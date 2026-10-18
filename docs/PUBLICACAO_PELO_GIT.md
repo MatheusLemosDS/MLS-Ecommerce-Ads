@@ -247,6 +247,51 @@ comunicação entre Auth e Financeiro. Uma conexão ainda não autorizada não d
 aparecer como `CONNECTED`. Essa consulta não solicita tokens à Shopee nem
 comprova que a Partner Key e a autorização da loja estão corretas.
 
+## Corrigir o segredo compartilhado pelo Git
+
+Se o Auth retornar `FINANCE_CONFIGURATION_PENDING`, conferir o Secret
+`FINANCE_ROUTER_SECRET` e o Service Binding `SHOPEE_FINANCE_SERVICE` do Auth.
+`FORBIDDEN` retornado pelo Financeiro indica que o segredo recebido não confere
+com o esperado. Uma Variable de texto chega ao código como string; o tipo,
+isoladamente, não explica uma divergência de valor.
+
+Para sincronizar os dois valores sem copiar a chave entre telas, existe uma
+operação explícita e temporária:
+
+```text
+npm run repair:finance-router
+```
+
+Usar esse comando no campo **Deploy command** do Build de
+`brazacommerce-auth`, mantendo **Build command** como `npm run build:auth`.
+Salvar e disparar um novo build na branch `main`.
+
+O helper valida as configurações locais e lê a lista de nomes de Secrets dos
+dois Workers antes da primeira alteração. Gera um único valor aleatório de
+64 caracteres hexadecimais e envia somente `FINANCE_ROUTER_SECRET` para
+Financeiro e Auth, por stdin privado do Wrangler fixado no lockfile.
+Não envia chaves na linha de comando ou no Git, não imprime valores e remove
+os logs temporários do Wrangler. Não altera Partner Key, chave de cifragem,
+bancos, código dos Workers ou configurações Ads. As listas finais precisam
+confirmar `FINANCE_ROUTER_SECRET` como `secret_text` nos dois Workers.
+
+O sucesso imprime apenas `FINANCE_ROUTER_SYNCED`. A operação faz duas
+gravações sequenciais; se a segunda falhar, pode haver uma atualização parcial.
+Uma falha imprime um código fixo `FINANCE_ROUTER_SYNC_*`, sem detalhes privados.
+Não executar novamente por rotina: cada execução gera um novo valor.
+
+Depois do sucesso, restaurar o **Deploy command** do Auth para
+`npm run deploy:auth` e consultar `/shopee/finance/status`. A criação e as
+permissões reais do token de Build para gravar nos dois Workers precisam
+funcionar na conta Cloudflare; os testes locais usam chamadas simuladas.
+
+Se aparecer `FINANCE_ROUTER_SYNC_FINANCE_BINDING_CONFLICT`, o Cloudflare
+recusou substituir a Variable pelo Secret. Nesse caso, remover somente a
+Variable de texto `FINANCE_ROUTER_SECRET` no Financeiro, salvar/publicar e
+reexecutar a operação. O helper não remove bindings automaticamente.
+Se aparecer um código `*_VERSION_NOT_DEPLOYED`, publicar a configuração
+pendente desse Worker antes de tentar novamente.
+
 ## Atualizações seguintes
 
 Editar o código no repositório, abrir uma pull request e aguardar o workflow
