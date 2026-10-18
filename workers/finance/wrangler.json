@@ -1,0 +1,15 @@
+{
+  "name": "brazacommerce-finance",
+  "main": "../../dist/finance-worker.mjs",
+  "compatibility_date": "2026-10-12",
+  "workers_dev": false,
+  "preview_urls": false,
+  "keep_vars": true,
+  "d1_databases": [
+    {
+      "binding": "FINANCE_DB",
+      "database_name": "brazacommerce-finance-db",
+      "database_id": "d1d43874-5eb9-4600-9e47-be026433142e"
+    }
+  ]
+}

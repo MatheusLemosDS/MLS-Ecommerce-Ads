@@ -5,7 +5,7 @@
   "mode": "existing",
   "source_sha256": "45d0142709c5087e373cc4da146070ed39c472805f6f64c00f00b6555f0e1f56",
   "recognized_source_sha256": "45d0142709c5087e373cc4da146070ed39c472805f6f64c00f00b6555f0e1f56",
-  "config_sha256": "08883b25c60eb65996c1006999fccf544a824f92130fd2106e7ce9162102d5b4",
+  "config_sha256": "4a4ebe4387dcb8771243c6942370f94e9bfee6d005b3b38cdcb24b90a9637e02",
   "captured_config": {
     "name": "brazacommerce-auth",
     "workers_dev": true,
@@ -23,7 +23,7 @@
     "observability": {
       "enabled": true,
       "head_sampling_rate": 1,
-      "redact_query_string": false,
+      "redact_query_string": true,
       "logs": {
         "enabled": true,
         "head_sampling_rate": 1,

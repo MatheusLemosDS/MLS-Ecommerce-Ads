@@ -168,6 +168,15 @@ Para **App e Auth existentes**, abrir o próprio Worker e acessar
 Para **Financeiro**, usar **Create an app → Connect GitHub**, selecionar o
 mesmo repositório e criar o Worker `brazacommerce-finance`.
 
+Na primeira criação, usar `npm run build:finance` no campo **Build command** e
+`npm run deploy:finance` no campo **Deploy command**, branch `main`, raiz `/`
+e Node `24.19.0`. O D1 `brazacommerce-finance-db` já está declarado no Git como
+`FINANCE_DB`; não é necessário adicionar outro vínculo manualmente.
+Esse primeiro deploy pode ocorrer antes do cadastro dos Secrets: o Worker
+permanece privado e a conexão depende dos Secrets e da variável de ativação.
+Concluir esse cadastro no próprio Financeiro antes de publicar o Auth.
+Enquanto isso, manter App e Auth com os comandos temporários de captura.
+
 Configurar os três projetos com a **raiz do repositório**, a branch de produção
 **`main`** e estes comandos:
 
@@ -206,7 +215,10 @@ Cloudflare no GitHub.
 2. **Auth:** adicionar o Service Binding `SHOPEE_FINANCE_SERVICE`, apontando
    para o Worker financeiro, e o Secret `FINANCE_ROUTER_SECRET`. Esse Secret
    precisa ter o mesmo valor nos dois Workers. Preservar as rotas e os demais
-   bindings existentes antes de publicar.
+   bindings existentes antes de publicar. A configuração revisada do Auth
+   também oculta a query das URLs nos logs de invocação; a captura original e
+   essa alteração intencional estão documentadas em
+   [REVIEWED_CHANGES.md](../workers/auth/REVIEWED_CHANGES.md).
 3. **App:** conferir o `ADMIN_DB`, os cron triggers e a versão que será
    entregue, então publicar. Não recriar o banco administrativo.
 

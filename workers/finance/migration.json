@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "target": "finance",
+  "worker_name": "brazacommerce-finance",
+  "mode": "new",
+  "source_sha256": null,
+  "recognized_source_sha256": null,
+  "config_sha256": "62847cc701e5ae88099ea79779cb15f86a5ef43ef542266ddd5541616d2e11be",
+  "captured_config": {
+    "name": "brazacommerce-finance",
+    "main": "../../dist/finance-worker.mjs",
+    "compatibility_date": "2026-10-12",
+    "workers_dev": false,
+    "preview_urls": false,
+    "keep_vars": true,
+    "d1_databases": [
+      {
+        "binding": "FINANCE_DB",
+        "database_name": "brazacommerce-finance-db",
+        "database_id": "d1d43874-5eb9-4600-9e47-be026433142e"
+      }
+    ]
+  }
+}
