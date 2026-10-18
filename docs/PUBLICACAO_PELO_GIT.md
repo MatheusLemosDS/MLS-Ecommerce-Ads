@@ -34,6 +34,12 @@ Manter a instalação com `npm ci` e usar **temporariamente** estes comandos:
 | `brazacommerce-app` | `npm run build:app` | `npm run capture:app` |
 | `brazacommerce-auth` | `npm run build:auth` | `npm run capture:auth` |
 
+Salvar os comandos pode não iniciar um build automaticamente. Depois de
+salvar os dois projetos, um novo push na branch `main` dispara os builds
+quando eles estão habilitados e os caminhos alterados correspondem aos
+Build watch paths. Abrir a execução do novo commit em **Deployments** para
+acompanhar a captura; as publicações manuais anteriores não têm esses logs.
+
 Embora a interface chame o campo de Deploy command, esses dois comandos apenas
 executam uma captura de leitura. O helper usa o Wrangler fixado no lockfile com
 `init --from-dash ... --yes --no-delegate-c3`, em pasta temporária fora do clone;
