@@ -1,0 +1,45 @@
+"""Build paste-ready Workers, preserving supplied originals."""
+from pathlib import Path
+import hashlib,json
+import re
+root=Path(__file__).resolve().parent
+original=(root/'original/app-worker.mjs').read_text()
+admin=(root/'src/admin.mjs').read_text().replace("import {CLIENT} from './admin-client.mjs';\n",'').replace("import {CSS,adminBody,loginBody} from './admin-view.mjs';\n",'')
+report=(root/'src/admin-report.mjs').read_text().replace('export function parseReport','function parseReport')
+client=report+'\n'+(root/'src/admin-client.mjs').read_text().replace("import {parseReport} from './admin-report.mjs';\n",'').replace('export const CLIENT','const CLIENT')
+view=(root/'src/admin-view.mjs').read_text().replace('export const CSS','const CSS').replace('export function adminBody','function adminBody').replace('export function loginBody','function loginBody')
+ads=(root/'src/admin-ads-today.mjs').read_text().replace('export function adsToday','function adsToday')
+orders=(root/'src/shop-orders.mjs').read_text().replace('export function shopOrders','function shopOrders')
+items=(root/'src/order-items.mjs').read_text().replace('export function orderItems','function orderItems')
+variants=re.sub(r'^export ', '', (root/'src/variant-bindings.mjs').read_text(), flags=re.M)
+observations=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/order-observations.mjs').read_text(),flags=re.M),flags=re.M)
+production_costs=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/production-costs.mjs').read_text(),flags=re.M),flags=re.M)
+orders_diagnostic=(root/'src/orders-diagnostic.mjs').read_text().replace('export function safeOrdersDiagnostic','function safeOrdersDiagnostic').replace('export function ordersReadDiagnostic','function ordersReadDiagnostic')
+orders_http=(root/'src/orders-http.mjs').read_text().replace("import {safeOrdersDiagnostic} from './orders-diagnostic.mjs';\n",'').replace('export async function boundedOrdersRead','async function boundedOrdersRead')
+app_orders=(root/'src/app-shop-orders.mjs').read_text().replace("import {boundedOrdersRead} from './orders-http.mjs';\n",'').replace("import {ordersReadDiagnostic} from './orders-diagnostic.mjs';\n",'').replace('export async function getShopOrders','async function getShopOrders')
+app_items=re.sub(r'^import .*\n','',(root/'src/app-order-items.mjs').read_text(),flags=re.M).replace('export async function getOrderItems','async function getOrderItems')
+admin=client+'\n'+view+'\n'+ads+'\n'+orders+'\n'+items+'\n'+variants+'\n'+observations+'\n'+production_costs+'\n'+re.sub(r'^import .*\n','',admin,flags=re.M)
+admin=admin.replace('export {adminFetch,schedule,DEFAULTS,SCHEMA,validateSettings};','')
+needle='    const url = new URL(request.url);'
+assert original.count(needle)==1
+updated=original.replace(needle,needle+'''\n    if (url.pathname === '/admin' || url.pathname.startsWith('/admin/') || url.pathname.startsWith('/api/admin/') || url.pathname.startsWith('/api/hermes/')) return brazaAdmin.adminFetch(request, env, {getAdsSummary,getShopOrders,getOrderItems});''',1)
+needle='  async fetch(request, env) {'
+updated=updated.replace(needle,'''  async scheduled(event, env, ctx) { ctx.waitUntil(brazaAdmin.schedule(env)); },\n'''+needle,1)
+needle='${navLink(\n  "/dashboard",'
+assert updated.count(needle)==1
+updated=updated.replace(needle,'${navLink("/admin", "Administração", currentPath)}\n\n'+needle,1)
+output=updated+'\n\n'+orders_diagnostic+'\n'+orders_http+'\n'+app_orders+'\n'+app_items+'\n\nconst brazaAdmin = (() => {\n'+admin+'\nreturn {adminFetch,schedule};\n})();\n'
+(root/'app-worker.mjs').write_text(output)
+auth_original=(root/'original/auth-worker.mjs').read_text()
+needle='    const url = new URL(request.url);'
+assert auth_original.count(needle)==1
+auth_updated=auth_original.replace(needle,needle+'''\n    if (url.pathname === '/internal/shopee/orders/summary') return brazaShopOrders.authShopOrders(request, env, {validateInternalApp,gatewayOrdersRead:env=>brazaShopOrders.gatewayShopOrders(env,normalizeGatewayUrl)});
+    if (url.pathname === '/internal/shopee/orders/items') return brazaOrderItems.authOrderItems(request, env, {validateInternalApp,gatewayOrderItemsRead:env=>brazaOrderItems.gatewayOrderItems(env,normalizeGatewayUrl)});''',1)
+auth_orders=(root/'src/auth-shop-orders.mjs').read_text().replace("import {shopOrders} from './shop-orders.mjs';\n",'').replace("import {boundedOrdersRead} from './orders-http.mjs';\n",'').replace("import {ordersReadDiagnostic} from './orders-diagnostic.mjs';\n",'').replace('export async function authShopOrders','async function authShopOrders').replace('export async function gatewayShopOrders','async function gatewayShopOrders')
+auth_output=auth_updated+'\n\nconst brazaShopOrders = (() => {\n'+orders_diagnostic+'\n'+orders_http+'\n'+orders+'\n'+auth_orders+'\nreturn {authShopOrders,gatewayShopOrders};\n})();\n'
+auth_items=re.sub(r'^import .*\n','',(root/'src/auth-order-items.mjs').read_text(),flags=re.M).replace('export async function authOrderItems','async function authOrderItems').replace('export async function gatewayOrderItems','async function gatewayOrderItems')
+auth_output+='\n\nconst brazaOrderItems = (() => {\n'+orders_diagnostic+'\n'+orders_http+'\n'+items+'\n'+auth_items+'\nreturn {authOrderItems,gatewayOrderItems};\n})();\n'
+(root/'auth-worker.mjs').write_text(auth_output)
+(root/'schema.sql').write_text('''-- Use only the dedicated ADMIN_DB binding. Existing gateway DB is separate.\n'''+ ';\n'.join(__import__('re').findall(r'`(CREATE TABLE IF NOT EXISTS .*?)`',admin))+ ';\n')
+(root/'manifest.json').write_text(json.dumps({'app_original_sha256':hashlib.sha256((root/'original/app-worker.mjs').read_bytes()).hexdigest(),'auth_original_sha256':hashlib.sha256((root/'original/auth-worker.mjs').read_bytes()).hexdigest(),'app_updated_sha256':hashlib.sha256(output.encode()).hexdigest(),'auth_updated_sha256':hashlib.sha256(auth_output.encode()).hexdigest(),'auth_modified':True,'deployment':'NOT_DEPLOYED','ads_execution':'LOCKED'},indent=2)+'\n')
+print('Built app-worker.mjs:',len(output.encode()),'bytes; auth-worker.mjs:',len(auth_output.encode()),'bytes')

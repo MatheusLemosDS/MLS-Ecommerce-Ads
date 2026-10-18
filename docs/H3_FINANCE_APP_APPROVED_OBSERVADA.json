@@ -1,0 +1,19 @@
+{
+  "received_on": "2026-10-18",
+  "timezone": "America/Sao_Paulo",
+  "source": "OPERATOR_TEXT_CONFIRMATION",
+  "application_name": "BrazaCommerce Financeiro",
+  "reported_approval": true,
+  "reported_active": true,
+  "live_partner_id": 2049333,
+  "live_partner_id_source": "OPERATOR_PUBLIC_NUMBER",
+  "previously_observed_category": "Seller In House System",
+  "previous_test_partner_id": 1248729,
+  "financial_shop_authorization_status": "NOT_CONFIGURED_OR_VERIFIED",
+  "financial_api_read_status": "NOT_YET_TESTED_WITH_NEW_APPLICATION",
+  "provider_adapter_status": "PENDING_OFFICIAL_TOKEN_CONTRACT_REFERENCE",
+  "production_connector_deployed": false,
+  "partner_key_collected": false,
+  "ads_application_partner_id": 2047569,
+  "ads_application_changed": false
+}

@@ -1,0 +1,10 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "brazacommerce-auth",
+  "main": "../../dist/auth-worker.mjs",
+  "compatibility_date": "2026-10-12",
+  "keep_vars": true,
+  "services": [
+    { "binding": "SHOPEE_FINANCE_SERVICE", "service": "brazacommerce-finance" }
+  ]
+}

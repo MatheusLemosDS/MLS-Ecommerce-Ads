@@ -1,0 +1,34 @@
+name: Validar Workers
+
+on:
+  push:
+    branches: [main, cloudflare-git]
+  pull_request:
+    branches: [main, cloudflare-git]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: worker-validation-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Obter código
+        uses: actions/checkout@v4
+      - name: Preparar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - name: Instalar versões fixadas
+        run: npm ci
+      - name: Executar testes
+        run: npm test
+      - name: Gerar os três Workers
+        run: npm run build

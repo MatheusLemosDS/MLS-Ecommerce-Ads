@@ -1,0 +1,2 @@
+* text=auto eol=lf
+web/cloudflare/original/*.mjs -text whitespace=cr-at-eol

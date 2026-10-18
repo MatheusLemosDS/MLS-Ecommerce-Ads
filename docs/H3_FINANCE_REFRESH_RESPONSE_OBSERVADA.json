@@ -1,0 +1,57 @@
+{
+  "received_on": "2026-10-18",
+  "timezone": "America/Sao_Paulo",
+  "source": "USER_PROVIDED_PUBLIC_AUTHENTICATION_GUIDE_ATTACHMENTS",
+  "independent_official_fetch": false,
+  "attachments": {
+    "count": 3,
+    "identical_bytes": true,
+    "bytes_each": 19505,
+    "sha256_each": "ddc7a0e46159006d6fa34a53e5f23791767556e9e5d7ac1f7197451b26fffa81",
+    "handling": "Read as public reference data; do not execute or copy demonstration credential/token literals"
+  },
+  "refresh": {
+    "method": "POST",
+    "production_url": "https://partner.shopeemobile.com/api/v2/auth/access_token/get",
+    "request_contract_complete": true,
+    "response_contract_complete": true,
+    "response": {
+      "access_token": {"type": "string"},
+      "refresh_token": {"type": "string", "validity_days": 30, "single_use_per_shop_or_merchant": true},
+      "expire_in": {"type": "int", "unit": "seconds", "minimum": 1, "maximum": 14400},
+      "request_id": {"type": "string"},
+      "error": {"type": "string", "success_value": ""},
+      "message": {"type": "string"},
+      "partner_id": {"type": "int", "must_match_requested_profile": true},
+      "shop_id": {"type": "int", "must_match_requested_profile": true}
+    },
+    "rotation": "Persist the new access/refresh pair atomically; the new refresh token is used for the next refresh",
+    "main_account_note": "Initial main-account bootstrap can cover scopes; independently refreshed shop/merchant pairs remain separate"
+  },
+  "initial_exchange": {
+    "source_lines": [348, 385],
+    "method": "POST",
+    "production_url": "https://partner.shopeemobile.com/api/v2/auth/token/get",
+    "request_contract_complete": true,
+    "response_contract_complete": true,
+    "body": {"shop_id": "int", "code": "string", "partner_id": "int"},
+    "query": {"partner_id": "int", "timestamp": "Unix seconds", "sign": "64 hexadecimal characters"},
+    "signature": {
+      "algorithm": "HMAC-SHA256",
+      "key_encoding": "UTF-8 partner key",
+      "base_order": ["partner_id", "api_path", "timestamp"],
+      "separators": false
+    },
+    "shop_response_fields": ["access_token", "refresh_token", "expire_in", "request_id", "error", "message"],
+    "shop_response_partner_id_echo": false,
+    "shop_response_shop_id_echo": false,
+    "shop_response_scope_lists_required": false,
+    "parser_note": "Use the initial SHOP contract; do not require refresh-only partner/shop echoes or account scope lists"
+  },
+  "remaining_documentation": ["Authorization URL generation", "redirect and state behavior"],
+  "provider_adapter_enabled": false,
+  "production_request_sent": false,
+  "new_shop_authorization_confirmed": false,
+  "financial_values_exported": false,
+  "ads_execution": "LOCKED"
+}

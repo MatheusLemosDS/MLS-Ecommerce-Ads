@@ -1,0 +1,26 @@
+{
+  "name": "mls-ecommerce-ads",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "packageManager": "npm@11.9.0",
+  "scripts": {
+    "pretest": "npm run build",
+    "build": "node tools/build_workers.mjs",
+    "build:app": "node tools/build_workers.mjs app",
+    "build:auth": "node tools/build_workers.mjs auth",
+    "build:finance": "node tools/build_workers.mjs finance",
+    "test": "node --test web/cloudflare/tests/*.test.mjs web/finance/tests/*.test.mjs tools/tests/*.test.mjs",
+    "validate:deploy": "node tools/worker_deploy.mjs check",
+    "deploy:app": "node tools/worker_deploy.mjs deploy app",
+    "deploy:auth": "node tools/worker_deploy.mjs deploy auth",
+    "deploy:finance": "node tools/worker_deploy.mjs deploy finance"
+  },
+  "devDependencies": {
+    "jsonc-parser": "3.3.1",
+    "wrangler": "4.151.1"
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "received_on": "2026-10-18",
+  "timezone": "America/Sao_Paulo",
+  "source": "USER_COPIED_PUBLIC_AUTHORIZATION_AND_AUTHENTICATION_GUIDE",
+  "independent_official_fetch": false,
+  "authorization": {
+    "origin": "https://partner.shopeemobile.com",
+    "path": "/api/v2/shop/auth_partner",
+    "query": [
+      "partner_id",
+      "timestamp",
+      "sign",
+      "redirect"
+    ],
+    "signature": {
+      "algorithm": "HMAC-SHA256",
+      "base_order": [
+        "partner_id",
+        "api_path",
+        "timestamp"
+      ],
+      "key_encoding": "UTF-8",
+      "output": "64 lowercase hexadecimal characters"
+    },
+    "redirect_parameter_name": "redirect",
+    "outer_state_documented": false,
+    "outer_redirect_uri_documented": false
+  },
+  "implementation": {
+    "partner_id": 2049333,
+    "shop_id": 1178167501,
+    "callback": "https://auth.brazacommerce.com.br/shopee/finance/callback",
+    "nonce_placement": "state query parameter within the redirect URL, bound to independent browser cookie",
+    "missing_nonce_behavior": "reject before code exchange",
+    "redirect_query_preservation_verified_live": false,
+    "initial_exchange_adapter_implemented": true,
+    "connection_activation_requires_explicit_flag": true,
+    "refresh_implemented_private": true,
+    "financial_import_implemented": false
+  },
+  "public_documentation_requests_remaining": [],
+  "production_deployed": false,
+  "shop_authorization_verified": false,
+  "production_requests_sent": false,
+  "ads_execution": "LOCKED"
+}
