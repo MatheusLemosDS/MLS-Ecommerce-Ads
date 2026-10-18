@@ -17,7 +17,9 @@
     "validate:deploy": "node tools/worker_deploy.mjs check",
     "deploy:app": "node tools/worker_deploy.mjs deploy app",
     "deploy:auth": "node tools/worker_deploy.mjs deploy auth",
-    "deploy:finance": "node tools/worker_deploy.mjs deploy finance"
+    "deploy:finance": "node tools/worker_deploy.mjs deploy finance",
+    "capture:app": "node tools/capture_worker_config.mjs app",
+    "capture:auth": "node tools/capture_worker_config.mjs auth"
   },
   "devDependencies": {
     "jsonc-parser": "3.3.1",

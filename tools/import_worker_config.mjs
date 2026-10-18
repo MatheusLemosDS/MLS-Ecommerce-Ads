@@ -92,6 +92,14 @@ function snapshotFor(target, config, mode, rawHash = null, recognizedHash = null
     config_sha256: sha256(Buffer.from(stableJson(config))), captured_config: cloneJson(config)};
 }
 
+export function validateCapturedConfig(target, config) {
+  if (!own(TARGETS, target) || !plain(config)
+    || Object.keys(config).some(key => !ALLOWED.has(key) || ['vars', 'secrets', '$schema'].includes(key))) {
+    fail('WORKER_CONFIG_UNSUPPORTED');
+  }
+  validateConfig(config, target);
+}
+
 // No files are written here. vars/secrets are intentionally absent from both
 // results; the existing values stay in Cloudflare through keep_vars and Wrangler.
 export function importWorkerConfig(target, exportConfig, source, {root = PROJECT_ROOT} = {}) {

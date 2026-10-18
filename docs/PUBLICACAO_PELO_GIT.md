@@ -16,6 +16,53 @@ publicação anterior não foi confirmada, e o Auth inclui a conexão financeira
 Portanto, o primeiro deploy também entrega mudanças funcionais; não é uma
 simples cópia comprovadamente idêntica ao que está no ar.
 
+## Primeiro vínculo: capturar pelo próprio Cloudflare
+
+Para evitar instalar ferramentas no computador ou criar outra credencial,
+o primeiro Build dos Workers existentes pode usar a autenticação que o próprio
+Cloudflare fornece ao Wrangler. Essa etapa só lê o Worker publicado e imprime
+um pacote de configuração sanitizado; não chama `deploy`, não troca código,
+não cria banco e não modifica a autorização da loja.
+
+Abrir cada Worker existente em **Settings → Builds → Connect repository** e
+selecionar `MatheusLemosDS/MLS-Ecommerce-Ads`, branch `main`, raiz do repositório.
+Usar Node `24.19.0` (variável de build `NODE_VERSION`, caso a interface peça).
+Manter a instalação com `npm ci` e usar **temporariamente** estes comandos:
+
+| Worker existente | Build command | Deploy command temporário |
+| --- | --- | --- |
+| `brazacommerce-app` | `npm run build:app` | `npm run capture:app` |
+| `brazacommerce-auth` | `npm run build:auth` | `npm run capture:auth` |
+
+Embora a interface chame o campo de Deploy command, esses dois comandos apenas
+executam uma captura de leitura. O helper usa o Wrangler fixado no lockfile com
+`init --from-dash ... --yes --no-delegate-c3`, em pasta temporária fora do clone;
+descarta a saída privada, remove `vars`/`secrets` e apaga os arquivos temporários.
+O caminho nativo evita instalar C3 ou criar outro repositório.
+
+Nos logs do Build, copiar somente o trecho entre `BRAZA_GIT_CONFIG_BEGIN` e
+`BRAZA_GIT_CONFIG_END`, incluindo as duas linhas. O conteúdo Base64 contém
+metadados de recursos e hashes do código, sem valores de variáveis ou segredos.
+Enviar esse trecho para incorporar a configuração ao Git. Não copiar o log
+inteiro. Se aparecer um erro `WORKER_*`, informar somente esse código.
+
+O pacote pode ser aplicado localmente com:
+
+```bash
+node tools/apply_worker_config_capture.mjs /tmp/captura-app.txt
+```
+
+Ele é validado antes de gerar `workers/app/wrangler.json` e `migration.json`.
+Repetir com o pacote do Auth. A validação recusa campos privados, hash divergente,
+fonte não reconhecida e configuração alterada sem substituição explícita.
+Somente depois de importar os dois pacotes e cadastrar o D1 financeiro, trocar
+os comandos temporários pelos comandos reais de publicação descritos abaixo.
+
+A captura ainda precisa ser executada na conta real. Se a credencial de Build
+não permitir a leitura, o helper retorna `WORKER_CAPTURE_REMOTE_UNAVAILABLE`
+sem tentar publicar; conferir as permissões da integração no próprio Cloudflare.
+Não é necessário enviar um token no chat.
+
 ## Configuração inicial
 
 1. No Cloudflare, anotar para cada Worker existente o nome, a versão publicada,
@@ -32,7 +79,7 @@ simples cópia comprovadamente idêntica ao que está no ar.
 4. Cadastrar os segredos diretamente em **Settings → Variables and Secrets**
    de cada Worker. Preservar os segredos atuais do App e do Auth.
 5. Enviar o código e as configurações revisadas ao Git e executar os checks.
-   Só depois conectar os projetos do Cloudflare à branch de produção.
+   Só depois ativar os comandos reais de publicação dos projetos do Cloudflare.
 
 `keep_vars=true` conserva variáveis de texto existentes no painel. Ele não
 preserva automaticamente bindings ausentes no arquivo de configuração. D1,
@@ -57,11 +104,11 @@ exatos dos Workers publicados. Executar um comando por Worker, em diretórios
 separados:
 
 ```bash
-node /CAMINHO/REPO/node_modules/wrangler/bin/wrangler.js init --from-dash brazacommerce-app --yes
+node /CAMINHO/REPO/node_modules/wrangler/bin/wrangler.js init --from-dash brazacommerce-app --yes --no-delegate-c3
 ```
 
 ```bash
-node /CAMINHO/REPO/node_modules/wrangler/bin/wrangler.js init --from-dash brazacommerce-auth --yes
+node /CAMINHO/REPO/node_modules/wrangler/bin/wrangler.js init --from-dash brazacommerce-auth --yes --no-delegate-c3
 ```
 
 O export pode conter valores privados de variáveis de texto. Não copiar o
@@ -104,7 +151,7 @@ O validador confere também que o banco financeiro é diferente dos bancos
 declarados no App. Para verificar um projeto separadamente, usar
 `npm run validate:deploy -- app`, `auth` ou `finance`. A validação é local e não
 publica. Somente depois de validar todos os projetos, conferir o diff e enviar
-os metadados revisados ao Git, conectar os Builds e seguir a ordem de publicação.
+os metadados revisados ao Git, ativar os comandos reais dos Builds e seguir a ordem de publicação.
 
 ## Conectar cada projeto ao repositório
 
@@ -138,8 +185,10 @@ bindings e credenciais de teste separados. Um preview não deve acessar o D1,
 executar cron ou usar as credenciais financeiras de produção. Desativar também
 o comando de deploy de branches não produtivas, se ele aparecer na interface.
 
-Conectar o Git pode iniciar o primeiro build. Fazer essa etapa somente quando
-as configurações e os snapshots estiverem completos. Os checks do GitHub
+Conectar o Git pode iniciar o primeiro build. Para os comandos reais de deploy,
+fazer essa etapa somente quando as configurações e os snapshots estiverem
+completos. Os comandos temporários de captura podem ser usados antes, conforme
+a seção inicial. Os checks do GitHub
 validam código e builds; eles não publicam e não precisam de Secrets de
 Cloudflare no GitHub.
 

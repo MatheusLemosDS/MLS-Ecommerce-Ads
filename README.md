@@ -20,6 +20,11 @@ Antes de publicar, importar a configuração real dos Workers existentes e
 configurar o D1 exclusivo do Financeiro. `npm run validate:deploy` informa o que
 falta e recusa o deploy enquanto esses arquivos não existirem.
 
+O primeiro vínculo dos Workers existentes pode usar `capture:app`/`capture:auth`
+para ler e devolver sua configuração sem publicar. Isso permite preparar os
+arquivos do Git a partir do próprio Build Cloudflare, sem instalar ferramentas
+no computador nem enviar tokens no chat.
+
 Guia completo: [Publicação pelo Git](docs/PUBLICACAO_PELO_GIT.md).
 Configuração financeira: [Financeiro](web/finance/DEPLOY.md).
 

@@ -1,5 +1,7 @@
 # Conexão financeira Shopee
 
+A publicação atual será pelo Git, incluindo App e Auth existentes. Seguir primeiro [Publicação pelo Git](../../docs/PUBLICACAO_PELO_GIT.md); a entrega manual abaixo permanece como referência.
+
 BrazaCommerce Financeiro foi informada aprovada e ativa em 18/10/2026: Live Partner **2049333**, Seller In House System, loja **1178167501**. A entrega de conexão está preparada para revisão e publicação manual. A autorização real, a importação Payment e o lucro ainda não foram verificados.
 
 ## Entrega e configuração
