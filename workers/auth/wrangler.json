@@ -1,0 +1,39 @@
+{
+  "name": "brazacommerce-auth",
+  "workers_dev": true,
+  "preview_urls": false,
+  "compatibility_date": "2026-10-05",
+  "routes": [
+    {
+      "pattern": "auth.brazacommerce.com.br",
+      "zone_name": "brazacommerce.com.br",
+      "custom_domain": true,
+      "enabled": true,
+      "previews_enabled": false
+    }
+  ],
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+    "redact_query_string": false,
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "persist": true,
+      "invocation_logs": true
+    },
+    "traces": {
+      "enabled": false,
+      "persist": true,
+      "head_sampling_rate": 1
+    }
+  },
+  "main": "../../dist/auth-worker.mjs",
+  "keep_vars": true,
+  "services": [
+    {
+      "binding": "SHOPEE_FINANCE_SERVICE",
+      "service": "brazacommerce-finance"
+    }
+  ]
+}

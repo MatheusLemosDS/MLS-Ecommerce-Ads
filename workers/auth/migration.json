@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "target": "auth",
+  "worker_name": "brazacommerce-auth",
+  "mode": "existing",
+  "source_sha256": "45d0142709c5087e373cc4da146070ed39c472805f6f64c00f00b6555f0e1f56",
+  "recognized_source_sha256": "45d0142709c5087e373cc4da146070ed39c472805f6f64c00f00b6555f0e1f56",
+  "config_sha256": "08883b25c60eb65996c1006999fccf544a824f92130fd2106e7ce9162102d5b4",
+  "captured_config": {
+    "name": "brazacommerce-auth",
+    "workers_dev": true,
+    "preview_urls": false,
+    "compatibility_date": "2026-10-05",
+    "routes": [
+      {
+        "pattern": "auth.brazacommerce.com.br",
+        "zone_name": "brazacommerce.com.br",
+        "custom_domain": true,
+        "enabled": true,
+        "previews_enabled": false
+      }
+    ],
+    "observability": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "redact_query_string": false,
+      "logs": {
+        "enabled": true,
+        "head_sampling_rate": 1,
+        "persist": true,
+        "invocation_logs": true
+      },
+      "traces": {
+        "enabled": false,
+        "persist": true,
+        "head_sampling_rate": 1
+      }
+    },
+    "main": "../../dist/auth-worker.mjs",
+    "keep_vars": true,
+    "services": [
+      {
+        "binding": "SHOPEE_FINANCE_SERVICE",
+        "service": "brazacommerce-finance"
+      }
+    ]
+  }
+}

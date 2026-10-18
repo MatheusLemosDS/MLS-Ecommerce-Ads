@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "target": "app",
+  "worker_name": "brazacommerce-app",
+  "mode": "existing",
+  "source_sha256": "b1792536a065a76b06886096838340e6c0c2daecbdb51d047bf0e63318e4437a",
+  "recognized_source_sha256": "b1792536a065a76b06886096838340e6c0c2daecbdb51d047bf0e63318e4437a",
+  "config_sha256": "39ad9b271f0ba4e6e9d1799e0e62a77b57daaeab340727f42c8d0eff5e46ce1a",
+  "captured_config": {
+    "name": "brazacommerce-app",
+    "workers_dev": true,
+    "preview_urls": false,
+    "compatibility_date": "2026-10-06",
+    "routes": [
+      {
+        "pattern": "app.brazacommerce.com.br",
+        "zone_name": "brazacommerce.com.br",
+        "custom_domain": true,
+        "enabled": true,
+        "previews_enabled": false
+      }
+    ],
+    "observability": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "redact_query_string": false,
+      "logs": {
+        "enabled": true,
+        "head_sampling_rate": 1,
+        "persist": true,
+        "invocation_logs": true
+      },
+      "traces": {
+        "enabled": false,
+        "persist": true,
+        "head_sampling_rate": 1
+      }
+    },
+    "d1_databases": [
+      {
+        "binding": "ADMIN_DB",
+        "database_id": "fb3a5b06-5877-4d7e-ae08-1be4701f6437"
+      }
+    ],
+    "main": "../../dist/app-worker.mjs",
+    "keep_vars": true
+  }
+}
