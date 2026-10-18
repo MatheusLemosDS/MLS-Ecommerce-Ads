@@ -241,6 +241,12 @@ financeira, seguir [DEPLOY.md](../web/finance/DEPLOY.md). O status esperado é
 `CONNECTED` com os IDs financeiros corretos, sem exibir tokens. Essa conexão
 não importa taxas nem calcula lucro por si só.
 
+Antes de iniciar a autorização, abrir
+`https://auth.brazacommerce.com.br/shopee/finance/status` para conferir a
+comunicação entre Auth e Financeiro. Uma conexão ainda não autorizada não deve
+aparecer como `CONNECTED`. Essa consulta não solicita tokens à Shopee nem
+comprova que a Partner Key e a autorização da loja estão corretas.
+
 ## Atualizações seguintes
 
 Editar o código no repositório, abrir uma pull request e aguardar o workflow
