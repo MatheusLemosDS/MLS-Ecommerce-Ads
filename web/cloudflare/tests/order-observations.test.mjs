@@ -124,7 +124,7 @@ test('maximum row and binding counts fit the explicit UTF8 bound; oversized DB r
  Object.assign(large,{rows,catalog_units:1000,orders_in_api_window:1000,orders_with_details:1000,pages_read:10,currency_counts:{BRL:1000,OTHER:0,UNKNOWN:0}});updateContext(env,{bindingsPayload:JSON.stringify(bindings)});
  const {observation}=await capture(env,large),row=env.ADMIN_DB.db.prepare('SELECT payload FROM order_observations WHERE id=?').get(observation.id);
  assert.ok(Buffer.byteLength(row.payload,'utf8')<=524288);assert.equal(observation.source_snapshot.rows.length,1000);assert.equal(observation.bindings_snapshot.bindings.length,1000);
- env.ADMIN_DB.db.prepare('UPDATE order_observations SET payload=? WHERE id=?').run(' '.repeat(524289),observation.id);
+ env.ADMIN_DB.db.prepare('UPDATE order_observations SET payload=? WHERE id=?').run(row.payload+' '.repeat(786433-Buffer.byteLength(row.payload,'utf8')),observation.id);
  await expectError(readObservation(env,observation.id),503,'OBSERVATION_INVALID_SNAPSHOT');assert.equal(count(env),1);
 });
 test('list uses stable keyset pagination with equal timestamps and exact slim metadata',async()=>{

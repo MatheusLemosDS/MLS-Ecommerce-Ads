@@ -1,0 +1,106 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {forwardFinanceConnection,forwardFinancePaymentSample} from '../src/auth-router.mjs';
+import defaultWorker,{createFinanceWorker} from '../src/connection-worker.mjs';
+import {getFinanceVariantCatalog} from '../../cloudflare/src/app-finance-sample.mjs';
+
+const origin='https://auth.brazacommerce.com.br';
+const path='/internal/shopee/finance/variant-catalog';
+const secret='fixture-catalog-router-'+'x'.repeat(40);
+const input={item_ids:['123']};
+const frame=(count=1)=>({schema:'variant_catalog_v1',checked_at:1800000000,products:[{
+ item_id:'123',catalog_fingerprint:'a'.repeat(64),unresolved_count:0,
+ bindings:Array.from({length:count},(_,index)=>({item_id:'123',model_id:String(index+1),male_size:'M',female_size:'G'})),
+}]});
+const json=(value,status=200)=>new Response(JSON.stringify(value),{status,headers:{'content-type':'application/json'}});
+const request=(body=JSON.stringify(input),options={})=>new Request((options.origin||origin)+(options.path||path),{
+ method:options.method||'POST',headers:{'content-type':'application/json','X-Braza-Finance-Router':secret,...options.headers},
+ ...(options.method==='GET'?{}:{body}),
+});
+const authenticated={validateInternalApp:async()=>true};
+
+test('catalogue private routes deny untrusted callers and invalid input before any capability',async()=>{
+ let calls=0;
+ const env={FINANCE_ROUTER_SECRET:secret,FINANCE_CONNECTION_ENABLED:'true',SHOPEE_FINANCE_SERVICE:{fetch(){calls++;}},get FINANCE_DB(){throw Error('must not read DB');}};
+ const worker=createFinanceWorker({variantCatalog:async()=>{calls++;return frame();},fetchImpl:async()=>{},now:()=>1800000000000});
+ const untrusted=request();
+ assert.equal((await forwardFinancePaymentSample(untrusted,env,{validateInternalApp:async()=>false})).status,401);
+ assert.equal(untrusted.bodyUsed,false);
+ assert.equal((await forwardFinanceConnection(request(),env)).status,404);
+ assert.equal((await worker.fetch(request(undefined,{headers:{'X-Braza-Finance-Router':'bad'}}),env)).status,403);
+ for(const body of ['{}','null','[]','{"item_ids":[]}','{"item_ids":[123]}','{"item_ids":["01"]}','{"item_ids":["1","1"]}','{"item_ids":["1","2","3","4"]}','{"item_ids":["123"],"shop_id":1}',' '.repeat(129)]){
+  assert.equal((await forwardFinancePaymentSample(request(body),env,authenticated)).status,400);
+  assert.equal((await worker.fetch(request(body),env)).status,400);
+ }
+ for(const [options,status] of [[{origin:'https://evil.invalid'},404],[{path:path+'/'},404],[{path:'/shopee/finance/variant-catalog'},404],[{path:path+'?shop_id=1'},400],[{method:'GET'},405]]){
+  assert.equal((await forwardFinancePaymentSample(request(undefined,options),env,authenticated)).status,status);
+  assert.equal((await worker.fetch(request(undefined,options),env)).status,status);
+ }
+ assert.equal(calls,0);
+});
+
+test('catalogue capability is explicit and flag-gated in the default and offline worker',async()=>{
+ let calls=0;
+ const env={FINANCE_ROUTER_SECRET:secret,FINANCE_CONNECTION_ENABLED:'true',get FINANCE_DB(){throw Error('must not read DB');}};
+ for(const worker of [defaultWorker,createFinanceWorker({fetchImpl:async()=>{calls++;}}),createFinanceWorker({variantCatalog:async()=>{calls++;}})])assert.equal((await worker.fetch(request(),env)).status,503);
+ const worker=createFinanceWorker({variantCatalog:async()=>{calls++;},fetchImpl:async()=>{calls++;}});
+ for(const flag of [undefined,'false',true])assert.equal((await worker.fetch(request(),{FINANCE_ROUTER_SECRET:secret,FINANCE_CONNECTION_ENABLED:flag,get FINANCE_DB(){throw Error('must not read DB');}})).status,503);
+ assert.equal(calls,0);
+});
+
+test('catalogue chain forwards only its fixed path, requested IDs and dedicated credentials',async()=>{
+ const now=()=>1800000000000,fetchImpl=async()=>{};
+ let calls=0;
+ const env={FINANCE_ROUTER_SECRET:secret,FINANCE_CONNECTION_ENABLED:'true'};
+ const worker=createFinanceWorker({variantCatalog:async(actual,options)=>{
+  calls++;assert.equal(actual,env);assert.deepEqual(options,{fetchImpl,now,item_ids:['123']});return frame();
+ },fetchImpl,now});
+ const authEnv={FINANCE_ROUTER_SECRET:secret,SHOPEE_FINANCE_SERVICE:{fetch:forwarded=>{
+  assert.equal(forwarded.url,origin+path);assert.equal(forwarded.method,'POST');
+  assert.equal(forwarded.headers.get('X-Braza-Finance-Router'),secret);
+  assert.equal(forwarded.headers.get('cookie'),null);assert.equal(forwarded.headers.get('authorization'),null);
+  assert.equal(forwarded.headers.get('X-Braza-App-Key'),null);
+  return worker.fetch(forwarded,env);
+ }}};
+ const result=await getFinanceVariantCatalog({APP_INTERNAL_SECRET:'fixture-catalog-app'},input,{fetchImpl:forwarded=>{
+  assert.equal(forwarded.url,origin+path);assert.equal(forwarded.headers.get('X-Braza-App-Key'),'fixture-catalog-app');
+  return forwardFinancePaymentSample(forwarded,authEnv,{validateInternalApp:async actual=>actual.headers.get('X-Braza-App-Key')==='fixture-catalog-app'});
+ }});
+ assert.deepEqual(result,frame());assert.equal(calls,1);
+});
+
+test('catalogue frame identity cannot be substituted or enlarged by any private boundary',async()=>{
+ const mismatched=frame();mismatched.products[0].item_id='456';mismatched.products[0].bindings[0].item_id='456';
+ const poisoned={...frame(),buyer_user_name:'PRIVATE_BUYER'};
+ for(const value of [mismatched,poisoned]){
+  const app=await getFinanceVariantCatalog({APP_INTERNAL_SECRET:'fixture'},input,{fetchImpl:async()=>json(value)});
+  assert.equal(app.status,'UNAVAILABLE');assert.ok(!JSON.stringify(app).includes('PRIVATE'));
+  const auth=await forwardFinancePaymentSample(request(),{FINANCE_ROUTER_SECRET:secret,SHOPEE_FINANCE_SERVICE:{fetch:async()=>json(value)}},authenticated);
+  assert.equal(auth.status,502);assert.ok(!(await auth.text()).includes('PRIVATE'));
+  const worker=createFinanceWorker({variantCatalog:async()=>value,fetchImpl:async()=>{}});
+  const finance=await worker.fetch(request(),{FINANCE_ROUTER_SECRET:secret,FINANCE_CONNECTION_ENABLED:'true'});
+  assert.equal(finance.status,502);assert.ok(!(await finance.text()).includes('PRIVATE'));
+ }
+});
+
+test('catalogue accepts the dedicated bounded response limit beyond the payment frame limit',async()=>{
+ const value=frame(1000);assert.ok(JSON.stringify(value).length>65536);assert.ok(JSON.stringify(value).length<262144);
+ const auth=await forwardFinancePaymentSample(request(),{FINANCE_ROUTER_SECRET:secret,SHOPEE_FINANCE_SERVICE:{fetch:async()=>json(value)}},authenticated);
+ assert.equal(auth.status,200);assert.deepEqual(await auth.json(),value);
+ assert.deepEqual(await getFinanceVariantCatalog({APP_INTERNAL_SECRET:'fixture'},input,{fetchImpl:async()=>json(value)}),value);
+ for(const response of [new Response(' '.repeat(262145),{headers:{'content-type':'application/json'}}),new Response('',{status:302,headers:{location:'https://other.invalid'}}),new Response('PRIVATE',{headers:{'content-type':'text/html'}})]){
+  const result=await getFinanceVariantCatalog({APP_INTERNAL_SECRET:'fixture'},input,{fetchImpl:async()=>response});
+  assert.equal(result.status,'UNAVAILABLE');assert.ok(!JSON.stringify(result).includes('PRIVATE'));
+ }
+});
+
+test('catalogue timeout aborts and cancels a late response without reading its body',async()=>{
+ let resolveFetch,signal,cancelled=0;
+ const result=await getFinanceVariantCatalog({APP_INTERNAL_SECRET:'fixture'},input,{timeoutMs:5,fetchImpl:request=>{signal=request.signal;return new Promise(resolve=>{resolveFetch=resolve;});}});
+ assert.equal(result.diagnostic.code,'FINANCE_CATALOG_APP_TIMEOUT');assert.equal(signal.aborted,true);
+ resolveFetch(new Response(new ReadableStream({cancel(){cancelled++;}}),{headers:{'content-type':'application/json'}}));
+ await new Promise(resolve=>setTimeout(resolve,0));assert.equal(cancelled,1);
+ let calls=0;
+ assert.equal((await getFinanceVariantCatalog({APP_INTERNAL_SECRET:'fixture'},{item_ids:['123','123']},{fetchImpl:async()=>{calls++;}})).status,'UNAVAILABLE');
+ assert.equal(calls,0);
+});

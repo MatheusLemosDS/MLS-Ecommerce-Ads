@@ -1,5 +1,6 @@
 import {FINANCE_PROFILE, FinanceConnectionError, createFinanceStore} from './connection-store.mjs';
 import {projectFinancePaymentPreview} from './payment-preview-frame.mjs';
+import {projectVariantCatalog,projectVariantCatalogRequest} from './variant-catalog-frame.mjs';
 
 const ORIGIN = 'https://auth.brazacommerce.com.br';
 const PREFIX = '/shopee/finance';
@@ -17,6 +18,7 @@ const SECURITY_HEADERS = Object.freeze({
 
 const PAYMENT_SAMPLE_PATH = '/internal/shopee/finance/payment-sample';
 const PAYMENT_PREVIEW_PATH = '/internal/shopee/finance/payment-preview';
+const VARIANT_CATALOG_PATH = '/internal/shopee/finance/variant-catalog';
 const SAMPLE_FIELDS = ['escrow_amount','original_cost_of_goods_sold','buyer_total_amount','commission_fee','service_fee','seller_transaction_fee','actual_shipping_fee','ads_escrow_top_up_fee_or_technical_support_fee','items'];
 const SAMPLE_ITEM_FIELDS = ['item_id','model_id','line_item_id','quantity_purchased','original_price','selling_price','order_discounted_price','is_kit','kit_items'];
 const SAMPLE_TYPES = new Set(['number','string','boolean','object','array','null','mixed']);
@@ -66,7 +68,7 @@ function paymentFailure(error) {
   }}, status, {json: true});
 }
 
-async function emptyPaymentBody(request) {
+async function privateFinanceBody(request, catalog = false) {
   const media = request.headers.get('content-type') || '';
   const declared = request.headers.get('content-length');
   if (!/^application\/json(?:\s*;\s*charset\s*=\s*(?:utf-8|"utf-8"))?\s*$/i.test(media)
@@ -89,7 +91,8 @@ async function emptyPaymentBody(request) {
     const bytes = new Uint8Array(length); let offset = 0;
     for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
     const value = JSON.parse(new TextDecoder('utf-8', {fatal: true}).decode(bytes));
-    return value !== null && typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length === 0;
+    if (catalog) return projectVariantCatalogRequest(value);
+    return value !== null && typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length === 0 ? value : null;
   };
   try { return await Promise.race([read(), deadline]); }
   catch { return false; }
@@ -245,7 +248,7 @@ function safeStatus(value) {
   };
 }
 
-export function createFinanceWorker({adapter, paymentSample, paymentPreview, fetchImpl, now = () => Date.now()} = {}) {
+export function createFinanceWorker({adapter, paymentSample, paymentPreview, variantCatalog, fetchImpl, now = () => Date.now()} = {}) {
   return {
     async fetch(request, env) {
       let url;
@@ -257,23 +260,26 @@ export function createFinanceWorker({adapter, paymentSample, paymentPreview, fet
       }
       const callback = url.pathname === PREFIX + '/callback';
       if (url.origin !== ORIGIN || url.username || url.password || url.hash) return failure('NOT_FOUND', 404, callback);
-      if ([PAYMENT_SAMPLE_PATH, PAYMENT_PREVIEW_PATH].includes(url.pathname)) {
+      if ([PAYMENT_SAMPLE_PATH, PAYMENT_PREVIEW_PATH, VARIANT_CATALOG_PATH].includes(url.pathname)) {
         if (request.method !== 'POST') return failure('METHOD_NOT_ALLOWED', 405);
         if (url.search !== '') return failure('INVALID_REQUEST', 400);
         const routerError = await trustedRouter(request, env);
         if (routerError) return failure(routerError, routerError === 'FORBIDDEN' ? 403 : 503);
         // The offline/default worker has no injected Payment capability.
         const preview = url.pathname === PAYMENT_PREVIEW_PATH;
-        const capability = preview ? paymentPreview : paymentSample;
+        const catalog = url.pathname === VARIANT_CATALOG_PATH;
+        const capability = catalog ? variantCatalog : preview ? paymentPreview : paymentSample;
         if (env?.FINANCE_CONNECTION_ENABLED !== 'true' || typeof capability !== 'function'
             || typeof fetchImpl !== 'function' || typeof now !== 'function') return failure('CONFIGURATION_PENDING', 503);
-        if (!await emptyPaymentBody(request)) return failure('INVALID_REQUEST', 400);
+        const input = await privateFinanceBody(request, catalog);
+        if (!input) return failure('INVALID_REQUEST', 400);
         try {
-          const result = await capability(env, {fetchImpl, now});
-          const frame = preview ? projectFinancePaymentPreview(result) : sampleFrame(result);
+          const result = await capability(env, {fetchImpl, now, ...(catalog ? {item_ids: input.item_ids} : {})});
+          const frame = catalog ? projectVariantCatalog(result) : preview ? projectFinancePaymentPreview(result) : sampleFrame(result);
+          if (catalog && (!frame || frame.products.length !== input.item_ids.length || frame.products.some(product => !input.item_ids.includes(product.item_id)))) return response({error:'FINANCE_CATALOG_UNAVAILABLE',diagnostic:{code:'FINANCE_CATALOG_UNAVAILABLE',http:null}},502,{json:true});
           if (!frame) return paymentFailure(preview ? new FinanceConnectionError('FINANCE_SAMPLE_PREVIEW_RESPONSE_INVALID', 502) : undefined);
           return response(frame, 200, {json: true});
-        } catch (error) { return paymentFailure(error); }
+        } catch (error) { return catalog ? response({error:'FINANCE_CATALOG_UNAVAILABLE',diagnostic:{code:'FINANCE_CATALOG_UNAVAILABLE',http:null}},502,{json:true}) : paymentFailure(error); }
       }
       if (![PREFIX + '/connect', PREFIX + '/callback', PREFIX + '/status'].includes(url.pathname)) return failure('NOT_FOUND', 404);
       if (request.method !== 'GET') return failure('METHOD_NOT_ALLOWED', 405, callback);

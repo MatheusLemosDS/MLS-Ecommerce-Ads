@@ -1,4 +1,5 @@
 import {projectFinancePaymentPreview} from './payment-preview-frame.mjs';
+import {projectVariantCatalog,projectVariantCatalogRequest} from './variant-catalog-frame.mjs';
 
 // Candidate router: only the isolated financial Service Binding can handle these paths.
 const FINANCE_ORIGIN = 'https://auth.brazacommerce.com.br';
@@ -7,6 +8,7 @@ const AUTHORIZATION_HOSTS = new Set(['open.shopee.com','open.shopee.com.br','par
 const PRIVATE_HEADERS = {'cache-control':'no-store','referrer-policy':'no-referrer','x-content-type-options':'nosniff'};
 const PAYMENT_SAMPLE_PATH = '/internal/shopee/finance/payment-sample';
 const PAYMENT_PREVIEW_PATH = '/internal/shopee/finance/payment-preview';
+const VARIANT_CATALOG_PATH = '/internal/shopee/finance/variant-catalog';
 const SAMPLE_FIELDS = ['escrow_amount','original_cost_of_goods_sold','buyer_total_amount','commission_fee','service_fee','seller_transaction_fee','actual_shipping_fee','ads_escrow_top_up_fee_or_technical_support_fee','items'];
 const SAMPLE_ITEM_FIELDS = ['item_id','model_id','line_item_id','quantity_purchased','original_price','selling_price','order_discounted_price','is_kit','kit_items'];
 const SAMPLE_TYPES = new Set(['number','string','boolean','object','array','null','mixed']);
@@ -27,6 +29,10 @@ const SAMPLE_FAILURES = new Set([
 
 function sampleFailure(code='FINANCE_SAMPLE_UNAVAILABLE',status=502,http=null){
  return new Response(JSON.stringify({error:'FINANCE_SAMPLE_UNAVAILABLE',diagnostic:{code:SAMPLE_FAILURES.has(code)?code:'FINANCE_SAMPLE_UNAVAILABLE',http:Number.isInteger(http)&&http>=100&&http<=599?http:null}}),{status,headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}});
+}
+
+function catalogFailure(status=502){
+ return new Response(JSON.stringify({error:'FINANCE_CATALOG_UNAVAILABLE',diagnostic:{code:'FINANCE_CATALOG_UNAVAILABLE',http:null}}),{status,headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}});
 }
 
 function sampleFrame(value){
@@ -61,10 +67,12 @@ async function readSampleBody(body,maximum,controller,onReader){
 // This private action is deliberately separate from the public OAuth router.
 export async function forwardFinancePaymentSample(request,env,{validateInternalApp}={}){
  let url;try{url=new URL(request.url);}catch{return routerFailure('INVALID_REQUEST',400);}
- if(url.origin!==FINANCE_ORIGIN||url.username||url.password||url.hash||![PAYMENT_SAMPLE_PATH,PAYMENT_PREVIEW_PATH].includes(url.pathname))return routerFailure('NOT_FOUND',404);
+ if(url.origin!==FINANCE_ORIGIN||url.username||url.password||url.hash||![PAYMENT_SAMPLE_PATH,PAYMENT_PREVIEW_PATH,VARIANT_CATALOG_PATH].includes(url.pathname))return routerFailure('NOT_FOUND',404);
+ const catalog=url.pathname===VARIANT_CATALOG_PATH,maximum=catalog?262144:65536;
+ const unavailable=()=>catalog?catalogFailure():sampleFailure();
  if(request.method!=='POST')return routerFailure('METHOD_NOT_ALLOWED',405);
  if(url.search||request.url.length>4096)return routerFailure('INVALID_REQUEST',400);
- try{if(typeof validateInternalApp!=='function'||!await validateInternalApp(request,env))return routerFailure('UNAUTHORIZED',401);}catch{return sampleFailure();}
+ try{if(typeof validateInternalApp!=='function'||!await validateInternalApp(request,env))return routerFailure('UNAUTHORIZED',401);}catch{return unavailable();}
  const secret=env?.FINANCE_ROUTER_SECRET;
  if(typeof secret!=='string'||! /^[\x21-\x7e]{32,256}$/.test(secret)||typeof env?.SHOPEE_FINANCE_SERVICE?.fetch!=='function')return routerFailure('FINANCE_CONFIGURATION_PENDING',503);
  if(!/^application\/json(?:\s*;\s*charset\s*=\s*(?:utf-8|"utf-8"))?\s*$/i.test(request.headers.get('content-type')||''))return routerFailure('INVALID_REQUEST',400);
@@ -74,27 +82,34 @@ export async function forwardFinancePaymentSample(request,env,{validateInternalA
  const deadline=new Promise((resolve,reject)=>{timer=setTimeout(()=>{controller.abort();try{reader?.cancel().catch(()=>{});}catch{}reject(Error('DEADLINE'));},45000);});
  const work=async()=>{
   let body;try{body=await readSampleBody(request.body,128,controller,value=>{reader=value;});}catch{return routerFailure('INVALID_REQUEST',400);}
-  if(!body||typeof body!=='object'||Array.isArray(body)||Object.keys(body).length!==0)return routerFailure('INVALID_REQUEST',400);
-  if(controller.signal.aborted)return sampleFailure();
+  const input=catalog?projectVariantCatalogRequest(body):body;
+  if(!input||(!catalog&&(typeof input!=='object'||Array.isArray(input)||Object.keys(input).length!==0)))return routerFailure('INVALID_REQUEST',400);
+  if(controller.signal.aborted)return unavailable();
   const headers={'content-type':'application/json',accept:'application/json','X-Braza-Finance-Router':secret};
-  const upstream=await env.SHOPEE_FINANCE_SERVICE.fetch(new Request(FINANCE_ORIGIN+url.pathname,{method:'POST',headers,body:'{}',redirect:'manual',signal:controller.signal}));
+  const upstream=await env.SHOPEE_FINANCE_SERVICE.fetch(new Request(FINANCE_ORIGIN+url.pathname,{method:'POST',headers,body:JSON.stringify(input),redirect:'manual',signal:controller.signal}));
   // A service binding may finish after our deadline despite its aborted signal.
   // Its late response must be canceled before acquiring a stalled body reader.
-  if(controller.signal.aborted){try{upstream?.body?.cancel().catch(()=>{});}catch{}return sampleFailure();}
-  if(!(upstream instanceof Response)||upstream.redirected||upstream.status>=300&&upstream.status<400){try{upstream?.body?.cancel().catch(()=>{});}catch{}return sampleFailure();}
+  if(controller.signal.aborted){try{upstream?.body?.cancel().catch(()=>{});}catch{}return unavailable();}
+  if(!(upstream instanceof Response)||upstream.redirected||upstream.status>=300&&upstream.status<400){try{upstream?.body?.cancel().catch(()=>{});}catch{}return unavailable();}
   const media=upstream.headers.get('content-type')||'',size=upstream.headers.get('content-length');
-  if(!/^application\/json(?:\s*;\s*charset\s*=\s*(?:utf-8|"utf-8"))?\s*$/i.test(media)||(size!==null&&(!/^\d+$/.test(size)||Number(size)>65536))){try{upstream.body?.cancel().catch(()=>{});}catch{}return sampleFailure();}
-  const value=await readSampleBody(upstream.body,65536,controller,current=>{reader=current;});
-  if(controller.signal.aborted)return sampleFailure();
+  if(!/^application\/json(?:\s*;\s*charset\s*=\s*(?:utf-8|"utf-8"))?\s*$/i.test(media)||(size!==null&&(!/^\d+$/.test(size)||Number(size)>maximum))){try{upstream.body?.cancel().catch(()=>{});}catch{}return unavailable();}
+  const value=await readSampleBody(upstream.body,maximum,controller,current=>{reader=current;});
+  if(controller.signal.aborted)return unavailable();
   if(upstream.status!==200){
+   if(catalog)return catalogFailure([400,401,403,409,429,502,503,504].includes(upstream.status)?upstream.status:502);
    const code=value?.error==='FINANCE_SAMPLE_UNAVAILABLE'&&SAMPLE_FAILURES.has(value?.diagnostic?.code)?value.diagnostic.code:'FINANCE_SAMPLE_UNAVAILABLE';
    return sampleFailure(code,[400,401,403,409,429,502,503,504].includes(upstream.status)?upstream.status:502,value?.diagnostic?.http);
   }
   const preview=url.pathname===PAYMENT_PREVIEW_PATH;
-  const frame=preview?projectFinancePaymentPreview(value):sampleFrame(value);
-  return frame?new Response(JSON.stringify(frame),{headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}}):sampleFailure(preview?'FINANCE_SAMPLE_PREVIEW_RESPONSE_INVALID':'FINANCE_SAMPLE_UNAVAILABLE');
+  const frame=catalog?projectVariantCatalog(value):preview?projectFinancePaymentPreview(value):sampleFrame(value);
+  if(catalog&&frame&&!catalogRequestMatches(input,frame))return catalogFailure();
+  return frame?new Response(JSON.stringify(frame),{headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}}):catalog?catalogFailure():sampleFailure(preview?'FINANCE_SAMPLE_PREVIEW_RESPONSE_INVALID':'FINANCE_SAMPLE_UNAVAILABLE');
  };
- try{return await Promise.race([work(),deadline]);}catch{return sampleFailure();}finally{clearTimeout(timer);controller.abort();try{reader?.cancel().catch(()=>{});}catch{}}
+ try{return await Promise.race([work(),deadline]);}catch{return unavailable();}finally{clearTimeout(timer);controller.abort();try{reader?.cancel().catch(()=>{});}catch{}}
+}
+
+function catalogRequestMatches(input,frame){
+ return Array.isArray(frame.products)&&frame.products.length===input.item_ids.length&&frame.products.every(item=>input.item_ids.includes(item.item_id));
 }
 
 function routerFailure(code,status){return new Response(JSON.stringify({error:code}),{status,headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}});}

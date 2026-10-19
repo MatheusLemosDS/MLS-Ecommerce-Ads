@@ -23,29 +23,35 @@ def build():
     preview=re.sub(r'^export\s+', '', preview, flags=re.M)
     preview_bundle='const brazaFinancePreviewFrame = (() => {\n'+preview+'\nreturn {projectFinancePaymentPreview};\n})();\n'
     preview_import="import {projectFinancePaymentPreview} from './payment-preview-frame.mjs';\n"
+    catalog=(FINANCE/'src/variant-catalog-frame.mjs').read_text()
+    if re.search(r'^import\b',catalog,re.M):
+        raise SystemExit('Unreviewed catalog frame import; candidate not built.')
+    catalog=re.sub(r'^export\s+', '', catalog, flags=re.M)
+    catalog_bundle='const brazaVariantCatalogFrame = (() => {\n'+catalog+'\nreturn {projectVariantCatalog,projectVariantCatalogRequest};\n})();\n'
+    catalog_import="import {projectVariantCatalog,projectVariantCatalogRequest} from './variant-catalog-frame.mjs';\n"
     router_source=(FINANCE/'src/auth-router.mjs').read_text()
-    if router_source.count(preview_import)!=1:
-        raise SystemExit('Preview router import not unique; candidate not built.')
-    router=re.sub(r'^export\s+', '', router_source.replace(preview_import,''), flags=re.M)
+    if router_source.count(preview_import)!=1 or router_source.count(catalog_import)!=1:
+        raise SystemExit('Shared router import not unique; candidate not built.')
+    router=re.sub(r'^export\s+', '', router_source.replace(preview_import,'').replace(catalog_import,''), flags=re.M)
     if re.search(r'^import\b',router,re.M):
         raise SystemExit('Unreviewed router import; candidate not built.')
     needle='    const url = new URL(request.url);'
     auth=original.decode()
     if auth.count(needle)!=1:
         raise SystemExit('Auth insertion point not unique.')
-    addition="\n    if (url.pathname.startsWith('/shopee/finance/')) return brazaFinanceRouter.forwardFinanceConnection(request, env);\n    if (url.pathname === '/internal/shopee/finance/payment-sample' || url.pathname === '/internal/shopee/finance/payment-preview') return brazaFinanceRouter.forwardFinancePaymentSample(request, env, {validateInternalApp});"
+    addition="\n    if (url.pathname.startsWith('/shopee/finance/')) return brazaFinanceRouter.forwardFinanceConnection(request, env);\n    if (url.pathname === '/internal/shopee/finance/payment-sample' || url.pathname === '/internal/shopee/finance/payment-preview' || url.pathname === '/internal/shopee/finance/variant-catalog') return brazaFinanceRouter.forwardFinancePaymentSample(request, env, {validateInternalApp});"
     auth=auth.replace(needle,needle+addition,1)
-    auth+='\n\n'+preview_bundle+'\nconst brazaFinanceRouter = (() => {\nconst {projectFinancePaymentPreview}=brazaFinancePreviewFrame;\n'+router+'\nreturn {forwardFinanceConnection,forwardFinancePaymentSample};\n})();\n'
+    auth+='\n\n'+preview_bundle+catalog_bundle+'\nconst brazaFinanceRouter = (() => {\nconst {projectFinancePaymentPreview}=brazaFinancePreviewFrame;\nconst {projectVariantCatalog,projectVariantCatalogRequest}=brazaVariantCatalogFrame;\n'+router+'\nreturn {forwardFinanceConnection,forwardFinancePaymentSample};\n})();\n'
     store=(FINANCE/'src/connection-store.mjs').read_text()
     store=re.sub(r'^export\s+', '', store, flags=re.M)
     worker=(FINANCE/'src/connection-worker.mjs').read_text()
-    if worker.count(preview_import)!=1:
-        raise SystemExit('Preview worker import not unique; candidate not built.')
-    worker=worker.replace(preview_import,'')
+    if worker.count(preview_import)!=1 or worker.count(catalog_import)!=1:
+        raise SystemExit('Shared worker import not unique; candidate not built.')
+    worker=worker.replace(preview_import,'').replace(catalog_import,'')
     worker=re.sub(r'^import\s+[\s\S]*?\s+from\s+[\'"]\./connection-store\.mjs[\'"];?\s*\n','',worker,count=1)
     if re.search(r'^import\b',worker,re.M):
         raise SystemExit('Unreviewed worker import; candidate not built.')
-    bundled=preview_bundle+'\nconst {projectFinancePaymentPreview}=brazaFinancePreviewFrame;\nconst brazaFinanceStore = (() => {\n'+store+'\nreturn {FINANCE_PROFILE,FinanceConnectionError,createFinanceStore};\n})();\nconst {FINANCE_PROFILE,FinanceConnectionError,createFinanceStore}=brazaFinanceStore;\n'+worker
+    bundled=preview_bundle+catalog_bundle+'\nconst {projectFinancePaymentPreview}=brazaFinancePreviewFrame;\nconst {projectVariantCatalog,projectVariantCatalogRequest}=brazaVariantCatalogFrame;\nconst brazaFinanceStore = (() => {\n'+store+'\nreturn {FINANCE_PROFILE,FinanceConnectionError,createFinanceStore};\n})();\nconst {FINANCE_PROFILE,FinanceConnectionError,createFinanceStore}=brazaFinanceStore;\n'+worker
     candidate=FINANCE/'candidate'
     candidate.mkdir(exist_ok=True)
     (candidate/'auth-worker.mjs').write_text(auth)

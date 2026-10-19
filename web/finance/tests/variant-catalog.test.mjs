@@ -1,0 +1,78 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {createHmac} from 'node:crypto';
+import {D1} from '../../cloudflare/tests/sqlite-d1.mjs';
+import {createFinanceStore} from '../src/connection-store.mjs';
+import {runFinanceVariantCatalog} from '../src/variant-catalog.mjs';
+
+const key = 'fixture-catalog-key-ç';
+const access = 'fixture-catalog-access';
+const catalog = () => ({error: '', response: {
+  tier_variation: [{name: 'Tamanho feminino', option_list: [{option: 'G1'}, {option: 'GG'}]},
+    {name: 'Tamanho masculino', option_list: [{option: 'P'}, {option: 'G2'}]}],
+  model: [{model_id: 456, tier_index: [0, 1], model_sku: 'DO_NOT_EXPORT'},
+    {model_id: 457, tier_index: [1, 0]}], buyer: 'DO_NOT_EXPORT',
+}});
+async function fixture(ttl = 500) {
+  const now = () => 1792405689000;
+  const env = {FINANCE_DB: new D1(), FINANCE_TOKEN_ENCRYPTION_KEY: Buffer.alloc(32, 9).toString('base64'),
+    FINANCE_CONNECTION_ENABLED: 'true', SHOPEE_FINANCE_PARTNER_KEY: key};
+  const store = await createFinanceStore(env, {now}); await store.setup();
+  await store.saveTokens({access_token: access, refresh_token: 'fixture-refresh', expires_at: now() / 1000 + ttl});
+  const calls = [];
+  const run = (overrides = {}) => runFinanceVariantCatalog(env, {now, item_ids: ['123'],
+    fetchImpl: async request => {calls.push(request); return Response.json(catalog());}, ...overrides});
+  return {env, store, calls, run, now};
+}
+test('catalogue reads fixed Global shop models once per requested product and maps reversed gender axes', async () => {
+  const f = await fixture(); const before = await f.store.readTokens();
+  const result = await f.run({item_ids: ['123', '124', '125']});
+  assert.equal(f.calls.length, 3); assert.equal(result.products.length, 3);
+  assert.deepEqual(result.products[0].bindings, [
+    {item_id: '123', model_id: '456', male_size: 'G2', female_size: 'G1'},
+    {item_id: '123', model_id: '457', male_size: 'P', female_size: 'GG'},
+  ]);
+  for (let i = 0; i < 3; i++) {
+    const r = f.calls[i], u = new URL(r.url);
+    assert.equal(u.origin, 'https://partner.shopeemobile.com');
+    assert.equal(u.pathname, '/api/v2/product/get_model_list'); assert.equal(r.method, 'GET');
+    assert.equal(r.redirect, 'manual'); assert.equal(await r.clone().text(), '');
+    assert.equal(r.headers.get('cookie'), null); assert.equal(r.headers.get('authorization'), null);
+    assert.equal(u.searchParams.get('shop_id'), '1178167501');
+    assert.equal(u.searchParams.get('partner_id'), '2049333');
+    assert.equal(u.searchParams.get('item_id'), String(123 + i));
+    assert.equal(u.searchParams.get('sign'), createHmac('sha256', key)
+      .update('2049333' + u.pathname + u.searchParams.get('timestamp') + access + '1178167501').digest('hex'));
+  }
+  assert.deepEqual(await f.store.readTokens(), before);
+  for (const privateValue of [key, access, 'fixture-refresh', 'DO_NOT_EXPORT', 'buyer', 'model_sku']) {
+    assert.ok(!JSON.stringify(result).includes(privateValue));
+  }
+});
+test('unknown catalogue axes produce unresolved entries without assuming option order or guessing SKU', async () => {
+  const f = await fixture();
+  const result = await f.run({fetchImpl: async () => {
+    const body = catalog(); body.response.tier_variation[0].name = 'Opção 1'; return Response.json(body);
+  }});
+  assert.deepEqual(result.products[0].bindings, []); assert.equal(result.products[0].unresolved_count, 2);
+});
+test('invalid scope, item and configuration fail before provider reads', async () => {
+  for (const item_ids of [[], ['0'], ['123', '123'], ['1', '2', '3', '4'], [123], ['001']]) {
+    const f = await fixture(); await assert.rejects(f.run({item_ids})); assert.equal(f.calls.length, 0);
+  }
+  for (const change of [env => {env.FINANCE_CONNECTION_ENABLED = 'false';}, env => {delete env.SHOPEE_FINANCE_PARTNER_KEY;}]) {
+    const f = await fixture(); change(f.env); await assert.rejects(f.run()); assert.equal(f.calls.length, 0);
+  }
+});
+test('provider permission, malformed scope and redirect errors never retry or invalidate a working connection', async () => {
+  for (const response of [Response.json({error: 'error_api_permission', message: key}),
+    Response.json({...catalog(), shop_id: 999}), Response.json({error: '', response: {}}),
+    new Response(null, {status: 302, headers: {location: 'https://other.invalid'}}),
+    new Response('x'.repeat(65537), {headers: {'content-type': 'application/json'}})]) {
+    const f = await fixture(); let calls = 0; const before = await f.store.readTokens();
+    await assert.rejects(f.run({fetchImpl: async () => {calls++; return response;}}), error => {
+      assert.ok(!String(error).includes(key)); return true;
+    });
+    assert.equal(calls, 1); assert.deepEqual(await f.store.readTokens(), before);
+  }
+});

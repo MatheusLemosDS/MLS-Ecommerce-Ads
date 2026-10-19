@@ -10,7 +10,7 @@ export class ObservationError extends Error {
  constructor(code,status=400){super(code);this.status=status;}
 }
 const observationEncoder=new TextEncoder();
-const observationMaximumBytes=524288;
+const observationMaximumBytes=786432;
 const observationIdPattern=/^[a-f0-9]{64}$/;
 function observationAssert(condition,code='OBSERVATION_INVALID_SNAPSHOT',status=503){if(!condition)throw new ObservationError(code,status);}
 function observationObject(value){return !!value&&typeof value==='object'&&!Array.isArray(value);}
