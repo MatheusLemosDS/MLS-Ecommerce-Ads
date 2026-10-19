@@ -12,14 +12,18 @@ Nunca usar ADMIN_DB, credenciais Ads ou Partner de teste. Nenhum segredo real é
 
 ## Contratos e implementação
 
-A referência pública recebida resolve autorização, troca inicial e renovação. O [registro de autorização](../../docs/H3_FINANCE_AUTHORIZATION_OBSERVADA.json) complementa a [resposta de refresh e o exemplo inicial](../../docs/H3_FINANCE_REFRESH_RESPONSE_OBSERVADA.json). Os três anexos são idênticos, de 19.505 bytes cada; seus exemplos não são executados nem têm valores de credenciais copiados.
+A referência pública genérica recebida descreve a assinatura, a troca inicial e a renovação. O [registro de autorização](../../docs/H3_FINANCE_AUTHORIZATION_OBSERVADA.json) complementa a [resposta de refresh e o exemplo inicial](../../docs/H3_FINANCE_REFRESH_RESPONSE_OBSERVADA.json). Os três anexos são idênticos, de 19.505 bytes cada; seus exemplos não são executados nem têm valores de credenciais copiados. O operador confirmou que a entrada brasileira de navegador abre a tela de autorização da aplicação 2049333; esse fluxo é separado dos endpoints de API assinados. A abertura da tela ainda não comprova o retorno do callback ou a obtenção de tokens.
 
-- `provider-adapter.mjs`: link oficial Global `/api/v2/shop/auth_partner`, HMAC-SHA256 de partner + caminho + timestamp, query `partner_id`, `timestamp`, `sign`, `redirect`. O nonce é embutido na query do callback em `redirect`; nenhum `state` ou `redirect_uri` externo é inventado. A preservação dessa query pela Shopee será conferida na primeira autorização real. O callback recusa sua ausência.
+- `provider-adapter.mjs`: entrada brasileira `https://open.shopee.com.br/auth`, com `partner_id`, `auth_type=seller`, `redirect_uri`, `response_type=code` e nonce em `state` externo. O callback permanece fixo e sem query. O link não recebe a Partner Key nem assinatura; a chave continua necessária para a troca de tokens. O retorno precisa preservar o nonce, vinculado ao cookie financeiro independente; o callback recusa sua ausência ou alteração.
 - `initial-exchange.mjs`: POST Global `/api/v2/auth/token/get`, JSON `shop_id`, `code`, `partner_id`. Aceita o exemplo inicial sem ecos de identidade; ecos escalares opcionais precisam coincidir. Listas extras não selecionam escopos.
 - `refresh-signature/request/response/transport/coordinator.mjs`: POST Global `/api/v2/auth/access_token/get`, somente o shop fixo; valida os ecos numéricos, usa `expire_in` inteiro em segundos e grava atomicamente o par rotacionado. O coordenador interno devolve apenas access token, vencimento e revisão. Ainda não existe importador/agendamento que o invoque em produção.
 - `auth-json-transport.mjs`: uma requisição por chamada, transporte injetado, sem retry/redirecionamento, prazo até dez segundos incluindo stream, JSON UTF-8 limitado a 64 KiB e erros fixos sem conteúdo privado.
 - `connection-store.mjs`: D1 financeiro privado, AES-256-GCM com identidade/revisão/vencimento autenticados; nonce/cookie independentes com hashes no D1 e validade de dez minutos. Autorização e refresh compartilham lease de sessenta segundos antes do POST, com CAS. Falha incerta/timeout exige nova autorização.
 - `auth-router.mjs` e `connection-worker.mjs`: somente connect/callback/status financeiros, perfil fixo e cookie próprio. O roteador não encaminha cookies Ads/admin ou Authorization do cliente; respostas públicas não contêm tokens.
+
+Os hosts de troca inicial e renovação continuam iguais aos da referência pública
+recebida. A escolha desses hosts não é validada pela abertura da tela brasileira;
+os pedidos de tokens ainda precisam ser confirmados na integração real.
 
 `connection-worker.mjs` isolado continua sem adaptador por padrão. `production-worker.mjs` é a entrada com adaptador oficial e ativação explícita. `candidate/` permanece uma base de teste sem adaptador; a entrega publicável é gerada separadamente por `build_finance_live_delivery.py`.
 

@@ -52,21 +52,21 @@ function adapterReady(adapter, env) {
   }
 }
 
-// The official authorization endpoint uses redirect, with our nonce embedded in
-// that callback URL. No undocumented outer state/redirect_uri is sent to Shopee.
+// The Brazilian browser authorization returns the outer OAuth state unchanged.
+// Keep its fixed callback and browser-bound nonce separate from the API routes.
 function checkedAuthorizationUrl(raw, state) {
   if (typeof raw !== 'string' || raw.length > MAX_URL_LENGTH || /[\x00-\x20\x7f]/.test(raw)) throw new Error('INVALID_AUTHORIZATION_URL');
   const url = new URL(raw);
-  const redirect = new URL(CALLBACK);
-  redirect.searchParams.set('state', state);
-  const expectedFields = new Set(['partner_id', 'timestamp', 'sign', 'redirect']);
-  if (url.origin !== 'https://partner.shopeemobile.com' || url.pathname !== '/api/v2/shop/auth_partner' ||
+  const expectedFields = new Set(['partner_id', 'auth_type', 'redirect_uri', 'response_type', 'state']);
+  if (url.origin !== 'https://open.shopee.com.br' || url.pathname !== '/auth' ||
       (url.port !== '' && url.port !== '443') || url.username || url.password || url.hash ||
-      url.searchParams.getAll('partner_id').length !== 1 || url.searchParams.get('partner_id') !== String(FINANCE_PROFILE.partner_id) ||
-      [...url.searchParams.keys()].some(key => !expectedFields.has(key) || url.searchParams.getAll(key).length !== 1) ||
-      !/^[1-9][0-9]{0,9}$/.test(url.searchParams.get('timestamp') || '') ||
-      !/^[0-9a-f]{64}$/.test(url.searchParams.get('sign') || '') ||
-      url.searchParams.get('redirect') !== redirect.href) {
+      [...expectedFields].some(key => url.searchParams.getAll(key).length !== 1) ||
+      [...url.searchParams.keys()].some(key => !expectedFields.has(key)) ||
+      url.searchParams.get('partner_id') !== String(FINANCE_PROFILE.partner_id) ||
+      url.searchParams.get('auth_type') !== 'seller' ||
+      url.searchParams.get('redirect_uri') !== CALLBACK ||
+      url.searchParams.get('response_type') !== 'code' ||
+      url.searchParams.get('state') !== state) {
     throw new Error('INVALID_AUTHORIZATION_URL');
   }
   return url.toString();

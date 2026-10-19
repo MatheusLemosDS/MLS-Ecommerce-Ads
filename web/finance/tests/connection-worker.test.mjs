@@ -38,11 +38,9 @@ function fixture() {
     isReady: () => true,
     authorizationUrl(params) {
       authorizationCalls.push(params);
-      const url = new URL('https://partner.shopeemobile.com/api/v2/shop/auth_partner');
-      const redirect = new URL(params.redirect_uri);
-      redirect.searchParams.set('state', params.state);
+      const url = new URL('https://open.shopee.com.br/auth');
       for (const [key, value] of Object.entries({partner_id: params.partner_id,
-        timestamp: 1800000000, sign: 'a'.repeat(64), redirect: redirect.href})) url.searchParams.set(key, String(value));
+        auth_type: 'seller', redirect_uri: params.redirect_uri, response_type: 'code', state: params.state})) url.searchParams.set(key, String(value));
       return url.toString();
     },
     async exchange(params) {
@@ -64,7 +62,7 @@ async function begin(ctx) {
   const response = await ctx.run(PREFIX + '/connect');
   assert.equal(response.status, 302);
   const location = new URL(response.headers.get('Location'));
-  return {response, state: new URL(location.searchParams.get('redirect')).searchParams.get('state'), cookie: response.headers.get('Set-Cookie').split(';', 1)[0], location};
+  return {response, state: location.searchParams.get('state'), cookie: response.headers.get('Set-Cookie').split(';', 1)[0], location};
 }
 
 function callbackPath(session, changes = {}) {
@@ -144,10 +142,14 @@ test('untrusted hosts, protocol, ports, Ads paths and methods are rejected befor
 
 test('connect generates a browser-bound state, fixed callback and pinned finance profile', async () => {
   const ctx = fixture(), session = await begin(ctx);
-  assert.equal(session.location.origin, 'https://partner.shopeemobile.com');
-  const redirect = new URL(session.location.searchParams.get('redirect'));
+  assert.equal(session.location.origin, 'https://open.shopee.com.br');
+  assert.equal(session.location.pathname, '/auth');
+  const redirect = new URL(session.location.searchParams.get('redirect_uri'));
   assert.equal(redirect.origin + redirect.pathname, ORIGIN + PREFIX + '/callback');
-  assert.equal(redirect.searchParams.get('state'), session.state);
+  assert.equal(redirect.search, '');
+  assert.equal(session.location.searchParams.get('state'), session.state);
+  assert.equal(session.location.searchParams.get('auth_type'), 'seller');
+  assert.equal(session.location.searchParams.get('response_type'), 'code');
   assert.equal(session.location.searchParams.get('partner_id'), '2049333');
   assert.equal(session.location.searchParams.has('shop_id'), false);
   assert.match(session.state, /^[A-Za-z0-9_-]{43}$/);
@@ -160,9 +162,9 @@ test('connect generates a browser-bound state, fixed callback and pinned finance
   assert.deepEqual(ctx.authorizationCalls[0], {state: session.state, redirect_uri: ORIGIN + PREFIX + '/callback', partner_id: 2049333, shop_id: 1178167501});
 });
 
-test('authorization URL validation rejects a lost state, changed callback and nonofficial redirects', async () => {
-  const good = state => 'https://partner.shopeemobile.com/api/v2/shop/auth_partner?' + new URLSearchParams({
-    redirect: ORIGIN + PREFIX + '/callback?state=' + state, partner_id: '2049333', timestamp: '1800000000', sign: 'a'.repeat(64)});
+test('authorization URL validation pins the Brazil frontend and exact OAuth fields', async () => {
+  const good = state => 'https://open.shopee.com.br/auth?' + new URLSearchParams({
+    partner_id: '2049333', auth_type: 'seller', redirect_uri: ORIGIN + PREFIX + '/callback', response_type: 'code', state});
   const changed = (state, field, value) => { const url = new URL(good(state)); url[field] = value; return url.toString(); };
   const param = (state, field, value) => { const url = new URL(good(state)); url.searchParams.set(field, value); return url.toString(); };
   const bad = [
@@ -172,11 +174,21 @@ test('authorization URL validation rejects a lost state, changed callback and no
     state => changed(state, 'username', 'name'),
     state => changed(state, 'password', 'pass'),
     state => param(state, 'redirect_uri', 'https://evil.invalid/callback'),
+    state => param(state, 'redirect_uri', ORIGIN + PREFIX + '/callback?state=' + state),
+    state => param(state, 'redirect_uri', ORIGIN + '/shopee/callback'),
+    state => param(state, 'auth_type', 'merchant'),
+    state => param(state, 'response_type', 'token'),
     state => param(state, 'redirect', ORIGIN + PREFIX + '/callback'),
-    state => param(state, 'redirect', ORIGIN + PREFIX + '/callback?state=' + state + 'x'),
-    state => param(state, 'redirect', 'https://evil.invalid/callback?state=' + state),
-    state => param(state, 'sign', 'a'.repeat(32)),
+    state => param(state, 'sign', 'a'.repeat(64)),
+    state => param(state, 'timestamp', '1800000000'),
+    state => param(state, 'scope', 'shop'),
     state => changed(state, 'pathname', '/api/v2/auth/token/get'),
+    state => changed(state, 'pathname', '/auth/'),
+    state => changed(state, 'hostname', 'open.shopee.com.br.evil.invalid'),
+    state => 'https://partner.shopeemobile.com/api/v2/shop/auth_partner?' + new URLSearchParams({
+      partner_id: '2049333', timestamp: '1800000000', sign: 'a'.repeat(64), redirect: ORIGIN + PREFIX + '/callback?state=' + state}),
+    state => 'https://openplatform.shopee.com.br/api/v2/shop/auth_partner?' + new URLSearchParams({
+      partner_id: '2049333', timestamp: '1800000000', sign: 'a'.repeat(64), redirect: ORIGIN + PREFIX + '/callback?state=' + state}),
     state => param(state, 'state', ''),
     state => param(state, 'state', state + 'x'),
     state => good(state) + '&state=' + state,
@@ -188,6 +200,10 @@ test('authorization URL validation rejects a lost state, changed callback and no
     state => param(state, 'shop_id', '1178167502'),
     state => good(state) + '&shop_id=1178167501&shop_id=1178167501',
     state => good(state) + '&redirect_uri=' + encodeURIComponent(ORIGIN + PREFIX + '/callback'),
+    ...['partner_id', 'auth_type', 'redirect_uri', 'response_type', 'state'].flatMap(field => [
+      state => { const url = new URL(good(state)); url.searchParams.delete(field); return url.toString(); },
+      state => { const url = new URL(good(state)); url.searchParams.append(field, url.searchParams.get(field)); return url.toString(); },
+    ]),
     () => 'https://open.shopee.com.br/' + 'x'.repeat(4096),
   ];
   for (const makeUrl of bad) {

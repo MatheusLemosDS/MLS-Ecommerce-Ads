@@ -235,6 +235,11 @@ Não gerar uma chave de cifragem nova a cada deploy. Alterá-la torna os tokens
 já armazenados ilegíveis. O Partner ID financeiro é **2049333** e a loja é
 **1178167501**. As credenciais Ads continuam separadas.
 
+A entrada de autorização financeira usa o fluxo web brasileiro
+`https://open.shopee.com.br/auth`, com `state` próprio e callback financeiro.
+O [registro da correção](FINANCE_AUTHORIZATION_FIX.md) distingue o link de
+navegador das chamadas assinadas de troca e renovação de tokens.
+
 Depois da publicação, conferir o painel, o login de revisão, a área
 administrativa e as rotas Auth existentes. Para a primeira autorização
 financeira, seguir [DEPLOY.md](../web/finance/DEPLOY.md). O status esperado é

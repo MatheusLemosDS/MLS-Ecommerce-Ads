@@ -55,16 +55,22 @@ como `https://auth.brazacommerce.com.br`. O callback é
 Abrir no navegador do titular da loja:
 `https://auth.brazacommerce.com.br/shopee/finance/connect`.
 
-O destino deve ser o endpoint oficial `https://partner.shopeemobile.com/api/v2/shop/auth_partner`
-com `partner_id=2049333`, `timestamp`, `sign` e `redirect`. O nonce fica dentro
-da query do `redirect`; não são enviados `state` ou `redirect_uri` externos.
+O destino deve ser a autorização brasileira `https://open.shopee.com.br/auth`,
+cuja tela foi aberta para a aplicação financeira pelo operador. O link contém
+somente `partner_id=2049333`, `auth_type=seller`, `redirect_uri` com o callback
+financeiro sem query, `response_type=code` e `state` com o nonce independente.
+Esse link de navegador não recebe a Partner Key, `timestamp` ou `sign`.
 Autorizar apenas a loja 1178167501 na aplicação financeira.
 
-O retorno precisa preservar a query `state` do redirect e acrescentar `code`
-e `shop_id`. Essa preservação ainda **não foi verificada na Shopee real**.
-Se ela não ocorrer, o callback recusa a tentativa sem solicitar tokens; coletar
+O retorno precisa trazer o mesmo `state`, além de `code` e `shop_id`. A conclusão
+desse retorno ainda **não foi verificada na Shopee real**. Se faltar ou mudar o
+nonce, o callback recusa a tentativa sem solicitar tokens; coletar
 somente a forma dos nomes de parâmetros retornados, sem compartilhar a URL com
 o código de autorização. Não remover a validação de nonce/cookie para contornar.
+
+A troca e a renovação dos tokens continuam nos endereços Global da referência
+pública recebida, com HMAC-SHA256 e a chave financeira. A confirmação da tela
+brasileira não valida esses pedidos de API nem comprova obtenção de tokens.
 
 O callback bem-sucedido mostra “Conexão financeira concluída” e apaga o cookie
 temporário. Consultar `/shopee/finance/status`: deve indicar `CONNECTED`,

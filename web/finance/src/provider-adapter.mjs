@@ -1,9 +1,9 @@
 import {FINANCE_PROFILE, FinanceConnectionError} from './connection-store.mjs';
 import {requestFinanceInitialExchange} from './initial-exchange.mjs';
 
-export const FINANCE_AUTHORIZATION_PATH = '/api/v2/shop/auth_partner';
+export const FINANCE_AUTHORIZATION_PATH = '/auth';
 export const FINANCE_CALLBACK = 'https://auth.brazacommerce.com.br/shopee/finance/callback';
-const ORIGIN = 'https://partner.shopeemobile.com';
+const ORIGIN = 'https://open.shopee.com.br';
 const encoder = new TextEncoder();
 const fail = () => new FinanceConnectionError('FINANCE_PROVIDER_CONFIGURATION', 503);
 const validKey = key => typeof key === 'string' && key.length > 0 && key.length <= 4096
@@ -28,22 +28,14 @@ export function createFinanceProviderAdapter({fetchImpl, now = () => Date.now()}
         || params.partner_id !== FINANCE_PROFILE.partner_id || params.shop_id !== FINANCE_PROFILE.shop_id
         || params.redirect_uri !== FINANCE_CALLBACK || typeof params.state !== 'string'
         || !/^[A-Za-z0-9_-]{43}$/.test(params.state)) throw fail();
-      const redirect = new URL(FINANCE_CALLBACK);
-      redirect.searchParams.set('state', params.state);
-      const timestamp = epoch();
-      const rawKey = encoder.encode(env.SHOPEE_FINANCE_PARTNER_KEY);
-      let signature;
-      try {
-        const key = await crypto.subtle.importKey('raw', rawKey, {name: 'HMAC', hash: 'SHA-256'}, false, ['sign']);
-        const bytes = new Uint8Array(await crypto.subtle.sign('HMAC', key,
-          encoder.encode(String(FINANCE_PROFILE.partner_id) + FINANCE_AUTHORIZATION_PATH + timestamp)));
-        signature = Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
-      } catch { throw fail(); } finally { rawKey.fill(0); }
+      // Brazil's browser authorization uses an outer OAuth state. The API
+      // Partner Key remains private and is used only for the token exchange.
       const url = new URL(FINANCE_AUTHORIZATION_PATH, ORIGIN);
       url.searchParams.set('partner_id', String(FINANCE_PROFILE.partner_id));
-      url.searchParams.set('timestamp', String(timestamp));
-      url.searchParams.set('sign', signature);
-      url.searchParams.set('redirect', redirect.href);
+      url.searchParams.set('auth_type', 'seller');
+      url.searchParams.set('redirect_uri', FINANCE_CALLBACK);
+      url.searchParams.set('response_type', 'code');
+      url.searchParams.set('state', params.state);
       return url.href;
     },
     async exchange(params, env) {

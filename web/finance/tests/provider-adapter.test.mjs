@@ -14,20 +14,21 @@ const params = {state: STATE, redirect_uri: FINANCE_CALLBACK, partner_id: 204933
 const env = {FINANCE_CONNECTION_ENABLED: 'true', SHOPEE_FINANCE_PARTNER_KEY: KEY};
 const now = () => stamp * 1000;
 
-test('official authorization URL uses a signed public API and encodes state inside redirect', async () => {
+test('Brazil browser authorization uses outer OAuth state without signing or provider requests', async t => {
   let requests = 0;
+  const signing = t.mock.method(crypto.subtle, 'sign', () => { throw new Error('UNEXPECTED_BROWSER_SIGNING'); });
   const adapter = createFinanceProviderAdapter({now, fetchImpl: () => { requests++; }});
   const url = new URL(await adapter.authorizationUrl(params, env));
-  assert.equal(url.origin, 'https://partner.shopeemobile.com');
-  assert.equal(url.pathname, '/api/v2/shop/auth_partner');
-  assert.deepEqual([...url.searchParams.keys()], ['partner_id', 'timestamp', 'sign', 'redirect']);
+  assert.equal(url.origin, 'https://open.shopee.com.br');
+  assert.equal(url.pathname, '/auth');
+  assert.deepEqual([...url.searchParams.keys()], ['partner_id', 'auth_type', 'redirect_uri', 'response_type', 'state']);
   assert.equal(url.searchParams.get('partner_id'), '2049333');
-  assert.equal(url.searchParams.get('timestamp'), String(stamp));
-  assert.equal(url.searchParams.get('sign'), createHmac('sha256', KEY)
-    .update('2049333/api/v2/shop/auth_partner' + stamp).digest('hex'));
-  assert.equal(url.searchParams.get('redirect'), FINANCE_CALLBACK + '?state=' + STATE);
-  assert.equal(url.searchParams.has('state'), false); assert.equal(url.searchParams.has('redirect_uri'), false);
-  assert.equal(url.href.includes(KEY), false); assert.equal(requests, 0);
+  assert.equal(url.searchParams.get('auth_type'), 'seller');
+  assert.equal(url.searchParams.get('redirect_uri'), FINANCE_CALLBACK);
+  assert.equal(url.searchParams.get('response_type'), 'code');
+  assert.equal(url.searchParams.get('state'), STATE);
+  for (const name of ['sign', 'timestamp', 'redirect', 'shop_id']) assert.equal(url.searchParams.has(name), false);
+  assert.equal(url.href.includes(KEY), false); assert.equal(requests, 0); assert.equal(signing.mock.callCount(), 0);
 });
 
 test('activation requires the explicit flag, dedicated key and injected transport', async () => {
@@ -76,7 +77,8 @@ test('real adapter joins browser-bound authorization, initial POST and encrypted
   const start = await run(FINANCE_CALLBACK.replace('/callback', '/connect'));
   assert.equal(start.status, 302);
   const location = new URL(start.headers.get('location'));
-  const returned = new URL(location.searchParams.get('redirect'));
+  const returned = new URL(location.searchParams.get('redirect_uri'));
+  returned.searchParams.set('state', location.searchParams.get('state'));
   returned.searchParams.set('code', 'fixture-one-time-code');
   returned.searchParams.set('shop_id', '1178167501');
   const cookie = start.headers.get('set-cookie').split(';')[0];
