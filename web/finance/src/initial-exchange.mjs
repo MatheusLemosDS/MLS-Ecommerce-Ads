@@ -11,6 +11,7 @@ const fail = (suffix, status = 502) => new FinanceConnectionError('FINANCE_INITI
 // arbitrary error strings may contain private data and must never leave here.
 const API_ERROR_SUFFIXES = new Map([
   ['error_sign', 'API_SIGNATURE_REJECTED'],
+  ['invalid_code', 'API_CODE_REJECTED'],
   ['error_param', 'API_PARAMETER_REJECTED'],
   ['error_auth', 'API_AUTHORIZATION_REJECTED'],
   ['error_api_permission', 'API_PERMISSION_REJECTED'],

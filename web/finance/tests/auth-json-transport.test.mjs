@@ -78,6 +78,7 @@ function forbiddenJson(payload, headers = {}) {
 test('403 JSON maps only exact finite provider errors and never retains private response fields', async () => {
   for (const [error, diagnostic] of [
     ['error_sign', 'JSON_SIGNATURE_REJECTED'],
+    ['invalid_code', 'JSON_CODE_REJECTED'],
     ['error_param', 'JSON_PARAMETER_REJECTED'],
     ['error_auth', 'JSON_AUTHORIZATION_REJECTED'],
     ['error_api_permission', 'JSON_PERMISSION_REJECTED'],
@@ -96,6 +97,8 @@ test('403 JSON maps only exact finite provider errors and never retains private 
 
 test('403 unknown errors and lookalikes remain unrecognized without using provider messages', async () => {
   for (const error of [...PRIVATE_VALUES, 'ERROR_SIGN', 'error_sign ', 'error_sign:' + PRIVATE_VALUES[0],
+    'INVALID_CODE', 'invalid_code ', ' invalid_code', 'invalid_code:' + PRIVATE_VALUES[0],
+    'invalid_code_' + PRIVATE_VALUES[2],
     'error_ip_address', '__proto__', 'constructor', null, 403, {error: 'error_sign'}]) {
     const {result, observations} = invoke(forbiddenJson({error,
       message: 'error_sign ' + PRIVATE_VALUES[0], request_id: PRIVATE_VALUES[1]}));

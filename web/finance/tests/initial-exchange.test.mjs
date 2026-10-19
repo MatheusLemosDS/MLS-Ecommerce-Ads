@@ -192,6 +192,7 @@ test('oversized Content-Length and streamed JSON bodies are refused at 64KiB', a
 test('known provider errors become fixed categories without copying private response fields', async () => {
   for (const [error, suffix] of [
     ['error_sign', 'API_SIGNATURE_REJECTED'],
+    ['invalid_code', 'API_CODE_REJECTED'],
     ['error_param', 'API_PARAMETER_REJECTED'],
     ['error_auth', 'API_AUTHORIZATION_REJECTED'],
     ['error_api_permission', 'API_PERMISSION_REJECTED'],
@@ -212,7 +213,9 @@ test('known provider errors become fixed categories without copying private resp
 test('unknown provider error strings remain generic, including secrets and allowlist lookalikes', async () => {
   for (const error of [input.code, input.partnerKey, payload().access_token,
     payload().refresh_token, 'fixture-private-provider-message', '__proto__', 'constructor',
-    'ERROR_SIGN', 'error_sign ', 'error_sign:' + input.code]) {
+    'ERROR_SIGN', 'error_sign ', 'error_sign:' + input.code,
+    'INVALID_CODE', 'invalid_code ', ' invalid_code', 'invalid_code:' + input.code,
+    'invalid_code_' + payload().access_token]) {
     await assert.rejects(requestFinanceInitialExchange(input, {now,
       fetchImpl: async () => jsonResponse(payload({error, message: input.code})),
     }), safeError('FINANCE_INITIAL_EXCHANGE_API_ERROR'));

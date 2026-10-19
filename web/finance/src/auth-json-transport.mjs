@@ -6,6 +6,7 @@ const JSON_CONTENT_TYPE = /^application\/json(?:\s*;\s*charset\s*=\s*(?:utf-8|"u
 // No message, request ID, token or arbitrary provider string is retained.
 const FORBIDDEN_JSON_DIAGNOSTICS = new Map([
   ['error_sign', 'JSON_SIGNATURE_REJECTED'],
+  ['invalid_code', 'JSON_CODE_REJECTED'],
   ['error_param', 'JSON_PARAMETER_REJECTED'],
   ['error_auth', 'JSON_AUTHORIZATION_REJECTED'],
   ['error_api_permission', 'JSON_PERMISSION_REJECTED'],

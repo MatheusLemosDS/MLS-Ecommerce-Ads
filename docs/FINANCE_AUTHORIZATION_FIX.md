@@ -82,6 +82,24 @@ origem fixa, sem alternar servidores nem repetir um código real após falha.
 O navegador continua no frontend brasileiro. A nova autorização real e o
 estado `CONNECTED` ainda precisam ser confirmados após o deploy.
 
+Depois de confirmar o deploy ativo da correção Global, o operador recebeu
+novamente rejeição de assinatura. Após a orientação para regravar somente a
+chave Live financeira no Secret do Worker financeiro, o retorno real mudou
+para `FINANCE_INITIAL_EXCHANGE_HTTP_403_JSON_UNRECOGNIZED`; o estado continuou
+`REAUTH_REQUIRED`, revisão zero. Essa categoria também cobre um campo `error`
+ausente ou não textual e não comprova sozinha que a assinatura foi aceita.
+
+Uma consulta posterior no terminal, ainda com o código fictício de 32 zeros,
+retornou o nome `invalid_code` no Auth Global. Essa rejeição é esperada para o
+código fictício e não identifica automaticamente o erro do callback real.
+O diagnóstico passa a reconhecer somente esse literal exato como
+`FINANCE_INITIAL_EXCHANGE_HTTP_403_JSON_CODE_REJECTED` (ou
+`FINANCE_INITIAL_EXCHANGE_API_CODE_REJECTED` para JSON HTTP200). Outros erros
+desconhecidos continuam privados. A revisão do callback confirmou que o código
+é decodificado uma vez e encaminhado diretamente ao JSON, com nonce e lease
+impedindo nova troca da mesma tentativa. A nova categoria permite conferir a
+próxima autorização real sem divulgar o código, mensagens ou tokens.
+
 ## Comparação com a conexão Ads existente
 
 O Auth existente já abre `https://open.shopee.com.br/auth` com os mesmos cinco

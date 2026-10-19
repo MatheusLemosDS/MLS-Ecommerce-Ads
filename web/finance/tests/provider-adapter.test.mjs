@@ -96,7 +96,8 @@ test('real adapter joins browser-bound authorization, initial POST and encrypted
 });
 
 for (const providerStatus of [200, 403]) {
-test(`a rejected production Auth exchange (HTTP ${providerStatus}) reports only its fixed category and cannot reuse the callback`, async () => {
+for (const [providerError, suffix] of [['error_sign', 'SIGNATURE_REJECTED'], ['invalid_code', 'CODE_REJECTED']]) {
+test(`a rejected production Auth exchange (${providerError}, HTTP ${providerStatus}) reports only its fixed category and cannot reuse the callback`, async () => {
   const db = new D1();
   const runtimeEnv = {...env, FINANCE_DB: db, FINANCE_ROUTER_SECRET: 'fixture-router-' + 'z'.repeat(40),
     FINANCE_TOKEN_ENCRYPTION_KEY: Buffer.alloc(32, 10).toString('base64')};
@@ -106,7 +107,7 @@ test(`a rejected production Auth exchange (HTTP ${providerStatus}) reports only 
     exchanges++;
     assert.equal(new URL(request.url).origin, 'https://partner.shopeemobile.com');
     assert.deepEqual(await request.json(), {shop_id: 1178167501, code: privateCode, partner_id: 2049333});
-    return Response.json({error: 'error_sign', request_id: 'fixture-private-request-id',
+    return Response.json({error: providerError, request_id: 'fixture-private-request-id',
       message: KEY + privateCode + 'fixture-private-upstream-response'}, {status: providerStatus});
   }});
   const worker = createFinanceWorker({adapter, now});
@@ -124,8 +125,8 @@ test(`a rejected production Auth exchange (HTTP ${providerStatus}) reports only 
   assert.equal(rejected.status, 503);
   const body = await rejected.text();
   const diagnostic = providerStatus === 403
-    ? 'FINANCE_INITIAL_EXCHANGE_HTTP_403_JSON_SIGNATURE_REJECTED'
-    : 'FINANCE_INITIAL_EXCHANGE_API_SIGNATURE_REJECTED';
+    ? 'FINANCE_INITIAL_EXCHANGE_HTTP_403_JSON_' + suffix
+    : 'FINANCE_INITIAL_EXCHANGE_API_' + suffix;
   assert.ok(body.includes('<code>' + diagnostic + '</code>'));
   for (const secret of [privateCode, KEY, location.searchParams.get('state'), cookie,
     'fixture-private-request-id', 'fixture-private-upstream-response']) assert.ok(!body.includes(secret));
@@ -137,6 +138,7 @@ test(`a rejected production Auth exchange (HTTP ${providerStatus}) reports only 
   assert.equal(row.ciphertext, null); assert.equal(row.iv, null);
   assert.equal((await run(returned.href, cookie)).status, 400); assert.equal(exchanges, 1);
 });
+}
 }
 
 test('the deployable entry stays disabled without its flag or dedicated finance credentials', async t => {

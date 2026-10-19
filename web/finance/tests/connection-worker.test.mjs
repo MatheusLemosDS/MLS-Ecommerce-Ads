@@ -377,6 +377,7 @@ test('invalid adapter token output is rejected before plaintext reaches storage 
 test('callback diagnostics disclose only fixed exchange or persistence categories and never permit replay', async () => {
   const cases = [
     ['FINANCE_INITIAL_EXCHANGE_API_SIGNATURE_REJECTED', undefined, 'FINANCE_INITIAL_EXCHANGE_API_SIGNATURE_REJECTED'],
+    ['FINANCE_INITIAL_EXCHANGE_API_CODE_REJECTED', undefined, 'FINANCE_INITIAL_EXCHANGE_API_CODE_REJECTED'],
     ['FINANCE_INITIAL_EXCHANGE_RESPONSE_INVALID', undefined, 'FINANCE_INITIAL_EXCHANGE_RESPONSE_INVALID'],
     ['FINANCE_STORAGE_UNAVAILABLE', undefined, 'FINANCE_STORAGE_UNAVAILABLE'],
     ['FINANCE_INITIAL_EXCHANGE_UPSTREAM_HTTP', 403, 'FINANCE_INITIAL_EXCHANGE_HTTP_403'],
@@ -407,7 +408,7 @@ test('callback diagnostics disclose only fixed exchange or persistence categorie
 });
 
 test('HTTP 403 callback distinguishes fixed JSON and HTML categories without exposing arbitrary metadata', async () => {
-  for (const detail of ['JSON_SIGNATURE_REJECTED', 'JSON_AUTHORIZATION_REJECTED', 'JSON_IP_REJECTED',
+  for (const detail of ['JSON_SIGNATURE_REJECTED', 'JSON_CODE_REJECTED', 'JSON_AUTHORIZATION_REJECTED', 'JSON_IP_REJECTED',
     'JSON_UNRECOGNIZED', 'HTML_CONTENT_TYPE', 'OTHER_CONTENT_TYPE', PRIVATE_CODE, '<script>private</script>']) {
     const ctx = fixture(), session = await begin(ctx);
     ctx.adapter.exchange = async params => {
@@ -422,7 +423,7 @@ test('HTTP 403 callback distinguishes fixed JSON and HTML categories without exp
     const html = await result.text();
     assert.equal(result.status, 503);
     assertSafe(result, html, {callback: true});
-    const known = ['JSON_SIGNATURE_REJECTED', 'JSON_AUTHORIZATION_REJECTED', 'JSON_IP_REJECTED',
+    const known = ['JSON_SIGNATURE_REJECTED', 'JSON_CODE_REJECTED', 'JSON_AUTHORIZATION_REJECTED', 'JSON_IP_REJECTED',
       'JSON_UNRECOGNIZED', 'HTML_CONTENT_TYPE', 'OTHER_CONTENT_TYPE'].includes(detail);
     const expected = 'FINANCE_INITIAL_EXCHANGE_HTTP_403' + (known ? '_' + detail : '');
     assert.ok(html.includes('<code>' + expected + '</code>'));
