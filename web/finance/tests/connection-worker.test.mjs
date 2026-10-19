@@ -12,6 +12,14 @@ const PRIVATE_ACCESS = 'fixture-private-access-token';
 const PRIVATE_REFRESH = 'fixture-private-refresh-token';
 const PRIVATE_CODE = 'fixture-private-code';
 const cookieName = 'braza_finance_oauth';
+const PAYMENT_PATH = '/internal/shopee/finance/payment-sample';
+const paymentFrame = () => ({schema_version: 1, status: 'VALIDATED', checked_at: 1800000000, token_revision: 2,
+  identity_match: true, fields: [{name: 'escrow_amount', type: 'number'}],
+  item_fields: [{name: 'quantity_purchased', type: 'number'}], item_count: 1});
+function paymentRequest(body = '{}', {origin = ORIGIN, path = PAYMENT_PATH, method = 'POST', headers = {}} = {}) {
+  return new Request(origin + path, {method, ...(method === 'POST' ? {body} : {}),
+    headers: {[SECRET_HEADER]: ROUTER_SECRET, 'content-type': 'application/json', ...headers}});
+}
 
 function fixture() {
   const db = new D1();
@@ -88,6 +96,80 @@ test('the default worker has no provider adapter and never issues or consumes a 
   }
   assert.equal(ctx.accesses(), 0);
   assert.equal(ctx.calls.length, 0);
+});
+
+test('Payment route is closed without explicit production capability and flag before any database access', async () => {
+  for (const kind of ['default', 'missing-payment', 'missing-fetch', 'disabled', 'boolean-flag']) {
+    const ctx = fixture(); let calls = 0;
+    ctx.env.FINANCE_CONNECTION_ENABLED = kind === 'boolean-flag' ? true : kind === 'disabled' ? 'false' : 'true';
+    const worker = kind === 'default' ? defaultWorker : createFinanceWorker({
+      paymentSample: kind === 'missing-payment' ? undefined : async () => { calls++; return paymentFrame(); },
+      fetchImpl: kind === 'missing-fetch' ? undefined : async () => { throw Error('must not call provider'); },
+      now: () => ctx.clock.milliseconds,
+    });
+    const response = await worker.fetch(paymentRequest(), ctx.env);
+    assert.equal(response.status, 503); assertSafe(response, await response.text());
+    assert.equal(ctx.accesses(), 0); assert.equal(calls, 0);
+  }
+});
+
+test('Payment route validates fixed origin, method, query, router secret and exact empty body before capability use', async () => {
+  const ctx = fixture(); let calls = 0;
+  ctx.env.FINANCE_CONNECTION_ENABLED = 'true';
+  const worker = createFinanceWorker({paymentSample: async () => { calls++; return paymentFrame(); }, fetchImpl: async () => {}, now: () => ctx.clock.milliseconds});
+  for (const origin of ['http://auth.brazacommerce.com.br', 'https://evil.invalid', 'https://auth.brazacommerce.com.br:444']) assert.equal((await worker.fetch(paymentRequest('{}', {origin}), ctx.env)).status, 404);
+  assert.equal((await worker.fetch(paymentRequest('{}', {path: '/shopee/finance/payment-sample'}), ctx.env)).status, 404);
+  assert.equal((await worker.fetch(paymentRequest('{}', {method: 'GET'}), ctx.env)).status, 405);
+  assert.equal((await worker.fetch(paymentRequest('{}', {path: PAYMENT_PATH + '?order_sn=PRIVATE_ORDER'}), ctx.env)).status, 400);
+  assert.equal((await worker.fetch(paymentRequest('{}', {headers: {[SECRET_HEADER]: 'PRIVATE_WRONG'}}), ctx.env)).status, 403);
+  for (const body of ['', 'null', '[]', '{', '{"order_sn":"PRIVATE_ORDER"}', '{"partner_id":2047569}', ' '.repeat(129) + '{}']) assert.equal((await worker.fetch(paymentRequest(body), ctx.env)).status, 400);
+  for (const headers of [{'content-type': 'text/plain'}, {'content-length': '129'}, {'content-length': 'NaN'}]) assert.equal((await worker.fetch(paymentRequest('{}', {headers}), ctx.env)).status, 400);
+  assert.equal(calls, 0); assert.equal(ctx.accesses(), 0);
+});
+
+test('Payment capability receives only server environment and injected transport/clock and returns schema-only metadata', async () => {
+  const ctx = fixture(); ctx.env.FINANCE_CONNECTION_ENABLED = 'true'; let calls = 0;
+  const fetchImpl = async () => { throw Error('fixture does not use provider'); }, now = () => ctx.clock.milliseconds;
+  const worker = createFinanceWorker({paymentSample: async (env, options) => {
+    calls++; assert.equal(env, ctx.env); assert.deepEqual(Object.keys(options).sort(), ['fetchImpl', 'now']);
+    assert.equal(options.fetchImpl, fetchImpl); assert.equal(options.now, now); return paymentFrame();
+  }, fetchImpl, now});
+  const response = await worker.fetch(paymentRequest('{}', {headers: {cookie: 'braza_admin=PRIVATE_ADMIN', authorization: 'Bearer PRIVATE_CALLER'}}), ctx.env);
+  assert.equal(response.status, 200); const text = await response.text(); assertSafe(response, text);
+  assert.deepEqual(JSON.parse(text), paymentFrame()); assert.equal(calls, 1); assert.equal(ctx.accesses(), 0);
+  assert.equal(response.headers.get('set-cookie'), null);
+});
+
+test('Payment output validation strips no raw data through invalid frames or arbitrary errors', async () => {
+  const ctx = fixture(); ctx.env.FINANCE_CONNECTION_ENABLED = 'true';
+  const empty = {schema_version: 1, status: 'EMPTY', checked_at: 1800000000, token_revision: 1, fields: [], item_fields: [], item_count: 0};
+  const run = callback => createFinanceWorker({paymentSample: callback, fetchImpl: async () => {}, now: () => ctx.clock.milliseconds}).fetch(paymentRequest(), ctx.env);
+  const emptyResponse = await run(async () => empty); assert.equal(emptyResponse.status, 200); assert.deepEqual(await emptyResponse.json(), empty);
+  for (const value of [{...paymentFrame(), order_sn: 'PRIVATE_ORDER'}, {...paymentFrame(), buyer: PRIVATE_ACCESS},
+    {...paymentFrame(), fields: [{name: 'buyer_user_name', type: 'string'}]}, {...paymentFrame(), fields: [{name: 'escrow_amount', type: 'number', value: 100}]},
+    {...paymentFrame(), item_fields: [{name: 'item_id', type: 'PRIVATE_TYPE'}]}, {...paymentFrame(), identity_match: false}, {...empty, identity_match: true}]) {
+    const response = await run(async () => value); assert.equal(response.status, 502); assertSafe(response, await response.text());
+  }
+  const unknown = await run(async () => { throw new FinanceConnectionError('PRIVATE_UPSTREAM_ERROR_' + PRIVATE_REFRESH, 403); });
+  assert.equal(unknown.status, 403); const unknownText = await unknown.text(); assertSafe(unknown, unknownText);
+  assert.equal(JSON.parse(unknownText).diagnostic.code, 'FINANCE_SAMPLE_UNAVAILABLE');
+  const accepted = new FinanceConnectionError('FINANCE_SAMPLE_PAYMENT_API_PERMISSION_REJECTED', 502);
+  Object.defineProperty(accepted, 'upstream_status', {value: 403});
+  const denied = await run(async () => { throw accepted; });
+  assert.equal(denied.status, 502); assert.deepEqual(await denied.json(), {error: 'FINANCE_SAMPLE_UNAVAILABLE', diagnostic: {code: accepted.code, http: 403}});
+  assert.equal(ctx.accesses(), 0);
+});
+
+test('Payment body deadline closes a stalled private input without database or provider calls', async () => {
+  const ctx = fixture(); ctx.env.FINANCE_CONNECTION_ENABLED = 'true'; let calls = 0;
+  const original = setTimeout;
+  globalThis.setTimeout = (callback, delay, ...args) => original(callback, delay === 5000 ? 5 : delay, ...args);
+  try {
+    const worker = createFinanceWorker({paymentSample: async () => { calls++; return paymentFrame(); }, fetchImpl: async () => {}, now: () => ctx.clock.milliseconds});
+    const request = new Request(ORIGIN + PAYMENT_PATH, {method: 'POST', headers: {[SECRET_HEADER]: ROUTER_SECRET, 'content-type': 'application/json'}, body: new ReadableStream({pull() {}}), duplex: 'half'});
+    const response = await worker.fetch(request, ctx.env);
+    assert.equal(response.status, 400); assert.equal(calls, 0); assert.equal(ctx.accesses(), 0);
+  } finally { globalThis.setTimeout = original; }
 });
 
 test('missing adapter readiness, credentials or database cannot start authorization', async () => {

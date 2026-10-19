@@ -18,6 +18,12 @@ produção** visível no painel, conforme o [registro de publicação](../worker
 A publicação dos três Workers pelo Git está confirmada pelo operador.
 O App v11 preserva a referência de margens e não calcula lucro financeiro.
 
+A atualização seguinte acrescenta a [validação financeira manual pelo painel](VALIDACAO_FINANCEIRA_PELO_PAINEL.md).
+Ela altera App, Auth e Financeiro e usa os comandos reais já configurados.
+Aguardar a publicação dos três antes de testar em **Custos e margens →
+Validação financeira**. Não repetir capturas, criar bancos ou refazer a
+autorização da loja apenas para publicar essa atualização.
+
 ## Primeiro vínculo: capturar pelo próprio Cloudflare
 
 Esta captura inicial já foi concluída para App e Auth nesta conta. As

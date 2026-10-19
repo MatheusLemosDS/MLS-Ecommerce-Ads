@@ -13,6 +13,87 @@ const SECURITY_HEADERS = Object.freeze({
   'X-Content-Type-Options': 'nosniff',
   'Content-Security-Policy': "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
 });
+
+const PAYMENT_SAMPLE_PATH = '/internal/shopee/finance/payment-sample';
+const SAMPLE_FIELDS = ['escrow_amount','original_cost_of_goods_sold','buyer_total_amount','commission_fee','service_fee','seller_transaction_fee','actual_shipping_fee','ads_escrow_top_up_fee_or_technical_support_fee','items'];
+const SAMPLE_ITEM_FIELDS = ['item_id','model_id','line_item_id','quantity_purchased','original_price','selling_price','order_discounted_price','is_kit','kit_items'];
+const SAMPLE_TYPES = new Set(['number','string','boolean','object','array','null','mixed']);
+const SAMPLE_FAILURES = new Set([
+ 'FINANCE_SAMPLE_UNAVAILABLE','FINANCE_SAMPLE_CONFIGURATION','FINANCE_SAMPLE_SIGNING_KEY_CONFIGURATION','FINANCE_SAMPLE_SIGNATURE_UNAVAILABLE','FINANCE_SAMPLE_CLOCK_CONFIGURATION','FINANCE_SAMPLE_AUTHORIZATION_EXPIRED',
+ 'FINANCE_AUTHORIZATION_REQUIRED','FINANCE_AUTHORIZATION_IN_PROGRESS','FINANCE_AUTHORIZATION_CONFLICT',
+ 'FINANCE_REFRESH_CONFLICT','FINANCE_REFRESH_IN_PROGRESS','FINANCE_REFRESH_FAILED','FINANCE_REFRESH_COORDINATOR_CONFIGURATION',
+ 'FINANCE_CLOCK_CONFIGURATION','FINANCE_DATABASE_CONFIGURATION','FINANCE_ENCRYPTION_CONFIGURATION','FINANCE_ENCRYPTION_FAILED',
+ 'FINANCE_ENCRYPTION_KEY_MISMATCH','FINANCE_INVALID_ENCODING','FINANCE_INVALID_LEASE','FINANCE_INVALID_REVISION','FINANCE_INVALID_TOKENS',
+ 'FINANCE_REVISION_CONFLICT','FINANCE_STORAGE_UNAVAILABLE','FINANCE_TOKEN_DECRYPT_FAILED',
+ ...['TRANSPORT_CONFIGURATION','TRANSPORT_UNAVAILABLE','REQUEST_STALE','TIMEOUT','UPSTREAM_FAILED','UPSTREAM_HTTP','UPSTREAM_BODY_TOO_LARGE','UPSTREAM_INVALID_JSON','UPSTREAM_CONTENT_TYPE',
+ 'RESPONSE_INVALID','IDENTITY_MISMATCH','STATUS_MISMATCH','CURRENCY_MISMATCH','API_SIGNATURE_REJECTED','API_PARAMETER_REJECTED','API_AUTHORIZATION_REJECTED','API_PERMISSION_REJECTED','API_PARTNER_REJECTED','API_ORDER_NOT_FOUND','API_ERROR']
+ .flatMap(suffix=>['LIST','DETAIL','PAYMENT'].map(scope=>'FINANCE_SAMPLE_'+scope+'_'+suffix)),
+ ...['TRANSPORT_CONFIGURATION','TRANSPORT_UNAVAILABLE','REQUEST_STALE','TIMEOUT','UPSTREAM_FAILED','UPSTREAM_HTTP','UPSTREAM_BODY_TOO_LARGE','UPSTREAM_INVALID_JSON','UPSTREAM_CONTENT_TYPE',
+ 'REQUEST_INVALID','TOKEN_INVALID','SIGNING_INPUT_INVALID','SIGNING_KEY_CONFIGURATION','SIGNATURE_UNAVAILABLE','API_ERROR','IDENTITY_MISMATCH','RESPONSE_CONTEXT_INVALID','RESPONSE_EXPIRED','RESPONSE_INVALID','TOKEN_NOT_ROTATED']
+ .map(suffix=>'FINANCE_REFRESH_'+suffix),
+]);
+
+function sampleFrame(value){
+ if(!value||typeof value!=='object'||Array.isArray(value))return null;
+ const keys=['schema_version','status','checked_at','token_revision','fields','item_fields','item_count'];
+ const valid=value.status==='VALIDATED';
+ if(valid)keys.push('identity_match');
+ if(Object.keys(value).length!==keys.length||keys.some(key=>!Object.hasOwn(value,key))||value.schema_version!==1||(!valid&&value.status!=='EMPTY')||
+ !Number.isSafeInteger(value.checked_at)||value.checked_at<=0||value.checked_at>9999999999||!Number.isSafeInteger(value.token_revision)||value.token_revision<1||
+ !Number.isSafeInteger(value.item_count)||value.item_count<0||value.item_count>1000||(valid&&value.identity_match!==true))return null;
+ const fields=(rows,names)=>{
+  if(!Array.isArray(rows)||rows.length>names.length)return null;
+  const seen=new Set(),result=[];
+  for(const row of rows){if(!row||typeof row!=='object'||Array.isArray(row)||Object.keys(row).length!==2||!Object.hasOwn(row,'name')||!Object.hasOwn(row,'type')||!names.includes(row.name)||!SAMPLE_TYPES.has(row.type)||seen.has(row.name))return null;seen.add(row.name);result.push({name:row.name,type:row.type});}
+  return result;
+ };
+ const projected=fields(value.fields,SAMPLE_FIELDS),items=fields(value.item_fields,SAMPLE_ITEM_FIELDS);
+ if(!projected||!items||(!valid&&(projected.length||items.length||value.item_count!==0)))return null;
+ return {schema_version:1,status:value.status,checked_at:value.checked_at,token_revision:value.token_revision,fields:projected,item_fields:items,item_count:value.item_count,...(valid?{identity_match:true}:{})};
+}
+
+function paymentFailure(error) {
+  const code = error instanceof FinanceConnectionError && SAMPLE_FAILURES.has(error.code)
+    ? error.code : 'FINANCE_SAMPLE_UNAVAILABLE';
+  const http = error instanceof FinanceConnectionError
+    ? Object.getOwnPropertyDescriptor(error, 'upstream_status')?.value : null;
+  const status = error instanceof FinanceConnectionError && [400, 401, 403, 409, 429, 502, 503, 504].includes(error.status)
+    ? error.status : 502;
+  return response({error: 'FINANCE_SAMPLE_UNAVAILABLE', diagnostic: {
+    code, http: Number.isInteger(http) && http >= 100 && http <= 599 ? http : null,
+  }}, status, {json: true});
+}
+
+async function emptyPaymentBody(request) {
+  const media = request.headers.get('content-type') || '';
+  const declared = request.headers.get('content-length');
+  if (!/^application\/json(?:\s*;\s*charset\s*=\s*(?:utf-8|"utf-8"))?\s*$/i.test(media)
+      || (declared !== null && (!/^\d+$/.test(declared) || Number(declared) > 128)) || !request.body) return false;
+  const reader = request.body.getReader();
+  let timer;
+  const deadline = new Promise((resolve, reject) => {
+    timer = setTimeout(() => { try { reader.cancel().catch(() => {}); } catch {} reject(Error('DEADLINE')); }, 5000);
+  });
+  const read = async () => {
+    const chunks = []; let length = 0;
+    while (true) {
+      const chunk = await reader.read();
+      if (chunk.done) break;
+      if (!(chunk.value instanceof Uint8Array)) return false;
+      length += chunk.value.byteLength;
+      if (length > 128) return false;
+      chunks.push(chunk.value);
+    }
+    const bytes = new Uint8Array(length); let offset = 0;
+    for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
+    const value = JSON.parse(new TextDecoder('utf-8', {fatal: true}).decode(bytes));
+    return value !== null && typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length === 0;
+  };
+  try { return await Promise.race([read(), deadline]); }
+  catch { return false; }
+  finally { clearTimeout(timer); try { reader.cancel().catch(() => {}); } catch {} }
+}
+
 const EXPIRED_COOKIE = `${COOKIE}=; Path=${PREFIX}; Max-Age=0; HttpOnly; Secure; SameSite=Lax`;
 const HTTP_403_DIAGNOSTICS = new Set([
   'JSON_SIGNATURE_REJECTED', 'JSON_CODE_REJECTED', 'JSON_PARAMETER_REJECTED', 'JSON_AUTHORIZATION_REJECTED',
@@ -162,7 +243,7 @@ function safeStatus(value) {
   };
 }
 
-export function createFinanceWorker({adapter, now = () => Date.now()} = {}) {
+export function createFinanceWorker({adapter, paymentSample, fetchImpl, now = () => Date.now()} = {}) {
   return {
     async fetch(request, env) {
       let url;
@@ -174,6 +255,21 @@ export function createFinanceWorker({adapter, now = () => Date.now()} = {}) {
       }
       const callback = url.pathname === PREFIX + '/callback';
       if (url.origin !== ORIGIN || url.username || url.password || url.hash) return failure('NOT_FOUND', 404, callback);
+      if (url.pathname === PAYMENT_SAMPLE_PATH) {
+        if (request.method !== 'POST') return failure('METHOD_NOT_ALLOWED', 405);
+        if (url.search !== '') return failure('INVALID_REQUEST', 400);
+        const routerError = await trustedRouter(request, env);
+        if (routerError) return failure(routerError, routerError === 'FORBIDDEN' ? 403 : 503);
+        // The offline/default worker has no injected Payment capability.
+        if (env?.FINANCE_CONNECTION_ENABLED !== 'true' || typeof paymentSample !== 'function'
+            || typeof fetchImpl !== 'function' || typeof now !== 'function') return failure('CONFIGURATION_PENDING', 503);
+        if (!await emptyPaymentBody(request)) return failure('INVALID_REQUEST', 400);
+        try {
+          const frame = sampleFrame(await paymentSample(env, {fetchImpl, now}));
+          if (!frame) return paymentFailure();
+          return response(frame, 200, {json: true});
+        } catch (error) { return paymentFailure(error); }
+      }
       if (![PREFIX + '/connect', PREFIX + '/callback', PREFIX + '/status'].includes(url.pathname)) return failure('NOT_FOUND', 404);
       if (request.method !== 'GET') return failure('METHOD_NOT_ALLOWED', 405, callback);
       const routerError = await trustedRouter(request, env);

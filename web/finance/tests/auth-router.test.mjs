@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {forwardFinanceConnection} from '../src/auth-router.mjs';
+import {forwardFinanceConnection,forwardFinancePaymentSample} from '../src/auth-router.mjs';
 const base='https://auth.brazacommerce.com.br';
 const secret='fixture-finance-router-secret-only-12345678';
 function configuration(handler){return {FINANCE_ROUTER_SECRET:secret,SHOPEE_FINANCE_SERVICE:{fetch:handler}};}
@@ -42,4 +42,102 @@ test('a backend cannot overwrite other cookies or broaden the cookie domain/path
 });
 test('oversized URL is refused without contacting the service',async()=>{
  let called=false;const result=await forwardFinanceConnection(new Request(base+'/shopee/finance/callback?code='+('x'.repeat(8200))),configuration(()=>{called=true;}));assert.equal(result.status,400);assert.equal(called,false);
+});
+
+const samplePath='/internal/shopee/finance/payment-sample';
+const sampleFrame=()=>({schema_version:1,status:'VALIDATED',checked_at:1800000000,token_revision:2,identity_match:true,fields:[{name:'escrow_amount',type:'number'}],item_fields:[{name:'quantity_purchased',type:'number'}],item_count:1});
+const privateRequest=(body='{}',options={})=>new Request(base+samplePath,{method:'POST',headers:{'content-type':'application/json',...options.headers},body,...options});
+const authenticated={validateInternalApp:async()=>true};
+const jsonReply=(value,status=200,headers={})=>new Response(JSON.stringify(value),{status,headers:{'content-type':'application/json',...headers}});
+
+test('Payment action requires the internal App validator before reading input or forwarding',async()=>{
+ let calls=0,reads=0;const env=configuration(()=>{calls++;});
+ const body=new ReadableStream({pull(){reads++;}});
+ const request=new Request(base+samplePath,{method:'POST',headers:{'content-type':'application/json'},body,duplex:'half'});
+ // An untrusted body must not be read; its default stream prefetch may run once.
+ const response=await forwardFinancePaymentSample(request,env,{validateInternalApp:async()=>false});
+ assert.equal(response.status,401);assert.equal(request.bodyUsed,false);assert.equal(calls,0);
+ assert.equal((await forwardFinancePaymentSample(privateRequest(),env)).status,401);
+ assert.equal((await forwardFinanceConnection(privateRequest(),env)).status,404);
+ assert.equal(calls,0);await request.body.cancel();
+});
+
+test('Payment route rejects host, path, method, query and invalid empty-body contracts with no service request',async()=>{
+ let calls=0;const env=configuration(()=>{calls++;});
+ for(const target of ['https://other.invalid'+samplePath,base+samplePath+'/',base+'/shopee/finance/payment-sample']){
+  assert.equal((await forwardFinancePaymentSample(new Request(target,{method:'POST',body:'{}',headers:{'content-type':'application/json'}}),env,authenticated)).status,404);
+ }
+ assert.equal((await forwardFinancePaymentSample(new Request(base+samplePath),env,authenticated)).status,405);
+ assert.equal((await forwardFinancePaymentSample(new Request(base+samplePath+'?order_sn=PRIVATE_ORDER',{method:'POST',body:'{}',headers:{'content-type':'application/json'}}),env,authenticated)).status,400);
+ for(const body of ['', 'null','[]','{"order_sn":"PRIVATE_ORDER"}','{"shop_id":1178167501}','{',' '.repeat(129)+'{}'])assert.equal((await forwardFinancePaymentSample(privateRequest(body),env,authenticated)).status,400);
+ for(const headers of [{'content-type':'text/plain'},{'content-type':'application/json','content-length':'129'},{'content-type':'application/json','content-length':'NaN'}])assert.equal((await forwardFinancePaymentSample(new Request(base+samplePath,{method:'POST',body:'{}',headers}),env,authenticated)).status,400);
+ assert.equal(calls,0);
+});
+
+test('Payment forwarding injects its own router credential and strips caller credentials and cookies',async()=>{
+ const response=await forwardFinancePaymentSample(new Request(base+samplePath,{method:'POST',body:'{}',headers:{'content-type':'application/json','X-Braza-App-Key':'PRIVATE_APP_KEY','X-Braza-Finance-Router':'PRIVATE_ATTACKER',authorization:'Bearer PRIVATE_TOKEN',cookie:'braza_admin=PRIVATE_ADMIN'}}),configuration(async request=>{
+  assert.equal(request.url,base+samplePath);assert.equal(request.method,'POST');assert.equal(request.redirect,'manual');assert.equal(await request.text(),'{}');
+  assert.equal(request.headers.get('x-braza-finance-router'),secret);
+  for(const header of ['cookie','authorization','x-braza-app-key'])assert.equal(request.headers.get(header),null);
+  assert.ok(!JSON.stringify([...request.headers]).includes('PRIVATE_'));
+  return jsonReply(sampleFrame(),200,{'set-cookie':'session=PRIVATE_COOKIE','location':'https://evil.invalid/PRIVATE_REDIRECT'});
+ }),authenticated);
+ assert.equal(response.status,200);assert.deepEqual(await response.json(),sampleFrame());
+ for(const header of ['set-cookie','location'])assert.equal(response.headers.get(header),null);
+ assert.equal(response.headers.get('cache-control'),'no-store');assert.equal(response.headers.get('referrer-policy'),'no-referrer');
+});
+
+test('Payment response is independently projected and refuses identifiers, unknown fields and unexpected schemas',async()=>{
+ const empty={schema_version:1,status:'EMPTY',checked_at:1800000000,token_revision:1,fields:[],item_fields:[],item_count:0};
+ const success=await forwardFinancePaymentSample(privateRequest(),configuration(()=>jsonReply(empty)),authenticated);
+ assert.equal(success.status,200);assert.deepEqual(await success.json(),empty);
+ const invalid=[
+  {...sampleFrame(),order_sn:'PRIVATE_ORDER'}, {...sampleFrame(),fields:[{name:'buyer_user_name',type:'string'}]},
+  {...sampleFrame(),fields:[{name:'escrow_amount',type:'PRIVATE_TOKEN'}]}, {...sampleFrame(),fields:[{name:'escrow_amount',type:'number',value:100}]},
+  {...sampleFrame(),item_count:1001},{...sampleFrame(),identity_match:false},{...sampleFrame(),token_revision:0},
+  {...sampleFrame(),checked_at:'1800000000'},{...sampleFrame(),fields:[{name:'items',type:'array'},{name:'items',type:'array'}]},
+  {...empty,identity_match:true},{...empty,item_count:1},
+ ];
+ for(const value of invalid){const response=await forwardFinancePaymentSample(privateRequest(),configuration(()=>jsonReply(value)),authenticated);assert.equal(response.status,502);assert.ok(!(await response.text()).includes('PRIVATE'));}
+});
+
+test('Payment errors expose only finite diagnostics and refuse redirect, HTML, malformed and oversized responses',async()=>{
+ const error={error:'FINANCE_SAMPLE_UNAVAILABLE',diagnostic:{code:'FINANCE_SAMPLE_PAYMENT_API_PERMISSION_REJECTED',http:403},message:'PRIVATE_ERROR',access_token:'PRIVATE_ACCESS'};
+ const response=await forwardFinancePaymentSample(privateRequest(),configuration(()=>jsonReply(error,502)),authenticated);
+ assert.equal(response.status,502);assert.deepEqual(await response.json(),{error:'FINANCE_SAMPLE_UNAVAILABLE',diagnostic:{code:error.diagnostic.code,http:403}});
+ const bad=[
+  ()=>jsonReply({error:'FINANCE_SAMPLE_UNAVAILABLE',diagnostic:{code:'PRIVATE_ERROR',http:'PRIVATE_ORDER'}},403),
+  ()=>new Response(null,{status:302,headers:{location:'https://evil.invalid/PRIVATE_REDIRECT'}}),
+  ()=>new Response('PRIVATE_HTML',{headers:{'content-type':'text/html'}}),
+  ()=>new Response('{PRIVATE_JSON',{headers:{'content-type':'application/json'}}),
+  ()=>new Response('x'.repeat(65537),{headers:{'content-type':'application/json'}}),
+  ()=>jsonReply(sampleFrame(),200,{'content-length':'65537'}),
+  ()=>{throw Error('PRIVATE_TOKEN_OR_URL');},
+ ];
+ for(const handler of bad){const result=await forwardFinancePaymentSample(privateRequest(),configuration(handler),authenticated);assert.ok([403,502].includes(result.status));assert.ok(!(await result.text()).includes('PRIVATE'));}
+});
+
+test('Payment service timeout aborts its signal without retrying',async()=>{
+ const original=setTimeout;let calls=0,signal;
+ globalThis.setTimeout=(callback,delay,...args)=>original(callback,delay===45000?5:delay,...args);
+ try{
+  const response=await forwardFinancePaymentSample(privateRequest(),configuration(request=>{calls++;signal=request.signal;return new Promise(()=>{});}),authenticated);
+  assert.equal(response.status,502);assert.equal(calls,1);assert.equal(signal.aborted,true);
+ }finally{globalThis.setTimeout=original;}
+});
+
+test('Payment service response arriving after the deadline has its stalled body canceled',async()=>{
+ const original=setTimeout;let resolveFetch,canceled=0,calls=0,signal;
+ globalThis.setTimeout=(callback,delay,...args)=>original(callback,delay===45000?5:delay,...args);
+ try{
+  const response=await forwardFinancePaymentSample(privateRequest(),configuration(request=>{
+   calls++;signal=request.signal;return new Promise(resolve=>{resolveFetch=resolve;});
+  }),authenticated);
+  assert.equal(response.status,502);assert.equal(signal.aborted,true);assert.equal(calls,1);
+  const lateBody=new ReadableStream({pull(){},cancel(){canceled++;}});
+  resolveFetch(new Response(lateBody,{headers:{'content-type':'application/json'}}));
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(canceled,1);assert.equal(lateBody.locked,false);
+  assert.deepEqual(await response.json(),{error:'FINANCE_SAMPLE_UNAVAILABLE',diagnostic:{code:'FINANCE_SAMPLE_UNAVAILABLE',http:null}});
+ }finally{globalThis.setTimeout=original;}
 });

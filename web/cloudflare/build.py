@@ -18,17 +18,19 @@ orders_diagnostic=(root/'src/orders-diagnostic.mjs').read_text().replace('export
 orders_http=(root/'src/orders-http.mjs').read_text().replace("import {safeOrdersDiagnostic} from './orders-diagnostic.mjs';\n",'').replace('export async function boundedOrdersRead','async function boundedOrdersRead')
 app_orders=(root/'src/app-shop-orders.mjs').read_text().replace("import {boundedOrdersRead} from './orders-http.mjs';\n",'').replace("import {ordersReadDiagnostic} from './orders-diagnostic.mjs';\n",'').replace('export async function getShopOrders','async function getShopOrders')
 app_items=re.sub(r'^import .*\n','',(root/'src/app-order-items.mjs').read_text(),flags=re.M).replace('export async function getOrderItems','async function getOrderItems')
+finance_sample_frame=re.sub(r'^export ', '', (root/'src/finance-sample-frame.mjs').read_text(), flags=re.M)
+app_finance_sample=re.sub(r'^import .*\n','',(root/'src/app-finance-sample.mjs').read_text(),flags=re.M).replace('export async function getFinancePaymentSample','async function getFinancePaymentSample')
 admin=client+'\n'+view+'\n'+ads+'\n'+orders+'\n'+items+'\n'+variants+'\n'+observations+'\n'+production_costs+'\n'+re.sub(r'^import .*\n','',admin,flags=re.M)
 admin=admin.replace('export {adminFetch,schedule,DEFAULTS,SCHEMA,validateSettings};','')
 needle='    const url = new URL(request.url);'
 assert original.count(needle)==1
-updated=original.replace(needle,needle+'''\n    if (url.pathname === '/admin' || url.pathname.startsWith('/admin/') || url.pathname.startsWith('/api/admin/') || url.pathname.startsWith('/api/hermes/')) return brazaAdmin.adminFetch(request, env, {getAdsSummary,getShopOrders,getOrderItems});''',1)
+updated=original.replace(needle,needle+'''\n    if (url.pathname === '/admin' || url.pathname.startsWith('/admin/') || url.pathname.startsWith('/api/admin/') || url.pathname.startsWith('/api/hermes/')) return brazaAdmin.adminFetch(request, env, {getAdsSummary,getShopOrders,getOrderItems,getFinancePaymentSample});''',1)
 needle='  async fetch(request, env) {'
 updated=updated.replace(needle,'''  async scheduled(event, env, ctx) { ctx.waitUntil(brazaAdmin.schedule(env)); },\n'''+needle,1)
 needle='${navLink(\n  "/dashboard",'
 assert updated.count(needle)==1
 updated=updated.replace(needle,'${navLink("/admin", "Administração", currentPath)}\n\n'+needle,1)
-output=updated+'\n\n'+orders_diagnostic+'\n'+orders_http+'\n'+app_orders+'\n'+app_items+'\n\nconst brazaAdmin = (() => {\n'+admin+'\nreturn {adminFetch,schedule};\n})();\n'
+output=updated+'\n\n'+orders_diagnostic+'\n'+orders_http+'\n'+app_orders+'\n'+app_items+'\n'+finance_sample_frame+'\n'+app_finance_sample+'\n\nconst brazaAdmin = (() => {\n'+admin+'\nreturn {adminFetch,schedule};\n})();\n'
 (root/'app-worker.mjs').write_text(output)
 auth_original=(root/'original/auth-worker.mjs').read_text()
 needle='    const url = new URL(request.url);'

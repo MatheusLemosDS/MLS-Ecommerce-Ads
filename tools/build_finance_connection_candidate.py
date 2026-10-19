@@ -15,14 +15,14 @@ def build():
     original=(ROOT/'web/cloudflare/auth-worker.mjs').read_bytes()
     if digest(original)!=AUTH_SHA:
         raise SystemExit('Current Auth differs from the reviewed v9 baseline; candidate not built.')
-    router=(FINANCE/'src/auth-router.mjs').read_text().replace('export async function forwardFinanceConnection','async function forwardFinanceConnection')
+    router=re.sub(r'^export\s+', '', (FINANCE/'src/auth-router.mjs').read_text(), flags=re.M)
     needle='    const url = new URL(request.url);'
     auth=original.decode()
     if auth.count(needle)!=1:
         raise SystemExit('Auth insertion point not unique.')
-    addition="\n    if (url.pathname.startsWith('/shopee/finance/')) return brazaFinanceRouter.forwardFinanceConnection(request, env);"
+    addition="\n    if (url.pathname.startsWith('/shopee/finance/')) return brazaFinanceRouter.forwardFinanceConnection(request, env);\n    if (url.pathname === '/internal/shopee/finance/payment-sample') return brazaFinanceRouter.forwardFinancePaymentSample(request, env, {validateInternalApp});"
     auth=auth.replace(needle,needle+addition,1)
-    auth+='\n\nconst brazaFinanceRouter = (() => {\n'+router+'\nreturn {forwardFinanceConnection};\n})();\n'
+    auth+='\n\nconst brazaFinanceRouter = (() => {\n'+router+'\nreturn {forwardFinanceConnection,forwardFinancePaymentSample};\n})();\n'
     store=(FINANCE/'src/connection-store.mjs').read_text()
     store=re.sub(r'^export\s+', '', store, flags=re.M)
     worker=(FINANCE/'src/connection-worker.mjs').read_text()
