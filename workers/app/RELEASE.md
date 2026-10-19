@@ -1,9 +1,11 @@
 # Primeira publicação do App pelo Git
 
-Estado de 18/10/2026, horário de Brasília: App preparado e validado; o operador
-confirmou que os comandos reais do Build estão salvos. O primeiro deploy pelo
-Git ainda depende da confirmação de sucesso no Cloudflare. A conexão financeira já foi informada como
-`CONNECTED`, revisão 1, após o release `9bc332e` de Auth e Finance.
+Estado de 18/10/2026, horário de Brasília: o operador confirmou o build
+**`f8f09da` ativo com sucesso** e a seção **Custos de produção** visível no
+painel administrativo. A primeira publicação do App pelo Git está concluída
+segundo essa confirmação, sem consulta independente por este ambiente.
+A conexão financeira também foi informada como `CONNECTED`, revisão 1,
+após o release `9bc332e` de Auth e Finance.
 
 ## Comandos no Cloudflare
 
@@ -47,8 +49,8 @@ Wrangler do App passaram. O App compilado e o Auth atual também passaram em
 histórico, guards, observações anteriores e ausência de tarefas automáticas.
 São testes locais, sem dados de produção ou solicitações à Shopee.
 
-Depois do deploy, conferir o commit ativo no Cloudflare e abrir a área
-administrativa para verificar **Custos de produção**, login e dados existentes.
+O operador confirmou o commit ativo e a seção **Custos de produção** no painel.
+Em atualizações futuras, conferir também login e dados existentes após o deploy.
 O histórico de versões anterior do Worker fica como referência de recuperação.
 O status público `/health` mantém uma versão legada e não identifica sozinho
 o release v11; usar o commit do deploy para essa confirmação.

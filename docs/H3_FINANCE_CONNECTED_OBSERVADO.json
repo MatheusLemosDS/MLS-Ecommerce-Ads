@@ -21,5 +21,13 @@
   "profit_calculation_available": false,
   "scheduled_refresh_enabled": false,
   "ads_execution": "LOCKED",
-  "remaining_git_publication": "App successful Git deployment still requires confirmation; its build/deploy commands were confirmed saved by the user"
+  "remaining_git_publication": null,
+  "app_deployment_report": {
+    "source": "USER_REPORTED_CLOUDFLARE_DEPLOYMENT_AND_ADMIN_UI",
+    "release_commit": "f8f09da0e501a7e085c4e0aba5a465c6d9510e12",
+    "active_build_succeeded": true,
+    "production_costs_section_visible": true,
+    "independently_fetched": false
+  },
+  "all_three_workers_git_publication_confirmed_by_user": true
 }

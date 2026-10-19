@@ -13,11 +13,10 @@ preservam os domínios e bancos existentes; não criar substitutos para App e Au
 Em 18/10/2026, o operador confirmou o [Financeiro conectado](H3_FINANCE_CONNECTED_OBSERVADO.json)
 após o release `9bc332e`: `CONNECTED`, revisão 1, Partner2049333 e shop1178167501.
 Auth e Finance usam os comandos reais de deploy pelo Git. O operador também
-confirmou salvos `build:app` e `deploy:app` no App; falta confirmar seu primeiro
-deploy pelo Git, conforme o [registro de publicação](../workers/app/RELEASE.md).
-O App preparado inclui o v11 de custos
-de produção; sua publicação ainda não foi confirmada. Ele preserva a referência
-de margens e não calcula lucro financeiro.
+confirmou o build `f8f09da` ativo com sucesso no App e a seção **Custos de
+produção** visível no painel, conforme o [registro de publicação](../workers/app/RELEASE.md).
+A publicação dos três Workers pelo Git está confirmada pelo operador.
+O App v11 preserva a referência de margens e não calcula lucro financeiro.
 
 ## Primeiro vínculo: capturar pelo próprio Cloudflare
 
