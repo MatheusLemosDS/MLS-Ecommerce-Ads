@@ -3,6 +3,22 @@
 Registro de 18/10/2026, horário de Brasília. Aplicação **BrazaCommerce
 Financeiro**, Live Partner ID **2049333**, loja **1178167501**.
 
+## Conexão real confirmada pelo operador
+
+Após o release `9bc332e` e a nova autorização pelo fluxo Global, o operador
+enviou o [status da conexão](H3_FINANCE_CONNECTED_OBSERVADO.json):
+`connected=true`, `status=CONNECTED`, revisão **1**, Partner **2049333** e loja
+**1178167501**. O retorno inclui vencimento `1792392320`, sem códigos de
+autorização ou tokens. É uma confirmação fornecida pelo operador, não uma
+consulta independente realizada por este ambiente.
+
+Esse resultado confirma a conexão financeira após o alinhamento Global e a
+configuração da chave. Não isola retrospectivamente uma única causa para todas
+as falhas anteriores nem comprova acesso Payment, valores financeiros ou lucro.
+A importação financeira e o agendamento de renovação continuam como etapas
+posteriores. Os registros de espera e falha abaixo descrevem a investigação
+antes dessa confirmação.
+
 ## Problema observado
 
 A implementação anterior enviava o navegador para

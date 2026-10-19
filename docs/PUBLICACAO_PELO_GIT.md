@@ -6,17 +6,24 @@ Worker. Os arquivos são editados no Git; o Cloudflare recebe as alterações da
 branch de produção. Não é necessário baixar ZIP nem colar o Worker inteiro no
 editor a cada atualização.
 
-O App e o Auth já existem no Cloudflare. O Worker financeiro ainda precisa ser
-criado. Os nomes exatos dos projetos existentes, seus bindings e os IDs dos
-bancos precisam ser conferidos antes de conectar a publicação automática.
-Não criar substitutos para os projetos App e Auth existentes.
+Os três Workers já existem na conta: `brazacommerce-app`,
+`brazacommerce-auth` e `brazacommerce-finance`. As configurações importadas
+preservam os domínios e bancos existentes; não criar substitutos para App e Auth.
 
-Esta preparação não publicou nada. O código local do App inclui o v11, cuja
-publicação anterior não foi confirmada, e o Auth inclui a conexão financeira.
-Portanto, o primeiro deploy também entrega mudanças funcionais; não é uma
-simples cópia comprovadamente idêntica ao que está no ar.
+Em 18/10/2026, o operador confirmou o [Financeiro conectado](H3_FINANCE_CONNECTED_OBSERVADO.json)
+após o release `9bc332e`: `CONNECTED`, revisão 1, Partner2049333 e shop1178167501.
+Auth e Finance usam os comandos reais de deploy pelo Git. O operador também
+confirmou salvos `build:app` e `deploy:app` no App; falta confirmar seu primeiro
+deploy pelo Git, conforme o [registro de publicação](../workers/app/RELEASE.md).
+O App preparado inclui o v11 de custos
+de produção; sua publicação ainda não foi confirmada. Ele preserva a referência
+de margens e não calcula lucro financeiro.
 
 ## Primeiro vínculo: capturar pelo próprio Cloudflare
+
+Esta captura inicial já foi concluída para App e Auth nesta conta. As
+instruções da seção ficam como referência; não substituir os comandos reais
+de deploy por capturas em atualizações normais.
 
 Para evitar instalar ferramentas no computador ou criar outra credencial,
 o primeiro Build dos Workers existentes pode usar a autenticação que o próprio
@@ -64,7 +71,7 @@ fonte não reconhecida e configuração alterada sem substituição explícita.
 Somente depois de importar os dois pacotes e cadastrar o D1 financeiro, trocar
 os comandos temporários pelos comandos reais de publicação descritos abaixo.
 
-A captura ainda precisa ser executada na conta real. Se a credencial de Build
+Ao configurar outra conta, a captura precisa ser executada nela. Se a credencial de Build
 não permitir a leitura, o helper retorna `WORKER_CAPTURE_REMOTE_UNAVAILABLE`
 sem tentar publicar; conferir as permissões da integração no próprio Cloudflare.
 Não é necessário enviar um token no chat.
@@ -235,14 +242,14 @@ Não gerar uma chave de cifragem nova a cada deploy. Alterá-la torna os tokens
 já armazenados ilegíveis. O Partner ID financeiro é **2049333** e a loja é
 **1178167501**. As credenciais Ads continuam separadas.
 
-A entrada de autorização financeira usa o fluxo web brasileiro
-`https://open.shopee.com.br/auth`, com `state` próprio e callback financeiro.
+A entrada de autorização financeira usa o fluxo web Global
+`https://open.shopee.com/auth`, com `state` próprio e callback financeiro.
 O [registro da correção](FINANCE_AUTHORIZATION_FIX.md) distingue o link de
 navegador das chamadas assinadas de troca e renovação de tokens.
 
 Depois da publicação, conferir o painel, o login de revisão, a área
-administrativa e as rotas Auth existentes. Para a primeira autorização
-financeira, seguir [DEPLOY.md](../web/finance/DEPLOY.md). O status esperado é
+administrativa e as rotas Auth existentes. A conexão financeira já foi informada
+como concluída; para uma autorização futura, seguir [DEPLOY.md](../web/finance/DEPLOY.md). O status esperado é
 `CONNECTED` com os IDs financeiros corretos, sem exibir tokens. Essa conexão
 não importa taxas nem calcula lucro por si só.
 

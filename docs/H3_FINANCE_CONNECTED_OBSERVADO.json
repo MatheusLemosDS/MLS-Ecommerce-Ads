@@ -1,0 +1,25 @@
+{
+  "received_on": "2026-10-18",
+  "timezone": "America/Sao_Paulo",
+  "source": "USER_REPORTED_FINANCE_STATUS_JSON",
+  "independently_fetched": false,
+  "reported_after_release_commit": "9bc332e52cdf195e4623fdd35016cbef6b2466a9",
+  "status_response": {
+    "connected": true,
+    "status": "CONNECTED",
+    "revision": 1,
+    "expires_at": 1792392320,
+    "partner_id": 2049333,
+    "shop_id": 1178167501
+  },
+  "authorization_frontend": "https://open.shopee.com/auth",
+  "token_api_origin": "https://partner.shopeemobile.com",
+  "credential_or_authorization_code_values_included": false,
+  "payment_api_access_verified": false,
+  "financial_import_implemented": false,
+  "financial_values_verified": false,
+  "profit_calculation_available": false,
+  "scheduled_refresh_enabled": false,
+  "ads_execution": "LOCKED",
+  "remaining_git_publication": "App successful Git deployment still requires confirmation; its build/deploy commands were confirmed saved by the user"
+}

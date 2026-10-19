@@ -2,7 +2,7 @@
 
 A publicação atual será pelo Git, incluindo App e Auth existentes. Seguir primeiro [Publicação pelo Git](../../docs/PUBLICACAO_PELO_GIT.md); a entrega manual abaixo permanece como referência.
 
-BrazaCommerce Financeiro foi informada aprovada e ativa em 18/10/2026: Live Partner **2049333**, Seller In House System, loja **1178167501**. A entrega de conexão está preparada para revisão e publicação manual. A autorização real, a importação Payment e o lucro ainda não foram verificados.
+BrazaCommerce Financeiro foi informada aprovada e ativa em 18/10/2026: Live Partner **2049333**, Seller In House System, loja **1178167501**. Após o release Git `9bc332e`, o operador confirmou [status `CONNECTED`, revisão 1](../../docs/H3_FINANCE_CONNECTED_OBSERVADO.json). Não houve consulta independente por este ambiente. A importação Payment e o lucro ainda não foram verificados.
 
 ## Entrega e configuração
 
@@ -12,18 +12,18 @@ Nunca usar ADMIN_DB, credenciais Ads ou Partner de teste. Nenhum segredo real é
 
 ## Contratos e implementação
 
-A referência pública genérica recebida descreve a assinatura, a troca inicial e a renovação. O [registro de autorização](../../docs/H3_FINANCE_AUTHORIZATION_OBSERVADA.json) complementa a [resposta de refresh e o exemplo inicial](../../docs/H3_FINANCE_REFRESH_RESPONSE_OBSERVADA.json). Os três anexos são idênticos, de 19.505 bytes cada; seus exemplos não são executados nem têm valores de credenciais copiados. O operador confirmou que a entrada Global de navegador abre a tela de autorização ou login da aplicação 2049333. O fluxo passa a usar esse frontend junto da API Auth Global; a abertura da tela ainda não comprova o retorno do callback ou a obtenção de tokens.
+A referência pública genérica recebida descreve a assinatura, a troca inicial e a renovação. O [registro de autorização](../../docs/H3_FINANCE_AUTHORIZATION_OBSERVADA.json) complementa a [resposta de refresh e o exemplo inicial](../../docs/H3_FINANCE_REFRESH_RESPONSE_OBSERVADA.json). Os três anexos são idênticos, de 19.505 bytes cada; seus exemplos não são executados nem têm valores de credenciais copiados. O fluxo usa o frontend Global junto da API Auth Global. O operador confirmou depois a conexão real em revisão 1; a renovação automática e a leitura Payment permanecem sem confirmação real.
 
 - `provider-adapter.mjs`: entrada Global `https://open.shopee.com/auth`, com `partner_id`, `auth_type=seller`, `redirect_uri`, `response_type=code` e nonce em `state` externo. O callback permanece fixo e sem query. O link não recebe a Partner Key nem assinatura; a chave continua necessária para a troca de tokens. O retorno precisa preservar o nonce, vinculado ao cookie financeiro independente; o callback recusa sua ausência ou alteração.
-- `initial-exchange.mjs`: POST Auth de produção `https://partner.shopeemobile.com/api/v2/auth/token/get`, JSON `shop_id`, `code`, `partner_id`. A origem segue o guia GetAccessToken recebido e acompanha o frontend Global, separadamente do roteamento Payment. Aceita o exemplo inicial sem ecos de identidade; ecos escalares opcionais precisam coincidir. Listas extras não selecionam escopos. O literal `invalid_code`, observado com código fictício, recebe categoria fixa; a causa do erro do callback real precisa ser confirmada separadamente.
+- `initial-exchange.mjs`: POST Auth de produção `https://partner.shopeemobile.com/api/v2/auth/token/get`, JSON `shop_id`, `code`, `partner_id`. A origem segue o guia GetAccessToken recebido e acompanha o frontend Global, separadamente do roteamento Payment. Aceita o exemplo inicial sem ecos de identidade; ecos escalares opcionais precisam coincidir. Listas extras não selecionam escopos. O literal `invalid_code`, observado com código fictício, recebe categoria fixa; as causas das falhas anteriores não foram isoladas individualmente.
 - `refresh-signature/request/response/transport/coordinator.mjs`: POST Auth de produção `https://partner.shopeemobile.com/api/v2/auth/access_token/get`, somente o shop fixo; valida os ecos numéricos, usa `expire_in` inteiro em segundos e grava atomicamente o par rotacionado. O coordenador interno devolve apenas access token, vencimento e revisão. Ainda não existe importador/agendamento que o invoque em produção.
 - `auth-json-transport.mjs`: uma requisição por chamada, transporte injetado, sem retry/redirecionamento, prazo até dez segundos incluindo stream, JSON UTF-8 limitado a 64 KiB e erros fixos sem conteúdo privado.
 - `connection-store.mjs`: D1 financeiro privado, AES-256-GCM com identidade/revisão/vencimento autenticados; nonce/cookie independentes com hashes no D1 e validade de dez minutos. Autorização e refresh compartilham lease de sessenta segundos antes do POST, com CAS. Falha incerta/timeout exige nova autorização.
 - `auth-router.mjs` e `connection-worker.mjs`: somente connect/callback/status financeiros, perfil fixo e cookie próprio. O roteador não encaminha cookies Ads/admin ou Authorization do cliente; respostas públicas não contêm tokens.
 
 O frontend, a troca inicial e a renovação usam o par Global de autenticação,
-separadamente do roteamento Payment brasileiro. Os pedidos de
-tokens ainda precisam ser confirmados na integração real. A página de falha
+separadamente do roteamento Payment brasileiro. A troca inicial foi informada
+como concluída pelo operador; a renovação real ainda não foi confirmada. A página de falha
 mostra somente códigos de diagnóstico de uma lista fechada; erros ou mensagens
 arbitrários da Shopee não são enviados ao navegador.
 

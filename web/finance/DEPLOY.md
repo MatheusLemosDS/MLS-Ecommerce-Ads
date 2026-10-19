@@ -2,14 +2,20 @@
 
 Entrega para **BrazaCommerce Financeiro / Live Partner 2049333 / loja 1178167501**.
 
+**Estado informado em 18/10/2026:** após o release Git `9bc332e`, o operador
+confirmou [status `CONNECTED`, revisão 1](../../docs/H3_FINANCE_CONNECTED_OBSERVADO.json).
+A configuração inicial abaixo já foi concluída nesta conta e permanece como
+referência. Não recriar banco ou segredos para uma atualização normal.
+
 Na publicação atual pelo Git, aguardar os deploys de **Auth e Finance** antes de
 iniciar uma tentativa. O Auth precisa aceitar o destino Global da autorização
 financeira. Sempre iniciar por `/shopee/finance/connect`, que cria cookie e
 nonce; o link público de verificação da tela não substitui essa etapa.
 
 Conecta a loja e guarda o par de tokens cifrado. A importação de taxas/recebíveis
-e o cálculo de lucro ainda não fazem parte desta entrega. Nada foi publicado
-pelo assistente. Ads 2047569 e o App v11 não precisam de alteração.
+e o cálculo de lucro ainda não fazem parte desta entrega. A publicação ocorreu
+pelo Git/Cloudflare; este ambiente não acessou tokens de produção. Ads 2047569
+e o App v11 não precisam de alteração para manter a conexão.
 
 ## Arquivos
 
@@ -68,8 +74,8 @@ financeiro sem query, `response_type=code` e `state` com o nonce independente.
 Esse link de navegador não recebe a Partner Key, `timestamp` ou `sign`.
 Autorizar apenas a loja 1178167501 na aplicação financeira.
 
-O retorno precisa trazer o mesmo `state`, além de `code` e `shop_id`. A conclusão
-desse retorno ainda **não foi verificada na Shopee real**. Se faltar ou mudar o
+O retorno precisa trazer o mesmo `state`, além de `code` e `shop_id`. O operador
+informou a conclusão da conexão real após o release `9bc332e`. Se faltar ou mudar o
 nonce, o callback recusa a tentativa sem solicitar tokens; coletar
 somente a forma dos nomes de parâmetros retornados, sem compartilhar a URL com
 o código de autorização. Não remover a validação de nonce/cookie para contornar.
