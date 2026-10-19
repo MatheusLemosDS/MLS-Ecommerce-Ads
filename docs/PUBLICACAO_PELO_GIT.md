@@ -266,6 +266,10 @@ Usar esse comando no campo **Deploy command** do Build de
 `brazacommerce-auth`, mantendo **Build command** como `npm run build:auth`.
 Salvar e disparar um novo build na branch `main`.
 
+Salvar o novo comando não garante uma execução automática. Depois de salvar,
+um novo push em `main` dispara o reparo; abrir a execução desse commit em
+**brazacommerce-auth → Deployments** para acompanhar o resultado.
+
 O helper valida as configurações locais e lê a lista de nomes de Secrets dos
 dois Workers antes da primeira alteração. Gera um único valor aleatório de
 64 caracteres hexadecimais e envia somente `FINANCE_ROUTER_SECRET` para
@@ -291,6 +295,10 @@ Variable de texto `FINANCE_ROUTER_SECRET` no Financeiro, salvar/publicar e
 reexecutar a operação. O helper não remove bindings automaticamente.
 Se aparecer um código `*_VERSION_NOT_DEPLOYED`, publicar a configuração
 pendente desse Worker antes de tentar novamente.
+Se houver um build normal do Financeiro em andamento pelo mesmo push,
+aguardar sua publicação terminar e repetir somente o build do Auth pelo
+**Retry build** dessa execução, mantendo o comando de reparo. Assim não é
+necessário outro push que inicie novamente os builds dos três projetos.
 
 ## Atualizações seguintes
 
