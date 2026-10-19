@@ -1,6 +1,7 @@
 import {FINANCE_PROFILE, FinanceConnectionError} from './connection-store.mjs';
 import {ensureFinanceAccessToken} from './refresh-coordinator.mjs';
 import {requestFinanceAuthJson} from './auth-json-transport.mjs';
+import {FINANCE_PREVIEW_SCHEMA, FINANCE_PREVIEW_AMOUNT_FIELDS, projectFinancePaymentPreview} from './payment-preview-frame.mjs';
 
 const ORIGIN = 'https://partner.shopeemobile.com';
 const LIST_PATH = '/api/v2/order/get_order_list';
@@ -112,9 +113,9 @@ function windowStart(epoch) {
   return Math.floor(candidate / 1000);
 }
 
-// Exactly one automatic sample, with no serial supplied by the browser. The
-// rotating token pair remains owned exclusively by the refresh coordinator.
-export async function runFinancePaymentSample(env, options = {}) {
+// Private collector shared by the two explicit administrator actions. Its raw
+// order and income never leave this module or enter persistent storage.
+async function collectFinancePaymentSample(env, options = {}) {
   if (!plain(options)) throw fail('CONFIGURATION', 503);
   const {fetchImpl, now = () => Date.now(), timeoutMs = 10000} = options;
   if (typeof fetchImpl !== 'function' || typeof now !== 'function'
@@ -196,8 +197,7 @@ export async function runFinancePaymentSample(env, options = {}) {
   const listing = await get('LIST', LIST_PATH, {time_range_field: 'create_time', time_from: windowStart(nowEpoch),
     time_to: nowEpoch, order_status: 'COMPLETED', page_size: 1, cursor: ''});
   if (!Array.isArray(listing.order_list) || listing.order_list.length > 1) throw fail('LIST_RESPONSE_INVALID');
-  const base = () => ({schema_version: 1, status: 'EMPTY', checked_at: epoch(), token_revision: tokens.revision,
-    fields: [], item_fields: [], item_count: 0});
+  const base = () => ({checked_at: epoch(), token_revision: tokens.revision, order_sn: null, income: null});
   if (!listing.order_list.length) return base();
   const selection = listing.order_list[0];
   if (!plain(selection) || !serialValid(selection.order_sn)) throw fail('LIST_RESPONSE_INVALID');
@@ -214,5 +214,39 @@ export async function runFinancePaymentSample(env, options = {}) {
   if (!plain(payment.order_income)) throw fail('PAYMENT_RESPONSE_INVALID');
   const echoes = [payment, payment.order_income].filter(container => Object.hasOwn(container, 'order_sn'));
   if (!echoes.length || echoes.some(container => container.order_sn !== serial)) throw fail('PAYMENT_IDENTITY_MISMATCH');
-  return {...base(), status: 'VALIDATED', identity_match: true, ...schemaOf(payment.order_income)};
+  return {...base(), order_sn: serial, income: payment.order_income};
+}
+
+// The schema-only action keeps its original wire contract: no order identifier
+// or financial value may appear in this response.
+export async function runFinancePaymentSample(env, options = {}) {
+  const sample = await collectFinancePaymentSample(env, options);
+  const base = {schema_version: 1, status: 'EMPTY', checked_at: sample.checked_at,
+    token_revision: sample.token_revision, fields: [], item_fields: [], item_count: 0};
+  return sample.income === null ? base
+    : {...base, status: 'VALIDATED', identity_match: true, ...schemaOf(sample.income)};
+}
+
+// A separate private administrator preview retains the original numeric units
+// solely for comparing this one order against Shopee. It does not import data.
+export async function runFinancePaymentPreview(env, options = {}) {
+  const sample = await collectFinancePaymentSample(env, options);
+  const available = sample.income !== null;
+  const frame = {schema: FINANCE_PREVIEW_SCHEMA, status: available ? 'AVAILABLE' : 'EMPTY',
+    checked_at: sample.checked_at, token_revision: sample.token_revision, currency: 'BRL',
+    monetary_unit: 'UNCONFIRMED', order_sn: sample.order_sn, identity_match: available,
+    amounts: FINANCE_PREVIEW_AMOUNT_FIELDS.map(name => ({name,
+      value: available && Object.hasOwn(sample.income, name) ? sample.income[name] : null})),
+    items: [], item_count: 0};
+  if (available) {
+    const items = Object.hasOwn(sample.income, 'items') ? sample.income.items : [];
+    if (!Array.isArray(items) || items.length > 100 || !items.every(plain)) throw fail('PREVIEW_RESPONSE_INVALID');
+    frame.items = items.map(item => Object.fromEntries(
+      ['quantity_purchased', 'original_price', 'selling_price', 'is_kit']
+        .map(name => [name, Object.hasOwn(item, name) ? item[name] : null])));
+    frame.item_count = frame.items.length;
+  }
+  const projected = projectFinancePaymentPreview(frame);
+  if (!projected) throw fail('PREVIEW_RESPONSE_INVALID');
+  return projected;
 }

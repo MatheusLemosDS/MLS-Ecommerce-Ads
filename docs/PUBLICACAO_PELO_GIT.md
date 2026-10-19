@@ -24,6 +24,12 @@ Aguardar a publicação dos três antes de testar em **Custos e margens →
 Validação financeira**. Não repetir capturas, criar bancos ou refazer a
 autorização da loja apenas para publicar essa atualização.
 
+O operador já confirmou o esquema real de Payment como `VALIDATED`, revisão 2.
+A entrega seguinte acrescenta **Conferência dos valores**, uma prévia privada
+de um pedido para comparar números com a Shopee antes de definir a escala
+monetária. Publicar essa entrega nos três Workers pelos mesmos comandos;
+nenhuma configuração adicional é necessária.
+
 ## Primeiro vínculo: capturar pelo próprio Cloudflare
 
 Esta captura inicial já foi concluída para App e Auth nesta conta. As

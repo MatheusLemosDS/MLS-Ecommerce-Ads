@@ -13,6 +13,11 @@ const PRIVATE_REFRESH = 'fixture-private-refresh-token';
 const PRIVATE_CODE = 'fixture-private-code';
 const cookieName = 'braza_finance_oauth';
 const PAYMENT_PATH = '/internal/shopee/finance/payment-sample';
+const PREVIEW_PATH = '/internal/shopee/finance/payment-preview';
+const previewFrame = (status='AVAILABLE') => ({schema: 'finance_payment_preview_v1', status, checked_at: 1800000000, token_revision: 2,
+  currency: 'BRL', monetary_unit: 'UNCONFIRMED', order_sn: status==='AVAILABLE'?'260101FIXTUREONLY':null, identity_match: status==='AVAILABLE',
+  amounts: ['escrow_amount','original_cost_of_goods_sold','buyer_total_amount','commission_fee','service_fee','seller_transaction_fee','actual_shipping_fee','ads_escrow_top_up_fee_or_technical_support_fee'].map((name,index)=>({name,value:status==='AVAILABLE'?index+0.25:null})),
+  items: status==='AVAILABLE'?[{quantity_purchased: 2, original_price: 100.5, selling_price: 85.25, is_kit: true}]:[], item_count: status==='AVAILABLE'?1:0});
 const paymentFrame = () => ({schema_version: 1, status: 'VALIDATED', checked_at: 1800000000, token_revision: 2,
   identity_match: true, fields: [{name: 'escrow_amount', type: 'number'}],
   item_fields: [{name: 'quantity_purchased', type: 'number'}], item_count: 1});
@@ -170,6 +175,47 @@ test('Payment body deadline closes a stalled private input without database or p
     const response = await worker.fetch(request, ctx.env);
     assert.equal(response.status, 400); assert.equal(calls, 0); assert.equal(ctx.accesses(), 0);
   } finally { globalThis.setTimeout = original; }
+});
+
+test('private Payment preview has a separate explicit capability and cannot fall back to metadata or public routes', async () => {
+  const ctx=fixture();ctx.env.FINANCE_CONNECTION_ENABLED='true';let sampleCalls=0,previewCalls=0;
+  const create=options=>createFinanceWorker({paymentSample:async()=>{sampleCalls++;return paymentFrame();},fetchImpl:async()=>{},now:()=>ctx.clock.milliseconds,...options});
+  for(const worker of [defaultWorker,create({}),create({paymentPreview:async()=>{previewCalls++;return previewFrame();},fetchImpl:undefined})]){
+    assert.equal((await worker.fetch(paymentRequest('{}',{path:PREVIEW_PATH}),ctx.env)).status,503);
+  }
+  const worker=create({paymentPreview:async()=>{previewCalls++;return previewFrame();}});
+  ctx.env.FINANCE_CONNECTION_ENABLED='false';assert.equal((await worker.fetch(paymentRequest('{}',{path:PREVIEW_PATH}),ctx.env)).status,503);ctx.env.FINANCE_CONNECTION_ENABLED='true';
+  assert.equal((await worker.fetch(paymentRequest('{}',{path:'/shopee/finance/payment-preview'}),ctx.env)).status,404);
+  assert.equal((await worker.fetch(paymentRequest('{}',{path:PREVIEW_PATH,headers:{[SECRET_HEADER]:'PRIVATE_WRONG'}}),ctx.env)).status,403);
+  assert.equal((await worker.fetch(paymentRequest('{}',{path:PREVIEW_PATH,method:'GET'}),ctx.env)).status,405);
+  assert.equal((await worker.fetch(paymentRequest('{}',{path:PREVIEW_PATH+'?order_sn=PRIVATE_SERIAL'}),ctx.env)).status,400);
+  for(const body of ['null','[]','{"order_sn":"PRIVATE_SERIAL"}',' '.repeat(129)+'{}'])assert.equal((await worker.fetch(paymentRequest(body,{path:PREVIEW_PATH}),ctx.env)).status,400);
+  assert.equal(sampleCalls,0);assert.equal(previewCalls,0);assert.equal(ctx.accesses(),0);
+});
+
+test('private Payment preview returns only shared-frame values through trusted authenticated dispatch', async () => {
+  const ctx=fixture();ctx.env.FINANCE_CONNECTION_ENABLED='true';const fetchImpl=async()=>{},now=()=>ctx.clock.milliseconds;let calls=0;
+  for(const status of ['AVAILABLE','EMPTY']){
+    const worker=createFinanceWorker({paymentPreview:async(env,options)=>{calls++;assert.equal(env,ctx.env);assert.deepEqual(options,{fetchImpl,now});return previewFrame(status);},fetchImpl,now});
+    const response=await worker.fetch(paymentRequest('{}',{path:PREVIEW_PATH}),ctx.env);
+    assert.equal(response.status,200);const body=await response.text();assertSafe(response,body);assert.deepEqual(JSON.parse(body),previewFrame(status));assert.equal(response.headers.get('set-cookie'),null);
+  }
+  assert.equal(calls,2);assert.equal(ctx.accesses(),0);
+});
+
+test('private preview rejects extra buyer/identity data and never leaks values in finite error diagnostics', async () => {
+  const ctx=fixture();ctx.env.FINANCE_CONNECTION_ENABLED='true';
+  const run=value=>createFinanceWorker({paymentPreview:async()=>value,fetchImpl:async()=>{},now:()=>ctx.clock.milliseconds}).fetch(paymentRequest('{}',{path:PREVIEW_PATH}),ctx.env);
+  for(const value of [paymentFrame(),{...previewFrame(),buyer_user_name:'PRIVATE_BUYER'},{...previewFrame(),access_token:PRIVATE_ACCESS},
+    {...previewFrame(),items:[{quantity_purchased:2,original_price:100,selling_price:100,is_kit:true,item_id:'PRIVATE_ITEM'}]}]){
+    const response=await run(value);assert.equal(response.status,502);const body=await response.text();assertSafe(response,body);assert.ok(!body.includes('260101FIXTUREONLY'));assert.equal(JSON.parse(body).diagnostic.code,'FINANCE_SAMPLE_PREVIEW_RESPONSE_INVALID');
+  }
+  const metadata=createFinanceWorker({paymentSample:async()=>previewFrame(),fetchImpl:async()=>{},now:()=>ctx.clock.milliseconds});
+  const rejected=await metadata.fetch(paymentRequest(),ctx.env);assert.equal(rejected.status,502);assert.ok(!(await rejected.text()).includes('260101FIXTUREONLY'));
+  const invalid=new FinanceConnectionError('FINANCE_SAMPLE_PREVIEW_RESPONSE_INVALID',502);Object.defineProperty(invalid,'upstream_status',{value:200});
+  const failure=createFinanceWorker({paymentPreview:async()=>{throw invalid;},fetchImpl:async()=>{},now:()=>ctx.clock.milliseconds});
+  assert.deepEqual(await (await failure.fetch(paymentRequest('{}',{path:PREVIEW_PATH}),ctx.env)).json(),{error:'FINANCE_SAMPLE_UNAVAILABLE',diagnostic:{code:'FINANCE_SAMPLE_PREVIEW_RESPONSE_INVALID',http:200}});
+  assert.equal(ctx.accesses(),0);
 });
 
 test('missing adapter readiness, credentials or database cannot start authorization', async () => {

@@ -1,0 +1,42 @@
+{
+  "observation_source": "operator_provided_safe_json",
+  "received_date": "2026-10-19",
+  "api": "v2.payment.get_escrow_detail",
+  "scope": "ONE_COMPLETED_ORDER_SCHEMA",
+  "result": {
+    "schema_version": 1,
+    "status": "VALIDATED",
+    "checked_at": 1792405689,
+    "token_revision": 2,
+    "fields": [
+      {"name": "escrow_amount", "type": "number"},
+      {"name": "original_cost_of_goods_sold", "type": "number"},
+      {"name": "buyer_total_amount", "type": "number"},
+      {"name": "commission_fee", "type": "number"},
+      {"name": "service_fee", "type": "number"},
+      {"name": "seller_transaction_fee", "type": "number"},
+      {"name": "actual_shipping_fee", "type": "number"},
+      {"name": "ads_escrow_top_up_fee_or_technical_support_fee", "type": "number"},
+      {"name": "items", "type": "array"}
+    ],
+    "item_fields": [
+      {"name": "item_id", "type": "number"},
+      {"name": "model_id", "type": "number"},
+      {"name": "line_item_id", "type": "number"},
+      {"name": "quantity_purchased", "type": "number"},
+      {"name": "original_price", "type": "number"},
+      {"name": "selling_price", "type": "number"},
+      {"name": "is_kit", "type": "boolean"}
+    ],
+    "item_count": 1,
+    "identity_match": true
+  },
+  "limits": [
+    "Reported by the operator; not independently fetched by Codex.",
+    "Only names and types were observed; no amounts, identifiers or buyer information were provided.",
+    "Numeric type does not establish monetary unit, scale or rounding.",
+    "Revision 2 alone does not establish how the token pair was renewed.",
+    "One completed order does not establish settlement, profit, item composition or full-period coverage.",
+    "Fields omitted by this sample are not proven absent in all orders."
+  ]
+}

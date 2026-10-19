@@ -45,6 +45,12 @@ test('oversized URL is refused without contacting the service',async()=>{
 });
 
 const samplePath='/internal/shopee/finance/payment-sample';
+const previewPath='/internal/shopee/finance/payment-preview';
+const previewFrame=(status='AVAILABLE')=>({schema:'finance_payment_preview_v1',status,checked_at:1800000000,token_revision:2,
+ currency:'BRL',monetary_unit:'UNCONFIRMED',order_sn:status==='AVAILABLE'?'260101FIXTUREONLY':null,identity_match:status==='AVAILABLE',
+ amounts:['escrow_amount','original_cost_of_goods_sold','buyer_total_amount','commission_fee','service_fee','seller_transaction_fee','actual_shipping_fee','ads_escrow_top_up_fee_or_technical_support_fee'].map((name,index)=>({name,value:status==='AVAILABLE'?index+0.25:null})),
+ items:status==='AVAILABLE'?[{quantity_purchased:2,original_price:100.5,selling_price:85.25,is_kit:true}]:[],item_count:status==='AVAILABLE'?1:0});
+const previewRequest=(body='{}',options={})=>new Request(base+previewPath,{method:'POST',headers:{'content-type':'application/json'},body,...options});
 const sampleFrame=()=>({schema_version:1,status:'VALIDATED',checked_at:1800000000,token_revision:2,identity_match:true,fields:[{name:'escrow_amount',type:'number'}],item_fields:[{name:'quantity_purchased',type:'number'}],item_count:1});
 const privateRequest=(body='{}',options={})=>new Request(base+samplePath,{method:'POST',headers:{'content-type':'application/json',...options.headers},body,...options});
 const authenticated={validateInternalApp:async()=>true};
@@ -139,5 +145,54 @@ test('Payment service response arriving after the deadline has its stalled body 
   await new Promise(resolve=>setImmediate(resolve));
   assert.equal(canceled,1);assert.equal(lateBody.locked,false);
   assert.deepEqual(await response.json(),{error:'FINANCE_SAMPLE_UNAVAILABLE',diagnostic:{code:'FINANCE_SAMPLE_UNAVAILABLE',http:null}});
+ }finally{globalThis.setTimeout=original;}
+});
+
+test('private Payment preview requires App authentication and exact empty JSON without opening a public OAuth path',async()=>{
+ let calls=0;const env=configuration(()=>{calls++;return jsonReply(previewFrame());});
+ const denied=previewRequest();assert.equal((await forwardFinancePaymentSample(denied,env,{validateInternalApp:async()=>false})).status,401);assert.equal(denied.bodyUsed,false);
+ assert.equal((await forwardFinanceConnection(previewRequest(),env)).status,404);
+ for(const [url,status,options] of [[base+previewPath+'/',404,{}],[base+'/shopee/finance/payment-preview',404,{}],['https://evil.invalid'+previewPath,404,{}],[base+previewPath+'?order_sn=PRIVATE_SERIAL',400,{}],[base+previewPath,405,{method:'GET'}]]){
+  const request=new Request(url,{method:'POST',body:'{}',headers:{'content-type':'application/json'},...options,...(options.method==='GET'?{body:undefined}:{})});
+  assert.equal((await forwardFinancePaymentSample(request,env,authenticated)).status,status);
+ }
+ for(const body of ['null','[]','{"order_sn":"PRIVATE_SERIAL"}','{"value":1}',' '.repeat(129)+'{}'])assert.equal((await forwardFinancePaymentSample(previewRequest(body),env,authenticated)).status,400);
+ assert.equal(calls,0);
+});
+
+test('private Payment preview preserves only validated preview values and serial after stripping caller credentials',async()=>{
+ for(const status of ['AVAILABLE','EMPTY']){
+  const frame=previewFrame(status);
+  const request=previewRequest('{}',{headers:{'content-type':'application/json',cookie:'braza_admin=PRIVATE_ADMIN',authorization:'Bearer PRIVATE_ACCESS','x-braza-app-key':'PRIVATE_APP','x-braza-finance-router':'PRIVATE_CALLER_ROUTER'}});
+  const response=await forwardFinancePaymentSample(request,configuration(async forwarded=>{
+   assert.equal(forwarded.url,base+previewPath);assert.equal(forwarded.method,'POST');assert.equal(forwarded.redirect,'manual');assert.equal(await forwarded.text(),'{}');
+   assert.equal(forwarded.headers.get('x-braza-finance-router'),secret);
+   for(const header of ['cookie','authorization','x-braza-app-key'])assert.equal(forwarded.headers.get(header),null);
+   return jsonReply(frame,200,{'set-cookie':'session=PRIVATE_COOKIE','location':'https://evil.invalid/PRIVATE_REDIRECT'});
+  }),authenticated);
+  assert.equal(response.status,200);assert.deepEqual(await response.json(),frame);
+  assert.equal(response.headers.get('set-cookie'),null);assert.equal(response.headers.get('location'),null);assert.equal(response.headers.get('cache-control'),'no-store');
+ }
+});
+
+test('preview and metadata cannot be confused and malformed private values never reach a response',async()=>{
+ const invalid=[sampleFrame(),{...previewFrame(),buyer_user_name:'PRIVATE_BUYER'},{...previewFrame(),access_token:'PRIVATE_TOKEN'},
+  {...previewFrame(),amounts:[...previewFrame().amounts,{name:'PRIVATE_FIELD',value:1}]},{...previewFrame(),currency:'USD'},
+  {...previewFrame(),items:[{quantity_purchased:2,original_price:1,selling_price:1,is_kit:true,item_id:'PRIVATE_ITEM'}]}];
+ for(const value of invalid){const response=await forwardFinancePaymentSample(previewRequest(),configuration(()=>jsonReply(value)),authenticated);assert.equal(response.status,502);const raw=await response.text();assert.ok(!raw.includes('PRIVATE'));assert.ok(!raw.includes('260101FIXTUREONLY'));assert.equal(JSON.parse(raw).diagnostic.code,'FINANCE_SAMPLE_PREVIEW_RESPONSE_INVALID');}
+ const metadata=await forwardFinancePaymentSample(privateRequest(),configuration(()=>jsonReply(previewFrame())),authenticated);assert.equal(metadata.status,502);assert.ok(!(await metadata.text()).includes('260101FIXTUREONLY'));
+ const operational=await forwardFinancePaymentSample(previewRequest(),configuration(()=>jsonReply({error:'FINANCE_SAMPLE_UNAVAILABLE',diagnostic:{code:'FINANCE_SAMPLE_PREVIEW_RESPONSE_INVALID',http:200},order_sn:'PRIVATE_SERIAL',buyer_user_name:'PRIVATE_BUYER'},502)),authenticated);
+ assert.deepEqual(await operational.json(),{error:'FINANCE_SAMPLE_UNAVAILABLE',diagnostic:{code:'FINANCE_SAMPLE_PREVIEW_RESPONSE_INVALID',http:200}});
+});
+
+test('late private preview response is canceled after deadline without reading or leaking its values',async()=>{
+ const original=setTimeout;let resolveFetch,canceled=0,calls=0;
+ globalThis.setTimeout=(callback,delay,...args)=>original(callback,delay===45000?5:delay,...args);
+ try{
+  const response=await forwardFinancePaymentSample(previewRequest(),configuration(()=>{calls++;return new Promise(resolve=>{resolveFetch=resolve;});}),authenticated);
+  assert.equal(response.status,502);
+  const body=new ReadableStream({pull(){},cancel(){canceled++;}});resolveFetch(new Response(body,{headers:{'content-type':'application/json'}}));
+  await new Promise(resolve=>setImmediate(resolve));assert.equal(canceled,1);assert.equal(body.locked,false);assert.equal(calls,1);
+  assert.ok(!(await response.text()).includes('260101FIXTUREONLY'));
  }finally{globalThis.setTimeout=original;}
 });

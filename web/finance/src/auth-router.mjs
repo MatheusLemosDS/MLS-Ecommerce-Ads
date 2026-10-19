@@ -1,14 +1,17 @@
+import {projectFinancePaymentPreview} from './payment-preview-frame.mjs';
+
 // Candidate router: only the isolated financial Service Binding can handle these paths.
 const FINANCE_ORIGIN = 'https://auth.brazacommerce.com.br';
 const FINANCE_ROUTES = new Set(['/shopee/finance/connect','/shopee/finance/callback','/shopee/finance/status']);
 const AUTHORIZATION_HOSTS = new Set(['open.shopee.com','open.shopee.com.br','partner.shopeemobile.com','openplatform.shopee.com.br']);
 const PRIVATE_HEADERS = {'cache-control':'no-store','referrer-policy':'no-referrer','x-content-type-options':'nosniff'};
 const PAYMENT_SAMPLE_PATH = '/internal/shopee/finance/payment-sample';
+const PAYMENT_PREVIEW_PATH = '/internal/shopee/finance/payment-preview';
 const SAMPLE_FIELDS = ['escrow_amount','original_cost_of_goods_sold','buyer_total_amount','commission_fee','service_fee','seller_transaction_fee','actual_shipping_fee','ads_escrow_top_up_fee_or_technical_support_fee','items'];
 const SAMPLE_ITEM_FIELDS = ['item_id','model_id','line_item_id','quantity_purchased','original_price','selling_price','order_discounted_price','is_kit','kit_items'];
 const SAMPLE_TYPES = new Set(['number','string','boolean','object','array','null','mixed']);
 const SAMPLE_FAILURES = new Set([
- 'FINANCE_SAMPLE_UNAVAILABLE','FINANCE_SAMPLE_CONFIGURATION','FINANCE_SAMPLE_SIGNING_KEY_CONFIGURATION','FINANCE_SAMPLE_SIGNATURE_UNAVAILABLE','FINANCE_SAMPLE_CLOCK_CONFIGURATION','FINANCE_SAMPLE_AUTHORIZATION_EXPIRED',
+ 'FINANCE_SAMPLE_UNAVAILABLE','FINANCE_SAMPLE_PREVIEW_RESPONSE_INVALID','FINANCE_SAMPLE_CONFIGURATION','FINANCE_SAMPLE_SIGNING_KEY_CONFIGURATION','FINANCE_SAMPLE_SIGNATURE_UNAVAILABLE','FINANCE_SAMPLE_CLOCK_CONFIGURATION','FINANCE_SAMPLE_AUTHORIZATION_EXPIRED',
  'FINANCE_AUTHORIZATION_REQUIRED','FINANCE_AUTHORIZATION_IN_PROGRESS','FINANCE_AUTHORIZATION_CONFLICT',
  'FINANCE_REFRESH_CONFLICT','FINANCE_REFRESH_IN_PROGRESS','FINANCE_REFRESH_FAILED','FINANCE_REFRESH_COORDINATOR_CONFIGURATION',
  'FINANCE_CLOCK_CONFIGURATION','FINANCE_DATABASE_CONFIGURATION','FINANCE_ENCRYPTION_CONFIGURATION','FINANCE_ENCRYPTION_FAILED',
@@ -58,7 +61,7 @@ async function readSampleBody(body,maximum,controller,onReader){
 // This private action is deliberately separate from the public OAuth router.
 export async function forwardFinancePaymentSample(request,env,{validateInternalApp}={}){
  let url;try{url=new URL(request.url);}catch{return routerFailure('INVALID_REQUEST',400);}
- if(url.origin!==FINANCE_ORIGIN||url.username||url.password||url.hash||url.pathname!==PAYMENT_SAMPLE_PATH)return routerFailure('NOT_FOUND',404);
+ if(url.origin!==FINANCE_ORIGIN||url.username||url.password||url.hash||![PAYMENT_SAMPLE_PATH,PAYMENT_PREVIEW_PATH].includes(url.pathname))return routerFailure('NOT_FOUND',404);
  if(request.method!=='POST')return routerFailure('METHOD_NOT_ALLOWED',405);
  if(url.search||request.url.length>4096)return routerFailure('INVALID_REQUEST',400);
  try{if(typeof validateInternalApp!=='function'||!await validateInternalApp(request,env))return routerFailure('UNAUTHORIZED',401);}catch{return sampleFailure();}
@@ -74,7 +77,7 @@ export async function forwardFinancePaymentSample(request,env,{validateInternalA
   if(!body||typeof body!=='object'||Array.isArray(body)||Object.keys(body).length!==0)return routerFailure('INVALID_REQUEST',400);
   if(controller.signal.aborted)return sampleFailure();
   const headers={'content-type':'application/json',accept:'application/json','X-Braza-Finance-Router':secret};
-  const upstream=await env.SHOPEE_FINANCE_SERVICE.fetch(new Request(FINANCE_ORIGIN+PAYMENT_SAMPLE_PATH,{method:'POST',headers,body:'{}',redirect:'manual',signal:controller.signal}));
+  const upstream=await env.SHOPEE_FINANCE_SERVICE.fetch(new Request(FINANCE_ORIGIN+url.pathname,{method:'POST',headers,body:'{}',redirect:'manual',signal:controller.signal}));
   // A service binding may finish after our deadline despite its aborted signal.
   // Its late response must be canceled before acquiring a stalled body reader.
   if(controller.signal.aborted){try{upstream?.body?.cancel().catch(()=>{});}catch{}return sampleFailure();}
@@ -87,7 +90,9 @@ export async function forwardFinancePaymentSample(request,env,{validateInternalA
    const code=value?.error==='FINANCE_SAMPLE_UNAVAILABLE'&&SAMPLE_FAILURES.has(value?.diagnostic?.code)?value.diagnostic.code:'FINANCE_SAMPLE_UNAVAILABLE';
    return sampleFailure(code,[400,401,403,409,429,502,503,504].includes(upstream.status)?upstream.status:502,value?.diagnostic?.http);
   }
-  const frame=sampleFrame(value);return frame?new Response(JSON.stringify(frame),{headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}}):sampleFailure();
+  const preview=url.pathname===PAYMENT_PREVIEW_PATH;
+  const frame=preview?projectFinancePaymentPreview(value):sampleFrame(value);
+  return frame?new Response(JSON.stringify(frame),{headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}}):sampleFailure(preview?'FINANCE_SAMPLE_PREVIEW_RESPONSE_INVALID':'FINANCE_SAMPLE_UNAVAILABLE');
  };
  try{return await Promise.race([work(),deadline]);}catch{return sampleFailure();}finally{clearTimeout(timer);controller.abort();try{reader?.cancel().catch(()=>{});}catch{}}
 }

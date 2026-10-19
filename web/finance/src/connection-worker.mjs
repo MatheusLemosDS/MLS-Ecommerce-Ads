@@ -1,4 +1,5 @@
 import {FINANCE_PROFILE, FinanceConnectionError, createFinanceStore} from './connection-store.mjs';
+import {projectFinancePaymentPreview} from './payment-preview-frame.mjs';
 
 const ORIGIN = 'https://auth.brazacommerce.com.br';
 const PREFIX = '/shopee/finance';
@@ -15,11 +16,12 @@ const SECURITY_HEADERS = Object.freeze({
 });
 
 const PAYMENT_SAMPLE_PATH = '/internal/shopee/finance/payment-sample';
+const PAYMENT_PREVIEW_PATH = '/internal/shopee/finance/payment-preview';
 const SAMPLE_FIELDS = ['escrow_amount','original_cost_of_goods_sold','buyer_total_amount','commission_fee','service_fee','seller_transaction_fee','actual_shipping_fee','ads_escrow_top_up_fee_or_technical_support_fee','items'];
 const SAMPLE_ITEM_FIELDS = ['item_id','model_id','line_item_id','quantity_purchased','original_price','selling_price','order_discounted_price','is_kit','kit_items'];
 const SAMPLE_TYPES = new Set(['number','string','boolean','object','array','null','mixed']);
 const SAMPLE_FAILURES = new Set([
- 'FINANCE_SAMPLE_UNAVAILABLE','FINANCE_SAMPLE_CONFIGURATION','FINANCE_SAMPLE_SIGNING_KEY_CONFIGURATION','FINANCE_SAMPLE_SIGNATURE_UNAVAILABLE','FINANCE_SAMPLE_CLOCK_CONFIGURATION','FINANCE_SAMPLE_AUTHORIZATION_EXPIRED',
+ 'FINANCE_SAMPLE_UNAVAILABLE','FINANCE_SAMPLE_PREVIEW_RESPONSE_INVALID','FINANCE_SAMPLE_CONFIGURATION','FINANCE_SAMPLE_SIGNING_KEY_CONFIGURATION','FINANCE_SAMPLE_SIGNATURE_UNAVAILABLE','FINANCE_SAMPLE_CLOCK_CONFIGURATION','FINANCE_SAMPLE_AUTHORIZATION_EXPIRED',
  'FINANCE_AUTHORIZATION_REQUIRED','FINANCE_AUTHORIZATION_IN_PROGRESS','FINANCE_AUTHORIZATION_CONFLICT',
  'FINANCE_REFRESH_CONFLICT','FINANCE_REFRESH_IN_PROGRESS','FINANCE_REFRESH_FAILED','FINANCE_REFRESH_COORDINATOR_CONFIGURATION',
  'FINANCE_CLOCK_CONFIGURATION','FINANCE_DATABASE_CONFIGURATION','FINANCE_ENCRYPTION_CONFIGURATION','FINANCE_ENCRYPTION_FAILED',
@@ -243,7 +245,7 @@ function safeStatus(value) {
   };
 }
 
-export function createFinanceWorker({adapter, paymentSample, fetchImpl, now = () => Date.now()} = {}) {
+export function createFinanceWorker({adapter, paymentSample, paymentPreview, fetchImpl, now = () => Date.now()} = {}) {
   return {
     async fetch(request, env) {
       let url;
@@ -255,18 +257,21 @@ export function createFinanceWorker({adapter, paymentSample, fetchImpl, now = ()
       }
       const callback = url.pathname === PREFIX + '/callback';
       if (url.origin !== ORIGIN || url.username || url.password || url.hash) return failure('NOT_FOUND', 404, callback);
-      if (url.pathname === PAYMENT_SAMPLE_PATH) {
+      if ([PAYMENT_SAMPLE_PATH, PAYMENT_PREVIEW_PATH].includes(url.pathname)) {
         if (request.method !== 'POST') return failure('METHOD_NOT_ALLOWED', 405);
         if (url.search !== '') return failure('INVALID_REQUEST', 400);
         const routerError = await trustedRouter(request, env);
         if (routerError) return failure(routerError, routerError === 'FORBIDDEN' ? 403 : 503);
         // The offline/default worker has no injected Payment capability.
-        if (env?.FINANCE_CONNECTION_ENABLED !== 'true' || typeof paymentSample !== 'function'
+        const preview = url.pathname === PAYMENT_PREVIEW_PATH;
+        const capability = preview ? paymentPreview : paymentSample;
+        if (env?.FINANCE_CONNECTION_ENABLED !== 'true' || typeof capability !== 'function'
             || typeof fetchImpl !== 'function' || typeof now !== 'function') return failure('CONFIGURATION_PENDING', 503);
         if (!await emptyPaymentBody(request)) return failure('INVALID_REQUEST', 400);
         try {
-          const frame = sampleFrame(await paymentSample(env, {fetchImpl, now}));
-          if (!frame) return paymentFailure();
+          const result = await capability(env, {fetchImpl, now});
+          const frame = preview ? projectFinancePaymentPreview(result) : sampleFrame(result);
+          if (!frame) return paymentFailure(preview ? new FinanceConnectionError('FINANCE_SAMPLE_PREVIEW_RESPONSE_INVALID', 502) : undefined);
           return response(frame, 200, {json: true});
         } catch (error) { return paymentFailure(error); }
       }
