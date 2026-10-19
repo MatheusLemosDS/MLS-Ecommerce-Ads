@@ -3,7 +3,7 @@ import {requestFinanceInitialExchange} from './initial-exchange.mjs';
 
 export const FINANCE_AUTHORIZATION_PATH = '/auth';
 export const FINANCE_CALLBACK = 'https://auth.brazacommerce.com.br/shopee/finance/callback';
-const ORIGIN = 'https://open.shopee.com.br';
+const ORIGIN = 'https://open.shopee.com';
 const encoder = new TextEncoder();
 const fail = () => new FinanceConnectionError('FINANCE_PROVIDER_CONFIGURATION', 503);
 const validKey = key => typeof key === 'string' && key.length > 0 && key.length <= 4096
@@ -28,7 +28,7 @@ export function createFinanceProviderAdapter({fetchImpl, now = () => Date.now()}
         || params.partner_id !== FINANCE_PROFILE.partner_id || params.shop_id !== FINANCE_PROFILE.shop_id
         || params.redirect_uri !== FINANCE_CALLBACK || typeof params.state !== 'string'
         || !/^[A-Za-z0-9_-]{43}$/.test(params.state)) throw fail();
-      // Brazil's browser authorization uses an outer OAuth state. The API
+      // Global browser authorization uses an outer OAuth state. The API
       // Partner Key remains private and is used only for the token exchange.
       const url = new URL(FINANCE_AUTHORIZATION_PATH, ORIGIN);
       url.searchParams.set('partner_id', String(FINANCE_PROFILE.partner_id));

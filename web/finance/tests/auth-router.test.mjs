@@ -31,8 +31,8 @@ test('unavailable service errors do not disclose upstream exception contents',as
 });
 test('redirect responses allow official HTTPS destinations and refuse unsafe alternatives',async()=>{
  const run=location=>forwardFinanceConnection(new Request(base+'/shopee/finance/connect'),configuration(()=>new Response(null,{status:302,headers:{location}})));
- for(const target of ['https://open.shopee.com.br/auth?partner_id=2049333','https://openplatform.shopee.com.br/api/v2/shop/auth_partner?state=fixture',base+'/shopee/finance/status'])assert.equal((await run(target)).status,302);
- for(const target of ['http://open.shopee.com.br/auth','https://open.shopee.com.br.attacker.invalid/auth','https://user:password@open.shopee.com.br/auth','https://open.shopee.com.br:444/auth',base+'/shopee/connect',base+'/shopee/finance/status?token=private','https://open.shopee.com.br/auth#fragment'])assert.equal((await run(target)).status,502);
+ for(const target of ['https://open.shopee.com/auth?partner_id=2049333','https://open.shopee.com.br/auth?partner_id=2049333','https://openplatform.shopee.com.br/api/v2/shop/auth_partner?state=fixture',base+'/shopee/finance/status'])assert.equal((await run(target)).status,302);
+ for(const target of ['http://open.shopee.com/auth','https://open.shopee.com.attacker.invalid/auth','https://user:password@open.shopee.com/auth','https://open.shopee.com:444/auth','http://open.shopee.com.br/auth','https://open.shopee.com.br.attacker.invalid/auth','https://user:password@open.shopee.com.br/auth','https://open.shopee.com.br:444/auth',base+'/shopee/connect',base+'/shopee/finance/status?token=private','https://open.shopee.com/auth#fragment','https://open.shopee.com.br/auth#fragment'])assert.equal((await run(target)).status,502);
 });
 test('a backend cannot overwrite other cookies or broaden the cookie domain/path',async()=>{
  for(const cookie of ['mls_session=changed; Path=/shopee/finance','braza_finance_oauth=fixture; Domain=brazacommerce.com.br; Path=/shopee/finance','braza_finance_oauth=fixture; Path=/']){

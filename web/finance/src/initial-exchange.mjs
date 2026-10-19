@@ -1,8 +1,8 @@
 import {FINANCE_PROFILE, FinanceConnectionError} from './connection-store.mjs';
 import {requestFinanceAuthJson} from './auth-json-transport.mjs';
 
-// Auth uses the production origin documented for GetAccessToken. The Brazilian
-// browser authorization frontend and Payment API have independent origins.
+// Auth uses the production origin documented for GetAccessToken. Browser
+// authorization uses its Global frontend; Payment routing is independent.
 const ORIGIN = 'https://partner.shopeemobile.com';
 const PATH = '/api/v2/auth/token/get';
 const encoder = new TextEncoder();

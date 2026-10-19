@@ -14,12 +14,12 @@ const params = {state: STATE, redirect_uri: FINANCE_CALLBACK, partner_id: 204933
 const env = {FINANCE_CONNECTION_ENABLED: 'true', SHOPEE_FINANCE_PARTNER_KEY: KEY};
 const now = () => stamp * 1000;
 
-test('Brazil browser authorization uses outer OAuth state without signing or provider requests', async t => {
+test('Global browser authorization uses outer OAuth state without signing or provider requests', async t => {
   let requests = 0;
   const signing = t.mock.method(crypto.subtle, 'sign', () => { throw new Error('UNEXPECTED_BROWSER_SIGNING'); });
   const adapter = createFinanceProviderAdapter({now, fetchImpl: () => { requests++; }});
   const url = new URL(await adapter.authorizationUrl(params, env));
-  assert.equal(url.origin, 'https://open.shopee.com.br');
+  assert.equal(url.origin, 'https://open.shopee.com');
   assert.equal(url.pathname, '/auth');
   assert.deepEqual([...url.searchParams.keys()], ['partner_id', 'auth_type', 'redirect_uri', 'response_type', 'state']);
   assert.equal(url.searchParams.get('partner_id'), '2049333');

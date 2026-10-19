@@ -38,7 +38,7 @@ function fixture() {
     isReady: () => true,
     authorizationUrl(params) {
       authorizationCalls.push(params);
-      const url = new URL('https://open.shopee.com.br/auth');
+      const url = new URL('https://open.shopee.com/auth');
       for (const [key, value] of Object.entries({partner_id: params.partner_id,
         auth_type: 'seller', redirect_uri: params.redirect_uri, response_type: 'code', state: params.state})) url.searchParams.set(key, String(value));
       return url.toString();
@@ -142,7 +142,7 @@ test('untrusted hosts, protocol, ports, Ads paths and methods are rejected befor
 
 test('connect generates a browser-bound state, fixed callback and pinned finance profile', async () => {
   const ctx = fixture(), session = await begin(ctx);
-  assert.equal(session.location.origin, 'https://open.shopee.com.br');
+  assert.equal(session.location.origin, 'https://open.shopee.com');
   assert.equal(session.location.pathname, '/auth');
   const redirect = new URL(session.location.searchParams.get('redirect_uri'));
   assert.equal(redirect.origin + redirect.pathname, ORIGIN + PREFIX + '/callback');
@@ -162,13 +162,14 @@ test('connect generates a browser-bound state, fixed callback and pinned finance
   assert.deepEqual(ctx.authorizationCalls[0], {state: session.state, redirect_uri: ORIGIN + PREFIX + '/callback', partner_id: 2049333, shop_id: 1178167501});
 });
 
-test('authorization URL validation pins the Brazil frontend and exact OAuth fields', async () => {
-  const good = state => 'https://open.shopee.com.br/auth?' + new URLSearchParams({
+test('authorization URL validation pins the Global frontend and exact OAuth fields', async () => {
+  const good = state => 'https://open.shopee.com/auth?' + new URLSearchParams({
     partner_id: '2049333', auth_type: 'seller', redirect_uri: ORIGIN + PREFIX + '/callback', response_type: 'code', state});
   const changed = (state, field, value) => { const url = new URL(good(state)); url[field] = value; return url.toString(); };
   const param = (state, field, value) => { const url = new URL(good(state)); url.searchParams.set(field, value); return url.toString(); };
   const bad = [
     state => changed(state, 'hostname', 'evil.invalid'),
+    state => changed(state, 'hostname', 'open.shopee.com.br'),
     state => changed(state, 'protocol', 'http:'),
     state => changed(state, 'port', '444'),
     state => changed(state, 'username', 'name'),
@@ -184,7 +185,7 @@ test('authorization URL validation pins the Brazil frontend and exact OAuth fiel
     state => param(state, 'scope', 'shop'),
     state => changed(state, 'pathname', '/api/v2/auth/token/get'),
     state => changed(state, 'pathname', '/auth/'),
-    state => changed(state, 'hostname', 'open.shopee.com.br.evil.invalid'),
+    state => changed(state, 'hostname', 'open.shopee.com.evil.invalid'),
     state => 'https://partner.shopeemobile.com/api/v2/shop/auth_partner?' + new URLSearchParams({
       partner_id: '2049333', timestamp: '1800000000', sign: 'a'.repeat(64), redirect: ORIGIN + PREFIX + '/callback?state=' + state}),
     state => 'https://openplatform.shopee.com.br/api/v2/shop/auth_partner?' + new URLSearchParams({
@@ -204,7 +205,7 @@ test('authorization URL validation pins the Brazil frontend and exact OAuth fiel
       state => { const url = new URL(good(state)); url.searchParams.delete(field); return url.toString(); },
       state => { const url = new URL(good(state)); url.searchParams.append(field, url.searchParams.get(field)); return url.toString(); },
     ]),
-    () => 'https://open.shopee.com.br/' + 'x'.repeat(4096),
+    () => 'https://open.shopee.com/' + 'x'.repeat(4096),
   ];
   for (const makeUrl of bad) {
     const ctx = fixture(); ctx.adapter.authorizationUrl = ({state}) => makeUrl(state);

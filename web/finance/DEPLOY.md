@@ -1,6 +1,12 @@
 # Publicação da conexão financeira
 
 Entrega para **BrazaCommerce Financeiro / Live Partner 2049333 / loja 1178167501**.
+
+Na publicação atual pelo Git, aguardar os deploys de **Auth e Finance** antes de
+iniciar uma tentativa. O Auth precisa aceitar o destino Global da autorização
+financeira. Sempre iniciar por `/shopee/finance/connect`, que cria cookie e
+nonce; o link público de verificação da tela não substitui essa etapa.
+
 Conecta a loja e guarda o par de tokens cifrado. A importação de taxas/recebíveis
 e o cálculo de lucro ainda não fazem parte desta entrega. Nada foi publicado
 pelo assistente. Ads 2047569 e o App v11 não precisam de alteração.
@@ -55,7 +61,7 @@ como `https://auth.brazacommerce.com.br`. O callback é
 Abrir no navegador do titular da loja:
 `https://auth.brazacommerce.com.br/shopee/finance/connect`.
 
-O destino deve ser a autorização brasileira `https://open.shopee.com.br/auth`,
+O destino deve ser a autorização Global `https://open.shopee.com/auth`,
 cuja tela foi aberta para a aplicação financeira pelo operador. O link contém
 somente `partner_id=2049333`, `auth_type=seller`, `redirect_uri` com o callback
 financeiro sem query, `response_type=code` e `state` com o nonce independente.
@@ -70,9 +76,9 @@ o código de autorização. Não remover a validação de nonce/cookie para cont
 
 A troca e a renovação dos tokens usam a base Auth de produção documentada
 `https://partner.shopeemobile.com`, com HMAC-SHA256 e a chave financeira.
-A origem Auth é independente do frontend `open.shopee.com.br/auth` e da API
-Payment brasileira. Não repetir um código real em outro servidor após falha.
-A confirmação da tela brasileira não valida esses pedidos de API nem comprova
+A origem Auth acompanha o frontend Global `open.shopee.com/auth`; a API
+Payment brasileira tem roteamento independente. Não repetir um código real em outro servidor após falha.
+A confirmação da tela Global não valida esses pedidos de API nem comprova
 obtenção de tokens. Se o callback falhar, enviar somente o código de diagnóstico
 escrito na página, sem compartilhar o endereço ou o código de autorização.
 

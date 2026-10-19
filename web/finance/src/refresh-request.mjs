@@ -2,7 +2,7 @@ import {FINANCE_PROFILE, FinanceConnectionError} from './connection-store.mjs';
 import {FINANCE_REFRESH_PATH, signFinanceRefreshRequest} from './refresh-signature.mjs';
 
 // RefreshAccessToken uses the documented production Auth origin, matching
-// initial exchange independently of the Brazilian browser and Payment origins.
+// initial exchange and Global browser flow independently of Payment routing.
 export const FINANCE_REFRESH_ORIGIN = 'https://partner.shopeemobile.com';
 
 // Private request construction only. No fetch, response parser, retry or rotation.

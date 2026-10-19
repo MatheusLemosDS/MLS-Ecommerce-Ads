@@ -20,7 +20,7 @@ O teste parou antes de confirmar a autorização; não validou a troca de tokens
 
 ## Correção
 
-O Financeiro passa a abrir `https://open.shopee.com.br/auth` com estes parâmetros:
+O Financeiro passa a abrir `https://open.shopee.com/auth` com estes parâmetros:
 
 | Parâmetro | Valor |
 | --- | --- |
@@ -32,8 +32,8 @@ O Financeiro passa a abrir `https://open.shopee.com.br/auth` com estes parâmetr
 
 O link de navegador usa o fluxo web; os POSTs de troca e renovação usam
 HMAC-SHA256 e a chave privada no servidor Auth de produção documentado
-`https://partner.shopeemobile.com`. A origem do frontend brasileiro e a origem
-da API Payment não determinam o servidor de autenticação. O callback
+`https://partner.shopeemobile.com`. O frontend e os POSTs usam o par Global de
+autenticação; o roteamento da API Payment permanece independente. O callback
 continua exigindo estado, cookie, validade, uso único e a loja
 esperada antes de trocar o código. Não há relaxamento de validação nem importação
 de tokens Ads.
@@ -79,8 +79,8 @@ comprova obtenção de tokens. A diferença entre candidato e controle sustenta
 usar a origem Auth Global explicitamente indicada nos exemplos oficiais
 GetAccessToken e RefreshAccessToken recebidos. Os dois POSTs passam a ter essa
 origem fixa, sem alternar servidores nem repetir um código real após falha.
-O navegador continua no frontend brasileiro. A nova autorização real e o
-estado `CONNECTED` ainda precisam ser confirmados após o deploy.
+Nessa etapa, o navegador ainda continuava no frontend brasileiro. A nova
+autorização real e o estado `CONNECTED` continuavam pendentes.
 
 Depois de confirmar o deploy ativo da correção Global, o operador recebeu
 novamente rejeição de assinatura. Após a orientação para regravar somente a
@@ -100,9 +100,31 @@ desconhecidos continuam privados. A revisão do callback confirmou que o código
 impedindo nova troca da mesma tentativa. A nova categoria permite conferir a
 próxima autorização real sem divulgar o código, mensagens ou tokens.
 
+## Alinhamento do frontend Global
+
+O operador confirmou posteriormente que o link público de verificação em
+`https://open.shopee.com/auth`, com a aplicação 2049333 e seu callback financeiro,
+abriu a tela de autorização ou login. Não foi solicitada a conclusão da
+autorização nesse link, que não contém o nonce gerado pelo painel.
+
+O SDK comunitário consultado associa o frontend `open.shopee.com/auth` à API
+`partner.shopeemobile.com/api/v2` no perfil Global e associa os dois endereços
+brasileiros no perfil Brasil. O Financeiro passa a usar o par Global observado:
+frontend Global e POSTs Auth Global. Isso elimina a combinação anterior entre
+frontend brasileiro e API Global; não comprova, por si, que essa combinação
+causava o erro real nem que um código válido já tenha sido trocado.
+
+O contrato continua com os mesmos cinco parâmetros, callback fixo, `state`
+externo, cookie independente, validade e uso único. O guard do Financeiro fixa
+o destino Global e recusa a origem brasileira para novas tentativas. O Auth
+adiciona somente o hostname exato `open.shopee.com` à lista de destinos seguros,
+mantendo as validações HTTPS, credenciais, porta, fragmento e cookie. É preciso
+aguardar os deploys de Auth e Finance e iniciar uma nova tentativa por
+`/shopee/finance/connect`. A tela pública de verificação não substitui essa rota.
+
 ## Comparação com a conexão Ads existente
 
-O Auth existente já abre `https://open.shopee.com.br/auth` com os mesmos cinco
+O fluxo Ads do Auth existente já abre `https://open.shopee.com.br/auth` com os mesmos cinco
 nomes de parâmetros. Seu callback valida cookie e `state` e envia código e
 identidade ao gateway DigitalOcean em `/api/shopee/token`. O Financeiro usa o
 mesmo formato de entrada e retorno, com callback, nonce e identidade próprios,
@@ -122,9 +144,9 @@ seus tokens permanecem separados da aplicação financeira 2049333.
 - A implementação existente de Ads gera o mesmo formato de link web, com seu
   próprio ID e callback. A correção financeira preserva essa integração.
 - A versão **2.10.0** do [SDK comunitário Shopee](https://www.npmjs.com/package/@congminh1254/shopee-sdk/v/2.10.0)
-  também gera esses cinco parâmetros em `getAuthorizationUrl`, usa
-  `open.shopee.com.br/auth` para Brasil e constrói a troca inicial/renovação
-  sobre a base regional `openplatform.shopee.com.br/api/v2`. O pacote foi consultado sem executar
+  também gera esses cinco parâmetros em `getAuthorizationUrl`. Associa
+  `open.shopee.com/auth` a `partner.shopeemobile.com/api/v2` no perfil Global e
+  os dois endereços brasileiros no perfil Brasil. O pacote foi consultado sem executar
   código e sua integridade SHA512 foi verificada. É uma fonte independente,
   não documentação oficial da Shopee.
 - O operador forneceu o guia oficial **BR SPI App Creation User Guide**,
@@ -138,7 +160,8 @@ seus tokens permanecem separados da aplicação financeira 2049333.
 
 ## Verificação após a publicação pelo Git
 
-1. Aguardar o deploy do commit da correção no Worker `brazacommerce-finance`.
+1. Aguardar o deploy do commit da correção nos Workers `brazacommerce-auth` e
+   `brazacommerce-finance`.
 2. Abrir novamente `https://auth.brazacommerce.com.br/shopee/finance/connect`.
 3. Confirmar a aplicação financeira e autorizar somente a loja 1178167501.
 4. Verificar a mensagem de conclusão e consultar `/shopee/finance/status`.

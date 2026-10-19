@@ -99,13 +99,13 @@ function adapterReady(adapter, env) {
   }
 }
 
-// The Brazilian browser authorization returns the outer OAuth state unchanged.
+// The Global browser authorization must return the outer OAuth state unchanged.
 // Keep its fixed callback and browser-bound nonce separate from the API routes.
 function checkedAuthorizationUrl(raw, state) {
   if (typeof raw !== 'string' || raw.length > MAX_URL_LENGTH || /[\x00-\x20\x7f]/.test(raw)) throw new Error('INVALID_AUTHORIZATION_URL');
   const url = new URL(raw);
   const expectedFields = new Set(['partner_id', 'auth_type', 'redirect_uri', 'response_type', 'state']);
-  if (url.origin !== 'https://open.shopee.com.br' || url.pathname !== '/auth' ||
+  if (url.origin !== 'https://open.shopee.com' || url.pathname !== '/auth' ||
       (url.port !== '' && url.port !== '443') || url.username || url.password || url.hash ||
       [...expectedFields].some(key => url.searchParams.getAll(key).length !== 1) ||
       [...url.searchParams.keys()].some(key => !expectedFields.has(key)) ||

@@ -1,7 +1,7 @@
 // Candidate router: only the isolated financial Service Binding can handle these paths.
 const FINANCE_ORIGIN = 'https://auth.brazacommerce.com.br';
 const FINANCE_ROUTES = new Set(['/shopee/finance/connect','/shopee/finance/callback','/shopee/finance/status']);
-const AUTHORIZATION_HOSTS = new Set(['open.shopee.com.br','partner.shopeemobile.com','openplatform.shopee.com.br']);
+const AUTHORIZATION_HOSTS = new Set(['open.shopee.com','open.shopee.com.br','partner.shopeemobile.com','openplatform.shopee.com.br']);
 const PRIVATE_HEADERS = {'cache-control':'no-store','referrer-policy':'no-referrer','x-content-type-options':'nosniff'};
 
 function routerFailure(code,status){return new Response(JSON.stringify({error:code}),{status,headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}});}
