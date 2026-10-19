@@ -17,7 +17,7 @@ test('HTTP failures other than 403 preserve only numeric status without reading 
         requests++;
         return new Response(stream, {status, headers: {'content-type': 'application/json'}});
       }},
-      buildRequest: async () => new Request('https://openplatform.shopee.com.br/api/v2/auth/token/get', {method: 'POST', redirect: 'manual'}),
+      buildRequest: async () => new Request('https://partner.shopeemobile.com/api/v2/auth/token/get', {method: 'POST', redirect: 'manual'}),
       normalizeResponse: () => { normalized++; },
     }), failure => {
       assert.ok(failure instanceof FinanceConnectionError);
@@ -48,7 +48,7 @@ function invoke(response, {timeoutMs = 10000} = {}) {
       assert.equal(request.redirect, 'manual');
       return response;
     }},
-    buildRequest: async () => new Request('https://openplatform.shopee.com.br/api/v2/auth/token/get',
+    buildRequest: async () => new Request('https://partner.shopeemobile.com/api/v2/auth/token/get',
       {method: 'POST', redirect: 'manual'}),
     normalizeResponse: () => { observations.normalized++; return 'UNEXPECTED_NORMALIZATION'; },
   });

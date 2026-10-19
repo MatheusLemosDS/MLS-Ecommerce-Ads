@@ -37,7 +37,7 @@ test('transport has no implicit global fetch and requires explicit injected fetc
   assert.equal(globalCalls, 0);
 });
 
-test('one Brazil production request returns only normalized tokens with conservative expiry', async () => {
+test('one documented production Auth request returns only normalized tokens with conservative expiry', async () => {
   let calls = 0;
   const result = await requestFinanceRefresh(input, {now, fetchImpl: async request => {
     calls++;
@@ -46,7 +46,7 @@ test('one Brazil production request returns only normalized tokens with conserva
     assert.equal(request.redirect, 'manual');
     assert.equal(request.signal.aborted, false);
     const url = new URL(request.url);
-    assert.equal(url.origin, 'https://openplatform.shopee.com.br');
+    assert.equal(url.origin, 'https://partner.shopeemobile.com');
     assert.equal(url.pathname, '/api/v2/auth/access_token/get');
     assert.equal(url.searchParams.get('partner_id'), '2049333');
     assert.equal(url.searchParams.get('timestamp'), String(timestamp));
@@ -129,7 +129,7 @@ test('HTTP failures and redirects are refused once, without retry or alternate h
     let calls = 0;
     await assert.rejects(requestFinanceRefresh(input, {now, fetchImpl: async request => {
       calls++;
-      assert.equal(new URL(request.url).host, 'openplatform.shopee.com.br');
+      assert.equal(new URL(request.url).host, 'partner.shopeemobile.com');
       assert.equal(request.redirect, 'manual');
       return new Response(status === 204 ? null : 'fixture-private-provider-message', {
         status, headers: {location: 'https://other.invalid/private', 'content-type': 'text/html'},

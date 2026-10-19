@@ -31,17 +31,19 @@ O Financeiro passa a abrir `https://open.shopee.com.br/auth` com estes parâmetr
 | `state` | Nonce aleatório de uso único, vinculado ao cookie do navegador |
 
 O link de navegador usa o fluxo web; os POSTs de troca e renovação usam
-HMAC-SHA256 e a chave privada no servidor regional
-`https://openplatform.shopee.com.br`, correspondente ao perfil Brasil. O callback
+HMAC-SHA256 e a chave privada no servidor Auth de produção documentado
+`https://partner.shopeemobile.com`. A origem do frontend brasileiro e a origem
+da API Payment não determinam o servidor de autenticação. O callback
 continua exigindo estado, cookie, validade, uso único e a loja
 esperada antes de trocar o código. Não há relaxamento de validação nem importação
 de tokens Ads.
 
 Após a primeira correção, o operador chegou ao callback e observou
-`REAUTH_REQUIRED`, revisão zero. O código de troca e renovação ainda apontava
-para o servidor Global. Essa inconsistência regional foi corrigida; o estado
-observado não determina sozinho a causa exata da falha anterior. A resposta de
-erro do callback agora mostra apenas um código de diagnóstico de uma lista
+`REAUTH_REQUIRED`, revisão zero. A tentativa seguinte alinhou os POSTs ao
+servidor brasileiro com base no SDK comunitário; essa escolha foi substituída
+pelo servidor Auth Global após a comparação controlada descrita abaixo.
+O estado observado não determina sozinho a causa exata da falha anterior.
+A resposta de erro do callback mostra apenas um código de diagnóstico de uma lista
 fechada, para distinguir assinatura, permissão, parâmetros, HTTP, resposta e
 persistência sem expor o conteúdo recebido da Shopee.
 
@@ -55,6 +57,44 @@ tokens, mesmo que contenha campos de sucesso. HTML e outros formatos são
 descartados sem leitura. Mensagens, identificadores de requisição, chaves e
 tokens não são exibidos. O número HTTP403 sozinho não comprova restrição de IP;
 o operador não encontrou campo de whitelist no cadastro financeiro.
+
+## Comparação controlada dos servidores Auth
+
+O operador executou no terminal da DigitalOcean duas requisições por servidor,
+usando a mesma chave Live informada, IDs financeiros fixos e um código público
+deliberadamente inválido de 32 zeros. Cada par compara o HMAC calculado pela
+regra documentada com o mesmo HMAC contendo um caractere hexadecimal alterado.
+Não há código real de autorização, repetição automática ou redirecionamento.
+A saída contém somente status HTTP, categorias fixas e indicadores de texto;
+nenhuma chave, assinatura, mensagem ou token foi exportado.
+
+| Servidor Auth | Assinatura calculada | Controle alterado |
+| --- | --- | --- |
+| `openplatform.shopee.com.br` | HTTP403 / `ASSINATURA_REJEITADA` | HTTP403 / `ASSINATURA_REJEITADA` |
+| `partner.shopeemobile.com` | HTTP403 / `OUTRO_ERRO_JSON` | HTTP403 / `ASSINATURA_REJEITADA` |
+
+O erro JSON diferente no servidor Global não teve seu código bruto divulgado.
+Portanto, não foi identificado como um erro específico de código inválido nem
+comprova obtenção de tokens. A diferença entre candidato e controle sustenta
+usar a origem Auth Global explicitamente indicada nos exemplos oficiais
+GetAccessToken e RefreshAccessToken recebidos. Os dois POSTs passam a ter essa
+origem fixa, sem alternar servidores nem repetir um código real após falha.
+O navegador continua no frontend brasileiro. A nova autorização real e o
+estado `CONNECTED` ainda precisam ser confirmados após o deploy.
+
+## Comparação com a conexão Ads existente
+
+O Auth existente já abre `https://open.shopee.com.br/auth` com os mesmos cinco
+nomes de parâmetros. Seu callback valida cookie e `state` e envia código e
+identidade ao gateway DigitalOcean em `/api/shopee/token`. O Financeiro usa o
+mesmo formato de entrada e retorno, com callback, nonce e identidade próprios,
+e faz o POST assinado no Worker privado.
+
+Os registros sanitizados do gateway mostram um helper público assinado, mas
+não registram o servidor da última troca Ads bem-sucedida nem o corpo completo
+do assinador. Não se afirma igualdade byte a byte nem se copia a configuração
+nativa como prova de uma chamada passada. A aplicação Ads 2047569, sua chave e
+seus tokens permanecem separados da aplicação financeira 2049333.
 
 ## Fontes e limites
 

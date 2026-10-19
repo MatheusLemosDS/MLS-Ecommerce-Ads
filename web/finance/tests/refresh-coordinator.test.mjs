@@ -8,7 +8,7 @@ import {ensureFinanceAccessToken} from '../src/refresh-coordinator.mjs';
 const ACCESS = 'fixture-internal-access';
 const REFRESH = 'fixture-internal-refresh';
 const KEY = 'fixture-finance-key';
-const ROOT = 'https://openplatform.shopee.com.br';
+const ROOT = 'https://partner.shopeemobile.com';
 const PATH = '/api/v2/auth/access_token/get';
 
 async function fixture(ttl = 60) {

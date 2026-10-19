@@ -32,14 +32,14 @@ test('initial exchange never falls back to global fetch', async t => {
   assert.equal(calls, 0);
 });
 
-test('initial shop exchange uses the Brazil API, documented POST query/body and independent signature', async () => {
+test('initial shop exchange uses the documented production Auth API, POST query/body and independent signature', async () => {
   let calls = 0;
   const result = await requestFinanceInitialExchange(input, {now, fetchImpl: async request => {
     calls++;
     assert.equal(request.method, 'POST');
     assert.equal(request.redirect, 'manual');
     const url = new URL(request.url);
-    assert.equal(url.origin, 'https://openplatform.shopee.com.br');
+    assert.equal(url.origin, 'https://partner.shopeemobile.com');
     assert.equal(url.pathname, '/api/v2/auth/token/get');
     assert.deepEqual([...url.searchParams.keys()], ['partner_id', 'timestamp', 'sign']);
     assert.equal(url.searchParams.get('partner_id'), '2049333');

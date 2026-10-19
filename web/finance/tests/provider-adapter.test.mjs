@@ -63,7 +63,7 @@ test('real adapter joins browser-bound authorization, initial POST and encrypted
   const adapter = createFinanceProviderAdapter({now, fetchImpl: async request => {
     exchanges++;
     const url = new URL(request.url);
-    assert.equal(url.origin + url.pathname, 'https://openplatform.shopee.com.br/api/v2/auth/token/get');
+    assert.equal(url.origin + url.pathname, 'https://partner.shopeemobile.com/api/v2/auth/token/get');
     assert.equal(url.searchParams.get('sign'), createHmac('sha256', KEY)
       .update('2049333/api/v2/auth/token/get' + stamp).digest('hex'));
     assert.deepEqual(await request.json(), {shop_id: 1178167501, code: 'fixture-one-time-code', partner_id: 2049333});
@@ -96,7 +96,7 @@ test('real adapter joins browser-bound authorization, initial POST and encrypted
 });
 
 for (const providerStatus of [200, 403]) {
-test(`a rejected regional token exchange (HTTP ${providerStatus}) reports only its fixed category and cannot reuse the callback`, async () => {
+test(`a rejected production Auth exchange (HTTP ${providerStatus}) reports only its fixed category and cannot reuse the callback`, async () => {
   const db = new D1();
   const runtimeEnv = {...env, FINANCE_DB: db, FINANCE_ROUTER_SECRET: 'fixture-router-' + 'z'.repeat(40),
     FINANCE_TOKEN_ENCRYPTION_KEY: Buffer.alloc(32, 10).toString('base64')};
@@ -104,7 +104,7 @@ test(`a rejected regional token exchange (HTTP ${providerStatus}) reports only i
   let exchanges = 0;
   const adapter = createFinanceProviderAdapter({now, fetchImpl: async request => {
     exchanges++;
-    assert.equal(new URL(request.url).origin, 'https://openplatform.shopee.com.br');
+    assert.equal(new URL(request.url).origin, 'https://partner.shopeemobile.com');
     assert.deepEqual(await request.json(), {shop_id: 1178167501, code: privateCode, partner_id: 2049333});
     return Response.json({error: 'error_sign', request_id: 'fixture-private-request-id',
       message: KEY + privateCode + 'fixture-private-upstream-response'}, {status: providerStatus});

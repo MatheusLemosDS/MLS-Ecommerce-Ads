@@ -1,9 +1,9 @@
 import {FINANCE_PROFILE, FinanceConnectionError} from './connection-store.mjs';
 import {requestFinanceAuthJson} from './auth-json-transport.mjs';
 
-// The fixed finance profile is Brazilian; token requests use its regional API
-// origin independently of the browser authorization frontend.
-const ORIGIN = 'https://openplatform.shopee.com.br';
+// Auth uses the production origin documented for GetAccessToken. The Brazilian
+// browser authorization frontend and Payment API have independent origins.
+const ORIGIN = 'https://partner.shopeemobile.com';
 const PATH = '/api/v2/auth/token/get';
 const encoder = new TextEncoder();
 const fail = (suffix, status = 502) => new FinanceConnectionError('FINANCE_INITIAL_EXCHANGE_' + suffix, status);
