@@ -406,6 +406,32 @@ test('callback diagnostics disclose only fixed exchange or persistence categorie
   }
 });
 
+test('HTTP 403 callback distinguishes fixed JSON and HTML categories without exposing arbitrary metadata', async () => {
+  for (const detail of ['JSON_SIGNATURE_REJECTED', 'JSON_AUTHORIZATION_REJECTED', 'JSON_IP_REJECTED',
+    'JSON_UNRECOGNIZED', 'HTML_CONTENT_TYPE', 'OTHER_CONTENT_TYPE', PRIVATE_CODE, '<script>private</script>']) {
+    const ctx = fixture(), session = await begin(ctx);
+    ctx.adapter.exchange = async params => {
+      ctx.calls.push(params);
+      const error = new FinanceConnectionError('FINANCE_INITIAL_EXCHANGE_UPSTREAM_HTTP');
+      error.upstream_status = 403;
+      error.upstream_diagnostic = detail;
+      error.message = PRIVATE_ACCESS + PRIVATE_REFRESH;
+      throw error;
+    };
+    const result = await ctx.run(callbackPath(session), {headers: {Cookie: session.cookie}});
+    const html = await result.text();
+    assert.equal(result.status, 503);
+    assertSafe(result, html, {callback: true});
+    const known = ['JSON_SIGNATURE_REJECTED', 'JSON_AUTHORIZATION_REJECTED', 'JSON_IP_REJECTED',
+      'JSON_UNRECOGNIZED', 'HTML_CONTENT_TYPE', 'OTHER_CONTENT_TYPE'].includes(detail);
+    const expected = 'FINANCE_INITIAL_EXCHANGE_HTTP_403' + (known ? '_' + detail : '');
+    assert.ok(html.includes('<code>' + expected + '</code>'));
+    assert.ok(!html.includes('<script>'));
+    assert.equal((await ctx.run(callbackPath(session), {headers: {Cookie: session.cookie}})).status, 400);
+    assert.equal(ctx.calls.length, 1);
+  }
+});
+
 test('URL bounds and unexpected connect/status query parameters are rejected before storage', async () => {
   const ctx = fixture();
   for (const path of [PREFIX + '/connect?state=unexpected', PREFIX + '/status?token=PRIVATE', PREFIX + '/callback?' + 'x'.repeat(4096)]) {

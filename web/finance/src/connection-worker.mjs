@@ -14,6 +14,12 @@ const SECURITY_HEADERS = Object.freeze({
   'Content-Security-Policy': "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
 });
 const EXPIRED_COOKIE = `${COOKIE}=; Path=${PREFIX}; Max-Age=0; HttpOnly; Secure; SameSite=Lax`;
+const HTTP_403_DIAGNOSTICS = new Set([
+  'JSON_SIGNATURE_REJECTED', 'JSON_PARAMETER_REJECTED', 'JSON_AUTHORIZATION_REJECTED',
+  'JSON_PERMISSION_REJECTED', 'JSON_PARTNER_REJECTED', 'JSON_IP_REJECTED',
+  'JSON_UNRECOGNIZED', 'JSON_INVALID', 'JSON_BODY_TOO_LARGE',
+  'HTML_CONTENT_TYPE', 'OTHER_CONTENT_TYPE',
+]);
 const CALLBACK_DIAGNOSTICS = new Set([
   'INVALID_CALLBACK', 'AUTHORIZATION_DENIED', 'CONFIGURATION_PENDING', 'FORBIDDEN',
   'FINANCE_INITIAL_EXCHANGE_API_SIGNATURE_REJECTED',
@@ -35,6 +41,7 @@ const CALLBACK_DIAGNOSTICS = new Set([
   'FINANCE_INITIAL_EXCHANGE_REQUEST_INVALID', 'FINANCE_INITIAL_EXCHANGE_REQUEST_STALE',
   'FINANCE_INITIAL_EXCHANGE_SIGNING_KEY_CONFIGURATION', 'FINANCE_INITIAL_EXCHANGE_SIGNATURE_UNAVAILABLE',
   'FINANCE_STORAGE_UNAVAILABLE', 'FINANCE_INVALID_TOKENS', 'FINANCE_AUTHORIZATION_CONFLICT',
+  ...[...HTTP_403_DIAGNOSTICS].map(value => 'FINANCE_INITIAL_EXCHANGE_HTTP_403_' + value),
 ]);
 
 function callbackDiagnostic(error) {
@@ -42,6 +49,8 @@ function callbackDiagnostic(error) {
   const code = Object.getOwnPropertyDescriptor(error, 'code')?.value;
   if (code === 'FINANCE_INITIAL_EXCHANGE_UPSTREAM_HTTP') {
     const status = Object.getOwnPropertyDescriptor(error, 'upstream_status')?.value;
+    const detail = Object.getOwnPropertyDescriptor(error, 'upstream_diagnostic')?.value;
+    if (status === 403 && HTTP_403_DIAGNOSTICS.has(detail)) return 'FINANCE_INITIAL_EXCHANGE_HTTP_403_' + detail;
     if ([400, 401, 403, 429].includes(status)) return 'FINANCE_INITIAL_EXCHANGE_HTTP_' + status;
     if (Number.isInteger(status) && status >= 300 && status <= 399) return 'FINANCE_INITIAL_EXCHANGE_HTTP_REDIRECT';
     if (Number.isInteger(status) && status >= 500 && status <= 599) return 'FINANCE_INITIAL_EXCHANGE_HTTP_SERVER';

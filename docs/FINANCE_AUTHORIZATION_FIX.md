@@ -45,6 +45,17 @@ erro do callback agora mostra apenas um código de diagnóstico de uma lista
 fechada, para distinguir assinatura, permissão, parâmetros, HTTP, resposta e
 persistência sem expor o conteúdo recebido da Shopee.
 
+O operador confirmou depois `FINANCE_INITIAL_EXCHANGE_HTTP_403` na troca
+regional. O transporte descartava o corpo de todas as respostas não-200 e,
+assim, ocultava se o erro era JSON da API ou uma resposta HTML. Agora somente
+o HTTP403 sem redirecionamento pode ter o JSON lido com os mesmos limites de
+64 KiB, UTF-8 e prazo do transporte. A leitura produz apenas categorias de uma
+lista fechada. Uma resposta 403 nunca é normalizada como sucesso ou salva como
+tokens, mesmo que contenha campos de sucesso. HTML e outros formatos são
+descartados sem leitura. Mensagens, identificadores de requisição, chaves e
+tokens não são exibidos. O número HTTP403 sozinho não comprova restrição de IP;
+o operador não encontrou campo de whitelist no cadastro financeiro.
+
 ## Fontes e limites
 
 - O [registro histórico do guia genérico recebido](H3_FINANCE_AUTHORIZATION_OBSERVADA.json)

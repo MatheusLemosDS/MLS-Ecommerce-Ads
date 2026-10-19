@@ -95,7 +95,8 @@ test('real adapter joins browser-bound authorization, initial POST and encrypted
   assert.equal((await run(returned.href, cookie)).status, 400); assert.equal(exchanges, 1);
 });
 
-test('a rejected regional token exchange reports only its fixed category and cannot reuse the callback', async () => {
+for (const providerStatus of [200, 403]) {
+test(`a rejected regional token exchange (HTTP ${providerStatus}) reports only its fixed category and cannot reuse the callback`, async () => {
   const db = new D1();
   const runtimeEnv = {...env, FINANCE_DB: db, FINANCE_ROUTER_SECRET: 'fixture-router-' + 'z'.repeat(40),
     FINANCE_TOKEN_ENCRYPTION_KEY: Buffer.alloc(32, 10).toString('base64')};
@@ -106,7 +107,7 @@ test('a rejected regional token exchange reports only its fixed category and can
     assert.equal(new URL(request.url).origin, 'https://openplatform.shopee.com.br');
     assert.deepEqual(await request.json(), {shop_id: 1178167501, code: privateCode, partner_id: 2049333});
     return Response.json({error: 'error_sign', request_id: 'fixture-private-request-id',
-      message: KEY + privateCode + 'fixture-private-upstream-response'});
+      message: KEY + privateCode + 'fixture-private-upstream-response'}, {status: providerStatus});
   }});
   const worker = createFinanceWorker({adapter, now});
   const run = (url, cookie) => worker.fetch(new Request(url, {headers: {
@@ -122,7 +123,10 @@ test('a rejected regional token exchange reports only its fixed category and can
   const rejected = await run(returned.href, cookie);
   assert.equal(rejected.status, 503);
   const body = await rejected.text();
-  assert.match(body, /FINANCE_INITIAL_EXCHANGE_API_SIGNATURE_REJECTED/);
+  const diagnostic = providerStatus === 403
+    ? 'FINANCE_INITIAL_EXCHANGE_HTTP_403_JSON_SIGNATURE_REJECTED'
+    : 'FINANCE_INITIAL_EXCHANGE_API_SIGNATURE_REJECTED';
+  assert.ok(body.includes('<code>' + diagnostic + '</code>'));
   for (const secret of [privateCode, KEY, location.searchParams.get('state'), cookie,
     'fixture-private-request-id', 'fixture-private-upstream-response']) assert.ok(!body.includes(secret));
   const store = await createFinanceStore(runtimeEnv, {now});
@@ -133,6 +137,7 @@ test('a rejected regional token exchange reports only its fixed category and can
   assert.equal(row.ciphertext, null); assert.equal(row.iv, null);
   assert.equal((await run(returned.href, cookie)).status, 400); assert.equal(exchanges, 1);
 });
+}
 
 test('the deployable entry stays disabled without its flag or dedicated finance credentials', async t => {
   let calls = 0;

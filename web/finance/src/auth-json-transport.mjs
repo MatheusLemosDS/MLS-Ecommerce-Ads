@@ -1,6 +1,17 @@
 import {FinanceConnectionError} from './connection-store.mjs';
 
 const MAX_BODY_BYTES = 64 * 1024;
+const JSON_CONTENT_TYPE = /^application\/json(?:\s*;\s*charset\s*=\s*(?:utf-8|"utf-8"))?\s*$/i;
+// Only exact provider error tokens may influence a public HTTP 403 diagnostic.
+// No message, request ID, token or arbitrary provider string is retained.
+const FORBIDDEN_JSON_DIAGNOSTICS = new Map([
+  ['error_sign', 'JSON_SIGNATURE_REJECTED'],
+  ['error_param', 'JSON_PARAMETER_REJECTED'],
+  ['error_auth', 'JSON_AUTHORIZATION_REJECTED'],
+  ['error_api_permission', 'JSON_PERMISSION_REJECTED'],
+  ['error_partner_id', 'JSON_PARTNER_REJECTED'],
+  ['error_ip', 'JSON_IP_REJECTED'],
+]);
 
 // Private, injected transport only. Importing this module never enables provider
 // traffic; a production adapter must explicitly supply its own fetch function.
@@ -53,38 +64,7 @@ export async function requestFinanceAuthJson({input, options = {}, prefix, build
     }, timeoutMs);
   });
 
-  const run = async () => {
-    const builtRequest = await buildRequest();
-    checkDeadline();
-    const request = new Request(builtRequest, {signal: controller.signal});
-    let response;
-    try {
-      // The Request itself fixes the host, scope, body, headers and manual
-      // redirect policy. There are no retries or alternate hosts.
-      response = await fetchImpl(request);
-    } catch {
-      checkDeadline();
-      throw error('UPSTREAM_FAILED');
-    }
-    if (controller.signal.aborted) {
-      try { response?.body?.cancel().catch(() => {}); } catch {}
-      checkDeadline();
-    }
-    if (!(response instanceof Response) || response.status !== 200 || response.redirected) {
-      try { response?.body?.cancel().catch(() => {}); } catch {}
-      const failure = error('UPSTREAM_HTTP');
-      if (response instanceof Response && Number.isInteger(response.status)
-          && response.status >= 100 && response.status <= 599) {
-        Object.defineProperty(failure, 'upstream_status', {value: response.status, enumerable: true});
-      }
-      throw failure;
-    }
-    const contentType = response.headers.get('content-type');
-    if (typeof contentType !== 'string' ||
-        !/^application\/json(?:\s*;\s*charset\s*=\s*(?:utf-8|"utf-8"))?\s*$/i.test(contentType)) {
-      try { response.body?.cancel().catch(() => {}); } catch {}
-      throw error('UPSTREAM_CONTENT_TYPE');
-    }
+  const readJson = async response => {
     const contentLength = response.headers.get('content-length');
     if (contentLength !== null && (!/^\d+$/.test(contentLength) ||
         !Number.isSafeInteger(Number(contentLength)) || Number(contentLength) > MAX_BODY_BYTES)) {
@@ -125,6 +105,68 @@ export async function requestFinanceAuthJson({input, options = {}, prefix, build
     try { payload = JSON.parse(new TextDecoder('utf-8', {fatal: true}).decode(bytes)); }
     catch { throw error('UPSTREAM_INVALID_JSON'); }
     checkDeadline();
+    return payload;
+  };
+
+  const run = async () => {
+    const builtRequest = await buildRequest();
+    checkDeadline();
+    const request = new Request(builtRequest, {signal: controller.signal});
+    let response;
+    try {
+      // The Request itself fixes the host, scope, body, headers and manual
+      // redirect policy. There are no retries or alternate hosts.
+      response = await fetchImpl(request);
+    } catch {
+      checkDeadline();
+      throw error('UPSTREAM_FAILED');
+    }
+    if (controller.signal.aborted) {
+      try { response?.body?.cancel().catch(() => {}); } catch {}
+      checkDeadline();
+    }
+    if (!(response instanceof Response) || response.status !== 200 || response.redirected) {
+      const failure = error('UPSTREAM_HTTP');
+      if (response instanceof Response && Number.isInteger(response.status)
+          && response.status >= 100 && response.status <= 599) {
+        Object.defineProperty(failure, 'upstream_status', {value: response.status, enumerable: true});
+      }
+      if (response instanceof Response && response.status === 403 && !response.redirected) {
+        const contentType = response.headers.get('content-type');
+        let diagnostic;
+        if (typeof contentType === 'string' && JSON_CONTENT_TYPE.test(contentType)) {
+          try {
+            const payload = await readJson(response);
+            const providerError = payload !== null && typeof payload === 'object' && !Array.isArray(payload)
+              ? Object.getOwnPropertyDescriptor(payload, 'error')?.value : undefined;
+            diagnostic = FORBIDDEN_JSON_DIAGNOSTICS.get(providerError) || 'JSON_UNRECOGNIZED';
+          } catch (readFailure) {
+            if (readFailure instanceof FinanceConnectionError && readFailure.code === prefix + '_UPSTREAM_INVALID_JSON') {
+              diagnostic = 'JSON_INVALID';
+            } else if (readFailure instanceof FinanceConnectionError && readFailure.code === prefix + '_UPSTREAM_BODY_TOO_LARGE') {
+              diagnostic = 'JSON_BODY_TOO_LARGE';
+            } else {
+              throw readFailure;
+            }
+          }
+        } else {
+          try { response.body?.cancel().catch(() => {}); } catch {}
+          diagnostic = typeof contentType === 'string' && contentType.split(';', 1)[0].trim().toLowerCase() === 'text/html'
+            ? 'HTML_CONTENT_TYPE' : 'OTHER_CONTENT_TYPE';
+        }
+        Object.defineProperty(failure, 'upstream_diagnostic', {value: diagnostic, enumerable: true});
+      } else {
+        try { response?.body?.cancel().catch(() => {}); } catch {}
+      }
+      // A non-200 payload is diagnostic only, even if it contains valid tokens.
+      throw failure;
+    }
+    const contentType = response.headers.get('content-type');
+    if (typeof contentType !== 'string' || !JSON_CONTENT_TYPE.test(contentType)) {
+      try { response.body?.cancel().catch(() => {}); } catch {}
+      throw error('UPSTREAM_CONTENT_TYPE');
+    }
+    const payload = await readJson(response);
     return normalizeResponse(payload, {
       requestedAt,
       receivedAt: epoch(),
