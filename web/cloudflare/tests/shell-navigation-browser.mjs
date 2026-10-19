@@ -16,20 +16,22 @@ const env = {
 };
 const nativeFetch = globalThis.fetch;
 const unexpectedNetwork = [];
-const internalPaths = new Set([
-  '/internal/shopee/status',
-  '/internal/shopee/ads/summary',
-  '/internal/shopee/ads/campaigns',
-  '/internal/shopee/ads/gms-items',
-]);
+const metrics = {spend: 123.45, gmv: 987.60, roas: 8, orders: 7, impressions: 123456, clicks: 1234, ctr: 0.01, cost_per_order: 17.64};
+const fixtures = {
+  '/internal/shopee/status': {connections: [{principal_type: 'shop', principal_id: 900001}]},
+  '/internal/shopee/ads/summary': {connected: true, shop: {id: 900001}, balance: 45.67, metrics, daily: [{date: '20261018', expense: 123.45, broad_gmv: 987.60, broad_order: 7}]},
+  '/internal/shopee/ads/campaigns': {connected: true, summary: metrics, campaigns: [{campaign_id: 900002, campaign_name: 'Synthetic cotton product campaign with a long descriptive name', status: 'ONGOING', ...metrics}]},
+  '/internal/shopee/ads/gms-items': {connected: true, summary: metrics, items: [{item_id: 900003, item_name: 'Synthetic cotton product', ...metrics}]},
+  '/internal/shopee/ads/opportunities': {connected: true, items: [], sources: {}},
+};
 let fixtureReads = 0;
 globalThis.fetch = async (input, options) => {
   const url = new URL(typeof input === 'string' ? input : input.url);
-  if (url.origin === 'https://auth.brazacommerce.com.br' && internalPaths.has(url.pathname)) {
+  if (url.origin === 'https://auth.brazacommerce.com.br' && fixtures[url.pathname]) {
     assert.equal(options.method, 'GET');
     assert.equal(options.headers['X-Braza-App-Key'], env.APP_INTERNAL_SECRET);
     fixtureReads++;
-    return Response.json({error: 'FIXTURE_UNAVAILABLE'}, {status: 503});
+    return Response.json(fixtures[url.pathname]);
   }
   unexpectedNetwork.push(url.origin + url.pathname);
   throw new Error('Unexpected fixture network destination');
@@ -56,23 +58,64 @@ await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
 const base = 'http://localhost:' + server.address().port;
 let browser;
 const checks = [];
-const passed = name => checks.push(name);
+const passed = name => {
+  checks.push(name);
+  if (process.env.BRAZA_NAV_TRACE) console.log(name);
+};
 async function noOverflow(page, width, state) {
-  const scrollWidth = await page.locator('html').evaluate(node => node.scrollWidth);
-  assert.ok(scrollWidth <= width, JSON.stringify({width, scrollWidth, state}));
+  const dimensions = await page.locator('html').evaluate(node => ({scrollWidth: node.scrollWidth, clientWidth: node.clientWidth}));
+  assert.equal(dimensions.clientWidth, width);
+  assert.ok(dimensions.scrollWidth <= dimensions.clientWidth, JSON.stringify({width, ...dimensions, state}));
 }
-async function signIn(page) {
+async function signIn(page, path = '/dashboard') {
   await page.goto(base + '/');
   await page.locator('[name="username"]').fill(env.REVIEW_USERNAME);
   await page.locator('[name="password"]').fill(env.REVIEW_PASSWORD);
   await page.getByRole('button', {name: 'Sign in', exact: true}).click();
   await page.waitForURL(base + '/dashboard');
-  await page.goto(base + '/advertising');
+  if (path !== '/dashboard') await page.goto(base + path);
+}
+async function menuInFlow(page) {
+  const positions = await page.locator('.shell-mobile-navigation').evaluate(header => {
+    const controls = [...header.querySelectorAll('.mobile-brand,.mobile-admin,summary')].map(node => node.getBoundingClientRect());
+    return {
+      headerWidth: header.getBoundingClientRect().width,
+      viewport: document.documentElement.clientWidth,
+      headerBottom: header.getBoundingClientRect().bottom,
+      mainTop: document.querySelector('.app').getBoundingClientRect().top,
+      navTop: header.querySelector('nav').getBoundingClientRect().top,
+      controlsBottom: Math.max(...controls.map(box => box.bottom)),
+    };
+  });
+  assert.equal(positions.headerWidth, positions.viewport);
+  assert.ok(positions.navTop >= positions.controlsBottom - 1, JSON.stringify(positions));
+  assert.ok(positions.mainTop >= positions.headerBottom - 1, JSON.stringify(positions));
+}
+async function tablePansLocally(page) {
+  const table = page.locator('.table-wrap').first();
+  assert.ok(await table.locator('tbody tr').count() > 0);
+  const dimensions = await table.evaluate(node => {
+    node.scrollLeft = node.scrollWidth;
+    const box = node.getBoundingClientRect();
+    const lastCell = node.querySelector('tbody tr:last-child td:last-child').getBoundingClientRect();
+    return {
+      client: node.clientWidth, scroll: node.scrollWidth, pan: node.scrollLeft,
+      overflow: getComputedStyle(node).overflowX,
+      right: box.right, cellRight: lastCell.right, cellWidth: lastCell.width,
+      viewport: document.documentElement.clientWidth,
+    };
+  });
+  assert.equal(dimensions.overflow, 'auto');
+  assert.ok(dimensions.scroll > dimensions.client, JSON.stringify(dimensions));
+  assert.ok(dimensions.pan > 0, JSON.stringify(dimensions));
+  assert.ok(dimensions.right <= dimensions.viewport, JSON.stringify(dimensions));
+  assert.ok(dimensions.cellRight <= dimensions.right + 1 && dimensions.cellWidth > 0, JSON.stringify(dimensions));
+  await table.evaluate(node => { node.scrollLeft = 0; });
 }
 try {
   browser = await chromium.launch({executablePath: process.env.BRAZA_CHROMIUM_PATH || '/usr/bin/chromium', args: ['--no-sandbox', '--no-proxy-server']});
-  for (const width of [320, 390, 768, 850]) {
-    const context = await browser.newContext({viewport: {width, height: 844}, javaScriptEnabled: false});
+  for (const width of [320, 360, 390, 768, 850]) {
+    const context = await browser.newContext({viewport: {width, height: 844}, javaScriptEnabled: false, isMobile: true, hasTouch: true});
     try {
       const page = await context.newPage();
       await signIn(page);
@@ -85,6 +128,7 @@ try {
       assert.equal(await admin.isVisible(), true);
       assert.equal(await menu.getAttribute('open'), null);
       await noOverflow(page, width, 'closed');
+      if (width <= 390) await tablePansLocally(page);
       await summary.focus();
       await page.keyboard.press('Enter');
       assert.notEqual(await menu.getAttribute('open'), null);
@@ -97,6 +141,7 @@ try {
         assert.ok(bounds.height >= 44, JSON.stringify({width, route, height: bounds.height}));
       }
       for (const control of [summary, admin]) assert.ok((await control.boundingBox()).height >= 44);
+      await menuInFlow(page);
       await noOverflow(page, width, 'open');
       if (width === 390) await page.screenshot({path: '/tmp/braza-shell-mobile-navigation.png', fullPage: false});
       await menu.locator('a[href="/campaigns"]').click();
@@ -115,7 +160,36 @@ try {
       await page.waitForURL(base + '/');
       assert.equal(await page.getByRole('heading', {name: 'Sign in', exact: true}).isVisible(), true);
       assert.equal((await context.cookies()).some(cookie => cookie.name === 'mls_session'), false);
-      passed(width + 'px: native keyboard menu, section changes, admin login boundary and logout work without JavaScript');
+      passed(width + 'px: populated mobile dashboard, keyboard menu, section changes, admin login boundary and logout work without JavaScript');
+    } finally {
+      await context.close();
+    }
+  }
+  for (const width of [320, 360, 390]) {
+    const context = await browser.newContext({viewport: {width, height: 844}, javaScriptEnabled: false, isMobile: true, hasTouch: true});
+    try {
+      const page = await context.newPage();
+      await signIn(page);
+      for (const fontScale of [130, 160]) {
+        for (const route of ['/dashboard', '/advertising', '/campaigns', '/gmv-max', '/opportunities', '/performance', '/optimization', '/integrations']) {
+          await page.goto(base + route);
+          await page.locator('html').evaluate((node, scale) => {
+            node.style.webkitTextSizeAdjust = scale + '%';
+            node.style.textSizeAdjust = scale + '%';
+          }, fontScale);
+          await noOverflow(page, width, route + ' text ' + fontScale + '% closed');
+          const summary = page.locator('.shell-mobile-navigation summary');
+          await summary.click({timeout: 2000});
+          assert.notEqual(await page.locator('.shell-mobile-navigation details').getAttribute('open'), null);
+          await noOverflow(page, width, route + ' text ' + fontScale + '% open');
+          await menuInFlow(page);
+          await page.locator('.mobile-admin').click({trial: true, timeout: 2000});
+          if (route === '/dashboard') await tablePansLocally(page);
+          await summary.click({timeout: 2000});
+          assert.equal(await page.locator('.shell-mobile-navigation details').getAttribute('open'), null);
+        }
+        passed(width + 'px at ' + fontScale + '% text: all eight populated sections fit, menu controls stay tappable, tables pan locally and the open menu pushes content down');
+      }
     } finally {
       await context.close();
     }
@@ -124,7 +198,7 @@ try {
     const context = await browser.newContext({viewport: {width, height: 950}, javaScriptEnabled: false});
     try {
       const page = await context.newPage();
-      await signIn(page);
+      await signIn(page, '/advertising');
       assert.equal(await page.locator('.shell-mobile-navigation').isVisible(), false);
       assert.equal(await page.locator('aside.sidebar').isVisible(), true);
       assert.equal(await page.locator('aside.sidebar').getByRole('link', {name: 'Administração', exact: true}).isVisible(), true);
@@ -138,7 +212,7 @@ try {
   }
   assert.ok(fixtureReads > 0);
   assert.deepEqual(unexpectedNetwork, []);
-  console.log(JSON.stringify({status: 'PASS', checks, widths: [320, 390, 768, 850, 851, 1365], javaScriptEnabled: false, providerRequests: 0, fixtureReads, screenshots: ['/tmp/braza-shell-mobile-navigation.png', '/tmp/braza-shell-desktop-navigation.png']}, null, 2));
+  console.log(JSON.stringify({status: 'PASS', checks, widths: [320, 360, 390, 768, 850, 851, 1365], mobileTextScales: [130, 160], javaScriptEnabled: false, providerRequests: 0, fixtureReads, screenshots: ['/tmp/braza-shell-mobile-navigation.png', '/tmp/braza-shell-desktop-navigation.png']}, null, 2));
 } finally {
   globalThis.fetch = nativeFetch;
   if (browser) await browser.close();
