@@ -20,6 +20,7 @@ app_orders=(root/'src/app-shop-orders.mjs').read_text().replace("import {bounded
 app_items=re.sub(r'^import .*\n','',(root/'src/app-order-items.mjs').read_text(),flags=re.M).replace('export async function getOrderItems','async function getOrderItems')
 finance_sample_frame=re.sub(r'^export ', '', (root/'src/finance-sample-frame.mjs').read_text(), flags=re.M)
 app_finance_sample=re.sub(r'^import .*\n','',(root/'src/app-finance-sample.mjs').read_text(),flags=re.M).replace('export async function getFinancePaymentSample','async function getFinancePaymentSample')
+shell_navigation=re.sub(r'^export ', '', (root/'src/shell-navigation.mjs').read_text(), flags=re.M)
 admin=client+'\n'+view+'\n'+ads+'\n'+orders+'\n'+items+'\n'+variants+'\n'+observations+'\n'+production_costs+'\n'+re.sub(r'^import .*\n','',admin,flags=re.M)
 admin=admin.replace('export {adminFetch,schedule,DEFAULTS,SCHEMA,validateSettings};','')
 needle='    const url = new URL(request.url);'
@@ -30,7 +31,13 @@ updated=updated.replace(needle,'''  async scheduled(event, env, ctx) { ctx.waitU
 needle='${navLink(\n  "/dashboard",'
 assert updated.count(needle)==1
 updated=updated.replace(needle,'${navLink("/admin", "Administração", currentPath)}\n\n'+needle,1)
-output=updated+'\n\n'+orders_diagnostic+'\n'+orders_http+'\n'+app_orders+'\n'+app_items+'\n'+finance_sample_frame+'\n'+app_finance_sample+'\n\nconst brazaAdmin = (() => {\n'+admin+'\nreturn {adminFetch,schedule};\n})();\n'
+needle='<div class="app">'
+assert updated.count(needle)==1
+updated=updated.replace(needle,'${shellMobileNavigation(currentPath)}\n\n'+needle,1)
+needle='\n</style>\n\n</head>\n\n<body>\n\n${shellMobileNavigation(currentPath)}'
+assert updated.count(needle)==1
+updated=updated.replace(needle,'\n${SHELL_NAVIGATION_CSS}'+needle,1)
+output=updated+'\n\n'+shell_navigation+'\n'+orders_diagnostic+'\n'+orders_http+'\n'+app_orders+'\n'+app_items+'\n'+finance_sample_frame+'\n'+app_finance_sample+'\n\nconst brazaAdmin = (() => {\n'+admin+'\nreturn {adminFetch,schedule};\n})();\n'
 (root/'app-worker.mjs').write_text(output)
 auth_original=(root/'original/auth-worker.mjs').read_text()
 needle='    const url = new URL(request.url);'
