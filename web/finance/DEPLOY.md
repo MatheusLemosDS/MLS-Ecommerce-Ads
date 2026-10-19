@@ -68,9 +68,11 @@ nonce, o callback recusa a tentativa sem solicitar tokens; coletar
 somente a forma dos nomes de parâmetros retornados, sem compartilhar a URL com
 o código de autorização. Não remover a validação de nonce/cookie para contornar.
 
-A troca e a renovação dos tokens continuam nos endereços Global da referência
-pública recebida, com HMAC-SHA256 e a chave financeira. A confirmação da tela
-brasileira não valida esses pedidos de API nem comprova obtenção de tokens.
+A troca e a renovação dos tokens usam a base regional brasileira
+`https://openplatform.shopee.com.br`, com HMAC-SHA256 e a chave financeira.
+A confirmação da tela brasileira não valida esses pedidos de API nem comprova
+obtenção de tokens. Se o callback falhar, enviar somente o código de diagnóstico
+escrito na página, sem compartilhar o endereço ou o código de autorização.
 
 O callback bem-sucedido mostra “Conexão financeira concluída” e apaga o cookie
 temporário. Consultar `/shopee/finance/status`: deve indicar `CONNECTED`,

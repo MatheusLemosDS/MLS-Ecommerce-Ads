@@ -14,6 +14,40 @@ const SECURITY_HEADERS = Object.freeze({
   'Content-Security-Policy': "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
 });
 const EXPIRED_COOKIE = `${COOKIE}=; Path=${PREFIX}; Max-Age=0; HttpOnly; Secure; SameSite=Lax`;
+const CALLBACK_DIAGNOSTICS = new Set([
+  'INVALID_CALLBACK', 'AUTHORIZATION_DENIED', 'CONFIGURATION_PENDING', 'FORBIDDEN',
+  'FINANCE_INITIAL_EXCHANGE_API_SIGNATURE_REJECTED',
+  'FINANCE_INITIAL_EXCHANGE_API_PARAMETER_REJECTED',
+  'FINANCE_INITIAL_EXCHANGE_API_AUTHORIZATION_REJECTED',
+  'FINANCE_INITIAL_EXCHANGE_API_PERMISSION_REJECTED',
+  'FINANCE_INITIAL_EXCHANGE_API_PARTNER_REJECTED',
+  'FINANCE_INITIAL_EXCHANGE_API_ERROR',
+  'FINANCE_INITIAL_EXCHANGE_UPSTREAM_HTTP',
+  'FINANCE_INITIAL_EXCHANGE_HTTP_400', 'FINANCE_INITIAL_EXCHANGE_HTTP_401',
+  'FINANCE_INITIAL_EXCHANGE_HTTP_403', 'FINANCE_INITIAL_EXCHANGE_HTTP_429',
+  'FINANCE_INITIAL_EXCHANGE_HTTP_REDIRECT', 'FINANCE_INITIAL_EXCHANGE_HTTP_SERVER',
+  'FINANCE_INITIAL_EXCHANGE_UPSTREAM_FAILED', 'FINANCE_INITIAL_EXCHANGE_TIMEOUT',
+  'FINANCE_INITIAL_EXCHANGE_UPSTREAM_CONTENT_TYPE',
+  'FINANCE_INITIAL_EXCHANGE_UPSTREAM_BODY_TOO_LARGE',
+  'FINANCE_INITIAL_EXCHANGE_UPSTREAM_INVALID_JSON',
+  'FINANCE_INITIAL_EXCHANGE_RESPONSE_INVALID', 'FINANCE_INITIAL_EXCHANGE_IDENTITY_MISMATCH',
+  'FINANCE_INITIAL_EXCHANGE_RESPONSE_EXPIRED', 'FINANCE_INITIAL_EXCHANGE_RESPONSE_CONTEXT_INVALID',
+  'FINANCE_INITIAL_EXCHANGE_REQUEST_INVALID', 'FINANCE_INITIAL_EXCHANGE_REQUEST_STALE',
+  'FINANCE_INITIAL_EXCHANGE_SIGNING_KEY_CONFIGURATION', 'FINANCE_INITIAL_EXCHANGE_SIGNATURE_UNAVAILABLE',
+  'FINANCE_STORAGE_UNAVAILABLE', 'FINANCE_INVALID_TOKENS', 'FINANCE_AUTHORIZATION_CONFLICT',
+]);
+
+function callbackDiagnostic(error) {
+  if (!(error instanceof FinanceConnectionError)) return 'CONNECTION_UNAVAILABLE';
+  const code = Object.getOwnPropertyDescriptor(error, 'code')?.value;
+  if (code === 'FINANCE_INITIAL_EXCHANGE_UPSTREAM_HTTP') {
+    const status = Object.getOwnPropertyDescriptor(error, 'upstream_status')?.value;
+    if ([400, 401, 403, 429].includes(status)) return 'FINANCE_INITIAL_EXCHANGE_HTTP_' + status;
+    if (Number.isInteger(status) && status >= 300 && status <= 399) return 'FINANCE_INITIAL_EXCHANGE_HTTP_REDIRECT';
+    if (Number.isInteger(status) && status >= 500 && status <= 599) return 'FINANCE_INITIAL_EXCHANGE_HTTP_SERVER';
+  }
+  return CALLBACK_DIAGNOSTICS.has(code) ? code : 'CONNECTION_UNAVAILABLE';
+}
 
 function response(body, status, {json = false, callback = false, headers = {}} = {}) {
   const resultHeaders = new Headers({...SECURITY_HEADERS, ...headers});
@@ -23,7 +57,10 @@ function response(body, status, {json = false, callback = false, headers = {}} =
 }
 
 function failure(code, status = 503, callback = false) {
-  if (callback) return response('<!doctype html><html lang="pt-BR"><meta charset="utf-8"><title>Conexão financeira</title><h1>Não foi possível concluir a conexão financeira</h1><p>Inicie uma nova autorização pelo painel.</p></html>', status, {callback: true});
+  if (callback) {
+    const diagnostic = CALLBACK_DIAGNOSTICS.has(code) ? code : 'CONNECTION_UNAVAILABLE';
+    return response('<!doctype html><html lang="pt-BR"><meta charset="utf-8"><title>Conexão financeira</title><h1>Não foi possível concluir a conexão financeira</h1><p>Inicie uma nova autorização pelo painel.</p><p>Código de diagnóstico: <code>' + diagnostic + '</code></p></html>', status, {callback: true});
+  }
   return response({error: code}, status, {json: true});
 }
 
@@ -196,7 +233,7 @@ export function createFinanceWorker({adapter, now = () => Date.now()} = {}) {
           try { await store.failAuthorization(lease); } catch { /* A stale lease must never invalidate a newer connection. */ }
         }
         const status = error instanceof FinanceConnectionError && [400, 401, 409].includes(error.status) ? error.status : 503;
-        return failure('CONNECTION_UNAVAILABLE', status, true);
+        return failure(callbackDiagnostic(error), status, true);
       }
     },
   };

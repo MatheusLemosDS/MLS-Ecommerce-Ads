@@ -63,7 +63,7 @@ test('real adapter joins browser-bound authorization, initial POST and encrypted
   const adapter = createFinanceProviderAdapter({now, fetchImpl: async request => {
     exchanges++;
     const url = new URL(request.url);
-    assert.equal(url.origin + url.pathname, 'https://partner.shopeemobile.com/api/v2/auth/token/get');
+    assert.equal(url.origin + url.pathname, 'https://openplatform.shopee.com.br/api/v2/auth/token/get');
     assert.equal(url.searchParams.get('sign'), createHmac('sha256', KEY)
       .update('2049333/api/v2/auth/token/get' + stamp).digest('hex'));
     assert.deepEqual(await request.json(), {shop_id: 1178167501, code: 'fixture-one-time-code', partner_id: 2049333});
@@ -92,6 +92,45 @@ test('real adapter joins browser-bound authorization, initial POST and encrypted
   assert.equal(tokens.expires_at, stamp + 13859); assert.equal(tokens.refresh_token, 'fixture-refresh');
   const row = db.db.prepare('SELECT * FROM finance_connections').get();
   assert.equal(JSON.stringify(row).includes('fixture-refresh'), false);
+  assert.equal((await run(returned.href, cookie)).status, 400); assert.equal(exchanges, 1);
+});
+
+test('a rejected regional token exchange reports only its fixed category and cannot reuse the callback', async () => {
+  const db = new D1();
+  const runtimeEnv = {...env, FINANCE_DB: db, FINANCE_ROUTER_SECRET: 'fixture-router-' + 'z'.repeat(40),
+    FINANCE_TOKEN_ENCRYPTION_KEY: Buffer.alloc(32, 10).toString('base64')};
+  const privateCode = 'fixture-rejected-one-time-code';
+  let exchanges = 0;
+  const adapter = createFinanceProviderAdapter({now, fetchImpl: async request => {
+    exchanges++;
+    assert.equal(new URL(request.url).origin, 'https://openplatform.shopee.com.br');
+    assert.deepEqual(await request.json(), {shop_id: 1178167501, code: privateCode, partner_id: 2049333});
+    return Response.json({error: 'error_sign', request_id: 'fixture-private-request-id',
+      message: KEY + privateCode + 'fixture-private-upstream-response'});
+  }});
+  const worker = createFinanceWorker({adapter, now});
+  const run = (url, cookie) => worker.fetch(new Request(url, {headers: {
+    'X-Braza-Finance-Router': runtimeEnv.FINANCE_ROUTER_SECRET, ...(cookie ? {cookie} : {}),
+  }}), runtimeEnv);
+  const start = await run(FINANCE_CALLBACK.replace('/callback', '/connect'));
+  const location = new URL(start.headers.get('location'));
+  const returned = new URL(location.searchParams.get('redirect_uri'));
+  returned.searchParams.set('state', location.searchParams.get('state'));
+  returned.searchParams.set('code', privateCode);
+  returned.searchParams.set('shop_id', '1178167501');
+  const cookie = start.headers.get('set-cookie').split(';')[0];
+  const rejected = await run(returned.href, cookie);
+  assert.equal(rejected.status, 503);
+  const body = await rejected.text();
+  assert.match(body, /FINANCE_INITIAL_EXCHANGE_API_SIGNATURE_REJECTED/);
+  for (const secret of [privateCode, KEY, location.searchParams.get('state'), cookie,
+    'fixture-private-request-id', 'fixture-private-upstream-response']) assert.ok(!body.includes(secret));
+  const store = await createFinanceStore(runtimeEnv, {now});
+  const status = await store.status();
+  assert.equal(status.status, 'REAUTH_REQUIRED'); assert.equal(status.revision, 0);
+  assert.equal(await store.readTokens(), null);
+  const row = db.db.prepare('SELECT * FROM finance_connections').get();
+  assert.equal(row.ciphertext, null); assert.equal(row.iv, null);
   assert.equal((await run(returned.href, cookie)).status, 400); assert.equal(exchanges, 1);
 });
 

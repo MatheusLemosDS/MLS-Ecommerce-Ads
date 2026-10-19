@@ -1,9 +1,9 @@
 import {FINANCE_PROFILE, FinanceConnectionError} from './connection-store.mjs';
 import {FINANCE_REFRESH_PATH, signFinanceRefreshRequest} from './refresh-signature.mjs';
 
-// The production URL shown in the RefreshAccessToken documentation screenshots.
-// This is an Auth endpoint; it does not change the existing Payment/Ads hosts.
-export const FINANCE_REFRESH_ORIGIN = 'https://partner.shopeemobile.com';
+// Keep renewal on the same regional API origin as this Brazilian profile's
+// initial token exchange. Existing Payment/Ads connections are separate.
+export const FINANCE_REFRESH_ORIGIN = 'https://openplatform.shopee.com.br';
 
 // Private request construction only. No fetch, response parser, retry or rotation.
 export async function buildFinanceRefreshRequest(options) {

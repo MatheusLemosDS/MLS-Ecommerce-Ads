@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import defaultWorker, {createFinanceWorker} from '../src/connection-worker.mjs';
-import {FINANCE_PROFILE, createFinanceStore} from '../src/connection-store.mjs';
+import {FINANCE_PROFILE, FinanceConnectionError, createFinanceStore} from '../src/connection-store.mjs';
 import {D1} from '../../cloudflare/tests/sqlite-d1.mjs';
 
 const ORIGIN = 'https://auth.brazacommerce.com.br';
@@ -371,6 +371,38 @@ test('invalid adapter token output is rejected before plaintext reaches storage 
     assert.equal(response.status, 503); assertSafe(response, await response.text(), {callback: true});
     assert.equal((await (await ctx.run(PREFIX + '/status')).json()).status, 'REAUTH_REQUIRED');
     assert.equal(ctx.db.db.prepare('SELECT ciphertext FROM finance_connections').get().ciphertext, null);
+  }
+});
+
+test('callback diagnostics disclose only fixed exchange or persistence categories and never permit replay', async () => {
+  const cases = [
+    ['FINANCE_INITIAL_EXCHANGE_API_SIGNATURE_REJECTED', undefined, 'FINANCE_INITIAL_EXCHANGE_API_SIGNATURE_REJECTED'],
+    ['FINANCE_INITIAL_EXCHANGE_RESPONSE_INVALID', undefined, 'FINANCE_INITIAL_EXCHANGE_RESPONSE_INVALID'],
+    ['FINANCE_STORAGE_UNAVAILABLE', undefined, 'FINANCE_STORAGE_UNAVAILABLE'],
+    ['FINANCE_INITIAL_EXCHANGE_UPSTREAM_HTTP', 403, 'FINANCE_INITIAL_EXCHANGE_HTTP_403'],
+    ['FINANCE_INITIAL_EXCHANGE_UPSTREAM_HTTP', 429, 'FINANCE_INITIAL_EXCHANGE_HTTP_429'],
+    ['FINANCE_INITIAL_EXCHANGE_UPSTREAM_HTTP', 302, 'FINANCE_INITIAL_EXCHANGE_HTTP_REDIRECT'],
+    ['FINANCE_INITIAL_EXCHANGE_UPSTREAM_HTTP', 502, 'FINANCE_INITIAL_EXCHANGE_HTTP_SERVER'],
+    [PRIVATE_CODE + '<script>', undefined, 'CONNECTION_UNAVAILABLE'],
+    ['FINANCE_INITIAL_EXCHANGE_UPSTREAM_HTTP', PRIVATE_ACCESS, 'FINANCE_INITIAL_EXCHANGE_UPSTREAM_HTTP'],
+  ];
+  for (const [code, upstreamStatus, diagnostic] of cases) {
+    const ctx = fixture(), session = await begin(ctx);
+    ctx.adapter.exchange = async params => {
+      ctx.calls.push(params);
+      const failure = new FinanceConnectionError(code);
+      failure.message = PRIVATE_ACCESS + PRIVATE_REFRESH;
+      failure.upstream_status = upstreamStatus;
+      throw failure;
+    };
+    const result = await ctx.run(callbackPath(session), {headers: {Cookie: session.cookie}});
+    const body = await result.text();
+    assert.equal(result.status, 503);
+    assertSafe(result, body, {callback: true});
+    assert.ok(body.includes('<code>' + diagnostic + '</code>'));
+    assert.equal((await (await ctx.run(PREFIX + '/status')).json()).status, 'REAUTH_REQUIRED');
+    assert.equal((await ctx.run(callbackPath(session), {headers: {Cookie: session.cookie}})).status, 400);
+    assert.equal(ctx.calls.length, 1);
   }
 });
 

@@ -12,9 +12,9 @@ const safeError=code=>error=>{
   return true;
 };
 
-test('refresh request matches the documented production URL, public query and POST JSON types',async()=>{
+test('refresh request uses the Brazil production URL, public query and POST JSON types',async()=>{
   const request=await buildFinanceRefreshRequest(input),url=new URL(request.url);
-  assert.equal(FINANCE_REFRESH_ORIGIN,'https://partner.shopeemobile.com');
+  assert.equal(FINANCE_REFRESH_ORIGIN,'https://openplatform.shopee.com.br');
   assert.equal(url.origin,FINANCE_REFRESH_ORIGIN);
   assert.equal(url.pathname,'/api/v2/auth/access_token/get');
   assert.deepEqual([...url.searchParams.keys()],['partner_id','timestamp','sign']);

@@ -32,14 +32,14 @@ test('initial exchange never falls back to global fetch', async t => {
   assert.equal(calls, 0);
 });
 
-test('initial shop exchange uses the documented POST query/body and independently calculated signature', async () => {
+test('initial shop exchange uses the Brazil API, documented POST query/body and independent signature', async () => {
   let calls = 0;
   const result = await requestFinanceInitialExchange(input, {now, fetchImpl: async request => {
     calls++;
     assert.equal(request.method, 'POST');
     assert.equal(request.redirect, 'manual');
     const url = new URL(request.url);
-    assert.equal(url.origin, 'https://partner.shopeemobile.com');
+    assert.equal(url.origin, 'https://openplatform.shopee.com.br');
     assert.equal(url.pathname, '/api/v2/auth/token/get');
     assert.deepEqual([...url.searchParams.keys()], ['partner_id', 'timestamp', 'sign']);
     assert.equal(url.searchParams.get('partner_id'), '2049333');
@@ -187,6 +187,36 @@ test('oversized Content-Length and streamed JSON bodies are refused at 64KiB', a
   await assert.rejects(requestFinanceInitialExchange(input, {now,
     fetchImpl: async () => new Response(new Uint8Array(65537), {headers: {'content-type': 'application/json'}}),
   }), safeError('FINANCE_INITIAL_EXCHANGE_UPSTREAM_BODY_TOO_LARGE'));
+});
+
+test('known provider errors become fixed categories without copying private response fields', async () => {
+  for (const [error, suffix] of [
+    ['error_sign', 'API_SIGNATURE_REJECTED'],
+    ['error_param', 'API_PARAMETER_REJECTED'],
+    ['error_auth', 'API_AUTHORIZATION_REJECTED'],
+    ['error_api_permission', 'API_PERMISSION_REJECTED'],
+    ['error_partner_id', 'API_PARTNER_REJECTED'],
+  ]) {
+    let calls = 0;
+    await assert.rejects(requestFinanceInitialExchange(input, {now, fetchImpl: async () => {
+      calls++;
+      return jsonResponse(payload({error,
+        request_id: input.code,
+        message: input.partnerKey + payload().access_token + payload().refresh_token,
+      }));
+    }}), safeError('FINANCE_INITIAL_EXCHANGE_' + suffix));
+    assert.equal(calls, 1);
+  }
+});
+
+test('unknown provider error strings remain generic, including secrets and allowlist lookalikes', async () => {
+  for (const error of [input.code, input.partnerKey, payload().access_token,
+    payload().refresh_token, 'fixture-private-provider-message', '__proto__', 'constructor',
+    'ERROR_SIGN', 'error_sign ', 'error_sign:' + input.code]) {
+    await assert.rejects(requestFinanceInitialExchange(input, {now,
+      fetchImpl: async () => jsonResponse(payload({error, message: input.code})),
+    }), safeError('FINANCE_INITIAL_EXCHANGE_API_ERROR'));
+  }
 });
 
 test('API errors, malformed success fields and invalid TTL never produce tokens', async () => {

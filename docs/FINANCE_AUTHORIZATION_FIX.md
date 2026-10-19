@@ -30,11 +30,20 @@ O Financeiro passa a abrir `https://open.shopee.com.br/auth` com estes parâmetr
 | `response_type` | `code` |
 | `state` | Nonce aleatório de uso único, vinculado ao cookie do navegador |
 
-O link de navegador usa o fluxo web; os POSTs de troca e renovação continuam
-usando HMAC-SHA256 e a chave privada. Seus hosts não foram alterados por esse
-teste. O callback continua exigindo estado, cookie, validade, uso único e a loja
+O link de navegador usa o fluxo web; os POSTs de troca e renovação usam
+HMAC-SHA256 e a chave privada no servidor regional
+`https://openplatform.shopee.com.br`, correspondente ao perfil Brasil. O callback
+continua exigindo estado, cookie, validade, uso único e a loja
 esperada antes de trocar o código. Não há relaxamento de validação nem importação
 de tokens Ads.
+
+Após a primeira correção, o operador chegou ao callback e observou
+`REAUTH_REQUIRED`, revisão zero. O código de troca e renovação ainda apontava
+para o servidor Global. Essa inconsistência regional foi corrigida; o estado
+observado não determina sozinho a causa exata da falha anterior. A resposta de
+erro do callback agora mostra apenas um código de diagnóstico de uma lista
+fechada, para distinguir assinatura, permissão, parâmetros, HTTP, resposta e
+persistência sem expor o conteúdo recebido da Shopee.
 
 ## Fontes e limites
 
@@ -44,8 +53,9 @@ de tokens Ads.
 - A implementação existente de Ads gera o mesmo formato de link web, com seu
   próprio ID e callback. A correção financeira preserva essa integração.
 - A versão **2.10.0** do [SDK comunitário Shopee](https://www.npmjs.com/package/@congminh1254/shopee-sdk/v/2.10.0)
-  também gera esses cinco parâmetros em `getAuthorizationUrl` e usa
-  `open.shopee.com.br/auth` para Brasil. O pacote foi consultado sem executar
+  também gera esses cinco parâmetros em `getAuthorizationUrl`, usa
+  `open.shopee.com.br/auth` para Brasil e constrói a troca inicial/renovação
+  sobre a base regional `openplatform.shopee.com.br/api/v2`. O pacote foi consultado sem executar
   código e sua integridade SHA512 foi verificada. É uma fonte independente,
   não documentação oficial da Shopee.
 - O operador forneceu o guia oficial **BR SPI App Creation User Guide**,
@@ -64,6 +74,8 @@ de tokens Ads.
 3. Confirmar a aplicação financeira e autorizar somente a loja 1178167501.
 4. Verificar a mensagem de conclusão e consultar `/shopee/finance/status`.
    O resultado esperado é `CONNECTED` com os IDs financeiros corretos.
+5. Se falhar, copiar somente o código de diagnóstico escrito na página.
+   Iniciar outra tentativa por `/connect`; não repetir o callback antigo.
 
 Abrir a tela de autorização comprova apenas a entrada do fluxo. O retorno
 real de `state`, a troca do código e o armazenamento dos tokens precisam ser

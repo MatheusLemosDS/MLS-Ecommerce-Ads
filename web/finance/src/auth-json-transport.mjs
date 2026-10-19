@@ -72,7 +72,12 @@ export async function requestFinanceAuthJson({input, options = {}, prefix, build
     }
     if (!(response instanceof Response) || response.status !== 200 || response.redirected) {
       try { response?.body?.cancel().catch(() => {}); } catch {}
-      throw error('UPSTREAM_HTTP');
+      const failure = error('UPSTREAM_HTTP');
+      if (response instanceof Response && Number.isInteger(response.status)
+          && response.status >= 100 && response.status <= 599) {
+        Object.defineProperty(failure, 'upstream_status', {value: response.status, enumerable: true});
+      }
+      throw failure;
     }
     const contentType = response.headers.get('content-type');
     if (typeof contentType !== 'string' ||

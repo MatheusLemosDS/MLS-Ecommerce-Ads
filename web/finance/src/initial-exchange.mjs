@@ -1,10 +1,21 @@
 import {FINANCE_PROFILE, FinanceConnectionError} from './connection-store.mjs';
 import {requestFinanceAuthJson} from './auth-json-transport.mjs';
 
-const ORIGIN = 'https://partner.shopeemobile.com';
+// The fixed finance profile is Brazilian; token requests use its regional API
+// origin independently of the browser authorization frontend.
+const ORIGIN = 'https://openplatform.shopee.com.br';
 const PATH = '/api/v2/auth/token/get';
 const encoder = new TextEncoder();
 const fail = (suffix, status = 502) => new FinanceConnectionError('FINANCE_INITIAL_EXCHANGE_' + suffix, status);
+// Copy only fixed categories from known API error codes. Provider messages and
+// arbitrary error strings may contain private data and must never leave here.
+const API_ERROR_SUFFIXES = new Map([
+  ['error_sign', 'API_SIGNATURE_REJECTED'],
+  ['error_param', 'API_PARAMETER_REJECTED'],
+  ['error_auth', 'API_AUTHORIZATION_REJECTED'],
+  ['error_api_permission', 'API_PERMISSION_REJECTED'],
+  ['error_partner_id', 'API_PARTNER_REJECTED'],
+]);
 const isPlainObject = value => value !== null && typeof value === 'object'
   && [Object.prototype, null].includes(Object.getPrototypeOf(value));
 const isPrivateString = value => typeof value === 'string' && value.length <= 8192;
@@ -63,7 +74,7 @@ function normalizeResponse(payload, {requestedAt, receivedAt}) {
   if (!Number.isSafeInteger(requestedAt) || !Number.isSafeInteger(receivedAt) ||
       requestedAt < 0 || receivedAt < requestedAt) throw fail('RESPONSE_CONTEXT_INVALID', 503);
   if (!isPlainObject(payload) || !isPrivateString(payload.error)) throw fail('RESPONSE_INVALID');
-  if (payload.error !== '') throw fail('API_ERROR');
+  if (payload.error !== '') throw fail(API_ERROR_SUFFIXES.get(payload.error) || 'API_ERROR');
   if (!isPrivateString(payload.request_id) || !isPrivateString(payload.message)) throw fail('RESPONSE_INVALID');
   // The documented shop success example omits identity echoes. If scalar echoes
   // are returned, they must agree with the fixed request/callback shop. Other
