@@ -63,6 +63,9 @@ test('only whole supported option tokens resolve; unsupported options and malfor
     ]};
   const value = await deriveCatalogProduct(ITEM,source);
   assert.deepEqual(value.bindings,[binding('1')]); assert.equal(value.unresolved_count,11);
+  assert.deepEqual(value.diagnostic.reasons,[
+    {code:'OPTION_NOT_RECOGNIZED',count:4},{code:'INDEX_NOT_VALID',count:7},
+  ]);
 });
 
 test('fingerprints use canonical relevant metadata and change with model choices or unknown options', async () => {
@@ -79,7 +82,7 @@ test('fingerprints use canonical relevant metadata and change with model choices
   const unknown = catalog(); unknown.tier_variation[0].option_list[0].option = 'XL';
   assert.notEqual((await deriveCatalogProduct(ITEM,unknown)).catalog_fingerprint,first.catalog_fingerprint);
   assert.notEqual((await deriveCatalogProduct('987654321',catalog())).catalog_fingerprint,first.catalog_fingerprint);
-  for (const value of ['PRIVATE_BUYER','PRIVATE_SKU','tamanho masculino','tier_index']) assert.ok(!JSON.stringify(first).includes(value));
+  for (const value of ['PRIVATE_BUYER','PRIVATE_SKU','tier_index']) assert.ok(!JSON.stringify(first).includes(value));
 });
 
 test('invalid canonical IDs and duplicate model IDs fail closed without echoing input values', async () => {
@@ -104,6 +107,96 @@ test('missing/nonarray models and malformed catalogue structures never masquerad
   }
   const empty = await deriveCatalogProduct(ITEM,{tier_variation:[],model:[]});
   assert.equal(empty.unresolved_count,0); assert.deepEqual(empty.bindings,[]);
+  assert.deepEqual(empty.diagnostic,{axes:[],model_count:0,reasons:[{code:'NO_MODELS',count:0}]});
+  assert.deepEqual(projectVariantCatalog(frame(empty)),frame(empty));
+});
+
+test('diagnostics preserve bounded raw axis labels and option samples without exposing unrelated provider data', async () => {
+  const options=[' p ','M','GG','G1','G2','G3','Masculina P','NEVER_IN_SAMPLE'];
+  const source={tier_variation:[axis('  TAMANHO FEMÍNINO  ',options),axis('Masculíno',[' p '])],
+    model:[{model_id:1,tier_index:[0,0],model_name:'PRIVATE_MODEL_LABEL',model_sku:'PRIVATE_SKU'}],
+    item_name:'PRIVATE_TITLE',access_token:'PRIVATE_TOKEN',buyer_name:'PRIVATE_BUYER',price:123};
+  source.tier_variation[0].private_extra='PRIVATE_AXIS';
+  source.tier_variation[0].option_list[0].private_extra='PRIVATE_OPTION';
+  const result=await deriveCatalogProduct(ITEM,source);
+  assert.deepEqual(result.bindings,[{item_id:ITEM,model_id:'1',male_size:'P',female_size:'P'}]);
+  assert.deepEqual(result.diagnostic,{
+    axes:[{name:'  TAMANHO FEMÍNINO  ',options:options.slice(0,7),option_count:8},
+      {name:'Masculíno',options:[' p '],option_count:1}],model_count:1,reasons:[],
+  });
+  const projected=projectVariantCatalog(frame(result));
+  assert.deepEqual(projected,frame(result));
+  result.diagnostic.axes[0].options[0]='CHANGED';
+  result.diagnostic.axes[1].name='CHANGED';
+  assert.equal(projected.products[0].diagnostic.axes[0].options[0],' p ');
+  assert.equal(projected.products[0].diagnostic.axes[1].name,'Masculíno');
+  for(const forbidden of ['PRIVATE_','NEVER_IN_SAMPLE','model_name','model_sku','access_token','buyer_name','price']){
+    assert.ok(!JSON.stringify(projected).includes(forbidden));
+  }
+});
+
+test('diagnostic counts describe disjoint unresolved models with axes before indices and indices before options', async () => {
+  const source={tier_variation:[axis('Masculino',['M','Masculino P']),axis('Feminino',['GG'])],
+    model:[{model_id:0,tier_index:[0,0]},{model_id:1,tier_index:[1,0]},
+      {model_id:2,tier_index:[1,1]},{model_id:3,tier_index:[0]},{model_id:4}]};
+  const result=await deriveCatalogProduct(ITEM,source);
+  assert.equal(result.unresolved_count,4);
+  assert.deepEqual(result.diagnostic.reasons,[{code:'OPTION_NOT_RECOGNIZED',count:1},{code:'INDEX_NOT_VALID',count:3}]);
+  assert.equal(result.diagnostic.model_count,result.bindings.length+result.unresolved_count);
+  assert.equal(result.diagnostic.reasons.reduce((sum,reason)=>sum+reason.count,0),result.unresolved_count);
+  source.tier_variation[0].name='Tamanho';
+  const unknown=await deriveCatalogProduct(ITEM,source);
+  assert.equal(unknown.unresolved_count,5);
+  assert.deepEqual(unknown.diagnostic.reasons,[{code:'AXES_NOT_RECOGNIZED',count:5}]);
+  assert.ok(projectVariantCatalog(frame(unknown)));
+});
+
+test('diagnostic projection remains optional for legacy frames and rejects malformed, enlarged or inconsistent metadata', async () => {
+  assert.deepEqual(projectVariantCatalog(frame(product())),frame(product()));
+  const source=frame(await deriveCatalogProduct(ITEM,catalog()));
+  const cases=[
+    value=>{value.diagnostic=undefined;},value=>{value.diagnostic.extra='PRIVATE';},
+    value=>{value.diagnostic.axes[0].extra='PRIVATE';},
+    value=>{value.diagnostic.axes[0].name='x'.repeat(129);},value=>{value.diagnostic.axes[0].name='bad\nname';},
+    value=>{value.diagnostic.axes[0].name=12;},value=>{value.diagnostic.axes[0].options[0]='x'.repeat(129);},
+    value=>{value.diagnostic.axes[0].options[0]='bad\u007foption';},value=>{value.diagnostic.axes[0].options[0]=12;},
+    value=>{value.diagnostic.axes[0].options.push('EXTRA');},value=>{value.diagnostic.axes[0].option_count=6;},
+    value=>{value.diagnostic.axes[0].option_count=1001;},value=>{value.diagnostic.axes[0].option_count=1.5;},
+    value=>{value.diagnostic.axes=Array.from({length:11},()=>({name:'axis',options:[],option_count:0}));},
+    value=>{value.diagnostic.model_count=1;},value=>{value.diagnostic.model_count=1001;},
+    value=>{value.diagnostic.reasons=[{code:'PRIVATE_PROVIDER_ERROR',count:1}];},
+    value=>{value.diagnostic.reasons=[{code:'INDEX_NOT_VALID',count:0}];},
+    value=>{value.diagnostic.reasons=[{code:'NO_MODELS',count:0}];},
+    value=>{value.diagnostic.reasons=[{code:'INDEX_NOT_VALID',count:1}];},
+    value=>{value.diagnostic.reasons=[{code:'INDEX_NOT_VALID',count:1,extra:'PRIVATE'}];},
+    value=>{value.diagnostic.axes=Array(1);},value=>{value.diagnostic.axes[0].options=Array(1);},
+    value=>{value.diagnostic.reasons=Array(1);},
+  ];
+  for(const change of cases){const value=structuredClone(source);change(value.products[0]);assert.equal(projectVariantCatalog(value),null);}
+  const unresolved=await deriveCatalogProduct(ITEM,{tier_variation:[axis('Unknown')],model:[{model_id:0},{model_id:1}]});
+  unresolved.diagnostic.reasons=[{code:'AXES_NOT_RECOGNIZED',count:1},{code:'AXES_NOT_RECOGNIZED',count:1}];
+  assert.equal(projectVariantCatalog(frame(unresolved)),null);
+  const empty=await deriveCatalogProduct(ITEM,{tier_variation:[],model:[]});
+  empty.diagnostic.reasons=[];assert.equal(projectVariantCatalog(frame(empty)),null);
+  empty.diagnostic.reasons=[{code:'NO_MODELS',count:1}];assert.equal(projectVariantCatalog(frame(empty)),null);
+});
+
+test('diagnostic projection rejects accessors without executing them', async () => {
+  let invoked=0;
+  const original=frame(await deriveCatalogProduct(ITEM,catalog()));
+  const targets=[
+    value=>[value.products[0],'diagnostic'],
+    value=>[value.products[0].diagnostic,'axes'],
+    value=>[value.products[0].diagnostic.axes[0],'name'],
+    value=>[value.products[0].diagnostic.axes[0].options,'0'],
+    value=>[value.products[0].diagnostic,'model_count'],
+    value=>[value.products[0].diagnostic,'reasons'],
+  ];
+  for(const target of targets){const value=structuredClone(original),[object,key]=target(value);
+    Object.defineProperty(object,key,{get(){invoked++;throw Error('PRIVATE');},enumerable:true});
+    assert.equal(projectVariantCatalog(value),null);
+  }
+  assert.equal(invoked,0);
 });
 
 test('projection strips nothing silently, sorts IDs deterministically and returns detached fixed-field copies', () => {

@@ -33,6 +33,19 @@ real nesse app para confirmar o acesso à API e se os nomes usados no catálogo 
 loja seguem os dois eixos reconhecidos. Uma resposta incompatível fica pendente;
 ela não é evidência de tamanho ou custo zero.
 
+Se a identificação ficar pendente, **Dados do catálogo** mostra os nomes dos
+campos recebidos, até sete opções de cada campo e o motivo da pendência. O botão
+**Copiar diagnóstico das variações** copia somente esse resumo limitado para
+permitir conferir o formato real da loja. Ele não copia a resposta inteira da API,
+dados de pedidos, preços ou credenciais. Os textos são exibidos literalmente.
+Esses nomes e opções não são gravados no banco de vínculos. Repetir uma consulta
+sem alterar os vínculos preserva a revisão, a data e a auditoria existentes.
+
+A imagem recebida após a primeira publicação confirmou uma consulta sem tamanhos
+identificados, mas não mostrou os nomes dos campos ou opções. Por isso esta etapa
+adiciona o diagnóstico e mantém as regras de identificação: o formato da loja
+ainda precisa ser observado antes de aceitar uma nova interpretação.
+
 Esta associação fornece referências de produção e margem. A conciliação dos
 pagamentos e a confirmação da unidade monetária da amostra financeira continuam
 etapas independentes.
@@ -42,3 +55,14 @@ três Workers no workerd/D1 e 11 verificações no Chromium passaram, incluindo
 larguras de 320 a 1365 pixels. As configurações e os três dry-runs do Wrangler
 passaram. Essas verificações usam respostas sintéticas e não comprovam a
 disponibilidade da API no app real.
+
+A amostra financeira fornecida pelo operador em `checked_at=1792436574` permanece
+`VALIDATED`, com revisão de token 4 e dois itens. O registro está em
+`FINANCE_PAYMENT_SAMPLE_OBSERVADO_1792436574.json`. Essa amostra confirma tipos e
+identidade; não inclui nomes de tamanhos nem confirma unidade monetária ou lucro.
+
+A atualização do diagnóstico passou em 390 testes Node, 17 verificações no
+workerd/D1 e 14 no Chromium. Foram conferidos a cópia limitada, o texto literal,
+as opções longas com detalhes abertos em 320–1365 pixels, a compatibilidade com
+respostas antigas e a preservação de revisão e auditoria nas consultas sem
+alterações. Os três dry-runs e as configurações de publicação passaram.

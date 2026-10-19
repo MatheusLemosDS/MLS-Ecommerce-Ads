@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "status": "VALIDATED",
+  "checked_at": 1792436574,
+  "token_revision": 4,
+  "fields": [
+    {"name": "escrow_amount", "type": "number"},
+    {"name": "original_cost_of_goods_sold", "type": "number"},
+    {"name": "buyer_total_amount", "type": "number"},
+    {"name": "commission_fee", "type": "number"},
+    {"name": "service_fee", "type": "number"},
+    {"name": "seller_transaction_fee", "type": "number"},
+    {"name": "actual_shipping_fee", "type": "number"},
+    {"name": "ads_escrow_top_up_fee_or_technical_support_fee", "type": "number"},
+    {"name": "items", "type": "array"}
+  ],
+  "item_fields": [
+    {"name": "item_id", "type": "number"},
+    {"name": "model_id", "type": "number"},
+    {"name": "line_item_id", "type": "number"},
+    {"name": "quantity_purchased", "type": "number"},
+    {"name": "original_price", "type": "number"},
+    {"name": "selling_price", "type": "number"},
+    {"name": "is_kit", "type": "boolean"}
+  ],
+  "item_count": 2,
+  "identity_match": true
+}

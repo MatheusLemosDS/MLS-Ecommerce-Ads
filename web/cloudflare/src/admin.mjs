@@ -90,7 +90,8 @@ async function adminFetch(request,env,services={}){const url=new URL(request.url
  let raw;try{if(typeof services.getFinanceVariantCatalog==='function')raw=await services.getFinanceVariantCatalog(env,selection);}catch{}
  const catalog=projectVariantCatalog(raw);
  assert(catalog&&catalog.products.length===selection.item_ids.length&&catalog.products.every(product=>selection.item_ids.includes(product.item_id)),'VARIANT_CATALOG_UNAVAILABLE',503);
- return json(await saveAutomaticVariantBindings(env,body,catalog,current.user));
+ const saved=await saveAutomaticVariantBindings(env,body,{...catalog,products:catalog.products.map(({diagnostic,...product})=>product)},current.user);
+ return json({...saved,...(catalog.products.some(product=>product.diagnostic)?{catalog_review:catalog}:{})});
  }if(path==='/api/admin/variant-bindings')return json(await saveVariantBindings(env,body,current.user));if(path==='/api/admin/order-observations'){assert(Object.keys(body).length===0,'OBSERVATION_BODY_INVALID');assert(!url.search,'OBSERVATION_QUERY_INVALID');return json(await captureObservation(env,services.getOrderItems,current.user));}if(path==='/api/admin/settings')return json(await saveSettings(env,body,current.user));if(path==='/api/admin/jobs'){assert(Object.keys(body).length===0,'TASK_NOT_ALLOWED');return json(await enqueue(env),202);}if(path==='/api/admin/jobs/cost')return json(await correctCost(env,body,current.user));throw new AdminError('NOT_FOUND',404);}
  assert(request.method==='GET','METHOD_NOT_ALLOWED',405);
  if(['/api/admin/finance/payment-sample','/api/admin/finance/payment-preview','/api/admin/variant-bindings/automate'].includes(path))throw new AdminError('METHOD_NOT_ALLOWED',405);

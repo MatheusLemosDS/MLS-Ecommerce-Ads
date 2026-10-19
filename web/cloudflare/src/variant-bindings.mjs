@@ -73,6 +73,7 @@ export async function saveAutomaticVariantBindings(env,body,catalog,actor){
  const combined=new Map(current.bindings.filter(binding=>binding.operator_confirmed||!requested.has(binding.item_id)).map(binding=>[binding.item_id+':'+binding.model_id,binding]));
  for(const binding of automatic){const key=binding.item_id+':'+binding.model_id;if(!combined.has(key))combined.set(key,binding);}
  const bindings=validateVariantBindings([...combined.values()]);
+ if(JSON.stringify(bindings)===JSON.stringify(current.bindings))return current;
  return writeVariantBindings(env,body.revision,bindings,'catalog-automation'+(typeof actor==='string'&&actor?':'+actor:''));
 }
 export function variantMarginReference(frame,bindings,state){

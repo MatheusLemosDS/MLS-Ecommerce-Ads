@@ -85,6 +85,49 @@ test('trusted catalog refresh preserves manual overrides and replaces only queri
  assert.equal(env.ADMIN_DB.db.prepare('SELECT revision FROM admin_settings').get().revision,1);
  assert.equal(env.ADMIN_DB.db.prepare('SELECT COUNT(*) n FROM hermes_jobs').get().n,0);
 });
+test('unresolved catalog with no automatic changes retains revision, timestamp and audit without a write',async()=>{
+ const {env,cookie,csrf}=await login();
+ await call(env,cookie,'variant-bindings',{revision:1,bindings:[binding(),binding('999','0')]},csrf);
+ const previous=await readVariantBindings(env),audits=env.ADMIN_DB.db.prepare('SELECT COUNT(*) n FROM variant_bindings_audit').get().n;
+ env.ADMIN_DB.batch=async()=>{throw new Error('unchanged catalog must not write');};
+ const state=await saveAutomaticVariantBindings(env,{revision:2,item_ids:['101']},catalog([catalogProduct('101',[],'a'.repeat(64),49)]),'admin');
+ assert.deepEqual(state,previous);
+ assert.deepEqual(await readVariantBindings(env),previous);
+ assert.equal(env.ADMIN_DB.db.prepare('SELECT COUNT(*) n FROM variant_bindings_audit').get().n,audits);
+ await assert.rejects(saveAutomaticVariantBindings(env,{revision:1,item_ids:['101']},catalog([catalogProduct('101',[],'a'.repeat(64),49)]),'admin'),bindingError('VARIANT_BINDINGS_CHANGED_RELOAD',409));
+});
+test('repeated normalized catalog is unchanged while fingerprint, sizes and removals create audited revisions',async()=>{
+ const {env}=await login();
+ let state=await saveAutomaticVariantBindings(env,{revision:1,item_ids:['101']},catalog([catalogProduct('101',[automatic('101','3','P','M'),automatic()])]),'admin');
+ const previous=state,audits=env.ADMIN_DB.db.prepare('SELECT COUNT(*) n FROM variant_bindings_audit').get().n,write=env.ADMIN_DB.batch.bind(env.ADMIN_DB);
+ env.ADMIN_DB.batch=async()=>{throw new Error('identical normalized bindings must not write');};
+ state=await saveAutomaticVariantBindings(env,{revision:2,item_ids:['101']},{...catalog([catalogProduct('101',[automatic(),automatic('101','3','P','M')])]),checked_at:1792405690},'admin');
+ assert.deepEqual(state,previous);assert.equal(env.ADMIN_DB.db.prepare('SELECT COUNT(*) n FROM variant_bindings_audit').get().n,audits);
+ env.ADMIN_DB.batch=write;
+ state=await saveAutomaticVariantBindings(env,{revision:2,item_ids:['101']},catalog([catalogProduct('101',[automatic(),automatic('101','3','P','M')],'b'.repeat(64))]),'admin');
+ assert.equal(state.revision,3);assert.ok(state.bindings.every(row=>row.catalog_fingerprint==='b'.repeat(64)));
+ state=await saveAutomaticVariantBindings(env,{revision:3,item_ids:['101']},catalog([catalogProduct('101',[automatic(),automatic('101','3','G2','M')],'b'.repeat(64))]),'admin');
+ assert.equal(state.revision,4);assert.equal(state.bindings.find(row=>row.model_id==='3').male_size,'G2');
+ state=await saveAutomaticVariantBindings(env,{revision:4,item_ids:['101']},catalog([catalogProduct('101',[],'c'.repeat(64),2)]),'admin');
+ assert.equal(state.revision,5);assert.deepEqual(state.bindings,[]);
+ const rows=env.ADMIN_DB.db.prepare('SELECT revision,actor,payload FROM variant_bindings_audit WHERE revision>2 ORDER BY revision').all();
+ assert.deepEqual(rows.map(row=>row.revision),[3,4,5]);assert.ok(rows.every(row=>row.actor==='catalog-automation:admin'));
+ assert.deepEqual(JSON.parse(rows[2].payload),[]);
+});
+test('changed automatic catalog still rejects a concurrent save between its read and write',async()=>{
+ const {env}=await login(),write=env.ADMIN_DB.batch.bind(env.ADMIN_DB);
+ const winnerCatalog=catalog([catalogProduct('101',[automatic('101','3','P','M')],'b'.repeat(64))]);
+ let winner;
+ env.ADMIN_DB.batch=async statements=>{
+  env.ADMIN_DB.batch=write;
+  winner=await saveAutomaticVariantBindings(env,{revision:1,item_ids:['101']},winnerCatalog,'concurrent-admin');
+  return write(statements);
+ };
+ await assert.rejects(saveAutomaticVariantBindings(env,{revision:1,item_ids:['101']},catalog(),'admin'),bindingError('VARIANT_BINDINGS_CHANGED_RELOAD',409));
+ assert.deepEqual(await readVariantBindings(env),winner);
+ const rows=env.ADMIN_DB.db.prepare('SELECT revision,actor FROM variant_bindings_audit ORDER BY revision').all();
+ assert.equal(rows.length,2);assert.equal(rows[1].revision,2);assert.equal(rows[1].actor,'catalog-automation:concurrent-admin');
+});
 test('manual route retains exact automatic links but cannot create or modify their provenance',async()=>{
  const {env,cookie,csrf}=await login();
  await saveAutomaticVariantBindings(env,{revision:1,item_ids:['101']},catalog(),'admin');

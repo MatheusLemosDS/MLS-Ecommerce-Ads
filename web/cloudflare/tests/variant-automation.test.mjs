@@ -124,3 +124,24 @@ test('future conflicting audit prevents any automatic state update or partially 
  const fixture=await login();const prior=await(await call(fixture,'variant-bindings')).json();fixture.env.ADMIN_DB.db.prepare('INSERT INTO variant_bindings_audit(revision,payload,actor,created_at) VALUES(2,?,?,?)').run('[]','existing-audit',prior.updated_at);
  const before=snapshot(fixture.env);const response=await call(fixture,'variant-bindings/automate',{revision:1,item_ids:['101']},{getFinanceVariantCatalog:async()=>catalog()});assert.ok(response.status>=500);assert.deepEqual(snapshot(fixture.env),before);
 });
+
+test('unrecognized catalogue returns bounded administrator review without storing labels or bumping unchanged binding state',async()=>{
+ const fixture=await login(),before=snapshot(fixture.env);
+ const diagnostic={axes:[{name:'Tamanho do casal',options:['Masc G + Fem M','Masc P + Fem GG'],option_count:2}],model_count:2,reasons:[{code:'AXES_NOT_RECOGNIZED',count:2}]};
+ const report=catalog([{...product('101',[],2),diagnostic}]);
+ for(let index=0;index<2;index++){
+  const response=await call(fixture,'variant-bindings/automate',{revision:1,item_ids:['101']},{getFinanceVariantCatalog:async()=>report});
+  assert.equal(response.status,200);const result=await response.json();assert.equal(result.revision,1);assert.deepEqual(result.bindings,[]);
+  assert.deepEqual(result.catalog_review,report);assert.deepEqual(snapshot(fixture.env),before);
+ }
+ for(const table of ['variant_bindings_state','variant_bindings_audit'])assert.ok(!JSON.stringify(fixture.env.ADMIN_DB.db.prepare('SELECT * FROM '+table).all()).includes('Masc G + Fem M'));
+});
+
+test('catalogue review with malformed or provider-extra diagnostics cannot bypass projection or persist associations',async()=>{
+ const fixture=await login(),before=snapshot(fixture.env);
+ const diagnostic={axes:[{name:'Tamanho masculino',options:['M'],option_count:1},{name:'Tamanho feminino',options:['G'],option_count:1}],model_count:1,reasons:[]};
+ for(const value of [{...diagnostic,access_token:'PRIVATE_DIAGNOSTIC_TOKEN'}, {...diagnostic,model_count:2}, {...diagnostic,axes:[{name:'Tamanho',options:['M'],option_count:1,buyer:'PRIVATE_BUYER'}]}, {...diagnostic,reasons:[{code:'PRIVATE_PROVIDER_MESSAGE',count:1}]}]){
+  const response=await call(fixture,'variant-bindings/automate',{revision:1,item_ids:['101']},{getFinanceVariantCatalog:async()=>catalog([{...product(),diagnostic:value}])});
+  assert.equal(response.status,503);assert.ok(!JSON.stringify(await response.json()).includes('PRIVATE'));assert.deepEqual(snapshot(fixture.env),before);
+ }
+});
