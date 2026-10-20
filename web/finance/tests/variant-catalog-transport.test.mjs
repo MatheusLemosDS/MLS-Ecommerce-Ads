@@ -12,6 +12,10 @@ const frame=(count=1)=>({schema:'variant_catalog_v1',checked_at:1800000000,produ
  item_id:'123',catalog_fingerprint:'a'.repeat(64),unresolved_count:0,
  bindings:Array.from({length:count},(_,index)=>({item_id:'123',model_id:String(index+1),male_size:'M',female_size:'G'})),
 }]});
+const singleFrame=()=>({schema:'variant_catalog_v1',checked_at:1800000000,products:[{
+ item_id:'123',selling_unit:'SINGLE_GARMENT',catalog_fingerprint:'b'.repeat(64),unresolved_count:0,
+ bindings:[{item_id:'123',model_id:'1',size:'P'}],
+}]});
 const json=(value,status=200)=>new Response(JSON.stringify(value),{status,headers:{'content-type':'application/json'}});
 const request=(body=JSON.stringify(input),options={})=>new Request((options.origin||origin)+(options.path||path),{
  method:options.method||'POST',headers:{'content-type':'application/json','X-Braza-Finance-Router':secret,...options.headers},
@@ -28,13 +32,17 @@ test('catalogue private routes deny untrusted callers and invalid input before a
  assert.equal(untrusted.bodyUsed,false);
  assert.equal((await forwardFinanceConnection(request(),env)).status,404);
  assert.equal((await worker.fetch(request(undefined,{headers:{'X-Braza-Finance-Router':'bad'}}),env)).status,403);
- for(const body of ['{}','null','[]','{"item_ids":[]}','{"item_ids":[123]}','{"item_ids":["01"]}','{"item_ids":["1","1"]}','{"item_ids":["1","2","3","4"]}','{"item_ids":["123"],"shop_id":1}',' '.repeat(129)]){
+ for(const body of ['{}','null','[]','{"item_ids":[]}','{"item_ids":[123]}','{"item_ids":["01"]}','{"item_ids":["1","1"]}','{"item_ids":["1","2","3","4"]}','{"item_ids":["123"],"shop_id":1}','{"item_ids":["123"],"selling_unit":"OTHER"}','{"item_ids":["123"],"selling_unit":null}',' '.repeat(129)]){
   assert.equal((await forwardFinancePaymentSample(request(body),env,authenticated)).status,400);
   assert.equal((await worker.fetch(request(body),env)).status,400);
  }
  for(const [options,status] of [[{origin:'https://evil.invalid'},404],[{path:path+'/'},404],[{path:'/shopee/finance/variant-catalog'},404],[{path:path+'?shop_id=1'},400],[{method:'GET'},405]]){
   assert.equal((await forwardFinancePaymentSample(request(undefined,options),env,authenticated)).status,status);
   assert.equal((await worker.fetch(request(undefined,options),env)).status,status);
+ }
+ assert.equal(calls,0);
+ for(const selling_unit of ['OTHER',null,true]){
+  assert.equal((await getFinanceVariantCatalog({APP_INTERNAL_SECRET:'fixture'},{item_ids:['123'],selling_unit},{fetchImpl:async()=>{calls++;}})).status,'UNAVAILABLE');
  }
  assert.equal(calls,0);
 });
@@ -67,6 +75,44 @@ test('catalogue chain forwards only its fixed path, requested IDs and dedicated 
   return forwardFinancePaymentSample(forwarded,authEnv,{validateInternalApp:async actual=>actual.headers.get('X-Braza-App-Key')==='fixture-catalog-app'});
  }});
  assert.deepEqual(result,frame());assert.equal(calls,1);
+});
+
+test('catalogue optional selling unit crosses all three private boundaries without changing legacy input',async()=>{
+ for(const selling_unit of [undefined,'SINGLE_GARMENT','ONE_MALE_ONE_FEMALE_KIT']){
+  const body={item_ids:['123'],...(selling_unit?{selling_unit}:{})};
+  const resultFrame=selling_unit==='SINGLE_GARMENT'?singleFrame():frame();
+  const now=()=>1800000000000,fetchImpl=async()=>{};
+  let capabilityCalls=0,authCalls=0,financeCalls=0;
+  const env={FINANCE_ROUTER_SECRET:secret,FINANCE_CONNECTION_ENABLED:'true'};
+  const worker=createFinanceWorker({variantCatalog:async(actual,options)=>{
+   capabilityCalls++;assert.equal(actual,env);assert.deepEqual(options,{fetchImpl,now,...body});
+   assert.equal(Object.hasOwn(options,'selling_unit'),selling_unit!==undefined);
+   return resultFrame;
+  },fetchImpl,now});
+  const authEnv={FINANCE_ROUTER_SECRET:secret,SHOPEE_FINANCE_SERVICE:{fetch:async forwarded=>{
+   financeCalls++;assert.deepEqual(await forwarded.clone().json(),body);return worker.fetch(forwarded,env);
+  }}};
+  const result=await getFinanceVariantCatalog({APP_INTERNAL_SECRET:'fixture'},body,{fetchImpl:async forwarded=>{
+   authCalls++;assert.deepEqual(await forwarded.clone().json(),body);
+   return forwardFinancePaymentSample(forwarded,authEnv,authenticated);
+  }});
+  assert.deepEqual(result,resultFrame);assert.equal(authCalls,1);assert.equal(financeCalls,1);assert.equal(capabilityCalls,1);
+ }
+});
+
+test('catalogue unit substitutions are rejected at App, Auth and Finance boundaries before any writes',async()=>{
+ for(const [body,value] of [[{item_ids:['123'],selling_unit:'SINGLE_GARMENT'},frame()],
+  [{item_ids:['123']},singleFrame()],
+  [{item_ids:['123'],selling_unit:'ONE_MALE_ONE_FEMALE_KIT'},singleFrame()]]){
+  const noWrites={get ADMIN_DB(){throw Error('must not access App database');},get FINANCE_DB(){throw Error('must not access Finance database');}};
+  const app=await getFinanceVariantCatalog(Object.assign(Object.create(noWrites),{APP_INTERNAL_SECRET:'fixture'}),body,{fetchImpl:async()=>json(value)});
+  assert.equal(app.status,'UNAVAILABLE');assert.equal(app.diagnostic.code,'FINANCE_CATALOG_APP_RESPONSE_INVALID');
+  const auth=await forwardFinancePaymentSample(request(JSON.stringify(body)),Object.assign(Object.create(noWrites),{FINANCE_ROUTER_SECRET:secret,SHOPEE_FINANCE_SERVICE:{fetch:async()=>json(value)}}),authenticated);
+  assert.equal(auth.status,502);
+  const worker=createFinanceWorker({variantCatalog:async()=>value,fetchImpl:async()=>{}});
+  const finance=await worker.fetch(request(JSON.stringify(body)),Object.assign(Object.create(noWrites),{FINANCE_ROUTER_SECRET:secret,FINANCE_CONNECTION_ENABLED:'true'}));
+  assert.equal(finance.status,502);
+ }
 });
 
 test('catalogue frame identity cannot be substituted or enlarged by any private boundary',async()=>{

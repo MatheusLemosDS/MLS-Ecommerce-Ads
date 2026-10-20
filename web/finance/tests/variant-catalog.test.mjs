@@ -56,12 +56,40 @@ test('unknown catalogue axes produce unresolved entries without assuming option 
   }});
   assert.deepEqual(result.products[0].bindings, []); assert.equal(result.products[0].unresolved_count, 2);
 });
+test('explicit single garment reads the observed Cor and Tamanho catalogue without doubling its garments', async () => {
+  const f = await fixture(); const before = await f.store.readTokens(); let reads = 0;
+  const result = await f.run({item_ids: ['22199878767'], selling_unit: 'SINGLE_GARMENT',fetchImpl: async request => {
+    reads++; const url = new URL(request.url);
+    assert.equal(url.origin, 'https://partner.shopeemobile.com');
+    assert.equal(url.pathname, '/api/v2/product/get_model_list');
+    assert.equal(url.searchParams.get('item_id'), '22199878767');
+    assert.equal(url.searchParams.get('selling_unit'), null);
+    assert.equal(url.searchParams.get('sign'), createHmac('sha256', key)
+      .update('2049333' + url.pathname + url.searchParams.get('timestamp') + access + '1178167501').digest('hex'));
+    return Response.json({error:'',response:{
+      tier_variation:[{name:'Cor',option_list:[{option:'Verde'}]},
+        {name:'Tamanho',option_list:['p','m','g','gg'].map(option=>({option}))}],
+      model:[0,1,2,3].map(index=>({model_id:189627799547+index,tier_index:[0,index],model_sku:'DO_NOT_EXPORT'})),
+    }});
+  }});
+  assert.equal(reads,1);assert.equal(result.products.length,1);
+  const product=result.products[0];
+  assert.equal(product.item_id,'22199878767');assert.equal(product.selling_unit,'SINGLE_GARMENT');
+  assert.equal(product.unresolved_count,0);
+  assert.deepEqual(product.bindings,['P','M','G','GG'].map((size,index)=>({item_id:'22199878767',model_id:String(189627799547+index),size})));
+  assert.ok(!JSON.stringify(result).includes('male_size'));assert.ok(!JSON.stringify(result).includes('female_size'));
+  assert.ok(!JSON.stringify(result).includes('DO_NOT_EXPORT'));
+  assert.deepEqual(await f.store.readTokens(),before);
+});
 test('invalid scope, item and configuration fail before provider reads', async () => {
   for (const item_ids of [[], ['0'], ['123', '123'], ['1', '2', '3', '4'], [123], ['001']]) {
     const f = await fixture(); await assert.rejects(f.run({item_ids})); assert.equal(f.calls.length, 0);
   }
   for (const change of [env => {env.FINANCE_CONNECTION_ENABLED = 'false';}, env => {delete env.SHOPEE_FINANCE_PARTNER_KEY;}]) {
     const f = await fixture(); change(f.env); await assert.rejects(f.run()); assert.equal(f.calls.length, 0);
+  }
+  for (const selling_unit of [undefined,null,true,'garment','SINGLE_GARMENT ']) {
+    const f = await fixture(); await assert.rejects(f.run({selling_unit})); assert.equal(f.calls.length,0);
   }
 });
 test('provider permission, malformed scope and redirect errors never retry or invalidate a working connection', async () => {

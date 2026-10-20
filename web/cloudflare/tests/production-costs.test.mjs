@@ -6,6 +6,7 @@ import {D1} from './sqlite-d1.mjs';
 const values=changes=>({...COST_DEFAULTS,components:[],...changes});
 const component=(id='print',basis='per_piece',amount_cents=150)=>({id,label:'Estampa',basis,amount_cents});
 const binding=(item_id='101',model_id='1',male_size='M',female_size='G')=>({item_id,model_id,male_size,female_size,selling_unit:'ONE_MALE_ONE_FEMALE_KIT',operator_confirmed:true});
+const single=(item_id='201',model_id='0',size='M',automatic=false)=>({item_id,model_id,size,selling_unit:'SINGLE_GARMENT',operator_confirmed:!automatic,...(automatic?{source:'CATALOG_SIZE_AXIS',catalog_fingerprint:'a'.repeat(64)}:{})});
 const frame=rows=>({status:'AVAILABLE',rows});
 const row=(quantity=1,item_id='101',model_id='1',order_status='READY_TO_SHIP')=>({item_id,model_id,quantity,order_status,line_count:1});
 const reference=(rows,bindings=[binding()],cfg=values(),revision=2)=>productionCostReference(frame(rows),{revision:3,bindings},{revision,values:cfg});
@@ -39,6 +40,26 @@ test('components have exact bounded IDs, literal labels, bases and amounts; dupl
 test('all-inclusive kits use 31.80, 34.80 and 37.80 for all 49 explicit size pairs',()=>{
  const sizes=['P','M','G','GG','G1','G2','G3'],plus=new Set(['G1','G2','G3']);
  for(const male of sizes)for(const female of sizes){const result=reference([row(2)],[binding('101','1',male,female)]);const expected=3180+300*(Number(plus.has(male))+Number(plus.has(female)));assert.equal(result.variants[0].unit_cost_cents,expected);assert.equal(result.total_cents,expected*2);assert.equal(result.mapped_quantity,2);assert.equal(result.gross_profit_cents,null);}
+});
+test('single garments charge one size-specific complete cost for all seven sizes and both provenance types',()=>{
+ for(const size of ['P','M','G','GG','G1','G2','G3'])for(const automatic of [false,true]){
+  const result=reference([row(3,'201','0')],[single('201','0',size,automatic)]),unit=['G1','G2','G3'].includes(size)?1890:1590;
+  assert.equal(result.variants[0].unit_cost_cents,unit);assert.equal(result.total_cents,3*unit);assert.equal(result.mapped_quantity,3);assert.equal(result.unmapped_quantity,0);assert.equal(result.gross_profit_cents,null);
+ }
+});
+test('mixed product references keep one-piece garments, two-piece kits and unknown quantities distinct',()=>{
+ const result=reference([row(2),row(3,'201','0'),row(1,'301','1'),row(4,'401','0')],[binding(),single(),single('301','1','G2',true)]);
+ assert.deepEqual(result.variants.map(value=>value.unit_cost_cents),[3180,1590,1890,null]);assert.equal(result.known_subset_cents,13020);assert.equal(result.total_cents,null);assert.equal(result.mapped_quantity,6);assert.equal(result.unmapped_quantity,4);
+});
+test('itemized individual garments use one bare garment and one per-piece component while kit-only charges are excluded',()=>{
+ const cfg=values({mode:'itemized',base_regular_cents:1000,base_plus_cents:1400,components:[component('print','per_piece',150),component('label','per_piece',25),component('pack','per_kit',100)]});
+ const result=reference([row(2,'201','0'),row(3,'301','0'),row(1)],[single(),single('301','0','G2',true),binding()],cfg);
+ assert.deepEqual(result.variants.map(value=>value.unit_cost_cents),[1175,1575,2450]);assert.equal(result.total_cents,9525);assert.equal(result.gross_profit_cents,null);
+ const inclusive=reference([row(1,'201','0')],[single()],{...cfg,mode:'all_inclusive'});assert.equal(inclusive.total_cents,1590);
+ const kitOnly=reference([row(1,'201','0')],[single()],{...cfg,components:[component('pack','per_kit',9999)]});assert.equal(kitOnly.total_cents,1000);
+});
+test('unsafe individual garment quantities and contribution multiplication fail closed',()=>{
+ for(const quantity of [0,-1,0.5,Number.MAX_SAFE_INTEGER])assert.throws(()=>reference([row(quantity,'201','0')],[single()]),error('PRODUCTION_COST_REFERENCE_INVALID',503));
 });
 test('retained separate bases and components are ignored while all-inclusive; no double charge',()=>{
  const result=reference([row()],undefined,values({base_regular_cents:1000,base_plus_cents:1300,components:[component(),component('packing','per_kit',300)]}));

@@ -104,6 +104,20 @@ test('saved observations stay immutable after margin or binding revisions and ac
  const retained=await readObservation(env,first.observation.id);assert.deepEqual(retained,first.observation);assert.equal(retained.margin_reference.total_cents,null);assert.equal(retained.margin_reference.known_subset_cents,3350);
  const listing=await listObservations(env,new URLSearchParams());assert.equal(listing.rows.length,2);assert.equal(count(env),2);
 });
+test('single garment observations retain composition without inheriting kit margins or changing historic kit hashes',async()=>{
+ const env=await fixture(),first=await capture(env),retained=env.ADMIN_DB.db.prepare('SELECT payload FROM order_observations WHERE id=?').get(first.observation.id).payload;
+ const single=model_id=>({item_id:'101',model_id,size:model_id==='1'?'M':'G2',selling_unit:'SINGLE_GARMENT',operator_confirmed:false,source:'CATALOG_SIZE_AXIS',catalog_fingerprint:'a'.repeat(64)});
+ updateContext(env,{bindingsPayload:JSON.stringify([single('1'),single('2')]),bindingsRevision:5});
+ const second=await capture(env),value=second.observation;
+ assert.notEqual(value.id,first.observation.id);assert.deepEqual(value.bindings_snapshot.bindings,[single('1'),single('2')]);assert.equal(value.margin_reference.total_cents,null);assert.equal(value.margin_reference.known_subset_cents,0);assert.equal(value.margin_reference.mapped_quantity,0);assert.equal(value.margin_reference.unmapped_quantity,3);assert.equal(value.margin_reference.unpriced_quantity,3);
+ assert.ok(value.margin_reference.variants.every(row=>row.unit_margin_cents===null&&row.contribution_cents===null));
+ assert.deepEqual(await readObservation(env,value.id),value);
+ assert.deepEqual(await readObservation(env,first.observation.id),first.observation);assert.equal(env.ADMIN_DB.db.prepare('SELECT payload FROM order_observations WHERE id=?').get(first.observation.id).payload,retained);assert.equal(Object.hasOwn(first.observation.margin_reference,'unpriced_quantity'),false);
+ const listed=await listObservations(env);assert.equal(listed.rows.length,2);assert.equal(listed.rows.find(row=>row.id===value.id).known_subset_cents,0);
+ const repeated=await capture(env);assert.equal(repeated.deduplicated,true);assert.equal(repeated.observation.id,value.id);
+ const tampered={...value,margin_reference:{...value.margin_reference,unpriced_quantity:2}};env.ADMIN_DB.db.prepare('UPDATE order_observations SET payload=? WHERE id=?').run(JSON.stringify(tampered),value.id);
+ await expectError(readObservation(env,value.id),503,'OBSERVATION_INVALID_SNAPSHOT');
+});
 test('saved settings require exact present integer cents and revisions without defaults',async()=>{
  const bad=[null,{},'{',JSON.stringify({...settings(),regular_cents:0}),JSON.stringify({...settings(),mixed_cents:1.5}),JSON.stringify({...settings(),plus_cents:1000001}),JSON.stringify({...settings(),ad_share_percent:0}),JSON.stringify({...settings(),ad_share_percent:101}),JSON.stringify({...settings(),regular_cents:'1675'})];
  for(const raw of bad){const env=await fixture();updateContext(env,{settingsPayload:raw===null?'null':typeof raw==='object'?JSON.stringify(raw):raw});await expectError(capture(env),503);assert.equal(count(env),0);}

@@ -1,21 +1,24 @@
-# Identificação dos tamanhos pelo catálogo
+# Identificação dos tamanhos e composição pelo catálogo
 
 O vínculo manual existia porque o resumo dos pedidos contém IDs e quantidades,
 sem os atributos que distinguem a camiseta masculina da feminina. Uma composição
 com tamanhos diferentes também muda o custo do kit.
 
-Em **Produtos e variações**, a ação por produto estabelece uma única regra:
-uma unidade desse produto contém uma camiseta masculina e uma feminina. A ação
-consulta as variações do produto e salva em lote as combinações identificáveis.
-Produtos avulsos e outros tipos de kit continuam com regras separadas.
+Em **Produtos e variações**, escolha a composição uma vez por produto:
+**Camiseta avulsa** ou **Kit com uma masculina e uma feminina**. A ação consulta
+as variações e salva em lote os tamanhos identificáveis. A escolha passa a ser
+retomada dos vínculos salvos; outros tipos de kit continuam pendentes de regra.
 
 A leitura usa `GET /api/v2/product/get_model_list` na API Global, com a conexão
-financeira da loja fixa. Só associa tamanhos quando existem exatamente dois eixos
-explicitamente identificados como masculino e feminino, com opções P, M, G, GG,
-G1, G2 ou G3 e índices válidos para cada modelo. A ordem dos eixos pode variar.
-Não deduz tamanhos de IDs, preços, títulos, SKU ou de uma dupla sem gênero.
+financeira da loja fixa. Para kits, exige os dois eixos explicitamente chamados
+masculino e feminino. Para avulsas, identifica um único eixo de tamanho, sozinho
+ou acompanhado por um eixo de cor. As opções P, M, G, GG, G1, G2 e G3 são
+normalizadas para maiúsculas; todos os índices precisam corresponder às opções,
+inclusive o índice da cor. A ordem dos eixos pode variar. Não deduz a composição
+física do produto pelos nomes, IDs, preços ou SKU.
 
-Os vínculos automáticos registram a origem `CATALOG_VARIATION_AXES` e uma impressão
+Os vínculos automáticos de kits registram `CATALOG_VARIATION_AXES`; os de avulsas,
+`CATALOG_SIZE_AXIS`. Ambos registram uma impressão
 SHA-256 da estrutura consultada. Não são marcados como confirmação manual. Uma
 edição manual tem prioridade. Nova consulta substitui as interpretações automáticas
 do produto: modelos ausentes ou ambíguos deixam de usar uma interpretação antiga.
@@ -46,6 +49,27 @@ identificados, mas não mostrou os nomes dos campos ou opções. Por isso esta e
 adiciona o diagnóstico e mantém as regras de identificação: o formato da loja
 ainda precisa ser observado antes de aceitar uma nova interpretação.
 
+O diagnóstico posterior do produto `22199878767` mostrou `Cor: Verde` e
+`Tamanho: p/m/g/gg`, com quatro modelos. O operador confirmou que cada unidade
+é uma camiseta avulsa. Esse produto passa a abrir com **Camiseta avulsa**
+selecionada; essa confirmação não se estende automaticamente a outros produtos.
+A evidência está em `CATALOGO_COMPOSICAO_OBSERVADA_22199878767.json`. O diagnóstico
+não contém os IDs e índices dos quatro modelos; os testes usam esses eixos com
+modelos sintéticos, e a leitura real resolve os IDs retornados pela Shopee.
+
+Avulsas usam o custo de **uma** peça: R$ 15,90 para P–GG e R$ 18,90 para G1–G3
+no perfil completo atual. No perfil separado, somam uma base e cada componente
+por peça uma vez; componentes marcados por kit aplicam-se somente aos kits.
+As margens R$ 16,75/19,10/20,70 continuam exclusivas dos kits. A margem de uma
+avulsa permanece desconhecida até existir uma regra própria; ela não é metade
+da margem do kit. A referência de custo pode estar completa enquanto a de
+margem continua pendente.
+
+Uma mudança da composição não sobrescreve vínculos manuais de outro tipo. O
+painel pede a revisão desses vínculos. Registros antigos mantêm os formatos,
+referências e hashes anteriores; a nova união aceita avulsas sem campos falsos
+de tamanho masculino ou feminino.
+
 Esta associação fornece referências de produção e margem. A conciliação dos
 pagamentos e a confirmação da unidade monetária da amostra financeira continuam
 etapas independentes.
@@ -66,3 +90,11 @@ workerd/D1 e 14 no Chromium. Foram conferidos a cópia limitada, o texto literal
 as opções longas com detalhes abertos em 320–1365 pixels, a compatibilidade com
 respostas antigas e a preservação de revisão e auditoria nas consultas sem
 alterações. Os três dry-runs e as configurações de publicação passaram.
+
+A extensão para camisetas avulsas passou em 415 testes Node, 22 verificações dos
+três Workers no workerd/D1 e 19 no Chromium, incluindo o padrão Cor/Tamanho
+informado pelo operador. A versão preserva custos de kits, referências históricas,
+rascunhos, consultas sem alterações e a separação das margens. Layouts em
+320/360/390/768/850/1365 pixels e os três dry-runs passaram. São verificações com
+respostas sintéticas; a identificação real das quatro variações deve ser
+executada pelo operador após a publicação dos três Workers.

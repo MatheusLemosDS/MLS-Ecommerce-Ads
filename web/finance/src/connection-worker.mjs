@@ -274,9 +274,9 @@ export function createFinanceWorker({adapter, paymentSample, paymentPreview, var
         const input = await privateFinanceBody(request, catalog);
         if (!input) return failure('INVALID_REQUEST', 400);
         try {
-          const result = await capability(env, {fetchImpl, now, ...(catalog ? {item_ids: input.item_ids} : {})});
+          const result = await capability(env, {fetchImpl, now, ...(catalog ? input : {})});
           const frame = catalog ? projectVariantCatalog(result) : preview ? projectFinancePaymentPreview(result) : sampleFrame(result);
-          if (catalog && (!frame || frame.products.length !== input.item_ids.length || frame.products.some(product => !input.item_ids.includes(product.item_id)))) return response({error:'FINANCE_CATALOG_UNAVAILABLE',diagnostic:{code:'FINANCE_CATALOG_UNAVAILABLE',http:null}},502,{json:true});
+          if (catalog && (!frame || frame.products.length !== input.item_ids.length || frame.products.some(product => !input.item_ids.includes(product.item_id) || (product.selling_unit || 'ONE_MALE_ONE_FEMALE_KIT') !== (input.selling_unit || 'ONE_MALE_ONE_FEMALE_KIT')))) return response({error:'FINANCE_CATALOG_UNAVAILABLE',diagnostic:{code:'FINANCE_CATALOG_UNAVAILABLE',http:null}},502,{json:true});
           if (!frame) return paymentFailure(preview ? new FinanceConnectionError('FINANCE_SAMPLE_PREVIEW_RESPONSE_INVALID', 502) : undefined);
           return response(frame, 200, {json: true});
         } catch (error) { return catalog ? response({error:'FINANCE_CATALOG_UNAVAILABLE',diagnostic:{code:'FINANCE_CATALOG_UNAVAILABLE',http:null}},502,{json:true}) : paymentFailure(error); }

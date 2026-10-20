@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {adminFetch,DEFAULTS} from '../src/admin.mjs';
-import {validateVariantBindings,variantMarginReference,readVariantBindings,saveAutomaticVariantBindings} from '../src/variant-bindings.mjs';
+import {validateVariantBindings,variantMarginReference,readVariantBindings,saveVariantBindings,saveAutomaticVariantBindings} from '../src/variant-bindings.mjs';
 import {COST_DEFAULTS,productionCostReference} from '../src/production-costs.mjs';
 import {captureObservation,readObservation} from '../src/order-observations.mjs';
 import {D1} from './sqlite-d1.mjs';
@@ -15,6 +15,9 @@ const automatic=(item_id='101',model_id='2',male_size='GG',female_size='G1',cata
 const catalogProduct=(item_id='101',models=[automatic(item_id)],catalog_fingerprint='a'.repeat(64),unresolved_count=0)=>({item_id,catalog_fingerprint,bindings:models.map(({item_id,model_id,male_size,female_size})=>({item_id,model_id,male_size,female_size})),unresolved_count});
 const catalog=(products=[catalogProduct()])=>({schema:'variant_catalog_v1',checked_at:1792405689,products});
 const bindingError=(message,status=400)=>error=>error.message===message&&error.status===status;
+const singleBinding=(item_id='101',model_id='1',size='M')=>({item_id,model_id,size,selling_unit:'SINGLE_GARMENT',operator_confirmed:true});
+const singleAutomatic=(item_id='101',model_id='1',size='M',catalog_fingerprint='a'.repeat(64))=>({...singleBinding(item_id,model_id,size),operator_confirmed:false,source:'CATALOG_SIZE_AXIS',catalog_fingerprint});
+const singleProduct=(item_id='101',models=[singleAutomatic(item_id)],catalog_fingerprint='a'.repeat(64),unresolved_count=0)=>({item_id,catalog_fingerprint,bindings:models.map(({item_id,model_id,size})=>({item_id,model_id,size})),unresolved_count,selling_unit:'SINGLE_GARMENT'});
 
 test('explicit model composition and confirmation required; model0 is exact, unknown inputs never inferred',()=>{
  assert.deepEqual(validateVariantBindings([binding('101','0','G1','G3')]),[binding('101','0','G1','G3')]);
@@ -180,4 +183,70 @@ test('automatic provenance is snapshotted while existing manual observations rem
  assert.deepEqual(await readObservation(env,first.observation.id),first.observation);
  assert.equal(env.ADMIN_DB.db.prepare('SELECT payload FROM order_observations WHERE id=?').get(first.observation.id).payload,retained);
  assert.equal(first.observation.margin_reference.total_cents,null);
+});
+test('individual garments use an exact separate union and cannot borrow kit fields or provenance',()=>{
+ for(const value of [singleBinding(),singleAutomatic('101','0','G3')])assert.deepEqual(validateVariantBindings([value]),[value]);
+ assert.equal(JSON.stringify(validateVariantBindings([binding()])[0]),JSON.stringify(binding()));
+ for(const change of [{size:'m'},{size:'XS'},{male_size:'M'},{female_size:'G'},{operator_confirmed:'true'},{selling_unit:'ONE_SHIRT'},{source:'CATALOG_SIZE_AXIS'}])assert.throws(()=>validateVariantBindings([{...singleBinding(),...change}]));
+ for(const change of [{source:'CATALOG_VARIATION_AXES'},{catalog_fingerprint:'A'.repeat(64)},{operator_confirmed:true},{male_size:'M'}])assert.throws(()=>validateVariantBindings([{...singleAutomatic(),...change}]));
+ assert.throws(()=>validateVariantBindings([{...automatic(),source:'CATALOG_SIZE_AXIS'}]));
+ assert.throws(()=>validateVariantBindings([binding(),singleAutomatic()]));
+ assert.throws(()=>validateVariantBindings(Array.from({length:1001},(_,n)=>singleBinding(String(n+1),'0'))));
+});
+test('single-garment automation preserves manual choices and replaces or removes only requested automatic links',async()=>{
+ const {env}=await login();
+ let state=await saveVariantBindings(env,{revision:1,bindings:[singleBinding(),binding('999','0')]},'admin');
+ state=await saveAutomaticVariantBindings(env,{revision:state.revision,item_ids:['101'],selling_unit:'SINGLE_GARMENT'},catalog([singleProduct('101',[singleAutomatic('101','1','G3'),singleAutomatic('101','2','P')])]),'admin');
+ assert.deepEqual(state.bindings,[singleBinding(),singleAutomatic('101','2','P'),binding('999','0')]);
+ const repeated=await saveAutomaticVariantBindings(env,{revision:state.revision,item_ids:['101'],selling_unit:'SINGLE_GARMENT'},catalog([singleProduct('101',[singleAutomatic('101','2','P'),singleAutomatic('101','1','G3')])]),'admin');
+ assert.deepEqual(repeated,state);
+ state=await saveAutomaticVariantBindings(env,{revision:state.revision,item_ids:['101'],selling_unit:'SINGLE_GARMENT'},catalog([singleProduct('101',[],'b'.repeat(64),2)]),'admin');
+ assert.deepEqual(state.bindings,[singleBinding(),binding('999','0')]);
+ assert.equal(env.ADMIN_DB.db.prepare('SELECT actor FROM variant_bindings_audit ORDER BY revision DESC LIMIT 1').get().actor,'catalog-automation:admin');
+});
+test('automatic unit switches replace prior automatic interpretations but reject conflicting manual product composition',async()=>{
+ const {env}=await login();
+ let state=await saveAutomaticVariantBindings(env,{revision:1,item_ids:['101']},catalog(),'admin');
+ state=await saveAutomaticVariantBindings(env,{revision:state.revision,item_ids:['101'],selling_unit:'SINGLE_GARMENT'},catalog([singleProduct()]),'admin');
+ assert.deepEqual(state.bindings,[singleAutomatic()]);
+ state=await saveAutomaticVariantBindings(env,{revision:state.revision,item_ids:['101'],selling_unit:'ONE_MALE_ONE_FEMALE_KIT'},catalog(),'admin');
+ assert.deepEqual(state.bindings,[automatic()]);
+ for(const manual of [binding('101','9'),singleBinding('101','9')]){
+  state=await saveVariantBindings(env,{revision:state.revision,bindings:[manual]},'admin');
+  const previous=state,audits=env.ADMIN_DB.db.prepare('SELECT COUNT(*) n FROM variant_bindings_audit').get().n,isSingle=manual.selling_unit!=='SINGLE_GARMENT';
+  await assert.rejects(saveAutomaticVariantBindings(env,{revision:state.revision,item_ids:['101'],selling_unit:isSingle?'SINGLE_GARMENT':'ONE_MALE_ONE_FEMALE_KIT'},isSingle?catalog([singleProduct()]):catalog(),'admin'),bindingError('VARIANT_BINDING_COMPOSITION_CONFLICT',409));
+  assert.deepEqual(await readVariantBindings(env),previous);assert.equal(env.ADMIN_DB.db.prepare('SELECT COUNT(*) n FROM variant_bindings_audit').get().n,audits);
+ }
+});
+test('manual save retains genuine garment and kit automatic rows but cannot forge either source',async()=>{
+ const {env}=await login();
+ let state=await saveAutomaticVariantBindings(env,{revision:1,item_ids:['101'],selling_unit:'SINGLE_GARMENT'},catalog([singleProduct()]),'admin');
+ state=await saveAutomaticVariantBindings(env,{revision:state.revision,item_ids:['201']},catalog([catalogProduct('201')]),'admin');
+ const genuine=state.bindings;
+ for(const candidate of [singleAutomatic('101','1','G3'),singleAutomatic('101','1','M','b'.repeat(64)),singleAutomatic('301','1')]){
+  await assert.rejects(saveVariantBindings(env,{revision:state.revision,bindings:[...genuine.filter(row=>row.item_id!=='101'),candidate]},'admin'),bindingError('VARIANT_BINDING_AUTOMATIC_SOURCE_REQUIRED'));
+ }
+ state=await saveVariantBindings(env,{revision:state.revision,bindings:[...genuine,singleBinding('999','0','GG')]},'admin');
+ assert.deepEqual(state.bindings,[singleAutomatic(),automatic('201'),singleBinding('999','0','GG')]);
+ await assert.rejects(saveVariantBindings(env,{revision:state.revision-1,bindings:genuine},'admin'),bindingError('VARIANT_BINDINGS_CHANGED_RELOAD',409));
+});
+test('garment catalog unit and shape mismatches fail before writes and aggregate model counts stay bounded',async()=>{
+ const {env}=await login(),body={revision:1,item_ids:['101'],selling_unit:'SINGLE_GARMENT'};
+ for(const bad of [{...body,selling_unit:'ONE_SHIRT'},{...body,source:'CATALOG_SIZE_AXIS'}])await assert.rejects(saveAutomaticVariantBindings(env,bad,catalog([singleProduct()]),'admin'),bindingError('VARIANT_CATALOG_REQUEST_INVALID'));
+ for(const product of [catalogProduct(),{...singleProduct(),selling_unit:undefined},{...singleProduct(),bindings:[{item_id:'101',model_id:'1',size:'m'}]},{...singleProduct(),bindings:[{item_id:'101',model_id:'1',male_size:'M',female_size:'M'}]},singleProduct('101',[singleAutomatic(),singleAutomatic()]),singleProduct('101',[singleAutomatic()],'a'.repeat(64),1000)])await assert.rejects(saveAutomaticVariantBindings(env,body,catalog([product]),'admin'),bindingError('VARIANT_CATALOG_INVALID',503));
+ const oversized=catalog([singleProduct('101',[],'a'.repeat(64),600),singleProduct('201',[],'a'.repeat(64),401)]);
+ await assert.rejects(saveAutomaticVariantBindings(env,{...body,item_ids:['101','201']},oversized,'admin'),bindingError('VARIANT_CATALOG_INVALID',503));
+ assert.equal((await readVariantBindings(env)).revision,1);assert.equal(env.ADMIN_DB.db.prepare('SELECT COUNT(*) n FROM variant_bindings_audit').get().n,1);
+});
+test('single garments remain unpriced by kit margins and legacy-only reference shape is unchanged',()=>{
+ const rows=[{item_id:'101',model_id:'1',quantity:2},{item_id:'201',model_id:'1',quantity:3},{item_id:'301',model_id:'0',quantity:1}];
+ const state={revision:4,bindings:[singleAutomatic(),binding('201','1')]},cfg={revision:3,values:DEFAULTS};
+ const result=variantMarginReference({status:'AVAILABLE',rows},state,cfg);
+ assert.equal(result.known_subset_cents,5025);assert.equal(result.total_cents,null);assert.equal(result.mapped_quantity,3);assert.equal(result.unmapped_quantity,3);assert.equal(result.unpriced_quantity,2);
+ assert.deepEqual(result.variants[0],{...rows[0],margin_class:null,unit_margin_cents:null,contribution_cents:null});
+ const onlySingle=variantMarginReference({status:'AVAILABLE',rows:[rows[0]]},state,cfg);
+ assert.equal(onlySingle.known_subset_cents,0);assert.equal(onlySingle.mapped_quantity,0);assert.equal(onlySingle.unmapped_quantity,2);assert.equal(onlySingle.total_cents,null);
+ const legacy=variantMarginReference({status:'AVAILABLE',rows:[rows[1]]},state,cfg);
+ assert.equal(Object.hasOwn(legacy,'unpriced_quantity'),false);
+ assert.deepEqual(legacy,{settings_revision:3,bindings_revision:4,known_subset_cents:5025,total_cents:5025,mapped_quantity:3,unmapped_quantity:0,status_scope:'ALL_RETURNED_STATUSES_REFERENCE_ONLY',currency:'BRL',margin_stage:'AFTER_FEES_AND_PRODUCT_COST_BEFORE_ADS',economic_status:'UNKNOWN',variants:[{...rows[1],margin_class:'REGULAR',unit_margin_cents:1675,contribution_cents:5025}]});
 });

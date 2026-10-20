@@ -264,3 +264,148 @@ test('1000 models are bounded without truncation and aggregate frame limits reje
   assert.equal(projectVariantCatalog({...frame(value),products:[value,extra]}),null);
   assert.equal(projectVariantCatalog({...frame(product()),products:Array.from({length:4},(_,index)=>({...product(),item_id:String(index+1),bindings:[]}))}),null);
 });
+
+test('confirmed single-garment composition resolves the observed color and generic size catalogue without duplicating garments', async () => {
+  const item_id='22199878767';
+  const source={tier_variation:[axis('Cor',['Verde']),axis('Tamanho',['p','m','g','gg'])],
+    model:[{model_id:'189627799547',tier_index:[0,0]},{model_id:'189627799548',tier_index:[0,1]},
+      {model_id:'189627799549',tier_index:[0,2]},{model_id:'189627799550',tier_index:[0,3]}]};
+  const value=await deriveCatalogProduct(item_id,source,{selling_unit:'SINGLE_GARMENT'});
+  assert.equal(value.selling_unit,'SINGLE_GARMENT'); assert.equal(value.unresolved_count,0);
+  assert.deepEqual(value.bindings,source.model.map((model,index)=>({item_id,model_id:model.model_id,size:sizes[index]})));
+  assert.deepEqual(value.diagnostic,{axes:[{name:'Cor',options:['Verde'],option_count:1},
+    {name:'Tamanho',options:['p','m','g','gg'],option_count:4}],model_count:4,reasons:[]});
+  assert.deepEqual(projectVariantCatalog(frame(value)),frame(value));
+  const legacy=await deriveCatalogProduct(item_id,source);
+  assert.equal(Object.hasOwn(legacy,'selling_unit'),false);
+  assert.deepEqual(legacy.bindings,[]); assert.equal(legacy.unresolved_count,4);
+  assert.deepEqual(legacy.diagnostic.reasons,[{code:'AXES_NOT_RECOGNIZED',count:4}]);
+});
+
+test('single-garment derivation supports every size, reversed color axes and normalized generic axis labels', async () => {
+  for(const name of ['Tamanho','  TAM.  ','Size','Sizes','Tamanhos','Shirt size','Garment size']){
+    const source={tier_variation:[axis(name,sizes.map(size=>' '+size.toLowerCase()+' '))],
+      model:sizes.map((_,index)=>({model_id:index,tier_index:[index]}))};
+    const result=await deriveCatalogProduct(ITEM,source,{selling_unit:'SINGLE_GARMENT'});
+    assert.deepEqual(result.bindings,sizes.map((size,index)=>({item_id:ITEM,model_id:String(index),size})));
+    assert.equal(result.unresolved_count,0);
+  }
+  for(const color of ['Cor','Color','Colour'])for(const reverse of [false,true]){
+    const source={tier_variation:reverse?[axis('Size',['g3']),axis(color,['Verde','Azul'])]
+      :[axis(color,['Verde','Azul']),axis('Size',['g3'])],
+      model:[{model_id:0,tier_index:reverse?[0,1]:[1,0]}]};
+    const result=await deriveCatalogProduct(ITEM,source,{selling_unit:'SINGLE_GARMENT'});
+    assert.deepEqual(result.bindings,[{item_id:ITEM,model_id:'0',size:'G3'}]);
+  }
+});
+
+test('single-garment indices validate color as well as size, with disjoint pending-model reasons', async () => {
+  const source={tier_variation:[axis('Cor',['Verde']),axis('Tamanho',['M','G.G','Masculino P','XL','Ｇ１'])],
+    model:[{model_id:0,tier_index:[0,0]},{model_id:1,tier_index:[0,1]},{model_id:2,tier_index:[0,2]},
+      {model_id:3,tier_index:[0,3]},{model_id:4,tier_index:[0,4]},{model_id:5,tier_index:[1,0]},
+      {model_id:6,tier_index:[0,5]},{model_id:7,tier_index:[-1,0]},{model_id:8,tier_index:[0]},
+      {model_id:9,tier_index:[0,0,0]},{model_id:10,tier_index:['0',0]},{model_id:11,tier_index:[0,0.5]},
+      {model_id:12}]};
+  const result=await deriveCatalogProduct(ITEM,source,{selling_unit:'SINGLE_GARMENT'});
+  assert.deepEqual(result.bindings,[{item_id:ITEM,model_id:'0',size:'M'}]);
+  assert.equal(result.unresolved_count,12);
+  assert.deepEqual(result.diagnostic.reasons,[{code:'OPTION_NOT_RECOGNIZED',count:4},{code:'INDEX_NOT_VALID',count:8}]);
+  assert.deepEqual(projectVariantCatalog(frame(result)),frame(result));
+  source.tier_variation[0].option_list=[];
+  assert.equal((await deriveCatalogProduct(ITEM,source,{selling_unit:'SINGLE_GARMENT'})).bindings.length,0);
+});
+
+test('single-garment rules reject duplicate size axes and unknown axes rather than guessing from names or SKU', async () => {
+  for(const axes of [[],[axis('Cor',['Verde'])],[axis('Masculino')],
+    [axis('Tamanho'),axis('Size')],[axis('Tamanho'),axis('Estampa',['Verde'])],
+    [axis('Tamanho'),axis('Cor',['Verde']),axis('Colour',['Verde'])],
+    [axis('Tamanho masculino'),axis('Tamanho feminino')]]){
+    const source={tier_variation:axes,model:[{model_id:0,tier_index:axes.map(()=>0),
+      model_name:'PRIVATE_SINGLE_GARMENT_SIZE_M',model_sku:'PRIVATE_M'}],item_name:'PRIVATE_CAMISETA_AVULSA_M'};
+    const result=await deriveCatalogProduct(ITEM,source,{selling_unit:'SINGLE_GARMENT'});
+    assert.deepEqual(result.bindings,[]);assert.equal(result.unresolved_count,1);
+    assert.deepEqual(result.diagnostic.reasons,[{code:'AXES_NOT_RECOGNIZED',count:1}]);
+    assert.equal(JSON.stringify(result).includes('PRIVATE_'),false);
+  }
+});
+
+test('single-garment fingerprints include the composition rule while legacy kit fingerprints remain identical', async () => {
+  const source={tier_variation:[axis('Cor',['Verde']),axis('Tamanho',['M'])],model:[{model_id:0,tier_index:[0,0]}]};
+  const single=await deriveCatalogProduct(ITEM,source,{selling_unit:'SINGLE_GARMENT'});
+  const canonical={item_id:ITEM,axes:[{name:'cor',options:['VERDE']},{name:'tamanho',options:['M']}],
+    models:[{model_id:'0',tier_index:[0,0]}],selling_unit:'SINGLE_GARMENT'};
+  assert.equal(single.catalog_fingerprint,createHash('sha256').update(JSON.stringify(canonical)).digest('hex'));
+  assert.notEqual(single.catalog_fingerprint,(await deriveCatalogProduct(ITEM,source)).catalog_fingerprint);
+  assert.deepEqual(await deriveCatalogProduct(ITEM,catalog(),{selling_unit:'ONE_MALE_ONE_FEMALE_KIT'}),
+    await deriveCatalogProduct(ITEM,catalog()));
+  source.model[0].model_sku='PRIVATE_SKU';source.item_name='PRIVATE_TITLE';source.price=123;
+  assert.equal((await deriveCatalogProduct(ITEM,source,{selling_unit:'SINGLE_GARMENT'})).catalog_fingerprint,single.catalog_fingerprint);
+  source.tier_variation[0].option_list[0].option='Azul';
+  assert.notEqual((await deriveCatalogProduct(ITEM,source,{selling_unit:'SINGLE_GARMENT'})).catalog_fingerprint,single.catalog_fingerprint);
+  await assert.rejects(deriveCatalogProduct(ITEM,source,{selling_unit:'UNKNOWN'}),invalid);
+});
+
+test('single-garment projection is a strict detached product union and never silently changes kit rows', async () => {
+  const single=await deriveCatalogProduct(ITEM,{tier_variation:[axis('Tamanho',['M'])],
+    model:[{model_id:0,tier_index:[0]}]},{selling_unit:'SINGLE_GARMENT'});
+  const copy=projectVariantCatalog(frame(single));
+  assert.deepEqual(copy,frame(single));single.bindings[0].size='G3';
+  assert.equal(copy.products[0].bindings[0].size,'M');
+  const kit=product();kit.selling_unit='ONE_MALE_ONE_FEMALE_KIT';
+  assert.deepEqual(projectVariantCatalog(frame(kit)),frame(kit));
+  assert.deepEqual(projectVariantCatalog(frame(product())),frame(product()));
+  const original=copy;
+  const cases=[value=>{delete value.selling_unit;},value=>{value.selling_unit='UNKNOWN';},
+    value=>{value.selling_unit=undefined;},value=>{value.selling_unit='ONE_MALE_ONE_FEMALE_KIT';},
+    value=>{value.bindings[0].size='m';},value=>{value.bindings[0].size=null;},
+    value=>{value.bindings[0].male_size='M';},value=>{value.bindings[0].female_size='M';},
+    value=>{value.bindings[0].model_id=0;},value=>{value.bindings[0].item_id='2';}];
+  for(const change of cases){const value=structuredClone(original);change(value.products[0]);assert.equal(projectVariantCatalog(value),null);}
+  const wrongKit=frame(product());wrongKit.products[0].bindings[0]={item_id:ITEM,model_id:'123',size:'M'};
+  assert.equal(projectVariantCatalog(wrongKit),null);
+});
+
+test('request composition rule remains optional, explicit and strictly typed without injecting defaults', () => {
+  const legacy={item_ids:[ITEM]};assert.deepEqual(projectVariantCatalogRequest(legacy),legacy);
+  for(const selling_unit of ['SINGLE_GARMENT','ONE_MALE_ONE_FEMALE_KIT']){
+    const source={item_ids:[ITEM],selling_unit},copy=projectVariantCatalogRequest(source);
+    assert.deepEqual(copy,source);source.item_ids[0]='2';assert.deepEqual(copy,{item_ids:[ITEM],selling_unit});
+  }
+  for(const selling_unit of [null,undefined,0,{},true,'single_garment','UNKNOWN','SINGLE_GARMENT ']){
+    assert.equal(projectVariantCatalogRequest({item_ids:[ITEM],selling_unit}),null);
+  }
+  assert.equal(projectVariantCatalogRequest({item_ids:[ITEM],selling_unit:'SINGLE_GARMENT',gender:'male'}),null);
+});
+
+test('new composition and size accessors are rejected before execution', async () => {
+  let invoked=0;
+  const getter={get(){invoked++;throw Error('PRIVATE');},enumerable:true};
+  const request={item_ids:[ITEM]};Object.defineProperty(request,'selling_unit',getter);
+  assert.equal(projectVariantCatalogRequest(request),null);
+  const single=await deriveCatalogProduct(ITEM,{tier_variation:[axis('Tamanho',['M'])],
+    model:[{model_id:0,tier_index:[0]}]},{selling_unit:'SINGLE_GARMENT'});
+  for(const key of ['selling_unit','size']){
+    const value=structuredClone(frame(single));
+    Object.defineProperty(key==='selling_unit'?value.products[0]:value.products[0].bindings[0],key,getter);
+    assert.equal(projectVariantCatalog(value),null);
+  }
+  assert.equal(invoked,0);
+});
+
+test('single-garment diagnostics preserve bounded source counts while excluding unrelated catalogue payload', async () => {
+  const colors=Array.from({length:1000},(_,index)=>'Cor '+index);
+  const source={tier_variation:[axis('Cor',colors),axis('Tamanho',[...sizes,'XL'])],
+    model:[{model_id:0,tier_index:[999,6],model_name:'PRIVATE_MODEL',model_sku:'PRIVATE_SKU'},
+      {model_id:1,tier_index:[0,7]}],item_name:'PRIVATE_TITLE',buyer_name:'PRIVATE_BUYER',price:123,access_token:'PRIVATE_TOKEN'};
+  const result=await deriveCatalogProduct(ITEM,source,{selling_unit:'SINGLE_GARMENT'});
+  assert.deepEqual(result.bindings,[{item_id:ITEM,model_id:'0',size:'G3'}]);
+  assert.equal(result.unresolved_count,1);
+  assert.deepEqual(result.diagnostic,{axes:[{name:'Cor',options:colors.slice(0,7),option_count:1000},
+    {name:'Tamanho',options:sizes,option_count:8}],model_count:2,reasons:[{code:'OPTION_NOT_RECOGNIZED',count:1}]});
+  const projected=projectVariantCatalog(frame(result));assert.deepEqual(projected,frame(result));
+  for(const forbidden of ['PRIVATE_','Cor 999','model_name','model_sku','price','access_token','buyer_name']){
+    assert.equal(JSON.stringify(projected).includes(forbidden),false);
+  }
+  source.tier_variation[0].option_list.push({option:'One too many'});
+  await assert.rejects(deriveCatalogProduct(ITEM,source,{selling_unit:'SINGLE_GARMENT'}),invalid);
+});

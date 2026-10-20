@@ -63,7 +63,7 @@ export async function getFinanceVariantCatalog(env,input,{fetchImpl=request=>fet
   const bytes=new Uint8Array(length);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.length;}
   let raw;try{raw=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes));}catch{return failure('FINANCE_CATALOG_APP_RESPONSE_INVALID');}
   const frame=projectVariantCatalog(raw);
-  return frame&&frame.products.length===body.item_ids.length&&frame.products.every(product=>body.item_ids.includes(product.item_id))?frame:failure('FINANCE_CATALOG_APP_RESPONSE_INVALID');
+  return frame&&frame.products.length===body.item_ids.length&&frame.products.every(product=>body.item_ids.includes(product.item_id)&&(product.selling_unit||'ONE_MALE_ONE_FEMALE_KIT')===(body.selling_unit||'ONE_MALE_ONE_FEMALE_KIT'))?frame:failure('FINANCE_CATALOG_APP_RESPONSE_INVALID');
  };
  try{return await Promise.race([run(),deadline]);}
  catch{return failure(controller.signal.aborted?'FINANCE_CATALOG_APP_TIMEOUT':'FINANCE_CATALOG_APP_UPSTREAM_FAILED');}

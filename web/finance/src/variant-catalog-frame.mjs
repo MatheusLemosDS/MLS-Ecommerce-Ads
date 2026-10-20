@@ -4,6 +4,7 @@ export class VariantCatalogFrameError extends Error {
   constructor() {super('VARIANT_CATALOG_INVALID');}
 }
 const catalogSizes = new Set(['P','M','G','GG','G1','G2','G3']);
+const catalogSellingUnits = new Set(['SINGLE_GARMENT','ONE_MALE_ONE_FEMALE_KIT']);
 const catalogObject = value => value !== null && typeof value === 'object'
   && [Object.prototype,null].includes(Object.getPrototypeOf(value));
 const catalogOwn = (value, key) => Object.getOwnPropertyDescriptor(value, key)?.value;
@@ -43,9 +44,11 @@ function projectCatalogDiagnostic(value, modelCount, unresolvedCount) {
 
 export function projectVariantCatalogRequest(value) {
   try {
-    if (!catalogKeys(value,['item_ids']) || !catalogArray(value.item_ids,3) || !value.item_ids.length
+    const hasUnit=catalogObject(value)&&Object.hasOwn(value,'selling_unit');
+    if (!catalogKeys(value,['item_ids',...(hasUnit?['selling_unit']:[])]) || !catalogArray(value.item_ids,3) || !value.item_ids.length
+      || (hasUnit&&!catalogSellingUnits.has(value.selling_unit))
       || !value.item_ids.every(id=>catalogId(id)) || new Set(value.item_ids).size!==value.item_ids.length) return null;
-    return {item_ids:[...value.item_ids]};
+    return {item_ids:[...value.item_ids],...(hasUnit?{selling_unit:value.selling_unit}:{})};
   } catch {return null;}
 }
 
@@ -57,23 +60,27 @@ export function projectVariantCatalog(value) {
     const products=[],seen=new Set(); let total=0;
     for (const product of value.products) {
       const hasDiagnostic=catalogObject(product)&&Object.hasOwn(product,'diagnostic');
-      const keys=['item_id','catalog_fingerprint','bindings','unresolved_count',...(hasDiagnostic?['diagnostic']:[])];
+      const hasUnit=catalogObject(product)&&Object.hasOwn(product,'selling_unit');
+      const keys=['item_id','catalog_fingerprint','bindings','unresolved_count',...(hasUnit?['selling_unit']:[]),...(hasDiagnostic?['diagnostic']:[])];
       if (!catalogKeys(product,keys)
+        || (hasUnit&&!catalogSellingUnits.has(product.selling_unit))
         || !catalogId(product.item_id) || seen.has(product.item_id)
         || typeof product.catalog_fingerprint!=='string' || !/^[a-f0-9]{64}$/.test(product.catalog_fingerprint)
         || !catalogArray(product.bindings,1000) || !catalogCount(product.unresolved_count)
         || product.bindings.length+product.unresolved_count>1000) return null;
       seen.add(product.item_id); const models=new Set(),bindings=[];
+      const single=hasUnit&&product.selling_unit==='SINGLE_GARMENT';
       for (const row of product.bindings) {
-        if (!catalogKeys(row,['item_id','model_id','male_size','female_size'])
+        if (!catalogKeys(row,['item_id','model_id',...(single?['size']:['male_size','female_size'])])
           || row.item_id!==product.item_id || !catalogId(row.model_id,true) || models.has(row.model_id)
-          || !catalogSizes.has(row.male_size) || !catalogSizes.has(row.female_size)) return null;
+          || (single?!catalogSizes.has(row.size):!catalogSizes.has(row.male_size)||!catalogSizes.has(row.female_size))) return null;
         models.add(row.model_id);
-        bindings.push({item_id:row.item_id,model_id:row.model_id,male_size:row.male_size,female_size:row.female_size});
+        bindings.push({item_id:row.item_id,model_id:row.model_id,...(single?{size:row.size}:{male_size:row.male_size,female_size:row.female_size})});
       }
       total+=bindings.length+product.unresolved_count; if(total>1000)return null;
       bindings.sort((a,b)=>catalogSort(a.model_id,b.model_id));
       const projected={item_id:product.item_id,catalog_fingerprint:product.catalog_fingerprint,bindings,unresolved_count:product.unresolved_count};
+      if(hasUnit)projected.selling_unit=product.selling_unit;
       if (hasDiagnostic) {
         const diagnostic=projectCatalogDiagnostic(product.diagnostic,bindings.length+product.unresolved_count,product.unresolved_count);
         if (!diagnostic) return null;
@@ -96,9 +103,11 @@ const catalogGender = value => {
   if(['feminino','feminina','tamanho feminino','tamanho feminina','tam feminino','tam feminina','tam fem','tamanho fem','fem','female','women','womens','female size','women size',"women's size"].includes(label))return 'female_size';
   return null;
 };
+const catalogSingleSizeAxis = label => ['tamanho','tamanhos','tam','size','sizes','shirt size','garment size'].includes(label);
+const catalogColorAxis = label => ['cor','color','colour'].includes(label);
 
-export async function deriveCatalogProduct(item_id,response) {
-  if(!catalogId(item_id)||!catalogObject(response))throw new VariantCatalogFrameError();
+export async function deriveCatalogProduct(item_id,response,{selling_unit='ONE_MALE_ONE_FEMALE_KIT'}={}) {
+  if(!catalogId(item_id)||!catalogObject(response)||!catalogSellingUnits.has(selling_unit))throw new VariantCatalogFrameError();
   const rawModels=catalogOwn(response,'model'),rawAxes=catalogOwn(response,'tier_variation');
   if(!catalogArray(rawModels,1000)||!catalogArray(rawAxes,10))throw new VariantCatalogFrameError();
   const diagnosticAxes=[];
@@ -116,7 +125,11 @@ export async function deriveCatalogProduct(item_id,response) {
     return {name,options:rawOptions.map(value=>value.trim().toUpperCase())};
   });
   const genders=axes.map(axis=>catalogGender(axis.name));
-  const explicit=axes.length===2&&genders.includes('male_size')&&genders.includes('female_size');
+  const single=selling_unit==='SINGLE_GARMENT';
+  const sizeAxes=axes.map((axis,index)=>catalogSingleSizeAxis(axis.name)?index:-1).filter(index=>index!==-1);
+  const explicit=single
+    ? axes.length>=1&&axes.length<=2&&sizeAxes.length===1&&axes.every((axis,index)=>index===sizeAxes[0]||catalogColorAxis(axis.name))
+    : axes.length===2&&genders.includes('male_size')&&genders.includes('female_size');
   const models=[],seen=new Set();
   for(const raw of rawModels){
     if(!catalogObject(raw))throw new VariantCatalogFrameError();
@@ -132,16 +145,22 @@ export async function deriveCatalogProduct(item_id,response) {
   const unresolved=code=>reasonCounts.set(code,(reasonCounts.get(code)||0)+1);
   for(const model of models){
     if(!explicit){unresolved('AXES_NOT_RECOGNIZED');continue;}
-    if(model.tier_index?.length!==2||model.tier_index.some((index,axis)=>index>=axes[axis].options.length)){
+    if(model.tier_index?.length!==axes.length||model.tier_index.some((index,axis)=>index>=axes[axis].options.length)){
       unresolved('INDEX_NOT_VALID');continue;
+    }
+    if(single){
+      const size=axes[sizeAxes[0]].options[model.tier_index[sizeAxes[0]]];
+      if(!catalogSizes.has(size)){unresolved('OPTION_NOT_RECOGNIZED');continue;}
+      bindings.push({item_id,model_id:model.model_id,size});
+      continue;
     }
     const sizes=axes.map((axis,index)=>axis.options[model.tier_index[index]]);
     if(!sizes.every(size=>catalogSizes.has(size))){unresolved('OPTION_NOT_RECOGNIZED');continue;}
     bindings.push({item_id,model_id:model.model_id,
       male_size:sizes[genders.indexOf('male_size')],female_size:sizes[genders.indexOf('female_size')]});
   }
-  const digest=new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify({item_id,axes,models}))));
+  const digest=new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify({item_id,axes,models,...(single?{selling_unit}:{})}))));
   return {item_id,catalog_fingerprint:Array.from(digest,byte=>byte.toString(16).padStart(2,'0')).join(''),
-    bindings,unresolved_count:models.length-bindings.length,diagnostic:{axes:diagnosticAxes,model_count:models.length,
+    bindings,unresolved_count:models.length-bindings.length,...(single?{selling_unit}:{}),diagnostic:{axes:diagnosticAxes,model_count:models.length,
       reasons:models.length?[...reasonCounts].map(([code,count])=>({code,count})):[{code:'NO_MODELS',count:0}]}};
 }

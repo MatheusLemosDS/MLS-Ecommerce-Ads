@@ -4,6 +4,9 @@ export class VariantBindingError extends Error {
 }
 const variantBindingKeys=['item_id','model_id','male_size','female_size','selling_unit','operator_confirmed'];
 const variantAutomaticKeys=[...variantBindingKeys,'source','catalog_fingerprint'];
+const variantSingleKeys=['item_id','model_id','size','selling_unit','operator_confirmed'];
+const variantSingleAutomaticKeys=[...variantSingleKeys,'source','catalog_fingerprint'];
+const variantSellingUnits=['ONE_MALE_ONE_FEMALE_KIT','SINGLE_GARMENT'];
 const variantExact=(value,keys)=>!!value&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).length===keys.length&&keys.every(key=>Object.hasOwn(value,key));
 const variantItemId=value=>typeof value==='string'&&(/^[1-9][0-9]{0,19}$/).test(value);
 const variantRevision=value=>Number.isSafeInteger(value)&&value>=1&&value<2147483647;
@@ -14,11 +17,12 @@ export function validateVariantBindings(bindings){
  const seen=new Set(),sizes=['P','M','G','GG','G1','G2','G3'];
  const result=[];
  for(const binding of bindings){
-  const automatic=binding?.operator_confirmed===false,keys=automatic?variantAutomaticKeys:variantBindingKeys;
+  const automatic=binding?.operator_confirmed===false,single=binding?.selling_unit==='SINGLE_GARMENT';
+  const keys=single?(automatic?variantSingleAutomaticKeys:variantSingleKeys):(automatic?variantAutomaticKeys:variantBindingKeys);
   if(!variantExact(binding,keys))fail('VARIANT_BINDING_INVALID');
   if(!variantItemId(binding.item_id)||typeof binding.model_id!=='string'||!(/^(0|[1-9][0-9]{0,19})$/).test(binding.model_id))fail('VARIANT_BINDING_ID_INVALID');
-  if(!sizes.includes(binding.male_size)||!sizes.includes(binding.female_size)||binding.selling_unit!=='ONE_MALE_ONE_FEMALE_KIT'||(!automatic&&binding.operator_confirmed!==true))fail('VARIANT_BINDING_CONFIRMATION_REQUIRED');
-  if(automatic&&(binding.source!=='CATALOG_VARIATION_AXES'||typeof binding.catalog_fingerprint!=='string'||!(/^[a-f0-9]{64}$/).test(binding.catalog_fingerprint)))fail('VARIANT_BINDING_PROVENANCE_INVALID');
+  if(!variantSellingUnits.includes(binding.selling_unit)||(single?!sizes.includes(binding.size):!sizes.includes(binding.male_size)||!sizes.includes(binding.female_size))||(!automatic&&binding.operator_confirmed!==true))fail('VARIANT_BINDING_CONFIRMATION_REQUIRED');
+  if(automatic&&(binding.source!==(single?'CATALOG_SIZE_AXIS':'CATALOG_VARIATION_AXES')||typeof binding.catalog_fingerprint!=='string'||!(/^[a-f0-9]{64}$/).test(binding.catalog_fingerprint)))fail('VARIANT_BINDING_PROVENANCE_INVALID');
   const key=binding.item_id+':'+binding.model_id;if(seen.has(key))fail('VARIANT_BINDING_DUPLICATE');seen.add(key);
   result.push(Object.fromEntries(keys.map(key=>[key,binding[key]])));
  }
@@ -52,22 +56,29 @@ async function writeVariantBindings(env,revision,bindings,actor){
  return readVariantBindings(env);
 }
 export async function saveAutomaticVariantBindings(env,body,catalog,actor){
- if(!variantExact(body,['revision','item_ids'])||!variantRevision(body.revision)||!Array.isArray(body.item_ids)||body.item_ids.length<1||body.item_ids.length>3||body.item_ids.some(id=>!variantItemId(id))||new Set(body.item_ids).size!==body.item_ids.length)variantFail('VARIANT_CATALOG_REQUEST_INVALID');
+ const hasSellingUnit=!!body&&typeof body==='object'&&Object.hasOwn(body,'selling_unit');
+ if(!variantExact(body,['revision','item_ids',...(hasSellingUnit?['selling_unit']:[])])||!variantRevision(body.revision)||!Array.isArray(body.item_ids)||body.item_ids.length<1||body.item_ids.length>3||body.item_ids.some(id=>!variantItemId(id))||new Set(body.item_ids).size!==body.item_ids.length||(hasSellingUnit&&!variantSellingUnits.includes(body.selling_unit)))variantFail('VARIANT_CATALOG_REQUEST_INVALID');
+ const sellingUnit=hasSellingUnit?body.selling_unit:'ONE_MALE_ONE_FEMALE_KIT',single=sellingUnit==='SINGLE_GARMENT';
  const requested=new Set(body.item_ids);
  if(!variantExact(catalog,['schema','checked_at','products'])||catalog.schema!=='variant_catalog_v1'||!Number.isSafeInteger(catalog.checked_at)||catalog.checked_at<1||!Array.isArray(catalog.products)||catalog.products.length!==requested.size)variantFail('VARIANT_CATALOG_INVALID',503);
- const seen=new Set(),resolved=[];
+ const seen=new Set(),resolved=[];let modelCount=0;
  for(const product of catalog.products){
-  if(!variantExact(product,['item_id','catalog_fingerprint','bindings','unresolved_count'])||!requested.has(product.item_id)||seen.has(product.item_id)||typeof product.catalog_fingerprint!=='string'||!(/^[a-f0-9]{64}$/).test(product.catalog_fingerprint)||!Array.isArray(product.bindings)||product.bindings.length>1000||!Number.isSafeInteger(product.unresolved_count)||product.unresolved_count<0||product.unresolved_count>1000)variantFail('VARIANT_CATALOG_INVALID',503);
+  const productHasSellingUnit=!!product&&typeof product==='object'&&Object.hasOwn(product,'selling_unit');
+  if(!variantExact(product,['item_id','catalog_fingerprint','bindings','unresolved_count',...(productHasSellingUnit?['selling_unit']:[])])||!requested.has(product.item_id)||seen.has(product.item_id)||typeof product.catalog_fingerprint!=='string'||!(/^[a-f0-9]{64}$/).test(product.catalog_fingerprint)||!Array.isArray(product.bindings)||product.bindings.length>1000||!Number.isSafeInteger(product.unresolved_count)||product.unresolved_count<0||product.unresolved_count>1000||(productHasSellingUnit?product.selling_unit:'ONE_MALE_ONE_FEMALE_KIT')!==sellingUnit)variantFail('VARIANT_CATALOG_INVALID',503);
+  modelCount+=product.bindings.length+product.unresolved_count;
+  if(modelCount>1000)variantFail('VARIANT_CATALOG_INVALID',503);
   seen.add(product.item_id);
   for(const binding of product.bindings){
-   if(!variantExact(binding,['item_id','model_id','male_size','female_size'])||binding.item_id!==product.item_id)variantFail('VARIANT_CATALOG_INVALID',503);
-   resolved.push({...binding,selling_unit:'ONE_MALE_ONE_FEMALE_KIT',operator_confirmed:false,source:'CATALOG_VARIATION_AXES',catalog_fingerprint:product.catalog_fingerprint});
+   if(!variantExact(binding,['item_id','model_id',...(single?['size']:['male_size','female_size'])])||binding.item_id!==product.item_id)variantFail('VARIANT_CATALOG_INVALID',503);
+   resolved.push({...binding,selling_unit:sellingUnit,operator_confirmed:false,source:single?'CATALOG_SIZE_AXIS':'CATALOG_VARIATION_AXES',catalog_fingerprint:product.catalog_fingerprint});
   }
  }
  let automatic;
  try{automatic=validateVariantBindings(resolved);}catch{variantFail('VARIANT_CATALOG_INVALID',503);}
  const current=await readVariantBindings(env);
  if(current.revision!==body.revision)variantFail('VARIANT_BINDINGS_CHANGED_RELOAD',409);
+ // A product-wide rule cannot silently change a manually confirmed composition.
+ if(current.bindings.some(binding=>binding.operator_confirmed&&requested.has(binding.item_id)&&binding.selling_unit!==sellingUnit))variantFail('VARIANT_BINDING_COMPOSITION_CONFLICT',409);
  // Remove prior automatic interpretations of the queried products first. Missing
  // or ambiguous models must stop contributing instead of retaining stale sizes.
  const combined=new Map(current.bindings.filter(binding=>binding.operator_confirmed||!requested.has(binding.item_id)).map(binding=>[binding.item_id+':'+binding.model_id,binding]));
@@ -82,11 +93,15 @@ export function variantMarginReference(frame,bindings,state){
  const grouped=new Map();
  for(const row of frame.rows){const key=row.item_id+':'+row.model_id;const entry=grouped.get(key)||{item_id:row.item_id,model_id:row.model_id,quantity:0};entry.quantity+=row.quantity;grouped.set(key,entry);}
  const plus=['G1','G2','G3'],marginKeys=['regular_cents','mixed_cents','plus_cents'],classes=['REGULAR','MIXED','PLUS'];
- let known=0,mapped=0,unmapped=0;
+ let known=0,mapped=0,unmapped=0,unpriced=0;
  const variants=[];
  for(const [key,row] of grouped){
   const binding=confirmed.get(key),out={...row,margin_class:null,unit_margin_cents:null,contribution_cents:null};
-  if(!binding)unmapped+=row.quantity;
+  if(!binding||binding.selling_unit==='SINGLE_GARMENT'){
+   unmapped+=row.quantity;
+   // Registered margins describe a two-piece kit, never an individual garment.
+   if(binding){unpriced+=row.quantity;if(!Number.isSafeInteger(unpriced)||unpriced<0)throw new VariantBindingError('VARIANT_REFERENCE_INVALID',503);}
+  }
   else{
    const count=Number(plus.includes(binding.male_size))+Number(plus.includes(binding.female_size)),unit=state.values[marginKeys[count]],value=unit*row.quantity;
    if(!Number.isSafeInteger(unit)||unit<=0||!Number.isSafeInteger(value)||value<0||!Number.isSafeInteger(known+value))throw new VariantBindingError('VARIANT_REFERENCE_INVALID',503);
@@ -94,5 +109,5 @@ export function variantMarginReference(frame,bindings,state){
   }
   variants.push(out);
  }
- return {settings_revision:state.revision,bindings_revision:bindings.revision,known_subset_cents:known,total_cents:unmapped?null:known,mapped_quantity:mapped,unmapped_quantity:unmapped,status_scope:'ALL_RETURNED_STATUSES_REFERENCE_ONLY',currency:'BRL',margin_stage:'AFTER_FEES_AND_PRODUCT_COST_BEFORE_ADS',economic_status:'UNKNOWN',variants};
+ return {settings_revision:state.revision,bindings_revision:bindings.revision,known_subset_cents:known,total_cents:unmapped?null:known,mapped_quantity:mapped,unmapped_quantity:unmapped,status_scope:'ALL_RETURNED_STATUSES_REFERENCE_ONLY',currency:'BRL',margin_stage:'AFTER_FEES_AND_PRODUCT_COST_BEFORE_ADS',economic_status:'UNKNOWN',variants,...(unpriced?{unpriced_quantity:unpriced}:{})};
 }

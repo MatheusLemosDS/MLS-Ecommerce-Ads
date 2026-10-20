@@ -145,3 +145,33 @@ test('catalogue review with malformed or provider-extra diagnostics cannot bypas
   assert.equal(response.status,503);assert.ok(!JSON.stringify(await response.json()).includes('PRIVATE'));assert.deepEqual(snapshot(fixture.env),before);
  }
 });
+
+const singleCatalog=()=>catalog([{item_id:'101',catalog_fingerprint:fingerprint,selling_unit:'SINGLE_GARMENT',unresolved_count:0,
+ bindings:['P','M','G','GG'].map((size,index)=>({item_id:'101',model_id:String(index+1),size})),
+ diagnostic:{axes:[{name:'Cor',options:['Verde'],option_count:1},{name:'Tamanho',options:['p','m','g','gg'],option_count:4}],model_count:4,reasons:[]}}]);
+
+test('explicit single-shirt composition saves all four colour/size models and uses one-piece cost with no kit margin',async()=>{
+ const fixture=await login(),before=snapshot(fixture.env),catalogFrame=singleCatalog();let reads=0;
+ const services={getFinanceVariantCatalog:async(env,selection)=>{assert.equal(env,fixture.env);assert.deepEqual(selection,{item_ids:['101'],selling_unit:'SINGLE_GARMENT'});reads++;return catalogFrame;}};
+ const request={revision:1,item_ids:['101'],selling_unit:'SINGLE_GARMENT'};
+ const response=await call(fixture,'variant-bindings/automate',request,services);assert.equal(response.status,200);
+ const saved=await response.json();assert.equal(saved.revision,2);assert.equal(saved.bindings.length,4);assert.deepEqual(saved.catalog_review,catalogFrame);
+ for(const [index,binding] of saved.bindings.entries())assert.deepEqual(binding,{item_id:'101',model_id:String(index+1),size:['P','M','G','GG'][index],selling_unit:'SINGLE_GARMENT',operator_confirmed:false,source:'CATALOG_SIZE_AXIS',catalog_fingerprint:fingerprint});
+ const after=snapshot(fixture.env);assert.equal(after.audit.length,2);for(const key of ['settings','costs','jobs'])assert.deepEqual(after[key],before[key]);
+ const report=await(await call(fixture,'order-items',undefined,{getOrderItems:async()=>nativeFrame()})).json();
+ assert.equal(report.production_cost_reference.total_cents,4770);assert.equal(report.production_cost_reference.variants[0].unit_cost_cents,1590);assert.equal(report.production_cost_reference.gross_profit_cents,null);
+ assert.equal(report.margin_reference.total_cents,null);assert.equal(report.margin_reference.known_subset_cents,0);assert.equal(report.margin_reference.unpriced_quantity,3);assert.equal(report.margin_reference.unmapped_quantity,3);
+ const repeated=await call(fixture,'variant-bindings/automate',{...request,revision:2},services);assert.equal(repeated.status,200);assert.equal((await repeated.json()).revision,2);assert.equal(reads,2);assert.deepEqual(snapshot(fixture.env),after);
+});
+
+test('composition selection is validated before reads and cannot substitute a kit frame or overwrite manually confirmed physical composition',async()=>{
+ const fixture=await login(),before=snapshot(fixture.env);let reads=0;
+ const services={getFinanceVariantCatalog:async()=>{reads++;return singleCatalog();}};
+ for(const selling_unit of [null,'','KIT','SINGLE_GARMENT ',1])assert.equal((await call(fixture,'variant-bindings/automate',{revision:1,item_ids:['101'],selling_unit},services)).status,400);
+ assert.equal(reads,0);assert.deepEqual(snapshot(fixture.env),before);
+ assert.equal((await call(fixture,'variant-bindings/automate',{revision:1,item_ids:['101']},services)).status,503);
+ assert.equal((await call(fixture,'variant-bindings/automate',{revision:1,item_ids:['101'],selling_unit:'SINGLE_GARMENT'},{getFinanceVariantCatalog:async()=>catalog()})).status,503);assert.deepEqual(snapshot(fixture.env),before);
+ assert.equal((await call(fixture,'variant-bindings',{revision:1,bindings:[manual()]})).status,200);const manuallyConfirmed=snapshot(fixture.env),readCount=reads;
+ const rejected=await call(fixture,'variant-bindings/automate',{revision:2,item_ids:['101'],selling_unit:'SINGLE_GARMENT'},services);
+ assert.equal(rejected.status,409);assert.equal((await rejected.json()).error,'VARIANT_BINDING_COMPOSITION_CONFLICT');assert.equal(reads,readCount);assert.deepEqual(snapshot(fixture.env),manuallyConfirmed);
+});

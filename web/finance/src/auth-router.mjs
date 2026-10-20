@@ -109,7 +109,7 @@ export async function forwardFinancePaymentSample(request,env,{validateInternalA
 }
 
 function catalogRequestMatches(input,frame){
- return Array.isArray(frame.products)&&frame.products.length===input.item_ids.length&&frame.products.every(item=>input.item_ids.includes(item.item_id));
+ return Array.isArray(frame.products)&&frame.products.length===input.item_ids.length&&frame.products.every(item=>input.item_ids.includes(item.item_id)&&(item.selling_unit||'ONE_MALE_ONE_FEMALE_KIT')===(input.selling_unit||'ONE_MALE_ONE_FEMALE_KIT'));
 }
 
 function routerFailure(code,status){return new Response(JSON.stringify({error:code}),{status,headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}});}

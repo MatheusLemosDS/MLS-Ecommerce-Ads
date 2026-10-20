@@ -12,7 +12,8 @@ const catalogPlain = value => value !== null && typeof value === 'object' && !Ar
 // A manual administrator action reads at most three products. The shop, host,
 // route and credentials are fixed; neither titles nor SKU guesses choose sizes.
 export async function runFinanceVariantCatalog(env, options = {}) {
-  const input = projectVariantCatalogRequest({item_ids: options.item_ids});
+  const input = projectVariantCatalogRequest({item_ids: options.item_ids,
+    ...(Object.hasOwn(options, 'selling_unit') ? {selling_unit: options.selling_unit} : {})});
   const {fetchImpl, now = () => Date.now(), timeoutMs = 10000} = options;
   if (!input) throw catalogFailure('REQUEST_INVALID', 400);
   if (env?.FINANCE_CONNECTION_ENABLED !== 'true' || typeof fetchImpl !== 'function'
@@ -69,7 +70,8 @@ export async function runFinanceVariantCatalog(env, options = {}) {
           if (Object.hasOwn(container, 'item_id') && ((typeof container.item_id !== 'string'
             && !Number.isSafeInteger(container.item_id)) || String(container.item_id) !== item_id)) throw catalogFailure('IDENTITY_MISMATCH');
         }
-        try { return await deriveCatalogProduct(item_id, payload.response); }
+        try { return await deriveCatalogProduct(item_id, payload.response,
+          {selling_unit: input.selling_unit || 'ONE_MALE_ONE_FEMALE_KIT'}); }
         catch { throw catalogFailure('RESPONSE_INVALID'); }
       },
     });

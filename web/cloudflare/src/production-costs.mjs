@@ -79,9 +79,11 @@ export function productionCostReference(frame,bindings,costState){
   if(!binding)unmapped=costSafeSum(unmapped,row.quantity);
   else{
    const garmentCost=size=>values[values.mode==='all_inclusive'?(plus.has(size)?'inclusive_plus_cents':'inclusive_regular_cents'):(plus.has(size)?'base_plus_cents':'base_regular_cents')];
-   let unit=costSafeSum(garmentCost(binding.male_size),garmentCost(binding.female_size));
+   const single=binding.selling_unit==='SINGLE_GARMENT',pieceCount=single?1:2;
+   let unit=single?garmentCost(binding.size):costSafeSum(garmentCost(binding.male_size),garmentCost(binding.female_size));
    // Retained components are inactive while all-inclusive mode is selected.
-   if(values.mode==='itemized')for(const component of values.components)unit=costSafeSum(unit,costSafeProduct(component.amount_cents,component.basis==='per_piece'?2:1));
+   // A per_kit component applies only to kits; an individual garment is not a kit.
+   if(values.mode==='itemized')for(const component of values.components)if(component.basis==='per_piece'||!single)unit=costSafeSum(unit,costSafeProduct(component.amount_cents,component.basis==='per_piece'?pieceCount:1));
    const subtotal=costSafeProduct(unit,row.quantity);known=costSafeSum(known,subtotal);mapped=costSafeSum(mapped,row.quantity);
    out.unit_cost_cents=unit;out.production_cost_cents=subtotal;
   }

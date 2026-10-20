@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "shop_id": "1178167501",
+  "item_id": "22199878767",
+  "selling_unit": "SINGLE_GARMENT",
+  "composition_source": "OPERATOR_CONFIRMED",
+  "confirmed_on": "2026-10-19",
+  "catalog_diagnostic": {
+    "schema": "variant_catalog_diagnostic_v1",
+    "item_id": "22199878767",
+    "checked_at": 1792437404,
+    "axes": [
+      {"name": "Cor", "options": ["Verde"], "option_count": 1},
+      {"name": "Tamanho", "options": ["p", "m", "g", "gg"], "option_count": 4}
+    ],
+    "model_count": 4,
+    "reasons": [{"code": "AXES_NOT_RECOGNIZED", "count": 4}]
+  }
+}
