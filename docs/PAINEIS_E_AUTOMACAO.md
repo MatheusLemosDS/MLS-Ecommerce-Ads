@@ -1,5 +1,9 @@
 # Painéis e identificação automática
 
+A visualização de muitos produtos foi ampliada com uma lista compacta,
+busca, filtros e paginação. O [guia do catálogo e próximos passos](CATALOGO_COMPACTO_E_PROXIMOS_PASSOS.md)
+descreve o alcance dos dados e as dependências atuais do plano.
+
 Atualização de 20/10/2026, solicitada pelo operador para automatizar a leitura e
 reorganizar os painéis. A página inicial da administração passa a mostrar o
 resultado financeiro do período. Custos, produtos, Hermes, histórico e evolução
