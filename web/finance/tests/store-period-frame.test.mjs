@@ -107,3 +107,85 @@ test('product breakdown supports a thousand bounded products and refuses an addi
  value.product_breakdown.products.push({...value.product_breakdown.products[0],item_id:'99999999999999999999'});
  assert.equal(projectStorePeriodFrame(value),null);
 });
+
+const returnsFrame=()=>{
+ const value=productFrame();value.returns_orders=null;
+ value.product_breakdown.products[0].returns_orders=null;
+ value.product_breakdown.products[1].returns_orders=1;
+ value.returns_breakdown={schema:'store_returns_breakdown_v1',
+  with_return:{order_count:1,payout_raw:'0.2'},without_reported_return:{order_count:1,payout_raw:'0.1'},unknown:{order_count:1,payout_raw:'-0.05'},
+  products:[{item_id:'20',order_count:2,with_return_orders:1,without_reported_return_orders:0,unknown_orders:1},
+   {item_id:'1',order_count:2,with_return_orders:1,without_reported_return_orders:1,unknown_orders:0}]};
+ return value;
+};
+
+test('optional return coverage preserves legacy bytes and known occurrences even when another order is unknown',()=>{
+ const legacy=projectStorePeriodFrame(productFrame());assert.equal(JSON.stringify(projectStorePeriodFrame(legacy)),JSON.stringify(legacy));
+ const value=returnsFrame(),result=projectStorePeriodFrame(value);assert.ok(result);
+ assert.equal(result.returns_orders,null);assert.equal(result.returns_breakdown.with_return.order_count,1);
+ assert.equal(result.returns_breakdown.unknown.payout_raw,'-0.05');
+ assert.deepEqual(result.returns_breakdown.products.map(row=>row.item_id),['1','20']);
+ assert.equal(result.returns_breakdown.products.reduce((sum,row)=>sum+row.with_return_orders,0),2);
+ assert.equal(result.returns_breakdown.with_return.order_count,1);
+ value.returns_breakdown.with_return.payout_raw='999';value.returns_breakdown.products[1].unknown_orders=99;
+ assert.equal(result.returns_breakdown.with_return.payout_raw,'0.2');assert.equal(result.returns_breakdown.products[0].unknown_orders,0);
+ const withoutProduct=returnsFrame();delete withoutProduct.product_breakdown;assert.ok(projectStorePeriodFrame(withoutProduct));
+ const empty={...frame(),returns_breakdown:{schema:'store_returns_breakdown_v1',with_return:{order_count:0,payout_raw:'0'},without_reported_return:{order_count:0,payout_raw:'0'},unknown:{order_count:0,payout_raw:'0'},products:[]}};
+ assert.deepEqual(projectStorePeriodFrame(empty),empty);
+});
+
+test('return exposure keeps a missing partition amount null while retaining the other known raw payouts',()=>{
+ const value=returnsFrame();value.escrow_amount_raw=null;value.product_breakdown.mixed_payout_raw=null;
+ value.returns_breakdown.with_return.payout_raw=null;
+ const result=projectStorePeriodFrame(value);assert.ok(result);
+ assert.equal(result.returns_breakdown.with_return.payout_raw,null);
+ assert.equal(result.returns_breakdown.without_reported_return.payout_raw,'0.1');
+ assert.equal(result.returns_breakdown.unknown.payout_raw,'-0.05');
+ const allKnown=returnsFrame();allKnown.returns_orders=1;
+ Object.assign(allKnown.returns_breakdown.without_reported_return,{order_count:2,payout_raw:'0.05'});
+ Object.assign(allKnown.returns_breakdown.unknown,{order_count:0,payout_raw:'0'});
+ Object.assign(allKnown.returns_breakdown.products[0],{without_reported_return_orders:1,unknown_orders:0});
+ allKnown.product_breakdown.products[0].returns_orders=1;
+ assert.ok(projectStorePeriodFrame(allKnown));
+});
+
+test('return coverage refuses fabricated totals, unknown-to-zero changes, foreign identities and private fields',()=>{
+ const mutations=[
+  value=>value.returns_breakdown.order_hash='PRIVATE_HASH',
+  value=>value.returns_breakdown.with_return.refund_amount='123',
+  value=>value.returns_breakdown.products[0].order_sn='PRIVATE_ORDER',
+  value=>value.returns_breakdown.with_return.order_count=2,
+  value=>value.returns_orders=1,
+  value=>value.returns_breakdown.with_return.payout_raw='0.3',
+  value=>value.returns_breakdown.with_return.payout_raw='0.20',
+  value=>value.returns_breakdown.with_return.payout_raw=null,
+  value=>value.escrow_amount_raw=null,
+  value=>value.returns_breakdown.products.pop(),
+  value=>value.returns_breakdown.products.push({...value.returns_breakdown.products[0]}),
+  value=>value.returns_breakdown.products[0].item_id='999',
+  value=>value.returns_breakdown.products[0].item_id='020',
+  value=>value.returns_breakdown.products[0].unknown_orders=2,
+  value=>value.returns_breakdown.products[0].order_count=1,
+  value=>value.product_breakdown.products[0].returns_orders=1,
+ ];
+ for(const mutate of mutations){const value=returnsFrame();mutate(value);assert.equal(projectStorePeriodFrame(value),null);}
+ let getters=0;const getter=returnsFrame();Object.defineProperty(getter.returns_breakdown.with_return,'payout_raw',{enumerable:true,get(){getters++;return '0.2';}});
+ assert.equal(projectStorePeriodFrame(getter),null);assert.equal(getters,0);
+ const sparse=returnsFrame();sparse.returns_breakdown.products=Array(2);assert.equal(projectStorePeriodFrame(sparse),null);
+ const empty=frame();empty.returns_breakdown={schema:'store_returns_breakdown_v1',with_return:{order_count:0,payout_raw:null},without_reported_return:{order_count:0,payout_raw:'0'},unknown:{order_count:0,payout_raw:'0'},products:[]};
+ assert.equal(projectStorePeriodFrame(empty),null);
+ const uncovered=returnsFrame();delete uncovered.product_breakdown;
+ uncovered.returns_breakdown.products=uncovered.returns_breakdown.products.map(row=>({...row,with_return_orders:0,without_reported_return_orders:1,unknown_orders:1}));
+ assert.equal(projectStorePeriodFrame(uncovered),null);
+});
+
+test('return coverage bounds one thousand product memberships and rejects a thousand-and-first product',()=>{
+ const value={...frame(),status:'COMPLETE',order_count:1000,pages_read:200,
+  items:Array.from({length:1000},(_,index)=>({item_id:String(index+1),model_id:'0',quantity:1})),
+  returns_breakdown:{schema:'store_returns_breakdown_v1',with_return:{order_count:0,payout_raw:'0'},
+   without_reported_return:{order_count:1000,payout_raw:'0'},unknown:{order_count:0,payout_raw:'0'},
+   products:Array.from({length:1000},(_,index)=>({item_id:String(index+1),order_count:1,with_return_orders:0,without_reported_return_orders:1,unknown_orders:0}))}};
+ assert.ok(projectStorePeriodFrame(value));
+ value.returns_breakdown.products.push({item_id:'1001',order_count:1,with_return_orders:0,without_reported_return_orders:1,unknown_orders:0});
+ assert.equal(projectStorePeriodFrame(value),null);
+});

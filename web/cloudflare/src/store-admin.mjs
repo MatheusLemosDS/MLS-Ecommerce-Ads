@@ -3,6 +3,7 @@ import {validateProductionCosts} from './production-costs.mjs';
 import {buildStoreSummary,validateStoreAdjustments,StoreSummaryError} from './store-summary.mjs';
 import {projectStorePeriodRequest,projectStorePeriodFrame} from '../../finance/src/store-period-frame.mjs';
 import {buildStoreProductSummary} from './store-product-summary.mjs';
+import {buildStoreReturnsSummary} from './store-returns-summary.mjs';
 import {projectAdsPeriod} from './ads-period.mjs';
 
 export const STORE_ADJUSTMENTS_SCHEMA=[
@@ -90,5 +91,6 @@ export async function storePeriodBundle(env,raw,{now=Date.now()}={}){
  const effective=automatic?(ads_period?.status==='AVAILABLE'?{...adjustments.values,ads_spend_cents:ads_period.expense_cents}:null):adjustments.values;
  const result=buildStoreSummary(finance,bindings,costs,effective);
  if(automatic&&!effective)result.pending=result.pending.map(code=>code==='ADJUSTMENTS_REQUIRED'?'ADS_PERIOD_UNAVAILABLE':code);
- return {finance,result,adjustments,product_result:buildStoreProductSummary(finance,bindings,costs),ads_period};
+ return {finance,result,adjustments,product_result:buildStoreProductSummary(finance,bindings,costs),ads_period,
+  returns_result:buildStoreReturnsSummary(finance)};
 }

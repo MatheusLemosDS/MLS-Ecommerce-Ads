@@ -135,7 +135,10 @@ test('a maximum product breakdown crosses 256KiB and both private transports enf
   product_breakdown:{schema:'store_product_breakdown_v1',exclusive_order_count:1000,mixed_order_count:0,
    exclusive_payout_raw:'123456789012123.456789012',mixed_payout_raw:'0',
    products:ids.map(item_id=>({item_id,order_count:1,exclusive_order_count:1,mixed_order_count:0,
-    exclusive_payout_raw:'123456789012.123456789012',returns_orders:0}))}};
+    exclusive_payout_raw:'123456789012.123456789012',returns_orders:0}))},
+  returns_breakdown:{schema:'store_returns_breakdown_v1',with_return:{order_count:0,payout_raw:'0'},
+   without_reported_return:{order_count:1000,payout_raw:'123456789012123.456789012'},unknown:{order_count:0,payout_raw:'0'},
+   products:ids.map(item_id=>({item_id,order_count:1,with_return_orders:0,without_reported_return_orders:1,unknown_orders:0}))}};
  const raw=JSON.stringify(value);assert.ok(Buffer.byteLength(raw)>262144);
  const padded=raw.padEnd(524288,' '),env={APP_INTERNAL_SECRET:'fixture'};
  const upstream=body=>new Response(body,{headers:{'content-type':'application/json'}});

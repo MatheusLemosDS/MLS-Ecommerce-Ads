@@ -1,5 +1,8 @@
 # Repasse por produto e consumo de anúncios
 
+O detalhamento de ocorrências e informação desconhecida de devoluções está em
+[Devoluções e cobertura da consulta](DEVOLUCOES_E_COBERTURA.md).
+
 A confirmação do operador em 20/10/2026 permite interpretar o consumo de Ads em
 reais: `50` significa R$ 50,00. A evidência limitada, sem credenciais, está em
 [ADS_BRL_CONFIRMADO_2026_10_20.json](ADS_BRL_CONFIRMADO_2026_10_20.json).

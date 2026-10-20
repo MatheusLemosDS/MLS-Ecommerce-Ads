@@ -116,11 +116,62 @@ function storeProductBreakdown(value,frame,items) {
     exclusive_payout_raw:value.exclusive_payout_raw,mixed_payout_raw:value.mixed_payout_raw,products};
 }
 
+// Return references identify whole orders. An occurrence does not identify the
+// affected product, its refund amount, or whether any payment has been settled.
+function storeReturnsBreakdown(value,frame,items,productBreakdown) {
+  const kinds=['with_return','without_reported_return','unknown'];
+  if(!storeExact(value,['schema',...kinds,'products'])||value.schema!=='store_returns_breakdown_v1'
+    ||!storeArray(value.products,1000))return null;
+  const money=value=>value===null||typeof value==='string'&&normalizeStoreDecimal(value)===value;
+  const groups={},payouts=[];
+  let count=0,unknownMoney=false;
+  for(const kind of kinds){
+    const group=value[kind];
+    if(!storeExact(group,['order_count','payout_raw'])||!storeInteger(group.order_count,0,frame.order_count)
+      ||!money(group.payout_raw)||group.order_count===0&&group.payout_raw!=='0')return null;
+    groups[kind]={order_count:group.order_count,payout_raw:group.payout_raw};count+=group.order_count;
+    if(group.payout_raw===null)unknownMoney=true;else payouts.push(group.payout_raw);
+  }
+  if(count!==frame.order_count||frame.returns_orders!==(groups.unknown.order_count>0?null:groups.with_return.order_count)
+    ||(frame.escrow_amount_raw===null)!==unknownMoney
+    ||!unknownMoney&&addStoreDecimals(payouts)!==frame.escrow_amount_raw)return null;
+  const quantities=new Map();
+  for(const row of items)quantities.set(row.item_id,(quantities.get(row.item_id)||0)+row.quantity);
+  if(value.products.length!==quantities.size)return null;
+  const sourceProducts=productBreakdown?new Map(productBreakdown.products.map(row=>[row.item_id,row])):null;
+  const products=[],seen=new Set(),memberships=Object.fromEntries(kinds.map(kind=>[kind,0]));
+  for(const row of value.products){
+    if(!storeExact(row,['item_id','order_count','with_return_orders','without_reported_return_orders','unknown_orders'])
+      ||!storeId(row.item_id)||!quantities.has(row.item_id)||seen.has(row.item_id)
+      ||!storeInteger(row.order_count,1,frame.order_count)||row.order_count>quantities.get(row.item_id))return null;
+    let total=0;
+    for(const kind of kinds){
+      const next=row[kind+'_orders'];
+      if(!storeInteger(next,0,groups[kind].order_count))return null;
+      memberships[kind]+=next;total+=next;
+    }
+    if(total!==row.order_count)return null;
+    if(sourceProducts){
+      const source=sourceProducts.get(row.item_id);
+      if(!source||source.order_count!==row.order_count
+        ||source.returns_orders!==(row.unknown_orders>0?null:row.with_return_orders))return null;
+    }
+    seen.add(row.item_id);
+    products.push({item_id:row.item_id,order_count:row.order_count,with_return_orders:row.with_return_orders,
+      without_reported_return_orders:row.without_reported_return_orders,unknown_orders:row.unknown_orders});
+  }
+  for(const kind of kinds)if(memberships[kind]<groups[kind].order_count
+    ||memberships[kind]>groups[kind].order_count*products.length)return null;
+  products.sort((a,b)=>storeIdOrder(a.item_id,b.item_id));
+  return {schema:'store_returns_breakdown_v1',...groups,products};
+}
+
 export function projectStorePeriodFrame(value) {
   try{
     const hasBreakdown=storePlain(value)&&Object.hasOwn(value,'product_breakdown');
+    const hasReturns=storePlain(value)&&Object.hasOwn(value,'returns_breakdown');
     const keys=['schema','run_id','revision','status','start_date','end_date','cutoff_at','checked_at','currency','monetary_unit',
-      'order_count','pages_read','duplicate_orders','returns_orders','escrow_amount_raw','ads_recharge_or_support_raw','items','diagnostic',...(hasBreakdown?['product_breakdown']:[])];
+      'order_count','pages_read','duplicate_orders','returns_orders','escrow_amount_raw','ads_recharge_or_support_raw','items','diagnostic',...(hasBreakdown?['product_breakdown']:[]),...(hasReturns?['returns_breakdown']:[])];
     if(!storeExact(value,keys)||value.schema!=='finance_store_period_v1'||!storeRunId(value.run_id)
       ||!storeInteger(value.revision,1,2147483647)||!['RUNNING','COMPLETE','LIMIT_REACHED'].includes(value.status)
       ||!projectStorePeriodRequest({operation:'start',start_date:value.start_date,end_date:value.end_date})
@@ -145,6 +196,8 @@ export function projectStorePeriodFrame(value) {
     items.sort((a,b)=>storeIdOrder(a.item_id,b.item_id)||storeIdOrder(a.model_id,b.model_id));
     const breakdown=hasBreakdown?storeProductBreakdown(value.product_breakdown,value,items):undefined;
     if(hasBreakdown&&!breakdown)return null;
-    return Object.fromEntries(keys.map(key=>[key,key==='items'?items:key==='product_breakdown'?breakdown:value[key]]));
+    const returns=hasReturns?storeReturnsBreakdown(value.returns_breakdown,value,items,breakdown):undefined;
+    if(hasReturns&&!returns)return null;
+    return Object.fromEntries(keys.map(key=>[key,key==='items'?items:key==='product_breakdown'?breakdown:key==='returns_breakdown'?returns:value[key]]));
   }catch{return null;}
 }

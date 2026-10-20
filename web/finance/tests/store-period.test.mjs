@@ -233,3 +233,48 @@ test('duplicate imported orders preserve per-product payout membership and unkno
  assert.equal(result.product_breakdown.exclusive_payout_raw,'50.925');assert.equal(result.product_breakdown.products[0].order_count,7);
  assert.equal(result.product_breakdown.products[0].exclusive_payout_raw,'50.925');
 });
+
+test('return coverage partitions whole-order exposure while mixed orders mark each participating product without claiming returned items',async()=>{
+ const f=await productFixture(),result=await f.run({operation:'step',run_id:f.job.run_id});
+ assert.deepEqual(result.returns_breakdown,{schema:'store_returns_breakdown_v1',
+  with_return:{order_count:1,payout_raw:'0.2'},without_reported_return:{order_count:2,payout_raw:'0.05'},unknown:{order_count:0,payout_raw:'0'},
+  products:[
+   {item_id:'100',order_count:2,with_return_orders:1,without_reported_return_orders:1,unknown_orders:0},
+   {item_id:'200',order_count:1,with_return_orders:1,without_reported_return_orders:0,unknown_orders:0},
+   {item_id:'300',order_count:1,with_return_orders:0,without_reported_return_orders:1,unknown_orders:0},
+  ]});
+ assert.equal(result.returns_breakdown.products.reduce((sum,row)=>sum+row.with_return_orders,0),2);
+ assert.equal(result.returns_orders,1);
+ for(const marker of ['PRIVATE_ORDER','PRIVATE_RETURN','PRIVATE_BUYER','order_hash','source_hash','refund_amount','selling_price'])assert.ok(!JSON.stringify(result.returns_breakdown).includes(marker));
+});
+
+test('return coverage retains known occurrences and partition payouts when another order or amount is unknown',async()=>{
+ const f=await productFixture('exclusive-money-missing'),result=await f.run({operation:'step',run_id:f.job.run_id}),coverage=result.returns_breakdown;
+ assert.equal(result.returns_orders,null);assert.equal(result.escrow_amount_raw,null);
+ assert.deepEqual(coverage.with_return,{order_count:1,payout_raw:'0.2'});
+ assert.deepEqual(coverage.without_reported_return,{order_count:1,payout_raw:null});
+ assert.deepEqual(coverage.unknown,{order_count:1,payout_raw:'-0.05'});
+ assert.equal(coverage.products.find(row=>row.item_id==='100').with_return_orders,1);
+ assert.equal(coverage.products.find(row=>row.item_id==='300').unknown_orders,1);
+ const mixed=await productFixture('mixed-money-missing'),other=await mixed.run({operation:'step',run_id:mixed.job.run_id});
+ assert.deepEqual(other.returns_breakdown.with_return,{order_count:1,payout_raw:null});
+ assert.deepEqual(other.returns_breakdown.without_reported_return,{order_count:2,payout_raw:'0.05'});
+ assert.deepEqual(other.returns_breakdown.unknown,{order_count:0,payout_raw:'0'});
+});
+
+test('cached hashed order records derive return coverage without schema changes, new provider reads or duplicate memberships',async()=>{
+ const f=await fixture(7),job=await f.start();await f.run({operation:'step',run_id:job.run_id});
+ f.state.mode='duplicate';const result=await f.run({operation:'step',run_id:job.run_id}),before=rows(f),calls=f.calls.length;
+ assert.deepEqual(result.returns_breakdown.with_return,{order_count:1,payout_raw:'0.1'});
+ assert.deepEqual(result.returns_breakdown.without_reported_return,{order_count:6,payout_raw:'50.825'});
+ assert.deepEqual(result.returns_breakdown.unknown,{order_count:0,payout_raw:'0'});
+ for(const record of before.orders){
+  const canonical={order_hash:record.order_hash,escrow_raw:record.escrow_raw,ads_raw:record.ads_raw,returns_seen:record.returns_seen,items:record.items,checked_at:record.checked_at};
+  assert.equal(record.source_hash,createHash('sha256').update(JSON.stringify(canonical)).digest('hex'));
+  assert.equal(Object.hasOwn(record,'returns_breakdown'),false);
+ }
+ const cached=await f.run({operation:'read',run_id:job.run_id});assert.deepEqual(cached.returns_breakdown,result.returns_breakdown);
+ assert.deepEqual(rows(f),before);assert.equal(f.calls.length,calls);
+ const empty=await fixture(0),emptyJob=await empty.start(),noOrders=await empty.run({operation:'step',run_id:emptyJob.run_id});
+ assert.deepEqual(noOrders.returns_breakdown,{schema:'store_returns_breakdown_v1',with_return:{order_count:0,payout_raw:'0'},without_reported_return:{order_count:0,payout_raw:'0'},unknown:{order_count:0,payout_raw:'0'},products:[]});
+});

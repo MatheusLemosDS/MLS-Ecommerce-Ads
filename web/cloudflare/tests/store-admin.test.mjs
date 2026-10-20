@@ -74,6 +74,35 @@ test('bundle reads all saved revisions in one batch and absent expense declarati
  const actualFrame=frame(),before=structuredClone(actualFrame),bundle=await storePeriodBundle(env,actualFrame);assert.deepEqual(calls,[4]);assert.deepEqual(bundle.finance,actualFrame);assert.deepEqual(actualFrame,before);
  assert.deepEqual(bundle.adjustments,{revision:0,values:null,updated_at:null});assert.equal(bundle.result.bindings_revision,5);assert.equal(bundle.result.costs_revision,7);assert.equal(bundle.result.expected_repass_cents,5000);assert.equal(bundle.result.production_cost_cents,3180);assert.equal(bundle.result.net_estimate_cents,null);assert.ok(bundle.result.pending.includes('ADJUSTMENTS_REQUIRED'));
  await saveStoreAdjustments(env,body(0,{values:values({ads_spend_cents:0,external_expenses_cents:0})}),'admin');const declared=await storePeriodBundle(env,actualFrame);assert.equal(declared.adjustments.revision,1);assert.equal(declared.result.net_estimate_cents,1820);assert.equal(declared.result.net_profit_cents,null);
+ assert.equal(bundle.returns_result,null);assert.equal(declared.returns_result,null);
+});
+
+test('return coverage keeps known occurrences visible beside unknown orders without permitting a net or refund claim',async()=>{
+ const env=await database(),calls=[],batch=env.ADMIN_DB.batch.bind(env.ADMIN_DB);
+ await saveStoreAdjustments(env,body(0,{values:values({ads_spend_cents:0,external_expenses_cents:0})}),'admin');
+ env.ADMIN_DB.batch=statements=>{calls.push(statements.length);return batch(statements);};
+ const value=frame({order_count:3,returns_orders:null,escrow_amount_raw:'150',items:[{item_id:'201',model_id:'0',quantity:3}],
+  returns_breakdown:{schema:'store_returns_breakdown_v1',with_return:{order_count:1,payout_raw:'50'},
+   without_reported_return:{order_count:1,payout_raw:'60'},unknown:{order_count:1,payout_raw:'40'},
+   products:[{item_id:'201',order_count:3,with_return_orders:1,without_reported_return_orders:1,unknown_orders:1}]}});
+ const before=snapshot(env),bundle=await storePeriodBundle(env,value);
+ assert.deepEqual(calls,[4]);assert.equal(bundle.finance.returns_orders,null);
+ assert.equal(bundle.returns_result.with_return.order_count,1);assert.equal(bundle.returns_result.unknown.order_count,1);
+ assert.equal(bundle.returns_result.with_return.expected_repass_cents,5000);
+ assert.equal(bundle.returns_result.without_reported_return.expected_repass_cents,6000);
+ assert.equal(bundle.returns_result.unknown.expected_repass_cents,4000);
+ assert.equal(bundle.returns_result.refund_amount_cents,null);assert.equal(bundle.returns_result.net_profit_cents,null);
+ assert.equal(bundle.result.net_estimate_cents,null);assert.ok(bundle.result.pending.includes('RETURNS_NOT_RECONCILED'));
+ assert.deepEqual(snapshot(env),before);
+});
+
+test('invalid return coverage cannot pass the bundle or write adjustment state',async()=>{
+ const env=await database(),before=snapshot(env);
+ const bad=frame({returns_breakdown:{schema:'store_returns_breakdown_v1',with_return:{order_count:1,payout_raw:'50'},
+  without_reported_return:{order_count:0,payout_raw:'0'},unknown:{order_count:0,payout_raw:'0'},
+  products:[{item_id:'201',order_count:1,with_return_orders:1,without_reported_return_orders:0,unknown_orders:0}]}});
+ await assert.rejects(storePeriodBundle(env,bad),fail('STORE_PERIOD_UNAVAILABLE',503));
+ assert.deepEqual(snapshot(env),before);
 });
 
 test('coherent bundle keeps captured configuration even if saved data changes just after the context batch',async()=>{

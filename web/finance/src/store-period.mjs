@@ -65,6 +65,7 @@ function storeMidnight(day){
 function storeFrame(run,records,diagnostic){
  if(!run||run.partner_id!==FINANCE_PROFILE.partner_id||run.shop_id!==FINANCE_PROFILE.shop_id||!Array.isArray(records)||records.length>1000)throw storeFailure('STORAGE_INVALID',503);
  const grouped=new Map(),productGroups=new Map();let returnsOrders=0,returnsKnown=true;
+ const returnGroups=Object.fromEntries(['with_return','without_reported_return','unknown'].map(kind=>[kind,{order_count:0,payouts:[],known:true}]));
  const escrows=[],ads=[];let escrowKnown=true,adsKnown=true;
  const exclusivePayouts=[],mixedPayouts=[];let exclusiveOrders=0,mixedOrders=0,exclusiveKnown=true,mixedKnown=true;
  for(const record of records){
@@ -77,6 +78,9 @@ function storeFrame(run,records,diagnostic){
   if(record.returns_seen===null)returnsKnown=false;
   else if(record.returns_seen===0||record.returns_seen===1)returnsOrders+=record.returns_seen;
   else throw storeFailure('STORAGE_INVALID',503);
+  const returnsKind=record.returns_seen===null?'unknown':record.returns_seen===1?'with_return':'without_reported_return';
+  const returnsGroup=returnGroups[returnsKind];returnsGroup.order_count++;
+  if(record.escrow_raw===null)returnsGroup.known=false;else returnsGroup.payouts.push(record.escrow_raw);
   let items;try{items=JSON.parse(record.items);}catch{throw storeFailure('STORAGE_INVALID',503);}
   if(!Array.isArray(items)||!items.length||items.length>1000)throw storeFailure('STORAGE_INVALID',503);
   const seen=new Set(),orderProducts=new Set();
@@ -91,8 +95,9 @@ function storeFrame(run,records,diagnostic){
   if(exclusive){exclusiveOrders++;if(record.escrow_raw===null)exclusiveKnown=false;else exclusivePayouts.push(record.escrow_raw);}
   else {mixedOrders++;if(record.escrow_raw===null)mixedKnown=false;else mixedPayouts.push(record.escrow_raw);}
   for(const item_id of orderProducts){
-   const product=productGroups.get(item_id)||{item_id,order_count:0,exclusive_order_count:0,mixed_order_count:0,payouts:[],payout_known:true,returns_orders:0,returns_known:true};
+   const product=productGroups.get(item_id)||{item_id,order_count:0,exclusive_order_count:0,mixed_order_count:0,payouts:[],payout_known:true,returns_orders:0,returns_known:true,with_return_orders:0,without_reported_return_orders:0,unknown_orders:0};
    product.order_count++;
+   product[returnsKind+'_orders']++;
    if(exclusive){product.exclusive_order_count++;if(record.escrow_raw===null)product.payout_known=false;else product.payouts.push(record.escrow_raw);}
    else product.mixed_order_count++;
    if(record.returns_seen===null)product.returns_known=false;else product.returns_orders+=record.returns_seen;
@@ -109,7 +114,11 @@ function storeFrame(run,records,diagnostic){
    exclusive_payout_raw:exclusiveKnown?addStoreDecimals(exclusivePayouts):null,mixed_payout_raw:mixedKnown?addStoreDecimals(mixedPayouts):null,
    products:[...productGroups.values()].map(product=>({item_id:product.item_id,order_count:product.order_count,
     exclusive_order_count:product.exclusive_order_count,mixed_order_count:product.mixed_order_count,
-    exclusive_payout_raw:product.payout_known?addStoreDecimals(product.payouts):null,returns_orders:product.returns_known?product.returns_orders:null}))}});
+    exclusive_payout_raw:product.payout_known?addStoreDecimals(product.payouts):null,returns_orders:product.returns_known?product.returns_orders:null}))},
+  returns_breakdown:{schema:'store_returns_breakdown_v1',
+   ...Object.fromEntries(Object.entries(returnGroups).map(([kind,group])=>[kind,{order_count:group.order_count,payout_raw:group.known?addStoreDecimals(group.payouts):null}])),
+   products:[...productGroups.values()].map(product=>({item_id:product.item_id,order_count:product.order_count,
+    with_return_orders:product.with_return_orders,without_reported_return_orders:product.without_reported_return_orders,unknown_orders:product.unknown_orders}))}});
  if(!result)throw storeFailure('STORAGE_INVALID',503);return result;
 }
 
