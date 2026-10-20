@@ -27,13 +27,15 @@ function summaryMoney(value){
 }
 
 export function validateStoreAdjustments(value){
-  if(!summaryExact(value,['ads_spend_cents','external_expenses_cents','recharge_treatment'])
+  const hasSource=summaryPlain(value)&&Object.hasOwn(value,'ads_source');
+  if(!summaryExact(value,['ads_spend_cents','external_expenses_cents','recharge_treatment',...(hasSource?['ads_source']:[])])
     ||!summarySafeInteger(value.ads_spend_cents)||!summarySafeInteger(value.external_expenses_cents)
+    ||hasSource&&!['MANUAL','SHOPEE_PERIOD'].includes(value.ads_source)
     ||!['UNCONFIRMED','ADS_RECHARGE','TECH_SUPPORT'].includes(value.recharge_treatment)){
     throw new StoreSummaryError('STORE_ADJUSTMENTS_INVALID');
   }
   return {ads_spend_cents:value.ads_spend_cents,external_expenses_cents:value.external_expenses_cents,
-    recharge_treatment:value.recharge_treatment};
+    recharge_treatment:value.recharge_treatment,...(hasSource?{ads_source:value.ads_source}:{})};
 }
 
 // Expected repass already incorporates Shopee's fees. Do not subtract fee fields

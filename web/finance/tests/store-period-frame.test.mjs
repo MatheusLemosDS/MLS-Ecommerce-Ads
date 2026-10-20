@@ -33,3 +33,77 @@ test('store frame refuses extra fields, noncanonical values, unbounded groups an
  let getters=0;assert.equal(projectStorePeriodFrame({...frame(),get items(){getters++;return [];}}),null);assert.equal(getters,0);
  const sparse=Array(1);assert.equal(projectStorePeriodFrame({...populated,items:sparse}),null);
 });
+
+const productFrame=()=>({...frame(),revision:2,status:'COMPLETE',pages_read:1,order_count:3,returns_orders:0,
+ escrow_amount_raw:'0.25',ads_recharge_or_support_raw:'0',
+ items:[{item_id:'1',model_id:'0',quantity:2},{item_id:'1',model_id:'1',quantity:1},{item_id:'20',model_id:'0',quantity:2}],
+ product_breakdown:{schema:'store_product_breakdown_v1',exclusive_order_count:2,mixed_order_count:1,
+  exclusive_payout_raw:'0.05',mixed_payout_raw:'0.2',products:[
+   {item_id:'20',order_count:2,exclusive_order_count:1,mixed_order_count:1,exclusive_payout_raw:'-0.05',returns_orders:0},
+   {item_id:'1',order_count:2,exclusive_order_count:1,mixed_order_count:1,exclusive_payout_raw:'0.1',returns_orders:0},
+  ]}});
+
+test('optional product breakdown preserves legacy frames, sorts and clones exact no-rateio aggregates',()=>{
+ const legacy=frame();assert.equal(JSON.stringify(projectStorePeriodFrame(legacy)),JSON.stringify(legacy));
+ const value=productFrame(),result=projectStorePeriodFrame(value);assert.ok(result);
+ assert.deepEqual(result.product_breakdown.products.map(row=>row.item_id),['1','20']);
+ assert.equal(result.product_breakdown.exclusive_payout_raw,'0.05');assert.equal(result.product_breakdown.mixed_payout_raw,'0.2');
+ assert.equal(result.product_breakdown.products[0].order_count,2);assert.equal(result.order_count,3);
+ value.product_breakdown.products[1].exclusive_payout_raw='900';assert.equal(result.product_breakdown.products[0].exclusive_payout_raw,'0.1');
+ const empty={...frame(),product_breakdown:{schema:'store_product_breakdown_v1',exclusive_order_count:0,mixed_order_count:0,exclusive_payout_raw:'0',mixed_payout_raw:'0',products:[]}};
+ assert.deepEqual(projectStorePeriodFrame(empty),empty);
+});
+
+test('product breakdown preserves missing money and returns without turning either into zero',()=>{
+ const value=productFrame();value.escrow_amount_raw=null;value.returns_orders=null;
+ value.product_breakdown.exclusive_payout_raw=null;value.product_breakdown.products[0].exclusive_payout_raw=null;
+ value.product_breakdown.products[0].returns_orders=null;
+ const result=projectStorePeriodFrame(value);assert.ok(result);assert.equal(result.product_breakdown.exclusive_payout_raw,null);
+ assert.equal(result.product_breakdown.mixed_payout_raw,'0.2');assert.equal(result.product_breakdown.products[0].exclusive_payout_raw,'0.1');
+ assert.equal(result.product_breakdown.products[1].returns_orders,null);
+ const onlyMixed=productFrame();onlyMixed.order_count=1;onlyMixed.escrow_amount_raw='-0.15';onlyMixed.items=onlyMixed.items.filter(row=>row.model_id==='0').map(row=>({...row,quantity:1}));
+ Object.assign(onlyMixed.product_breakdown,{exclusive_order_count:0,mixed_order_count:1,exclusive_payout_raw:'0',mixed_payout_raw:'-0.15'});
+ onlyMixed.product_breakdown.products=onlyMixed.product_breakdown.products.map(row=>({...row,order_count:1,exclusive_order_count:0,mixed_order_count:1,exclusive_payout_raw:'0'}));
+ assert.ok(projectStorePeriodFrame(onlyMixed));
+});
+
+test('product breakdown refuses poisoned identity, overlapping totals, fabricated coverage and private fields',()=>{
+ const mutations=[
+  value=>value.product_breakdown.order_hash='PRIVATE_HASH',
+  value=>value.product_breakdown.products[0].order_sn='PRIVATE_ORDER',
+  value=>value.product_breakdown.products.pop(),
+  value=>value.product_breakdown.products.push({...value.product_breakdown.products[0]}),
+  value=>value.product_breakdown.products[0].item_id='999',
+  value=>value.product_breakdown.products[0].item_id='020',
+  value=>value.product_breakdown.products[0].order_count=1,
+  value=>value.product_breakdown.exclusive_order_count=1,
+  value=>value.product_breakdown.mixed_order_count=2,
+  value=>value.product_breakdown.products[0].mixed_order_count=0,
+  value=>value.product_breakdown.products[0].exclusive_payout_raw='0.1',
+  value=>value.product_breakdown.exclusive_payout_raw='0.15',
+  value=>value.product_breakdown.mixed_payout_raw='0.3',
+  value=>value.product_breakdown.exclusive_payout_raw=null,
+  value=>value.escrow_amount_raw=null,
+  value=>value.product_breakdown.products[0].exclusive_payout_raw=null,
+  value=>value.product_breakdown.products[0].exclusive_payout_raw='-0.050',
+  value=>value.product_breakdown.products[0].returns_orders=1,
+  value=>value.product_breakdown.products[0].returns_orders=null,
+  value=>value.returns_orders=null,
+  value=>value.product_breakdown.products=Array(2),
+ ];
+ for(const mutate of mutations){const value=productFrame();mutate(value);assert.equal(projectStorePeriodFrame(value),null);}
+ let getters=0;const value=productFrame();Object.defineProperty(value,'product_breakdown',{get(){getters++;return {};},enumerable:true});
+ assert.equal(projectStorePeriodFrame(value),null);assert.equal(getters,0);
+});
+
+test('product breakdown supports a thousand bounded products and refuses an additional product',()=>{
+ const value={...frame(),revision:2,status:'COMPLETE',pages_read:200,order_count:1000,escrow_amount_raw:'1000000000000000',items:[],product_breakdown:{schema:'store_product_breakdown_v1',exclusive_order_count:1000,mixed_order_count:0,exclusive_payout_raw:'1000000000000000',mixed_payout_raw:'0',products:[]}};
+ for(let index=0;index<1000;index++){
+  const item_id=String(10000000000000000000n+BigInt(index));
+  value.items.push({item_id,model_id:'0',quantity:1});
+  value.product_breakdown.products.push({item_id,order_count:1,exclusive_order_count:1,mixed_order_count:0,exclusive_payout_raw:'1000000000000',returns_orders:0});
+ }
+ assert.ok(projectStorePeriodFrame(value));
+ value.product_breakdown.products.push({...value.product_breakdown.products[0],item_id:'99999999999999999999'});
+ assert.equal(projectStorePeriodFrame(value),null);
+});

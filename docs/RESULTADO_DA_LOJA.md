@@ -1,6 +1,8 @@
 # Resultado da loja por período
 
-**Atualização da reformulação:** o resultado agora aparece na tela inicial e a
+**Atualização:** consumo automático de Ads e repasse previsto por produto estão
+descritos em [Repasse por produto e consumo de anúncios](REPASSE_POR_PRODUTO_E_ADS.md).
+O resultado aparece na tela inicial e a
 coleta do período padrão começa automaticamente após a autenticação. Produtos
 novos também passam pela descoberta automática de composição. A organização,
 as regras e os temas estão em [Painéis e automação](PAINEIS_E_AUTOMACAO.md).
@@ -10,14 +12,15 @@ Atualização de 20/10/2026. O operador confirmou que o repasse numérico da amo
 é igual ao valor em reais da Shopee: um valor de R$ 50,00 aparece como `50`.
 Essa evidência confirma a escala de Payment para esta loja. Não confirma a
 unidade de uma fonte de anúncios diferente nem a liquidação dos pagamentos.
+A unidade de Ads foi confirmada separadamente na atualização citada acima.
 
 ## Uso no painel
 
 Em **Custos e margens → Resultado da loja**, escolha um intervalo de até quinze
 dias e inicie a apuração. O padrão são os últimos sete dias de calendário de
 São Paulo. O sistema avança por páginas enquanto a tela estiver aberta; é
-possível parar e continuar a mesma apuração. A consulta não começa no
-carregamento da página, na troca de abas ou no polling do painel.
+possível parar e continuar a mesma apuração. O período padrão começa após a
+autenticação; trocas de aba ou polling não disparam novas apurações.
 
 A seleção reúne todos os pedidos `COMPLETED` **criados no intervalo**, até o
 corte fixado no início. Não é um extrato de recebimentos ocorridos nesses dias.
@@ -43,7 +46,8 @@ e não entram novamente nesta conta.
 
 ## Anúncios, despesas e pendências
 
-Informe o **consumo de anúncios do mesmo intervalo**, em reais, e as despesas
+O painel busca o **consumo de anúncios do mesmo intervalo** automaticamente após
+a coleta financeira; também permite uma declaração manual. Informe as despesas
 externas ainda não incluídas no repasse ou na produção, como impostos e outras
 despesas operacionais. Zero é uma declaração explícita de ausência, não o padrão
 para um valor desconhecido. Não usar uma recarga de saldo como consumo de Ads.
@@ -73,9 +77,10 @@ reconhecidas somente no eixo correspondente. Não se aceitam prefixos arbitrári
 nem um gênero no eixo oposto. A evidência pública limitada está em
 [CATALOGO_KIT_OBSERVADO_58269212782.json](CATALOGO_KIT_OBSERVADO_58269212782.json).
 
-Para outro produto, a composição física precisa ser escolhida uma vez quando
-ainda não existir regra salva. Os tamanhos identificáveis são preenchidos em
-lote; casos ambíguos continuam pendentes. Vínculos manuais têm prioridade e
+Novos produtos com eixos inequívocos de tamanho são identificados automaticamente
+como camisetas avulsas ou kits com uma peça de cada gênero. Casos ambíguos ficam
+pendentes para definir a composição uma vez. Tamanhos identificáveis são
+preenchidos em lote. Vínculos manuais têm prioridade e
 rascunhos de edição são preservados. Nada altera o catálogo da Shopee.
 
 ## Publicação e proteção dos dados

@@ -1,0 +1,13 @@
+{
+  "schema": "operator_monetary_scale_observation_v1",
+  "observed_on": "2026-10-20",
+  "source": "operator_reply",
+  "shop_id": 1178167501,
+  "field": "daily.expense",
+  "currency": "BRL",
+  "raw_units_per_brl": 1,
+  "operator_statement": "Sim, corresponde ao mesmo valor em reais",
+  "confirms_source_timezone": false,
+  "confirms_order_or_product_attribution": false,
+  "confirms_settlement": false
+}

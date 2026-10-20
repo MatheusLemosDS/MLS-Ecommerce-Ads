@@ -71,10 +71,56 @@ export function projectStorePeriodRequest(value) {
   }catch{return null;}
 }
 
+// Only orders containing one distinct product can have their whole expected
+// payout attributed without a fee-allocation rule. Mixed orders stay separate.
+function storeProductBreakdown(value,frame,items) {
+  if(!storeExact(value,['schema','exclusive_order_count','mixed_order_count','exclusive_payout_raw','mixed_payout_raw','products'])
+    ||value.schema!=='store_product_breakdown_v1'||!storeInteger(value.exclusive_order_count,0,frame.order_count)
+    ||!storeInteger(value.mixed_order_count,0,frame.order_count)
+    ||value.exclusive_order_count+value.mixed_order_count!==frame.order_count||!storeArray(value.products,1000))return null;
+  const money=value=>value===null||typeof value==='string'&&normalizeStoreDecimal(value)===value;
+  for(const kind of ['exclusive','mixed']){
+    if(!money(value[kind+'_payout_raw'])||value[kind+'_order_count']===0&&value[kind+'_payout_raw']!=='0')return null;
+  }
+  if((frame.escrow_amount_raw===null)!==(value.exclusive_payout_raw===null||value.mixed_payout_raw===null))return null;
+  if(frame.escrow_amount_raw!==null&&addStoreDecimals([value.exclusive_payout_raw,value.mixed_payout_raw])!==frame.escrow_amount_raw)return null;
+  const quantities=new Map();
+  for(const row of items)quantities.set(row.item_id,(quantities.get(row.item_id)||0)+row.quantity);
+  if(value.products.length!==quantities.size)return null;
+  const products=[],seen=new Set(),exclusivePayouts=[];
+  let exclusiveOrders=0,mixedMemberships=0,returnsMemberships=0,unknownExclusive=false,unknownReturns=false;
+  for(const row of value.products){
+    if(!storeExact(row,['item_id','order_count','exclusive_order_count','mixed_order_count','exclusive_payout_raw','returns_orders'])
+      ||!storeId(row.item_id)||!quantities.has(row.item_id)||seen.has(row.item_id)
+      ||!storeInteger(row.order_count,1,frame.order_count)||row.order_count>quantities.get(row.item_id)
+      ||!storeInteger(row.exclusive_order_count,0,value.exclusive_order_count)
+      ||!storeInteger(row.mixed_order_count,0,value.mixed_order_count)
+      ||row.order_count!==row.exclusive_order_count+row.mixed_order_count
+      ||!money(row.exclusive_payout_raw)||row.exclusive_order_count===0&&row.exclusive_payout_raw!=='0'
+      ||row.returns_orders!==null&&!storeInteger(row.returns_orders,0,row.order_count))return null;
+    seen.add(row.item_id);exclusiveOrders+=row.exclusive_order_count;mixedMemberships+=row.mixed_order_count;
+    if(row.exclusive_payout_raw===null)unknownExclusive=true;else exclusivePayouts.push(row.exclusive_payout_raw);
+    if(row.returns_orders===null)unknownReturns=true;
+    else {returnsMemberships+=row.returns_orders;if(frame.returns_orders!==null&&row.returns_orders>frame.returns_orders)return null;}
+    products.push({item_id:row.item_id,order_count:row.order_count,exclusive_order_count:row.exclusive_order_count,
+      mixed_order_count:row.mixed_order_count,exclusive_payout_raw:row.exclusive_payout_raw,returns_orders:row.returns_orders});
+  }
+  if(exclusiveOrders!==value.exclusive_order_count||mixedMemberships<value.mixed_order_count*2
+    ||mixedMemberships>value.mixed_order_count*products.length
+    ||(value.exclusive_payout_raw===null)!==unknownExclusive
+    ||!unknownExclusive&&addStoreDecimals(exclusivePayouts)!==value.exclusive_payout_raw
+    ||(frame.returns_orders===null)!==unknownReturns
+    ||frame.returns_orders!==null&&(returnsMemberships<frame.returns_orders||returnsMemberships>frame.returns_orders*products.length))return null;
+  products.sort((a,b)=>storeIdOrder(a.item_id,b.item_id));
+  return {schema:'store_product_breakdown_v1',exclusive_order_count:value.exclusive_order_count,mixed_order_count:value.mixed_order_count,
+    exclusive_payout_raw:value.exclusive_payout_raw,mixed_payout_raw:value.mixed_payout_raw,products};
+}
+
 export function projectStorePeriodFrame(value) {
   try{
+    const hasBreakdown=storePlain(value)&&Object.hasOwn(value,'product_breakdown');
     const keys=['schema','run_id','revision','status','start_date','end_date','cutoff_at','checked_at','currency','monetary_unit',
-      'order_count','pages_read','duplicate_orders','returns_orders','escrow_amount_raw','ads_recharge_or_support_raw','items','diagnostic'];
+      'order_count','pages_read','duplicate_orders','returns_orders','escrow_amount_raw','ads_recharge_or_support_raw','items','diagnostic',...(hasBreakdown?['product_breakdown']:[])];
     if(!storeExact(value,keys)||value.schema!=='finance_store_period_v1'||!storeRunId(value.run_id)
       ||!storeInteger(value.revision,1,2147483647)||!['RUNNING','COMPLETE','LIMIT_REACHED'].includes(value.status)
       ||!projectStorePeriodRequest({operation:'start',start_date:value.start_date,end_date:value.end_date})
@@ -97,6 +143,8 @@ export function projectStorePeriodFrame(value) {
     if(value.order_count===0&&(items.length||value.returns_orders!==0||value.escrow_amount_raw!=='0'||value.ads_recharge_or_support_raw!=='0'))return null;
     if(value.order_count>0&&!items.length)return null;
     items.sort((a,b)=>storeIdOrder(a.item_id,b.item_id)||storeIdOrder(a.model_id,b.model_id));
-    return Object.fromEntries(keys.map(key=>[key,key==='items'?items:value[key]]));
+    const breakdown=hasBreakdown?storeProductBreakdown(value.product_breakdown,value,items):undefined;
+    if(hasBreakdown&&!breakdown)return null;
+    return Object.fromEntries(keys.map(key=>[key,key==='items'?items:key==='product_breakdown'?breakdown:value[key]]));
   }catch{return null;}
 }

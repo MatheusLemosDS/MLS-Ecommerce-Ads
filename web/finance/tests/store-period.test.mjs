@@ -170,3 +170,66 @@ test('the two-hundred-page cap never declares a still-paginating cohort complete
  assert.equal(result.status,'LIMIT_REACHED');assert.equal(result.pages_read,200);assert.equal(result.order_count,1);assert.equal(result.duplicate_orders,199);assert.equal(result.escrow_amount_raw,'0.1');assert.equal(f.calls.filter(request=>new URL(request.url).pathname===payment).length,1);
  const priorPage=page;assert.deepEqual(await f.run({operation:'step',run_id:job.run_id,fetchImpl}),result);assert.equal(page,priorPage);
 });
+
+async function productFixture(mode='normal'){
+ const f=await fixture(3),state={mode};
+ const lines=index=>index===0?[{item_id:100,model_id:0,quantity:2},{item_id:100,model_id:1,quantity:1}]
+  :index===1?[{item_id:100,model_id:0,quantity:1},{item_id:200,model_id:0,quantity:3}]
+  :[{item_id:300,model_id:0,quantity:1}];
+ const fetchImpl=async request=>{
+  const url=new URL(request.url);
+  if(url.pathname===detail)return body({order_list:url.searchParams.get('order_sn_list').split(',').map(sn=>{
+   const index=Number(sn.split('_').at(-1));return {order_sn:sn,order_status:'COMPLETED',currency:'BRL',
+    item_list:lines(index).map(({quantity,...row})=>({...row,model_quantity_purchased:quantity}))};
+  })});
+  if(url.pathname!==payment)return f.fetchImpl(request);
+  const index=Number(url.searchParams.get('order_sn').split('_').at(-1));
+  const order_income={escrow_amount:[0.1,0.2,-0.05][index],ads_escrow_top_up_fee_or_technical_support_fee:0,
+   items:lines(index).map(({quantity,...row},position)=>({...row,line_item_id:index*10+position,quantity_purchased:quantity,selling_price:99999,buyer:'PRIVATE_BUYER'}))};
+  if(state.mode==='exclusive-money-missing'&&index===0||state.mode==='mixed-money-missing'&&index===1)delete order_income.escrow_amount;
+  const response={order_sn:serial(index),order_income,return_order_sn_list:index===1?['FIXTURE_PRIVATE_RETURN']:[]};
+  if(state.mode==='exclusive-money-missing'&&index===2)delete response.return_order_sn_list;
+  return body(response);
+ };
+ const job=await f.start(),run=input=>f.run({...input,fetchImpl});
+ return {...f,state,job,run};
+}
+
+test('product payout uses a single distinct item ID even across models and leaves multi-product money unallocated',async()=>{
+ const f=await productFixture(),result=await f.run({operation:'step',run_id:f.job.run_id});
+ assert.equal(result.status,'COMPLETE');assert.equal(result.escrow_amount_raw,'0.25');
+ assert.deepEqual(result.product_breakdown,{schema:'store_product_breakdown_v1',exclusive_order_count:2,mixed_order_count:1,
+  exclusive_payout_raw:'0.05',mixed_payout_raw:'0.2',products:[
+   {item_id:'100',order_count:2,exclusive_order_count:1,mixed_order_count:1,exclusive_payout_raw:'0.1',returns_orders:1},
+   {item_id:'200',order_count:1,exclusive_order_count:0,mixed_order_count:1,exclusive_payout_raw:'0',returns_orders:1},
+   {item_id:'300',order_count:1,exclusive_order_count:1,mixed_order_count:0,exclusive_payout_raw:'-0.05',returns_orders:0},
+  ]});
+ assert.equal(result.product_breakdown.products.reduce((sum,row)=>sum+row.order_count,0),4);assert.equal(result.order_count,3);
+ const before=rows(f),calls=f.calls.length;assert.deepEqual(await f.run({operation:'read',run_id:f.job.run_id}),result);
+ assert.equal(f.calls.length,calls);assert.deepEqual(rows(f),before);
+ for(const privateValue of ['PRIVATE_ORDER','PRIVATE_RETURN','PRIVATE_BUYER','99999','order_hash','source_hash','selling_price'])assert.ok(!JSON.stringify(result.product_breakdown).includes(privateValue));
+});
+
+test('product partition missing amounts and returns retain only justified known exclusive totals',async()=>{
+ for(const mode of ['exclusive-money-missing','mixed-money-missing']){
+  const f=await productFixture(mode),result=await f.run({operation:'step',run_id:f.job.run_id});
+  assert.equal(result.status,'COMPLETE');assert.equal(result.escrow_amount_raw,null);
+  const b=result.product_breakdown;
+  if(mode==='exclusive-money-missing'){
+   assert.equal(b.exclusive_payout_raw,null);assert.equal(b.mixed_payout_raw,'0.2');
+   assert.equal(b.products[0].exclusive_payout_raw,null);assert.equal(b.products[0].returns_orders,1);
+   assert.equal(b.products[2].exclusive_payout_raw,'-0.05');assert.equal(b.products[2].returns_orders,null);assert.equal(result.returns_orders,null);
+  }else{
+   assert.equal(b.exclusive_payout_raw,'0.05');assert.equal(b.mixed_payout_raw,null);
+   assert.equal(b.products[0].exclusive_payout_raw,'0.1');assert.equal(b.products[1].exclusive_payout_raw,'0');assert.equal(result.returns_orders,1);
+  }
+ }
+});
+
+test('duplicate imported orders preserve per-product payout membership and unknown-return state',async()=>{
+ const f=await fixture(7),job=await f.start();await f.run({operation:'step',run_id:job.run_id});
+ f.state.mode='duplicate';const result=await f.run({operation:'step',run_id:job.run_id});
+ assert.equal(result.duplicate_orders,1);assert.equal(result.product_breakdown.exclusive_order_count,7);assert.equal(result.product_breakdown.mixed_order_count,0);
+ assert.equal(result.product_breakdown.exclusive_payout_raw,'50.925');assert.equal(result.product_breakdown.products[0].order_count,7);
+ assert.equal(result.product_breakdown.products[0].exclusive_payout_raw,'50.925');
+});

@@ -120,11 +120,35 @@ test('raw period totals remain canonical decimal strings, unknown return coverag
  const auth=await forwardFinancePaymentSample(request(),{FINANCE_ROUTER_SECRET:router,SHOPEE_FINANCE_SERVICE:{fetch:async()=>response(value)}},trusted);
  assert.equal(auth.status,200);assert.deepEqual(await auth.json(),value);
  assert.deepEqual(await getFinanceStorePeriod({APP_INTERNAL_SECRET:'fixture'},start,{fetchImpl:async()=>response(value)}),value);
- for(const bad of [new Response(' '.repeat(262145),{headers:{'content-type':'application/json'}}),
+ for(const bad of [new Response(' '.repeat(524289),{headers:{'content-type':'application/json'}}),
   new Response('PRIVATE_HTML',{headers:{'content-type':'text/html'}}),new Response(null,{status:302,headers:{location:'https://foreign.invalid'}}),
   response({...value,message:'PRIVATE_ERROR'},403)]){
   const result=await getFinanceStorePeriod({APP_INTERNAL_SECRET:'fixture'},start,{fetchImpl:async()=>bad});
   assert.equal(result.status,'UNAVAILABLE');assert.ok(!JSON.stringify(result).includes('PRIVATE'));
+ }
+});
+
+test('a maximum product breakdown crosses 256KiB and both private transports enforce the 512KiB boundary',async()=>{
+ const ids=Array.from({length:1000},(_,index)=>String(99999999999999999000n+BigInt(index)));
+ const value={...frame(),status:'COMPLETE',order_count:1000,pages_read:200,
+  escrow_amount_raw:'123456789012123.456789012',items:ids.map(item_id=>({item_id,model_id:'99999999999999999999',quantity:1000000000000})),
+  product_breakdown:{schema:'store_product_breakdown_v1',exclusive_order_count:1000,mixed_order_count:0,
+   exclusive_payout_raw:'123456789012123.456789012',mixed_payout_raw:'0',
+   products:ids.map(item_id=>({item_id,order_count:1,exclusive_order_count:1,mixed_order_count:0,
+    exclusive_payout_raw:'123456789012.123456789012',returns_orders:0}))}};
+ const raw=JSON.stringify(value);assert.ok(Buffer.byteLength(raw)>262144);
+ const padded=raw.padEnd(524288,' '),env={APP_INTERNAL_SECRET:'fixture'};
+ const upstream=body=>new Response(body,{headers:{'content-type':'application/json'}});
+ assert.deepEqual(await getFinanceStorePeriod(env,start,{fetchImpl:async()=>upstream(padded)}),value);
+ const auth=await forwardFinancePaymentSample(request(),{FINANCE_ROUTER_SECRET:router,
+  SHOPEE_FINANCE_SERVICE:{fetch:async()=>upstream(padded)}},trusted);
+ assert.equal(auth.status,200);assert.deepEqual(await auth.json(),value);
+ for(const declared of [false,true]){
+  const excessive=()=>new Response(padded+' ',{headers:{'content-type':'application/json',...(declared?{'content-length':'524289'}:{})}});
+  assert.equal((await getFinanceStorePeriod(env,start,{fetchImpl:async()=>excessive()})).status,'UNAVAILABLE');
+  const rejected=await forwardFinancePaymentSample(request(),{FINANCE_ROUTER_SECRET:router,
+   SHOPEE_FINANCE_SERVICE:{fetch:async()=>excessive()}},trusted);
+  assert.equal(rejected.status,502);
  }
 });
 

@@ -11,7 +11,7 @@ import {CLIENT} from './admin-client.mjs';
 import {projectFinanceSample} from './finance-sample-frame.mjs';
 import {projectAdminFinancePreview} from './app-finance-sample.mjs';
 import {projectStorePeriodRequest,projectStorePeriodFrame} from '../../finance/src/store-period-frame.mjs';
-import {STORE_ADJUSTMENTS_SCHEMA,validateStoreAdjustmentBody,saveStoreAdjustments,storePeriodBundle} from './store-admin.mjs';
+import {STORE_ADJUSTMENTS_SCHEMA,validateStoreAdjustmentBody,saveStoreAdjustments,storePeriodBundle,cacheStoreAdsPeriod} from './store-admin.mjs';
 import {StoreSummaryError} from './store-summary.mjs';
 import {syncVariantBindings} from './variant-sync.mjs';
 import {BRAZA_THEME_HEAD,BRAZA_THEME_CSS} from './theme.mjs';
@@ -87,7 +87,18 @@ async function adminFetch(request,env,services={}){const url=new URL(request.url
  if(path==='/admin/logout'){assert(request.method==='POST','METHOD_NOT_ALLOWED',405);sameOrigin(request);assert(await equal(request.headers.get('x-csrf-token')||'',current.csrf),'CSRF_REJECTED',403);return new Response(null,{status:204,headers:{'set-cookie':'braza_admin=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0','cache-control':'no-store'}});}
  if(path==='/admin'){assert(request.method==='GET','METHOD_NOT_ALLOWED',405);return dashboard();}
  assert(path.startsWith('/api/admin/'),'NOT_FOUND',404);await setup(env);
- if(request.method==='POST'){sameOrigin(request);assert(await equal(request.headers.get('x-csrf-token')||'',current.csrf),'CSRF_REJECTED',403);const body=await input(request,['/api/admin/finance/payment-sample','/api/admin/finance/payment-preview'].includes(path)?128:path==='/api/admin/variant-bindings'?393216:path==='/api/admin/variant-bindings/sync'?131072:path==='/api/admin/variant-bindings/automate'?256:16384);if(path==='/api/admin/finance/store-period'||path==='/api/admin/finance/store-adjustments'){
+ if(request.method==='POST'){sameOrigin(request);assert(await equal(request.headers.get('x-csrf-token')||'',current.csrf),'CSRF_REJECTED',403);const body=await input(request,['/api/admin/finance/payment-sample','/api/admin/finance/payment-preview','/api/admin/finance/ads-period'].includes(path)?128:path==='/api/admin/variant-bindings'?393216:path==='/api/admin/variant-bindings/sync'?131072:path==='/api/admin/variant-bindings/automate'?256:16384);if(path==='/api/admin/finance/ads-period'){
+ assert(!url.search&&Object.keys(body).length===1&&Object.hasOwn(body,'run_id'),'STORE_ADS_REQUEST_INVALID');
+ const selection=projectStorePeriodRequest({operation:'read',run_id:body.run_id});
+ assert(selection,'STORE_ADS_REQUEST_INVALID');
+ let raw;try{if(typeof services.getFinanceStorePeriod==='function')raw=await services.getFinanceStorePeriod(env,selection);}catch{}
+ const frame=projectStorePeriodFrame(raw);
+ assert(frame&&frame.run_id===selection.run_id,'STORE_PERIOD_UNAVAILABLE',503);
+ assert(frame.status==='COMPLETE','STORE_ADS_PERIOD_NOT_READY',409);
+ let report;try{if(typeof services.getAdsPeriod==='function')report=await services.getAdsPeriod(env,{start_date:frame.start_date,end_date:frame.end_date});}catch{}
+ await cacheStoreAdsPeriod(env,frame,report);
+ return json(await storePeriodBundle(env,frame));
+ }if(path==='/api/admin/finance/store-period'||path==='/api/admin/finance/store-adjustments'){
  assert(!url.search,'STORE_PERIOD_REQUEST_INVALID');
  const adjustment=path==='/api/admin/finance/store-adjustments'?validateStoreAdjustmentBody(body):null;
  const selection=adjustment?{operation:'read',run_id:adjustment.run_id}:projectStorePeriodRequest(body);
@@ -95,7 +106,7 @@ async function adminFetch(request,env,services={}){const url=new URL(request.url
  let raw;try{if(typeof services.getFinanceStorePeriod==='function')raw=await services.getFinanceStorePeriod(env,selection);}catch{}
  const frame=projectStorePeriodFrame(raw);
  assert(frame&&(selection.operation==='start'?frame.start_date===selection.start_date&&frame.end_date===selection.end_date:frame.run_id===selection.run_id),'STORE_PERIOD_UNAVAILABLE',503);
- if(adjustment)await saveStoreAdjustments(env,adjustment,current.user);
+ if(adjustment)await saveStoreAdjustments(env,adjustment,current.user,frame);
  return json(await storePeriodBundle(env,frame));
  }if(path==='/api/admin/variant-bindings/sync'){
  assert(!url.search,'VARIANT_CATALOG_REQUEST_INVALID');
@@ -115,7 +126,7 @@ async function adminFetch(request,env,services={}){const url=new URL(request.url
  return json({...saved,...(catalog.products.some(product=>product.diagnostic)?{catalog_review:catalog}:{})});
  }if(path==='/api/admin/variant-bindings')return json(await saveVariantBindings(env,body,current.user));if(path==='/api/admin/order-observations'){assert(Object.keys(body).length===0,'OBSERVATION_BODY_INVALID');assert(!url.search,'OBSERVATION_QUERY_INVALID');return json(await captureObservation(env,services.getOrderItems,current.user));}if(path==='/api/admin/settings')return json(await saveSettings(env,body,current.user));if(path==='/api/admin/jobs'){assert(Object.keys(body).length===0,'TASK_NOT_ALLOWED');return json(await enqueue(env),202);}if(path==='/api/admin/jobs/cost')return json(await correctCost(env,body,current.user));throw new AdminError('NOT_FOUND',404);}
  assert(request.method==='GET','METHOD_NOT_ALLOWED',405);
- if(['/api/admin/finance/payment-sample','/api/admin/finance/payment-preview','/api/admin/variant-bindings/automate','/api/admin/variant-bindings/sync','/api/admin/finance/store-period','/api/admin/finance/store-adjustments'].includes(path))throw new AdminError('METHOD_NOT_ALLOWED',405);
+ if(['/api/admin/finance/payment-sample','/api/admin/finance/payment-preview','/api/admin/variant-bindings/automate','/api/admin/variant-bindings/sync','/api/admin/finance/store-period','/api/admin/finance/store-adjustments','/api/admin/finance/ads-period'].includes(path))throw new AdminError('METHOD_NOT_ALLOWED',405);
  if(path==='/api/admin/production-costs'){assert(!url.search,'COSTS_QUERY_INVALID');return json(await readProductionCosts(env));}
  if(path==='/api/admin/production-costs/audit'){assert(!url.search,'COSTS_QUERY_INVALID');return json(await readProductionCostAudit(env));}
  if(path==='/api/admin/variant-bindings')return json(await readVariantBindings(env));

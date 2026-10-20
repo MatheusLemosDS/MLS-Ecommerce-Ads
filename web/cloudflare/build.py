@@ -28,16 +28,18 @@ store_period_frame=re.sub(r'^export ', '', (root.parent/'finance/src/store-perio
 store_period_frame='const brazaStorePeriodFrame = (() => {\n'+store_period_frame+'\nreturn {projectStorePeriodRequest,projectStorePeriodFrame};\n})();\nconst {projectStorePeriodRequest,projectStorePeriodFrame}=brazaStorePeriodFrame;\n'
 app_store_period=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/app-store-period.mjs').read_text(),flags=re.M),flags=re.M)
 store_summary=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/store-summary.mjs').read_text(),flags=re.M),flags=re.M)
+store_product_summary=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/store-product-summary.mjs').read_text(),flags=re.M),flags=re.M)
+ads_period=re.sub(r'^export ', '', (root/'src/ads-period.mjs').read_text(), flags=re.M)
 store_admin=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/store-admin.mjs').read_text(),flags=re.M),flags=re.M)
 variant_sync=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/variant-sync.mjs').read_text(),flags=re.M),flags=re.M)
 shell_navigation=re.sub(r'^export ', '', (root/'src/shell-navigation.mjs').read_text(), flags=re.M)
 theme=re.sub(r'^export ', '', (root/'src/theme.mjs').read_text(), flags=re.M)
 ads_presentation=re.sub(r'^export ', '', (root/'src/ads-presentation.mjs').read_text(), flags=re.M)
-admin=client+'\n'+view+'\n'+ads+'\n'+orders+'\n'+items+'\n'+variants+'\n'+observations+'\n'+production_costs+'\n'+store_summary+'\n'+store_admin+'\n'+variant_sync+'\n'+re.sub(r'^import .*\n','',admin,flags=re.M)
+admin=client+'\n'+view+'\n'+ads+'\n'+orders+'\n'+items+'\n'+variants+'\n'+observations+'\n'+production_costs+'\n'+store_summary+'\n'+store_product_summary+'\n'+store_admin+'\n'+variant_sync+'\n'+re.sub(r'^import .*\n','',admin,flags=re.M)
 admin=admin.replace('export {adminFetch,schedule,DEFAULTS,SCHEMA,validateSettings};','')
 needle='    const url = new URL(request.url);'
 assert original.count(needle)==1
-updated=original.replace(needle,needle+'''\n    if (url.pathname === '/admin' || url.pathname.startsWith('/admin/') || url.pathname.startsWith('/api/admin/') || url.pathname.startsWith('/api/hermes/')) return brazaAdmin.adminFetch(request, env, {getAdsSummary,getShopOrders,getOrderItems,getFinancePaymentSample,getFinancePaymentPreview,getFinanceVariantCatalog,getFinanceStorePeriod});''',1)
+updated=original.replace(needle,needle+'''\n    if (url.pathname === '/admin' || url.pathname.startsWith('/admin/') || url.pathname.startsWith('/api/admin/') || url.pathname.startsWith('/api/hermes/')) return brazaAdmin.adminFetch(request, env, {getAdsSummary,getAdsPeriod,getShopOrders,getOrderItems,getFinancePaymentSample,getFinancePaymentPreview,getFinanceVariantCatalog,getFinanceStorePeriod});''',1)
 needle='  async fetch(request, env) {'
 updated=updated.replace(needle,'''  async scheduled(event, env, ctx) { ctx.waitUntil(brazaAdmin.schedule(env)); },\n'''+needle,1)
 needle='${navLink(\n  "/dashboard",'
@@ -61,7 +63,7 @@ for name in ['money','integer','percent','percentNumber','formatRoas']:
     needle='function '+name+'(\n  value\n) {'
     assert updated.count(needle)==1
     updated=updated.replace(needle,needle+'\n  if(value===null||value===undefined||typeof value===\'boolean\'||(typeof value===\'string\'&&!value.trim())||!Number.isFinite(Number(value)))return "—";',1)
-output=updated+'\n\n'+theme+'\n'+ads_presentation+'\n'+shell_navigation+'\n'+orders_diagnostic+'\n'+orders_http+'\n'+app_orders+'\n'+app_items+'\n'+finance_sample_frame+'\n'+finance_preview_frame+'\n'+variant_catalog_frame+'\n'+app_finance_sample+'\n'+store_period_frame+'\n'+app_store_period+'\n\nconst brazaAdmin = (() => {\n'+admin+'\nreturn {adminFetch,schedule};\n})();\n'
+output=updated+'\n\n'+theme+'\n'+ads_presentation+'\n'+shell_navigation+'\n'+orders_diagnostic+'\n'+orders_http+'\n'+app_orders+'\n'+app_items+'\n'+finance_sample_frame+'\n'+finance_preview_frame+'\n'+variant_catalog_frame+'\n'+app_finance_sample+'\n'+store_period_frame+'\n'+app_store_period+'\n'+ads_period+'\n\nconst brazaAdmin = (() => {\n'+admin+'\nreturn {adminFetch,schedule};\n})();\n'
 (root/'app-worker.mjs').write_text(output)
 auth_original=(root/'original/auth-worker.mjs').read_text()
 needle='    const url = new URL(request.url);'
