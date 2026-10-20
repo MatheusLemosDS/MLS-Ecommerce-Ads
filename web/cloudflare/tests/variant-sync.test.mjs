@@ -20,15 +20,17 @@ function catalog(ids,unit=kit,models=['0']){
 const state=env=>({row:env.ADMIN_DB.db.prepare('SELECT * FROM variant_bindings_state').get(),audit:env.ADMIN_DB.db.prepare('SELECT * FROM variant_bindings_audit ORDER BY revision').all()});
 const failure=(code,status=400)=>error=>error.message===code&&error.status===status;
 
-test('known operator products synchronize in separate bounded unit batches without any per-variation confirmation',async()=>{
+test('known operator products and new products synchronize in bounded unit batches without any per-variation confirmation',async()=>{
  const env=await fixture(),calls=[];
- const getCatalog=async(actual,selection)=>{assert.equal(actual,env);calls.push(selection);return catalog(selection.item_ids,selection.selling_unit||kit);};
+ const getCatalog=async(actual,selection)=>{assert.equal(actual,env);calls.push(selection);return catalog(selection.item_ids,selection.selling_unit==='AUTO'?single:selection.selling_unit||kit);};
  const candidates=[candidate('58269212782'),candidate('22199878767'),candidate('999')];
  let result=await syncVariantBindings(env,{revision:1,candidates},'admin',getCatalog);
- assert.deepEqual(calls,[{item_ids:['22199878767'],selling_unit:single}]);assert.equal(result.remaining_known,1);assert.deepEqual(result.pending_type,['999']);assert.deepEqual(result.processed,['22199878767']);assert.equal(result.state.revision,2);
+ assert.deepEqual(calls,[{item_ids:['22199878767'],selling_unit:single}]);assert.equal(result.remaining_known,2);assert.deepEqual(result.pending_type,[]);assert.deepEqual(result.processed,['22199878767']);assert.equal(result.state.revision,2);
  assert.deepEqual(result.state.bindings[0],{item_id:'22199878767',model_id:'0',size:'M',selling_unit:single,operator_confirmed:false,source:'CATALOG_SIZE_AXIS',catalog_fingerprint:fingerprint});
- result=await syncVariantBindings(env,{revision:2,candidates:candidates.filter(row=>!result.processed.includes(row.item_id))},'admin',getCatalog);
- assert.deepEqual(calls[1],{item_ids:['58269212782']});assert.equal(result.remaining_known,0);assert.deepEqual(result.pending_type,['999']);assert.equal(result.state.bindings[1].source,'CATALOG_VARIATION_AXES');assert.equal(result.state.revision,3);
+ result=await syncVariantBindings(env,{revision:2,candidates:candidates.filter(row=>row.item_id!=='22199878767')},'admin',getCatalog);
+ assert.deepEqual(calls[1],{item_ids:['58269212782']});assert.equal(result.remaining_known,1);assert.deepEqual(result.pending_type,[]);assert.equal(result.state.bindings[1].source,'CATALOG_VARIATION_AXES');assert.equal(result.state.revision,3);
+ result=await syncVariantBindings(env,{revision:3,candidates:[candidate('999')]},'admin',getCatalog);
+ assert.deepEqual(calls[2],{item_ids:['999'],selling_unit:'AUTO'});assert.equal(result.remaining_known,0);assert.deepEqual(result.pending_type,[]);assert.equal(result.state.bindings[0].source,'CATALOG_SIZE_AXIS');assert.equal(result.state.revision,4);
 });
 
 test('saved consistent composition takes precedence, skips complete models and batches at most three products of one unit',async()=>{
@@ -41,12 +43,23 @@ test('saved consistent composition takes precedence, skips complete models and b
  assert.equal(reads,0);assert.deepEqual(complete,{state:await readVariantBindings(env),remaining_known:0,pending_type:[],processed:[]});assert.deepEqual(state(env),before);
 });
 
-test('empty selection and unknown or mixed physical compositions do not call catalogue or write state',async()=>{
+test('empty selection and mixed saved physical compositions do not call catalogue or write state',async()=>{
  const env=await fixture([manual('8','1'),manual('8','2',single)]);let calls=0;const getCatalog=()=>{calls++;throw Error('must not call');};
  const before=state(env);
  assert.deepEqual((await syncVariantBindings(env,{revision:1,candidates:[]},'admin',getCatalog)).processed,[]);
- const result=await syncVariantBindings(env,{revision:1,candidates:[candidate('8','3'),candidate('20'),candidate('9')]},'admin',getCatalog);
- assert.deepEqual(result.pending_type,['8','9','20']);assert.equal(result.remaining_known,0);assert.equal(calls,0);assert.deepEqual(state(env),before);
+ const result=await syncVariantBindings(env,{revision:1,candidates:[candidate('8','3')]},'admin',getCatalog);
+ assert.deepEqual(result.pending_type,['8']);assert.equal(result.remaining_known,0);assert.equal(calls,0);assert.deepEqual(state(env),before);
+});
+
+test('AUTO mixed catalogue is saved atomically and ambiguous processed products do not loop or guess costs',async()=>{
+ const env=await fixture(),calls=[],candidates=['10','20','30','40'].map(item_id=>candidate(item_id));
+ const result=await syncVariantBindings(env,{revision:1,candidates},'admin',async(_,selection)=>{
+  calls.push(selection);return {schema:'variant_catalog_v1',checked_at:1792510733,products:[catalog(['10'],single).products[0],catalog(['20'],kit).products[0],{item_id:'30',catalog_fingerprint:fingerprint,bindings:[],unresolved_count:5}]};
+ });
+ assert.deepEqual(calls,[{item_ids:['10','20','30'],selling_unit:'AUTO'}]);assert.deepEqual(result.processed,['10','20','30']);assert.equal(result.remaining_known,1);assert.deepEqual(result.pending_type,['30']);assert.equal(result.state.revision,2);
+ assert.deepEqual(result.state.bindings.map(row=>[row.item_id,row.selling_unit]),[['10',single],['20',kit]]);assert.equal(state(env).audit.length,2);
+ const next=await syncVariantBindings(env,{revision:2,candidates:candidates.filter(row=>!result.processed.includes(row.item_id))},'admin',async(_,selection)=>catalog(selection.item_ids,single));
+ assert.deepEqual(next.processed,['40']);assert.equal(next.remaining_known,0);assert.deepEqual(next.pending_type,[]);
 });
 
 test('strict canonical candidate input, stale revision and bounded counts reject before provider or database changes',async()=>{

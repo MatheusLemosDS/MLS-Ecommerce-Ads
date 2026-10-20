@@ -104,3 +104,31 @@ test('provider permission, malformed scope and redirect errors never retry or in
     assert.equal(calls, 1); assert.deepEqual(await f.store.readTokens(), before);
   }
 });
+
+test('AUTO reads one bounded catalogue request per product and projects mixed resolved compositions', async () => {
+  const f=await fixture(),before=await f.store.readTokens();let reads=0;
+  const result=await f.run({item_ids:['123','124','125'],selling_unit:'AUTO',fetchImpl:async request=>{
+    reads++;const url=new URL(request.url);
+    assert.equal(url.origin,'https://partner.shopeemobile.com');
+    assert.equal(url.pathname,'/api/v2/product/get_model_list');
+    assert.equal(url.searchParams.get('selling_unit'),null);
+    assert.equal(url.searchParams.get('sign'),createHmac('sha256',key)
+      .update('2049333'+url.pathname+url.searchParams.get('timestamp')+access+'1178167501').digest('hex'));
+    if(url.searchParams.get('item_id')==='123')return Response.json(catalog());
+    if(url.searchParams.get('item_id')==='124')return Response.json({error:'',response:{
+      tier_variation:[{name:'Cor',option_list:[{option:'Verde'}]},
+        {name:'Tamanho',option_list:[{option:'P'},{option:'GG'}]}],
+      model:[{model_id:0,tier_index:[0,0]},{model_id:1,tier_index:[0,1]}],buyer_name:'DO_NOT_EXPORT'}});
+    return Response.json({error:'',response:{tier_variation:[{name:'Opção',option_list:[{option:'A'}]}],
+      model:[{model_id:0,tier_index:[0]}],model_sku:'DO_NOT_EXPORT'}});
+  }});
+  assert.equal(reads,3);assert.equal(result.products.length,3);
+  assert.equal(result.products[0].selling_unit||'ONE_MALE_ONE_FEMALE_KIT','ONE_MALE_ONE_FEMALE_KIT');
+  assert.equal(result.products[0].bindings.length,2);
+  assert.equal(result.products[1].selling_unit,'SINGLE_GARMENT');
+  assert.deepEqual(result.products[1].bindings,[{item_id:'124',model_id:'0',size:'P'},{item_id:'124',model_id:'1',size:'GG'}]);
+  assert.equal(result.products[2].bindings.length,0);assert.equal(result.products[2].unresolved_count,1);
+  assert.ok(result.products.every(row=>row.selling_unit!=='AUTO'));
+  assert.deepEqual(await f.store.readTokens(),before);
+  assert.equal(JSON.stringify(result).includes('DO_NOT_EXPORT'),false);
+});

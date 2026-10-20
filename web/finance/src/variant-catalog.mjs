@@ -9,7 +9,7 @@ const catalogFailure = (suffix, status = 502) => new FinanceConnectionError('FIN
 const catalogPlain = value => value !== null && typeof value === 'object' && !Array.isArray(value)
   && [Object.prototype, null].includes(Object.getPrototypeOf(value));
 
-// A manual administrator action reads at most three products. The shop, host,
+// An authenticated synchronization reads at most three products. The shop, host,
 // route and credentials are fixed; neither titles nor SKU guesses choose sizes.
 export async function runFinanceVariantCatalog(env, options = {}) {
   const input = projectVariantCatalogRequest({item_ids: options.item_ids,

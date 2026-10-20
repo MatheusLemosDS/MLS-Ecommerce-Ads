@@ -1,5 +1,11 @@
 # Resultado da loja por período
 
+**Atualização da reformulação:** o resultado agora aparece na tela inicial e a
+coleta do período padrão começa automaticamente após a autenticação. Produtos
+novos também passam pela descoberta automática de composição. A organização,
+as regras e os temas estão em [Painéis e automação](PAINEIS_E_AUTOMACAO.md).
+As referências abaixo a início manual descrevem a entrega anterior.
+
 Atualização de 20/10/2026. O operador confirmou que o repasse numérico da amostra
 é igual ao valor em reais da Shopee: um valor de R$ 50,00 aparece como `50`.
 Essa evidência confirma a escala de Payment para esta loja. Não confirma a

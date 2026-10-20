@@ -19,6 +19,31 @@ const singleBinding=(item_id='101',model_id='1',size='M')=>({item_id,model_id,si
 const singleAutomatic=(item_id='101',model_id='1',size='M',catalog_fingerprint='a'.repeat(64))=>({...singleBinding(item_id,model_id,size),operator_confirmed:false,source:'CATALOG_SIZE_AXIS',catalog_fingerprint});
 const singleProduct=(item_id='101',models=[singleAutomatic(item_id)],catalog_fingerprint='a'.repeat(64),unresolved_count=0)=>({item_id,catalog_fingerprint,bindings:models.map(({item_id,model_id,size})=>({item_id,model_id,size})),unresolved_count,selling_unit:'SINGLE_GARMENT'});
 
+test('AUTO atomically stores mixed kit and garment results with exact provenance and manual precedence',async()=>{
+ const {env}=await login();
+ let state=await saveVariantBindings(env,{revision:1,bindings:[singleBinding('101','1','G3'),binding('201','1','G1','G2')]},'admin');
+ const mixed=catalog([singleProduct('101',[singleAutomatic('101','1','P'),singleAutomatic('101','2','M')]),catalogProduct('201',[automatic('201','1','P','P'),automatic('201','2','M','G')]),catalogProduct('301',[],fingerprintForAutoTest(),4)]);
+ state=await saveAutomaticVariantBindings(env,{revision:state.revision,item_ids:['101','201','301'],selling_unit:'AUTO'},mixed,'admin');
+ assert.deepEqual(state.bindings,[singleBinding('101','1','G3'),singleAutomatic('101','2','M'),binding('201','1','G1','G2'),automatic('201','2','M','G')]);
+ assert.equal(state.revision,3);assert.equal(env.ADMIN_DB.db.prepare('SELECT COUNT(*) n FROM variant_bindings_audit').get().n,3);
+ assert.deepEqual(await saveAutomaticVariantBindings(env,{revision:3,item_ids:['101','201','301'],selling_unit:'AUTO'},mixed,'admin'),state);
+ assert.equal(env.ADMIN_DB.db.prepare('SELECT COUNT(*) n FROM variant_bindings_audit').get().n,3);
+ const before=state;
+ await assert.rejects(saveAutomaticVariantBindings(env,{revision:3,item_ids:['101'],selling_unit:'AUTO'},catalog([catalogProduct('101')]),'admin'),bindingError('VARIANT_BINDING_COMPOSITION_CONFLICT',409));
+ assert.deepEqual(await readVariantBindings(env),before);
+ const unavailable=await saveAutomaticVariantBindings(env,{revision:3,item_ids:['101'],selling_unit:'AUTO'},catalog([catalogProduct('101',[],fingerprintForAutoTest(),4)]),'admin');
+ assert.deepEqual(unavailable.bindings.filter(row=>row.item_id==='101'),[singleBinding('101','1','G3')]);
+ assert.equal(unavailable.bindings.some(row=>row.selling_unit==='AUTO'),false);
+});
+function fingerprintForAutoTest(){return 'b'.repeat(64);}
+
+test('AUTO mixed save rolls back every product when the audit write collides',async()=>{
+ const {env}=await login(),before=await readVariantBindings(env);
+ env.ADMIN_DB.db.prepare('INSERT INTO variant_bindings_audit(revision,payload,actor,created_at) VALUES(2,?,?,?)').run('[]','fixture','2026-10-20T00:00:00.000Z');
+ await assert.rejects(saveAutomaticVariantBindings(env,{revision:1,item_ids:['101','201'],selling_unit:'AUTO'},catalog([singleProduct(),catalogProduct('201')]),'admin'));
+ assert.deepEqual(await readVariantBindings(env),before);
+});
+
 test('explicit model composition and confirmation required; model0 is exact, unknown inputs never inferred',()=>{
  assert.deepEqual(validateVariantBindings([binding('101','0','G1','G3')]),[binding('101','0','G1','G3')]);
  for(const change of [{item_id:101},{model_id:'01'},{model_id:true},{male_size:'XS'},{female_size:'G4'},{selling_unit:'ONE_SHIRT'},{operator_confirmed:'true'},{title:'PRIVATE'}])assert.throws(()=>validateVariantBindings([{...binding(),...change}]));

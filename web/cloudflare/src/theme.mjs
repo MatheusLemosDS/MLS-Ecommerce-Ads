@@ -1,0 +1,19 @@
+// Shared visual preference for administration, advertising and login pages.
+// No network requests, user identifiers or application data are stored here.
+export const BRAZA_THEME_HEAD=String.raw`<meta name="color-scheme" content="light dark"><script>(function(){
+var key='braza-theme',modes=['system','light','dark'],mode='system',media;
+try{var saved=localStorage.getItem(key);if(modes.indexOf(saved)!==-1)mode=saved;}catch(e){}
+try{media=window.matchMedia('(prefers-color-scheme: dark)');}catch(e){}
+function apply(){var dark=mode==='dark'||mode==='system'&&media&&media.matches;document.documentElement.dataset.theme=dark?'dark':'light';document.documentElement.dataset.themePreference=mode;document.documentElement.style.colorScheme=dark?'dark':'light';var names={system:'Automático',light:'Claro',dark:'Escuro'};document.querySelectorAll('[data-braza-theme-toggle]').forEach(function(button){button.textContent=names[mode];button.setAttribute('aria-label','Tema: '+names[mode]+'. Alterar tema');button.title='Alternar entre automático, claro e escuro';});}
+function next(){mode=modes[(modes.indexOf(mode)+1)%modes.length];try{localStorage.setItem(key,mode);}catch(e){}apply();}
+apply();document.addEventListener('DOMContentLoaded',function(){document.querySelectorAll('[data-braza-theme-toggle]').forEach(function(button){button.addEventListener('click',next);});apply();});
+if(media){if(media.addEventListener)media.addEventListener('change',function(){if(mode==='system')apply();});else if(media.addListener)media.addListener(function(){if(mode==='system')apply();});}
+window.addEventListener('storage',function(event){if(event.key===key){mode=modes.indexOf(event.newValue)!==-1?event.newValue:'system';apply();}});
+})();</script>`;
+
+export const BRAZA_THEME_CSS=String.raw`
+:root{color-scheme:light;--app-bg:#f4f6fb;--surface:#ffffff;--surface-raised:#f8f9fd;--text:#17213a;--muted:#68748c;--line:#e3e7f0;--accent:#6554d9;--on-accent:#fff;--accent-hover:#5140be;--accent-soft:#eeebfc;--positive:#17845e;--positive-soft:#e7f6ee;--negative:#ca4555;--negative-soft:#fcecef;--warning:#9b6819;--warning-soft:#fff6e3;--shadow:0 6px 24px rgba(26,35,67,.04);--bg:var(--app-bg);--card:var(--surface);--brand:var(--accent);--ink:var(--text)}
+html[data-theme=dark]{color-scheme:dark;--app-bg:#0d1221;--surface:#161e31;--surface-raised:#1d2840;--text:#e9edf7;--muted:#a3aec5;--line:#2a3650;--accent:#a394ff;--on-accent:#17132b;--accent-hover:#b4a8ff;--accent-soft:#2d284c;--positive:#64d7aa;--positive-soft:#15392f;--negative:#ff909b;--negative-soft:#462630;--warning:#edc27e;--warning-soft:#3c3020;--shadow:0 8px 28px rgba(0,0,0,.12)}
+@media(prefers-color-scheme:dark){html:not([data-theme]){color-scheme:dark;--app-bg:#0d1221;--surface:#161e31;--surface-raised:#1d2840;--text:#e9edf7;--muted:#a3aec5;--line:#2a3650;--accent:#a394ff;--on-accent:#17132b;--accent-hover:#b4a8ff;--accent-soft:#2d284c;--positive:#64d7aa;--positive-soft:#15392f;--negative:#ff909b;--negative-soft:#462630;--warning:#edc27e;--warning-soft:#3c3020;--shadow:0 8px 28px rgba(0,0,0,.12)}}
+html{background:var(--app-bg);accent-color:var(--accent)}body{background:var(--app-bg);color:var(--text)}a{color:var(--accent)}button,input,select,textarea{font:inherit}input,select,textarea{color:var(--text);background:var(--surface)}:focus-visible{outline:3px solid var(--accent);outline-offset:3px}[data-braza-theme-toggle]{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:8px 13px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}[data-braza-theme-toggle]::before{content:'◐';font-size:17px}[hidden]{display:none!important}@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}
+`;

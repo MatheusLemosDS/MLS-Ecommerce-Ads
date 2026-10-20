@@ -1,5 +1,12 @@
 # Identificação dos tamanhos e composição pelo catálogo
 
+**Reformulação dos painéis:** a descoberta automática agora inclui produtos
+novos pelas estruturas reconhecidas de eixos. A tela principal agrupa as
+variações por produto e aplica os custos cadastrados. Não é necessário escolher
+cada produto ou combinação identificável. Regras, limites e exceções estão em
+[Painéis e automação](PAINEIS_E_AUTOMACAO.md). As seções abaixo preservam o
+histórico das entregas anteriores.
+
 **Atualização de 20/10/2026:** o catálogo com 49 combinações de `MULHER P…G3`
 e `HOMEM P…G3` é reconhecido nos respectivos eixos feminino e masculino. O
 painel passa a identificar pendências de composição conhecida ao abrir

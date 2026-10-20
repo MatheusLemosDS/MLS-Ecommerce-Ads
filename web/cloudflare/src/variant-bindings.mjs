@@ -57,20 +57,22 @@ async function writeVariantBindings(env,revision,bindings,actor){
 }
 export async function saveAutomaticVariantBindings(env,body,catalog,actor){
  const hasSellingUnit=!!body&&typeof body==='object'&&Object.hasOwn(body,'selling_unit');
- if(!variantExact(body,['revision','item_ids',...(hasSellingUnit?['selling_unit']:[])])||!variantRevision(body.revision)||!Array.isArray(body.item_ids)||body.item_ids.length<1||body.item_ids.length>3||body.item_ids.some(id=>!variantItemId(id))||new Set(body.item_ids).size!==body.item_ids.length||(hasSellingUnit&&!variantSellingUnits.includes(body.selling_unit)))variantFail('VARIANT_CATALOG_REQUEST_INVALID');
- const sellingUnit=hasSellingUnit?body.selling_unit:'ONE_MALE_ONE_FEMALE_KIT',single=sellingUnit==='SINGLE_GARMENT';
+ if(!variantExact(body,['revision','item_ids',...(hasSellingUnit?['selling_unit']:[])])||!variantRevision(body.revision)||!Array.isArray(body.item_ids)||body.item_ids.length<1||body.item_ids.length>3||body.item_ids.some(id=>!variantItemId(id))||new Set(body.item_ids).size!==body.item_ids.length||(hasSellingUnit&&body.selling_unit!=='AUTO'&&!variantSellingUnits.includes(body.selling_unit)))variantFail('VARIANT_CATALOG_REQUEST_INVALID');
+ const sellingUnit=hasSellingUnit?body.selling_unit:'ONE_MALE_ONE_FEMALE_KIT',infer=sellingUnit==='AUTO';
  const requested=new Set(body.item_ids);
  if(!variantExact(catalog,['schema','checked_at','products'])||catalog.schema!=='variant_catalog_v1'||!Number.isSafeInteger(catalog.checked_at)||catalog.checked_at<1||!Array.isArray(catalog.products)||catalog.products.length!==requested.size)variantFail('VARIANT_CATALOG_INVALID',503);
- const seen=new Set(),resolved=[];let modelCount=0;
+ const seen=new Set(),resolved=[],productUnits=new Map();let modelCount=0;
  for(const product of catalog.products){
   const productHasSellingUnit=!!product&&typeof product==='object'&&Object.hasOwn(product,'selling_unit');
-  if(!variantExact(product,['item_id','catalog_fingerprint','bindings','unresolved_count',...(productHasSellingUnit?['selling_unit']:[])])||!requested.has(product.item_id)||seen.has(product.item_id)||typeof product.catalog_fingerprint!=='string'||!(/^[a-f0-9]{64}$/).test(product.catalog_fingerprint)||!Array.isArray(product.bindings)||product.bindings.length>1000||!Number.isSafeInteger(product.unresolved_count)||product.unresolved_count<0||product.unresolved_count>1000||(productHasSellingUnit?product.selling_unit:'ONE_MALE_ONE_FEMALE_KIT')!==sellingUnit)variantFail('VARIANT_CATALOG_INVALID',503);
+  const unit=productHasSellingUnit?product.selling_unit:'ONE_MALE_ONE_FEMALE_KIT',single=unit==='SINGLE_GARMENT';
+  if(!variantExact(product,['item_id','catalog_fingerprint','bindings','unresolved_count',...(productHasSellingUnit?['selling_unit']:[])])||!requested.has(product.item_id)||seen.has(product.item_id)||typeof product.catalog_fingerprint!=='string'||!(/^[a-f0-9]{64}$/).test(product.catalog_fingerprint)||!Array.isArray(product.bindings)||product.bindings.length>1000||!Number.isSafeInteger(product.unresolved_count)||product.unresolved_count<0||product.unresolved_count>1000||!variantSellingUnits.includes(unit)||!infer&&unit!==sellingUnit)variantFail('VARIANT_CATALOG_INVALID',503);
   modelCount+=product.bindings.length+product.unresolved_count;
   if(modelCount>1000)variantFail('VARIANT_CATALOG_INVALID',503);
   seen.add(product.item_id);
+  if(!infer||product.bindings.length)productUnits.set(product.item_id,unit);
   for(const binding of product.bindings){
    if(!variantExact(binding,['item_id','model_id',...(single?['size']:['male_size','female_size'])])||binding.item_id!==product.item_id)variantFail('VARIANT_CATALOG_INVALID',503);
-   resolved.push({...binding,selling_unit:sellingUnit,operator_confirmed:false,source:single?'CATALOG_SIZE_AXIS':'CATALOG_VARIATION_AXES',catalog_fingerprint:product.catalog_fingerprint});
+   resolved.push({...binding,selling_unit:unit,operator_confirmed:false,source:single?'CATALOG_SIZE_AXIS':'CATALOG_VARIATION_AXES',catalog_fingerprint:product.catalog_fingerprint});
   }
  }
  let automatic;
@@ -78,7 +80,7 @@ export async function saveAutomaticVariantBindings(env,body,catalog,actor){
  const current=await readVariantBindings(env);
  if(current.revision!==body.revision)variantFail('VARIANT_BINDINGS_CHANGED_RELOAD',409);
  // A product-wide rule cannot silently change a manually confirmed composition.
- if(current.bindings.some(binding=>binding.operator_confirmed&&requested.has(binding.item_id)&&binding.selling_unit!==sellingUnit))variantFail('VARIANT_BINDING_COMPOSITION_CONFLICT',409);
+ if(current.bindings.some(binding=>binding.operator_confirmed&&requested.has(binding.item_id)&&productUnits.has(binding.item_id)&&binding.selling_unit!==productUnits.get(binding.item_id)))variantFail('VARIANT_BINDING_COMPOSITION_CONFLICT',409);
  // Remove prior automatic interpretations of the queried products first. Missing
  // or ambiguous models must stop contributing instead of retaining stale sizes.
  const combined=new Map(current.bindings.filter(binding=>binding.operator_confirmed||!requested.has(binding.item_id)).map(binding=>[binding.item_id+':'+binding.model_id,binding]));

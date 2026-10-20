@@ -470,3 +470,71 @@ test('single-garment diagnostics preserve bounded source counts while excluding 
   source.tier_variation[0].option_list.push({option:'One too many'});
   await assert.rejects(deriveCatalogProduct(ITEM,source,{selling_unit:'SINGLE_GARMENT'}),invalid);
 });
+
+test('AUTO request mode remains a strict detached input and never a persisted output composition', async () => {
+  const source={item_ids:[ITEM,'456'],selling_unit:'AUTO'};
+  const projected=projectVariantCatalogRequest(source);
+  assert.deepEqual(projected,source);source.item_ids[0]='789';
+  assert.deepEqual(projected,{item_ids:[ITEM,'456'],selling_unit:'AUTO'});
+  for(const selling_unit of ['auto','AUTO ',' AUT0','AUTOMATIC']){
+    assert.equal(projectVariantCatalogRequest({item_ids:[ITEM],selling_unit}),null);
+  }
+  const wrong=frame(product());wrong.products[0].selling_unit='AUTO';
+  assert.equal(projectVariantCatalog(wrong),null);
+  let invoked=0;const accessor={item_ids:[ITEM]};
+  Object.defineProperty(accessor,'selling_unit',{get(){invoked++;return 'AUTO';},enumerable:true});
+  assert.equal(projectVariantCatalogRequest(accessor),null);assert.equal(invoked,0);
+});
+
+test('AUTO discovers all male and female size pairs without changing explicit kit fingerprints', async () => {
+  const source={tier_variation:[axis('Tamanho Feminino',sizes.map(size=>'MULHER '+size)),
+    axis('Tamanho Masculino',sizes.map(size=>'HOMEM '+size))],
+    model:sizes.flatMap((_,female)=>sizes.map((__,male)=>({model_id:female*7+male,tier_index:[female,male]})))};
+  const automatic=await deriveCatalogProduct(ITEM,source,{selling_unit:'AUTO'});
+  const explicit=await deriveCatalogProduct(ITEM,source,{selling_unit:'ONE_MALE_ONE_FEMALE_KIT'});
+  assert.deepEqual(automatic.bindings,explicit.bindings);assert.equal(automatic.bindings.length,49);
+  assert.equal(automatic.unresolved_count,0);
+  assert.equal(automatic.selling_unit||'ONE_MALE_ONE_FEMALE_KIT','ONE_MALE_ONE_FEMALE_KIT');
+  assert.equal(automatic.catalog_fingerprint,explicit.catalog_fingerprint);
+  assert.deepEqual(projectVariantCatalog(frame(automatic)),frame(automatic));
+  source.tier_variation.reverse();source.model.forEach(row=>row.tier_index.reverse());
+  assert.deepEqual((await deriveCatalogProduct(ITEM,source,{selling_unit:'AUTO'})).bindings,automatic.bindings);
+});
+
+test('AUTO discovers single garments from generic size alone or size and color in either order', async () => {
+  for(const rawAxes of [[axis('Size',sizes)],
+    [axis('Cor',['Verde','Azul']),axis('Tamanho',sizes)],
+    [axis('Tamanho',sizes),axis('Colour',['Verde','Azul'])]]){
+    const sizeIndex=rawAxes.findIndex(row=>['Size','Tamanho'].includes(row.name));
+    const source={tier_variation:rawAxes,model:sizes.map((_,index)=>({model_id:index,
+      tier_index:rawAxes.map((__,axisIndex)=>axisIndex===sizeIndex?index:1)}))};
+    const automatic=await deriveCatalogProduct(ITEM,source,{selling_unit:'AUTO'});
+    const explicit=await deriveCatalogProduct(ITEM,source,{selling_unit:'SINGLE_GARMENT'});
+    assert.equal(automatic.selling_unit,'SINGLE_GARMENT');assert.equal(automatic.unresolved_count,0);
+    assert.deepEqual(automatic.bindings,sizes.map((size,index)=>({item_id:ITEM,model_id:String(index),size})));
+    assert.equal(automatic.catalog_fingerprint,explicit.catalog_fingerprint);
+    assert.deepEqual(projectVariantCatalog(frame(automatic)),frame(automatic));
+    assert.equal(JSON.stringify(automatic.bindings).includes('male_size'),false);
+  }
+});
+
+test('AUTO leaves ambiguous axes and invalid choices pending instead of fabricating a composition or cost', async () => {
+  for(const rawAxes of [[],[axis('Cor',['Verde'])],[axis('Masculino')],
+    [axis('Tamanho 1'),axis('Tamanho 2')],[axis('Masculino'),axis('Masculino')],
+    [axis('Tamanho'),axis('Size')],[axis('Tamanho'),axis('Estampa',['A'])],
+    [axis('Masculino'),axis('Feminino'),axis('Cor',['Verde'])]]){
+    const source={tier_variation:rawAxes,model:[{model_id:0,tier_index:rawAxes.map(()=>0),
+      model_sku:'PRIVATE_SINGLE_P_KIT',model_name:'PRIVATE_KIT_CASAL'}],item_name:'PRIVATE_CAMISETA'};
+    const result=await deriveCatalogProduct(ITEM,source,{selling_unit:'AUTO'});
+    assert.deepEqual(result.bindings,[]);assert.equal(result.unresolved_count,1);
+    assert.notEqual(result.selling_unit,'AUTO');
+    assert.deepEqual(result.diagnostic.reasons,[{code:'AXES_NOT_RECOGNIZED',count:1}]);
+    assert.equal(JSON.stringify(result).includes('PRIVATE_'),false);
+    assert.ok(projectVariantCatalog(frame(result)));
+  }
+  const result=await deriveCatalogProduct(ITEM,{tier_variation:[axis('Cor',['Verde']),axis('Tamanho',['P','XL'])],
+    model:[{model_id:0,tier_index:[0,0]},{model_id:1,tier_index:[0,1]},{model_id:2,tier_index:[1,0]}]},
+    {selling_unit:'AUTO'});
+  assert.deepEqual(result.bindings,[{item_id:ITEM,model_id:'0',size:'P'}]);assert.equal(result.unresolved_count,2);
+  assert.deepEqual(result.diagnostic.reasons,[{code:'OPTION_NOT_RECOGNIZED',count:1},{code:'INDEX_NOT_VALID',count:1}]);
+});

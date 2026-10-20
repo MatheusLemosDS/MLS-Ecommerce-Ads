@@ -46,7 +46,7 @@ export function projectVariantCatalogRequest(value) {
   try {
     const hasUnit=catalogObject(value)&&Object.hasOwn(value,'selling_unit');
     if (!catalogKeys(value,['item_ids',...(hasUnit?['selling_unit']:[])]) || !catalogArray(value.item_ids,3) || !value.item_ids.length
-      || (hasUnit&&!catalogSellingUnits.has(value.selling_unit))
+      || (hasUnit&&value.selling_unit!=='AUTO'&&!catalogSellingUnits.has(value.selling_unit))
       || !value.item_ids.every(id=>catalogId(id)) || new Set(value.item_ids).size!==value.item_ids.length) return null;
     return {item_ids:[...value.item_ids],...(hasUnit?{selling_unit:value.selling_unit}:{})};
   } catch {return null;}
@@ -116,7 +116,7 @@ const catalogKitOptionSize = (option, gender) => {
 };
 
 export async function deriveCatalogProduct(item_id,response,{selling_unit='ONE_MALE_ONE_FEMALE_KIT'}={}) {
-  if(!catalogId(item_id)||!catalogObject(response)||!catalogSellingUnits.has(selling_unit))throw new VariantCatalogFrameError();
+  if(!catalogId(item_id)||!catalogObject(response)||(selling_unit!=='AUTO'&&!catalogSellingUnits.has(selling_unit)))throw new VariantCatalogFrameError();
   const rawModels=catalogOwn(response,'model'),rawAxes=catalogOwn(response,'tier_variation');
   if(!catalogArray(rawModels,1000)||!catalogArray(rawAxes,10))throw new VariantCatalogFrameError();
   const diagnosticAxes=[];
@@ -134,11 +134,14 @@ export async function deriveCatalogProduct(item_id,response,{selling_unit='ONE_M
     return {name,options:rawOptions.map(value=>value.trim().toUpperCase())};
   });
   const genders=axes.map(axis=>catalogGender(axis.name));
-  const single=selling_unit==='SINGLE_GARMENT';
   const sizeAxes=axes.map((axis,index)=>catalogSingleSizeAxis(axis.name)?index:-1).filter(index=>index!==-1);
-  const explicit=single
-    ? axes.length>=1&&axes.length<=2&&sizeAxes.length===1&&axes.every((axis,index)=>index===sizeAxes[0]||catalogColorAxis(axis.name))
-    : axes.length===2&&genders.includes('male_size')&&genders.includes('female_size');
+  const singleAxes=axes.length>=1&&axes.length<=2&&sizeAxes.length===1&&axes.every((axis,index)=>index===sizeAxes[0]||catalogColorAxis(axis.name));
+  const kitAxes=axes.length===2&&genders.includes('male_size')&&genders.includes('female_size');
+  // The administrator enabled automatic composition for these two catalogue
+  // structures. A title, price, SKU or an extra axis never chooses a unit.
+  const inferred=selling_unit==='AUTO'?(kitAxes?'ONE_MALE_ONE_FEMALE_KIT':singleAxes?'SINGLE_GARMENT':null):selling_unit;
+  const single=inferred==='SINGLE_GARMENT';
+  const explicit=single?singleAxes:inferred==='ONE_MALE_ONE_FEMALE_KIT'&&kitAxes;
   const models=[],seen=new Set();
   for(const raw of rawModels){
     if(!catalogObject(raw))throw new VariantCatalogFrameError();
@@ -168,8 +171,8 @@ export async function deriveCatalogProduct(item_id,response,{selling_unit='ONE_M
     bindings.push({item_id,model_id:model.model_id,
       male_size:sizes[genders.indexOf('male_size')],female_size:sizes[genders.indexOf('female_size')]});
   }
-  const digest=new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify({item_id,axes,models,...(single?{selling_unit}:{})}))));
+  const digest=new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify({item_id,axes,models,...(single?{selling_unit:inferred}:{})}))));
   return {item_id,catalog_fingerprint:Array.from(digest,byte=>byte.toString(16).padStart(2,'0')).join(''),
-    bindings,unresolved_count:models.length-bindings.length,...(single?{selling_unit}:{}),diagnostic:{axes:diagnosticAxes,model_count:models.length,
+    bindings,unresolved_count:models.length-bindings.length,...(single?{selling_unit:inferred}:{}),diagnostic:{axes:diagnosticAxes,model_count:models.length,
       reasons:models.length?[...reasonCounts].map(([code,count])=>({code,count})):[{code:'NO_MODELS',count:0}]}};
 }

@@ -1,7 +1,7 @@
 // Native links and disclosure keep the legacy dashboard usable without scripts.
 export function shellMobileNavigation(currentPath){
  const links=[['/dashboard','Painel de anúncios'],['/advertising','Anúncios'],['/campaigns','Campanhas'],['/gmv-max','GMV Max'],['/opportunities','Oportunidades'],['/performance','Desempenho'],['/optimization','Otimização'],['/integrations','Integrações']];
- return `<header class="shell-mobile-navigation mobile-toolbar"><a class="mobile-brand" href="/dashboard" aria-label="BrazaCommerce — painel de anúncios">BRAZA</a><a class="mobile-admin" href="/admin">Administração</a><details class="mobile-menu"><summary>Menu</summary><nav aria-label="Navegação do painel">${links.map(([href,label])=>`<a class="nav${currentPath===href?' active':''}" href="${href}"${currentPath===href?' aria-current="page"':''}>${label}</a>`).join('')}<a class="mobile-logout" href="/logout">Sair</a></nav></details></header>`;
+ return `<header class="shell-mobile-navigation mobile-toolbar"><a class="mobile-brand" href="/dashboard" aria-label="BrazaCommerce — painel de anúncios"><span class="mobile-brand-mark">B</span><span class="mobile-brand-name">BrazaCommerce</span></a><a class="mobile-admin" href="/admin">Administração</a><button class="mobile-theme theme-toggle" type="button" data-braza-theme-toggle aria-label="Alterar tema">Tema</button><details class="mobile-menu"><summary>Menu</summary><nav aria-label="Navegação do painel">${links.map(([href,label])=>`<a class="nav${currentPath===href?' active':''}" href="${href}"${currentPath===href?' aria-current="page"':''}>${label}</a>`).join('')}<a class="mobile-logout" href="/logout">Sair</a></nav></details></header>`;
 }
 
 export const SHELL_NAVIGATION_CSS=String.raw`
@@ -17,21 +17,25 @@ export const SHELL_NAVIGATION_CSS=String.raw`
  .top>div:first-child{min-width:0;flex:1 1 180px}
  .panel-title-row>*,.detail-head>*{min-width:0;max-width:100%}
  .value,.note,.feature,.panel h2{overflow-wrap:anywhere}
- .mobile-toolbar{display:flow-root;position:sticky;top:0;z-index:50;width:100%;min-width:0;padding:10px 16px;background:#111827;color:#fff}
+ .mobile-toolbar{display:grid;grid-template-columns:minmax(36px,1fr) auto 44px 64px;align-items:center;gap:0 8px;position:sticky;top:0;z-index:50;width:100%;min-width:0;padding:10px 16px;background:var(--surface);color:var(--text);border-bottom:1px solid var(--line)}
  .mobile-toolbar a,.mobile-toolbar summary{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
- .mobile-toolbar a:focus-visible,.mobile-toolbar summary:focus-visible{outline:3px solid #93c5fd;outline-offset:3px}
- .mobile-brand{float:left;display:flex;align-items:center;min-height:44px;margin-right:12px;color:#fff;text-decoration:none;font-size:15px;font-weight:800;letter-spacing:.6px}
- .mobile-admin{float:left;display:flex;align-items:center;justify-content:center;min-height:44px;max-width:100%;margin-right:10px;padding:10px 12px;background:#ff5a1f;border-radius:8px;color:#fff;text-decoration:none;font-size:14px;font-weight:700;overflow-wrap:anywhere}
- .mobile-menu{position:static}
- .mobile-menu summary{float:right;display:flex;align-items:center;justify-content:center;gap:7px;min-height:44px;max-width:100%;padding:10px 12px;border:1px solid #4b5563;border-radius:8px;list-style:none;font-size:14px;font-weight:700;cursor:pointer}
+ .mobile-toolbar a:focus-visible,.mobile-toolbar summary:focus-visible,.mobile-toolbar button:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+ .mobile-brand{display:flex;align-items:center;gap:9px;min-width:0;min-height:44px;color:var(--text);text-decoration:none;font-size:14px;font-weight:800;letter-spacing:-.3px}
+ .mobile-brand-mark{display:grid;place-items:center;width:32px;height:32px;flex:0 0 32px;border-radius:10px;background:var(--accent);color:var(--on-accent,#fff);font-size:17px}
+ .mobile-brand-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ .mobile-admin{display:flex;align-items:center;justify-content:center;min-height:44px;min-width:0;padding:10px 12px;background:var(--accent-soft);border:1px solid var(--line);border-radius:11px;color:var(--accent);text-decoration:none;font-size:12px;font-weight:750}
+ .mobile-theme{width:44px!important;height:44px!important;min-height:44px!important;min-width:0!important;padding:4px!important;overflow:hidden;text-indent:-9999px;position:relative;border:1px solid var(--line)!important;border-radius:11px!important;background:var(--surface)!important;color:var(--text)!important;font-size:11px!important}
+ .mobile-theme::after{content:'◐';text-indent:0;position:absolute;inset:0;display:grid;place-items:center;font-size:23px;font-weight:400}
+ .mobile-menu{grid-column:1/-1;min-width:0}
+ .mobile-menu summary{position:absolute;top:10px;right:16px;display:flex;align-items:center;justify-content:center;gap:5px;width:64px;min-height:44px;padding:10px 6px;border:1px solid var(--line);border-radius:11px;background:var(--surface);list-style:none;font-size:12px;font-weight:750;cursor:pointer}
  .mobile-menu summary::-webkit-details-marker{display:none}
  .mobile-menu summary::after{content:'▾'}
  .mobile-menu[open] summary::after{content:'▴'}
- .mobile-menu nav{clear:both;width:100%;max-width:100%;max-height:55vh;max-height:55dvh;overflow-y:auto;overscroll-behavior:contain;padding:8px;background:#111827;border-top:1px solid #4b5563}
- .mobile-menu .nav,.mobile-logout{display:flex;align-items:center;min-height:44px;margin:0;padding:11px 14px;color:#e2e8f0;text-decoration:none;font-size:14px;border-radius:8px}
- .mobile-menu .nav.active{color:#fff;background:#ff5a1f}
- .mobile-logout{margin-top:8px;border-top:1px solid #4b5563;border-radius:0}
- .mobile-logout:hover{color:#fff;background:#1f2937}
+ .mobile-menu nav{width:100%;max-width:100%;max-height:55vh;max-height:55dvh;overflow-y:auto;overscroll-behavior:contain;margin-top:10px;padding:10px 0 0;background:var(--surface);border-top:1px solid var(--line)}
+ .mobile-menu .nav,.mobile-logout{display:flex;align-items:center;min-height:44px;margin:3px 0;padding:11px 14px;color:var(--muted);text-decoration:none;font-size:14px;border-radius:10px}
+ .mobile-menu .nav.active{color:var(--accent);background:var(--accent-soft);font-weight:750}
+ .mobile-logout{margin-top:8px;border-top:1px solid var(--line);border-radius:0}
+ .mobile-logout:hover{color:var(--text);background:var(--surface-raised)}
 }
-@media(max-width:550px){.cards,.mini-grid{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:550px){.cards,.mini-grid{grid-template-columns:minmax(0,1fr)}.mobile-brand-name{display:none}}
 `;

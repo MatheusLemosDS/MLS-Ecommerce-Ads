@@ -130,18 +130,39 @@ export async function runFinanceStorePeriod(env,options={}){
   const nextDay=new Date(Date.parse(input.end_date+'T00:00:00Z')+86400000).toISOString().slice(0,10);
   const timeFrom=storeMidnight(input.start_date),timeTo=Math.min(initialTime,storeMidnight(nextDay)-1);
   if(timeTo<timeFrom)throw storeFailure('REQUEST_INVALID',400);
+  // Automatic dashboard loading reuses a recent cohort. The INSERT guard below
+  // makes concurrent page loads share one run without another provider import.
+  const recentSql="SELECT run_id FROM finance_store_period_runs WHERE partner_id=? AND shop_id=? AND start_date=? AND end_date=? AND cutoff_at>=? AND status IN ('RUNNING','COMPLETE') ORDER BY created_at DESC,run_id DESC LIMIT 1";
+  const recentArgs=[...storeIdentity,input.start_date,input.end_date,initialTime-900];
+  const recent=await storage(()=>prepare(recentSql,recentArgs).first());
+  if(recent)return (await snapshot(recent.run_id)).frame;
   const cutoff=initialTime-30*86400;
   await storage(()=>db.batch([
    prepare('DELETE FROM finance_store_period_orders WHERE run_id IN (SELECT run_id FROM finance_store_period_runs WHERE created_at<? AND partner_id=? AND shop_id=?)',[cutoff,...storeIdentity]),
    prepare('DELETE FROM finance_store_period_cursors WHERE run_id IN (SELECT run_id FROM finance_store_period_runs WHERE created_at<? AND partner_id=? AND shop_id=?)',[cutoff,...storeIdentity]),
    prepare('DELETE FROM finance_store_period_runs WHERE created_at<? AND partner_id=? AND shop_id=?',[cutoff,...storeIdentity]),
   ]));
+  // These runs are a bounded query cache, not a financial ledger. At capacity,
+  // expire the oldest stale idle entry so routine automatic opens cannot make
+  // the dashboard unusable until the thirty-day age limit is reached.
+  const evict="SELECT run_id FROM finance_store_period_runs WHERE partner_id=? AND shop_id=? AND cutoff_at<? AND (lease_owner IS NULL OR lease_until<=?) AND (SELECT COUNT(*) FROM finance_store_period_runs WHERE partner_id=? AND shop_id=?)>=60 ORDER BY created_at,run_id LIMIT 1";
+  const evictArgs=[...storeIdentity,initialTime-900,initialTime,...storeIdentity];
+  await storage(()=>db.batch([
+   prepare('DELETE FROM finance_store_period_orders WHERE run_id IN ('+evict+')',evictArgs),
+   prepare('DELETE FROM finance_store_period_cursors WHERE run_id IN ('+evict+')',evictArgs),
+   prepare('DELETE FROM finance_store_period_runs WHERE run_id IN ('+evict+')',evictArgs),
+  ]));
   const count=await storage(()=>prepare('SELECT COUNT(*) AS n FROM finance_store_period_runs WHERE partner_id=? AND shop_id=?',storeIdentity).first());if(!count||count.n>=60)throw storeFailure('RUN_LIMIT',409);
   const run_id=crypto.randomUUID(),cursorHash=await storeHash('');
-  await storage(()=>db.batch([
-   prepare("INSERT INTO finance_store_period_runs(run_id,partner_id,shop_id,revision,status,start_date,end_date,time_from,time_to,cutoff_at,checked_at,created_at,cursor,pages_read,duplicate_orders,lease_owner,lease_until,last_error) VALUES(?,?,?,1,'RUNNING',?,?,?,?,?,?,?,'',0,0,NULL,NULL,NULL)",[run_id,...storeIdentity,input.start_date,input.end_date,timeFrom,timeTo,initialTime,initialTime,initialTime]),
-   prepare('INSERT INTO finance_store_period_cursors(run_id,cursor_hash) VALUES(?,?)',[run_id,cursorHash]),
+  const created=await storage(()=>db.batch([
+   prepare("INSERT INTO finance_store_period_runs(run_id,partner_id,shop_id,revision,status,start_date,end_date,time_from,time_to,cutoff_at,checked_at,created_at,cursor,pages_read,duplicate_orders,lease_owner,lease_until,last_error) SELECT ?,?,?,1,'RUNNING',?,?,?,?,?,?,?,'',0,0,NULL,NULL,NULL WHERE NOT EXISTS("+recentSql+") AND (SELECT COUNT(*) FROM finance_store_period_runs WHERE partner_id=? AND shop_id=?)<60",[run_id,...storeIdentity,input.start_date,input.end_date,timeFrom,timeTo,initialTime,initialTime,initialTime,...recentArgs,...storeIdentity]),
+   prepare('INSERT INTO finance_store_period_cursors(run_id,cursor_hash) SELECT ?,? WHERE EXISTS(SELECT 1 FROM finance_store_period_runs WHERE run_id=?)',[run_id,cursorHash,run_id]),
   ]));
+  if(created[0]?.meta?.changes!==1){
+   const winner=await storage(()=>prepare(recentSql,recentArgs).first());
+   if(!winner)throw storeFailure('RUN_LIMIT',409);
+   return (await snapshot(winner.run_id)).frame;
+  }
   return (await snapshot(run_id)).frame;
  }
  const observed=await snapshot(input.run_id);

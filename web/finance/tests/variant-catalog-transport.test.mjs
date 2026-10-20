@@ -78,7 +78,7 @@ test('catalogue chain forwards only its fixed path, requested IDs and dedicated 
 });
 
 test('catalogue optional selling unit crosses all three private boundaries without changing legacy input',async()=>{
- for(const selling_unit of [undefined,'SINGLE_GARMENT','ONE_MALE_ONE_FEMALE_KIT']){
+ for(const selling_unit of [undefined,'SINGLE_GARMENT','ONE_MALE_ONE_FEMALE_KIT','AUTO']){
   const body={item_ids:['123'],...(selling_unit?{selling_unit}:{})};
   const resultFrame=selling_unit==='SINGLE_GARMENT'?singleFrame():frame();
   const now=()=>1800000000000,fetchImpl=async()=>{};
@@ -97,6 +97,41 @@ test('catalogue optional selling unit crosses all three private boundaries witho
    return forwardFinancePaymentSample(forwarded,authEnv,authenticated);
   }});
   assert.deepEqual(result,resultFrame);assert.equal(authCalls,1);assert.equal(financeCalls,1);assert.equal(capabilityCalls,1);
+ }
+});
+
+test('AUTO mixed resolved and ambiguous catalogue crosses the entire private chain without losing identity or leaking credentials',async()=>{
+ const body={item_ids:['123','456','789'],selling_unit:'AUTO'},value={schema:'variant_catalog_v1',checked_at:1800000000,products:[singleFrame().products[0],
+  {...frame().products[0],item_id:'456',bindings:[{item_id:'456',model_id:'0',male_size:'G1',female_size:'M'}]},
+  {item_id:'789',catalog_fingerprint:'c'.repeat(64),bindings:[],unresolved_count:4}]};
+ const now=()=>1800000000000,fetchImpl=async()=>{};let capabilityCalls=0,routerCalls=0,appCalls=0;
+ const env={FINANCE_ROUTER_SECRET:secret,FINANCE_CONNECTION_ENABLED:'true',get FINANCE_DB(){throw Error('transport must not touch token database');}};
+ const worker=createFinanceWorker({variantCatalog:async(actual,options)=>{
+  capabilityCalls++;assert.equal(actual,env);assert.deepEqual(options,{fetchImpl,now,...body});return value;
+ },fetchImpl,now});
+ const authEnv={FINANCE_ROUTER_SECRET:secret,SHOPEE_FINANCE_SERVICE:{fetch:async forwarded=>{
+  routerCalls++;assert.equal(forwarded.url,origin+path);assert.deepEqual(await forwarded.clone().json(),body);
+  assert.equal(forwarded.headers.get('X-Braza-Finance-Router'),secret);assert.equal(forwarded.headers.get('cookie'),null);assert.equal(forwarded.headers.get('authorization'),null);assert.equal(forwarded.headers.get('X-Braza-App-Key'),null);
+  return worker.fetch(forwarded,env);
+ }}};
+ const result=await getFinanceVariantCatalog({APP_INTERNAL_SECRET:'fixture-auto-app'},body,{fetchImpl:async forwarded=>{
+  appCalls++;assert.deepEqual(await forwarded.clone().json(),body);assert.equal(forwarded.headers.get('X-Braza-App-Key'),'fixture-auto-app');
+  return forwardFinancePaymentSample(forwarded,authEnv,authenticated);
+ }});
+ assert.deepEqual(result,value);assert.deepEqual([appCalls,routerCalls,capabilityCalls],[1,1,1]);assert.equal(JSON.stringify(result).includes('AUTO'),false);assert.equal(JSON.stringify(result).includes(secret),false);
+});
+
+test('AUTO still rejects missing, substituted, duplicate and poisoned products at every private boundary',async()=>{
+ const body={item_ids:['123'],selling_unit:'AUTO'},substituted=singleFrame();substituted.products[0].item_id='456';substituted.products[0].bindings[0].item_id='456';
+ for(const value of [substituted,{...singleFrame(),products:[]},{...singleFrame(),products:[singleFrame().products[0],singleFrame().products[0]]},{...singleFrame(),products:[{...singleFrame().products[0],selling_unit:'AUTO'}]},{...singleFrame(),private_payload:'PRIVATE_BUYER_TOKEN'}]){
+  const noWrites={get ADMIN_DB(){throw Error('must not touch App database');},get FINANCE_DB(){throw Error('must not touch Finance database');}};
+  const app=await getFinanceVariantCatalog(Object.assign(Object.create(noWrites),{APP_INTERNAL_SECRET:'fixture'}),body,{fetchImpl:async()=>json(value)});
+  assert.equal(app.status,'UNAVAILABLE');assert.ok(!JSON.stringify(app).includes('PRIVATE'));
+  const auth=await forwardFinancePaymentSample(request(JSON.stringify(body)),Object.assign(Object.create(noWrites),{FINANCE_ROUTER_SECRET:secret,SHOPEE_FINANCE_SERVICE:{fetch:async()=>json(value)}}),authenticated);
+  assert.equal(auth.status,502);assert.ok(!(await auth.text()).includes('PRIVATE'));
+  const worker=createFinanceWorker({variantCatalog:async()=>value,fetchImpl:async()=>{}});
+  const finance=await worker.fetch(request(JSON.stringify(body)),Object.assign(Object.create(noWrites),{FINANCE_ROUTER_SECRET:secret,FINANCE_CONNECTION_ENABLED:'true'}));
+  assert.equal(finance.status,502);assert.ok(!(await finance.text()).includes('PRIVATE'));
  }
 });
 

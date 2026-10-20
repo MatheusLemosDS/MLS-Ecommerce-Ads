@@ -72,7 +72,42 @@ test('two bounded pages collect every completed order exactly once with raw deci
 
 test('missing linked-return or ad recharge data stays unknown rather than becoming zero',async()=>{
  const f=await fixture(1);let job=await f.start();f.state.mode='returns-unknown';let result=await f.run({operation:'step',run_id:job.run_id});assert.equal(result.status,'COMPLETE');assert.equal(result.returns_orders,null);
- job=await f.start();f.state.mode='missing';result=await f.run({operation:'step',run_id:job.run_id});assert.equal(result.status,'COMPLETE');assert.equal(result.ads_recharge_or_support_raw,null);
+ f.clock.time+=901000;job=await f.start();f.state.mode='missing';result=await f.run({operation:'step',run_id:job.run_id});assert.equal(result.status,'COMPLETE');assert.equal(result.ads_recharge_or_support_raw,null);
+});
+
+test('automatic page loads reuse recent running and complete cohorts without provider or data duplication',async()=>{
+ const f=await fixture(1),job=await f.start();f.clock.time+=30000;
+ assert.deepEqual(await f.start(),job);assert.equal(f.calls.length,0);
+ const completed=await f.run({operation:'step',run_id:job.run_id}),count=f.calls.length;
+ f.clock.time+=30000;assert.deepEqual(await f.start(),completed);assert.equal(f.calls.length,count);
+ assert.equal(rows(f).runs.length,1);assert.equal(rows(f).orders.length,1);assert.equal(rows(f).cursors.length,1);
+});
+
+test('simultaneous automatic dashboard openings atomically share one run and initial cursor',async()=>{
+ const f=await fixture(1);const runs=await Promise.all(Array.from({length:6},()=>f.start()));
+ assert.equal(new Set(runs.map(run=>run.run_id)).size,1);assert.equal(rows(f).runs.length,1);assert.equal(rows(f).cursors.length,1);assert.equal(f.calls.length,0);
+});
+
+test('expired cache starts a new fixed cutoff while another selected date range stays isolated',async()=>{
+ const f=await fixture(1),first=await f.start();f.clock.time+=901000;
+ const fresh=await f.start();assert.notEqual(fresh.run_id,first.run_id);assert.equal(fresh.cutoff_at,first.cutoff_at+901);
+ const other=await f.run({operation:'start',start_date:'2026-10-19',end_date:'2026-10-20'});
+ assert.notEqual(other.run_id,fresh.run_id);assert.equal(other.start_date,'2026-10-19');assert.equal(rows(f).runs.length,3);
+ assert.deepEqual(await f.run({operation:'read',run_id:first.run_id}),first);assert.equal(f.calls.length,0);
+});
+
+test('bounded automatic cache evicts stale idle entries at capacity without losing a live lease',async()=>{
+ const f=await fixture(0);let first,live;
+ for(let i=0;i<60;i++){
+  const end=20-Math.floor(i/15),start=end-i%15;
+  const run=await f.run({operation:'start',start_date:'2026-10-'+String(start).padStart(2,'0'),end_date:'2026-10-'+String(end).padStart(2,'0')});
+  first??=run;live=run;
+ }
+ assert.equal(rows(f).runs.length,60);f.clock.time+=901000;
+ f.db.db.prepare('UPDATE finance_store_period_runs SET lease_owner=?,lease_until=? WHERE run_id=?').run('FIXTURE_ACTIVE',f.clock.time/1000+45,live.run_id);
+ const fresh=await f.start();assert.equal(rows(f).runs.length,60);assert.notEqual(fresh.run_id,first.run_id);
+ assert.equal((await f.run({operation:'read',run_id:live.run_id})).run_id,live.run_id);
+ assert.equal(f.calls.length,0);assert.equal(rows(f).cursors.length,60);
 });
 
 test('a failed page retains prior imported records/cursor and reports a finite stop diagnostic without invalidating finance connection',async()=>{

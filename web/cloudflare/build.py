@@ -31,6 +31,8 @@ store_summary=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/store
 store_admin=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/store-admin.mjs').read_text(),flags=re.M),flags=re.M)
 variant_sync=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/variant-sync.mjs').read_text(),flags=re.M),flags=re.M)
 shell_navigation=re.sub(r'^export ', '', (root/'src/shell-navigation.mjs').read_text(), flags=re.M)
+theme=re.sub(r'^export ', '', (root/'src/theme.mjs').read_text(), flags=re.M)
+ads_presentation=re.sub(r'^export ', '', (root/'src/ads-presentation.mjs').read_text(), flags=re.M)
 admin=client+'\n'+view+'\n'+ads+'\n'+orders+'\n'+items+'\n'+variants+'\n'+observations+'\n'+production_costs+'\n'+store_summary+'\n'+store_admin+'\n'+variant_sync+'\n'+re.sub(r'^import .*\n','',admin,flags=re.M)
 admin=admin.replace('export {adminFetch,schedule,DEFAULTS,SCHEMA,validateSettings};','')
 needle='    const url = new URL(request.url);'
@@ -47,7 +49,19 @@ updated=updated.replace(needle,'${shellMobileNavigation(currentPath)}\n\n'+needl
 needle='\n</style>\n\n</head>\n\n<body>\n\n${shellMobileNavigation(currentPath)}'
 assert updated.count(needle)==1
 updated=updated.replace(needle,'\n${SHELL_NAVIGATION_CSS}'+needle,1)
-output=updated+'\n\n'+shell_navigation+'\n'+orders_diagnostic+'\n'+orders_http+'\n'+app_orders+'\n'+app_items+'\n'+finance_sample_frame+'\n'+finance_preview_frame+'\n'+variant_catalog_frame+'\n'+app_finance_sample+'\n'+store_period_frame+'\n'+app_store_period+'\n\nconst brazaAdmin = (() => {\n'+admin+'\nreturn {adminFetch,schedule};\n})();\n'
+needle='  return new Response(\n    content,'
+assert updated.count(needle)==1
+updated=updated.replace(needle,"  return new Response(\n    enhanceAdsPageHtml(content).replace('</head>',BRAZA_THEME_HEAD+'<style>'+BRAZA_THEME_CSS+'</style></head>'),",1)
+needle='"style-src \'unsafe-inline\'; " +'
+assert updated.count(needle)==1
+updated=updated.replace(needle,needle+'\n          "script-src \'self\' \'unsafe-inline\'; " +',1)
+# Formatting unknown display values as zero would make absent metrics look real.
+# Keep numerical business-policy helpers intact and guard presentation only.
+for name in ['money','integer','percent','percentNumber','formatRoas']:
+    needle='function '+name+'(\n  value\n) {'
+    assert updated.count(needle)==1
+    updated=updated.replace(needle,needle+'\n  if(value===null||value===undefined||typeof value===\'boolean\'||(typeof value===\'string\'&&!value.trim())||!Number.isFinite(Number(value)))return "—";',1)
+output=updated+'\n\n'+theme+'\n'+ads_presentation+'\n'+shell_navigation+'\n'+orders_diagnostic+'\n'+orders_http+'\n'+app_orders+'\n'+app_items+'\n'+finance_sample_frame+'\n'+finance_preview_frame+'\n'+variant_catalog_frame+'\n'+app_finance_sample+'\n'+store_period_frame+'\n'+app_store_period+'\n\nconst brazaAdmin = (() => {\n'+admin+'\nreturn {adminFetch,schedule};\n})();\n'
 (root/'app-worker.mjs').write_text(output)
 auth_original=(root/'original/auth-worker.mjs').read_text()
 needle='    const url = new URL(request.url);'

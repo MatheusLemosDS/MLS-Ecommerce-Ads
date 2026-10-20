@@ -1,8 +1,8 @@
 import {VariantBindingError,readVariantBindings,saveAutomaticVariantBindings} from './variant-bindings.mjs';
 import {projectVariantCatalog} from '../../finance/src/variant-catalog-frame.mjs';
 
-// These product-level composition rules were supplied by the operator. Other
-// products need a saved composition; catalog labels alone do not count pieces.
+// Product-level saved/confirmed rules take priority. Other products use the
+// administrator-enabled AUTO rules for the two recognized catalogue structures.
 const syncKnownUnits=Object.freeze({
  '22199878767':'SINGLE_GARMENT',
  '58269212782':'ONE_MALE_ONE_FEMALE_KIT',
@@ -45,9 +45,10 @@ function syncPending(candidates,state){
  const known=[],pending_type=[];
  for(const item_id of [...missing].sort(syncSort)){
   const savedUnits=units.get(item_id);
-  const selling_unit=savedUnits?.size===1?[...savedUnits][0]:savedUnits?.size>1?null:syncKnownUnits[item_id];
+  const selling_unit=savedUnits?.size===1?[...savedUnits][0]:savedUnits?.size>1?null:syncKnownUnits[item_id]||'AUTO';
   if(selling_unit)known.push({item_id,selling_unit});else pending_type.push(item_id);
  }
+ known.sort((a,b)=>Number(a.selling_unit==='AUTO')-Number(b.selling_unit==='AUTO')||syncSort(a.item_id,b.item_id));
  return {known,pending_type};
 }
 
@@ -62,14 +63,14 @@ export async function syncVariantBindings(env,body,actor,getCatalog){
  const unit=pending.known[0].selling_unit;
  const processed=pending.known.filter(row=>row.selling_unit===unit).slice(0,3).map(row=>row.item_id);
  if(typeof getCatalog!=='function')syncFail('VARIANT_CATALOG_UNAVAILABLE',503);
- const selection={item_ids:processed,...(unit==='SINGLE_GARMENT'?{selling_unit:unit}:{})};
+ const selection={item_ids:processed,...(unit!=='ONE_MALE_ONE_FEMALE_KIT'?{selling_unit:unit}:{})};
  let raw;try{raw=await getCatalog(env,selection);}catch{syncFail('VARIANT_CATALOG_UNAVAILABLE',503);}
  const frame=projectVariantCatalog(raw);
  if(!frame||frame.products.length!==processed.length
-  ||frame.products.some(product=>!processed.includes(product.item_id)||(product.selling_unit||'ONE_MALE_ONE_FEMALE_KIT')!==unit))syncFail('VARIANT_CATALOG_UNAVAILABLE',503);
+  ||frame.products.some(product=>!processed.includes(product.item_id)||unit!=='AUTO'&&(product.selling_unit||'ONE_MALE_ONE_FEMALE_KIT')!==unit))syncFail('VARIANT_CATALOG_UNAVAILABLE',503);
  const stripped={...frame,products:frame.products.map(({diagnostic,...product})=>product)};
  const state=await saveAutomaticVariantBindings(env,{revision:body.revision,...selection},stripped,actor);
  const after=syncPending(candidates,state),done=new Set(processed);
  return {state,remaining_known:after.known.filter(row=>!done.has(row.item_id)).length,
-  pending_type:after.pending_type,processed};
+  pending_type:[...new Set([...after.pending_type,...after.known.filter(row=>done.has(row.item_id)).map(row=>row.item_id)])].sort(syncSort),processed};
 }
