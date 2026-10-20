@@ -1,0 +1,40 @@
+{
+  "schema": "variant_catalog_diagnostic_v1",
+  "item_id": "58269212782",
+  "checked_at": 1792510733,
+  "axes": [
+    {
+      "name": "Tamanho Feminino",
+      "options": [
+        "MULHER P",
+        "MULHER M",
+        "MULHER G",
+        "MULHER GG",
+        "MULHER G1",
+        "MULHER G2",
+        "MULHER G3"
+      ],
+      "option_count": 7
+    },
+    {
+      "name": "Tamanho Masculino",
+      "options": [
+        "HOMEM P",
+        "HOMEM M",
+        "HOMEM G",
+        "HOMEM GG",
+        "HOMEM G1",
+        "HOMEM G2",
+        "HOMEM G3"
+      ],
+      "option_count": 7
+    }
+  ],
+  "model_count": 49,
+  "reasons": [
+    {
+      "code": "OPTION_NOT_RECOGNIZED",
+      "count": 49
+    }
+  ]
+}

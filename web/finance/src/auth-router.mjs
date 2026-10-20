@@ -1,5 +1,6 @@
 import {projectFinancePaymentPreview} from './payment-preview-frame.mjs';
 import {projectVariantCatalog,projectVariantCatalogRequest} from './variant-catalog-frame.mjs';
+import {projectStorePeriodRequest,projectStorePeriodFrame} from './store-period-frame.mjs';
 
 // Candidate router: only the isolated financial Service Binding can handle these paths.
 const FINANCE_ORIGIN = 'https://auth.brazacommerce.com.br';
@@ -9,6 +10,7 @@ const PRIVATE_HEADERS = {'cache-control':'no-store','referrer-policy':'no-referr
 const PAYMENT_SAMPLE_PATH = '/internal/shopee/finance/payment-sample';
 const PAYMENT_PREVIEW_PATH = '/internal/shopee/finance/payment-preview';
 const VARIANT_CATALOG_PATH = '/internal/shopee/finance/variant-catalog';
+const STORE_PERIOD_PATH = '/internal/shopee/finance/store-period';
 const SAMPLE_FIELDS = ['escrow_amount','original_cost_of_goods_sold','buyer_total_amount','commission_fee','service_fee','seller_transaction_fee','actual_shipping_fee','ads_escrow_top_up_fee_or_technical_support_fee','items'];
 const SAMPLE_ITEM_FIELDS = ['item_id','model_id','line_item_id','quantity_purchased','original_price','selling_price','order_discounted_price','is_kit','kit_items'];
 const SAMPLE_TYPES = new Set(['number','string','boolean','object','array','null','mixed']);
@@ -33,6 +35,10 @@ function sampleFailure(code='FINANCE_SAMPLE_UNAVAILABLE',status=502,http=null){
 
 function catalogFailure(status=502){
  return new Response(JSON.stringify({error:'FINANCE_CATALOG_UNAVAILABLE',diagnostic:{code:'FINANCE_CATALOG_UNAVAILABLE',http:null}}),{status,headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}});
+}
+
+function storePeriodFailure(status=502){
+ return new Response(JSON.stringify({error:'FINANCE_STORE_UNAVAILABLE',diagnostic:{code:'FINANCE_STORE_UNAVAILABLE',http:null}}),{status,headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}});
 }
 
 function sampleFrame(value){
@@ -67,9 +73,9 @@ async function readSampleBody(body,maximum,controller,onReader){
 // This private action is deliberately separate from the public OAuth router.
 export async function forwardFinancePaymentSample(request,env,{validateInternalApp}={}){
  let url;try{url=new URL(request.url);}catch{return routerFailure('INVALID_REQUEST',400);}
- if(url.origin!==FINANCE_ORIGIN||url.username||url.password||url.hash||![PAYMENT_SAMPLE_PATH,PAYMENT_PREVIEW_PATH,VARIANT_CATALOG_PATH].includes(url.pathname))return routerFailure('NOT_FOUND',404);
- const catalog=url.pathname===VARIANT_CATALOG_PATH,maximum=catalog?262144:65536;
- const unavailable=()=>catalog?catalogFailure():sampleFailure();
+ if(url.origin!==FINANCE_ORIGIN||url.username||url.password||url.hash||![PAYMENT_SAMPLE_PATH,PAYMENT_PREVIEW_PATH,VARIANT_CATALOG_PATH,STORE_PERIOD_PATH].includes(url.pathname))return routerFailure('NOT_FOUND',404);
+ const catalog=url.pathname===VARIANT_CATALOG_PATH,storePeriod=url.pathname===STORE_PERIOD_PATH,maximum=catalog||storePeriod?262144:65536,maximumInput=storePeriod?256:128;
+ const unavailable=()=>storePeriod?storePeriodFailure():catalog?catalogFailure():sampleFailure();
  if(request.method!=='POST')return routerFailure('METHOD_NOT_ALLOWED',405);
  if(url.search||request.url.length>4096)return routerFailure('INVALID_REQUEST',400);
  try{if(typeof validateInternalApp!=='function'||!await validateInternalApp(request,env))return routerFailure('UNAUTHORIZED',401);}catch{return unavailable();}
@@ -77,13 +83,13 @@ export async function forwardFinancePaymentSample(request,env,{validateInternalA
  if(typeof secret!=='string'||! /^[\x21-\x7e]{32,256}$/.test(secret)||typeof env?.SHOPEE_FINANCE_SERVICE?.fetch!=='function')return routerFailure('FINANCE_CONFIGURATION_PENDING',503);
  if(!/^application\/json(?:\s*;\s*charset\s*=\s*(?:utf-8|"utf-8"))?\s*$/i.test(request.headers.get('content-type')||''))return routerFailure('INVALID_REQUEST',400);
  const length=request.headers.get('content-length');
- if(length!==null&&(!/^\d+$/.test(length)||Number(length)>128))return routerFailure('INVALID_REQUEST',400);
+ if(length!==null&&(!/^\d+$/.test(length)||Number(length)>maximumInput))return routerFailure('INVALID_REQUEST',400);
  const controller=new AbortController();let reader,timer;
  const deadline=new Promise((resolve,reject)=>{timer=setTimeout(()=>{controller.abort();try{reader?.cancel().catch(()=>{});}catch{}reject(Error('DEADLINE'));},45000);});
  const work=async()=>{
-  let body;try{body=await readSampleBody(request.body,128,controller,value=>{reader=value;});}catch{return routerFailure('INVALID_REQUEST',400);}
-  const input=catalog?projectVariantCatalogRequest(body):body;
-  if(!input||(!catalog&&(typeof input!=='object'||Array.isArray(input)||Object.keys(input).length!==0)))return routerFailure('INVALID_REQUEST',400);
+  let body;try{body=await readSampleBody(request.body,maximumInput,controller,value=>{reader=value;});}catch{return routerFailure('INVALID_REQUEST',400);}
+  const input=storePeriod?projectStorePeriodRequest(body):catalog?projectVariantCatalogRequest(body):body;
+  if(!input||(!catalog&&!storePeriod&&(typeof input!=='object'||Array.isArray(input)||Object.keys(input).length!==0)))return routerFailure('INVALID_REQUEST',400);
   if(controller.signal.aborted)return unavailable();
   const headers={'content-type':'application/json',accept:'application/json','X-Braza-Finance-Router':secret};
   const upstream=await env.SHOPEE_FINANCE_SERVICE.fetch(new Request(FINANCE_ORIGIN+url.pathname,{method:'POST',headers,body:JSON.stringify(input),redirect:'manual',signal:controller.signal}));
@@ -96,16 +102,22 @@ export async function forwardFinancePaymentSample(request,env,{validateInternalA
   const value=await readSampleBody(upstream.body,maximum,controller,current=>{reader=current;});
   if(controller.signal.aborted)return unavailable();
   if(upstream.status!==200){
+   if(storePeriod)return storePeriodFailure([400,401,403,409,429,502,503,504].includes(upstream.status)?upstream.status:502);
    if(catalog)return catalogFailure([400,401,403,409,429,502,503,504].includes(upstream.status)?upstream.status:502);
    const code=value?.error==='FINANCE_SAMPLE_UNAVAILABLE'&&SAMPLE_FAILURES.has(value?.diagnostic?.code)?value.diagnostic.code:'FINANCE_SAMPLE_UNAVAILABLE';
    return sampleFailure(code,[400,401,403,409,429,502,503,504].includes(upstream.status)?upstream.status:502,value?.diagnostic?.http);
   }
   const preview=url.pathname===PAYMENT_PREVIEW_PATH;
-  const frame=catalog?projectVariantCatalog(value):preview?projectFinancePaymentPreview(value):sampleFrame(value);
+  const frame=storePeriod?projectStorePeriodFrame(value):catalog?projectVariantCatalog(value):preview?projectFinancePaymentPreview(value):sampleFrame(value);
+  if(storePeriod&&frame&&!storePeriodRequestMatches(input,frame))return storePeriodFailure();
   if(catalog&&frame&&!catalogRequestMatches(input,frame))return catalogFailure();
-  return frame?new Response(JSON.stringify(frame),{headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}}):catalog?catalogFailure():sampleFailure(preview?'FINANCE_SAMPLE_PREVIEW_RESPONSE_INVALID':'FINANCE_SAMPLE_UNAVAILABLE');
+  return frame?new Response(JSON.stringify(frame),{headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}}):storePeriod?storePeriodFailure():catalog?catalogFailure():sampleFailure(preview?'FINANCE_SAMPLE_PREVIEW_RESPONSE_INVALID':'FINANCE_SAMPLE_UNAVAILABLE');
  };
  try{return await Promise.race([work(),deadline]);}catch{return unavailable();}finally{clearTimeout(timer);controller.abort();try{reader?.cancel().catch(()=>{});}catch{}}
+}
+
+function storePeriodRequestMatches(input,frame){
+ return input.operation==='start'?frame.start_date===input.start_date&&frame.end_date===input.end_date:frame.run_id===input.run_id;
 }
 
 function catalogRequestMatches(input,frame){

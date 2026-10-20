@@ -1,5 +1,14 @@
 # Identificação dos tamanhos e composição pelo catálogo
 
+**Atualização de 20/10/2026:** o catálogo com 49 combinações de `MULHER P…G3`
+e `HOMEM P…G3` é reconhecido nos respectivos eixos feminino e masculino. O
+painel passa a identificar pendências de composição conhecida ao abrir
+**Produtos e variações** e após uma apuração financeira completa. Não consulta
+Payment automaticamente. Produtos novos ainda exigem uma escolha da composição
+física por produto. O [guia do resultado da loja](RESULTADO_DA_LOJA.md) descreve
+a apuração e a confirmação da escala em reais recebida do operador. As seções
+abaixo registram também as entregas anteriores.
+
 O vínculo manual existia porque o resumo dos pedidos contém IDs e quantidades,
 sem os atributos que distinguem a camiseta masculina da feminina. Uma composição
 com tamanhos diferentes também muda o custo do kit.
@@ -26,7 +35,9 @@ Os recortes históricos preservam a interpretação usada quando foram registrad
 
 Cada ação exige sessão administrativa, origem e CSRF válidos. App e Auth usam
 rotas privadas fixas; a chave e os tokens ficam no Financeiro. A operação não
-altera o catálogo da Shopee. Não roda ao abrir a página ou no polling do painel.
+altera o catálogo da Shopee. Não roda no carregamento inicial nem no polling do
+painel; a sincronização limitada ocorre ao abrir Produtos e variações ou ao
+concluir uma apuração financeira solicitada pelo operador.
 Há limites de três produtos por requisição, mil modelos/vínculos por resposta,
 JSON de 64 KiB por chamada à Shopee e dez segundos por chamada, sem retries.
 

@@ -10,10 +10,15 @@ import {CSS,adminBody,loginBody} from './admin-view.mjs';
 import {CLIENT} from './admin-client.mjs';
 import {projectFinanceSample} from './finance-sample-frame.mjs';
 import {projectAdminFinancePreview} from './app-finance-sample.mjs';
+import {projectStorePeriodRequest,projectStorePeriodFrame} from '../../finance/src/store-period-frame.mjs';
+import {STORE_ADJUSTMENTS_SCHEMA,validateStoreAdjustmentBody,saveStoreAdjustments,storePeriodBundle} from './store-admin.mjs';
+import {StoreSummaryError} from './store-summary.mjs';
+import {syncVariantBindings} from './variant-sync.mjs';
 // BrazaCommerce administration. No Shopee write operations.
 const DEFAULTS = {regular_cents:1675,mixed_cents:1910,plus_cents:2070,ad_share_percent:40,hermes_mode:'manual',daily_hour:9,monthly_budget_cents:2000,run_reserve_cents:100,billing_mode:'unverified',monthly_run_limit:30};
 const SCHEMA = [
 ...COST_SCHEMA,
+...STORE_ADJUSTMENTS_SCHEMA,
 ...OBSERVATION_SCHEMA,
 `CREATE TABLE IF NOT EXISTS variant_bindings_state (id INTEGER PRIMARY KEY CHECK(id=1), revision INTEGER NOT NULL, payload TEXT NOT NULL, updated_at TEXT NOT NULL)`,
 `CREATE TABLE IF NOT EXISTS variant_bindings_audit (id INTEGER PRIMARY KEY AUTOINCREMENT, revision INTEGER UNIQUE NOT NULL, payload TEXT NOT NULL, actor TEXT NOT NULL, created_at TEXT NOT NULL)`,
@@ -81,7 +86,20 @@ async function adminFetch(request,env,services={}){const url=new URL(request.url
  if(path==='/admin/logout'){assert(request.method==='POST','METHOD_NOT_ALLOWED',405);sameOrigin(request);assert(await equal(request.headers.get('x-csrf-token')||'',current.csrf),'CSRF_REJECTED',403);return new Response(null,{status:204,headers:{'set-cookie':'braza_admin=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0','cache-control':'no-store'}});}
  if(path==='/admin'){assert(request.method==='GET','METHOD_NOT_ALLOWED',405);return dashboard();}
  assert(path.startsWith('/api/admin/'),'NOT_FOUND',404);await setup(env);
- if(request.method==='POST'){sameOrigin(request);assert(await equal(request.headers.get('x-csrf-token')||'',current.csrf),'CSRF_REJECTED',403);const body=await input(request,['/api/admin/finance/payment-sample','/api/admin/finance/payment-preview'].includes(path)?128:path==='/api/admin/variant-bindings'?393216:path==='/api/admin/variant-bindings/automate'?256:16384);if(path==='/api/admin/finance/payment-preview'){assert(!url.search&&Object.keys(body).length===0,'FINANCE_SAMPLE_REQUEST_INVALID');let result;try{if(typeof services.getFinancePaymentPreview==='function')result=await services.getFinancePaymentPreview(env);}catch{}return json(projectAdminFinancePreview(result));}if(path==='/api/admin/finance/payment-sample'){assert(!url.search&&Object.keys(body).length===0,'FINANCE_SAMPLE_REQUEST_INVALID');let result;try{if(typeof services.getFinancePaymentSample==='function')result=await services.getFinancePaymentSample(env);}catch{}return json(projectFinanceSample(result));}if(path==='/api/admin/production-costs'){assert(!url.search,'COSTS_QUERY_INVALID');return json(await saveProductionCosts(env,body,current.user));}if(path==='/api/admin/variant-bindings/automate'){
+ if(request.method==='POST'){sameOrigin(request);assert(await equal(request.headers.get('x-csrf-token')||'',current.csrf),'CSRF_REJECTED',403);const body=await input(request,['/api/admin/finance/payment-sample','/api/admin/finance/payment-preview'].includes(path)?128:path==='/api/admin/variant-bindings'?393216:path==='/api/admin/variant-bindings/sync'?131072:path==='/api/admin/variant-bindings/automate'?256:16384);if(path==='/api/admin/finance/store-period'||path==='/api/admin/finance/store-adjustments'){
+ assert(!url.search,'STORE_PERIOD_REQUEST_INVALID');
+ const adjustment=path==='/api/admin/finance/store-adjustments'?validateStoreAdjustmentBody(body):null;
+ const selection=adjustment?{operation:'read',run_id:adjustment.run_id}:projectStorePeriodRequest(body);
+ assert(selection,'STORE_PERIOD_REQUEST_INVALID');
+ let raw;try{if(typeof services.getFinanceStorePeriod==='function')raw=await services.getFinanceStorePeriod(env,selection);}catch{}
+ const frame=projectStorePeriodFrame(raw);
+ assert(frame&&(selection.operation==='start'?frame.start_date===selection.start_date&&frame.end_date===selection.end_date:frame.run_id===selection.run_id),'STORE_PERIOD_UNAVAILABLE',503);
+ if(adjustment)await saveStoreAdjustments(env,adjustment,current.user);
+ return json(await storePeriodBundle(env,frame));
+ }if(path==='/api/admin/variant-bindings/sync'){
+ assert(!url.search,'VARIANT_CATALOG_REQUEST_INVALID');
+ return json(await syncVariantBindings(env,body,current.user,services.getFinanceVariantCatalog));
+ }if(path==='/api/admin/finance/payment-preview'){assert(!url.search&&Object.keys(body).length===0,'FINANCE_SAMPLE_REQUEST_INVALID');let result;try{if(typeof services.getFinancePaymentPreview==='function')result=await services.getFinancePaymentPreview(env);}catch{}return json(projectAdminFinancePreview(result));}if(path==='/api/admin/finance/payment-sample'){assert(!url.search&&Object.keys(body).length===0,'FINANCE_SAMPLE_REQUEST_INVALID');let result;try{if(typeof services.getFinancePaymentSample==='function')result=await services.getFinancePaymentSample(env);}catch{}return json(projectFinanceSample(result));}if(path==='/api/admin/production-costs'){assert(!url.search,'COSTS_QUERY_INVALID');return json(await saveProductionCosts(env,body,current.user));}if(path==='/api/admin/variant-bindings/automate'){
  assert(!url.search&&Object.hasOwn(body,'revision')&&Object.hasOwn(body,'item_ids')&&Object.keys(body).length===(Object.hasOwn(body,'selling_unit')?3:2)&&Object.keys(body).every(key=>['revision','item_ids','selling_unit'].includes(key)),'VARIANT_CATALOG_REQUEST_INVALID');
  const selection=projectVariantCatalogRequest({item_ids:body.item_ids,...(Object.hasOwn(body,'selling_unit')?{selling_unit:body.selling_unit}:{})});
  assert(selection&&Number.isSafeInteger(body.revision)&&body.revision>=1&&body.revision<2147483647,'VARIANT_CATALOG_REQUEST_INVALID');
@@ -96,7 +114,7 @@ async function adminFetch(request,env,services={}){const url=new URL(request.url
  return json({...saved,...(catalog.products.some(product=>product.diagnostic)?{catalog_review:catalog}:{})});
  }if(path==='/api/admin/variant-bindings')return json(await saveVariantBindings(env,body,current.user));if(path==='/api/admin/order-observations'){assert(Object.keys(body).length===0,'OBSERVATION_BODY_INVALID');assert(!url.search,'OBSERVATION_QUERY_INVALID');return json(await captureObservation(env,services.getOrderItems,current.user));}if(path==='/api/admin/settings')return json(await saveSettings(env,body,current.user));if(path==='/api/admin/jobs'){assert(Object.keys(body).length===0,'TASK_NOT_ALLOWED');return json(await enqueue(env),202);}if(path==='/api/admin/jobs/cost')return json(await correctCost(env,body,current.user));throw new AdminError('NOT_FOUND',404);}
  assert(request.method==='GET','METHOD_NOT_ALLOWED',405);
- if(['/api/admin/finance/payment-sample','/api/admin/finance/payment-preview','/api/admin/variant-bindings/automate'].includes(path))throw new AdminError('METHOD_NOT_ALLOWED',405);
+ if(['/api/admin/finance/payment-sample','/api/admin/finance/payment-preview','/api/admin/variant-bindings/automate','/api/admin/variant-bindings/sync','/api/admin/finance/store-period','/api/admin/finance/store-adjustments'].includes(path))throw new AdminError('METHOD_NOT_ALLOWED',405);
  if(path==='/api/admin/production-costs'){assert(!url.search,'COSTS_QUERY_INVALID');return json(await readProductionCosts(env));}
  if(path==='/api/admin/production-costs/audit'){assert(!url.search,'COSTS_QUERY_INVALID');return json(await readProductionCostAudit(env));}
  if(path==='/api/admin/variant-bindings')return json(await readVariantBindings(env));
@@ -126,5 +144,5 @@ async function adminFetch(request,env,services={}){const url=new URL(request.url
  if(path==='/api/admin/jobs')return json({rows:(await env.ADMIN_DB.prepare(`SELECT id,json_extract(task,'$.start_date') AS start_date,json_extract(task,'$.end_date') AS end_date,trigger_type,status,settings_revision,reserve_cents,cost_cents,cost_source,result,failure,created_at,started_at,completed_at FROM hermes_jobs ORDER BY created_at DESC LIMIT 30`).all()).results});
  if(path==='/api/admin/audit')return json({rows:(await env.ADMIN_DB.prepare('SELECT revision,payload,actor,created_at FROM admin_audit ORDER BY revision DESC LIMIT 30').all()).results});
  return json({error:'NOT_FOUND'},404);
- }catch(error){return json({error:error instanceof AdminError||error instanceof VariantBindingError||error instanceof ObservationError||error instanceof ProductionCostError?error.message:'ADMIN_UNAVAILABLE'},error instanceof AdminError||error instanceof VariantBindingError||error instanceof ObservationError||error instanceof ProductionCostError?error.status:503);}}
+ }catch(error){return json({error:error instanceof AdminError||error instanceof VariantBindingError||error instanceof ObservationError||error instanceof ProductionCostError||error instanceof StoreSummaryError?error.message:'ADMIN_UNAVAILABLE'},error instanceof AdminError||error instanceof VariantBindingError||error instanceof ObservationError||error instanceof ProductionCostError||error instanceof StoreSummaryError?error.status:503);}}
 export {adminFetch,schedule,DEFAULTS,SCHEMA,validateSettings};

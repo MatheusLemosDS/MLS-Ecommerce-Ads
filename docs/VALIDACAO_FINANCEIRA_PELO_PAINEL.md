@@ -1,5 +1,12 @@
 # Validar a leitura financeira pelo painel
 
+**Atualização de 20/10/2026:** o operador confirmou a escala de Payment em reais
+ao comparar o repasse do mesmo pedido: `50` corresponde a R$ 50,00. A evidência
+está em [FINANCE_PAYMENT_BRL_CONFIRMADO_2026_10_20.json](FINANCE_PAYMENT_BRL_CONFIRMADO_2026_10_20.json).
+A nova apuração por período está descrita em [Resultado da loja](RESULTADO_DA_LOJA.md).
+Os limites abaixo continuam específicos dos botões de amostra e conferência;
+a projeção de transporte da amostra conserva seu contrato raw original.
+
 A conexão financeira `2049333` já foi confirmada pelo operador como `CONNECTED`.
 Esta entrega acrescenta uma validação manual da API Payment, usando a conexão
 armazenada no Financeiro. Em 19/10/2026, o operador forneceu o
@@ -61,9 +68,11 @@ ou mensagens da API. A cópia de **Resultado da validação** continua contendo
 somente o esquema, sem números de pedidos ou valores monetários. A prévia
 privada não possui botão de cópia de valores.
 
-A moeda `BRL` foi conferida no detalhe do pedido. A escala dos valores permanece
-`UNCONFIRMED`: os números são apresentados sem símbolo `R$`, divisão por 100,
-arredondamento, somas ou cálculo de lucro. Zero e negativos são preservados;
+A moeda `BRL` foi conferida no detalhe do pedido e a escala em reais foi
+confirmada pelo operador em 20/10/2026. O contrato raw de transporte conserva
+`UNCONFIRMED` para compatibilidade; a prévia mostra os números originais sem
+divisão por 100, arredondamento, somas ou cálculo de lucro. A apuração do período
+aplica separadamente a confirmação de escala registrada. Zero e negativos são preservados;
 ausência e nulo aparecem como **Não informado**, sem virar zero. Tipos inválidos
 ou números não finitos são recusados.
 
@@ -119,6 +128,5 @@ As validações compiladas usam workerd/D1 e provedores simulados. A confirmaç�
 da prévia real dos valores continua dependendo da conferência no painel
 publicado. A aceitação da consulta de esquema já foi confirmada pelo operador.
 
-Depois da conferência dos números com o mesmo pedido na Shopee, registrar a
-evidência de unidade e escala e confirmar as regras de conciliação antes de
-preparar a importação financeira por período.
+A evidência de unidade e escala já foi registrada. A importação por período e
+suas pendências de conciliação seguem o contrato em [Resultado da loja](RESULTADO_DA_LOJA.md).

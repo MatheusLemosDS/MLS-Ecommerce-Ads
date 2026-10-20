@@ -39,6 +39,67 @@ test('reversed explicit axes and common accent/case labels never swap the garmen
   }
 });
 
+test('observed MULHER and HOMEM kit options resolve all 49 combinations on their explicit gender axes', async () => {
+  const item='58269212782';
+  const source={tier_variation:[axis('Tamanho Feminino',sizes.map(size=>'MULHER '+size)),
+    axis('Tamanho Masculino',sizes.map(size=>'HOMEM '+size))],
+    // Model IDs are synthetic; the operator supplied axis options and a count,
+    // not the real model IDs or their tier indices.
+    model:sizes.flatMap((_,female)=>sizes.map((__,male)=>({model_id:female*7+male,tier_index:[female,male]})))};
+  const original=await deriveCatalogProduct(item,source);
+  assert.equal(original.unresolved_count,0);assert.equal(original.bindings.length,49);
+  assert.deepEqual(original.diagnostic.reasons,[]);
+  for(let female=0;female<7;female++)for(let male=0;male<7;male++){
+    assert.deepEqual(original.bindings[female*7+male],{item_id:item,model_id:String(female*7+male),
+      male_size:sizes[male],female_size:sizes[female]});
+  }
+  const expectedFingerprint=createHash('sha256').update(JSON.stringify({item_id:item,
+    axes:[{name:'tamanho feminino',options:sizes.map(size=>'MULHER '+size)},
+      {name:'tamanho masculino',options:sizes.map(size=>'HOMEM '+size)}],
+    models:source.model.map(row=>({model_id:String(row.model_id),tier_index:row.tier_index}))})).digest('hex');
+  assert.equal(original.catalog_fingerprint,expectedFingerprint);
+  assert.deepEqual(projectVariantCatalog(frame(original)),frame(original));
+  source.tier_variation.reverse();for(const row of source.model)row.tier_index.reverse();
+  assert.deepEqual((await deriveCatalogProduct(item,source)).bindings,original.bindings);
+});
+
+test('kit prefix recognition is exact and gender-aware while plain sizes retain their meaning', async () => {
+  for(const [female,male,expected] of [
+    [' mulher p ',' homem gg ',{female_size:'P',male_size:'GG'}],
+    ['MULHER   G1','HOMEM  G3',{female_size:'G1',male_size:'G3'}],
+    ['P','HOMEM M',{female_size:'P',male_size:'M'}],
+    ['MULHER G2','GG',{female_size:'G2',male_size:'GG'}],
+  ]){
+    const source={tier_variation:[axis('Feminino',[female]),axis('Masculino',[male])],model:[{model_id:0,tier_index:[0,0]}]};
+    assert.deepEqual((await deriveCatalogProduct(ITEM,source)).bindings,[{item_id:ITEM,model_id:'0',male_size:expected.male_size,female_size:expected.female_size}]);
+  }
+  for(const [female,male] of [
+    ['HOMEM P','HOMEM G'],['MULHER P','MULHER G'],['MULHER P HOMEM G','HOMEM G'],
+    ['MULHER MULHER P','HOMEM G'],['MULHER-P','HOMEM G'],['MULHERP','HOMEM G'],
+    ['MULHER P extra','HOMEM G'],['MULHER GG1','HOMEM G'],['MULHER G.G','HOMEM G'],
+    ['FEMININO P','HOMEM G'],['MULHER P','MASCULINO G'],['MULHER P','HOMEM XL'],
+    ['MÚLHER P','HOMEM G'],['MULHER P','HOMEM\u2028G'],
+  ]){
+    const source={tier_variation:[axis('Feminino',[female]),axis('Masculino',[male])],model:[{model_id:0,tier_index:[0,0]}]};
+    const result=await deriveCatalogProduct(ITEM,source);
+    assert.deepEqual(result.bindings,[],JSON.stringify([female,male]));assert.equal(result.unresolved_count,1);
+    assert.deepEqual(result.diagnostic.reasons,[{code:'OPTION_NOT_RECOGNIZED',count:1}]);
+  }
+});
+
+test('gender prefixes cannot supply missing kit axes or change single-garment size parsing', async () => {
+  for(const names of [['Tamanho','Outro tamanho'],['Cor','Tamanho'],['Feminino','Feminino']]){
+    const source={tier_variation:[axis(names[0],['MULHER P']),axis(names[1],['HOMEM G'])],model:[{model_id:1,tier_index:[0,0]}]};
+    const result=await deriveCatalogProduct(ITEM,source);
+    assert.deepEqual(result.bindings,[]);assert.deepEqual(result.diagnostic.reasons,[{code:'AXES_NOT_RECOGNIZED',count:1}]);
+  }
+  const source={tier_variation:[axis('Cor',['Verde']),axis('Tamanho',['p','MULHER P','HOMEM P','gg'])],
+    model:[0,1,2,3].map(index=>({model_id:index,tier_index:[0,index]}))};
+  const result=await deriveCatalogProduct(ITEM,source,{selling_unit:'SINGLE_GARMENT'});
+  assert.deepEqual(result.bindings,[{item_id:ITEM,model_id:'0',size:'P'},{item_id:ITEM,model_id:'3',size:'GG'}]);
+  assert.equal(result.unresolved_count,2);assert.deepEqual(result.diagnostic.reasons,[{code:'OPTION_NOT_RECOGNIZED',count:2}]);
+});
+
 test('unlabeled or ambiguous axes never infer composition from titles, SKU or order of sizes', async () => {
   for (const axes of [[],[axis('Tamanho')],[axis('Tamanho 1'),axis('Tamanho 2')],
     [axis('Masculino'),axis('Masculino')],[axis('Masculino/Feminino'),axis('Cor')],

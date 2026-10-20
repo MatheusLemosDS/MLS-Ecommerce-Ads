@@ -105,6 +105,15 @@ const catalogGender = value => {
 };
 const catalogSingleSizeAxis = label => ['tamanho','tamanhos','tam','size','sizes','shirt size','garment size'].includes(label);
 const catalogColorAxis = label => ['cor','color','colour'].includes(label);
+const catalogKitOptionSize = (option, gender) => {
+  if(catalogSizes.has(option))return option;
+  // The observed catalogue labels each kit option with its garment. Accept only
+  // the matching prefix on an already identified gender axis, never strip an
+  // arbitrary word or infer a gender from the option itself.
+  const match=/^(MULHER|HOMEM) +(P|M|G|GG|G1|G2|G3)$/.exec(option);
+  if(!match||match[1]!==({female_size:'MULHER',male_size:'HOMEM'})[gender])return null;
+  return match[2];
+};
 
 export async function deriveCatalogProduct(item_id,response,{selling_unit='ONE_MALE_ONE_FEMALE_KIT'}={}) {
   if(!catalogId(item_id)||!catalogObject(response)||!catalogSellingUnits.has(selling_unit))throw new VariantCatalogFrameError();
@@ -154,7 +163,7 @@ export async function deriveCatalogProduct(item_id,response,{selling_unit='ONE_M
       bindings.push({item_id,model_id:model.model_id,size});
       continue;
     }
-    const sizes=axes.map((axis,index)=>axis.options[model.tier_index[index]]);
+    const sizes=axes.map((axis,index)=>catalogKitOptionSize(axis.options[model.tier_index[index]],genders[index]));
     if(!sizes.every(size=>catalogSizes.has(size))){unresolved('OPTION_NOT_RECOGNIZED');continue;}
     bindings.push({item_id,model_id:model.model_id,
       male_size:sizes[genders.indexOf('male_size')],female_size:sizes[genders.indexOf('female_size')]});

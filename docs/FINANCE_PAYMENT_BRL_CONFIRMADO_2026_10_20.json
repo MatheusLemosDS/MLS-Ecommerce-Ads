@@ -1,0 +1,13 @@
+{
+  "schema": "operator_monetary_scale_observation_v1",
+  "observed_on": "2026-10-20",
+  "source": "operator_reply",
+  "partner_id": 2049333,
+  "shop_id": 1178167501,
+  "field": "escrow_amount",
+  "currency": "BRL",
+  "raw_units_per_brl": 1,
+  "operator_statement": "Mostra como 50 (mesmo valor em reais)",
+  "confirms_settlement": false,
+  "confirms_ads_source_units": false
+}
