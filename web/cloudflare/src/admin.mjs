@@ -1,3 +1,4 @@
+import {shopDailyOrders} from './daily-shop-orders.mjs';
 import {orderItems} from './order-items.mjs';
 import {VariantBindingError,readVariantBindings,saveVariantBindings,saveAutomaticVariantBindings,variantMarginReference} from './variant-bindings.mjs';
 import {projectVariantCatalog,projectVariantCatalogRequest} from '../../finance/src/variant-catalog-frame.mjs';
@@ -147,7 +148,7 @@ async function adminFetch(request,env,services={}){const url=new URL(request.url
   let summary=null,diagnostic=null;
   try{if(typeof services.getShopOrders==='function')summary=await services.getShopOrders(env);}catch{diagnostic={stage:'APP_TO_AUTH',code:'INTERNAL_ERROR',http:null};}
   diagnostic=diagnostic||safeOrdersDiagnostic(summary?.diagnostic);
-  const value=shopOrders(diagnostic?null:summary);
+  const value=summary?.schema==='shop_daily_sales_v1'?shopDailyOrders(diagnostic?null:summary):shopOrders(diagnostic?null:summary);
   if(!diagnostic&&['INVALID_RESPONSE','STALE_DATE'].includes(value.status))diagnostic={stage:'APP_VALIDATION',code:value.status,http:200,validation:value.status};
   return json({...value,...(diagnostic?{diagnostic}:{}),fetched_at:new Date().toISOString()});
  }

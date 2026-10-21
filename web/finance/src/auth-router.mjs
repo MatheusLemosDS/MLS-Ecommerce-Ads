@@ -1,3 +1,4 @@
+import {projectDailyOrdersFrame} from './daily-orders-frame.mjs';
 import {projectFinancePaymentPreview} from './payment-preview-frame.mjs';
 import {projectVariantCatalog,projectVariantCatalogRequest} from './variant-catalog-frame.mjs';
 import {projectStorePeriodRequest,projectStorePeriodFrame} from './store-period-frame.mjs';
@@ -157,4 +158,31 @@ export async function forwardFinanceConnection(request,env){
  const cookie=outputHeaders.get('set-cookie');
  if(cookie&&(!cookie.startsWith('braza_finance_oauth=')||/;\s*domain\s*=/i.test(cookie)||!/(?:^|;)\s*Path=\/shopee\/finance(?:;|$)/i.test(cookie)))return routerFailure('FINANCE_UNAVAILABLE',502);
  return new Response(upstream.body,{status:upstream.status,headers:outputHeaders});
+}
+
+
+// Daily sales have a distinct read-only capability. The browser cannot select
+// a shop, date, status, gateway host or arbitrary provider endpoint.
+export async function forwardFinanceDailyOrders(request,env,{validateInternalApp}={}){
+ const unavailable=()=>new Response(JSON.stringify({error:'SHOP_ORDERS_UNAVAILABLE',diagnostic:{stage:'AUTH_VALIDATION',code:'INVALID_RESPONSE',http:null}}),{status:502,headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}});
+ let url;try{url=new URL(request.url);}catch{return routerFailure('INVALID_REQUEST',400);}
+ if(url.origin!==FINANCE_ORIGIN||url.username||url.password||url.hash||url.pathname!=='/internal/shopee/finance/daily-orders')return routerFailure('NOT_FOUND',404);
+ if(request.method!=='GET')return routerFailure('METHOD_NOT_ALLOWED',405);
+ if(url.search||request.url.length>4096)return routerFailure('INVALID_REQUEST',400);
+ try{if(typeof validateInternalApp!=='function'||!await validateInternalApp(request,env))return routerFailure('UNAUTHORIZED',401);}catch{return unavailable();}
+ const secret=env?.FINANCE_ROUTER_SECRET;
+ if(typeof secret!=='string'||! /^[\x21-\x7e]{32,256}$/.test(secret)||typeof env?.SHOPEE_FINANCE_SERVICE?.fetch!=='function')return routerFailure('FINANCE_CONFIGURATION_PENDING',503);
+ const controller=new AbortController();let reader,timer;
+ const deadline=new Promise((resolve,reject)=>{timer=setTimeout(()=>{controller.abort();try{reader?.cancel().catch(()=>{});}catch{}reject(Error('DEADLINE'));},45000);});
+ const work=async()=>{
+  const upstream=await env.SHOPEE_FINANCE_SERVICE.fetch(new Request(FINANCE_ORIGIN+url.pathname,{method:'GET',headers:{accept:'application/json','X-Braza-Finance-Router':secret},redirect:'manual',signal:controller.signal}));
+  if(controller.signal.aborted||!(upstream instanceof Response)||upstream.redirected||upstream.status!==200){try{upstream?.body?.cancel().catch(()=>{});}catch{}return unavailable();}
+  const media=upstream.headers.get('content-type')||'',size=upstream.headers.get('content-length');
+  if(!/^application\/json(?:\s*;\s*charset\s*=\s*(?:utf-8|"utf-8"))?\s*$/i.test(media)||(size!==null&&(!/^\d+$/.test(size)||Number(size)>4096))){try{upstream.body?.cancel().catch(()=>{});}catch{}return unavailable();}
+  const value=await readSampleBody(upstream.body,4096,controller,current=>{reader=current;});
+  const frame=projectDailyOrdersFrame(value),currentDay=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date());
+  if(controller.signal.aborted||!frame||frame.date!==currentDay||Date.parse(frame.through_at)>Date.now()+60000||Date.now()-Date.parse(frame.through_at)>120000)return unavailable();
+  return new Response(JSON.stringify(frame),{headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}});
+ };
+ try{return await Promise.race([work(),deadline]);}catch{return unavailable();}finally{clearTimeout(timer);controller.abort();try{reader?.cancel().catch(()=>{});}catch{}}
 }

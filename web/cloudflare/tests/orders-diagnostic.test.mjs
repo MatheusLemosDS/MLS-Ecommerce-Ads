@@ -3,15 +3,17 @@ import assert from 'node:assert/strict';
 import {safeOrdersDiagnostic} from '../src/orders-diagnostic.mjs';
 import {boundedOrdersRead} from '../src/orders-http.mjs';
 import {getShopOrders} from '../src/app-shop-orders.mjs';
-import authWorker from '../auth-worker.mjs';
+import authWorker from '../../../dist/auth-worker.mjs';
 import appWorker from '../app-worker.mjs';
 import {D1} from './sqlite-d1.mjs';
 
 const base='https://app.example.test';
-const authEnv={APP_INTERNAL_SECRET:'fixture-app-secret',GATEWAY_SHARED_SECRET:'fixture-gateway-secret',GATEWAY_URL:'https://gateway.example.test'};
+const authEnv={APP_INTERNAL_SECRET:'fixture-app-secret',GATEWAY_SHARED_SECRET:'fixture-gateway-secret',GATEWAY_URL:'https://gateway.example.test',FINANCE_ROUTER_SECRET:'fixture-finance-router-'+ 'r'.repeat(40)};
 function currentSummary(){
  const through=new Date(Date.now()-10800000).toISOString().replace('Z','-03:00');
- return {schema:'shop_orders_v1',shop_id:1178167501,date:through.slice(0,10),timezone:'America/Sao_Paulo',through_at:through,day_partial:true,orders_in_api_window:12,pagination_complete:true,pages_read:1,duplicate_rows:0,count_basis:'UNIQUE_ORDER_SN_CREATE_TIME_NO_STATUS_FILTER',order_status_filter:'NONE',dashboard_counter_reconciled:false,source:'shopee_get_order_list',api_error:'NO',transport_http:200};
+ return {schema:'shop_daily_sales_v1',shop_id:1178167501,date:through.slice(0,10),timezone:'America/Sao_Paulo',through_at:through,day_partial:true,
+  orders_in_api_window:12,orders_with_details:12,sales_orders:8,cancelled_orders:2,cancellation_pending_orders:0,unpaid_orders:2,other_orders:0,unknown_status_orders:0,
+  pagination_complete:true,pages_read:1,duplicate_rows:0,count_basis:'UNIQUE_ORDER_SN_CREATE_TIME_CURRENT_STATUS',source:'shopee_get_order_list_and_detail'};
 }
 async function adminSession(secret=authEnv.APP_INTERNAL_SECRET){
  const env={ADMIN_DB:new D1(),ADMIN_SESSION_SECRET:'fixture-session-secret-1234567890123456',ADMIN_USERNAME:'fixture-admin',ADMIN_PASSWORD:'fixture-password-123456',APP_INTERNAL_SECRET:secret};
@@ -57,57 +59,52 @@ test('HTTP/JSON/body/timeout/runtime failures retain safe codes without raw cont
  }finally{globalThis.fetch=originalFetch;AbortSignal.timeout=originalTimeout;}
 });
 
-test('authenticated generated chain reports native failures and validation stages, with null counts and no jobs',async()=>{
+test('authenticated generated daily chain sanitizes Finance failures and invalid aggregates with null counts and no jobs',async()=>{
  const originalFetch=globalThis.fetch;
  try{
   const stale=currentSummary();stale.date='2020-01-01';stale.through_at='2020-01-01T13:00:00-03:00';
-  for(const [makeResponse,expected] of [
-   [()=>new Response('PRIVATE',{status:403}),{stage:'AUTH_TO_GATEWAY',code:'HTTP_STATUS',http:403}],
-   [()=>Response.json({error:'PRIVATE',buyer:'PRIVATE'}),{stage:'AUTH_VALIDATION',code:'INVALID_RESPONSE',http:200,validation:'INVALID_RESPONSE'}],
-   [()=>Response.json(stale),{stage:'AUTH_VALIDATION',code:'STALE_DATE',http:200,validation:'STALE_DATE'}],
-  ]){
-   const {env,cookie}=await adminSession();let nativeReads=0;
+  for(const makeResponse of [()=>new Response('PRIVATE',{status:403}),()=>Response.json({error:'PRIVATE',buyer:'PRIVATE'}),()=>Response.json(stale)]){
+   const {env,cookie}=await adminSession();let financeReads=0;
+   const bindings={...authEnv,SHOPEE_FINANCE_SERVICE:{fetch:async request=>{financeReads++;assert.equal(request.method,'GET');assert.equal(request.url,'https://auth.brazacommerce.com.br/internal/shopee/finance/daily-orders');return makeResponse();}}};
    globalThis.fetch=async(target,options)=>{
-    const url=new URL(target);assert.equal(options.redirect,'manual');
-    if(url.hostname==='gateway.example.test'){nativeReads++;return makeResponse();}
-    if(url.hostname==='auth.brazacommerce.com.br')return authWorker.fetch(new Request(url,options),authEnv);
-    throw Error('Unexpected fixture destination');
+    const url=new URL(target);assert.equal(options.redirect,'manual');assert.equal(url.hostname,'auth.brazacommerce.com.br');
+    return authWorker.fetch(new Request(url,options),bindings);
    };
    const response=await appWorker.fetch(new Request(base+'/api/admin/shop-orders',{headers:{cookie}}),env);
-   const result=await response.json();assert.equal(response.status,200);assert.equal(result.orders_in_api_window,null);assert.deepEqual(result.diagnostic,expected);assert.ok(!JSON.stringify(result).includes('PRIVATE'));assert.equal(nativeReads,1);
-   assert.equal(env.ADMIN_DB.db.prepare('SELECT COUNT(*) n FROM hermes_jobs').get().n,0);
-   assert.equal(env.ADMIN_DB.db.prepare('SELECT revision FROM admin_settings').get().revision,1);
+   const result=await response.json();assert.equal(response.status,200);assert.equal(result.orders_in_api_window,null);
+   assert.deepEqual(result.diagnostic,{stage:'AUTH_VALIDATION',code:'INVALID_RESPONSE',http:null});assert.ok(!JSON.stringify(result).includes('PRIVATE'));assert.equal(financeReads,1);
+   assert.equal(env.ADMIN_DB.db.prepare('SELECT COUNT(*) n FROM hermes_jobs').get().n,0);assert.equal(env.ADMIN_DB.db.prepare('SELECT revision FROM admin_settings').get().revision,1);
   }
  }finally{globalThis.fetch=originalFetch;}
 });
 
-test('App key denial and missing Auth bindings are distinguished without gateway reads or secret output',async()=>{
+test('App key denial and missing Finance binding remain distinct without provider reads or secret output',async()=>{
  const originalFetch=globalThis.fetch;
  try{
-  for(const [appSecret,authBindings,expected] of [
-   ['fixture-wrong-key',authEnv,{stage:'APP_TO_AUTH',code:'HTTP_STATUS',http:401}],
-   [authEnv.APP_INTERNAL_SECRET,{APP_INTERNAL_SECRET:authEnv.APP_INTERNAL_SECRET},{stage:'AUTH_CONFIG',code:'MISSING_BINDING',http:null}],
+  let providerReads=0;
+  const ready={...authEnv,SHOPEE_FINANCE_SERVICE:{fetch:async()=>{providerReads++;throw Error('must not call');}}};
+  for(const [appSecret,bindings,expected] of [
+   ['fixture-wrong-key',ready,{stage:'APP_TO_AUTH',code:'HTTP_STATUS',http:401}],
+   [authEnv.APP_INTERNAL_SECRET,authEnv,{stage:'APP_TO_AUTH',code:'HTTP_STATUS',http:503}],
   ]){
-   const {env,cookie}=await adminSession(appSecret);let nativeReads=0;
-   globalThis.fetch=async(target,options)=>{
-    if(new URL(target).hostname!=='auth.brazacommerce.com.br'){nativeReads++;throw Error('must not reach gateway');}
-    return authWorker.fetch(new Request(target,options),authBindings);
-   };
+   const {env,cookie}=await adminSession(appSecret);
+   globalThis.fetch=async(target,options)=>{assert.equal(new URL(target).hostname,'auth.brazacommerce.com.br');return authWorker.fetch(new Request(target,options),bindings);};
    const result=await(await appWorker.fetch(new Request(base+'/api/admin/shop-orders',{headers:{cookie}}),env)).json();
-   assert.deepEqual(result.diagnostic,expected);assert.equal(result.orders_in_api_window,null);assert.equal(nativeReads,0);assert.ok(!JSON.stringify(result).includes(appSecret));
+   assert.deepEqual(result.diagnostic,expected);assert.equal(result.orders_in_api_window,null);assert.equal(providerReads,0);assert.ok(!JSON.stringify(result).includes(appSecret));
   }
  }finally{globalThis.fetch=originalFetch;}
 });
 
-test('manual corrected generated chain returns validated API count, independent of Ads and diagnostic data',async()=>{
- const originalFetch=globalThis.fetch,{env,cookie}=await adminSession();let nativeReads=0;
- globalThis.fetch=async(target,options)=>{
-  assert.equal(options.redirect,'manual');const url=new URL(target);
-  if(url.hostname==='gateway.example.test'){nativeReads++;assert.equal(options.headers['X-Braza-Gateway-Key'],authEnv.GATEWAY_SHARED_SECRET);return Response.json({...currentSummary(),access_token:'PRIVATE'});}
-  return authWorker.fetch(new Request(url,options),authEnv);
- };
+test('generated status-checked chain returns daily sales independently of gross totals, Ads and raw diagnostic data',async()=>{
+ const originalFetch=globalThis.fetch,{env,cookie}=await adminSession();let financeReads=0;
+ const bindings={...authEnv,SHOPEE_FINANCE_SERVICE:{fetch:async request=>{
+  financeReads++;assert.equal(request.headers.get('x-braza-finance-router'),authEnv.FINANCE_ROUTER_SECRET);
+  for(const name of ['cookie','authorization','x-braza-app-key','x-braza-gateway-key'])assert.equal(request.headers.has(name),false);
+  return Response.json(currentSummary());
+ }}};
+ globalThis.fetch=async(target,options)=>{assert.equal(options.redirect,'manual');assert.equal(new URL(target).hostname,'auth.brazacommerce.com.br');return authWorker.fetch(new Request(target,options),bindings);};
  try{
   const result=await(await appWorker.fetch(new Request(base+'/api/admin/shop-orders?shop_id=999',{headers:{cookie}}),env)).json();
-  assert.equal(result.status,'AVAILABLE');assert.equal(result.orders_in_api_window,12);assert.equal(result.dashboard_counter_reconciled,false);assert.equal(result.diagnostic,undefined);assert.equal(nativeReads,1);assert.ok(!JSON.stringify(result).includes('PRIVATE'));
+  assert.equal(result.status,'AVAILABLE');assert.equal(result.orders_in_api_window,12);assert.equal(result.sales_orders,8);assert.equal(result.cancelled_orders,2);assert.equal(result.unpaid_orders,2);assert.equal(result.dashboard_counter_reconciled,false);assert.equal(result.diagnostic,undefined);assert.equal(financeReads,1);assert.ok(!JSON.stringify(result).includes('PRIVATE'));
  }finally{globalThis.fetch=originalFetch;}
 });

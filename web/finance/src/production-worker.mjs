@@ -1,3 +1,4 @@
+import {runFinanceDailyOrders} from './daily-orders.mjs';
 import {createFinanceWorker} from './connection-worker.mjs';
 import {createFinanceProviderAdapter} from './provider-adapter.mjs';
 import {runFinancePaymentSample, runFinancePaymentPreview} from './payment-sample.mjs';
@@ -11,6 +12,7 @@ export default createFinanceWorker({
   paymentPreview: runFinancePaymentPreview,
   variantCatalog: runFinanceVariantCatalog,
   storePeriod: runFinanceStorePeriod,
+  dailyOrders: runFinanceDailyOrders,
   fetchImpl: request => fetch(request),
   adapter: createFinanceProviderAdapter({fetchImpl: request => fetch(request)}),
 });

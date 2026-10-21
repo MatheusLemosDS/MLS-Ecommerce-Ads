@@ -1,3 +1,4 @@
+import {projectDailyOrdersFrame} from './daily-orders-frame.mjs';
 import {FINANCE_PROFILE, FinanceConnectionError, createFinanceStore} from './connection-store.mjs';
 import {projectFinancePaymentPreview} from './payment-preview-frame.mjs';
 import {projectVariantCatalog,projectVariantCatalogRequest} from './variant-catalog-frame.mjs';
@@ -252,7 +253,7 @@ function safeStatus(value) {
   };
 }
 
-export function createFinanceWorker({adapter, paymentSample, paymentPreview, variantCatalog, storePeriod, fetchImpl, now = () => Date.now()} = {}) {
+export function createFinanceWorker({adapter, paymentSample, paymentPreview, variantCatalog, storePeriod, dailyOrders, fetchImpl, now = () => Date.now()} = {}) {
   return {
     async fetch(request, env) {
       let url;
@@ -264,6 +265,18 @@ export function createFinanceWorker({adapter, paymentSample, paymentPreview, var
       }
       const callback = url.pathname === PREFIX + '/callback';
       if (url.origin !== ORIGIN || url.username || url.password || url.hash) return failure('NOT_FOUND', 404, callback);
+      if (url.pathname === '/internal/shopee/finance/daily-orders') {
+        if (request.method !== 'GET') return failure('METHOD_NOT_ALLOWED',405);
+        if (url.search) return failure('INVALID_REQUEST',400);
+        const routerError=await trustedRouter(request,env);
+        if (routerError) return failure(routerError,routerError==='FORBIDDEN'?403:503);
+        if (env?.FINANCE_CONNECTION_ENABLED!=='true'||typeof dailyOrders!=='function'||typeof fetchImpl!=='function'||typeof now!=='function') return failure('CONFIGURATION_PENDING',503);
+        try {
+          const frame=projectDailyOrdersFrame(await dailyOrders(env,{fetchImpl,now}));
+          if (!frame) throw Error('INVALID_DAILY_ORDERS');
+          return response(frame,200,{json:true});
+        } catch {return response({error:'SHOP_ORDERS_UNAVAILABLE'},502,{json:true});}
+      }
       if ([PAYMENT_SAMPLE_PATH, PAYMENT_PREVIEW_PATH, VARIANT_CATALOG_PATH, STORE_PERIOD_PATH].includes(url.pathname)) {
         if (request.method !== 'POST') return failure('METHOD_NOT_ALLOWED', 405);
         if (url.search !== '') return failure('INVALID_REQUEST', 400);

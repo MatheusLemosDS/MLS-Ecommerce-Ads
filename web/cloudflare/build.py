@@ -10,6 +10,7 @@ client=report+'\n'+(root/'src/admin-client.mjs').read_text().replace("import {pa
 view=(root/'src/admin-view.mjs').read_text().replace('export const CSS','const CSS').replace('export function adminBody','function adminBody').replace('export function loginBody','function loginBody')
 ads=(root/'src/admin-ads-today.mjs').read_text().replace('export function adsToday','function adsToday')
 orders=(root/'src/shop-orders.mjs').read_text().replace('export function shopOrders','function shopOrders')
+daily_shop_orders=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/daily-shop-orders.mjs').read_text(),flags=re.M),flags=re.M)
 items=(root/'src/order-items.mjs').read_text().replace('export function orderItems','function orderItems')
 variants=re.sub(r'^export ', '', (root/'src/variant-bindings.mjs').read_text(), flags=re.M)
 observations=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/order-observations.mjs').read_text(),flags=re.M),flags=re.M)
@@ -24,6 +25,8 @@ finance_preview_frame=re.sub(r'^export ', '', (root.parent/'finance/src/payment-
 finance_preview_frame='const brazaFinancePreviewFrame = (() => {\n'+finance_preview_frame+'\nreturn {projectFinancePaymentPreview};\n})();\nconst {projectFinancePaymentPreview}=brazaFinancePreviewFrame;\n'
 variant_catalog_frame=re.sub(r'^export ', '', (root.parent/'finance/src/variant-catalog-frame.mjs').read_text(), flags=re.M)
 variant_catalog_frame='const brazaVariantCatalogFrame = (() => {\n'+variant_catalog_frame+'\nreturn {projectVariantCatalog,projectVariantCatalogRequest};\n})();\nconst {projectVariantCatalog,projectVariantCatalogRequest}=brazaVariantCatalogFrame;\n'
+daily_orders_frame=re.sub(r'^export ', '', (root.parent/'finance/src/daily-orders-frame.mjs').read_text(), flags=re.M)
+daily_orders_frame='const brazaDailyOrdersFrame = (() => {\n'+daily_orders_frame+'\nreturn {projectDailyOrdersFrame};\n})();\nconst {projectDailyOrdersFrame}=brazaDailyOrdersFrame;\n'
 store_period_frame=re.sub(r'^export ', '', (root.parent/'finance/src/store-period-frame.mjs').read_text(), flags=re.M)
 store_period_frame='const brazaStorePeriodFrame = (() => {\n'+store_period_frame+'\nreturn {projectStorePeriodRequest,projectStorePeriodFrame};\n})();\nconst {projectStorePeriodRequest,projectStorePeriodFrame}=brazaStorePeriodFrame;\n'
 app_store_period=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/app-store-period.mjs').read_text(),flags=re.M),flags=re.M)
@@ -37,7 +40,7 @@ variant_sync=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/varian
 shell_navigation=re.sub(r'^export ', '', (root/'src/shell-navigation.mjs').read_text(), flags=re.M)
 theme=re.sub(r'^export ', '', (root/'src/theme.mjs').read_text(), flags=re.M)
 ads_presentation=re.sub(r'^export ', '', (root/'src/ads-presentation.mjs').read_text(), flags=re.M)
-admin=client+'\n'+view+'\n'+ads+'\n'+orders+'\n'+items+'\n'+variants+'\n'+observations+'\n'+production_costs+'\n'+store_summary+'\n'+store_invoice_tax+'\n'+store_product_summary+'\n'+store_returns_summary+'\n'+store_admin+'\n'+variant_sync+'\n'+re.sub(r'^import .*\n','',admin,flags=re.M)
+admin=client+'\n'+view+'\n'+ads+'\n'+orders+'\n'+daily_shop_orders+'\n'+items+'\n'+variants+'\n'+observations+'\n'+production_costs+'\n'+store_summary+'\n'+store_invoice_tax+'\n'+store_product_summary+'\n'+store_returns_summary+'\n'+store_admin+'\n'+variant_sync+'\n'+re.sub(r'^import .*\n','',admin,flags=re.M)
 admin=admin.replace('export {adminFetch,schedule,DEFAULTS,SCHEMA,validateSettings};','')
 needle='    const url = new URL(request.url);'
 assert original.count(needle)==1
@@ -65,7 +68,7 @@ for name in ['money','integer','percent','percentNumber','formatRoas']:
     needle='function '+name+'(\n  value\n) {'
     assert updated.count(needle)==1
     updated=updated.replace(needle,needle+'\n  if(value===null||value===undefined||typeof value===\'boolean\'||(typeof value===\'string\'&&!value.trim())||!Number.isFinite(Number(value)))return "—";',1)
-output=updated+'\n\n'+theme+'\n'+ads_presentation+'\n'+shell_navigation+'\n'+orders_diagnostic+'\n'+orders_http+'\n'+app_orders+'\n'+app_items+'\n'+finance_sample_frame+'\n'+finance_preview_frame+'\n'+variant_catalog_frame+'\n'+app_finance_sample+'\n'+store_period_frame+'\n'+app_store_period+'\n'+ads_period+'\n\nconst brazaAdmin = (() => {\n'+admin+'\nreturn {adminFetch,schedule};\n})();\n'
+output=updated+'\n\n'+theme+'\n'+ads_presentation+'\n'+shell_navigation+'\n'+orders_diagnostic+'\n'+orders_http+'\n'+app_orders+'\n'+app_items+'\n'+finance_sample_frame+'\n'+finance_preview_frame+'\n'+variant_catalog_frame+'\n'+app_finance_sample+'\n'+daily_orders_frame+'\n'+store_period_frame+'\n'+app_store_period+'\n'+ads_period+'\n\nconst brazaAdmin = (() => {\n'+admin+'\nreturn {adminFetch,schedule};\n})();\n'
 (root/'app-worker.mjs').write_text(output)
 auth_original=(root/'original/auth-worker.mjs').read_text()
 needle='    const url = new URL(request.url);'
