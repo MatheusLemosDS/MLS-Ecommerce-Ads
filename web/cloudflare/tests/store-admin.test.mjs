@@ -105,6 +105,37 @@ test('invalid return coverage cannot pass the bundle or write adjustment state',
  assert.deepEqual(snapshot(env),before);
 });
 
+test('product tax and after-tax balances use the same saved revisions without changing the global result or declarations',async()=>{
+ const env=await database(),calls=[],batch=env.ADMIN_DB.batch.bind(env.ADMIN_DB),before=snapshot(env);
+ env.ADMIN_DB.batch=statements=>{calls.push(statements.length);return batch(statements);};
+ const value=frame({product_breakdown:{schema:'store_product_breakdown_v1',exclusive_order_count:1,mixed_order_count:0,
+  exclusive_payout_raw:'50',mixed_payout_raw:'0',products:[{item_id:'201',order_count:1,exclusive_order_count:1,mixed_order_count:0,exclusive_payout_raw:'50',returns_orders:0}]},
+  invoice_tax:{schema:'store_invoice_tax_v1',rate_bps:200,basis:'PAYMENT_GOODS_VALUE_PER_ORDER_ESTIMATE',rounding:'HALF_UP_PER_ORDER',covered_orders:1,unavailable_orders:0,known_base_raw:'100',known_tax_raw:'2'},
+  product_invoice_tax:{schema:'store_product_invoice_tax_v1',exclusive_covered_orders:1,mixed_covered_orders:0,known_exclusive_tax_raw:'2',known_mixed_tax_raw:'0',products:[{item_id:'201',exclusive_covered_orders:1,known_exclusive_tax_raw:'2'}]}});
+ const bundle=await storePeriodBundle(env,value),product=bundle.product_result.products[0];
+ assert.deepEqual(calls,[4]);assert.equal(product.invoice_tax_cents,200);
+ assert.equal(product.expected_after_production_and_tax_cents,1620);
+ assert.equal(bundle.result.invoice_tax.tax_cents,200);assert.equal(bundle.result.expected_after_tax_cents,1620);
+ assert.equal(bundle.result.net_estimate_cents,null);assert.equal(product.net_profit_cents,null);
+ assert.equal(bundle.product_result.bindings_revision,5);assert.equal(bundle.product_result.costs_revision,7);
+ assert.deepEqual(snapshot(env),before);
+});
+
+test('a product with full tax coverage stays usable when another product keeps the global tax pending',async()=>{
+ const env=await database(),before=snapshot(env);
+ const value=frame({order_count:2,escrow_amount_raw:'100',items:[{item_id:'201',model_id:'0',quantity:2},{item_id:'202',model_id:'0',quantity:1}],
+  product_breakdown:{schema:'store_product_breakdown_v1',exclusive_order_count:2,mixed_order_count:0,exclusive_payout_raw:'100',mixed_payout_raw:'0',
+   products:['201','202'].map(item_id=>({item_id,order_count:1,exclusive_order_count:1,mixed_order_count:0,exclusive_payout_raw:'50',returns_orders:0}))},
+  invoice_tax:{schema:'store_invoice_tax_v1',rate_bps:200,basis:'PAYMENT_GOODS_VALUE_PER_ORDER_ESTIMATE',rounding:'HALF_UP_PER_ORDER',covered_orders:1,unavailable_orders:1,known_base_raw:'100',known_tax_raw:'2'},
+  product_invoice_tax:{schema:'store_product_invoice_tax_v1',exclusive_covered_orders:1,mixed_covered_orders:0,known_exclusive_tax_raw:'2',known_mixed_tax_raw:'0',
+   products:[{item_id:'201',exclusive_covered_orders:1,known_exclusive_tax_raw:'2'},{item_id:'202',exclusive_covered_orders:0,known_exclusive_tax_raw:'0'}]}});
+ const bundle=await storePeriodBundle(env,value),[complete,pending]=bundle.product_result.products;
+ assert.equal(complete.invoice_tax_cents,200);assert.equal(complete.expected_after_production_and_tax_cents,1620);
+ assert.equal(pending.invoice_tax_cents,null);assert.equal(pending.expected_after_production_and_tax_cents,null);
+ assert.equal(bundle.result.invoice_tax.tax_cents,null);assert.equal(bundle.result.net_estimate_cents,null);
+ assert.deepEqual(snapshot(env),before);
+});
+
 test('coherent bundle keeps captured configuration even if saved data changes just after the context batch',async()=>{
  const env=await database();await saveStoreAdjustments(env,body(),'admin');const original=env.ADMIN_DB.batch.bind(env.ADMIN_DB);let changed=false;
  env.ADMIN_DB.batch=async statements=>{const result=await original(statements);if(statements.length===4&&!changed){changed=true;env.ADMIN_DB.db.prepare('UPDATE variant_bindings_state SET revision=6,payload=?').run(JSON.stringify([garment('G1')]));env.ADMIN_DB.db.prepare('UPDATE production_costs_state SET revision=8,payload=?').run(JSON.stringify({...COST_DEFAULTS,inclusive_regular_cents:2000,components:[]}));env.ADMIN_DB.db.prepare('UPDATE store_period_adjustments SET revision=2,payload=?').run(JSON.stringify(values({ads_spend_cents:1000})));}return result;};

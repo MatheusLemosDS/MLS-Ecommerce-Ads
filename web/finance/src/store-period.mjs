@@ -85,6 +85,7 @@ function storeFrame(run,records,diagnostic,invoiceBases=new Map()){
  const escrows=[],ads=[];let escrowKnown=true,adsKnown=true;
  const exclusivePayouts=[],mixedPayouts=[];let exclusiveOrders=0,mixedOrders=0,exclusiveKnown=true,mixedKnown=true;
  let coveredInvoices=0,invoiceBase=0n,invoiceTax=0n;
+ let exclusiveCoveredInvoices=0,mixedCoveredInvoices=0,exclusiveInvoiceTax=0n,mixedInvoiceTax=0n;
  for(const record of records){
   if(!/^[a-f0-9]{64}$/.test(record.order_hash)||!/^[a-f0-9]{64}$/.test(record.source_hash))throw storeFailure('STORAGE_INVALID',503);
   for(const [field,values] of [['escrow_raw',escrows],['ads_raw',ads]]){
@@ -96,9 +97,11 @@ function storeFrame(run,records,diagnostic,invoiceBases=new Map()){
   else if(record.returns_seen===0||record.returns_seen===1)returnsOrders+=record.returns_seen;
   else throw storeFailure('STORAGE_INVALID',503);
   const invoice=invoiceBases.get(record.order_hash);
+  let orderInvoiceTax=null;
   if(invoice&&invoice.base_raw!==null){
    const cents=storeInvoiceCents(invoice.base_raw);if(cents===null)throw storeFailure('STORAGE_INVALID',503);
-   coveredInvoices++;invoiceBase+=cents;invoiceTax+=(cents*200n+5000n)/10000n;
+   orderInvoiceTax=(cents*200n+5000n)/10000n;
+   coveredInvoices++;invoiceBase+=cents;invoiceTax+=orderInvoiceTax;
   }
   const returnsKind=record.returns_seen===null?'unknown':record.returns_seen===1?'with_return':'without_reported_return';
   const returnsGroup=returnGroups[returnsKind];returnsGroup.order_count++;
@@ -114,13 +117,21 @@ function storeFrame(run,records,diagnostic,invoiceBases=new Map()){
    orderProducts.add(row.item_id);
   }
   const exclusive=orderProducts.size===1;
-  if(exclusive){exclusiveOrders++;if(record.escrow_raw===null)exclusiveKnown=false;else exclusivePayouts.push(record.escrow_raw);}
-  else {mixedOrders++;if(record.escrow_raw===null)mixedKnown=false;else mixedPayouts.push(record.escrow_raw);}
+  if(exclusive){
+   exclusiveOrders++;if(record.escrow_raw===null)exclusiveKnown=false;else exclusivePayouts.push(record.escrow_raw);
+   if(orderInvoiceTax!==null){exclusiveCoveredInvoices++;exclusiveInvoiceTax+=orderInvoiceTax;}
+  }else {
+   mixedOrders++;if(record.escrow_raw===null)mixedKnown=false;else mixedPayouts.push(record.escrow_raw);
+   if(orderInvoiceTax!==null){mixedCoveredInvoices++;mixedInvoiceTax+=orderInvoiceTax;}
+  }
   for(const item_id of orderProducts){
-   const product=productGroups.get(item_id)||{item_id,order_count:0,exclusive_order_count:0,mixed_order_count:0,payouts:[],payout_known:true,returns_orders:0,returns_known:true,with_return_orders:0,without_reported_return_orders:0,unknown_orders:0};
+   const product=productGroups.get(item_id)||{item_id,order_count:0,exclusive_order_count:0,mixed_order_count:0,payouts:[],payout_known:true,returns_orders:0,returns_known:true,with_return_orders:0,without_reported_return_orders:0,unknown_orders:0,exclusive_covered_orders:0,exclusive_tax:0n};
    product.order_count++;
    product[returnsKind+'_orders']++;
-   if(exclusive){product.exclusive_order_count++;if(record.escrow_raw===null)product.payout_known=false;else product.payouts.push(record.escrow_raw);}
+   if(exclusive){
+    product.exclusive_order_count++;if(record.escrow_raw===null)product.payout_known=false;else product.payouts.push(record.escrow_raw);
+    if(orderInvoiceTax!==null){product.exclusive_covered_orders++;product.exclusive_tax+=orderInvoiceTax;}
+   }
    else product.mixed_order_count++;
    if(record.returns_seen===null)product.returns_known=false;else product.returns_orders+=record.returns_seen;
    productGroups.set(item_id,product);
@@ -143,7 +154,11 @@ function storeFrame(run,records,diagnostic,invoiceBases=new Map()){
     with_return_orders:product.with_return_orders,without_reported_return_orders:product.without_reported_return_orders,unknown_orders:product.unknown_orders}))},
   invoice_tax:{schema:'store_invoice_tax_v1',rate_bps:200,basis:'PAYMENT_GOODS_VALUE_PER_ORDER_ESTIMATE',rounding:'HALF_UP_PER_ORDER',
    covered_orders:coveredInvoices,unavailable_orders:records.length-coveredInvoices,
-   known_base_raw:storeInvoiceMoney(invoiceBase),known_tax_raw:storeInvoiceMoney(invoiceTax)}});
+   known_base_raw:storeInvoiceMoney(invoiceBase),known_tax_raw:storeInvoiceMoney(invoiceTax)},
+  product_invoice_tax:{schema:'store_product_invoice_tax_v1',exclusive_covered_orders:exclusiveCoveredInvoices,mixed_covered_orders:mixedCoveredInvoices,
+   known_exclusive_tax_raw:storeInvoiceMoney(exclusiveInvoiceTax),known_mixed_tax_raw:storeInvoiceMoney(mixedInvoiceTax),
+   products:[...productGroups.values()].map(product=>({item_id:product.item_id,exclusive_covered_orders:product.exclusive_covered_orders,
+    known_exclusive_tax_raw:storeInvoiceMoney(product.exclusive_tax)}))}});
  if(!result)throw storeFailure('STORAGE_INVALID',503);return result;
 }
 

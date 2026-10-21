@@ -24,6 +24,24 @@ const mixed=changes=>frame({order_count:3,escrow_amount_raw:'350.3',
  product_breakdown:{schema:'store_product_breakdown_v1',exclusive_order_count:2,mixed_order_count:1,
   exclusive_payout_raw:'270.3',mixed_payout_raw:'80',products:[product('101','200.1',{order_count:2,mixed_order_count:1}),product('201','70.2',{order_count:2,mixed_order_count:1})]},...changes});
 const report=(source=frame(),mapped=bindings(),cfg=costs())=>buildStoreProductSummary(source,mapped,cfg);
+const taxRaw=cents=>{
+ const value=BigInt(cents),whole=value/100n,fraction=(value%100n).toString().padStart(2,'0').replace(/0+$/,'');
+ return String(whole)+(fraction?'.'+fraction:'');
+};
+// Each fixture order has a goods base of R$100.25 and already-rounded tax
+// of R$2.01. The product summary must preserve those imported amounts.
+const withTax=(source=frame(),{invoice={},allocation={}}={})=>{
+ const breakdown=source.product_breakdown,total=source.order_count;
+ return {...source,invoice_tax:{schema:'store_invoice_tax_v1',rate_bps:200,
+  basis:'PAYMENT_GOODS_VALUE_PER_ORDER_ESTIMATE',rounding:'HALF_UP_PER_ORDER',
+  covered_orders:total,unavailable_orders:0,known_base_raw:taxRaw(BigInt(total)*10025n),
+  known_tax_raw:taxRaw(BigInt(total)*201n),...invoice},
+  product_invoice_tax:{schema:'store_product_invoice_tax_v1',exclusive_covered_orders:breakdown.exclusive_order_count,
+   mixed_covered_orders:breakdown.mixed_order_count,known_exclusive_tax_raw:taxRaw(BigInt(breakdown.exclusive_order_count)*201n),
+   known_mixed_tax_raw:taxRaw(BigInt(breakdown.mixed_order_count)*201n),
+   products:breakdown.products.map(row=>({item_id:row.item_id,exclusive_covered_orders:row.exclusive_order_count,
+    known_exclusive_tax_raw:taxRaw(BigInt(row.exclusive_order_count)*201n)})),...allocation}};
+};
 
 test('single-product orders attribute the whole repass by product even across several models, with actual one/two-piece standard costs',()=>{
  const value=report();
@@ -103,4 +121,115 @@ test('no source data, cost profile, saved mappings or policy objects are mutated
  const source=mixed(),mapped=bindings(),cfg=costs(),before=structuredClone({source,mapped,cfg}),value=report(source,mapped,cfg);
  value.products[0].pending.push('CALLER_CHANGED');value.products[0].quantity=999;value.products.push({item_id:'PRIVATE'});
  assert.deepEqual({source,mapped,cfg},before);assert.equal(Object.hasOwn(value,'ads_spend_cents'),false);assert.equal(Object.hasOwn(value,'legacy_margin_cents'),false);
+});
+
+test('exclusive product tax follows the whole invoice across models and is deducted once after all production costs',()=>{
+ const value=report(withTax()),[kitResult,garment]=value.products;
+ assert.deepEqual(value.invoice_tax_allocation,{schema:'store_product_invoice_tax_result_v1',
+  exclusive_covered_orders:2,exclusive_unavailable_orders:0,mixed_covered_orders:0,mixed_unavailable_orders:0,
+  known_exclusive_tax_cents:402,exclusive_tax_cents:402,known_mixed_tax_cents:0,mixed_tax_cents:0});
+ assert.equal(kitResult.quantity,4);assert.equal(kitResult.exclusive_tax_covered_orders,1);
+ assert.equal(kitResult.known_exclusive_tax_cents,201);assert.equal(kitResult.invoice_tax_cents,201);
+ assert.equal(kitResult.expected_after_production_cents,6390);assert.equal(kitResult.expected_after_production_and_tax_cents,6189);
+ assert.equal(garment.invoice_tax_cents,201);assert.equal(garment.expected_after_production_and_tax_cents,3639);
+ for(const row of value.products){assert.equal(row.net_profit_cents,null);assert.equal(row.pending.includes('INVOICE_TAX_UNAVAILABLE'),false);}
+ assert.equal(Object.hasOwn(value,'ads_spend_cents'),false);
+});
+
+test('already-rounded invoice taxes are summed without recomputing tax from a product base or multiplying by units',()=>{
+ const source=one('50',{order_count:2});source.product_breakdown.exclusive_order_count=2;
+ source.product_breakdown.products[0].order_count=2;source.product_breakdown.products[0].exclusive_order_count=2;
+ const value=report(withTax(source,{invoice:{known_base_raw:'0.5',known_tax_raw:'0.02'},
+  allocation:{known_exclusive_tax_raw:'0.02',products:[{item_id:'201',exclusive_covered_orders:2,known_exclusive_tax_raw:'0.02'}]}}));
+ assert.equal(value.products[0].invoice_tax_cents,2);assert.equal(value.invoice_tax_allocation.exclusive_tax_cents,2);
+ assert.equal(value.products[0].expected_after_production_and_tax_cents,1818);
+});
+
+test('mixed invoice tax remains unallocated and exclusive subsets do not pay for a whole mixed product cohort',()=>{
+ const value=report(withTax(mixed()));
+ assert.equal(value.invoice_tax_allocation.exclusive_tax_cents,402);assert.equal(value.invoice_tax_allocation.mixed_tax_cents,201);
+ for(const row of value.products){
+  assert.equal(row.known_exclusive_tax_cents,201);assert.equal(row.exclusive_tax_covered_orders,1);
+  assert.equal(row.invoice_tax_cents,null);assert.equal(row.expected_after_production_and_tax_cents,null);
+  assert.ok(row.pending.includes('MIXED_PRODUCT_ORDERS'));assert.ok(row.pending.includes('INVOICE_TAX_UNAVAILABLE'));
+ }
+ const onlyMixed=frame({order_count:1,escrow_amount_raw:'80',
+  product_breakdown:{schema:'store_product_breakdown_v1',exclusive_order_count:0,mixed_order_count:1,
+   exclusive_payout_raw:'0',mixed_payout_raw:'80',products:[product('101','0',{exclusive_order_count:0,mixed_order_count:1}),product('201','0',{exclusive_order_count:0,mixed_order_count:1})]}});
+ const mixedReport=report(withTax(onlyMixed));assert.equal(mixedReport.invoice_tax_allocation.exclusive_tax_cents,0);
+ assert.equal(mixedReport.invoice_tax_allocation.mixed_tax_cents,201);
+ for(const row of mixedReport.products){assert.equal(row.known_exclusive_tax_cents,0);assert.equal(row.invoice_tax_cents,null);assert.equal(row.expected_after_production_and_tax_cents,null);}
+});
+
+test('one product can have complete tax while another product has an unavailable invoice base',()=>{
+ const value=report(withTax(frame(),{invoice:{covered_orders:1,unavailable_orders:1,known_base_raw:'100.25',known_tax_raw:'2.01'},
+  allocation:{exclusive_covered_orders:1,known_exclusive_tax_raw:'2.01',products:[
+   {item_id:'101',exclusive_covered_orders:1,known_exclusive_tax_raw:'2.01'},
+   {item_id:'201',exclusive_covered_orders:0,known_exclusive_tax_raw:'0'}]}}));
+ assert.equal(value.invoice_tax_allocation.exclusive_tax_cents,null);assert.equal(value.invoice_tax_allocation.known_exclusive_tax_cents,201);
+ assert.equal(value.invoice_tax_allocation.exclusive_unavailable_orders,1);
+ assert.equal(value.products[0].invoice_tax_cents,201);assert.equal(value.products[0].expected_after_production_and_tax_cents,6189);
+ assert.equal(value.products[1].known_exclusive_tax_cents,0);assert.equal(value.products[1].invoice_tax_cents,null);
+ assert.equal(value.products[1].expected_after_production_and_tax_cents,null);assert.ok(value.products[1].pending.includes('INVOICE_TAX_UNAVAILABLE'));
+});
+
+test('partial cohorts retain known invoice subsets without promoting them to full product tax or balance totals',()=>{
+ for(const change of [{status:'RUNNING'},{status:'LIMIT_REACHED',pages_read:200},{status:'RUNNING',diagnostic:'STORE_PERIOD_UPSTREAM_UNAVAILABLE'}]){
+  const value=report(withTax(frame(change)));assert.equal(value.invoice_tax_allocation.known_exclusive_tax_cents,402);
+  assert.equal(value.invoice_tax_allocation.exclusive_tax_cents,null);assert.equal(value.invoice_tax_allocation.mixed_tax_cents,null);
+  for(const row of value.products){assert.equal(row.known_exclusive_tax_cents,201);assert.equal(row.invoice_tax_cents,null);assert.equal(row.expected_after_production_and_tax_cents,null);assert.ok(row.pending.includes('INVOICE_TAX_UNAVAILABLE'));}
+ }
+});
+
+test('tax availability is independent of payout, mappings and returns, while balances keep their existing prerequisites',()=>{
+ const noMoney=report(withTax(one(null))).products[0];assert.equal(noMoney.invoice_tax_cents,201);
+ assert.equal(noMoney.expected_after_production_and_tax_cents,null);assert.ok(noMoney.pending.includes('MONEY_UNAVAILABLE'));
+ const noCost=report(withTax(),bindings([single()]));assert.equal(noCost.products[0].invoice_tax_cents,201);
+ assert.equal(noCost.products[0].expected_after_production_and_tax_cents,null);assert.ok(noCost.products[0].pending.includes('PRODUCTION_COST_INCOMPLETE'));
+ const returned=one('50',{returns_orders:1});returned.product_breakdown.products[0].returns_orders=1;
+ const value=report(withTax(returned)).products[0];assert.equal(value.invoice_tax_cents,201);
+ assert.equal(value.expected_after_production_and_tax_cents,1619);assert.equal(value.net_profit_cents,null);
+ assert.ok(value.pending.includes('RETURNS_NOT_RECONCILED'));assert.ok(value.pending.includes('SETTLEMENT_NOT_RECONCILED'));
+});
+
+test('explicit zero invoice tax is known and negative after-tax balances remain exact instead of being clamped',()=>{
+ const zero=report(withTax(one('50'),{invoice:{known_base_raw:'0',known_tax_raw:'0'},
+  allocation:{known_exclusive_tax_raw:'0',products:[{item_id:'201',exclusive_covered_orders:1,known_exclusive_tax_raw:'0'}]}})).products[0];
+ assert.equal(zero.invoice_tax_cents,0);assert.equal(zero.expected_after_production_and_tax_cents,1820);
+ const loss=report(withTax(one('0'))).products[0];assert.equal(loss.invoice_tax_cents,201);
+ assert.equal(loss.expected_after_production_and_tax_cents,-3381);assert.equal(loss.net_profit_cents,null);
+});
+
+test('invoice tax outside the monetary projection bound remains unknown instead of being rounded into a plausible product balance',()=>{
+ const source=one('50',{order_count:100,pages_read:20});source.items[0].quantity=100;
+ source.product_breakdown.exclusive_order_count=100;source.product_breakdown.products[0].order_count=100;
+ source.product_breakdown.products[0].exclusive_order_count=100;
+ const value=report(withTax(source,{invoice:{known_base_raw:'100000000000000',known_tax_raw:'2000000000000'},
+  allocation:{known_exclusive_tax_raw:'2000000000000',products:[{item_id:'201',exclusive_covered_orders:100,known_exclusive_tax_raw:'2000000000000'}]}}));
+ assert.equal(value.invoice_tax_allocation.known_exclusive_tax_cents,null);assert.equal(value.invoice_tax_allocation.exclusive_tax_cents,null);
+ assert.equal(value.products[0].known_exclusive_tax_cents,null);assert.equal(value.products[0].invoice_tax_cents,null);
+ assert.equal(value.products[0].expected_after_production_and_tax_cents,null);assert.ok(value.products[0].pending.includes('INVOICE_TAX_UNAVAILABLE'));
+});
+
+test('legacy product summaries keep their serialized shape when global tax exists without a product allocation',()=>{
+ const source=withTax(),withGlobalOnly=structuredClone(source);delete withGlobalOnly.product_invoice_tax;
+ assert.equal(JSON.stringify(report(frame())),JSON.stringify(report(withGlobalOnly)));
+ const empty=frame({order_count:0,items:[],escrow_amount_raw:'0',product_breakdown:{schema:'store_product_breakdown_v1',exclusive_order_count:0,mixed_order_count:0,exclusive_payout_raw:'0',mixed_payout_raw:'0',products:[]}});
+ const value=report(withTax(empty),bindings([]));assert.deepEqual(value.products,[]);
+ assert.equal(value.invoice_tax_allocation.exclusive_tax_cents,0);assert.equal(value.invoice_tax_allocation.mixed_tax_cents,0);
+ const before=structuredClone(source),projection=report(source);projection.invoice_tax_allocation.known_exclusive_tax_cents=999;
+ projection.products[0].invoice_tax_cents=999;assert.deepEqual(source,before);
+});
+
+test('invalid product invoice allocation identities, coverage, sums and private extras fail before a product result can be built',()=>{
+ const invalid=[
+  source=>{source.product_invoice_tax.products[0].item_id='999';},
+  source=>{source.product_invoice_tax.exclusive_covered_orders=1;},
+  source=>{source.product_invoice_tax.known_mixed_tax_raw='0.01';},
+  source=>{source.product_invoice_tax.products[0].known_exclusive_tax_raw='2.001';},
+  source=>{source.product_invoice_tax.products[0].exclusive_covered_orders=2;},
+  source=>{source.product_invoice_tax.order_sn='PRIVATE_ORDER';},
+  source=>{delete source.invoice_tax;},
+ ];
+ for(const mutate of invalid){const source=withTax();mutate(source);assert.throws(()=>report(source),error=>error instanceof StoreSummaryError&&error.message==='STORE_PRODUCT_FRAME_INVALID');}
 });

@@ -140,8 +140,11 @@ test('a maximum product breakdown crosses 256KiB and both private transports enf
    without_reported_return:{order_count:1000,payout_raw:'123456789012123.456789012'},unknown:{order_count:0,payout_raw:'0'},
    products:ids.map(item_id=>({item_id,order_count:1,with_return_orders:0,without_reported_return_orders:1,unknown_orders:0}))},
   invoice_tax:{schema:'store_invoice_tax_v1',rate_bps:200,basis:'PAYMENT_GOODS_VALUE_PER_ORDER_ESTIMATE',
-   rounding:'HALF_UP_PER_ORDER',covered_orders:1000,unavailable_orders:0,known_base_raw:'1000',known_tax_raw:'20'}};
- const raw=JSON.stringify(value);assert.ok(Buffer.byteLength(raw)>262144);
+   rounding:'HALF_UP_PER_ORDER',covered_orders:1000,unavailable_orders:0,known_base_raw:'999999999999500',known_tax_raw:'19999999999990'},
+  product_invoice_tax:{schema:'store_product_invoice_tax_v1',exclusive_covered_orders:1000,mixed_covered_orders:0,
+   known_exclusive_tax_raw:'19999999999990',known_mixed_tax_raw:'0',
+   products:ids.map(item_id=>({item_id,exclusive_covered_orders:1,known_exclusive_tax_raw:'19999999999.99'}))}};
+ const raw=JSON.stringify(value);assert.ok(Buffer.byteLength(raw)>490000);assert.ok(Buffer.byteLength(raw)<524288);
  const padded=raw.padEnd(524288,' '),env={APP_INTERNAL_SECRET:'fixture'};
  const upstream=body=>new Response(body,{headers:{'content-type':'application/json'}});
  assert.deepEqual(await getFinanceStorePeriod(env,start,{fetchImpl:async()=>upstream(padded)}),value);

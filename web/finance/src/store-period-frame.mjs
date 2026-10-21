@@ -191,13 +191,52 @@ function storeInvoiceTax(value,frame) {
     known_base_raw:value.known_base_raw,known_tax_raw:value.known_tax_raw};
 }
 
+// Whole-invoice tax follows an exclusive order's one product. A mixed order's
+// tax remains in the global unallocated partition and is never copied to each
+// participant or recalculated from product quantities or period-wide bases.
+function storeProductInvoiceTax(value,productBreakdown,invoiceTax) {
+  if(!productBreakdown||!invoiceTax
+    ||!storeExact(value,['schema','exclusive_covered_orders','mixed_covered_orders','known_exclusive_tax_raw','known_mixed_tax_raw','products'])
+    ||value.schema!=='store_product_invoice_tax_v1'||!storeArray(value.products,1000)
+    ||!storeInteger(value.exclusive_covered_orders,0,productBreakdown.exclusive_order_count)
+    ||!storeInteger(value.mixed_covered_orders,0,productBreakdown.mixed_order_count)
+    ||value.exclusive_covered_orders+value.mixed_covered_orders!==invoiceTax.covered_orders
+    ||value.products.length!==productBreakdown.products.length)return null;
+  const cents=(raw,covered)=>{
+    if(typeof raw!=='string'||normalizeStoreDecimal(raw)!==raw)return null;
+    const scaled=storeScaled(raw);
+    if(scaled===null||scaled<0n||scaled%10000000000n!==0n||covered===0&&raw!=='0')return null;
+    const amount=scaled/10000000000n;
+    return amount<=BigInt(covered)*2000000000000n?amount:null;
+  };
+  const exclusiveTax=cents(value.known_exclusive_tax_raw,value.exclusive_covered_orders),mixedTax=cents(value.known_mixed_tax_raw,value.mixed_covered_orders);
+  if(exclusiveTax===null||mixedTax===null
+    ||addStoreDecimals([value.known_exclusive_tax_raw,value.known_mixed_tax_raw])!==invoiceTax.known_tax_raw)return null;
+  const sourceProducts=new Map(productBreakdown.products.map(row=>[row.item_id,row])),seen=new Set(),products=[];
+  let covered=0,tax=0n;
+  for(const row of value.products){
+    if(!storeExact(row,['item_id','exclusive_covered_orders','known_exclusive_tax_raw'])||!storeId(row.item_id)
+      ||seen.has(row.item_id)||!sourceProducts.has(row.item_id)
+      ||!storeInteger(row.exclusive_covered_orders,0,sourceProducts.get(row.item_id).exclusive_order_count))return null;
+    const amount=cents(row.known_exclusive_tax_raw,row.exclusive_covered_orders);if(amount===null)return null;
+    seen.add(row.item_id);covered+=row.exclusive_covered_orders;tax+=amount;
+    products.push({item_id:row.item_id,exclusive_covered_orders:row.exclusive_covered_orders,known_exclusive_tax_raw:row.known_exclusive_tax_raw});
+  }
+  if(covered!==value.exclusive_covered_orders||tax!==exclusiveTax)return null;
+  products.sort((a,b)=>storeIdOrder(a.item_id,b.item_id));
+  return {schema:'store_product_invoice_tax_v1',exclusive_covered_orders:value.exclusive_covered_orders,
+    mixed_covered_orders:value.mixed_covered_orders,known_exclusive_tax_raw:value.known_exclusive_tax_raw,
+    known_mixed_tax_raw:value.known_mixed_tax_raw,products};
+}
+
 export function projectStorePeriodFrame(value) {
   try{
     const hasBreakdown=storePlain(value)&&Object.hasOwn(value,'product_breakdown');
     const hasReturns=storePlain(value)&&Object.hasOwn(value,'returns_breakdown');
     const hasInvoiceTax=storePlain(value)&&Object.hasOwn(value,'invoice_tax');
+    const hasProductInvoiceTax=storePlain(value)&&Object.hasOwn(value,'product_invoice_tax');
     const keys=['schema','run_id','revision','status','start_date','end_date','cutoff_at','checked_at','currency','monetary_unit',
-      'order_count','pages_read','duplicate_orders','returns_orders','escrow_amount_raw','ads_recharge_or_support_raw','items','diagnostic',...(hasBreakdown?['product_breakdown']:[]),...(hasReturns?['returns_breakdown']:[]),...(hasInvoiceTax?['invoice_tax']:[])];
+      'order_count','pages_read','duplicate_orders','returns_orders','escrow_amount_raw','ads_recharge_or_support_raw','items','diagnostic',...(hasBreakdown?['product_breakdown']:[]),...(hasReturns?['returns_breakdown']:[]),...(hasInvoiceTax?['invoice_tax']:[]),...(hasProductInvoiceTax?['product_invoice_tax']:[])];
     if(!storeExact(value,keys)||value.schema!=='finance_store_period_v1'||!storeRunId(value.run_id)
       ||!storeInteger(value.revision,1,2147483647)||!['RUNNING','COMPLETE','LIMIT_REACHED'].includes(value.status)
       ||!projectStorePeriodRequest({operation:'start',start_date:value.start_date,end_date:value.end_date})
@@ -226,6 +265,8 @@ export function projectStorePeriodFrame(value) {
     if(hasReturns&&!returns)return null;
     const invoiceTax=hasInvoiceTax?storeInvoiceTax(value.invoice_tax,value):undefined;
     if(hasInvoiceTax&&!invoiceTax)return null;
-    return Object.fromEntries(keys.map(key=>[key,key==='items'?items:key==='product_breakdown'?breakdown:key==='returns_breakdown'?returns:key==='invoice_tax'?invoiceTax:value[key]]));
+    const productInvoiceTax=hasProductInvoiceTax?storeProductInvoiceTax(value.product_invoice_tax,breakdown,invoiceTax):undefined;
+    if(hasProductInvoiceTax&&!productInvoiceTax)return null;
+    return Object.fromEntries(keys.map(key=>[key,key==='items'?items:key==='product_breakdown'?breakdown:key==='returns_breakdown'?returns:key==='invoice_tax'?invoiceTax:key==='product_invoice_tax'?productInvoiceTax:value[key]]));
   }catch{return null;}
 }

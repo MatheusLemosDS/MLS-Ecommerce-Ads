@@ -171,13 +171,14 @@ test('the two-hundred-page cap never declares a still-paginating cohort complete
  const priorPage=page;assert.deepEqual(await f.run({operation:'step',run_id:job.run_id,fetchImpl}),result);assert.equal(page,priorPage);
 });
 
-async function productFixture(mode='normal'){
- const f=await fixture(3),state={mode};
+async function productFixture(mode='normal',bases=[]){
+ const f=await fixture(3),state={mode},providerCalls=[];
  const lines=index=>index===0?[{item_id:100,model_id:0,quantity:2},{item_id:100,model_id:1,quantity:1}]
   :index===1?[{item_id:100,model_id:0,quantity:1},{item_id:200,model_id:0,quantity:3}]
   :[{item_id:300,model_id:0,quantity:1}];
  const fetchImpl=async request=>{
   const url=new URL(request.url);
+  providerCalls.push(url.pathname);
   if(url.pathname===detail)return body({order_list:url.searchParams.get('order_sn_list').split(',').map(sn=>{
    const index=Number(sn.split('_').at(-1));return {order_sn:sn,order_status:'COMPLETED',currency:'BRL',
     item_list:lines(index).map(({quantity,...row})=>({...row,model_quantity_purchased:quantity}))};
@@ -186,13 +187,14 @@ async function productFixture(mode='normal'){
   const index=Number(url.searchParams.get('order_sn').split('_').at(-1));
   const order_income={escrow_amount:[0.1,0.2,-0.05][index],ads_escrow_top_up_fee_or_technical_support_fee:0,
    items:lines(index).map(({quantity,...row},position)=>({...row,line_item_id:index*10+position,quantity_purchased:quantity,selling_price:99999,buyer:'PRIVATE_BUYER'}))};
+  if(bases[index]!==undefined)order_income.original_cost_of_goods_sold=bases[index];
   if(state.mode==='exclusive-money-missing'&&index===0||state.mode==='mixed-money-missing'&&index===1)delete order_income.escrow_amount;
   const response={order_sn:serial(index),order_income,return_order_sn_list:index===1?['FIXTURE_PRIVATE_RETURN']:[]};
   if(state.mode==='exclusive-money-missing'&&index===2)delete response.return_order_sn_list;
   return body(response);
  };
  const job=await f.start(),run=input=>f.run({...input,fetchImpl});
- return {...f,state,job,run};
+ return {...f,state,job,run,providerCalls};
 }
 
 test('product payout uses a single distinct item ID even across models and leaves multi-product money unallocated',async()=>{
@@ -369,4 +371,60 @@ test('invoice evidence expires with its parent cohort under age retention and bo
  assert.equal(rows(bounded).runs.length,60);bounded.clock.time+=901000;await bounded.start();assert.equal(rows(bounded).runs.length,60);
  assert.equal(invoiceRows(bounded).length,0);assert.equal(rows(bounded).orders.length,0);
  await assert.rejects(bounded.run({operation:'read',run_id:first.run_id}),error=>error.code==='FINANCE_STORE_RUN_NOT_FOUND');
+});
+
+test('whole per-order invoice tax follows an exclusive product across models and leaves mixed-order tax unallocated',async()=>{
+ const f=await productFixture('normal',[0.25,0.75,0.25]),result=await f.run({operation:'step',run_id:f.job.run_id});
+ assert.equal(result.status,'COMPLETE');assert.equal(result.invoice_tax.known_tax_raw,'0.04');
+ assert.deepEqual(result.product_invoice_tax,{schema:'store_product_invoice_tax_v1',exclusive_covered_orders:2,mixed_covered_orders:1,
+  known_exclusive_tax_raw:'0.02',known_mixed_tax_raw:'0.02',products:[
+   {item_id:'100',exclusive_covered_orders:1,known_exclusive_tax_raw:'0.01'},
+   {item_id:'200',exclusive_covered_orders:0,known_exclusive_tax_raw:'0'},
+   {item_id:'300',exclusive_covered_orders:1,known_exclusive_tax_raw:'0.01'},
+  ]});
+ assert.equal(result.product_breakdown.products[0].exclusive_order_count,1);
+ assert.equal(result.items.filter(row=>row.item_id==='100').length,2);
+ assert.equal(result.product_invoice_tax.products[0].known_exclusive_tax_raw,'0.01');
+ assert.equal(f.providerCalls.filter(path=>path===payment).length,3);
+ assert.equal(f.providerCalls.length,5);
+ assert.equal(invoiceRows(f).length,3);
+ for(const marker of ['PRIVATE_ORDER','PRIVATE_BUYER','PRIVATE_RETURN','source_hash','order_hash','original_cost_of_goods_sold'])assert.ok(!JSON.stringify(result.product_invoice_tax).includes(marker));
+});
+
+test('per-product tax preserves invoice rounding instead of re-rounding one product aggregate or multiplying by quantity',async()=>{
+ const f=await invoiceFixture([0.25,0.25]),job=await f.start(),result=await f.run({operation:'step',run_id:job.run_id});
+ assert.equal(result.product_breakdown.products.length,1);assert.equal(result.items.length,2);
+ assert.equal(result.items.reduce((total,row)=>total+row.quantity,0),4);
+ assert.deepEqual(result.product_invoice_tax,{schema:'store_product_invoice_tax_v1',exclusive_covered_orders:2,mixed_covered_orders:0,
+  known_exclusive_tax_raw:'0.02',known_mixed_tax_raw:'0',products:[{item_id:'100',exclusive_covered_orders:2,known_exclusive_tax_raw:'0.02'}]});
+ assert.equal(f.calls.filter(request=>new URL(request.url).pathname===payment).length,2);
+});
+
+test('missing bases keep only their product tax coverage unavailable while independent covered products retain exact known tax',async()=>{
+ const f=await productFixture('normal',[0.25,undefined,null]),result=await f.run({operation:'step',run_id:f.job.run_id});
+ assert.equal(result.invoice_tax.covered_orders,1);assert.equal(result.invoice_tax.unavailable_orders,2);
+ assert.deepEqual(result.product_invoice_tax,{schema:'store_product_invoice_tax_v1',exclusive_covered_orders:1,mixed_covered_orders:0,
+  known_exclusive_tax_raw:'0.01',known_mixed_tax_raw:'0',products:[
+   {item_id:'100',exclusive_covered_orders:1,known_exclusive_tax_raw:'0.01'},
+   {item_id:'200',exclusive_covered_orders:0,known_exclusive_tax_raw:'0'},
+   {item_id:'300',exclusive_covered_orders:0,known_exclusive_tax_raw:'0'},
+  ]});
+ const before=rows(f),aux=invoiceRows(f),calls=f.calls.length,cached=await f.run({operation:'read',run_id:f.job.run_id});
+ assert.deepEqual(cached.product_invoice_tax,result.product_invoice_tax);assert.deepEqual(rows(f),before);assert.deepEqual(invoiceRows(f),aux);assert.equal(f.calls.length,calls);
+ f.db.db.prepare('DELETE FROM finance_store_period_invoice_bases WHERE run_id=?').run(f.job.run_id);
+ const legacy=await f.run({operation:'read',run_id:f.job.run_id});assert.equal(legacy.product_invoice_tax.exclusive_covered_orders,0);
+ assert.equal(legacy.product_invoice_tax.mixed_covered_orders,0);assert.equal(legacy.product_invoice_tax.known_exclusive_tax_raw,'0');
+ assert.equal(legacy.invoice_tax.unavailable_orders,3);assert.ok(legacy.product_invoice_tax.products.every(row=>row.exclusive_covered_orders===0));
+ assert.equal(f.calls.length,calls);
+});
+
+test('explicit zero and empty cohorts have covered zero product tax without creating mixed allocations or new evidence',async()=>{
+ const f=await productFixture('normal',[0,0,0]),result=await f.run({operation:'step',run_id:f.job.run_id});
+ assert.equal(result.product_invoice_tax.exclusive_covered_orders,2);assert.equal(result.product_invoice_tax.mixed_covered_orders,1);
+ assert.equal(result.product_invoice_tax.known_exclusive_tax_raw,'0');assert.equal(result.product_invoice_tax.known_mixed_tax_raw,'0');
+ assert.deepEqual(result.product_invoice_tax.products.map(row=>[row.item_id,row.exclusive_covered_orders]),[['100',1],['200',0],['300',1]]);
+ const empty=await fixture(0),job=await empty.start(),noOrders=await empty.run({operation:'step',run_id:job.run_id});
+ assert.deepEqual(noOrders.product_invoice_tax,{schema:'store_product_invoice_tax_v1',exclusive_covered_orders:0,mixed_covered_orders:0,
+  known_exclusive_tax_raw:'0',known_mixed_tax_raw:'0',products:[]});
+ assert.equal(invoiceRows(empty).length,0);assert.equal(empty.calls.filter(request=>new URL(request.url).pathname===payment).length,0);
 });

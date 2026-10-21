@@ -1,5 +1,8 @@
 # Repasse por produto e consumo de anúncios
 
+O imposto na lista e as opções de ordenação e paginação estão em
+[Imposto por produto e ordenação](IMPOSTO_POR_PRODUTO_E_ORDENACAO.md).
+
 O detalhamento de ocorrências e informação desconhecida de devoluções está em
 [Devoluções e cobertura da consulta](DEVOLUCOES_E_COBERTURA.md).
 
@@ -45,8 +48,8 @@ Pedidos com produtos diferentes ficam em uma parcela sem rateio. Não se usa
 preço de venda para inventar a distribuição de taxas ou do repasse.
 
 Cada linha informa unidades, pedidos, cobertura de repasse, custo padrão atual
-de produção e, quando houver cobertura integral, o saldo de repasse previsto
-após produção. Se o produto participa de pedidos mistos, o saldo completo fica
+de produção, imposto e, quando houver cobertura integral, o saldo de repasse previsto
+após produção e imposto. Se o produto participa de pedidos mistos, o saldo completo fica
 pendente. Um valor conhecido apenas de parte dos pedidos não recebe o desconto
 de todo o custo como se fosse um resultado completo.
 

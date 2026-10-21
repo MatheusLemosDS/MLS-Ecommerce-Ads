@@ -236,3 +236,89 @@ test('invoice tax aggregate bounds retain exact cents for one thousand maximum a
   invoice_tax:{...invoiceFrame().invoice_tax,covered_orders:1000,unavailable_orders:0,known_base_raw:'1000000000000000',known_tax_raw:'20000000000000'}};
  assert.ok(projectStorePeriodFrame(value));value.invoice_tax.known_base_raw='1000000000000000.01';assert.equal(projectStorePeriodFrame(value),null);
 });
+
+const productInvoiceFrame=()=>({...productFrame(),invoice_tax:{schema:'store_invoice_tax_v1',rate_bps:200,
+ basis:'PAYMENT_GOODS_VALUE_PER_ORDER_ESTIMATE',rounding:'HALF_UP_PER_ORDER',covered_orders:3,unavailable_orders:0,
+ known_base_raw:'1.25',known_tax_raw:'0.04'},product_invoice_tax:{schema:'store_product_invoice_tax_v1',
+ exclusive_covered_orders:2,mixed_covered_orders:1,known_exclusive_tax_raw:'0.02',known_mixed_tax_raw:'0.02',
+ products:[{item_id:'20',exclusive_covered_orders:1,known_exclusive_tax_raw:'0.01'},
+  {item_id:'1',exclusive_covered_orders:1,known_exclusive_tax_raw:'0.01'}]}});
+
+test('optional product invoice tax preserves legacy bytes and projects independent exclusive and unallocated mixed sums',()=>{
+ const legacy=projectStorePeriodFrame(productFrame());assert.equal(JSON.stringify(projectStorePeriodFrame(legacy)),JSON.stringify(legacy));
+ const value=productInvoiceFrame(),result=projectStorePeriodFrame(value);assert.ok(result);
+ assert.deepEqual(result.product_invoice_tax.products.map(row=>row.item_id),['1','20']);
+ assert.equal(result.product_invoice_tax.known_exclusive_tax_raw,'0.02');
+ assert.equal(result.product_invoice_tax.known_mixed_tax_raw,'0.02');
+ value.product_invoice_tax.products[0].known_exclusive_tax_raw='99';assert.equal(result.product_invoice_tax.products[1].known_exclusive_tax_raw,'0.01');
+ for(const key of ['product_breakdown','invoice_tax']){const missing=productInvoiceFrame();delete missing[key];assert.equal(projectStorePeriodFrame(missing),null);}
+ const empty={...frame(),product_breakdown:{schema:'store_product_breakdown_v1',exclusive_order_count:0,mixed_order_count:0,exclusive_payout_raw:'0',mixed_payout_raw:'0',products:[]},
+  invoice_tax:{...productInvoiceFrame().invoice_tax,covered_orders:0,unavailable_orders:0,known_base_raw:'0',known_tax_raw:'0'},
+  product_invoice_tax:{schema:'store_product_invoice_tax_v1',exclusive_covered_orders:0,mixed_covered_orders:0,known_exclusive_tax_raw:'0',known_mixed_tax_raw:'0',products:[]}};
+ assert.deepEqual(projectStorePeriodFrame(empty),empty);
+});
+
+test('product invoice coverage retains complete individual products when other exclusive or mixed bases are unknown',()=>{
+ const value=productInvoiceFrame();Object.assign(value.invoice_tax,{covered_orders:1,unavailable_orders:2,known_base_raw:'0.25',known_tax_raw:'0.01'});
+ Object.assign(value.product_invoice_tax,{exclusive_covered_orders:1,mixed_covered_orders:0,known_exclusive_tax_raw:'0.01',known_mixed_tax_raw:'0'});
+ Object.assign(value.product_invoice_tax.products[0],{exclusive_covered_orders:0,known_exclusive_tax_raw:'0'});
+ const result=projectStorePeriodFrame(value);assert.ok(result);
+ assert.equal(result.product_invoice_tax.products[0].exclusive_covered_orders,1);
+ assert.equal(result.product_invoice_tax.products[0].known_exclusive_tax_raw,'0.01');
+ assert.equal(result.product_invoice_tax.products[1].exclusive_covered_orders,0);
+ const mixed=productInvoiceFrame();mixed.order_count=1;mixed.items=mixed.items.filter(row=>row.model_id==='0').map(row=>({...row,quantity:1}));
+ Object.assign(mixed.product_breakdown,{exclusive_order_count:0,mixed_order_count:1,exclusive_payout_raw:'0',mixed_payout_raw:'0.25'});
+ mixed.product_breakdown.products=mixed.product_breakdown.products.map(row=>({...row,order_count:1,exclusive_order_count:0,mixed_order_count:1,exclusive_payout_raw:'0'}));
+ Object.assign(mixed.invoice_tax,{covered_orders:1,unavailable_orders:0,known_base_raw:'0.75',known_tax_raw:'0.02'});
+ Object.assign(mixed.product_invoice_tax,{exclusive_covered_orders:0,mixed_covered_orders:1,known_exclusive_tax_raw:'0',known_mixed_tax_raw:'0.02'});
+ mixed.product_invoice_tax.products=mixed.product_invoice_tax.products.map(row=>({...row,exclusive_covered_orders:0,known_exclusive_tax_raw:'0'}));
+ const resultMixed=projectStorePeriodFrame(mixed);assert.ok(resultMixed);
+ assert.equal(resultMixed.product_invoice_tax.known_mixed_tax_raw,'0.02');
+ assert.ok(resultMixed.product_invoice_tax.products.every(row=>row.exclusive_covered_orders===0&&row.known_exclusive_tax_raw==='0'));
+});
+
+test('product invoice tax refuses fabricated allocations, impossible coverage, noncanonical money and private extras',()=>{
+ const mutations=[
+  value=>value.product_invoice_tax.schema='store_product_invoice_tax_v2',
+  value=>value.product_invoice_tax.order_hash='PRIVATE_HASH',
+  value=>value.product_invoice_tax.exclusive_covered_orders=3,
+  value=>value.product_invoice_tax.mixed_covered_orders=0,
+  value=>value.product_invoice_tax.known_exclusive_tax_raw='0.03',
+  value=>value.product_invoice_tax.known_mixed_tax_raw='0.01',
+  value=>value.product_invoice_tax.known_exclusive_tax_raw=null,
+  value=>value.product_invoice_tax.known_exclusive_tax_raw='-0.01',
+  value=>value.product_invoice_tax.known_exclusive_tax_raw='0.020',
+  value=>value.product_invoice_tax.known_exclusive_tax_raw='0.021',
+  value=>value.product_invoice_tax.products.pop(),
+  value=>value.product_invoice_tax.products.push({...value.product_invoice_tax.products[0]}),
+  value=>value.product_invoice_tax.products[0].item_id='999',
+  value=>value.product_invoice_tax.products[0].item_id='020',
+  value=>value.product_invoice_tax.products[0].exclusive_covered_orders=2,
+  value=>value.product_invoice_tax.products[0].exclusive_covered_orders='1',
+  value=>value.product_invoice_tax.products[0].known_exclusive_tax_raw='0.02',
+  value=>value.product_invoice_tax.products[0].known_exclusive_tax_raw='0.011',
+  value=>value.product_invoice_tax.products[0].order_sn='PRIVATE_ORDER',
+  value=>value.product_invoice_tax.products=Array(2),
+ ];
+ for(const mutate of mutations){const value=productInvoiceFrame();mutate(value);assert.equal(projectStorePeriodFrame(value),null);}
+ let getters=0;const getter=productInvoiceFrame();Object.defineProperty(getter.product_invoice_tax.products[0],'known_exclusive_tax_raw',{enumerable:true,get(){getters++;return '0.01';}});
+ assert.equal(projectStorePeriodFrame(getter),null);assert.equal(getters,0);
+ const unavailable=productInvoiceFrame();Object.assign(unavailable.invoice_tax,{covered_orders:0,unavailable_orders:3,known_base_raw:'0',known_tax_raw:'0'});
+ Object.assign(unavailable.product_invoice_tax,{exclusive_covered_orders:0,mixed_covered_orders:0,known_exclusive_tax_raw:'0.01',known_mixed_tax_raw:'0'});
+ unavailable.product_invoice_tax.products=unavailable.product_invoice_tax.products.map(row=>({...row,exclusive_covered_orders:0,known_exclusive_tax_raw:'0'}));
+ assert.equal(projectStorePeriodFrame(unavailable),null);
+});
+
+test('product invoice tax supports a thousand compact maximum-size products and bounds each covered order tax',()=>{
+ const ids=Array.from({length:1000},(_,index)=>String(99999999999999999000n+BigInt(index)));
+ const value={...frame(),status:'COMPLETE',order_count:1000,pages_read:200,escrow_amount_raw:'1000000000000000',
+  items:ids.map(item_id=>({item_id,model_id:'0',quantity:1})),
+  product_breakdown:{schema:'store_product_breakdown_v1',exclusive_order_count:1000,mixed_order_count:0,exclusive_payout_raw:'1000000000000000',mixed_payout_raw:'0',
+   products:ids.map(item_id=>({item_id,order_count:1,exclusive_order_count:1,mixed_order_count:0,exclusive_payout_raw:'1000000000000',returns_orders:0}))},
+  invoice_tax:{...productInvoiceFrame().invoice_tax,covered_orders:1000,unavailable_orders:0,known_base_raw:'1000000000000000',known_tax_raw:'20000000000000'},
+  product_invoice_tax:{schema:'store_product_invoice_tax_v1',exclusive_covered_orders:1000,mixed_covered_orders:0,known_exclusive_tax_raw:'20000000000000',known_mixed_tax_raw:'0',
+   products:ids.map(item_id=>({item_id,exclusive_covered_orders:1,known_exclusive_tax_raw:'20000000000'}))}};
+ assert.ok(projectStorePeriodFrame(value));
+ const excessive=structuredClone(value);excessive.product_invoice_tax.products[0].known_exclusive_tax_raw='20000000000.01';assert.equal(projectStorePeriodFrame(excessive),null);
+ value.product_invoice_tax.products.push({...value.product_invoice_tax.products[0],item_id:'1001'});assert.equal(projectStorePeriodFrame(value),null);
+});

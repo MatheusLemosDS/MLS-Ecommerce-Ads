@@ -1,5 +1,8 @@
 # Imposto de 2% e resultado após custos conhecidos
 
+A associação do imposto à lista financeira e sua ordenação estão em
+[Imposto por produto e ordenação](IMPOSTO_POR_PRODUTO_E_ORDENACAO.md).
+
 O operador confirmou que uma venda de produtos de R$ 100,00, antes das taxas da
 Shopee, gera R$ 2,00 de imposto. A confirmação limitada está em
 [IMPOSTO_2_POR_CENTO_CONFIRMADO.json](IMPOSTO_2_POR_CENTO_CONFIRMADO.json).
