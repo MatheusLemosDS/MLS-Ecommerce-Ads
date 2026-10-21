@@ -1,5 +1,8 @@
 # Resultado da loja por período
 
+O imposto automático de 2% sobre produtos e o comportamento do último cartão
+estão em [Imposto e resultado previsto](IMPOSTO_E_RESULTADO_PREVISTO.md).
+
 **Atualização:** consumo automático de Ads e repasse previsto por produto estão
 descritos em [Repasse por produto e consumo de anúncios](REPASSE_POR_PRODUTO_E_ADS.md).
 O resultado aparece na tela inicial e a
@@ -47,9 +50,10 @@ e não entram novamente nesta conta.
 ## Anúncios, despesas e pendências
 
 O painel busca o **consumo de anúncios do mesmo intervalo** automaticamente após
-a coleta financeira; também permite uma declaração manual. Informe as despesas
-externas ainda não incluídas no repasse ou na produção, como impostos e outras
-despesas operacionais. Zero é uma declaração explícita de ausência, não o padrão
+a coleta financeira; também permite uma declaração manual. O imposto de 2%
+é calculado separadamente sobre os produtos. Informe as outras despesas
+externas ainda não incluídas no repasse, na produção ou nesse imposto.
+Zero é uma declaração explícita de ausência, não o padrão
 para um valor desconhecido. Não usar uma recarga de saldo como consumo de Ads.
 
 Se houver dedução no campo combinado de recarga de anúncios/suporte técnico,

@@ -1,5 +1,6 @@
 import {productionCostReference} from './production-costs.mjs';
 import {projectStorePeriodFrame} from '../../finance/src/store-period-frame.mjs';
+import {buildStoreInvoiceTax} from './store-invoice-tax.mjs';
 
 export class StoreSummaryError extends Error {
   constructor(code,status=400){super(code);this.status=status;}
@@ -28,19 +29,22 @@ function summaryMoney(value){
 
 export function validateStoreAdjustments(value){
   const hasSource=summaryPlain(value)&&Object.hasOwn(value,'ads_source');
-  if(!summaryExact(value,['ads_spend_cents','external_expenses_cents','recharge_treatment',...(hasSource?['ads_source']:[])])
+  const hasBasis=summaryPlain(value)&&Object.hasOwn(value,'external_expenses_basis');
+  if(!summaryExact(value,['ads_spend_cents','external_expenses_cents','recharge_treatment',...(hasSource?['ads_source']:[]),...(hasBasis?['external_expenses_basis']:[])])
     ||!summarySafeInteger(value.ads_spend_cents)||!summarySafeInteger(value.external_expenses_cents)
     ||hasSource&&!['MANUAL','SHOPEE_PERIOD'].includes(value.ads_source)
+    ||hasBasis&&value.external_expenses_basis!=='EXCLUDES_INVOICE_TAX'
     ||!['UNCONFIRMED','ADS_RECHARGE','TECH_SUPPORT'].includes(value.recharge_treatment)){
     throw new StoreSummaryError('STORE_ADJUSTMENTS_INVALID');
   }
   return {ads_spend_cents:value.ads_spend_cents,external_expenses_cents:value.external_expenses_cents,
-    recharge_treatment:value.recharge_treatment,...(hasSource?{ads_source:value.ads_source}:{})};
+    recharge_treatment:value.recharge_treatment,...(hasSource?{ads_source:value.ads_source}:{}),
+    ...(hasBasis?{external_expenses_basis:value.external_expenses_basis}:{})};
 }
 
 // Expected repass already incorporates Shopee's fees. Do not subtract fee fields
 // again or use Shopee's original_cost_of_goods_sold as our manufacturing cost.
-export function buildStoreSummary(frame,bindings,costs,adjustments=null){
+export function buildStoreSummary(frame,bindings,costs,adjustments=null,adsPeriodSpendCents=null){
   const source=projectStorePeriodFrame(frame);
   if(!source)throw new StoreSummaryError('STORE_SUMMARY_FRAME_INVALID',502);
   const declared=adjustments===null?null:validateStoreAdjustments(adjustments);
@@ -49,6 +53,7 @@ export function buildStoreSummary(frame,bindings,costs,adjustments=null){
     reference=productionCostReference({status:'AVAILABLE',rows:source.items.map(row=>({...row}))},bindings,costs);
   }catch{throw new StoreSummaryError('STORE_SUMMARY_COST_INVALID',503);}
   const complete=source.status==='COMPLETE'&&source.diagnostic===null;
+  const invoiceTax=Object.hasOwn(source,'invoice_tax')?buildStoreInvoiceTax(source):null;
   const payout=summaryMoney(source.escrow_amount_raw),combined=summaryMoney(source.ads_recharge_or_support_raw);
   const pending=[];
   if(source.status==='RUNNING')pending.push('COLLECTING');
@@ -56,18 +61,37 @@ export function buildStoreSummary(frame,bindings,costs,adjustments=null){
   if(source.diagnostic!==null)pending.push('PERIOD_DIAGNOSTIC');
   if(payout===null)pending.push('MONEY_UNAVAILABLE');
   if(reference.total_cents===null)pending.push('PRODUCTION_COST_INCOMPLETE');
+  if(invoiceTax&&invoiceTax.tax_cents===null)pending.push('INVOICE_TAX_UNAVAILABLE');
   if(source.returns_orders!==0)pending.push('RETURNS_NOT_RECONCILED');
   if(!declared)pending.push('ADJUSTMENTS_REQUIRED');
+  if(invoiceTax&&declared&&declared.external_expenses_basis!=='EXCLUDES_INVOICE_TAX')pending.push('EXTERNAL_EXPENSES_REVIEW_REQUIRED');
   if(combined===null||combined<0)pending.push('RECHARGE_COMPONENT_UNAVAILABLE');
-  if(combined!==null&&combined>0&&declared?.recharge_treatment==='UNCONFIRMED')pending.push('RECHARGE_TREATMENT_REQUIRED');
+  if(combined!==null&&combined>0&&(declared?.recharge_treatment==='UNCONFIRMED'||invoiceTax&&!declared))pending.push('RECHARGE_TREATMENT_REQUIRED');
 
   const expected=complete?payout:null,production=complete?reference.total_cents:null;
-  let afterProduction=null,estimate=null;
+  let afterProduction=null,afterTax=null,knownCostResult=null,estimate=null;
   if(expected!==null&&production!==null){
     afterProduction=summarySafeNumber(BigInt(expected)-BigInt(production));
     if(afterProduction===null)pending.push('ARITHMETIC_UNSAFE');
   }
-  if(afterProduction!==null&&source.returns_orders===0&&declared&&combined!==null&&combined>=0
+  if(invoiceTax&&afterProduction!==null&&invoiceTax.tax_cents!==null){
+    afterTax=summarySafeNumber(BigInt(afterProduction)-BigInt(invoiceTax.tax_cents));
+    if(afterTax===null&&!pending.includes('ARITHMETIC_UNSAFE'))pending.push('ARITHMETIC_UNSAFE');
+  }
+  if(invoiceTax&&afterTax!==null&&source.returns_orders===0&&combined!==null&&combined>=0
+    &&(combined===0||declared&&declared.recharge_treatment!=='UNCONFIRMED')){
+    const adsSpend=declared?.ads_spend_cents??(summarySafeInteger(adsPeriodSpendCents)?adsPeriodSpendCents:null);
+    if(adsSpend!==null){
+      const addBack=combined>0&&declared.recharge_treatment==='ADS_RECHARGE'?BigInt(combined):0n;
+      knownCostResult=summarySafeNumber(BigInt(afterTax)+addBack-BigInt(adsSpend));
+      if(knownCostResult===null&&!pending.includes('ARITHMETIC_UNSAFE'))pending.push('ARITHMETIC_UNSAFE');
+    }
+    if(knownCostResult!==null&&declared?.external_expenses_basis==='EXCLUDES_INVOICE_TAX'){
+      estimate=summarySafeNumber(BigInt(knownCostResult)-BigInt(declared.external_expenses_cents));
+      if(estimate===null&&!pending.includes('ARITHMETIC_UNSAFE'))pending.push('ARITHMETIC_UNSAFE');
+    }
+  }
+  if(!invoiceTax&&afterProduction!==null&&source.returns_orders===0&&declared&&combined!==null&&combined>=0
     &&(combined===0||declared.recharge_treatment!=='UNCONFIRMED')){
     const addBack=combined>0&&declared.recharge_treatment==='ADS_RECHARGE'?BigInt(combined):0n;
     estimate=summarySafeNumber(BigInt(afterProduction)+addBack-BigInt(declared.ads_spend_cents)-BigInt(declared.external_expenses_cents));
@@ -80,7 +104,9 @@ export function buildStoreSummary(frame,bindings,costs,adjustments=null){
     returns_orders:source.returns_orders,complete,bindings_revision:reference.bindings_revision,costs_revision:reference.costs_revision,
     known_expected_repass_cents:payout,expected_repass_cents:expected,
     known_production_cost_cents:reference.known_subset_cents,production_cost_cents:production,
-    expected_after_production_cents:afterProduction,ads_recharge_or_support_cents:complete?combined:null,
+    expected_after_production_cents:afterProduction,
+    ...(invoiceTax?{invoice_tax:invoiceTax,expected_after_tax_cents:afterTax,known_cost_result_cents:knownCostResult}:{}),
+    ads_recharge_or_support_cents:complete?combined:null,
     net_estimate_cents:estimate,net_profit_cents:null,pending,
     unmapped_variants:reference.variants.filter(row=>row.unit_cost_cents===null)
       .map(({item_id,model_id,quantity})=>({item_id,model_id,quantity})),

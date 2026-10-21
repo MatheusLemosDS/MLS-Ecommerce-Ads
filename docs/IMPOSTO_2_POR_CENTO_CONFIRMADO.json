@@ -1,0 +1,12 @@
+{
+  "schema": "operator_tax_policy_observation_v1",
+  "observed_on": "2026-10-20",
+  "source": "operator_reply",
+  "currency": "BRL",
+  "rate_bps": 200,
+  "basis": "PRODUCTS_VALUE_BEFORE_SHOPEE_FEES",
+  "operator_statement": "Sim, 2% sobre o valor dos produtos",
+  "confirms_actual_issued_invoice_values": false,
+  "confirms_invoice_rounding_method": false,
+  "confirms_other_expenses_are_zero": false
+}

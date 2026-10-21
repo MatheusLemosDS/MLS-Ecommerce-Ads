@@ -89,7 +89,7 @@ export async function storePeriodBundle(env,raw,{now=Date.now()}={}){
  const ads_period=readStoredAdsPeriod(context[3]?.results?.[0],finance,now);
  const automatic=adjustments.values?.ads_source==='SHOPEE_PERIOD';
  const effective=automatic?(ads_period?.status==='AVAILABLE'?{...adjustments.values,ads_spend_cents:ads_period.expense_cents}:null):adjustments.values;
- const result=buildStoreSummary(finance,bindings,costs,effective);
+ const result=buildStoreSummary(finance,bindings,costs,effective,ads_period?.status==='AVAILABLE'?ads_period.expense_cents:null);
  if(automatic&&!effective)result.pending=result.pending.map(code=>code==='ADJUSTMENTS_REQUIRED'?'ADS_PERIOD_UNAVAILABLE':code);
  return {finance,result,adjustments,product_result:buildStoreProductSummary(finance,bindings,costs),ads_period,
   returns_result:buildStoreReturnsSummary(finance)};

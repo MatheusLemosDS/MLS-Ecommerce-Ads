@@ -18,6 +18,7 @@ const STORE_SCHEMA=[
  `CREATE TABLE IF NOT EXISTS finance_store_period_runs (run_id TEXT PRIMARY KEY,partner_id INTEGER NOT NULL,shop_id INTEGER NOT NULL,revision INTEGER NOT NULL,status TEXT NOT NULL,start_date TEXT NOT NULL,end_date TEXT NOT NULL,time_from INTEGER NOT NULL,time_to INTEGER NOT NULL,cutoff_at INTEGER NOT NULL,checked_at INTEGER NOT NULL,created_at INTEGER NOT NULL,cursor TEXT NOT NULL,pages_read INTEGER NOT NULL,duplicate_orders INTEGER NOT NULL,lease_owner TEXT,lease_until INTEGER,last_error TEXT)`,
  `CREATE TABLE IF NOT EXISTS finance_store_period_orders (run_id TEXT NOT NULL,order_hash TEXT NOT NULL,escrow_raw TEXT,ads_raw TEXT,returns_seen INTEGER,items TEXT NOT NULL,source_hash TEXT NOT NULL,checked_at INTEGER NOT NULL,PRIMARY KEY(run_id,order_hash))`,
  `CREATE TABLE IF NOT EXISTS finance_store_period_cursors (run_id TEXT NOT NULL,cursor_hash TEXT NOT NULL,PRIMARY KEY(run_id,cursor_hash))`,
+ `CREATE TABLE IF NOT EXISTS finance_store_period_invoice_bases (run_id TEXT NOT NULL,order_hash TEXT NOT NULL,base_raw TEXT,source_hash TEXT NOT NULL,parent_source_hash TEXT NOT NULL,checked_at INTEGER NOT NULL,PRIMARY KEY(run_id,order_hash))`,
 ];
 
 function storeCatalogId(value,zero=false){
@@ -47,6 +48,21 @@ function storeProviderAmount(income,name){
  const value=normalizeStoreDecimal(income[name],'1000000000000');
  if(value===null)throw storeFailure('RESPONSE_INVALID');return value;
 }
+function storeInvoiceCents(raw){
+ if(typeof raw!=='string'||normalizeStoreDecimal(raw,'1000000000000')!==raw)return null;
+ const match=/^(0|[1-9][0-9]*)(?:\.([0-9]{1,2}))?$/.exec(raw);
+ return match?BigInt(match[1])*100n+BigInt((match[2]||'').padEnd(2,'0')):null;
+}
+function storeInvoiceBase(income){
+ const raw=typeof income.original_cost_of_goods_sold==='number'
+  ?normalizeStoreDecimal(income.original_cost_of_goods_sold,'1000000000000'):null;
+ return storeInvoiceCents(raw)===null?null:raw;
+}
+function storeInvoiceMoney(cents){
+ const fraction=(cents%100n).toString().padStart(2,'0').replace(/0+$/,'');
+ return (cents/100n).toString()+(fraction?'.'+fraction:'');
+}
+const storeInvoiceCanonical=(run_id,row)=>({run_id,order_hash:row.order_hash,base_raw:row.base_raw,parent_source_hash:row.parent_source_hash,checked_at:row.checked_at});
 function storeEnvelope(payload){
  if(!storeObject(payload)||typeof payload.error!=='string'||payload.error!==''||!storeObject(payload.response))throw storeFailure('RESPONSE_INVALID');
  for(const row of [payload,payload.response])for(const field of ['partner_id','shop_id'])if(Object.hasOwn(row,field)&&row[field]!==FINANCE_PROFILE[field])throw storeFailure('IDENTITY_MISMATCH');
@@ -62,12 +78,13 @@ function storeMidnight(day){
  }
  return Math.floor(candidate/1000);
 }
-function storeFrame(run,records,diagnostic){
+function storeFrame(run,records,diagnostic,invoiceBases=new Map()){
  if(!run||run.partner_id!==FINANCE_PROFILE.partner_id||run.shop_id!==FINANCE_PROFILE.shop_id||!Array.isArray(records)||records.length>1000)throw storeFailure('STORAGE_INVALID',503);
  const grouped=new Map(),productGroups=new Map();let returnsOrders=0,returnsKnown=true;
  const returnGroups=Object.fromEntries(['with_return','without_reported_return','unknown'].map(kind=>[kind,{order_count:0,payouts:[],known:true}]));
  const escrows=[],ads=[];let escrowKnown=true,adsKnown=true;
  const exclusivePayouts=[],mixedPayouts=[];let exclusiveOrders=0,mixedOrders=0,exclusiveKnown=true,mixedKnown=true;
+ let coveredInvoices=0,invoiceBase=0n,invoiceTax=0n;
  for(const record of records){
   if(!/^[a-f0-9]{64}$/.test(record.order_hash)||!/^[a-f0-9]{64}$/.test(record.source_hash))throw storeFailure('STORAGE_INVALID',503);
   for(const [field,values] of [['escrow_raw',escrows],['ads_raw',ads]]){
@@ -78,6 +95,11 @@ function storeFrame(run,records,diagnostic){
   if(record.returns_seen===null)returnsKnown=false;
   else if(record.returns_seen===0||record.returns_seen===1)returnsOrders+=record.returns_seen;
   else throw storeFailure('STORAGE_INVALID',503);
+  const invoice=invoiceBases.get(record.order_hash);
+  if(invoice&&invoice.base_raw!==null){
+   const cents=storeInvoiceCents(invoice.base_raw);if(cents===null)throw storeFailure('STORAGE_INVALID',503);
+   coveredInvoices++;invoiceBase+=cents;invoiceTax+=(cents*200n+5000n)/10000n;
+  }
   const returnsKind=record.returns_seen===null?'unknown':record.returns_seen===1?'with_return':'without_reported_return';
   const returnsGroup=returnGroups[returnsKind];returnsGroup.order_count++;
   if(record.escrow_raw===null)returnsGroup.known=false;else returnsGroup.payouts.push(record.escrow_raw);
@@ -118,7 +140,10 @@ function storeFrame(run,records,diagnostic){
   returns_breakdown:{schema:'store_returns_breakdown_v1',
    ...Object.fromEntries(Object.entries(returnGroups).map(([kind,group])=>[kind,{order_count:group.order_count,payout_raw:group.known?addStoreDecimals(group.payouts):null}])),
    products:[...productGroups.values()].map(product=>({item_id:product.item_id,order_count:product.order_count,
-    with_return_orders:product.with_return_orders,without_reported_return_orders:product.without_reported_return_orders,unknown_orders:product.unknown_orders}))}});
+    with_return_orders:product.with_return_orders,without_reported_return_orders:product.without_reported_return_orders,unknown_orders:product.unknown_orders}))},
+  invoice_tax:{schema:'store_invoice_tax_v1',rate_bps:200,basis:'PAYMENT_GOODS_VALUE_PER_ORDER_ESTIMATE',rounding:'HALF_UP_PER_ORDER',
+   covered_orders:coveredInvoices,unavailable_orders:records.length-coveredInvoices,
+   known_base_raw:storeInvoiceMoney(invoiceBase),known_tax_raw:storeInvoiceMoney(invoiceTax)}});
  if(!result)throw storeFailure('STORAGE_INVALID',503);return result;
 }
 
@@ -138,6 +163,7 @@ export async function runFinanceStorePeriod(env,options={}){
   const rows=await storage(()=>db.batch([
    prepare('SELECT * FROM finance_store_period_runs WHERE run_id=? AND partner_id=? AND shop_id=?',[run_id,...storeIdentity]),
    prepare('SELECT order_hash,escrow_raw,ads_raw,returns_seen,items,source_hash,checked_at FROM finance_store_period_orders WHERE run_id=? AND EXISTS(SELECT 1 FROM finance_store_period_runs WHERE run_id=? AND partner_id=? AND shop_id=?) ORDER BY order_hash',[run_id,run_id,...storeIdentity]),
+   prepare('SELECT order_hash,base_raw,source_hash,parent_source_hash,checked_at FROM finance_store_period_invoice_bases WHERE run_id=? AND EXISTS(SELECT 1 FROM finance_store_period_runs WHERE run_id=? AND partner_id=? AND shop_id=?) ORDER BY order_hash',[run_id,run_id,...storeIdentity]),
   ]));
   const run=rows[0]?.results?.[0];if(!run)throw storeFailure('RUN_NOT_FOUND',404);
   const records=rows[1]?.results;if(!Array.isArray(records))throw storeFailure('STORAGE_INVALID',503);
@@ -149,7 +175,17 @@ export async function runFinanceStorePeriod(env,options={}){
    const canonical={order_hash:record.order_hash,escrow_raw:record.escrow_raw,ads_raw:record.ads_raw,returns_seen:record.returns_seen,items:record.items,checked_at:record.checked_at};
    if(await storeHash(JSON.stringify(canonical))!==record.source_hash)throw storeFailure('STORAGE_INVALID',503);
   }
-  return {run,records,frame:storeFrame(run,records,run.status==='RUNNING'?diagnostic:undefined)};
+  const invoiceRows=rows[2]?.results,byHash=new Map(records.map(record=>[record.order_hash,record])),invoiceBases=new Map();
+  if(!Array.isArray(invoiceRows)||invoiceRows.length>records.length)throw storeFailure('STORAGE_INVALID',503);
+  for(const invoice of invoiceRows){
+   const parent=byHash.get(invoice.order_hash);
+   if(!parent||invoiceBases.has(invoice.order_hash)||invoice.parent_source_hash!==parent.source_hash
+    ||invoice.checked_at!==parent.checked_at||!Number.isSafeInteger(invoice.checked_at)||invoice.checked_at<1||invoice.checked_at>9999999999
+    ||invoice.base_raw!==null&&storeInvoiceCents(invoice.base_raw)===null
+    ||!/^[a-f0-9]{64}$/.test(invoice.source_hash)||await storeHash(JSON.stringify(storeInvoiceCanonical(run_id,invoice)))!==invoice.source_hash)throw storeFailure('STORAGE_INVALID',503);
+   invoiceBases.set(invoice.order_hash,invoice);
+  }
+  return {run,records,invoiceBases,frame:storeFrame(run,records,run.status==='RUNNING'?diagnostic:undefined,invoiceBases)};
  };
  if(input.operation==='start'){
   const today=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date(initialTime*1000));
@@ -159,12 +195,13 @@ export async function runFinanceStorePeriod(env,options={}){
   if(timeTo<timeFrom)throw storeFailure('REQUEST_INVALID',400);
   // Automatic dashboard loading reuses a recent cohort. The INSERT guard below
   // makes concurrent page loads share one run without another provider import.
-  const recentSql="SELECT run_id FROM finance_store_period_runs WHERE partner_id=? AND shop_id=? AND start_date=? AND end_date=? AND cutoff_at>=? AND status IN ('RUNNING','COMPLETE') ORDER BY created_at DESC,run_id DESC LIMIT 1";
+  const recentSql="SELECT r.run_id FROM finance_store_period_runs r WHERE r.partner_id=? AND r.shop_id=? AND r.start_date=? AND r.end_date=? AND r.cutoff_at>=? AND r.status IN ('RUNNING','COMPLETE') AND NOT EXISTS(SELECT 1 FROM finance_store_period_orders o WHERE o.run_id=r.run_id AND NOT EXISTS(SELECT 1 FROM finance_store_period_invoice_bases b WHERE b.run_id=o.run_id AND b.order_hash=o.order_hash)) ORDER BY r.created_at DESC,r.run_id DESC LIMIT 1";
   const recentArgs=[...storeIdentity,input.start_date,input.end_date,initialTime-900];
   const recent=await storage(()=>prepare(recentSql,recentArgs).first());
   if(recent)return (await snapshot(recent.run_id)).frame;
   const cutoff=initialTime-30*86400;
   await storage(()=>db.batch([
+   prepare('DELETE FROM finance_store_period_invoice_bases WHERE run_id IN (SELECT run_id FROM finance_store_period_runs WHERE created_at<? AND partner_id=? AND shop_id=?)',[cutoff,...storeIdentity]),
    prepare('DELETE FROM finance_store_period_orders WHERE run_id IN (SELECT run_id FROM finance_store_period_runs WHERE created_at<? AND partner_id=? AND shop_id=?)',[cutoff,...storeIdentity]),
    prepare('DELETE FROM finance_store_period_cursors WHERE run_id IN (SELECT run_id FROM finance_store_period_runs WHERE created_at<? AND partner_id=? AND shop_id=?)',[cutoff,...storeIdentity]),
    prepare('DELETE FROM finance_store_period_runs WHERE created_at<? AND partner_id=? AND shop_id=?',[cutoff,...storeIdentity]),
@@ -175,6 +212,7 @@ export async function runFinanceStorePeriod(env,options={}){
   const evict="SELECT run_id FROM finance_store_period_runs WHERE partner_id=? AND shop_id=? AND cutoff_at<? AND (lease_owner IS NULL OR lease_until<=?) AND (SELECT COUNT(*) FROM finance_store_period_runs WHERE partner_id=? AND shop_id=?)>=60 ORDER BY created_at,run_id LIMIT 1";
   const evictArgs=[...storeIdentity,initialTime-900,initialTime,...storeIdentity];
   await storage(()=>db.batch([
+   prepare('DELETE FROM finance_store_period_invoice_bases WHERE run_id IN ('+evict+')',evictArgs),
    prepare('DELETE FROM finance_store_period_orders WHERE run_id IN ('+evict+')',evictArgs),
    prepare('DELETE FROM finance_store_period_cursors WHERE run_id IN ('+evict+')',evictArgs),
    prepare('DELETE FROM finance_store_period_runs WHERE run_id IN ('+evict+')',evictArgs),
@@ -245,7 +283,7 @@ export async function runFinanceStorePeriod(env,options={}){
    }
    details=selected.map(row=>({...row,items:bySerial.get(row.serial)}));
   }
-  const records=new Array(details.length);let index=0,failed;
+  const records=new Array(details.length),invoiceRecords=new Array(details.length);let index=0,failed;
   const worker=async()=>{
    while(!failed){const position=index++;if(position>=details.length)return;const selection=details[position];
     try{
@@ -262,18 +300,22 @@ export async function runFinanceStorePeriod(env,options={}){
      }
      const record={order_hash:selection.orderHash,escrow_raw:storeProviderAmount(payment.order_income,'escrow_amount'),ads_raw:storeProviderAmount(payment.order_income,'ads_escrow_top_up_fee_or_technical_support_fee'),returns_seen:returnsSeen,items:JSON.stringify(items),checked_at:epoch()};
      record.source_hash=await storeHash(JSON.stringify(record));records[position]=record;
+     const invoice={order_hash:record.order_hash,base_raw:storeInvoiceBase(payment.order_income),parent_source_hash:record.source_hash,checked_at:record.checked_at};
+     invoice.source_hash=await storeHash(JSON.stringify(storeInvoiceCanonical(input.run_id,invoice)));invoiceRecords[position]=invoice;
     }catch(error){failed=error;return;}
    }
   };
   await Promise.all([worker(),worker()]);if(failed)throw failed;
   const stamp=epoch(),pages=run.pages_read+1,orderCount=observed.records.length+records.length;
   let status=!listing.more?'COMPLETE':pages>=200||orderCount>=1000?'LIMIT_REACHED':'RUNNING';
-  try{storeFrame({...run,revision:run.revision+1,status,checked_at:stamp,pages_read:pages,duplicate_orders:run.duplicate_orders+duplicates,last_error:null},[...observed.records,...records]);}
+  const invoiceBases=new Map([...observed.invoiceBases,...invoiceRecords.map(invoice=>[invoice.order_hash,invoice])]);
+  try{storeFrame({...run,revision:run.revision+1,status,checked_at:stamp,pages_read:pages,duplicate_orders:run.duplicate_orders+duplicates,last_error:null},[...observed.records,...records],undefined,invoiceBases);}
   catch(error){if(error instanceof FinanceConnectionError&&error.code==='FINANCE_STORE_GROUP_LIMIT'){
    const limit=await storage(()=>prepare("UPDATE finance_store_period_runs SET status='LIMIT_REACHED',revision=revision+1,checked_at=?,lease_owner=NULL,lease_until=NULL,last_error=NULL WHERE "+guard,[stamp,...guardArgs(stamp)]).run());
    return (await snapshot(input.run_id,limit.meta.changes===1?undefined:'STORE_PERIOD_CONFLICT')).frame;
   }throw error;}
   const statements=records.map(record=>prepare('INSERT INTO finance_store_period_orders(run_id,order_hash,escrow_raw,ads_raw,returns_seen,items,source_hash,checked_at) SELECT ?,?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM finance_store_period_runs WHERE '+guard+')',[input.run_id,record.order_hash,record.escrow_raw,record.ads_raw,record.returns_seen,record.items,record.source_hash,record.checked_at,...guardArgs(stamp)]));
+  statements.push(...invoiceRecords.map(invoice=>prepare('INSERT INTO finance_store_period_invoice_bases(run_id,order_hash,base_raw,source_hash,parent_source_hash,checked_at) SELECT ?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM finance_store_period_runs WHERE '+guard+')',[input.run_id,invoice.order_hash,invoice.base_raw,invoice.source_hash,invoice.parent_source_hash,invoice.checked_at,...guardArgs(stamp)])));
   if(listing.more)statements.push(prepare('INSERT INTO finance_store_period_cursors(run_id,cursor_hash) SELECT ?,? WHERE EXISTS(SELECT 1 FROM finance_store_period_runs WHERE '+guard+')',[input.run_id,await storeHash(nextCursor),...guardArgs(stamp)]));
   statements.push(prepare('UPDATE finance_store_period_runs SET cursor=?,pages_read=?,duplicate_orders=?,status=?,revision=revision+1,checked_at=?,lease_owner=NULL,lease_until=NULL,last_error=NULL WHERE '+guard,[nextCursor,pages,run.duplicate_orders+duplicates,status,stamp,...guardArgs(stamp)]));
   const committed=await storage(()=>db.batch(statements));

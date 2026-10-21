@@ -278,3 +278,95 @@ test('cached hashed order records derive return coverage without schema changes,
  const empty=await fixture(0),emptyJob=await empty.start(),noOrders=await empty.run({operation:'step',run_id:emptyJob.run_id});
  assert.deepEqual(noOrders.returns_breakdown,{schema:'store_returns_breakdown_v1',with_return:{order_count:0,payout_raw:'0'},without_reported_return:{order_count:0,payout_raw:'0'},unknown:{order_count:0,payout_raw:'0'},products:[]});
 });
+
+const invoiceRows=f=>f.db.db.prepare('SELECT * FROM finance_store_period_invoice_bases ORDER BY run_id,order_hash').all();
+async function invoiceFixture(bases){
+ const f=await fixture(bases.length),fetchImpl=async request=>{
+  const response=await f.fetchImpl(request),url=new URL(request.url);
+  if(url.pathname!==payment)return response;
+  const value=await response.json(),index=Number(url.searchParams.get('order_sn').split('_').at(-1));
+  if(bases[index]!==undefined)value.response.order_income.original_cost_of_goods_sold=bases[index];
+  return Response.json(value);
+ };
+ return {...f,run:input=>f.run({...input,fetchImpl})};
+}
+
+test('invoice tax uses goods value and HALF_UP per order from the existing Payment response, never repass or production',async()=>{
+ const f=await invoiceFixture([0.25,0.25]),job=await f.start(),result=await f.run({operation:'step',run_id:job.run_id});
+ assert.equal(result.status,'COMPLETE');assert.equal(result.escrow_amount_raw,'0.3');
+ assert.deepEqual(result.invoice_tax,{schema:'store_invoice_tax_v1',rate_bps:200,basis:'PAYMENT_GOODS_VALUE_PER_ORDER_ESTIMATE',rounding:'HALF_UP_PER_ORDER',covered_orders:2,unavailable_orders:0,known_base_raw:'0.5',known_tax_raw:'0.02'});
+ assert.equal(f.calls.length,4);assert.equal(f.calls.filter(request=>new URL(request.url).pathname===payment).length,2);
+ const before=rows(f),aux=invoiceRows(f),calls=f.calls.length;
+ for(const row of aux){
+  const parent=before.orders.find(record=>record.order_hash===row.order_hash);assert.equal(row.parent_source_hash,parent.source_hash);
+  const canonical={run_id:job.run_id,order_hash:row.order_hash,base_raw:row.base_raw,parent_source_hash:row.parent_source_hash,checked_at:row.checked_at};
+  assert.equal(row.source_hash,createHash('sha256').update(JSON.stringify(canonical)).digest('hex'));
+ }
+ assert.deepEqual(await f.run({operation:'read',run_id:job.run_id}),result);assert.deepEqual(rows(f),before);assert.deepEqual(invoiceRows(f),aux);assert.equal(f.calls.length,calls);
+ for(const marker of [key,access,refresh,'PRIVATE_ORDER','PRIVATE_BUYER','original_cost_of_goods_sold','parent_source_hash'])assert.ok(!JSON.stringify(result).includes(marker));
+});
+
+test('invalid or absent goods bases stay unavailable without failing financial import, while explicit zero is covered',async()=>{
+ const bases=[undefined,null,-1,1.001,'50',1000000000000.01,0,50],f=await invoiceFixture(bases),job=await f.start();
+ await f.run({operation:'step',run_id:job.run_id});const result=await f.run({operation:'step',run_id:job.run_id});
+ assert.equal(result.status,'COMPLETE');assert.equal(result.order_count,bases.length);
+ assert.equal(result.invoice_tax.covered_orders,2);assert.equal(result.invoice_tax.unavailable_orders,6);
+ assert.equal(result.invoice_tax.known_base_raw,'50');assert.equal(result.invoice_tax.known_tax_raw,'1');
+ assert.equal(invoiceRows(f).length,bases.length);assert.equal(invoiceRows(f).filter(row=>row.base_raw===null).length,6);
+ const calls=f.calls.length;assert.deepEqual(await f.start(),result);assert.equal(f.calls.length,calls);
+});
+
+test('old nonempty cached cohorts are readable with unknown tax coverage and a normal opening starts a fresh tax-capable cohort once',async()=>{
+ const f=await invoiceFixture([50,100]),old=await f.start(),completed=await f.run({operation:'step',run_id:old.run_id}),calls=f.calls.length;
+ assert.equal(completed.invoice_tax.covered_orders,2);f.db.db.prepare('DELETE FROM finance_store_period_invoice_bases WHERE run_id=?').run(old.run_id);
+ const legacy=await f.run({operation:'read',run_id:old.run_id});assert.equal(legacy.invoice_tax.covered_orders,0);assert.equal(legacy.invoice_tax.unavailable_orders,2);assert.equal(legacy.invoice_tax.known_tax_raw,'0');assert.equal(f.calls.length,calls);
+ const fresh=await f.start();assert.notEqual(fresh.run_id,old.run_id);assert.equal(fresh.order_count,0);assert.equal(f.calls.length,calls);
+ const result=await f.run({operation:'step',run_id:fresh.run_id});assert.equal(result.invoice_tax.known_tax_raw,'3');
+ const currentCalls=f.calls.length;assert.deepEqual(await f.start(),result);assert.equal(f.calls.length,currentCalls);
+ const empty=await invoiceFixture([25]),emptyRun=await empty.start();assert.deepEqual(await empty.start(),emptyRun);
+ assert.equal((await empty.run({operation:'step',run_id:emptyRun.run_id})).invoice_tax.covered_orders,1);
+});
+
+test('independent invoice hashes, original-record linkage, timestamp and precision are checked before cached tax is exposed',async()=>{
+ const mutations=[
+  row=>({...row,base_raw:'999.99'}),
+  row=>({...row,parent_source_hash:'0'.repeat(64),rehash:true}),
+  row=>({...row,checked_at:row.checked_at-1,rehash:true}),
+  row=>({...row,base_raw:'1.001',rehash:true}),
+  row=>({...row,base_raw:'-1',rehash:true}),
+  row=>({...row,source_hash:'f'.repeat(64)}),
+ ];
+ for(const mutate of mutations){
+  const f=await invoiceFixture([50]),job=await f.start();await f.run({operation:'step',run_id:job.run_id});
+  const row=mutate(invoiceRows(f)[0]);
+  if(row.rehash)row.source_hash=createHash('sha256').update(JSON.stringify({run_id:job.run_id,order_hash:row.order_hash,base_raw:row.base_raw,parent_source_hash:row.parent_source_hash,checked_at:row.checked_at})).digest('hex');
+  f.db.db.prepare('UPDATE finance_store_period_invoice_bases SET base_raw=?,source_hash=?,parent_source_hash=?,checked_at=? WHERE run_id=? AND order_hash=?').run(row.base_raw,row.source_hash,row.parent_source_hash,row.checked_at,job.run_id,row.order_hash);
+  const calls=f.calls.length;await assert.rejects(f.run({operation:'read',run_id:job.run_id}),error=>error.code==='FINANCE_STORE_STORAGE_INVALID');assert.equal(f.calls.length,calls);
+ }
+});
+
+test('lease expiry and transactional invoice insertion failure cannot leave an order without its new tax evidence',async()=>{
+ const f=await invoiceFixture([50]),job=await f.start();f.state.hold=true;
+ const began=new Promise(resolve=>f.state.started=resolve),pending=f.run({operation:'step',run_id:job.run_id});await began;
+ f.clock.time+=46000;f.state.hold=false;f.state.release();const expired=await pending;
+ assert.equal(expired.diagnostic,'STORE_PERIOD_CONFLICT');assert.equal(rows(f).orders.length,0);assert.equal(invoiceRows(f).length,0);
+ const resumed=await f.run({operation:'step',run_id:job.run_id});assert.equal(resumed.invoice_tax.known_tax_raw,'1');assert.equal(invoiceRows(f).length,1);
+ const broken=await invoiceFixture([25]),brokenRun=await broken.start();
+ broken.db.db.exec("CREATE TRIGGER fixture_invoice_failure BEFORE INSERT ON finance_store_period_invoice_bases BEGIN SELECT RAISE(ABORT,'FIXTURE_INVOICE_FAILURE'); END");
+ const failed=await broken.run({operation:'step',run_id:brokenRun.run_id});assert.equal(failed.diagnostic,'STORE_PERIOD_UPSTREAM_UNAVAILABLE');assert.equal(rows(broken).orders.length,0);assert.equal(invoiceRows(broken).length,0);
+ broken.db.db.exec('DROP TRIGGER fixture_invoice_failure');assert.equal((await broken.run({operation:'step',run_id:brokenRun.run_id})).invoice_tax.known_tax_raw,'0.5');
+});
+
+test('invoice evidence expires with its parent cohort under age retention and bounded-cache eviction',async()=>{
+ const f=await invoiceFixture([50]),job=await f.start();await f.run({operation:'step',run_id:job.run_id});assert.equal(invoiceRows(f).length,1);
+ f.clock.time+=31*86400000;await f.start();assert.equal(invoiceRows(f).length,0);assert.equal(rows(f).orders.length,0);
+ await assert.rejects(f.run({operation:'read',run_id:job.run_id}),error=>error.code==='FINANCE_STORE_RUN_NOT_FOUND');
+ const bounded=await invoiceFixture([25]),first=await bounded.start();await bounded.run({operation:'step',run_id:first.run_id});
+ for(let i=0;i<60;i++){
+  const end=20-Math.floor(i/15),start=end-i%15;if(start===14&&end===20)continue;
+  bounded.clock.time+=1000;await bounded.run({operation:'start',start_date:'2026-10-'+String(start).padStart(2,'0'),end_date:'2026-10-'+String(end).padStart(2,'0')});
+ }
+ assert.equal(rows(bounded).runs.length,60);bounded.clock.time+=901000;await bounded.start();assert.equal(rows(bounded).runs.length,60);
+ assert.equal(invoiceRows(bounded).length,0);assert.equal(rows(bounded).orders.length,0);
+ await assert.rejects(bounded.run({operation:'read',run_id:first.run_id}),error=>error.code==='FINANCE_STORE_RUN_NOT_FOUND');
+});

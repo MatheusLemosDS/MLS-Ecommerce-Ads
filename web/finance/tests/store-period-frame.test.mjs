@@ -189,3 +189,50 @@ test('return coverage bounds one thousand product memberships and rejects a thou
  value.returns_breakdown.products.push({item_id:'1001',order_count:1,with_return_orders:0,without_reported_return_orders:1,unknown_orders:0});
  assert.equal(projectStorePeriodFrame(value),null);
 });
+
+const invoiceFrame=()=>({...frame(),status:'COMPLETE',pages_read:1,order_count:3,
+ items:[{item_id:'1',model_id:'0',quantity:3}],invoice_tax:{schema:'store_invoice_tax_v1',rate_bps:200,
+  basis:'PAYMENT_GOODS_VALUE_PER_ORDER_ESTIMATE',rounding:'HALF_UP_PER_ORDER',covered_orders:2,unavailable_orders:1,
+  known_base_raw:'0.5',known_tax_raw:'0.02'}});
+
+test('optional invoice tax preserves legacy frames and accepts sums of independently rounded invoices without re-rounding',()=>{
+ const legacy=projectStorePeriodFrame(returnsFrame());assert.equal(JSON.stringify(projectStorePeriodFrame(legacy)),JSON.stringify(legacy));
+ const value=invoiceFrame(),result=projectStorePeriodFrame(value);assert.ok(result);
+ assert.equal(result.invoice_tax.known_tax_raw,'0.02');assert.equal(result.invoice_tax.unavailable_orders,1);
+ value.invoice_tax.known_base_raw='999';assert.equal(result.invoice_tax.known_base_raw,'0.5');
+ const zero={...frame(),invoice_tax:{...invoiceFrame().invoice_tax,covered_orders:0,unavailable_orders:0,known_base_raw:'0',known_tax_raw:'0'}};
+ assert.deepEqual(projectStorePeriodFrame(zero),zero);
+ const missing=invoiceFrame();Object.assign(missing.invoice_tax,{covered_orders:0,unavailable_orders:3,known_base_raw:'0',known_tax_raw:'0'});assert.ok(projectStorePeriodFrame(missing));
+ const threshold=invoiceFrame();threshold.order_count=1;threshold.items[0].quantity=1;
+ Object.assign(threshold.invoice_tax,{covered_orders:1,unavailable_orders:0,known_base_raw:'0.25',known_tax_raw:'0.01'});
+ assert.ok(projectStorePeriodFrame(threshold));threshold.invoice_tax.known_tax_raw='0';assert.equal(projectStorePeriodFrame(threshold),null);
+});
+
+test('invoice tax refuses wrong rate or basis, missing coverage, sub-cent values, impossible totals and private extras',()=>{
+ const mutations=[
+  value=>value.invoice_tax.rate_bps=2,
+  value=>value.invoice_tax.basis='ESCROW_AMOUNT',
+  value=>value.invoice_tax.rounding='AGGREGATE_HALF_UP',
+  value=>value.invoice_tax.covered_orders=3,
+  value=>value.invoice_tax.unavailable_orders=-1,
+  value=>value.invoice_tax.known_base_raw=null,
+  value=>value.invoice_tax.known_base_raw='-1',
+  value=>value.invoice_tax.known_base_raw='0.50',
+  value=>value.invoice_tax.known_base_raw='0.501',
+  value=>value.invoice_tax.known_base_raw='2000000000000.01',
+  value=>value.invoice_tax.known_tax_raw='0.03',
+  value=>value.invoice_tax.known_tax_raw='-0.01',
+  value=>value.invoice_tax.known_tax_raw='0.021',
+  value=>value.invoice_tax.order_hash='PRIVATE_HASH',
+ ];
+ for(const mutate of mutations){const value=invoiceFrame();mutate(value);assert.equal(projectStorePeriodFrame(value),null);}
+ let getters=0;const value=invoiceFrame();Object.defineProperty(value.invoice_tax,'known_base_raw',{enumerable:true,get(){getters++;return '0.5';}});
+ assert.equal(projectStorePeriodFrame(value),null);assert.equal(getters,0);
+ const fabricated=invoiceFrame();Object.assign(fabricated.invoice_tax,{covered_orders:3,unavailable_orders:0,known_base_raw:'0',known_tax_raw:'0.01'});assert.equal(projectStorePeriodFrame(fabricated),null);
+});
+
+test('invoice tax aggregate bounds retain exact cents for one thousand maximum allowed source bases',()=>{
+ const value={...invoiceFrame(),order_count:1000,pages_read:200,items:[{item_id:'1',model_id:'0',quantity:1000}],
+  invoice_tax:{...invoiceFrame().invoice_tax,covered_orders:1000,unavailable_orders:0,known_base_raw:'1000000000000000',known_tax_raw:'20000000000000'}};
+ assert.ok(projectStorePeriodFrame(value));value.invoice_tax.known_base_raw='1000000000000000.01';assert.equal(projectStorePeriodFrame(value),null);
+});

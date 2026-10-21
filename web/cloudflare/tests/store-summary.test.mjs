@@ -15,6 +15,11 @@ const costs=()=>({revision:4,values:{...COST_DEFAULTS,components:[]}});
 const adjustments=changes=>({ads_spend_cents:1000,external_expenses_cents:250,recharge_treatment:'UNCONFIRMED',...changes});
 const summary=(changes={},bindingRows,declared=adjustments())=>buildStoreSummary(frame(changes),bindings(bindingRows),costs(),declared);
 const has=(actual,...codes)=>{for(const code of codes)assert.ok(actual.pending.includes(code),code);};
+const tax=changes=>({schema:'store_invoice_tax_v1',rate_bps:200,basis:'PAYMENT_GOODS_VALUE_PER_ORDER_ESTIMATE',
+ rounding:'HALF_UP_PER_ORDER',covered_orders:2,unavailable_orders:0,known_base_raw:'200',known_tax_raw:'4',...changes});
+const reviewed=changes=>adjustments({external_expenses_basis:'EXCLUDES_INVOICE_TAX',...changes});
+const taxed=(changes={},bindingRows,declared=reviewed(),adsPeriodSpendCents=null)=>
+ buildStoreSummary(frame({invoice_tax:tax(),...changes}),bindings(bindingRows),costs(),declared,adsPeriodSpendCents);
 
 test('whole completed cohort uses actual expected repass and one-piece/two-piece costs, never legacy kit margins',()=>{
  const value=summary();
@@ -110,4 +115,122 @@ test('inputs are preserved and returned missing variants and lists cannot mutate
  const source=frame(),mapped=bindings([kit]),cost=costs(),declared=adjustments(),before=structuredClone({source,mapped,cost,declared});
  const value=buildStoreSummary(source,mapped,cost,declared);value.unmapped_variants[0].quantity=999;value.pending.push('MODIFIED_BY_CALLER');
  assert.deepEqual({source,mapped,cost,declared},before);assert.equal(source.items[1].quantity,2);
+});
+
+test('invoice tax deducts 2% of product value once, independently of the already-net Shopee repass',()=>{
+ const value=taxed();
+ assert.equal(value.expected_repass_cents,15025);assert.equal(value.production_cost_cents,6660);
+ assert.equal(value.expected_after_production_cents,8365);assert.equal(value.invoice_tax.base_cents,20000);
+ assert.equal(value.invoice_tax.tax_cents,400);assert.equal(value.expected_after_tax_cents,7965);
+ assert.equal(value.known_cost_result_cents,6965);assert.equal(value.net_estimate_cents,6715);
+ assert.equal(value.net_profit_cents,null);assert.deepEqual(value.pending,['SETTLEMENT_NOT_RECONCILED']);
+ // Tax uses the product-value base, not 2% of the BRL 150.25 expected repass.
+ assert.notEqual(value.invoice_tax.tax_cents,Math.round(value.expected_repass_cents*0.02));
+});
+
+test('tax-free legacy frames keep the complete serialized summary and ignore the new trusted Ads argument',()=>{
+ const expected={schema:'store_result_v1',run_id:runId,revision:3,status:'COMPLETE',
+  start_date:'2026-10-13',end_date:'2026-10-20',cutoff_at:1792510000,checked_at:1792510100,
+  currency:'BRL',unit_confirmation:'OPERATOR_CONFIRMED_BRL_2026_10_20',order_count:2,pages_read:1,
+  returns_orders:0,complete:true,bindings_revision:7,costs_revision:4,
+  known_expected_repass_cents:15025,expected_repass_cents:15025,known_production_cost_cents:6660,
+  production_cost_cents:6660,expected_after_production_cents:8365,ads_recharge_or_support_cents:0,
+  net_estimate_cents:7115,net_profit_cents:null,pending:['SETTLEMENT_NOT_RECONCILED'],unmapped_variants:[],
+  net_basis:'EXPECTED_REPASS_CURRENT_STANDARD_COSTS_NOT_SETTLED'};
+ assert.equal(JSON.stringify(buildStoreSummary(frame(),bindings(),costs(),adjustments(),9000)),JSON.stringify(expected));
+ const undeclared=buildStoreSummary(frame(),bindings(),costs(),null,1000);
+ assert.equal(undeclared.net_estimate_cents,null);has(undeclared,'ADJUSTMENTS_REQUIRED');
+ for(const key of ['invoice_tax','expected_after_tax_cents','known_cost_result_cents'])assert.equal(Object.hasOwn(undeclared,key),false);
+});
+
+test('unknown invoice coverage and partial cohorts preserve references without inventing a tax-complete result',()=>{
+ const unknown=taxed({invoice_tax:tax({covered_orders:1,unavailable_orders:1,known_base_raw:'100',known_tax_raw:'2'})});
+ assert.equal(unknown.expected_after_production_cents,8365);assert.equal(unknown.invoice_tax.known_tax_cents,200);
+ for(const key of ['expected_after_tax_cents','known_cost_result_cents','net_estimate_cents'])assert.equal(unknown[key],null);
+ has(unknown,'INVOICE_TAX_UNAVAILABLE');
+ for(const status of ['RUNNING','LIMIT_REACHED']){
+  const value=taxed({status});assert.equal(value.invoice_tax.known_tax_cents,400);assert.equal(value.invoice_tax.tax_cents,null);
+  assert.equal(value.expected_after_tax_cents,null);assert.equal(value.known_cost_result_cents,null);assert.equal(value.net_estimate_cents,null);
+  has(value,'INVOICE_TAX_UNAVAILABLE');
+ }
+});
+
+test('older external-expense amounts stay untouched until reviewed to exclude the new automatic tax',()=>{
+ const declared=adjustments(),before=structuredClone(declared),value=taxed({},undefined,declared);
+ assert.equal(value.expected_after_tax_cents,7965);assert.equal(value.known_cost_result_cents,6965);
+ assert.equal(value.net_estimate_cents,null);assert.equal(value.net_profit_cents,null);
+ has(value,'EXTERNAL_EXPENSES_REVIEW_REQUIRED');assert.deepEqual(declared,before);
+ const reviewedValue=taxed({},undefined,reviewed());assert.equal(reviewedValue.net_estimate_cents,6715);
+ assert.ok(!reviewedValue.pending.includes('EXTERNAL_EXPENSES_REVIEW_REQUIRED'));
+});
+
+test('fresh automatic Ads can show a known-cost subtotal without assuming other expenses are zero',()=>{
+ const value=taxed({},undefined,null,1200);
+ assert.equal(value.expected_after_tax_cents,7965);assert.equal(value.known_cost_result_cents,6765);
+ assert.equal(value.net_estimate_cents,null);assert.equal(value.net_profit_cents,null);
+ has(value,'ADJUSTMENTS_REQUIRED','SETTLEMENT_NOT_RECONCILED');
+ assert.ok(!value.pending.includes('EXTERNAL_EXPENSES_REVIEW_REQUIRED'));
+ const missing=taxed({},undefined,null);assert.equal(missing.known_cost_result_cents,null);
+ for(const invalid of [-1,1.1,'1200',Infinity,NaN,Number.MAX_SAFE_INTEGER+1]){
+  assert.equal(taxed({},undefined,null,invalid).known_cost_result_cents,null);
+ }
+ const zero=taxed({},undefined,null,0);assert.equal(zero.known_cost_result_cents,7965);
+ assert.equal(zero.net_estimate_cents,null);
+ const declared=taxed({},undefined,reviewed({ads_spend_cents:800}),1200);
+ assert.equal(declared.known_cost_result_cents,7165);assert.equal(declared.net_estimate_cents,6915);
+});
+
+test('the known-cost subtotal always precedes other expenses and can remain negative',()=>{
+ const low=taxed({},undefined,reviewed({external_expenses_cents:0}));
+ const high=taxed({},undefined,reviewed({external_expenses_cents:5000}));
+ assert.equal(low.known_cost_result_cents,6965);assert.equal(high.known_cost_result_cents,6965);
+ assert.equal(low.net_estimate_cents,6965);assert.equal(high.net_estimate_cents,1965);
+ const loss=taxed({},undefined,reviewed({ads_spend_cents:20000,external_expenses_cents:0}));
+ assert.equal(loss.known_cost_result_cents,-12035);assert.equal(loss.net_estimate_cents,-12035);
+});
+
+test('unknown production, returns, recharge or money still block known-cost and net results after tax',()=>{
+ const unmapped=taxed({},[kit]);assert.equal(unmapped.invoice_tax.tax_cents,400);
+ assert.equal(unmapped.expected_after_tax_cents,null);assert.equal(unmapped.known_cost_result_cents,null);
+ has(unmapped,'PRODUCTION_COST_INCOMPLETE');
+ for(const returns_orders of [null,1]){
+  const value=taxed({returns_orders});assert.equal(value.expected_after_tax_cents,7965);
+  assert.equal(value.known_cost_result_cents,null);assert.equal(value.net_estimate_cents,null);has(value,'RETURNS_NOT_RECONCILED');
+ }
+ for(const ads_recharge_or_support_raw of [null,'-1','1.001']){
+  const value=taxed({ads_recharge_or_support_raw});assert.equal(value.expected_after_tax_cents,7965);
+  assert.equal(value.known_cost_result_cents,null);assert.equal(value.net_estimate_cents,null);has(value,'RECHARGE_COMPONENT_UNAVAILABLE');
+ }
+ const money=taxed({escrow_amount_raw:null});assert.equal(money.expected_after_tax_cents,null);
+ assert.equal(money.known_cost_result_cents,null);assert.equal(money.net_estimate_cents,null);has(money,'MONEY_UNAVAILABLE');
+});
+
+test('positive combined fees require classification and only a recharge receives an add-back',()=>{
+ const changes={ads_recharge_or_support_raw:'20'};
+ const unknown=taxed(changes);assert.equal(unknown.known_cost_result_cents,null);has(unknown,'RECHARGE_TREATMENT_REQUIRED');
+ const undeclared=taxed(changes,undefined,null,1000);assert.equal(undeclared.known_cost_result_cents,null);has(undeclared,'RECHARGE_TREATMENT_REQUIRED');
+ const recharge=taxed(changes,undefined,reviewed({recharge_treatment:'ADS_RECHARGE'}));
+ assert.equal(recharge.known_cost_result_cents,8965);assert.equal(recharge.net_estimate_cents,8715);
+ const support=taxed(changes,undefined,reviewed({recharge_treatment:'TECH_SUPPORT'}));
+ assert.equal(support.known_cost_result_cents,6965);assert.equal(support.net_estimate_cents,6715);
+});
+
+test('only the explicit excludes-tax provenance literal is accepted without changing legacy adjustment shape',()=>{
+ const legacy=adjustments(),current=reviewed({ads_source:'SHOPEE_PERIOD'});
+ assert.deepEqual(validateStoreAdjustments(legacy),legacy);
+ assert.deepEqual(validateStoreAdjustments(current),current);
+ for(const external_expenses_basis of [null,undefined,'INCLUDES_INVOICE_TAX','EXCLUDES_TAX',true,200]){
+  assert.throws(()=>validateStoreAdjustments(adjustments({external_expenses_basis})),StoreSummaryError);
+ }
+ let reads=0;const getter=adjustments();Object.defineProperty(getter,'external_expenses_basis',{get(){reads++;return 'EXCLUDES_INVOICE_TAX';}});
+ assert.throws(()=>validateStoreAdjustments(getter),StoreSummaryError);assert.equal(reads,0);
+});
+
+test('tax-specific arithmetic stays exact and never turns an unsafe value into a result',()=>{
+ const value=taxed({},undefined,reviewed({ads_spend_cents:Number.MAX_SAFE_INTEGER,external_expenses_cents:Number.MAX_SAFE_INTEGER}));
+ assert.equal(value.known_cost_result_cents,7965-Number.MAX_SAFE_INTEGER);assert.equal(value.net_estimate_cents,null);
+ has(value,'ARITHMETIC_UNSAFE');
+ const source=frame({invoice_tax:tax()}),declared=reviewed(),before=structuredClone({source,declared});
+ const result=buildStoreSummary(source,bindings(),costs(),declared);result.invoice_tax.tax_cents=999;
+ assert.deepEqual({source,declared},before);
 });

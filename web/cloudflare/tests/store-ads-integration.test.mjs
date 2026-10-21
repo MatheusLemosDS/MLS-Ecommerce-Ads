@@ -14,6 +14,9 @@ const dates=()=>({start_date:day(-2),end_date:day(-1)});
 const frame=changes=>({schema:'finance_store_period_v1',run_id:run,revision:3,status:'COMPLETE',...dates(),cutoff_at:now()-60,checked_at:now()-30,currency:'BRL',monetary_unit:'UNCONFIRMED',order_count:1,pages_read:1,duplicate_orders:0,returns_orders:0,escrow_amount_raw:'50',ads_recharge_or_support_raw:'0',items:[{item_id:'201',model_id:'0',quantity:2}],diagnostic:null,...changes});
 const ads=changes=>({schema:'ads_period_v1',status:'AVAILABLE',...dates(),fetched_at:now(),covered_days:2,total_days:2,missing_dates:[],expense_cents:123,days:[{date:day(-2),expense_cents:100},{date:day(-1),expense_cents:23}],day_partial:false,unit_confirmation:'OPERATOR_CONFIRMED_BRL_2026_10_20',source_timezone:'UNCONFIRMED',basis:'CALENDAR_PERIOD_NOT_ORDER_ATTRIBUTION',diagnostic:null,...changes});
 const declaration=(revision=0,changes={})=>({run_id:run,revision,values:{ads_spend_cents:999999,external_expenses_cents:200,recharge_treatment:'UNCONFIRMED',ads_source:'SHOPEE_PERIOD',...changes}});
+const taxFrame=changes=>frame({invoice_tax:{schema:'store_invoice_tax_v1',rate_bps:200,
+ basis:'PAYMENT_GOODS_VALUE_PER_ORDER_ESTIMATE',rounding:'HALF_UP_PER_ORDER',covered_orders:1,unavailable_orders:0,
+ known_base_raw:'100',known_tax_raw:'2'},...changes});
 async function login(){
  const env={ADMIN_DB:new D1(),ADMIN_SESSION_SECRET:'fixture-store-ads-session-secret-1234567890',ADMIN_USERNAME:'fixture-store-ads-admin',ADMIN_PASSWORD:'fixture-store-ads-password-1234567890'};
  const response=await adminFetch(new Request(origin+'/admin/login',{method:'POST',headers:{origin,'content-type':'application/x-www-form-urlencoded'},body:new URLSearchParams({username:env.ADMIN_USERNAME,password:env.ADMIN_PASSWORD})}),env);assert.equal(response.status,303);
@@ -54,6 +57,53 @@ test('Ads query derives dates only from verified complete financial run and bund
   const read=await call(auth,'/api/admin/finance/store-period',{operation:'read',run_id:run},source);assert.equal(read.status,200);assert.equal((await read.json()).ads_period.expense_cents,123);
  }
  assert.equal(source.calls.ads.length,1);assert.equal(state(auth).adjustments.length,0);assert.equal(state(auth).audit.length,0);
+});
+
+test('fresh automatic Ads fills the known-cost subtotal including goods-based tax without inventing other expenses or saving on read',async()=>{
+ const auth=await login(),source=services(taxFrame());
+ const first=await call(auth,'/api/admin/finance/store-period',{operation:'read',run_id:run},source);
+ assert.equal(first.status,200);assert.equal((await first.json()).result.known_cost_result_cents,null);
+ const response=await call(auth,'/api/admin/finance/ads-period',{run_id:run},source);assert.equal(response.status,200);
+ const bundle=await response.json();assert.equal(bundle.result.invoice_tax.base_cents,10000);
+ assert.equal(bundle.result.invoice_tax.tax_cents,200);assert.equal(bundle.result.expected_after_tax_cents,1620);
+ assert.equal(bundle.result.known_cost_result_cents,1497);assert.equal(bundle.result.net_estimate_cents,null);
+ assert.ok(bundle.result.pending.includes('ADJUSTMENTS_REQUIRED'));assert.deepEqual(state(auth),{adjustments:[],audit:[]});
+ const cached=await call(auth,'/api/admin/finance/store-period',{operation:'read',run_id:run},source);
+ assert.equal((await cached.json()).result.known_cost_result_cents,1497);assert.equal(source.calls.ads.length,1);
+});
+
+test('an explicit no-other-expenses declaration saves the tax exclusion basis and produces the taxed estimate with exact audit',async()=>{
+ const auth=await login(),source=services(taxFrame());await call(auth,'/api/admin/finance/ads-period',{run_id:run},source);
+ const response=await call(auth,'/api/admin/finance/store-adjustments',declaration(0,{external_expenses_cents:0,external_expenses_basis:'EXCLUDES_INVOICE_TAX'}),source);
+ assert.equal(response.status,200);const bundle=await response.json();assert.equal(bundle.result.net_estimate_cents,1497);
+ assert.equal(bundle.result.known_cost_result_cents,1497);assert.equal(bundle.result.net_profit_cents,null);
+ const saved=state(auth);assert.equal(saved.adjustments.length,1);assert.equal(saved.audit.length,1);
+ assert.equal(saved.adjustments[0].payload,saved.audit[0].payload);
+ const values=JSON.parse(saved.audit[0].payload);assert.equal(values.ads_spend_cents,123);
+ assert.equal(values.external_expenses_cents,0);assert.equal(values.external_expenses_basis,'EXCLUDES_INVOICE_TAX');
+});
+
+test('old expenses that may already contain tax are preserved until explicit review instead of being deducted twice',async()=>{
+ const auth=await login(),source=services(taxFrame());await call(auth,'/api/admin/finance/ads-period',{run_id:run},source);
+ const legacy=await call(auth,'/api/admin/finance/store-adjustments',declaration(),source);assert.equal(legacy.status,200);
+ const blocked=await legacy.json();assert.equal(blocked.result.net_estimate_cents,null);
+ assert.equal(blocked.result.known_cost_result_cents,1497);assert.ok(blocked.result.pending.includes('EXTERNAL_EXPENSES_REVIEW_REQUIRED'));
+ assert.equal(blocked.adjustments.values.external_expenses_cents,200);
+ const before=state(auth),read=await call(auth,'/api/admin/finance/store-period',{operation:'read',run_id:run},source);
+ assert.equal((await read.json()).result.net_estimate_cents,null);assert.deepEqual(state(auth),before);
+ const reviewed=await call(auth,'/api/admin/finance/store-adjustments',declaration(1,{external_expenses_cents:50,external_expenses_basis:'EXCLUDES_INVOICE_TAX'}),source);
+ assert.equal(reviewed.status,200);assert.equal((await reviewed.json()).result.net_estimate_cents,1447);
+ assert.equal(state(auth).audit.length,2);assert.equal(JSON.parse(state(auth).audit[0].payload).external_expenses_cents,200);
+});
+
+test('unsupported external-expense tax bases and forged invoice tax frames cannot save financial declarations',async()=>{
+ const auth=await login(),source=services(taxFrame()),before=state(auth);
+ for(const basis of ['INCLUDES_INVOICE_TAX','',false,null]){
+  assert.equal((await call(auth,'/api/admin/finance/store-adjustments',declaration(0,{external_expenses_basis:basis}),source)).status,400);
+ }
+ const wrong=taxFrame();wrong.invoice_tax.rate_bps=100;
+ const rejected=await call(auth,'/api/admin/finance/store-period',{operation:'read',run_id:run},services(wrong));
+ assert.equal(rejected.status,503);assert.deepEqual(state(auth),before);
 });
 
 test('foreign or incomplete financial runs prevent Ads calls and cached report association',async()=>{

@@ -166,12 +166,38 @@ function storeReturnsBreakdown(value,frame,items,productBreakdown) {
   return {schema:'store_returns_breakdown_v1',...groups,products};
 }
 
+// The goods-value basis is independent of the expected repass and production
+// cost. Rounding occurs on each invoice, so aggregate validation keeps its
+// bounded rounding interval instead of rounding the aggregate again.
+function storeInvoiceTax(value,frame) {
+  if(!storeExact(value,['schema','rate_bps','basis','rounding','covered_orders','unavailable_orders','known_base_raw','known_tax_raw'])
+    ||value.schema!=='store_invoice_tax_v1'||value.rate_bps!==200
+    ||value.basis!=='PAYMENT_GOODS_VALUE_PER_ORDER_ESTIMATE'||value.rounding!=='HALF_UP_PER_ORDER'
+    ||!storeInteger(value.covered_orders,0,frame.order_count)||!storeInteger(value.unavailable_orders,0,frame.order_count)
+    ||value.covered_orders+value.unavailable_orders!==frame.order_count)return null;
+  const cents=raw=>{
+    if(typeof raw!=='string'||normalizeStoreDecimal(raw)!==raw)return null;
+    const scaled=storeScaled(raw);
+    return scaled===null||scaled<0n||scaled%10000000000n!==0n?null:scaled/10000000000n;
+  };
+  const base=cents(value.known_base_raw),tax=cents(value.known_tax_raw),covered=BigInt(value.covered_orders);
+  if(base===null||tax===null||base>covered*100000000000000n
+    ||covered===0n&&(value.known_base_raw!=='0'||value.known_tax_raw!=='0')
+    ||base===0n&&tax!==0n||tax>base/25n)return null;
+  const difference=tax*10000n-base*200n;
+  if(difference< -4999n*covered||difference>5000n*covered)return null;
+  return {schema:'store_invoice_tax_v1',rate_bps:200,basis:'PAYMENT_GOODS_VALUE_PER_ORDER_ESTIMATE',rounding:'HALF_UP_PER_ORDER',
+    covered_orders:value.covered_orders,unavailable_orders:value.unavailable_orders,
+    known_base_raw:value.known_base_raw,known_tax_raw:value.known_tax_raw};
+}
+
 export function projectStorePeriodFrame(value) {
   try{
     const hasBreakdown=storePlain(value)&&Object.hasOwn(value,'product_breakdown');
     const hasReturns=storePlain(value)&&Object.hasOwn(value,'returns_breakdown');
+    const hasInvoiceTax=storePlain(value)&&Object.hasOwn(value,'invoice_tax');
     const keys=['schema','run_id','revision','status','start_date','end_date','cutoff_at','checked_at','currency','monetary_unit',
-      'order_count','pages_read','duplicate_orders','returns_orders','escrow_amount_raw','ads_recharge_or_support_raw','items','diagnostic',...(hasBreakdown?['product_breakdown']:[]),...(hasReturns?['returns_breakdown']:[])];
+      'order_count','pages_read','duplicate_orders','returns_orders','escrow_amount_raw','ads_recharge_or_support_raw','items','diagnostic',...(hasBreakdown?['product_breakdown']:[]),...(hasReturns?['returns_breakdown']:[]),...(hasInvoiceTax?['invoice_tax']:[])];
     if(!storeExact(value,keys)||value.schema!=='finance_store_period_v1'||!storeRunId(value.run_id)
       ||!storeInteger(value.revision,1,2147483647)||!['RUNNING','COMPLETE','LIMIT_REACHED'].includes(value.status)
       ||!projectStorePeriodRequest({operation:'start',start_date:value.start_date,end_date:value.end_date})
@@ -198,6 +224,8 @@ export function projectStorePeriodFrame(value) {
     if(hasBreakdown&&!breakdown)return null;
     const returns=hasReturns?storeReturnsBreakdown(value.returns_breakdown,value,items,breakdown):undefined;
     if(hasReturns&&!returns)return null;
-    return Object.fromEntries(keys.map(key=>[key,key==='items'?items:key==='product_breakdown'?breakdown:key==='returns_breakdown'?returns:value[key]]));
+    const invoiceTax=hasInvoiceTax?storeInvoiceTax(value.invoice_tax,value):undefined;
+    if(hasInvoiceTax&&!invoiceTax)return null;
+    return Object.fromEntries(keys.map(key=>[key,key==='items'?items:key==='product_breakdown'?breakdown:key==='returns_breakdown'?returns:key==='invoice_tax'?invoiceTax:value[key]]));
   }catch{return null;}
 }
