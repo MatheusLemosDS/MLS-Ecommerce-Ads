@@ -17,6 +17,12 @@ async function fixture(bindings=[]){
 function catalog(ids,unit=kit,models=['0']){
  return {schema:'variant_catalog_v1',checked_at:1792510733,products:ids.map(item_id=>({item_id,catalog_fingerprint:fingerprint,bindings:models.map(model_id=>({item_id,model_id,...(unit===single?{size:'M'}:{male_size:'M',female_size:'G'})})),unresolved_count:0,...(unit===single?{selling_unit:unit}:{})}))};
 }
+function withDiagnostic(product,axes=[{name:'Tamanho',options:['M'],option_count:1}],code='OPTION_NOT_RECOGNIZED'){
+ const model_count=product.bindings.length+product.unresolved_count;
+ return {...product,diagnostic:{axes,model_count,reasons:model_count
+  ?product.unresolved_count?[{code,count:product.unresolved_count}]:[]
+  :[{code:'NO_MODELS',count:0}]}};
+}
 const state=env=>({row:env.ADMIN_DB.db.prepare('SELECT * FROM variant_bindings_state').get(),audit:env.ADMIN_DB.db.prepare('SELECT * FROM variant_bindings_audit ORDER BY revision').all()});
 const failure=(code,status=400)=>error=>error.message===code&&error.status===status;
 
@@ -60,6 +66,71 @@ test('AUTO mixed catalogue is saved atomically and ambiguous processed products 
  assert.deepEqual(result.state.bindings.map(row=>[row.item_id,row.selling_unit]),[['10',single],['20',kit]]);assert.equal(state(env).audit.length,2);
  const next=await syncVariantBindings(env,{revision:2,candidates:candidates.filter(row=>!result.processed.includes(row.item_id))},'admin',async(_,selection)=>catalog(selection.item_ids,single));
  assert.deepEqual(next.processed,['40']);assert.equal(next.remaining_known,0);assert.deepEqual(next.pending_type,[]);
+});
+
+test('only processed products still pending return a projected catalogue review, including missing requested models',async()=>{
+ const env=await fixture(),candidates=['10','20','30','40'].map(item_id=>candidate(item_id,'9'));
+ const raw={schema:'variant_catalog_v1',checked_at:1792510733,products:[
+  withDiagnostic(catalog(['10'],single,['9']).products[0]),
+  withDiagnostic({item_id:'20',catalog_fingerprint:fingerprint,bindings:[],unresolved_count:1},[{name:'Modelo',options:['Único'],option_count:1}],'AXES_NOT_RECOGNIZED'),
+  withDiagnostic({item_id:'30',catalog_fingerprint:fingerprint,bindings:[],unresolved_count:0},[]),
+ ]};
+ const expected=structuredClone(raw);expected.products.shift();
+ const result=await syncVariantBindings(env,{revision:1,candidates},'admin',async()=>raw);
+ assert.deepEqual(result.processed,['10','20','30']);assert.equal(result.remaining_known,1);assert.deepEqual(result.pending_type,['20','30']);
+ assert.deepEqual(result.catalog_review,expected);assert.equal(result.state.revision,2);
+ assert.deepEqual(result.state.bindings.map(row=>row.item_id),['10']);
+ assert.equal(JSON.stringify(state(env)).includes('diagnostic'),false);
+ assert.equal(JSON.stringify(state(env)).includes('Único'),false);
+ // Projection also separates safe review data from the provider's objects.
+ raw.products[1].diagnostic.axes[0].options[0]='changed';
+ assert.equal(result.catalog_review.products[0].diagnostic.axes[0].options[0],'Único');
+ result.catalog_review.products[0].diagnostic.axes[0].options[0]='local edit';
+ assert.deepEqual(await readVariantBindings(env),result.state);
+});
+
+test('ambiguous review keeps manual bindings and no-op state unchanged while processed IDs advance the queue',async()=>{
+ const env=await fixture([manual('30','0',single)]),before=state(env),candidates=[candidate('30'),candidate('30','1'),candidate('40')],calls=[];
+ const product=withDiagnostic({...catalog(['30'],single).products[0],bindings:[{item_id:'30',model_id:'0',size:'G'}],unresolved_count:1},[{name:'Tamanho',options:['G','XL'],option_count:2}]);
+ const result=await syncVariantBindings(env,{revision:1,candidates},'admin',async(_,selection)=>{
+  calls.push(selection);return {schema:'variant_catalog_v1',checked_at:1792510733,products:[product]};
+ });
+ assert.deepEqual(result.catalog_review.products,[product]);assert.deepEqual(result.state.bindings,[manual('30','0',single)]);
+ assert.equal(result.state.revision,1);assert.deepEqual(state(env),before);assert.deepEqual(result.processed,['30']);assert.deepEqual(result.pending_type,['30']);assert.equal(result.remaining_known,1);
+ const remaining=candidates.filter(row=>!result.processed.includes(row.item_id));
+ const next=await syncVariantBindings(env,{revision:1,candidates:remaining},'admin',async(_,selection)=>{
+  calls.push(selection);return {schema:'variant_catalog_v1',checked_at:1792510733,products:[withDiagnostic(catalog(selection.item_ids,single).products[0])]};
+ });
+ assert.deepEqual(calls,[{item_ids:['30'],selling_unit:single},{item_ids:['40'],selling_unit:'AUTO'}]);
+ assert.deepEqual(next.processed,['40']);assert.equal(next.remaining_known,0);assert.deepEqual(next.pending_type,[]);
+ assert.deepEqual(Object.keys(next),['state','remaining_known','pending_type','processed']);
+ assert.deepEqual(next.state.bindings.find(row=>row.item_id==='30'),manual('30','0',single));
+});
+
+test('review diagnostics reject extra or inconsistent provider data before any otherwise valid binding is saved',async()=>{
+ const env=await fixture(),before=state(env),body={revision:1,candidates:[candidate('10'),candidate('20')]};
+ const base={schema:'variant_catalog_v1',checked_at:1792510733,products:[
+  catalog(['10'],single).products[0],
+  withDiagnostic({item_id:'20',catalog_fingerprint:fingerprint,bindings:[],unresolved_count:1}),
+ ]};
+ const mutations=[
+  frame=>{frame.products[1].diagnostic.private_token='PRIVATE_TOKEN';},
+  frame=>{frame.products[1].diagnostic.axes[0].buyer='PRIVATE_BUYER';},
+  frame=>{frame.products[1].diagnostic.reasons[0].message='PRIVATE_ERROR';},
+  frame=>{frame.products[1].diagnostic.axes[0].options.extra='PRIVATE_OPTION';},
+  frame=>{frame.products[1].diagnostic.model_count=2;},
+  frame=>{frame.products[1].diagnostic.reasons[0].count=2;},
+  frame=>{frame.products[1].diagnostic.axes[0].options[0]='M\nPRIVATE';},
+ ];
+ for(const mutate of mutations){
+  const frame=structuredClone(base);mutate(frame);
+  await assert.rejects(syncVariantBindings(env,body,'admin',async()=>frame),failure('VARIANT_CATALOG_UNAVAILABLE',503));
+  assert.deepEqual(state(env),before);
+ }
+ let getters=0;const frame=structuredClone(base);
+ Object.defineProperty(frame.products[1].diagnostic,'axes',{get(){getters++;return [];},enumerable:true});
+ await assert.rejects(syncVariantBindings(env,body,'admin',async()=>frame),failure('VARIANT_CATALOG_UNAVAILABLE',503));
+ assert.equal(getters,0);assert.deepEqual(state(env),before);
 });
 
 test('strict canonical candidate input, stale revision and bounded counts reject before provider or database changes',async()=>{

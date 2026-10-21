@@ -378,7 +378,7 @@ test('single-garment indices validate color as well as size, with disjoint pendi
 
 test('single-garment rules reject duplicate size axes and unknown axes rather than guessing from names or SKU', async () => {
   for(const axes of [[],[axis('Cor',['Verde'])],[axis('Masculino')],
-    [axis('Tamanho'),axis('Size')],[axis('Tamanho'),axis('Estampa',['Verde'])],
+    [axis('Tamanho'),axis('Size')],[axis('Tamanho'),axis('Material',['Verde'])],
     [axis('Tamanho'),axis('Cor',['Verde']),axis('Colour',['Verde'])],
     [axis('Tamanho masculino'),axis('Tamanho feminino')]]){
     const source={tier_variation:axes,model:[{model_id:0,tier_index:axes.map(()=>0),
@@ -518,10 +518,81 @@ test('AUTO discovers single garments from generic size alone or size and color i
   }
 });
 
+test('observed Estampa and Tamanho catalogue resolves all eight single-garment variations in either axis order', async () => {
+  const item_id='58220193244',observedSizes=['P','M','G','GG'],prints=['Vermelha','SemEstampa'];
+  for(const reversed of [false,true]){
+    // The screenshot establishes labels/options, not real model IDs or indices.
+    const source={tier_variation:reversed?[axis('Tamanho',observedSizes),axis('Estampa',prints)]
+      :[axis('Estampa',prints),axis('Tamanho',observedSizes)],
+      model:prints.flatMap((_,printIndex)=>observedSizes.map((__,sizeIndex)=>({
+        model_id:printIndex*4+sizeIndex,tier_index:reversed?[sizeIndex,printIndex]:[printIndex,sizeIndex],
+      })))};
+    const automatic=await deriveCatalogProduct(item_id,source,{selling_unit:'AUTO'});
+    const explicit=await deriveCatalogProduct(item_id,source,{selling_unit:'SINGLE_GARMENT'});
+    assert.equal(automatic.selling_unit,'SINGLE_GARMENT');assert.equal(automatic.unresolved_count,0);
+    assert.deepEqual(automatic.bindings,prints.flatMap((_,printIndex)=>observedSizes.map((size,sizeIndex)=>({
+      item_id,model_id:String(printIndex*4+sizeIndex),size,
+    }))));
+    assert.deepEqual(automatic,explicit);assert.deepEqual(automatic.diagnostic.reasons,[]);
+    assert.deepEqual(projectVariantCatalog(frame(automatic)),frame(automatic));
+    assert.equal(automatic.bindings.some(row=>Object.hasOwn(row,'male_size')||Object.hasOwn(row,'female_size')),false);
+  }
+});
+
+test('print indices remain required and supported size tokens still come only from the generic size axis', async () => {
+  const source={tier_variation:[axis('Estampa',['P','GG']),axis('Tamanho',['m','XL'])],model:[
+    {model_id:0,tier_index:[0,0]},{model_id:1,tier_index:[1,0]},
+    {model_id:2,tier_index:[2,0]},{model_id:3,tier_index:[0,1]},
+    {model_id:4,tier_index:[0]},{model_id:5,tier_index:[-1,0]},
+  ]};
+  for(const selling_unit of ['AUTO','SINGLE_GARMENT']){
+    const value=await deriveCatalogProduct(ITEM,source,{selling_unit});
+    assert.deepEqual(value.bindings,[{item_id:ITEM,model_id:'0',size:'M'},{item_id:ITEM,model_id:'1',size:'M'}]);
+    assert.equal(value.unresolved_count,4);
+    assert.deepEqual(value.diagnostic.reasons,[{code:'INDEX_NOT_VALID',count:3},{code:'OPTION_NOT_RECOGNIZED',count:1}]);
+  }
+});
+
+test('print cannot replace a size or garment axis, admit extra axes or broaden unknown catalogue labels', async () => {
+  for(const rawAxes of [[axis('Estampa',['P'])],[axis('Estampa',['P']),axis('Cor',['M'])],
+    [axis('Estampa',['P']),axis('Masculino',['M'])],
+    [axis('Estampa',['P']),axis('Feminino',['M'])],
+    [axis('Estampa',['P']),axis('Masculino',['M']),axis('Feminino',['G'])],
+    [axis('Estampa',['P']),axis('Tamanho',['M']),axis('Cor',['Verde'])],
+    [axis('Estampa',['P']),axis('Tamanho',['M']),axis('Size',['G'])],
+    [axis('Material',['P']),axis('Tamanho',['M'])],
+    [axis('Estampas',['P']),axis('Tamanho',['M'])]]){
+    const source={tier_variation:rawAxes,model:[{model_id:0,tier_index:rawAxes.map(()=>0),
+      model_name:'PRIVATE_SINGLE_M',model_sku:'PRIVATE_SINGLE_M'}],item_name:'PRIVATE_SINGLE_GARMENT'};
+    for(const selling_unit of ['AUTO','SINGLE_GARMENT','ONE_MALE_ONE_FEMALE_KIT']){
+      const value=await deriveCatalogProduct(ITEM,source,{selling_unit});
+      assert.deepEqual(value.bindings,[]);assert.equal(value.unresolved_count,1);
+      assert.deepEqual(value.diagnostic.reasons,[{code:'AXES_NOT_RECOGNIZED',count:1}]);
+      assert.equal(JSON.stringify(value).includes('PRIVATE_'),false);
+    }
+  }
+});
+
+test('single-garment print choices remain in the fingerprint without title, SKU or unrelated metadata', async () => {
+  const source={tier_variation:[axis('  ESTAMPA  ',['Vermelha','SemEstampa']),axis('Tamanho',['GG'])],
+    model:[{model_id:0,tier_index:[1,0]}]};
+  const first=await deriveCatalogProduct(ITEM,source,{selling_unit:'AUTO'});
+  const canonical={item_id:ITEM,axes:[{name:'estampa',options:['VERMELHA','SEMESTAMPA']},{name:'tamanho',options:['GG']}],
+    models:[{model_id:'0',tier_index:[1,0]}],selling_unit:'SINGLE_GARMENT'};
+  assert.equal(first.catalog_fingerprint,createHash('sha256').update(JSON.stringify(canonical)).digest('hex'));
+  source.item_name='PRIVATE_TITLE';source.model[0].model_sku='PRIVATE_SKU';source.private_extra='PRIVATE_METADATA';
+  assert.equal((await deriveCatalogProduct(ITEM,source,{selling_unit:'AUTO'})).catalog_fingerprint,first.catalog_fingerprint);
+  source.tier_variation[0].option_list[1].option='Sem Estampa';
+  const changed=await deriveCatalogProduct(ITEM,source,{selling_unit:'AUTO'});
+  assert.notEqual(changed.catalog_fingerprint,first.catalog_fingerprint);
+  assert.deepEqual(changed.bindings,first.bindings);
+  assert.equal(JSON.stringify(changed).includes('PRIVATE_'),false);
+});
+
 test('AUTO leaves ambiguous axes and invalid choices pending instead of fabricating a composition or cost', async () => {
   for(const rawAxes of [[],[axis('Cor',['Verde'])],[axis('Masculino')],
     [axis('Tamanho 1'),axis('Tamanho 2')],[axis('Masculino'),axis('Masculino')],
-    [axis('Tamanho'),axis('Size')],[axis('Tamanho'),axis('Estampa',['A'])],
+    [axis('Tamanho'),axis('Size')],[axis('Tamanho'),axis('Material',['A'])],
     [axis('Masculino'),axis('Feminino'),axis('Cor',['Verde'])]]){
     const source={tier_variation:rawAxes,model:[{model_id:0,tier_index:rawAxes.map(()=>0),
       model_sku:'PRIVATE_SINGLE_P_KIT',model_name:'PRIVATE_KIT_CASAL'}],item_name:'PRIVATE_CAMISETA'};

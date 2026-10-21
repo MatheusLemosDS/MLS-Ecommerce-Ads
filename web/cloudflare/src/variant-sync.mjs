@@ -71,6 +71,11 @@ export async function syncVariantBindings(env,body,actor,getCatalog){
  const stripped={...frame,products:frame.products.map(({diagnostic,...product})=>product)};
  const state=await saveAutomaticVariantBindings(env,{revision:body.revision,...selection},stripped,actor);
  const after=syncPending(candidates,state),done=new Set(processed);
+ // Review only the requested products still missing a binding. The entire
+ // provider frame was projected before saving; diagnostics never enter state.
+ const pendingIds=new Set([...after.pending_type,...after.known.map(row=>row.item_id)]);
+ const reviewProducts=frame.products.filter(product=>pendingIds.has(product.item_id)&&Object.hasOwn(product,'diagnostic'));
  return {state,remaining_known:after.known.filter(row=>!done.has(row.item_id)).length,
-  pending_type:[...new Set([...after.pending_type,...after.known.filter(row=>done.has(row.item_id)).map(row=>row.item_id)])].sort(syncSort),processed};
+  pending_type:[...new Set([...after.pending_type,...after.known.filter(row=>done.has(row.item_id)).map(row=>row.item_id)])].sort(syncSort),processed,
+  ...(reviewProducts.length?{catalog_review:{...frame,products:reviewProducts}}:{})};
 }

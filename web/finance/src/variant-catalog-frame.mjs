@@ -104,7 +104,9 @@ const catalogGender = value => {
   return null;
 };
 const catalogSingleSizeAxis = label => ['tamanho','tamanhos','tam','size','sizes','shirt size','garment size'].includes(label);
-const catalogColorAxis = label => ['cor','color','colour'].includes(label);
+// The observed single-garment catalogue varies the print independently of its
+// generic size. Print options never supply a size or select a kit composition.
+const catalogSingleAttributeAxis = label => ['cor','color','colour','estampa'].includes(label);
 const catalogKitOptionSize = (option, gender) => {
   if(catalogSizes.has(option))return option;
   // The observed catalogue labels each kit option with its garment. Accept only
@@ -135,7 +137,7 @@ export async function deriveCatalogProduct(item_id,response,{selling_unit='ONE_M
   });
   const genders=axes.map(axis=>catalogGender(axis.name));
   const sizeAxes=axes.map((axis,index)=>catalogSingleSizeAxis(axis.name)?index:-1).filter(index=>index!==-1);
-  const singleAxes=axes.length>=1&&axes.length<=2&&sizeAxes.length===1&&axes.every((axis,index)=>index===sizeAxes[0]||catalogColorAxis(axis.name));
+  const singleAxes=axes.length>=1&&axes.length<=2&&sizeAxes.length===1&&axes.every((axis,index)=>index===sizeAxes[0]||catalogSingleAttributeAxis(axis.name));
   const kitAxes=axes.length===2&&genders.includes('male_size')&&genders.includes('female_size');
   // The administrator enabled automatic composition for these two catalogue
   // structures. A title, price, SKU or an extra axis never chooses a unit.
