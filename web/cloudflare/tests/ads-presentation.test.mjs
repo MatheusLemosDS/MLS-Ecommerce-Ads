@@ -39,9 +39,11 @@ test('legacy login receives matching presentation and keeps the form method and 
  assert.ok(!result.includes('class="ads-source-banner"'));
 });
 
-test('all native mobile destinations and accessible theme controls survive the redesign',()=>{
+test('mobile navigation has three distinct destinations and preserves finance, settings and accessible theme controls',()=>{
  const html=shellMobileNavigation('/campaigns');
- for(const destination of ['/admin','/dashboard','/advertising','/campaigns','/gmv-max','/opportunities','/performance','/optimization','/integrations','/logout'])assert.ok(html.includes('href="'+destination+'"'),destination);
+ for(const destination of ['/admin','/dashboard','/campaigns','/optimization','/integrations','/logout'])assert.ok(html.includes('href="'+destination+'"'),destination);
+ for(const destination of ['/advertising','/gmv-max','/opportunities','/performance'])assert.ok(!html.includes('href="'+destination+'"'),destination);
+ for(const label of ['Resumo mensal','Campanhas','Automação','Conexões e configurações','Minha loja'])assert.ok(html.includes(label),label);
  assert.match(html,/class="nav active" href="\/campaigns" aria-current="page"/);
  assert.match(html,/<details class="mobile-menu"><summary>Menu<\/summary><nav aria-label="Navegação do painel">/);
  assert.match(html,/<button[^>]*type="button"[^>]*data-braza-theme-toggle[^>]*aria-label="Alterar tema"/);

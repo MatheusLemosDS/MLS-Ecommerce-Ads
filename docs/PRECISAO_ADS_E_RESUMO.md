@@ -1,50 +1,73 @@
-# Conferência de anúncios e financeiro
+# Resumo mensal, anúncios e líquido previsto
 
-Admin e dashboard consultam a mesma fonte de anúncios e aplicam a mesma projeção
-de datas, gastos e atribuição. O dashboard inicia em **hoje, em Brasília**, com
-seleção explícita de até 15 dias. No Admin, o link do bloco de anúncios abre o
-dashboard com as mesmas datas do resumo.
+A navegação de anúncios tem três destinos: **Resumo mensal**, **Campanhas**
+(com Product Ads e GMV Max) e **Automação**. Conexões ficam em configurações.
+Os totais da conta aparecem somente no resumo. Os endereços antigos continuam
+funcionando por redirecionamento autenticado.
 
-- Investimento é a soma exata dos gastos diários, em centavos. Dias ausentes
-  deixam o total pendente; não são tratados como zero.
-- Vendas atribuídas e pedidos atribuídos usam atribuição ampla. Direta fica
-  separada; nunca é somada nem usada para preencher uma ampla ausente.
-- ROAS informado é o valor retornado pela fonte para o dia. ROAS calculado é
-  vendas atribuídas divididas pelo investimento da mesma leitura. Para um
-  período, divide-se a soma das vendas pela soma dos gastos; não se faz média
-  dos ROAS diários.
-- Saldo da conta de anúncios é crédito disponível, separado do investimento.
-- Cada consulta identifica datas e horário da leitura. Esse horário não
-  comprova o corte de atualização da Shopee, ainda não informado pela fonte.
-  Consultas feitas em momentos diferentes podem divergir.
+O mês selecionado pode ter até 31 dias. Cada leitura da API mantém seu limite de
+15 dias; o aplicativo divide o mês em até três intervalos sem sobreposição.
+O mês atual termina no dia de hoje em Brasília. Um mês anterior usa todos os dias.
 
-O Admin atualiza automaticamente anúncios de períodos que incluem hoje a cada
-60 segundos, enquanto está visível, no modo automático e sem edição de
-despesas. Períodos encerrados mantêm cache de até 15 minutos; o botão Atualizar
-anúncios permite nova consulta. A atualização preserva valores salvos e rascunhos.
+## Indicadores de anúncios
 
-## Como conferir com a Shopee
+Admin e Ads compartilham a mesma projeção de gastos e atribuição:
 
-Selecione as mesmas datas em ambos os painéis e confira **Shopee Ads**, com a
-mesma atribuição. Vendas da loja e vendas atribuídas aos anúncios são métricas
-diferentes. Registre também o horário de atualização exibido pela Shopee.
+- Investimento é a soma exata dos gastos diários em centavos. Ausências deixam
+  o total pendente, sem preencher gasto zero.
+- Vendas atribuídas e pedidos atribuídos usam atribuição ampla. Direta permanece
+  separada, sem soma nem preenchimento de uma ampla ausente.
+- ROAS mensal = soma das vendas atribuídas ÷ soma dos gastos. Não se faz média
+  dos ROAS diários. O ROAS informado pela fonte fica preservado no detalhe diário.
+- Saldo da conta é crédito disponível, separado do investimento.
+- Datas e horário da leitura ficam identificados. A API não informa aqui o
+  horário de corte de atualização da Shopee.
 
-Por exemplo, vendas atribuídas de R$ 1.011,37 e gasto de R$ 52,61 dão ROAS
-calculado de 19,223912. Se a fonte retorna ROAS 19,28, o painel preserva os dois
-valores e sinaliza a diferença. Um gasto atualizado de R$ 52,77, com as mesmas
-vendas, dá 19,165624. O código não altera os gastos para forçar um ROAS.
+Por exemplo, R$ 1.011,37 de vendas atribuídas e R$ 52,61 de gasto dão ROAS
+calculado de 19,223912. Um gasto atualizado de R$ 52,77, mantendo as vendas,
+resulta em 19,165624. O código não altera gastos para forçar um ROAS informado.
 
-## Saldo de pedidos concluídos
+## Resultado mensal da loja
 
-A consulta financeira atual reúne somente pedidos concluídos criados no período.
-Ela não cobre todas as vendas em andamento. O resumo mostra repasse previsto,
-produção, imposto de 2% e saldo desses pedidos. Anúncios e outras despesas do
-calendário aparecem separados.
+O resumo principal lê todos os status dos pedidos criados no mês, separa os
+pagos em andamento dos concluídos e exclui cancelados e não pagos das vendas.
+Usa somente as APIs de lista, detalhe e Payment já utilizadas pela integração.
+A identidade da loja, os itens e as quantidades de cada Payment são conferidos.
 
-Assim, R$ 173,37 de repasse menos R$ 117,30 de produção e R$ 4,91 de imposto
-resultam em **R$ 51,16 de saldo dos concluídos**. Descontar R$ 489,24 de anúncios
-de todo o período desse saldo não comprova prejuízo de R$ 438,08 da loja.
+As vendas da loja vêm do valor dos produtos no Payment dos pedidos pagos.
+As vendas atribuídas aos anúncios são outro indicador e ficam separadas.
 
-O líquido da loja permanece **Em conciliação** até que as vendas, anúncios,
-devoluções, despesas e recebimentos tenham cobertura e critérios compatíveis.
-Salvar despesas ou confirmar a unidade monetária não substitui essa conciliação.
+A conta do líquido previsto é:
+
+**Repasse previsto − produção − imposto de 2% − anúncios − outras despesas**.
+
+O repasse já contém as taxas da Shopee. Elas não são descontadas novamente.
+Se o ajuste financeiro for confirmado como recarga de crédito de anúncios,
+seu valor é adicionado de volta uma vez, pois o investimento consumido é
+calculado separadamente. Suporte técnico permanece no repasse.
+
+A produção usa os custos atuais cadastrados e as quantidades de cada tamanho.
+O imposto é estimado por pedido, com arredondamento por nota, sobre os produtos
+antes das taxas da Shopee. Outras despesas são registradas uma única vez por mês,
+com controle de versão e auditoria. Quando não houver, use **Não tenho outras
+despesas**; ausência de declaração não é tratada como zero.
+
+O líquido previsto é liberado quando todos os intervalos, valores de Payment,
+custos, imposto, anúncios, classificação dos ajustes e despesas estão completos,
+sem ocorrências de devolução ou situação de pedido ainda sem conferência.
+Pagamento indisponível em um pedido ativo mantém suas quantidades e a pendência;
+não vira venda zero nem prejuízo artificial.
+
+Esse resultado é uma **estimativa operacional da coorte de criação do mês**,
+com os anúncios do calendário e custos padrão atuais. Ele não confirma o lucro
+já recebido em banco nem custos históricos reais por pedido. A consulta antiga
+que cobre apenas concluídos fica recolhida em Consulta detalhada de pedidos
+concluídos e não substitui a nova conta mensal de todos os pagos.
+
+## Próxima etapa de automação
+
+A área Automação concentra a referência de ROAS, a preparação das metas e as
+sugestões disponíveis. Para escalar por lucro, ainda é necessário relacionar
+margem, gasto de campanha, devoluções e estoque por produto, definir limites de
+orçamento e perda, validar permissões e revisar a execução. A publicação de
+anúncios, alteração de preços e mudança automática de orçamento seguem desativadas.

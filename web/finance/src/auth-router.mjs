@@ -2,6 +2,7 @@ import {projectDailyOrdersFrame} from './daily-orders-frame.mjs';
 import {projectFinancePaymentPreview} from './payment-preview-frame.mjs';
 import {projectVariantCatalog,projectVariantCatalogRequest} from './variant-catalog-frame.mjs';
 import {projectStorePeriodRequest,projectStorePeriodFrame} from './store-period-frame.mjs';
+import {projectBusinessPeriodRequest,projectBusinessPeriodFrame} from './business-period-frame.mjs';
 
 // Candidate router: only the isolated financial Service Binding can handle these paths.
 const FINANCE_ORIGIN = 'https://auth.brazacommerce.com.br';
@@ -12,6 +13,7 @@ const PAYMENT_SAMPLE_PATH = '/internal/shopee/finance/payment-sample';
 const PAYMENT_PREVIEW_PATH = '/internal/shopee/finance/payment-preview';
 const VARIANT_CATALOG_PATH = '/internal/shopee/finance/variant-catalog';
 const STORE_PERIOD_PATH = '/internal/shopee/finance/store-period';
+const BUSINESS_PERIOD_PATH = '/internal/shopee/finance/business-period';
 const SAMPLE_FIELDS = ['escrow_amount','original_cost_of_goods_sold','buyer_total_amount','commission_fee','service_fee','seller_transaction_fee','actual_shipping_fee','ads_escrow_top_up_fee_or_technical_support_fee','items'];
 const SAMPLE_ITEM_FIELDS = ['item_id','model_id','line_item_id','quantity_purchased','original_price','selling_price','order_discounted_price','is_kit','kit_items'];
 const SAMPLE_TYPES = new Set(['number','string','boolean','object','array','null','mixed']);
@@ -74,8 +76,8 @@ async function readSampleBody(body,maximum,controller,onReader){
 // This private action is deliberately separate from the public OAuth router.
 export async function forwardFinancePaymentSample(request,env,{validateInternalApp}={}){
  let url;try{url=new URL(request.url);}catch{return routerFailure('INVALID_REQUEST',400);}
- if(url.origin!==FINANCE_ORIGIN||url.username||url.password||url.hash||![PAYMENT_SAMPLE_PATH,PAYMENT_PREVIEW_PATH,VARIANT_CATALOG_PATH,STORE_PERIOD_PATH].includes(url.pathname))return routerFailure('NOT_FOUND',404);
- const catalog=url.pathname===VARIANT_CATALOG_PATH,storePeriod=url.pathname===STORE_PERIOD_PATH,maximum=storePeriod?524288:catalog?262144:65536,maximumInput=storePeriod?256:128;
+ if(url.origin!==FINANCE_ORIGIN||url.username||url.password||url.hash||![PAYMENT_SAMPLE_PATH,PAYMENT_PREVIEW_PATH,VARIANT_CATALOG_PATH,STORE_PERIOD_PATH,BUSINESS_PERIOD_PATH].includes(url.pathname))return routerFailure('NOT_FOUND',404);
+ const catalog=url.pathname===VARIANT_CATALOG_PATH,business=url.pathname===BUSINESS_PERIOD_PATH,storePeriod=business||url.pathname===STORE_PERIOD_PATH,maximum=storePeriod?524288:catalog?262144:65536,maximumInput=storePeriod?256:128;
  const unavailable=()=>storePeriod?storePeriodFailure():catalog?catalogFailure():sampleFailure();
  if(request.method!=='POST')return routerFailure('METHOD_NOT_ALLOWED',405);
  if(url.search||request.url.length>4096)return routerFailure('INVALID_REQUEST',400);
@@ -89,7 +91,7 @@ export async function forwardFinancePaymentSample(request,env,{validateInternalA
  const deadline=new Promise((resolve,reject)=>{timer=setTimeout(()=>{controller.abort();try{reader?.cancel().catch(()=>{});}catch{}reject(Error('DEADLINE'));},45000);});
  const work=async()=>{
   let body;try{body=await readSampleBody(request.body,maximumInput,controller,value=>{reader=value;});}catch{return routerFailure('INVALID_REQUEST',400);}
-  const input=storePeriod?projectStorePeriodRequest(body):catalog?projectVariantCatalogRequest(body):body;
+  const input=storePeriod?(business?projectBusinessPeriodRequest(body):projectStorePeriodRequest(body)):catalog?projectVariantCatalogRequest(body):body;
   if(!input||(!catalog&&!storePeriod&&(typeof input!=='object'||Array.isArray(input)||Object.keys(input).length!==0)))return routerFailure('INVALID_REQUEST',400);
   if(controller.signal.aborted)return unavailable();
   const headers={'content-type':'application/json',accept:'application/json','X-Braza-Finance-Router':secret};
@@ -109,7 +111,7 @@ export async function forwardFinancePaymentSample(request,env,{validateInternalA
    return sampleFailure(code,[400,401,403,409,429,502,503,504].includes(upstream.status)?upstream.status:502,value?.diagnostic?.http);
   }
   const preview=url.pathname===PAYMENT_PREVIEW_PATH;
-  const frame=storePeriod?projectStorePeriodFrame(value):catalog?projectVariantCatalog(value):preview?projectFinancePaymentPreview(value):sampleFrame(value);
+  const frame=storePeriod?(business?projectBusinessPeriodFrame(value):projectStorePeriodFrame(value)):catalog?projectVariantCatalog(value):preview?projectFinancePaymentPreview(value):sampleFrame(value);
   if(storePeriod&&frame&&!storePeriodRequestMatches(input,frame))return storePeriodFailure();
   if(catalog&&frame&&!catalogRequestMatches(input,frame))return catalogFailure();
   return frame?new Response(JSON.stringify(frame),{headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}}):storePeriod?storePeriodFailure():catalog?catalogFailure():sampleFailure(preview?'FINANCE_SAMPLE_PREVIEW_RESPONSE_INVALID':'FINANCE_SAMPLE_UNAVAILABLE');

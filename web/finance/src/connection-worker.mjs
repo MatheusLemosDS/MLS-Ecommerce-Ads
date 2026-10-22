@@ -3,6 +3,7 @@ import {FINANCE_PROFILE, FinanceConnectionError, createFinanceStore} from './con
 import {projectFinancePaymentPreview} from './payment-preview-frame.mjs';
 import {projectVariantCatalog,projectVariantCatalogRequest} from './variant-catalog-frame.mjs';
 import {projectStorePeriodRequest,projectStorePeriodFrame} from './store-period-frame.mjs';
+import {projectBusinessPeriodRequest,projectBusinessPeriodFrame} from './business-period-frame.mjs';
 
 const ORIGIN = 'https://auth.brazacommerce.com.br';
 const PREFIX = '/shopee/finance';
@@ -22,6 +23,7 @@ const PAYMENT_SAMPLE_PATH = '/internal/shopee/finance/payment-sample';
 const PAYMENT_PREVIEW_PATH = '/internal/shopee/finance/payment-preview';
 const VARIANT_CATALOG_PATH = '/internal/shopee/finance/variant-catalog';
 const STORE_PERIOD_PATH = '/internal/shopee/finance/store-period';
+const BUSINESS_PERIOD_PATH = '/internal/shopee/finance/business-period';
 const SAMPLE_FIELDS = ['escrow_amount','original_cost_of_goods_sold','buyer_total_amount','commission_fee','service_fee','seller_transaction_fee','actual_shipping_fee','ads_escrow_top_up_fee_or_technical_support_fee','items'];
 const SAMPLE_ITEM_FIELDS = ['item_id','model_id','line_item_id','quantity_purchased','original_price','selling_price','order_discounted_price','is_kit','kit_items'];
 const SAMPLE_TYPES = new Set(['number','string','boolean','object','array','null','mixed']);
@@ -71,7 +73,7 @@ function paymentFailure(error) {
   }}, status, {json: true});
 }
 
-async function privateFinanceBody(request, catalog = false, storePeriod = false) {
+async function privateFinanceBody(request, catalog = false, storePeriod = false, business = false) {
   const maximum=storePeriod?256:128;
   const media = request.headers.get('content-type') || '';
   const declared = request.headers.get('content-length');
@@ -95,7 +97,7 @@ async function privateFinanceBody(request, catalog = false, storePeriod = false)
     const bytes = new Uint8Array(length); let offset = 0;
     for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
     const value = JSON.parse(new TextDecoder('utf-8', {fatal: true}).decode(bytes));
-    if (storePeriod) return projectStorePeriodRequest(value);
+    if (storePeriod) return business?projectBusinessPeriodRequest(value):projectStorePeriodRequest(value);
     if (catalog) return projectVariantCatalogRequest(value);
     return value !== null && typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length === 0 ? value : null;
   };
@@ -253,7 +255,7 @@ function safeStatus(value) {
   };
 }
 
-export function createFinanceWorker({adapter, paymentSample, paymentPreview, variantCatalog, storePeriod, dailyOrders, fetchImpl, now = () => Date.now()} = {}) {
+export function createFinanceWorker({adapter, paymentSample, paymentPreview, variantCatalog, storePeriod, businessPeriod, dailyOrders, fetchImpl, now = () => Date.now()} = {}) {
   return {
     async fetch(request, env) {
       let url;
@@ -277,7 +279,7 @@ export function createFinanceWorker({adapter, paymentSample, paymentPreview, var
           return response(frame,200,{json:true});
         } catch {return response({error:'SHOP_ORDERS_UNAVAILABLE'},502,{json:true});}
       }
-      if ([PAYMENT_SAMPLE_PATH, PAYMENT_PREVIEW_PATH, VARIANT_CATALOG_PATH, STORE_PERIOD_PATH].includes(url.pathname)) {
+      if ([PAYMENT_SAMPLE_PATH, PAYMENT_PREVIEW_PATH, VARIANT_CATALOG_PATH, STORE_PERIOD_PATH, BUSINESS_PERIOD_PATH].includes(url.pathname)) {
         if (request.method !== 'POST') return failure('METHOD_NOT_ALLOWED', 405);
         if (url.search !== '') return failure('INVALID_REQUEST', 400);
         const routerError = await trustedRouter(request, env);
@@ -285,15 +287,16 @@ export function createFinanceWorker({adapter, paymentSample, paymentPreview, var
         // The offline/default worker has no injected Payment capability.
         const preview = url.pathname === PAYMENT_PREVIEW_PATH;
         const catalog = url.pathname === VARIANT_CATALOG_PATH;
-        const period = url.pathname === STORE_PERIOD_PATH;
-        const capability = period ? storePeriod : catalog ? variantCatalog : preview ? paymentPreview : paymentSample;
+        const business = url.pathname === BUSINESS_PERIOD_PATH;
+        const period = business || url.pathname === STORE_PERIOD_PATH;
+        const capability = business ? businessPeriod : period ? storePeriod : catalog ? variantCatalog : preview ? paymentPreview : paymentSample;
         if (env?.FINANCE_CONNECTION_ENABLED !== 'true' || typeof capability !== 'function'
             || typeof fetchImpl !== 'function' || typeof now !== 'function') return failure('CONFIGURATION_PENDING', 503);
-        const input = await privateFinanceBody(request, catalog, period);
+        const input = await privateFinanceBody(request, catalog, period, business);
         if (!input) return failure('INVALID_REQUEST', 400);
         try {
           const result = await capability(env, {fetchImpl, now, ...(catalog || period ? input : {})});
-          const frame = period ? projectStorePeriodFrame(result) : catalog ? projectVariantCatalog(result) : preview ? projectFinancePaymentPreview(result) : sampleFrame(result);
+          const frame = period ? (business ? projectBusinessPeriodFrame(result) : projectStorePeriodFrame(result)) : catalog ? projectVariantCatalog(result) : preview ? projectFinancePaymentPreview(result) : sampleFrame(result);
           if (period && (!frame || (input.operation === 'start' ? frame.start_date !== input.start_date || frame.end_date !== input.end_date : frame.run_id !== input.run_id))) return response({error:'FINANCE_STORE_UNAVAILABLE',diagnostic:{code:'FINANCE_STORE_UNAVAILABLE',http:null}},502,{json:true});
           if (catalog && (!frame || frame.products.length !== input.item_ids.length || frame.products.some(product => !input.item_ids.includes(product.item_id) || input.selling_unit !== 'AUTO' && (product.selling_unit || 'ONE_MALE_ONE_FEMALE_KIT') !== (input.selling_unit || 'ONE_MALE_ONE_FEMALE_KIT')))) return response({error:'FINANCE_CATALOG_UNAVAILABLE',diagnostic:{code:'FINANCE_CATALOG_UNAVAILABLE',http:null}},502,{json:true});
           if (!frame) return paymentFailure(preview ? new FinanceConnectionError('FINANCE_SAMPLE_PREVIEW_RESPONSE_INVALID', 502) : undefined);

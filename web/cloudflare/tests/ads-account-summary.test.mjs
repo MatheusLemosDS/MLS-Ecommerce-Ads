@@ -84,14 +84,21 @@ test('a fresh expense read updates calculated ROAS without rewriting the provide
   assert.equal(later.measurement.fetched_at, earlier.measurement.fetched_at + 60);
 });
 
-test('page selection defaults to the current Sao Paulo day and explicit dates pass through to the same source', async () => {
+test('page selection defaults to the current Sao Paulo month and explicit dates pass through to the same source', async () => {
+  const month={start_date:'2026-10-01',end_date:day};
   for (const route of ['/dashboard', '/ads', '/campaigns']) {
-    assert.deepEqual(adsMeasurementPageSelection(new URL('https://app.brazacommerce.com.br' + route), {now}), selection);
+    assert.deepEqual(adsMeasurementPageSelection(new URL('https://app.brazacommerce.com.br' + route), {now}), month);
   }
-  const {summary, calls} = await readSummary(payload(), undefined);
-  assert.deepEqual(summary.period, selection);
-  assert.equal(summary.measurement.day_partial, true);
-  assert.equal(new URL(calls[0].url).searchParams.get('start_date'), '21-10-2026');
+  const calls=[];
+  const summary=await getAdsSummary(env,undefined,{now,fetchImpl:async request=>{
+    const query=new URL(request.url).searchParams,source={start_date:query.get('start_date'),end_date:query.get('end_date')};calls.push(request);
+    const iso=value=>value.split('-').reverse().join('-'),start=Date.parse(iso(source.start_date)+'T00:00:00Z'),end=Date.parse(iso(source.end_date)+'T00:00:00Z');
+    const daily=Array.from({length:(end-start)/86400000+1},(_,index)=>({date:new Date(start+index*86400000).toISOString().slice(0,10),expense:1,broad_gmv:2,broad_order:1}));
+    return Response.json({...payload(),period:source,daily});
+  }});
+  assert.deepEqual(summary.period, month);
+  assert.equal(summary.calendar.day_partial, true);assert.equal(summary.metrics.spend,21);assert.equal(summary.metrics.gmv,42);assert.equal(summary.metrics.roas,2);assert.equal(summary.measurement,undefined);
+  assert.equal(calls.length,2);assert.equal(new URL(calls[0].url).searchParams.get('start_date'), '01-10-2026');assert.equal(new URL(calls[1].url).searchParams.get('start_date'),'16-10-2026');
   const explicit = adsMeasurementPageSelection(new URL('https://app.brazacommerce.com.br/ads?start_date=2026-10-20&end_date=2026-10-21'), {now});
   assert.deepEqual(explicit, {start_date: '2026-10-20', end_date: day});
   const raw = payload(); raw.period.start_date = '20-10-2026';
@@ -111,7 +118,9 @@ test('invalid, duplicate or incomplete date selectors cannot silently fall back 
     'start_date=2026-10-21&end_date=2026-10-21&end_date=2026-10-20',
     'start_date=&end_date=', 'start_date=2026-02-30&end_date=2026-10-21',
     'start_date=2026-10-22&end_date=2026-10-22',
-    'start_date=2026-10-01&end_date=2026-10-21',
+    'start_date=2026-09-20&end_date=2026-10-21',
+    'month=2026-10&start_date=2026-10-21&end_date=2026-10-21',
+    'month=2026-10&month=2026-09', 'month=2026-11', 'month=2026-13', 'month=',
     'start_date=2026-10-21&end_date=2026-10-20'
   ]) {
     const selected = adsMeasurementPageSelection(new URL('https://app.brazacommerce.com.br/ads?' + query), {now});

@@ -1,11 +1,26 @@
-// Native links and disclosure keep the legacy dashboard usable without scripts.
+// A destination has one job. Older URLs can still resolve through route aliases,
+// but do not create extra menu entries for the same account totals.
+const shellPrimaryLinks=[['/dashboard','Resumo mensal'],['/campaigns','Campanhas'],['/optimization','Automação']];
+function shellCanonicalPath(path){return ({'/advertising':'/dashboard','/performance':'/dashboard','/gmv-max':'/campaigns','/opportunities':'/optimization'})[path]||path;}
+function shellNavigationLinks(currentPath){
+ const current=shellCanonicalPath(currentPath);
+ return shellPrimaryLinks.map(([href,label])=>`<a class="nav${current===href?' active':''}" href="${href}"${current===href?' aria-current="page"':''}>${label}</a>`).join('');
+}
+function shellConfigurationLink(currentPath){return `<a class="nav shell-settings${currentPath==='/integrations'?' active':''}" href="/integrations"${currentPath==='/integrations'?' aria-current="page"':''}>Conexões e configurações</a>`;}
+
+export function shellDesktopNavigation(currentPath){
+ return `<a class="nav shell-store" href="/admin">Resultado da loja <span aria-hidden="true">↗</span></a><div class="shell-nav-label">ANÚNCIOS</div><nav aria-label="Navegação de anúncios">${shellNavigationLinks(currentPath)}</nav><div class="shell-navigation-secondary">${shellConfigurationLink(currentPath)}</div>`;
+}
 export function shellMobileNavigation(currentPath){
- const links=[['/dashboard','Painel de anúncios'],['/advertising','Anúncios'],['/campaigns','Campanhas'],['/gmv-max','GMV Max'],['/opportunities','Oportunidades'],['/performance','Desempenho'],['/optimization','Otimização'],['/integrations','Integrações']];
- return `<header class="shell-mobile-navigation mobile-toolbar"><a class="mobile-brand" href="/dashboard" aria-label="BrazaCommerce — painel de anúncios"><span class="mobile-brand-mark">B</span><span class="mobile-brand-name">BrazaCommerce</span></a><a class="mobile-admin" href="/admin">Administração</a><button class="mobile-theme theme-toggle" type="button" data-braza-theme-toggle aria-label="Alterar tema">Tema</button><details class="mobile-menu"><summary>Menu</summary><nav aria-label="Navegação do painel">${links.map(([href,label])=>`<a class="nav${currentPath===href?' active':''}" href="${href}"${currentPath===href?' aria-current="page"':''}>${label}</a>`).join('')}<a class="mobile-logout" href="/logout">Sair</a></nav></details></header>`;
+ return `<header class="shell-mobile-navigation mobile-toolbar"><a class="mobile-brand" href="/dashboard" aria-label="BrazaCommerce — resumo mensal de anúncios"><span class="mobile-brand-mark">B</span><span class="mobile-brand-name">BrazaCommerce</span></a><a class="mobile-admin" href="/admin">Minha loja</a><button class="mobile-theme theme-toggle" type="button" data-braza-theme-toggle aria-label="Alterar tema">Tema</button><details class="mobile-menu"><summary>Menu</summary><nav aria-label="Navegação do painel">${shellNavigationLinks(currentPath)}<div class="shell-navigation-secondary">${shellConfigurationLink(currentPath)}</div><a class="mobile-logout" href="/logout">Sair</a></nav></details></header>`;
 }
 
 export const SHELL_NAVIGATION_CSS=String.raw`
 .mobile-toolbar{display:none}
+.shell-nav-label{margin:22px 14px 8px;font-size:10px;font-weight:750;letter-spacing:1.2px;color:var(--muted)}
+.shell-navigation-secondary{margin-top:22px;padding-top:12px;border-top:1px solid var(--line)}
+.sidebar .nav.shell-store{justify-content:space-between;background:var(--accent-soft);color:var(--accent)}
+.sidebar .nav.shell-settings{font-size:12px}
 @media(max-width:850px){
  .app{display:block;width:100%;min-width:0}
  .main{width:100%;min-width:0}
