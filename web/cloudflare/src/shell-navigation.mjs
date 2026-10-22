@@ -19,7 +19,7 @@ export const SHELL_NAVIGATION_CSS=String.raw`
 .mobile-toolbar{display:none}
 .shell-nav-label{margin:22px 14px 8px;font-size:10px;font-weight:750;letter-spacing:1.2px;color:var(--muted)}
 .shell-navigation-secondary{margin-top:22px;padding-top:12px;border-top:1px solid var(--line)}
-.sidebar .nav.shell-store{justify-content:space-between;background:var(--accent-soft);color:var(--accent)}
+.sidebar .nav.shell-store{justify-content:space-between;background:var(--surface-raised);color:var(--text)}
 .sidebar .nav.shell-settings{font-size:12px}
 @media(max-width:850px){
  .app{display:block;width:100%;min-width:0}
@@ -38,7 +38,7 @@ export const SHELL_NAVIGATION_CSS=String.raw`
  .mobile-brand{display:flex;align-items:center;gap:9px;min-width:0;min-height:44px;color:var(--text);text-decoration:none;font-size:14px;font-weight:800;letter-spacing:-.3px}
  .mobile-brand-mark{display:grid;place-items:center;width:32px;height:32px;flex:0 0 32px;border-radius:10px;background:var(--accent);color:var(--on-accent,#fff);font-size:17px}
  .mobile-brand-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
- .mobile-admin{display:flex;align-items:center;justify-content:center;min-height:44px;min-width:0;padding:10px 12px;background:var(--accent-soft);border:1px solid var(--line);border-radius:11px;color:var(--accent);text-decoration:none;font-size:12px;font-weight:750}
+ .mobile-admin{display:flex;align-items:center;justify-content:center;min-height:44px;min-width:0;padding:10px 12px;background:var(--surface-raised);border:1px solid var(--line);border-radius:11px;color:var(--accent);text-decoration:none;font-size:12px;font-weight:750}
  .mobile-theme{width:44px!important;height:44px!important;min-height:44px!important;min-width:0!important;padding:4px!important;overflow:hidden;text-indent:-9999px;position:relative;border:1px solid var(--line)!important;border-radius:11px!important;background:var(--surface)!important;color:var(--text)!important;font-size:11px!important}
  .mobile-theme::after{content:'◐';text-indent:0;position:absolute;inset:0;display:grid;place-items:center;font-size:23px;font-weight:400}
  .mobile-menu{grid-column:1/-1;min-width:0}
@@ -48,7 +48,7 @@ export const SHELL_NAVIGATION_CSS=String.raw`
  .mobile-menu[open] summary::after{content:'▴'}
  .mobile-menu nav{width:100%;max-width:100%;max-height:55vh;max-height:55dvh;overflow-y:auto;overscroll-behavior:contain;margin-top:10px;padding:10px 0 0;background:var(--surface);border-top:1px solid var(--line)}
  .mobile-menu .nav,.mobile-logout{display:flex;align-items:center;min-height:44px;margin:3px 0;padding:11px 14px;color:var(--muted);text-decoration:none;font-size:14px;border-radius:10px}
- .mobile-menu .nav.active{color:var(--accent);background:var(--accent-soft);font-weight:750}
+ .mobile-menu .nav.active{color:var(--text);background:var(--surface-raised);font-weight:750}
  .mobile-logout{margin-top:8px;border-top:1px solid var(--line);border-radius:0}
  .mobile-logout:hover{color:var(--text);background:var(--surface-raised)}
 }

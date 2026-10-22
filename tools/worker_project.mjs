@@ -26,6 +26,7 @@ export const TARGETS = Object.freeze({
     'e3f73bd0e5980d708a3e8df04ac7b98d8925e91c36d8b8282571e17dce673ebb',
     '2ca1bb300336725a1a1f1c0da1e9a6e3f770fff439e937f09bedb54643b5a30b',
     'e8117e73c1e60d8fea99c6e2ca250816f7a20541dcaba5771f93579ad1f421f0',
+    '042d6243a0fbff27e8bb8e09547652eb5e7a595397dca8572e1f19349682fc4f',
   ]}),
   auth: Object.freeze({name: 'brazacommerce-auth', main: '../../dist/auth-worker.mjs', baselineHashes: [
     '45d0142709c5087e373cc4da146070ed39c472805f6f64c00f00b6555f0e1f56',

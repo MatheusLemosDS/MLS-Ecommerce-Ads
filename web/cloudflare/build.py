@@ -3,13 +3,29 @@ from pathlib import Path
 import hashlib,json
 import re
 root=Path(__file__).resolve().parent
+
+def freeze_client_helpers(source, helpers):
+    """Embed helper source before Wrangler can rename functions or their closures.
+
+    These named exports use column-zero closing braces. Keep the source as a
+    JSON string interpolation so template literals and regular expressions in
+    the helper retain their exact spelling inside the browser script.
+    """
+    for name, filename in helpers.items():
+        marker='${'+name+'.toString()}'
+        functions=re.findall(r'^export function '+re.escape(name)+r'\([\s\S]*?^\}', (root/'src'/filename).read_text(),flags=re.M)
+        if source.count(marker)!=1 or len(functions)!=1:
+            raise ValueError('Cannot snapshot browser helper: '+name)
+        source=source.replace(marker,'${'+json.dumps(functions[0].removeprefix('export '))+'}',1)
+    return source
+
 original=(root/'original/app-worker.mjs').read_text()
 admin=(root/'src/admin.mjs').read_text().replace("import {CLIENT} from './admin-client.mjs';\n",'').replace("import {CSS,adminBody,loginBody} from './admin-view.mjs';\n",'')
 report=(root/'src/admin-report.mjs').read_text().replace('export function parseReport','function parseReport')
-client=report+'\n'+re.sub(r'^import .*\n','',(root/'src/admin-client.mjs').read_text(),flags=re.M).replace('export const CLIENT','const CLIENT')
+client=report+'\n'+re.sub(r'^import .*\n','',freeze_client_helpers((root/'src/admin-client.mjs').read_text(),{'parseReport':'admin-report.mjs','projectAdsMeasurement':'ads-measurement.mjs'}),flags=re.M).replace('export const CLIENT','const CLIENT')
 view=re.sub(r'^import .*\n','',(root/'src/admin-view.mjs').read_text(),flags=re.M).replace('export const CSS','const CSS').replace('export function adminBody','function adminBody').replace('export function loginBody','function loginBody')
 month_view=re.sub(r'^export ', '', (root/'src/business-month-view.mjs').read_text(),flags=re.M)
-month_client=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/business-month-client.mjs').read_text(),flags=re.M),flags=re.M)
+month_client=re.sub(r'^export ', '', re.sub(r'^import .*\n','',freeze_client_helpers((root/'src/business-month-client.mjs').read_text(),{'projectAdsCalendar':'ads-calendar.mjs','projectBusinessMonth':'business-month.mjs'}),flags=re.M),flags=re.M)
 business_month=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/business-month.mjs').read_text(),flags=re.M),flags=re.M)
 business_month='const brazaBusinessMonth = (() => {\n'+business_month+'\nreturn {BUSINESS_MONTH_SCHEMA,businessMonth,projectBusinessMonth,BusinessMonthError};\n})();\nconst {BUSINESS_MONTH_SCHEMA,businessMonth,projectBusinessMonth,BusinessMonthError}=brazaBusinessMonth;\n'
 ads=re.sub(r'^import .*\n','',(root/'src/admin-ads-today.mjs').read_text(),flags=re.M).replace('export function adsToday','function adsToday')
