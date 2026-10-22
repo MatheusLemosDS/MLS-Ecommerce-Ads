@@ -73,7 +73,11 @@ test('bundle reads all saved revisions in one batch and absent expense declarati
  const env=await database(),calls=[],actual=env.ADMIN_DB.batch.bind(env.ADMIN_DB);env.ADMIN_DB.batch=statements=>{calls.push(statements.length);return actual(statements);};
  const actualFrame=frame(),before=structuredClone(actualFrame),bundle=await storePeriodBundle(env,actualFrame);assert.deepEqual(calls,[4]);assert.deepEqual(bundle.finance,actualFrame);assert.deepEqual(actualFrame,before);
  assert.deepEqual(bundle.adjustments,{revision:0,values:null,updated_at:null});assert.equal(bundle.result.bindings_revision,5);assert.equal(bundle.result.costs_revision,7);assert.equal(bundle.result.expected_repass_cents,5000);assert.equal(bundle.result.production_cost_cents,3180);assert.equal(bundle.result.net_estimate_cents,null);assert.ok(bundle.result.pending.includes('ADJUSTMENTS_REQUIRED'));
- await saveStoreAdjustments(env,body(0,{values:values({ads_spend_cents:0,external_expenses_cents:0})}),'admin');const declared=await storePeriodBundle(env,actualFrame);assert.equal(declared.adjustments.revision,1);assert.equal(declared.result.net_estimate_cents,1820);assert.equal(declared.result.net_profit_cents,null);
+ await saveStoreAdjustments(env,body(0,{values:values({ads_spend_cents:0,external_expenses_cents:0})}),'admin');const declared=await storePeriodBundle(env,actualFrame);assert.equal(declared.adjustments.revision,1);assert.equal(declared.result.net_estimate_cents,null);assert.equal(declared.result.net_profit_cents,null);
+ assert.equal(declared.result.expected_after_production_cents,1820);assert.ok(declared.result.pending.includes('ADS_COHORT_NOT_RECONCILED'));
+ const saved=snapshot(env),reread=await storePeriodBundle(env,actualFrame);
+ assert.deepEqual(reread.adjustments,declared.adjustments);assert.equal(reread.result.net_estimate_cents,null);
+ assert.deepEqual(snapshot(env),saved);assert.deepEqual(JSON.parse(saved.audit[0].payload),values({ads_spend_cents:0,external_expenses_cents:0}));
  assert.equal(bundle.returns_result,null);assert.equal(declared.returns_result,null);
 });
 
@@ -139,7 +143,7 @@ test('a product with full tax coverage stays usable when another product keeps t
 test('coherent bundle keeps captured configuration even if saved data changes just after the context batch',async()=>{
  const env=await database();await saveStoreAdjustments(env,body(),'admin');const original=env.ADMIN_DB.batch.bind(env.ADMIN_DB);let changed=false;
  env.ADMIN_DB.batch=async statements=>{const result=await original(statements);if(statements.length===4&&!changed){changed=true;env.ADMIN_DB.db.prepare('UPDATE variant_bindings_state SET revision=6,payload=?').run(JSON.stringify([garment('G1')]));env.ADMIN_DB.db.prepare('UPDATE production_costs_state SET revision=8,payload=?').run(JSON.stringify({...COST_DEFAULTS,inclusive_regular_cents:2000,components:[]}));env.ADMIN_DB.db.prepare('UPDATE store_period_adjustments SET revision=2,payload=?').run(JSON.stringify(values({ads_spend_cents:1000})));}return result;};
- const captured=await storePeriodBundle(env,frame());assert.equal(captured.result.bindings_revision,5);assert.equal(captured.result.costs_revision,7);assert.equal(captured.adjustments.revision,1);assert.equal(captured.result.production_cost_cents,3180);assert.equal(captured.result.net_estimate_cents,1520);
+ const captured=await storePeriodBundle(env,frame());assert.equal(captured.result.bindings_revision,5);assert.equal(captured.result.costs_revision,7);assert.equal(captured.adjustments.revision,1);assert.equal(captured.result.production_cost_cents,3180);assert.equal(captured.result.net_estimate_cents,null);
  assert.equal(env.ADMIN_DB.db.prepare('SELECT revision FROM variant_bindings_state').get().revision,6);assert.equal(env.ADMIN_DB.db.prepare('SELECT revision FROM production_costs_state').get().revision,8);
 });
 
@@ -179,7 +183,7 @@ test('foreign run/date frames and malformed provider payloads are rejected befor
 
 test('route saves expense revisions for the verified run and stale attempts retain coherent state and audit',async()=>{
  const auth=await login();let calls=0;const services={getFinanceStorePeriod:async(env,selection)=>{calls++;assert.equal(env,auth.env);assert.deepEqual(selection,{operation:'read',run_id:run});return frame();}};
- const first=await adminFetch(request(auth,'/api/admin/finance/store-adjustments',body()),auth.env,services);assert.equal(first.status,200);const bundle=await first.json();assert.equal(bundle.adjustments.revision,1);assert.deepEqual(bundle.adjustments.values,values());assert.equal(bundle.result.net_estimate_cents,1520);assert.equal(bundle.result.net_profit_cents,null);
+ const first=await adminFetch(request(auth,'/api/admin/finance/store-adjustments',body()),auth.env,services);assert.equal(first.status,200);const bundle=await first.json();assert.equal(bundle.adjustments.revision,1);assert.deepEqual(bundle.adjustments.values,values());assert.equal(bundle.result.net_estimate_cents,null);assert.equal(bundle.result.net_profit_cents,null);
  const before=snapshot(auth.env),stale=await adminFetch(request(auth,'/api/admin/finance/store-adjustments',body()),auth.env,services);assert.equal(stale.status,409);assert.equal((await stale.json()).error,'STORE_ADJUSTMENTS_CHANGED_RELOAD');assert.deepEqual(snapshot(auth.env),before);assert.equal(calls,2);
  assert.equal(auth.env.ADMIN_DB.db.prepare('SELECT COUNT(*) n FROM hermes_jobs').get().n,0);assert.equal(auth.env.ADMIN_DB.db.prepare('SELECT revision FROM production_costs_state').get().revision,1);
 });

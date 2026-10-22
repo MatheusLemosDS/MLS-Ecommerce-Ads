@@ -143,7 +143,7 @@ async function adminFetch(request,env,services={}){const url=new URL(request.url
   const bindings=await readVariantBindings(env),cfg=await settings(env),costs=await readProductionCosts(env);
   return json({...frame,...(diagnostic?{diagnostic}:{}),margin_reference:variantMarginReference(frame,bindings,cfg),production_cost_reference:productionCostReference(frame,bindings,costs),fetched_at:new Date().toISOString()});
  }
- if(path==='/api/admin/ads-today'){const summary=typeof services.getAdsSummary==='function'?await services.getAdsSummary(env):null;return json({...adsToday(summary,localDay()),fetched_at:new Date().toISOString()});}
+ if(path==='/api/admin/ads-today'){const day=localDay(),summary=typeof services.getAdsSummary==='function'?await services.getAdsSummary(env,{start_date:day,end_date:day}):null;return json({...adsToday(summary,day),fetched_at:new Date().toISOString()});}
  if(path==='/api/admin/shop-orders'){
   let summary=null,diagnostic=null;
   try{if(typeof services.getShopOrders==='function')summary=await services.getShopOrders(env);}catch{diagnostic={stage:'APP_TO_AUTH',code:'INTERNAL_ERROR',http:null};}

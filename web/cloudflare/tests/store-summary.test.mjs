@@ -24,8 +24,8 @@ const taxed=(changes={},bindingRows,declared=reviewed(),adsPeriodSpendCents=null
 test('whole completed cohort uses actual expected repass and one-piece/two-piece costs, never legacy kit margins',()=>{
  const value=summary();
  assert.equal(value.complete,true);assert.equal(value.expected_repass_cents,15025);assert.equal(value.production_cost_cents,6660);
- assert.equal(value.known_production_cost_cents,6660);assert.equal(value.expected_after_production_cents,8365);assert.equal(value.net_estimate_cents,7115);
- assert.equal(value.net_profit_cents,null);assert.deepEqual(value.pending,['SETTLEMENT_NOT_RECONCILED']);assert.deepEqual(value.unmapped_variants,[]);
+ assert.equal(value.known_production_cost_cents,6660);assert.equal(value.expected_after_production_cents,8365);assert.equal(value.net_estimate_cents,null);
+ assert.equal(value.net_profit_cents,null);assert.deepEqual(value.pending,['ADS_COHORT_NOT_RECONCILED','SETTLEMENT_NOT_RECONCILED']);assert.deepEqual(value.unmapped_variants,[]);
  assert.equal(value.bindings_revision,7);assert.equal(value.costs_revision,4);assert.equal(value.net_basis,'EXPECTED_REPASS_CURRENT_STANDARD_COSTS_NOT_SETTLED');
  assert.equal(value.unit_confirmation,'OPERATOR_CONFIRMED_BRL_2026_10_20');
 });
@@ -62,13 +62,13 @@ test('exact canonical cents preserve decimals, negative payout and genuine zero 
  for(const [raw,cents] of [['0',0],['0.01',1],['0.1',10],['1.23',123],['-0.01',-1],['-80.5',-8050],['999999999999.99',99999999999999]]){
   const value=summary({escrow_amount_raw:raw});assert.equal(value.expected_repass_cents,cents);assert.equal(value.expected_after_production_cents,cents-6660);
  }
- const negative=summary({escrow_amount_raw:'1'});assert.equal(negative.net_estimate_cents,-7810);assert.equal(negative.net_profit_cents,null);
+ const negative=summary({escrow_amount_raw:'1'});assert.equal(negative.expected_after_production_cents,-6560);assert.equal(negative.net_estimate_cents,null);assert.equal(negative.net_profit_cents,null);
 });
 
-test('a genuine empty completed cohort is zero with explicit zero expenses, while absent declarations remain unknown',()=>{
+test('an empty completed cohort has real zero balances without proving the whole store has zero net result',()=>{
  const empty={order_count:0,items:[],escrow_amount_raw:'0',ads_recharge_or_support_raw:'0'};
  const value=summary(empty,[],adjustments({ads_spend_cents:0,external_expenses_cents:0}));
- assert.equal(value.expected_repass_cents,0);assert.equal(value.production_cost_cents,0);assert.equal(value.expected_after_production_cents,0);assert.equal(value.net_estimate_cents,0);assert.equal(value.net_profit_cents,null);
+ assert.equal(value.expected_repass_cents,0);assert.equal(value.production_cost_cents,0);assert.equal(value.expected_after_production_cents,0);assert.equal(value.net_estimate_cents,null);assert.equal(value.net_profit_cents,null);
  const undeclared=summary(empty,[],null);assert.equal(undeclared.net_estimate_cents,null);has(undeclared,'ADJUSTMENTS_REQUIRED');
 });
 
@@ -77,13 +77,13 @@ test('already-net Shopee fees are not subtracted a second time and the original-
  for(const field of ['commission_fee','service_fee','original_cost_of_goods_sold','legacy_kit_margin'])assert.throws(()=>summary({[field]:999999}),StoreSummaryError);
 });
 
-test('recharge and technical support interpretations have different explicit add-back behavior',()=>{
+test('recharge and technical support declarations stay classified while calendar attribution blocks a net claim',()=>{
  const raw={escrow_amount_raw:'100',ads_recharge_or_support_raw:'20'};
  const unknown=summary(raw);assert.equal(unknown.expected_after_production_cents,3340);assert.equal(unknown.net_estimate_cents,null);has(unknown,'RECHARGE_TREATMENT_REQUIRED');
- const recharge=summary(raw,undefined,adjustments({recharge_treatment:'ADS_RECHARGE'}));assert.equal(recharge.net_estimate_cents,4090);
- const support=summary(raw,undefined,adjustments({recharge_treatment:'TECH_SUPPORT'}));assert.equal(support.net_estimate_cents,2090);
+ const recharge=summary(raw,undefined,adjustments({recharge_treatment:'ADS_RECHARGE'}));assert.equal(recharge.expected_after_production_cents,3340);assert.equal(recharge.net_estimate_cents,null);assert.ok(!recharge.pending.includes('RECHARGE_TREATMENT_REQUIRED'));
+ const support=summary(raw,undefined,adjustments({recharge_treatment:'TECH_SUPPORT'}));assert.equal(support.expected_after_production_cents,3340);assert.equal(support.net_estimate_cents,null);assert.ok(!support.pending.includes('RECHARGE_TREATMENT_REQUIRED'));
  assert.equal(recharge.ads_recharge_or_support_cents,2000);assert.equal(support.ads_recharge_or_support_cents,2000);
- const zero=summary({ads_recharge_or_support_raw:'0'});assert.equal(zero.net_estimate_cents,7115);assert.ok(!zero.pending.includes('RECHARGE_TREATMENT_REQUIRED'));
+ const zero=summary({ads_recharge_or_support_raw:'0'});assert.equal(zero.net_estimate_cents,null);assert.ok(!zero.pending.includes('RECHARGE_TREATMENT_REQUIRED'));
 });
 
 test('unknown, negative or sub-cent combined components block net estimates without discarding independent repass/cost totals',()=>{
@@ -105,9 +105,9 @@ test('adjustments are explicit nonnegative safe integer cents with a fixed treat
  let reads=0;const getter=adjustments();Object.defineProperty(getter,'ads_spend_cents',{get(){reads++;return 0;}});assert.throws(()=>validateStoreAdjustments(getter),StoreSummaryError);assert.equal(reads,0);
 });
 
-test('unsafe final arithmetic never produces an imprecise number and a negative estimate remains legitimate',()=>{
- const value=summary({},undefined,adjustments({ads_spend_cents:Number.MAX_SAFE_INTEGER,external_expenses_cents:Number.MAX_SAFE_INTEGER}));assert.equal(value.net_estimate_cents,null);has(value,'ARITHMETIC_UNSAFE');
- const loss=summary({},undefined,adjustments({ads_spend_cents:20000,external_expenses_cents:0}));assert.equal(loss.net_estimate_cents,-11635);assert.equal(loss.net_profit_cents,null);
+test('incompatible expenses are not used for final arithmetic while unsafe production quantities still fail',()=>{
+ const value=summary({},undefined,adjustments({ads_spend_cents:Number.MAX_SAFE_INTEGER,external_expenses_cents:Number.MAX_SAFE_INTEGER}));assert.equal(value.net_estimate_cents,null);has(value,'ADS_COHORT_NOT_RECONCILED');assert.ok(!value.pending.includes('ARITHMETIC_UNSAFE'));
+ const loss=summary({},undefined,adjustments({ads_spend_cents:20000,external_expenses_cents:0}));assert.equal(loss.net_estimate_cents,null);assert.equal(loss.net_profit_cents,null);
  const unsafeItems=frame({items:[{item_id:'201',model_id:'0',quantity:1000000000000}]}),unsafeCost=costs();unsafeCost.values.inclusive_regular_cents=1000000;assert.throws(()=>buildStoreSummary(unsafeItems,bindings(),unsafeCost,adjustments()),StoreSummaryError);
 });
 
@@ -122,20 +122,57 @@ test('invoice tax deducts 2% of product value once, independently of the already
  assert.equal(value.expected_repass_cents,15025);assert.equal(value.production_cost_cents,6660);
  assert.equal(value.expected_after_production_cents,8365);assert.equal(value.invoice_tax.base_cents,20000);
  assert.equal(value.invoice_tax.tax_cents,400);assert.equal(value.expected_after_tax_cents,7965);
- assert.equal(value.known_cost_result_cents,6965);assert.equal(value.net_estimate_cents,6715);
- assert.equal(value.net_profit_cents,null);assert.deepEqual(value.pending,['SETTLEMENT_NOT_RECONCILED']);
+ assert.equal(value.known_cost_result_cents,null);assert.equal(value.net_estimate_cents,null);
+ assert.equal(value.net_profit_cents,null);assert.deepEqual(value.pending,['ADS_COHORT_NOT_RECONCILED','SETTLEMENT_NOT_RECONCILED']);
  // Tax uses the product-value base, not 2% of the BRL 150.25 expected repass.
  assert.notEqual(value.invoice_tax.tax_cents,Math.round(value.expected_repass_cents*0.02));
 });
 
-test('tax-free legacy frames keep the complete serialized summary and ignore the new trusted Ads argument',()=>{
+test('the reported completed-order balance remains BRL 51.16 instead of subtracting BRL 489.24 of calendar Ads',()=>{
+ const source=frame({escrow_amount_raw:'173.37',items:[{item_id:'201',model_id:'0',quantity:5},{item_id:'202',model_id:'0',quantity:2}],
+  invoice_tax:tax({known_base_raw:'245.5',known_tax_raw:'4.91'})});
+ const mapped=bindings([garment,{...garment,item_id:'202',size:'G1'}]),cost=costs();
+ for(const ads_source of [undefined,'MANUAL','SHOPEE_PERIOD']){
+  for(const external_expenses_cents of [0,250]){
+   const declared=reviewed({ads_spend_cents:48924,external_expenses_cents,...(ads_source?{ads_source}:{})});
+   const before=structuredClone({source,mapped,cost,declared});
+   const value=buildStoreSummary(source,mapped,cost,declared,48924);
+   assert.equal(value.expected_repass_cents,17337);assert.equal(value.production_cost_cents,11730);
+   assert.equal(value.expected_after_production_cents,5607);assert.equal(value.invoice_tax.tax_cents,491);
+   assert.equal(value.expected_after_tax_cents,5116);
+   for(const key of ['known_cost_result_cents','net_estimate_cents','net_profit_cents'])assert.equal(value[key],null,key);
+   has(value,'ADS_COHORT_NOT_RECONCILED','SETTLEMENT_NOT_RECONCILED');
+   assert.ok(!value.pending.includes('EXTERNAL_EXPENSES_REVIEW_REQUIRED'));
+   assert.deepEqual({source,mapped,cost,declared},before);
+  }
+ }
+});
+
+test('zero Ads, legacy frames and fully reviewed expenses cannot bypass the unreconciled-cohort gate',()=>{
+ for(const includeTax of [false,true]){
+  const source=frame(includeTax?{invoice_tax:tax()}:{});
+  for(const declared of [null,adjustments({ads_spend_cents:0,external_expenses_cents:0}),
+   reviewed({ads_source:'MANUAL',ads_spend_cents:0,external_expenses_cents:0}),
+   reviewed({ads_source:'SHOPEE_PERIOD',ads_spend_cents:0,external_expenses_cents:0})]){
+   const value=buildStoreSummary(source,bindings(),costs(),declared,0);
+   assert.equal(value.expected_repass_cents,15025);assert.equal(value.production_cost_cents,6660);
+   assert.equal(value.expected_after_production_cents,8365);assert.equal(value.net_estimate_cents,null);
+   assert.equal(value.net_profit_cents,null);has(value,'ADS_COHORT_NOT_RECONCILED');
+   assert.equal(Object.hasOwn(value,'known_cost_result_cents'),includeTax);
+   if(includeTax){assert.equal(value.expected_after_tax_cents,7965);assert.equal(value.known_cost_result_cents,null);}
+   assert.ok(value.pending.length<=16);assert.equal(new Set(value.pending).size,value.pending.length);
+  }
+ }
+});
+
+test('tax-free legacy response shape stays stable while the cohort gate also blocks its net field',()=>{
  const expected={schema:'store_result_v1',run_id:runId,revision:3,status:'COMPLETE',
   start_date:'2026-10-13',end_date:'2026-10-20',cutoff_at:1792510000,checked_at:1792510100,
   currency:'BRL',unit_confirmation:'OPERATOR_CONFIRMED_BRL_2026_10_20',order_count:2,pages_read:1,
   returns_orders:0,complete:true,bindings_revision:7,costs_revision:4,
   known_expected_repass_cents:15025,expected_repass_cents:15025,known_production_cost_cents:6660,
   production_cost_cents:6660,expected_after_production_cents:8365,ads_recharge_or_support_cents:0,
-  net_estimate_cents:7115,net_profit_cents:null,pending:['SETTLEMENT_NOT_RECONCILED'],unmapped_variants:[],
+  net_estimate_cents:null,net_profit_cents:null,pending:['ADS_COHORT_NOT_RECONCILED','SETTLEMENT_NOT_RECONCILED'],unmapped_variants:[],
   net_basis:'EXPECTED_REPASS_CURRENT_STANDARD_COSTS_NOT_SETTLED'};
  assert.equal(JSON.stringify(buildStoreSummary(frame(),bindings(),costs(),adjustments(),9000)),JSON.stringify(expected));
  const undeclared=buildStoreSummary(frame(),bindings(),costs(),null,1000);
@@ -157,16 +194,16 @@ test('unknown invoice coverage and partial cohorts preserve references without i
 
 test('older external-expense amounts stay untouched until reviewed to exclude the new automatic tax',()=>{
  const declared=adjustments(),before=structuredClone(declared),value=taxed({},undefined,declared);
- assert.equal(value.expected_after_tax_cents,7965);assert.equal(value.known_cost_result_cents,6965);
+ assert.equal(value.expected_after_tax_cents,7965);assert.equal(value.known_cost_result_cents,null);
  assert.equal(value.net_estimate_cents,null);assert.equal(value.net_profit_cents,null);
  has(value,'EXTERNAL_EXPENSES_REVIEW_REQUIRED');assert.deepEqual(declared,before);
- const reviewedValue=taxed({},undefined,reviewed());assert.equal(reviewedValue.net_estimate_cents,6715);
+ const reviewedValue=taxed({},undefined,reviewed());assert.equal(reviewedValue.net_estimate_cents,null);
  assert.ok(!reviewedValue.pending.includes('EXTERNAL_EXPENSES_REVIEW_REQUIRED'));
 });
 
-test('fresh automatic Ads can show a known-cost subtotal without assuming other expenses are zero',()=>{
+test('fresh calendar Ads, genuine zero spend and manual amounts do not establish order-cohort attribution',()=>{
  const value=taxed({},undefined,null,1200);
- assert.equal(value.expected_after_tax_cents,7965);assert.equal(value.known_cost_result_cents,6765);
+ assert.equal(value.expected_after_tax_cents,7965);assert.equal(value.known_cost_result_cents,null);
  assert.equal(value.net_estimate_cents,null);assert.equal(value.net_profit_cents,null);
  has(value,'ADJUSTMENTS_REQUIRED','SETTLEMENT_NOT_RECONCILED');
  assert.ok(!value.pending.includes('EXTERNAL_EXPENSES_REVIEW_REQUIRED'));
@@ -174,19 +211,19 @@ test('fresh automatic Ads can show a known-cost subtotal without assuming other 
  for(const invalid of [-1,1.1,'1200',Infinity,NaN,Number.MAX_SAFE_INTEGER+1]){
   assert.equal(taxed({},undefined,null,invalid).known_cost_result_cents,null);
  }
- const zero=taxed({},undefined,null,0);assert.equal(zero.known_cost_result_cents,7965);
+ const zero=taxed({},undefined,null,0);assert.equal(zero.known_cost_result_cents,null);
  assert.equal(zero.net_estimate_cents,null);
  const declared=taxed({},undefined,reviewed({ads_spend_cents:800}),1200);
- assert.equal(declared.known_cost_result_cents,7165);assert.equal(declared.net_estimate_cents,6915);
+ assert.equal(declared.known_cost_result_cents,null);assert.equal(declared.net_estimate_cents,null);
 });
 
-test('the known-cost subtotal always precedes other expenses and can remain negative',()=>{
+test('different saved expenses and large Ads values cannot release an unreconciled store result',()=>{
  const low=taxed({},undefined,reviewed({external_expenses_cents:0}));
  const high=taxed({},undefined,reviewed({external_expenses_cents:5000}));
- assert.equal(low.known_cost_result_cents,6965);assert.equal(high.known_cost_result_cents,6965);
- assert.equal(low.net_estimate_cents,6965);assert.equal(high.net_estimate_cents,1965);
+ assert.equal(low.known_cost_result_cents,null);assert.equal(high.known_cost_result_cents,null);
+ assert.equal(low.net_estimate_cents,null);assert.equal(high.net_estimate_cents,null);
  const loss=taxed({},undefined,reviewed({ads_spend_cents:20000,external_expenses_cents:0}));
- assert.equal(loss.known_cost_result_cents,-12035);assert.equal(loss.net_estimate_cents,-12035);
+ assert.equal(loss.known_cost_result_cents,null);assert.equal(loss.net_estimate_cents,null);
 });
 
 test('unknown production, returns, recharge or money still block known-cost and net results after tax',()=>{
@@ -205,14 +242,14 @@ test('unknown production, returns, recharge or money still block known-cost and 
  assert.equal(money.known_cost_result_cents,null);assert.equal(money.net_estimate_cents,null);has(money,'MONEY_UNAVAILABLE');
 });
 
-test('positive combined fees require classification and only a recharge receives an add-back',()=>{
+test('positive combined fees keep their classification requirement without an unverified net add-back',()=>{
  const changes={ads_recharge_or_support_raw:'20'};
  const unknown=taxed(changes);assert.equal(unknown.known_cost_result_cents,null);has(unknown,'RECHARGE_TREATMENT_REQUIRED');
  const undeclared=taxed(changes,undefined,null,1000);assert.equal(undeclared.known_cost_result_cents,null);has(undeclared,'RECHARGE_TREATMENT_REQUIRED');
  const recharge=taxed(changes,undefined,reviewed({recharge_treatment:'ADS_RECHARGE'}));
- assert.equal(recharge.known_cost_result_cents,8965);assert.equal(recharge.net_estimate_cents,8715);
+ assert.equal(recharge.known_cost_result_cents,null);assert.equal(recharge.net_estimate_cents,null);
  const support=taxed(changes,undefined,reviewed({recharge_treatment:'TECH_SUPPORT'}));
- assert.equal(support.known_cost_result_cents,6965);assert.equal(support.net_estimate_cents,6715);
+ assert.equal(support.known_cost_result_cents,null);assert.equal(support.net_estimate_cents,null);
 });
 
 test('only the explicit excludes-tax provenance literal is accepted without changing legacy adjustment shape',()=>{
@@ -226,10 +263,10 @@ test('only the explicit excludes-tax provenance literal is accepted without chan
  assert.throws(()=>validateStoreAdjustments(getter),StoreSummaryError);assert.equal(reads,0);
 });
 
-test('tax-specific arithmetic stays exact and never turns an unsafe value into a result',()=>{
+test('large incompatible expenses stay outside the result while independent tax references remain detached',()=>{
  const value=taxed({},undefined,reviewed({ads_spend_cents:Number.MAX_SAFE_INTEGER,external_expenses_cents:Number.MAX_SAFE_INTEGER}));
- assert.equal(value.known_cost_result_cents,7965-Number.MAX_SAFE_INTEGER);assert.equal(value.net_estimate_cents,null);
- has(value,'ARITHMETIC_UNSAFE');
+ assert.equal(value.known_cost_result_cents,null);assert.equal(value.net_estimate_cents,null);
+ has(value,'ADS_COHORT_NOT_RECONCILED');assert.ok(!value.pending.includes('ARITHMETIC_UNSAFE'));
  const source=frame({invoice_tax:tax()}),declared=reviewed(),before=structuredClone({source,declared});
  const result=buildStoreSummary(source,bindings(),costs(),declared);result.invoice_tax.tax_cents=999;
  assert.deepEqual({source,declared},before);

@@ -6,9 +6,9 @@ root=Path(__file__).resolve().parent
 original=(root/'original/app-worker.mjs').read_text()
 admin=(root/'src/admin.mjs').read_text().replace("import {CLIENT} from './admin-client.mjs';\n",'').replace("import {CSS,adminBody,loginBody} from './admin-view.mjs';\n",'')
 report=(root/'src/admin-report.mjs').read_text().replace('export function parseReport','function parseReport')
-client=report+'\n'+(root/'src/admin-client.mjs').read_text().replace("import {parseReport} from './admin-report.mjs';\n",'').replace('export const CLIENT','const CLIENT')
+client=report+'\n'+re.sub(r'^import .*\n','',(root/'src/admin-client.mjs').read_text(),flags=re.M).replace('export const CLIENT','const CLIENT')
 view=(root/'src/admin-view.mjs').read_text().replace('export const CSS','const CSS').replace('export function adminBody','function adminBody').replace('export function loginBody','function loginBody')
-ads=(root/'src/admin-ads-today.mjs').read_text().replace('export function adsToday','function adsToday')
+ads=re.sub(r'^import .*\n','',(root/'src/admin-ads-today.mjs').read_text(),flags=re.M).replace('export function adsToday','function adsToday')
 orders=(root/'src/shop-orders.mjs').read_text().replace('export function shopOrders','function shopOrders')
 daily_shop_orders=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/daily-shop-orders.mjs').read_text(),flags=re.M),flags=re.M)
 items=(root/'src/order-items.mjs').read_text().replace('export function orderItems','function orderItems')
@@ -34,7 +34,11 @@ store_summary=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/store
 store_invoice_tax=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/store-invoice-tax.mjs').read_text(),flags=re.M),flags=re.M)
 store_product_summary=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/store-product-summary.mjs').read_text(),flags=re.M),flags=re.M)
 store_returns_summary=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/store-returns-summary.mjs').read_text(),flags=re.M),flags=re.M)
-ads_period=re.sub(r'^export ', '', (root/'src/ads-period.mjs').read_text(), flags=re.M)
+ads_measurement=re.sub(r'^export ', '', (root/'src/ads-measurement.mjs').read_text(), flags=re.M)
+ads_measurement='const brazaAdsMeasurement = (() => {\n'+ads_measurement+'\nreturn {buildAdsMeasurement,projectAdsMeasurement};\n})();\nconst {buildAdsMeasurement,projectAdsMeasurement}=brazaAdsMeasurement;\n'
+ads_measurement_view=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/ads-measurement-view.mjs').read_text(),flags=re.M), flags=re.M)
+ads_period=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/ads-period.mjs').read_text(),flags=re.M), flags=re.M)
+app_ads_summary=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/app-ads-summary.mjs').read_text(),flags=re.M), flags=re.M)
 store_admin=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/store-admin.mjs').read_text(),flags=re.M),flags=re.M)
 variant_sync=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/variant-sync.mjs').read_text(),flags=re.M),flags=re.M)
 shell_navigation=re.sub(r'^export ', '', (root/'src/shell-navigation.mjs').read_text(), flags=re.M)
@@ -68,7 +72,33 @@ for name in ['money','integer','percent','percentNumber','formatRoas']:
     needle='function '+name+'(\n  value\n) {'
     assert updated.count(needle)==1
     updated=updated.replace(needle,needle+'\n  if(value===null||value===undefined||typeof value===\'boolean\'||(typeof value===\'string\'&&!value.trim())||!Number.isFinite(Number(value)))return "—";',1)
-output=updated+'\n\n'+theme+'\n'+ads_presentation+'\n'+shell_navigation+'\n'+orders_diagnostic+'\n'+orders_http+'\n'+app_orders+'\n'+app_items+'\n'+finance_sample_frame+'\n'+finance_preview_frame+'\n'+variant_catalog_frame+'\n'+app_finance_sample+'\n'+daily_orders_frame+'\n'+store_period_frame+'\n'+app_store_period+'\n'+ads_period+'\n\nconst brazaAdmin = (() => {\n'+admin+'\nreturn {adminFetch,schedule};\n})();\n'
+# Override account reporting without changing the frozen Auth/gateway source.
+for needle,replacement in [
+ ('async function getAdsSummary(\n  env\n) {','async function legacyGetAdsSummary(\n  env\n) {'),
+ ('function dailyTable(\n  rows\n) {','function legacyDailyTable(\n  rows\n) {'),
+ ('          getAdsSummary(env),','          getAdsSummary(env,adsMeasurementPageSelection(url)),'),
+ ('${content}','${renderAdsMeasurementScope(ads,currentPath)}\n${content}'),
+]:
+    assert updated.count(needle)==1, needle
+    updated=updated.replace(needle,replacement,1)
+updated+='\nfunction dailyTable(rows){return renderAdsMeasurementDailyTable(rows);}\n'
+# Every account ROAS card states whether it uses the provider's one-day value
+# or a ratio of the selected period totals. Campaign-level cards are untouched.
+needle='${metricCard(\n  "ROAS",'
+assert updated.count(needle)==3
+updated=updated.replace(needle,'${metricCard(\n  ads.measurement?.total_days===1&&ads.measurement.totals.broad.reported_roas_raw!==null?"ROAS informado · amplo":"ROAS calculado · amplo",')
+# The scope component owns the account metrics, with both ROAS definitions.
+# Remove duplicate legacy cards rather than displaying the same totals twice.
+for name in ['dashboardContent','advertisingContent','performanceContent']:
+    pattern=r'(function '+name+r'\([\s\S]*?  return `)\n<div class="cards">[\s\S]*?\n</div>'
+    updated,count=re.subn(pattern,r'\1',updated,count=1)
+    assert count==1, name
+# Campaign and GMV Max summaries have no verified matching period/cutoff.
+# A percentage comparing them to the selected account dates would be invented.
+needle='function calculateCoverage(\n  ads,\n  campaigns,\n  gms,\n  config\n) {'
+assert updated.count(needle)==1
+updated=updated.replace(needle,needle+'\n  if(ads.measurement)return {ready:false,locked:true,reason:"As fontes por campanha ainda não confirmam o mesmo período e horário da conta. A cobertura não foi conciliada."};',1)
+output=updated+'\n\n'+theme+'\n'+ads_presentation+'\n'+shell_navigation+'\n'+orders_diagnostic+'\n'+orders_http+'\n'+app_orders+'\n'+app_items+'\n'+finance_sample_frame+'\n'+finance_preview_frame+'\n'+variant_catalog_frame+'\n'+app_finance_sample+'\n'+daily_orders_frame+'\n'+store_period_frame+'\n'+app_store_period+'\n'+ads_measurement+'\n'+ads_measurement_view+'\n'+ads_period+'\n'+app_ads_summary+'\n\nconst brazaAdmin = (() => {\n'+admin+'\nreturn {adminFetch,schedule};\n})();\n'
 (root/'app-worker.mjs').write_text(output)
 auth_original=(root/'original/auth-worker.mjs').read_text()
 needle='    const url = new URL(request.url);'

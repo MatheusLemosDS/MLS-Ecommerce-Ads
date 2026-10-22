@@ -44,7 +44,7 @@ export function validateStoreAdjustments(value){
 
 // Expected repass already incorporates Shopee's fees. Do not subtract fee fields
 // again or use Shopee's original_cost_of_goods_sold as our manufacturing cost.
-export function buildStoreSummary(frame,bindings,costs,adjustments=null,adsPeriodSpendCents=null){
+export function buildStoreSummary(frame,bindings,costs,adjustments=null,_adsPeriodSpendCents=null){
   const source=projectStorePeriodFrame(frame);
   if(!source)throw new StoreSummaryError('STORE_SUMMARY_FRAME_INVALID',502);
   const declared=adjustments===null?null:validateStoreAdjustments(adjustments);
@@ -69,7 +69,8 @@ export function buildStoreSummary(frame,bindings,costs,adjustments=null,adsPerio
   if(combined!==null&&combined>0&&(declared?.recharge_treatment==='UNCONFIRMED'||invoiceTax&&!declared))pending.push('RECHARGE_TREATMENT_REQUIRED');
 
   const expected=complete?payout:null,production=complete?reference.total_cents:null;
-  let afterProduction=null,afterTax=null,knownCostResult=null,estimate=null;
+  let afterProduction=null,afterTax=null;
+  const knownCostResult=null,estimate=null;
   if(expected!==null&&production!==null){
     afterProduction=summarySafeNumber(BigInt(expected)-BigInt(production));
     if(afterProduction===null)pending.push('ARITHMETIC_UNSAFE');
@@ -78,25 +79,12 @@ export function buildStoreSummary(frame,bindings,costs,adjustments=null,adsPerio
     afterTax=summarySafeNumber(BigInt(afterProduction)-BigInt(invoiceTax.tax_cents));
     if(afterTax===null&&!pending.includes('ARITHMETIC_UNSAFE'))pending.push('ARITHMETIC_UNSAFE');
   }
-  if(invoiceTax&&afterTax!==null&&source.returns_orders===0&&combined!==null&&combined>=0
-    &&(combined===0||declared&&declared.recharge_treatment!=='UNCONFIRMED')){
-    const adsSpend=declared?.ads_spend_cents??(summarySafeInteger(adsPeriodSpendCents)?adsPeriodSpendCents:null);
-    if(adsSpend!==null){
-      const addBack=combined>0&&declared.recharge_treatment==='ADS_RECHARGE'?BigInt(combined):0n;
-      knownCostResult=summarySafeNumber(BigInt(afterTax)+addBack-BigInt(adsSpend));
-      if(knownCostResult===null&&!pending.includes('ARITHMETIC_UNSAFE'))pending.push('ARITHMETIC_UNSAFE');
-    }
-    if(knownCostResult!==null&&declared?.external_expenses_basis==='EXCLUDES_INVOICE_TAX'){
-      estimate=summarySafeNumber(BigInt(knownCostResult)-BigInt(declared.external_expenses_cents));
-      if(estimate===null&&!pending.includes('ARITHMETIC_UNSAFE'))pending.push('ARITHMETIC_UNSAFE');
-    }
-  }
-  if(!invoiceTax&&afterProduction!==null&&source.returns_orders===0&&declared&&combined!==null&&combined>=0
-    &&(combined===0||declared.recharge_treatment!=='UNCONFIRMED')){
-    const addBack=combined>0&&declared.recharge_treatment==='ADS_RECHARGE'?BigInt(combined):0n;
-    estimate=summarySafeNumber(BigInt(afterProduction)+addBack-BigInt(declared.ads_spend_cents)-BigInt(declared.external_expenses_cents));
-    if(estimate===null&&!pending.includes('ARITHMETIC_UNSAFE'))pending.push('ARITHMETIC_UNSAFE');
-  }
+  // This source contains only completed orders created in the chosen window.
+  // Calendar Ads consumption (including manually entered period amounts) is
+  // not attributed to that order population. Subtracting the two cannot prove
+  // the store's net result, even when all saved expenses are zero. Keep the
+  // independently verified balances and declarations, never a fabricated loss.
+  pending.push('ADS_COHORT_NOT_RECONCILED');
   pending.push('SETTLEMENT_NOT_RECONCILED');
   return {schema:'store_result_v1',run_id:source.run_id,revision:source.revision,status:source.status,
     start_date:source.start_date,end_date:source.end_date,cutoff_at:source.cutoff_at,checked_at:source.checked_at,

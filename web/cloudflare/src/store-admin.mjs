@@ -46,7 +46,9 @@ function readStoredAdsPeriod(row,finance=null,now=Date.now()){
  try{
   if(!row||!Number.isSafeInteger(row.updated_at))return null;
   const report=projectAdsPeriod(JSON.parse(row.payload)),epoch=Math.floor(now/1000);
-  if(!report||report.fetched_at!==row.updated_at||report.fetched_at>epoch+5||epoch-report.fetched_at>900)return null;
+  const today=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date(now));
+  const maxAge=report?.end_date===today?60:900;
+  if(!report||report.fetched_at!==row.updated_at||report.fetched_at>epoch+5||epoch-report.fetched_at>maxAge)return null;
   if(finance&&(report.start_date!==finance.start_date||report.end_date!==finance.end_date||report.fetched_at<finance.checked_at-5))return null;
   return report;
  }catch{return null;}

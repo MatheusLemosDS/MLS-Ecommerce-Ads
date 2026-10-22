@@ -1,3 +1,4 @@
+import {buildAdsMeasurement,projectAdsMeasurement} from './ads-measurement.mjs';
 // The operator confirmed that this Ads source reports BRL units on 2026-10-20.
 // Consumption still belongs to calendar reporting days, not to a Payment order
 // cohort or an individual product. No legacy aggregate is used as financial data.
@@ -48,7 +49,14 @@ function adsPeriodEmpty(input,stamp,diagnostic){
 }
 export function projectAdsPeriod(value){
  try{
-  if(!adsPeriodExact(value,adsPeriodKeys)||value.schema!=='ads_period_v1'||!['AVAILABLE','PARTIAL','UNAVAILABLE'].includes(value.status)||!adsPeriodInteger(value.fetched_at,9999999999)||!adsPeriodInteger(value.covered_days,15)||!adsPeriodInteger(value.total_days,15)||!adsPeriodArray(value.missing_dates,15)||!value.missing_dates.every(adsPeriodDay)||!adsPeriodArray(value.days,15)||typeof value.day_partial!=='boolean'||value.unit_confirmation!==adsPeriodUnits||value.source_timezone!=='UNCONFIRMED'||value.basis!==adsPeriodBasis||value.diagnostic!==null&&!adsPeriodDiagnostics.has(value.diagnostic))return null;
+  const keys=[...adsPeriodKeys,...(adsPeriodPlain(value)&&Object.hasOwn(value,'measurement')?['measurement']:[])];
+  if(!adsPeriodExact(value,keys)||value.schema!=='ads_period_v1'||!['AVAILABLE','PARTIAL','UNAVAILABLE'].includes(value.status)||!adsPeriodInteger(value.fetched_at,9999999999)||!adsPeriodInteger(value.covered_days,15)||!adsPeriodInteger(value.total_days,15)||!adsPeriodArray(value.missing_dates,15)||!value.missing_dates.every(adsPeriodDay)||!adsPeriodArray(value.days,15)||typeof value.day_partial!=='boolean'||value.unit_confirmation!==adsPeriodUnits||value.source_timezone!=='UNCONFIRMED'||value.basis!==adsPeriodBasis||value.diagnostic!==null&&!adsPeriodDiagnostics.has(value.diagnostic))return null;
+  let measurement;
+  if(Object.hasOwn(value,'measurement')){
+   measurement=projectAdsMeasurement(value.measurement);if(!measurement)return null;
+   for(const key of ['status','start_date','end_date','fetched_at','covered_days','total_days','expense_cents','day_partial'])if(measurement[key]!==value[key])return null;
+   if(JSON.stringify(measurement.missing_dates)!==JSON.stringify(value.missing_dates)||JSON.stringify(measurement.days.map(({date,expense_cents})=>({date,expense_cents})))!==JSON.stringify(value.days))return null;
+  }
   const dates=adsPeriodDates(value.start_date,value.end_date);
   if(!dates){if(value.status!=='UNAVAILABLE'||value.start_date!==null||value.end_date!==null||value.total_days!==0||value.covered_days!==0||value.missing_dates.length||value.days.length||value.expense_cents!==null||value.day_partial||value.diagnostic!=='ADS_PERIOD_CONFIGURATION')return null;return {...value,missing_dates:[],days:[]};}
   if(value.fetched_at===0||value.end_date>adsPeriodToday(value.fetched_at)||value.total_days!==dates.length||value.day_partial!==(value.end_date===adsPeriodToday(value.fetched_at)))return null;
@@ -64,7 +72,7 @@ export function projectAdsPeriod(value){
    if(value.covered_days!==covered||JSON.stringify(value.missing_dates)!==JSON.stringify(missing))return null;
    if(value.status==='AVAILABLE'?(covered!==dates.length||total>BigInt(Number.MAX_SAFE_INTEGER)||value.expense_cents!==Number(total)||value.diagnostic!==null):(covered===dates.length||value.expense_cents!==null||!['ADS_PERIOD_DATE_COVERAGE_PARTIAL','ADS_PERIOD_EXPENSE_INVALID'].includes(value.diagnostic)))return null;
   }
-  return Object.fromEntries(adsPeriodKeys.map(key=>[key,key==='days'?value.days.map(day=>({...day})):key==='missing_dates'?[...value.missing_dates]:value[key]]));
+  return {...Object.fromEntries(adsPeriodKeys.map(key=>[key,key==='days'?value.days.map(day=>({...day})):key==='missing_dates'?[...value.missing_dates]:value[key]])),...(measurement?{measurement}:{})};
  }catch{return null;}
 }
 
@@ -87,20 +95,12 @@ export async function getAdsPeriod(env,input,{fetchImpl=request=>fetch(request),
   finally{cancel();try{reader.releaseLock();}catch{}reader=undefined;}
   const bytes=new Uint8Array(length);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.length;}
   let raw;try{raw=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes));}catch{return failure('ADS_PERIOD_UNAVAILABLE');}
-  // Direct Auth JSON uses status:"ok"; getAdsSummary's ok:true wrapper is not
-  // part of that HTTP body. Do not require a field the server never returns.
-  if(!adsPeriodPlain(raw)||raw.status!=='ok'||raw.connected!==true||Object.hasOwn(raw,'ok')&&raw.ok!==true||!adsPeriodPlain(raw.shop)||!((typeof raw.shop.id==='string'&&raw.shop.id==='1178167501')||(typeof raw.shop.id==='number'&&raw.shop.id===1178167501))||!adsPeriodPlain(raw.period)||adsPeriodSourceDay(raw.period.start_date)!==selection.start_date||adsPeriodSourceDay(raw.period.end_date)!==selection.end_date||!adsPeriodArray(raw.daily,15))return failure('ADS_PERIOD_UNAVAILABLE');
-  const byDate=new Map();let invalidExpense=false;
-  for(const row of raw.daily){
-   if(!adsPeriodPlain(row))return failure('ADS_PERIOD_UNAVAILABLE');
-   const day=adsPeriodSourceDay(row.date);if(!day||!dates.includes(day)||byDate.has(day))return failure('ADS_PERIOD_UNAVAILABLE');
-   const expense=Object.hasOwn(row,'expense')?adsPeriodCents(row.expense):null;
-   if(expense===null)invalidExpense=true;byDate.set(day,expense);
-  }
-  const days=dates.map(date=>({date,expense_cents:byDate.get(date)??null})),missing_dates=days.filter(day=>day.expense_cents===null).map(day=>day.date),covered_days=days.length-missing_dates.length;
-  const total=days.reduce((sum,day)=>sum+BigInt(day.expense_cents??0),0n);
-  if(total>BigInt(Number.MAX_SAFE_INTEGER))return failure('ADS_PERIOD_ARITHMETIC_UNSAFE');
-  return projectAdsPeriod({schema:'ads_period_v1',status:missing_dates.length?'PARTIAL':'AVAILABLE',...selection,fetched_at:stamp,covered_days,total_days:dates.length,missing_dates,expense_cents:missing_dates.length?null:Number(total),days,day_partial:selection.end_date===adsPeriodToday(stamp),unit_confirmation:adsPeriodUnits,source_timezone:'UNCONFIRMED',basis:adsPeriodBasis,diagnostic:missing_dates.length?(invalidExpense?'ADS_PERIOD_EXPENSE_INVALID':'ADS_PERIOD_DATE_COVERAGE_PARTIAL'):null})||failure('ADS_PERIOD_UNAVAILABLE');
+  // Admin and Ads pages use one projection of this same read. Legacy metrics
+  // can mix direct/broad attribution and are never used to calculate totals.
+  const measurement=buildAdsMeasurement(raw,selection,stamp);
+  const diagnostic=measurement.diagnostic?.replace('ADS_MEASUREMENT_','ADS_PERIOD_')??null;
+  const days=measurement.days.map(({date,expense_cents})=>({date,expense_cents}));
+  return projectAdsPeriod({schema:'ads_period_v1',status:measurement.status,...selection,fetched_at:stamp,covered_days:measurement.covered_days,total_days:dates.length,missing_dates:[...measurement.missing_dates],expense_cents:measurement.expense_cents,days,day_partial:selection.end_date===adsPeriodToday(stamp),unit_confirmation:adsPeriodUnits,source_timezone:'UNCONFIRMED',basis:adsPeriodBasis,diagnostic,measurement})||failure('ADS_PERIOD_UNAVAILABLE');
  };
  try{return await Promise.race([work(),deadline]);}catch{return failure('ADS_PERIOD_UNAVAILABLE');}finally{clearTimeout(timer);controller.abort();cancel();}
 }
