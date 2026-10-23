@@ -70,25 +70,58 @@ scaling_preparation=re.sub(r'^export ', '', (root/'src/scaling-preparation.mjs')
 app_ads_summary=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/app-ads-summary.mjs').read_text(),flags=re.M), flags=re.M)
 store_admin=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/store-admin.mjs').read_text(),flags=re.M),flags=re.M)
 variant_sync=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/variant-sync.mjs').read_text(),flags=re.M),flags=re.M)
-shell_navigation=re.sub(r'^export ', '', (root/'src/shell-navigation.mjs').read_text(), flags=re.M)
+workspace_navigation=re.sub(r'^export ', '', (root/'src/workspace-navigation.mjs').read_text(), flags=re.M)
+shell_navigation=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/shell-navigation.mjs').read_text(),flags=re.M), flags=re.M)
+workspace_auth=re.sub(r'^export ', '', (root/'src/unified-auth.mjs').read_text(), flags=re.M)
+workspace_auth='const brazaWorkspaceAuth = (() => {\n'+workspace_auth+'\nreturn {readOwnerSession,readWorkspaceSession,handleWorkspaceAuth};\n})();\nconst {readOwnerSession,readWorkspaceSession,handleWorkspaceAuth}=brazaWorkspaceAuth;\n'
 theme=re.sub(r'^export ', '', (root/'src/theme.mjs').read_text(), flags=re.M)
 ads_presentation=re.sub(r'^export ', '', (root/'src/ads-presentation.mjs').read_text(), flags=re.M)
 admin=business_products+'\n'+business_month+'\n'+month_view+'\n'+month_client+'\n'+client+'\n'+view+'\n'+ads+'\n'+orders+'\n'+daily_shop_orders+'\n'+items+'\n'+variants+'\n'+observations+'\n'+production_costs+'\n'+store_summary+'\n'+store_invoice_tax+'\n'+store_product_summary+'\n'+store_returns_summary+'\n'+store_admin+'\n'+variant_sync+'\n'+re.sub(r'^import .*\n','',admin,flags=re.M)
-admin=admin.replace('export {adminFetch,schedule,DEFAULTS,SCHEMA,validateSettings};','')
+admin=admin.replace('export {adminFetch,schedule,DEFAULTS,SCHEMA,validateSettings,workspaceAuthFetch};','')
 needle='    const url = new URL(request.url);'
 assert original.count(needle)==1
-updated=original.replace(needle,needle+'''\n    if (url.pathname === '/admin' || url.pathname.startsWith('/admin/') || url.pathname.startsWith('/api/admin/') || url.pathname.startsWith('/api/hermes/')) return brazaAdmin.adminFetch(request, env, {getAdsSummary,getAdsPeriod,getAdsCalendar,getFinanceBusinessPeriod,getShopOrders,getOrderItems,getFinancePaymentSample,getFinancePaymentPreview,getFinanceVariantCatalog,getFinanceStorePeriod});''',1)
+updated=original.replace(needle,needle+'''\n    if (['/','/login','/admin/login','/logout','/admin/logout'].includes(url.pathname)) return brazaAdmin.workspaceAuthFetch(request, env);
+    if (url.pathname === '/admin' || url.pathname.startsWith('/admin/') || url.pathname.startsWith('/api/admin/') || url.pathname.startsWith('/api/hermes/')) return brazaAdmin.adminFetch(request, env, {getAdsSummary,getAdsPeriod,getAdsCalendar,getFinanceBusinessPeriod,getShopOrders,getOrderItems,getFinancePaymentSample,getFinancePaymentPreview,getFinanceVariantCatalog,getFinanceStorePeriod});''',1)
+# A valid owner session opens the whole workspace. Review credentials retain
+# their existing read-only Ads scope and never satisfy Admin authorization.
+needle='''      const authenticated =
+        await isAuthenticated(
+          request,
+          env
+        );'''
+assert updated.count(needle)==2
+updated=updated.replace(needle,'''      const workspaceSession=await readWorkspaceSession(request,env);
+      const authenticated=workspaceSession!==null;''',1)
+needle='''          url.origin + "/",
+          302'''
+assert updated.count(needle)==1
+updated=updated.replace(needle,'''          url.origin + "/login",
+          303''',1)
+updated,count=re.subn(r'async function isAuthenticated\([\s\S]*?(?=\nasync function sign\()', 'async function isAuthenticated(request,env){return (await readWorkspaceSession(request,env))!==null;}\n\n',updated,count=1)
+assert count==1
+needle='''          opportunityDetail
+        )'''
+assert updated.count(needle)==1
+updated=updated.replace(needle,'''          opportunityDetail,
+          workspaceSession.role
+        )''',1)
+needle='''  opportunityDetail
+) {'''
+assert updated.count(needle)==1
+updated=updated.replace(needle,'''  opportunityDetail,
+  workspaceRole='review'
+) {''',1)
 needle='  async fetch(request, env) {'
 updated=updated.replace(needle,'''  async scheduled(event, env, ctx) { ctx.waitUntil(brazaAdmin.schedule(env)); },\n'''+needle,1)
 needle='${navLink(\n  "/dashboard",'
 assert updated.count(needle)==1
 start=updated.index(needle)
 end=updated.index('\n</aside>',start)
-updated=updated[:start]+'${shellDesktopNavigation(currentPath)}\n<a class="logout" href="/logout">Sair</a>\n'+updated[end:]
+updated=updated[:start]+'${shellDesktopNavigation(currentPath,{role:workspaceRole})}\n'+updated[end:]
 needle='<div class="app">'
 assert updated.count(needle)==1
-updated=updated.replace(needle,'${shellMobileNavigation(currentPath)}\n\n'+needle,1)
-needle='\n</style>\n\n</head>\n\n<body>\n\n${shellMobileNavigation(currentPath)}'
+updated=updated.replace(needle,'${shellMobileNavigation(currentPath,{role:workspaceRole})}\n\n'+needle,1)
+needle='\n</style>\n\n</head>\n\n<body>\n\n${shellMobileNavigation(currentPath,{role:workspaceRole})}'
 assert updated.count(needle)==1
 updated=updated.replace(needle,'\n${SHELL_NAVIGATION_CSS}'+needle,1)
 needle='  return new Response(\n    content,'
@@ -164,14 +197,14 @@ start=updated.index('function appPage(')
 point=updated.index(needle,start)
 insertion='''  const view=ads.workspace_view||'product';
   if(currentPath==='/campaigns'&&view==='gmv-max')content=gmvMaxContent(shopee,gms,config);
-  if(currentPath==='/optimization')content=renderScalingPreparation(config);
-  if(currentPath==='/integrations')content=renderWorkspaceConnections(shopee);
-  content=renderAdsWorkspace(currentPath,{ads,view,content,opportunityContent:currentPath==='/optimization'?opportunitiesContent(shopee,opportunities,opportunityDetail,config):''});
-  const workspaceTitles={'/dashboard':['Resumo mensal de anúncios','Investimento, vendas atribuídas e retorno no mês.'],'/campaigns':['Campanhas','Produtos anunciados e desempenho de cada campanha.'],'/optimization':['Automação e crescimento','Prepare metas e decisões com ROAS e margem.'],'/integrations':['Conexões e configurações','Acesso aos dados e configurações da operação.']};
+  if(currentPath==='/optimization')content=renderScalingPreparation(config,{role:workspaceRole});
+  if(currentPath==='/integrations')content=renderWorkspaceConnections(shopee,{role:workspaceRole});
+  content=renderAdsWorkspace(currentPath,{role:workspaceRole,ads,view,content,opportunityContent:currentPath==='/optimization'?opportunitiesContent(shopee,opportunities,opportunityDetail,config):''});
+  const workspaceTitles={'/dashboard':['Anúncios','Investimento, vendas atribuídas e retorno no mês.'],'/campaigns':['Campanhas','Produtos anunciados e desempenho de cada campanha.'],'/optimization':['Automação','Metas e critérios para crescer com margem.'],'/integrations':['Conexões','Acesso aos dados e configurações da operação.']};
   if(workspaceTitles[currentPath])[title,subtitle]=workspaceTitles[currentPath];
 '''
 updated=updated[:point]+insertion+updated[point:]
-output=updated+'\n\n'+theme+'\n'+ads_presentation+'\n'+shell_navigation+'\n'+orders_diagnostic+'\n'+orders_http+'\n'+app_orders+'\n'+app_items+'\n'+finance_sample_frame+'\n'+finance_preview_frame+'\n'+variant_catalog_frame+'\n'+app_finance_sample+'\n'+daily_orders_frame+'\n'+store_period_frame+'\n'+business_period_frame+'\n'+app_store_period+'\n'+app_business_period+'\n'+ads_measurement+'\n'+ads_measurement_view+'\n'+ads_period+'\n'+ads_calendar+'\n'+app_ads_summary+'\n'+ads_workspace+'\n'+scaling_preparation+'\n\nconst brazaAdmin = (() => {\n'+admin+'\nreturn {adminFetch,schedule};\n})();\n'
+output=updated+'\n\n'+theme+'\n'+workspace_auth+'\n'+workspace_navigation+'\n'+ads_presentation+'\n'+shell_navigation+'\n'+orders_diagnostic+'\n'+orders_http+'\n'+app_orders+'\n'+app_items+'\n'+finance_sample_frame+'\n'+finance_preview_frame+'\n'+variant_catalog_frame+'\n'+app_finance_sample+'\n'+daily_orders_frame+'\n'+store_period_frame+'\n'+business_period_frame+'\n'+app_store_period+'\n'+app_business_period+'\n'+ads_measurement+'\n'+ads_measurement_view+'\n'+ads_period+'\n'+ads_calendar+'\n'+app_ads_summary+'\n'+ads_workspace+'\n'+scaling_preparation+'\n\nconst brazaAdmin = (() => {\n'+admin+'\nreturn {adminFetch,schedule,workspaceAuthFetch};\n})();\n'
 (root/'app-worker.mjs').write_text(output)
 auth_original=(root/'original/auth-worker.mjs').read_text()
 needle='    const url = new URL(request.url);'

@@ -18,13 +18,11 @@ test('Ads presentation localizes UI and branding while preserving provider value
   '<script>const fixture={label:\'Orders\',value:123.45};</script>','<style>.fixture::after{content:"Advertising Spend"}</style>'])assert.ok(result.includes(value),value);
 });
 
-test('financial scope is distinguished from ad attribution and has a direct finance destination',()=>{
+test('presentation does not inject a duplicate financial banner or privileged links into restricted Ads content',()=>{
  const result=enhanceAdsPageHtml(sample());
- assert.equal((result.match(/class="ads-source-banner"/g)||[]).length,1);
- assert.match(result,/Vendas e pedidos atribuídos aos anúncios/);
- assert.match(result,/href="\/admin\?tab=overview" class="ads-finance-link"/);
+ assert.equal((result.match(/class="ads-source-banner"/g)||[]).length,0);
+ assert.doesNotMatch(result,/href="\/admin/);
  assert.match(result,/<div class="ads-top-actions"><button[^>]*data-braza-theme-toggle/);
- assert.ok(result.indexOf('ads-source-banner')<result.indexOf('<div class="cards">'));
 });
 
 test('legacy login receives matching presentation and keeps the form method and field names',()=>{
@@ -39,13 +37,14 @@ test('legacy login receives matching presentation and keeps the form method and 
  assert.ok(!result.includes('class="ads-source-banner"'));
 });
 
-test('mobile navigation has three distinct destinations and preserves finance, settings and accessible theme controls',()=>{
+test('mobile review navigation has three primary destinations and keeps grouped connections and accessible theme controls',()=>{
  const html=shellMobileNavigation('/campaigns');
- for(const destination of ['/admin','/dashboard','/campaigns','/optimization','/integrations','/logout'])assert.ok(html.includes('href="'+destination+'"'),destination);
+ for(const destination of ['/dashboard','/campaigns','/optimization','/integrations','/logout'])assert.ok(html.includes('href="'+destination+'"'),destination);
+ assert.doesNotMatch(html,/href="\/admin/);
  for(const destination of ['/advertising','/gmv-max','/opportunities','/performance'])assert.ok(!html.includes('href="'+destination+'"'),destination);
- for(const label of ['Resumo mensal','Campanhas','Automação','Conexões e configurações','Minha loja'])assert.ok(html.includes(label),label);
- assert.match(html,/class="nav active" href="\/campaigns" aria-current="page"/);
- assert.match(html,/<details class="mobile-menu"><summary>Menu<\/summary><nav aria-label="Navegação do painel">/);
+ for(const label of ['Anúncios','Campanhas','Automação','Conexões','Mais opções'])assert.ok(html.includes(label),label);
+ assert.match(html,/class="workspace-nav-link active" href="\/campaigns" aria-current="page"/);
+ assert.match(html,/workspace-nav-mobile/);
  assert.match(html,/<button[^>]*type="button"[^>]*data-braza-theme-toggle[^>]*aria-label="Alterar tema"/);
  assert.ok(!SHELL_NAVIGATION_CSS.includes('float:'));
  for(const property of ['--surface','--app-bg','--accent','--text','--muted','--line','--positive','--negative'])assert.ok(ADS_PRESENTATION_CSS.includes(property),property);

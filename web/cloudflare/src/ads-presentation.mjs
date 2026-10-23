@@ -95,8 +95,6 @@ export function enhanceAdsPageHtml(html){
  if(result.includes('<main class="main">')){
   result=result.replace(/(<div class="top">[\s\S]*?)(<div class="system">)/,'$1<div class="ads-top-actions">'+toggle+'$2')
    .replace(/(<div class="system">[\s\S]*?<\/div>)/,'$1</div>');
-  result=result.replace(/(<div class="top">[\s\S]*?<div class="system">[\s\S]*?<\/div>\s*<\/div>\s*<\/div>)/,
-   '$1<section class="ads-source-banner" aria-label="Escopo dos indicadores"><div><span class="ads-eyebrow">ANÚNCIOS · DADOS DA SHOPEE</span><p>Vendas e pedidos atribuídos aos anúncios. O resultado financeiro da loja está no resumo financeiro.</p></div><a href="/admin?tab=overview" class="ads-finance-link">Ver resultado da loja <span aria-hidden="true">↗</span></a></section>');
  }else if(result.includes('action="/login"')){
   result=result.replace('<body>','<body class="ads-login"><div class="ads-login-theme">'+toggle+'</div>');
  }
@@ -107,17 +105,17 @@ export const ADS_PRESENTATION_CSS=String.raw`
 body{background:var(--app-bg);color:var(--text);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
 a{color:var(--accent)}
 .app{width:100%;min-width:0;align-items:flex-start}
-.sidebar{position:sticky;top:0;height:100dvh;width:242px;padding:30px 16px;background:var(--surface);color:var(--text);border-right:1px solid var(--line);overflow-y:auto}
+.sidebar{position:sticky;top:0;height:100dvh;width:236px;flex:0 0 236px;padding:30px 20px 20px;background:var(--surface);color:var(--text);border-right:1px solid var(--line);overflow-y:auto}
 .logo,.brand{display:flex;align-items:center;gap:10px;color:var(--text);font-size:18px;font-weight:800;letter-spacing:-.6px;margin-bottom:36px}
-.logo .ads-brand-mark,.brand .ads-brand-mark{display:grid;place-items:center;width:34px;height:34px;flex:0 0 34px;border-radius:11px;background:var(--accent);color:var(--on-accent,#fff);font-size:18px;letter-spacing:0}
+.logo .ads-brand-mark,.brand .ads-brand-mark{display:grid;place-items:center;width:37px;height:39px;flex:0 0 37px;border-radius:12px;background:var(--accent);color:var(--on-accent,#fff);font-size:18px;letter-spacing:0}
 .logo .ads-brand-name,.brand .ads-brand-name{color:var(--text)}
 .sidebar .nav{display:flex;align-items:center;min-height:44px;padding:12px 15px;margin:5px 0;border:1px solid transparent;border-radius:11px;color:var(--muted);font-size:13px;font-weight:600;transition:background .15s,color .15s}
 .sidebar .nav:hover{color:var(--text);background:var(--surface-raised)}
 .sidebar .nav.active{color:var(--accent);background:var(--accent-soft);border-color:var(--line);font-weight:750}
 .logout{color:var(--muted);font-size:13px;border-top:1px solid var(--line);margin-top:24px;padding-top:20px}
-.main{padding:40px clamp(22px,3.5vw,58px) 60px;width:calc(100% - 242px);max-width:1640px;margin:0 auto}
+.main{padding:34px 36px 56px;width:calc(100% - 236px);max-width:1470px;margin:0 auto}
 .top{gap:20px;margin-bottom:24px;align-items:flex-start}
-.top h1{font-size:clamp(25px,2.4vw,34px);font-weight:780;letter-spacing:-1px;line-height:1.2;overflow-wrap:anywhere}
+.top h1{font-size:30px;font-weight:750;letter-spacing:-1px;line-height:1.35;overflow-wrap:anywhere}
 .subtitle{font-size:14px;color:var(--muted);margin-top:10px;max-width:64ch;line-height:1.6}
 .ads-top-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-shrink:0}
 .system{display:flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--surface);color:var(--muted);padding:9px 12px;font-size:11px;font-weight:650;white-space:nowrap}

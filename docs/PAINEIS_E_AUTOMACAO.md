@@ -1,5 +1,10 @@
 # Painéis e identificação automática
 
+A [entrada e navegação unificadas](LOGIN_E_NAVEGACAO_UNIFICADOS.md) reúnem
+gestão e anúncios no mesmo acesso do proprietário. As áreas principais são
+Visão geral, Produtos, Anúncios, Custos e Automação; opções avançadas ficam
+recolhidas. O acesso de revisão dos anúncios mantém suas permissões próprias.
+
 A visão atual usa o resumo mensal, com vendas pagas, anúncios, produção e
 imposto. O [detalhamento mensal de produtos](PRODUTOS_DO_RESUMO_MENSAL.md)
 explica a lista compacta, a contribuição de pedidos exclusivos e os valores
