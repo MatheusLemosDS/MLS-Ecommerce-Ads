@@ -131,3 +131,84 @@ test('the exact frame projector works when embedded alone in a fresh browser rea
  context.serialized=JSON.stringify({...covered(),order_sn:'PRIVATE_ORDER'});
  assert.equal(new vm.Script('project(JSON.parse(serialized))').runInContext(context),null);
 });
+
+function productFrame(){
+ const value=empty({revision:2,status:'COMPLETE',pages_read:1,
+  coverage:{orders:5,paid:3,completed:2,ongoing:1,cancelled:1,cancel_pending:0,unpaid:1,other:0,unknown:0,payment_covered:2,payment_missing:1,returns:0,returns_unknown:1},
+  known_sales_base_raw:'150',sales_base_raw:null,known_expected_repass_raw:'105',expected_repass_raw:null,known_ads_adjustment_raw:'5',ads_adjustment_raw:null,
+  invoice_tax:{schema:'store_invoice_tax_v1',rate_bps:200,basis:'PAYMENT_GOODS_VALUE_PER_ORDER_ESTIMATE',rounding:'HALF_UP_PER_ORDER',covered_orders:2,unavailable_orders:1,known_base_raw:'150',known_tax_raw:'3'},
+  items:[{item_id:'201',model_id:'0',quantity:3},{item_id:'202',model_id:'10',quantity:2},{item_id:'202',model_id:'11',quantity:1}]});
+ const product=(item_id,quantity,covered,items)=>({item_id,quantity,orders:2,exclusive_orders:1,mixed_orders:1,exclusive_payment_covered:covered,exclusive_payment_missing:1-covered,exclusive_returns:0,exclusive_returns_unknown:1-covered,...Object.fromEntries(['sales_base','expected_repass','ads_adjustment','invoice_tax'].flatMap((name,index)=>{const raw=covered?['100','80','3','2'][index]:'0';return [['known_exclusive_'+name+'_raw',raw],['exclusive_'+name+'_raw',covered?raw:null]];})),items});
+ value.product_breakdown={schema:'business_product_breakdown_v1',mixed_orders:1,mixed_payment_covered:1,mixed_payment_missing:0,known_mixed_sales_base_raw:'50',known_mixed_expected_repass_raw:'25',known_mixed_ads_adjustment_raw:'2',known_mixed_invoice_tax_raw:'1',products:[
+  product('201',3,1,[{model_id:'0',exclusive_quantity:2,mixed_quantity:1}]),
+  product('202',3,0,[{model_id:'10',exclusive_quantity:0,mixed_quantity:2},{model_id:'11',exclusive_quantity:1,mixed_quantity:0}]),
+ ]};return value;
+}
+
+test('product sidecar conserves exclusive money and mixed unallocated money without losing missing-payment quantities',()=>{
+ const value=productFrame(),result=projectBusinessPeriodFrame(value);assert.ok(result);
+ assert.equal(result.product_breakdown.mixed_orders,1);assert.equal(result.product_breakdown.known_mixed_expected_repass_raw,'25');
+ const first=result.product_breakdown.products[0],second=result.product_breakdown.products[1];
+ assert.equal(first.exclusive_expected_repass_raw,'80');assert.equal(first.quantity,3);assert.equal(first.items[0].exclusive_quantity,2);assert.equal(first.items[0].mixed_quantity,1);
+ assert.equal(second.known_exclusive_expected_repass_raw,'0');assert.equal(second.exclusive_expected_repass_raw,null);assert.equal(second.exclusive_payment_missing,1);assert.equal(second.items[1].exclusive_quantity,1);
+ // The known mixed payout is kept once, rather than allocated or duplicated
+ // into either product's exclusive estimate.
+ assert.equal(first.known_exclusive_expected_repass_raw,'80');assert.equal(result.known_expected_repass_raw,'105');
+ value.product_breakdown.products[0].items[0].exclusive_quantity=999;value.product_breakdown.products[0].known_exclusive_expected_repass_raw='999';
+ assert.equal(first.items[0].exclusive_quantity,2);assert.equal(first.known_exclusive_expected_repass_raw,'80');
+});
+
+test('product identities, quantities, coverage, money completeness and tax are independently reconciled with the parent frame',()=>{
+ const mutations=[
+  v=>v.product_breakdown.mixed_orders=0,v=>v.product_breakdown.mixed_payment_covered=0,v=>v.product_breakdown.known_mixed_expected_repass_raw='26',v=>v.product_breakdown.known_mixed_invoice_tax_raw='1.01',
+  v=>v.product_breakdown.products.pop(),v=>v.product_breakdown.products.push(structuredClone(v.product_breakdown.products[0])),
+  v=>v.product_breakdown.products[0].item_id='999',v=>v.product_breakdown.products[0].quantity++,v=>v.product_breakdown.products[0].orders++,v=>v.product_breakdown.products[0].mixed_orders=0,
+  v=>v.product_breakdown.products[0].exclusive_payment_missing++,v=>v.product_breakdown.products[0].exclusive_returns_unknown=2,v=>v.product_breakdown.products[1].exclusive_returns_unknown=0,
+  v=>v.product_breakdown.products[0].known_exclusive_sales_base_raw='-100',v=>v.product_breakdown.products[0].exclusive_expected_repass_raw=null,v=>v.product_breakdown.products[1].exclusive_expected_repass_raw='0',
+  v=>v.product_breakdown.products[0].items[0].model_id='999',v=>v.product_breakdown.products[0].items[0].exclusive_quantity++,v=>v.product_breakdown.products[1].items.pop(),
+  v=>v.product_breakdown.products[0].items.push(structuredClone(v.product_breakdown.products[0].items[0])),
+ ];
+ for(const mutate of mutations){const value=productFrame();mutate(value);assert.equal(projectBusinessPeriodFrame(value),null);}
+ const mixedOnly=productFrame();mixedOnly.product_breakdown.products[0].exclusive_orders=0;assert.equal(projectBusinessPeriodFrame(mixedOnly),null);
+});
+
+test('empty product sidecar is explicit only for empty paid quantities and old frames remain compatible',()=>{
+ const old=empty();assert.equal(Object.hasOwn(projectBusinessPeriodFrame(old),'product_breakdown'),false);
+ const value={...old,product_breakdown:{schema:'business_product_breakdown_v1',mixed_orders:0,mixed_payment_covered:0,mixed_payment_missing:0,known_mixed_sales_base_raw:'0',known_mixed_expected_repass_raw:'0',known_mixed_ads_adjustment_raw:'0',known_mixed_invoice_tax_raw:'0',products:[]}};
+ assert.deepEqual(projectBusinessPeriodFrame(value),value);
+ assert.equal(projectBusinessPeriodFrame({...value,product_breakdown:null}),null);
+ const nonempty=productFrame();nonempty.product_breakdown=value.product_breakdown;assert.equal(projectBusinessPeriodFrame(nonempty),null);
+});
+
+test('conserving positive and negative offsets cannot exceed the source bound for the covered exclusive or mixed orders',()=>{
+ for(const [name,mixed] of [['expected_repass','-999999999999895'],['ads_adjustment','-999999999999995']]){
+  const value=productFrame(),row=value.product_breakdown.products[0];
+  row['known_exclusive_'+name+'_raw']='1000000000000000';row['exclusive_'+name+'_raw']='1000000000000000';value.product_breakdown['known_mixed_'+name+'_raw']=mixed;
+  assert.equal(projectBusinessPeriodFrame(value),null);
+ }
+});
+
+test('optional product projection remains standalone, rejects private extras and accessors without executing them',()=>{
+ let invoked=0;
+ for(const location of ['frame','breakdown','product','item']){
+  const value=productFrame(),target=location==='frame'?value:location==='breakdown'?value.product_breakdown:location==='product'?value.product_breakdown.products[0]:value.product_breakdown.products[0].items[0],key=location==='frame'?'product_breakdown':location==='breakdown'?'products':location==='product'?'items':'exclusive_quantity';
+  Object.defineProperty(target,key,{get(){invoked++;return null;},enumerable:true});assert.equal(projectBusinessPeriodFrame(value),null);
+ }
+ assert.equal(invoked,0);
+ for(const mutate of [v=>v.product_breakdown.access_token='PRIVATE',v=>v.product_breakdown.products[0].order_sn='PRIVATE',v=>v.product_breakdown.products[0].items[0].sku='PRIVATE',v=>v.product_breakdown.products=Array(2)]){const value=productFrame();mutate(value);assert.equal(projectBusinessPeriodFrame(value),null);}
+ const context=vm.createContext({serialized:JSON.stringify(productFrame())});
+ const result=new vm.Script('const project='+projectBusinessPeriodFrame.toString()+';project(JSON.parse(serialized));').runInContext(context);
+ assert.deepEqual(JSON.parse(JSON.stringify(result)),projectBusinessPeriodFrame(productFrame()));
+});
+
+test('a maximal thousand-variant product sidecar remains bounded without truncating identities or amounts',()=>{
+ const value=empty({revision:201,status:'COMPLETE',pages_read:200,
+  coverage:{...empty().coverage,orders:1000,paid:1000,completed:1000,payment_covered:1000},
+  known_sales_base_raw:'1000000000000000',sales_base_raw:'1000000000000000',known_expected_repass_raw:'-1000000000000000',expected_repass_raw:'-1000000000000000',known_ads_adjustment_raw:'-1000000000000000',ads_adjustment_raw:'-1000000000000000',
+  invoice_tax:{...empty().invoice_tax,covered_orders:1000,known_base_raw:'1000000000000000',known_tax_raw:'20000000000000'},
+  items:Array.from({length:1000},(_,index)=>({item_id:String(10000000000000000000n+BigInt(index)),model_id:'99999999999999999999',quantity:1000000000000}))});
+ value.product_breakdown={schema:'business_product_breakdown_v1',mixed_orders:0,mixed_payment_covered:0,mixed_payment_missing:0,known_mixed_sales_base_raw:'0',known_mixed_expected_repass_raw:'0',known_mixed_ads_adjustment_raw:'0',known_mixed_invoice_tax_raw:'0',products:value.items.map(row=>({item_id:row.item_id,quantity:row.quantity,orders:1,exclusive_orders:1,mixed_orders:0,exclusive_payment_covered:1,exclusive_payment_missing:0,exclusive_returns:0,exclusive_returns_unknown:0,...Object.fromEntries(['sales_base','expected_repass','ads_adjustment','invoice_tax'].flatMap((name,index)=>{const raw=['1000000000000','-1000000000000','-1000000000000','20000000000'][index];return [['known_exclusive_'+name+'_raw',raw],['exclusive_'+name+'_raw',raw]];})),items:[{model_id:row.model_id,exclusive_quantity:row.quantity,mixed_quantity:0}]}))};
+ const result=projectBusinessPeriodFrame(value);assert.ok(result);
+ const bytes=Buffer.byteLength(JSON.stringify(result));assert.ok(bytes>524288);assert.ok(bytes<1048576);
+ assert.equal(result.product_breakdown.products.length,1000);assert.equal(result.product_breakdown.products.at(-1).item_id,'10000000000000000999');
+});

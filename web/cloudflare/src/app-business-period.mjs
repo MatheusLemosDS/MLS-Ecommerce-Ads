@@ -19,11 +19,11 @@ export async function getFinanceBusinessPeriod(env,input,{fetchImpl=request=>fet
   if(!(response instanceof Response)||response.redirected||response.status!==200
     ||!/^application\/json(?:\s*;\s*charset\s*=\s*(?:utf-8|"utf-8"))?\s*$/i.test(response.headers.get('content-type')||''))return failure();
   const declared=response.headers.get('content-length');
-  if(declared!==null&&(!/^\d+$/.test(declared)||!Number.isSafeInteger(Number(declared))||Number(declared)>524288))return failure();
+  if(declared!==null&&(!/^\d+$/.test(declared)||!Number.isSafeInteger(Number(declared))||Number(declared)>1048576))return failure();
   if(!response.body)return failure();
   reader=response.body.getReader();const chunks=[];let length=0;
   try{while(true){checkDeadline();const chunk=await reader.read();checkDeadline();if(chunk.done)break;
-   if(!(chunk.value instanceof Uint8Array))return failure();length+=chunk.value.byteLength;if(length>524288)return failure();chunks.push(chunk.value);}}
+   if(!(chunk.value instanceof Uint8Array))return failure();length+=chunk.value.byteLength;if(length>1048576)return failure();chunks.push(chunk.value);}}
   finally{cancel();try{reader.releaseLock();}catch{}reader=undefined;}
   const bytes=new Uint8Array(length);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.length;}
   let raw;try{raw=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes));}catch{return failure();}

@@ -103,7 +103,8 @@ function businessMidnight(day){
 const businessCanonical=record=>({order_hash:record.order_hash,bucket:record.bucket,payment_covered:record.payment_covered,sales_raw:record.sales_raw,escrow_raw:record.escrow_raw,ads_raw:record.ads_raw,returns_seen:record.returns_seen,items:record.items,checked_at:record.checked_at});
 function businessFrame(run,records,diagnostic){
  if(!run||run.partner_id!==FINANCE_PROFILE.partner_id||run.shop_id!==FINANCE_PROFILE.shop_id||!Array.isArray(records)||records.length>1000)throw businessFailure('STORAGE_INVALID',503);
- const coverage={orders:records.length,paid:0,completed:0,ongoing:0,cancelled:0,cancel_pending:0,unpaid:0,other:0,unknown:0,payment_covered:0,payment_missing:0,returns:0,returns_unknown:0},grouped=new Map(),seenOrders=new Set();
+ const coverage={orders:records.length,paid:0,completed:0,ongoing:0,cancelled:0,cancel_pending:0,unpaid:0,other:0,unknown:0,payment_covered:0,payment_missing:0,returns:0,returns_unknown:0},grouped=new Map(),seenOrders=new Set(),products=new Map();
+ const mixed={orders:0,covered:0,missing:0,money:[0n,0n,0n,0n]},moneyNames=['sales_base','expected_repass','ads_adjustment','invoice_tax'];
  let sales=0n,escrow=0n,ads=0n,tax=0n;
  for(const record of records){
   if(!/^[a-f0-9]{64}$/.test(record.order_hash)||seenOrders.has(record.order_hash)||!/^[a-f0-9]{64}$/.test(record.source_hash)||!businessBuckets.includes(record.bucket)||![0,1].includes(record.payment_covered)||!Number.isSafeInteger(record.checked_at)||record.checked_at<run.cutoff_at||record.checked_at>run.checked_at)throw businessFailure('STORAGE_INVALID',503);
@@ -114,21 +115,38 @@ function businessFrame(run,records,diagnostic){
   coverage.paid++;
   const canonical=businessItems(items,'quantity');
   if(JSON.stringify(canonical)!==record.items)throw businessFailure('STORAGE_INVALID',503);
+  const exclusive=new Set(canonical.map(row=>row.item_id)).size===1,affected=new Set();
+  if(!exclusive)mixed.orders++;
+  for(const row of canonical){
+   let product=products.get(row.item_id);
+   if(!product){product={item_id:row.item_id,quantity:0,orders:0,exclusive_orders:0,mixed_orders:0,exclusive_payment_covered:0,exclusive_payment_missing:0,exclusive_returns:0,exclusive_returns_unknown:0,money:[0n,0n,0n,0n],items:new Map()};products.set(row.item_id,product);}
+   if(!affected.has(row.item_id)){product.orders++;product[exclusive?'exclusive_orders':'mixed_orders']++;affected.add(row.item_id);}
+   product.quantity+=row.quantity;if(!Number.isSafeInteger(product.quantity))throw businessFailure('GROUP_LIMIT',409);
+   let model=product.items.get(row.model_id);if(!model){model={model_id:row.model_id,exclusive_quantity:0,mixed_quantity:0};product.items.set(row.model_id,model);}
+   model[exclusive?'exclusive_quantity':'mixed_quantity']+=row.quantity;
+  }
+  const product=exclusive?products.get(canonical[0].item_id):null;
   for(const row of canonical){const id=row.item_id+':'+row.model_id,total=(grouped.get(id)?.quantity||0)+row.quantity;if(!Number.isSafeInteger(total)||total>1000000000000)throw businessFailure('GROUP_LIMIT',409);grouped.set(id,{...row,quantity:total});}
   if(record.payment_covered===0){
    if(record.sales_raw!==null||record.escrow_raw!==null||record.ads_raw!==null||record.returns_seen!==null)throw businessFailure('STORAGE_INVALID',503);
+   if(product){product.exclusive_payment_missing++;product.exclusive_returns_unknown++;}else mixed.missing++;
    coverage.payment_missing++;coverage.returns_unknown++;continue;
   }
   const currentSales=businessCents(record.sales_raw,100000000000000n),currentEscrow=businessCents(record.escrow_raw,100000000000000n),currentAds=businessCents(record.ads_raw,100000000000000n);
   if(currentSales===null||currentSales<0n||currentEscrow===null||currentAds===null)throw businessFailure('STORAGE_INVALID',503);
-  coverage.payment_covered++;sales+=currentSales;escrow+=currentEscrow;ads+=currentAds;tax+=(currentSales*200n+5000n)/10000n;
+  const currentTax=(currentSales*200n+5000n)/10000n,currentMoney=[currentSales,currentEscrow,currentAds,currentTax];
+  coverage.payment_covered++;sales+=currentSales;escrow+=currentEscrow;ads+=currentAds;tax+=currentTax;
   if(record.returns_seen===null)coverage.returns_unknown++;else if(record.returns_seen===0||record.returns_seen===1)coverage.returns+=record.returns_seen;else throw businessFailure('STORAGE_INVALID',503);
+  if(product){product.exclusive_payment_covered++;if(record.returns_seen===null)product.exclusive_returns_unknown++;else product.exclusive_returns+=record.returns_seen;for(let index=0;index<currentMoney.length;index++)product.money[index]+=currentMoney[index];}
+  else{mixed.covered++;for(let index=0;index<currentMoney.length;index++)mixed.money[index]+=currentMoney[index];}
  }
  if(grouped.size>1000)throw businessFailure('GROUP_LIMIT',409);
  const completePayments=coverage.payment_missing===0,salesRaw=businessRaw(sales),escrowRaw=businessRaw(escrow),adsRaw=businessRaw(ads);
  const frame=projectBusinessPeriodFrame({schema:'finance_business_period_v1',run_id:run.run_id,revision:run.revision,status:run.status,start_date:run.start_date,end_date:run.end_date,cutoff_at:run.cutoff_at,checked_at:run.checked_at,currency:'BRL',monetary_unit:'UNCONFIRMED',pages_read:run.pages_read,duplicate_orders:run.duplicate_orders,coverage,
   known_sales_base_raw:salesRaw,sales_base_raw:completePayments?salesRaw:null,known_expected_repass_raw:escrowRaw,expected_repass_raw:completePayments?escrowRaw:null,known_ads_adjustment_raw:adsRaw,ads_adjustment_raw:completePayments?adsRaw:null,
-  invoice_tax:{schema:'store_invoice_tax_v1',rate_bps:200,basis:'PAYMENT_GOODS_VALUE_PER_ORDER_ESTIMATE',rounding:'HALF_UP_PER_ORDER',covered_orders:coverage.payment_covered,unavailable_orders:coverage.payment_missing,known_base_raw:salesRaw,known_tax_raw:businessRaw(tax)},items:[...grouped.values()],diagnostic:diagnostic===undefined?run.last_error:diagnostic,basis:'CREATE_TIME_PAID_ORDER_ESTIMATE_NOT_SETTLED'});
+  invoice_tax:{schema:'store_invoice_tax_v1',rate_bps:200,basis:'PAYMENT_GOODS_VALUE_PER_ORDER_ESTIMATE',rounding:'HALF_UP_PER_ORDER',covered_orders:coverage.payment_covered,unavailable_orders:coverage.payment_missing,known_base_raw:salesRaw,known_tax_raw:businessRaw(tax)},items:[...grouped.values()],
+  product_breakdown:{schema:'business_product_breakdown_v1',mixed_orders:mixed.orders,mixed_payment_covered:mixed.covered,mixed_payment_missing:mixed.missing,...Object.fromEntries(moneyNames.map((name,index)=>['known_mixed_'+name+'_raw',businessRaw(mixed.money[index])])),products:[...products.values()].map(({money,items,...row})=>({...row,...Object.fromEntries(moneyNames.flatMap((name,index)=>{const known=businessRaw(money[index]);return [['known_exclusive_'+name+'_raw',known],['exclusive_'+name+'_raw',row.exclusive_payment_missing?null:known]];})),items:[...items.values()]}))},
+  diagnostic:diagnostic===undefined?run.last_error:diagnostic,basis:'CREATE_TIME_PAID_ORDER_ESTIMATE_NOT_SETTLED'});
  if(!frame)throw businessFailure('STORAGE_INVALID',503);return frame;
 }
 

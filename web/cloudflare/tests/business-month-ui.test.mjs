@@ -20,6 +20,21 @@ function fixture(changes={}){
  const frame={schema:'business_month_v1',month:'2026-10',start_date:'2026-10-01',end_date:'2026-10-22',status:'COMPLETE',checked_at:stamp,progress:{windows_total:2,windows_complete:2,pages_read:2},coverage:{orders:4,paid:2,completed:1,ongoing:1,cancelled:1,cancel_pending:0,unpaid:1,other:0,unknown:0,payment_covered:2,payment_missing:0,returns:0,returns_unknown:0},sales_cents:10000,known_sales_cents:10000,expected_repass_cents:8000,known_expected_repass_cents:8000,production_cost_cents:2000,known_production_cost_cents:2000,invoice_tax_cents:200,known_invoice_tax_cents:200,ads_adjustment_cents:0,ads:calendar(),expenses:{revision:1,external_expenses_cents:500,recharge_treatment:'UNCONFIRMED',updated_at:current},result:{net_estimate_cents:4300,net_profit_cents:null,net_margin_bps:4300,pending:[],basis:'PAID_ORDER_CREATE_MONTH_AND_CALENDAR_ADS_ESTIMATE'},unmapped_variants:[],bindings_revision:2,costs_revision:3,...changes};
  assert.ok(projectBusinessMonth(frame),'fixture must satisfy the production projector');return frame;
 }
+function productRow(itemId,modelId,changes={}){
+ const repass=4000+Number(itemId)-200,after=repass-1100;
+ return {item_id:String(itemId),quantity:1,orders:1,exclusive_orders:1,mixed_orders:0,exclusive_payment_covered:1,exclusive_payment_missing:0,exclusive_returns:0,exclusive_returns_unknown:0,known_exclusive_sales_cents:5000,exclusive_sales_cents:5000,known_exclusive_repass_cents:repass,exclusive_repass_cents:repass,known_exclusive_tax_cents:100,exclusive_tax_cents:100,known_exclusive_ads_adjustment_cents:0,exclusive_ads_adjustment_cents:0,known_production_cost_cents:1000,production_cost_cents:1000,known_exclusive_production_cost_cents:1000,exclusive_production_cost_cents:1000,exclusive_after_costs_cents:after,exclusive_margin_bps:Math.trunc(after*10000/5000),pending:[],variants:[{model_id:String(modelId),quantity:1,exclusive_quantity:1,mixed_quantity:0,unit_cost_cents:1000,production_cost_cents:1000,exclusive_production_cost_cents:1000,selling_unit:'SINGLE_GARMENT',size:'P',male_size:null,female_size:null}],...changes};
+}
+function productFixture(count=2){
+ const source=fixture(),products=Array.from({length:count},(_,index)=>productRow(200+index,300+index));
+ const sales=count*5000,repass=products.reduce((sum,row)=>sum+row.exclusive_repass_cents,0),production=count*1000,tax=count*100,net=repass-production-tax-1500;
+ return fixture({...source,progress:{...source.progress,pages_read:Math.ceil((count+2)/5)},coverage:{...source.coverage,orders:count+2,paid:count,completed:count-1,ongoing:1,payment_covered:count},sales_cents:sales,known_sales_cents:sales,expected_repass_cents:repass,known_expected_repass_cents:repass,production_cost_cents:production,known_production_cost_cents:production,invoice_tax_cents:tax,known_invoice_tax_cents:tax,result:{...source.result,net_estimate_cents:net,net_margin_bps:Math.trunc(net*10000/sales)},product_summary:{schema:'business_month_products_v1',mixed_orders:0,known_mixed_sales_cents:0,known_mixed_repass_cents:0,known_mixed_tax_cents:0,known_mixed_ads_adjustment_cents:0,products}});
+}
+function mixedProductFixture(){
+ const source=fixture(),first=productRow(200,300),second=productRow(201,301);
+ Object.assign(first,{quantity:2,orders:2,mixed_orders:1,known_production_cost_cents:2000,production_cost_cents:2000});Object.assign(first.variants[0],{quantity:2,mixed_quantity:1,production_cost_cents:2000});
+ Object.assign(second,{exclusive_orders:0,mixed_orders:1,exclusive_payment_covered:0,known_exclusive_sales_cents:0,exclusive_sales_cents:0,known_exclusive_repass_cents:0,exclusive_repass_cents:0,known_exclusive_tax_cents:0,exclusive_tax_cents:0,known_exclusive_production_cost_cents:0,exclusive_production_cost_cents:0,exclusive_after_costs_cents:null,exclusive_margin_bps:null,pending:['NO_EXCLUSIVE_ORDERS']});Object.assign(second.variants[0],{exclusive_quantity:0,mixed_quantity:1,exclusive_production_cost_cents:0});
+ return fixture({...source,sales_cents:15000,known_sales_cents:15000,expected_repass_cents:12000,known_expected_repass_cents:12000,production_cost_cents:3000,known_production_cost_cents:3000,invoice_tax_cents:300,known_invoice_tax_cents:300,result:{...source.result,net_estimate_cents:7200,net_margin_bps:4800},product_summary:{schema:'business_month_products_v1',mixed_orders:1,known_mixed_sales_cents:10000,known_mixed_repass_cents:8000,known_mixed_tax_cents:200,known_mixed_ads_adjustment_cents:0,products:[first,second]}});
+}
 function browser(value=fixture(),search=''){
  const context=vm.createContext({URLSearchParams});
  const ids=[...businessMonthBody().matchAll(/\bid="(businessMonth[^"]*)"/g)].map(match=>match[1]);
@@ -129,4 +144,59 @@ test('missing product costs trigger one automatic catalogue pass and a read-only
 test('a forged net result is refused before it can appear in the monthly dashboard',async()=>{
  const b=browser(),invalid=fixture();invalid.result.net_estimate_cents++;b.load(invalid);
  assert.equal(await b.run('brazaMonthDashboard.start({api,syncVariants})'),false);assert.equal(b.text('Net'),'Em apuração');assert.match(b.text('Status'),/não puderam ser conferidos/);assert.equal(b.run('timers.size'),0);
+});
+
+test('monthly products keep production totals and exclusive contribution separate from account Ads and net profit',async()=>{
+ const b=browser(productFixture());assert.equal(await b.run('brazaMonthDashboard.start({api,syncVariants})'),true);
+ assert.match(b.text('ProductSummary'),/2 produto\(s\) vendido\(s\)/);
+ assert.match(b.text('ProductRows'),/Produto #200/);assert.match(b.text('ProductRows'),/29,00/);assert.match(b.text('ProductRows'),/10,00/);
+ assert.match(b.text('ProductRows'),/1 pedido\(s\) só deste produto/);assert.match(b.text('ProductRows'),/Anúncios e outras despesas ainda não foram conciliados por produto/);
+ assert.doesNotMatch(b.text('ProductRows'),/ROAS|lucro líquido/i);
+ assert.equal(b.run("control('ProductRows').children[0].children[0].children[3].children[1].children.length"),0,'variation details should stay lazy while collapsed');
+ b.run("const detail=control('ProductRows').children[0].children[0].children[3];detail.open=true;detail.ontoggle();");
+ assert.match(b.text('ProductRows'),/Variação #300 · Camiseta P/);
+ assert.match(b.text('ProductRows'),/1 em pedidos exclusivos \/ 0 com outros produtos/);
+});
+
+test('a large monthly product list supports stable pagination, exact identity search, sort and empty filters',async()=>{
+ const b=browser(productFixture(45));await b.run('brazaMonthDashboard.start({api,syncVariants})');
+ assert.equal(b.run("control('ProductRows').children.length"),20);assert.match(b.text('ProductPageStatus'),/1–20 de 45/);
+ await b.run("control('ProductNext').onclick()");assert.match(b.text('ProductPageStatus'),/21–40 de 45/);assert.match(b.run("text(control('ProductRows').children[0])"),/Produto #220/);
+ await b.run("control('ProductNext').onclick()");assert.equal(b.run("control('ProductRows').children.length"),5);assert.equal(b.run("control('ProductNext').disabled"),true);
+ b.run("control('ProductSort').value='contribution_desc';control('ProductSort').onchange();");assert.match(b.run("text(control('ProductRows').children[0])"),/Produto #244/);
+ b.run("control('ProductSearch').value='#329';control('ProductSearch').oninput();");assert.match(b.text('ProductRows'),/Produto #229/);assert.match(b.text('ProductPageStatus'),/1–1 de 1/);
+ b.run("control('ProductSearch').value='';control('ProductSearch').oninput();control('ProductPageSize').value='50';control('ProductPageSize').onchange();");assert.equal(b.run("control('ProductRows').children.length"),45);
+ b.run("control('ProductFilter').value='pending';control('ProductFilter').onchange();");assert.match(b.text('ProductRows'),/Nenhum produto corresponde/);assert.equal(b.run("control('ProductNext').disabled"),true);assert.match(b.text('ProductPageStatus'),/0–0 de 0/);
+});
+
+test('mixed orders keep all production visible without allocating payout or subtracting mixed units from exclusive contribution',async()=>{
+ const b=browser(mixedProductFixture());assert.equal(await b.run('brazaMonthDashboard.start({api,syncVariants})'),true);
+ assert.match(b.text('ProductSummary'),/1 pedido\(s\) com produtos diferentes, sem rateio financeiro/);assert.match(b.text('ProductSummary'),/100,00/);assert.match(b.text('ProductSummary'),/80,00/);
+ const first=b.run("text(control('ProductRows').children[0])"),second=b.run("text(control('ProductRows').children[1])");
+ assert.match(first,/20,00/);assert.match(first,/29,00/);assert.doesNotMatch(first,/19,00/);assert.match(first,/1 pedido\(s\) com outros produtos não estão neste saldo/);
+ assert.match(second,/Sem pedido exclusivo/);assert.doesNotMatch(b.run("text(control('ProductRows').children[1].children[3])"),/0,00/);
+ b.run("control('ProductFilter').value='ready';control('ProductFilter').onchange();");assert.equal(b.run("control('ProductRows').children.length"),1);assert.match(b.text('ProductRows'),/Produto #200/);
+ b.run("control('ProductFilter').value='pending';control('ProductFilter').onchange();");assert.equal(b.run("control('ProductRows').children.length"),1);assert.match(b.text('ProductRows'),/Produto #201/);
+ b.run("control('ProductFilter').value='mixed';control('ProductFilter').onchange();");assert.equal(b.run("control('ProductRows').children.length"),2);
+});
+
+test('pending-cost filter also finds a mixed variation without blocking the proven exclusive saldo',async()=>{
+ const source=mixedProductFixture(),row=source.product_summary.products[0];
+ row.known_production_cost_cents=1000;row.production_cost_cents=null;Object.assign(row.variants[0],{quantity:1,mixed_quantity:0,production_cost_cents:1000});
+ row.variants.push({model_id:'302',quantity:1,exclusive_quantity:0,mixed_quantity:1,unit_cost_cents:null,production_cost_cents:null,exclusive_production_cost_cents:0,selling_unit:null,size:null,male_size:null,female_size:null});
+ source.known_production_cost_cents=2000;source.production_cost_cents=null;source.unmapped_variants=[{item_id:'200',model_id:'302',quantity:1}];source.result={...source.result,net_estimate_cents:null,net_margin_bps:null,pending:['PRODUCTION_COST_INCOMPLETE']};
+ const b=browser(fixture(source));assert.equal(await b.run('brazaMonthDashboard.start({api,syncVariants})'),true);
+ b.run("control('ProductFilter').value='pending';control('ProductFilter').onchange();control('ProductSearch').value='200';control('ProductSearch').oninput();");
+ assert.equal(b.run("control('ProductRows').children.length"),1);assert.match(b.text('ProductRows'),/Produto #200/);assert.match(b.text('ProductRows'),/29,00/);assert.match(b.text('ProductRows'),/Já identificado: .*10,00/);
+ assert.match(b.text('ProductRows'),/Nestes pedidos: repasse .*40,00 · produção .*10,00 · imposto .*1,00/);
+ assert.equal(b.text('Net'),'Em conciliação');
+});
+
+test('absent or forged product data cannot become zero product contribution',async()=>{
+ const legacy=browser();await legacy.run('brazaMonthDashboard.start({api,syncVariants})');
+ assert.match(legacy.text('ProductSummary'),/leitura anterior ainda não trouxe os produtos/);assert.doesNotMatch(legacy.text('ProductRows'),/0,00/);assert.equal(legacy.run("control('ProductSearch').disabled"),true);
+ const source=productFixture(),b=browser(source);await b.run('brazaMonthDashboard.start({api,syncVariants})');
+ source.product_summary.products[0].exclusive_after_costs_cents++;
+ b.load(source);assert.equal(await b.run('brazaMonthDashboard.refreshCosts()'),false);assert.match(b.run("text(control('ProductRows').children[0])"),/29,00/);assert.doesNotMatch(b.run("text(control('ProductRows').children[0])"),/29,01/);
+ assert.match(b.text('Status'),/não foi possível recalcular/);
 });

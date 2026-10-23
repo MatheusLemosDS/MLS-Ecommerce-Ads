@@ -1,5 +1,11 @@
 # Painéis e identificação automática
 
+A visão atual usa o resumo mensal, com vendas pagas, anúncios, produção e
+imposto. O [detalhamento mensal de produtos](PRODUTOS_DO_RESUMO_MENSAL.md)
+explica a lista compacta, a contribuição de pedidos exclusivos e os valores
+de pedidos mistos ainda sem rateio. As seções abaixo também registram o fluxo
+anterior de conferência financeira por período, disponível nos detalhes.
+
 A visualização de muitos produtos foi ampliada com uma lista compacta,
 busca, filtros e paginação. O [guia do catálogo e próximos passos](CATALOGO_COMPACTO_E_PROXIMOS_PASSOS.md)
 descreve o alcance dos dados e as dependências atuais do plano.
@@ -65,7 +71,8 @@ histórico de fabricação importado da Shopee.
 ## Visual e temas
 
 Administração, painéis de anúncios e login compartilham a identidade visual
-BrazaCommerce, com cores violeta e ardósia. O controle de tema alterna entre
+BrazaCommerce, com fundos neutros, branco/cinza no claro, grafite no escuro e
+azul petróleo discreto nos destaques. O controle de tema alterna entre
 **Automático**, **Claro** e **Escuro**. Automático acompanha o sistema; a
 preferência fica no navegador e vale ao mudar de painel.
 

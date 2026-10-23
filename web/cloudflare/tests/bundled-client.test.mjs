@@ -7,6 +7,7 @@ import {D1} from './sqlite-d1.mjs';
 import {buildAdsMeasurement} from '../src/ads-measurement.mjs';
 import {buildAdsCalendar} from '../src/ads-calendar.mjs';
 import {projectBusinessMonth} from '../src/business-month.mjs';
+import {projectBusinessMonthProducts} from '../src/business-month-products.mjs';
 
 const current='2026-10-22T12:00:00Z',stamp=Date.parse(current)/1000;
 
@@ -24,8 +25,18 @@ function monthlyFrame(){
   sales_cents:10000,known_sales_cents:10000,expected_repass_cents:8000,known_expected_repass_cents:8000,production_cost_cents:2000,known_production_cost_cents:2000,invoice_tax_cents:200,known_invoice_tax_cents:200,ads_adjustment_cents:0,ads,
   expenses:{revision:1,external_expenses_cents:500,recharge_treatment:'UNCONFIRMED',updated_at:current},
   result:{net_estimate_cents:4300,net_profit_cents:null,net_margin_bps:4300,pending:[],basis:'PAID_ORDER_CREATE_MONTH_AND_CALENDAR_ADS_ESTIMATE'},
-  unmapped_variants:[],bindings_revision:2,costs_revision:3
+  unmapped_variants:[],bindings_revision:2,costs_revision:3,
+  product_summary:{
+   schema:'business_month_products_v1',mixed_orders:0,known_mixed_sales_cents:0,known_mixed_repass_cents:0,known_mixed_tax_cents:0,known_mixed_ads_adjustment_cents:0,
+   products:[{
+    item_id:'201',quantity:2,orders:2,exclusive_orders:2,mixed_orders:0,exclusive_payment_covered:2,exclusive_payment_missing:0,exclusive_returns:0,exclusive_returns_unknown:0,
+    known_exclusive_sales_cents:10000,exclusive_sales_cents:10000,known_exclusive_repass_cents:8000,exclusive_repass_cents:8000,known_exclusive_tax_cents:200,exclusive_tax_cents:200,known_exclusive_ads_adjustment_cents:0,exclusive_ads_adjustment_cents:0,
+    known_production_cost_cents:2000,production_cost_cents:2000,known_exclusive_production_cost_cents:2000,exclusive_production_cost_cents:2000,exclusive_after_costs_cents:5800,exclusive_margin_bps:5800,pending:[],
+    variants:[{model_id:'0',quantity:2,exclusive_quantity:2,mixed_quantity:0,unit_cost_cents:1000,production_cost_cents:2000,exclusive_production_cost_cents:2000,selling_unit:'SINGLE_GARMENT',size:'M',male_size:null,female_size:null}]
+   }]
+  }
  };
+ assert.ok(projectBusinessMonthProducts(frame.product_summary,frame),'the product summary must reconcile with its parent monthly totals');
  assert.ok(projectBusinessMonth(frame),'the response fixture must satisfy the production financial checks');
  return frame;
 }
@@ -103,6 +114,9 @@ for(const minify of [false,true]){
   assert.match(browser.text('Ads'),/10,00/);
   assert.equal(browser.text('Roas'),'20,00x');
   assert.match(browser.text('Net'),/43,00/);
+  assert.match(browser.text('ProductRows'),/Produto #201/);
+  assert.match(browser.text('ProductRows'),/58,00/);
+  assert.doesNotMatch(browser.text('ProductRows'),/43,00/,'product contribution must remain before the month-wide Ads and expenses');
   assert.match(browser.text('Coverage'),/1 cancelado\(s\) excluído\(s\)/);
   assert.deepEqual(JSON.parse(browser.run('JSON.stringify(calls.map(call=>call.body.operation))')),['start','ads']);
   // A second real response exercises the embedded projector again, including
@@ -110,6 +124,7 @@ for(const minify of [false,true]){
   await browser.run('brazaMonthDashboard.refreshCosts()');
   assert.equal(browser.run('calls.at(-1).body.operation'),'read');
   assert.match(browser.text('Net'),/43,00/);
+  assert.match(browser.text('ProductRows'),/58,00/);
   assert.doesNotMatch(browser.text('Status'),/is not defined/);
   verifyReportAndDailyAds(html);
  });

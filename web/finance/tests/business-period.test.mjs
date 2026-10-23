@@ -17,7 +17,8 @@ async function fixture(statuses=defaults){
  let queue=Promise.resolve();const batch=db.batch.bind(db);db.batch=statements=>{const next=queue.then(()=>batch(statements));queue=next.catch(()=>{});return next;};
  const env={FINANCE_DB:db,FINANCE_CONNECTION_ENABLED:'true',FINANCE_TOKEN_ENCRYPTION_KEY:Buffer.alloc(32,31).toString('base64'),SHOPEE_FINANCE_PARTNER_KEY:key};
  const store=await createFinanceStore(env,{now});await store.setup();await store.saveTokens({access_token:access,refresh_token:refresh,expires_at:Math.floor(now()/1000)+14400});
- const calls=[],state={statuses:[...statuses],mode:'normal',active:0,maxActive:0,hold:false,started:null,release:null,base:100};
+ const calls=[],state={statuses:[...statuses],mode:'normal',active:0,maxActive:0,hold:false,started:null,release:null,base:100,itemLists:{},moneyByIndex:{}};
+ const itemList=index=>state.itemLists[index]||[{item_id:100,model_id:index%2,model_quantity_purchased:2}];
  const fetchImpl=async request=>{
   const url=new URL(request.url);calls.push(request);
   assert.equal(url.origin,'https://partner.shopeemobile.com');assert.equal(request.method,'GET');assert.equal(request.redirect,'manual');assert.equal(request.headers.get('accept'),'application/json');assert.equal(await request.clone().text(),'');
@@ -35,7 +36,7 @@ async function fixture(statuses=defaults){
   }
   if(url.pathname===detail){
    const ids=url.searchParams.get('order_sn_list').split(',');
-   const rows=ids.map(sn=>{const index=Number(sn.slice(serial(0).length-1));return {order_sn:sn,order_status:state.statuses[index],currency:state.mode==='currency'?'USD':'BRL',create_time:Date.UTC(2026,9,20,12)/1000,item_list:[{item_id:100,model_id:index%2,model_quantity_purchased:2}],buyer_username:'PRIVATE_BUSINESS_BUYER'};});
+   const rows=ids.map(sn=>{const index=Number(sn.slice(serial(0).length-1));return {order_sn:sn,order_status:state.statuses[index],currency:state.mode==='currency'?'USD':'BRL',create_time:Date.UTC(2026,9,20,12)/1000,item_list:itemList(index),buyer_username:'PRIVATE_BUSINESS_BUYER'};});
    if(state.mode==='detail-foreign')rows[0].order_sn='PRIVATE_FOREIGN';
    if(state.mode==='detail-missing')rows.pop();
    if(state.mode==='date-foreign')rows[0].create_time=Date.UTC(2026,9,1)/1000;
@@ -47,7 +48,7 @@ async function fixture(statuses=defaults){
   if(state.mode==='ongoing-api-unavailable'&&state.statuses[index]!=='COMPLETED')return Response.json({error:'order_not_found',message:'PRIVATE_BUSINESS_MESSAGE'});
   if(state.mode==='ongoing-auth-rejected'&&state.statuses[index]!=='COMPLETED')return Response.json({error:'error_auth',message:key},{status:403});
   if(state.mode==='ongoing-malformed'&&state.statuses[index]!=='COMPLETED')return new Response('PRIVATE_BAD_JSON',{headers:{'content-type':'application/json'}});
-  const order_income={order_sn:serial(index),original_cost_of_goods_sold:state.base,escrow_amount:20+index,ads_escrow_top_up_fee_or_technical_support_fee:0,items:[{item_id:100,model_id:index%2,line_item_id:1000+index,quantity_purchased:2,selling_price:999,buyer:'PRIVATE_BUSINESS_BUYER'}]};
+  const order_income={order_sn:serial(index),original_cost_of_goods_sold:state.base,escrow_amount:20+index,ads_escrow_top_up_fee_or_technical_support_fee:0,...state.moneyByIndex[index],items:itemList(index).map((row,line)=>({item_id:row.item_id,model_id:row.model_id,line_item_id:1000+index*1000+line,quantity_purchased:row.model_quantity_purchased,selling_price:999,buyer:'PRIVATE_BUSINESS_BUYER'}))};
   if(state.mode==='amount-missing')delete order_income.escrow_amount;
   if(state.mode==='amount-null')order_income.original_cost_of_goods_sold=null;
   if(state.mode==='amount-string')order_income.original_cost_of_goods_sold='100';
@@ -182,4 +183,43 @@ test('a thousand collected orders with another provider page stays LIMIT_REACHED
 test('variant group overflow stops before committing its entire new page and retains the prior safe subset',async()=>{
  const f=await fixture(Array(1005).fill('COMPLETED')),job=await f.start();seedCohort(f,job,{groups:true});
  const before=snapshot(f),frame=await f.run({operation:'step',run_id:job.run_id});assert.equal(frame.status,'LIMIT_REACHED');assert.equal(frame.coverage.orders,995);assert.equal(frame.items.length,1000);assert.equal(frame.pages_read,199);assert.equal(frame.diagnostic,null);assert.deepEqual(snapshot(f).orders,before.orders);assert.deepEqual(snapshot(f).cursors,before.cursors);assert.equal(f.calls.length,7);
+});
+
+test('paid product projection keeps exact exclusive money and model quantities while mixed money stays unallocated once',async()=>{
+ const f=await fixture(['COMPLETED','COMPLETED','SHIPPED','CANCELLED','UNPAID']);
+ f.state.mode='ongoing-unavailable';
+ f.state.itemLists={
+  0:[{item_id:201,model_id:0,model_quantity_purchased:2}],
+  1:[{item_id:201,model_id:0,model_quantity_purchased:1},{item_id:202,model_id:10,model_quantity_purchased:2}],
+  2:[{item_id:202,model_id:11,model_quantity_purchased:1}],
+  3:[{item_id:999,model_id:0,model_quantity_purchased:999}],
+  4:[{item_id:998,model_id:0,model_quantity_purchased:999}],
+ };
+ f.state.moneyByIndex={0:{original_cost_of_goods_sold:100,escrow_amount:80,ads_escrow_top_up_fee_or_technical_support_fee:3},1:{original_cost_of_goods_sold:50,escrow_amount:25,ads_escrow_top_up_fee_or_technical_support_fee:2}};
+ const frame=await finish(f),sidecar=frame.product_breakdown;assert.ok(projectBusinessPeriodFrame(frame));
+ assert.equal(sidecar.schema,'business_product_breakdown_v1');assert.equal(sidecar.mixed_orders,1);assert.equal(sidecar.mixed_payment_covered,1);assert.equal(sidecar.mixed_payment_missing,0);
+ assert.equal(sidecar.known_mixed_sales_base_raw,'50');assert.equal(sidecar.known_mixed_expected_repass_raw,'25');assert.equal(sidecar.known_mixed_ads_adjustment_raw,'2');assert.equal(sidecar.known_mixed_invoice_tax_raw,'1');
+ assert.deepEqual(sidecar.products.map(row=>row.item_id),['201','202']);
+ const [first,second]=sidecar.products;
+ assert.equal(first.quantity,3);assert.equal(first.orders,2);assert.equal(first.exclusive_orders,1);assert.equal(first.mixed_orders,1);assert.equal(first.exclusive_sales_base_raw,'100');assert.equal(first.exclusive_expected_repass_raw,'80');assert.equal(first.exclusive_ads_adjustment_raw,'3');assert.equal(first.exclusive_invoice_tax_raw,'2');
+ assert.deepEqual(first.items,[{model_id:'0',exclusive_quantity:2,mixed_quantity:1}]);
+ assert.equal(second.quantity,3);assert.equal(second.exclusive_payment_missing,1);assert.equal(second.exclusive_returns_unknown,1);assert.equal(second.known_exclusive_sales_base_raw,'0');assert.equal(second.exclusive_sales_base_raw,null);assert.equal(second.exclusive_expected_repass_raw,null);assert.equal(second.exclusive_ads_adjustment_raw,null);assert.equal(second.exclusive_invoice_tax_raw,null);
+ assert.deepEqual(second.items,[{model_id:'10',exclusive_quantity:0,mixed_quantity:2},{model_id:'11',exclusive_quantity:1,mixed_quantity:0}]);
+ assert.equal(frame.known_expected_repass_raw,'105');assert.equal(frame.expected_repass_raw,null);assert.equal(frame.invoice_tax.known_tax_raw,'3');
+ const count=f.calls.length;assert.deepEqual(await f.run({operation:'read',run_id:frame.run_id}),frame);assert.equal(f.calls.length,count);
+});
+
+test('different variations of one product remain one exclusive order and preserve per-invoice tax rounding',async()=>{
+ const f=await fixture(['COMPLETED']);f.state.base=.25;
+ f.state.itemLists={0:[{item_id:201,model_id:20,model_quantity_purchased:1},{item_id:201,model_id:21,model_quantity_purchased:2}]};
+ const frame=await finish(f),sidecar=frame.product_breakdown,row=sidecar.products[0];
+ assert.equal(sidecar.mixed_orders,0);assert.equal(sidecar.known_mixed_expected_repass_raw,'0');assert.equal(row.item_id,'201');assert.equal(row.quantity,3);assert.equal(row.orders,1);assert.equal(row.exclusive_orders,1);assert.equal(row.mixed_orders,0);assert.equal(row.exclusive_invoice_tax_raw,'0.01');assert.equal(row.exclusive_returns_unknown,0);
+ assert.deepEqual(row.items,[{model_id:'20',exclusive_quantity:1,mixed_quantity:0},{model_id:'21',exclusive_quantity:2,mixed_quantity:0}]);
+ const g=await fixture(['COMPLETED','SHIPPED']);g.state.mode='returns-unknown';const unknown=await finish(g);assert.equal(unknown.product_breakdown.products[0].exclusive_returns_unknown,2);assert.equal(unknown.product_breakdown.products[0].exclusive_returns,0);
+});
+
+test('mixed-only products have no allocated payout, tax or exclusive quantities even when their order is fully paid',async()=>{
+ const f=await fixture(['COMPLETED']);f.state.itemLists={0:[{item_id:201,model_id:0,model_quantity_purchased:1},{item_id:202,model_id:0,model_quantity_purchased:2}]};
+ const frame=await finish(f),sidecar=frame.product_breakdown;assert.equal(sidecar.mixed_orders,1);assert.equal(sidecar.known_mixed_expected_repass_raw,'20');assert.equal(sidecar.known_mixed_invoice_tax_raw,'2');
+ for(const row of sidecar.products){assert.equal(row.exclusive_orders,0);assert.equal(row.mixed_orders,1);assert.equal(row.exclusive_expected_repass_raw,'0');assert.equal(row.exclusive_invoice_tax_raw,'0');assert.equal(row.items[0].exclusive_quantity,0);assert.equal(row.items[0].mixed_quantity,row.quantity);}
 });

@@ -13,6 +13,10 @@ const request=(operation='start',changes={})=>({operation,month:'2026-10',...cha
 const fail=code=>error=>error instanceof BusinessMonthError&&error.message===code;
 const serial=index=>'11111111-1111-4111-8111-'+String(index).padStart(12,'0');
 const frame=(selection,index,changes={})=>({schema:'finance_business_period_v1',run_id:serial(index),revision:2,status:'COMPLETE',...selection,cutoff_at:stamp-2,checked_at:stamp,currency:'BRL',monetary_unit:'UNCONFIRMED',pages_read:1,duplicate_orders:0,coverage:{orders:4,paid:2,completed:1,ongoing:1,cancelled:1,cancel_pending:0,unpaid:1,other:0,unknown:0,payment_covered:2,payment_missing:0,returns:0,returns_unknown:0},known_sales_base_raw:'600',sales_base_raw:'600',known_expected_repass_raw:'500',expected_repass_raw:'500',known_ads_adjustment_raw:'0',ads_adjustment_raw:'0',invoice_tax:{schema:'store_invoice_tax_v1',rate_bps:200,basis:'PAYMENT_GOODS_VALUE_PER_ORDER_ESTIMATE',rounding:'HALF_UP_PER_ORDER',covered_orders:2,unavailable_orders:0,known_base_raw:'600',known_tax_raw:'12'},items:[{item_id:'201',model_id:'0',quantity:2}],diagnostic:null,basis:'CREATE_TIME_PAID_ORDER_ESTIMATE_NOT_SETTLED',...changes});
+function withProducts(value){
+ const c=value.coverage;
+ return {...value,product_breakdown:{schema:'business_product_breakdown_v1',mixed_orders:0,mixed_payment_covered:0,mixed_payment_missing:0,known_mixed_sales_base_raw:'0',known_mixed_expected_repass_raw:'0',known_mixed_ads_adjustment_raw:'0',known_mixed_invoice_tax_raw:'0',products:[{item_id:'201',quantity:2,orders:2,exclusive_orders:2,mixed_orders:0,exclusive_payment_covered:c.payment_covered,exclusive_payment_missing:c.payment_missing,exclusive_returns:c.returns,exclusive_returns_unknown:c.returns_unknown,known_exclusive_sales_base_raw:value.known_sales_base_raw,exclusive_sales_base_raw:value.sales_base_raw,known_exclusive_expected_repass_raw:value.known_expected_repass_raw,exclusive_expected_repass_raw:value.expected_repass_raw,known_exclusive_ads_adjustment_raw:value.known_ads_adjustment_raw,exclusive_ads_adjustment_raw:value.ads_adjustment_raw,known_exclusive_invoice_tax_raw:value.invoice_tax.known_tax_raw,exclusive_invoice_tax_raw:c.payment_missing?null:value.invoice_tax.known_tax_raw,items:[{model_id:'0',exclusive_quantity:2,mixed_quantity:0}]}]}};
+}
 function calendar(selection,at=stamp,missing=null){
  const days=[];for(let at=Date.parse(selection.start_date+'T00:00:00Z');at<=Date.parse(selection.end_date+'T00:00:00Z');at+=86400000)days.push(new Date(at).toISOString().slice(0,10));
  const children=[];for(let index=0;index<days.length;index+=15){const dates=days.slice(index,index+15),range={start_date:dates[0],end_date:dates.at(-1)},raw={status:'ok',connected:true,shop:{id:1178167501},period:range,balance:31.07,daily:dates.filter(day=>day!==missing).map(date=>({date,expense:1,broad_gmv:10,broad_order:1,broad_roas:10,direct_gmv:4,direct_order:1,direct_roas:4}))};children.push(buildAdsMeasurement(raw,range,at));}
@@ -49,11 +53,11 @@ test('monthly estimated net uses one month of spend and one audited expense, wit
 });
 
 test('current-month start reuses a fresh completed import for sixty seconds; closed months keep fifteen minutes without duplicating expenses',async()=>{
- const e=env(),s=source();await complete(e,s);await run(e,s,'ads');await save(e,s);const saved=state(e),calls=s.calls.finance.length;
+ const e=env(),s=source(withProducts);await complete(e,s);await run(e,s,'ads');await save(e,s);const saved=state(e),calls=s.calls.finance.length;
  await run(e,s,'start',{}, {now:()=>clock+899000});assert.equal(s.calls.finance.length,calls);
  await run(e,s,'start',{}, {now:()=>clock+901000});assert.equal(s.calls.finance.length,calls+1);assert.deepEqual(state(e),saved);
  const currentEnv=env(),currentSource=source(),dateNow=()=>Date.UTC(2026,9,21,15);
- const currentStamp=Math.floor(dateNow()/1000);currentSource.getFinanceBusinessPeriod=async(_,selection)=>{currentSource.calls.finance.push(selection);return frame({start_date:selection.start_date,end_date:selection.end_date},currentSource.calls.finance.length,{cutoff_at:currentStamp-2,checked_at:currentStamp});};
+ const currentStamp=Math.floor(dateNow()/1000);currentSource.getFinanceBusinessPeriod=async(_,selection)=>{currentSource.calls.finance.push(selection);return withProducts(frame({start_date:selection.start_date,end_date:selection.end_date},currentSource.calls.finance.length,{cutoff_at:currentStamp-2,checked_at:currentStamp}));};
  const current=async(op,offset=0)=>businessMonth(currentEnv,request(op),currentSource,{now:()=>dateNow()+offset});
  await current('start');await current('step');assert.equal(currentSource.calls.finance.length,2);await current('start',59000);assert.equal(currentSource.calls.finance.length,2);await current('start',61000);assert.equal(currentSource.calls.finance.length,3);
 });
@@ -116,4 +120,26 @@ test('the browser projector rejects forged monthly sums, missing blockers, priva
  const partial=await run(env(),source());partial.result.pending=partial.result.pending.filter(code=>code!=='COLLECTING');assert.equal(projectBusinessMonth(partial),null);
  const context=vm.createContext({structuredClone,Intl});context.serialized=JSON.stringify(value);new vm.Script(projectAdsCalendar.toString()+'\n'+projectBusinessMonth.toString()+'\nglobalThis.actual=projectBusinessMonth(JSON.parse(serialized));').runInContext(context);assert.deepEqual(JSON.parse(JSON.stringify(context.actual)),value);
  const copy=projectBusinessMonth(value);copy.coverage.paid=99;assert.notEqual(value.coverage.paid,99);assert.ok(projectBusinessPeriodFrame(frame({start_date:'2026-10-01',end_date:'2026-10-15'},1)));
+});
+
+test('monthly product contribution uses the same disjoint paid windows and cost snapshots before account Ads and expenses',async()=>{
+ const e=env(),s=source(withProducts);const partial=await run(e,s);assert.equal(partial.product_summary,null);
+ let value=partial;while(value.status==='RUNNING')value=await run(e,s,'step');
+ const products=value.product_summary;assert.ok(products);assert.equal(products.mixed_orders,0);assert.equal(products.products.length,1);
+ const product=products.products[0];assert.equal(product.item_id,'201');assert.equal(product.quantity,6);assert.equal(product.orders,6);assert.equal(product.exclusive_orders,6);assert.equal(product.mixed_orders,0);
+ assert.equal(product.production_cost_cents,9540);assert.equal(product.exclusive_production_cost_cents,9540);assert.equal(product.exclusive_tax_cents,3600);assert.equal(product.exclusive_after_costs_cents,136860);assert.deepEqual(product.pending,[]);
+ assert.deepEqual(product.variants,[{model_id:'0',quantity:6,exclusive_quantity:6,mixed_quantity:0,unit_cost_cents:1590,production_cost_cents:9540,exclusive_production_cost_cents:9540,selling_unit:'SINGLE_GARMENT',size:'P',male_size:null,female_size:null}]);
+ await run(e,s,'ads');value=await save(e,s,0,{external_expenses_cents:1000});assert.equal(value.result.net_estimate_cents,132760);assert.equal(value.product_summary.products[0].exclusive_after_costs_cents,136860);assert.equal(s.calls.finance.length,3);
+ const changed=e.ADMIN_DB.db.prepare('SELECT payload FROM production_costs_state WHERE id=1').get();const costs=JSON.parse(changed.payload);costs.inclusive_regular_cents=2000;
+ e.ADMIN_DB.db.prepare('UPDATE production_costs_state SET revision=8,payload=? WHERE id=1').run(JSON.stringify(costs));
+ value=await run(e,s,'read');assert.equal(value.costs_revision,8);assert.equal(value.product_summary.products[0].production_cost_cents,12000);assert.equal(value.product_summary.products[0].exclusive_after_costs_cents,134400);assert.equal(s.calls.finance.length,3);
+});
+
+test('legacy paid imports retain monthly totals while product detail is unavailable until refreshed',async()=>{
+ const e=env(),s=source();const value=await complete(e,s);assert.equal(value.sales_cents,180000);assert.equal(value.product_summary,null);
+ const stored=await run(e,s,'read');assert.equal(stored.product_summary,null);assert.equal(s.calls.finance.length,3);
+ const upgraded=source(withProducts);let refreshed=await run(e,upgraded,'start');while(refreshed.status==='RUNNING')refreshed=await run(e,upgraded,'step');
+ assert.ok(refreshed.product_summary);assert.equal(refreshed.sales_cents,value.sales_cents);assert.equal(upgraded.calls.finance.length,3);
+ const live=await complete(env(),source(f=>withProducts({...f,coverage:{...f.coverage,orders:5,cancel_pending:1}})));
+ assert.ok(live.product_summary);assert.equal(live.product_summary.products[0].exclusive_after_costs_cents,null);assert.ok(live.product_summary.products[0].pending.includes('STATUS_REVIEW_REQUIRED'));
 });
