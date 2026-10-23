@@ -10,19 +10,48 @@ export class ProductionCostError extends Error {
  constructor(code,status=400){super(code);this.status=status;}
 }
 const costFail=(code,status=400)=>{throw new ProductionCostError(code,status);};
-const costExact=(value,keys)=>value&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).length===keys.length&&keys.every(key=>Object.hasOwn(value,key));
-const costMoney=(value,positive=false)=>Number.isInteger(value)&&value>=(positive?1:0)&&value<=1000000;
+const costPlain=value=>value!==null&&typeof value==='object'&&[Object.prototype,null].includes(Object.getPrototypeOf(value));
+const costExact=(value,keys)=>costPlain(value)&&Reflect.ownKeys(value).length===keys.length&&keys.every(key=>Object.hasOwn(Object.getOwnPropertyDescriptor(value,key)||{},'value'));
+const costArray=(value,max)=>Array.isArray(value)&&Object.getPrototypeOf(value)===Array.prototype&&value.length<=max&&Reflect.ownKeys(value).length===value.length+1&&Array.from({length:value.length},(_,index)=>Object.getOwnPropertyDescriptor(value,String(index))).every(descriptor=>descriptor&&Object.hasOwn(descriptor,'value'));
+const costMoney=(value,positive=false)=>Number.isSafeInteger(value)&&!Object.is(value,-0)&&value>=(positive?1:0)&&value<=1000000;
 const costRevisionValid=value=>Number.isSafeInteger(value)&&value>=1&&value<=2147483647;
+const costId=value=>typeof value==='string'&&/^[a-z0-9-]{1,64}$/.test(value);
+const costItemId=value=>typeof value==='string'&&/^[1-9][0-9]{0,19}$/.test(value);
+const costModelId=value=>typeof value==='string'&&/^(0|[1-9][0-9]{0,19})$/.test(value);
+const costAssignmentKey=value=>value.item_id+':'+(value.model_id===null?'*':value.model_id);
+const costNumericOrder=(left,right)=>left.length-right.length||left.localeCompare(right);
+
+function validateCustomProductionCosts(values){
+ if(!costArray(values.custom_profiles,100))costFail('COSTS_CUSTOM_PROFILES_INVALID');
+ if(!costArray(values.custom_assignments,1000))costFail('COSTS_CUSTOM_ASSIGNMENTS_INVALID');
+ const profiles=[],ids=new Set();
+ for(const profile of values.custom_profiles){
+  if(!costExact(profile,['id','label','unit_cost_cents'])||!costId(profile.id)||ids.has(profile.id)||typeof profile.label!=='string'||/[\u0000-\u001f\u007f-\u009f]/.test(profile.label)||!costMoney(profile.unit_cost_cents,true))costFail('COSTS_CUSTOM_PROFILE_INVALID');
+  const label=profile.label.trim();if(!label||label.length>60)costFail('COSTS_CUSTOM_PROFILE_INVALID');
+  ids.add(profile.id);profiles.push({id:profile.id,label,unit_cost_cents:profile.unit_cost_cents});
+ }
+ const assignments=[],seen=new Set();
+ for(const assignment of values.custom_assignments){
+  if(!costExact(assignment,['item_id','model_id','profile_id'])||!costItemId(assignment.item_id)||(assignment.model_id!==null&&!costModelId(assignment.model_id))||!costId(assignment.profile_id)||!ids.has(assignment.profile_id))costFail('COSTS_CUSTOM_ASSIGNMENT_INVALID');
+  const key=costAssignmentKey(assignment);if(seen.has(key))costFail('COSTS_CUSTOM_ASSIGNMENT_DUPLICATE');seen.add(key);
+  assignments.push({item_id:assignment.item_id,model_id:assignment.model_id,profile_id:assignment.profile_id});
+ }
+ profiles.sort((a,b)=>a.id.localeCompare(b.id));
+ assignments.sort((a,b)=>costNumericOrder(a.item_id,b.item_id)||(a.model_id===null?(b.model_id===null?0:-1):b.model_id===null?1:costNumericOrder(a.model_id,b.model_id)));
+ return {custom_profiles:profiles,custom_assignments:assignments};
+}
 
 export function validateProductionCosts(values){
  const keys=['mode','inclusive_regular_cents','inclusive_plus_cents','base_regular_cents','base_plus_cents','components'];
+ const custom=costPlain(values)&&(Object.hasOwn(values,'custom_profiles')||Object.hasOwn(values,'custom_assignments'));
+ if(custom)keys.push('custom_profiles','custom_assignments');
  if(!costExact(values,keys)||!['all_inclusive','itemized'].includes(values.mode))costFail('PRODUCTION_COSTS_INVALID');
  if(!costMoney(values.inclusive_regular_cents,true)||!costMoney(values.inclusive_plus_cents,true))costFail('PRODUCTION_COST_AMOUNT_INVALID');
  for(const key of ['base_regular_cents','base_plus_cents']){
   if(values[key]!==null&&!costMoney(values[key],true))costFail('PRODUCTION_COST_AMOUNT_INVALID');
   if(values.mode==='itemized'&&values[key]===null)costFail('PRODUCTION_COST_ITEMIZED_BASE_REQUIRED');
  }
- if(!Array.isArray(values.components)||values.components.length>20)costFail('PRODUCTION_COST_COMPONENTS_INVALID');
+ if(!costArray(values.components,20))costFail('PRODUCTION_COST_COMPONENTS_INVALID');
  const seen=new Set(),components=[];
  for(const component of values.components){
   if(!costExact(component,['id','label','basis','amount_cents'])||typeof component.id!=='string'||!(/^[a-z0-9-]{1,64}$/).test(component.id)||seen.has(component.id))costFail('PRODUCTION_COST_COMPONENT_INVALID');
@@ -31,7 +60,7 @@ export function validateProductionCosts(values){
   if(label.length<1||label.length>60||!['per_piece','per_kit'].includes(component.basis)||!costMoney(component.amount_cents))costFail('PRODUCTION_COST_COMPONENT_INVALID');
   seen.add(component.id);components.push({id:component.id,label,basis:component.basis,amount_cents:component.amount_cents});
  }
- return {mode:values.mode,inclusive_regular_cents:values.inclusive_regular_cents,inclusive_plus_cents:values.inclusive_plus_cents,base_regular_cents:values.base_regular_cents,base_plus_cents:values.base_plus_cents,components};
+ return {mode:values.mode,inclusive_regular_cents:values.inclusive_regular_cents,inclusive_plus_cents:values.inclusive_plus_cents,base_regular_cents:values.base_regular_cents,base_plus_cents:values.base_plus_cents,components,...(custom?validateCustomProductionCosts(values):{})};
 }
 
 function costStoredValues(payload){
@@ -44,9 +73,16 @@ export async function readProductionCosts(env){
 }
 export async function saveProductionCosts(env,body,actor){
  if(!costExact(body,['revision','values'])||!costRevisionValid(body.revision)||body.revision>=2147483647)costFail('PRODUCTION_COSTS_REVISION_REQUIRED');
- const raw=JSON.stringify(validateProductionCosts(body.values)),now=new Date().toISOString();
+ const values=validateProductionCosts(body.values),current=await env.ADMIN_DB.prepare('SELECT revision,payload,updated_at FROM production_costs_state WHERE id=1').first();
+ if(!current||!costRevisionValid(current.revision)||typeof current.updated_at!=='string'||!Number.isFinite(Date.parse(current.updated_at)))costFail('PRODUCTION_COST_STATE_INVALID',503);
+ const previous=costStoredValues(current.payload);
+ if(current.revision!==body.revision)costFail('PRODUCTION_COSTS_CHANGED_RELOAD',409);
+ // An older browser knows only the six original fields. It must not erase
+ // profiles or assignments saved by a newer session with the same revision.
+ if(!Object.hasOwn(values,'custom_profiles')&&(previous.custom_profiles?.length||previous.custom_assignments?.length))costFail('COSTS_CUSTOM_FIELDS_REQUIRED',409);
+ const raw=JSON.stringify(values),now=new Date().toISOString();
  const results=await env.ADMIN_DB.batch([
-  env.ADMIN_DB.prepare('UPDATE production_costs_state SET revision=revision+1,payload=?,updated_at=? WHERE id=1 AND revision=?').bind(raw,now,body.revision),
+  env.ADMIN_DB.prepare('UPDATE production_costs_state SET revision=revision+1,payload=?,updated_at=? WHERE id=1 AND revision=? AND payload=?').bind(raw,now,body.revision,current.payload),
   env.ADMIN_DB.prepare('INSERT INTO production_costs_audit(revision,payload,actor,created_at) SELECT revision,payload,?,updated_at FROM production_costs_state WHERE changes()=1 AND id=1 AND revision=? AND updated_at=? AND payload=?').bind(actor,body.revision+1,now,raw),
  ]);
  if(results[0].meta.changes!==1)costFail('PRODUCTION_COSTS_CHANGED_RELOAD',409);
@@ -73,10 +109,17 @@ export function productionCostReference(frame,bindings,costState){
   const key=row.item_id+':'+row.model_id,entry=grouped.get(key)||{item_id:row.item_id,model_id:row.model_id,quantity:0};entry.quantity=costSafeSum(entry.quantity,row.quantity);grouped.set(key,entry);
  }
  const plus=new Set(['G1','G2','G3']),variants=[];
+ const profiles=new Map((values.custom_profiles||[]).map(profile=>[profile.id,profile]));
+ const assignments=new Map((values.custom_assignments||[]).map(assignment=>[costAssignmentKey(assignment),profiles.get(assignment.profile_id)]));
  let known=0,mapped=0,unmapped=0;
  for(const [key,row] of grouped){
-  const binding=confirmed.get(key),out={...row,unit_cost_cents:null,production_cost_cents:null};
-  if(!binding)unmapped=costSafeSum(unmapped,row.quantity);
+  const binding=confirmed.get(key),custom=assignments.get(key)||assignments.get(row.item_id+':*'),out={...row,unit_cost_cents:null,production_cost_cents:null};
+  if(custom){
+   const subtotal=costSafeProduct(custom.unit_cost_cents,row.quantity);known=costSafeSum(known,subtotal);mapped=costSafeSum(mapped,row.quantity);
+   out.unit_cost_cents=custom.unit_cost_cents;out.production_cost_cents=subtotal;
+   out.cost_source='CUSTOM_PROFILE';out.cost_profile_id=custom.id;out.cost_profile_label=custom.label;
+  }
+  else if(!binding)unmapped=costSafeSum(unmapped,row.quantity);
   else{
    const garmentCost=size=>values[values.mode==='all_inclusive'?(plus.has(size)?'inclusive_plus_cents':'inclusive_regular_cents'):(plus.has(size)?'base_plus_cents':'base_regular_cents')];
    const single=binding.selling_unit==='SINGLE_GARMENT',pieceCount=single?1:2;

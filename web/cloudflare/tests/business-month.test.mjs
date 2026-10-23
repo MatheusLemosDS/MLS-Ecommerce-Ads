@@ -143,3 +143,15 @@ test('legacy paid imports retain monthly totals while product detail is unavaila
  const live=await complete(env(),source(f=>withProducts({...f,coverage:{...f.coverage,orders:5,cancel_pending:1}})));
  assert.ok(live.product_summary);assert.equal(live.product_summary.products[0].exclusive_after_costs_cents,null);assert.ok(live.product_summary.products[0].pending.includes('STATUS_REVIEW_REQUIRED'));
 });
+
+test('a custom product-wide cost prices every monthly unit without a shirt binding and recalculates the exclusive balance',async()=>{
+ const e=env(),s=source(withProducts);
+ e.ADMIN_DB.db.prepare('UPDATE variant_bindings_state SET revision=4,payload=? WHERE id=1').run('[]');
+ const values={...COST_DEFAULTS,components:[],custom_profiles:[{id:'calca-moletom',label:'Calça de moletom',unit_cost_cents:5000}],custom_assignments:[{item_id:'201',model_id:null,profile_id:'calca-moletom'}]};
+ e.ADMIN_DB.db.prepare('UPDATE production_costs_state SET revision=8,payload=? WHERE id=1').run(JSON.stringify(values));
+ await complete(e,s);await run(e,s,'ads');const result=await save(e,s);
+ assert.equal(result.production_cost_cents,30000);assert.deepEqual(result.unmapped_variants,[]);assert.equal(result.result.net_estimate_cents,113300);
+ const product=result.product_summary.products[0];assert.equal(product.exclusive_production_cost_cents,30000);assert.equal(product.exclusive_after_costs_cents,116400);
+ assert.equal(product.variants[0].selling_unit,'CUSTOM_PRODUCT');assert.equal(product.variants[0].cost_profile_label,'Calça de moletom');assert.equal(product.variants[0].unit_cost_cents,5000);
+ assert.equal(result.costs_revision,8);assert.equal(result.bindings_revision,4);assert.ok(projectBusinessMonth(result));
+});

@@ -11,7 +11,7 @@ import {projectBusinessMonthProducts} from '../src/business-month-products.mjs';
 
 const current='2026-10-22T12:00:00Z',stamp=Date.parse(current)/1000;
 
-function monthlyFrame(){
+function monthlyFrame({custom=false}={}){
  const selections=[{start_date:'2026-10-01',end_date:'2026-10-15'},{start_date:'2026-10-16',end_date:'2026-10-22'}];
  const children=selections.map(selection=>{
   const days=Array.from({length:Number(selection.end_date.slice(8))-Number(selection.start_date.slice(8))+1},(_,index)=>'2026-10-'+String(Number(selection.start_date.slice(8))+index).padStart(2,'0'));
@@ -36,6 +36,7 @@ function monthlyFrame(){
    }]
   }
  };
+ if(custom)Object.assign(frame.product_summary.products[0].variants[0],{selling_unit:'CUSTOM_PRODUCT',size:null,male_size:null,female_size:null,cost_profile_id:'calca-moletom',cost_profile_label:'Calça moletom <b>premium</b>'});
  assert.ok(projectBusinessMonthProducts(frame.product_summary,frame),'the product summary must reconcile with its parent monthly totals');
  assert.ok(projectBusinessMonth(frame),'the response fixture must satisfy the production financial checks');
  return frame;
@@ -78,7 +79,7 @@ function verifyReportAndDailyAds(html){
  assert.equal(projected.expense_cents,1000);assert.equal(projected.totals.broad.gmv_cents,20000);
 }
 
-function monthlyBrowser(html){
+function monthlyBrowser(html,value=monthlyFrame()){
  const scripts=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match=>match[1]);
  assert.ok(scripts.length>=2,'the rendered page must contain its browser scripts');
  for(const script of scripts)new vm.Script(script);
@@ -96,7 +97,7 @@ function monthlyBrowser(html){
  const controls=new Map(${JSON.stringify(ids)}.map(id=>[id,node()]));
  const document={hidden:false,getElementById(id){if(!controls.has(id))throw Error('UNKNOWN_CONTROL:'+id);return controls.get(id);},createElement:tag=>node(tag),addEventListener(){}};
  const text=element=>element.textContent+element.children.map(text).join(' '),control=name=>controls.get('businessMonth'+name);
- let frame=JSON.parse(${JSON.stringify(JSON.stringify(monthlyFrame()))});const calls=[];
+ let frame=JSON.parse(${JSON.stringify(JSON.stringify(value))});const calls=[];
  const api=async(path,body)=>{calls.push({path,body});return JSON.parse(JSON.stringify(frame));};
  const syncVariants=async()=>true;
  `+monthly[0]).runInContext(context);
@@ -127,5 +128,18 @@ for(const minify of [false,true]){
   assert.match(browser.text('ProductRows'),/58,00/);
   assert.doesNotMatch(browser.text('Status'),/is not defined/);
   verifyReportAndDailyAds(html);
+ });
+ test(`deployed monthly client renders custom product costs as text without changing financial balances (minify=${minify})`,async()=>{
+  const html=await bundledAdminHtml(minify),browser=monthlyBrowser(html,monthlyFrame({custom:true}));
+  assert.equal(await browser.run('brazaMonthDashboard.start({api,syncVariants})'),true,browser.text('Status'));
+  browser.run("const detail=control('ProductRows').children[0].children[0].children.find(child=>child.tag==='details');detail.open=true;detail.ontoggle();");
+  assert.match(browser.text('ProductRows'),/Custo personalizado · Calça moletom <b>premium<\/b>/);
+  assert.match(browser.text('ProductRows'),/10,00 por unidade vendida/);
+  assert.doesNotMatch(browser.text('ProductRows'),/Camiseta M|masculino|null|undefined/);
+  assert.equal(browser.run("(function tags(node){return [node.tag,...node.children.flatMap(tags)];})(control('ProductRows')).some(tag=>['b','img','script'].includes(tag))"),false,'custom labels must remain literal text, not new HTML elements');
+  assert.match(browser.text('Sales'),/100,00/);assert.match(browser.text('Ads'),/10,00/);assert.equal(browser.text('Roas'),'20,00x');assert.match(browser.text('Net'),/43,00/);assert.match(browser.text('ProductRows'),/58,00/);
+  await browser.run('brazaMonthDashboard.refreshCosts()');
+  browser.run("const refreshed=control('ProductRows').children[0].children[0].children.find(child=>child.tag==='details');refreshed.open=true;refreshed.ontoggle();");
+  assert.match(browser.text('ProductRows'),/Custo personalizado · Calça moletom <b>premium<\/b>/);assert.match(browser.text('Net'),/43,00/);assert.match(browser.text('ProductRows'),/58,00/);assert.doesNotMatch(browser.text('Status'),/is not defined/);
  });
 }

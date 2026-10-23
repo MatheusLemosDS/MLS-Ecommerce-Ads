@@ -1,5 +1,6 @@
 import {orderItems} from './order-items.mjs';
 import {validateVariantBindings,variantMarginReference} from './variant-bindings.mjs';
+import {validateProductionCosts} from './production-costs.mjs';
 
 // An observation is an explicit partial-day record, never an order ledger or profit claim.
 export const OBSERVATION_SCHEMA=[
@@ -87,9 +88,16 @@ export async function captureObservation(env,getOrderItems,actor,now){
   const context=await env.ADMIN_DB.batch([
    env.ADMIN_DB.prepare('SELECT revision,payload FROM admin_settings WHERE id=1'),
    env.ADMIN_DB.prepare('SELECT revision,payload FROM variant_bindings_state WHERE id=1'),
+   env.ADMIN_DB.prepare('SELECT revision,payload FROM production_costs_state WHERE id=1'),
   ]);
-  observationAssert(Array.isArray(context)&&context.length===2&&context.every(value=>Array.isArray(value.results)&&value.results.length===1));
+  observationAssert(Array.isArray(context)&&context.length===3&&context.every(value=>Array.isArray(value.results)&&value.results.length===1));
   const settings=observationSettings(context[0].results[0]),bindings=observationBindings(context[1].results[0],frame);
+  const costRow=context[2].results[0];
+  observationAssert(observationObject(costRow)&&observationInteger(costRow.revision,1,2147483647));
+  const costs=validateProductionCosts(JSON.parse(costRow.payload)),assignments=new Set((costs.custom_assignments||[]).map(row=>row.item_id+':'+(row.model_id===null?'*':row.model_id)));
+  // V1 retains kit margins and composition, but no production-cost snapshot.
+  // Keep its historical hashes intact and refuse a new misleading reference.
+  observationAssert(!frame.rows.some(row=>assignments.has(row.item_id+':'+row.model_id)||assignments.has(row.item_id+':*')),'OBSERVATION_CUSTOM_COST_MARGIN_UNAVAILABLE',409);
   const content=observationContent(frame,settings,bindings),id=await observationHash(content),savedMoment=now??new Date();
   observationAssert(frame.date===new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(savedMoment),'OBSERVATION_SOURCE_UNAVAILABLE');
   const saved_at=savedMoment.toISOString();

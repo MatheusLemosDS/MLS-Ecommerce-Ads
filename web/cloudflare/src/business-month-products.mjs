@@ -39,9 +39,11 @@ export function projectBusinessMonthProducts(value,frame){
    if(!taxValid(row.known_exclusive_sales_cents,row.known_exclusive_tax_cents,row.exclusive_payment_covered))return null;
    const variants=[],models=new Set();let quantity=0n,exclusiveQuantity=0n,mixedQuantity=0n,knownCost=0n,exclusiveCost=0n,costReady=true,exclusiveReady=true;
    for(const variant of row.variants){
-    if(!exact(variant,variantKeys)||!id(variant.model_id,true)||models.has(variant.model_id)||!int(variant.quantity,1)||!int(variant.exclusive_quantity)||!int(variant.mixed_quantity)||BigInt(variant.quantity)!==BigInt(variant.exclusive_quantity)+BigInt(variant.mixed_quantity)||variant.unit_cost_cents!==null&&!cents(variant.unit_cost_cents))return null;
+    const custom=Object.getOwnPropertyDescriptor(variant||{},'selling_unit')?.value==='CUSTOM_PRODUCT';
+    if(!exact(variant,[...variantKeys,...(custom?['cost_profile_id','cost_profile_label']:[])])||!id(variant.model_id,true)||models.has(variant.model_id)||!int(variant.quantity,1)||!int(variant.exclusive_quantity)||!int(variant.mixed_quantity)||BigInt(variant.quantity)!==BigInt(variant.exclusive_quantity)+BigInt(variant.mixed_quantity)||variant.unit_cost_cents!==null&&!cents(variant.unit_cost_cents))return null;
     models.add(variant.model_id);
-    if(variant.unit_cost_cents===null){if([variant.selling_unit,variant.size,variant.male_size,variant.female_size].some(item=>item!==null))return null;const key=row.item_id+':'+variant.model_id;if(unmapped.get(key)!==variant.quantity)return null;seenUnmapped.add(key);}
+    if(custom){if(!int(variant.unit_cost_cents,1,1000000)||typeof variant.cost_profile_id!=='string'||!/^[a-z0-9-]{1,64}$/.test(variant.cost_profile_id)||typeof variant.cost_profile_label!=='string'||variant.cost_profile_label!==variant.cost_profile_label.trim()||variant.cost_profile_label.length<1||variant.cost_profile_label.length>60||/[\u0000-\u001f\u007f-\u009f]/.test(variant.cost_profile_label)||[variant.size,variant.male_size,variant.female_size].some(item=>item!==null))return null;}
+    else if(variant.unit_cost_cents===null){if([variant.selling_unit,variant.size,variant.male_size,variant.female_size].some(item=>item!==null))return null;const key=row.item_id+':'+variant.model_id;if(unmapped.get(key)!==variant.quantity)return null;seenUnmapped.add(key);}
     else if(variant.selling_unit==='SINGLE_GARMENT'){if(!sizes.includes(variant.size)||variant.male_size!==null||variant.female_size!==null)return null;}
     else if(variant.selling_unit==='ONE_MALE_ONE_FEMALE_KIT'){if(variant.size!==null||!sizes.includes(variant.male_size)||!sizes.includes(variant.female_size))return null;}
     else return null;
@@ -102,11 +104,12 @@ export function buildBusinessMonthProducts(frames,monthFrame,variantReferences,b
    for(const item of row.items.values()){
     const key=row.item_id+':'+item.model_id,quantity=item.exclusive_quantity+item.mixed_quantity,reference=references.get(key),binding=mapped.get(key);
     if(!reference||reference.quantity!==quantity||!Number.isSafeInteger(quantity))return null;
+    const custom=reference.cost_source==='CUSTOM_PROFILE';
     const unit=reference.unit_cost_cents,total=unit===null?null:safe(BigInt(unit)*BigInt(quantity)),exclusiveTotal=item.exclusive_quantity===0?0:unit===null?null:safe(BigInt(unit)*BigInt(item.exclusive_quantity));
-    if(unit!==null&&(total===null||exclusiveTotal===null)||total!==reference.production_cost_cents||unit!==null&&!binding)return null;
+    if(unit!==null&&(total===null||exclusiveTotal===null)||total!==reference.production_cost_cents||unit!==null&&!binding&&!custom||custom&&unit===null)return null;
     if(total===null)ready=false;else known+=BigInt(total);if(exclusiveTotal===null)exclusiveReady=false;else exclusive+=BigInt(exclusiveTotal);
     const single=binding?.selling_unit==='SINGLE_GARMENT';
-    out.variants.push({...item,quantity,unit_cost_cents:unit,production_cost_cents:total,exclusive_production_cost_cents:exclusiveTotal,selling_unit:unit===null?null:single?'SINGLE_GARMENT':'ONE_MALE_ONE_FEMALE_KIT',size:unit!==null&&single?binding.size:null,male_size:unit!==null&&!single?binding.male_size:null,female_size:unit!==null&&!single?binding.female_size:null});
+    out.variants.push({...item,quantity,unit_cost_cents:unit,production_cost_cents:total,exclusive_production_cost_cents:exclusiveTotal,selling_unit:unit===null?null:custom?'CUSTOM_PRODUCT':single?'SINGLE_GARMENT':'ONE_MALE_ONE_FEMALE_KIT',size:unit!==null&&!custom&&single?binding.size:null,male_size:unit!==null&&!custom&&!single?binding.male_size:null,female_size:unit!==null&&!custom&&!single?binding.female_size:null,...(custom?{cost_profile_id:reference.cost_profile_id,cost_profile_label:reference.cost_profile_label}:{})});
    }
    const knownCost=safe(known),exclusiveCost=safe(exclusive);if(knownCost===null||exclusiveCost===null)return null;
    out.known_production_cost_cents=knownCost;out.production_cost_cents=ready?knownCost:null;out.known_exclusive_production_cost_cents=exclusiveCost;out.exclusive_production_cost_cents=exclusiveReady?exclusiveCost:null;

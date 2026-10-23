@@ -93,7 +93,7 @@ async function adminFetch(request,env,services={}){const url=new URL(request.url
  if(path==='/admin'){assert(request.method==='GET','METHOD_NOT_ALLOWED',405);return dashboard();}
  assert(path.startsWith('/api/admin/'),'NOT_FOUND',404);await setup(env);
  if(path==='/api/admin/finance/business-month'&&request.method!=='POST')throw new AdminError('METHOD_NOT_ALLOWED',405);
- if(request.method==='POST'){sameOrigin(request);assert(await equal(request.headers.get('x-csrf-token')||'',current.csrf),'CSRF_REJECTED',403);const body=await input(request,path==='/api/admin/finance/business-month'?512:['/api/admin/finance/payment-sample','/api/admin/finance/payment-preview','/api/admin/finance/ads-period'].includes(path)?128:path==='/api/admin/variant-bindings'?393216:path==='/api/admin/variant-bindings/sync'?131072:path==='/api/admin/variant-bindings/automate'?256:16384);if(path==='/api/admin/finance/business-month'){assert(!url.search,'BUSINESS_MONTH_REQUEST_INVALID');return json(await businessMonth(env,body,services,{actor:current.user}));}if(path==='/api/admin/finance/ads-period'){
+ if(request.method==='POST'){sameOrigin(request);assert(await equal(request.headers.get('x-csrf-token')||'',current.csrf),'CSRF_REJECTED',403);const body=await input(request,path==='/api/admin/finance/business-month'?512:['/api/admin/finance/payment-sample','/api/admin/finance/payment-preview','/api/admin/finance/ads-period'].includes(path)?128:path==='/api/admin/production-costs'?196608:path==='/api/admin/variant-bindings'?393216:path==='/api/admin/variant-bindings/sync'?131072:path==='/api/admin/variant-bindings/automate'?256:16384);if(path==='/api/admin/finance/business-month'){assert(!url.search,'BUSINESS_MONTH_REQUEST_INVALID');return json(await businessMonth(env,body,services,{actor:current.user}));}if(path==='/api/admin/finance/ads-period'){
  assert(!url.search&&Object.keys(body).length===1&&Object.hasOwn(body,'run_id'),'STORE_ADS_REQUEST_INVALID');
  const selection=projectStorePeriodRequest({operation:'read',run_id:body.run_id});
  assert(selection,'STORE_ADS_REQUEST_INVALID');
@@ -146,7 +146,8 @@ async function adminFetch(request,env,services={}){const url=new URL(request.url
   const frame=orderItems(diagnostic?null:raw);
   if(!diagnostic&&['INVALID_RESPONSE','STALE_DATE'].includes(frame.status))diagnostic={stage:'APP_VALIDATION',code:frame.status,http:200,validation:frame.status};
   const bindings=await readVariantBindings(env),cfg=await settings(env),costs=await readProductionCosts(env);
-  return json({...frame,...(diagnostic?{diagnostic}:{}),margin_reference:variantMarginReference(frame,bindings,cfg),production_cost_reference:productionCostReference(frame,bindings,costs),fetched_at:new Date().toISOString()});
+  const productionReference=productionCostReference(frame,bindings,costs);
+  return json({...frame,...(diagnostic?{diagnostic}:{}),margin_reference:variantMarginReference(frame,bindings,cfg,productionReference),production_cost_reference:productionReference,fetched_at:new Date().toISOString()});
  }
  if(path==='/api/admin/ads-today'){const day=localDay(),summary=typeof services.getAdsSummary==='function'?await services.getAdsSummary(env,{start_date:day,end_date:day}):null;return json({...adsToday(summary,day),fetched_at:new Date().toISOString()});}
  if(path==='/api/admin/shop-orders'){

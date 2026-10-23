@@ -60,11 +60,13 @@ test('every restricted Ads route and presentation omits financial navigation whi
    const content=route==='/integrations'?renderWorkspaceConnections({connected:true},{role}):'';
    const rendered=renderAdsWorkspace(route,{role,content});
    assert.doesNotMatch(rendered,/<a[^>]*href="\/admin/);
+   assert.doesNotMatch(rendered,/shopee\/finance\/connect/);
   }
  }
  const ownerDashboard=renderAdsWorkspace('/dashboard',{role:'owner'});
  assert.match(ownerDashboard,/<a[^>]*href="\/admin\?tab=overview/);
  assert.match(renderWorkspaceConnections({connected:true},{role:'owner'}),/<a[^>]*href="\/admin\?tab=overview/);
+ assert.match(renderWorkspaceConnections({connected:true},{role:'owner'}),/href="https:\/\/auth\.brazacommerce\.com\.br\/shopee\/finance\/connect" target="_blank" rel="noopener noreferrer"/);
  const presentation=enhanceAdsPageHtml('<html><head></head><body><main class="main"><div class="top"><div><h1>Advertising</h1></div><div class="system">System Online</div></div></main></body></html>');
  assert.doesNotMatch(presentation,/<a[^>]*href="\/admin/);
  assert.doesNotMatch(presentation,/class="ads-source-banner"/);

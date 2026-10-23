@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import {buildBusinessMonthProducts,projectBusinessMonthProducts} from '../src/business-month-products.mjs';
 import {projectBusinessPeriodFrame} from '../../finance/src/business-period-frame.mjs';
+import {productionCostReference,COST_DEFAULTS} from '../src/production-costs.mjs';
 
 const copy=value=>structuredClone(value);
 const money=(sales,repass,tax,adjustment='0')=>Object.fromEntries([['sales_base',sales],['expected_repass',repass],['invoice_tax',tax],['ads_adjustment',adjustment]].flatMap(([name,value])=>[['known_exclusive_'+name+'_raw',value],['exclusive_'+name+'_raw',value]]));
@@ -79,4 +80,39 @@ test('strict projection rejects fabricated costs, contribution, tax, population,
 test('browser source is closure-free and returns detached data with the same validated equations',()=>{
  const f=fixture(),value=build(f),context=vm.createContext();context.serialized=JSON.stringify({value,frame:f.frame});new vm.Script(projectBusinessMonthProducts.toString()+'\nconst input=JSON.parse(serialized);globalThis.actual=projectBusinessMonthProducts(input.value,input.frame);').runInContext(context);assert.deepEqual(JSON.parse(JSON.stringify(context.actual)),value);
  const result=projectBusinessMonthProducts(value,f.frame);result.products[0].variants[0].quantity=99;result.products[0].pending.push('PRIVATE');assert.equal(value.products[0].variants[0].quantity,1);assert.deepEqual(value.products[0].pending,[]);
+});
+
+test('custom products without garment bindings use one full cost per sold unit and preserve exclusive versus mixed quantities',()=>{
+ const f=fixture();f.bindings.bindings=[];
+ f.refs=f.refs.map((row,index)=>({...row,cost_source:'CUSTOM_PROFILE',cost_profile_id:['calca','moletom','kit-casal'][index],cost_profile_label:['Calça','Moletom','Kit casal'][index]}));
+ const value=build(f);assert.ok(value);const [a,b]=value.products;
+ assert.equal(a.production_cost_cents,3400);assert.equal(a.exclusive_production_cost_cents,1000);assert.equal(a.exclusive_after_costs_cents,6800);
+ assert.equal(b.production_cost_cents,4000);assert.equal(b.exclusive_production_cost_cents,2000);assert.equal(b.exclusive_after_costs_cents,2380);
+ for(const product of value.products)for(const variant of product.variants){assert.equal(variant.selling_unit,'CUSTOM_PRODUCT');assert.equal(variant.size,null);assert.equal(variant.male_size,null);assert.equal(variant.female_size,null);assert.ok(variant.cost_profile_id);assert.ok(variant.cost_profile_label);}
+ assert.deepEqual(projectBusinessMonthProducts(value,f.frame),value);
+ const context=vm.createContext();context.serialized=JSON.stringify({value,frame:f.frame});new vm.Script(projectBusinessMonthProducts.toString()+'\nconst input=JSON.parse(serialized);globalThis.actual=projectBusinessMonthProducts(input.value,input.frame);').runInContext(context);assert.deepEqual(JSON.parse(JSON.stringify(context.actual)),value);
+ const detached=projectBusinessMonthProducts(value,f.frame);detached.products[0].variants[0].cost_profile_label='Alterado';assert.equal(value.products[0].variants[0].cost_profile_label,'Calça');
+});
+
+test('custom cost references take precedence over existing garment compositions without inheriting shirt or kit sizes',()=>{
+ const f=fixture();f.refs[2]={...f.refs[2],cost_source:'CUSTOM_PROFILE',cost_profile_id:'moletom',cost_profile_label:'Moletom'};
+ const value=build(f);assert.ok(value);const row=value.products[1];
+ assert.equal(row.variants[0].selling_unit,'CUSTOM_PRODUCT');assert.equal(row.variants[0].male_size,null);assert.equal(row.variants[0].female_size,null);assert.equal(row.variants[0].cost_profile_label,'Moletom');assert.equal(row.production_cost_cents,4000);
+ assert.equal(value.products[0].variants[0].selling_unit,'SINGLE_GARMENT');assert.equal(Object.hasOwn(value.products[0].variants[0],'cost_profile_id'),false);
+});
+
+test('custom monthly variants require exact bounded profile metadata and cannot add metadata to legacy shapes',()=>{
+ const f=fixture();f.bindings.bindings=[];f.refs=f.refs.map(row=>({...row,cost_source:'CUSTOM_PROFILE',cost_profile_id:'calca',cost_profile_label:'Calça'}));
+ const value=build(f);assert.ok(value);
+ const mutations=[v=>delete v.cost_profile_id,v=>v.cost_profile_id='CALCA',v=>v.cost_profile_id='a'.repeat(65),v=>v.cost_profile_label='',v=>v.cost_profile_label=' Calça',v=>v.cost_profile_label='x'.repeat(61),v=>v.cost_profile_label='Calça\u0000',v=>v.size='P',v=>v.male_size='M',v=>v.unit_cost_cents=0,v=>v.unit_cost_cents=1000001,v=>v.selling_unit='SINGLE_GARMENT',v=>v.access_token='PRIVATE'];
+ for(const mutate of mutations){const altered=copy(value);mutate(altered.products[0].variants[0]);assert.equal(projectBusinessMonthProducts(altered,f.frame),null);}
+ let reads=0;for(const field of ['cost_profile_id','cost_profile_label','selling_unit']){const altered=copy(value);Object.defineProperty(altered.products[0].variants[0],field,{enumerable:true,get(){reads++;return 'PRIVATE';}});assert.equal(projectBusinessMonthProducts(altered,f.frame),null);}assert.equal(reads,0);
+ const legacy=build(fixture());legacy.products[0].variants[0].cost_profile_id='calca';assert.equal(projectBusinessMonthProducts(legacy,f.frame),null);
+});
+
+test('product-wide profiles and variation overrides flow from the actual cost reference into the monthly sidecar without bindings',()=>{
+ const f=fixture();f.bindings.bindings=[];
+ const costs={revision:f.frame.costs_revision,values:{...COST_DEFAULTS,components:[],custom_profiles:[{id:'calca',label:'Calça moletom',unit_cost_cents:1000},{id:'calca-gg',label:'Calça GG',unit_cost_cents:1200},{id:'kit-casal',label:'Kit casal',unit_cost_cents:2000}],custom_assignments:[{item_id:'201',model_id:null,profile_id:'calca'},{item_id:'201',model_id:'11',profile_id:'calca-gg'},{item_id:'202',model_id:null,profile_id:'kit-casal'}]}};
+ const reference=productionCostReference({status:'AVAILABLE',rows:f.source.items},f.bindings,costs);assert.equal(reference.total_cents,7400);assert.equal(reference.unmapped_quantity,0);
+ f.refs=reference.variants;const value=build(f);assert.ok(value);assert.equal(value.products[0].variants[0].cost_profile_label,'Calça moletom');assert.equal(value.products[0].variants[1].cost_profile_label,'Calça GG');assert.equal(value.products[1].variants[0].cost_profile_label,'Kit casal');assert.equal(value.products[0].exclusive_after_costs_cents,6800);assert.equal(value.products[1].exclusive_after_costs_cents,2380);
 });

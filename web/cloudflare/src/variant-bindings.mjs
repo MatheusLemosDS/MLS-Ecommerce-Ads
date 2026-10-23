@@ -89,17 +89,30 @@ export async function saveAutomaticVariantBindings(env,body,catalog,actor){
  if(JSON.stringify(bindings)===JSON.stringify(current.bindings))return current;
  return writeVariantBindings(env,body.revision,bindings,'catalog-automation'+(typeof actor==='string'&&actor?':'+actor:''));
 }
-export function variantMarginReference(frame,bindings,state){
+export function variantMarginReference(frame,bindings,state,productionReference){
  if(frame?.status!=='AVAILABLE')return null;
  const confirmed=new Map(validateVariantBindings(bindings.bindings).map(row=>[row.item_id+':'+row.model_id,row]));
  const grouped=new Map();
  for(const row of frame.rows){const key=row.item_id+':'+row.model_id;const entry=grouped.get(key)||{item_id:row.item_id,model_id:row.model_id,quantity:0};entry.quantity+=row.quantity;grouped.set(key,entry);}
+ const customCosts=new Set();
+ if(productionReference!==undefined){
+  if(!productionReference||productionReference.bindings_revision!==bindings.revision||!Array.isArray(productionReference.variants)||productionReference.variants.length!==grouped.size)throw new VariantBindingError('VARIANT_REFERENCE_INVALID',503);
+  const seen=new Set();
+  for(const row of productionReference.variants){
+   const key=row?.item_id+':'+row?.model_id;
+   if(seen.has(key)||!grouped.has(key)||row.quantity!==grouped.get(key).quantity||(Object.hasOwn(row,'cost_source')&&row.cost_source!=='CUSTOM_PROFILE'))throw new VariantBindingError('VARIANT_REFERENCE_INVALID',503);
+   seen.add(key);if(row.cost_source==='CUSTOM_PROFILE')customCosts.add(key);
+  }
+ }
  const plus=['G1','G2','G3'],marginKeys=['regular_cents','mixed_cents','plus_cents'],classes=['REGULAR','MIXED','PLUS'];
  let known=0,mapped=0,unmapped=0,unpriced=0;
  const variants=[];
  for(const [key,row] of grouped){
   const binding=confirmed.get(key),out={...row,margin_class:null,unit_margin_cents:null,contribution_cents:null};
-  if(!binding||binding.selling_unit==='SINGLE_GARMENT'){
+  // Static kit margins embed the old production cost. A custom full-unit cost
+  // cannot inherit that margin, even when the catalog composition is a kit.
+  if(customCosts.has(key))unmapped+=row.quantity;
+  else if(!binding||binding.selling_unit==='SINGLE_GARMENT'){
    unmapped+=row.quantity;
    // Registered margins describe a two-piece kit, never an individual garment.
    if(binding){unpriced+=row.quantity;if(!Number.isSafeInteger(unpriced)||unpriced<0)throw new VariantBindingError('VARIANT_REFERENCE_INVALID',503);}

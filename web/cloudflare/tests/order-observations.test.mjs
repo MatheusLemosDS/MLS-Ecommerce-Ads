@@ -3,21 +3,25 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {D1} from './sqlite-d1.mjs';
 import {OBSERVATION_SCHEMA,ObservationError,captureObservation,listObservations,readObservation} from '../src/order-observations.mjs';
+import {COST_DEFAULTS,COST_SCHEMA} from '../src/production-costs.mjs';
 
 const now=new Date('2026-10-15T15:30:00.000Z');
 const binding=(item_id='101',model_id='1',male_size='M',female_size='G')=>({item_id,model_id,male_size,female_size,selling_unit:'ONE_MALE_ONE_FEMALE_KIT',operator_confirmed:true});
 const settings=()=>({regular_cents:1675,mixed_cents:1910,plus_cents:2070,ad_share_percent:40,hermes_mode:'manual',billing_mode:'subscription',private_extra:'PRIVATE_SETTING'});
+const customCosts=(model_id='1',item_id='101')=>({...COST_DEFAULTS,custom_profiles:[{id:'custom-kit',label:'Kit com custo próprio',unit_cost_cents:5100}],custom_assignments:[{item_id,model_id,profile_id:'custom-kit'}]});
 function frame(){return {schema:'shop_order_items_v1',shop_id:1178167501,date:'2026-10-15',timezone:'America/Sao_Paulo',through_at:'2026-10-15T12:29:00.123456-03:00',day_partial:true,pagination_complete:true,pages_read:1,orders_in_api_window:2,orders_with_details:2,duplicate_rows:0,catalog_units:3,rows:[{item_id:'101',model_id:'1',order_status:'READY_TO_SHIP',quantity:2,line_count:1},{item_id:'101',model_id:'2',order_status:'UNPAID',quantity:1,line_count:1}],currency_status:'BRL_ALL_CONFIRMED',currency_counts:{BRL:2,OTHER:0,UNKNOWN:0},order_status_verified:true,source:'shopee_get_order_list_and_detail',transport_http:200,api_error:'NO',count_basis:'UNIQUE_ORDER_SN_CREATE_TIME_NO_STATUS_FILTER',order_status_filter:'NONE',dashboard_counter_reconciled:false};}
 async function fixture(){
  const env={ADMIN_DB:new D1()};
  await env.ADMIN_DB.batch([
   ...OBSERVATION_SCHEMA.map(sql=>env.ADMIN_DB.prepare(sql)),
+  ...COST_SCHEMA.map(sql=>env.ADMIN_DB.prepare(sql)),
   env.ADMIN_DB.prepare('CREATE TABLE admin_settings(id INTEGER PRIMARY KEY,revision INTEGER,payload TEXT,updated_at TEXT)'),
   env.ADMIN_DB.prepare('CREATE TABLE variant_bindings_state(id INTEGER PRIMARY KEY,revision INTEGER,payload TEXT,updated_at TEXT)'),
   env.ADMIN_DB.prepare('CREATE TABLE hermes_jobs(id TEXT PRIMARY KEY)'),
  ]);
  await env.ADMIN_DB.prepare('INSERT INTO admin_settings VALUES(1,7,?,?)').bind(JSON.stringify(settings()),now.toISOString()).run();
  await env.ADMIN_DB.prepare('INSERT INTO variant_bindings_state VALUES(1,4,?,?)').bind(JSON.stringify([binding(),binding('999','0','G1','G3')]),now.toISOString()).run();
+ await env.ADMIN_DB.prepare('INSERT INTO production_costs_state VALUES(1,3,?,?)').bind(JSON.stringify(COST_DEFAULTS),now.toISOString()).run();
  return env;
 }
 function count(env){return env.ADMIN_DB.db.prepare('SELECT COUNT(*) n FROM order_observations').get().n;}
@@ -50,7 +54,7 @@ test('explicit capture projects one complete source and stores only matching con
 });
 test('context is selected in one transactional D1 batch and copied before subsequent edits',async()=>{
  const env=await fixture(),originalBatch=env.ADMIN_DB.batch.bind(env.ADMIN_DB);let batches=0;
- env.ADMIN_DB.batch=async statements=>{batches++;assert.equal(statements.length,2);const result=await originalBatch(statements);updateContext(env,{settingsPayload:JSON.stringify({...settings(),regular_cents:999}),settingsRevision:8,bindingsPayload:'[]',bindingsRevision:5});return result;};
+ env.ADMIN_DB.batch=async statements=>{batches++;assert.equal(statements.length,3);const result=await originalBatch(statements);updateContext(env,{settingsPayload:JSON.stringify({...settings(),regular_cents:999}),settingsRevision:8,bindingsPayload:'[]',bindingsRevision:5});env.ADMIN_DB.db.prepare('UPDATE production_costs_state SET revision=4,payload=? WHERE id=1').run(JSON.stringify(customCosts(null)));return result;};
  const {observation}=await capture(env);
  assert.equal(batches,1);assert.equal(observation.settings_snapshot.revision,7);assert.equal(observation.bindings_snapshot.revision,4);assert.equal(observation.margin_reference.known_subset_cents,3350);
 });
@@ -117,6 +121,38 @@ test('single garment observations retain composition without inheriting kit marg
  const repeated=await capture(env);assert.equal(repeated.deduplicated,true);assert.equal(repeated.observation.id,value.id);
  const tampered={...value,margin_reference:{...value.margin_reference,unpriced_quantity:2}};env.ADMIN_DB.db.prepare('UPDATE order_observations SET payload=? WHERE id=?').run(JSON.stringify(tampered),value.id);
  await expectError(readObservation(env,value.id),503,'OBSERVATION_INVALID_SNAPSHOT');
+});
+test('custom product or variant costs block new static-margin observations without changing retained history',async()=>{
+ for(const model_id of [null,'1','2']){
+  const env=await fixture(),first=await capture(env),retained=env.ADMIN_DB.db.prepare('SELECT payload FROM order_observations WHERE id=?').get(first.observation.id).payload;
+  env.ADMIN_DB.db.prepare('UPDATE production_costs_state SET revision=4,payload=? WHERE id=1').run(JSON.stringify(customCosts(model_id)));
+  await expectError(capture(env),409,'OBSERVATION_CUSTOM_COST_MARGIN_UNAVAILABLE');
+  assert.equal(count(env),1);assert.deepEqual(await readObservation(env,first.observation.id),first.observation);
+  assert.equal(env.ADMIN_DB.db.prepare('SELECT payload FROM order_observations WHERE id=?').get(first.observation.id).payload,retained);
+  assert.deepEqual((await listObservations(env)).rows.map(row=>row.id),[first.observation.id]);
+  assert.deepEqual(first.observation.bindings_snapshot.bindings,[binding()]);
+ }
+});
+test('unassigned profiles and costs for other products or variants leave v1 capture and hashes unchanged',async()=>{
+ const env=await fixture(),first=await capture(env);
+ for(const costs of [{...customCosts(),custom_assignments:[]},customCosts('3'),customCosts(null,'999')]){
+  env.ADMIN_DB.db.prepare('UPDATE production_costs_state SET revision=revision+1,payload=? WHERE id=1').run(JSON.stringify(costs));
+  const again=await capture(env);assert.equal(again.deduplicated,true);assert.deepEqual(again.observation,first.observation);
+ }
+ assert.equal(count(env),1);
+});
+test('capture checks custom assignments from the same atomic context even when costs change immediately after selection',async()=>{
+ const env=await fixture(),batch=env.ADMIN_DB.batch.bind(env.ADMIN_DB);
+ env.ADMIN_DB.db.prepare('UPDATE production_costs_state SET payload=? WHERE id=1').run(JSON.stringify(customCosts(null)));
+ env.ADMIN_DB.batch=async statements=>{assert.equal(statements.length,3);const selected=await batch(statements);env.ADMIN_DB.db.prepare('UPDATE production_costs_state SET revision=revision+1,payload=? WHERE id=1').run(JSON.stringify(COST_DEFAULTS));return selected;};
+ await expectError(capture(env),409,'OBSERVATION_CUSTOM_COST_MARGIN_UNAVAILABLE');assert.equal(count(env),0);
+});
+test('invalid production cost context cannot be captured or silently bypass the custom-cost guard',async()=>{
+ for(const payload of ['{','null',JSON.stringify({...COST_DEFAULTS,custom_profiles:[]}),JSON.stringify({...customCosts(),custom_assignments:[{item_id:'101',model_id:null,profile_id:'missing'}]})]){
+  const env=await fixture();env.ADMIN_DB.db.prepare('UPDATE production_costs_state SET payload=? WHERE id=1').run(payload);
+  await expectError(capture(env),503);assert.equal(count(env),0);
+ }
+ const env=await fixture();env.ADMIN_DB.db.prepare('UPDATE production_costs_state SET revision=0 WHERE id=1').run();await expectError(capture(env),503);assert.equal(count(env),0);
 });
 test('saved settings require exact present integer cents and revisions without defaults',async()=>{
  const bad=[null,{},'{',JSON.stringify({...settings(),regular_cents:0}),JSON.stringify({...settings(),mixed_cents:1.5}),JSON.stringify({...settings(),plus_cents:1000001}),JSON.stringify({...settings(),ad_share_percent:0}),JSON.stringify({...settings(),ad_share_percent:101}),JSON.stringify({...settings(),regular_cents:'1675'})];

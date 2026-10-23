@@ -200,3 +200,14 @@ test('absent or forged product data cannot become zero product contribution',asy
  b.load(source);assert.equal(await b.run('brazaMonthDashboard.refreshCosts()'),false);assert.match(b.run("text(control('ProductRows').children[0])"),/29,00/);assert.doesNotMatch(b.run("text(control('ProductRows').children[0])"),/29,01/);
  assert.match(b.text('Status'),/não foi possível recalcular/);
 });
+
+test('monthly custom products show their configured profile and full unit cost without assuming garment composition or rendering labels as HTML',async()=>{
+ const source=productFixture(),labels=['Calça moletom','Kit casal <img src=x onerror=alert(1)>'];
+ for(const [index,product] of source.product_summary.products.entries())Object.assign(product.variants[0],{selling_unit:'CUSTOM_PRODUCT',size:null,male_size:null,female_size:null,cost_profile_id:index?'kit-casal':'calca',cost_profile_label:labels[index]});
+ assert.ok(projectBusinessMonth(source));const b=browser(source);assert.equal(await b.run('brazaMonthDashboard.start({api,syncVariants})'),true);
+ for(let index=0;index<2;index++)b.run("{const detail=control('ProductRows').children["+index+"].children[0].children[3];detail.open=true;detail.ontoggle();}");
+ const text=b.text('ProductRows');assert.match(text,/Custo personalizado · Calça moletom/);assert.match(text,/Custo personalizado · Kit casal <img src=x onerror=alert\(1\)>/);assert.match(text,/10,00 por unidade vendida/);assert.doesNotMatch(text,/Camiseta P|masculino|feminino|Camisetas ou kits/);
+ assert.equal(b.run("control('ProductRows').children[1].children[0].children[3].children[1].children[0].tag"),'li');
+ assert.equal(b.run('globalThis.alert'),undefined);assert.match(b.text('Net'),/43,01/);
+ const changed=structuredClone(source);changed.product_summary.products[0].variants[0].cost_profile_label='INVALID\u0000';b.load(changed);assert.equal(await b.run('brazaMonthDashboard.refreshCosts()'),false);assert.match(b.text('ProductRows'),/Custo personalizado · Calça moletom/);
+});

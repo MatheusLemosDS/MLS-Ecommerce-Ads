@@ -183,7 +183,8 @@ replacement='''      const routeAliases={'/advertising':'/dashboard','/performan
         url.pathname==='/campaigns'&&workspaceView==='product'?getCampaignSummary(env):Promise.resolve({ok:false,campaigns:[]}),
         url.pathname==='/campaigns'&&workspaceView==='gmv-max'?getGmsItems(env):Promise.resolve({ok:false,items:[]})
       ]);
-      ads.workspace_view=workspaceView;'''
+      ads.workspace_view=workspaceView;
+      ads.workspace_period_mode=url.searchParams.has('start_date')||url.searchParams.has('end_date')?'dates':'month';'''
 updated=updated.replace(needle,replacement,1)
 needle='''      if (
         url.pathname ===
@@ -199,7 +200,7 @@ insertion='''  const view=ads.workspace_view||'product';
   if(currentPath==='/campaigns'&&view==='gmv-max')content=gmvMaxContent(shopee,gms,config);
   if(currentPath==='/optimization')content=renderScalingPreparation(config,{role:workspaceRole});
   if(currentPath==='/integrations')content=renderWorkspaceConnections(shopee,{role:workspaceRole});
-  content=renderAdsWorkspace(currentPath,{role:workspaceRole,ads,view,content,opportunityContent:currentPath==='/optimization'?opportunitiesContent(shopee,opportunities,opportunityDetail,config):''});
+  content=renderAdsWorkspace(currentPath,{role:workspaceRole,periodMode:ads.workspace_period_mode,ads,view,content,opportunityContent:currentPath==='/optimization'?opportunitiesContent(shopee,opportunities,opportunityDetail,config):''});
   const workspaceTitles={'/dashboard':['Anúncios','Investimento, vendas atribuídas e retorno no mês.'],'/campaigns':['Campanhas','Produtos anunciados e desempenho de cada campanha.'],'/optimization':['Automação','Metas e critérios para crescer com margem.'],'/integrations':['Conexões','Acesso aos dados e configurações da operação.']};
   if(workspaceTitles[currentPath])[title,subtitle]=workspaceTitles[currentPath];
 '''

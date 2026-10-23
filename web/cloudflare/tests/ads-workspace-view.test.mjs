@@ -11,8 +11,8 @@ function source(part,{expense=1,missing=false}={}){
  const dates=days(part.start_date,part.end_date);
  return {status:'ok',connected:true,shop:{id:1178167501},period:part,balance:'31.07',daily:dates.filter(date=>!missing||date!=='2026-10-17').map(date=>({date,expense,broad_gmv:10,broad_order:2,broad_roas:'19.28',direct_gmv:5,direct_order:1,direct_roas:'8.01'})),private_token:'PRIVATE_SOURCE_TOKEN',private_html:'<img src=x onerror=alert(1)>'};
 }
-async function calendar(options={}){
- return getAdsCalendar({APP_INTERNAL_SECRET:'FIXTURE_NOT_EXPORTED'},selection,{now:()=>now,fetchImpl:async request=>{
+async function calendar(options={},range=selection,clock=now){
+ return getAdsCalendar({APP_INTERNAL_SECRET:'FIXTURE_NOT_EXPORTED'},range,{now:()=>clock,fetchImpl:async request=>{
   const url=new URL(request.url),iso=value=>value.slice(6)+'-'+value.slice(3,5)+'-'+value.slice(0,2),part={start_date:iso(url.searchParams.get('start_date')),end_date:iso(url.searchParams.get('end_date'))};
   return Response.json(source(part,options));
  }});
@@ -33,6 +33,53 @@ test('fresh monthly spend updates the ratio of totals while source daily ROAS re
  const updated=await calendar({expense:2}),html=clean(renderAdsWorkspace('/dashboard',{ads:{calendar:updated},now}));
  assert.ok(html.includes('R$ 62,00'));assert.ok(html.includes('R$ 310,00'));assert.ok(/data-ads-metric="roas"[\s\S]*?<strong>5,00x<\/strong>/.test(html));assert.ok(html.includes('19,28x'));
  assert.ok(!/data-ads-metric="roas"[\s\S]*?<strong>19,28x<\/strong>/.test(html));
+});
+
+test('today uses the daily title and selected shortcut while the month submit is a closed secondary choice',async()=>{
+ const clock=Date.UTC(2026,9,23,12),day={start_date:'2026-10-23',end_date:'2026-10-23'},value=await calendar({},day,clock);
+ const html=clean(renderAdsWorkspace('/dashboard',{role:'owner',ads:{calendar:value},now:clock}));
+ assert.match(html,/<h2>Hoje<\/h2>/);assert.match(html,/23\/10\/2026/);assert.ok(!html.includes('<h2>outubro de 2026</h2>'));
+ assert.match(html,/data-ads-period="today"/);assert.match(html,/data-ads-shortcut="today" aria-current="date">Hoje<\/a>/);assert.ok(!html.includes('data-ads-shortcut="month" aria-current='));
+ assert.match(html,/<details class="ads-workspace-month-picker"><summary>Escolher outro mês<\/summary><form[\s\S]*?>Ver mês<\/button><\/form><\/details>/);
+ assert.ok(!html.includes('Atualizar mês'));assert.ok(html.includes('Visão geral do mês'));assert.ok(!html.includes('nas mesmas datas'));
+ assert.match(html,/data-ads-metric="spend"[\s\S]*?<strong>R\$ 1,00<\/strong>/);assert.match(html,/data-ads-metric="sales"[\s\S]*?<strong>R\$ 10,00<\/strong>/);
+});
+
+test('a past single day is labeled with its date and does not claim that Hoje or Este mês is selected',async()=>{
+ const clock=Date.UTC(2026,9,23,12),day={start_date:'2026-10-21',end_date:'2026-10-21'},value=await calendar({},day,clock);
+ const html=clean(renderAdsWorkspace('/dashboard',{ads:{calendar:value},now:clock}));
+ assert.match(html,/<h2>Dia 21\/10\/2026<\/h2>/);assert.match(html,/data-ads-period="day"/);assert.ok(!/data-ads-shortcut="(?:today|month)" aria-current=/.test(html));
+ assert.ok(html.includes('Dia selecionado: 21/10/2026'));assert.match(html,/<details class="ads-workspace-details" open><summary>Escolher outras datas/);
+ assert.match(html,/name="start_date" value="2026-10-21"/);assert.match(html,/name="end_date" value="2026-10-21"/);
+});
+
+test('a full past month and the current month to date keep the monthly title and controls without selecting Hoje',async()=>{
+ const past=clean(renderAdsWorkspace('/dashboard',{ads:{calendar:full},now}));
+ assert.match(past,/<h2>outubro de 2026<\/h2>/);assert.match(past,/data-ads-period="month"/);assert.ok(past.includes('Atualizar mês'));assert.ok(!/data-ads-shortcut="(?:today|month)" aria-current=/.test(past));
+ const clock=Date.UTC(2026,9,23,12),range={start_date:'2026-10-01',end_date:'2026-10-23'},value=await calendar({},range,clock),current=clean(renderAdsWorkspace('/dashboard',{ads:{calendar:value},now:clock}));
+ assert.match(current,/<h2>outubro de 2026<\/h2>/);assert.match(current,/data-ads-period="month"/);assert.match(current,/data-ads-shortcut="month" aria-current="true">Este mês<\/a>/);assert.ok(!current.includes('data-ads-shortcut="today" aria-current='));
+ assert.match(current,/01\/10\/2026 a 23\/10\/2026/);assert.match(current,/data-ads-metric="spend"[\s\S]*?<strong>R\$ 23,00<\/strong>/);
+});
+
+test('a custom interval keeps its exact range visible rather than claiming a month total',async()=>{
+ const clock=Date.UTC(2026,9,23,12),range={start_date:'2026-10-02',end_date:'2026-10-12'},value=await calendar({},range,clock),html=clean(renderAdsWorkspace('/dashboard',{ads:{calendar:value},now:clock}));
+ assert.match(html,/<h2>Período personalizado<\/h2>/);assert.match(html,/data-ads-period="range"/);assert.ok(html.includes('Intervalo selecionado: 02/10/2026 a 12/10/2026'));assert.ok(!/data-ads-shortcut="(?:today|month)" aria-current=/.test(html));
+ assert.match(html,/<details class="ads-workspace-details" open><summary>Escolher outras datas/);assert.match(html,/name="start_date" value="2026-10-02"/);assert.match(html,/name="end_date" value="2026-10-12"/);
+ assert.match(html,/data-ads-metric="spend"[\s\S]*?<strong>R\$ 11,00<\/strong>/);
+});
+
+test('the first day distinguishes an explicit month from Hoje without altering their identical validated amounts',async()=>{
+ const clock=Date.UTC(2026,9,1,12),range={start_date:'2026-10-01',end_date:'2026-10-01'},value=await calendar({},range,clock);
+ const month=clean(renderAdsWorkspace('/dashboard',{ads:{calendar:value},periodMode:'month',now:clock})),today=clean(renderAdsWorkspace('/dashboard',{ads:{calendar:value},periodMode:'dates',now:clock}));
+ assert.match(month,/<h2>outubro de 2026<\/h2>/);assert.match(month,/data-ads-period="month"/);assert.match(month,/data-ads-shortcut="month" aria-current="true"/);assert.ok(month.includes('Atualizar mês'));assert.ok(!month.includes('data-ads-shortcut="today" aria-current='));
+ assert.match(today,/<h2>Hoje<\/h2>/);assert.match(today,/data-ads-period="today"/);assert.match(today,/data-ads-shortcut="today" aria-current="date"/);assert.ok(today.includes('Escolher outro mês'));assert.ok(!today.includes('Atualizar mês'));
+ for(const html of [month,today]){assert.match(html,/data-ads-metric="spend"[\s\S]*?<strong>R\$ 1,00<\/strong>/);assert.match(html,/data-ads-metric="sales"[\s\S]*?<strong>R\$ 10,00<\/strong>/);assert.match(html,/01\/10\/2026/);}
+});
+
+test('display hints retain explicit full-month dates and cannot turn a different validated range into a month',async()=>{
+ const explicit=clean(renderAdsWorkspace('/dashboard',{ads:{calendar:full},periodMode:'dates',now}));assert.match(explicit,/<h2>Período personalizado<\/h2>/);assert.match(explicit,/data-ads-period="range"/);assert.match(explicit,/01\/10\/2026 a 31\/10\/2026/);assert.match(explicit,/data-ads-metric="spend"[\s\S]*?<strong>R\$ 31,00<\/strong>/);
+ const clock=Date.UTC(2026,9,23,12),range={start_date:'2026-10-02',end_date:'2026-10-12'},value=await calendar({},range,clock),mismatch=clean(renderAdsWorkspace('/dashboard',{ads:{calendar:value},periodMode:'month',now:clock}));
+ assert.match(mismatch,/<h2>Período personalizado<\/h2>/);assert.match(mismatch,/data-ads-period="range"/);assert.match(mismatch,/02\/10\/2026 a 12\/10\/2026/);assert.ok(!mismatch.includes('data-ads-shortcut="month" aria-current='));
 });
 
 test('missing expense day keeps total and period ROAS pending rather than using a partial month as a complete zero',async()=>{

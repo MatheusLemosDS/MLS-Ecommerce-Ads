@@ -275,3 +275,24 @@ test('single garments remain unpriced by kit margins and legacy-only reference s
  assert.equal(Object.hasOwn(legacy,'unpriced_quantity'),false);
  assert.deepEqual(legacy,{settings_revision:3,bindings_revision:4,known_subset_cents:5025,total_cents:5025,mapped_quantity:3,unmapped_quantity:0,status_scope:'ALL_RETURNED_STATUSES_REFERENCE_ONLY',currency:'BRL',margin_stage:'AFTER_FEES_AND_PRODUCT_COST_BEFORE_ADS',economic_status:'UNKNOWN',variants:[{...rows[1],margin_class:'REGULAR',unit_margin_cents:1675,contribution_cents:5025}]});
 });
+test('custom full-unit costs never inherit old kit margins while other kit references remain available',()=>{
+ const rows=[{item_id:'101',model_id:'1',quantity:2},{item_id:'101',model_id:'2',quantity:1},{item_id:'201',model_id:'1',quantity:3}];
+ const frame={status:'AVAILABLE',rows},bindings={revision:4,bindings:[binding(),binding('101','2','G1','G2'),binding('201','1')]},cfg={revision:3,values:DEFAULTS};
+ const values={...COST_DEFAULTS,custom_profiles:[{id:'special-kit',label:'Kit personalizado',unit_cost_cents:5100}],custom_assignments:[{item_id:'101',model_id:null,profile_id:'special-kit'}]};
+ const production=productionCostReference(frame,bindings,{revision:8,values}),reference=variantMarginReference(frame,bindings,cfg,production);
+ assert.equal(production.total_cents,3*5100+3*3180);
+ assert.equal(reference.total_cents,null);assert.equal(reference.known_subset_cents,3*1675);assert.equal(reference.mapped_quantity,3);assert.equal(reference.unmapped_quantity,3);
+ assert.equal(Object.hasOwn(reference,'unpriced_quantity'),false);
+ assert.deepEqual(reference.variants.slice(0,2),rows.slice(0,2).map(row=>({...row,margin_class:null,unit_margin_cents:null,contribution_cents:null})));
+ assert.equal(reference.variants[2].unit_margin_cents,1675);assert.equal(bindings.bindings.length,3);
+ const variantCosts={...values,custom_assignments:[{item_id:'101',model_id:'1',profile_id:'special-kit'}]};
+ const variantReference=variantMarginReference(frame,bindings,cfg,productionCostReference(frame,bindings,{revision:9,values:variantCosts}));
+ assert.equal(variantReference.unmapped_quantity,2);assert.equal(variantReference.known_subset_cents,2070+3*1675);
+ const defaultProduction=productionCostReference(frame,bindings,{revision:8,values:COST_DEFAULTS});
+ assert.deepEqual(variantMarginReference(frame,bindings,cfg,defaultProduction),variantMarginReference(frame,bindings,cfg));
+});
+test('mismatched production references fail closed instead of retaining stale custom kit margins',()=>{
+ const frame={status:'AVAILABLE',rows:[{item_id:'101',model_id:'1',quantity:2}]},bindings={revision:4,bindings:[binding()]},cfg={revision:3,values:DEFAULTS};
+ const production=productionCostReference(frame,bindings,{revision:8,values:COST_DEFAULTS});
+ for(const reference of [null,{...production,bindings_revision:3},{...production,variants:[]},{...production,variants:[{...production.variants[0],quantity:1}]},{...production,variants:[{...production.variants[0],cost_source:'UNKNOWN'}]}])assert.throws(()=>variantMarginReference(frame,bindings,cfg,reference),bindingError('VARIANT_REFERENCE_INVALID',503));
+});
