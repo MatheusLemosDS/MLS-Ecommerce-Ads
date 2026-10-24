@@ -8,15 +8,15 @@ import {enhanceAdsPageHtml} from '../src/ads-presentation.mjs';
 
 const primary=html=>html.match(/<nav class="workspace-nav[^"]*"[^>]*>([\s\S]*?)<\/nav>/)?.[1]||'';
 const destinations=html=>[...html.matchAll(/href="([^"]*)"/g)].map(match=>match[1]);
-const owner=['/admin?tab=overview','/admin?tab=products','/dashboard','/admin?tab=margins','/optimization'];
+const owner=['/admin?tab=overview','/admin?tab=products','/admin?tab=production','/dashboard','/admin?tab=margins','/optimization'];
 
-test('owner has the same five main destinations and ordering on Admin, Ads, desktop and mobile',()=>{
- for(const active of ['overview','products','/dashboard','margins','/optimization']){
+test('owner has the same six main destinations and ordering on Admin, Ads, desktop and mobile',()=>{
+ for(const active of ['overview','products','production','/dashboard','margins','/optimization']){
   for(const mobile of [false,true]){
    const html=workspaceNavigation(active,{role:'owner',mobile});
    assert.deepEqual(destinations(primary(html)),owner);
    assert.equal((primary(html).match(/aria-current="page"/g)||[]).length,1);
-   for(const tab of ['overview','products','margins'])assert.match(html,new RegExp('data-tab="'+tab+'" data-workspace-tab="'+tab+'"'));
+   for(const tab of ['overview','products','production','margins'])assert.match(html,new RegExp('data-tab="'+tab+'" data-workspace-tab="'+tab+'"'));
   }
  }
  assert.deepEqual(destinations(primary(shellDesktopNavigation('/dashboard',{role:'owner'}))),owner);

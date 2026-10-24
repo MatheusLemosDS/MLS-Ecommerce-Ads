@@ -16,8 +16,12 @@ const FORBIDDEN_JSON_DIAGNOSTICS = new Map([
 
 // Private, injected transport only. Importing this module never enables provider
 // traffic; a production adapter must explicitly supply its own fetch function.
-export async function requestFinanceAuthJson({input, options = {}, prefix, buildRequest, normalizeResponse}) {
+export async function requestFinanceAuthJson({input, options = {}, prefix, buildRequest, normalizeResponse, maximumBodyBytes = MAX_BODY_BYTES}) {
   const error = (suffix, status = 502) => new FinanceConnectionError(prefix + '_' + suffix, status);
+  // The production order-detail projection can include many line items. Only
+  // trusted call sites may opt into a larger finite bound; legacy calls retain
+  // their exact 64 KiB limit and credentials never select this value.
+  if (!Number.isSafeInteger(maximumBodyBytes) || maximumBodyBytes < 1 || maximumBodyBytes > 1048576) throw error('TRANSPORT_CONFIGURATION', 503);
   if (!options || typeof options !== 'object' || Array.isArray(options)) {
     throw error('TRANSPORT_CONFIGURATION', 503);
   }
@@ -68,7 +72,7 @@ export async function requestFinanceAuthJson({input, options = {}, prefix, build
   const readJson = async response => {
     const contentLength = response.headers.get('content-length');
     if (contentLength !== null && (!/^\d+$/.test(contentLength) ||
-        !Number.isSafeInteger(Number(contentLength)) || Number(contentLength) > MAX_BODY_BYTES)) {
+        !Number.isSafeInteger(Number(contentLength)) || Number(contentLength) > maximumBodyBytes)) {
       try { response.body?.cancel().catch(() => {}); } catch {}
       throw error('UPSTREAM_BODY_TOO_LARGE');
     }
@@ -89,7 +93,7 @@ export async function requestFinanceAuthJson({input, options = {}, prefix, build
         if (chunk.done) break;
         if (!(chunk.value instanceof Uint8Array)) throw error('UPSTREAM_INVALID_JSON');
         length += chunk.value.byteLength;
-        if (length > MAX_BODY_BYTES) {
+        if (length > maximumBodyBytes) {
           cancelReader();
           throw error('UPSTREAM_BODY_TOO_LARGE');
         }

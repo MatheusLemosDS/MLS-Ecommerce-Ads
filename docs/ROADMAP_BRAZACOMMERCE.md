@@ -1,10 +1,10 @@
 # Roadmap BrazaCommerce
 
-Atualizado em **24/10/2026**. Referência: estado já versionado em `main`
-no commit `899a8de` e incremento de coleta em segundo plano, cache inicial e
-diagnóstico de conta implementado na árvore de trabalho, ainda pendente de
-publicação. Este documento substitui o plano de 18/10; os registros antigos
-continuam como histórico das respectivas entregas.
+Atualizado em **24/10/2026**. Referência: `main` até `96505b3`, com o módulo
+[Produção e DTF](PRODUCAO_DTF.md) implementado no incremento atual, ainda
+pendente de publicação e verificação física. Este documento substitui o plano
+de 18/10; os registros antigos permanecem como histórico. Código publicado no
+Git não comprova, sozinho, o deploy ativo no Cloudflare.
 
 O objetivo é o Hermes acompanhar a loja, identificar produtos rentáveis e
 administrar anúncios e ofertas dentro dos limites definidos pelo proprietário.
@@ -26,9 +26,9 @@ testes locais.
 | Consumo de anúncios no período | Já versionado em `main` | Usa gasto consumido do calendário; distingue recarga e consumo. Não há atribuição validada desse gasto por produto e campanha. |
 | MEI e DAS de 2026 | Já versionados em `main` | Declaração do operador de **R$ 86,05 por mês**, substituindo os 2% anteriores. Vale para 2026; outro ano precisa de declaração própria. Não consulta PGMEI nem confirma pagamento. |
 | Atualização com o painel aberto | Já versionada em `main` | Consultas automáticas com paginação, deduplicação e horários separados de Financeiro e Ads. O trabalho anterior dependia da sessão visível para continuar atualizando. |
-| Coleta em segundo plano | Implementada neste incremento; pendente de publicação | Cron do App a cada cinco minutos avança coletores de leitura sem depender da aba. Inclui exclusão de execuções concorrentes, pausa/retomada, espera crescente após falhas e auditoria. O disparo real do cron ainda não foi observado nesta entrega. |
-| Abertura rápida da Visão geral | Implementada neste incremento; pendente de publicação | Mostra primeiro o cache privado validado e seus horários; a atualização prossegue sem tratar dado antigo como recente. |
-| Diagnóstico da conta | Implementado neste incremento; pendente de publicação | Calcula TACOS, saldo disponível antes de Ads, cobertura dos custos e próximas tarefas a partir do mês validado. Dados ausentes bloqueiam os indicadores correspondentes. Não autoriza investimento. |
+| Coleta em segundo plano | Versionada em `main` (`6f9ce23`); ativação a conferir | Cron do App a cada cinco minutos avança coletores de leitura sem depender da aba. Inclui exclusão de execuções concorrentes, pausa/retomada, espera crescente após falhas e auditoria. O disparo real do cron ainda não foi observado nesta entrega. |
+| Abertura rápida da Visão geral | Versionada em `main` (`6f9ce23`); ativação a conferir | Mostra primeiro o cache privado validado e seus horários; a atualização prossegue sem tratar dado antigo como recente. |
+| Diagnóstico da conta | Versionado em `main` (`6f9ce23`); ativação a conferir | Calcula TACOS, saldo disponível antes de Ads, cobertura dos custos e próximas tarefas a partir do mês validado. Dados ausentes bloqueiam os indicadores correspondentes. Não autoriza investimento. |
 | Alterar anúncios, campanhas e promoções | Ainda não implementado para execução comercial | As proteções de somente leitura e Ads/PROMO `LOCKED` continuam vigentes. A coleta autônoma não cria permissão de escrita na Shopee. |
 
 O cron configurado é uma oportunidade de execução, não garantia de dados novos
@@ -114,7 +114,7 @@ sem copiar promessas de resultado ou tratar recomendações como lucro comprovad
 
 | Fase | Entrega e estado | Critério concreto para avançar |
 | --- | --- | --- |
-| 0 — Coleta confiável e diagnóstico | Base existente; cron, cache inicial e diagnóstico em fechamento neste incremento | Publicar a versão correspondente, observar cron com o navegador fechado, conferir último sucesso/erro e horários de cada fonte; demonstrar pausa/retomada, ausência de sobreposição, espera após falha e sinalização de dado vencido. |
+| 0 — Coleta confiável e diagnóstico | Cron, cache inicial e diagnóstico versionados; execução real a conferir | Publicar a versão correspondente, observar cron com o navegador fechado, conferir último sucesso/erro e horários de cada fonte; demonstrar pausa/retomada, ausência de sobreposição, espera após falha e sinalização de dado vencido. |
 | 1 — Financeiro confiável | Apuração prevista disponível; conciliação ainda incompleta | Conferir um período completo contra a Shopee, incluindo recebimentos, reembolsos, ajustes, produção, DAS e Ads. Registrar diferenças, cobertura e bases de tempo; manter desconhecido o que não foi conciliado. |
 | 2 — Contratos de estoque e campanha | Planejado | Validar fontes oficiais, permissões, IDs, unidades, fuso, paginação e atualização. Fechar o contrato de cada escrita pretendida; mostrar que estoque, gasto e campanha se referem ao mesmo escopo da decisão. |
 | 3 — Ranking de campeões com atribuição | Planejado após as fases 1 e 2 | Ordenar contribuição depois de Ads em períodos compatíveis, com cobertura de repasse/gasto e estoque. Separar pedidos mistos e atribuição estimada; reconciliar totais e reproduzir o ranking a partir das revisões guardadas. |
@@ -135,6 +135,13 @@ devoluções. Aumento isolado de ROAS não justifica promover uma regra. Esse ci
 não depende de alterar os pesos do modelo a cada conversa.
 
 ## Próxima sequência de trabalho
+
+O DTF entra como melhoria operacional antes do escalonamento comercial. A fila
+identifica pedido e linha, usa SKU para localizar a arte e reserva os lotes para
+evitar repetição. A montagem não depende de atribuição de campanhas: a
+conciliação financeira segue em paralelo. Ainda faltam armazenamento
+centralizado das artes, regras para composições especiais, consumo real de
+material e calibração da saída física; não há impressão autônoma na máquina.
 
 1. Concluir a publicação e a verificação do incremento atual. Conferir cache
    inicial, cron sem aba aberta, pausa, concorrência, falhas e horários reais;

@@ -2,6 +2,7 @@
 const workspaceNavigationItems=Object.freeze({
  overview:{href:'/admin?tab=overview',label:'Visão geral',hint:'Vendas, custos e resultado',icon:'<rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>'},
  products:{href:'/admin?tab=products',label:'Produtos',hint:'Variações e custos por produto',icon:'<path d="m12 3 9 5-9 5-9-5 9-5ZM3 8v9l9 5 9-5V8M12 13v9"/>'},
+ production:{href:'/admin?tab=production',label:'Produção',hint:'Pedidos, artes e montagem DTF',icon:'<path d="M6 8V3h12v5M6 17H4V8h16v9h-2M6 14h12v7H6zM16 11h1"/>'},
  ads:{href:'/dashboard',label:'Anúncios',hint:'Investimento, vendas e ROAS',icon:'<path d="M4 19V9m8 10V4m8 15v-7M2 21h20"/>'},
  margins:{href:'/admin?tab=margins',label:'Custos',hint:'Produção e regras de cálculo',icon:'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 12h2m4 0h2M8 16h2m4 0h2"/>'},
  automation:{href:'/optimization',label:'Automação',hint:'Metas e oportunidades',icon:'<path d="m12 3 2.4 6.6L21 12l-6.6 2.4L12 21l-2.4-6.6L3 12l6.6-2.4L12 3Z"/>'},
@@ -11,7 +12,7 @@ const workspaceNavigationItems=Object.freeze({
  history:{href:'/admin?tab=history',label:'Histórico',hint:'Alterações e versões salvas',icon:'<path d="M3 11a9 9 0 1 1 2 7M3 5v6h6M12 7v5l3 2"/>'},
  roadmap:{href:'/admin?tab=roadmap',label:'Plano de evolução',hint:'Etapas e dados que faltam',icon:'<path d="M5 20V4h12l-2 4 2 4H5M3 20h4"/>'},
 });
-const workspaceOwnerPrimary=['overview','products','ads','margins','automation'];
+const workspaceOwnerPrimary=['overview','products','production','ads','margins','automation'];
 const workspaceReviewPrimary=['ads','campaigns','automation'];
 const workspaceOwnerSecondary=['campaigns','hermes','integrations','history','roadmap'];
 const workspaceReviewSecondary=['integrations'];
@@ -19,7 +20,7 @@ function workspaceActiveKey(active){
  if(Object.hasOwn(workspaceNavigationItems,active))return active;
  const aliases={'/dashboard':'ads','/advertising':'ads','/performance':'ads','/campaigns':'campaigns','/gmv-max':'campaigns','/optimization':'automation','/opportunities':'automation','/integrations':'integrations','/admin':'overview'};
  if(Object.hasOwn(aliases,active))return aliases[active];
- if(typeof active==='string'&&active.startsWith('/admin?')){try{const value=new URL(active,'https://workspace.invalid').searchParams.get('tab');if(['overview','products','margins','hermes','history','roadmap'].includes(value))return value;}catch{}}
+ if(typeof active==='string'&&active.startsWith('/admin?')){try{const value=new URL(active,'https://workspace.invalid').searchParams.get('tab');if(['overview','products','production','margins','hermes','history','roadmap'].includes(value))return value;}catch{}}
  return '';
 }
 function workspaceNavLink(key,current,{mobile=false}={}){
@@ -49,7 +50,7 @@ export const WORKSPACE_NAVIGATION_CSS=String.raw`
 .workspace-nav-mobile{display:none}.workspace-nav :focus-visible,.workspace-more :focus-visible{outline:3px solid var(--accent);outline-offset:3px}
 @media(min-width:851px){.workspace-header-menu{display:none}}
 @media(max-width:850px){
- .workspace-nav-mobile{box-sizing:border-box;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:3px;position:fixed;bottom:0;left:0;right:0;width:100%;z-index:60;padding:7px 8px calc(7px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:var(--surface)}
+ .workspace-nav-mobile{box-sizing:border-box;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:3px;position:fixed;bottom:0;left:0;right:0;width:100%;z-index:60;padding:7px 8px calc(7px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:var(--surface)}
  .workspace-nav-mobile[data-workspace-role=review]{grid-template-columns:repeat(3,minmax(0,1fr))}
  .workspace-nav-mobile .workspace-nav-link{display:flex;flex-direction:column;justify-content:center;gap:5px;min-height:54px;min-width:0;padding:7px 2px;border:0;border-radius:9px;text-align:center;color:var(--muted)}
  .workspace-nav-mobile .workspace-nav-link.active{border:0;color:var(--accent);background:var(--accent-soft)}.workspace-nav-mobile .workspace-nav-copy{display:block}.workspace-nav-mobile .workspace-nav-label{font-size:10px;line-height:1.3;white-space:nowrap;font-weight:600}.workspace-nav-mobile .workspace-nav-icon{flex:0 0 20px}
