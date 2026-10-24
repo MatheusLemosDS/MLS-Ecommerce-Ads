@@ -132,3 +132,23 @@ test('AUTO reads one bounded catalogue request per product and projects mixed re
   assert.deepEqual(await f.store.readTokens(),before);
   assert.equal(JSON.stringify(result).includes('DO_NOT_EXPORT'),false);
 });
+
+test('opt-in cost catalogue reads fixed product metadata and exact child options without borrowing adult sizes or exposing unrelated data',async()=>{
+ const f=await fixture(),before=await f.store.readTokens(),calls=[];
+ const result=await f.run({selling_unit:'AUTO',include_cost_catalog:true,fetchImpl:async request=>{
+  const url=new URL(request.url);calls.push(url);assert.equal(url.origin,'https://partner.shopeemobile.com');assert.equal(url.searchParams.get('shop_id'),'1178167501');assert.equal(url.searchParams.get('partner_id'),'2049333');
+  assert.equal(url.searchParams.get('sign'),createHmac('sha256',key).update('2049333'+url.pathname+url.searchParams.get('timestamp')+access+'1178167501').digest('hex'));
+  if(url.pathname==='/api/v2/product/get_item_base_info'){assert.equal(url.searchParams.get('item_id_list'),'123');return Response.json({error:'',response:{item_list:[{item_id:123,item_name:'Camiseta Infantil Estrela',description:'DO_NOT_EXPORT',price_info:[{price:9999}],buyer:'DO_NOT_EXPORT'}]}});}
+  assert.equal(url.pathname,'/api/v2/product/get_model_list');return Response.json({error:'',response:{tier_variation:[{name:'Cor',option_list:[{option:'Vermelho'}]},{name:'Tamanho',option_list:['4','6','8','10','12','14','16'].map(option=>({option}))}],model:Array.from({length:7},(_,i)=>({model_id:i,tier_index:[0,i],model_sku:'DO_NOT_EXPORT'}))}});
+ }});
+ assert.equal(calls.length,2);assert.equal(result.products[0].bindings.length,0);assert.equal(result.products[0].unresolved_count,7);
+ assert.equal(result.products[0].cost_catalog.product_name,'Camiseta Infantil Estrela');assert.deepEqual(result.products[0].cost_catalog.variants.map(row=>row.attributes[1].value),['4','6','8','10','12','14','16']);
+ assert.equal(JSON.stringify(result).includes('DO_NOT_EXPORT'),false);assert.equal(JSON.stringify(result).includes('price_info'),false);assert.deepEqual(await f.store.readTokens(),before);
+});
+
+test('cost metadata with another product or shop fails before model reads and does not change the connection',async()=>{
+ for(const payload of [{error:'',shop_id:9,response:{item_list:[{item_id:123,item_name:'Camiseta Infantil'}]}},{error:'',response:{item_list:[{item_id:999,item_name:'Camiseta Infantil'}]}},{error:'error_api_permission',response:{item_list:[]}}]){
+  const f=await fixture(),before=await f.store.readTokens();let calls=0;
+  await assert.rejects(f.run({include_cost_catalog:true,fetchImpl:async()=>{calls++;return Response.json(payload);}}));assert.equal(calls,1);assert.deepEqual(await f.store.readTokens(),before);
+ }
+});

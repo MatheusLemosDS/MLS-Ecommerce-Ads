@@ -1,6 +1,7 @@
 import {orderItems} from './order-items.mjs';
 import {validateVariantBindings,variantMarginReference} from './variant-bindings.mjs';
 import {validateProductionCosts} from './production-costs.mjs';
+import {costRuleReferenceFromSnapshot} from './cost-rules.mjs';
 
 // An observation is an explicit partial-day record, never an order ledger or profit claim.
 export const OBSERVATION_SCHEMA=[
@@ -83,21 +84,27 @@ export async function captureObservation(env,getOrderItems,actor,now){
  let raw;
  try{observationAssert(typeof getOrderItems==='function','OBSERVATION_SOURCE_UNAVAILABLE');raw=await getOrderItems(env);}catch{throw new ObservationError('OBSERVATION_SOURCE_UNAVAILABLE',503);}
  observationAssert(!raw?.diagnostic,'OBSERVATION_SOURCE_UNAVAILABLE');
- const frame=observationFrame(raw,now??new Date());
+ const captureMoment=now??new Date(),frame=observationFrame(raw,captureMoment);
  try{
+  const itemIds=[...new Set(frame.rows.map(row=>row.item_id))],catalogQueries=[];
+  for(let i=0;i<itemIds.length;i+=90){const chunk=itemIds.slice(i,i+90);catalogQueries.push(env.ADMIN_DB.prepare('SELECT item_id,catalog_fingerprint,payload,checked_at FROM production_cost_catalog WHERE item_id IN ('+chunk.map(()=>'?').join(',')+')').bind(...chunk));}
   const context=await env.ADMIN_DB.batch([
    env.ADMIN_DB.prepare('SELECT revision,payload FROM admin_settings WHERE id=1'),
    env.ADMIN_DB.prepare('SELECT revision,payload FROM variant_bindings_state WHERE id=1'),
    env.ADMIN_DB.prepare('SELECT revision,payload FROM production_costs_state WHERE id=1'),
+   env.ADMIN_DB.prepare('SELECT revision,payload,updated_at FROM production_cost_rules_state WHERE id=1'),
+   ...catalogQueries,
   ]);
-  observationAssert(Array.isArray(context)&&context.length===3&&context.every(value=>Array.isArray(value.results)&&value.results.length===1));
+  observationAssert(Array.isArray(context)&&context.length===4+catalogQueries.length&&context.every(value=>Array.isArray(value.results))&&context.slice(0,4).every(value=>value.results.length===1));
   const settings=observationSettings(context[0].results[0]),bindings=observationBindings(context[1].results[0],frame);
   const costRow=context[2].results[0];
   observationAssert(observationObject(costRow)&&observationInteger(costRow.revision,1,2147483647));
   const costs=validateProductionCosts(JSON.parse(costRow.payload)),assignments=new Set((costs.custom_assignments||[]).map(row=>row.item_id+':'+(row.model_id===null?'*':row.model_id)));
+  const automated=costRuleReferenceFromSnapshot(context.slice(3),{now:()=>captureMoment.getTime()}),restricted=new Set(automated.restricted_item_ids);
+  for(const match of automated.variants)assignments.add(match.item_id+':'+match.model_id);
   // V1 retains kit margins and composition, but no production-cost snapshot.
   // Keep its historical hashes intact and refuse a new misleading reference.
-  observationAssert(!frame.rows.some(row=>assignments.has(row.item_id+':'+row.model_id)||assignments.has(row.item_id+':*')),'OBSERVATION_CUSTOM_COST_MARGIN_UNAVAILABLE',409);
+  observationAssert(!frame.rows.some(row=>restricted.has(row.item_id)||assignments.has(row.item_id+':'+row.model_id)||assignments.has(row.item_id+':*')),'OBSERVATION_CUSTOM_COST_MARGIN_UNAVAILABLE',409);
   const content=observationContent(frame,settings,bindings),id=await observationHash(content),savedMoment=now??new Date();
   observationAssert(frame.date===new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(savedMoment),'OBSERVATION_SOURCE_UNAVAILABLE');
   const saved_at=savedMoment.toISOString();

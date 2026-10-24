@@ -23,6 +23,14 @@ const request=(body=JSON.stringify(input),options={})=>new Request((options.orig
 });
 const authenticated={validateInternalApp:async()=>true};
 
+test('opt-in child cost metadata crosses App Auth and Finance only when requested and cannot appear on a legacy request',async()=>{
+ const body={item_ids:['123'],selling_unit:'AUTO',include_cost_catalog:true},value={schema:'variant_catalog_v1',checked_at:1800000000,products:[{item_id:'123',selling_unit:'SINGLE_GARMENT',catalog_fingerprint:'c'.repeat(64),bindings:[],unresolved_count:2,cost_catalog:{schema:'product_cost_catalog_v1',product_name:'Camiseta Infantil',variants:[{model_id:'4',attributes:[{name:'Tamanho',value:'4'}]},{model_id:'6',attributes:[{name:'Tamanho',value:'6'}]}]}}]};
+ const worker=createFinanceWorker({variantCatalog:async(_,options)=>{assert.equal(options.include_cost_catalog,true);return value;},fetchImpl:async()=>{},now:()=>1800000000000});
+ const env={FINANCE_ROUTER_SECRET:secret,FINANCE_CONNECTION_ENABLED:'true',SHOPEE_FINANCE_SERVICE:{fetch:request=>worker.fetch(request,{FINANCE_ROUTER_SECRET:secret,FINANCE_CONNECTION_ENABLED:'true'})}};
+ const result=await getFinanceVariantCatalog({APP_INTERNAL_SECRET:'fixture'},body,{fetchImpl:request=>forwardFinancePaymentSample(request,env,authenticated)});assert.deepEqual(result,value);
+ const refused=await getFinanceVariantCatalog({APP_INTERNAL_SECRET:'fixture'},input,{fetchImpl:async()=>json(value)});assert.equal(refused.status,'UNAVAILABLE');
+});
+
 test('catalogue private routes deny untrusted callers and invalid input before any capability',async()=>{
  let calls=0;
  const env={FINANCE_ROUTER_SECRET:secret,FINANCE_CONNECTION_ENABLED:'true',SHOPEE_FINANCE_SERVICE:{fetch(){calls++;}},get FINANCE_DB(){throw Error('must not read DB');}};

@@ -7,6 +7,7 @@ import {buildAdsMeasurement} from '../src/ads-measurement.mjs';
 import {buildAdsCalendar,projectAdsCalendar} from '../src/ads-calendar.mjs';
 import {projectBusinessPeriodFrame} from '../../finance/src/business-period-frame.mjs';
 import {businessMonth,projectBusinessMonth,BusinessMonthError} from '../src/business-month.mjs';
+import {syncCostRuleCatalog,readCostRules,saveCostRules} from '../src/cost-rules.mjs';
 
 const clock=Date.UTC(2026,10,2,12),stamp=Math.floor(clock/1000),now=()=>clock;
 const request=(operation='start',changes={})=>({operation,month:'2026-10',...changes});
@@ -35,6 +36,15 @@ const run=(e,s,operation='start',changes={},options={})=>businessMonth(e,request
 async function complete(e,s,changes={},options={}){let value=await run(e,s,'start',changes,options);for(let index=0;index<20&&value.status==='RUNNING';index++)value=await run(e,s,'step',changes,options);return value;}
 const state=e=>({expenses:e.ADMIN_DB.db.prepare('SELECT * FROM business_month_expenses').all(),audit:e.ADMIN_DB.db.prepare('SELECT * FROM business_month_expenses_audit').all()});
 const save=(e,s,revision=0,changes={})=>run(e,s,'expenses',{revision,external_expenses_cents:0,recharge_treatment:'UNCONFIRMED',...changes},{actor:'fixture-admin'});
+
+test('automatic child costs flow into the month and every sold unit without using the old adult price or per-product confirmations',async()=>{
+ const e=env(),s=source(withProducts);await complete(e,s);
+ await syncCostRuleCatalog(e,['201'],async()=>({schema:'variant_catalog_v1',checked_at:stamp,products:[{item_id:'201',catalog_fingerprint:'b'.repeat(64),bindings:[],unresolved_count:1,cost_catalog:{schema:'product_cost_catalog_v1',product_name:'Camiseta Infantil Estrela',variants:[{model_id:'0',attributes:[{name:'Tamanho',value:'4'}]}]}}]}),{now});
+ await run(e,s,'ads');let value=await save(e,s);
+ assert.equal(value.production_cost_cents,7500);assert.equal(value.result.net_estimate_cents,130795);assert.equal(value.cost_rules_revision,1);assert.equal(value.costs_revision,7);assert.deepEqual(value.unmapped_variants,[]);
+ const product=value.product_summary.products[0];assert.equal(product.exclusive_after_costs_cents,142500);assert.equal(product.variants[0].unit_cost_cents,1250);assert.equal(product.variants[0].selling_unit,'CUSTOM_PRODUCT');assert.match(product.variants[0].cost_profile_label,/infantil · 4/);
+ const state=await readCostRules(e),values=structuredClone(state.values);values.rules[0].unit_cost_cents=1300;await saveCostRules(e,{revision:state.revision,values},'admin');value=await run(e,s,'read');assert.equal(value.production_cost_cents,7800);assert.equal(value.result.net_estimate_cents,130495);assert.equal(value.cost_rules_revision,2);assert.ok(projectBusinessMonth(value));
+});
 
 test('MEI policy and source timestamps are detached and strict; financial timings cannot disappear from a completed result',async()=>{
  const e=env(),s=source(withProducts);await complete(e,s);await run(e,s,'ads');const value=await save(e,s);

@@ -46,6 +46,7 @@ export async function getFinanceVariantCatalog(env,input,{fetchImpl=request=>fet
  const failure=code=>({schema:'variant_catalog_v1',status:'UNAVAILABLE',diagnostic:{code,http:null}});
  const body=projectVariantCatalogRequest(input);
  if(!body||typeof env?.APP_INTERNAL_SECRET!=='string'||!env.APP_INTERNAL_SECRET||typeof fetchImpl!=='function'||!Number.isInteger(timeoutMs)||timeoutMs<5||timeoutMs>45000)return failure('FINANCE_CATALOG_APP_CONFIGURATION');
+ const maximum=body.include_cost_catalog?1048576:262144;
  const controller=new AbortController();let timer,reader,response;
  const cancel=()=>{try{(reader?reader.cancel():response?.body?.cancel())?.catch(()=>{});}catch{}};
  const checkDeadline=()=>{if(controller.signal.aborted){cancel();throw Error('deadline');}};
@@ -55,15 +56,15 @@ export async function getFinanceVariantCatalog(env,input,{fetchImpl=request=>fet
   checkDeadline();
   if(!(response instanceof Response)||response.redirected||response.status!==200||!/^application\/json(?:\s*;\s*charset\s*=\s*(?:utf-8|"utf-8"))?\s*$/i.test(response.headers.get('content-type')||''))return failure('FINANCE_CATALOG_APP_RESPONSE_INVALID');
   const declared=response.headers.get('content-length');
-  if(declared!==null&&(!/^\d+$/.test(declared)||!Number.isSafeInteger(Number(declared))||Number(declared)>262144))return failure('FINANCE_CATALOG_APP_RESPONSE_INVALID');
+  if(declared!==null&&(!/^\d+$/.test(declared)||!Number.isSafeInteger(Number(declared))||Number(declared)>maximum))return failure('FINANCE_CATALOG_APP_RESPONSE_INVALID');
   if(!response.body)return failure('FINANCE_CATALOG_APP_RESPONSE_INVALID');
   reader=response.body.getReader();const chunks=[];let length=0;
-  try{while(true){checkDeadline();const chunk=await reader.read();checkDeadline();if(chunk.done)break;if(!(chunk.value instanceof Uint8Array))return failure('FINANCE_CATALOG_APP_RESPONSE_INVALID');length+=chunk.value.byteLength;if(length>262144)return failure('FINANCE_CATALOG_APP_RESPONSE_INVALID');chunks.push(chunk.value);}}
+  try{while(true){checkDeadline();const chunk=await reader.read();checkDeadline();if(chunk.done)break;if(!(chunk.value instanceof Uint8Array))return failure('FINANCE_CATALOG_APP_RESPONSE_INVALID');length+=chunk.value.byteLength;if(length>maximum)return failure('FINANCE_CATALOG_APP_RESPONSE_INVALID');chunks.push(chunk.value);}}
   finally{cancel();try{reader.releaseLock();}catch{}reader=undefined;}
   const bytes=new Uint8Array(length);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.length;}
   let raw;try{raw=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes));}catch{return failure('FINANCE_CATALOG_APP_RESPONSE_INVALID');}
   const frame=projectVariantCatalog(raw);
-  return frame&&frame.products.length===body.item_ids.length&&frame.products.every(product=>body.item_ids.includes(product.item_id)&&(body.selling_unit==='AUTO'||(product.selling_unit||'ONE_MALE_ONE_FEMALE_KIT')===(body.selling_unit||'ONE_MALE_ONE_FEMALE_KIT')))?frame:failure('FINANCE_CATALOG_APP_RESPONSE_INVALID');
+  return frame&&frame.products.length===body.item_ids.length&&frame.products.every(product=>body.item_ids.includes(product.item_id)&&Boolean(body.include_cost_catalog)===Object.hasOwn(product,'cost_catalog')&&(body.selling_unit==='AUTO'||(product.selling_unit||'ONE_MALE_ONE_FEMALE_KIT')===(body.selling_unit||'ONE_MALE_ONE_FEMALE_KIT')))?frame:failure('FINANCE_CATALOG_APP_RESPONSE_INVALID');
  };
  try{return await Promise.race([run(),deadline]);}
  catch{return failure(controller.signal.aborted?'FINANCE_CATALOG_APP_TIMEOUT':'FINANCE_CATALOG_APP_UPSTREAM_FAILED');}

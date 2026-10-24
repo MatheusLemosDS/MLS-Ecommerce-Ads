@@ -1,5 +1,10 @@
 # Custos personalizados
 
+Para associar pelo tipo do produto e pelo tamanho, use também as
+[regras automáticas por variação](CUSTOS_AUTOMATICOS_POR_VARIACAO.md).
+A regra inicial de camiseta infantil aplica R$ 12,50 aos tamanhos 4 a 16
+confirmados; calças, shorts e outros produtos podem ter regras próprias.
+
 Em **Custos → Custos de produção**, a seção **Custos para qualquer produto**
 permite cadastrar calça, moletom, camiseta, kit casal ou outro produto. Cada
 perfil representa o custo completo de **uma unidade vendida**. Os valores são

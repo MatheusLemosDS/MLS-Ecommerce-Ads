@@ -77,7 +77,7 @@ async function readSampleBody(body,maximum,controller,onReader){
 export async function forwardFinancePaymentSample(request,env,{validateInternalApp}={}){
  let url;try{url=new URL(request.url);}catch{return routerFailure('INVALID_REQUEST',400);}
  if(url.origin!==FINANCE_ORIGIN||url.username||url.password||url.hash||![PAYMENT_SAMPLE_PATH,PAYMENT_PREVIEW_PATH,VARIANT_CATALOG_PATH,STORE_PERIOD_PATH,BUSINESS_PERIOD_PATH].includes(url.pathname))return routerFailure('NOT_FOUND',404);
- const catalog=url.pathname===VARIANT_CATALOG_PATH,business=url.pathname===BUSINESS_PERIOD_PATH,storePeriod=business||url.pathname===STORE_PERIOD_PATH,maximum=business?1048576:storePeriod?524288:catalog?262144:65536,maximumInput=storePeriod?256:128;
+ const catalog=url.pathname===VARIANT_CATALOG_PATH,business=url.pathname===BUSINESS_PERIOD_PATH,storePeriod=business||url.pathname===STORE_PERIOD_PATH,maximum=business?1048576:storePeriod?524288:catalog?262144:65536,maximumInput=storePeriod||catalog?256:128;
  const unavailable=()=>storePeriod?storePeriodFailure():catalog?catalogFailure():sampleFailure();
  if(request.method!=='POST')return routerFailure('METHOD_NOT_ALLOWED',405);
  if(url.search||request.url.length>4096)return routerFailure('INVALID_REQUEST',400);
@@ -94,6 +94,7 @@ export async function forwardFinancePaymentSample(request,env,{validateInternalA
   const input=storePeriod?(business?projectBusinessPeriodRequest(body):projectStorePeriodRequest(body)):catalog?projectVariantCatalogRequest(body):body;
   if(!input||(!catalog&&!storePeriod&&(typeof input!=='object'||Array.isArray(input)||Object.keys(input).length!==0)))return routerFailure('INVALID_REQUEST',400);
   if(controller.signal.aborted)return unavailable();
+  const responseMaximum=catalog&&input.include_cost_catalog?1048576:maximum;
   const headers={'content-type':'application/json',accept:'application/json','X-Braza-Finance-Router':secret};
   const upstream=await env.SHOPEE_FINANCE_SERVICE.fetch(new Request(FINANCE_ORIGIN+url.pathname,{method:'POST',headers,body:JSON.stringify(input),redirect:'manual',signal:controller.signal}));
   // A service binding may finish after our deadline despite its aborted signal.
@@ -101,8 +102,8 @@ export async function forwardFinancePaymentSample(request,env,{validateInternalA
   if(controller.signal.aborted){try{upstream?.body?.cancel().catch(()=>{});}catch{}return unavailable();}
   if(!(upstream instanceof Response)||upstream.redirected||upstream.status>=300&&upstream.status<400){try{upstream?.body?.cancel().catch(()=>{});}catch{}return unavailable();}
   const media=upstream.headers.get('content-type')||'',size=upstream.headers.get('content-length');
-  if(!/^application\/json(?:\s*;\s*charset\s*=\s*(?:utf-8|"utf-8"))?\s*$/i.test(media)||(size!==null&&(!/^\d+$/.test(size)||Number(size)>maximum))){try{upstream.body?.cancel().catch(()=>{});}catch{}return unavailable();}
-  const value=await readSampleBody(upstream.body,maximum,controller,current=>{reader=current;});
+  if(!/^application\/json(?:\s*;\s*charset\s*=\s*(?:utf-8|"utf-8"))?\s*$/i.test(media)||(size!==null&&(!/^\d+$/.test(size)||Number(size)>responseMaximum))){try{upstream.body?.cancel().catch(()=>{});}catch{}return unavailable();}
+  const value=await readSampleBody(upstream.body,responseMaximum,controller,current=>{reader=current;});
   if(controller.signal.aborted)return unavailable();
   if(upstream.status!==200){
    if(storePeriod)return storePeriodFailure([400,401,403,409,429,502,503,504].includes(upstream.status)?upstream.status:502);
@@ -124,7 +125,7 @@ function storePeriodRequestMatches(input,frame){
 }
 
 function catalogRequestMatches(input,frame){
- return Array.isArray(frame.products)&&frame.products.length===input.item_ids.length&&frame.products.every(item=>input.item_ids.includes(item.item_id)&&(input.selling_unit==='AUTO'||(item.selling_unit||'ONE_MALE_ONE_FEMALE_KIT')===(input.selling_unit||'ONE_MALE_ONE_FEMALE_KIT')));
+ return Array.isArray(frame.products)&&frame.products.length===input.item_ids.length&&frame.products.every(item=>input.item_ids.includes(item.item_id)&&Boolean(input.include_cost_catalog)===Object.hasOwn(item,'cost_catalog')&&(input.selling_unit==='AUTO'||(item.selling_unit||'ONE_MALE_ONE_FEMALE_KIT')===(input.selling_unit||'ONE_MALE_ONE_FEMALE_KIT')));
 }
 
 function routerFailure(code,status){return new Response(JSON.stringify({error:code}),{status,headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}});}

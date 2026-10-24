@@ -54,7 +54,7 @@ test('explicit capture projects one complete source and stores only matching con
 });
 test('context is selected in one transactional D1 batch and copied before subsequent edits',async()=>{
  const env=await fixture(),originalBatch=env.ADMIN_DB.batch.bind(env.ADMIN_DB);let batches=0;
- env.ADMIN_DB.batch=async statements=>{batches++;assert.equal(statements.length,3);const result=await originalBatch(statements);updateContext(env,{settingsPayload:JSON.stringify({...settings(),regular_cents:999}),settingsRevision:8,bindingsPayload:'[]',bindingsRevision:5});env.ADMIN_DB.db.prepare('UPDATE production_costs_state SET revision=4,payload=? WHERE id=1').run(JSON.stringify(customCosts(null)));return result;};
+ env.ADMIN_DB.batch=async statements=>{batches++;assert.equal(statements.length,5);const result=await originalBatch(statements);updateContext(env,{settingsPayload:JSON.stringify({...settings(),regular_cents:999}),settingsRevision:8,bindingsPayload:'[]',bindingsRevision:5});env.ADMIN_DB.db.prepare('UPDATE production_costs_state SET revision=4,payload=? WHERE id=1').run(JSON.stringify(customCosts(null)));return result;};
  const {observation}=await capture(env);
  assert.equal(batches,1);assert.equal(observation.settings_snapshot.revision,7);assert.equal(observation.bindings_snapshot.revision,4);assert.equal(observation.margin_reference.known_subset_cents,3350);
 });
@@ -144,7 +144,7 @@ test('unassigned profiles and costs for other products or variants leave v1 capt
 test('capture checks custom assignments from the same atomic context even when costs change immediately after selection',async()=>{
  const env=await fixture(),batch=env.ADMIN_DB.batch.bind(env.ADMIN_DB);
  env.ADMIN_DB.db.prepare('UPDATE production_costs_state SET payload=? WHERE id=1').run(JSON.stringify(customCosts(null)));
- env.ADMIN_DB.batch=async statements=>{assert.equal(statements.length,3);const selected=await batch(statements);env.ADMIN_DB.db.prepare('UPDATE production_costs_state SET revision=revision+1,payload=? WHERE id=1').run(JSON.stringify(COST_DEFAULTS));return selected;};
+ env.ADMIN_DB.batch=async statements=>{assert.equal(statements.length,5);const selected=await batch(statements);env.ADMIN_DB.db.prepare('UPDATE production_costs_state SET revision=revision+1,payload=? WHERE id=1').run(JSON.stringify(COST_DEFAULTS));return selected;};
  await expectError(capture(env),409,'OBSERVATION_CUSTOM_COST_MARGIN_UNAVAILABLE');assert.equal(count(env),0);
 });
 test('invalid production cost context cannot be captured or silently bypass the custom-cost guard',async()=>{

@@ -5,8 +5,10 @@ import {projectStorePeriodRequest,projectStorePeriodFrame} from '../../finance/s
 import {buildStoreProductSummary} from './store-product-summary.mjs';
 import {buildStoreReturnsSummary} from './store-returns-summary.mjs';
 import {projectAdsPeriod} from './ads-period.mjs';
+import {COST_RULE_SCHEMA,costRuleSnapshotQueries,costRuleReferenceFromSnapshot} from './cost-rules.mjs';
 
 export const STORE_ADJUSTMENTS_SCHEMA=[
+ ...COST_RULE_SCHEMA,
  `CREATE TABLE IF NOT EXISTS store_period_adjustments (run_id TEXT PRIMARY KEY NOT NULL, revision INTEGER NOT NULL, payload TEXT NOT NULL, updated_at TEXT NOT NULL)`,
  `CREATE TABLE IF NOT EXISTS store_period_adjustments_audit (run_id TEXT NOT NULL, revision INTEGER NOT NULL, payload TEXT NOT NULL, actor TEXT NOT NULL, created_at TEXT NOT NULL, PRIMARY KEY(run_id,revision))`,
  `CREATE TABLE IF NOT EXISTS store_period_ads_cache (run_id TEXT PRIMARY KEY NOT NULL,payload TEXT NOT NULL,updated_at INTEGER NOT NULL)`,
@@ -72,6 +74,7 @@ export async function storePeriodBundle(env,raw,{now=Date.now()}={}){
   env.ADMIN_DB.prepare('SELECT revision,payload,updated_at FROM production_costs_state WHERE id=1'),
   env.ADMIN_DB.prepare('SELECT revision,payload,updated_at FROM store_period_adjustments WHERE run_id=?').bind(finance.run_id),
   env.ADMIN_DB.prepare('SELECT payload,updated_at FROM store_period_ads_cache WHERE run_id=?').bind(finance.run_id),
+  ...costRuleSnapshotQueries(env.ADMIN_DB,finance.items.map(row=>row.item_id)),
  ]);
  let bindings,costs,adjustments;
  try{
@@ -91,8 +94,9 @@ export async function storePeriodBundle(env,raw,{now=Date.now()}={}){
  const ads_period=readStoredAdsPeriod(context[3]?.results?.[0],finance,now);
  const automatic=adjustments.values?.ads_source==='SHOPEE_PERIOD';
  const effective=automatic?(ads_period?.status==='AVAILABLE'?{...adjustments.values,ads_spend_cents:ads_period.expense_cents}:null):adjustments.values;
- const result=buildStoreSummary(finance,bindings,costs,effective,ads_period?.status==='AVAILABLE'?ads_period.expense_cents:null);
+ const automaticCosts=costRuleReferenceFromSnapshot(context.slice(4),{now:()=>now});
+ const result=buildStoreSummary(finance,bindings,costs,effective,ads_period?.status==='AVAILABLE'?ads_period.expense_cents:null,automaticCosts);
  if(automatic&&!effective)result.pending=result.pending.map(code=>code==='ADJUSTMENTS_REQUIRED'?'ADS_PERIOD_UNAVAILABLE':code);
- return {finance,result,adjustments,product_result:buildStoreProductSummary(finance,bindings,costs),ads_period,
+ return {finance,result,adjustments,product_result:buildStoreProductSummary(finance,bindings,costs,automaticCosts),ads_period,
   returns_result:buildStoreReturnsSummary(finance)};
 }

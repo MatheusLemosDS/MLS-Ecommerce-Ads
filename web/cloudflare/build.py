@@ -32,6 +32,9 @@ business_sync=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/busin
 business_sync='const brazaBusinessSync = (() => {\n'+business_sync+'\nreturn {BUSINESS_SYNC_SCHEMA,runBusinessSync,readBusinessSyncState,saveBusinessSyncPolicy,BusinessSyncError};\n})();\nconst {BUSINESS_SYNC_SCHEMA,runBusinessSync,readBusinessSyncState,saveBusinessSyncPolicy,BusinessSyncError}=brazaBusinessSync;\n'
 business_products=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/business-month-products.mjs').read_text(),flags=re.M),flags=re.M)
 business_products='const brazaBusinessProducts = (() => {\n'+business_products+'\nreturn {buildBusinessMonthProducts,projectBusinessMonthProducts};\n})();\nconst {buildBusinessMonthProducts,projectBusinessMonthProducts}=brazaBusinessProducts;\n'
+cost_rules=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/cost-rules.mjs').read_text(),flags=re.M),flags=re.M)
+cost_rules='const brazaCostRulesStore = (() => {\n'+cost_rules+'\nreturn {COST_RULE_SCHEMA,readCostRules,saveCostRules,readCostRuleReference,syncCostRuleCatalog,selectCostRuleCandidates,validateCostRules,evaluateCostRules,costRuleSnapshotQueries,costRuleReferenceFromSnapshot,CostRuleError};\n})();\nconst {COST_RULE_SCHEMA,readCostRules,saveCostRules,readCostRuleReference,syncCostRuleCatalog,selectCostRuleCandidates,validateCostRules,evaluateCostRules,costRuleSnapshotQueries,costRuleReferenceFromSnapshot,CostRuleError}=brazaCostRulesStore;\n'
+cost_rules_view=re.sub(r'^export ', '', (root/'src/cost-rules-view.mjs').read_text(),flags=re.M)
 business_month=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/business-month.mjs').read_text(),flags=re.M),flags=re.M)
 business_tax=re.sub(r'^export ', '', (root/'src/business-tax-policy.mjs').read_text(),flags=re.M)
 business_month='const brazaBusinessMonth = (() => {\n'+business_tax+'\n'+business_month+'\nreturn {BUSINESS_MONTH_SCHEMA,businessMonth,projectBusinessMonth,BusinessMonthError,readBusinessTaxPolicy,saveBusinessTaxPolicy,readBusinessTaxPolicyAudit,BusinessTaxPolicyError};\n})();\nconst {BUSINESS_MONTH_SCHEMA,businessMonth,projectBusinessMonth,BusinessMonthError,readBusinessTaxPolicy,saveBusinessTaxPolicy,readBusinessTaxPolicyAudit,BusinessTaxPolicyError}=brazaBusinessMonth;\n'
@@ -51,7 +54,7 @@ app_finance_sample=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/
 finance_preview_frame=re.sub(r'^export ', '', (root.parent/'finance/src/payment-preview-frame.mjs').read_text(), flags=re.M)
 finance_preview_frame='const brazaFinancePreviewFrame = (() => {\n'+finance_preview_frame+'\nreturn {projectFinancePaymentPreview};\n})();\nconst {projectFinancePaymentPreview}=brazaFinancePreviewFrame;\n'
 variant_catalog_frame=re.sub(r'^export ', '', (root.parent/'finance/src/variant-catalog-frame.mjs').read_text(), flags=re.M)
-variant_catalog_frame='const brazaVariantCatalogFrame = (() => {\n'+variant_catalog_frame+'\nreturn {projectVariantCatalog,projectVariantCatalogRequest};\n})();\nconst {projectVariantCatalog,projectVariantCatalogRequest}=brazaVariantCatalogFrame;\n'
+variant_catalog_frame='const brazaVariantCatalogFrame = (() => {\n'+variant_catalog_frame+'\nreturn {projectVariantCatalog,projectVariantCatalogRequest,projectProductCostCatalog};\n})();\nconst {projectVariantCatalog,projectVariantCatalogRequest,projectProductCostCatalog}=brazaVariantCatalogFrame;\n'
 daily_orders_frame=re.sub(r'^export ', '', (root.parent/'finance/src/daily-orders-frame.mjs').read_text(), flags=re.M)
 daily_orders_frame='const brazaDailyOrdersFrame = (() => {\n'+daily_orders_frame+'\nreturn {projectDailyOrdersFrame};\n})();\nconst {projectDailyOrdersFrame}=brazaDailyOrdersFrame;\n'
 store_period_frame=re.sub(r'^export ', '', (root.parent/'finance/src/store-period-frame.mjs').read_text(), flags=re.M)
@@ -81,7 +84,7 @@ workspace_auth=re.sub(r'^export ', '', (root/'src/unified-auth.mjs').read_text()
 workspace_auth='const brazaWorkspaceAuth = (() => {\n'+workspace_auth+'\nreturn {readOwnerSession,readWorkspaceSession,handleWorkspaceAuth};\n})();\nconst {readOwnerSession,readWorkspaceSession,handleWorkspaceAuth}=brazaWorkspaceAuth;\n'
 theme=re.sub(r'^export ', '', (root/'src/theme.mjs').read_text(), flags=re.M)
 ads_presentation=re.sub(r'^export ', '', (root/'src/ads-presentation.mjs').read_text(), flags=re.M)
-admin=business_products+'\n'+business_month+'\n'+business_sync+'\n'+automation_workspace+'\n'+month_view+'\n'+month_client+'\n'+client+'\n'+view+'\n'+ads+'\n'+orders+'\n'+daily_shop_orders+'\n'+items+'\n'+variants+'\n'+observations+'\n'+production_costs+'\n'+store_summary+'\n'+store_invoice_tax+'\n'+store_product_summary+'\n'+store_returns_summary+'\n'+store_admin+'\n'+variant_sync+'\n'+re.sub(r'^import .*\n','',admin,flags=re.M)
+admin=cost_rules+'\n'+cost_rules_view+'\n'+business_products+'\n'+business_month+'\n'+business_sync+'\n'+automation_workspace+'\n'+month_view+'\n'+month_client+'\n'+client+'\n'+view+'\n'+ads+'\n'+orders+'\n'+daily_shop_orders+'\n'+items+'\n'+variants+'\n'+observations+'\n'+production_costs+'\n'+store_summary+'\n'+store_invoice_tax+'\n'+store_product_summary+'\n'+store_returns_summary+'\n'+store_admin+'\n'+variant_sync+'\n'+re.sub(r'^import .*\n','',admin,flags=re.M)
 admin=admin.replace('export {adminFetch,schedule,scheduledWork,DEFAULTS,SCHEMA,validateSettings,workspaceAuthFetch};','')
 needle='    const url = new URL(request.url);'
 assert original.count(needle)==1
@@ -117,7 +120,7 @@ updated=updated.replace(needle,'''  opportunityDetail,
   workspaceRole='review'
 ) {''',1)
 needle='  async fetch(request, env) {'
-updated=updated.replace(needle,'''  async scheduled(event, env, ctx) { ctx.waitUntil(brazaAdmin.scheduledWork(env,{getFinanceBusinessPeriod,getAdsCalendar})); },\n'''+needle,1)
+updated=updated.replace(needle,'''  async scheduled(event, env, ctx) { ctx.waitUntil(brazaAdmin.scheduledWork(env,{getFinanceBusinessPeriod,getAdsCalendar,getFinanceVariantCatalog})); },\n'''+needle,1)
 needle='${navLink(\n  "/dashboard",'
 assert updated.count(needle)==1
 start=updated.index(needle)

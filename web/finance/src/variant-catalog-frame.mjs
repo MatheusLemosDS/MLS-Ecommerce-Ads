@@ -45,10 +45,11 @@ function projectCatalogDiagnostic(value, modelCount, unresolvedCount) {
 export function projectVariantCatalogRequest(value) {
   try {
     const hasUnit=catalogObject(value)&&Object.hasOwn(value,'selling_unit');
-    if (!catalogKeys(value,['item_ids',...(hasUnit?['selling_unit']:[])]) || !catalogArray(value.item_ids,3) || !value.item_ids.length
+    const costs=catalogObject(value)&&Object.hasOwn(value,'include_cost_catalog');
+    if (!catalogKeys(value,['item_ids',...(hasUnit?['selling_unit']:[]),...(costs?['include_cost_catalog']:[])]) || costs&&value.include_cost_catalog!==true || !catalogArray(value.item_ids,3) || !value.item_ids.length
       || (hasUnit&&value.selling_unit!=='AUTO'&&!catalogSellingUnits.has(value.selling_unit))
       || !value.item_ids.every(id=>catalogId(id)) || new Set(value.item_ids).size!==value.item_ids.length) return null;
-    return {item_ids:[...value.item_ids],...(hasUnit?{selling_unit:value.selling_unit}:{})};
+    return {item_ids:[...value.item_ids],...(hasUnit?{selling_unit:value.selling_unit}:{}),...(costs?{include_cost_catalog:true}:{})};
   } catch {return null;}
 }
 
@@ -61,7 +62,8 @@ export function projectVariantCatalog(value) {
     for (const product of value.products) {
       const hasDiagnostic=catalogObject(product)&&Object.hasOwn(product,'diagnostic');
       const hasUnit=catalogObject(product)&&Object.hasOwn(product,'selling_unit');
-      const keys=['item_id','catalog_fingerprint','bindings','unresolved_count',...(hasUnit?['selling_unit']:[]),...(hasDiagnostic?['diagnostic']:[])];
+      const hasCosts=catalogObject(product)&&Object.hasOwn(product,'cost_catalog');
+      const keys=['item_id','catalog_fingerprint','bindings','unresolved_count',...(hasUnit?['selling_unit']:[]),...(hasDiagnostic?['diagnostic']:[]),...(hasCosts?['cost_catalog']:[])];
       if (!catalogKeys(product,keys)
         || (hasUnit&&!catalogSellingUnits.has(product.selling_unit))
         || !catalogId(product.item_id) || seen.has(product.item_id)
@@ -86,11 +88,43 @@ export function projectVariantCatalog(value) {
         if (!diagnostic) return null;
         projected.diagnostic=diagnostic;
       }
+      if(hasCosts){const costs=projectProductCostCatalog(product.cost_catalog,bindings.length+product.unresolved_count);if(!costs)return null;projected.cost_catalog=costs;}
       products.push(projected);
     }
     products.sort((a,b)=>catalogSort(a.item_id,b.item_id));
     return {schema:'variant_catalog_v1',checked_at:value.checked_at,products};
   } catch {return null;}
+}
+
+// Cost rules need the product type and exact named options. This opt-in view
+// excludes SKUs, prices, orders, buyers and unrelated provider metadata.
+const costCatalogText=(value,max)=>typeof value==='string'&&value.trim().length>0&&new TextEncoder().encode(value).byteLength<=max&&!/[\u0000-\u001f\u007f-\u009f]/.test(value);
+export function projectProductCostCatalog(value,expectedCount){
+ try{
+  if(!catalogKeys(value,['schema','product_name','variants'])||value.schema!=='product_cost_catalog_v1'||!costCatalogText(value.product_name,1024)||!catalogArray(value.variants,1000)||value.variants.length!==expectedCount)return null;
+  const seen=new Set(),variants=[];
+  for(const row of value.variants){
+   if(!catalogKeys(row,['model_id','attributes'])||!catalogId(row.model_id,true)||seen.has(row.model_id)||!catalogArray(row.attributes,2))return null;seen.add(row.model_id);
+   const names=new Set(),attributes=[];for(const attribute of row.attributes){if(!catalogKeys(attribute,['name','value'])||!costCatalogText(attribute.name,64)||!costCatalogText(attribute.value,64)||names.has(attribute.name))return null;names.add(attribute.name);attributes.push({...attribute});}
+   variants.push({model_id:row.model_id,attributes});
+  }
+  variants.sort((a,b)=>catalogSort(a.model_id,b.model_id));return {schema:'product_cost_catalog_v1',product_name:value.product_name,variants};
+ }catch{return null;}
+}
+export function deriveProductCostCatalog(response,productName){
+ if(!catalogObject(response)||!costCatalogText(productName,1024))throw new VariantCatalogFrameError();
+ const models=catalogOwn(response,'model'),axes=catalogOwn(response,'tier_variation');
+ if(!catalogArray(models,1000)||!catalogArray(axes,2))throw new VariantCatalogFrameError();
+ const variants=[];
+ for(const model of models){
+  const rawId=catalogOwn(model,'model_id'),model_id=typeof rawId==='number'&&Number.isSafeInteger(rawId)?String(rawId):rawId,indices=catalogOwn(model,'tier_index'),attributes=[];
+  if(catalogArray(indices,2)&&indices.length===axes.length&&indices.every((value,index)=>Number.isSafeInteger(value)&&value>=0&&catalogArray(catalogOwn(axes[index],'option_list'),1000)&&value<catalogOwn(axes[index],'option_list').length)){
+   for(let i=0;i<axes.length;i++)attributes.push({name:catalogOwn(axes[i],'name'),value:catalogOwn(catalogOwn(axes[i],'option_list')[indices[i]],'option')});
+  }
+  variants.push({model_id,attributes});
+ }
+ const result=projectProductCostCatalog({schema:'product_cost_catalog_v1',product_name:productName,variants},models.length);
+ if(!result)throw new VariantCatalogFrameError();return result;
 }
 
 const catalogLabel = value => {

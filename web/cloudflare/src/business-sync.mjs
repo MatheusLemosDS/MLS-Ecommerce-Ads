@@ -1,4 +1,5 @@
 import {businessMonth,projectBusinessMonth} from './business-month.mjs';
+import {syncCostRuleCatalog,selectCostRuleCandidates} from './cost-rules.mjs';
 
 // This job only advances the existing read-only collectors. Financial frames,
 // expenses, declared DAS and cost rules remain owned by their existing stores.
@@ -91,8 +92,14 @@ export async function runBusinessSync(env,services,{now=()=>Date.now(),maxSteps=
    if(frame.status!=='RUNNING')break;
   }
   if(frame?.status==='COMPLETE'&&await canCall(60000)){
-   frame=projectBusinessMonth(await businessMonth(env,{operation:'ads',month},collectors,{now,actor:'business-sync'}));
-   if(!frame||frame.month!==month)throw new BusinessSyncError('BUSINESS_SYNC_RESULT_INVALID');
+   const costItems=[...new Set([...(frame.product_summary?.products||[]),...frame.unmapped_variants].map(row=>row.item_id))];
+   if(costItems.length&&typeof services?.getFinanceVariantCatalog==='function'&&await canCall(45000)){
+    try{const ids=await selectCostRuleCandidates(env,costItems,{now});if(ids.length){await syncCostRuleCatalog(env,ids,services.getFinanceVariantCatalog,{now});frame=projectBusinessMonth(await businessMonth(env,{operation:'read',month},collectors,{now,actor:'business-sync'}));}}catch{}
+   }
+   if(await canCall(60000)){
+    frame=projectBusinessMonth(await businessMonth(env,{operation:'ads',month},collectors,{now,actor:'business-sync'}));
+    if(!frame||frame.month!==month)throw new BusinessSyncError('BUSINESS_SYNC_RESULT_INVALID');
+   }
   }
   if(frame?.result.pending.some(code=>['SOURCE_UNAVAILABLE','FINANCIAL_SOURCE_STALE'].includes(code))){status='ERROR';errorCode='BUSINESS_SYNC_COLLECTION_UNAVAILABLE';}
   else if(frame?.status==='LIMIT_REACHED'){status='LIMIT_REACHED';errorCode='BUSINESS_SYNC_PERIOD_LIMIT_REACHED';}

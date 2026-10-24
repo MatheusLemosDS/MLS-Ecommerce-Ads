@@ -129,3 +129,32 @@ test('the BRT boundary chooses the previous UTC month and an expired lease can b
  env.ADMIN_DB.db.prepare("UPDATE business_sync_state SET lease_token='22222222-2222-4222-8222-222222222222',lease_expires_at=?,status='RUNNING'").run(time/1000-1);
  const result=await run(env,services,{now:()=>time});assert.equal(result.state.month,'2026-10');assert.equal(result.status,'COMPLETE');assert.equal(result.finance_steps,3);assert.equal(result.state.summary.end_date,'2026-10-31');assert.equal(result.state.lease_expires_at,null);
 });
+
+test('unattended catalogue discovery corrects an already priced adult binding to the child rule without opening the UI',async()=>{
+ const env=environment(),services=source(),provider=services.getFinanceBusinessPeriod,catalogCalls=[];
+ const binding={item_id:'201',model_id:'0',selling_unit:'SINGLE_GARMENT',size:'P',operator_confirmed:true};
+ env.ADMIN_DB.db.prepare('UPDATE variant_bindings_state SET payload=? WHERE id=1').run(JSON.stringify([binding]));
+ services.getFinanceBusinessPeriod=async(...args)=>{
+  const value=await provider(...args);
+  value.coverage={...value.coverage,orders:2,paid:2,completed:2,payment_covered:2};
+  value.known_sales_base_raw=value.sales_base_raw='100';value.known_expected_repass_raw=value.expected_repass_raw='80';
+  value.invoice_tax={...value.invoice_tax,covered_orders:2,known_base_raw:'100',known_tax_raw:'2'};
+  value.items=[{item_id:'201',model_id:'0',quantity:2}];
+  value.product_breakdown.products=[{item_id:'201',quantity:2,orders:2,exclusive_orders:2,mixed_orders:0,exclusive_payment_covered:2,exclusive_payment_missing:0,exclusive_returns:0,exclusive_returns_unknown:0,known_exclusive_sales_base_raw:'100',exclusive_sales_base_raw:'100',known_exclusive_expected_repass_raw:'80',exclusive_expected_repass_raw:'80',known_exclusive_ads_adjustment_raw:'0',exclusive_ads_adjustment_raw:'0',known_exclusive_invoice_tax_raw:'2',exclusive_invoice_tax_raw:'2',items:[{model_id:'0',exclusive_quantity:2,mixed_quantity:0}]}];
+  assert.ok(projectBusinessPeriodFrame(value));return value;
+ };
+ services.getFinanceVariantCatalog=async(_,selection)=>{
+  catalogCalls.push(selection);
+  assert.deepEqual(selection,{item_ids:['201'],selling_unit:'AUTO',include_cost_catalog:true});
+  const before=await businessMonth(env,{operation:'read',month:'2026-10'},services,{now});
+  assert.equal(before.production_cost_cents,6360);assert.deepEqual(before.unmapped_variants,[]);
+  return {schema:'variant_catalog_v1',checked_at:stamp,products:[{item_id:'201',catalog_fingerprint:'b'.repeat(64),bindings:[],unresolved_count:1,cost_catalog:{schema:'product_cost_catalog_v1',product_name:'Camiseta Infantil Estrela',variants:[{model_id:'0',attributes:[{name:'Tamanho',value:'4'}]}]}}]};
+ };
+ await businessMonth(env,{operation:'expenses',month:'2026-10',revision:0,external_expenses_cents:0,recharge_treatment:'UNCONFIRMED'},services,{now});
+ const savedBindings=rows(env,'variant_bindings_state'),savedCosts=rows(env,'production_costs_state');
+ const result=await run(env,services),month=await businessMonth(env,{operation:'read',month:'2026-10'},services,{now});
+ assert.equal(result.status,'COMPLETE');assert.equal(catalogCalls.length,1);assert.equal(result.finance_steps,2);assert.equal(result.ads_reads,1);
+ assert.equal(month.production_cost_cents,5000);assert.equal(month.result.net_estimate_cents,2395);assert.equal(result.state.summary.net_estimate_cents,2395);assert.deepEqual(month.unmapped_variants,[]);
+ assert.equal(month.product_summary.products[0].variants[0].unit_cost_cents,1250);assert.equal(month.product_summary.products[0].quantity,4);
+ assert.deepEqual(rows(env,'variant_bindings_state'),savedBindings);assert.deepEqual(rows(env,'production_costs_state'),savedCosts);assert.equal(rows(env,'hermes_jobs').length,0);
+});

@@ -1,8 +1,10 @@
 import {validateVariantBindings} from './variant-bindings.mjs';
+import {COST_RULE_SCHEMA} from './cost-rules.mjs';
 
 // Operator-confirmed production costs. These do not come from Shopee finances.
 export const COST_DEFAULTS=Object.freeze({mode:'all_inclusive',inclusive_regular_cents:1590,inclusive_plus_cents:1890,base_regular_cents:null,base_plus_cents:null,components:Object.freeze([])});
 export const COST_SCHEMA=[
+ ...COST_RULE_SCHEMA,
  `CREATE TABLE IF NOT EXISTS production_costs_state (id INTEGER PRIMARY KEY CHECK(id=1), revision INTEGER NOT NULL, payload TEXT NOT NULL, updated_at TEXT NOT NULL)`,
  `CREATE TABLE IF NOT EXISTS production_costs_audit (id INTEGER PRIMARY KEY AUTOINCREMENT, revision INTEGER UNIQUE NOT NULL, payload TEXT NOT NULL, actor TEXT NOT NULL, created_at TEXT NOT NULL)`,
 ];
@@ -98,7 +100,7 @@ export async function readProductionCostAudit(env){
 const costReferenceFailure=()=>costFail('PRODUCTION_COST_REFERENCE_INVALID',503);
 function costSafeSum(a,b){const result=a+b;if(!Number.isSafeInteger(result)||result<0)costReferenceFailure();return result;}
 function costSafeProduct(a,b){const result=a*b;if(!Number.isSafeInteger(result)||result<0)costReferenceFailure();return result;}
-export function productionCostReference(frame,bindings,costState){
+export function productionCostReference(frame,bindings,costState,automaticReference=null){
  if(frame?.status!=='AVAILABLE')return null;
  if(!Array.isArray(frame.rows)||frame.rows.length>1000||!costRevisionValid(bindings?.revision)||!costRevisionValid(costState?.revision))costReferenceFailure();
  let values,confirmed;
@@ -111,15 +113,17 @@ export function productionCostReference(frame,bindings,costState){
  const plus=new Set(['G1','G2','G3']),variants=[];
  const profiles=new Map((values.custom_profiles||[]).map(profile=>[profile.id,profile]));
  const assignments=new Map((values.custom_assignments||[]).map(assignment=>[costAssignmentKey(assignment),profiles.get(assignment.profile_id)]));
+ const automated=new Map((automaticReference?.variants||[]).map(row=>[row.item_id+':'+row.model_id,row]));
+ const ruleManaged=new Set(automaticReference?.restricted_item_ids||[]);
  let known=0,mapped=0,unmapped=0;
  for(const [key,row] of grouped){
-  const binding=confirmed.get(key),custom=assignments.get(key)||assignments.get(row.item_id+':*'),out={...row,unit_cost_cents:null,production_cost_cents:null};
+  const binding=confirmed.get(key),manual=assignments.get(key)||assignments.get(row.item_id+':*'),automatic=automated.get(key),custom=manual||(automatic?.unit_cost_cents!==null&&automatic?{id:automatic.profile_id,label:automatic.profile_label,unit_cost_cents:automatic.unit_cost_cents}:null),out={...row,unit_cost_cents:null,production_cost_cents:null};
   if(custom){
    const subtotal=costSafeProduct(custom.unit_cost_cents,row.quantity);known=costSafeSum(known,subtotal);mapped=costSafeSum(mapped,row.quantity);
    out.unit_cost_cents=custom.unit_cost_cents;out.production_cost_cents=subtotal;
    out.cost_source='CUSTOM_PROFILE';out.cost_profile_id=custom.id;out.cost_profile_label=custom.label;
   }
-  else if(!binding)unmapped=costSafeSum(unmapped,row.quantity);
+  else if(automatic||ruleManaged.has(row.item_id)||!binding)unmapped=costSafeSum(unmapped,row.quantity);
   else{
    const garmentCost=size=>values[values.mode==='all_inclusive'?(plus.has(size)?'inclusive_plus_cents':'inclusive_regular_cents'):(plus.has(size)?'base_plus_cents':'base_regular_cents')];
    const single=binding.selling_unit==='SINGLE_GARMENT',pieceCount=single?1:2;

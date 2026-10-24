@@ -44,13 +44,13 @@ export function validateStoreAdjustments(value){
 
 // Expected repass already incorporates Shopee's fees. Do not subtract fee fields
 // again or use Shopee's original_cost_of_goods_sold as our manufacturing cost.
-export function buildStoreSummary(frame,bindings,costs,adjustments=null,_adsPeriodSpendCents=null){
+export function buildStoreSummary(frame,bindings,costs,adjustments=null,_adsPeriodSpendCents=null,automaticCosts=null){
   const source=projectStorePeriodFrame(frame);
   if(!source)throw new StoreSummaryError('STORE_SUMMARY_FRAME_INVALID',502);
   const declared=adjustments===null?null:validateStoreAdjustments(adjustments);
   let reference;
   try{
-    reference=productionCostReference({status:'AVAILABLE',rows:source.items.map(row=>({...row}))},bindings,costs);
+    reference=productionCostReference({status:'AVAILABLE',rows:source.items.map(row=>({...row}))},bindings,costs,automaticCosts);
   }catch{throw new StoreSummaryError('STORE_SUMMARY_COST_INVALID',503);}
   const complete=source.status==='COMPLETE'&&source.diagnostic===null;
   const invoiceTax=Object.hasOwn(source,'invoice_tax')?buildStoreInvoiceTax(source):null;

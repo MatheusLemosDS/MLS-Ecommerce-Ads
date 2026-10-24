@@ -74,7 +74,7 @@ function paymentFailure(error) {
 }
 
 async function privateFinanceBody(request, catalog = false, storePeriod = false, business = false) {
-  const maximum=storePeriod?256:128;
+  const maximum=storePeriod||catalog?256:128;
   const media = request.headers.get('content-type') || '';
   const declared = request.headers.get('content-length');
   if (!/^application\/json(?:\s*;\s*charset\s*=\s*(?:utf-8|"utf-8"))?\s*$/i.test(media)
@@ -298,7 +298,7 @@ export function createFinanceWorker({adapter, paymentSample, paymentPreview, var
           const result = await capability(env, {fetchImpl, now, ...(catalog || period ? input : {})});
           const frame = period ? (business ? projectBusinessPeriodFrame(result) : projectStorePeriodFrame(result)) : catalog ? projectVariantCatalog(result) : preview ? projectFinancePaymentPreview(result) : sampleFrame(result);
           if (period && (!frame || (input.operation === 'start' ? frame.start_date !== input.start_date || frame.end_date !== input.end_date : frame.run_id !== input.run_id))) return response({error:'FINANCE_STORE_UNAVAILABLE',diagnostic:{code:'FINANCE_STORE_UNAVAILABLE',http:null}},502,{json:true});
-          if (catalog && (!frame || frame.products.length !== input.item_ids.length || frame.products.some(product => !input.item_ids.includes(product.item_id) || input.selling_unit !== 'AUTO' && (product.selling_unit || 'ONE_MALE_ONE_FEMALE_KIT') !== (input.selling_unit || 'ONE_MALE_ONE_FEMALE_KIT')))) return response({error:'FINANCE_CATALOG_UNAVAILABLE',diagnostic:{code:'FINANCE_CATALOG_UNAVAILABLE',http:null}},502,{json:true});
+          if (catalog && (!frame || frame.products.length !== input.item_ids.length || frame.products.some(product => !input.item_ids.includes(product.item_id) || Boolean(input.include_cost_catalog)!==Object.hasOwn(product,'cost_catalog') || input.selling_unit !== 'AUTO' && (product.selling_unit || 'ONE_MALE_ONE_FEMALE_KIT') !== (input.selling_unit || 'ONE_MALE_ONE_FEMALE_KIT')))) return response({error:'FINANCE_CATALOG_UNAVAILABLE',diagnostic:{code:'FINANCE_CATALOG_UNAVAILABLE',http:null}},502,{json:true});
           if (!frame) return paymentFailure(preview ? new FinanceConnectionError('FINANCE_SAMPLE_PREVIEW_RESPONSE_INVALID', 502) : undefined);
           return response(frame, 200, {json: true});
         } catch (error) { return period ? response({error:'FINANCE_STORE_UNAVAILABLE',diagnostic:{code:'FINANCE_STORE_UNAVAILABLE',http:null}},502,{json:true}) : catalog ? response({error:'FINANCE_CATALOG_UNAVAILABLE',diagnostic:{code:'FINANCE_CATALOG_UNAVAILABLE',http:null}},502,{json:true}) : paymentFailure(error); }

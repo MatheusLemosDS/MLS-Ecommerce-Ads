@@ -20,14 +20,14 @@ function productSummaryMoney(value){
 // Only an order containing one product can attribute its entire expected
 // repass without an invented fee allocation. A mixed order's repass remains
 // unallocated; the known exclusive subset never pays for every order's costs.
-export function buildStoreProductSummary(frame,bindings,costs){
+export function buildStoreProductSummary(frame,bindings,costs,automaticCosts=null){
  const source=projectStorePeriodFrame(frame);
  if(!source)throw new StoreSummaryError('STORE_PRODUCT_FRAME_INVALID',502);
  if(!Object.hasOwn(source,'product_breakdown'))return null;
  const breakdown=source.product_breakdown,taxBreakdown=source.product_invoice_tax;
  const taxProducts=taxBreakdown?new Map(taxBreakdown.products.map(product=>[product.item_id,product])):null;
  let reference;
- try{reference=productionCostReference({status:'AVAILABLE',rows:source.items.map(row=>({...row}))},bindings,costs);}
+ try{reference=productionCostReference({status:'AVAILABLE',rows:source.items.map(row=>({...row}))},bindings,costs,automaticCosts);}
  catch{throw new StoreSummaryError('STORE_PRODUCT_COST_INVALID',503);}
  const complete=source.status==='COMPLETE'&&source.diagnostic===null,grouped=new Map();
  for(const variant of reference.variants){
