@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {D1} from './sqlite-d1.mjs';
-import {COST_RULE_DEFAULTS,validateCostRules,evaluateCostRules,readCostRules,saveCostRules,readCostRuleReference,syncCostRuleCatalog,selectCostRuleCandidates} from '../src/cost-rules.mjs';
+import {COST_RULE_DEFAULTS,validateCostRules,evaluateCostRules,readCostRules,saveCostRules,readCostRuleReference,syncCostRuleCatalog,selectCostRuleCandidates,assignCostRules} from '../src/cost-rules.mjs';
 import {COST_DEFAULTS,productionCostReference} from '../src/production-costs.mjs';
 const clock=Date.UTC(2026,9,24,12),now=()=>clock,stamp=clock/1000;
 const catalog=(name='Camiseta Estrela Infantil',sizes=['4','6','8','10','12','14','16'])=>({schema:'product_cost_catalog_v1',product_name:name,variants:sizes.map((size,i)=>({model_id:String(i),attributes:[{name:'Cor',value:'Vermelho'},{name:'Tamanho',value:size}]}))});
@@ -64,5 +64,42 @@ test('background selection visits uncached products before refreshing old catalo
 test('audit collisions roll back the complete rule change and deleted rule state cannot reset an existing history',async()=>{
  const env=fixture();try{const first=await readCostRules(env);env.ADMIN_DB.db.prepare('INSERT INTO production_cost_rules_audit VALUES(2,?,?,?)').run(JSON.stringify(first.values),'fixture',first.updated_at);
  await assert.rejects(saveCostRules(env,{revision:1,values:{rules:[]}},'admin'));assert.deepEqual(await readCostRules(env),first);env.ADMIN_DB.db.prepare('DELETE FROM production_cost_rules_state').run();await assert.rejects(readCostRules(env));
+ }finally{env.ADMIN_DB.db.close();}
+});
+
+test('an explicit child variation size works without catalogue metadata and never receives the adult cost',async()=>{
+ const env=fixture();try{const initial=await readCostRules(env);assert.deepEqual(Object.keys(initial.values),['rules']);
+ const assigned=await assignCostRules(env,{revision:initial.revision,assignments:[{item_id:'101',model_id:'189628289639',rule_id:'camiseta-infantil',size:'4'}]},'admin');assert.equal(assigned.revision,2);
+ const rules=await readCostRuleReference(env,['101'],{now}),frame={status:'AVAILABLE',rows:[{item_id:'101',model_id:'189628289639',quantity:2},{item_id:'101',model_id:'2',quantity:1}]},bindings={revision:1,bindings:[{item_id:'101',model_id:'189628289639',size:'P',selling_unit:'SINGLE_GARMENT',operator_confirmed:true},{item_id:'101',model_id:'2',size:'P',selling_unit:'SINGLE_GARMENT',operator_confirmed:true}]};
+ const result=productionCostReference(frame,bindings,{revision:1,values:COST_DEFAULTS},rules);assert.equal(result.variants[0].unit_cost_cents,1250);assert.equal(result.variants[0].production_cost_cents,2500);assert.equal(result.variants[1].unit_cost_cents,1590);assert.equal(result.total_cents,4090);assert.equal(rules.restricted_item_ids.includes('101'),false);
+ const manual={...COST_DEFAULTS,custom_profiles:[{id:'manual',label:'Custo manual',unit_cost_cents:1100}],custom_assignments:[{item_id:'101',model_id:'189628289639',profile_id:'manual'}]};assert.equal(productionCostReference(frame,bindings,{revision:2,values:manual},rules).variants[0].unit_cost_cents,1100);
+ }finally{env.ADMIN_DB.db.close();}
+});
+
+test('assigned sizes follow current rule prices, while disabling or deleting a rule leaves the assignment pending',async()=>{
+ const env=fixture();try{let state=await readCostRules(env);state=await assignCostRules(env,{revision:state.revision,assignments:[{item_id:'101',model_id:'0',rule_id:'camiseta-infantil',size:'16'}]},'admin');
+ const values=structuredClone(state.values);values.rules[0].unit_cost_cents=1400;state=await saveCostRules(env,{revision:state.revision,values},'admin');assert.equal((await readCostRuleReference(env,['101'],{now})).variants[0].unit_cost_cents,1400);
+ values.rules[0].enabled=false;state=await saveCostRules(env,{revision:state.revision,values},'admin');assert.equal((await readCostRuleReference(env,['101'],{now})).variants[0].unit_cost_cents,null);
+ state=await saveCostRules(env,{revision:state.revision,values:{rules:[],assignments:state.values.assignments}},'admin');const pending=await readCostRuleReference(env,['101'],{now});assert.equal(pending.variants[0].reason,'RULE_ASSIGNMENT_PENDING');assert.equal(state.values.assignments.length,1);
+ state=await assignCostRules(env,{revision:state.revision,assignments:[{item_id:'101',model_id:'0',rule_id:null,size:null}]},'admin');assert.deepEqual(state.values.assignments,[]);
+ }finally{env.ADMIN_DB.db.close();}
+});
+
+test('a product rule bypasses title matching but still needs a valid size axis, and an explicit variation takes priority',async()=>{
+ const env=fixture();try{let state=await readCostRules(env);const values=structuredClone(state.values);values.rules.push({...values.rules[0],id:'child-special',label:'Infantil especial',unit_cost_cents:1550});state=await saveCostRules(env,{revision:state.revision,values},'admin');
+ state=await assignCostRules(env,{revision:state.revision,assignments:[{item_id:'101',model_id:null,rule_id:'camiseta-infantil',size:null},{item_id:'101',model_id:'0',rule_id:'child-special',size:'4'}]},'admin');
+ const pending=await readCostRuleReference(env,['101'],{now});assert.ok(pending.restricted_item_ids.includes('101'));assert.equal(pending.variants[0].unit_cost_cents,1550);
+ await syncCostRuleCatalog(env,['101'],async()=>provider(catalog('Produto com título antigo',['4','6','18'])),{now});const reference=await readCostRuleReference(env,['101'],{now});assert.deepEqual(reference.variants.map(row=>row.unit_cost_cents),[1550,1250,null]);
+ const bad=catalog('Produto com título antigo',['6']);bad.variants[0].attributes=[{name:'Código',value:'6'}];assert.equal(evaluateCostRules(state.values,'101',{...bad,variants:[{...bad.variants[0],model_id:'1'}]})[0].unit_cost_cents,null);
+ }finally{env.ADMIN_DB.db.close();}
+});
+
+test('assignment patches preserve unrelated scopes and old clients cannot erase assigned classifications',async()=>{
+ const env=fixture();try{let state=await readCostRules(env);state=await assignCostRules(env,{revision:state.revision,assignments:[{item_id:'101',model_id:'0',rule_id:'camiseta-infantil',size:'4'},{item_id:'102',model_id:'0',rule_id:'camiseta-infantil',size:'6'}]},'admin');
+ const before=await readCostRules(env);await assert.rejects(saveCostRules(env,{revision:state.revision,values:{rules:state.values.rules}},'admin'),error=>error.status===409&&error.message==='COST_RULE_ASSIGNMENTS_CHANGED_RELOAD');assert.deepEqual(await readCostRules(env),before);
+ await assert.rejects(assignCostRules(env,{revision:1,assignments:[{item_id:'101',model_id:'0',rule_id:null,size:null}]},'admin'),error=>error.status===409);
+ state=await assignCostRules(env,{revision:state.revision,assignments:[{item_id:'101',model_id:'0',rule_id:null,size:null}]},'admin');assert.deepEqual(state.values.assignments,[{item_id:'102',model_id:'0',rule_id:'camiseta-infantil',size:'6'}]);
+ for(const assignment of [{item_id:'102',model_id:'0',rule_id:'camiseta-infantil',size:'5'},{item_id:'102',model_id:null,rule_id:'camiseta-infantil',size:'4'},{item_id:'102',model_id:'0',rule_id:'missing',size:'6'}])await assert.rejects(assignCostRules(env,{revision:state.revision,assignments:[assignment]},'admin'));
+ assert.deepEqual(await readCostRules(env),state);const accessor={item_id:'102',model_id:'0',rule_id:'camiseta-infantil',size:'6'};let calls=0;Object.defineProperty(accessor,'size',{get(){calls++;return '6';},enumerable:true});assert.throws(()=>validateCostRules({rules:state.values.rules,assignments:[accessor]}));assert.equal(calls,0);
  }finally{env.ADMIN_DB.db.close();}
 });

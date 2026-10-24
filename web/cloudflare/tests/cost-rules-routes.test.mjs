@@ -18,7 +18,19 @@ test('owner rules and catalogue actions enforce Origin CSRF method and exact sco
  const state=await (await call(auth)).json();assert.equal(state.values.rules[0].unit_cost_cents,1250);const body={revision:state.revision,values:state.values};
  assert.equal((await call(auth,'cost-rules',body,services,{csrf:''})).status,403);assert.equal((await call(auth,'cost-rules',body,services,{origin:'https://other.invalid'})).status,403);
  assert.equal((await call(auth,'cost-rules/sync')).status,405);assert.equal((await call(auth,'cost-rules/sync',{item_ids:['101'],force:false,shop_id:1},services)).status,400);assert.equal((await call(auth,'cost-rules/sync?x=1',{item_ids:['101'],force:false},services)).status,400);assert.equal(reads,0);
+ const assignment={revision:state.revision,assignments:[{item_id:'101',model_id:'0',rule_id:'camiseta-infantil',size:'4'}]};
+ assert.equal((await call(auth,'cost-rules/assignments')).status,405);assert.equal((await call(auth,'cost-rules/assignments',assignment,services,{cookie:''})).status,401);assert.equal((await call(auth,'cost-rules/assignments',assignment,services,{csrf:''})).status,403);assert.equal((await call(auth,'cost-rules/assignments',assignment,services,{origin:'https://other.invalid'})).status,403);assert.equal((await call(auth,'cost-rules/assignments?x=1',assignment,services)).status,400);assert.equal(reads,0);
  const html=await (await adminFetch(new Request(base+'/admin?tab=margins',{headers:{cookie:auth.cookie}}),auth.env)).text();assert.match(html,/id="costRulesForm"/);assert.match(html,/Custo por tipo de produto e tamanho/);for(const [,script] of html.matchAll(/<script>([\s\S]*?)<\/script>/g))assert.doesNotThrow(()=>new vm.Script(script));
+ }finally{auth.env.ADMIN_DB.db.close();}
+});
+
+test('a child size can be saved directly without catalogue access or an adult binding and follows the current rule price',async()=>{
+ const auth=await fixture();try{
+ let catalogReads=0;const services={getOrderItems:async()=>items(),getFinanceVariantCatalog:async()=>{catalogReads++;throw Error('unavailable');}};
+ let state=await(await call(auth)).json(),response=await call(auth,'cost-rules/assignments',{revision:state.revision,assignments:[{item_id:'101',model_id:'0',rule_id:'camiseta-infantil',size:'8'}]},services);assert.equal(response.status,200);state=await response.json();assert.equal(state.revision,2);
+ let result=await(await call(auth,'order-items',undefined,services)).json();assert.equal(result.production_cost_reference.total_cents,2500);assert.match(result.production_cost_reference.variants[0].cost_profile_label,/infantil · 8/);assert.equal(catalogReads,0);
+ assert.equal((await(await call(auth,'variant-bindings')).json()).bindings.length,0);assert.equal((await call(auth,'cost-rules/assignments',{revision:1,assignments:[{item_id:'101',model_id:'0',rule_id:'camiseta-infantil',size:'6'}]},services)).status,409);
+ state.values.rules[0].unit_cost_cents=1400;assert.equal((await call(auth,'cost-rules',{revision:state.revision,values:state.values})).status,200);result=await(await call(auth,'order-items',undefined,services)).json();assert.equal(result.production_cost_reference.total_cents,2800);assert.equal(result.cost_rules_revision,3);assert.equal(catalogReads,0);
  }finally{auth.env.ADMIN_DB.db.close();}
 });
 

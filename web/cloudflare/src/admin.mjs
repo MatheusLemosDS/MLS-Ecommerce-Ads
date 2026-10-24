@@ -23,7 +23,7 @@ import {StoreSummaryError} from './store-summary.mjs';
 import {syncVariantBindings} from './variant-sync.mjs';
 import {BRAZA_THEME_HEAD,BRAZA_THEME_CSS} from './theme.mjs';
 import {readOwnerSession,handleWorkspaceAuth} from './unified-auth.mjs';
-import {readCostRules,saveCostRules,readCostRuleReference,syncCostRuleCatalog,CostRuleError} from './cost-rules.mjs';
+import {readCostRules,saveCostRules,assignCostRules,readCostRuleReference,syncCostRuleCatalog,CostRuleError} from './cost-rules.mjs';
 import {COST_RULE_CSS,costRulesBody,COST_RULE_CLIENT} from './cost-rules-view.mjs';
 import {PRODUCTION_DTF_SCHEMA,ProductionDtfError,readProductionDtf,saveProductionDtfSettings,syncProductionDtf,prepareProductionDtfBatch,actProductionDtfBatch} from './production-dtf-store.mjs';
 import {DTF_CSS,dtfBody,DTF_CLIENT} from './dtf-view.mjs';
@@ -123,9 +123,10 @@ async function adminFetch(request,env,services={}){const url=new URL(request.url
   return json(await prepareProductionDtfBatch(env,body,services.getFinanceProductionOrders,current.user));
  }
  if(path==='/api/admin/finance/business-month'&&request.method!=='POST')throw new AdminError('METHOD_NOT_ALLOWED',405);
- if((path==='/api/admin/cost-rules'||path==='/api/admin/cost-rules/sync')&&request.method==='POST'){
+ if((path==='/api/admin/cost-rules'||path==='/api/admin/cost-rules/sync'||path==='/api/admin/cost-rules/assignments')&&request.method==='POST'){
   sameOrigin(request);assert(await equal(request.headers.get('x-csrf-token')||'',current.csrf),'CSRF_REJECTED',403);assert(!url.search,'COST_RULE_REQUEST_INVALID');
   const body=await input(request,path.endsWith('/sync')?512:131072);
+  if(path.endsWith('/assignments'))return json(await assignCostRules(env,body,current.user));
   if(path.endsWith('/sync')){assert(Object.keys(body).length===2&&Object.hasOwn(body,'item_ids')&&Object.hasOwn(body,'force')&&typeof body.force==='boolean','COST_RULE_REQUEST_INVALID');return json(await syncCostRuleCatalog(env,body.item_ids,services.getFinanceVariantCatalog,{force:body.force}));}
   return json(await saveCostRules(env,body,current.user));
  }
@@ -173,7 +174,7 @@ async function adminFetch(request,env,services={}){const url=new URL(request.url
  }if(path==='/api/admin/tax-policy'){assert(!url.search,'BUSINESS_TAX_POLICY_QUERY_INVALID');return json(await saveBusinessTaxPolicy(env,body,current.user));}if(path==='/api/admin/variant-bindings')return json(await saveVariantBindings(env,body,current.user));if(path==='/api/admin/order-observations'){assert(Object.keys(body).length===0,'OBSERVATION_BODY_INVALID');assert(!url.search,'OBSERVATION_QUERY_INVALID');return json(await captureObservation(env,services.getOrderItems,current.user));}if(path==='/api/admin/settings')return json(await saveSettings(env,body,current.user));if(path==='/api/admin/jobs'){assert(Object.keys(body).length===0,'TASK_NOT_ALLOWED');return json(await enqueue(env),202);}if(path==='/api/admin/jobs/cost')return json(await correctCost(env,body,current.user));throw new AdminError('NOT_FOUND',404);}
  assert(request.method==='GET','METHOD_NOT_ALLOWED',405);
  if(path==='/api/admin/cost-rules'){assert(!url.search,'COST_RULE_REQUEST_INVALID');return json(await readCostRules(env));}
- if(path==='/api/admin/cost-rules/sync')throw new AdminError('METHOD_NOT_ALLOWED',405);
+ if(path==='/api/admin/cost-rules/sync'||path==='/api/admin/cost-rules/assignments')throw new AdminError('METHOD_NOT_ALLOWED',405);
  if(path==='/api/admin/finance/sync-state'){assert(!url.search,'BUSINESS_SYNC_REQUEST_INVALID');return json(await readBusinessSyncState(env));}
  if(['/api/admin/finance/payment-sample','/api/admin/finance/payment-preview','/api/admin/variant-bindings/automate','/api/admin/variant-bindings/sync','/api/admin/finance/store-period','/api/admin/finance/store-adjustments','/api/admin/finance/ads-period'].includes(path))throw new AdminError('METHOD_NOT_ALLOWED',405);
  if(path==='/api/admin/production-costs'){assert(!url.search,'COSTS_QUERY_INVALID');return json(await readProductionCosts(env));}

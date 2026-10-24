@@ -7,7 +7,7 @@ import {buildAdsMeasurement} from '../src/ads-measurement.mjs';
 import {buildAdsCalendar,projectAdsCalendar} from '../src/ads-calendar.mjs';
 import {projectBusinessPeriodFrame} from '../../finance/src/business-period-frame.mjs';
 import {businessMonth,projectBusinessMonth,BusinessMonthError} from '../src/business-month.mjs';
-import {syncCostRuleCatalog,readCostRules,saveCostRules} from '../src/cost-rules.mjs';
+import {syncCostRuleCatalog,readCostRules,saveCostRules,assignCostRules} from '../src/cost-rules.mjs';
 
 const clock=Date.UTC(2026,10,2,12),stamp=Math.floor(clock/1000),now=()=>clock;
 const request=(operation='start',changes={})=>({operation,month:'2026-10',...changes});
@@ -54,6 +54,13 @@ test('MEI policy and source timestamps are detached and strict; financial timing
  assert.equal(projectBusinessMonth({...value,tax:{...value.tax,tax_cents:17210}}),null);
  let calls=0;const poisoned={...value.ads};Object.defineProperty(poisoned,'fetched_at',{enumerable:true,get(){calls++;return stamp;}});
  assert.equal(projectBusinessMonth({...value,ads:poisoned}),null);assert.equal(calls,0);
+});
+
+test('a manually classified child variation replaces the adult cost in the monthly net without another provider read',async()=>{
+ const e=env(),s=source(withProducts);await complete(e,s);await run(e,s,'ads');await save(e,s);
+ const bindings=e.ADMIN_DB.db.prepare('SELECT * FROM variant_bindings_state').all(),rules=await readCostRules(e),reads=s.calls.finance.length;
+ await assignCostRules(e,{revision:rules.revision,assignments:[{item_id:'201',model_id:'0',rule_id:'camiseta-infantil',size:'12'}]},'admin');const value=await run(e,s,'read');
+ assert.equal(value.production_cost_cents,7500);assert.equal(value.result.net_estimate_cents,130795);assert.equal(value.cost_rules_revision,2);assert.match(value.product_summary.products[0].variants[0].cost_profile_label,/infantil · 12/);assert.equal(s.calls.finance.length,reads);assert.deepEqual(e.ADMIN_DB.db.prepare('SELECT * FROM variant_bindings_state').all(),bindings);
 });
 
 test('a 31-day month uses disjoint bounded windows and all paid statuses without counting cancelled or unpaid as sales',async()=>{

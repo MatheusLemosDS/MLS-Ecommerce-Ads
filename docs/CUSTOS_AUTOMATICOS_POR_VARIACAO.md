@@ -47,10 +47,34 @@ credenciais e outros campos da resposta não são projetados.
 
 ## Prioridade e pendências
 
+Quando a identificação automática não reconhecer o produto, em **Produtos →
+Tipo e tamanho** é possível selecionar **Camiseta infantil** e aplicar a regra
+ao produto inteiro. Essa escolha identifica o tipo, sem depender do título;
+o catálogo continua identificando os tamanhos das variações.
+
+Dentro da variação também há **Custo por tipo e tamanho**: escolha o tipo,
+selecione **4, 6, 8, 10, 12, 14 ou 16** e use **Salvar custo desta variação**.
+Essa correção explícita funciona mesmo sem consulta ao catálogo. O preço vem
+da regra salva — inicialmente **R$ 12,50** — e acompanha alterações futuras
+dessa regra. Não é criado um vínculo de tamanho adulto.
+
+As classificações por produto e variação ficam em `values.assignments`, na
+mesma revisão e auditoria das regras. Variação explícita tem prioridade sobre
+tipo do produto e reconhecimento automático. Uma regra removida ou desativada
+deixa a associação pendente. Custos personalizados manuais de valor fixo
+continuam prioritários. Clientes antigos não podem apagar essas classificações
+ao enviar apenas a lista de regras.
+
+A busca automática de custos continua mesmo com rascunhos no formulário de
+composição adulta. Esses rascunhos só suspendem a gravação da composição.
+Salvar uma classificação explícita remove o rascunho adulto substituído nesse
+mesmo escopo e recalcula o resumo; rascunhos de outros produtos são preservados.
+
 1. Custo personalizado manual da variação.
 2. Custo personalizado manual do produto inteiro.
-3. Regra automática única compatível com tipo e tamanho.
-4. Padrão adulto anterior, quando o produto realmente cabe nessa convenção.
+3. Classificação explícita por regra da variação, seguida da classificação do produto.
+4. Regra automática única compatível com tipo e tamanho.
+5. Padrão adulto anterior, quando o produto realmente cabe nessa convenção.
 
 Uma calça ou um produto infantil sem regra aplicável não recebe R$ 15,90 ou
 R$ 18,90 automaticamente. Duas regras que coincidam na mesma variação deixam
@@ -69,8 +93,10 @@ automático; o resultado aplicável fica na Visão geral.
 
 ## Publicação
 
-Esta atualização envolve **App, Auth e Financeiro**: os três precisam concluir
-o deploy do mesmo commit para a nova leitura de catálogo funcionar. A conexão
+O transporte de catálogo inicial envolve **App, Auth e Financeiro**: os três
+precisam concluir o deploy correspondente. A correção de seleção manual de
+tipo/tamanho e de rascunhos ocorre apenas no **App**, sem nova permissão de
+catálogo para informar o tamanho manualmente. A conexão
 OAuth, os segredos, a base original dos Workers e os domínios são preservados.
 Se faltar permissão para ler os dados de produto na Shopee, o custo automático
 fica pendente; os custos manuais continuam disponíveis.
