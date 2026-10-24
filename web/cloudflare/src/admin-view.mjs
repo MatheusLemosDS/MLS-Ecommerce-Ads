@@ -59,5 +59,5 @@ export function adminBody(){
  const original=legacyAdminBody(),opening='<section id="overview">',start=original.indexOf(opening),end=original.indexOf('</section>',start);
  if(start<0||end<start)throw Error('MONTH_VIEW_INSERTION_INVALID');
  const legacy=original.slice(start+opening.length,end);
- return original.slice(0,start)+opening+businessMonthBody()+'<details id="legacyFinanceDetails" class="card monthly-legacy-details"><summary>Conferência avançada de pedidos concluídos</summary><p class="field-help">Use para conferir um intervalo específico. O resumo mensal acima reúne todos os pedidos pagos.</p>'+legacy+'</details></section>'+original.slice(end+10)+'<div class="workspace-mobile-navigation">'+workspaceNavigation('overview',{role:'owner',mobile:true})+'</div>';
+ return original.slice(0,start)+opening+businessMonthBody()+'<details id="legacyFinanceDetails" class="card monthly-legacy-details" hidden><summary>Referência anterior de pedidos concluídos</summary><p class="field-help">Esta referência preserva a regra antiga por pedido. Para o MEI, use o resumo mensal, que desconta o DAS uma vez no mês.</p>'+legacy+'</details></section>'+original.slice(end+10)+'<div class="workspace-mobile-navigation">'+workspaceNavigation('overview',{role:'owner',mobile:true})+'</div>';
 }

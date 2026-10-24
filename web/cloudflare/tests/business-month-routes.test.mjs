@@ -34,12 +34,12 @@ test('monthly collection is admin-only, exact-origin and CSRF protected before a
  assert.deepEqual(source.calls,{finance:0,ads:0});assert.deepEqual(snapshot(auth),before);
 });
 
-test('a complete explicitly empty month only yields zero estimated net after its zero expense declaration, without a Hermes job',async()=>{
+test('a complete empty MEI month still deducts its one monthly DAS after the zero external expense declaration, without a Hermes job',async()=>{
  const auth=await login(),source=services(),invoke=async body=>{const response=await adminFetch(request(auth,body),auth.env,source);assert.equal(response.status,200);return response.json();};
  let result=await invoke({operation:'start',month});for(let i=0;i<3&&result.status==='RUNNING';i++)result=await invoke({operation:'step',month});
  assert.equal(result.status,'COMPLETE');assert.equal(result.coverage.paid,0);assert.equal(result.result.net_estimate_cents,null);
  result=await invoke({operation:'ads',month});assert.equal(result.ads.expense_cents,0);assert.equal(result.ads.balance_cents,5000);assert.equal(result.result.net_estimate_cents,null);
- result=await invoke({operation:'expenses',month,revision:0,external_expenses_cents:0,recharge_treatment:'UNCONFIRMED'});assert.equal(result.result.net_estimate_cents,0);assert.equal(result.result.net_profit_cents,null);assert.deepEqual(result.result.pending,[]);
+ result=await invoke({operation:'expenses',month,revision:0,external_expenses_cents:0,recharge_treatment:'UNCONFIRMED'});assert.equal(result.result.net_estimate_cents,-8605);assert.equal(result.invoice_tax_cents,8605);assert.equal(result.tax.regime,'MEI');assert.equal(result.result.net_profit_cents,null);assert.deepEqual(result.result.pending,[]);
  const before=snapshot(auth),calls={...source.calls};assert.equal(before.audit.length,1);assert.equal(before.expenses.length,1);assert.equal(before.audit[0].actor,'admin');
  await invoke({operation:'read',month});assert.deepEqual(source.calls,calls);assert.deepEqual(snapshot(auth),before);
  const conflict=await adminFetch(request(auth,{operation:'expenses',month,revision:0,external_expenses_cents:900,recharge_treatment:'UNCONFIRMED'}),auth.env,source);assert.equal(conflict.status,409);assert.deepEqual(snapshot(auth),before);

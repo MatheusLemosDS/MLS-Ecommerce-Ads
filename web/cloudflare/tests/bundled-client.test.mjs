@@ -11,7 +11,7 @@ import {projectBusinessMonthProducts} from '../src/business-month-products.mjs';
 
 const current='2026-10-22T12:00:00Z',stamp=Date.parse(current)/1000;
 
-function monthlyFrame({custom=false}={}){
+function monthlyFrame({custom=false,mei=false}={}){
  const selections=[{start_date:'2026-10-01',end_date:'2026-10-15'},{start_date:'2026-10-16',end_date:'2026-10-22'}];
  const children=selections.map(selection=>{
   const days=Array.from({length:Number(selection.end_date.slice(8))-Number(selection.start_date.slice(8))+1},(_,index)=>'2026-10-'+String(Number(selection.start_date.slice(8))+index).padStart(2,'0'));
@@ -37,6 +37,13 @@ function monthlyFrame({custom=false}={}){
   }
  };
  if(custom)Object.assign(frame.product_summary.products[0].variants[0],{selling_unit:'CUSTOM_PRODUCT',size:null,male_size:null,female_size:null,cost_profile_id:'calca-moletom',cost_profile_label:'Calça moletom <b>premium</b>'});
+ if(mei){
+  frame.tax={schema:'business_month_tax_v1',regime:'MEI',year:2026,policy_revision:1,monthly_das_cents:8605,tax_cents:8605,status:'DECLARED',source:'OPERATOR_DECLARED_DAS',basis:'MONTHLY_COMPETENCE_NO_PRORATION'};
+  frame.source_checked_at={finance_oldest_at:stamp,finance_latest_at:stamp,ads_at:stamp};
+  frame.invoice_tax_cents=8605;frame.known_invoice_tax_cents=8605;frame.result.net_estimate_cents=-4105;frame.result.net_margin_bps=-4105;
+  frame.product_summary.tax_treatment='MONTHLY_DAS_NOT_ALLOCATED';
+  Object.assign(frame.product_summary.products[0],{known_exclusive_tax_cents:0,exclusive_tax_cents:0,exclusive_after_costs_cents:6000,exclusive_margin_bps:6000});
+ }
  assert.ok(projectBusinessMonthProducts(frame.product_summary,frame),'the product summary must reconcile with its parent monthly totals');
  assert.ok(projectBusinessMonth(frame),'the response fixture must satisfy the production financial checks');
  return frame;
@@ -141,5 +148,15 @@ for(const minify of [false,true]){
   await browser.run('brazaMonthDashboard.refreshCosts()');
   browser.run("const refreshed=control('ProductRows').children[0].children[0].children.find(child=>child.tag==='details');refreshed.open=true;refreshed.ontoggle();");
   assert.match(browser.text('ProductRows'),/Custo personalizado · Calça moletom <b>premium<\/b>/);assert.match(browser.text('Net'),/43,00/);assert.match(browser.text('ProductRows'),/58,00/);assert.doesNotMatch(browser.text('Status'),/is not defined/);
+ });
+ test(`deployed monthly client deducts one MEI DAS and keeps product balances before the fixed monthly tax (minify=${minify})`,async()=>{
+  const html=await bundledAdminHtml(minify),browser=monthlyBrowser(html,monthlyFrame({custom:true,mei:true}));
+  assert.equal(await browser.run('brazaMonthDashboard.start({api,syncVariants})'),true,browser.text('Status'));
+  assert.match(browser.text('TaxSummary'),/86,05/);assert.match(browser.text('Net'),/41,05/);assert.match(browser.text('Net'),/-/);
+  assert.match(browser.text('TotalExpenses'),/121,05/);assert.match(browser.text('Waterfall'),/DAS/);assert.doesNotMatch(browser.text('Waterfall'),/2%/);
+  assert.match(browser.text('ProductBalanceHeading'),/após produção/);assert.match(browser.text('ProductRows'),/60,00/);assert.doesNotMatch(browser.text('ProductRows'),/imposto de 2%/);
+  assert.match(browser.text('Scope'),/financeir|pedidos/i);assert.match(browser.text('Scope'),/anúncios/i);
+  await browser.run('brazaMonthDashboard.refreshCosts()');assert.match(browser.text('TaxSummary'),/86,05/);assert.match(browser.text('Net'),/41,05/);
+  assert.doesNotMatch(browser.text('Status'),/is not defined/);
  });
 }

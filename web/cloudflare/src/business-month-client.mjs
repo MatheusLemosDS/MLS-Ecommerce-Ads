@@ -9,7 +9,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
  ${projectBusinessMonth.toString()}
  const el=id=>document.getElementById('businessMonth'+id);
  const node=(tag,text,cls)=>{const value=document.createElement(tag);if(text!==undefined)value.textContent=text;if(cls)value.className=cls;return value;};
- const pendingMessages={COLLECTING:'A consulta dos pedidos do mês ainda está em andamento.',PERIOD_LIMIT_REACHED:'A quantidade de pedidos ultrapassou o limite desta consulta. O mês permanece parcial.',SOURCE_UNAVAILABLE:'A Shopee não concluiu parte da leitura. Atualize o mês para retomar.',STATUS_REVIEW_REQUIRED:'Há pedidos em cancelamento ou com uma situação que ainda precisa ser conferida.',PAYMENT_INCOMPLETE:'A Shopee ainda não informou todos os valores financeiros dos pedidos pagos. Esses pedidos não são tratados como valor zero.',RETURNS_NOT_RECONCILED:'Há devoluções ou pedidos sem informação suficiente de devolução. Falta conciliar seus valores.',PRODUCTION_COST_INCOMPLETE:'Há produtos sem composição ou custo completo. A identificação automática preserva os vínculos já salvos.',INVOICE_TAX_UNAVAILABLE:'A base dos produtos ainda não foi informada para todos os pedidos; o imposto de 2% permanece parcial.',ADS_UNAVAILABLE:'O gasto de anúncios ainda não foi confirmado para todos os dias do mês.',EXTERNAL_EXPENSES_REQUIRED:'Informe as outras despesas do mês ou escolha “Não tenho outras despesas”.',RECHARGE_TREATMENT_REQUIRED:'Confira se o ajuste financeiro corresponde a recarga de anúncios ou taxa de suporte.',ADJUSTMENT_UNAVAILABLE:'O ajuste financeiro de anúncios ou suporte ainda não foi informado por completo.',ARITHMETIC_UNSAFE:'Um valor excedeu o limite seguro de cálculo e não será apresentado como resultado.'};
+ const pendingMessages={COLLECTING:'A consulta dos pedidos do mês ainda está em andamento.',PERIOD_LIMIT_REACHED:'A quantidade de pedidos ultrapassou o limite desta consulta. O mês permanece parcial.',SOURCE_UNAVAILABLE:'A Shopee não concluiu parte da leitura. Atualize o mês para retomar.',STATUS_REVIEW_REQUIRED:'Há pedidos em cancelamento ou com uma situação que ainda precisa ser conferida.',PAYMENT_INCOMPLETE:'A Shopee ainda não informou todos os valores financeiros dos pedidos pagos. Esses pedidos não são tratados como valor zero.',RETURNS_NOT_RECONCILED:'Há devoluções ou pedidos sem informação suficiente de devolução. Falta conciliar seus valores.',PRODUCTION_COST_INCOMPLETE:'Há produtos sem composição ou custo completo. A identificação automática preserva os vínculos já salvos.',INVOICE_TAX_UNAVAILABLE:'O valor do imposto ainda não está disponível para concluir o mês.',TAX_POLICY_REQUIRED:'O DAS-MEI deste ano ainda não está cadastrado. O imposto permanece pendente, sem usar 2% por nota.',FINANCIAL_SOURCE_STALE:'Os pedidos e repasses precisam de uma nova leitura. O resultado permanece em conferência até a atualização financeira.',ADS_UNAVAILABLE:'O gasto de anúncios ainda não foi confirmado para todos os dias do mês.',EXTERNAL_EXPENSES_REQUIRED:'Informe as outras despesas do mês ou escolha “Não tenho outras despesas”.',RECHARGE_TREATMENT_REQUIRED:'Confira se o ajuste financeiro corresponde a recarga de anúncios ou taxa de suporte.',ADJUSTMENT_UNAVAILABLE:'O ajuste financeiro de anúncios ou suporte ainda não foi informado por completo.',ARITHMETIC_UNSAFE:'Um valor excedeu o limite seguro de cálculo e não será apresentado como resultado.'};
  const money=value=>Number.isSafeInteger(value)?new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(value/100):'Pendente';
  const ratio=value=>value===null||value===undefined?'Pendente':new Intl.NumberFormat('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(value))+'x';
  const today=()=>new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date());
@@ -17,6 +17,8 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
  const monthName=value=>validMonth(value)?new Intl.DateTimeFormat('pt-BR',{month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(value+'-01T12:00:00Z')):'mês selecionado';
  let api=null,syncVariants=null,frame=null,month='',generation=0,busy=false,adsBusy=false,saving=false,started=false,paused=false,dirty=false,editSequence=0,draftRevision=0,timer=null,message='',failed=false;
  let productPage=1,productMonth='';
+ const financeRefreshInterval=300000;
+ let lastFinancialRefreshAt=0,automaticBlocked=false,resumeOnVisible=false;
  const productOpen=new Set();
  function setMetric(key,value,help){const target=el(key),card=el(key+'Card');target.textContent=value===null?'Pendente':value;card.dataset.status=value===null?'pending':'available';el(key+'Help').textContent=help;}
  function status(text,error=false){message=text;failed=error;el('Status').textContent=text;el('Status').dataset.status=error?'error':'normal';}
@@ -31,8 +33,13 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
  function drawWaterfall(){
   const target=el('Waterfall');target.replaceChildren();if(!frame)return;
   const row=(label,amount,sign='')=>{const entry=node('div',undefined,'month-waterfall-row');entry.append(node('dt',label),node('dd',amount===null?'Pendente':sign+money(amount)));target.append(entry);};
-  row('Repasse previsto · taxas da Shopee já descontadas',frame.expected_repass_cents);
-  row('Produção',frame.production_cost_cents,'− ');row('Imposto previsto · 2%',frame.invoice_tax_cents,'− ');
+  const mei=frame.tax?.regime==='MEI';
+  row('Vendas dos produtos',frame.sales_cents);
+  const difference=Number.isSafeInteger(frame.sales_cents)&&Number.isSafeInteger(frame.expected_repass_cents)?BigInt(frame.sales_cents)-BigInt(frame.expected_repass_cents):null;
+  const adjustment=difference!==null&&difference>=BigInt(Number.MIN_SAFE_INTEGER)&&difference<=BigInt(Number.MAX_SAFE_INTEGER)?Number(difference):null;
+  row('Diferença líquida entre vendas e repasse',adjustment);
+  row('Repasse previsto · deduções da Shopee já consideradas',frame.expected_repass_cents);
+  row('Produção',frame.production_cost_cents,'− ');row(mei?'DAS-MEI mensal · uma vez no mês':'Imposto previsto · 2%',frame.invoice_tax_cents,'− ');
   if(frame.ads_adjustment_cents>0){
    if(frame.expenses.recharge_treatment==='ADS_RECHARGE')row('Recarga de anúncios reposta',frame.ads_adjustment_cents,'+ ');
    else if(frame.expenses.recharge_treatment==='UNCONFIRMED')row('Recarga ou suporte · tratamento a conferir',null);
@@ -41,10 +48,27 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
   row('Outras despesas do mês',frame.expenses.external_expenses_cents,'− ');
   row('Resultado líquido previsto',frame.result.net_estimate_cents);
  }
+ function drawTaxAndExpenses(){
+  const mei=frame?.tax?.regime==='MEI';
+  el('TotalExpensesLabel').textContent='Custos após o repasse';
+  el('TotalExpensesHelp').textContent='Produção, '+(mei?'DAS-MEI mensal':'imposto')+', anúncios e outras despesas. A diferença entre vendas e repasse pode incluir taxas, frete e outros ajustes da Shopee; ela já está considerada no repasse e não é descontada novamente.';
+  const amounts=frame?[frame.production_cost_cents,frame.invoice_tax_cents,frame.ads?.status==='AVAILABLE'?frame.ads.expense_cents:null,frame.expenses.external_expenses_cents]:[];
+  const subtotal=amounts.length===4&&amounts.every(Number.isSafeInteger)?amounts.reduce((sum,value)=>sum+BigInt(value),0n):null;
+  el('TotalExpenses').textContent=subtotal!==null&&subtotal>=0n&&subtotal<=BigInt(Number.MAX_SAFE_INTEGER)?money(Number(subtotal)):'Pendente';
+  if(!frame){el('TaxSummary').textContent='Consultando a regra fiscal';el('TaxHelp').textContent='O imposto aparece quando a regra fiscal do mês puder ser conferida.';return;}
+  if(mei){
+   const tax=frame.tax,declared=tax.status==='DECLARED'&&Number.isSafeInteger(tax.tax_cents);
+   el('TaxSummary').textContent=declared?'DAS-MEI · '+money(tax.tax_cents)+' por mês · '+tax.year+' · automático':'DAS-MEI pendente para '+tax.year;
+   el('TaxHelp').textContent=declared?'Valor mensal informado por você, versão '+tax.policy_revision+'. Descontado uma única vez na competência do mês, mesmo sem vendas. Não é multiplicado pelas notas ou pelos pedidos e não é rateado entre os produtos.':'Falta o valor mensal do DAS-MEI deste ano. O sistema não substitui esse valor por 2% de cada nota nem assume imposto zero.';
+  }else{
+   el('TaxSummary').textContent='Regra anterior · estimativa de 2% sobre os produtos';
+   el('TaxHelp').textContent='Esta leitura usa a regra fiscal anterior registrada no mês. Ela não representa o DAS-MEI mensal. Atualize o mês para conferir a regra atual.';
+  }
+ }
  function drawReadiness(){
   const target=el('Readiness');target.replaceChildren();if(!frame)return;
   const c=frame.coverage,complete=frame.status==='COMPLETE';
-  for(const [label,ready] of [['Pedidos e valores financeiros',complete&&c.payment_missing===0&&c.cancel_pending===0&&c.other===0&&c.unknown===0],['Custos de produção',complete&&frame.production_cost_cents!==null],['Imposto de 2%',complete&&frame.invoice_tax_cents!==null],['Gasto dos anúncios',frame.ads?.status==='AVAILABLE'],['Outras despesas',frame.expenses.external_expenses_cents!==null],['Devoluções e ajustes',complete&&c.returns===0&&c.returns_unknown===0&&!frame.result.pending.includes('ADJUSTMENT_UNAVAILABLE')&&!frame.result.pending.includes('RECHARGE_TREATMENT_REQUIRED')]]){
+  for(const [label,ready] of [['Pedidos e valores financeiros',complete&&c.payment_missing===0&&c.cancel_pending===0&&c.other===0&&c.unknown===0&&!frame.result.pending.includes('FINANCIAL_SOURCE_STALE')],['Custos de produção',complete&&frame.production_cost_cents!==null],[frame.tax?.regime==='MEI'?'DAS-MEI mensal':'Imposto de 2%',complete&&frame.invoice_tax_cents!==null&&!frame.result.pending.includes('TAX_POLICY_REQUIRED')],['Gasto dos anúncios',frame.ads?.status==='AVAILABLE'],['Outras despesas',frame.expenses.external_expenses_cents!==null],['Devoluções e ajustes',complete&&c.returns===0&&c.returns_unknown===0&&!frame.result.pending.includes('ADJUSTMENT_UNAVAILABLE')&&!frame.result.pending.includes('RECHARGE_TREATMENT_REQUIRED')]]){
    const item=node('li');item.dataset.ready=String(!!ready);item.append(node('span',label),node('strong',ready?'Conferido':'Pendente'));target.append(item);
   }
   el('ReadinessStatus').textContent=frame.result.net_estimate_cents===null?'Complete as pendências para comparar a previsão de lucro do mês.':frame.result.net_estimate_cents<=0?'A previsão do mês ainda não tem lucro positivo. Confira custos e desempenho antes de aumentar o investimento.':'A previsão financeira do mês está completa. Próximo passo: conferir margem por produto, estoque e campanhas antes de escalar.';
@@ -54,7 +78,9 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
   const saved=frame.expenses;el('ExpensesValue').value=saved.external_expenses_cents===null?'':(saved.external_expenses_cents/100).toFixed(2);el('Recharge').value=saved.recharge_treatment;draftRevision=saved.revision;dirty=false;
  }
  function drawProducts(){
-  const target=el('ProductRows'),report=frame?.product_summary;
+  const target=el('ProductRows'),report=frame?.product_summary,mei=frame?.tax?.regime==='MEI';
+  el('ProductBalanceHeading').textContent=mei?'Saldo após produção':'Saldo após produção e imposto';
+  el('ProductTaxHelp').textContent=mei?'O saldo por produto usa o repasse da Shopee, menos produção dos pedidos exclusivos. O DAS-MEI é mensal e está descontado uma única vez no resultado geral, sem rateio por produto. Anúncios e outras despesas ainda não foram conciliados por produto. Este saldo não é lucro líquido por produto.':'O saldo por produto usa o repasse da Shopee, menos produção e imposto de 2% dos pedidos exclusivos. Anúncios e outras despesas ainda não foram conciliados por produto. Este saldo não é lucro líquido por produto.';
   if(month!==productMonth){productMonth=month;productPage=1;productOpen.clear();el('ProductSearch').value='';el('ProductFilter').value='all';el('ProductSort').value='quantity_desc';el('ProductPageSize').value='20';}
   target.replaceChildren();
   for(const name of ['ProductSearch','ProductFilter','ProductSort','ProductPageSize'])el(name).disabled=!report;
@@ -85,9 +111,9 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
    if(product.pending.length){const pending=node('ul',undefined,'month-product-pending');for(const code of product.pending)pending.append(node('li',productMessages[code]||'Parte dos dados ainda precisa ser conferida.'));identity.append(pending);}
    const units=stat('Unidades vendidas',new Intl.NumberFormat('pt-BR').format(product.quantity),'Unidades do anúncio, conforme a composição ou o perfil de custo cadastrado.');
    const production=stat('Produção total',money(product.production_cost_cents),product.production_cost_cents===null?'Já identificado: '+money(product.known_production_cost_cents)+'. Falta conferir as variações pendentes.':'Custo de todas as unidades deste produto no mês.');
-   const contribution=stat('Saldo após produção e imposto',product.exclusive_orders===0?'Sem pedido exclusivo':money(product.exclusive_after_costs_cents),product.exclusive_orders+' pedido(s) só deste produto. Repasse informado pela Shopee, após produção e imposto de 2%. Anúncios e outras despesas ainda não foram conciliados por produto.');
+   const contribution=stat(mei?'Saldo após produção':'Saldo após produção e imposto',product.exclusive_orders===0?'Sem pedido exclusivo':money(product.exclusive_after_costs_cents),product.exclusive_orders+' pedido(s) só deste produto. '+(mei?'Repasse informado pela Shopee, após produção. O DAS-MEI está no resultado geral da loja, sem rateio entre produtos.':'Repasse informado pela Shopee, após produção e imposto de 2%.')+' Anúncios e outras despesas ainda não foram conciliados por produto.');
    if(product.exclusive_after_costs_cents!==null&&product.exclusive_after_costs_cents<0)contribution.children[1].className='month-product-negative';
-   if(product.exclusive_orders>0)contribution.append(node('small','Nestes pedidos: repasse '+money(product.exclusive_repass_cents)+' · produção '+money(product.exclusive_production_cost_cents)+' · imposto '+money(product.exclusive_tax_cents)+'.'));
+   if(product.exclusive_orders>0)contribution.append(node('small','Nestes pedidos: repasse '+money(product.exclusive_repass_cents)+' · produção '+money(product.exclusive_production_cost_cents)+(mei?'. DAS-MEI contabilizado no resultado mensal.':' · imposto '+money(product.exclusive_tax_cents)+'.')));
    if(product.exclusive_margin_bps!==null)contribution.append(node('small','Percentual sobre as vendas exclusivas: '+new Intl.NumberFormat('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:2}).format(product.exclusive_margin_bps/100)+'%.'));
    if(product.mixed_orders>0)contribution.append(node('small',product.mixed_orders+' pedido(s) com outros produtos não estão neste saldo.'));
    row.append(identity,units,production,contribution);target.append(row);
@@ -98,14 +124,14 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
  }
  function render(){
   if(!frame){
-   for(const key of ['Sales','Ads','Roas']){el(key).textContent=busy?'Consultando':'Pendente';el(key+'Card').dataset.status='pending';}el('Net').textContent='Em apuração';el('NetCard').dataset.status='pending';el('Margin').textContent='';el('Coverage').replaceChildren();el('Waterfall').replaceChildren();el('Readiness').replaceChildren();el('Pending').hidden=true;el('Badge').textContent=busy?'Consultando':'Aguardando consulta';drawProducts();controls();return;
+   for(const key of ['Sales','Ads','Roas']){el(key).textContent=busy?'Consultando':'Pendente';el(key+'Card').dataset.status='pending';}el('Net').textContent='Em apuração';el('NetCard').dataset.status='pending';el('Margin').textContent='';el('Coverage').replaceChildren();el('Waterfall').replaceChildren();el('Readiness').replaceChildren();el('Pending').hidden=true;el('Badge').textContent=busy?'Consultando':'Aguardando consulta';drawTaxAndExpenses();drawProducts();controls();return;
   }
   const c=frame.coverage,ads=frame.ads,broad=ads?.totals.broad,net=frame.result.net_estimate_cents;
   setMetric('Sales',frame.sales_cents===null?null:money(frame.sales_cents),frame.sales_cents===null?'Já informado: '+money(frame.known_sales_cents)+'. Falta conferir parte dos pedidos pagos.':'Produtos dos '+c.paid+' pedido(s) pagos criados nas datas do mês.');
   setMetric('Ads',ads?.status==='AVAILABLE'?money(ads.expense_cents):null,ads?'Gasto confirmado em '+ads.covered_days+' de '+ads.total_days+' dia(s). Dias ausentes permanecem pendentes.':'Consultando o gasto da conta de anúncios nas mesmas datas.');
   setMetric('Roas',broad?.calculated_roas_raw===null||broad?.calculated_roas_raw===undefined?null:ratio(broad.calculated_roas_raw),broad?.gmv_cents===null||broad?.gmv_cents===undefined?'Vendas atribuídas aos anúncios ainda pendentes.':'Vendas atribuídas aos anúncios: '+money(broad.gmv_cents)+'. Este valor difere das vendas totais da loja.');
   if(ads?.status==='AVAILABLE'&&ads.expense_cents===0&&broad?.calculated_roas_raw===null){el('Roas').textContent='Sem investimento';el('RoasCard').dataset.status='available';}
-  setMetric('Net',net===null?null:money(net),net===null?'Os valores faltantes estão identificados abaixo.':'Produção, imposto, anúncios e outras despesas já descontados. É uma previsão, não o valor recebido em banco.');
+  setMetric('Net',net===null?null:money(net),net===null?'Os valores faltantes estão identificados abaixo.':'Produção, '+(frame.tax?.regime==='MEI'?'DAS-MEI mensal':'imposto')+', anúncios e outras despesas já descontados. É uma previsão, não o valor recebido em banco.');
   if(net===null)el('Net').textContent=frame.status==='RUNNING'?'Em apuração':'Em conciliação';
   el('NetCard').dataset.negative=String(net!==null&&net<0);
   el('Margin').textContent=frame.result.net_margin_bps===null?'':'Margem prevista: '+new Intl.NumberFormat('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:2}).format(frame.result.net_margin_bps/100)+'%';
@@ -117,38 +143,46 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
   el('Identify').hidden=!frame.unmapped_variants.length;
   if(warnings.includes('EXTERNAL_EXPENSES_REQUIRED')&&warnings.length===1)el('ExpensesDetails').open=true;
   el('RechargeField').hidden=!(frame.ads_adjustment_cents>0||warnings.includes('RECHARGE_TREATMENT_REQUIRED'));
-  drawWaterfall();drawReadiness();drawProducts();fillExpenses();
+  drawWaterfall();drawTaxAndExpenses();drawReadiness();drawProducts();fillExpenses();
   if(dirty){el('ExpenseState').textContent=draftRevision!==frame.expenses.revision?'As despesas foram alteradas em outra sessão. Sua edição foi preservada; carregue os valores salvos antes de salvar novamente.':'Há uma edição de despesas ainda não salva.';}
   else el('ExpenseState').textContent=frame.expenses.external_expenses_cents===null?'Outras despesas ainda não informadas. Informe o valor ou confirme que não há despesas.':'Despesas salvas para '+monthName(frame.month)+' · versão '+frame.expenses.revision+'.';
   const progress=frame.progress;el('Progress').hidden=!busy;el('Progress').value=progress.windows_total?Math.round(progress.windows_complete/progress.windows_total*100):0;
-  el('Scope').textContent='Pedidos pagos criados de '+frame.start_date.split('-').reverse().join('/')+' a '+frame.end_date.split('-').reverse().join('/')+' e anúncios nas mesmas datas. Custos atuais de produção. Consulta em '+new Date(frame.checked_at*1000).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'})+' · Brasília. Recebimentos bancários ainda não conciliados.';
+  const formatTime=value=>Number.isSafeInteger(value)&&value>0?new Date(value*1000).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'}):'pendente',sources=frame.source_checked_at;
+  const consultation=sources?'Pedidos e financeiro: leitura mais antiga '+formatTime(sources.finance_oldest_at)+'; mais recente '+formatTime(sources.finance_latest_at)+'. Anúncios consultados em '+formatTime(sources.ads_at)+'.':'Horário informado pela leitura anterior: '+formatTime(frame.checked_at)+'. Essa leitura não separa os horários do financeiro e dos anúncios.';
+  el('Scope').textContent='Pedidos pagos criados de '+frame.start_date.split('-').reverse().join('/')+' a '+frame.end_date.split('-').reverse().join('/')+' e anúncios nas mesmas datas. Custos atuais de produção. '+consultation+' Brasília. Recebimentos bancários ainda não conciliados.';
   for(const key of ['AdsLink','DetailsLink'])el(key).href='/dashboard?month='+encodeURIComponent(frame.month);
   controls();
  }
  function apply(value,expectedMonth){const checked=projectBusinessMonth(value);if(!checked||checked.month!==expectedMonth)throw Error('Os dados mensais não puderam ser conferidos. Atualize o mês para tentar novamente.');frame=checked;render();return checked;}
  function schedule(){
-  clearTimeout(timer);timer=null;if(!started||document.hidden||busy||adsBusy||saving||dirty||frame?.status!=='COMPLETE'||month!==today().slice(0,7))return;
-  timer=setTimeout(()=>{timer=null;if(!document.hidden&&!dirty)return refreshAds();},60000);
+  clearTimeout(timer);timer=null;if(!started||document.hidden||busy||adsBusy||saving||dirty||paused||automaticBlocked||frame?.status!=='COMPLETE'&&!resumeOnVisible||month!==today().slice(0,7))return;
+  // Ads updates never advance the financial clock: orders, cancellations and
+  // payouts must be imported again even while Ads continues to update.
+  const financialDue=resumeOnVisible?Date.now():lastFinancialRefreshAt+financeRefreshInterval;
+  const delay=Math.min(60000,Math.max(0,financialDue-Date.now()));
+  timer=setTimeout(()=>{timer=null;if(document.hidden||dirty||paused||automaticBlocked)return;return Date.now()>=financialDue?refresh({automatic:true}):refreshAds();},delay);
  }
  async function request(operation,selected=month){return api('finance/business-month',{operation,month:selected});}
- async function refresh(){
-  if(!started||saving)return false;
+ async function refresh({automatic=false}={}){
+  if(!started||saving||automatic&&(dirty||paused||automaticBlocked||document.hidden||adsBusy))return false;
   const selected=el('Select').value;if(!validMonth(selected)){status('Escolha um mês válido até o mês atual.',true);return false;}
   const changed=selected!==month;if(busy&&!changed)return false;
-  const token=++generation;month=selected;paused=false;busy=true;adsBusy=false;clearTimeout(timer);timer=null;
+  const token=++generation;month=selected;paused=false;automaticBlocked=false;resumeOnVisible=false;busy=true;adsBusy=false;clearTimeout(timer);timer=null;
   if(changed){frame=null;dirty=false;editSequence++;draftRevision=0;el('ExpensesValue').value='';el('Recharge').value='UNCONFIRMED';}
-  status('Consultando os pedidos de '+monthName(month)+'…');render();
+  status(automatic?'Atualizando vendas, cancelamentos e anúncios de '+monthName(month)+'…':'Consultando os pedidos de '+monthName(month)+'…');render();
   const current=()=>token===generation&&month===selected;
   try{
    const initial=await request('start',selected);if(!current())return false;let value=apply(initial,selected);
    let steps=0;
-   while(value.status==='RUNNING'&&!paused&&steps<610){
+   while(value.status==='RUNNING'&&!paused&&!document.hidden&&steps<610){
     status('Conferindo os pedidos do mês… '+value.coverage.orders+' pedido(s) consultado(s).');
     const raw=await request('step',selected);if(!current())return false;value=apply(raw,selected);steps++;
     if(value.result.pending.includes('SOURCE_UNAVAILABLE'))break;
    }
    if(!current())return false;
-   if(value.status==='COMPLETE'){
+   if(value.result.pending.includes('SOURCE_UNAVAILABLE'))automaticBlocked=true;
+   if(document.hidden&&!paused){resumeOnVisible=!automaticBlocked;status('A atualização continua automaticamente quando este painel voltar à tela.');}
+   else if(value.status==='COMPLETE'&&!paused){
     let catalogueFailed=false;
     if(value.unmapped_variants.length&&typeof syncVariants==='function'){
      status('Associando automaticamente os custos dos produtos vendidos…');
@@ -157,20 +191,22 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
     }
     if(!current())return false;status('Conferindo os anúncios nas mesmas datas…');
     const raw=await request('ads',selected);if(!current())return false;value=apply(raw,selected);
+    if(value.ads?.status==='AVAILABLE'&&!value.result.pending.includes('SOURCE_UNAVAILABLE'))lastFinancialRefreshAt=Date.now();
+    else automaticBlocked=true;
     status(catalogueFailed?'Valores mensais atualizados. Há produtos com identificação pendente; confira os motivos abaixo.':'Dados do mês atualizados. Confira o resultado e as pendências abaixo.');
    }else if(paused)status('Consulta pausada após a última resposta. Use Continuar consulta para retomar.');
    else if(value.status==='LIMIT_REACHED')status('O mês está parcial porque o limite de pedidos foi atingido. Os totais pendentes não são estimados como zero.');
    else status('Parte da consulta ficou pendente. Use Atualizar mês para retomar a leitura.');
    return true;
-  }catch(error){if(current()){status(error?.message||'Não foi possível atualizar o mês. Tente novamente.',true);if(frame)render();}return false;}
+  }catch(error){if(current()){automaticBlocked=true;status(error?.message||'Não foi possível atualizar o mês. Tente novamente.',true);if(frame)render();}return false;}
   finally{if(current()){busy=false;render();schedule();}}
  }
  async function refreshAds(){
   if(!started||!frame||busy||adsBusy||saving||dirty||document.hidden)return false;
   if(frame.ads&&Date.now()-frame.ads.fetched_at*1000<60000){schedule();return false;}
   const token=generation,selected=month;adsBusy=true;controls();
-  try{const raw=await request('ads',selected);if(token!==generation||selected!==month)return false;apply(raw,selected);return true;}
-  catch{if(token===generation)status('Não foi possível atualizar os anúncios. A leitura anterior mantém seu horário de consulta; use Atualizar mês para conferir.',true);return false;}
+  try{const raw=await request('ads',selected);if(token!==generation||selected!==month)return false;apply(raw,selected);if(frame.ads?.status!=='AVAILABLE')automaticBlocked=true;return true;}
+  catch{if(token===generation){automaticBlocked=true;status('Não foi possível atualizar os anúncios. A leitura anterior mantém seu horário de consulta; use Atualizar mês para conferir.',true);}return false;}
   finally{if(token===generation){adsBusy=false;controls();schedule();}}
  }
  async function refreshCosts(){
@@ -222,7 +258,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
   document.addEventListener('visibilitychange',()=>{if(document.hidden){clearTimeout(timer);timer=null;}else schedule();});
   return refresh();
  }
- function stop(){paused=true;generation++;busy=false;adsBusy=false;clearTimeout(timer);timer=null;controls();}
+ function stop(){started=false;paused=true;resumeOnVisible=false;generation++;busy=false;adsBusy=false;clearTimeout(timer);timer=null;controls();}
  globalThis.brazaMonthDashboard={start,refresh,refreshCosts,stop};
 })();
 `;

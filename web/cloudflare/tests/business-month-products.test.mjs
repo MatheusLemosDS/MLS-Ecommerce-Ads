@@ -21,6 +21,13 @@ function fixture(){
  return {source,frame,refs,bindings};
 }
 const build=f=>buildBusinessMonthProducts([f.source],f.frame,f.refs,f.bindings);
+function meiFixture({pending=false}={}){
+ const f=fixture();
+ f.frame.tax={schema:'business_month_tax_v1',regime:'MEI',year:2026,policy_revision:pending?0:1,monthly_das_cents:pending?null:8605,tax_cents:pending?null:8605,status:pending?'PENDING':'DECLARED',source:pending?'DAS_REQUIRED':'OPERATOR_DECLARED_DAS',basis:'MONTHLY_COMPETENCE_NO_PRORATION'};
+ f.frame.known_invoice_tax_cents=pending?null:8605;
+ if(pending)f.frame.result.pending=['TAX_POLICY_REQUIRED'];
+ return f;
+}
 
 test('monthly products separate all sold production from exclusive-order contribution and retain unallocated mixed totals',()=>{
  const f=fixture(),value=build(f);assert.ok(value);assert.equal(value.mixed_orders,1);assert.equal(value.known_mixed_sales_cents,10000);assert.equal(value.known_mixed_repass_cents,7500);assert.equal(value.known_mixed_tax_cents,200);
@@ -115,4 +122,62 @@ test('product-wide profiles and variation overrides flow from the actual cost re
  const costs={revision:f.frame.costs_revision,values:{...COST_DEFAULTS,components:[],custom_profiles:[{id:'calca',label:'Calça moletom',unit_cost_cents:1000},{id:'calca-gg',label:'Calça GG',unit_cost_cents:1200},{id:'kit-casal',label:'Kit casal',unit_cost_cents:2000}],custom_assignments:[{item_id:'201',model_id:null,profile_id:'calca'},{item_id:'201',model_id:'11',profile_id:'calca-gg'},{item_id:'202',model_id:null,profile_id:'kit-casal'}]}};
  const reference=productionCostReference({status:'AVAILABLE',rows:f.source.items},f.bindings,costs);assert.equal(reference.total_cents,7400);assert.equal(reference.unmapped_quantity,0);
  f.refs=reference.variants;const value=build(f);assert.ok(value);assert.equal(value.products[0].variants[0].cost_profile_label,'Calça moletom');assert.equal(value.products[0].variants[1].cost_profile_label,'Calça GG');assert.equal(value.products[1].variants[0].cost_profile_label,'Kit casal');assert.equal(value.products[0].exclusive_after_costs_cents,6800);assert.equal(value.products[1].exclusive_after_costs_cents,2380);
+});
+
+test('MEI product balances exclude the old per-order estimate and never allocate the monthly DAS to products',()=>{
+ const f=meiFixture(),value=build(f);assert.ok(value);
+ assert.equal(value.tax_treatment,'MONTHLY_DAS_NOT_ALLOCATED');assert.equal(value.known_mixed_tax_cents,0);
+ const [a,b]=value.products;
+ assert.equal(a.known_exclusive_tax_cents,0);assert.equal(a.exclusive_tax_cents,0);assert.equal(a.exclusive_after_costs_cents,7000);assert.equal(a.exclusive_margin_bps,7000);
+ assert.equal(b.known_exclusive_tax_cents,0);assert.equal(b.exclusive_tax_cents,0);assert.equal(b.exclusive_after_costs_cents,2500);assert.equal(b.exclusive_margin_bps,4166);
+ // The remaining mixed-order payout less its production is 3100. The three
+ // subsets reconcile before deducting DAS exactly once at the monthly level.
+ assert.equal(a.exclusive_after_costs_cents+b.exclusive_after_costs_cents+3100,f.frame.known_expected_repass_cents-f.frame.production_cost_cents);
+ assert.equal(f.frame.known_expected_repass_cents-f.frame.production_cost_cents-f.frame.tax.tax_cents,3995);
+ assert.deepEqual(projectBusinessMonthProducts(value,f.frame),value);
+ const legacy=build(fixture());assert.equal(Object.hasOwn(legacy,'tax_treatment'),false);assert.equal(legacy.products[0].exclusive_tax_cents,200);
+});
+
+test('more MEI orders or disjoint windows do not multiply the fixed monthly DAS or create product tax',()=>{
+ const f=meiFixture(),source=copy(f.source);source.run_id='22222222-2222-4222-8222-222222222222';source.start_date='2026-10-16';source.end_date='2026-10-30';
+ const frame=copy(f.frame);frame.progress={windows_total:2,windows_complete:2,pages_read:2};for(const key of Object.keys(frame.coverage))frame.coverage[key]*=2;for(const key of ['known_sales_cents','known_expected_repass_cents','known_production_cost_cents','production_cost_cents'])frame[key]*=2;
+ const refs=f.refs.map(row=>({...row,quantity:row.quantity*2,production_cost_cents:row.production_cost_cents*2}));
+ const value=buildBusinessMonthProducts([f.source,source],frame,refs,f.bindings);assert.ok(value);
+ assert.equal(frame.known_invoice_tax_cents,8605);assert.equal(value.known_mixed_tax_cents,0);assert.equal(value.products[0].exclusive_after_costs_cents,14000);assert.equal(value.products[1].exclusive_after_costs_cents,5000);
+ assert.ok(value.products.every(row=>row.exclusive_tax_cents===0&&row.known_exclusive_tax_cents===0));
+});
+
+test('a zero-sales MEI month keeps its full monthly DAS while the product report remains empty',()=>{
+ const f=meiFixture();for(const key of Object.keys(f.frame.coverage))f.frame.coverage[key]=0;
+ for(const key of ['known_sales_cents','known_expected_repass_cents','known_production_cost_cents','production_cost_cents'])f.frame[key]=0;
+ const empty={status:'COMPLETE',product_breakdown:{schema:'business_product_breakdown_v1',mixed_orders:0,mixed_payment_covered:0,mixed_payment_missing:0,known_mixed_sales_base_raw:'0',known_mixed_expected_repass_raw:'0',known_mixed_ads_adjustment_raw:'0',known_mixed_invoice_tax_raw:'0',products:[]}};
+ const value=buildBusinessMonthProducts([empty],f.frame,[],f.bindings);assert.ok(value);assert.deepEqual(value.products,[]);assert.equal(value.known_mixed_tax_cents,0);assert.equal(value.tax_treatment,'MONTHLY_DAS_NOT_ALLOCATED');assert.equal(f.frame.known_invoice_tax_cents,8605);
+});
+
+test('an unknown MEI DAS remains pending in the month without inventing a tax charge for products',()=>{
+ const f=meiFixture({pending:true}),value=build(f);assert.ok(value);
+ assert.equal(f.frame.known_invoice_tax_cents,null);assert.equal(value.tax_treatment,'MONTHLY_DAS_NOT_ALLOCATED');assert.equal(value.known_mixed_tax_cents,0);assert.equal(value.products[0].exclusive_after_costs_cents,7000);assert.equal(value.products[1].exclusive_after_costs_cents,2500);
+ const context=vm.createContext();context.serialized=JSON.stringify({value,frame:f.frame});new vm.Script(projectBusinessMonthProducts.toString()+'\nconst input=JSON.parse(serialized);globalThis.actual=projectBusinessMonthProducts(input.value,input.frame);').runInContext(context);assert.deepEqual(JSON.parse(JSON.stringify(context.actual)),value);
+});
+
+test('stale monthly financial readings retain known product values but block a newly claimed exclusive balance',()=>{
+ for(const codes of [['FINANCIAL_SOURCE_STALE'],['SOURCE_UNAVAILABLE','FINANCIAL_SOURCE_STALE']]){
+  const f=meiFixture();f.frame.result.pending=codes;const value=build(f);assert.ok(value);
+  assert.ok(value.products.every(row=>row.exclusive_after_costs_cents===null&&row.exclusive_margin_bps===null));
+  assert.ok(value.products.every(row=>row.pending.length===1&&row.pending[0]==='SOURCE_UNAVAILABLE'));
+  assert.equal(value.products[0].exclusive_repass_cents,8000);assert.equal(value.products[0].exclusive_production_cost_cents,1000);
+  assert.deepEqual(projectBusinessMonthProducts(value,f.frame),value);
+ }
+});
+
+test('MEI projection rejects invented allocation, mismatched treatment and tax metadata without executing accessors',()=>{
+ const f=meiFixture(),value=build(f);assert.ok(value);
+ for(const mutate of [v=>delete v.tax_treatment,v=>v.tax_treatment='PER_PRODUCT_DAS',v=>v.known_mixed_tax_cents=1,v=>v.products[0].known_exclusive_tax_cents=200,v=>v.products[0].exclusive_tax_cents=200]){const altered=copy(value);mutate(altered);assert.equal(projectBusinessMonthProducts(altered,f.frame),null);}
+ const legacy=fixture();assert.equal(projectBusinessMonthProducts(value,legacy.frame),null);
+ for(const mutate of [t=>t.regime='SIMPLES',t=>t.schema='unknown',t=>t.year=0,t=>t.policy_revision=0,t=>t.monthly_das_cents=0,t=>t.tax_cents=8606,t=>t.source='GUESSED_DAS',t=>t.status='PENDING',t=>t.basis='PER_ORDER',t=>t.private='PRIVATE']){const frame=copy(f.frame);mutate(frame.tax);assert.equal(projectBusinessMonthProducts(value,frame),null);}
+ let reads=0;
+ for(const field of ['schema','regime','tax_cents']){const frame=copy(f.frame);Object.defineProperty(frame.tax,field,{enumerable:true,get(){reads++;return 'PRIVATE';}});assert.equal(projectBusinessMonthProducts(value,frame),null);assert.equal(buildBusinessMonthProducts([f.source],frame,f.refs,f.bindings),null);}
+ const frame=copy(f.frame);Object.defineProperty(frame,'tax',{enumerable:true,get(){reads++;return f.frame.tax;}});assert.equal(projectBusinessMonthProducts(value,frame),null);assert.equal(buildBusinessMonthProducts([f.source],frame,f.refs,f.bindings),null);
+ const altered=copy(value);Object.defineProperty(altered,'tax_treatment',{enumerable:true,get(){reads++;return 'MONTHLY_DAS_NOT_ALLOCATED';}});assert.equal(projectBusinessMonthProducts(altered,f.frame),null);assert.equal(reads,0);
+ const source=copy(f.source);source.product_breakdown.known_mixed_invoice_tax_raw='not-money';assert.equal(buildBusinessMonthProducts([source],f.frame,f.refs,f.bindings),null);
 });

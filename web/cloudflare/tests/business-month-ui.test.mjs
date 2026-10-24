@@ -111,12 +111,73 @@ test('outdated month responses never overwrite the selected month or restore old
  assert.equal(b.run("control('Select').value"),'2026-09');assert.match(b.text('Scope'),/01\/09\/2026 a 30\/09\/2026/);assert.doesNotMatch(b.text('Scope'),/01\/10\/2026 a 22\/10\/2026/);
 });
 
-test('automatic Ads refresh keeps a single visible current-month timer and never imports orders again',async()=>{
+test('minute Ads updates keep one timer and do not repeat the full financial import before its bounded interval',async()=>{
  const b=browser();await b.run('brazaMonthDashboard.start({api,syncVariants})');assert.equal(b.run('timers.size'),1);
  b.run('clock+=61000;');await b.run('[...timers.values()][0].callback()');
  assert.deepEqual(JSON.parse(b.run('JSON.stringify(calls.map(call=>call.body.operation))')),['start','ads','ads']);
  b.run("document.hidden=true;document.handlers.visibilitychange();");assert.equal(b.run('timers.size'),0);
  b.run("document.hidden=false;document.handlers.visibilitychange();control('ExpensesValue').value='7.00';control('ExpensesValue').oninput();");assert.equal(b.run('timers.size'),0);
+});
+
+test('automatic full refresh imports new sales and later cancellations before updating Ads and the monthly net',async()=>{
+ const b=browser(),source=fixture();await b.run('brazaMonthDashboard.start({api,syncVariants})');
+ const added=fixture({...source,coverage:{...source.coverage,orders:5,paid:3,ongoing:2,payment_covered:3},sales_cents:15000,known_sales_cents:15000,expected_repass_cents:12000,known_expected_repass_cents:12000,production_cost_cents:3000,known_production_cost_cents:3000,invoice_tax_cents:300,known_invoice_tax_cents:300,result:{...source.result,net_estimate_cents:7200,net_margin_bps:4800}});
+ const running=fixture({...source,status:'RUNNING',progress:{...source.progress,windows_complete:1},sales_cents:null,expected_repass_cents:null,production_cost_cents:null,invoice_tax_cents:null,ads_adjustment_cents:null,result:{...source.result,net_estimate_cents:null,net_margin_bps:null,pending:['COLLECTING','PRODUCTION_COST_INCOMPLETE','INVOICE_TAX_UNAVAILABLE','ADJUSTMENT_UNAVAILABLE']}});
+ b.context.running=JSON.stringify(running);b.load(added);
+ b.run("customApi=async(path,body)=>JSON.parse(body.operation==='start'?running:JSON.stringify(currentFrame));clock+=301000;");
+ await b.run('[...timers.values()][0].callback()');
+ assert.deepEqual(JSON.parse(b.run('JSON.stringify(calls.map(call=>call.body.operation))')),['start','ads','start','step','ads']);
+ assert.match(b.text('Sales'),/150,00/);assert.match(b.text('Coverage'),/3 pedido\(s\) pagos/);assert.match(b.text('Net'),/72,00/);assert.equal(b.run('timers.size'),1);
+ const cancelled=fixture({...source,coverage:{...source.coverage,orders:5,cancelled:2},result:{...source.result}});b.load(cancelled);
+ b.run('clock+=301000;');await b.run('[...timers.values()][0].callback()');
+ assert.deepEqual(JSON.parse(b.run('JSON.stringify(calls.slice(-3).map(call=>call.body.operation))')),['start','step','ads']);
+ assert.match(b.text('Coverage'),/2 cancelado\(s\) excluído\(s\)/);assert.match(b.text('Sales'),/100,00/);assert.match(b.text('Net'),/43,00/);
+ assert.equal(b.run('timers.size'),1);
+});
+
+test('overdue hidden finance refresh resumes once, blocks overlap and preserves expense edits made during the import',async()=>{
+ const b=browser();await b.run('brazaMonthDashboard.start({api,syncVariants})');
+ b.run('document.hidden=true;document.handlers.visibilitychange();clock+=600000;');assert.equal(b.run('timers.size'),0);
+ b.run('document.hidden=false;document.handlers.visibilitychange();');assert.equal(b.run('timers.size'),1);assert.equal(b.run('[...timers.values()][0].delay'),0);
+ b.run("let completeImport;customApi=async(path,body)=>body.operation==='start'?new Promise(resolve=>completeImport=resolve):JSON.parse(JSON.stringify(currentFrame));");
+ const refresh=b.run('[...timers.values()][0].callback()');
+ assert.equal(b.run('timers.size'),0);assert.equal(b.run("control('Refresh').disabled"),true);
+ b.run("document.handlers.visibilitychange();control('ExpensesValue').value='12,34';control('ExpensesValue').oninput();");assert.equal(b.run('timers.size'),0);
+ b.run('completeImport(JSON.parse(JSON.stringify(currentFrame)));');await refresh;
+ assert.equal(b.run("control('ExpensesValue').value"),'12,34');assert.match(b.text('ExpenseState'),/edição de despesas ainda não salva/);
+ assert.deepEqual(JSON.parse(b.run('JSON.stringify(calls.map(call=>call.body.operation))')),['start','ads','start','ads']);
+ assert.equal(b.run('timers.size'),0,'an unfinished expense draft pauses scheduling instead of being saved or overwritten');
+ b.run("control('ExpensesReload').onclick();");assert.equal(b.run('timers.size'),1);
+});
+
+test('an automatic source failure or explicit stop cannot start a retry loop on visibility changes',async()=>{
+ const b=browser();await b.run('brazaMonthDashboard.start({api,syncVariants})');
+ b.run("customApi=async()=>{throw Error('Fonte temporariamente indisponível.');};clock+=301000;");
+ assert.equal(await b.run('[...timers.values()][0].callback()'),false);assert.equal(b.run('calls.length'),3);assert.equal(b.run('timers.size'),0);
+ b.run('document.hidden=true;document.handlers.visibilitychange();clock+=600000;document.hidden=false;document.handlers.visibilitychange();');
+ assert.equal(b.run('timers.size'),0);assert.equal(b.run('calls.length'),3);assert.match(b.text('Sales'),/100,00/);assert.match(b.text('Status'),/Fonte temporariamente indisponível/);
+ b.run('customApi=null;');assert.equal(await b.run('brazaMonthDashboard.refresh()'),true);assert.equal(b.run('timers.size'),1);
+ b.run('brazaMonthDashboard.stop();document.hidden=true;document.handlers.visibilitychange();document.hidden=false;document.handlers.visibilitychange();');
+ assert.equal(b.run('timers.size'),0);
+});
+
+test('an import hidden between responses suspends further requests and resumes automatically on visibility',async()=>{
+ const source=fixture(),running=fixture({...source,status:'RUNNING',progress:{...source.progress,windows_complete:1},sales_cents:null,expected_repass_cents:null,production_cost_cents:null,invoice_tax_cents:null,ads_adjustment_cents:null,result:{...source.result,net_estimate_cents:null,net_margin_bps:null,pending:['COLLECTING','PRODUCTION_COST_INCOMPLETE','INVOICE_TAX_UNAVAILABLE','ADJUSTMENT_UNAVAILABLE']}});
+ const b=browser();b.context.partial=JSON.stringify(running);
+ b.run("let releaseStart;customApi=async()=>new Promise(resolve=>releaseStart=resolve);");const starting=b.run('brazaMonthDashboard.start({api,syncVariants})');
+ b.run('document.hidden=true;document.handlers.visibilitychange();releaseStart(JSON.parse(partial));');await starting;
+ assert.equal(b.run('calls.length'),1);assert.equal(b.run('timers.size'),0);assert.match(b.text('Status'),/automaticamente quando este painel voltar/);
+ b.run('customApi=null;document.hidden=false;document.handlers.visibilitychange();');assert.equal(b.run('[...timers.values()][0].delay'),0);
+ await b.run('[...timers.values()][0].callback()');
+ assert.deepEqual(JSON.parse(b.run('JSON.stringify(calls.map(call=>call.body.operation))')),['start','start','ads']);assert.match(b.text('Net'),/43,00/);assert.equal(b.run('timers.size'),1);
+});
+
+test('an explicit pause waits for the current response and does not start Ads until manually resumed',async()=>{
+ const b=browser();b.run("let releaseStart;customApi=async()=>new Promise(resolve=>releaseStart=resolve);");
+ const starting=b.run('brazaMonthDashboard.start({api,syncVariants})');b.run("control('Pause').onclick();releaseStart(JSON.parse(JSON.stringify(currentFrame)));");await starting;
+ assert.equal(b.run('calls.length'),1);assert.equal(b.run('timers.size'),0);assert.match(b.text('Status'),/Consulta pausada/);
+ b.run('customApi=null;');await b.run('brazaMonthDashboard.refresh()');
+ assert.deepEqual(JSON.parse(b.run('JSON.stringify(calls.map(call=>call.body.operation))')),['start','start','ads']);assert.equal(b.run('timers.size'),1);
 });
 
 test('source failure stops the collection without an automatic retry loop or private error text',async()=>{
@@ -210,4 +271,43 @@ test('monthly custom products show their configured profile and full unit cost w
  assert.equal(b.run("control('ProductRows').children[1].children[0].children[3].children[1].children[0].tag"),'li');
  assert.equal(b.run('globalThis.alert'),undefined);assert.match(b.text('Net'),/43,01/);
  const changed=structuredClone(source);changed.product_summary.products[0].variants[0].cost_profile_label='INVALID\u0000';b.load(changed);assert.equal(await b.run('brazaMonthDashboard.refreshCosts()'),false);assert.match(b.text('ProductRows'),/Custo personalizado · Calça moletom/);
+});
+
+function meiProductFixture({pending=false}={}){
+ const source=productFixture(3),tax={schema:'business_month_tax_v1',regime:'MEI',year:2026,policy_revision:pending?0:1,monthly_das_cents:pending?null:8605,tax_cents:pending?null:8605,status:pending?'PENDING':'DECLARED',source:pending?'DAS_REQUIRED':'OPERATOR_DECLARED_DAS',basis:'MONTHLY_COMPETENCE_NO_PRORATION'};
+ source.tax=tax;source.invoice_tax_cents=tax.tax_cents;source.known_invoice_tax_cents=tax.tax_cents;
+ source.source_checked_at={finance_oldest_at:stamp-90,finance_latest_at:stamp-30,ads_at:stamp};
+ source.product_summary.tax_treatment='MONTHLY_DAS_NOT_ALLOCATED';
+ for(const product of source.product_summary.products){product.known_exclusive_tax_cents=0;product.exclusive_tax_cents=0;product.exclusive_after_costs_cents=product.exclusive_repass_cents-product.exclusive_production_cost_cents;product.exclusive_margin_bps=Math.trunc(product.exclusive_after_costs_cents*10000/product.exclusive_sales_cents);}
+ const net=pending?null:source.expected_repass_cents-source.production_cost_cents-tax.tax_cents-source.ads.expense_cents-source.expenses.external_expenses_cents;
+ source.result={...source.result,net_estimate_cents:net,net_margin_bps:net===null?null:Math.trunc(net*10000/source.sales_cents),pending:pending?['TAX_POLICY_REQUIRED','INVOICE_TAX_UNAVAILABLE']:[]};
+ assert.ok(projectBusinessMonth(source),'MEI fixture must satisfy the real monthly and product projectors');return source;
+}
+
+test('MEI shows one fixed monthly DAS for three products and leaves product balances before the unallocated monthly tax',async()=>{
+ const source=meiProductFixture(),b=browser(source);assert.equal(await b.run('brazaMonthDashboard.start({api,syncVariants})'),true);
+ assert.match(b.text('TaxSummary'),/DAS-MEI.*86,05 por mês.*2026.*automático/);assert.match(b.text('TaxHelp'),/uma única vez.*mesmo sem vendas/);
+ const waterfall=b.text('Waterfall');assert.equal((waterfall.match(/86,05/g)||[]).length,1);assert.match(waterfall,/DAS-MEI mensal · uma vez no mês/);assert.match(waterfall,/Diferença líquida entre vendas e repasse/);
+ assert.match(b.text('Net'),/11,02/);assert.match(b.text('TotalExpenses'),/131,05/);assert.match(b.text('TotalExpensesHelp'),/já está considerada no repasse e não é descontada novamente/);
+ assert.equal(b.text('ProductBalanceHeading'),'Saldo após produção');assert.match(b.text('ProductTaxHelp'),/uma única vez no resultado geral, sem rateio/);
+ assert.match(b.text('ProductRows'),/30,00/);assert.doesNotMatch(b.text('ProductRows'),/86,05|29,00|imposto .*0,00/);
+ for(const name of ['TaxSummary','TaxHelp','Waterfall','Readiness','NetHelp','ProductTaxHelp','ProductRows'])assert.doesNotMatch(b.text(name),/imposto (?:de )?2%|estimativa de 2%|Imposto previsto · 2%/i,'MEI copy must not claim a per-note tax in '+name);
+ assert.equal(b.run("calls.some(call=>call.body.operation==='expenses')"),false,'reading the known DAS does not prompt or save manual monthly tax amounts');
+});
+
+test('an unknown MEI yearly DAS remains pending instead of using two percent or zero tax',async()=>{
+ const b=browser(meiProductFixture({pending:true}));assert.equal(await b.run('brazaMonthDashboard.start({api,syncVariants})'),true);
+ assert.equal(b.text('Net'),'Em conciliação');assert.equal(b.text('TotalExpenses'),'Pendente');assert.match(b.text('TaxSummary'),/DAS-MEI pendente para 2026/);
+ assert.match(b.text('TaxHelp'),/não substitui esse valor por 2%.*nem assume imposto zero/);assert.match(b.text('PendingList'),/DAS-MEI deste ano ainda não está cadastrado/);
+ const taxRow=b.run("text(control('Waterfall').children.find(row=>row.children[0].textContent.startsWith('DAS-MEI')))");assert.equal(taxRow,'DAS-MEI mensal · uma vez no mês Pendente');
+ assert.match(b.text('ProductRows'),/30,00/,'a monthly tax pending status does not invent a per-product tax allocation');
+});
+
+test('financial and Ads timestamps remain visibly separate when a newer Ads response arrives',async()=>{
+ const source=meiProductFixture(),b=browser(source);await b.run('brazaMonthDashboard.start({api,syncVariants})');
+ assert.match(b.text('Scope'),/financeiro: leitura mais antiga .*08:58:30; mais recente .*08:59:30/);assert.match(b.text('Scope'),/Anúncios consultados em .*09:00:00/);
+ assert.doesNotMatch(b.text('Scope'),/Consulta em/);
+ const later=structuredClone(source);later.checked_at=stamp+30;later.source_checked_at.ads_at=stamp+30;later.ads.fetched_at=stamp+30;
+ b.load(later);assert.equal(await b.run('brazaMonthDashboard.refreshCosts()'),true);
+ assert.match(b.text('Scope'),/financeiro: leitura mais antiga .*08:58:30; mais recente .*08:59:30/);assert.match(b.text('Scope'),/Anúncios consultados em .*09:00:30/);
 });

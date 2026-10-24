@@ -52,8 +52,11 @@ produção. Ao salvar, o painel solicita o recálculo; custos faltantes continua
 pendentes, sem serem tratados como zero. As versões anteriores permanecem no
 histórico; isso não transforma o custo atual em custo histórico da venda.
 
-O **imposto previsto de 2% sobre o valor dos produtos antes das taxas da
-Shopee** é calculado separadamente do custo de produção. O resultado líquido
-previsto também depende dos dados financeiros, anúncios e demais despesas do
-período. Ele é uma estimativa: a liquidação bancária e os recebimentos efetivos
-ainda não estão conciliados.
+Para esta loja **MEI**, o **DAS mensal de R$ 86,05 em 2026**, confirmado pelo
+operador, é descontado uma vez no resumo do mês. A regra anterior de 2% por
+pedido não participa do resultado MEI. O DAS não é multiplicado pelos produtos
+nem rateado no saldo individual. Veja [MEI e atualização automática](MEI_E_RESULTADO_AUTOMATICO.md).
+
+O resultado líquido previsto também depende dos dados financeiros, anúncios e
+demais despesas do período. Ele é uma estimativa: a liquidação bancária e os
+recebimentos efetivos ainda não estão conciliados.

@@ -37,6 +37,7 @@ test('owner workspace keeps one shared navigation, intact controls and advanced 
  for(const id of ['productionCostsForm','bindingsForm','settings','controls','logout','connection','pageTitle','pageSubtitle','legacyFinanceDetails'])assert.ok(ids.includes(id),id);
  assert.equal([...body.matchAll(/<nav class="workspace-nav"/g)].length,1);assert.equal([...body.matchAll(/workspace-nav workspace-nav-mobile/g)].length,1);
  assert.match(body,/<form[^>]*id="logout" hidden>/);assert.doesNotMatch(body,/id="legacyFinanceDetails"[^>]*\bopen\b|class="sidebar-external"|class="ads-shortcut"/);
+ assert.match(body,/id="legacyFinanceDetails"[^>]*\bhidden\b/,'the obsolete per-order tax estimate cannot compete with the current monthly MEI result');
  assert.match(CSS,/\.app-shell>\.sidebar\{display:none\}/);assert.match(CSS,/safe-area-inset-bottom/);
 });
 
