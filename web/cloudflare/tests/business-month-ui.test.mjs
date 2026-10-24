@@ -54,7 +54,8 @@ function browser(value=fixture(),search=''){
  `+BUSINESS_MONTH_CLIENT).runInContext(context);
  const run=code=>new vm.Script(code).runInContext(context);
  const load=data=>{context.serialized=JSON.stringify(data);run('currentFrame=JSON.parse(serialized);');};
- return {run,load,context,text:name=>run("text(control("+JSON.stringify(name)+"))")};
+ const settle=async()=>{for(let index=0;index<10;index++)await Promise.resolve();};
+ return {run,load,context,settle,text:name=>run("text(control("+JSON.stringify(name)+"))")};
 }
 
 test('monthly body has one clear card per business metric and responsive scoped markup',()=>{
@@ -72,7 +73,46 @@ test('paid store sales, Ads attribution and the fully costed net remain differen
  const waterfall=b.text('Waterfall');for(const value of ['80,00','20,00','2,00','10,00','5,00','43,00'])assert.ok(waterfall.includes(value),value);
  assert.match(b.text('Coverage'),/1 cancelado\(s\) excluído\(s\)/);assert.match(b.text('Coverage'),/1 não pago\(s\) excluído\(s\)/);assert.match(b.text('Coverage'),/1 em andamento/);
  assert.match(b.text('NetHelp'),/não o valor recebido em banco/);assert.equal(b.run("control('AdsLink').href"),'/dashboard?month=2026-10');
- assert.deepEqual(JSON.parse(b.run('JSON.stringify(calls.map(call=>call.body.operation))')),['start','ads']);
+ assert.deepEqual(JSON.parse(b.run('JSON.stringify(calls.map(call=>call.body.operation))')),['read','start','ads']);
+});
+
+test('a validated saved month paints before the private import responds and remains visible while its steps run',async()=>{
+ const source=fixture({source_checked_at:{finance_oldest_at:stamp-90,finance_latest_at:stamp-30,ads_at:stamp}}),b=browser(source);
+ const running=fixture({...source,status:'RUNNING',progress:{...source.progress,windows_complete:1},sales_cents:null,expected_repass_cents:null,production_cost_cents:null,invoice_tax_cents:null,ads_adjustment_cents:null,result:{...source.result,net_estimate_cents:null,net_margin_bps:null,pending:['COLLECTING','PRODUCTION_COST_INCOMPLETE','INVOICE_TAX_UNAVAILABLE','ADJUSTMENT_UNAVAILABLE']}});
+ b.run("let releaseStart,releaseStep;customApi=async(path,body)=>body.operation==='start'?new Promise(resolve=>releaseStart=resolve):body.operation==='step'?new Promise(resolve=>releaseStep=resolve):JSON.parse(JSON.stringify(currentFrame));");
+ const starting=b.run('brazaMonthDashboard.start({api,syncVariants})');await b.settle();
+ assert.deepEqual(JSON.parse(b.run('JSON.stringify(calls.map(call=>call.body.operation))')),['read','start']);
+ assert.match(b.text('Sales'),/100,00/);assert.match(b.text('Net'),/43,00/);assert.match(b.text('Status'),/última leitura salva.*Atualizando/);
+ assert.match(b.text('Scope'),/financeiro: leitura mais antiga .*08:58:30; mais recente .*08:59:30/);assert.match(b.text('Scope'),/Idade do financeiro: há 1 minuto\(s\).*idade dos anúncios: há menos de 1 minuto/);
+ b.context.running=JSON.stringify(running);b.run('releaseStart(JSON.parse(running));');await b.settle();
+ assert.equal(b.run('calls.at(-1).body.operation'),'step');assert.match(b.text('Net'),/43,00/);assert.match(b.text('Sales'),/100,00/);assert.match(b.text('Status'),/última leitura salva.*Conferindo os pedidos/);
+ b.run('releaseStep(JSON.parse(JSON.stringify(currentFrame)));');assert.equal(await starting,true);assert.equal(b.run('timers.size'),1);
+});
+
+test('a changed month paints its saved data while a late private response from the previous month is ignored',async()=>{
+ const source=fixture(),b=browser(source);
+ b.run("const releaseImports=new Map();customApi=async(path,body)=>body.operation==='start'?new Promise(resolve=>releaseImports.set(body.month,resolve)):JSON.parse(JSON.stringify(currentFrame));");
+ const old=b.run('brazaMonthDashboard.start({api,syncVariants})');await b.settle();
+ const past=fixture({...source,month:'2026-09',start_date:'2026-09-01',end_date:'2026-09-30',ads:calendar('2026-09',30)});b.load(past);
+ b.run("control('Select').value='2026-09';");const selected=b.run('brazaMonthDashboard.refresh()');await b.settle();
+ assert.match(b.text('Scope'),/01\/09\/2026 a 30\/09\/2026/);assert.match(b.text('Net'),/43,00/);assert.match(b.text('Status'),/última leitura salva/);
+ b.run("releaseImports.get('2026-09')(JSON.parse(JSON.stringify(currentFrame)));");assert.equal(await selected,true);
+ b.context.old=JSON.stringify(source);b.run("releaseImports.get('2026-10')(JSON.parse(old));");assert.equal(await old,false);
+ assert.match(b.text('Scope'),/01\/09\/2026 a 30\/09\/2026/);assert.doesNotMatch(b.text('Scope'),/01\/10\/2026/);
+});
+
+test('a failed saved read falls back once to the normal financial import',async()=>{
+ const b=browser();b.run("customApi=async(path,body)=>{if(body.operation==='read')throw Error('Cache indisponível.');return JSON.parse(JSON.stringify(currentFrame));};");
+ assert.equal(await b.run('brazaMonthDashboard.start({api,syncVariants})'),true);
+ assert.deepEqual(JSON.parse(b.run('JSON.stringify(calls.map(call=>call.body.operation))')),['read','start','ads']);assert.match(b.text('Net'),/43,00/);assert.equal(b.run('timers.size'),1);
+});
+
+test('a stale saved financial source keeps the net pending before a delayed private refresh',async()=>{
+ const source=fixture(),stale=fixture({...source,source_checked_at:{finance_oldest_at:stamp-1200,finance_latest_at:stamp-30,ads_at:stamp},result:{...source.result,net_estimate_cents:null,net_margin_bps:null,pending:['FINANCIAL_SOURCE_STALE']}}),b=browser(stale);
+ b.run("let releaseStart;customApi=async(path,body)=>body.operation==='start'?new Promise(resolve=>releaseStart=resolve):JSON.parse(JSON.stringify(currentFrame));");
+ const starting=b.run('brazaMonthDashboard.start({api,syncVariants})');await b.settle();
+ assert.equal(b.text('Net'),'Em conciliação');assert.doesNotMatch(b.text('Net'),/0,00|43,00/);assert.match(b.text('PendingList'),/nova leitura/);assert.match(b.text('Scope'),/Idade do financeiro: há 20 minuto\(s\)/);
+ b.load(source);b.run('releaseStart(JSON.parse(JSON.stringify(currentFrame)));');await starting;assert.match(b.text('Net'),/43,00/);
 });
 
 test('a missing payment keeps monthly sales and net pending rather than manufacturing zero revenue or a loss',async()=>{
@@ -114,7 +154,7 @@ test('outdated month responses never overwrite the selected month or restore old
 test('minute Ads updates keep one timer and do not repeat the full financial import before its bounded interval',async()=>{
  const b=browser();await b.run('brazaMonthDashboard.start({api,syncVariants})');assert.equal(b.run('timers.size'),1);
  b.run('clock+=61000;');await b.run('[...timers.values()][0].callback()');
- assert.deepEqual(JSON.parse(b.run('JSON.stringify(calls.map(call=>call.body.operation))')),['start','ads','ads']);
+ assert.deepEqual(JSON.parse(b.run('JSON.stringify(calls.map(call=>call.body.operation))')),['read','start','ads','ads']);
  b.run("document.hidden=true;document.handlers.visibilitychange();");assert.equal(b.run('timers.size'),0);
  b.run("document.hidden=false;document.handlers.visibilitychange();control('ExpensesValue').value='7.00';control('ExpensesValue').oninput();");assert.equal(b.run('timers.size'),0);
 });
@@ -126,7 +166,7 @@ test('automatic full refresh imports new sales and later cancellations before up
  b.context.running=JSON.stringify(running);b.load(added);
  b.run("customApi=async(path,body)=>JSON.parse(body.operation==='start'?running:JSON.stringify(currentFrame));clock+=301000;");
  await b.run('[...timers.values()][0].callback()');
- assert.deepEqual(JSON.parse(b.run('JSON.stringify(calls.map(call=>call.body.operation))')),['start','ads','start','step','ads']);
+ assert.deepEqual(JSON.parse(b.run('JSON.stringify(calls.map(call=>call.body.operation))')),['read','start','ads','start','step','ads']);
  assert.match(b.text('Sales'),/150,00/);assert.match(b.text('Coverage'),/3 pedido\(s\) pagos/);assert.match(b.text('Net'),/72,00/);assert.equal(b.run('timers.size'),1);
  const cancelled=fixture({...source,coverage:{...source.coverage,orders:5,cancelled:2},result:{...source.result}});b.load(cancelled);
  b.run('clock+=301000;');await b.run('[...timers.values()][0].callback()');
@@ -145,7 +185,7 @@ test('overdue hidden finance refresh resumes once, blocks overlap and preserves 
  b.run("document.handlers.visibilitychange();control('ExpensesValue').value='12,34';control('ExpensesValue').oninput();");assert.equal(b.run('timers.size'),0);
  b.run('completeImport(JSON.parse(JSON.stringify(currentFrame)));');await refresh;
  assert.equal(b.run("control('ExpensesValue').value"),'12,34');assert.match(b.text('ExpenseState'),/edição de despesas ainda não salva/);
- assert.deepEqual(JSON.parse(b.run('JSON.stringify(calls.map(call=>call.body.operation))')),['start','ads','start','ads']);
+ assert.deepEqual(JSON.parse(b.run('JSON.stringify(calls.map(call=>call.body.operation))')),['read','start','ads','start','ads']);
  assert.equal(b.run('timers.size'),0,'an unfinished expense draft pauses scheduling instead of being saved or overwritten');
  b.run("control('ExpensesReload').onclick();");assert.equal(b.run('timers.size'),1);
 });
@@ -153,9 +193,9 @@ test('overdue hidden finance refresh resumes once, blocks overlap and preserves 
 test('an automatic source failure or explicit stop cannot start a retry loop on visibility changes',async()=>{
  const b=browser();await b.run('brazaMonthDashboard.start({api,syncVariants})');
  b.run("customApi=async()=>{throw Error('Fonte temporariamente indisponível.');};clock+=301000;");
- assert.equal(await b.run('[...timers.values()][0].callback()'),false);assert.equal(b.run('calls.length'),3);assert.equal(b.run('timers.size'),0);
+ assert.equal(await b.run('[...timers.values()][0].callback()'),false);assert.equal(b.run('calls.length'),4);assert.equal(b.run('timers.size'),0);
  b.run('document.hidden=true;document.handlers.visibilitychange();clock+=600000;document.hidden=false;document.handlers.visibilitychange();');
- assert.equal(b.run('timers.size'),0);assert.equal(b.run('calls.length'),3);assert.match(b.text('Sales'),/100,00/);assert.match(b.text('Status'),/Fonte temporariamente indisponível/);
+ assert.equal(b.run('timers.size'),0);assert.equal(b.run('calls.length'),4);assert.match(b.text('Sales'),/100,00/);assert.match(b.text('Status'),/Fonte temporariamente indisponível/);
  b.run('customApi=null;');assert.equal(await b.run('brazaMonthDashboard.refresh()'),true);assert.equal(b.run('timers.size'),1);
  b.run('brazaMonthDashboard.stop();document.hidden=true;document.handlers.visibilitychange();document.hidden=false;document.handlers.visibilitychange();');
  assert.equal(b.run('timers.size'),0);
@@ -169,7 +209,7 @@ test('an import hidden between responses suspends further requests and resumes a
  assert.equal(b.run('calls.length'),1);assert.equal(b.run('timers.size'),0);assert.match(b.text('Status'),/automaticamente quando este painel voltar/);
  b.run('customApi=null;document.hidden=false;document.handlers.visibilitychange();');assert.equal(b.run('[...timers.values()][0].delay'),0);
  await b.run('[...timers.values()][0].callback()');
- assert.deepEqual(JSON.parse(b.run('JSON.stringify(calls.map(call=>call.body.operation))')),['start','start','ads']);assert.match(b.text('Net'),/43,00/);assert.equal(b.run('timers.size'),1);
+ assert.deepEqual(JSON.parse(b.run('JSON.stringify(calls.map(call=>call.body.operation))')),['read','start','ads']);assert.match(b.text('Net'),/43,00/);assert.equal(b.run('timers.size'),1);
 });
 
 test('an explicit pause waits for the current response and does not start Ads until manually resumed',async()=>{
@@ -177,12 +217,12 @@ test('an explicit pause waits for the current response and does not start Ads un
  const starting=b.run('brazaMonthDashboard.start({api,syncVariants})');b.run("control('Pause').onclick();releaseStart(JSON.parse(JSON.stringify(currentFrame)));");await starting;
  assert.equal(b.run('calls.length'),1);assert.equal(b.run('timers.size'),0);assert.match(b.text('Status'),/Consulta pausada/);
  b.run('customApi=null;');await b.run('brazaMonthDashboard.refresh()');
- assert.deepEqual(JSON.parse(b.run('JSON.stringify(calls.map(call=>call.body.operation))')),['start','start','ads']);assert.equal(b.run('timers.size'),1);
+ assert.deepEqual(JSON.parse(b.run('JSON.stringify(calls.map(call=>call.body.operation))')),['read','start','ads']);assert.equal(b.run('timers.size'),1);
 });
 
 test('source failure stops the collection without an automatic retry loop or private error text',async()=>{
  const b=browser();b.run("customApi=async()=>{throw Error('A conexão financeira ainda não está disponível.');};");
- assert.equal(await b.run('brazaMonthDashboard.start({api,syncVariants})'),false);assert.equal(b.run('calls.length'),1);assert.equal(b.run('timers.size'),0);assert.equal(b.text('Net'),'Em apuração');assert.equal(b.run("control('Refresh').disabled"),false);assert.match(b.text('Status'),/conexão financeira/);
+ assert.equal(await b.run('brazaMonthDashboard.start({api,syncVariants})'),false);assert.equal(b.run('calls.length'),2);assert.equal(b.run('timers.size'),0);assert.equal(b.text('Net'),'Em apuração');assert.equal(b.run("control('Refresh').disabled"),false);assert.match(b.text('Status'),/conexão financeira/);
 });
 
 test('a recharge is visibly added back once while a support fee stays inside the reported payout',async()=>{
@@ -199,12 +239,13 @@ test('missing product costs trigger one automatic catalogue pass and a read-only
  const b=browser(pending);b.context.completed=JSON.stringify(source);
  b.run("const syncAndComplete=async rows=>{syncCalls++;if(rows.length!==1||rows[0].item_id!=='201')throw Error('UNEXPECTED_VARIANTS');currentFrame=JSON.parse(completed);return true;};");
  await b.run('brazaMonthDashboard.start({api,syncVariants:syncAndComplete})');
- assert.equal(b.run('syncCalls'),1);assert.deepEqual(JSON.parse(b.run('JSON.stringify(calls.map(call=>call.body.operation))')),['start','read','ads']);assert.match(b.text('Net'),/43,00/);
+ assert.equal(b.run('syncCalls'),1);assert.deepEqual(JSON.parse(b.run('JSON.stringify(calls.map(call=>call.body.operation))')),['read','start','read','ads']);assert.match(b.text('Net'),/43,00/);
 });
 
 test('a forged net result is refused before it can appear in the monthly dashboard',async()=>{
  const b=browser(),invalid=fixture();invalid.result.net_estimate_cents++;b.load(invalid);
  assert.equal(await b.run('brazaMonthDashboard.start({api,syncVariants})'),false);assert.equal(b.text('Net'),'Em apuração');assert.match(b.text('Status'),/não puderam ser conferidos/);assert.equal(b.run('timers.size'),0);
+ assert.deepEqual(JSON.parse(b.run('JSON.stringify(calls.map(call=>call.body.operation))')),['read'],'an invalid successful cache response is never trusted or treated as a cache miss');
 });
 
 test('monthly products keep production totals and exclusive contribution separate from account Ads and net profit',async()=>{

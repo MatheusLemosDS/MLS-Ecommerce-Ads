@@ -1,0 +1,131 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {D1} from './sqlite-d1.mjs';
+import {COST_DEFAULTS} from '../src/production-costs.mjs';
+import {buildAdsCalendar} from '../src/ads-calendar.mjs';
+import {buildAdsMeasurement} from '../src/ads-measurement.mjs';
+import {businessMonth} from '../src/business-month.mjs';
+import {projectBusinessPeriodFrame} from '../../finance/src/business-period-frame.mjs';
+import {runBusinessSync,readBusinessSyncState,saveBusinessSyncPolicy,BusinessSyncError} from '../src/business-sync.mjs';
+
+const clock=Date.UTC(2026,9,24,12),stamp=clock/1000,now=()=>clock;
+function environment(){
+ const ADMIN_DB=new D1();ADMIN_DB.db.exec('CREATE TABLE variant_bindings_state(id INTEGER PRIMARY KEY,revision INTEGER,payload TEXT,updated_at TEXT);CREATE TABLE production_costs_state(id INTEGER PRIMARY KEY,revision INTEGER,payload TEXT,updated_at TEXT);CREATE TABLE hermes_jobs(id TEXT PRIMARY KEY,payload TEXT)');
+ ADMIN_DB.db.prepare('INSERT INTO variant_bindings_state VALUES(1,3,?,?)').run('[]',new Date(clock).toISOString());
+ ADMIN_DB.db.prepare('INSERT INTO production_costs_state VALUES(1,7,?,?)').run(JSON.stringify(COST_DEFAULTS),new Date(clock).toISOString());return {ADMIN_DB};
+}
+function finance(selection,index,{running=false,at=stamp}={}){
+ const value={schema:'finance_business_period_v1',run_id:'11111111-1111-4111-8111-'+String(index).padStart(12,'0'),revision:1,status:running?'RUNNING':'COMPLETE',start_date:selection.start_date,end_date:selection.end_date,cutoff_at:at-2,checked_at:at,currency:'BRL',monetary_unit:'UNCONFIRMED',pages_read:running?0:1,duplicate_orders:0,coverage:{orders:0,paid:0,completed:0,ongoing:0,cancelled:0,cancel_pending:0,unpaid:0,other:0,unknown:0,payment_covered:0,payment_missing:0,returns:0,returns_unknown:0},known_sales_base_raw:'0',sales_base_raw:'0',known_expected_repass_raw:'0',expected_repass_raw:'0',known_ads_adjustment_raw:'0',ads_adjustment_raw:'0',invoice_tax:{schema:'store_invoice_tax_v1',rate_bps:200,basis:'PAYMENT_GOODS_VALUE_PER_ORDER_ESTIMATE',rounding:'HALF_UP_PER_ORDER',covered_orders:0,unavailable_orders:0,known_base_raw:'0',known_tax_raw:'0'},items:[],diagnostic:null,basis:'CREATE_TIME_PAID_ORDER_ESTIMATE_NOT_SETTLED',product_breakdown:{schema:'business_product_breakdown_v1',mixed_orders:0,mixed_payment_covered:0,mixed_payment_missing:0,known_mixed_sales_base_raw:'0',known_mixed_expected_repass_raw:'0',known_mixed_ads_adjustment_raw:'0',known_mixed_invoice_tax_raw:'0',products:[]}};
+ assert.ok(projectBusinessPeriodFrame(value));return value;
+}
+function calendar(selection,at=stamp,missing=null){
+ const days=[];for(let day=Date.parse(selection.start_date+'T00:00:00Z');day<=Date.parse(selection.end_date+'T00:00:00Z');day+=86400000)days.push(new Date(day).toISOString().slice(0,10));
+ const children=[];for(let index=0;index<days.length;index+=15){const dates=days.slice(index,index+15),range={start_date:dates[0],end_date:dates.at(-1)};children.push(buildAdsMeasurement({status:'ok',connected:true,shop:{id:1178167501},period:range,balance:31.07,daily:dates.filter(day=>day!==missing).map(date=>({date,expense:0,broad_gmv:0,broad_order:0,broad_roas:0,direct_gmv:0,direct_order:0,direct_roas:0}))},range,at));}
+ return buildAdsCalendar(children,selection,at);
+}
+function source({running=false,time=now,missing=null}={}){
+ const calls={finance:[],ads:[]},frames=new Map();let sequence=0;
+ return {calls,frames,getFinanceBusinessPeriod:async(_,selection,options)=>{assert.equal(options.timeoutMs,45000);calls.finance.push(selection);if(selection.operation==='start'){const value=finance(selection,++sequence,{running,at:Math.floor(time()/1000)});frames.set(value.run_id,value);return structuredClone(value);}return structuredClone(frames.get(selection.run_id));},getAdsCalendar:async(_,selection,options)=>{assert.equal(options.timeoutMs,10000);calls.ads.push(selection);return calendar(selection,Math.floor(time()/1000),missing);}};
+}
+const run=(env,services,options={})=>runBusinessSync(env,services,{now,...options});
+const rows=(env,table)=>env.ADMIN_DB.db.prepare('SELECT * FROM '+table).all();
+const privateRows=env=>['business_sync_state','business_sync_audit','business_month_runs','business_month_frames','business_month_ads'].flatMap(table=>rows(env,table));
+
+test('default unattended collection uses the current BRT month, preserves expenses and costs, and stores compact estimate metadata',async()=>{
+ const env=environment(),services=source();await businessMonth(env,{operation:'expenses',month:'2026-10',revision:0,external_expenses_cents:12345,recharge_treatment:'UNCONFIRMED'},services,{now});
+ const expenses=rows(env,'business_month_expenses'),expenseAudit=rows(env,'business_month_expenses_audit'),costs=rows(env,'production_costs_state'),bindings=rows(env,'variant_bindings_state');
+ const result=await run(env,services);assert.equal(result.status,'COMPLETE');assert.equal(result.finance_steps,2);assert.equal(result.ads_reads,1);
+ assert.equal(result.state.enabled,true);assert.equal(result.state.mode,'READ_ONLY');assert.equal(result.state.last_success_at,stamp);assert.equal(result.state.next_run_at,stamp+300);
+ assert.deepEqual(services.calls.finance,[{operation:'start',start_date:'2026-10-01',end_date:'2026-10-15'},{operation:'start',start_date:'2026-10-16',end_date:'2026-10-24'}]);
+ const summary=result.state.summary;assert.equal(summary.month,'2026-10');assert.equal(summary.net_estimate_cents,-20950);assert.equal(summary.net_profit_cents,null);assert.equal(summary.expenses_revision,1);assert.equal(summary.tax_policy_revision,1);assert.equal(summary.bindings_revision,3);assert.equal(summary.costs_revision,7);assert.equal(summary.source_checked_at.finance_oldest_at,stamp);assert.equal(summary.source_checked_at.ads_at,stamp);assert.equal(summary.ads_covered_days,24);assert.equal(summary.ads_total_days,24);assert.equal(summary.basis,'PAID_ORDER_CREATE_MONTH_AND_CALENDAR_ADS_ESTIMATE');
+ assert.deepEqual(rows(env,'business_month_expenses'),expenses);assert.deepEqual(rows(env,'business_month_expenses_audit'),expenseAudit);assert.deepEqual(rows(env,'production_costs_state'),costs);assert.deepEqual(rows(env,'variant_bindings_state'),bindings);assert.equal(rows(env,'hermes_jobs').length,0);
+ const audit=rows(env,'business_sync_audit');assert.equal(audit.length,1);assert.equal(audit[0].kind,'RUN');assert.ok(Buffer.byteLength(audit[0].summary)<3000);assert.ok(!audit[0].summary.includes('product_breakdown'));assert.ok(!audit[0].summary.includes('run_id'));assert.equal(result.state.lease_expires_at,null);
+ assert.equal((await run(env,services)).status,'NOT_DUE');assert.equal(services.calls.finance.length,2);assert.equal(rows(env,'business_sync_audit').length,1);
+});
+
+test('an atomic lease excludes overlapping schedulers and resumes a running provider run on the following tick',async()=>{
+ const env=environment(),services=source({running:true});let entered,release;
+ const blocked=new Promise(resolve=>release=resolve),started=new Promise(resolve=>entered=resolve),provider=services.getFinanceBusinessPeriod;
+ services.getFinanceBusinessPeriod=async(...args)=>{entered();await blocked;return provider(...args);};
+ const first=run(env,services);await started;const duplicate=await run(env,services);assert.equal(duplicate.status,'LEASED');assert.equal(duplicate.finance_steps,0);assert.equal(services.calls.finance.length,0);
+ release();const initial=await first;assert.equal(initial.status,'RUNNING');assert.equal(initial.finance_steps,4);assert.equal(initial.ads_reads,0);assert.equal(initial.state.summary.net_estimate_cents,null);assert.equal(initial.state.summary.net_profit_cents,null);assert.ok(initial.state.summary.pending.includes('COLLECTING'));assert.equal(initial.state.summary.progress.windows_complete,0);
+ const id=[...services.frames.keys()][0];assert.deepEqual(services.calls.finance.slice(1),Array.from({length:3},()=>({operation:'step',run_id:id})));
+ services.getFinanceBusinessPeriod=provider;const resumed=await run(env,services,{now:()=>clock+300000,maxSteps:1});assert.equal(resumed.status,'RUNNING');assert.equal(resumed.finance_steps,1);assert.deepEqual(services.calls.finance.at(-1),{operation:'step',run_id:id});assert.equal(resumed.state.failure_count,0);assert.equal(rows(env,'business_sync_audit').length,2);
+});
+
+test('simultaneous first cron ticks race through one atomic lease and never duplicate source reads',async()=>{
+ const env=environment(),services=source();let entered,release;
+ const blocked=new Promise(resolve=>release=resolve),started=new Promise(resolve=>entered=resolve),provider=services.getFinanceBusinessPeriod;
+ services.getFinanceBusinessPeriod=async(...args)=>{entered();await blocked;return provider(...args);};
+ const first=run(env,services),second=run(env,services);await started;
+ const skipped=await Promise.race([first,second]);assert.equal(skipped.status,'LEASED');assert.equal(skipped.finance_steps,0);
+ release();const results=await Promise.all([first,second]);assert.deepEqual(results.map(result=>result.status).sort(),['COMPLETE','LEASED']);assert.equal(services.calls.finance.length,2);assert.equal(services.calls.ads.length,1);assert.equal(rows(env,'business_sync_audit').length,1);
+});
+
+test('pause and resume are explicit versioned policy changes and paused ticks never read providers',async()=>{
+ const env=environment(),services=source(),state=await readBusinessSyncState(env);assert.equal(state.enabled,true);
+ const paused=await saveBusinessSyncPolicy(env,{revision:state.revision,enabled:false},'fixture-admin',{now});assert.equal(paused.status,'PAUSED');assert.equal(paused.revision,2);
+ assert.equal((await run(env,services)).status,'PAUSED');assert.equal(services.calls.finance.length,0);assert.equal(services.calls.ads.length,0);
+ await assert.rejects(saveBusinessSyncPolicy(env,{revision:1,enabled:true},'fixture-admin',{now}),error=>error instanceof BusinessSyncError&&error.status===409);
+ const enabled=await saveBusinessSyncPolicy(env,{revision:2,enabled:true},'fixture-admin',{now});assert.equal(enabled.enabled,true);assert.equal(enabled.revision,3);assert.equal(enabled.next_run_at,0);
+ assert.equal((await run(env,services)).status,'COMPLETE');assert.equal(rows(env,'business_sync_audit').filter(row=>row.kind==='POLICY').length,2);
+});
+
+test('a policy pause during a provider call stops the following step and keeps the running lease exclusive',async()=>{
+ const env=environment(),services=source({running:true}),provider=services.getFinanceBusinessPeriod;let paused=false;
+ services.getFinanceBusinessPeriod=async(...args)=>{const value=await provider(...args);if(!paused){paused=true;const current=await readBusinessSyncState(env);const policy=await saveBusinessSyncPolicy(env,{revision:current.revision,enabled:false},'fixture-admin',{now});assert.equal(policy.status,'PAUSED');assert.equal(policy.lease_expires_at,stamp+300);assert.equal((await run(env,services)).status,'PAUSED');}return value;};
+ const result=await run(env,services);assert.equal(result.status,'PAUSED');assert.equal(result.finance_steps,1);assert.equal(result.ads_reads,0);assert.equal(result.state.lease_expires_at,null);assert.equal(services.calls.finance.length,1);
+});
+
+test('a deleted paused state with policy history fails closed when the database is reopened',async()=>{
+ const env=environment(),current=await readBusinessSyncState(env);
+ await saveBusinessSyncPolicy(env,{revision:current.revision,enabled:false},'fixture-admin',{now});
+ env.ADMIN_DB.db.exec('DELETE FROM business_sync_state');
+ const reopened={ADMIN_DB:Object.create(env.ADMIN_DB)},services=source();
+ await assert.rejects(readBusinessSyncState(reopened),error=>error instanceof BusinessSyncError&&error.message==='BUSINESS_SYNC_STATE_INVALID');
+ await assert.rejects(run(reopened,services),error=>error instanceof BusinessSyncError&&error.message==='BUSINESS_SYNC_STATE_INVALID');
+ assert.equal(rows(env,'business_sync_state').length,0);assert.equal(rows(env,'business_sync_audit').length,1);assert.equal(services.calls.finance.length,0);assert.equal(services.calls.ads.length,0);
+});
+
+test('a completed resumed month with stale financial windows never records collection success',async()=>{
+ const env=environment();let time=clock;const services=source({time:()=>time});
+ const first=await run(env,services,{now:()=>time,maxSteps:1});assert.equal(first.status,'RUNNING');assert.equal(first.state.summary.progress.windows_complete,1);assert.equal(first.state.last_success_at,null);
+ time+=1000000;
+ const result=await run(env,services,{now:()=>time});assert.equal(result.state.summary.status,'COMPLETE');assert.ok(result.state.summary.pending.includes('FINANCIAL_SOURCE_STALE'));assert.equal(result.status,'ERROR');assert.equal(result.state.last_error,'BUSINESS_SYNC_COLLECTION_UNAVAILABLE');assert.equal(result.state.last_success_at,null);assert.equal(result.state.failure_count,1);assert.equal(result.state.summary.net_estimate_cents,null);assert.equal(rows(env,'business_sync_audit').at(-1).status,'ERROR');
+});
+
+test('provider failures store safe errors and back off by five, ten, twenty and at most thirty minutes',async()=>{
+ const env=environment();let time=clock,calls=0;
+ const services={getFinanceBusinessPeriod:async()=>{calls++;throw Error('PRIVATE_ACCESS_TOKEN_PRIVATE_BUYER');}};
+ for(const [index,delay] of [300,600,1200,1800,1800].entries()){
+  const result=await run(env,services,{now:()=>time});assert.equal(result.status,'ERROR');assert.equal(result.state.failure_count,index+1);assert.equal(result.state.next_run_at,Math.floor(time/1000)+delay);assert.equal(result.state.last_error,'BUSINESS_SYNC_COLLECTION_UNAVAILABLE');assert.equal(result.state.last_success_at,null);assert.equal(result.state.lease_expires_at,null);assert.equal(result.state.summary,null);assert.ok(!JSON.stringify(result).includes('PRIVATE'));assert.ok(!JSON.stringify(privateRows(env)).includes('PRIVATE'));
+  assert.equal((await run(env,services,{now:()=>time+1000})).status,'NOT_DUE');time+=delay*1000;
+ }
+ assert.equal(calls,5);assert.equal(rows(env,'business_sync_audit').length,5);
+ const good=source({time:()=>time});const recovered=await run(env,good,{now:()=>time});assert.equal(recovered.status,'COMPLETE');assert.equal(recovered.state.failure_count,0);assert.equal(recovered.state.last_error,null);
+});
+
+test('partial Ads never become a zero total or a liquidated profit and are retried',async()=>{
+ const env=environment(),services=source({missing:'2026-10-03'}),result=await run(env,services);
+ assert.equal(result.status,'PARTIAL');assert.equal(result.state.summary.ads_status,'PARTIAL');assert.equal(result.state.summary.ads_covered_days,23);assert.equal(result.state.summary.ads_total_days,24);assert.ok(result.state.summary.pending.includes('ADS_UNAVAILABLE'));assert.ok(result.state.summary.pending.includes('EXTERNAL_EXPENSES_REQUIRED'));assert.equal(result.state.summary.net_estimate_cents,null);assert.equal(result.state.summary.net_profit_cents,null);assert.equal(result.state.last_success_at,null);assert.equal(result.state.failure_count,1);assert.equal(result.state.last_error,'BUSINESS_SYNC_ADS_INCOMPLETE');
+});
+
+test('strict source projection rejects provider extras without persisting their private fields',async()=>{
+ const env=environment(),services=source(),provider=services.getFinanceBusinessPeriod;
+ services.getFinanceBusinessPeriod=async(...args)=>({...await provider(...args),access_token:'PRIVATE_PROVIDER_TOKEN'});
+ const result=await run(env,services);assert.equal(result.status,'ERROR');assert.equal(result.ads_reads,0);assert.equal(result.state.summary,null);assert.ok(!JSON.stringify(privateRows(env)).includes('PRIVATE'));assert.ok(!JSON.stringify(result).includes('PRIVATE'));
+});
+
+test('remaining request budget is checked before starting Ads and before every financial operation',async()=>{
+ const env=environment();let time=clock;const services=source({time:()=>time}),provider=services.getFinanceBusinessPeriod;
+ services.getFinanceBusinessPeriod=async(...args)=>{const value=await provider(...args);time+=115000;return value;};
+ const result=await run(env,services,{now:()=>time});assert.equal(result.finance_steps,2);assert.equal(result.ads_reads,0);assert.equal(result.status,'PARTIAL');assert.equal(result.state.summary.ads_status,null);assert.equal(result.state.summary.net_estimate_cents,null);assert.equal(time,clock+230000);
+ const runningEnv=environment();time=clock;const pending=source({running:true,time:()=>time}),step=pending.getFinanceBusinessPeriod;pending.getFinanceBusinessPeriod=async(...args)=>{const value=await step(...args);time+=115000;return value;};
+ const stopped=await run(runningEnv,pending,{now:()=>time});assert.equal(stopped.finance_steps,2);assert.equal(stopped.status,'RUNNING');assert.equal(stopped.ads_reads,0);assert.equal(stopped.state.summary.net_estimate_cents,null);assert.equal(stopped.state.failure_count,0);
+});
+
+test('the BRT boundary chooses the previous UTC month and an expired lease can be recovered',async()=>{
+ const env=environment(),time=Date.UTC(2026,10,1,1),services=source({time:()=>time});await readBusinessSyncState(env);
+ env.ADMIN_DB.db.prepare("UPDATE business_sync_state SET lease_token='22222222-2222-4222-8222-222222222222',lease_expires_at=?,status='RUNNING'").run(time/1000-1);
+ const result=await run(env,services,{now:()=>time});assert.equal(result.state.month,'2026-10');assert.equal(result.status,'COMPLETE');assert.equal(result.finance_steps,3);assert.equal(result.state.summary.end_date,'2026-10-31');assert.equal(result.state.lease_expires_at,null);
+});

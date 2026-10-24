@@ -1,12 +1,14 @@
 import {projectBusinessMonth} from './business-month.mjs';
 import {projectAdsCalendar} from './ads-calendar.mjs';
 import {projectBusinessMonthProducts} from './business-month-products.mjs';
+import {buildAccountDiagnosis} from './account-diagnosis.mjs';
 
 export const BUSINESS_MONTH_CLIENT=String.raw`
 (()=>{
  ${projectAdsCalendar.toString()}
  ${projectBusinessMonthProducts.toString()}
  ${projectBusinessMonth.toString()}
+ ${buildAccountDiagnosis.toString()}
  const el=id=>document.getElementById('businessMonth'+id);
  const node=(tag,text,cls)=>{const value=document.createElement(tag);if(text!==undefined)value.textContent=text;if(cls)value.className=cls;return value;};
  const pendingMessages={COLLECTING:'A consulta dos pedidos do mês ainda está em andamento.',PERIOD_LIMIT_REACHED:'A quantidade de pedidos ultrapassou o limite desta consulta. O mês permanece parcial.',SOURCE_UNAVAILABLE:'A Shopee não concluiu parte da leitura. Atualize o mês para retomar.',STATUS_REVIEW_REQUIRED:'Há pedidos em cancelamento ou com uma situação que ainda precisa ser conferida.',PAYMENT_INCOMPLETE:'A Shopee ainda não informou todos os valores financeiros dos pedidos pagos. Esses pedidos não são tratados como valor zero.',RETURNS_NOT_RECONCILED:'Há devoluções ou pedidos sem informação suficiente de devolução. Falta conciliar seus valores.',PRODUCTION_COST_INCOMPLETE:'Há produtos sem composição ou custo completo. A identificação automática preserva os vínculos já salvos.',INVOICE_TAX_UNAVAILABLE:'O valor do imposto ainda não está disponível para concluir o mês.',TAX_POLICY_REQUIRED:'O DAS-MEI deste ano ainda não está cadastrado. O imposto permanece pendente, sem usar 2% por nota.',FINANCIAL_SOURCE_STALE:'Os pedidos e repasses precisam de uma nova leitura. O resultado permanece em conferência até a atualização financeira.',ADS_UNAVAILABLE:'O gasto de anúncios ainda não foi confirmado para todos os dias do mês.',EXTERNAL_EXPENSES_REQUIRED:'Informe as outras despesas do mês ou escolha “Não tenho outras despesas”.',RECHARGE_TREATMENT_REQUIRED:'Confira se o ajuste financeiro corresponde a recarga de anúncios ou taxa de suporte.',ADJUSTMENT_UNAVAILABLE:'O ajuste financeiro de anúncios ou suporte ainda não foi informado por completo.',ARITHMETIC_UNSAFE:'Um valor excedeu o limite seguro de cálculo e não será apresentado como resultado.'};
@@ -15,6 +17,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
  const today=()=>new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date());
  const validMonth=value=>typeof value==='string'&&/^\d{4}-(0[1-9]|1[0-2])$/.test(value)&&value>='2000-01'&&value<=today().slice(0,7);
  const monthName=value=>validMonth(value)?new Intl.DateTimeFormat('pt-BR',{month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(value+'-01T12:00:00Z')):'mês selecionado';
+ const sourceAge=value=>{if(!Number.isSafeInteger(value)||value<=0)return 'pendente';const minutes=Math.max(0,Math.floor((Date.now()-value*1000)/60000));return minutes<1?'há menos de 1 minuto':minutes<60?'há '+minutes+' minuto(s)':minutes<1440?'há '+Math.floor(minutes/60)+' hora(s)':'há '+Math.floor(minutes/1440)+' dia(s)';};
  let api=null,syncVariants=null,frame=null,month='',generation=0,busy=false,adsBusy=false,saving=false,started=false,paused=false,dirty=false,editSequence=0,draftRevision=0,timer=null,message='',failed=false;
  let productPage=1,productMonth='';
  const financeRefreshInterval=300000;
@@ -123,6 +126,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
   el('ProductPrevious').disabled=productPage<=1;el('ProductNext').disabled=productPage>=pages;
  }
  function render(){
+  globalThis.brazaAutomationWorkspace?.render(frame?buildAccountDiagnosis(frame):null);
   if(!frame){
    for(const key of ['Sales','Ads','Roas']){el(key).textContent=busy?'Consultando':'Pendente';el(key+'Card').dataset.status='pending';}el('Net').textContent='Em apuração';el('NetCard').dataset.status='pending';el('Margin').textContent='';el('Coverage').replaceChildren();el('Waterfall').replaceChildren();el('Readiness').replaceChildren();el('Pending').hidden=true;el('Badge').textContent=busy?'Consultando':'Aguardando consulta';drawTaxAndExpenses();drawProducts();controls();return;
   }
@@ -148,12 +152,13 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
   else el('ExpenseState').textContent=frame.expenses.external_expenses_cents===null?'Outras despesas ainda não informadas. Informe o valor ou confirme que não há despesas.':'Despesas salvas para '+monthName(frame.month)+' · versão '+frame.expenses.revision+'.';
   const progress=frame.progress;el('Progress').hidden=!busy;el('Progress').value=progress.windows_total?Math.round(progress.windows_complete/progress.windows_total*100):0;
   const formatTime=value=>Number.isSafeInteger(value)&&value>0?new Date(value*1000).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'}):'pendente',sources=frame.source_checked_at;
-  const consultation=sources?'Pedidos e financeiro: leitura mais antiga '+formatTime(sources.finance_oldest_at)+'; mais recente '+formatTime(sources.finance_latest_at)+'. Anúncios consultados em '+formatTime(sources.ads_at)+'.':'Horário informado pela leitura anterior: '+formatTime(frame.checked_at)+'. Essa leitura não separa os horários do financeiro e dos anúncios.';
+  const consultation=sources?'Pedidos e financeiro: leitura mais antiga '+formatTime(sources.finance_oldest_at)+'; mais recente '+formatTime(sources.finance_latest_at)+'. Anúncios consultados em '+formatTime(sources.ads_at)+'. Idade do financeiro: '+sourceAge(sources.finance_oldest_at)+'; idade dos anúncios: '+sourceAge(sources.ads_at)+'.':'Horário informado pela leitura anterior: '+formatTime(frame.checked_at)+'. Idade da leitura: '+sourceAge(frame.checked_at)+'. Essa leitura não separa os horários do financeiro e dos anúncios.';
   el('Scope').textContent='Pedidos pagos criados de '+frame.start_date.split('-').reverse().join('/')+' a '+frame.end_date.split('-').reverse().join('/')+' e anúncios nas mesmas datas. Custos atuais de produção. '+consultation+' Brasília. Recebimentos bancários ainda não conciliados.';
   for(const key of ['AdsLink','DetailsLink'])el(key).href='/dashboard?month='+encodeURIComponent(frame.month);
   controls();
  }
- function apply(value,expectedMonth){const checked=projectBusinessMonth(value);if(!checked||checked.month!==expectedMonth)throw Error('Os dados mensais não puderam ser conferidos. Atualize o mês para tentar novamente.');frame=checked;render();return checked;}
+ function checkedFrame(value,expectedMonth){const checked=projectBusinessMonth(value);if(!checked||checked.month!==expectedMonth)throw Error('Os dados mensais não puderam ser conferidos. Atualize o mês para tentar novamente.');return checked;}
+ function apply(value,expectedMonth){frame=checkedFrame(value,expectedMonth);render();return frame;}
  function schedule(){
   clearTimeout(timer);timer=null;if(!started||document.hidden||busy||adsBusy||saving||dirty||paused||automaticBlocked||frame?.status!=='COMPLETE'&&!resumeOnVisible||month!==today().slice(0,7))return;
   // Ads updates never advance the financial clock: orders, cancellations and
@@ -172,11 +177,26 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
   status(automatic?'Atualizando vendas, cancelamentos e anúncios de '+monthName(month)+'…':'Consultando os pedidos de '+monthName(month)+'…');render();
   const current=()=>token===generation&&month===selected;
   try{
-   const initial=await request('start',selected);if(!current())return false;let value=apply(initial,selected);
+   let value=null;
+   if(changed){
+    let cached,readSucceeded=false;
+    try{cached=await request('read',selected);readSucceeded=true;}catch{}
+    if(!current())return false;
+    // A successful but invalid cache response must fail validation, rather than
+    // being treated as a network miss or displaying unverified totals.
+    if(readSucceeded){value=apply(cached,selected);if(value.status==='COMPLETE')status('Mostrando a última leitura salva. Atualizando os pedidos e anúncios de '+monthName(selected)+'…');}
+   }
+   if(paused||document.hidden){
+    resumeOnVisible=!paused;
+    status(paused?'Consulta pausada após a última resposta. Use Continuar consulta para retomar.':'A atualização continua automaticamente quando este painel voltar à tela.');return true;
+   }
+   const keepCached=value?.status==='COMPLETE';
+   const update=raw=>{const checked=checkedFrame(raw,selected);if(!keepCached||checked.status!=='RUNNING'){frame=checked;render();}return checked;};
+   const initial=await request('start',selected);if(!current())return false;value=update(initial);
    let steps=0;
    while(value.status==='RUNNING'&&!paused&&!document.hidden&&steps<610){
-    status('Conferindo os pedidos do mês… '+value.coverage.orders+' pedido(s) consultado(s).');
-    const raw=await request('step',selected);if(!current())return false;value=apply(raw,selected);steps++;
+    status((keepCached?'Mostrando a última leitura salva. ':'')+'Conferindo os pedidos do mês… '+value.coverage.orders+' pedido(s) consultado(s).');
+    const raw=await request('step',selected);if(!current())return false;value=update(raw);steps++;
     if(value.result.pending.includes('SOURCE_UNAVAILABLE'))break;
    }
    if(!current())return false;

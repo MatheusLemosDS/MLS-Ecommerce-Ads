@@ -107,6 +107,7 @@ function monthlyBrowser(html,value=monthlyFrame()){
  let frame=JSON.parse(${JSON.stringify(JSON.stringify(value))});const calls=[];
  const api=async(path,body)=>{calls.push({path,body});return JSON.parse(JSON.stringify(frame));};
  const syncVariants=async()=>true;
+ globalThis.brazaAutomationWorkspace={render(value){globalThis.lastDiagnosis=value;}};
  `+monthly[0]).runInContext(context);
  const run=source=>new vm.Script(source).runInContext(context);
  return {run,text:name=>run('text(control('+JSON.stringify(name)+'))')};
@@ -126,7 +127,7 @@ for(const minify of [false,true]){
   assert.match(browser.text('ProductRows'),/58,00/);
   assert.doesNotMatch(browser.text('ProductRows'),/43,00/,'product contribution must remain before the month-wide Ads and expenses');
   assert.match(browser.text('Coverage'),/1 cancelado\(s\) excluído\(s\)/);
-  assert.deepEqual(JSON.parse(browser.run('JSON.stringify(calls.map(call=>call.body.operation))')),['start','ads']);
+  assert.deepEqual(JSON.parse(browser.run('JSON.stringify(calls.map(call=>call.body.operation))')),['read','start','ads']);
   // A second real response exercises the embedded projector again, including
   // the nested Ads calendar check, rather than just compiling the script.
   await browser.run('brazaMonthDashboard.refreshCosts()');
@@ -156,6 +157,7 @@ for(const minify of [false,true]){
   assert.match(browser.text('TotalExpenses'),/121,05/);assert.match(browser.text('Waterfall'),/DAS/);assert.doesNotMatch(browser.text('Waterfall'),/2%/);
   assert.match(browser.text('ProductBalanceHeading'),/após produção/);assert.match(browser.text('ProductRows'),/60,00/);assert.doesNotMatch(browser.text('ProductRows'),/imposto de 2%/);
   assert.match(browser.text('Scope'),/financeir|pedidos/i);assert.match(browser.text('Scope'),/anúncios/i);
+  assert.equal(browser.run('lastDiagnosis.metrics.tacos_bps'),1000);assert.equal(browser.run('lastDiagnosis.metrics.net_estimate_cents'),-4105);assert.equal(browser.run('lastDiagnosis.actual_profit_cents'),null);assert.equal(browser.run('lastDiagnosis.execution'),'READ_ONLY');
   await browser.run('brazaMonthDashboard.refreshCosts()');assert.match(browser.text('TaxSummary'),/86,05/);assert.match(browser.text('Net'),/41,05/);
   assert.doesNotMatch(browser.text('Status'),/is not defined/);
  });

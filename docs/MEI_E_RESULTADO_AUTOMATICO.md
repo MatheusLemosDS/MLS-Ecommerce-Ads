@@ -42,10 +42,21 @@ o painel está visível, os anúncios atualizam a cada minuto e os pedidos,
 cancelamentos e repasses são consultados novamente a cada cinco minutos.
 Ao voltar para a aba, uma consulta financeira vencida é retomada automaticamente.
 
-As consultas não se sobrepõem. Uma pausa explícita, edição de despesas ou falha
-de fonte interrompe a repetição; erros persistentes não disparam consultas sem
-limite. A coleta não roda permanentemente com o navegador fechado: não foi
-criado um novo cron nesta entrega.
+O carregamento inicial apresenta primeiro o último resultado validado salvo,
+com os horários de suas fontes, enquanto uma leitura nova acontece em segundo
+plano. Um valor antigo não é apresentado com o horário da consulta mais recente
+dos anúncios.
+
+A atualização seguinte acrescenta um cron de cinco minutos no App, com coleta
+de leitura independente do navegador. Cada execução avança no máximo quatro
+etapas financeiras, com exclusão de execuções simultâneas, auditoria resumida e
+esperas de 5, 10, 20 ou 30 minutos após falhas. Há pausa própria para essa coleta.
+O estado mostra a última execução real; a configuração do cron não comprova que
+o Cloudflare já o executou. Publicação e primeira execução devem ser distinguidas.
+
+No navegador, uma pausa explícita, edição de despesas ou falha de fonte
+interrompe sua repetição. Isso não autoriza nem cria anúncios ou altera
+orçamentos. As análises do Hermes mantêm seu modo e limites anteriores.
 
 Os horários do financeiro e dos anúncios aparecem separados. No mês atual,
 uma leitura financeira com mais de quinze minutos bloqueia o líquido; Ads

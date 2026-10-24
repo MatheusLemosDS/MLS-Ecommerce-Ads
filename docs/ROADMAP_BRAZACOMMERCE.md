@@ -1,0 +1,154 @@
+# Roadmap BrazaCommerce
+
+Atualizado em **24/10/2026**. Referência: estado já versionado em `main`
+no commit `899a8de` e incremento de coleta em segundo plano, cache inicial e
+diagnóstico de conta implementado na árvore de trabalho, ainda pendente de
+publicação. Este documento substitui o plano de 18/10; os registros antigos
+continuam como histórico das respectivas entregas.
+
+O objetivo é o Hermes acompanhar a loja, identificar produtos rentáveis e
+administrar anúncios e ofertas dentro dos limites definidos pelo proprietário.
+A decisão deve priorizar contribuição depois de anúncios, disponibilidade e
+qualidade dos dados. ROAS, volume de vendas e saldo de repasse isolados não
+comprovam rentabilidade.
+
+## Base disponível e incremento atual
+
+“Versionado” identifica o código do repositório. Não comprova que um build está
+ativo no Cloudflare nem que uma coleta real passou pelas mesmas condições dos
+testes locais.
+
+| Capacidade | Estado em 24/10 | Alcance e evidência que ainda falta |
+| --- | --- | --- |
+| Acesso unificado, painéis, produtos, custos e histórico | Já versionados em `main` | A interface reúne gestão e Ads. Custos são os padrões cadastrados; catálogo e quantidades não equivalem a estoque disponível. |
+| Financeiro por pedido e resumo mensal | Já versionados em `main` | Consulta repasse esperado, pedidos pagos, produção, cancelamentos e cobertura de devoluções. Recebimentos liquidados e valores efetivos de reembolso ainda exigem conciliação. |
+| Detalhamento mensal por produto/variação | Já versionado em `main` | Mantém pedidos exclusivos separados dos mistos, sem inventar rateio de repasse ou de Ads. Não entrega lucro líquido por SKU. |
+| Consumo de anúncios no período | Já versionado em `main` | Usa gasto consumido do calendário; distingue recarga e consumo. Não há atribuição validada desse gasto por produto e campanha. |
+| MEI e DAS de 2026 | Já versionados em `main` | Declaração do operador de **R$ 86,05 por mês**, substituindo os 2% anteriores. Vale para 2026; outro ano precisa de declaração própria. Não consulta PGMEI nem confirma pagamento. |
+| Atualização com o painel aberto | Já versionada em `main` | Consultas automáticas com paginação, deduplicação e horários separados de Financeiro e Ads. O trabalho anterior dependia da sessão visível para continuar atualizando. |
+| Coleta em segundo plano | Implementada neste incremento; pendente de publicação | Cron do App a cada cinco minutos avança coletores de leitura sem depender da aba. Inclui exclusão de execuções concorrentes, pausa/retomada, espera crescente após falhas e auditoria. O disparo real do cron ainda não foi observado nesta entrega. |
+| Abertura rápida da Visão geral | Implementada neste incremento; pendente de publicação | Mostra primeiro o cache privado validado e seus horários; a atualização prossegue sem tratar dado antigo como recente. |
+| Diagnóstico da conta | Implementado neste incremento; pendente de publicação | Calcula TACOS, saldo disponível antes de Ads, cobertura dos custos e próximas tarefas a partir do mês validado. Dados ausentes bloqueiam os indicadores correspondentes. Não autoriza investimento. |
+| Alterar anúncios, campanhas e promoções | Ainda não implementado para execução comercial | As proteções de somente leitura e Ads/PROMO `LOCKED` continuam vigentes. A coleta autônoma não cria permissão de escrita na Shopee. |
+
+O cron configurado é uma oportunidade de execução, não garantia de dados novos
+a cada cinco minutos: paginação, limites das fontes, falhas e espera entre
+tentativas podem atrasar a conclusão. A publicação deve preservar a configuração
+capturada do Worker, seus domínios, variáveis e bancos. O Financeiro continua
+privado, sem cron próprio.
+
+Detalhes da base: [MEI e resultado automático](MEI_E_RESULTADO_AUTOMATICO.md),
+[produtos do resumo mensal](PRODUTOS_DO_RESUMO_MENSAL.md),
+[repasse por produto e Ads](REPASSE_POR_PRODUTO_E_ADS.md) e
+[devoluções e cobertura](DEVOLUCOES_E_COBERTURA.md). A descrição anterior de
+ausência de cron no guia MEI refere-se à entrega já versionada; o incremento
+atual acrescenta a coleta em segundo plano.
+
+## O resultado que podemos usar hoje
+
+A conta mensal permanece uma **estimativa operacional**:
+
+```text
+repasse esperado dos pedidos pagos criados no mês
+− produção das unidades com custo cadastrado
+− DAS mensal declarado
++ recarga de Ads retida no repasse, somente quando identificada como recarga
+− gasto consumido de Ads nas mesmas datas de calendário
+− despesas externas declaradas
+= resultado líquido previsto
+```
+
+Taxas já incorporadas no repasse não são descontadas novamente. Recarga de
+saldo não é consumo de anúncios. Uma despesa desconhecida não recebe zero.
+O DAS é mensal, inclusive sem vendas, e não deve ser multiplicado por pedido
+nem distribuído arbitrariamente entre produtos.
+
+O diagnóstico calcula **TACOS = gasto consumido de Ads / vendas pagas da loja**
+na seleção compatível. Não soma atribuições diretas e amplas nem usa GMV
+atribuído como se fosse receita de toda a loja. Saldo antes de Ads é uma
+referência do mês condicionada à cobertura financeira; não é limite aprovado
+de investimento. A cobertura de custos mede quantas unidades vendidas têm
+custo identificado, sem afirmar que esse padrão é o custo histórico realizado.
+
+Pedidos usam mês de criação; Ads usa calendário. Essa combinação não prova o
+gasto que gerou cada pedido. Repasse esperado não comprova dinheiro liquidado.
+Devolução identificada não comprova o valor final reembolsado. O sistema mantém
+o lucro realizado desconhecido e não promete precisão de 100%.
+
+## Dependências que bloqueiam decisões comerciais
+
+| Dependência | O que falta obter ou validar | Como comprovar a conclusão |
+| --- | --- | --- |
+| Recebimentos e reembolsos | Valores efetivamente liquidados, devolvidos e ajustados, com datas e revisões | Reconciliação com uma referência financeira da Shopee do mesmo escopo, explicando cada diferença e sem contar o mesmo ajuste duas vezes. |
+| Custos e despesas | Cobertura das unidades, vigência dos custos e despesas externas completas | Revisões identificáveis e resultado bloqueado quando faltar custo, despesa ou classificação de recarga. |
+| Estoque | Quantidade vendável por produto/variação, reservas, disponibilidade e atualização | Contrato oficial validado com exemplos reais; informação vencida ou ausente impede propor aumento de exposição. |
+| Campanhas e atribuição | IDs de campanha/produto/variação, gasto, conversões, janela e fuso da atribuição | Totais reconciliados com a conta, distinção entre atribuição direta/ampla e estimativas explicitadas onde não houver vínculo comprovável. |
+| Escrita oficial | Endpoints, permissões e elegibilidade para cada ação pretendida | Contratos e respostas reais verificados para criar/editar campanhas e ofertas. A existência de leitura ou extensão de navegador não demonstra esse acesso. |
+| Limites de Ads | Teto de gasto, perda máxima, margem, estoque e frequência de alteração | Regras persistidas e aplicadas pelo backend, com comportamento testado em concorrência, falha e resposta incerta. |
+
+O orçamento de análises do assistente controla uso do modelo. Ele **não é**
+orçamento de mídia e não limita gasto na Shopee. A autonomia comercial precisa
+de limites próprios de Ads, independentes das instruções ao modelo.
+
+## Referência de produto: Seller IA Club
+
+Fonte pública: [selleriaclub.com.br](https://selleriaclub.com.br/), consultada
+em **24/10/2026**. O site anuncia as capacidades abaixo; não houve teste
+independente da ferramenta, de suas métricas ou de seus resultados. A página
+descreve fluxos com extensão, envio de relatórios e recoleta manual. Isso não
+comprova escrita autônoma em campanhas ou uso de uma API oficial para executá-la.
+
+| Capacidade anunciada no site | Correspondência no BrazaCommerce | Próxima entrega útil |
+| --- | --- | --- |
+| Diagnóstico de conta com 18 métricas em cinco dimensões | Diagnóstico atual cobre TACOS, saldo antes de Ads, cobertura e pendências; não reivindica as mesmas 18 métricas | Ampliar indicadores somente com definições, períodos e fontes verificáveis; cada problema deve gerar uma tarefa concreta. |
+| Análise de SKU por ROAS × margem, curva ABC e ações de pausar/escalar/otimizar | Quantidades, custos e contribuição parcial já existem; ranking por rentabilidade ainda depende de atribuição e estoque | Classificar campeões por contribuição depois de Ads e qualidade da evidência; avaliar recomendações antes de executar. |
+| Precificação e ROAS mínimo | Custos e DAS declarados formam parte da base | Simular preço mínimo e ponto de equilíbrio com taxas, descontos e mix corretos. ROAS mínimo só faz sentido com margem e base de receita compatíveis. |
+| Geração de fotos, títulos e vídeos | Ainda planejada | Gerar rascunhos a partir dos dados reais do produto, com revisão e avaliação de desempenho; publicação depende do contrato da ação. |
+| Cursos e conteúdo de orientação | Próximas tarefas do diagnóstico já orientam correções | Oferecer ajuda contextual e explicação das recomendações; cursos não são dependência da apuração financeira. |
+
+A comparação orienta funcionalidades. A prioridade do BrazaCommerce é reduzir
+trabalho de coleta e produzir decisões rastreáveis com os dados da própria loja,
+sem copiar promessas de resultado ou tratar recomendações como lucro comprovado.
+
+## Fases e critérios de avanço
+
+| Fase | Entrega e estado | Critério concreto para avançar |
+| --- | --- | --- |
+| 0 — Coleta confiável e diagnóstico | Base existente; cron, cache inicial e diagnóstico em fechamento neste incremento | Publicar a versão correspondente, observar cron com o navegador fechado, conferir último sucesso/erro e horários de cada fonte; demonstrar pausa/retomada, ausência de sobreposição, espera após falha e sinalização de dado vencido. |
+| 1 — Financeiro confiável | Apuração prevista disponível; conciliação ainda incompleta | Conferir um período completo contra a Shopee, incluindo recebimentos, reembolsos, ajustes, produção, DAS e Ads. Registrar diferenças, cobertura e bases de tempo; manter desconhecido o que não foi conciliado. |
+| 2 — Contratos de estoque e campanha | Planejado | Validar fontes oficiais, permissões, IDs, unidades, fuso, paginação e atualização. Fechar o contrato de cada escrita pretendida; mostrar que estoque, gasto e campanha se referem ao mesmo escopo da decisão. |
+| 3 — Ranking de campeões com atribuição | Planejado após as fases 1 e 2 | Ordenar contribuição depois de Ads em períodos compatíveis, com cobertura de repasse/gasto e estoque. Separar pedidos mistos e atribuição estimada; reconciliar totais e reproduzir o ranking a partir das revisões guardadas. |
+| 4 — Recomendações em observação | Planejado | Registrar proposta, evidências, hipótese, limites e resultado posterior sem enviar escrita. Testar identificador único por ação, deduplicação, reserva de orçamento, perda máxima e tratamento de resposta incerta; impedir nova execução sem conciliar o estado anterior. |
+| 5 — Piloto aprovado | Planejado após evidência das fases anteriores | Habilitar um grupo pequeno de produtos e ações com teto de gasto, perda, preço, margem e estoque; conferir limites no backend antes da chamada, auditoria, pausa e alertas. Acompanhar uma janela suficiente para devoluções e comparar com a estratégia anterior. |
+| 6 — Autonomia ampliada | Objetivo futuro | Ampliar produtos e ações somente com benefício observado e estabilidade no piloto. Cada novo escopo herda limites, observabilidade e critérios de pausa, com autorização explícita do escopo e registro dos resultados. |
+
+Na fase de observação, as recomendações são avaliadas como se fossem decisões,
+mas não executadas. Uma nova tentativa não pode duplicar orçamento ou ação.
+Se a API aceitar uma escrita e a resposta se perder, primeiro se verifica o
+estado remoto. Repetir a chamada às cegas não é uma estratégia de recuperação.
+
+O aprendizado previsto relaciona **observação → recomendação → execução →
+resultado → versão da estratégia**. Métricas são calculadas em código; o modelo
+explica, propõe e consulta a memória. Mudanças de estratégia precisam de
+comparação com resultados maduros, considerando estoque, preço, sazonalidade e
+devoluções. Aumento isolado de ROAS não justifica promover uma regra. Esse ciclo
+não depende de alterar os pesos do modelo a cada conversa.
+
+## Próxima sequência de trabalho
+
+1. Concluir a publicação e a verificação do incremento atual. Conferir cache
+   inicial, cron sem aba aberta, pausa, concorrência, falhas e horários reais;
+   registrar o que foi observado em produção separadamente dos testes locais.
+2. Usar as próximas tarefas do diagnóstico para fechar pendências de custo,
+   despesas, pagamento, devolução e atualização. Conciliar recebimentos e valores
+   efetivos de reembolso antes de chamar o resultado de realizado.
+3. Documentar e validar os contratos oficiais de estoque e campanhas, incluindo
+   permissões de escrita por ação e limites próprios de investimento em Ads.
+4. Construir o ranking com atribuição comprovável e testar recomendações em
+   observação. Só então iniciar o piloto comercial delimitado.
+
+A autorização para automatizar a coleta já orienta o incremento atual. As fases
+comerciais descrevem trabalho ainda necessário para tornar a autonomia
+executável e verificável; não indicam que campanhas já estão sendo alteradas.
+Pausar impede novas ações, mas não desfaz anúncios já consumidos ou vendas
+concluídas. Nenhum aprendizado aumenta permissões ou limites por conta própria.

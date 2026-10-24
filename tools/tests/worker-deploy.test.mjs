@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {validateDeployment, deployWorker} from '../worker_deploy.mjs';
-import {TARGETS, stableJson, sha256} from '../worker_project.mjs';
+import {PROJECT_ROOT, TARGETS, stableJson, sha256} from '../worker_project.mjs';
 
 const APP_ID = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const FINANCE_ID = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
@@ -33,10 +33,16 @@ function fixture(t) {
   });
   for (const name of Object.keys(TARGETS)) save(name, config(name));
   const calls = [];
+  const automate = (name = 'app', mutation = () => {}) => {
+    const config = JSON.parse(fs.readFileSync(path.join(root, 'workers', name, 'wrangler.json')));
+    const automation = {version: 1, cron: '*/5 * * * *', captured_config_sha256: sha256(stableJson(config))};
+    mutation(automation);
+    fs.writeFileSync(path.join(root, 'workers', name, 'automation.json'), stableJson(automation));
+  };
   const run = (...args) => { calls.push(args); return 'OK'; };
   const built = [];
   const build = name => built.push(name);
-  return {root, save, config, run, calls, build, built};
+  return {root, save, config, automate, run, calls, build, built};
 }
 
 test('verified targets retain the captured domain, database, cron and private profile', t => {
@@ -124,4 +130,77 @@ test('valid deployment builds one target and calls pinned Wrangler once with exp
   assert.deepEqual(args, [path.join(f.root, 'node_modules/wrangler/bin/wrangler.js'), 'deploy', '--config',
     path.join(f.root, 'workers/finance/wrangler.json'), '--dry-run']);
   assert.equal(options.cwd, f.root);
+});
+
+test('App automation deploys the authorized effective cron and preserves the migration capture', t => {
+  const f = fixture(t); f.automate();
+  const originalPath = path.join(f.root, 'workers/app/wrangler.json');
+  const snapshotPath = path.join(f.root, 'workers/app/migration.json');
+  const original = fs.readFileSync(originalPath, 'utf8');
+  const snapshot = fs.readFileSync(snapshotPath, 'utf8');
+  const verified = validateDeployment('app', f);
+  const generatedPath = path.join(f.root, 'workers/app/.wrangler/automation.generated.json');
+  const expected = {...JSON.parse(original), main: path.join(f.root, 'dist/app-worker.mjs'),
+    triggers: {crons: ['*/5 * * * *']}};
+  assert.deepEqual(verified.config, expected);
+  assert.equal(verified.configPath, generatedPath);
+  assert.equal(fs.existsSync(generatedPath), false, 'validation is read-only');
+  assert.equal(deployWorker('app', {...f, dryRun: true}), 'OK');
+  assert.deepEqual(f.built, ['app']);
+  assert.equal(f.calls.length, 1);
+  assert.deepEqual(f.calls[0][1], [path.join(f.root, 'node_modules/wrangler/bin/wrangler.js'),
+    'deploy', '--config', generatedPath, '--dry-run']);
+  assert.deepEqual(JSON.parse(fs.readFileSync(generatedPath)), expected);
+  assert.equal(fs.readFileSync(originalPath, 'utf8'), original);
+  assert.equal(fs.readFileSync(snapshotPath, 'utf8'), snapshot);
+});
+
+test('App automation is bound to the exact capture and rejects extra configuration or different schedules', t => {
+  const f = fixture(t);
+  for (const mutation of [
+    value => { value.version = 2; },
+    value => { value.cron = '* * * * *'; },
+    value => { value.captured_config_sha256 = 'c'.repeat(64); },
+    value => { delete value.captured_config_sha256; },
+    value => { value.vars = {PRIVATE: 'fixture-private-value'}; },
+    value => { value.env = {}; },
+    value => { value.keep_vars = false; },
+    value => { value.routes = []; },
+    value => { value.d1_databases = []; },
+  ]) {
+    f.automate('app', mutation);
+    assert.throws(() => deployWorker('app', f), {code: 'WORKER_AUTOMATION_CONFIG_INVALID'});
+  }
+  fs.writeFileSync(path.join(f.root, 'workers/app/automation.json'), '{');
+  assert.throws(() => deployWorker('app', f), {code: 'WORKER_AUTOMATION_CONFIG_INVALID'});
+  assert.equal(f.calls.length, 0); assert.equal(f.built.length, 0);
+});
+
+test('automation does not permit edits to the original App capture', t => {
+  const f = fixture(t); f.automate();
+  const original = f.config('app'); original.triggers.crons = ['*/5 * * * *'];
+  fs.writeFileSync(path.join(f.root, 'workers/app/wrangler.json'), stableJson(original));
+  assert.throws(() => deployWorker('app', f), {code: 'WORKER_MIGRATION_SNAPSHOT_MISMATCH'});
+  assert.equal(f.calls.length, 0); assert.equal(f.built.length, 0);
+});
+
+test('Auth and Finance cannot enable an automation override', t => {
+  const f = fixture(t);
+  for (const name of ['auth', 'finance']) {
+    f.automate(name);
+    assert.throws(() => deployWorker(name, f), {code: 'WORKER_AUTOMATION_CONFIG_INVALID'});
+  }
+  assert.equal(f.calls.length, 0); assert.equal(f.built.length, 0);
+});
+
+test('checked-in App automation validates the effective five-minute trigger without changing its capture', () => {
+  const verified = validateDeployment('app');
+  const snapshot = JSON.parse(fs.readFileSync(path.join(PROJECT_ROOT, 'workers/app/migration.json')));
+  const original = JSON.parse(fs.readFileSync(path.join(PROJECT_ROOT, 'workers/app/wrangler.json')));
+  assert.deepEqual(verified.config.triggers.crons, ['*/5 * * * *']);
+  assert.equal(sha256(stableJson(original)), snapshot.config_sha256);
+  assert.deepEqual(original, snapshot.captured_config);
+  assert.equal(verified.config.keep_vars, true);
+  assert.deepEqual(verified.config.d1_databases, original.d1_databases);
+  assert.deepEqual(verified.config.routes, original.routes);
 });

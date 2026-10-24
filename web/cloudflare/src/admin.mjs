@@ -13,6 +13,8 @@ import {BUSINESS_MONTH_CLIENT} from './business-month-client.mjs';
 import {BUSINESS_MONTH_CSS} from './business-month-view.mjs';
 import {BUSINESS_MONTH_SCHEMA,businessMonth,BusinessMonthError} from './business-month.mjs';
 import {readBusinessTaxPolicy,saveBusinessTaxPolicy,readBusinessTaxPolicyAudit,BusinessTaxPolicyError} from './business-tax-policy.mjs';
+import {BUSINESS_SYNC_SCHEMA,runBusinessSync,readBusinessSyncState,saveBusinessSyncPolicy,BusinessSyncError} from './business-sync.mjs';
+import {AUTOMATION_WORKSPACE_CSS,automationWorkspaceBody,AUTOMATION_WORKSPACE_CLIENT} from './automation-workspace.mjs';
 import {projectFinanceSample} from './finance-sample-frame.mjs';
 import {projectAdminFinancePreview} from './app-finance-sample.mjs';
 import {projectStorePeriodRequest,projectStorePeriodFrame} from '../../finance/src/store-period-frame.mjs';
@@ -27,6 +29,7 @@ const SCHEMA = [
 ...COST_SCHEMA,
 ...STORE_ADJUSTMENTS_SCHEMA,
 ...BUSINESS_MONTH_SCHEMA,
+...BUSINESS_SYNC_SCHEMA,
 ...OBSERVATION_SCHEMA,
 `CREATE TABLE IF NOT EXISTS variant_bindings_state (id INTEGER PRIMARY KEY CHECK(id=1), revision INTEGER NOT NULL, payload TEXT NOT NULL, updated_at TEXT NOT NULL)`,
 `CREATE TABLE IF NOT EXISTS variant_bindings_audit (id INTEGER PRIMARY KEY AUTOINCREMENT, revision INTEGER UNIQUE NOT NULL, payload TEXT NOT NULL, actor TEXT NOT NULL, created_at TEXT NOT NULL)`,
@@ -84,8 +87,13 @@ async function correctCost(env,body,actor){assert(Object.keys(body).length===2&&
 async function schedule(env,now=new Date()){await setup(env);const cfg=await settings(env);if(cfg.values.hermes_mode!=='scheduled')return;const hour=Number(new Intl.DateTimeFormat('en-GB',{timeZone:'America/Sao_Paulo',hour:'2-digit',hourCycle:'h23'}).format(now));if(hour!==cfg.values.daily_hour)return;try{await enqueue(env,'scheduled','daily:'+localDay(now));}catch(error){if(!(error instanceof AdminError))throw error;}}
 function page(body,title='BrazaCommerce · Gestão da loja'){return new Response(`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title>${BRAZA_THEME_HEAD}<style>${BRAZA_THEME_CSS}\n${CSS}</style></head><body>${body}</body></html>`,{headers:{'content-type':'text/html; charset=utf-8','cache-control':'no-store','content-security-policy':"default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",'x-content-type-options':'nosniff','x-frame-options':'DENY','referrer-policy':'same-origin'}});}
 function loginPage(error=''){return page(loginBody(error));}
+async function scheduledWork(env,services,now=new Date()){
+ await setup(env);
+ const results=await Promise.allSettled([schedule(env,now),runBusinessSync(env,services,{now:()=>now.getTime()})]);
+ return {analysis:results[0].status==='fulfilled'?'CHECKED':'UNAVAILABLE',collection:results[1].status==='fulfilled'?results[1].value.status:'ERROR'};
+}
 async function workspaceAuthFetch(request,env){return handleWorkspaceAuth(request,env,{renderLogin:loginPage,renderLogout:current=>page('<main class="login card"><div class="brand"><span class="brand-mark">B</span><div>BrazaCommerce<small>Sua conta</small></div></div><h1>Sair da sua conta?</h1><p class="muted">Você precisará entrar novamente para acessar o painel.</p><form action="/logout" method="post"><input type="hidden" name="csrf" value="'+current.csrf+'"><button type="submit">Sair</button></form><p><a href="'+(current.role==='owner'?'/admin':'/dashboard')+'">Continuar no painel</a></p></main>')});}
-function dashboard(){return page('<style>'+BUSINESS_MONTH_CSS+'</style>'+adminBody()+'<script>'+BUSINESS_MONTH_CLIENT+'</script><script>'+CLIENT+'</script>');}
+function dashboard(){return page('<style>'+BUSINESS_MONTH_CSS+AUTOMATION_WORKSPACE_CSS+'</style>'+adminBody().replace('<details id="legacyFinanceDetails"',automationWorkspaceBody()+'<details id="legacyFinanceDetails"')+'<script>'+AUTOMATION_WORKSPACE_CLIENT+'</script><script>'+BUSINESS_MONTH_CLIENT+'</script><script>'+CLIENT+'</script>');}
 
 async function adminFetch(request,env,services={}){const url=new URL(request.url),path=url.pathname;try{
  if(path.startsWith('/api/hermes/')){assert(typeof env.HERMES_BRIDGE_SECRET==='string'&&env.HERMES_BRIDGE_SECRET.length>=32,'HERMES_BRIDGE_SETUP_REQUIRED',503);assert(await equal(request.headers.get('authorization')||'','Bearer '+env.HERMES_BRIDGE_SECRET),'UNAUTHORIZED',401);assert(request.method==='POST','METHOD_NOT_ALLOWED',405);await setup(env);const body=await input(request);if(path==='/api/hermes/heartbeat'){await env.ADMIN_DB.prepare('INSERT INTO hermes_agent(id,heartbeat) VALUES(1,?) ON CONFLICT(id) DO UPDATE SET heartbeat=excluded.heartbeat').bind(new Date().toISOString()).run();return json({ok:true});}if(path==='/api/hermes/claim')return json({job:await claim(env)});if(path==='/api/hermes/finish')return json(await finish(env,body));return json({error:'NOT_FOUND'},404);}
@@ -94,6 +102,10 @@ async function adminFetch(request,env,services={}){const url=new URL(request.url
  if(path==='/admin'){assert(request.method==='GET','METHOD_NOT_ALLOWED',405);return dashboard();}
  assert(path.startsWith('/api/admin/'),'NOT_FOUND',404);await setup(env);
  if(path==='/api/admin/finance/business-month'&&request.method!=='POST')throw new AdminError('METHOD_NOT_ALLOWED',405);
+ if(path==='/api/admin/finance/sync-policy'){
+  assert(request.method==='POST','METHOD_NOT_ALLOWED',405);sameOrigin(request);assert(await equal(request.headers.get('x-csrf-token')||'',current.csrf),'CSRF_REJECTED',403);assert(!url.search,'BUSINESS_SYNC_REQUEST_INVALID');
+  return json(await saveBusinessSyncPolicy(env,await input(request,512),current.user));
+ }
  if(request.method==='POST'){sameOrigin(request);assert(await equal(request.headers.get('x-csrf-token')||'',current.csrf),'CSRF_REJECTED',403);const body=await input(request,path==='/api/admin/finance/business-month'?512:['/api/admin/finance/payment-sample','/api/admin/finance/payment-preview','/api/admin/finance/ads-period'].includes(path)?128:path==='/api/admin/production-costs'?196608:path==='/api/admin/variant-bindings'?393216:path==='/api/admin/variant-bindings/sync'?131072:path==='/api/admin/variant-bindings/automate'?256:16384);if(path==='/api/admin/finance/business-month'){assert(!url.search,'BUSINESS_MONTH_REQUEST_INVALID');return json(await businessMonth(env,body,services,{actor:current.user}));}if(path==='/api/admin/finance/ads-period'){
  assert(!url.search&&Object.keys(body).length===1&&Object.hasOwn(body,'run_id'),'STORE_ADS_REQUEST_INVALID');
  const selection=projectStorePeriodRequest({operation:'read',run_id:body.run_id});
@@ -133,6 +145,7 @@ async function adminFetch(request,env,services={}){const url=new URL(request.url
  return json({...saved,...(catalog.products.some(product=>product.diagnostic)?{catalog_review:catalog}:{})});
  }if(path==='/api/admin/tax-policy'){assert(!url.search,'BUSINESS_TAX_POLICY_QUERY_INVALID');return json(await saveBusinessTaxPolicy(env,body,current.user));}if(path==='/api/admin/variant-bindings')return json(await saveVariantBindings(env,body,current.user));if(path==='/api/admin/order-observations'){assert(Object.keys(body).length===0,'OBSERVATION_BODY_INVALID');assert(!url.search,'OBSERVATION_QUERY_INVALID');return json(await captureObservation(env,services.getOrderItems,current.user));}if(path==='/api/admin/settings')return json(await saveSettings(env,body,current.user));if(path==='/api/admin/jobs'){assert(Object.keys(body).length===0,'TASK_NOT_ALLOWED');return json(await enqueue(env),202);}if(path==='/api/admin/jobs/cost')return json(await correctCost(env,body,current.user));throw new AdminError('NOT_FOUND',404);}
  assert(request.method==='GET','METHOD_NOT_ALLOWED',405);
+ if(path==='/api/admin/finance/sync-state'){assert(!url.search,'BUSINESS_SYNC_REQUEST_INVALID');return json(await readBusinessSyncState(env));}
  if(['/api/admin/finance/payment-sample','/api/admin/finance/payment-preview','/api/admin/variant-bindings/automate','/api/admin/variant-bindings/sync','/api/admin/finance/store-period','/api/admin/finance/store-adjustments','/api/admin/finance/ads-period'].includes(path))throw new AdminError('METHOD_NOT_ALLOWED',405);
  if(path==='/api/admin/production-costs'){assert(!url.search,'COSTS_QUERY_INVALID');return json(await readProductionCosts(env));}
  if(path==='/api/admin/production-costs/audit'){assert(!url.search,'COSTS_QUERY_INVALID');return json(await readProductionCostAudit(env));}
@@ -168,5 +181,5 @@ async function adminFetch(request,env,services={}){const url=new URL(request.url
  if(path==='/api/admin/jobs')return json({rows:(await env.ADMIN_DB.prepare(`SELECT id,json_extract(task,'$.start_date') AS start_date,json_extract(task,'$.end_date') AS end_date,trigger_type,status,settings_revision,reserve_cents,cost_cents,cost_source,result,failure,created_at,started_at,completed_at FROM hermes_jobs ORDER BY created_at DESC LIMIT 30`).all()).results});
  if(path==='/api/admin/audit')return json({rows:(await env.ADMIN_DB.prepare('SELECT revision,payload,actor,created_at FROM admin_audit ORDER BY revision DESC LIMIT 30').all()).results});
  return json({error:'NOT_FOUND'},404);
- }catch(error){return json({error:error instanceof AdminError||error instanceof VariantBindingError||error instanceof ObservationError||error instanceof ProductionCostError||error instanceof StoreSummaryError||error instanceof BusinessMonthError||error instanceof BusinessTaxPolicyError?error.message:'ADMIN_UNAVAILABLE'},error instanceof AdminError||error instanceof VariantBindingError||error instanceof ObservationError||error instanceof ProductionCostError||error instanceof StoreSummaryError||error instanceof BusinessMonthError||error instanceof BusinessTaxPolicyError?error.status:503);}}
-export {adminFetch,schedule,DEFAULTS,SCHEMA,validateSettings,workspaceAuthFetch};
+ }catch(error){return json({error:error instanceof AdminError||error instanceof VariantBindingError||error instanceof ObservationError||error instanceof ProductionCostError||error instanceof StoreSummaryError||error instanceof BusinessMonthError||error instanceof BusinessTaxPolicyError||error instanceof BusinessSyncError?error.message:'ADMIN_UNAVAILABLE'},error instanceof AdminError||error instanceof VariantBindingError||error instanceof ObservationError||error instanceof ProductionCostError||error instanceof StoreSummaryError||error instanceof BusinessMonthError||error instanceof BusinessTaxPolicyError||error instanceof BusinessSyncError?error.status:503);}}
+export {adminFetch,schedule,scheduledWork,DEFAULTS,SCHEMA,validateSettings,workspaceAuthFetch};

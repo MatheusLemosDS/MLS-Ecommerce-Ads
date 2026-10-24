@@ -12,6 +12,30 @@ function read(root, target, filename) {
   } catch { throw error('WORKER_MIGRATION_CONFIG_REQUIRED'); }
 }
 
+// The captured config remains immutable. This small, hash-bound authorization
+// permits only the App collection interval to evolve after migration.
+function automationConfig(root, target, config, snapshot) {
+  const file = path.join(root, 'workers', target, 'automation.json');
+  let automation;
+  try {
+    if (fs.statSync(file).size > 256 * 1024) throw error('WORKER_AUTOMATION_CONFIG_INVALID');
+    automation = JSON.parse(fs.readFileSync(file, 'utf8'));
+  } catch (failure) {
+    if (failure?.code === 'ENOENT') return null;
+    throw error('WORKER_AUTOMATION_CONFIG_INVALID');
+  }
+  if (target !== 'app' || !automation || Array.isArray(automation)
+    || Object.keys(automation).sort().join(',') !== 'captured_config_sha256,cron,version'
+    || automation.version !== 1 || automation.cron !== '*/5 * * * *'
+    || automation.captured_config_sha256 !== snapshot.config_sha256) {
+    throw error('WORKER_AUTOMATION_CONFIG_INVALID');
+  }
+  return {...config,
+    main: path.resolve(root, 'workers', target, config.main),
+    triggers: {...config.triggers, crons: [automation.cron]},
+  };
+}
+
 export function validateDeployment(target, {root = PROJECT_ROOT, dependencies = true} = {}) {
   if (!Object.hasOwn(TARGETS, target)) throw error('WORKER_TARGET_INVALID');
   const expected = TARGETS[target];
@@ -56,13 +80,20 @@ export function validateDeployment(target, {root = PROJECT_ROOT, dependencies = 
       if (adminIds.has(config.d1_databases[0].database_id.toLowerCase())) throw error('WORKER_FINANCE_DATABASE_MUST_BE_SEPARATE');
     }
   }
-  return {target, config, configPath: path.join(root, 'workers', target, 'wrangler.json')};
+  const effective = automationConfig(root, target, config, snapshot);
+  return {target, config: effective || config, generated: Boolean(effective),
+    configPath: path.join(root, 'workers', target,
+      ...(effective ? ['.wrangler', 'automation.generated.json'] : ['wrangler.json']))};
 }
 
 export function deployWorker(target, {root = PROJECT_ROOT, run = execFileSync, build = buildWorkers, dryRun = false} = {}) {
   const verified = validateDeployment(target, {root});
   if (target === 'auth') validateDeployment('finance', {root});
   build(target, {root});
+  if (verified.generated) {
+    fs.mkdirSync(path.dirname(verified.configPath), {recursive: true});
+    fs.writeFileSync(verified.configPath, stableJson(verified.config));
+  }
   const wrangler = path.join(root, 'node_modules/wrangler/bin/wrangler.js');
   return run(process.execPath, [wrangler, 'deploy', '--config', verified.configPath,
     ...(dryRun ? ['--dry-run'] : [])], {cwd: root, stdio: 'inherit',
@@ -75,8 +106,9 @@ if (process.argv[1] && path.resolve(process.argv[1]) === path.join(PROJECT_ROOT,
     if (mode === 'check') {
       const names = target === 'all' ? Object.keys(TARGETS) : [target];
       for (const name of names) {
-        validateDeployment(name);
-        console.log(TARGETS[name].name + ': CONFIG_VALIDATED');
+        const verified = validateDeployment(name);
+        const crons = verified.config.triggers?.crons || [];
+        console.log(TARGETS[name].name + ': CONFIG_VALIDATED cron=' + (crons.join(',') || 'none'));
       }
     } else if (mode === 'deploy' && (!flag || flag === '--dry-run')) {
       deployWorker(target, {dryRun: flag === '--dry-run'});

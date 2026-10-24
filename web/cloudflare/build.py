@@ -25,7 +25,11 @@ report=(root/'src/admin-report.mjs').read_text().replace('export function parseR
 client=report+'\n'+re.sub(r'^import .*\n','',freeze_client_helpers((root/'src/admin-client.mjs').read_text(),{'parseReport':'admin-report.mjs','projectAdsMeasurement':'ads-measurement.mjs'}),flags=re.M).replace('export const CLIENT','const CLIENT')
 view=re.sub(r'^import .*\n','',(root/'src/admin-view.mjs').read_text(),flags=re.M).replace('export const CSS','const CSS').replace('export function adminBody','function adminBody').replace('export function loginBody','function loginBody')
 month_view=re.sub(r'^export ', '', (root/'src/business-month-view.mjs').read_text(),flags=re.M)
-month_client=re.sub(r'^export ', '', re.sub(r'^import .*\n','',freeze_client_helpers((root/'src/business-month-client.mjs').read_text(),{'projectAdsCalendar':'ads-calendar.mjs','projectBusinessMonthProducts':'business-month-products.mjs','projectBusinessMonth':'business-month.mjs'}),flags=re.M),flags=re.M)
+month_client=re.sub(r'^export ', '', re.sub(r'^import .*\n','',freeze_client_helpers((root/'src/business-month-client.mjs').read_text(),{'projectAdsCalendar':'ads-calendar.mjs','projectBusinessMonthProducts':'business-month-products.mjs','projectBusinessMonth':'business-month.mjs','buildAccountDiagnosis':'account-diagnosis.mjs'}),flags=re.M),flags=re.M)
+automation_workspace=re.sub(r'^export ', '', (root/'src/automation-workspace.mjs').read_text(),flags=re.M)
+automation_workspace='const brazaAutomationWorkspaceView = (() => {\n'+automation_workspace+'\nreturn {AUTOMATION_WORKSPACE_CSS,automationWorkspaceBody,AUTOMATION_WORKSPACE_CLIENT};\n})();\nconst {AUTOMATION_WORKSPACE_CSS,automationWorkspaceBody,AUTOMATION_WORKSPACE_CLIENT}=brazaAutomationWorkspaceView;\n'
+business_sync=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/business-sync.mjs').read_text(),flags=re.M),flags=re.M)
+business_sync='const brazaBusinessSync = (() => {\n'+business_sync+'\nreturn {BUSINESS_SYNC_SCHEMA,runBusinessSync,readBusinessSyncState,saveBusinessSyncPolicy,BusinessSyncError};\n})();\nconst {BUSINESS_SYNC_SCHEMA,runBusinessSync,readBusinessSyncState,saveBusinessSyncPolicy,BusinessSyncError}=brazaBusinessSync;\n'
 business_products=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/business-month-products.mjs').read_text(),flags=re.M),flags=re.M)
 business_products='const brazaBusinessProducts = (() => {\n'+business_products+'\nreturn {buildBusinessMonthProducts,projectBusinessMonthProducts};\n})();\nconst {buildBusinessMonthProducts,projectBusinessMonthProducts}=brazaBusinessProducts;\n'
 business_month=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/business-month.mjs').read_text(),flags=re.M),flags=re.M)
@@ -77,8 +81,8 @@ workspace_auth=re.sub(r'^export ', '', (root/'src/unified-auth.mjs').read_text()
 workspace_auth='const brazaWorkspaceAuth = (() => {\n'+workspace_auth+'\nreturn {readOwnerSession,readWorkspaceSession,handleWorkspaceAuth};\n})();\nconst {readOwnerSession,readWorkspaceSession,handleWorkspaceAuth}=brazaWorkspaceAuth;\n'
 theme=re.sub(r'^export ', '', (root/'src/theme.mjs').read_text(), flags=re.M)
 ads_presentation=re.sub(r'^export ', '', (root/'src/ads-presentation.mjs').read_text(), flags=re.M)
-admin=business_products+'\n'+business_month+'\n'+month_view+'\n'+month_client+'\n'+client+'\n'+view+'\n'+ads+'\n'+orders+'\n'+daily_shop_orders+'\n'+items+'\n'+variants+'\n'+observations+'\n'+production_costs+'\n'+store_summary+'\n'+store_invoice_tax+'\n'+store_product_summary+'\n'+store_returns_summary+'\n'+store_admin+'\n'+variant_sync+'\n'+re.sub(r'^import .*\n','',admin,flags=re.M)
-admin=admin.replace('export {adminFetch,schedule,DEFAULTS,SCHEMA,validateSettings,workspaceAuthFetch};','')
+admin=business_products+'\n'+business_month+'\n'+business_sync+'\n'+automation_workspace+'\n'+month_view+'\n'+month_client+'\n'+client+'\n'+view+'\n'+ads+'\n'+orders+'\n'+daily_shop_orders+'\n'+items+'\n'+variants+'\n'+observations+'\n'+production_costs+'\n'+store_summary+'\n'+store_invoice_tax+'\n'+store_product_summary+'\n'+store_returns_summary+'\n'+store_admin+'\n'+variant_sync+'\n'+re.sub(r'^import .*\n','',admin,flags=re.M)
+admin=admin.replace('export {adminFetch,schedule,scheduledWork,DEFAULTS,SCHEMA,validateSettings,workspaceAuthFetch};','')
 needle='    const url = new URL(request.url);'
 assert original.count(needle)==1
 updated=original.replace(needle,needle+'''\n    if (['/','/login','/admin/login','/logout','/admin/logout'].includes(url.pathname)) return brazaAdmin.workspaceAuthFetch(request, env);
@@ -113,7 +117,7 @@ updated=updated.replace(needle,'''  opportunityDetail,
   workspaceRole='review'
 ) {''',1)
 needle='  async fetch(request, env) {'
-updated=updated.replace(needle,'''  async scheduled(event, env, ctx) { ctx.waitUntil(brazaAdmin.schedule(env)); },\n'''+needle,1)
+updated=updated.replace(needle,'''  async scheduled(event, env, ctx) { ctx.waitUntil(brazaAdmin.scheduledWork(env,{getFinanceBusinessPeriod,getAdsCalendar})); },\n'''+needle,1)
 needle='${navLink(\n  "/dashboard",'
 assert updated.count(needle)==1
 start=updated.index(needle)
@@ -206,7 +210,7 @@ insertion='''  const view=ads.workspace_view||'product';
   if(workspaceTitles[currentPath])[title,subtitle]=workspaceTitles[currentPath];
 '''
 updated=updated[:point]+insertion+updated[point:]
-output=updated+'\n\n'+theme+'\n'+workspace_auth+'\n'+workspace_navigation+'\n'+ads_presentation+'\n'+shell_navigation+'\n'+orders_diagnostic+'\n'+orders_http+'\n'+app_orders+'\n'+app_items+'\n'+finance_sample_frame+'\n'+finance_preview_frame+'\n'+variant_catalog_frame+'\n'+app_finance_sample+'\n'+daily_orders_frame+'\n'+store_period_frame+'\n'+business_period_frame+'\n'+app_store_period+'\n'+app_business_period+'\n'+ads_measurement+'\n'+ads_measurement_view+'\n'+ads_period+'\n'+ads_calendar+'\n'+app_ads_summary+'\n'+ads_workspace+'\n'+scaling_preparation+'\n\nconst brazaAdmin = (() => {\n'+admin+'\nreturn {adminFetch,schedule,workspaceAuthFetch};\n})();\n'
+output=updated+'\n\n'+theme+'\n'+workspace_auth+'\n'+workspace_navigation+'\n'+ads_presentation+'\n'+shell_navigation+'\n'+orders_diagnostic+'\n'+orders_http+'\n'+app_orders+'\n'+app_items+'\n'+finance_sample_frame+'\n'+finance_preview_frame+'\n'+variant_catalog_frame+'\n'+app_finance_sample+'\n'+daily_orders_frame+'\n'+store_period_frame+'\n'+business_period_frame+'\n'+app_store_period+'\n'+app_business_period+'\n'+ads_measurement+'\n'+ads_measurement_view+'\n'+ads_period+'\n'+ads_calendar+'\n'+app_ads_summary+'\n'+ads_workspace+'\n'+scaling_preparation+'\n\nconst brazaAdmin = (() => {\n'+admin+'\nreturn {adminFetch,schedule,scheduledWork,workspaceAuthFetch};\n})();\n'
 (root/'app-worker.mjs').write_text(output)
 auth_original=(root/'original/auth-worker.mjs').read_text()
 needle='    const url = new URL(request.url);'
