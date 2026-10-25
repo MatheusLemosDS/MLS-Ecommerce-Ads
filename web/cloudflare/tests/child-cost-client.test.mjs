@@ -3,7 +3,12 @@ import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import {CLIENT} from '../src/admin-client.mjs';
 
-const declaration=name=>{const source=CLIENT.split('\n').find(line=>line.startsWith('function '+name+'(')||line.startsWith('async function '+name+'('));assert.ok(source,name);return source;};
+const declaration=name=>{
+ const marker=new RegExp('^(?:async )?function '+name+'\\(','m').exec(CLIENT);assert.ok(marker,name);
+ const source=CLIENT.slice(marker.index),next=/\n(?:async )?function [A-Za-z_$]/.exec(source);
+ assert.ok(next,'next declaration after '+name);
+ return source.slice(0,next.index);
+};
 
 test('an incomplete adult draft does not block independent child cost discovery or send any adult binding',async()=>{
  const context=vm.createContext();new vm.Script(`
