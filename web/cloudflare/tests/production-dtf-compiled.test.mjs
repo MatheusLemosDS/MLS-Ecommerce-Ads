@@ -17,7 +17,8 @@ for(const minify of [false,true])test(`deployable DTF reads in the background an
   return Response.json({schema:'production_orders_v1',shop_id:1178167501,checked_at:stamp,start_date:input.operation==='scan'?input.start_date:null,end_date:input.operation==='scan'?input.end_date:null,complete:true,orders:input.operation==='scan'&&input.end_date<new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date(stamp*1000))?[]:[{order_id:'COMPILED01',status:'READY_TO_SHIP',create_time:stamp-300,update_time:stamp-1,lines:[{line_key:'101:0',item_id:'101',model_id:'0',sku:'vivaosanos80-27',quantity:2,model_name:'M'}]}]});
  };
  try{
-  const tasks=[];await worker.scheduled({},env,{waitUntil(task){tasks.push(task);}});await Promise.all(tasks);
+  // DTF and weekly costs advance on their own bounded background lanes.
+  for(let tick=0;tick<12&&calls.length<3;tick++){const tasks=[];await worker.scheduled({},env,{waitUntil(task){tasks.push(task);}});await Promise.all(tasks);}
   const today=calls[0]?.end_date,previous=new Date(Date.parse(today+'T12:00:00Z')-86400000).toISOString().slice(0,10),monday=new Date(today+'T12:00:00Z');monday.setUTCDate(monday.getUTCDate()-(monday.getUTCDay()+6)%7);
   const expectedScans=[{operation:'scan',start_date:today,end_date:today},{operation:'scan',start_date:previous,end_date:previous},{operation:'scan',start_date:monday.toISOString().slice(0,10),end_date:today}];
   assert.deepEqual(calls,expectedScans,'the background task reads the DTF day, one DTF history day and the exact current-week cost cohort');
