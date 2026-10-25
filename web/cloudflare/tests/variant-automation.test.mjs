@@ -99,6 +99,7 @@ test('browser full replacement can retain genuine automatic rows and make manual
 
 test('automatic bindings feed reference arithmetic and immutable observations without changing legacy manual records',async()=>{
  const fixture=await login();await call(fixture,'variant-bindings',{revision:1,bindings:[manual()]});
+ const savedCosts=fixture.env.ADMIN_DB.db.prepare('SELECT * FROM production_costs_state').get();
  const first=(await captureObservation(fixture.env,async()=>nativeFrame(),'admin')).observation;
  assert.deepEqual(first.bindings_snapshot.bindings,[manual()]);assert.equal(first.margin_reference.total_cents,null);
  await call(fixture,'variant-bindings/automate',{revision:2,item_ids:['101']},{getFinanceVariantCatalog:async()=>catalog([product('101',[resolved('101','1','G3','G3'),resolved('101','2','G1','M')])])});
@@ -107,7 +108,7 @@ test('automatic bindings feed reference arithmetic and immutable observations wi
  const second=(await captureObservation(fixture.env,async()=>nativeFrame(),'admin')).observation;
  assert.notEqual(second.id,first.id);assert.deepEqual(second.bindings_snapshot.bindings,[manual(),automatic('101','2','G1','M')]);assert.equal(second.margin_reference.total_cents,5260);
  assert.deepEqual(await readObservation(fixture.env,first.id),first);assert.deepEqual(await readObservation(fixture.env,second.id),second);
- assert.equal(fixture.env.ADMIN_DB.db.prepare('SELECT COUNT(*) n FROM hermes_jobs').get().n,0);assert.equal(fixture.env.ADMIN_DB.db.prepare('SELECT revision FROM production_costs_state').get().revision,1);assert.equal(fixture.env.ADMIN_DB.db.prepare('SELECT revision FROM admin_settings').get().revision,1);
+ assert.equal(fixture.env.ADMIN_DB.db.prepare('SELECT COUNT(*) n FROM hermes_jobs').get().n,0);assert.deepEqual(fixture.env.ADMIN_DB.db.prepare('SELECT * FROM production_costs_state').get(),savedCosts);assert.equal(fixture.env.ADMIN_DB.db.prepare('SELECT revision FROM admin_settings').get().revision,1);
 });
 
 test('1000 automatic links with long canonical IDs fit both route persistence and bounded historic snapshots',async()=>{
