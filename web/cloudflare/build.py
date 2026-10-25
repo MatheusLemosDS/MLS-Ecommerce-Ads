@@ -22,7 +22,7 @@ def freeze_client_helpers(source, helpers):
 original=(root/'original/app-worker.mjs').read_text()
 admin=(root/'src/admin.mjs').read_text().replace("import {CLIENT} from './admin-client.mjs';\n",'').replace("import {CSS,adminBody,loginBody} from './admin-view.mjs';\n",'')
 report=(root/'src/admin-report.mjs').read_text().replace('export function parseReport','function parseReport')
-client=report+'\n'+re.sub(r'^import .*\n','',freeze_client_helpers((root/'src/admin-client.mjs').read_text(),{'parseReport':'admin-report.mjs','projectAdsMeasurement':'ads-measurement.mjs'}),flags=re.M).replace('export const CLIENT','const CLIENT')
+client=report+'\n'+re.sub(r'^import .*\n','',freeze_client_helpers((root/'src/admin-client.mjs').read_text(),{'parseReport':'admin-report.mjs','projectAdsMeasurement':'ads-measurement.mjs','createAdminApiClient':'admin-api-client.mjs','createAdminStartup':'admin-startup.mjs'}),flags=re.M).replace('export const CLIENT','const CLIENT')
 view=re.sub(r'^import .*\n','',(root/'src/admin-view.mjs').read_text(),flags=re.M).replace('export const CSS','const CSS').replace('export function adminBody','function adminBody').replace('export function loginBody','function loginBody')
 month_view=re.sub(r'^export ', '', (root/'src/business-month-view.mjs').read_text(),flags=re.M)
 month_client=re.sub(r'^export ', '', re.sub(r'^import .*\n','',freeze_client_helpers((root/'src/business-month-client.mjs').read_text(),{'projectAdsCalendar':'ads-calendar.mjs','projectBusinessMonthProducts':'business-month-products.mjs','projectBusinessMonth':'business-month.mjs','buildBusinessCheckpoint':'business-checkpoint.mjs','buildAccountDiagnosis':'account-diagnosis.mjs'}),flags=re.M),flags=re.M)

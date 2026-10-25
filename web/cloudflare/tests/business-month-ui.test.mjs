@@ -525,3 +525,34 @@ test('hiding the page during one catalogue request prevents follow-up reads and 
  b.run("document.hidden=false;document.handlers.visibilitychange();");await b.run("[...timers.values()].find(timer=>timer.delay===0).callback()");
  assert.equal(b.run("calls.at(-1).body.operation"),'read');assert.match(b.text('Net'),/43,01/);
 });
+
+test('prepare fills the valid query month or the current Brasilia month before any authenticated API is available',()=>{
+ for(const [search,expected] of [['?month=2026-09','2026-09'],['?month=2099-01','2026-10'],['?month=2026-13','2026-10'],['?month=2026-09&month=2026-08','2026-10'],['','2026-10']]){
+  const b=browser(fixture(),search);assert.equal(b.run('brazaMonthDashboard.prepare()'),true);
+  assert.equal(b.run("control('Select').value"),expected);assert.equal(b.run("control('Select').max"),'2026-10');assert.equal(b.run("control('Select').disabled"),true);assert.equal(b.run("control('Previous').disabled"),true);assert.equal(b.run("control('Refresh').disabled"),true);
+  assert.equal(b.text('Refresh'),'Conectando…');assert.match(b.text('Status'),/Conectando ao painel/);assert.equal(b.text('Sales'),'Pendente');assert.equal(b.run('calls.length'),0);assert.equal(b.run('timers.size'),0);
+ }
+ const boundary=browser();boundary.run("clock=Date.parse('2026-11-01T01:00:00Z');brazaMonthDashboard.prepare();");assert.equal(boundary.run("control('Select').value"),'2026-10','the local month must remain October before midnight in Brasilia');
+});
+
+test('bootstrap failures display safe Portuguese text and one retry callback without an API request or raw fetch error',async()=>{
+ const b=browser();b.run("let retries=0,releaseRetry;brazaMonthDashboard.prepare({retry:()=>{retries++;return new Promise(resolve=>releaseRetry=resolve);}});brazaMonthDashboard.bootstrapState({phase:'FAILED',message:'Failed to fetch PRIVATE_PROVIDER_TOKEN https://private.invalid'});");
+ assert.match(b.text('Status'),/Não foi possível conectar ao painel/);assert.doesNotMatch(b.text('Status'),/Failed to fetch|PRIVATE|https:/);assert.equal(b.text('Refresh'),'Tentar novamente');assert.equal(b.run("control('Refresh').disabled"),false);
+ const first=b.run("control('Refresh').onclick()"),second=b.run("control('Refresh').onclick()");
+ assert.equal(await second,false);assert.equal(b.run('retries'),1);assert.equal(b.run("control('Refresh').disabled"),true);assert.equal(b.text('Refresh'),'Conectando…');assert.match(b.text('Status'),/Tentando conectar/);
+ b.run('releaseRetry(false)');assert.equal(await first,false);assert.equal(b.run("control('Refresh').disabled"),false);assert.equal(b.text('Refresh'),'Tentar novamente');assert.equal(b.run('calls.length'),0);
+});
+
+test('a rejected bootstrap retry remains recoverable without reflecting its exception',async()=>{
+ const b=browser();b.run("let retries=0;brazaMonthDashboard.prepare({retry:async()=>{retries++;throw Error('Failed to fetch PRIVATE_PROVIDER_TOKEN');}});brazaMonthDashboard.bootstrapState({phase:'FAILED'});");
+ assert.equal(await b.run("control('Refresh').onclick()"),false);assert.equal(b.run('retries'),1);assert.equal(b.text('Refresh'),'Tentar novamente');assert.equal(b.run("control('Refresh').disabled"),false);assert.doesNotMatch(b.text('Status'),/PRIVATE|Failed to fetch/);assert.equal(b.run('calls.length'),0);
+});
+
+test('the prepared retry can start the monthly dashboard and late bootstrap notifications preserve its data and expense draft',async()=>{
+ const b=browser();b.run("let retries=0;brazaMonthDashboard.prepare({retry:()=>{retries++;return brazaMonthDashboard.start({api,syncVariants});}});brazaMonthDashboard.bootstrapState({phase:'FAILED'});");
+ assert.equal(await b.run("control('Refresh').onclick()"),true);assert.equal(b.run('retries'),1);assert.equal(b.run("control('Select').disabled"),false);assert.equal(b.run("control('Previous').disabled"),false);assert.equal(b.text('Refresh'),'Atualizar mês');assert.match(b.text('Net'),/43,00/);
+ b.run("control('ExpensesValue').value='123.45';control('ExpensesValue').oninput();");const before=b.text('Status'),calls=b.run('calls.length');
+ for(const phase of ['LOADING','RETRYING','FAILED','READY'])assert.equal(b.run('brazaMonthDashboard.bootstrapState({phase:'+JSON.stringify(phase)+',message:"Failed to fetch PRIVATE"})'),false);
+ assert.equal(b.run('brazaMonthDashboard.prepare()'),false);assert.equal(b.run('calls.length'),calls);assert.equal(b.run("control('ExpensesValue').value"),'123.45');assert.equal(b.text('Status'),before);assert.match(b.text('Net'),/43,00/);
+ b.run('brazaMonthDashboard.stop();');assert.equal(b.text('Refresh'),'Continuar consulta');assert.equal(b.run('brazaMonthDashboard.bootstrapState({phase:"FAILED"})'),false);assert.match(b.text('Net'),/43,00/);
+});

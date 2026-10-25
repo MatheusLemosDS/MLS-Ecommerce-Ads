@@ -21,6 +21,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
  const monthName=value=>validMonth(value)?new Intl.DateTimeFormat('pt-BR',{month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(value+'-01T12:00:00Z')):'mês selecionado';
  const sourceAge=value=>{if(!Number.isSafeInteger(value)||value<=0)return 'pendente';const minutes=Math.max(0,Math.floor((Date.now()-value*1000)/60000));return minutes<1?'há menos de 1 minuto':minutes<60?'há '+minutes+' minuto(s)':minutes<1440?'há '+Math.floor(minutes/60)+' hora(s)':'há '+Math.floor(minutes/1440)+' dia(s)';};
  let api=null,syncVariants=null,onCatalogChanged=null,frame=null,month='',generation=0,busy=false,adsBusy=false,saving=false,started=false,paused=false,dirty=false,editSequence=0,draftRevision=0,timer=null,message='',failed=false;
+ let bootstrapPrepared=false,bootstrapCompleted=false,bootstrapPhase='LOADING',bootstrapRetry=null,bootstrapRetryPending=false;
  let productPage=1,productMonth='';
  const financeRefreshInterval=300000;
  let lastFinancialRefreshAt=0,automaticBlocked=false,resumeOnVisible=false;
@@ -210,7 +211,38 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
  }
  function setMetric(key,value,help){const target=el(key),card=el(key+'Card');target.textContent=value===null?'Pendente':value;card.dataset.status=value===null?'pending':'available';el(key+'Help').textContent=help;}
  function status(text,error=false){message=text;failed=error;el('Status').textContent=text;el('Status').dataset.status=error?'error':'normal';}
+ function paintBootstrap(){
+  if(started||bootstrapCompleted||!el('Select'))return false;
+  const failure=bootstrapPhase==='FAILED';
+  el('Select').disabled=true;el('Previous').disabled=true;el('Pause').hidden=true;
+  el('Refresh').disabled=!failure||bootstrapRetryPending;el('Refresh').textContent=failure?'Tentar novamente':'Conectando…';
+  status(failure?'Não foi possível conectar ao painel. Verifique a conexão e tente novamente.':bootstrapPhase==='RETRYING'?'Tentando conectar ao painel novamente…':'Conectando ao painel da loja…',failure);
+  return true;
+ }
+ async function retryBootstrap(){
+  if(started||bootstrapPhase!=='FAILED'||bootstrapRetryPending||typeof bootstrapRetry!=='function')return false;
+  bootstrapRetryPending=true;bootstrapPhase='RETRYING';paintBootstrap();
+  try{const result=await bootstrapRetry();if(result===false&&!started)bootstrapPhase='FAILED';return result;}
+  catch{if(!started)bootstrapPhase='FAILED';return false;}
+  finally{bootstrapRetryPending=false;if(!started)paintBootstrap();}
+ }
+ function prepare(options={}){
+  if(started||bootstrapCompleted||!el('Select'))return false;
+  if(typeof options.retry==='function')bootstrapRetry=options.retry;
+  let selected;try{const params=new URLSearchParams(globalThis.location?.search||'');selected=params.getAll('month').length===1?params.get('month'):null;}catch{}
+  const control=el('Select');control.max=today().slice(0,7);control.value=validMonth(selected)?selected:bootstrapPrepared&&validMonth(control.value)?control.value:today().slice(0,7);
+  bootstrapPrepared=true;if(!frame)render();
+  el('Refresh').onclick=retryBootstrap;paintBootstrap();return true;
+ }
+ function bootstrapState(options={}){
+  if(started||bootstrapCompleted||!['LOADING','RETRYING','FAILED','READY'].includes(options.phase))return false;
+  if(!bootstrapPrepared&&!prepare())return false;
+  // The caller's error text may contain a browser/provider failure or private
+  // details. Only the known phase selects the user-facing Portuguese message.
+  bootstrapPhase=options.phase;return paintBootstrap();
+ }
  function controls(){
+  if(bootstrapPrepared&&!bootstrapCompleted&&!started){paintBootstrap();return;}
   el('Refresh').disabled=busy||adsBusy||saving;el('Refresh').textContent=busy?'Consultando…':paused?'Continuar consulta':'Atualizar mês';el('Pause').hidden=!busy;el('Pause').disabled=paused;el('Previous').disabled=saving;el('Select').disabled=saving;
   const conflict=!!frame&&dirty&&draftRevision!==frame.expenses.revision;
   el('ExpensesSave').disabled=!frame||busy||adsBusy||saving||conflict;
@@ -454,9 +486,9 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
  }
  async function start(options={}){
   if(started)return false;if(typeof options.api!=='function'||!el('Select'))return false;
-  api=options.api;syncVariants=options.syncVariants;onCatalogChanged=options.onCatalogChanged;started=true;
+  api=options.api;syncVariants=options.syncVariants;onCatalogChanged=options.onCatalogChanged;bootstrapPhase='READY';bootstrapCompleted=true;started=true;
   let selected;try{const params=new URLSearchParams(globalThis.location?.search||'');selected=params.getAll('month').length===1?params.get('month'):null;}catch{}
-  el('Select').max=today().slice(0,7);el('Select').value=validMonth(selected)?selected:today().slice(0,7);
+  el('Select').max=today().slice(0,7);el('Select').value=validMonth(selected)?selected:bootstrapPrepared&&validMonth(el('Select').value)?el('Select').value:today().slice(0,7);
   el('Refresh').onclick=()=>refresh();el('Select').onchange=()=>refresh();
   el('Previous').onclick=()=>{const basis=validMonth(el('Select').value)?el('Select').value:today().slice(0,7),date=new Date(basis+'-01T12:00:00Z');date.setUTCMonth(date.getUTCMonth()-1);el('Select').value=date.toISOString().slice(0,7);refresh();};
   el('Pause').onclick=()=>{paused=true;el('Pause').disabled=true;status('A consulta será pausada após a resposta em andamento.');};
@@ -470,6 +502,6 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
   return refresh();
  }
  function stop(){started=false;catalogRequest++;catalogBusy=false;clearTimeout(catalogTimer);catalogTimer=null;paused=true;resumeOnVisible=false;generation++;checkpointHistoryRequest++;checkpointHistoryBusy=false;busy=false;adsBusy=false;clearTimeout(timer);timer=null;controls();}
- globalThis.brazaMonthDashboard={start,refresh,refreshCosts,stop,supportsCatalogQueue:catalogFeature,syncCatalogCandidates,refreshCatalog:()=>{catalogNeedsRead=true;return updateCatalog();},catalogMetadata:item=>catalogProducts.get(item)||null};
+ globalThis.brazaMonthDashboard={prepare,bootstrapState,start,refresh,refreshCosts,stop,supportsCatalogQueue:catalogFeature,syncCatalogCandidates,refreshCatalog:()=>{catalogNeedsRead=true;return updateCatalog();},catalogMetadata:item=>catalogProducts.get(item)||null};
 })();
 `;
