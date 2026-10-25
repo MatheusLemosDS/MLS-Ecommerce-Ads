@@ -14,6 +14,8 @@ const values=changes=>({ads_spend_cents:100,external_expenses_cents:200,recharge
 const body=(revision=0,changes={})=>({run_id:run,revision,values:values(),...changes});
 const garment=(size='P')=>({item_id:'201',model_id:'0',size,selling_unit:'SINGLE_GARMENT',operator_confirmed:true});
 const frame=changes=>({schema:'finance_store_period_v1',run_id:run,revision:3,status:'COMPLETE',start_date:'2026-10-13',end_date:'2026-10-20',cutoff_at:1792510000,checked_at:1792510100,currency:'BRL',monetary_unit:'UNCONFIRMED',order_count:1,pages_read:1,duplicate_orders:0,returns_orders:0,escrow_amount_raw:'50',ads_recharge_or_support_raw:'0',items:[{item_id:'201',model_id:'0',quantity:2}],diagnostic:null,...changes});
+// One coherent read now includes the durable catalogue-change marker.
+const contextStatementCount=10;
 const fail=(code,status)=>error=>error instanceof StoreSummaryError&&error.message===code&&(status===undefined||error.status===status);
 const snapshot=env=>({state:env.ADMIN_DB.db.prepare('SELECT * FROM store_period_adjustments ORDER BY run_id').all(),audit:env.ADMIN_DB.db.prepare('SELECT * FROM store_period_adjustments_audit ORDER BY run_id,revision').all()});
 async function database(){
@@ -72,7 +74,7 @@ test('concurrent declarations at one expected revision have one winner and one m
 
 test('bundle reads all saved revisions in one batch and absent expense declaration stays explicitly unknown',async()=>{
  const env=await database(),calls=[],actual=env.ADMIN_DB.batch.bind(env.ADMIN_DB);env.ADMIN_DB.batch=statements=>{calls.push(statements.length);return actual(statements);};
- const actualFrame=frame(),before=structuredClone(actualFrame),bundle=await storePeriodBundle(env,actualFrame);assert.deepEqual(calls,[9]);assert.deepEqual(bundle.finance,actualFrame);assert.deepEqual(actualFrame,before);
+ const actualFrame=frame(),before=structuredClone(actualFrame),bundle=await storePeriodBundle(env,actualFrame);assert.deepEqual(calls,[contextStatementCount]);assert.deepEqual(bundle.finance,actualFrame);assert.deepEqual(actualFrame,before);
  assert.deepEqual(bundle.adjustments,{revision:0,values:null,updated_at:null});assert.equal(bundle.result.bindings_revision,5);assert.equal(bundle.result.costs_revision,7);assert.equal(bundle.result.expected_repass_cents,5000);assert.equal(bundle.result.production_cost_cents,3180);assert.equal(bundle.result.net_estimate_cents,null);assert.ok(bundle.result.pending.includes('ADJUSTMENTS_REQUIRED'));
  await saveStoreAdjustments(env,body(0,{values:values({ads_spend_cents:0,external_expenses_cents:0})}),'admin');const declared=await storePeriodBundle(env,actualFrame);assert.equal(declared.adjustments.revision,1);assert.equal(declared.result.net_estimate_cents,null);assert.equal(declared.result.net_profit_cents,null);
  assert.equal(declared.result.expected_after_production_cents,1820);assert.ok(declared.result.pending.includes('ADS_COHORT_NOT_RECONCILED'));
@@ -91,7 +93,7 @@ test('return coverage keeps known occurrences visible beside unknown orders with
    without_reported_return:{order_count:1,payout_raw:'60'},unknown:{order_count:1,payout_raw:'40'},
    products:[{item_id:'201',order_count:3,with_return_orders:1,without_reported_return_orders:1,unknown_orders:1}]}});
  const before=snapshot(env),bundle=await storePeriodBundle(env,value);
- assert.deepEqual(calls,[9]);assert.equal(bundle.finance.returns_orders,null);
+ assert.deepEqual(calls,[contextStatementCount]);assert.equal(bundle.finance.returns_orders,null);
  assert.equal(bundle.returns_result.with_return.order_count,1);assert.equal(bundle.returns_result.unknown.order_count,1);
  assert.equal(bundle.returns_result.with_return.expected_repass_cents,5000);
  assert.equal(bundle.returns_result.without_reported_return.expected_repass_cents,6000);
@@ -118,7 +120,7 @@ test('product tax and after-tax balances use the same saved revisions without ch
   invoice_tax:{schema:'store_invoice_tax_v1',rate_bps:200,basis:'PAYMENT_GOODS_VALUE_PER_ORDER_ESTIMATE',rounding:'HALF_UP_PER_ORDER',covered_orders:1,unavailable_orders:0,known_base_raw:'100',known_tax_raw:'2'},
   product_invoice_tax:{schema:'store_product_invoice_tax_v1',exclusive_covered_orders:1,mixed_covered_orders:0,known_exclusive_tax_raw:'2',known_mixed_tax_raw:'0',products:[{item_id:'201',exclusive_covered_orders:1,known_exclusive_tax_raw:'2'}]}});
  const bundle=await storePeriodBundle(env,value),product=bundle.product_result.products[0];
- assert.deepEqual(calls,[9]);assert.equal(product.invoice_tax_cents,200);
+ assert.deepEqual(calls,[contextStatementCount]);assert.equal(product.invoice_tax_cents,200);
  assert.equal(product.expected_after_production_and_tax_cents,1620);
  assert.equal(bundle.result.invoice_tax.tax_cents,200);assert.equal(bundle.result.expected_after_tax_cents,1620);
  assert.equal(bundle.result.net_estimate_cents,null);assert.equal(product.net_profit_cents,null);
@@ -151,7 +153,7 @@ test('a product with full tax coverage stays usable when another product keeps t
 
 test('coherent bundle keeps captured configuration even if saved data changes just after the context batch',async()=>{
  const env=await database();await saveStoreAdjustments(env,body(),'admin');const original=env.ADMIN_DB.batch.bind(env.ADMIN_DB);let changed=false;
- env.ADMIN_DB.batch=async statements=>{const result=await original(statements);if(statements.length===9&&!changed){changed=true;env.ADMIN_DB.db.prepare('UPDATE variant_bindings_state SET revision=6,payload=?').run(JSON.stringify([garment('G1')]));env.ADMIN_DB.db.prepare('UPDATE production_costs_state SET revision=8,payload=?').run(JSON.stringify({...COST_DEFAULTS,inclusive_regular_cents:2000,components:[]}));env.ADMIN_DB.db.prepare('UPDATE store_period_adjustments SET revision=2,payload=?').run(JSON.stringify(values({ads_spend_cents:1000})));}return result;};
+ env.ADMIN_DB.batch=async statements=>{const result=await original(statements);if(statements.length===contextStatementCount&&!changed){changed=true;env.ADMIN_DB.db.prepare('UPDATE variant_bindings_state SET revision=6,payload=?').run(JSON.stringify([garment('G1')]));env.ADMIN_DB.db.prepare('UPDATE production_costs_state SET revision=8,payload=?').run(JSON.stringify({...COST_DEFAULTS,inclusive_regular_cents:2000,components:[]}));env.ADMIN_DB.db.prepare('UPDATE store_period_adjustments SET revision=2,payload=?').run(JSON.stringify(values({ads_spend_cents:1000})));}return result;};
  const captured=await storePeriodBundle(env,frame());assert.equal(captured.result.bindings_revision,5);assert.equal(captured.result.costs_revision,7);assert.equal(captured.adjustments.revision,1);assert.equal(captured.result.production_cost_cents,3180);assert.equal(captured.result.net_estimate_cents,null);
  assert.equal(env.ADMIN_DB.db.prepare('SELECT revision FROM variant_bindings_state').get().revision,6);assert.equal(env.ADMIN_DB.db.prepare('SELECT revision FROM production_costs_state').get().revision,8);
 });
