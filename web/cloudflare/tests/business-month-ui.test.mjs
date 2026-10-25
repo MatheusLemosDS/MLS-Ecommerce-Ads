@@ -6,6 +6,7 @@ import {BUSINESS_MONTH_CSS,businessMonthBody} from '../src/business-month-view.m
 import {buildAdsMeasurement} from '../src/ads-measurement.mjs';
 import {buildAdsCalendar} from '../src/ads-calendar.mjs';
 import {projectBusinessMonth} from '../src/business-month.mjs';
+import {buildBusinessCheckpoint} from '../src/business-checkpoint.mjs';
 
 const current='2026-10-22T12:00:00Z',stamp=Date.parse(current)/1000;
 function calendar(month='2026-10',end=22){
@@ -351,4 +352,102 @@ test('financial and Ads timestamps remain visibly separate when a newer Ads resp
  const later=structuredClone(source);later.checked_at=stamp+30;later.source_checked_at.ads_at=stamp+30;later.ads.fetched_at=stamp+30;
  b.load(later);assert.equal(await b.run('brazaMonthDashboard.refreshCosts()'),true);
  assert.match(b.text('Scope'),/financeiro: leitura mais antiga .*08:58:30; mais recente .*08:59:30/);assert.match(b.text('Scope'),/Anúncios consultados em .*09:00:30/);
+});
+
+test('financial conference explains the actual cohort, source times and versions without claiming received profit',async()=>{
+ const source=fixture({source_checked_at:{finance_oldest_at:stamp-120,finance_latest_at:stamp-30,ads_at:stamp},cost_rules_revision:4}),b=browser(source);
+ await b.run('brazaMonthDashboard.start({api,syncVariants})');
+ const text=b.text('CheckpointEvidence');
+ assert.match(text,/Resultado previsto.*43,00/);assert.match(text,/2 pago\(s\).*1 concluído\(s\).*1 em andamento/);
+ assert.match(text,/1 cancelado\(s\) e 1 não pago\(s\)/);assert.match(text,/Primeira leitura financeira usada/);assert.match(text,/Última leitura financeira usada/);
+ assert.match(text,/Custos v3.*vínculos v2.*regras v4.*imposto anterior sem versão.*despesas v1/);
+ assert.equal(b.text('CheckpointStatus'),'Previsão completa');
+ assert.match(businessMonthBody(),/Recebimentos e reembolsos ainda não conciliados/);
+ assert.equal(b.run("calls.filter(call=>call.path.startsWith('finance/checkpoints')).length"),0,'collapsed evidence must not add requests');
+});
+
+test('opening the financial conference reads history once, then a newer frame invalidates it without a request loop',async()=>{
+ const source=fixture(),b=browser(source),history={schema:'business_checkpoint_history_v1',month:source.month,retention_limit:128,checkpoints:[{revision:7,fingerprint:'a'.repeat(64),checkpoint:buildBusinessCheckpoint(source)}]};
+ b.context.historySerialized=JSON.stringify(history);
+ b.run("customApi=async(path,body)=>path.startsWith('finance/checkpoints')?JSON.parse(historySerialized):JSON.parse(JSON.stringify(currentFrame));");
+ await b.run('brazaMonthDashboard.start({api,syncVariants})');
+ b.run("control('CheckpointDetails').open=true;control('CheckpointDetails').ontoggle();");await b.settle();
+ assert.match(b.text('CheckpointHistory'),/Versão 7/);assert.match(b.text('CheckpointHistory'),/Previsão:.*43,00/);
+ assert.equal(b.run("calls.filter(call=>call.path==='finance/checkpoints?month=2026-10&limit=10').length"),1);
+ b.run("control('CheckpointDetails').open=false;control('CheckpointDetails').ontoggle();control('CheckpointDetails').open=true;control('CheckpointDetails').ontoggle();");await b.settle();
+ assert.equal(b.run("calls.filter(call=>call.path.startsWith('finance/checkpoints')).length"),1);
+ await b.run('brazaMonthDashboard.refreshCosts()');
+ assert.match(b.text('CheckpointHistoryState'),/nova leitura do resumo/);
+ assert.equal(b.run("calls.filter(call=>call.path.startsWith('finance/checkpoints')).length"),1,'ordinary render cannot repeat the history read');
+ await b.run("control('CheckpointHistoryRefresh').onclick()");
+ assert.equal(b.run("calls.filter(call=>call.path.startsWith('finance/checkpoints')).length"),2);
+ assert.match(b.text('CheckpointHistoryState'),/registradas automaticamente/);
+});
+
+test('late history from a different month cannot overwrite the selected financial conference',async()=>{
+ const source=fixture(),b=browser(source),history={schema:'business_checkpoint_history_v1',month:source.month,retention_limit:128,checkpoints:[{revision:8,fingerprint:'b'.repeat(64),checkpoint:buildBusinessCheckpoint(source)}]};
+ b.context.historySerialized=JSON.stringify(history);
+ await b.run('brazaMonthDashboard.start({api,syncVariants})');
+ b.run("let releaseHistory;customApi=async(path,body)=>path.startsWith('finance/checkpoints')?new Promise(resolve=>releaseHistory=resolve):JSON.parse(JSON.stringify(currentFrame));control('CheckpointDetails').open=true;control('CheckpointDetails').ontoggle();");await b.settle();
+ const past=fixture({...source,month:'2026-09',start_date:'2026-09-01',end_date:'2026-09-30',ads:calendar('2026-09',30)});b.load(past);
+ b.run("control('Select').value='2026-09';");await b.run('brazaMonthDashboard.refresh()');
+ b.run('releaseHistory(JSON.parse(historySerialized));');await b.settle();
+ assert.doesNotMatch(b.text('CheckpointHistory'),/Versão 8/);
+ assert.match(b.text('CheckpointEvidence'),/Resultado previsto.*43,00/);
+ assert.equal(b.run("control('CheckpointHistoryRefresh').disabled"),false);
+});
+
+test('invalid history remains a local error and cannot replace the verified expected result or render private error text',async()=>{
+ const source=fixture(),b=browser(source),history={schema:'business_checkpoint_history_v1',month:source.month,retention_limit:128,checkpoints:[{revision:1,fingerprint:'c'.repeat(64),checkpoint:{...buildBusinessCheckpoint(source),result:{expected_net_cents:'PRIVATE_PROVIDER_VALUE',realized_net_cents:null,realization:'UNVERIFIED'}}}]};
+ b.context.historySerialized=JSON.stringify(history);
+ b.run("customApi=async(path,body)=>path.startsWith('finance/checkpoints')?JSON.parse(historySerialized):JSON.parse(JSON.stringify(currentFrame));");
+ await b.run('brazaMonthDashboard.start({api,syncVariants})');
+ b.run("control('CheckpointDetails').open=true;control('CheckpointDetails').ontoggle();");await b.settle();
+ assert.match(b.text('CheckpointHistoryState'),/Não foi possível conferir o histórico/);assert.doesNotMatch(b.text('CheckpointHistoryState'),/PRIVATE_PROVIDER_VALUE/);
+ assert.doesNotMatch(b.text('CheckpointHistory'),/PRIVATE_PROVIDER_VALUE/);assert.match(b.text('Net'),/43,00/);
+ assert.equal(b.run("control('CheckpointHistoryRefresh').disabled"),false);
+});
+
+test('each historical version expands its own amounts, references and pending reasons instead of reusing the current calculation',async()=>{
+ const current=fixture(),older=fixture({production_cost_cents:1500,known_production_cost_cents:1500,result:{...current.result,net_estimate_cents:4800,net_margin_bps:4800}}),pending=fixture({production_cost_cents:null,result:{...current.result,net_estimate_cents:null,net_margin_bps:null,pending:['PRODUCTION_COST_INCOMPLETE']}}),b=browser(current);
+ const history={schema:'business_checkpoint_history_v1',month:current.month,retention_limit:128,checkpoints:[{revision:2,fingerprint:'e'.repeat(64),checkpoint:buildBusinessCheckpoint(older)},{revision:1,fingerprint:'f'.repeat(64),checkpoint:buildBusinessCheckpoint(pending)}]};
+ b.context.historySerialized=JSON.stringify(history);b.run("customApi=async(path,body)=>path.startsWith('finance/checkpoints')?JSON.parse(historySerialized):JSON.parse(JSON.stringify(currentFrame));");
+ await b.run('brazaMonthDashboard.start({api,syncVariants})');b.run("control('CheckpointDetails').open=true;control('CheckpointDetails').ontoggle();");await b.settle();
+ assert.match(b.text('Net'),/43,00/);
+ assert.match(b.text('CheckpointHistory'),/48,00/);assert.match(b.text('CheckpointHistory'),/Há produtos sem composição ou custo completo/);
+ assert.equal(b.run("control('CheckpointHistory').children[0].children[0].tag"),'details');
+ b.run("let historicalDetails=control('CheckpointHistory').children[0].children[0];historicalDetails.open=true;historicalDetails.ontoggle();");
+ assert.match(b.run("text(historicalDetails.children[2].children[1])"),/Custo de produção.*15,00/);
+ assert.match(b.run("text(historicalDetails.children[3])"),/Custos v3.*vínculos v2/);
+ assert.match(b.run("text(historicalDetails.children[2].children[6])"),/Resultado previsto desta versão.*48,00/);
+ await b.run('brazaMonthDashboard.refreshCosts()');
+ assert.equal(b.run("control('CheckpointHistory').children[0].children[0].open"),true,'a harmless rerender should preserve the expanded version');
+});
+
+test('forged historical lines, sums, references, sources and pending codes are rejected before displaying the old calculation',async()=>{
+ const source=fixture();
+ const corruptions=[
+  report=>{report.lines[1].amount_cents=-1;},
+  report=>{report.lines[1].sign=1;},
+  report=>{report.lines[1].code='EXPECTED_PAYOUT';},
+  report=>{report.lines[1].amount_cents=1999;},
+  report=>{report.versions.costs=0;},
+  report=>{report.source_checked_at={finance_oldest_at:stamp,finance_latest_at:stamp-1,ads_at:stamp};},
+  report=>{report.pending=['PRIVATE_PROVIDER_VALUE'];},
+ ];
+ for(const corrupt of corruptions){
+  const report=buildBusinessCheckpoint(source);corrupt(report);
+  const b=browser(source),history={schema:'business_checkpoint_history_v1',month:source.month,retention_limit:128,checkpoints:[{revision:1,fingerprint:'d'.repeat(64),checkpoint:report}]};
+  b.context.historySerialized=JSON.stringify(history);b.run("customApi=async(path,body)=>path.startsWith('finance/checkpoints')?JSON.parse(historySerialized):JSON.parse(JSON.stringify(currentFrame));");
+  await b.run('brazaMonthDashboard.start({api,syncVariants})');b.run("control('CheckpointDetails').open=true;control('CheckpointDetails').ontoggle();");await b.settle();
+  assert.match(b.text('CheckpointHistoryState'),/Não foi possível conferir o histórico/);assert.equal(b.text('CheckpointHistory'),'');assert.match(b.text('Net'),/43,00/);
+ }
+});
+
+test('history validation refuses accessor fields without evaluating their getters',async()=>{
+ const source=fixture(),b=browser(source),history={schema:'business_checkpoint_history_v1',month:source.month,retention_limit:128,checkpoints:[{revision:1,fingerprint:'a'.repeat(64),checkpoint:buildBusinessCheckpoint(source)}]};
+ b.context.historySerialized=JSON.stringify(history);
+ b.run("let getterReads=0;customApi=async(path,body)=>{if(!path.startsWith('finance/checkpoints'))return JSON.parse(JSON.stringify(currentFrame));const value=JSON.parse(historySerialized);Object.defineProperty(value.checkpoints[0].checkpoint,'lines',{enumerable:true,get(){getterReads++;throw Error('PRIVATE_GETTER');}});return value;};");
+ await b.run('brazaMonthDashboard.start({api,syncVariants})');b.run("control('CheckpointDetails').open=true;control('CheckpointDetails').ontoggle();");await b.settle();
+ assert.equal(b.run('getterReads'),0);assert.match(b.text('CheckpointHistoryState'),/Não foi possível conferir o histórico/);assert.doesNotMatch(b.text('CheckpointHistoryState'),/PRIVATE_GETTER/);assert.match(b.text('Net'),/43,00/);
 });

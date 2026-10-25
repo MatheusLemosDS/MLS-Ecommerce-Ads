@@ -132,6 +132,29 @@ test('the exact frame projector works when embedded alone in a fresh browser rea
  assert.equal(new vm.Script('project(JSON.parse(serialized))').runInContext(context),null);
 });
 
+test('optional observation bounds preserve legacy frames and reject forged times without invoking getters',()=>{
+ const original=covered(),oldest=original.cutoff_at,latest=oldest+1200;
+ const value={...original,checked_at:latest+30,source_checked_at:{oldest_at:oldest,latest_at:latest}},result=projectBusinessPeriodFrame(value);
+ assert.ok(result);assert.deepEqual(result.source_checked_at,value.source_checked_at);assert.notEqual(result.source_checked_at,value.source_checked_at);
+ value.source_checked_at.oldest_at++;assert.equal(result.source_checked_at.oldest_at,oldest);
+ assert.equal(Object.hasOwn(projectBusinessPeriodFrame(original),'source_checked_at'),false);
+ for(const source_checked_at of [null,{}, {oldest_at:oldest-1,latest_at:latest},{oldest_at:latest,latest_at:oldest},{oldest_at:oldest,latest_at:latest+31},{oldest_at:'1792510733',latest_at:latest},{oldest_at:oldest,latest_at:latest,order_sn:'PRIVATE_ORDER'}])assert.equal(projectBusinessPeriodFrame({...original,checked_at:latest+30,source_checked_at}),null);
+ let invoked=0;
+ for(const key of ['oldest_at','latest_at']){
+  const source_checked_at={oldest_at:oldest,latest_at:latest};Object.defineProperty(source_checked_at,key,{enumerable:true,get(){invoked++;return oldest;}});
+  assert.equal(projectBusinessPeriodFrame({...original,checked_at:latest+30,source_checked_at}),null);
+ }
+ const top={...original};Object.defineProperty(top,'source_checked_at',{enumerable:true,get(){invoked++;return {};}});assert.equal(projectBusinessPeriodFrame(top),null);assert.equal(invoked,0);
+ const context=vm.createContext({serialized:JSON.stringify(result)}),embedded=new vm.Script('const project='+projectBusinessPeriodFrame.toString()+';project(JSON.parse(serialized))').runInContext(context);
+ assert.deepEqual(JSON.parse(JSON.stringify(embedded)),result);
+});
+
+test('an empty cohort retains the conservative run interval rather than inventing a per-order observation',()=>{
+ const value=empty({revision:2,status:'COMPLETE',pages_read:1,checked_at:1792511933,source_checked_at:{oldest_at:1792510733,latest_at:1792511933}});
+ assert.ok(projectBusinessPeriodFrame(value));
+ for(const times of [{oldest_at:value.checked_at,latest_at:value.checked_at},{oldest_at:value.cutoff_at,latest_at:value.cutoff_at}])assert.equal(projectBusinessPeriodFrame({...value,source_checked_at:times}),null);
+});
+
 function productFrame(){
  const value=empty({revision:2,status:'COMPLETE',pages_read:1,
   coverage:{orders:5,paid:3,completed:2,ongoing:1,cancelled:1,cancel_pending:0,unpaid:1,other:0,unknown:0,payment_covered:2,payment_missing:1,returns:0,returns_unknown:1},

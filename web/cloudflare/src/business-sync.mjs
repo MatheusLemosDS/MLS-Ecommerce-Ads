@@ -1,4 +1,5 @@
-import {businessMonth,projectBusinessMonth} from './business-month.mjs';
+import {projectBusinessMonth} from './business-month.mjs';
+import {businessMonthWithCheckpoint} from './business-checkpoint.mjs';
 import {syncCostRuleCatalog,selectCostRuleCandidates} from './cost-rules.mjs';
 
 // This job only advances the existing read-only collectors. Financial frames,
@@ -87,17 +88,17 @@ export async function runBusinessSync(env,services,{now=()=>Date.now(),maxSteps=
  try{
   for(let step=0;step<maxSteps;step++){
    if(!await canCall(45000)){stopped=true;break;}
-   frame=projectBusinessMonth(await businessMonth(env,{operation:step===0?'start':'step',month},collectors,{now,actor:'business-sync'}));
+   frame=projectBusinessMonth(await businessMonthWithCheckpoint(env,{operation:step===0?'start':'step',month},collectors,{now,actor:'business-sync'}));
    if(!frame||frame.month!==month)throw new BusinessSyncError('BUSINESS_SYNC_RESULT_INVALID');
    if(frame.status!=='RUNNING')break;
   }
   if(frame?.status==='COMPLETE'&&await canCall(60000)){
    const costItems=[...new Set([...(frame.product_summary?.products||[]),...frame.unmapped_variants].map(row=>row.item_id))];
    if(costItems.length&&typeof services?.getFinanceVariantCatalog==='function'&&await canCall(45000)){
-    try{const ids=await selectCostRuleCandidates(env,costItems,{now});if(ids.length){await syncCostRuleCatalog(env,ids,services.getFinanceVariantCatalog,{now});frame=projectBusinessMonth(await businessMonth(env,{operation:'read',month},collectors,{now,actor:'business-sync'}));}}catch{}
+    try{const ids=await selectCostRuleCandidates(env,costItems,{now});if(ids.length){await syncCostRuleCatalog(env,ids,services.getFinanceVariantCatalog,{now});frame=projectBusinessMonth(await businessMonthWithCheckpoint(env,{operation:'read',month},collectors,{now,actor:'business-sync'}));}}catch{}
    }
    if(await canCall(60000)){
-    frame=projectBusinessMonth(await businessMonth(env,{operation:'ads',month},collectors,{now,actor:'business-sync'}));
+    frame=projectBusinessMonth(await businessMonthWithCheckpoint(env,{operation:'ads',month},collectors,{now,actor:'business-sync'}));
     if(!frame||frame.month!==month)throw new BusinessSyncError('BUSINESS_SYNC_RESULT_INVALID');
    }
   }

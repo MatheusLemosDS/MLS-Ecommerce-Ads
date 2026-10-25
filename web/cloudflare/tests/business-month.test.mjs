@@ -49,7 +49,7 @@ test('automatic child costs flow into the month and every sold unit without usin
 test('MEI policy and source timestamps are detached and strict; financial timings cannot disappear from a completed result',async()=>{
  const e=env(),s=source(withProducts);await complete(e,s);await run(e,s,'ads');const value=await save(e,s);
  const projected=projectBusinessMonth(value);assert.ok(projected);assert.notEqual(projected.tax,value.tax);assert.notEqual(projected.source_checked_at,value.source_checked_at);
- projected.tax.tax_cents=1;projected.source_checked_at.finance_oldest_at=1;assert.equal(value.tax.tax_cents,8605);assert.equal(value.source_checked_at.finance_oldest_at,stamp);
+ projected.tax.tax_cents=1;projected.source_checked_at.finance_oldest_at=1;assert.equal(value.tax.tax_cents,8605);assert.equal(value.source_checked_at.finance_oldest_at,stamp-2);
  assert.equal(projectBusinessMonth({...value,source_checked_at:{finance_oldest_at:null,finance_latest_at:null,ads_at:value.ads.fetched_at}}),null);
  assert.equal(projectBusinessMonth({...value,tax:{...value.tax,tax_cents:17210}}),null);
  let calls=0;const poisoned={...value.ads};Object.defineProperty(poisoned,'fetched_at',{enumerable:true,get(){calls++;return stamp;}});
@@ -229,10 +229,32 @@ test('fresh Ads cannot conceal stale current-month financial data or release a n
  await complete(e,s,{},options);await run(e,s,'ads',{},options);let value=await run(e,s,'expenses',{revision:0,external_expenses_cents:0,recharge_treatment:'UNCONFIRMED'},{...options,actor:'fixture-admin'});
  assert.equal(value.result.net_estimate_cents,82935);assert.equal(s.calls.finance.length,2);
  activeClock+=901000;value=await run(e,s,'ads',{},options);
- assert.equal(value.ads.fetched_at,Math.floor(activeClock/1000));assert.equal(value.checked_at,Math.floor(activeClock/1000));assert.equal(value.source_checked_at.finance_oldest_at,firstStamp);assert.equal(value.source_checked_at.finance_latest_at,firstStamp);assert.equal(value.source_checked_at.ads_at,value.ads.fetched_at);
+ assert.equal(value.ads.fetched_at,Math.floor(activeClock/1000));assert.equal(value.checked_at,Math.floor(activeClock/1000));assert.equal(value.source_checked_at.finance_oldest_at,firstStamp-2);assert.equal(value.source_checked_at.finance_latest_at,firstStamp);assert.equal(value.source_checked_at.ads_at,value.ads.fetched_at);
  assert.equal(value.result.net_estimate_cents,null);assert.ok(value.result.pending.includes('FINANCIAL_SOURCE_STALE'));assert.equal(value.sales_cents,120000);assert.equal(s.calls.finance.length,2);
  assert.equal(value.product_summary.products[0].exclusive_after_costs_cents,null);assert.ok(value.product_summary.products[0].pending.includes('SOURCE_UNAVAILABLE'));
  const forged=structuredClone(value);forged.result.pending=forged.result.pending.filter(code=>code!=='FINANCIAL_SOURCE_STALE');assert.equal(projectBusinessMonth(forged),null);
  financeStamp=Math.floor(activeClock/1000);value=await complete(e,s,{},options);
- assert.equal(s.calls.finance.length,4);assert.equal(value.source_checked_at.finance_oldest_at,financeStamp);assert.ok(!value.result.pending.includes('FINANCIAL_SOURCE_STALE'));assert.equal(value.result.net_estimate_cents,82935);assert.equal(value.product_summary.products[0].exclusive_after_costs_cents,93640);assert.equal(state(e).audit.length,1);
+ assert.equal(s.calls.finance.length,4);assert.equal(value.source_checked_at.finance_oldest_at,financeStamp-2);assert.ok(!value.result.pending.includes('FINANCIAL_SOURCE_STALE'));assert.equal(value.result.net_estimate_cents,82935);assert.equal(value.product_summary.products[0].exclusive_after_costs_cents,93640);assert.equal(state(e).audit.length,1);
+});
+
+test('a just-completed paused import keeps the oldest order observation stale, with conservative bounds for legacy frames',async()=>{
+ for(const legacy of [false,true]){
+  const e=env();let activeClock=Date.UTC(2026,9,21,12),firstObservation=Math.floor(activeClock/1000)-1200;const options={now:()=>activeClock};
+  const s=source(original=>{
+   const checked=Math.floor(activeClock/1000),value=withProducts({...original,cutoff_at:firstObservation,checked_at:checked});
+   if(!legacy)value.source_checked_at={oldest_at:firstObservation,latest_at:checked-5};
+   return value;
+  });
+  s.getAdsCalendar=async(_,selection)=>calendar(selection,Math.floor(activeClock/1000));
+  await complete(e,s,{},options);await run(e,s,'ads',{},options);
+  let value=await run(e,s,'expenses',{revision:0,external_expenses_cents:0,recharge_treatment:'UNCONFIRMED'},{...options,actor:'fixture-admin'});
+  assert.equal(value.status,'COMPLETE');assert.equal(value.checked_at,Math.floor(activeClock/1000));assert.equal(value.source_checked_at.finance_oldest_at,firstObservation);
+  assert.equal(value.source_checked_at.finance_latest_at,Math.floor(activeClock/1000)-(legacy?0:5));assert.ok(value.result.pending.includes('FINANCIAL_SOURCE_STALE'));
+  assert.equal(value.result.net_estimate_cents,null);assert.equal(value.sales_cents,120000);assert.equal(value.product_summary.products[0].exclusive_after_costs_cents,null);
+  // Recollecting the whole cohort, rather than finishing a last page, releases
+  // the estimate. Existing expenses remain the same recorded declaration.
+  activeClock+=61000;firstObservation=Math.floor(activeClock/1000)-5;
+  await complete(e,s,{},options);value=await run(e,s,'ads',{},options);
+  assert.equal(value.source_checked_at.finance_oldest_at,firstObservation);assert.ok(!value.result.pending.includes('FINANCIAL_SOURCE_STALE'));assert.equal(value.result.net_estimate_cents,82935);assert.equal(state(e).audit.length,1);
+ }
 });

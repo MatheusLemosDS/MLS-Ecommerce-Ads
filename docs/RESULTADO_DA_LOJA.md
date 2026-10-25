@@ -1,7 +1,10 @@
 # Resultado da loja por período
 
-O imposto automático de 2% sobre produtos e o comportamento do último cartão
-estão em [Imposto e resultado previsto](IMPOSTO_E_RESULTADO_PREVISTO.md).
+**Regra atual:** o MEI usa o DAS declarado de R$ 86,05 por mês em 2026, uma
+única vez na competência. A estimativa anterior de 2% sobre produtos foi
+substituída. A conta atual, a cobertura e o histórico automático estão em
+[Conferência financeira](CONFERENCIA_FINANCEIRA.md). As referências a 2% e à
+apuração manual de pedidos concluídos abaixo documentam versões anteriores.
 
 **Atualização:** consumo automático de Ads e repasse previsto por produto estão
 descritos em [Repasse por produto e consumo de anúncios](REPASSE_POR_PRODUTO_E_ADS.md).

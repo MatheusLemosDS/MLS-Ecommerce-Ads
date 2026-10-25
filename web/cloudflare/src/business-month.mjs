@@ -251,7 +251,9 @@ async function businessMonthBundle(db,month,range,stamp,observed){
  const sales=complete&&coverage.payment_missing===0?knownSales:null,payout=complete&&coverage.payment_missing===0?knownPayout:null,tax=complete?knownTax:null,adjustment=complete&&coverage.payment_missing===0?knownAdjustment:null,production=complete&&productionComplete?knownProduction:null;
  if(production===null)pending.push('PRODUCTION_COST_INCOMPLETE');if(tax===null)pending.push('INVOICE_TAX_UNAVAILABLE');if(ads?.status!=='AVAILABLE')pending.push('ADS_UNAVAILABLE');if(expense.external_expenses_cents===null)pending.push('EXTERNAL_EXPENSES_REQUIRED');if(adjustment===null||adjustment<0)pending.push('ADJUSTMENT_UNAVAILABLE');else if(adjustment>0&&expense.recharge_treatment==='UNCONFIRMED')pending.push('RECHARGE_TREATMENT_REQUIRED');if(!amountsSafe)pending.push('ARITHMETIC_UNSAFE');
  if(taxPolicy.status==='PENDING')pending.push('TAX_POLICY_REQUIRED');
- const financialTimes=frames.map(frame=>frame.checked_at),sourceCheckedAt={finance_oldest_at:financialTimes.length?Math.min(...financialTimes):null,finance_latest_at:financialTimes.length?Math.max(...financialTimes):null,ads_at:ads?.fetched_at??null};
+ // Legacy frames only bound their observations by the import's start/end.
+ // A recent final page must never make an earlier page appear freshly read.
+ const financialTimes=frames.map(frame=>frame.checked_at),oldestFinancialTimes=frames.map(frame=>frame.source_checked_at?.oldest_at??frame.cutoff_at),latestFinancialTimes=frames.map(frame=>frame.source_checked_at?.latest_at??frame.checked_at),sourceCheckedAt={finance_oldest_at:frames.length?Math.min(...oldestFinancialTimes):null,finance_latest_at:frames.length?Math.max(...latestFinancialTimes):null,ads_at:ads?.fetched_at??null};
  const checkedAt=Math.max(stamp,...financialTimes,ads?.fetched_at||0);
  const checkedMonth=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date(checkedAt*1000)).slice(0,7);
  if(month===checkedMonth&&sourceCheckedAt.finance_oldest_at!==null&&checkedAt-sourceCheckedAt.finance_oldest_at>900)pending.push('FINANCIAL_SOURCE_STALE');

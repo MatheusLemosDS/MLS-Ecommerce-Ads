@@ -8,6 +8,7 @@ import {buildAdsMeasurement} from '../src/ads-measurement.mjs';
 import {buildAdsCalendar} from '../src/ads-calendar.mjs';
 import {projectBusinessMonth} from '../src/business-month.mjs';
 import {projectBusinessMonthProducts} from '../src/business-month-products.mjs';
+import {buildBusinessCheckpoint} from '../src/business-checkpoint.mjs';
 
 const current='2026-10-22T12:00:00Z',stamp=Date.parse(current)/1000;
 
@@ -105,7 +106,8 @@ function monthlyBrowser(html,value=monthlyFrame()){
  const document={hidden:false,getElementById(id){if(!controls.has(id))throw Error('UNKNOWN_CONTROL:'+id);return controls.get(id);},createElement:tag=>node(tag),addEventListener(){}};
  const text=element=>element.textContent+element.children.map(text).join(' '),control=name=>controls.get('businessMonth'+name);
  let frame=JSON.parse(${JSON.stringify(JSON.stringify(value))});const calls=[];
- const api=async(path,body)=>{calls.push({path,body});return JSON.parse(JSON.stringify(frame));};
+ const historyFixture=JSON.parse(${JSON.stringify(JSON.stringify({schema:'business_checkpoint_history_v1',month:value.month,retention_limit:128,checkpoints:[{revision:4,fingerprint:'c'.repeat(64),checkpoint:buildBusinessCheckpoint(value)}]}))});
+ const api=async(path,body)=>{calls.push({path,body});return JSON.parse(JSON.stringify(path.startsWith('finance/checkpoints?')?historyFixture:frame));};
  const syncVariants=async()=>true;
  globalThis.brazaAutomationWorkspace={render(value){globalThis.lastDiagnosis=value;}};
  `+monthly[0]).runInContext(context);
@@ -136,6 +138,25 @@ for(const minify of [false,true]){
   assert.match(browser.text('ProductRows'),/58,00/);
   assert.doesNotMatch(browser.text('Status'),/is not defined/);
   verifyReportAndDailyAds(html);
+ });
+ test(`deployed reconciliation explains the observation and reads only its private monthly history after esbuild (minify=${minify})`,async()=>{
+  const html=await bundledAdminHtml(minify),browser=monthlyBrowser(html,monthlyFrame({mei:true}));
+  assert.equal(await browser.run('brazaMonthDashboard.start({api,syncVariants})'),true,browser.text('Status'));
+  assert.match(browser.text('CheckpointEvidence'),/Custos v3/);
+  assert.match(browser.text('CheckpointEvidence'),/DAS-MEI v1/);
+  assert.match(browser.text('CheckpointEvidence'),/1 cancelado\(s\) e 1 não pago\(s\)/);
+  assert.match(browser.text('CheckpointStatus'),/Previsão completa/);
+  assert.equal(browser.run('calls.filter(call=>call.path.startsWith("finance/checkpoints?")).length'),0);
+  await browser.run('control("CheckpointDetails").open=true;control("CheckpointDetails").ontoggle()');
+  // The DOM event handler intentionally does not return its asynchronous work.
+  await browser.run('Promise.resolve()');
+  assert.equal(browser.run('calls.filter(call=>call.path.startsWith("finance/checkpoints?")).length'),1);
+  assert.match(browser.text('CheckpointHistory'),/Versão 4/);
+  assert.match(browser.text('CheckpointHistory'),/41,05/);
+  assert.match(browser.text('Net'),/41,05/);
+  await browser.run('control("CheckpointDetails").ontoggle();Promise.resolve()');
+  assert.equal(browser.run('calls.filter(call=>call.path.startsWith("finance/checkpoints?")).length'),1,'reopening does not repeat a cached history read');
+  assert.equal(browser.run('calls.filter(call=>call.path.startsWith("finance/checkpoints?")).every(call=>call.body===undefined)'),true,'history uses no mutation or source collection');
  });
  test(`deployed monthly client renders custom product costs as text without changing financial balances (minify=${minify})`,async()=>{
   const html=await bundledAdminHtml(minify),browser=monthlyBrowser(html,monthlyFrame({custom:true}));

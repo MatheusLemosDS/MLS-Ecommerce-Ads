@@ -61,6 +61,17 @@ test('the optional product sidecar crosses all three private boundaries with exc
  assert.doesNotMatch(JSON.stringify(result),/order_sn|access_token|refresh_token|sku|PRIVATE/);
 });
 
+test('observation times cross App, Auth and Finance unchanged and forged intervals fail at every boundary',async()=>{
+ const value={...productSource(),checked_at:1792401200,source_checked_at:{oldest_at:1792400001,latest_at:1792401200}},result=await crossPrivateChain(value);
+ assert.deepEqual(result.source_checked_at,value.source_checked_at);
+ for(const source_checked_at of [{oldest_at:1792399999,latest_at:1792401200},{oldest_at:1792401200,latest_at:1792400001},{oldest_at:1792400001,latest_at:1792401201}]){
+  const forged={...value,source_checked_at};assert.equal(projectBusinessPeriodFrame(forged),null);
+  const app=await getFinanceBusinessPeriod({APP_INTERNAL_SECRET:appKey},input,{fetchImpl:async()=>Response.json(forged)});assert.equal(app.status,'UNAVAILABLE');
+  const auth=await forwardFinancePaymentSample(request(),{FINANCE_ROUTER_SECRET:router,SHOPEE_FINANCE_SERVICE:{fetch:async()=>Response.json(forged)}},{validateInternalApp});assert.equal(auth.status,502);
+  const finance=createFinanceWorker({businessPeriod:async()=>forged,fetchImpl:async()=>{throw Error('UNEXPECTED_PROVIDER_READ');}}),rejected=await finance.fetch(request(input,{headers:{'x-braza-finance-router':router}}),{FINANCE_ROUTER_SECRET:router,FINANCE_CONNECTION_ENABLED:'true'});assert.equal(rejected.status,502);
+ }
+});
+
 test('every private boundary rejects forged product conservation, identities, completeness and private extras',async()=>{
  const mutations=[
   value=>value.product_breakdown.known_mixed_expected_repass_raw='26',

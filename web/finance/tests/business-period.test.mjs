@@ -90,6 +90,24 @@ test('every supported active status is a paid order and cancellation classes can
  const f=await fixture(statuses),frame=await finish(f);assert.equal(frame.coverage.paid,7);assert.equal(frame.coverage.completed,1);assert.equal(frame.coverage.ongoing,6);assert.equal(frame.coverage.cancelled,1);assert.equal(frame.coverage.cancel_pending,1);assert.equal(frame.coverage.unpaid,1);assert.equal(frame.coverage.other,1);assert.equal(frame.coverage.unknown,1);assert.equal(frame.sales_base_raw,'700');
 });
 
+test('a resumed paginated import exposes old and new order observation times independently of its completion time',async()=>{
+ const f=await fixture(['COMPLETED','READY_TO_SHIP','CANCELLED','UNPAID','IN_CANCEL','SHIPPED']),job=await f.start(),firstStamp=f.now()/1000;
+ assert.deepEqual(job.source_checked_at,{oldest_at:firstStamp,latest_at:firstStamp});
+ const first=await f.run({operation:'step',run_id:job.run_id});assert.equal(first.status,'RUNNING');assert.equal(first.coverage.orders,5);
+ f.clock.time+=1200000;
+ const finished=await f.run({operation:'step',run_id:job.run_id});assert.equal(finished.status,'COMPLETE');assert.equal(finished.checked_at,firstStamp+1200);
+ assert.deepEqual(finished.source_checked_at,{oldest_at:firstStamp,latest_at:firstStamp+1200});
+ const times=snapshot(f).orders.map(row=>row.checked_at);assert.equal(finished.source_checked_at.oldest_at,Math.min(...times));assert.equal(finished.source_checked_at.latest_at,Math.max(...times));
+ f.clock.time+=300000;
+ const read=await f.run({operation:'read',run_id:job.run_id});assert.deepEqual(read.source_checked_at,finished.source_checked_at);assert.equal(read.checked_at,finished.checked_at);
+});
+
+test('a delayed empty import exposes its conservative collection interval without fabricating orders or money',async()=>{
+ const f=await fixture([]),job=await f.start(),cutoff=f.now()/1000;f.clock.time+=1200000;
+ const finished=await f.run({operation:'step',run_id:job.run_id});assert.equal(finished.status,'COMPLETE');assert.equal(finished.coverage.orders,0);assert.equal(finished.sales_base_raw,'0');
+ assert.deepEqual(finished.source_checked_at,{oldest_at:cutoff,latest_at:cutoff+1200});assert.ok(projectBusinessPeriodFrame(finished));
+});
+
 test('ongoing Payment unavailable keeps its detail quantities and missing coverage, never zero or a fake total',async()=>{
  for(const mode of ['ongoing-unavailable','ongoing-api-unavailable']){
   const f=await fixture(['COMPLETED','SHIPPED']);f.state.mode=mode;const frame=await finish(f);

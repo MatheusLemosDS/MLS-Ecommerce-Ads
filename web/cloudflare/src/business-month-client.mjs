@@ -2,12 +2,14 @@ import {projectBusinessMonth} from './business-month.mjs';
 import {projectAdsCalendar} from './ads-calendar.mjs';
 import {projectBusinessMonthProducts} from './business-month-products.mjs';
 import {buildAccountDiagnosis} from './account-diagnosis.mjs';
+import {buildBusinessCheckpoint} from './business-checkpoint.mjs';
 
 export const BUSINESS_MONTH_CLIENT=String.raw`
 (()=>{
  ${projectAdsCalendar.toString()}
  ${projectBusinessMonthProducts.toString()}
  ${projectBusinessMonth.toString()}
+ ${buildBusinessCheckpoint.toString()}
  ${buildAccountDiagnosis.toString()}
  const el=id=>document.getElementById('businessMonth'+id);
  const node=(tag,text,cls)=>{const value=document.createElement(tag);if(text!==undefined)value.textContent=text;if(cls)value.className=cls;return value;};
@@ -23,6 +25,105 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
  const financeRefreshInterval=300000;
  let lastFinancialRefreshAt=0,automaticBlocked=false,resumeOnVisible=false;
  const productOpen=new Set();
+ let checkpointHistory=null,checkpointHistoryMonth='',checkpointHistoryBusy=false,checkpointHistoryError='',checkpointHistoryStale=false,checkpointHistoryRequest=0;
+ const checkpointHistoryOpen=new Set();
+ const checkpointVersions=report=>'Custos v'+report.versions.costs+' · vínculos v'+report.versions.bindings+' · regras '+(report.versions.cost_rules===null?'pendentes':'v'+report.versions.cost_rules)+' · '+(report.tax_regime==='MEI'?'DAS-MEI':'imposto anterior')+' '+(report.versions.tax_policy===null?'sem versão':'v'+report.versions.tax_policy)+' · despesas v'+report.versions.expenses;
+ const checkpointTime=value=>Number.isSafeInteger(value)&&value>0?new Date(value*1000).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'}):'Pendente';
+ function invalidateCheckpointHistory(){
+  checkpointHistoryRequest++;checkpointHistoryBusy=false;checkpointHistoryError='';
+  checkpointHistoryStale=!!checkpointHistory;
+  if(checkpointHistoryMonth!==month){checkpointHistory=null;checkpointHistoryMonth='';checkpointHistoryStale=false;checkpointHistoryOpen.clear();}
+ }
+ function drawCheckpoint(){
+  const report=frame?buildBusinessCheckpoint(frame):null,target=el('CheckpointEvidence');target.replaceChildren();
+  el('CheckpointStatus').textContent=!report?'Aguardando os dados do mês':report.status==='EXPECTED_READY'?'Previsão completa':'Previsão com pendências';
+  if(report){
+   const entries=[
+    ['Resultado previsto',money(report.result.expected_net_cents)],
+    ['Pedidos considerados',report.coverage.paid+' pago(s), dos quais '+report.coverage.completed+' concluído(s) e '+report.coverage.ongoing+' em andamento'],
+    ['Pedidos excluídos',report.coverage.cancelled+' cancelado(s) e '+report.coverage.unpaid+' não pago(s)'],
+    ['Situações em conferência',report.coverage.cancel_pending+' em cancelamento e '+(report.coverage.other+report.coverage.unknown)+' com situação não confirmada'],
+    ['Cobertura dos valores financeiros',report.coverage.payment_covered+' de '+report.coverage.paid+' pedido(s) pago(s) · '+report.coverage.payment_missing+' com valores pendentes'],
+    ['Devoluções a conferir',report.coverage.returns+' com devolução e '+report.coverage.returns_unknown+' sem informação suficiente'],
+    ['Primeira leitura financeira usada',checkpointTime(report.source_checked_at.finance_oldest_at)],
+    ['Última leitura financeira usada',checkpointTime(report.source_checked_at.finance_latest_at)],
+    ['Gasto dos anúncios consultado em',checkpointTime(report.source_checked_at.ads_at)],
+    ['Referências usadas',checkpointVersions(report)],
+   ];
+   for(const [label,value] of entries){const row=node('div');row.append(node('dt',label),node('dd',value));target.append(row);}
+  }
+  const list=el('CheckpointHistory');list.replaceChildren();
+  el('CheckpointHistoryRefresh').disabled=!frame||checkpointHistoryBusy;
+  el('CheckpointHistoryRefresh').textContent=checkpointHistoryBusy?'Consultando…':'Atualizar histórico';
+  let historyState='O histórico é consultado quando você abre esta conferência.';
+  if(checkpointHistoryBusy)historyState='Consultando os registros deste mês…';
+  else if(checkpointHistoryError)historyState=checkpointHistoryError;
+  else if(checkpointHistoryStale)historyState='Há uma nova leitura do resumo. Atualize o histórico para conferir os registros mais recentes.';
+  else if(checkpointHistory)historyState='Últimas '+checkpointHistory.checkpoints.length+' versão(ões) registradas automaticamente. Até 128 versões são preservadas por mês.';
+  el('CheckpointHistoryState').textContent=historyState;
+  if(checkpointHistory&&checkpointHistoryMonth===month){
+   if(!checkpointHistory.checkpoints.length)list.append(node('li','Ainda não há uma versão registrada para este mês.'));
+   for(const entry of checkpointHistory.checkpoints){
+    const saved=entry.checkpoint,item=node('li'),details=node('details',undefined,'month-checkpoint-version'),summary=node('summary'),amounts=node('dl',undefined,'month-checkpoint-evidence'),references=node('dl',undefined,'month-checkpoint-evidence');
+    summary.append(node('strong','Versão '+entry.revision+' · '+checkpointTime(saved.checked_at)),node('span',saved.status==='EXPECTED_READY'?'Previsão: '+money(saved.result.expected_net_cents):'Previsão em conferência · valores pendentes'));
+    const key=saved.month+':'+entry.revision;details.open=checkpointHistoryOpen.has(key);details.ontoggle=()=>{if(details.open)checkpointHistoryOpen.add(key);else checkpointHistoryOpen.delete(key);};
+    const labels={EXPECTED_PAYOUT:'Repasse previsto',PRODUCTION:'Custo de produção',TAX:saved.tax_regime==='MEI'?'DAS-MEI mensal':'Imposto estimado',ADS_CONSUMPTION:'Gasto em anúncios',OTHER_EXPENSES:'Outras despesas',ADS_RECHARGE_RESTORE:'Recarga de anúncios reposta'};
+    for(const line of saved.lines){const row=node('div'),sign=line.sign===-1?'− ':line.code==='ADS_RECHARGE_RESTORE'?'+ ':'';row.append(node('dt',labels[line.code]),node('dd',line.amount_cents===null?'Pendente':sign+money(line.amount_cents)));amounts.append(row);}
+    const resultRow=node('div');resultRow.append(node('dt','Resultado previsto desta versão'),node('dd',money(saved.result.expected_net_cents)));amounts.append(resultRow);
+    const evidence=[['Pedidos pagos',saved.coverage.paid+' · '+saved.coverage.completed+' concluído(s) e '+saved.coverage.ongoing+' em andamento'],['Pedidos excluídos',saved.coverage.cancelled+' cancelado(s) e '+saved.coverage.unpaid+' não pago(s)'],['Referências usadas',checkpointVersions(saved)],['Primeira leitura financeira usada',checkpointTime(saved.source_checked_at.finance_oldest_at)],['Última leitura financeira usada',checkpointTime(saved.source_checked_at.finance_latest_at)],['Anúncios consultados em',checkpointTime(saved.source_checked_at.ads_at)]];
+    for(const [label,value] of evidence){const row=node('div');row.append(node('dt',label),node('dd',value));references.append(row);}
+    details.append(summary,node('p','Valores registrados nesta versão. As deduções da Shopee já estão incluídas no repasse.','month-detail-help'),amounts,references);
+    if(saved.pending.length){const pending=node('ul',undefined,'month-checkpoint-version-pending');for(const code of saved.pending)pending.append(node('li',pendingMessages[code]));details.append(pending);}
+    else details.append(node('p','Previsão completa com as informações disponíveis nessa leitura. Recebimentos e reembolsos não conciliados.','month-detail-help'));
+    item.append(details);list.append(item);
+   }
+  }
+ }
+ function checkedCheckpointHistory(value,selected){
+  const plain=row=>row!==null&&typeof row==='object'&&[Object.prototype,null].includes(Object.getPrototypeOf(row));
+  const exact=(row,keys)=>plain(row)&&Reflect.ownKeys(row).length===keys.length&&keys.every(key=>Object.hasOwn(Object.getOwnPropertyDescriptor(row,key)||{},'value'));
+  const array=(row,max)=>Array.isArray(row)&&Object.getPrototypeOf(row)===Array.prototype&&row.length<=max&&Reflect.ownKeys(row).length===row.length+1&&Array.from({length:row.length},(_,index)=>Object.getOwnPropertyDescriptor(row,String(index))).every(descriptor=>descriptor&&Object.hasOwn(descriptor,'value'));
+  const int=(row,min=0,max=Number.MAX_SAFE_INTEGER)=>Number.isSafeInteger(row)&&!Object.is(row,-0)&&row>=min&&row<=max;
+  const amount=(row,signed=false)=>row===null||int(row,signed?Number.MIN_SAFE_INTEGER:0);
+  const day=row=>typeof row==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(row)&&Number.isFinite(Date.parse(row+'T00:00:00Z'))&&new Date(row+'T00:00:00Z').toISOString().slice(0,10)===row;
+  const coverageKeys=['orders','paid','completed','ongoing','cancelled','cancel_pending','unpaid','other','unknown','payment_covered','payment_missing','returns','returns_unknown'];
+  const lineCodes=['EXPECTED_PAYOUT','PRODUCTION','TAX','ADS_CONSUMPTION','OTHER_EXPENSES','ADS_RECHARGE_RESTORE'];
+  if(!exact(value,['schema','month','retention_limit','checkpoints'])||value.schema!=='business_checkpoint_history_v1'||value.month!==selected||value.retention_limit!==128||!array(value.checkpoints,10))throw Error();
+  let previous=Infinity;
+  for(const entry of value.checkpoints){
+   if(!exact(entry,['revision','fingerprint','checkpoint'])||!int(entry.revision,1,2147483647)||entry.revision>=previous||typeof entry.fingerprint!=='string'||!/^[a-f0-9]{64}$/.test(entry.fingerprint))throw Error();
+   const report=entry.checkpoint;
+   if(!exact(report,['schema','month','start_date','end_date','checked_at','status','coverage','pending','result','lines','sales_cents','versions','source_checked_at','tax_regime','recharge_treatment'])||report.schema!=='business_checkpoint_v1'||report.month!==selected||report.start_date!==selected+'-01'||!day(report.start_date)||!day(report.end_date)||report.end_date.slice(0,7)!==selected||!int(report.checked_at,1,Math.floor(Date.now()/1000)+60)||!['EXPECTED_READY','PENDING'].includes(report.status))throw Error();
+   const checkedDay=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date(report.checked_at*1000)),c=report.coverage;
+   if(report.end_date>checkedDay||!exact(c,coverageKeys)||!coverageKeys.every(key=>int(c[key],0,3000))||c.orders!==c.paid+c.cancelled+c.cancel_pending+c.unpaid+c.other+c.unknown||c.paid!==c.completed+c.ongoing||c.payment_covered+c.payment_missing!==c.paid||c.returns+c.returns_unknown>c.paid)throw Error();
+   if(!array(report.pending,Object.keys(pendingMessages).length)||!report.pending.every(code=>typeof code==='string'&&Object.hasOwn(pendingMessages,code))||new Set(report.pending).size!==report.pending.length||!exact(report.result,['expected_net_cents','realized_net_cents','realization'])||!amount(report.result.expected_net_cents,true)||report.result.realized_net_cents!==null||report.result.realization!=='UNVERIFIED'||!amount(report.sales_cents)||!array(report.lines,6)||report.lines.length!==6)throw Error();
+   for(let index=0;index<6;index++){const line=report.lines[index];if(!exact(line,['code','sign','amount_cents'])||line.code!==lineCodes[index]||line.sign!==(index===0||index===5?1:-1)||!amount(line.amount_cents,index===0))throw Error();}
+   const versions=report.versions,sources=report.source_checked_at;
+   if(!exact(versions,['bindings','costs','cost_rules','tax_policy','expenses'])||!int(versions.bindings,1,2147483647)||!int(versions.costs,1,2147483647)||versions.cost_rules!==null&&!int(versions.cost_rules,1,2147483646)||versions.tax_policy!==null&&!int(versions.tax_policy,0,2147483647)||!int(versions.expenses,0,2147483646)||!exact(sources,['finance_oldest_at','finance_latest_at','ads_at'])||!Object.values(sources).every(at=>at===null||int(at,1,report.checked_at))||(sources.finance_oldest_at===null)!==(sources.finance_latest_at===null)||sources.finance_oldest_at!==null&&sources.finance_oldest_at>sources.finance_latest_at)throw Error();
+   if(!['MEI','LEGACY_ESTIMATE'].includes(report.tax_regime)||!['UNCONFIRMED','ADS_RECHARGE','TECH_SUPPORT'].includes(report.recharge_treatment)||report.tax_regime==='MEI'&&versions.tax_policy===null||report.tax_regime==='LEGACY_ESTIMATE'&&versions.tax_policy!==null||report.recharge_treatment!=='ADS_RECHARGE'&&report.lines[5].amount_cents!==null&&report.lines[5].amount_cents!==0)throw Error();
+   const has=code=>report.pending.includes(code);
+   if(c.cancel_pending+c.other+c.unknown>0&&!has('STATUS_REVIEW_REQUIRED')||c.payment_missing>0&&!has('PAYMENT_INCOMPLETE')||c.returns+c.returns_unknown>0&&!has('RETURNS_NOT_RECONCILED')||report.lines[1].amount_cents===null&&!has('PRODUCTION_COST_INCOMPLETE')||report.lines[2].amount_cents===null&&!has('INVOICE_TAX_UNAVAILABLE')||report.lines[3].amount_cents===null&&!has('ADS_UNAVAILABLE')||report.lines[4].amount_cents===null&&!has('EXTERNAL_EXPENSES_REQUIRED')||report.lines[5].amount_cents===null&&!has('ADJUSTMENT_UNAVAILABLE')&&!has('RECHARGE_TREATMENT_REQUIRED')||report.tax_regime==='MEI'&&versions.tax_policy===0&&!has('TAX_POLICY_REQUIRED'))throw Error();
+   const stale=report.month===checkedDay.slice(0,7)&&sources.finance_oldest_at!==null&&report.checked_at-sources.finance_oldest_at>900;
+   const ready=report.result.expected_net_cents!==null;
+   if(stale!==has('FINANCIAL_SOURCE_STALE')||(report.status==='EXPECTED_READY')!==ready||ready&&(report.pending.length||report.sales_cents===null||report.lines.some(line=>line.amount_cents===null))||!ready&&!report.pending.length)throw Error();
+   if(ready&&report.lines.reduce((total,line)=>total+BigInt(line.sign)*BigInt(line.amount_cents),0n)!==BigInt(report.result.expected_net_cents))throw Error();
+   previous=entry.revision;
+  }
+  return value;
+ }
+ async function loadCheckpointHistory(){
+  if(!started||!api||!frame||!el('CheckpointDetails').open||checkpointHistoryBusy)return false;
+  if(checkpointHistory&&!checkpointHistoryStale&&checkpointHistoryMonth===month)return true;
+  const selected=month,token=++checkpointHistoryRequest;checkpointHistoryBusy=true;checkpointHistoryError='';drawCheckpoint();
+  try{
+   const raw=await api('finance/checkpoints?month='+encodeURIComponent(selected)+'&limit=10');
+   if(token!==checkpointHistoryRequest||selected!==month||!started)return false;
+   checkpointHistory=checkedCheckpointHistory(raw,selected);checkpointHistoryMonth=selected;checkpointHistoryStale=false;return true;
+  }catch{
+   if(token===checkpointHistoryRequest&&selected===month)checkpointHistoryError='Não foi possível conferir o histórico. Os valores do resumo foram preservados; tente atualizar o histórico novamente.';
+   return false;
+  }finally{if(token===checkpointHistoryRequest&&selected===month){checkpointHistoryBusy=false;drawCheckpoint();}}
+ }
  function setMetric(key,value,help){const target=el(key),card=el(key+'Card');target.textContent=value===null?'Pendente':value;card.dataset.status=value===null?'pending':'available';el(key+'Help').textContent=help;}
  function status(text,error=false){message=text;failed=error;el('Status').textContent=text;el('Status').dataset.status=error?'error':'normal';}
  function controls(){
@@ -126,7 +227,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
   el('ProductPrevious').disabled=productPage<=1;el('ProductNext').disabled=productPage>=pages;
  }
  function render(){
-  globalThis.brazaAutomationWorkspace?.render(frame?buildAccountDiagnosis(frame):null);
+  globalThis.brazaAutomationWorkspace?.render(frame?buildAccountDiagnosis(frame):null);drawCheckpoint();
   if(!frame){
    for(const key of ['Sales','Ads','Roas']){el(key).textContent=busy?'Consultando':'Pendente';el(key+'Card').dataset.status='pending';}el('Net').textContent='Em apuração';el('NetCard').dataset.status='pending';el('Margin').textContent='';el('Coverage').replaceChildren();el('Waterfall').replaceChildren();el('Readiness').replaceChildren();el('Pending').hidden=true;el('Badge').textContent=busy?'Consultando':'Aguardando consulta';drawTaxAndExpenses();drawProducts();controls();return;
   }
@@ -158,7 +259,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
   controls();
  }
  function checkedFrame(value,expectedMonth){const checked=projectBusinessMonth(value);if(!checked||checked.month!==expectedMonth)throw Error('Os dados mensais não puderam ser conferidos. Atualize o mês para tentar novamente.');return checked;}
- function apply(value,expectedMonth){frame=checkedFrame(value,expectedMonth);render();return frame;}
+ function apply(value,expectedMonth){frame=checkedFrame(value,expectedMonth);invalidateCheckpointHistory();render();return frame;}
  function schedule(){
   clearTimeout(timer);timer=null;if(!started||document.hidden||busy||adsBusy||saving||dirty||paused||automaticBlocked||frame?.status!=='COMPLETE'&&!resumeOnVisible||month!==today().slice(0,7))return;
   // Ads updates never advance the financial clock: orders, cancellations and
@@ -173,7 +274,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
   const selected=el('Select').value;if(!validMonth(selected)){status('Escolha um mês válido até o mês atual.',true);return false;}
   const changed=selected!==month;if(busy&&!changed)return false;
   const token=++generation;month=selected;paused=false;automaticBlocked=false;resumeOnVisible=false;busy=true;adsBusy=false;clearTimeout(timer);timer=null;
-  if(changed){frame=null;dirty=false;editSequence++;draftRevision=0;el('ExpensesValue').value='';el('Recharge').value='UNCONFIRMED';}
+  if(changed){frame=null;invalidateCheckpointHistory();dirty=false;editSequence++;draftRevision=0;el('ExpensesValue').value='';el('Recharge').value='UNCONFIRMED';}
   status(automatic?'Atualizando vendas, cancelamentos e anúncios de '+monthName(month)+'…':'Consultando os pedidos de '+monthName(month)+'…');render();
   const current=()=>token===generation&&month===selected;
   try{
@@ -191,7 +292,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
     status(paused?'Consulta pausada após a última resposta. Use Continuar consulta para retomar.':'A atualização continua automaticamente quando este painel voltar à tela.');return true;
    }
    const keepCached=value?.status==='COMPLETE';
-   const update=raw=>{const checked=checkedFrame(raw,selected);if(!keepCached||checked.status!=='RUNNING'){frame=checked;render();}return checked;};
+   const update=raw=>{const checked=checkedFrame(raw,selected);if(!keepCached||checked.status!=='RUNNING'){frame=checked;invalidateCheckpointHistory();render();}return checked;};
    const initial=await request('start',selected);if(!current())return false;value=update(initial);
    let steps=0;
    while(value.status==='RUNNING'&&!paused&&!document.hidden&&steps<610){
@@ -246,7 +347,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
    const raw=await api('finance/business-month',{operation:'expenses',month:selected,revision,external_expenses_cents:amount,recharge_treatment:treatment});
    if(token!==generation||selected!==month)return false;
    const result=projectBusinessMonth(raw);if(!result||result.month!==selected)throw Error('As despesas foram enviadas, mas o resultado não pôde ser conferido. Atualize o mês.');
-   frame=result;draftRevision=result.expenses.revision;
+   frame=result;invalidateCheckpointHistory();draftRevision=result.expenses.revision;
    if(submitted===editSequence){dirty=false;fillExpenses({force:true});}
    render();status('Despesas do mês salvas. Produção, imposto e anúncios continuam contabilizados separadamente.');return true;
   }catch(error){
@@ -273,12 +374,14 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
   el('Pause').onclick=()=>{paused=true;el('Pause').disabled=true;status('A consulta será pausada após a resposta em andamento.');};
   el('ExpensesForm').onsubmit=event=>{event.preventDefault();saveExpenses();};el('ExpensesValue').oninput=expenseChanged;el('Recharge').onchange=expenseChanged;
   el('ExpensesZero').onclick=()=>saveExpenses({zero:true});el('ExpensesReload').onclick=()=>{dirty=false;editSequence++;fillExpenses({force:true});render();schedule();};el('Identify').onclick=identify;
+  el('CheckpointDetails').ontoggle=()=>{if(el('CheckpointDetails').open)loadCheckpointHistory();};
+  el('CheckpointHistoryRefresh').onclick=()=>{checkpointHistoryStale=true;return loadCheckpointHistory();};
   for(const name of ['ProductSearch','ProductFilter','ProductSort','ProductPageSize'])el(name)[name==='ProductSearch'?'oninput':'onchange']=()=>{productPage=1;drawProducts();};
   el('ProductPrevious').onclick=()=>{productPage--;drawProducts();};el('ProductNext').onclick=()=>{productPage++;drawProducts();};
   document.addEventListener('visibilitychange',()=>{if(document.hidden){clearTimeout(timer);timer=null;}else schedule();});
   return refresh();
  }
- function stop(){started=false;paused=true;resumeOnVisible=false;generation++;busy=false;adsBusy=false;clearTimeout(timer);timer=null;controls();}
+ function stop(){started=false;paused=true;resumeOnVisible=false;generation++;checkpointHistoryRequest++;checkpointHistoryBusy=false;busy=false;adsBusy=false;clearTimeout(timer);timer=null;controls();}
  globalThis.brazaMonthDashboard={start,refresh,refreshCosts,stop};
 })();
 `;

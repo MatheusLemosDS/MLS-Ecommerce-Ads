@@ -142,7 +142,11 @@ function businessFrame(run,records,diagnostic){
  }
  if(grouped.size>1000)throw businessFailure('GROUP_LIMIT',409);
  const completePayments=coverage.payment_missing===0,salesRaw=businessRaw(sales),escrowRaw=businessRaw(escrow),adsRaw=businessRaw(ads);
- const frame=projectBusinessPeriodFrame({schema:'finance_business_period_v1',run_id:run.run_id,revision:run.revision,status:run.status,start_date:run.start_date,end_date:run.end_date,cutoff_at:run.cutoff_at,checked_at:run.checked_at,currency:'BRL',monetary_unit:'UNCONFIRMED',pages_read:run.pages_read,duplicate_orders:run.duplicate_orders,coverage,
+ // Finishing another page does not refresh the orders read on earlier pages.
+ // Empty imports have no per-order observations, so retain the conservative
+ // run interval instead of inventing a fresh timestamp for the empty cohort.
+ const source_checked_at={oldest_at:records.length?Math.min(...records.map(record=>record.checked_at)):run.cutoff_at,latest_at:records.length?Math.max(...records.map(record=>record.checked_at)):run.checked_at};
+ const frame=projectBusinessPeriodFrame({schema:'finance_business_period_v1',run_id:run.run_id,revision:run.revision,status:run.status,start_date:run.start_date,end_date:run.end_date,cutoff_at:run.cutoff_at,checked_at:run.checked_at,source_checked_at,currency:'BRL',monetary_unit:'UNCONFIRMED',pages_read:run.pages_read,duplicate_orders:run.duplicate_orders,coverage,
   known_sales_base_raw:salesRaw,sales_base_raw:completePayments?salesRaw:null,known_expected_repass_raw:escrowRaw,expected_repass_raw:completePayments?escrowRaw:null,known_ads_adjustment_raw:adsRaw,ads_adjustment_raw:completePayments?adsRaw:null,
   invoice_tax:{schema:'store_invoice_tax_v1',rate_bps:200,basis:'PAYMENT_GOODS_VALUE_PER_ORDER_ESTIMATE',rounding:'HALF_UP_PER_ORDER',covered_orders:coverage.payment_covered,unavailable_orders:coverage.payment_missing,known_base_raw:salesRaw,known_tax_raw:businessRaw(tax)},items:[...grouped.values()],
   product_breakdown:{schema:'business_product_breakdown_v1',mixed_orders:mixed.orders,mixed_payment_covered:mixed.covered,mixed_payment_missing:mixed.missing,...Object.fromEntries(moneyNames.map((name,index)=>['known_mixed_'+name+'_raw',businessRaw(mixed.money[index])])),products:[...products.values()].map(({money,items,...row})=>({...row,...Object.fromEntries(moneyNames.flatMap((name,index)=>{const known=businessRaw(money[index]);return [['known_exclusive_'+name+'_raw',known],['exclusive_'+name+'_raw',row.exclusive_payment_missing?null:known]];})),items:[...items.values()]}))},
