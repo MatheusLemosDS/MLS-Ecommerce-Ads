@@ -26,7 +26,7 @@ function automationConfig(root, target, config, snapshot) {
   }
   if (target !== 'app' || !automation || Array.isArray(automation)
     || Object.keys(automation).sort().join(',') !== 'captured_config_sha256,cron,version'
-    || automation.version !== 1 || automation.cron !== '*/5 * * * *'
+    || automation.version !== 1 || automation.cron !== '* * * * *'
     || automation.captured_config_sha256 !== snapshot.config_sha256) {
     throw error('WORKER_AUTOMATION_CONFIG_INVALID');
   }

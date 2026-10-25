@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {projectBusinessMonth} from '../src/business-month.mjs';
 import {runBusinessSync} from '../src/business-sync.mjs';
+import {buildMonthlyFinancialSummary} from '../src/business-month-summary.mjs';
 import {adminFetch,scheduledWork} from '../src/admin.mjs';
 import {collectionFixture as fixture} from './business-collection-fixture.mjs';
 
@@ -25,6 +26,26 @@ function verifyMonth(frame,{returns=false}={}){
  assert.equal(frame.ads.totals.broad.calculated_roas_raw,'10.000000');assert.equal(frame.result.net_estimate_cents,returns?null:290617);assert.equal(frame.result.net_profit_cents,null);
  assert.deepEqual(frame.result.pending,returns?['RETURNS_NOT_RECONCILED']:[]);
 }
+
+test('294 orders and 242 paid orders finish within the real freshness window on minute continuations without exceeding request budgets',async t=>{
+ for(const cadence of [300,60]){
+  const f=await fixture({allPaid:true,windowCounts:[160,134],paymentDelayMs:0});t.after(()=>{f.env.ADMIN_DB.db.close();f.financeEnv.FINANCE_DB.db.close();});
+  f.state.listHook=({base,offset,size,clock})=>{clock.time+=1000;const total=base===0?160:134,count=Math.min(size,total-offset),start=base===0?0:160,more=offset+count<total;return f.provider({order_list:Array.from({length:count},(_,index)=>({order_sn:f.serial(start+offset+index)})),more,next_cursor:more?String(offset+count):''});};
+  f.state.detailHook=({ids,clock})=>{clock.time+=1000;return f.provider({order_list:ids.map(index=>({order_sn:f.serial(index),order_status:index<242?'COMPLETED':'CANCELLED',currency:'BRL',create_time:Date.UTC(2026,9,index<160?10:20,12)/1000,item_list:[{item_id:f.item(index%120),model_id:0,model_quantity_purchased:1}]}))});};
+  f.state.paymentHook=({index,clock})=>{clock.time+=200;return f.provider({order_sn:f.serial(index),return_order_sn_list:[],order_income:{order_sn:f.serial(index),original_cost_of_goods_sold:65.25,escrow_amount:47.51,ads_escrow_top_up_fee_or_technical_support_fee:0,items:[{item_id:f.item(index%120),model_id:0,line_item_id:index+1,quantity_purchased:1}]}});};
+  const started=f.now(),steps=[];let result;
+  for(let tick=0;tick<5;tick++){
+   // Fire on the actual cron boundary, not a minute after the previous call
+   // finished. Source hooks advance the clock to include upstream latency.
+   f.clock.time=started+tick*cadence*1000;f.env.ADMIN_DB.calls=0;const sourceBefore=f.calls.finance.length+f.calls.ads.length;result=await runBusinessSync(f.env,f.services,{now:f.now});steps.push(result.finance_steps);const totalRpc=f.env.ADMIN_DB.calls+f.calls.finance.length+f.calls.ads.length-sourceBefore;assert.ok(totalRpc<=50,'App D1 and private binding budget: '+JSON.stringify({cadence,tick,totalRpc}));assert.ok(result.ads_reads<=1);assert.equal(result.state.failure_count,0);assert.equal(result.state.last_error,null);
+   if(result.state.summary.status==='COMPLETE')break;assert.equal(result.status,'RUNNING');assert.equal(result.state.next_run_at,started/1000+tick*cadence+60);
+  }
+  assert.deepEqual(steps,[4,4,4,4,1]);assert.equal(result.state.summary.progress.pages_read,15);const before={finance:f.calls.finance.length,ads:f.calls.ads.length},frame=await f.invoke('read'),summary=buildMonthlyFinancialSummary(frame),age=frame.checked_at-frame.source_checked_at.finance_oldest_at;t.diagnostic(cadence+'s cadence: oldest financial observation '+age+'s old');
+  assert.equal(frame.status,'COMPLETE');assert.equal(frame.coverage.orders,294);assert.equal(frame.coverage.paid,242);assert.equal(frame.coverage.cancelled,52);assert.equal(frame.coverage.payment_covered,242);assert.equal(frame.coverage.payment_missing,0);assert.equal(frame.sales_cents,1579050);assert.equal(frame.expected_repass_cents,1149742);assert.equal(frame.production_cost_cents,384780);assert.equal(frame.invoice_tax_cents,8605);assert.equal(frame.ads.expense_cents,3000);assert.equal(summary.balance_cents,752123);assert.equal(f.calls.finance.length,before.finance);assert.equal(f.calls.ads.length,before.ads);assert.equal(new Set(f.calls.payment).size,242);assert.equal(f.calls.payment.length,242);for(const budget of f.calls.financeBudgets)assert.ok(budget.d1+budget.fetches<=50,JSON.stringify(budget));
+  if(cadence===300){assert.ok(age>900);assert.ok(frame.result.pending.includes('FINANCIAL_SOURCE_STALE'));assert.equal(frame.result.net_estimate_cents,null);assert.equal(summary.state,'PROVISIONAL');assert.equal(result.status,'PARTIAL');assert.equal(result.state.last_success_at,null);assert.equal(result.state.next_run_at,Math.max(Math.floor(f.now()/1000),started/1000+4*cadence+60));}
+  else{assert.ok(age<=900);assert.deepEqual(frame.result.pending,[]);assert.equal(frame.result.net_estimate_cents,752123);assert.equal(summary.state,'READY');assert.equal(result.status,'COMPLETE');assert.equal(result.state.last_success_at,Math.floor(f.now()/1000));assert.equal(result.state.next_run_at,Math.floor(f.now()/1000)+300);}
+ }
+});
 
 test('120 real collector orders finish across two cron ticks with exact costs, monthly DAS, spend and cancellation exclusions',async()=>{
  const f=await fixture(),first=await runBusinessSync(f.env,f.services,{now:f.now});assert.equal(first.status,'RUNNING');assert.equal(first.finance_steps,4);assert.equal(first.state.summary.coverage.orders,60);assert.equal(first.state.summary.coverage.cancelled,6);assert.equal(first.ads_reads,1);assert.equal(first.state.summary.source_checked_at.ads_at,f.clock.time/1000);assert.equal(first.state.failure_count,0);
@@ -71,5 +92,5 @@ test('a cold Worker over an already migrated production database keeps collectio
  // New binding identity resets every module's per-isolate setup cache, while
  // retaining the actual durable database and the corrections already applied.
  f.env.ADMIN_DB={db:meter.db,prepare:meter.prepare.bind(meter),batch:meter.batch.bind(meter)};meter.calls=0;
- const result=await scheduledWork(f.env,f.services,f.now);t.diagnostic('cold migrated Worker App D1 RPC='+meter.calls);assert.ok(meter.calls<=50,'the first collection in a new Worker exceeded the 50-RPC budget');assert.equal(result.collection,'RUNNING');assert.equal(f.calls.finance.length,4);assert.equal(f.calls.ads.length,1);verifyConfirmedCorrections(f);
+ const result=await scheduledWork(f.env,f.services,f.now),privateReads=f.calls.finance.length+f.calls.ads.length;t.diagnostic('cold migrated Worker App D1 RPC='+meter.calls+', private service reads='+privateReads);assert.ok(meter.calls+privateReads<=50,'the first collection in a new Worker exceeded the combined 50-RPC budget');assert.equal(result.collection,'RUNNING');assert.equal(f.calls.finance.length,4);assert.equal(f.calls.ads.length,1);verifyConfirmedCorrections(f);
 });

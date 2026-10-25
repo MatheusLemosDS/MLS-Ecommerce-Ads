@@ -69,8 +69,8 @@ export async function saveBusinessSyncPolicy(env,input,actor='admin',{now=()=>Da
  return (await syncRead(db)).state;
 }
 
-// A run fits inside one five-minute cron interval, including the existing
-// transport timeouts. Never detach a stateful request with Promise.race: a
+// The minute cron can resume a bounded run; its five-minute lease and deadline
+// still cover the existing transport timeouts. Never detach a stateful request with Promise.race: a
 // timed-out caller must not release its lease while that request still writes.
 export async function runBusinessSync(env,services,{now=()=>Date.now(),maxSteps=4}={}){
  if(typeof now!=='function'||!syncInteger(maxSteps,1,4))syncFail('BUSINESS_SYNC_OPTIONS_INVALID',400);
@@ -80,7 +80,7 @@ export async function runBusinessSync(env,services,{now=()=>Date.now(),maxSteps=
  if(state.lease_expires_at!==null&&state.lease_expires_at>started)return result('LEASED');
  // Older releases treated stale pages as a provider failure. Resume that
  // exact failed attempt now, but keep a genuine failure's retry deadline.
- const recoverStaleBackoff=state.status==='ERROR'&&state.last_error==='BUSINESS_SYNC_COLLECTION_UNAVAILABLE'&&state.summary?.status==='RUNNING'&&state.summary.pending.includes('FINANCIAL_SOURCE_STALE')&&!state.summary.pending.includes('SOURCE_UNAVAILABLE')&&state.last_attempt_at!==null&&state.summary.checked_at>=state.last_attempt_at;
+ const recoverStaleBackoff=state.status==='ERROR'&&state.last_error==='BUSINESS_SYNC_COLLECTION_UNAVAILABLE'&&['RUNNING','COMPLETE'].includes(state.summary?.status)&&state.summary.pending.includes('FINANCIAL_SOURCE_STALE')&&!state.summary.pending.includes('SOURCE_UNAVAILABLE')&&state.last_attempt_at!==null&&state.summary.checked_at>=state.last_attempt_at;
  if(state.next_run_at>started&&!recoverStaleBackoff)return result('NOT_DUE');
  let acquired;try{acquired=await db.prepare("UPDATE business_sync_state SET lease_token=?,lease_expires_at=?,status='RUNNING',month=?,last_attempt_at=? WHERE id=1 AND enabled=1 AND (next_run_at<=? OR (?=1 AND status='ERROR' AND last_error='BUSINESS_SYNC_COLLECTION_UNAVAILABLE' AND summary=? AND last_attempt_at=?)) AND (lease_token IS NULL OR lease_expires_at<=?)").bind(token,started+300,month,started,started,Number(recoverStaleBackoff),initialRow.summary,initialRow.last_attempt_at,started).run();}catch{syncFail('BUSINESS_SYNC_STORAGE_UNAVAILABLE');}
  if(acquired?.meta?.changes!==1){state=(await syncRead(db)).state;return result(!state.enabled?'PAUSED':state.lease_expires_at>started?'LEASED':'NOT_DUE');}
@@ -109,20 +109,25 @@ export async function runBusinessSync(env,services,{now=()=>Date.now(),maxSteps=
   // An in-progress month can outlive the freshness window while its pages
   // continue arriving. Keep that freshness blocker on the financial result,
   // but do not slow the collector down with the provider-failure backoff.
-  if(frame?.result.pending.includes('SOURCE_UNAVAILABLE')||frame?.status!=='RUNNING'&&frame?.result.pending.includes('FINANCIAL_SOURCE_STALE')){status='ERROR';errorCode=({BUSINESS_PERIOD_RATE_LIMIT:'BUSINESS_SYNC_SOURCE_RATE_LIMIT',BUSINESS_PERIOD_TIMEOUT:'BUSINESS_SYNC_SOURCE_TIMEOUT',BUSINESS_PERIOD_AUTH_REQUIRED:'BUSINESS_SYNC_SOURCE_AUTH_REQUIRED',BUSINESS_PERIOD_INVALID_SOURCE:'BUSINESS_SYNC_SOURCE_INVALID',BUSINESS_PERIOD_PERMISSION_DENIED:'BUSINESS_SYNC_SOURCE_PERMISSION_DENIED'})[frame?.collection?.code]||'BUSINESS_SYNC_COLLECTION_UNAVAILABLE';}
+  if(frame?.result.pending.includes('SOURCE_UNAVAILABLE')){status='ERROR';errorCode=({BUSINESS_PERIOD_RATE_LIMIT:'BUSINESS_SYNC_SOURCE_RATE_LIMIT',BUSINESS_PERIOD_TIMEOUT:'BUSINESS_SYNC_SOURCE_TIMEOUT',BUSINESS_PERIOD_AUTH_REQUIRED:'BUSINESS_SYNC_SOURCE_AUTH_REQUIRED',BUSINESS_PERIOD_INVALID_SOURCE:'BUSINESS_SYNC_SOURCE_INVALID',BUSINESS_PERIOD_PERMISSION_DENIED:'BUSINESS_SYNC_SOURCE_PERMISSION_DENIED'})[frame?.collection?.code]||'BUSINESS_SYNC_COLLECTION_UNAVAILABLE';}
   else if(frame?.status==='LIMIT_REACHED'){status='LIMIT_REACHED';errorCode='BUSINESS_SYNC_PERIOD_LIMIT_REACHED';}
   else if(frame?.status==='COMPLETE'){
    status=frame.ads?.status==='AVAILABLE'&&!frame.result.pending.includes('ADS_UNAVAILABLE')?'COMPLETE':'PARTIAL';
    if(status==='PARTIAL')errorCode='BUSINESS_SYNC_ADS_INCOMPLETE';
+   // A complete cohort can still contain old observations. Preserve the
+   // strict freshness blocker and retry soon without calling age a source
+   // failure or recording a successful financial collection.
+   else if(frame.result.pending.includes('FINANCIAL_SOURCE_STALE'))status='PARTIAL';
   }
  }catch(error){if(!yielded){status='ERROR';errorCode=error instanceof BusinessSyncError&&error.message==='BUSINESS_SYNC_RESULT_INVALID'?error.message:'BUSINESS_SYNC_COLLECTION_UNAVAILABLE';}}
  const finished=Math.max(started,Math.floor(syncClock(now)/1000)),latest=await syncRead(db);
  if(latest.row.lease_token!==token){state=latest.state;return result('LEASED',financeSteps,adsReads);}
  if(!latest.state.enabled){status='PAUSED';errorCode=null;}
  const failure=errorCode!==null,failureCount=failure?Math.min(latest.state.failure_count+1,1000000):0;
- const delay=frame?.collection?.state==='RETRY_WAIT'?Math.max(300,frame.collection.retry_after_seconds):failure?[300,600,1200,1800][Math.min(failureCount-1,3)]:300;
+ const continueSoon=!failure&&frame?.collection?.state!=='RETRY_WAIT'&&(status==='RUNNING'||status==='PARTIAL'&&frame?.result.pending.includes('FINANCIAL_SOURCE_STALE'));
+ const delay=frame?.collection?.state==='RETRY_WAIT'?Math.max(300,frame.collection.retry_after_seconds):failure?[300,600,1200,1800][Math.min(failureCount-1,3)]:continueSoon?60:300;
  const summary=frame?JSON.stringify(syncSummary(frame)):latest.state.summary?.month===month?latest.row.summary:null;
- const next=stopped&&syncMonth(finished*1000)!==month?finished:finished+delay;
+ const next=stopped&&syncMonth(finished*1000)!==month?finished:continueSoon?Math.max(finished,started+delay):finished+delay;
  let writes;try{writes=await db.batch([
   db.prepare('UPDATE business_sync_state SET status=?,lease_token=NULL,lease_expires_at=NULL,next_run_at=?,failure_count=?,last_success_at=?,last_error=?,summary=? WHERE id=1 AND lease_token=?').bind(status,next,failureCount,status==='COMPLETE'?finished:latest.state.last_success_at,errorCode,summary,token),
   db.prepare("INSERT INTO business_sync_audit(id,kind,month,status,started_at,finished_at,finance_steps,ads_reads,error_code,policy_revision,actor,summary) SELECT ?,'RUN',month,status,?,?,?,?,?,revision,'business-sync',summary FROM business_sync_state WHERE changes()=1 AND id=1 AND lease_token IS NULL AND last_attempt_at=?").bind(token,started,finished,financeSteps,adsReads,errorCode,started),

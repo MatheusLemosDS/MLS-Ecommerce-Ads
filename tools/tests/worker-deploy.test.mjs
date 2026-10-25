@@ -35,7 +35,7 @@ function fixture(t) {
   const calls = [];
   const automate = (name = 'app', mutation = () => {}) => {
     const config = JSON.parse(fs.readFileSync(path.join(root, 'workers', name, 'wrangler.json')));
-    const automation = {version: 1, cron: '*/5 * * * *', captured_config_sha256: sha256(stableJson(config))};
+    const automation = {version: 1, cron: '* * * * *', captured_config_sha256: sha256(stableJson(config))};
     mutation(automation);
     fs.writeFileSync(path.join(root, 'workers', name, 'automation.json'), stableJson(automation));
   };
@@ -141,7 +141,7 @@ test('App automation deploys the authorized effective cron and preserves the mig
   const verified = validateDeployment('app', f);
   const generatedPath = path.join(f.root, 'workers/app/.wrangler/automation.generated.json');
   const expected = {...JSON.parse(original), main: path.join(f.root, 'dist/app-worker.mjs'),
-    triggers: {crons: ['*/5 * * * *']}};
+    triggers: {crons: ['* * * * *']}};
   assert.deepEqual(verified.config, expected);
   assert.equal(verified.configPath, generatedPath);
   assert.equal(fs.existsSync(generatedPath), false, 'validation is read-only');
@@ -159,7 +159,9 @@ test('App automation is bound to the exact capture and rejects extra configurati
   const f = fixture(t);
   for (const mutation of [
     value => { value.version = 2; },
-    value => { value.cron = '* * * * *'; },
+    value => { value.cron = '*/2 * * * *'; },
+    value => { value.cron = '*/5 * * * *'; },
+    value => { value.cron = '*/15 * * * *'; },
     value => { value.captured_config_sha256 = 'c'.repeat(64); },
     value => { delete value.captured_config_sha256; },
     value => { value.vars = {PRIVATE: 'fixture-private-value'}; },
@@ -193,11 +195,11 @@ test('Auth and Finance cannot enable an automation override', t => {
   assert.equal(f.calls.length, 0); assert.equal(f.built.length, 0);
 });
 
-test('checked-in App automation validates the effective five-minute trigger without changing its capture', () => {
+test('checked-in App automation validates the effective one-minute trigger without changing its capture', () => {
   const verified = validateDeployment('app');
   const snapshot = JSON.parse(fs.readFileSync(path.join(PROJECT_ROOT, 'workers/app/migration.json')));
   const original = JSON.parse(fs.readFileSync(path.join(PROJECT_ROOT, 'workers/app/wrangler.json')));
-  assert.deepEqual(verified.config.triggers.crons, ['*/5 * * * *']);
+  assert.deepEqual(verified.config.triggers.crons, ['* * * * *']);
   assert.equal(sha256(stableJson(original)), snapshot.config_sha256);
   assert.deepEqual(original, snapshot.captured_config);
   assert.equal(verified.config.keep_vars, true);

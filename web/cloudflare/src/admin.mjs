@@ -36,7 +36,7 @@ import {PRODUCT_REGISTRY_SCHEMA,ProductRegistryError,readProductRegistry,runProd
 import {PRODUCTION_COST_PERIODS_SCHEMA,ProductionCostPeriodsError,productionCostPeriods,captureProductionCostMonth} from './production-cost-periods.mjs';
 import {PRODUCTION_COST_PERIODS_CSS,productionCostPeriodsBody,PRODUCTION_COST_PERIODS_CLIENT} from './production-cost-periods-view.mjs';
 import {SAVED_CATALOG_CSS,savedCatalogBody,SAVED_CATALOG_CLIENT} from './saved-catalog-view.mjs';
-import {BusinessCostDiagnosticsError,readBusinessCostDiagnostics} from './business-cost-diagnostics.mjs';
+import {BusinessCostDiagnosticsError,readBusinessCostDiagnostics,readBusinessCostDiagnosticsEvidence} from './business-cost-diagnostics.mjs';
 import {HISTORICAL_COST_EVIDENCE_SCHEMA,HistoricalCostEvidenceError,readHistoricalCostEvidence,syncHistoricalCostEvidence} from './historical-cost-evidence.mjs';
 import {OPERATOR_COST_CORRECTIONS_SCHEMA,OperatorCostCorrectionError,applyConfirmedOperatorCostCorrections} from './operator-cost-corrections.mjs';
 import {BACKGROUND_LANE_SCHEMA,HistoricalCostOrchestrationError,acquireBackgroundLane,finishBackgroundLane,readHistoricalCostCandidates} from './historical-cost-orchestration.mjs';
@@ -216,10 +216,16 @@ async function scheduledWork(env,services,now=()=>Date.now()){
  }finally{try{await finishBackgroundLane(env,lease,{now,repeatHistory});}catch{}}
 }
 async function workspaceAuthFetch(request,env){return handleWorkspaceAuth(request,env,{renderLogin:loginPage,renderLogout:current=>page('<main class="login card"><div class="brand"><span class="brand-mark">B</span><div>BrazaCommerce<small>Sua conta</small></div></div><h1>Sair da sua conta?</h1><p class="muted">Você precisará entrar novamente para acessar o painel.</p><form action="/logout" method="post"><input type="hidden" name="csrf" value="'+current.csrf+'"><button type="submit">Sair</button></form><p><a href="'+(current.role==='owner'?'/admin':'/dashboard')+'">Continuar no painel</a></p></main>')});}
-async function stableCostDiagnostics(env,month){let value=await readBusinessCostDiagnostics(env,{month});if(!value.consistent)value=await readBusinessCostDiagnostics(env,{month});return value;}
+function costDiagnosticsSelection(url,{recovery=false}={}){
+ const entries=[...url.searchParams],seen=new Set();let month,evidence=false;
+ for(const [key,value] of entries){assert(!seen.has(key)&&(['evidence',...(recovery?[]:['month'])].includes(key)),'BUSINESS_COST_DIAGNOSTICS_REQUEST_INVALID');seen.add(key);if(key==='evidence'){assert(value==='history-v1','BUSINESS_COST_DIAGNOSTICS_REQUEST_INVALID');evidence=true;}else month=value;}
+ assert(recovery||seen.has('month'),'BUSINESS_COST_DIAGNOSTICS_REQUEST_INVALID');return {month,evidence};
+}
+async function stableCostDiagnostics(env,month,{evidence=false}={}){const read=evidence?readBusinessCostDiagnosticsEvidence:readBusinessCostDiagnostics;let value=await read(env,{month});if(!(evidence?value.diagnostic:value).consistent)value=await read(env,{month});return value;}
 function historicalRecoveryCandidates(diagnostic){return diagnostic.products.filter(product=>product.variants.some(variant=>['NO_CATALOG','MODEL_NOT_IN_CATALOG'].includes(variant.reason))).map(product=>product.item_id);}
-async function recoverMonthlyCosts(env,month,services){
- let diagnostic=await stableCostDiagnostics(env,month);const work={status:'IDLE',processed:[],failed:[]},response=()=>({schema:'business_cost_recovery_v1',month,diagnostic,work});
+async function recoverMonthlyCosts(env,month,services,{evidence=false}={}){
+ let snapshot;const read=async()=>{snapshot=await stableCostDiagnostics(env,month,{evidence});return evidence?snapshot.diagnostic:snapshot;};
+ let diagnostic=await read();const work={status:'IDLE',processed:[],failed:[]},response=()=>({schema:'business_cost_recovery_v1',month,diagnostic:evidence?snapshot:diagnostic,work});
  if(!(await readBusinessSyncState(env)).enabled){work.status='PAUSED';return response();}if(!diagnostic.consistent)return response();
  // Current catalogues cannot name a deleted variation. Read one bounded page
  // of the original order metadata before repeating the same catalogue request.
@@ -232,14 +238,14 @@ async function recoverMonthlyCosts(env,month,services){
    work.status=historical.work==='ERROR'?'RETRY_WAIT':historical.work;
    if(historical.work==='PROGRESSED')work.processed=selected.item_ids;
    if(historical.work==='ERROR')work.failed=selected.item_ids;
-   diagnostic=await stableCostDiagnostics(env,month);return response();
+   diagnostic=await read();return response();
   }
  }
  const missing=diagnostic.products.flatMap(product=>product.variants.filter(variant=>variant.recoverable).map(variant=>({item_id:product.item_id,model_id:variant.model_id,quantity:variant.quantity})));
  if(missing.length)await enqueueSoldCatalogGaps(env,missing);
- diagnostic=await stableCostDiagnostics(env,month);if(!diagnostic.consistent)return response();
+ diagnostic=await read();if(!diagnostic.consistent)return response();
  const related=diagnostic.products.filter(product=>product.variants.some(variant=>['NO_CATALOG','MODEL_NOT_IN_CATALOG','METADATA_CHANGED'].includes(variant.reason))),ids=related.filter(product=>product.variants.some(variant=>variant.recoverable)).map(product=>product.item_id);
- if(ids.length){assert(typeof services.getFinanceVariantCatalog==='function','BUSINESS_COST_RECOVERY_SOURCE_UNAVAILABLE',503);const result=await runCatalogClassifications(env,services.getFinanceVariantCatalog,{maxProducts:1,itemIds:ids,canRun:async()=>(await readBusinessSyncState(env)).enabled});work.status=result.status;work.processed=result.processed;work.failed=result.failed;diagnostic=await stableCostDiagnostics(env,month);}
+ if(ids.length){assert(typeof services.getFinanceVariantCatalog==='function','BUSINESS_COST_RECOVERY_SOURCE_UNAVAILABLE',503);const result=await runCatalogClassifications(env,services.getFinanceVariantCatalog,{maxProducts:1,itemIds:ids,canRun:async()=>(await readBusinessSyncState(env)).enabled});work.status=result.status;work.processed=result.processed;work.failed=result.failed;diagnostic=await read();}
  if(work.status==='IDLE'){if(related.some(product=>product.classification?.status==='RUNNING'))work.status='LEASED';else if(related.some(product=>product.classification?.status==='RETRY_WAIT'&&product.classification.next_attempt_at>diagnostic.diagnosed_at))work.status='RETRY_WAIT';}
  return response();
 }
@@ -288,10 +294,10 @@ async function adminFetch(request,env,services={}){const url=new URL(request.url
   assert(request.method==='GET','METHOD_NOT_ALLOWED',405);const entries=[...url.searchParams];assert(entries.length===1&&entries[0][0]==='month','BUSINESS_MONTH_REQUEST_INVALID');return json(await readBusinessMonthAdsState(env,entries[0][1]));
  }
  if(path==='/api/admin/finance/cost-diagnostics'){
-  assert(request.method==='GET','METHOD_NOT_ALLOWED',405);const entries=[...url.searchParams];assert(entries.length===1&&entries[0][0]==='month','BUSINESS_COST_DIAGNOSTICS_REQUEST_INVALID');return json(await stableCostDiagnostics(env,entries[0][1]));
+  assert(request.method==='GET','METHOD_NOT_ALLOWED',405);const selection=costDiagnosticsSelection(url);return json(await stableCostDiagnostics(env,selection.month,{evidence:selection.evidence}));
  }
  if(path==='/api/admin/finance/cost-recovery'){
-  assert(request.method==='POST','METHOD_NOT_ALLOWED',405);assert(!url.search,'BUSINESS_COST_DIAGNOSTICS_REQUEST_INVALID');sameOrigin(request);assert(await equal(request.headers.get('x-csrf-token')||'',current.csrf),'CSRF_REJECTED',403);const body=await input(request,128);assert(Object.keys(body).length===1&&Object.hasOwn(body,'month'),'BUSINESS_COST_DIAGNOSTICS_REQUEST_INVALID');return json(await recoverMonthlyCosts(env,body.month,services));
+  assert(request.method==='POST','METHOD_NOT_ALLOWED',405);const selection=costDiagnosticsSelection(url,{recovery:true});sameOrigin(request);assert(await equal(request.headers.get('x-csrf-token')||'',current.csrf),'CSRF_REJECTED',403);const body=await input(request,128);assert(Object.keys(body).length===1&&Object.hasOwn(body,'month'),'BUSINESS_COST_DIAGNOSTICS_REQUEST_INVALID');return json(await recoverMonthlyCosts(env,body.month,services,{evidence:selection.evidence}));
  }
  if(path==='/api/admin/product-registry'){
   assert(request.method==='GET','METHOD_NOT_ALLOWED',405);const selection={},seen=new Set();

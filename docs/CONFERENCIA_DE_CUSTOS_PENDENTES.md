@@ -84,6 +84,55 @@ Lotes históricos em andamento conservam seus cinco produtos; lotes concluídos
 recentemente cedem lugar aos produtos ainda não consultados. Uma nova tentativa
 do mesmo lote concluído aguarda 15 minutos e não apaga a evidência válida.
 
+## Evidência observada em 25/10/2026
+
+O diagnóstico enviado pelo operador, `checked_at=1792935883`, já confirma
+253 de 257 unidades com custo, total identificado de R$ 7.365,10. Permanecem
+quatro unidades em dois modelos ausentes do catálogo atual. O título do anúncio
+não comprova o tamanho dessas variações antigas.
+
+O gasto de anúncios voltou a estar disponível: R$ 1.314,03, consultado 26 segundos
+antes do diagnóstico. A primeira leitura financeira tinha 1.135 segundos,
+acima da validade de 900 segundos; a última tinha apenas 30 segundos. A cadência
+anterior de cinco minutos com quatro etapas por execução tornava esse problema
+reproduzível para um mês com 294 pedidos e 15 páginas. A retomada em um minuto
+preserva a validade e os horários originais, sem rotular a leitura antiga como
+atual nem aumentar o limite de consultas por execução. Falhas reais continuam
+respeitando a espera da fonte.
+
+A conta aritmética dos valores já identificados nesse recorte é:
+R$ 11.093,13 de repasse + R$ 11,80 de recarga explicitamente classificada
+− R$ 7.365,10 de produção identificada − R$ 86,05 de DAS − R$ 1.314,03 de Ads
+− R$ 0,00 de outras despesas declaradas = R$ 2.339,75. Esse subtotal ainda
+não desconta os quatro custos ausentes e não concilia duas situações
+`TO_RETURN` nem quatro ocorrências nos pedidos pagos. Não constitui lucro
+líquido final nem confirmação de recebimento bancário. São conjuntos de
+ocorrências distintos, não seis reembolsos comprovados.
+
+## Evidência histórica e subtotal identificado
+
+A consulta opcional
+`GET /api/admin/finance/cost-diagnostics?month=2026-10&evidence=history-v1`
+retorna o envelope `business_cost_diagnostics_evidence_v1`: o diagnóstico v1
+inalterado, o histórico de cada par e o subtotal dos valores identificados.
+A recuperação usa o mesmo opt-in em `POST /api/admin/finance/cost-recovery?evidence=history-v1`,
+com o corpo original `{month}` e as mesmas proteções de sessão, Origin e CSRF.
+Sem o opt-in, o contrato anterior continua idêntico para abas já abertas.
+
+O histórico distingue varredura ainda não iniciada, leitura em andamento, par
+não encontrado na varredura concluída, nomes ausentes ou conflitantes e composição
+não reconhecida. Apresenta horários e progresso dos dados salvos; essa consulta
+não acessa a Shopee. Flags ausentes/conflitantes não são apagadas só para liberar
+um preço. Uma observação de uma varredura abandonada não recebe aprovação de
+outra varredura que não encontrou o par.
+
+O subtotal identificado é calculado com centavos inteiros e não substitui os
+campos de líquido previsto e lucro realizado. Exige coorte completa, repasse e
+pagamento cobertos, DAS declarado, Ads nas mesmas datas e despesas confirmadas.
+Mantém explícitas as unidades sem custo, situações de pedido, devoluções e idade
+das fontes. Se qualquer entrada monetária faltar, o subtotal fica indisponível.
+Uma leitura de custos não atualiza artificialmente o horário financeiro.
+
 ## Uma conferência por mês
 
 Na Visão geral, abra as pendências e use **Conferir pendências do cálculo**.

@@ -26,19 +26,19 @@ testes locais.
 | Financeiro por pedido e resumo mensal | Já versionados em `main` | Consulta repasse esperado, pedidos pagos, produção, cancelamentos e cobertura de devoluções. Recebimentos liquidados e valores efetivos de reembolso ainda exigem conciliação. |
 | Conferência e histórico do cálculo | Versionados em `main` (`1ffd3b2`) | Preserva automaticamente mudanças financeiras, pendências e revisões usadas, com as 128 versões mais recentes por mês. Corrige o frescor de coletas demoradas. Continua sendo previsão; contratos de liquidação e reembolso monetário ainda não foram confirmados. |
 | Fila persistente de identificação e subtotal conhecido | Já publicados (`192235cb`) | Adultos, kits, infantis e regras personalizadas usam a mesma fila; erros isolados não interrompem os demais. Classificações não expiram apenas pela idade do catálogo. Subtotal dos pedidos exclusivos conhecidos permanece separado do saldo final e das pendências do mês. |
-| Reconhecimento infantil e aprendizado de custos | Versionados em `main` (`9ebee7b`, `c07d1fe`) | Tamanhos 4 a 16 e referência de R$ 12,50; correções inequívocas podem ser reaproveitadas em variações compatíveis. Composições ambíguas permanecem pendentes. |
+| Reconhecimento infantil e aprendizado de custos | Versionados em `main` (`9ebee7b`, `c07d1fe`) | Tamanhos 2 a 16 e referência de R$ 12,50; correções inequívocas podem ser reaproveitadas em variações compatíveis. Composições ambíguas permanecem pendentes. |
 | Detalhamento mensal por produto/variação | Já versionado em `main` | Mantém pedidos exclusivos separados dos mistos, sem inventar rateio de repasse ou de Ads. Não entrega lucro líquido por SKU. |
 | Consumo de anúncios no período | Já versionado em `main` | Usa gasto consumido do calendário; distingue recarga e consumo. Não há atribuição validada desse gasto por produto e campanha. |
 | MEI e DAS de 2026 | Já versionados em `main` | Declaração do operador de **R$ 86,05 por mês**, substituindo os 2% anteriores. Vale para 2026; outro ano precisa de declaração própria. Não consulta PGMEI nem confirma pagamento. |
 | Atualização com o painel aberto | Já versionada em `main` | Consultas automáticas com paginação, deduplicação e horários separados de Financeiro e Ads. O trabalho anterior dependia da sessão visível para continuar atualizando. |
-| Coleta em segundo plano | Versionada em `main` (`6f9ce23`); ativação a conferir | Cron do App a cada cinco minutos avança coletores de leitura sem depender da aba. Inclui exclusão de execuções concorrentes, pausa/retomada, espera crescente após falhas e auditoria. O disparo real do cron ainda não foi observado nesta entrega. |
+| Coleta em segundo plano | Versionada em `main` (`6f9ce23`); ativação a conferir | Cron do App a cada minuto retoma coletores de leitura sem depender da aba; o financeiro em andamento tem prioridade e os demais trabalhos são intercalados. Inclui exclusão de execuções concorrentes, pausa/retomada, espera crescente após falhas e auditoria. O disparo real do cron ainda não foi observado nesta entrega. |
 | Abertura rápida da Visão geral | Versionada em `main` (`6f9ce23`); ativação a conferir | Mostra primeiro o cache privado validado e seus horários; a atualização prossegue sem tratar dado antigo como recente. |
 | Diagnóstico da conta | Versionado em `main` (`6f9ce23`); ativação a conferir | Calcula TACOS, saldo disponível antes de Ads, cobertura dos custos e próximas tarefas a partir do mês validado. Dados ausentes bloqueiam os indicadores correspondentes. Não autoriza investimento. |
 | Hermes com financeiro da loja | Publicado (`11f45ce`); atualização da ponte pendente | Cada análise preserva o mês financeiro, custos, DAS, anúncios, pendências e até três próximas ações. A ponte antiga não recebe tarefas novas. Exige atualização no Droplet e observação de uma execução real com a nova referência. |
 | Alterar anúncios, campanhas e promoções | Ainda não implementado para execução comercial | As proteções de somente leitura e Ads/PROMO `LOCKED` continuam vigentes. A coleta autônoma não cria permissão de escrita na Shopee. |
 
 O cron configurado é uma oportunidade de execução, não garantia de dados novos
-a cada cinco minutos: paginação, limites das fontes, falhas e espera entre
+a cada minuto: paginação, limites das fontes, falhas e espera entre
 tentativas podem atrasar a conclusão. A publicação deve preservar a configuração
 capturada do Worker, seus domínios, variáveis e bancos. O Financeiro continua
 privado, sem cron próprio.

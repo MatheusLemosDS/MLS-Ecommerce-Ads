@@ -102,11 +102,22 @@ test('a deleted paused state with policy history fails closed when the database 
  assert.equal(rows(env,'business_sync_state').length,0);assert.equal(rows(env,'business_sync_audit').length,1);assert.equal(services.calls.finance.length,0);assert.equal(services.calls.ads.length,0);
 });
 
-test('a completed resumed month with stale financial windows never records collection success',async()=>{
+test('a completed stale cohort retries promptly without provider-failure backoff or releasing strict net',async()=>{
  const env=environment();let time=clock;const services=source({time:()=>time});
  const first=await run(env,services,{now:()=>time,maxSteps:1});assert.equal(first.status,'RUNNING');assert.equal(first.state.summary.progress.windows_complete,1);assert.equal(first.state.last_success_at,null);
  time+=1000000;
- const result=await run(env,services,{now:()=>time});assert.equal(result.state.summary.status,'COMPLETE');assert.ok(result.state.summary.pending.includes('FINANCIAL_SOURCE_STALE'));assert.equal(result.status,'ERROR');assert.equal(result.state.last_error,'BUSINESS_SYNC_COLLECTION_UNAVAILABLE');assert.equal(result.state.last_success_at,null);assert.equal(result.state.failure_count,1);assert.equal(result.state.summary.net_estimate_cents,null);assert.equal(rows(env,'business_sync_audit').at(-1).status,'ERROR');
+ const result=await run(env,services,{now:()=>time});assert.equal(result.state.summary.status,'COMPLETE');assert.ok(result.state.summary.pending.includes('FINANCIAL_SOURCE_STALE'));assert.equal(result.status,'PARTIAL');assert.equal(result.state.last_error,null);assert.equal(result.state.last_success_at,null);assert.equal(result.state.failure_count,0);assert.equal(result.state.summary.net_estimate_cents,null);assert.equal(result.state.summary.source_checked_at.finance_oldest_at,stamp-2);assert.equal(result.state.next_run_at,Math.floor(time/1000)+60);assert.equal(rows(env,'business_sync_audit').at(-1).status,'PARTIAL');
+ const before=services.calls.finance.length;time+=60000;const refreshed=await run(env,services,{now:()=>time});assert.equal(refreshed.status,'COMPLETE');assert.equal(services.calls.finance.length,before+2);assert.equal(refreshed.state.summary.source_checked_at.finance_oldest_at,Math.floor(time/1000)-2);assert.ok(!refreshed.state.summary.pending.includes('FINANCIAL_SOURCE_STALE'));assert.equal(refreshed.state.last_success_at,Math.floor(time/1000));assert.equal(refreshed.state.next_run_at,Math.floor(time/1000)+300);
+});
+
+test('minute continuations use the start boundary rather than adding another minute after provider latency',async()=>{
+ const env=environment();let time=clock;const services=source({running:true,time:()=>time}),provider=services.getFinanceBusinessPeriod;services.getFinanceBusinessPeriod=async(...args)=>{const value=await provider(...args);time+=2000;return value;};
+ const first=await run(env,services,{now:()=>time});assert.equal(first.status,'RUNNING');assert.equal(time,clock+8000);assert.equal(first.state.next_run_at,stamp+60);assert.equal(first.state.failure_count,0);
+ time=clock+59000;assert.equal((await run(env,services,{now:()=>time})).status,'NOT_DUE');time=clock+60000;const second=await run(env,services,{now:()=>time,maxSteps:1});assert.equal(second.status,'RUNNING');assert.equal(second.finance_steps,1);assert.equal(second.state.next_run_at,stamp+120);
+});
+
+test('a genuine Ads failure still receives its normal backoff when the completed financial cohort is stale',async()=>{
+ const env=environment();let time=clock;const services=source({time:()=>time,missing:'2026-10-03'});await run(env,services,{now:()=>time,maxSteps:1});time+=1000000;const result=await run(env,services,{now:()=>time});assert.equal(result.status,'PARTIAL');assert.equal(result.state.last_error,'BUSINESS_SYNC_ADS_INCOMPLETE');assert.equal(result.state.failure_count,1);assert.equal(result.state.next_run_at,Math.floor(time/1000)+300);assert.equal(result.state.summary.net_estimate_cents,null);assert.ok(result.state.summary.pending.includes('FINANCIAL_SOURCE_STALE'));assert.ok(result.state.summary.pending.includes('ADS_UNAVAILABLE'));assert.equal(result.state.last_success_at,null);
 });
 
 test('a stale month still collecting pages resumes at the normal interval and clears obsolete failure backoff',async()=>{
@@ -120,7 +131,7 @@ test('a stale month still collecting pages resumes at the normal interval and cl
  const result=await run(env,services,{now:()=>time,maxSteps:2});
  assert.equal(result.status,'RUNNING');assert.equal(result.finance_steps,2);assert.equal(result.state.summary.progress.pages_read,3);
  assert.ok(result.state.summary.pending.includes('COLLECTING'));assert.ok(result.state.summary.pending.includes('FINANCIAL_SOURCE_STALE'));
- assert.equal(result.state.failure_count,0);assert.equal(result.state.last_error,null);assert.equal(result.state.next_run_at,Math.floor(time/1000)+300);
+ assert.equal(result.state.failure_count,0);assert.equal(result.state.last_error,null);assert.equal(result.state.next_run_at,Math.floor(time/1000)+60);
  assert.equal(result.state.last_success_at,null);assert.equal(result.state.summary.net_estimate_cents,null);assert.equal(result.state.summary.net_profit_cents,null);
  const audit=rows(env,'business_sync_audit').at(-1);assert.equal(audit.status,'RUNNING');assert.equal(audit.error_code,null);
 });
@@ -159,8 +170,13 @@ test('a persisted stale-only error from the same attempt resumes before its old 
  env.ADMIN_DB.db.prepare("UPDATE business_sync_state SET status='ERROR',failure_count=4,last_error='BUSINESS_SYNC_COLLECTION_UNAVAILABLE',next_run_at=? WHERE id=1").run(Math.floor(time/1000)+1800);
  const before=services.calls.finance.length;time+=1000;
  const resumed=await run(env,services,{now:()=>time,maxSteps:1});
- assert.equal(resumed.status,'RUNNING');assert.equal(services.calls.finance.length,before+1);assert.equal(resumed.state.failure_count,0);assert.equal(resumed.state.last_error,null);assert.equal(resumed.state.next_run_at,Math.floor(time/1000)+300);
+ assert.equal(resumed.status,'RUNNING');assert.equal(services.calls.finance.length,before+1);assert.equal(resumed.state.failure_count,0);assert.equal(resumed.state.last_error,null);assert.equal(resumed.state.next_run_at,Math.floor(time/1000)+60);
  assert.ok(resumed.state.summary.pending.includes('FINANCIAL_SOURCE_STALE'));assert.equal(resumed.state.summary.net_estimate_cents,null);assert.equal(resumed.state.last_success_at,null);
+});
+
+test('a legacy stale-only terminal error resumes before its obsolete failure deadline without forging source age',async()=>{
+ const env=environment();let time=clock;const services=source({time:()=>time});await run(env,services,{now:()=>time,maxSteps:1});time+=1000000;const partial=await run(env,services,{now:()=>time});assert.equal(partial.state.summary.status,'COMPLETE');assert.ok(partial.state.summary.pending.includes('FINANCIAL_SOURCE_STALE'));assert.equal(partial.state.summary.net_estimate_cents,null);
+ env.ADMIN_DB.db.prepare("UPDATE business_sync_state SET status='ERROR',failure_count=4,last_error='BUSINESS_SYNC_COLLECTION_UNAVAILABLE',next_run_at=? WHERE id=1").run(Math.floor(time/1000)+1800);const before=services.calls.finance.length;time+=1000;const resumed=await run(env,services,{now:()=>time});assert.equal(resumed.status,'COMPLETE');assert.equal(services.calls.finance.length,before+2);assert.equal(resumed.state.failure_count,0);assert.equal(resumed.state.last_error,null);assert.equal(resumed.state.summary.source_checked_at.finance_oldest_at,Math.floor(time/1000)-2);assert.ok(!resumed.state.summary.pending.includes('FINANCIAL_SOURCE_STALE'));
 });
 
 test('a genuine source failure or an older retained summary cannot bypass the saved retry deadline',async()=>{
@@ -220,7 +236,7 @@ test('remaining request budget is checked before starting Ads and before every f
  services.getFinanceBusinessPeriod=async(...args)=>{const value=await provider(...args);time+=115000;return value;};
  const result=await run(env,services,{now:()=>time});assert.equal(result.finance_steps,2);assert.equal(result.ads_reads,0);assert.equal(result.status,'PARTIAL');assert.equal(result.state.summary.ads_status,null);assert.equal(result.state.summary.net_estimate_cents,null);assert.equal(time,clock+230000);
  const runningEnv=environment();time=clock;const pending=source({running:true,time:()=>time}),step=pending.getFinanceBusinessPeriod;pending.getFinanceBusinessPeriod=async(...args)=>{const value=await step(...args);time+=115000;return value;};
- const stopped=await run(runningEnv,pending,{now:()=>time});assert.equal(stopped.finance_steps,2);assert.equal(stopped.status,'RUNNING');assert.equal(stopped.ads_reads,0);assert.equal(stopped.state.summary.net_estimate_cents,null);assert.equal(stopped.state.failure_count,0);
+ const stopped=await run(runningEnv,pending,{now:()=>time});assert.equal(stopped.finance_steps,2);assert.equal(stopped.status,'RUNNING');assert.equal(stopped.ads_reads,0);assert.equal(stopped.state.summary.net_estimate_cents,null);assert.equal(stopped.state.failure_count,0);assert.equal(stopped.state.next_run_at,Math.floor(time/1000),'a long bounded run can resume as soon as its lease is released');
 });
 
 test('the BRT boundary chooses the previous UTC month and an expired lease can be recovered',async()=>{

@@ -6,6 +6,8 @@ import {validateProductionCosts,productionCostReference} from './production-cost
 import {validateCostRules,costRuleSnapshotQueries,costRuleReferenceFromSnapshot,mergeCatalogCostReference} from './cost-rules.mjs';
 import {catalogClassificationQueries,catalogClassificationsFromSnapshot} from './catalog-classification.mjs';
 import {projectVariantCatalogFailure} from '../../finance/src/variant-catalog-frame.mjs';
+import {historicalCostPairDiagnosticsQueries,historicalCostPairDiagnosticsFromSnapshot,projectHistoricalCostPairDiagnostics} from './historical-cost-evidence.mjs';
+import {buildRecordedBusinessBalance,projectRecordedBusinessBalance} from './business-recorded-balance.mjs';
 
 export class BusinessCostDiagnosticsError extends Error {constructor(code,status=503){super(code);this.status=status;}}
 const fail=(code,status=503)=>{throw new BusinessCostDiagnosticsError(code,status);};
@@ -66,6 +68,31 @@ export function projectBusinessCostDiagnostics(value){
  }catch{return null;}
 }
 
+// Validators are explicit arguments: the embedded browser function must never
+// capture server imports, and an old open tab keeps the unmodified v1 DTO.
+export function projectBusinessCostDiagnosticsEvidence(value,validators={}){
+ const plain=row=>row!==null&&typeof row==='object'&&[Object.prototype,null].includes(Object.getPrototypeOf(row));
+ const exact=(row,keys)=>plain(row)&&Reflect.ownKeys(row).length===keys.length&&keys.every(key=>Object.hasOwn(Object.getOwnPropertyDescriptor(row,key)||{},'value'));
+ const int=(row,signed=false)=>Number.isSafeInteger(row)&&!Object.is(row,-0)&&(signed||row>=0);
+ try{
+  if(!exact(validators,['projectDiagnostic','projectHistory','projectBalance'])||!Object.values(validators).every(fn=>typeof fn==='function')||!exact(value,['schema','diagnostic','history','recorded_balance'])||value.schema!=='business_cost_diagnostics_evidence_v1')return null;
+  const diagnostic=validators.projectDiagnostic(value.diagnostic),history=validators.projectHistory(value.history),balance=validators.projectBalance(value.recorded_balance);
+  if(!diagnostic||!history||!balance||history.month!==diagnostic.month||history.checked_at!==diagnostic.diagnosed_at||history.truncation.pairs_total!==diagnostic.truncation.variants_total)return null;
+  const pairs=new Set(diagnostic.products.flatMap(product=>product.variants.map(variant=>product.item_id+':'+variant.model_id)));
+  if(history.pairs.some(pair=>!pairs.has(pair.item_id+':'+pair.model_id)))return null;
+  const expectedCounts={known_production_cents:diagnostic.totals.known_production_cost_cents,pending_production_units:diagnostic.summary.production_coverage.pending_units,review_orders:diagnostic.coverage.cancel_pending+diagnostic.coverage.other+diagnostic.coverage.unknown,returns_orders:diagnostic.coverage.returns+diagnostic.coverage.returns_unknown};
+  if(Object.keys(expectedCounts).some(key=>balance[key]!==null&&balance[key]!==expectedCounts[key]))return null;
+  if(balance.status==='AVAILABLE'){
+   const t=diagnostic.totals,keys=['expected_repass_cents','known_production_cost_cents','invoice_tax_cents','ads_spend_cents','external_expenses_cents','recharge_addback_cents'];
+   if(!diagnostic.consistent||!keys.every(key=>int(t[key],key==='expected_repass_cents'))||balance.pending.length!==diagnostic.pending.length||!balance.pending.every(code=>diagnostic.pending.includes(code))||Object.keys(balance.source_checked_at).some(key=>balance.source_checked_at[key]!==diagnostic.source_checked_at[key]))return null;
+   const amount=BigInt(t.expected_repass_cents)-BigInt(t.known_production_cost_cents)-BigInt(t.invoice_tax_cents)-BigInt(t.ads_spend_cents)-BigInt(t.external_expenses_cents)+BigInt(t.recharge_addback_cents);
+   if(amount<BigInt(Number.MIN_SAFE_INTEGER)||amount>BigInt(Number.MAX_SAFE_INTEGER)||amount!==BigInt(balance.amount_cents))return null;
+  }
+  const projected={schema:'business_cost_diagnostics_evidence_v1',diagnostic,history,recorded_balance:balance};
+  return new TextEncoder().encode(JSON.stringify(projected)).byteLength<=196608?projected:null;
+ }catch{return null;}
+}
+
 export function buildBusinessCostDiagnostics(frame,context,{now=()=>Date.now()}={}){
  const value=projectBusinessMonth(frame),checkpoint=value&&buildBusinessCheckpoint(value);if(!value||!checkpoint)fail('BUSINESS_COST_DIAGNOSTICS_FRAME_INVALID');
  const diagnosedAt=epoch(now),summary=buildMonthlyFinancialSummary(value),{bindings,costs,rules,classifications,catalogs,reference,sourceDiagnostics=[]}=context;
@@ -113,14 +140,23 @@ export function buildBusinessCostDiagnostics(frame,context,{now=()=>Date.now()}=
 // No provider capability is passed to the monthly read. All cost evidence is
 // then read in one D1 batch, so a concurrent cost edit is visible as a version
 // difference rather than being silently mixed with the monthly amounts.
-export async function readBusinessCostDiagnostics(env,input,{now=()=>Date.now()}={}){
+async function readBusinessCostDiagnosticsSnapshot(env,input,{now=()=>Date.now(),evidence=false}={}){
  if(!input||typeof input!=='object'||Reflect.ownKeys(input).length!==1||!Object.hasOwn(Object.getOwnPropertyDescriptor(input,'month')||{},'value')||typeof input.month!=='string'||!/^\d{4}-(0[1-9]|1[0-2])$/.test(input.month))fail('BUSINESS_COST_DIAGNOSTICS_REQUEST_INVALID',400);
  const stamp=epoch(now),clock=()=>stamp*1000;let frame;
  try{frame=await businessMonthWithCheckpoint(env,{operation:'read',month:input.month},{},{now:clock});}catch(error){if(error?.message==='BUSINESS_MONTH_NOT_FOUND')throw error;fail('BUSINESS_COST_DIAGNOSTICS_MONTH_UNAVAILABLE');}
  try{
-  const db=env.ADMIN_DB,ids=[...new Set(frame.unmapped_variants.map(row=>row.item_id))].sort(compare).slice(0,90),allowed=new Set(ids),pairs=frame.unmapped_variants.filter(row=>allowed.has(row.item_id)),ruleQueries=costRuleSnapshotQueries(db,ids),classQueries=catalogClassificationQueries(db,ids,pairs);
-  const snapshot=await db.batch([db.prepare('SELECT revision,payload FROM variant_bindings_state WHERE id=1'),db.prepare('SELECT revision,payload FROM production_costs_state WHERE id=1'),...ruleQueries,...classQueries,db.prepare('SELECT item_id,diagnostic,checked_at,failure_count FROM catalog_classification_source_diagnostics WHERE item_id IN(SELECT value FROM json_each(?))').bind(JSON.stringify(ids))]);
+  const db=env.ADMIN_DB,ids=[...new Set(frame.unmapped_variants.map(row=>row.item_id))].sort(compare).slice(0,90),allowed=new Set(ids),pairs=frame.unmapped_variants.filter(row=>allowed.has(row.item_id)),ruleQueries=costRuleSnapshotQueries(db,ids),classQueries=catalogClassificationQueries(db,ids,pairs),sourceIndex=2+ruleQueries.length+classQueries.length,historyQueries=evidence?historicalCostPairDiagnosticsQueries(db,input.month,pairs.map(({item_id,model_id})=>({item_id,model_id}))):[];
+  const snapshot=await db.batch([db.prepare('SELECT revision,payload FROM variant_bindings_state WHERE id=1'),db.prepare('SELECT revision,payload FROM production_costs_state WHERE id=1'),...ruleQueries,...classQueries,db.prepare('SELECT item_id,diagnostic,checked_at,failure_count FROM catalog_classification_source_diagnostics WHERE item_id IN(SELECT value FROM json_each(?))').bind(JSON.stringify(ids)),...historyQueries]);
   const [bindingRow,costRow]=snapshot.slice(0,2).map(row=>row.results[0]),bindings={revision:bindingRow.revision,bindings:validateVariantBindings(JSON.parse(bindingRow.payload))},costs={revision:costRow.revision,values:validateProductionCosts(JSON.parse(costRow.payload))},ruleSnapshot=snapshot.slice(2,2+ruleQueries.length),ruleRow=ruleSnapshot[0].results[0],rules={revision:ruleRow.revision,values:validateCostRules(JSON.parse(ruleRow.payload))},classifications=catalogClassificationsFromSnapshot(snapshot.slice(2+ruleQueries.length,2+ruleQueries.length+classQueries.length)),reference=mergeCatalogCostReference(costRuleReferenceFromSnapshot(ruleSnapshot,{now:clock}),classifications);
-  return buildBusinessCostDiagnostics(frame,{bindings,costs,rules,classifications,catalogs:ruleSnapshot.slice(1).flatMap(row=>row.results).filter(row=>Object.hasOwn(row,'catalog_fingerprint')&&Object.hasOwn(row,'payload')),reference,sourceDiagnostics:snapshot.at(-1).results},{now:clock});
+  const diagnostic=buildBusinessCostDiagnostics(frame,{bindings,costs,rules,classifications,catalogs:ruleSnapshot.slice(1).flatMap(row=>row.results).filter(row=>Object.hasOwn(row,'catalog_fingerprint')&&Object.hasOwn(row,'payload')),reference,sourceDiagnostics:snapshot[sourceIndex].results},{now:clock});
+  if(!evidence)return diagnostic;
+  const history=historicalCostPairDiagnosticsFromSnapshot(snapshot.slice(sourceIndex+1,sourceIndex+1+historyQueries.length),{now:clock}),included=new Set(diagnostic.products.flatMap(product=>product.variants.map(variant=>product.item_id+':'+variant.model_id)));
+  history.pairs=history.pairs.filter(pair=>included.has(pair.item_id+':'+pair.model_id));history.truncation={truncated:diagnostic.truncation.variants_total>history.pairs.length,pairs_total:diagnostic.truncation.variants_total,pairs_included:history.pairs.length};
+  let recorded_balance=buildRecordedBusinessBalance(frame);if(!diagnostic.consistent)recorded_balance={...recorded_balance,status:'UNAVAILABLE',amount_cents:null};
+  const result=projectBusinessCostDiagnosticsEvidence({schema:'business_cost_diagnostics_evidence_v1',diagnostic,history,recorded_balance},{projectDiagnostic:projectBusinessCostDiagnostics,projectHistory:projectHistoricalCostPairDiagnostics,projectBalance:projectRecordedBusinessBalance});
+  if(!result)fail('BUSINESS_COST_DIAGNOSTICS_RESULT_INVALID');return result;
  }catch(error){if(error instanceof BusinessCostDiagnosticsError)throw error;fail('BUSINESS_COST_DIAGNOSTICS_STORAGE_INVALID');}
 }
+
+export async function readBusinessCostDiagnostics(env,input,options={}){return readBusinessCostDiagnosticsSnapshot(env,input,options);}
+export async function readBusinessCostDiagnosticsEvidence(env,input,options={}){return readBusinessCostDiagnosticsSnapshot(env,input,{...options,evidence:true});}
