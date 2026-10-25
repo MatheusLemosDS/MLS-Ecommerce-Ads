@@ -7,6 +7,7 @@ import {projectBusinessPeriodRequest,projectBusinessPeriodFrame} from './busines
 import {projectProductionOrdersRequest,projectProductionOrdersFrame,productionOrdersRequestMatches} from './production-orders-frame.mjs';
 import {projectProductIndexRequest,projectProductIndexFrame,productIndexRequestMatches,financeProductIndexDiagnostic} from './product-index-frame.mjs';
 import {projectHistoricalVariantEvidenceRequest,projectHistoricalVariantEvidenceFrame,historicalVariantEvidenceRequestMatches,historicalVariantEvidenceDiagnostic} from './historical-variant-evidence-frame.mjs';
+import {projectEscrowReleaseRequest,projectEscrowReleaseFrame,escrowReleaseRequestMatches} from './escrow-release-frame.mjs';
 import {projectReconciliationRequest,projectReconciliationFrame,reconciliationRequestMatches} from './reconciliation-frame.mjs';
 
 const ORIGIN = 'https://auth.brazacommerce.com.br';
@@ -32,6 +33,7 @@ const PRODUCTION_ORDERS_PATH = '/internal/shopee/finance/production-orders';
 const PRODUCT_INDEX_PATH = '/internal/shopee/finance/product-index';
 const HISTORICAL_EVIDENCE_PATH = '/internal/shopee/finance/historical-variant-evidence';
 const RECONCILIATION_PATH = '/internal/shopee/finance/reconciliation';
+const ESCROW_RELEASES_PATH = '/internal/shopee/finance/escrow-releases';
 const SAMPLE_FIELDS = ['escrow_amount','original_cost_of_goods_sold','buyer_total_amount','commission_fee','service_fee','seller_transaction_fee','actual_shipping_fee','ads_escrow_top_up_fee_or_technical_support_fee','items'];
 const SAMPLE_ITEM_FIELDS = ['item_id','model_id','line_item_id','quantity_purchased','original_price','selling_price','order_discounted_price','is_kit','kit_items'];
 const SAMPLE_TYPES = new Set(['number','string','boolean','object','array','null','mixed']);
@@ -81,8 +83,8 @@ function paymentFailure(error) {
   }}, status, {json: true});
 }
 
-async function privateFinanceBody(request, catalog = false, storePeriod = false, business = false, production = false, productIndex = false, historical = false, reconciliation = false) {
-  const maximum=production||historical?8192:storePeriod||catalog||productIndex?256:128;
+async function privateFinanceBody(request, catalog = false, storePeriod = false, business = false, production = false, productIndex = false, historical = false, reconciliation = false, escrowReleases = false) {
+  const maximum=escrowReleases?512:production||historical?8192:storePeriod||catalog||productIndex?256:128;
   const media = request.headers.get('content-type') || '';
   const declared = request.headers.get('content-length');
   if (!/^application\/json(?:\s*;\s*charset\s*=\s*(?:utf-8|"utf-8"))?\s*$/i.test(media)
@@ -105,6 +107,7 @@ async function privateFinanceBody(request, catalog = false, storePeriod = false,
     const bytes = new Uint8Array(length); let offset = 0;
     for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
     const value = JSON.parse(new TextDecoder('utf-8', {fatal: true}).decode(bytes));
+    if (escrowReleases) return projectEscrowReleaseRequest(value);
     if (reconciliation) return projectReconciliationRequest(value);
     if (historical) return projectHistoricalVariantEvidenceRequest(value);
     if (productIndex) return projectProductIndexRequest(value);
@@ -267,7 +270,7 @@ function safeStatus(value) {
   };
 }
 
-export function createFinanceWorker({adapter, paymentSample, paymentPreview, variantCatalog, storePeriod, businessPeriod, dailyOrders, productionOrders, productIndex, historicalVariantEvidence, reconciliation, fetchImpl, now = () => Date.now()} = {}) {
+export function createFinanceWorker({adapter, paymentSample, paymentPreview, variantCatalog, storePeriod, businessPeriod, dailyOrders, productionOrders, productIndex, historicalVariantEvidence, reconciliation, escrowReleases, fetchImpl, now = () => Date.now()} = {}) {
   return {
     async fetch(request, env) {
       let url;
@@ -279,6 +282,15 @@ export function createFinanceWorker({adapter, paymentSample, paymentPreview, var
       }
       const callback = url.pathname === PREFIX + '/callback';
       if (url.origin !== ORIGIN || url.username || url.password || url.hash) return failure('NOT_FOUND', 404, callback);
+      if(url.pathname===ESCROW_RELEASES_PATH){
+        if(request.method!=='POST')return failure('METHOD_NOT_ALLOWED',405);
+        if(url.search)return failure('INVALID_REQUEST',400);
+        const routerError=await trustedRouter(request,env);if(routerError)return failure(routerError,routerError==='FORBIDDEN'?403:503);
+        if(env?.FINANCE_CONNECTION_ENABLED!=='true'||typeof escrowReleases!=='function'||typeof fetchImpl!=='function'||typeof now!=='function')return failure('CONFIGURATION_PENDING',503);
+        const input=await privateFinanceBody(request,false,false,false,false,false,false,false,true);if(!input)return failure('INVALID_REQUEST',400);
+        try{const frame=projectEscrowReleaseFrame(await escrowReleases(env,{...input,fetchImpl,now}));if(!frame||!escrowReleaseRequestMatches(input,frame))throw Error();return response(frame,200,{json:true});}
+        catch{return response({error:'FINANCE_ESCROW_RELEASES_UNAVAILABLE'},502,{json:true});}
+      }
       if(url.pathname===RECONCILIATION_PATH){
         if(request.method!=='POST')return failure('METHOD_NOT_ALLOWED',405);
         if(url.search)return failure('INVALID_REQUEST',400);

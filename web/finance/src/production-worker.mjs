@@ -8,6 +8,7 @@ import {runFinanceBusinessPeriod} from './business-period.mjs';
 import {runFinanceProductionOrders} from './production-orders.mjs';
 import {runFinanceProductIndex} from './product-index.mjs';
 import {runFinanceHistoricalVariantEvidence} from './historical-variant-evidence.mjs';
+import {runFinanceEscrowReleases} from './escrow-releases.mjs';
 import {runFinanceReturnsReconciliation} from './returns-reconciliation.mjs';
 
 // Deployment entry only. Configuration and FINANCE_CONNECTION_ENABLED='true'
@@ -23,6 +24,7 @@ export default createFinanceWorker({
   productIndex: runFinanceProductIndex,
   historicalVariantEvidence: runFinanceHistoricalVariantEvidence,
   reconciliation: runFinanceReturnsReconciliation,
+  escrowReleases: runFinanceEscrowReleases,
   fetchImpl: request => fetch(request),
   adapter: createFinanceProviderAdapter({fetchImpl: request => fetch(request)}),
 });

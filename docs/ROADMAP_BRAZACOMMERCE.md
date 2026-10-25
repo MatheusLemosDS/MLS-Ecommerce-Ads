@@ -1,6 +1,6 @@
 # Roadmap BrazaCommerce
 
-Atualizado em **25/10/2026 UTC**. Base anterior: `bee63b0`, com
+Atualizado em **25/10/2026 UTC**. Base anterior: `a8636c4`, com
 [resumo financeiro total](RESUMO_FINANCEIRO_TOTAL.md) e
 [integração financeira do Hermes](HERMES_FINANCEIRO.md). O incremento atual traz
 [catálogo salvo e custos por semana/mês](CATALOGO_SALVO_E_CUSTOS_POR_PERIODO.md).
@@ -88,11 +88,16 @@ agora preserva as referências privadas, lê os detalhes em segundo plano e
 compara os valores de ajuste. Isso fornece evidências; não confirma recebimento
 nem libera o lucro estrito por si só.
 
+O [cruzamento de liberações com pedidos](LIBERACOES_E_PEDIDOS.md) acrescenta
+um calendário independente, cópia durável da coorte e parcelas monetárias
+conferidas por pedido. Repetições, unidades incompatíveis e fontes ausentes
+continuam pendentes; liberação da Shopee não comprova depósito bancário.
+
 ## Dependências que bloqueiam decisões comerciais
 
 | Dependência | O que falta obter ou validar | Como comprovar a conclusão |
 | --- | --- | --- |
-| Recebimentos e reembolsos | Detalhes de devoluções e três valores de ajuste agora têm captura e auditoria automáticas. Ainda faltam validar liberações efetivas e recebimentos, com datas e revisões | Reconciliação com uma referência financeira da Shopee do mesmo escopo, explicando cada diferença e sem contar o mesmo ajuste duas vezes. |
+| Recebimentos e reembolsos | Detalhes de devoluções e três valores de ajuste agora têm captura e auditoria automáticas. O cruzamento de liberações agora registra cobertura, vínculos e compatibilidade monetária. Ainda faltam comprovar os recebimentos e resolver valores sem correspondência ou identidade única | Reconciliação com uma referência financeira da Shopee do mesmo escopo, explicando cada diferença e sem contar o mesmo ajuste duas vezes. |
 | Custos e despesas | Cobertura das unidades, vigência dos custos e despesas externas completas | Revisões identificáveis e resultado bloqueado quando faltar custo, despesa ou classificação de recarga. |
 | Estoque | Quantidade vendável por produto/variação, reservas, disponibilidade e atualização | Contrato oficial validado com exemplos reais; informação vencida ou ausente impede propor aumento de exposição. |
 | Campanhas e atribuição | IDs de campanha/produto/variação, gasto, conversões, janela e fuso da atribuição | Totais reconciliados com a conta, distinção entre atribuição direta/ampla e estimativas explicitadas onde não houver vínculo comprovável. |
