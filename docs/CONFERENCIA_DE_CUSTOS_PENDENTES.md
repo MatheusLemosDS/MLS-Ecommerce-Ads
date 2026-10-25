@@ -133,6 +133,41 @@ Mantém explícitas as unidades sem custo, situações de pedido, devoluções e
 das fontes. Se qualquer entrada monetária faltar, o subtotal fica indisponível.
 Uma leitura de custos não atualiza artificialmente o horário financeiro.
 
+## Alternativas de nome e consenso de custo
+
+O opt-in `evidence=history-v2`, nas mesmas rotas GET e recuperação POST,
+retorna `business_cost_diagnostics_evidence_v2`. Preserva a versão anterior e
+acrescenta as listas completas e limitadas de nomes observados, a resolução
+semântica e o acompanhamento local da coleta. A cópia do diagnóstico inclui
+essas evidências; não contém números de pedidos, tokens, leases privados ou
+credenciais.
+
+Uma diferença de caixa, acento ou cor no rótulo não precisa bloquear um custo
+se **todas** as combinações observadas comprovarem a mesma composição exata.
+Os nomes originais e a flag de conflito continuam guardados. A resolução não
+cria um alias entre IDs diferentes nem troca o tamanho de uma venda.
+
+Quando as composições válidas diferem, o custo só é liberado se todas tiverem
+exatamente o mesmo valor pelas referências atuais. Por exemplo, P/M/G/GG podem
+ter custo equivalente sem que se escolha um tamanho para o modelo antigo.
+Três unidades recebem três custos unitários; as alternativas não são somadas.
+Se alguma alternativa tiver custo diferente, estiver incompleta ou for inválida,
+o valor permanece pendente. Uma edição futura dos custos pode revogar a
+igualdade e exigir nova conferência. Regras atuais, custos e vínculos manuais
+mantêm prioridade. A equivalência monetária não inventa composição para produção.
+
+Um conjunto de nomes alterado durante nova varredura precisa concluir essa
+varredura antes de receber aprovação. O diagnóstico anterior permanece
+conservador para abas abertas, e os nomes conflitantes nunca são apagados apenas
+para liberar o cálculo.
+
+O bloco de acompanhamento mostra a configuração planejada separada das
+execuções locais registradas: próxima tentativa, estado, horários da coorte e
+últimas oito execuções financeiras. Esses registros não equivalem a uma consulta
+à configuração externa de agendamento. Uma coorte iniciada antes da publicação
+pode terminar antiga durante a transição; a retomada seguinte conserva os
+horários originais e inicia a leitura fresca, sem renovar timestamps por recálculo.
+
 ## Uma conferência por mês
 
 Na Visão geral, abra as pendências e use **Conferir pendências do cálculo**.

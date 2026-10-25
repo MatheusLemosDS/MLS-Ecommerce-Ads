@@ -46,7 +46,7 @@ test('one page per call persists its opaque cursor without exposing it in the ow
 });
 
 test('conflicting exact names and missing names never become inferred cost evidence',async()=>{
- const f=await fixture();await f.sync();f.setSource(input=>page(input,Math.floor(f.now()/1000),[variant('1','Camiseta Outro Tema','G')]));
+ const f=await fixture();await f.sync();f.setSource(input=>page(input,Math.floor(f.now()/1000),[variant('1','Camiseta Outro Tema','G1')]));
  const state=await f.sync();assert.equal(state.scan.complete,true);assert.equal(state.products[0].variants[0].reason,'CONFLICT');assert.equal((await f.reference()).compositions.length,0);
  const g=await fixture();g.setSource(input=>{const row=variant();row.item_names=[];row.missing_item_name_lines=1;return page(input,Math.floor(g.now()/1000),[row]);});await g.sync();await g.sync();assert.equal((await g.read()).products[0].variants[0].reason,'NAMES_MISSING');assert.deepEqual((await g.reference()).compositions,[]);
 });
@@ -75,7 +75,7 @@ test('a repeated cursor is rejected rather than importing the page twice or cert
 
 test('the next local day starts a new bounded scan while a new conflict revokes previously approved evidence',async()=>{
  const f=await fixture();await f.sync();await f.sync();assert.equal((await f.reference()).compositions.length,1);
- f.clock.time+=86400000;f.setSource(input=>page(input,Math.floor(f.now()/1000),[variant('1','Camiseta Outra','G')]));const state=await f.sync();assert.equal(state.scan.complete,false);assert.equal(state.scan.end_date,'2026-10-26');assert.equal(state.scan.pages_read,1);assert.equal((await f.reference()).compositions.length,0);
+ f.clock.time+=86400000;f.setSource(input=>page(input,Math.floor(f.now()/1000),[variant('1','Camiseta Outra','G1')]));const state=await f.sync();assert.equal(state.scan.complete,false);assert.equal(state.scan.end_date,'2026-10-26');assert.equal(state.scan.pages_read,1);assert.equal((await f.reference()).compositions.length,0);
 });
 
 test('fresh complete scans coalesce repeated recovery while a pending model can be discovered after the fifteen-minute TTL',async()=>{

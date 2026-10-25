@@ -40,14 +40,16 @@ function checkedObservation(row,stamp){
  if(!row||!id(row.item_id)||!id(row.model_id,true)||![0,1].includes(row.approved)||!integer(row.first_checked_at,1,stamp+60)||!integer(row.last_checked_at,row.first_checked_at,stamp+60)||typeof row.payload!=='string'||encoder.encode(row.payload).byteLength>8192)fail('HISTORICAL_COST_EVIDENCE_STORAGE_INVALID');
  return {...row,names:namesPayload(row.payload)};
 }
-const normalize=value=>value.normalize('NFKD').replace(/\p{M}/gu,'').toUpperCase().replace(/[^A-Z0-9]+/g,' ').trim();
-const adultSizes=new Set(['P','M','G','GG','G1','G2','G3']),childSizes=new Set(['2','4','6','8','10','12','14','16']);
-
 // Exact, narrow interpretation. A printed theme, a similar title or a lone
 // numeric size never selects a garment family or supplies a second kit piece.
 export function deriveHistoricalCostComposition(itemName,modelName){
+ const text=(value,max)=>typeof value==='string'&&value.trim().length>0&&new TextEncoder().encode(value).byteLength<=max&&!/[\u0000-\u001f\u007f-\u009f]/.test(value);
+ const normalize=value=>value.normalize('NFKD').replace(/\p{M}/gu,'').toUpperCase().replace(/[^A-Z0-9]+/g,' ').trim(),adultSizes=new Set(['P','M','G','GG','G1','G2','G3']),childSizes=new Set(['2','4','6','8','10','12','14','16']);
  if(!text(itemName,1024)||!text(modelName,512))return null;
  const title=normalize(itemName),model=normalize(modelName),words=new Set(title.split(' ')),labels=model.split(' '),sizes=labels.filter(word=>adultSizes.has(word)),numbers=labels.filter(word=>/^\d+$/.test(word));
+ // A split plus-size label must never fall back to regular G. Without a
+ // structured size axis, G + a separate digit remains ambiguous evidence.
+ if(/\bG\s+[123]\b/.test(model))return null;
  const shirt=['CAMISETA','CAMISETAS'].some(word=>words.has(word)),forbidden=['CALCA','CALCAS','BAGGY','SHORT','SHORTS','BERMUDA','BERMUDAS','MOLETOM','MOLETONS','VESTIDO','BODY','REGATA','PET','PETS','CACHORRO','GATO','CANINO','FELINO','BONECA','BONECAS','PACK','PACOTE','LOTE','TRIO','FAMILIA'];
  if(!shirt||forbidden.some(word=>words.has(word)||labels.includes(word)))return null;
  const child=['INFANTIL','INFANTIS','KIDS','CRIANCA','CRIANCAS','INFANTO'].some(word=>words.has(word)),kit=['KIT','KITS','COMBO','COMBOS','CONJUNTO','CONJUNTOS','CASAL','CASAIS','DUPLA','PAR'].some(word=>words.has(word));
@@ -70,9 +72,22 @@ export function deriveHistoricalCostComposition(itemName,modelName){
  if(sizes.length!==1||numbers.some(number=>childSizes.has(number))||/\b(?:2|3|4|5|6|7|8|9)\s+(?:CAMISETAS?|PECAS?|UNIDADES?)\b/.test(title))return null;
  return {kind:'ADULT_SINGLE',...empty,size:sizes[0]};
 }
+// Preserve every raw observation. Different spellings are safe only when all
+// observed title/label combinations prove the exact same garment composition.
+// Multiple supported compositions are candidates, never a chosen size/price.
+export function deriveHistoricalCompositionConsensus(names,{approved=true}={}){
+ const blocked=reason=>({kind:'CONFLICT',compositions:[],combinations:0,reason});
+ if(names===null)return blocked('NO_OBSERVATION');
+ if(!approved)return blocked('UNAPPROVED_SCAN');
+ if(!exact(names,['item_names','model_names','missing_item_name','missing_model_name','conflict','overflow'])||!array(names.item_names,5)||!array(names.model_names,5)||!names.item_names.every(row=>text(row,1024))||!names.model_names.every(row=>text(row,512))||!['missing_item_name','missing_model_name','conflict','overflow'].every(key=>typeof names[key]==='boolean')||names.overflow||names.missing_item_name||names.missing_model_name||!names.item_names.length||!names.model_names.length||new Set(names.item_names).size!==names.item_names.length||new Set(names.model_names).size!==names.model_names.length||names.conflict&&names.item_names.length===1&&names.model_names.length===1)return blocked('INCOMPLETE_METADATA');
+ const found=new Map(),combinations=names.item_names.length*names.model_names.length;
+ for(const title of names.item_names)for(const model of names.model_names){const composition=deriveHistoricalCostComposition(title,model);if(!composition)return {...blocked('UNSUPPORTED_ALTERNATIVE'),combinations};found.set(JSON.stringify(composition),composition);}
+ const compositions=[...found.values()].sort((a,b)=>JSON.stringify(a).localeCompare(JSON.stringify(b)));
+ if(new Set(compositions.map(row=>row.kind)).size!==1)return {...blocked('UNSUPPORTED_ALTERNATIVE'),combinations};
+ return {kind:compositions.length===1?'EXACT_COMPOSITION':'COST_CANDIDATES',compositions,combinations,reason:compositions.length>1?'DIFFERENT_COMPOSITIONS':combinations===1?'EXACT_NAMES':'SEMANTIC_COMPOSITION_CONSENSUS'};
+}
 function observationComposition(row){
- const names=row.names;if(row.approved!==1||names.conflict||names.overflow||names.missing_item_name||names.missing_model_name||names.item_names.length!==1||names.model_names.length!==1)return null;
- const composition=deriveHistoricalCostComposition(names.item_names[0],names.model_names[0]);
+ const resolution=deriveHistoricalCompositionConsensus(row.names,{approved:row.approved===1}),composition=resolution.kind==='EXACT_COMPOSITION'?resolution.compositions[0]:null;
  return composition?{item_id:row.item_id,model_id:row.model_id,...composition,provenance:'HISTORICAL_ORDER_EVIDENCE',checked_at:row.last_checked_at}:null;
 }
 export function historicalCostEvidenceSnapshotQueries(db,itemIds){
@@ -81,9 +96,9 @@ export function historicalCostEvidenceSnapshotQueries(db,itemIds){
  return queries;
 }
 export function historicalCostEvidenceFromSnapshot(snapshot,{now=()=>Date.now()}={}){
- const stamp=epoch(now),revision=snapshot?.[0]?.results?.[0]?.historical_cost_evidence_revision;if(!integer(revision,1,2147483646))fail('HISTORICAL_COST_EVIDENCE_STORAGE_INVALID');const seen=new Set(),compositions=[];
- for(const raw of snapshot.slice(1).flatMap(row=>row.results)){const row=checkedObservation(raw,stamp),key=row.item_id+':'+row.model_id;if(seen.has(key))fail('HISTORICAL_COST_EVIDENCE_STORAGE_INVALID');seen.add(key);const composition=observationComposition(row);if(composition)compositions.push(composition);}
- return {revision,compositions};
+ const stamp=epoch(now),revision=snapshot?.[0]?.results?.[0]?.historical_cost_evidence_revision;if(!integer(revision,1,2147483646))fail('HISTORICAL_COST_EVIDENCE_STORAGE_INVALID');const seen=new Set(),compositions=[],equivalent_candidates=[];
+ for(const raw of snapshot.slice(1).flatMap(row=>row.results)){const row=checkedObservation(raw,stamp),key=row.item_id+':'+row.model_id;if(seen.has(key))fail('HISTORICAL_COST_EVIDENCE_STORAGE_INVALID');seen.add(key);const resolution=deriveHistoricalCompositionConsensus(row.names,{approved:row.approved===1}),composition=observationComposition(row);if(composition)compositions.push(composition);else if(resolution.kind==='COST_CANDIDATES')equivalent_candidates.push({item_id:row.item_id,model_id:row.model_id,candidates:resolution.compositions,provenance:'HISTORICAL_ORDER_EVIDENCE',checked_at:row.last_checked_at});}
+ return {revision,compositions,equivalent_candidates};
 }
 
 // A diagnostic for an exact financial pair must distinguish "not observed"
@@ -127,7 +142,7 @@ export function historicalCostPairDiagnosticsFromSnapshot(snapshot,{now=()=>Date
  if(typeof month!=='string'||!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)||!integer(total,0,3000)||!Array.isArray(snapshot?.[1]?.results))fail('HISTORICAL_COST_PAIR_DIAGNOSTICS_STORAGE_INVALID');
  const scopes=new Map(snapshot[1].results.map(row=>[row.item_id+':'+row.model_id,row])),pairs=[];
  for(const raw of snapshot[0].results){if(raw.item_id===null&&raw.model_id===null&&total===0)continue;if(!id(raw.item_id)||!id(raw.model_id,true)||raw.historical_cost_pair_month!==month||raw.historical_cost_pair_total!==total)fail('HISTORICAL_COST_PAIR_DIAGNOSTICS_STORAGE_INVALID');
-  const observation=raw.payload===null?null:checkedObservation(raw,stamp),scope=scopes.get(raw.item_id+':'+raw.model_id),composition=observation?observationComposition(observation):null,names=observation?.names,flags={missing_item_name:names?.missing_item_name??false,missing_model_name:names?.missing_model_name??false,conflict:names?.conflict??false,overflow:names?.overflow??false};let scan=null;
+  const observation=raw.payload===null?null:checkedObservation(raw,stamp),scope=scopes.get(raw.item_id+':'+raw.model_id),names=observation?.names,composition=observation&&!names.conflict?observationComposition(observation):null,flags={missing_item_name:names?.missing_item_name??false,missing_model_name:names?.missing_model_name??false,conflict:names?.conflict??false,overflow:names?.overflow??false};let scan=null;
   if(scope){if(!['RUNNING','COMPLETE','RETRY_WAIT','LIMIT_REACHED'].includes(scope.status)||typeof scope.end_date!=='string'||!new RegExp('^'+month+'-(0[1-9]|[12][0-9]|3[01])$').test(scope.end_date)||!integer(scope.window_index,0,3)||!integer(scope.pages_read,0,MAX_PAGES)||!integer(scope.next_run_at,0,9999999999)||scope.lease_until!==null&&!integer(scope.lease_until,1,9999999999)||scope.last_success_at!==null&&!integer(scope.last_success_at,1,stamp+60)||![0,1].includes(scope.observed_pair))fail('HISTORICAL_COST_PAIR_DIAGNOSTICS_STORAGE_INVALID');scan={status:scope.status,start_date:month+'-01',end_date:scope.end_date,window_index:scope.window_index,windows_total:windows(scope.end_date).length,pages_read:scope.pages_read,checked_at:scope.last_success_at,retry_after_seconds:Math.min(1800,Math.max(0,scope.next_run_at-stamp,scope.lease_until===null?0:scope.lease_until-stamp)),running:scope.lease_until!==null&&scope.lease_until>stamp,observed_pair:scope.observed_pair===1};}
   let state,reason;if(flags.conflict||flags.overflow){state='CONFLICT';reason='RECORDED_NAMES_CONFLICT';}else if(flags.missing_item_name||flags.missing_model_name){state='NAME_MISSING';reason='RECORDED_NAMES_MISSING';}else if(composition){state='APPROVED';reason='UNANIMOUS_SUPPORTED_NAMES';}else if(observation?.approved===1){state='COMPOSITION_REJECTED';reason='RECORDED_NAMES_NOT_SUPPORTED';}else if(!scan){state='NO_SCAN';reason='NO_MATCHING_MONTH_SCAN';}else if(!observation&&scan.status==='COMPLETE'&&!scan.observed_pair){state='NOT_FOUND';reason='EXACT_PAIR_NOT_IN_COMPLETED_SCAN';}else{state='SCANNING';reason=scan.status==='COMPLETE'?(scan.observed_pair?'APPROVAL_PENDING':'OBSERVATION_OUTSIDE_COMPLETED_SCAN'):'SCAN_NOT_COMPLETE';}
   pairs.push({item_id:raw.item_id,model_id:raw.model_id,state,reason,approved:composition!==null,provenance:observation?'HISTORICAL_ORDER_EVIDENCE':null,item_name:names?.item_names.length===1?clipped(names.item_names[0],256):null,model_name:names?.model_names.length===1?clipped(names.model_names[0],128):null,name_flags:flags,composition:composition?Object.fromEntries(['kind','size','male_size','female_size','child_size'].map(key=>[key,composition[key]])):null,first_checked_at:observation?.first_checked_at??null,last_checked_at:observation?.last_checked_at??null,scan});
@@ -135,6 +150,58 @@ export function historicalCostPairDiagnosticsFromSnapshot(snapshot,{now=()=>Date
  const result={schema:'historical_cost_pair_diagnostics_v1',month,checked_at:stamp,pairs,truncation:{truncated:pairs.length<total,pairs_total:total,pairs_included:pairs.length}};
  while(encoder.encode(JSON.stringify(result)).byteLength>65536&&result.pairs.length){result.pairs.pop();result.truncation.pairs_included=result.pairs.length;result.truncation.truncated=true;}
  const projected=projectHistoricalCostPairDiagnostics(result);if(!projected)fail('HISTORICAL_COST_PAIR_DIAGNOSTICS_RESULT_INVALID');return projected;
+}
+
+// Version 2 carries complete bounded alternatives. The old diagnostic remains
+// intentionally conservative for clients opened before semantic consensus.
+export function historicalCostPairDiagnosticsEvidenceFromSnapshot(snapshot,{now=()=>Date.now()}={}){
+ const legacy=historicalCostPairDiagnosticsFromSnapshot(snapshot,{now}),stamp=legacy.checked_at,observations=new Map(snapshot[0].results.filter(row=>row.item_id!==null).map(raw=>[raw.item_id+':'+raw.model_id,raw.payload===null?null:checkedObservation(raw,stamp)]));
+ const pairs=legacy.pairs.map(row=>{const observation=observations.get(row.item_id+':'+row.model_id),names=observation?.names,resolution=deriveHistoricalCompositionConsensus(names??null,{approved:observation?.approved===1});
+  const result={...row,item_names:names?[...names.item_names]:[],model_names:names?[...names.model_names]:[],resolution};
+  if(resolution.kind==='EXACT_COMPOSITION')Object.assign(result,{state:'APPROVED',reason:resolution.reason==='SEMANTIC_COMPOSITION_CONSENSUS'?'SEMANTIC_COMPOSITION_CONSENSUS':'UNANIMOUS_SUPPORTED_NAMES',approved:true,composition:resolution.compositions[0]});
+  else if(resolution.kind==='COST_CANDIDATES')Object.assign(result,{state:'COST_CANDIDATES',reason:'DIFFERENT_SUPPORTED_COMPOSITIONS',approved:true,composition:null});
+  return result;
+ });
+ const result={...legacy,schema:'historical_cost_pair_diagnostics_v2',pairs,truncation:{...legacy.truncation}};
+ while(encoder.encode(JSON.stringify(result)).byteLength>65536&&result.pairs.length){result.pairs.pop();result.truncation.pairs_included=result.pairs.length;result.truncation.truncated=true;}
+ const projected=projectHistoricalCostPairDiagnosticsEvidence(result,{deriveComposition:deriveHistoricalCostComposition,projectLegacy:projectHistoricalCostPairDiagnostics});if(!projected)fail('HISTORICAL_COST_PAIR_DIAGNOSTICS_RESULT_INVALID');return projected;
+}
+
+// Standalone: both validators are supplied explicitly by server/browser build.
+// Never trust a claimed candidate/consensus: rederive every observed pairing.
+export function projectHistoricalCostPairDiagnosticsEvidence(value,{deriveComposition,projectLegacy}={}){
+ const plain=row=>row!==null&&typeof row==='object'&&[Object.prototype,null].includes(Object.getPrototypeOf(row)),exact=(row,keys)=>plain(row)&&Reflect.ownKeys(row).length===keys.length&&keys.every(key=>Object.hasOwn(Object.getOwnPropertyDescriptor(row,key)||{},'value'));
+ const array=(rows,max)=>Array.isArray(rows)&&Object.getPrototypeOf(rows)===Array.prototype&&rows.length<=max&&Reflect.ownKeys(rows).length===rows.length+1&&Array.from({length:rows.length},(_,index)=>Object.getOwnPropertyDescriptor(rows,String(index))).every(field=>field&&Object.hasOwn(field,'value'));
+ const string=(row,max)=>typeof row==='string'&&row.trim().length>0&&new TextEncoder().encode(row).byteLength<=max&&!/[\u0000-\u001f\u007f-\u009f]/.test(row),same=(a,b)=>JSON.stringify(a)===JSON.stringify(b),clip=(input,max)=>{let result='';for(const character of input){if(new TextEncoder().encode(result+character).byteLength>max)break;result+=character;}return result;};
+ const composition=row=>{const adult=['P','M','G','GG','G1','G2','G3'];return exact(row,['kind','size','male_size','female_size','child_size'])&&(row.kind==='ADULT_SINGLE'&&adult.includes(row.size)&&row.male_size===null&&row.female_size===null&&row.child_size===null||row.kind==='CHILD_SINGLE'&&['2','4','6','8','10','12','14','16'].includes(row.child_size)&&row.size===null&&row.male_size===null&&row.female_size===null||row.kind==='EXPLICIT_COUPLE_KIT'&&adult.includes(row.male_size)&&adult.includes(row.female_size)&&row.size===null&&row.child_size===null);};
+ const descriptor=row=>Object.fromEntries(['kind','size','male_size','female_size','child_size'].map(key=>[key,row[key]]));
+ try{
+  if(typeof deriveComposition!=='function'||typeof projectLegacy!=='function'||!exact(value,['schema','month','checked_at','pairs','truncation'])||value.schema!=='historical_cost_pair_diagnostics_v2'||!array(value.pairs,90))return null;
+  const legacyPairs=[];
+  for(const row of value.pairs){
+   const oldKeys=['item_id','model_id','state','reason','approved','provenance','item_name','model_name','name_flags','composition','first_checked_at','last_checked_at','scan'];
+   if(!exact(row,[...oldKeys,'item_names','model_names','resolution'])||!array(row.item_names,5)||!array(row.model_names,5)||!row.item_names.every(name=>string(name,1024))||!row.model_names.every(name=>string(name,512))||new Set(row.item_names).size!==row.item_names.length||new Set(row.model_names).size!==row.model_names.length||!exact(row.name_flags,['missing_item_name','missing_model_name','conflict','overflow'])||!Object.values(row.name_flags).every(flag=>typeof flag==='boolean'))return null;
+   const n=row.name_flags,r=row.resolution;
+   if(!exact(r,['kind','compositions','combinations','reason'])||!['EXACT_COMPOSITION','COST_CANDIDATES','CONFLICT'].includes(r.kind)||!array(r.compositions,25)||!r.compositions.every(composition)||!Number.isSafeInteger(r.combinations)||r.combinations<0||r.combinations>25||!['EXACT_NAMES','SEMANTIC_COMPOSITION_CONSENSUS','DIFFERENT_COMPOSITIONS','UNSUPPORTED_ALTERNATIVE','INCOMPLETE_METADATA','UNAPPROVED_SCAN','NO_OBSERVATION'].includes(r.reason))return null;
+   if(row.item_name!==(row.item_names.length===1?clip(row.item_names[0],256):null)||row.model_name!==(row.model_names.length===1?clip(row.model_names[0],128):null)||!n.conflict&&(row.item_names.length>1||row.model_names.length>1||n.overflow))return null;
+   const incomplete=n.overflow||n.missing_item_name||n.missing_model_name||!row.item_names.length||!row.model_names.length||n.conflict&&row.item_names.length===1&&row.model_names.length===1,combinations=row.item_names.length*row.model_names.length,found=new Map();let invalid=false;
+   if(!incomplete)for(const title of row.item_names)for(const label of row.model_names){const parsed=deriveComposition(title,label);if(!composition(parsed)){invalid=true;continue;}const candidate=descriptor(parsed);found.set(JSON.stringify(candidate),candidate);}
+   const candidates=[...found.values()].sort((a,b)=>JSON.stringify(a).localeCompare(JSON.stringify(b)));if(new Set(candidates.map(candidate=>candidate.kind)).size>1)invalid=true;
+   if(r.kind==='CONFLICT'){
+    if(row.approved||r.compositions.length||!['UNSUPPORTED_ALTERNATIVE','INCOMPLETE_METADATA','UNAPPROVED_SCAN','NO_OBSERVATION'].includes(r.reason))return null;
+    if(r.reason==='NO_OBSERVATION'&&(row.provenance!==null||row.item_names.length||row.model_names.length||r.combinations!==0)||r.reason==='UNAPPROVED_SCAN'&&(row.provenance!=='HISTORICAL_ORDER_EVIDENCE'||r.combinations!==0)||r.reason==='INCOMPLETE_METADATA'&&(!incomplete||r.combinations!==0)||r.reason==='UNSUPPORTED_ALTERNATIVE'&&(incomplete||!invalid||r.combinations!==combinations))return null;
+   }else{
+    if(incomplete||invalid||!candidates.length||!row.approved||row.provenance!=='HISTORICAL_ORDER_EVIDENCE'||r.combinations!==combinations||!same(r.compositions,candidates))return null;
+    if(r.kind==='EXACT_COMPOSITION'&&(candidates.length!==1||row.state!=='APPROVED'||!same(row.composition,candidates[0])||r.reason!==(combinations===1?'EXACT_NAMES':'SEMANTIC_COMPOSITION_CONSENSUS')||row.reason!==(combinations===1?'UNANIMOUS_SUPPORTED_NAMES':'SEMANTIC_COMPOSITION_CONSENSUS')))return null;
+    if(r.kind==='COST_CANDIDATES'&&(candidates.length<2||row.state!=='COST_CANDIDATES'||row.reason!=='DIFFERENT_SUPPORTED_COMPOSITIONS'||row.composition!==null||r.reason!=='DIFFERENT_COMPOSITIONS'))return null;
+   }
+   const legacy=Object.fromEntries(oldKeys.map(key=>[key,row[key]]));
+   if(row.state==='COST_CANDIDATES'||row.state==='APPROVED'&&n.conflict)Object.assign(legacy,{state:'CONFLICT',reason:'RECORDED_NAMES_CONFLICT',approved:false,composition:null});
+   legacyPairs.push(legacy);
+  }
+  if(!projectLegacy({...value,schema:'historical_cost_pair_diagnostics_v1',pairs:legacyPairs})||new TextEncoder().encode(JSON.stringify(value)).byteLength>65536)return null;
+  return JSON.parse(JSON.stringify(value));
+ }catch{return null;}
 }
 
 function checkedRun(row){
@@ -189,10 +256,10 @@ export async function syncHistoricalCostEvidence(env,input,getPage,{now=()=>Date
   // Two independently scoped scans can see the same model. A global evidence
   // CAS prevents one of them from erasing a newly observed conflicting name.
   writes.push(db.prepare('DELETE FROM historical_cost_evidence_members WHERE run_id NOT IN (SELECT run_id FROM historical_cost_evidence_runs) AND EXISTS(SELECT 1 FROM historical_cost_evidence_runs WHERE '+publishedGuard+')').bind(...publishedArgs()));writes.push(db.prepare('DELETE FROM historical_cost_evidence_cursors WHERE run_id NOT IN (SELECT run_id FROM historical_cost_evidence_runs) AND EXISTS(SELECT 1 FROM historical_cost_evidence_runs WHERE '+publishedGuard+')').bind(...publishedArgs()));
-  const records=observations.map(observation=>{const previous=old.get(observation.item_id+':'+observation.model_id);return {item_id:observation.item_id,model_id:observation.model_id,payload:JSON.stringify(mergedNames(previous?.payload,observation)),approved:previous?.approved??0,first_checked_at:previous?.first_checked_at??frame.checked_at,last_checked_at:frame.checked_at};});
+  const records=observations.map(observation=>{const previous=old.get(observation.item_id+':'+observation.model_id),payload=JSON.stringify(mergedNames(previous?.payload,observation));return {item_id:observation.item_id,model_id:observation.model_id,payload,approved:previous?.payload===payload?previous.approved:0,first_checked_at:previous?.first_checked_at??frame.checked_at,last_checked_at:frame.checked_at};});
   // One bounded JSON statement per page, rather than two queries per model.
   // This also keeps large accepted provider pages within the D1 query budget.
-  if(records.length){const payload=JSON.stringify(records);writes.push(db.prepare("INSERT INTO historical_cost_evidence_names(item_id,model_id,payload,approved,first_checked_at,last_checked_at) SELECT json_extract(value,'$.item_id'),json_extract(value,'$.model_id'),json_extract(value,'$.payload'),json_extract(value,'$.approved'),json_extract(value,'$.first_checked_at'),json_extract(value,'$.last_checked_at') FROM json_each(?) WHERE EXISTS(SELECT 1 FROM historical_cost_evidence_runs WHERE "+publishedGuard+") ON CONFLICT(item_id,model_id) DO UPDATE SET payload=excluded.payload,last_checked_at=MAX(historical_cost_evidence_names.last_checked_at,excluded.last_checked_at)").bind(payload,...publishedArgs()));writes.push(db.prepare("INSERT OR IGNORE INTO historical_cost_evidence_members(run_id,item_id,model_id) SELECT ?,json_extract(value,'$.item_id'),json_extract(value,'$.model_id') FROM json_each(?) WHERE EXISTS(SELECT 1 FROM historical_cost_evidence_runs WHERE "+publishedGuard+")").bind(runId,payload,...publishedArgs()));}
+  if(records.length){const payload=JSON.stringify(records);writes.push(db.prepare("INSERT INTO historical_cost_evidence_names(item_id,model_id,payload,approved,first_checked_at,last_checked_at) SELECT json_extract(value,'$.item_id'),json_extract(value,'$.model_id'),json_extract(value,'$.payload'),json_extract(value,'$.approved'),json_extract(value,'$.first_checked_at'),json_extract(value,'$.last_checked_at') FROM json_each(?) WHERE EXISTS(SELECT 1 FROM historical_cost_evidence_runs WHERE "+publishedGuard+") ON CONFLICT(item_id,model_id) DO UPDATE SET payload=excluded.payload,approved=excluded.approved,last_checked_at=MAX(historical_cost_evidence_names.last_checked_at,excluded.last_checked_at)").bind(payload,...publishedArgs()));writes.push(db.prepare("INSERT OR IGNORE INTO historical_cost_evidence_members(run_id,item_id,model_id) SELECT ?,json_extract(value,'$.item_id'),json_extract(value,'$.model_id') FROM json_each(?) WHERE EXISTS(SELECT 1 FROM historical_cost_evidence_runs WHERE "+publishedGuard+")").bind(runId,payload,...publishedArgs()));}
   writes.push(db.prepare('INSERT INTO historical_cost_evidence_cursors(run_id,window_index,cursor_hash) SELECT ?,?,? WHERE EXISTS(SELECT 1 FROM historical_cost_evidence_runs WHERE '+publishedGuard+')').bind(runId,state.window_index,cursorHash,...publishedArgs()));
   if(complete)writes.push(db.prepare('UPDATE historical_cost_evidence_names SET approved=1 WHERE approved=0 AND EXISTS(SELECT 1 FROM historical_cost_evidence_members m WHERE m.run_id=? AND m.item_id=historical_cost_evidence_names.item_id AND m.model_id=historical_cost_evidence_names.model_id) AND EXISTS(SELECT 1 FROM historical_cost_evidence_runs WHERE '+publishedGuard+')').bind(runId,...publishedArgs()));
   const classificationTable=await db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='catalog_classification_state'").first();

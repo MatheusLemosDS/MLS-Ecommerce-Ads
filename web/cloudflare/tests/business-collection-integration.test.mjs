@@ -27,12 +27,17 @@ function verifyMonth(frame,{returns=false}={}){
  assert.deepEqual(frame.result.pending,returns?['RETURNS_NOT_RECONCILED']:[]);
 }
 
+async function largeMonthFixture(t){
+ const f=await fixture({allPaid:true,windowCounts:[160,134],paymentDelayMs:0});t.after(()=>{f.env.ADMIN_DB.db.close();f.financeEnv.FINANCE_DB.db.close();});
+ f.state.listHook=({base,offset,size,clock})=>{clock.time+=1000;const total=base===0?160:134,count=Math.min(size,total-offset),start=base===0?0:160,more=offset+count<total;return f.provider({order_list:Array.from({length:count},(_,index)=>({order_sn:f.serial(start+offset+index)})),more,next_cursor:more?String(offset+count):''});};
+ f.state.detailHook=({ids,clock})=>{clock.time+=1000;return f.provider({order_list:ids.map(index=>({order_sn:f.serial(index),order_status:index<242?'COMPLETED':'CANCELLED',currency:'BRL',create_time:Date.UTC(2026,9,index<160?10:20,12)/1000,item_list:[{item_id:f.item(index%120),model_id:0,model_quantity_purchased:1}]}))});};
+ f.state.paymentHook=({index,clock})=>{clock.time+=200;return f.provider({order_sn:f.serial(index),return_order_sn_list:[],order_income:{order_sn:f.serial(index),original_cost_of_goods_sold:65.25,escrow_amount:47.51,ads_escrow_top_up_fee_or_technical_support_fee:0,items:[{item_id:f.item(index%120),model_id:0,line_item_id:index+1,quantity_purchased:1}]}});};
+ return f;
+}
+
 test('294 orders and 242 paid orders finish within the real freshness window on minute continuations without exceeding request budgets',async t=>{
  for(const cadence of [300,60]){
-  const f=await fixture({allPaid:true,windowCounts:[160,134],paymentDelayMs:0});t.after(()=>{f.env.ADMIN_DB.db.close();f.financeEnv.FINANCE_DB.db.close();});
-  f.state.listHook=({base,offset,size,clock})=>{clock.time+=1000;const total=base===0?160:134,count=Math.min(size,total-offset),start=base===0?0:160,more=offset+count<total;return f.provider({order_list:Array.from({length:count},(_,index)=>({order_sn:f.serial(start+offset+index)})),more,next_cursor:more?String(offset+count):''});};
-  f.state.detailHook=({ids,clock})=>{clock.time+=1000;return f.provider({order_list:ids.map(index=>({order_sn:f.serial(index),order_status:index<242?'COMPLETED':'CANCELLED',currency:'BRL',create_time:Date.UTC(2026,9,index<160?10:20,12)/1000,item_list:[{item_id:f.item(index%120),model_id:0,model_quantity_purchased:1}]}))});};
-  f.state.paymentHook=({index,clock})=>{clock.time+=200;return f.provider({order_sn:f.serial(index),return_order_sn_list:[],order_income:{order_sn:f.serial(index),original_cost_of_goods_sold:65.25,escrow_amount:47.51,ads_escrow_top_up_fee_or_technical_support_fee:0,items:[{item_id:f.item(index%120),model_id:0,line_item_id:index+1,quantity_purchased:1}]}});};
+  const f=await largeMonthFixture(t);
   const started=f.now(),steps=[];let result;
   for(let tick=0;tick<5;tick++){
    // Fire on the actual cron boundary, not a minute after the previous call
@@ -45,6 +50,26 @@ test('294 orders and 242 paid orders finish within the real freshness window on 
   if(cadence===300){assert.ok(age>900);assert.ok(frame.result.pending.includes('FINANCIAL_SOURCE_STALE'));assert.equal(frame.result.net_estimate_cents,null);assert.equal(summary.state,'PROVISIONAL');assert.equal(result.status,'PARTIAL');assert.equal(result.state.last_success_at,null);assert.equal(result.state.next_run_at,Math.max(Math.floor(f.now()/1000),started/1000+4*cadence+60));}
   else{assert.ok(age<=900);assert.deepEqual(frame.result.pending,[]);assert.equal(frame.result.net_estimate_cents,752123);assert.equal(summary.state,'READY');assert.equal(result.status,'COMPLETE');assert.equal(result.state.last_success_at,Math.floor(f.now()/1000));assert.equal(result.state.next_run_at,Math.floor(f.now()/1000)+300);}
  }
+});
+
+for(const migration of ['legacy-running','cached-historical'])test('minute collection replaces one stale '+migration+' cohort without renewing its original observation times',async t=>{
+ const f=await largeMonthFixture(t),initial=f.now();let oldest;
+ if(migration==='legacy-running'){
+  // An already running cohort survives deployment. Finishing it must not
+  // relabel its first orders with the new scheduler's current timestamp.
+  for(const tick of [0,1,2]){f.clock.time=initial+tick*300000;const result=await runBusinessSync(f.env,f.services,{now:f.now});assert.equal(result.status,'RUNNING');oldest=result.state.summary.source_checked_at.finance_oldest_at;}
+ }else{
+  // A closed historical window may legally be reused near its 900s cache
+  // limit, while the current window still needs several new source pages.
+  let prior=await f.services.getFinanceBusinessPeriod(f.env,{operation:'start',start_date:'2026-10-01',end_date:'2026-10-15'});while(prior.status==='RUNNING')prior=await f.services.getFinanceBusinessPeriod(f.env,{operation:'step',run_id:prior.run_id});assert.equal(prior.pages_read,8);oldest=prior.source_checked_at.oldest_at;
+ }
+ const origin=initial+(migration==='legacy-running'?1080000:850000);let stale=null,fresh=null;
+ for(let tick=0;tick<10;tick++){
+  f.clock.time=origin+tick*60000;f.env.ADMIN_DB.calls=0;const sourceBefore=f.calls.finance.length+f.calls.ads.length,result=await runBusinessSync(f.env,f.services,{now:f.now}),summary=result.state.summary;assert.ok(f.env.ADMIN_DB.calls+f.calls.finance.length+f.calls.ads.length-sourceBefore<=50);assert.equal(result.state.failure_count,0);assert.equal(result.state.last_error,null);
+  if(summary.status==='COMPLETE'&&summary.pending.includes('FINANCIAL_SOURCE_STALE')){assert.equal(stale,null,'the complete stale cohort is replaced once rather than repeated forever');stale=summary;assert.equal(summary.source_checked_at.finance_oldest_at,oldest);assert.equal(summary.net_estimate_cents,null);assert.equal(result.status,'PARTIAL');assert.equal(result.state.last_success_at,null);assert.equal(summary.coverage.orders,294);assert.equal(summary.coverage.payment_covered,242);assert.equal(result.state.next_run_at,Math.floor(origin/1000)+tick*60+60);const frame=await f.invoke('read');assert.equal(buildMonthlyFinancialSummary(frame).state,'PROVISIONAL');assert.equal(buildMonthlyFinancialSummary(frame).balance_cents,752123);}
+  else if(summary.status==='COMPLETE'){fresh=result;break;}
+ }
+ assert.ok(stale,'the old source timestamps remain observable until a real refresh');assert.ok(fresh,'a later minute tick finishes a genuinely new cohort');assert.equal(fresh.status,'COMPLETE');assert.equal(fresh.state.summary.coverage.orders,294);assert.equal(fresh.state.summary.coverage.paid,242);assert.equal(fresh.state.summary.coverage.cancelled,52);assert.equal(fresh.state.summary.net_estimate_cents,752123);assert.ok(fresh.state.summary.source_checked_at.finance_oldest_at>oldest);assert.ok(fresh.state.summary.checked_at-fresh.state.summary.source_checked_at.finance_oldest_at<=900);assert.equal(f.calls.payment.length,484,'each full cohort is read once without multiplying its quantities');assert.equal(new Set(f.calls.payment).size,242);const frame=await f.invoke('read');assert.equal(frame.production_cost_cents,384780);assert.equal(frame.sales_cents,1579050);assert.equal(frame.result.net_estimate_cents,752123);assert.deepEqual(frame.result.pending,[]);for(const budget of f.calls.financeBudgets)assert.ok(budget.d1+budget.fetches<=50,JSON.stringify(budget));
 });
 
 test('120 real collector orders finish across two cron ticks with exact costs, monthly DAS, spend and cancellation exclusions',async()=>{
