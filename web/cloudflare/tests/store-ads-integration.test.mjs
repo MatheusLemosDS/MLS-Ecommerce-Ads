@@ -147,9 +147,13 @@ test('missing, stale, partial or unavailable period Ads never become zero or per
  }
 });
 
-test('expired automatic provenance remains a separate pending reason without mutating declarations or refetching Ads',async()=>{
+test('expired automatic provenance across Brasilia midnight remains pending without mutating declarations or refetching Ads',async t=>{
+ // Moving a source observation across midnight also changes whether its final
+ // date was still partial. Keep the stale fixture internally coherent.
+ t.mock.timers.enable({apis:['Date'],now:Date.UTC(2026,9,25,3,30)});
  const auth=await login(),source=services();await call(auth,'/api/admin/finance/ads-period',{run_id:run},source);assert.equal((await call(auth,'/api/admin/finance/store-adjustments',declaration(),source)).status,200);
  const record=auth.env.ADMIN_DB.db.prepare('SELECT payload FROM store_period_ads_cache WHERE run_id=?').get(run);const report=JSON.parse(record.payload);report.fetched_at=now()-3600;
+ report.day_partial=report.end_date===localDate(report.fetched_at);
  assert.ok(projectAdsPeriod(report));
  auth.env.ADMIN_DB.db.prepare('UPDATE store_period_ads_cache SET payload=?,updated_at=? WHERE run_id=?').run(JSON.stringify(report),now()-3600,run);
  const before=state(auth),response=await call(auth,'/api/admin/finance/store-period',{operation:'read',run_id:run},source);assert.equal(response.status,200);
