@@ -1,0 +1,17 @@
+# Coleta mensal e retomada
+
+O estado observado em produção mostrava 100 pedidos em 20 páginas, nenhuma janela concluída e uma leitura financeira com aproximadamente 38 minutos. O coletor confundia `FINANCIAL_SOURCE_STALE`, durante `RUNNING`, com falha da fonte. Isso elevou o contador de falhas a quatro e adiou a próxima tentativa por 30 minutos.
+
+A antiguidade continua bloqueando o resultado financeiro, mas não aplica o intervalo de falha enquanto a coleta avança. Uma leitura em andamento volta no intervalo normal de cinco minutos. Falha real da fonte continua sujeita ao intervalo progressivo. O código também reconhece o estado antigo afetado e pode retomar antes do horário adiado: exige que o resumo seja da própria tentativa, esteja em andamento e não indique falha da fonte.
+
+Cada página financeira passa de cinco para até 20 pedidos, com até quatro consultas de pagamento simultâneas. Os limites de 1.000 pedidos por janela e 200 páginas permanecem. A última página respeita o espaço restante, sem cortar pedidos de uma resposta nem avançar um cursor parcialmente processado. Páginas, cursores e valores já persistidos são preservados na retomada.
+
+Os contratos aceitam as leituras antigas de cinco pedidos por página. As novas leituras informam a capacidade da página; o resumo mensal agrega essa capacidade para validar a cobertura sem confundir páginas maiores com dados inválidos. App, Auth e Finance precisam receber a mesma atualização do contrato.
+
+A fila de identificação dos produtos continua sendo alimentada durante a coleta. Nesse caminho interno, o enfileiramento não carrega a lista de produtos e variações que será descartada pelo chamador. Isso reduz consultas ao banco por etapa, preservando as respostas completas das rotas de catálogo.
+
+Uma falha na interface mantém os valores parciais conhecidos, encerra o indicador de consulta ativa e permite retomar. O diagnóstico usa apenas etapa, código seguro e status HTTP. Respostas da Shopee, códigos de autorização, dados dos pedidos, URLs privadas e tokens não são exibidos.
+
+Concluir a coleta não equivale a conciliar o lucro. Cancelamentos e pedidos não pagos ficam excluídos das vendas consideradas. Devoluções, situações não reconhecidas, pagamentos ausentes e custos incompletos continuam impedindo um resultado final. O DAS-MEI mensal é descontado uma vez; a antiga estimativa de 2% por nota não representa a política tributária atual.
+
+Os testes locais usam fontes simuladas e banco SQLite compatível com a interface D1. Verificam retomada, concorrência, contratos antigos, cobertura e cálculos; não comprovam o término da coleta na conta real. O endpoint autenticado `/api/admin/finance/sync-state` permite conferir esse progresso depois da publicação.

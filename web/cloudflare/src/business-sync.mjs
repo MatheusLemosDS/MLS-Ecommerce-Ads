@@ -34,9 +34,11 @@ function syncStoredSummary(raw){
  try{
   if(typeof raw!=='string'||new TextEncoder().encode(raw).byteLength>16384)throw Error();
   const value=JSON.parse(raw),coverageKeys=['orders','paid','completed','ongoing','cancelled','cancel_pending','unpaid','other','unknown','payment_covered','payment_missing','returns','returns_unknown'];
+  const progress=value?.progress,capacityDescriptor=Object.getOwnPropertyDescriptor(progress||{},'order_capacity'),capacity=capacityDescriptor?capacityDescriptor.value:progress?.pages_read*5;
+  if(!syncExact(progress,['windows_total','windows_complete','pages_read',...(capacityDescriptor?['order_capacity']:[])])||!syncInteger(progress.pages_read,0,600)||!syncInteger(capacity,progress.pages_read*5,Math.min(12000,progress.pages_read*20))||(capacity-progress.pages_read*5)%15!==0||!syncInteger(value?.coverage?.orders,0,capacity))throw Error();
   const keys=['schema','month','start_date','end_date','status','checked_at','source_checked_at','progress','coverage','pending','bindings_revision','costs_revision','expenses_revision','tax_policy_revision','ads_status','ads_covered_days','ads_total_days','net_estimate_cents','net_profit_cents','basis'];
   const pendingCodes=['COLLECTING','PERIOD_LIMIT_REACHED','SOURCE_UNAVAILABLE','STATUS_REVIEW_REQUIRED','PAYMENT_INCOMPLETE','RETURNS_NOT_RECONCILED','PRODUCTION_COST_INCOMPLETE','INVOICE_TAX_UNAVAILABLE','ADS_UNAVAILABLE','EXTERNAL_EXPENSES_REQUIRED','RECHARGE_TREATMENT_REQUIRED','ADJUSTMENT_UNAVAILABLE','ARITHMETIC_UNSAFE','TAX_POLICY_REQUIRED','FINANCIAL_SOURCE_STALE'];
-  if(!syncExact(value,keys)||value.schema!=='business_sync_summary_v1'||!/^\d{4}-(0[1-9]|1[0-2])$/.test(value.month)||value.start_date!==value.month+'-01'||typeof value.end_date!=='string'||!new RegExp('^'+value.month+'-(0[1-9]|[12][0-9]|3[01])$').test(value.end_date)||!['RUNNING','COMPLETE','LIMIT_REACHED'].includes(value.status)||!syncInteger(value.checked_at,1,9999999999)||!syncExact(value.source_checked_at,['finance_oldest_at','finance_latest_at','ads_at'])||!Object.values(value.source_checked_at).every(at=>at===null||syncInteger(at,1,value.checked_at))||!syncExact(value.progress,['windows_total','windows_complete','pages_read'])||!syncInteger(value.progress.windows_total,1,3)||!syncInteger(value.progress.windows_complete,0,value.progress.windows_total)||!syncInteger(value.progress.pages_read,0,600)||!syncExact(value.coverage,coverageKeys)||!coverageKeys.every(key=>syncInteger(value.coverage[key],0,3000))||!Array.isArray(value.pending)||value.pending.length>pendingCodes.length||new Set(value.pending).size!==value.pending.length||!value.pending.every(code=>pendingCodes.includes(code))||!syncInteger(value.bindings_revision,1,2147483647)||!syncInteger(value.costs_revision,1,2147483647)||!syncInteger(value.expenses_revision,0,2147483646)||value.tax_policy_revision!==null&&!syncInteger(value.tax_policy_revision,0,2147483647)||![null,'AVAILABLE','PARTIAL','UNAVAILABLE'].includes(value.ads_status)||!syncInteger(value.ads_covered_days,0,31)||!syncInteger(value.ads_total_days,0,31)||value.ads_covered_days>value.ads_total_days||value.net_estimate_cents!==null&&!syncInteger(value.net_estimate_cents,Number.MIN_SAFE_INTEGER)||value.net_profit_cents!==null||value.basis!=='PAID_ORDER_CREATE_MONTH_AND_CALENDAR_ADS_ESTIMATE'||value.status!=='COMPLETE'&&value.net_estimate_cents!==null||value.pending.length&&value.net_estimate_cents!==null)throw Error();
+  if(!syncExact(value,keys)||value.schema!=='business_sync_summary_v1'||!/^\d{4}-(0[1-9]|1[0-2])$/.test(value.month)||value.start_date!==value.month+'-01'||typeof value.end_date!=='string'||!new RegExp('^'+value.month+'-(0[1-9]|[12][0-9]|3[01])$').test(value.end_date)||!['RUNNING','COMPLETE','LIMIT_REACHED'].includes(value.status)||!syncInteger(value.checked_at,1,9999999999)||!syncExact(value.source_checked_at,['finance_oldest_at','finance_latest_at','ads_at'])||!Object.values(value.source_checked_at).every(at=>at===null||syncInteger(at,1,value.checked_at))||!syncInteger(value.progress.windows_total,1,3)||!syncInteger(value.progress.windows_complete,0,value.progress.windows_total)||!syncExact(value.coverage,coverageKeys)||!coverageKeys.every(key=>syncInteger(value.coverage[key],0,3000))||!Array.isArray(value.pending)||value.pending.length>pendingCodes.length||new Set(value.pending).size!==value.pending.length||!value.pending.every(code=>pendingCodes.includes(code))||!syncInteger(value.bindings_revision,1,2147483647)||!syncInteger(value.costs_revision,1,2147483647)||!syncInteger(value.expenses_revision,0,2147483646)||value.tax_policy_revision!==null&&!syncInteger(value.tax_policy_revision,0,2147483647)||![null,'AVAILABLE','PARTIAL','UNAVAILABLE'].includes(value.ads_status)||!syncInteger(value.ads_covered_days,0,31)||!syncInteger(value.ads_total_days,0,31)||value.ads_covered_days>value.ads_total_days||value.net_estimate_cents!==null&&!syncInteger(value.net_estimate_cents,Number.MIN_SAFE_INTEGER)||value.net_profit_cents!==null||value.basis!=='PAID_ORDER_CREATE_MONTH_AND_CALENDAR_ADS_ESTIMATE'||value.status!=='COMPLETE'&&value.net_estimate_cents!==null||value.pending.length&&value.net_estimate_cents!==null)throw Error();
   return value;
  }catch{syncFail('BUSINESS_SYNC_STATE_INVALID');}
 }
@@ -69,15 +71,19 @@ export async function saveBusinessSyncPolicy(env,input,actor='admin',{now=()=>Da
 export async function runBusinessSync(env,services,{now=()=>Date.now(),maxSteps=4}={}){
  if(typeof now!=='function'||!syncInteger(maxSteps,1,4))syncFail('BUSINESS_SYNC_OPTIONS_INVALID',400);
  const db=await syncSetup(env),startedMs=syncClock(now),started=Math.floor(startedMs/1000),deadline=startedMs+270000,token=crypto.randomUUID(),month=syncMonth(startedMs);
- let {state}=await syncRead(db);const result=(status,finance_steps=0,ads_reads=0)=>({status,finance_steps,ads_reads,state});
+ let {row:initialRow,state}=await syncRead(db);const result=(status,finance_steps=0,ads_reads=0)=>({status,finance_steps,ads_reads,state});
  if(!state.enabled)return result('PAUSED');
  if(state.lease_expires_at!==null&&state.lease_expires_at>started)return result('LEASED');
- if(state.next_run_at>started)return result('NOT_DUE');
- let acquired;try{acquired=await db.prepare("UPDATE business_sync_state SET lease_token=?,lease_expires_at=?,status='RUNNING',month=?,last_attempt_at=? WHERE id=1 AND enabled=1 AND next_run_at<=? AND (lease_token IS NULL OR lease_expires_at<=?)").bind(token,started+300,month,started,started,started).run();}catch{syncFail('BUSINESS_SYNC_STORAGE_UNAVAILABLE');}
+ // Older releases treated stale pages as a provider failure. Resume that
+ // exact failed attempt now, but keep a genuine failure's retry deadline.
+ const recoverStaleBackoff=state.status==='ERROR'&&state.last_error==='BUSINESS_SYNC_COLLECTION_UNAVAILABLE'&&state.summary?.status==='RUNNING'&&state.summary.pending.includes('FINANCIAL_SOURCE_STALE')&&!state.summary.pending.includes('SOURCE_UNAVAILABLE')&&state.last_attempt_at!==null&&state.summary.checked_at>=state.last_attempt_at;
+ if(state.next_run_at>started&&!recoverStaleBackoff)return result('NOT_DUE');
+ let acquired;try{acquired=await db.prepare("UPDATE business_sync_state SET lease_token=?,lease_expires_at=?,status='RUNNING',month=?,last_attempt_at=? WHERE id=1 AND enabled=1 AND (next_run_at<=? OR (?=1 AND status='ERROR' AND last_error='BUSINESS_SYNC_COLLECTION_UNAVAILABLE' AND summary=? AND last_attempt_at=?)) AND (lease_token IS NULL OR lease_expires_at<=?)").bind(token,started+300,month,started,started,Number(recoverStaleBackoff),initialRow.summary,initialRow.last_attempt_at,started).run();}catch{syncFail('BUSINESS_SYNC_STORAGE_UNAVAILABLE');}
  if(acquired?.meta?.changes!==1){state=(await syncRead(db)).state;return result(!state.enabled?'PAUSED':state.lease_expires_at>started?'LEASED':'NOT_DUE');}
  let frame=null,financeSteps=0,adsReads=0,status='RUNNING',errorCode=null,stopped=false,yielded=false;
+ const hasTime=(budget,clock=syncClock(now))=>clock>=startedMs&&clock+budget+5000<=deadline&&syncMonth(clock)===month;
  const canCall=async budget=>{
-  const clock=syncClock(now);if(clock<startedMs||clock+budget+5000>deadline||syncMonth(clock)!==month)return false;
+  const clock=syncClock(now);if(!hasTime(budget,clock))return false;
   const latest=await syncRead(db);return latest.state.enabled&&latest.row.lease_token===token&&latest.row.lease_expires_at>Math.floor(clock/1000);
  };
  const collectors={
@@ -86,18 +92,20 @@ export async function runBusinessSync(env,services,{now=()=>Date.now(),maxSteps=
  };
  try{
   for(let step=0;step<maxSteps;step++){
-   if(!await canCall(45000)){stopped=true;break;}
+   if(!hasTime(45000)){stopped=true;break;}
    frame=projectBusinessMonth(await businessMonthWithCheckpoint(env,{operation:step===0?'start':'step',month},collectors,{now,actor:'business-sync'}));
    if(!frame||frame.month!==month)throw new BusinessSyncError('BUSINESS_SYNC_RESULT_INVALID');
+   if(frame.result.pending.includes('SOURCE_UNAVAILABLE'))break;
    if(frame.status!=='RUNNING')break;
   }
-  if(frame?.status==='COMPLETE'&&await canCall(60000)){
-   if(await canCall(60000)){
-    frame=projectBusinessMonth(await businessMonthWithCheckpoint(env,{operation:'ads',month},collectors,{now,actor:'business-sync'}));
-    if(!frame||frame.month!==month)throw new BusinessSyncError('BUSINESS_SYNC_RESULT_INVALID');
-   }
+  if(frame?.status==='COMPLETE'&&hasTime(60000)){
+   frame=projectBusinessMonth(await businessMonthWithCheckpoint(env,{operation:'ads',month},collectors,{now,actor:'business-sync'}));
+   if(!frame||frame.month!==month)throw new BusinessSyncError('BUSINESS_SYNC_RESULT_INVALID');
   }
-  if(frame?.result.pending.some(code=>['SOURCE_UNAVAILABLE','FINANCIAL_SOURCE_STALE'].includes(code))){status='ERROR';errorCode='BUSINESS_SYNC_COLLECTION_UNAVAILABLE';}
+  // An in-progress month can outlive the freshness window while its pages
+  // continue arriving. Keep that freshness blocker on the financial result,
+  // but do not slow the collector down with the provider-failure backoff.
+  if(frame?.result.pending.includes('SOURCE_UNAVAILABLE')||frame?.status!=='RUNNING'&&frame?.result.pending.includes('FINANCIAL_SOURCE_STALE')){status='ERROR';errorCode='BUSINESS_SYNC_COLLECTION_UNAVAILABLE';}
   else if(frame?.status==='LIMIT_REACHED'){status='LIMIT_REACHED';errorCode='BUSINESS_SYNC_PERIOD_LIMIT_REACHED';}
   else if(frame?.status==='COMPLETE'){
    status=frame.ads?.status==='AVAILABLE'?'COMPLETE':'PARTIAL';

@@ -20,7 +20,11 @@ export function projectBusinessMonthProducts(value,frame){
  const sizes=['P','M','G','GG','G1','G2','G3'];
  const codes=['PAYMENT_INCOMPLETE','PRODUCTION_COST_INCOMPLETE','RETURNS_NOT_RECONCILED','STATUS_REVIEW_REQUIRED','SOURCE_UNAVAILABLE','NO_EXCLUSIVE_ORDERS','ARITHMETIC_UNSAFE'];
  try{
-  if(!plain(frame)||!frameKeys.every(key=>Object.hasOwn(Object.getOwnPropertyDescriptor(frame,key)||{},'value'))||frame.status!=='COMPLETE'||!exact(frame.progress,['windows_total','windows_complete','pages_read'])||!int(frame.progress.windows_total,1,3)||frame.progress.windows_complete!==frame.progress.windows_total||!exact(frame.coverage,coverageKeys)||!coverageKeys.every(key=>int(frame.coverage[key],0,3000))||!plain(frame.result)||!Object.hasOwn(Object.getOwnPropertyDescriptor(frame.result,'pending')||{},'value')||!array(frame.result.pending,15)||!array(frame.unmapped_variants,3000))return null;
+  const progress=Object.getOwnPropertyDescriptor(frame||{},'progress')?.value,hasCapacity=plain(progress)&&Object.hasOwn(progress,'order_capacity');
+  if(!plain(frame)||!frameKeys.every(key=>Object.hasOwn(Object.getOwnPropertyDescriptor(frame,key)||{},'value'))||frame.status!=='COMPLETE'||!exact(frame.progress,['windows_total','windows_complete','pages_read',...(hasCapacity?['order_capacity']:[])])||!int(frame.progress.windows_total,1,3)||frame.progress.windows_complete!==frame.progress.windows_total||!exact(frame.coverage,coverageKeys)||!coverageKeys.every(key=>int(frame.coverage[key],0,3000))||!plain(frame.result)||!Object.hasOwn(Object.getOwnPropertyDescriptor(frame.result,'pending')||{},'value')||!array(frame.result.pending,15)||!array(frame.unmapped_variants,3000))return null;
+  // Current imports may mix legacy five-order pages and new twenty-order
+  // pages. Their explicit aggregate capacity must bound the observed cohort.
+  if(hasCapacity&&(!int(progress.pages_read,0,progress.windows_total*200)||!int(progress.order_capacity,progress.pages_read*5,progress.pages_read*20)||progress.order_capacity<frame.coverage.orders))return null;
   const taxDescriptor=Object.getOwnPropertyDescriptor(frame,'tax'),mei=taxDescriptor!==undefined;
   if(mei){
    if(!Object.hasOwn(taxDescriptor,'value'))return null;

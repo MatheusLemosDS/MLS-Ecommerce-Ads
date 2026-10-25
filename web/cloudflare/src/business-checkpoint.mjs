@@ -18,7 +18,7 @@ export class BusinessCheckpointError extends Error {
 export async function businessMonthWithCheckpoint(env,input,services,options={}){
  const frame=await businessMonth(env,input,services,options);
  const items=[...new Set([...(frame.product_summary?.products||[]),...frame.unmapped_variants].map(row=>row.item_id))];
- if(items.length)await enqueueCatalogClassifications(env,items,{now:options.now||(()=>Date.now())});
+ if(items.length)await enqueueCatalogClassifications(env,items,{now:options.now||(()=>Date.now()),returnState:false});
  if(frame.status!=='RUNNING')await recordBusinessCheckpoint(env,frame);
  return frame;
 }

@@ -81,6 +81,17 @@ test('a policy pause during a provider call stops the following step and keeps t
  const result=await run(env,services);assert.equal(result.status,'PAUSED');assert.equal(result.finance_steps,1);assert.equal(result.ads_reads,0);assert.equal(result.state.lease_expires_at,null);assert.equal(services.calls.finance.length,1);
 });
 
+test('a pause after the final financial response prevents the Ads read and a pause during Ads is honored after its response',async()=>{
+ for(const pauseAt of ['FINANCE','ADS']){
+  const env=environment(),services=source(),financeProvider=services.getFinanceBusinessPeriod,adsProvider=services.getAdsCalendar;
+  const pause=async()=>{const current=await readBusinessSyncState(env);await saveBusinessSyncPolicy(env,{revision:current.revision,enabled:false},'fixture-admin',{now});};
+  services.getFinanceBusinessPeriod=async(...args)=>{const frame=await financeProvider(...args);if(pauseAt==='FINANCE'&&services.calls.finance.length===2)await pause();return frame;};
+  services.getAdsCalendar=async(...args)=>{const frame=await adsProvider(...args);if(pauseAt==='ADS')await pause();return frame;};
+  const result=await run(env,services);assert.equal(result.status,'PAUSED',pauseAt);assert.equal(result.state.enabled,false);assert.equal(result.finance_steps,2);assert.equal(result.ads_reads,pauseAt==='ADS'?1:0);assert.equal(services.calls.ads.length,result.ads_reads);assert.equal(result.state.lease_expires_at,null);assert.equal(result.state.failure_count,0);assert.equal(result.state.last_success_at,null);
+  assert.equal((await run(env,services)).status,'PAUSED');assert.equal(services.calls.ads.length,result.ads_reads);
+ }
+});
+
 test('a deleted paused state with policy history fails closed when the database is reopened',async()=>{
  const env=environment(),current=await readBusinessSyncState(env);
  await saveBusinessSyncPolicy(env,{revision:current.revision,enabled:false},'fixture-admin',{now});
@@ -96,6 +107,90 @@ test('a completed resumed month with stale financial windows never records colle
  const first=await run(env,services,{now:()=>time,maxSteps:1});assert.equal(first.status,'RUNNING');assert.equal(first.state.summary.progress.windows_complete,1);assert.equal(first.state.last_success_at,null);
  time+=1000000;
  const result=await run(env,services,{now:()=>time});assert.equal(result.state.summary.status,'COMPLETE');assert.ok(result.state.summary.pending.includes('FINANCIAL_SOURCE_STALE'));assert.equal(result.status,'ERROR');assert.equal(result.state.last_error,'BUSINESS_SYNC_COLLECTION_UNAVAILABLE');assert.equal(result.state.last_success_at,null);assert.equal(result.state.failure_count,1);assert.equal(result.state.summary.net_estimate_cents,null);assert.equal(rows(env,'business_sync_audit').at(-1).status,'ERROR');
+});
+
+test('a stale month still collecting pages resumes at the normal interval and clears obsolete failure backoff',async()=>{
+ const env=environment();let time=clock,page=0;const services=source({running:true,time:()=>time}),provider=services.getFinanceBusinessPeriod;
+ services.getFinanceBusinessPeriod=async(...args)=>{
+  const value=await provider(...args);value.pages_read=++page;value.revision=page;value.checked_at=Math.floor(time/1000);return value;
+ };
+ const first=await run(env,services,{now:()=>time,maxSteps:1});assert.equal(first.status,'RUNNING');assert.equal(first.state.summary.progress.pages_read,1);
+ env.ADMIN_DB.db.prepare("UPDATE business_sync_state SET status='ERROR',failure_count=4,last_error='BUSINESS_SYNC_COLLECTION_UNAVAILABLE',next_run_at=? WHERE id=1").run(stamp+1800);
+ time+=2268000;
+ const result=await run(env,services,{now:()=>time,maxSteps:2});
+ assert.equal(result.status,'RUNNING');assert.equal(result.finance_steps,2);assert.equal(result.state.summary.progress.pages_read,3);
+ assert.ok(result.state.summary.pending.includes('COLLECTING'));assert.ok(result.state.summary.pending.includes('FINANCIAL_SOURCE_STALE'));
+ assert.equal(result.state.failure_count,0);assert.equal(result.state.last_error,null);assert.equal(result.state.next_run_at,Math.floor(time/1000)+300);
+ assert.equal(result.state.last_success_at,null);assert.equal(result.state.summary.net_estimate_cents,null);assert.equal(result.state.summary.net_profit_cents,null);
+ const audit=rows(env,'business_sync_audit').at(-1);assert.equal(audit.status,'RUNNING');assert.equal(audit.error_code,null);
+});
+
+test('a stale running month with an actual source failure still backs off and preserves its pending financial result',async()=>{
+ const env=environment();let time=clock;const services=source({running:true,time:()=>time}),provider=services.getFinanceBusinessPeriod;
+ await run(env,services,{now:()=>time,maxSteps:1});time+=1000000;
+ services.getFinanceBusinessPeriod=async(...args)=>({...await provider(...args),diagnostic:'BUSINESS_PERIOD_UPSTREAM_UNAVAILABLE'});
+ const result=await run(env,services,{now:()=>time,maxSteps:1});
+ assert.equal(result.status,'ERROR');assert.equal(result.state.failure_count,1);assert.equal(result.state.last_error,'BUSINESS_SYNC_COLLECTION_UNAVAILABLE');
+ assert.ok(result.state.summary.pending.includes('SOURCE_UNAVAILABLE'));assert.ok(result.state.summary.pending.includes('FINANCIAL_SOURCE_STALE'));
+ assert.equal(result.state.summary.net_estimate_cents,null);assert.equal(result.state.last_success_at,null);
+});
+
+test('an unavailable financial source is tried once per tick and retains the already imported partial collection',async()=>{
+ for(const outcome of ['DIAGNOSTIC','THROW']){
+  const env=environment();let time=clock,failed=false;const services=source({running:true,time:()=>time}),provider=services.getFinanceBusinessPeriod;
+  services.getFinanceBusinessPeriod=async(...args)=>{
+   const value=await provider(...args);value.pages_read=2;value.revision=2;value.coverage.orders=value.coverage.cancelled=5;
+   if(failed){if(outcome==='THROW')throw Error('PRIVATE_PROVIDER_FAILURE');value.diagnostic='BUSINESS_PERIOD_UPSTREAM_UNAVAILABLE';}
+   return value;
+  };
+  const first=await run(env,services,{now:()=>time,maxSteps:1});assert.equal(first.state.summary.coverage.orders,5);assert.equal(first.state.summary.progress.pages_read,2);
+  failed=true;time+=300000;const before=services.calls.finance.length;
+  const result=await run(env,services,{now:()=>time});
+  assert.equal(result.finance_steps,1,outcome);assert.equal(services.calls.finance.length,before+1);assert.equal(result.status,'ERROR');assert.equal(result.state.failure_count,1);assert.equal(result.state.last_error,'BUSINESS_SYNC_COLLECTION_UNAVAILABLE');
+  assert.equal(result.state.summary.coverage.orders,5);assert.equal(result.state.summary.progress.pages_read,2);assert.equal(result.state.summary.net_estimate_cents,null);
+  assert.ok(!JSON.stringify(result).includes('PRIVATE_PROVIDER_FAILURE'));
+ }
+});
+
+test('a persisted stale-only error from the same attempt resumes before its old thirty-minute retry deadline',async()=>{
+ const env=environment();let time=clock;const services=source({running:true,time:()=>time});
+ await run(env,services,{now:()=>time,maxSteps:1});time+=2268000;
+ const partial=await run(env,services,{now:()=>time,maxSteps:1});assert.ok(partial.state.summary.pending.includes('FINANCIAL_SOURCE_STALE'));
+ env.ADMIN_DB.db.prepare("UPDATE business_sync_state SET status='ERROR',failure_count=4,last_error='BUSINESS_SYNC_COLLECTION_UNAVAILABLE',next_run_at=? WHERE id=1").run(Math.floor(time/1000)+1800);
+ const before=services.calls.finance.length;time+=1000;
+ const resumed=await run(env,services,{now:()=>time,maxSteps:1});
+ assert.equal(resumed.status,'RUNNING');assert.equal(services.calls.finance.length,before+1);assert.equal(resumed.state.failure_count,0);assert.equal(resumed.state.last_error,null);assert.equal(resumed.state.next_run_at,Math.floor(time/1000)+300);
+ assert.ok(resumed.state.summary.pending.includes('FINANCIAL_SOURCE_STALE'));assert.equal(resumed.state.summary.net_estimate_cents,null);assert.equal(resumed.state.last_success_at,null);
+});
+
+test('a genuine source failure or an older retained summary cannot bypass the saved retry deadline',async()=>{
+ for(const cause of ['SOURCE_UNAVAILABLE','OLDER_SUMMARY']){
+  const env=environment();let time=clock;const services=source({running:true,time:()=>time});
+  await run(env,services,{now:()=>time,maxSteps:1});time+=1000000;
+  const partial=await run(env,services,{now:()=>time,maxSteps:1}),summary=structuredClone(partial.state.summary);
+  if(cause==='SOURCE_UNAVAILABLE')summary.pending.push('SOURCE_UNAVAILABLE');
+  const attempt=Math.floor(time/1000)+(cause==='OLDER_SUMMARY'?1:0);
+  env.ADMIN_DB.db.prepare("UPDATE business_sync_state SET status='ERROR',failure_count=4,last_error='BUSINESS_SYNC_COLLECTION_UNAVAILABLE',next_run_at=?,last_attempt_at=?,summary=? WHERE id=1").run(attempt+1800,attempt,JSON.stringify(summary));
+  const before=services.calls.finance.length;time+=2000;
+  const skipped=await run(env,services,{now:()=>time,maxSteps:1});assert.equal(skipped.status,'NOT_DUE',cause);assert.equal(services.calls.finance.length,before);assert.equal(skipped.state.failure_count,4);
+ }
+});
+
+test('stored collection summaries accept legacy five-order pages and explicit mixed page capacities without accepting invented coverage',async()=>{
+ const env=environment();await run(env,source());const row=env.ADMIN_DB.db.prepare('SELECT summary FROM business_sync_state WHERE id=1').get(),original=JSON.parse(row.summary),pages=original.progress.pages_read;
+ const persist=value=>env.ADMIN_DB.db.prepare('UPDATE business_sync_state SET summary=? WHERE id=1').run(JSON.stringify(value));
+ const legacy=structuredClone(original);delete legacy.progress.order_capacity;persist(legacy);
+ assert.deepEqual((await readBusinessSyncState(env)).summary.progress,legacy.progress);
+ for(const capacity of [pages*5,pages*5+15,pages*20]){
+  const current=structuredClone(original);current.progress.order_capacity=capacity;persist(current);
+  assert.equal((await readBusinessSyncState(env)).summary.progress.order_capacity,capacity);
+ }
+ for(const capacity of [null,-1,pages*5-1,pages*5+1,pages*20+15,12001]){
+  const current=structuredClone(original);current.progress.order_capacity=capacity;persist(current);
+  await assert.rejects(readBusinessSyncState(env),error=>error instanceof BusinessSyncError&&error.message==='BUSINESS_SYNC_STATE_INVALID');
+ }
+ const excess=structuredClone(legacy);excess.coverage.orders=excess.coverage.paid=excess.coverage.completed=excess.coverage.payment_covered=pages*5+1;persist(excess);
+ await assert.rejects(readBusinessSyncState(env),error=>error instanceof BusinessSyncError&&error.message==='BUSINESS_SYNC_STATE_INVALID');
 });
 
 test('provider failures store safe errors and back off by five, ten, twenty and at most thirty minutes',async()=>{

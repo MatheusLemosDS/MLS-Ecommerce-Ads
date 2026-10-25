@@ -16,6 +16,23 @@ const failure=code=>error=>error instanceof CatalogClassificationError&&error.me
 const snapshot=async(env,ids,sourceItems=null)=>catalogClassificationsFromSnapshot(await env.ADMIN_DB.batch(catalogClassificationQueries(env.ADMIN_DB,ids,sourceItems)));
 const state=(env,options={},at=initial)=>readCatalogClassificationState(env,options,{now:()=>at*1000});
 
+test('background discovery queues a large catalogue in one D1 request without reading a presentation snapshot',async t=>{
+ class CountedD1 extends D1 {
+  requests=0;insideBatch=0;
+  prepare(sql){const statement=super.prepare(sql);for(const method of ['run','first','all']){const original=statement[method];statement[method]=async(...args)=>{if(!this.insideBatch)this.requests++;return original.apply(statement,args);};}return statement;}
+  async batch(statements){this.requests++;this.insideBatch++;try{return await super.batch(statements);}finally{this.insideBatch--;}}
+ }
+ const env={ADMIN_DB:new CountedD1()};t.after(()=>env.ADMIN_DB.db.close());await state(env);
+ const ids=Array.from({length:181},(_,index)=>String(index+100));env.ADMIN_DB.requests=0;
+ assert.equal(await enqueueCatalogClassifications(env,ids,{now:()=>initial*1000,returnState:false}),null);
+ assert.equal(env.ADMIN_DB.requests,1,'all insertion chunks share one D1 batch and no unused preview is queried');
+ assert.equal(env.ADMIN_DB.db.prepare('SELECT COUNT(*) AS n FROM catalog_classification_jobs').get().n,181);
+ env.ADMIN_DB.requests=0;
+ const publicState=await enqueueCatalogClassifications(env,ids,{now:()=>initial*1000});
+ assert.equal(env.ADMIN_DB.requests,2);assert.equal(publicState.schema,'catalog_classification_state_v1');assert.equal(publicState.counts.total,181);assert.equal(publicState.counts.queued,181);assert.equal(publicState.products.length,20);
+ await assert.rejects(enqueueCatalogClassifications(env,ids,{returnState:'false'}),failure('CATALOG_CLASSIFICATION_REQUEST_INVALID'));
+});
+
 test('one unattended queue stores adult and kit compositions while preserving unresolved child metadata and existing manual bindings',async t=>{
  const env=environment();t.after(()=>env.ADMIN_DB.db.close());
  env.ADMIN_DB.db.exec("CREATE TABLE variant_bindings_state(id INTEGER PRIMARY KEY,payload TEXT);INSERT INTO variant_bindings_state VALUES(1,'MANUAL_UNCHANGED')");

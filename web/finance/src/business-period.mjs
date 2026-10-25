@@ -9,6 +9,7 @@ const BUSINESS_ORIGIN='https://partner.shopeemobile.com';
 const BUSINESS_LIST='/api/v2/order/get_order_list';
 const BUSINESS_DETAIL='/api/v2/order/get_order_detail';
 const BUSINESS_PAYMENT='/api/v2/payment/get_escrow_detail';
+const BUSINESS_PAGE_CAPACITY=20;
 const businessSalesStatuses=new Set(['READY_TO_SHIP','PROCESSED','RETRY_SHIP','SHIPPED','TO_CONFIRM_RECEIVE','COMPLETED','INVOICE_PENDING']);
 const businessEncoder=new TextEncoder();
 const businessIdentity=[FINANCE_PROFILE.partner_id,FINANCE_PROFILE.shop_id];
@@ -146,7 +147,7 @@ function businessFrame(run,records,diagnostic){
  // Empty imports have no per-order observations, so retain the conservative
  // run interval instead of inventing a fresh timestamp for the empty cohort.
  const source_checked_at={oldest_at:records.length?Math.min(...records.map(record=>record.checked_at)):run.cutoff_at,latest_at:records.length?Math.max(...records.map(record=>record.checked_at)):run.checked_at};
- const frame=projectBusinessPeriodFrame({schema:'finance_business_period_v1',run_id:run.run_id,revision:run.revision,status:run.status,start_date:run.start_date,end_date:run.end_date,cutoff_at:run.cutoff_at,checked_at:run.checked_at,source_checked_at,currency:'BRL',monetary_unit:'UNCONFIRMED',pages_read:run.pages_read,duplicate_orders:run.duplicate_orders,coverage,
+ const frame=projectBusinessPeriodFrame({schema:'finance_business_period_v1',run_id:run.run_id,revision:run.revision,status:run.status,start_date:run.start_date,end_date:run.end_date,cutoff_at:run.cutoff_at,checked_at:run.checked_at,source_checked_at,currency:'BRL',monetary_unit:'UNCONFIRMED',pages_read:run.pages_read,page_capacity:BUSINESS_PAGE_CAPACITY,duplicate_orders:run.duplicate_orders,coverage,
   known_sales_base_raw:salesRaw,sales_base_raw:completePayments?salesRaw:null,known_expected_repass_raw:escrowRaw,expected_repass_raw:completePayments?escrowRaw:null,known_ads_adjustment_raw:adsRaw,ads_adjustment_raw:completePayments?adsRaw:null,
   invoice_tax:{schema:'store_invoice_tax_v1',rate_bps:200,basis:'PAYMENT_GOODS_VALUE_PER_ORDER_ESTIMATE',rounding:'HALF_UP_PER_ORDER',covered_orders:coverage.payment_covered,unavailable_orders:coverage.payment_missing,known_base_raw:salesRaw,known_tax_raw:businessRaw(tax)},items:[...grouped.values()],
   product_breakdown:{schema:'business_product_breakdown_v1',mixed_orders:mixed.orders,mixed_payment_covered:mixed.covered,mixed_payment_missing:mixed.missing,...Object.fromEntries(moneyNames.map((name,index)=>['known_mixed_'+name+'_raw',businessRaw(mixed.money[index])])),products:[...products.values()].map(({money,items,...row})=>({...row,...Object.fromEntries(moneyNames.flatMap((name,index)=>{const known=businessRaw(money[index]);return [['known_exclusive_'+name+'_raw',known],['exclusive_'+name+'_raw',row.exclusive_payment_missing?null:known]];})),items:[...items.values()]}))},
@@ -208,21 +209,29 @@ export async function runFinanceBusinessPeriod(env,options={}){
  const leased=await storage(()=>prepare("UPDATE finance_business_period_runs SET lease_owner=?,lease_until=? WHERE run_id=? AND partner_id=? AND shop_id=? AND revision=? AND status='RUNNING' AND (lease_owner IS NULL OR lease_until<=?)",[owner,leaseUntil,input.run_id,...businessIdentity,run.revision,initialTime]).run());
  if(leased?.meta?.changes!==1)return (await snapshot(input.run_id,'BUSINESS_PERIOD_CONFLICT')).frame;
  const guard="run_id=? AND partner_id=? AND shop_id=? AND revision=? AND status='RUNNING' AND lease_owner=? AND lease_until>?",guardArgs=stamp=>[input.run_id,...businessIdentity,run.revision,owner,stamp];
+ const stopAtLimit=async stamp=>{
+  const limited=await storage(()=>prepare("UPDATE finance_business_period_runs SET status='LIMIT_REACHED',revision=revision+1,checked_at=?,lease_owner=NULL,lease_until=NULL,last_error=NULL WHERE "+guard,[stamp,...guardArgs(stamp)]).run());
+  return (await snapshot(input.run_id,limited.meta.changes===1?undefined:'BUSINESS_PERIOD_CONFLICT')).frame;
+ };
  try{
+  if(run.pages_read>=200||observed.records.length>=1000)return await stopAtLimit(epoch());
   const partnerKey=env.SHOPEE_FINANCE_PARTNER_KEY;if(typeof partnerKey!=='string'||!partnerKey.length||partnerKey.length>4096||/[\u0000-\u001f\u007f]/.test(partnerKey))throw businessFailure('SIGNING_CONFIGURATION',503);
   const rawKey=businessEncoder.encode(partnerKey);let key;
   try{if(rawKey.length>8192)throw businessFailure('SIGNING_CONFIGURATION',503);key=await crypto.subtle.importKey('raw',rawKey,{name:'HMAC',hash:'SHA-256'},false,['sign']);}finally{rawKey.fill(0);}
   const tokens=await ensureFinanceAccessToken(env,{fetchImpl,now,timeoutMs});
   const get=async(path,query)=>{
    const timestamp=epoch();if(tokens.expires_at<=timestamp)throw businessFailure('AUTHORIZATION_EXPIRED',409);
-   return requestFinanceAuthJson({input:{timestamp},options:{fetchImpl,now,timeoutMs},prefix:'FINANCE_BUSINESS',buildRequest:async()=>{
+   return requestFinanceAuthJson({input:{timestamp},options:{fetchImpl,now,timeoutMs},prefix:'FINANCE_BUSINESS',...(path===BUSINESS_DETAIL?{maximumBodyBytes:1024*1024}:{}),buildRequest:async()=>{
     const base=String(FINANCE_PROFILE.partner_id)+path+timestamp+tokens.access_token+FINANCE_PROFILE.shop_id,sign=Array.from(new Uint8Array(await crypto.subtle.sign('HMAC',key,businessEncoder.encode(base))),byte=>byte.toString(16).padStart(2,'0')).join('');
     const url=new URL(path,BUSINESS_ORIGIN);for(const [name,value] of Object.entries({partner_id:FINANCE_PROFILE.partner_id,timestamp,access_token:tokens.access_token,shop_id:FINANCE_PROFILE.shop_id,sign,...query}))url.searchParams.set(name,String(value));
     return new Request(url,{method:'GET',redirect:'manual',headers:{Accept:'application/json'}});
    },normalizeResponse:businessEnvelope});
   };
-  const listing=await get(BUSINESS_LIST,{time_range_field:'create_time',time_from:run.time_from,time_to:run.time_to,page_size:5,cursor:run.cursor});
-  if(!Array.isArray(listing.order_list)||listing.order_list.length>5||typeof listing.more!=='boolean')throw businessFailure('LIST_INVALID');
+  // Reserve the entire page before reading it. A final short page can reach
+  // the order ceiling without truncating provider rows or skipping a cursor.
+  const pageSize=Math.min(BUSINESS_PAGE_CAPACITY,1000-observed.records.length);
+  const listing=await get(BUSINESS_LIST,{time_range_field:'create_time',time_from:run.time_from,time_to:run.time_to,page_size:pageSize,cursor:run.cursor});
+  if(!Array.isArray(listing.order_list)||listing.order_list.length>pageSize||typeof listing.more!=='boolean')throw businessFailure('LIST_INVALID');
   let nextCursor='';
   if(listing.more){nextCursor=listing.next_cursor;if(!listing.order_list.length||!businessCursor(nextCursor)||nextCursor===run.cursor)throw businessFailure('CURSOR_INVALID');const nextHash=await businessHash(nextCursor);if(await storage(()=>prepare('SELECT cursor_hash FROM finance_business_period_cursors WHERE run_id=? AND cursor_hash=?',[input.run_id,nextHash]).first()))throw businessFailure('CURSOR_INVALID');}
   const known=new Set(observed.records.map(record=>record.order_hash)),selected=[],pageSeen=new Set();let duplicates=0;
@@ -230,6 +239,7 @@ export async function runFinanceBusinessPeriod(env,options={}){
    if(!businessPlain(row)||!businessSerial(row.order_sn))throw businessFailure('LIST_INVALID');
    const orderHash=await businessHash(row.order_sn);if(known.has(orderHash)||pageSeen.has(orderHash)){duplicates++;continue;}pageSeen.add(orderHash);selected.push({serial:row.order_sn,orderHash});
   }
+  if(run.duplicate_orders+duplicates>1000)return await stopAtLimit(epoch());
   let details=[];
   if(selected.length){
    const response=await get(BUSINESS_DETAIL,{order_sn_list:selected.map(row=>row.serial).join(','),response_optional_fields:'item_list'});
@@ -274,12 +284,12 @@ export async function runFinanceBusinessPeriod(env,options={}){
     }catch(error){failed=error;return;}
    }
   };
-  await Promise.all([worker(),worker()]);if(failed)throw failed;
+  await Promise.all(Array.from({length:4},()=>worker()));if(failed)throw failed;
   const stamp=epoch(),pages=run.pages_read+1,orderCount=observed.records.length+records.length;
   const status=!listing.more?'COMPLETE':pages>=200||orderCount>=1000?'LIMIT_REACHED':'RUNNING';
   try{businessFrame({...run,revision:run.revision+1,status,checked_at:stamp,pages_read:pages,duplicate_orders:run.duplicate_orders+duplicates,last_error:null},[...observed.records,...records]);}
   catch(error){if(error instanceof FinanceConnectionError&&error.code==='FINANCE_BUSINESS_GROUP_LIMIT'){
-   const limited=await storage(()=>prepare("UPDATE finance_business_period_runs SET status='LIMIT_REACHED',revision=revision+1,checked_at=?,lease_owner=NULL,lease_until=NULL,last_error=NULL WHERE "+guard,[stamp,...guardArgs(stamp)]).run());return (await snapshot(input.run_id,limited.meta.changes===1?undefined:'BUSINESS_PERIOD_CONFLICT')).frame;
+   return await stopAtLimit(stamp);
   }throw error;}
   const statements=records.map(record=>prepare('INSERT INTO finance_business_period_orders(run_id,order_hash,bucket,payment_covered,sales_raw,escrow_raw,ads_raw,returns_seen,items,source_hash,checked_at) SELECT ?,?,?,?,?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM finance_business_period_runs WHERE '+guard+')',[input.run_id,record.order_hash,record.bucket,record.payment_covered,record.sales_raw,record.escrow_raw,record.ads_raw,record.returns_seen,record.items,record.source_hash,record.checked_at,...guardArgs(stamp)]));
   if(listing.more)statements.push(prepare('INSERT INTO finance_business_period_cursors(run_id,cursor_hash) SELECT ?,? WHERE EXISTS(SELECT 1 FROM finance_business_period_runs WHERE '+guard+')',[input.run_id,await businessHash(nextCursor),...guardArgs(stamp)]));

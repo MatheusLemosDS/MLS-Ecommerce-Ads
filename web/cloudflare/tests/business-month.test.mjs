@@ -73,9 +73,23 @@ test('a learned product prices sold sibling sizes in the monthly net without req
 test('a 31-day month uses disjoint bounded windows and all paid statuses without counting cancelled or unpaid as sales',async()=>{
  const e=env(),s=source();const value=await complete(e,s);
  assert.deepEqual(s.calls.finance,[{operation:'start',start_date:'2026-10-01',end_date:'2026-10-15'},{operation:'start',start_date:'2026-10-16',end_date:'2026-10-30'},{operation:'start',start_date:'2026-10-31',end_date:'2026-10-31'}]);
- assert.equal(value.status,'COMPLETE');assert.deepEqual(value.progress,{windows_total:3,windows_complete:3,pages_read:3});
+ assert.equal(value.status,'COMPLETE');assert.deepEqual(value.progress,{windows_total:3,windows_complete:3,pages_read:3,order_capacity:15});
  assert.equal(value.coverage.orders,12);assert.equal(value.coverage.paid,6);assert.equal(value.coverage.completed,3);assert.equal(value.coverage.ongoing,3);assert.equal(value.coverage.cancelled,3);assert.equal(value.coverage.unpaid,3);
  assert.equal(value.sales_cents,180000);assert.equal(value.expected_repass_cents,150000);assert.equal(value.production_cost_cents,9540);assert.equal(value.invoice_tax_cents,8605);assert.equal(value.known_invoice_tax_cents,8605);assert.equal(value.tax.regime,'MEI');assert.equal(value.result.net_estimate_cents,null);assert.ok(value.result.pending.includes('ADS_UNAVAILABLE'));assert.ok(value.result.pending.includes('EXTERNAL_EXPENSES_REQUIRED'));assert.ok(projectBusinessMonth(value));assert.deepEqual(state(e),{expenses:[],audit:[]});
+});
+
+test('mixed legacy and twenty-order frames retain their bounded capacity through storage and browser projection',async()=>{
+ let index=0;const e=env(),s=source(original=>{
+  if(index++===1)return original;
+  return {...original,page_capacity:20,coverage:{...original.coverage,orders:20,cancelled:17}};
+ });
+ const value=await complete(e,s);assert.equal(value.status,'COMPLETE');assert.equal(value.coverage.orders,44);assert.deepEqual(value.progress,{windows_total:3,windows_complete:3,pages_read:3,order_capacity:45});assert.ok(projectBusinessMonth(value));
+ assert.deepEqual((await run(e,s,'read')).progress,value.progress);
+ const withoutCapacity=structuredClone(value);delete withoutCapacity.progress.order_capacity;assert.equal(projectBusinessMonth(withoutCapacity),null);
+ for(const capacity of [null,'45',0,14,44,46,61,Infinity])assert.equal(projectBusinessMonth({...value,progress:{...value.progress,order_capacity:capacity}}),null);
+ let invoked=0;const progress={...value.progress};Object.defineProperty(progress,'order_capacity',{get(){invoked++;return 45;},enumerable:true});assert.equal(projectBusinessMonth({...value,progress}),null);assert.equal(invoked,0);
+ const legacy=await complete(env(),source());delete legacy.progress.order_capacity;assert.ok(projectBusinessMonth(legacy));
+ const context=vm.createContext({structuredClone,Intl,serialized:JSON.stringify(value)});new vm.Script(projectAdsCalendar.toString()+'\n'+projectBusinessMonth.toString()+'\nglobalThis.actual=projectBusinessMonth(JSON.parse(serialized));').runInContext(context);assert.deepEqual(JSON.parse(JSON.stringify(context.actual)),value);
 });
 
 test('monthly estimated net uses one month of spend and one audited expense, with a single declared MEI DAS and current production costs',async()=>{

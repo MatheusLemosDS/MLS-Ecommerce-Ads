@@ -17,7 +17,8 @@ async function fixture(statuses=defaults){
  let queue=Promise.resolve();const batch=db.batch.bind(db);db.batch=statements=>{const next=queue.then(()=>batch(statements));queue=next.catch(()=>{});return next;};
  const env={FINANCE_DB:db,FINANCE_CONNECTION_ENABLED:'true',FINANCE_TOKEN_ENCRYPTION_KEY:Buffer.alloc(32,31).toString('base64'),SHOPEE_FINANCE_PARTNER_KEY:key};
  const store=await createFinanceStore(env,{now});await store.setup();await store.saveTokens({access_token:access,refresh_token:refresh,expires_at:Math.floor(now()/1000)+14400});
- const calls=[],state={statuses:[...statuses],mode:'normal',active:0,maxActive:0,hold:false,started:null,release:null,base:100,itemLists:{},moneyByIndex:{}};
+ const calls=[],state={statuses:[...statuses],mode:'normal',active:0,maxActive:0,hold:false,started:null,release:null,base:100,itemLists:{},moneyByIndex:{},pageSize:20,expectedPageSize:20,detailPadding:0,detailBodyBytes:0,phaseMs:0,beforeListMs:0,paymentReads:0,gateFirstPaymentWave:false};
+ let paymentGate,releasePaymentGate;
  const itemList=index=>state.itemLists[index]||[{item_id:100,model_id:index%2,model_quantity_purchased:2}];
  const fetchImpl=async request=>{
   const url=new URL(request.url);calls.push(request);
@@ -26,24 +27,38 @@ async function fixture(statuses=defaults){
   assert.equal(url.searchParams.get('partner_id'),'2049333');assert.equal(url.searchParams.get('shop_id'),'1178167501');assert.equal(url.searchParams.get('access_token'),access);
   assert.equal(url.searchParams.get('sign'),createHmac('sha256',key).update('2049333'+url.pathname+url.searchParams.get('timestamp')+access+'1178167501').digest('hex'));
   if(url.pathname===list){
+   clock.time+=state.beforeListMs+state.phaseMs;state.beforeListMs=0;
    if(state.started){state.started();state.started=null;}if(state.hold)await new Promise(resolve=>state.release=resolve);
    if(state.mode==='list-http')return Response.json({error:'error_sign',message:key},{status:403});
-   assert.equal(url.searchParams.has('order_status'),false);assert.equal(url.searchParams.get('time_range_field'),'create_time');assert.equal(url.searchParams.get('page_size'),'5');
-   const cursor=url.searchParams.get('cursor'),offset=cursor===''?0:cursor==='cursor-loop'?5:Number(cursor.slice(7)),indices=Array.from({length:Math.min(5,state.statuses.length-offset)},(_,i)=>i+offset);
-   if(state.mode==='duplicate'&&offset===5)indices[0]=0;
-   const more=offset+5<state.statuses.length;
-   return provider({order_list:indices.map(index=>({order_sn:serial(index),order_status:'CANCELLED'})),more,next_cursor:state.mode==='loop'&&more?'cursor-loop':more?'cursor-'+(offset+5):''});
+   assert.equal(url.searchParams.has('order_status'),false);assert.equal(url.searchParams.get('time_range_field'),'create_time');assert.equal(url.searchParams.get('page_size'),String(state.expectedPageSize));
+   const pageSize=Math.min(state.pageSize,state.expectedPageSize),cursor=url.searchParams.get('cursor'),offset=cursor===''?0:cursor==='cursor-loop'?pageSize:Number(cursor.slice(7)),indices=Array.from({length:Math.min(pageSize,state.statuses.length-offset)},(_,i)=>i+offset);
+   if(state.mode==='duplicate'&&offset===pageSize)indices[0]=0;
+   const more=offset+pageSize<state.statuses.length;
+   if(state.mode==='list-overfull')indices.push(pageSize);
+   return provider({order_list:indices.map(index=>({order_sn:serial(index),order_status:'CANCELLED'})),more,next_cursor:state.mode==='loop'&&more?'cursor-loop':more?'cursor-'+(offset+pageSize):''});
   }
   if(url.pathname===detail){
+   clock.time+=state.phaseMs;
    const ids=url.searchParams.get('order_sn_list').split(',');
    const rows=ids.map(sn=>{const index=Number(sn.slice(serial(0).length-1));return {order_sn:sn,order_status:state.statuses[index],currency:state.mode==='currency'?'USD':'BRL',create_time:Date.UTC(2026,9,20,12)/1000,item_list:itemList(index),buyer_username:'PRIVATE_BUSINESS_BUYER'};});
    if(state.mode==='detail-foreign')rows[0].order_sn='PRIVATE_FOREIGN';
    if(state.mode==='detail-missing')rows.pop();
    if(state.mode==='date-foreign')rows[0].create_time=Date.UTC(2026,9,1)/1000;
+   if(state.detailPadding)for(const row of rows)row.description='x'.repeat(state.detailPadding);
+   state.detailBodyBytes=Buffer.byteLength(JSON.stringify({order_list:rows}));
    return provider({order_list:rows});
   }
   assert.equal(url.pathname,payment);const index=Number(url.searchParams.get('order_sn').slice(serial(0).length-1));assert.ok(eligible(state.statuses[index]));
-  state.active++;state.maxActive=Math.max(state.active,state.maxActive);await new Promise(resolve=>setTimeout(resolve,2));state.active--;
+  state.active++;state.maxActive=Math.max(state.active,state.maxActive);
+  // The throughput assertion holds the first wave until all four reads have
+  // entered, independently of cryptographic scheduling or event-loop speed.
+  if(state.gateFirstPaymentWave){
+   paymentGate??=new Promise(resolve=>releasePaymentGate=resolve);
+   if(state.active===4){state.gateFirstPaymentWave=false;releasePaymentGate();}
+   await paymentGate;
+  }else await Promise.resolve();
+  state.active--;
+  if(++state.paymentReads%4===0)clock.time+=state.phaseMs;
   if(state.mode==='ongoing-unavailable'&&state.statuses[index]!=='COMPLETED')return Response.json({error:'order_not_ready',message:'PRIVATE_BUSINESS_MESSAGE'},{status:503});
   if(state.mode==='ongoing-api-unavailable'&&state.statuses[index]!=='COMPLETED')return Response.json({error:'order_not_found',message:'PRIVATE_BUSINESS_MESSAGE'});
   if(state.mode==='ongoing-auth-rejected'&&state.statuses[index]!=='COMPLETED')return Response.json({error:'error_auth',message:key},{status:403});
@@ -77,8 +92,8 @@ test('start/read is private, scoped and read-only; invalid periods and bindings 
 });
 
 test('all detail statuses are classified, paid/completed share the cohort, and nonpaid orders never request Payment',async()=>{
- const f=await fixture(),frame=await finish(f);assert.equal(frame.status,'COMPLETE');assert.equal(frame.pages_read,2);assert.deepEqual(frame.coverage,{orders:9,paid:4,completed:1,ongoing:3,cancelled:1,cancel_pending:1,unpaid:1,other:1,unknown:1,payment_covered:4,payment_missing:0,returns:0,returns_unknown:0});
- assert.equal(frame.sales_base_raw,'400');assert.equal(frame.expected_repass_raw,'94');assert.equal(frame.ads_adjustment_raw,'0');assert.equal(frame.invoice_tax.known_tax_raw,'8');assert.deepEqual(frame.items,[{item_id:'100',model_id:'0',quantity:4},{item_id:'100',model_id:'1',quantity:4}]);assert.ok(f.state.maxActive<=2);assert.equal(f.state.maxActive,2);
+ const f=await fixture(),frame=await finish(f);assert.equal(frame.status,'COMPLETE');assert.equal(frame.pages_read,1);assert.equal(frame.page_capacity,20);assert.deepEqual(frame.coverage,{orders:9,paid:4,completed:1,ongoing:3,cancelled:1,cancel_pending:1,unpaid:1,other:1,unknown:1,payment_covered:4,payment_missing:0,returns:0,returns_unknown:0});
+ assert.equal(frame.sales_base_raw,'400');assert.equal(frame.expected_repass_raw,'94');assert.equal(frame.ads_adjustment_raw,'0');assert.equal(frame.invoice_tax.known_tax_raw,'8');assert.deepEqual(frame.items,[{item_id:'100',model_id:'0',quantity:4},{item_id:'100',model_id:'1',quantity:4}]);assert.ok(f.state.maxActive>=1&&f.state.maxActive<=4);
  const payments=f.calls.filter(request=>new URL(request.url).pathname===payment);assert.equal(payments.length,4);assert.deepEqual(new Set(payments.map(request=>new URL(request.url).searchParams.get('order_sn'))),new Set([0,1,5,8].map(serial)));
  const callCount=f.calls.length;assert.deepEqual(await f.run({operation:'step',run_id:frame.run_id}),frame);assert.deepEqual(await f.run({operation:'read',run_id:frame.run_id}),frame);assert.equal(f.calls.length,callCount);
  for(const secret of [key,access,refresh,'PRIVATE_BUSINESS_ORDER','PRIVATE_BUSINESS_BUYER','PRIVATE_BUSINESS_RETURN','cursor-','selling_price']){assert.ok(!JSON.stringify(frame).includes(secret));assert.ok(!JSON.stringify(snapshot(f)).includes(secret)||secret==='cursor-');}
@@ -90,8 +105,31 @@ test('every supported active status is a paid order and cancellation classes can
  const f=await fixture(statuses),frame=await finish(f);assert.equal(frame.coverage.paid,7);assert.equal(frame.coverage.completed,1);assert.equal(frame.coverage.ongoing,6);assert.equal(frame.coverage.cancelled,1);assert.equal(frame.coverage.cancel_pending,1);assert.equal(frame.coverage.unpaid,1);assert.equal(frame.coverage.other,1);assert.equal(frame.coverage.unknown,1);assert.equal(frame.sales_base_raw,'700');
 });
 
+test('one hundred paid orders finish in five bounded pages with at most four concurrent Payment reads',async()=>{
+ const f=await fixture(Array(100).fill('COMPLETED')),job=await f.start();f.state.gateFirstPaymentWave=true;assert.equal(job.page_capacity,20);
+ const frame=await finish(f);assert.equal(frame.status,'COMPLETE');assert.equal(frame.pages_read,5);assert.equal(frame.page_capacity,20);assert.equal(frame.coverage.orders,100);assert.equal(frame.coverage.payment_covered,100);assert.equal(frame.sales_base_raw,'10000');assert.equal(frame.expected_repass_raw,'6950');
+ assert.equal(f.calls.filter(request=>new URL(request.url).pathname===list).length,5);assert.equal(f.calls.filter(request=>new URL(request.url).pathname===detail).length,5);assert.equal(f.calls.filter(request=>new URL(request.url).pathname===payment).length,100);assert.equal(f.state.maxActive,4);assert.equal(f.state.gateFirstPaymentWave,false);
+ assert.ok(projectBusinessPeriodFrame(frame));assert.equal(snapshot(f).orders.length,100);
+});
+
+test('twenty-order detail bodies may exceed 64 KiB while the one-MiB detail bound remains atomic',async()=>{
+ const f=await fixture(Array(20).fill('COMPLETED'));f.state.detailPadding=4000;const frame=await finish(f);
+ assert.ok(f.state.detailBodyBytes>64*1024);assert.ok(f.state.detailBodyBytes<1024*1024);assert.equal(frame.status,'COMPLETE');assert.equal(frame.coverage.orders,20);assert.equal(frame.coverage.payment_covered,20);assert.ok(projectBusinessPeriodFrame(frame));assert.ok(!JSON.stringify(frame).includes('description'));
+ const g=await fixture(Array(20).fill('COMPLETED'));g.state.detailPadding=53000;const job=await g.start(),before=snapshot(g),failed=await g.run({operation:'step',run_id:job.run_id});
+ assert.ok(g.state.detailBodyBytes>1024*1024);assert.equal(failed.status,'RUNNING');assert.equal(failed.diagnostic,'BUSINESS_PERIOD_UPSTREAM_UNAVAILABLE');assert.equal(failed.pages_read,0);assert.equal(failed.coverage.orders,0);assert.equal(g.calls.length,2);assert.deepEqual(snapshot(g).orders,before.orders);assert.deepEqual(snapshot(g).cursors,before.cursors);
+});
+
+test('a simulated forty-second page commits but a page reaching its forty-five-second lease cannot commit partial rows',async()=>{
+ const f=await fixture(Array(20).fill('COMPLETED')),job=await f.start(),started=f.now();f.state.phaseMs=5000;f.state.beforeListMs=5000;
+ const complete=await f.run({operation:'step',run_id:job.run_id});assert.equal(f.now()-started,40000);assert.equal(complete.status,'COMPLETE');assert.equal(complete.coverage.orders,20);assert.equal(snapshot(f).orders.length,20);
+ const g=await fixture(Array(20).fill('COMPLETED')),pending=await g.start(),before=snapshot(g),initial=g.now();g.state.phaseMs=5000;g.state.beforeListMs=10000;
+ const expired=await g.run({operation:'step',run_id:pending.run_id});assert.equal(g.now()-initial,45000);assert.equal(expired.status,'RUNNING');assert.equal(expired.diagnostic,'BUSINESS_PERIOD_CONFLICT');assert.equal(expired.coverage.orders,0);assert.equal(expired.pages_read,0);assert.deepEqual(snapshot(g).orders,before.orders);assert.deepEqual(snapshot(g).cursors,before.cursors);
+ g.state.phaseMs=0;const resumed=await g.run({operation:'step',run_id:pending.run_id});assert.equal(resumed.status,'COMPLETE');assert.equal(resumed.coverage.orders,20);assert.equal(snapshot(g).orders.length,20);
+});
+
 test('a resumed paginated import exposes old and new order observation times independently of its completion time',async()=>{
  const f=await fixture(['COMPLETED','READY_TO_SHIP','CANCELLED','UNPAID','IN_CANCEL','SHIPPED']),job=await f.start(),firstStamp=f.now()/1000;
+ f.state.pageSize=5;
  assert.deepEqual(job.source_checked_at,{oldest_at:firstStamp,latest_at:firstStamp});
  const first=await f.run({operation:'step',run_id:job.run_id});assert.equal(first.status,'RUNNING');assert.equal(first.coverage.orders,5);
  f.clock.time+=1200000;
@@ -162,8 +200,8 @@ test('simultaneous starts share one run; a held page lease cannot trigger duplic
 });
 
 test('repeated provider rows are deduplicated by private hash, while repeated cursors never advance or corrupt a job',async()=>{
- const f=await fixture(Array(7).fill('COMPLETED'));f.state.mode='duplicate';const frame=await finish(f);assert.equal(frame.status,'COMPLETE');assert.equal(frame.coverage.orders,6);assert.equal(frame.duplicate_orders,1);assert.equal(snapshot(f).orders.length,6);
- const g=await fixture(Array(12).fill('COMPLETED'));g.state.mode='loop';const job=await g.start(),first=await g.run({operation:'step',run_id:job.run_id}),before=snapshot(g),failed=await g.run({operation:'step',run_id:job.run_id});assert.equal(failed.diagnostic,'BUSINESS_PERIOD_UPSTREAM_UNAVAILABLE');assert.equal(failed.revision,first.revision);assert.deepEqual(snapshot(g).orders,before.orders);assert.deepEqual(snapshot(g).cursors,before.cursors);
+ const f=await fixture(Array(27).fill('COMPLETED'));f.state.mode='duplicate';const frame=await finish(f);assert.equal(frame.status,'COMPLETE');assert.equal(frame.coverage.orders,26);assert.equal(frame.duplicate_orders,1);assert.equal(snapshot(f).orders.length,26);
+ const g=await fixture(Array(42).fill('COMPLETED'));g.state.mode='loop';const job=await g.start(),first=await g.run({operation:'step',run_id:job.run_id}),before=snapshot(g),failed=await g.run({operation:'step',run_id:job.run_id});assert.equal(failed.diagnostic,'BUSINESS_PERIOD_UPSTREAM_UNAVAILABLE');assert.equal(failed.revision,first.revision);assert.deepEqual(snapshot(g).orders,before.orders);assert.deepEqual(snapshot(g).cursors,before.cursors);
 });
 
 test('hash tampering with classifications, amounts, items or run scope is refused before provider reads',async()=>{
@@ -180,17 +218,31 @@ test('expired idle cache entries are bounded at sixty and cleanup never removes 
  const job=await f.start();assert.notEqual(job.run_id,first.run_id);assert.equal(snapshot(f).runs.length,60);assert.equal((await f.run({operation:'read',run_id:live.run_id})).run_id,live.run_id);assert.equal(f.calls.length,0);
 });
 
-function seedCohort(f,job,{groups=false}={}){
+function seedCohort(f,job,{groups=false,count=995,pages=199}={}){
  const stamp=f.now()/1000,insert=f.db.db.prepare('INSERT INTO finance_business_period_orders(run_id,order_hash,bucket,payment_covered,sales_raw,escrow_raw,ads_raw,returns_seen,items,source_hash,checked_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)');
- for(let index=0;index<995;index++){
+ for(let index=0;index<count;index++){
   const items=groups?[{item_id:String(2000+index),model_id:'0',quantity:2},...(index<5?[{item_id:String(4000+index),model_id:'0',quantity:1}]:[])]:[{item_id:'100',model_id:String(index%2),quantity:2}];
   const record={order_hash:createHash('sha256').update(serial(index)).digest('hex'),bucket:'completed',payment_covered:1,sales_raw:'100',escrow_raw:String(20+index),ads_raw:'0',returns_seen:0,items:JSON.stringify(items),checked_at:stamp};
   const sourceHash=createHash('sha256').update(JSON.stringify(record)).digest('hex');
   insert.run(job.run_id,record.order_hash,record.bucket,record.payment_covered,record.sales_raw,record.escrow_raw,record.ads_raw,record.returns_seen,record.items,sourceHash,stamp);
  }
- f.db.db.prepare('UPDATE finance_business_period_runs SET revision=200,pages_read=199,cursor=? WHERE run_id=?').run('cursor-995',job.run_id);
- f.db.db.prepare('INSERT INTO finance_business_period_cursors VALUES(?,?)').run(job.run_id,createHash('sha256').update('cursor-995').digest('hex'));
+ const cursor='cursor-'+count;
+ f.db.db.prepare('UPDATE finance_business_period_runs SET revision=?,pages_read=?,cursor=? WHERE run_id=?').run(pages+1,pages,cursor,job.run_id);
+ f.db.db.prepare('INSERT INTO finance_business_period_cursors VALUES(?,?)').run(job.run_id,createHash('sha256').update(cursor).digest('hex'));
+ f.state.expectedPageSize=Math.min(20,1000-count);
 }
+
+test('the final page reserves only remaining capacity and an already full run stops without provider reads',async()=>{
+ const f=await fixture(Array(1010).fill('COMPLETED')),job=await f.start();seedCohort(f,job,{count:990,pages:50});
+ const frame=await f.run({operation:'step',run_id:job.run_id});assert.equal(frame.status,'LIMIT_REACHED');assert.equal(frame.coverage.orders,1000);assert.equal(frame.pages_read,51);assert.equal(frame.page_capacity,20);assert.equal(snapshot(f).orders.length,1000);assert.equal(new URL(f.calls[0].url).searchParams.get('page_size'),'10');assert.equal(f.calls.length,12);
+ const g=await fixture(Array(1010).fill('COMPLETED')),full=await g.start();seedCohort(g,full,{count:1000,pages:50});const before=snapshot(g);
+ const limited=await g.run({operation:'step',run_id:full.run_id});assert.equal(limited.status,'LIMIT_REACHED');assert.equal(limited.coverage.orders,1000);assert.equal(limited.pages_read,50);assert.deepEqual(snapshot(g).orders,before.orders);assert.deepEqual(snapshot(g).cursors,before.cursors);assert.equal(g.calls.length,0);
+});
+
+test('a provider page larger than the reserved capacity cannot commit rows or advance a cursor',async()=>{
+ const f=await fixture(Array(1010).fill('COMPLETED')),job=await f.start();seedCohort(f,job);f.state.mode='list-overfull';const before=snapshot(f);
+ const frame=await f.run({operation:'step',run_id:job.run_id});assert.equal(frame.status,'RUNNING');assert.equal(frame.diagnostic,'BUSINESS_PERIOD_UPSTREAM_UNAVAILABLE');assert.equal(frame.coverage.orders,995);assert.equal(frame.pages_read,199);assert.deepEqual(snapshot(f).orders,before.orders);assert.deepEqual(snapshot(f).cursors,before.cursors);assert.equal(f.calls.length,1);
+});
 
 test('a thousand collected orders with another provider page stays LIMIT_REACHED, never a complete monthly total',async()=>{
  const f=await fixture(Array(1005).fill('COMPLETED')),job=await f.start();seedCohort(f,job);

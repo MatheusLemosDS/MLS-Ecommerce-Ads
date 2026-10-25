@@ -74,10 +74,12 @@ export function catalogClassificationsFromSnapshot(results){
  return {revision:results[0].results[0].classification_revision,bindings,products:[...jobs.values()].map(productMetadata).sort((a,b)=>compare(a.item_id,b.item_id)),variants};
 }
 
-export async function enqueueCatalogClassifications(env,itemIds,{now=()=>Date.now()}={}){
+export async function enqueueCatalogClassifications(env,itemIds,{now=()=>Date.now(),returnState=true}={}){
+ if(typeof returnState!=='boolean')fail('CATALOG_CLASSIFICATION_REQUEST_INVALID',400);
  const ids=idsInput(itemIds),stamp=clock(now),db=await setup(env);
- for(let i=0;i<ids.length;i+=90)await db.prepare("INSERT OR IGNORE INTO catalog_classification_jobs(item_id,status,next_attempt_at) SELECT value,'QUEUED',? FROM json_each(?)").bind(stamp,JSON.stringify(ids.slice(i,i+90))).run();
- return readCatalogClassificationState(env,{}, {now});
+ const writes=[];for(let i=0;i<ids.length;i+=90)writes.push(db.prepare("INSERT OR IGNORE INTO catalog_classification_jobs(item_id,status,next_attempt_at) SELECT value,'QUEUED',? FROM json_each(?)").bind(stamp,JSON.stringify(ids.slice(i,i+90))));
+ if(writes.length)await db.batch(writes);
+ return returnState?readCatalogClassificationState(env,{}, {now}):null;
 }
 
 export async function readCatalogClassificationFence(env,itemIds){

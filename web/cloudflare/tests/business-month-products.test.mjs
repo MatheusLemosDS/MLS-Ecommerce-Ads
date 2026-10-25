@@ -42,6 +42,38 @@ test('disjoint monthly windows merge the same product/model before matching cost
  const value=buildBusinessMonthProducts([f.source,source],frame,refs,f.bindings);assert.ok(value);assert.equal(value.products.length,2);assert.equal(value.products[0].quantity,6);assert.equal(value.products[0].exclusive_after_costs_cents,13600);assert.equal(value.products[1].exclusive_after_costs_cents,4760);assert.equal(value.mixed_orders,2);
 });
 
+test('explicit order capacity admits twenty-order and mixed legacy/current page imports without changing product money',()=>{
+ const f=fixture(),legacy=build(f);assert.ok(legacy);
+ f.frame.progress.order_capacity=20;f.frame.coverage.cancelled+=15;f.frame.coverage.orders+=15;
+ assert.deepEqual(projectBusinessMonthProducts(legacy,f.frame),legacy,'a twenty-order page can contain the same paid subset and more cancelled orders');
+ assert.deepEqual(build(f),legacy);
+ f.frame.progress.pages_read=2;f.frame.progress.order_capacity=25;
+ assert.deepEqual(projectBusinessMonthProducts(legacy,f.frame),legacy,'one legacy page and one current page retain their summed capacity');
+ const context=vm.createContext();context.serialized=JSON.stringify({value:legacy,frame:f.frame});
+ new vm.Script(projectBusinessMonthProducts.toString()+'\nconst input=JSON.parse(serialized);globalThis.actual=projectBusinessMonthProducts(input.value,input.frame);').runInContext(context);
+ assert.deepEqual(JSON.parse(JSON.stringify(context.actual)),legacy,'the browser projector preserves optional progress capacity');
+});
+
+test('optional order capacity rejects malformed values, impossible bounds and accessors before releasing a product report',()=>{
+ const f=fixture(),value=build(f);
+ for(const capacity of [undefined,null,-0,-1,4,21,5.5,'20',NaN,Infinity,Number.MAX_SAFE_INTEGER]){
+  const frame=copy(f.frame);frame.progress.order_capacity=capacity;
+  assert.equal(projectBusinessMonthProducts(value,frame),null,String(capacity));
+ }
+ for(const mutate of [
+  frame=>{frame.progress.pages_read=2;frame.progress.order_capacity=9;},
+  frame=>{frame.progress.pages_read=2;frame.progress.order_capacity=41;},
+  frame=>{frame.progress.order_capacity=20;frame.coverage.orders=21;frame.coverage.cancelled=17;},
+  frame=>{frame.progress.pages_read=-1;frame.progress.order_capacity=20;},
+  frame=>{frame.progress.pages_read=201;frame.progress.order_capacity=1005;},
+  frame=>{frame.progress.pages_read='1';frame.progress.order_capacity=20;},
+  frame=>{frame.progress.order_capacity=20;frame.progress.extra=1;},
+ ]){const frame=copy(f.frame);mutate(frame);assert.equal(projectBusinessMonthProducts(value,frame),null);}
+ let reads=0;const frame=copy(f.frame);Object.defineProperty(frame.progress,'order_capacity',{enumerable:true,get(){reads++;return 20;}});
+ assert.equal(projectBusinessMonthProducts(value,frame),null);assert.equal(reads,0);
+ assert.deepEqual(projectBusinessMonthProducts(value,f.frame),value,'old three-field progress remains supported');
+});
+
 test('an unmapped variant sold only in mixed orders keeps all-production pending without blocking the exclusive subset',()=>{
  const f=fixture();f.refs[1].unit_cost_cents=null;f.refs[1].production_cost_cents=null;f.bindings.bindings.splice(1,1);f.frame.known_production_cost_cents=5000;f.frame.production_cost_cents=null;f.frame.unmapped_variants=[{item_id:'201',model_id:'11',quantity:2}];f.frame.result.pending=['PRODUCTION_COST_INCOMPLETE'];
  const value=build(f);assert.ok(value);const row=value.products[0];assert.equal(row.known_production_cost_cents,1000);assert.equal(row.production_cost_cents,null);assert.equal(row.exclusive_production_cost_cents,1000);assert.equal(row.exclusive_after_costs_cents,6800);assert.deepEqual(row.pending,[]);assert.equal(row.variants[1].exclusive_production_cost_cents,0);assert.equal(row.variants[1].size,null);

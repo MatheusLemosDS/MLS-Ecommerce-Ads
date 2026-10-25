@@ -18,6 +18,19 @@ const covered=changes=>{
  return {...value,...changes};
 };
 
+test('explicit twenty-order page capacity is strict while legacy frames retain their five-order bound',()=>{
+ const cancelled=count=>empty({status:'COMPLETE',pages_read:1,coverage:{...empty().coverage,orders:count,cancelled:count}});
+ assert.ok(projectBusinessPeriodFrame(cancelled(5)));assert.equal(projectBusinessPeriodFrame(cancelled(6)),null);
+ const current={...cancelled(20),page_capacity:20};assert.equal(projectBusinessPeriodFrame(current).page_capacity,20);
+ assert.equal(projectBusinessPeriodFrame({...current,duplicate_orders:1}),null);
+ assert.ok(projectBusinessPeriodFrame({...cancelled(19),page_capacity:20,duplicate_orders:1}));
+ for(const capacity of [null,0,5,19,21,20.5,'20',-0,NaN,Infinity])assert.equal(projectBusinessPeriodFrame({...current,page_capacity:capacity}),null);
+ let invoked=0;Object.defineProperty(current,'page_capacity',{get(){invoked++;return 20;},enumerable:true});assert.equal(projectBusinessPeriodFrame(current),null);assert.equal(invoked,0);
+ const context=vm.createContext({serialized:JSON.stringify({...cancelled(20),page_capacity:20})});
+ const projected=new vm.Script('const project='+projectBusinessPeriodFrame.toString()+';project(JSON.parse(serialized));').runInContext(context);
+ assert.equal(projected.coverage.orders,20);assert.equal(projected.page_capacity,20);
+});
+
 test('business request union has exact operations, canonical IDs and at most fifteen inclusive calendar days',()=>{
  assert.deepEqual(projectBusinessPeriodRequest({operation:'start',start_date:'2026-10-01',end_date:'2026-10-15'}),{operation:'start',start_date:'2026-10-01',end_date:'2026-10-15'});
  assert.deepEqual(projectBusinessPeriodRequest({operation:'start',start_date:'2024-02-29',end_date:'2024-02-29'}),{operation:'start',start_date:'2024-02-29',end_date:'2024-02-29'});

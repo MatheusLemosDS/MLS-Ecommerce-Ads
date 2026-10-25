@@ -8,7 +8,7 @@ import {COST_RULE_SCHEMA,costRuleSnapshotQueries,costRuleReferenceFromSnapshot,m
 import {catalogClassificationQueries,catalogClassificationsFromSnapshot} from './catalog-classification.mjs';
 
 export class BusinessMonthError extends Error {
- constructor(code,status=400){super(code);this.status=status;}
+ constructor(code,status=400,diagnostic=null){super(code);this.status=status;if(diagnostic!==null)this.diagnostic=Object.freeze({...diagnostic});}
 }
 export const BUSINESS_MONTH_SCHEMA=[
  ...TAX_POLICY_SCHEMA,
@@ -39,9 +39,12 @@ export function projectBusinessMonth(value){
   if(plain(value)&&Object.hasOwn(value,'source_checked_at'))keys.push('source_checked_at');
   if(plain(value)&&Object.hasOwn(value,'cost_rules_revision'))keys.push('cost_rules_revision');
   if(plain(value)&&Object.hasOwn(value,'classification_revision'))keys.push('classification_revision');
-  if(!exact(value,keys)||value.schema!=='business_month_v1'||typeof value.month!=='string'||!/^\d{4}-(0[1-9]|1[0-2])$/.test(value.month)||!day(value.start_date)||value.start_date!==value.month+'-01'||!day(value.end_date)||value.end_date.slice(0,7)!==value.month||!['RUNNING','COMPLETE','LIMIT_REACHED'].includes(value.status)||!int(value.checked_at,1,9999999999)||!int(value.bindings_revision,1,2147483647)||!int(value.costs_revision,1,2147483647)||!exact(value.progress,['windows_total','windows_complete','pages_read'])||!exact(value.coverage,covKeys))return null;
+  if(!exact(value,keys)||value.schema!=='business_month_v1'||typeof value.month!=='string'||!/^\d{4}-(0[1-9]|1[0-2])$/.test(value.month)||!day(value.start_date)||value.start_date!==value.month+'-01'||!day(value.end_date)||value.end_date.slice(0,7)!==value.month||!['RUNNING','COMPLETE','LIMIT_REACHED'].includes(value.status)||!int(value.checked_at,1,9999999999)||!int(value.bindings_revision,1,2147483647)||!int(value.costs_revision,1,2147483647)||!plain(value.progress)||!exact(value.coverage,covKeys))return null;
   const span=Number(value.end_date.slice(8)),p=value.progress,c=value.coverage;
-  if(p.windows_total!==Math.ceil(span/15)||!int(p.windows_complete,0,p.windows_total)||!int(p.pages_read,0,p.windows_total*200)||!covKeys.every(key=>int(c[key],0,p.windows_total*1000))||c.orders!==c.paid+c.cancelled+c.cancel_pending+c.unpaid+c.other+c.unknown||c.paid!==c.completed+c.ongoing||c.payment_covered+c.payment_missing!==c.paid||c.returns+c.returns_unknown>c.paid||c.orders>p.pages_read*5||value.status==='COMPLETE'&&p.windows_complete!==p.windows_total||value.status!=='COMPLETE'&&p.windows_complete===p.windows_total)return null;
+  const hasCapacity=Object.hasOwn(p,'order_capacity');
+  if(!exact(p,['windows_total','windows_complete','pages_read',...(hasCapacity?['order_capacity']:[])]))return null;
+  const capacity=hasCapacity?p.order_capacity:p.pages_read*5;
+  if(p.windows_total!==Math.ceil(span/15)||!int(p.windows_complete,0,p.windows_total)||!int(p.pages_read,0,p.windows_total*200)||!int(capacity,p.pages_read*5,p.pages_read*20)||(capacity-p.pages_read*5)%15!==0||!covKeys.every(key=>int(c[key],0,p.windows_total*1000))||c.orders!==c.paid+c.cancelled+c.cancel_pending+c.unpaid+c.other+c.unknown||c.paid!==c.completed+c.ongoing||c.payment_covered+c.payment_missing!==c.paid||c.returns+c.returns_unknown>c.paid||c.orders>capacity||value.status==='COMPLETE'&&p.windows_complete!==p.windows_total||value.status!=='COMPLETE'&&p.windows_complete===p.windows_total)return null;
   const currentDay=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date(value.checked_at*1000));
   if(value.end_date>currentDay)return null;
   if(Object.hasOwn(value,'cost_rules_revision')&&!int(value.cost_rules_revision,1,2147483646))return null;
@@ -198,7 +201,19 @@ async function businessMonthAdvance(env,db,month,range,stamp,observed,services){
  if(index<0||observed.payload.slots.some(slot=>slot.frame?.status==='LIMIT_REACHED'))return observed;
  if(typeof services?.getFinanceBusinessPeriod!=='function')businessMonthFail('BUSINESS_MONTH_SOURCE_UNAVAILABLE',503);
  const slot=observed.payload.slots[index],selection=slot.frame?{operation:'step',run_id:slot.frame.run_id}:{operation:'start',start_date:slot.start_date,end_date:slot.end_date};
- let frame;try{frame=projectBusinessPeriodFrame(await services.getFinanceBusinessPeriod(env,selection));}catch{businessMonthFail('BUSINESS_MONTH_SOURCE_UNAVAILABLE',503);}
+ let source;try{source=await services.getFinanceBusinessPeriod(env,selection);}catch{businessMonthFail('BUSINESS_MONTH_SOURCE_UNAVAILABLE',503);}
+ // Only this exact, bounded envelope can turn a private transport failure into
+ // an owner-facing code. Provider text and unknown fields never cross here.
+ if(businessMonthExact(source,['schema','status','diagnostic'])&&source.schema==='finance_business_period_v1'&&source.status==='UNAVAILABLE'){
+  const diagnostic=source.diagnostic,codes=['UNAVAILABLE','CONFIGURATION','NETWORK_ERROR','TIMEOUT','HTTP_ERROR','REDIRECT_REJECTED','CONTENT_TYPE_INVALID','BODY_LIMIT','BODY_READ_ERROR','JSON_INVALID','FRAME_INVALID','SCOPE_MISMATCH','RESPONSE_INVALID'];
+  if(businessMonthExact(diagnostic,['code','http'])&&typeof diagnostic.code==='string'&&codes.some(suffix=>diagnostic.code==='FINANCE_BUSINESS_'+suffix)&&(diagnostic.http===null||Number.isInteger(diagnostic.http)&&diagnostic.http>=100&&diagnostic.http<=599)){
+   let suffix=diagnostic.code.slice('FINANCE_BUSINESS_'.length);
+   if(suffix==='HTTP_ERROR'&&[400,401,403,404,408,409,429,500,502,503,504].includes(diagnostic.http))suffix='HTTP_'+diagnostic.http;
+   throw new BusinessMonthError('BUSINESS_MONTH_SOURCE_'+suffix,503,{code:diagnostic.code,http:diagnostic.http});
+  }
+  businessMonthFail('BUSINESS_MONTH_SOURCE_UNAVAILABLE',503);
+ }
+ const frame=projectBusinessPeriodFrame(source);
  if(!frame||frame.start_date!==slot.start_date||frame.end_date!==slot.end_date||frame.checked_at>stamp+60||slot.frame&&(frame.run_id!==slot.frame.run_id||frame.revision<slot.frame.revision)||observed.payload.slots.some((entry,position)=>position!==index&&entry.frame?.run_id===frame.run_id))businessMonthFail('BUSINESS_MONTH_SOURCE_INVALID',503);
  const payload={...observed.payload,slots:observed.payload.slots.map((entry,position)=>position===index?{...entry,frame}:entry)};
  // Full frames each fit one bounded row. The parent keeps only three compact
@@ -263,7 +278,7 @@ async function businessMonthBundle(db,month,range,stamp,observed){
  if(month===checkedMonth&&sourceCheckedAt.finance_oldest_at!==null&&checkedAt-sourceCheckedAt.finance_oldest_at>900)pending.push('FINANCIAL_SOURCE_STALE');
  let net=null,margin=null;
  if(!pending.length){const addBack=expense.recharge_treatment==='ADS_RECHARGE'?adjustment:0;net=businessMonthSafe(BigInt(payout)-BigInt(production)-BigInt(tax)+BigInt(addBack)-BigInt(ads.expense_cents)-BigInt(expense.external_expenses_cents));if(net===null)pending.push('ARITHMETIC_UNSAFE');else if(sales>0){margin=businessMonthSafe(BigInt(net)*10000n/BigInt(sales));if(margin===null){net=null;pending.push('ARITHMETIC_UNSAFE');}}}
- const result={schema:'business_month_v1',month,start_date:range.start_date,end_date:range.end_date,status:complete?'COMPLETE':limited?'LIMIT_REACHED':'RUNNING',checked_at:checkedAt,progress:{windows_total:range.slots.length,windows_complete:frames.filter(frame=>frame.status==='COMPLETE').length,pages_read:frames.reduce((sum,frame)=>sum+frame.pages_read,0)},coverage,sales_cents:sales,known_sales_cents:knownSales,expected_repass_cents:payout,known_expected_repass_cents:knownPayout,production_cost_cents:production,known_production_cost_cents:knownProduction,invoice_tax_cents:tax,known_invoice_tax_cents:knownTax,ads_adjustment_cents:adjustment,ads,expenses:expense,result:{net_estimate_cents:net,net_profit_cents:null,net_margin_bps:margin,pending,basis:'PAID_ORDER_CREATE_MONTH_AND_CALENDAR_ADS_ESTIMATE'},unmapped_variants:unmapped,bindings_revision:bindings.revision,costs_revision:costs.revision};
+ const result={schema:'business_month_v1',month,start_date:range.start_date,end_date:range.end_date,status:complete?'COMPLETE':limited?'LIMIT_REACHED':'RUNNING',checked_at:checkedAt,progress:{windows_total:range.slots.length,windows_complete:frames.filter(frame=>frame.status==='COMPLETE').length,pages_read:frames.reduce((sum,frame)=>sum+frame.pages_read,0),order_capacity:frames.reduce((sum,frame)=>sum+frame.pages_read*(frame.page_capacity??5),0)},coverage,sales_cents:sales,known_sales_cents:knownSales,expected_repass_cents:payout,known_expected_repass_cents:knownPayout,production_cost_cents:production,known_production_cost_cents:knownProduction,invoice_tax_cents:tax,known_invoice_tax_cents:knownTax,ads_adjustment_cents:adjustment,ads,expenses:expense,result:{net_estimate_cents:net,net_profit_cents:null,net_margin_bps:margin,pending,basis:'PAID_ORDER_CREATE_MONTH_AND_CALENDAR_ADS_ESTIMATE'},unmapped_variants:unmapped,bindings_revision:bindings.revision,costs_revision:costs.revision};
  result.tax=taxPolicy;result.source_checked_at=sourceCheckedAt;
  result.cost_rules_revision=automaticCosts.revision;result.classification_revision=automaticCosts.classification_revision;
  result.product_summary=buildBusinessMonthProducts(frames,result,variantReferences,bindings);

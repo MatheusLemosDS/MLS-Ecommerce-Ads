@@ -87,12 +87,13 @@ export function projectBusinessPeriodFrame(value) {
   return Object.fromEntries(names.map(key=>[key,key==='products'?products:source[key]]));
  }
  try {
-  const hasProducts=plain(value)&&Object.hasOwn(value,'product_breakdown'),hasTimes=plain(value)&&Object.hasOwn(value,'source_checked_at'),frameKeys=[...keys,...(hasProducts?['product_breakdown']:[]),...(hasTimes?['source_checked_at']:[])];
+  const hasProducts=plain(value)&&Object.hasOwn(value,'product_breakdown'),hasTimes=plain(value)&&Object.hasOwn(value,'source_checked_at'),hasCapacity=plain(value)&&Object.hasOwn(value,'page_capacity'),frameKeys=[...keys,...(hasProducts?['product_breakdown']:[]),...(hasTimes?['source_checked_at']:[]),...(hasCapacity?['page_capacity']:[])];
   if(!exact(value,frameKeys)||value.schema!=='finance_business_period_v1'||!run(value.run_id)||!integer(value.revision,1,2147483647)||!['RUNNING','COMPLETE','LIMIT_REACHED'].includes(value.status)||!day(value.start_date)||!day(value.end_date)||!integer(value.cutoff_at,1,9999999999)||!integer(value.checked_at,value.cutoff_at,9999999999)||value.currency!=='BRL'||value.monetary_unit!=='UNCONFIRMED'||value.basis!=='CREATE_TIME_PAID_ORDER_ESTIMATE_NOT_SETTLED'||!integer(value.pages_read,0,200)||!integer(value.duplicate_orders,0,1000)||!exact(value.coverage,coverageKeys)||!exact(value.invoice_tax,invoiceKeys)||!array(value.items,1000)||![null,'BUSINESS_PERIOD_UPSTREAM_UNAVAILABLE','BUSINESS_PERIOD_CONFLICT'].includes(value.diagnostic))return null;
   const days=(Date.parse(value.end_date+'T00:00:00Z')-Date.parse(value.start_date+'T00:00:00Z'))/86400000+1;
   if(days<1||days>15||value.status==='COMPLETE'&&value.pages_read===0||value.status!=='RUNNING'&&value.diagnostic!==null)return null;
-  const c=value.coverage;
-  if(!coverageKeys.every(key=>integer(c[key],0,1000))||c.orders!==c.paid+c.cancelled+c.cancel_pending+c.unpaid+c.other+c.unknown||c.paid!==c.completed+c.ongoing||c.payment_covered+c.payment_missing!==c.paid||c.returns>c.payment_covered||c.returns_unknown<c.payment_missing||c.returns+c.returns_unknown>c.paid||c.orders+value.duplicate_orders>value.pages_read*5)return null;
+  if(hasCapacity&&value.page_capacity!==20)return null;
+  const c=value.coverage,capacity=hasCapacity?value.page_capacity:5;
+  if(!coverageKeys.every(key=>integer(c[key],0,1000))||c.orders!==c.paid+c.cancelled+c.cancel_pending+c.unpaid+c.other+c.unknown||c.paid!==c.completed+c.ongoing||c.payment_covered+c.payment_missing!==c.paid||c.returns>c.payment_covered||c.returns_unknown<c.payment_missing||c.returns+c.returns_unknown>c.paid||c.orders+value.duplicate_orders>value.pages_read*capacity)return null;
   let sourceTimes=null;
   if(hasTimes){
    sourceTimes=value.source_checked_at;
