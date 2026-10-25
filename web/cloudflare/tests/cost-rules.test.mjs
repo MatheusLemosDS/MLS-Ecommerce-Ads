@@ -145,3 +145,11 @@ test('a specific variation rule outranks a constant product rule and stays pendi
   await saveCostRules(env,{revision:state.revision,values:{...state.values,rules:state.values.rules.filter(rule=>rule.id!=='camiseta-infantil')}},'admin');result=await priced();assert.deepEqual(result.variants.map(row=>row.unit_cost_cents),[null,2300]);assert.equal(result.total_cents,null);
  }finally{env.ADMIN_DB.db.close();}
 });
+
+test('a product-wide child rule cannot be saved over a locally known adult size axis while partly supported child catalogues remain valid',async()=>{
+ const env=fixture();try{
+  await syncCostRuleCatalog(env,['101'],async()=>provider(catalog('Camiseta Unissex Verde',['P','M','G','GG'])),{now});const before=await readCostRules(env),audit=env.ADMIN_DB.db.prepare('SELECT COUNT(*) AS n FROM production_cost_rules_audit').get().n;
+  await assert.rejects(assignCostRules(env,{revision:before.revision,assignments:[{item_id:'101',model_id:null,rule_id:'camiseta-infantil',size:null}]},'admin'),error=>error.status===409&&error.message==='COST_RULE_ASSIGNMENT_CATALOG_CONFLICT');assert.deepEqual(await readCostRules(env),before);assert.equal(env.ADMIN_DB.db.prepare('SELECT COUNT(*) AS n FROM production_cost_rules_audit').get().n,audit);
+  await syncCostRuleCatalog(env,['101'],async()=>provider(catalog('Camiseta infantil',['2','4','6'])),{now,force:true});const saved=await assignCostRules(env,{revision:before.revision,assignments:[{item_id:'101',model_id:null,rule_id:'camiseta-infantil',size:null}]},'admin');assert.equal(saved.revision,before.revision+1);assert.deepEqual((await readCostRuleReference(env,['101'],{now})).variants.map(row=>row.unit_cost_cents),[null,1250,1250]);
+ }finally{env.ADMIN_DB.db.close();}
+});

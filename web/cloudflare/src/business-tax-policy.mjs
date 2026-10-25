@@ -33,15 +33,23 @@ function businessTaxStored(row,year){
  }catch{businessTaxFail('BUSINESS_TAX_POLICY_STATE_INVALID',503);}
 }
 
+// A caller collecting several financial references can validate this policy
+// from the same D1 batch without giving up deleted-state/audit protection.
+export function businessTaxPolicyFromSnapshot(row,historical,year=2026){
+ if(!businessTaxYear(year))businessTaxFail('BUSINESS_TAX_POLICY_YEAR_INVALID');
+ if(row)return businessTaxStored(row,year);
+ if(historical)businessTaxFail('BUSINESS_TAX_POLICY_STATE_INVALID',503);
+ return {revision:0,values:{regime:'MEI',year,monthly_das_cents:null},updated_at:null};
+}
+
 export async function readBusinessTaxPolicy(env,year=2026){
  if(!businessTaxYear(year))businessTaxFail('BUSINESS_TAX_POLICY_YEAR_INVALID');
  const row=await env.ADMIN_DB.prepare('SELECT revision,payload,updated_at FROM business_tax_policy_state WHERE year=?').bind(year).first();
- if(row)return businessTaxStored(row,year);
+ if(row)return businessTaxPolicyFromSnapshot(row,null,year);
  // An absent year is unconfigured. A deleted state with existing history is
  // corrupt and must never be recreated as an unaudited first version.
  const historical=await env.ADMIN_DB.prepare('SELECT revision FROM business_tax_policy_audit WHERE year=? LIMIT 1').bind(year).first();
- if(historical)businessTaxFail('BUSINESS_TAX_POLICY_STATE_INVALID',503);
- return {revision:0,values:{regime:'MEI',year,monthly_das_cents:null},updated_at:null};
+ return businessTaxPolicyFromSnapshot(null,historical,year);
 }
 
 export async function saveBusinessTaxPolicy(env,body,actor,options={}){

@@ -92,7 +92,7 @@ export function costRuleProductLearning(values,itemId,catalog,options={}){
 
   // This bounded fallback uses an operator-confirmed domain rule. It does not
   // learn arbitrary words or prices from a corrected title or a numeric size.
-  const child=rules.get('camiseta-infantil'),childSizes=new Set(['4','6','8','10','12','14','16']);
+  const child=rules.get('camiseta-infantil'),childSizes=new Set(['2','4','6','8','10','12','14','16']);
   if(!source||!source.variants.length||!child?.enabled||!child.options.length||!child.options.every(size=>childSizes.has(learningOption(size))))return learningResult();
   const shirtWords=['camiseta','camisa','blusa'],childWords=['infantil','kids','crianca'];
   if(!child.name_patterns.some(pattern=>{const words=learningWords(pattern);return shirtWords.some(word=>words.has(word))&&childWords.some(word=>words.has(word));}))return learningResult();

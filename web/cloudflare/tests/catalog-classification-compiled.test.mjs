@@ -19,7 +19,9 @@ for(const minify of [false,true])test(`deployable automatic classification works
  };
  try{
   await enqueueCatalogClassifications(env,['201','202']);
-  const tasks=[];await worker.scheduled({},env,{waitUntil(task){tasks.push(task);}});await Promise.all(tasks);
+  // Bootstrap and financial work have separate bounded lanes. The catalogue
+  // still advances automatically after the failed financial source backs off.
+  for(let tick=0;tick<6&&reads.length<2;tick++){const tasks=[];await worker.scheduled({},env,{waitUntil(task){tasks.push(task);}});await Promise.all(tasks);}
   assert.deepEqual(reads,['201','202'],'the cron advances classification despite an unavailable financial import and no owner session');
   assert.equal(env.ADMIN_DB.db.prepare('SELECT COUNT(*) n FROM catalog_classification_variants').get().n,2);
   assert.equal((await worker.fetch(new Request(origin+'/api/admin/catalog-classification'),env)).status,401);

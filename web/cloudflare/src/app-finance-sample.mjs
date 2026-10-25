@@ -1,6 +1,6 @@
 import {projectFinanceSample,financeSampleDiagnostic} from './finance-sample-frame.mjs';
 import {projectFinancePaymentPreview} from '../../finance/src/payment-preview-frame.mjs';
-import {projectVariantCatalog,projectVariantCatalogRequest} from '../../finance/src/variant-catalog-frame.mjs';
+import {projectVariantCatalog,projectVariantCatalogRequest,projectVariantCatalogFailure} from '../../finance/src/variant-catalog-frame.mjs';
 
 export function projectAdminFinancePreview(value){
  return projectFinancePaymentPreview(value)||{schema:'finance_payment_preview_v1',status:'UNAVAILABLE',diagnostic:financeSampleDiagnostic(value?.diagnostic)};
@@ -43,7 +43,7 @@ export async function getFinancePaymentPreview(env,options){return getFinanceAct
 // The caller supplies only bounded product identifiers, never a provider path,
 // shop, token or URL. The response is projected again before the admin sees it.
 export async function getFinanceVariantCatalog(env,input,{fetchImpl=request=>fetch(request),timeoutMs=45000}={}){
- const failure=code=>({schema:'variant_catalog_v1',status:'UNAVAILABLE',diagnostic:{code,http:null}});
+ const failure=(code,http=null)=>({schema:'variant_catalog_v1',status:'UNAVAILABLE',diagnostic:{stage:'APP',code,http}});
  const body=projectVariantCatalogRequest(input);
  if(!body||typeof env?.APP_INTERNAL_SECRET!=='string'||!env.APP_INTERNAL_SECRET||typeof fetchImpl!=='function'||!Number.isInteger(timeoutMs)||timeoutMs<5||timeoutMs>45000)return failure('FINANCE_CATALOG_APP_CONFIGURATION');
  const maximum=body.include_cost_catalog?1048576:262144;
@@ -54,7 +54,7 @@ export async function getFinanceVariantCatalog(env,input,{fetchImpl=request=>fet
  const run=async()=>{
   response=await fetchImpl(new Request('https://auth.brazacommerce.com.br/internal/shopee/finance/variant-catalog',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json','X-Braza-App-Key':env.APP_INTERNAL_SECRET},body:JSON.stringify(body),redirect:'manual',signal:controller.signal}));
   checkDeadline();
-  if(!(response instanceof Response)||response.redirected||response.status!==200||!/^application\/json(?:\s*;\s*charset\s*=\s*(?:utf-8|"utf-8"))?\s*$/i.test(response.headers.get('content-type')||''))return failure('FINANCE_CATALOG_APP_RESPONSE_INVALID');
+  if(!(response instanceof Response)||response.redirected||!/^application\/json(?:\s*;\s*charset\s*=\s*(?:utf-8|"utf-8"))?\s*$/i.test(response.headers.get('content-type')||''))return failure('FINANCE_CATALOG_APP_RESPONSE_INVALID');
   const declared=response.headers.get('content-length');
   if(declared!==null&&(!/^\d+$/.test(declared)||!Number.isSafeInteger(Number(declared))||Number(declared)>maximum))return failure('FINANCE_CATALOG_APP_RESPONSE_INVALID');
   if(!response.body)return failure('FINANCE_CATALOG_APP_RESPONSE_INVALID');
@@ -63,6 +63,8 @@ export async function getFinanceVariantCatalog(env,input,{fetchImpl=request=>fet
   finally{cancel();try{reader.releaseLock();}catch{}reader=undefined;}
   const bytes=new Uint8Array(length);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.length;}
   let raw;try{raw=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes));}catch{return failure('FINANCE_CATALOG_APP_RESPONSE_INVALID');}
+  const sourceFailure=projectVariantCatalogFailure(raw);if(sourceFailure)return sourceFailure;
+  if(response.status!==200)return failure('FINANCE_CATALOG_APP_HTTP_ERROR',response.status);
   const frame=projectVariantCatalog(raw);
   return frame&&frame.products.length===body.item_ids.length&&frame.products.every(product=>body.item_ids.includes(product.item_id)&&Boolean(body.include_cost_catalog)===Object.hasOwn(product,'cost_catalog')&&(body.selling_unit==='AUTO'||(product.selling_unit||'ONE_MALE_ONE_FEMALE_KIT')===(body.selling_unit||'ONE_MALE_ONE_FEMALE_KIT')))?frame:failure('FINANCE_CATALOG_APP_RESPONSE_INVALID');
  };

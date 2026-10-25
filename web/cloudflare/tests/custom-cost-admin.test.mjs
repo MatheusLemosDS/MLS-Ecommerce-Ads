@@ -14,23 +14,24 @@ async function login(){
  assert.equal(response.status,303);const cookie=response.headers.get('set-cookie').split(';')[0];
  const state=await (await request(env,cookie,'state')).json();return {env,cookie,csrf:state.csrf};
 }
-const costs=()=>({...COST_DEFAULTS,components:[],custom_profiles:[{id:'calca',label:'Calça de moletom',unit_cost_cents:3500}],custom_assignments:Array.from({length:1000},(_,index)=>({item_id:String(index+1),model_id:null,profile_id:'calca'}))});
+const costs=(saved=COST_DEFAULTS)=>({...saved,components:[],custom_profiles:[{id:'calca',label:'Calça de moletom',unit_cost_cents:3500}],custom_assignments:Array.from({length:1000},(_,index)=>({item_id:String(index+1),model_id:null,profile_id:'calca'}))});
 
 test('the production cost API accepts a full product assignment catalog while preserving owner, origin, CSRF and body limits',async()=>{
  const {env,cookie,csrf}=await login();
  try{
-  const body={revision:1,values:costs()};assert.ok(JSON.stringify(body).length>16384);
+  const initial=await (await request(env,cookie,'production-costs')).json(),initialAudits=env.ADMIN_DB.db.prepare('SELECT COUNT(*) n FROM production_costs_audit').get().n;
+  assert.equal(initial.values.composition_recipes.length,1,'the confirmed combo recipe is part of the loaded operator state');const body={revision:initial.revision,values:costs(initial.values)};assert.ok(JSON.stringify(body).length>16384);
   for(const [changes,status] of [[{cookie:''},401],[{cookie:'mls_session=restricted'},401],[{csrf:''},403],[{origin:'https://foreign.example'},403]]){
    const response=await request(env,changes.cookie??cookie,'production-costs',{body,csrf,origin:base,...changes});assert.equal(response.status,status);
   }
-  assert.equal((await (await request(env,cookie,'production-costs')).json()).revision,1);
+  assert.deepEqual(await (await request(env,cookie,'production-costs')).json(),initial);
   const response=await request(env,cookie,'production-costs',{body,csrf});assert.equal(response.status,200);
-  const saved=await response.json();assert.equal(saved.revision,2);assert.equal(saved.values.custom_assignments.length,1000);
+  const saved=await response.json();assert.equal(saved.revision,initial.revision+1);assert.equal(saved.values.custom_assignments.length,1000);assert.deepEqual(saved.values.composition_recipes,initial.values.composition_recipes);assert.deepEqual(saved.values.composition_assignments,initial.values.composition_assignments);
   const read=await (await request(env,cookie,'production-costs')).json();assert.deepEqual(read.values,saved.values);
-  const oversized={revision:2,values:{...costs(),padding:'x'.repeat(196608)}};
+  const oversized={revision:saved.revision,values:{...costs(saved.values),padding:'x'.repeat(196608)}};
   assert.equal((await request(env,cookie,'production-costs',{body:oversized,csrf})).status,413);
-  assert.equal((await (await request(env,cookie,'production-costs')).json()).revision,2);
-  assert.equal(env.ADMIN_DB.db.prepare('SELECT COUNT(*) n FROM production_costs_audit').get().n,2);
+  assert.equal((await (await request(env,cookie,'production-costs')).json()).revision,saved.revision);
+  assert.equal(env.ADMIN_DB.db.prepare('SELECT COUNT(*) n FROM production_costs_audit').get().n,initialAudits+1);
  }finally{env.ADMIN_DB.db.close();}
 });
 
@@ -39,8 +40,8 @@ test('the order API uses the custom cost and excludes its legacy kit margin with
  try{
   const bindings=['1','2'].map(model_id=>({item_id:'101',model_id,male_size:'M',female_size:'G',selling_unit:'ONE_MALE_ONE_FEMALE_KIT',operator_confirmed:true}));
   assert.equal((await request(env,cookie,'variant-bindings',{body:{revision:1,bindings},csrf})).status,200);
-  const values={...costs(),custom_assignments:[{item_id:'101',model_id:null,profile_id:'calca'}]};
-  assert.equal((await request(env,cookie,'production-costs',{body:{revision:1,values},csrf})).status,200);
+  const initial=await (await request(env,cookie,'production-costs')).json(),values={...costs(initial.values),custom_assignments:[{item_id:'101',model_id:null,profile_id:'calca'}]};
+  assert.equal((await request(env,cookie,'production-costs',{body:{revision:initial.revision,values},csrf})).status,200);
   const cutoff=new Date(Date.now()-10800000).toISOString().replace('Z','-03:00');
   const frame={schema:'shop_order_items_v1',shop_id:1178167501,date:cutoff.slice(0,10),timezone:'America/Sao_Paulo',through_at:cutoff,day_partial:true,pagination_complete:true,pages_read:1,orders_in_api_window:2,orders_with_details:2,duplicate_rows:0,catalog_units:3,rows:[{item_id:'101',model_id:'1',order_status:'READY_TO_SHIP',quantity:2,line_count:1},{item_id:'101',model_id:'2',order_status:'UNPAID',quantity:1,line_count:1}],currency_status:'BRL_ALL_CONFIRMED',currency_counts:{BRL:2,OTHER:0,UNKNOWN:0},source:'shopee_get_order_list_and_detail',transport_http:200,api_error:'NO',count_basis:'UNIQUE_ORDER_SN_CREATE_TIME_NO_STATUS_FILTER',order_status_filter:'NONE',dashboard_counter_reconciled:false,order_status_verified:true};
   const services={getOrderItems:async()=>frame};

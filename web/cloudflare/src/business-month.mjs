@@ -3,7 +3,7 @@ import {projectAdsCalendar} from './ads-calendar.mjs';
 import {validateVariantBindings} from './variant-bindings.mjs';
 import {productionCostReference,validateProductionCosts} from './production-costs.mjs';
 import {buildBusinessMonthProducts,projectBusinessMonthProducts} from './business-month-products.mjs';
-import {TAX_POLICY_SCHEMA,readBusinessTaxPolicy,businessMonthTax} from './business-tax-policy.mjs';
+import {TAX_POLICY_SCHEMA,businessTaxPolicyFromSnapshot,businessMonthTax} from './business-tax-policy.mjs';
 import {COST_RULE_SCHEMA,costRuleSnapshotQueries,costRuleReferenceFromSnapshot,mergeCatalogCostReference} from './cost-rules.mjs';
 import {catalogClassificationQueries,catalogClassificationsFromSnapshot} from './catalog-classification.mjs';
 
@@ -29,6 +29,7 @@ export const BUSINESS_MONTH_SCHEMA=[
  `CREATE TABLE IF NOT EXISTS business_month_runs (month TEXT PRIMARY KEY NOT NULL,revision INTEGER NOT NULL,payload TEXT NOT NULL,created_at INTEGER NOT NULL,updated_at INTEGER NOT NULL)`,
  `CREATE TABLE IF NOT EXISTS business_month_frames (month TEXT NOT NULL,slot_index INTEGER NOT NULL CHECK(slot_index BETWEEN 0 AND 2),run_id TEXT NOT NULL,revision INTEGER NOT NULL,payload TEXT NOT NULL CHECK(length(CAST(payload AS BLOB))<=1048576),PRIMARY KEY(month,slot_index))`,
  `CREATE TABLE IF NOT EXISTS business_month_ads (month TEXT PRIMARY KEY NOT NULL,payload TEXT NOT NULL,updated_at INTEGER NOT NULL)`,
+ `CREATE TABLE IF NOT EXISTS business_month_ads_attempts (month TEXT PRIMARY KEY NOT NULL,start_date TEXT NOT NULL,end_date TEXT NOT NULL,attempted_at INTEGER NOT NULL,completed_at INTEGER NOT NULL,status TEXT NOT NULL,diagnostic TEXT,payload TEXT CHECK(payload IS NULL OR length(CAST(payload AS BLOB))<=1048576))`,
  `CREATE TABLE IF NOT EXISTS business_month_expenses (month TEXT PRIMARY KEY NOT NULL,revision INTEGER NOT NULL,external_expenses_cents INTEGER NOT NULL,recharge_treatment TEXT NOT NULL,updated_at TEXT NOT NULL)`,
  `CREATE TABLE IF NOT EXISTS business_month_expenses_audit (month TEXT NOT NULL,revision INTEGER NOT NULL,external_expenses_cents INTEGER NOT NULL,recharge_treatment TEXT NOT NULL,actor TEXT NOT NULL,created_at TEXT NOT NULL,PRIMARY KEY(month,revision))`,
 ];
@@ -99,6 +100,7 @@ export function projectBusinessMonth(value){
   if(tax?.status==='PENDING'&&!has('TAX_POLICY_REQUIRED')||tax?.status!=='PENDING'&&has('TAX_POLICY_REQUIRED'))return null;
   if(sources&&value.month===currentDay.slice(0,7)&&sources.finance_oldest_at!==null&&value.checked_at-sources.finance_oldest_at>900&&!has('FINANCIAL_SOURCE_STALE'))return null;
   if(has('FINANCIAL_SOURCE_STALE')&&(!sources||sources.finance_oldest_at===null||value.month!==currentDay.slice(0,7)||value.checked_at-sources.finance_oldest_at<=900))return null;
+  if(ads?.status==='AVAILABLE'&&value.checked_at-ads.fetched_at>900&&!has('ADS_UNAVAILABLE'))return null;
   if(value.status==='RUNNING'&&!has('COLLECTING')||value.status==='LIMIT_REACHED'&&!has('PERIOD_LIMIT_REACHED')||c.cancel_pending+c.other+c.unknown>0&&!has('STATUS_REVIEW_REQUIRED')||c.payment_missing>0&&!has('PAYMENT_INCOMPLETE')||c.returns+c.returns_unknown>0&&!has('RETURNS_NOT_RECONCILED')||value.production_cost_cents===null&&!has('PRODUCTION_COST_INCOMPLETE')||value.invoice_tax_cents===null&&!has('INVOICE_TAX_UNAVAILABLE')||ads?.status!=='AVAILABLE'&&!has('ADS_UNAVAILABLE')||expense.external_expenses_cents===null&&!has('EXTERNAL_EXPENSES_REQUIRED')||(value.ads_adjustment_cents===null||value.ads_adjustment_cents<0)&&!has('ADJUSTMENT_UNAVAILABLE'))return null;
   // Incomplete or unclassified population cannot release any monthly total.
   if(value.status!=='COMPLETE'&&['sales_cents','expected_repass_cents','production_cost_cents','invoice_tax_cents','ads_adjustment_cents'].some(key=>value[key]!==null))return null;
@@ -159,12 +161,7 @@ async function businessMonthOperation(env,input,services,{now=()=>Date.now(),act
  let result=null;
  try{
   if(operation==='start'||operation==='step')observed=await businessMonthAdvance(env,db,input.month,range,stamp,observed,services);
-  if(operation==='ads'){
-   if(typeof services?.getAdsCalendar!=='function')businessMonthFail('BUSINESS_MONTH_ADS_UNAVAILABLE',503);
-   let report;try{report=projectAdsCalendar(await services.getAdsCalendar(env,{start_date:range.start_date,end_date:range.end_date}));}catch{businessMonthFail('BUSINESS_MONTH_ADS_UNAVAILABLE',503);}
-   if(!report||report.start_date!==range.start_date||report.end_date!==range.end_date||report.fetched_at>stamp+60||stamp-report.fetched_at>(range.current?60:900))businessMonthFail('BUSINESS_MONTH_ADS_INVALID',503);
-   await db.prepare('INSERT INTO business_month_ads(month,payload,updated_at) VALUES(?,?,?) ON CONFLICT(month) DO UPDATE SET payload=excluded.payload,updated_at=excluded.updated_at WHERE business_month_ads.updated_at<=excluded.updated_at').bind(input.month,JSON.stringify(report),report.fetched_at).run();
-  }
+  if(operation==='ads')await businessMonthRefreshAds(env,db,input.month,range,stamp,services,now);
   result=await businessMonthBundle(db,input.month,range,stamp,observed);return result;
  }finally{
   // Discovery uses every validated imported item, including already priced
@@ -176,6 +173,52 @@ async function businessMonthOperation(env,input,services,{now=()=>Date.now(),act
    try{await onProductsDiscovered(itemIds,{priorityItemIds,unmappedVariants:result?.unmapped_variants||[]});}catch{}
   }
  }
+}
+
+// Refresh cadence and validity are different: a sixty-second refresh interval
+// must not erase a proven Ads amount when a local cost calculation reads it.
+function businessMonthAdsRead(cached,attempt,range,stamp){
+ let retained=null,latest=null;
+ if(cached){try{retained=projectAdsCalendar(JSON.parse(cached.payload));}catch{}if(!retained||retained.fetched_at!==cached.updated_at||retained.fetched_at>stamp+60)businessMonthFail('BUSINESS_MONTH_ADS_CACHE_INVALID',503);}
+ if(attempt){
+  if(!['AVAILABLE','PARTIAL','UNAVAILABLE','ERROR'].includes(attempt.status)||!Number.isSafeInteger(attempt.attempted_at)||attempt.attempted_at<1||!Number.isSafeInteger(attempt.completed_at)||attempt.completed_at<attempt.attempted_at||attempt.completed_at>stamp+60||!businessMonthRange(attempt.start_date.slice(0,7),stamp)||attempt.start_date.slice(0,7)!==attempt.end_date.slice(0,7)||attempt.diagnostic!==null&&!['ADS_CALENDAR_CONFIGURATION','ADS_CALENDAR_UNAVAILABLE','ADS_CALENDAR_DATE_COVERAGE_PARTIAL','ADS_CALENDAR_EXPENSE_INVALID','ADS_CALENDAR_ARITHMETIC_UNSAFE','BUSINESS_MONTH_ADS_UNAVAILABLE','BUSINESS_MONTH_ADS_INVALID'].includes(attempt.diagnostic))businessMonthFail('BUSINESS_MONTH_ADS_CACHE_INVALID',503);
+  if(attempt.payload!==null){try{latest=projectAdsCalendar(JSON.parse(attempt.payload));}catch{}if(!latest||latest.status!==attempt.status||latest.start_date!==attempt.start_date||latest.end_date!==attempt.end_date||latest.fetched_at>attempt.completed_at+60)businessMonthFail('BUSINESS_MONTH_ADS_CACHE_INVALID',503);}
+  else if(attempt.status!=='ERROR')businessMonthFail('BUSINESS_MONTH_ADS_CACHE_INVALID',503);
+ }
+ const matches=report=>report&&report.start_date===range.start_date&&report.end_date===range.end_date;
+ const good=retained?.status==='AVAILABLE'?retained:null,matchingGood=matches(good)?good:null,attemptMatches=attempt?.start_date===range.start_date&&attempt.end_date===range.end_date;
+ const ads=matchingGood||(matches(latest)?latest:matches(retained)?retained:null);
+ const failed=attemptMatches&&attempt.status!=='AVAILABLE'&&(!matchingGood||attempt.attempted_at>=matchingGood.fetched_at);
+ const age=ads?Math.max(0,stamp-ads.fetched_at):null,fresh=ads?.status==='AVAILABLE'&&age<=900&&!failed;
+ const state=fresh?'FRESH':failed?(attempt.status==='PARTIAL'?'PARTIAL':attempt.status==='UNAVAILABLE'?'UNAVAILABLE':'FAILED'):ads?.status==='AVAILABLE'?'STALE':ads?.status==='PARTIAL'?'PARTIAL':ads?.status==='UNAVAILABLE'?'UNAVAILABLE':retained?'SCOPE_MISMATCH':'MISSING';
+ return {ads,fresh,observation:{state,age_seconds:age,last_success_at:good?.fetched_at??null,last_success_scope:good?{start_date:good.start_date,end_date:good.end_date}:null,last_attempt_at:attemptMatches?attempt.completed_at:null,last_attempt_status:attemptMatches?attempt.status:null,diagnostic:failed?attempt.diagnostic:ads?.diagnostic??null}};
+}
+async function businessMonthRefreshAds(env,db,month,range,stamp,services,now){
+ let report=null,status='ERROR',diagnostic='BUSINESS_MONTH_ADS_UNAVAILABLE';
+ try{
+  if(typeof services?.getAdsCalendar!=='function')throw Error();report=projectAdsCalendar(await services.getAdsCalendar(env,{start_date:range.start_date,end_date:range.end_date}));
+  const finished=Math.max(stamp,Math.floor(now()/1000));
+  if(!report||report.start_date!==range.start_date||report.end_date!==range.end_date||report.fetched_at>finished+60||finished-report.fetched_at>(range.current?60:900)){report=null;diagnostic='BUSINESS_MONTH_ADS_INVALID';}
+  else{status=report.status;diagnostic=report.diagnostic;}
+ }catch(error){if(Object.getOwnPropertyDescriptor(error||{},'code')?.value==='BUSINESS_MONTH_ADS_SKIPPED')throw error;report=null;}
+ const completed=Math.max(stamp,Math.floor(now()/1000));if(!Number.isSafeInteger(completed)||completed>9999999999)businessMonthFail('BUSINESS_MONTH_CLOCK',503);
+ const writes=[];
+ // Keep the last complete amount on failure. A partial report is useful only
+ // when a complete report has never been stored for this exact date cohort.
+ if(report)writes.push(db.prepare(`INSERT INTO business_month_ads(month,payload,updated_at) VALUES(?,?,?) ON CONFLICT(month) DO UPDATE SET payload=excluded.payload,updated_at=excluded.updated_at
+ WHERE business_month_ads.updated_at<=excluded.updated_at AND (json_extract(excluded.payload,'$.status')='AVAILABLE' OR json_extract(business_month_ads.payload,'$.status')<>'AVAILABLE')`).bind(month,JSON.stringify(report),report.fetched_at));
+ writes.push(db.prepare('INSERT INTO business_month_ads_attempts(month,start_date,end_date,attempted_at,completed_at,status,diagnostic,payload) VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(month) DO UPDATE SET start_date=excluded.start_date,end_date=excluded.end_date,attempted_at=excluded.attempted_at,completed_at=excluded.completed_at,status=excluded.status,diagnostic=excluded.diagnostic,payload=excluded.payload WHERE business_month_ads_attempts.attempted_at<=excluded.attempted_at').bind(month,range.start_date,range.end_date,stamp,completed,status,diagnostic,report?JSON.stringify(report):null));
+ await db.batch(writes);
+}
+
+// Separate finite diagnostics preserve the exact monthly v1/v2 response shape.
+// This read never refreshes Ads, orders or payments and never changes source age.
+export async function readBusinessMonthAdsState(env,month,{now=()=>Date.now()}={}){
+ const value=now(),stamp=Number.isSafeInteger(value)&&value>0?Math.floor(value/1000):null,range=stamp?businessMonthRange(month,stamp):null;
+ if(!range)businessMonthFail('BUSINESS_MONTH_REQUEST_INVALID');const db=env?.ADMIN_DB;if(!db?.batch)businessMonthFail('BUSINESS_MONTH_CONFIGURATION',503);
+ if(!businessMonthReady.has(db)){await db.batch(BUSINESS_MONTH_SCHEMA.map(sql=>db.prepare(sql)));businessMonthReady.add(db);}
+ const rows=await db.batch([db.prepare('SELECT payload,updated_at FROM business_month_ads WHERE month=?').bind(month),db.prepare('SELECT * FROM business_month_ads_attempts WHERE month=?').bind(month)]),state=businessMonthAdsRead(rows[0].results[0],rows[1].results[0],range,stamp);
+ return {schema:'business_month_ads_state_v1',month,start_date:range.start_date,end_date:range.end_date,checked_at:stamp,...state.observation,refresh_due:state.observation.age_seconds===null||state.observation.age_seconds>=60||!state.fresh,unit_confirmation:'OPERATOR_CONFIRMED_BRL_2026_10_20'};
 }
 
 async function businessMonthSaveExpenses(db,input,actor,stamp){
@@ -269,7 +312,7 @@ async function businessMonthAdvance(env,db,month,range,stamp,observed,services){
 }
 
 async function businessMonthBundle(db,month,range,stamp,observed){
- const taxPolicy=businessMonthTax(await readBusinessTaxPolicy({ADMIN_DB:db},Number(month.slice(0,4))),month);
+ const year=Number(month.slice(0,4));
  const sourceItems=observed.payload.slots.flatMap(slot=>slot.frame?.items||[]),itemIds=sourceItems.map(row=>row.item_id);
  const ruleQueries=costRuleSnapshotQueries(db,itemIds),classificationQueries=catalogClassificationQueries(db,itemIds,sourceItems);
  const rows=await db.batch([
@@ -278,13 +321,17 @@ async function businessMonthBundle(db,month,range,stamp,observed){
   db.prepare('SELECT revision,external_expenses_cents,recharge_treatment,updated_at FROM business_month_expenses WHERE month=?').bind(month),
   db.prepare('SELECT payload,updated_at FROM business_month_ads WHERE month=?').bind(month),
   ...ruleQueries,...classificationQueries,
+  db.prepare('SELECT * FROM business_month_ads_attempts WHERE month=?').bind(month),
+  db.prepare('SELECT revision,payload,updated_at FROM business_tax_policy_state WHERE year=?').bind(year),
+  db.prepare('SELECT revision FROM business_tax_policy_audit WHERE year=? LIMIT 1').bind(year),
  ]);
- let bindings,costs,expense,ads=null;
+ let bindings,costs,expense,taxPolicy,ads=null,adsFresh=false;
  try{
   const b=rows[0].results[0],c=rows[1].results[0];if(!b||!c||!Number.isSafeInteger(b.revision)||b.revision<1||!Number.isSafeInteger(c.revision)||c.revision<1)throw Error();
   bindings={revision:b.revision,bindings:validateVariantBindings(JSON.parse(b.payload))};costs={revision:c.revision,values:validateProductionCosts(JSON.parse(c.payload))};
   expense=rows[2].results[0]||{revision:0,external_expenses_cents:null,recharge_treatment:'UNCONFIRMED',updated_at:null};
-  const cached=rows[3].results[0];if(cached){const projected=projectAdsCalendar(JSON.parse(cached.payload));if(projected&&projected.start_date===range.start_date&&projected.end_date===range.end_date&&projected.fetched_at===cached.updated_at&&projected.fetched_at<=stamp+60&&stamp-projected.fetched_at<=(range.current?60:900))ads=projected;}
+  const observedAds=businessMonthAdsRead(rows[3].results[0],rows.at(-3).results[0],range,stamp);ads=observedAds.ads;adsFresh=observedAds.fresh;
+  taxPolicy=businessMonthTax(businessTaxPolicyFromSnapshot(rows.at(-2).results[0],rows.at(-1).results[0],year),month);
  }catch{businessMonthFail('BUSINESS_MONTH_STORAGE_INVALID',503);}
  const frames=observed.payload.slots.flatMap(slot=>slot.frame?[slot.frame]:[]),complete=frames.length===range.slots.length&&frames.every(frame=>frame.status==='COMPLETE'),limited=frames.some(frame=>frame.status==='LIMIT_REACHED');
  const coverage=Object.fromEntries(businessMonthCoverageKeys.map(key=>[key,frames.reduce((sum,frame)=>sum+frame.coverage[key],0)]));
@@ -304,13 +351,13 @@ async function businessMonthBundle(db,month,range,stamp,observed){
  const map=new Map();let invalidQuantity=false;
  for(const frame of frames)for(const row of frame.items){const key=row.item_id+':'+row.model_id,previous=map.get(key),quantity=(previous?.quantity||0)+row.quantity;if(!Number.isSafeInteger(quantity))invalidQuantity=true;else map.set(key,{...row,quantity});}
  const items=[...map.values()],unmapped=[],variantReferences=[];let productionKnown=0n,productionComplete=true;
- const automaticCosts=mergeCatalogCostReference(costRuleReferenceFromSnapshot(rows.slice(4,4+ruleQueries.length),{now:()=>stamp*1000}),catalogClassificationsFromSnapshot(rows.slice(4+ruleQueries.length)));
+ const automaticCosts=mergeCatalogCostReference(costRuleReferenceFromSnapshot(rows.slice(4,4+ruleQueries.length),{now:()=>stamp*1000}),catalogClassificationsFromSnapshot(rows.slice(4+ruleQueries.length,4+ruleQueries.length+classificationQueries.length)));
  if(invalidQuantity)productionComplete=false;
  // The cost helper is bounded per batch; all batches use the same snapshots.
  try{for(let index=0;index<items.length;index+=1000){const ref=productionCostReference({status:'AVAILABLE',rows:items.slice(index,index+1000)},bindings,costs,automaticCosts);variantReferences.push(...ref.variants);productionKnown+=BigInt(ref.known_subset_cents);if(ref.total_cents===null)productionComplete=false;for(const row of ref.variants)if(row.unit_cost_cents===null)unmapped.push({item_id:row.item_id,model_id:row.model_id,quantity:row.quantity});}}catch{productionComplete=false;invalidQuantity=true;}
  const knownProduction=businessMonthSafe(productionKnown),amountsSafe=[knownSales,knownPayout,knownAdjustment,knownProduction].every(value=>value!==null)&&!invalidQuantity;
  const sales=complete&&coverage.payment_missing===0?knownSales:null,payout=complete&&coverage.payment_missing===0?knownPayout:null,tax=complete?knownTax:null,adjustment=complete&&coverage.payment_missing===0?knownAdjustment:null,production=complete&&productionComplete?knownProduction:null;
- if(production===null)pending.push('PRODUCTION_COST_INCOMPLETE');if(tax===null)pending.push('INVOICE_TAX_UNAVAILABLE');if(ads?.status!=='AVAILABLE')pending.push('ADS_UNAVAILABLE');if(expense.external_expenses_cents===null)pending.push('EXTERNAL_EXPENSES_REQUIRED');if(adjustment===null||adjustment<0)pending.push('ADJUSTMENT_UNAVAILABLE');else if(adjustment>0&&expense.recharge_treatment==='UNCONFIRMED')pending.push('RECHARGE_TREATMENT_REQUIRED');if(!amountsSafe)pending.push('ARITHMETIC_UNSAFE');
+ if(production===null)pending.push('PRODUCTION_COST_INCOMPLETE');if(tax===null)pending.push('INVOICE_TAX_UNAVAILABLE');if(!adsFresh)pending.push('ADS_UNAVAILABLE');if(expense.external_expenses_cents===null)pending.push('EXTERNAL_EXPENSES_REQUIRED');if(adjustment===null||adjustment<0)pending.push('ADJUSTMENT_UNAVAILABLE');else if(adjustment>0&&expense.recharge_treatment==='UNCONFIRMED')pending.push('RECHARGE_TREATMENT_REQUIRED');if(!amountsSafe)pending.push('ARITHMETIC_UNSAFE');
  if(taxPolicy.status==='PENDING')pending.push('TAX_POLICY_REQUIRED');
  // Legacy frames only bound their observations by the import's start/end.
  // A recent final page must never make an earlier page appear freshly read.

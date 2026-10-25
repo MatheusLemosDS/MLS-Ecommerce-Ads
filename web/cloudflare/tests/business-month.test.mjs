@@ -6,7 +6,7 @@ import {COST_DEFAULTS} from '../src/production-costs.mjs';
 import {buildAdsMeasurement} from '../src/ads-measurement.mjs';
 import {buildAdsCalendar,projectAdsCalendar} from '../src/ads-calendar.mjs';
 import {projectBusinessPeriodFrame} from '../../finance/src/business-period-frame.mjs';
-import {businessMonth,projectBusinessMonth,BusinessMonthError} from '../src/business-month.mjs';
+import {businessMonth,projectBusinessMonth,BusinessMonthError,readBusinessMonthAdsState} from '../src/business-month.mjs';
 import {syncCostRuleCatalog,readCostRules,saveCostRules,assignCostRules} from '../src/cost-rules.mjs';
 import {businessMonthWithCheckpoint} from '../src/business-checkpoint.mjs';
 import {storeCatalogClassificationFrame,runCatalogClassifications} from '../src/catalog-classification.mjs';
@@ -150,7 +150,7 @@ test('recharges are added back exactly once while support already included in th
 
 test('Ads coverage holes and aged current-day caches stay unavailable without saving missing days as zero',async()=>{
  const e=env(),s=source();s.getAdsCalendar=async(_,selection)=>calendar(selection,stamp,'2026-10-16');await complete(e,s);let value=await run(e,s,'ads');assert.equal(value.ads.status,'PARTIAL');assert.equal(value.ads.expense_cents,null);assert.deepEqual(value.ads.missing_dates,['2026-10-16']);value=await save(e,s);assert.equal(value.result.net_estimate_cents,null);assert.ok(value.result.pending.includes('ADS_UNAVAILABLE'));
- const before=state(e);value=await run(e,s,'read',{}, {now:()=>clock+901000});assert.equal(value.ads,null);assert.deepEqual(state(e),before);
+ const before=state(e);value=await run(e,s,'read',{}, {now:()=>clock+901000});assert.equal(value.ads.status,'PARTIAL');assert.equal(value.ads.known_expense_cents,3000);assert.equal(value.source_checked_at.ads_at,stamp);assert.ok(value.result.pending.includes('ADS_UNAVAILABLE'));assert.deepEqual(state(e),before);
 });
 
 test('poisoned provider identity, duplicates and foreign ranges cannot replace a stored monthly import',async()=>{
@@ -295,4 +295,38 @@ test('reading a saved month automatically recovers only a missing sold model wit
  value=await businessMonthWithCheckpoint(e,{operation:'read',month:'2026-10'},s,{now});assert.equal(value.production_cost_cents,null);const job=e.ADMIN_DB.db.prepare("SELECT * FROM catalog_classification_jobs WHERE item_id='201'").get();assert.equal(job.status,'MATCHED');assert.equal(job.reason,'CATALOG_SOLD_MODEL_MISSING');assert.equal(job.next_attempt_at,0);assert.equal(e.ADMIN_DB.db.prepare('SELECT COUNT(*) AS n FROM catalog_classification_changes').get().n,0);
  const recovered=await runCatalogClassifications(e,async()=>catalogue(['0','1']),{now,maxProducts:1,itemIds:['201']});assert.deepEqual(recovered.processed,['201']);value=await businessMonthWithCheckpoint(e,{operation:'read',month:'2026-10'},s,{now});assert.equal(value.production_cost_cents,9540);assert.deepEqual(value.unmapped_variants,[]);assert.equal(s.calls.finance.length,before);assert.equal(s.calls.ads.length,0);assert.equal(e.ADMIN_DB.db.prepare('SELECT COUNT(*) AS n FROM catalog_classification_variants').get().n,2);
  assert.equal(e.ADMIN_DB.db.prepare('SELECT payload FROM variant_bindings_state').get().payload,'[]');assert.equal(e.ADMIN_DB.db.prepare('SELECT COUNT(*) AS n FROM catalog_classification_sold_gaps').get().n,1);
+});
+
+
+test('a local current-month calculation retains proven Ads after sixty seconds without changing source timestamps or calling providers',async()=>{
+ const e=env(),s=source();await complete(e,s,{month:'2026-11'});await run(e,s,'ads',{month:'2026-11'});const before=await save(e,s,0,{month:'2026-11'}),reads={finance:s.calls.finance.length,ads:s.calls.ads.length};
+ const later=await run(e,s,'read',{month:'2026-11'},{now:()=>clock+61000});assert.equal(later.ads.status,'AVAILABLE');assert.equal(later.ads.expense_cents,before.ads.expense_cents);assert.equal(later.source_checked_at.ads_at,stamp);assert.equal(later.result.net_estimate_cents,before.result.net_estimate_cents);assert.ok(!later.result.pending.includes('ADS_UNAVAILABLE'));assert.deepEqual({finance:s.calls.finance.length,ads:s.calls.ads.length},reads);
+ const observed=await readBusinessMonthAdsState(e,'2026-11',{now:()=>clock+61000});assert.equal(observed.state,'FRESH');assert.equal(observed.age_seconds,61);assert.equal(observed.refresh_due,true);assert.equal(observed.last_success_at,stamp);assert.equal(observed.unit_confirmation,'OPERATOR_CONFIRMED_BRL_2026_10_20');
+});
+
+test('an aged complete Ads report remains visible as saved evidence but cannot release the strict monthly net',async()=>{
+ const e=env(),s=source();await complete(e,s);await run(e,s,'ads');const before=await save(e,s),later=await run(e,s,'read',{}, {now:()=>clock+901000});assert.equal(later.ads.status,'AVAILABLE');assert.deepEqual(later.ads,before.ads);assert.equal(later.source_checked_at.ads_at,stamp);assert.equal(later.result.net_estimate_cents,null);assert.ok(later.result.pending.includes('ADS_UNAVAILABLE'));assert.equal((await readBusinessMonthAdsState(e,'2026-10',{now:()=>clock+901000})).state,'STALE');
+ const forged=structuredClone(later);forged.result={...before.result};assert.equal(projectBusinessMonth(forged),null,'removing the stale Ads blocker cannot make a historical amount a current expected net');
+});
+
+test('partial and failed Ads attempts preserve the last complete report and remain distinct from cache expiry',async()=>{
+ const e=env(),s=source();await complete(e,s);await run(e,s,'ads');const before=await save(e,s),saved=e.ADMIN_DB.db.prepare('SELECT payload FROM business_month_ads').get().payload;
+ s.getAdsCalendar=async(_,selection)=>calendar(selection,stamp+30,'2026-10-16');const partial=await run(e,s,'ads',{}, {now:()=>clock+30000});assert.deepEqual(partial.ads,before.ads);assert.equal(partial.result.net_estimate_cents,null);assert.ok(partial.result.pending.includes('ADS_UNAVAILABLE'));assert.equal(e.ADMIN_DB.db.prepare('SELECT payload FROM business_month_ads').get().payload,saved);const partialState=await readBusinessMonthAdsState(e,'2026-10',{now:()=>clock+30000});assert.equal(partialState.state,'PARTIAL');assert.equal(partialState.last_success_at,stamp);assert.equal(partialState.last_attempt_at,stamp+30);assert.equal(partialState.diagnostic,'ADS_CALENDAR_DATE_COVERAGE_PARTIAL');
+ s.getAdsCalendar=async()=>{throw Error('PRIVATE_PROVIDER_CREDENTIAL');};const failed=await run(e,s,'ads',{}, {now:()=>clock+60000}),failureState=await readBusinessMonthAdsState(e,'2026-10',{now:()=>clock+60000});assert.deepEqual(failed.ads,before.ads);assert.equal(failureState.state,'FAILED');assert.equal(failureState.diagnostic,'BUSINESS_MONTH_ADS_UNAVAILABLE');assert.equal(failed.source_checked_at.ads_at,stamp);assert.ok(!JSON.stringify(failureState).includes('PRIVATE'));assert.ok(!JSON.stringify(e.ADMIN_DB.db.prepare('SELECT * FROM business_month_ads_attempts').get()).includes('PRIVATE'));
+ s.getAdsCalendar=async(_,selection)=>calendar(selection,stamp+90);const recovered=await run(e,s,'ads',{}, {now:()=>clock+90000});assert.equal(recovered.result.net_estimate_cents,before.result.net_estimate_cents);assert.equal(recovered.source_checked_at.ads_at,stamp+90);assert.equal((await readBusinessMonthAdsState(e,'2026-10',{now:()=>clock+90000})).state,'FRESH');
+});
+
+test('a previous-day Ads cache cannot cover the new calendar day or acquire a fabricated latest source time',async()=>{
+ const e=env(),s=source();await complete(e,s,{month:'2026-11'});await run(e,s,'ads',{month:'2026-11'});const newDay=clock+86400000,value=await run(e,s,'read',{month:'2026-11'},{now:()=>newDay});assert.equal(value.ads,null);assert.equal(value.source_checked_at.ads_at,null);assert.ok(value.result.pending.includes('ADS_UNAVAILABLE'));const observed=await readBusinessMonthAdsState(e,'2026-11',{now:()=>newDay});assert.equal(observed.state,'SCOPE_MISMATCH');assert.equal(observed.last_success_scope.end_date,'2026-11-02');assert.equal(observed.end_date,'2026-11-03');assert.equal(observed.age_seconds,null);
+});
+
+test('an older in-flight Ads failure cannot overwrite the observation or amount from a later successful attempt',async()=>{
+ const e=env(),s=source();await complete(e,s);await run(e,s,'ads');await save(e,s);let entered,release;const waiting=new Promise(resolve=>entered=resolve),gate=new Promise((_,reject)=>release=reject),late={...s,getAdsCalendar:async()=>{entered();return gate;}};
+ const older=run(e,late,'ads',{}, {now:()=>clock+20000});await waiting;const newer={...s,getAdsCalendar:async(_,selection)=>calendar(selection,stamp+30)};const completeFrame=await run(e,newer,'ads',{}, {now:()=>clock+30000});release(Error('PRIVATE_LATE_FAILURE'));await older;const observed=await readBusinessMonthAdsState(e,'2026-10',{now:()=>clock+30000});assert.equal(observed.state,'FRESH');assert.equal(observed.last_success_at,stamp+30);assert.equal(observed.last_attempt_status,'AVAILABLE');const latest=await run(e,s,'read',{}, {now:()=>clock+30000});assert.equal(latest.result.net_estimate_cents,completeFrame.result.net_estimate_cents);
+});
+
+
+test('a legitimate saved zero Ads consumption stays zero after refresh cadence and is never manufactured from a failed source',async()=>{
+ const e=env(),s=source();s.getAdsCalendar=async(_,selection)=>calendar(selection,stamp,null,0);await complete(e,s,{month:'2026-11'});await run(e,s,'ads',{month:'2026-11'});const before=await save(e,s,0,{month:'2026-11'}),later=await run(e,s,'read',{month:'2026-11'},{now:()=>clock+61000});assert.equal(later.ads.expense_cents,0);assert.equal(later.ads.status,'AVAILABLE');assert.equal(later.result.net_estimate_cents,before.result.net_estimate_cents);assert.equal(later.source_checked_at.ads_at,stamp);
+ s.getAdsCalendar=async()=>{throw Error('PRIVATE_ZERO_FAILURE');};const failed=await run(e,s,'ads',{month:'2026-11'},{now:()=>clock+62000});assert.equal(failed.ads.expense_cents,0);assert.equal(failed.result.net_estimate_cents,null);assert.ok(failed.result.pending.includes('ADS_UNAVAILABLE'));assert.equal((await readBusinessMonthAdsState(e,'2026-11',{now:()=>clock+62000})).state,'FAILED');
 });

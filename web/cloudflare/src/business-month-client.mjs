@@ -29,7 +29,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
  let bootstrapPrepared=false,bootstrapCompleted=false,bootstrapPhase='LOADING',bootstrapRetry=null,bootstrapRetryPending=false;
  let productPage=1,productMonth='';
  const financeRefreshInterval=300000;
- let lastFinancialRefreshAt=0,automaticBlocked=false,resumeOnVisible=false;
+ let lastFinancialRefreshAt=0,automaticBlocked=false,resumeOnVisible=false,adsFailures=0,adsRetryAt=0;
  let collectionFailure=null,collectionRecovery=null;
  const productOpen=new Set();
  let catalogState=null,catalogBusy=false,catalogTimer=null,catalogRequest=0,catalogNeedsRead=true,catalogError='',catalogPaused=false,catalogProductsChanged=false,catalogVisibleIds=[],catalogSignature='';
@@ -39,7 +39,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
  const catalogMessages={CATALOG_NOT_READ:'Aguardando a consulta automática do catálogo.',CATALOG_UNAVAILABLE:'A consulta falhou; a fila tentará este produto novamente.',CATALOG_REQUEST_FAILED:'A consulta falhou; os outros produtos continuam na fila.',UNRECOGNIZED_TYPE:'O tipo deste produto ainda não foi reconhecido com segurança.',SIZE_AMBIGUOUS:'O tamanho da variação precisa de conferência.',RULE_CONFLICT:'Mais de uma regra de custo corresponde a esta variação.',NO_COST_REGISTERED:'Falta cadastrar um custo para este tipo de produto.',RULE_NOT_MATCHED:'Nenhuma regra de custo reconhece este tipo e tamanho com segurança.',RULE_ASSIGNMENT_PENDING:'A regra de custo informada precisa de conferência de tamanho ou disponibilidade.',UNRECOGNIZED_VARIATION:'O catálogo não identificou o tipo e o tamanho desta variação com segurança.',INDEX_NOT_VALID:'A combinação de opções desta variação precisa ser conferida no catálogo.',NO_MODELS:'O catálogo não retornou variações para este produto.',CATALOG_CONFLICT:'Outra atualização está conferindo este produto; a fila continuará automaticamente.',CATALOG_STALE_RESPONSE:'Uma resposta antiga foi descartada. A fila consultará novamente.',AXES_NOT_RECOGNIZED:'Os eixos de variação não identificam a composição com segurança.',OPTION_NOT_RECOGNIZED:'O tamanho retornado pelo catálogo ainda não foi reconhecido.',CATALOG_INVALID:'Os dados do catálogo não passaram na conferência.',CATALOG_STALE:'A classificação salva está preservada enquanto o catálogo é atualizado.'};
  function catalogReason(reason,status){return catalogMessages[reason]||(status==='QUEUED'||status==='RUNNING'?'A identificação automática está na fila.':status==='RETRY_WAIT'?'A consulta será repetida automaticamente, sem impedir os outros produtos.':'O catálogo precisa de uma conferência de tipo ou tamanho.');}
  const costDiagnosticReasons={COST_AVAILABLE:'O custo já está disponível na versão atual.',NO_CATALOG:'O catálogo deste produto ainda não foi consultado.',MODEL_NOT_IN_CATALOG:'A variação vendida ainda não consta no catálogo salvo.',METADATA_CHANGED:'O produto mudou na Shopee e precisa de uma nova conferência.',RULE_DISABLED:'A regra de custo associada está desativada.',RULE_UNAVAILABLE:'A regra de custo associada não está disponível.',ASSIGNMENT_PENDING:'O tipo ou tamanho associado precisa de correção.',CONFLICT:'Há regras ou composições conflitantes.',OPTION_NOT_RECOGNIZED:'O tamanho do catálogo ainda não foi reconhecido.',AXES_NOT_RECOGNIZED:'As opções do produto não identificam a composição com segurança.',INDEX_NOT_VALID:'A combinação de opções precisa ser conferida.',NO_MODELS:'O catálogo não retornou as variações deste produto.',RULE_NOT_MATCHED:'Nenhuma regra de custo corresponde ao tipo e tamanho.',COMPOSITION_PENDING:'Falta identificar a composição e o custo deste produto.'};
- function costDiagnosticHasDue(value){return !!value?.consistent&&value.products.some(product=>product.variants.some(variant=>variant.recoverable));}
+ function costDiagnosticHasDue(value){return value?.consistent===true&&value.products.some(product=>product.variants.some(variant=>variant.recoverable||['NO_CATALOG','MODEL_NOT_IN_CATALOG'].includes(variant.reason)));}
  function drawCostDiagnostic(){
   const value=costDiagnostic,target=el('CostDiagnosticBody');if(!value||value.month!==month){target.hidden=true;return;}target.hidden=false;const coverage=value.summary.production_coverage,out=[node('p',coverage.pending_units+' unidade(s) sem custo · '+coverage.pending_variants+' variação(ões) · '+coverage.pending_products+' produto(s).','month-detail-help')];
   const counts=node('div',undefined,'month-cost-diagnostic-counts');for(const [key,label] of [['IN_CANCEL','Em cancelamento'],['TO_RETURN','Em devolução'],['UNKNOWN_STATUS','Situação desconhecida']])counts.append(node('span',label+': '+value.review_counts[key]));out.push(counts);
@@ -47,7 +47,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
   for(const product of value.products){const card=node('article',undefined,'month-cost-diagnostic-product');card.append(node('h4',product.product_name||'Produto #'+product.item_id),node('p','#'+product.item_id+' · catálogo: '+checkpointTime(product.catalog_checked_at)));const classification=product.classification,labels={QUEUED:'Na fila',RUNNING:'Em consulta',MATCHED:'Catálogo identificado',PARTIAL:'Identificação parcial',REVIEW:'Tipo ou tamanho em conferência',RETRY_WAIT:'Aguardando nova tentativa'};
    card.append(node('p',classification?labels[classification.status]+(classification.status==='RETRY_WAIT'?' · próxima tentativa: '+checkpointTime(classification.next_attempt_at):classification.status==='RUNNING'?' · aguarde a consulta em andamento.':''):'Aguardando a primeira consulta do catálogo.'));
    const groups=new Map();for(const variant of product.variants){if(!groups.has(variant.reason))groups.set(variant.reason,[]);groups.get(variant.reason).push(variant);}for(const [reason,variants] of groups){const quantity=variants.reduce((sum,row)=>sum+BigInt(row.quantity),0n),list=node('ul');card.append(node('p',new Intl.NumberFormat('pt-BR').format(quantity)+' unidade(s) · '+variants.length+' variação(ões) · '+costDiagnosticReasons[reason]));for(const variant of variants){const label=variant.model_name||'Variação #'+variant.model_id,attributes=variant.attributes.map(row=>row.name+': '+row.value).join(' · '),item=node('li',label+' · '+variant.quantity+' unidade(s)'+(attributes?' · '+attributes:'')+(variant.unit_cost_cents!==null?' · custo unitário '+money(variant.unit_cost_cents):''));if(variant.assignment)item.append(node('span',' · regra '+variant.assignment.rule_id+(variant.assignment.size?' · tamanho '+variant.assignment.size:'')));list.append(item);}card.append(list);}
-   if(product.variants.some(variant=>variant.recoverable))card.append(node('p','Há dados de catálogo que podem ser consultados pela conferência automática.'));else if(product.variants.some(variant=>variant.reason!=='COST_AVAILABLE')&&classification?.status!=='RUNNING'&&classification?.status!=='RETRY_WAIT')card.append(node('p','Confira o tipo, o tamanho ou o custo cadastrado. Repetir uma consulta não resolve uma composição ambígua.'));out.push(card);
+   if(product.variants.some(variant=>variant.recoverable))card.append(node('p','Há dados de catálogo que podem ser consultados pela conferência automática.'));else if(value.consistent&&product.variants.some(variant=>['NO_CATALOG','MODEL_NOT_IN_CATALOG'].includes(variant.reason)))card.append(node('p','O histórico de pedidos pode confirmar esta variação sem repetir o catálogo em espera.'));else if(product.variants.some(variant=>variant.reason!=='COST_AVAILABLE')&&classification?.status!=='RUNNING'&&classification?.status!=='RETRY_WAIT')card.append(node('p','Confira o tipo, o tamanho ou o custo cadastrado. Repetir uma consulta não resolve uma composição ambígua.'));out.push(card);
   }
   if(!value.products.length)out.push(node('p','Não há produtos sem custo neste diagnóstico. As outras pendências do período continuam identificadas acima.','month-detail-help'));
   const versionText=versions=>'custos v'+(versions.costs??'—')+' · regras v'+(versions.cost_rules??'—')+' · vínculos v'+(versions.bindings??'—')+' · catálogo v'+(versions.classifications??'—');out.push(node('p','Conferência: '+checkpointTime(value.diagnosed_at)+' · financeiro: '+checkpointTime(value.source_checked_at.finance_oldest_at)+' · anúncios: '+checkpointTime(value.source_checked_at.ads_at)+' · referências atuais: '+versionText(value.versions.current)+'.'+(value.consistent?'':' Referências do mês: '+versionText(value.versions.monthly)+'.'),'month-cost-diagnostic-sources'));
@@ -72,7 +72,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
     try{const updated=await request('read',selected);if(!current())return false;apply(updated,selected);catalogNeedsRead=true;}catch{if(!current())return false;localReadFailed=true;}
    }
    if(!current())return false;
-   el('CostDiagnosticStatus').textContent=lastStatus==='PAUSED'?'A conferência automática está pausada nas configurações. Os custos salvos foram preservados.':lastStatus==='LEASED'?'Outra conferência está em andamento. Aguarde alguns segundos; os custos salvos foram preservados.':lastStatus==='RETRY_WAIT'?'A Shopee pediu uma espera. Confira abaixo o horário da próxima tentativa.':localReadFailed?'O diagnóstico foi atualizado, mas o resumo mensal não pôde ser relido. Use Recalcular custos para conferir os novos totais.':recover&&document.hidden?'Conferência interrompida porque o painel ficou em segundo plano. Os avanços foram preservados.':recover&&(requests===8||Date.now()-start>=120000)&&costDiagnosticHasDue(costDiagnostic)?'Esta rodada atingiu o limite de conferências. Os avanços foram preservados e as pendências continuam identificadas abaixo.':recover?'Conferência concluída nesta tentativa. Veja os custos identificados e as pendências que ainda exigem conferência.':'Pendências conferidas nos dados salvos. Copie o diagnóstico para reunir todos os motivos em uma única mensagem.';return true;
+   el('CostDiagnosticStatus').textContent=lastStatus==='PAUSED'?'A conferência automática está pausada nas configurações. Os custos salvos foram preservados.':lastStatus==='LEASED'?'Outra conferência está em andamento. Aguarde alguns segundos; os custos salvos foram preservados.':lastStatus==='RETRY_WAIT'?'Uma fonte precisa aguardar. Confira abaixo o horário da próxima tentativa.':localReadFailed?'O diagnóstico foi atualizado, mas o resumo mensal não pôde ser relido. Use Recalcular custos para conferir os novos totais.':recover&&document.hidden?'Conferência interrompida porque o painel ficou em segundo plano. Os avanços foram preservados.':recover&&(requests===8||Date.now()-start>=120000)&&costDiagnosticHasDue(costDiagnostic)?'Esta rodada atingiu o limite de conferências. Os avanços foram preservados e as pendências continuam identificadas abaixo.':recover?'Conferência concluída nesta tentativa. Veja os custos identificados e as pendências que ainda exigem conferência.':'Pendências conferidas nos dados salvos. Copie o diagnóstico para reunir todos os motivos em uma única mensagem.';return true;
   }catch{if(current())el('CostDiagnosticStatus').textContent='Não foi possível concluir esta conferência. Os valores, o diagnóstico anterior e seus rascunhos foram preservados; tente novamente.';return false;}finally{if(current()){costDiagnosticBusy=false;costDiagnosticPromise=null;controls();schedule();scheduleCatalog();}}})();costDiagnosticPromise=task;return task;
  }
  function checkedCatalogState(value){
@@ -368,7 +368,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
  function drawReadiness(){
   const target=el('Readiness');target.replaceChildren();if(!frame)return;
   const c=frame.coverage,complete=frame.status==='COMPLETE';
-  for(const [label,ready] of [['Pedidos e valores financeiros',complete&&c.payment_missing===0&&c.cancel_pending===0&&c.other===0&&c.unknown===0&&!frame.result.pending.includes('FINANCIAL_SOURCE_STALE')],['Custos de produção',complete&&frame.production_cost_cents!==null],[frame.tax?.regime==='MEI'?'DAS-MEI mensal':'Imposto de 2%',complete&&frame.invoice_tax_cents!==null&&!frame.result.pending.includes('TAX_POLICY_REQUIRED')],['Gasto dos anúncios',frame.ads?.status==='AVAILABLE'],['Outras despesas',frame.expenses.external_expenses_cents!==null],['Devoluções e ajustes',complete&&c.returns===0&&c.returns_unknown===0&&!frame.result.pending.includes('ADJUSTMENT_UNAVAILABLE')&&!frame.result.pending.includes('RECHARGE_TREATMENT_REQUIRED')]]){
+  for(const [label,ready] of [['Pedidos e valores financeiros',complete&&c.payment_missing===0&&c.cancel_pending===0&&c.other===0&&c.unknown===0&&!frame.result.pending.includes('FINANCIAL_SOURCE_STALE')],['Custos de produção',complete&&frame.production_cost_cents!==null],[frame.tax?.regime==='MEI'?'DAS-MEI mensal':'Imposto de 2%',complete&&frame.invoice_tax_cents!==null&&!frame.result.pending.includes('TAX_POLICY_REQUIRED')],['Gasto dos anúncios',frame.ads?.status==='AVAILABLE'&&!frame.result.pending.includes('ADS_UNAVAILABLE')],['Outras despesas',frame.expenses.external_expenses_cents!==null],['Devoluções e ajustes',complete&&c.returns===0&&c.returns_unknown===0&&!frame.result.pending.includes('ADJUSTMENT_UNAVAILABLE')&&!frame.result.pending.includes('RECHARGE_TREATMENT_REQUIRED')]]){
    const item=node('li');item.dataset.ready=String(!!ready);item.append(node('span',label),node('strong',ready?'Conferido':'Pendente'));target.append(item);
   }
   el('ReadinessStatus').textContent=frame.result.net_estimate_cents===null?'Complete as pendências para comparar a previsão de lucro do mês.':frame.result.net_estimate_cents<=0?'A previsão do mês ainda não tem lucro positivo. Confira custos e desempenho antes de aumentar o investimento.':'A previsão financeira do mês está completa. Próximo passo: conferir margem por produto, estoque e campanhas antes de escalar.';
@@ -432,7 +432,8 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
   }
   const c=frame.coverage,ads=frame.ads,broad=ads?.totals.broad,net=frame.result.net_estimate_cents,summary=buildMonthlyFinancialSummary(frame),balance=summary?.balance_cents??null;
   setMetric('Sales',frame.sales_cents===null?null:money(frame.sales_cents),frame.sales_cents===null?'Já informado: '+money(frame.known_sales_cents)+'. Falta conferir parte dos pedidos pagos.':'Produtos dos '+c.paid+' pedido(s) pagos criados nas datas do mês.');
-  setMetric('Ads',ads?.status==='AVAILABLE'?money(ads.expense_cents):null,ads?'Gasto confirmado em '+ads.covered_days+' de '+ads.total_days+' dia(s). Dias ausentes permanecem pendentes.':'Consultando o gasto da conta de anúncios nas mesmas datas.');
+  setMetric('Ads',ads?.status==='AVAILABLE'?money(ads.expense_cents):null,savedAdsHelp(ads));
+  if(ads?.status==='AVAILABLE'&&frame.result.pending.includes('ADS_UNAVAILABLE'))el('AdsCard').dataset.status='provisional';
   setMetric('Roas',broad?.calculated_roas_raw===null||broad?.calculated_roas_raw===undefined?null:ratio(broad.calculated_roas_raw),broad?.gmv_cents===null||broad?.gmv_cents===undefined?'Vendas atribuídas aos anúncios ainda pendentes.':'Vendas atribuídas aos anúncios: '+money(broad.gmv_cents)+'. Este valor difere das vendas totais da loja.');
   if(ads?.status==='AVAILABLE'&&ads.expense_cents===0&&broad?.calculated_roas_raw===null){el('Roas').textContent='Sem investimento';el('RoasCard').dataset.status='available';}
   el('NetLabel').textContent=balanceLabel(summary);setMetric('Net',balance===null?null:money(balance),summaryBalanceHelp(summary));
@@ -444,7 +445,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
   el('Coverage').replaceChildren();for(const text of [c.paid+' pedido(s) pagos',c.completed+' concluído(s)',c.ongoing+' em andamento',c.cancelled+' cancelado(s) excluído(s)',c.unpaid+' não pago(s) excluído(s)'])el('Coverage').append(node('span',text));
   if(c.cancel_pending)el('Coverage').append(node('span',c.cancel_pending+' em cancelamento · em revisão'));
   if(c.other+c.unknown)el('Coverage').append(node('span',(c.other+c.unknown)+' com situação a conferir'));
-  const warnings=frame.result.pending.filter(code=>code!=='COLLECTING');el('Pending').hidden=!warnings.length;el('PendingTitle').textContent=warnings.length===1?'Falta uma conferência para concluir o resultado':'O que falta para concluir o resultado';el('PendingList').replaceChildren();for(const code of warnings)el('PendingList').append(node('li',pendingMessages[code]||'Parte dos dados ainda precisa ser conferida.'));
+  const warnings=frame.result.pending.filter(code=>code!=='COLLECTING');el('Pending').hidden=!warnings.length;el('PendingTitle').textContent=warnings.length===1?'Falta uma conferência para concluir o resultado':'O que falta para concluir o resultado';el('PendingList').replaceChildren();for(const code of warnings)el('PendingList').append(node('li',code==='ADS_UNAVAILABLE'&&ads?.status==='AVAILABLE'?savedAdsHelp(ads):pendingMessages[code]||'Parte dos dados ainda precisa ser conferida.'));
   el('Identify').hidden=true;
   if(warnings.includes('EXTERNAL_EXPENSES_REQUIRED')&&warnings.length===1)el('ExpensesDetails').open=true;
   el('RechargeField').hidden=!(frame.ads_adjustment_cents>0||warnings.includes('RECHARGE_TREATMENT_REQUIRED'));
@@ -522,8 +523,8 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
      if(started&&token===generation&&selected===month&&refreshed)status(frame.ads?.status==='AVAILABLE'?'Dados do mês atualizados. Confira o resultado e as pendências abaixo.':'A consulta financeira foi concluída, mas o gasto de anúncios ainda está pendente. O resultado líquido continua em conciliação.');
      return refreshed;
     }
-    collectionRecovery=null;collectionFailure=null;lastFinancialRefreshAt=Date.now();automaticBlocked=value.result.pending.includes('SOURCE_UNAVAILABLE')||value.ads?.status!=='AVAILABLE';
-    status(value.status==='COMPLETE'?(value.ads?.status==='AVAILABLE'?'A consulta financeira foi concluída. Os dados salvos e as pendências do mês foram atualizados.':'A consulta financeira foi concluída, mas o gasto de anúncios ainda está pendente. O resultado líquido continua em conciliação. Use Atualizar mês para conferir os anúncios. Não repetimos o envio anterior automaticamente.'):'O mês está parcial porque o limite de pedidos foi atingido. Os totais pendentes não são estimados como zero.');return true;
+    collectionRecovery=null;collectionFailure=null;lastFinancialRefreshAt=Date.now();automaticBlocked=value.result.pending.includes('SOURCE_UNAVAILABLE');if(value.ads?.status==='AVAILABLE'&&!value.result.pending.includes('ADS_UNAVAILABLE'))adsSuccess();else adsFailure();
+    status(value.status==='COMPLETE'?(value.ads?.status==='AVAILABLE'?'A consulta financeira foi concluída. Os dados salvos e as pendências do mês foram atualizados.':'A consulta financeira foi concluída, mas o gasto de anúncios ainda está pendente. O resultado líquido continua em conciliação. A atualização dos anúncios será tentada novamente automaticamente, com uma espera entre tentativas.'):'O mês está parcial porque o limite de pedidos foi atingido. Os totais pendentes não são estimados como zero.');return true;
    }
    if(value.collection.state==='RETRY_WAIT')waitForCollection(value);
    else recovery.retryAt=0;
@@ -538,6 +539,15 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
     else{collectionRecovery=null;automaticBlocked=true;status('Não foi possível conferir o estado da consulta. Os dados salvos foram preservados; confira a conexão financeira antes de retomar.',true);}
    }return false;
   }finally{if(current()){recovery.observing=false;render();schedule();scheduleCatalog();}else if(started&&token===generation&&selected===month){render();schedule();scheduleCatalog();}}
+ }
+ function adsFailure(){adsFailures=Math.min(adsFailures+1,3);adsRetryAt=Date.now()+[60000,120000,300000][adsFailures-1];}
+ function adsSuccess(){adsFailures=0;adsRetryAt=0;}
+ function savedAdsHelp(value){
+  if(!value)return 'O gasto de anúncios ainda não foi coletado para estas datas. A atualização automática continuará tentando.';
+  if(value.status!=='AVAILABLE')return 'Consulta parcial: '+value.covered_days+' de '+value.total_days+' dia(s), sem completar os dias ausentes com zero.';
+  const old=Date.now()-value.fetched_at*1000>900000,unconfirmed=frame.result.pending.includes('ADS_UNAVAILABLE');
+  return (old?'Último gasto salvo; leitura antiga. ':unconfirmed?'Último gasto confirmado; a atualização ainda está pendente. ':'Gasto confirmado em '+value.covered_days+' de '+value.total_days+' dia(s). ')+
+   'Consultado '+sourceAge(value.fetched_at)+'.'+(unconfirmed?' O líquido aguarda uma atualização de anúncios.':'');
  }
  function schedule(){
   clearTimeout(timer);timer=null;
@@ -555,7 +565,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
   const selected=el('Select').value;if(!validMonth(selected)){status('Escolha um mês válido até o mês atual.',true);return false;}
   const changed=selected!==month;if(busy&&!changed)return false;
   resetCostDiagnostic({clear:changed});const token=++generation;catalogRequest++;catalogBusy=false;clearTimeout(catalogTimer);catalogTimer=null;month=selected;paused=false;automaticBlocked=false;resumeOnVisible=false;collectionFailure=null;if(!observed)collectionRecovery=null;busy=true;adsBusy=false;clearTimeout(timer);timer=null;
-  if(changed){frame=null;catalogState=null;catalogPaused=false;catalogProducts.clear();catalogSignature='';catalogNeedsRead=true;invalidateCheckpointHistory();dirty=false;editSequence++;draftRevision=0;el('ExpensesValue').value='';el('Recharge').value='UNCONFIRMED';}
+  if(changed){adsSuccess();frame=null;catalogState=null;catalogPaused=false;catalogProducts.clear();catalogSignature='';catalogNeedsRead=true;invalidateCheckpointHistory();dirty=false;editSequence++;draftRevision=0;el('ExpensesValue').value='';el('Recharge').value='UNCONFIRMED';}
   status(automatic?'Atualizando vendas, cancelamentos e anúncios de '+monthName(month)+'…':'Consultando os pedidos de '+monthName(month)+'…');render();
   const current=()=>token===generation&&month===selected;
   let operation='read';
@@ -600,32 +610,37 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
    if(document.hidden&&!paused){if(value.collection&&value.status==='RUNNING')waitForCollection(value);else resumeOnVisible=!automaticBlocked;status('A atualização continua automaticamente quando este painel voltar à tela.');}
    else if(collectionRecovery?.waiting||automaticBlocked&&value.collection?.state==='BLOCKED'){}
    else if(value.status==='COMPLETE'&&!paused){
-    collectionRecovery=null;
+    collectionRecovery=null;lastFinancialRefreshAt=Date.now();
     let catalogueFailed=false;
     if(!catalogFeature()&&value.unmapped_variants.length&&typeof syncVariants==='function'){
      status('Associando automaticamente os custos dos produtos vendidos…');
      try{catalogueFailed=await syncVariants(value.unmapped_variants)===false;}catch{catalogueFailed=true;}
      if(!current())return false;operation='read';const reread=await request('read',selected);if(!current())return false;apply(reread,selected);
     }
+    if(automatic&&Date.now()<adsRetryAt){status('Vendas atualizadas. A consulta de anúncios aguarda a próxima tentativa automática; o último gasto salvo mantém seu horário.');return true;}
     if(!current())return false;status('Conferindo os anúncios nas mesmas datas…');
     operation='ads';const raw=await request('ads',selected);if(!current())return false;value=apply(raw,selected);
-    if(value.ads?.status==='AVAILABLE'&&!value.result.pending.includes('SOURCE_UNAVAILABLE'))lastFinancialRefreshAt=Date.now();
-    else automaticBlocked=true;
+    if(value.ads?.status==='AVAILABLE'&&!value.result.pending.includes('ADS_UNAVAILABLE'))adsSuccess();else adsFailure();
     status(catalogueFailed?'Valores mensais atualizados. Há produtos com identificação pendente; confira os motivos abaixo.':'Dados do mês atualizados. Confira o resultado e as pendências abaixo.');
    }else if(paused)status('Consulta pausada após a última resposta. Use Continuar consulta para retomar.');
    else if(value.status==='LIMIT_REACHED')status('O mês está parcial porque o limite de pedidos foi atingido. Os totais pendentes não são estimados como zero.');
    else status('Parte da consulta ficou pendente. Use Atualizar mês para retomar a leitura.');
    return true;
-  }catch(error){if(current()){collectionFailure=collectionDiagnostic(operation,error);const recoverableValue=collectionRecovery?.value||frame;if(['start','step'].includes(operation)&&recoverableFailure(error)&&(recoverableValue?.collection||!recoverableValue)){if(recoverableValue)waitForCollection(recoverableValue,{error:true});else waitForUnknownCollection();}else{automaticBlocked=true;collectionRecovery=null;status(error?.message||'Não foi possível atualizar o mês. Tente novamente.',true);}render();}return false;}
+  }catch(error){if(current()){collectionFailure=collectionDiagnostic(operation,error);const recoverableValue=collectionRecovery?.value||frame;if(['start','step'].includes(operation)&&recoverableFailure(error)&&(recoverableValue?.collection||!recoverableValue)){if(recoverableValue)waitForCollection(recoverableValue,{error:true});else waitForUnknownCollection();}else{if(operation==='ads')adsFailure();else automaticBlocked=true;collectionRecovery=null;status(operation==='ads'?'Não foi possível atualizar os anúncios. O último gasto salvo mantém sua data; tentaremos novamente automaticamente.':error?.message||'Não foi possível atualizar o mês. Tente novamente.',true);}render();}return false;}
   finally{if(current()){busy=false;render();schedule();scheduleCatalog();}}
  }
  async function refreshAds(){
   if(!started||!frame||busy||adsBusy||saving||dirty||document.hidden)return false;
-  if(frame.ads?.status==='AVAILABLE'&&Date.now()-frame.ads.fetched_at*1000<60000){schedule();return false;}
+  if(Date.now()<adsRetryAt){schedule();return false;}
+  if(frame.ads?.status==='AVAILABLE'&&!frame.result.pending.includes('ADS_UNAVAILABLE')&&Date.now()-frame.ads.fetched_at*1000<60000){schedule();return false;}
   const token=generation,selected=month;adsBusy=true;controls();
-  try{const raw=await request('ads',selected);if(token!==generation||selected!==month)return false;apply(raw,selected);if(frame.ads?.status!=='AVAILABLE')automaticBlocked=true;return true;}
-  catch(error){if(token===generation){automaticBlocked=true;collectionFailure=collectionDiagnostic('ads',error);status('Não foi possível atualizar os anúncios. A leitura anterior mantém seu horário de consulta; use Atualizar mês para conferir.',true);}return false;}
-  finally{if(token===generation){adsBusy=false;controls();schedule();scheduleCatalog();}}
+  try{
+   const raw=await request('ads',selected);if(token!==generation||selected!==month)return false;apply(raw,selected);
+   if(frame.ads?.status==='AVAILABLE'&&!frame.result.pending.includes('ADS_UNAVAILABLE')){adsSuccess();if(collectionFailure?.operation==='ads')collectionFailure=null;}
+   else{adsFailure();status('A atualização dos anúncios ficou pendente. O último gasto salvo mantém seu horário; a consulta será repetida automaticamente.');}
+   return true;
+  }catch(error){if(token===generation){adsFailure();collectionFailure=collectionDiagnostic('ads',error);status('Não foi possível atualizar os anúncios. O último gasto salvo mantém seu horário; tentaremos novamente automaticamente.',true);}return false;}
+  finally{if(token===generation){adsBusy=false;render();schedule();scheduleCatalog();}}
  }
  async function refreshCosts(){
   if(!started||!frame||busy||adsBusy||saving)return false;

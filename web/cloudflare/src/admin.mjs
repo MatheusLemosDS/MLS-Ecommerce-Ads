@@ -11,7 +11,7 @@ import {CSS,adminBody,loginBody} from './admin-view.mjs';
 import {CLIENT} from './admin-client.mjs';
 import {BUSINESS_MONTH_CLIENT} from './business-month-client.mjs';
 import {BUSINESS_MONTH_CSS} from './business-month-view.mjs';
-import {BUSINESS_MONTH_SCHEMA,BusinessMonthError,businessMonthClientFrame} from './business-month.mjs';
+import {BUSINESS_MONTH_SCHEMA,BusinessMonthError,businessMonthClientFrame,readBusinessMonthAdsState} from './business-month.mjs';
 import {BUSINESS_CHECKPOINT_SCHEMA,businessMonthWithCheckpoint,readBusinessCheckpoints,BusinessCheckpointError} from './business-checkpoint.mjs';
 import {CATALOG_CLASSIFICATION_SCHEMA,enqueueCatalogClassifications,enqueueSoldCatalogGaps,runCatalogClassifications,readCatalogClassificationState,catalogClassificationQueries,catalogClassificationsFromSnapshot,CatalogClassificationError} from './catalog-classification.mjs';
 import {readBusinessTaxPolicy,saveBusinessTaxPolicy,readBusinessTaxPolicyAudit,BusinessTaxPolicyError} from './business-tax-policy.mjs';
@@ -37,9 +37,12 @@ import {PRODUCTION_COST_PERIODS_SCHEMA,ProductionCostPeriodsError,productionCost
 import {PRODUCTION_COST_PERIODS_CSS,productionCostPeriodsBody,PRODUCTION_COST_PERIODS_CLIENT} from './production-cost-periods-view.mjs';
 import {SAVED_CATALOG_CSS,savedCatalogBody,SAVED_CATALOG_CLIENT} from './saved-catalog-view.mjs';
 import {BusinessCostDiagnosticsError,readBusinessCostDiagnostics} from './business-cost-diagnostics.mjs';
+import {HISTORICAL_COST_EVIDENCE_SCHEMA,HistoricalCostEvidenceError,readHistoricalCostEvidence,syncHistoricalCostEvidence} from './historical-cost-evidence.mjs';
+import {OPERATOR_COST_CORRECTIONS_SCHEMA,OperatorCostCorrectionError,applyConfirmedOperatorCostCorrections} from './operator-cost-corrections.mjs';
+import {BACKGROUND_LANE_SCHEMA,HistoricalCostOrchestrationError,acquireBackgroundLane,finishBackgroundLane,readHistoricalCostCandidates} from './historical-cost-orchestration.mjs';
 // BrazaCommerce administration. No Shopee write operations.
 const DEFAULTS = {regular_cents:1675,mixed_cents:1910,plus_cents:2070,ad_share_percent:40,hermes_mode:'manual',daily_hour:9,monthly_budget_cents:2000,run_reserve_cents:100,billing_mode:'unverified',monthly_run_limit:30};
-const SCHEMA = [
+const SCHEMA = [...new Set([
 ...COST_SCHEMA,
 ...STORE_ADJUSTMENTS_SCHEMA,
 ...BUSINESS_MONTH_SCHEMA,
@@ -52,6 +55,9 @@ const SCHEMA = [
 ...SAVED_ORDER_ITEMS_SCHEMA,
 ...PRODUCT_REGISTRY_SCHEMA,
 ...PRODUCTION_COST_PERIODS_SCHEMA,
+...OPERATOR_COST_CORRECTIONS_SCHEMA,
+...HISTORICAL_COST_EVIDENCE_SCHEMA,
+...BACKGROUND_LANE_SCHEMA,
 `CREATE TABLE IF NOT EXISTS variant_bindings_state (id INTEGER PRIMARY KEY CHECK(id=1), revision INTEGER NOT NULL, payload TEXT NOT NULL, updated_at TEXT NOT NULL)`,
 `CREATE TABLE IF NOT EXISTS variant_bindings_audit (id INTEGER PRIMARY KEY AUTOINCREMENT, revision INTEGER UNIQUE NOT NULL, payload TEXT NOT NULL, actor TEXT NOT NULL, created_at TEXT NOT NULL)`,
 `CREATE TABLE IF NOT EXISTS admin_settings (id INTEGER PRIMARY KEY CHECK(id=1), revision INTEGER NOT NULL, payload TEXT NOT NULL, updated_at TEXT NOT NULL)`,
@@ -59,7 +65,7 @@ const SCHEMA = [
 `CREATE TABLE IF NOT EXISTS hermes_agent (id INTEGER PRIMARY KEY CHECK(id=1), heartbeat TEXT NOT NULL)`,
 `CREATE TABLE IF NOT EXISTS hermes_agent_capabilities (id INTEGER PRIMARY KEY CHECK(id=1), protocol TEXT NOT NULL, updated_at TEXT NOT NULL, maintenance_until INTEGER NOT NULL DEFAULT 0)`,
 `CREATE TABLE IF NOT EXISTS hermes_jobs (id TEXT PRIMARY KEY, trigger_type TEXT NOT NULL, dedupe_key TEXT UNIQUE, status TEXT NOT NULL, task TEXT NOT NULL, settings_revision INTEGER NOT NULL, settings_snapshot TEXT NOT NULL, reserve_cents INTEGER NOT NULL, cost_cents INTEGER, result TEXT, failure TEXT, cost_source TEXT, lease TEXT, created_at TEXT NOT NULL, started_at TEXT, completed_at TEXT)`,
-`CREATE TABLE IF NOT EXISTS hermes_cost_audit (id INTEGER PRIMARY KEY AUTOINCREMENT, job_id TEXT NOT NULL, previous_cents INTEGER, cost_cents INTEGER NOT NULL, actor TEXT NOT NULL, created_at TEXT NOT NULL)`];
+`CREATE TABLE IF NOT EXISTS hermes_cost_audit (id INTEGER PRIMARY KEY AUTOINCREMENT, job_id TEXT NOT NULL, previous_cents INTEGER, cost_cents INTEGER NOT NULL, actor TEXT NOT NULL, created_at TEXT NOT NULL)`])];
 const enc = new TextEncoder();
 const json = (value,status=200) => new Response(JSON.stringify(value),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'}});
 function businessMonthResponse(request,frame){
@@ -77,7 +83,22 @@ function sameOrigin(request){assert(request.headers.get('origin')===new URL(requ
 async function readBody(request,maximum){const reader=request.body?.getReader();assert(reader,'BODY_REQUIRED');const pieces=[];let length=0;try{while(true){const {done,value}=await reader.read();if(done)break;length+=value.length;assert(length<=maximum,'BODY_TOO_LARGE',413);pieces.push(value);}}finally{await reader.cancel();}const raw=new Uint8Array(length);let offset=0;for(const piece of pieces){raw.set(piece,offset);offset+=piece.length;}return new TextDecoder().decode(raw);}
 async function input(request,maximum=16384){assert((request.headers.get('content-type')||'').split(';')[0]==='application/json','JSON_REQUIRED',415);const raw=await readBody(request,maximum);try{const value=JSON.parse(raw);assert(value&&typeof value==='object'&&!Array.isArray(value),'BODY_INVALID');return value;}catch(error){if(error instanceof AdminError)throw error;throw new AdminError('BODY_INVALID');}}
 const INITIALIZED_DB=new WeakMap();
-async function setup(env){assert(env.ADMIN_DB&&typeof env.ADMIN_DB.prepare==='function','ADMIN_DB_SETUP_REQUIRED',503);if(INITIALIZED_DB.has(env.ADMIN_DB))return INITIALIZED_DB.get(env.ADMIN_DB);const ready=(async()=>{await env.ADMIN_DB.batch(SCHEMA.map(sql=>env.ADMIN_DB.prepare(sql)));const now=new Date().toISOString();await env.ADMIN_DB.prepare('INSERT OR IGNORE INTO production_costs_state(id,revision,payload,updated_at) VALUES(1,1,?,?)').bind(JSON.stringify(COST_DEFAULTS),now).run();await env.ADMIN_DB.prepare('INSERT OR IGNORE INTO production_costs_audit(revision,payload,actor,created_at) SELECT revision,payload,?,updated_at FROM production_costs_state WHERE id=1 AND revision=1').bind('operator-confirmed-2026-10-16').run();await env.ADMIN_DB.prepare('INSERT OR IGNORE INTO variant_bindings_state(id,revision,payload,updated_at) VALUES(1,1,?,?)').bind('[]',now).run();await env.ADMIN_DB.prepare('INSERT OR IGNORE INTO variant_bindings_audit(revision,payload,actor,created_at) SELECT revision,payload,?,updated_at FROM variant_bindings_state WHERE id=1 AND revision=1').bind('initial').run();await env.ADMIN_DB.prepare('INSERT OR IGNORE INTO admin_settings(id,revision,payload,updated_at) VALUES(1,1,?,?)').bind(JSON.stringify(DEFAULTS),now).run();await env.ADMIN_DB.prepare('INSERT OR IGNORE INTO admin_audit(revision,payload,actor,created_at) VALUES(1,?,?,?)').bind(JSON.stringify(DEFAULTS),'initial',now).run();})();INITIALIZED_DB.set(env.ADMIN_DB,ready);try{return await ready;}catch(error){INITIALIZED_DB.delete(env.ADMIN_DB);throw error;}}
+const MAINTENANCE_PENDING=new WeakSet();
+async function setup(env){
+ assert(env.ADMIN_DB&&typeof env.ADMIN_DB.prepare==='function','ADMIN_DB_SETUP_REQUIRED',503);if(INITIALIZED_DB.has(env.ADMIN_DB))return INITIALIZED_DB.get(env.ADMIN_DB);
+ const ready=(async()=>{const db=env.ADMIN_DB,now=new Date().toISOString();
+  const initialized=await db.batch([...SCHEMA.map(sql=>db.prepare(sql)),
+   db.prepare('INSERT OR IGNORE INTO production_costs_state(id,revision,payload,updated_at) VALUES(1,1,?,?)').bind(JSON.stringify(COST_DEFAULTS),now),
+   db.prepare('INSERT OR IGNORE INTO production_costs_audit(revision,payload,actor,created_at) SELECT revision,payload,?,updated_at FROM production_costs_state WHERE id=1 AND revision=1').bind('operator-confirmed-2026-10-16'),
+   db.prepare('INSERT OR IGNORE INTO variant_bindings_state(id,revision,payload,updated_at) VALUES(1,1,?,?)').bind('[]',now),
+   db.prepare('INSERT OR IGNORE INTO variant_bindings_audit(revision,payload,actor,created_at) SELECT revision,payload,?,updated_at FROM variant_bindings_state WHERE id=1 AND revision=1').bind('initial'),
+   db.prepare('INSERT OR IGNORE INTO admin_settings(id,revision,payload,updated_at) VALUES(1,1,?,?)').bind(JSON.stringify(DEFAULTS),now),
+   db.prepare('INSERT OR IGNORE INTO admin_audit(revision,payload,actor,created_at) VALUES(1,?,?,?)').bind(JSON.stringify(DEFAULTS),'initial',now),
+   db.prepare("SELECT COUNT(*) AS n FROM operator_cost_corrections WHERE shop_id=1178167501 AND correction_id IN('adult-22199878767-remove-child-rule-v1','child-size-2-1250-v1','adult-triple-58271140523-149796059126-v1')"),
+  ]);
+  const maintenanceApplied=initialized.at(-1).results[0].n<3;await applyConfirmedOperatorCostCorrections(env);if(maintenanceApplied)MAINTENANCE_PENDING.add(db);return {maintenanceApplied};
+ })();INITIALIZED_DB.set(env.ADMIN_DB,ready);try{return await ready;}catch(error){INITIALIZED_DB.delete(env.ADMIN_DB);throw error;}
+}
 function validateSettings(value){assert(value&&typeof value==='object'&&!Array.isArray(value),'SETTINGS_INVALID');assert(Object.keys(value).length===Object.keys(DEFAULTS).length&&Object.keys(DEFAULTS).every(key=>Object.hasOwn(value,key)),'SETTINGS_INVALID');for(const key of ['regular_cents','mixed_cents','plus_cents'])assert(Number.isInteger(value[key])&&value[key]>0&&value[key]<=1000000,'MARGIN_INVALID');assert(Number.isInteger(value.ad_share_percent)&&value.ad_share_percent>=1&&value.ad_share_percent<=100,'AD_SHARE_INVALID');assert(['manual','scheduled','paused'].includes(value.hermes_mode),'MODE_INVALID');assert(Number.isInteger(value.daily_hour)&&value.daily_hour>=0&&value.daily_hour<=23,'HOUR_INVALID');for(const key of ['monthly_budget_cents','run_reserve_cents'])assert(Number.isInteger(value[key])&&value[key]>=1&&value[key]<=1000000,'BUDGET_INVALID');assert(value.run_reserve_cents<=value.monthly_budget_cents,'RESERVE_EXCEEDS_BUDGET');assert(['unverified','subscription','api'].includes(value.billing_mode),'BILLING_MODE_INVALID');assert(Number.isInteger(value.monthly_run_limit)&&value.monthly_run_limit>=1&&value.monthly_run_limit<=1000,'RUN_LIMIT_INVALID');return value;}
 async function settings(env){const row=await env.ADMIN_DB.prepare('SELECT revision,payload,updated_at FROM admin_settings WHERE id=1').first();return {revision:row.revision,values:{...DEFAULTS,...JSON.parse(row.payload)},updated_at:row.updated_at};}
 async function saveSettings(env,body,actor){assert(Number.isInteger(body.revision)&&body.revision>=1&&Object.keys(body).length===2,'REVISION_REQUIRED');const value=validateSettings(body.values),raw=JSON.stringify(value),now=new Date().toISOString();const results=await env.ADMIN_DB.batch([
@@ -149,38 +170,71 @@ async function finish(env,body){
  assert(result.meta.changes===1,'JOB_LEASE_REJECTED',409);return {ok:true};
 }
 async function correctCost(env,body,actor){assert(Object.keys(body).length===2&&typeof body.id==='string'&&Number.isInteger(body.cost_cents)&&body.cost_cents>=0&&body.cost_cents<=100000000,'COST_INVALID');const now=new Date().toISOString();const results=await env.ADMIN_DB.batch([env.ADMIN_DB.prepare("INSERT INTO hermes_cost_audit(job_id,previous_cents,cost_cents,actor,created_at) SELECT id,cost_cents,?,?,? FROM hermes_jobs WHERE id=? AND status IN ('completed','failed')").bind(body.cost_cents,actor,now,body.id),env.ADMIN_DB.prepare("UPDATE hermes_jobs SET cost_cents=?,cost_source='operator_confirmed' WHERE id=? AND status IN ('completed','failed')").bind(body.cost_cents,body.id)]);assert(results[1].meta.changes===1,'COST_JOB_NOT_COMPLETED',409);return {ok:true};}
-async function schedule(env,now=new Date()){await setup(env);const cfg=await settings(env);if(cfg.values.hermes_mode!=='scheduled')return;const hour=Number(new Intl.DateTimeFormat('en-GB',{timeZone:'America/Sao_Paulo',hour:'2-digit',hourCycle:'h23'}).format(now));if(hour!==cfg.values.daily_hour)return;try{await enqueue(env,'scheduled','daily:'+localDay(now));}catch(error){if(!(error instanceof AdminError))throw error;}}
+async function schedule(env,now=new Date()){await setup(env);const cfg=await settings(env);if(cfg.values.hermes_mode!=='scheduled')return;const hour=Number(new Intl.DateTimeFormat('en-GB',{timeZone:'America/Sao_Paulo',hour:'2-digit',hourCycle:'h23'}).format(now));if(hour<cfg.values.daily_hour)return;try{await enqueue(env,'scheduled','daily:'+localDay(now));}catch(error){if(!(error instanceof AdminError))throw error;}}
 function page(body,title='BrazaCommerce · Gestão da loja'){return new Response(`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title>${BRAZA_THEME_HEAD}<style>${BRAZA_THEME_CSS}\n${CSS}</style></head><body>${body}</body></html>`,{headers:{'content-type':'text/html; charset=utf-8','cache-control':'no-store','content-security-policy':"default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' blob: data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",'x-content-type-options':'nosniff','x-frame-options':'DENY','referrer-policy':'same-origin'}});}
 function loginPage(error=''){return page(loginBody(error));}
 async function scheduledWork(env,services,now=()=>Date.now()){
  await setup(env);
- const month=localDay(new Date(now())).slice(0,7),enabled=(await readBusinessSyncState(env)).enabled;
- // Preserve the last complete quantity cohort before the monthly collector
- // opens a new day. This calculation performs no upstream requests.
- if(enabled)try{await captureProductionCostMonth(env,month,{now});}catch{}
- const production=async()=>{if(typeof services?.getFinanceProductionOrders!=='function')return 'UNAVAILABLE';if(!(await readBusinessSyncState(env)).enabled)return 'PAUSED';await syncProductionDtf(env,services.getFinanceProductionOrders,{now});return 'CHECKED';};
- const results=await Promise.allSettled([schedule(env,new Date(now())),runBusinessSync(env,services,{now})]);
- let registryStatus='UNAVAILABLE';if(typeof services?.getFinanceProductIndex==='function')try{registryStatus=(await runProductRegistry(env,services.getFinanceProductIndex,{now,canRun:async()=>(await readBusinessSyncState(env)).enabled})).status;}catch{registryStatus='ERROR';}
- let classificationStatus='UNAVAILABLE';
- if(typeof services?.getFinanceVariantCatalog==='function')try{
-  const classification=await runCatalogClassifications(env,services.getFinanceVariantCatalog,{now,maxProducts:3,canRun:async()=>(await readBusinessSyncState(env)).enabled});
-  classificationStatus=classification.status;
-  if(classification.processed.length){
-   const month=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date(now())).slice(0,7);
-   await businessMonthWithCheckpoint(env,{operation:'read',month},services,{now,actor:'catalog-classification'});
+ const output={analysis:'DEFERRED',collection:'DEFERRED',classification:'DEFERRED',production:'DEFERRED',registry:'DEFERRED',costs:'DEFERRED',history:'DEFERRED',lane:'MAINTENANCE'};
+ // First-time corrections can themselves consume the invocation budget. The
+ // marker is consumed once even if an owner request initialized this isolate.
+ if(MAINTENANCE_PENDING.delete(env.ADMIN_DB)){output.collection='MAINTENANCE';return output;}
+ const month=localDay(new Date(now())).slice(0,7),lease=await acquireBackgroundLane(env,{month},{now});output.lane=lease.lane;
+ if(lease.lane==='LEASED')return {...output,collection:'LEASED'};
+ let repeatHistory=false;const canRun=async()=>(await readBusinessSyncState(env)).enabled;
+ const productionSource=async(...args)=>{if(!await canRun())throw Error('BACKGROUND_COLLECTION_PAUSED');return services.getFinanceProductionOrders(...args);};
+ try{
+  if(lease.lane==='PAUSED'){for(const key of ['collection','classification','production','registry','costs','history'])output[key]='PAUSED';return output;}
+  if(lease.lane==='FINANCE'){
+   // Retain the previous complete creation-date cohort before opening a day.
+   try{await captureProductionCostMonth(env,month,{now});}catch{}
+   try{output.collection=(await runBusinessSync(env,services,{now})).status;}catch{output.collection='ERROR';}
+  }else if(lease.lane==='HISTORY'){
+   try{const selection=await readHistoricalCostCandidates(env,month,{now});output.history=selection.status;
+    if(selection.ready&&typeof services?.getFinanceHistoricalVariantEvidence==='function'){
+     const historical=await syncHistoricalCostEvidence(env,{month,item_ids:selection.item_ids},services.getFinanceHistoricalVariantEvidence,{now,canRun});output.history=historical.work;repeatHistory=historical.work==='PROGRESSED'&&!historical.scan.complete;
+    }else if(selection.ready)output.history='UNAVAILABLE';
+   }catch{output.history='ERROR';}
+  }else if(lease.lane==='CATALOG'){
+   if(typeof services?.getFinanceVariantCatalog!=='function')output.classification='UNAVAILABLE';
+   else try{const classification=await runCatalogClassifications(env,services.getFinanceVariantCatalog,{now,maxProducts:3,canRun});output.classification=classification.status;
+    if(classification.processed.length)await businessMonthWithCheckpoint(env,{operation:'read',month},{},{now,actor:'catalog-classification'});
+   }catch{output.classification='ERROR';}
+  }else if(lease.lane==='REGISTRY'){
+   if(typeof services?.getFinanceProductIndex!=='function')output.registry='UNAVAILABLE';
+   else try{output.registry=(await runProductRegistry(env,services.getFinanceProductIndex,{now,canRun})).status;}catch{output.registry='ERROR';}
+  }else if(lease.lane==='PRODUCTION'){
+   if(typeof services?.getFinanceProductionOrders!=='function')output.production='UNAVAILABLE';
+   else try{if(!await canRun())output.production='PAUSED';else{await syncProductionDtf(env,productionSource,{now});output.production='CHECKED';}}catch{output.production='ERROR';}
+  }else if(lease.lane==='COSTS'){
+   if(typeof services?.getFinanceProductionOrders!=='function')output.costs='UNAVAILABLE';
+   else try{if(!await canRun())output.costs='PAUSED';else output.costs=(await productionCostPeriods(env,{operation:'sync',month},{...services,getFinanceProductionOrders:productionSource},{now})).weekly.state;}catch{output.costs='ERROR';}
+  }else if(lease.lane==='ANALYSIS'){
+   try{await schedule(env,new Date(now()));output.analysis='CHECKED';}catch{output.analysis='UNAVAILABLE';}
   }
- }catch{classificationStatus='ERROR';}
- // Complete the financial collector before the production ledger uses the
- // same database. Each collector retains its own lease and failure outcome.
- let productionStatus='UNAVAILABLE';try{productionStatus=await production();}catch{}
- let costsStatus='UNAVAILABLE';if(typeof services?.getFinanceProductionOrders==='function'&&(await readBusinessSyncState(env)).enabled)try{costsStatus=(await productionCostPeriods(env,{operation:'sync',month},services,{now})).weekly.state;}catch{costsStatus='ERROR';}
- return {analysis:results[0].status==='fulfilled'?'CHECKED':'UNAVAILABLE',collection:results[1].status==='fulfilled'?results[1].value.status:'ERROR',classification:classificationStatus,production:productionStatus,registry:registryStatus,costs:costsStatus};
+  return output;
+ }finally{try{await finishBackgroundLane(env,lease,{now,repeatHistory});}catch{}}
 }
 async function workspaceAuthFetch(request,env){return handleWorkspaceAuth(request,env,{renderLogin:loginPage,renderLogout:current=>page('<main class="login card"><div class="brand"><span class="brand-mark">B</span><div>BrazaCommerce<small>Sua conta</small></div></div><h1>Sair da sua conta?</h1><p class="muted">Você precisará entrar novamente para acessar o painel.</p><form action="/logout" method="post"><input type="hidden" name="csrf" value="'+current.csrf+'"><button type="submit">Sair</button></form><p><a href="'+(current.role==='owner'?'/admin':'/dashboard')+'">Continuar no painel</a></p></main>')});}
 async function stableCostDiagnostics(env,month){let value=await readBusinessCostDiagnostics(env,{month});if(!value.consistent)value=await readBusinessCostDiagnostics(env,{month});return value;}
+function historicalRecoveryCandidates(diagnostic){return diagnostic.products.filter(product=>product.variants.some(variant=>['NO_CATALOG','MODEL_NOT_IN_CATALOG'].includes(variant.reason))).map(product=>product.item_id);}
 async function recoverMonthlyCosts(env,month,services){
  let diagnostic=await stableCostDiagnostics(env,month);const work={status:'IDLE',processed:[],failed:[]},response=()=>({schema:'business_cost_recovery_v1',month,diagnostic,work});
  if(!(await readBusinessSyncState(env)).enabled){work.status='PAUSED';return response();}if(!diagnostic.consistent)return response();
+ // Current catalogues cannot name a deleted variation. Read one bounded page
+ // of the original order metadata before repeating the same catalogue request.
+ const historicalIds=historicalRecoveryCandidates(diagnostic);
+ if(historicalIds.length&&typeof services.getFinanceHistoricalVariantEvidence==='function'){
+  const selected=await readHistoricalCostCandidates(env,month,{itemIds:historicalIds});
+  if(['PAUSED','LEASED','RETRY_WAIT'].includes(selected.status)){work.status=selected.status;return response();}
+  const historical=selected.item_ids.length?await syncHistoricalCostEvidence(env,{month,item_ids:selected.item_ids},services.getFinanceHistoricalVariantEvidence,{canRun:async()=>(await readBusinessSyncState(env)).enabled}):{work:'IDLE'};
+  if(historical.work!=='COMPLETE'&&historical.work!=='IDLE'){
+   work.status=historical.work==='ERROR'?'RETRY_WAIT':historical.work;
+   if(historical.work==='PROGRESSED')work.processed=selected.item_ids;
+   if(historical.work==='ERROR')work.failed=selected.item_ids;
+   diagnostic=await stableCostDiagnostics(env,month);return response();
+  }
+ }
  const missing=diagnostic.products.flatMap(product=>product.variants.filter(variant=>variant.recoverable).map(variant=>({item_id:product.item_id,model_id:variant.model_id,quantity:variant.quantity})));
  if(missing.length)await enqueueSoldCatalogGaps(env,missing);
  diagnostic=await stableCostDiagnostics(env,month);if(!diagnostic.consistent)return response();
@@ -227,6 +281,12 @@ async function adminFetch(request,env,services={}){const url=new URL(request.url
  const current=await session(request,env);if(!current)return path.startsWith('/api/')?json({error:'UNAUTHORIZED'},401):Response.redirect(url.origin+'/login',303);
  if(path==='/admin'){assert(request.method==='GET','METHOD_NOT_ALLOWED',405);return dashboard();}
  assert(path.startsWith('/api/admin/'),'NOT_FOUND',404);await setup(env);
+ if(path==='/api/admin/production-costs/confirmed-references'){
+  assert(request.method==='GET','METHOD_NOT_ALLOWED',405);assert(!url.search,'OPERATOR_COST_CORRECTION_REQUEST_INVALID');return json(await applyConfirmedOperatorCostCorrections(env));
+ }
+ if(path==='/api/admin/finance/business-month-ads-state'){
+  assert(request.method==='GET','METHOD_NOT_ALLOWED',405);const entries=[...url.searchParams];assert(entries.length===1&&entries[0][0]==='month','BUSINESS_MONTH_REQUEST_INVALID');return json(await readBusinessMonthAdsState(env,entries[0][1]));
+ }
  if(path==='/api/admin/finance/cost-diagnostics'){
   assert(request.method==='GET','METHOD_NOT_ALLOWED',405);const entries=[...url.searchParams];assert(entries.length===1&&entries[0][0]==='month','BUSINESS_COST_DIAGNOSTICS_REQUEST_INVALID');return json(await stableCostDiagnostics(env,entries[0][1]));
  }
@@ -400,5 +460,5 @@ async function adminFetch(request,env,services={}){const url=new URL(request.url
  if(path==='/api/admin/jobs')return json({rows:(await env.ADMIN_DB.prepare(`SELECT id,json_extract(task,'$.start_date') AS start_date,json_extract(task,'$.end_date') AS end_date,trigger_type,status,settings_revision,reserve_cents,cost_cents,cost_source,result,failure,created_at,started_at,completed_at FROM hermes_jobs ORDER BY created_at DESC LIMIT 30`).all()).results});
  if(path==='/api/admin/audit')return json({rows:(await env.ADMIN_DB.prepare('SELECT revision,payload,actor,created_at FROM admin_audit ORDER BY revision DESC LIMIT 30').all()).results});
  return json({error:'NOT_FOUND'},404);
- }catch(error){return json({error:error instanceof BusinessCostDiagnosticsError||error instanceof ProductRegistryError||error instanceof ProductionCostPeriodsError||error instanceof SavedOrderItemsError||error instanceof HermesFinancialContextError||error instanceof AdminError||error instanceof VariantBindingError||error instanceof ObservationError||error instanceof ProductionCostError||error instanceof StoreSummaryError||error instanceof BusinessMonthError||error instanceof BusinessCheckpointError||error instanceof BusinessTaxPolicyError||error instanceof BusinessSyncError||error instanceof CostRuleError||error instanceof CatalogClassificationError||error instanceof ProductionDtfError?error.message:'ADMIN_UNAVAILABLE'},error instanceof BusinessCostDiagnosticsError||error instanceof ProductRegistryError||error instanceof ProductionCostPeriodsError||error instanceof SavedOrderItemsError||error instanceof HermesFinancialContextError||error instanceof AdminError||error instanceof VariantBindingError||error instanceof ObservationError||error instanceof ProductionCostError||error instanceof StoreSummaryError||error instanceof BusinessMonthError||error instanceof BusinessCheckpointError||error instanceof BusinessTaxPolicyError||error instanceof BusinessSyncError||error instanceof CostRuleError||error instanceof CatalogClassificationError||error instanceof ProductionDtfError?error.status:503);}}
+ }catch(error){return json({error:error instanceof HistoricalCostOrchestrationError||error instanceof HistoricalCostEvidenceError||error instanceof OperatorCostCorrectionError||error instanceof BusinessCostDiagnosticsError||error instanceof ProductRegistryError||error instanceof ProductionCostPeriodsError||error instanceof SavedOrderItemsError||error instanceof HermesFinancialContextError||error instanceof AdminError||error instanceof VariantBindingError||error instanceof ObservationError||error instanceof ProductionCostError||error instanceof StoreSummaryError||error instanceof BusinessMonthError||error instanceof BusinessCheckpointError||error instanceof BusinessTaxPolicyError||error instanceof BusinessSyncError||error instanceof CostRuleError||error instanceof CatalogClassificationError||error instanceof ProductionDtfError?error.message:'ADMIN_UNAVAILABLE'},error instanceof HistoricalCostOrchestrationError||error instanceof HistoricalCostEvidenceError||error instanceof OperatorCostCorrectionError||error instanceof BusinessCostDiagnosticsError||error instanceof ProductRegistryError||error instanceof ProductionCostPeriodsError||error instanceof SavedOrderItemsError||error instanceof HermesFinancialContextError||error instanceof AdminError||error instanceof VariantBindingError||error instanceof ObservationError||error instanceof ProductionCostError||error instanceof StoreSummaryError||error instanceof BusinessMonthError||error instanceof BusinessCheckpointError||error instanceof BusinessTaxPolicyError||error instanceof BusinessSyncError||error instanceof CostRuleError||error instanceof CatalogClassificationError||error instanceof ProductionDtfError?error.status:503);}}
 export {adminFetch,schedule,scheduledWork,DEFAULTS,SCHEMA,validateSettings,workspaceAuthFetch};

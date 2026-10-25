@@ -3,6 +3,31 @@
 export class VariantCatalogFrameError extends Error {
   constructor() {super('VARIANT_CATALOG_INVALID');}
 }
+
+// Only these phase/code pairs cross the private catalogue boundaries. Provider
+// messages, request parameters and arbitrary Error text never enter a failure.
+export function financeCatalogDiagnostic(error){
+ const stages=['BASE_INFO','MODELS','RESULT','TRANSPORT','CONFIGURATION','APP','UNKNOWN'];
+ const suffixes=['REQUEST_INVALID','CONFIGURATION','CLOCK_CONFIGURATION','SIGNING_KEY_CONFIGURATION','AUTHORIZATION_EXPIRED','AUTH_REQUIRED','PERMISSION_REQUIRED','RATE_LIMIT','IDENTITY_MISMATCH','COST_METADATA_UNAVAILABLE','BASE_API_REJECTED','BASE_ITEM_ABSENT','BASE_NAME_UNAVAILABLE','BASE_RESPONSE_INVALID','MODEL_API_REJECTED','MODEL_RESPONSE_INVALID','MODEL_STRUCTURE_INVALID','COST_METADATA_INVALID','RESPONSE_INVALID','API_REJECTED','UNAVAILABLE','TRANSPORT_CONFIGURATION','TRANSPORT_UNAVAILABLE','REQUEST_STALE','TIMEOUT','UPSTREAM_FAILED','UPSTREAM_HTTP','UPSTREAM_BODY_TOO_LARGE','UPSTREAM_INVALID_JSON','UPSTREAM_CONTENT_TYPE','APP_CONFIGURATION','APP_RESPONSE_INVALID','APP_HTTP_ERROR','APP_TIMEOUT','APP_UPSTREAM_FAILED'];
+ try{
+  const code=Object.getOwnPropertyDescriptor(error||{},'code')?.value,stage=Object.getOwnPropertyDescriptor(error||{},'catalog_stage')?.value,http=Object.getOwnPropertyDescriptor(error||{},'upstream_status')?.value;
+  const safeCode=suffixes.some(suffix=>code==='FINANCE_CATALOG_'+suffix)?code:['FINANCE_AUTHORIZATION_REQUIRED','FINANCE_TOKEN_DECRYPT_FAILED','FINANCE_ENCRYPTION_KEY_MISMATCH'].includes(code)?'FINANCE_CATALOG_AUTH_REQUIRED':'FINANCE_CATALOG_UNAVAILABLE';
+  return {stage:stages.includes(stage)?stage:safeCode.startsWith('FINANCE_CATALOG_BASE_')?'BASE_INFO':safeCode.startsWith('FINANCE_CATALOG_MODEL_')?'MODELS':safeCode.startsWith('FINANCE_CATALOG_APP_')?'APP':'UNKNOWN',code:safeCode,http:Number.isInteger(http)&&http>=100&&http<=599?http:null};
+ }catch{return {stage:'UNKNOWN',code:'FINANCE_CATALOG_UNAVAILABLE',http:null};}
+}
+
+export function projectVariantCatalogFailure(value){
+ const plain=row=>row!==null&&typeof row==='object'&&[Object.prototype,null].includes(Object.getPrototypeOf(row));
+ const exact=(row,keys)=>plain(row)&&Reflect.ownKeys(row).length===keys.length&&keys.every(key=>Object.hasOwn(Object.getOwnPropertyDescriptor(row,key)||{},'value'));
+ const stages=['BASE_INFO','MODELS','RESULT','TRANSPORT','CONFIGURATION','APP','UNKNOWN'];
+ const suffixes=['REQUEST_INVALID','CONFIGURATION','CLOCK_CONFIGURATION','SIGNING_KEY_CONFIGURATION','AUTHORIZATION_EXPIRED','AUTH_REQUIRED','PERMISSION_REQUIRED','RATE_LIMIT','IDENTITY_MISMATCH','COST_METADATA_UNAVAILABLE','BASE_API_REJECTED','BASE_ITEM_ABSENT','BASE_NAME_UNAVAILABLE','BASE_RESPONSE_INVALID','MODEL_API_REJECTED','MODEL_RESPONSE_INVALID','MODEL_STRUCTURE_INVALID','COST_METADATA_INVALID','RESPONSE_INVALID','API_REJECTED','UNAVAILABLE','TRANSPORT_CONFIGURATION','TRANSPORT_UNAVAILABLE','REQUEST_STALE','TIMEOUT','UPSTREAM_FAILED','UPSTREAM_HTTP','UPSTREAM_BODY_TOO_LARGE','UPSTREAM_INVALID_JSON','UPSTREAM_CONTENT_TYPE','APP_CONFIGURATION','APP_RESPONSE_INVALID','APP_HTTP_ERROR','APP_TIMEOUT','APP_UPSTREAM_FAILED'];
+ try{
+  if(!(exact(value,['schema','status','diagnostic'])&&value.schema==='variant_catalog_v1'&&value.status==='UNAVAILABLE')&&!(exact(value,['error','diagnostic'])&&value.error==='FINANCE_CATALOG_UNAVAILABLE'))return null;
+  const diagnostic=value.diagnostic,hasStage=plain(diagnostic)&&Object.hasOwn(diagnostic,'stage');
+  if(!exact(diagnostic,['code','http',...(hasStage?['stage']:[])])||!suffixes.some(suffix=>diagnostic.code==='FINANCE_CATALOG_'+suffix)||diagnostic.http!==null&&(!Number.isInteger(diagnostic.http)||diagnostic.http<100||diagnostic.http>599)||hasStage&&!stages.includes(diagnostic.stage))return null;
+  return {schema:'variant_catalog_v1',status:'UNAVAILABLE',diagnostic:{stage:hasStage?diagnostic.stage:'UNKNOWN',code:diagnostic.code,http:diagnostic.http}};
+ }catch{return null;}
+}
 const catalogSizes = new Set(['P','M','G','GG','G1','G2','G3']);
 const catalogSellingUnits = new Set(['SINGLE_GARMENT','ONE_MALE_ONE_FEMALE_KIT']);
 const catalogObject = value => value !== null && typeof value === 'object'

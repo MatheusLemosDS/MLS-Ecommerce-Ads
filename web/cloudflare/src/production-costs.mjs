@@ -43,10 +43,27 @@ function validateCustomProductionCosts(values){
  return {custom_profiles:profiles,custom_assignments:assignments};
 }
 
+function validateCompositionProductionCosts(values){
+ if(!costArray(values.composition_recipes,100)||!costArray(values.composition_assignments,1000))costFail('COSTS_COMPOSITIONS_INVALID');
+ const recipes=[],ids=new Set();
+ for(const recipe of values.composition_recipes){
+  if(!costExact(recipe,['id','label','components'])||!costId(recipe.id)||ids.has(recipe.id)||typeof recipe.label!=='string'||/[\u0000-\u001f\u007f-\u009f]/.test(recipe.label)||!recipe.label.trim()||recipe.label.trim().length>60||!costArray(recipe.components,20)||!recipe.components.length)costFail('COSTS_COMPOSITION_RECIPE_INVALID');
+  let pieces=0;const components=recipe.components.map(component=>{if(!costExact(component,['kind','size','quantity'])||component.kind!=='ADULT_GARMENT'||!['P','M','G','GG','G1','G2','G3'].includes(component.size)||!Number.isSafeInteger(component.quantity)||component.quantity<1||component.quantity>20)costFail('COSTS_COMPOSITION_COMPONENT_INVALID');pieces+=component.quantity;return {...component};});
+  if(pieces>20)costFail('COSTS_COMPOSITION_COMPONENT_INVALID');ids.add(recipe.id);recipes.push({id:recipe.id,label:recipe.label.trim(),components});
+ }
+ const assignments=[],seen=new Set();for(const assignment of values.composition_assignments){
+  if(!costExact(assignment,['item_id','model_id','recipe_id'])||!costItemId(assignment.item_id)||!costModelId(assignment.model_id)||!costId(assignment.recipe_id)||!ids.has(assignment.recipe_id)||seen.has(costAssignmentKey(assignment)))costFail('COSTS_COMPOSITION_ASSIGNMENT_INVALID');
+  seen.add(costAssignmentKey(assignment));assignments.push({...assignment});
+ }
+ recipes.sort((a,b)=>a.id.localeCompare(b.id));assignments.sort((a,b)=>costNumericOrder(a.item_id,b.item_id)||costNumericOrder(a.model_id,b.model_id));return {composition_recipes:recipes,composition_assignments:assignments};
+}
+
 export function validateProductionCosts(values){
  const keys=['mode','inclusive_regular_cents','inclusive_plus_cents','base_regular_cents','base_plus_cents','components'];
  const custom=costPlain(values)&&(Object.hasOwn(values,'custom_profiles')||Object.hasOwn(values,'custom_assignments'));
  if(custom)keys.push('custom_profiles','custom_assignments');
+ const composition=costPlain(values)&&(Object.hasOwn(values,'composition_recipes')||Object.hasOwn(values,'composition_assignments'));
+ if(composition)keys.push('composition_recipes','composition_assignments');
  if(!costExact(values,keys)||!['all_inclusive','itemized'].includes(values.mode))costFail('PRODUCTION_COSTS_INVALID');
  if(!costMoney(values.inclusive_regular_cents,true)||!costMoney(values.inclusive_plus_cents,true))costFail('PRODUCTION_COST_AMOUNT_INVALID');
  for(const key of ['base_regular_cents','base_plus_cents']){
@@ -62,7 +79,7 @@ export function validateProductionCosts(values){
   if(label.length<1||label.length>60||!['per_piece','per_kit'].includes(component.basis)||!costMoney(component.amount_cents))costFail('PRODUCTION_COST_COMPONENT_INVALID');
   seen.add(component.id);components.push({id:component.id,label,basis:component.basis,amount_cents:component.amount_cents});
  }
- return {mode:values.mode,inclusive_regular_cents:values.inclusive_regular_cents,inclusive_plus_cents:values.inclusive_plus_cents,base_regular_cents:values.base_regular_cents,base_plus_cents:values.base_plus_cents,components,...(custom?validateCustomProductionCosts(values):{})};
+ return {mode:values.mode,inclusive_regular_cents:values.inclusive_regular_cents,inclusive_plus_cents:values.inclusive_plus_cents,base_regular_cents:values.base_regular_cents,base_plus_cents:values.base_plus_cents,components,...(custom?validateCustomProductionCosts(values):{}),...(composition?validateCompositionProductionCosts(values):{})};
 }
 
 function costStoredValues(payload){
@@ -82,6 +99,7 @@ export async function saveProductionCosts(env,body,actor){
  // An older browser knows only the six original fields. It must not erase
  // profiles or assignments saved by a newer session with the same revision.
  if(!Object.hasOwn(values,'custom_profiles')&&(previous.custom_profiles?.length||previous.custom_assignments?.length))costFail('COSTS_CUSTOM_FIELDS_REQUIRED',409);
+ if(!Object.hasOwn(values,'composition_recipes')&&(previous.composition_recipes?.length||previous.composition_assignments?.length))costFail('COSTS_COMPOSITION_FIELDS_REQUIRED',409);
  const raw=JSON.stringify(values),now=new Date().toISOString();
  const results=await env.ADMIN_DB.batch([
   env.ADMIN_DB.prepare('UPDATE production_costs_state SET revision=revision+1,payload=?,updated_at=? WHERE id=1 AND revision=? AND payload=?').bind(raw,now,body.revision,current.payload),
@@ -113,7 +131,11 @@ export function productionCostReference(frame,bindings,costState,automaticRefere
  const plus=new Set(['G1','G2','G3']),variants=[];
  const profiles=new Map((values.custom_profiles||[]).map(profile=>[profile.id,profile]));
  const assignments=new Map((values.custom_assignments||[]).map(assignment=>[costAssignmentKey(assignment),profiles.get(assignment.profile_id)]));
+ const recipes=new Map((values.composition_recipes||[]).map(recipe=>[recipe.id,recipe])),compositionAssignments=new Map((values.composition_assignments||[]).map(assignment=>[costAssignmentKey(assignment),recipes.get(assignment.recipe_id)]));
+ const recipeCost=recipe=>{let unit=0,pieces=0;for(const component of recipe.components){const isPlus=['G1','G2','G3'].includes(component.size),base=values[values.mode==='all_inclusive'?(isPlus?'inclusive_plus_cents':'inclusive_regular_cents'):(isPlus?'base_plus_cents':'base_regular_cents')];unit=costSafeSum(unit,costSafeProduct(base,component.quantity));pieces+=component.quantity;}if(values.mode==='itemized')for(const component of values.components)if(component.basis==='per_piece'||pieces>1)unit=costSafeSum(unit,costSafeProduct(component.amount_cents,component.basis==='per_piece'?pieces:1));return {id:recipe.id,label:recipe.label,unit_cost_cents:unit};};
  const automated=new Map((automaticReference?.variants||[]).map(row=>[row.item_id+':'+row.model_id,row]));
+ const historical=new Map((automaticReference?.historical_compositions||[]).map(row=>[row.item_id+':'+row.model_id,row])),manualProductScopes=new Set(automaticReference?.manual_product_item_ids||[]),currentCatalogModels=new Set([...(automaticReference?.catalog_model_keys||[]),...(automaticReference?.catalog_variants||[]).map(row=>row.item_id+':'+row.model_id)]);
+ const historicalCost=composition=>{if(!composition||composition.provenance!=='HISTORICAL_ORDER_EVIDENCE')return null;if(composition.kind==='CHILD_SINGLE')return ['2','4','6','8','10','12','14','16'].includes(composition.child_size)&&costMoney(composition.unit_cost_cents,true)?{id:'historical-child-'+composition.child_size,label:'Camiseta infantil '+composition.child_size+' · histórico',unit_cost_cents:composition.unit_cost_cents}:null;const sizes=composition.kind==='ADULT_SINGLE'?[composition.size]:composition.kind==='EXPLICIT_COUPLE_KIT'?[composition.male_size,composition.female_size]:[];if(!sizes.length||!sizes.every(size=>['P','M','G','GG','G1','G2','G3'].includes(size)))return null;return recipeCost({id:'historical-'+(sizes.length===1?'adult-':'couple-')+sizes.join('-').toLowerCase(),label:(sizes.length===1?'Camiseta adulta ':'Kit de 2 camisetas ')+sizes.join('/')+' · histórico',components:sizes.map(size=>({kind:'ADULT_GARMENT',size,quantity:1}))});};
  const metadataChanged=new Set(automaticReference?.metadata_changed_item_ids||[]),manualRuleKeys=new Set(automaticReference?.manual_variant_keys||[]),manualRuleProducts=new Map((automaticReference?.manual_product_costs||[]).map(row=>[row.item_id,row]));
  const ruleManaged=new Set(automaticReference?.restricted_item_ids||[]),classifiedItems=new Set(automaticReference?.classified_item_ids||[]),catalogBindings=new Map();
  // Validate one bounded product/model record at a time. The durable table is
@@ -127,7 +149,7 @@ export function productionCostReference(frame,bindings,costState,automaticRefere
  }
  let known=0,mapped=0,unmapped=0;
  for(const [key,row] of grouped){
-  const legacy=confirmed.get(key),catalogBinding=catalogBindings.get(key),binding=legacy?.operator_confirmed===true?legacy:classifiedItems.has(row.item_id)?catalogBinding:catalogBinding||legacy,manual=assignments.get(key)||assignments.get(row.item_id+':*'),automatic=automated.get(key),changed=metadataChanged.has(row.item_id),manualRule=manualRuleKeys.has(key)?null:manualRuleProducts.get(row.item_id),allowedAutomatic=!changed||manualRuleKeys.has(key),custom=manual||manualRule||(allowedAutomatic&&automatic?.unit_cost_cents!==null&&automatic?{id:automatic.profile_id,label:automatic.profile_label,unit_cost_cents:automatic.unit_cost_cents}:null),out={...row,unit_cost_cents:null,production_cost_cents:null};
+  const legacy=confirmed.get(key),catalogBinding=catalogBindings.get(key),binding=legacy?.operator_confirmed===true?legacy:classifiedItems.has(row.item_id)?catalogBinding:catalogBinding||legacy,manual=assignments.get(key)||assignments.get(row.item_id+':*'),recipe=compositionAssignments.get(key),automatic=automated.get(key),changed=metadataChanged.has(row.item_id),manualRule=manualRuleKeys.has(key)?null:manualRuleProducts.get(row.item_id),allowedAutomatic=!changed||manualRuleKeys.has(key),allowHistorical=!changed&&legacy?.operator_confirmed!==true&&!catalogBinding&&!currentCatalogModels.has(key)&&!automated.has(key)&&!manualRuleKeys.has(key)&&!manualProductScopes.has(row.item_id),custom=manual||(recipe?recipeCost(recipe):null)||manualRule||(allowedAutomatic&&automatic?.unit_cost_cents!==null&&automatic?{id:automatic.profile_id,label:automatic.profile_label,unit_cost_cents:automatic.unit_cost_cents}:null)||(allowHistorical?historicalCost(historical.get(key)):null),out={...row,unit_cost_cents:null,production_cost_cents:null};
   if(custom){
    const subtotal=costSafeProduct(custom.unit_cost_cents,row.quantity);known=costSafeSum(known,subtotal);mapped=costSafeSum(mapped,row.quantity);
    out.unit_cost_cents=custom.unit_cost_cents;out.production_cost_cents=subtotal;

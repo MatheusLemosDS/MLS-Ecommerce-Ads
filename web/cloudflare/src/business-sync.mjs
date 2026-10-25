@@ -92,7 +92,7 @@ export async function runBusinessSync(env,services,{now=()=>Date.now(),maxSteps=
  };
  const collectors={
   getFinanceBusinessPeriod:async(binding,input)=>{if(typeof services?.getFinanceBusinessPeriod!=='function')throw Error();if(!await canCall(45000)){stopped=yielded=true;throw Error();}financeSteps++;return services.getFinanceBusinessPeriod(binding,input,{timeoutMs:45000});},
-  getAdsCalendar:async(binding,input)=>{if(typeof services?.getAdsCalendar!=='function')throw Error();if(!await canCall(60000)){stopped=yielded=true;throw Error();}adsReads++;return services.getAdsCalendar(binding,input,{now,timeoutMs:10000});},
+  getAdsCalendar:async(binding,input)=>{if(typeof services?.getAdsCalendar!=='function')throw Error();if(!await canCall(60000)){stopped=yielded=true;throw Object.assign(Error(),{code:'BUSINESS_MONTH_ADS_SKIPPED'});}adsReads++;return services.getAdsCalendar(binding,input,{now,timeoutMs:10000});},
  };
  try{
   for(let step=0;step<maxSteps;step++){
@@ -102,7 +102,7 @@ export async function runBusinessSync(env,services,{now=()=>Date.now(),maxSteps=
    if(frame.result.pending.includes('SOURCE_UNAVAILABLE')||frame.collection?.state==='RETRY_WAIT'||frame.collection?.state==='BLOCKED')break;
    if(frame.status!=='RUNNING')break;
   }
-  if(frame?.status==='COMPLETE'&&hasTime(60000)){
+  if(frame&&hasTime(60000)){
    frame=projectBusinessMonth(await businessMonthWithCheckpoint(env,{operation:'ads',month},collectors,{now,actor:'business-sync'}));
    if(!frame||frame.month!==month)throw new BusinessSyncError('BUSINESS_SYNC_RESULT_INVALID');
   }
@@ -112,13 +112,13 @@ export async function runBusinessSync(env,services,{now=()=>Date.now(),maxSteps=
   if(frame?.result.pending.includes('SOURCE_UNAVAILABLE')||frame?.status!=='RUNNING'&&frame?.result.pending.includes('FINANCIAL_SOURCE_STALE')){status='ERROR';errorCode=({BUSINESS_PERIOD_RATE_LIMIT:'BUSINESS_SYNC_SOURCE_RATE_LIMIT',BUSINESS_PERIOD_TIMEOUT:'BUSINESS_SYNC_SOURCE_TIMEOUT',BUSINESS_PERIOD_AUTH_REQUIRED:'BUSINESS_SYNC_SOURCE_AUTH_REQUIRED',BUSINESS_PERIOD_INVALID_SOURCE:'BUSINESS_SYNC_SOURCE_INVALID',BUSINESS_PERIOD_PERMISSION_DENIED:'BUSINESS_SYNC_SOURCE_PERMISSION_DENIED'})[frame?.collection?.code]||'BUSINESS_SYNC_COLLECTION_UNAVAILABLE';}
   else if(frame?.status==='LIMIT_REACHED'){status='LIMIT_REACHED';errorCode='BUSINESS_SYNC_PERIOD_LIMIT_REACHED';}
   else if(frame?.status==='COMPLETE'){
-   status=frame.ads?.status==='AVAILABLE'?'COMPLETE':'PARTIAL';
+   status=frame.ads?.status==='AVAILABLE'&&!frame.result.pending.includes('ADS_UNAVAILABLE')?'COMPLETE':'PARTIAL';
    if(status==='PARTIAL')errorCode='BUSINESS_SYNC_ADS_INCOMPLETE';
   }
  }catch(error){if(!yielded){status='ERROR';errorCode=error instanceof BusinessSyncError&&error.message==='BUSINESS_SYNC_RESULT_INVALID'?error.message:'BUSINESS_SYNC_COLLECTION_UNAVAILABLE';}}
  const finished=Math.max(started,Math.floor(syncClock(now)/1000)),latest=await syncRead(db);
  if(latest.row.lease_token!==token){state=latest.state;return result('LEASED',financeSteps,adsReads);}
- if(!latest.state.enabled)status='PAUSED';
+ if(!latest.state.enabled){status='PAUSED';errorCode=null;}
  const failure=errorCode!==null,failureCount=failure?Math.min(latest.state.failure_count+1,1000000):0;
  const delay=frame?.collection?.state==='RETRY_WAIT'?Math.max(300,frame.collection.retry_after_seconds):failure?[300,600,1200,1800][Math.min(failureCount-1,3)]:300;
  const summary=frame?JSON.stringify(syncSummary(frame)):latest.state.summary?.month===month?latest.row.summary:null;

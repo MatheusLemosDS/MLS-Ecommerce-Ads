@@ -31,6 +31,14 @@ test('child summary uses the saved rule price and sizes without resetting an edi
  b.field('amount').value='15,00';b.field('amount').oninput();assert.match(widgetText(b.el('Summary')),/14,25/);assert.doesNotMatch(widgetText(b.el('Summary')),/15,00/);
 });
 
+test('confirmed child size two and its current saved price appear dynamically without requiring an adult binding',async()=>{
+ const values=structuredClone(COST_RULE_DEFAULTS);values.rules[0].options=['2',...values.rules[0].options];values.rules[0].unit_cost_cents=1325;let current=state(8,values);const b=browser(async(path,body)=>{if(path==='cost-rules/assignments')current=state(9,{...values,assignments:body.assignments});return current;});await b.workspace.start({api:b.api});const widget=b.workspace.assignmentControl({item_id:'101',model_id:'0'});selectChild(widget,'2');assert.match(widgetText(b.el('Summary')),/13,25.*2, 4, 6, 8, 10, 12, 14, 16/);assert.equal(findAssignment(widget,'save','action').disabled,false);await findAssignment(widget,'save','action').onclick();assert.equal(b.calls.find(row=>row.path==='cost-rules/assignments').body.assignments[0].size,'2');assert.ok(!b.calls.some(row=>row.path.includes('variant-bindings')));
+});
+
+test('a catalogue mismatch rejects an infantil rule on an adult product with a useful message while preserving the choices and saved cost',async()=>{
+ const b=browser(async(path)=>{if(path==='cost-rules/assignments')throw Object.assign(Error('PRIVATE_CATALOG_TRACE'),{status:409,apiCode:'COST_RULE_ASSIGNMENT_CATALOG_CONFLICT'});return state();});await b.workspace.start({api:b.api});let saved=false;const widget=b.workspace.assignmentControl({item_id:'101',model_id:null,onSaved:()=>{saved=true;}}),type=findAssignment(widget,'rule');type.value='camiseta-infantil';type.onchange();await findAssignment(widget,'save','action').onclick();assert.match(widgetText(widget),/não corresponde aos tamanhos deste produto.*associação não foi salva.*custo anterior foi preservado/);assert.doesNotMatch(widgetText(widget),/PRIVATE|mudaram em outra sessão/);assert.equal(type.value,'camiseta-infantil');assert.equal(findAssignment(widget,'save','action').disabled,false);assert.equal(saved,false);assert.equal(b.workspace.hasAssignment('101'),false);assert.equal(b.calls.filter(row=>row.path==='cost-rules/sync').length,0);
+});
+
 test('the child rule loads as R$12.50 and seven sizes, while other product types can be added without touching manual profiles',async()=>{
  const b=browser(async()=>state());await b.workspace.start({api:b.api});assert.equal(b.field('amount').value,'12.50');assert.equal(b.field('options').value,'4; 6; 8; 10; 12; 14; 16');assert.equal(b.el('Save').disabled,true);
  b.el('Add').onclick();assert.equal(b.el('Rows').children.length,2);assert.equal(b.el('Save').disabled,false);assert.equal(b.field('amount',1).value,'');assert.equal(b.field('options',1).value,'');

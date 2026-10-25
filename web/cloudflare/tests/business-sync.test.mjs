@@ -5,13 +5,13 @@ import {COST_DEFAULTS} from '../src/production-costs.mjs';
 import {buildAdsCalendar} from '../src/ads-calendar.mjs';
 import {buildAdsMeasurement} from '../src/ads-measurement.mjs';
 import {businessMonth} from '../src/business-month.mjs';
-import {scheduledWork} from '../src/admin.mjs';
+import {scheduledWork,SCHEMA} from '../src/admin.mjs';
 import {projectBusinessPeriodFrame} from '../../finance/src/business-period-frame.mjs';
 import {runBusinessSync,readBusinessSyncState,saveBusinessSyncPolicy,BusinessSyncError} from '../src/business-sync.mjs';
 
 const clock=Date.UTC(2026,9,24,12),stamp=clock/1000,now=()=>clock;
 function environment(){
- const ADMIN_DB=new D1();ADMIN_DB.db.exec('CREATE TABLE variant_bindings_state(id INTEGER PRIMARY KEY,revision INTEGER,payload TEXT,updated_at TEXT);CREATE TABLE production_costs_state(id INTEGER PRIMARY KEY,revision INTEGER,payload TEXT,updated_at TEXT);CREATE TABLE hermes_jobs(id TEXT PRIMARY KEY,payload TEXT)');
+ const ADMIN_DB=new D1();ADMIN_DB.db.exec('CREATE TABLE variant_bindings_state(id INTEGER PRIMARY KEY,revision INTEGER,payload TEXT,updated_at TEXT);CREATE TABLE production_costs_state(id INTEGER PRIMARY KEY,revision INTEGER,payload TEXT,updated_at TEXT)');ADMIN_DB.db.exec(SCHEMA.find(sql=>sql.startsWith('CREATE TABLE IF NOT EXISTS hermes_jobs ')));
  ADMIN_DB.db.prepare('INSERT INTO variant_bindings_state VALUES(1,3,?,?)').run('[]',new Date(clock).toISOString());
  ADMIN_DB.db.prepare('INSERT INTO production_costs_state VALUES(1,7,?,?)').run(JSON.stringify(COST_DEFAULTS),new Date(clock).toISOString());return {ADMIN_DB};
 }
@@ -52,7 +52,7 @@ test('an atomic lease excludes overlapping schedulers and resumes a running prov
  const blocked=new Promise(resolve=>release=resolve),started=new Promise(resolve=>entered=resolve),provider=services.getFinanceBusinessPeriod;
  services.getFinanceBusinessPeriod=async(...args)=>{entered();await blocked;return provider(...args);};
  const first=run(env,services);await started;const duplicate=await run(env,services);assert.equal(duplicate.status,'LEASED');assert.equal(duplicate.finance_steps,0);assert.equal(services.calls.finance.length,0);
- release();const initial=await first;assert.equal(initial.status,'RUNNING');assert.equal(initial.finance_steps,4);assert.equal(initial.ads_reads,0);assert.equal(initial.state.summary.net_estimate_cents,null);assert.equal(initial.state.summary.net_profit_cents,null);assert.ok(initial.state.summary.pending.includes('COLLECTING'));assert.equal(initial.state.summary.progress.windows_complete,0);
+ release();const initial=await first;assert.equal(initial.status,'RUNNING');assert.equal(initial.finance_steps,4);assert.equal(initial.ads_reads,1);assert.equal(initial.state.summary.source_checked_at.ads_at,stamp);assert.equal(initial.state.summary.net_estimate_cents,null);assert.equal(initial.state.summary.net_profit_cents,null);assert.ok(initial.state.summary.pending.includes('COLLECTING'));assert.equal(initial.state.summary.progress.windows_complete,0);
  const id=[...services.frames.keys()][0];assert.deepEqual(services.calls.finance.slice(1),Array.from({length:3},()=>({operation:'step',run_id:id})));
  services.getFinanceBusinessPeriod=provider;const resumed=await run(env,services,{now:()=>clock+300000,maxSteps:1});assert.equal(resumed.status,'RUNNING');assert.equal(resumed.finance_steps,1);assert.deepEqual(services.calls.finance.at(-1),{operation:'step',run_id:id});assert.equal(resumed.state.failure_count,0);assert.equal(rows(env,'business_sync_audit').length,2);
 });
@@ -253,10 +253,10 @@ test('unattended catalogue discovery corrects an already priced adult binding to
  const savedBindings=rows(env,'variant_bindings_state'),savedCosts=rows(env,'production_costs_state');
  const result=await run(env,services);
  assert.equal(catalogCalls.length,0,'financial pagination discovers products without running a second catalogue pipeline');
- const scheduled=await scheduledWork(env,services,now),month=await businessMonth(env,{operation:'read',month:'2026-10'},services,{now});
+ let scheduled;const lanes=[];for(let tick=0;tick<5;tick++){scheduled=await scheduledWork(env,services,now);lanes.push(scheduled.lane);if(scheduled.classification==='PROGRESSED')break;}assert.deepEqual(lanes,['MAINTENANCE','FINANCE','HISTORY','FINANCE','CATALOG']);const month=await businessMonth(env,{operation:'read',month:'2026-10'},services,{now});
  assert.equal(scheduled.classification,'PROGRESSED');
  assert.equal(result.status,'COMPLETE');assert.equal(catalogCalls.length,1);assert.equal(result.finance_steps,2);assert.equal(result.ads_reads,1);
  assert.equal(month.production_cost_cents,5000);assert.equal(month.result.net_estimate_cents,2395);assert.deepEqual(month.unmapped_variants,[]);
  assert.equal(month.product_summary.products[0].variants[0].unit_cost_cents,1250);assert.equal(month.product_summary.products[0].quantity,4);
- assert.deepEqual(rows(env,'variant_bindings_state'),savedBindings);assert.deepEqual(rows(env,'production_costs_state'),savedCosts);assert.equal(rows(env,'hermes_jobs').length,0);
+ assert.deepEqual(rows(env,'variant_bindings_state'),savedBindings);const saved=JSON.parse(savedCosts[0].payload),updatedCosts=rows(env,'production_costs_state');assert.equal(updatedCosts.length,1);const {composition_recipes,composition_assignments,...retained}=JSON.parse(updatedCosts[0].payload);assert.deepEqual(retained,saved,'automatic confirmed corrections preserve existing garment prices and other cost fields');assert.equal(updatedCosts[0].revision,savedCosts[0].revision+1);assert.deepEqual(composition_recipes,[{id:'adult-triple-pmg-confirmed',label:'Combo de 3 camisetas adultas P/M/G',components:['P','M','G'].map(size=>({kind:'ADULT_GARMENT',size,quantity:1}))}]);assert.deepEqual(composition_assignments,[{item_id:'58271140523',model_id:'149796059126',recipe_id:'adult-triple-pmg-confirmed'}]);const corrections=rows(env,'operator_cost_corrections');assert.equal(corrections.length,3);assert.deepEqual(corrections.map(row=>row.status).sort(),['APPLIED','APPLIED','SKIPPED']);assert.equal(rows(env,'hermes_jobs').length,0);
 });

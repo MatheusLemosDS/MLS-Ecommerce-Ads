@@ -10,6 +10,10 @@ for(const minify of [false,true])test(`compiled App scheduled collection is wire
  const base='https://app.example.test',env={ADMIN_DB:new D1(),ADMIN_SESSION_SECRET:'background-session-fixture-'+ 's'.repeat(40),ADMIN_USERNAME:'background-owner',ADMIN_PASSWORD:'background-password-fixture-123456'};
  try{
   const tasks=[];await worker.scheduled({},env,{waitUntil(value){tasks.push(value);}});assert.equal(tasks.length,1);await Promise.all(tasks);
+  assert.equal(env.ADMIN_DB.db.prepare('SELECT status FROM business_sync_state WHERE id=1').get().status,'IDLE');
+  assert.equal(env.ADMIN_DB.db.prepare('SELECT COUNT(*) n FROM business_sync_audit').get().n,0);
+  assert.equal(env.ADMIN_DB.db.prepare('SELECT COUNT(*) n FROM operator_cost_corrections').get().n,3);
+  const financial=[];await worker.scheduled({},env,{waitUntil(value){financial.push(value);}});await Promise.all(financial);
   // No internal service key is configured in this fixture, so the private
   // transport fails locally before any network request or commercial action.
   const stored=env.ADMIN_DB.db.prepare('SELECT status,summary,last_error FROM business_sync_state WHERE id=1').get();assert.equal(stored.status,'ERROR');assert.equal(stored.last_error,'BUSINESS_SYNC_COLLECTION_UNAVAILABLE');

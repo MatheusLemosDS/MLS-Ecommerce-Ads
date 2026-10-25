@@ -96,8 +96,19 @@ test('one automatic cost action stops at eight targeted requests and reads the m
  assert.equal(await b.run('control("CostRecover").onclick()'),true);assert.equal(b.run('calls.slice('+before+').filter(call=>call.path==="finance/cost-recovery").length'),8);assert.deepEqual(JSON.parse(b.run('JSON.stringify(calls.slice('+before+').filter(call=>call.body?.operation).map(call=>call.body.operation))')),['read']);assert.equal(b.run('control("ExpensesValue").value'),'37,50');assert.match(b.text('CostDiagnosticStatus'),/atingiu o limite/);assert.match(b.text('NetLabel'),/ainda falta produção|Saldo/);assert.equal(b.run('calls.slice('+before+').some(call=>["start","step","ads","expenses"].includes(call.body?.operation))'),false);
 });
 
+test('historical cost recovery remains eligible during catalogue backoff and respects server pauses, leases and retry limits',async()=>{
+ const source=partialCostProductFixture();
+ for(const reason of ['NO_CATALOG','MODEL_NOT_IN_CATALOG'])for(const state of ['PROGRESSED','PAUSED','LEASED','RETRY_WAIT']){
+  const diagnostic=costDiagnosticFixture(source),product=diagnostic.products[0];product.classification={status:'RETRY_WAIT',reason:'CATALOG_UNAVAILABLE',checked_at:stamp-10,next_attempt_at:stamp+86400,failure_count:20};Object.assign(product.variants[0],{reason,recoverable:false,next_attempt_at:stamp+86400});assert.ok(projectBusinessCostDiagnostics(diagnostic));
+  const b=browser(source);b.context.diagnostic=JSON.stringify(diagnostic);b.context.workStatus=state;await b.run('brazaMonthDashboard.start({api})');const before=b.run('calls.length');
+  b.run('customApi=async(path)=>path.startsWith("finance/cost-diagnostics?")?JSON.parse(diagnostic):path==="finance/cost-recovery"?{schema:"business_cost_recovery_v1",month:"2026-10",diagnostic:JSON.parse(diagnostic),work:{status:workStatus,processed:workStatus==="PROGRESSED"?["200"]:[],failed:[]}}:JSON.parse(JSON.stringify(currentFrame));');
+  assert.equal(await b.run('control("CostRecover").onclick()'),true,reason+' '+state);assert.equal(b.run('calls.slice('+before+').filter(call=>call.path==="finance/cost-recovery").length'),state==='PROGRESSED'?8:1,reason+' '+state);assert.deepEqual(JSON.parse(b.run('JSON.stringify(calls.slice('+before+').filter(call=>call.body?.operation).map(call=>call.body.operation))')),['read']);assert.match(b.text('CostDiagnosticBody'),/histórico de pedidos pode confirmar/);assert.match(b.text('CostDiagnosticStatus'),state==='PROGRESSED'?/atingiu o limite/:state==='PAUSED'?/pausada/:state==='LEASED'?/Outra conferência/:/Uma fonte precisa aguardar/);b.run('brazaMonthDashboard.stop()');
+ }
+ const diagnostic=costDiagnosticFixture(source);diagnostic.consistent=false;diagnostic.versions.current.costs++;diagnostic.products[0].variants[0].recoverable=false;assert.ok(projectBusinessCostDiagnostics(diagnostic));const b=browser(source);b.context.diagnostic=JSON.stringify(diagnostic);await b.run('brazaMonthDashboard.start({api})');const before=b.run('calls.length');b.run('customApi=async(path)=>path.startsWith("finance/cost-diagnostics?")?JSON.parse(diagnostic):JSON.parse(JSON.stringify(currentFrame));');assert.equal(await b.run('control("CostRecover").onclick()'),true);assert.equal(b.run('calls.slice('+before+').filter(call=>call.path==="finance/cost-recovery").length'),0);assert.match(b.text('CostDiagnosticBody'),/custos mudaram durante a conferência/);b.run('brazaMonthDashboard.stop()');
+});
+
 test('automatic cost work stops immediately for policy pause, active lease or provider backoff and never guesses ambiguous composition',async()=>{
- const source=partialCostProductFixture();for(const state of ['PAUSED','LEASED','RETRY_WAIT']){const diagnostic=costDiagnosticFixture(source),b=browser(source);b.context.diagnostic=JSON.stringify(diagnostic);b.context.workStatus=state;await b.run('brazaMonthDashboard.start({api})');const before=b.run('calls.length');b.run('customApi=async(path)=>path.startsWith("finance/cost-diagnostics?")?JSON.parse(diagnostic):path==="finance/cost-recovery"?{schema:"business_cost_recovery_v1",month:"2026-10",diagnostic:JSON.parse(diagnostic),work:{status:workStatus,processed:[],failed:[]}}:JSON.parse(JSON.stringify(currentFrame));');assert.equal(await b.run('control("CostRecover").onclick()'),true);assert.equal(b.run('calls.slice('+before+').filter(call=>call.path==="finance/cost-recovery").length'),1,state);assert.match(b.text('CostDiagnosticStatus'),state==='PAUSED'?/pausada/:state==='LEASED'?/Outra conferência/:/pediu uma espera/);}
+ const source=partialCostProductFixture();for(const state of ['PAUSED','LEASED','RETRY_WAIT']){const diagnostic=costDiagnosticFixture(source),b=browser(source);b.context.diagnostic=JSON.stringify(diagnostic);b.context.workStatus=state;await b.run('brazaMonthDashboard.start({api})');const before=b.run('calls.length');b.run('customApi=async(path)=>path.startsWith("finance/cost-diagnostics?")?JSON.parse(diagnostic):path==="finance/cost-recovery"?{schema:"business_cost_recovery_v1",month:"2026-10",diagnostic:JSON.parse(diagnostic),work:{status:workStatus,processed:[],failed:[]}}:JSON.parse(JSON.stringify(currentFrame));');assert.equal(await b.run('control("CostRecover").onclick()'),true);assert.equal(b.run('calls.slice('+before+').filter(call=>call.path==="finance/cost-recovery").length'),1,state);assert.match(b.text('CostDiagnosticStatus'),state==='PAUSED'?/pausada/:state==='LEASED'?/Outra conferência/:/Uma fonte precisa aguardar/);}
  const diagnostic=costDiagnosticFixture(source);diagnostic.products[0].variants[0].reason='CONFLICT';diagnostic.products[0].variants[0].recoverable=false;const b=browser(source);b.context.diagnostic=JSON.stringify(diagnostic);await b.run('brazaMonthDashboard.start({api})');const before=b.run('calls.length');b.run('customApi=async(path)=>path.startsWith("finance/cost-diagnostics?")?JSON.parse(diagnostic):JSON.parse(JSON.stringify(currentFrame));');assert.equal(await b.run('control("CostRecover").onclick()'),true);assert.equal(b.run('calls.slice('+before+').filter(call=>call.path==="finance/cost-recovery").length'),0);assert.match(b.text('CostDiagnosticBody'),/conflitantes.*composição ambígua/);
 });
 
@@ -151,12 +162,12 @@ test('an observed financial completion makes one first Ads read when none was su
  assert.deepEqual(operations(b),['read','start','step','observe','ads']);assert.equal(operations(b).filter(op=>op==='ads').length,1);assert.equal(b.run('timers.size'),1);assert.match(b.text('Ads'),/10,00/);assert.match(b.text('Net'),/43,00/);assert.match(b.text('Status'),/Dados do mês atualizados/);
 });
 
-test('failure of the first Ads read after observed finance completion stops without replaying Ads, finance or expenses',async()=>{
+test('failure of the first Ads read after observed finance completion waits before retrying only the read-only Ads source',async()=>{
  const source=fixture(),done=fixture({...source,ads:null,result:{...source.result,net_estimate_cents:null,net_margin_bps:null,pending:['ADS_UNAVAILABLE']},collection:{schema:'business_month_collection_v1',state:'READY',code:null,retry_after_seconds:0}}),b=browser(collectionFixture());b.context.done=JSON.stringify(done);
  b.run("customApi=async(path,body)=>{if(!body)return JSON.parse(done);if(['step','ads'].includes(body.operation))throw Object.assign(Error('Private upstream payload'),{code:'ADMIN_API_TIMEOUT'});return JSON.parse(JSON.stringify(currentFrame));};");
  await b.run('brazaMonthDashboard.start({api,syncVariants})');assert.equal(await recoveryTick(b),false);
- assert.deepEqual(operations(b),['read','start','step','observe','ads']);assert.equal(b.run('timers.size'),0);assert.equal(b.text('Net'),'Em conciliação');assert.match(b.text('Status'),/Não foi possível atualizar os anúncios/);assert.doesNotMatch(b.text('Status'),/Private upstream/);
- b.run('document.hidden=true;document.handlers.visibilitychange();document.hidden=false;document.handlers.visibilitychange();');assert.equal(b.run('timers.size'),0);assert.equal(operations(b).filter(op=>op==='ads').length,1);assert.ok(!operations(b).includes('expenses'));
+ assert.deepEqual(operations(b),['read','start','step','observe','ads']);assert.equal(b.run('timers.size'),1);assert.equal(b.run('[...timers.values()][0].delay'),60000);assert.equal(b.text('Net'),'Em conciliação');assert.match(b.text('Status'),/Não foi possível atualizar os anúncios/);assert.doesNotMatch(b.text('Status'),/Private upstream/);
+ b.run('document.hidden=true;document.handlers.visibilitychange();document.hidden=false;document.handlers.visibilitychange();');assert.equal(b.run('timers.size'),1);assert.equal(operations(b).filter(op=>op==='ads').length,1);assert.ok(!operations(b).includes('expenses'));
 });
 
 test('an initial cache miss and ambiguous start timeout observe the durable job without fabricating totals or replaying start',async()=>{
@@ -167,11 +178,11 @@ test('an initial cache miss and ambiguous start timeout observe the durable job 
  await recoveryTick(b);assert.deepEqual(operations(b),['read','start','observe','step','ads']);assert.match(b.text('Net'),/43,00/);assert.equal(operations(b).filter(op=>op==='start').length,1);
 });
 
-test('an ambiguous Ads submission is never converted into a financial recovery or a second Ads read',async()=>{
+test('an interrupted Ads read waits for a bounded retry without replaying the financial import',async()=>{
  const b=browser(fixture({collection:{schema:'business_month_collection_v1',state:'READY',code:null,retry_after_seconds:0}}));
  b.run("customApi=async(path,body)=>{if(body.operation==='ads')throw Object.assign(Error('Ads timed out'),{code:'ADMIN_API_TIMEOUT'});return JSON.parse(JSON.stringify(currentFrame));};");
- assert.equal(await b.run('brazaMonthDashboard.start({api,syncVariants})'),false);assert.deepEqual(operations(b),['read','start','ads']);assert.equal(b.run('timers.size'),0);
- b.run('document.hidden=true;document.handlers.visibilitychange();document.hidden=false;document.handlers.visibilitychange();');assert.deepEqual(operations(b),['read','start','ads']);assert.equal(b.run('timers.size'),0);
+ assert.equal(await b.run('brazaMonthDashboard.start({api,syncVariants})'),false);assert.deepEqual(operations(b),['read','start','ads']);assert.equal(b.run('timers.size'),1);assert.equal(b.run('[...timers.values()][0].delay'),60000);
+ b.run('document.hidden=true;document.handlers.visibilitychange();document.hidden=false;document.handlers.visibilitychange();');assert.deepEqual(operations(b),['read','start','ads']);assert.equal(b.run('timers.size'),1);assert.equal(b.run('[...timers.values()][0].delay'),60000);
 });
 
 test('eight retries without progress suspend step requests while GET observes cron progress and resumes automatically',async()=>{
@@ -845,4 +856,21 @@ test('a delayed local recalculation cannot overwrite a different selected month 
  const pending=b.run("control('Refresh').onclick()");await b.settle();assert.equal(b.run("control('SourceRefresh').disabled"),true);assert.equal(await b.run("control('SourceRefresh').onclick()"),false);assert.deepEqual(operations(b),['read','read']);
  const past=fixture({...saved,month:'2026-09',start_date:'2026-09-01',end_date:'2026-09-30',ads:calendar('2026-09',30)});b.load(past);b.run("control('Select').value='2026-09';");assert.equal(await b.run("control('Select').onchange()"),true);assert.match(b.text('Scope'),/01\/09\/2026 a 30\/09\/2026/);
  b.context.old=JSON.stringify(saved);b.run('releaseCosts(JSON.parse(old));');assert.equal(await pending,false);assert.match(b.text('Scope'),/01\/09\/2026 a 30\/09\/2026/);assert.doesNotMatch(b.text('Scope'),/01\/10\/2026/);assert.equal(b.run("control('SourceRefresh').disabled"),false);
+});
+
+
+test('Ads retries back off at sixty, one hundred twenty and three hundred seconds while financial collection remains independent',async()=>{
+ const source=fixture(),saved=fixture({...source,source_checked_at:{finance_oldest_at:stamp,finance_latest_at:stamp,ads_at:stamp},result:{...source.result,net_estimate_cents:null,net_margin_bps:null,pending:['ADS_UNAVAILABLE']}}),b=browser(saved);
+ b.run("customApi=async(path,body)=>{if(body.operation==='ads')throw Object.assign(Error('PRIVATE_ADS_RESPONSE'),{code:'ADMIN_API_TIMEOUT'});return JSON.parse(JSON.stringify(currentFrame));};");
+ await b.run('brazaMonthDashboard.start({api,syncVariants})');assert.deepEqual(operations(b),['read']);assert.match(b.text('Ads'),/10,00/);assert.match(b.text('AdsHelp'),/Último gasto confirmado/);assert.equal(b.run("control('AdsCard').dataset.status"),'provisional');
+ await recoveryTick(b);assert.equal(operations(b).filter(op=>op==='ads').length,1);assert.equal(b.run('[...timers.values()][0].delay'),60000);assert.doesNotMatch(b.text('Status'),/PRIVATE/);
+ await recoveryTick(b);assert.equal(operations(b).filter(op=>op==='ads').length,2);await recoveryTick(b);assert.equal(operations(b).filter(op=>op==='ads').length,2,'no source request during the 120-second retry wait');
+ await recoveryTick(b);assert.equal(operations(b).filter(op=>op==='ads').length,3);await recoveryTick(b);assert.equal(operations(b).filter(op=>op==='start').length,1,'the five-minute financial timer still imports orders after repeated Ads failures');assert.equal(operations(b).filter(op=>op==='ads').length,3,'financial collection does not bypass the Ads backoff');
+ await recoveryTick(b);await recoveryTick(b);await recoveryTick(b);assert.equal(operations(b).filter(op=>op==='ads').length,3);b.run('customApi=null;');await recoveryTick(b);assert.equal(operations(b).filter(op=>op==='ads').length,4,'the next Ads retry happens after the 300-second wait');
+ assert.equal(operations(b).filter(op=>op==='start').length,1);assert.ok(!operations(b).includes('expenses'));
+});
+
+test('cost-only reads retain the last dated Ads amount and cannot call an Ads source even while its refresh is pending',async()=>{
+ const source=fixture(),saved=fixture({...source,source_checked_at:{finance_oldest_at:stamp-30,finance_latest_at:stamp,ads_at:stamp},result:{...source.result,net_estimate_cents:null,net_margin_bps:null,pending:['ADS_UNAVAILABLE']}}),b=browser(saved);await b.run('brazaMonthDashboard.start({api,syncVariants})');
+ assert.equal(await b.run("control('Refresh').onclick()"),true);assert.deepEqual(operations(b),['read','read']);assert.match(b.text('Ads'),/10,00/);assert.match(b.text('AdsHelp'),/último gasto|Último gasto/);assert.equal(b.text('Net'),'Em conciliação');assert.equal(b.run('currentFrame.source_checked_at.ads_at'),stamp);assert.equal(b.run('timers.size'),1);
 });

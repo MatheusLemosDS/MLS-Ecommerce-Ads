@@ -6,7 +6,7 @@ import {COST_DEFAULTS} from '../src/production-costs.mjs';
 import {businessMonth} from '../src/business-month.mjs';
 import {projectBusinessPeriodFrame} from '../../finance/src/business-period-frame.mjs';
 import {readCostRules,saveCostRules,assignCostRules,costRuleSnapshotQueries,costRuleReferenceFromSnapshot,mergeCatalogCostReference} from '../src/cost-rules.mjs';
-import {storeCatalogClassificationFrame,refreshKnownCatalogClassifications,enqueueCatalogClassifications,catalogClassificationQueries,catalogClassificationsFromSnapshot} from '../src/catalog-classification.mjs';
+import {storeCatalogClassificationFrame,refreshKnownCatalogClassifications,enqueueCatalogClassifications,runCatalogClassifications,catalogClassificationQueries,catalogClassificationsFromSnapshot} from '../src/catalog-classification.mjs';
 import {readBusinessCostDiagnostics,buildBusinessCostDiagnostics,projectBusinessCostDiagnostics} from '../src/business-cost-diagnostics.mjs';
 
 const clock=Date.UTC(2026,10,2,12),stamp=clock/1000,now=()=>clock;
@@ -63,6 +63,15 @@ test('a queued provider failure is reported safely without clearing its retry ba
  assert.equal(f.env.ADMIN_DB.db.prepare("SELECT next_attempt_at FROM catalog_classification_jobs WHERE item_id='201'").get().next_attempt_at,stamp+1200);
  f.env.ADMIN_DB.db.prepare("UPDATE catalog_classification_jobs SET status='RUNNING',lease_token=?,lease_until=? WHERE item_id='201'").run('11111111-1111-4111-8111-111111111111',stamp+180);
  assert.equal(variant(await f.read()).recoverable,false,'an active worker owns recovery until its lease is released');
+});
+
+test('a current failed source retains its bounded phase and HTTP evidence in the compact diagnostic',async t=>{
+ const f=await fixture(t);await f.read();
+ await runCatalogClassifications(f.env,async()=>({schema:'variant_catalog_v1',status:'UNAVAILABLE',diagnostic:{stage:'BASE_INFO',code:'FINANCE_CATALOG_UPSTREAM_HTTP',http:403}}),{now,maxProducts:1});
+ const value=await f.read(),job=value.products[0].classification;
+ assert.equal(job.reason,'CATALOG_BASE_HTTP_ERROR');assert.deepEqual(job.source_diagnostic,{stage:'BASE_INFO',code:'FINANCE_CATALOG_UPSTREAM_HTTP',http:403,checked_at:stamp});assert.equal(variant(value).reason,'NO_CATALOG');assert.equal(variant(value).recoverable,false);assert.ok(projectBusinessCostDiagnostics(value));
+ const stale=structuredClone(value);stale.products[0].classification.source_diagnostic.message='PRIVATE';assert.equal(projectBusinessCostDiagnostics(stale),null);
+ f.env.ADMIN_DB.db.prepare('UPDATE catalog_classification_source_diagnostics SET failure_count=0').run();assert.equal((await f.read()).products[0].classification.source_diagnostic,undefined,'a previous failure is not attributed to the current attempt');
 });
 
 test('explicit rule evidence distinguishes disabled assignments, invalid assigned options and conflicting rules',async t=>{

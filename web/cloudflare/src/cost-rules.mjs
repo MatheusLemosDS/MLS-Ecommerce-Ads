@@ -1,6 +1,7 @@
 import {projectVariantCatalog,projectProductCostCatalog} from '../../finance/src/variant-catalog-frame.mjs';
 import {costRuleProductLearning} from './cost-rule-learning.mjs';
 import {CATALOG_CLASSIFICATION_SCHEMA,catalogClassificationQueries,catalogClassificationsFromSnapshot,storeCatalogClassificationFrame,readCatalogClassificationFence} from './catalog-classification.mjs';
+import {HISTORICAL_COST_EVIDENCE_SCHEMA,historicalCostEvidenceSnapshotQueries,historicalCostEvidenceFromSnapshot} from './historical-cost-evidence.mjs';
 
 export class CostRuleError extends Error {constructor(code,status=400){super(code);this.status=status;}}
 const ruleFail=(code,status=400)=>{throw new CostRuleError(code,status);};
@@ -17,6 +18,7 @@ export const COST_RULE_DEFAULTS={rules:[{id:'camiseta-infantil',label:'Camiseta 
 const ruleSeed=JSON.stringify(COST_RULE_DEFAULTS).replaceAll("'","''");
 export const COST_RULE_SCHEMA=[
  ...CATALOG_CLASSIFICATION_SCHEMA,
+ ...HISTORICAL_COST_EVIDENCE_SCHEMA,
  `CREATE TABLE IF NOT EXISTS production_cost_rules_state(id INTEGER PRIMARY KEY CHECK(id=1),revision INTEGER NOT NULL,payload TEXT NOT NULL,updated_at TEXT NOT NULL)`,
  `CREATE TABLE IF NOT EXISTS production_cost_rules_audit(revision INTEGER PRIMARY KEY,payload TEXT NOT NULL,actor TEXT NOT NULL,created_at TEXT NOT NULL)`,
  `CREATE TABLE IF NOT EXISTS production_cost_catalog(item_id TEXT PRIMARY KEY,catalog_fingerprint TEXT NOT NULL,payload TEXT NOT NULL CHECK(length(CAST(payload AS BLOB))<=1048576),checked_at INTEGER NOT NULL)`,
@@ -80,6 +82,12 @@ export async function assignCostRules(env,body,actor){
   if(row.rule_id===null){if(row.size!==null)ruleFail('COST_RULE_ASSIGNMENTS_INVALID');assignments.delete(key);continue;}
   const rule=rules.get(row.rule_id);if(!rule?.enabled)ruleFail('COST_RULE_ASSIGNMENT_RULE_UNAVAILABLE',409);
   if(row.model_id===null?row.size!==null:rule.options.length?!rule.options.includes(row.size):row.size!==null)ruleFail('COST_RULE_ASSIGNMENT_SIZE_INVALID');
+  if(row.model_id===null&&rule.options.length){
+   const saved=await env.ADMIN_DB.prepare('SELECT payload FROM production_cost_catalog WHERE item_id=?').bind(row.item_id).first();
+   if(saved){let raw,source;try{raw=JSON.parse(saved.payload);source=projectProductCostCatalog(raw,Array.isArray(raw?.variants)?raw.variants.length:-1);}catch{}if(!source)ruleFail('COST_RULES_STORAGE_INVALID',503);
+    if(source.variants.length&&!source.variants.some(variant=>{const axes=variant.attributes.filter(attribute=>rule.axis_names.some(name=>ruleNormalize(name)===ruleNormalize(attribute.name)));return axes.length===1&&rule.options.some(option=>ruleOption(option)===ruleOption(axes[0].value));}))ruleFail('COST_RULE_ASSIGNMENT_CATALOG_CONFLICT',409);
+   }
+  }
   assignments.set(key,{...row});
  }
  const values={...current.values,assignments:[...assignments.values()].sort((a,b)=>a.item_id.length-b.item_id.length||a.item_id.localeCompare(b.item_id)||(a.model_id===null?-1:b.model_id===null?1:a.model_id.length-b.model_id.length||a.model_id.localeCompare(b.model_id)))};
@@ -120,16 +128,18 @@ export function costRuleSnapshotQueries(db,itemIds){
  const ids=[...new Set(itemIds)];if(ids.length>3000||!ids.every(ruleItem))ruleFail('COST_RULE_CATALOG_REQUEST_INVALID');
  const queries=[db.prepare('SELECT revision,payload,updated_at FROM production_cost_rules_state WHERE id=1')];
  for(let i=0;i<ids.length;i+=90){const chunk=ids.slice(i,i+90);queries.push(db.prepare('SELECT item_id,catalog_fingerprint,payload,checked_at FROM production_cost_catalog WHERE item_id IN ('+chunk.map(()=>'?').join(',')+')').bind(...chunk));}
+ queries.push(...historicalCostEvidenceSnapshotQueries(db,ids));
  return queries;
 }
 export function costRuleReferenceFromSnapshot(snapshot,{now=()=>Date.now()}={}){
- const state=ruleState(snapshot[0].results[0]),variants=[],restricted=new Set(),learning=[],catalogued=new Set();const stamp=ruleClock(now);
- for(const row of snapshot.slice(1).flatMap(value=>value.results)){
+ const state=ruleState(snapshot[0].results[0]),variants=[],restricted=new Set(),learning=[],catalogued=new Set(),catalogModels=[];const stamp=ruleClock(now),historicalStart=snapshot.findIndex((result,index)=>index>0&&result?.results?.some(row=>Object.hasOwn(row,'historical_cost_evidence_revision'))),catalogSnapshot=snapshot.slice(1,historicalStart<0?undefined:historicalStart),historical=historicalStart<0?{compositions:[]}:historicalCostEvidenceFromSnapshot(snapshot.slice(historicalStart),{now});
+ for(const row of catalogSnapshot.flatMap(value=>value.results)){
   if(!Number.isSafeInteger(row.checked_at)||row.checked_at<1||row.checked_at>stamp+60||!(/^[a-f0-9]{64}$/).test(row.catalog_fingerprint))ruleFail('COST_RULES_STORAGE_INVALID',503);
   let catalog;try{catalog=JSON.parse(row.payload);}catch{ruleFail('COST_RULES_STORAGE_INVALID',503);}
   // Classification is saved evidence. Its age schedules verification; age alone
   // must not erase a recognized production cost while the queue catches up.
   const stale=false,recognition=costRuleProductLearning({rules:state.values.rules,assignments:(state.values.assignments||[]).filter(assignment=>assignment.item_id===row.item_id)},row.item_id,catalog,{stale}),productVariants=evaluateCostRules(state.values,row.item_id,catalog,{stale});
+  catalogModels.push(...catalog.variants.map(variant=>row.item_id+':'+variant.model_id));
   variants.push(...productVariants);catalogued.add(row.item_id);
   const rule=state.values.rules.find(rule=>rule.id===recognition.rule_id),conflicting=recognition.status==='CONFLICT'&&(state.values.assignments||[]).some(assignment=>assignment.item_id===row.item_id);
   if(ruleProductScope(state.values.rules,catalog.product_name).managed||recognition.managed||conflicting)restricted.add(row.item_id);
@@ -147,13 +157,14 @@ export function costRuleReferenceFromSnapshot(snapshot,{now=()=>Date.now()}={}){
  }
  const reference={revision:state.revision,variants,restricted_item_ids:[...restricted],learning},rules=new Map(state.values.rules.filter(rule=>rule.enabled).map(rule=>[rule.id,rule])),manualKeys=[],manualProducts=[];
  for(const assignment of state.values.assignments||[]){if(assignment.model_id!==null){manualKeys.push(assignment.item_id+':'+assignment.model_id);continue;}const rule=rules.get(assignment.rule_id);if(rule?.options.length===0)manualProducts.push({item_id:assignment.item_id,id:'auto-'+rule.id,label:rule.label,unit_cost_cents:rule.unit_cost_cents});}
- Object.defineProperties(reference,{manual_variant_keys:{value:manualKeys},manual_product_costs:{value:manualProducts}});return reference;
+ const child=state.values.rules.find(rule=>rule.enabled&&rule.id==='camiseta-infantil'),historicalCompositions=historical.compositions.map(row=>row.kind==='CHILD_SINGLE'?{...row,unit_cost_cents:child?.options.some(option=>ruleOption(option)===row.child_size)?child.unit_cost_cents:null}:{...row});
+ Object.defineProperties(reference,{manual_variant_keys:{value:manualKeys},manual_product_costs:{value:manualProducts},manual_product_item_ids:{value:(state.values.assignments||[]).filter(row=>row.model_id===null).map(row=>row.item_id)},catalog_model_keys:{value:catalogModels},historical_compositions:{value:historicalCompositions},historical_revision:{value:historical.revision??null}});return reference;
 }
 export function mergeCatalogCostReference(reference,classifications){
  if(!classifications||!ruleRevision(classifications.revision)||!Array.isArray(classifications.bindings)||!Array.isArray(classifications.products)||!Array.isArray(classifications.variants))ruleFail('COST_RULES_STORAGE_INVALID',503);
  const changed=new Set(classifications.products.filter(row=>row.reason==='CATALOG_METADATA_CHANGED').map(row=>row.item_id)),manual=new Set(reference.manual_variant_keys||[]),products=new Set((reference.manual_product_costs||[]).map(row=>row.item_id));
  const merged={...reference,variants:reference.variants.map(row=>changed.has(row.item_id)&&!manual.has(row.item_id+':'+row.model_id)&&!products.has(row.item_id)?{...row,unit_cost_cents:null,profile_id:null,profile_label:null,reason:'CATALOG_METADATA_CHANGED'}:row),classification_revision:classifications.revision,catalog_bindings:classifications.bindings,catalog_products:classifications.products,catalog_variants:classifications.variants,classified_item_ids:classifications.products.filter(row=>typeof row.catalog_fingerprint==='string'&&/^[a-f0-9]{64}$/.test(row.catalog_fingerprint)&&Number.isSafeInteger(row.checked_at)&&row.checked_at>0).map(row=>row.item_id)};
- Object.defineProperties(merged,{manual_variant_keys:{value:reference.manual_variant_keys||[]},manual_product_costs:{value:reference.manual_product_costs||[]},metadata_changed_item_ids:{value:[...changed]}});return merged;
+ Object.defineProperties(merged,{manual_variant_keys:{value:reference.manual_variant_keys||[]},manual_product_costs:{value:reference.manual_product_costs||[]},manual_product_item_ids:{value:reference.manual_product_item_ids||[]},catalog_model_keys:{value:reference.catalog_model_keys||[]},historical_compositions:{value:reference.historical_compositions||[]},historical_revision:{value:reference.historical_revision??null},metadata_changed_item_ids:{value:[...changed]}});return merged;
 }
 export async function readCostRuleReference(env,itemIds,options={}){
  const db=await ruleSetup(env),rules=costRuleSnapshotQueries(db,itemIds),classes=catalogClassificationQueries(db,itemIds),rows=await db.batch([...rules,...classes]);

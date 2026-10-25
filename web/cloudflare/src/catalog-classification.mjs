@@ -1,4 +1,4 @@
-import {projectVariantCatalog} from '../../finance/src/variant-catalog-frame.mjs';
+import {projectVariantCatalog,projectVariantCatalogFailure} from '../../finance/src/variant-catalog-frame.mjs';
 import {validateVariantBindings} from './variant-bindings.mjs';
 
 // A catalogue interpretation is a registered composition, not a live price.
@@ -10,6 +10,7 @@ export const CATALOG_CLASSIFICATION_SCHEMA=[
  `CREATE TABLE IF NOT EXISTS catalog_classification_variants(item_id TEXT NOT NULL,model_id TEXT NOT NULL,payload TEXT NOT NULL CHECK(length(CAST(payload AS BLOB))<=4096),PRIMARY KEY(item_id,model_id))`,
  `CREATE TABLE IF NOT EXISTS catalog_classification_changes(item_id TEXT PRIMARY KEY,change_token TEXT NOT NULL,changed_at INTEGER NOT NULL)`,
  `CREATE TABLE IF NOT EXISTS catalog_classification_sold_gaps(item_id TEXT NOT NULL,evidence_hash TEXT NOT NULL,catalog_fingerprint TEXT,model_ids_json TEXT NOT NULL CHECK(length(CAST(model_ids_json AS BLOB))<=65536),scheduled_at INTEGER NOT NULL,PRIMARY KEY(item_id,evidence_hash))`,
+ `CREATE TABLE IF NOT EXISTS catalog_classification_source_diagnostics(item_id TEXT PRIMARY KEY,diagnostic TEXT NOT NULL CHECK(length(CAST(diagnostic AS BLOB))<=512),checked_at INTEGER NOT NULL,failure_count INTEGER NOT NULL)`,
  `CREATE TABLE IF NOT EXISTS catalog_classification_audit(id INTEGER PRIMARY KEY AUTOINCREMENT,item_id TEXT NOT NULL,checked_at INTEGER NOT NULL,outcome TEXT NOT NULL,reason TEXT,revision INTEGER NOT NULL)`,
  `CREATE TABLE IF NOT EXISTS production_cost_catalog(item_id TEXT PRIMARY KEY,catalog_fingerprint TEXT NOT NULL,payload TEXT NOT NULL CHECK(length(CAST(payload AS BLOB))<=1048576),checked_at INTEGER NOT NULL)`,
  `INSERT OR IGNORE INTO catalog_classification_state(id,revision) SELECT 1,1 WHERE NOT EXISTS(SELECT 1 FROM catalog_classification_variants) AND NOT EXISTS(SELECT 1 FROM catalog_classification_audit) AND NOT EXISTS(SELECT 1 FROM catalog_classification_jobs WHERE checked_at IS NOT NULL)`,
@@ -25,7 +26,21 @@ const hash=value=>typeof value==='string'&&/^[a-f0-9]{64}$/.test(value);
 const text=(value,max)=>typeof value==='string'&&value.trim().length>0&&new TextEncoder().encode(value).length<=max&&!/[\u0000-\u001f\u007f-\u009f]/.test(value);
 const compare=(a,b)=>a.length-b.length||(a<b?-1:a>b?1:0);
 const statuses=['QUEUED','RUNNING','MATCHED','PARTIAL','REVIEW','RETRY_WAIT'];
-const reasons=['CATALOG_UNAVAILABLE','CATALOG_INVALID','CATALOG_STALE_RESPONSE','CATALOG_CONFLICT','CATALOG_METADATA_CHANGED','CATALOG_SOLD_MODEL_MISSING','UNRECOGNIZED_VARIATION','AXES_NOT_RECOGNIZED','OPTION_NOT_RECOGNIZED','INDEX_NOT_VALID','NO_MODELS'];
+const reasons=['CATALOG_UNAVAILABLE','CATALOG_INVALID','CATALOG_STALE_RESPONSE','CATALOG_CONFLICT','CATALOG_METADATA_CHANGED','CATALOG_SOLD_MODEL_MISSING','UNRECOGNIZED_VARIATION','AXES_NOT_RECOGNIZED','OPTION_NOT_RECOGNIZED','INDEX_NOT_VALID','NO_MODELS','CATALOG_BASE_ITEM_ABSENT','CATALOG_BASE_NAME_UNAVAILABLE','CATALOG_BASE_API_REJECTED','CATALOG_BASE_RESPONSE_INVALID','CATALOG_MODEL_API_REJECTED','CATALOG_MODEL_RESPONSE_INVALID','CATALOG_MODEL_STRUCTURE_INVALID','CATALOG_COST_METADATA_INVALID','CATALOG_RESPONSE_INVALID','CATALOG_RESPONSE_TOO_LARGE','CATALOG_AUTH_REQUIRED','CATALOG_PERMISSION_REQUIRED','CATALOG_RATE_LIMIT','CATALOG_TIMEOUT','CATALOG_HTTP_ERROR','CATALOG_BASE_HTTP_ERROR','CATALOG_MODEL_HTTP_ERROR','CATALOG_TRANSPORT_UNAVAILABLE','CATALOG_SOURCE_UNAVAILABLE'];
+function sourceFailureReason(failure){
+ const {code,stage,http}=failure.diagnostic,prefix='FINANCE_CATALOG_';
+ const direct=['BASE_ITEM_ABSENT','BASE_NAME_UNAVAILABLE','BASE_API_REJECTED','BASE_RESPONSE_INVALID','MODEL_API_REJECTED','MODEL_RESPONSE_INVALID','MODEL_STRUCTURE_INVALID','COST_METADATA_INVALID'];
+ for(const suffix of direct)if(code===prefix+suffix)return 'CATALOG_'+suffix;
+ if(code===prefix+'AUTH_REQUIRED'||code===prefix+'AUTHORIZATION_EXPIRED')return 'CATALOG_AUTH_REQUIRED';
+ if(code===prefix+'PERMISSION_REQUIRED')return 'CATALOG_PERMISSION_REQUIRED';
+ if(code===prefix+'RATE_LIMIT'||http===429)return 'CATALOG_RATE_LIMIT';
+ if(code.endsWith('_TIMEOUT')||[408,504].includes(http))return 'CATALOG_TIMEOUT';
+ if(code===prefix+'UPSTREAM_HTTP'||code===prefix+'APP_HTTP_ERROR')return stage==='BASE_INFO'?'CATALOG_BASE_HTTP_ERROR':stage==='MODELS'?'CATALOG_MODEL_HTTP_ERROR':'CATALOG_HTTP_ERROR';
+ if(code===prefix+'UPSTREAM_BODY_TOO_LARGE')return 'CATALOG_RESPONSE_TOO_LARGE';
+ if(['RESPONSE_INVALID','APP_RESPONSE_INVALID','UPSTREAM_INVALID_JSON','UPSTREAM_CONTENT_TYPE','IDENTITY_MISMATCH'].some(suffix=>code===prefix+suffix))return 'CATALOG_RESPONSE_INVALID';
+ if(['TRANSPORT_UNAVAILABLE','UPSTREAM_FAILED','APP_UPSTREAM_FAILED'].some(suffix=>code===prefix+suffix))return 'CATALOG_TRANSPORT_UNAVAILABLE';
+ return 'CATALOG_SOURCE_UNAVAILABLE';
+}
 const ready=new WeakMap();
 function clock(now){let value;try{value=now();}catch{fail('CATALOG_CLASSIFICATION_CLOCK_INVALID');}if(!integer(value,1,9999999999999))fail('CATALOG_CLASSIFICATION_CLOCK_INVALID');return Math.floor(value/1000);}
 function idsInput(values){if(!array(values,3000)||!values.every(value=>id(value)))fail('CATALOG_CLASSIFICATION_REQUEST_INVALID',400);return [...new Set(values)].sort(compare);}
@@ -173,6 +188,7 @@ async function storeFrame(env,raw,{now=()=>Date.now(),token=null,itemId=null,fen
     db.prepare('DELETE FROM catalog_classification_variants WHERE item_id=? AND '+proof).bind(product.item_id,...proofArgs),
     db.prepare("INSERT INTO catalog_classification_variants(item_id,model_id,payload) SELECT ?,json_extract(value,'$.model_id'),json_extract(value,'$.payload') FROM json_each(?) WHERE "+proof).bind(product.item_id,JSON.stringify(variants),...proofArgs),
     db.prepare('INSERT INTO production_cost_catalog(item_id,catalog_fingerprint,payload,checked_at) SELECT ?,?,?,? WHERE '+proof+' ON CONFLICT(item_id) DO UPDATE SET catalog_fingerprint=excluded.catalog_fingerprint,payload=excluded.payload,checked_at=excluded.checked_at WHERE production_cost_catalog.checked_at<=excluded.checked_at').bind(product.item_id,product.catalog_fingerprint,JSON.stringify(product.cost_catalog),frame.checked_at,...proofArgs),
+    db.prepare('DELETE FROM catalog_classification_source_diagnostics WHERE item_id=? AND '+proof).bind(product.item_id,...proofArgs),
     db.prepare('DELETE FROM catalog_classification_changes WHERE item_id=? AND change_token=? AND '+proof).bind(product.item_id,changeToken,...proofArgs),
     db.prepare('INSERT INTO catalog_classification_audit(item_id,checked_at,outcome,reason,revision) SELECT ?,?,?,?,revision FROM catalog_classification_state WHERE id=1 AND '+proof).bind(product.item_id,stamp,status,reason,...proofArgs),
     db.prepare('DELETE FROM catalog_classification_audit WHERE id NOT IN (SELECT id FROM catalog_classification_audit ORDER BY id DESC LIMIT 1000)'),
@@ -202,12 +218,19 @@ export async function runCatalogClassifications(env,getCatalog,{now=()=>Date.now
    try{
     const change=await db.prepare('SELECT change_token FROM catalog_classification_changes WHERE item_id=?').bind(row.item_id).first();
     const frame=await getCatalog(env,{item_ids:[row.item_id],selling_unit:'AUTO',include_cost_catalog:true},{timeoutMs:45000});
+    const unavailable=projectVariantCatalogFailure(frame);
+    if(unavailable)throw Object.assign(new CatalogClassificationError('CATALOG_CLASSIFICATION_SOURCE_UNAVAILABLE'),{catalog_reason:sourceFailureReason(unavailable),catalog_diagnostic:unavailable.diagnostic});
     const result=await storeFrame(env,frame,{now,token,itemId:row.item_id,changeToken:change?.change_token??null});if(result.processed.length)processed.push(row.item_id);else fail('CATALOG_CLASSIFICATION_STALE_RESPONSE');
    }catch(error){
-    const finish=clock(now),failureCount=Math.min(row.failure_count+1,1000000),reason=error instanceof CatalogClassificationError&&error.message==='CATALOG_CLASSIFICATION_CONFLICT'?'CATALOG_CONFLICT':error instanceof CatalogClassificationError&&error.message==='CATALOG_CLASSIFICATION_INVALID'?'CATALOG_INVALID':error instanceof CatalogClassificationError&&error.message==='CATALOG_CLASSIFICATION_STALE_RESPONSE'?'CATALOG_STALE_RESPONSE':'CATALOG_UNAVAILABLE';
+    const sourceReason=Object.getOwnPropertyDescriptor(error||{},'catalog_reason')?.value;
+    const finish=clock(now),failureCount=Math.min(row.failure_count+1,1000000),reason=error instanceof CatalogClassificationError&&error.message==='CATALOG_CLASSIFICATION_SOURCE_UNAVAILABLE'&&reasons.includes(sourceReason)?sourceReason:error instanceof CatalogClassificationError&&error.message==='CATALOG_CLASSIFICATION_CONFLICT'?'CATALOG_CONFLICT':error instanceof CatalogClassificationError&&error.message==='CATALOG_CLASSIFICATION_INVALID'?'CATALOG_INVALID':error instanceof CatalogClassificationError&&error.message==='CATALOG_CLASSIFICATION_STALE_RESPONSE'?'CATALOG_STALE_RESPONSE':'CATALOG_UNAVAILABLE';
+    const sourceDiagnostic=projectVariantCatalogFailure({schema:'variant_catalog_v1',status:'UNAVAILABLE',diagnostic:Object.getOwnPropertyDescriptor(error||{},'catalog_diagnostic')?.value})?.diagnostic;
+    const diagnosticGuard="EXISTS(SELECT 1 FROM catalog_classification_jobs WHERE item_id=? AND status='RETRY_WAIT' AND reason=? AND failure_count=? AND last_attempt_at=? AND lease_token IS NULL) AND EXISTS(SELECT 1 FROM catalog_classification_state WHERE id=1 AND lease_token=?)",diagnosticArgs=[row.item_id,reason,failureCount,at,token];
     const result=await db.batch([
      db.prepare("UPDATE catalog_classification_jobs SET status='RETRY_WAIT',reason=?,failure_count=?,next_attempt_at=?,lease_token=NULL,lease_until=NULL WHERE item_id=? AND lease_token=? AND EXISTS(SELECT 1 FROM catalog_classification_state WHERE id=1 AND lease_token=?)").bind(reason,failureCount,finish+Math.min(1800,300*2**Math.min(failureCount-1,3)),row.item_id,token,token),
      db.prepare("INSERT INTO catalog_classification_audit(item_id,checked_at,outcome,reason,revision) SELECT ?,?,'RETRY_WAIT',?,revision FROM catalog_classification_state WHERE id=1 AND changes()=1").bind(row.item_id,finish,reason),
+     db.prepare('DELETE FROM catalog_classification_source_diagnostics WHERE item_id=? AND '+diagnosticGuard).bind(row.item_id,...diagnosticArgs),
+     ...(sourceDiagnostic?[db.prepare('INSERT INTO catalog_classification_source_diagnostics(item_id,diagnostic,checked_at,failure_count) SELECT ?,?,?,? WHERE '+diagnosticGuard).bind(row.item_id,JSON.stringify(sourceDiagnostic),finish,failureCount,...diagnosticArgs)]:[]),
      db.prepare('DELETE FROM catalog_classification_audit WHERE id NOT IN (SELECT id FROM catalog_classification_audit ORDER BY id DESC LIMIT 1000)'),
     ]);if(result[0]?.meta?.changes===1)failed.push(row.item_id);
    }

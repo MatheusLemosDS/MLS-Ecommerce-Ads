@@ -14,8 +14,9 @@ const values=changes=>({ads_spend_cents:100,external_expenses_cents:200,recharge
 const body=(revision=0,changes={})=>({run_id:run,revision,values:values(),...changes});
 const garment=(size='P')=>({item_id:'201',model_id:'0',size,selling_unit:'SINGLE_GARMENT',operator_confirmed:true});
 const frame=changes=>({schema:'finance_store_period_v1',run_id:run,revision:3,status:'COMPLETE',start_date:'2026-10-13',end_date:'2026-10-20',cutoff_at:1792510000,checked_at:1792510100,currency:'BRL',monetary_unit:'UNCONFIRMED',order_count:1,pages_read:1,duplicate_orders:0,returns_orders:0,escrow_amount_raw:'50',ads_recharge_or_support_raw:'0',items:[{item_id:'201',model_id:'0',quantity:2}],diagnostic:null,...changes});
-// One coherent read now includes the durable catalogue-change marker.
-const contextStatementCount=10;
+// One coherent read includes the catalogue-change marker and the historical
+// evidence revision plus rows, so none can race the captured cost references.
+const contextStatementCount=12;
 const fail=(code,status)=>error=>error instanceof StoreSummaryError&&error.message===code&&(status===undefined||error.status===status);
 const snapshot=env=>({state:env.ADMIN_DB.db.prepare('SELECT * FROM store_period_adjustments ORDER BY run_id').all(),audit:env.ADMIN_DB.db.prepare('SELECT * FROM store_period_adjustments_audit ORDER BY run_id,revision').all()});
 async function database(){
@@ -193,8 +194,8 @@ test('foreign run/date frames and malformed provider payloads are rejected befor
 });
 
 test('route saves expense revisions for the verified run and stale attempts retain coherent state and audit',async()=>{
- const auth=await login();let calls=0;const services={getFinanceStorePeriod:async(env,selection)=>{calls++;assert.equal(env,auth.env);assert.deepEqual(selection,{operation:'read',run_id:run});return frame();}};
+ const auth=await login(),costBefore=auth.env.ADMIN_DB.db.prepare('SELECT * FROM production_costs_state').get();assert.equal(JSON.parse(costBefore.payload).composition_recipes.length,1,'the confirmed combo correction is already part of the starting state');let calls=0;const services={getFinanceStorePeriod:async(env,selection)=>{calls++;assert.equal(env,auth.env);assert.deepEqual(selection,{operation:'read',run_id:run});return frame();}};
  const first=await adminFetch(request(auth,'/api/admin/finance/store-adjustments',body()),auth.env,services);assert.equal(first.status,200);const bundle=await first.json();assert.equal(bundle.adjustments.revision,1);assert.deepEqual(bundle.adjustments.values,values());assert.equal(bundle.result.net_estimate_cents,null);assert.equal(bundle.result.net_profit_cents,null);
  const before=snapshot(auth.env),stale=await adminFetch(request(auth,'/api/admin/finance/store-adjustments',body()),auth.env,services);assert.equal(stale.status,409);assert.equal((await stale.json()).error,'STORE_ADJUSTMENTS_CHANGED_RELOAD');assert.deepEqual(snapshot(auth.env),before);assert.equal(calls,2);
- assert.equal(auth.env.ADMIN_DB.db.prepare('SELECT COUNT(*) n FROM hermes_jobs').get().n,0);assert.equal(auth.env.ADMIN_DB.db.prepare('SELECT revision FROM production_costs_state').get().revision,1);
+ assert.equal(auth.env.ADMIN_DB.db.prepare('SELECT COUNT(*) n FROM hermes_jobs').get().n,0);assert.deepEqual(auth.env.ADMIN_DB.db.prepare('SELECT * FROM production_costs_state').get(),costBefore);
 });
