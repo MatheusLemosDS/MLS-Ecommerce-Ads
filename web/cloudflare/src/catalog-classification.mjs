@@ -8,6 +8,7 @@ export const CATALOG_CLASSIFICATION_SCHEMA=[
  `CREATE TABLE IF NOT EXISTS catalog_classification_jobs(item_id TEXT PRIMARY KEY,status TEXT NOT NULL,product_name TEXT,reason TEXT,checked_at INTEGER,catalog_fingerprint TEXT,source_hash TEXT,model_count INTEGER NOT NULL DEFAULT 0,resolved_count INTEGER NOT NULL DEFAULT 0,last_attempt_at INTEGER,next_attempt_at INTEGER NOT NULL,failure_count INTEGER NOT NULL DEFAULT 0,lease_token TEXT,lease_until INTEGER,write_token TEXT)`,
  `CREATE INDEX IF NOT EXISTS catalog_classification_due ON catalog_classification_jobs(next_attempt_at,last_attempt_at)`,
  `CREATE TABLE IF NOT EXISTS catalog_classification_variants(item_id TEXT NOT NULL,model_id TEXT NOT NULL,payload TEXT NOT NULL CHECK(length(CAST(payload AS BLOB))<=4096),PRIMARY KEY(item_id,model_id))`,
+ `CREATE TABLE IF NOT EXISTS catalog_classification_changes(item_id TEXT PRIMARY KEY,change_token TEXT NOT NULL,changed_at INTEGER NOT NULL)`,
  `CREATE TABLE IF NOT EXISTS catalog_classification_audit(id INTEGER PRIMARY KEY AUTOINCREMENT,item_id TEXT NOT NULL,checked_at INTEGER NOT NULL,outcome TEXT NOT NULL,reason TEXT,revision INTEGER NOT NULL)`,
  `CREATE TABLE IF NOT EXISTS production_cost_catalog(item_id TEXT PRIMARY KEY,catalog_fingerprint TEXT NOT NULL,payload TEXT NOT NULL CHECK(length(CAST(payload AS BLOB))<=1048576),checked_at INTEGER NOT NULL)`,
  `INSERT OR IGNORE INTO catalog_classification_state(id,revision) SELECT 1,1 WHERE NOT EXISTS(SELECT 1 FROM catalog_classification_variants) AND NOT EXISTS(SELECT 1 FROM catalog_classification_audit) AND NOT EXISTS(SELECT 1 FROM catalog_classification_jobs WHERE checked_at IS NOT NULL)`,
@@ -23,7 +24,7 @@ const hash=value=>typeof value==='string'&&/^[a-f0-9]{64}$/.test(value);
 const text=(value,max)=>typeof value==='string'&&value.trim().length>0&&new TextEncoder().encode(value).length<=max&&!/[\u0000-\u001f\u007f-\u009f]/.test(value);
 const compare=(a,b)=>a.length-b.length||(a<b?-1:a>b?1:0);
 const statuses=['QUEUED','RUNNING','MATCHED','PARTIAL','REVIEW','RETRY_WAIT'];
-const reasons=['CATALOG_UNAVAILABLE','CATALOG_INVALID','CATALOG_STALE_RESPONSE','CATALOG_CONFLICT','UNRECOGNIZED_VARIATION','AXES_NOT_RECOGNIZED','OPTION_NOT_RECOGNIZED','INDEX_NOT_VALID','NO_MODELS'];
+const reasons=['CATALOG_UNAVAILABLE','CATALOG_INVALID','CATALOG_STALE_RESPONSE','CATALOG_CONFLICT','CATALOG_METADATA_CHANGED','UNRECOGNIZED_VARIATION','AXES_NOT_RECOGNIZED','OPTION_NOT_RECOGNIZED','INDEX_NOT_VALID','NO_MODELS'];
 const ready=new WeakMap();
 function clock(now){let value;try{value=now();}catch{fail('CATALOG_CLASSIFICATION_CLOCK_INVALID');}if(!integer(value,1,9999999999999))fail('CATALOG_CLASSIFICATION_CLOCK_INVALID');return Math.floor(value/1000);}
 function idsInput(values){if(!array(values,3000)||!values.every(value=>id(value)))fail('CATALOG_CLASSIFICATION_REQUEST_INVALID',400);return [...new Set(values)].sort(compare);}
@@ -42,7 +43,7 @@ function checkedVariant(row,job){
  if(value.binding!==null){try{const normalized=validateVariantBindings([value.binding]);if(normalized[0].item_id!==row.item_id||normalized[0].model_id!==row.model_id||normalized[0].operator_confirmed!==false||job&&normalized[0].catalog_fingerprint!==job.catalog_fingerprint||!bindingMatchesAttributes(normalized[0],value.attributes))throw Error();value.binding=normalized[0];}catch{fail('CATALOG_CLASSIFICATION_STORAGE_INVALID');}}
  return {...value,item_id:row.item_id,model_id:row.model_id,attributes:value.attributes.map(value=>({...value}))};
 }
-function productMetadata(row){const value=checkedJob(row);return {item_id:value.item_id,product_name:value.product_name,status:value.status,reason:value.reason,checked_at:value.checked_at,catalog_fingerprint:value.catalog_fingerprint,model_count:value.model_count,resolved_count:value.resolved_count,next_attempt_at:value.next_attempt_at,failure_count:value.failure_count};}
+function productMetadata(row){const value=checkedJob(row);return {item_id:value.item_id,product_name:value.product_name,status:value.status,reason:row.metadata_changed_at!==null&&row.metadata_changed_at!==undefined?'CATALOG_METADATA_CHANGED':value.reason,checked_at:value.checked_at,catalog_fingerprint:value.catalog_fingerprint,model_count:value.model_count,resolved_count:value.resolved_count,next_attempt_at:value.next_attempt_at,failure_count:value.failure_count};}
 function bindingMatchesAttributes(binding,attributes){
  const label=value=>value.normalize('NFKD').replace(/\p{M}/gu,'').trim().toLowerCase().replace(/[.]/g,'').replace(/\s+/g,' ');
  const axes=attributes.map(row=>({name:label(row.name),value:row.value.trim().toUpperCase()}));
@@ -63,13 +64,15 @@ export function catalogClassificationQueries(db,itemIds,sourceItems=null){
   for(let i=0;i<pairs.length;i+=90)queries.push(db.prepare("SELECT item_id,model_id,payload FROM catalog_classification_variants WHERE (item_id,model_id) IN (SELECT json_extract(value,'$.item_id'),json_extract(value,'$.model_id') FROM json_each(?))").bind(JSON.stringify(pairs.slice(i,i+90))));
  }else for(let i=0;i<ids.length;i+=90){const part=ids.slice(i,i+90);queries.push(db.prepare('SELECT item_id,model_id,payload FROM catalog_classification_variants WHERE item_id IN ('+part.map(()=>'?').join(',')+')').bind(...part));}
  for(let i=0;i<ids.length;i+=90){const part=ids.slice(i,i+90);queries.push(db.prepare('SELECT * FROM catalog_classification_jobs WHERE item_id IN ('+part.map(()=>'?').join(',')+')').bind(...part));}
+ for(let i=0;i<ids.length;i+=90){const part=ids.slice(i,i+90);queries.push(db.prepare('SELECT item_id,change_token,changed_at FROM catalog_classification_changes WHERE item_id IN ('+part.map(()=>'?').join(',')+')').bind(...part));}
  return queries;
 }
 export function catalogClassificationsFromSnapshot(results){
  if(!Array.isArray(results)||!integer(results[0]?.results?.[0]?.classification_revision,1,2147483647))fail('CATALOG_CLASSIFICATION_STORAGE_INVALID');
- const raw=results.slice(1).flatMap(row=>row.results||[]),jobs=new Map(),rows=[];
- for(const row of raw){if(Object.hasOwn(row,'status')){if(jobs.has(row.item_id))fail('CATALOG_CLASSIFICATION_STORAGE_INVALID');jobs.set(row.item_id,checkedJob(row));}else rows.push(row);}
- const bindings=[],variants=[],seen=new Set();for(const row of rows){const job=jobs.get(row.item_id),key=row.item_id+':'+row.model_id;if(!job||seen.has(key))fail('CATALOG_CLASSIFICATION_STORAGE_INVALID');seen.add(key);const value=checkedVariant(row,job);if(value.binding)bindings.push(value.binding);const {binding,...metadata}=value;variants.push(metadata);}
+ const raw=results.slice(1).flatMap(row=>row.results||[]),jobs=new Map(),rows=[],changed=new Map();
+ for(const row of raw){if(Object.hasOwn(row,'changed_at')){if(!id(row.item_id)||!integer(row.changed_at,1,9999999999)||typeof row.change_token!=='string'||!/^[a-f0-9-]{36}$/.test(row.change_token)||changed.has(row.item_id))fail('CATALOG_CLASSIFICATION_STORAGE_INVALID');changed.set(row.item_id,row.changed_at);}else if(Object.hasOwn(row,'status')){if(jobs.has(row.item_id))fail('CATALOG_CLASSIFICATION_STORAGE_INVALID');jobs.set(row.item_id,checkedJob(row));}else rows.push(row);}
+ for(const [itemId,at]of changed){const job=jobs.get(itemId);if(job)job.metadata_changed_at=at;}
+ const bindings=[],variants=[],seen=new Set();for(const row of rows){const job=jobs.get(row.item_id),key=row.item_id+':'+row.model_id;if(!job||seen.has(key))fail('CATALOG_CLASSIFICATION_STORAGE_INVALID');seen.add(key);const value=checkedVariant(row,job);if(value.binding&&!changed.has(row.item_id)&&job.reason!=='CATALOG_METADATA_CHANGED')bindings.push(value.binding);const {binding,...metadata}=value;variants.push({...metadata,...(changed.has(row.item_id)||job.reason==='CATALOG_METADATA_CHANGED'?{reason:'CATALOG_METADATA_CHANGED'}:{})});}
  bindings.sort((a,b)=>compare(a.item_id,b.item_id)||compare(a.model_id,b.model_id));variants.sort((a,b)=>compare(a.item_id,b.item_id)||compare(a.model_id,b.model_id));
  return {revision:results[0].results[0].classification_revision,bindings,products:[...jobs.values()].map(productMetadata).sort((a,b)=>compare(a.item_id,b.item_id)),variants};
 }
@@ -86,12 +89,29 @@ export async function enqueueCatalogClassifications(env,itemIds,{now=()=>Date.no
  return returnState?readCatalogClassificationState(env,{}, {now}):null;
 }
 
+// The product index calls this only after persisting a strictly newer provider
+// update_time. Keep the registered composition usable while checking changes;
+// an active owner or a provider backoff is never displaced by discovery.
+export async function refreshKnownCatalogClassifications(env,itemIds,{now=()=>Date.now()}={}){
+ const ids=idsInput(itemIds),stamp=clock(now),db=await setup(env),refreshed=[];
+ if(ids.length)await db.batch([
+  db.prepare('INSERT OR IGNORE INTO catalog_classification_changes(item_id,change_token,changed_at) SELECT item_id,?,? FROM catalog_classification_jobs WHERE item_id IN (SELECT value FROM json_each(?)) AND checked_at IS NOT NULL').bind(crypto.randomUUID(),stamp,JSON.stringify(ids)),
+  db.prepare('UPDATE catalog_classification_state SET revision=revision+1 WHERE id=1 AND changes()>0 AND revision<2147483646'),
+ ]);
+ for(let index=0;index<ids.length;index+=90){
+  const chunk=ids.slice(index,index+90),rows=await db.prepare("UPDATE catalog_classification_jobs SET reason='CATALOG_METADATA_CHANGED',next_attempt_at=? WHERE item_id IN (SELECT value FROM json_each(?)) AND checked_at IS NOT NULL AND (lease_token IS NULL OR lease_until<=?) AND (status<>'RETRY_WAIT' OR next_attempt_at<=?) RETURNING item_id").bind(stamp,JSON.stringify(chunk),stamp,stamp).all();
+  refreshed.push(...rows.results.map(row=>row.item_id));
+ }
+ if(refreshed.length)await db.prepare('UPDATE catalog_classification_state SET revision=revision+1 WHERE id=1 AND revision<2147483646').run();
+ return refreshed;
+}
+
 export async function readCatalogClassificationFence(env,itemIds){
  const ids=idsInput(itemIds);if(ids.length>3)fail('CATALOG_CLASSIFICATION_REQUEST_INVALID',400);
  const db=await setup(env),rows=ids.length?(await db.prepare('SELECT item_id,write_token FROM catalog_classification_jobs WHERE item_id IN ('+ids.map(()=>'?').join(',')+')').bind(...ids).all()).results:[],map=new Map(rows.map(row=>[row.item_id,row.write_token]));
  return ids.map(item_id=>({item_id,write_token:map.get(item_id)??null}));
 }
-async function storeFrame(env,raw,{now=()=>Date.now(),token=null,itemId=null,fence=null}={}){
+async function storeFrame(env,raw,{now=()=>Date.now(),token=null,itemId=null,fence=null,changeToken=null}={}){
  const frame=projectVariantCatalog(raw),stamp=clock(now);if(!frame||frame.checked_at>stamp+60||stamp-frame.checked_at>60||frame.products.some(row=>!row.cost_catalog)||itemId!==null&&(frame.products.length!==1||frame.products[0].item_id!==itemId))fail('CATALOG_CLASSIFICATION_INVALID',503);
  let fenced=null;
  if(fence!==null){if(!array(fence,3)||fence.length!==frame.products.length)fail('CATALOG_CLASSIFICATION_REQUEST_INVALID',400);fenced=new Map();for(const row of fence){if(!exact(row,['item_id','write_token'])||!id(row.item_id)||fenced.has(row.item_id)||!frame.products.some(product=>product.item_id===row.item_id)||row.write_token!==null&&(typeof row.write_token!=='string'||!/^[a-f0-9-]{36}$/.test(row.write_token)))fail('CATALOG_CLASSIFICATION_REQUEST_INVALID',400);fenced.set(row.item_id,row.write_token);}}
@@ -108,7 +128,7 @@ async function storeFrame(env,raw,{now=()=>Date.now(),token=null,itemId=null,fen
    if(current?.checked_at===frame.checked_at&&current.source_hash!==sourceHash&&token===null&&!fenced)fail('CATALOG_CLASSIFICATION_CONFLICT',409);
    if(token===null&&current?.lease_token!==null&&current?.lease_token!==undefined&&current.lease_until>stamp)fail('CATALOG_CLASSIFICATION_LEASED',409);
    if(token!==null&&(current?.lease_token!==token||current.lease_until<=stamp))fail('CATALOG_CLASSIFICATION_LEASE_LOST',409);
-   const changed=!current||current.source_hash!==sourceHash,status=product.bindings.length===variants.length&&variants.length?'MATCHED':product.bindings.length?'PARTIAL':'REVIEW',reason=status==='MATCHED'?null:unresolvedReason;
+   const changed=!current||current.source_hash!==sourceHash||changeToken!==null,status=product.bindings.length===variants.length&&variants.length?'MATCHED':product.bindings.length?'PARTIAL':'REVIEW',reason=status==='MATCHED'?null:unresolvedReason;
    const guard=current?'item_id=? AND checked_at IS ? AND source_hash IS ? AND lease_token IS ? AND write_token IS ?':'item_id=?';
    const guardArgs=current?[product.item_id,current.checked_at,current.source_hash,current.lease_token,current.write_token]:[product.item_id];
    if(!current){await db.prepare("INSERT OR IGNORE INTO catalog_classification_jobs(item_id,status,next_attempt_at) VALUES(?,'QUEUED',?)").bind(product.item_id,stamp).run();continue;}
@@ -120,6 +140,7 @@ async function storeFrame(env,raw,{now=()=>Date.now(),token=null,itemId=null,fen
     db.prepare('DELETE FROM catalog_classification_variants WHERE item_id=? AND '+proof).bind(product.item_id,...proofArgs),
     db.prepare("INSERT INTO catalog_classification_variants(item_id,model_id,payload) SELECT ?,json_extract(value,'$.model_id'),json_extract(value,'$.payload') FROM json_each(?) WHERE "+proof).bind(product.item_id,JSON.stringify(variants),...proofArgs),
     db.prepare('INSERT INTO production_cost_catalog(item_id,catalog_fingerprint,payload,checked_at) SELECT ?,?,?,? WHERE '+proof+' ON CONFLICT(item_id) DO UPDATE SET catalog_fingerprint=excluded.catalog_fingerprint,payload=excluded.payload,checked_at=excluded.checked_at WHERE production_cost_catalog.checked_at<=excluded.checked_at').bind(product.item_id,product.catalog_fingerprint,JSON.stringify(product.cost_catalog),frame.checked_at,...proofArgs),
+    db.prepare('DELETE FROM catalog_classification_changes WHERE item_id=? AND change_token=? AND '+proof).bind(product.item_id,changeToken,...proofArgs),
     db.prepare('INSERT INTO catalog_classification_audit(item_id,checked_at,outcome,reason,revision) SELECT ?,?,?,?,revision FROM catalog_classification_state WHERE id=1 AND '+proof).bind(product.item_id,stamp,status,reason,...proofArgs),
     db.prepare('DELETE FROM catalog_classification_audit WHERE id NOT IN (SELECT id FROM catalog_classification_audit ORDER BY id DESC LIMIT 1000)'),
    ];
@@ -146,8 +167,9 @@ export async function runCatalogClassifications(env,getCatalog,{now=()=>Date.now
    const row=await db.prepare('SELECT * FROM catalog_classification_jobs WHERE next_attempt_at<=? AND (lease_token IS NULL OR lease_until<=?) ORDER BY CASE WHEN last_attempt_at IS NULL THEN 0 ELSE 1 END,next_attempt_at,length(item_id),item_id LIMIT 1').bind(at,at).first();if(!row)break;checkedJob(row);
    const claimed=await db.prepare("UPDATE catalog_classification_jobs SET status='RUNNING',last_attempt_at=?,lease_token=?,lease_until=? WHERE item_id=? AND next_attempt_at<=? AND (lease_token IS NULL OR lease_until<=?) AND EXISTS(SELECT 1 FROM catalog_classification_state WHERE id=1 AND lease_token=? AND lease_until>?)").bind(at,token,start+180,row.item_id,at,at,token,at).run();if(claimed?.meta?.changes!==1)continue;
    try{
+    const change=await db.prepare('SELECT change_token FROM catalog_classification_changes WHERE item_id=?').bind(row.item_id).first();
     const frame=await getCatalog(env,{item_ids:[row.item_id],selling_unit:'AUTO',include_cost_catalog:true},{timeoutMs:45000});
-    const result=await storeFrame(env,frame,{now,token,itemId:row.item_id});if(result.processed.length)processed.push(row.item_id);else fail('CATALOG_CLASSIFICATION_STALE_RESPONSE');
+    const result=await storeFrame(env,frame,{now,token,itemId:row.item_id,changeToken:change?.change_token??null});if(result.processed.length)processed.push(row.item_id);else fail('CATALOG_CLASSIFICATION_STALE_RESPONSE');
    }catch(error){
     const finish=clock(now),failureCount=Math.min(row.failure_count+1,1000000),reason=error instanceof CatalogClassificationError&&error.message==='CATALOG_CLASSIFICATION_CONFLICT'?'CATALOG_CONFLICT':error instanceof CatalogClassificationError&&error.message==='CATALOG_CLASSIFICATION_INVALID'?'CATALOG_INVALID':error instanceof CatalogClassificationError&&error.message==='CATALOG_CLASSIFICATION_STALE_RESPONSE'?'CATALOG_STALE_RESPONSE':'CATALOG_UNAVAILABLE';
     const result=await db.batch([
@@ -169,7 +191,7 @@ export async function readCatalogClassificationState(env,input={}, {now=()=>Date
  const result=await db.batch([
   db.prepare('SELECT revision FROM catalog_classification_state WHERE id=1'),
   db.prepare("SELECT COUNT(*) AS total,SUM(status='QUEUED') AS queued,SUM(status='RUNNING') AS running,SUM(status='MATCHED') AS matched,SUM(status='PARTIAL') AS partial,SUM(status='REVIEW') AS review,SUM(status='RETRY_WAIT') AS retry_wait,SUM(next_attempt_at<=? AND (lease_token IS NULL OR lease_until<=?)) AS due,MIN(next_attempt_at) AS next_due_at FROM catalog_classification_jobs"+filter).bind(stamp,stamp,...args),
-  db.prepare('SELECT * FROM catalog_classification_jobs'+filter+' ORDER BY length(item_id),item_id LIMIT ? OFFSET ?').bind(...args,limit,offset),
+  db.prepare('SELECT *,(SELECT changed_at FROM catalog_classification_changes x WHERE x.item_id=catalog_classification_jobs.item_id) AS metadata_changed_at FROM catalog_classification_jobs'+filter+' ORDER BY length(item_id),item_id LIMIT ? OFFSET ?').bind(...args,limit,offset),
   db.prepare('SELECT item_id,model_id,payload FROM catalog_classification_variants WHERE item_id IN (SELECT item_id FROM catalog_classification_jobs'+filter+' ORDER BY length(item_id),item_id LIMIT ? OFFSET ?) ORDER BY length(item_id),item_id,length(model_id),model_id LIMIT 1001').bind(...args,limit,offset),
  ]);
  const revision=result[0]?.results?.[0]?.revision;if(!integer(revision,1,2147483647))fail('CATALOG_CLASSIFICATION_STORAGE_INVALID');const aggregate=result[1]?.results?.[0];if(!aggregate||!integer(aggregate.total,0))fail('CATALOG_CLASSIFICATION_STORAGE_INVALID');

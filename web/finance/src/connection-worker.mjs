@@ -5,6 +5,7 @@ import {projectVariantCatalog,projectVariantCatalogRequest} from './variant-cata
 import {projectStorePeriodRequest,projectStorePeriodFrame} from './store-period-frame.mjs';
 import {projectBusinessPeriodRequest,projectBusinessPeriodFrame} from './business-period-frame.mjs';
 import {projectProductionOrdersRequest,projectProductionOrdersFrame,productionOrdersRequestMatches} from './production-orders-frame.mjs';
+import {projectProductIndexRequest,projectProductIndexFrame,productIndexRequestMatches,financeProductIndexDiagnostic} from './product-index-frame.mjs';
 
 const ORIGIN = 'https://auth.brazacommerce.com.br';
 const PREFIX = '/shopee/finance';
@@ -26,6 +27,7 @@ const VARIANT_CATALOG_PATH = '/internal/shopee/finance/variant-catalog';
 const STORE_PERIOD_PATH = '/internal/shopee/finance/store-period';
 const BUSINESS_PERIOD_PATH = '/internal/shopee/finance/business-period';
 const PRODUCTION_ORDERS_PATH = '/internal/shopee/finance/production-orders';
+const PRODUCT_INDEX_PATH = '/internal/shopee/finance/product-index';
 const SAMPLE_FIELDS = ['escrow_amount','original_cost_of_goods_sold','buyer_total_amount','commission_fee','service_fee','seller_transaction_fee','actual_shipping_fee','ads_escrow_top_up_fee_or_technical_support_fee','items'];
 const SAMPLE_ITEM_FIELDS = ['item_id','model_id','line_item_id','quantity_purchased','original_price','selling_price','order_discounted_price','is_kit','kit_items'];
 const SAMPLE_TYPES = new Set(['number','string','boolean','object','array','null','mixed']);
@@ -75,8 +77,8 @@ function paymentFailure(error) {
   }}, status, {json: true});
 }
 
-async function privateFinanceBody(request, catalog = false, storePeriod = false, business = false, production = false) {
-  const maximum=production?8192:storePeriod||catalog?256:128;
+async function privateFinanceBody(request, catalog = false, storePeriod = false, business = false, production = false, productIndex = false) {
+  const maximum=production?8192:storePeriod||catalog||productIndex?256:128;
   const media = request.headers.get('content-type') || '';
   const declared = request.headers.get('content-length');
   if (!/^application\/json(?:\s*;\s*charset\s*=\s*(?:utf-8|"utf-8"))?\s*$/i.test(media)
@@ -99,6 +101,7 @@ async function privateFinanceBody(request, catalog = false, storePeriod = false,
     const bytes = new Uint8Array(length); let offset = 0;
     for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
     const value = JSON.parse(new TextDecoder('utf-8', {fatal: true}).decode(bytes));
+    if (productIndex) return projectProductIndexRequest(value);
     if (production) return projectProductionOrdersRequest(value);
     if (storePeriod) return business?projectBusinessPeriodRequest(value):projectStorePeriodRequest(value);
     if (catalog) return projectVariantCatalogRequest(value);
@@ -258,7 +261,7 @@ function safeStatus(value) {
   };
 }
 
-export function createFinanceWorker({adapter, paymentSample, paymentPreview, variantCatalog, storePeriod, businessPeriod, dailyOrders, productionOrders, fetchImpl, now = () => Date.now()} = {}) {
+export function createFinanceWorker({adapter, paymentSample, paymentPreview, variantCatalog, storePeriod, businessPeriod, dailyOrders, productionOrders, productIndex, fetchImpl, now = () => Date.now()} = {}) {
   return {
     async fetch(request, env) {
       let url;
@@ -270,6 +273,15 @@ export function createFinanceWorker({adapter, paymentSample, paymentPreview, var
       }
       const callback = url.pathname === PREFIX + '/callback';
       if (url.origin !== ORIGIN || url.username || url.password || url.hash) return failure('NOT_FOUND', 404, callback);
+      if(url.pathname===PRODUCT_INDEX_PATH){
+        if(request.method!=='POST')return failure('METHOD_NOT_ALLOWED',405);
+        if(url.search)return failure('INVALID_REQUEST',400);
+        const routerError=await trustedRouter(request,env);if(routerError)return failure(routerError,routerError==='FORBIDDEN'?403:503);
+        if(env?.FINANCE_CONNECTION_ENABLED!=='true'||typeof productIndex!=='function'||typeof fetchImpl!=='function'||typeof now!=='function')return failure('CONFIGURATION_PENDING',503);
+        const input=await privateFinanceBody(request,false,false,false,false,true);if(!input)return failure('INVALID_REQUEST',400);
+        try{const frame=projectProductIndexFrame(await productIndex(env,{...input,fetchImpl,now}));if(!frame||!productIndexRequestMatches(input,frame))throw new FinanceConnectionError('FINANCE_PRODUCT_INDEX_RESPONSE_INVALID',502);return response(frame,200,{json:true});}
+        catch(error){return response({error:'FINANCE_PRODUCT_INDEX_UNAVAILABLE',diagnostic:financeProductIndexDiagnostic(error)},error instanceof FinanceConnectionError&&[400,409,429,502,503,504].includes(error.status)?error.status:502,{json:true});}
+      }
       if (url.pathname === '/internal/shopee/finance/daily-orders') {
         if (request.method !== 'GET') return failure('METHOD_NOT_ALLOWED',405);
         if (url.search) return failure('INVALID_REQUEST',400);

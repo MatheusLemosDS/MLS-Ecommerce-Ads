@@ -6,6 +6,7 @@ import {runFinanceVariantCatalog} from './variant-catalog.mjs';
 import {runFinanceStorePeriod} from './store-period.mjs';
 import {runFinanceBusinessPeriod} from './business-period.mjs';
 import {runFinanceProductionOrders} from './production-orders.mjs';
+import {runFinanceProductIndex} from './product-index.mjs';
 
 // Deployment entry only. Configuration and FINANCE_CONNECTION_ENABLED='true'
 // are still required; importing this entry never makes a provider request.
@@ -17,6 +18,7 @@ export default createFinanceWorker({
   businessPeriod: runFinanceBusinessPeriod,
   dailyOrders: runFinanceDailyOrders,
   productionOrders: runFinanceProductionOrders,
+  productIndex: runFinanceProductIndex,
   fetchImpl: request => fetch(request),
   adapter: createFinanceProviderAdapter({fetchImpl: request => fetch(request)}),
 });

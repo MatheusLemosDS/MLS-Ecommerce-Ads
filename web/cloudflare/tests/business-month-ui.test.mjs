@@ -221,7 +221,8 @@ test('a validated saved month paints before the private import responds and rema
  const source=fixture({source_checked_at:{finance_oldest_at:stamp-90,finance_latest_at:stamp-30,ads_at:stamp}}),b=browser(source);
  const running=fixture({...source,status:'RUNNING',progress:{...source.progress,windows_complete:1},sales_cents:null,expected_repass_cents:null,production_cost_cents:null,invoice_tax_cents:null,ads_adjustment_cents:null,result:{...source.result,net_estimate_cents:null,net_margin_bps:null,pending:['COLLECTING','PRODUCTION_COST_INCOMPLETE','INVOICE_TAX_UNAVAILABLE','ADJUSTMENT_UNAVAILABLE']}});
  b.run("let releaseStart,releaseStep;customApi=async(path,body)=>body.operation==='start'?new Promise(resolve=>releaseStart=resolve):body.operation==='step'?new Promise(resolve=>releaseStep=resolve):JSON.parse(JSON.stringify(currentFrame));");
- const starting=b.run('brazaMonthDashboard.start({api,syncVariants})');await b.settle();
+ await b.run('brazaMonthDashboard.start({api,syncVariants})');assert.deepEqual(operations(b),['read']);
+ const starting=b.run("control('SourceRefresh').onclick()");await b.settle();
  assert.deepEqual(JSON.parse(b.run('JSON.stringify(calls.map(call=>call.body.operation))')),['read','start']);
  assert.match(b.text('Sales'),/100,00/);assert.match(b.text('Net'),/43,00/);assert.match(b.text('Status'),/última leitura salva.*Atualizando/);
  assert.match(b.text('Scope'),/financeiro: leitura mais antiga .*08:58:30; mais recente .*08:59:30/);assert.match(b.text('Scope'),/Idade do financeiro: há 1 minuto\(s\).*idade dos anúncios: há menos de 1 minuto/);
@@ -767,9 +768,38 @@ test('a rejected bootstrap retry remains recoverable without reflecting its exce
 
 test('the prepared retry can start the monthly dashboard and late bootstrap notifications preserve its data and expense draft',async()=>{
  const b=browser();b.run("let retries=0;brazaMonthDashboard.prepare({retry:()=>{retries++;return brazaMonthDashboard.start({api,syncVariants});}});brazaMonthDashboard.bootstrapState({phase:'FAILED'});");
- assert.equal(await b.run("control('Refresh').onclick()"),true);assert.equal(b.run('retries'),1);assert.equal(b.run("control('Select').disabled"),false);assert.equal(b.run("control('Previous').disabled"),false);assert.equal(b.text('Refresh'),'Atualizar mês');assert.match(b.text('Net'),/43,00/);
+ assert.equal(await b.run("control('Refresh').onclick()"),true);assert.equal(b.run('retries'),1);assert.equal(b.run("control('Select').disabled"),false);assert.equal(b.run("control('Previous').disabled"),false);assert.equal(b.text('Refresh'),'Recalcular custos');assert.match(b.text('Net'),/43,00/);
  b.run("control('ExpensesValue').value='123.45';control('ExpensesValue').oninput();");const before=b.text('Status'),calls=b.run('calls.length');
  for(const phase of ['LOADING','RETRYING','FAILED','READY'])assert.equal(b.run('brazaMonthDashboard.bootstrapState({phase:'+JSON.stringify(phase)+',message:"Failed to fetch PRIVATE"})'),false);
  assert.equal(b.run('brazaMonthDashboard.prepare()'),false);assert.equal(b.run('calls.length'),calls);assert.equal(b.run("control('ExpensesValue').value"),'123.45');assert.equal(b.text('Status'),before);assert.match(b.text('Net'),/43,00/);
  b.run('brazaMonthDashboard.stop();');assert.equal(b.text('Refresh'),'Continuar consulta');assert.equal(b.run('brazaMonthDashboard.bootstrapState({phase:"FAILED"})'),false);assert.match(b.text('Net'),/43,00/);
+});
+
+
+test('a recent saved month opens with one local read and the primary cost recalculation never reimports orders or Ads',async()=>{
+ const saved=fixture({source_checked_at:{finance_oldest_at:stamp-90,finance_latest_at:stamp-30,ads_at:stamp}}),b=browser(saved);
+ assert.equal(await b.run('brazaMonthDashboard.start({api,syncVariants})'),true);assert.deepEqual(operations(b),['read']);
+ assert.equal(b.text('Refresh'),'Recalcular custos');assert.equal(b.text('SourceRefresh'),'Atualizar vendas');assert.match(b.text('Status'),/pedidos salvos/);
+ const changed=fixture({...saved,costs_revision:4,production_cost_cents:2100,known_production_cost_cents:2100,result:{...saved.result,net_estimate_cents:4200,net_margin_bps:4200}});b.load(changed);
+ assert.equal(await b.run("control('Refresh').onclick()"),true);assert.deepEqual(operations(b),['read','read']);assert.match(b.text('Net'),/42,00/);
+ assert.match(b.text('Status'),/dados salvos/);assert.match(b.text('Scope'),/08:58:30/);assert.equal(b.run("control('SourceRefresh').disabled"),false);
+ assert.equal(b.run('timers.size'),1,'cost recalculation keeps exactly one financial schedule');
+ b.run('clock+=211000;customApi=async(path,body)=>{if(body.operation!=="read")throw Object.assign(Error("fixture stop"),{code:"ADMIN_API_HTTP_ERROR"});return JSON.parse(JSON.stringify(currentFrame));};');
+ await b.run('[...timers.values()][0].callback()');assert.equal(operations(b).at(-1),'start','the local read did not renew the provider clock');
+});
+
+test('the separate sales update still imports cancellations before replacing the saved monthly quantities and balance',async()=>{
+ const saved=fixture({source_checked_at:{finance_oldest_at:stamp-90,finance_latest_at:stamp-30,ads_at:stamp}}),b=browser(saved);
+ await b.run('brazaMonthDashboard.start({api,syncVariants})');
+ const updated=fixture({...saved,coverage:{...saved.coverage,paid:1,completed:1,ongoing:0,cancelled:2,payment_covered:1},sales_cents:5000,known_sales_cents:5000,expected_repass_cents:4000,known_expected_repass_cents:4000,production_cost_cents:1000,known_production_cost_cents:1000,invoice_tax_cents:100,known_invoice_tax_cents:100,result:{...saved.result,net_estimate_cents:1400,net_margin_bps:2800}});b.load(updated);
+ assert.equal(await b.run("control('SourceRefresh').onclick()"),true);assert.deepEqual(operations(b),['read','start','ads']);
+ assert.match(b.text('Coverage'),/1 pedido\(s\) pagos/);assert.match(b.text('Coverage'),/2 cancelado\(s\) excluído\(s\)/);assert.match(b.text('Sales'),/50,00/);assert.match(b.text('Net'),/14,00/);
+});
+
+test('a delayed local recalculation cannot overwrite a different selected month and cannot send an overlapping source update',async()=>{
+ const saved=fixture({source_checked_at:{finance_oldest_at:stamp-90,finance_latest_at:stamp-30,ads_at:stamp}}),b=browser(saved);await b.run('brazaMonthDashboard.start({api,syncVariants})');
+ b.run('let releaseCosts;customApi=async(path,body)=>body.month==="2026-10"?new Promise(resolve=>releaseCosts=resolve):JSON.parse(JSON.stringify(currentFrame));');
+ const pending=b.run("control('Refresh').onclick()");await b.settle();assert.equal(b.run("control('SourceRefresh').disabled"),true);assert.equal(await b.run("control('SourceRefresh').onclick()"),false);assert.deepEqual(operations(b),['read','read']);
+ const past=fixture({...saved,month:'2026-09',start_date:'2026-09-01',end_date:'2026-09-30',ads:calendar('2026-09',30)});b.load(past);b.run("control('Select').value='2026-09';");assert.equal(await b.run("control('Select').onchange()"),true);assert.match(b.text('Scope'),/01\/09\/2026 a 30\/09\/2026/);
+ b.context.old=JSON.stringify(saved);b.run('releaseCosts(JSON.parse(old));');assert.equal(await pending,false);assert.match(b.text('Scope'),/01\/09\/2026 a 30\/09\/2026/);assert.doesNotMatch(b.text('Scope'),/01\/10\/2026/);assert.equal(b.run("control('SourceRefresh').disabled"),false);
 });

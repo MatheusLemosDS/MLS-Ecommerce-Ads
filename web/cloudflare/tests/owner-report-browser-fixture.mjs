@@ -18,7 +18,7 @@ export async function compiledOwnerReportPage(minify){
 
 // A small DOM is sufficient for the actual owner script. Network responses are
 // parsed in the page's realm, as browser Response.json() would parse them.
-export function ownerReportBrowser(html,{respond=async()=>new Promise(()=>{})}={}){
+export function ownerReportBrowser(html,{respond=async()=>new Promise(()=>{}),scriptIncludes='let renderedReportKey='}={}){
  const ids=[...html.matchAll(/\bid="([^"]*)"/g)].map(match=>match[1]),calls=[],timers=new Map();let nextTimer=0,context;
  const matches=(element,selector)=>{
   if(selector.startsWith('.'))return selector.slice(1).split('.').every(name=>element.className.split(/\s+/).includes(name));
@@ -39,6 +39,6 @@ export function ownerReportBrowser(html,{respond=async()=>new Promise(()=>{})}={
   return {ok:status>=200&&status<300,status,body:null,json:async()=>vm.runInContext('JSON.parse('+JSON.stringify(JSON.stringify(response.body))+')',context)};
  }});
  vm.runInContext("globalThis.window=globalThis;window.matchMedia=()=>({matches:false});globalThis.addEventListener=()=>{};",context);
- const script=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match=>match[1]).find(value=>value.includes('let renderedReportKey='));assert.ok(script,'compiled owner client not found');vm.runInContext(script,context);
+ const script=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match=>match[1]).find(value=>value.includes(scriptIncludes));assert.ok(script,'compiled owner client not found: '+scriptIncludes);vm.runInContext(script,context);
  return {nodes,calls,timers,context,run:source=>vm.runInContext(source,context),async flush(){for(let turn=0;turn<8;turn++)await new Promise(resolve=>setImmediate(resolve));},stop(){vm.runInContext('startupController.stop();clearTimeout(pollTimer);',context);timers.clear();}};
 }

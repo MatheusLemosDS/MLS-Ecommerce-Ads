@@ -47,6 +47,13 @@ def build():
     production=re.sub(r'^export\s+', '', production, flags=re.M)
     production_bundle='const brazaProductionOrdersFrame = (() => {\n'+production+'\nreturn {projectProductionOrdersRequest,projectProductionOrdersFrame,productionOrdersRequestMatches};\n})();\n'
     production_import="import {projectProductionOrdersRequest,projectProductionOrdersFrame,productionOrdersRequestMatches} from './production-orders-frame.mjs';\n"
+    product_index=(FINANCE/'src/product-index-frame.mjs').read_text()
+    if re.search(r'^import\b',product_index,re.M):
+        raise SystemExit('Unreviewed product index frame import; candidate not built.')
+    product_index=re.sub(r'^export\s+', '', product_index, flags=re.M)
+    product_index_names='projectProductIndexRequest,projectProductIndexFrame,productIndexRequestMatches,financeProductIndexDiagnostic'
+    product_index_bundle='const brazaProductIndexFrame = (() => {\n'+product_index+'\nreturn {'+product_index_names+'};\n})();\n'
+    product_index_import="import {"+product_index_names+"} from './product-index-frame.mjs';\n"
     daily=(FINANCE/'src/daily-orders-frame.mjs').read_text()
     if re.search(r'^import\b',daily,re.M):
         raise SystemExit('Unreviewed daily orders frame import; candidate not built.')
@@ -54,9 +61,9 @@ def build():
     daily_bundle='const brazaDailyOrdersFrame = (() => {\n'+daily+'\nreturn {projectDailyOrdersFrame};\n})();\n'
     daily_import="import {projectDailyOrdersFrame} from './daily-orders-frame.mjs';\n"
     router_source=(FINANCE/'src/auth-router.mjs').read_text()
-    if router_source.count(preview_import)!=1 or router_source.count(catalog_import)!=1 or router_source.count(period_import)!=1 or router_source.count(daily_import)!=1 or router_source.count(business_import)!=1 or router_source.count(production_import)!=1:
+    if router_source.count(preview_import)!=1 or router_source.count(catalog_import)!=1 or router_source.count(period_import)!=1 or router_source.count(daily_import)!=1 or router_source.count(business_import)!=1 or router_source.count(production_import)!=1 or router_source.count(product_index_import)!=1:
         raise SystemExit('Shared router import not unique; candidate not built.')
-    router=re.sub(r'^export\s+', '', router_source.replace(preview_import,'').replace(catalog_import,'').replace(period_import,'').replace(daily_import,'').replace(business_import,'').replace(production_import,''), flags=re.M)
+    router=re.sub(r'^export\s+', '', router_source.replace(preview_import,'').replace(catalog_import,'').replace(period_import,'').replace(daily_import,'').replace(business_import,'').replace(production_import,'').replace(product_index_import,''), flags=re.M)
     if re.search(r'^import\b',router,re.M):
         raise SystemExit('Unreviewed router import; candidate not built.')
     needle='    const url = new URL(request.url);'
@@ -64,18 +71,19 @@ def build():
     if auth.count(needle)!=1:
         raise SystemExit('Auth insertion point not unique.')
     addition="\n    if (url.pathname === '/internal/shopee/finance/daily-orders') return brazaFinanceRouter.forwardFinanceDailyOrders(request, env, {validateInternalApp});\n    if (url.pathname.startsWith('/shopee/finance/')) return brazaFinanceRouter.forwardFinanceConnection(request, env);\n    if (url.pathname === '/internal/shopee/finance/payment-sample' || url.pathname === '/internal/shopee/finance/payment-preview' || url.pathname === '/internal/shopee/finance/variant-catalog' || url.pathname === '/internal/shopee/finance/store-period' || url.pathname === '/internal/shopee/finance/business-period' || url.pathname === '/internal/shopee/finance/production-orders') return brazaFinanceRouter.forwardFinancePaymentSample(request, env, {validateInternalApp});"
+    addition=addition.replace("url.pathname === '/internal/shopee/finance/payment-sample'", "url.pathname === '/internal/shopee/finance/product-index' || url.pathname === '/internal/shopee/finance/payment-sample'")
     auth=auth.replace(needle,needle+addition,1)
-    auth+='\n\n'+preview_bundle+catalog_bundle+period_bundle+daily_bundle+business_bundle+production_bundle+'\nconst brazaFinanceRouter = (() => {\nconst {projectFinancePaymentPreview}=brazaFinancePreviewFrame;\nconst {projectVariantCatalog,projectVariantCatalogRequest}=brazaVariantCatalogFrame;\nconst {projectStorePeriodRequest,projectStorePeriodFrame}=brazaStorePeriodFrame;\nconst {projectDailyOrdersFrame}=brazaDailyOrdersFrame;\nconst {projectBusinessPeriodRequest,projectBusinessPeriodFrame}=brazaBusinessPeriodFrame;\nconst {projectProductionOrdersRequest,projectProductionOrdersFrame,productionOrdersRequestMatches}=brazaProductionOrdersFrame;\n'+router+'\nreturn {forwardFinanceConnection,forwardFinancePaymentSample,forwardFinanceDailyOrders};\n})();\n'
+    auth+='\n\n'+preview_bundle+catalog_bundle+period_bundle+daily_bundle+business_bundle+production_bundle+product_index_bundle+'\nconst brazaFinanceRouter = (() => {\nconst {'+product_index_names+'}=brazaProductIndexFrame;\nconst {projectFinancePaymentPreview}=brazaFinancePreviewFrame;\nconst {projectVariantCatalog,projectVariantCatalogRequest}=brazaVariantCatalogFrame;\nconst {projectStorePeriodRequest,projectStorePeriodFrame}=brazaStorePeriodFrame;\nconst {projectDailyOrdersFrame}=brazaDailyOrdersFrame;\nconst {projectBusinessPeriodRequest,projectBusinessPeriodFrame}=brazaBusinessPeriodFrame;\nconst {projectProductionOrdersRequest,projectProductionOrdersFrame,productionOrdersRequestMatches}=brazaProductionOrdersFrame;\n'+router+'\nreturn {forwardFinanceConnection,forwardFinancePaymentSample,forwardFinanceDailyOrders};\n})();\n'
     store=(FINANCE/'src/connection-store.mjs').read_text()
     store=re.sub(r'^export\s+', '', store, flags=re.M)
     worker=(FINANCE/'src/connection-worker.mjs').read_text()
-    if worker.count(preview_import)!=1 or worker.count(catalog_import)!=1 or worker.count(period_import)!=1 or worker.count(daily_import)!=1 or worker.count(business_import)!=1 or worker.count(production_import)!=1:
+    if worker.count(preview_import)!=1 or worker.count(catalog_import)!=1 or worker.count(period_import)!=1 or worker.count(daily_import)!=1 or worker.count(business_import)!=1 or worker.count(production_import)!=1 or worker.count(product_index_import)!=1:
         raise SystemExit('Shared worker import not unique; candidate not built.')
-    worker=worker.replace(preview_import,'').replace(catalog_import,'').replace(period_import,'').replace(daily_import,'').replace(business_import,'').replace(production_import,'')
+    worker=worker.replace(preview_import,'').replace(catalog_import,'').replace(period_import,'').replace(daily_import,'').replace(business_import,'').replace(production_import,'').replace(product_index_import,'')
     worker=re.sub(r'^import\s+[\s\S]*?\s+from\s+[\'"]\./connection-store\.mjs[\'"];?\s*\n','',worker,count=1)
     if re.search(r'^import\b',worker,re.M):
         raise SystemExit('Unreviewed worker import; candidate not built.')
-    bundled=preview_bundle+catalog_bundle+period_bundle+daily_bundle+business_bundle+production_bundle+'\nconst {projectFinancePaymentPreview}=brazaFinancePreviewFrame;\nconst {projectVariantCatalog,projectVariantCatalogRequest}=brazaVariantCatalogFrame;\nconst {projectStorePeriodRequest,projectStorePeriodFrame}=brazaStorePeriodFrame;\nconst {projectDailyOrdersFrame}=brazaDailyOrdersFrame;\nconst {projectBusinessPeriodRequest,projectBusinessPeriodFrame}=brazaBusinessPeriodFrame;\nconst {projectProductionOrdersRequest,projectProductionOrdersFrame,productionOrdersRequestMatches}=brazaProductionOrdersFrame;\nconst brazaFinanceStore = (() => {\n'+store+'\nreturn {FINANCE_PROFILE,FinanceConnectionError,createFinanceStore};\n})();\nconst {FINANCE_PROFILE,FinanceConnectionError,createFinanceStore}=brazaFinanceStore;\n'+worker
+    bundled=preview_bundle+catalog_bundle+period_bundle+daily_bundle+business_bundle+production_bundle+product_index_bundle+'\nconst {'+product_index_names+'}=brazaProductIndexFrame;\nconst {projectFinancePaymentPreview}=brazaFinancePreviewFrame;\nconst {projectVariantCatalog,projectVariantCatalogRequest}=brazaVariantCatalogFrame;\nconst {projectStorePeriodRequest,projectStorePeriodFrame}=brazaStorePeriodFrame;\nconst {projectDailyOrdersFrame}=brazaDailyOrdersFrame;\nconst {projectBusinessPeriodRequest,projectBusinessPeriodFrame}=brazaBusinessPeriodFrame;\nconst {projectProductionOrdersRequest,projectProductionOrdersFrame,productionOrdersRequestMatches}=brazaProductionOrdersFrame;\nconst brazaFinanceStore = (() => {\n'+store+'\nreturn {FINANCE_PROFILE,FinanceConnectionError,createFinanceStore};\n})();\nconst {FINANCE_PROFILE,FinanceConnectionError,createFinanceStore}=brazaFinanceStore;\n'+worker
     candidate=FINANCE/'candidate'
     candidate.mkdir(exist_ok=True)
     (candidate/'auth-worker.mjs').write_text(auth)

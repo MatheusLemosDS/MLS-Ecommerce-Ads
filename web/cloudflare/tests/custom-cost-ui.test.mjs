@@ -51,6 +51,26 @@ test('custom cost controls share the revisioned production form and explain whol
  assert.match(CSS,/\.custom-cost-assignment-controls\{grid-template-columns:minmax\(0,1fr\)/);
 });
 
+test('saved adult singles precede derived kits and preserve the current plus cost of R$21.40',()=>{
+ const b=browser({...base,inclusive_plus_cents:2140});
+ assert.deepEqual(b.json('productionCostSingleValues(productionCostsState.values)'),[1590,2140]);assert.deepEqual(b.json('productionCostKitValues(productionCostsState.values)'),[3180,3730,4280]);
+ assert.equal(b.run('el("costsPreview").children[0].textContent'),'Camisetas adultas avulsas');assert.equal(b.run('el("costsPreview").children[1].children[0].textContent'),'Adulto P, M, G e GG');assert.match(b.run('el("costsPreview").children[2].children[1].textContent'),/21,40/);assert.equal(b.run('el("costsPreview").children[3].textContent'),'Kits com duas camisetas');assert.match(b.run('el("costsPreview").children[5].children[1].textContent'),/37,30/);assert.match(b.run('el("costsPreview").children[6].children[1].textContent'),/42,80/);
+ assert.match(b.run('el("costsDraftNote").textContent'),/cor só muda o custo quando há uma exceção cadastrada/);
+});
+
+test('itemized single costs include per-piece components while whole kits include their packaging once',()=>{
+ const values={...base,mode:'itemized',base_regular_cents:1000,base_plus_cents:1500,components:[{id:'dtf',label:'Estampa',basis:'per_piece',amount_cents:250},{id:'pack',label:'Embalagem kit',basis:'per_kit',amount_cents:100}]},b=browser(values);
+ assert.deepEqual(b.json('productionCostSingleValues(productionCostsState.values)'),[1250,1750]);assert.deepEqual(b.json('productionCostKitValues(productionCostsState.values)'),[2600,3100,3600]);
+});
+
+test('loading and saving current costs do not request thirty hidden audit versions; opening audit reads once per revision',async()=>{
+ const b=browser({...base,inclusive_plus_cents:2140});b.run('globalThis.apiAction=async(path,body)=>({revision:body?8:7,values:body?body.values:productionCostsState.values,updated_at:"saved"});');
+ await b.run('loadProductionCosts()');assert.deepEqual(b.json('apiCalls.map(row=>row.path)'),['production-costs']);
+ await b.run('loadProductionCostsAudit()');await b.run('loadProductionCostsAudit()');assert.equal(b.run('apiCalls.filter(row=>row.path==="production-costs/audit").length'),1);
+ b.run('el("costInclusivePlus").value="22,00";productionCostsChanged()');await b.run('saveProductionCosts()');assert.equal(b.run('apiCalls.filter(row=>row.path==="production-costs/audit").length'),1);
+ await b.run('loadProductionCostsAudit()');assert.equal(b.run('apiCalls.filter(row=>row.path==="production-costs/audit").length'),2);assert.equal(b.run('productionCostsState.values.inclusive_plus_cents'),2200);
+});
+
 test('legacy values keep six keys; custom state validates exact paired metadata without executing accessors',()=>{
  const b=browser();assert.deepEqual(b.json('productionCostsValues()'),base);
  assert.equal(b.run('Object.hasOwn(productionCostsValues(),"custom_profiles")'),false);

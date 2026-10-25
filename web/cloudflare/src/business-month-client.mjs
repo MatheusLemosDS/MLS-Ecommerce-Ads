@@ -260,7 +260,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
  }
  function controls(){
   if(bootstrapPrepared&&!bootstrapCompleted&&!started){paintBootstrap();return;}
-  el('Refresh').disabled=busy||adsBusy||saving;el('Refresh').textContent=busy?'Consultando…':collectionRecovery?.waiting&&!paused?'Atualizar agora':paused||frame?.status==='RUNNING'?'Continuar consulta':'Atualizar mês';el('Pause').hidden=!busy&&!collectionRecovery?.waiting;el('Pause').disabled=paused;el('Previous').disabled=saving;el('Select').disabled=saving;
+  el('Refresh').disabled=busy||adsBusy||saving;el('Refresh').textContent=busy?'Consultando…':collectionRecovery?.waiting&&!paused?'Atualizar agora':paused||frame?.status==='RUNNING'?'Continuar consulta':frame?.status==='COMPLETE'?'Recalcular custos':'Atualizar mês';el('SourceRefresh').disabled=busy||adsBusy||saving;el('SourceRefresh').textContent='Atualizar vendas';el('Pause').hidden=!busy&&!collectionRecovery?.waiting;el('Pause').disabled=paused;el('Previous').disabled=saving;el('Select').disabled=saving;
   const conflict=!!frame&&dirty&&draftRevision!==frame.expenses.revision;
   el('ExpensesSave').disabled=!frame||busy||adsBusy||saving||conflict;
   el('ExpensesZero').disabled=!frame||busy||adsBusy||saving||conflict;
@@ -509,7 +509,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
   timer=setTimeout(()=>{timer=null;if(document.hidden||dirty||paused||automaticBlocked)return;return Date.now()>=financialDue?refresh({automatic:true}):refreshAds();},delay);
  }
  async function request(operation,selected=month){return api('finance/business-month',{operation,month:selected});}
- async function refresh({automatic=false,observed=null}={}){
+ async function refresh({automatic=false,observed=null,cacheFirst=false}={}){
   if(!started||saving||automatic&&(dirty||paused||automaticBlocked||document.hidden||adsBusy))return false;
   const selected=el('Select').value;if(!validMonth(selected)){status('Escolha um mês válido até o mês atual.',true);return false;}
   const changed=selected!==month;if(busy&&!changed)return false;
@@ -519,7 +519,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
   const current=()=>token===generation&&month===selected;
   let operation='read';
   try{
-   let value=null;
+   let value=!changed&&frame?.status==='COMPLETE'?frame:null;
    if(changed){
     let cached,readSucceeded=false;
     try{cached=await request('read',selected);readSucceeded=true;}catch{}
@@ -532,7 +532,17 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
     resumeOnVisible=!paused;
     status(paused?'Consulta pausada após a última resposta. Use Continuar consulta para retomar.':'A atualização continua automaticamente quando este painel voltar à tela.');return true;
    }
+   // Opening a recent saved month must not restart its order/payment import.
+   // Only provider observation times govern freshness; a local cost read does
+   // not make old orders, cancellations or Ads newer.
+   const financeAt=value?.source_checked_at?.finance_oldest_at;
+   if(cacheFirst&&value?.status==='COMPLETE'&&Number.isSafeInteger(financeAt)&&financeAt>0&&financeAt*1000<=Date.now()&&Date.now()-financeAt*1000<financeRefreshInterval&&!value.result.pending.some(code=>['SOURCE_UNAVAILABLE','FINANCIAL_SOURCE_STALE'].includes(code))){
+    lastFinancialRefreshAt=financeAt*1000;
+    status('Custos recalculados com os pedidos salvos. Leitura financeira '+sourceAge(financeAt)+'. Use Atualizar vendas para buscar mudanças na Shopee.');
+    return true;
+   }
    const keepCached=value?.status==='COMPLETE';
+   if(keepCached)status('Mostrando a última leitura salva. Atualizando os pedidos e anúncios de '+monthName(selected)+'…');
    const update=raw=>{const checked=checkedFrame(raw,selected);trackCollection(checked);if(!keepCached||checked.status!=='RUNNING'){frame=checked;invalidateCheckpointHistory();render();}return checked;};
    if(observed)value=update(observed);
    else{operation='start';const initial=await request('start',selected);if(!current())return false;value=update(initial);}
@@ -578,9 +588,13 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
  }
  async function refreshCosts(){
   if(!started||!frame||busy||adsBusy||saving)return false;
-  const token=generation,selected=month;
-  try{const raw=await request('read',selected);if(token!==generation||selected!==month)return false;apply(raw,selected);schedule();scheduleCatalog();return true;}
-  catch(error){if(token===generation){collectionFailure=collectionDiagnostic('read',error);status('Os custos foram preservados, mas não foi possível recalcular o mês. Use Atualizar mês para conferir.',true);}return false;}
+  const token=++generation,selected=month;busy=true;catalogRequest++;catalogBusy=false;clearTimeout(catalogTimer);catalogTimer=null;clearTimeout(timer);timer=null;controls();
+  status('Recalculando os custos com os pedidos e produtos salvos…');
+  try{
+   const raw=await request('read',selected);if(token!==generation||selected!==month)return false;apply(raw,selected);
+   status('Custos recalculados com os dados salvos. Pedidos consultados '+sourceAge(frame.source_checked_at?.finance_oldest_at??frame.checked_at)+'. Use Atualizar vendas para buscar mudanças na Shopee.');return true;
+  }catch(error){if(token===generation){collectionFailure=collectionDiagnostic('read',error);status('Os custos foram preservados, mas não foi possível recalcular os dados salvos. Tente novamente ou use Atualizar vendas.',true);}return false;}
+  finally{if(token===generation){busy=false;render();schedule();scheduleCatalog();}}
  }
  function expenseChanged(){dirty=true;editSequence++;clearTimeout(timer);timer=null;render();}
  function expenseAmount(){const raw=el('ExpensesValue').value.trim().replace(',','.');if(!/^(0|[1-9][0-9]{0,10})(?:\.[0-9]{1,2})?$/.test(raw))throw Error('Informe as despesas em reais, com até duas casas decimais, inclusive se forem zero.');const [whole,fraction='']=raw.split('.'),cents=BigInt(whole)*100n+BigInt(fraction.padEnd(2,'0'));if(cents>BigInt(Number.MAX_SAFE_INTEGER))throw Error('O valor das despesas excede o limite seguro.');return Number(cents);}
@@ -616,8 +630,8 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
   api=options.api;syncVariants=options.syncVariants;onCatalogChanged=options.onCatalogChanged;bootstrapPhase='READY';bootstrapCompleted=true;started=true;
   let selected;try{const params=new URLSearchParams(globalThis.location?.search||'');selected=params.getAll('month').length===1?params.get('month'):null;}catch{}
   el('Select').max=today().slice(0,7);el('Select').value=validMonth(selected)?selected:bootstrapPrepared&&validMonth(el('Select').value)?el('Select').value:today().slice(0,7);
-  el('Refresh').onclick=()=>refresh();el('Select').onchange=()=>refresh();
-  el('Previous').onclick=()=>{const basis=validMonth(el('Select').value)?el('Select').value:today().slice(0,7),date=new Date(basis+'-01T12:00:00Z');date.setUTCMonth(date.getUTCMonth()-1);el('Select').value=date.toISOString().slice(0,7);refresh();};
+  el('Refresh').onclick=()=>frame?.status==='COMPLETE'&&!paused&&!collectionRecovery?.waiting?refreshCosts():refresh();el('SourceRefresh').onclick=()=>refresh();el('Select').onchange=()=>refresh({cacheFirst:true});
+  el('Previous').onclick=()=>{const basis=validMonth(el('Select').value)?el('Select').value:today().slice(0,7),date=new Date(basis+'-01T12:00:00Z');date.setUTCMonth(date.getUTCMonth()-1);el('Select').value=date.toISOString().slice(0,7);refresh({cacheFirst:true});};
   el('Pause').onclick=()=>{paused=true;clearTimeout(timer);timer=null;el('Pause').disabled=true;status(busy?'A consulta será pausada após a resposta em andamento.':'Consulta pausada. Use Continuar consulta para retomar.');render();};
   el('ExpensesForm').onsubmit=event=>{event.preventDefault();saveExpenses();};el('ExpensesValue').oninput=expenseChanged;el('Recharge').onchange=expenseChanged;
   el('ExpensesZero').onclick=()=>saveExpenses({zero:true});el('ExpensesReload').onclick=()=>{dirty=false;editSequence++;fillExpenses({force:true});render();schedule();scheduleCatalog();};el('Identify').onclick=identify;
@@ -626,7 +640,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
   for(const name of ['ProductSearch','ProductFilter','ProductSort','ProductPageSize'])el(name)[name==='ProductSearch'?'oninput':'onchange']=()=>{productPage=1;drawProducts();scheduleCatalog();};
   el('ProductPrevious').onclick=()=>{productPage--;drawProducts();scheduleCatalog();};el('ProductNext').onclick=()=>{productPage++;drawProducts();scheduleCatalog();};
   document.addEventListener('visibilitychange',()=>{if(document.hidden){clearTimeout(timer);timer=null;clearTimeout(catalogTimer);catalogTimer=null;}else{schedule();scheduleCatalog();}});
-  return refresh();
+  return refresh({cacheFirst:true});
  }
  function stop(){started=false;catalogRequest++;catalogBusy=false;clearTimeout(catalogTimer);catalogTimer=null;paused=true;resumeOnVisible=false;collectionRecovery=null;generation++;checkpointHistoryRequest++;checkpointHistoryBusy=false;busy=false;adsBusy=false;clearTimeout(timer);timer=null;controls();}
  globalThis.brazaMonthDashboard={clientContract,prepare,bootstrapState,start,refresh,refreshCosts,stop,supportsCatalogQueue:catalogFeature,syncCatalogCandidates,refreshCatalog:()=>{catalogNeedsRead=true;return updateCatalog();},catalogMetadata:item=>catalogProducts.get(item)||null};

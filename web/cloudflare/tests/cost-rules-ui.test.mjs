@@ -25,6 +25,12 @@ const widgetText=root=>root.textContent+' '+root.children.map(widgetText).join('
 const selectChild=(root,size='8')=>{const type=findAssignment(root,'rule');type.value='camiseta-infantil';type.onchange();const option=findAssignment(root,'size');option.value=size;option.onchange();};
 const learning=(changes={})=>({item_id:'101',rule_id:'camiseta-infantil',rule_label:'Camiseta infantil',status:'LEARNED',reason:'CORRECTION_AND_CATALOG',evidence_count:1,matched_variants:7,pending_variants:0,checked_at:Math.floor(Date.now()/1000),...changes});
 
+test('child summary uses the saved rule price and sizes without resetting an edited saved value to the original seed',async()=>{
+ const values=structuredClone(COST_RULE_DEFAULTS);values.rules[0].unit_cost_cents=1425;const b=browser(async()=>state(5,values));await b.workspace.start({api:b.api});
+ assert.match(widgetText(b.el('Summary')),/Camiseta infantil.*14,25.*4, 6, 8, 10, 12, 14, 16/);assert.doesNotMatch(widgetText(b.el('Summary')),/12,50/);assert.match(widgetText(b.el('Summary')),/versão salva 5/);
+ b.field('amount').value='15,00';b.field('amount').oninput();assert.match(widgetText(b.el('Summary')),/14,25/);assert.doesNotMatch(widgetText(b.el('Summary')),/15,00/);
+});
+
 test('the child rule loads as R$12.50 and seven sizes, while other product types can be added without touching manual profiles',async()=>{
  const b=browser(async()=>state());await b.workspace.start({api:b.api});assert.equal(b.field('amount').value,'12.50');assert.equal(b.field('options').value,'4; 6; 8; 10; 12; 14; 16');assert.equal(b.el('Save').disabled,true);
  b.el('Add').onclick();assert.equal(b.el('Rows').children.length,2);assert.equal(b.el('Save').disabled,false);assert.equal(b.field('amount',1).value,'');assert.equal(b.field('options',1).value,'');

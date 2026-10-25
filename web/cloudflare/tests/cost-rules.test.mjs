@@ -133,3 +133,15 @@ test('assignment patches preserve unrelated scopes and old clients cannot erase 
  assert.deepEqual(await readCostRules(env),state);const accessor={item_id:'102',model_id:'0',rule_id:'camiseta-infantil',size:'6'};let calls=0;Object.defineProperty(accessor,'size',{get(){calls++;return '6';},enumerable:true});assert.throws(()=>validateCostRules({rules:state.values.rules,assignments:[accessor]}));assert.equal(calls,0);
  }finally{env.ADMIN_DB.db.close();}
 });
+
+test('a specific variation rule outranks a constant product rule and stays pending if its own rule is disabled or removed',async()=>{
+ const env=fixture();try{
+  let state=await readCostRules(env);state=await saveCostRules(env,{revision:state.revision,values:{...state.values,rules:[...state.values.rules,{id:'product-fixed',label:'Produto inteiro',enabled:true,unit_cost_cents:2300,name_patterns:['short'],exclude_terms:[],axis_names:[],options:[]}]}},'admin');
+  state=await assignCostRules(env,{revision:state.revision,assignments:[{item_id:'101',model_id:null,rule_id:'product-fixed',size:null},{item_id:'101',model_id:'0',rule_id:'camiseta-infantil',size:'4'}]},'admin');
+  await syncCostRuleCatalog(env,['101'],async()=>provider(catalog('Produto confirmado',['4','6'])),{now});
+  const priced=async()=>productionCostReference({status:'AVAILABLE',rows:[{item_id:'101',model_id:'0',quantity:2},{item_id:'101',model_id:'1',quantity:1}]},{revision:1,bindings:[]},{revision:1,values:COST_DEFAULTS},await readCostRuleReference(env,['101'],{now}));
+  let result=await priced();assert.deepEqual(result.variants.map(row=>row.unit_cost_cents),[1250,2300]);assert.equal(result.total_cents,4800);
+  state=await saveCostRules(env,{revision:state.revision,values:{...state.values,rules:state.values.rules.map(rule=>rule.id==='camiseta-infantil'?{...rule,enabled:false}:rule)}},'admin');result=await priced();assert.deepEqual(result.variants.map(row=>row.unit_cost_cents),[null,2300]);assert.equal(result.total_cents,null);assert.equal(result.known_subset_cents,2300);
+  await saveCostRules(env,{revision:state.revision,values:{...state.values,rules:state.values.rules.filter(rule=>rule.id!=='camiseta-infantil')}},'admin');result=await priced();assert.deepEqual(result.variants.map(row=>row.unit_cost_cents),[null,2300]);assert.equal(result.total_cents,null);
+ }finally{env.ADMIN_DB.db.close();}
+});

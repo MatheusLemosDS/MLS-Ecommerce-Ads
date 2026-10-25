@@ -1,10 +1,11 @@
 # Roadmap BrazaCommerce
 
-Atualizado em **25/10/2026 UTC**. Base publicada: `192235cb`, com
-[resumo financeiro total](RESUMO_FINANCEIRO_TOTAL.md). Este incremento conecta
-[o Hermes ao financeiro da loja](HERMES_FINANCEIRO.md). A atualização da ponte
-no Droplet tem entrega própria; os testes e o deploy do painel não comprovam
-que essa ponte já esteja ativa. Os registros anteriores permanecem no histórico.
+Atualizado em **25/10/2026 UTC**. Base publicada: `11f45ce`, com
+[resumo financeiro total](RESUMO_FINANCEIRO_TOTAL.md) e
+[integração financeira do Hermes](HERMES_FINANCEIRO.md). O incremento atual traz
+[catálogo salvo e custos por semana/mês](CATALOGO_SALVO_E_CUSTOS_POR_PERIODO.md).
+A atualização da ponte Hermes no Droplet permanece uma etapa separada; ela não
+é necessária para usar o catálogo e os cálculos de custo desta entrega.
 
 O objetivo é o Hermes acompanhar a loja, identificar produtos rentáveis e
 administrar anúncios e ofertas dentro dos limites definidos pelo proprietário.
@@ -20,6 +21,7 @@ testes locais.
 
 | Capacidade | Estado desta entrega | Alcance e evidência que ainda falta |
 | --- | --- | --- |
+| Catálogo salvo e custos por semana/mês | Implementado neste incremento | Cadastro completo por páginas, variações por cor/tamanho, recálculo local, prévia de avulsas e kits e cobertura dos custos. Primeira importação da conta é observada separadamente. [Detalhes](CATALOGO_SALVO_E_CUSTOS_POR_PERIODO.md). |
 | Acesso unificado, painéis, produtos, custos e histórico | Já versionados em `main` | A interface reúne gestão e Ads. Custos são os padrões cadastrados; catálogo e quantidades não equivalem a estoque disponível. |
 | Financeiro por pedido e resumo mensal | Já versionados em `main` | Consulta repasse esperado, pedidos pagos, produção, cancelamentos e cobertura de devoluções. Recebimentos liquidados e valores efetivos de reembolso ainda exigem conciliação. |
 | Conferência e histórico do cálculo | Versionados em `main` (`1ffd3b2`) | Preserva automaticamente mudanças financeiras, pendências e revisões usadas, com as 128 versões mais recentes por mês. Corrige o frescor de coletas demoradas. Continua sendo previsão; contratos de liquidação e reembolso monetário ainda não foram confirmados. |
@@ -32,7 +34,7 @@ testes locais.
 | Coleta em segundo plano | Versionada em `main` (`6f9ce23`); ativação a conferir | Cron do App a cada cinco minutos avança coletores de leitura sem depender da aba. Inclui exclusão de execuções concorrentes, pausa/retomada, espera crescente após falhas e auditoria. O disparo real do cron ainda não foi observado nesta entrega. |
 | Abertura rápida da Visão geral | Versionada em `main` (`6f9ce23`); ativação a conferir | Mostra primeiro o cache privado validado e seus horários; a atualização prossegue sem tratar dado antigo como recente. |
 | Diagnóstico da conta | Versionado em `main` (`6f9ce23`); ativação a conferir | Calcula TACOS, saldo disponível antes de Ads, cobertura dos custos e próximas tarefas a partir do mês validado. Dados ausentes bloqueiam os indicadores correspondentes. Não autoriza investimento. |
-| Hermes com financeiro da loja | Implementado neste incremento; atualização da ponte pendente | Cada análise preserva o mês financeiro, custos, DAS, anúncios, pendências e até três próximas ações. A ponte antiga não recebe tarefas novas. Exige atualização no Droplet e observação de uma execução real com a nova referência. |
+| Hermes com financeiro da loja | Publicado (`11f45ce`); atualização da ponte pendente | Cada análise preserva o mês financeiro, custos, DAS, anúncios, pendências e até três próximas ações. A ponte antiga não recebe tarefas novas. Exige atualização no Droplet e observação de uma execução real com a nova referência. |
 | Alterar anúncios, campanhas e promoções | Ainda não implementado para execução comercial | As proteções de somente leitura e Ads/PROMO `LOCKED` continuam vigentes. A coleta autônoma não cria permissão de escrita na Shopee. |
 
 O cron configurado é uma oportunidade de execução, não garantia de dados novos

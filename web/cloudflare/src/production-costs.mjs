@@ -114,6 +114,7 @@ export function productionCostReference(frame,bindings,costState,automaticRefere
  const profiles=new Map((values.custom_profiles||[]).map(profile=>[profile.id,profile]));
  const assignments=new Map((values.custom_assignments||[]).map(assignment=>[costAssignmentKey(assignment),profiles.get(assignment.profile_id)]));
  const automated=new Map((automaticReference?.variants||[]).map(row=>[row.item_id+':'+row.model_id,row]));
+ const metadataChanged=new Set(automaticReference?.metadata_changed_item_ids||[]),manualRuleKeys=new Set(automaticReference?.manual_variant_keys||[]),manualRuleProducts=new Map((automaticReference?.manual_product_costs||[]).map(row=>[row.item_id,row]));
  const ruleManaged=new Set(automaticReference?.restricted_item_ids||[]),classifiedItems=new Set(automaticReference?.classified_item_ids||[]),catalogBindings=new Map();
  // Validate one bounded product/model record at a time. The durable table is
  // intentionally not constrained by the legacy global 1,000-binding array.
@@ -126,13 +127,13 @@ export function productionCostReference(frame,bindings,costState,automaticRefere
  }
  let known=0,mapped=0,unmapped=0;
  for(const [key,row] of grouped){
-  const legacy=confirmed.get(key),catalogBinding=catalogBindings.get(key),binding=legacy?.operator_confirmed===true?legacy:classifiedItems.has(row.item_id)?catalogBinding:catalogBinding||legacy,manual=assignments.get(key)||assignments.get(row.item_id+':*'),automatic=automated.get(key),custom=manual||(automatic?.unit_cost_cents!==null&&automatic?{id:automatic.profile_id,label:automatic.profile_label,unit_cost_cents:automatic.unit_cost_cents}:null),out={...row,unit_cost_cents:null,production_cost_cents:null};
+  const legacy=confirmed.get(key),catalogBinding=catalogBindings.get(key),binding=legacy?.operator_confirmed===true?legacy:classifiedItems.has(row.item_id)?catalogBinding:catalogBinding||legacy,manual=assignments.get(key)||assignments.get(row.item_id+':*'),automatic=automated.get(key),changed=metadataChanged.has(row.item_id),manualRule=manualRuleKeys.has(key)?null:manualRuleProducts.get(row.item_id),allowedAutomatic=!changed||manualRuleKeys.has(key),custom=manual||manualRule||(allowedAutomatic&&automatic?.unit_cost_cents!==null&&automatic?{id:automatic.profile_id,label:automatic.profile_label,unit_cost_cents:automatic.unit_cost_cents}:null),out={...row,unit_cost_cents:null,production_cost_cents:null};
   if(custom){
    const subtotal=costSafeProduct(custom.unit_cost_cents,row.quantity);known=costSafeSum(known,subtotal);mapped=costSafeSum(mapped,row.quantity);
    out.unit_cost_cents=custom.unit_cost_cents;out.production_cost_cents=subtotal;
    out.cost_source='CUSTOM_PROFILE';out.cost_profile_id=custom.id;out.cost_profile_label=custom.label;
   }
-  else if(automatic||ruleManaged.has(row.item_id)||!binding)unmapped=costSafeSum(unmapped,row.quantity);
+  else if(changed&&legacy?.operator_confirmed!==true||(!changed||legacy?.operator_confirmed!==true)&&(automatic||ruleManaged.has(row.item_id))||!binding)unmapped=costSafeSum(unmapped,row.quantity);
   else{
    const garmentCost=size=>values[values.mode==='all_inclusive'?(plus.has(size)?'inclusive_plus_cents':'inclusive_regular_cents'):(plus.has(size)?'base_plus_cents':'base_regular_cents')];
    const single=binding.selling_unit==='SINGLE_GARMENT',pieceCount=single?1:2;
