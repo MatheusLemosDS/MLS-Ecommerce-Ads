@@ -373,8 +373,11 @@ async function adminFetch(request,env,services={}){const url=new URL(request.url
  if(path==='/api/admin/finance/business-month-view'){
   assert(request.method==='GET','METHOD_NOT_ALLOWED',405);
   const entries=[...url.searchParams];assert(entries.length===1&&entries[0][0]==='month','BUSINESS_MONTH_REQUEST_INVALID');
+  const contract=request.headers.get('x-braza-client-contract')??'business-month-view-v1';
+  assert(['business-month-view-v1','business-month-view-v2'].includes(contract),'BUSINESS_MONTH_VIEW_CONTRACT_UNSUPPORTED',409);
   const observed=await readBusinessMonthDisplay(env,{month:entries[0][1]});
-  return json(buildBusinessMonthView(observed,await readBusinessSyncState(env)));
+  const response=json(buildBusinessMonthView(observed,await readBusinessSyncState(env),{contract}));
+  response.headers.set('x-braza-client-contract',contract);response.headers.set('vary','X-Braza-Client-Contract');return response;
  }
  if(path==='/api/admin/finance/business-month-request'){
   assert(request.method==='POST','METHOD_NOT_ALLOWED',405);sameOrigin(request);assert(await equal(request.headers.get('x-csrf-token')||'',current.csrf),'CSRF_REJECTED',403);assert(!url.search,'BUSINESS_MONTH_REQUEST_INVALID');

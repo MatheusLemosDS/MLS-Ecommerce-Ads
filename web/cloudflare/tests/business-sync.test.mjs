@@ -31,6 +31,11 @@ function source({running=false,time=now,missing=null}={}){
 const run=(env,services,options={})=>runBusinessSync(env,services,{now,...options});
 const rows=(env,table)=>env.ADMIN_DB.db.prepare('SELECT * FROM '+table).all();
 const privateRows=env=>['business_sync_state','business_sync_audit','business_month_runs','business_month_frames','business_month_ads'].flatMap(table=>rows(env,table));
+function beforeSyncCommit(env,callback){
+ const db=env.ADMIN_DB,prepare=db.prepare.bind(db),batch=db.batch.bind(db),commits=new WeakSet();let invoked=false;
+ db.prepare=sql=>{const statement=prepare(sql);if(sql.startsWith('UPDATE business_sync_state SET status='))commits.add(statement);return statement;};
+ db.batch=async statements=>{if(!invoked&&statements.some(statement=>commits.has(statement))){invoked=true;await callback();}return batch(statements);};
+}
 
 test('default unattended collection uses the current BRT month, preserves expenses and costs, and stores compact estimate metadata',async()=>{
  const env=environment(),services=source();await businessMonth(env,{operation:'expenses',month:'2026-10',revision:0,external_expenses_cents:12345,recharge_treatment:'UNCONFIRMED'},services,{now});
@@ -90,6 +95,32 @@ test('a pause after the final financial response prevents the Ads read and a pau
   const result=await run(env,services);assert.equal(result.status,'PAUSED',pauseAt);assert.equal(result.state.enabled,false);assert.equal(result.finance_steps,2);assert.equal(result.ads_reads,pauseAt==='ADS'?1:0);assert.equal(services.calls.ads.length,result.ads_reads);assert.equal(result.state.lease_expires_at,null);assert.equal(result.state.failure_count,0);assert.equal(result.state.last_success_at,null);
   assert.equal((await run(env,services)).status,'PAUSED');assert.equal(services.calls.ads.length,result.ads_reads);
  }
+});
+
+test('a pause committed between the final state read and lease release governs success and failure audit records',async()=>{
+ for(const ending of ['complete','finance-failure','ads-failure']){
+  const env=environment(),services=source();let paused;
+  if(ending==='finance-failure')services.getFinanceBusinessPeriod=async()=>{throw Error('PRIVATE_PROVIDER_FAILURE');};
+  if(ending==='ads-failure')services.getAdsCalendar=async()=>{throw Error('PRIVATE_ADS_FAILURE');};
+  beforeSyncCommit(env,async()=>{const current=await readBusinessSyncState(env);paused=await saveBusinessSyncPolicy(env,{revision:current.revision,enabled:false},'race-owner',{now});});
+  const result=await run(env,services);assert.ok(paused,ending);assert.equal(result.status,'PAUSED',ending);assert.equal(result.state.status,'PAUSED',ending);assert.equal(result.state.enabled,false);assert.equal(result.state.revision,paused.revision);assert.equal(result.state.next_run_at,paused.next_run_at);assert.equal(result.state.lease_expires_at,null);assert.equal(result.state.last_success_at,null);assert.equal(result.state.failure_count,0);assert.equal(result.state.last_error,null);
+  const audit=rows(env,'business_sync_audit').filter(row=>row.kind==='RUN');assert.equal(audit.length,1);assert.equal(audit[0].status,'PAUSED');assert.equal(audit[0].error_code,null);assert.equal(audit[0].policy_revision,paused.revision);
+  const calls=structuredClone(services.calls);assert.equal((await run(env,services)).status,'PAUSED');assert.deepEqual(services.calls,calls);assert.ok(!JSON.stringify(privateRows(env)).includes('PRIVATE'));
+ }
+});
+
+test('a resume committed at lease release keeps its immediate schedule and does not retain a previously observed pause',async()=>{
+ const env=environment(),services=source(),ads=services.getAdsCalendar;let paused,resumed;
+ services.getAdsCalendar=async(...args)=>{const value=await ads(...args),current=await readBusinessSyncState(env);paused=await saveBusinessSyncPolicy(env,{revision:current.revision,enabled:false},'race-owner',{now});return value;};
+ beforeSyncCommit(env,async()=>{assert.equal((await readBusinessSyncState(env)).status,'PAUSED');resumed=await saveBusinessSyncPolicy(env,{revision:paused.revision,enabled:true},'race-owner',{now});});
+ const result=await run(env,services);assert.equal(result.status,'COMPLETE');assert.equal(result.state.status,'COMPLETE');assert.equal(result.state.enabled,true);assert.equal(result.state.revision,resumed.revision);assert.equal(result.state.next_run_at,0);assert.equal(result.state.next_run_at,resumed.next_run_at);assert.equal(result.state.lease_expires_at,null);assert.equal(result.state.last_success_at,stamp);
+ const audit=rows(env,'business_sync_audit').filter(row=>row.kind==='RUN');assert.equal(audit.length,1);assert.equal(audit[0].status,'COMPLETE');assert.equal(audit[0].policy_revision,resumed.revision);assert.equal(audit[0].error_code,null);
+});
+
+test('a newer lease owner is not released or audited by the previous owner at completion',async()=>{
+ const env=environment(),services=source(),replacement='22222222-2222-4222-8222-222222222222';
+ beforeSyncCommit(env,async()=>{env.ADMIN_DB.db.prepare("UPDATE business_sync_state SET lease_token=?,lease_expires_at=?,status='RUNNING'").run(replacement,stamp+600);});
+ const result=await run(env,services);assert.equal(result.status,'LEASED');assert.equal(result.state.status,'RUNNING');assert.equal(result.state.lease_expires_at,stamp+600);assert.equal(rows(env,'business_sync_state')[0].lease_token,replacement);assert.equal(rows(env,'business_sync_audit').filter(row=>row.kind==='RUN').length,0);
 });
 
 test('a deleted paused state with policy history fails closed when the database is reopened',async()=>{

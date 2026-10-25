@@ -1,5 +1,6 @@
 import {projectReconciliationFrame} from '../../finance/src/reconciliation-frame.mjs';
 import {projectBusinessReconciliation} from './business-reconciliation.mjs';
+import {projectBusinessMonthAuditScope} from './business-month-view-state.mjs';
 
 export const BUSINESS_RECONCILIATION_CSS=String.raw`
 .business-reconciliation{margin-top:18px;border:1px solid var(--line);border-radius:12px;background:var(--surface);min-width:0}.business-reconciliation>details>summary{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px;cursor:pointer;list-style:none}.business-reconciliation>details>summary::-webkit-details-marker{display:none}.business-reconciliation>details>summary::after{content:"+";font-size:21px;color:var(--muted)}.business-reconciliation>details[open]>summary::after{content:"−"}.business-reconciliation-heading{min-width:0;flex:1}.business-reconciliation-heading strong{display:block;font-size:13px;line-height:1.5}.business-reconciliation-heading span,.business-reconciliation-badge{display:block;margin-top:5px;font-size:11px;line-height:1.6;color:var(--muted)}.business-reconciliation-body{padding:0 16px 16px}.business-reconciliation-body>p{font-size:11px;color:var(--muted);line-height:1.75;margin:0 0 12px;overflow-wrap:anywhere}.business-reconciliation-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0}.business-reconciliation-metric{min-width:0;padding:12px;border:1px solid var(--line);border-radius:9px}.business-reconciliation-metric small,.business-reconciliation-metric span{display:block;font-size:10px;line-height:1.65;color:var(--muted)}.business-reconciliation-metric strong{display:block;margin:7px 0;font-size:16px;line-height:1.4;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}.business-reconciliation-run{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}.business-reconciliation-run h4{margin:0 0 7px;font-size:12px}.business-reconciliation-run p,.business-reconciliation-run li{font-size:11px;line-height:1.75;color:var(--muted);overflow-wrap:anywhere}.business-reconciliation-run ul{padding-left:18px;margin:10px 0}.business-reconciliation-case{display:flex;justify-content:space-between;align-items:start;gap:14px;padding:10px 0;border-top:1px solid var(--line)}.business-reconciliation-case:first-child{border-top:0}.business-reconciliation-case>div{min-width:0}.business-reconciliation-case strong{display:block;font-size:11px;line-height:1.7}.business-reconciliation-case span{display:block;font-size:10px;line-height:1.7;color:var(--muted)}.business-reconciliation-case>span{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}.business-reconciliation-notice{padding:11px 12px;border-radius:8px;background:var(--surface-raised);font-size:11px;color:var(--muted);line-height:1.75}.business-reconciliation [hidden]{display:none!important}.business-reconciliation summary:focus-visible{outline:3px solid var(--accent);outline-offset:3px}@media(max-width:640px){.business-reconciliation-metrics{grid-template-columns:minmax(0,1fr)}.business-reconciliation-case{flex-direction:column;gap:5px}.business-reconciliation-case>span{text-align:left}.business-reconciliation>details>summary{align-items:flex-start;gap:10px}.business-reconciliation-badge{max-width:105px}}
@@ -13,6 +14,7 @@ export const BUSINESS_RECONCILIATION_CLIENT=String.raw`
 (()=>{
  ${projectReconciliationFrame.toString()}
  ${projectBusinessReconciliation.toString()}
+ ${projectBusinessMonthAuditScope.toString()}
  const el=name=>document.getElementById('businessReconciliation'+name);
  const node=(tag,text,cls)=>{const result=document.createElement(tag);if(text!==undefined)result.textContent=text;if(cls)result.className=cls;return result;};
  const money=value=>Number.isSafeInteger(value)?new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(value/100):'Não informado';
@@ -68,8 +70,9 @@ export const BUSINESS_RECONCILIATION_CLIENT=String.raw`
   if(failed||value.pending.includes('SOURCE_UNAVAILABLE')){notice.hidden=false;notice.textContent='Parte da fonte não pôde ser consultada. As evidências salvas mantêm suas datas originais; o servidor tentará novamente.';}
   else if(!reports.length&&value.status!=='COLLECTING'){notice.hidden=false;notice.textContent='A conferência será preenchida pela coleta do servidor. Não é necessário consultar a Shopee manualmente.';}
  }
- function observe(selected,selectedScopeKey=''){
-  if(!started||document.hidden||!validMonth(selected)||typeof selectedScopeKey!=='string'||selectedScopeKey.length>1024)return Promise.resolve(false);
+ function observe(selected,selectedScope=null){
+  if(!started||!validMonth(selected))return Promise.resolve(false);
+  const projectedScope=projectBusinessMonthAuditScope(selectedScope),scope=projectedScope?.start_date===selected+'-01'?projectedScope:null,selectedScopeKey=scope===null?'':JSON.stringify(scope);
   const changedMonth=selected!==month,changedScope=selectedScopeKey!==scopeKey;
   if(changedMonth||changedScope){
    generation++;month=selected;scopeKey=selectedScopeKey;pending=null;
@@ -78,12 +81,14 @@ export const BUSINESS_RECONCILIATION_CLIENT=String.raw`
    if(!reuse){cache.delete(selected);attempted.delete(selected);}
    render();showMessage(value?'Mostrando as últimas evidências salvas deste mês.':'Conferindo as evidências salvas deste mês…');
   }
+  if(scope===null){value=null;render();showMessage('Aguardando um resumo publicado para conferir os mesmos pedidos.','Aguardando resumo');return Promise.resolve(false);}
+  if(document.hidden)return Promise.resolve(false);
   if(pending?.month===selected&&pending.scopeKey===selectedScopeKey)return pending.task;
   const stamp=Date.now(),last=attempted.get(selected);if(last?.scopeKey===selectedScopeKey&&stamp>=last.at&&stamp-last.at<60000)return Promise.resolve(value!==null);
   attempted.set(selected,{scopeKey:selectedScopeKey,at:stamp});while(attempted.size>12){const first=attempted.keys().next().value;attempted.delete(first);cache.delete(first);}const token=generation,current=()=>started&&generation===token&&month===selected&&scopeKey===selectedScopeKey;
   const task=(async()=>{
    await Promise.resolve();
-   try{const raw=await api('finance/reconciliation?month='+encodeURIComponent(selected)),checked=projectBusinessReconciliation(raw,projectReconciliationFrame);if(!current())return false;if(!checked||checked.month!==selected)throw Error('INVALID_RECONCILIATION');value=checked;cache.set(selected,{scopeKey:selectedScopeKey,value:checked});while(cache.size>12){const first=cache.keys().next().value;cache.delete(first);attempted.delete(first);}render();return true;}
+   try{const raw=await api('finance/reconciliation?month='+encodeURIComponent(selected)),checked=projectBusinessReconciliation(raw,projectReconciliationFrame);if(!current())return false;if(!checked||checked.month!==selected)throw Error('INVALID_RECONCILIATION');const receivedScope=projectBusinessMonthAuditScope({publication_revision:checked.source_revision,start_date:checked.start_date,end_date:checked.end_date,sources:checked.sources});if(receivedScope===null||JSON.stringify(receivedScope)!==selectedScopeKey)throw Error('RECONCILIATION_SCOPE_MISMATCH');value=checked;cache.set(selected,{scopeKey:selectedScopeKey,value:checked});while(cache.size>12){const first=cache.keys().next().value;cache.delete(first);attempted.delete(first);}render();return true;}
    catch{if(current())showMessage(value?'Não foi possível atualizar a conferência agora. As evidências salvas e suas datas foram preservadas.':'A conferência ainda não pôde ser carregada. A coleta do servidor continua e tentaremos novamente.','Em conferência');return false;}
    finally{if(current()&&pending?.task===task)pending=null;}
   })();

@@ -1,5 +1,6 @@
 import {projectEscrowReleaseFrame} from '../../finance/src/escrow-release-frame.mjs';
 import {projectBusinessEscrowReleases} from './business-escrow-releases.mjs';
+import {projectBusinessMonthAuditScope} from './business-month-view-state.mjs';
 
 export const ESCROW_RELEASES_CSS=String.raw`
 .escrow-releases{margin-top:18px;border:1px solid var(--line);border-radius:12px;background:var(--surface);min-width:0}
@@ -25,6 +26,7 @@ export const ESCROW_RELEASES_CLIENT=String.raw`
 (()=>{
  ${projectEscrowReleaseFrame.toString()}
  ${projectBusinessEscrowReleases.toString()}
+ ${projectBusinessMonthAuditScope.toString()}
  const el=name=>document.getElementById('businessEscrowReleases'+name);
  const node=(tag,text,cls)=>{const result=document.createElement(tag);if(text!==undefined)result.textContent=text;if(cls)result.className=cls;return result;};
  const money=value=>{if(!Number.isSafeInteger(value))return 'Não informado';const cents=BigInt(value),absolute=cents<0n?-cents:cents,fraction=String(absolute%100n).padStart(2,'0');const text=new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).formatToParts(absolute/100n).map(part=>part.type==='fraction'?fraction:part.value).join('');return (cents<0n?'-':'')+text;};
@@ -81,8 +83,9 @@ export const ESCROW_RELEASES_CLIENT=String.raw`
   if(observation.attempt?.status==='UNAVAILABLE'||report.pending.includes('RELEASE_SOURCE_UNAVAILABLE')||collection.status==='BLOCKED'||collection.status==='RETRY_WAIT')notes.push('Parte da fonte não pôde ser consultada. Os valores salvos mantêm suas datas originais e o servidor retomará a conferência.');
   if(notes.length){notice.hidden=false;notice.textContent=notes.join(' ');}
  }
- function observe(selected,selectedScopeKey=''){
-  if(!started||document.hidden||!validMonth(selected)||typeof selectedScopeKey!=='string'||selectedScopeKey.length>1024)return Promise.resolve(false);
+ function observe(selected,selectedScope=null){
+  if(!started||!validMonth(selected))return Promise.resolve(false);
+  const projectedScope=projectBusinessMonthAuditScope(selectedScope),scope=projectedScope?.start_date===selected+'-01'?projectedScope:null,selectedScopeKey=scope===null?'':JSON.stringify(scope);
   const changedMonth=selected!==month,changedScope=selectedScopeKey!==scopeKey;
   if(changedMonth||changedScope){
    generation++;month=selected;scopeKey=selectedScopeKey;pending=null;
@@ -91,12 +94,14 @@ export const ESCROW_RELEASES_CLIENT=String.raw`
    if(!reuse){cache.delete(selected);attempted.delete(selected);}
    render();showMessage(value?'Mostrando as últimas liberações salvas deste mês.':'Conferindo as liberações salvas deste mês…');
   }
+  if(scope===null){value=null;render();showMessage('Aguardando um resumo publicado para conferir os mesmos pedidos.','Aguardando resumo');return Promise.resolve(false);}
+  if(document.hidden)return Promise.resolve(false);
   if(pending?.month===selected&&pending.scopeKey===selectedScopeKey)return pending.task;
   const stamp=Date.now(),last=attempted.get(selected);if(last?.scopeKey===selectedScopeKey&&stamp>=last.at&&stamp-last.at<60000)return Promise.resolve(value!==null);
   attempted.set(selected,{scopeKey:selectedScopeKey,at:stamp});while(attempted.size>12){const first=attempted.keys().next().value;attempted.delete(first);cache.delete(first);}const token=generation,current=()=>started&&generation===token&&month===selected&&scopeKey===selectedScopeKey;
   const task=(async()=>{
    await Promise.resolve();
-   try{const raw=await api('finance/escrow-releases?month='+encodeURIComponent(selected)),checked=projectBusinessEscrowReleases(raw,projectEscrowReleaseFrame);if(!current())return false;if(!checked||checked.month!==selected)throw Error('INVALID_RECONCILIATION');value=checked;cache.set(selected,{scopeKey:selectedScopeKey,value:checked});while(cache.size>12){const first=cache.keys().next().value;cache.delete(first);attempted.delete(first);}render();return true;}
+   try{const raw=await api('finance/escrow-releases?month='+encodeURIComponent(selected)),checked=projectBusinessEscrowReleases(raw,projectEscrowReleaseFrame);if(!current())return false;if(!checked||checked.month!==selected)throw Error('INVALID_RECONCILIATION');const receivedScope=projectBusinessMonthAuditScope(checked.cohort===null?null:{publication_revision:checked.cohort.publication_revision,start_date:checked.cohort.start_date,end_date:checked.cohort.end_date,sources:checked.cohort.sources.map(({run_id,source_revision,start_date,end_date})=>({run_id,source_revision,start_date,end_date}))});if(receivedScope===null||JSON.stringify(receivedScope)!==selectedScopeKey)throw Error('RECONCILIATION_SCOPE_MISMATCH');value=checked;cache.set(selected,{scopeKey:selectedScopeKey,value:checked});while(cache.size>12){const first=cache.keys().next().value;cache.delete(first);attempted.delete(first);}render();return true;}
    catch{if(current())showMessage(value?'Não foi possível atualizar as liberações agora. Os valores conferidos e suas datas foram preservados.':'As liberações ainda não puderam ser carregadas. A coleta do servidor continua e tentaremos novamente.','Em conferência');return false;}
    finally{if(current()&&pending?.task===task)pending=null;}
   })();

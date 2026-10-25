@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {adminFetch} from '../src/admin.mjs';
 import {businessMonth} from '../src/business-month.mjs';
-import {projectBusinessMonthView} from '../src/business-month-view-state.mjs';
+import {projectBusinessMonthView,projectBusinessMonthAuditScope} from '../src/business-month-view-state.mjs';
 import {projectBusinessMonth} from '../src/business-month.mjs';
 import {D1} from './sqlite-d1.mjs';
 
@@ -19,8 +19,8 @@ async function login(t){
  const reviewCookie=review.headers.getSetCookie().find(value=>value.startsWith('mls_session=')&&!value.startsWith('mls_session=;')).split(';')[0];
  return {env,cookie,csrf:state.csrf,reviewCookie};
 }
-function invoke(auth,path,{method='GET',body,raw,cookie=auth.cookie,csrf=auth.csrf,requestOrigin=origin}={},services={}){
- return adminFetch(new Request(origin+path,{method,headers:{cookie,origin:requestOrigin,'x-csrf-token':csrf,'content-type':'application/json'},body:body===undefined&&raw===undefined?undefined:raw??JSON.stringify(body)}),auth.env,services);
+function invoke(auth,path,{method='GET',body,raw,cookie=auth.cookie,csrf=auth.csrf,requestOrigin=origin,contract}={},services={}){
+ return adminFetch(new Request(origin+path,{method,headers:{cookie,origin:requestOrigin,'x-csrf-token':csrf,'content-type':'application/json',...(contract===undefined?{}:{'x-braza-client-contract':contract})},body:body===undefined&&raw===undefined?undefined:raw??JSON.stringify(body)}),auth.env,services);
 }
 const viewPath=()=>'/api/admin/finance/business-month-view?month='+month();
 const priorityPath='/api/admin/finance/business-month-request';
@@ -91,4 +91,24 @@ test('published view survives a fresh active import while owner GET never advanc
  const original=source.getFinanceBusinessPeriod;source.getFinanceBusinessPeriod=async(...args)=>{const frame=await original(...args);return {...frame,status:'RUNNING',pages_read:0};};
  const active=await businessMonth(auth.env,{operation:'start',month:selected},source);assert.equal(active.status,'RUNNING');const calls={...source.calls};
  const response=await invoke(auth,viewPath(),{},source);assert.equal(response.status,200,await response.clone().text());const value=await response.json();assert.equal(value.display_source,'PUBLISHED');assert.equal(value.display.status,'COMPLETE');assert.equal(value.collection.status,'RUNNING');assert.equal(value.display.production_cost_cents,0);assert.equal(active.production_cost_cents,null);assert.deepEqual(source.calls,calls);
+});
+
+test('view negotiation preserves old tabs and binds audit identities to the displayed publication during replacement',async t=>{
+ const auth=await login(t),source=sources(),selected=month(),options={contract:'business-month-view-v2'};
+ const activeResponse=await invoke(auth,viewPath(),options,source),active=await activeResponse.json();
+ assert.equal(activeResponse.status,200);assert.equal(activeResponse.headers.get('x-braza-client-contract'),options.contract);assert.equal(activeResponse.headers.get('vary'),'X-Braza-Client-Contract');assert.equal(activeResponse.headers.get('cache-control'),'no-store');
+ assert.equal(active.schema,'business_month_view_v2');assert.equal(active.audit_scope,null);assert.ok(projectBusinessMonthView(active,projectBusinessMonth,projectBusinessMonthAuditScope));
+ for(const contract of ['business-month-v2','business-month-view-v3',''])assert.equal((await invoke(auth,viewPath(),{contract},source)).status,409);
+ assert.deepEqual(source.calls,{finance:0,ads:0});
+ let result=await businessMonth(auth.env,{operation:'start',month:selected},source);
+ while(result.status==='RUNNING')result=await businessMonth(auth.env,{operation:'step',month:selected},source);
+ const response=await invoke(auth,viewPath(),options,source),published=await response.json();assert.equal(response.status,200);assert.ok(projectBusinessMonthView(published,projectBusinessMonth,projectBusinessMonthAuditScope));
+ const db=auth.env.ADMIN_DB.db,header=db.prepare('SELECT source_revision FROM business_month_publications WHERE month=?').get(selected),frames=db.prepare('SELECT run_id,revision,payload FROM business_month_publication_frames WHERE month=? ORDER BY slot_index').all(selected);
+ assert.equal(published.audit_scope.publication_revision,header.source_revision);
+ assert.deepEqual(published.audit_scope.sources,frames.map(row=>{const frame=JSON.parse(row.payload);return {run_id:row.run_id,source_revision:row.revision,start_date:frame.start_date,end_date:frame.end_date};}));
+ const legacyResponse=await invoke(auth,viewPath(),{},source),legacy=await legacyResponse.json();assert.equal(legacy.schema,'business_month_view_v1');assert.equal(Object.hasOwn(legacy,'audit_scope'),false);assert.equal(legacyResponse.headers.get('x-braza-client-contract'),'business-month-view-v1');
+ db.prepare('UPDATE business_month_runs SET created_at=created_at-61 WHERE month=?').run(selected);
+ const original=source.getFinanceBusinessPeriod;source.getFinanceBusinessPeriod=async(...args)=>({...await original(...args),status:'RUNNING',pages_read:0});
+ await businessMonth(auth.env,{operation:'start',month:selected},source);const calls={...source.calls};
+ const refreshing=await (await invoke(auth,viewPath(),options,source)).json();assert.equal(refreshing.collection.status,'RUNNING');assert.equal(refreshing.display_source,'PUBLISHED');assert.deepEqual(refreshing.audit_scope,published.audit_scope);assert.deepEqual(source.calls,calls);
 });
