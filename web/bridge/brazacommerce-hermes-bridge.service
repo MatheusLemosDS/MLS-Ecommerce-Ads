@@ -1,0 +1,23 @@
+[Unit]
+Description=BrazaCommerce Hermes web analysis bridge
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=hermes-mls
+Group=1000
+WorkingDirectory=/home/hermes-mls
+EnvironmentFile=/etc/brazacommerce-hermes-bridge.env
+ExecStart=/usr/bin/python3 -B /opt/brazacommerce-hermes-bridge/hermes_bridge.py
+Restart=on-failure
+RestartSec=30
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/hermes-mls/.hermes
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

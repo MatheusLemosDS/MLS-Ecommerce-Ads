@@ -1,0 +1,24 @@
+{
+  "ads": "LOCKED",
+  "bridge_source_sha256": "ed0408b611516ff76a711aaac98253b1b3ceabade6bbe635913f8432ab30f9ff",
+  "canonical_ast_sha256": "ce3465375acd6a34374bc0a6d2aa122e994062ff77b8183f54bb6a4c0877754f",
+  "credentials_configured": false,
+  "model_calls": false,
+  "operation": "INSTALL_FILE_AND_CHECK_USER_RUNTIME_ONLY",
+  "part_bytes": [
+    3499,
+    3531,
+    3531,
+    3573,
+    3593,
+    3586,
+    3600,
+    1465
+  ],
+  "previous_bridge_sha256": "e49a9bfd4ef310d0938b0f6b253dac498aa7b9abd4c03f368de234546aaededd",
+  "protocol": "hermes-finance-v1",
+  "restart_requested": false,
+  "service_started": false,
+  "source_bytes": 25900,
+  "source_sha256": "07ca0661334c359b6ed93949f19a5b45f0e39b78980d70fcd4bb1a8feba6bdf4"
+}

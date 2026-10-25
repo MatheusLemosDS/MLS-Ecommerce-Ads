@@ -1,0 +1,64 @@
+        locked=os.open('hermes_bridge.py',os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK,dir_fd=fd);fcntl.flock(locked,fcntl.LOCK_EX|fcntl.LOCK_NB)
+        old,observed=read('hermes_bridge.py');lock_info=os.fstat(locked)
+        if (lock_info.st_dev,lock_info.st_ino)!=(observed.st_dev,observed.st_ino):raise ValueError('BRIDGE_UPGRADE_CONFLICT')
+        target=Path(_anchor)/'opt/brazacommerce-hermes-bridge/hermes_bridge.py'
+        if old==raw:
+            checker(target)
+            if _after_replace is not None:_after_replace()
+            return 'BRIDGE_ALREADY_UPGRADED'
+        if hashlib.sha256(old).hexdigest()!=LEGACY_SOURCE_SHA:raise ValueError('BRIDGE_UPGRADE_VERSION_NOT_REVIEWED')
+        try:backup,_=read(BACKUP_NAME)
+        except FileNotFoundError:write(BACKUP_NAME,old)
+        else:
+            if backup!=old:raise ValueError('BRIDGE_UPGRADE_BACKUP_CONFLICT')
+        staging='.hermes_bridge.finance-v1.new';write(staging,raw)
+        checker(target.with_name(staging))
+        if not unchanged('hermes_bridge.py',observed):raise ValueError('BRIDGE_UPGRADE_CONFLICT')
+        os.replace(staging,'hermes_bridge.py',src_dir_fd=fd,dst_dir_fd=fd);replaced=True;os.fsync(fd)
+        checker(target)
+        if _after_replace is not None:_after_replace()
+        return 'BRIDGE_UPGRADED'
+    except BaseException:
+        if replaced:
+            try:
+                installed,installed_info=read('hermes_bridge.py')
+                if installed!=raw or (installed_info.st_dev,installed_info.st_ino)!=(created[staging].st_dev,created[staging].st_ino):raise ValueError()
+                saved,_=read(BACKUP_NAME)
+                if saved!=old:raise ValueError()
+                rollback='.hermes_bridge.finance-v1.rollback';write(rollback,saved)
+                os.replace(rollback,'hermes_bridge.py',src_dir_fd=fd,dst_dir_fd=fd);os.fsync(fd)
+                if _after_rollback is not None:_after_rollback()
+            except BaseException:raise ValueError('BRIDGE_UPGRADE_ROLLBACK_FAILED') from None
+        raise
+    finally:
+        for name,info in created.items():
+            if name==BACKUP_NAME:continue
+            try:
+                current=os.stat(name,dir_fd=fd,follow_symlinks=False)
+                if (current.st_dev,current.st_ino)==(info.st_dev,info.st_ino):os.unlink(name,dir_fd=fd)
+            except FileNotFoundError:pass
+        if locked is not None:os.close(locked)
+        os.close(fd)
+
+
+def trusted_directory(parent,*,anchor='/',owner=0):
+    fd=os.open(anchor,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW)
+    try:
+        for component in parent.strip('/').split('/'):
+            info=os.fstat(fd)
+            if info.st_uid!=owner or info.st_mode&0o022:raise ValueError('BRIDGE_PATH_INVALID')
+            child=os.open(component,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW,dir_fd=fd);os.close(fd);fd=child
+        info=os.fstat(fd)
+        if info.st_uid!=owner or info.st_mode&0o022:raise ValueError('BRIDGE_PATH_INVALID')
+        return fd
+    except BaseException:os.close(fd);raise
+
+
+def private_file(parent,leaf,mode,group,limit,*,anchor='/',owner=0):
+    fd=trusted_directory(parent,anchor=anchor,owner=owner)
+    try:
+        file=os.open(leaf,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK,dir_fd=fd)
+        with os.fdopen(file,'rb') as stream:
+            info=os.fstat(stream.fileno())
+            if not stat.S_ISREG(info.st_mode) or info.st_uid!=owner or info.st_gid!=group or stat.S_IMODE(info.st_mode)!=mode or info.st_nlink!=1 or info.st_size>limit:raise ValueError('BRIDGE_CONFIGURATION_CONFLICT')
+            return stream.read(limit+1)

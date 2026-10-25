@@ -1,0 +1,50 @@
+            raw=response.read(1025)
+            if len(raw)>1024:raise ActivationError('BRIDGE_APP_NOT_READY')
+            value=json.loads(raw)
+            if type(value) is not dict or set(value) not in ({'ok','protocol'},{'ok','protocol','draining','safe_to_restart'}) or value['ok'] is not True or value['protocol']!=PROTOCOL:raise ActivationError('BRIDGE_APP_PROTOCOL_REQUIRED')
+            if 'draining' in value and (type(value['draining']) is not bool or type(value['safe_to_restart']) is not bool):raise ActivationError('BRIDGE_APP_PROTOCOL_REQUIRED')
+            if drain is not None and ('draining' not in value or value['draining'] is not drain):raise ActivationError('BRIDGE_APP_PROTOCOL_REQUIRED')
+            if drain is True and not value['safe_to_restart']:raise ActivationError('BRIDGE_EXECUTION_IN_PROGRESS')
+    except error.HTTPError as exc:
+        code=exc.code;exc.close()
+        raise ActivationError('BRIDGE_APP_KEY_REJECTED' if code==401 else 'BRIDGE_APP_NOT_READY') from None
+    except ActivationError:raise
+    except Exception:raise ActivationError('BRIDGE_APP_NOT_READY') from None
+
+def write_file(parent,leaf,raw,mode,*,anchor='/',owner=0,group=0):
+    fd=directory(parent,anchor=anchor,owner=owner)
+    try:
+        try:existing=os.open(leaf,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK,dir_fd=fd)
+        except FileNotFoundError:existing=None
+        if existing is not None:
+            with os.fdopen(existing,'rb') as stream:
+                info=os.fstat(stream.fileno())
+                if not stat.S_ISREG(info.st_mode) or info.st_uid!=owner or info.st_gid!=group or stat.S_IMODE(info.st_mode)!=mode or info.st_nlink!=1 or info.st_size!=len(raw) or stream.read(len(raw)+1)!=raw:raise ActivationError('BRIDGE_CONFIGURATION_CONFLICT')
+            return
+        output=os.open(leaf,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,mode,dir_fd=fd);created=os.fstat(output)
+        try:
+            with os.fdopen(output,'wb') as stream:
+                os.fchown(stream.fileno(),owner,group);os.fchmod(stream.fileno(),mode);stream.write(raw);stream.flush();os.fsync(stream.fileno())
+            os.fsync(fd)
+        except BaseException:
+            info=os.stat(leaf,dir_fd=fd,follow_symlinks=False)
+            if (info.st_dev,info.st_ino)==(created.st_dev,created.st_ino):os.unlink(leaf,dir_fd=fd)
+            raise
+    finally:os.close(fd)
+
+def existing_secret(*,anchor='/',owner=0,group=1000):
+    fd=directory('/etc',anchor=anchor,owner=owner)
+    try:
+        try:file=os.open('brazacommerce-hermes-bridge.env',os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK,dir_fd=fd)
+        except FileNotFoundError:return None
+        with os.fdopen(file,'rb') as stream:
+            info=os.fstat(stream.fileno())
+            if not stat.S_ISREG(info.st_mode) or info.st_uid!=owner or info.st_gid!=group or stat.S_IMODE(info.st_mode)!=0o640 or info.st_nlink!=1 or info.st_size>1024:raise ActivationError('BRIDGE_CONFIGURATION_CONFLICT')
+            raw=stream.read(1025)
+        match=re.fullmatch(rb'HERMES_BRIDGE_SECRET=([A-Za-z0-9_-]{32,256})\n',raw)
+        if not match:raise ActivationError('BRIDGE_CONFIGURATION_CONFLICT')
+        return match[1].decode('ascii')
+    finally:os.close(fd)
+
+def check_runtime():
+    result=subprocess.run(['/usr/sbin/runuser','-u','hermes-mls','--','/usr/bin/python3','-B','/opt/brazacommerce-hermes-bridge/hermes_bridge.py','--check'],stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,timeout=30,check=False)

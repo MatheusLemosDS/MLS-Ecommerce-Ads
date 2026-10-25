@@ -1,0 +1,4 @@
+        print(str(exc) if isinstance(exc,ActivationError) else 'BRIDGE_ACTIVATION_FAILED');return 1
+
+if __name__=='__main__':raise SystemExit(main())
+HERMES_WEB_BRIDGE_ACTIVATION_SOURCE

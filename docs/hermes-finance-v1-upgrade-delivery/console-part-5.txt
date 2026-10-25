@@ -1,0 +1,59 @@
+        except FileNotFoundError:existing=None
+        if existing is not None:
+            with os.fdopen(existing,'rb') as stream:
+                info=os.fstat(stream.fileno())
+                if not stat.S_ISREG(info.st_mode) or info.st_uid!=_owner or stat.S_IMODE(info.st_mode)!=0o644 or info.st_nlink!=1 or info.st_size!=len(raw) or stream.read(len(raw)+1)!=raw:
+                    raise ValueError('BRIDGE_INSTALL_CONFLICT')
+            return 'BRIDGE_ALREADY_INSTALLED'
+        output=os.open(name,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o644,dir_fd=fd)
+        created=os.fstat(output)
+        try:
+            with os.fdopen(output,'wb') as stream:
+                os.fchmod(stream.fileno(),0o644)
+                stream.write(raw);stream.flush();os.fsync(stream.fileno())
+            os.fsync(fd)
+        except BaseException:
+            info=os.stat(name,dir_fd=fd,follow_symlinks=False)
+            if (info.st_dev,info.st_ino)==(created.st_dev,created.st_ino):os.unlink(name,dir_fd=fd)
+            raise
+        return 'BRIDGE_INSTALLED'
+    finally:os.close(fd)
+
+
+def check_runtime(path):
+    result=subprocess.run(['/usr/sbin/runuser','-u','hermes-mls','--','/usr/bin/python3','-B',str(path),'--check'],stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,timeout=30,check=False)
+    if result.returncode!=0 or result.stdout.strip()!=b'BRIDGE_RUNTIME_FLAGS_OK':raise ValueError('BRIDGE_UPGRADE_RUNTIME_FAILED')
+
+
+def upgrade(*,_anchor='/',_owner=0,_runtime_check=None,_after_replace=None,_after_rollback=None):
+    """Replace only the reviewed legacy file; never an operator-customized file."""
+    if os.geteuid()!=_owner:raise ValueError('BRIDGE_INSTALL_ROOT_REQUIRED')
+    raw=source();checker=_runtime_check or check_runtime
+    fd=os.open(_anchor,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW)
+    locked=None;created={};replaced=False
+    def read(name):
+        handle=os.open(name,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK,dir_fd=fd)
+        with os.fdopen(handle,'rb') as stream:
+            info=os.fstat(stream.fileno())
+            if not stat.S_ISREG(info.st_mode) or info.st_uid!=_owner or stat.S_IMODE(info.st_mode)!=0o644 or info.st_nlink!=1 or info.st_size>32768:raise ValueError('BRIDGE_UPGRADE_FILE_INVALID')
+            return stream.read(32769),info
+    def write(name,data):
+        output=os.open(name,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o644,dir_fd=fd);created[name]=os.fstat(output)
+        try:
+            with os.fdopen(output,'wb') as stream:
+                os.fchmod(stream.fileno(),0o644);stream.write(data);stream.flush();os.fsync(stream.fileno())
+            os.fsync(fd)
+        except BaseException:
+            current=os.stat(name,dir_fd=fd,follow_symlinks=False);info=created.pop(name)
+            if (current.st_dev,current.st_ino)==(info.st_dev,info.st_ino):os.unlink(name,dir_fd=fd)
+            raise
+    def unchanged(name,info):
+        current=os.stat(name,dir_fd=fd,follow_symlinks=False)
+        return (current.st_dev,current.st_ino,current.st_size,current.st_mtime_ns,current.st_ctime_ns)==(info.st_dev,info.st_ino,info.st_size,info.st_mtime_ns,info.st_ctime_ns)
+    try:
+        for component in ('opt','brazacommerce-hermes-bridge'):
+            info=os.fstat(fd)
+            if info.st_uid!=_owner or info.st_mode&0o022:raise ValueError('BRIDGE_PATH_INVALID')
+            child=os.open(component,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW,dir_fd=fd);os.close(fd);fd=child
+        info=os.fstat(fd)
+        if info.st_uid!=_owner or info.st_mode&0o022:raise ValueError('BRIDGE_PATH_INVALID')

@@ -1,0 +1,18 @@
+{
+  "ads": "LOCKED",
+  "bridge_source_sha256": "ed0408b611516ff76a711aaac98253b1b3ceabade6bbe635913f8432ab30f9ff",
+  "canonical_ast_sha256": "567c2efde719f923db4d5f98155c3418d223e100f8e100a43e5429dc777a365c",
+  "gateway_changed": false,
+  "network_requests": "FIXED_APP_HEARTBEAT_DRAIN_PREFLIGHT",
+  "operation": "CONFIGURE_OR_REUSE_SECRET_AND_RESTART_IDLE_BRIDGE",
+  "part_bytes": [
+    3568,
+    3493,
+    3503,
+    186
+  ],
+  "protocol": "hermes-finance-v1",
+  "restart_requested": true,
+  "source_bytes": 10250,
+  "source_sha256": "8046ea6a55a3d8fb6b4c2d14e16ba613fee6852b16f9c54541ddb81548459b83"
+}

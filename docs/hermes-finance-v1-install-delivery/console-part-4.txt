@@ -1,0 +1,54 @@
+    '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'
+    '2Nz5H2avpU8wagAA'
+)
+
+
+def source():
+    packed=base64.b64decode(PACKED,validate=True)
+    if hashlib.sha256(packed).hexdigest()!=PACKED_SHA:raise ValueError('BRIDGE_PACKAGE_INVALID')
+    raw=gzip.decompress(packed)
+    if len(raw)>32768 or hashlib.sha256(raw).hexdigest()!=SOURCE_SHA:raise ValueError('BRIDGE_SOURCE_INVALID')
+    compile(raw,'<reviewed-web-bridge>','exec')
+    return raw
+
+
+def install(*,_anchor='/',_owner=0):
+    if os.geteuid()!=_owner:raise ValueError('BRIDGE_INSTALL_ROOT_REQUIRED')
+    raw=source()
+    fd=os.open(_anchor,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW)
+    try:
+        info=os.fstat(fd)
+        if info.st_uid!=_owner or info.st_mode&0o022:raise ValueError('BRIDGE_PATH_INVALID')
+        child=os.open('opt',os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW,dir_fd=fd)
+        os.close(fd);fd=child
+        info=os.fstat(fd)
+        if info.st_uid!=_owner or info.st_mode&0o022:raise ValueError('BRIDGE_PATH_INVALID')
+        created_directory=False
+        try:
+            os.mkdir('brazacommerce-hermes-bridge',0o755,dir_fd=fd);created_directory=True
+        except FileExistsError:pass
+        child=os.open('brazacommerce-hermes-bridge',os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW,dir_fd=fd)
+        os.close(fd);fd=child
+        info=os.fstat(fd)
+        if info.st_uid!=_owner or info.st_mode&0o022:raise ValueError('BRIDGE_PATH_INVALID')
+        if created_directory:os.fchmod(fd,0o755)
+        name='hermes_bridge.py'
+        try:existing=os.open(name,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK,dir_fd=fd)

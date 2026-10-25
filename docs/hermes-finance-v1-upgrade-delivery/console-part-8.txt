@@ -1,0 +1,22 @@
+            try:maintenance(secret,False)
+            except Exception:
+                if not pending_error:raise ValueError('BRIDGE_DRAIN_RELEASE_PENDING') from None
+                print('BRIDGE_DRAIN_RELEASE_PENDING')
+    finally:os.close(lock)
+
+
+def main(arguments=None):
+    try:
+        parser=argparse.ArgumentParser();parser.add_argument('--upgrade',action='store_true');parser.add_argument('--restart',action='store_true');options=parser.parse_args(arguments)
+        if options.upgrade!=options.restart:raise ValueError('BRIDGE_UPGRADE_RESTART_REQUIRED')
+        status=upgrade_and_restart() if options.upgrade else install()
+        print(json.dumps({'stage':status,'source_sha256':SOURCE_SHA,'ads':'LOCKED'}),flush=True)
+        if not options.upgrade:check_runtime('/opt/brazacommerce-hermes-bridge/hermes_bridge.py')
+        print('BRIDGE_RUNTIME_FLAGS_OK');return 0
+    except Exception as error:
+        code=str(error);allowed={'BRIDGE_UPGRADE_VERSION_NOT_REVIEWED','BRIDGE_UPGRADE_BACKUP_CONFLICT','BRIDGE_UPGRADE_CONFLICT','BRIDGE_UPGRADE_RUNTIME_FAILED','BRIDGE_UPGRADE_ROLLBACK_FAILED','BRIDGE_UPGRADE_RESTART_REQUIRED','BRIDGE_EXECUTION_IN_PROGRESS','BRIDGE_UPGRADE_SERVICE_NOT_REVIEWED','BRIDGE_MAINTENANCE_UNAVAILABLE','BRIDGE_DRAIN_RELEASE_PENDING','BRIDGE_SERVICE_NOT_ACTIVE'}
+        print(code if code in allowed else 'BRIDGE_INSTALL_FAILED');return 1
+
+
+if __name__=='__main__':raise SystemExit(main())
+HERMES_WEB_BRIDGE_INSTALL_SOURCE

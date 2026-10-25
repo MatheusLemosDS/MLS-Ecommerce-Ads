@@ -1,0 +1,45 @@
+/usr/bin/python3 -I -S -B -c 'import sys,hashlib,ast; s=sys.stdin.buffer.read(65537); (len(s)<=65536 and hashlib.sha256(ast.dump(ast.parse(s),include_attributes=False).encode()).hexdigest()=='"'"'ce3465375acd6a34374bc0a6d2aa122e994062ff77b8183f54bb6a4c0877754f'"'"') or sys.exit('"'"'HERMES_WEB_BRIDGE_INSTALL_SOURCE_INVALID'"'"'); exec(compile(s,'"'"'<verified-hermes-bridge-install>'"'"','"'"'exec'"'"'))' --upgrade --restart <<'HERMES_WEB_BRIDGE_INSTALL_SOURCE'
+"""Install reviewed bridge file only. Do not configure credentials or start services."""
+import base64
+import argparse
+import fcntl
+import gzip
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import stat
+import subprocess
+import sys
+from urllib import request
+
+SOURCE_SHA = 'ed0408b611516ff76a711aaac98253b1b3ceabade6bbe635913f8432ab30f9ff'
+PACKED_SHA = '3cd44d66c3fd996d28aaf7dc822fc8f6dac68c76a7c1f3b5cfbc3b9f0c4a9b43'
+LEGACY_SOURCE_SHA = 'e49a9bfd4ef310d0938b0f6b253dac498aa7b9abd4c03f368de234546aaededd'
+BACKUP_NAME = 'hermes_bridge.py.pre-finance-v1'
+PROTOCOL = 'hermes-finance-v1'
+UNIT_SHA = '861f8e3d23363ad2c701be47b7c86674736b714eba799ec4af32e89ad52a13b2'
+PACKED = (
+    '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'

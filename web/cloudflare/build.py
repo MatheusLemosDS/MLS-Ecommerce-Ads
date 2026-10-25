@@ -22,7 +22,7 @@ def freeze_client_helpers(source, helpers):
 original=(root/'original/app-worker.mjs').read_text()
 admin=(root/'src/admin.mjs').read_text().replace("import {CLIENT} from './admin-client.mjs';\n",'').replace("import {CSS,adminBody,loginBody} from './admin-view.mjs';\n",'')
 report=(root/'src/admin-report.mjs').read_text().replace('export function parseReport','function parseReport')
-client=report+'\n'+re.sub(r'^import .*\n','',freeze_client_helpers((root/'src/admin-client.mjs').read_text(),{'parseReport':'admin-report.mjs','projectAdsMeasurement':'ads-measurement.mjs','createAdminApiClient':'admin-api-client.mjs','createAdminStartup':'admin-startup.mjs'}),flags=re.M).replace('export const CLIENT','const CLIENT')
+client=report+'\n'+re.sub(r'^import .*\n','',freeze_client_helpers((root/'src/admin-client.mjs').read_text(),{'parseReport':'admin-report.mjs','projectAdsMeasurement':'ads-measurement.mjs','createAdminApiClient':'admin-api-client.mjs','createAdminStartup':'admin-startup.mjs','projectHermesFinancialContext':'hermes-financial-context.mjs'}),flags=re.M).replace('export const CLIENT','const CLIENT')
 view=re.sub(r'^import .*\n','',(root/'src/admin-view.mjs').read_text(),flags=re.M).replace('export const CSS','const CSS').replace('export function adminBody','function adminBody').replace('export function loginBody','function loginBody')
 month_view=re.sub(r'^export ', '', (root/'src/business-month-view.mjs').read_text(),flags=re.M)
 month_client=re.sub(r'^export ', '', re.sub(r'^import .*\n','',freeze_client_helpers((root/'src/business-month-client.mjs').read_text(),{'buildMonthlyFinancialSummary':'business-month-summary.mjs','projectAdsCalendar':'ads-calendar.mjs','projectBusinessMonthProducts':'business-month-products.mjs','projectBusinessMonth':'business-month.mjs','buildBusinessCheckpoint':'business-checkpoint.mjs','buildAccountDiagnosis':'account-diagnosis.mjs'}),flags=re.M),flags=re.M)
@@ -50,6 +50,11 @@ business_checkpoint='const brazaBusinessCheckpoint = (() => {\n'+business_checkp
 business_month=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/business-month.mjs').read_text(),flags=re.M),flags=re.M)
 business_tax=re.sub(r'^export ', '', (root/'src/business-tax-policy.mjs').read_text(),flags=re.M)
 business_month='const brazaBusinessMonth = (() => {\n'+business_tax+'\n'+business_month+'\nreturn {BUSINESS_MONTH_SCHEMA,businessMonth,projectBusinessMonth,BusinessMonthError,businessMonthClientFrame,readBusinessTaxPolicy,saveBusinessTaxPolicy,readBusinessTaxPolicyAudit,BusinessTaxPolicyError};\n})();\nconst {BUSINESS_MONTH_SCHEMA,businessMonth,projectBusinessMonth,BusinessMonthError,businessMonthClientFrame,readBusinessTaxPolicy,saveBusinessTaxPolicy,readBusinessTaxPolicyAudit,BusinessTaxPolicyError}=brazaBusinessMonth;\n'
+# The financial snapshot uses the same deterministic summaries as the owner page.
+hermes_context=''
+for filename in ['business-month-summary.mjs','account-diagnosis.mjs','hermes-financial-context.mjs']:
+    hermes_context+='\n'+re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src'/filename).read_text(),flags=re.M),flags=re.M)
+hermes_context='const brazaHermesFinancialContext = (() => {\n'+hermes_context+'\nreturn {HERMES_FINANCIAL_CONTEXT_SCHEMA,HermesFinancialContextError,prepareHermesFinancialContext,readHermesFinancialContext};\n})();\nconst {HERMES_FINANCIAL_CONTEXT_SCHEMA,HermesFinancialContextError,prepareHermesFinancialContext,readHermesFinancialContext}=brazaHermesFinancialContext;\n'
 ads=re.sub(r'^import .*\n','',(root/'src/admin-ads-today.mjs').read_text(),flags=re.M).replace('export function adsToday','function adsToday')
 orders=(root/'src/shop-orders.mjs').read_text().replace('export function shopOrders','function shopOrders')
 daily_shop_orders=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/daily-shop-orders.mjs').read_text(),flags=re.M),flags=re.M)
@@ -99,7 +104,7 @@ workspace_auth=re.sub(r'^export ', '', (root/'src/unified-auth.mjs').read_text()
 workspace_auth='const brazaWorkspaceAuth = (() => {\n'+workspace_auth+'\nreturn {readOwnerSession,readWorkspaceSession,handleWorkspaceAuth};\n})();\nconst {readOwnerSession,readWorkspaceSession,handleWorkspaceAuth}=brazaWorkspaceAuth;\n'
 theme=re.sub(r'^export ', '', (root/'src/theme.mjs').read_text(), flags=re.M)
 ads_presentation=re.sub(r'^export ', '', (root/'src/ads-presentation.mjs').read_text(), flags=re.M)
-admin=dtf_layout+'\n'+dtf_view+'\n'+production_dtf+'\n'+cost_rule_learning+'\n'+catalog_classification+'\n'+cost_rules+'\n'+cost_rules_view+'\n'+business_products+'\n'+business_month+'\n'+business_checkpoint+'\n'+business_sync+'\n'+automation_workspace+'\n'+month_view+'\n'+month_client+'\n'+client+'\n'+view+'\n'+ads+'\n'+orders+'\n'+daily_shop_orders+'\n'+items+'\n'+variants+'\n'+observations+'\n'+production_costs+'\n'+store_summary+'\n'+store_invoice_tax+'\n'+store_product_summary+'\n'+store_returns_summary+'\n'+store_admin+'\n'+variant_sync+'\n'+re.sub(r'^import .*\n','',admin,flags=re.M)
+admin=dtf_layout+'\n'+dtf_view+'\n'+production_dtf+'\n'+cost_rule_learning+'\n'+catalog_classification+'\n'+cost_rules+'\n'+cost_rules_view+'\n'+business_products+'\n'+business_month+'\n'+business_checkpoint+'\n'+business_sync+'\n'+hermes_context+'\n'+automation_workspace+'\n'+month_view+'\n'+month_client+'\n'+client+'\n'+view+'\n'+ads+'\n'+orders+'\n'+daily_shop_orders+'\n'+items+'\n'+variants+'\n'+observations+'\n'+production_costs+'\n'+store_summary+'\n'+store_invoice_tax+'\n'+store_product_summary+'\n'+store_returns_summary+'\n'+store_admin+'\n'+variant_sync+'\n'+re.sub(r'^import .*\n','',admin,flags=re.M)
 admin=admin.replace('export {adminFetch,schedule,scheduledWork,DEFAULTS,SCHEMA,validateSettings,workspaceAuthFetch};','')
 needle='    const url = new URL(request.url);'
 assert original.count(needle)==1

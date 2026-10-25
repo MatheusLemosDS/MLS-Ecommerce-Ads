@@ -1,0 +1,57 @@
+    if result.returncode!=0 or result.stdout.strip()!=b'BRIDGE_RUNTIME_FLAGS_OK':raise ActivationError('BRIDGE_RUNTIME_UNAVAILABLE')
+
+def upgrade_lock():
+    fd=directory('/opt/brazacommerce-hermes-bridge')
+    try:
+        try:lock=os.open('.hermes_bridge.finance-v1.lock',os.O_RDWR|os.O_NOFOLLOW|os.O_NONBLOCK,dir_fd=fd)
+        except FileNotFoundError:
+            lock=os.open('.hermes_bridge.finance-v1.lock',os.O_RDWR|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600,dir_fd=fd);os.fchmod(lock,0o600)
+        try:
+            info=os.fstat(lock)
+            if not stat.S_ISREG(info.st_mode) or info.st_uid!=0 or stat.S_IMODE(info.st_mode)!=0o600 or info.st_nlink!=1:raise ActivationError('BRIDGE_CONFIGURATION_CONFLICT')
+            fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB);return lock
+        except BaseException:os.close(lock);raise
+    finally:os.close(fd)
+
+def configure(key=None,*,anchor='/',owner=0,group=1000):
+    if os.geteuid()!=owner:raise ActivationError('BRIDGE_ROOT_REQUIRED')
+    verify(anchor=anchor,owner=owner)
+    saved=existing_secret(anchor=anchor,owner=owner,group=group)
+    if saved is not None:
+        if key is not None and key!=saved:raise ActivationError('BRIDGE_CONFIGURATION_CONFLICT')
+        key=saved
+    preflight(key)
+    write_file('/etc','brazacommerce-hermes-bridge.env',('HERMES_BRIDGE_SECRET='+key+'\n').encode(),0o640,anchor=anchor,owner=owner,group=group)
+    write_file('/etc/systemd/system','brazacommerce-hermes-bridge.service',UNIT.encode(),0o644,anchor=anchor,owner=owner,group=owner)
+
+def activate(key):
+    lock=upgrade_lock()
+    try:
+        verify();check_runtime()
+        try:
+            preflight(key,drain=True);configure(key);preflight(key,drain=True)
+            for cmd in (['/usr/bin/systemctl','daemon-reload'],['/usr/bin/systemctl','enable','brazacommerce-hermes-bridge.service'],['/usr/bin/systemctl','restart','brazacommerce-hermes-bridge.service']):
+                subprocess.run(cmd,stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=20,check=True)
+            result=subprocess.run(['/usr/bin/systemctl','is-active','brazacommerce-hermes-bridge.service'],stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,timeout=5,check=False)
+            if result.returncode!=0 or result.stdout.strip()!=b'active':raise ActivationError('BRIDGE_SERVICE_NOT_ACTIVE')
+        finally:
+            pending_error=sys.exc_info()[0] is not None
+            try:preflight(key,drain=False)
+            except Exception:
+                if not pending_error:raise ActivationError('BRIDGE_DRAIN_RELEASE_PENDING') from None
+                print('BRIDGE_DRAIN_RELEASE_PENDING')
+    finally:os.close(lock)
+
+def main(arguments=None):
+    try:
+        if os.geteuid()!=0:raise ActivationError('BRIDGE_ROOT_REQUIRED')
+        parser=argparse.ArgumentParser();parser.add_argument('--restart',action='store_true');options=parser.parse_args(arguments)
+        if not options.restart:raise ActivationError('BRIDGE_RESTART_FLAG_REQUIRED')
+        verify();check_runtime();key=existing_secret()
+        if key is None:
+            with warnings.catch_warnings():
+                warnings.simplefilter('error',getpass.GetPassWarning)
+                key=getpass.getpass('Cole HERMES_BRIDGE_SECRET (entrada oculta) e pressione Enter: ')
+        activate(key);del key
+        print('BRIDGE_FINANCE_PROTOCOL_OK / ADS LOCKED',flush=True);print('BRIDGE_SERVICE_ACTIVE');return 0
+    except BaseException as exc:

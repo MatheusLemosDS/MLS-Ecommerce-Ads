@@ -30,5 +30,7 @@ jobs:
         run: npm ci
       - name: Executar testes
         run: npm test
+      - name: Validar ponte financeira e atualização do Hermes
+        run: python3 -m unittest web/bridge/test_hermes_bridge.py tools/test_install_hermes_web_bridge.py tools/test_build_hermes_web_bridge_install.py tools/test_activate_hermes_web_bridge.py tools/test_build_hermes_web_bridge_activation.py -q
       - name: Gerar os três Workers
         run: npm run build

@@ -30,6 +30,7 @@ import {COST_RULE_CSS,costRulesBody,COST_RULE_CLIENT} from './cost-rules-view.mj
 import {PRODUCTION_DTF_SCHEMA,ProductionDtfError,readProductionDtf,saveProductionDtfSettings,syncProductionDtf,prepareProductionDtfBatch,actProductionDtfBatch} from './production-dtf-store.mjs';
 import {DTF_CSS,dtfBody,DTF_CLIENT} from './dtf-view.mjs';
 import {DTF_ENGINE_CLIENT} from './dtf-layout.mjs';
+import {HERMES_FINANCIAL_CONTEXT_SCHEMA,HermesFinancialContextError,prepareHermesFinancialContext,readHermesFinancialContext} from './hermes-financial-context.mjs';
 // BrazaCommerce administration. No Shopee write operations.
 const DEFAULTS = {regular_cents:1675,mixed_cents:1910,plus_cents:2070,ad_share_percent:40,hermes_mode:'manual',daily_hour:9,monthly_budget_cents:2000,run_reserve_cents:100,billing_mode:'unverified',monthly_run_limit:30};
 const SCHEMA = [
@@ -41,11 +42,13 @@ const SCHEMA = [
 ...BUSINESS_SYNC_SCHEMA,
 ...PRODUCTION_DTF_SCHEMA,
 ...OBSERVATION_SCHEMA,
+...HERMES_FINANCIAL_CONTEXT_SCHEMA,
 `CREATE TABLE IF NOT EXISTS variant_bindings_state (id INTEGER PRIMARY KEY CHECK(id=1), revision INTEGER NOT NULL, payload TEXT NOT NULL, updated_at TEXT NOT NULL)`,
 `CREATE TABLE IF NOT EXISTS variant_bindings_audit (id INTEGER PRIMARY KEY AUTOINCREMENT, revision INTEGER UNIQUE NOT NULL, payload TEXT NOT NULL, actor TEXT NOT NULL, created_at TEXT NOT NULL)`,
 `CREATE TABLE IF NOT EXISTS admin_settings (id INTEGER PRIMARY KEY CHECK(id=1), revision INTEGER NOT NULL, payload TEXT NOT NULL, updated_at TEXT NOT NULL)`,
 `CREATE TABLE IF NOT EXISTS admin_audit (id INTEGER PRIMARY KEY AUTOINCREMENT, revision INTEGER UNIQUE NOT NULL, payload TEXT NOT NULL, actor TEXT NOT NULL, created_at TEXT NOT NULL)`,
 `CREATE TABLE IF NOT EXISTS hermes_agent (id INTEGER PRIMARY KEY CHECK(id=1), heartbeat TEXT NOT NULL)`,
+`CREATE TABLE IF NOT EXISTS hermes_agent_capabilities (id INTEGER PRIMARY KEY CHECK(id=1), protocol TEXT NOT NULL, updated_at TEXT NOT NULL, maintenance_until INTEGER NOT NULL DEFAULT 0)`,
 `CREATE TABLE IF NOT EXISTS hermes_jobs (id TEXT PRIMARY KEY, trigger_type TEXT NOT NULL, dedupe_key TEXT UNIQUE, status TEXT NOT NULL, task TEXT NOT NULL, settings_revision INTEGER NOT NULL, settings_snapshot TEXT NOT NULL, reserve_cents INTEGER NOT NULL, cost_cents INTEGER, result TEXT, failure TEXT, cost_source TEXT, lease TEXT, created_at TEXT NOT NULL, started_at TEXT, completed_at TEXT)`,
 `CREATE TABLE IF NOT EXISTS hermes_cost_audit (id INTEGER PRIMARY KEY AUTOINCREMENT, job_id TEXT NOT NULL, previous_cents INTEGER, cost_cents INTEGER NOT NULL, actor TEXT NOT NULL, created_at TEXT NOT NULL)`];
 const enc = new TextEncoder();
@@ -74,30 +77,68 @@ async function saveSettings(env,body,actor){assert(Number.isInteger(body.revisio
 function localDay(now=new Date()){return new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit'}).format(now);}
 function yesterday(){return localDay(new Date(Date.now()-86400000));}
 async function connected(env){const row=await env.ADMIN_DB.prepare('SELECT heartbeat FROM hermes_agent WHERE id=1').first();return !!row&&Date.now()-Date.parse(row.heartbeat)<90000;}
+const HERMES_FINANCE_PROTOCOL='hermes-finance-v1';
+async function financeBridgeReady(env){const row=await env.ADMIN_DB.prepare('SELECT protocol,updated_at,maintenance_until FROM hermes_agent_capabilities WHERE id=1').first();const age=row?Date.now()-Date.parse(row.updated_at):NaN;return !!row&&row.protocol===HERMES_FINANCE_PROTOCOL&&age>=0&&age<90000&&row.maintenance_until<=Date.now();}
+async function heartbeat(env,body){
+ const keys=Object.keys(body),modern=body.protocol===HERMES_FINANCE_PROTOCOL;
+ assert(keys.length===0||modern&&keys.every(key=>['protocol','drain'].includes(key))&&(!Object.hasOwn(body,'drain')||typeof body.drain==='boolean'),'HERMES_PROTOCOL_INVALID');
+ const now=new Date().toISOString(),statements=[env.ADMIN_DB.prepare('INSERT INTO hermes_agent(id,heartbeat) VALUES(1,?) ON CONFLICT(id) DO UPDATE SET heartbeat=excluded.heartbeat').bind(now)];
+ if(modern)statements.push(env.ADMIN_DB.prepare('INSERT INTO hermes_agent_capabilities(id,protocol,updated_at,maintenance_until) VALUES(1,?,?,0) ON CONFLICT(id) DO UPDATE SET protocol=excluded.protocol,updated_at=excluded.updated_at').bind(HERMES_FINANCE_PROTOCOL,now));
+ if(Object.hasOwn(body,'drain'))statements.push(env.ADMIN_DB.prepare('UPDATE hermes_agent_capabilities SET maintenance_until=? WHERE id=1').bind(body.drain?Date.now()+120000:0));
+ await env.ADMIN_DB.batch(statements);
+ if(Object.hasOwn(body,'drain')){const row=await env.ADMIN_DB.prepare("SELECT COUNT(*) AS n FROM hermes_jobs WHERE status='running'").first();return {ok:true,protocol:HERMES_FINANCE_PROTOCOL,draining:body.drain,safe_to_restart:row.n===0};}
+ return modern?{ok:true,protocol:HERMES_FINANCE_PROTOCOL}:{ok:true};
+}
 async function budget(env){const month=new Date().toISOString().slice(0,7);return env.ADMIN_DB.prepare(`SELECT COALESCE(SUM(CASE WHEN COALESCE(json_extract(settings_snapshot,'$.billing_mode'),'unverified')='subscription' THEN 0 WHEN status IN ('queued','running') THEN reserve_cents WHEN status='completed' AND (cost_cents>0 OR (cost_cents=0 AND cost_source='operator_confirmed')) THEN cost_cents WHEN status IN ('completed','failed') THEN reserve_cents ELSE 0 END),0) AS committed_cents, SUM(CASE WHEN status='completed' AND COALESCE(json_extract(settings_snapshot,'$.billing_mode'),'unverified')<>'subscription' AND (cost_cents IS NULL OR (cost_cents=0 AND COALESCE(cost_source,'')<>'operator_confirmed')) THEN 1 ELSE 0 END) AS unknown_cost_runs,COUNT(CASE WHEN status<>'cancelled' THEN 1 END) AS total_runs FROM hermes_jobs WHERE substr(created_at,1,7)=?`).bind(month).first();}
 async function enqueue(env,trigger='manual',dedupe=null){
- const state=await settings(env);assert(state.values.hermes_mode!=='paused','HERMES_PAUSED',409);assert(await connected(env),'HERMES_DISCONNECTED',503);
- const task={type:'daily_review',shop_id:'1178167501',start_date:yesterday(),end_date:yesterday(),ads_execution:'LOCKED'};
+ const state=await settings(env);assert(state.values.hermes_mode!=='paused','HERMES_PAUSED',409);assert(await connected(env),'HERMES_DISCONNECTED',503);assert(await financeBridgeReady(env),'HERMES_FINANCE_UPGRADE_REQUIRED',409);
+ const date=yesterday(),task={type:'daily_review',shop_id:'1178167501',start_date:date,end_date:date,ads_execution:'LOCKED'},taskRaw=JSON.stringify(task);
  const id=crypto.randomUUID(),now=new Date().toISOString(),month=now.slice(0,7);
- const result=await env.ADMIN_DB.prepare(`INSERT OR IGNORE INTO hermes_jobs(id,trigger_type,dedupe_key,status,task,settings_revision,settings_snapshot,reserve_cents,created_at)
+ const snapshot=await prepareHermesFinancialContext(env,id,date,{taskRaw});
+ const statement=env.ADMIN_DB.prepare(`INSERT OR IGNORE INTO hermes_jobs(id,trigger_type,dedupe_key,status,task,settings_revision,settings_snapshot,reserve_cents,created_at)
  SELECT ?,?,?,'queued',?,?,?,?,?
  WHERE NOT EXISTS(SELECT 1 FROM hermes_jobs WHERE status IN ('queued','running'))
  AND (?='subscription' OR (
  NOT EXISTS(SELECT 1 FROM hermes_jobs WHERE status='completed' AND COALESCE(json_extract(settings_snapshot,'$.billing_mode'),'unverified')<>'subscription' AND (cost_cents IS NULL OR (cost_cents=0 AND COALESCE(cost_source,'')<>'operator_confirmed')) AND substr(created_at,1,7)=?)
  AND (SELECT COALESCE(SUM(CASE WHEN COALESCE(json_extract(settings_snapshot,'$.billing_mode'),'unverified')='subscription' THEN 0 WHEN status IN ('queued','running') THEN reserve_cents WHEN status='completed' AND (cost_cents>0 OR (cost_cents=0 AND cost_source='operator_confirmed')) THEN cost_cents WHEN status IN ('completed','failed') THEN reserve_cents ELSE 0 END),0) FROM hermes_jobs WHERE substr(created_at,1,7)=?)+?<=?))
  AND (SELECT COUNT(*) FROM hermes_jobs WHERE substr(created_at,1,7)=? AND status<>'cancelled')<?
- AND EXISTS(SELECT 1 FROM admin_settings WHERE id=1 AND revision=?)`).bind(id,trigger,dedupe,JSON.stringify(task),state.revision,JSON.stringify(state.values),state.values.run_reserve_cents,now,state.values.billing_mode,month,month,state.values.run_reserve_cents,state.values.monthly_budget_cents,month,state.values.monthly_run_limit,state.revision).run();
- assert(result.meta.changes===1,'RUN_BLOCKED_CHECK_BUDGET_COST_OR_ACTIVE_JOB',409);return {id,status:'queued'};
+ AND EXISTS(SELECT 1 FROM admin_settings WHERE id=1 AND revision=?)
+ AND EXISTS(SELECT 1 FROM hermes_agent_capabilities WHERE id=1 AND protocol=? AND maintenance_until<=?)`).bind(id,trigger,dedupe,taskRaw,state.revision,JSON.stringify(state.values),state.values.run_reserve_cents,now,state.values.billing_mode,month,month,state.values.run_reserve_cents,state.values.monthly_budget_cents,month,state.values.monthly_run_limit,state.revision,HERMES_FINANCE_PROTOCOL,Date.now());
+ const results=await env.ADMIN_DB.batch([statement,snapshot.statement]);
+ assert(results[0].meta.changes===1,'RUN_BLOCKED_CHECK_BUDGET_COST_OR_ACTIVE_JOB',409);assert(results[1].meta.changes===1,'HERMES_CONTEXT_STORAGE_INVALID',503);return {id,status:'queued'};
 }
-function access(values,isConnected,account,rows){
+function access(values,isConnected,account,rows,financeReady){
  let reason=null;
- if(!isConnected)reason='disconnected';else if(values.hermes_mode==='paused')reason='paused';else if(rows.some(job=>['queued','running'].includes(job.status)))reason='active';else if(account.total_runs>=values.monthly_run_limit)reason='run_limit';else if(values.billing_mode!=='subscription'&&account.unknown_cost_runs>0)reason='cost_unconfirmed';else if(values.billing_mode!=='subscription'&&account.committed_cents+values.run_reserve_cents>values.monthly_budget_cents)reason='budget';
+ if(!isConnected)reason='disconnected';else if(values.hermes_mode==='paused')reason='paused';else if(!financeReady)reason='bridge_upgrade_required';else if(rows.some(job=>['queued','running'].includes(job.status)))reason='active';else if(account.total_runs>=values.monthly_run_limit)reason='run_limit';else if(values.billing_mode!=='subscription'&&account.unknown_cost_runs>0)reason='cost_unconfirmed';else if(values.billing_mode!=='subscription'&&account.committed_cents+values.run_reserve_cents>values.monthly_budget_cents)reason='budget';
  return {allowed:reason===null,reason};
 }
-async function live(env){const cfg=await settings(env),isConnected=await connected(env),account=await budget(env),rows=(await env.ADMIN_DB.prepare(`SELECT id,json_extract(task,'$.start_date') AS start_date,json_extract(task,'$.end_date') AS end_date,trigger_type,status,settings_revision,reserve_cents,cost_cents,cost_source,result,failure,created_at,started_at,completed_at FROM hermes_jobs ORDER BY created_at DESC LIMIT 30`).all()).results;return {store_orders:{status:'ON_DEMAND_SOURCE',date:localDay(),timezone:'America/Sao_Paulo',total:null},hermes_connected:isConnected,mode:cfg.values.hermes_mode,billing_mode:cfg.values.billing_mode,monthly_run_limit:cfg.values.monthly_run_limit,budget:account,rows,execution_access:access(cfg.values,isConnected,account,rows)};}
+async function live(env){const cfg=await settings(env),isConnected=await connected(env),financeReady=await financeBridgeReady(env),account=await budget(env),rows=(await env.ADMIN_DB.prepare(`SELECT id,json_extract(task,'$.start_date') AS start_date,json_extract(task,'$.end_date') AS end_date,trigger_type,status,settings_revision,reserve_cents,cost_cents,cost_source,result,failure,created_at,started_at,completed_at FROM hermes_jobs ORDER BY created_at DESC LIMIT 30`).all()).results;return {store_orders:{status:'ON_DEMAND_SOURCE',date:localDay(),timezone:'America/Sao_Paulo',total:null},hermes_connected:isConnected,hermes_finance_ready:financeReady,mode:cfg.values.hermes_mode,billing_mode:cfg.values.billing_mode,monthly_run_limit:cfg.values.monthly_run_limit,budget:account,rows,execution_access:access(cfg.values,isConnected,account,rows,financeReady)};}
 
-async function claim(env){const cfg=await settings(env);if(cfg.values.hermes_mode==='paused')return null;const lease=crypto.randomUUID(),now=new Date().toISOString();return env.ADMIN_DB.prepare(`UPDATE hermes_jobs SET status='running',lease=?,started_at=? WHERE id=(SELECT id FROM hermes_jobs WHERE status='queued' ORDER BY created_at LIMIT 1) AND status='queued' AND (SELECT json_extract(payload,'$.hermes_mode') FROM admin_settings WHERE id=1)<>'paused' RETURNING id,task,settings_revision,settings_snapshot,lease`).bind(lease,now).first();}
-async function finish(env,body){assert(typeof body.id==='string'&&typeof body.lease==='string','JOB_INVALID');assert(['completed','failed'].includes(body.status),'JOB_STATUS_INVALID');assert(body.cost_cents===null||(Number.isInteger(body.cost_cents)&&body.cost_cents>=0&&body.cost_cents<=100000000),'COST_INVALID');assert(body.status!=='failed'||body.failure==='EXECUTION_FAILED','FAILURE_INVALID');assert(body.status!=='completed'||(typeof body.result==='string'&&body.result.length<=12000),'RESULT_INVALID');const result=await env.ADMIN_DB.prepare(`UPDATE hermes_jobs SET status=?,cost_cents=?,result=?,failure=?,completed_at=?,cost_source=?,lease=NULL WHERE id=? AND status='running' AND lease=?`).bind(body.status,body.cost_cents,body.status==='completed'?body.result:null,body.status==='failed'?'EXECUTION_FAILED':null,new Date().toISOString(),body.cost_cents===null?null:'agent_estimate',body.id,body.lease).run();assert(result.meta.changes===1,'JOB_LEASE_REJECTED',409);return {ok:true};}
+async function claim(env){
+ const cfg=await settings(env);if(cfg.values.hermes_mode==='paused')return null;
+ const queued=await env.ADMIN_DB.prepare("SELECT id,task,created_at FROM hermes_jobs WHERE status='queued' ORDER BY created_at,id LIMIT 1").first();if(!queued)return null;
+ // Read and validate the immutable snapshot before acquiring a paid execution.
+ const snapshot=await readHermesFinancialContext(env,queued.id),lease=crypto.randomUUID(),now=new Date().toISOString();
+ const contextGuard=snapshot.persisted?'EXISTS(SELECT 1 FROM hermes_financial_contexts WHERE job_id=? AND fingerprint=? AND payload=?)':'NOT EXISTS(SELECT 1 FROM hermes_financial_contexts WHERE job_id=?)';
+ const bindings=[lease,now,queued.id,queued.task,queued.created_at,Date.now(),...(snapshot.persisted?[queued.id,snapshot.fingerprint,snapshot.payload]:[queued.id])];
+ const job=await env.ADMIN_DB.prepare(`UPDATE hermes_jobs SET status='running',lease=?,started_at=? WHERE id=? AND task=? AND created_at=? AND status='queued'
+ AND (SELECT json_extract(payload,'$.hermes_mode') FROM admin_settings WHERE id=1)<>'paused'
+ AND COALESCE((SELECT maintenance_until FROM hermes_agent_capabilities WHERE id=1),0)<=?
+ AND ${contextGuard} RETURNING id,task,settings_revision,settings_snapshot,lease`).bind(...bindings).first();
+ return job?{...job,financial_context:snapshot.payload,financial_context_fingerprint:snapshot.fingerprint}:null;
+}
+async function finish(env,body){
+ assert(typeof body.id==='string'&&typeof body.lease==='string','JOB_INVALID');assert(['completed','failed'].includes(body.status),'JOB_STATUS_INVALID');
+ assert(body.cost_cents===null||(Number.isInteger(body.cost_cents)&&body.cost_cents>=0&&body.cost_cents<=100000000),'COST_INVALID');
+ assert(body.status!=='failed'||body.failure==='EXECUTION_FAILED','FAILURE_INVALID');assert(body.status!=='completed'||(typeof body.result==='string'&&body.result.length<=12000),'RESULT_INVALID');
+ const running=await env.ADMIN_DB.prepare("SELECT id,task,created_at FROM hermes_jobs WHERE id=? AND status='running' AND lease=?").bind(body.id,body.lease).first();assert(running,'JOB_LEASE_REJECTED',409);
+ const snapshot=await readHermesFinancialContext(env,body.id);
+ if(snapshot.persisted||Object.hasOwn(body,'financial_context_fingerprint'))assert(body.financial_context_fingerprint===snapshot.fingerprint,'HERMES_CONTEXT_FINGERPRINT_MISMATCH',409);
+ const contextGuard=snapshot.persisted?'EXISTS(SELECT 1 FROM hermes_financial_contexts WHERE job_id=? AND fingerprint=? AND payload=?)':'NOT EXISTS(SELECT 1 FROM hermes_financial_contexts WHERE job_id=?)';
+ const bindings=[body.status,body.cost_cents,body.status==='completed'?body.result:null,body.status==='failed'?'EXECUTION_FAILED':null,new Date().toISOString(),body.cost_cents===null?null:'agent_estimate',body.id,body.lease,running.task,running.created_at,...(snapshot.persisted?[body.id,snapshot.fingerprint,snapshot.payload]:[body.id])];
+ const result=await env.ADMIN_DB.prepare(`UPDATE hermes_jobs SET status=?,cost_cents=?,result=?,failure=?,completed_at=?,cost_source=?,lease=NULL WHERE id=? AND status='running' AND lease=? AND task=? AND created_at=? AND ${contextGuard}`).bind(...bindings).run();
+ assert(result.meta.changes===1,'JOB_LEASE_REJECTED',409);return {ok:true};
+}
 async function correctCost(env,body,actor){assert(Object.keys(body).length===2&&typeof body.id==='string'&&Number.isInteger(body.cost_cents)&&body.cost_cents>=0&&body.cost_cents<=100000000,'COST_INVALID');const now=new Date().toISOString();const results=await env.ADMIN_DB.batch([env.ADMIN_DB.prepare("INSERT INTO hermes_cost_audit(job_id,previous_cents,cost_cents,actor,created_at) SELECT id,cost_cents,?,?,? FROM hermes_jobs WHERE id=? AND status IN ('completed','failed')").bind(body.cost_cents,actor,now,body.id),env.ADMIN_DB.prepare("UPDATE hermes_jobs SET cost_cents=?,cost_source='operator_confirmed' WHERE id=? AND status IN ('completed','failed')").bind(body.cost_cents,body.id)]);assert(results[1].meta.changes===1,'COST_JOB_NOT_COMPLETED',409);return {ok:true};}
 async function schedule(env,now=new Date()){await setup(env);const cfg=await settings(env);if(cfg.values.hermes_mode!=='scheduled')return;const hour=Number(new Intl.DateTimeFormat('en-GB',{timeZone:'America/Sao_Paulo',hour:'2-digit',hourCycle:'h23'}).format(now));if(hour!==cfg.values.daily_hour)return;try{await enqueue(env,'scheduled','daily:'+localDay(now));}catch(error){if(!(error instanceof AdminError))throw error;}}
 function page(body,title='BrazaCommerce · Gestão da loja'){return new Response(`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title>${BRAZA_THEME_HEAD}<style>${BRAZA_THEME_CSS}\n${CSS}</style></head><body>${body}</body></html>`,{headers:{'content-type':'text/html; charset=utf-8','cache-control':'no-store','content-security-policy':"default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' blob: data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",'x-content-type-options':'nosniff','x-frame-options':'DENY','referrer-policy':'same-origin'}});}
@@ -143,7 +184,18 @@ async function catalogStateForOwner(env,state){
 function dashboard(){return page('<style>'+BUSINESS_MONTH_CSS+AUTOMATION_WORKSPACE_CSS+COST_RULE_CSS+DTF_CSS+'</style>'+adminBody().replace('<details id="legacyFinanceDetails"',automationWorkspaceBody()+'<details id="legacyFinanceDetails"').replace('<section id="margins" hidden>','<section id="margins" hidden>'+costRulesBody()).replace('<section id="products" hidden>',dtfBody()+'<section id="products" hidden>')+'<script>'+DTF_ENGINE_CLIENT+'</script><script>'+DTF_CLIENT+'</script><script>'+COST_RULE_CLIENT+'</script><script>'+AUTOMATION_WORKSPACE_CLIENT+'</script><script>'+BUSINESS_MONTH_CLIENT+'</script><script>'+CLIENT+'</script>');}
 
 async function adminFetch(request,env,services={}){const url=new URL(request.url),path=url.pathname;try{
- if(path.startsWith('/api/hermes/')){assert(typeof env.HERMES_BRIDGE_SECRET==='string'&&env.HERMES_BRIDGE_SECRET.length>=32,'HERMES_BRIDGE_SETUP_REQUIRED',503);assert(await equal(request.headers.get('authorization')||'','Bearer '+env.HERMES_BRIDGE_SECRET),'UNAUTHORIZED',401);assert(request.method==='POST','METHOD_NOT_ALLOWED',405);await setup(env);const body=await input(request);if(path==='/api/hermes/heartbeat'){await env.ADMIN_DB.prepare('INSERT INTO hermes_agent(id,heartbeat) VALUES(1,?) ON CONFLICT(id) DO UPDATE SET heartbeat=excluded.heartbeat').bind(new Date().toISOString()).run();return json({ok:true});}if(path==='/api/hermes/claim')return json({job:await claim(env)});if(path==='/api/hermes/finish')return json(await finish(env,body));return json({error:'NOT_FOUND'},404);}
+ if(path.startsWith('/api/hermes/')){
+  assert(typeof env.HERMES_BRIDGE_SECRET==='string'&&env.HERMES_BRIDGE_SECRET.length>=32,'HERMES_BRIDGE_SETUP_REQUIRED',503);
+  assert(await equal(request.headers.get('authorization')||'','Bearer '+env.HERMES_BRIDGE_SECRET),'UNAUTHORIZED',401);assert(request.method==='POST','METHOD_NOT_ALLOWED',405);
+  assert(!url.search,'HERMES_QUERY_INVALID');assert(['/api/hermes/heartbeat','/api/hermes/claim','/api/hermes/finish'].includes(path),'NOT_FOUND',404);
+  await setup(env);const body=await input(request,path==='/api/hermes/finish'?65536:1024);
+  if(path==='/api/hermes/heartbeat')return json(await heartbeat(env,body));
+  if(path==='/api/hermes/claim'){
+   if(Object.keys(body).length===0)return json({job:null,reason:'HERMES_BRIDGE_UPGRADE_REQUIRED'});
+   assert(Object.keys(body).length===1&&body.protocol===HERMES_FINANCE_PROTOCOL,'HERMES_PROTOCOL_INVALID');return json({job:await claim(env)});
+  }
+  return json(await finish(env,body));
+ }
  if(['/','/login','/admin/login','/logout','/admin/logout'].includes(path))return workspaceAuthFetch(request,env);
  const current=await session(request,env);if(!current)return path.startsWith('/api/')?json({error:'UNAUTHORIZED'},401):Response.redirect(url.origin+'/login',303);
  if(path==='/admin'){assert(request.method==='GET','METHOD_NOT_ALLOWED',405);return dashboard();}
@@ -284,10 +336,12 @@ async function adminFetch(request,env,services={}){const url=new URL(request.url
   if(!diagnostic&&['INVALID_RESPONSE','STALE_DATE'].includes(value.status))diagnostic={stage:'APP_VALIDATION',code:value.status,http:200,validation:value.status};
   return json({...value,...(diagnostic?{diagnostic}:{}),fetched_at:new Date().toISOString()});
  }
+ const financialJob=path.match(/^\/api\/admin\/jobs\/([a-f0-9-]{36})\/financial-context$/);
+ if(financialJob){assert(request.method==='GET','METHOD_NOT_ALLOWED',405);assert(!url.search,'HERMES_CONTEXT_QUERY_INVALID');const value=await readHermesFinancialContext(env,financialJob[1]);return json({job_id:value.job_id,fingerprint:value.fingerprint,context:value.context});}
  if(path==='/api/admin/live')return json(await live(env));
- if(path==='/api/admin/state')return json({settings:await settings(env),csrf:current.csrf,hermes_connected:await connected(env),budget:await budget(env),ads_execution:'LOCKED'});
+ if(path==='/api/admin/state')return json({settings:await settings(env),csrf:current.csrf,hermes_connected:await connected(env),hermes_finance_ready:await financeBridgeReady(env),budget:await budget(env),ads_execution:'LOCKED'});
  if(path==='/api/admin/jobs')return json({rows:(await env.ADMIN_DB.prepare(`SELECT id,json_extract(task,'$.start_date') AS start_date,json_extract(task,'$.end_date') AS end_date,trigger_type,status,settings_revision,reserve_cents,cost_cents,cost_source,result,failure,created_at,started_at,completed_at FROM hermes_jobs ORDER BY created_at DESC LIMIT 30`).all()).results});
  if(path==='/api/admin/audit')return json({rows:(await env.ADMIN_DB.prepare('SELECT revision,payload,actor,created_at FROM admin_audit ORDER BY revision DESC LIMIT 30').all()).results});
  return json({error:'NOT_FOUND'},404);
- }catch(error){return json({error:error instanceof AdminError||error instanceof VariantBindingError||error instanceof ObservationError||error instanceof ProductionCostError||error instanceof StoreSummaryError||error instanceof BusinessMonthError||error instanceof BusinessCheckpointError||error instanceof BusinessTaxPolicyError||error instanceof BusinessSyncError||error instanceof CostRuleError||error instanceof CatalogClassificationError||error instanceof ProductionDtfError?error.message:'ADMIN_UNAVAILABLE'},error instanceof AdminError||error instanceof VariantBindingError||error instanceof ObservationError||error instanceof ProductionCostError||error instanceof StoreSummaryError||error instanceof BusinessMonthError||error instanceof BusinessCheckpointError||error instanceof BusinessTaxPolicyError||error instanceof BusinessSyncError||error instanceof CostRuleError||error instanceof CatalogClassificationError||error instanceof ProductionDtfError?error.status:503);}}
+ }catch(error){return json({error:error instanceof HermesFinancialContextError||error instanceof AdminError||error instanceof VariantBindingError||error instanceof ObservationError||error instanceof ProductionCostError||error instanceof StoreSummaryError||error instanceof BusinessMonthError||error instanceof BusinessCheckpointError||error instanceof BusinessTaxPolicyError||error instanceof BusinessSyncError||error instanceof CostRuleError||error instanceof CatalogClassificationError||error instanceof ProductionDtfError?error.message:'ADMIN_UNAVAILABLE'},error instanceof HermesFinancialContextError||error instanceof AdminError||error instanceof VariantBindingError||error instanceof ObservationError||error instanceof ProductionCostError||error instanceof StoreSummaryError||error instanceof BusinessMonthError||error instanceof BusinessCheckpointError||error instanceof BusinessTaxPolicyError||error instanceof BusinessSyncError||error instanceof CostRuleError||error instanceof CatalogClassificationError||error instanceof ProductionDtfError?error.status:503);}}
 export {adminFetch,schedule,scheduledWork,DEFAULTS,SCHEMA,validateSettings,workspaceAuthFetch};
