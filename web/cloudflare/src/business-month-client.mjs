@@ -4,6 +4,7 @@ import {projectBusinessMonthProducts} from './business-month-products.mjs';
 import {buildAccountDiagnosis} from './account-diagnosis.mjs';
 import {buildBusinessCheckpoint} from './business-checkpoint.mjs';
 import {buildMonthlyFinancialSummary} from './business-month-summary.mjs';
+import {projectBusinessCostDiagnostics} from './business-cost-diagnostics.mjs';
 
 export const BUSINESS_MONTH_CLIENT=String.raw`
 (()=>{
@@ -13,6 +14,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
  ${buildBusinessCheckpoint.toString()}
  ${buildAccountDiagnosis.toString()}
  ${buildMonthlyFinancialSummary.toString()}
+ ${projectBusinessCostDiagnostics.toString()}
  const clientContract='business-month-v2';
  const el=id=>document.getElementById('businessMonth'+id);
  const node=(tag,text,cls)=>{const value=document.createElement(tag);if(text!==undefined)value.textContent=text;if(cls)value.className=cls;return value;};
@@ -32,9 +34,47 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
  const productOpen=new Set();
  let catalogState=null,catalogBusy=false,catalogTimer=null,catalogRequest=0,catalogNeedsRead=true,catalogError='',catalogPaused=false,catalogProductsChanged=false,catalogVisibleIds=[],catalogSignature='';
  const catalogProducts=new Map();
+ let costDiagnostic=null,costDiagnosticRaw='',costDiagnosticBusy=false,costDiagnosticRequest=0,costDiagnosticPromise=null;
  const catalogFeature=()=>Number.isSafeInteger(frame?.classification_revision);
  const catalogMessages={CATALOG_NOT_READ:'Aguardando a consulta automática do catálogo.',CATALOG_UNAVAILABLE:'A consulta falhou; a fila tentará este produto novamente.',CATALOG_REQUEST_FAILED:'A consulta falhou; os outros produtos continuam na fila.',UNRECOGNIZED_TYPE:'O tipo deste produto ainda não foi reconhecido com segurança.',SIZE_AMBIGUOUS:'O tamanho da variação precisa de conferência.',RULE_CONFLICT:'Mais de uma regra de custo corresponde a esta variação.',NO_COST_REGISTERED:'Falta cadastrar um custo para este tipo de produto.',RULE_NOT_MATCHED:'Nenhuma regra de custo reconhece este tipo e tamanho com segurança.',RULE_ASSIGNMENT_PENDING:'A regra de custo informada precisa de conferência de tamanho ou disponibilidade.',UNRECOGNIZED_VARIATION:'O catálogo não identificou o tipo e o tamanho desta variação com segurança.',INDEX_NOT_VALID:'A combinação de opções desta variação precisa ser conferida no catálogo.',NO_MODELS:'O catálogo não retornou variações para este produto.',CATALOG_CONFLICT:'Outra atualização está conferindo este produto; a fila continuará automaticamente.',CATALOG_STALE_RESPONSE:'Uma resposta antiga foi descartada. A fila consultará novamente.',AXES_NOT_RECOGNIZED:'Os eixos de variação não identificam a composição com segurança.',OPTION_NOT_RECOGNIZED:'O tamanho retornado pelo catálogo ainda não foi reconhecido.',CATALOG_INVALID:'Os dados do catálogo não passaram na conferência.',CATALOG_STALE:'A classificação salva está preservada enquanto o catálogo é atualizado.'};
  function catalogReason(reason,status){return catalogMessages[reason]||(status==='QUEUED'||status==='RUNNING'?'A identificação automática está na fila.':status==='RETRY_WAIT'?'A consulta será repetida automaticamente, sem impedir os outros produtos.':'O catálogo precisa de uma conferência de tipo ou tamanho.');}
+ const costDiagnosticReasons={COST_AVAILABLE:'O custo já está disponível na versão atual.',NO_CATALOG:'O catálogo deste produto ainda não foi consultado.',MODEL_NOT_IN_CATALOG:'A variação vendida ainda não consta no catálogo salvo.',METADATA_CHANGED:'O produto mudou na Shopee e precisa de uma nova conferência.',RULE_DISABLED:'A regra de custo associada está desativada.',RULE_UNAVAILABLE:'A regra de custo associada não está disponível.',ASSIGNMENT_PENDING:'O tipo ou tamanho associado precisa de correção.',CONFLICT:'Há regras ou composições conflitantes.',OPTION_NOT_RECOGNIZED:'O tamanho do catálogo ainda não foi reconhecido.',AXES_NOT_RECOGNIZED:'As opções do produto não identificam a composição com segurança.',INDEX_NOT_VALID:'A combinação de opções precisa ser conferida.',NO_MODELS:'O catálogo não retornou as variações deste produto.',RULE_NOT_MATCHED:'Nenhuma regra de custo corresponde ao tipo e tamanho.',COMPOSITION_PENDING:'Falta identificar a composição e o custo deste produto.'};
+ function costDiagnosticHasDue(value){return !!value?.consistent&&value.products.some(product=>product.variants.some(variant=>variant.recoverable));}
+ function drawCostDiagnostic(){
+  const value=costDiagnostic,target=el('CostDiagnosticBody');if(!value||value.month!==month){target.hidden=true;return;}target.hidden=false;const coverage=value.summary.production_coverage,out=[node('p',coverage.pending_units+' unidade(s) sem custo · '+coverage.pending_variants+' variação(ões) · '+coverage.pending_products+' produto(s).','month-detail-help')];
+  const counts=node('div',undefined,'month-cost-diagnostic-counts');for(const [key,label] of [['IN_CANCEL','Em cancelamento'],['TO_RETURN','Em devolução'],['UNKNOWN_STATUS','Situação desconhecida']])counts.append(node('span',label+': '+value.review_counts[key]));out.push(counts);
+  if(!value.consistent)out.push(node('p','Os custos mudaram durante a conferência. As versões abaixo foram preservadas; recalcule novamente antes de concluir.','month-detail-help'));
+  for(const product of value.products){const card=node('article',undefined,'month-cost-diagnostic-product');card.append(node('h4',product.product_name||'Produto #'+product.item_id),node('p','#'+product.item_id+' · catálogo: '+checkpointTime(product.catalog_checked_at)));const classification=product.classification,labels={QUEUED:'Na fila',RUNNING:'Em consulta',MATCHED:'Catálogo identificado',PARTIAL:'Identificação parcial',REVIEW:'Tipo ou tamanho em conferência',RETRY_WAIT:'Aguardando nova tentativa'};
+   card.append(node('p',classification?labels[classification.status]+(classification.status==='RETRY_WAIT'?' · próxima tentativa: '+checkpointTime(classification.next_attempt_at):classification.status==='RUNNING'?' · aguarde a consulta em andamento.':''):'Aguardando a primeira consulta do catálogo.'));
+   const groups=new Map();for(const variant of product.variants){if(!groups.has(variant.reason))groups.set(variant.reason,[]);groups.get(variant.reason).push(variant);}for(const [reason,variants] of groups){const quantity=variants.reduce((sum,row)=>sum+BigInt(row.quantity),0n),list=node('ul');card.append(node('p',new Intl.NumberFormat('pt-BR').format(quantity)+' unidade(s) · '+variants.length+' variação(ões) · '+costDiagnosticReasons[reason]));for(const variant of variants){const label=variant.model_name||'Variação #'+variant.model_id,attributes=variant.attributes.map(row=>row.name+': '+row.value).join(' · '),item=node('li',label+' · '+variant.quantity+' unidade(s)'+(attributes?' · '+attributes:'')+(variant.unit_cost_cents!==null?' · custo unitário '+money(variant.unit_cost_cents):''));if(variant.assignment)item.append(node('span',' · regra '+variant.assignment.rule_id+(variant.assignment.size?' · tamanho '+variant.assignment.size:'')));list.append(item);}card.append(list);}
+   if(product.variants.some(variant=>variant.recoverable))card.append(node('p','Há dados de catálogo que podem ser consultados pela conferência automática.'));else if(product.variants.some(variant=>variant.reason!=='COST_AVAILABLE')&&classification?.status!=='RUNNING'&&classification?.status!=='RETRY_WAIT')card.append(node('p','Confira o tipo, o tamanho ou o custo cadastrado. Repetir uma consulta não resolve uma composição ambígua.'));out.push(card);
+  }
+  if(!value.products.length)out.push(node('p','Não há produtos sem custo neste diagnóstico. As outras pendências do período continuam identificadas acima.','month-detail-help'));
+  const versionText=versions=>'custos v'+(versions.costs??'—')+' · regras v'+(versions.cost_rules??'—')+' · vínculos v'+(versions.bindings??'—')+' · catálogo v'+(versions.classifications??'—');out.push(node('p','Conferência: '+checkpointTime(value.diagnosed_at)+' · financeiro: '+checkpointTime(value.source_checked_at.finance_oldest_at)+' · anúncios: '+checkpointTime(value.source_checked_at.ads_at)+' · referências atuais: '+versionText(value.versions.current)+'.'+(value.consistent?'':' Referências do mês: '+versionText(value.versions.monthly)+'.'),'month-cost-diagnostic-sources'));
+  if(value.truncation.truncated)out.push(node('p','Diagnóstico parcial: '+value.truncation.products_included+' de '+value.truncation.products_total+' produto(s) e '+value.truncation.variants_included+' de '+value.truncation.variants_total+' variação(ões) incluídos. Nenhuma ausência foi tratada como custo zero.','month-detail-help'));target.replaceChildren(...out);
+ }
+ function costDiagnosticControls(){const unavailable=!started||!frame||busy||adsBusy||saving||costDiagnosticBusy;el('CostCheck').disabled=unavailable;el('CostRecover').disabled=unavailable||!frame?.unmapped_variants.length;el('CostCopy').disabled=costDiagnosticBusy||!costDiagnosticRaw;el('CostRecover').textContent=costDiagnosticBusy?'Conferindo custos…':'Conferir custos automaticamente';}
+ function resetCostDiagnostic({clear=false}={}){costDiagnosticRequest++;costDiagnosticBusy=false;costDiagnosticPromise=null;if(clear){costDiagnostic=null;costDiagnosticRaw='';el('CostDiagnosticBody').replaceChildren();el('CostDiagnosticBody').hidden=true;el('CostDiagnosticStatus').textContent='Confira todos os produtos sem custo e as situações dos pedidos em uma única consulta aos dados salvos.';}}
+ function takeCostDiagnostic(raw,selected){const checked=projectBusinessCostDiagnostics(raw);if(!checked||checked.month!==selected)throw Error('COST_DIAGNOSTIC_INVALID');costDiagnostic=checked;costDiagnosticRaw=JSON.stringify(raw,null,2);drawCostDiagnostic();return checked;}
+ function checkedCostRecovery(raw,selected){const plain=row=>row!==null&&typeof row==='object'&&[Object.prototype,null].includes(Object.getPrototypeOf(row)),exact=(row,keys)=>plain(row)&&Reflect.ownKeys(row).length===keys.length&&keys.every(key=>Object.hasOwn(Object.getOwnPropertyDescriptor(row,key)||{},'value')),ids=rows=>Array.isArray(rows)&&Object.getPrototypeOf(rows)===Array.prototype&&rows.length<=90&&Reflect.ownKeys(rows).length===rows.length+1&&Array.from({length:rows.length},(_,index)=>Object.getOwnPropertyDescriptor(rows,String(index))).every(d=>d&&Object.hasOwn(d,'value')&&typeof d.value==='string'&&/^[1-9][0-9]{0,19}$/.test(d.value))&&new Set(rows).size===rows.length;if(!exact(raw,['schema','month','diagnostic','work'])||raw.schema!=='business_cost_recovery_v1'||raw.month!==selected||!exact(raw.work,['status','processed','failed'])||!['PROGRESSED','IDLE','PAUSED','LEASED','RETRY_WAIT'].includes(raw.work.status)||!ids(raw.work.processed)||!ids(raw.work.failed)||raw.work.processed.some(id=>raw.work.failed.includes(id)))throw Error('COST_RECOVERY_INVALID');takeCostDiagnostic(raw.diagnostic,selected);return raw.work;}
+ async function copyCostDiagnostic(){if(!costDiagnosticRaw)return false;const serialized=costDiagnosticRaw,selected=month,token=generation,current=()=>started&&month===selected&&token===generation&&serialized===costDiagnosticRaw;try{if(typeof globalThis.navigator?.clipboard?.writeText!=='function')throw Error();await globalThis.navigator.clipboard.writeText(serialized);if(current())el('CostDiagnosticStatus').textContent='Diagnóstico copiado. Ele contém somente a conferência retornada para este mês.';return true;}catch{if(current())el('CostDiagnosticStatus').textContent='Não foi possível copiar automaticamente. O diagnóstico continua disponível; tente novamente em uma conexão segura.';return false;}}
+ function checkCostDiagnostic({recover=false}={}){
+  if(costDiagnosticPromise)return costDiagnosticPromise;if(!started||!frame||busy||adsBusy||saving||!validMonth(month))return Promise.resolve(false);const token=generation,selected=month,requestId=++costDiagnosticRequest,start=Date.now(),current=()=>started&&token===generation&&selected===month&&requestId===costDiagnosticRequest;
+  costDiagnosticBusy=true;catalogRequest++;catalogBusy=false;clearTimeout(catalogTimer);catalogTimer=null;clearTimeout(timer);timer=null;controls();el('CostDiagnosticStatus').textContent=recover?'Conferindo os custos salvos e as consultas necessárias…':'Conferindo todas as pendências nos dados salvos…';
+  const task=(async()=>{let requests=0,lastStatus=null,localReadFailed=false;try{
+   const raw=await api('finance/cost-diagnostics?month='+encodeURIComponent(selected));if(!current())return false;takeCostDiagnostic(raw,selected);
+   if(recover){
+    for(;requests<8&&Date.now()-start<120000&&!document.hidden;){
+     if(!costDiagnosticHasDue(costDiagnostic))break;el('CostDiagnosticStatus').textContent='Conferindo custos automaticamente · etapa '+(requests+1)+' de até 8. Vínculos manuais são preservados.';
+     const result=await api('finance/cost-recovery',{month:selected},{timeoutMs:Math.max(1,Math.min(60000,120000-(Date.now()-start)))});requests++;if(!current())return false;const work=checkedCostRecovery(result,selected);lastStatus=work.status;if(work.status!=='PROGRESSED')break;
+    }
+    if(!current())return false;
+    try{const updated=await request('read',selected);if(!current())return false;apply(updated,selected);catalogNeedsRead=true;}catch{if(!current())return false;localReadFailed=true;}
+   }
+   if(!current())return false;
+   el('CostDiagnosticStatus').textContent=lastStatus==='PAUSED'?'A conferência automática está pausada nas configurações. Os custos salvos foram preservados.':lastStatus==='LEASED'?'Outra conferência está em andamento. Aguarde alguns segundos; os custos salvos foram preservados.':lastStatus==='RETRY_WAIT'?'A Shopee pediu uma espera. Confira abaixo o horário da próxima tentativa.':localReadFailed?'O diagnóstico foi atualizado, mas o resumo mensal não pôde ser relido. Use Recalcular custos para conferir os novos totais.':recover&&document.hidden?'Conferência interrompida porque o painel ficou em segundo plano. Os avanços foram preservados.':recover&&(requests===8||Date.now()-start>=120000)&&costDiagnosticHasDue(costDiagnostic)?'Esta rodada atingiu o limite de conferências. Os avanços foram preservados e as pendências continuam identificadas abaixo.':recover?'Conferência concluída nesta tentativa. Veja os custos identificados e as pendências que ainda exigem conferência.':'Pendências conferidas nos dados salvos. Copie o diagnóstico para reunir todos os motivos em uma única mensagem.';return true;
+  }catch{if(current())el('CostDiagnosticStatus').textContent='Não foi possível concluir esta conferência. Os valores, o diagnóstico anterior e seus rascunhos foram preservados; tente novamente.';return false;}finally{if(current()){costDiagnosticBusy=false;costDiagnosticPromise=null;controls();schedule();scheduleCatalog();}}})();costDiagnosticPromise=task;return task;
+ }
  function checkedCatalogState(value){
   const plain=row=>row!==null&&typeof row==='object'&&[Object.prototype,null].includes(Object.getPrototypeOf(row));
   const exact=(row,keys)=>plain(row)&&Reflect.ownKeys(row).length===keys.length&&keys.every(key=>Object.hasOwn(Object.getOwnPropertyDescriptor(row,key)||{},'value'));
@@ -71,7 +111,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
   else if(catalogState)target.textContent=remaining?remaining+' variação(ões) vendida(s) ainda sem custo completo. '+catalogState.counts.queued+' produto(s) na fila · '+catalogState.counts.running+' em consulta · '+catalogState.counts.retry_wait+' aguardando nova tentativa.':'Custos dos produtos vendidos identificados. O catálogo continua sendo conferido automaticamente.';
   else target.textContent='Consultando a identificação automática dos produtos vendidos…';
  }
- function canClassify(){return started&&catalogFeature()&&!document.hidden&&!busy&&!adsBusy&&!saving&&!dirty&&!paused;}
+ function canClassify(){return started&&catalogFeature()&&!document.hidden&&!busy&&!adsBusy&&!saving&&!dirty&&!paused&&!costDiagnosticBusy;}
  function scheduleCatalog(delay=0){
   clearTimeout(catalogTimer);catalogTimer=null;if(!canClassify()||catalogBusy)return;
   catalogTimer=setTimeout(()=>{catalogTimer=null;return updateCatalog();},Math.max(0,delay));
@@ -266,6 +306,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
   el('ExpensesZero').disabled=!frame||busy||adsBusy||saving||conflict;
   el('ExpensesReload').hidden=!dirty;
   el('Identify').disabled=busy||adsBusy||saving;
+  costDiagnosticControls();
  }
  function balanceLabel(summary){return summary?.state==='PARTIAL_COSTS'?'Saldo com custos identificados':summary?.state==='PROVISIONAL'?'Saldo provisório da loja':'Resultado líquido previsto';}
  function summaryCount(value,singular,plural){return new Intl.NumberFormat('pt-BR').format(value)+' '+(value===1?singular:plural);}
@@ -404,7 +445,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
   if(c.cancel_pending)el('Coverage').append(node('span',c.cancel_pending+' em cancelamento · em revisão'));
   if(c.other+c.unknown)el('Coverage').append(node('span',(c.other+c.unknown)+' com situação a conferir'));
   const warnings=frame.result.pending.filter(code=>code!=='COLLECTING');el('Pending').hidden=!warnings.length;el('PendingTitle').textContent=warnings.length===1?'Falta uma conferência para concluir o resultado':'O que falta para concluir o resultado';el('PendingList').replaceChildren();for(const code of warnings)el('PendingList').append(node('li',pendingMessages[code]||'Parte dos dados ainda precisa ser conferida.'));
-  el('Identify').hidden=!frame.unmapped_variants.length;
+  el('Identify').hidden=true;
   if(warnings.includes('EXTERNAL_EXPENSES_REQUIRED')&&warnings.length===1)el('ExpensesDetails').open=true;
   el('RechargeField').hidden=!(frame.ads_adjustment_cents>0||warnings.includes('RECHARGE_TREATMENT_REQUIRED'));
   drawCostOverview(summary);drawWaterfall(summary);drawTaxAndExpenses(summary);drawReadiness();drawProducts();fillExpenses();
@@ -456,7 +497,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
   if(recovery.waitKey!==key){recovery.waitKey=key;recovery.retryAt=Date.now()+Math.max(error?0:value.collection.retry_after_seconds*1000,recoveryDelay(recovery.attempts));}
   status(recovery.attempts>=8?'A coleta automática está aguardando avanço da Shopee. Continuaremos conferindo os dados salvos, sem repetir consultas em sequência.':'Aguardando retomada automática da consulta. Os valores já consultados foram preservados.');return true;
  }
- function canRecover(){return started&&collectionRecovery?.waiting&&!document.hidden&&!busy&&!adsBusy&&!saving&&!dirty&&!paused&&!automaticBlocked;}
+ function canRecover(){return started&&collectionRecovery?.waiting&&!document.hidden&&!busy&&!adsBusy&&!saving&&!dirty&&!paused&&!automaticBlocked&&!costDiagnosticBusy;}
  async function observeCollection(){
   if(!canRecover()||collectionRecovery.observing)return false;
   const recovery=collectionRecovery,selected=month,token=generation;recovery.observing=true;
@@ -501,7 +542,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
  function schedule(){
   clearTimeout(timer);timer=null;
   if(collectionRecovery?.waiting){if(!canRecover()||collectionRecovery.observing)return;const delay=collectionRecovery.attempts>=8?60000:Math.min(60000,Math.max(0,collectionRecovery.retryAt-Date.now()));timer=setTimeout(()=>{timer=null;return observeCollection();},delay);return;}
-  if(!started||document.hidden||busy||adsBusy||saving||dirty||paused||automaticBlocked||frame?.status!=='COMPLETE'&&!resumeOnVisible||month!==today().slice(0,7))return;
+  if(!started||document.hidden||busy||adsBusy||saving||dirty||paused||automaticBlocked||costDiagnosticBusy||frame?.status!=='COMPLETE'&&!resumeOnVisible||month!==today().slice(0,7))return;
   // Ads updates never advance the financial clock: orders, cancellations and
   // payouts must be imported again even while Ads continues to update.
   const financialDue=resumeOnVisible?Date.now():lastFinancialRefreshAt+financeRefreshInterval;
@@ -513,7 +554,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
   if(!started||saving||automatic&&(dirty||paused||automaticBlocked||document.hidden||adsBusy))return false;
   const selected=el('Select').value;if(!validMonth(selected)){status('Escolha um mês válido até o mês atual.',true);return false;}
   const changed=selected!==month;if(busy&&!changed)return false;
-  const token=++generation;catalogRequest++;catalogBusy=false;clearTimeout(catalogTimer);catalogTimer=null;month=selected;paused=false;automaticBlocked=false;resumeOnVisible=false;collectionFailure=null;if(!observed)collectionRecovery=null;busy=true;adsBusy=false;clearTimeout(timer);timer=null;
+  resetCostDiagnostic({clear:changed});const token=++generation;catalogRequest++;catalogBusy=false;clearTimeout(catalogTimer);catalogTimer=null;month=selected;paused=false;automaticBlocked=false;resumeOnVisible=false;collectionFailure=null;if(!observed)collectionRecovery=null;busy=true;adsBusy=false;clearTimeout(timer);timer=null;
   if(changed){frame=null;catalogState=null;catalogPaused=false;catalogProducts.clear();catalogSignature='';catalogNeedsRead=true;invalidateCheckpointHistory();dirty=false;editSequence++;draftRevision=0;el('ExpensesValue').value='';el('Recharge').value='UNCONFIRMED';}
   status(automatic?'Atualizando vendas, cancelamentos e anúncios de '+monthName(month)+'…':'Consultando os pedidos de '+monthName(month)+'…');render();
   const current=()=>token===generation&&month===selected;
@@ -588,7 +629,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
  }
  async function refreshCosts(){
   if(!started||!frame||busy||adsBusy||saving)return false;
-  const token=++generation,selected=month;busy=true;catalogRequest++;catalogBusy=false;clearTimeout(catalogTimer);catalogTimer=null;clearTimeout(timer);timer=null;controls();
+  resetCostDiagnostic();const token=++generation,selected=month;busy=true;catalogRequest++;catalogBusy=false;clearTimeout(catalogTimer);catalogTimer=null;clearTimeout(timer);timer=null;controls();
   status('Recalculando os custos com os pedidos e produtos salvos…');
   try{
    const raw=await request('read',selected);if(token!==generation||selected!==month)return false;apply(raw,selected);
@@ -635,6 +676,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
   el('Pause').onclick=()=>{paused=true;clearTimeout(timer);timer=null;el('Pause').disabled=true;status(busy?'A consulta será pausada após a resposta em andamento.':'Consulta pausada. Use Continuar consulta para retomar.');render();};
   el('ExpensesForm').onsubmit=event=>{event.preventDefault();saveExpenses();};el('ExpensesValue').oninput=expenseChanged;el('Recharge').onchange=expenseChanged;
   el('ExpensesZero').onclick=()=>saveExpenses({zero:true});el('ExpensesReload').onclick=()=>{dirty=false;editSequence++;fillExpenses({force:true});render();schedule();scheduleCatalog();};el('Identify').onclick=identify;
+  el('CostCheck').onclick=()=>checkCostDiagnostic();el('CostRecover').onclick=()=>checkCostDiagnostic({recover:true});el('CostCopy').onclick=copyCostDiagnostic;
   el('CheckpointDetails').ontoggle=()=>{if(el('CheckpointDetails').open)loadCheckpointHistory();};
   el('CheckpointHistoryRefresh').onclick=()=>{checkpointHistoryStale=true;return loadCheckpointHistory();};
   for(const name of ['ProductSearch','ProductFilter','ProductSort','ProductPageSize'])el(name)[name==='ProductSearch'?'oninput':'onchange']=()=>{productPage=1;drawProducts();scheduleCatalog();};
@@ -642,7 +684,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
   document.addEventListener('visibilitychange',()=>{if(document.hidden){clearTimeout(timer);timer=null;clearTimeout(catalogTimer);catalogTimer=null;}else{schedule();scheduleCatalog();}});
   return refresh({cacheFirst:true});
  }
- function stop(){started=false;catalogRequest++;catalogBusy=false;clearTimeout(catalogTimer);catalogTimer=null;paused=true;resumeOnVisible=false;collectionRecovery=null;generation++;checkpointHistoryRequest++;checkpointHistoryBusy=false;busy=false;adsBusy=false;clearTimeout(timer);timer=null;controls();}
+ function stop(){started=false;resetCostDiagnostic();catalogRequest++;catalogBusy=false;clearTimeout(catalogTimer);catalogTimer=null;paused=true;resumeOnVisible=false;collectionRecovery=null;generation++;checkpointHistoryRequest++;checkpointHistoryBusy=false;busy=false;adsBusy=false;clearTimeout(timer);timer=null;controls();}
  globalThis.brazaMonthDashboard={clientContract,prepare,bootstrapState,start,refresh,refreshCosts,stop,supportsCatalogQueue:catalogFeature,syncCatalogCandidates,refreshCatalog:()=>{catalogNeedsRead=true;return updateCatalog();},catalogMetadata:item=>catalogProducts.get(item)||null};
 })();
 `;

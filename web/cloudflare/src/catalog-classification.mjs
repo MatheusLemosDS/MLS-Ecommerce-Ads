@@ -9,6 +9,7 @@ export const CATALOG_CLASSIFICATION_SCHEMA=[
  `CREATE INDEX IF NOT EXISTS catalog_classification_due ON catalog_classification_jobs(next_attempt_at,last_attempt_at)`,
  `CREATE TABLE IF NOT EXISTS catalog_classification_variants(item_id TEXT NOT NULL,model_id TEXT NOT NULL,payload TEXT NOT NULL CHECK(length(CAST(payload AS BLOB))<=4096),PRIMARY KEY(item_id,model_id))`,
  `CREATE TABLE IF NOT EXISTS catalog_classification_changes(item_id TEXT PRIMARY KEY,change_token TEXT NOT NULL,changed_at INTEGER NOT NULL)`,
+ `CREATE TABLE IF NOT EXISTS catalog_classification_sold_gaps(item_id TEXT NOT NULL,evidence_hash TEXT NOT NULL,catalog_fingerprint TEXT,model_ids_json TEXT NOT NULL CHECK(length(CAST(model_ids_json AS BLOB))<=65536),scheduled_at INTEGER NOT NULL,PRIMARY KEY(item_id,evidence_hash))`,
  `CREATE TABLE IF NOT EXISTS catalog_classification_audit(id INTEGER PRIMARY KEY AUTOINCREMENT,item_id TEXT NOT NULL,checked_at INTEGER NOT NULL,outcome TEXT NOT NULL,reason TEXT,revision INTEGER NOT NULL)`,
  `CREATE TABLE IF NOT EXISTS production_cost_catalog(item_id TEXT PRIMARY KEY,catalog_fingerprint TEXT NOT NULL,payload TEXT NOT NULL CHECK(length(CAST(payload AS BLOB))<=1048576),checked_at INTEGER NOT NULL)`,
  `INSERT OR IGNORE INTO catalog_classification_state(id,revision) SELECT 1,1 WHERE NOT EXISTS(SELECT 1 FROM catalog_classification_variants) AND NOT EXISTS(SELECT 1 FROM catalog_classification_audit) AND NOT EXISTS(SELECT 1 FROM catalog_classification_jobs WHERE checked_at IS NOT NULL)`,
@@ -24,7 +25,7 @@ const hash=value=>typeof value==='string'&&/^[a-f0-9]{64}$/.test(value);
 const text=(value,max)=>typeof value==='string'&&value.trim().length>0&&new TextEncoder().encode(value).length<=max&&!/[\u0000-\u001f\u007f-\u009f]/.test(value);
 const compare=(a,b)=>a.length-b.length||(a<b?-1:a>b?1:0);
 const statuses=['QUEUED','RUNNING','MATCHED','PARTIAL','REVIEW','RETRY_WAIT'];
-const reasons=['CATALOG_UNAVAILABLE','CATALOG_INVALID','CATALOG_STALE_RESPONSE','CATALOG_CONFLICT','CATALOG_METADATA_CHANGED','UNRECOGNIZED_VARIATION','AXES_NOT_RECOGNIZED','OPTION_NOT_RECOGNIZED','INDEX_NOT_VALID','NO_MODELS'];
+const reasons=['CATALOG_UNAVAILABLE','CATALOG_INVALID','CATALOG_STALE_RESPONSE','CATALOG_CONFLICT','CATALOG_METADATA_CHANGED','CATALOG_SOLD_MODEL_MISSING','UNRECOGNIZED_VARIATION','AXES_NOT_RECOGNIZED','OPTION_NOT_RECOGNIZED','INDEX_NOT_VALID','NO_MODELS'];
 const ready=new WeakMap();
 function clock(now){let value;try{value=now();}catch{fail('CATALOG_CLASSIFICATION_CLOCK_INVALID');}if(!integer(value,1,9999999999999))fail('CATALOG_CLASSIFICATION_CLOCK_INVALID');return Math.floor(value/1000);}
 function idsInput(values){if(!array(values,3000)||!values.every(value=>id(value)))fail('CATALOG_CLASSIFICATION_REQUEST_INVALID',400);return [...new Set(values)].sort(compare);}
@@ -87,6 +88,38 @@ export async function enqueueCatalogClassifications(env,itemIds,{now=()=>Date.no
  const writes=[];for(let i=0;i<ids.length;i+=90)writes.push(db.prepare("INSERT OR IGNORE INTO catalog_classification_jobs(item_id,status,next_attempt_at) SELECT json_extract(value,'$.item_id'),'QUEUED',CASE WHEN json_extract(value,'$.priority')=1 THEN 0 ELSE ? END FROM json_each(?) WHERE 1 ON CONFLICT(item_id) DO UPDATE SET next_attempt_at=0 WHERE excluded.next_attempt_at=0 AND catalog_classification_jobs.status='QUEUED' AND catalog_classification_jobs.checked_at IS NULL AND catalog_classification_jobs.last_attempt_at IS NULL AND catalog_classification_jobs.failure_count=0 AND catalog_classification_jobs.lease_token IS NULL AND catalog_classification_jobs.lease_until IS NULL").bind(stamp,JSON.stringify(ids.slice(i,i+90).map(item_id=>({item_id,priority:priority.has(item_id)?1:0})))));
  if(writes.length)await db.batch(writes);
  return returnState?readCatalogClassificationState(env,{}, {now}):null;
+}
+
+// A newly sold model is evidence that the cached catalogue may be incomplete,
+// even when the product index has no newer update_time. Check that exact gap
+// once per model set and catalogue fingerprint; quantity changes are not new
+// evidence. Known models and existing production references remain usable.
+export async function enqueueSoldCatalogGaps(env,variants,{now=()=>Date.now()}={}){
+ if(!array(variants,3000))fail('CATALOG_CLASSIFICATION_REQUEST_INVALID',400);
+ const seen=new Set();for(const row of variants){if(!exact(row,['item_id','model_id','quantity'])||!id(row.item_id)||!id(row.model_id,true)||!integer(row.quantity,1)||seen.has(row.item_id+':'+row.model_id))fail('CATALOG_CLASSIFICATION_REQUEST_INVALID',400);seen.add(row.item_id+':'+row.model_id);}
+ const stamp=clock(now),db=await setup(env),products=new Map(),scheduled=[];
+ const queries=[];for(let index=0;index<variants.length;index+=90)queries.push(db.prepare("SELECT json_extract(g.value,'$.item_id') AS item_id,json_extract(g.value,'$.model_id') AS model_id,j.status,j.reason,j.checked_at,j.catalog_fingerprint,j.write_token,j.lease_token,j.lease_until,j.next_attempt_at,j.failure_count,p.catalog_fingerprint AS cost_catalog_fingerprint,p.checked_at AS cost_catalog_checked_at,EXISTS(SELECT 1 FROM catalog_classification_variants v WHERE v.item_id=json_extract(g.value,'$.item_id') AND v.model_id=json_extract(g.value,'$.model_id')) AS classification_model_exists,EXISTS(SELECT 1 FROM json_each(p.payload,'$.variants') v WHERE json_extract(v.value,'$.model_id')=json_extract(g.value,'$.model_id')) AS cost_model_exists,EXISTS(SELECT 1 FROM catalog_classification_changes x WHERE x.item_id=json_extract(g.value,'$.item_id')) AS metadata_changed FROM json_each(?) g LEFT JOIN catalog_classification_jobs j ON j.item_id=json_extract(g.value,'$.item_id') LEFT JOIN production_cost_catalog p ON p.item_id=json_extract(g.value,'$.item_id')").bind(JSON.stringify(variants.slice(index,index+90))));
+ const snapshots=queries.length?await db.batch(queries):[];
+ for(const row of snapshots.flatMap(result=>result.results)){
+  if(row.classification_model_exists||row.cost_model_exists)continue;
+  if(!id(row.item_id)||!id(row.model_id,true)||[row.catalog_fingerprint,row.cost_catalog_fingerprint].some(value=>value!==null&&!hash(value)))fail('CATALOG_CLASSIFICATION_STORAGE_INVALID');
+  let product=products.get(row.item_id);if(!product){product={...row,model_ids:[]};products.set(row.item_id,product);}product.model_ids.push(row.model_id);
+ }
+ if(products.size)await enqueueCatalogClassifications(env,[...products.keys()],{now,returnState:false,priorityItemIds:[...products.keys()]});
+ const output=[];
+ for(const product of [...products.values()].sort((a,b)=>compare(a.item_id,b.item_id))){
+  const models=product.model_ids.sort(compare),evidence=await digest({model_ids:models,catalog_fingerprint:product.catalog_fingerprint,cost_catalog_fingerprint:product.cost_catalog_fingerprint}),modelJson=JSON.stringify(models);
+  const eligible=!product.metadata_changed&&(product.lease_token===null||product.lease_until<=stamp)&&(product.status!=='RETRY_WAIT'||product.next_attempt_at<=stamp);
+  let accepted=false;
+  if(eligible){
+   const writes=await db.batch([
+    db.prepare("UPDATE catalog_classification_jobs SET reason='CATALOG_SOLD_MODEL_MISSING',next_attempt_at=0 WHERE item_id=? AND write_token IS ? AND catalog_fingerprint IS ? AND checked_at IS ? AND (lease_token IS NULL OR lease_until<=?) AND (status<>'RETRY_WAIT' OR next_attempt_at<=?) AND NOT EXISTS(SELECT 1 FROM catalog_classification_changes WHERE item_id=?) AND (SELECT catalog_fingerprint FROM production_cost_catalog WHERE item_id=?) IS ? AND (SELECT checked_at FROM production_cost_catalog WHERE item_id=?) IS ? AND NOT EXISTS(SELECT 1 FROM catalog_classification_sold_gaps WHERE item_id=? AND evidence_hash=?)").bind(product.item_id,product.write_token,product.catalog_fingerprint,product.checked_at,stamp,stamp,product.item_id,product.item_id,product.cost_catalog_fingerprint,product.item_id,product.cost_catalog_checked_at,product.item_id,evidence),
+    db.prepare('INSERT INTO catalog_classification_sold_gaps(item_id,evidence_hash,catalog_fingerprint,model_ids_json,scheduled_at) SELECT ?,?,?,?,? WHERE changes()=1').bind(product.item_id,evidence,product.cost_catalog_fingerprint??product.catalog_fingerprint,modelJson,stamp),
+   ]);accepted=writes[0]?.meta?.changes===1&&writes[1]?.meta?.changes===1;if(accepted)scheduled.push(product.item_id);
+  }
+  output.push({item_id:product.item_id,reason:product.catalog_fingerprint===null&&product.cost_catalog_fingerprint===null?'CATALOG_NOT_READ':'CATALOG_MODEL_MISSING',model_ids:[...models],scheduled:accepted});
+ }
+ return {schema:'catalog_sold_gaps_v1',products:output,scheduled_item_ids:scheduled};
 }
 
 // The product index calls this only after persisting a strictly newer provider
@@ -153,8 +186,8 @@ async function storeFrame(env,raw,{now=()=>Date.now(),token=null,itemId=null,fen
 }
 export async function storeCatalogClassificationFrame(env,frame,options={}){try{return await storeFrame(env,frame,options);}catch(error){if(error instanceof CatalogClassificationError)throw error;fail('CATALOG_CLASSIFICATION_UNAVAILABLE');}}
 
-export async function runCatalogClassifications(env,getCatalog,{now=()=>Date.now(),maxProducts=3,canRun=async()=>true}={}){
- if(typeof getCatalog!=='function'||typeof now!=='function'||typeof canRun!=='function'||!integer(maxProducts,1,3))fail('CATALOG_CLASSIFICATION_OPTIONS_INVALID',400);
+export async function runCatalogClassifications(env,getCatalog,{now=()=>Date.now(),maxProducts=3,canRun=async()=>true,itemIds=null}={}){
+ if(typeof getCatalog!=='function'||typeof now!=='function'||typeof canRun!=='function'||!integer(maxProducts,1,3)||itemIds!==null&&(!array(itemIds,90)||!itemIds.every(value=>id(value))||new Set(itemIds).size!==itemIds.length))fail('CATALOG_CLASSIFICATION_OPTIONS_INVALID',400);
  const db=await setup(env),start=clock(now),deadline=start+150,token=crypto.randomUUID(),processed=[],failed=[];
  const output=async status=>({status,processed,failed,state:await readCatalogClassificationState(env,{}, {now})});
  if(!await canRun())return output('PAUSED');
@@ -164,7 +197,7 @@ export async function runCatalogClassifications(env,getCatalog,{now=()=>Date.now
  try{
   for(let step=0;step<maxProducts;step++){
    const at=clock(now);if(at+45>deadline)break;if(!await canRun()){status='PAUSED';break;}
-   const row=await db.prepare('SELECT * FROM catalog_classification_jobs WHERE next_attempt_at<=? AND (lease_token IS NULL OR lease_until<=?) ORDER BY CASE WHEN last_attempt_at IS NULL THEN 0 ELSE 1 END,next_attempt_at,length(item_id),item_id LIMIT 1').bind(at,at).first();if(!row)break;checkedJob(row);
+   const row=await db.prepare("SELECT * FROM catalog_classification_jobs WHERE next_attempt_at<=? AND (lease_token IS NULL OR lease_until<=?)"+(itemIds!==null?' AND item_id IN (SELECT value FROM json_each(?))':'')+" ORDER BY CASE WHEN reason='CATALOG_SOLD_MODEL_MISSING' THEN 0 WHEN last_attempt_at IS NULL THEN 1 ELSE 2 END,next_attempt_at,length(item_id),item_id LIMIT 1").bind(at,at,...(itemIds!==null?[JSON.stringify(itemIds)]:[])).first();if(!row)break;checkedJob(row);
    const claimed=await db.prepare("UPDATE catalog_classification_jobs SET status='RUNNING',last_attempt_at=?,lease_token=?,lease_until=? WHERE item_id=? AND next_attempt_at<=? AND (lease_token IS NULL OR lease_until<=?) AND EXISTS(SELECT 1 FROM catalog_classification_state WHERE id=1 AND lease_token=? AND lease_until>?)").bind(at,token,start+180,row.item_id,at,at,token,at).run();if(claimed?.meta?.changes!==1)continue;
    try{
     const change=await db.prepare('SELECT change_token FROM catalog_classification_changes WHERE item_id=?').bind(row.item_id).first();

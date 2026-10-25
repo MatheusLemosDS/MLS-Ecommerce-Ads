@@ -106,3 +106,9 @@ test('detail prices and binding revisions share one snapshot and legal itemized 
  const originalPrepare=f.db.prepare.bind(f.db),originalBatch=f.db.batch.bind(f.db);f.db.prepare=sql=>Object.assign(originalPrepare(sql),{testSql:sql});let pricingBatches=0;f.db.batch=async statements=>{if(statements.some(statement=>statement.testSql==='SELECT revision,payload FROM variant_bindings_state WHERE id=1')){pricingBatches++;assert.ok(statements.some(statement=>statement.testSql==='SELECT revision,payload FROM production_costs_state WHERE id=1'));assert.ok(statements.some(statement=>statement.testSql?.includes('classification_revision')));}return originalBatch(statements);};
  const detail=await readProductRegistry(f.env,{item_id:'103'},{now:f.now});assert.equal(pricingBatches,1);assert.equal(detail.revisions.costs,8);assert.ok(detail.variants.every(row=>row.unit_cost_cents===42000000));assert.ok(projectProductRegistryFrame(detail));const corrupt=structuredClone(detail);corrupt.variants[0].unit_cost_cents=42000001;assert.equal(projectProductRegistryFrame(corrupt),null);
 });
+
+
+test('an explicit cost rule that becomes unavailable reports its pricing reason instead of an unrelated catalogue parsing error',async()=>{
+ const f=await fixture();await catalog(f,'102',{child:true});let rules=await readCostRules(f.env);rules=await assignCostRules(f.env,{revision:rules.revision,assignments:[{item_id:'102',model_id:'10200',rule_id:'camiseta-infantil',size:'4'}]},'fixture');await saveCostRules(f.env,{revision:rules.revision,values:{...rules.values,rules:rules.values.rules.map(rule=>({...rule,enabled:false}))}},'fixture');
+ const detail=await readProductRegistry(f.env,{item_id:'102'},{now:f.now}),variant=detail.variants.find(row=>row.model_id==='10200');assert.equal(variant.unit_cost_cents,null);assert.equal(variant.reason,'RULE_ASSIGNMENT_PENDING');assert.equal(f.calls.length,0);
+});

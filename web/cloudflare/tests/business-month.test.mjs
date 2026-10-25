@@ -8,6 +8,8 @@ import {buildAdsCalendar,projectAdsCalendar} from '../src/ads-calendar.mjs';
 import {projectBusinessPeriodFrame} from '../../finance/src/business-period-frame.mjs';
 import {businessMonth,projectBusinessMonth,BusinessMonthError} from '../src/business-month.mjs';
 import {syncCostRuleCatalog,readCostRules,saveCostRules,assignCostRules} from '../src/cost-rules.mjs';
+import {businessMonthWithCheckpoint} from '../src/business-checkpoint.mjs';
+import {storeCatalogClassificationFrame,runCatalogClassifications} from '../src/catalog-classification.mjs';
 
 const clock=Date.UTC(2026,10,2,12),stamp=Math.floor(clock/1000),now=()=>clock;
 const request=(operation='start',changes={})=>({operation,month:'2026-10',...changes});
@@ -284,4 +286,13 @@ test('a newly classified adult variant prices the monthly products without addin
  assert.equal(projectBusinessMonth({...value,classification_revision:0}),null);let getters=0;const poisoned={...value};Object.defineProperty(poisoned,'classification_revision',{enumerable:true,get(){getters++;return 1;}});assert.equal(projectBusinessMonth(poisoned),null);assert.equal(getters,0);
  const revision=value.classification_revision;e.ADMIN_DB.db.prepare('UPDATE production_costs_state SET revision=8,payload=? WHERE id=1').run(JSON.stringify({...COST_DEFAULTS,inclusive_regular_cents:1700}));
  value=await run(e,s,'read');assert.equal(value.production_cost_cents,10200);assert.equal(value.classification_revision,revision);assert.equal(value.costs_revision,8);
+});
+
+test('reading a saved month automatically recovers only a missing sold model without recollecting its orders or discarding known models',async()=>{
+ const e=env(),s=source(withProducts);e.ADMIN_DB.db.prepare('UPDATE variant_bindings_state SET payload=? WHERE id=1').run('[]');
+ const catalogue=models=>({schema:'variant_catalog_v1',checked_at:stamp,products:[{item_id:'201',catalog_fingerprint:(models.length===1?'c':'d').repeat(64),selling_unit:'SINGLE_GARMENT',bindings:models.map(model_id=>({item_id:'201',model_id,size:'P'})),unresolved_count:0,cost_catalog:{schema:'product_cost_catalog_v1',product_name:'Camiseta Unissex Verde',variants:models.map(model_id=>({model_id,attributes:[{name:'Cor',value:'Verde'},{name:'Tamanho',value:'P'}]}))}}]});
+ await storeCatalogClassificationFrame(e,catalogue(['1']),{now});let value=await complete(e,s);assert.deepEqual(value.unmapped_variants,[{item_id:'201',model_id:'0',quantity:6}]);const before=s.calls.finance.length;
+ value=await businessMonthWithCheckpoint(e,{operation:'read',month:'2026-10'},s,{now});assert.equal(value.production_cost_cents,null);const job=e.ADMIN_DB.db.prepare("SELECT * FROM catalog_classification_jobs WHERE item_id='201'").get();assert.equal(job.status,'MATCHED');assert.equal(job.reason,'CATALOG_SOLD_MODEL_MISSING');assert.equal(job.next_attempt_at,0);assert.equal(e.ADMIN_DB.db.prepare('SELECT COUNT(*) AS n FROM catalog_classification_changes').get().n,0);
+ const recovered=await runCatalogClassifications(e,async()=>catalogue(['0','1']),{now,maxProducts:1,itemIds:['201']});assert.deepEqual(recovered.processed,['201']);value=await businessMonthWithCheckpoint(e,{operation:'read',month:'2026-10'},s,{now});assert.equal(value.production_cost_cents,9540);assert.deepEqual(value.unmapped_variants,[]);assert.equal(s.calls.finance.length,before);assert.equal(s.calls.ads.length,0);assert.equal(e.ADMIN_DB.db.prepare('SELECT COUNT(*) AS n FROM catalog_classification_variants').get().n,2);
+ assert.equal(e.ADMIN_DB.db.prepare('SELECT payload FROM variant_bindings_state').get().payload,'[]');assert.equal(e.ADMIN_DB.db.prepare('SELECT COUNT(*) AS n FROM catalog_classification_sold_gaps').get().n,1);
 });

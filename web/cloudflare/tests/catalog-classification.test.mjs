@@ -2,7 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {D1} from './sqlite-d1.mjs';
 import {projectVariantCatalog} from '../../finance/src/variant-catalog-frame.mjs';
-import {enqueueCatalogClassifications,runCatalogClassifications,readCatalogClassificationState,readCatalogClassificationFence,storeCatalogClassificationFrame,catalogClassificationQueries,catalogClassificationsFromSnapshot,CatalogClassificationError} from '../src/catalog-classification.mjs';
+import {enqueueCatalogClassifications,enqueueSoldCatalogGaps,runCatalogClassifications,readCatalogClassificationState,readCatalogClassificationFence,storeCatalogClassificationFrame,catalogClassificationQueries,catalogClassificationsFromSnapshot,CatalogClassificationError} from '../src/catalog-classification.mjs';
+import {runProductRegistry} from '../src/product-registry.mjs';
+import {productionCostReference,COST_DEFAULTS} from '../src/production-costs.mjs';
 
 const initial=Date.UTC(2026,9,25,12)/1000;
 const environment=()=>({ADMIN_DB:new D1()});
@@ -15,6 +17,40 @@ function providerFrame({item='101',at=initial,count=1,kit=false,unresolved=false
 const failure=code=>error=>error instanceof CatalogClassificationError&&error.message===code;
 const snapshot=async(env,ids,sourceItems=null)=>catalogClassificationsFromSnapshot(await env.ADMIN_DB.batch(catalogClassificationQueries(env.ADMIN_DB,ids,sourceItems)));
 const state=(env,options={},at=initial)=>readCatalogClassificationState(env,options,{now:()=>at*1000});
+
+test('a newly sold missing model gets one targeted check despite a MATCHED catalogue and an unchanged daily index',async t=>{
+ const env=environment();t.after(()=>env.ADMIN_DB.db.close());let stamp=initial,now=()=>stamp*1000;
+ await storeCatalogClassificationFrame(env,providerFrame(),{now});
+ const read=()=>env.ADMIN_DB.db.prepare("SELECT * FROM catalog_classification_jobs WHERE item_id='101'").get();assert.equal(read().next_attempt_at,initial+86400);
+ const gaps=[{item_id:'101',model_id:'2',quantity:2},{item_id:'101',model_id:'1',quantity:1}];
+ const first=await enqueueSoldCatalogGaps(env,gaps,{now});assert.deepEqual(first.products,[{item_id:'101',reason:'CATALOG_MODEL_MISSING',model_ids:['2'],scheduled:true}]);assert.deepEqual(first.scheduled_item_ids,['101']);assert.equal(read().reason,'CATALOG_SOLD_MODEL_MISSING');assert.equal(read().next_attempt_at,0);
+ const saved=await snapshot(env,['101']),price=productionCostReference({status:'AVAILABLE',rows:[{item_id:'101',model_id:'1',quantity:1}]},{revision:1,bindings:[]},{revision:1,values:COST_DEFAULTS},{catalog_bindings:saved.bindings,classified_item_ids:['101']});assert.equal(price.total_cents,1590);assert.equal(env.ADMIN_DB.db.prepare('SELECT COUNT(*) AS n FROM catalog_classification_changes').get().n,0);
+ await runProductRegistry(env,async(_,selection)=>({schema:'product_index_v1',status:'AVAILABLE',shop_id:1178167501,checked_at:stamp,...selection,total_count:1,has_more:false,next_offset:null,items:[{item_id:'101',item_status:selection.item_status,source_update_time:initial-100}]}),{now});assert.equal(read().next_attempt_at,0,'an unchanged index cannot postpone the specific missing-model check');
+ stamp++;const calls=[],result=await runCatalogClassifications(env,async(_,input)=>{calls.push(input.item_ids[0]);return providerFrame({at:stamp,count:2,fingerprint:'b'.repeat(64)});},{now,maxProducts:1,itemIds:['101']});assert.deepEqual(result.processed,['101']);assert.deepEqual(calls,['101']);assert.deepEqual((await enqueueSoldCatalogGaps(env,gaps,{now})).products,[]);assert.equal((await snapshot(env,['101'])).variants.length,2);
+});
+
+test('a removed historical model does not loop on reads or quantity changes while new pairs and a real catalogue change permit one new check',async t=>{
+ const env=environment();t.after(()=>env.ADMIN_DB.db.close());let stamp=initial,now=()=>stamp*1000;await storeCatalogClassificationFrame(env,providerFrame(),{now});const gaps=[{item_id:'101',model_id:'2',quantity:1}],read=()=>env.ADMIN_DB.db.prepare("SELECT * FROM catalog_classification_jobs WHERE item_id='101'").get();let calls=0;
+ assert.deepEqual((await enqueueSoldCatalogGaps(env,gaps,{now})).scheduled_item_ids,['101']);stamp++;
+ await runCatalogClassifications(env,async()=>{calls++;return providerFrame({at:stamp});},{now,maxProducts:1,itemIds:['101']});const next=read().next_attempt_at;
+ for(const quantity of [1,2,7]){assert.deepEqual((await enqueueSoldCatalogGaps(env,[{...gaps[0],quantity}],{now})).scheduled_item_ids,[]);await runCatalogClassifications(env,async()=>{calls++;throw Error('must not retry');},{now,maxProducts:1,itemIds:['101']});}assert.equal(calls,1);assert.equal(read().next_attempt_at,next);
+ const freshPair=[...gaps,{item_id:'101',model_id:'3',quantity:1}];assert.deepEqual((await enqueueSoldCatalogGaps(env,freshPair,{now})).scheduled_item_ids,['101']);stamp++;await runCatalogClassifications(env,async()=>{calls++;return providerFrame({at:stamp});},{now,maxProducts:1,itemIds:['101']});assert.deepEqual((await enqueueSoldCatalogGaps(env,gaps,{now})).scheduled_item_ids,[],'returning to an older missing subset does not bypass its durable attempt');
+ stamp++;await storeCatalogClassificationFrame(env,providerFrame({at:stamp,fingerprint:'c'.repeat(64)}),{now});assert.deepEqual((await enqueueSoldCatalogGaps(env,gaps,{now})).scheduled_item_ids,['101']);assert.equal(env.ADMIN_DB.db.prepare('SELECT COUNT(*) AS n FROM catalog_classification_sold_gaps').get().n,3);
+});
+
+test('gap recovery leaves leased jobs and provider backoffs intact and the scoped runner never consumes unrelated global work',async t=>{
+ const env=environment();t.after(()=>env.ADMIN_DB.db.close());let stamp=initial,now=()=>stamp*1000;await storeCatalogClassificationFrame(env,providerFrame(),{now});const lease=crypto.randomUUID(),gaps=[{item_id:'101',model_id:'2',quantity:1}];
+ env.ADMIN_DB.db.prepare("UPDATE catalog_classification_jobs SET status='RUNNING',lease_token=?,lease_until=? WHERE item_id='101'").run(lease,stamp+180);const before=env.ADMIN_DB.db.prepare("SELECT * FROM catalog_classification_jobs WHERE item_id='101'").get();assert.deepEqual((await enqueueSoldCatalogGaps(env,gaps,{now})).scheduled_item_ids,[]);assert.deepEqual(env.ADMIN_DB.db.prepare("SELECT * FROM catalog_classification_jobs WHERE item_id='101'").get(),before);assert.equal(env.ADMIN_DB.db.prepare('SELECT COUNT(*) AS n FROM catalog_classification_sold_gaps').get().n,0);
+ env.ADMIN_DB.db.prepare("UPDATE catalog_classification_jobs SET status='RETRY_WAIT',reason='CATALOG_UNAVAILABLE',failure_count=2,next_attempt_at=?,lease_token=NULL,lease_until=NULL WHERE item_id='101'").run(stamp+600);assert.deepEqual((await enqueueSoldCatalogGaps(env,gaps,{now})).scheduled_item_ids,[]);assert.equal(env.ADMIN_DB.db.prepare("SELECT next_attempt_at FROM catalog_classification_jobs WHERE item_id='101'").get().next_attempt_at,stamp+600);
+ stamp+=600;assert.deepEqual((await enqueueSoldCatalogGaps(env,gaps,{now})).scheduled_item_ids,['101']);await enqueueCatalogClassifications(env,['1','2'],{now,returnState:false});const calls=[];const result=await runCatalogClassifications(env,async(_,input)=>{calls.push(input.item_ids[0]);throw Error('temporary');},{now,maxProducts:1,itemIds:['101']});assert.deepEqual(result.failed,['101']);assert.deepEqual(calls,['101']);const failed=env.ADMIN_DB.db.prepare("SELECT * FROM catalog_classification_jobs WHERE item_id='101'").get();assert.equal(failed.failure_count,3);assert.equal(failed.next_attempt_at,stamp+1200);assert.deepEqual((await enqueueSoldCatalogGaps(env,gaps,{now})).scheduled_item_ids,[]);assert.equal(env.ADMIN_DB.db.prepare("SELECT next_attempt_at FROM catalog_classification_jobs WHERE item_id='101'").get().next_attempt_at,failed.next_attempt_at);
+ const none=await runCatalogClassifications(env,async()=>{throw Error('unrelated work');},{now,maxProducts:1,itemIds:[]});assert.equal(none.status,'IDLE');
+ for(const itemIds of [['bad'],Array.from({length:91},(_,index)=>String(index+1)),['101','101']])await assert.rejects(runCatalogClassifications(env,async()=>{}, {now,itemIds}),failure('CATALOG_CLASSIFICATION_OPTIONS_INVALID'));
+});
+
+test('invalid gap requests never invoke accessors or mutate the persistent queue',async t=>{
+ const env=environment();t.after(()=>env.ADMIN_DB.db.close());await state(env);let called=0;const row={item_id:'101',model_id:'0',quantity:1};Object.defineProperty(row,'quantity',{enumerable:true,get(){called++;return 1;}});
+ for(const variants of [[row],[{item_id:'101',model_id:'0',quantity:0}],[{item_id:'101',model_id:'0',quantity:1,extra:'private'}],[{item_id:'101',model_id:'0',quantity:1},{item_id:'101',model_id:'0',quantity:2}]])await assert.rejects(enqueueSoldCatalogGaps(env,variants),failure('CATALOG_CLASSIFICATION_REQUEST_INVALID'));assert.equal(called,0);assert.equal(env.ADMIN_DB.db.prepare('SELECT COUNT(*) AS n FROM catalog_classification_jobs').get().n,0);
+});
 
 test('background discovery queues a large catalogue in one D1 request without reading a presentation snapshot',async t=>{
  class CountedD1 extends D1 {

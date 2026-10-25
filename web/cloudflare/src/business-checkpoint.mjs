@@ -1,5 +1,5 @@
 import {businessMonth,projectBusinessMonth} from './business-month.mjs';
-import {enqueueCatalogClassifications} from './catalog-classification.mjs';
+import {enqueueCatalogClassifications,enqueueSoldCatalogGaps} from './catalog-classification.mjs';
 
 // Compact explanations, not a cash ledger. No order/customer identifiers or
 // provider credentials are copied into this history.
@@ -16,8 +16,9 @@ export class BusinessCheckpointError extends Error {
 // A running page import is not a period checkpoint; completed/limited reads
 // are kept even when expenses, returns or another input are still pending.
 export async function businessMonthWithCheckpoint(env,input,services,options={}){
- const frame=await businessMonth(env,input,services,{...options,onProductsDiscovered:async(itemIds,{priorityItemIds=[]}={})=>{
+ const frame=await businessMonth(env,input,services,{...options,onProductsDiscovered:async(itemIds,{priorityItemIds=[],unmappedVariants=[]}={})=>{
   if(itemIds.length)await enqueueCatalogClassifications(env,itemIds,{now:options.now||(()=>Date.now()),returnState:false,priorityItemIds});
+  if(unmappedVariants.length)await enqueueSoldCatalogGaps(env,unmappedVariants,{now:options.now||(()=>Date.now())});
  }});
  if(frame.status!=='RUNNING')await recordBusinessCheckpoint(env,frame);
  return frame;

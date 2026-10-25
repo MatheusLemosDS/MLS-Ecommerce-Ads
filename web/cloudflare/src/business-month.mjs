@@ -173,7 +173,7 @@ async function businessMonthOperation(env,input,services,{now=()=>Date.now(),act
   if(onProductsDiscovered){
    const itemIds=[...new Set(observed.payload.slots.flatMap(slot=>slot.frame?.items.map(row=>row.item_id)||[]))];
    const priorityItemIds=[...new Set((result?.unmapped_variants||[]).map(row=>row.item_id))];
-   try{await onProductsDiscovered(itemIds,{priorityItemIds});}catch{}
+   try{await onProductsDiscovered(itemIds,{priorityItemIds,unmappedVariants:result?.unmapped_variants||[]});}catch{}
   }
  }
 }
