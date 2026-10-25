@@ -6,6 +6,10 @@ Atualizado em **25/10/2026 UTC**. Base anterior: `a8636c4`, com
 [catálogo salvo e custos por semana/mês](CATALOGO_SALVO_E_CUSTOS_POR_PERIODO.md).
 A entrega atual separa [resumo publicado e coleta em andamento](RESUMO_PUBLICADO_E_COLETA.md),
 com previsão líquida em conferência quando os valores necessários são conhecidos.
+A continuidade a partir de `94dff2d` vincula as conferências à publicação exata
+mostrada na Visão geral e preserva pausa/retomada durante o encerramento da coleta.
+Essas correções são validadas no código; sua ativação em produção deve ser
+conferida pelo commit publicado.
 A atualização da ponte Hermes no Droplet permanece uma etapa separada; ela não
 é necessária para usar o catálogo e os cálculos de custo desta entrega.
 
@@ -35,6 +39,8 @@ testes locais.
 | Atualização com o painel aberto | Implementada nesta entrega | O navegador lê o resumo salvo e o progresso. Atualizar vendas prioriza o servidor; abrir várias abas não inicia coletores financeiros concorrentes. Meses históricos e política pausada exigem ação manual explícita. |
 | Coleta em segundo plano | Cron observado no diagnóstico fornecido; continuação corrigida nesta entrega | Cron do App a cada minuto retoma coletores de leitura sem depender da aba; o financeiro em andamento tem prioridade e os demais trabalhos são intercalados. Inclui exclusão de execuções concorrentes, pausa/retomada, espera crescente após falhas e auditoria. Os registros fornecidos mostram execuções reais; pausas normais de página agora retomam no próximo minuto, sem a espera indevida de cinco minutos. |
 | Abertura rápida da Visão geral | Implementada nesta entrega | O último período completo tem cópias próprias das fontes e permanece visível durante uma nova coleta ou falha. Custos são recalculados localmente; datas de Financeiro e Ads são preservadas. |
+| Conferências vinculadas ao resumo exibido | Implementadas nesta continuidade | A interface confere revisão da publicação e identidade/revisão de todas as fontes, descarta respostas de outra atualização e suspende conferências durante consultas manuais sem publicação. O contrato anterior permanece disponível para abas antigas. |
+| Pausa e retomada durante o encerramento | Corrigidas nesta continuidade | O estado final e a auditoria respeitam a política confirmada durante a gravação. A retomada mantém sua agenda; uma lease substituída não é liberada pela execução anterior. |
 | Diagnóstico da conta | Versionado em `main` (`6f9ce23`); ativação a conferir | Calcula TACOS, saldo disponível antes de Ads, cobertura dos custos e próximas tarefas a partir do mês validado. Dados ausentes bloqueiam os indicadores correspondentes. Não autoriza investimento. |
 | Hermes com financeiro da loja | Publicado (`11f45ce`); atualização da ponte pendente | Cada análise preserva o mês financeiro, custos, DAS, anúncios, pendências e até três próximas ações. A ponte antiga não recebe tarefas novas. Exige atualização no Droplet e observação de uma execução real com a nova referência. |
 | Alterar anúncios, campanhas e promoções | Ainda não implementado para execução comercial | As proteções de somente leitura e Ads/PROMO `LOCKED` continuam vigentes. A coleta autônoma não cria permissão de escrita na Shopee. |

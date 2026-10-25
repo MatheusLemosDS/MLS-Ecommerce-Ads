@@ -77,6 +77,20 @@ preserva valores e horários após falhas e descarta respostas de uma publicaç�
 anterior, mesmo dentro do mesmo mês. A coleta financeira e a recuperação de
 custos mantêm prioridade; uma permissão ausente não revoga a conexão existente.
 
+O vínculo da interface usa a revisão da publicação e os identificadores,
+revisões e janelas de todas as fontes que geraram o resumo exibido. Totais,
+contagens e horários iguais não são suficientes para identificar os mesmos
+pedidos. Se outra publicação for concluída entre a leitura do resumo e a leitura
+das liberações, a resposta incompatível é descartada. A próxima leitura do
+resumo permite acompanhar a nova publicação.
+
+Uma consulta manual parcial ou um resumo sem essa identidade suspende a seção
+de conferência até a próxima publicação válida. A invalidação também ocorre
+quando a aba está oculta, sem iniciar novas consultas. O contrato da visão
+mensal é negociado: abas anteriores continuam recebendo o formato v1, enquanto
+o cliente atual recebe o v2 com a identidade da publicação. A mudança não
+acrescenta consultas à Shopee ao abrir a página.
+
 ## Alcance financeiro
 
 O relatório distingue consulta da API, data de liberação, data de criação dos

@@ -1,7 +1,7 @@
 import {ESCROW_RELEASES_CLIENT} from './escrow-releases-view.mjs';
 import {BUSINESS_RECONCILIATION_CLIENT} from './business-reconciliation-view.mjs';
 import {projectBusinessMonth} from './business-month.mjs';
-import {projectBusinessMonthView} from './business-month-view-state.mjs';
+import {projectBusinessMonthView,projectBusinessMonthAuditScope} from './business-month-view-state.mjs';
 import {projectAdsCalendar} from './ads-calendar.mjs';
 import {projectBusinessMonthProducts} from './business-month-products.mjs';
 import {buildAccountDiagnosis} from './account-diagnosis.mjs';
@@ -17,6 +17,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
  ${projectAdsCalendar.toString()}
  ${projectBusinessMonthProducts.toString()}
  ${projectBusinessMonth.toString()}
+ ${projectBusinessMonthAuditScope.toString()}
  ${projectBusinessMonthView.toString()}
  ${buildBusinessCheckpoint.toString()}
  ${buildAccountDiagnosis.toString()}
@@ -529,12 +530,12 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
   el('RefreshHelp').textContent=automatic.applicable&&automatic.enabled?'Recalcular custos usa os pedidos salvos. Atualizar vendas prioriza a próxima coleta automática, que continua com o painel fechado.':'Recalcular custos usa os pedidos salvos. Atualizar vendas inicia uma consulta manual à Shopee para este período.';
  }
  async function fetchWorkspaceView(selected){
-  const raw=await api('finance/business-month-view?month='+encodeURIComponent(selected)),checked=projectBusinessMonthView(raw,projectBusinessMonth);if(!checked||checked.month!==selected)throw Error('BUSINESS_MONTH_VIEW_INVALID');return checked;
+  const raw=await api('finance/business-month-view?month='+encodeURIComponent(selected)),checked=projectBusinessMonthView(raw,projectBusinessMonth,projectBusinessMonthAuditScope);if(!checked||checked.month!==selected)throw Error('BUSINESS_MONTH_VIEW_INVALID');return checked;
  }
  function readWorkspaceView({selected=el('Select').value,background=false}={}){
   if(!started||saving||!validMonth(selected)||background&&(document.hidden||costDiagnosticBusy||manualCollection||busy))return Promise.resolve(false);
   if(viewPromise?.month===selected)return viewPromise.task;
-  const changed=selected!==month;if(changed){resetCostDiagnostic({clear:true});generation++;month=selected;frame=null;workspaceView=null;collectionRecovery=null;collectionFailure=null;manualCollection=false;priorityPromise=null;paused=false;automaticBlocked=false;catalogRequest++;catalogBusy=false;catalogState=null;catalogProducts.clear();catalogSignature='';catalogNeedsRead=true;dirty=false;editSequence++;draftRevision=0;el('ExpensesValue').value='';el('Recharge').value='UNCONFIRMED';invalidateCheckpointHistory();}
+  const changed=selected!==month;if(changed){resetCostDiagnostic({clear:true});generation++;month=selected;frame=null;workspaceView=null;observeAudits(selected);collectionRecovery=null;collectionFailure=null;manualCollection=false;priorityPromise=null;paused=false;automaticBlocked=false;catalogRequest++;catalogBusy=false;catalogState=null;catalogProducts.clear();catalogSignature='';catalogNeedsRead=true;dirty=false;editSequence++;draftRevision=0;el('ExpensesValue').value='';el('Recharge').value='UNCONFIRMED';invalidateCheckpointHistory();}
   const token=generation,requestId=++viewRequest,current=()=>started&&token===generation&&month===selected&&requestId===viewRequest;
   if(!background){busy=true;clearTimeout(timer);timer=null;status('Conferindo o resumo salvo e o andamento da coleta…');render();}
   const task=(async()=>{try{const value=await fetchWorkspaceView(selected);if(!current())return false;workspaceView=value;manualCollection=false;collectionRecovery=null;collectionFailure=null;automaticBlocked=false;viewFailures=0;apply(value.display,selected);if(!background)status(value.collection.status==='RUNNING'?(value.display_source==='PUBLISHED'?'Atualização em andamento no servidor; o último resumo concluído está identificado abaixo.':value.automatic.enabled&&value.automatic.applicable?'A coleta automática está em andamento. O resultado do período aparece após sua conclusão.':'Há uma leitura parcial salva. Use Atualizar vendas para continuar manualmente.'):'Resumo recalculado com os pedidos, anúncios e custos salvos.');return true;}catch(error){if(current()){viewFailures=Math.min(4,viewFailures+1);status(error?.status===401?'Entre novamente para acompanhar os dados da loja.':'Não foi possível conferir o andamento agora. O último resumo e seus rascunhos foram preservados; tentaremos novamente.',true);}return false;}finally{if(current()){if(!background)busy=false;viewPromise=null;render();schedule();scheduleCatalog();}}})();viewPromise={month:selected,task};return task;
@@ -546,12 +547,13 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
  function requestSalesUpdate(){
   if(priorityPromise)return priorityPromise;if(!started||busy||adsBusy||saving||!validMonth(month))return Promise.resolve(false);
   if(!workspaceView)return readWorkspaceView();
-  if(!cronOwnsCollection()){manualCollection=true;workspaceView=null;viewRequest++;viewPromise=null;return refresh();}
+  if(!cronOwnsCollection()){manualCollection=true;workspaceView=null;viewRequest++;viewPromise=null;observeAudits(month);return refresh();}
   const selected=month,token=generation,current=()=>started&&month===selected&&token===generation;
   const task=(async()=>{try{const value=checkedRefreshRequest(await api('finance/business-month-request',{month:selected}),selected);if(!current())return false;await readWorkspaceView({selected,background:true});if(!current())return false;status(value.status==='PAUSED'?'A coleta automática foi pausada. Os valores salvos foram preservados.':value.status==='RETRY_WAIT'?'A fonte precisa aguardar antes da próxima tentativa. O resumo salvo foi preservado.':value.status==='RUNNING'?'A coleta já está em andamento. O painel acompanhará os avanços automaticamente.':'Atualização priorizada. A coleta será executada automaticamente; você pode manter o painel fechado.');return true;}catch{if(current())status('Não foi possível priorizar a atualização agora. O resumo salvo foi preservado.',true);return false;}finally{if(current()){priorityPromise=null;controls();schedule();}}})();priorityPromise=task;controls();return task;
  }
  function checkedFrame(value,expectedMonth){const checked=projectBusinessMonth(value);if(!checked||checked.month!==expectedMonth)throw Error('Os dados mensais não puderam ser conferidos. Atualize o mês para tentar novamente.');return checked;}
- function apply(value,expectedMonth){const previous=frame?.classification_revision;frame=checkedFrame(value,expectedMonth);if(previous!==frame.classification_revision){catalogNeedsRead=true;if(previous!==undefined)catalogProductsChanged=true;}invalidateCheckpointHistory();render();try{const auditScope=[frame.start_date,frame.end_date,frame.source_checked_at?.finance_oldest_at??'',frame.source_checked_at?.finance_latest_at??'',frame.coverage.orders,frame.coverage.paid,frame.expected_repass_cents??''].join('|');globalThis.brazaReconciliation?.observe(expectedMonth,auditScope);globalThis.brazaEscrowReleases?.observe(expectedMonth,auditScope);}catch{}return frame;}
+ function observeAudits(selected,scope=null){try{globalThis.brazaReconciliation?.observe(selected,scope);globalThis.brazaEscrowReleases?.observe(selected,scope);}catch{}}
+ function apply(value,expectedMonth){const previous=frame?.classification_revision;frame=checkedFrame(value,expectedMonth);if(previous!==frame.classification_revision){catalogNeedsRead=true;if(previous!==undefined)catalogProductsChanged=true;}invalidateCheckpointHistory();render();const auditScope=!manualCollection&&workspaceView?.display===value&&workspaceView.schema==='business_month_view_v2'&&workspaceView.display_source==='PUBLISHED'?workspaceView.audit_scope:null;observeAudits(expectedMonth,auditScope);return frame;}
  function collectionProgress(value){return [value.progress.pages_read,value.coverage.orders,value.progress.windows_complete];}
  function trackCollection(value){
   if(!value.collection)return null;
@@ -658,7 +660,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
   const selected=el('Select').value;if(!validMonth(selected)){status('Escolha um mês válido até o mês atual.',true);return false;}
   const changed=selected!==month;if(busy&&!changed)return false;
   resetCostDiagnostic({clear:changed});const token=++generation;catalogRequest++;catalogBusy=false;clearTimeout(catalogTimer);catalogTimer=null;month=selected;paused=false;automaticBlocked=false;resumeOnVisible=false;collectionFailure=null;if(!observed)collectionRecovery=null;busy=true;adsBusy=false;clearTimeout(timer);timer=null;
-  if(changed){adsSuccess();frame=null;catalogState=null;catalogPaused=false;catalogProducts.clear();catalogSignature='';catalogNeedsRead=true;invalidateCheckpointHistory();dirty=false;editSequence++;draftRevision=0;el('ExpensesValue').value='';el('Recharge').value='UNCONFIRMED';}
+  if(changed){adsSuccess();frame=null;observeAudits(selected);catalogState=null;catalogPaused=false;catalogProducts.clear();catalogSignature='';catalogNeedsRead=true;invalidateCheckpointHistory();dirty=false;editSequence++;draftRevision=0;el('ExpensesValue').value='';el('Recharge').value='UNCONFIRMED';}
   status(automatic?'Atualizando vendas, cancelamentos e anúncios de '+monthName(month)+'…':'Consultando os pedidos de '+monthName(month)+'…');render();
   const current=()=>token===generation&&month===selected;
   let operation='read';
@@ -758,7 +760,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
    const raw=await api('finance/business-month',{operation:'expenses',month:selected,revision,external_expenses_cents:amount,recharge_treatment:treatment});
    if(token!==generation||selected!==month)return false;
    const result=projectBusinessMonth(raw);if(!result||result.month!==selected)throw Error('As despesas foram enviadas, mas o resultado não pôde ser conferido. Atualize o mês.');
-   frame=result;invalidateCheckpointHistory();draftRevision=result.expenses.revision;
+   frame=result;observeAudits(selected);invalidateCheckpointHistory();draftRevision=result.expenses.revision;
    if(submitted===editSequence){dirty=false;fillExpenses({force:true});}
    render();status('Despesas do mês salvas. Produção, imposto e anúncios continuam contabilizados separadamente.');return true;
   }catch(error){

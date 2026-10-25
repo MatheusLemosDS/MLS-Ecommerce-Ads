@@ -4,7 +4,7 @@ import vm from 'node:vm';
 import {D1} from './sqlite-d1.mjs';
 import {projectBusinessMonth} from '../src/business-month.mjs';
 import {BUSINESS_SYNC_SCHEMA,readBusinessSyncState} from '../src/business-sync.mjs';
-import {buildBusinessMonthView,projectBusinessMonthView,requestBusinessMonthRefresh,BusinessMonthViewError} from '../src/business-month-view-state.mjs';
+import {buildBusinessMonthView,projectBusinessMonthView,projectBusinessMonthAuditScope,requestBusinessMonthRefresh,BusinessMonthViewError} from '../src/business-month-view-state.mjs';
 
 const clock=Date.UTC(2026,9,25,15),stamp=clock/1000,now=()=>clock;
 function monthly({complete=false,month='2026-10',at=stamp}={}){
@@ -42,6 +42,48 @@ test('the embedded projector is self-contained and rejects mismatched active met
  const customer=structuredClone(value);customer.collection.order_sn='private';assert.equal(projectBusinessMonthView(customer,projectBusinessMonth),null);
  let reads=0;const accessor={...value};Object.defineProperty(accessor,'display',{enumerable:true,get(){reads++;return value.display;}});assert.equal(projectBusinessMonthView(accessor,projectBusinessMonth),null);assert.equal(reads,0);
  assert.throws(()=>view(monthly(),monthly(),'PUBLISHED'),error=>error instanceof BusinessMonthViewError&&error.message==='BUSINESS_MONTH_VIEW_INVALID');
+});
+
+function publishedScope(display){
+ const month=display.month,last=Number(display.end_date.slice(8));
+ return {publication_revision:7,start_date:display.start_date,end_date:display.end_date,sources:Array.from({length:Math.ceil(last/15)},(_,index)=>({run_id:String(index+1).repeat(8)+'-1111-4111-8111-111111111111',source_revision:index+2,start_date:month+'-'+String(index*15+1).padStart(2,'0'),end_date:month+'-'+String(Math.min(index*15+15,last)).padStart(2,'0')}))};
+}
+
+test('negotiated view carries the exact published identities and keeps the previous view contract unchanged',()=>{
+ const display=monthly({complete:true}),active=monthly(),audit_scope=publishedScope(display),observed={display,active,display_source:'PUBLISHED',audit_scope};
+ const legacy=buildBusinessMonthView(observed,policy(),{now});
+ assert.equal(legacy.schema,'business_month_view_v1');assert.equal(Object.hasOwn(legacy,'audit_scope'),false);
+ assert.deepEqual(Object.keys(legacy),['schema','month','display','display_source','collection','automatic']);
+ const value=buildBusinessMonthView(observed,policy(),{now,contract:'business-month-view-v2'});
+ assert.equal(value.schema,'business_month_view_v2');assert.deepEqual(value.audit_scope,audit_scope);assert.deepEqual(value.display,legacy.display);
+ const detached=vm.runInNewContext('('+projectBusinessMonthView.toString()+')(JSON.parse(serialized),value=>value,('+projectBusinessMonthAuditScope.toString()+'))',{serialized:JSON.stringify(value)});
+ assert.deepEqual(JSON.parse(JSON.stringify(detached)),value);
+ value.audit_scope.sources[0].source_revision=99;assert.equal(audit_scope.sources[0].source_revision,2);
+ // Matching totals, dates and source clocks cannot identify a publication.
+ const next=structuredClone(observed);next.audit_scope.publication_revision++;next.audit_scope.sources[0].run_id='99999999-9999-4999-8999-999999999999';
+ const updated=buildBusinessMonthView(next,policy(),{now,contract:'business-month-view-v2'});
+ assert.deepEqual(updated.display,legacy.display);assert.notDeepEqual(updated.audit_scope,audit_scope);
+});
+
+test('active or unscoped views cannot claim a published audit cohort',()=>{
+ const active=monthly(),display=monthly({complete:true}),options={now,contract:'business-month-view-v2'};
+ const value=buildBusinessMonthView({display:active,active,display_source:'ACTIVE',audit_scope:null},policy(),options);
+ assert.equal(value.audit_scope,null);assert.ok(projectBusinessMonthView(value,projectBusinessMonth,projectBusinessMonthAuditScope));
+ assert.equal(projectBusinessMonthView(value,projectBusinessMonth),null);
+ assert.throws(()=>buildBusinessMonthView({display,active,display_source:'PUBLISHED'},policy(),options),{message:'BUSINESS_MONTH_VIEW_INVALID'});
+ assert.throws(()=>buildBusinessMonthView({display:active,active,display_source:'ACTIVE',audit_scope:publishedScope(display)},policy(),options),{message:'BUSINESS_MONTH_VIEW_INVALID'});
+ assert.throws(()=>buildBusinessMonthView({display,active,display_source:'PUBLISHED',audit_scope:publishedScope(display)},policy(),{now,contract:'future'}),error=>error.status===409);
+});
+
+test('audit identities reject wrong dates, overlapping windows, duplicate runs and unsafe values without invoking getters',()=>{
+ const scope=publishedScope(monthly({complete:true}));
+ assert.ok(projectBusinessMonthAuditScope(scope));
+ for(const mutate of [value=>value.publication_revision=0,value=>value.publication_revision=2147483648,value=>value.start_date='2026-10-02',value=>value.end_date='2026-10-32',value=>value.sources.pop(),value=>value.sources[0].source_revision=0,value=>value.sources[0].order_sn='private',value=>value.sources[0].run_id='not-a-run',value=>value.sources[0].end_date='2026-10-16',value=>value.sources[1].run_id=value.sources[0].run_id,value=>value.sources.reverse()]){
+  const invalid=structuredClone(scope);mutate(invalid);assert.equal(projectBusinessMonthAuditScope(invalid),null);
+ }
+ let reads=0;const getter=structuredClone(scope);Object.defineProperty(getter.sources,'0',{enumerable:true,get(){reads++;return scope.sources[0];}});assert.equal(projectBusinessMonthAuditScope(getter),null);assert.equal(reads,0);
+ const display=monthly({complete:true}),valid=buildBusinessMonthView({display,active:monthly(),display_source:'PUBLISHED',audit_scope:scope},policy(),{now,contract:'business-month-view-v2'}),wrongMonth=structuredClone(valid);
+ wrongMonth.audit_scope=publishedScope(monthly({month:'2026-09',complete:true}));assert.equal(projectBusinessMonthView(wrongMonth,projectBusinessMonth,projectBusinessMonthAuditScope),null);
 });
 
 test('a priority request changes only the local eligible due time in one batch and never reads source bindings',async()=>{

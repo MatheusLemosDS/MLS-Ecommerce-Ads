@@ -28,6 +28,31 @@ Todos os produtos vendidos entram na fila automática mesmo durante uma coleta p
 
 A [pesquisa de arquitetura e referências públicas](PESQUISA_COLETA_AUTOMATICA.md) registra as fontes, licenças e limites observados. A validação inclui o caminho App → Auth → Finance compilado normal e minificado, falhas por pedido, retomada sem duplicação e disputa entre navegador, cron e catálogo.
 
+## Pausa durante o encerramento da coleta
+
+Uma pausa podia ser confirmada entre a última leitura do estado e a gravação
+final da execução. A coleta seguinte permanecia desativada, mas a execução que
+estava terminando podia substituir `PAUSED` por `COMPLETE` ou `ERROR`, inclusive
+na auditoria. O encerramento agora resolve o estado de pausa na mesma transação
+que libera a lease, preserva o último sucesso anterior e registra o estado
+efetivamente salvo.
+
+Uma retomada confirmada nesse intervalo mantém a agenda definida pelo
+proprietário. A execução anterior não pode liberar uma lease que já pertence a
+outra execução. As regressões reproduzem pausa em conclusão normal e falhas,
+retomada concorrente e substituição do token, usando o banco de teste D1.
+
+## Conferências da mesma publicação
+
+As seções de devoluções e liberações usam a identidade da publicação que gerou
+o resumo exibido. O cliente atual negocia `business-month-view-v2`; o formato
+anterior permanece disponível para abas abertas antes da atualização. O novo
+campo reúne revisão da publicação, período e IDs/revisões das fontes. Uma
+resposta de outra publicação não substitui as evidências exibidas, mesmo que
+seus totais sejam iguais. Consultas manuais parciais suspendem essas seções até
+que exista novamente um resumo publicado com identidade correspondente. Abas
+ocultas também invalidam respostas antigas, sem iniciar consultas novas.
+
 ## Abas abertas durante uma publicação
 
 O campo novo `collection` revelou uma incompatibilidade com a validação estrita do cliente anterior. O teste com o código de `d487da7` reproduz a rejeição no início da atualização, sem erro HTTP, preservando o resumo já mostrado. A versão atual aceita o mesmo conteúdo.

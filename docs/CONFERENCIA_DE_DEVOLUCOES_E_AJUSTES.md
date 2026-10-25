@@ -73,6 +73,12 @@ repasse-base e aos horários originais da publicação. Uma coleta em andamento
 não substitui a referência exibida. Uma falha conserva o último relatório
 validado com sua data e registra uma tentativa separada.
 
+A interface também compara a revisão da publicação e a identidade completa das
+fontes com o resumo que está na tela. Uma resposta válida de outra atualização
+do mesmo mês é recusada, inclusive quando datas, contagens e valores coincidem.
+Ao trocar de mês ou iniciar uma consulta manual, a conferência anterior é
+suspensa; ela retorna após a leitura de uma publicação correspondente.
+
 ## Evidência e próxima etapa
 
 Foram testados os três Workers gerados, normais e minificados, a captura nas

@@ -122,7 +122,6 @@ export async function runBusinessSync(env,services,{now=()=>Date.now(),maxSteps=
  }catch(error){if(!yielded){status='ERROR';errorCode=error instanceof BusinessSyncError&&error.message==='BUSINESS_SYNC_RESULT_INVALID'?error.message:'BUSINESS_SYNC_COLLECTION_UNAVAILABLE';}}
  const finished=Math.max(started,Math.floor(syncClock(now)/1000)),latest=await syncRead(db);
  if(latest.row.lease_token!==token){state=latest.state;return result('LEASED',financeSteps,adsReads);}
- if(!latest.state.enabled){status='PAUSED';errorCode=null;}
  const failure=errorCode!==null,failureCount=failure?Math.min(latest.state.failure_count+1,1000000):0;
  // The Finance page lease and its short checkpoint are normal bounded work,
  // including an interactive reader racing the cron. They must not turn a
@@ -132,11 +131,14 @@ export async function runBusinessSync(env,services,{now=()=>Date.now(),maxSteps=
  const delay=providerWait?Math.max(300,frame.collection.retry_after_seconds):failure?[300,600,1200,1800][Math.min(failureCount-1,3)]:continueSoon?60:300;
  const summary=frame?JSON.stringify(syncSummary(frame)):latest.state.summary?.month===month?latest.row.summary:null;
  const next=stopped&&syncMonth(finished*1000)!==month?finished:continueSoon?Math.max(finished+(ordinaryYield?frame.collection.retry_after_seconds:0),started+delay):finished+delay;
+ // Policy changes can commit after the final read above. Resolve pause in the
+ // same transaction that releases the lease, and keep a newer policy's due
+ // time (especially an explicit resume) instead of overwriting it here.
  let writes;try{writes=await db.batch([
-  db.prepare('UPDATE business_sync_state SET status=?,lease_token=NULL,lease_expires_at=NULL,next_run_at=?,failure_count=?,last_success_at=?,last_error=?,summary=? WHERE id=1 AND lease_token=?').bind(status,next,failureCount,status==='COMPLETE'?finished:latest.state.last_success_at,errorCode,summary,token),
-  db.prepare("INSERT INTO business_sync_audit(id,kind,month,status,started_at,finished_at,finance_steps,ads_reads,error_code,policy_revision,actor,summary) SELECT ?,'RUN',month,status,?,?,?,?,?,revision,'business-sync',summary FROM business_sync_state WHERE changes()=1 AND id=1 AND lease_token IS NULL AND last_attempt_at=?").bind(token,started,finished,financeSteps,adsReads,errorCode,started),
+  db.prepare("UPDATE business_sync_state SET status=CASE WHEN enabled=0 THEN 'PAUSED' ELSE ? END,lease_token=NULL,lease_expires_at=NULL,next_run_at=CASE WHEN revision<>? THEN next_run_at ELSE ? END,failure_count=CASE WHEN enabled=0 THEN 0 ELSE ? END,last_success_at=CASE WHEN enabled=1 AND ?='COMPLETE' THEN ? ELSE last_success_at END,last_error=CASE WHEN enabled=0 THEN NULL ELSE ? END,summary=? WHERE id=1 AND lease_token=?").bind(status,latest.state.revision,next,failureCount,status,finished,errorCode,summary,token),
+  db.prepare("INSERT INTO business_sync_audit(id,kind,month,status,started_at,finished_at,finance_steps,ads_reads,error_code,policy_revision,actor,summary) SELECT ?,'RUN',month,status,?,?,?,?,last_error,revision,'business-sync',summary FROM business_sync_state WHERE changes()=1 AND id=1 AND lease_token IS NULL AND last_attempt_at=?").bind(token,started,finished,financeSteps,adsReads,started),
  ]);}catch{syncFail('BUSINESS_SYNC_STORAGE_UNAVAILABLE');}
  if(writes[0]?.meta?.changes!==1){state=(await syncRead(db)).state;return result(state.enabled?'LEASED':'PAUSED',financeSteps,adsReads);}
  if(writes[1]?.meta?.changes!==1)syncFail('BUSINESS_SYNC_STORAGE_UNAVAILABLE');
- state=(await syncRead(db)).state;return result(status,financeSteps,adsReads);
+ state=(await syncRead(db)).state;return result(state.status,financeSteps,adsReads);
 }
