@@ -1,6 +1,6 @@
 # Roadmap BrazaCommerce
 
-Atualizado em **25/10/2026 UTC**. Base anterior: `77c09bb`, com
+Atualizado em **25/10/2026 UTC**. Base anterior: `bee63b0`, com
 [resumo financeiro total](RESUMO_FINANCEIRO_TOTAL.md) e
 [integração financeira do Hermes](HERMES_FINANCEIRO.md). O incremento atual traz
 [catálogo salvo e custos por semana/mês](CATALOGO_SALVO_E_CUSTOS_POR_PERIODO.md).
@@ -83,11 +83,16 @@ gasto que gerou cada pedido. Repasse esperado não comprova dinheiro liquidado.
 Devolução identificada não comprova o valor final reembolsado. O sistema mantém
 o lucro realizado desconhecido e não promete precisão de 100%.
 
+A [conferência automática de devoluções e ajustes](CONFERENCIA_DE_DEVOLUCOES_E_AJUSTES.md)
+agora preserva as referências privadas, lê os detalhes em segundo plano e
+compara os valores de ajuste. Isso fornece evidências; não confirma recebimento
+nem libera o lucro estrito por si só.
+
 ## Dependências que bloqueiam decisões comerciais
 
 | Dependência | O que falta obter ou validar | Como comprovar a conclusão |
 | --- | --- | --- |
-| Recebimentos e reembolsos | Valores efetivamente liquidados, devolvidos e ajustados, com datas e revisões | Reconciliação com uma referência financeira da Shopee do mesmo escopo, explicando cada diferença e sem contar o mesmo ajuste duas vezes. |
+| Recebimentos e reembolsos | Detalhes de devoluções e três valores de ajuste agora têm captura e auditoria automáticas. Ainda faltam validar liberações efetivas e recebimentos, com datas e revisões | Reconciliação com uma referência financeira da Shopee do mesmo escopo, explicando cada diferença e sem contar o mesmo ajuste duas vezes. |
 | Custos e despesas | Cobertura das unidades, vigência dos custos e despesas externas completas | Revisões identificáveis e resultado bloqueado quando faltar custo, despesa ou classificação de recarga. |
 | Estoque | Quantidade vendável por produto/variação, reservas, disponibilidade e atualização | Contrato oficial validado com exemplos reais; informação vencida ou ausente impede propor aumento de exposição. |
 | Campanhas e atribuição | IDs de campanha/produto/variação, gasto, conversões, janela e fuso da atribuição | Totais reconciliados com a conta, distinção entre atribuição direta/ampla e estimativas explicitadas onde não houver vínculo comprovável. |
@@ -122,7 +127,7 @@ sem copiar promessas de resultado ou tratar recomendações como lucro comprovad
 
 | Fase | Entrega e estado | Critério concreto para avançar |
 | --- | --- | --- |
-| 0 — Coleta confiável e diagnóstico | Cron, cache inicial e diagnóstico versionados; execução real a conferir | Publicar a versão correspondente, observar cron com o navegador fechado, conferir último sucesso/erro e horários de cada fonte; demonstrar pausa/retomada, ausência de sobreposição, espera após falha e sinalização de dado vencido. |
+| 0 — Coleta confiável e diagnóstico | Cron e resumo publicado implantados (`bee63b0`), verificações públicas e registros de execução observados | Publicar a versão correspondente, observar cron com o navegador fechado, conferir último sucesso/erro e horários de cada fonte; demonstrar pausa/retomada, ausência de sobreposição, espera após falha e sinalização de dado vencido. |
 | 1 — Financeiro confiável | Apuração prevista disponível; conciliação ainda incompleta | Conferir um período completo contra a Shopee, incluindo recebimentos, reembolsos, ajustes, produção, DAS e Ads. Registrar diferenças, cobertura e bases de tempo; manter desconhecido o que não foi conciliado. |
 | 2 — Contratos de estoque e campanha | Planejado | Validar fontes oficiais, permissões, IDs, unidades, fuso, paginação e atualização. Fechar o contrato de cada escrita pretendida; mostrar que estoque, gasto e campanha se referem ao mesmo escopo da decisão. |
 | 3 — Ranking de campeões com atribuição | Planejado após as fases 1 e 2 | Ordenar contribuição depois de Ads em períodos compatíveis, com cobertura de repasse/gasto e estoque. Separar pedidos mistos e atribuição estimada; reconciliar totais e reproduzir o ranking a partir das revisões guardadas. |

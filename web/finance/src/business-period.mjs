@@ -2,6 +2,7 @@ import {FINANCE_PROFILE,FinanceConnectionError} from './connection-store.mjs';
 import {ensureFinanceAccessToken} from './refresh-coordinator.mjs';
 import {requestFinanceAuthJson} from './auth-json-transport.mjs';
 import {projectBusinessPeriodRequest,projectBusinessPeriodFrame} from './business-period-frame.mjs';
+import {FINANCIAL_ORDER_EVIDENCE_SCHEMA,buildFinancialOrderEvidence} from './financial-order-evidence.mjs';
 
 // A creation-time cohort of every order, classified from current detail status.
 // Only the existing read APIs are used; no Ads attribution or settlement is inferred.
@@ -20,6 +21,7 @@ const businessCursor=value=>typeof value==='string'&&value.length>0&&value.lengt
 const businessHash=async value=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',businessEncoder.encode(value))),byte=>byte.toString(16).padStart(2,'0')).join('');
 const businessBuckets=['completed','ongoing','cancelled','cancel_pending','unpaid','other','unknown'];
 const BUSINESS_SCHEMA=[
+ ...FINANCIAL_ORDER_EVIDENCE_SCHEMA,
  `CREATE TABLE IF NOT EXISTS finance_business_period_runs (run_id TEXT PRIMARY KEY,partner_id INTEGER NOT NULL,shop_id INTEGER NOT NULL,revision INTEGER NOT NULL,status TEXT NOT NULL,start_date TEXT NOT NULL,end_date TEXT NOT NULL,time_from INTEGER NOT NULL,time_to INTEGER NOT NULL,cutoff_at INTEGER NOT NULL,checked_at INTEGER NOT NULL,created_at INTEGER NOT NULL,cursor TEXT NOT NULL,pages_read INTEGER NOT NULL,duplicate_orders INTEGER NOT NULL,lease_owner TEXT,lease_until INTEGER,last_error TEXT)`,
  `CREATE TABLE IF NOT EXISTS finance_business_period_orders (run_id TEXT NOT NULL,order_hash TEXT NOT NULL,bucket TEXT NOT NULL,payment_covered INTEGER NOT NULL,sales_raw TEXT,escrow_raw TEXT,ads_raw TEXT,returns_seen INTEGER,items TEXT NOT NULL,source_hash TEXT NOT NULL,checked_at INTEGER NOT NULL,PRIMARY KEY(run_id,order_hash))`,
  `CREATE TABLE IF NOT EXISTS finance_business_period_cursors (run_id TEXT NOT NULL,cursor_hash TEXT NOT NULL,PRIMARY KEY(run_id,cursor_hash))`,
@@ -196,10 +198,11 @@ export async function runFinanceBusinessPeriod(env,options={}){
   const nextDay=new Date(Date.parse(input.end_date+'T00:00:00Z')+86400000).toISOString().slice(0,10),timeFrom=businessMidnight(input.start_date),timeTo=Math.min(initialTime,businessMidnight(nextDay)-1);
   if(timeTo<timeFrom)throw businessFailure('REQUEST_INVALID',400);
   const freshness=input.end_date===today?60:900;
-  const recentSql="SELECT run_id FROM finance_business_period_runs WHERE partner_id=? AND shop_id=? AND start_date=? AND end_date=? AND ((status='COMPLETE' AND cutoff_at>=?) OR (status='RUNNING' AND cutoff_at>=?)) ORDER BY created_at DESC,run_id DESC LIMIT 1",recentArgs=[...businessIdentity,input.start_date,input.end_date,initialTime-freshness,initialTime-900];
+  const recentSql="SELECT r.run_id FROM finance_business_period_runs r WHERE partner_id=? AND shop_id=? AND start_date=? AND end_date=? AND ((status='COMPLETE' AND cutoff_at>=? AND NOT EXISTS(SELECT 1 FROM finance_business_period_orders o WHERE o.run_id=r.run_id AND NOT EXISTS(SELECT 1 FROM finance_business_order_evidence e WHERE e.run_id=o.run_id AND e.order_hash=o.order_hash AND e.source_hash=o.source_hash AND e.checked_at=o.checked_at))) OR (status='RUNNING' AND cutoff_at>=?)) ORDER BY created_at DESC,run_id DESC LIMIT 1",recentArgs=[...businessIdentity,input.start_date,input.end_date,initialTime-freshness,initialTime-900];
   const recent=await storage(()=>prepare(recentSql,recentArgs).first());if(recent)return (await snapshot(recent.run_id)).frame;
   const cutoff=initialTime-30*86400;
   await storage(()=>db.batch([
+   prepare('DELETE FROM finance_business_order_evidence WHERE run_id IN (SELECT run_id FROM finance_business_period_runs WHERE created_at<? AND partner_id=? AND shop_id=?)',[cutoff,...businessIdentity]),
    prepare('DELETE FROM finance_business_period_orders WHERE run_id IN (SELECT run_id FROM finance_business_period_runs WHERE created_at<? AND partner_id=? AND shop_id=?)',[cutoff,...businessIdentity]),
    prepare('DELETE FROM finance_business_period_cursors WHERE run_id IN (SELECT run_id FROM finance_business_period_runs WHERE created_at<? AND partner_id=? AND shop_id=?)',[cutoff,...businessIdentity]),
    prepare('DELETE FROM finance_business_period_payment_cache WHERE run_id IN (SELECT run_id FROM finance_business_period_runs WHERE created_at<? AND partner_id=? AND shop_id=?)',[cutoff,...businessIdentity]),
@@ -207,6 +210,7 @@ export async function runFinanceBusinessPeriod(env,options={}){
   ]));
   const evict="SELECT run_id FROM finance_business_period_runs WHERE partner_id=? AND shop_id=? AND cutoff_at<? AND (lease_owner IS NULL OR lease_until<=?) AND (SELECT COUNT(*) FROM finance_business_period_runs WHERE partner_id=? AND shop_id=?)>=60 ORDER BY created_at,run_id LIMIT 1",evictArgs=[...businessIdentity,initialTime-900,initialTime,...businessIdentity];
   await storage(()=>db.batch([
+   prepare('DELETE FROM finance_business_order_evidence WHERE run_id IN ('+evict+')',evictArgs),
    prepare('DELETE FROM finance_business_period_orders WHERE run_id IN ('+evict+')',evictArgs),
    prepare('DELETE FROM finance_business_period_cursors WHERE run_id IN ('+evict+')',evictArgs),
    prepare('DELETE FROM finance_business_period_payment_cache WHERE run_id IN ('+evict+')',evictArgs),
@@ -234,7 +238,11 @@ export async function runFinanceBusinessPeriod(env,options={}){
   const limited=await storage(()=>prepare("UPDATE finance_business_period_runs SET status='LIMIT_REACHED',revision=revision+1,checked_at=?,lease_owner=NULL,lease_until=NULL,last_error=NULL WHERE "+guard,[stamp,...guardArgs(stamp)]).run());
   return (await snapshot(input.run_id,limited.meta.changes===1?undefined:'BUSINESS_PERIOD_CONFLICT')).frame;
  };
- const newlyCached=[];let retainedCache=observed.cache;
+ const newlyCached=[],newEvidence=new Map();let retainedCache=observed.cache;
+ const evidenceStatements=(records,stamp)=>records.flatMap(record=>{
+  const evidence=newEvidence.get(record.order_hash);if(!evidence||evidence.source_hash!==record.source_hash||evidence.checked_at!==record.checked_at)return [];
+  return [prepare('INSERT INTO finance_business_order_evidence(run_id,order_hash,source_hash,checked_at,payload,payload_hash) SELECT ?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM finance_business_period_runs WHERE '+guard+') ON CONFLICT(run_id,order_hash) DO UPDATE SET source_hash=excluded.source_hash,checked_at=excluded.checked_at,payload=excluded.payload,payload_hash=excluded.payload_hash',[input.run_id,record.order_hash,record.source_hash,record.checked_at,evidence.payload,evidence.payload_hash,...guardArgs(stamp)])];
+ });
  try{
   remainingTimeout();
   if(run.pages_read>=200||observed.records.length>=1000)return await stopAtLimit(epoch());
@@ -274,7 +282,7 @@ export async function runFinanceBusinessPeriod(env,options={}){
     if(Object.hasOwn(row,'create_time')&&(!Number.isSafeInteger(row.create_time)||row.create_time<run.time_from||row.create_time>run.time_to))throw businessFailure('IDENTITY_MISMATCH');
     const bucket=businessBucket(row.order_status),paid=['completed','ongoing'].includes(bucket);
     if(paid&&row.currency!=='BRL')throw businessFailure('DETAIL_INVALID');
-    bySerial.set(row.order_sn,{bucket,items:paid?businessItems(row.item_list,'model_quantity_purchased'):[]});
+    bySerial.set(row.order_sn,{bucket,order_status:row.order_status,currency:row.currency,items:paid?businessItems(row.item_list,'model_quantity_purchased'):[]});
    }
    details=selected.map(row=>({...row,...bySerial.get(row.serial)}));
   }
@@ -288,8 +296,8 @@ export async function runFinanceBusinessPeriod(env,options={}){
      const saved=cached.get(selection.orderHash);
      if(saved&&saved.bucket===selection.bucket&&saved.items===JSON.stringify(selection.items)){records[position]=saved;continue;}
      const record={order_hash:selection.orderHash,bucket:selection.bucket,payment_covered:0,sales_raw:null,escrow_raw:null,ads_raw:null,returns_seen:null,items:JSON.stringify(selection.items),checked_at:epoch()};
+     let payment;
      if(['completed','ongoing'].includes(selection.bucket)){
-      let payment;
       try{payment=await get(BUSINESS_PAYMENT,{order_sn:selection.serial});}catch(error){if(selection.bucket!=='ongoing'||!businessPaymentUnavailable(error))throw error;}
       if(payment!==undefined){
        const income=payment.order_income;
@@ -310,6 +318,9 @@ export async function runFinanceBusinessPeriod(env,options={}){
      }
      record.checked_at=epoch();record.source_hash=await businessHash(JSON.stringify(businessCanonical(record)));records[position]=record;
      if(record.payment_covered===1)newlyCached.push(record);
+     // Optional evidence has its own private bounded representation. Missing or
+     // invalid optional fields cannot invalidate the established v1 ledger.
+     try{newEvidence.set(record.order_hash,await buildFinancialOrderEvidence({order_sn:selection.serial,order_status:selection.order_status??null,currency:selection.currency??null,payment,record}));}catch{}
     }catch(error){
      const priority={BUSINESS_PERIOD_CHECKPOINT:0,BUSINESS_PERIOD_BUSY:0,BUSINESS_PERIOD_UPSTREAM_UNAVAILABLE:1,BUSINESS_PERIOD_TIMEOUT:2,BUSINESS_PERIOD_RATE_LIMIT:3,BUSINESS_PERIOD_AUTH_REQUIRED:4,BUSINESS_PERIOD_INVALID_SOURCE:5};
      if(!failed||priority[businessDiagnostic(error)]>priority[businessDiagnostic(failed)])failed=error;
@@ -328,6 +339,7 @@ export async function runFinanceBusinessPeriod(env,options={}){
   const statements=records.map(record=>prepare('INSERT INTO finance_business_period_orders(run_id,order_hash,bucket,payment_covered,sales_raw,escrow_raw,ads_raw,returns_seen,items,source_hash,checked_at) SELECT ?,?,?,?,?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM finance_business_period_runs WHERE '+guard+')',[input.run_id,record.order_hash,record.bucket,record.payment_covered,record.sales_raw,record.escrow_raw,record.ads_raw,record.returns_seen,record.items,record.source_hash,record.checked_at,...guardArgs(stamp)]));
   if(listing.more)statements.push(prepare('INSERT INTO finance_business_period_cursors(run_id,cursor_hash) SELECT ?,? WHERE EXISTS(SELECT 1 FROM finance_business_period_runs WHERE '+guard+')',[input.run_id,await businessHash(nextCursor),...guardArgs(stamp)]));
   statements.push(prepare('DELETE FROM finance_business_period_payment_cache WHERE run_id=? AND EXISTS(SELECT 1 FROM finance_business_period_runs WHERE '+guard+')',[input.run_id,...guardArgs(stamp)]));
+  statements.push(...evidenceStatements(records,stamp));
   statements.push(prepare('UPDATE finance_business_period_runs SET cursor=?,pages_read=?,duplicate_orders=?,status=?,revision=revision+1,checked_at=?,lease_owner=NULL,lease_until=NULL,last_error=NULL WHERE '+guard,[nextCursor,pages,run.duplicate_orders+duplicates,status,stamp,...guardArgs(stamp)]));
   const committed=await storage(()=>db.batch(statements));return (await snapshot(input.run_id,committed.at(-1)?.meta?.changes===1?undefined:'BUSINESS_PERIOD_CONFLICT')).frame;
  }catch(error){
@@ -336,6 +348,7 @@ export async function runFinanceBusinessPeriod(env,options={}){
   // value bounded even when a valid page has unusually many item lines.
   for(const record of new Map([...retainedCache,...newlyCached].map(record=>[record.order_hash,record])).values())if(cache.length<20&&businessEncoder.encode(JSON.stringify([...cache,record])).byteLength<=1048576)cache.push(record);
   const statements=[prepare('DELETE FROM finance_business_period_payment_cache WHERE run_id=? AND EXISTS(SELECT 1 FROM finance_business_period_runs WHERE '+guard+')',[input.run_id,...guardArgs(stamp)]),...cache.map(record=>prepare('INSERT INTO finance_business_period_payment_cache(run_id,order_hash,bucket,payment_covered,sales_raw,escrow_raw,ads_raw,returns_seen,items,source_hash,checked_at) SELECT ?,?,?,?,?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM finance_business_period_runs WHERE '+guard+')',[input.run_id,record.order_hash,record.bucket,record.payment_covered,record.sales_raw,record.escrow_raw,record.ads_raw,record.returns_seen,record.items,record.source_hash,record.checked_at,...guardArgs(stamp)]))];
+  statements.push(...evidenceStatements(cache,stamp));
   statements.push(prepare('UPDATE finance_business_period_runs SET revision=revision+?,lease_owner=NULL,lease_until=NULL,last_error=?,checked_at=? WHERE '+guard,[newlyCached.length?1:0,diagnostic,stamp,...guardArgs(stamp)]));
   const saved=await storage(()=>db.batch(statements));if(saved.at(-1)?.meta?.changes!==1)return (await snapshot(input.run_id,'BUSINESS_PERIOD_CONFLICT')).frame;
   return (await snapshot(input.run_id)).frame;

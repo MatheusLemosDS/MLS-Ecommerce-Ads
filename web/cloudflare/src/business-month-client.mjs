@@ -1,3 +1,4 @@
+import {BUSINESS_RECONCILIATION_CLIENT} from './business-reconciliation-view.mjs';
 import {projectBusinessMonth} from './business-month.mjs';
 import {projectBusinessMonthView} from './business-month-view-state.mjs';
 import {projectAdsCalendar} from './ads-calendar.mjs';
@@ -549,7 +550,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
   const task=(async()=>{try{const value=checkedRefreshRequest(await api('finance/business-month-request',{month:selected}),selected);if(!current())return false;await readWorkspaceView({selected,background:true});if(!current())return false;status(value.status==='PAUSED'?'A coleta automática foi pausada. Os valores salvos foram preservados.':value.status==='RETRY_WAIT'?'A fonte precisa aguardar antes da próxima tentativa. O resumo salvo foi preservado.':value.status==='RUNNING'?'A coleta já está em andamento. O painel acompanhará os avanços automaticamente.':'Atualização priorizada. A coleta será executada automaticamente; você pode manter o painel fechado.');return true;}catch{if(current())status('Não foi possível priorizar a atualização agora. O resumo salvo foi preservado.',true);return false;}finally{if(current()){priorityPromise=null;controls();schedule();}}})();priorityPromise=task;controls();return task;
  }
  function checkedFrame(value,expectedMonth){const checked=projectBusinessMonth(value);if(!checked||checked.month!==expectedMonth)throw Error('Os dados mensais não puderam ser conferidos. Atualize o mês para tentar novamente.');return checked;}
- function apply(value,expectedMonth){const previous=frame?.classification_revision;frame=checkedFrame(value,expectedMonth);if(previous!==frame.classification_revision){catalogNeedsRead=true;if(previous!==undefined)catalogProductsChanged=true;}invalidateCheckpointHistory();render();return frame;}
+ function apply(value,expectedMonth){const previous=frame?.classification_revision;frame=checkedFrame(value,expectedMonth);if(previous!==frame.classification_revision){catalogNeedsRead=true;if(previous!==undefined)catalogProductsChanged=true;}invalidateCheckpointHistory();render();try{globalThis.brazaReconciliation?.observe(expectedMonth,[frame.start_date,frame.end_date,frame.source_checked_at?.finance_oldest_at??'',frame.source_checked_at?.finance_latest_at??'',frame.coverage.orders,frame.coverage.paid,frame.expected_repass_cents??''].join('|'));}catch{}return frame;}
  function collectionProgress(value){return [value.progress.pages_read,value.coverage.orders,value.progress.windows_complete];}
  function trackCollection(value){
   if(!value.collection)return null;
@@ -776,7 +777,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
  }
  async function start(options={}){
   if(started)return false;if(typeof options.api!=='function'||!el('Select'))return false;
-  api=options.api;syncVariants=options.syncVariants;onCatalogChanged=options.onCatalogChanged;bootstrapPhase='READY';bootstrapCompleted=true;started=true;
+  api=options.api;try{globalThis.brazaReconciliation?.start({api});}catch{}syncVariants=options.syncVariants;onCatalogChanged=options.onCatalogChanged;bootstrapPhase='READY';bootstrapCompleted=true;started=true;
   let selected;try{const params=new URLSearchParams(globalThis.location?.search||'');selected=params.getAll('month').length===1?params.get('month'):null;}catch{}
   el('Select').max=today().slice(0,7);el('Select').value=validMonth(selected)?selected:bootstrapPrepared&&validMonth(el('Select').value)?el('Select').value:today().slice(0,7);
   el('Refresh').onclick=()=>frame?.status==='COMPLETE'&&!paused&&!collectionRecovery?.waiting?refreshCosts():refresh();el('SourceRefresh').onclick=requestSalesUpdate;el('Select').onchange=()=>readWorkspaceView();
@@ -792,7 +793,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
   document.addEventListener('visibilitychange',()=>{if(document.hidden){clearTimeout(timer);timer=null;clearTimeout(catalogTimer);catalogTimer=null;}else{schedule();scheduleCatalog();}});
   manualCollection=false;return readWorkspaceView();
  }
- function stop(){started=false;viewRequest++;viewPromise=null;priorityPromise=null;manualCollection=false;resetCostDiagnostic();catalogRequest++;catalogBusy=false;clearTimeout(catalogTimer);catalogTimer=null;paused=true;resumeOnVisible=false;collectionRecovery=null;generation++;checkpointHistoryRequest++;checkpointHistoryBusy=false;busy=false;adsBusy=false;clearTimeout(timer);timer=null;controls();}
+ function stop(){try{globalThis.brazaReconciliation?.stop();}catch{}started=false;viewRequest++;viewPromise=null;priorityPromise=null;manualCollection=false;resetCostDiagnostic();catalogRequest++;catalogBusy=false;clearTimeout(catalogTimer);catalogTimer=null;paused=true;resumeOnVisible=false;collectionRecovery=null;generation++;checkpointHistoryRequest++;checkpointHistoryBusy=false;busy=false;adsBusy=false;clearTimeout(timer);timer=null;controls();}
  globalThis.brazaMonthDashboard={clientContract,prepare,bootstrapState,start,refresh,refreshCosts,stop,supportsCatalogQueue:catalogFeature,syncCatalogCandidates,refreshCatalog:()=>{catalogNeedsRead=true;return updateCatalog();},catalogMetadata:item=>catalogProducts.get(item)||null};
 })();
-`;
+`+BUSINESS_RECONCILIATION_CLIENT;
