@@ -43,9 +43,9 @@ test('cached catalogue metadata is reapplied immediately after a rule edit while
  await assert.rejects(saveCostRules(env,{revision:1,values},'admin'),error=>error.status===409);const audit=env.ADMIN_DB.db.prepare('SELECT payload FROM production_cost_rules_audit ORDER BY revision').all();assert.equal(audit.length,2);assert.equal(JSON.parse(audit[0].payload).rules[0].unit_cost_cents,1250);
  }finally{env.ADMIN_DB.db.close();}
 });
-test('fresh catalogue skips duplicate provider reads, expired metadata is pending and private or wrong product replies cannot overwrite it',async()=>{
+test('fresh catalogue skips duplicate provider reads, saved classification survives age and poisoned replies cannot overwrite it',async()=>{
  const env=fixture();try{let calls=0;const read=async()=>{calls++;return provider();};await syncCostRuleCatalog(env,['101'],read,{now});await syncCostRuleCatalog(env,['101'],read,{now});assert.equal(calls,1);
- const old=await readCostRuleReference(env,['101'],{now:()=>clock+901000});assert.ok(old.variants.every(row=>row.unit_cost_cents===null&&row.reason==='CATALOG_STALE'));
+ const old=await readCostRuleReference(env,['101'],{now:()=>clock+901000});assert.ok(old.variants.every(row=>row.unit_cost_cents===1250&&row.reason===null));
  const before=env.ADMIN_DB.db.prepare('SELECT * FROM production_cost_catalog').all();await assert.rejects(syncCostRuleCatalog(env,['101'],async()=>({...provider(),secret:'PRIVATE'}),{now,force:true}));assert.deepEqual(env.ADMIN_DB.db.prepare('SELECT * FROM production_cost_catalog').all(),before);
  }finally{env.ADMIN_DB.db.close();}
 });

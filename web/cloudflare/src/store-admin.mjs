@@ -1,3 +1,4 @@
+import {catalogClassificationQueries,catalogClassificationsFromSnapshot} from './catalog-classification.mjs';
 import {validateVariantBindings} from './variant-bindings.mjs';
 import {validateProductionCosts} from './production-costs.mjs';
 import {buildStoreSummary,validateStoreAdjustments,StoreSummaryError} from './store-summary.mjs';
@@ -5,7 +6,7 @@ import {projectStorePeriodRequest,projectStorePeriodFrame} from '../../finance/s
 import {buildStoreProductSummary} from './store-product-summary.mjs';
 import {buildStoreReturnsSummary} from './store-returns-summary.mjs';
 import {projectAdsPeriod} from './ads-period.mjs';
-import {COST_RULE_SCHEMA,costRuleSnapshotQueries,costRuleReferenceFromSnapshot} from './cost-rules.mjs';
+import {COST_RULE_SCHEMA,costRuleSnapshotQueries,costRuleReferenceFromSnapshot,mergeCatalogCostReference} from './cost-rules.mjs';
 
 export const STORE_ADJUSTMENTS_SCHEMA=[
  ...COST_RULE_SCHEMA,
@@ -69,12 +70,13 @@ export async function cacheStoreAdsPeriod(env,rawFinance,rawReport,{now=Date.now
 export async function storePeriodBundle(env,raw,{now=Date.now()}={}){
  const finance=projectStorePeriodFrame(raw);
  if(!finance)storeAdminFail('STORE_PERIOD_UNAVAILABLE',503);
+ const itemIds=finance.items.map(row=>row.item_id),ruleQueries=costRuleSnapshotQueries(env.ADMIN_DB,itemIds),classificationQueries=catalogClassificationQueries(env.ADMIN_DB,itemIds,finance.items);
  const context=await env.ADMIN_DB.batch([
   env.ADMIN_DB.prepare('SELECT revision,payload,updated_at FROM variant_bindings_state WHERE id=1'),
   env.ADMIN_DB.prepare('SELECT revision,payload,updated_at FROM production_costs_state WHERE id=1'),
   env.ADMIN_DB.prepare('SELECT revision,payload,updated_at FROM store_period_adjustments WHERE run_id=?').bind(finance.run_id),
   env.ADMIN_DB.prepare('SELECT payload,updated_at FROM store_period_ads_cache WHERE run_id=?').bind(finance.run_id),
-  ...costRuleSnapshotQueries(env.ADMIN_DB,finance.items.map(row=>row.item_id)),
+  ...ruleQueries,...classificationQueries,
  ]);
  let bindings,costs,adjustments;
  try{
@@ -94,7 +96,7 @@ export async function storePeriodBundle(env,raw,{now=Date.now()}={}){
  const ads_period=readStoredAdsPeriod(context[3]?.results?.[0],finance,now);
  const automatic=adjustments.values?.ads_source==='SHOPEE_PERIOD';
  const effective=automatic?(ads_period?.status==='AVAILABLE'?{...adjustments.values,ads_spend_cents:ads_period.expense_cents}:null):adjustments.values;
- const automaticCosts=costRuleReferenceFromSnapshot(context.slice(4),{now:()=>now});
+ const automaticCosts=mergeCatalogCostReference(costRuleReferenceFromSnapshot(context.slice(4,4+ruleQueries.length),{now:()=>now}),catalogClassificationsFromSnapshot(context.slice(4+ruleQueries.length)));
  const result=buildStoreSummary(finance,bindings,costs,effective,ads_period?.status==='AVAILABLE'?ads_period.expense_cents:null,automaticCosts);
  if(automatic&&!effective)result.pending=result.pending.map(code=>code==='ADJUSTMENTS_REQUIRED'?'ADS_PERIOD_UNAVAILABLE':code);
  return {finance,result,adjustments,product_result:buildStoreProductSummary(finance,bindings,costs,automaticCosts),ads_period,

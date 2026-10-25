@@ -19,10 +19,10 @@ test('one saved correction teaches every compatible sibling and a new model with
  }finally{env.ADMIN_DB.db.close();}
 });
 
-test('expired learned evidence preserves the manual example and never restores adult costs for siblings',async()=>{
+test('saved learned evidence survives an overdue verification without restoring adult costs for siblings',async()=>{
  const env={ADMIN_DB:new D1()};try{await readCostRules(env);await assignCostRules(env,{revision:1,assignments:[correction()]},'admin');await syncCostRuleCatalog(env,['101'],async()=>frame(),{now});
- const reference=await readCostRuleReference(env,['101'],{now:()=>clock+901000});assert.equal(reference.learning[0].status,'PENDING');assert.equal(reference.variants[0].unit_cost_cents,1250);assert.ok(reference.variants.slice(1).every(row=>row.unit_cost_cents===null));
- const binding={item_id:'101',model_id:'1',selling_unit:'SINGLE_GARMENT',size:'P',operator_confirmed:true},priced=productionCostReference({status:'AVAILABLE',rows:[{item_id:'101',model_id:'1',quantity:1}]},{revision:1,bindings:[binding]},{revision:1,values:COST_DEFAULTS},reference);assert.equal(priced.total_cents,null);assert.equal(priced.known_subset_cents,0);
+ const reference=await readCostRuleReference(env,['101'],{now:()=>clock+901000});assert.equal(reference.learning[0].status,'LEARNED');assert.ok(reference.variants.every(row=>row.unit_cost_cents===1250));
+ const binding={item_id:'101',model_id:'1',selling_unit:'SINGLE_GARMENT',size:'P',operator_confirmed:true},priced=productionCostReference({status:'AVAILABLE',rows:[{item_id:'101',model_id:'1',quantity:1}]},{revision:1,bindings:[binding]},{revision:1,values:COST_DEFAULTS},reference);assert.equal(priced.total_cents,1250);assert.equal(priced.known_subset_cents,1250);
  }finally{env.ADMIN_DB.db.close();}
 });
 

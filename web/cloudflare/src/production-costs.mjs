@@ -114,10 +114,19 @@ export function productionCostReference(frame,bindings,costState,automaticRefere
  const profiles=new Map((values.custom_profiles||[]).map(profile=>[profile.id,profile]));
  const assignments=new Map((values.custom_assignments||[]).map(assignment=>[costAssignmentKey(assignment),profiles.get(assignment.profile_id)]));
  const automated=new Map((automaticReference?.variants||[]).map(row=>[row.item_id+':'+row.model_id,row]));
- const ruleManaged=new Set(automaticReference?.restricted_item_ids||[]);
+ const ruleManaged=new Set(automaticReference?.restricted_item_ids||[]),classifiedItems=new Set(automaticReference?.classified_item_ids||[]),catalogBindings=new Map();
+ // Validate one bounded product/model record at a time. The durable table is
+ // intentionally not constrained by the legacy global 1,000-binding array.
+ const requested=new Set(grouped.keys());
+ for(const row of automaticReference?.catalog_bindings||[]){
+  const key=row?.item_id+':'+row?.model_id;if(!requested.has(key))continue;
+  let binding;try{[binding]=validateVariantBindings([row]);}catch{costReferenceFailure();}
+  if(binding.operator_confirmed!==false||catalogBindings.has(key))costReferenceFailure();
+  catalogBindings.set(key,binding);
+ }
  let known=0,mapped=0,unmapped=0;
  for(const [key,row] of grouped){
-  const binding=confirmed.get(key),manual=assignments.get(key)||assignments.get(row.item_id+':*'),automatic=automated.get(key),custom=manual||(automatic?.unit_cost_cents!==null&&automatic?{id:automatic.profile_id,label:automatic.profile_label,unit_cost_cents:automatic.unit_cost_cents}:null),out={...row,unit_cost_cents:null,production_cost_cents:null};
+  const legacy=confirmed.get(key),catalogBinding=catalogBindings.get(key),binding=legacy?.operator_confirmed===true?legacy:classifiedItems.has(row.item_id)?catalogBinding:catalogBinding||legacy,manual=assignments.get(key)||assignments.get(row.item_id+':*'),automatic=automated.get(key),custom=manual||(automatic?.unit_cost_cents!==null&&automatic?{id:automatic.profile_id,label:automatic.profile_label,unit_cost_cents:automatic.unit_cost_cents}:null),out={...row,unit_cost_cents:null,production_cost_cents:null};
   if(custom){
    const subtotal=costSafeProduct(custom.unit_cost_cents,row.quantity);known=costSafeSum(known,subtotal);mapped=costSafeSum(mapped,row.quantity);
    out.unit_cost_cents=custom.unit_cost_cents;out.production_cost_cents=subtotal;
@@ -133,6 +142,7 @@ export function productionCostReference(frame,bindings,costState,automaticRefere
    if(values.mode==='itemized')for(const component of values.components)if(component.basis==='per_piece'||!single)unit=costSafeSum(unit,costSafeProduct(component.amount_cents,component.basis==='per_piece'?pieceCount:1));
    const subtotal=costSafeProduct(unit,row.quantity);known=costSafeSum(known,subtotal);mapped=costSafeSum(mapped,row.quantity);
    out.unit_cost_cents=unit;out.production_cost_cents=subtotal;
+   if(binding===catalogBinding)out.catalog_binding={...catalogBinding};
   }
   variants.push(out);
  }

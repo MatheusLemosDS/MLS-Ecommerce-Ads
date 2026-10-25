@@ -1,6 +1,5 @@
 import {projectBusinessMonth} from './business-month.mjs';
 import {businessMonthWithCheckpoint} from './business-checkpoint.mjs';
-import {syncCostRuleCatalog,selectCostRuleCandidates} from './cost-rules.mjs';
 
 // This job only advances the existing read-only collectors. Financial frames,
 // expenses, declared DAS and cost rules remain owned by their existing stores.
@@ -93,10 +92,6 @@ export async function runBusinessSync(env,services,{now=()=>Date.now(),maxSteps=
    if(frame.status!=='RUNNING')break;
   }
   if(frame?.status==='COMPLETE'&&await canCall(60000)){
-   const costItems=[...new Set([...(frame.product_summary?.products||[]),...frame.unmapped_variants].map(row=>row.item_id))];
-   if(costItems.length&&typeof services?.getFinanceVariantCatalog==='function'&&await canCall(45000)){
-    try{const ids=await selectCostRuleCandidates(env,costItems,{now});if(ids.length){await syncCostRuleCatalog(env,ids,services.getFinanceVariantCatalog,{now});frame=projectBusinessMonth(await businessMonthWithCheckpoint(env,{operation:'read',month},collectors,{now,actor:'business-sync'}));}}catch{}
-   }
    if(await canCall(60000)){
     frame=projectBusinessMonth(await businessMonthWithCheckpoint(env,{operation:'ads',month},collectors,{now,actor:'business-sync'}));
     if(!frame||frame.month!==month)throw new BusinessSyncError('BUSINESS_SYNC_RESULT_INVALID');

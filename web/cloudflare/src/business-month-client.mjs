@@ -20,14 +20,98 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
  const validMonth=value=>typeof value==='string'&&/^\d{4}-(0[1-9]|1[0-2])$/.test(value)&&value>='2000-01'&&value<=today().slice(0,7);
  const monthName=value=>validMonth(value)?new Intl.DateTimeFormat('pt-BR',{month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(value+'-01T12:00:00Z')):'mês selecionado';
  const sourceAge=value=>{if(!Number.isSafeInteger(value)||value<=0)return 'pendente';const minutes=Math.max(0,Math.floor((Date.now()-value*1000)/60000));return minutes<1?'há menos de 1 minuto':minutes<60?'há '+minutes+' minuto(s)':minutes<1440?'há '+Math.floor(minutes/60)+' hora(s)':'há '+Math.floor(minutes/1440)+' dia(s)';};
- let api=null,syncVariants=null,frame=null,month='',generation=0,busy=false,adsBusy=false,saving=false,started=false,paused=false,dirty=false,editSequence=0,draftRevision=0,timer=null,message='',failed=false;
+ let api=null,syncVariants=null,onCatalogChanged=null,frame=null,month='',generation=0,busy=false,adsBusy=false,saving=false,started=false,paused=false,dirty=false,editSequence=0,draftRevision=0,timer=null,message='',failed=false;
  let productPage=1,productMonth='';
  const financeRefreshInterval=300000;
  let lastFinancialRefreshAt=0,automaticBlocked=false,resumeOnVisible=false;
  const productOpen=new Set();
+ let catalogState=null,catalogBusy=false,catalogTimer=null,catalogRequest=0,catalogNeedsRead=true,catalogError='',catalogPaused=false,catalogProductsChanged=false,catalogVisibleIds=[],catalogSignature='';
+ const catalogProducts=new Map();
+ const catalogFeature=()=>Number.isSafeInteger(frame?.classification_revision);
+ const catalogMessages={CATALOG_NOT_READ:'Aguardando a consulta automática do catálogo.',CATALOG_UNAVAILABLE:'A consulta falhou; a fila tentará este produto novamente.',CATALOG_REQUEST_FAILED:'A consulta falhou; os outros produtos continuam na fila.',UNRECOGNIZED_TYPE:'O tipo deste produto ainda não foi reconhecido com segurança.',SIZE_AMBIGUOUS:'O tamanho da variação precisa de conferência.',RULE_CONFLICT:'Mais de uma regra de custo corresponde a esta variação.',NO_COST_REGISTERED:'Falta cadastrar um custo para este tipo de produto.',RULE_NOT_MATCHED:'Nenhuma regra de custo reconhece este tipo e tamanho com segurança.',RULE_ASSIGNMENT_PENDING:'A regra de custo informada precisa de conferência de tamanho ou disponibilidade.',UNRECOGNIZED_VARIATION:'O catálogo não identificou o tipo e o tamanho desta variação com segurança.',INDEX_NOT_VALID:'A combinação de opções desta variação precisa ser conferida no catálogo.',NO_MODELS:'O catálogo não retornou variações para este produto.',CATALOG_CONFLICT:'Outra atualização está conferindo este produto; a fila continuará automaticamente.',CATALOG_STALE_RESPONSE:'Uma resposta antiga foi descartada. A fila consultará novamente.',AXES_NOT_RECOGNIZED:'Os eixos de variação não identificam a composição com segurança.',OPTION_NOT_RECOGNIZED:'O tamanho retornado pelo catálogo ainda não foi reconhecido.',CATALOG_INVALID:'Os dados do catálogo não passaram na conferência.',CATALOG_STALE:'A classificação salva está preservada enquanto o catálogo é atualizado.'};
+ function catalogReason(reason,status){return catalogMessages[reason]||(status==='QUEUED'||status==='RUNNING'?'A identificação automática está na fila.':status==='RETRY_WAIT'?'A consulta será repetida automaticamente, sem impedir os outros produtos.':'O catálogo precisa de uma conferência de tipo ou tamanho.');}
+ function checkedCatalogState(value){
+  const plain=row=>row!==null&&typeof row==='object'&&[Object.prototype,null].includes(Object.getPrototypeOf(row));
+  const exact=(row,keys)=>plain(row)&&Reflect.ownKeys(row).length===keys.length&&keys.every(key=>Object.hasOwn(Object.getOwnPropertyDescriptor(row,key)||{},'value'));
+  const array=(row,max)=>Array.isArray(row)&&Object.getPrototypeOf(row)===Array.prototype&&row.length<=max&&Reflect.ownKeys(row).length===row.length+1&&Array.from({length:row.length},(_,index)=>Object.getOwnPropertyDescriptor(row,String(index))).every(descriptor=>descriptor&&Object.hasOwn(descriptor,'value'));
+  const int=(row,min=0,max=Number.MAX_SAFE_INTEGER)=>Number.isSafeInteger(row)&&!Object.is(row,-0)&&row>=min&&row<=max;
+  const text=(row,max)=>typeof row==='string'&&row.length<=max&&!/[\u0000-\u001f\u007f-\u009f]/.test(row);
+  const reason=row=>row===null||typeof row==='string'&&/^[A-Z][A-Z0-9_]{0,95}$/.test(row);
+  const id=(row,zero=false)=>typeof row==='string'&&(zero?/^(0|[1-9][0-9]{0,19})$/:/^[1-9][0-9]{0,19}$/).test(row);
+  const keys=['schema','revision','counts','products','limit','offset','more','next_due_at'];
+  if(plain(value)&&Object.hasOwn(value,'enabled'))keys.push('enabled');
+  if(plain(value)&&Object.hasOwn(value,'variants_limit_reached'))keys.push('variants_limit_reached');
+  const counts=['total','queued','running','matched','partial','review','retry_wait','due'];
+  if(!exact(value,keys)||value.schema!=='catalog_classification_state_v1'||!int(value.revision,1,2147483647)||!exact(value.counts,counts)||!counts.every(key=>int(value.counts[key],0,3000000))||value.counts.total!==counts.slice(1,-1).reduce((sum,key)=>sum+value.counts[key],0)||value.counts.due>value.counts.total||!array(value.products,100)||!int(value.limit,1,100)||!int(value.offset,0,3000000)||typeof value.more!=='boolean'||value.next_due_at!==null&&!int(value.next_due_at,0,9999999999)||Object.hasOwn(value,'enabled')&&typeof value.enabled!=='boolean'||Object.hasOwn(value,'variants_limit_reached')&&typeof value.variants_limit_reached!=='boolean')throw Error('CATALOG_STATE_INVALID');
+  const seen=new Set();let variantCount=0;
+  for(const product of value.products){
+   if(!exact(product,['item_id','product_name','status','reason','checked_at','catalog_fingerprint','model_count','resolved_count','next_attempt_at','failure_count','variants','variants_complete'])||!id(product.item_id)||seen.has(product.item_id)||product.product_name!==null&&!text(product.product_name,1024)||!['QUEUED','RUNNING','MATCHED','PARTIAL','REVIEW','RETRY_WAIT'].includes(product.status)||!reason(product.reason)||product.checked_at!==null&&!int(product.checked_at,1,Math.floor(Date.now()/1000)+60)||product.catalog_fingerprint!==null&&(typeof product.catalog_fingerprint!=='string'||!/^[a-f0-9]{64}$/.test(product.catalog_fingerprint))||!int(product.model_count,0,1000)||!int(product.resolved_count,0,product.model_count)||product.next_attempt_at!==null&&!int(product.next_attempt_at,0,9999999999)||!int(product.failure_count,0,1000000)||!array(product.variants,1000)||typeof product.variants_complete!=='boolean')throw Error('CATALOG_STATE_INVALID');
+   seen.add(product.item_id);variantCount+=product.variants.length;if(variantCount>1000)throw Error('CATALOG_STATE_INVALID');const models=new Set();
+   for(const variant of product.variants){if(!exact(variant,['model_id','model_name','reason','attributes'])||!id(variant.model_id,true)||models.has(variant.model_id)||!text(variant.model_name,1024)||!reason(variant.reason)||!array(variant.attributes,10))throw Error('CATALOG_STATE_INVALID');models.add(variant.model_id);for(const attribute of variant.attributes)if(!exact(attribute,['name','value'])||!text(attribute.name,1024)||!text(attribute.value,1024))throw Error('CATALOG_STATE_INVALID');}
+  }
+  return value;
+ }
+ function checkedCatalogRun(value){
+  const keys=['status','processed','failed','state'];if(!value||typeof value!=='object'||![Object.prototype,null].includes(Object.getPrototypeOf(value))||Reflect.ownKeys(value).length!==keys.length||!keys.every(key=>Object.hasOwn(Object.getOwnPropertyDescriptor(value,key)||{},'value'))||!['PAUSED','LEASED','PROGRESSED','IDLE'].includes(value.status))throw Error('CATALOG_STATE_INVALID');
+  for(const key of ['processed','failed']){const rows=value[key];if(!Array.isArray(rows)||Object.getPrototypeOf(rows)!==Array.prototype||rows.length>3||Reflect.ownKeys(rows).length!==rows.length+1||!Array.from({length:rows.length},(_,index)=>Object.getOwnPropertyDescriptor(rows,String(index))).every(descriptor=>descriptor&&Object.hasOwn(descriptor,'value'))||!rows.every(id=>typeof id==='string'&&/^[1-9][0-9]{0,19}$/.test(id))||new Set(rows).size!==rows.length)throw Error('CATALOG_STATE_INVALID');}
+  checkedCatalogState(value.state);return value;
+ }
+ function takeCatalogState(value,{metadataOnly=false}={}){const checked=checkedCatalogState(value);if(!metadataOnly){catalogState=checked;catalogPaused=checked.enabled===false;}else if(checked.enabled===false)catalogPaused=true;for(const product of checked.products)catalogProducts.set(product.item_id,product);while(catalogProducts.size>3000)catalogProducts.delete(catalogProducts.keys().next().value);catalogError='';}
+ function drawCatalogStatus(){
+  const target=el('CatalogStatus');target.hidden=!catalogFeature();if(target.hidden)return;
+  if(catalogError){target.textContent=catalogError;return;}
+  if(catalogPaused){target.textContent='Identificação automática pausada nas configurações da coleta. Os custos já cadastrados foram preservados.';return;}
+  const remaining=frame?.unmapped_variants.length||0;
+  if(catalogBusy)target.textContent='Identificando automaticamente tipos e tamanhos. Os outros produtos continuam na fila se uma consulta falhar.';
+  else if(catalogState)target.textContent=remaining?remaining+' variação(ões) vendida(s) ainda sem custo completo. '+catalogState.counts.queued+' produto(s) na fila · '+catalogState.counts.running+' em consulta · '+catalogState.counts.retry_wait+' aguardando nova tentativa.':'Custos dos produtos vendidos identificados. O catálogo continua sendo conferido automaticamente.';
+  else target.textContent='Consultando a identificação automática dos produtos vendidos…';
+ }
+ function canClassify(){return started&&catalogFeature()&&!document.hidden&&!busy&&!adsBusy&&!saving&&!dirty&&!paused;}
+ function scheduleCatalog(delay=0){
+  clearTimeout(catalogTimer);catalogTimer=null;if(!canClassify()||catalogBusy)return;
+  catalogTimer=setTimeout(()=>{catalogTimer=null;return updateCatalog();},Math.max(0,delay));
+ }
+ async function loadCatalogMetadata(token,selected){
+  const globalState=await api('catalog-classification?limit=1&offset=0');if(token!==catalogRequest||selected!==month||!started)return false;takeCatalogState(globalState);
+  const ids=[...new Set(catalogVisibleIds.length?catalogVisibleIds:(frame?.unmapped_variants||[]).map(row=>row.item_id))];
+  const chunks=ids.length?Array.from({length:Math.ceil(ids.length/90)},(_,index)=>ids.slice(index*90,index*90+90)):[[]];
+  for(const chunk of chunks){
+   const raw=await api('catalog-classification?limit=100&offset=0'+(chunk.length?'&item_ids='+encodeURIComponent(chunk.join(',')):''));
+   if(token!==catalogRequest||selected!==month||!started)return false;takeCatalogState(raw,{metadataOnly:true});
+  }
+  catalogNeedsRead=false;return true;
+ }
+ async function updateCatalog({process=true}={}){
+  if(!canClassify()||catalogBusy)return false;
+  const token=++catalogRequest,selected=month;catalogBusy=true;drawCatalogStatus();let delay=60000;
+  try{
+   if(catalogNeedsRead||!catalogState){if(!await loadCatalogMetadata(token,selected))return false;}
+   if(token!==catalogRequest||selected!==month||!canClassify())return false;
+   if(process&&!catalogPaused&&catalogState.counts.due>0){
+    const response=await api('catalog-classification/sync',{});
+    if(token!==catalogRequest||selected!==month||!started)return false;
+    const raw=checkedCatalogRun(response);
+    takeCatalogState(raw.state);catalogPaused=catalogPaused||raw.status==='PAUSED';catalogNeedsRead=raw.processed.length+raw.failed.length>0;if(raw.processed.length)catalogProductsChanged=true;if(!canClassify())return false;
+    if(raw.processed.length){const reread=await request('read',selected);if(token!==catalogRequest||selected!==month||!started)return false;apply(reread,selected);if(token!==catalogRequest||selected!==month||!canClassify())return false;if(!await loadCatalogMetadata(token,selected))return false;}else if(raw.failed.length&&!await loadCatalogMetadata(token,selected))return false;
+    delay=raw.status==='LEASED'?5000:(raw.processed.length+raw.failed.length)>0&&catalogState.counts.due>0?750:60000;
+   }
+   if(token!==catalogRequest||selected!==month||!canClassify())return false;
+   if(catalogState.revision!==frame.classification_revision){const reread=await request('read',selected);if(token!==catalogRequest||selected!==month||!canClassify())return false;apply(reread,selected);}
+   if(catalogProductsChanged&&typeof onCatalogChanged==='function'){try{await onCatalogChanged();catalogProductsChanged=false;}catch{}if(token!==catalogRequest||selected!==month||!canClassify())return false;}
+   drawProducts();return true;
+  }catch{if(token===catalogRequest&&selected===month){catalogError='A consulta do catálogo está indisponível agora. Os custos conhecidos foram preservados; a coleta automática continuará tentando.';catalogNeedsRead=true;}return false;}
+  finally{if(token===catalogRequest&&selected===month){catalogBusy=false;drawCatalogStatus();if(catalogPaused)delay=300000;else if(catalogState?.counts.due===0&&catalogState.next_due_at!==null)delay=Math.max(60000,Math.min(300000,catalogState.next_due_at*1000-Date.now()));catalogNeedsRead=true;scheduleCatalog(delay);}}
+ }
+ async function syncCatalogCandidates(rows){
+  if(!catalogFeature())return null;if(!Array.isArray(rows)||rows.length>3000)return false;
+  const ids=[...new Set(rows.map(row=>row?.item_id).filter(value=>typeof value==='string'&&/^[1-9][0-9]{0,19}$/.test(value)))];
+  if(!ids.length)return true;
+  try{const raw=await api('catalog-classification/enqueue',{item_ids:ids});takeCatalogState(raw);catalogNeedsRead=true;drawCatalogStatus();scheduleCatalog();return true;}
+  catch{catalogError='A fila não pôde ser atualizada agora. Os custos e ajustes salvos foram preservados.';drawCatalogStatus();return false;}
+ }
  let checkpointHistory=null,checkpointHistoryMonth='',checkpointHistoryBusy=false,checkpointHistoryError='',checkpointHistoryStale=false,checkpointHistoryRequest=0;
  const checkpointHistoryOpen=new Set();
- const checkpointVersions=report=>'Custos v'+report.versions.costs+' · vínculos v'+report.versions.bindings+' · regras '+(report.versions.cost_rules===null?'pendentes':'v'+report.versions.cost_rules)+' · '+(report.tax_regime==='MEI'?'DAS-MEI':'imposto anterior')+' '+(report.versions.tax_policy===null?'sem versão':'v'+report.versions.tax_policy)+' · despesas v'+report.versions.expenses;
+ const checkpointVersions=report=>'Custos v'+report.versions.costs+' · vínculos v'+report.versions.bindings+' · regras '+(report.versions.cost_rules===null?'pendentes':'v'+report.versions.cost_rules)+' · '+(report.tax_regime==='MEI'?'DAS-MEI':'imposto anterior')+' '+(report.versions.tax_policy===null?'sem versão':'v'+report.versions.tax_policy)+' · despesas v'+report.versions.expenses+(Number.isSafeInteger(report.versions.classifications)?' · classificações v'+report.versions.classifications:'');
  const checkpointTime=value=>Number.isSafeInteger(value)&&value>0?new Date(value*1000).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'}):'Pendente';
  function invalidateCheckpointHistory(){
   checkpointHistoryRequest++;checkpointHistoryBusy=false;checkpointHistoryError='';
@@ -99,7 +183,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
    if(!array(report.pending,Object.keys(pendingMessages).length)||!report.pending.every(code=>typeof code==='string'&&Object.hasOwn(pendingMessages,code))||new Set(report.pending).size!==report.pending.length||!exact(report.result,['expected_net_cents','realized_net_cents','realization'])||!amount(report.result.expected_net_cents,true)||report.result.realized_net_cents!==null||report.result.realization!=='UNVERIFIED'||!amount(report.sales_cents)||!array(report.lines,6)||report.lines.length!==6)throw Error();
    for(let index=0;index<6;index++){const line=report.lines[index];if(!exact(line,['code','sign','amount_cents'])||line.code!==lineCodes[index]||line.sign!==(index===0||index===5?1:-1)||!amount(line.amount_cents,index===0))throw Error();}
    const versions=report.versions,sources=report.source_checked_at;
-   if(!exact(versions,['bindings','costs','cost_rules','tax_policy','expenses'])||!int(versions.bindings,1,2147483647)||!int(versions.costs,1,2147483647)||versions.cost_rules!==null&&!int(versions.cost_rules,1,2147483646)||versions.tax_policy!==null&&!int(versions.tax_policy,0,2147483647)||!int(versions.expenses,0,2147483646)||!exact(sources,['finance_oldest_at','finance_latest_at','ads_at'])||!Object.values(sources).every(at=>at===null||int(at,1,report.checked_at))||(sources.finance_oldest_at===null)!==(sources.finance_latest_at===null)||sources.finance_oldest_at!==null&&sources.finance_oldest_at>sources.finance_latest_at)throw Error();
+   if(!exact(versions,['bindings','costs','cost_rules','tax_policy','expenses',...(Object.hasOwn(versions,'classifications')?['classifications']:[])])||Object.hasOwn(versions,'classifications')&&!int(versions.classifications,1,2147483647)||!int(versions.bindings,1,2147483647)||!int(versions.costs,1,2147483647)||versions.cost_rules!==null&&!int(versions.cost_rules,1,2147483646)||versions.tax_policy!==null&&!int(versions.tax_policy,0,2147483647)||!int(versions.expenses,0,2147483646)||!exact(sources,['finance_oldest_at','finance_latest_at','ads_at'])||!Object.values(sources).every(at=>at===null||int(at,1,report.checked_at))||(sources.finance_oldest_at===null)!==(sources.finance_latest_at===null)||sources.finance_oldest_at!==null&&sources.finance_oldest_at>sources.finance_latest_at)throw Error();
    if(!['MEI','LEGACY_ESTIMATE'].includes(report.tax_regime)||!['UNCONFIRMED','ADS_RECHARGE','TECH_SUPPORT'].includes(report.recharge_treatment)||report.tax_regime==='MEI'&&versions.tax_policy===null||report.tax_regime==='LEGACY_ESTIMATE'&&versions.tax_policy!==null||report.recharge_treatment!=='ADS_RECHARGE'&&report.lines[5].amount_cents!==null&&report.lines[5].amount_cents!==0)throw Error();
    const has=code=>report.pending.includes(code);
    if(c.cancel_pending+c.other+c.unknown>0&&!has('STATUS_REVIEW_REQUIRED')||c.payment_missing>0&&!has('PAYMENT_INCOMPLETE')||c.returns+c.returns_unknown>0&&!has('RETURNS_NOT_RECONCILED')||report.lines[1].amount_cents===null&&!has('PRODUCTION_COST_INCOMPLETE')||report.lines[2].amount_cents===null&&!has('INVOICE_TAX_UNAVAILABLE')||report.lines[3].amount_cents===null&&!has('ADS_UNAVAILABLE')||report.lines[4].amount_cents===null&&!has('EXTERNAL_EXPENSES_REQUIRED')||report.lines[5].amount_cents===null&&!has('ADJUSTMENT_UNAVAILABLE')&&!has('RECHARGE_TREATMENT_REQUIRED')||report.tax_regime==='MEI'&&versions.tax_policy===0&&!has('TAX_POLICY_REQUIRED'))throw Error();
@@ -183,6 +267,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
  }
  function drawProducts(){
   const target=el('ProductRows'),report=frame?.product_summary,mei=frame?.tax?.regime==='MEI';
+  drawCatalogStatus();const periodCodes=frame?.result.pending.filter(code=>['STATUS_REVIEW_REQUIRED','SOURCE_UNAVAILABLE','FINANCIAL_SOURCE_STALE'].includes(code))||[];el('ProductPeriodNotice').hidden=!periodCodes.length;el('ProductPeriodNotice').textContent=periodCodes.length?'Avisos do período: '+periodCodes.map(code=>pendingMessages[code]).join(' ')+' Os subtotais abaixo cobrem somente os pedidos já conferidos de cada produto.':'';
   el('ProductBalanceHeading').textContent=mei?'Saldo após produção':'Saldo após produção e imposto';
   el('ProductTaxHelp').textContent=mei?'O saldo por produto usa o repasse da Shopee, menos produção dos pedidos exclusivos. O DAS-MEI é mensal e está descontado uma única vez no resultado geral, sem rateio por produto. Anúncios e outras despesas ainda não foram conciliados por produto. Este saldo não é lucro líquido por produto.':'O saldo por produto usa o repasse da Shopee, menos produção e imposto de 2% dos pedidos exclusivos. Anúncios e outras despesas ainda não foram conciliados por produto. Este saldo não é lucro líquido por produto.';
   if(month!==productMonth){productMonth=month;productPage=1;productOpen.clear();el('ProductSearch').value='';el('ProductFilter').value='all';el('ProductSort').value='quantity_desc';el('ProductPageSize').value='20';}
@@ -197,7 +282,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
   const orderId=(left,right)=>left.length-right.length||(left<right?-1:left>right?1:0);
   const query=el('ProductSearch').value.trim().replace(/^#/,'').toLowerCase().split(/\s+/).filter(Boolean),filter=el('ProductFilter').value,sort=el('ProductSort').value;
   const numberOrder=(left,right)=>left===null?(right===null?0:1):right===null?-1:left>right?-1:left<right?1:0;
-  const rows=report.products.filter(product=>query.every(term=>[product.item_id,...product.variants.map(variant=>variant.model_id)].some(value=>value.toLowerCase().includes(term)))&&(filter==='ready'?product.exclusive_after_costs_cents!==null:filter==='pending'?(product.pending.length>0||product.production_cost_cents===null):filter==='mixed'?product.mixed_orders>0:true)).sort((left,right)=>(sort==='contribution_desc'?numberOrder(left.exclusive_after_costs_cents,right.exclusive_after_costs_cents):sort==='cost_desc'?numberOrder(left.production_cost_cents,right.production_cost_cents):sort==='item_asc'?0:numberOrder(left.quantity,right.quantity))||orderId(left.item_id,right.item_id));
+  const rows=report.products.filter(product=>query.every(term=>[product.item_id,...product.variants.map(variant=>variant.model_id),catalogProducts.get(product.item_id)?.product_name||'',...(catalogProducts.get(product.item_id)?.variants||[]).flatMap(variant=>[variant.model_name,...variant.attributes.map(attribute=>attribute.value)])].some(value=>value.toLowerCase().includes(term)))&&(filter==='ready'?product.exclusive_after_costs_cents!==null:filter==='known'?Number.isSafeInteger(product.known_exclusive_after_costs_cents):filter==='pending'?(product.pending.length>0||product.production_cost_cents===null):filter==='mixed'?product.mixed_orders>0:true)).sort((left,right)=>(sort==='contribution_desc'?numberOrder(left.exclusive_after_costs_cents??left.known_exclusive_after_costs_cents??null,right.exclusive_after_costs_cents??right.known_exclusive_after_costs_cents??null):sort==='cost_desc'?numberOrder(left.production_cost_cents,right.production_cost_cents):sort==='item_asc'?0:numberOrder(left.quantity,right.quantity))||orderId(left.item_id,right.item_id));
   const pageSize=[20,50,100].includes(Number(el('ProductPageSize').value))?Number(el('ProductPageSize').value):20,pages=Math.max(1,Math.ceil(rows.length/pageSize));
   productPage=Math.max(1,Math.min(productPage,pages));const offset=(productPage-1)*pageSize;
   const ready=report.products.filter(product=>product.exclusive_after_costs_cents!==null).length;
@@ -205,17 +290,19 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
   if(report.mixed_orders>0)el('ProductSummary').textContent+=' Valores já informados nesses pedidos: produtos '+money(report.known_mixed_sales_cents)+', repasse '+money(report.known_mixed_repass_cents)+'. Eles fazem parte do total da loja.';
   const productMessages={PAYMENT_INCOMPLETE:'Faltam valores financeiros de pedidos exclusivos.',PRODUCTION_COST_INCOMPLETE:'Há variações com custo de produção pendente.',RETURNS_NOT_RECONCILED:'Devoluções dos pedidos exclusivos precisam de conciliação.',STATUS_REVIEW_REQUIRED:'Há situações de pedidos do mês ainda em revisão.',SOURCE_UNAVAILABLE:'Parte da leitura financeira ainda está pendente.',NO_EXCLUSIVE_ORDERS:'Este produto só aparece em pedidos com outros produtos; os valores não foram rateados.',ARITHMETIC_UNSAFE:'Um valor excedeu o limite seguro de cálculo.'};
   const stat=(label,amount,help)=>{const cell=node('td');cell.append(node('span',label,'month-product-mobile-label'),node('strong',amount),node('small',help));return cell;};
-  for(const product of rows.slice(offset,offset+pageSize)){
-   const row=node('tr'),identity=node('td');identity.append(node('strong','Produto #'+product.item_id),node('small',product.orders+' pedido(s) · '+product.exclusive_orders+' exclusivo(s) · '+product.mixed_orders+' com outros produtos'));
+  const visible=rows.slice(offset,offset+pageSize);catalogVisibleIds=visible.map(product=>product.item_id);const signature=month+':'+catalogVisibleIds.join(',');if(signature!==catalogSignature){catalogSignature=signature;catalogNeedsRead=true;}
+  for(const product of visible){
+   const metadata=catalogProducts.get(product.item_id),row=node('tr'),identity=node('td');identity.append(node('strong',metadata?.product_name||'Produto #'+product.item_id));if(metadata?.product_name)identity.append(node('small','Produto #'+product.item_id,'month-product-identity-code'));identity.append(node('small',product.orders+' pedido(s) · '+product.exclusive_orders+' exclusivo(s) · '+product.mixed_orders+' com outros produtos'));
    const badge=node('span',product.exclusive_after_costs_cents===null?'Saldo em conferência':'Saldo de pedidos exclusivos conferido','month-product-badge');badge.dataset.ready=String(product.exclusive_after_costs_cents!==null);identity.append(badge);
    const details=node('details',undefined,'month-product-variants'),summary=node('summary',product.variants.length+' variação(ões) vendida(s)'),variants=node('ul',undefined,'month-product-variant-list');
    details.append(summary,variants);details.open=productOpen.has(product.item_id);
-   const fill=()=>{variants.replaceChildren();if(!details.open)return;for(const variant of product.variants){const composition=variant.selling_unit==='CUSTOM_PRODUCT'?'Custo personalizado · '+variant.cost_profile_label:variant.selling_unit==='SINGLE_GARMENT'?'Camiseta '+variant.size:variant.selling_unit==='ONE_MALE_ONE_FEMALE_KIT'?'Kit · masculino '+variant.male_size+' / feminino '+variant.female_size:'Composição pendente';variants.append(node('li','Variação #'+variant.model_id+' · '+composition+' · '+variant.quantity+' unidade(s) · '+money(variant.unit_cost_cents)+' por unidade vendida · '+variant.exclusive_quantity+' em pedidos exclusivos / '+variant.mixed_quantity+' com outros produtos.'));}};
+   const fill=()=>{variants.replaceChildren();if(!details.open)return;for(const variant of product.variants){const composition=variant.selling_unit==='CUSTOM_PRODUCT'?'Custo personalizado · '+variant.cost_profile_label:variant.selling_unit==='SINGLE_GARMENT'?'Camiseta '+variant.size:variant.selling_unit==='ONE_MALE_ONE_FEMALE_KIT'?'Kit · masculino '+variant.male_size+' / feminino '+variant.female_size:'Composição pendente';const catalogueVariant=metadata?.variants.find(row=>row.model_id===variant.model_id),label=catalogueVariant?.model_name||catalogueVariant?.attributes.map(attribute=>attribute.name+': '+attribute.value).join(' · ')||'Variação #'+variant.model_id,entry=node('li',label+' · '+composition+' · '+variant.quantity+' unidade(s) · '+money(variant.unit_cost_cents)+' por unidade vendida · '+variant.exclusive_quantity+' em pedidos exclusivos / '+variant.mixed_quantity+' com outros produtos.');if(catalogueVariant?.model_name)entry.append(node('small','Variação #'+variant.model_id));if(variant.unit_cost_cents===null)entry.append(node('small',catalogReason(catalogueVariant?.reason||metadata?.reason,metadata?.status)));variants.append(entry);}};
    details.ontoggle=()=>{if(details.open)productOpen.add(product.item_id);else productOpen.delete(product.item_id);fill();};fill();identity.append(details);
-   if(product.pending.length){const pending=node('ul',undefined,'month-product-pending');for(const code of product.pending)pending.append(node('li',productMessages[code]||'Parte dos dados ainda precisa ser conferida.'));identity.append(pending);}
+   const localPending=product.pending.filter(code=>!['STATUS_REVIEW_REQUIRED','SOURCE_UNAVAILABLE'].includes(code));if(localPending.length){const pending=node('ul',undefined,'month-product-pending');pending.append(node('li','Pendências deste produto:'));for(const code of localPending)pending.append(node('li',productMessages[code]||'Parte dos dados ainda precisa ser conferida.'));identity.append(pending);}
    const units=stat('Unidades vendidas',new Intl.NumberFormat('pt-BR').format(product.quantity),'Unidades do anúncio, conforme a composição ou o perfil de custo cadastrado.');
    const production=stat('Produção total',money(product.production_cost_cents),product.production_cost_cents===null?'Já identificado: '+money(product.known_production_cost_cents)+'. Falta conferir as variações pendentes.':'Custo de todas as unidades deste produto no mês.');
    const contribution=stat(mei?'Saldo após produção':'Saldo após produção e imposto',product.exclusive_orders===0?'Sem pedido exclusivo':money(product.exclusive_after_costs_cents),product.exclusive_orders+' pedido(s) só deste produto. '+(mei?'Repasse informado pela Shopee, após produção. O DAS-MEI está no resultado geral da loja, sem rateio entre produtos.':'Repasse informado pela Shopee, após produção e imposto de 2%.')+' Anúncios e outras despesas ainda não foram conciliados por produto.');
+   if(product.exclusive_after_costs_cents===null&&Number.isSafeInteger(product.known_exclusive_after_costs_cents)){const stale=frame.result.pending.includes('FINANCIAL_SOURCE_STALE'),partial=node('div',undefined,'month-product-partial');partial.append(node('small',stale?'Subtotal da última leitura':'Subtotal dos pedidos já conferidos'),node('strong',money(product.known_exclusive_after_costs_cents)),node('small','Após produção'+(mei?'':' e imposto')+', antes de anúncios, outras despesas'+(mei?' e DAS-MEI mensal':'')+'. O saldo final continua em conferência.'));if(stale)partial.append(node('small','Leitura financeira: '+checkpointTime(frame.source_checked_at?.finance_oldest_at??frame.checked_at)+'.'));contribution.append(partial);}
    if(product.exclusive_after_costs_cents!==null&&product.exclusive_after_costs_cents<0)contribution.children[1].className='month-product-negative';
    if(product.exclusive_orders>0)contribution.append(node('small','Nestes pedidos: repasse '+money(product.exclusive_repass_cents)+' · produção '+money(product.exclusive_production_cost_cents)+(mei?'. DAS-MEI contabilizado no resultado mensal.':' · imposto '+money(product.exclusive_tax_cents)+'.')));
    if(product.exclusive_margin_bps!==null)contribution.append(node('small','Percentual sobre as vendas exclusivas: '+new Intl.NumberFormat('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:2}).format(product.exclusive_margin_bps/100)+'%.'));
@@ -259,7 +346,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
   controls();
  }
  function checkedFrame(value,expectedMonth){const checked=projectBusinessMonth(value);if(!checked||checked.month!==expectedMonth)throw Error('Os dados mensais não puderam ser conferidos. Atualize o mês para tentar novamente.');return checked;}
- function apply(value,expectedMonth){frame=checkedFrame(value,expectedMonth);invalidateCheckpointHistory();render();return frame;}
+ function apply(value,expectedMonth){const previous=frame?.classification_revision;frame=checkedFrame(value,expectedMonth);if(previous!==frame.classification_revision){catalogNeedsRead=true;if(previous!==undefined)catalogProductsChanged=true;}invalidateCheckpointHistory();render();return frame;}
  function schedule(){
   clearTimeout(timer);timer=null;if(!started||document.hidden||busy||adsBusy||saving||dirty||paused||automaticBlocked||frame?.status!=='COMPLETE'&&!resumeOnVisible||month!==today().slice(0,7))return;
   // Ads updates never advance the financial clock: orders, cancellations and
@@ -273,8 +360,8 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
   if(!started||saving||automatic&&(dirty||paused||automaticBlocked||document.hidden||adsBusy))return false;
   const selected=el('Select').value;if(!validMonth(selected)){status('Escolha um mês válido até o mês atual.',true);return false;}
   const changed=selected!==month;if(busy&&!changed)return false;
-  const token=++generation;month=selected;paused=false;automaticBlocked=false;resumeOnVisible=false;busy=true;adsBusy=false;clearTimeout(timer);timer=null;
-  if(changed){frame=null;invalidateCheckpointHistory();dirty=false;editSequence++;draftRevision=0;el('ExpensesValue').value='';el('Recharge').value='UNCONFIRMED';}
+  const token=++generation;catalogRequest++;catalogBusy=false;clearTimeout(catalogTimer);catalogTimer=null;month=selected;paused=false;automaticBlocked=false;resumeOnVisible=false;busy=true;adsBusy=false;clearTimeout(timer);timer=null;
+  if(changed){frame=null;catalogState=null;catalogPaused=false;catalogProducts.clear();catalogSignature='';catalogNeedsRead=true;invalidateCheckpointHistory();dirty=false;editSequence++;draftRevision=0;el('ExpensesValue').value='';el('Recharge').value='UNCONFIRMED';}
   status(automatic?'Atualizando vendas, cancelamentos e anúncios de '+monthName(month)+'…':'Consultando os pedidos de '+monthName(month)+'…');render();
   const current=()=>token===generation&&month===selected;
   try{
@@ -305,7 +392,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
    if(document.hidden&&!paused){resumeOnVisible=!automaticBlocked;status('A atualização continua automaticamente quando este painel voltar à tela.');}
    else if(value.status==='COMPLETE'&&!paused){
     let catalogueFailed=false;
-    if(value.unmapped_variants.length&&typeof syncVariants==='function'){
+    if(!catalogFeature()&&value.unmapped_variants.length&&typeof syncVariants==='function'){
      status('Associando automaticamente os custos dos produtos vendidos…');
      try{catalogueFailed=await syncVariants(value.unmapped_variants)===false;}catch{catalogueFailed=true;}
      if(!current())return false;const reread=await request('read',selected);if(!current())return false;apply(reread,selected);
@@ -320,7 +407,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
    else status('Parte da consulta ficou pendente. Use Atualizar mês para retomar a leitura.');
    return true;
   }catch(error){if(current()){automaticBlocked=true;status(error?.message||'Não foi possível atualizar o mês. Tente novamente.',true);if(frame)render();}return false;}
-  finally{if(current()){busy=false;render();schedule();}}
+  finally{if(current()){busy=false;render();schedule();scheduleCatalog();}}
  }
  async function refreshAds(){
   if(!started||!frame||busy||adsBusy||saving||dirty||document.hidden)return false;
@@ -328,12 +415,12 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
   const token=generation,selected=month;adsBusy=true;controls();
   try{const raw=await request('ads',selected);if(token!==generation||selected!==month)return false;apply(raw,selected);if(frame.ads?.status!=='AVAILABLE')automaticBlocked=true;return true;}
   catch{if(token===generation){automaticBlocked=true;status('Não foi possível atualizar os anúncios. A leitura anterior mantém seu horário de consulta; use Atualizar mês para conferir.',true);}return false;}
-  finally{if(token===generation){adsBusy=false;controls();schedule();}}
+  finally{if(token===generation){adsBusy=false;controls();schedule();scheduleCatalog();}}
  }
  async function refreshCosts(){
   if(!started||!frame||busy||adsBusy||saving)return false;
   const token=generation,selected=month;
-  try{const raw=await request('read',selected);if(token!==generation||selected!==month)return false;apply(raw,selected);schedule();return true;}
+  try{const raw=await request('read',selected);if(token!==generation||selected!==month)return false;apply(raw,selected);schedule();scheduleCatalog();return true;}
   catch{if(token===generation)status('Os custos foram preservados, mas não foi possível recalcular o mês. Use Atualizar mês para conferir.',true);return false;}
  }
  function expenseChanged(){dirty=true;editSequence++;clearTimeout(timer);timer=null;render();}
@@ -355,9 +442,10 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
     el('ExpenseState').textContent=error.status===409?'As despesas mudaram em outra sessão. Sua edição foi preservada; carregue os valores salvos antes de salvar.':(error.message||'Não foi possível salvar. Sua edição foi preservada.');
     if(error.status===409){try{const raw=await request('read',selected);if(token===generation)apply(raw,selected);}catch{}}
    }return false;
-  }finally{if(token===generation){saving=false;controls();schedule();}}
+  }finally{if(token===generation){saving=false;controls();schedule();scheduleCatalog();}}
  }
  async function identify(){
+  if(catalogFeature()){catalogNeedsRead=true;return updateCatalog();}
   if(!frame||busy||adsBusy||saving||!frame.unmapped_variants.length||typeof syncVariants!=='function')return;
   const token=generation,selected=month;busy=true;controls();status('Atualizando a identificação dos produtos vendidos…');
   try{await syncVariants(frame.unmapped_variants);if(token!==generation)return;const raw=await request('read',selected);if(token!==generation)return;apply(raw,selected);status('Custos do mês atualizados. Vínculos manuais foram preservados.');}
@@ -366,22 +454,22 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
  }
  async function start(options={}){
   if(started)return false;if(typeof options.api!=='function'||!el('Select'))return false;
-  api=options.api;syncVariants=options.syncVariants;started=true;
+  api=options.api;syncVariants=options.syncVariants;onCatalogChanged=options.onCatalogChanged;started=true;
   let selected;try{const params=new URLSearchParams(globalThis.location?.search||'');selected=params.getAll('month').length===1?params.get('month'):null;}catch{}
   el('Select').max=today().slice(0,7);el('Select').value=validMonth(selected)?selected:today().slice(0,7);
   el('Refresh').onclick=()=>refresh();el('Select').onchange=()=>refresh();
   el('Previous').onclick=()=>{const basis=validMonth(el('Select').value)?el('Select').value:today().slice(0,7),date=new Date(basis+'-01T12:00:00Z');date.setUTCMonth(date.getUTCMonth()-1);el('Select').value=date.toISOString().slice(0,7);refresh();};
   el('Pause').onclick=()=>{paused=true;el('Pause').disabled=true;status('A consulta será pausada após a resposta em andamento.');};
   el('ExpensesForm').onsubmit=event=>{event.preventDefault();saveExpenses();};el('ExpensesValue').oninput=expenseChanged;el('Recharge').onchange=expenseChanged;
-  el('ExpensesZero').onclick=()=>saveExpenses({zero:true});el('ExpensesReload').onclick=()=>{dirty=false;editSequence++;fillExpenses({force:true});render();schedule();};el('Identify').onclick=identify;
+  el('ExpensesZero').onclick=()=>saveExpenses({zero:true});el('ExpensesReload').onclick=()=>{dirty=false;editSequence++;fillExpenses({force:true});render();schedule();scheduleCatalog();};el('Identify').onclick=identify;
   el('CheckpointDetails').ontoggle=()=>{if(el('CheckpointDetails').open)loadCheckpointHistory();};
   el('CheckpointHistoryRefresh').onclick=()=>{checkpointHistoryStale=true;return loadCheckpointHistory();};
-  for(const name of ['ProductSearch','ProductFilter','ProductSort','ProductPageSize'])el(name)[name==='ProductSearch'?'oninput':'onchange']=()=>{productPage=1;drawProducts();};
-  el('ProductPrevious').onclick=()=>{productPage--;drawProducts();};el('ProductNext').onclick=()=>{productPage++;drawProducts();};
-  document.addEventListener('visibilitychange',()=>{if(document.hidden){clearTimeout(timer);timer=null;}else schedule();});
+  for(const name of ['ProductSearch','ProductFilter','ProductSort','ProductPageSize'])el(name)[name==='ProductSearch'?'oninput':'onchange']=()=>{productPage=1;drawProducts();scheduleCatalog();};
+  el('ProductPrevious').onclick=()=>{productPage--;drawProducts();scheduleCatalog();};el('ProductNext').onclick=()=>{productPage++;drawProducts();scheduleCatalog();};
+  document.addEventListener('visibilitychange',()=>{if(document.hidden){clearTimeout(timer);timer=null;clearTimeout(catalogTimer);catalogTimer=null;}else{schedule();scheduleCatalog();}});
   return refresh();
  }
- function stop(){started=false;paused=true;resumeOnVisible=false;generation++;checkpointHistoryRequest++;checkpointHistoryBusy=false;busy=false;adsBusy=false;clearTimeout(timer);timer=null;controls();}
- globalThis.brazaMonthDashboard={start,refresh,refreshCosts,stop};
+ function stop(){started=false;catalogRequest++;catalogBusy=false;clearTimeout(catalogTimer);catalogTimer=null;paused=true;resumeOnVisible=false;generation++;checkpointHistoryRequest++;checkpointHistoryBusy=false;busy=false;adsBusy=false;clearTimeout(timer);timer=null;controls();}
+ globalThis.brazaMonthDashboard={start,refresh,refreshCosts,stop,supportsCatalogQueue:catalogFeature,syncCatalogCandidates,refreshCatalog:()=>{catalogNeedsRead=true;return updateCatalog();},catalogMetadata:item=>catalogProducts.get(item)||null};
 })();
 `;

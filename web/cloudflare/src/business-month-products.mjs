@@ -40,7 +40,8 @@ export function projectBusinessMonthProducts(value,frame){
   const totals=moneyNames.map(name=>BigInt(value['known_mixed_'+name+'_cents'])),products=[],seen=new Set(),seenUnmapped=new Set();
   let exclusiveOrders=0,covered=0,missing=0,returns=0,unknownReturns=0,mixedReferences=0,variantCount=0,allKnownCost=0n,allCompleteCost=true;
   for(const row of value.products){
-   if(!exact(row,rowKeys)||!id(row.item_id)||seen.has(row.item_id)||!int(row.quantity,1)||!counts.every(key=>int(row[key],0,3000))||row.orders!==row.exclusive_orders+row.mixed_orders||row.orders===0||row.exclusive_payment_covered+row.exclusive_payment_missing!==row.exclusive_orders||row.exclusive_returns>row.exclusive_payment_covered||row.exclusive_returns_unknown<row.exclusive_payment_missing||row.exclusive_returns+row.exclusive_returns_unknown>row.exclusive_orders||row.mixed_orders>value.mixed_orders||!array(row.variants,3000)||!row.variants.length||!array(row.pending,codes.length)||new Set(row.pending).size!==row.pending.length||!row.pending.every(code=>codes.includes(code)))return null;
+   const hasKnown=plain(row)&&Object.hasOwn(row,'known_exclusive_after_costs_cents'),projectedRowKeys=[...rowKeys,...(hasKnown?['known_exclusive_after_costs_cents']:[])];
+   if(!exact(row,projectedRowKeys)||!id(row.item_id)||seen.has(row.item_id)||!int(row.quantity,1)||!counts.every(key=>int(row[key],0,3000))||row.orders!==row.exclusive_orders+row.mixed_orders||row.orders===0||row.exclusive_payment_covered+row.exclusive_payment_missing!==row.exclusive_orders||row.exclusive_returns>row.exclusive_payment_covered||row.exclusive_returns_unknown<row.exclusive_payment_missing||row.exclusive_returns+row.exclusive_returns_unknown>row.exclusive_orders||row.mixed_orders>value.mixed_orders||!array(row.variants,3000)||!row.variants.length||!array(row.pending,codes.length)||new Set(row.pending).size!==row.pending.length||!row.pending.every(code=>codes.includes(code)))return null;
    seen.add(row.item_id);variantCount+=row.variants.length;if(variantCount>3000)return null;
    for(let index=0;index<moneyNames.length;index++){
     const name=moneyNames[index],known=row['known_exclusive_'+name+'_cents'],total=row['exclusive_'+name+'_cents'];
@@ -76,8 +77,12 @@ export function projectBusinessMonthProducts(value,frame){
    if(!row.exclusive_orders)expectedPending.push('NO_EXCLUSIVE_ORDERS');
    let after=null,margin=null;
    if(!expectedPending.length){after=safe(BigInt(row.exclusive_repass_cents)-exclusiveCost-BigInt(row.exclusive_tax_cents));if(after!==null&&row.exclusive_sales_cents>0)margin=safe(BigInt(after)*10000n/BigInt(row.exclusive_sales_cents));if(after===null||row.exclusive_sales_cents>0&&margin===null){after=null;margin=null;expectedPending.push('ARITHMETIC_UNSAFE');}}
+   // This is only the fully covered exclusive subset. It remains an observed
+   // subtotal when another order or an older period source blocks the result.
+   const knownAfter=row.exclusive_orders>0&&row.exclusive_payment_missing===0&&exclusiveReady&&row.exclusive_returns+row.exclusive_returns_unknown===0?safe(BigInt(row.exclusive_repass_cents)-exclusiveCost-BigInt(row.exclusive_tax_cents)):null;
+   if(hasKnown&&(row.known_exclusive_after_costs_cents!==null&&!cents(row.known_exclusive_after_costs_cents,true)||row.known_exclusive_after_costs_cents!==knownAfter))return null;
    if(row.exclusive_after_costs_cents!==after||row.exclusive_margin_bps!==margin||row.pending.length!==expectedPending.length||!expectedPending.every(code=>row.pending.includes(code)))return null;
-   variants.sort((a,b)=>sorted(a.model_id,b.model_id));products.push(Object.fromEntries(rowKeys.map(key=>[key,key==='variants'?variants:key==='pending'?[...expectedPending]:row[key]])));
+   variants.sort((a,b)=>sorted(a.model_id,b.model_id));products.push(Object.fromEntries(projectedRowKeys.map(key=>[key,key==='variants'?variants:key==='pending'?[...expectedPending]:row[key]])));
    exclusiveOrders+=row.exclusive_orders;covered+=row.exclusive_payment_covered;missing+=row.exclusive_payment_missing;returns+=row.exclusive_returns;unknownReturns+=row.exclusive_returns_unknown;mixedReferences+=row.mixed_orders;allKnownCost+=knownCost;allCompleteCost&&=costReady;
   }
   const mixedCovered=frame.coverage.payment_covered-covered,mixedMissing=frame.coverage.payment_missing-missing,mixedReturns=frame.coverage.returns-returns,mixedUnknownReturns=frame.coverage.returns_unknown-unknownReturns;
@@ -118,8 +123,17 @@ export function buildBusinessMonthProducts(frames,monthFrame,variantReferences,b
    for(let index=0;index<names.length;index++){const amount=safe(row.money[index]);if(amount===null)return null;out['known_exclusive_'+names[index]+'_cents']=amount;out['exclusive_'+names[index]+'_cents']=row.exclusive_payment_missing?null:amount;}
    let known=0n,exclusive=0n,ready=true,exclusiveReady=true;out.variants=[];
    for(const item of row.items.values()){
-    const key=row.item_id+':'+item.model_id,quantity=item.exclusive_quantity+item.mixed_quantity,reference=references.get(key),binding=mapped.get(key);
+    const key=row.item_id+':'+item.model_id,quantity=item.exclusive_quantity+item.mixed_quantity,reference=references.get(key);
     if(!reference||reference.quantity!==quantity||!Number.isSafeInteger(quantity))return null;
+    let binding=mapped.get(key);
+    const descriptor=Object.getOwnPropertyDescriptor(reference,'catalog_binding');
+    if(descriptor!==undefined){
+     if(!Object.hasOwn(descriptor,'value'))return null;
+     const candidate=descriptor.value,plain=candidate!==null&&typeof candidate==='object'&&[Object.prototype,null].includes(Object.getPrototypeOf(candidate)),single=Object.getOwnPropertyDescriptor(candidate||{},'selling_unit')?.value==='SINGLE_GARMENT';
+     const keys=['item_id','model_id','selling_unit',...(single?['size']:['male_size','female_size']),'operator_confirmed','source','catalog_fingerprint'],sizes=['P','M','G','GG','G1','G2','G3'];
+     if(!plain||Reflect.ownKeys(candidate).length!==keys.length||!keys.every(name=>Object.hasOwn(Object.getOwnPropertyDescriptor(candidate,name)||{},'value'))||candidate.item_id!==row.item_id||candidate.model_id!==item.model_id||candidate.operator_confirmed!==false||candidate.selling_unit!==(single?'SINGLE_GARMENT':'ONE_MALE_ONE_FEMALE_KIT')||candidate.source!==(single?'CATALOG_SIZE_AXIS':'CATALOG_VARIATION_AXES')||typeof candidate.catalog_fingerprint!=='string'||!/^[a-f0-9]{64}$/.test(candidate.catalog_fingerprint)||(single?!sizes.includes(candidate.size):!sizes.includes(candidate.male_size)||!sizes.includes(candidate.female_size)))return null;
+     if(!binding||binding.operator_confirmed===false)binding=candidate;
+    }
     const custom=reference.cost_source==='CUSTOM_PROFILE';
     const unit=reference.unit_cost_cents,total=unit===null?null:safe(BigInt(unit)*BigInt(quantity)),exclusiveTotal=item.exclusive_quantity===0?0:unit===null?null:safe(BigInt(unit)*BigInt(item.exclusive_quantity));
     if(unit!==null&&(total===null||exclusiveTotal===null)||total!==reference.production_cost_cents||unit!==null&&!binding&&!custom||custom&&unit===null)return null;
@@ -133,6 +147,7 @@ export function buildBusinessMonthProducts(frames,monthFrame,variantReferences,b
    if(row.exclusive_payment_missing)out.pending.push('PAYMENT_INCOMPLETE');if(!exclusiveReady)out.pending.push('PRODUCTION_COST_INCOMPLETE');if(row.exclusive_returns+row.exclusive_returns_unknown)out.pending.push('RETURNS_NOT_RECONCILED');if(monthFrame.coverage.cancel_pending+monthFrame.coverage.other+monthFrame.coverage.unknown)out.pending.push('STATUS_REVIEW_REQUIRED');if(monthFrame.result.pending.includes('SOURCE_UNAVAILABLE')||monthFrame.result.pending.includes('FINANCIAL_SOURCE_STALE'))out.pending.push('SOURCE_UNAVAILABLE');if(!row.exclusive_orders)out.pending.push('NO_EXCLUSIVE_ORDERS');
    let after=null,margin=null;
    if(!out.pending.length){after=safe(BigInt(out.exclusive_repass_cents)-exclusive-BigInt(out.exclusive_tax_cents));if(after!==null&&out.exclusive_sales_cents>0)margin=safe(BigInt(after)*10000n/BigInt(out.exclusive_sales_cents));if(after===null||out.exclusive_sales_cents>0&&margin===null){after=null;margin=null;out.pending.push('ARITHMETIC_UNSAFE');}}
+   out.known_exclusive_after_costs_cents=row.exclusive_orders>0&&row.exclusive_payment_missing===0&&exclusiveReady&&row.exclusive_returns+row.exclusive_returns_unknown===0?safe(BigInt(out.exclusive_repass_cents)-exclusive-BigInt(out.exclusive_tax_cents)):null;
    out.exclusive_after_costs_cents=after;out.exclusive_margin_bps=margin;result.products.push(out);
   }
   if(references.size!==result.products.reduce((count,row)=>count+row.variants.length,0))return null;

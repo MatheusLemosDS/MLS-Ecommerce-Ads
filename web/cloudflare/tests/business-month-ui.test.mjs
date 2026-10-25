@@ -451,3 +451,77 @@ test('history validation refuses accessor fields without evaluating their getter
  await b.run('brazaMonthDashboard.start({api,syncVariants})');b.run("control('CheckpointDetails').open=true;control('CheckpointDetails').ontoggle();");await b.settle();
  assert.equal(b.run('getterReads'),0);assert.match(b.text('CheckpointHistoryState'),/Não foi possível conferir o histórico/);assert.doesNotMatch(b.text('CheckpointHistoryState'),/PRIVATE_GETTER/);assert.match(b.text('Net'),/43,00/);
 });
+
+function classificationFixture({due=0,enabled=true,products=null}={}){
+ const rows=products||[{item_id:'200',product_name:'Camiseta infantil <img src=x>',status:due?'QUEUED':'MATCHED',reason:due?'CATALOG_NOT_READ':null,checked_at:stamp,catalog_fingerprint:'a'.repeat(64),model_count:1,resolved_count:due?0:1,next_attempt_at:due?stamp:stamp+86400,failure_count:0,variants:[{model_id:'300',model_name:'Estampa: Verde · Tamanho: 8',reason:null,attributes:[{name:'Cor',value:'Verde'},{name:'Tamanho',value:'8'}]}],variants_complete:true}];
+ return {schema:'catalog_classification_state_v1',revision:1,counts:{total:1,queued:due?1:0,running:0,matched:due?0:1,partial:0,review:0,retry_wait:0,due:due?1:0},products:rows,limit:100,offset:0,more:false,next_due_at:due?stamp:stamp+86400,variants_limit_reached:false,enabled};
+}
+
+test('automatic catalogue metadata names the sold products and variations as text without replacing their financial amounts',async()=>{
+ const b=browser(fixture({...productFixture(),classification_revision:1}));b.context.classified=JSON.stringify(classificationFixture());
+ b.run("customApi=async(path,body)=>path.startsWith('catalog-classification?')?JSON.parse(classified):JSON.parse(JSON.stringify(currentFrame));");
+ assert.equal(await b.run('brazaMonthDashboard.start({api,syncVariants})'),true);
+ assert.equal(b.run('syncCalls'),0);
+ assert.equal(await b.run('brazaMonthDashboard.refreshCatalog()'),true);
+ assert.match(b.text('ProductRows'),/Camiseta infantil <img src=x>/);assert.equal(b.run("control('ProductRows').children[0].children[0].children[0].tag"),'strong');
+ b.run("control('ProductRows').children[0].children[0].children.find(child=>child.tag==='details').open=true;control('ProductRows').children[0].children[0].children.find(child=>child.tag==='details').ontoggle();");
+ assert.match(b.text('ProductRows'),/Estampa: Verde · Tamanho: 8/);assert.match(b.text('ProductRows'),/Produto #200/);assert.match(b.text('Net'),/43,01/);
+ b.run("control('ProductSearch').value='verde';control('ProductSearch').oninput();");assert.match(b.text('ProductRows'),/Camiseta infantil/);assert.doesNotMatch(b.text('ProductRows'),/Produto #201/);
+ assert.equal(b.run("calls.filter(call=>call.path.startsWith('catalog-classification/sync')).length"),0,'a queue with no due work performs no source action');
+});
+
+test('one failed catalogue product does not stop automatic continuation and known classifications do not require per-product clicks',async()=>{
+ const b=browser(fixture({...productFixture(),classification_revision:1}));b.context.classified=JSON.stringify(classificationFixture({due:1}));
+ b.run("let classifiedSteps=0;customApi=async(path,body)=>{if(path.startsWith('catalog-classification?'))return JSON.parse(classified);if(path==='catalog-classification/sync'){classifiedSteps++;const state=JSON.parse(classified);if(classifiedSteps===2){state.counts={total:1,queued:0,running:0,matched:1,partial:0,review:0,retry_wait:0,due:0};state.next_due_at=Date.now()/1000+86400;classified=JSON.stringify(state);}return {status:'PROGRESSED',processed:classifiedSteps===1?[]:['200'],failed:classifiedSteps===1?['199']:[],state};}return JSON.parse(JSON.stringify(currentFrame));};");
+ await b.run('brazaMonthDashboard.start({api,syncVariants})');assert.equal(await b.run('brazaMonthDashboard.refreshCatalog()'),true);assert.equal(b.run('classifiedSteps'),1);
+ assert.equal(b.run("[...timers.values()].some(timer=>timer.delay===750)"),true);
+ await b.run("[...timers.values()].find(timer=>timer.delay===750).callback()");
+ assert.equal(b.run('classifiedSteps'),2);assert.equal(b.run('syncCalls'),0);assert.match(b.text('Net'),/43,01/);
+ assert.equal(b.run("calls.filter(call=>call.path==='catalog-classification/sync').every(call=>Object.keys(call.body).length===0)"),true);
+});
+
+test('catalogue work pauses for hidden pages and a paused collection, then resumes once when visible',async()=>{
+ const b=browser(fixture({...productFixture(),classification_revision:1}));b.context.classified=JSON.stringify(classificationFixture({due:1,enabled:false}));
+ b.run("customApi=async(path,body)=>path.startsWith('catalog-classification?')?JSON.parse(classified):JSON.parse(JSON.stringify(currentFrame));");
+ await b.run('brazaMonthDashboard.start({api,syncVariants})');await b.run('brazaMonthDashboard.refreshCatalog()');assert.match(b.text('CatalogStatus'),/pausada/);assert.equal(b.run("calls.filter(call=>call.path==='catalog-classification/sync').length"),0);
+ b.run("document.hidden=true;document.handlers.visibilitychange();");assert.equal(b.run('timers.size'),0);assert.equal(await b.run('brazaMonthDashboard.refreshCatalog()'),false);
+ b.run("document.hidden=false;document.handlers.visibilitychange();");assert.equal(b.run("[...timers.values()].filter(timer=>timer.delay===0).length"),1);
+});
+
+test('malformed catalogue metadata cannot replace trusted product prices or render raw source errors',async()=>{
+ const b=browser(fixture({...productFixture(),classification_revision:1}));b.context.classified=JSON.stringify({...classificationFixture(),access_token:'PRIVATE_PROVIDER_TOKEN'});
+ b.run("customApi=async(path,body)=>path.startsWith('catalog-classification?')?JSON.parse(classified):JSON.parse(JSON.stringify(currentFrame));");
+ await b.run('brazaMonthDashboard.start({api,syncVariants})');assert.equal(await b.run('brazaMonthDashboard.refreshCatalog()'),false);
+ assert.match(b.text('CatalogStatus'),/indisponível/);assert.doesNotMatch(b.text('CatalogStatus'),/PRIVATE|CATALOG_STATE/);assert.doesNotMatch(b.text('ProductRows'),/<img/);assert.match(b.text('Net'),/43,01/);
+});
+
+test('a known product subtotal remains visible beside final monthly blockers and states the data age',async()=>{
+ const source=productFixture(1),row=source.product_summary.products[0];
+ Object.assign(row,{known_exclusive_repass_cents:2198,exclusive_repass_cents:2198,known_exclusive_tax_cents:0,exclusive_tax_cents:0,known_production_cost_cents:1590,production_cost_cents:1590,known_exclusive_production_cost_cents:1590,exclusive_production_cost_cents:1590,known_exclusive_after_costs_cents:608,exclusive_after_costs_cents:null,exclusive_margin_bps:null,pending:['STATUS_REVIEW_REQUIRED','SOURCE_UNAVAILABLE']});Object.assign(row.variants[0],{unit_cost_cents:1590,production_cost_cents:1590,exclusive_production_cost_cents:1590});
+ const mei={schema:'business_month_tax_v1',regime:'MEI',year:2026,policy_revision:1,monthly_das_cents:8605,tax_cents:8605,status:'DECLARED',source:'OPERATOR_DECLARED_DAS',basis:'MONTHLY_COMPETENCE_NO_PRORATION'};
+ const value=fixture({...source,coverage:{...source.coverage,orders:4,cancel_pending:1},expected_repass_cents:2198,known_expected_repass_cents:2198,production_cost_cents:1590,known_production_cost_cents:1590,invoice_tax_cents:8605,known_invoice_tax_cents:8605,tax:mei,source_checked_at:{finance_oldest_at:stamp-1200,finance_latest_at:stamp,ads_at:stamp},result:{...source.result,net_estimate_cents:null,net_margin_bps:null,pending:['STATUS_REVIEW_REQUIRED','FINANCIAL_SOURCE_STALE']},product_summary:{...source.product_summary,tax_treatment:'MONTHLY_DAS_NOT_ALLOCATED'}});
+ const b=browser(value);await b.run('brazaMonthDashboard.start({api,syncVariants})');
+ assert.match(b.text('ProductRows'),/Subtotal da última leitura.*6,08/);assert.match(b.text('ProductRows'),/antes de anúncios, outras despesas e DAS-MEI mensal/);assert.match(b.text('ProductRows'),/saldo final continua em conferência/);assert.match(b.text('ProductPeriodNotice'),/Avisos do período/);assert.doesNotMatch(b.text('ProductRows'),/Há situações de pedidos do mês|Parte da leitura financeira/);assert.equal(b.text('Net'),'Em conciliação');
+});
+
+test('ready products on the visible page never hide the global queue of more than sixty products',async()=>{
+ const b=browser(fixture({...productFixture(),classification_revision:1})),globalState=classificationFixture({due:1}),visibleState=classificationFixture();
+ globalState.counts={total:61,queued:61,running:0,matched:0,partial:0,review:0,retry_wait:0,due:61};
+ b.context.globalState=JSON.stringify(globalState);b.context.visibleState=JSON.stringify(visibleState);
+ b.run("let classifiedSteps=0;customApi=async(path,body)=>{if(path.startsWith('catalog-classification?'))return JSON.parse(path.includes('item_ids=')?visibleState:globalState);if(path==='catalog-classification/sync'){classifiedSteps++;return {status:'PROGRESSED',processed:['999'],failed:[],state:JSON.parse(globalState)};}return JSON.parse(JSON.stringify(currentFrame));};");
+ await b.run('brazaMonthDashboard.start({api,syncVariants})');await b.run('brazaMonthDashboard.refreshCatalog()');
+ assert.equal(b.run('classifiedSteps'),1);assert.equal(b.run("[...timers.values()].some(timer=>timer.delay===750)"),true);
+ await b.run("[...timers.values()].find(timer=>timer.delay===750).callback()");assert.equal(b.run('classifiedSteps'),2);
+ assert.equal(b.run("calls.filter(call=>call.path.includes('catalog-classification?limit=1&')).length>=2"),true);
+});
+
+test('hiding the page during one catalogue request prevents follow-up reads and resumes the changed costs on return',async()=>{
+ const b=browser(fixture({...productFixture(),classification_revision:1}));b.context.classified=JSON.stringify(classificationFixture({due:1}));
+ b.run("let releaseClassification;customApi=async(path,body)=>{if(path.startsWith('catalog-classification?'))return JSON.parse(classified);if(path==='catalog-classification/sync')return new Promise(resolve=>releaseClassification=resolve);return JSON.parse(JSON.stringify(currentFrame));};");
+ await b.run('brazaMonthDashboard.start({api,syncVariants})');const pending=b.run('brazaMonthDashboard.refreshCatalog()');await b.settle();
+ assert.equal(b.run('typeof releaseClassification'),'function');const before=b.run('calls.length');
+ b.run("document.hidden=true;document.handlers.visibilitychange();const completed=JSON.parse(classified);completed.revision=2;completed.counts={total:1,queued:0,running:0,matched:1,partial:0,review:0,retry_wait:0,due:0};completed.next_due_at=Date.now()/1000+86400;classified=JSON.stringify(completed);currentFrame.classification_revision=2;releaseClassification({status:'PROGRESSED',processed:['200'],failed:[],state:completed});");
+ assert.equal(await pending,false);assert.equal(b.run('calls.length'),before);assert.equal(b.run('timers.size'),0);
+ b.run("document.hidden=false;document.handlers.visibilitychange();");await b.run("[...timers.values()].find(timer=>timer.delay===0).callback()");
+ assert.equal(b.run("calls.at(-1).body.operation"),'read');assert.match(b.text('Net'),/43,01/);
+});

@@ -1,6 +1,7 @@
 import {createDtfEngine} from './dtf-layout.mjs';
 import {projectProductionOrdersFrame,productionOrdersRequestMatches} from '../../finance/src/production-orders-frame.mjs';
 import {validateVariantBindings} from './variant-bindings.mjs';
+import {CATALOG_CLASSIFICATION_SCHEMA,catalogClassificationQueries,catalogClassificationsFromSnapshot} from './catalog-classification.mjs';
 
 // Production is a private operational ledger. It never mutates a Shopee order
 // and never feeds image consumption back into a full-unit manufacturing cost.
@@ -39,7 +40,7 @@ export const PRODUCTION_DTF_SCHEMA=[
 const dtfReady=new WeakMap();
 async function dtfSetup(env){
  const db=env?.ADMIN_DB;if(!db?.prepare||!db?.batch)dtfFail('DTF_STORAGE_CONFIGURATION',503);
- if(!dtfReady.has(db))dtfReady.set(db,db.batch(PRODUCTION_DTF_SCHEMA.map(sql=>db.prepare(sql))).catch(()=>{dtfReady.delete(db);dtfFail('DTF_STORAGE_UNAVAILABLE',503);}));
+ if(!dtfReady.has(db))dtfReady.set(db,db.batch([...PRODUCTION_DTF_SCHEMA,...CATALOG_CLASSIFICATION_SCHEMA].map(sql=>db.prepare(sql))).catch(()=>{dtfReady.delete(db);dtfFail('DTF_STORAGE_UNAVAILABLE',503);}));
  await dtfReady.get(db);return db;
 }
 function dtfClock(now){let value;try{value=now();}catch{dtfFail('DTF_CLOCK_INVALID',503);}if(!dtfInt(value,1,9999999999999))dtfFail('DTF_CLOCK_INVALID',503);return Math.floor(value/1000);}
@@ -88,12 +89,21 @@ async function dtfSource(env,getSource,input,now){
  const frame=projectProductionOrdersFrame(raw),stamp=dtfClock(now);
  if(!frame||!productionOrdersRequestMatches(input,frame)||frame.checked_at>stamp+10||stamp-frame.checked_at>60)dtfFail('DTF_SOURCE_UNAVAILABLE',503);return frame;
 }
-async function dtfBindings(db){
- try{const row=await db.prepare('SELECT payload FROM variant_bindings_state WHERE id=1').first();if(!row)dtfFail('DTF_BINDINGS_UNAVAILABLE',503);return new Map(validateVariantBindings(JSON.parse(row.payload)).map(value=>[value.item_id+':'+value.model_id,value.selling_unit==='ONE_MALE_ONE_FEMALE_KIT']));}
- catch(error){if(error instanceof ProductionDtfError)throw error;dtfFail('DTF_BINDINGS_UNAVAILABLE',503);}
+async function dtfBindings(db,frame){
+ try{
+  const pairs=[...new Map(frame.orders.flatMap(order=>order.lines.map(line=>[line.item_id+':'+line.model_id,{item_id:line.item_id,model_id:line.model_id}]))).values()],queries=[db.prepare('SELECT payload FROM variant_bindings_state WHERE id=1')],sections=[];
+  // Every legacy/manual and normalized composition shares one D1 read snapshot.
+  // The order source may contain 5,000 lines, so each normalized selector is
+  // bounded independently rather than reusing the legacy global array limit.
+  for(let index=0;index<pairs.length;index+=1000){const part=pairs.slice(index,index+1000),selection=catalogClassificationQueries(db,[...new Set(part.map(row=>row.item_id))],part);sections.push({start:queries.length,length:selection.length});queries.push(...selection);}
+  const snapshot=await db.batch(queries),row=snapshot[0]?.results?.[0];if(!row)dtfFail('DTF_BINDINGS_UNAVAILABLE',503);
+  const legacy=new Map(validateVariantBindings(JSON.parse(row.payload)).map(value=>[value.item_id+':'+value.model_id,value])),automatic=new Map(),classified=new Set();
+  for(const section of sections){const value=catalogClassificationsFromSnapshot(snapshot.slice(section.start,section.start+section.length));for(const product of value.products)if(dtfHashText(product.catalog_fingerprint)&&dtfInt(product.checked_at,1,9999999999))classified.add(product.item_id);for(const binding of value.bindings)automatic.set(binding.item_id+':'+binding.model_id,binding);}
+  return new Map(pairs.map(pair=>{const key=pair.item_id+':'+pair.model_id,manual=legacy.get(key),binding=manual?.operator_confirmed===true?manual:classified.has(pair.item_id)?automatic.get(key):automatic.get(key)||manual;return [key,binding?.selling_unit==='ONE_MALE_ONE_FEMALE_KIT'];}));
+ }catch(error){if(error instanceof ProductionDtfError)throw error;dtfFail('DTF_BINDINGS_UNAVAILABLE',503);}
 }
 async function dtfIngest(db,frame){
- const bindings=await dtfBindings(db),orders=[],lines=[];
+ const bindings=await dtfBindings(db,frame),orders=[],lines=[];
  for(const order of frame.orders){
   const values=await Promise.all(order.lines.map(async line=>{const payload={item_id:line.item_id,model_id:line.model_id,sku:line.sku,quantity:line.quantity,model_name:line.model_name,requires_pair:bindings.get(line.line_key)===true};return {unit_key:await dtfHash([order.order_id,line.line_key]),line_key:line.line_key,payload:JSON.stringify(payload),source_hash:await dtfHash(payload),provider_hash:await dtfHash([line.item_id,line.model_id,line.sku,line.quantity,line.model_name])};}));
   // Local composition rules may change without any provider order update.

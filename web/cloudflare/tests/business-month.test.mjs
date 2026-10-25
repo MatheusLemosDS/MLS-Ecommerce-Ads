@@ -258,3 +258,16 @@ test('a just-completed paused import keeps the oldest order observation stale, w
   assert.equal(value.source_checked_at.finance_oldest_at,firstObservation);assert.ok(!value.result.pending.includes('FINANCIAL_SOURCE_STALE'));assert.equal(value.result.net_estimate_cents,82935);assert.equal(state(e).audit.length,1);
  }
 });
+
+
+test('a newly classified adult variant prices the monthly products without adding legacy bindings and exposes its classification revision',async()=>{
+ const e=env(),s=source(withProducts);e.ADMIN_DB.db.prepare('UPDATE variant_bindings_state SET payload=? WHERE id=1').run('[]');
+ let value=await complete(e,s);assert.equal(value.production_cost_cents,null);
+ await syncCostRuleCatalog(e,['201'],async()=>({schema:'variant_catalog_v1',checked_at:stamp,products:[{item_id:'201',catalog_fingerprint:'c'.repeat(64),selling_unit:'SINGLE_GARMENT',bindings:[{item_id:'201',model_id:'0',size:'GG'}],unresolved_count:0,cost_catalog:{schema:'product_cost_catalog_v1',product_name:'Camiseta Unissex Verde',variants:[{model_id:'0',attributes:[{name:'Cor',value:'Verde'},{name:'Tamanho',value:'GG'}]}]}}]}),{now});
+ value=await run(e,s,'read');assert.equal(value.production_cost_cents,9540);assert.ok(value.classification_revision>=2);assert.equal(value.bindings_revision,3);
+ const product=value.product_summary.products[0];assert.equal(product.variants[0].selling_unit,'SINGLE_GARMENT');assert.equal(product.variants[0].size,'GG');assert.equal(product.variants[0].unit_cost_cents,1590);assert.equal(product.production_cost_cents,9540);
+ assert.equal(e.ADMIN_DB.db.prepare('SELECT payload FROM variant_bindings_state').get().payload,'[]');
+ assert.equal(projectBusinessMonth({...value,classification_revision:0}),null);let getters=0;const poisoned={...value};Object.defineProperty(poisoned,'classification_revision',{enumerable:true,get(){getters++;return 1;}});assert.equal(projectBusinessMonth(poisoned),null);assert.equal(getters,0);
+ const revision=value.classification_revision;e.ADMIN_DB.db.prepare('UPDATE production_costs_state SET revision=8,payload=? WHERE id=1').run(JSON.stringify({...COST_DEFAULTS,inclusive_regular_cents:1700}));
+ value=await run(e,s,'read');assert.equal(value.production_cost_cents,10200);assert.equal(value.classification_revision,revision);assert.equal(value.costs_revision,8);
+});

@@ -31,7 +31,7 @@ export const COST_RULE_CLIENT=String.raw`(()=>{
    seen.add(row.item_id);result.push(Object.fromEntries(keys.map(key=>[key,row[key]])));
   }return result;
  }
- function learningFor(item){const row=learningByProduct.get(item);if(!row)return null;const copy={...row},epoch=Math.floor(Date.now()/1000);if(copy.checked_at>epoch+60||epoch-copy.checked_at>900){copy.status='PENDING';copy.reason='CATALOG_STALE';copy.pending_variants+=copy.matched_variants;copy.matched_variants=0;}return copy;}
+ function learningFor(item){const row=learningByProduct.get(item);if(!row)return null;const copy={...row},epoch=Math.floor(Date.now()/1000);if(copy.checked_at>epoch+60){copy.status='PENDING';copy.reason='CATALOG_STALE';copy.pending_variants+=copy.matched_variants;copy.matched_variants=0;}return copy;}
  function learningNote(item){const info=learningFor(item);if(!info||info.status==='NONE')return null;const note=node('p');note.className='field-help product-rule-learning';note.dataset.costRuleLearning=info.status;const label=info.rule_label?' · '+info.rule_label:'',coverage=info.matched_variants+' variação(ões) com custo'+(info.pending_variants?' · '+info.pending_variants+' aguardando identificação':'');
   if(info.status==='LEARNED')note.textContent='Aprendido com sua correção'+label+'. '+coverage+'. Novas variações compatíveis seguem esta regra.';
   else if(info.status==='RECOGNIZED')note.textContent='Reconhecido pelo tipo e pelos tamanhos infantis'+label+'. '+coverage+'.';
@@ -41,6 +41,7 @@ export const COST_RULE_CLIENT=String.raw`(()=>{
   return note;
  }
  async function syncCandidates(rows,{force=false}={}){
+  if(!force&&globalThis.brazaMonthDashboard?.supportsCatalogQueue?.())return globalThis.brazaMonthDashboard.syncCatalogCandidates(rows);
   if(!api||!Array.isArray(rows))return false;const ids=[...new Set(rows.map(row=>row?.item_id).filter(id=>typeof id==='string'&&/^[1-9][0-9]{0,19}$/.test(id)))];if(ids.length>3000)return false;
   const task=async()=>{try{for(let i=0;i<ids.length;i+=3){const batch=ids.slice(i,i+3),result=await api('cost-rules/sync',{item_ids:batch,force}),descriptor=Object.getOwnPropertyDescriptor(result||{},'learning');if(descriptor&&!Object.hasOwn(descriptor,'value'))throw Error('invalid learning');const learned=descriptor?projectLearningRows(descriptor.value,batch):[];for(const id of batch)learningByProduct.delete(id);for(const row of learned)learningByProduct.set(row.item_id,row);while(learningByProduct.size>3000)learningByProduct.delete(learningByProduct.keys().next().value);for(const key of [...matchedVariants])if(batch.includes(key.split(':')[0]))matchedVariants.delete(key);for(const row of result.matched_variants||[])if(batch.includes(row.item_id)&&typeof row.model_id==='string'&&/^(0|[1-9][0-9]{0,19})$/.test(row.model_id))matchedVariants.add(row.item_id+':'+row.model_id);}el('Sync').textContent=ids.length?'Regras conferidas no catálogo para '+ids.length+' produto(s). Custos manuais preservados.':'';return true;}catch{for(const id of ids)learningByProduct.delete(id);el('Sync').textContent='Parte da identificação por tipo e tamanho ficou pendente. Os custos manuais foram preservados.';return false;}};
   const work=queue.then(task,task);queue=work.catch(()=>{});return work;

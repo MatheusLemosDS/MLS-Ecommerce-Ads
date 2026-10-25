@@ -5,6 +5,7 @@ import {COST_DEFAULTS} from '../src/production-costs.mjs';
 import {buildAdsCalendar} from '../src/ads-calendar.mjs';
 import {buildAdsMeasurement} from '../src/ads-measurement.mjs';
 import {businessMonth} from '../src/business-month.mjs';
+import {scheduledWork} from '../src/admin.mjs';
 import {projectBusinessPeriodFrame} from '../../finance/src/business-period-frame.mjs';
 import {runBusinessSync,readBusinessSyncState,saveBusinessSyncPolicy,BusinessSyncError} from '../src/business-sync.mjs';
 
@@ -155,9 +156,12 @@ test('unattended catalogue discovery corrects an already priced adult binding to
  };
  await businessMonth(env,{operation:'expenses',month:'2026-10',revision:0,external_expenses_cents:0,recharge_treatment:'UNCONFIRMED'},services,{now});
  const savedBindings=rows(env,'variant_bindings_state'),savedCosts=rows(env,'production_costs_state');
- const result=await run(env,services),month=await businessMonth(env,{operation:'read',month:'2026-10'},services,{now});
+ const result=await run(env,services);
+ assert.equal(catalogCalls.length,0,'financial pagination discovers products without running a second catalogue pipeline');
+ const scheduled=await scheduledWork(env,services,now),month=await businessMonth(env,{operation:'read',month:'2026-10'},services,{now});
+ assert.equal(scheduled.classification,'PROGRESSED');
  assert.equal(result.status,'COMPLETE');assert.equal(catalogCalls.length,1);assert.equal(result.finance_steps,2);assert.equal(result.ads_reads,1);
- assert.equal(month.production_cost_cents,5000);assert.equal(month.result.net_estimate_cents,2395);assert.equal(result.state.summary.net_estimate_cents,2395);assert.deepEqual(month.unmapped_variants,[]);
+ assert.equal(month.production_cost_cents,5000);assert.equal(month.result.net_estimate_cents,2395);assert.deepEqual(month.unmapped_variants,[]);
  assert.equal(month.product_summary.products[0].variants[0].unit_cost_cents,1250);assert.equal(month.product_summary.products[0].quantity,4);
  assert.deepEqual(rows(env,'variant_bindings_state'),savedBindings);assert.deepEqual(rows(env,'production_costs_state'),savedCosts);assert.equal(rows(env,'hermes_jobs').length,0);
 });

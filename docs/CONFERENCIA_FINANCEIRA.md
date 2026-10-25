@@ -49,6 +49,12 @@ antiga não substitui uma observação posterior. O histórico é privado, exige
 sessão do proprietário e não contém tokens, compradores ou números de pedidos.
 Uma mudança futura não altera a explicação do resultado anteriormente guardado.
 
+A identificação persistente de produtos e as revisões das classificações estão
+descritas em [Custos automáticos e pendências](CUSTOS_AUTOMATICOS_E_PENDENCIAS.md).
+O detalhe mensal pode mostrar um subtotal conhecido dos pedidos exclusivos,
+separado do saldo final. Esse subtotal não comprova recebimento nem remove as
+pendências do mês.
+
 ## Frescor, cancelamentos e devoluções
 
 O Financeiro informa o primeiro e o último horário de consulta dos pedidos.

@@ -50,11 +50,11 @@ test('an unmapped variant sold only in mixed orders keeps all-production pending
 test('missing exclusive Payment preserves its quantity and cost but never creates zero sales or a complete contribution',()=>{
  const f=fixture(),row=f.source.product_breakdown.products[0];row.exclusive_payment_covered=0;row.exclusive_payment_missing=1;row.exclusive_returns_unknown=1;for(const name of ['sales_base','expected_repass','invoice_tax','ads_adjustment']){row['known_exclusive_'+name+'_raw']='0';row['exclusive_'+name+'_raw']=null;}
  f.source.coverage.payment_covered=2;f.source.coverage.payment_missing=1;f.source.coverage.returns_unknown=1;f.frame.coverage=copy(f.source.coverage);f.frame.known_sales_cents=16000;f.frame.known_expected_repass_cents=12000;f.frame.known_invoice_tax_cents=320;f.frame.ads_adjustment_cents=null;f.frame.result.pending=['PAYMENT_INCOMPLETE','RETURNS_NOT_RECONCILED'];
- const value=build(f);assert.ok(value);const out=value.products[0];assert.equal(out.quantity,3);assert.equal(out.production_cost_cents,3400);assert.equal(out.known_exclusive_sales_cents,0);assert.equal(out.exclusive_sales_cents,null);assert.equal(out.exclusive_after_costs_cents,null);assert.deepEqual(out.pending,['PAYMENT_INCOMPLETE','RETURNS_NOT_RECONCILED']);
+ const value=build(f);assert.ok(value);const out=value.products[0];assert.equal(out.quantity,3);assert.equal(out.production_cost_cents,3400);assert.equal(out.known_exclusive_sales_cents,0);assert.equal(out.exclusive_sales_cents,null);assert.equal(out.exclusive_after_costs_cents,null);assert.equal(out.known_exclusive_after_costs_cents,null);assert.deepEqual(out.pending,['PAYMENT_INCOMPLETE','RETURNS_NOT_RECONCILED']);
 });
 
 test('returns and unclassified or cancelling orders block contribution without hiding known values',()=>{
- for(const field of ['exclusive_returns','exclusive_returns_unknown']){const f=fixture();f.source.product_breakdown.products[0][field]=1;f.frame.coverage[field==='exclusive_returns'?'returns':'returns_unknown']=1;const value=build(f);assert.ok(value);assert.equal(value.products[0].exclusive_repass_cents,8000);assert.equal(value.products[0].exclusive_after_costs_cents,null);assert.deepEqual(value.products[0].pending,['RETURNS_NOT_RECONCILED']);assert.equal(value.products[1].exclusive_after_costs_cents,2380);}
+ for(const field of ['exclusive_returns','exclusive_returns_unknown']){const f=fixture();f.source.product_breakdown.products[0][field]=1;f.frame.coverage[field==='exclusive_returns'?'returns':'returns_unknown']=1;const value=build(f);assert.ok(value);assert.equal(value.products[0].exclusive_repass_cents,8000);assert.equal(value.products[0].exclusive_after_costs_cents,null);assert.equal(value.products[0].known_exclusive_after_costs_cents,null);assert.deepEqual(value.products[0].pending,['RETURNS_NOT_RECONCILED']);assert.equal(value.products[1].exclusive_after_costs_cents,2380);}
  for(const field of ['cancel_pending','other','unknown']){const f=fixture();f.frame.coverage[field]=1;f.frame.coverage.orders++;const value=build(f);assert.ok(value);assert.ok(value.products.every(row=>row.exclusive_after_costs_cents===null&&row.pending.includes('STATUS_REVIEW_REQUIRED')));}
  const f=fixture();f.frame.result.pending=['SOURCE_UNAVAILABLE'];assert.ok(build(f).products.every(row=>row.pending.includes('SOURCE_UNAVAILABLE')));
 });
@@ -62,7 +62,7 @@ test('returns and unclassified or cancelling orders block contribution without h
 test('mixed-only products never claim a zero or allocated contribution',()=>{
  const f=fixture(),row=f.source.product_breakdown.products[0];row.exclusive_orders=0;row.orders=1;row.quantity=2;row.exclusive_payment_covered=0;row.items.splice(0,1);for(const [key] of Object.entries(money('0','0','0')))row[key]='0';
  f.frame.coverage.paid=2;f.frame.coverage.completed=1;f.frame.coverage.payment_covered=2;f.frame.coverage.orders=4;f.frame.known_sales_cents=16000;f.frame.known_expected_repass_cents=12000;f.frame.known_invoice_tax_cents=320;f.frame.known_production_cost_cents=6400;f.frame.production_cost_cents=6400;f.refs.splice(0,1);
- const value=build(f);assert.ok(value);assert.equal(value.products[0].exclusive_repass_cents,0);assert.equal(value.products[0].exclusive_after_costs_cents,null);assert.equal(value.products[0].exclusive_margin_bps,null);assert.deepEqual(value.products[0].pending,['NO_EXCLUSIVE_ORDERS']);
+ const value=build(f);assert.ok(value);assert.equal(value.products[0].exclusive_repass_cents,0);assert.equal(value.products[0].exclusive_after_costs_cents,null);assert.equal(value.products[0].known_exclusive_after_costs_cents,null);assert.equal(value.products[0].exclusive_margin_bps,null);assert.deepEqual(value.products[0].pending,['NO_EXCLUSIVE_ORDERS']);
 });
 
 test('legacy/incomplete frames and mismatched snapshots stay unavailable instead of becoming an empty product report',()=>{
@@ -180,4 +180,56 @@ test('MEI projection rejects invented allocation, mismatched treatment and tax m
  const frame=copy(f.frame);Object.defineProperty(frame,'tax',{enumerable:true,get(){reads++;return f.frame.tax;}});assert.equal(projectBusinessMonthProducts(value,frame),null);assert.equal(buildBusinessMonthProducts([f.source],frame,f.refs,f.bindings),null);
  const altered=copy(value);Object.defineProperty(altered,'tax_treatment',{enumerable:true,get(){reads++;return 'MONTHLY_DAS_NOT_ALLOCATED';}});assert.equal(projectBusinessMonthProducts(altered,f.frame),null);assert.equal(reads,0);
  const source=copy(f.source);source.product_breakdown.known_mixed_invoice_tax_raw='not-money';assert.equal(buildBusinessMonthProducts([source],f.frame,f.refs,f.bindings),null);
+});
+
+test('a fully covered product retains its observed exclusive subtotal when other month statuses and source age block the final balance',()=>{
+ const f=meiFixture(),itemId='58217763082';
+ for(const row of f.source.product_breakdown.products)if(row.item_id==='201')Object.assign(row,{item_id:itemId,known_exclusive_expected_repass_raw:'21.98',exclusive_expected_repass_raw:'21.98'});
+ for(const row of f.source.items)if(row.item_id==='201')row.item_id=itemId;
+ for(const row of f.refs)if(row.item_id==='201')row.item_id=itemId;
+ for(const row of f.bindings.bindings)if(row.item_id==='201')row.item_id=itemId;
+ Object.assign(f.refs[0],{unit_cost_cents:1590,production_cost_cents:1590});
+ f.source.known_expected_repass_raw=f.source.expected_repass_raw='141.98';f.source.coverage.cancel_pending=1;f.source.coverage.orders++;f.source.pages_read=2;f.frame.progress.pages_read=2;
+ f.frame.coverage=copy(f.source.coverage);f.frame.known_expected_repass_cents=14198;f.frame.known_production_cost_cents=f.frame.production_cost_cents=7990;
+ f.frame.result.pending=['STATUS_REVIEW_REQUIRED','FINANCIAL_SOURCE_STALE'];
+ assert.ok(projectBusinessPeriodFrame(f.source));
+ const value=build(f);assert.ok(value);const product=value.products.find(row=>row.item_id===itemId);
+ assert.equal(product.exclusive_repass_cents,2198);assert.equal(product.exclusive_production_cost_cents,1590);
+ assert.equal(product.known_exclusive_after_costs_cents,608);assert.equal(product.exclusive_after_costs_cents,null);
+ assert.equal(product.exclusive_margin_bps,null);assert.deepEqual(product.pending,['STATUS_REVIEW_REQUIRED','SOURCE_UNAVAILABLE']);
+ assert.equal(f.frame.tax.tax_cents,8605);assert.equal(product.exclusive_tax_cents,0,'the monthly DAS is not assigned to an observed product subset');
+ const context=vm.createContext();context.serialized=JSON.stringify({value,frame:f.frame});new vm.Script(projectBusinessMonthProducts.toString()+'\nconst input=JSON.parse(serialized);globalThis.actual=projectBusinessMonthProducts(input.value,input.frame);').runInContext(context);assert.deepEqual(JSON.parse(JSON.stringify(context.actual)),value);
+});
+
+test('the observed subtotal uses only complete exclusive costs, keeps mixed quantities separate and never pairs partial payments with all costs',()=>{
+ const f=meiFixture();f.frame.result.pending=['SOURCE_UNAVAILABLE'];
+ f.refs[1].unit_cost_cents=null;f.refs[1].production_cost_cents=null;f.bindings.bindings.splice(1,1);f.frame.known_production_cost_cents=5000;f.frame.production_cost_cents=null;f.frame.unmapped_variants=[{item_id:'201',model_id:'11',quantity:2}];
+ let value=build(f);assert.ok(value);assert.equal(value.products[0].production_cost_cents,null);assert.equal(value.products[0].known_exclusive_after_costs_cents,7000,'a missing mixed-only cost does not change the complete exclusive subtotal');assert.equal(value.products[0].exclusive_after_costs_cents,null);
+ f.refs[0].unit_cost_cents=null;f.refs[0].production_cost_cents=null;f.frame.known_production_cost_cents=4000;f.frame.unmapped_variants.push({item_id:'201',model_id:'10',quantity:1});
+ value=build(f);assert.ok(value);assert.equal(value.products[0].known_exclusive_after_costs_cents,null,'an exclusive cost gap blocks even the observed subtotal');
+});
+
+test('legacy product rows remain compatible while optional observed subtotals reject forged values, negative zero and getters',()=>{
+ const f=fixture(),value=build(f);assert.ok(value);assert.equal(value.products[0].known_exclusive_after_costs_cents,6800,'legacy percentage tax stays in the legacy equation');
+ const legacy=copy(value);for(const row of legacy.products)delete row.known_exclusive_after_costs_cents;assert.deepEqual(projectBusinessMonthProducts(legacy,f.frame),legacy);
+ for(const amount of [null,6799,6801,'6800',NaN,Infinity]){const forged=copy(value);forged.products[0].known_exclusive_after_costs_cents=amount;assert.equal(projectBusinessMonthProducts(forged,f.frame),null);}
+ let reads=0;const getter=copy(value);Object.defineProperty(getter.products[0],'known_exclusive_after_costs_cents',{enumerable:true,get(){reads++;return 6800;}});assert.equal(projectBusinessMonthProducts(getter,f.frame),null);assert.equal(reads,0);
+ const zero=fixture();Object.assign(zero.source.product_breakdown.products[0],{known_exclusive_expected_repass_raw:'12',exclusive_expected_repass_raw:'12'});zero.frame.known_expected_repass_cents=13200;
+ const zeroValue=build(zero);assert.ok(zeroValue);assert.equal(zeroValue.products[0].known_exclusive_after_costs_cents,0);
+ zeroValue.products[0].known_exclusive_after_costs_cents=-0;assert.equal(projectBusinessMonthProducts(zeroValue,zero.frame),null);
+});
+
+const catalogBinding=(row,unit='SINGLE_GARMENT')=>({item_id:row.item_id,model_id:row.model_id,selling_unit:unit,...(unit==='SINGLE_GARMENT'?{size:'M'}:{male_size:'G',female_size:'P'}),operator_confirmed:false,source:unit==='SINGLE_GARMENT'?'CATALOG_SIZE_AXIS':'CATALOG_VARIATION_AXES',catalog_fingerprint:'d'.repeat(64)});
+test('normalized automatic garment classifications render without a global binding array and preserve explicit manual compositions',()=>{
+ const f=fixture();f.bindings.bindings=[];for(const [index,row] of f.refs.entries())row.catalog_binding=catalogBinding(row,index===2?'ONE_MALE_ONE_FEMALE_KIT':'SINGLE_GARMENT');
+ const value=build(f);assert.ok(value);assert.equal(value.products[0].variants[0].selling_unit,'SINGLE_GARMENT');assert.equal(value.products[0].variants[0].size,'M');assert.equal(value.products[1].variants[0].selling_unit,'ONE_MALE_ONE_FEMALE_KIT');assert.equal(value.products[1].variants[0].male_size,'G');assert.equal(value.products[1].variants[0].female_size,'P');assert.equal(Object.hasOwn(value.products[0].variants[0],'catalog_binding'),false);assert.equal(value.products[0].known_exclusive_after_costs_cents,6800);
+ const manual=fixture();manual.bindings.bindings[0].operator_confirmed=true;manual.refs[0].catalog_binding=catalogBinding(manual.refs[0]);assert.equal(build(manual).products[0].variants[0].size,'P');
+ const previous=fixture();previous.bindings.bindings[0].operator_confirmed=false;previous.refs[0].catalog_binding=catalogBinding(previous.refs[0]);assert.equal(build(previous).products[0].variants[0].size,'M');
+});
+
+test('normalized catalog binding provenance, identity and composition are checked without evaluating accessors',()=>{
+ const mutations=[binding=>binding.item_id='999',binding=>binding.model_id='99',binding=>binding.operator_confirmed=true,binding=>binding.catalog_fingerprint='bad',binding=>binding.source='GUESS',binding=>binding.size='4',binding=>binding.selling_unit='CUSTOM_PRODUCT',binding=>binding.private='PRIVATE'];
+ for(const mutate of mutations){const f=fixture();f.bindings.bindings=[];for(const [index,row] of f.refs.entries())row.catalog_binding=catalogBinding(row,index===2?'ONE_MALE_ONE_FEMALE_KIT':'SINGLE_GARMENT');mutate(f.refs[0].catalog_binding);assert.equal(build(f),null);}
+ let reads=0;
+ for(const field of ['catalog_binding','size']){const f=fixture();f.bindings.bindings=[];for(const [index,row] of f.refs.entries())row.catalog_binding=catalogBinding(row,index===2?'ONE_MALE_ONE_FEMALE_KIT':'SINGLE_GARMENT');if(field==='catalog_binding')Object.defineProperty(f.refs[0],field,{enumerable:true,get(){reads++;return catalogBinding(f.refs[0]);}});else Object.defineProperty(f.refs[0].catalog_binding,field,{enumerable:true,get(){reads++;return 'M';}});assert.equal(build(f),null);assert.equal(reads,0);}
 });

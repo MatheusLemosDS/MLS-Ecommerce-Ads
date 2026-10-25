@@ -1,8 +1,9 @@
 # Roadmap BrazaCommerce
 
-Atualizado em **25/10/2026 UTC**. Referência: `main` até `c07d1fe`, com
-[conferência e histórico financeiro](CONFERENCIA_FINANCEIRA.md) no incremento
-atual. [Produção e DTF](PRODUCAO_DTF.md) já foi publicado no Git; a montagem
+Atualizado em **25/10/2026 UTC**. Referência: `main` até `1ffd3b2`, com
+[identificação automática e custos pendentes](CUSTOS_AUTOMATICOS_E_PENDENCIAS.md)
+no incremento atual. A [conferência financeira](CONFERENCIA_FINANCEIRA.md) e
+[Produção e DTF](PRODUCAO_DTF.md) já foram publicados no Git; a montagem
 física ainda precisa de verificação. Este documento substitui o plano
 de 18/10; os registros antigos permanecem como histórico. Código publicado no
 Git não comprova, sozinho, o deploy ativo no Cloudflare.
@@ -23,7 +24,8 @@ testes locais.
 | --- | --- | --- |
 | Acesso unificado, painéis, produtos, custos e histórico | Já versionados em `main` | A interface reúne gestão e Ads. Custos são os padrões cadastrados; catálogo e quantidades não equivalem a estoque disponível. |
 | Financeiro por pedido e resumo mensal | Já versionados em `main` | Consulta repasse esperado, pedidos pagos, produção, cancelamentos e cobertura de devoluções. Recebimentos liquidados e valores efetivos de reembolso ainda exigem conciliação. |
-| Conferência e histórico do cálculo | Implementados neste incremento | Preserva automaticamente mudanças financeiras, pendências e revisões usadas, com as 128 versões mais recentes por mês. Corrige o frescor de coletas demoradas. Continua sendo previsão; contratos de liquidação e reembolso monetário ainda não foram confirmados. |
+| Conferência e histórico do cálculo | Versionados em `main` (`1ffd3b2`) | Preserva automaticamente mudanças financeiras, pendências e revisões usadas, com as 128 versões mais recentes por mês. Corrige o frescor de coletas demoradas. Continua sendo previsão; contratos de liquidação e reembolso monetário ainda não foram confirmados. |
+| Fila persistente de identificação e subtotal conhecido | Implementados neste incremento | Adultos, kits, infantis e regras personalizadas usam a mesma fila; erros isolados não interrompem os demais. Classificações não expiram apenas pela idade do catálogo. Subtotal dos pedidos exclusivos conhecidos permanece separado do saldo final e das pendências do mês. |
 | Reconhecimento infantil e aprendizado de custos | Versionados em `main` (`9ebee7b`, `c07d1fe`) | Tamanhos 4 a 16 e referência de R$ 12,50; correções inequívocas podem ser reaproveitadas em variações compatíveis. Composições ambíguas permanecem pendentes. |
 | Detalhamento mensal por produto/variação | Já versionado em `main` | Mantém pedidos exclusivos separados dos mistos, sem inventar rateio de repasse ou de Ads. Não entrega lucro líquido por SKU. |
 | Consumo de anúncios no período | Já versionado em `main` | Usa gasto consumido do calendário; distingue recarga e consumo. Não há atribuição validada desse gasto por produto e campanha. |

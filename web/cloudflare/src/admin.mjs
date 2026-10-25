@@ -13,6 +13,7 @@ import {BUSINESS_MONTH_CLIENT} from './business-month-client.mjs';
 import {BUSINESS_MONTH_CSS} from './business-month-view.mjs';
 import {BUSINESS_MONTH_SCHEMA,BusinessMonthError} from './business-month.mjs';
 import {BUSINESS_CHECKPOINT_SCHEMA,businessMonthWithCheckpoint,readBusinessCheckpoints,BusinessCheckpointError} from './business-checkpoint.mjs';
+import {CATALOG_CLASSIFICATION_SCHEMA,enqueueCatalogClassifications,runCatalogClassifications,readCatalogClassificationState,CatalogClassificationError} from './catalog-classification.mjs';
 import {readBusinessTaxPolicy,saveBusinessTaxPolicy,readBusinessTaxPolicyAudit,BusinessTaxPolicyError} from './business-tax-policy.mjs';
 import {BUSINESS_SYNC_SCHEMA,runBusinessSync,readBusinessSyncState,saveBusinessSyncPolicy,BusinessSyncError} from './business-sync.mjs';
 import {AUTOMATION_WORKSPACE_CSS,automationWorkspaceBody,AUTOMATION_WORKSPACE_CLIENT} from './automation-workspace.mjs';
@@ -36,6 +37,7 @@ const SCHEMA = [
 ...STORE_ADJUSTMENTS_SCHEMA,
 ...BUSINESS_MONTH_SCHEMA,
 ...BUSINESS_CHECKPOINT_SCHEMA,
+...CATALOG_CLASSIFICATION_SCHEMA,
 ...BUSINESS_SYNC_SCHEMA,
 ...PRODUCTION_DTF_SCHEMA,
 ...OBSERVATION_SCHEMA,
@@ -99,12 +101,40 @@ async function scheduledWork(env,services,now=()=>Date.now()){
  await setup(env);
  const production=async()=>{if(typeof services?.getFinanceProductionOrders!=='function')return 'UNAVAILABLE';if(!(await readBusinessSyncState(env)).enabled)return 'PAUSED';await syncProductionDtf(env,services.getFinanceProductionOrders,{now});return 'CHECKED';};
  const results=await Promise.allSettled([schedule(env,new Date(now())),runBusinessSync(env,services,{now})]);
+ let classificationStatus='UNAVAILABLE';
+ if(typeof services?.getFinanceVariantCatalog==='function')try{
+  const classification=await runCatalogClassifications(env,services.getFinanceVariantCatalog,{now,maxProducts:3,canRun:async()=>(await readBusinessSyncState(env)).enabled});
+  classificationStatus=classification.status;
+  if(classification.processed.length){
+   const month=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date(now())).slice(0,7);
+   await businessMonthWithCheckpoint(env,{operation:'read',month},services,{now,actor:'catalog-classification'});
+  }
+ }catch{classificationStatus='ERROR';}
  // Complete the financial collector before the production ledger uses the
  // same database. Each collector retains its own lease and failure outcome.
  let productionStatus='UNAVAILABLE';try{productionStatus=await production();}catch{}
- return {analysis:results[0].status==='fulfilled'?'CHECKED':'UNAVAILABLE',collection:results[1].status==='fulfilled'?results[1].value.status:'ERROR',production:productionStatus};
+ return {analysis:results[0].status==='fulfilled'?'CHECKED':'UNAVAILABLE',collection:results[1].status==='fulfilled'?results[1].value.status:'ERROR',classification:classificationStatus,production:productionStatus};
 }
 async function workspaceAuthFetch(request,env){return handleWorkspaceAuth(request,env,{renderLogin:loginPage,renderLogout:current=>page('<main class="login card"><div class="brand"><span class="brand-mark">B</span><div>BrazaCommerce<small>Sua conta</small></div></div><h1>Sair da sua conta?</h1><p class="muted">Você precisará entrar novamente para acessar o painel.</p><form action="/logout" method="post"><input type="hidden" name="csrf" value="'+current.csrf+'"><button type="submit">Sair</button></form><p><a href="'+(current.role==='owner'?'/admin':'/dashboard')+'">Continuar no painel</a></p></main>')});}
+async function catalogStateForOwner(env,state){
+ const enabled=(await readBusinessSyncState(env)).enabled;
+ if(!state.products.length)return {...state,enabled};
+ const itemIds=state.products.map(row=>row.item_id);
+ const [reference,costs,bindings]=await Promise.all([readCostRuleReference(env,itemIds),readProductionCosts(env),readVariantBindings(env)]);
+ const rows=state.products.flatMap(product=>product.variants.map(variant=>({item_id:product.item_id,model_id:variant.model_id,quantity:1}))),priced=new Map();
+ for(let offset=0;offset<rows.length;offset+=1000){const result=productionCostReference({status:'AVAILABLE',rows:rows.slice(offset,offset+1000)},bindings,costs,reference);for(const row of result.variants)priced.set(row.item_id+':'+row.model_id,row.unit_cost_cents);}
+ const ruleReasons=new Map(reference.variants.map(row=>[row.item_id+':'+row.model_id,row.reason]));
+ const products=state.products.map(product=>{
+  const variants=product.variants.map(variant=>{
+   const key=product.item_id+':'+variant.model_id,known=priced.get(key)!==null&&priced.has(key);
+   return {...variant,reason:known?null:ruleReasons.get(key)||variant.reason||'NO_COST_REGISTERED'};
+  });
+  if(!product.variants_complete||['QUEUED','RUNNING','RETRY_WAIT'].includes(product.status))return {...product,variants};
+  const resolved=variants.filter(row=>row.reason===null).length;
+  return {...product,variants,resolved_count:resolved,status:resolved===product.model_count&&resolved>0?'MATCHED':resolved?'PARTIAL':'REVIEW',reason:resolved===product.model_count&&resolved>0?null:variants.find(row=>row.reason!==null)?.reason||product.reason};
+ });
+ return {...state,products,enabled};
+}
 function dashboard(){return page('<style>'+BUSINESS_MONTH_CSS+AUTOMATION_WORKSPACE_CSS+COST_RULE_CSS+DTF_CSS+'</style>'+adminBody().replace('<details id="legacyFinanceDetails"',automationWorkspaceBody()+'<details id="legacyFinanceDetails"').replace('<section id="margins" hidden>','<section id="margins" hidden>'+costRulesBody()).replace('<section id="products" hidden>',dtfBody()+'<section id="products" hidden>')+'<script>'+DTF_ENGINE_CLIENT+'</script><script>'+DTF_CLIENT+'</script><script>'+COST_RULE_CLIENT+'</script><script>'+AUTOMATION_WORKSPACE_CLIENT+'</script><script>'+BUSINESS_MONTH_CLIENT+'</script><script>'+CLIENT+'</script>');}
 
 async function adminFetch(request,env,services={}){const url=new URL(request.url),path=url.pathname;try{
@@ -113,6 +143,30 @@ async function adminFetch(request,env,services={}){const url=new URL(request.url
  const current=await session(request,env);if(!current)return path.startsWith('/api/')?json({error:'UNAUTHORIZED'},401):Response.redirect(url.origin+'/login',303);
  if(path==='/admin'){assert(request.method==='GET','METHOD_NOT_ALLOWED',405);return dashboard();}
  assert(path.startsWith('/api/admin/'),'NOT_FOUND',404);await setup(env);
+ if(path==='/api/admin/catalog-classification'){
+  assert(request.method==='GET','METHOD_NOT_ALLOWED',405);
+  const entries=[...url.searchParams],keys=entries.map(([key])=>key);
+  assert(new Set(keys).size===keys.length&&keys.every(key=>['item_ids','limit','offset'].includes(key)),'CATALOG_CLASSIFICATION_REQUEST_INVALID');
+  const selection={};
+  for(const name of ['limit','offset'])if(url.searchParams.has(name)){
+   const value=url.searchParams.get(name);assert(/^(0|[1-9][0-9]{0,4})$/.test(value),'CATALOG_CLASSIFICATION_REQUEST_INVALID');selection[name]=Number(value);
+  }
+  if(url.searchParams.has('item_ids')){const ids=url.searchParams.get('item_ids').split(',');assert(ids.length>=1&&ids.length<=90&&new Set(ids).size===ids.length&&ids.every(id=>/^[1-9][0-9]{0,19}$/.test(id)),'CATALOG_CLASSIFICATION_REQUEST_INVALID');selection.item_ids=ids;}
+  const state=await readCatalogClassificationState(env,selection);
+  return json(await catalogStateForOwner(env,state));
+ }
+ if(path==='/api/admin/catalog-classification/sync'){
+  assert(request.method==='POST','METHOD_NOT_ALLOWED',405);assert(!url.search,'CATALOG_CLASSIFICATION_REQUEST_INVALID');sameOrigin(request);assert(await equal(request.headers.get('x-csrf-token')||'',current.csrf),'CSRF_REJECTED',403);
+  const body=await input(request,128);assert(Object.keys(body).length===0,'CATALOG_CLASSIFICATION_REQUEST_INVALID');
+  const result=await runCatalogClassifications(env,services.getFinanceVariantCatalog,{maxProducts:1,canRun:async()=>(await readBusinessSyncState(env)).enabled});
+  return json({...result,state:await catalogStateForOwner(env,result.state)});
+ }
+ if(path==='/api/admin/catalog-classification/enqueue'){
+  assert(request.method==='POST','METHOD_NOT_ALLOWED',405);assert(!url.search,'CATALOG_CLASSIFICATION_REQUEST_INVALID');sameOrigin(request);assert(await equal(request.headers.get('x-csrf-token')||'',current.csrf),'CSRF_REJECTED',403);
+  const body=await input(request,131072);assert(Object.keys(body).length===1&&Object.hasOwn(body,'item_ids'),'CATALOG_CLASSIFICATION_REQUEST_INVALID');
+  const state=await enqueueCatalogClassifications(env,body.item_ids);
+  return json(await catalogStateForOwner(env,state));
+ }
  if(path==='/api/admin/production'||path.startsWith('/api/admin/production/')){
   assert(!url.search,'PRODUCTION_REQUEST_INVALID');
   if(path==='/api/admin/production'){assert(request.method==='GET','METHOD_NOT_ALLOWED',405);return json(await readProductionDtf(env));}
@@ -221,5 +275,5 @@ async function adminFetch(request,env,services={}){const url=new URL(request.url
  if(path==='/api/admin/jobs')return json({rows:(await env.ADMIN_DB.prepare(`SELECT id,json_extract(task,'$.start_date') AS start_date,json_extract(task,'$.end_date') AS end_date,trigger_type,status,settings_revision,reserve_cents,cost_cents,cost_source,result,failure,created_at,started_at,completed_at FROM hermes_jobs ORDER BY created_at DESC LIMIT 30`).all()).results});
  if(path==='/api/admin/audit')return json({rows:(await env.ADMIN_DB.prepare('SELECT revision,payload,actor,created_at FROM admin_audit ORDER BY revision DESC LIMIT 30').all()).results});
  return json({error:'NOT_FOUND'},404);
- }catch(error){return json({error:error instanceof AdminError||error instanceof VariantBindingError||error instanceof ObservationError||error instanceof ProductionCostError||error instanceof StoreSummaryError||error instanceof BusinessMonthError||error instanceof BusinessCheckpointError||error instanceof BusinessTaxPolicyError||error instanceof BusinessSyncError||error instanceof CostRuleError||error instanceof ProductionDtfError?error.message:'ADMIN_UNAVAILABLE'},error instanceof AdminError||error instanceof VariantBindingError||error instanceof ObservationError||error instanceof ProductionCostError||error instanceof StoreSummaryError||error instanceof BusinessMonthError||error instanceof BusinessCheckpointError||error instanceof BusinessTaxPolicyError||error instanceof BusinessSyncError||error instanceof CostRuleError||error instanceof ProductionDtfError?error.status:503);}}
+ }catch(error){return json({error:error instanceof AdminError||error instanceof VariantBindingError||error instanceof ObservationError||error instanceof ProductionCostError||error instanceof StoreSummaryError||error instanceof BusinessMonthError||error instanceof BusinessCheckpointError||error instanceof BusinessTaxPolicyError||error instanceof BusinessSyncError||error instanceof CostRuleError||error instanceof CatalogClassificationError||error instanceof ProductionDtfError?error.message:'ADMIN_UNAVAILABLE'},error instanceof AdminError||error instanceof VariantBindingError||error instanceof ObservationError||error instanceof ProductionCostError||error instanceof StoreSummaryError||error instanceof BusinessMonthError||error instanceof BusinessCheckpointError||error instanceof BusinessTaxPolicyError||error instanceof BusinessSyncError||error instanceof CostRuleError||error instanceof CatalogClassificationError||error instanceof ProductionDtfError?error.status:503);}}
 export {adminFetch,schedule,scheduledWork,DEFAULTS,SCHEMA,validateSettings,workspaceAuthFetch};

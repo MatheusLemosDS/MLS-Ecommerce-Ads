@@ -1,4 +1,5 @@
 import {businessMonth,projectBusinessMonth} from './business-month.mjs';
+import {enqueueCatalogClassifications} from './catalog-classification.mjs';
 
 // Compact explanations, not a cash ledger. No order/customer identifiers or
 // provider credentials are copied into this history.
@@ -16,6 +17,8 @@ export class BusinessCheckpointError extends Error {
 // are kept even when expenses, returns or another input are still pending.
 export async function businessMonthWithCheckpoint(env,input,services,options={}){
  const frame=await businessMonth(env,input,services,options);
+ const items=[...new Set([...(frame.product_summary?.products||[]),...frame.unmapped_variants].map(row=>row.item_id))];
+ if(items.length)await enqueueCatalogClassifications(env,items,{now:options.now||(()=>Date.now())});
  if(frame.status!=='RUNNING')await recordBusinessCheckpoint(env,frame);
  return frame;
 }
@@ -40,7 +43,7 @@ export function buildBusinessCheckpoint(frame){
     {code:'ADS_RECHARGE_RESTORE',sign:1,amount_cents:restore},
    ],
    sales_cents:value.sales_cents,
-   versions:{bindings:value.bindings_revision,costs:value.costs_revision,cost_rules:value.cost_rules_revision??null,tax_policy:value.tax?.policy_revision??null,expenses:value.expenses.revision},
+   versions:{bindings:value.bindings_revision,costs:value.costs_revision,cost_rules:value.cost_rules_revision??null,tax_policy:value.tax?.policy_revision??null,expenses:value.expenses.revision,...(value.classification_revision===undefined?{}:{classifications:value.classification_revision})},
    source_checked_at:value.source_checked_at?{...value.source_checked_at}:{finance_oldest_at:null,finance_latest_at:null,ads_at:value.ads?.fetched_at??null},
    tax_regime:value.tax?.regime==='MEI'?'MEI':'LEGACY_ESTIMATE',recharge_treatment:value.expenses.recharge_treatment,
   };
@@ -70,7 +73,9 @@ function checkpointProject(value){
   if(!checkpointArray(value.pending,checkpointPending.length)||new Set(value.pending).size!==value.pending.length||!value.pending.every(code=>checkpointPending.includes(code))||!checkpointExact(value.result,['expected_net_cents','realized_net_cents','realization'])||!checkpointCent(value.result.expected_net_cents,true)||value.result.realized_net_cents!==null||value.result.realization!=='UNVERIFIED')return null;
   if(!checkpointArray(value.lines,6)||value.lines.length!==6)return null;
   for(let index=0;index<6;index++){const line=value.lines[index];if(!checkpointExact(line,['code','sign','amount_cents'])||line.code!==checkpointLineCodes[index]||line.sign!==(index===0||index===5?1:-1)||!checkpointCent(line.amount_cents,index===0))return null;}
-  if(!checkpointCent(value.sales_cents)||!checkpointExact(value.versions,['bindings','costs','cost_rules','tax_policy','expenses'])||!checkpointInt(value.versions.bindings,1,2147483647)||!checkpointInt(value.versions.costs,1,2147483647)||value.versions.cost_rules!==null&&!checkpointInt(value.versions.cost_rules,1,2147483646)||value.versions.tax_policy!==null&&!checkpointInt(value.versions.tax_policy,0,2147483647)||!checkpointInt(value.versions.expenses,0,2147483646))return null;
+  const classified=Object.getOwnPropertyDescriptor(value.versions||{},'classifications');
+  if(classified&&(!Object.hasOwn(classified,'value')||!checkpointInt(classified.value,1,2147483646)))return null;
+  if(!checkpointCent(value.sales_cents)||!checkpointExact(value.versions,['bindings','costs','cost_rules','tax_policy','expenses',...(classified?['classifications']:[])])||!checkpointInt(value.versions.bindings,1,2147483647)||!checkpointInt(value.versions.costs,1,2147483647)||value.versions.cost_rules!==null&&!checkpointInt(value.versions.cost_rules,1,2147483646)||value.versions.tax_policy!==null&&!checkpointInt(value.versions.tax_policy,0,2147483647)||!checkpointInt(value.versions.expenses,0,2147483646))return null;
   const sources=value.source_checked_at;
   if(!checkpointExact(sources,['finance_oldest_at','finance_latest_at','ads_at'])||!Object.values(sources).every(at=>at===null||checkpointInt(at,1,value.checked_at))||(sources.finance_oldest_at===null)!==(sources.finance_latest_at===null)||sources.finance_oldest_at!==null&&sources.finance_oldest_at>sources.finance_latest_at)return null;
   if(!['MEI','LEGACY_ESTIMATE'].includes(value.tax_regime)||!['UNCONFIRMED','ADS_RECHARGE','TECH_SUPPORT'].includes(value.recharge_treatment)||value.tax_regime==='MEI'&&value.versions.tax_policy===null||value.tax_regime==='LEGACY_ESTIMATE'&&value.versions.tax_policy!==null||value.recharge_treatment==='TECH_SUPPORT'&&value.lines[5].amount_cents!==null&&value.lines[5].amount_cents!==0||value.recharge_treatment==='UNCONFIRMED'&&value.lines[5].amount_cents!==null&&value.lines[5].amount_cents!==0)return null;
@@ -134,7 +139,7 @@ export async function recordBusinessCheckpoint(env,frame){
    // still contain an older configuration snapshot. Never let either revert
    // a version already observed. Incomparable vectors wait for a combined
    // snapshot instead of combining values from different reads here.
-   const regressed=current&&Object.keys(checkpoint.versions).some(key=>(checkpoint.versions[key]??0)<(current.checkpoint.versions[key]??0));
+   const regressed=current&&[...new Set([...Object.keys(checkpoint.versions),...Object.keys(current.checkpoint.versions)])].some(key=>(checkpoint.versions[key]??0)<(current.checkpoint.versions[key]??0));
    const olderSource=current&&Object.keys(checkpoint.source_checked_at).some(key=>checkpoint.source_checked_at[key]!==null&&current.source_watermarks[key]!==null&&checkpoint.source_checked_at[key]<current.source_watermarks[key]);
    if(current&&(checkpoint.checked_at<current.observed_at||regressed||olderSource))return {revision:current.revision,fingerprint:current.fingerprint,checkpoint:current.checkpoint};
    const watermarks=Object.fromEntries(Object.keys(checkpoint.source_checked_at).map(key=>[key,checkpoint.source_checked_at[key]===null?current?.source_watermarks[key]??null:current?.source_watermarks[key]===null||!current?checkpoint.source_checked_at[key]:Math.max(checkpoint.source_checked_at[key],current.source_watermarks[key])])),watermarksRaw=JSON.stringify(watermarks);

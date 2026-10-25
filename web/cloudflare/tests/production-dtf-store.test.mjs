@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {D1} from './sqlite-d1.mjs';
+import {syncCostRuleCatalog} from '../src/cost-rules.mjs';
 import {readProductionDtf,saveProductionDtfSettings,syncProductionDtf,prepareProductionDtfBatch,actProductionDtfBatch,ProductionDtfError} from '../src/production-dtf-store.mjs';
 
 const base=Date.UTC(2026,9,24,12),id='11111111-1111-4111-8111-111111111111',other='22222222-2222-4222-8222-222222222222';
@@ -103,4 +104,18 @@ test('a busy rolling history never blocks today and older known orders are reche
  f.state.time+=61000;f.state.orders.find(row=>row.order_id==='OLD00_000').status='CANCELLED';f.state.orders.find(row=>row.order_id==='OLD00_000').update_time++;
  const second=await f.sync({force:false});assert.equal(second.queue_total,201);assert.equal(second.history_next_date,'2026-10-21');assert.equal(second.lines.find(row=>row.order_id==='OLD00_000').production_state,'BLOCKED');
  assert.ok(f.state.calls.every(input=>input.operation!=='scan'||input.start_date===input.end_date));assert.ok(f.state.calls.some(input=>input.operation==='verify'&&input.order_ids.includes('OLD00_000')));
+});
+
+
+test('a newly classified couple kit reaches the DTF queue without writing a legacy binding and keeps manual composition priority',async()=>{
+ const f=await fixture(),before=f.env.ADMIN_DB.db.prepare('SELECT * FROM variant_bindings_state').all();
+ const catalogue=(model_id='0')=>({schema:'variant_catalog_v1',checked_at:Math.floor(f.state.time/1000),products:[{item_id:'201',catalog_fingerprint:'d'.repeat(64),selling_unit:'ONE_MALE_ONE_FEMALE_KIT',bindings:[{item_id:'201',model_id,male_size:'M',female_size:'P'}],unresolved_count:0,cost_catalog:{schema:'product_cost_catalog_v1',product_name:'Kit Camiseta Casal',variants:[{model_id,attributes:[{name:'Tamanho Masculino',value:'HOMEM M'},{name:'Tamanho Feminino',value:'MULHER P'}]}]}}]});
+ await syncCostRuleCatalog(f.env,['201'],async()=>catalogue(),{now:f.now});
+ let view=await f.sync();assert.equal(view.lines[0].requires_pair,true);assert.equal(view.lines[0].status,'READY_TO_SHIP');assert.deepEqual(f.env.ADMIN_DB.db.prepare('SELECT * FROM variant_bindings_state').all(),before);
+ await rejects(f.prepare(request(view.lines)),'DTF_PLAN_PENDING',400);
+ const manual={item_id:'201',model_id:'0',selling_unit:'SINGLE_GARMENT',size:'M',operator_confirmed:true};f.env.ADMIN_DB.db.prepare('UPDATE variant_bindings_state SET payload=?').run(JSON.stringify([manual]));f.state.time+=1000;
+ view=await f.sync();assert.equal(view.lines[0].requires_pair,false,'a saved manual composition still wins over the catalogue');assert.equal(view.lines[0].status,'READY_TO_SHIP');
+ const old={item_id:'201',model_id:'0',selling_unit:'ONE_MALE_ONE_FEMALE_KIT',male_size:'M',female_size:'P',operator_confirmed:false,source:'CATALOG_VARIATION_AXES',catalog_fingerprint:'d'.repeat(64)};f.env.ADMIN_DB.db.prepare('UPDATE variant_bindings_state SET payload=?').run(JSON.stringify([old]));f.state.time+=1000;
+ await syncCostRuleCatalog(f.env,['201'],async()=>catalogue('1'),{now:f.now,force:true});
+ view=await f.sync();assert.equal(view.lines[0].requires_pair,false,'a model removed from the new catalogue cannot revive an obsolete automatic kit binding');
 });

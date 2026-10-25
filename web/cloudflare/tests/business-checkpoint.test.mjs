@@ -68,6 +68,16 @@ test('same-second changes are retained and versions create a new explanation eve
  const revision=frame({payout:7000});revision.costs_revision++;const third=await recordBusinessCheckpoint(e,revision);assert.equal(third.revision,3);assert.equal(third.checkpoint.result.expected_net_cents,changed.checkpoint.result.expected_net_cents);
 });
 
+test('classification revisions extend the history without rewriting legacy fingerprints or accepting a later revisionless downgrade',async()=>{
+ const e=env(),legacy=await recordBusinessCheckpoint(e,frame());
+ const classified=frame({at:stamp+1});classified.classification_revision=2;
+ const updated=await recordBusinessCheckpoint(e,classified);
+ assert.equal(updated.revision,2);assert.equal(updated.checkpoint.versions.classifications,2);
+ let records=await history(e);assert.equal(records.checkpoints[1].fingerprint,legacy.fingerprint);assert.ok(!Object.hasOwn(records.checkpoints[1].checkpoint.versions,'classifications'));
+ const late=await recordBusinessCheckpoint(e,frame({at:stamp+2}));assert.equal(late.revision,2);assert.equal(late.checkpoint.versions.classifications,2);
+ records=await history(e);assert.equal(records.checkpoints.length,2);assert.equal(records.checkpoints[1].fingerprint,legacy.fingerprint);
+});
+
 test('out-of-order same-second replies and incomparable configuration vectors cannot roll costs or expenses back',async()=>{
  const e=env(),current=frame({expenses:500,expenseRevision:2});await recordBusinessCheckpoint(e,current);
  const old=await recordBusinessCheckpoint(e,frame({expenses:0,expenseRevision:1}));assert.equal(old.revision,1);assert.equal(old.checkpoint.versions.expenses,2);assert.equal(old.checkpoint.lines[4].amount_cents,500);

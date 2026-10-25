@@ -98,9 +98,9 @@ test('learning notes distinguish correction-based learning from confirmed child 
  first.rule_label='ALTERADO';const copy=b.workspace.learningFor('101');copy.matched_variants=0;assert.equal(b.workspace.learningFor('101').rule_label,'Camiseta infantil');assert.equal(b.workspace.learningFor('101').matched_variants,7);assert.equal(b.workspace.learningFor('103'),null);
 });
 
-test('stale and conflicting learning remains pending and a legacy response cannot retain a prior positive note',async()=>{
+test('established learning survives catalogue age, conflicts remain pending and legacy responses clear old notes',async()=>{
  let current={learning:[learning({checked_at:Math.floor(Date.now()/1000)-901})]};const b=browser(async path=>path==='cost-rules'?state():current);await b.workspace.start({api:b.api});
- await b.workspace.syncCandidates([{item_id:'101'}]);assert.equal(b.workspace.learningFor('101').status,'PENDING');assert.equal(b.workspace.learningFor('101').matched_variants,0);assert.doesNotMatch(widgetText(b.workspace.learningNote('101')),/Aprendido/);assert.match(widgetText(b.workspace.learningNote('101')),/atualização do catálogo/);
+ await b.workspace.syncCandidates([{item_id:'101'}]);assert.equal(b.workspace.learningFor('101').status,'LEARNED');assert.equal(b.workspace.learningFor('101').matched_variants,7);assert.match(widgetText(b.workspace.learningNote('101')),/Aprendido/);
  current={learning:[learning({status:'CONFLICT',reason:'CONFLICTING_CORRECTIONS',matched_variants:1,pending_variants:6})]};await b.workspace.syncCandidates([{item_id:'101'}]);assert.match(widgetText(b.workspace.learningNote('101')),/em revisão.*preservadas/);assert.doesNotMatch(widgetText(b.workspace.learningNote('101')),/Aprendido/);
  current={processed:['101'],revision:1};assert.equal(await b.workspace.syncCandidates([{item_id:'101'}]),true);assert.equal(b.workspace.learningFor('101'),null);assert.equal(b.workspace.learningNote('101'),null);
 });
