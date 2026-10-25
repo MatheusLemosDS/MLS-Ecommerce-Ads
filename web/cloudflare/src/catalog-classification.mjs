@@ -74,10 +74,14 @@ export function catalogClassificationsFromSnapshot(results){
  return {revision:results[0].results[0].classification_revision,bindings,products:[...jobs.values()].map(productMetadata).sort((a,b)=>compare(a.item_id,b.item_id)),variants};
 }
 
-export async function enqueueCatalogClassifications(env,itemIds,{now=()=>Date.now(),returnState=true}={}){
+export async function enqueueCatalogClassifications(env,itemIds,{now=()=>Date.now(),returnState=true,priorityItemIds=[]}={}){
  if(typeof returnState!=='boolean')fail('CATALOG_CLASSIFICATION_REQUEST_INVALID',400);
- const ids=idsInput(itemIds),stamp=clock(now),db=await setup(env);
- const writes=[];for(let i=0;i<ids.length;i+=90)writes.push(db.prepare("INSERT OR IGNORE INTO catalog_classification_jobs(item_id,status,next_attempt_at) SELECT value,'QUEUED',? FROM json_each(?)").bind(stamp,JSON.stringify(ids.slice(i,i+90))));
+ const ids=idsInput(itemIds),priority=new Set(idsInput(priorityItemIds)),allowed=new Set(ids);if([...priority].some(item=>!allowed.has(item)))fail('CATALOG_CLASSIFICATION_REQUEST_INVALID',400);
+ const stamp=clock(now),db=await setup(env);
+ // A missing production cost should not wait behind already priced products.
+ // Only an untouched queued job can move forward; failed and leased jobs keep
+ // their provider backoff and ownership even when another month rediscovers it.
+ const writes=[];for(let i=0;i<ids.length;i+=90)writes.push(db.prepare("INSERT OR IGNORE INTO catalog_classification_jobs(item_id,status,next_attempt_at) SELECT json_extract(value,'$.item_id'),'QUEUED',CASE WHEN json_extract(value,'$.priority')=1 THEN 0 ELSE ? END FROM json_each(?) WHERE 1 ON CONFLICT(item_id) DO UPDATE SET next_attempt_at=0 WHERE excluded.next_attempt_at=0 AND catalog_classification_jobs.status='QUEUED' AND catalog_classification_jobs.checked_at IS NULL AND catalog_classification_jobs.last_attempt_at IS NULL AND catalog_classification_jobs.failure_count=0 AND catalog_classification_jobs.lease_token IS NULL AND catalog_classification_jobs.lease_until IS NULL").bind(stamp,JSON.stringify(ids.slice(i,i+90).map(item_id=>({item_id,priority:priority.has(item_id)?1:0})))));
  if(writes.length)await db.batch(writes);
  return returnState?readCatalogClassificationState(env,{}, {now}):null;
 }

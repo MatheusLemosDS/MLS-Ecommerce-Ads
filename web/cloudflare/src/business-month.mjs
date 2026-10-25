@@ -156,6 +156,7 @@ async function businessMonthOperation(env,input,services,{now=()=>Date.now(),act
   if(operation!=='start'&&operation!=='read'&&operation!=='ads'&&!expenseOperation)businessMonthFail('BUSINESS_MONTH_START_REQUIRED',409);
   observed=await businessMonthCreateRun(db,input.month,range,stamp,observed);
  }
+ let result=null;
  try{
   if(operation==='start'||operation==='step')observed=await businessMonthAdvance(env,db,input.month,range,stamp,observed,services);
   if(operation==='ads'){
@@ -164,14 +165,15 @@ async function businessMonthOperation(env,input,services,{now=()=>Date.now(),act
    if(!report||report.start_date!==range.start_date||report.end_date!==range.end_date||report.fetched_at>stamp+60||stamp-report.fetched_at>(range.current?60:900))businessMonthFail('BUSINESS_MONTH_ADS_INVALID',503);
    await db.prepare('INSERT INTO business_month_ads(month,payload,updated_at) VALUES(?,?,?) ON CONFLICT(month) DO UPDATE SET payload=excluded.payload,updated_at=excluded.updated_at WHERE business_month_ads.updated_at<=excluded.updated_at').bind(input.month,JSON.stringify(report),report.fetched_at).run();
   }
-  return await businessMonthBundle(db,input.month,range,stamp,observed);
+  result=await businessMonthBundle(db,input.month,range,stamp,observed);return result;
  }finally{
   // Discovery uses every validated imported item, including already priced
   // products in a partial month. An independent catalogue queue failure must
   // not discard a valid financial result or replace its original source error.
   if(onProductsDiscovered){
    const itemIds=[...new Set(observed.payload.slots.flatMap(slot=>slot.frame?.items.map(row=>row.item_id)||[]))];
-   try{await onProductsDiscovered(itemIds);}catch{}
+   const priorityItemIds=[...new Set((result?.unmapped_variants||[]).map(row=>row.item_id))];
+   try{await onProductsDiscovered(itemIds,{priorityItemIds});}catch{}
   }
  }
 }

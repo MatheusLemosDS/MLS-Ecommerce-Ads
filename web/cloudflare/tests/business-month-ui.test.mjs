@@ -36,6 +36,13 @@ function mixedProductFixture(){
  Object.assign(second,{exclusive_orders:0,mixed_orders:1,exclusive_payment_covered:0,known_exclusive_sales_cents:0,exclusive_sales_cents:0,known_exclusive_repass_cents:0,exclusive_repass_cents:0,known_exclusive_tax_cents:0,exclusive_tax_cents:0,known_exclusive_production_cost_cents:0,exclusive_production_cost_cents:0,exclusive_after_costs_cents:null,exclusive_margin_bps:null,pending:['NO_EXCLUSIVE_ORDERS']});Object.assign(second.variants[0],{exclusive_quantity:0,mixed_quantity:1,exclusive_production_cost_cents:0});
  return fixture({...source,sales_cents:15000,known_sales_cents:15000,expected_repass_cents:12000,known_expected_repass_cents:12000,production_cost_cents:3000,known_production_cost_cents:3000,invoice_tax_cents:300,known_invoice_tax_cents:300,result:{...source.result,net_estimate_cents:7200,net_margin_bps:4800},product_summary:{schema:'business_month_products_v1',mixed_orders:1,known_mixed_sales_cents:10000,known_mixed_repass_cents:8000,known_mixed_tax_cents:200,known_mixed_ads_adjustment_cents:0,products:[first,second]}});
 }
+function partialCostProductFixture(){
+ const source=mixedProductFixture(),row=source.product_summary.products[0];
+ row.known_production_cost_cents=1000;row.production_cost_cents=null;Object.assign(row.variants[0],{quantity:1,mixed_quantity:0,production_cost_cents:1000});
+ row.variants.push({model_id:'302',quantity:1,exclusive_quantity:0,mixed_quantity:1,unit_cost_cents:null,production_cost_cents:null,exclusive_production_cost_cents:0,selling_unit:null,size:null,male_size:null,female_size:null});
+ source.known_production_cost_cents=2000;source.production_cost_cents=null;source.unmapped_variants=[{item_id:'200',model_id:'302',quantity:1}];source.result={...source.result,net_estimate_cents:null,net_margin_bps:null,pending:['PRODUCTION_COST_INCOMPLETE']};
+ return fixture(source);
+}
 function browser(value=fixture(),search=''){
  const context=vm.createContext({URLSearchParams});
  const ids=[...businessMonthBody().matchAll(/\bid="(businessMonth[^"]*)"/g)].map(match=>match[1]);
@@ -241,11 +248,11 @@ test('a failed saved read falls back once to the normal financial import',async(
  assert.deepEqual(JSON.parse(b.run('JSON.stringify(calls.map(call=>call.body.operation))')),['read','start','ads']);assert.match(b.text('Net'),/43,00/);assert.equal(b.run('timers.size'),1);
 });
 
-test('a stale saved financial source keeps the net pending before a delayed private refresh',async()=>{
+test('a stale saved financial source shows a clearly provisional balance while the strict net awaits a delayed refresh',async()=>{
  const source=fixture(),stale=fixture({...source,source_checked_at:{finance_oldest_at:stamp-1200,finance_latest_at:stamp-30,ads_at:stamp},result:{...source.result,net_estimate_cents:null,net_margin_bps:null,pending:['FINANCIAL_SOURCE_STALE']}}),b=browser(stale);
  b.run("let releaseStart;customApi=async(path,body)=>body.operation==='start'?new Promise(resolve=>releaseStart=resolve):JSON.parse(JSON.stringify(currentFrame));");
  const starting=b.run('brazaMonthDashboard.start({api,syncVariants})');await b.settle();
- assert.equal(b.text('Net'),'Em conciliação');assert.doesNotMatch(b.text('Net'),/0,00|43,00/);assert.match(b.text('PendingList'),/nova leitura/);assert.match(b.text('Scope'),/Idade do financeiro: há 20 minuto\(s\)/);
+ assert.match(b.text('Net'),/43,00/);assert.equal(b.text('NetLabel'),'Saldo provisório da loja');assert.match(b.text('NetHelp'),/última leitura|provisório|atualiza/i);assert.equal(b.run('currentFrame.result.net_estimate_cents'),null);assert.equal(b.text('CheckpointStatus'),'Previsão com pendências');assert.match(b.text('PendingList'),/nova leitura/);assert.match(b.text('Scope'),/Idade do financeiro: há 20 minuto\(s\)/);
  b.load(source);b.run('releaseStart(JSON.parse(JSON.stringify(currentFrame)));');await starting;assert.match(b.text('Net'),/43,00/);
 });
 
@@ -432,21 +439,68 @@ test('mixed orders keep all production visible without allocating payout or subt
  const first=b.run("text(control('ProductRows').children[0])"),second=b.run("text(control('ProductRows').children[1])");
  assert.match(first,/20,00/);assert.match(first,/29,00/);assert.doesNotMatch(first,/19,00/);assert.match(first,/1 pedido\(s\) com outros produtos não estão neste saldo/);
  assert.match(second,/Sem pedido exclusivo/);assert.doesNotMatch(b.run("text(control('ProductRows').children[1].children[3])"),/0,00/);
+ assert.match(b.text('CostOverview'),/30,00/);assert.match(b.text('CostOverview'),/48,00/);assert.match(b.text('CostOverview'),/3 de 3/);assert.match(b.text('Net'),/72,00/);assert.equal(b.text('NetLabel'),'Resultado líquido previsto');
  b.run("control('ProductFilter').value='ready';control('ProductFilter').onchange();");assert.equal(b.run("control('ProductRows').children.length"),1);assert.match(b.text('ProductRows'),/Produto #200/);
  b.run("control('ProductFilter').value='pending';control('ProductFilter').onchange();");assert.equal(b.run("control('ProductRows').children.length"),1);assert.match(b.text('ProductRows'),/Produto #201/);
  b.run("control('ProductFilter').value='mixed';control('ProductFilter').onchange();");assert.equal(b.run("control('ProductRows').children.length"),2);
 });
 
 test('pending-cost filter also finds a mixed variation without blocking the proven exclusive saldo',async()=>{
- const source=mixedProductFixture(),row=source.product_summary.products[0];
- row.known_production_cost_cents=1000;row.production_cost_cents=null;Object.assign(row.variants[0],{quantity:1,mixed_quantity:0,production_cost_cents:1000});
- row.variants.push({model_id:'302',quantity:1,exclusive_quantity:0,mixed_quantity:1,unit_cost_cents:null,production_cost_cents:null,exclusive_production_cost_cents:0,selling_unit:null,size:null,male_size:null,female_size:null});
- source.known_production_cost_cents=2000;source.production_cost_cents=null;source.unmapped_variants=[{item_id:'200',model_id:'302',quantity:1}];source.result={...source.result,net_estimate_cents:null,net_margin_bps:null,pending:['PRODUCTION_COST_INCOMPLETE']};
- const b=browser(fixture(source));assert.equal(await b.run('brazaMonthDashboard.start({api,syncVariants})'),true);
+ const b=browser(partialCostProductFixture());assert.equal(await b.run('brazaMonthDashboard.start({api,syncVariants})'),true);
  b.run("control('ProductFilter').value='pending';control('ProductFilter').onchange();control('ProductSearch').value='200';control('ProductSearch').oninput();");
  assert.equal(b.run("control('ProductRows').children.length"),1);assert.match(b.text('ProductRows'),/Produto #200/);assert.match(b.text('ProductRows'),/29,00/);assert.match(b.text('ProductRows'),/Já identificado: .*10,00/);
  assert.match(b.text('ProductRows'),/Nestes pedidos: repasse .*40,00 · produção .*10,00 · imposto .*1,00/);
- assert.equal(b.text('Net'),'Em conciliação');
+ assert.match(b.text('Net'),/82,00/);assert.equal(b.text('NetLabel'),'Saldo com custos identificados');assert.match(b.text('NetHelp'),/custo.*(?:pendente|falta|faltante)|(?:pendente|falta|faltante).*custo/i);assert.equal(b.run('currentFrame.result.net_estimate_cents'),null);
+});
+
+test('partial manufacturing costs show known amounts and unit coverage without releasing final net or automation',async()=>{
+ const source=partialCostProductFixture(),b=browser(source);
+ b.run('globalThis.brazaAutomationWorkspace={render(value){globalThis.diagnosis=value;}};');
+ assert.equal(await b.run('brazaMonthDashboard.start({api,syncVariants})'),true);
+ assert.match(b.text('CostOverview'),/20,00/);assert.match(b.text('CostOverview'),/38,00/);assert.match(b.text('CostOverview'),/2 de 3/);assert.match(b.text('CostOverview'),/1.*pendente/i);
+ assert.match(b.text('Net'),/82,00/);assert.equal(b.text('NetLabel'),'Saldo com custos identificados');assert.match(b.text('Waterfall'),/Produção.*identificad|Produção.*conhecid/i);assert.match(b.text('Waterfall'),/Saldo com custos identificados/);
+ assert.equal(b.run('currentFrame.result.net_estimate_cents'),null);assert.equal(b.run('currentFrame.production_cost_cents'),null);assert.equal(b.text('CheckpointStatus'),'Previsão com pendências');assert.match(b.text('PendingList'),/sem composição ou custo completo/);
+ assert.equal(b.run('diagnosis.status'),'BLOCKED');assert.equal(b.run('diagnosis.metrics.net_estimate_cents'),null);assert.equal(b.run('diagnosis.execution'),'READ_ONLY');assert.equal(b.run('diagnosis.conditions.includes("PRODUCTION_COST_INCOMPLETE")'),true);
+});
+
+test('partial balances explain both returns and unpriced production, including a known zero subtotal without inferred unit coverage',async()=>{
+ const source=fixture();
+ for(const sample of [{known:1000,quantity:1,returns:1,amount:'53,00'},{known:0,quantity:2,returns:0,amount:'63,00'}]){
+  const pending=['PRODUCTION_COST_INCOMPLETE',...(sample.returns?['RETURNS_NOT_RECONCILED']:[])],value=fixture({...source,coverage:{...source.coverage,returns:sample.returns},production_cost_cents:null,known_production_cost_cents:sample.known,unmapped_variants:[{item_id:'201',model_id:'0',quantity:sample.quantity}],result:{...source.result,net_estimate_cents:null,net_margin_bps:null,pending}}),b=browser(value);
+  assert.equal(await b.run('brazaMonthDashboard.start({api,syncVariants})'),true);assert.equal(b.text('NetLabel'),'Saldo com custos identificados');assert.match(b.text('Net'),new RegExp(sample.amount));assert.match(b.text('NetHelp'),/falta descontar a produção/);assert.match(b.text('NetHelp'),/não é lucro líquido final/);
+  if(sample.returns)assert.match(b.text('NetHelp'),/devoluções.*conciliação/i);
+  const production=b.run("text(control('CostOverview').children[0])");assert.match(production,/Produção com custo identificado/);assert.match(production,new RegExp(sample.known?'10,00':'0,00'));assert.match(production,/produção total permanece pendente/i);
+  assert.doesNotMatch(b.text('CostOverview'),/100%|1 de 1|2 de 2|0 de 0/);assert.match(b.text('CostOverview'),/Quantidade ainda não disponível/);assert.equal(b.run('currentFrame.result.net_estimate_cents'),null);assert.equal(b.run('currentFrame.production_cost_cents'),null);
+ }
+});
+
+test('fully identified production with unconciliated returns shows a provisional store balance and preserves all final blockers',async()=>{
+ const source=productFixture(),row=source.product_summary.products[0];source.coverage.returns=1;row.exclusive_returns=1;row.exclusive_after_costs_cents=null;row.exclusive_margin_bps=null;row.pending=['RETURNS_NOT_RECONCILED'];source.result={...source.result,net_estimate_cents:null,net_margin_bps:null,pending:['RETURNS_NOT_RECONCILED']};
+ const b=browser(fixture(source));b.run('globalThis.brazaAutomationWorkspace={render(value){globalThis.diagnosis=value;}};');
+ assert.equal(await b.run('brazaMonthDashboard.start({api,syncVariants})'),true);
+ assert.equal(b.text('NetLabel'),'Saldo provisório da loja');assert.match(b.text('Net'),/43,01/);assert.match(b.text('NetHelp'),/devolu|reembolso|concilia/i);assert.match(b.text('CostOverview'),/20,00/);assert.match(b.text('CostOverview'),/2 de 2/);assert.match(b.text('PendingList'),/devoluções/);
+ assert.equal(b.text('CheckpointStatus'),'Previsão com pendências');assert.equal(b.run('currentFrame.result.net_estimate_cents'),null);assert.equal(b.run('diagnosis.status'),'BLOCKED');assert.equal(b.run('diagnosis.metrics.net_estimate_cents'),null);assert.equal(b.run('diagnosis.conditions.includes("RETURNS_NOT_RECONCILED")'),true);
+});
+
+test('missing financial inputs and unresolved source or status gates cannot become a numerical store balance',async()=>{
+ const source=fixture(),pending=({pending:codes,...changes})=>fixture({...source,...changes,result:{...source.result,net_estimate_cents:null,net_margin_bps:null,pending:codes}});
+ const cases=[
+  ['repasse',pending({coverage:{...source.coverage,payment_covered:1,payment_missing:1},sales_cents:null,expected_repass_cents:null,invoice_tax_cents:null,ads_adjustment_cents:null,pending:['PAYMENT_INCOMPLETE','INVOICE_TAX_UNAVAILABLE','ADJUSTMENT_UNAVAILABLE']})],
+  ['anúncios',pending({ads:null,pending:['ADS_UNAVAILABLE']})],
+  ['DAS',meiProductFixture({pending:true})],
+  ['despesas',pending({expenses:{revision:0,external_expenses_cents:null,recharge_treatment:'UNCONFIRMED',updated_at:null},pending:['EXTERNAL_EXPENSES_REQUIRED']})],
+  ['ajuste ausente',pending({ads_adjustment_cents:null,pending:['ADJUSTMENT_UNAVAILABLE']})],
+  ['recarga não classificada',pending({ads_adjustment_cents:1000,pending:['RECHARGE_TREATMENT_REQUIRED']})],
+  ['fonte indisponível',pending({pending:['SOURCE_UNAVAILABLE']})],
+  ['situação em revisão',pending({coverage:{...source.coverage,orders:5,cancel_pending:1},pending:['STATUS_REVIEW_REQUIRED']})],
+  ['aritmética insegura',pending({pending:['ARITHMETIC_UNSAFE']})],
+ ];
+ for(const [name,value] of cases){const b=browser(value);assert.equal(await b.run('brazaMonthDashboard.start({api,syncVariants})'),true,name);assert.equal(b.text('Net'),'Em conciliação',name);assert.equal(b.text('NetLabel'),'Resultado líquido previsto',name);assert.equal(b.run('currentFrame.result.net_estimate_cents'),null,name);assert.equal(b.text('CheckpointStatus'),'Previsão com pendências',name);assert.doesNotMatch(b.text('Net'),/R\$|0,00/,name);}
+});
+
+test('legacy monthly data without product quantities does not invent unit coverage or erase known manufacturing costs',async()=>{
+ const b=browser();assert.equal(await b.run('brazaMonthDashboard.start({api,syncVariants})'),true);
+ assert.match(b.text('CostOverview'),/20,00/);assert.doesNotMatch(b.text('CostOverview'),/2 de 2|100%|0 de 0/);assert.match(b.text('CostOverview'),/quantidade|unidades|detalhamento/i);assert.match(b.text('Net'),/43,00/);
 });
 
 test('absent or forged product data cannot become zero product contribution',async()=>{
@@ -489,6 +543,15 @@ test('MEI shows one fixed monthly DAS for three products and leaves product bala
  assert.match(b.text('ProductRows'),/30,00/);assert.doesNotMatch(b.text('ProductRows'),/86,05|29,00|imposto .*0,00/);
  for(const name of ['TaxSummary','TaxHelp','Waterfall','Readiness','NetHelp','ProductTaxHelp','ProductRows'])assert.doesNotMatch(b.text(name),/imposto (?:de )?2%|estimativa de 2%|Imposto previsto · 2%/i,'MEI copy must not claim a per-note tax in '+name);
  assert.equal(b.run("calls.some(call=>call.body.operation==='expenses')"),false,'reading the known DAS does not prompt or save manual monthly tax amounts');
+});
+
+test('a partially costed MEI month deducts the declared DAS once without inventing the missing product cost',async()=>{
+ const source=meiProductFixture(),row=source.product_summary.products[0],variant=row.variants[0];
+ Object.assign(variant,{unit_cost_cents:null,production_cost_cents:null,exclusive_production_cost_cents:null,selling_unit:null,size:null,male_size:null,female_size:null});Object.assign(row,{known_production_cost_cents:0,production_cost_cents:null,known_exclusive_production_cost_cents:0,exclusive_production_cost_cents:null,exclusive_after_costs_cents:null,exclusive_margin_bps:null,pending:['PRODUCTION_COST_INCOMPLETE']});
+ Object.assign(source,{known_production_cost_cents:2000,production_cost_cents:null,unmapped_variants:[{item_id:row.item_id,model_id:variant.model_id,quantity:1}],result:{...source.result,net_estimate_cents:null,net_margin_bps:null,pending:['PRODUCTION_COST_INCOMPLETE']}});
+ const b=browser(fixture(source));assert.equal(await b.run('brazaMonthDashboard.start({api,syncVariants})'),true);
+ assert.equal(b.text('NetLabel'),'Saldo com custos identificados');assert.match(b.text('Net'),/-R\$\s*1,02/);assert.match(b.text('CostOverview'),/121,05/);assert.match(b.text('CostOverview'),/2 de 3/);assert.match(b.text('NetHelp'),/DAS-MEI mensal/);assert.doesNotMatch(b.text('NetHelp'),/2%/);
+ assert.equal((b.text('Waterfall').match(/86,05/g)||[]).length,1);assert.equal(b.run('currentFrame.result.net_estimate_cents'),null);assert.equal(b.run('currentFrame.production_cost_cents'),null);
 });
 
 test('an unknown MEI yearly DAS remains pending instead of using two percent or zero tax',async()=>{

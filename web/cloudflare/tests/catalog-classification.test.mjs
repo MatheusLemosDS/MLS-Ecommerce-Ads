@@ -33,6 +33,28 @@ test('background discovery queues a large catalogue in one D1 request without re
  await assert.rejects(enqueueCatalogClassifications(env,ids,{returnState:'false'}),failure('CATALOG_CLASSIFICATION_REQUEST_INVALID'));
 });
 
+test('a sold product missing its cost moves ahead of one hundred untouched jobs without resetting a failed request backoff',async t=>{
+ const env=environment();t.after(()=>env.ADMIN_DB.db.close());const known=Array.from({length:100},(_,index)=>String(index+100)),ids=[...known,'1001'];
+ await enqueueCatalogClassifications(env,ids,{now:()=>initial*1000,returnState:false});
+ await enqueueCatalogClassifications(env,ids,{now:()=>initial*1000,returnState:false,priorityItemIds:['1001']});
+ const read=()=>env.ADMIN_DB.db.prepare('SELECT * FROM catalog_classification_jobs WHERE item_id=?').get('1001');
+ assert.equal(read().next_attempt_at,0);assert.equal(env.ADMIN_DB.db.prepare('SELECT next_attempt_at FROM catalog_classification_jobs WHERE item_id=?').get('100').next_attempt_at,initial);
+ const calls=[],source=async(_,input)=>{const item=input.item_ids[0];calls.push(item);if(item==='1001')throw Error('PRIVATE_RATE_FAILURE');return providerFrame({item});};
+ const first=await runCatalogClassifications(env,source,{now:()=>initial*1000,maxProducts:1});assert.deepEqual(first.failed,['1001']);assert.deepEqual(calls,['1001']);
+ const failed={...read()};assert.equal(failed.status,'RETRY_WAIT');assert.equal(failed.next_attempt_at,initial+300);assert.equal(failed.failure_count,1);
+ await enqueueCatalogClassifications(env,ids,{now:()=>initial*1000,returnState:false,priorityItemIds:['1001']});assert.deepEqual({...read()},failed);
+ await runCatalogClassifications(env,source,{now:()=>initial*1000,maxProducts:1});assert.deepEqual(calls,['1001','100']);
+ await assert.rejects(enqueueCatalogClassifications(env,known,{priorityItemIds:['1001']}),failure('CATALOG_CLASSIFICATION_REQUEST_INVALID'));
+});
+
+test('priority discovery cannot reclaim a queued lease or clear previous attempt and failure guards',async t=>{
+ const env=environment();t.after(()=>env.ADMIN_DB.db.close());const ids=['101','102','103'];await enqueueCatalogClassifications(env,ids,{now:()=>initial*1000,returnState:false});
+ env.ADMIN_DB.db.prepare('UPDATE catalog_classification_jobs SET lease_token=?,lease_until=? WHERE item_id=?').run('11111111-1111-4111-8111-111111111111',initial+180,'101');
+ env.ADMIN_DB.db.prepare('UPDATE catalog_classification_jobs SET failure_count=1 WHERE item_id=?').run('102');env.ADMIN_DB.db.prepare('UPDATE catalog_classification_jobs SET last_attempt_at=? WHERE item_id=?').run(initial,'103');
+ const rows=()=>env.ADMIN_DB.db.prepare('SELECT * FROM catalog_classification_jobs ORDER BY item_id').all(),before=rows();
+ await enqueueCatalogClassifications(env,ids,{now:()=>initial*1000,returnState:false,priorityItemIds:ids});assert.deepEqual(rows(),before);
+});
+
 test('one unattended queue stores adult and kit compositions while preserving unresolved child metadata and existing manual bindings',async t=>{
  const env=environment();t.after(()=>env.ADMIN_DB.db.close());
  env.ADMIN_DB.db.exec("CREATE TABLE variant_bindings_state(id INTEGER PRIMARY KEY,payload TEXT);INSERT INTO variant_bindings_state VALUES(1,'MANUAL_UNCHANGED')");

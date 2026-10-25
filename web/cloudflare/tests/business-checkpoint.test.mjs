@@ -176,10 +176,14 @@ test('partial collection discovers already priced sold products and catalogue qu
  const services={getFinanceBusinessPeriod:async()=>structuredClone(imported)},invoke=operation=>businessMonthWithCheckpoint(e,{operation,month},services,{now:()=>stamp*1000});
  const partial=await invoke('start');assert.equal(partial.status,'RUNNING');assert.equal(partial.product_summary,null);assert.deepEqual(partial.unmapped_variants,[]);assert.equal(partial.known_production_cost_cents,3480);
  const queued=()=>e.ADMIN_DB.db.prepare('SELECT item_id FROM catalog_classification_jobs ORDER BY item_id').all().map(row=>row.item_id);assert.deepEqual(queued(),['201','202']);
+ imported.revision=2;for(const name of ['orders','paid','completed','payment_covered'])imported.coverage[name]=3;
+ imported.known_sales_base_raw=imported.sales_base_raw='150';imported.known_expected_repass_raw=imported.expected_repass_raw='120';imported.invoice_tax={...imported.invoice_tax,covered_orders:3,known_base_raw:'150',known_tax_raw:'3'};imported.items.push({item_id:'203',model_id:'3',quantity:1});
+ const missing=await invoke('step');assert.deepEqual(missing.unmapped_variants,[{item_id:'203',model_id:'3',quantity:1}]);
+ assert.equal(e.ADMIN_DB.db.prepare('SELECT next_attempt_at FROM catalog_classification_jobs WHERE item_id=?').get('203').next_attempt_at,0);assert.equal(e.ADMIN_DB.db.prepare('SELECT next_attempt_at FROM catalog_classification_jobs WHERE item_id=?').get('201').next_attempt_at,stamp);
  e.ADMIN_DB.db.exec('DELETE FROM catalog_classification_jobs');services.getFinanceBusinessPeriod=async()=>{throw Error('PRIVATE_SOURCE_FAILURE');};
- await assert.rejects(invoke('step'),error=>error.message==='BUSINESS_MONTH_SOURCE_UNAVAILABLE');assert.deepEqual(queued(),['201','202'],'the previous validated partial still discovers products when the next page fails');
+ await assert.rejects(invoke('step'),error=>error.message==='BUSINESS_MONTH_SOURCE_UNAVAILABLE');assert.deepEqual(queued(),['201','202','203'],'the previous validated partial still discovers products when the next page fails');
  e.ADMIN_DB.db.exec('DELETE FROM catalog_classification_jobs');e.ADMIN_DB.failQueue=true;
  await assert.rejects(invoke('step'),error=>error.message==='BUSINESS_MONTH_SOURCE_UNAVAILABLE');
- const retained=await invoke('read');assert.equal(retained.known_production_cost_cents,3480);assert.equal(retained.known_sales_cents,10000);assert.equal(retained.status,'RUNNING');assert.deepEqual(queued(),[]);
+ const retained=await invoke('read');assert.equal(retained.known_production_cost_cents,3480);assert.equal(retained.known_sales_cents,15000);assert.equal(retained.status,'RUNNING');assert.deepEqual(queued(),[]);
  assert.deepEqual(JSON.parse(e.ADMIN_DB.db.prepare('SELECT payload FROM variant_bindings_state').get().payload),bindings);
 });

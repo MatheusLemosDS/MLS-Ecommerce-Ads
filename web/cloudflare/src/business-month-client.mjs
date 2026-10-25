@@ -3,6 +3,7 @@ import {projectAdsCalendar} from './ads-calendar.mjs';
 import {projectBusinessMonthProducts} from './business-month-products.mjs';
 import {buildAccountDiagnosis} from './account-diagnosis.mjs';
 import {buildBusinessCheckpoint} from './business-checkpoint.mjs';
+import {buildMonthlyFinancialSummary} from './business-month-summary.mjs';
 
 export const BUSINESS_MONTH_CLIENT=String.raw`
 (()=>{
@@ -11,6 +12,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
  ${projectBusinessMonth.toString()}
  ${buildBusinessCheckpoint.toString()}
  ${buildAccountDiagnosis.toString()}
+ ${buildMonthlyFinancialSummary.toString()}
  const clientContract='business-month-v2';
  const el=id=>document.getElementById('businessMonth'+id);
  const node=(tag,text,cls)=>{const value=document.createElement(tag);if(text!==undefined)value.textContent=text;if(cls)value.className=cls;return value;};
@@ -265,7 +267,30 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
   el('ExpensesReload').hidden=!dirty;
   el('Identify').disabled=busy||adsBusy||saving;
  }
- function drawWaterfall(){
+ function balanceLabel(summary){return summary?.state==='PARTIAL_COSTS'?'Saldo com custos identificados':summary?.state==='PROVISIONAL'?'Saldo provisório da loja':'Resultado líquido previsto';}
+ function summaryCount(value,singular,plural){return new Intl.NumberFormat('pt-BR').format(value)+' '+(value===1?singular:plural);}
+ function missingProductionText(summary){const coverage=summary?.production_coverage;if(coverage?.pending_units>0)return 'Ainda falta descontar a produção de '+summaryCount(coverage.pending_units,'unidade','unidades')+', em '+summaryCount(coverage.pending_variants,'variação','variações')+' de '+summaryCount(coverage.pending_products,'produto','produtos')+'.';return 'Ainda há custos de produção pendentes. Eles não foram tratados como zero.';}
+ function summaryBalanceHelp(summary){
+  if(!summary)return 'Os valores faltantes estão identificados abaixo.';
+  const mei=frame?.tax?.regime==='MEI',deductions='Produção, '+(mei?'DAS-MEI mensal':'imposto')+', anúncios e outras despesas já descontados.';
+  if(summary.state==='READY')return deductions+' É uma previsão, não o valor recebido em banco.';
+  const returns=summary.pending.includes('RETURNS_NOT_RECONCILED')?' Devoluções e reembolsos ainda precisam de conciliação.':'';
+  const stale=summary.pending.includes('FINANCIAL_SOURCE_STALE')?' Saldo da última leitura financeira, consultada '+sourceAge(frame?.source_checked_at?.finance_oldest_at??frame?.checked_at)+'.':'';
+  if(summary.state==='PARTIAL_COSTS')return 'Repasse após os custos identificados, '+(mei?'DAS-MEI mensal':'imposto')+', anúncios e outras despesas. '+missingProductionText(summary)+' O saldo pode diminuir; não é lucro líquido final.'+returns+stale;
+  if(summary.state==='PROVISIONAL')return deductions+returns+' Este saldo não é lucro líquido final nem recebimento confirmado.'+stale;
+  const blockers=['COLLECTING','PERIOD_LIMIT_REACHED','PAYMENT_INCOMPLETE','SOURCE_UNAVAILABLE','STATUS_REVIEW_REQUIRED','ADS_UNAVAILABLE','INVOICE_TAX_UNAVAILABLE','TAX_POLICY_REQUIRED','EXTERNAL_EXPENSES_REQUIRED','RECHARGE_TREATMENT_REQUIRED','ADJUSTMENT_UNAVAILABLE','ARITHMETIC_UNSAFE'];
+  const reasons=summary.pending.filter(code=>blockers.includes(code)).slice(0,2).map(code=>pendingMessages[code]);return reasons.length?reasons.join(' '):'Os valores faltantes estão identificados abaixo. Custos conhecidos não representam o total de todos os custos.';
+ }
+ function drawCostOverview(summary){
+  const target=el('CostOverview');target.replaceChildren();target.hidden=!frame||!summary;if(target.hidden)return;
+  const item=(label,value,help)=>{const entry=node('article',undefined,'month-cost-overview-item');entry.append(node('small',label),node('strong',value),node('p',help,'month-detail-help'));target.append(entry);};
+  const coverage=summary.production_coverage;
+  item(summary.production_complete?'Produção total do mês':'Produção com custo identificado',money(summary.known_production_cents),summary.production_complete?'Custo cadastrado aplicado às unidades vendidas, incluindo os pedidos com vários produtos.':missingProductionText(summary)+' A produção total permanece pendente.');
+  item(summary.production_complete?'Custos após o repasse':'Custos identificados após o repasse',money(summary.costs_after_payout_cents),'Produção '+(summary.production_complete?'total':'identificada')+', '+(frame.tax?.regime==='MEI'?'DAS-MEI':'imposto')+', anúncios e outras despesas. '+(summary.costs_after_payout_cents===null?'Algum valor ainda não foi confirmado.':'As deduções já incluídas no repasse da Shopee não são cobradas novamente.'));
+  const counted=coverage.total_units!==null&&coverage.known_units!==null;
+  item('Cobertura do custo de produção',counted?coverage.total_units===0?'Sem unidades vendidas':new Intl.NumberFormat('pt-BR').format(coverage.known_units)+' de '+new Intl.NumberFormat('pt-BR').format(coverage.total_units)+' unidades':'Quantidade ainda não disponível',coverage.pending_units>0?summaryCount(coverage.pending_units,'unidade','unidades')+' sem custo · '+summaryCount(coverage.pending_variants,'variação','variações')+' · '+summaryCount(coverage.pending_products,'produto','produtos')+'.':counted?'Todas as unidades deste recorte têm custo identificado.':'A quantidade depende do detalhamento validado dos produtos; ela não é calculada pela quantidade de pedidos.');
+ }
+ function drawWaterfall(summary=frame?buildMonthlyFinancialSummary(frame):null){
   const target=el('Waterfall');target.replaceChildren();if(!frame)return;
   const row=(label,amount,sign='')=>{const entry=node('div',undefined,'month-waterfall-row');entry.append(node('dt',label),node('dd',amount===null?'Pendente':sign+money(amount)));target.append(entry);};
   const mei=frame.tax?.regime==='MEI';
@@ -274,22 +299,21 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
   const adjustment=difference!==null&&difference>=BigInt(Number.MIN_SAFE_INTEGER)&&difference<=BigInt(Number.MAX_SAFE_INTEGER)?Number(difference):null;
   row('Diferença líquida entre vendas e repasse',adjustment);
   row('Repasse previsto · deduções da Shopee já consideradas',frame.expected_repass_cents);
-  row('Produção',frame.production_cost_cents,'− ');row(mei?'DAS-MEI mensal · uma vez no mês':'Imposto previsto · 2%',frame.invoice_tax_cents,'− ');
+  row(summary?.production_complete?'Produção total':'Produção com custo identificado',summary?.known_production_cents??null,'− ');row(mei?'DAS-MEI mensal · uma vez no mês':'Imposto previsto · 2%',frame.invoice_tax_cents,'− ');
   if(frame.ads_adjustment_cents>0){
    if(frame.expenses.recharge_treatment==='ADS_RECHARGE')row('Recarga de anúncios reposta',frame.ads_adjustment_cents,'+ ');
    else if(frame.expenses.recharge_treatment==='UNCONFIRMED')row('Recarga ou suporte · tratamento a conferir',null);
   }
   row('Gasto com anúncios',frame.ads?.status==='AVAILABLE'?frame.ads.expense_cents:null,'− ');
   row('Outras despesas do mês',frame.expenses.external_expenses_cents,'− ');
-  row('Resultado líquido previsto',frame.result.net_estimate_cents);
+  row(balanceLabel(summary),summary?.balance_cents??null);
+  el('CalculationHelp').textContent=summary?.state==='PARTIAL_COSTS'||summary?.state==='PROVISIONAL'?summaryBalanceHelp(summary):'A previsão usa os custos de produção atuais. Recebimentos bancários ainda não estão conciliados.';
  }
- function drawTaxAndExpenses(){
+ function drawTaxAndExpenses(summary=frame?buildMonthlyFinancialSummary(frame):null){
   const mei=frame?.tax?.regime==='MEI';
-  el('TotalExpensesLabel').textContent='Custos após o repasse';
-  el('TotalExpensesHelp').textContent='Produção, '+(mei?'DAS-MEI mensal':'imposto')+', anúncios e outras despesas. A diferença entre vendas e repasse pode incluir taxas, frete e outros ajustes da Shopee; ela já está considerada no repasse e não é descontada novamente.';
-  const amounts=frame?[frame.production_cost_cents,frame.invoice_tax_cents,frame.ads?.status==='AVAILABLE'?frame.ads.expense_cents:null,frame.expenses.external_expenses_cents]:[];
-  const subtotal=amounts.length===4&&amounts.every(Number.isSafeInteger)?amounts.reduce((sum,value)=>sum+BigInt(value),0n):null;
-  el('TotalExpenses').textContent=subtotal!==null&&subtotal>=0n&&subtotal<=BigInt(Number.MAX_SAFE_INTEGER)?money(Number(subtotal)):'Pendente';
+  el('TotalExpensesLabel').textContent=summary&&!summary.production_complete?'Custos identificados após o repasse':'Custos após o repasse';
+  el('TotalExpensesHelp').textContent='Produção'+(summary&&!summary.production_complete?' identificada':'')+', '+(mei?'DAS-MEI mensal':'imposto')+', anúncios e outras despesas. '+(summary&&!summary.production_complete?'O custo de produção pendente ainda não está neste total. ':'')+'A diferença entre vendas e repasse pode incluir taxas, frete e outros ajustes da Shopee; ela já está considerada no repasse e não é descontada novamente.';
+  el('TotalExpenses').textContent=money(summary?.costs_after_payout_cents??null);
   if(!frame){el('TaxSummary').textContent='Consultando a regra fiscal';el('TaxHelp').textContent='O imposto aparece quando a regra fiscal do mês puder ser conferida.';return;}
   if(mei){
    const tax=frame.tax,declared=tax.status==='DECLARED'&&Number.isSafeInteger(tax.tax_cents);
@@ -363,16 +387,17 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
  function render(){
   globalThis.brazaAutomationWorkspace?.render(frame?buildAccountDiagnosis(frame):null);drawCheckpoint();
   if(!frame){
-   for(const key of ['Sales','Ads','Roas']){el(key).textContent=busy?'Consultando':'Pendente';el(key+'Card').dataset.status='pending';}el('Net').textContent='Em apuração';el('NetCard').dataset.status='pending';el('Margin').textContent='';el('Coverage').replaceChildren();el('Waterfall').replaceChildren();el('Readiness').replaceChildren();el('Pending').hidden=true;el('Badge').textContent=collectionRecovery?.waiting&&!paused&&!document.hidden?'Aguardando retomada automática':busy?'Consultando':collectionFailure?'Consulta interrompida':'Aguardando consulta';drawTaxAndExpenses();drawProducts();controls();return;
+   for(const key of ['Sales','Ads','Roas']){el(key).textContent=busy?'Consultando':'Pendente';el(key+'Card').dataset.status='pending';}el('NetLabel').textContent='Resultado líquido previsto';el('Net').textContent='Em apuração';el('NetHelp').textContent='O resultado aparece após conferir os pedidos, anúncios e custos do mês.';el('NetCard').dataset.status='pending';el('Margin').textContent='';el('Coverage').replaceChildren();el('Waterfall').replaceChildren();el('Readiness').replaceChildren();el('Pending').hidden=true;el('Badge').textContent=collectionRecovery?.waiting&&!paused&&!document.hidden?'Aguardando retomada automática':busy?'Consultando':collectionFailure?'Consulta interrompida':'Aguardando consulta';drawCostOverview(null);drawTaxAndExpenses();drawProducts();controls();return;
   }
-  const c=frame.coverage,ads=frame.ads,broad=ads?.totals.broad,net=frame.result.net_estimate_cents;
+  const c=frame.coverage,ads=frame.ads,broad=ads?.totals.broad,net=frame.result.net_estimate_cents,summary=buildMonthlyFinancialSummary(frame),balance=summary?.balance_cents??null;
   setMetric('Sales',frame.sales_cents===null?null:money(frame.sales_cents),frame.sales_cents===null?'Já informado: '+money(frame.known_sales_cents)+'. Falta conferir parte dos pedidos pagos.':'Produtos dos '+c.paid+' pedido(s) pagos criados nas datas do mês.');
   setMetric('Ads',ads?.status==='AVAILABLE'?money(ads.expense_cents):null,ads?'Gasto confirmado em '+ads.covered_days+' de '+ads.total_days+' dia(s). Dias ausentes permanecem pendentes.':'Consultando o gasto da conta de anúncios nas mesmas datas.');
   setMetric('Roas',broad?.calculated_roas_raw===null||broad?.calculated_roas_raw===undefined?null:ratio(broad.calculated_roas_raw),broad?.gmv_cents===null||broad?.gmv_cents===undefined?'Vendas atribuídas aos anúncios ainda pendentes.':'Vendas atribuídas aos anúncios: '+money(broad.gmv_cents)+'. Este valor difere das vendas totais da loja.');
   if(ads?.status==='AVAILABLE'&&ads.expense_cents===0&&broad?.calculated_roas_raw===null){el('Roas').textContent='Sem investimento';el('RoasCard').dataset.status='available';}
-  setMetric('Net',net===null?null:money(net),net===null?'Os valores faltantes estão identificados abaixo.':'Produção, '+(frame.tax?.regime==='MEI'?'DAS-MEI mensal':'imposto')+', anúncios e outras despesas já descontados. É uma previsão, não o valor recebido em banco.');
-  if(net===null)el('Net').textContent=frame.status==='RUNNING'?'Em apuração':'Em conciliação';
-  el('NetCard').dataset.negative=String(net!==null&&net<0);
+  el('NetLabel').textContent=balanceLabel(summary);setMetric('Net',balance===null?null:money(balance),summaryBalanceHelp(summary));
+  if(balance===null)el('Net').textContent=frame.status==='RUNNING'?'Em apuração':'Em conciliação';
+  else if(summary.state!=='READY')el('NetCard').dataset.status='provisional';
+  el('NetCard').dataset.negative=String(balance!==null&&balance<0);
   el('Margin').textContent=frame.result.net_margin_bps===null?'':'Margem prevista: '+new Intl.NumberFormat('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:2}).format(frame.result.net_margin_bps/100)+'%';
   el('Badge').textContent=collectionRecovery?.waiting&&!paused&&!document.hidden?'Aguardando retomada automática':frame.status==='RUNNING'?(busy&&!paused&&!document.hidden?'Consultando':paused||resumeOnVisible||document.hidden?'Consulta pausada':frame.collection?.state==='BLOCKED'?'Consulta requer atenção':'Consulta interrompida'):frame.status==='LIMIT_REACHED'?'Mês parcial':net===null?'Há pendências':'Previsão completa';
   el('Coverage').replaceChildren();for(const text of [c.paid+' pedido(s) pagos',c.completed+' concluído(s)',c.ongoing+' em andamento',c.cancelled+' cancelado(s) excluído(s)',c.unpaid+' não pago(s) excluído(s)'])el('Coverage').append(node('span',text));
@@ -382,7 +407,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
   el('Identify').hidden=!frame.unmapped_variants.length;
   if(warnings.includes('EXTERNAL_EXPENSES_REQUIRED')&&warnings.length===1)el('ExpensesDetails').open=true;
   el('RechargeField').hidden=!(frame.ads_adjustment_cents>0||warnings.includes('RECHARGE_TREATMENT_REQUIRED'));
-  drawWaterfall();drawTaxAndExpenses();drawReadiness();drawProducts();fillExpenses();
+  drawCostOverview(summary);drawWaterfall(summary);drawTaxAndExpenses(summary);drawReadiness();drawProducts();fillExpenses();
   if(dirty){el('ExpenseState').textContent=draftRevision!==frame.expenses.revision?'As despesas foram alteradas em outra sessão. Sua edição foi preservada; carregue os valores salvos antes de salvar novamente.':'Há uma edição de despesas ainda não salva.';}
   else el('ExpenseState').textContent=frame.expenses.external_expenses_cents===null?'Outras despesas ainda não informadas. Informe o valor ou confirme que não há despesas.':'Despesas salvas para '+monthName(frame.month)+' · versão '+frame.expenses.revision+'.';
   const progress=frame.progress;el('Progress').hidden=!busy;el('Progress').value=progress.windows_total?Math.round(progress.windows_complete/progress.windows_total*100):0;

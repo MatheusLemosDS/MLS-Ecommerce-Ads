@@ -39,10 +39,13 @@ for(const minify of [false,true])test(`the actual owner HTML projector accepts a
  const {f,cached,started}=await realMonthlyResponses(t),html=await ownerHtml(minify,f.env),script=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match=>match[1]).find(value=>value.includes('globalThis.brazaMonthDashboard='));assert.ok(script);
  const prefix=script.slice(script.indexOf('(()=>{')+6,script.indexOf(' const el=id=>'));
  const context=vm.createContext({serialized:JSON.stringify({cached,started})});
- vm.runInContext(prefix+'\nglobalThis.project=projectBusinessMonth;globalThis.data=JSON.parse(serialized);',context);
+ vm.runInContext(prefix+'\nglobalThis.project=projectBusinessMonth;globalThis.summary=buildMonthlyFinancialSummary;globalThis.data=JSON.parse(serialized);',context);
  assert.equal(vm.runInContext('project(data.cached)!==null',context),true,'cached server response rejected by actual embedded projector');
  assert.equal(vm.runInContext('project(data.started)!==null',context),true,'zero-order restart rejected by actual embedded projector');
  assert.deepEqual(JSON.parse(vm.runInContext('JSON.stringify(project(data.started))',context)),started);
+ assert.equal(vm.runInContext('summary(project(data.cached)).state',context),'PROVISIONAL');
+ assert.equal(vm.runInContext('Number.isSafeInteger(summary(project(data.cached)).balance_cents)',context),true,'the emitted summary must work without a server closure');
+ assert.equal(vm.runInContext('summary(project(data.started)).balance_cents',context),null,'a fresh partial import cannot acquire a whole-store balance');
 });
 
 function legacyBrowser(cached,started){
