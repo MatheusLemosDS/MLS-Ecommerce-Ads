@@ -160,17 +160,23 @@ test('a maximum product breakdown crosses 256KiB and both private transports enf
  }
 });
 
-test('missing configuration and invalid requests do not call the period service; timeout aborts and cancels a late body',async()=>{
+test('missing configuration and invalid requests do not call the period service; timeout aborts and cancels a late body',async t=>{
  let calls=0;
  for(const [env,input] of [[{},start],[{APP_INTERNAL_SECRET:'fixture'},{}],[{APP_INTERNAL_SECRET:'fixture'},{...start,url:'https://foreign.invalid'}]]){
   assert.equal((await getFinanceStorePeriod(env,input,{fetchImpl:async()=>{calls++;}})).status,'UNAVAILABLE');
  }
  assert.equal(calls,0);
- let resolveFetch,signal,cancelled=0;
- const result=await getFinanceStorePeriod({APP_INTERNAL_SECRET:'fixture'},start,{timeoutMs:5,fetchImpl:actual=>{
-  signal=actual.signal;return new Promise(resolve=>{resolveFetch=resolve;});
+ // Control the deadline instead of racing a five-millisecond wall clock under
+ // parallel CI load. Keep the pending request alive as a real transport does.
+ t.mock.timers.enable({apis:['setTimeout']});
+ let resolveFetch,actualRequest,cancelled=0;
+ const pending=getFinanceStorePeriod({APP_INTERNAL_SECRET:'fixture'},start,{timeoutMs:5,fetchImpl:actual=>{
+  actualRequest=actual;return new Promise(resolve=>{resolveFetch=resolve;});
  }});
- assert.equal(result.diagnostic.code,'FINANCE_STORE_UNAVAILABLE');assert.equal(signal.aborted,true);
+ t.mock.timers.tick(4);assert.equal(actualRequest.signal.aborted,false);
+ t.mock.timers.tick(1);const result=await pending;
+ assert.equal(result.diagnostic.code,'FINANCE_STORE_UNAVAILABLE');assert.equal(actualRequest.signal.aborted,true);
+ t.mock.timers.reset();
  resolveFetch(new Response(new ReadableStream({cancel(){cancelled++;}}),{headers:{'content-type':'application/json'}}));
  await new Promise(resolve=>setTimeout(resolve,0));assert.equal(cancelled,1);
  const worker=createFinanceWorker({storePeriod:async()=>{throw Error('PRIVATE_DATABASE_ERROR');},fetchImpl:async()=>{}});
