@@ -63,6 +63,13 @@ test('a manually classified child variation replaces the adult cost in the month
  assert.equal(value.production_cost_cents,7500);assert.equal(value.result.net_estimate_cents,130795);assert.equal(value.cost_rules_revision,2);assert.match(value.product_summary.products[0].variants[0].cost_profile_label,/infantil · 12/);assert.equal(s.calls.finance.length,reads);assert.deepEqual(e.ADMIN_DB.db.prepare('SELECT * FROM variant_bindings_state').all(),bindings);
 });
 
+test('a learned product prices sold sibling sizes in the monthly net without requiring another manual classification',async()=>{
+ const e=env(),s=source(value=>{const result=withProducts({...value,items:[{item_id:'201',model_id:'0',quantity:1},{item_id:'201',model_id:'1',quantity:1}]});result.product_breakdown.products[0].items=[{model_id:'0',exclusive_quantity:1,mixed_quantity:0},{model_id:'1',exclusive_quantity:1,mixed_quantity:0}];return result;});
+ await complete(e,s);await run(e,s,'ads');await save(e,s);await assignCostRules(e,{revision:1,assignments:[{item_id:'201',model_id:'0',rule_id:'camiseta-infantil',size:'4'}]},'admin');
+ await syncCostRuleCatalog(e,['201'],async()=>({schema:'variant_catalog_v1',checked_at:stamp,products:[{item_id:'201',catalog_fingerprint:'d'.repeat(64),bindings:[],unresolved_count:2,cost_catalog:{schema:'product_cost_catalog_v1',product_name:'Produto Verde',variants:[{model_id:'0',attributes:[{name:'Tamanho',value:'4'}]},{model_id:'1',attributes:[{name:'Tamanho',value:'6'}]}]}}]}),{now});
+ const value=await run(e,s,'read');assert.equal(value.production_cost_cents,7500);assert.equal(value.result.net_estimate_cents,130795);assert.deepEqual(value.product_summary.products[0].variants.map(row=>row.unit_cost_cents),[1250,1250]);assert.match(value.product_summary.products[0].variants[1].cost_profile_label,/infantil · 6/);assert.equal((await readCostRules(e)).values.assignments.length,1);assert.equal(s.calls.finance.length,3);
+});
+
 test('a 31-day month uses disjoint bounded windows and all paid statuses without counting cancelled or unpaid as sales',async()=>{
  const e=env(),s=source();const value=await complete(e,s);
  assert.deepEqual(s.calls.finance,[{operation:'start',start_date:'2026-10-01',end_date:'2026-10-15'},{operation:'start',start_date:'2026-10-16',end_date:'2026-10-30'},{operation:'start',start_date:'2026-10-31',end_date:'2026-10-31'}]);

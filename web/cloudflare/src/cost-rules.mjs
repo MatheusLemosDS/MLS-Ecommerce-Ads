@@ -1,4 +1,5 @@
 import {projectVariantCatalog,projectProductCostCatalog} from '../../finance/src/variant-catalog-frame.mjs';
+import {costRuleProductLearning} from './cost-rule-learning.mjs';
 
 export class CostRuleError extends Error {constructor(code,status=400){super(code);this.status=status;}}
 const ruleFail=(code,status=400)=>{throw new CostRuleError(code,status);};
@@ -23,11 +24,11 @@ export const COST_RULE_SCHEMA=[
 const ruleReady=new WeakMap();
 function ruleClock(now){let value;try{value=now();}catch{ruleFail('COST_RULE_CLOCK_INVALID',503);}if(!Number.isSafeInteger(value)||value<1||value>9999999999999)ruleFail('COST_RULE_CLOCK_INVALID',503);return Math.floor(value/1000);}
 async function ruleSetup(env){if(!env?.ADMIN_DB?.batch)ruleFail('COST_RULES_CONFIGURATION',503);const db=env.ADMIN_DB;if(!ruleReady.has(db))ruleReady.set(db,db.batch(COST_RULE_SCHEMA.map(sql=>db.prepare(sql))).catch(()=>{ruleReady.delete(db);ruleFail('COST_RULES_STORAGE_INVALID',503);}));await ruleReady.get(db);return db;}
-const ruleNormalize=value=>value.normalize('NFKD').replace(/\p{M}/gu,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim().split(/\s+/).map(word=>({camisetas:'camiseta',camisas:'camisa',blusas:'blusa',infantis:'infantil',criancas:'crianca',calcas:'calca',shorts:'short',bermudas:'bermuda'})[word]||word).join(' ');
+const ruleNormalize=value=>value.normalize('NFKD').replace(/\p{M}/gu,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim().split(/\s+/).map(word=>({camisetas:'camiseta',camisas:'camisa',blusas:'blusa',infantis:'infantil',criancas:'crianca',calcas:'calca',shorts:'short',bermudas:'bermuda',kits:'kit',combos:'combo',conjuntos:'conjunto',casais:'casal',moletons:'moletom',vestidos:'vestido',saias:'saia',leggings:'legging',adultos:'adulto',adultas:'adulta',bonecas:'boneca',pets:'pet'})[word]||word).join(' ');
 const ruleOption=value=>ruleNormalize(value).replace(/^(\d+) (anos?|years?)$/,'$1');
 const ruleContains=(text,pattern)=>ruleNormalize(pattern).split(' ').every(word=>text.has(word));
 function ruleProductScope(rules,name){
- const words=new Set(ruleNormalize(name).split(' ')),candidates=rules.filter(row=>row.enabled&&row.name_patterns.some(pattern=>ruleContains(words,pattern))&&!row.exclude_terms.some(pattern=>ruleContains(words,pattern)));
+ const words=new Set(ruleNormalize(name).split(' ')),candidates=rules.filter(row=>row.enabled&&row.name_patterns.some(pattern=>ruleContains(words,pattern))&&!row.exclude_terms.some(pattern=>ruleContains(words,pattern))&&!(row.id==='camiseta-infantil'&&['casal','adulto','adulta','boneca','pet'].some(word=>words.has(word))));
  const nonShirt=!['camiseta','camisa','blusa'].some(word=>words.has(word))||['calca','baggy','short','bermuda','moletom','vestido','body','saia','legging','infantil','kids','crianca'].some(word=>words.has(word));
  return {candidates,managed:candidates.length>0||nonShirt};
 }
@@ -92,7 +93,10 @@ export function evaluateCostRules(values,itemId,catalog,{stale=false}={}){
  const variants=Object.getOwnPropertyDescriptor(catalog||{},'variants')?.value,validated=validateCostRules(values),rules=validated.rules.filter(row=>row.enabled),source=projectProductCostCatalog(catalog,Array.isArray(variants)?variants.length:-1);
  if(!ruleItem(itemId)||!source)ruleFail('COST_RULE_CATALOG_INVALID',503);
  const assignments=(validated.assignments||[]).filter(row=>row.item_id===itemId),manualProduct=assignments.find(row=>row.model_id===null),manualVariants=new Map(assignments.filter(row=>row.model_id!==null).map(row=>[row.model_id,row]));
- const normalScope=ruleProductScope(rules,source.product_name),candidates=manualProduct?rules.filter(row=>row.id===manualProduct.rule_id):normalScope.candidates,managed=!!manualProduct||normalScope.managed;
+ const normalScope=ruleProductScope(rules,source.product_name),learning=costRuleProductLearning({rules:validated.rules,...(assignments.length?{assignments}:{})},itemId,source,{stale});
+ const inferred=rules.find(row=>row.id===learning.rule_id),conflicting=learning.status==='CONFLICT'&&assignments.length>0;
+ const candidates=manualProduct?rules.filter(row=>row.id===manualProduct.rule_id):learning.status==='LEARNED'?[inferred].filter(Boolean):conflicting?[]:learning.status==='RECOGNIZED'?[...new Map([...normalScope.candidates,...(inferred?[inferred]:[])].map(row=>[row.id,row])).values()]:normalScope.candidates;
+ const managed=!!manualProduct||normalScope.managed||learning.managed||conflicting;
  // Numeric sizes never select a product type. Clothing outside the legacy
  // T-shirt/kit convention must have its own configured rule or manual cost.
  return source.variants.flatMap(variant=>{
@@ -117,19 +121,27 @@ export function costRuleSnapshotQueries(db,itemIds){
  return queries;
 }
 export function costRuleReferenceFromSnapshot(snapshot,{now=()=>Date.now()}={}){
- const state=ruleState(snapshot[0].results[0]),variants=[],restricted=new Set();const stamp=ruleClock(now);
+ const state=ruleState(snapshot[0].results[0]),variants=[],restricted=new Set(),learning=[],catalogued=new Set();const stamp=ruleClock(now);
  for(const row of snapshot.slice(1).flatMap(value=>value.results)){
   if(!Number.isSafeInteger(row.checked_at)||row.checked_at<1||row.checked_at>stamp+60||!(/^[a-f0-9]{64}$/).test(row.catalog_fingerprint))ruleFail('COST_RULES_STORAGE_INVALID',503);
   let catalog;try{catalog=JSON.parse(row.payload);}catch{ruleFail('COST_RULES_STORAGE_INVALID',503);}
-  variants.push(...evaluateCostRules(state.values,row.item_id,catalog,{stale:stamp-row.checked_at>900}));
-  if(ruleProductScope(state.values.rules,catalog.product_name).managed)restricted.add(row.item_id);
+  const stale=stamp-row.checked_at>900,recognition=costRuleProductLearning({rules:state.values.rules,assignments:(state.values.assignments||[]).filter(assignment=>assignment.item_id===row.item_id)},row.item_id,catalog,{stale}),productVariants=evaluateCostRules(state.values,row.item_id,catalog,{stale});
+  variants.push(...productVariants);catalogued.add(row.item_id);
+  const rule=state.values.rules.find(rule=>rule.id===recognition.rule_id),conflicting=recognition.status==='CONFLICT'&&(state.values.assignments||[]).some(assignment=>assignment.item_id===row.item_id);
+  if(ruleProductScope(state.values.rules,catalog.product_name).managed||recognition.managed||conflicting)restricted.add(row.item_id);
+  const ambiguity=recognition.status==='RECOGNIZED'&&productVariants.some(variant=>variant.reason==='RULE_CONFLICT');
+  learning.push({item_id:row.item_id,rule_id:recognition.rule_id,rule_label:rule?.label??null,status:ambiguity?'CONFLICT':recognition.status,reason:ambiguity?'RULE_CONFLICT':recognition.reason,evidence_count:recognition.evidence_models.length,matched_variants:productVariants.filter(variant=>variant.unit_cost_cents!==null).length,pending_variants:productVariants.filter(variant=>variant.unit_cost_cents===null).length,checked_at:row.checked_at});
  }
  const seen=new Set(variants.map(row=>row.item_id+':'+row.model_id));
  for(const assignment of state.values.assignments||[]){
   if(assignment.model_id===null){restricted.add(assignment.item_id);continue;}
   const key=assignment.item_id+':'+assignment.model_id;if(!seen.has(key)){variants.push(ruleAssignedVariant(state.values,assignment.item_id,assignment));seen.add(key);}
  }
- return {revision:state.revision,variants,restricted_item_ids:[...restricted]};
+ for(const itemId of new Set((state.values.assignments||[]).map(row=>row.item_id)))if(!catalogued.has(itemId)){
+  const recognition=costRuleProductLearning({rules:state.values.rules,assignments:(state.values.assignments||[]).filter(assignment=>assignment.item_id===itemId)},itemId,null),rule=state.values.rules.find(rule=>rule.id===recognition.rule_id);
+  learning.push({item_id:itemId,rule_id:recognition.rule_id,rule_label:rule?.label??null,status:recognition.status,reason:recognition.reason,evidence_count:recognition.evidence_models.length,matched_variants:variants.filter(row=>row.item_id===itemId&&row.unit_cost_cents!==null).length,pending_variants:variants.filter(row=>row.item_id===itemId&&row.unit_cost_cents===null).length,checked_at:stamp});
+ }
+ return {revision:state.revision,variants,restricted_item_ids:[...restricted],learning};
 }
 export async function readCostRuleReference(env,itemIds,options={}){const db=await ruleSetup(env);return costRuleReferenceFromSnapshot(await db.batch(costRuleSnapshotQueries(db,itemIds)),options);}
 
@@ -145,7 +157,7 @@ export async function syncCostRuleCatalog(env,itemIds,getCatalog,{force=false,no
  if(!ruleArray(itemIds,3)||!itemIds.length||!itemIds.every(ruleItem)||new Set(itemIds).size!==itemIds.length||typeof getCatalog!=='function'||typeof force!=='boolean')ruleFail('COST_RULE_CATALOG_REQUEST_INVALID');
  const db=await ruleSetup(env),stamp=ruleClock(now),cached=(await db.prepare('SELECT item_id,checked_at FROM production_cost_catalog WHERE item_id IN ('+itemIds.map(()=>'?').join(',')+')').bind(...itemIds).all()).results;
  const fresh=new Set(cached.filter(row=>Number.isSafeInteger(row.checked_at)&&row.checked_at<=stamp+60&&stamp-row.checked_at<=600).map(row=>row.item_id)),selected=itemIds.filter(id=>force||!fresh.has(id));
- const result=async processed=>{const reference=await readCostRuleReference(env,itemIds,{now});return {processed,cached:itemIds.filter(id=>!processed.includes(id)),revision:reference.revision,matched_variants:reference.variants.filter(row=>row.unit_cost_cents!==null).map(row=>({item_id:row.item_id,model_id:row.model_id}))};};
+ const result=async processed=>{const reference=await readCostRuleReference(env,itemIds,{now});return {processed,cached:itemIds.filter(id=>!processed.includes(id)),revision:reference.revision,matched_variants:reference.variants.filter(row=>row.unit_cost_cents!==null&&itemIds.includes(row.item_id)).map(row=>({item_id:row.item_id,model_id:row.model_id})),learning:reference.learning.filter(row=>itemIds.includes(row.item_id))};};
  if(!selected.length)return result([]);
  let raw;try{raw=await getCatalog(env,{item_ids:selected,selling_unit:'AUTO',include_cost_catalog:true});}catch{ruleFail('COST_RULE_CATALOG_UNAVAILABLE',503);}
  const frame=projectVariantCatalog(raw);

@@ -44,3 +44,12 @@ test('an automatic rule links child variations and rule edits recalculate the se
  assert.equal((await (await call(auth,'variant-bindings')).json()).revision,1);assert.equal(auth.env.ADMIN_DB.db.prepare('SELECT COUNT(*) n FROM hermes_jobs').get().n,0);
  }finally{auth.env.ADMIN_DB.db.close();}
 });
+
+test('one correction is reused for all compatible catalogue variants through the authenticated product flow',async()=>{
+ const auth=await fixture();try{
+ const sizes=['4','6','8','10','12','14','16'],services={getOrderItems:async()=>({...items(),catalog_units:7,rows:sizes.map((size,index)=>({item_id:'101',model_id:String(index),order_status:'READY_TO_SHIP',quantity:1,line_count:1}))}),getFinanceVariantCatalog:async()=>({schema:'variant_catalog_v1',checked_at:Math.floor(Date.now()/1000),products:[{item_id:'101',catalog_fingerprint:'e'.repeat(64),bindings:[],unresolved_count:7,cost_catalog:{schema:'product_cost_catalog_v1',product_name:'Produto Verde de lançamento',variants:sizes.map((size,index)=>({model_id:String(index),attributes:[{name:'Tamanho',value:size}]}))}}]})};
+ assert.equal((await call(auth,'cost-rules/assignments',{revision:1,assignments:[{item_id:'101',model_id:'0',rule_id:'camiseta-infantil',size:'4'}]},services)).status,200);
+ const synced=await(await call(auth,'cost-rules/sync',{item_ids:['101'],force:true},services)).json();assert.equal(synced.learning[0].status,'LEARNED');assert.equal(synced.learning[0].evidence_count,1);assert.equal(synced.learning[0].matched_variants,7);assert.equal(synced.matched_variants.length,7);
+ const result=await(await call(auth,'order-items',undefined,services)).json();assert.equal(result.production_cost_reference.total_cents,8750);assert.equal(result.production_cost_reference.unmapped_quantity,0);assert.equal((await(await call(auth)).json()).values.assignments.length,1);assert.deepEqual((await(await call(auth,'variant-bindings')).json()).bindings,[]);
+ }finally{auth.env.ADMIN_DB.db.close();}
+});
