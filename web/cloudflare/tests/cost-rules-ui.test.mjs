@@ -118,3 +118,11 @@ test('a source failure after an individual child correction preserves the saved 
  let current=state(),saved=false;const b=browser(async(path,body)=>{if(path==='cost-rules/assignments'){current=state(2,{...current.values,assignments:body.assignments});return current;}if(path==='cost-rules/sync')throw Error('PRIVATE_PROVIDER_FAILURE');return current;});await b.workspace.start({api:b.api});
  const widget=b.workspace.assignmentControl({item_id:'101',model_id:'1',onSaved:()=>{saved=true;}});selectChild(widget,'4');await findAssignment(widget,'save','action').onclick();assert.equal(saved,true);assert.equal(b.workspace.assignmentFor('101','1').size,'4');assert.match(widgetText(widget),/Tamanho salvo.*outras variações aguarda o catálogo.*custo desta variação foi preservado/);assert.doesNotMatch(widgetText(widget),/PRIVATE_PROVIDER_FAILURE/);assert.equal(b.workspace.learningNote('101'),null);assert.ok(!b.calls.some(row=>row.path.includes('variant-bindings')));
 });
+
+test('an unavailable saved rule is repairable in its own scope and never selects the only available child rule automatically',async()=>{
+ let current=state(2,{...structuredClone(COST_RULE_DEFAULTS),assignments:[{item_id:'101',model_id:null,rule_id:'regra-antiga',size:null}]});
+ const b=browser(async(path,body)=>{if(path==='cost-rules/assignments')current=state(3,{...current.values,assignments:[]});return current;});await b.workspace.start({api:b.api});
+ const widget=b.workspace.assignmentControl({item_id:'101'}),type=findAssignment(widget,'rule');
+ assert.equal(type.value,'regra-antiga');assert.equal(type.children.find(option=>option.value==='regra-antiga').disabled,true);assert.equal(findAssignment(widget,'save','action').disabled,true);assert.equal(findAssignment(widget,'remove','action').hidden,false);assert.match(widgetText(widget),/Recarregue os tipos ou retire essa associação/);assert.doesNotMatch(widgetText(widget),/Para infantil, escolha/);
+ await findAssignment(widget,'remove','action').onclick();assert.deepEqual(b.calls.find(call=>call.path==='cost-rules/assignments').body.assignments,[{item_id:'101',model_id:null,rule_id:null,size:null}]);assert.equal(type.value,'');assert.equal(b.workspace.hasAssignment('101'),false);
+});

@@ -3,11 +3,41 @@ import assert from 'node:assert/strict';
 import {D1} from './sqlite-d1.mjs';
 import {COST_RULE_DEFAULTS,validateCostRules,evaluateCostRules,readCostRules,saveCostRules,readCostRuleReference,syncCostRuleCatalog,selectCostRuleCandidates,assignCostRules} from '../src/cost-rules.mjs';
 import {COST_DEFAULTS,productionCostReference} from '../src/production-costs.mjs';
+import {deriveCatalogProduct,deriveProductCostCatalog} from '../../finance/src/variant-catalog-frame.mjs';
+import {storeCatalogClassificationFrame} from '../src/catalog-classification.mjs';
 const clock=Date.UTC(2026,9,24,12),now=()=>clock,stamp=clock/1000;
 const catalog=(name='Camiseta Estrela Infantil',sizes=['4','6','8','10','12','14','16'])=>({schema:'product_cost_catalog_v1',product_name:name,variants:sizes.map((size,i)=>({model_id:String(i),attributes:[{name:'Cor',value:'Vermelho'},{name:'Tamanho',value:size}]}))});
 const provider=(meta=catalog())=>({schema:'variant_catalog_v1',checked_at:stamp,products:[{item_id:'101',catalog_fingerprint:'a'.repeat(64),bindings:[],unresolved_count:meta.variants.length,cost_catalog:meta}]});
 const fixture=()=>({ADMIN_DB:new D1()});
 const reference=(automated,changes={})=>productionCostReference({status:'AVAILABLE',rows:catalog().variants.map(row=>({item_id:'101',model_id:row.model_id,quantity:2}))},{revision:1,bindings:[]},{revision:1,values:{...COST_DEFAULTS,...changes}},automated);
+
+test('the saved catalogue automatically prices adult, plus, child and all gendered kit options while keeping ambiguous products pending',async t=>{
+ const env=fixture();t.after(()=>env.ADMIN_DB.db.close());
+ const sizes=['P','M','G','GG','G1','G2','G3'];
+ const definitions=[
+  {item:'22199878767',name:'Camiseta Camisa Unissex Verde',axes:[{name:'Cor',options:['Verde']},{name:'Tamanho',options:sizes.map(size=>size.toLowerCase())}]},
+  {item:'102',name:'Camiseta Política Estrela',axes:[{name:'Cor',options:['Verde']},{name:'Tamanho',options:['4','6','8','10','12','14','16']}]},
+  {item:'58269212782',name:'Kit Casal Camisetas Estrela',axes:[{name:'Tamanho Feminino',options:sizes.map(size=>'MULHER '+size)},{name:'Tamanho Masculino',options:sizes.map(size=>'HOMEM '+size)}]},
+  {item:'104',name:'Calça Baggy',axes:[{name:'Cor',options:['Verde']},{name:'Tamanho',options:['M']}]},
+  {item:'105',name:'Kit Casal Camisetas',axes:[{name:'Tamanho Feminino',options:['HOMEM P']},{name:'Tamanho Masculino',options:['MULHER M']}]},
+ ];
+ const products=[];
+ for(const definition of definitions){
+  const model=[];for(let first=0;first<definition.axes[0].options.length;first++)for(let second=0;second<definition.axes[1].options.length;second++)model.push({model_id:100+model.length,tier_index:[first,second]});
+  const raw={tier_variation:definition.axes.map(axis=>({name:axis.name,option_list:axis.options.map(option=>({option}))})),model};
+  const product=await deriveCatalogProduct(definition.item,raw,{selling_unit:'AUTO'});product.cost_catalog=deriveProductCostCatalog(raw,definition.name);products.push(product);
+  await storeCatalogClassificationFrame(env,{schema:'variant_catalog_v1',checked_at:stamp,products:[product]},{now});
+ }
+ const automatic=await readCostRuleReference(env,definitions.map(row=>row.item),{now}),rows=products.flatMap(product=>product.cost_catalog.variants.map(variant=>({item_id:product.item_id,model_id:variant.model_id,quantity:1}))),price=(values=COST_DEFAULTS,bindings=[])=>productionCostReference({status:'AVAILABLE',rows},{revision:1,bindings},{revision:1,values},automatic),result=price();
+ const adult=result.variants.filter(row=>row.item_id==='22199878767'),children=result.variants.filter(row=>row.item_id==='102'),kits=result.variants.filter(row=>row.item_id==='58269212782');
+ assert.deepEqual(adult.map(row=>row.unit_cost_cents),[1590,1590,1590,1590,1890,1890,1890]);assert.deepEqual(adult.map(row=>row.catalog_binding.size),sizes);
+ assert.equal(children.length,7);assert.ok(children.every(row=>row.unit_cost_cents===1250&&row.cost_source==='CUSTOM_PROFILE'));
+ assert.equal(kits.length,49);assert.equal(kits[0].unit_cost_cents,3180);assert.equal(kits[4].unit_cost_cents,3480);assert.equal(kits.at(-1).unit_cost_cents,3780);
+ assert.ok(result.variants.filter(row=>['104','105'].includes(row.item_id)).every(row=>row.unit_cost_cents===null));assert.equal(result.total_cents,null);assert.equal(result.known_subset_cents,189200);
+ assert.ok(!automatic.variants.some(row=>row.item_id==='22199878767'),'adult garment prices use their catalogue composition, not the child rule');
+ const manualBinding={item_id:'22199878767',model_id:'102',size:'G1',selling_unit:'SINGLE_GARMENT',operator_confirmed:true},manualValues={...COST_DEFAULTS,custom_profiles:[{id:'manual-child',label:'Exceção infantil',unit_cost_cents:999}],custom_assignments:[{item_id:'102',model_id:'100',profile_id:'manual-child'}]},before=structuredClone({manualBinding,manualValues});
+ const manual=price(manualValues,[manualBinding]);assert.equal(manual.variants.find(row=>row.item_id==='22199878767'&&row.model_id==='102').unit_cost_cents,1890);assert.equal(manual.variants.find(row=>row.item_id==='102'&&row.model_id==='100').unit_cost_cents,999);assert.deepEqual({manualBinding,manualValues},before);
+});
 
 test('the confirmed child rule covers every even size 4 to 16 once per selling unit without garment bindings',async()=>{
  const env=fixture();try{const state=await readCostRules(env);assert.equal(state.revision,1);assert.equal(state.values.rules[0].unit_cost_cents,1250);

@@ -15,3 +15,15 @@ Uma falha na interface mantém os valores parciais conhecidos, encerra o indicad
 Concluir a coleta não equivale a conciliar o lucro. Cancelamentos e pedidos não pagos ficam excluídos das vendas consideradas. Devoluções, situações não reconhecidas, pagamentos ausentes e custos incompletos continuam impedindo um resultado final. O DAS-MEI mensal é descontado uma vez; a antiga estimativa de 2% por nota não representa a política tributária atual.
 
 Os testes locais usam fontes simuladas e banco SQLite compatível com a interface D1. Verificam retomada, concorrência, contratos antigos, cobertura e cálculos; não comprovam o término da coleta na conta real. O endpoint autenticado `/api/admin/finance/sync-state` permite conferir esse progresso depois da publicação.
+
+## Recuperação automática e identificação dos produtos
+
+A revisão seguinte reproduziu uma falha mais específica: um Payment recusado descartava todos os pagamentos válidos daquela página. O Finance agora mantém um cache privado de até 20 pagamentos validados por execução, limitado a 1 MiB. Uma retomada confere novamente o status e os itens do pedido e reaproveita somente entradas compatíveis, preservando o horário da leitura original. Esse cache não participa dos totais antes de a página completa ser validada e gravada atomicamente.
+
+As chamadas externas têm orçamento de 20 segundos por etapa, incluindo margem para persistir o checkpoint. Consultas D1 já iniciadas não são canceladas de maneira especulativa: sua latência pode ultrapassar esse orçamento. Auth usa prazo de 35 segundos nessa rota; App preserva 45 segundos e o navegador, 90. Checkpoint e disputa de lease indicam espera normal. Rate limit, timeout e indisponibilidade têm esperas persistidas, enquanto autorização necessária e dados inválidos permanecem bloqueados.
+
+Depois de uma falha ambígua, a interface observa o estado salvo por GET antes de avançar. Ela retoma etapas de coleta com espera e limite de oito tentativas sem progresso; após esse limite, continua observando o avanço do coletor do servidor. Pausa, página oculta e edição de despesas impedem avanço automático. Uma conclusão financeira observada pode iniciar a primeira consulta de anúncios que ainda faltava; uma solicitação de anúncios ou despesas com resultado ambíguo não é repetida automaticamente.
+
+Todos os produtos vendidos entram na fila automática mesmo durante uma coleta parcial e mesmo quando já têm custo. Uma falha dessa fila não invalida os valores financeiros. Camisetas adultas, plus e kits identificados mostram seu custo diretamente; o formulário de regra infantil deixa de aparecer como ação principal nesses produtos. Correções manuais continuam preservadas, e regras indisponíveis não são substituídas silenciosamente pela primeira opção.
+
+A [pesquisa de arquitetura e referências públicas](PESQUISA_COLETA_AUTOMATICA.md) registra as fontes, licenças e limites observados. A validação inclui o caminho App → Auth → Finance compilado normal e minificado, falhas por pedido, retomada sem duplicação e disputa entre navegador, cron e catálogo.

@@ -155,6 +155,36 @@ test('bounded App transport rejects failed or oversized source bodies, aborts a 
  let calls=0,req;const result=await getFinanceBusinessPeriod({APP_INTERNAL_SECRET:appKey},input,{timeoutMs:5,fetchImpl:async value=>{req=value;calls++;return new Promise(()=>{});}});assert.equal(result.status,'UNAVAILABLE');assert.equal(calls,1);assert.equal(req.signal.aborted,true);
 });
 
+test('Auth bounds monthly collection at 35 seconds while the sample keeps its 45-second deadline',async()=>{
+ const original=setTimeout,timers=[];globalThis.setTimeout=(callback,delay,...args)=>{timers.push(delay);return original(callback,[35000,45000].includes(delay)?5:delay,...args);};
+ try{
+  for(const [route,body,expected] of [[path,input,35000],['/internal/shopee/finance/payment-sample',{},45000]]){
+   let calls=0,signal;const previous=timers.length;
+   const response=await forwardFinancePaymentSample(new Request(origin+route,{method:'POST',headers:{'content-type':'application/json','x-braza-app-key':appKey},body:JSON.stringify(body)}),{FINANCE_ROUTER_SECRET:router,SHOPEE_FINANCE_SERVICE:{fetch:async upstream=>{calls++;signal=upstream.signal;return new Promise(()=>{});}}},{validateInternalApp});
+   assert.equal(response.status,502);assert.equal(calls,1);assert.equal(signal.aborted,true);assert.deepEqual(timers.slice(previous),[expected]);assert.ok(!(await response.text()).includes('PRIVATE'));
+  }
+ }finally{globalThis.setTimeout=original;}
+});
+
+test('the monthly Auth deadline includes request and response bodies and cancels late service responses',async()=>{
+ const original=setTimeout,timers=[];globalThis.setTimeout=(callback,delay,...args)=>{timers.push(delay);return original(callback,delay===35000?5:delay,...args);};
+ try{
+  let requestCancelled=0,serviceCalls=0;
+  const stalledRequest=new Request(origin+path,{method:'POST',headers:{'content-type':'application/json','x-braza-app-key':appKey},body:new ReadableStream({pull(){},cancel(){requestCancelled++;}}),duplex:'half'});
+  const environment=fetch=>({FINANCE_ROUTER_SECRET:router,SHOPEE_FINANCE_SERVICE:{fetch}});
+  const stalledInput=await forwardFinancePaymentSample(stalledRequest,environment(async()=>{serviceCalls++;return Response.json(source());}),{validateInternalApp});
+  assert.equal(stalledInput.status,502);assert.equal(requestCancelled,1);assert.equal(serviceCalls,0);
+  let responseCancelled=0,signal;
+  const stalledOutput=await forwardFinancePaymentSample(request(),environment(async upstream=>{serviceCalls++;signal=upstream.signal;return new Response(new ReadableStream({pull(){},cancel(){responseCancelled++;}}),{headers:{'content-type':'application/json'}});}),{validateInternalApp});
+  assert.equal(stalledOutput.status,502);assert.equal(responseCancelled,1);assert.equal(signal.aborted,true);assert.equal(serviceCalls,1);
+  let resolveFetch,lateCancelled=0;
+  const late=await forwardFinancePaymentSample(request(),environment(async upstream=>{serviceCalls++;signal=upstream.signal;return new Promise(resolve=>{resolveFetch=resolve;});}),{validateInternalApp});
+  assert.equal(late.status,502);assert.equal(signal.aborted,true);assert.equal(serviceCalls,2);
+  const lateBody=new ReadableStream({pull(){},cancel(){lateCancelled++;}});resolveFetch(new Response(lateBody,{headers:{'content-type':'application/json'}}));
+  await new Promise(resolve=>setImmediate(resolve));assert.equal(lateCancelled,1);assert.equal(lateBody.locked,false);assert.deepEqual(timers,[35000,35000,35000]);
+ }finally{globalThis.setTimeout=original;}
+});
+
 test('business response accepts exactly one MiB and rejects the next declared or streamed byte at App and Auth',async()=>{
  const value=productSource(),serialized=JSON.stringify(value),cap=1048576;
  const response=(size,{declared=true,stream=false}={})=>{

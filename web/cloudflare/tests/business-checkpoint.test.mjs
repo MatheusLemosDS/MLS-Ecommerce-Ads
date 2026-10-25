@@ -164,3 +164,22 @@ test('the shared entry point automatically checkpoints a completed period and ch
  const changed=await invoke('expenses',{revision:0,external_expenses_cents:0,recharge_treatment:'UNCONFIRMED'});assert.equal(changed.checked_at,stamp);assert.equal((await history(e)).checkpoints[0].revision,2);assert.equal(e.ADMIN_DB.db.prepare('SELECT actor FROM business_month_expenses_audit').get().actor,'checkpoint-operator');
  await invoke('read');assert.equal((await history(e)).checkpoints[0].revision,2);
 });
+
+test('partial collection discovers already priced sold products and catalogue queue failures cannot replace valid finance or its original error',async t=>{
+ class QueueFailureD1 extends D1 {
+  prepare(sql){const statement=super.prepare(sql);if(this.failQueue&&sql.startsWith('INSERT OR IGNORE INTO catalog_classification_jobs'))statement.run=async()=>{throw Error('PRIVATE_QUEUE_FAILURE');};return statement;}
+ }
+ const e={ADMIN_DB:new QueueFailureD1()};t.after(()=>e.ADMIN_DB.db.close());e.ADMIN_DB.db.exec('CREATE TABLE variant_bindings_state(id INTEGER PRIMARY KEY,revision INTEGER,payload TEXT,updated_at TEXT);CREATE TABLE production_costs_state(id INTEGER PRIMARY KEY,revision INTEGER,payload TEXT,updated_at TEXT)');
+ const bindings=[{item_id:'201',model_id:'1',size:'P',selling_unit:'SINGLE_GARMENT',operator_confirmed:true},{item_id:'202',model_id:'2',size:'G1',selling_unit:'SINGLE_GARMENT',operator_confirmed:true}];
+ e.ADMIN_DB.db.prepare('INSERT INTO variant_bindings_state VALUES(1,1,?,?)').run(JSON.stringify(bindings),new Date(stamp*1000).toISOString());e.ADMIN_DB.db.prepare('INSERT INTO production_costs_state VALUES(1,1,?,?)').run(JSON.stringify(COST_DEFAULTS),new Date(stamp*1000).toISOString());
+ const imported={schema:'finance_business_period_v1',run_id:'11111111-1111-4111-8111-111111111111',revision:1,status:'RUNNING',start_date:'2026-10-01',end_date:'2026-10-01',cutoff_at:stamp-1,checked_at:stamp,currency:'BRL',monetary_unit:'UNCONFIRMED',pages_read:1,duplicate_orders:0,coverage:{orders:2,paid:2,completed:2,ongoing:0,cancelled:0,cancel_pending:0,unpaid:0,other:0,unknown:0,payment_covered:2,payment_missing:0,returns:0,returns_unknown:0},known_sales_base_raw:'100',sales_base_raw:'100',known_expected_repass_raw:'80',expected_repass_raw:'80',known_ads_adjustment_raw:'0',ads_adjustment_raw:'0',invoice_tax:{schema:'store_invoice_tax_v1',rate_bps:200,basis:'PAYMENT_GOODS_VALUE_PER_ORDER_ESTIMATE',rounding:'HALF_UP_PER_ORDER',covered_orders:2,unavailable_orders:0,known_base_raw:'100',known_tax_raw:'2'},items:[{item_id:'201',model_id:'1',quantity:1},{item_id:'202',model_id:'2',quantity:1}],diagnostic:null,basis:'CREATE_TIME_PAID_ORDER_ESTIMATE_NOT_SETTLED'};
+ const services={getFinanceBusinessPeriod:async()=>structuredClone(imported)},invoke=operation=>businessMonthWithCheckpoint(e,{operation,month},services,{now:()=>stamp*1000});
+ const partial=await invoke('start');assert.equal(partial.status,'RUNNING');assert.equal(partial.product_summary,null);assert.deepEqual(partial.unmapped_variants,[]);assert.equal(partial.known_production_cost_cents,3480);
+ const queued=()=>e.ADMIN_DB.db.prepare('SELECT item_id FROM catalog_classification_jobs ORDER BY item_id').all().map(row=>row.item_id);assert.deepEqual(queued(),['201','202']);
+ e.ADMIN_DB.db.exec('DELETE FROM catalog_classification_jobs');services.getFinanceBusinessPeriod=async()=>{throw Error('PRIVATE_SOURCE_FAILURE');};
+ await assert.rejects(invoke('step'),error=>error.message==='BUSINESS_MONTH_SOURCE_UNAVAILABLE');assert.deepEqual(queued(),['201','202'],'the previous validated partial still discovers products when the next page fails');
+ e.ADMIN_DB.db.exec('DELETE FROM catalog_classification_jobs');e.ADMIN_DB.failQueue=true;
+ await assert.rejects(invoke('step'),error=>error.message==='BUSINESS_MONTH_SOURCE_UNAVAILABLE');
+ const retained=await invoke('read');assert.equal(retained.known_production_cost_cents,3480);assert.equal(retained.known_sales_cents,10000);assert.equal(retained.status,'RUNNING');assert.deepEqual(queued(),[]);
+ assert.deepEqual(JSON.parse(e.ADMIN_DB.db.prepare('SELECT payload FROM variant_bindings_state').get().payload),bindings);
+});

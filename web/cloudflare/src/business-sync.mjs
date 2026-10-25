@@ -15,7 +15,7 @@ export class BusinessSyncError extends Error {
 const syncFail=(code,status=503)=>{throw new BusinessSyncError(code,status);};
 const syncReady=new WeakMap();
 const syncStatuses=['IDLE','RUNNING','COMPLETE','PARTIAL','LIMIT_REACHED','ERROR','PAUSED'];
-const syncErrors=['BUSINESS_SYNC_COLLECTION_UNAVAILABLE','BUSINESS_SYNC_RESULT_INVALID','BUSINESS_SYNC_ADS_INCOMPLETE','BUSINESS_SYNC_PERIOD_LIMIT_REACHED'];
+const syncErrors=['BUSINESS_SYNC_COLLECTION_UNAVAILABLE','BUSINESS_SYNC_RESULT_INVALID','BUSINESS_SYNC_ADS_INCOMPLETE','BUSINESS_SYNC_PERIOD_LIMIT_REACHED','BUSINESS_SYNC_SOURCE_RATE_LIMIT','BUSINESS_SYNC_SOURCE_TIMEOUT','BUSINESS_SYNC_SOURCE_AUTH_REQUIRED','BUSINESS_SYNC_SOURCE_INVALID','BUSINESS_SYNC_SOURCE_PERMISSION_DENIED'];
 const syncPlain=value=>value!==null&&typeof value==='object'&&[Object.prototype,null].includes(Object.getPrototypeOf(value));
 const syncExact=(value,keys)=>syncPlain(value)&&Reflect.ownKeys(value).length===keys.length&&keys.every(key=>Object.hasOwn(Object.getOwnPropertyDescriptor(value,key)||{},'value'));
 const syncInteger=(value,min=0,max=Number.MAX_SAFE_INTEGER)=>Number.isSafeInteger(value)&&!Object.is(value,-0)&&value>=min&&value<=max;
@@ -27,7 +27,7 @@ async function syncSetup(env){
  await syncReady.get(db);return db;
 }
 function syncSummary(frame){
- return {schema:'business_sync_summary_v1',month:frame.month,start_date:frame.start_date,end_date:frame.end_date,status:frame.status,checked_at:frame.checked_at,source_checked_at:frame.source_checked_at?{...frame.source_checked_at}:{finance_oldest_at:null,finance_latest_at:null,ads_at:frame.ads?.fetched_at??null},progress:{...frame.progress},coverage:{...frame.coverage},pending:[...frame.result.pending],bindings_revision:frame.bindings_revision,costs_revision:frame.costs_revision,expenses_revision:frame.expenses.revision,tax_policy_revision:frame.tax?.policy_revision??null,ads_status:frame.ads?.status??null,ads_covered_days:frame.ads?.covered_days??0,ads_total_days:frame.ads?.total_days??0,net_estimate_cents:frame.result.net_estimate_cents,net_profit_cents:null,basis:frame.result.basis};
+ return {schema:'business_sync_summary_v1',month:frame.month,start_date:frame.start_date,end_date:frame.end_date,status:frame.status,checked_at:frame.checked_at,source_checked_at:frame.source_checked_at?{...frame.source_checked_at}:{finance_oldest_at:null,finance_latest_at:null,ads_at:frame.ads?.fetched_at??null},progress:{...frame.progress},coverage:{...frame.coverage},pending:[...frame.result.pending],bindings_revision:frame.bindings_revision,costs_revision:frame.costs_revision,expenses_revision:frame.expenses.revision,tax_policy_revision:frame.tax?.policy_revision??null,ads_status:frame.ads?.status??null,ads_covered_days:frame.ads?.covered_days??0,ads_total_days:frame.ads?.total_days??0,net_estimate_cents:frame.result.net_estimate_cents,net_profit_cents:null,basis:frame.result.basis,...(frame.collection?{collection:{...frame.collection}}:{})};
 }
 function syncStoredSummary(raw){
  if(raw===null)return null;
@@ -37,6 +37,10 @@ function syncStoredSummary(raw){
   const progress=value?.progress,capacityDescriptor=Object.getOwnPropertyDescriptor(progress||{},'order_capacity'),capacity=capacityDescriptor?capacityDescriptor.value:progress?.pages_read*5;
   if(!syncExact(progress,['windows_total','windows_complete','pages_read',...(capacityDescriptor?['order_capacity']:[])])||!syncInteger(progress.pages_read,0,600)||!syncInteger(capacity,progress.pages_read*5,Math.min(12000,progress.pages_read*20))||(capacity-progress.pages_read*5)%15!==0||!syncInteger(value?.coverage?.orders,0,capacity))throw Error();
   const keys=['schema','month','start_date','end_date','status','checked_at','source_checked_at','progress','coverage','pending','bindings_revision','costs_revision','expenses_revision','tax_policy_revision','ads_status','ads_covered_days','ads_total_days','net_estimate_cents','net_profit_cents','basis'];
+  if(Object.hasOwn(value,'collection')){
+   keys.push('collection');const collection=value.collection,retry=['BUSINESS_PERIOD_CHECKPOINT','BUSINESS_PERIOD_BUSY','BUSINESS_PERIOD_CONFLICT','BUSINESS_PERIOD_RATE_LIMIT','BUSINESS_PERIOD_TIMEOUT','BUSINESS_PERIOD_UPSTREAM_UNAVAILABLE'],blocked=['BUSINESS_PERIOD_AUTH_REQUIRED','BUSINESS_PERIOD_INVALID_SOURCE','BUSINESS_PERIOD_PERMISSION_DENIED'];
+   if(!syncExact(collection,['schema','state','code','retry_after_seconds'])||collection.schema!=='business_month_collection_v1'||!syncInteger(collection.retry_after_seconds,0,1800)||!['READY','RETRY_WAIT','BLOCKED'].includes(collection.state)||(collection.state==='READY'?(collection.code!==null||collection.retry_after_seconds!==0):collection.state==='RETRY_WAIT'?(!retry.includes(collection.code)||collection.retry_after_seconds<1):(!blocked.includes(collection.code)||collection.retry_after_seconds!==0)))throw Error();
+  }
   const pendingCodes=['COLLECTING','PERIOD_LIMIT_REACHED','SOURCE_UNAVAILABLE','STATUS_REVIEW_REQUIRED','PAYMENT_INCOMPLETE','RETURNS_NOT_RECONCILED','PRODUCTION_COST_INCOMPLETE','INVOICE_TAX_UNAVAILABLE','ADS_UNAVAILABLE','EXTERNAL_EXPENSES_REQUIRED','RECHARGE_TREATMENT_REQUIRED','ADJUSTMENT_UNAVAILABLE','ARITHMETIC_UNSAFE','TAX_POLICY_REQUIRED','FINANCIAL_SOURCE_STALE'];
   if(!syncExact(value,keys)||value.schema!=='business_sync_summary_v1'||!/^\d{4}-(0[1-9]|1[0-2])$/.test(value.month)||value.start_date!==value.month+'-01'||typeof value.end_date!=='string'||!new RegExp('^'+value.month+'-(0[1-9]|[12][0-9]|3[01])$').test(value.end_date)||!['RUNNING','COMPLETE','LIMIT_REACHED'].includes(value.status)||!syncInteger(value.checked_at,1,9999999999)||!syncExact(value.source_checked_at,['finance_oldest_at','finance_latest_at','ads_at'])||!Object.values(value.source_checked_at).every(at=>at===null||syncInteger(at,1,value.checked_at))||!syncInteger(value.progress.windows_total,1,3)||!syncInteger(value.progress.windows_complete,0,value.progress.windows_total)||!syncExact(value.coverage,coverageKeys)||!coverageKeys.every(key=>syncInteger(value.coverage[key],0,3000))||!Array.isArray(value.pending)||value.pending.length>pendingCodes.length||new Set(value.pending).size!==value.pending.length||!value.pending.every(code=>pendingCodes.includes(code))||!syncInteger(value.bindings_revision,1,2147483647)||!syncInteger(value.costs_revision,1,2147483647)||!syncInteger(value.expenses_revision,0,2147483646)||value.tax_policy_revision!==null&&!syncInteger(value.tax_policy_revision,0,2147483647)||![null,'AVAILABLE','PARTIAL','UNAVAILABLE'].includes(value.ads_status)||!syncInteger(value.ads_covered_days,0,31)||!syncInteger(value.ads_total_days,0,31)||value.ads_covered_days>value.ads_total_days||value.net_estimate_cents!==null&&!syncInteger(value.net_estimate_cents,Number.MIN_SAFE_INTEGER)||value.net_profit_cents!==null||value.basis!=='PAID_ORDER_CREATE_MONTH_AND_CALENDAR_ADS_ESTIMATE'||value.status!=='COMPLETE'&&value.net_estimate_cents!==null||value.pending.length&&value.net_estimate_cents!==null)throw Error();
   return value;
@@ -95,7 +99,7 @@ export async function runBusinessSync(env,services,{now=()=>Date.now(),maxSteps=
    if(!hasTime(45000)){stopped=true;break;}
    frame=projectBusinessMonth(await businessMonthWithCheckpoint(env,{operation:step===0?'start':'step',month},collectors,{now,actor:'business-sync'}));
    if(!frame||frame.month!==month)throw new BusinessSyncError('BUSINESS_SYNC_RESULT_INVALID');
-   if(frame.result.pending.includes('SOURCE_UNAVAILABLE'))break;
+   if(frame.result.pending.includes('SOURCE_UNAVAILABLE')||frame.collection?.state==='RETRY_WAIT'||frame.collection?.state==='BLOCKED')break;
    if(frame.status!=='RUNNING')break;
   }
   if(frame?.status==='COMPLETE'&&hasTime(60000)){
@@ -105,7 +109,7 @@ export async function runBusinessSync(env,services,{now=()=>Date.now(),maxSteps=
   // An in-progress month can outlive the freshness window while its pages
   // continue arriving. Keep that freshness blocker on the financial result,
   // but do not slow the collector down with the provider-failure backoff.
-  if(frame?.result.pending.includes('SOURCE_UNAVAILABLE')||frame?.status!=='RUNNING'&&frame?.result.pending.includes('FINANCIAL_SOURCE_STALE')){status='ERROR';errorCode='BUSINESS_SYNC_COLLECTION_UNAVAILABLE';}
+  if(frame?.result.pending.includes('SOURCE_UNAVAILABLE')||frame?.status!=='RUNNING'&&frame?.result.pending.includes('FINANCIAL_SOURCE_STALE')){status='ERROR';errorCode=({BUSINESS_PERIOD_RATE_LIMIT:'BUSINESS_SYNC_SOURCE_RATE_LIMIT',BUSINESS_PERIOD_TIMEOUT:'BUSINESS_SYNC_SOURCE_TIMEOUT',BUSINESS_PERIOD_AUTH_REQUIRED:'BUSINESS_SYNC_SOURCE_AUTH_REQUIRED',BUSINESS_PERIOD_INVALID_SOURCE:'BUSINESS_SYNC_SOURCE_INVALID',BUSINESS_PERIOD_PERMISSION_DENIED:'BUSINESS_SYNC_SOURCE_PERMISSION_DENIED'})[frame?.collection?.code]||'BUSINESS_SYNC_COLLECTION_UNAVAILABLE';}
   else if(frame?.status==='LIMIT_REACHED'){status='LIMIT_REACHED';errorCode='BUSINESS_SYNC_PERIOD_LIMIT_REACHED';}
   else if(frame?.status==='COMPLETE'){
    status=frame.ads?.status==='AVAILABLE'?'COMPLETE':'PARTIAL';
@@ -116,7 +120,7 @@ export async function runBusinessSync(env,services,{now=()=>Date.now(),maxSteps=
  if(latest.row.lease_token!==token){state=latest.state;return result('LEASED',financeSteps,adsReads);}
  if(!latest.state.enabled)status='PAUSED';
  const failure=errorCode!==null,failureCount=failure?Math.min(latest.state.failure_count+1,1000000):0;
- const delay=failure?[300,600,1200,1800][Math.min(failureCount-1,3)]:300;
+ const delay=frame?.collection?.state==='RETRY_WAIT'?Math.max(300,frame.collection.retry_after_seconds):failure?[300,600,1200,1800][Math.min(failureCount-1,3)]:300;
  const summary=frame?JSON.stringify(syncSummary(frame)):latest.state.summary?.month===month?latest.row.summary:null;
  const next=stopped&&syncMonth(finished*1000)!==month?finished:finished+delay;
  let writes;try{writes=await db.batch([

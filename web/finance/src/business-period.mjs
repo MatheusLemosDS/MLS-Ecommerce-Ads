@@ -23,6 +23,7 @@ const BUSINESS_SCHEMA=[
  `CREATE TABLE IF NOT EXISTS finance_business_period_runs (run_id TEXT PRIMARY KEY,partner_id INTEGER NOT NULL,shop_id INTEGER NOT NULL,revision INTEGER NOT NULL,status TEXT NOT NULL,start_date TEXT NOT NULL,end_date TEXT NOT NULL,time_from INTEGER NOT NULL,time_to INTEGER NOT NULL,cutoff_at INTEGER NOT NULL,checked_at INTEGER NOT NULL,created_at INTEGER NOT NULL,cursor TEXT NOT NULL,pages_read INTEGER NOT NULL,duplicate_orders INTEGER NOT NULL,lease_owner TEXT,lease_until INTEGER,last_error TEXT)`,
  `CREATE TABLE IF NOT EXISTS finance_business_period_orders (run_id TEXT NOT NULL,order_hash TEXT NOT NULL,bucket TEXT NOT NULL,payment_covered INTEGER NOT NULL,sales_raw TEXT,escrow_raw TEXT,ads_raw TEXT,returns_seen INTEGER,items TEXT NOT NULL,source_hash TEXT NOT NULL,checked_at INTEGER NOT NULL,PRIMARY KEY(run_id,order_hash))`,
  `CREATE TABLE IF NOT EXISTS finance_business_period_cursors (run_id TEXT NOT NULL,cursor_hash TEXT NOT NULL,PRIMARY KEY(run_id,cursor_hash))`,
+ `CREATE TABLE IF NOT EXISTS finance_business_period_payment_cache (run_id TEXT NOT NULL,order_hash TEXT NOT NULL,bucket TEXT NOT NULL,payment_covered INTEGER NOT NULL,sales_raw TEXT,escrow_raw TEXT,ads_raw TEXT,returns_seen INTEGER,items TEXT NOT NULL,source_hash TEXT NOT NULL,checked_at INTEGER NOT NULL,PRIMARY KEY(run_id,order_hash))`,
 ];
 
 function businessBucket(status){
@@ -81,16 +82,24 @@ function businessAmount(income,field,{positive=false}={}){
 function businessEnvelope(payload){
  if(!businessPlain(payload)||typeof payload.error!=='string'||payload.error.length>8192)throw businessFailure('RESPONSE_INVALID');
  for(const row of [payload,businessPlain(payload.response)?payload.response:{}])for(const field of ['partner_id','shop_id'])if(Object.hasOwn(row,field)&&row[field]!==FINANCE_PROFILE[field])throw businessFailure('IDENTITY_MISMATCH');
- if(payload.error!=='')throw businessFailure(['error_sign','error_auth','error_api_permission','error_partner_id','error_ip'].includes(payload.error)?'API_REJECTED':'API_UNAVAILABLE');
+ if(payload.error!=='')throw businessFailure(payload.error==='error_token'?'AUTH_REQUIRED':['error_rate_limit','error_limit'].includes(payload.error)?'RATE_LIMIT':['error_server','err_busy'].includes(payload.error)?'PROVIDER_UNAVAILABLE':['error_auth','error_sign','error_api_permission','error_partner_id','error_ip'].includes(payload.error)?'API_REJECTED':['order_not_ready','order_not_found'].includes(payload.error)?'PAYMENT_NOT_READY':'API_UNAVAILABLE');
  if(!businessPlain(payload.response))throw businessFailure('RESPONSE_INVALID');
  return payload.response;
 }
 function businessPaymentUnavailable(error){
- if(!(error instanceof FinanceConnectionError))return false;
- if(['FINANCE_BUSINESS_API_UNAVAILABLE','FINANCE_BUSINESS_UPSTREAM_FAILED','FINANCE_BUSINESS_TIMEOUT'].includes(error.code))return true;
- if(error.code!=='FINANCE_BUSINESS_UPSTREAM_HTTP')return false;
- if([404,409,429].includes(error.upstream_status)||error.upstream_status>=500)return true;
- return error.upstream_status===403&&['JSON_UNRECOGNIZED','JSON_PARAMETER_REJECTED'].includes(error.upstream_diagnostic);
+ // Only an exact successful-HTTP provider token describes an order whose
+ // Payment is not ready. Transport/auth/rate failures are never missing money.
+ return error instanceof FinanceConnectionError&&error.code==='FINANCE_BUSINESS_PAYMENT_NOT_READY';
+}
+function businessDiagnostic(error){
+ const code=error instanceof FinanceConnectionError?error.code:'';
+ if(code==='FINANCE_BUSINESS_CHECKPOINT')return 'BUSINESS_PERIOD_CHECKPOINT';
+ if(['FINANCE_REFRESH_IN_PROGRESS','FINANCE_AUTHORIZATION_IN_PROGRESS','FINANCE_REFRESH_CONFLICT','FINANCE_REVISION_CONFLICT'].includes(code))return 'BUSINESS_PERIOD_BUSY';
+ if(['FINANCE_BUSINESS_AUTH_REQUIRED','FINANCE_AUTHORIZATION_REQUIRED','FINANCE_BUSINESS_AUTHORIZATION_EXPIRED'].includes(code))return 'BUSINESS_PERIOD_AUTH_REQUIRED';
+ if(code==='FINANCE_BUSINESS_RATE_LIMIT'||error?.upstream_status===429)return 'BUSINESS_PERIOD_RATE_LIMIT';
+ if(code.endsWith('_TIMEOUT')||[408,504].includes(error?.upstream_status))return 'BUSINESS_PERIOD_TIMEOUT';
+ if(['FINANCE_BUSINESS_PROVIDER_UNAVAILABLE','FINANCE_BUSINESS_PAYMENT_NOT_READY','FINANCE_BUSINESS_UPSTREAM_FAILED','FINANCE_STORAGE_UNAVAILABLE','FINANCE_BUSINESS_STORAGE_UNAVAILABLE','FINANCE_REFRESH_FAILED','FINANCE_REFRESH_TRANSPORT_UNAVAILABLE','FINANCE_BUSINESS_TRANSPORT_UNAVAILABLE'].includes(code)||error?.upstream_status>=500)return 'BUSINESS_PERIOD_UPSTREAM_UNAVAILABLE';
+ return 'BUSINESS_PERIOD_INVALID_SOURCE';
 }
 function businessMidnight(day){
  const target=Date.parse(day+'T00:00:00Z'),formatter=new Intl.DateTimeFormat('en-US',{timeZone:'America/Sao_Paulo',timeZoneName:'longOffset'});let candidate=target;
@@ -151,7 +160,10 @@ function businessFrame(run,records,diagnostic){
   known_sales_base_raw:salesRaw,sales_base_raw:completePayments?salesRaw:null,known_expected_repass_raw:escrowRaw,expected_repass_raw:completePayments?escrowRaw:null,known_ads_adjustment_raw:adsRaw,ads_adjustment_raw:completePayments?adsRaw:null,
   invoice_tax:{schema:'store_invoice_tax_v1',rate_bps:200,basis:'PAYMENT_GOODS_VALUE_PER_ORDER_ESTIMATE',rounding:'HALF_UP_PER_ORDER',covered_orders:coverage.payment_covered,unavailable_orders:coverage.payment_missing,known_base_raw:salesRaw,known_tax_raw:businessRaw(tax)},items:[...grouped.values()],
   product_breakdown:{schema:'business_product_breakdown_v1',mixed_orders:mixed.orders,mixed_payment_covered:mixed.covered,mixed_payment_missing:mixed.missing,...Object.fromEntries(moneyNames.map((name,index)=>['known_mixed_'+name+'_raw',businessRaw(mixed.money[index])])),products:[...products.values()].map(({money,items,...row})=>({...row,...Object.fromEntries(moneyNames.flatMap((name,index)=>{const known=businessRaw(money[index]);return [['known_exclusive_'+name+'_raw',known],['exclusive_'+name+'_raw',row.exclusive_payment_missing?null:known]];})),items:[...items.values()]}))},
-  diagnostic:diagnostic===undefined?run.last_error:diagnostic,basis:'CREATE_TIME_PAID_ORDER_ESTIMATE_NOT_SETTLED'});
+  // A competing lease owner may finish between this caller's observation and
+  // its failed write. The winner's terminal data takes precedence over the
+  // caller-local conflict; a stored terminal error still fails validation.
+  diagnostic:diagnostic===undefined||diagnostic==='BUSINESS_PERIOD_CONFLICT'&&run.status!=='RUNNING'?run.last_error:diagnostic,basis:'CREATE_TIME_PAID_ORDER_ESTIMATE_NOT_SETTLED'});
  if(!frame)throw businessFailure('STORAGE_INVALID',503);return frame;
 }
 
@@ -160,20 +172,24 @@ export async function runFinanceBusinessPeriod(env,options={}){
  const {operation,fetchImpl,now=()=>Date.now(),timeoutMs=5000}=options;
  const input=projectBusinessPeriodRequest(operation==='start'?{operation,start_date:options.start_date,end_date:options.end_date}:{operation,run_id:options.run_id});if(!input)throw businessFailure('REQUEST_INVALID',400);
  const epoch=()=>{let value;try{value=now();}catch{throw businessFailure('CLOCK_CONFIGURATION',503);}if(!Number.isSafeInteger(value)||value<=0||Math.floor(value/1000)>9999999999)throw businessFailure('CLOCK_CONFIGURATION',503);return Math.floor(value/1000);};
- const initialTime=epoch(),db=env.FINANCE_DB,prepare=(sql,args=[])=>db.prepare(sql).bind(...args);
+ const initialTime=epoch(),deadline=initialTime+20,db=env.FINANCE_DB,prepare=(sql,args=[])=>db.prepare(sql).bind(...args);
+ const remainingTimeout=()=>{const remaining=(deadline-epoch()-3)*1000;if(remaining<5)throw businessFailure('CHECKPOINT',409);return Math.min(timeoutMs,remaining);};
  const storage=async work=>{try{return await work();}catch(error){if(error instanceof FinanceConnectionError)throw error;throw businessFailure('STORAGE_UNAVAILABLE',503);}};
  await storage(()=>db.batch(BUSINESS_SCHEMA.map(sql=>db.prepare(sql))));
  const snapshot=async(run_id,diagnostic)=>{
   const data=await storage(()=>db.batch([
    prepare('SELECT * FROM finance_business_period_runs WHERE run_id=? AND partner_id=? AND shop_id=?',[run_id,...businessIdentity]),
    prepare('SELECT order_hash,bucket,payment_covered,sales_raw,escrow_raw,ads_raw,returns_seen,items,source_hash,checked_at FROM finance_business_period_orders WHERE run_id=? AND EXISTS(SELECT 1 FROM finance_business_period_runs WHERE run_id=? AND partner_id=? AND shop_id=?) ORDER BY order_hash',[run_id,run_id,...businessIdentity]),
+   prepare('SELECT order_hash,bucket,payment_covered,sales_raw,escrow_raw,ads_raw,returns_seen,items,source_hash,checked_at FROM finance_business_period_payment_cache WHERE run_id=? ORDER BY order_hash',[run_id]),
   ]));
-  const run=data[0]?.results?.[0],records=data[1]?.results;if(!run)throw businessFailure('RUN_NOT_FOUND',404);
+  const run=data[0]?.results?.[0],records=data[1]?.results,cache=data[2]?.results;if(!run)throw businessFailure('RUN_NOT_FOUND',404);
   if(!Array.isArray(records)||!projectBusinessPeriodRequest({operation:'start',start_date:run.start_date,end_date:run.end_date}))throw businessFailure('STORAGE_INVALID',503);
   const nextDay=new Date(Date.parse(run.end_date+'T00:00:00Z')+86400000).toISOString().slice(0,10);
   if(run.time_from!==businessMidnight(run.start_date)||run.time_to!==Math.min(run.cutoff_at,businessMidnight(nextDay)-1)||run.cursor!==''&&!businessCursor(run.cursor))throw businessFailure('STORAGE_INVALID',503);
-  for(const record of records)if(await businessHash(JSON.stringify(businessCanonical(record)))!==record.source_hash)throw businessFailure('STORAGE_INVALID',503);
-  return {run,records,frame:businessFrame(run,records,diagnostic)};
+  if(!Array.isArray(cache)||cache.length>20||businessEncoder.encode(JSON.stringify(cache)).byteLength>1048576||cache.some(record=>record.payment_covered!==1||!['completed','ongoing'].includes(record.bucket)||records.some(committed=>committed.order_hash===record.order_hash)))throw businessFailure('STORAGE_INVALID',503);
+  const hashes=await Promise.all([...records,...cache].map(async record=>await businessHash(JSON.stringify(businessCanonical(record)))===record.source_hash));if(hashes.includes(false))throw businessFailure('STORAGE_INVALID',503);
+  for(const record of cache)businessFrame({...run,status:'RUNNING',pages_read:1,duplicate_orders:0,last_error:null},[record]);
+  return {run,records,cache,frame:businessFrame(run,records,diagnostic)};
  };
  if(input.operation==='start'){
   const today=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date(initialTime*1000));if(input.end_date>today)throw businessFailure('REQUEST_INVALID',400);
@@ -186,12 +202,14 @@ export async function runFinanceBusinessPeriod(env,options={}){
   await storage(()=>db.batch([
    prepare('DELETE FROM finance_business_period_orders WHERE run_id IN (SELECT run_id FROM finance_business_period_runs WHERE created_at<? AND partner_id=? AND shop_id=?)',[cutoff,...businessIdentity]),
    prepare('DELETE FROM finance_business_period_cursors WHERE run_id IN (SELECT run_id FROM finance_business_period_runs WHERE created_at<? AND partner_id=? AND shop_id=?)',[cutoff,...businessIdentity]),
+   prepare('DELETE FROM finance_business_period_payment_cache WHERE run_id IN (SELECT run_id FROM finance_business_period_runs WHERE created_at<? AND partner_id=? AND shop_id=?)',[cutoff,...businessIdentity]),
    prepare('DELETE FROM finance_business_period_runs WHERE created_at<? AND partner_id=? AND shop_id=?',[cutoff,...businessIdentity]),
   ]));
   const evict="SELECT run_id FROM finance_business_period_runs WHERE partner_id=? AND shop_id=? AND cutoff_at<? AND (lease_owner IS NULL OR lease_until<=?) AND (SELECT COUNT(*) FROM finance_business_period_runs WHERE partner_id=? AND shop_id=?)>=60 ORDER BY created_at,run_id LIMIT 1",evictArgs=[...businessIdentity,initialTime-900,initialTime,...businessIdentity];
   await storage(()=>db.batch([
    prepare('DELETE FROM finance_business_period_orders WHERE run_id IN ('+evict+')',evictArgs),
    prepare('DELETE FROM finance_business_period_cursors WHERE run_id IN ('+evict+')',evictArgs),
+   prepare('DELETE FROM finance_business_period_payment_cache WHERE run_id IN ('+evict+')',evictArgs),
    prepare('DELETE FROM finance_business_period_runs WHERE run_id IN ('+evict+')',evictArgs),
   ]));
   const count=await storage(()=>prepare('SELECT COUNT(*) AS n FROM finance_business_period_runs WHERE partner_id=? AND shop_id=?',businessIdentity).first());if(!count||count.n>=60)throw businessFailure('RUN_LIMIT',409);
@@ -205,6 +223,9 @@ export async function runFinanceBusinessPeriod(env,options={}){
  }
  const observed=await snapshot(input.run_id);if(input.operation==='read'||observed.run.status!=='RUNNING')return observed.frame;
  if(typeof fetchImpl!=='function'||!Number.isInteger(timeoutMs)||timeoutMs<5||timeoutMs>5000)throw businessFailure('CONFIGURATION',503);
+ const retrySeconds={BUSINESS_PERIOD_RATE_LIMIT:30,BUSINESS_PERIOD_TIMEOUT:5,BUSINESS_PERIOD_UPSTREAM_UNAVAILABLE:10,BUSINESS_PERIOD_BUSY:2}[observed.run.last_error]||0;
+ if(epoch()<observed.run.checked_at+retrySeconds)return observed.frame;
+ if(deadline-epoch()<=3)return {...observed.frame,diagnostic:'BUSINESS_PERIOD_CHECKPOINT'};
  const owner=crypto.randomUUID(),leaseUntil=initialTime+45,run=observed.run;
  const leased=await storage(()=>prepare("UPDATE finance_business_period_runs SET lease_owner=?,lease_until=? WHERE run_id=? AND partner_id=? AND shop_id=? AND revision=? AND status='RUNNING' AND (lease_owner IS NULL OR lease_until<=?)",[owner,leaseUntil,input.run_id,...businessIdentity,run.revision,initialTime]).run());
  if(leased?.meta?.changes!==1)return (await snapshot(input.run_id,'BUSINESS_PERIOD_CONFLICT')).frame;
@@ -213,15 +234,17 @@ export async function runFinanceBusinessPeriod(env,options={}){
   const limited=await storage(()=>prepare("UPDATE finance_business_period_runs SET status='LIMIT_REACHED',revision=revision+1,checked_at=?,lease_owner=NULL,lease_until=NULL,last_error=NULL WHERE "+guard,[stamp,...guardArgs(stamp)]).run());
   return (await snapshot(input.run_id,limited.meta.changes===1?undefined:'BUSINESS_PERIOD_CONFLICT')).frame;
  };
+ const newlyCached=[];let retainedCache=observed.cache;
  try{
+  remainingTimeout();
   if(run.pages_read>=200||observed.records.length>=1000)return await stopAtLimit(epoch());
   const partnerKey=env.SHOPEE_FINANCE_PARTNER_KEY;if(typeof partnerKey!=='string'||!partnerKey.length||partnerKey.length>4096||/[\u0000-\u001f\u007f]/.test(partnerKey))throw businessFailure('SIGNING_CONFIGURATION',503);
   const rawKey=businessEncoder.encode(partnerKey);let key;
   try{if(rawKey.length>8192)throw businessFailure('SIGNING_CONFIGURATION',503);key=await crypto.subtle.importKey('raw',rawKey,{name:'HMAC',hash:'SHA-256'},false,['sign']);}finally{rawKey.fill(0);}
-  const tokens=await ensureFinanceAccessToken(env,{fetchImpl,now,timeoutMs});
+  const tokens=await ensureFinanceAccessToken(env,{fetchImpl,now,timeoutMs:remainingTimeout()});
   const get=async(path,query)=>{
    const timestamp=epoch();if(tokens.expires_at<=timestamp)throw businessFailure('AUTHORIZATION_EXPIRED',409);
-   return requestFinanceAuthJson({input:{timestamp},options:{fetchImpl,now,timeoutMs},prefix:'FINANCE_BUSINESS',...(path===BUSINESS_DETAIL?{maximumBodyBytes:1024*1024}:{}),buildRequest:async()=>{
+   return requestFinanceAuthJson({input:{timestamp},options:{fetchImpl,now,timeoutMs:remainingTimeout()},prefix:'FINANCE_BUSINESS',...(path===BUSINESS_DETAIL?{maximumBodyBytes:1024*1024}:{}),buildRequest:async()=>{
     const base=String(FINANCE_PROFILE.partner_id)+path+timestamp+tokens.access_token+FINANCE_PROFILE.shop_id,sign=Array.from(new Uint8Array(await crypto.subtle.sign('HMAC',key,businessEncoder.encode(base))),byte=>byte.toString(16).padStart(2,'0')).join('');
     const url=new URL(path,BUSINESS_ORIGIN);for(const [name,value] of Object.entries({partner_id:FINANCE_PROFILE.partner_id,timestamp,access_token:tokens.access_token,shop_id:FINANCE_PROFILE.shop_id,sign,...query}))url.searchParams.set(name,String(value));
     return new Request(url,{method:'GET',redirect:'manual',headers:{Accept:'application/json'}});
@@ -256,9 +279,14 @@ export async function runFinanceBusinessPeriod(env,options={}){
    details=selected.map(row=>({...row,...bySerial.get(row.serial)}));
   }
   const records=new Array(details.length);let index=0,failed;
+  const cached=new Map(observed.cache.map(record=>[record.order_hash,record]));
+  retainedCache=details.flatMap(selection=>{const record=cached.get(selection.orderHash);return record&&record.bucket===selection.bucket&&record.items===JSON.stringify(selection.items)?[record]:[];});
   const worker=async()=>{
    while(!failed){const position=index++;if(position>=details.length)return;const selection=details[position];
     try{
+     remainingTimeout();
+     const saved=cached.get(selection.orderHash);
+     if(saved&&saved.bucket===selection.bucket&&saved.items===JSON.stringify(selection.items)){records[position]=saved;continue;}
      const record={order_hash:selection.orderHash,bucket:selection.bucket,payment_covered:0,sales_raw:null,escrow_raw:null,ads_raw:null,returns_seen:null,items:JSON.stringify(selection.items),checked_at:epoch()};
      if(['completed','ongoing'].includes(selection.bucket)){
       let payment;
@@ -281,10 +309,16 @@ export async function runFinanceBusinessPeriod(env,options={}){
       }
      }
      record.checked_at=epoch();record.source_hash=await businessHash(JSON.stringify(businessCanonical(record)));records[position]=record;
-    }catch(error){failed=error;return;}
+     if(record.payment_covered===1)newlyCached.push(record);
+    }catch(error){
+     const priority={BUSINESS_PERIOD_CHECKPOINT:0,BUSINESS_PERIOD_BUSY:0,BUSINESS_PERIOD_UPSTREAM_UNAVAILABLE:1,BUSINESS_PERIOD_TIMEOUT:2,BUSINESS_PERIOD_RATE_LIMIT:3,BUSINESS_PERIOD_AUTH_REQUIRED:4,BUSINESS_PERIOD_INVALID_SOURCE:5};
+     if(!failed||priority[businessDiagnostic(error)]>priority[businessDiagnostic(failed)])failed=error;
+     return;
+    }
    }
   };
   await Promise.all(Array.from({length:4},()=>worker()));if(failed)throw failed;
+  remainingTimeout();
   const stamp=epoch(),pages=run.pages_read+1,orderCount=observed.records.length+records.length;
   const status=!listing.more?'COMPLETE':pages>=200||orderCount>=1000?'LIMIT_REACHED':'RUNNING';
   try{businessFrame({...run,revision:run.revision+1,status,checked_at:stamp,pages_read:pages,duplicate_orders:run.duplicate_orders+duplicates,last_error:null},[...observed.records,...records]);}
@@ -293,10 +327,17 @@ export async function runFinanceBusinessPeriod(env,options={}){
   }throw error;}
   const statements=records.map(record=>prepare('INSERT INTO finance_business_period_orders(run_id,order_hash,bucket,payment_covered,sales_raw,escrow_raw,ads_raw,returns_seen,items,source_hash,checked_at) SELECT ?,?,?,?,?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM finance_business_period_runs WHERE '+guard+')',[input.run_id,record.order_hash,record.bucket,record.payment_covered,record.sales_raw,record.escrow_raw,record.ads_raw,record.returns_seen,record.items,record.source_hash,record.checked_at,...guardArgs(stamp)]));
   if(listing.more)statements.push(prepare('INSERT INTO finance_business_period_cursors(run_id,cursor_hash) SELECT ?,? WHERE EXISTS(SELECT 1 FROM finance_business_period_runs WHERE '+guard+')',[input.run_id,await businessHash(nextCursor),...guardArgs(stamp)]));
+  statements.push(prepare('DELETE FROM finance_business_period_payment_cache WHERE run_id=? AND EXISTS(SELECT 1 FROM finance_business_period_runs WHERE '+guard+')',[input.run_id,...guardArgs(stamp)]));
   statements.push(prepare('UPDATE finance_business_period_runs SET cursor=?,pages_read=?,duplicate_orders=?,status=?,revision=revision+1,checked_at=?,lease_owner=NULL,lease_until=NULL,last_error=NULL WHERE '+guard,[nextCursor,pages,run.duplicate_orders+duplicates,status,stamp,...guardArgs(stamp)]));
   const committed=await storage(()=>db.batch(statements));return (await snapshot(input.run_id,committed.at(-1)?.meta?.changes===1?undefined:'BUSINESS_PERIOD_CONFLICT')).frame;
  }catch(error){
-  const stamp=epoch();await storage(()=>prepare("UPDATE finance_business_period_runs SET lease_owner=NULL,lease_until=NULL,last_error='BUSINESS_PERIOD_UPSTREAM_UNAVAILABLE',checked_at=? WHERE run_id=? AND partner_id=? AND shop_id=? AND revision=? AND lease_owner=?",[stamp,input.run_id,...businessIdentity,run.revision,owner]).run());
+  const stamp=epoch(),diagnostic=businessDiagnostic(error),cache=[];
+  // This is an optional checkpoint, never a partial cohort. Keep its private
+  // value bounded even when a valid page has unusually many item lines.
+  for(const record of new Map([...retainedCache,...newlyCached].map(record=>[record.order_hash,record])).values())if(cache.length<20&&businessEncoder.encode(JSON.stringify([...cache,record])).byteLength<=1048576)cache.push(record);
+  const statements=[prepare('DELETE FROM finance_business_period_payment_cache WHERE run_id=? AND EXISTS(SELECT 1 FROM finance_business_period_runs WHERE '+guard+')',[input.run_id,...guardArgs(stamp)]),...cache.map(record=>prepare('INSERT INTO finance_business_period_payment_cache(run_id,order_hash,bucket,payment_covered,sales_raw,escrow_raw,ads_raw,returns_seen,items,source_hash,checked_at) SELECT ?,?,?,?,?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM finance_business_period_runs WHERE '+guard+')',[input.run_id,record.order_hash,record.bucket,record.payment_covered,record.sales_raw,record.escrow_raw,record.ads_raw,record.returns_seen,record.items,record.source_hash,record.checked_at,...guardArgs(stamp)]))];
+  statements.push(prepare('UPDATE finance_business_period_runs SET revision=revision+?,lease_owner=NULL,lease_until=NULL,last_error=?,checked_at=? WHERE '+guard,[newlyCached.length?1:0,diagnostic,stamp,...guardArgs(stamp)]));
+  const saved=await storage(()=>db.batch(statements));if(saved.at(-1)?.meta?.changes!==1)return (await snapshot(input.run_id,'BUSINESS_PERIOD_CONFLICT')).frame;
   return (await snapshot(input.run_id)).frame;
  }
 }

@@ -91,7 +91,9 @@ export async function forwardFinancePaymentSample(request,env,{validateInternalA
  const length=request.headers.get('content-length');
  if(length!==null&&(!/^\d+$/.test(length)||Number(length)>maximumInput))return routerFailure('INVALID_REQUEST',400);
  const controller=new AbortController();let reader,timer;
- const deadline=new Promise((resolve,reject)=>{timer=setTimeout(()=>{controller.abort();try{reader?.cancel().catch(()=>{});}catch{}reject(Error('DEADLINE'));},45000);});
+ // Monthly collection yields its progress within 20 seconds. Leave time for
+ // this router to report a failure before the App's outer 45-second deadline.
+ const deadline=new Promise((resolve,reject)=>{timer=setTimeout(()=>{controller.abort();try{reader?.cancel().catch(()=>{});}catch{}reject(Error('DEADLINE'));},business?35000:45000);});
  const work=async()=>{
   let body;try{body=await readSampleBody(request.body,maximumInput,controller,value=>{reader=value;});}catch{return routerFailure('INVALID_REQUEST',400);}
   const input=production?projectProductionOrdersRequest(body):storePeriod?(business?projectBusinessPeriodRequest(body):projectStorePeriodRequest(body)):catalog?projectVariantCatalogRequest(body):body;

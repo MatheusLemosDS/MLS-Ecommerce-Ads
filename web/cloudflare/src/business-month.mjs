@@ -39,6 +39,7 @@ export function projectBusinessMonth(value){
   if(plain(value)&&Object.hasOwn(value,'source_checked_at'))keys.push('source_checked_at');
   if(plain(value)&&Object.hasOwn(value,'cost_rules_revision'))keys.push('cost_rules_revision');
   if(plain(value)&&Object.hasOwn(value,'classification_revision'))keys.push('classification_revision');
+  if(plain(value)&&Object.hasOwn(value,'collection'))keys.push('collection');
   if(!exact(value,keys)||value.schema!=='business_month_v1'||typeof value.month!=='string'||!/^\d{4}-(0[1-9]|1[0-2])$/.test(value.month)||!day(value.start_date)||value.start_date!==value.month+'-01'||!day(value.end_date)||value.end_date.slice(0,7)!==value.month||!['RUNNING','COMPLETE','LIMIT_REACHED'].includes(value.status)||!int(value.checked_at,1,9999999999)||!int(value.bindings_revision,1,2147483647)||!int(value.costs_revision,1,2147483647)||!plain(value.progress)||!exact(value.coverage,covKeys))return null;
   const span=Number(value.end_date.slice(8)),p=value.progress,c=value.coverage;
   const hasCapacity=Object.hasOwn(p,'order_capacity');
@@ -72,6 +73,15 @@ export function projectBusinessMonth(value){
   const result=value.result;
   if(!exact(result,['net_estimate_cents','net_profit_cents','net_margin_bps','pending','basis'])||!cent(result.net_estimate_cents,true)||result.net_profit_cents!==null||!cent(result.net_margin_bps,true)||result.basis!=='PAID_ORDER_CREATE_MONTH_AND_CALENDAR_ADS_ESTIMATE'||!array(result.pending,codes.length)||new Set(result.pending).size!==result.pending.length||!result.pending.every(code=>codes.includes(code)))return null;
   const pending=result.pending,has=code=>pending.includes(code);
+  let collection=null;
+  if(Object.hasOwn(value,'collection')){
+   collection=value.collection;
+   const retryCodes=['BUSINESS_PERIOD_CHECKPOINT','BUSINESS_PERIOD_BUSY','BUSINESS_PERIOD_CONFLICT','BUSINESS_PERIOD_RATE_LIMIT','BUSINESS_PERIOD_TIMEOUT','BUSINESS_PERIOD_UPSTREAM_UNAVAILABLE'],blockedCodes=['BUSINESS_PERIOD_AUTH_REQUIRED','BUSINESS_PERIOD_INVALID_SOURCE','BUSINESS_PERIOD_PERMISSION_DENIED'];
+   if(!exact(collection,['schema','state','code','retry_after_seconds'])||collection.schema!=='business_month_collection_v1'||!['READY','RETRY_WAIT','BLOCKED'].includes(collection.state)||!int(collection.retry_after_seconds,0,1800))return null;
+   if(collection.state==='READY'?(collection.code!==null||collection.retry_after_seconds!==0):collection.state==='RETRY_WAIT'?(!retryCodes.includes(collection.code)||collection.retry_after_seconds<1):(!blockedCodes.includes(collection.code)||collection.retry_after_seconds!==0))return null;
+   const yielded=['BUSINESS_PERIOD_CHECKPOINT','BUSINESS_PERIOD_BUSY','BUSINESS_PERIOD_CONFLICT'].includes(collection.code);
+   if(collection.state!=='READY'&&(yielded?has('SOURCE_UNAVAILABLE'):!has('SOURCE_UNAVAILABLE')))return null;
+  }
   if(['known_sales_cents','known_expected_repass_cents','known_production_cost_cents',...(tax?.status==='PENDING'?[]:['known_invoice_tax_cents'])].some(key=>value[key]===null)&&!has('ARITHMETIC_UNSAFE'))return null;
   if(tax?.status==='PENDING'&&!has('TAX_POLICY_REQUIRED')||tax?.status!=='PENDING'&&has('TAX_POLICY_REQUIRED'))return null;
   if(sources&&value.month===currentDay.slice(0,7)&&sources.finance_oldest_at!==null&&value.checked_at-sources.finance_oldest_at>900&&!has('FINANCIAL_SOURCE_STALE'))return null;
@@ -87,7 +97,7 @@ export function projectBusinessMonth(value){
   if(canCalculate){const addBack=expense.recharge_treatment==='ADS_RECHARGE'?value.ads_adjustment_cents:0;expected=safe(BigInt(value.expected_repass_cents)-BigInt(value.production_cost_cents)-BigInt(value.invoice_tax_cents)+BigInt(addBack)-BigInt(ads.expense_cents)-BigInt(expense.external_expenses_cents));if(expected===null)return null;if(value.sales_cents>0)margin=safe(BigInt(expected)*10000n/BigInt(value.sales_cents));}
   if(result.net_estimate_cents!==expected||result.net_margin_bps!==margin)return null;
   let products=null;if(Object.hasOwn(value,'product_summary')&&value.product_summary!==null){products=projectBusinessMonthProducts(value.product_summary,value);if(!products)return null;}
-  return Object.fromEntries(keys.map(key=>[key,key==='progress'?{...p}:key==='coverage'?{...c}:key==='expenses'?{...expense}:key==='tax'?{...tax}:key==='source_checked_at'?{...sources}:key==='ads'?ads:key==='product_summary'?products:key==='result'?{...result,pending:[...pending]}:key==='unmapped_variants'?value.unmapped_variants.map(row=>({...row})):value[key]]));
+  return Object.fromEntries(keys.map(key=>[key,key==='progress'?{...p}:key==='coverage'?{...c}:key==='expenses'?{...expense}:key==='tax'?{...tax}:key==='source_checked_at'?{...sources}:key==='collection'?{...collection}:key==='ads'?ads:key==='product_summary'?products:key==='result'?{...result,pending:[...pending]}:key==='unmapped_variants'?value.unmapped_variants.map(row=>({...row})):value[key]]));
  }catch{return null;}
 }
 
@@ -117,9 +127,9 @@ export async function businessMonth(env,input,services,options={}){
  try{return await businessMonthOperation(env,input,services,options);}
  catch(error){if(error instanceof BusinessMonthError)throw error;throw new BusinessMonthError('BUSINESS_MONTH_UNAVAILABLE',503);}
 }
-async function businessMonthOperation(env,input,services,{now=()=>Date.now(),actor='admin'}={}){
+async function businessMonthOperation(env,input,services,{now=()=>Date.now(),actor='admin',onProductsDiscovered=null}={}){
  let stamp;try{const clock=now();if(!Number.isSafeInteger(clock)||clock<=0)throw Error();stamp=Math.floor(clock/1000);}catch{businessMonthFail('BUSINESS_MONTH_CLOCK',503);}
- if(!env?.ADMIN_DB||typeof env.ADMIN_DB.batch!=='function'||!businessMonthPlain(input))businessMonthFail('BUSINESS_MONTH_CONFIGURATION',503);
+ if(!env?.ADMIN_DB||typeof env.ADMIN_DB.batch!=='function'||!businessMonthPlain(input)||onProductsDiscovered!==null&&typeof onProductsDiscovered!=='function')businessMonthFail('BUSINESS_MONTH_CONFIGURATION',503);
  const operation=Object.getOwnPropertyDescriptor(input,'operation')?.value;
  const expenseOperation=operation==='expenses';
  if(!businessMonthExact(input,expenseOperation?['operation','month','revision','external_expenses_cents','recharge_treatment']:['operation','month'])||!['start','step','read','ads','expenses'].includes(operation))businessMonthFail('BUSINESS_MONTH_REQUEST_INVALID');
@@ -133,14 +143,24 @@ async function businessMonthOperation(env,input,services,{now=()=>Date.now(),act
   if(operation!=='start'&&operation!=='read'&&operation!=='ads'&&!expenseOperation)businessMonthFail('BUSINESS_MONTH_START_REQUIRED',409);
   observed=await businessMonthCreateRun(db,input.month,range,stamp,observed);
  }
- if(operation==='start'||operation==='step')observed=await businessMonthAdvance(env,db,input.month,range,stamp,observed,services);
- if(operation==='ads'){
-  if(typeof services?.getAdsCalendar!=='function')businessMonthFail('BUSINESS_MONTH_ADS_UNAVAILABLE',503);
-  let report;try{report=projectAdsCalendar(await services.getAdsCalendar(env,{start_date:range.start_date,end_date:range.end_date}));}catch{businessMonthFail('BUSINESS_MONTH_ADS_UNAVAILABLE',503);}
-  if(!report||report.start_date!==range.start_date||report.end_date!==range.end_date||report.fetched_at>stamp+60||stamp-report.fetched_at>(range.current?60:900))businessMonthFail('BUSINESS_MONTH_ADS_INVALID',503);
-  await db.prepare('INSERT INTO business_month_ads(month,payload,updated_at) VALUES(?,?,?) ON CONFLICT(month) DO UPDATE SET payload=excluded.payload,updated_at=excluded.updated_at WHERE business_month_ads.updated_at<=excluded.updated_at').bind(input.month,JSON.stringify(report),report.fetched_at).run();
+ try{
+  if(operation==='start'||operation==='step')observed=await businessMonthAdvance(env,db,input.month,range,stamp,observed,services);
+  if(operation==='ads'){
+   if(typeof services?.getAdsCalendar!=='function')businessMonthFail('BUSINESS_MONTH_ADS_UNAVAILABLE',503);
+   let report;try{report=projectAdsCalendar(await services.getAdsCalendar(env,{start_date:range.start_date,end_date:range.end_date}));}catch{businessMonthFail('BUSINESS_MONTH_ADS_UNAVAILABLE',503);}
+   if(!report||report.start_date!==range.start_date||report.end_date!==range.end_date||report.fetched_at>stamp+60||stamp-report.fetched_at>(range.current?60:900))businessMonthFail('BUSINESS_MONTH_ADS_INVALID',503);
+   await db.prepare('INSERT INTO business_month_ads(month,payload,updated_at) VALUES(?,?,?) ON CONFLICT(month) DO UPDATE SET payload=excluded.payload,updated_at=excluded.updated_at WHERE business_month_ads.updated_at<=excluded.updated_at').bind(input.month,JSON.stringify(report),report.fetched_at).run();
+  }
+  return await businessMonthBundle(db,input.month,range,stamp,observed);
+ }finally{
+  // Discovery uses every validated imported item, including already priced
+  // products in a partial month. An independent catalogue queue failure must
+  // not discard a valid financial result or replace its original source error.
+  if(onProductsDiscovered){
+   const itemIds=[...new Set(observed.payload.slots.flatMap(slot=>slot.frame?.items.map(row=>row.item_id)||[]))];
+   try{await onProductsDiscovered(itemIds);}catch{}
+  }
  }
- return businessMonthBundle(db,input.month,range,stamp,observed);
 }
 
 async function businessMonthSaveExpenses(db,input,actor,stamp){
@@ -253,7 +273,14 @@ async function businessMonthBundle(db,month,range,stamp,observed){
  }catch{businessMonthFail('BUSINESS_MONTH_STORAGE_INVALID',503);}
  const frames=observed.payload.slots.flatMap(slot=>slot.frame?[slot.frame]:[]),complete=frames.length===range.slots.length&&frames.every(frame=>frame.status==='COMPLETE'),limited=frames.some(frame=>frame.status==='LIMIT_REACHED');
  const coverage=Object.fromEntries(businessMonthCoverageKeys.map(key=>[key,frames.reduce((sum,frame)=>sum+frame.coverage[key],0)]));
- const pending=[];if(!complete)pending.push(limited?'PERIOD_LIMIT_REACHED':'COLLECTING');if(frames.some(frame=>frame.diagnostic!==null))pending.push('SOURCE_UNAVAILABLE');if(coverage.cancel_pending+coverage.other+coverage.unknown>0)pending.push('STATUS_REVIEW_REQUIRED');if(coverage.payment_missing>0)pending.push('PAYMENT_INCOMPLETE');if(coverage.returns+coverage.returns_unknown>0)pending.push('RETURNS_NOT_RECONCILED');
+ // A held lease or a deliberately bounded checkpoint is normal progress.
+ // Only a provider failure blocks this cohort as SOURCE_UNAVAILABLE.
+ const waits={BUSINESS_PERIOD_CHECKPOINT:1,BUSINESS_PERIOD_BUSY:2,BUSINESS_PERIOD_CONFLICT:2,BUSINESS_PERIOD_UPSTREAM_UNAVAILABLE:10,BUSINESS_PERIOD_TIMEOUT:5,BUSINESS_PERIOD_RATE_LIMIT:30};
+ const blocked=['BUSINESS_PERIOD_AUTH_REQUIRED','BUSINESS_PERIOD_INVALID_SOURCE','BUSINESS_PERIOD_PERMISSION_DENIED'],yielded=['BUSINESS_PERIOD_CHECKPOINT','BUSINESS_PERIOD_BUSY','BUSINESS_PERIOD_CONFLICT'];
+ const diagnostics=frames.map(frame=>frame.diagnostic).filter(code=>code!==null);
+ const blocking=diagnostics.find(code=>blocked.includes(code)),provider=diagnostics.filter(code=>!yielded.includes(code)),retry=provider.sort((a,b)=>(waits[b]||0)-(waits[a]||0))[0]||diagnostics.sort((a,b)=>(waits[b]||0)-(waits[a]||0))[0];
+ const collection=blocking?{schema:'business_month_collection_v1',state:'BLOCKED',code:blocking,retry_after_seconds:0}:retry?{schema:'business_month_collection_v1',state:'RETRY_WAIT',code:retry,retry_after_seconds:waits[retry]}:{schema:'business_month_collection_v1',state:'READY',code:null,retry_after_seconds:0};
+ const pending=[];if(!complete)pending.push(limited?'PERIOD_LIMIT_REACHED':'COLLECTING');if(provider.length)pending.push('SOURCE_UNAVAILABLE');if(coverage.cancel_pending+coverage.other+coverage.unknown>0)pending.push('STATUS_REVIEW_REQUIRED');if(coverage.payment_missing>0)pending.push('PAYMENT_INCOMPLETE');if(coverage.returns+coverage.returns_unknown>0)pending.push('RETURNS_NOT_RECONCILED');
  const sum=field=>{let amount=0n;for(const frame of frames){const cents=businessMonthCents(frame[field]);if(cents===null)return null;amount+=cents;}return businessMonthSafe(amount);};
  const knownSales=sum('known_sales_base_raw'),knownPayout=sum('known_expected_repass_raw'),knownAdjustment=sum('known_ads_adjustment_raw');
  // MEI DAS belongs to the month, including a month without sales. The old
@@ -279,7 +306,7 @@ async function businessMonthBundle(db,month,range,stamp,observed){
  let net=null,margin=null;
  if(!pending.length){const addBack=expense.recharge_treatment==='ADS_RECHARGE'?adjustment:0;net=businessMonthSafe(BigInt(payout)-BigInt(production)-BigInt(tax)+BigInt(addBack)-BigInt(ads.expense_cents)-BigInt(expense.external_expenses_cents));if(net===null)pending.push('ARITHMETIC_UNSAFE');else if(sales>0){margin=businessMonthSafe(BigInt(net)*10000n/BigInt(sales));if(margin===null){net=null;pending.push('ARITHMETIC_UNSAFE');}}}
  const result={schema:'business_month_v1',month,start_date:range.start_date,end_date:range.end_date,status:complete?'COMPLETE':limited?'LIMIT_REACHED':'RUNNING',checked_at:checkedAt,progress:{windows_total:range.slots.length,windows_complete:frames.filter(frame=>frame.status==='COMPLETE').length,pages_read:frames.reduce((sum,frame)=>sum+frame.pages_read,0),order_capacity:frames.reduce((sum,frame)=>sum+frame.pages_read*(frame.page_capacity??5),0)},coverage,sales_cents:sales,known_sales_cents:knownSales,expected_repass_cents:payout,known_expected_repass_cents:knownPayout,production_cost_cents:production,known_production_cost_cents:knownProduction,invoice_tax_cents:tax,known_invoice_tax_cents:knownTax,ads_adjustment_cents:adjustment,ads,expenses:expense,result:{net_estimate_cents:net,net_profit_cents:null,net_margin_bps:margin,pending,basis:'PAID_ORDER_CREATE_MONTH_AND_CALENDAR_ADS_ESTIMATE'},unmapped_variants:unmapped,bindings_revision:bindings.revision,costs_revision:costs.revision};
- result.tax=taxPolicy;result.source_checked_at=sourceCheckedAt;
+ result.tax=taxPolicy;result.source_checked_at=sourceCheckedAt;result.collection=collection;
  result.cost_rules_revision=automaticCosts.revision;result.classification_revision=automaticCosts.classification_revision;
  result.product_summary=buildBusinessMonthProducts(frames,result,variantReferences,bindings);
  const projected=projectBusinessMonth(result);if(!projected)businessMonthFail('BUSINESS_MONTH_RESULT_INVALID',503);return projected;

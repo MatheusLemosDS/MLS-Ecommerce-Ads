@@ -58,6 +58,139 @@ function browser(value=fixture(),search=''){
  const settle=async()=>{for(let index=0;index<10;index++)await Promise.resolve();};
  return {run,load,context,settle,text:name=>run("text(control("+JSON.stringify(name)+"))")};
 }
+function collectionFixture(state='READY',code=null,wait=0,changes={}){
+ const source=fixture(),pending=['COLLECTING','PRODUCTION_COST_INCOMPLETE','INVOICE_TAX_UNAVAILABLE','ADJUSTMENT_UNAVAILABLE'];
+ if(state!=='READY'&&!['BUSINESS_PERIOD_CHECKPOINT','BUSINESS_PERIOD_BUSY','BUSINESS_PERIOD_CONFLICT'].includes(code))pending.push('SOURCE_UNAVAILABLE');
+ return fixture({...source,status:'RUNNING',progress:{windows_total:2,windows_complete:1,pages_read:1},sales_cents:null,expected_repass_cents:null,production_cost_cents:null,invoice_tax_cents:null,ads_adjustment_cents:null,result:{...source.result,net_estimate_cents:null,net_margin_bps:null,pending},collection:{schema:'business_month_collection_v1',state,code,retry_after_seconds:wait},...changes});
+}
+const recoveryTick=b=>b.run('clock+=[...timers.values()][0].delay;[...timers.values()][0].callback()');
+const operations=b=>JSON.parse(b.run("JSON.stringify(calls.map(call=>call.body?.operation||'observe'))"));
+
+test('a durable checkpoint observes saved progress and resumes only step after its delay',async()=>{
+ const waiting=collectionFixture('RETRY_WAIT','BUSINESS_PERIOD_CHECKPOINT',3),ready=collectionFixture(),done=fixture({collection:{schema:'business_month_collection_v1',state:'READY',code:null,retry_after_seconds:0}}),b=browser(waiting);
+ b.context.ready=JSON.stringify(ready);b.context.done=JSON.stringify(done);
+ b.run("Math.random=()=>0;customApi=async(path,body)=>JSON.parse(!body?ready:['step','ads'].includes(body.operation)?done:JSON.stringify(currentFrame));");
+ assert.equal(await b.run('brazaMonthDashboard.start({api,syncVariants})'),true);
+ assert.deepEqual(operations(b),['read','start']);assert.equal(b.text('Badge'),'Aguardando retomada automática');assert.match(b.text('Status'),/preservados/);assert.equal(b.run("control('Pause').hidden"),false);
+ assert.equal(b.run('[...timers.values()][0].delay'),3000);
+ await recoveryTick(b);
+ assert.deepEqual(operations(b),['read','start','observe','step','ads']);assert.match(b.text('Net'),/43,00/);assert.doesNotMatch(b.text('Status'),/Diagnóstico da coleta/);
+});
+
+test('an ambiguous step timeout preserves partial amounts and observes before any retry without replaying start or expenses',async()=>{
+ const running=collectionFixture(),done=fixture({collection:{schema:'business_month_collection_v1',state:'READY',code:null,retry_after_seconds:0}}),b=browser(running);
+ b.context.done=JSON.stringify(done);
+ b.run("Math.random=()=>0;let stepFailures=0;customApi=async(path,body)=>{if(body?.operation==='step'&&stepFailures++===0)throw Object.assign(Error('Private provider URL must stay private'),{code:'ADMIN_API_TIMEOUT',status:null});return JSON.parse(body&&['step','ads'].includes(body.operation)?done:JSON.stringify(currentFrame));};");
+ assert.equal(await b.run('brazaMonthDashboard.start({api,syncVariants})'),false);
+ assert.deepEqual(operations(b),['read','start','step']);assert.match(b.text('SalesHelp'),/100,00/);assert.equal(b.text('Net'),'Em apuração');assert.equal(b.text('Badge'),'Aguardando retomada automática');assert.doesNotMatch(b.text('Status'),/Private provider/);
+ await recoveryTick(b);
+ assert.deepEqual(operations(b),['read','start','step','observe','step','ads']);assert.match(b.text('Net'),/43,00/);assert.equal(operations(b).filter(op=>op==='start').length,1);assert.ok(!operations(b).includes('expenses'));
+});
+
+test('an observed completion after a timeout does not replay start, step or Ads',async()=>{
+ const running=collectionFixture(),done=fixture({collection:{schema:'business_month_collection_v1',state:'READY',code:null,retry_after_seconds:0}}),b=browser(running);b.context.done=JSON.stringify(done);
+ b.run("customApi=async(path,body)=>{if(!body)return JSON.parse(done);if(body.operation==='step')throw Object.assign(Error('Timeout'),{code:'ADMIN_API_TIMEOUT',status:null});return JSON.parse(JSON.stringify(currentFrame));};");
+ await b.run('brazaMonthDashboard.start({api,syncVariants})');await recoveryTick(b);
+ assert.deepEqual(operations(b),['read','start','step','observe']);assert.match(b.text('Net'),/43,00/);assert.equal(b.text('Badge'),'Previsão completa');assert.match(b.text('Status'),/financeira foi concluída/);
+});
+
+test('an observed financial completion makes one first Ads read when none was submitted before the interrupted finance request',async()=>{
+ const source=fixture(),done=fixture({...source,ads:null,result:{...source.result,net_estimate_cents:null,net_margin_bps:null,pending:['ADS_UNAVAILABLE']},collection:{schema:'business_month_collection_v1',state:'READY',code:null,retry_after_seconds:0}}),priced=fixture({collection:done.collection}),b=browser(collectionFixture());b.context.done=JSON.stringify(done);b.context.priced=JSON.stringify(priced);
+ b.run("customApi=async(path,body)=>{if(!body)return JSON.parse(done);if(body.operation==='step')throw Object.assign(Error('Timeout'),{code:'ADMIN_API_TIMEOUT'});if(body.operation==='ads')return JSON.parse(priced);return JSON.parse(JSON.stringify(currentFrame));};");
+ await b.run('brazaMonthDashboard.start({api,syncVariants})');await recoveryTick(b);
+ assert.deepEqual(operations(b),['read','start','step','observe','ads']);assert.equal(operations(b).filter(op=>op==='ads').length,1);assert.equal(b.run('timers.size'),1);assert.match(b.text('Ads'),/10,00/);assert.match(b.text('Net'),/43,00/);assert.match(b.text('Status'),/Dados do mês atualizados/);
+});
+
+test('failure of the first Ads read after observed finance completion stops without replaying Ads, finance or expenses',async()=>{
+ const source=fixture(),done=fixture({...source,ads:null,result:{...source.result,net_estimate_cents:null,net_margin_bps:null,pending:['ADS_UNAVAILABLE']},collection:{schema:'business_month_collection_v1',state:'READY',code:null,retry_after_seconds:0}}),b=browser(collectionFixture());b.context.done=JSON.stringify(done);
+ b.run("customApi=async(path,body)=>{if(!body)return JSON.parse(done);if(['step','ads'].includes(body.operation))throw Object.assign(Error('Private upstream payload'),{code:'ADMIN_API_TIMEOUT'});return JSON.parse(JSON.stringify(currentFrame));};");
+ await b.run('brazaMonthDashboard.start({api,syncVariants})');assert.equal(await recoveryTick(b),false);
+ assert.deepEqual(operations(b),['read','start','step','observe','ads']);assert.equal(b.run('timers.size'),0);assert.equal(b.text('Net'),'Em conciliação');assert.match(b.text('Status'),/Não foi possível atualizar os anúncios/);assert.doesNotMatch(b.text('Status'),/Private upstream/);
+ b.run('document.hidden=true;document.handlers.visibilitychange();document.hidden=false;document.handlers.visibilitychange();');assert.equal(b.run('timers.size'),0);assert.equal(operations(b).filter(op=>op==='ads').length,1);assert.ok(!operations(b).includes('expenses'));
+});
+
+test('an initial cache miss and ambiguous start timeout observe the durable job without fabricating totals or replaying start',async()=>{
+ const ready=collectionFixture(),done=fixture({collection:{schema:'business_month_collection_v1',state:'READY',code:null,retry_after_seconds:0}}),b=browser();b.context.ready=JSON.stringify(ready);b.context.done=JSON.stringify(done);
+ b.run("customApi=async(path,body)=>{if(!body)return JSON.parse(ready);if(body.operation==='read')throw Object.assign(Error('No saved frame'),{code:'ADMIN_API_HTTP_ERROR',status:409});if(body.operation==='start')throw Object.assign(Error('Start timed out'),{code:'ADMIN_API_TIMEOUT'});return JSON.parse(done);};");
+ assert.equal(await b.run('brazaMonthDashboard.start({api,syncVariants})'),false);
+ assert.deepEqual(operations(b),['read','start']);assert.equal(b.text('Sales'),'Pendente');assert.equal(b.text('Ads'),'Pendente');assert.equal(b.text('Net'),'Em apuração');assert.equal(b.text('Badge'),'Aguardando retomada automática');assert.doesNotMatch(b.text('SalesHelp'),/0,00/);
+ await recoveryTick(b);assert.deepEqual(operations(b),['read','start','observe','step','ads']);assert.match(b.text('Net'),/43,00/);assert.equal(operations(b).filter(op=>op==='start').length,1);
+});
+
+test('an ambiguous Ads submission is never converted into a financial recovery or a second Ads read',async()=>{
+ const b=browser(fixture({collection:{schema:'business_month_collection_v1',state:'READY',code:null,retry_after_seconds:0}}));
+ b.run("customApi=async(path,body)=>{if(body.operation==='ads')throw Object.assign(Error('Ads timed out'),{code:'ADMIN_API_TIMEOUT'});return JSON.parse(JSON.stringify(currentFrame));};");
+ assert.equal(await b.run('brazaMonthDashboard.start({api,syncVariants})'),false);assert.deepEqual(operations(b),['read','start','ads']);assert.equal(b.run('timers.size'),0);
+ b.run('document.hidden=true;document.handlers.visibilitychange();document.hidden=false;document.handlers.visibilitychange();');assert.deepEqual(operations(b),['read','start','ads']);assert.equal(b.run('timers.size'),0);
+});
+
+test('eight retries without progress suspend step requests while GET observes cron progress and resumes automatically',async()=>{
+ const waiting=collectionFixture('RETRY_WAIT','BUSINESS_PERIOD_CHECKPOINT',1),ready=collectionFixture(),progress=collectionFixture('READY',null,0,{progress:{windows_total:2,windows_complete:1,pages_read:2}}),done=fixture({collection:{schema:'business_month_collection_v1',state:'READY',code:null,retry_after_seconds:0}}),b=browser(waiting);
+ b.context.ready=JSON.stringify(ready);b.context.progress=JSON.stringify(progress);b.context.done=JSON.stringify(done);
+ b.run("Math.random=()=>0;let externalProgress=false;customApi=async(path,body)=>JSON.parse(!body?(externalProgress?progress:ready):body.operation==='step'&&externalProgress?done:body.operation==='ads'?done:JSON.stringify(currentFrame));");
+ await b.run('brazaMonthDashboard.start({api,syncVariants})');
+ for(let index=0;index<8;index++)await recoveryTick(b);
+ assert.equal(operations(b).filter(op=>op==='step').length,8);assert.equal(b.run('[...timers.values()][0].delay'),60000);assert.match(b.text('Status'),/aguardando avanço/);
+ for(let index=0;index<3;index++)await recoveryTick(b);
+ assert.equal(operations(b).filter(op=>op==='step').length,8,'observing unchanged data cannot reset the request budget');
+ b.run('externalProgress=true;');await recoveryTick(b);
+ assert.equal(operations(b).filter(op=>op==='step').length,9);assert.match(b.text('Net'),/43,00/);assert.equal(operations(b).filter(op=>op==='start').length,1);
+});
+
+test('lower job counters cannot release another retry budget by returning to the already observed high-water marks',async()=>{
+ const waiting=collectionFixture('RETRY_WAIT','BUSINESS_PERIOD_CHECKPOINT',1,{progress:{windows_total:2,windows_complete:1,pages_read:2}}),lower=collectionFixture(),b=browser(waiting);b.context.lower=JSON.stringify(lower);
+ b.run("Math.random=()=>0;let lowerObservation=false;customApi=async(path,body)=>JSON.parse(!body&&lowerObservation?lower:JSON.stringify(currentFrame));");
+ await b.run('brazaMonthDashboard.start({api,syncVariants})');for(let index=0;index<8;index++)await recoveryTick(b);
+ assert.equal(operations(b).filter(op=>op==='step').length,8);
+ b.run('lowerObservation=true;');await recoveryTick(b);b.run('lowerObservation=false;');await recoveryTick(b);
+ assert.equal(operations(b).filter(op=>op==='step').length,8);assert.equal(b.run('[...timers.values()][0].delay'),60000);
+});
+
+test('fixed provider backoff is not restarted by unchanged GET observations and each wait is bounded to sixty seconds',async()=>{
+ const waiting=collectionFixture('RETRY_WAIT','BUSINESS_PERIOD_RATE_LIMIT',1800),done=fixture({collection:{schema:'business_month_collection_v1',state:'READY',code:null,retry_after_seconds:0}}),b=browser(waiting);b.context.done=JSON.stringify(done);
+ b.run("Math.random=()=>0;customApi=async(path,body)=>JSON.parse(body&&['step','ads'].includes(body.operation)?done:JSON.stringify(currentFrame));");
+ await b.run('brazaMonthDashboard.start({api,syncVariants})');
+ for(let index=0;index<29;index++){assert.equal(b.run('[...timers.values()][0].delay'),60000);await recoveryTick(b);}
+ assert.equal(operations(b).filter(op=>op==='step').length,0);await recoveryTick(b);
+ assert.equal(operations(b).filter(op=>op==='step').length,1);assert.match(b.text('Net'),/43,00/);
+});
+
+test('authorization and invalid-source collection blocks keep partial values and never create automatic source requests',async()=>{
+ for(const code of ['BUSINESS_PERIOD_AUTH_REQUIRED','BUSINESS_PERIOD_INVALID_SOURCE','BUSINESS_PERIOD_PERMISSION_DENIED']){
+  const b=browser(collectionFixture('BLOCKED',code));await b.run('brazaMonthDashboard.start({api,syncVariants})');
+  assert.deepEqual(operations(b),['read','start']);assert.equal(b.run('timers.size'),0);assert.equal(b.text('Badge'),'Consulta requer atenção');assert.equal(b.text('Net'),'Em apuração');assert.match(b.text('SalesHelp'),/100,00/);assert.match(b.text('Status'),/preservados/);
+  b.run('document.hidden=true;document.handlers.visibilitychange();document.hidden=false;document.handlers.visibilitychange();');assert.equal(b.run('timers.size'),0);
+ }
+});
+
+test('recovery pauses for visibility, explicit pause and expense drafts without sending an expense write',async()=>{
+ const waiting=collectionFixture('RETRY_WAIT','BUSINESS_PERIOD_CONFLICT',1),b=browser(waiting);await b.run('brazaMonthDashboard.start({api,syncVariants})');
+ b.run('document.hidden=true;document.handlers.visibilitychange();clock+=10000;');assert.equal(b.run('timers.size'),0);
+ b.run('document.hidden=false;document.handlers.visibilitychange();');assert.equal(b.run('timers.size'),1);
+ b.run("control('Pause').onclick();");assert.equal(b.run('timers.size'),0);assert.equal(b.text('Badge'),'Consulta pausada');
+ await b.run('brazaMonthDashboard.refresh()');
+ b.run("control('ExpensesValue').value='7.00';control('ExpensesValue').oninput();");assert.equal(b.run('timers.size'),0);assert.equal(b.run("control('ExpensesValue').value"),'7.00');
+ b.run("control('ExpensesReload').onclick();");assert.equal(b.run('timers.size'),1);assert.ok(!operations(b).includes('observe'));assert.ok(!operations(b).includes('expenses'));
+ b.run('brazaMonthDashboard.stop();document.hidden=true;document.handlers.visibilitychange();document.hidden=false;document.handlers.visibilitychange();');assert.equal(b.run('timers.size'),0);
+});
+
+test('a hidden or stopped page ignores a pending observation before it could advance a source step',async()=>{
+ for(const action of ['document.hidden=true;document.handlers.visibilitychange();','brazaMonthDashboard.stop();']){
+  const waiting=collectionFixture('RETRY_WAIT','BUSINESS_PERIOD_CONFLICT',1),ready=collectionFixture(),b=browser(waiting);b.context.ready=JSON.stringify(ready);
+  b.run("let releaseObserve;customApi=async(path,body)=>body?JSON.parse(JSON.stringify(currentFrame)):new Promise(resolve=>releaseObserve=resolve);");
+  await b.run('brazaMonthDashboard.start({api,syncVariants})');const observing=recoveryTick(b);await b.settle();
+  b.run(action+'releaseObserve(JSON.parse(ready));');await observing;
+  assert.deepEqual(operations(b),['read','start','observe']);assert.equal(b.run('timers.size'),0);
+ }
+});
+
+test('transient observation failures back off but an owner authorization failure ends recovery',async()=>{
+ const b=browser(collectionFixture('RETRY_WAIT','BUSINESS_PERIOD_TIMEOUT',1));
+ b.run("let observations=0;customApi=async(path,body)=>{if(!body)throw Object.assign(Error('Private response'),observations++===0?{code:'ADMIN_API_TIMEOUT',status:200}:{code:'ADMIN_API_TIMEOUT',status:401});return JSON.parse(JSON.stringify(currentFrame));};");
+ await b.run('brazaMonthDashboard.start({api,syncVariants})');await recoveryTick(b);
+ assert.equal(b.run('timers.size'),1);assert.match(b.text('Status'),/consulta está temporariamente indisponível/);assert.doesNotMatch(b.text('Status'),/Private response/);
+ await recoveryTick(b);assert.equal(b.run('timers.size'),0);assert.deepEqual(operations(b),['read','start','observe','observe']);assert.match(b.text('Status'),/confira a conexão financeira/);
+});
 
 test('monthly body has one clear card per business metric and responsive scoped markup',()=>{
  const body=businessMonthBody(),ids=[...body.matchAll(/\bid="([^"]+)"/g)].map(match=>match[1]);

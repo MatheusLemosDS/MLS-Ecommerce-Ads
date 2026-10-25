@@ -13,7 +13,7 @@ async function login(){
  assert.equal(response.status,303);const cookie=response.headers.get('set-cookie').split(';')[0],state=await(await adminFetch(new Request(origin+'/api/admin/state',{headers:{cookie}}),env)).json();
  return {env,cookie,csrf:state.csrf};
 }
-const request=(auth,body,options={})=>new Request(origin+'/api/admin/finance/business-month'+(options.search||''),{method:options.method||'POST',headers:{cookie:options.cookie??auth.cookie,origin:options.origin??origin,'x-csrf-token':options.csrf??auth.csrf,'content-type':'application/json'},body:options.method==='GET'?undefined:options.raw??JSON.stringify(body)});
+const request=(auth,body,options={})=>new Request(origin+'/api/admin/finance/business-month'+(options.search||''),{method:options.method||'POST',headers:{cookie:options.cookie??auth.cookie,origin:options.origin??origin,'x-csrf-token':options.csrf??auth.csrf,'content-type':'application/json'},body:['GET','HEAD'].includes(options.method)?undefined:options.raw??JSON.stringify(body)});
 const snapshot=auth=>({expenses:auth.env.ADMIN_DB.db.prepare('SELECT * FROM business_month_expenses').all(),audit:auth.env.ADMIN_DB.db.prepare('SELECT * FROM business_month_expenses_audit').all(),jobs:auth.env.ADMIN_DB.db.prepare('SELECT id FROM hermes_jobs').all()});
 const emptyFrame=selection=>({schema:'finance_business_period_v1',run_id:'11111111-1111-4111-8111-'+String(selection.start_date.slice(8)).padStart(12,'0'),revision:2,status:'COMPLETE',...selection,cutoff_at:stamp()-1,checked_at:stamp(),currency:'BRL',monetary_unit:'UNCONFIRMED',pages_read:1,duplicate_orders:0,coverage:{orders:0,paid:0,completed:0,ongoing:0,cancelled:0,cancel_pending:0,unpaid:0,other:0,unknown:0,payment_covered:0,payment_missing:0,returns:0,returns_unknown:0},known_sales_base_raw:'0',sales_base_raw:'0',known_expected_repass_raw:'0',expected_repass_raw:'0',known_ads_adjustment_raw:'0',ads_adjustment_raw:'0',invoice_tax:{schema:'store_invoice_tax_v1',rate_bps:200,basis:'PAYMENT_GOODS_VALUE_PER_ORDER_ESTIMATE',rounding:'HALF_UP_PER_ORDER',covered_orders:0,unavailable_orders:0,known_base_raw:'0',known_tax_raw:'0'},items:[],diagnostic:null,basis:'CREATE_TIME_PAID_ORDER_ESTIMATE_NOT_SETTLED'});
 function services(){
@@ -27,11 +27,30 @@ function services(){
 
 test('monthly collection is admin-only, exact-origin and CSRF protected before any source or expense write',async()=>{
  const auth=await login(),source=services(),before=snapshot(auth),body={operation:'start',month};
- for(const [options,status] of [[{cookie:''},401],[{cookie:'mls_session=review'},401],[{origin:'https://other.invalid'},403],[{csrf:''},403],[{method:'GET'},405]])assert.equal((await adminFetch(request(auth,body,options),auth.env,source)).status,status);
+ for(const [options,status] of [[{cookie:''},401],[{cookie:'mls_session=review'},401],[{origin:'https://other.invalid'},403],[{csrf:''},403],[{method:'GET'},400],[{method:'HEAD'},405]])assert.equal((await adminFetch(request(auth,body,options),auth.env,source)).status,status);
  for(const input of [{...body,shop_id:1178167501},{...body,month:'2026-13'},{...body,operation:'publish'},{}])assert.equal((await adminFetch(request(auth,input),auth.env,source)).status,400);
  assert.equal((await adminFetch(request(auth,body,{search:'?month='+month}),auth.env,source)).status,400);
  assert.equal((await adminFetch(request(auth,body,{raw:' '.repeat(513)+JSON.stringify(body)}),auth.env,source)).status,413);
  assert.deepEqual(source.calls,{finance:0,ads:0});assert.deepEqual(snapshot(auth),before);
+});
+
+test('owner GET observes a saved month without replaying source requests or changing expenses',async()=>{
+ const auth=await login(),source=services();
+ const started=await adminFetch(request(auth,{operation:'start',month}),auth.env,source);assert.equal(started.status,200);const saved=await started.json(),before=snapshot(auth),calls={...source.calls};
+ const response=await adminFetch(new Request(origin+'/api/admin/finance/business-month?month='+month,{headers:{cookie:auth.cookie}}),auth.env,source);
+ assert.equal(response.status,200);assert.equal(response.headers.get('access-control-allow-origin'),null);assert.ok(/no-store/.test(response.headers.get('cache-control')));
+ const observed=await response.json();assert.equal(observed.month,saved.month);assert.deepEqual(observed.progress,saved.progress);assert.deepEqual(observed.coverage,saved.coverage);assert.equal(observed.sales_cents,saved.sales_cents);assert.deepEqual(source.calls,calls);assert.deepEqual(snapshot(auth),before);
+ for(const cookie of ['', 'mls_session=review'])assert.equal((await adminFetch(request(auth,undefined,{method:'GET',search:'?month='+month,cookie}),auth.env,source)).status,401);
+ for(const search of ['', '?month=', '?month=2026-13', '?month=2026-1', '?month='+month+'&month='+month, '?month='+month+'&operation=step', '?shop_id=1178167501', '?Month='+month]){
+  const invalid=await adminFetch(request(auth,undefined,{method:'GET',search}),auth.env,source);assert.equal(invalid.status,400,search);assert.deepEqual(await invalid.json(),{error:'BUSINESS_MONTH_REQUEST_INVALID'});
+ }
+ assert.equal((await adminFetch(request(auth,undefined,{method:'HEAD',search:'?month='+month}),auth.env,source)).status,405);
+ assert.deepEqual(source.calls,calls);assert.deepEqual(snapshot(auth),before);
+});
+
+test('owner GET can prepare an uncollected month without calling finance or Ads',async()=>{
+ const auth=await login(),source=services(),before=snapshot(auth),response=await adminFetch(request(auth,undefined,{method:'GET',search:'?month='+month,csrf:''}),auth.env,source);
+ assert.equal(response.status,200);const observed=await response.json();assert.equal(observed.month,month);assert.equal(observed.status,'RUNNING');assert.equal(observed.coverage.orders,0);assert.deepEqual(source.calls,{finance:0,ads:0});assert.deepEqual(snapshot(auth),before);
 });
 
 test('a complete empty MEI month still deducts its one monthly DAS after the zero external expense declaration, without a Hermes job',async()=>{

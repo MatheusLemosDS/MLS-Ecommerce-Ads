@@ -17,7 +17,7 @@ async function fixture(statuses=defaults){
  let queue=Promise.resolve();const batch=db.batch.bind(db);db.batch=statements=>{const next=queue.then(()=>batch(statements));queue=next.catch(()=>{});return next;};
  const env={FINANCE_DB:db,FINANCE_CONNECTION_ENABLED:'true',FINANCE_TOKEN_ENCRYPTION_KEY:Buffer.alloc(32,31).toString('base64'),SHOPEE_FINANCE_PARTNER_KEY:key};
  const store=await createFinanceStore(env,{now});await store.setup();await store.saveTokens({access_token:access,refresh_token:refresh,expires_at:Math.floor(now()/1000)+14400});
- const calls=[],state={statuses:[...statuses],mode:'normal',active:0,maxActive:0,hold:false,started:null,release:null,base:100,itemLists:{},moneyByIndex:{},pageSize:20,expectedPageSize:20,detailPadding:0,detailBodyBytes:0,phaseMs:0,beforeListMs:0,paymentReads:0,gateFirstPaymentWave:false};
+ const calls=[],state={statuses:[...statuses],mode:'normal',active:0,maxActive:0,hold:false,started:null,release:null,base:100,itemLists:{},moneyByIndex:{},pageSize:20,expectedPageSize:20,detailPadding:0,detailBodyBytes:0,phaseMs:0,beforeListMs:0,paymentReads:0,gateFirstPaymentWave:false,paymentFailures:{}};
  let paymentGate,releasePaymentGate;
  const itemList=index=>state.itemLists[index]||[{item_id:100,model_id:index%2,model_quantity_purchased:2}];
  const fetchImpl=async request=>{
@@ -59,6 +59,10 @@ async function fixture(statuses=defaults){
   }else await Promise.resolve();
   state.active--;
   if(++state.paymentReads%4===0)clock.time+=state.phaseMs;
+  const fault=state.paymentFailures[index];
+  if(fault==='timeout')return new Promise(()=>{});
+  if(typeof fault==='number')return Response.json({error:'PRIVATE_PROVIDER_ERROR',message:key},{status:fault});
+  if(typeof fault==='string')return Response.json({error:fault,message:key});
   if(state.mode==='ongoing-unavailable'&&state.statuses[index]!=='COMPLETED')return Response.json({error:'order_not_ready',message:'PRIVATE_BUSINESS_MESSAGE'},{status:503});
   if(state.mode==='ongoing-api-unavailable'&&state.statuses[index]!=='COMPLETED')return Response.json({error:'order_not_found',message:'PRIVATE_BUSINESS_MESSAGE'});
   if(state.mode==='ongoing-auth-rejected'&&state.statuses[index]!=='COMPLETED')return Response.json({error:'error_auth',message:key},{status:403});
@@ -79,7 +83,7 @@ async function fixture(statuses=defaults){
  const run=input=>runFinanceBusinessPeriod(env,{fetchImpl,now,...input}),start=()=>run({operation:'start',start_date:'2026-10-14',end_date:'2026-10-20'});
  return {db,env,clock,now,store,calls,state,fetchImpl,run,start};
 }
-const snapshot=f=>({runs:f.db.db.prepare('SELECT * FROM finance_business_period_runs ORDER BY run_id').all(),orders:f.db.db.prepare('SELECT * FROM finance_business_period_orders ORDER BY run_id,order_hash').all(),cursors:f.db.db.prepare('SELECT * FROM finance_business_period_cursors ORDER BY run_id,cursor_hash').all()});
+const snapshot=f=>({runs:f.db.db.prepare('SELECT * FROM finance_business_period_runs ORDER BY run_id').all(),orders:f.db.db.prepare('SELECT * FROM finance_business_period_orders ORDER BY run_id,order_hash').all(),cursors:f.db.db.prepare('SELECT * FROM finance_business_period_cursors ORDER BY run_id,cursor_hash').all(),cache:f.db.db.prepare('SELECT * FROM finance_business_period_payment_cache ORDER BY run_id,order_hash').all()});
 async function finish(f){let frame=await f.start();for(let steps=0;frame.status==='RUNNING'&&steps<202;steps++){frame=await f.run({operation:'step',run_id:frame.run_id});if(frame.diagnostic)break;}return frame;}
 
 test('start/read is private, scoped and read-only; invalid periods and bindings fail before provider calls',async()=>{
@@ -116,15 +120,89 @@ test('twenty-order detail bodies may exceed 64 KiB while the one-MiB detail boun
  const f=await fixture(Array(20).fill('COMPLETED'));f.state.detailPadding=4000;const frame=await finish(f);
  assert.ok(f.state.detailBodyBytes>64*1024);assert.ok(f.state.detailBodyBytes<1024*1024);assert.equal(frame.status,'COMPLETE');assert.equal(frame.coverage.orders,20);assert.equal(frame.coverage.payment_covered,20);assert.ok(projectBusinessPeriodFrame(frame));assert.ok(!JSON.stringify(frame).includes('description'));
  const g=await fixture(Array(20).fill('COMPLETED'));g.state.detailPadding=53000;const job=await g.start(),before=snapshot(g),failed=await g.run({operation:'step',run_id:job.run_id});
- assert.ok(g.state.detailBodyBytes>1024*1024);assert.equal(failed.status,'RUNNING');assert.equal(failed.diagnostic,'BUSINESS_PERIOD_UPSTREAM_UNAVAILABLE');assert.equal(failed.pages_read,0);assert.equal(failed.coverage.orders,0);assert.equal(g.calls.length,2);assert.deepEqual(snapshot(g).orders,before.orders);assert.deepEqual(snapshot(g).cursors,before.cursors);
+ assert.ok(g.state.detailBodyBytes>1024*1024);assert.equal(failed.status,'RUNNING');assert.equal(failed.diagnostic,'BUSINESS_PERIOD_INVALID_SOURCE');assert.equal(failed.pages_read,0);assert.equal(failed.coverage.orders,0);assert.equal(g.calls.length,2);assert.deepEqual(snapshot(g).orders,before.orders);assert.deepEqual(snapshot(g).cursors,before.cursors);
 });
 
-test('a simulated forty-second page commits but a page reaching its forty-five-second lease cannot commit partial rows',async()=>{
+test('a slow page yields to its twenty-second budget, preserves verified Payments and resumes without replaying them',async()=>{
  const f=await fixture(Array(20).fill('COMPLETED')),job=await f.start(),started=f.now();f.state.phaseMs=5000;f.state.beforeListMs=5000;
- const complete=await f.run({operation:'step',run_id:job.run_id});assert.equal(f.now()-started,40000);assert.equal(complete.status,'COMPLETE');assert.equal(complete.coverage.orders,20);assert.equal(snapshot(f).orders.length,20);
- const g=await fixture(Array(20).fill('COMPLETED')),pending=await g.start(),before=snapshot(g),initial=g.now();g.state.phaseMs=5000;g.state.beforeListMs=10000;
- const expired=await g.run({operation:'step',run_id:pending.run_id});assert.equal(g.now()-initial,45000);assert.equal(expired.status,'RUNNING');assert.equal(expired.diagnostic,'BUSINESS_PERIOD_CONFLICT');assert.equal(expired.coverage.orders,0);assert.equal(expired.pages_read,0);assert.deepEqual(snapshot(g).orders,before.orders);assert.deepEqual(snapshot(g).cursors,before.cursors);
- g.state.phaseMs=0;const resumed=await g.run({operation:'step',run_id:pending.run_id});assert.equal(resumed.status,'COMPLETE');assert.equal(resumed.coverage.orders,20);assert.equal(snapshot(g).orders.length,20);
+ const yielded=await f.run({operation:'step',run_id:job.run_id});assert.equal(f.now()-started,20000);assert.equal(yielded.status,'RUNNING');assert.equal(yielded.diagnostic,'BUSINESS_PERIOD_CHECKPOINT');assert.equal(yielded.coverage.orders,0);assert.equal(yielded.pages_read,0);assert.ok(snapshot(f).cache.length>0);assert.equal(snapshot(f).orders.length,0);
+ const cached=snapshot(f).cache,alreadyRead=f.calls.filter(request=>new URL(request.url).pathname===payment).map(request=>new URL(request.url).searchParams.get('order_sn'));
+ f.state.phaseMs=0;const resumed=await f.run({operation:'step',run_id:job.run_id});assert.equal(resumed.status,'COMPLETE');assert.equal(resumed.coverage.orders,20);assert.equal(snapshot(f).orders.length,20);assert.equal(snapshot(f).cache.length,0);
+ for(const serial of alreadyRead)assert.equal(f.calls.filter(request=>new URL(request.url).pathname===payment&&new URL(request.url).searchParams.get('order_sn')===serial).length,1);
+ for(const record of cached)assert.equal(snapshot(f).orders.find(row=>row.order_hash===record.order_hash).checked_at,record.checked_at);
+});
+
+test('a rate failure after nineteen valid Payments checkpoints privately and retries only the missing payment',async()=>{
+ const f=await fixture(Array(20).fill('COMPLETED')),job=await f.start();f.state.paymentFailures[19]=429;
+ const stopped=await f.run({operation:'step',run_id:job.run_id});assert.equal(stopped.diagnostic,'BUSINESS_PERIOD_RATE_LIMIT');assert.equal(stopped.status,'RUNNING');assert.equal(stopped.coverage.orders,0);assert.equal(stopped.pages_read,0);assert.equal(stopped.revision,job.revision+1);assert.equal(snapshot(f).cache.length,19);assert.equal(snapshot(f).orders.length,0);
+ const cached=snapshot(f).cache;for(const secret of ['PRIVATE_BUSINESS_ORDER',key,access,refresh])assert.ok(!JSON.stringify(snapshot(f)).includes(secret));
+ f.clock.time+=30000;delete f.state.paymentFailures[19];const completed=await f.run({operation:'step',run_id:job.run_id});assert.equal(completed.status,'COMPLETE');assert.equal(completed.coverage.payment_covered,20);assert.equal(completed.sales_base_raw,'2000');assert.equal(snapshot(f).cache.length,0);assert.equal(f.calls.filter(request=>new URL(request.url).pathname===payment).length,21);
+ for(const record of cached)assert.equal(snapshot(f).orders.find(row=>row.order_hash===record.order_hash).checked_at,record.checked_at);assert.equal(completed.source_checked_at.oldest_at,job.checked_at);
+});
+
+test('transient failures in ongoing orders retain retry diagnostics while generic authorization errors never request a token reset',async()=>{
+ for(const [fault,diagnostic] of [[429,'RATE_LIMIT'],['error_rate_limit','RATE_LIMIT'],['error_limit','RATE_LIMIT'],[503,'UPSTREAM_UNAVAILABLE'],['error_server','UPSTREAM_UNAVAILABLE'],['err_busy','UPSTREAM_UNAVAILABLE'],[504,'TIMEOUT'],['timeout','TIMEOUT'],['unknown_provider_error','INVALID_SOURCE'],[401,'INVALID_SOURCE'],[403,'INVALID_SOURCE'],['error_auth','INVALID_SOURCE'],['error_api_permission','INVALID_SOURCE'],['error_sign','INVALID_SOURCE'],['error_token','AUTH_REQUIRED']]){
+  const f=await fixture(['SHIPPED']),job=await f.start(),tokens=await f.store.readTokens();f.state.paymentFailures[0]=fault;
+  const stopped=await f.run({operation:'step',run_id:job.run_id,timeoutMs:15});assert.equal(stopped.diagnostic,'BUSINESS_PERIOD_'+diagnostic,String(fault));assert.equal(stopped.status,'RUNNING');assert.equal(stopped.coverage.orders,0);assert.equal(stopped.pages_read,0);assert.equal(snapshot(f).cache.length,0);assert.deepEqual(await f.store.readTokens(),tokens);
+ }
+});
+
+test('stored rate-limit and timeout gates prevent browser reloads or cron steps from bypassing a bounded retry delay',async()=>{
+ for(const [fault,delay] of [[429,30],['error_rate_limit',30],['error_limit',30],[504,5],[503,10]]){
+  const f=await fixture(['COMPLETED']),job=await f.start();f.state.paymentFailures[0]=fault;const failed=await f.run({operation:'step',run_id:job.run_id}),calls=f.calls.length;
+  delete f.state.paymentFailures[0];assert.deepEqual(await f.run({operation:'step',run_id:job.run_id}),failed);assert.equal(f.calls.length,calls);
+  f.clock.time+=(delay-1)*1000;assert.deepEqual(await f.run({operation:'step',run_id:job.run_id}),failed);assert.equal(f.calls.length,calls);
+  f.clock.time+=1000;const resumed=await f.run({operation:'step',run_id:job.run_id});assert.equal(resumed.status,'COMPLETE');assert.equal(resumed.coverage.payment_covered,1);assert.equal(f.calls.length,calls+3);
+ }
+});
+
+test('concurrent upstream failures retain the rate-limit delay instead of downgrading it to a generic busy response',async()=>{
+ const f=await fixture(Array(20).fill('COMPLETED')),job=await f.start();f.state.gateFirstPaymentWave=true;f.state.paymentFailures={0:429,1:503,2:504};
+ const stopped=await f.run({operation:'step',run_id:job.run_id});assert.equal(stopped.diagnostic,'BUSINESS_PERIOD_RATE_LIMIT');assert.equal(stopped.coverage.orders,0);const calls=f.calls.length;
+ f.clock.time+=29000;await f.run({operation:'step',run_id:job.run_id});assert.equal(f.calls.length,calls);
+});
+
+test('expired-run cleanup removes its private Payment checkpoint along with the original cohort',async()=>{
+ const f=await fixture(Array(20).fill('COMPLETED')),job=await f.start();f.state.paymentFailures[19]=429;await f.run({operation:'step',run_id:job.run_id});assert.equal(snapshot(f).cache.length,19);
+ f.clock.time+=31*86400000;await f.start();assert.equal(snapshot(f).cache.length,0);assert.ok(snapshot(f).runs.every(run=>run.run_id!==job.run_id));
+});
+
+test('an already claimed token refresh or authorization yields busy without provider calls or losing the private checkpoint',async()=>{
+ for(const operation of ['refresh','authorization']){
+  const f=await fixture(Array(20).fill('COMPLETED')),job=await f.start();f.state.paymentFailures[19]=429;await f.run({operation:'step',run_id:job.run_id});f.clock.time+=30000;
+  const current=await f.store.readTokens(),lease=await (operation==='refresh'?f.store.claimRefresh(current.revision):f.store.claimAuthorization(current.revision)),before=snapshot(f),calls=f.calls.length;
+  const stopped=await f.run({operation:'step',run_id:job.run_id});assert.equal(stopped.diagnostic,'BUSINESS_PERIOD_BUSY');assert.equal(stopped.status,'RUNNING');assert.equal(stopped.coverage.orders,0);assert.equal(stopped.pages_read,0);assert.equal(f.calls.length,calls);assert.deepEqual(snapshot(f).cache,before.cache);assert.deepEqual(snapshot(f).orders,before.orders);assert.deepEqual(snapshot(f).cursors,before.cursors);
+  assert.equal((await f.store.status()).status,operation==='refresh'?'REFRESHING':'AUTHORIZING');assert.ok(lease.owner);
+ }
+});
+
+test('one unavailable token SELECT returns a retryable source error and preserves all nineteen verified payments',async()=>{
+ const f=await fixture(Array(20).fill('COMPLETED')),job=await f.start();f.state.paymentFailures[19]=429;await f.run({operation:'step',run_id:job.run_id});f.clock.time+=30000;
+ const prepare=f.db.prepare.bind(f.db);let injected=false;f.db.prepare=sql=>{
+  const statement=prepare(sql);
+  if(sql.startsWith('SELECT * FROM finance_connections WHERE')){const first=statement.first.bind(statement);statement.first=async()=>{if(!injected){injected=true;throw new Error('fixture token read unavailable');}return first();};}
+  return statement;
+ };
+ const before=snapshot(f),calls=f.calls.length,stopped=await f.run({operation:'step',run_id:job.run_id});assert.equal(injected,true);assert.equal(stopped.diagnostic,'BUSINESS_PERIOD_UPSTREAM_UNAVAILABLE');assert.equal(stopped.status,'RUNNING');assert.equal(stopped.coverage.orders,0);assert.equal(stopped.pages_read,0);assert.equal(f.calls.length,calls);assert.deepEqual(snapshot(f).cache,before.cache);assert.deepEqual(snapshot(f).orders,before.orders);assert.deepEqual(snapshot(f).cursors,before.cursors);
+ delete f.state.paymentFailures[19];f.clock.time+=10000;const resumed=await f.run({operation:'step',run_id:job.run_id});assert.equal(resumed.status,'COMPLETE');assert.equal(resumed.coverage.payment_covered,20);assert.equal(f.calls.length,calls+3);assert.equal(snapshot(f).cache.length,0);
+});
+
+test('a refresh-claim compare-and-swap conflict yields busy instead of blocking a healthy connection',async()=>{
+ const f=await fixture(['COMPLETED']),job=await f.start(),tokens=await f.store.readTokens();await f.store.saveTokens({access_token:access,refresh_token:refresh,expires_at:f.now()/1000+60},{expectedRevision:tokens.revision});
+ const prepare=f.db.prepare.bind(f.db);let injected=false;f.db.prepare=sql=>{
+  const statement=prepare(sql);
+  if(sql.startsWith("UPDATE finance_connections SET status = 'REFRESHING'")){statement.first=async()=>{injected=true;return null;};}
+  return statement;
+ };
+ const stopped=await f.run({operation:'step',run_id:job.run_id});assert.equal(injected,true);assert.equal(stopped.diagnostic,'BUSINESS_PERIOD_BUSY');assert.equal(stopped.coverage.orders,0);assert.equal(stopped.pages_read,0);assert.equal(f.calls.length,0);assert.equal((await f.store.status()).status,'CONNECTED');
+});
+
+test('resumption rechecks detail composition and detects cache tampering before provider calls',async()=>{
+ const f=await fixture(Array(20).fill('COMPLETED')),job=await f.start();f.state.paymentFailures[19]=429;await f.run({operation:'step',run_id:job.run_id});
+ f.state.itemLists[0]=[{item_id:100,model_id:99,model_quantity_purchased:1}];delete f.state.paymentFailures[19];f.clock.time+=30000;const calls=f.calls.length;
+ const completed=await f.run({operation:'step',run_id:job.run_id});assert.equal(completed.status,'COMPLETE');assert.equal(f.calls.length-calls,4);assert.equal(f.calls.filter(request=>new URL(request.url).pathname===payment&&new URL(request.url).searchParams.get('order_sn')===serial(0)).length,2);assert.ok(completed.items.some(row=>row.model_id==='99'));
+ const g=await fixture(Array(20).fill('COMPLETED')),pending=await g.start();g.state.paymentFailures[19]=429;await g.run({operation:'step',run_id:pending.run_id});const count=g.calls.length;
+ g.db.db.prepare("UPDATE finance_business_period_payment_cache SET escrow_raw='999999'").run();await assert.rejects(g.run({operation:'step',run_id:pending.run_id}),error=>error.code==='FINANCE_BUSINESS_STORAGE_INVALID');assert.equal(g.calls.length,count);
 });
 
 test('a resumed paginated import exposes old and new order observation times independently of its completion time',async()=>{
@@ -147,7 +225,7 @@ test('a delayed empty import exposes its conservative collection interval withou
 });
 
 test('ongoing Payment unavailable keeps its detail quantities and missing coverage, never zero or a fake total',async()=>{
- for(const mode of ['ongoing-unavailable','ongoing-api-unavailable']){
+ for(const mode of ['ongoing-api-unavailable']){
   const f=await fixture(['COMPLETED','SHIPPED']);f.state.mode=mode;const frame=await finish(f);
   assert.equal(frame.status,'COMPLETE');assert.equal(frame.diagnostic,null);assert.equal(frame.coverage.paid,2);assert.equal(frame.coverage.payment_covered,1);assert.equal(frame.coverage.payment_missing,1);assert.equal(frame.coverage.returns_unknown,1);assert.equal(frame.known_expected_repass_raw,'20');assert.equal(frame.expected_repass_raw,null);assert.equal(frame.known_sales_base_raw,'100');assert.equal(frame.sales_base_raw,null);assert.equal(frame.ads_adjustment_raw,null);assert.equal(frame.invoice_tax.covered_orders,1);assert.equal(frame.invoice_tax.unavailable_orders,1);assert.equal(frame.invoice_tax.known_tax_raw,'2');assert.equal(frame.items.reduce((sum,row)=>sum+row.quantity,0),4);assert.ok(projectBusinessPeriodFrame(frame));
  }
@@ -162,7 +240,7 @@ test('missing legitimate Payment amounts remain an atomic missing payment withou
 test('malformed identity, Payment poison, authorization and list/detail failures stop without committing a partial page',async()=>{
  for(const mode of ['list-http','currency','detail-foreign','detail-missing','date-foreign','amount-string','amount-subcent','payment-foreign','payment-items','payment-scope','ongoing-auth-rejected','ongoing-malformed']){
   const f=await fixture(['COMPLETED','SHIPPED']),job=await f.start(),before=snapshot(f),tokens=await f.store.readTokens();f.state.mode=mode;
-  const frame=await f.run({operation:'step',run_id:job.run_id});assert.equal(frame.status,'RUNNING',mode);assert.equal(frame.diagnostic,'BUSINESS_PERIOD_UPSTREAM_UNAVAILABLE',mode);assert.equal(frame.pages_read,0);assert.equal(frame.coverage.orders,0);assert.equal(frame.revision,job.revision);assert.deepEqual(snapshot(f).orders,before.orders);assert.deepEqual(snapshot(f).cursors,before.cursors);assert.deepEqual(await f.store.readTokens(),tokens);
+  const frame=await f.run({operation:'step',run_id:job.run_id});assert.equal(frame.status,'RUNNING',mode);assert.equal(frame.diagnostic,'BUSINESS_PERIOD_INVALID_SOURCE',mode);assert.equal(frame.pages_read,0);assert.equal(frame.coverage.orders,0);assert.equal(frame.revision,job.revision+(snapshot(f).cache.length?1:0));assert.deepEqual(snapshot(f).orders,before.orders);assert.deepEqual(snapshot(f).cursors,before.cursors);assert.deepEqual(await f.store.readTokens(),tokens);
   for(const secret of [key,access,'PRIVATE_BUSINESS','PRIVATE_FOREIGN'])assert.ok(!JSON.stringify(frame).includes(secret));
   f.state.mode='normal';const resumed=await f.run({operation:'step',run_id:job.run_id});assert.equal(resumed.status,'COMPLETE',mode);assert.equal(resumed.coverage.orders,2);
  }
@@ -199,9 +277,29 @@ test('simultaneous starts share one run; a held page lease cannot trigger duplic
  const conflict=await f.run({operation:'step',run_id:starts[0].run_id});assert.equal(conflict.diagnostic,'BUSINESS_PERIOD_CONFLICT');assert.equal(f.calls.length,1);f.state.hold=false;f.state.release();const completed=await inflight;assert.equal(completed.status,'COMPLETE');assert.equal(snapshot(f).orders.length,1);
 });
 
+test('a lease loser returns the completed winner without inventing a terminal conflict or masking invalid stored errors',async()=>{
+ for(const invalidTerminalError of [false,true]){
+  const f=await fixture(['COMPLETED']),job=await f.start(),prepare=f.db.prepare.bind(f.db);let injected=false,winner;
+  f.db.prepare=sql=>{
+   const statement=prepare(sql);
+   if(sql.startsWith('UPDATE finance_business_period_runs SET lease_owner=?')){
+    const execute=statement.run.bind(statement);statement.run=async()=>{
+     if(!injected){injected=true;winner=await f.run({operation:'step',run_id:job.run_id});if(invalidTerminalError)f.db.db.prepare('UPDATE finance_business_period_runs SET last_error=? WHERE run_id=?').run('BUSINESS_PERIOD_RATE_LIMIT',job.run_id);}
+     return execute();
+    };
+   }
+   return statement;
+  };
+  const loser=f.run({operation:'step',run_id:job.run_id});
+  if(invalidTerminalError)await assert.rejects(loser,error=>error.code==='FINANCE_BUSINESS_STORAGE_INVALID');
+  else{const result=await loser;assert.deepEqual(result,winner);assert.equal(result.status,'COMPLETE');assert.equal(result.diagnostic,null);assert.ok(projectBusinessPeriodFrame(result));}
+  assert.equal(injected,true);assert.equal(f.calls.length,3,'the loser must not repeat the winner\'s list, detail or Payment reads');assert.equal(snapshot(f).orders.length,1);
+ }
+});
+
 test('repeated provider rows are deduplicated by private hash, while repeated cursors never advance or corrupt a job',async()=>{
  const f=await fixture(Array(27).fill('COMPLETED'));f.state.mode='duplicate';const frame=await finish(f);assert.equal(frame.status,'COMPLETE');assert.equal(frame.coverage.orders,26);assert.equal(frame.duplicate_orders,1);assert.equal(snapshot(f).orders.length,26);
- const g=await fixture(Array(42).fill('COMPLETED'));g.state.mode='loop';const job=await g.start(),first=await g.run({operation:'step',run_id:job.run_id}),before=snapshot(g),failed=await g.run({operation:'step',run_id:job.run_id});assert.equal(failed.diagnostic,'BUSINESS_PERIOD_UPSTREAM_UNAVAILABLE');assert.equal(failed.revision,first.revision);assert.deepEqual(snapshot(g).orders,before.orders);assert.deepEqual(snapshot(g).cursors,before.cursors);
+ const g=await fixture(Array(42).fill('COMPLETED'));g.state.mode='loop';const job=await g.start(),first=await g.run({operation:'step',run_id:job.run_id}),before=snapshot(g),failed=await g.run({operation:'step',run_id:job.run_id});assert.equal(failed.diagnostic,'BUSINESS_PERIOD_INVALID_SOURCE');assert.equal(failed.revision,first.revision);assert.deepEqual(snapshot(g).orders,before.orders);assert.deepEqual(snapshot(g).cursors,before.cursors);
 });
 
 test('hash tampering with classifications, amounts, items or run scope is refused before provider reads',async()=>{
@@ -241,7 +339,7 @@ test('the final page reserves only remaining capacity and an already full run st
 
 test('a provider page larger than the reserved capacity cannot commit rows or advance a cursor',async()=>{
  const f=await fixture(Array(1010).fill('COMPLETED')),job=await f.start();seedCohort(f,job);f.state.mode='list-overfull';const before=snapshot(f);
- const frame=await f.run({operation:'step',run_id:job.run_id});assert.equal(frame.status,'RUNNING');assert.equal(frame.diagnostic,'BUSINESS_PERIOD_UPSTREAM_UNAVAILABLE');assert.equal(frame.coverage.orders,995);assert.equal(frame.pages_read,199);assert.deepEqual(snapshot(f).orders,before.orders);assert.deepEqual(snapshot(f).cursors,before.cursors);assert.equal(f.calls.length,1);
+ const frame=await f.run({operation:'step',run_id:job.run_id});assert.equal(frame.status,'RUNNING');assert.equal(frame.diagnostic,'BUSINESS_PERIOD_INVALID_SOURCE');assert.equal(frame.coverage.orders,995);assert.equal(frame.pages_read,199);assert.deepEqual(snapshot(f).orders,before.orders);assert.deepEqual(snapshot(f).cursors,before.cursors);assert.equal(f.calls.length,1);
 });
 
 test('a thousand collected orders with another provider page stays LIMIT_REACHED, never a complete monthly total',async()=>{
@@ -257,7 +355,7 @@ test('variant group overflow stops before committing its entire new page and ret
 
 test('paid product projection keeps exact exclusive money and model quantities while mixed money stays unallocated once',async()=>{
  const f=await fixture(['COMPLETED','COMPLETED','SHIPPED','CANCELLED','UNPAID']);
- f.state.mode='ongoing-unavailable';
+ f.state.mode='ongoing-api-unavailable';
  f.state.itemLists={
   0:[{item_id:201,model_id:0,model_quantity_purchased:2}],
   1:[{item_id:201,model_id:0,model_quantity_purchased:1},{item_id:202,model_id:10,model_quantity_purchased:2}],

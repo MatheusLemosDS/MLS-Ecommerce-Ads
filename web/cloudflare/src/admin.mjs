@@ -178,7 +178,14 @@ async function adminFetch(request,env,services={}){const url=new URL(request.url
   if(path.endsWith('/batches/action'))return json(await actProductionDtfBatch(env,body,services.getFinanceProductionOrders,current.user));
   return json(await prepareProductionDtfBatch(env,body,services.getFinanceProductionOrders,current.user));
  }
- if(path==='/api/admin/finance/business-month'&&request.method!=='POST')throw new AdminError('METHOD_NOT_ALLOWED',405);
+ if(path==='/api/admin/finance/business-month'){
+  if(request.method==='GET'){
+   const entries=[...url.searchParams];
+   assert(entries.length===1&&entries[0][0]==='month'&&/^[2-9][0-9]{3}-(?:0[1-9]|1[0-2])$/.test(entries[0][1]),'BUSINESS_MONTH_REQUEST_INVALID');
+   return json(await businessMonthWithCheckpoint(env,{operation:'read',month:entries[0][1]},services,{actor:current.user}));
+  }
+  assert(request.method==='POST','METHOD_NOT_ALLOWED',405);
+ }
  if(path==='/api/admin/finance/checkpoints'){
   assert(request.method==='GET','METHOD_NOT_ALLOWED',405);
   const entries=[...url.searchParams],keys=entries.map(([key])=>key);
