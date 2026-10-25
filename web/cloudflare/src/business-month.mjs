@@ -10,6 +10,19 @@ import {catalogClassificationQueries,catalogClassificationsFromSnapshot} from '.
 export class BusinessMonthError extends Error {
  constructor(code,status=400,diagnostic=null){super(code);this.status=status;if(diagnostic!==null)this.diagnostic=Object.freeze({...diagnostic});}
 }
+
+// The input already passed projectBusinessMonth on the server. Keep old open
+// tabs on their exact response shape; new clients explicitly request v2.
+export function businessMonthClientFrame(frame,contract='business-month-v1'){
+ if(contract==='business-month-v2')return frame;
+ if(contract!=='business-month-v1')throw new BusinessMonthError('BUSINESS_MONTH_CLIENT_CONTRACT_UNSUPPORTED',409);
+ const keys=['schema','month','start_date','end_date','status','checked_at','progress','coverage','sales_cents','known_sales_cents','expected_repass_cents','known_expected_repass_cents','production_cost_cents','known_production_cost_cents','invoice_tax_cents','known_invoice_tax_cents','ads_adjustment_cents','ads','expenses','result','unmapped_variants','bindings_revision','costs_revision','product_summary','tax','source_checked_at','cost_rules_revision','classification_revision'];
+ const collection=frame.collection,legacy=Object.fromEntries(keys.filter(key=>Object.hasOwn(frame,key)).map(key=>[key,frame[key]]));
+ // Older clients have no retry timer. A busy/yielded page must pause their
+ // tight step loop while the cron or another collector retains the lease.
+ if(legacy.status==='RUNNING'&&collection?.state==='RETRY_WAIT'&&!legacy.result.pending.includes('SOURCE_UNAVAILABLE'))legacy.result={...legacy.result,pending:[...legacy.result.pending,'SOURCE_UNAVAILABLE']};
+ return legacy;
+}
 export const BUSINESS_MONTH_SCHEMA=[
  ...TAX_POLICY_SCHEMA,
  ...COST_RULE_SCHEMA,

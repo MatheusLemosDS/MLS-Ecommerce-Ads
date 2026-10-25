@@ -13,7 +13,7 @@ async function login(){
  assert.equal(response.status,303);const cookie=response.headers.get('set-cookie').split(';')[0],state=await(await adminFetch(new Request(origin+'/api/admin/state',{headers:{cookie}}),env)).json();
  return {env,cookie,csrf:state.csrf};
 }
-const request=(auth,body,options={})=>new Request(origin+'/api/admin/finance/business-month'+(options.search||''),{method:options.method||'POST',headers:{cookie:options.cookie??auth.cookie,origin:options.origin??origin,'x-csrf-token':options.csrf??auth.csrf,'content-type':'application/json'},body:['GET','HEAD'].includes(options.method)?undefined:options.raw??JSON.stringify(body)});
+const request=(auth,body,options={})=>new Request(origin+'/api/admin/finance/business-month'+(options.search||''),{method:options.method||'POST',headers:{cookie:options.cookie??auth.cookie,origin:options.origin??origin,'x-csrf-token':options.csrf??auth.csrf,'content-type':'application/json',...(options.contract===undefined?{}:{'x-braza-client-contract':options.contract})},body:['GET','HEAD'].includes(options.method)?undefined:options.raw??JSON.stringify(body)});
 const snapshot=auth=>({expenses:auth.env.ADMIN_DB.db.prepare('SELECT * FROM business_month_expenses').all(),audit:auth.env.ADMIN_DB.db.prepare('SELECT * FROM business_month_expenses_audit').all(),jobs:auth.env.ADMIN_DB.db.prepare('SELECT id FROM hermes_jobs').all()});
 const emptyFrame=selection=>({schema:'finance_business_period_v1',run_id:'11111111-1111-4111-8111-'+String(selection.start_date.slice(8)).padStart(12,'0'),revision:2,status:'COMPLETE',...selection,cutoff_at:stamp()-1,checked_at:stamp(),currency:'BRL',monetary_unit:'UNCONFIRMED',pages_read:1,duplicate_orders:0,coverage:{orders:0,paid:0,completed:0,ongoing:0,cancelled:0,cancel_pending:0,unpaid:0,other:0,unknown:0,payment_covered:0,payment_missing:0,returns:0,returns_unknown:0},known_sales_base_raw:'0',sales_base_raw:'0',known_expected_repass_raw:'0',expected_repass_raw:'0',known_ads_adjustment_raw:'0',ads_adjustment_raw:'0',invoice_tax:{schema:'store_invoice_tax_v1',rate_bps:200,basis:'PAYMENT_GOODS_VALUE_PER_ORDER_ESTIMATE',rounding:'HALF_UP_PER_ORDER',covered_orders:0,unavailable_orders:0,known_base_raw:'0',known_tax_raw:'0'},items:[],diagnostic:null,basis:'CREATE_TIME_PAID_ORDER_ESTIMATE_NOT_SETTLED'});
 function services(){
@@ -67,4 +67,27 @@ test('a complete empty MEI month still deducts its one monthly DAS after the zer
 test('a poisoned monthly source cannot cross the authenticated aggregate boundary or produce a confirmed total',async()=>{
  const auth=await login(),source=services();source.getFinanceBusinessPeriod=async(env,{start_date,end_date})=>({...emptyFrame({start_date,end_date}),access_token:'PRIVATE_PROVIDER_TOKEN'});
  const response=await adminFetch(request(auth,{operation:'start',month}),auth.env,source);assert.equal(response.status,503);const raw=await response.text();assert.ok(!raw.includes('PRIVATE_PROVIDER_TOKEN'));assert.deepEqual(snapshot(auth),{expenses:[],audit:[],jobs:[]});
+});
+
+test('open legacy tabs and explicit modern clients receive their own exact monthly response contract',async()=>{
+ const auth=await login(),source=services();
+ const invalid=await adminFetch(request(auth,{operation:'start',month},{contract:'business-month-v3'}),auth.env,source);
+ assert.equal(invalid.status,409);assert.equal((await invalid.json()).error,'BUSINESS_MONTH_CLIENT_CONTRACT_UNSUPPORTED');assert.equal(source.calls.finance,0);
+ const modernResponse=await adminFetch(request(auth,{operation:'start',month},{contract:'business-month-v2'}),auth.env,source),modern=await modernResponse.json();
+ assert.equal(modernResponse.status,200);assert.equal(modernResponse.headers.get('x-braza-client-contract'),'business-month-v2');assert.equal(modern.collection.schema,'business_month_collection_v1');
+ const calls={...source.calls};
+ for(const contract of [undefined,'business-month-v1']){
+  const response=await adminFetch(request(auth,null,{method:'GET',search:'?month='+month,contract}),auth.env,source),legacy=await response.json();
+  assert.equal(response.status,200);assert.equal(response.headers.get('x-braza-client-contract'),'business-month-v1');assert.equal(response.headers.get('cache-control'),'no-store');assert.equal(response.headers.get('vary'),'X-Braza-Client-Contract');assert.equal(Object.hasOwn(legacy,'collection'),false);
+  assert.equal(legacy.known_sales_cents,modern.known_sales_cents);assert.deepEqual(legacy.progress,modern.progress);assert.deepEqual(legacy.expenses,modern.expenses);
+ }
+ assert.deepEqual(source.calls,calls);
+});
+
+test('a legacy client pauses a busy page while the modern contract retains automatic retry metadata',async()=>{
+ const auth=await login(),source=services();source.getFinanceBusinessPeriod=async(_,selection)=>{source.calls.finance++;return {...emptyFrame({start_date:selection.start_date,end_date:selection.end_date}),status:'RUNNING',pages_read:0,diagnostic:'BUSINESS_PERIOD_CONFLICT'};};
+ const first=await adminFetch(request(auth,{operation:'start',month},{contract:'business-month-v2'}),auth.env,source);assert.equal(first.status,200);const modern=await first.json();assert.equal(modern.collection.state,'RETRY_WAIT');assert.ok(!modern.result.pending.includes('SOURCE_UNAVAILABLE'));
+ const response=await adminFetch(request(auth,null,{method:'GET',search:'?month='+month}),auth.env,source),legacy=await response.json();
+ assert.equal(response.status,200);assert.equal(Object.hasOwn(legacy,'collection'),false);assert.ok(legacy.result.pending.includes('SOURCE_UNAVAILABLE'));assert.equal(legacy.result.net_estimate_cents,null);assert.deepEqual(legacy.coverage,modern.coverage);assert.equal(source.calls.finance,1);
+ const reread=await(await adminFetch(request(auth,null,{method:'GET',search:'?month='+month,contract:'business-month-v2'}),auth.env,source)).json();assert.deepEqual(reread.collection,modern.collection);assert.ok(!reread.result.pending.includes('SOURCE_UNAVAILABLE'));
 });

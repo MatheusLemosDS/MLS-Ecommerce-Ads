@@ -11,7 +11,7 @@ import {CSS,adminBody,loginBody} from './admin-view.mjs';
 import {CLIENT} from './admin-client.mjs';
 import {BUSINESS_MONTH_CLIENT} from './business-month-client.mjs';
 import {BUSINESS_MONTH_CSS} from './business-month-view.mjs';
-import {BUSINESS_MONTH_SCHEMA,BusinessMonthError} from './business-month.mjs';
+import {BUSINESS_MONTH_SCHEMA,BusinessMonthError,businessMonthClientFrame} from './business-month.mjs';
 import {BUSINESS_CHECKPOINT_SCHEMA,businessMonthWithCheckpoint,readBusinessCheckpoints,BusinessCheckpointError} from './business-checkpoint.mjs';
 import {CATALOG_CLASSIFICATION_SCHEMA,enqueueCatalogClassifications,runCatalogClassifications,readCatalogClassificationState,CatalogClassificationError} from './catalog-classification.mjs';
 import {readBusinessTaxPolicy,saveBusinessTaxPolicy,readBusinessTaxPolicyAudit,BusinessTaxPolicyError} from './business-tax-policy.mjs';
@@ -50,6 +50,11 @@ const SCHEMA = [
 `CREATE TABLE IF NOT EXISTS hermes_cost_audit (id INTEGER PRIMARY KEY AUTOINCREMENT, job_id TEXT NOT NULL, previous_cents INTEGER, cost_cents INTEGER NOT NULL, actor TEXT NOT NULL, created_at TEXT NOT NULL)`];
 const enc = new TextEncoder();
 const json = (value,status=200) => new Response(JSON.stringify(value),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'}});
+function businessMonthResponse(request,frame){
+ const contract=request.headers.get('x-braza-client-contract')||'business-month-v1';
+ const response=json(businessMonthClientFrame(frame,contract));
+ response.headers.set('x-braza-client-contract',contract);response.headers.set('vary','X-Braza-Client-Contract');return response;
+}
 class AdminError extends Error {constructor(code,status=400){super(code);this.status=status;}}
 function assert(condition,code,status=400){if(!condition)throw new AdminError(code,status);}
 async function digest(value,secret){const key=await crypto.subtle.importKey('raw',enc.encode(secret),{name:'HMAC',hash:'SHA-256'},false,['sign']);return [...new Uint8Array(await crypto.subtle.sign('HMAC',key,enc.encode(value)))].map(x=>x.toString(16).padStart(2,'0')).join('');}
@@ -179,10 +184,12 @@ async function adminFetch(request,env,services={}){const url=new URL(request.url
   return json(await prepareProductionDtfBatch(env,body,services.getFinanceProductionOrders,current.user));
  }
  if(path==='/api/admin/finance/business-month'){
+  const contract=request.headers.get('x-braza-client-contract');
+  assert(contract===null||['business-month-v1','business-month-v2'].includes(contract),'BUSINESS_MONTH_CLIENT_CONTRACT_UNSUPPORTED',409);
   if(request.method==='GET'){
    const entries=[...url.searchParams];
    assert(entries.length===1&&entries[0][0]==='month'&&/^[2-9][0-9]{3}-(?:0[1-9]|1[0-2])$/.test(entries[0][1]),'BUSINESS_MONTH_REQUEST_INVALID');
-   return json(await businessMonthWithCheckpoint(env,{operation:'read',month:entries[0][1]},services,{actor:current.user}));
+   return businessMonthResponse(request,await businessMonthWithCheckpoint(env,{operation:'read',month:entries[0][1]},services,{actor:current.user}));
   }
   assert(request.method==='POST','METHOD_NOT_ALLOWED',405);
  }
@@ -205,7 +212,7 @@ async function adminFetch(request,env,services={}){const url=new URL(request.url
   assert(request.method==='POST','METHOD_NOT_ALLOWED',405);sameOrigin(request);assert(await equal(request.headers.get('x-csrf-token')||'',current.csrf),'CSRF_REJECTED',403);assert(!url.search,'BUSINESS_SYNC_REQUEST_INVALID');
   return json(await saveBusinessSyncPolicy(env,await input(request,512),current.user));
  }
- if(request.method==='POST'){sameOrigin(request);assert(await equal(request.headers.get('x-csrf-token')||'',current.csrf),'CSRF_REJECTED',403);const body=await input(request,path==='/api/admin/finance/business-month'?512:['/api/admin/finance/payment-sample','/api/admin/finance/payment-preview','/api/admin/finance/ads-period'].includes(path)?128:path==='/api/admin/production-costs'?196608:path==='/api/admin/variant-bindings'?393216:path==='/api/admin/variant-bindings/sync'?131072:path==='/api/admin/variant-bindings/automate'?256:16384);if(path==='/api/admin/finance/business-month'){assert(!url.search,'BUSINESS_MONTH_REQUEST_INVALID');return json(await businessMonthWithCheckpoint(env,body,services,{actor:current.user}));}if(path==='/api/admin/finance/ads-period'){
+ if(request.method==='POST'){sameOrigin(request);assert(await equal(request.headers.get('x-csrf-token')||'',current.csrf),'CSRF_REJECTED',403);const body=await input(request,path==='/api/admin/finance/business-month'?512:['/api/admin/finance/payment-sample','/api/admin/finance/payment-preview','/api/admin/finance/ads-period'].includes(path)?128:path==='/api/admin/production-costs'?196608:path==='/api/admin/variant-bindings'?393216:path==='/api/admin/variant-bindings/sync'?131072:path==='/api/admin/variant-bindings/automate'?256:16384);if(path==='/api/admin/finance/business-month'){assert(!url.search,'BUSINESS_MONTH_REQUEST_INVALID');return businessMonthResponse(request,await businessMonthWithCheckpoint(env,body,services,{actor:current.user}));}if(path==='/api/admin/finance/ads-period'){
  assert(!url.search&&Object.keys(body).length===1&&Object.hasOwn(body,'run_id'),'STORE_ADS_REQUEST_INVALID');
  const selection=projectStorePeriodRequest({operation:'read',run_id:body.run_id});
  assert(selection,'STORE_ADS_REQUEST_INVALID');

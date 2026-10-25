@@ -11,6 +11,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
  ${projectBusinessMonth.toString()}
  ${buildBusinessCheckpoint.toString()}
  ${buildAccountDiagnosis.toString()}
+ const clientContract='business-month-v2';
  const el=id=>document.getElementById('businessMonth'+id);
  const node=(tag,text,cls)=>{const value=document.createElement(tag);if(text!==undefined)value.textContent=text;if(cls)value.className=cls;return value;};
  const pendingMessages={COLLECTING:'A consulta dos pedidos do mês ainda está em andamento.',PERIOD_LIMIT_REACHED:'A quantidade de pedidos ultrapassou o limite desta consulta. O mês permanece parcial.',SOURCE_UNAVAILABLE:'A Shopee não concluiu parte da leitura. Atualize o mês para retomar.',STATUS_REVIEW_REQUIRED:'Há pedidos em cancelamento ou com uma situação que ainda precisa ser conferida.',PAYMENT_INCOMPLETE:'A Shopee ainda não informou todos os valores financeiros dos pedidos pagos. Esses pedidos não são tratados como valor zero.',RETURNS_NOT_RECONCILED:'Há devoluções ou pedidos sem informação suficiente de devolução. Falta conciliar seus valores.',PRODUCTION_COST_INCOMPLETE:'Há produtos sem composição ou custo completo. A identificação automática preserva os vínculos já salvos.',INVOICE_TAX_UNAVAILABLE:'O valor do imposto ainda não está disponível para concluir o mês.',TAX_POLICY_REQUIRED:'O DAS-MEI deste ano ainda não está cadastrado. O imposto permanece pendente, sem usar 2% por nota.',FINANCIAL_SOURCE_STALE:'Os pedidos e repasses precisam de uma nova leitura. O resultado permanece em conferência até a atualização financeira.',ADS_UNAVAILABLE:'O gasto de anúncios ainda não foi confirmado para todos os dias do mês.',EXTERNAL_EXPENSES_REQUIRED:'Informe as outras despesas do mês ou escolha “Não tenho outras despesas”.',RECHARGE_TREATMENT_REQUIRED:'Confira se o ajuste financeiro corresponde a recarga de anúncios ou taxa de suporte.',ADJUSTMENT_UNAVAILABLE:'O ajuste financeiro de anúncios ou suporte ainda não foi informado por completo.',ARITHMETIC_UNSAFE:'Um valor excedeu o limite seguro de cálculo e não será apresentado como resultado.'};
@@ -215,7 +216,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
   const field=key=>{try{return Object.getOwnPropertyDescriptor(error||{},key)?.value;}catch{return undefined;}};
   const sourceCode=field('code'),sourceApiCode=field('apiCode'),sourceStatus=field('status');
   const transportCodes=['ADMIN_API_NETWORK_ERROR','ADMIN_API_TIMEOUT','ADMIN_API_HTTP_ERROR','ADMIN_API_RESPONSE_INVALID','ADMIN_API_CONFIGURATION','ADMIN_API_REQUEST_INVALID','BUSINESS_MONTH_SOURCE_UNAVAILABLE'];
-  return {operation:['start','step','read','ads'].includes(operation)?operation:'read',code:transportCodes.includes(sourceCode)?sourceCode:'BUSINESS_MONTH_REQUEST_FAILED',api_code:typeof sourceApiCode==='string'&&/^BUSINESS_MONTH_[A-Z0-9_]{1,64}$/.test(sourceApiCode)?sourceApiCode:null,http:Number.isInteger(sourceStatus)&&sourceStatus>=100&&sourceStatus<=599?sourceStatus:null};
+  return {client_contract:clientContract,operation:['start','step','read','ads'].includes(operation)?operation:'read',code:transportCodes.includes(sourceCode)?sourceCode:'BUSINESS_MONTH_REQUEST_FAILED',api_code:typeof sourceApiCode==='string'&&/^BUSINESS_MONTH_[A-Z0-9_]{1,64}$/.test(sourceApiCode)?sourceApiCode:null,http:Number.isInteger(sourceStatus)&&sourceStatus>=100&&sourceStatus<=599?sourceStatus:null};
  }
  function status(text,error=false){
   message=text;failed=error;const target=el('Status');target.replaceChildren();target.textContent=text;target.dataset.status=error?'error':'normal';
@@ -603,6 +604,6 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
   return refresh();
  }
  function stop(){started=false;catalogRequest++;catalogBusy=false;clearTimeout(catalogTimer);catalogTimer=null;paused=true;resumeOnVisible=false;collectionRecovery=null;generation++;checkpointHistoryRequest++;checkpointHistoryBusy=false;busy=false;adsBusy=false;clearTimeout(timer);timer=null;controls();}
- globalThis.brazaMonthDashboard={prepare,bootstrapState,start,refresh,refreshCosts,stop,supportsCatalogQueue:catalogFeature,syncCatalogCandidates,refreshCatalog:()=>{catalogNeedsRead=true;return updateCatalog();},catalogMetadata:item=>catalogProducts.get(item)||null};
+ globalThis.brazaMonthDashboard={clientContract,prepare,bootstrapState,start,refresh,refreshCosts,stop,supportsCatalogQueue:catalogFeature,syncCatalogCandidates,refreshCatalog:()=>{catalogNeedsRead=true;return updateCatalog();},catalogMetadata:item=>catalogProducts.get(item)||null};
 })();
 `;

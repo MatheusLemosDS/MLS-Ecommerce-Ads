@@ -1,6 +1,7 @@
 // This factory is embedded into the owner page. Keep helpers local so bundling
 // cannot capture a server closure or rename a dependency in the browser source.
 export function createAdminApiClient(options={}){
+ const monthlyContract='business-month-v2';
  const messages={ADMIN_API_NETWORK_ERROR:'Não foi possível conectar ao painel. Verifique sua conexão e tente novamente.',ADMIN_API_TIMEOUT:'A consulta demorou mais que o esperado. Tente novamente.',ADMIN_API_RESPONSE_INVALID:'Não foi possível conferir a resposta do painel. Tente novamente.',ADMIN_API_HTTP_ERROR:'Não foi possível concluir a consulta ao painel. Tente novamente.'};
  const error=(code,status=null,apiCode=null)=>Object.assign(new Error(messages[code]),{code,status,apiCode});
  const plain=value=>value!==null&&typeof value==='object'&&[Object.prototype,null].includes(Object.getPrototypeOf(value));
@@ -16,6 +17,8 @@ export function createAdminApiClient(options={}){
   try{
    if(post){serialized=JSON.stringify(body);csrf=getCsrf();if(serialized===undefined||typeof csrf!=='string'||csrf.length>4096||/[\u0000-\u001f\u007f]/.test(csrf))throw Error();}
   }catch{throw error('ADMIN_API_RESPONSE_INVALID');}
+  const headers=post?{'Accept':'application/json','Content-Type':'application/json','X-CSRF-Token':csrf}:{'Accept':'application/json'};
+  if(path==='finance/business-month'||path.startsWith('finance/business-month?'))headers['X-Braza-Client-Contract']=monthlyContract;
   let controller;try{controller=new Controller();if(!controller.signal||typeof controller.abort!=='function')throw Error();}catch{throw error('ADMIN_API_RESPONSE_INVALID');}
   let timer=null,expired=false,response=null,responseStatus=null;
   const deadline=new Promise((resolve,reject)=>{
@@ -30,7 +33,7 @@ export function createAdminApiClient(options={}){
   });
   const work=async()=>{
    if(expired)throw error('ADMIN_API_TIMEOUT',responseStatus);
-   try{response=await fetchImpl('/api/admin/'+path,{method:post?'POST':'GET',headers:post?{'Accept':'application/json','Content-Type':'application/json','X-CSRF-Token':csrf}:{'Accept':'application/json'},credentials:'same-origin',redirect:'error',cache:'no-store',signal:controller.signal,...(post?{body:serialized}:{})});}
+   try{response=await fetchImpl('/api/admin/'+path,{method:post?'POST':'GET',headers,credentials:'same-origin',redirect:'error',cache:'no-store',signal:controller.signal,...(post?{body:serialized}:{})});}
    catch{throw error(expired?'ADMIN_API_TIMEOUT':'ADMIN_API_NETWORK_ERROR',responseStatus);}
    if(expired)throw error('ADMIN_API_TIMEOUT',responseStatus);
    if(!response||typeof response.json!=='function'||typeof response.ok!=='boolean'||!Number.isInteger(response.status)||response.status<100||response.status>599)throw error('ADMIN_API_RESPONSE_INVALID');

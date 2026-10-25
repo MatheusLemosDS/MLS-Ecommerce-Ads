@@ -27,3 +27,9 @@ Depois de uma falha ambígua, a interface observa o estado salvo por GET antes d
 Todos os produtos vendidos entram na fila automática mesmo durante uma coleta parcial e mesmo quando já têm custo. Uma falha dessa fila não invalida os valores financeiros. Camisetas adultas, plus e kits identificados mostram seu custo diretamente; o formulário de regra infantil deixa de aparecer como ação principal nesses produtos. Correções manuais continuam preservadas, e regras indisponíveis não são substituídas silenciosamente pela primeira opção.
 
 A [pesquisa de arquitetura e referências públicas](PESQUISA_COLETA_AUTOMATICA.md) registra as fontes, licenças e limites observados. A validação inclui o caminho App → Auth → Finance compilado normal e minificado, falhas por pedido, retomada sem duplicação e disputa entre navegador, cron e catálogo.
+
+## Abas abertas durante uma publicação
+
+O campo novo `collection` revelou uma incompatibilidade com a validação estrita do cliente anterior. O teste com o código de `d487da7` reproduz a rejeição no início da atualização, sem erro HTTP, preservando o resumo já mostrado. A versão atual aceita o mesmo conteúdo.
+
+A rota mensal agora negocia o formato por `X-Braza-Client-Contract`. Clientes atuais enviam `business-month-v2` e recebem a retomada automática; requisições sem esse cabeçalho recebem o formato `business-month-v1`, com os mesmos valores financeiros e sem o campo desconhecido. Uma espera normal interrompe o laço do cliente antigo, evitando consultas repetidas enquanto outro coletor trabalha. A resposta informa seu contrato, mantém `no-store` e usa `Vary` nesse cabeçalho. Os diagnósticos atuais também identificam a versão do cliente.

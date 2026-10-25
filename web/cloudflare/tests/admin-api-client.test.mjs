@@ -21,6 +21,19 @@ test('successful fixed-origin reads return JSON and always clear their deadline'
  assert.equal(timer.timers.size,0);assert.equal(timer.cleared.length,1);assert.equal(calls[0].options.signal.aborted,false);
 });
 
+test('the monthly contract header is limited to its exact GET and POST route while CSRF and unrelated headers stay unchanged',async()=>{
+ const calls=[];let csrfReads=0;
+ const api=createAdminApiClient({getCsrf:()=>{csrfReads++;return 'current-monthly-csrf';},fetchImpl:async(url,options)=>{calls.push({url,options});return Response.json({ok:true});}});
+ for(const [path,body] of [['finance/business-month',undefined],['finance/business-month?month=2026-10',undefined],['finance/business-month',{operation:'step',month:'2026-10'}],['finance/business-month?month=2026-10',{}],['settings',{revision:1,values:{}}],['finance/business-month/history',undefined],['finance/business-monthly',undefined],['state',undefined]])await api(path,body);
+ for(const [index,call] of calls.entries()){
+  assert.equal(call.options.headers['X-Braza-Client-Contract'],index<4?'business-month-v2':undefined);
+  assert.equal(call.options.headers.Accept,'application/json');assert.equal(call.options.credentials,'same-origin');
+  if(call.options.method==='POST'){assert.equal(call.options.headers['X-CSRF-Token'],'current-monthly-csrf');assert.equal(call.options.headers['Content-Type'],'application/json');}
+  else{assert.equal(call.options.headers['X-CSRF-Token'],undefined);assert.equal(call.options.headers['Content-Type'],undefined);}
+ }
+ assert.equal(csrfReads,3);assert.equal(calls.length,8);
+});
+
 test('a mutation carries the current CSRF once and never replays after a network failure',async()=>{
  const timer=timerControl(),calls=[];let csrf='first-csrf';
  const api=createAdminApiClient({...timingOptions(timer),getCsrf:()=>csrf,fetchImpl:async(url,options)=>{calls.push({url,options});assert.equal([...timer.timers.values()][0].delay,90000);throw new TypeError('Failed to fetch PRIVATE_PROVIDER_TOKEN');}});
@@ -88,6 +101,9 @@ test('an unencodable body or invalid csrf cannot issue a request and arrays rema
 
 test('the factory works from its isolated browser source without a module closure',async()=>{
  const context=vm.createContext({AbortController,setTimeout,clearTimeout,Response});
- vm.runInContext(createAdminApiClient.toString()+"\nglobalThis.client=createAdminApiClient({fetchImpl:async(url,options)=>Response.json({url,method:options.method}),getCsrf:()=> 'csrf'});",context);
+ vm.runInContext(createAdminApiClient.toString()+"\nglobalThis.client=createAdminApiClient({fetchImpl:async(url,options)=>Response.json({url,method:options.method,headers:options.headers}),getCsrf:()=> 'csrf'});",context);
  const actual=await vm.runInContext("client('state',undefined,{timeoutMs:12000})",context);assert.equal(actual.url,'/api/admin/state');assert.equal(actual.method,'GET');
+ assert.equal(actual.headers['X-Braza-Client-Contract'],undefined);
+ const month=await vm.runInContext("client('finance/business-month?month=2026-10')",context);assert.equal(month.headers['X-Braza-Client-Contract'],'business-month-v2');assert.equal(month.method,'GET');
+ const settings=await vm.runInContext("client('settings',{revision:1})",context);assert.equal(settings.headers['X-Braza-Client-Contract'],undefined);assert.equal(settings.headers['X-CSRF-Token'],'csrf');assert.equal(settings.method,'POST');
 });

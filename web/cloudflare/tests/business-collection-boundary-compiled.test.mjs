@@ -29,7 +29,7 @@ for(const minify of [false,true])test(`the three deployed Workers preserve a rat
   const login=await app.fetch(new Request(origin+'/login',{method:'POST',headers:{origin,'content-type':'application/x-www-form-urlencoded'},body:new URLSearchParams({username:env.ADMIN_USERNAME,password:env.ADMIN_PASSWORD})}),env);
   assert.equal(login.status,303);const cookie=login.headers.get('set-cookie').split(';')[0],state=await(await app.fetch(new Request(origin+'/api/admin/state',{headers:{cookie}}),env)).json();
   const invoke=async operation=>{
-   const response=await app.fetch(new Request(origin+'/api/admin/finance/business-month',{method:'POST',headers:{origin,cookie,'content-type':'application/json','X-CSRF-Token':state.csrf},body:JSON.stringify({operation,month:'2026-10'})}),env);
+   const response=await app.fetch(new Request(origin+'/api/admin/finance/business-month',{method:'POST',headers:{origin,cookie,'content-type':'application/json','X-CSRF-Token':state.csrf,'X-Braza-Client-Contract':'business-month-v2'},body:JSON.stringify({operation,month:'2026-10'})}),env);
    const value=await response.json();assert.equal(response.status,200,JSON.stringify(value));
    const text=JSON.stringify(value);for(const secret of [routerSecret,appSecret,'PRIVATE_INTEGRATION_ACCESS','PRIVATE_INTEGRATION_ORDER','PRIVATE_INTEGRATION_KEY'])assert.ok(!text.includes(secret));return value;
   };
