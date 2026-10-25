@@ -19,6 +19,8 @@ for(const minify of [false,true])test(`deployable monthly reads persist their pr
   const login=await worker.fetch(new Request(origin+'/login',{method:'POST',headers:{origin,'content-type':'application/x-www-form-urlencoded'},body:new URLSearchParams({username:env.ADMIN_USERNAME,password:env.ADMIN_PASSWORD})}),env);assert.equal(login.status,303);
   const cookie=login.headers.get('set-cookie').split(';')[0],state=await(await worker.fetch(new Request(origin+'/api/admin/state',{headers:{cookie}}),env)).json();
   const month=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date()).slice(0,7),historyUrl=origin+'/api/admin/finance/checkpoints?month='+month;
+  const policy=await(await worker.fetch(new Request(origin+'/api/admin/finance/sync-state',{headers:{cookie}}),env)).json();
+  const paused=await worker.fetch(new Request(origin+'/api/admin/finance/sync-policy',{method:'POST',headers:{origin,cookie,'content-type':'application/json','x-csrf-token':state.csrf},body:JSON.stringify({revision:policy.revision,enabled:false})}),env);assert.equal(paused.status,200);
   assert.equal((await worker.fetch(new Request(historyUrl),env)).status,401);
   const invoke=async body=>{const response=await worker.fetch(new Request(origin+'/api/admin/finance/business-month',{method:'POST',headers:{origin,cookie,'content-type':'application/json','x-csrf-token':state.csrf},body:JSON.stringify(body)}),env);assert.equal(response.status,200,await response.clone().text());return response.json();};
   let frame=await invoke({operation:'start',month});while(frame.status==='RUNNING')frame=await invoke({operation:'step',month});

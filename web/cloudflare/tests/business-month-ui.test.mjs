@@ -61,8 +61,13 @@ function browser(value=fixture(),search=''){
  const controls=new Map(${JSON.stringify(ids)}.map(id=>[id,item()]));
  const document={hidden:false,handlers:{},getElementById(id){if(!controls.has(id))throw Error('UNKNOWN_CONTROL:'+id);return controls.get(id);},createElement:tag=>item(tag),addEventListener(name,callback){this.handlers[name]=callback;}};
  const text=element=>element.textContent+element.children.map(text).join(' '),control=name=>controls.get('businessMonth'+name);
- let currentFrame=JSON.parse(${JSON.stringify(JSON.stringify(value))});const calls=[];let customApi=null,syncCalls=0;
- const api=async(path,body)=>{calls.push({path,body});return customApi?customApi(path,body):JSON.parse(JSON.stringify(currentFrame));};
+ let currentFrame=JSON.parse(${JSON.stringify(JSON.stringify(value))});const calls=[];let customApi=null,customViewApi=null,syncCalls=0;
+ // These tests exercise the explicit manual path with the automatic collector
+ // paused. Current-month cron ownership has a separate dedicated test suite.
+ const savedView=value=>({schema:'business_month_view_v1',month:value.month,display:JSON.parse(JSON.stringify(value)),display_source:'ACTIVE',collection:{status:value.status,start_date:value.start_date,end_date:value.end_date,checked_at:value.checked_at,progress:JSON.parse(JSON.stringify(value.progress)),coverage:JSON.parse(JSON.stringify(value.coverage)),source_checked_at:value.source_checked_at??null,collection:value.collection??null},automatic:{enabled:false,applicable:value.month===new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date()).slice(0,7),status:'PAUSED',next_run_at:0,last_attempt_at:null}});
+ const api=async(path,body)=>{calls.push({path,body});if(path.startsWith('finance/business-month-view?'))return customViewApi?customViewApi(path):savedView(currentFrame);return customApi?customApi(path,body):JSON.parse(JSON.stringify(currentFrame));};
+ async function startManual(options={api,syncVariants}){const opened=await brazaMonthDashboard.start(options);if(!opened)return false;return control('SourceRefresh').onclick();}
+ const operationCalls=(rows=calls)=>rows.map(call=>call.path.startsWith('finance/business-month-view?')?'view':call.body?.operation||'observe');
  const syncVariants=async rows=>{syncCalls++;return true;};
  `+BUSINESS_MONTH_CLIENT).runInContext(context);
  const run=code=>new vm.Script(code).runInContext(context);
@@ -76,7 +81,7 @@ function collectionFixture(state='READY',code=null,wait=0,changes={}){
  return fixture({...source,status:'RUNNING',progress:{windows_total:2,windows_complete:1,pages_read:1},sales_cents:null,expected_repass_cents:null,production_cost_cents:null,invoice_tax_cents:null,ads_adjustment_cents:null,result:{...source.result,net_estimate_cents:null,net_margin_bps:null,pending},collection:{schema:'business_month_collection_v1',state,code,retry_after_seconds:wait},...changes});
 }
 const recoveryTick=b=>b.run('clock+=[...timers.values()][0].delay;[...timers.values()][0].callback()');
-const operations=b=>JSON.parse(b.run("JSON.stringify(calls.map(call=>call.body?.operation||'observe'))"));
+const operations=b=>JSON.parse(b.run("JSON.stringify(operationCalls())"));
 
 function costDiagnosticFixture(source=partialCostProductFixture(),changes={}){
  const versions={bindings:source.bindings_revision,costs:source.costs_revision,cost_rules:source.cost_rules_revision??null,classifications:source.classification_revision??null},summary=buildMonthlyFinancialSummary(source),products=source.unmapped_variants.map(row=>({item_id:row.item_id,product_name:'Camiseta infantil',catalog_checked_at:null,classification:null,variants:[{model_id:row.model_id,quantity:row.quantity,model_name:null,attributes:[],reason:'NO_CATALOG',recoverable:true,next_attempt_at:null,unit_cost_cents:null,production_cost_cents:null,assignment:null}]}));
@@ -96,7 +101,7 @@ test('one local diagnostic displays all eight missing-cost products, reasons and
 test('one automatic cost action stops at eight targeted requests and reads the monthly result locally without overwriting expense drafts',async()=>{
  const source=partialCostProductFixture(),diagnostic=costDiagnosticFixture(source),b=browser(source);b.context.diagnostic=JSON.stringify(diagnostic);await b.run('brazaMonthDashboard.start({api})');const before=b.run('calls.length');
  b.run('control("ExpensesValue").value="37,50";control("ExpensesValue").oninput();customApi=async(path,body)=>path.startsWith("finance/cost-diagnostics?")?JSON.parse(diagnostic):path.startsWith("finance/cost-recovery?")?{schema:"business_cost_recovery_v1",month:"2026-10",diagnostic:JSON.parse(diagnostic),work:{status:"PROGRESSED",processed:["200"],failed:[]}}:JSON.parse(JSON.stringify(currentFrame));');
- assert.equal(await b.run('control("CostRecover").onclick()'),true);assert.equal(b.run('calls.slice('+before+').filter(call=>call.path.startsWith("finance/cost-recovery?")).length'),8);assert.deepEqual(JSON.parse(b.run('JSON.stringify(calls.slice('+before+').filter(call=>call.body?.operation).map(call=>call.body.operation))')),['read']);assert.equal(b.run('control("ExpensesValue").value'),'37,50');assert.match(b.text('CostDiagnosticStatus'),/atingiu o limite/);assert.match(b.text('NetLabel'),/ainda falta produção|Saldo/);assert.equal(b.run('calls.slice('+before+').some(call=>["start","step","ads","expenses"].includes(call.body?.operation))'),false);
+ assert.equal(await b.run('control("CostRecover").onclick()'),true);assert.equal(b.run('calls.slice('+before+').filter(call=>call.path.startsWith("finance/cost-recovery?")).length'),8);assert.deepEqual(JSON.parse(b.run('JSON.stringify(operationCalls(calls.slice('+before+').filter(call=>call.path.startsWith("finance/business-month-view?"))))')),['view']);assert.equal(b.run('control("ExpensesValue").value'),'37,50');assert.match(b.text('CostDiagnosticStatus'),/atingiu o limite/);assert.match(b.text('NetLabel'),/ainda falta produção|Saldo/);assert.equal(b.run('calls.slice('+before+').some(call=>["start","step","ads","expenses"].includes(call.body?.operation))'),false);
 });
 
 test('historical cost recovery remains eligible during catalogue backoff and respects server pauses, leases and retry limits',async()=>{
@@ -105,7 +110,7 @@ test('historical cost recovery remains eligible during catalogue backoff and res
   const diagnostic=costDiagnosticFixture(source),product=diagnostic.products[0];product.classification={status:'RETRY_WAIT',reason:'CATALOG_UNAVAILABLE',checked_at:stamp-10,next_attempt_at:stamp+86400,failure_count:20};Object.assign(product.variants[0],{reason,recoverable:false,next_attempt_at:stamp+86400});assert.ok(projectBusinessCostDiagnostics(diagnostic));
   const b=browser(source);b.context.diagnostic=JSON.stringify(diagnostic);b.context.workStatus=state;await b.run('brazaMonthDashboard.start({api})');const before=b.run('calls.length');
   b.run('customApi=async(path)=>path.startsWith("finance/cost-diagnostics?")?JSON.parse(diagnostic):path.startsWith("finance/cost-recovery?")?{schema:"business_cost_recovery_v1",month:"2026-10",diagnostic:JSON.parse(diagnostic),work:{status:workStatus,processed:workStatus==="PROGRESSED"?["200"]:[],failed:[]}}:JSON.parse(JSON.stringify(currentFrame));');
-  assert.equal(await b.run('control("CostRecover").onclick()'),true,reason+' '+state);assert.equal(b.run('calls.slice('+before+').filter(call=>call.path.startsWith("finance/cost-recovery?")).length'),state==='PROGRESSED'?8:1,reason+' '+state);assert.deepEqual(JSON.parse(b.run('JSON.stringify(calls.slice('+before+').filter(call=>call.body?.operation).map(call=>call.body.operation))')),['read']);assert.match(b.text('CostDiagnosticBody'),/histórico de pedidos pode confirmar/);assert.match(b.text('CostDiagnosticStatus'),state==='PROGRESSED'?/atingiu o limite/:state==='PAUSED'?/pausada/:state==='LEASED'?/Outra conferência/:/Uma fonte precisa aguardar/);b.run('brazaMonthDashboard.stop()');
+  assert.equal(await b.run('control("CostRecover").onclick()'),true,reason+' '+state);assert.equal(b.run('calls.slice('+before+').filter(call=>call.path.startsWith("finance/cost-recovery?")).length'),state==='PROGRESSED'?8:1,reason+' '+state);assert.deepEqual(JSON.parse(b.run('JSON.stringify(operationCalls(calls.slice('+before+').filter(call=>call.path.startsWith("finance/business-month-view?"))))')),['view']);assert.match(b.text('CostDiagnosticBody'),/histórico de pedidos pode confirmar/);assert.match(b.text('CostDiagnosticStatus'),state==='PROGRESSED'?/atingiu o limite/:state==='PAUSED'?/pausada/:state==='LEASED'?/Outra conferência/:/Uma fonte precisa aguardar/);b.run('brazaMonthDashboard.stop()');
  }
  const diagnostic=costDiagnosticFixture(source);diagnostic.consistent=false;diagnostic.versions.current.costs++;diagnostic.products[0].variants[0].recoverable=false;assert.ok(projectBusinessCostDiagnostics(diagnostic));const b=browser(source);b.context.diagnostic=JSON.stringify(diagnostic);await b.run('brazaMonthDashboard.start({api})');const before=b.run('calls.length');b.run('customApi=async(path)=>path.startsWith("finance/cost-diagnostics?")?JSON.parse(diagnostic):JSON.parse(JSON.stringify(currentFrame));');assert.equal(await b.run('control("CostRecover").onclick()'),true);assert.equal(b.run('calls.slice('+before+').filter(call=>call.path.startsWith("finance/cost-recovery?")).length'),0);assert.match(b.text('CostDiagnosticBody'),/custos mudaram durante a conferência/);b.run('brazaMonthDashboard.stop()');
 });
@@ -134,65 +139,65 @@ test('a durable checkpoint observes saved progress and resumes only step after i
  const waiting=collectionFixture('RETRY_WAIT','BUSINESS_PERIOD_CHECKPOINT',3),ready=collectionFixture(),done=fixture({collection:{schema:'business_month_collection_v1',state:'READY',code:null,retry_after_seconds:0}}),b=browser(waiting);
  b.context.ready=JSON.stringify(ready);b.context.done=JSON.stringify(done);
  b.run("Math.random=()=>0;customApi=async(path,body)=>JSON.parse(!body?ready:['step','ads'].includes(body.operation)?done:JSON.stringify(currentFrame));");
- assert.equal(await b.run('brazaMonthDashboard.start({api,syncVariants})'),true);
- assert.deepEqual(operations(b),['read','start']);assert.equal(b.text('Badge'),'Aguardando retomada automática');assert.match(b.text('Status'),/preservados/);assert.equal(b.run("control('Pause').hidden"),false);
+ assert.equal(await b.run('startManual({api,syncVariants})'),true);
+ assert.deepEqual(operations(b),['view','start']);assert.equal(b.text('Badge'),'Aguardando retomada automática');assert.match(b.text('Status'),/preservados/);assert.equal(b.run("control('Pause').hidden"),false);
  assert.equal(b.run('[...timers.values()][0].delay'),3000);
  await recoveryTick(b);
- assert.deepEqual(operations(b),['read','start','observe','step','ads']);assert.match(b.text('Net'),/43,00/);assert.doesNotMatch(b.text('Status'),/Diagnóstico da coleta/);
+ assert.deepEqual(operations(b),['view','start','observe','step','ads']);assert.match(b.text('Net'),/43,00/);assert.doesNotMatch(b.text('Status'),/Diagnóstico da coleta/);
 });
 
 test('an ambiguous step timeout preserves partial amounts and observes before any retry without replaying start or expenses',async()=>{
  const running=collectionFixture(),done=fixture({collection:{schema:'business_month_collection_v1',state:'READY',code:null,retry_after_seconds:0}}),b=browser(running);
  b.context.done=JSON.stringify(done);
  b.run("Math.random=()=>0;let stepFailures=0;customApi=async(path,body)=>{if(body?.operation==='step'&&stepFailures++===0)throw Object.assign(Error('Private provider URL must stay private'),{code:'ADMIN_API_TIMEOUT',status:null});return JSON.parse(body&&['step','ads'].includes(body.operation)?done:JSON.stringify(currentFrame));};");
- assert.equal(await b.run('brazaMonthDashboard.start({api,syncVariants})'),false);
- assert.deepEqual(operations(b),['read','start','step']);assert.match(b.text('SalesHelp'),/100,00/);assert.equal(b.text('Net'),'Em apuração');assert.equal(b.text('Badge'),'Aguardando retomada automática');assert.doesNotMatch(b.text('Status'),/Private provider/);
+ assert.equal(await b.run('startManual({api,syncVariants})'),false);
+ assert.deepEqual(operations(b),['view','start','step']);assert.match(b.text('SalesHelp'),/100,00/);assert.equal(b.text('Net'),'Em apuração');assert.equal(b.text('Badge'),'Aguardando retomada automática');assert.doesNotMatch(b.text('Status'),/Private provider/);
  await recoveryTick(b);
- assert.deepEqual(operations(b),['read','start','step','observe','step','ads']);assert.match(b.text('Net'),/43,00/);assert.equal(operations(b).filter(op=>op==='start').length,1);assert.ok(!operations(b).includes('expenses'));
+ assert.deepEqual(operations(b),['view','start','step','observe','step','ads']);assert.match(b.text('Net'),/43,00/);assert.equal(operations(b).filter(op=>op==='start').length,1);assert.ok(!operations(b).includes('expenses'));
 });
 
 test('an observed completion after a timeout does not replay start, step or Ads',async()=>{
  const running=collectionFixture(),done=fixture({collection:{schema:'business_month_collection_v1',state:'READY',code:null,retry_after_seconds:0}}),b=browser(running);b.context.done=JSON.stringify(done);
  b.run("customApi=async(path,body)=>{if(!body)return JSON.parse(done);if(body.operation==='step')throw Object.assign(Error('Timeout'),{code:'ADMIN_API_TIMEOUT',status:null});return JSON.parse(JSON.stringify(currentFrame));};");
- await b.run('brazaMonthDashboard.start({api,syncVariants})');await recoveryTick(b);
- assert.deepEqual(operations(b),['read','start','step','observe']);assert.match(b.text('Net'),/43,00/);assert.equal(b.text('Badge'),'Previsão completa');assert.match(b.text('Status'),/financeira foi concluída/);
+ await b.run('startManual({api,syncVariants})');await recoveryTick(b);
+ assert.deepEqual(operations(b),['view','start','step','observe']);assert.match(b.text('Net'),/43,00/);assert.equal(b.text('Badge'),'Previsão completa');assert.match(b.text('Status'),/financeira foi concluída/);
 });
 
 test('an observed financial completion makes one first Ads read when none was submitted before the interrupted finance request',async()=>{
  const source=fixture(),done=fixture({...source,ads:null,result:{...source.result,net_estimate_cents:null,net_margin_bps:null,pending:['ADS_UNAVAILABLE']},collection:{schema:'business_month_collection_v1',state:'READY',code:null,retry_after_seconds:0}}),priced=fixture({collection:done.collection}),b=browser(collectionFixture());b.context.done=JSON.stringify(done);b.context.priced=JSON.stringify(priced);
  b.run("customApi=async(path,body)=>{if(!body)return JSON.parse(done);if(body.operation==='step')throw Object.assign(Error('Timeout'),{code:'ADMIN_API_TIMEOUT'});if(body.operation==='ads')return JSON.parse(priced);return JSON.parse(JSON.stringify(currentFrame));};");
- await b.run('brazaMonthDashboard.start({api,syncVariants})');await recoveryTick(b);
- assert.deepEqual(operations(b),['read','start','step','observe','ads']);assert.equal(operations(b).filter(op=>op==='ads').length,1);assert.equal(b.run('timers.size'),1);assert.match(b.text('Ads'),/10,00/);assert.match(b.text('Net'),/43,00/);assert.match(b.text('Status'),/Dados do mês atualizados/);
+ await b.run('startManual({api,syncVariants})');await recoveryTick(b);
+ assert.deepEqual(operations(b),['view','start','step','observe','ads']);assert.equal(operations(b).filter(op=>op==='ads').length,1);assert.equal(b.run('timers.size'),1);assert.match(b.text('Ads'),/10,00/);assert.match(b.text('Net'),/43,00/);assert.match(b.text('Status'),/Dados do mês atualizados/);
 });
 
 test('failure of the first Ads read after observed finance completion waits before retrying only the read-only Ads source',async()=>{
  const source=fixture(),done=fixture({...source,ads:null,result:{...source.result,net_estimate_cents:null,net_margin_bps:null,pending:['ADS_UNAVAILABLE']},collection:{schema:'business_month_collection_v1',state:'READY',code:null,retry_after_seconds:0}}),b=browser(collectionFixture());b.context.done=JSON.stringify(done);
  b.run("customApi=async(path,body)=>{if(!body)return JSON.parse(done);if(['step','ads'].includes(body.operation))throw Object.assign(Error('Private upstream payload'),{code:'ADMIN_API_TIMEOUT'});return JSON.parse(JSON.stringify(currentFrame));};");
- await b.run('brazaMonthDashboard.start({api,syncVariants})');assert.equal(await recoveryTick(b),false);
- assert.deepEqual(operations(b),['read','start','step','observe','ads']);assert.equal(b.run('timers.size'),1);assert.equal(b.run('[...timers.values()][0].delay'),60000);assert.equal(b.text('Net'),'Em conciliação');assert.match(b.text('Status'),/Não foi possível atualizar os anúncios/);assert.doesNotMatch(b.text('Status'),/Private upstream/);
+ await b.run('startManual({api,syncVariants})');assert.equal(await recoveryTick(b),false);
+ assert.deepEqual(operations(b),['view','start','step','observe','ads']);assert.equal(b.run('timers.size'),1);assert.equal(b.run('[...timers.values()][0].delay'),60000);assert.equal(b.text('Net'),'Em conciliação');assert.match(b.text('Status'),/Não foi possível atualizar os anúncios/);assert.doesNotMatch(b.text('Status'),/Private upstream/);
  b.run('document.hidden=true;document.handlers.visibilitychange();document.hidden=false;document.handlers.visibilitychange();');assert.equal(b.run('timers.size'),1);assert.equal(operations(b).filter(op=>op==='ads').length,1);assert.ok(!operations(b).includes('expenses'));
 });
 
-test('an initial cache miss and ambiguous start timeout observe the durable job without fabricating totals or replaying start',async()=>{
- const ready=collectionFixture(),done=fixture({collection:{schema:'business_month_collection_v1',state:'READY',code:null,retry_after_seconds:0}}),b=browser();b.context.ready=JSON.stringify(ready);b.context.done=JSON.stringify(done);
+test('an explicit start timeout preserves partial data and observes the durable job without fabricating totals or replaying start',async()=>{
+ const ready=collectionFixture(),done=fixture({collection:{schema:'business_month_collection_v1',state:'READY',code:null,retry_after_seconds:0}}),b=browser(ready);b.context.ready=JSON.stringify(ready);b.context.done=JSON.stringify(done);
  b.run("customApi=async(path,body)=>{if(!body)return JSON.parse(ready);if(body.operation==='read')throw Object.assign(Error('No saved frame'),{code:'ADMIN_API_HTTP_ERROR',status:409});if(body.operation==='start')throw Object.assign(Error('Start timed out'),{code:'ADMIN_API_TIMEOUT'});return JSON.parse(done);};");
- assert.equal(await b.run('brazaMonthDashboard.start({api,syncVariants})'),false);
- assert.deepEqual(operations(b),['read','start']);assert.equal(b.text('Sales'),'Pendente');assert.equal(b.text('Ads'),'Pendente');assert.equal(b.text('Net'),'Em apuração');assert.equal(b.text('Badge'),'Aguardando retomada automática');assert.doesNotMatch(b.text('SalesHelp'),/0,00/);
- await recoveryTick(b);assert.deepEqual(operations(b),['read','start','observe','step','ads']);assert.match(b.text('Net'),/43,00/);assert.equal(operations(b).filter(op=>op==='start').length,1);
+ assert.equal(await b.run('startManual({api,syncVariants})'),false);
+ assert.deepEqual(operations(b),['view','start']);assert.equal(b.text('Sales'),'Pendente');assert.match(b.text('Ads'),/10,00/);assert.equal(b.text('Net'),'Em apuração');assert.equal(b.text('Badge'),'Aguardando retomada automática');assert.doesNotMatch(b.text('SalesHelp'),/R\$\s*0,00/);
+ await recoveryTick(b);assert.deepEqual(operations(b),['view','start','observe','step','ads']);assert.match(b.text('Net'),/43,00/);assert.equal(operations(b).filter(op=>op==='start').length,1);
 });
 
 test('an interrupted Ads read waits for a bounded retry without replaying the financial import',async()=>{
  const b=browser(fixture({collection:{schema:'business_month_collection_v1',state:'READY',code:null,retry_after_seconds:0}}));
  b.run("customApi=async(path,body)=>{if(body.operation==='ads')throw Object.assign(Error('Ads timed out'),{code:'ADMIN_API_TIMEOUT'});return JSON.parse(JSON.stringify(currentFrame));};");
- assert.equal(await b.run('brazaMonthDashboard.start({api,syncVariants})'),false);assert.deepEqual(operations(b),['read','start','ads']);assert.equal(b.run('timers.size'),1);assert.equal(b.run('[...timers.values()][0].delay'),60000);
- b.run('document.hidden=true;document.handlers.visibilitychange();document.hidden=false;document.handlers.visibilitychange();');assert.deepEqual(operations(b),['read','start','ads']);assert.equal(b.run('timers.size'),1);assert.equal(b.run('[...timers.values()][0].delay'),60000);
+ assert.equal(await b.run('startManual({api,syncVariants})'),false);assert.deepEqual(operations(b),['view','start','ads']);assert.equal(b.run('timers.size'),1);assert.equal(b.run('[...timers.values()][0].delay'),60000);
+ b.run('document.hidden=true;document.handlers.visibilitychange();document.hidden=false;document.handlers.visibilitychange();');assert.deepEqual(operations(b),['view','start','ads']);assert.equal(b.run('timers.size'),1);assert.equal(b.run('[...timers.values()][0].delay'),60000);
 });
 
 test('eight retries without progress suspend step requests while GET observes cron progress and resumes automatically',async()=>{
  const waiting=collectionFixture('RETRY_WAIT','BUSINESS_PERIOD_CHECKPOINT',1),ready=collectionFixture(),progress=collectionFixture('READY',null,0,{progress:{windows_total:2,windows_complete:1,pages_read:2}}),done=fixture({collection:{schema:'business_month_collection_v1',state:'READY',code:null,retry_after_seconds:0}}),b=browser(waiting);
  b.context.ready=JSON.stringify(ready);b.context.progress=JSON.stringify(progress);b.context.done=JSON.stringify(done);
  b.run("Math.random=()=>0;let externalProgress=false;customApi=async(path,body)=>JSON.parse(!body?(externalProgress?progress:ready):body.operation==='step'&&externalProgress?done:body.operation==='ads'?done:JSON.stringify(currentFrame));");
- await b.run('brazaMonthDashboard.start({api,syncVariants})');
+ await b.run('startManual({api,syncVariants})');
  for(let index=0;index<8;index++)await recoveryTick(b);
  assert.equal(operations(b).filter(op=>op==='step').length,8);assert.equal(b.run('[...timers.values()][0].delay'),60000);assert.match(b.text('Status'),/aguardando avanço/);
  for(let index=0;index<3;index++)await recoveryTick(b);
@@ -204,7 +209,7 @@ test('eight retries without progress suspend step requests while GET observes cr
 test('lower job counters cannot release another retry budget by returning to the already observed high-water marks',async()=>{
  const waiting=collectionFixture('RETRY_WAIT','BUSINESS_PERIOD_CHECKPOINT',1,{progress:{windows_total:2,windows_complete:1,pages_read:2}}),lower=collectionFixture(),b=browser(waiting);b.context.lower=JSON.stringify(lower);
  b.run("Math.random=()=>0;let lowerObservation=false;customApi=async(path,body)=>JSON.parse(!body&&lowerObservation?lower:JSON.stringify(currentFrame));");
- await b.run('brazaMonthDashboard.start({api,syncVariants})');for(let index=0;index<8;index++)await recoveryTick(b);
+ await b.run('startManual({api,syncVariants})');for(let index=0;index<8;index++)await recoveryTick(b);
  assert.equal(operations(b).filter(op=>op==='step').length,8);
  b.run('lowerObservation=true;');await recoveryTick(b);b.run('lowerObservation=false;');await recoveryTick(b);
  assert.equal(operations(b).filter(op=>op==='step').length,8);assert.equal(b.run('[...timers.values()][0].delay'),60000);
@@ -213,7 +218,7 @@ test('lower job counters cannot release another retry budget by returning to the
 test('fixed provider backoff is not restarted by unchanged GET observations and each wait is bounded to sixty seconds',async()=>{
  const waiting=collectionFixture('RETRY_WAIT','BUSINESS_PERIOD_RATE_LIMIT',1800),done=fixture({collection:{schema:'business_month_collection_v1',state:'READY',code:null,retry_after_seconds:0}}),b=browser(waiting);b.context.done=JSON.stringify(done);
  b.run("Math.random=()=>0;customApi=async(path,body)=>JSON.parse(body&&['step','ads'].includes(body.operation)?done:JSON.stringify(currentFrame));");
- await b.run('brazaMonthDashboard.start({api,syncVariants})');
+ await b.run('startManual({api,syncVariants})');
  for(let index=0;index<29;index++){assert.equal(b.run('[...timers.values()][0].delay'),60000);await recoveryTick(b);}
  assert.equal(operations(b).filter(op=>op==='step').length,0);await recoveryTick(b);
  assert.equal(operations(b).filter(op=>op==='step').length,1);assert.match(b.text('Net'),/43,00/);
@@ -221,14 +226,14 @@ test('fixed provider backoff is not restarted by unchanged GET observations and 
 
 test('authorization and invalid-source collection blocks keep partial values and never create automatic source requests',async()=>{
  for(const code of ['BUSINESS_PERIOD_AUTH_REQUIRED','BUSINESS_PERIOD_INVALID_SOURCE','BUSINESS_PERIOD_PERMISSION_DENIED']){
-  const b=browser(collectionFixture('BLOCKED',code));await b.run('brazaMonthDashboard.start({api,syncVariants})');
-  assert.deepEqual(operations(b),['read','start']);assert.equal(b.run('timers.size'),0);assert.equal(b.text('Badge'),'Consulta requer atenção');assert.equal(b.text('Net'),'Em apuração');assert.match(b.text('SalesHelp'),/100,00/);assert.match(b.text('Status'),/preservados/);
+  const b=browser(collectionFixture('BLOCKED',code));await b.run('startManual({api,syncVariants})');
+  assert.deepEqual(operations(b),['view','start']);assert.equal(b.run('timers.size'),0);assert.equal(b.text('Badge'),'Consulta requer atenção');assert.equal(b.text('Net'),'Em apuração');assert.match(b.text('SalesHelp'),/100,00/);assert.match(b.text('Status'),/preservados/);
   b.run('document.hidden=true;document.handlers.visibilitychange();document.hidden=false;document.handlers.visibilitychange();');assert.equal(b.run('timers.size'),0);
  }
 });
 
 test('recovery pauses for visibility, explicit pause and expense drafts without sending an expense write',async()=>{
- const waiting=collectionFixture('RETRY_WAIT','BUSINESS_PERIOD_CONFLICT',1),b=browser(waiting);await b.run('brazaMonthDashboard.start({api,syncVariants})');
+ const waiting=collectionFixture('RETRY_WAIT','BUSINESS_PERIOD_CONFLICT',1),b=browser(waiting);await b.run('startManual({api,syncVariants})');
  b.run('document.hidden=true;document.handlers.visibilitychange();clock+=10000;');assert.equal(b.run('timers.size'),0);
  b.run('document.hidden=false;document.handlers.visibilitychange();');assert.equal(b.run('timers.size'),1);
  b.run("control('Pause').onclick();");assert.equal(b.run('timers.size'),0);assert.equal(b.text('Badge'),'Consulta pausada');
@@ -242,18 +247,18 @@ test('a hidden or stopped page ignores a pending observation before it could adv
  for(const action of ['document.hidden=true;document.handlers.visibilitychange();','brazaMonthDashboard.stop();']){
   const waiting=collectionFixture('RETRY_WAIT','BUSINESS_PERIOD_CONFLICT',1),ready=collectionFixture(),b=browser(waiting);b.context.ready=JSON.stringify(ready);
   b.run("let releaseObserve;customApi=async(path,body)=>body?JSON.parse(JSON.stringify(currentFrame)):new Promise(resolve=>releaseObserve=resolve);");
-  await b.run('brazaMonthDashboard.start({api,syncVariants})');const observing=recoveryTick(b);await b.settle();
+  await b.run('startManual({api,syncVariants})');const observing=recoveryTick(b);await b.settle();
   b.run(action+'releaseObserve(JSON.parse(ready));');await observing;
-  assert.deepEqual(operations(b),['read','start','observe']);assert.equal(b.run('timers.size'),0);
+  assert.deepEqual(operations(b),['view','start','observe']);assert.equal(b.run('timers.size'),0);
  }
 });
 
 test('transient observation failures back off but an owner authorization failure ends recovery',async()=>{
  const b=browser(collectionFixture('RETRY_WAIT','BUSINESS_PERIOD_TIMEOUT',1));
  b.run("let observations=0;customApi=async(path,body)=>{if(!body)throw Object.assign(Error('Private response'),observations++===0?{code:'ADMIN_API_TIMEOUT',status:200}:{code:'ADMIN_API_TIMEOUT',status:401});return JSON.parse(JSON.stringify(currentFrame));};");
- await b.run('brazaMonthDashboard.start({api,syncVariants})');await recoveryTick(b);
+ await b.run('startManual({api,syncVariants})');await recoveryTick(b);
  assert.equal(b.run('timers.size'),1);assert.match(b.text('Status'),/consulta está temporariamente indisponível/);assert.doesNotMatch(b.text('Status'),/Private response/);
- await recoveryTick(b);assert.equal(b.run('timers.size'),0);assert.deepEqual(operations(b),['read','start','observe','observe']);assert.match(b.text('Status'),/confira a conexão financeira/);
+ await recoveryTick(b);assert.equal(b.run('timers.size'),0);assert.deepEqual(operations(b),['view','start','observe','observe']);assert.match(b.text('Status'),/confira a conexão financeira/);
 });
 
 test('monthly body has one clear card per business metric and responsive scoped markup',()=>{
@@ -271,46 +276,46 @@ test('paid store sales, Ads attribution and the fully costed net remain differen
  const waterfall=b.text('Waterfall');for(const value of ['80,00','20,00','2,00','10,00','5,00','43,00'])assert.ok(waterfall.includes(value),value);
  assert.match(b.text('Coverage'),/1 cancelado\(s\) excluído\(s\)/);assert.match(b.text('Coverage'),/1 não pago\(s\) excluído\(s\)/);assert.match(b.text('Coverage'),/1 em andamento/);
  assert.match(b.text('NetHelp'),/não o valor recebido em banco/);assert.equal(b.run("control('AdsLink').href"),'/dashboard?month=2026-10');
- assert.deepEqual(JSON.parse(b.run('JSON.stringify(calls.map(call=>call.body.operation))')),['read','start','ads']);
+ assert.deepEqual(JSON.parse(b.run('JSON.stringify(operationCalls())')),['view']);
 });
 
 test('a validated saved month paints before the private import responds and remains visible while its steps run',async()=>{
  const source=fixture({source_checked_at:{finance_oldest_at:stamp-90,finance_latest_at:stamp-30,ads_at:stamp}}),b=browser(source);
  const running=fixture({...source,status:'RUNNING',progress:{...source.progress,windows_complete:1},sales_cents:null,expected_repass_cents:null,production_cost_cents:null,invoice_tax_cents:null,ads_adjustment_cents:null,result:{...source.result,net_estimate_cents:null,net_margin_bps:null,pending:['COLLECTING','PRODUCTION_COST_INCOMPLETE','INVOICE_TAX_UNAVAILABLE','ADJUSTMENT_UNAVAILABLE']}});
  b.run("let releaseStart,releaseStep;customApi=async(path,body)=>body.operation==='start'?new Promise(resolve=>releaseStart=resolve):body.operation==='step'?new Promise(resolve=>releaseStep=resolve):JSON.parse(JSON.stringify(currentFrame));");
- await b.run('brazaMonthDashboard.start({api,syncVariants})');assert.deepEqual(operations(b),['read']);
+ await b.run('brazaMonthDashboard.start({api,syncVariants})');assert.deepEqual(operations(b),['view']);
  const starting=b.run("control('SourceRefresh').onclick()");await b.settle();
- assert.deepEqual(JSON.parse(b.run('JSON.stringify(calls.map(call=>call.body.operation))')),['read','start']);
+ assert.deepEqual(JSON.parse(b.run('JSON.stringify(operationCalls())')),['view','start']);
  assert.match(b.text('Sales'),/100,00/);assert.match(b.text('Net'),/43,00/);assert.match(b.text('Status'),/última leitura salva.*Atualizando/);
  assert.match(b.text('Scope'),/financeiro: leitura mais antiga .*08:58:30; mais recente .*08:59:30/);assert.match(b.text('Scope'),/Idade do financeiro: há 1 minuto\(s\).*idade dos anúncios: há menos de 1 minuto/);
  b.context.running=JSON.stringify(running);b.run('releaseStart(JSON.parse(running));');await b.settle();
- assert.equal(b.run('calls.at(-1).body.operation'),'step');assert.match(b.text('Net'),/43,00/);assert.match(b.text('Sales'),/100,00/);assert.match(b.text('Status'),/última leitura salva.*Conferindo os pedidos/);
+ assert.equal(b.run('calls.at(-1).body?.operation'),'step');assert.match(b.text('Net'),/43,00/);assert.match(b.text('Sales'),/100,00/);assert.match(b.text('Status'),/última leitura salva.*Conferindo os pedidos/);
  b.run('releaseStep(JSON.parse(JSON.stringify(currentFrame)));');assert.equal(await starting,true);assert.equal(b.run('timers.size'),1);
 });
 
 test('a changed month paints its saved data while a late private response from the previous month is ignored',async()=>{
  const source=fixture(),b=browser(source);
  b.run("const releaseImports=new Map();customApi=async(path,body)=>body.operation==='start'?new Promise(resolve=>releaseImports.set(body.month,resolve)):JSON.parse(JSON.stringify(currentFrame));");
- const old=b.run('brazaMonthDashboard.start({api,syncVariants})');await b.settle();
+ const old=b.run('startManual({api,syncVariants})');await b.settle();
  const past=fixture({...source,month:'2026-09',start_date:'2026-09-01',end_date:'2026-09-30',ads:calendar('2026-09',30)});b.load(past);
- b.run("control('Select').value='2026-09';");const selected=b.run('brazaMonthDashboard.refresh()');await b.settle();
- assert.match(b.text('Scope'),/01\/09\/2026 a 30\/09\/2026/);assert.match(b.text('Net'),/43,00/);assert.match(b.text('Status'),/última leitura salva/);
- b.run("releaseImports.get('2026-09')(JSON.parse(JSON.stringify(currentFrame)));");assert.equal(await selected,true);
+ b.run("control('Select').value='2026-09';");const selected=b.run("control('Select').onchange()");await b.settle();
+ assert.match(b.text('Scope'),/01\/09\/2026 a 30\/09\/2026/);assert.match(b.text('Net'),/43,00/);assert.match(b.text('Status'),/salvos/);
+ assert.equal(await selected,true);assert.equal(b.run("releaseImports.has('2026-09')"),false);
  b.context.old=JSON.stringify(source);b.run("releaseImports.get('2026-10')(JSON.parse(old));");assert.equal(await old,false);
  assert.match(b.text('Scope'),/01\/09\/2026 a 30\/09\/2026/);assert.doesNotMatch(b.text('Scope'),/01\/10\/2026/);
 });
 
-test('a failed saved read falls back once to the normal financial import',async()=>{
- const b=browser();b.run("customApi=async(path,body)=>{if(body.operation==='read')throw Error('Cache indisponível.');return JSON.parse(JSON.stringify(currentFrame));};");
- assert.equal(await b.run('brazaMonthDashboard.start({api,syncVariants})'),true);
- assert.deepEqual(JSON.parse(b.run('JSON.stringify(calls.map(call=>call.body.operation))')),['read','start','ads']);assert.match(b.text('Net'),/43,00/);assert.equal(b.run('timers.size'),1);
+test('an unavailable saved view does not start a financial import and can be retried through a local read',async()=>{
+ const b=browser();b.run("customViewApi=async()=>{throw Object.assign(Error('PRIVATE_STORAGE_RESPONSE'),{status:503});};");
+ assert.equal(await b.run('brazaMonthDashboard.start({api,syncVariants})'),false);assert.deepEqual(operations(b),['view']);assert.equal(b.text('Net'),'Em apuração');assert.doesNotMatch(b.text('Status'),/PRIVATE/);
+ b.run('customViewApi=null;');assert.equal(await b.run('brazaMonthDashboard.refresh()'),true);assert.deepEqual(operations(b),['view','view']);assert.match(b.text('Net'),/43,00/);assert.equal(b.run('timers.size'),1);
 });
 
 test('a stale saved financial source shows a clearly provisional balance while the strict net awaits a delayed refresh',async()=>{
  const source=fixture(),stale=fixture({...source,source_checked_at:{finance_oldest_at:stamp-1200,finance_latest_at:stamp-30,ads_at:stamp},result:{...source.result,net_estimate_cents:null,net_margin_bps:null,pending:['FINANCIAL_SOURCE_STALE']}}),b=browser(stale);
  b.run("let releaseStart;customApi=async(path,body)=>body.operation==='start'?new Promise(resolve=>releaseStart=resolve):JSON.parse(JSON.stringify(currentFrame));");
- const starting=b.run('brazaMonthDashboard.start({api,syncVariants})');await b.settle();
- assert.match(b.text('Net'),/43,00/);assert.equal(b.text('NetLabel'),'Saldo provisório da loja');assert.match(b.text('NetHelp'),/última leitura|provisório|atualiza/i);assert.equal(b.run('currentFrame.result.net_estimate_cents'),null);assert.equal(b.text('CheckpointStatus'),'Previsão com pendências');assert.match(b.text('PendingList'),/nova leitura/);assert.match(b.text('Scope'),/Idade do financeiro: há 20 minuto\(s\)/);
+ const starting=b.run('startManual({api,syncVariants})');await b.settle();
+ assert.match(b.text('Net'),/43,00/);assert.equal(b.text('NetLabel'),'Resultado líquido previsto · em conferência');assert.match(b.text('NetHelp'),/última leitura|provisório|atualiza/i);assert.equal(b.run('currentFrame.result.net_estimate_cents'),null);assert.equal(b.text('CheckpointStatus'),'Previsão com pendências');assert.match(b.text('PendingList'),/nova leitura/);assert.match(b.text('Scope'),/Idade do financeiro: há 20 minuto\(s\)/);
  b.load(source);b.run('releaseStart(JSON.parse(JSON.stringify(currentFrame)));');await starting;assert.match(b.text('Net'),/43,00/);
 });
 
@@ -326,9 +331,9 @@ test('an explicit zero expense is saved once per month and recalculates only fro
  assert.equal(b.run("control('ExpensesValue').value"),'');assert.equal(b.text('Net'),'Em conciliação');
  b.load(fixture({...source,expenses:{revision:1,external_expenses_cents:0,recharge_treatment:'UNCONFIRMED',updated_at:current},result:{...source.result,net_estimate_cents:4800,net_margin_bps:4800}}));
  await b.run("control('ExpensesZero').onclick()");
- assert.equal(b.run("calls.filter(call=>call.body.operation==='expenses').length"),1);
- assert.equal(b.run("calls.find(call=>call.body.operation==='expenses').body.external_expenses_cents"),0);
- assert.equal(b.run("calls.find(call=>call.body.operation==='expenses').body.revision"),0);assert.match(b.text('Net'),/48,00/);
+ assert.equal(b.run("calls.filter(call=>call.body?.operation==='expenses').length"),1);
+ assert.equal(b.run("calls.find(call=>call.body?.operation==='expenses').body.external_expenses_cents"),0);
+ assert.equal(b.run("calls.find(call=>call.body?.operation==='expenses').body.revision"),0);assert.match(b.text('Net'),/48,00/);
 });
 
 test('cost-only refresh is read-only, preserves expense drafts and requires review on a changed saved revision',async()=>{
@@ -336,113 +341,93 @@ test('cost-only refresh is read-only, preserves expense drafts and requires revi
  b.run("control('ExpensesValue').value='12,34';control('ExpensesValue').oninput();");
  const source=fixture(),changed=fixture({...source,expenses:{...source.expenses,revision:2,external_expenses_cents:700},result:{...source.result,net_estimate_cents:4100,net_margin_bps:4100}});b.load(changed);
  await b.run('brazaMonthDashboard.refreshCosts()');
- assert.equal(b.run("control('ExpensesValue').value"),'12,34');assert.equal(b.run("calls.at(-1).body.operation"),'read');assert.equal(b.run("control('ExpensesSave').disabled"),true);assert.match(b.text('ExpenseState'),/alteradas em outra sessão/);
+ assert.equal(b.run("control('ExpensesValue').value"),'12,34');assert.equal(b.run("operationCalls().at(-1)"),'view');assert.equal(b.run("control('ExpensesSave').disabled"),true);assert.match(b.text('ExpenseState'),/alteradas em outra sessão/);
  b.run("control('ExpensesReload').onclick();");assert.equal(b.run("control('ExpensesValue').value"),'7.00');assert.equal(b.run("control('ExpensesSave').disabled"),false);
 });
 
-test('outdated month responses never overwrite the selected month or restore old metrics',async()=>{
- const b=browser();
- b.run("let releaseOld;customApi=async(path,body)=>body.month==='2026-10'?new Promise(resolve=>releaseOld=resolve):JSON.parse(JSON.stringify(currentFrame));");
- const old=b.run('brazaMonthDashboard.start({api,syncVariants})');
- const source=fixture(),past={...source,month:'2026-09',start_date:'2026-09-01',end_date:'2026-09-30',progress:{windows_total:2,windows_complete:2,pages_read:2},ads:calendar('2026-09',30)};assert.ok(projectBusinessMonth(past));b.load(past);
- b.run("control('Select').value='2026-09';");await b.run('brazaMonthDashboard.refresh()');
- b.context.stale=JSON.stringify(source);b.run('releaseOld(JSON.parse(stale));');await old;
- assert.equal(b.run("control('Select').value"),'2026-09');assert.match(b.text('Scope'),/01\/09\/2026 a 30\/09\/2026/);assert.doesNotMatch(b.text('Scope'),/01\/10\/2026 a 22\/10\/2026/);
+test('outdated local views never overwrite the selected month or restore old metrics',async()=>{
+ const b=browser();b.run("let releaseOld;customViewApi=async path=>new URLSearchParams(path.split('?')[1]).get('month')==='2026-10'?new Promise(resolve=>releaseOld=resolve):savedView(currentFrame);");
+ const old=b.run('brazaMonthDashboard.start({api,syncVariants})');await b.settle();
+ const source=fixture(),past=fixture({...source,month:'2026-09',start_date:'2026-09-01',end_date:'2026-09-30',ads:calendar('2026-09',30)});b.load(past);
+ b.run("control('Select').value='2026-09';");assert.equal(await b.run("control('Select').onchange()"),true);
+ b.context.stale=JSON.stringify(source);b.run('releaseOld(savedView(JSON.parse(stale)));');assert.equal(await old,false);
+ assert.equal(b.run("control('Select').value"),'2026-09');assert.match(b.text('Scope'),/01\/09\/2026 a 30\/09\/2026/);assert.doesNotMatch(b.text('Scope'),/01\/10\/2026 a 22\/10\/2026/);assert.deepEqual(operations(b),['view','view']);
 });
 
-test('minute Ads updates keep one timer and do not repeat the full financial import before its bounded interval',async()=>{
+test('a paused workspace observes saved values with one timer and never refreshes Ads or finance on its own',async()=>{
  const b=browser();await b.run('brazaMonthDashboard.start({api,syncVariants})');assert.equal(b.run('timers.size'),1);
- b.run('clock+=61000;');await b.run('[...timers.values()][0].callback()');
- assert.deepEqual(JSON.parse(b.run('JSON.stringify(calls.map(call=>call.body.operation))')),['read','start','ads','ads']);
+ await recoveryTick(b);assert.deepEqual(operations(b),['view','view']);
  b.run("document.hidden=true;document.handlers.visibilitychange();");assert.equal(b.run('timers.size'),0);
- b.run("document.hidden=false;document.handlers.visibilitychange();control('ExpensesValue').value='7.00';control('ExpensesValue').oninput();");assert.equal(b.run('timers.size'),0);
+ b.run("document.hidden=false;document.handlers.visibilitychange();control('ExpensesValue').value='7.00';control('ExpensesValue').oninput();");assert.equal(b.run('timers.size'),0);assert.equal(b.run("control('ExpensesValue').value"),'7.00');b.run("control('ExpensesReload').onclick();");assert.equal(b.run('timers.size'),1);await recoveryTick(b);assert.deepEqual(operations(b),['view','view','view']);assert.equal(b.run('calls.some(call=>call.body?.operation)'),false);
 });
 
-test('automatic full refresh imports new sales and later cancellations before updating Ads and the monthly net',async()=>{
+test('local observation displays newly saved sales and later cancellations without importing either source in the browser',async()=>{
  const b=browser(),source=fixture();await b.run('brazaMonthDashboard.start({api,syncVariants})');
- const added=fixture({...source,coverage:{...source.coverage,orders:5,paid:3,ongoing:2,payment_covered:3},sales_cents:15000,known_sales_cents:15000,expected_repass_cents:12000,known_expected_repass_cents:12000,production_cost_cents:3000,known_production_cost_cents:3000,invoice_tax_cents:300,known_invoice_tax_cents:300,result:{...source.result,net_estimate_cents:7200,net_margin_bps:4800}});
- const running=fixture({...source,status:'RUNNING',progress:{...source.progress,windows_complete:1},sales_cents:null,expected_repass_cents:null,production_cost_cents:null,invoice_tax_cents:null,ads_adjustment_cents:null,result:{...source.result,net_estimate_cents:null,net_margin_bps:null,pending:['COLLECTING','PRODUCTION_COST_INCOMPLETE','INVOICE_TAX_UNAVAILABLE','ADJUSTMENT_UNAVAILABLE']}});
- b.context.running=JSON.stringify(running);b.load(added);
- b.run("customApi=async(path,body)=>JSON.parse(body.operation==='start'?running:JSON.stringify(currentFrame));clock+=301000;");
- await b.run('[...timers.values()][0].callback()');
- assert.deepEqual(JSON.parse(b.run('JSON.stringify(calls.map(call=>call.body.operation))')),['read','start','ads','start','step','ads']);
- assert.match(b.text('Sales'),/150,00/);assert.match(b.text('Coverage'),/3 pedido\(s\) pagos/);assert.match(b.text('Net'),/72,00/);assert.equal(b.run('timers.size'),1);
- const cancelled=fixture({...source,coverage:{...source.coverage,orders:5,cancelled:2},result:{...source.result}});b.load(cancelled);
- b.run('clock+=301000;');await b.run('[...timers.values()][0].callback()');
- assert.deepEqual(JSON.parse(b.run('JSON.stringify(calls.slice(-3).map(call=>call.body.operation))')),['start','step','ads']);
- assert.match(b.text('Coverage'),/2 cancelado\(s\) excluído\(s\)/);assert.match(b.text('Sales'),/100,00/);assert.match(b.text('Net'),/43,00/);
- assert.equal(b.run('timers.size'),1);
+ const added=fixture({...source,coverage:{...source.coverage,orders:5,paid:3,ongoing:2,payment_covered:3},sales_cents:15000,known_sales_cents:15000,expected_repass_cents:12000,known_expected_repass_cents:12000,production_cost_cents:3000,known_production_cost_cents:3000,invoice_tax_cents:300,known_invoice_tax_cents:300,result:{...source.result,net_estimate_cents:7200,net_margin_bps:4800}});b.load(added);await recoveryTick(b);
+ assert.deepEqual(operations(b),['view','view']);assert.match(b.text('Sales'),/150,00/);assert.match(b.text('Coverage'),/3 pedido\(s\) pagos/);assert.match(b.text('Net'),/72,00/);assert.equal(b.run('timers.size'),1);
+ const cancelled=fixture({...source,coverage:{...source.coverage,orders:5,cancelled:2}});b.load(cancelled);await recoveryTick(b);
+ assert.deepEqual(operations(b),['view','view','view']);assert.match(b.text('Coverage'),/2 cancelado\(s\) excluído\(s\)/);assert.match(b.text('Sales'),/100,00/);assert.match(b.text('Net'),/43,00/);assert.equal(b.run('timers.size'),1);
 });
 
-test('overdue hidden finance refresh resumes once, blocks overlap and preserves expense edits made during the import',async()=>{
- const b=browser();await b.run('brazaMonthDashboard.start({api,syncVariants})');
- b.run('document.hidden=true;document.handlers.visibilitychange();clock+=600000;');assert.equal(b.run('timers.size'),0);
- b.run('document.hidden=false;document.handlers.visibilitychange();');assert.equal(b.run('timers.size'),1);assert.equal(b.run('[...timers.values()][0].delay'),0);
- b.run("let completeImport;customApi=async(path,body)=>body.operation==='start'?new Promise(resolve=>completeImport=resolve):JSON.parse(JSON.stringify(currentFrame));");
- const refresh=b.run('[...timers.values()][0].callback()');
- assert.equal(b.run('timers.size'),0);assert.equal(b.run("control('Refresh').disabled"),true);
- b.run("document.handlers.visibilitychange();control('ExpensesValue').value='12,34';control('ExpensesValue').oninput();");assert.equal(b.run('timers.size'),0);
- b.run('completeImport(JSON.parse(JSON.stringify(currentFrame)));');await refresh;
- assert.equal(b.run("control('ExpensesValue').value"),'12,34');assert.match(b.text('ExpenseState'),/edição de despesas ainda não salva/);
- assert.deepEqual(JSON.parse(b.run('JSON.stringify(calls.map(call=>call.body.operation))')),['read','start','ads','start','ads']);
- assert.equal(b.run('timers.size'),0,'an unfinished expense draft pauses scheduling instead of being saved or overwritten');
+test('a visible local observation coalesces overlap and preserves expense edits made while its response is pending',async()=>{
+ const b=browser();await b.run('brazaMonthDashboard.start({api,syncVariants})');b.run('document.hidden=true;document.handlers.visibilitychange();clock+=600000;');assert.equal(b.run('timers.size'),0);
+ b.run('document.hidden=false;document.handlers.visibilitychange();');assert.equal(b.run('timers.size'),1);b.run("let completeView;customViewApi=async()=>new Promise(resolve=>completeView=resolve);");
+ const observed=recoveryTick(b);await b.settle();assert.equal(b.run('timers.size'),0);assert.equal(b.run('calls.length'),2);
+ b.run("document.handlers.visibilitychange();control('ExpensesValue').value='12,34';control('ExpensesValue').oninput();");assert.equal(b.run('calls.length'),2);
+ b.run('completeView(savedView(currentFrame));');assert.equal(await observed,true);assert.equal(b.run("control('ExpensesValue').value"),'12,34');assert.match(b.text('ExpenseState'),/edição de despesas ainda não salva/);assert.deepEqual(operations(b),['view','view']);assert.equal(b.run('timers.size'),1);
  b.run("control('ExpensesReload').onclick();");assert.equal(b.run('timers.size'),1);
 });
 
-test('an automatic source failure or explicit stop cannot start a retry loop on visibility changes',async()=>{
- const b=browser();await b.run('brazaMonthDashboard.start({api,syncVariants})');
- b.run("customApi=async()=>{throw Error('Fonte temporariamente indisponível.');};clock+=301000;");
- assert.equal(await b.run('[...timers.values()][0].callback()'),false);assert.equal(b.run('calls.length'),4);assert.equal(b.run('timers.size'),0);
- b.run('document.hidden=true;document.handlers.visibilitychange();clock+=600000;document.hidden=false;document.handlers.visibilitychange();');
- assert.equal(b.run('timers.size'),0);assert.equal(b.run('calls.length'),4);assert.match(b.text('Sales'),/100,00/);assert.match(b.text('Status'),/Fonte temporariamente indisponível/);
- b.run('customApi=null;');assert.equal(await b.run('brazaMonthDashboard.refresh()'),true);assert.equal(b.run('timers.size'),1);
- b.run('brazaMonthDashboard.stop();document.hidden=true;document.handlers.visibilitychange();document.hidden=false;document.handlers.visibilitychange();');
- assert.equal(b.run('timers.size'),0);
+test('failed local observation retains the verified summary and cannot create source requests on visibility changes or after stop',async()=>{
+ const b=browser();await b.run('brazaMonthDashboard.start({api,syncVariants})');b.run("customViewApi=async()=>{throw Error('PRIVATE_STORAGE_RESPONSE');};");
+ assert.equal(await recoveryTick(b),false);assert.deepEqual(operations(b),['view','view']);assert.match(b.text('Sales'),/100,00/);assert.doesNotMatch(b.text('Status'),/PRIVATE/);assert.equal(b.run('timers.size'),1);assert.ok(b.run('[...timers.values()][0].delay')>=15000);
+ b.run('document.hidden=true;document.handlers.visibilitychange();clock+=600000;document.hidden=false;document.handlers.visibilitychange();');assert.equal(b.run('timers.size'),1);assert.equal(b.run('calls.length'),2);
+ b.run('customViewApi=null;');assert.equal(await b.run('brazaMonthDashboard.refresh()'),true);assert.deepEqual(operations(b),['view','view','view']);
+ b.run('brazaMonthDashboard.stop();document.hidden=true;document.handlers.visibilitychange();document.hidden=false;document.handlers.visibilitychange();');assert.equal(b.run('timers.size'),0);
 });
 
-test('an import hidden between responses suspends further requests and resumes automatically on visibility',async()=>{
- const source=fixture(),running=fixture({...source,status:'RUNNING',progress:{...source.progress,windows_complete:1},sales_cents:null,expected_repass_cents:null,production_cost_cents:null,invoice_tax_cents:null,ads_adjustment_cents:null,result:{...source.result,net_estimate_cents:null,net_margin_bps:null,pending:['COLLECTING','PRODUCTION_COST_INCOMPLETE','INVOICE_TAX_UNAVAILABLE','ADJUSTMENT_UNAVAILABLE']}});
- const b=browser();b.context.partial=JSON.stringify(running);
- b.run("let releaseStart;customApi=async()=>new Promise(resolve=>releaseStart=resolve);");const starting=b.run('brazaMonthDashboard.start({api,syncVariants})');
+test('an explicitly requested manual import suspends while hidden and resumes the saved job without a new start',async()=>{
+ const running=collectionFixture(),source=fixture({collection:{schema:'business_month_collection_v1',state:'READY',code:null,retry_after_seconds:0}}),b=browser(running);b.context.partial=JSON.stringify(running);b.context.completed=JSON.stringify(source);
+ b.run("let releaseStart;customApi=async()=>new Promise(resolve=>releaseStart=resolve);");const starting=b.run('startManual({api,syncVariants})');await b.settle();
  b.run('document.hidden=true;document.handlers.visibilitychange();releaseStart(JSON.parse(partial));');await starting;
- assert.equal(b.run('calls.length'),1);assert.equal(b.run('timers.size'),0);assert.match(b.text('Status'),/automaticamente quando este painel voltar/);
- b.run('customApi=null;document.hidden=false;document.handlers.visibilitychange();');assert.equal(b.run('[...timers.values()][0].delay'),0);
- await b.run('[...timers.values()][0].callback()');
- assert.deepEqual(JSON.parse(b.run('JSON.stringify(calls.map(call=>call.body.operation))')),['read','start','ads']);assert.match(b.text('Net'),/43,00/);assert.equal(b.run('timers.size'),1);
+ assert.equal(b.run('calls.length'),2);assert.equal(b.run('timers.size'),0);assert.equal(operations(b).filter(operation=>operation==='ads').length,0);
+ b.run("customApi=async(path,body)=>JSON.parse(body&&['step','ads'].includes(body.operation)?completed:partial);document.hidden=false;document.handlers.visibilitychange();");assert.equal(b.run('timers.size'),1);await recoveryTick(b);
+ assert.deepEqual(operations(b),['view','start','observe','step','ads']);assert.match(b.text('Net'),/43,00/);assert.equal(b.run('timers.size'),1);
 });
 
 test('an explicit pause waits for the current response and does not start Ads until manually resumed',async()=>{
- const b=browser();b.run("let releaseStart;customApi=async()=>new Promise(resolve=>releaseStart=resolve);");
- const starting=b.run('brazaMonthDashboard.start({api,syncVariants})');b.run("control('Pause').onclick();releaseStart(JSON.parse(JSON.stringify(currentFrame)));");await starting;
- assert.equal(b.run('calls.length'),1);assert.equal(b.run('timers.size'),0);assert.match(b.text('Status'),/Consulta pausada/);
- b.run('customApi=null;');await b.run('brazaMonthDashboard.refresh()');
- assert.deepEqual(JSON.parse(b.run('JSON.stringify(calls.map(call=>call.body.operation))')),['read','start','ads']);assert.equal(b.run('timers.size'),1);
+ const b=browser(collectionFixture());b.run("let releaseStart;customApi=async()=>new Promise(resolve=>releaseStart=resolve);");
+ const starting=b.run('startManual({api,syncVariants})');await b.settle();b.run("control('Pause').onclick();releaseStart(JSON.parse(JSON.stringify(currentFrame)));");await starting;
+ assert.equal(b.run('calls.length'),2);assert.equal(b.run('timers.size'),0);assert.match(b.text('Status'),/Consulta pausada/);
+ b.load(fixture());b.run('customApi=null;');await b.run('brazaMonthDashboard.refresh()');
+ assert.deepEqual(JSON.parse(b.run('JSON.stringify(operationCalls())')),['view','start','start','ads']);assert.equal(b.run('timers.size'),1);
 });
 
-test('source failure stops the collection without an automatic retry loop or private error text',async()=>{
+test('an explicitly requested source failure preserves the last complete summary and returns to local observation',async()=>{
  const b=browser();b.run("customApi=async()=>{throw Error('A conexão financeira ainda não está disponível.');};");
- assert.equal(await b.run('brazaMonthDashboard.start({api,syncVariants})'),false);assert.equal(b.run('calls.length'),2);assert.equal(b.run('timers.size'),0);assert.equal(b.text('Net'),'Em apuração');assert.equal(b.run("control('Refresh').disabled"),false);assert.match(b.text('Status'),/conexão financeira/);
+ assert.equal(await b.run('startManual({api,syncVariants})'),false);assert.deepEqual(operations(b),['view','start']);assert.match(b.text('Net'),/43,00/);assert.equal(b.run("control('Refresh').disabled"),false);assert.match(b.text('Status'),/conexão financeira/);assert.equal(b.run('timers.size'),1);
+ await recoveryTick(b);assert.deepEqual(operations(b),['view','start','view']);assert.match(b.text('Net'),/43,00/);
 });
 
 test('a failed partial import shows an interrupted badge and a bounded copyable diagnostic until a manual continuation succeeds',async()=>{
  const source=fixture(),running=fixture({...source,status:'RUNNING',progress:{...source.progress,windows_complete:1},sales_cents:null,expected_repass_cents:null,production_cost_cents:null,invoice_tax_cents:null,ads_adjustment_cents:null,result:{...source.result,net_estimate_cents:null,net_margin_bps:null,pending:['COLLECTING','PRODUCTION_COST_INCOMPLETE','INVOICE_TAX_UNAVAILABLE','ADJUSTMENT_UNAVAILABLE']}}),b=browser(running);
  b.run("customApi=async(path,body)=>{if(body.operation==='step')throw Object.assign(Error('A leitura financeira foi interrompida.'),{code:'ADMIN_API_HTTP_ERROR',apiCode:'BUSINESS_MONTH_SOURCE_HTTP_503',status:503,url:'https://private.invalid/?token=PRIVATE_TOKEN',payload:{access_token:'PRIVATE_TOKEN'}});return JSON.parse(JSON.stringify(currentFrame));};");
- assert.equal(await b.run('brazaMonthDashboard.start({api,syncVariants})'),false);assert.equal(b.text('Badge'),'Consulta interrompida');assert.equal(b.text('Refresh'),'Continuar consulta');assert.equal(b.run("control('Refresh').disabled"),false);assert.match(b.text('Coverage'),/2 pedido\(s\) pagos/);assert.match(b.text('SalesHelp'),/100,00/);
+ assert.equal(await b.run('startManual({api,syncVariants})'),false);assert.equal(b.text('Badge'),'Consulta interrompida');assert.equal(b.text('Refresh'),'Continuar consulta');assert.equal(b.run("control('Refresh').disabled"),false);assert.match(b.text('Coverage'),/2 pedido\(s\) pagos/);assert.match(b.text('SalesHelp'),/100,00/);
  const diagnostic=b.run("control('Status').children.find(row=>row.className==='month-detail-help').children.find(row=>row.tag==='code').textContent");
  assert.deepEqual(JSON.parse(diagnostic),{client_contract:'business-month-v2',operation:'step',code:'ADMIN_API_HTTP_ERROR',api_code:'BUSINESS_MONTH_SOURCE_HTTP_503',http:503});assert.ok(!b.text('Status').includes('PRIVATE_TOKEN'));assert.ok(!b.text('Status').includes('private.invalid'));assert.equal(b.run("control('Status').children.filter(row=>row.className==='month-detail-help').length"),1);
  assert.equal(b.run('calls.length'),3);assert.equal(b.run('timers.size'),0,'a partial POST failure must not be replayed automatically');
  b.load(source);b.run('customApi=null;');assert.equal(await b.run("control('Refresh').onclick()"),true);assert.equal(b.text('Badge'),'Previsão completa');assert.doesNotMatch(b.text('Status'),/Diagnóstico da coleta/);assert.match(b.text('Net'),/43,00/);
 });
 
-test('a failed cache read followed by a successful import never leaves a stale collection diagnostic',async()=>{
- const b=browser();b.run("customApi=async(path,body)=>{if(body.operation==='read')throw Object.assign(Error('Cache temporariamente indisponível.'),{code:'ADMIN_API_NETWORK_ERROR'});return JSON.parse(JSON.stringify(currentFrame));};");
- assert.equal(await b.run('brazaMonthDashboard.start({api,syncVariants})'),true);assert.equal(b.text('Badge'),'Previsão completa');assert.doesNotMatch(b.text('Status'),/Diagnóstico da coleta|ADMIN_API_NETWORK_ERROR/);assert.deepEqual(JSON.parse(b.run('JSON.stringify(calls.map(call=>call.body.operation))')),['read','start','ads']);
+test('a failed local recalculation preserves verified amounts and a successful retry clears the local error',async()=>{
+ const b=browser();await b.run('brazaMonthDashboard.start({api,syncVariants})');b.run("customViewApi=async()=>{throw Object.assign(Error('PRIVATE_STORAGE_RESPONSE'),{code:'ADMIN_API_NETWORK_ERROR'});};");
+ assert.equal(await b.run('brazaMonthDashboard.refreshCosts()'),false);assert.match(b.text('Net'),/43,00/);assert.doesNotMatch(b.text('Status'),/PRIVATE/);b.run('customViewApi=null;');assert.equal(await b.run('brazaMonthDashboard.refreshCosts()'),true);assert.doesNotMatch(b.text('Status'),/Diagnóstico da coleta|ADMIN_API_NETWORK_ERROR/);assert.deepEqual(operations(b),['view','view','view']);
 });
 
 test('collection diagnostics ignore arbitrary payloads, unsafe codes and accessor fields',async()=>{
  const b=browser();assert.equal(b.run('brazaMonthDashboard.clientContract'),'business-month-v2');b.run("brazaMonthDashboard.clientContract='PRIVATE_TOKEN';let diagnosticAccessors=0;customApi=async()=>{const failure=Error('Não foi possível concluir a leitura.');failure.url='https://private.invalid/PRIVATE_TOKEN';failure.payload={token:'PRIVATE_TOKEN'};Object.defineProperty(failure,'client_contract',{get(){diagnosticAccessors++;return 'PRIVATE_TOKEN';}});failure.code='PRIVATE_TOKEN <html>';Object.defineProperty(failure,'apiCode',{get(){diagnosticAccessors++;return 'BUSINESS_MONTH_PRIVATE';}});Object.defineProperty(failure,'status',{get(){diagnosticAccessors++;return 503;}});throw failure;};");
- assert.equal(await b.run('brazaMonthDashboard.start({api,syncVariants})'),false);assert.equal(b.run('diagnosticAccessors'),0);assert.doesNotMatch(b.text('Status'),/PRIVATE_TOKEN|private\.invalid|<html>/);
- const diagnostic=b.run("control('Status').children.find(row=>row.className==='month-detail-help').children.find(row=>row.tag==='code').textContent");assert.deepEqual(JSON.parse(diagnostic),{client_contract:'business-month-v2',operation:'start',code:'BUSINESS_MONTH_REQUEST_FAILED',api_code:null,http:null});assert.equal(b.text('Badge'),'Consulta interrompida');
+ assert.equal(await b.run('startManual({api,syncVariants})'),false);assert.equal(b.run('diagnosticAccessors'),0);assert.doesNotMatch(b.text('Status'),/PRIVATE_TOKEN|private\.invalid|<html>/);
+ const diagnostic=b.run("control('Status').children.find(row=>row.className==='month-detail-help').children.find(row=>row.tag==='code').textContent");assert.deepEqual(JSON.parse(diagnostic),{client_contract:'business-month-v2',operation:'start',code:'BUSINESS_MONTH_REQUEST_FAILED',api_code:null,http:null});assert.equal(b.text('Badge'),'Previsão completa');
 });
 
 test('a recharge is visibly added back once while a support fee stays inside the reported payout',async()=>{
@@ -458,14 +443,14 @@ test('missing product costs trigger one automatic catalogue pass and a read-only
  const source=fixture(),pending=fixture({...source,production_cost_cents:null,known_production_cost_cents:1000,unmapped_variants:[{item_id:'201',model_id:'0',quantity:1}],result:{...source.result,net_estimate_cents:null,net_margin_bps:null,pending:['PRODUCTION_COST_INCOMPLETE']}});
  const b=browser(pending);b.context.completed=JSON.stringify(source);
  b.run("const syncAndComplete=async rows=>{syncCalls++;if(rows.length!==1||rows[0].item_id!=='201')throw Error('UNEXPECTED_VARIANTS');currentFrame=JSON.parse(completed);return true;};");
- await b.run('brazaMonthDashboard.start({api,syncVariants:syncAndComplete})');
- assert.equal(b.run('syncCalls'),1);assert.deepEqual(JSON.parse(b.run('JSON.stringify(calls.map(call=>call.body.operation))')),['read','start','read','ads']);assert.match(b.text('Net'),/43,00/);
+ await b.run('startManual({api,syncVariants:syncAndComplete})');
+ assert.equal(b.run('syncCalls'),1);assert.deepEqual(JSON.parse(b.run('JSON.stringify(operationCalls())')),['view','start','read','ads']);assert.match(b.text('Net'),/43,00/);
 });
 
 test('a forged net result is refused before it can appear in the monthly dashboard',async()=>{
  const b=browser(),invalid=fixture();invalid.result.net_estimate_cents++;b.load(invalid);
- assert.equal(await b.run('brazaMonthDashboard.start({api,syncVariants})'),false);assert.equal(b.text('Net'),'Em apuração');assert.match(b.text('Status'),/não puderam ser conferidos/);assert.equal(b.run('timers.size'),0);
- assert.deepEqual(JSON.parse(b.run('JSON.stringify(calls.map(call=>call.body.operation))')),['read'],'an invalid successful cache response is never trusted or treated as a cache miss');
+ assert.equal(await b.run('brazaMonthDashboard.start({api,syncVariants})'),false);assert.equal(b.text('Net'),'Em apuração');assert.match(b.text('Status'),/não foi possível conferir/i);assert.equal(b.run('timers.size'),1);
+ assert.deepEqual(JSON.parse(b.run('JSON.stringify(operationCalls())')),['view'],'an invalid successful cache response is never trusted or treated as a cache miss');
 });
 
 test('monthly products keep production totals and exclusive contribution separate from account Ads and net profit',async()=>{
@@ -526,7 +511,7 @@ test('partial balances explain both returns and unpriced production, including a
  for(const sample of [{known:1000,quantity:1,returns:1,amount:'53,00'},{known:0,quantity:2,returns:0,amount:'63,00'}]){
   const pending=['PRODUCTION_COST_INCOMPLETE',...(sample.returns?['RETURNS_NOT_RECONCILED']:[])],value=fixture({...source,coverage:{...source.coverage,returns:sample.returns},production_cost_cents:null,known_production_cost_cents:sample.known,unmapped_variants:[{item_id:'201',model_id:'0',quantity:sample.quantity}],result:{...source.result,net_estimate_cents:null,net_margin_bps:null,pending}}),b=browser(value);
   assert.equal(await b.run('brazaMonthDashboard.start({api,syncVariants})'),true);assert.equal(b.text('NetLabel'),'Saldo com custos identificados');assert.match(b.text('Net'),new RegExp(sample.amount));assert.match(b.text('NetHelp'),/falta descontar a produção/);assert.match(b.text('NetHelp'),/não é lucro líquido final/);
-  if(sample.returns)assert.match(b.text('NetHelp'),/devoluções.*conciliação/i);
+  if(sample.returns)assert.match(b.text('NetHelp'),/devolu.*conciliação/i);
   const production=b.run("text(control('CostOverview').children[0])");assert.match(production,/Produção com custo identificado/);assert.match(production,new RegExp(sample.known?'10,00':'0,00'));assert.match(production,/produção total permanece pendente/i);
   assert.doesNotMatch(b.text('CostOverview'),/100%|1 de 1|2 de 2|0 de 0/);assert.match(b.text('CostOverview'),/Quantidade ainda não disponível/);assert.equal(b.run('currentFrame.result.net_estimate_cents'),null);assert.equal(b.run('currentFrame.production_cost_cents'),null);
  }
@@ -536,11 +521,11 @@ test('fully identified production with unconciliated returns shows a provisional
  const source=productFixture(),row=source.product_summary.products[0];source.coverage.returns=1;row.exclusive_returns=1;row.exclusive_after_costs_cents=null;row.exclusive_margin_bps=null;row.pending=['RETURNS_NOT_RECONCILED'];source.result={...source.result,net_estimate_cents:null,net_margin_bps:null,pending:['RETURNS_NOT_RECONCILED']};
  const b=browser(fixture(source));b.run('globalThis.brazaAutomationWorkspace={render(value){globalThis.diagnosis=value;}};');
  assert.equal(await b.run('brazaMonthDashboard.start({api,syncVariants})'),true);
- assert.equal(b.text('NetLabel'),'Saldo provisório da loja');assert.match(b.text('Net'),/43,01/);assert.match(b.text('NetHelp'),/devolu|reembolso|concilia/i);assert.match(b.text('CostOverview'),/20,00/);assert.match(b.text('CostOverview'),/2 de 2/);assert.match(b.text('PendingList'),/devoluções/);
+ assert.equal(b.text('NetLabel'),'Resultado líquido previsto · em conferência');assert.match(b.text('Net'),/43,01/);assert.match(b.text('NetHelp'),/devolu|reembolso|concilia/i);assert.match(b.text('CostOverview'),/20,00/);assert.match(b.text('CostOverview'),/2 de 2/);assert.match(b.text('PendingList'),/devoluções/);
  assert.equal(b.text('CheckpointStatus'),'Previsão com pendências');assert.equal(b.run('currentFrame.result.net_estimate_cents'),null);assert.equal(b.run('diagnosis.status'),'BLOCKED');assert.equal(b.run('diagnosis.metrics.net_estimate_cents'),null);assert.equal(b.run('diagnosis.conditions.includes("RETURNS_NOT_RECONCILED")'),true);
 });
 
-test('missing financial inputs and unresolved source or status gates cannot become a numerical store balance',async()=>{
+test('missing financial inputs and unresolved sources cannot become a numerical store balance',async()=>{
  const source=fixture(),pending=({pending:codes,...changes})=>fixture({...source,...changes,result:{...source.result,net_estimate_cents:null,net_margin_bps:null,pending:codes}});
  const cases=[
   ['repasse',pending({coverage:{...source.coverage,payment_covered:1,payment_missing:1},sales_cents:null,expected_repass_cents:null,invoice_tax_cents:null,ads_adjustment_cents:null,pending:['PAYMENT_INCOMPLETE','INVOICE_TAX_UNAVAILABLE','ADJUSTMENT_UNAVAILABLE']})],
@@ -550,10 +535,16 @@ test('missing financial inputs and unresolved source or status gates cannot beco
   ['ajuste ausente',pending({ads_adjustment_cents:null,pending:['ADJUSTMENT_UNAVAILABLE']})],
   ['recarga não classificada',pending({ads_adjustment_cents:1000,pending:['RECHARGE_TREATMENT_REQUIRED']})],
   ['fonte indisponível',pending({pending:['SOURCE_UNAVAILABLE']})],
-  ['situação em revisão',pending({coverage:{...source.coverage,orders:5,cancel_pending:1},pending:['STATUS_REVIEW_REQUIRED']})],
   ['aritmética insegura',pending({pending:['ARITHMETIC_UNSAFE']})],
  ];
  for(const [name,value] of cases){const b=browser(value);assert.equal(await b.run('brazaMonthDashboard.start({api,syncVariants})'),true,name);assert.equal(b.text('Net'),'Em conciliação',name);assert.equal(b.text('NetLabel'),'Resultado líquido previsto',name);assert.equal(b.run('currentFrame.result.net_estimate_cents'),null,name);assert.equal(b.text('CheckpointStatus'),'Previsão com pendências',name);assert.doesNotMatch(b.text('Net'),/R\$|0,00/,name);}
+});
+
+test('a fully costed forecast keeps status-review orders excluded and preserves strict financial and automation blockers',async()=>{
+ const source=fixture(),value=fixture({...source,coverage:{...source.coverage,orders:6,cancel_pending:1,other:1,returns:1},result:{...source.result,net_estimate_cents:null,net_margin_bps:null,pending:['STATUS_REVIEW_REQUIRED','RETURNS_NOT_RECONCILED']}}),b=browser(value);
+ b.run('globalThis.brazaAutomationWorkspace={render(value){globalThis.diagnosis=value;}};');await b.run('brazaMonthDashboard.start({api,syncVariants})');
+ assert.equal(b.text('NetLabel'),'Resultado líquido previsto · em conferência');assert.match(b.text('Net'),/43,00/);assert.match(b.text('NetHelp'),/2.*pedido.*(?:revisão|excluído)/i);assert.match(b.text('NetHelp'),/devolu.*concilia/i);assert.match(b.text('CostOverview'),/37,00/);assert.match(b.text('PendingList'),/cancelamento|situação/);assert.match(b.text('PendingList'),/devolu/i);
+ assert.equal(b.run('currentFrame.result.net_estimate_cents'),null);assert.equal(b.run('currentFrame.result.net_profit_cents'),null);assert.equal(b.run('diagnosis.status'),'BLOCKED');assert.equal(b.run('diagnosis.execution'),'READ_ONLY');assert.equal(b.run('diagnosis.metrics.net_estimate_cents'),null);
 });
 
 test('legacy monthly data without product quantities does not invent unit coverage or erase known manufacturing costs',async()=>{
@@ -567,7 +558,7 @@ test('absent or forged product data cannot become zero product contribution',asy
  const source=productFixture(),b=browser(source);await b.run('brazaMonthDashboard.start({api,syncVariants})');
  source.product_summary.products[0].exclusive_after_costs_cents++;
  b.load(source);assert.equal(await b.run('brazaMonthDashboard.refreshCosts()'),false);assert.match(b.run("text(control('ProductRows').children[0])"),/29,00/);assert.doesNotMatch(b.run("text(control('ProductRows').children[0])"),/29,01/);
- assert.match(b.text('Status'),/não foi possível recalcular/);
+ assert.match(b.text('Status'),/não foi possível (?:recalcular|conferir)/i);
 });
 
 test('monthly custom products show their configured profile and full unit cost without assuming garment composition or rendering labels as HTML',async()=>{
@@ -600,7 +591,7 @@ test('MEI shows one fixed monthly DAS for three products and leaves product bala
  assert.equal(b.text('ProductBalanceHeading'),'Saldo após produção');assert.match(b.text('ProductTaxHelp'),/uma única vez no resultado geral, sem rateio/);
  assert.match(b.text('ProductRows'),/30,00/);assert.doesNotMatch(b.text('ProductRows'),/86,05|29,00|imposto .*0,00/);
  for(const name of ['TaxSummary','TaxHelp','Waterfall','Readiness','NetHelp','ProductTaxHelp','ProductRows'])assert.doesNotMatch(b.text(name),/imposto (?:de )?2%|estimativa de 2%|Imposto previsto · 2%/i,'MEI copy must not claim a per-note tax in '+name);
- assert.equal(b.run("calls.some(call=>call.body.operation==='expenses')"),false,'reading the known DAS does not prompt or save manual monthly tax amounts');
+ assert.equal(b.run("calls.some(call=>call.body?.operation==='expenses')"),false,'reading the known DAS does not prompt or save manual monthly tax amounts');
 });
 
 test('a partially costed MEI month deducts the declared DAS once without inventing the missing product cost',async()=>{
@@ -776,7 +767,7 @@ test('a known product subtotal remains visible beside final monthly blockers and
  const mei={schema:'business_month_tax_v1',regime:'MEI',year:2026,policy_revision:1,monthly_das_cents:8605,tax_cents:8605,status:'DECLARED',source:'OPERATOR_DECLARED_DAS',basis:'MONTHLY_COMPETENCE_NO_PRORATION'};
  const value=fixture({...source,coverage:{...source.coverage,orders:4,cancel_pending:1},expected_repass_cents:2198,known_expected_repass_cents:2198,production_cost_cents:1590,known_production_cost_cents:1590,invoice_tax_cents:8605,known_invoice_tax_cents:8605,tax:mei,source_checked_at:{finance_oldest_at:stamp-1200,finance_latest_at:stamp,ads_at:stamp},result:{...source.result,net_estimate_cents:null,net_margin_bps:null,pending:['STATUS_REVIEW_REQUIRED','FINANCIAL_SOURCE_STALE']},product_summary:{...source.product_summary,tax_treatment:'MONTHLY_DAS_NOT_ALLOCATED'}});
  const b=browser(value);await b.run('brazaMonthDashboard.start({api,syncVariants})');
- assert.match(b.text('ProductRows'),/Subtotal da última leitura.*6,08/);assert.match(b.text('ProductRows'),/antes de anúncios, outras despesas e DAS-MEI mensal/);assert.match(b.text('ProductRows'),/saldo final continua em conferência/);assert.match(b.text('ProductPeriodNotice'),/Avisos do período/);assert.doesNotMatch(b.text('ProductRows'),/Há situações de pedidos do mês|Parte da leitura financeira/);assert.equal(b.text('Net'),'Em conciliação');
+ assert.match(b.text('ProductRows'),/Subtotal da última leitura.*6,08/);assert.match(b.text('ProductRows'),/antes de anúncios, outras despesas e DAS-MEI mensal/);assert.match(b.text('ProductRows'),/saldo final continua em conferência/);assert.match(b.text('ProductPeriodNotice'),/Avisos do período/);assert.doesNotMatch(b.text('ProductRows'),/Há situações de pedidos do mês|Parte da leitura financeira/);assert.equal(b.text('NetLabel'),'Resultado líquido previsto · em conferência');assert.match(b.text('Net'),/94,97/);assert.equal(b.run('currentFrame.result.net_estimate_cents'),null);
 });
 
 test('ready products on the visible page never hide the global queue of more than sixty products',async()=>{
@@ -798,7 +789,7 @@ test('hiding the page during one catalogue request prevents follow-up reads and 
  b.run("document.hidden=true;document.handlers.visibilitychange();const completed=JSON.parse(classified);completed.revision=2;completed.counts={total:1,queued:0,running:0,matched:1,partial:0,review:0,retry_wait:0,due:0};completed.next_due_at=Date.now()/1000+86400;classified=JSON.stringify(completed);currentFrame.classification_revision=2;releaseClassification({status:'PROGRESSED',processed:['200'],failed:[],state:completed});");
  assert.equal(await pending,false);assert.equal(b.run('calls.length'),before);assert.equal(b.run('timers.size'),0);
  b.run("document.hidden=false;document.handlers.visibilitychange();");await b.run("[...timers.values()].find(timer=>timer.delay===0).callback()");
- assert.equal(b.run("calls.at(-1).body.operation"),'read');assert.match(b.text('Net'),/43,01/);
+ assert.equal(b.run("operationCalls().at(-1)"),'view');assert.match(b.text('Net'),/43,01/);
 });
 
 test('prepare fills the valid query month or the current Brasilia month before any authenticated API is available',()=>{
@@ -829,53 +820,49 @@ test('the prepared retry can start the monthly dashboard and late bootstrap noti
  b.run("control('ExpensesValue').value='123.45';control('ExpensesValue').oninput();");const before=b.text('Status'),calls=b.run('calls.length');
  for(const phase of ['LOADING','RETRYING','FAILED','READY'])assert.equal(b.run('brazaMonthDashboard.bootstrapState({phase:'+JSON.stringify(phase)+',message:"Failed to fetch PRIVATE"})'),false);
  assert.equal(b.run('brazaMonthDashboard.prepare()'),false);assert.equal(b.run('calls.length'),calls);assert.equal(b.run("control('ExpensesValue').value"),'123.45');assert.equal(b.text('Status'),before);assert.match(b.text('Net'),/43,00/);
- b.run('brazaMonthDashboard.stop();');assert.equal(b.text('Refresh'),'Continuar consulta');assert.equal(b.run('brazaMonthDashboard.bootstrapState({phase:"FAILED"})'),false);assert.match(b.text('Net'),/43,00/);
+ b.run('brazaMonthDashboard.stop();');assert.equal(b.text('Refresh'),'Recalcular custos');assert.equal(b.run('brazaMonthDashboard.bootstrapState({phase:"FAILED"})'),false);assert.match(b.text('Net'),/43,00/);
 });
 
 
 test('a recent saved month opens with one local read and the primary cost recalculation never reimports orders or Ads',async()=>{
  const saved=fixture({source_checked_at:{finance_oldest_at:stamp-90,finance_latest_at:stamp-30,ads_at:stamp}}),b=browser(saved);
- assert.equal(await b.run('brazaMonthDashboard.start({api,syncVariants})'),true);assert.deepEqual(operations(b),['read']);
- assert.equal(b.text('Refresh'),'Recalcular custos');assert.equal(b.text('SourceRefresh'),'Atualizar vendas');assert.match(b.text('Status'),/pedidos salvos/);
+ assert.equal(await b.run('brazaMonthDashboard.start({api,syncVariants})'),true);assert.deepEqual(operations(b),['view']);
+ assert.equal(b.text('Refresh'),'Recalcular custos');assert.equal(b.text('SourceRefresh'),'Atualizar vendas');assert.match(b.text('Status'),/pedidos.*salvos/);
  const changed=fixture({...saved,costs_revision:4,production_cost_cents:2100,known_production_cost_cents:2100,result:{...saved.result,net_estimate_cents:4200,net_margin_bps:4200}});b.load(changed);
- assert.equal(await b.run("control('Refresh').onclick()"),true);assert.deepEqual(operations(b),['read','read']);assert.match(b.text('Net'),/42,00/);
- assert.match(b.text('Status'),/dados salvos/);assert.match(b.text('Scope'),/08:58:30/);assert.equal(b.run("control('SourceRefresh').disabled"),false);
+ assert.equal(await b.run("control('Refresh').onclick()"),true);assert.deepEqual(operations(b),['view','view']);assert.match(b.text('Net'),/42,00/);
+ assert.match(b.text('Status'),/custos salvos/);assert.match(b.text('Scope'),/08:58:30/);assert.equal(b.run("control('SourceRefresh').disabled"),false);
  assert.equal(b.run('timers.size'),1,'cost recalculation keeps exactly one financial schedule');
  b.run('clock+=211000;customApi=async(path,body)=>{if(body.operation!=="read")throw Object.assign(Error("fixture stop"),{code:"ADMIN_API_HTTP_ERROR"});return JSON.parse(JSON.stringify(currentFrame));};');
- await b.run('[...timers.values()][0].callback()');assert.equal(operations(b).at(-1),'start','the local read did not renew the provider clock');
+ await b.run('[...timers.values()][0].callback()');assert.equal(operations(b).at(-1),'view');assert.equal(b.run('currentFrame.source_checked_at.finance_oldest_at'),stamp-90,'the local read did not renew the provider clock');assert.equal(operations(b).some(operation=>['start','step','ads'].includes(operation)),false);
 });
 
 test('the separate sales update still imports cancellations before replacing the saved monthly quantities and balance',async()=>{
  const saved=fixture({source_checked_at:{finance_oldest_at:stamp-90,finance_latest_at:stamp-30,ads_at:stamp}}),b=browser(saved);
  await b.run('brazaMonthDashboard.start({api,syncVariants})');
  const updated=fixture({...saved,coverage:{...saved.coverage,paid:1,completed:1,ongoing:0,cancelled:2,payment_covered:1},sales_cents:5000,known_sales_cents:5000,expected_repass_cents:4000,known_expected_repass_cents:4000,production_cost_cents:1000,known_production_cost_cents:1000,invoice_tax_cents:100,known_invoice_tax_cents:100,result:{...saved.result,net_estimate_cents:1400,net_margin_bps:2800}});b.load(updated);
- assert.equal(await b.run("control('SourceRefresh').onclick()"),true);assert.deepEqual(operations(b),['read','start','ads']);
+ assert.equal(await b.run("control('SourceRefresh').onclick()"),true);assert.deepEqual(operations(b),['view','start','ads']);
  assert.match(b.text('Coverage'),/1 pedido\(s\) pagos/);assert.match(b.text('Coverage'),/2 cancelado\(s\) excluído\(s\)/);assert.match(b.text('Sales'),/50,00/);assert.match(b.text('Net'),/14,00/);
 });
 
 test('a delayed local recalculation cannot overwrite a different selected month and cannot send an overlapping source update',async()=>{
  const saved=fixture({source_checked_at:{finance_oldest_at:stamp-90,finance_latest_at:stamp-30,ads_at:stamp}}),b=browser(saved);await b.run('brazaMonthDashboard.start({api,syncVariants})');
- b.run('let releaseCosts;customApi=async(path,body)=>body.month==="2026-10"?new Promise(resolve=>releaseCosts=resolve):JSON.parse(JSON.stringify(currentFrame));');
- const pending=b.run("control('Refresh').onclick()");await b.settle();assert.equal(b.run("control('SourceRefresh').disabled"),true);assert.equal(await b.run("control('SourceRefresh').onclick()"),false);assert.deepEqual(operations(b),['read','read']);
+ b.run('let releaseCosts;customViewApi=async path=>new URLSearchParams(path.split("?")[1]).get("month")==="2026-10"?new Promise(resolve=>releaseCosts=resolve):savedView(currentFrame);');
+ const pending=b.run("control('Refresh').onclick()");await b.settle();assert.equal(b.run("control('SourceRefresh').disabled"),true);assert.equal(await b.run("control('SourceRefresh').onclick()"),false);assert.deepEqual(operations(b),['view','view']);
  const past=fixture({...saved,month:'2026-09',start_date:'2026-09-01',end_date:'2026-09-30',ads:calendar('2026-09',30)});b.load(past);b.run("control('Select').value='2026-09';");assert.equal(await b.run("control('Select').onchange()"),true);assert.match(b.text('Scope'),/01\/09\/2026 a 30\/09\/2026/);
- b.context.old=JSON.stringify(saved);b.run('releaseCosts(JSON.parse(old));');assert.equal(await pending,false);assert.match(b.text('Scope'),/01\/09\/2026 a 30\/09\/2026/);assert.doesNotMatch(b.text('Scope'),/01\/10\/2026/);assert.equal(b.run("control('SourceRefresh').disabled"),false);
+ b.context.old=JSON.stringify(saved);b.run('releaseCosts(savedView(JSON.parse(old)));');assert.equal(await pending,false);assert.match(b.text('Scope'),/01\/09\/2026 a 30\/09\/2026/);assert.doesNotMatch(b.text('Scope'),/01\/10\/2026/);assert.equal(b.run("control('SourceRefresh').disabled"),false);
 });
 
 
-test('Ads retries back off at sixty, one hundred twenty and three hundred seconds while financial collection remains independent',async()=>{
+test('a failed Ads read after an explicit manual update cannot become a periodic browser retry',async()=>{
  const source=fixture(),saved=fixture({...source,source_checked_at:{finance_oldest_at:stamp,finance_latest_at:stamp,ads_at:stamp},result:{...source.result,net_estimate_cents:null,net_margin_bps:null,pending:['ADS_UNAVAILABLE']}}),b=browser(saved);
- b.run("customApi=async(path,body)=>{if(body.operation==='ads')throw Object.assign(Error('PRIVATE_ADS_RESPONSE'),{code:'ADMIN_API_TIMEOUT'});return JSON.parse(JSON.stringify(currentFrame));};");
- await b.run('brazaMonthDashboard.start({api,syncVariants})');assert.deepEqual(operations(b),['read']);assert.match(b.text('Ads'),/10,00/);assert.match(b.text('AdsHelp'),/Último gasto confirmado/);assert.equal(b.run("control('AdsCard').dataset.status"),'provisional');
- await recoveryTick(b);assert.equal(operations(b).filter(op=>op==='ads').length,1);assert.equal(b.run('[...timers.values()][0].delay'),60000);assert.doesNotMatch(b.text('Status'),/PRIVATE/);
- await recoveryTick(b);assert.equal(operations(b).filter(op=>op==='ads').length,2);await recoveryTick(b);assert.equal(operations(b).filter(op=>op==='ads').length,2,'no source request during the 120-second retry wait');
- await recoveryTick(b);assert.equal(operations(b).filter(op=>op==='ads').length,3);await recoveryTick(b);assert.equal(operations(b).filter(op=>op==='start').length,1,'the five-minute financial timer still imports orders after repeated Ads failures');assert.equal(operations(b).filter(op=>op==='ads').length,3,'financial collection does not bypass the Ads backoff');
- await recoveryTick(b);await recoveryTick(b);await recoveryTick(b);assert.equal(operations(b).filter(op=>op==='ads').length,3);b.run('customApi=null;');await recoveryTick(b);assert.equal(operations(b).filter(op=>op==='ads').length,4,'the next Ads retry happens after the 300-second wait');
- assert.equal(operations(b).filter(op=>op==='start').length,1);assert.ok(!operations(b).includes('expenses'));
+ b.run("customApi=async(path,body)=>{if(body?.operation==='ads')throw Object.assign(Error('PRIVATE_ADS_RESPONSE'),{code:'ADMIN_API_TIMEOUT'});return JSON.parse(JSON.stringify(currentFrame));};");
+ assert.equal(await b.run('startManual({api,syncVariants})'),false);assert.deepEqual(operations(b),['view','start','ads']);assert.match(b.text('Ads'),/10,00/);assert.equal(b.run("control('AdsCard').dataset.status"),'provisional');assert.doesNotMatch(b.text('Status'),/PRIVATE/);
+ for(let index=0;index<4;index++)await recoveryTick(b);assert.deepEqual(operations(b),['view','start','ads','view','view','view','view']);assert.equal(b.run('calls.filter(call=>call.body?.operation===\"ads\").length'),1);assert.ok(!operations(b).includes('expenses'));
 });
 
 test('cost-only reads retain the last dated Ads amount and cannot call an Ads source even while its refresh is pending',async()=>{
  const source=fixture(),saved=fixture({...source,source_checked_at:{finance_oldest_at:stamp-30,finance_latest_at:stamp,ads_at:stamp},result:{...source.result,net_estimate_cents:null,net_margin_bps:null,pending:['ADS_UNAVAILABLE']}}),b=browser(saved);await b.run('brazaMonthDashboard.start({api,syncVariants})');
- assert.equal(await b.run("control('Refresh').onclick()"),true);assert.deepEqual(operations(b),['read','read']);assert.match(b.text('Ads'),/10,00/);assert.match(b.text('AdsHelp'),/último gasto|Último gasto/);assert.equal(b.text('Net'),'Em conciliação');assert.equal(b.run('currentFrame.source_checked_at.ads_at'),stamp);assert.equal(b.run('timers.size'),1);
+ assert.equal(await b.run("control('Refresh').onclick()"),true);assert.deepEqual(operations(b),['view','view']);assert.match(b.text('Ads'),/10,00/);assert.match(b.text('AdsHelp'),/último gasto|Último gasto/);assert.equal(b.text('Net'),'Em conciliação');assert.equal(b.run('currentFrame.source_checked_at.ads_at'),stamp);assert.equal(b.run('timers.size'),1);
 });
 
 
@@ -887,9 +874,9 @@ function costEvidenceFixture(source=recordedUiFixture()){
  assert.ok(projectBusinessCostDiagnosticsEvidence(value,{projectDiagnostic:projectBusinessCostDiagnostics,projectHistory:projectHistoricalCostPairDiagnostics,projectBalance:projectRecordedBusinessBalance}),'the enriched report must satisfy all standalone contracts');return value;
 }
 
-test('the overview shows the recorded R$2339.75 subtotal without opening diagnostics and keeps four costs, two reviews and four returns explicit',async()=>{
+test('the overview presents one R$2339.75 known-cost balance and keeps four costs, two reviews and four returns explicit',async()=>{
  const source=recordedUiFixture(),b=browser(source),before=JSON.stringify(source);assert.equal(buildRecordedBusinessBalance(source).amount_cents,233975);await b.run('brazaMonthDashboard.start({api})');
- const text=b.text('CostOverview');assert.match(text,/Subtotal com custos identificados.*2[.]339,75/);assert.match(text,/produção de 4 unidade/);assert.match(text,/2 pedido.*revisão/);assert.match(text,/4 devolução/);assert.match(text,/leitura financeira precisa de atualização/);assert.match(text,/Não é lucro final nem confirma recebimento/);assert.match(text,/Financeiro:/);assert.equal(b.text('Net'),'Em conciliação');assert.equal(b.run('currentFrame.result.net_estimate_cents'),null);assert.equal(b.run('currentFrame.result.net_profit_cents'),null);assert.equal(b.run('calls.some(call=>call.path.includes("cost-diagnostics"))'),false);assert.equal(JSON.stringify(source),before);b.run('brazaMonthDashboard.stop()');
+ const text=b.text('NetHelp');assert.match(b.text('Net'),/2[.]339,75/);assert.equal(b.text('NetLabel'),'Saldo com custos identificados');assert.doesNotMatch(b.text('CostOverview'),/Subtotal com custos identificados/);assert.match(text,/produção.*4|4.*unidade/i);assert.match(text,/2.*pedido.*revisão/i);assert.match(text,/4.*devolu/i);assert.match(text,/leitura financeira|última leitura|atualiza/i);assert.match(text,/não é lucro líquido final/i);assert.equal(b.run('currentFrame.result.net_estimate_cents'),null);assert.equal(b.run('currentFrame.result.net_profit_cents'),null);assert.equal(b.run('calls.some(call=>call.path.includes("cost-diagnostics"))'),false);assert.equal(JSON.stringify(source),before);b.run('brazaMonthDashboard.stop()');
  const ready=browser(meiProductFixture());await ready.run('brazaMonthDashboard.start({api})');assert.doesNotMatch(ready.text('CostOverview'),/Subtotal com custos identificados/);assert.equal(ready.text('NetLabel'),'Resultado líquido previsto');ready.run('brazaMonthDashboard.stop()');
 });
 

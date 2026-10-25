@@ -35,7 +35,7 @@ function browser(html,session,{sessionFails=false,auditFails=false,unauthorized=
   }
   if(url==='/api/admin/audit'&&auditFails)throw new TypeError('Failed to fetch PRIVATE_AUDIT_DETAIL');
   // Simulate Ads and other optional sources never completing. The overview
-  // must already have its month, handlers and independent financial request.
+  // must already have its month, handlers and independent saved-view request.
   return new Promise(()=>{});
  }});
  vm.runInContext("globalThis.window=globalThis;window.matchMedia=()=>({matches:false});globalThis.addEventListener=()=>{};",context);
@@ -51,7 +51,7 @@ for(const minify of [false,true]){
   const {html,session}=await ownerHtml(minify),b=browser(html,session,{auditFails:true});
   try{await b.flush();assert.equal(b.run('startupController.getState().ready'),true);
    assert.equal(b.nodes.get('businessMonthSelect').value,new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date()).slice(0,7));
-   const reads=b.calls.filter(call=>call.url==='/api/admin/finance/business-month');assert.equal(reads.length,1);assert.equal(JSON.parse(reads[0].options.body).operation,'read');assert.equal(reads[0].options.headers['X-CSRF-Token'],session.csrf);assert.equal(reads[0].options.headers['X-Braza-Client-Contract'],'business-month-v2');assert.equal(b.run('brazaMonthDashboard.clientContract'),'business-month-v2');
+   const reads=b.calls.filter(call=>call.url.startsWith('/api/admin/finance/business-month-view?month='));assert.equal(reads.length,1);assert.equal(reads[0].url,'/api/admin/finance/business-month-view?month='+b.nodes.get('businessMonthSelect').value);assert.equal(reads[0].options.method,'GET');assert.equal(reads[0].options.body,undefined);assert.equal(reads[0].options.headers['X-CSRF-Token'],undefined);assert.equal(reads[0].options.headers['X-Braza-Client-Contract'],undefined);assert.equal(reads[0].options.credentials,'same-origin');assert.equal(reads[0].options.cache,'no-store');assert.equal(b.calls.some(call=>call.url==='/api/admin/finance/business-month'),false,'mount must not start, advance or recalculate a source collector');assert.equal(b.run('brazaMonthDashboard.clientContract'),'business-month-v2');
    b.run("void api('settings',{revision:1,values:{}}).catch(()=>{});");
    const settings=b.calls.find(call=>call.url==='/api/admin/settings');assert.ok(settings);assert.equal(settings.options.headers['X-Braza-Client-Contract'],undefined);assert.equal(settings.options.headers['X-CSRF-Token'],session.csrf);assert.equal(settings.options.method,'POST');
    assert.equal(typeof b.nodes.get('businessMonthRefresh').onclick,'function');assert.match(b.nodes.get('audit').children[0].textContent,/histórico está indisponível/);assert.doesNotMatch(b.nodes.get('message').textContent,/Failed to fetch|PRIVATE/);
@@ -60,8 +60,8 @@ for(const minify of [false,true]){
  test(`the deployed owner script prepares the month offline and a manual retry safely restores initialization (minify=${minify})`,async()=>{
   const {html,session}=await ownerHtml(minify),b=browser(html,session,{sessionFails:true});
   try{await b.flush();const retry=[...b.timers.values()].find(timer=>timer.delay===750);assert.ok(retry);retry.callback();await b.flush();
-   assert.equal(b.calls.filter(call=>call.url==='/api/admin/state').length,2);assert.equal(b.calls.filter(call=>call.url==='/api/admin/finance/business-month').length,0);assert.match(b.nodes.get('businessMonthSelect').value,/^\d{4}-\d{2}$/);assert.equal(b.nodes.get('startupRetry').hidden,false);assert.match(b.nodes.get('message').textContent,/Não foi possível conectar/);assert.doesNotMatch(b.nodes.get('message').textContent,/Failed to fetch|PRIVATE/);
-   b.recover();await b.nodes.get('startupRetry').onclick();await b.flush();assert.equal(b.run('startupController.getState().ready'),true);assert.equal(b.calls.filter(call=>call.url==='/api/admin/state').length,3);assert.equal(b.calls.filter(call=>call.url==='/api/admin/finance/business-month').length,1);assert.equal(b.nodes.get('startupRetry').hidden,true);
+   assert.equal(b.calls.filter(call=>call.url==='/api/admin/state').length,2);assert.equal(b.calls.filter(call=>call.url.startsWith('/api/admin/finance/business-month-view?month=')).length,0);assert.equal(b.calls.filter(call=>call.url==='/api/admin/finance/business-month').length,0);assert.match(b.nodes.get('businessMonthSelect').value,/^\d{4}-\d{2}$/);assert.equal(b.nodes.get('startupRetry').hidden,false);assert.match(b.nodes.get('message').textContent,/Não foi possível conectar/);assert.doesNotMatch(b.nodes.get('message').textContent,/Failed to fetch|PRIVATE/);
+   b.recover();await b.nodes.get('startupRetry').onclick();await b.flush();assert.equal(b.run('startupController.getState().ready'),true);assert.equal(b.calls.filter(call=>call.url==='/api/admin/state').length,3);assert.equal(b.calls.filter(call=>call.url.startsWith('/api/admin/finance/business-month-view?month=')).length,1);assert.equal(b.calls.filter(call=>call.url==='/api/admin/finance/business-month').length,0);assert.equal(b.nodes.get('startupRetry').hidden,true);
   }finally{b.stop();}
  });
  test(`an expired session offers login without replaying financial requests (minify=${minify})`,async()=>{
@@ -71,7 +71,7 @@ for(const minify of [false,true]){
  });
  test(`optional settings rendering cannot gate the financial overview (minify=${minify})`,async()=>{
   const {html,session}=await ownerHtml(minify),b=browser(html,session);b.nodes.delete('regular');
-  try{await b.flush();assert.equal(b.run('startupController.getState().ready'),true);assert.equal(b.calls.filter(call=>call.url==='/api/admin/finance/business-month').length,1);assert.match(b.nodes.get('simulation').textContent,/configurações não puderam ser carregadas/);}
+  try{await b.flush();assert.equal(b.run('startupController.getState().ready'),true);assert.equal(b.calls.filter(call=>call.url.startsWith('/api/admin/finance/business-month-view?month=')).length,1);assert.equal(b.calls.filter(call=>call.url==='/api/admin/finance/business-month').length,0);assert.match(b.nodes.get('simulation').textContent,/configurações não puderam ser carregadas/);}
   finally{b.stop();}
  });
  test(`failed or timed-out logout preserves startup and only a confirmed exit stops the workspace (minify=${minify})`,async()=>{

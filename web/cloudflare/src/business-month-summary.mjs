@@ -33,10 +33,13 @@ export function buildMonthlyFinancialSummary(frame){
   const status=read(frame,'status'),orders=read(frame,'coverage'),collection=read(frame,'collection');
   output.production_complete=status==='COMPLETE'&&int(production)&&production===knownProduction&&missingUnits===0;
   if(production!==null&&(!int(production)||production!==knownProduction||missingUnits>0))return arithmetic();
-  if(status!=='COMPLETE'||!plain(orders)||read(orders,'payment_missing')!==0||['SOURCE_UNAVAILABLE','STATUS_REVIEW_REQUIRED','ARITHMETIC_UNSAFE'].some(code=>pending.includes(code))||read(collection,'state')==='BLOCKED')return output;
-  if(['cancel_pending','other','unknown'].some(key=>!int(read(orders,key))||read(orders,key)!==0))return output;
+  if(status!=='COMPLETE'||!plain(orders)||read(orders,'payment_missing')!==0||['COLLECTING','PERIOD_LIMIT_REACHED','SOURCE_UNAVAILABLE','ARITHMETIC_UNSAFE'].some(code=>pending.includes(code))||read(collection,'state')==='BLOCKED')return output;
+  const countKeys=['orders','paid','completed','ongoing','cancelled','cancel_pending','unpaid','other','unknown','payment_covered','payment_missing','returns','returns_unknown'];
+  if(countKeys.some(key=>!int(read(orders,key))||read(orders,key)>3000))return output;
+  const c=Object.fromEntries(countKeys.map(key=>[key,read(orders,key)])),review=c.cancel_pending+c.other+c.unknown;
+  if(c.orders!==c.paid+c.cancelled+review+c.unpaid||c.paid!==c.completed+c.ongoing||c.payment_covered!==c.paid||c.returns+c.returns_unknown>c.paid||review>0&&!pending.includes('STATUS_REVIEW_REQUIRED')||(c.returns+c.returns_unknown)>0&&!pending.includes('RETURNS_NOT_RECONCILED'))return output;
   const payout=read(frame,'expected_repass_cents'),sales=read(frame,'sales_cents'),tax=read(frame,'invoice_tax_cents'),ads=read(frame,'ads'),expenses=read(frame,'expenses'),adjustment=read(frame,'ads_adjustment_cents'),treatment=read(expenses,'recharge_treatment'),external=read(expenses,'external_expenses_cents'),spend=read(ads,'expense_cents');
-  if(!int(payout,true)||!int(sales)||!int(tax)||!int(knownProduction)||read(ads,'status')!=='AVAILABLE'||!int(spend)||read(ads,'start_date')!==read(frame,'start_date')||read(ads,'end_date')!==read(frame,'end_date')||!int(external)||!int(adjustment)||!['UNCONFIRMED','ADS_RECHARGE','TECH_SUPPORT'].includes(treatment)||adjustment>0&&treatment==='UNCONFIRMED')return output;
+  if(!int(payout,true)||payout!==read(frame,'known_expected_repass_cents')||!int(sales)||sales!==read(frame,'known_sales_cents')||!int(tax)||!int(knownProduction)||read(ads,'status')!=='AVAILABLE'||!int(spend)||read(ads,'start_date')!==read(frame,'start_date')||read(ads,'end_date')!==read(frame,'end_date')||!int(external)||!int(adjustment)||!['UNCONFIRMED','ADS_RECHARGE','TECH_SUPPORT'].includes(treatment)||adjustment>0&&treatment==='UNCONFIRMED')return output;
   if(['PAYMENT_INCOMPLETE','INVOICE_TAX_UNAVAILABLE','TAX_POLICY_REQUIRED','ADS_UNAVAILABLE','EXTERNAL_EXPENSES_REQUIRED','RECHARGE_TREATMENT_REQUIRED','ADJUSTMENT_UNAVAILABLE'].some(code=>pending.includes(code)))return output;
   const policy=read(frame,'tax');if(read(policy,'regime')==='MEI'&&(read(policy,'status')!=='DECLARED'||read(policy,'tax_cents')!==tax||read(policy,'monthly_das_cents')!==tax))return output;
   const restore=treatment==='ADS_RECHARGE'?adjustment:0;

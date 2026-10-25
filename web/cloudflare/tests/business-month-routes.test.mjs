@@ -4,13 +4,16 @@ import {adminFetch} from '../src/admin.mjs';
 import {D1} from './sqlite-d1.mjs';
 import {buildAdsCalendar} from '../src/ads-calendar.mjs';
 import {buildAdsMeasurement} from '../src/ads-measurement.mjs';
+import {readBusinessSyncState,saveBusinessSyncPolicy} from '../src/business-sync.mjs';
 
 const origin='https://app.example.test';
 const day=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date()),month=day.slice(0,7),stamp=()=>Math.floor(Date.now()/1000);
-async function login(){
+async function login({manualCollection=false}={}){
  const env={ADMIN_DB:new D1(),ADMIN_SESSION_SECRET:'fixture-month-session-'+ 's'.repeat(32),ADMIN_USERNAME:'month-admin',ADMIN_PASSWORD:'fixture-month-password-1234567890'};
  const response=await adminFetch(new Request(origin+'/admin/login',{method:'POST',headers:{origin,'content-type':'application/x-www-form-urlencoded'},body:new URLSearchParams({username:env.ADMIN_USERNAME,password:env.ADMIN_PASSWORD})}),env);
  assert.equal(response.status,303);const cookie=response.headers.get('set-cookie').split(';')[0],state=await(await adminFetch(new Request(origin+'/api/admin/state',{headers:{cookie}}),env)).json();
+ // Legacy manual collection is available only after the owner pauses background collection.
+ if(manualCollection){const policy=await readBusinessSyncState(env),paused=await saveBusinessSyncPolicy(env,{revision:policy.revision,enabled:false},'fixture-manual-owner');assert.equal(paused.enabled,false);}
  return {env,cookie,csrf:state.csrf};
 }
 const request=(auth,body,options={})=>new Request(origin+'/api/admin/finance/business-month'+(options.search||''),{method:options.method||'POST',headers:{cookie:options.cookie??auth.cookie,origin:options.origin??origin,'x-csrf-token':options.csrf??auth.csrf,'content-type':'application/json',...(options.contract===undefined?{}:{'x-braza-client-contract':options.contract})},body:['GET','HEAD'].includes(options.method)?undefined:options.raw??JSON.stringify(body)});
@@ -35,7 +38,7 @@ test('monthly collection is admin-only, exact-origin and CSRF protected before a
 });
 
 test('owner GET observes a saved month without replaying source requests or changing expenses',async()=>{
- const auth=await login(),source=services();
+ const auth=await login({manualCollection:true}),source=services();
  const started=await adminFetch(request(auth,{operation:'start',month}),auth.env,source);assert.equal(started.status,200);const saved=await started.json(),before=snapshot(auth),calls={...source.calls};
  const response=await adminFetch(new Request(origin+'/api/admin/finance/business-month?month='+month,{headers:{cookie:auth.cookie}}),auth.env,source);
  assert.equal(response.status,200);assert.equal(response.headers.get('access-control-allow-origin'),null);assert.ok(/no-store/.test(response.headers.get('cache-control')));
@@ -54,7 +57,7 @@ test('owner GET can prepare an uncollected month without calling finance or Ads'
 });
 
 test('a complete empty MEI month still deducts its one monthly DAS after the zero external expense declaration, without a Hermes job',async()=>{
- const auth=await login(),source=services(),invoke=async body=>{const response=await adminFetch(request(auth,body),auth.env,source);assert.equal(response.status,200);return response.json();};
+ const auth=await login({manualCollection:true}),source=services(),invoke=async body=>{const response=await adminFetch(request(auth,body),auth.env,source);assert.equal(response.status,200);return response.json();};
  let result=await invoke({operation:'start',month});for(let i=0;i<3&&result.status==='RUNNING';i++)result=await invoke({operation:'step',month});
  assert.equal(result.status,'COMPLETE');assert.equal(result.coverage.paid,0);assert.equal(result.result.net_estimate_cents,null);
  result=await invoke({operation:'ads',month});assert.equal(result.ads.expense_cents,0);assert.equal(result.ads.balance_cents,5000);assert.equal(result.result.net_estimate_cents,null);
@@ -65,12 +68,12 @@ test('a complete empty MEI month still deducts its one monthly DAS after the zer
 });
 
 test('a poisoned monthly source cannot cross the authenticated aggregate boundary or produce a confirmed total',async()=>{
- const auth=await login(),source=services();source.getFinanceBusinessPeriod=async(env,{start_date,end_date})=>({...emptyFrame({start_date,end_date}),access_token:'PRIVATE_PROVIDER_TOKEN'});
+ const auth=await login({manualCollection:true}),source=services();source.getFinanceBusinessPeriod=async(env,{start_date,end_date})=>({...emptyFrame({start_date,end_date}),access_token:'PRIVATE_PROVIDER_TOKEN'});
  const response=await adminFetch(request(auth,{operation:'start',month}),auth.env,source);assert.equal(response.status,503);const raw=await response.text();assert.ok(!raw.includes('PRIVATE_PROVIDER_TOKEN'));assert.deepEqual(snapshot(auth),{expenses:[],audit:[],jobs:[]});
 });
 
 test('open legacy tabs and explicit modern clients receive their own exact monthly response contract',async()=>{
- const auth=await login(),source=services();
+ const auth=await login({manualCollection:true}),source=services();
  const invalid=await adminFetch(request(auth,{operation:'start',month},{contract:'business-month-v3'}),auth.env,source);
  assert.equal(invalid.status,409);assert.equal((await invalid.json()).error,'BUSINESS_MONTH_CLIENT_CONTRACT_UNSUPPORTED');assert.equal(source.calls.finance,0);
  const modernResponse=await adminFetch(request(auth,{operation:'start',month},{contract:'business-month-v2'}),auth.env,source),modern=await modernResponse.json();
@@ -85,7 +88,7 @@ test('open legacy tabs and explicit modern clients receive their own exact month
 });
 
 test('a legacy client pauses a busy page while the modern contract retains automatic retry metadata',async()=>{
- const auth=await login(),source=services();source.getFinanceBusinessPeriod=async(_,selection)=>{source.calls.finance++;return {...emptyFrame({start_date:selection.start_date,end_date:selection.end_date}),status:'RUNNING',pages_read:0,diagnostic:'BUSINESS_PERIOD_CONFLICT'};};
+ const auth=await login({manualCollection:true}),source=services();source.getFinanceBusinessPeriod=async(_,selection)=>{source.calls.finance++;return {...emptyFrame({start_date:selection.start_date,end_date:selection.end_date}),status:'RUNNING',pages_read:0,diagnostic:'BUSINESS_PERIOD_CONFLICT'};};
  const first=await adminFetch(request(auth,{operation:'start',month},{contract:'business-month-v2'}),auth.env,source);assert.equal(first.status,200);const modern=await first.json();assert.equal(modern.collection.state,'RETRY_WAIT');assert.ok(!modern.result.pending.includes('SOURCE_UNAVAILABLE'));
  const response=await adminFetch(request(auth,null,{method:'GET',search:'?month='+month}),auth.env,source),legacy=await response.json();
  assert.equal(response.status,200);assert.equal(Object.hasOwn(legacy,'collection'),false);assert.ok(legacy.result.pending.includes('SOURCE_UNAVAILABLE'));assert.equal(legacy.result.net_estimate_cents,null);assert.deepEqual(legacy.coverage,modern.coverage);assert.equal(source.calls.finance,1);

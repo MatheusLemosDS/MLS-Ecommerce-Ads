@@ -9,6 +9,7 @@ import {buildAdsCalendar} from '../src/ads-calendar.mjs';
 import {projectBusinessMonth} from '../src/business-month.mjs';
 import {projectBusinessMonthProducts} from '../src/business-month-products.mjs';
 import {buildBusinessCheckpoint} from '../src/business-checkpoint.mjs';
+import {buildBusinessMonthView,projectBusinessMonthView} from '../src/business-month-view-state.mjs';
 
 const current='2026-10-22T12:00:00Z',stamp=Date.parse(current)/1000;
 
@@ -88,6 +89,8 @@ function verifyReportAndDailyAds(html){
 }
 
 function monthlyBrowser(html,value=monthlyFrame()){
+ const view=buildBusinessMonthView({display:value,active:value,display_source:'PUBLISHED'},{enabled:true,status:'COMPLETE',next_run_at:stamp+60,last_attempt_at:stamp},{now:()=>Date.parse(current)});
+ assert.ok(projectBusinessMonthView(view,projectBusinessMonth),'the saved workspace fixture must satisfy the real owner view contract');
  const scripts=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match=>match[1]);
  assert.ok(scripts.length>=2,'the rendered page must contain its browser scripts');
  for(const script of scripts)new vm.Script(script);
@@ -105,9 +108,9 @@ function monthlyBrowser(html,value=monthlyFrame()){
  const controls=new Map(${JSON.stringify(ids)}.map(id=>[id,node()]));
  const document={hidden:false,getElementById(id){if(!controls.has(id))throw Error('UNKNOWN_CONTROL:'+id);return controls.get(id);},createElement:tag=>node(tag),addEventListener(){}};
  const text=element=>element.textContent+element.children.map(text).join(' '),control=name=>controls.get('businessMonth'+name);
- let frame=JSON.parse(${JSON.stringify(JSON.stringify(value))});const calls=[];
+ const viewFixture=JSON.parse(${JSON.stringify(JSON.stringify(view))});const calls=[];
  const historyFixture=JSON.parse(${JSON.stringify(JSON.stringify({schema:'business_checkpoint_history_v1',month:value.month,retention_limit:128,checkpoints:[{revision:4,fingerprint:'c'.repeat(64),checkpoint:buildBusinessCheckpoint(value)}]}))});
- const api=async(path,body)=>{calls.push({path,body});return JSON.parse(JSON.stringify(path.startsWith('finance/checkpoints?')?historyFixture:frame));};
+ const api=async(path,body)=>{calls.push({path,body});if(body===undefined&&path==='finance/business-month-view?month='+viewFixture.month)return JSON.parse(JSON.stringify(viewFixture));if(body===undefined&&path==='finance/checkpoints?month='+viewFixture.month+'&limit=10')return JSON.parse(JSON.stringify(historyFixture));throw Error('UNEXPECTED_REQUEST:'+path);};
  const syncVariants=async()=>true;
  globalThis.brazaAutomationWorkspace={render(value){globalThis.lastDiagnosis=value;}};
  `+monthly[0]).runInContext(context);
@@ -129,11 +132,12 @@ for(const minify of [false,true]){
   assert.match(browser.text('ProductRows'),/58,00/);
   assert.doesNotMatch(browser.text('ProductRows'),/43,00/,'product contribution must remain before the month-wide Ads and expenses');
   assert.match(browser.text('Coverage'),/1 cancelado\(s\) excluído\(s\)/);
-  assert.deepEqual(JSON.parse(browser.run('JSON.stringify(calls.map(call=>call.body.operation))')),['read','start','ads']);
+  assert.deepEqual(JSON.parse(browser.run('JSON.stringify(calls)')),[{path:'finance/business-month-view?month=2026-10'}],'mount reads the saved automatic workspace without starting Finance or Ads collection');
   // A second real response exercises the embedded projector again, including
   // the nested Ads calendar check, rather than just compiling the script.
   await browser.run('brazaMonthDashboard.refreshCosts()');
-  assert.equal(browser.run('calls.at(-1).body.operation'),'read');
+  assert.equal(browser.run('calls.at(-1).path'),'finance/business-month-view?month=2026-10');
+  assert.equal(browser.run('calls.at(-1).body'),undefined,'cost recalculation reads local observations without collecting a new cohort');
   assert.match(browser.text('Net'),/43,00/);
   assert.match(browser.text('ProductRows'),/58,00/);
   assert.doesNotMatch(browser.text('Status'),/is not defined/);

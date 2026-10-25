@@ -4,16 +4,19 @@ import {adminFetch} from '../src/admin.mjs';
 import {D1} from './sqlite-d1.mjs';
 import {buildAdsCalendar} from '../src/ads-calendar.mjs';
 import {buildAdsMeasurement} from '../src/ads-measurement.mjs';
+import {readBusinessSyncState,saveBusinessSyncPolicy} from '../src/business-sync.mjs';
 
 const origin='https://app.example.test';
 const stamp=()=>Math.floor(Date.now()/1000);
 const day=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date()),month=day.slice(0,7);
-async function login(){
+async function login({manualCollection=false}={}){
  const env={ADMIN_DB:new D1(),ADMIN_SESSION_SECRET:'checkpoint-session-'+ 's'.repeat(32),ADMIN_USERNAME:'checkpoint-owner',ADMIN_PASSWORD:'checkpoint-fixture-password-12345'};
  const response=await adminFetch(new Request(origin+'/login',{method:'POST',headers:{origin,'content-type':'application/x-www-form-urlencoded'},body:new URLSearchParams({username:env.ADMIN_USERNAME,password:env.ADMIN_PASSWORD})}),env);
  assert.equal(response.status,303);
  const cookie=response.headers.get('set-cookie').split(';')[0];
  const state=await(await adminFetch(new Request(origin+'/api/admin/state',{headers:{cookie}}),env)).json();
+ // This history fixture exercises manual collection after the owner pauses the background worker.
+ if(manualCollection){const policy=await readBusinessSyncState(env),paused=await saveBusinessSyncPolicy(env,{revision:policy.revision,enabled:false},'fixture-manual-owner');assert.equal(paused.enabled,false);}
  return {env,cookie,csrf:state.csrf};
 }
 const read=(auth,query='?month='+month,options={})=>adminFetch(new Request(origin+'/api/admin/finance/checkpoints'+query,{method:options.method||'GET',headers:{cookie:options.cookie??auth.cookie}}),auth.env);
@@ -47,7 +50,7 @@ test('checkpoint history is owner-only and refuses mutations, duplicate or extra
 });
 
 test('completed monthly reads automatically preserve changed calculations and history never calls the sources',async t=>{
- const auth=await login(),services=source();t.after(()=>auth.env.ADMIN_DB.db.close());
+ const auth=await login({manualCollection:true}),services=source();t.after(()=>auth.env.ADMIN_DB.db.close());
  const invoke=async body=>{const response=await adminFetch(new Request(origin+'/api/admin/finance/business-month',{method:'POST',headers:{cookie:auth.cookie,origin,'x-csrf-token':auth.csrf,'content-type':'application/json'},body:JSON.stringify(body)}),auth.env,services);assert.equal(response.status,200,await response.clone().text());return response.json();};
  let frame=await invoke({operation:'start',month});
  while(frame.status==='RUNNING')frame=await invoke({operation:'step',month});

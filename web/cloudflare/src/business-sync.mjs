@@ -124,10 +124,14 @@ export async function runBusinessSync(env,services,{now=()=>Date.now(),maxSteps=
  if(latest.row.lease_token!==token){state=latest.state;return result('LEASED',financeSteps,adsReads);}
  if(!latest.state.enabled){status='PAUSED';errorCode=null;}
  const failure=errorCode!==null,failureCount=failure?Math.min(latest.state.failure_count+1,1000000):0;
- const continueSoon=!failure&&frame?.collection?.state!=='RETRY_WAIT'&&(status==='RUNNING'||status==='PARTIAL'&&frame?.result.pending.includes('FINANCIAL_SOURCE_STALE'));
- const delay=frame?.collection?.state==='RETRY_WAIT'?Math.max(300,frame.collection.retry_after_seconds):failure?[300,600,1200,1800][Math.min(failureCount-1,3)]:continueSoon?60:300;
+ // The Finance page lease and its short checkpoint are normal bounded work,
+ // including an interactive reader racing the cron. They must not turn a
+ // one/two-second yield into another five-minute import interval.
+ const ordinaryYield=frame?.collection?.state==='RETRY_WAIT'&&['BUSINESS_PERIOD_CHECKPOINT','BUSINESS_PERIOD_BUSY','BUSINESS_PERIOD_CONFLICT'].includes(frame.collection.code),providerWait=frame?.collection?.state==='RETRY_WAIT'&&!ordinaryYield;
+ const continueSoon=!failure&&!providerWait&&(status==='RUNNING'||status==='PARTIAL'&&frame?.result.pending.includes('FINANCIAL_SOURCE_STALE'));
+ const delay=providerWait?Math.max(300,frame.collection.retry_after_seconds):failure?[300,600,1200,1800][Math.min(failureCount-1,3)]:continueSoon?60:300;
  const summary=frame?JSON.stringify(syncSummary(frame)):latest.state.summary?.month===month?latest.row.summary:null;
- const next=stopped&&syncMonth(finished*1000)!==month?finished:continueSoon?Math.max(finished,started+delay):finished+delay;
+ const next=stopped&&syncMonth(finished*1000)!==month?finished:continueSoon?Math.max(finished+(ordinaryYield?frame.collection.retry_after_seconds:0),started+delay):finished+delay;
  let writes;try{writes=await db.batch([
   db.prepare('UPDATE business_sync_state SET status=?,lease_token=NULL,lease_expires_at=NULL,next_run_at=?,failure_count=?,last_success_at=?,last_error=?,summary=? WHERE id=1 AND lease_token=?').bind(status,next,failureCount,status==='COMPLETE'?finished:latest.state.last_success_at,errorCode,summary,token),
   db.prepare("INSERT INTO business_sync_audit(id,kind,month,status,started_at,finished_at,finance_steps,ads_reads,error_code,policy_revision,actor,summary) SELECT ?,'RUN',month,status,?,?,?,?,?,revision,'business-sync',summary FROM business_sync_state WHERE changes()=1 AND id=1 AND lease_token IS NULL AND last_attempt_at=?").bind(token,started,finished,financeSteps,adsReads,errorCode,started),

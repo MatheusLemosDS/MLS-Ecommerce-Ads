@@ -97,8 +97,6 @@ test('missing deductions and incomplete or unreliable cohorts never become a sto
   ['recharge unclassified',pending(frame,['RECHARGE_TREATMENT_REQUIRED'],{ads_adjustment_cents:1180})],
   ['provider unavailable',pending(frame,['SOURCE_UNAVAILABLE'])],
   ['unsafe arithmetic',pending(frame,['ARITHMETIC_UNSAFE'])],
-  ['pending cancellation',pending(frame,['STATUS_REVIEW_REQUIRED'],{coverage:{...frame.coverage,orders:11,cancel_pending:1}})],
-  ['unknown status',pending(frame,['STATUS_REVIEW_REQUIRED'],{coverage:{...frame.coverage,orders:11,unknown:1}})],
   ['blocked source',pending(frame,['SOURCE_UNAVAILABLE'],{collection:{schema:'business_month_collection_v1',state:'BLOCKED',code:'BUSINESS_PERIOD_INVALID_SOURCE',retry_after_seconds:0}})],
  ])waiting(value,label);
  const tax={...frame.tax,policy_revision:0,monthly_das_cents:null,tax_cents:null,status:'PENDING',source:'DAS_REQUIRED'};
@@ -132,4 +130,13 @@ test('the summary function runs standalone in the browser realm without imported
  const frame=await month(t,{missingCosts:true}),original=clone(frame),context=vm.createContext({serialized:JSON.stringify(frame)});
  vm.runInContext(buildMonthlyFinancialSummary.toString()+'\nglobalThis.frame=JSON.parse(serialized);globalThis.view=buildMonthlyFinancialSummary(frame);',context);
  assert.deepEqual(JSON.parse(JSON.stringify(context.view)),buildMonthlyFinancialSummary(frame));assert.deepEqual(frame,original);assert.deepEqual(JSON.parse(vm.runInContext('JSON.stringify(frame)',context)),frame);
+});
+
+
+test('known paid-order arithmetic remains provisional when excluded statuses and returns still require reconciliation',async t=>{
+ const frame=await month(t),before=clone(frame),coverage={...frame.coverage,orders:12,other:2,returns:4},value=pending(frame,['STATUS_REVIEW_REQUIRED','RETURNS_NOT_RECONCILED'],{coverage}),view=buildMonthlyFinancialSummary(value);
+ assert.equal(view.state,'PROVISIONAL');assert.equal(view.balance_cents,18771);assert.equal(view.costs_after_payout_cents,28739);assert.equal(view.production_complete,true);assert.deepEqual(view.pending,['STATUS_REVIEW_REQUIRED','RETURNS_NOT_RECONCILED']);assert.equal(value.result.net_estimate_cents,null);assert.equal(value.result.net_profit_cents,null);assert.deepEqual(frame,before);
+ for(const key of ['cancel_pending','other','unknown']){const next=pending(frame,['STATUS_REVIEW_REQUIRED'],{coverage:{...frame.coverage,orders:11,[key]:1}});assert.equal(buildMonthlyFinancialSummary(next).state,'PROVISIONAL');assert.equal(buildMonthlyFinancialSummary(next).balance_cents,18771);}
+ const partial=await month(t,{missingCosts:true}),partialValue=pending(partial,['PRODUCTION_COST_INCOMPLETE','STATUS_REVIEW_REQUIRED','RETURNS_NOT_RECONCILED'],{coverage:{...partial.coverage,orders:12,other:2,returns:4}}),partialView=buildMonthlyFinancialSummary(partialValue);assert.equal(partialView.state,'PARTIAL_COSTS');assert.equal(partialView.balance_cents,20361);assert.equal(partialView.production_complete,false);
+ for(const change of [row=>{row.coverage.payment_covered--;},row=>{row.coverage.orders++;},row=>{row.known_expected_repass_cents--;},row=>{row.known_sales_cents--;},row=>{row.result.pending=row.result.pending.filter(code=>code!=='STATUS_REVIEW_REQUIRED');}]){const next=clone(value);change(next);const blocked=buildMonthlyFinancialSummary(next);assert.equal(blocked.state,'WAITING');assert.equal(blocked.balance_cents,null);}
 });

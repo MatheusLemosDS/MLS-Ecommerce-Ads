@@ -2,9 +2,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import {createHash} from 'node:crypto';
+import {execFileSync} from 'node:child_process';
+import {fileURLToPath} from 'node:url';
 import {D1} from './sqlite-d1.mjs';
 import {collectionFixture} from './business-collection-fixture.mjs';
 import {buildHermesFinancialContext,projectHermesFinancialContext,prepareHermesFinancialContext,readHermesFinancialContext,HermesFinancialContextError} from '../src/hermes-financial-context.mjs';
+import {projectBusinessMonth} from '../src/business-month.mjs';
+import {buildMonthlyFinancialSummary} from '../src/business-month-summary.mjs';
 
 const analysisDate='2026-10-23',jobId='11111111-1111-4111-8111-111111111111',otherId='22222222-2222-4222-8222-222222222222';
 const taskRaw=JSON.stringify({type:'daily_review',shop_id:'1178167501',start_date:analysisDate,end_date:analysisDate,ads_execution:'LOCKED'});
@@ -15,6 +19,29 @@ async function fixture(options={}){
  const f=await collectionFixture({paymentDelayMs:0,...options});jobs(f.env.ADMIN_DB);
  let frame=await f.invoke('start');while(frame.status==='RUNNING')frame=await f.invoke('step');frame=await f.invoke('ads');return {...f,frame};
 }
+
+function withStatusReview(source){
+ const frame=structuredClone(source);frame.coverage.cancelled-=2;frame.coverage.other+=2;frame.result.pending.push('STATUS_REVIEW_REQUIRED');frame.result.net_estimate_cents=frame.result.net_margin_bps=null;
+ for(const product of frame.product_summary?.products||[]){product.pending.push('STATUS_REVIEW_REQUIRED');product.exclusive_after_costs_cents=product.exclusive_margin_bps=null;}
+ const checked=projectBusinessMonth(frame);assert.ok(checked,'the reviewed paid cohort must still pass the strict monthly projector');return checked;
+}
+function legacyPythonContext(context){
+ const raw=JSON.stringify(context),fingerprint=createHash('sha256').update(JSON.stringify({job_id:jobId,context})).digest('hex'),payload={job:{id:jobId,financial_context:raw,financial_context_fingerprint:fingerprint},task:JSON.parse(taskRaw)};
+ const script="import importlib.util,json,sys\nspec=importlib.util.spec_from_file_location('legacy_bridge',sys.argv[1]);bridge=importlib.util.module_from_spec(spec);spec.loader.exec_module(bridge)\nvalue=json.load(sys.stdin)\ntry:\n result=bridge.validate_financial_context(value['job'],value['task']);print(json.dumps({'accepted':True,'available':result['available'],'state':result['monthly']['summary']['state']}))\nexcept bridge.BridgeError as error:\n print(json.dumps({'accepted':False,'error':str(error)}))\n";
+ return JSON.parse(execFileSync('python3',['-c',script,fileURLToPath(new URL('../../bridge/hermes_bridge.py',import.meta.url))],{input:JSON.stringify(payload),encoding:'utf8'}));
+}
+
+test('the v1 projector stays byte-for-byte pinned while reviewed monthly balances retain the old waiting bridge contract',async()=>{
+ assert.equal(createHash('sha256').update(projectHermesFinancialContext.toString()).digest('hex'),'1aae4dc3b2c476228dc0c37e5b2ecfa90fb80278689f994588377badfe01fe1d');
+ const f=await fixture({returns:true}),frame=withStatusReview(f.frame),presentation=buildMonthlyFinancialSummary(frame),context=buildHermesFinancialContext(frame,{analysisDate,capturedAt:Math.floor(f.now()/1000)});assert.equal(presentation.state,'PROVISIONAL');assert.notEqual(presentation.balance_cents,null);
+ assert.equal(context.available,true);assert.equal(context.monthly.summary.state,'WAITING');for(const key of ['balance_cents','before_production_cents','costs_after_payout_cents'])assert.equal(context.monthly.summary[key],null);assert.equal(context.monthly.summary.known_production_cents,presentation.known_production_cents);assert.equal(context.monthly.summary.production_complete,true);assert.deepEqual(context.monthly.summary.production_coverage,presentation.production_coverage);assert.deepEqual(context.monthly.order_coverage,frame.coverage);assert.deepEqual(context.monthly.pending,frame.result.pending);assert.deepEqual(context.monthly.summary.pending,frame.result.pending);assert.equal(context.monthly.totals.production_cost_cents,frame.production_cost_cents);assert.equal(context.monthly.totals.known_sales_cents,frame.known_sales_cents);assert.equal(context.monthly.totals.net_estimate_cents,null);assert.equal(context.monthly.totals.net_profit_cents,null);assert.equal(context.monthly.execution,'READ_ONLY');assert.ok(context.monthly.top_actions.some(row=>row.code==='RECONCILE_ORDER_STATUS'));assert.ok(context.monthly.top_actions.some(row=>row.code==='RECONCILE_RETURNS'));
+ assert.deepEqual(legacyPythonContext(context),{accepted:true,available:true,state:'WAITING'});const forged=structuredClone(context);forged.monthly.summary=presentation;assert.equal(projectHermesFinancialContext(forged),null);assert.deepEqual(legacyPythonContext(forged),{accepted:false,error:'FINANCIAL_CONTEXT_INVALID'});assert.equal(frame.result.net_estimate_cents,null);assert.notEqual(presentation.balance_cents,null,'the owner presentation is not mutated by the v1 compatibility conversion');
+});
+
+test('review compatibility preserves every missing-cost count and review action instead of replacing partial known values with an unavailable context',async()=>{
+ const f=await fixture({returns:true}),stored=f.env.ADMIN_DB.db.prepare('SELECT payload FROM variant_bindings_state').get(),bindings=JSON.parse(stored.payload).filter(row=>row.item_id!=='1002');f.env.ADMIN_DB.db.prepare('UPDATE variant_bindings_state SET revision=4,payload=?').run(JSON.stringify(bindings));const frame=withStatusReview(await f.invoke('read')),presentation=buildMonthlyFinancialSummary(frame),context=buildHermesFinancialContext(frame,{analysisDate,capturedAt:Math.floor(f.now()/1000)});
+ assert.equal(presentation.state,'PARTIAL_COSTS');assert.notEqual(presentation.balance_cents,null);assert.equal(context.available,true);assert.equal(context.monthly.summary.state,'WAITING');assert.equal(context.monthly.summary.production_complete,false);assert.equal(context.monthly.totals.production_cost_cents,null);assert.equal(context.monthly.totals.known_production_cost_cents,151050);assert.deepEqual(context.monthly.summary.production_coverage,{total_units:96,known_units:95,pending_units:1,pending_variants:1,pending_products:1});assert.deepEqual(context.monthly.pending,frame.result.pending);assert.ok(context.monthly.top_actions.some(row=>row.code==='COMPLETE_PRODUCTION_COSTS'));assert.ok(context.monthly.top_actions.some(row=>row.code==='RECONCILE_RETURNS'));assert.ok(context.monthly.top_actions.some(row=>row.code==='RECONCILE_ORDER_STATUS'));assert.equal(context.monthly.totals.net_estimate_cents,null);assert.deepEqual(legacyPythonContext(context),{accepted:true,available:true,state:'WAITING'});
+});
 
 test('the daily Hermes job receives the exact monthly checkpoint, explicit scope and at most three read-only actions and products',async()=>{
  const f=await fixture(),capturedAt=Math.floor(f.now()/1000),context=buildHermesFinancialContext(f.frame,{analysisDate,capturedAt});

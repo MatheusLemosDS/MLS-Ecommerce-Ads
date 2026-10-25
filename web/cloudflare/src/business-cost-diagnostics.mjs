@@ -1,6 +1,6 @@
 import {businessMonthWithCheckpoint,buildBusinessCheckpoint} from './business-checkpoint.mjs';
 import {buildMonthlyFinancialSummary} from './business-month-summary.mjs';
-import {projectBusinessMonth} from './business-month.mjs';
+import {projectBusinessMonth,readBusinessMonthDisplay} from './business-month.mjs';
 import {validateVariantBindings} from './variant-bindings.mjs';
 import {validateProductionCosts,productionCostReference} from './production-costs.mjs';
 import {validateCostRules,costRuleSnapshotQueries,costRuleReferenceFromSnapshot,mergeCatalogCostReference} from './cost-rules.mjs';
@@ -167,7 +167,7 @@ export function buildBusinessCostDiagnostics(frame,context,{now=()=>Date.now()}=
 async function readBusinessCostDiagnosticsSnapshot(env,input,{now=()=>Date.now(),evidence=false}={}){
  if(!input||typeof input!=='object'||Reflect.ownKeys(input).length!==1||!Object.hasOwn(Object.getOwnPropertyDescriptor(input,'month')||{},'value')||typeof input.month!=='string'||!/^\d{4}-(0[1-9]|1[0-2])$/.test(input.month))fail('BUSINESS_COST_DIAGNOSTICS_REQUEST_INVALID',400);
  const stamp=epoch(now),clock=()=>stamp*1000;let frame;
- try{frame=await businessMonthWithCheckpoint(env,{operation:'read',month:input.month},{},{now:clock});}catch(error){if(error?.message==='BUSINESS_MONTH_NOT_FOUND')throw error;fail('BUSINESS_COST_DIAGNOSTICS_MONTH_UNAVAILABLE');}
+ try{frame=evidence===2?(await readBusinessMonthDisplay(env,{month:input.month},{now:clock})).display:await businessMonthWithCheckpoint(env,{operation:'read',month:input.month},{},{now:clock});}catch(error){if(error?.message==='BUSINESS_MONTH_NOT_FOUND')throw error;fail('BUSINESS_COST_DIAGNOSTICS_MONTH_UNAVAILABLE');}
  try{
   const db=env.ADMIN_DB,ids=[...new Set(frame.unmapped_variants.map(row=>row.item_id))].sort(compare).slice(0,90),allowed=new Set(ids),pairs=frame.unmapped_variants.filter(row=>allowed.has(row.item_id)),ruleQueries=costRuleSnapshotQueries(db,ids),classQueries=catalogClassificationQueries(db,ids,pairs),sourceIndex=2+ruleQueries.length+classQueries.length,historyQueries=evidence?historicalCostPairDiagnosticsQueries(db,input.month,pairs.map(({item_id,model_id})=>({item_id,model_id}))):[];
   const snapshot=await db.batch([db.prepare('SELECT revision,payload FROM variant_bindings_state WHERE id=1'),db.prepare('SELECT revision,payload FROM production_costs_state WHERE id=1'),...ruleQueries,...classQueries,db.prepare('SELECT item_id,diagnostic,checked_at,failure_count FROM catalog_classification_source_diagnostics WHERE item_id IN(SELECT value FROM json_each(?))').bind(JSON.stringify(ids)),...historyQueries]);

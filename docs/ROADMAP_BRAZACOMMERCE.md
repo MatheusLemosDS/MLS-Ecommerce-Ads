@@ -1,9 +1,11 @@
 # Roadmap BrazaCommerce
 
-Atualizado em **25/10/2026 UTC**. Base publicada: `11f45ce`, com
+Atualizado em **25/10/2026 UTC**. Base anterior: `77c09bb`, com
 [resumo financeiro total](RESUMO_FINANCEIRO_TOTAL.md) e
 [integração financeira do Hermes](HERMES_FINANCEIRO.md). O incremento atual traz
 [catálogo salvo e custos por semana/mês](CATALOGO_SALVO_E_CUSTOS_POR_PERIODO.md).
+A entrega atual separa [resumo publicado e coleta em andamento](RESUMO_PUBLICADO_E_COLETA.md),
+com previsão líquida em conferência quando os valores necessários são conhecidos.
 A atualização da ponte Hermes no Droplet permanece uma etapa separada; ela não
 é necessária para usar o catálogo e os cálculos de custo desta entrega.
 
@@ -30,9 +32,9 @@ testes locais.
 | Detalhamento mensal por produto/variação | Já versionado em `main` | Mantém pedidos exclusivos separados dos mistos, sem inventar rateio de repasse ou de Ads. Não entrega lucro líquido por SKU. |
 | Consumo de anúncios no período | Já versionado em `main` | Usa gasto consumido do calendário; distingue recarga e consumo. Não há atribuição validada desse gasto por produto e campanha. |
 | MEI e DAS de 2026 | Já versionados em `main` | Declaração do operador de **R$ 86,05 por mês**, substituindo os 2% anteriores. Vale para 2026; outro ano precisa de declaração própria. Não consulta PGMEI nem confirma pagamento. |
-| Atualização com o painel aberto | Já versionada em `main` | Consultas automáticas com paginação, deduplicação e horários separados de Financeiro e Ads. O trabalho anterior dependia da sessão visível para continuar atualizando. |
-| Coleta em segundo plano | Versionada em `main` (`6f9ce23`); ativação a conferir | Cron do App a cada minuto retoma coletores de leitura sem depender da aba; o financeiro em andamento tem prioridade e os demais trabalhos são intercalados. Inclui exclusão de execuções concorrentes, pausa/retomada, espera crescente após falhas e auditoria. O disparo real do cron ainda não foi observado nesta entrega. |
-| Abertura rápida da Visão geral | Versionada em `main` (`6f9ce23`); ativação a conferir | Mostra primeiro o cache privado validado e seus horários; a atualização prossegue sem tratar dado antigo como recente. |
+| Atualização com o painel aberto | Implementada nesta entrega | O navegador lê o resumo salvo e o progresso. Atualizar vendas prioriza o servidor; abrir várias abas não inicia coletores financeiros concorrentes. Meses históricos e política pausada exigem ação manual explícita. |
+| Coleta em segundo plano | Cron observado no diagnóstico fornecido; continuação corrigida nesta entrega | Cron do App a cada minuto retoma coletores de leitura sem depender da aba; o financeiro em andamento tem prioridade e os demais trabalhos são intercalados. Inclui exclusão de execuções concorrentes, pausa/retomada, espera crescente após falhas e auditoria. Os registros fornecidos mostram execuções reais; pausas normais de página agora retomam no próximo minuto, sem a espera indevida de cinco minutos. |
+| Abertura rápida da Visão geral | Implementada nesta entrega | O último período completo tem cópias próprias das fontes e permanece visível durante uma nova coleta ou falha. Custos são recalculados localmente; datas de Financeiro e Ads são preservadas. |
 | Diagnóstico da conta | Versionado em `main` (`6f9ce23`); ativação a conferir | Calcula TACOS, saldo disponível antes de Ads, cobertura dos custos e próximas tarefas a partir do mês validado. Dados ausentes bloqueiam os indicadores correspondentes. Não autoriza investimento. |
 | Hermes com financeiro da loja | Publicado (`11f45ce`); atualização da ponte pendente | Cada análise preserva o mês financeiro, custos, DAS, anúncios, pendências e até três próximas ações. A ponte antiga não recebe tarefas novas. Exige atualização no Droplet e observação de uma execução real com a nova referência. |
 | Alterar anúncios, campanhas e promoções | Ainda não implementado para execução comercial | As proteções de somente leitura e Ads/PROMO `LOCKED` continuam vigentes. A coleta autônoma não cria permissão de escrita na Shopee. |

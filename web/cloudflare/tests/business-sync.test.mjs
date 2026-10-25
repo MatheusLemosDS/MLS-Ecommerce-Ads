@@ -116,6 +116,13 @@ test('minute continuations use the start boundary rather than adding another min
  time=clock+59000;assert.equal((await run(env,services,{now:()=>time})).status,'NOT_DUE');time=clock+60000;const second=await run(env,services,{now:()=>time,maxSteps:1});assert.equal(second.status,'RUNNING');assert.equal(second.finance_steps,1);assert.equal(second.state.next_run_at,stamp+120);
 });
 
+test('normal Finance checkpoints and competing page leases resume on the minute boundary after the Ads projection',async()=>{
+ for(const diagnostic of ['BUSINESS_PERIOD_CHECKPOINT','BUSINESS_PERIOD_BUSY','BUSINESS_PERIOD_CONFLICT']){
+  const env=environment();let time=clock,yielding=true;const services=source({running:true,time:()=>time}),provider=services.getFinanceBusinessPeriod;services.getFinanceBusinessPeriod=async(...args)=>({...await provider(...args),diagnostic:yielding?diagnostic:null});const first=await run(env,services,{now:()=>time});assert.equal(first.status,'RUNNING',diagnostic);assert.equal(first.finance_steps,1);assert.equal(first.ads_reads,1);assert.equal(first.state.summary.collection.code,diagnostic);assert.equal(first.state.failure_count,0);assert.equal(first.state.last_error,null);assert.equal(first.state.next_run_at,stamp+60);assert.ok(!first.state.summary.pending.includes('SOURCE_UNAVAILABLE'));assert.equal(first.state.summary.net_estimate_cents,null);
+  time=clock+59000;assert.equal((await run(env,services,{now:()=>time})).status,'NOT_DUE');yielding=false;time=clock+60000;const resumed=await run(env,services,{now:()=>time,maxSteps:1});assert.equal(resumed.status,'RUNNING');assert.equal(resumed.finance_steps,1);assert.equal(services.calls.finance.at(-1).operation,'step');assert.equal(resumed.state.summary.collection.state,'READY');assert.equal(resumed.state.next_run_at,stamp+120);
+ }
+});
+
 test('a genuine Ads failure still receives its normal backoff when the completed financial cohort is stale',async()=>{
  const env=environment();let time=clock;const services=source({time:()=>time,missing:'2026-10-03'});await run(env,services,{now:()=>time,maxSteps:1});time+=1000000;const result=await run(env,services,{now:()=>time});assert.equal(result.status,'PARTIAL');assert.equal(result.state.last_error,'BUSINESS_SYNC_ADS_INCOMPLETE');assert.equal(result.state.failure_count,1);assert.equal(result.state.next_run_at,Math.floor(time/1000)+300);assert.equal(result.state.summary.net_estimate_cents,null);assert.ok(result.state.summary.pending.includes('FINANCIAL_SOURCE_STALE'));assert.ok(result.state.summary.pending.includes('ADS_UNAVAILABLE'));assert.equal(result.state.last_success_at,null);
 });

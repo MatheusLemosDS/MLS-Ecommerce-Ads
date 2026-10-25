@@ -13,6 +13,12 @@ informação, as ocorrências conhecidas continuam visíveis. As contagens dos t
 grupos somam os pedidos importados na apuração. Durante uma coleta incompleta,
 o painel identifica os valores como parciais.
 
+A Visão geral mensal agora distingue a **previsão em conferência** do lucro
+conciliado. Com o mês completo e todos os valores necessários identificados,
+pode mostrar o número previsto mesmo com ocorrências de devolução, preservando
+as contagens e pendências. Isso não libera o indicador estrito para automação
+nem confirma reembolso ou recebimento. [Contrato atual](RESUMO_PUBLICADO_E_COLETA.md).
+
 ## O que significam os valores
 
 Cada grupo mostra a soma do **repasse previsto dos seus pedidos** quando todos
@@ -23,8 +29,8 @@ arredondamento para produzir um total aparente.
 
 O repasse total continua incluindo todos os grupos. Nenhuma soma é descontada
 novamente, nem se presume a recuperação do custo de produção ou do estoque.
-A presença de devolução ou de informação desconhecida mantém o resultado
-líquido previsto pendente. O valor reembolsado e o lucro liquidado continuam
+A presença de devolução ou de informação desconhecida mantém o indicador
+estrito de conciliação pendente, mesmo quando a previsão mensal é numérica. O valor reembolsado e o lucro liquidado continuam
 desconhecidos nesta projeção.
 
 ## Encontrar os produtos afetados pela pendência

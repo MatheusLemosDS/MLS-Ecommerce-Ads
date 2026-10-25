@@ -22,7 +22,7 @@ const unavailable=(value,label)=>{const result=buildRecordedBusinessBalance(valu
 test('recorded amounts give R$2339.75 while four unpriced units, two status reviews, returns and stale readings still block the strict result',()=>{
  const frame=reportedFrame(),before=clone(frame),result=buildRecordedBusinessBalance(frame);
  assert.deepEqual(result,{schema:'recorded_business_balance_v1',status:'AVAILABLE',amount_cents:233975,known_production_cents:736510,pending_production_units:4,review_orders:2,returns_orders:4,source_checked_at:frame.source_checked_at,pending:frame.result.pending,basis:'RECORDED_PAYOUT_MINUS_IDENTIFIED_COSTS_NOT_FINAL_PROFIT'});
- assert.equal(result.amount_cents,1109313-736510-8605-131403+1180);assert.equal(frame.result.net_estimate_cents,null);assert.equal(frame.result.net_profit_cents,null);assert.equal(buildMonthlyFinancialSummary(frame).balance_cents,null);assert.deepEqual(frame,before);assert.ok(projectRecordedBusinessBalance(result));
+ assert.equal(result.amount_cents,1109313-736510-8605-131403+1180);assert.equal(frame.result.net_estimate_cents,null);assert.equal(frame.result.net_profit_cents,null);assert.equal(buildMonthlyFinancialSummary(frame).state,'PARTIAL_COSTS');assert.equal(buildMonthlyFinancialSummary(frame).balance_cents,233975);assert.deepEqual(frame,before);assert.ok(projectRecordedBusinessBalance(result));
  result.pending.push('ADS_UNAVAILABLE');result.source_checked_at.ads_at=1;assert.deepEqual(frame,before,'the display result is detached from its source');
 });
 
