@@ -13,7 +13,7 @@ export async function getFinanceBusinessPeriod(env,input,{fetchImpl=request=>fet
  const deadline=new Promise((resolve,reject)=>{timer=setTimeout(()=>{controller.abort();cancel();reject(Error('deadline'));},timeoutMs);});
  const run=async()=>{
   response=await fetchImpl(new Request('https://auth.brazacommerce.com.br/internal/shopee/finance/business-period',{
-   method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json','X-Braza-App-Key':env.APP_INTERNAL_SECRET},
+   method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json','X-Braza-App-Key':env.APP_INTERNAL_SECRET,'X-Braza-Daily-Contract':'daily-profit-v1'},
    body:JSON.stringify(body),redirect:'manual',signal:controller.signal}));
   checkDeadline();
   if(!(response instanceof Response))return failure('RESPONSE_INVALID');

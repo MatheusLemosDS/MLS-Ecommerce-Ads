@@ -161,13 +161,15 @@ export async function readBusinessMonthDisplay(env,{month},{now=()=>Date.now()}=
  if(observed?.complete&&(!published||published.row.revision<observed.row.revision)){
   published=await saveCompletedBusinessMonth(env,month,observed,{now})||await readCompletedBusinessMonth(env,month,{now});
  }
- if(!published)return {display:active,active,display_source:'ACTIVE',audit_scope:null};
+ if(!published)return {display:active,active,display_source:'ACTIVE',audit_scope:null,source_frames:null};
  const savedRange={start_date:published.payload.start_date,end_date:published.payload.end_date,slots:published.payload.slots,current:range.current};
  const display=await businessMonthBundle(db,month,savedRange,stamp,published);
  // Carry the exact publication used for the displayed calculation. Aggregated
  // dates, order counts and money can coincide across different source runs.
  const audit_scope={publication_revision:published.publication.source_revision,start_date:published.payload.start_date,end_date:published.payload.end_date,sources:published.payload.slots.map(slot=>({run_id:slot.frame.run_id,source_revision:slot.frame.revision,start_date:slot.start_date,end_date:slot.end_date}))};
- return {display,active,display_source:'PUBLISHED',audit_scope};
+ // The daily calculation consumes these same immutable copies. They stay on
+ // the server; opening or changing a day never starts a second collector.
+ return {display,active,display_source:'PUBLISHED',audit_scope,source_frames:published.payload.slots.map(slot=>slot.frame)};
 }
 async function businessMonthOperation(env,input,services,{now=()=>Date.now(),actor='admin',onProductsDiscovered=null}={}){
  let stamp;try{const clock=now();if(!Number.isSafeInteger(clock)||clock<=0)throw Error();stamp=Math.floor(clock/1000);}catch{businessMonthFail('BUSINESS_MONTH_CLOCK',503);}

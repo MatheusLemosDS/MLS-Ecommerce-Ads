@@ -5,6 +5,7 @@ import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {spawnSync} from 'node:child_process';
 import {captureWorkerConfig, formatCapturePacket} from '../capture_worker_config.mjs';
+import {MAX_WORKER_SOURCE_BYTES} from '../import_worker_config.mjs';
 import {PROJECT_ROOT, stableJson} from '../worker_project.mjs';
 
 const authSource = readFileSync(path.join(PROJECT_ROOT, 'web/cloudflare/auth-worker.mjs'));
@@ -42,6 +43,7 @@ test('capture runs only pinned native init outside the repo, strips private data
     assert.equal(options.env.CI, 'true');
     assert.equal(options.env.WRANGLER_SEND_METRICS, 'false');
     assert.equal(options.env.WRANGLER_LOG, 'error');
+    assert.equal(options.maxBuffer, 3 * 1024 * 1024);
     assert.equal(cwd.startsWith(PROJECT_ROOT + path.sep), false);
     downloaded(cwd, 'auth');
     return PRIVATE;
@@ -115,12 +117,35 @@ test('unknown downloaded source returns a fixed error without code or vars', asy
   assert.deepEqual(readdirSync(f.temporaryRoot), []);
 });
 
+test('capture admits up to four MiB of source to UTF-8 and reviewed-hash validation, but rejects one extra byte', async t => {
+  assert.equal(MAX_WORKER_SOURCE_BYTES, 4 * 1024 * 1024);
+  const utf8 = 'é'.repeat(MAX_WORKER_SOURCE_BYTES / 2);
+  const malformed = Buffer.alloc(MAX_WORKER_SOURCE_BYTES, 0x20);
+  malformed[malformed.length - 1] = 0xff;
+  for (const [source, code] of [[utf8, 'WORKER_SOURCE_UNRECOGNIZED'],
+    [utf8 + 'x', 'WORKER_CAPTURE_EXPORT_LIMIT'], [malformed, 'WORKER_SOURCE_INVALID']]) {
+    const f = fixture(t);
+    await assert.rejects(captureWorkerConfig('app', {...f, run: (_command, _args, options) =>
+      downloaded(options.cwd, 'app', exportFor('app'), source)}),
+    failure => failure.code === code && failure.message === code && !String(failure).includes(PRIVATE));
+    assert.deepEqual(readdirSync(f.temporaryRoot), []);
+  }
+});
+
+test('the source allowance does not enlarge the separate config-file limit', async t => {
+  const f = fixture(t);
+  await assert.rejects(captureWorkerConfig('app', {...f, run: (_command, _args, options) =>
+    downloaded(options.cwd, 'app', {...exportFor('app'), vars: {PRIVATE_KEY: 'x'.repeat(256 * 1024)}})}),
+  {code: 'WORKER_CAPTURE_EXPORT_LIMIT'});
+  assert.deepEqual(readdirSync(f.temporaryRoot), []);
+});
+
 test('missing source and oversized exports produce fixed errors and cleanup', async t => {
   for (const oversized of [false, true]) {
     const f = fixture(t);
     await assert.rejects(captureWorkerConfig('auth', {...f, run: (_command, _args, options) => {
       const directory = downloaded(options.cwd, 'auth');
-      if (oversized) writeFileSync(path.join(directory, 'huge.bin'), Buffer.alloc(3 * 1024 * 1024));
+      if (oversized) writeFileSync(path.join(directory, 'huge.bin'), Buffer.alloc(MAX_WORKER_SOURCE_BYTES + 1024 * 1024));
       else rmSync(path.join(directory, 'src/index.js'));
     }}), {code: oversized ? 'WORKER_CAPTURE_EXPORT_LIMIT' : 'WORKER_CAPTURE_SOURCE_MISSING'});
     assert.deepEqual(readdirSync(f.temporaryRoot), []);

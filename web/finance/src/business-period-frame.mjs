@@ -86,8 +86,55 @@ export function projectBusinessPeriodFrame(value) {
   products.sort((a,b)=>order(a.item_id,b.item_id));
   return Object.fromEntries(names.map(key=>[key,key==='products'?products:source[key]]));
  }
+ function dailyBreakdown(source,coverage,items){
+  const names=['schema','timezone','basis','days','undated'],groupKeys=['date','coverage','known_sales_base_raw','sales_base_raw','known_expected_repass_raw','expected_repass_raw','known_ads_adjustment_raw','ads_adjustment_raw','items','source_checked_at','adjustments'];
+  const knownKeys=['known_sales_base_raw','known_expected_repass_raw','known_ads_adjustment_raw'],totalKeys=['sales_base_raw','expected_repass_raw','ads_adjustment_raw'];
+  const adjustmentKeys=['covered_orders','missing_orders','conflict_orders','known_base_repass_raw','known_adjustment_raw','known_after_adjustment_repass_raw','adjustment_raw','after_adjustment_repass_raw'];
+  if(!exact(source,names)||source.schema!=='finance_business_daily_v1'||source.timezone!=='America/Sao_Paulo'||source.basis!=='CREATE_TIME_PAID_ORDER_ESTIMATE_NOT_SETTLED'||!array(source.days,15))return null;
+  const dates=[];for(let at=Date.parse(value.start_date+'T00:00:00Z'),end=Date.parse(value.end_date+'T00:00:00Z');at<=end;at+=86400000)dates.push(new Date(at).toISOString().slice(0,10));
+  const cutoffDay=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date(value.cutoff_at*1000));
+  if(source.days.length!==dates.length||value.end_date>cutoffDay)return null;
+  const counts=Object.fromEntries(coverageKeys.map(key=>[key,0])),money=[0n,0n,0n],quantities=new Map(),expectedItems=new Map(items.map(row=>[row.item_id+':'+row.model_id,BigInt(row.quantity)])),times=[];
+  const projectGroup=(group,date)=>{
+   if(!exact(group,groupKeys)||group.date!==date||!exact(group.coverage,coverageKeys)||!array(group.items,1000)||!exact(group.source_checked_at,['oldest_at','latest_at'])||!exact(group.adjustments,adjustmentKeys))return null;
+   const c=group.coverage;
+   if(!coverageKeys.every(key=>integer(c[key],0,1000))||c.orders!==c.paid+c.cancelled+c.cancel_pending+c.unpaid+c.other+c.unknown||c.paid!==c.completed+c.ongoing||c.payment_covered+c.payment_missing!==c.paid||c.returns>c.payment_covered||c.returns_unknown<c.payment_missing||c.returns+c.returns_unknown>c.paid)return null;
+   for(const key of coverageKeys){counts[key]+=c[key];if(counts[key]>coverage[key])return null;}
+   for(let index=0;index<knownKeys.length;index++){
+    const amount=cents(group[knownKeys[index]]),bound=BigInt(c.payment_covered)*100000000000000n;
+    if(amount===null||amount< -bound||amount>bound||index===0&&amount<0n||group[totalKeys[index]]!==(c.payment_missing?null:group[knownKeys[index]]))return null;
+    money[index]+=amount;
+   }
+   const seen=new Set(),outItems=[];let quantity=0n;
+   for(const row of group.items){
+    if(!exact(row,['item_id','model_id','quantity'])||!id(row.item_id)||!id(row.model_id,true)||!integer(row.quantity,1,1000000000000))return null;
+    const key=row.item_id+':'+row.model_id;if(seen.has(key)||!expectedItems.has(key))return null;seen.add(key);quantity+=BigInt(row.quantity);
+    const aggregate=(quantities.get(key)||0n)+BigInt(row.quantity);if(aggregate>expectedItems.get(key))return null;quantities.set(key,aggregate);outItems.push({...row});
+   }
+   if(c.paid===0?outItems.length!==0:outItems.length===0||quantity<BigInt(c.paid))return null;
+   outItems.sort((a,b)=>order(a.item_id,b.item_id)||order(a.model_id,b.model_id));
+   const observed=group.source_checked_at;
+   if(c.orders===0){if(observed.oldest_at!==null||observed.latest_at!==null)return null;}
+   else{if(!integer(observed.oldest_at,value.cutoff_at,value.checked_at)||!integer(observed.latest_at,observed.oldest_at,value.checked_at)||c.orders===1&&observed.oldest_at!==observed.latest_at)return null;times.push(observed);}
+   const a=group.adjustments;
+   if(!['covered_orders','missing_orders','conflict_orders'].every(key=>integer(a[key],0,1000))||a.covered_orders+a.missing_orders+a.conflict_orders!==c.paid||a.covered_orders+a.conflict_orders>c.payment_covered||a.missing_orders<c.payment_missing)return null;
+   const amounts=['known_base_repass_raw','known_adjustment_raw','known_after_adjustment_repass_raw'].map(key=>cents(a[key])),bound=BigInt(a.covered_orders)*100000000000000n;
+   if(amounts.some(amount=>amount===null||amount< -bound||amount>bound)||amounts[0]+amounts[1]!==amounts[2])return null;
+   const complete=a.covered_orders===c.paid;
+   if(complete&&amounts[0]!==cents(group.known_expected_repass_raw)||a.adjustment_raw!==(complete?a.known_adjustment_raw:null)||a.after_adjustment_repass_raw!==(complete?a.known_after_adjustment_repass_raw:null))return null;
+   return Object.fromEntries(groupKeys.map(key=>[key,key==='coverage'?{...c}:key==='items'?outItems:key==='source_checked_at'?{...observed}:key==='adjustments'?{...a}:group[key]]));
+  };
+  const days=[];for(let index=0;index<dates.length;index++){const row=projectGroup(source.days[index],dates[index]);if(!row)return null;days.push(row);}
+  const undated=projectGroup(source.undated,null);if(!undated||coverageKeys.some(key=>counts[key]!==coverage[key])||knownKeys.some((key,index)=>money[index]!==cents(value[key]))||quantities.size!==expectedItems.size||[...expectedItems].some(([key,quantity])=>quantities.get(key)!==quantity))return null;
+  if(coverage.orders&&value.source_checked_at&&(Math.min(...times.map(row=>row.oldest_at))!==value.source_checked_at.oldest_at||Math.max(...times.map(row=>row.latest_at))!==value.source_checked_at.latest_at))return null;
+  const result={schema:source.schema,timezone:source.timezone,basis:source.basis,days,undated};
+  // Every allowed field is ASCII. Bound the added calendar without increasing
+  // the existing one-MiB private frame or its persisted value limit.
+  if(JSON.stringify(result).length>524288||JSON.stringify(value).length>1048576)return null;
+  return result;
+ }
  try {
-  const hasProducts=plain(value)&&Object.hasOwn(value,'product_breakdown'),hasTimes=plain(value)&&Object.hasOwn(value,'source_checked_at'),hasCapacity=plain(value)&&Object.hasOwn(value,'page_capacity'),frameKeys=[...keys,...(hasProducts?['product_breakdown']:[]),...(hasTimes?['source_checked_at']:[]),...(hasCapacity?['page_capacity']:[])];
+  const hasProducts=plain(value)&&Object.hasOwn(value,'product_breakdown'),hasTimes=plain(value)&&Object.hasOwn(value,'source_checked_at'),hasCapacity=plain(value)&&Object.hasOwn(value,'page_capacity'),hasDaily=plain(value)&&Object.hasOwn(value,'daily_breakdown'),frameKeys=[...keys,...(hasProducts?['product_breakdown']:[]),...(hasTimes?['source_checked_at']:[]),...(hasCapacity?['page_capacity']:[]),...(hasDaily?['daily_breakdown']:[])];
   if(!exact(value,frameKeys)||value.schema!=='finance_business_period_v1'||!run(value.run_id)||!integer(value.revision,1,2147483647)||!['RUNNING','COMPLETE','LIMIT_REACHED'].includes(value.status)||!day(value.start_date)||!day(value.end_date)||!integer(value.cutoff_at,1,9999999999)||!integer(value.checked_at,value.cutoff_at,9999999999)||value.currency!=='BRL'||value.monetary_unit!=='UNCONFIRMED'||value.basis!=='CREATE_TIME_PAID_ORDER_ESTIMATE_NOT_SETTLED'||!integer(value.pages_read,0,200)||!integer(value.duplicate_orders,0,1000)||!exact(value.coverage,coverageKeys)||!exact(value.invoice_tax,invoiceKeys)||!array(value.items,1000)||![null,'BUSINESS_PERIOD_UPSTREAM_UNAVAILABLE','BUSINESS_PERIOD_CONFLICT','BUSINESS_PERIOD_CHECKPOINT','BUSINESS_PERIOD_BUSY','BUSINESS_PERIOD_RATE_LIMIT','BUSINESS_PERIOD_TIMEOUT','BUSINESS_PERIOD_AUTH_REQUIRED','BUSINESS_PERIOD_INVALID_SOURCE'].includes(value.diagnostic))return null;
   const days=(Date.parse(value.end_date+'T00:00:00Z')-Date.parse(value.start_date+'T00:00:00Z'))/86400000+1;
   if(days<1||days>15||value.status==='COMPLETE'&&value.pages_read===0||value.status!=='RUNNING'&&value.diagnostic!==null)return null;
@@ -121,6 +168,7 @@ export function projectBusinessPeriodFrame(value) {
   if(c.paid===0?items.length!==0:items.length===0||quantity<BigInt(c.paid))return null;
   items.sort((a,b)=>order(a.item_id,b.item_id)||order(a.model_id,b.model_id));
   const products=hasProducts?productBreakdown(value.product_breakdown,c,items):null;if(hasProducts&&!products)return null;
-  return Object.fromEntries(frameKeys.map(key=>[key,key==='coverage'?Object.fromEntries(coverageKeys.map(name=>[name,c[name]])):key==='invoice_tax'?Object.fromEntries(invoiceKeys.map(name=>[name,tax[name]])):key==='items'?items:key==='product_breakdown'?products:key==='source_checked_at'?{...sourceTimes}:value[key]]));
+  const daily=hasDaily?dailyBreakdown(value.daily_breakdown,c,items):null;if(hasDaily&&!daily)return null;
+  return Object.fromEntries(frameKeys.map(key=>[key,key==='coverage'?Object.fromEntries(coverageKeys.map(name=>[name,c[name]])):key==='invoice_tax'?Object.fromEntries(invoiceKeys.map(name=>[name,tax[name]])):key==='items'?items:key==='product_breakdown'?products:key==='daily_breakdown'?daily:key==='source_checked_at'?{...sourceTimes}:value[key]]));
  }catch{return null;}
 }

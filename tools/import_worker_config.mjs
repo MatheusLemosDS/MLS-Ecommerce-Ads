@@ -4,6 +4,10 @@ import {fileURLToPath} from 'node:url';
 import {parse} from 'jsonc-parser';
 import {PROJECT_ROOT, TARGETS, sha256, stableJson, error} from './worker_project.mjs';
 
+// The reviewed App bundle now exceeds two MiB. This is only an import-file
+// ceiling: strict UTF-8 and the exact reviewed-source hash remain mandatory.
+export const MAX_WORKER_SOURCE_BYTES = 4 * 1024 * 1024;
+
 const ALLOWED = new Set(['name', 'main', 'account_id', 'compatibility_date', 'compatibility_flags',
   'workers_dev', 'preview_urls', 'routes', 'route', 'triggers', 'd1_databases', 'kv_namespaces',
   'r2_buckets', 'services', 'placement', 'limits', 'observability', 'logpush', 'tail_consumers',
@@ -111,7 +115,7 @@ export function importWorkerConfig(target, exportConfig, source, {root = PROJECT
   try {
     if (typeof source !== 'string' && !Buffer.isBuffer(source) && !(source instanceof Uint8Array)) fail('WORKER_SOURCE_INVALID');
     raw = Buffer.from(source);
-    if (!raw.length || raw.length > 2 * 1024 * 1024) fail('WORKER_SOURCE_INVALID');
+    if (!raw.length || raw.length > MAX_WORKER_SOURCE_BYTES) fail('WORKER_SOURCE_INVALID');
     normalized = Buffer.from(new TextDecoder('utf-8', {fatal: true}).decode(raw).replace(/\r\n/g, '\n'));
   } catch { fail('WORKER_SOURCE_INVALID'); }
   const recognizedHash = sha256(normalized);

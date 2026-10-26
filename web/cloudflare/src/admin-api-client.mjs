@@ -1,7 +1,7 @@
 // This factory is embedded into the owner page. Keep helpers local so bundling
 // cannot capture a server closure or rename a dependency in the browser source.
 export function createAdminApiClient(options={}){
- const monthlyContract='business-month-v2',monthlyViewContract='business-month-view-v2';
+ const monthlyContract='business-month-v2',monthlyViewContract='business-month-view-v3';
  const messages={ADMIN_API_NETWORK_ERROR:'Não foi possível conectar ao painel. Verifique sua conexão e tente novamente.',ADMIN_API_TIMEOUT:'A consulta demorou mais que o esperado. Tente novamente.',ADMIN_API_RESPONSE_INVALID:'Não foi possível conferir a resposta do painel. Tente novamente.',ADMIN_API_HTTP_ERROR:'Não foi possível concluir a consulta ao painel. Tente novamente.'};
  const error=(code,status=null,apiCode=null)=>Object.assign(new Error(messages[code]),{code,status,apiCode});
  const plain=value=>value!==null&&typeof value==='object'&&[Object.prototype,null].includes(Object.getPrototypeOf(value));

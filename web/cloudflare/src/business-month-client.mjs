@@ -12,13 +12,16 @@ import {projectBusinessCostDiagnostics,projectBusinessCostDiagnosticsEvidence,pr
 import {projectHistoricalCostPairDiagnostics,projectHistoricalCostPairDiagnosticsEvidence,deriveHistoricalCostComposition} from './historical-cost-evidence.mjs';
 import {projectBackgroundCollectionDiagnostics} from './background-collection-diagnostics.mjs';
 import {buildRecordedBusinessBalance,projectRecordedBusinessBalance} from './business-recorded-balance.mjs';
+import {projectDailyBusinessSummary} from './business-daily-summary.mjs';
+import {BUSINESS_DAY_CLIENT} from './business-day-view.mjs';
 
-export const BUSINESS_MONTH_CLIENT=String.raw`
+export const BUSINESS_MONTH_CLIENT=BUSINESS_DAY_CLIENT+String.raw`
 (()=>{
  ${projectAdsCalendar.toString()}
  ${projectBusinessMonthProducts.toString()}
  ${projectBusinessMonth.toString()}
  ${projectBusinessMonthAuditScope.toString()}
+ ${projectDailyBusinessSummary.toString()}
  ${projectBusinessMonthView.toString()}
  ${buildBusinessCheckpoint.toString()}
  ${buildAccountDiagnosis.toString()}
@@ -336,7 +339,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
  function prepare(options={}){
   if(started||bootstrapCompleted||!el('Select'))return false;
   if(typeof options.retry==='function')bootstrapRetry=options.retry;
-  let selected;try{const params=new URLSearchParams(globalThis.location?.search||'');selected=params.getAll('month').length===1?params.get('month'):null;}catch{}
+  let selected;try{const params=new URLSearchParams(globalThis.location?.search||'');selected=params.getAll('month').length===1?params.get('month'):null;}catch{}try{const dailyMonth=globalThis.brazaDayDashboard?.getSelection?.()?.slice(0,7);if(validMonth(dailyMonth))selected=dailyMonth;}catch{}
   const control=el('Select');control.max=today().slice(0,7);control.value=validMonth(selected)?selected:bootstrapPrepared&&validMonth(control.value)?control.value:today().slice(0,7);
   bootstrapPrepared=true;if(!frame)render();
   el('Refresh').onclick=retryBootstrap;paintBootstrap();return true;
@@ -538,12 +541,12 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
   el('RefreshHelp').textContent=automatic.applicable&&automatic.enabled?'Recalcular custos usa os pedidos salvos. Atualizar vendas prioriza a próxima coleta automática, que continua com o painel fechado.':'Recalcular custos usa os pedidos salvos. Atualizar vendas inicia uma consulta manual à Shopee para este período.';
  }
  async function fetchWorkspaceView(selected){
-  const raw=await api('finance/business-month-view?month='+encodeURIComponent(selected)),checked=projectBusinessMonthView(raw,projectBusinessMonth,projectBusinessMonthAuditScope);if(!checked||checked.month!==selected)throw Error('BUSINESS_MONTH_VIEW_INVALID');return checked;
+  const raw=await api('finance/business-month-view?month='+encodeURIComponent(selected)),checked=projectBusinessMonthView(raw,projectBusinessMonth,projectBusinessMonthAuditScope,projectDailyBusinessSummary);if(!checked||checked.month!==selected)throw Error('BUSINESS_MONTH_VIEW_INVALID');return checked;
  }
  function readWorkspaceView({selected=el('Select').value,background=false}={}){
   if(!started||saving||!validMonth(selected)||background&&(document.hidden||costDiagnosticBusy||manualCollection||busy))return Promise.resolve(false);
   if(viewPromise?.month===selected)return viewPromise.task;
-  const changed=selected!==month;if(changed){resetCostDiagnostic({clear:true});generation++;month=selected;frame=null;workspaceView=null;observeAudits(selected);collectionRecovery=null;collectionFailure=null;manualCollection=false;priorityPromise=null;paused=false;automaticBlocked=false;catalogRequest++;catalogBusy=false;catalogState=null;catalogProducts.clear();catalogSignature='';catalogNeedsRead=true;dirty=false;editSequence++;draftRevision=0;el('ExpensesValue').value='';el('Recharge').value='UNCONFIRMED';invalidateCheckpointHistory();}
+  const changed=selected!==month;if(changed){resetCostDiagnostic({clear:true});generation++;month=selected;frame=null;workspaceView=null;observeAudits(selected);try{globalThis.brazaDayDashboard?.reset?.({month:selected});}catch{}collectionRecovery=null;collectionFailure=null;manualCollection=false;priorityPromise=null;paused=false;automaticBlocked=false;catalogRequest++;catalogBusy=false;catalogState=null;catalogProducts.clear();catalogSignature='';catalogNeedsRead=true;dirty=false;editSequence++;draftRevision=0;el('ExpensesValue').value='';el('Recharge').value='UNCONFIRMED';invalidateCheckpointHistory();}
   const token=generation,requestId=++viewRequest,current=()=>started&&token===generation&&month===selected&&requestId===viewRequest;
   if(!background){busy=true;clearTimeout(timer);timer=null;status('Conferindo o resumo salvo e o andamento da coleta…');render();}
   const task=(async()=>{try{const value=await fetchWorkspaceView(selected);if(!current())return false;workspaceView=value;manualCollection=false;collectionRecovery=null;collectionFailure=null;automaticBlocked=false;viewFailures=0;apply(value.display,selected);if(!background)status(value.collection.status==='RUNNING'?(value.display_source==='PUBLISHED'?'Atualização em andamento no servidor; o último resumo concluído está identificado abaixo.':value.automatic.enabled&&value.automatic.applicable?'A coleta automática está em andamento. O resultado do período aparece após sua conclusão.':'Há uma leitura parcial salva. Use Atualizar vendas para continuar manualmente.'):'Resumo recalculado com os pedidos, anúncios e custos salvos.');return true;}catch(error){if(current()){viewFailures=Math.min(4,viewFailures+1);status(error?.status===401?'Entre novamente para acompanhar os dados da loja.':'Não foi possível conferir o andamento agora. O último resumo e seus rascunhos foram preservados; tentaremos novamente.',true);}return false;}finally{if(current()){if(!background)busy=false;viewPromise=null;render();schedule();scheduleCatalog();}}})();viewPromise={month:selected,task};return task;
@@ -561,7 +564,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
  }
  function checkedFrame(value,expectedMonth){const checked=projectBusinessMonth(value);if(!checked||checked.month!==expectedMonth)throw Error('Os dados mensais não puderam ser conferidos. Atualize o mês para tentar novamente.');return checked;}
  function observeAudits(selected,scope=null,monthly=null){try{globalThis.brazaReconciliation?.observe(selected,scope,monthly);globalThis.brazaEscrowReleases?.observe(selected,scope);}catch{}}
- function apply(value,expectedMonth){const previous=frame?.classification_revision;frame=checkedFrame(value,expectedMonth);if(previous!==frame.classification_revision){catalogNeedsRead=true;if(previous!==undefined)catalogProductsChanged=true;}invalidateCheckpointHistory();render();const auditScope=!manualCollection&&workspaceView?.display===value&&workspaceView.schema==='business_month_view_v2'&&workspaceView.display_source==='PUBLISHED'?workspaceView.audit_scope:null;observeAudits(expectedMonth,auditScope,auditScope===null?null:frame);return frame;}
+ function apply(value,expectedMonth){const previous=frame?.classification_revision;frame=checkedFrame(value,expectedMonth);if(previous!==frame.classification_revision){catalogNeedsRead=true;if(previous!==undefined)catalogProductsChanged=true;}invalidateCheckpointHistory();render();const auditScope=!manualCollection&&workspaceView?.display===value&&['business_month_view_v2','business_month_view_v3'].includes(workspaceView.schema)&&workspaceView.display_source==='PUBLISHED'?workspaceView.audit_scope:null;observeAudits(expectedMonth,auditScope,auditScope===null?null:frame);try{globalThis.brazaDayDashboard?.setContext?.(auditScope===null?null:workspaceView.daily_summary??null,{monthly:frame,scope:auditScope,month:expectedMonth});}catch{}return frame;}
  function collectionProgress(value){return [value.progress.pages_read,value.coverage.orders,value.progress.windows_complete];}
  function trackCollection(value){
   if(!value.collection)return null;
@@ -768,7 +771,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
    const raw=await api('finance/business-month',{operation:'expenses',month:selected,revision,external_expenses_cents:amount,recharge_treatment:treatment});
    if(token!==generation||selected!==month)return false;
    const result=projectBusinessMonth(raw);if(!result||result.month!==selected)throw Error('As despesas foram enviadas, mas o resultado não pôde ser conferido. Atualize o mês.');
-   frame=result;observeAudits(selected);invalidateCheckpointHistory();draftRevision=result.expenses.revision;
+   frame=result;observeAudits(selected);try{globalThis.brazaDayDashboard?.reset?.({month:selected});}catch{}invalidateCheckpointHistory();draftRevision=result.expenses.revision;
    if(submitted===editSequence){dirty=false;fillExpenses({force:true});}
    render();status('Despesas do mês salvas. Produção, imposto e anúncios continuam contabilizados separadamente.');return true;
   }catch(error){
@@ -789,14 +792,19 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
  async function start(options={}){
   if(started)return false;if(typeof options.api!=='function'||!el('Select'))return false;
   api=options.api;try{globalThis.brazaExpenseLedger?.start({api,onChanged:async selected=>{if(started&&selected===month)return refreshCosts();}});globalThis.brazaReconciliation?.start({api});globalThis.brazaEscrowReleases?.start({api});}catch{}syncVariants=options.syncVariants;onCatalogChanged=options.onCatalogChanged;bootstrapPhase='READY';bootstrapCompleted=true;started=true;
-  let selected;try{const params=new URLSearchParams(globalThis.location?.search||'');selected=params.getAll('month').length===1?params.get('month'):null;}catch{}
+  let selected;try{const params=new URLSearchParams(globalThis.location?.search||'');selected=params.getAll('month').length===1?params.get('month'):null;}catch{}try{const dailyMonth=globalThis.brazaDayDashboard?.getSelection?.()?.slice(0,7);if(validMonth(dailyMonth))selected=dailyMonth;}catch{}
   el('Select').max=today().slice(0,7);el('Select').value=validMonth(selected)?selected:bootstrapPrepared&&validMonth(el('Select').value)?el('Select').value:today().slice(0,7);
   el('Refresh').onclick=()=>frame?.status==='COMPLETE'&&!paused&&!collectionRecovery?.waiting?refreshCosts():refresh();el('SourceRefresh').onclick=requestSalesUpdate;el('Select').onchange=()=>readWorkspaceView();
   el('Previous').onclick=()=>{const basis=validMonth(el('Select').value)?el('Select').value:today().slice(0,7),date=new Date(basis+'-01T12:00:00Z');date.setUTCMonth(date.getUTCMonth()-1);el('Select').value=date.toISOString().slice(0,7);readWorkspaceView();};
   el('Pause').onclick=()=>{paused=true;clearTimeout(timer);timer=null;el('Pause').disabled=true;status(busy?'A consulta será pausada após a resposta em andamento.':'Consulta pausada. Use Continuar consulta para retomar.');render();};
   el('ExpensesForm').onsubmit=event=>{event.preventDefault();saveExpenses();};el('ExpensesValue').oninput=expenseChanged;el('Recharge').onchange=expenseChanged;
   el('OpenReconciliation').onclick=()=>globalThis.brazaReconciliation?.open?.()??false;
-  el('OpenExpenses').onclick=()=>{el('ExpensesDetails').open=true;el('ExpensesDetails').scrollIntoView?.({behavior:'smooth',block:'start'});return globalThis.brazaExpenseLedger?.refresh();};
+  const openDetails=(details,focus=null)=>{if(!details)return false;details.open=true;details.scrollIntoView?.({behavior:'smooth',block:'start'});(focus||details.querySelector?.('summary'))?.focus?.({preventScroll:true});return true;};
+  el('OpenExpenses').onclick=()=>{openDetails(el('ExpensesDetails'));return globalThis.brazaExpenseLedger?.refresh();};
+  if(el('OpenCalculation'))el('OpenCalculation').onclick=()=>openDetails(el('CalculationDetails'));
+  if(el('OpenProducts'))el('OpenProducts').onclick=()=>openDetails(el('ProductsDetails'),el('ProductSearch'));
+  if(el('OpenRefunds'))el('OpenRefunds').onclick=()=>globalThis.brazaReconciliation?.open?.()??false;
+  if(el('OpenReleases'))el('OpenReleases').onclick=()=>openDetails(document.getElementById('businessEscrowReleasesDetails'));
   el('ExpensesZero').onclick=()=>saveExpenses({zero:true});el('ExpensesReload').onclick=()=>{dirty=false;editSequence++;fillExpenses({force:true});render();schedule();scheduleCatalog();};el('Identify').onclick=identify;
   el('CostCheck').onclick=()=>checkCostDiagnostic();el('CostRecover').onclick=()=>checkCostDiagnostic({recover:true});el('CostCopy').onclick=copyCostDiagnostic;
   el('CheckpointDetails').ontoggle=()=>{if(el('CheckpointDetails').open)loadCheckpointHistory();};
@@ -807,6 +815,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
   manualCollection=false;return readWorkspaceView();
  }
  function stop(){try{globalThis.brazaExpenseLedger?.stop();globalThis.brazaReconciliation?.stop();globalThis.brazaEscrowReleases?.stop();}catch{}started=false;viewRequest++;viewPromise=null;priorityPromise=null;manualCollection=false;resetCostDiagnostic();catalogRequest++;catalogBusy=false;clearTimeout(catalogTimer);catalogTimer=null;paused=true;resumeOnVisible=false;collectionRecovery=null;generation++;checkpointHistoryRequest++;checkpointHistoryBusy=false;busy=false;adsBusy=false;clearTimeout(timer);timer=null;controls();}
- globalThis.brazaMonthDashboard={clientContract,prepare,bootstrapState,start,refresh,refreshCosts,stop,supportsCatalogQueue:catalogFeature,syncCatalogCandidates,refreshCatalog:()=>{catalogNeedsRead=true;return updateCatalog();},catalogMetadata:item=>catalogProducts.get(item)||null};
+ function selectMonth(selected){if(!started||saving||!validMonth(selected))return Promise.resolve(false);el('Select').value=selected;return readWorkspaceView({selected});}
+ globalThis.brazaMonthDashboard={clientContract,prepare,bootstrapState,start,refresh,refreshCosts,selectMonth,stop,supportsCatalogQueue:catalogFeature,syncCatalogCandidates,refreshCatalog:()=>{catalogNeedsRead=true;return updateCatalog();},catalogMetadata:item=>catalogProducts.get(item)||null};
 })();
 `+EXPENSE_LEDGER_CLIENT+BUSINESS_RECONCILIATION_CLIENT+ESCROW_RELEASES_CLIENT;

@@ -801,6 +801,7 @@ function startupFeedback(value){
  const target=el('message');if(message){target.dataset.startup='true';notice(message);}else if(target.dataset.startup==='true'){notice('');delete target.dataset.startup;}
  const retry=el('startupRetry'),login=el('startupLogin');if(retry){retry.hidden=!failed||unauthorized;retry.disabled=!failed;}if(login)login.hidden=!unauthorized;
  globalThis.brazaMonthDashboard?.bootstrapState?.({phase:value.phase,failureKind:failed?failureKind:null});
+ globalThis.brazaDayDashboard?.bootstrapState?.({phase:value.phase,failureKind:failed?failureKind:null});
 }
 function secondaryFailure(key){
  if(key==='audit'){const target=el('audit');if(target)target.replaceChildren(node('p','O histórico está indisponível no momento. O resumo da loja continua disponível.','field-help'));}
@@ -860,7 +861,7 @@ function logoutWorkspace(event){
    const deadline=new Promise((resolve,reject)=>{timer=setTimeout(()=>{controller.abort();reject(Error('LOGOUT_TIMEOUT'));},15000);});
    const response=await Promise.race([fetch('/admin/logout',{method:'POST',headers:{'X-CSRF-Token':csrf},credentials:'same-origin',redirect:'error',signal:controller.signal}),deadline]);
    if(!response.ok){notice('Não foi possível sair. Atualize a página e tente novamente.');return false;}
-   try{startupController?.stop();settingsLoadGeneration++;csrf='';state=null;settingsControls(false);globalThis.brazaMonthDashboard?.stop();globalThis.brazaSavedCatalog?.stop();globalThis.brazaProductionCostPeriods?.stop();globalThis.brazaAutomationWorkspace?.stop();globalThis.brazaDtfWorkspace?.stop();clearTimeout(pollTimer);clearTimeout(storeAdsRefreshTimer);clearTimeout(shopOrdersRefreshTimer);}finally{location.href='/login';}
+   try{startupController?.stop();settingsLoadGeneration++;csrf='';state=null;settingsControls(false);globalThis.brazaMonthDashboard?.stop();globalThis.brazaDayDashboard?.stop();globalThis.brazaSavedCatalog?.stop();globalThis.brazaProductionCostPeriods?.stop();globalThis.brazaAutomationWorkspace?.stop();globalThis.brazaDtfWorkspace?.stop();clearTimeout(pollTimer);clearTimeout(storeAdsRefreshTimer);clearTimeout(shopOrdersRefreshTimer);}finally{location.href='/login';}
    return true;
   }catch{notice('Não foi possível confirmar a saída. Verifique sua conexão e tente novamente.');return false;}
   finally{if(timer!==null)clearTimeout(timer);logoutPromise=null;}
@@ -869,7 +870,7 @@ function logoutWorkspace(event){
 el('logout').onsubmit=logoutWorkspace;
 function workspaceTabFromLocation(){try{const values=new URLSearchParams(globalThis.location?.search||'').getAll('tab');return values.length===1?values[0]:'overview';}catch{return 'overview';}}
 function openTab(tab,{updateUrl=true}={}){
- const titles={production:['Produção e DTF','Organize os pedidos, encontre as artes pelo SKU e monte seus lotes de impressão.'],overview:['Visão geral','Acompanhe o mês, entenda o resultado e encontre o que precisa de atenção.'],margins:['Custos de produção','Cadastre o custo por peça. Os produtos identificados recebem o cálculo automaticamente.'],hermes:['Análises do Hermes','Peça uma análise e acompanhe o andamento, os limites e o histórico.'],products:['Produtos e variações','Consulte os produtos e seus custos. Revise somente as identificações pendentes.'],history:['Histórico e auditoria','Confira o que foi alterado e as versões salvas dos seus dados.'],roadmap:['Plano de evolução','Veja o que já está disponível e o que falta para automatizar as vendas.']};
+ const titles={production:['Produção e DTF','Organize os pedidos, encontre as artes pelo SKU e monte seus lotes de impressão.'],overview:['Visão geral','Veja o resultado do dia e acompanhe o mês. Abra as despesas e conferências quando precisar.'],margins:['Custos de produção','Cadastre o custo por peça. Os produtos identificados recebem o cálculo automaticamente.'],hermes:['Análises do Hermes','Peça uma análise e acompanhe o andamento, os limites e o histórico.'],products:['Produtos e variações','Consulte os produtos e seus custos. Revise somente as identificações pendentes.'],history:['Histórico e auditoria','Confira o que foi alterado e as versões salvas dos seus dados.'],roadmap:['Plano de evolução','Veja o que já está disponível e o que falta para automatizar as vendas.']};
  if(!Object.hasOwn(titles,tab))tab='overview';
  if(['margins','hermes'].includes(tab)&&csrf&&!state)void loadSettings();
  if(tab==='products'){if(csrf)loadObservations();if(globalThis.brazaSavedCatalog)globalThis.brazaSavedCatalog.refresh();else syncOnProductsOpen();}
@@ -888,6 +889,7 @@ openTab(workspaceTabFromLocation(),{updateUrl:false});
 document.addEventListener('visibilitychange',()=>{if(document.hidden){clearTimeout(pollTimer);clearTimeout(shopOrdersRefreshTimer);shopOrdersRefreshTimer=null;clearTimeout(storeAdsRefreshTimer);storeAdsRefreshTimer=null;}else if(csrf){pollLive();loadShopOrders();refreshStoreAds({automatic:true});scheduleStoreAdsRefresh();}});
 setInterval(()=>{if(document.hidden)return;updateShopSnapshotAge();updateObservationCaptureState();for(const button of el('jobs').querySelectorAll('[data-job-id]')){const job=rows.find(row=>row.id===button.dataset.jobId);if(job)button.textContent=jobLabel(job);}const selected=rows.find(job=>job.id===selectedJobId);if(selected&&['queued','running'].includes(selected.status))selectedResult();},1000);
 settingsControls(false);
+globalThis.brazaDayDashboard?.prepare?.();
 globalThis.brazaMonthDashboard?.prepare?.({retry:initialize});
 const startupRetry=el('startupRetry');if(startupRetry)startupRetry.onclick=initialize;
 initialize();

@@ -39,7 +39,7 @@ test('financial collection retains private exact order and return evidence for p
  assert.equal(frame.status,'COMPLETE');assert.ok(projectBusinessPeriodFrame(frame));assert.equal(frame.coverage.paid,2);assert.equal(frame.coverage.other,1);assert.equal(frame.coverage.cancel_pending,1);assert.equal(frame.coverage.returns,1);assert.equal(frame.expected_repass_raw,'65');assert.equal(frame.sales_base_raw,'200');
  assert.deepEqual(f.calls.map(url=>url.pathname).sort(),[detail,list,payment,payment].sort());assert.equal(f.evidence().length,6);
  const entries=bySerial(f),paid=entries.get(serial(0)),review=entries.get(serial(1));
- assert.equal(paid.value.schema,'financial_order_evidence_v1');assert.deepEqual(paid.value.return_order_sn_list,f.state.returns[0]);assert.equal(paid.value.order_status,'COMPLETED');assert.equal(paid.value.currency,'BRL');
+ assert.equal(paid.value.schema,'financial_order_evidence_v2');assert.equal(paid.value.create_time,Date.UTC(2026,9,20,12)/1000);assert.deepEqual(paid.value.return_order_sn_list,f.state.returns[0]);assert.equal(paid.value.order_status,'COMPLETED');assert.equal(paid.value.currency,'BRL');
  assert.deepEqual(paid.value.amounts,{escrow_amount_raw:'30',escrow_amount_after_adjustment_raw:'40.1',total_adjustment_amount_raw:'10.1'});
  assert.equal(review.value.order_status,'TO_RETURN');assert.equal(review.value.return_order_sn_list,null);assert.equal(review.value.amounts.escrow_amount_raw,null);
  for(const row of f.evidence()){

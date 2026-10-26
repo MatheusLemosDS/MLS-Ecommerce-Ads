@@ -49,7 +49,8 @@ function validRecord(record){
 }
 
 export function projectFinancialOrderEvidence(value){
- if(!exact(value,['schema','order_sn','order_status','currency','return_order_sn_list','amounts','diagnostic'])||value.schema!=='financial_order_evidence_v1'||!serial(value.order_sn)||value.order_status!==null&&!status(value.order_status)||value.currency!==null&&!currency(value.currency)||!diagnostics.includes(value.diagnostic)||!exact(value.amounts,['escrow_amount_raw','escrow_amount_after_adjustment_raw','total_adjustment_amount_raw']))return null;
+ const dated=read(value,'schema')==='financial_order_evidence_v2';
+ if(!exact(value,['schema','order_sn','order_status','currency','return_order_sn_list','amounts','diagnostic',...(dated?['create_time']:[])])||value.schema!==(dated?'financial_order_evidence_v2':'financial_order_evidence_v1')||dated&&value.create_time!==null&&!integer(value.create_time,1,9999999999)||!serial(value.order_sn)||value.order_status!==null&&!status(value.order_status)||value.currency!==null&&!currency(value.currency)||!diagnostics.includes(value.diagnostic)||!exact(value.amounts,['escrow_amount_raw','escrow_amount_after_adjustment_raw','total_adjustment_amount_raw']))return null;
  const returns=value.return_order_sn_list;if(returns!==null&&(!list(returns,100)||!returns.every(serial)||new Set(returns).size!==returns.length))return null;
  if(!Object.values(value.amounts).every(value=>value===null||cents(value)!==null))return null;
  const a=value.amounts,complete=Object.values(a).every(value=>value!==null),consistent=!complete||cents(a.escrow_amount_raw)+cents(a.total_adjustment_amount_raw)===cents(a.escrow_amount_after_adjustment_raw);
@@ -61,11 +62,13 @@ export function projectFinancialOrderEvidence(value){
 // adjustment or return list becomes invalid evidence, never a failed paid page.
 // Only a forged source context is rejected before a sidecar can be constructed.
 export async function buildFinancialOrderEvidence(input){
- if(!exact(input,['order_sn','order_status','currency','payment','record']))fail('CONTEXT_INVALID');
+ const dated=plain(input)&&Object.hasOwn(input,'create_time');
+ if(!exact(input,['order_sn','order_status','currency','payment','record',...(dated?['create_time']:[])]))fail('CONTEXT_INVALID');
  const {order_sn,order_status:sourceStatus,currency:sourceCurrency,payment,record}=input;
  if(!serial(order_sn)||!validRecord(record)||await hash(order_sn)!==record.order_hash||await hash(JSON.stringify(canonical(record)))!==record.source_hash)fail('CONTEXT_INVALID');
  let invalid=!status(sourceStatus)||sourceCurrency!==null&&sourceCurrency!==undefined&&!currency(sourceCurrency);
- const evidence={schema:'financial_order_evidence_v1',order_sn,order_status:status(sourceStatus)?sourceStatus:null,currency:currency(sourceCurrency)?sourceCurrency:null,return_order_sn_list:null,amounts:{escrow_amount_raw:null,escrow_amount_after_adjustment_raw:null,total_adjustment_amount_raw:null},diagnostic:null};
+ const evidence={schema:dated?'financial_order_evidence_v2':'financial_order_evidence_v1',order_sn,order_status:status(sourceStatus)?sourceStatus:null,currency:currency(sourceCurrency)?sourceCurrency:null,return_order_sn_list:null,amounts:{escrow_amount_raw:null,escrow_amount_after_adjustment_raw:null,total_adjustment_amount_raw:null},diagnostic:null};
+ if(dated){if(input.create_time!==null&&!integer(input.create_time,1,record.checked_at))fail('CONTEXT_INVALID');evidence.create_time=input.create_time;}
  const observed=plain(payment),income=read(payment,'order_income');
  if(payment!==null&&payment!==undefined&&!observed)invalid=true;
  if(observed){

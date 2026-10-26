@@ -33,6 +33,12 @@ Após o relato de timeout na abertura, a continuidade atual separa a
 [confirmação da sessão das consultas de configuração e Hermes](ABERTURA_DO_PAINEL.md#demora-na-confirmação-da-sessão--26102026).
 Uma leitura inicial sem D1 permite abrir o resumo independentemente dessas
 consultas, mantendo os dados financeiros sujeitos à disponibilidade do banco.
+Essa correção foi publicada pela PR #8 (`ecc8ffb`) e o operador confirmou
+**“Funcionou”**. O pedido seguinte prioriza
+[lucro diário e organização da Visão geral](LUCRO_DIARIO_E_VISAO_GERAL.md):
+resultado do dia no topo, mês em segundo plano e acesso direto às despesas e
+conferências. A separação usa as datas reais dos pedidos da mesma publicação,
+sem nova varredura externa; os custos fixos têm rateio diário explícito.
 O diagnóstico e os limites dessa correção estão em
 [abertura do painel](ABERTURA_DO_PAINEL.md#limite-diário-do-d1--26102026).
 A atualização da ponte Hermes no Droplet permanece uma etapa separada; ela não
@@ -71,7 +77,8 @@ testes locais.
 | Variações removidas do catálogo | PR #4 publicada; complemento do custo histórico publicado em `4853bbf` pela PR #5 | Preserva correções históricas e variações atuais. A evidência aprovada do tamanho 16 pode usar a regra infantil atual quando ela for inequívoca; os demais bloqueios e as decisões manuais permanecem. Recalcula dados salvos sem nova consulta externa. A conferência do resultado atualizado da conta continua separada dos testes. |
 | Pedidos em revisão e suas devoluções | Publicados em `b97d55e` pela PR #6 | Detalha situação, referências, cobertura e horários com os dados já salvos. Separa os pedidos em revisão dos pagos com devolução, corrige a falsa exigência de referência em cancelamentos e mantém as pendências de recebimento e reembolso. O atalho para a conferência não inicia consultas. |
 | Valores de devolução e saldo após ajustes | Publicados em `f16bb1f` pela PR #7 | Totais por situação e base financeira, repasse por pedido afetado e saldo provisório com os custos da mesma publicação. Não duplica deduções, não transforma aprovação em comprovante bancário e mantém o saldo ainda a liberar indisponível. |
-| Sessão independente de configuração e Hermes | Corrigida nesta continuidade após o print de timeout | Confirmação autenticada sem acesso ao D1; resumo inicia sem aguardar configuração ou orçamento. Mensagens distinguem demora, sessão e rede. A leitura dos dados financeiros continua dependendo do banco. |
+| Sessão independente de configuração e Hermes | Publicada em `ecc8ffb` pela PR #8; recuperação confirmada pelo operador | Confirmação autenticada sem acesso ao D1; resumo inicia sem aguardar configuração ou orçamento. Mensagens distinguem demora, sessão e rede. A leitura dos dados financeiros continua dependendo do banco. |
+| Lucro diário e hierarquia da Visão geral | Implementados nesta continuidade | Hoje/Ontem/Data, pedidos por criação em Brasília, produção por variação, Ads da data, ajustes informados e rateio explícito de DAS/despesas confirmadas. Mesma publicação e referências do mensal; legado sem datas fica pendente até coleta normal. Despesas, devoluções, liberações e produtos têm atalhos próprios. [Cálculo e limites](LUCRO_DIARIO_E_VISAO_GERAL.md). |
 | Diagnóstico da conta | Versionado em `main` (`6f9ce23`); ativação a conferir | Calcula TACOS, saldo disponível antes de Ads, cobertura dos custos e próximas tarefas a partir do mês validado. Dados ausentes bloqueiam os indicadores correspondentes. Não autoriza investimento. |
 | Hermes com financeiro da loja | Publicado (`11f45ce`); atualização da ponte pendente | Cada análise preserva o mês financeiro, custos, DAS, anúncios, pendências e até três próximas ações. A ponte antiga não recebe tarefas novas. Exige atualização no Droplet e observação de uma execução real com a nova referência. |
 | Alterar anúncios, campanhas e promoções | Ainda não implementado para execução comercial | As proteções de somente leitura e Ads/PROMO `LOCKED` continuam vigentes. A coleta autônoma não cria permissão de escrita na Shopee. |
@@ -211,6 +218,9 @@ material e calibração da saída física; não há impressão autônoma na máq
    presumir que cada ajuste corresponde a uma devolução específica. Conferir a
    cobertura e as diferenças nas liberações. Conciliar recebimentos e valores
    efetivos de reembolso antes de chamar o resultado de realizado.
+   Conferir a nova Visão geral no uso real, a cobertura das datas na próxima
+   coleta normal e os resultados diários, inclusive dias sem vendas. O rateio
+   diário de custos fixos é explícito e não altera a dedução integral mensal.
 3. Documentar e validar os contratos oficiais de estoque e campanhas, incluindo
    permissões de escrita por ação e limites próprios de investimento em Ads.
 4. Construir o ranking com atribuição comprovável e testar recomendações em
