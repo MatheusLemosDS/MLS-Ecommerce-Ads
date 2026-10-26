@@ -16,8 +16,8 @@ async function ownerHtml(minify){
  }finally{env.ADMIN_DB.db.close();}
 }
 
-function browser(html,session,{sessionFails=false,auditFails=false,unauthorized=false}={}){
- const ids=[...html.matchAll(/\bid="([^"]*)"/g)].map(match=>match[1]),nodes=new Map(),timers=new Map(),calls=[];let nextTimer=0,failed=sessionFails,logoutMode='network';
+function browser(html,session,{sessionFails=false,sessionQuota=false,auditFails=false,unauthorized=false}={}){
+ const ids=[...html.matchAll(/\bid="([^"]*)"/g)].map(match=>match[1]),nodes=new Map(),timers=new Map(),calls=[];let nextTimer=0,failed=sessionFails,quota=sessionQuota,logoutMode='network';
  const element=(tag='div')=>({tag,value:'',textContent:'',children:[],dataset:{},hidden:false,disabled:false,open:false,style:{},classList:{toggle(){},add(){},remove(){}},append(...children){this.children.push(...children);},replaceChildren(...children){this.children=[...children];this.textContent='';},setAttribute(){},removeAttribute(){},querySelectorAll(){return [];},querySelector(){return null;},contains(){return false;},scrollIntoView(){},get childNodes(){return this.children;}});
  for(const id of ids)nodes.set(id,element());
  const context=vm.createContext({AbortController,URLSearchParams,Intl,Date,Response,TextEncoder,location:{search:'',href:'https://app.startup.test/admin'},history:{replaceState(){}},setTimeout(callback,delay){const id=++nextTimer;timers.set(id,{callback,delay});return id;},clearTimeout(id){timers.delete(id);},setInterval(){return 1;},clearInterval(){},document:{hidden:false,activeElement:null,documentElement:{dataset:{}},getElementById(id){if(!nodes.has(id))throw Error('UNKNOWN_CONTROL:'+id);return nodes.get(id);},createElement:element,querySelectorAll(){return [];},addEventListener(){}},fetch:async(url,options)=>{
@@ -29,7 +29,8 @@ function browser(html,session,{sessionFails=false,auditFails=false,unauthorized=
    return new Promise(()=>{});
   }
   if(url==='/api/admin/state'){
-   if(unauthorized)return Response.json({error:'UNAUTHORIZED'},{status:401});
+   if(unauthorized)return errorResponse(401,'UNAUTHORIZED');
+   if(quota)return errorResponse(503,'ADMIN_DB_DAILY_LIMIT_EXCEEDED');
    if(failed)throw new TypeError('Failed to fetch PRIVATE_NETWORK_DETAIL');
    return Response.json(session);
   }
@@ -38,12 +39,18 @@ function browser(html,session,{sessionFails=false,auditFails=false,unauthorized=
   // must already have its month, handlers and independent saved-view request.
   return new Promise(()=>{});
  }});
+ function errorResponse(status,error){
+  const response=Response.json({error},{status});
+  // Browser JSON belongs to the client realm. Keep the real transport factory's
+  // plain-object validation instead of accidentally testing cross-realm data.
+  response.json=async()=>vm.runInContext('JSON.parse',context)(await response.text());return response;
+ }
  vm.runInContext("globalThis.window=globalThis;window.matchMedia=()=>({matches:false});globalThis.addEventListener=()=>{};",context);
  const scripts=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match=>match[1]);
  const monthly=scripts.find(script=>script.includes('globalThis.brazaMonthDashboard=')),admin=scripts.find(script=>script.includes('let renderedReportKey='));assert.ok(monthly&&admin);
  vm.runInContext(monthly,context);vm.runInContext(admin,context);
  const flush=async()=>{for(let index=0;index<5;index++)await new Promise(resolve=>setImmediate(resolve));};
- return {nodes,timers,calls,context,flush,recover(){failed=false;},setLogout(mode){logoutMode=mode;},run:source=>vm.runInContext(source,context),stop(){vm.runInContext('startupController.stop();brazaMonthDashboard.stop();',context);timers.clear();}};
+ return {nodes,timers,calls,context,flush,recover(){failed=false;quota=false;},setLogout(mode){logoutMode=mode;},run:source=>vm.runInContext(source,context),stop(){vm.runInContext('startupController.stop();brazaMonthDashboard.stop();',context);timers.clear();}};
 }
 
 for(const minify of [false,true]){
@@ -68,6 +75,17 @@ for(const minify of [false,true]){
   const {html,session}=await ownerHtml(minify),b=browser(html,session,{unauthorized:true});
   try{await b.flush();assert.equal(b.calls.length,1);assert.equal(b.nodes.get('startupLogin').hidden,false);assert.match(b.nodes.get('message').textContent,/sessão expirou/);assert.equal(b.run('startupController.getState().ready'),false);}
   finally{b.stop();}
+ });
+ test(`a daily database quota passes through the deployed API client and a manual retry restores startup (minify=${minify})`,async()=>{
+  const {html,session}=await ownerHtml(minify),b=browser(html,session,{sessionQuota:true});
+  try{
+   await b.flush();assert.equal(b.run('startupController.getState().phase'),'FAILED');assert.equal(b.run('startupController.getState().sessionReady'),false);
+   assert.equal(b.calls.filter(call=>call.url==='/api/admin/state').length,1);assert.equal(b.calls.filter(call=>call.url.startsWith('/api/admin/finance/')).length,0);assert.equal([...b.timers.values()].some(timer=>timer.delay===750),false);
+   const message=b.nodes.get('message').textContent;assert.match(message,/limite diário do banco de dados/);assert.match(message,/21h \(horário de Brasília\)/);assert.doesNotMatch(message,/Verifique sua conexão|D1_ERROR|PRIVATE|SQL/);
+   assert.equal(b.nodes.get('startupRetry').hidden,false);assert.equal(b.nodes.get('startupRetry').disabled,false);assert.equal(b.nodes.get('startupLogin').hidden,true);
+   b.recover();await b.nodes.get('startupRetry').onclick();await b.flush();assert.equal(b.run('startupController.getState().ready'),true);
+   assert.equal(b.calls.filter(call=>call.url==='/api/admin/state').length,2);assert.equal(b.calls.filter(call=>call.url.startsWith('/api/admin/finance/business-month-view?month=')).length,1);assert.equal(b.calls.filter(call=>call.url==='/api/admin/finance/business-month').length,0);assert.equal(b.nodes.get('startupRetry').hidden,true);assert.equal(b.nodes.get('message').textContent,'');
+  }finally{b.stop();}
  });
  test(`optional settings rendering cannot gate the financial overview (minify=${minify})`,async()=>{
   const {html,session}=await ownerHtml(minify),b=browser(html,session);b.nodes.delete('regular');

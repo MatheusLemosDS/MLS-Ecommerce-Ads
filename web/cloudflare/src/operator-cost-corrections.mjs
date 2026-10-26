@@ -8,7 +8,7 @@ const corrections=['adult-22199878767-remove-child-rule-v1','child-size-2-1250-v
 export const OPERATOR_COST_CORRECTIONS_SCHEMA=[
  `CREATE TABLE IF NOT EXISTS operator_cost_corrections(shop_id INTEGER NOT NULL,correction_id TEXT NOT NULL,status TEXT NOT NULL,reason TEXT NOT NULL,previous_revision INTEGER,revision INTEGER,checked_at INTEGER NOT NULL,PRIMARY KEY(shop_id,correction_id))`,
 ];
-export class OperatorCostCorrectionError extends Error{constructor(code,status=503){super(code);this.status=status;}}
+export class OperatorCostCorrectionError extends Error{constructor(code,status=503,options){super(code,options);this.status=status;}}
 const fail=code=>{throw new OperatorCostCorrectionError(code);};
 const revision=value=>Number.isSafeInteger(value)&&value>=1&&value<=2147483647;
 const project=row=>{if(!row||row.shop_id!==shopId||!corrections.includes(row.correction_id)||!['APPLIED','SKIPPED','CONFLICT'].includes(row.status)||typeof row.reason!=='string'||!/^[A-Z][A-Z0-9_]{0,95}$/.test(row.reason)||!['previous_revision','revision'].every(key=>row[key]===null||revision(row[key]))||!Number.isSafeInteger(row.checked_at)||row.checked_at<1||row.checked_at>9999999999)fail('OPERATOR_COST_CORRECTION_STATE_INVALID');return {id:row.correction_id,status:row.status,reason:row.reason,previous_revision:row.previous_revision,revision:row.revision,checked_at:row.checked_at};};
@@ -61,5 +61,5 @@ export async function applyConfirmedOperatorCostCorrections(env,{now=()=>Date.no
    results.push(await apply(db,id,'costs',before,{...before.values,composition_recipes:existingRecipe?recipes:[...recipes,recipe],composition_assignments:[...assignments,{item_id:itemId,model_id:modelId,recipe_id:recipe.id}]},stamp,rules));
   }
   return {schema:'operator_cost_corrections_v1',shop_id:shopId,corrections:results};
- }catch(error){if(error instanceof OperatorCostCorrectionError)throw error;fail('OPERATOR_COST_CORRECTION_STORAGE_UNAVAILABLE');}
+ }catch(error){if(error instanceof OperatorCostCorrectionError)throw error;throw new OperatorCostCorrectionError('OPERATOR_COST_CORRECTION_STORAGE_UNAVAILABLE',503,{cause:error});}
 }

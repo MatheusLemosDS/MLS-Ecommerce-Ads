@@ -69,6 +69,18 @@ test('background discovery queues a large catalogue in one D1 request without re
  await assert.rejects(enqueueCatalogClassifications(env,ids,{returnState:'false'}),failure('CATALOG_CLASSIFICATION_REQUEST_INVALID'));
 });
 
+test('repeated priority discovery performs no writes while a new priority still advances the queue',async t=>{
+ const env=environment();t.after(()=>env.ADMIN_DB.db.close());const ids=['101','102'];
+ await enqueueCatalogClassifications(env,ids,{now:()=>initial*1000,returnState:false,priorityItemIds:['101']});
+ const changes=()=>env.ADMIN_DB.db.prepare('SELECT total_changes() AS n').get().n,rows=()=>env.ADMIN_DB.db.prepare('SELECT * FROM catalog_classification_jobs ORDER BY item_id').all().map(row=>({...row})),before=rows();
+ for(const seconds of [0,60,300]){
+  const previous=changes();await enqueueCatalogClassifications(env,ids,{now:()=>(initial+seconds)*1000,returnState:false,priorityItemIds:['101']});
+  assert.equal(changes()-previous,0,'unchanged discoveries must not consume row writes');assert.deepEqual(rows(),before);
+ }
+ const previous=changes();await enqueueCatalogClassifications(env,ids,{now:()=>(initial+360)*1000,returnState:false,priorityItemIds:ids});
+ assert.equal(changes()-previous,1,'only the newly prioritized job is updated');assert.deepEqual(rows(),[before[0],{...before[1],next_attempt_at:0}]);
+});
+
 test('a sold product missing its cost moves ahead of one hundred untouched jobs without resetting a failed request backoff',async t=>{
  const env=environment();t.after(()=>env.ADMIN_DB.db.close());const known=Array.from({length:100},(_,index)=>String(index+100)),ids=[...known,'1001'];
  await enqueueCatalogClassifications(env,ids,{now:()=>initial*1000,returnState:false});

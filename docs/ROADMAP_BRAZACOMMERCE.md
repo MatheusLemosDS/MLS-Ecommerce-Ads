@@ -1,6 +1,6 @@
 # Roadmap BrazaCommerce
 
-Atualizado em **25/10/2026 UTC**. Base anterior: `a8636c4`, com
+Atualizado em **26/10/2026 UTC**. Base anterior: `a8636c4`, com
 [resumo financeiro total](RESUMO_FINANCEIRO_TOTAL.md) e
 [integração financeira do Hermes](HERMES_FINANCEIRO.md). O incremento atual traz
 [catálogo salvo e custos por semana/mês](CATALOGO_SALVO_E_CUSTOS_POR_PERIODO.md).
@@ -8,8 +8,14 @@ A entrega atual separa [resumo publicado e coleta em andamento](RESUMO_PUBLICADO
 com previsão líquida em conferência quando os valores necessários são conhecidos.
 A continuidade a partir de `94dff2d` vincula as conferências à publicação exata
 mostrada na Visão geral e preserva pausa/retomada durante o encerramento da coleta.
-Essas correções são validadas no código; sua ativação em produção deve ser
-conferida pelo commit publicado.
+Essas correções foram integradas em `305ac6a` pela PR #1; os três Builds
+Cloudflare concluíram a publicação em 25/10. A verificação pública de saúde
+passou, mas o acesso autenticado ficou afetado pelo limite de gravações do D1.
+O ciclo de 26/10 voltou a atingir a cota. A continuidade a partir de `305ac6a`
+corrige a mensagem de indisponibilidade e uma atualização redundante na fila
+de classificação; sua publicação não repõe a cota nem comprova recuperação.
+O diagnóstico e os limites dessa correção estão em
+[abertura do painel](ABERTURA_DO_PAINEL.md#limite-diário-do-d1--26102026).
 A atualização da ponte Hermes no Droplet permanece uma etapa separada; ela não
 é necessária para usar o catálogo e os cálculos de custo desta entrega.
 
@@ -167,9 +173,11 @@ conciliação financeira segue em paralelo. Ainda faltam armazenamento
 centralizado das artes, regras para composições especiais, consumo real de
 material e calibração da saída física; não há impressão autônoma na máquina.
 
-1. Concluir a publicação e a verificação do incremento atual. Conferir cache
-   inicial, cron sem aba aberta, pausa, concorrência, falhas e horários reais;
-   registrar o que foi observado em produção separadamente dos testes locais.
+1. Publicar a correção de diagnóstico e gravação redundante; confirmar o acesso
+   autenticado após liberar a cota D1. Medir consumo por banco e rotina antes de
+   atribuir todo o gasto a um único módulo. Conferir cache inicial, cron sem aba
+   aberta, pausa, concorrência, falhas e horários reais; registrar observações
+   de produção separadamente dos testes locais.
 2. Usar as próximas tarefas do diagnóstico para fechar pendências de custo,
    despesas, pagamento, devolução e atualização. Conciliar recebimentos e valores
    efetivos de reembolso antes de chamar o resultado de realizado.

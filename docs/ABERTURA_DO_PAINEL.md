@@ -41,3 +41,37 @@ logout não confirmado. Nenhum cenário recebe valores financeiros inventados.
 Disponibilidade pública de `/health` e `/login` não comprova a conexão de cada
 requisição autenticada no aparelho. A recuperação permite tentar novamente sem
 deixar o resumo permanentemente em “Preparando os dados”.
+
+## Limite diário do D1 — 26/10/2026
+
+O bloqueio de gravações do D1 foi confirmado por alertas da conta em dois ciclos
+diários consecutivos. Em 26/10, os avisos registraram 76% às 04h04, 94% às 05h26
+e limite excedido às 06h23, em Brasília. São horários dos avisos, não medições
+diretas do instante de cada operação. A cota gratuita de 100 mil linhas gravadas
+é compartilhada pelos bancos da conta; acessos ao Worker não equivalem a linhas
+gravadas. Uma única coleta pode ler ou gravar várias linhas.
+
+A inicialização autenticada acessa o banco e pode executar a preparação do
+armazenamento. Antes desta correção, uma exceção de cota nessa etapa virava
+`ADMIN_UNAVAILABLE` e a interface sugeria verificar a conexão. O servidor agora
+reconhece apenas as mensagens canônicas do D1 para limites diários de leitura e
+gravação e devolve `ADMIN_DB_DAILY_LIMIT_EXCEEDED`, com HTTP 503. Detalhes do erro,
+SQL e causas internas não são enviados ao navegador. O painel informa o limite
+do banco e a renovação diária às 21h de Brasília; mantém a tentativa manual,
+inclusive para permitir recuperação após mudança de plano. Não repete a leitura
+automaticamente por causa de um 503.
+
+A fila de classificação também deixa de atualizar `next_attempt_at=0` quando
+o item prioritário já tem esse valor. A promoção de um item com tentativa
+agendada continua funcionando. Isso elimina uma gravação redundante confirmada
+em teste, mas não mede sua participação no consumo real nem demonstra que toda
+a operação cabe na franquia gratuita.
+
+Publicar essas correções não renova a cota consumida. A recuperação do serviço
+depende da renovação diária ou da alteração do plano da conta, seguida de uma
+consulta autenticada bem-sucedida. Otimizações de outros pontos da coleta
+dependem de medição por banco e rotina. Esta correção preserva a frequência da
+coleta e os dados financeiros.
+
+Referências: [preços e renovação do D1](https://developers.cloudflare.com/d1/platform/pricing/)
+e [erros documentados do D1](https://developers.cloudflare.com/d1/observability/debug-d1/).
