@@ -32,6 +32,17 @@ test('private evidence conserves exact source identities and positive, zero and 
  input.payment.order_income.escrow_amount_after_adjustment=99;assert.equal(JSON.parse((await buildFinancialOrderEvidence(input)).payload).diagnostic,'ADJUSTMENT_MISMATCH');assert.equal(input.record.escrow_raw,'100');
 });
 
+test('private v2 captures an optional creation timestamp while exact v1 callers and original financial observation times remain unchanged',async()=>{
+ const input=fixture(),legacy=await buildFinancialOrderEvidence(input);assert.equal(JSON.parse(legacy.payload).schema,'financial_order_evidence_v1');assert.equal(Object.hasOwn(JSON.parse(legacy.payload),'create_time'),false);
+ for(const create_time of [stamp-86400,null]){
+  const saved=await buildFinancialOrderEvidence({...input,create_time}),value=JSON.parse(saved.payload);assert.equal(value.schema,'financial_order_evidence_v2');assert.equal(value.create_time,create_time);assert.equal(saved.checked_at,legacy.checked_at);assert.equal(saved.source_hash,legacy.source_hash);assert.equal(saved.payload_hash,hash(saved.payload));assert.deepEqual(value.amounts,JSON.parse(legacy.payload).amounts);assert.deepEqual(projectFinancialOrderEvidence(value),value);
+ }
+ for(const create_time of [undefined,0,-1,stamp+1,0.5,'1793000000',NaN,Infinity])await assert.rejects(buildFinancialOrderEvidence({...input,create_time}),/CONTEXT_INVALID/);
+ const value=JSON.parse((await buildFinancialOrderEvidence({...input,create_time:stamp-1})).payload);
+ for(const mutate of [v=>delete v.create_time,v=>{v.create_time='PRIVATE';},v=>{v.create_time=0;},v=>{v.extra='PRIVATE';},v=>{v.schema='financial_order_evidence_v1';}]){const bad=structuredClone(value);mutate(bad);assert.equal(projectFinancialOrderEvidence(bad),null);}
+ let reads=0;const getter={...input};Object.defineProperty(getter,'create_time',{enumerable:true,get(){reads++;throw Error();}});await assert.rejects(buildFinancialOrderEvidence(getter),/CONTEXT_INVALID/);assert.equal(reads,0);
+});
+
 test('missing returns and optional money remain unknown while valid empty references and zero amounts retain their meaning',async()=>{
  const input=fixture();delete input.payment.return_order_sn_list;delete input.payment.order_income.escrow_amount_after_adjustment;delete input.payment.order_income.total_adjustment_amount;
  const missing=JSON.parse((await buildFinancialOrderEvidence(input)).payload);assert.equal(missing.return_order_sn_list,null);assert.deepEqual(missing.amounts,{escrow_amount_raw:'100',escrow_amount_after_adjustment_raw:null,total_adjustment_amount_raw:null});assert.equal(missing.diagnostic,null);

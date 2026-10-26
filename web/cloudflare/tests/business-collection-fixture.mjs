@@ -32,7 +32,7 @@ class MeteredD1 extends D1 {
  }
 }
 
-export async function collectionFixture({returns=false,allPaid=false,windowCounts=[60,60],paymentTimeoutMs=5000,paymentDelayMs=1}={}){
+export async function collectionFixture({returns=false,allPaid=false,daily=false,windowCounts=[60,60],paymentTimeoutMs=5000,paymentDelayMs=1}={}){
  const clock={time:initial},now=()=>clock.time,ADMIN_DB=new MeteredD1(),FINANCE_DB=new MeteredD1(),orderStatus=index=>allPaid?'COMPLETED':status(index);
  ADMIN_DB.db.exec('CREATE TABLE variant_bindings_state(id INTEGER PRIMARY KEY,revision INTEGER,payload TEXT,updated_at TEXT);CREATE TABLE production_costs_state(id INTEGER PRIMARY KEY,revision INTEGER,payload TEXT,updated_at TEXT)');
  ADMIN_DB.db.prepare('INSERT INTO variant_bindings_state VALUES(1,3,?,?)').run(JSON.stringify(Array.from({length:120},(_,index)=>({item_id:String(item(index)),model_id:'0',size:'P',selling_unit:'SINGLE_GARMENT',operator_confirmed:true}))),new Date(initial).toISOString());
@@ -60,7 +60,7 @@ export async function collectionFixture({returns=false,allPaid=false,windowCount
  const services={
   getFinanceBusinessPeriod:async(_,selection)=>{
    calls.finance.push(selection);const startCalls=FINANCE_DB.calls,startFetches=calls.list.length+calls.detail.length+calls.payment.length;
-   const frame=await runFinanceBusinessPeriod(financeEnv,{...selection,fetchImpl,now,timeoutMs:paymentTimeoutMs});calls.financeFrames.push(frame);
+   const frame=await runFinanceBusinessPeriod(financeEnv,{...selection,fetchImpl,now,timeoutMs:paymentTimeoutMs,includeDaily:daily});calls.financeFrames.push(frame);
    calls.financeBudgets.push({operation:selection.operation,d1:FINANCE_DB.calls-startCalls,fetches:calls.list.length+calls.detail.length+calls.payment.length-startFetches});return frame;
   },
   getAdsCalendar:async(_,selection)=>{

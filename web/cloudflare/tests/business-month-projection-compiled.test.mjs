@@ -37,7 +37,10 @@ async function ownerHtml(minify,env){
 
 for(const minify of [false,true])test(`the actual owner HTML projector accepts a cached 241-order month and its zero-order restart with retained Ads (minify=${minify})`,async t=>{
  const {f,cached,started}=await realMonthlyResponses(t),html=await ownerHtml(minify,f.env),script=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match=>match[1]).find(value=>value.includes('globalThis.brazaMonthDashboard='));assert.ok(script);
- const prefix=script.slice(script.indexOf('(()=>{')+6,script.indexOf(' const el=id=>'));
+ // The daily client precedes the monthly IIFE in the same shipped script.
+ // Extract the actual monthly projector block, not the preceding client body.
+ const start=script.indexOf('function projectAdsCalendar('),end=script.indexOf(' const el=id=>',start);
+ assert.ok(start>=0&&end>start);const prefix=script.slice(start,end);
  const context=vm.createContext({serialized:JSON.stringify({cached,started})});
  vm.runInContext(prefix+'\nglobalThis.project=projectBusinessMonth;globalThis.summary=buildMonthlyFinancialSummary;globalThis.data=JSON.parse(serialized);',context);
  assert.equal(vm.runInContext('project(data.cached)!==null',context),true,'cached server response rejected by actual embedded projector');

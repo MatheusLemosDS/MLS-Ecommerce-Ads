@@ -4,7 +4,7 @@ import {mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync, symlinkSync
 import {tmpdir} from 'node:os';
 import {resolve} from 'node:path';
 import {spawnSync} from 'node:child_process';
-import {importWorkerConfig, createFinanceConfig} from '../import_worker_config.mjs';
+import {importWorkerConfig, createFinanceConfig, MAX_WORKER_SOURCE_BYTES} from '../import_worker_config.mjs';
 import {PROJECT_ROOT, TARGETS, sha256, stableJson} from '../worker_project.mjs';
 
 const authSource = readFileSync(resolve(PROJECT_ROOT, 'web/cloudflare/auth-worker.mjs'));
@@ -75,6 +75,24 @@ test('unsupported resource types never disappear silently from an imported expor
 test('unknown source is rejected without disclosing source text or dashboard values', () => {
   rejectsCode(() => importWorkerConfig('auth', authExport(), Buffer.from('export default ' + secret)), 'WORKER_SOURCE_UNRECOGNIZED');
   rejectsCode(() => importWorkerConfig('auth', authExport(), Buffer.from([0xff])), 'WORKER_SOURCE_INVALID');
+});
+
+test('the four-MiB source ceiling counts UTF-8 bytes and still requires an exact reviewed hash', () => {
+  assert.equal(MAX_WORKER_SOURCE_BYTES, 4 * 1024 * 1024);
+  for (const length of [2 * 1024 * 1024 + 1, MAX_WORKER_SOURCE_BYTES]) {
+    rejectsCode(() => importWorkerConfig('app', appExport(), Buffer.alloc(length, 0x20)), 'WORKER_SOURCE_UNRECOGNIZED');
+  }
+  const utf8 = 'é'.repeat(MAX_WORKER_SOURCE_BYTES / 2);
+  assert.equal(Buffer.byteLength(utf8), MAX_WORKER_SOURCE_BYTES);
+  rejectsCode(() => importWorkerConfig('app', appExport(), utf8), 'WORKER_SOURCE_UNRECOGNIZED');
+  rejectsCode(() => importWorkerConfig('app', appExport(), utf8 + 'x'), 'WORKER_SOURCE_INVALID');
+  rejectsCode(() => importWorkerConfig('app', appExport(), Buffer.alloc(MAX_WORKER_SOURCE_BYTES + 1, 0x20)), 'WORKER_SOURCE_INVALID');
+  const malformed = Buffer.alloc(MAX_WORKER_SOURCE_BYTES, 0x20);
+  malformed[malformed.length - 1] = 0xff;
+  rejectsCode(() => importWorkerConfig('app', appExport(), malformed), 'WORKER_SOURCE_INVALID');
+  const changed = Buffer.from(appSource);
+  changed[changed.length - 1] ^= 1;
+  rejectsCode(() => importWorkerConfig('app', appExport(), changed), 'WORKER_SOURCE_UNRECOGNIZED');
 });
 
 test('CRLF downloads retain their raw digest and match the reviewed LF source', () => {

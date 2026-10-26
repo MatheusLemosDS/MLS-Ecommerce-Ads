@@ -105,6 +105,8 @@ export async function forwardFinancePaymentSample(request,env,{validateInternalA
  if(reconciliationContract!==null&&!['finance-reconciliation-v1','finance-reconciliation-v2'].includes(reconciliationContract))return routerFailure('INVALID_REQUEST',400);
  const refundContract=reconciliation?request.headers.get('x-braza-refund-contract'):null;
  if(refundContract!==null&&(refundContract!=='refunds-v1'||reconciliationContract!=='finance-reconciliation-v2'))return routerFailure('INVALID_REQUEST',400);
+ const dailyContract=business?request.headers.get('x-braza-daily-contract'):null;
+ if(dailyContract!==null&&dailyContract!=='daily-profit-v1')return routerFailure('INVALID_REQUEST',400);
  const secret=env?.FINANCE_ROUTER_SECRET;
  if(typeof secret!=='string'||! /^[\x21-\x7e]{32,256}$/.test(secret)||typeof env?.SHOPEE_FINANCE_SERVICE?.fetch!=='function')return routerFailure('FINANCE_CONFIGURATION_PENDING',503);
  if(!/^application\/json(?:\s*;\s*charset\s*=\s*(?:utf-8|"utf-8"))?\s*$/i.test(request.headers.get('content-type')||''))return routerFailure('INVALID_REQUEST',400);
@@ -123,6 +125,7 @@ export async function forwardFinancePaymentSample(request,env,{validateInternalA
   const headers={'content-type':'application/json',accept:'application/json','X-Braza-Finance-Router':secret};
   if(reconciliationContract!==null)headers['X-Braza-Client-Contract']=reconciliationContract;
   if(refundContract!==null)headers['X-Braza-Refund-Contract']=refundContract;
+  if(dailyContract!==null)headers['X-Braza-Daily-Contract']=dailyContract;
   const upstream=await env.SHOPEE_FINANCE_SERVICE.fetch(new Request(FINANCE_ORIGIN+url.pathname,{method:'POST',headers,body:JSON.stringify(input),redirect:'manual',signal:controller.signal}));
   // A service binding may finish after our deadline despite its aborted signal.
   // Its late response must be canceled before acquiring a stalled body reader.
@@ -155,7 +158,8 @@ export async function forwardFinancePaymentSample(request,env,{validateInternalA
   if(production)return frame&&productionOrdersRequestMatches(input,frame)?new Response(JSON.stringify(frame),{headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}}):productionFailure();
   if(storePeriod&&frame&&!storePeriodRequestMatches(input,frame))return storePeriodFailure();
   if(catalog&&frame&&!catalogRequestMatches(input,frame))return catalogFailure();
-  return frame?new Response(JSON.stringify(frame),{headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}}):storePeriod?storePeriodFailure():catalog?catalogFailure():sampleFailure(preview?'FINANCE_SAMPLE_PREVIEW_RESPONSE_INVALID':'FINANCE_SAMPLE_UNAVAILABLE');
+  const output=frame&&business&&dailyContract===null&&Object.hasOwn(frame,'daily_breakdown')?Object.fromEntries(Object.entries(frame).filter(([key])=>key!=='daily_breakdown')):frame;
+  return output?new Response(JSON.stringify(output),{headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}}):storePeriod?storePeriodFailure():catalog?catalogFailure():sampleFailure(preview?'FINANCE_SAMPLE_PREVIEW_RESPONSE_INVALID':'FINANCE_SAMPLE_UNAVAILABLE');
  };
  try{return await Promise.race([work(),deadline]);}catch{return unavailable();}finally{clearTimeout(timer);controller.abort();try{reader?.cancel().catch(()=>{});}catch{}}
 }

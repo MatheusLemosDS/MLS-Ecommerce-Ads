@@ -131,3 +131,9 @@ minificada, configuração pendente ou inválida, retomada manual, descarte de
 respostas depois de sair e preservação de rascunhos. O D1 continua necessário
 para carregar os dados financeiros: sua indisponibilidade deve aparecer na
 consulta correspondente, sem ser confundida com falha na confirmação da sessão.
+
+Após a publicação da PR #8 (`ecc8ffb`), o operador confirmou **“Funcionou”** em
+26/10/2026. Essa confirmação registra a recuperação relatada no uso real; não
+substitui uma medição de latência de cada consulta. A continuidade seguinte
+organiza a Visão geral e acrescenta o
+[lucro estimado por dia](LUCRO_DIARIO_E_VISAO_GERAL.md), preservando esse bootstrap.

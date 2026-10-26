@@ -5,6 +5,17 @@ import {adminBody,loginBody,CSS} from '../src/admin-view.mjs';
 import {CLIENT} from '../src/admin-client.mjs';
 import {businessMonthBody} from '../src/business-month-view.mjs';
 
+function detailAncestors(html){
+ const open=[],result=new Map();
+ for(const token of html.matchAll(/<(\/?)([a-z][a-z0-9-]*)\b([^>]*)>/gi)){
+  const [,closing,tag,attrs]=token;
+  if(closing){if(tag.toLowerCase()==='details')open.pop();continue;}
+  const id=/\bid="([^"]+)"/.exec(attrs)?.[1];if(id)result.set(id,[...open]);
+  if(tag.toLowerCase()==='details')open.push(id||/\bclass="([^"]+)"/.exec(attrs)?.[1]||'anonymous');
+ }
+ assert.equal(open.length,0,'detail sections must remain balanced');return result;
+}
+
 function navigation(search=''){
  const context=vm.createContext({URL,URLSearchParams});
  const html=adminBody(),tabs=[...html.matchAll(/data-tab="([^"]+)"/g)].map(match=>match[1]);
@@ -41,12 +52,33 @@ test('owner workspace keeps one shared navigation, intact controls and advanced 
  assert.match(CSS,/\.app-shell>\.sidebar\{display:none\}/);assert.match(CSS,/safe-area-inset-bottom/);
 });
 
-test('monthly overview puts four metrics before the explanation and product list, with preparation secondary',()=>{
+test('daily profit leads the overview and monthly result leads its four secondary metrics',()=>{
+ const html=adminBody();assert.ok(html.indexOf('id="businessDay"')<html.indexOf('id="businessMonth"'));assert.ok(html.indexOf('id="businessMonth"')<html.indexOf('id="legacyFinanceDetails"'));
  const body=businessMonthBody();assert.equal([...body.matchAll(/class="month-metric(?: month-net)?"/g)].length,4);
+ assert.match(body,/Resultado do mês/);assert.ok(body.indexOf('businessMonthNetCard')<body.indexOf('businessMonthSalesCard'));
  assert.ok(body.indexOf('businessMonthSalesCard')<body.indexOf('businessMonthCalculationTitle'));
  assert.ok(body.indexOf('id="businessMonthCalculationTitle"')<body.indexOf('id="businessMonthProductsTitle"'));
  assert.ok(body.indexOf('id="businessMonthProductsTitle"')<body.indexOf('id="businessMonthReadinessTitle"'));
  assert.match(body,/<details class="month-subsection month-readiness-details">/);assert.doesNotMatch(body,/<details class="month-subsection month-readiness-details"[^>]*\bopen\b/);
+});
+
+test('monthly tools open independent closed sections while preserving all cost, product and reconciliation controls',()=>{
+ const body=businessMonthBody(),ancestors=detailAncestors(body);
+ for(const id of ['businessMonthCalculationDetails','businessMonthExpensesDetails','businessMonthProductsDetails','businessReconciliationDetails','businessEscrowReleasesDetails']){
+  assert.deepEqual(ancestors.get(id),[],id+' must be reachable without opening an unrelated section');
+  const tag=new RegExp('<details\\b[^>]*\\bid="'+id+'"[^>]*>').exec(body)?.[0];assert.ok(tag,id);assert.doesNotMatch(tag,/\bopen\b/);
+ }
+ for(const [button,label] of [['Expenses','Despesas e contas'],['Refunds','Devoluções e ajustes'],['Products','Produtos vendidos'],['Calculation','Ver cálculo do mês'],['Releases','Liberações da Shopee']])assert.match(body,new RegExp('<button[^>]*id="businessMonthOpen'+button+'"[^>]*>'+label+'</button>'));
+ for(const id of ['businessMonthCostOverview','businessMonthCoverage','businessMonthWaterfall','businessMonthTaxSummary'])assert.deepEqual(ancestors.get(id),['businessMonthCalculationDetails']);
+ for(const id of ['businessMonthExpensesForm','businessMonthExpensesValue','businessMonthExpensesSave','businessMonthExpensesZero','businessMonthRecharge'])assert.ok(ancestors.get(id)?.includes('businessMonthExpensesDetails'),id);
+ for(const id of ['businessMonthProductSearch','businessMonthProductSort','businessMonthProductRows','businessMonthProductNext','businessMonthProductPrevious'])assert.ok(ancestors.get(id)?.includes('businessMonthProductsDetails'),id);
+ assert.match(body,/Aluguel, funcionários e boletos/);assert.match(body,/Informar somente o total do mês/);
+});
+
+test('the separate Hermes monitor is closed and keeps the existing daily sales and Ads identifiers',()=>{
+ const html=adminBody(),ancestors=detailAncestors(html);assert.match(html,/<details class="hermes-live-monitor"><summary>Monitoramento de hoje/);
+ for(const id of ['storeDay','shopOrdersCount','shopOrders','shopOrdersCutoff','shopOrdersAge','todayAds','todayAdsTime'])assert.deepEqual(ancestors.get(id),['hermes-live-monitor'],id);
+ assert.match(CSS,/\.hermes-live-monitor>summary/);assert.equal([...html.matchAll(/\bid="shopOrders"/g)].length,1);assert.equal([...html.matchAll(/\bid="todayAds"/g)].length,1);
 });
 
 test('direct tab URLs select the correct section and do not reload or discard the selected month',()=>{

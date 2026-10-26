@@ -5,9 +5,12 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {parse} from 'jsonc-parser';
 import {PROJECT_ROOT, TARGETS, stableJson, error} from './worker_project.mjs';
-import {importWorkerConfig} from './import_worker_config.mjs';
+import {importWorkerConfig, MAX_WORKER_SOURCE_BYTES} from './import_worker_config.mjs';
 
-const MAX_BYTES = 3 * 1024 * 1024;
+// Preserve the one-MiB allowance for metadata around a bounded source file.
+// Process output has its separate original ceiling; it is never Worker source.
+const MAX_EXPORT_BYTES = MAX_WORKER_SOURCE_BYTES + 1024 * 1024;
+const MAX_OUTPUT_BYTES = 3 * 1024 * 1024;
 const fail = code => {throw error(code);};
 const inside = (parent, file) => {
   const relative = path.relative(parent, file);
@@ -28,7 +31,7 @@ function exportedFiles(directory) {
       else if (stat.isFile()) {
         files++;
         bytes += stat.size;
-        if (files > 100 || bytes > MAX_BYTES) fail('WORKER_CAPTURE_EXPORT_LIMIT');
+        if (files > 100 || bytes > MAX_EXPORT_BYTES) fail('WORKER_CAPTURE_EXPORT_LIMIT');
         if (['wrangler.json', 'wrangler.jsonc'].includes(entry.name)) configs.push(file);
       } else fail('WORKER_CAPTURE_PATH_INVALID');
     }
@@ -52,7 +55,7 @@ function readCapture(directory) {
   try { actual = realpathSync(sourceFile); stat = lstatSync(sourceFile); }
   catch { fail('WORKER_CAPTURE_SOURCE_MISSING'); }
   if (!inside(directory, actual) || !stat.isFile() || stat.isSymbolicLink()) fail('WORKER_CAPTURE_PATH_INVALID');
-  if (!stat.size || stat.size > MAX_BYTES) fail('WORKER_CAPTURE_EXPORT_LIMIT');
+  if (!stat.size || stat.size > MAX_WORKER_SOURCE_BYTES) fail('WORKER_CAPTURE_EXPORT_LIMIT');
   return {config, source: readFileSync(sourceFile)};
 }
 
@@ -73,7 +76,7 @@ export async function captureWorkerConfig(target, {
       await run(process.execPath, [path.join(project, 'node_modules/wrangler/bin/wrangler.js'),
         'init', '--from-dash', TARGETS[target].name, '--yes', '--no-delegate-c3'], {
         cwd: directory, stdio: ['ignore', 'pipe', 'pipe'], encoding: 'utf8',
-        maxBuffer: MAX_BYTES, timeout: 180000,
+        maxBuffer: MAX_OUTPUT_BYTES, timeout: 180000,
         env: {...process.env, CI: 'true', WRANGLER_SEND_METRICS: 'false', WRANGLER_LOG: 'error'},
       });
     } catch { fail('WORKER_CAPTURE_REMOTE_UNAVAILABLE'); }

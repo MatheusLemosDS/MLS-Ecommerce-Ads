@@ -344,20 +344,23 @@ export function createFinanceWorker({adapter, paymentSample, paymentPreview, var
         const production = url.pathname === PRODUCTION_ORDERS_PATH;
         const business = url.pathname === BUSINESS_PERIOD_PATH;
         const period = business || url.pathname === STORE_PERIOD_PATH;
+        const dailyContract = business ? request.headers.get('x-braza-daily-contract') : null;
+        if (dailyContract !== null && dailyContract !== 'daily-profit-v1') return failure('INVALID_REQUEST',400);
         const capability = production ? productionOrders : business ? businessPeriod : period ? storePeriod : catalog ? variantCatalog : preview ? paymentPreview : paymentSample;
         if (env?.FINANCE_CONNECTION_ENABLED !== 'true' || typeof capability !== 'function'
             || typeof fetchImpl !== 'function' || typeof now !== 'function') return failure('CONFIGURATION_PENDING', 503);
         const input = await privateFinanceBody(request, catalog, period, business, production);
         if (!input) return failure('INVALID_REQUEST', 400);
         try {
-          const result = await capability(env, {fetchImpl, now, ...(production || catalog || period ? input : {})});
+          const result = await capability(env, {fetchImpl, now, ...(production || catalog || period ? input : {}),...(business&&dailyContract==='daily-profit-v1'?{includeDaily:true}:{})});
           if(catalog){const unavailable=projectVariantCatalogFailure(result);if(unavailable)return response(unavailable,502,{json:true});}
           const frame = production ? projectProductionOrdersFrame(result) : period ? (business ? projectBusinessPeriodFrame(result) : projectStorePeriodFrame(result)) : catalog ? projectVariantCatalog(result) : preview ? projectFinancePaymentPreview(result) : sampleFrame(result);
           if (production) return frame&&productionOrdersRequestMatches(input,frame) ? response(frame,200,{json:true}) : response({error:'FINANCE_PRODUCTION_UNAVAILABLE'},502,{json:true});
           if (period && (!frame || (input.operation === 'start' ? frame.start_date !== input.start_date || frame.end_date !== input.end_date : frame.run_id !== input.run_id))) return response({error:'FINANCE_STORE_UNAVAILABLE',diagnostic:{code:'FINANCE_STORE_UNAVAILABLE',http:null}},502,{json:true});
           if (catalog && (!frame || frame.products.length !== input.item_ids.length || frame.products.some(product => !input.item_ids.includes(product.item_id) || Boolean(input.include_cost_catalog)!==Object.hasOwn(product,'cost_catalog') || input.selling_unit !== 'AUTO' && (product.selling_unit || 'ONE_MALE_ONE_FEMALE_KIT') !== (input.selling_unit || 'ONE_MALE_ONE_FEMALE_KIT')))) return response({schema:'variant_catalog_v1',status:'UNAVAILABLE',diagnostic:financeCatalogDiagnostic({code:'FINANCE_CATALOG_RESPONSE_INVALID',catalog_stage:'RESULT'})},502,{json:true});
           if (!frame) return paymentFailure(preview ? new FinanceConnectionError('FINANCE_SAMPLE_PREVIEW_RESPONSE_INVALID', 502) : undefined);
-          return response(frame, 200, {json: true});
+          const output=business&&dailyContract===null&&Object.hasOwn(frame,'daily_breakdown')?Object.fromEntries(Object.entries(frame).filter(([key])=>key!=='daily_breakdown')):frame;
+          return response(output, 200, {json: true});
         } catch (error) { return production ? response({error:'FINANCE_PRODUCTION_UNAVAILABLE'},502,{json:true}) : period ? response({error:'FINANCE_STORE_UNAVAILABLE',diagnostic:{code:'FINANCE_STORE_UNAVAILABLE',http:null}},502,{json:true}) : catalog ? response({schema:'variant_catalog_v1',status:'UNAVAILABLE',diagnostic:financeCatalogDiagnostic(error)},error instanceof FinanceConnectionError&&[400,401,403,409,429,502,503,504].includes(error.status)?error.status:502,{json:true}) : paymentFailure(error); }
       }
       if (![PREFIX + '/connect', PREFIX + '/callback', PREFIX + '/status'].includes(url.pathname)) return failure('NOT_FOUND', 404);

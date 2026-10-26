@@ -2,7 +2,7 @@ import {FINANCE_PROFILE,FinanceConnectionError} from './connection-store.mjs';
 import {ensureFinanceAccessToken} from './refresh-coordinator.mjs';
 import {requestFinanceAuthJson} from './auth-json-transport.mjs';
 import {projectBusinessPeriodRequest,projectBusinessPeriodFrame} from './business-period-frame.mjs';
-import {FINANCIAL_ORDER_EVIDENCE_SCHEMA,buildFinancialOrderEvidence} from './financial-order-evidence.mjs';
+import {FINANCIAL_ORDER_EVIDENCE_SCHEMA,buildFinancialOrderEvidence,projectFinancialOrderEvidence} from './financial-order-evidence.mjs';
 
 // A creation-time cohort of every order, classified from current detail status.
 // Only the existing read APIs are used; no Ads attribution or settlement is inferred.
@@ -113,6 +113,36 @@ function businessMidnight(day){
  return Math.floor(candidate/1000);
 }
 const businessCanonical=record=>({order_hash:record.order_hash,bucket:record.bucket,payment_covered:record.payment_covered,sales_raw:record.sales_raw,escrow_raw:record.escrow_raw,ads_raw:record.ads_raw,returns_seen:record.returns_seen,items:record.items,checked_at:record.checked_at});
+function businessDailyBreakdown(run,records,evidenceByOrder){
+ const coverageKeys=['orders','paid','completed','ongoing','cancelled','cancel_pending','unpaid','other','unknown','payment_covered','payment_missing','returns','returns_unknown'];
+ const group=date=>({date,coverage:Object.fromEntries(coverageKeys.map(key=>[key,0])),money:[0n,0n,0n],items:new Map(),times:[],adjustments:{covered_orders:0,missing_orders:0,conflict_orders:0,money:[0n,0n,0n]}});
+ const days=new Map(),undated=group(null),formatter=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'});
+ for(let at=Date.parse(run.start_date+'T00:00:00Z'),end=Date.parse(run.end_date+'T00:00:00Z');at<=end;at+=86400000){const date=new Date(at).toISOString().slice(0,10);days.set(date,group(date));}
+ for(const record of records){
+  const evidence=evidenceByOrder.get(record.order_hash),created=evidence?.schema==='financial_order_evidence_v2'?evidence.create_time:null;
+  const date=Number.isSafeInteger(created)&&created>=run.time_from&&created<=run.time_to&&created<=record.checked_at?formatter.format(new Date(created*1000)):null;
+  const current=days.get(date)||undated,c=current.coverage;c.orders++;c[record.bucket]++;current.times.push(record.checked_at);
+  if(!['completed','ongoing'].includes(record.bucket))continue;
+  c.paid++;for(const item of JSON.parse(record.items)){const key=item.item_id+':'+item.model_id,old=current.items.get(key);current.items.set(key,{...item,quantity:(old?.quantity||0)+item.quantity});}
+  const adjustment=current.adjustments;
+  if(!record.payment_covered){c.payment_missing++;c.returns_unknown++;adjustment.missing_orders++;continue;}
+  c.payment_covered++;if(record.returns_seen===null)c.returns_unknown++;else c.returns+=record.returns_seen;
+  [record.sales_raw,record.escrow_raw,record.ads_raw].forEach((raw,index)=>{current.money[index]+=businessCents(raw);});
+  if(!evidence){adjustment.missing_orders++;continue;}
+  if(['INVALID','ADJUSTMENT_MISMATCH'].includes(evidence.diagnostic)||evidence.currency!=='BRL'||evidence.amounts.escrow_amount_raw!==record.escrow_raw){adjustment.conflict_orders++;continue;}
+  const amounts=['escrow_amount_raw','total_adjustment_amount_raw','escrow_amount_after_adjustment_raw'].map(key=>businessCents(evidence.amounts[key],100000000000000n));
+  if(amounts.some(value=>value===null)){adjustment.missing_orders++;continue;}
+  if(amounts[0]+amounts[1]!==amounts[2]){adjustment.conflict_orders++;continue;}
+  adjustment.covered_orders++;amounts.forEach((amount,index)=>{adjustment.money[index]+=amount;});
+ }
+ const project=current=>{
+  const {coverage:c,adjustments:a}=current,complete=a.covered_orders===c.paid;
+  const items=[...current.items.values()].sort((a,b)=>a.item_id.length-b.item_id.length||a.item_id.localeCompare(b.item_id)||a.model_id.length-b.model_id.length||a.model_id.localeCompare(b.model_id));
+  const money=current.money.map(businessRaw),adjustments=a.money.map(businessRaw);
+  return {date:current.date,coverage:c,known_sales_base_raw:money[0],sales_base_raw:c.payment_missing?null:money[0],known_expected_repass_raw:money[1],expected_repass_raw:c.payment_missing?null:money[1],known_ads_adjustment_raw:money[2],ads_adjustment_raw:c.payment_missing?null:money[2],items,source_checked_at:{oldest_at:current.times.length?Math.min(...current.times):null,latest_at:current.times.length?Math.max(...current.times):null},adjustments:{covered_orders:a.covered_orders,missing_orders:a.missing_orders,conflict_orders:a.conflict_orders,known_base_repass_raw:adjustments[0],known_adjustment_raw:adjustments[1],known_after_adjustment_repass_raw:adjustments[2],adjustment_raw:complete?adjustments[1]:null,after_adjustment_repass_raw:complete?adjustments[2]:null}};
+ };
+ return {schema:'finance_business_daily_v1',timezone:'America/Sao_Paulo',basis:'CREATE_TIME_PAID_ORDER_ESTIMATE_NOT_SETTLED',days:[...days.values()].map(project),undated:project(undated)};
+}
 function businessFrame(run,records,diagnostic){
  if(!run||run.partner_id!==FINANCE_PROFILE.partner_id||run.shop_id!==FINANCE_PROFILE.shop_id||!Array.isArray(records)||records.length>1000)throw businessFailure('STORAGE_INVALID',503);
  const coverage={orders:records.length,paid:0,completed:0,ongoing:0,cancelled:0,cancel_pending:0,unpaid:0,other:0,unknown:0,payment_covered:0,payment_missing:0,returns:0,returns_unknown:0},grouped=new Map(),seenOrders=new Set(),products=new Map();
@@ -171,7 +201,7 @@ function businessFrame(run,records,diagnostic){
 
 export async function runFinanceBusinessPeriod(env,options={}){
  if(!businessPlain(options)||env?.FINANCE_CONNECTION_ENABLED!=='true'||!env?.FINANCE_DB||typeof env.FINANCE_DB.prepare!=='function'||typeof env.FINANCE_DB.batch!=='function'||env.ADMIN_DB===env.FINANCE_DB)throw businessFailure('CONFIGURATION',503);
- const {operation,fetchImpl,now=()=>Date.now(),timeoutMs=5000}=options;
+ const {operation,fetchImpl,now=()=>Date.now(),timeoutMs=5000,includeDaily=false}=options;if(typeof includeDaily!=='boolean')throw businessFailure('REQUEST_INVALID',400);
  const input=projectBusinessPeriodRequest(operation==='start'?{operation,start_date:options.start_date,end_date:options.end_date}:{operation,run_id:options.run_id});if(!input)throw businessFailure('REQUEST_INVALID',400);
  const epoch=()=>{let value;try{value=now();}catch{throw businessFailure('CLOCK_CONFIGURATION',503);}if(!Number.isSafeInteger(value)||value<=0||Math.floor(value/1000)>9999999999)throw businessFailure('CLOCK_CONFIGURATION',503);return Math.floor(value/1000);};
  const initialTime=epoch(),deadline=initialTime+20,db=env.FINANCE_DB,prepare=(sql,args=[])=>db.prepare(sql).bind(...args);
@@ -179,19 +209,37 @@ export async function runFinanceBusinessPeriod(env,options={}){
  const storage=async work=>{try{return await work();}catch(error){if(error instanceof FinanceConnectionError)throw error;throw businessFailure('STORAGE_UNAVAILABLE',503);}};
  await storage(()=>db.batch(BUSINESS_SCHEMA.map(sql=>db.prepare(sql))));
  const snapshot=async(run_id,diagnostic)=>{
+  const fields='o.order_hash,o.bucket,o.payment_covered,o.sales_raw,o.escrow_raw,o.ads_raw,o.returns_seen,o.items,o.source_hash,o.checked_at',dailyFields=',e.source_hash AS evidence_source_hash,e.checked_at AS evidence_checked_at,e.payload AS evidence_payload,e.payload_hash AS evidence_payload_hash';
+  const selectRecords=(table,daily=false)=>'SELECT '+fields+(daily?dailyFields:'')+' FROM '+table+' o'+(daily?' LEFT JOIN finance_business_order_evidence e ON e.run_id=o.run_id AND e.order_hash=o.order_hash':'')+' WHERE o.run_id=?';
   const data=await storage(()=>db.batch([
    prepare('SELECT * FROM finance_business_period_runs WHERE run_id=? AND partner_id=? AND shop_id=?',[run_id,...businessIdentity]),
-   prepare('SELECT order_hash,bucket,payment_covered,sales_raw,escrow_raw,ads_raw,returns_seen,items,source_hash,checked_at FROM finance_business_period_orders WHERE run_id=? AND EXISTS(SELECT 1 FROM finance_business_period_runs WHERE run_id=? AND partner_id=? AND shop_id=?) ORDER BY order_hash',[run_id,run_id,...businessIdentity]),
-   prepare('SELECT order_hash,bucket,payment_covered,sales_raw,escrow_raw,ads_raw,returns_seen,items,source_hash,checked_at FROM finance_business_period_payment_cache WHERE run_id=? ORDER BY order_hash',[run_id]),
+   prepare(selectRecords('finance_business_period_orders',includeDaily)+' AND EXISTS(SELECT 1 FROM finance_business_period_runs WHERE run_id=? AND partner_id=? AND shop_id=?) ORDER BY o.order_hash',[run_id,run_id,...businessIdentity]),
+   prepare(selectRecords('finance_business_period_payment_cache')+' ORDER BY o.order_hash',[run_id]),
   ]));
-  const run=data[0]?.results?.[0],records=data[1]?.results,cache=data[2]?.results;if(!run)throw businessFailure('RUN_NOT_FOUND',404);
+  const run=data[0]?.results?.[0],stored=data[1]?.results,storedCache=data[2]?.results;if(!run)throw businessFailure('RUN_NOT_FOUND',404);
+  const record=entry=>({...businessCanonical(entry),source_hash:entry.source_hash}),records=Array.isArray(stored)?stored.map(record):stored,cache=Array.isArray(storedCache)?storedCache.map(record):storedCache;
   if(!Array.isArray(records)||!projectBusinessPeriodRequest({operation:'start',start_date:run.start_date,end_date:run.end_date}))throw businessFailure('STORAGE_INVALID',503);
   const nextDay=new Date(Date.parse(run.end_date+'T00:00:00Z')+86400000).toISOString().slice(0,10);
   if(run.time_from!==businessMidnight(run.start_date)||run.time_to!==Math.min(run.cutoff_at,businessMidnight(nextDay)-1)||run.cursor!==''&&!businessCursor(run.cursor))throw businessFailure('STORAGE_INVALID',503);
   if(!Array.isArray(cache)||cache.length>20||businessEncoder.encode(JSON.stringify(cache)).byteLength>1048576||cache.some(record=>record.payment_covered!==1||!['completed','ongoing'].includes(record.bucket)||records.some(committed=>committed.order_hash===record.order_hash)))throw businessFailure('STORAGE_INVALID',503);
   const hashes=await Promise.all([...records,...cache].map(async record=>await businessHash(JSON.stringify(businessCanonical(record)))===record.source_hash));if(hashes.includes(false))throw businessFailure('STORAGE_INVALID',503);
   for(const record of cache)businessFrame({...run,status:'RUNNING',pages_read:1,duplicate_orders:0,last_error:null},[record]);
-  return {run,records,cache,frame:businessFrame(run,records,diagnostic)};
+  let frame=businessFrame(run,records,diagnostic);
+  if(includeDaily){
+   const evidenceByOrder=new Map();
+   for(const row of stored){
+    try{
+     if(row.evidence_source_hash!==row.source_hash||row.evidence_checked_at!==row.checked_at||typeof row.evidence_payload!=='string'||businessEncoder.encode(row.evidence_payload).byteLength>32768||await businessHash(row.evidence_payload)!==row.evidence_payload_hash)continue;
+     const evidence=projectFinancialOrderEvidence(JSON.parse(row.evidence_payload));if(!evidence||await businessHash(evidence.order_sn)!==row.order_hash)continue;
+     evidenceByOrder.set(row.order_hash,evidence);
+    }catch{}
+   }
+   const daily_breakdown=businessDailyBreakdown(run,records,evidenceByOrder),candidate={...frame,daily_breakdown};
+   // A very dense calendar must not invalidate the already bounded period.
+   // Omit the optional detail instead of truncating days or enlarging limits.
+   if(businessEncoder.encode(JSON.stringify(daily_breakdown)).byteLength<=524288&&businessEncoder.encode(JSON.stringify(candidate)).byteLength<=1048576){const projected=projectBusinessPeriodFrame(candidate);if(!projected)throw businessFailure('STORAGE_INVALID',503);frame=projected;}
+  }
+  return {run,records,cache,frame};
  };
  if(input.operation==='start'){
   const today=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date(initialTime*1000));if(input.end_date>today)throw businessFailure('REQUEST_INVALID',400);
@@ -282,7 +330,7 @@ export async function runFinanceBusinessPeriod(env,options={}){
     if(Object.hasOwn(row,'create_time')&&(!Number.isSafeInteger(row.create_time)||row.create_time<run.time_from||row.create_time>run.time_to))throw businessFailure('IDENTITY_MISMATCH');
     const bucket=businessBucket(row.order_status),paid=['completed','ongoing'].includes(bucket);
     if(paid&&row.currency!=='BRL')throw businessFailure('DETAIL_INVALID');
-    bySerial.set(row.order_sn,{bucket,order_status:row.order_status,currency:row.currency,items:paid?businessItems(row.item_list,'model_quantity_purchased'):[]});
+    bySerial.set(row.order_sn,{bucket,order_status:row.order_status,currency:row.currency,create_time:row.create_time??null,items:paid?businessItems(row.item_list,'model_quantity_purchased'):[]});
    }
    details=selected.map(row=>({...row,...bySerial.get(row.serial)}));
   }
@@ -320,7 +368,7 @@ export async function runFinanceBusinessPeriod(env,options={}){
      if(record.payment_covered===1)newlyCached.push(record);
      // Optional evidence has its own private bounded representation. Missing or
      // invalid optional fields cannot invalidate the established v1 ledger.
-     try{newEvidence.set(record.order_hash,await buildFinancialOrderEvidence({order_sn:selection.serial,order_status:selection.order_status??null,currency:selection.currency??null,payment,record}));}catch{}
+     try{newEvidence.set(record.order_hash,await buildFinancialOrderEvidence({order_sn:selection.serial,order_status:selection.order_status??null,currency:selection.currency??null,payment,record,create_time:selection.create_time}));}catch{}
     }catch(error){
      const priority={BUSINESS_PERIOD_CHECKPOINT:0,BUSINESS_PERIOD_BUSY:0,BUSINESS_PERIOD_UPSTREAM_UNAVAILABLE:1,BUSINESS_PERIOD_TIMEOUT:2,BUSINESS_PERIOD_RATE_LIMIT:3,BUSINESS_PERIOD_AUTH_REQUIRED:4,BUSINESS_PERIOD_INVALID_SOURCE:5};
      if(!failed||priority[businessDiagnostic(error)]>priority[businessDiagnostic(failed)])failed=error;

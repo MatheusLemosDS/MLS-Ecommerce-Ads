@@ -408,7 +408,7 @@ async function adminFetch(request,env,services={}){const url=new URL(request.url
   assert(request.method==='GET','METHOD_NOT_ALLOWED',405);
   const entries=[...url.searchParams];assert(entries.length===1&&entries[0][0]==='month','BUSINESS_MONTH_REQUEST_INVALID');
   const contract=request.headers.get('x-braza-client-contract')??'business-month-view-v1';
-  assert(['business-month-view-v1','business-month-view-v2'].includes(contract),'BUSINESS_MONTH_VIEW_CONTRACT_UNSUPPORTED',409);
+  assert(['business-month-view-v1','business-month-view-v2','business-month-view-v3'].includes(contract),'BUSINESS_MONTH_VIEW_CONTRACT_UNSUPPORTED',409);
   const observed=await readBusinessMonthDisplay(env,{month:entries[0][1]});
   const response=json(buildBusinessMonthView(observed,await readBusinessSyncState(env),{contract}));
   response.headers.set('x-braza-client-contract',contract);response.headers.set('vary','X-Braza-Client-Contract');return response;
