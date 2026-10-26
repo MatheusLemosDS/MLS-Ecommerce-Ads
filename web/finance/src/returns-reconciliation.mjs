@@ -2,7 +2,7 @@ import {FINANCE_PROFILE,FinanceConnectionError} from './connection-store.mjs';
 import {ensureFinanceAccessToken} from './refresh-coordinator.mjs';
 import {requestFinanceAuthJson} from './auth-json-transport.mjs';
 import {readFinancialOrderEvidence} from './financial-order-evidence.mjs';
-import {projectReconciliationRequest,projectReconciliationFrame} from './reconciliation-frame.mjs';
+import {projectReconciliationRequest,projectReconciliationFrame,projectReconciliationEvidenceFrame} from './reconciliation-frame.mjs';
 
 // Return amounts are observations of requests, never additional deductions
 // from escrow and never proof of a paid refund or a bank settlement.
@@ -97,7 +97,19 @@ function dueCases(refs,snapshot,stamp){
   return first?first.checked_at-last.checked_at:(left?.row.failure_count??0)-(right?.row.failure_count??0);
  }).slice(0,2);
 }
-function report(source,refs,snapshot,stamp,probes){
+function reviewEvidence(source,refs,snapshot,stamp,probes){
+ const selected=source.orders.filter(review),summary={orders:selected.length,in_cancel:0,to_return:0,other:0,unknown:0},orders=[];
+ for(const row of selected){
+  const observed=row.evidence?.order_status,status=observed==='TO_RETURN'?'TO_RETURN':observed==='IN_CANCEL'?'IN_CANCEL':!observed||row.bucket==='unknown'?'UNKNOWN_STATUS':'OTHER_STATUS';
+  summary[{TO_RETURN:'to_return',IN_CANCEL:'in_cancel',UNKNOWN_STATUS:'unknown',OTHER_STATUS:'other'}[status]]++;
+  if(orders.length>=40)continue;
+  const probe=status==='TO_RETURN'?probes.get(row.order_hash):null,list=effectiveReferences(row,probes),known=Array.isArray(list),linked=refs.entries.filter(reference=>reference.order_hash===row.order_hash),checked=linked.filter(reference=>snapshot.map.get(reference.case_hash)?.observation).length;
+  const diagnostic=probe?.row.diagnostic??null,next=probe?.row.next_attempt_at>0?probe.row.next_attempt_at:null;
+  orders.push({order_hash:row.order_hash,status,source_checked_at:row.checked_at,reference_state:known?(list.length?'AVAILABLE':'KNOWN_EMPTY'):status!=='TO_RETURN'?'NOT_APPLICABLE':diagnostic!==null&&diagnostic!=='DETAILS_PENDING'&&next>stamp?'RETRY_WAIT':'PENDING',reference_count:known?list.length:null,references_checked_at:known?(row.evidence?.return_order_sn_list!==null?row.checked_at:probe?.observation?.checked_at??null):null,reference_diagnostic:status==='TO_RETURN'?diagnostic:null,next_attempt_at:status==='TO_RETURN'?next:null,checked_cases:known?checked:null,pending_cases:known?list.length-checked:null});
+ }
+ return {schema:'finance_review_orders_v1',summary,orders,truncation:{truncated:selected.length>orders.length,orders_total:selected.length,orders_included:orders.length},basis:'REVIEW_ORDERS_OUTSIDE_PAID_COHORT'};
+}
+function report(source,refs,snapshot,stamp,probes,includeReview=false){
  const orders=source.orders,coverage={orders:orders.length,evidence_orders:orders.filter(row=>row.evidence!==null).length,missing_evidence_orders:orders.filter(row=>row.evidence===null).length,paid_orders:orders.filter(paid).length,review_orders:orders.filter(review).length,return_orders:orders.filter(row=>paid(row)&&row.returns_seen===1).length,return_unknown_orders:orders.filter(row=>paid(row)&&row.returns_seen===null).length};
  const adjustments={reported_orders:0,missing_orders:0,conflicting_orders:0,known_adjustment_cents:0,base_repass_cents:null,after_adjustment_repass_cents:null};let base=0n,baseKnown=true,delta=0n;
  for(const row of orders.filter(paid)){
@@ -123,36 +135,40 @@ function report(source,refs,snapshot,stamp,probes){
  if(source.run.status!=='COMPLETE')pending.unshift('SOURCE_COLLECTING');
  if(coverage.missing_evidence_orders||source.invalid_orders)pending.push('ORDER_EVIDENCE_MISSING');
  if(adjustments.missing_orders)pending.push('ADJUSTMENT_FIELDS_UNAVAILABLE');if(adjustments.conflicting_orders)pending.push('ADJUSTMENT_CONFLICT');
- if(coverage.return_unknown_orders>0||refs.total<coverage.return_orders||orders.some(row=>(paid(row)||review(row))&&effectiveReferences(row,probes)===null)||refs.conflict)pending.push('RETURN_REFERENCES_MISSING');
+ if(coverage.return_unknown_orders>0||refs.total<coverage.return_orders||orders.some(row=>(paid(row)||review(row)&&row.evidence?.order_status==='TO_RETURN')&&effectiveReferences(row,probes)===null)||refs.conflict)pending.push('RETURN_REFERENCES_MISSING');
  if(checked<refs.total||!complete||(snapshot.state?.last_error||caseFailures.length>0)&&permission!=='DENIED')pending.push('RETURN_DETAILS_PENDING');
  if(permission==='DENIED')pending.push('RETURN_PERMISSION_REQUIRED');if(refs.total)pending.push('RETURN_VALUES_UNVERIFIED');if(unknown)pending.push('RETURN_STATUS_UNRECOGNIZED');
  const blocked=permission==='DENIED',status=blocked?'BLOCKED':source.run.status!=='COMPLETE'?'COLLECTING':pending.some(code=>!['SETTLEMENT_NOT_RECONCILED','RETURN_VALUES_UNVERIFIED'].includes(code))?'PARTIAL':'CHECKED';
  const frame={schema:'finance_reconciliation_v1',run_id:source.run.run_id,source_revision:source.run.revision,start_date:source.run.start_date,end_date:source.run.end_date,checked_at:stamp,status,source_checked_at:{finance_oldest_at:source.run.source_checked_at.oldest_at,finance_latest_at:source.run.source_checked_at.latest_at,returns_oldest_at:times.length?Math.min(...times):null,returns_latest_at:times.length?Math.max(...times):null},coverage,adjustments,returns:{reference_count:refs.total,checked_count:checked,pending_count:refs.total-checked,known_requested_refund_cents:safe(requested),requested_amount_complete:complete&&checked===refs.total,permission},cases,truncation:{truncated:refs.total>cases.length,cases_total:refs.total,cases_included:cases.length},pending,basis:'SOURCE_EVIDENCE_AUDIT_NOT_SETTLEMENT_OR_REALIZED_PROFIT'};
- const projected=projectReconciliationFrame(frame);if(!projected)fail('RESULT_INVALID');return projected;
+ const projected=projectReconciliationFrame(frame);if(!projected)fail('RESULT_INVALID');
+ // Contradictory reference ownership has no safe per-order association. Keep
+ // its existing partial report instead of guessing or failing the whole read.
+ if(!includeReview||refs.conflict)return projected;
+ const evidence=projectReconciliationEvidenceFrame({schema:'finance_reconciliation_v2',report:projected,review:reviewEvidence(source,refs,snapshot,stamp,probes)},projectReconciliationFrame);if(!evidence)fail('RESULT_INVALID');return evidence;
 }
 
 export async function runFinanceReturnsReconciliation(env,options={}){
- if(!plain(options)||Reflect.ownKeys(options).some(key=>!['operation','run_id','fetchImpl','now','timeoutMs'].includes(key)||!Object.hasOwn(Object.getOwnPropertyDescriptor(options,key)||{},'value')))fail('REQUEST_INVALID',400);
+ if(!plain(options)||Reflect.ownKeys(options).some(key=>!['operation','run_id','fetchImpl','now','timeoutMs','includeReview'].includes(key)||!Object.hasOwn(Object.getOwnPropertyDescriptor(options,key)||{},'value'))||Object.hasOwn(options,'includeReview')&&typeof options.includeReview!=='boolean')fail('REQUEST_INVALID',400);
  const selection=projectReconciliationRequest({operation:options.operation,run_id:options.run_id});if(!selection)fail('REQUEST_INVALID',400);
- const {fetchImpl,now=()=>Date.now(),timeoutMs=5000}=options,epoch=()=>{let value;try{value=now();}catch{fail('CLOCK_INVALID');}if(!integer(value,1,9999999999999))fail('CLOCK_INVALID');return Math.floor(value/1000);};
+ const {fetchImpl,now=()=>Date.now(),timeoutMs=5000,includeReview=false}=options,epoch=()=>{let value;try{value=now();}catch{fail('CLOCK_INVALID');}if(!integer(value,1,9999999999999))fail('CLOCK_INVALID');return Math.floor(value/1000);};
  const stamp=epoch(),db=env?.FINANCE_DB;if(env?.FINANCE_CONNECTION_ENABLED!=='true'||typeof db?.batch!=='function'||typeof db?.prepare!=='function')fail('CONFIGURATION');
  if(!ready.has(db)){await db.batch(RETURNS_RECONCILIATION_SCHEMA.map(sql=>db.prepare(sql)));ready.add(db);}
  const source=await readFinancialOrderEvidence(env,{run_id:selection.run_id},{now}),candidates=reviewCandidates(source);
  let probes=await readProbes(db,candidates,stamp),refs=await references(source,probes);
  let snapshot=await rows(db,selection.run_id,refs,stamp);
- if(selection.operation==='read'||refs.conflict||!refs.entries.length&&!candidates.length)return report(source,refs,snapshot,stamp,probes);
+ if(selection.operation==='read'||refs.conflict||!refs.entries.length&&!candidates.length)return report(source,refs,snapshot,stamp,probes,includeReview);
  if(typeof fetchImpl!=='function'||!integer(timeoutMs,5,5000))fail('CONFIGURATION');
- if(snapshot.state?.next_attempt_at>stamp||snapshot.state?.lease_until>stamp)return report(source,refs,snapshot,stamp,probes);
+ if(snapshot.state?.next_attempt_at>stamp||snapshot.state?.lease_until>stamp)return report(source,refs,snapshot,stamp,probes,includeReview);
  const probeDue=candidates.filter(row=>{const item=probes.get(row.order_hash);return (!item?.observation||stamp-item.observation.checked_at>=300)&&(!item?.row.next_attempt_at||item.row.next_attempt_at<=stamp)&&(!item?.row.lease_until||item.row.lease_until<=stamp);}).sort((a,b)=>{
   const left=probes.get(a.order_hash),right=probes.get(b.order_hash),first=left?.observation,last=right?.observation;
   if(Boolean(first)!==Boolean(last))return first?1:-1;
   return first?first.checked_at-last.checked_at:(left?.row.failure_count??0)-(right?.row.failure_count??0);
  })[0];
- if(!dueCases(refs,snapshot,stamp).length&&!probeDue)return report(source,refs,snapshot,stamp,probes);
+ if(!dueCases(refs,snapshot,stamp).length&&!probeDue)return report(source,refs,snapshot,stamp,probes,includeReview);
  const owner=crypto.randomUUID(),leaseUntil=stamp+45;
  await db.batch([db.prepare('INSERT OR IGNORE INTO finance_returns_reconciliation_runs(run_id,partner_id,shop_id,revision,permission,checked_at,next_attempt_at,last_error,lease_owner,lease_until) SELECT ?,?,?,1,\'UNKNOWN\',0,0,NULL,NULL,NULL WHERE EXISTS(SELECT 1 FROM finance_business_period_runs WHERE run_id=? AND partner_id=? AND shop_id=?)').bind(selection.run_id,...identity,selection.run_id,...identity)]);
  const lease=await db.prepare('UPDATE finance_returns_reconciliation_runs SET lease_owner=?,lease_until=? WHERE run_id=? AND partner_id=? AND shop_id=? AND next_attempt_at<=? AND (lease_owner IS NULL OR lease_until<=?)').bind(owner,leaseUntil,selection.run_id,...identity,stamp,stamp).run();
- if(lease?.meta?.changes!==1)return report(source,refs,await rows(db,selection.run_id,refs,epoch()),epoch(),probes);
+ if(lease?.meta?.changes!==1)return report(source,refs,await rows(db,selection.run_id,refs,epoch()),epoch(),probes,includeReview);
  let permission=snapshot.state?.permission??'UNKNOWN',lastError=null,nextAttempt=stamp;
  try{
   const partnerKey=env.SHOPEE_FINANCE_PARTNER_KEY;if(typeof partnerKey!=='string'||!partnerKey.length||partnerKey.length>4096||/[\u0000-\u001f\u007f]/.test(partnerKey))fail('SIGNING_CONFIGURATION');
@@ -215,5 +231,5 @@ export async function runFinanceReturnsReconciliation(env,options={}){
  finally{
   const finished=epoch();await db.prepare('UPDATE finance_returns_reconciliation_runs SET revision=revision+1,permission=?,checked_at=?,next_attempt_at=?,last_error=?,lease_owner=NULL,lease_until=NULL WHERE run_id=? AND lease_owner=?').bind(permission,finished,nextAttempt,lastError,selection.run_id,owner).run();
  }
- snapshot=await rows(db,selection.run_id,refs,epoch());return report(source,refs,snapshot,epoch(),probes);
+ snapshot=await rows(db,selection.run_id,refs,epoch());return report(source,refs,snapshot,epoch(),probes,includeReview);
 }

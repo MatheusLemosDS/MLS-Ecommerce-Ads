@@ -21,6 +21,58 @@ somente identificadores derivados, contagens, valores e códigos limitados.
 Dados de compradores, tokens e números originais de pedidos não atravessam
 esse novo contrato.
 
+## Pedidos em revisão — 26/10/2026
+
+O atalho **Conferir pedidos e devoluções**, junto às pendências da Visão geral,
+abre a seção **Conferência de repasses e devoluções**. O atalho só abre, desloca
+e dá foco à seção; não inicia coleta nem acrescenta consulta ao servidor.
+
+A seção separa duas contagens: pedidos com situação em revisão, fora dos
+valores dos pedidos pagos, e pedidos pagos com devolução identificada. No
+diagnóstico enviado pelo operador, os dois pedidos `TO_RETURN` pertencem ao
+primeiro grupo e os quatro pedidos pagos com devolução pertencem ao segundo.
+São populações diferentes; não se deve somar as contagens para obter vendas
+pagas nem presumir que cada pedido tenha exatamente uma solicitação.
+
+Cada pedido em revisão pode mostrar:
+
+- a situação e o horário original em que ela foi observada;
+- se a busca de referências está pendente, aguarda nova tentativa, encontrou
+  referências, confirmou uma lista vazia ou não se aplica àquela situação;
+- quantas solicitações têm detalhes consultados e quantas ainda aguardam;
+- a data própria da consulta das referências, um motivo controlado de falha
+  e o horário a partir do qual uma nova consulta pode ser tentada;
+- a próxima conferência necessária e um vínculo com as solicitações daquele
+  pedido disponíveis na mesma página.
+
+As referências exibidas são internas do BrazaCommerce, derivadas por hash.
+Não são números de pedidos pesquisáveis na Shopee. A interface mostra até
+quarenta pedidos em revisão e quarenta solicitações por intervalo financeiro,
+com aviso quando a lista é parcial; as contagens continuam abrangendo o
+intervalo inteiro. Uma consulta malsucedida não renova a data da evidência
+anterior nem transforma referência desconhecida em uma lista vazia.
+
+Cancelamento em andamento (`IN_CANCEL`) ou situação desconhecida, por si só,
+não exige referências de devolução. O erro que atribuía essa falta a qualquer
+pedido em revisão foi corrigido. A revisão da situação do pedido permanece
+pendente no resumo mensal. Se uma referência de devolução for contraditoriamente
+vinculada a dois pedidos, o sistema preserva o relatório parcial anterior,
+sem atribuir a solicitação arbitrariamente a um deles.
+
+O detalhamento usa as evidências já carregadas pelo Financeiro. O App grava o
+relatório ampliado no mesmo registro existente e o navegador usa a mesma
+leitura periódica do relatório salvo. Não foram acrescentadas tabelas, consultas
+D1, chamadas à Shopee ou temporizadores. O volume de cada relatório aumenta
+com os detalhes; isso não equivale a uma medição da fatura em produção.
+
+O formato ampliado é negociado entre os três Workers. Chamadores antigos
+continuam recebendo o relatório v1, e uma atualização gradual pode continuar
+usando v1 sem repetir a consulta. Se a leitura salva ainda não tiver detalhes
+individuais compatíveis, o painel conserva os totais e informa essa ausência.
+Tanto os detalhes quanto o relatório seguem a mesma publicação, período,
+identidade e revisão das fontes; trocar de mês ou de publicação invalida o
+conjunto anterior.
+
 Uma importação anterior sem essas evidências continua legível. Ao atualizar o
 período, o coletor prepara uma substituição para capturá-las, sem reutilizar
 indefinidamente uma versão antiga que não permite conferir devoluções.
@@ -86,9 +138,17 @@ transações reais do Financeiro, o cache, as permissões e as leituras passivas
 Os dados dos testes são simulados. A disponibilidade e as permissões da conta
 real são verificadas pelo coletor após a implantação e apresentadas no painel.
 
-A próxima etapa para fechamento financeiro é validar uma fonte de liberações
-de escrow e ajustes por pedido, preservando o mês de criação separado da data
-de liberação. Liberação dentro da Shopee também não comprova depósito em banco.
-O App não pode transformar esses três eventos em um único lucro realizado.
+O [cruzamento de liberações com pedidos](LIBERACOES_E_PEDIDOS.md) já acrescenta
+uma consulta de liberações de escrow e compatibilidade monetária por pedido.
+O fechamento ainda depende de conferir a cobertura e as diferenças na conta
+real, preservando mês de criação, data de liberação e reembolso efetivo como
+evidências distintas. Liberação dentro da Shopee não comprova depósito em banco.
+
+A regressão desta continuidade usa os três Workers gerados, normais e
+minificados, com dois pedidos `TO_RETURN`, quatro pedidos pagos com devolução
+e seis referências. Confere a navegação, os contratos e os horários, mantém
+os valores financeiros e as pendências mensais, e verifica que leituras locais
+repetidas não fazem chamadas externas nem gravam novamente os relatórios.
+Esse cenário controlado não é uma nova leitura autenticada da conta do operador.
 
 Pesquisa e fontes: [contratos consultados](PESQUISA_FINANCEIRA_SHOPEE.md).

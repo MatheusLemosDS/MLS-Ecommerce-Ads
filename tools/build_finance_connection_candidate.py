@@ -66,7 +66,7 @@ def build():
     if re.search(r'^import\b',reconciliation,re.M):
         raise SystemExit('Unreviewed reconciliation frame import; candidate not built.')
     reconciliation=re.sub(r'^export\s+', '', reconciliation, flags=re.M)
-    reconciliation_names='projectReconciliationRequest,projectReconciliationFrame,reconciliationRequestMatches'
+    reconciliation_names='projectReconciliationRequest,projectReconciliationFrame,projectReconciliationEvidenceFrame,reconciliationRequestMatches'
     reconciliation_bundle='const brazaReconciliationFrame = (() => {\n'+reconciliation+'\nreturn {'+reconciliation_names+'};\n})();\n'
     reconciliation_import="import {"+reconciliation_names+"} from './reconciliation-frame.mjs';\n"
     escrow_release=(FINANCE/'src/escrow-release-frame.mjs').read_text()

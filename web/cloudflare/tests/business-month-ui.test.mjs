@@ -919,6 +919,14 @@ test('the overview presents one R$2339.75 known-cost balance and keeps four cost
  const ready=browser(meiProductFixture());await ready.run('brazaMonthDashboard.start({api})');assert.doesNotMatch(ready.text('CostOverview'),/Subtotal com custos identificados/);assert.equal(ready.text('NetLabel'),'Resultado líquido previsto');ready.run('brazaMonthDashboard.stop()');
 });
 
+test('the pending-order shortcut opens the saved reconciliation section without new reads, timers or financial changes',async()=>{
+ const b=browser(recordedUiFixture());b.run('let reconciliationOpens=0;globalThis.brazaReconciliation={start:()=>true,observe:async()=>false,stop(){},open(){reconciliationOpens++;return true;}};');
+ await b.run('brazaMonthDashboard.start({api})');assert.match(businessMonthBody(),/Conferir pedidos e devoluções/);assert.equal(b.run('control("OpenReconciliation").hidden'),false);
+ const reads=b.run('calls.length'),timers=b.run('timers.size'),net=b.text('Net');for(let i=0;i<3;i++)assert.equal(b.run('control("OpenReconciliation").onclick()'),true);
+ assert.equal(b.run('reconciliationOpens'),3);assert.equal(b.run('calls.length'),reads);assert.equal(b.run('timers.size'),timers);assert.equal(b.text('Net'),net);assert.equal(b.run('currentFrame.result.net_estimate_cents'),null);
+ b.load(fixture());await b.run('brazaMonthDashboard.refreshCosts()');assert.equal(b.run('control("OpenReconciliation").hidden'),true);b.run('brazaMonthDashboard.stop()');
+});
+
 test('an unknown monetary deduction cannot become a recorded subtotal or zero after a local repaint',async()=>{
  const source=recordedUiFixture();source.expenses={revision:0,external_expenses_cents:null,recharge_treatment:'UNCONFIRMED',updated_at:null};source.ads_adjustment_cents=0;source.result.pending.push('EXTERNAL_EXPENSES_REQUIRED');assert.ok(projectBusinessMonth(source));const b=browser(source);await b.run('brazaMonthDashboard.start({api})');assert.doesNotMatch(b.text('CostOverview'),/Subtotal com custos identificados|2[.]339,75/);assert.equal(b.text('Net'),'Em conciliação');b.run('brazaMonthDashboard.stop()');
 });
