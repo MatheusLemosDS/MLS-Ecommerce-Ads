@@ -2,7 +2,7 @@
 
 O estado observado em produção mostrava 100 pedidos em 20 páginas, nenhuma janela concluída e uma leitura financeira com aproximadamente 38 minutos. O coletor confundia `FINANCIAL_SOURCE_STALE`, durante `RUNNING`, com falha da fonte. Isso elevou o contador de falhas a quatro e adiou a próxima tentativa por 30 minutos.
 
-A antiguidade continua bloqueando o resultado financeiro, mas não aplica o intervalo de falha enquanto a coleta avança. Uma leitura em andamento volta no intervalo normal de cinco minutos. Falha real da fonte continua sujeita ao intervalo progressivo. O código também reconhece o estado antigo afetado e pode retomar antes do horário adiado: exige que o resumo seja da própria tentativa, esteja em andamento e não indique falha da fonte.
+A antiguidade continua bloqueando o resultado financeiro, mas não aplica o intervalo de falha enquanto a coleta avança. Uma leitura em andamento continua no intervalo de um minuto. Falha real da fonte continua sujeita ao intervalo progressivo. O código também reconhece o estado antigo afetado e pode retomar antes do horário adiado: exige que o resumo seja da própria tentativa, esteja em andamento e não indique falha da fonte.
 
 Cada página financeira passa de cinco para até 20 pedidos, com até quatro consultas de pagamento simultâneas. Os limites de 1.000 pedidos por janela e 200 páginas permanecem. A última página respeita o espaço restante, sem cortar pedidos de uma resposta nem avançar um cursor parcialmente processado. Páginas, cursores e valores já persistidos são preservados na retomada.
 
