@@ -39,6 +39,12 @@ Essa correção foi publicada pela PR #8 (`ecc8ffb`) e o operador confirmou
 resultado do dia no topo, mês em segundo plano e acesso direto às despesas e
 conferências. A separação usa as datas reais dos pedidos da mesma publicação,
 sem nova varredura externa; os custos fixos têm rateio diário explícito.
+A PR #9 foi publicada em `a8bedf6` e o operador confirmou **“Está funcionando”**.
+O incremento seguinte traz [conferência financeira guiada e confirmação de
+despesas](CONFERENCIA_FINANCEIRA_GUIADA.md): pendências com destino definido,
+prévia do total de despesas, proteção de rascunhos e diagnóstico ligado à
+mesma publicação e às revisões do resumo exibido. Um total anterior preservado
+não encerra a conferência de despesas em rascunho.
 O diagnóstico e os limites dessa correção estão em
 [abertura do painel](ABERTURA_DO_PAINEL.md#limite-diário-do-d1--26102026).
 A atualização da ponte Hermes no Droplet permanece uma etapa separada; ela não
@@ -78,7 +84,8 @@ testes locais.
 | Pedidos em revisão e suas devoluções | Publicados em `b97d55e` pela PR #6 | Detalha situação, referências, cobertura e horários com os dados já salvos. Separa os pedidos em revisão dos pagos com devolução, corrige a falsa exigência de referência em cancelamentos e mantém as pendências de recebimento e reembolso. O atalho para a conferência não inicia consultas. |
 | Valores de devolução e saldo após ajustes | Publicados em `f16bb1f` pela PR #7 | Totais por situação e base financeira, repasse por pedido afetado e saldo provisório com os custos da mesma publicação. Não duplica deduções, não transforma aprovação em comprovante bancário e mantém o saldo ainda a liberar indisponível. |
 | Sessão independente de configuração e Hermes | Publicada em `ecc8ffb` pela PR #8; recuperação confirmada pelo operador | Confirmação autenticada sem acesso ao D1; resumo inicia sem aguardar configuração ou orçamento. Mensagens distinguem demora, sessão e rede. A leitura dos dados financeiros continua dependendo do banco. |
-| Lucro diário e hierarquia da Visão geral | Implementados nesta continuidade | Hoje/Ontem/Data, pedidos por criação em Brasília, produção por variação, Ads da data, ajustes informados e rateio explícito de DAS/despesas confirmadas. Mesma publicação e referências do mensal; legado sem datas fica pendente até coleta normal. Despesas, devoluções, liberações e produtos têm atalhos próprios. [Cálculo e limites](LUCRO_DIARIO_E_VISAO_GERAL.md). |
+| Lucro diário e hierarquia da Visão geral | Publicados em `a8bedf6` pela PR #9; funcionamento confirmado pelo operador | Hoje/Ontem/Data, pedidos por criação em Brasília, produção por variação, Ads da data, ajustes informados e rateio explícito de DAS/despesas confirmadas. Mesma publicação e referências do mensal; legado sem datas fica pendente até coleta normal. Despesas, devoluções, liberações e produtos têm atalhos próprios. [Cálculo e limites](LUCRO_DIARIO_E_VISAO_GERAL.md). |
+| Conferência guiada e confirmação de despesas | Implementadas nesta continuidade | Pendências abrem a seção correspondente; despesas em rascunho e pedidos em devolução não aparecem como conferidos. Prévia do total, proteção de edição não salva e seleção explícita da competência. Diagnóstico v3 vinculado à publicação, fontes e seis revisões, com invalidação ao mudar o resumo. [Detalhes](CONFERENCIA_FINANCEIRA_GUIADA.md). |
 | Diagnóstico da conta | Versionado em `main` (`6f9ce23`); ativação a conferir | Calcula TACOS, saldo disponível antes de Ads, cobertura dos custos e próximas tarefas a partir do mês validado. Dados ausentes bloqueiam os indicadores correspondentes. Não autoriza investimento. |
 | Hermes com financeiro da loja | Publicado (`11f45ce`); atualização da ponte pendente | Cada análise preserva o mês financeiro, custos, DAS, anúncios, pendências e até três próximas ações. A ponte antiga não recebe tarefas novas. Exige atualização no Droplet e observação de uma execução real com a nova referência. |
 | Alterar anúncios, campanhas e promoções | Ainda não implementado para execução comercial | As proteções de somente leitura e Ads/PROMO `LOCKED` continuam vigentes. A coleta autônoma não cria permissão de escrita na Shopee. |
@@ -221,6 +228,11 @@ material e calibração da saída física; não há impressão autônoma na máq
    Conferir a nova Visão geral no uso real, a cobertura das datas na próxima
    coleta normal e os resultados diários, inclusive dias sem vendas. O rateio
    diário de custos fixos é explícito e não altera a dedução integral mensal.
+   A confirmação de funcionamento da PR #9 foi recebida. Conferir agora o
+   fluxo guiado e o impacto das despesas antes de confirmar a competência.
+   Detalhar as referências e os motivos das liberações ainda sem valor
+   compatível é o próximo incremento possível com a evidência já persistida;
+   manter calendário, publicação e recebimento bancário como bases distintas.
 3. Documentar e validar os contratos oficiais de estoque e campanhas, incluindo
    permissões de escrita por ação e limites próprios de investimento em Ads.
 4. Construir o ranking com atribuição comprovável e testar recomendações em

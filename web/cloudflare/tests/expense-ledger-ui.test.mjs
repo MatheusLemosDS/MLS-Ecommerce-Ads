@@ -120,7 +120,77 @@ test('changing the dashboard month during a save is applied after the response a
  b.el('Month').value='2026-12';await b.el('Month').onchange();b.workspace.observe('2026-11');assert.equal(b.el('Month').value,'2026-12','the independent expense month is retained until the dashboard selection actually changes');
 });
 
+test('editing or informing payment preserves a new draft and unsaved changes to the same or another expense',async t=>{
+ const b=fixture(t);b.start();await b.open();b.create('Aluguel','50,00');await b.submit();b.create('Internet','20,00');await b.submit();
+ const fields=['Description','Category','Amount','Competence','Due','Payment','PaidDate','Installments'],snapshot=()=>Object.fromEntries(fields.map(name=>[name,b.el(name).value]));
+ b.create('Boleto ainda não salvo','77,50');const fresh=snapshot(),calls=b.calls.length;
+ for(const label of ['Editar','Informar pagamento']){assert.equal(b.button(label).onclick(),false);assert.deepEqual(snapshot(),fresh);assert.equal(b.calls.length,calls);assert.match(b.el('FormStatus').textContent,/Salve ou descarte a edição atual/);}
+ b.el('CancelEdit').onclick();assert.equal(b.button('Editar').onclick(),true);b.input('Amount','51,25');const edited=snapshot();
+ for(const row of b.el('List').children)for(const label of ['Editar','Informar pagamento']){assert.equal(b.button(label,row).onclick(),false);assert.deepEqual(snapshot(),edited);}
+ assert.equal(await b.submit(),true);const current=await b.read('2026-10');assert.equal(current.items[0].amount_cents,5125);assert.equal(current.items[0].status,'OPEN');assert.equal(current.items[1].amount_cents,2000);
+ b.button('Editar').onclick();b.input('Amount','99,00');b.el('CancelEdit').onclick();assert.equal(b.button('Informar pagamento').onclick(),true);assert.equal(b.el('Amount').value,'51,25');assert.equal(b.el('Payment').value,'PAID');
+});
+
+test('a protected draft retains the idempotency key after an ambiguous save and an attempted editor switch',async t=>{
+ const b=fixture(t);b.start();await b.open();b.create('Despesa existente','50,00');await b.submit();b.create('Boleto novo','77,50');let lose=true;
+ b.setApi(async(path,body,actual)=>{const result=await actual(path,body);if(body&&lose){lose=false;throw Error('LOST_RESPONSE');}return result;});assert.equal(await b.submit(),false);
+ const before=b.calls.filter(call=>call.body).at(-1).body;assert.equal(b.button('Informar pagamento').onclick(),false);assert.equal(b.el('Description').value,'Boleto novo');assert.equal(b.el('Amount').value,'77,50');
+ assert.equal(await b.submit(),true);const after=b.calls.filter(call=>call.body).at(-1).body;assert.deepEqual(after,before);assert.equal((await b.read('2026-10')).items.length,2);
+});
+
+test('the live confirmation preview shows saved items plus the remaining amount, the old declaration and a signed difference without writing',async t=>{
+ const b=fixture(t,{manual:10000});b.start();await b.open();b.create('Aluguel detalhado','50,00');await b.submit();const before=b.calls.length;
+ assert.equal(b.el('ConfirmationEquation').textContent,'R$\u00a050,00 + R$\u00a0100,00 = R$\u00a0150,00');assert.match(b.el('ConfirmationPrevious').textContent,/100,00/);assert.match(b.el('ConfirmationDifference').textContent,/\+ R\$\s*50,00.*aumenta/);
+ b.input('Remainder','0');assert.equal(b.el('ConfirmationEquation').textContent,'R$\u00a050,00 + R$\u00a00,00 = R$\u00a050,00');assert.match(b.el('ConfirmationDifference').textContent,/− R\$\s*50,00.*diminui/);assert.equal(b.el('Confirm').disabled,true);assert.equal(b.calls.length,before);assert.equal((await b.read('2026-10')).current_external_expenses_cents,10000);
+ b.create('Ainda não cadastrado','9,99');assert.match(b.el('ConfirmationPreviewStatus').textContent,/lançamentos já salvos/);assert.match(b.el('ConfirmationEquation').textContent,/= R\$\s*50,00$/,'unsaved editor values are excluded from the proposed composition');
+ b.el('Confirmed').checked=true;b.el('Confirmed').onchange();assert.equal(b.el('Confirm').disabled,false);assert.equal(await b.el('Confirm').onclick(),true);assert.equal((await b.read('2026-10')).current_external_expenses_cents,5000);assert.equal(b.el('Description').value,'Ainda não cadastrado');assert.equal(b.el('Amount').value,'9,99');assert.match(b.el('ConfirmationDifference').textContent,/0,00.*permanece igual/);
+});
+
+test('an unknown previous declaration is not presented as a zero difference and confirming zero remains explicit',async t=>{
+ const b=fixture(t);b.start();await b.open();assert.match(b.el('ConfirmationPrevious').textContent,/ainda não informado/);assert.match(b.el('ConfirmationDifference').textContent,/não disponível sem um total anterior/);assert.equal(b.el('ConfirmationEquation').textContent,'R$\u00a00,00 + R$\u00a00,00 = R$\u00a00,00');
+ assert.equal(b.el('Confirm').disabled,true);assert.equal((await b.read('2026-10')).current_external_expenses_cents,null);const before=b.calls.length;
+ assert.equal(await b.el('Confirm').onclick(),false);assert.equal(b.calls.length,before);b.el('Confirmed').checked=true;b.el('Confirmed').onchange();assert.equal(await b.el('Confirm').onclick(),true);assert.equal((await b.read('2026-10')).current_external_expenses_cents,0);
+});
+
+test('invalid remaining amounts and a safe-integer sum overflow hide the confirmable total and cannot submit',async t=>{
+ const b=fixture(t,{manual:0});b.start();await b.open();b.create('Centavo detalhado','0,01');await b.submit();const before=b.calls.length;
+ for(const remaining of ['', '-1','10,123','90071992547409,91']){
+  b.input('Remainder',remaining);b.el('Confirmed').checked=true;b.el('Confirmed').onchange();assert.equal(b.el('ConfirmationPreview').dataset.valid,'false');assert.equal(b.el('ConfirmationEquation').textContent,'Total a conferir');assert.equal(b.el('Confirm').disabled,true);assert.equal(await b.el('Confirm').onclick(),false);assert.equal(b.calls.length,before);
+ }
+ assert.match(b.el('ConfirmationPreviewStatus').textContent,/soma.*excede o limite seguro/);b.input('Remainder','0');assert.equal(b.el('ConfirmationPreview').dataset.valid,'true');assert.equal(b.el('Confirmed').checked,false);assert.equal(b.el('Confirm').disabled,true);
+});
+
+test('confirmation preview and differences preserve every cent at safe-integer boundaries',async t=>{
+ for(const previous of [0,Number.MAX_SAFE_INTEGER]){
+  const b=fixture(t,{manual:previous});b.start();await b.open();b.input('Remainder',previous===0?'90071992547409,91':'0');assert.equal(b.el('ConfirmationPreview').dataset.valid,'true');
+  assert.match(b.el('ConfirmationDifference').textContent,/90\.071\.992\.547\.409,91/);assert.ok(b.el('ConfirmationDifference').textContent.startsWith(previous===0?'Diferença: + ':'Diferença: − '));
+  if(previous===0)assert.match(b.el('ConfirmationEquation').textContent,/= R\$\s*90\.071\.992\.547\.409,91$/);else assert.match(b.el('ConfirmationPrevious').textContent,/90\.071\.992\.547\.409,91/);
+  assert.equal(b.calls.length,1);assert.equal(b.el('Confirm').disabled,true);
+ }
+});
+
+test('explicit opening selects the dashboard competence while preserving a separate future editor and confirmation draft',async t=>{
+ const b=fixture(t);b.start();await b.open();b.el('Month').value='2026-11';await b.el('Month').onchange();b.create('Aluguel de novembro em edição','85,50');b.input('Due','2026-11-10');b.input('Remainder','25,50');b.input('Recharge','TECH_SUPPORT');
+ assert.equal(b.workspace.observe('2026-10'),true);assert.equal(b.el('Month').value,'2026-11','ordinary overview renders preserve the independent selection');
+ const before=b.calls.length;assert.equal(await b.workspace.open('2026-10'),true);assert.equal(b.el('Month').value,'2026-10');assert.equal(b.calls.length,before+1);await b.elements.get('businessMonthExpensesDetails').ontoggle();assert.equal(b.calls.length,before+1);
+ assert.equal(await b.workspace.open('2026-11'),true);assert.equal(b.el('Description').value,'Aluguel de novembro em edição');assert.equal(b.el('Amount').value,'85,50');assert.equal(b.el('Due').value,'2026-11-10');assert.equal(b.el('Remainder').value,'25,50');assert.equal(b.el('Recharge').value,'TECH_SUPPORT');assert.equal(b.el('Confirmed').checked,false);assert.match(b.el('ConfirmationPreviewStatus').textContent,/11\/2026/);assert.equal(b.calls.filter(call=>call.body).length,0);
+});
+
+test('explicit opening coalesces pending reads, ignores stale months and does not read twice after an opening failure',async t=>{
+ const b=fixture(t);b.start();let release;b.setApi((path,body,actual)=>path.endsWith('2026-10')?new Promise(resolve=>release=resolve):actual(path,body));
+ const first=b.workspace.open('2026-10'),second=b.workspace.open('2026-10');assert.equal(first,second);await b.elements.get('businessMonthExpensesDetails').ontoggle();assert.equal(b.calls.length,1);
+ assert.equal(await b.workspace.open('2026-11'),true);release(await b.read('2026-10'));assert.equal(await first,false);assert.equal(b.el('Month').value,'2026-11');assert.equal(b.calls.length,2);
+ b.setApi(async()=>{throw Error('PRIVATE_FAILURE');});assert.equal(await b.workspace.open('2026-12'),false);const failedCalls=b.calls.length;await b.elements.get('businessMonthExpensesDetails').ontoggle();assert.equal(b.calls.length,failedCalls);assert.doesNotMatch(b.el('Status').textContent,/PRIVATE_FAILURE/);
+ b.elements.get('businessMonthExpensesDetails').open=false;await b.elements.get('businessMonthExpensesDetails').ontoggle();b.setApi(null);assert.equal(await b.open(),true);assert.equal(b.calls.length,failedCalls+1);
+});
+
+test('explicit opening cannot redirect an in-flight mutation or restore data after stop',async t=>{
+ const b=fixture(t);b.start();await b.open();b.create('Aluguel','50,00');let release;b.setApi((path,body,actual)=>body?new Promise(resolve=>release=async()=>resolve(await actual(path,body))):actual(path,body));const saving=b.submit(),before=b.calls.length;
+ assert.equal(await b.workspace.open('2026-11'),false);assert.equal(b.el('Month').value,'2026-10');assert.equal(b.el('Description').value,'Aluguel');assert.equal(b.calls.length,before);await release();assert.equal(await saving,true);assert.equal((await b.read('2026-10')).items.length,1);assert.equal((await b.read('2026-11')).items.length,0);
+ b.workspace.stop();assert.equal(await b.workspace.open('2026-11'),false);assert.equal(b.calls.length,before);
+});
+
 for(const minify of [false,true])test(`the bundled browser expense editor saves and confirms real ledger responses (minify=${minify})`,async t=>{
  const result=await build({entryPoints:[fileURLToPath(new URL('../src/expense-ledger-view.mjs',import.meta.url))],bundle:true,write:false,format:'esm',platform:'browser',target:'es2022',minify});const module=await import('data:text/javascript;base64,'+Buffer.from(result.outputFiles[0].text).toString('base64'));
- const b=fixture(t,{script:module.EXPENSE_LEDGER_CLIENT});b.start();await b.open();b.create('Boleto internet','149,90');b.input('Category','BILL');assert.equal(await b.submit(),true);b.input('Remainder','0');b.el('Confirmed').checked=true;b.el('Confirmed').onchange();assert.equal(await b.el('Confirm').onclick(),true);assert.equal((await b.read('2026-10')).current_external_expenses_cents,14990);assert.match(b.el('Coverage').textContent,/149,90/);
+ const b=fixture(t,{script:module.EXPENSE_LEDGER_CLIENT});b.start();await b.workspace.open('2026-10');b.create('Boleto internet','149,90');b.input('Category','BILL');assert.equal(await b.submit(),true);b.input('Remainder','0');assert.equal(b.el('ConfirmationEquation').textContent,'R$\u00a0149,90 + R$\u00a00,00 = R$\u00a0149,90');b.create('Rascunho preservado','7,50');assert.equal(b.button('Informar pagamento').onclick(),false);assert.equal(b.el('Amount').value,'7,50');b.el('Confirmed').checked=true;b.el('Confirmed').onchange();assert.equal(await b.el('Confirm').onclick(),true);assert.equal((await b.read('2026-10')).current_external_expenses_cents,14990);assert.match(b.el('Coverage').textContent,/149,90/);assert.equal(b.el('Description').value,'Rascunho preservado');
 });

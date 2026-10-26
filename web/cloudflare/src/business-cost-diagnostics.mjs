@@ -9,6 +9,7 @@ import {projectVariantCatalogFailure} from '../../finance/src/variant-catalog-fr
 import {historicalCostPairDiagnosticsQueries,historicalCostPairDiagnosticsFromSnapshot,projectHistoricalCostPairDiagnostics,historicalCostPairDiagnosticsEvidenceFromSnapshot,projectHistoricalCostPairDiagnosticsEvidence,deriveHistoricalCostComposition} from './historical-cost-evidence.mjs';
 import {buildRecordedBusinessBalance,projectRecordedBusinessBalance} from './business-recorded-balance.mjs';
 import {readBackgroundCollectionDiagnostics,projectBackgroundCollectionDiagnostics} from './background-collection-diagnostics.mjs';
+import {projectBusinessMonthAuditScope} from './business-month-view-state.mjs';
 
 export class BusinessCostDiagnosticsError extends Error {constructor(code,status=503){super(code);this.status=status;}}
 const fail=(code,status=503)=>{throw new BusinessCostDiagnosticsError(code,status);};
@@ -117,6 +118,87 @@ export function projectBusinessCostDiagnosticsEvidenceV2(value,validators={}){
  }catch{return null;}
 }
 
+// v3 keeps the existing evidence intact and adds the identity of the exact
+// displayed publication and pricing snapshot. The background cohort describes
+// active work; it must never supply the publication identity below.
+// All dependencies are explicit because the browser embeds .toString(). When
+// supplied, expected.monthly has already passed projectBusinessMonth. A caller
+// may validate a response first, then attach it only after this context check.
+export function projectBusinessCostDiagnosticsEvidenceV3(value,validators={},expected=null){
+ const plain=row=>row!==null&&typeof row==='object'&&[Object.prototype,null].includes(Object.getPrototypeOf(row));
+ const read=(row,key)=>plain(row)?Object.getOwnPropertyDescriptor(row,key)?.value:undefined;
+ const exact=(row,keys)=>plain(row)&&Reflect.ownKeys(row).length===keys.length&&keys.every(key=>Object.hasOwn(Object.getOwnPropertyDescriptor(row,key)||{},'value'));
+ const array=(rows,max)=>Array.isArray(rows)&&Object.getPrototypeOf(rows)===Array.prototype&&rows.length<=max&&Reflect.ownKeys(rows).length===rows.length+1&&Array.from({length:rows.length},(_,i)=>Object.getOwnPropertyDescriptor(rows,String(i))).every(field=>field&&Object.hasOwn(field,'value'));
+ const int=(row,min=0,max=Number.MAX_SAFE_INTEGER)=>Number.isSafeInteger(row)&&!Object.is(row,-0)&&row>=min&&row<=max;
+ const id=(row,zero=false)=>typeof row==='string'&&(zero?/^(0|[1-9][0-9]{0,19})$/:/^[1-9][0-9]{0,19}$/).test(row);
+ const versionKeys=['bindings','costs','cost_rules','classifications','expenses','tax_policy'];
+ const coverageKeys=['orders','paid','completed','ongoing','cancelled','cancel_pending','unpaid','other','unknown','payment_covered','payment_missing','returns','returns_unknown'];
+ const sourceKeys=['finance_oldest_at','finance_latest_at','ads_at'];
+ try{
+  if(!exact(validators,['projectEvidenceV2','projectScope'])||!Object.values(validators).every(fn=>typeof fn==='function')||!exact(value,['schema','diagnostic','history','recorded_balance','background','display_source','audit_scope','versions'])||value.schema!=='business_cost_diagnostics_evidence_v3'||!['PUBLISHED','ACTIVE'].includes(value.display_source)||!exact(value.versions,versionKeys))return null;
+  const evidence=validators.projectEvidenceV2({schema:'business_cost_diagnostics_evidence_v2',diagnostic:value.diagnostic,history:value.history,recorded_balance:value.recorded_balance,background:value.background});if(!evidence)return null;
+  const diagnostic=evidence.diagnostic,versions=value.versions,summary=diagnostic.summary,totals=diagnostic.totals;
+  // A later read may change availability, but it must never change the
+  // arithmetic of a subtotal that this particular snapshot does expose.
+  const hasAmounts=summary.balance_cents!==null,amountFields=['balance_cents','before_production_cents','costs_after_payout_cents'];
+  if(amountFields.some(key=>(summary[key]!==null)!==hasAmounts)||hasAmounts!==(summary.state!=='WAITING')||summary.known_production_cents!==totals.known_production_cost_cents)return null;
+  if(hasAmounts){
+   const keys=['expected_repass_cents','known_production_cost_cents','invoice_tax_cents','ads_spend_cents','external_expenses_cents','recharge_addback_cents'];
+   if(!keys.every(key=>int(totals[key],key==='expected_repass_cents'?Number.MIN_SAFE_INTEGER:0))||diagnostic.status!=='COMPLETE'||diagnostic.coverage.payment_missing!==0||diagnostic.collection?.state==='BLOCKED'||['COLLECTING','PERIOD_LIMIT_REACHED','SOURCE_UNAVAILABLE','PAYMENT_INCOMPLETE','INVOICE_TAX_UNAVAILABLE','TAX_POLICY_REQUIRED','ADS_UNAVAILABLE','EXTERNAL_EXPENSES_REQUIRED','RECHARGE_TREATMENT_REQUIRED','ADJUSTMENT_UNAVAILABLE','ARITHMETIC_UNSAFE'].some(code=>diagnostic.pending.includes(code))||summary.pending.length!==diagnostic.pending.length||!summary.pending.every(code=>diagnostic.pending.includes(code)))return null;
+   const costs=BigInt(totals.known_production_cost_cents)+BigInt(totals.invoice_tax_cents)+BigInt(totals.ads_spend_cents)+BigInt(totals.external_expenses_cents),before=BigInt(totals.expected_repass_cents)+BigInt(totals.recharge_addback_cents)-costs+BigInt(totals.known_production_cost_cents);
+   if(BigInt(summary.before_production_cents)!==before||BigInt(summary.balance_cents)!==before-BigInt(totals.known_production_cost_cents)||BigInt(summary.costs_after_payout_cents)!==costs||summary.state!==(totals.net_estimate_cents!==null?'READY':summary.production_complete?'PROVISIONAL':'PARTIAL_COSTS'))return null;
+  }
+  if(totals.net_estimate_cents!==null&&(!hasAmounts||summary.state!=='READY'||!summary.production_complete||diagnostic.pending.length!==0||totals.net_estimate_cents!==summary.balance_cents))return null;
+  for(const key of ['bindings','costs'])if(!int(versions[key],1,2147483647))return null;
+  for(const key of ['cost_rules','classifications'])if(versions[key]!==null&&!int(versions[key],1,2147483647))return null;
+  if(!int(versions.expenses,0,2147483646)||versions.tax_policy!==null&&!int(versions.tax_policy,0,2147483647)||['bindings','costs','cost_rules','classifications'].some(key=>versions[key]!==diagnostic.versions.monthly[key]))return null;
+  let scope=null;
+  if(value.display_source==='PUBLISHED'){
+   scope=validators.projectScope(value.audit_scope);
+   if(!scope||diagnostic.status!=='COMPLETE'||scope.start_date!==diagnostic.start_date||scope.end_date!==diagnostic.end_date)return null;
+  }else if(value.audit_scope!==null)return null;
+  if(expected!==null){
+   if(!exact(expected,['monthly','audit_scope']))return null;
+   const monthly=expected.monthly,expenses=read(monthly,'expenses'),tax=read(monthly,'tax'),coverage=read(monthly,'coverage'),sources=read(monthly,'source_checked_at'),result=read(monthly,'result'),pending=read(result,'pending');
+   if(read(monthly,'schema')!=='business_month_v1'||!['month','start_date','end_date','status'].every(key=>read(monthly,key)===diagnostic[key])||!exact(expenses,['revision','external_expenses_cents','recharge_treatment','updated_at'])||!exact(coverage,coverageKeys)||!array(pending,20)||pending.some(code=>typeof code!=='string')||new Set(pending).size!==pending.length)return null;
+   const expectedVersions={bindings:read(monthly,'bindings_revision'),costs:read(monthly,'costs_revision'),cost_rules:read(monthly,'cost_rules_revision')??null,classifications:read(monthly,'classification_revision')??null,expenses:expenses.revision,tax_policy:read(tax,'policy_revision')??null};
+   if(versionKeys.some(key=>versions[key]!==expectedVersions[key])||coverageKeys.some(key=>coverage[key]!==diagnostic.coverage[key]))return null;
+   if(scope===null){if(expected.audit_scope!==null)return null;}
+   else{
+    const expectedScope=validators.projectScope(expected.audit_scope);
+    if(!expectedScope||JSON.stringify(scope)!==JSON.stringify(expectedScope))return null;
+   }
+   // The check time may advance while all source observations remain the
+   // same. Preserve every substantive pending condition, including a ledger
+   // draft that keeps the old aggregate amount and expense revision intact.
+   const relevant=rows=>rows.filter(code=>code!=='FINANCIAL_SOURCE_STALE').sort(),left=relevant(pending),right=relevant(diagnostic.pending);
+   if(left.length!==right.length||left.some((code,index)=>code!==right[index]))return null;
+   const ads=read(monthly,'ads'),expectedSources=sources===undefined?{finance_oldest_at:null,finance_latest_at:null,ads_at:read(ads,'fetched_at')??null}:sources;
+   if(!exact(expectedSources,sourceKeys)||sourceKeys.some(key=>expectedSources[key]!==diagnostic.source_checked_at[key]))return null;
+   const fields=['sales_cents','known_sales_cents','expected_repass_cents','known_expected_repass_cents','production_cost_cents','known_production_cost_cents','invoice_tax_cents','ads_adjustment_cents'];
+   if(fields.some(key=>read(monthly,key)!==diagnostic.totals[key])||diagnostic.totals.external_expenses_cents!==expenses.external_expenses_cents||diagnostic.totals.ads_spend_cents!==(read(ads,'status')==='AVAILABLE'?read(ads,'expense_cents'):null))return null;
+   const adjustment=read(monthly,'ads_adjustment_cents'),restore=adjustment===null||adjustment<0?null:adjustment===0||expenses.recharge_treatment==='TECH_SUPPORT'?0:expenses.recharge_treatment==='ADS_RECHARGE'?adjustment:null;
+   if(diagnostic.totals.recharge_addback_cents!==restore||diagnostic.summary.known_production_cents!==read(monthly,'known_production_cost_cents'))return null;
+   const unmapped=read(monthly,'unmapped_variants');if(!array(unmapped,3000))return null;
+   const pairs=new Map(),products=new Set();let missing=0n;
+   for(const row of unmapped){
+    if(!exact(row,['item_id','model_id','quantity'])||!id(row.item_id)||!id(row.model_id,true)||!int(row.quantity,1))return null;
+    const key=row.item_id+':'+row.model_id;if(pairs.has(key))return null;pairs.set(key,row.quantity);products.add(row.item_id);missing+=BigInt(row.quantity);
+   }
+   if(missing>BigInt(Number.MAX_SAFE_INTEGER)||diagnostic.truncation.variants_total!==pairs.size||diagnostic.truncation.products_total!==products.size||diagnostic.summary.production_coverage.pending_units!==Number(missing)||diagnostic.summary.production_coverage.pending_variants!==pairs.size||diagnostic.summary.production_coverage.pending_products!==products.size||diagnostic.products.some(product=>product.variants.some(variant=>pairs.get(product.item_id+':'+variant.model_id)!==variant.quantity)))return null;
+   const rows=read(read(monthly,'product_summary'),'products');let total=null,known=null;
+   if(rows!==undefined){
+    if(!array(rows,3000))return null;let units=0n;const seen=new Set();
+    for(const row of rows){const item=read(row,'item_id'),quantity=read(row,'quantity');if(!id(item)||!int(quantity,1)||seen.has(item))return null;seen.add(item);units+=BigInt(quantity);}
+    if(units>BigInt(Number.MAX_SAFE_INTEGER)||units<missing)return null;total=Number(units);known=Number(units-missing);
+   }
+   if(diagnostic.summary.production_coverage.total_units!==total||diagnostic.summary.production_coverage.known_units!==known||diagnostic.summary.production_complete!==(diagnostic.status==='COMPLETE'&&read(monthly,'production_cost_cents')!==null&&missing===0n))return null;
+  }
+  const projected={schema:'business_cost_diagnostics_evidence_v3',diagnostic,history:evidence.history,recorded_balance:evidence.recorded_balance,background:evidence.background,display_source:value.display_source,audit_scope:scope,versions:{...versions}};
+  return new TextEncoder().encode(JSON.stringify(projected)).byteLength<=262144?projected:null;
+ }catch{return null;}
+}
+
 export function buildBusinessCostDiagnostics(frame,context,{now=()=>Date.now()}={}){
  const value=projectBusinessMonth(frame),checkpoint=value&&buildBusinessCheckpoint(value);if(!value||!checkpoint)fail('BUSINESS_COST_DIAGNOSTICS_FRAME_INVALID');
  const diagnosedAt=epoch(now),summary=buildMonthlyFinancialSummary(value),{bindings,costs,rules,classifications,catalogs,reference,sourceDiagnostics=[]}=context;
@@ -166,18 +248,20 @@ export function buildBusinessCostDiagnostics(frame,context,{now=()=>Date.now()}=
 // difference rather than being silently mixed with the monthly amounts.
 async function readBusinessCostDiagnosticsSnapshot(env,input,{now=()=>Date.now(),evidence=false}={}){
  if(!input||typeof input!=='object'||Reflect.ownKeys(input).length!==1||!Object.hasOwn(Object.getOwnPropertyDescriptor(input,'month')||{},'value')||typeof input.month!=='string'||!/^\d{4}-(0[1-9]|1[0-2])$/.test(input.month))fail('BUSINESS_COST_DIAGNOSTICS_REQUEST_INVALID',400);
- const stamp=epoch(now),clock=()=>stamp*1000;let frame;
- try{frame=evidence===2?(await readBusinessMonthDisplay(env,{month:input.month},{now:clock})).display:await businessMonthWithCheckpoint(env,{operation:'read',month:input.month},{},{now:clock});}catch(error){if(error?.message==='BUSINESS_MONTH_NOT_FOUND')throw error;fail('BUSINESS_COST_DIAGNOSTICS_MONTH_UNAVAILABLE');}
+ const stamp=epoch(now),clock=()=>stamp*1000;let frame,display=null;
+ try{if(evidence===2||evidence===3){display=await readBusinessMonthDisplay(env,{month:input.month},{now:clock});frame=display.display;}else frame=await businessMonthWithCheckpoint(env,{operation:'read',month:input.month},{},{now:clock});}catch(error){if(error?.message==='BUSINESS_MONTH_NOT_FOUND')throw error;fail('BUSINESS_COST_DIAGNOSTICS_MONTH_UNAVAILABLE');}
  try{
   const db=env.ADMIN_DB,ids=[...new Set(frame.unmapped_variants.map(row=>row.item_id))].sort(compare).slice(0,90),allowed=new Set(ids),pairs=frame.unmapped_variants.filter(row=>allowed.has(row.item_id)),ruleQueries=costRuleSnapshotQueries(db,ids),classQueries=catalogClassificationQueries(db,ids,pairs),sourceIndex=2+ruleQueries.length+classQueries.length,historyQueries=evidence?historicalCostPairDiagnosticsQueries(db,input.month,pairs.map(({item_id,model_id})=>({item_id,model_id}))):[];
   const snapshot=await db.batch([db.prepare('SELECT revision,payload FROM variant_bindings_state WHERE id=1'),db.prepare('SELECT revision,payload FROM production_costs_state WHERE id=1'),...ruleQueries,...classQueries,db.prepare('SELECT item_id,diagnostic,checked_at,failure_count FROM catalog_classification_source_diagnostics WHERE item_id IN(SELECT value FROM json_each(?))').bind(JSON.stringify(ids)),...historyQueries]);
   const [bindingRow,costRow]=snapshot.slice(0,2).map(row=>row.results[0]),bindings={revision:bindingRow.revision,bindings:validateVariantBindings(JSON.parse(bindingRow.payload))},costs={revision:costRow.revision,values:validateProductionCosts(JSON.parse(costRow.payload))},ruleSnapshot=snapshot.slice(2,2+ruleQueries.length),ruleRow=ruleSnapshot[0].results[0],rules={revision:ruleRow.revision,values:validateCostRules(JSON.parse(ruleRow.payload))},classifications=catalogClassificationsFromSnapshot(snapshot.slice(2+ruleQueries.length,2+ruleQueries.length+classQueries.length)),reference=mergeCatalogCostReference(costRuleReferenceFromSnapshot(ruleSnapshot,{now:clock}),classifications);
   const diagnostic=buildBusinessCostDiagnostics(frame,{bindings,costs,rules,classifications,catalogs:ruleSnapshot.slice(1).flatMap(row=>row.results).filter(row=>Object.hasOwn(row,'catalog_fingerprint')&&Object.hasOwn(row,'payload')),reference,sourceDiagnostics:snapshot[sourceIndex].results},{now:clock});
   if(!evidence)return diagnostic;
-  const history=(evidence===2?historicalCostPairDiagnosticsEvidenceFromSnapshot:historicalCostPairDiagnosticsFromSnapshot)(snapshot.slice(sourceIndex+1,sourceIndex+1+historyQueries.length),{now:clock}),included=new Set(diagnostic.products.flatMap(product=>product.variants.map(variant=>product.item_id+':'+variant.model_id)));
+  const history=(evidence===2||evidence===3?historicalCostPairDiagnosticsEvidenceFromSnapshot:historicalCostPairDiagnosticsFromSnapshot)(snapshot.slice(sourceIndex+1,sourceIndex+1+historyQueries.length),{now:clock}),included=new Set(diagnostic.products.flatMap(product=>product.variants.map(variant=>product.item_id+':'+variant.model_id)));
   history.pairs=history.pairs.filter(pair=>included.has(pair.item_id+':'+pair.model_id));history.truncation={truncated:diagnostic.truncation.variants_total>history.pairs.length,pairs_total:diagnostic.truncation.variants_total,pairs_included:history.pairs.length};
   let recorded_balance=buildRecordedBusinessBalance(frame);if(!diagnostic.consistent)recorded_balance={...recorded_balance,status:'UNAVAILABLE',amount_cents:null};
-  const result=evidence===2?projectBusinessCostDiagnosticsEvidenceV2({schema:'business_cost_diagnostics_evidence_v2',diagnostic,history,recorded_balance,background:await readBackgroundCollectionDiagnostics(env,{month:input.month},{now:clock})},{projectDiagnostic:projectBusinessCostDiagnostics,projectHistory:value=>projectHistoricalCostPairDiagnosticsEvidence(value,{deriveComposition:deriveHistoricalCostComposition,projectLegacy:projectHistoricalCostPairDiagnostics}),projectBalance:projectRecordedBusinessBalance,projectBackground:projectBackgroundCollectionDiagnostics}):projectBusinessCostDiagnosticsEvidence({schema:'business_cost_diagnostics_evidence_v1',diagnostic,history,recorded_balance},{projectDiagnostic:projectBusinessCostDiagnostics,projectHistory:projectHistoricalCostPairDiagnostics,projectBalance:projectRecordedBusinessBalance});
+  const projectV2=value=>projectBusinessCostDiagnosticsEvidenceV2(value,{projectDiagnostic:projectBusinessCostDiagnostics,projectHistory:value=>projectHistoricalCostPairDiagnosticsEvidence(value,{deriveComposition:deriveHistoricalCostComposition,projectLegacy:projectHistoricalCostPairDiagnostics}),projectBalance:projectRecordedBusinessBalance,projectBackground:projectBackgroundCollectionDiagnostics});
+  let result=evidence===2||evidence===3?projectV2({schema:'business_cost_diagnostics_evidence_v2',diagnostic,history,recorded_balance,background:await readBackgroundCollectionDiagnostics(env,{month:input.month},{now:clock})}):projectBusinessCostDiagnosticsEvidence({schema:'business_cost_diagnostics_evidence_v1',diagnostic,history,recorded_balance},{projectDiagnostic:projectBusinessCostDiagnostics,projectHistory:projectHistoricalCostPairDiagnostics,projectBalance:projectRecordedBusinessBalance});
+  if(result&&evidence===3)result=projectBusinessCostDiagnosticsEvidenceV3({...result,schema:'business_cost_diagnostics_evidence_v3',display_source:display.display_source,audit_scope:display.audit_scope,versions:{bindings:frame.bindings_revision,costs:frame.costs_revision,cost_rules:frame.cost_rules_revision??null,classifications:frame.classification_revision??null,expenses:frame.expenses.revision,tax_policy:frame.tax?.policy_revision??null}},{projectEvidenceV2:projectV2,projectScope:projectBusinessMonthAuditScope},{monthly:frame,audit_scope:display.audit_scope});
   if(!result)fail('BUSINESS_COST_DIAGNOSTICS_RESULT_INVALID');return result;
  }catch(error){if(error instanceof BusinessCostDiagnosticsError)throw error;fail('BUSINESS_COST_DIAGNOSTICS_STORAGE_INVALID');}
 }
@@ -186,3 +270,5 @@ export async function readBusinessCostDiagnostics(env,input,options={}){return r
 export async function readBusinessCostDiagnosticsEvidence(env,input,options={}){return readBusinessCostDiagnosticsSnapshot(env,input,{...options,evidence:true});}
 
 export async function readBusinessCostDiagnosticsEvidenceV2(env,input,options={}){return readBusinessCostDiagnosticsSnapshot(env,input,{...options,evidence:2});}
+
+export async function readBusinessCostDiagnosticsEvidenceV3(env,input,options={}){return readBusinessCostDiagnosticsSnapshot(env,input,{...options,evidence:3});}

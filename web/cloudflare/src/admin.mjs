@@ -41,7 +41,7 @@ import {PRODUCT_REGISTRY_SCHEMA,ProductRegistryError,readProductRegistry,runProd
 import {PRODUCTION_COST_PERIODS_SCHEMA,ProductionCostPeriodsError,productionCostPeriods,captureProductionCostMonth} from './production-cost-periods.mjs';
 import {PRODUCTION_COST_PERIODS_CSS,productionCostPeriodsBody,PRODUCTION_COST_PERIODS_CLIENT} from './production-cost-periods-view.mjs';
 import {SAVED_CATALOG_CSS,savedCatalogBody,SAVED_CATALOG_CLIENT} from './saved-catalog-view.mjs';
-import {BusinessCostDiagnosticsError,readBusinessCostDiagnostics,readBusinessCostDiagnosticsEvidence,readBusinessCostDiagnosticsEvidenceV2} from './business-cost-diagnostics.mjs';
+import {BusinessCostDiagnosticsError,readBusinessCostDiagnostics,readBusinessCostDiagnosticsEvidence,readBusinessCostDiagnosticsEvidenceV2,readBusinessCostDiagnosticsEvidenceV3} from './business-cost-diagnostics.mjs';
 import {HISTORICAL_COST_EVIDENCE_SCHEMA,HistoricalCostEvidenceError,readHistoricalCostEvidence,syncHistoricalCostEvidence} from './historical-cost-evidence.mjs';
 import {OPERATOR_COST_CORRECTIONS_SCHEMA,OperatorCostCorrectionError,applyConfirmedOperatorCostCorrections} from './operator-cost-corrections.mjs';
 import {BACKGROUND_LANE_SCHEMA,HistoricalCostOrchestrationError,acquireBackgroundLane,finishBackgroundLane,readHistoricalCostCandidates} from './historical-cost-orchestration.mjs';
@@ -250,10 +250,10 @@ async function scheduledWork(env,services,now=()=>Date.now()){
 async function workspaceAuthFetch(request,env){return handleWorkspaceAuth(request,env,{renderLogin:loginPage,renderLogout:current=>page('<main class="login card"><div class="brand"><span class="brand-mark">B</span><div>BrazaCommerce<small>Sua conta</small></div></div><h1>Sair da sua conta?</h1><p class="muted">Você precisará entrar novamente para acessar o painel.</p><form action="/logout" method="post"><input type="hidden" name="csrf" value="'+current.csrf+'"><button type="submit">Sair</button></form><p><a href="'+(current.role==='owner'?'/admin':'/dashboard')+'">Continuar no painel</a></p></main>')});}
 function costDiagnosticsSelection(url,{recovery=false}={}){
  const entries=[...url.searchParams],seen=new Set();let month,evidence=false;
- for(const [key,value] of entries){assert(!seen.has(key)&&(['evidence',...(recovery?[]:['month'])].includes(key)),'BUSINESS_COST_DIAGNOSTICS_REQUEST_INVALID');seen.add(key);if(key==='evidence'){assert(['history-v1','history-v2'].includes(value),'BUSINESS_COST_DIAGNOSTICS_REQUEST_INVALID');evidence=value;}else month=value;}
+ for(const [key,value] of entries){assert(!seen.has(key)&&(['evidence',...(recovery?[]:['month'])].includes(key)),'BUSINESS_COST_DIAGNOSTICS_REQUEST_INVALID');seen.add(key);if(key==='evidence'){assert(['history-v1','history-v2','history-v3'].includes(value),'BUSINESS_COST_DIAGNOSTICS_REQUEST_INVALID');evidence=value;}else month=value;}
  assert(recovery||seen.has('month'),'BUSINESS_COST_DIAGNOSTICS_REQUEST_INVALID');return {month,evidence};
 }
-async function stableCostDiagnostics(env,month,{evidence=false}={}){const read=evidence==='history-v2'?readBusinessCostDiagnosticsEvidenceV2:evidence?readBusinessCostDiagnosticsEvidence:readBusinessCostDiagnostics;let value=await read(env,{month});if(!(evidence?value.diagnostic:value).consistent)value=await read(env,{month});return value;}
+async function stableCostDiagnostics(env,month,{evidence=false}={}){const read=evidence==='history-v3'?readBusinessCostDiagnosticsEvidenceV3:evidence==='history-v2'?readBusinessCostDiagnosticsEvidenceV2:evidence?readBusinessCostDiagnosticsEvidence:readBusinessCostDiagnostics;let value=await read(env,{month});if(!(evidence?value.diagnostic:value).consistent)value=await read(env,{month});return value;}
 function historicalRecoveryCandidates(diagnostic){return diagnostic.products.filter(product=>product.variants.some(variant=>['NO_CATALOG','MODEL_NOT_IN_CATALOG'].includes(variant.reason))).map(product=>product.item_id);}
 async function recoverMonthlyCosts(env,month,services,{evidence=false}={}){
  let snapshot;const read=async()=>{snapshot=await stableCostDiagnostics(env,month,{evidence});return evidence?snapshot.diagnostic:snapshot;};
