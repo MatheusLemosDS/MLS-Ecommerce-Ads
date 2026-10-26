@@ -30,10 +30,24 @@ test('all present correction anchors must agree, and different confirmed rules p
  input.assignments[1].rule_id='another-rule';const result=costRuleProductLearning(input,'101',source);assert.equal(result.status,'CONFLICT');assert.equal(result.rule_id,null);assert.equal(result.reason,'MULTIPLE_CONFIRMED_RULES');assert.equal(result.managed,false);
 });
 
-test('a missing catalogue or removed corrected model stays pending instead of guessing a type from another item',()=>{
+test('a missing catalogue or removed corrected model with no independent type evidence stays pending',()=>{
  const input=values([assigned()]);let result=costRuleProductLearning(input,'101',null);assert.equal(result.status,'PENDING');assert.equal(result.reason,'CATALOG_UNAVAILABLE');assert.equal(result.managed,false);
- const source=catalog();source.variants.shift();result=costRuleProductLearning(input,'101',source);assert.equal(result.reason,'CORRECTED_MODEL_NOT_FOUND');assert.equal(result.managed,false);
+ const source=catalog('Produto Verde');source.variants.shift();result=costRuleProductLearning(input,'101',source);assert.equal(result.reason,'CORRECTED_MODEL_NOT_FOUND');assert.equal(result.managed,false);
  assert.equal(costRuleProductLearning(input,'102',catalog('Produto antigo')).status,'NONE');
+});
+
+test('removing the only corrected size does not suppress independent recognition of the remaining child sizes',()=>{
+ const input=values([assigned('6','16')]),source=catalog();
+ assert.equal(costRuleProductLearning(input,'101',source).status,'LEARNED');
+ source.variants.pop();const before=structuredClone({input,source});
+ assert.deepEqual(costRuleProductLearning(input,'101',source),{rule_id:'camiseta-infantil',status:'RECOGNIZED',reason:'CONFIRMED_CHILD_TYPE_AND_SIZES',evidence_models:[],managed:true});
+ assert.deepEqual({input,source},before,'the removed correction remains historical evidence for its exact model ID');
+ assert.equal(costRuleProductLearning(input,'101',source,{stale:true}).reason,'CATALOG_STALE');
+ for(const title of ['Produto Verde','Camiseta Kit Casal','Calça Infantil'])assert.notEqual(costRuleProductLearning(input,'101',{...source,product_name:title}).status,'RECOGNIZED');
+ for(const sizes of [['4','18'],['4','P'],[]])assert.notEqual(costRuleProductLearning(input,'101',catalog('Camiseta Verde',sizes)).status,'RECOGNIZED');
+ const unknown=catalog();unknown.variants.pop();unknown.variants[0].attributes[1].name='Código';assert.notEqual(costRuleProductLearning(input,'101',unknown).status,'RECOGNIZED');
+ const other=values([assigned('6','16',{rule_id:'different-rule'})]);assert.notEqual(costRuleProductLearning(other,'101',source).status,'RECOGNIZED');
+ const disabled=values([assigned('6','16')]);disabled.rules[0].enabled=false;assert.notEqual(costRuleProductLearning(disabled,'101',source).status,'RECOGNIZED');
 });
 
 test('stale coherent evidence remains managed but cannot authorize a learned cost; disabled and removed rules stay pending',()=>{

@@ -15,10 +15,15 @@ O ciclo de 26/10 voltou a atingir a cota. A correção `a24e1ea`, publicada nos 
 Workers pela PR #2, distingue o limite do banco e evita uma atualização
 redundante na fila de classificação. O operador informou a ativação do Workers
 Paid; a recuperação autenticada e o consumo real são verificações separadas.
-O incremento a partir de `a24e1ea` reduz a regravação de checkpoints financeiros
-e quantidades mensais de produção, além de aplicar a espera progressiva aos
-erros estruturados da fonte. As medições locais e seus limites estão em
+O incremento `5322d70`, publicado nos três Workers pela PR #3, reduz a regravação
+de checkpoints financeiros e quantidades mensais de produção, além de aplicar
+a espera progressiva aos erros estruturados da fonte. As medições locais e seus limites estão em
 [eficiência da coleta](COLETA_MENSAL_E_RETOMADA.md#eficiência-da-coleta--26102026).
+O pedido seguinte do operador prioriza [despesas operacionais por competência
+e atualização de variações](DESPESAS_OPERACIONAIS_E_VARIACOES.md): aluguel,
+funcionários, boletos, parcelas e recuperação de custos após remover um tamanho.
+O total anterior de despesas é preservado e sua transição exige conferência
+explícita para evitar dupla contagem.
 O diagnóstico e os limites dessa correção estão em
 [abertura do painel](ABERTURA_DO_PAINEL.md#limite-diário-do-d1--26102026).
 A atualização da ponte Hermes no Droplet permanece uma etapa separada; ela não
@@ -52,7 +57,9 @@ testes locais.
 | Abertura rápida da Visão geral | Implementada nesta entrega | O último período completo tem cópias próprias das fontes e permanece visível durante uma nova coleta ou falha. Custos são recalculados localmente; datas de Financeiro e Ads são preservadas. |
 | Conferências vinculadas ao resumo exibido | Implementadas nesta continuidade | A interface confere revisão da publicação e identidade/revisão de todas as fontes, descarta respostas de outra atualização e suspende conferências durante consultas manuais sem publicação. O contrato anterior permanece disponível para abas antigas. |
 | Pausa e retomada durante o encerramento | Corrigidas nesta continuidade | O estado final e a auditoria respeitam a política confirmada durante a gravação. A retomada mantém sua agenda; uma lease substituída não é liberada pela execução anterior. |
-| Eficiência da coleta e dos custos | Implementada após `a24e1ea`, com regressões locais | Checkpoints idênticos de pagamento e quantidades mensais não são regravados; falhas persistentes da fonte seguem esperas de 5/10/20/30 minutos. A medição por banco em produção permanece pendente; os testes não projetam a fatura. |
+| Eficiência da coleta e dos custos | Publicada em `5322d70` pela PR #3 | Checkpoints idênticos de pagamento e quantidades mensais não são regravados; falhas persistentes da fonte seguem esperas de 5/10/20/30 minutos. A medição por banco em produção permanece pendente; os testes não projetam a fatura. |
+| Despesas operacionais e contas a pagar | Implementadas após `5322d70`, com regressões locais | Cadastro discriminado de aluguel, funcionários, boletos e outras despesas; parcelas mensais finitas, vencimento e pagamento informado. A competência determina o custo e a conferência explícita impede duplicar o total agregado anterior. Não executa pagamentos. |
+| Variações removidas do catálogo | Correção com reprodução local | Preserva a correção do modelo histórico, permite reconhecer tamanhos atuais compatíveis e encerra somente a revisão de catálogo efetivamente conferida. O produto aberto pode consultar suas variações na Shopee; a validação do anúncio real exige acesso autenticado. |
 | Diagnóstico da conta | Versionado em `main` (`6f9ce23`); ativação a conferir | Calcula TACOS, saldo disponível antes de Ads, cobertura dos custos e próximas tarefas a partir do mês validado. Dados ausentes bloqueiam os indicadores correspondentes. Não autoriza investimento. |
 | Hermes com financeiro da loja | Publicado (`11f45ce`); atualização da ponte pendente | Cada análise preserva o mês financeiro, custos, DAS, anúncios, pendências e até três próximas ações. A ponte antiga não recebe tarefas novas. Exige atualização no Droplet e observação de uma execução real com a nova referência. |
 | Alterar anúncios, campanhas e promoções | Ainda não implementado para execução comercial | As proteções de somente leitura e Ads/PROMO `LOCKED` continuam vigentes. A coleta autônoma não cria permissão de escrita na Shopee. |
@@ -179,13 +186,14 @@ conciliação financeira segue em paralelo. Ainda faltam armazenamento
 centralizado das artes, regras para composições especiais, consumo real de
 material e calibração da saída física; não há impressão autônoma na máquina.
 
-1. Publicar as otimizações de checkpoint, quantidades mensais e espera após
-   falhas. Confirmar o acesso autenticado após a mudança de plano e comparar
+1. Conferir no painel autenticado o cadastro de despesas e a correção de variações
+   solicitados pelo operador. Confirmar o acesso após a mudança de plano, conferir a
+   camiseta infantil após a remoção do tamanho 16 e comparar
    consumo D1 por banco com o avanço da coleta. Conferir cache inicial, cron sem
    aba aberta, pausa, concorrência, falhas e horários reais; registrar
    observações de produção separadamente dos testes locais.
-2. Usar as próximas tarefas do diagnóstico para fechar pendências de custo,
-   despesas, pagamento, devolução e atualização. Conciliar recebimentos e valores
+2. Conferir as despesas por competência e usar as próximas tarefas do diagnóstico
+   para fechar pendências de custo, pagamento, devolução e atualização. Conciliar recebimentos e valores
    efetivos de reembolso antes de chamar o resultado de realizado.
 3. Documentar e validar os contratos oficiais de estoque e campanhas, incluindo
    permissões de escrita por ação e limites próprios de investimento em Ads.
