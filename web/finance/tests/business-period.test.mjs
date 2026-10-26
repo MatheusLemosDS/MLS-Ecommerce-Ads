@@ -85,6 +85,15 @@ async function fixture(statuses=defaults){
 }
 const snapshot=f=>({runs:f.db.db.prepare('SELECT * FROM finance_business_period_runs ORDER BY run_id').all(),orders:f.db.db.prepare('SELECT * FROM finance_business_period_orders ORDER BY run_id,order_hash').all(),cursors:f.db.db.prepare('SELECT * FROM finance_business_period_cursors ORDER BY run_id,cursor_hash').all(),cache:f.db.db.prepare('SELECT * FROM finance_business_period_payment_cache ORDER BY run_id,order_hash').all()});
 async function finish(f){let frame=await f.start();for(let steps=0;frame.status==='RUNNING'&&steps<202;steps++){frame=await f.run({operation:'step',run_id:frame.run_id});if(frame.diagnostic)break;}return frame;}
+function countPaymentCacheWrites(f){
+ const counts={inserted:0,deleted:0},prepare=f.db.prepare.bind(f.db),changes=()=>f.db.db.prepare('SELECT total_changes() AS n').get().n;
+ f.db.prepare=sql=>{
+  const statement=prepare(sql),kind=sql.startsWith('INSERT INTO finance_business_period_payment_cache')?'inserted':sql.startsWith('DELETE FROM finance_business_period_payment_cache')?'deleted':null;
+  if(kind){const run=statement.run.bind(statement);statement.run=async()=>{const before=changes(),result=await run();counts[kind]+=changes()-before;return result;};}
+  return statement;
+ };
+ return counts;
+}
 
 test('start/read is private, scoped and read-only; invalid periods and bindings fail before provider calls',async()=>{
  const f=await fixture(),before=await f.store.readTokens(),frame=await f.start();assert.ok(projectBusinessPeriodFrame(frame));assert.equal(frame.status,'RUNNING');assert.equal(frame.coverage.orders,0);assert.equal(frame.expected_repass_raw,'0');assert.equal(f.calls.length,0);assert.deepEqual(await f.run({operation:'read',run_id:frame.run_id}),frame);
@@ -138,6 +147,59 @@ test('a rate failure after nineteen valid Payments checkpoints privately and ret
  const cached=snapshot(f).cache;for(const secret of ['PRIVATE_BUSINESS_ORDER',key,access,refresh])assert.ok(!JSON.stringify(snapshot(f)).includes(secret));
  f.clock.time+=30000;delete f.state.paymentFailures[19];const completed=await f.run({operation:'step',run_id:job.run_id});assert.equal(completed.status,'COMPLETE');assert.equal(completed.coverage.payment_covered,20);assert.equal(completed.sales_base_raw,'2000');assert.equal(snapshot(f).cache.length,0);assert.equal(f.calls.filter(request=>new URL(request.url).pathname===payment).length,21);
  for(const record of cached)assert.equal(snapshot(f).orders.find(row=>row.order_hash===record.order_hash).checked_at,record.checked_at);assert.equal(completed.source_checked_at.oldest_at,job.checked_at);
+});
+
+test('identical payment checkpoints preserve zero or nineteen cached records without rewriting rows',async t=>{
+ for(const orderCount of [1,20]){
+  const f=await fixture(Array(orderCount).fill('COMPLETED'));t.after(()=>f.db.db.close());const job=await f.start(),failedIndex=orderCount-1;f.state.paymentFailures[failedIndex]=429;
+  const first=await f.run({operation:'step',run_id:job.run_id}),before=snapshot(f);assert.equal(before.cache.length,failedIndex);
+  const writes=countPaymentCacheWrites(f);f.clock.time+=30000;
+  const repeated=await f.run({operation:'step',run_id:job.run_id}),after=snapshot(f);
+  assert.equal(writes.inserted+writes.deleted,0,'an unchanged '+failedIndex+'-payment cache must not be deleted and reinserted');assert.deepEqual(after.cache,before.cache);assert.deepEqual(after.orders,before.orders);assert.deepEqual(after.cursors,before.cursors);
+  assert.equal(repeated.diagnostic,'BUSINESS_PERIOD_RATE_LIMIT');assert.equal(repeated.revision,first.revision);assert.equal(repeated.pages_read,0);assert.equal(repeated.coverage.orders,0);assert.equal(after.runs[0].lease_owner,null);assert.equal(after.runs[0].lease_until,null);assert.equal(after.runs[0].checked_at,f.now()/1000);
+  f.clock.time+=30000;delete f.state.paymentFailures[failedIndex];const completed=await f.run({operation:'step',run_id:job.run_id});assert.equal(completed.status,'COMPLETE');assert.equal(completed.coverage.payment_covered,orderCount);assert.equal(snapshot(f).cache.length,0);
+  for(const record of before.cache)assert.equal(snapshot(f).orders.find(row=>row.order_hash===record.order_hash).checked_at,record.checked_at);
+ }
+});
+
+test('a checkpoint with nineteen records still replaces a changed payment and preserves the other observation times',async t=>{
+ const f=await fixture(Array(20).fill('COMPLETED'));t.after(()=>f.db.db.close());const job=await f.start();f.state.paymentFailures[19]=429;
+ const first=await f.run({operation:'step',run_id:job.run_id}),before=snapshot(f),changedHash=createHash('sha256').update(serial(0)).digest('hex');assert.equal(before.cache.length,19);
+ f.state.itemLists[0]=[{item_id:100,model_id:99,model_quantity_purchased:1}];f.clock.time+=30000;const writes=countPaymentCacheWrites(f);
+ const changed=await f.run({operation:'step',run_id:job.run_id}),after=snapshot(f);assert.equal(changed.diagnostic,'BUSINESS_PERIOD_RATE_LIMIT');assert.equal(changed.revision,first.revision+1);assert.equal(after.cache.length,19);assert.deepEqual(writes,{inserted:19,deleted:19});
+ const replacement=after.cache.find(row=>row.order_hash===changedHash);assert.notEqual(replacement.source_hash,before.cache.find(row=>row.order_hash===changedHash).source_hash);assert.equal(replacement.checked_at,f.now()/1000);assert.deepEqual(JSON.parse(replacement.items),[{item_id:'100',model_id:'99',quantity:1}]);
+ assert.deepEqual(after.cache.filter(row=>row.order_hash!==changedHash),before.cache.filter(row=>row.order_hash!==changedHash));assert.deepEqual(after.orders,before.orders);assert.deepEqual(after.cursors,before.cursors);
+ f.clock.time+=30000;delete f.state.paymentFailures[19];const completed=await f.run({operation:'step',run_id:job.run_id});assert.equal(completed.status,'COMPLETE');assert.equal(completed.coverage.payment_covered,20);assert.ok(completed.items.some(row=>row.model_id==='99'));assert.equal(snapshot(f).cache.length,0);
+});
+
+test('a failed checkpoint removes every cached payment whose detail bucket is no longer paid',async t=>{
+ const f=await fixture(Array(20).fill('COMPLETED'));t.after(()=>f.db.db.close());const job=await f.start();f.state.paymentFailures[19]=429;
+ await f.run({operation:'step',run_id:job.run_id});const before=snapshot(f);assert.equal(before.cache.length,19);
+ f.state.statuses.fill('CANCELLED',0,19);f.clock.time+=30000;const writes=countPaymentCacheWrites(f),failed=await f.run({operation:'step',run_id:job.run_id}),after=snapshot(f);
+ assert.equal(failed.diagnostic,'BUSINESS_PERIOD_RATE_LIMIT');assert.deepEqual(writes,{inserted:0,deleted:19});assert.equal(after.cache.length,0);assert.deepEqual(after.orders,before.orders);assert.deepEqual(after.cursors,before.cursors);
+ f.clock.time+=30000;delete f.state.paymentFailures[19];const completed=await f.run({operation:'step',run_id:job.run_id});assert.equal(completed.status,'COMPLETE');assert.equal(completed.coverage.cancelled,19);assert.equal(completed.coverage.payment_covered,1);assert.equal(completed.sales_base_raw,'100');
+});
+
+test('a checkpoint that loses ownership cannot overwrite the winner with an unchanged or changed cache',async t=>{
+ for(const changed of [false,true]){
+  const f=await fixture(Array(20).fill('COMPLETED'));t.after(()=>f.db.db.close());const job=await f.start();f.state.paymentFailures[19]=429;await f.run({operation:'step',run_id:job.run_id});f.clock.time+=30000;
+  if(changed)f.state.itemLists[0]=[{item_id:100,model_id:99,model_quantity_purchased:1}];
+  const writes=countPaymentCacheWrites(f),prepare=f.db.prepare.bind(f.db),batch=f.db.batch.bind(f.db),checkpoint=Symbol('failure-checkpoint'),winner=crypto.randomUUID();let injected=false,winnerSnapshot;
+  f.db.prepare=sql=>{const statement=prepare(sql);if(sql.startsWith('UPDATE finance_business_period_runs SET revision=revision+?'))statement[checkpoint]=true;return statement;};
+  f.db.batch=statements=>{
+   if(!injected&&statements.some(statement=>statement[checkpoint])){injected=true;f.db.db.prepare('UPDATE finance_business_period_runs SET revision=revision+1,lease_owner=?,lease_until=? WHERE run_id=?').run(winner,f.now()/1000+45,job.run_id);winnerSnapshot=snapshot(f);}
+   return batch(statements);
+  };
+  const result=await f.run({operation:'step',run_id:job.run_id});assert.equal(injected,true);assert.equal(result.diagnostic,'BUSINESS_PERIOD_CONFLICT');assert.deepEqual(snapshot(f),winnerSnapshot);assert.deepEqual(writes,{inserted:0,deleted:0});assert.equal(snapshot(f).runs[0].lease_owner,winner);
+ }
+});
+
+test('a failed checkpoint state update rolls back changed cache records and their evidence together',async t=>{
+ const f=await fixture(Array(20).fill('COMPLETED'));t.after(()=>f.db.db.close());const job=await f.start();f.state.paymentFailures[19]=429;await f.run({operation:'step',run_id:job.run_id});f.clock.time+=30000;
+ f.state.itemLists[0]=[{item_id:100,model_id:99,model_quantity_purchased:1}];const before=snapshot(f),evidence=()=>f.db.db.prepare('SELECT * FROM finance_business_order_evidence ORDER BY run_id,order_hash').all(),beforeEvidence=evidence(),prepare=f.db.prepare.bind(f.db);let injected=false;
+ f.db.prepare=sql=>{const statement=prepare(sql);if(sql.startsWith('UPDATE finance_business_period_runs SET revision=revision+?'))statement.run=async()=>{injected=true;throw Error('fixture checkpoint update failure');};return statement;};
+ await assert.rejects(f.run({operation:'step',run_id:job.run_id}),error=>error.code==='FINANCE_BUSINESS_STORAGE_UNAVAILABLE');assert.equal(injected,true);
+ const after=snapshot(f);assert.deepEqual(after.cache,before.cache);assert.deepEqual(after.orders,before.orders);assert.deepEqual(after.cursors,before.cursors);assert.deepEqual(evidence(),beforeEvidence);assert.equal(after.runs[0].revision,before.runs[0].revision);assert.equal(after.runs[0].checked_at,before.runs[0].checked_at);assert.ok(after.runs[0].lease_owner);assert.equal(after.runs[0].lease_until,f.now()/1000+45);
 });
 
 test('transient failures in ongoing orders retain retry diagnostics while generic authorization errors never request a token reset',async()=>{
