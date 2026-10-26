@@ -258,6 +258,31 @@ test('provider failures store safe errors and back off by five, ten, twenty and 
  const good=source({time:()=>time});const recovered=await run(env,good,{now:()=>time});assert.equal(recovered.status,'COMPLETE');assert.equal(recovered.state.failure_count,0);assert.equal(recovered.state.last_error,null);
 });
 
+for(const [diagnostic,errorCode] of [['BUSINESS_PERIOD_RATE_LIMIT','BUSINESS_SYNC_SOURCE_RATE_LIMIT'],['BUSINESS_PERIOD_TIMEOUT','BUSINESS_SYNC_SOURCE_TIMEOUT'],['BUSINESS_PERIOD_UPSTREAM_UNAVAILABLE','BUSINESS_SYNC_COLLECTION_UNAVAILABLE']])test(`${diagnostic} backs off repeatedly and recovers without restarting the partial cohort or forgiving source age`,async t=>{
+ const env=environment();t.after(()=>env.ADMIN_DB.db.close());let time=clock,failed=true;
+ const services=source({running:true,time:()=>time}),provider=services.getFinanceBusinessPeriod;
+ services.getFinanceBusinessPeriod=async(...args)=>{
+  const value=await provider(...args);value.checked_at=Math.floor(time/1000);
+  if(failed)value.diagnostic=diagnostic;else{value.status='COMPLETE';value.pages_read=1;}
+  return value;
+ };
+ for(const [index,delay] of [300,600,1200,1800,1800].entries()){
+  const result=await run(env,services,{now:()=>time}),before=services.calls.finance.length;
+  assert.equal(result.status,'ERROR');assert.equal(result.state.failure_count,index+1);assert.equal(result.state.last_error,errorCode);assert.equal(result.state.next_run_at,Math.floor(time/1000)+delay);assert.equal(result.finance_steps,1);assert.equal(result.ads_reads,1);
+  assert.equal(result.state.summary.collection.state,'RETRY_WAIT');assert.equal(result.state.summary.collection.code,diagnostic);assert.ok(result.state.summary.pending.includes('SOURCE_UNAVAILABLE'));assert.equal(result.state.summary.net_estimate_cents,null);assert.equal(result.state.last_success_at,null);assert.equal(result.state.lease_expires_at,null);
+  assert.equal((await run(env,services,{now:()=>time+(delay-1)*1000})).status,'NOT_DUE');assert.equal(services.calls.finance.length,before);assert.equal(services.calls.ads.length,before);
+  assert.equal(rows(env,'business_sync_audit').length,index+1);time=result.state.next_run_at*1000;
+ }
+ assert.equal(services.calls.finance.filter(call=>call.operation==='start').length,1);
+ const originalRun=[...services.frames.keys()][0];failed=false;
+ const resumed=await run(env,services,{now:()=>time,maxSteps:1});
+ assert.equal(resumed.status,'RUNNING');assert.equal(resumed.state.failure_count,0);assert.equal(resumed.state.last_error,null);assert.equal(resumed.state.next_run_at,Math.floor(time/1000)+60);assert.deepEqual(services.calls.finance.at(-1),{operation:'step',run_id:originalRun});assert.ok(resumed.state.summary.pending.includes('FINANCIAL_SOURCE_STALE'));assert.equal(resumed.state.last_success_at,null);
+ time=resumed.state.next_run_at*1000;const completedOld=await run(env,services,{now:()=>time});
+ assert.equal(completedOld.state.summary.status,'COMPLETE');assert.equal(completedOld.status,'PARTIAL');assert.equal(completedOld.state.failure_count,0);assert.equal(completedOld.state.last_error,null);assert.equal(completedOld.state.next_run_at,Math.floor(time/1000)+60);assert.equal(completedOld.state.summary.net_estimate_cents,null);assert.equal(completedOld.state.last_success_at,null);
+ time=completedOld.state.next_run_at*1000;const refreshed=await run(env,services,{now:()=>time});
+ assert.equal(refreshed.status,'COMPLETE');assert.equal(refreshed.state.failure_count,0);assert.equal(refreshed.state.last_error,null);assert.equal(refreshed.state.next_run_at,Math.floor(time/1000)+300);assert.ok(!refreshed.state.summary.pending.includes('FINANCIAL_SOURCE_STALE'));assert.equal(refreshed.state.last_success_at,Math.floor(time/1000));
+});
+
 test('partial Ads never become a zero total or a liquidated profit and are retried',async()=>{
  const env=environment(),services=source({missing:'2026-10-03'}),result=await run(env,services);
  assert.equal(result.status,'PARTIAL');assert.equal(result.state.summary.ads_status,'PARTIAL');assert.equal(result.state.summary.ads_covered_days,23);assert.equal(result.state.summary.ads_total_days,24);assert.ok(result.state.summary.pending.includes('ADS_UNAVAILABLE'));assert.ok(result.state.summary.pending.includes('EXTERNAL_EXPENSES_REQUIRED'));assert.equal(result.state.summary.net_estimate_cents,null);assert.equal(result.state.summary.net_profit_cents,null);assert.equal(result.state.last_success_at,null);assert.equal(result.state.failure_count,1);assert.equal(result.state.last_error,'BUSINESS_SYNC_ADS_INCOMPLETE');

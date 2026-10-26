@@ -6,6 +6,7 @@ import {SCHEMA} from '../src/admin.mjs';
 import {COST_DEFAULTS} from '../src/production-costs.mjs';
 import {readCostRules,syncCostRuleCatalog} from '../src/cost-rules.mjs';
 import {projectProductionOrdersFrame} from '../../finance/src/production-orders-frame.mjs';
+import {projectBusinessPeriodFrame} from '../../finance/src/business-period-frame.mjs';
 import {businessMonth} from '../src/business-month.mjs';
 import {productionCostPeriods,captureProductionCostMonth,PRODUCTION_COST_PERIODS_SCHEMA} from '../src/production-cost-periods.mjs';
 
@@ -34,10 +35,22 @@ async function fixture(t,{orders=[order()],time=base,bindings=null,costs={}}={})
  return {env,state,services,now,frame,values,child,read:month=>run('read',month),sync:month=>run('sync',month)};
 }
 
-async function seedMonth(f){
+async function seedMonth(f,{expectedCost=3180}={}){
  const stamp=Math.floor(f.state.time/1000),calls=[];
  const services={getFinanceBusinessPeriod:async(_,input)=>{calls.push(clone(input));return {schema:'finance_business_period_v1',run_id:'11111111-1111-4111-8111-'+String(calls.length).padStart(12,'0'),revision:2,status:'COMPLETE',start_date:input.start_date,end_date:input.end_date,cutoff_at:stamp-2,checked_at:stamp,currency:'BRL',monetary_unit:'UNCONFIRMED',pages_read:1,duplicate_orders:0,coverage:{orders:1,paid:1,completed:1,ongoing:0,cancelled:0,cancel_pending:0,unpaid:0,other:0,unknown:0,payment_covered:1,payment_missing:0,returns:0,returns_unknown:0},known_sales_base_raw:'20',sales_base_raw:'20',known_expected_repass_raw:'15',expected_repass_raw:'15',known_ads_adjustment_raw:'0',ads_adjustment_raw:'0',invoice_tax:{schema:'store_invoice_tax_v1',rate_bps:200,basis:'PAYMENT_GOODS_VALUE_PER_ORDER_ESTIMATE',rounding:'HALF_UP_PER_ORDER',covered_orders:1,unavailable_orders:0,known_base_raw:'20',known_tax_raw:'0.4'},items:[{item_id:'201',model_id:'0',quantity:1}],diagnostic:null,basis:'CREATE_TIME_PAID_ORDER_ESTIMATE_NOT_SETTLED'};}};
- let frame=await businessMonth(f.env,{operation:'start',month:'2026-10'},services,{now:f.now});for(let count=0;frame.status==='RUNNING'&&count<4;count++)frame=await businessMonth(f.env,{operation:'step',month:'2026-10'},services,{now:f.now});assert.equal(frame.status,'COMPLETE');assert.equal(frame.production_cost_cents,3180);return {frame,calls};
+ let frame=await businessMonth(f.env,{operation:'start',month:'2026-10'},services,{now:f.now});for(let count=0;frame.status==='RUNNING'&&count<4;count++)frame=await businessMonth(f.env,{operation:'step',month:'2026-10'},services,{now:f.now});assert.equal(frame.status,'COMPLETE');assert.equal(frame.production_cost_cents,expectedCost);return {frame,calls};
+}
+
+const changes=f=>f.env.ADMIN_DB.db.prepare('SELECT total_changes() AS n').get().n;
+const captured=f=>f.env.ADMIN_DB.db.prepare('SELECT * FROM production_cost_month_quantities WHERE month=?').get('2026-10');
+function reviseMonthSources(f,mutate){
+ const db=f.env.ADMIN_DB.db,run=JSON.parse(db.prepare('SELECT payload FROM business_month_runs WHERE month=?').get('2026-10').payload);
+ for(const row of db.prepare('SELECT slot_index,payload FROM business_month_frames WHERE month=? ORDER BY slot_index').all('2026-10')){
+  const frame=JSON.parse(row.payload);frame.revision++;mutate(frame);assert.ok(projectBusinessPeriodFrame(frame),'changed source must remain a valid Finance frame');
+  run.slots[row.slot_index].frame.revision=frame.revision;run.slots[row.slot_index].end_date=frame.end_date;db.prepare('UPDATE business_month_frames SET revision=?,payload=? WHERE month=? AND slot_index=?').run(frame.revision,JSON.stringify(frame),'2026-10',row.slot_index);
+ }
+ run.end_date=run.slots.at(-1).end_date;
+ db.prepare('UPDATE business_month_runs SET revision=revision+1,payload=? WHERE month=?').run(JSON.stringify(run),'2026-10');
 }
 
 test('read uses only local state and distinguishes unavailable production from a real zero',async t=>{
@@ -136,6 +149,42 @@ test('an existing monthly cohort is read locally and is not replaced by the curr
  const f=await fixture(t);await seedMonth(f);
  const read=await f.read();assert.equal(read.monthly.state,'COMPLETE');assert.equal(read.monthly.production_cost_cents,3180);assert.equal(read.monthly.coverage.eligible_orders,2);assert.equal(f.state.calls.length,0);assert.deepEqual(read.monthly.days,[]);
  const sync=await f.sync();assert.equal(sync.weekly.production_cost_cents,1590);assert.equal(sync.monthly.production_cost_cents,3180);assert.equal(f.state.calls.length,1);
+});
+
+test('unchanged monthly captures and reads write no rows and preserve the full single, kit and custom-cost response',async t=>{
+ const f=await fixture(t);await seedMonth(f);
+ reviseMonthSources(f,frame=>{frame.items=[{item_id:'201',model_id:'0',quantity:1},{item_id:'204',model_id:'0',quantity:2},{item_id:'205',model_id:'0',quantity:1}];});
+ const first=await f.read(),saved=captured(f);assert.equal(first.monthly.production_cost_cents,28100);assert.equal(first.monthly.coverage.total_units,8);
+ const prepare=f.env.ADMIN_DB.prepare.bind(f.env.ADMIN_DB);let captures=0;
+ f.env.ADMIN_DB.prepare=sql=>{if(sql.startsWith('INSERT INTO production_cost_month_quantities('))captures++;return prepare(sql);};
+ const before=changes(f);
+ for(let index=0;index<5;index++)assert.equal(await captureProductionCostMonth(f.env,'2026-10',{now:f.now}),true);
+ for(let index=0;index<5;index++)assert.deepEqual(await f.read(),first);
+ assert.equal(captures,15,'both before/after read captures and all background captures still execute');assert.equal(changes(f)-before,0);assert.deepEqual(captured(f),saved);assert.equal(f.state.calls.length,0);
+});
+
+test('a newer monthly source and changed quantities at the same source time still persist, while older sources cannot replace them',async t=>{
+ const f=await fixture(t);await seedMonth(f);assert.equal(await captureProductionCostMonth(f.env,'2026-10',{now:f.now}),true);const initial=captured(f);
+ reviseMonthSources(f,frame=>{frame.cutoff_at++;});let before=changes(f);
+ assert.equal(await captureProductionCostMonth(f.env,'2026-10',{now:f.now}),true);assert.equal(changes(f)-before,1);const newer=captured(f);assert.equal(newer.source_checked_at,initial.source_checked_at+1);assert.deepEqual(JSON.parse(newer.payload).items,JSON.parse(initial.payload).items);
+ reviseMonthSources(f,frame=>{frame.items[0].quantity=2;});before=changes(f);
+ assert.equal(await captureProductionCostMonth(f.env,'2026-10',{now:f.now}),true);assert.equal(changes(f)-before,1);const changed=captured(f);assert.equal(changed.source_checked_at,newer.source_checked_at);assert.deepEqual(JSON.parse(changed.payload).items,[{item_id:'201',model_id:'0',quantity:4}]);assert.equal((await f.read()).monthly.production_cost_cents,6360);
+ reviseMonthSources(f,frame=>{frame.cutoff_at-=2;frame.items[0].quantity=9;});before=changes(f);
+ assert.equal(await captureProductionCostMonth(f.env,'2026-10',{now:f.now}),true);assert.equal(changes(f)-before,0);assert.deepEqual(captured(f),changed);
+});
+
+test('a completed month-end cohort remains unchanged across the month boundary and never supplies a zero for the empty next month',async t=>{
+ const f=await fixture(t,{time:Date.parse('2026-10-31T12:00:00Z')});await seedMonth(f,{expectedCost:4770});const first=await f.read();assert.equal(first.monthly.production_cost_cents,4770);assert.equal(first.monthly.end_date,'2026-10-31');const saved=captured(f);
+ f.state.time=Date.parse('2026-11-01T12:00:00Z');const before=changes(f),closed=await f.read('2026-10');assert.equal(changes(f)-before,0);assert.deepEqual(captured(f),saved);assert.equal(closed.monthly.end_date,'2026-10-31');assert.equal(closed.monthly.source_end_date,'2026-10-31');assert.equal(closed.monthly.known_production_cost_cents,4770);assert.equal(closed.monthly.production_cost_cents,null);assert.ok(closed.monthly.pending.includes('SOURCE_STALE'));
+ const empty=await f.read('2026-11');assert.equal(empty.monthly.state,'UNAVAILABLE');assert.equal(empty.monthly.production_cost_cents,null);assert.equal(empty.monthly.known_production_cost_cents,null);assert.ok(empty.monthly.pending.includes('SOURCE_MISSING'));assert.equal(f.env.ADMIN_DB.db.prepare('SELECT COUNT(*) AS n FROM production_cost_month_quantities WHERE month=?').get('2026-11').n,0);assert.deepEqual(captured(f),saved);
+});
+
+test('a later complete end date advances the saved cohort and a narrower one cannot replace it even with a newer source time',async t=>{
+ const f=await fixture(t);await seedMonth(f);await captureProductionCostMonth(f.env,'2026-10',{now:f.now});f.state.time+=86400000;
+ reviseMonthSources(f,frame=>{if(frame.end_date==='2026-10-28')frame.end_date='2026-10-29';frame.cutoff_at=Math.floor(f.state.time/1000)-2;frame.checked_at=Math.floor(f.state.time/1000);});let before=changes(f);
+ assert.equal(await captureProductionCostMonth(f.env,'2026-10',{now:f.now}),true);assert.equal(changes(f)-before,1);const extended=captured(f);assert.equal(extended.end_date,'2026-10-29');assert.equal((await f.read()).monthly.production_cost_cents,3180);
+ reviseMonthSources(f,frame=>{if(frame.end_date==='2026-10-29')frame.end_date='2026-10-28';frame.cutoff_at++;frame.items[0].quantity=9;});before=changes(f);
+ assert.equal(await captureProductionCostMonth(f.env,'2026-10',{now:f.now}),true);assert.equal(changes(f)-before,0);assert.deepEqual(captured(f),extended);
 });
 
 test('captured complete monthly quantities survive the next-day RUNNING reset without appearing complete through the new day',async t=>{
