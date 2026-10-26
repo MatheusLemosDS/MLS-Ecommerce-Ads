@@ -8,6 +8,7 @@ import {COST_RULE_SCHEMA,costRuleSnapshotQueries,costRuleReferenceFromSnapshot,m
 import {catalogClassificationQueries,catalogClassificationsFromSnapshot} from './catalog-classification.mjs';
 import {BUSINESS_MONTH_PUBLICATION_SCHEMA,completedBusinessMonthPublicationStatements,saveCompletedBusinessMonth,readCompletedBusinessMonth} from './business-month-publication.mjs';
 import {BUSINESS_MONTH_ADS_HISTORY_SCHEMA,businessMonthAdsHistoryQueries,businessMonthAdsHistoryStatements} from './business-month-ads-history.mjs';
+import {EXPENSE_LEDGER_SCHEMA} from './expense-ledger.mjs';
 
 export class BusinessMonthError extends Error {
  constructor(code,status=400,diagnostic=null){super(code);this.status=status;if(diagnostic!==null)this.diagnostic=Object.freeze({...diagnostic});}
@@ -26,6 +27,7 @@ export function businessMonthClientFrame(frame,contract='business-month-v1'){
  return legacy;
 }
 export const BUSINESS_MONTH_SCHEMA=[
+ ...EXPENSE_LEDGER_SCHEMA,
  ...BUSINESS_MONTH_PUBLICATION_SCHEMA,
  ...BUSINESS_MONTH_ADS_HISTORY_SCHEMA,
  ...TAX_POLICY_SCHEMA,
@@ -249,9 +251,9 @@ export async function readBusinessMonthAdsState(env,month,{now=()=>Date.now()}={
 async function businessMonthSaveExpenses(db,input,actor,stamp){
  if(!Number.isSafeInteger(input.revision)||Object.is(input.revision,-0)||input.revision<0||input.revision>=2147483646||!Number.isSafeInteger(input.external_expenses_cents)||Object.is(input.external_expenses_cents,-0)||input.external_expenses_cents<0||!['UNCONFIRMED','ADS_RECHARGE','TECH_SUPPORT'].includes(input.recharge_treatment)||typeof actor!=='string'||actor.length<1||actor.length>256)businessMonthFail('BUSINESS_MONTH_EXPENSES_INVALID');
  const time=new Date(stamp*1000).toISOString();
- const mutation=input.revision===0?db.prepare('INSERT OR IGNORE INTO business_month_expenses(month,revision,external_expenses_cents,recharge_treatment,updated_at) VALUES(?,1,?,?,?)').bind(input.month,input.external_expenses_cents,input.recharge_treatment,time):db.prepare('UPDATE business_month_expenses SET revision=revision+1,external_expenses_cents=?,recharge_treatment=?,updated_at=? WHERE month=? AND revision=?').bind(input.external_expenses_cents,input.recharge_treatment,time,input.month,input.revision);
+ const mutation=input.revision===0?db.prepare('INSERT OR IGNORE INTO business_month_expenses(month,revision,external_expenses_cents,recharge_treatment,updated_at) SELECT ?,1,?,?,? WHERE NOT EXISTS (SELECT 1 FROM business_expense_ledger_months WHERE month=?)').bind(input.month,input.external_expenses_cents,input.recharge_treatment,time,input.month):db.prepare('UPDATE business_month_expenses SET revision=revision+1,external_expenses_cents=?,recharge_treatment=?,updated_at=? WHERE month=? AND revision=? AND NOT EXISTS (SELECT 1 FROM business_expense_ledger_months WHERE month=?)').bind(input.external_expenses_cents,input.recharge_treatment,time,input.month,input.revision,input.month);
  const results=await db.batch([mutation,db.prepare('INSERT INTO business_month_expenses_audit(month,revision,external_expenses_cents,recharge_treatment,actor,created_at) SELECT month,revision,external_expenses_cents,recharge_treatment,?,updated_at FROM business_month_expenses WHERE changes()=1 AND month=? AND revision=? AND external_expenses_cents=? AND recharge_treatment=? AND updated_at=?').bind(actor,input.month,input.revision+1,input.external_expenses_cents,input.recharge_treatment,time)]);
- if(results[0].meta.changes!==1)businessMonthFail('BUSINESS_MONTH_EXPENSES_CHANGED_RELOAD',409);
+ if(results[0].meta.changes!==1){if(await db.prepare('SELECT 1 AS present FROM business_expense_ledger_months WHERE month=?').bind(input.month).first())businessMonthFail('BUSINESS_MONTH_EXPENSES_MANAGED',409);businessMonthFail('BUSINESS_MONTH_EXPENSES_CHANGED_RELOAD',409);}
  if(results[1].meta.changes!==1)businessMonthFail('BUSINESS_MONTH_STORAGE_INVALID',503);
 }
 
@@ -353,7 +355,7 @@ async function businessMonthBundle(db,month,range,stamp,observed){
  const rows=await db.batch([
   db.prepare('SELECT revision,payload,updated_at FROM variant_bindings_state WHERE id=1'),
   db.prepare('SELECT revision,payload,updated_at FROM production_costs_state WHERE id=1'),
-  db.prepare('SELECT revision,external_expenses_cents,recharge_treatment,updated_at FROM business_month_expenses WHERE month=?').bind(month),
+  db.prepare('SELECT saved.revision,saved.external_expenses_cents,saved.recharge_treatment,saved.updated_at,ledger.mode AS ledger_mode FROM (SELECT ? AS month) AS selected LEFT JOIN business_month_expenses AS saved ON saved.month=selected.month LEFT JOIN business_expense_ledger_months AS ledger ON ledger.month=selected.month').bind(month),
   db.prepare('SELECT payload,updated_at FROM business_month_ads WHERE month=?').bind(month),
   ...ruleQueries,...classificationQueries,
   ...businessMonthAdsHistoryQueries(db,month,range),
@@ -361,11 +363,13 @@ async function businessMonthBundle(db,month,range,stamp,observed){
   db.prepare('SELECT revision,payload,updated_at FROM business_tax_policy_state WHERE year=?').bind(year),
   db.prepare('SELECT revision FROM business_tax_policy_audit WHERE year=? LIMIT 1').bind(year),
  ]);
- let bindings,costs,expense,taxPolicy,ads=null,adsFresh=false;
+ let bindings,costs,expense,taxPolicy,ads=null,adsFresh=false,expensesDraft=false;
  try{
   const b=rows[0].results[0],c=rows[1].results[0];if(!b||!c||!Number.isSafeInteger(b.revision)||b.revision<1||!Number.isSafeInteger(c.revision)||c.revision<1)throw Error();
   bindings={revision:b.revision,bindings:validateVariantBindings(JSON.parse(b.payload))};costs={revision:c.revision,values:validateProductionCosts(JSON.parse(c.payload))};
-  expense=rows[2].results[0]||{revision:0,external_expenses_cents:null,recharge_treatment:'UNCONFIRMED',updated_at:null};
+  const expenseRow=rows[2].results[0];expensesDraft=expenseRow?.ledger_mode==='DRAFT';
+  if(expenseRow?.ledger_mode!==null&&expenseRow?.ledger_mode!==undefined&&!['DRAFT','CONFIRMED'].includes(expenseRow.ledger_mode))throw Error();
+  expense=expenseRow?.revision!==null&&expenseRow?.revision!==undefined?{revision:expenseRow.revision,external_expenses_cents:expenseRow.external_expenses_cents,recharge_treatment:expenseRow.recharge_treatment,updated_at:expenseRow.updated_at}:{revision:0,external_expenses_cents:null,recharge_treatment:'UNCONFIRMED',updated_at:null};
   let observedAds=businessMonthAdsRead(rows[3].results[0],rows.at(-3).results[0],range,stamp);
   const retained=rows[3].results[0]?JSON.parse(rows[3].results[0].payload):null;
   if(rows.at(-4).results[0]&&!(retained?.status==='AVAILABLE'&&retained.start_date===range.start_date&&retained.end_date===range.end_date))observedAds=businessMonthAdsRead(rows.at(-4).results[0],rows.at(-3).results[0],range,stamp);
@@ -396,7 +400,7 @@ async function businessMonthBundle(db,month,range,stamp,observed){
  try{for(let index=0;index<items.length;index+=1000){const ref=productionCostReference({status:'AVAILABLE',rows:items.slice(index,index+1000)},bindings,costs,automaticCosts);variantReferences.push(...ref.variants);productionKnown+=BigInt(ref.known_subset_cents);if(ref.total_cents===null)productionComplete=false;for(const row of ref.variants)if(row.unit_cost_cents===null)unmapped.push({item_id:row.item_id,model_id:row.model_id,quantity:row.quantity});}}catch{productionComplete=false;invalidQuantity=true;}
  const knownProduction=businessMonthSafe(productionKnown),amountsSafe=[knownSales,knownPayout,knownAdjustment,knownProduction].every(value=>value!==null)&&!invalidQuantity;
  const sales=complete&&coverage.payment_missing===0?knownSales:null,payout=complete&&coverage.payment_missing===0?knownPayout:null,tax=complete?knownTax:null,adjustment=complete&&coverage.payment_missing===0?knownAdjustment:null,production=complete&&productionComplete?knownProduction:null;
- if(production===null)pending.push('PRODUCTION_COST_INCOMPLETE');if(tax===null)pending.push('INVOICE_TAX_UNAVAILABLE');if(!adsFresh)pending.push('ADS_UNAVAILABLE');if(expense.external_expenses_cents===null)pending.push('EXTERNAL_EXPENSES_REQUIRED');if(adjustment===null||adjustment<0)pending.push('ADJUSTMENT_UNAVAILABLE');else if(adjustment>0&&expense.recharge_treatment==='UNCONFIRMED')pending.push('RECHARGE_TREATMENT_REQUIRED');if(!amountsSafe)pending.push('ARITHMETIC_UNSAFE');
+ if(production===null)pending.push('PRODUCTION_COST_INCOMPLETE');if(tax===null)pending.push('INVOICE_TAX_UNAVAILABLE');if(!adsFresh)pending.push('ADS_UNAVAILABLE');if(expense.external_expenses_cents===null||expensesDraft)pending.push('EXTERNAL_EXPENSES_REQUIRED');if(adjustment===null||adjustment<0)pending.push('ADJUSTMENT_UNAVAILABLE');else if(adjustment>0&&expense.recharge_treatment==='UNCONFIRMED')pending.push('RECHARGE_TREATMENT_REQUIRED');if(!amountsSafe)pending.push('ARITHMETIC_UNSAFE');
  if(taxPolicy.status==='PENDING')pending.push('TAX_POLICY_REQUIRED');
  // Legacy frames only bound their observations by the import's start/end.
  // A recent final page must never make an earlier page appear freshly read.

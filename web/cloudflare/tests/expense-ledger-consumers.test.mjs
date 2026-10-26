@@ -1,0 +1,53 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {completeWorkspaceFrame,workspaceStamp} from './monthly-workspace-browser-fixture.mjs';
+import {projectBusinessMonth,businessMonthClientFrame} from '../src/business-month.mjs';
+import {buildMonthlyFinancialSummary} from '../src/business-month-summary.mjs';
+import {buildRecordedBusinessBalance} from '../src/business-recorded-balance.mjs';
+import {buildAccountDiagnosis} from '../src/account-diagnosis.mjs';
+import {buildBusinessCheckpoint} from '../src/business-checkpoint.mjs';
+import {buildHermesFinancialContext} from '../src/hermes-financial-context.mjs';
+
+test('an unfinished expense breakdown blocks monetary decisions while preserving the previous declaration and its revision',()=>{
+ const saved=completeWorkspaceFrame({review:false});
+ saved.expenses={...saved.expenses,revision:7,external_expenses_cents:10000};
+ saved.result.net_estimate_cents-=10000;
+ saved.result.net_margin_bps=Number(BigInt(saved.result.net_estimate_cents)*10000n/BigInt(saved.sales_cents));
+ assert.ok(projectBusinessMonth(saved));
+ assert.equal(buildMonthlyFinancialSummary(saved).state,'READY');
+ assert.equal(buildRecordedBusinessBalance(saved).status,'AVAILABLE');
+ const draft={...saved,result:{...saved.result,net_estimate_cents:null,net_margin_bps:null,pending:['EXTERNAL_EXPENSES_REQUIRED']}};
+ assert.ok(projectBusinessMonth(draft),'a retained amount is not a declaration that the new list is complete');
+ for(const contract of ['business-month-v1','business-month-v2']){
+  const frame=businessMonthClientFrame(draft,contract);
+  assert.deepEqual(frame.expenses,saved.expenses);
+  assert.equal(frame.expenses.revision,7);
+  assert.equal(frame.result.net_estimate_cents,null);
+  const summary=buildMonthlyFinancialSummary(frame);
+  assert.equal(summary.state,'WAITING');
+  assert.equal(summary.balance_cents,null);
+  assert.equal(summary.before_production_cents,null);
+  const balance=buildRecordedBusinessBalance(frame);
+  assert.equal(balance.status,'UNAVAILABLE');
+  assert.equal(balance.amount_cents,null);
+  const diagnosis=buildAccountDiagnosis(frame);
+  assert.equal(diagnosis.status,'BLOCKED');
+  assert.equal(diagnosis.metrics.available_before_ads_cents,null);
+  assert.equal(diagnosis.metrics.net_estimate_cents,null);
+  assert.ok(diagnosis.tasks.some(row=>row.code==='DECLARE_EXTERNAL_EXPENSES'));
+  const checkpoint=buildBusinessCheckpoint(frame);
+  assert.equal(checkpoint.status,'PENDING');
+  assert.equal(checkpoint.versions.expenses,7);
+  assert.equal(checkpoint.lines.find(row=>row.code==='OTHER_EXPENSES').amount_cents,10000);
+  assert.equal(checkpoint.result.expected_net_cents,null);
+  assert.equal(checkpoint.result.realized_net_cents,null);
+  const context=buildHermesFinancialContext(frame,{analysisDate:'2026-10-25',capturedAt:workspaceStamp});
+  assert.equal(context.available,true);
+  assert.equal(context.monthly.summary.state,'WAITING');
+  assert.equal(context.monthly.totals.external_expenses_cents,10000);
+  assert.equal(context.monthly.totals.net_estimate_cents,null);
+  assert.ok(context.monthly.top_actions.some(row=>row.code==='DECLARE_EXTERNAL_EXPENSES'));
+  assert.equal(context.monthly.execution,'READ_ONLY');
+ }
+ assert.equal(saved.result.net_estimate_cents,215013,'the previous confirmed snapshot is not mutated');
+});

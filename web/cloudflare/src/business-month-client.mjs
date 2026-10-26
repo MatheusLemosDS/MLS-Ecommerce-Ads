@@ -1,3 +1,4 @@
+import {EXPENSE_LEDGER_CLIENT} from './expense-ledger-view.mjs';
 import {ESCROW_RELEASES_CLIENT} from './escrow-releases-view.mjs';
 import {BUSINESS_RECONCILIATION_CLIENT} from './business-reconciliation-view.mjs';
 import {projectBusinessMonth} from './business-month.mjs';
@@ -481,6 +482,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
   el('ProductPrevious').disabled=productPage<=1;el('ProductNext').disabled=productPage>=pages;
  }
  function render(){
+  try{globalThis.brazaExpenseLedger?.observe(month);}catch{}
   globalThis.brazaAutomationWorkspace?.render(frame?buildAccountDiagnosis(frame):null);drawCheckpoint();
   if(!frame){
    for(const key of ['Sales','Ads','Roas']){el(key).textContent=busy?'Consultando':'Pendente';el(key+'Card').dataset.status='pending';}el('NetLabel').textContent='Resultado líquido previsto';el('Net').textContent='Em apuração';el('NetHelp').textContent='O resultado aparece após conferir os pedidos, anúncios e custos do mês.';el('NetCard').dataset.status='pending';el('Margin').textContent='';el('Coverage').replaceChildren();el('Waterfall').replaceChildren();el('Readiness').replaceChildren();el('Pending').hidden=true;el('Badge').textContent=collectionRecovery?.waiting&&!paused&&!document.hidden?'Aguardando retomada automática':busy?'Consultando':collectionFailure?'Consulta interrompida':'Aguardando consulta';drawCostOverview(null);drawTaxAndExpenses();drawProducts();drawWorkspaceCollection();controls();return;
@@ -780,13 +782,14 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
  }
  async function start(options={}){
   if(started)return false;if(typeof options.api!=='function'||!el('Select'))return false;
-  api=options.api;try{globalThis.brazaReconciliation?.start({api});globalThis.brazaEscrowReleases?.start({api});}catch{}syncVariants=options.syncVariants;onCatalogChanged=options.onCatalogChanged;bootstrapPhase='READY';bootstrapCompleted=true;started=true;
+  api=options.api;try{globalThis.brazaExpenseLedger?.start({api,onChanged:async selected=>{if(started&&selected===month)return refreshCosts();}});globalThis.brazaReconciliation?.start({api});globalThis.brazaEscrowReleases?.start({api});}catch{}syncVariants=options.syncVariants;onCatalogChanged=options.onCatalogChanged;bootstrapPhase='READY';bootstrapCompleted=true;started=true;
   let selected;try{const params=new URLSearchParams(globalThis.location?.search||'');selected=params.getAll('month').length===1?params.get('month'):null;}catch{}
   el('Select').max=today().slice(0,7);el('Select').value=validMonth(selected)?selected:bootstrapPrepared&&validMonth(el('Select').value)?el('Select').value:today().slice(0,7);
   el('Refresh').onclick=()=>frame?.status==='COMPLETE'&&!paused&&!collectionRecovery?.waiting?refreshCosts():refresh();el('SourceRefresh').onclick=requestSalesUpdate;el('Select').onchange=()=>readWorkspaceView();
   el('Previous').onclick=()=>{const basis=validMonth(el('Select').value)?el('Select').value:today().slice(0,7),date=new Date(basis+'-01T12:00:00Z');date.setUTCMonth(date.getUTCMonth()-1);el('Select').value=date.toISOString().slice(0,7);readWorkspaceView();};
   el('Pause').onclick=()=>{paused=true;clearTimeout(timer);timer=null;el('Pause').disabled=true;status(busy?'A consulta será pausada após a resposta em andamento.':'Consulta pausada. Use Continuar consulta para retomar.');render();};
   el('ExpensesForm').onsubmit=event=>{event.preventDefault();saveExpenses();};el('ExpensesValue').oninput=expenseChanged;el('Recharge').onchange=expenseChanged;
+  el('OpenExpenses').onclick=()=>{el('ExpensesDetails').open=true;el('ExpensesDetails').scrollIntoView?.({behavior:'smooth',block:'start'});return globalThis.brazaExpenseLedger?.refresh();};
   el('ExpensesZero').onclick=()=>saveExpenses({zero:true});el('ExpensesReload').onclick=()=>{dirty=false;editSequence++;fillExpenses({force:true});render();schedule();scheduleCatalog();};el('Identify').onclick=identify;
   el('CostCheck').onclick=()=>checkCostDiagnostic();el('CostRecover').onclick=()=>checkCostDiagnostic({recover:true});el('CostCopy').onclick=copyCostDiagnostic;
   el('CheckpointDetails').ontoggle=()=>{if(el('CheckpointDetails').open)loadCheckpointHistory();};
@@ -796,7 +799,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
   document.addEventListener('visibilitychange',()=>{if(document.hidden){clearTimeout(timer);timer=null;clearTimeout(catalogTimer);catalogTimer=null;}else{schedule();scheduleCatalog();}});
   manualCollection=false;return readWorkspaceView();
  }
- function stop(){try{globalThis.brazaReconciliation?.stop();globalThis.brazaEscrowReleases?.stop();}catch{}started=false;viewRequest++;viewPromise=null;priorityPromise=null;manualCollection=false;resetCostDiagnostic();catalogRequest++;catalogBusy=false;clearTimeout(catalogTimer);catalogTimer=null;paused=true;resumeOnVisible=false;collectionRecovery=null;generation++;checkpointHistoryRequest++;checkpointHistoryBusy=false;busy=false;adsBusy=false;clearTimeout(timer);timer=null;controls();}
+ function stop(){try{globalThis.brazaExpenseLedger?.stop();globalThis.brazaReconciliation?.stop();globalThis.brazaEscrowReleases?.stop();}catch{}started=false;viewRequest++;viewPromise=null;priorityPromise=null;manualCollection=false;resetCostDiagnostic();catalogRequest++;catalogBusy=false;clearTimeout(catalogTimer);catalogTimer=null;paused=true;resumeOnVisible=false;collectionRecovery=null;generation++;checkpointHistoryRequest++;checkpointHistoryBusy=false;busy=false;adsBusy=false;clearTimeout(timer);timer=null;controls();}
  globalThis.brazaMonthDashboard={clientContract,prepare,bootstrapState,start,refresh,refreshCosts,stop,supportsCatalogQueue:catalogFeature,syncCatalogCandidates,refreshCatalog:()=>{catalogNeedsRead=true;return updateCatalog();},catalogMetadata:item=>catalogProducts.get(item)||null};
 })();
-`+BUSINESS_RECONCILIATION_CLIENT+ESCROW_RELEASES_CLIENT;
+`+EXPENSE_LEDGER_CLIENT+BUSINESS_RECONCILIATION_CLIENT+ESCROW_RELEASES_CLIENT;

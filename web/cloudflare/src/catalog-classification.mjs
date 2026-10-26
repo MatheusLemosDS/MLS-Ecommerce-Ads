@@ -141,10 +141,12 @@ export async function enqueueSoldCatalogGaps(env,variants,{now=()=>Date.now()}={
 // The product index calls this only after persisting a strictly newer provider
 // update_time. Keep the registered composition usable while checking changes;
 // an active owner or a provider backoff is never displaced by discovery.
+// Each confirmed provider change gets a new token, including a second change
+// during a catalogue read, so an older response cannot clear the newer notice.
 export async function refreshKnownCatalogClassifications(env,itemIds,{now=()=>Date.now()}={}){
  const ids=idsInput(itemIds),stamp=clock(now),db=await setup(env),refreshed=[];
  if(ids.length)await db.batch([
-  db.prepare('INSERT OR IGNORE INTO catalog_classification_changes(item_id,change_token,changed_at) SELECT item_id,?,? FROM catalog_classification_jobs WHERE item_id IN (SELECT value FROM json_each(?)) AND checked_at IS NOT NULL').bind(crypto.randomUUID(),stamp,JSON.stringify(ids)),
+  db.prepare('INSERT INTO catalog_classification_changes(item_id,change_token,changed_at) SELECT item_id,?,? FROM catalog_classification_jobs WHERE item_id IN (SELECT value FROM json_each(?)) AND checked_at IS NOT NULL ON CONFLICT(item_id) DO UPDATE SET change_token=excluded.change_token,changed_at=excluded.changed_at').bind(crypto.randomUUID(),stamp,JSON.stringify(ids)),
   db.prepare('UPDATE catalog_classification_state SET revision=revision+1 WHERE id=1 AND changes()>0 AND revision<2147483646'),
  ]);
  for(let index=0;index<ids.length;index+=90){
@@ -157,13 +159,13 @@ export async function refreshKnownCatalogClassifications(env,itemIds,{now=()=>Da
 
 export async function readCatalogClassificationFence(env,itemIds){
  const ids=idsInput(itemIds);if(ids.length>3)fail('CATALOG_CLASSIFICATION_REQUEST_INVALID',400);
- const db=await setup(env),rows=ids.length?(await db.prepare('SELECT item_id,write_token FROM catalog_classification_jobs WHERE item_id IN ('+ids.map(()=>'?').join(',')+')').bind(...ids).all()).results:[],map=new Map(rows.map(row=>[row.item_id,row.write_token]));
- return ids.map(item_id=>({item_id,write_token:map.get(item_id)??null}));
+ const db=await setup(env),rows=ids.length?(await db.prepare('SELECT item_id,write_token,(SELECT change_token FROM catalog_classification_changes x WHERE x.item_id=catalog_classification_jobs.item_id) AS change_token FROM catalog_classification_jobs WHERE item_id IN ('+ids.map(()=>'?').join(',')+')').bind(...ids).all()).results:[],map=new Map(rows.map(row=>[row.item_id,row]));
+ return ids.map(item_id=>({item_id,write_token:map.get(item_id)?.write_token??null,change_token:map.get(item_id)?.change_token??null}));
 }
 async function storeFrame(env,raw,{now=()=>Date.now(),token=null,itemId=null,fence=null,changeToken=null}={}){
  const frame=projectVariantCatalog(raw),stamp=clock(now);if(!frame||frame.checked_at>stamp+60||stamp-frame.checked_at>60||frame.products.some(row=>!row.cost_catalog)||itemId!==null&&(frame.products.length!==1||frame.products[0].item_id!==itemId))fail('CATALOG_CLASSIFICATION_INVALID',503);
  let fenced=null;
- if(fence!==null){if(!array(fence,3)||fence.length!==frame.products.length)fail('CATALOG_CLASSIFICATION_REQUEST_INVALID',400);fenced=new Map();for(const row of fence){if(!exact(row,['item_id','write_token'])||!id(row.item_id)||fenced.has(row.item_id)||!frame.products.some(product=>product.item_id===row.item_id)||row.write_token!==null&&(typeof row.write_token!=='string'||!/^[a-f0-9-]{36}$/.test(row.write_token)))fail('CATALOG_CLASSIFICATION_REQUEST_INVALID',400);fenced.set(row.item_id,row.write_token);}}
+ if(fence!==null){if(!array(fence,3)||fence.length!==frame.products.length)fail('CATALOG_CLASSIFICATION_REQUEST_INVALID',400);fenced=new Map();for(const row of fence){const hasChange=plain(row)&&Object.hasOwn(row,'change_token');if(!exact(row,['item_id','write_token',...(hasChange?['change_token']:[])])||!id(row.item_id)||fenced.has(row.item_id)||!frame.products.some(product=>product.item_id===row.item_id)||row.write_token!==null&&(typeof row.write_token!=='string'||!/^[a-f0-9-]{36}$/.test(row.write_token))||hasChange&&row.change_token!==null&&(typeof row.change_token!=='string'||!/^[a-f0-9-]{36}$/.test(row.change_token)))fail('CATALOG_CLASSIFICATION_REQUEST_INVALID',400);fenced.set(row.item_id,{write_token:row.write_token,change_token:hasChange?row.change_token:null});}}
  const db=await setup(env),stored=[];
  for(const product of frame.products){
   const sourceHash=await digest(product),single=product.selling_unit==='SINGLE_GARMENT',bindings=new Map(product.bindings.map(row=>[row.model_id,{...row,selling_unit:single?'SINGLE_GARMENT':'ONE_MALE_ONE_FEMALE_KIT',operator_confirmed:false,source:single?'CATALOG_SIZE_AXIS':'CATALOG_VARIATION_AXES',catalog_fingerprint:product.catalog_fingerprint}]));
@@ -172,12 +174,13 @@ async function storeFrame(env,raw,{now=()=>Date.now(),token=null,itemId=null,fen
   if(variants.some(row=>new TextEncoder().encode(row.payload).length>4096)||product.bindings.some(row=>{const variant=product.cost_catalog.variants.find(variant=>variant.model_id===row.model_id);return !variant||!bindingMatchesAttributes(bindings.get(row.model_id),variant.attributes);}))fail('CATALOG_CLASSIFICATION_INVALID');
   for(let attempt=0;attempt<4;attempt++){
    const current=await db.prepare('SELECT * FROM catalog_classification_jobs WHERE item_id=?').bind(product.item_id).first();if(current)checkedJob(current);
-   if(fenced&&(current?.write_token??null)!==fenced.get(product.item_id))fail('CATALOG_CLASSIFICATION_CHANGED_RETRY',409);
+   if(fenced&&(current?.write_token??null)!==fenced.get(product.item_id).write_token)fail('CATALOG_CLASSIFICATION_CHANGED_RETRY',409);
    if(current?.checked_at>frame.checked_at)break;
    if(current?.checked_at===frame.checked_at&&current.source_hash!==sourceHash&&token===null&&!fenced)fail('CATALOG_CLASSIFICATION_CONFLICT',409);
    if(token===null&&current?.lease_token!==null&&current?.lease_token!==undefined&&current.lease_until>stamp)fail('CATALOG_CLASSIFICATION_LEASED',409);
    if(token!==null&&(current?.lease_token!==token||current.lease_until<=stamp))fail('CATALOG_CLASSIFICATION_LEASE_LOST',409);
-   const changed=!current||current.source_hash!==sourceHash||changeToken!==null,status=product.bindings.length===variants.length&&variants.length?'MATCHED':product.bindings.length?'PARTIAL':'REVIEW',reason=status==='MATCHED'?null:unresolvedReason;
+   const observedChange=fenced?fenced.get(product.item_id).change_token:changeToken;
+   const changed=!current||current.source_hash!==sourceHash||observedChange!==null,status=product.bindings.length===variants.length&&variants.length?'MATCHED':product.bindings.length?'PARTIAL':'REVIEW',reason=status==='MATCHED'?null:unresolvedReason;
    const guard=current?'item_id=? AND checked_at IS ? AND source_hash IS ? AND lease_token IS ? AND write_token IS ?':'item_id=?';
    const guardArgs=current?[product.item_id,current.checked_at,current.source_hash,current.lease_token,current.write_token]:[product.item_id];
    if(!current){await db.prepare("INSERT OR IGNORE INTO catalog_classification_jobs(item_id,status,next_attempt_at) VALUES(?,'QUEUED',?)").bind(product.item_id,stamp).run();continue;}
@@ -190,7 +193,7 @@ async function storeFrame(env,raw,{now=()=>Date.now(),token=null,itemId=null,fen
     db.prepare("INSERT INTO catalog_classification_variants(item_id,model_id,payload) SELECT ?,json_extract(value,'$.model_id'),json_extract(value,'$.payload') FROM json_each(?) WHERE "+proof).bind(product.item_id,JSON.stringify(variants),...proofArgs),
     db.prepare('INSERT INTO production_cost_catalog(item_id,catalog_fingerprint,payload,checked_at) SELECT ?,?,?,? WHERE '+proof+' ON CONFLICT(item_id) DO UPDATE SET catalog_fingerprint=excluded.catalog_fingerprint,payload=excluded.payload,checked_at=excluded.checked_at WHERE production_cost_catalog.checked_at<=excluded.checked_at').bind(product.item_id,product.catalog_fingerprint,JSON.stringify(product.cost_catalog),frame.checked_at,...proofArgs),
     db.prepare('DELETE FROM catalog_classification_source_diagnostics WHERE item_id=? AND '+proof).bind(product.item_id,...proofArgs),
-    db.prepare('DELETE FROM catalog_classification_changes WHERE item_id=? AND change_token=? AND '+proof).bind(product.item_id,changeToken,...proofArgs),
+    db.prepare('DELETE FROM catalog_classification_changes WHERE item_id=? AND change_token=? AND '+proof).bind(product.item_id,observedChange,...proofArgs),
     db.prepare('INSERT INTO catalog_classification_audit(item_id,checked_at,outcome,reason,revision) SELECT ?,?,?,?,revision FROM catalog_classification_state WHERE id=1 AND '+proof).bind(product.item_id,stamp,status,reason,...proofArgs),
     db.prepare('DELETE FROM catalog_classification_audit WHERE id NOT IN (SELECT id FROM catalog_classification_audit ORDER BY id DESC LIMIT 1000)'),
    ];

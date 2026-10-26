@@ -57,6 +57,23 @@ function learningSnapshot(value){
 
 function learningSizeAxes(rule,variant){return variant.attributes.filter(row=>rule.axis_names.some(name=>learningNormalize(name)===learningNormalize(row.name)));}
 
+function learningChildRecognition(rules,source,stale){
+ // This bounded fallback uses an operator-confirmed domain rule. It does not
+ // learn arbitrary words or prices from a corrected title or a numeric size.
+ const child=rules.get('camiseta-infantil'),childSizes=new Set(['2','4','6','8','10','12','14','16']);
+ if(!source||!source.variants.length||!child?.enabled||!child.options.length||!child.options.every(size=>childSizes.has(learningOption(size))))return learningResult();
+ const shirtWords=['camiseta','camisa','blusa'],childWords=['infantil','kids','crianca'];
+ if(!child.name_patterns.some(pattern=>{const words=learningWords(pattern);return shirtWords.some(word=>words.has(word))&&childWords.some(word=>words.has(word));}))return learningResult();
+ const words=learningWords(source.product_name);
+ if(!shirtWords.some(word=>words.has(word))||learningChildConflicts.some(word=>words.has(word))||child.exclude_terms.some(pattern=>learningContains(words,pattern)))return learningResult();
+ const allowed=new Set(child.options.map(learningOption)),extraAxes=new Set(['cor','estampa','color','print']);
+ for(const variant of source.variants){
+  const axes=learningSizeAxes(child,variant);
+  if(axes.length!==1||!allowed.has(learningOption(axes[0].value))||variant.attributes.some(axis=>axis!==axes[0]&&!extraAxes.has(learningNormalize(axis.name))))return learningResult();
+ }
+ return learningResult(child.id,stale?'PENDING':'RECOGNIZED',stale?'CATALOG_STALE':'CONFIRMED_CHILD_TYPE_AND_SIZES',[],true);
+}
+
 export function costRuleProductLearning(values,itemId,catalog,options={}){
  try{
   if(!learningId(itemId)||!learningPlain(options)||Reflect.ownKeys(options).some(key=>key!=='stale'))return learningResult();
@@ -74,7 +91,13 @@ export function costRuleProductLearning(values,itemId,catalog,options={}){
    const words=learningWords(source.product_name);
    if(rule.exclude_terms.some(pattern=>learningContains(words,pattern))||rule.id==='camiseta-infantil'&&learningChildConflicts.some(word=>words.has(word)))return learningResult(ruleId,'CONFLICT','PRODUCT_TYPE_CONFLICT',[],false);
    const anchors=leaves.filter(row=>source.variants.some(variant=>variant.model_id===row.model_id));
-   if(!anchors.length)return learningResult(ruleId,'PENDING','CORRECTED_MODEL_NOT_FOUND',[],false);
+   if(!anchors.length){
+    // A removed corrected model remains evidence for that historical ID. Its
+    // absence cannot suppress independent recognition of the current models,
+    // but it also cannot teach a different product type or ambiguous size.
+    const recognized=ruleId==='camiseta-infantil'?learningChildRecognition(rules,source,stale):null;
+    return recognized?.managed?recognized:learningResult(ruleId,'PENDING','CORRECTED_MODEL_NOT_FOUND',[],false);
+   }
    const evidence=anchors.map(row=>row.model_id);
    if(!rule.options.length){
     if(anchors.some(row=>row.size!==null))return learningResult(ruleId,'CONFLICT','CORRECTION_SIZE_MISMATCH',evidence,false);
@@ -90,19 +113,6 @@ export function costRuleProductLearning(values,itemId,catalog,options={}){
    return learningResult(ruleId,stale?'PENDING':'LEARNED',stale?'CATALOG_STALE':'CONFIRMED_VARIATION_SIZE',evidence,true);
   }
 
-  // This bounded fallback uses an operator-confirmed domain rule. It does not
-  // learn arbitrary words or prices from a corrected title or a numeric size.
-  const child=rules.get('camiseta-infantil'),childSizes=new Set(['2','4','6','8','10','12','14','16']);
-  if(!source||!source.variants.length||!child?.enabled||!child.options.length||!child.options.every(size=>childSizes.has(learningOption(size))))return learningResult();
-  const shirtWords=['camiseta','camisa','blusa'],childWords=['infantil','kids','crianca'];
-  if(!child.name_patterns.some(pattern=>{const words=learningWords(pattern);return shirtWords.some(word=>words.has(word))&&childWords.some(word=>words.has(word));}))return learningResult();
-  const words=learningWords(source.product_name);
-  if(!shirtWords.some(word=>words.has(word))||learningChildConflicts.some(word=>words.has(word))||child.exclude_terms.some(pattern=>learningContains(words,pattern)))return learningResult();
-  const allowed=new Set(child.options.map(learningOption)),extraAxes=new Set(['cor','estampa','color','print']);
-  for(const variant of source.variants){
-   const axes=learningSizeAxes(child,variant);
-   if(axes.length!==1||!allowed.has(learningOption(axes[0].value))||variant.attributes.some(axis=>axis!==axes[0]&&!extraAxes.has(learningNormalize(axis.name))))return learningResult();
-  }
-  return learningResult(child.id,stale?'PENDING':'RECOGNIZED',stale?'CATALOG_STALE':'CONFIRMED_CHILD_TYPE_AND_SIZES',[],true);
+  return learningChildRecognition(rules,source,stale);
  }catch{return learningResult();}
 }

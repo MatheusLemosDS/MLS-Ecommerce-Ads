@@ -3,11 +3,63 @@ import assert from 'node:assert/strict';
 import {D1} from './sqlite-d1.mjs';
 import {COST_DEFAULTS,productionCostReference} from '../src/production-costs.mjs';
 import {readCostRules,saveCostRules,assignCostRules,syncCostRuleCatalog,readCostRuleReference,evaluateCostRules,COST_RULE_DEFAULTS} from '../src/cost-rules.mjs';
+import {refreshKnownCatalogClassifications,readCatalogClassificationState} from '../src/catalog-classification.mjs';
+import {deriveCatalogProduct,deriveProductCostCatalog} from '../../finance/src/variant-catalog-frame.mjs';
 
 const clock=Date.UTC(2026,9,24,12),stamp=clock/1000,now=()=>clock;
 const catalogue=(name='Produto Verde de lançamento',sizes=['4','6','8','10','12','14','16'])=>({schema:'product_cost_catalog_v1',product_name:name,variants:sizes.map((size,index)=>({model_id:String(index),attributes:[{name:'Cor',value:'Verde'},{name:'Tamanho',value:size}]}))});
 const frame=(source=catalogue(),id='101')=>({schema:'variant_catalog_v1',checked_at:stamp,products:[{item_id:id,catalog_fingerprint:'a'.repeat(64),bindings:[],unresolved_count:source.variants.length,cost_catalog:source}]});
 const correction=(model_id='0',size='4',rule_id='camiseta-infantil')=>({item_id:'101',model_id,rule_id,size});
+
+test('a targeted catalogue refresh after size 16 removal clears only the observed change and preserves historical costs',async()=>{
+ const env={ADMIN_DB:new D1()};try{
+  await readCostRules(env);await assignCostRules(env,{revision:1,assignments:[correction('6','16')]},'admin');
+  await syncCostRuleCatalog(env,['101'],async()=>frame(catalogue('Camiseta Verde')),{now});
+  await refreshKnownCatalogClassifications(env,['101'],{now});
+  assert.equal((await readCatalogClassificationState(env,{item_ids:['101']},{now})).products[0].reason,'CATALOG_METADATA_CHANGED');
+  const remaining=catalogue('Camiseta Verde');remaining.variants.pop();
+  const refreshed=await syncCostRuleCatalog(env,['101'],async()=>({...frame(remaining),checked_at:stamp+1}),{now:()=>clock+1000,force:true});
+  const state=await readCatalogClassificationState(env,{item_ids:['101']},{now:()=>clock+1000});
+  assert.notEqual(state.products[0].reason,'CATALOG_METADATA_CHANGED');assert.equal(state.products[0].model_count,6);assert.equal(state.products[0].variants.some(row=>row.model_id==='6'),false);
+  const reference=await readCostRuleReference(env,['101'],{now:()=>clock+1000});
+  assert.equal(refreshed.learning[0].status,'RECOGNIZED');assert.equal(reference.variants.length,7);assert.ok(reference.variants.every(row=>row.unit_cost_cents===1250));
+  assert.equal(reference.catalog_model_keys.includes('101:6'),false,'removed size is not advertised as a current variation');
+  assert.deepEqual((await readCostRules(env)).values.assignments,[correction('6','16')]);
+  const priced=productionCostReference({status:'AVAILABLE',rows:[{item_id:'101',model_id:'0',quantity:2},{item_id:'101',model_id:'6',quantity:1}]},{revision:1,bindings:[]},{revision:1,values:COST_DEFAULTS},reference);
+  assert.equal(priced.total_cents,3750,'remaining models and historical size 16 keep their own evidence and saved price');
+ }finally{env.ADMIN_DB.db.close();}
+});
+
+test('a newer provider change arriving during a manual catalogue read remains pending',async()=>{
+ for(const priorChange of [false,true]){const env={ADMIN_DB:new D1()};try{
+  await readCostRules(env);await syncCostRuleCatalog(env,['101'],async()=>frame(catalogue('Camiseta Verde')),{now});
+  if(priorChange)await refreshKnownCatalogClassifications(env,['101'],{now});
+  const first=env.ADMIN_DB.db.prepare('SELECT change_token FROM catalog_classification_changes WHERE item_id=?').get('101')?.change_token??null;
+  await syncCostRuleCatalog(env,['101'],async()=>{await refreshKnownCatalogClassifications(env,['101'],{now:()=>clock+1000});return {...frame(catalogue('Camiseta Verde')),checked_at:stamp+1};},{now:()=>clock+1000,force:true});
+  const pending=env.ADMIN_DB.db.prepare('SELECT change_token FROM catalog_classification_changes WHERE item_id=?').get('101');
+  assert.ok(pending);assert.notEqual(pending.change_token,first);
+  assert.equal((await readCatalogClassificationState(env,{item_ids:['101']},{now:()=>clock+1000})).products[0].reason,'CATALOG_METADATA_CHANGED');
+  assert.ok((await readCostRuleReference(env,['101'],{now:()=>clock+1000})).variants.every(row=>row.unit_cost_cents===null));
+ }finally{env.ADMIN_DB.db.close();}}
+});
+
+test('an explicitly named child shirt reprocesses remaining stable IDs after size 16 and axis reordering without manual assignments',async()=>{
+ const env={ADMIN_DB:new D1()};try{
+  await readCostRules(env);
+  const axis=(name,options)=>({name,option_list:options.map(option=>({option}))});
+  const source={tier_variation:[axis('Cor',['Verde']),axis('Tamanho',['4','14','16'])],model:[{model_id:104,tier_index:[0,0]},{model_id:114,tier_index:[0,1]},{model_id:116,tier_index:[0,2]}]};
+  const response=async(at=stamp)=>({schema:'variant_catalog_v1',checked_at:at,products:[{...await deriveCatalogProduct('101',source,{selling_unit:'AUTO'}),cost_catalog:deriveProductCostCatalog(source,'Camiseta infantil Verde')}]});
+  await syncCostRuleCatalog(env,['101'],async()=>response(),{now});
+  await refreshKnownCatalogClassifications(env,['101'],{now});
+  source.tier_variation=[axis('Tamanho',['14','4']),axis('Cor',['Verde'])];source.model=[{model_id:114,tier_index:[0,0]},{model_id:104,tier_index:[1,0]}];
+  await syncCostRuleCatalog(env,['101'],async()=>response(stamp+1),{now:()=>clock+1000,force:true});
+  const state=await readCatalogClassificationState(env,{item_ids:['101']},{now:()=>clock+1000}),reference=await readCostRuleReference(env,['101'],{now:()=>clock+1000});
+  assert.notEqual(state.products[0].reason,'CATALOG_METADATA_CHANGED');assert.deepEqual(state.products[0].variants.map(row=>[row.model_id,row.attributes.find(attribute=>attribute.name==='Tamanho').value]),[['104','4'],['114','14']]);
+  assert.deepEqual(reference.variants.map(row=>[row.model_id,row.unit_cost_cents]),[['104',1250],['114',1250]]);assert.equal((await readCostRules(env)).values.assignments,undefined);
+  const priced=productionCostReference({status:'AVAILABLE',rows:[{item_id:'101',model_id:'104',quantity:2},{item_id:'101',model_id:'114',quantity:1}]},{revision:1,bindings:[]},{revision:1,values:COST_DEFAULTS},reference);assert.equal(priced.total_cents,3750);
+  const old=productionCostReference({status:'AVAILABLE',rows:[{item_id:'101',model_id:'116',quantity:1}]},{revision:1,bindings:[]},{revision:1,values:COST_DEFAULTS},reference);assert.equal(old.total_cents,null,'an absent historical model without saved composition cannot inherit a remaining model by position');
+ }finally{env.ADMIN_DB.db.close();}
+});
 
 test('one saved correction teaches every compatible sibling and a new model without copying assignments or freezing the price',async()=>{
  const env={ADMIN_DB:new D1()};try{
