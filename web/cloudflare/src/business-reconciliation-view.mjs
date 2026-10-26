@@ -1,37 +1,111 @@
-import {projectReconciliationFrame,projectReconciliationEvidenceFrame} from '../../finance/src/reconciliation-frame.mjs';
-import {projectBusinessReconciliation,projectBusinessReconciliationEvidence} from './business-reconciliation.mjs';
+import {projectReconciliationFrame,projectReconciliationEvidenceFrame,projectReconciliationMoneyFrame} from '../../finance/src/reconciliation-frame.mjs';
+import {projectBusinessReconciliation,projectBusinessReconciliationEvidence,projectBusinessReconciliationMoney} from './business-reconciliation.mjs';
 import {projectBusinessMonthAuditScope} from './business-month-view-state.mjs';
+import {projectBusinessMonth} from './business-month.mjs';
+import {projectAdsCalendar} from './ads-calendar.mjs';
+import {projectBusinessMonthProducts} from './business-month-products.mjs';
+import {buildMonthlyFinancialSummary} from './business-month-summary.mjs';
+import {buildAdjustedBusinessBalance} from './business-adjusted-balance.mjs';
 
 export const BUSINESS_RECONCILIATION_CSS=String.raw`
+.business-reconciliation-money,.business-reconciliation-adjusted{margin:18px 0;padding:14px;border:1px solid var(--line);border-radius:9px;min-width:0}.business-reconciliation-money h4,.business-reconciliation-adjusted h4{margin:0 0 9px;font-size:13px;line-height:1.6}.business-reconciliation-money h5{margin:16px 0 6px;font-size:12px;line-height:1.6}.business-reconciliation-money p,.business-reconciliation-adjusted p,.business-reconciliation-adjusted li{font-size:11px;line-height:1.75;color:var(--muted);overflow-wrap:anywhere}.business-reconciliation-money-table{overflow-x:auto}.business-reconciliation-money table{width:100%;border-collapse:collapse;font-size:11px;line-height:1.65}.business-reconciliation-money th,.business-reconciliation-money td{padding:9px 8px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line);overflow-wrap:anywhere}.business-reconciliation-money td:last-child{font-variant-numeric:tabular-nums;min-width:125px}.business-reconciliation-money th{color:var(--muted);font-weight:500}.business-reconciliation-money .status-highlight{background:var(--surface-raised);font-weight:650}.business-reconciliation-money td span{display:block;font-size:10px;font-weight:400;color:var(--muted)}.business-reconciliation-adjusted>strong{display:block;margin:8px 0;font-size:23px;font-variant-numeric:tabular-nums}.business-reconciliation-adjusted dl{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px 12px;font-size:11px;line-height:1.7}.business-reconciliation-adjusted dt{color:var(--muted)}.business-reconciliation-adjusted dd{margin:0;text-align:right;font-variant-numeric:tabular-nums}.business-reconciliation-payout{padding:9px 0;font-size:11px;line-height:1.75;color:var(--muted)}.business-reconciliation-payout span{display:block;overflow-wrap:anywhere}@media(max-width:640px){.business-reconciliation-money,.business-reconciliation-adjusted{padding:10px}.business-reconciliation-money th,.business-reconciliation-money td{padding:8px 5px}.business-reconciliation-adjusted dl{grid-template-columns:minmax(0,1fr)}.business-reconciliation-adjusted dd{text-align:left}}
 .business-reconciliation-review{margin:14px 0;padding:12px;border:1px solid var(--line);border-radius:9px}.business-reconciliation-review h5,.business-reconciliation-order-group h5{margin:0 0 8px;font-size:12px;line-height:1.6}.business-reconciliation-review-order{padding:12px 0;border-top:1px solid var(--line)}.business-reconciliation-review-order strong,.business-reconciliation-review-order span,.business-reconciliation-review-order a{display:block;font-size:11px;line-height:1.75;overflow-wrap:anywhere}.business-reconciliation-review-order span{color:var(--muted)}.business-reconciliation-review-order a{margin-top:6px}.business-reconciliation-order-group{padding-top:12px;margin-top:12px;border-top:1px solid var(--line)}
 .business-reconciliation{margin-top:18px;border:1px solid var(--line);border-radius:12px;background:var(--surface);min-width:0}.business-reconciliation>details>summary{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px;cursor:pointer;list-style:none}.business-reconciliation>details>summary::-webkit-details-marker{display:none}.business-reconciliation>details>summary::after{content:"+";font-size:21px;color:var(--muted)}.business-reconciliation>details[open]>summary::after{content:"−"}.business-reconciliation-heading{min-width:0;flex:1}.business-reconciliation-heading strong{display:block;font-size:13px;line-height:1.5}.business-reconciliation-heading span,.business-reconciliation-badge{display:block;margin-top:5px;font-size:11px;line-height:1.6;color:var(--muted)}.business-reconciliation-body{padding:0 16px 16px}.business-reconciliation-body>p{font-size:11px;color:var(--muted);line-height:1.75;margin:0 0 12px;overflow-wrap:anywhere}.business-reconciliation-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0}.business-reconciliation-metric{min-width:0;padding:12px;border:1px solid var(--line);border-radius:9px}.business-reconciliation-metric small,.business-reconciliation-metric span{display:block;font-size:10px;line-height:1.65;color:var(--muted)}.business-reconciliation-metric strong{display:block;margin:7px 0;font-size:16px;line-height:1.4;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}.business-reconciliation-run{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}.business-reconciliation-run h4{margin:0 0 7px;font-size:12px}.business-reconciliation-run p,.business-reconciliation-run li{font-size:11px;line-height:1.75;color:var(--muted);overflow-wrap:anywhere}.business-reconciliation-run ul{padding-left:18px;margin:10px 0}.business-reconciliation-case{display:flex;justify-content:space-between;align-items:start;gap:14px;padding:10px 0;border-top:1px solid var(--line)}.business-reconciliation-case:first-child{border-top:0}.business-reconciliation-case>div{min-width:0}.business-reconciliation-case strong{display:block;font-size:11px;line-height:1.7}.business-reconciliation-case span{display:block;font-size:10px;line-height:1.7;color:var(--muted)}.business-reconciliation-case>span{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}.business-reconciliation-notice{padding:11px 12px;border-radius:8px;background:var(--surface-raised);font-size:11px;color:var(--muted);line-height:1.75}.business-reconciliation [hidden]{display:none!important}.business-reconciliation summary:focus-visible{outline:3px solid var(--accent);outline-offset:3px}@media(max-width:640px){.business-reconciliation-metrics{grid-template-columns:minmax(0,1fr)}.business-reconciliation-case{flex-direction:column;gap:5px}.business-reconciliation-case>span{text-align:left}.business-reconciliation>details>summary{align-items:flex-start;gap:10px}.business-reconciliation-badge{max-width:105px}}
 `;
 
 export function businessReconciliationBody(){
- return `<section id="businessReconciliation" class="business-reconciliation" aria-labelledby="businessReconciliationTitle"><details id="businessReconciliationDetails"><summary id="businessReconciliationSummary"><span class="business-reconciliation-heading"><strong id="businessReconciliationTitle">Conferência de repasses e devoluções</strong><span id="businessReconciliationStatus" role="status" aria-live="polite">Aguardando o resumo salvo do mês.</span></span><span id="businessReconciliationBadge" class="business-reconciliation-badge">Em conferência</span></summary><div class="business-reconciliation-body"><p id="businessReconciliationScope">A consulta acompanha as mesmas datas do resumo concluído.</p><p>Valores de solicitações de devolução e ajustes são evidências para conferência. Eles não são descontados novamente do resultado e não comprovam pagamento ou recebimento no banco.</p><div id="businessReconciliationMetrics" class="business-reconciliation-metrics" hidden></div><p id="businessReconciliationNotice" class="business-reconciliation-notice" hidden></p><div id="businessReconciliationRuns"></div></div></details></section>`;
+ return `<section id="businessReconciliation" class="business-reconciliation" aria-labelledby="businessReconciliationTitle"><details id="businessReconciliationDetails"><summary id="businessReconciliationSummary"><span class="business-reconciliation-heading"><strong id="businessReconciliationTitle">Conferência de repasses e devoluções</strong><span id="businessReconciliationStatus" role="status" aria-live="polite">Aguardando o resumo salvo do mês.</span></span><span id="businessReconciliationBadge" class="business-reconciliation-badge">Em conferência</span></summary><div class="business-reconciliation-body"><p id="businessReconciliationScope">A consulta acompanha as mesmas datas do resumo concluído.</p><p>Os valores de reembolso informados pela Shopee não são descontados novamente do repasse após ajustes e não comprovam pagamento ou recebimento no banco.</p><div id="businessReconciliationMetrics" class="business-reconciliation-metrics" hidden></div><div id="businessReconciliationAdjustedBalance" hidden></div><div id="businessReconciliationMoney" hidden></div><p id="businessReconciliationNotice" class="business-reconciliation-notice" hidden></p><div id="businessReconciliationRuns"></div></div></details></section>`;
 }
 
 export const BUSINESS_RECONCILIATION_CLIENT=String.raw`
 (()=>{
  ${projectReconciliationFrame.toString()}
  ${projectReconciliationEvidenceFrame.toString()}
+ ${projectReconciliationMoneyFrame.toString()}
  ${projectBusinessReconciliation.toString()}
  ${projectBusinessReconciliationEvidence.toString()}
+ ${projectBusinessReconciliationMoney.toString()}
  ${projectBusinessMonthAuditScope.toString()}
+ ${projectAdsCalendar.toString()}
+ ${projectBusinessMonthProducts.toString()}
+ ${projectBusinessMonth.toString()}
+ ${buildMonthlyFinancialSummary.toString()}
+ ${buildAdjustedBusinessBalance.toString()}
  const el=name=>document.getElementById('businessReconciliation'+name);
  const node=(tag,text,cls)=>{const result=document.createElement(tag);if(text!==undefined)result.textContent=text;if(cls)result.className=cls;return result;};
  const money=value=>Number.isSafeInteger(value)?new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(value/100):'Não informado';
+ const signedMoney=value=>Number.isSafeInteger(value)&&value>0?'+'+money(value):money(value);
  const time=value=>Number.isSafeInteger(value)&&value>0?new Intl.DateTimeFormat('pt-BR',{dateStyle:'short',timeStyle:'short',timeZone:'America/Sao_Paulo'}).format(new Date(value*1000)):'Não consultado';
  const day=value=>typeof value==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(value)?value.slice(8)+'/'+value.slice(5,7)+'/'+value.slice(0,4):'—';
  const sum=values=>{let total=0n;for(const value of values){if(!Number.isSafeInteger(value))return null;total+=BigInt(value);}return total>=BigInt(Number.MIN_SAFE_INTEGER)&&total<=BigInt(Number.MAX_SAFE_INTEGER)?Number(total):null;};
  const caseLabels={PENDING:'Detalhes pendentes',UNKNOWN:'Situação não reconhecida',REQUESTED:'Solicitação aberta',ACCEPTED:'Solicitação aceita',CANCELLED:'Solicitação cancelada',JUDGING:'Em análise',REFUND_PAID:'Reembolso informado pela Shopee',CLOSED:'Solicitação encerrada',PROCESSING:'Em processamento'};
+ const moneyLabels={...caseLabels,ACCEPTED:'Solicitações aceitas',REFUND_PAID:'Status de reembolso pago informado'};
+ const moneyCohorts={PAID:'Pedidos pagos',REVIEW:'Pedidos em revisão',OTHER:'Outros pedidos'};
+ const moneyStatuses=['PENDING','UNKNOWN','REQUESTED','ACCEPTED','CANCELLED','JUDGING','REFUND_PAID','CLOSED','PROCESSING'];
  const reviewLabels={IN_CANCEL:'Cancelamento em andamento',TO_RETURN:'Devolução em andamento',OTHER_STATUS:'Outro estado em revisão',UNKNOWN_STATUS:'Situação não identificada'};
  const referenceMessages={DETAILS_PENDING:'As referências ainda precisam ser consultadas.',PERMISSION_DENIED:'A integração não recebeu permissão para consultar estas referências.',RATE_LIMIT:'A fonte limitou as consultas. A próxima tentativa deve respeitar a espera indicada.',TIMEOUT:'A fonte não respondeu dentro do prazo.',UNAVAILABLE:'A fonte das referências está indisponível.',INVALID_RESPONSE:'A resposta da fonte não pôde ser confirmada.',UNKNOWN_STATUS:'A situação informada pela fonte ainda não é reconhecida.',CURRENCY_MISMATCH:'A moeda informada pela fonte não corresponde ao real.'};
- let api=null,started=false,month='',scopeKey='',generation=0,pending=null,value=null,reviews=[];
+ let api=null,started=false,month='',scopeKey='',generation=0,pending=null,value=null,reviews=[],amounts=[],monthlyContext=null,auditScopeContext=null;
  const cache=new Map(),attempted=new Map();
  function validMonth(selected){try{return typeof selected==='string'&&/^\d{4}-(0[1-9]|1[0-2])$/.test(selected)&&selected>='2000-01'&&selected<=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date()).slice(0,7);}catch{return false;}}
  function showMessage(text,badge='Em conferência'){if(el('Status'))el('Status').textContent=text;if(el('Badge'))el('Badge').textContent=badge;}
  const orderTarget=(report,hash)=>'business-reconciliation-order-'+report.run_id+'-'+hash;
+ function renderAdjustedBalance(){
+  const target=el('AdjustedBalance');target.replaceChildren();target.hidden=!value;if(target.hidden)return;
+  const balance=buildAdjustedBusinessBalance(monthlyContext,value,auditScopeContext,{projectMonthly:projectBusinessMonth,projectReconciliation:projectBusinessReconciliation,projectFrame:projectReconciliationFrame,projectScope:projectBusinessMonthAuditScope,buildSummary:buildMonthlyFinancialSummary});
+  const section=node('section',undefined,'business-reconciliation-adjusted');section.append(node('h4','Saldo após ajustes informados'));
+  if(!balance||balance.state==='UNAVAILABLE'){
+   section.append(node('strong','Em conferência'));
+   const reasons={SOURCE_MISMATCH:'A conferência precisa corresponder aos mesmos pedidos e à mesma publicação do resumo mensal.',RECONCILIATION_INCOMPLETE:'Ainda faltam intervalos da conferência para calcular o saldo do mês.',ADJUSTMENT_VALUES_UNAVAILABLE:'Há repasses ou ajustes sem valores compatíveis; eles não são tratados como zero.',MONTHLY_COSTS_UNAVAILABLE:'Ainda faltam valores de anúncios, impostos ou outras despesas para calcular o saldo.',ARITHMETIC_UNSAFE:'Um valor excedeu o limite seguro do cálculo.'};
+   section.append(node('p',reasons[balance?.reason]||'Aguardando o resumo mensal e os ajustes compatíveis dos mesmos pedidos.'));
+  }else{
+   section.append(node('strong',money(balance.balance_cents)),node('p',balance.state==='PARTIAL_COSTS'?'Saldo provisório com os custos de produção já identificados. Ainda há produtos sem custo completo.':'Saldo provisório dos pedidos pagos, após os ajustes informados e os custos do mesmo resumo.'));
+   const parts=node('dl');for(const [label,amount] of [['Repasse após ajustes informado',balance.after_adjustment_repass_cents],['Custos após o repasse',balance.costs_after_payout_cents]])parts.append(node('dt',label),node('dd',money(amount)));
+   if(balance.recharge_addback_cents!==0)parts.append(node('dt','Recarga de anúncios reposta'),node('dd',money(balance.recharge_addback_cents)));
+   section.append(parts,node('p','Ajuste com sinal aplicado ao repasse: '+signedMoney(balance.reported_adjustment_cents)+'. Os valores das solicitações de reembolso não são descontados novamente.'));
+   const times=balance.source_checked_at;section.append(node('p','Financeiro consultado de '+time(times.finance_oldest_at)+' a '+time(times.finance_latest_at)+' · anúncios em '+time(times.ads_at)+'.'));
+   if(balance.pending.includes('FINANCIAL_SOURCE_STALE'))section.append(node('p','A leitura financeira precisa ser atualizada. Este saldo mantém os valores e as datas salvos.'));
+   if(balance.pending.includes('RETURNS_NOT_RECONCILED')||balance.pending.includes('STATUS_REVIEW_REQUIRED'))section.append(node('p','Devoluções e situações de pedidos ainda precisam de conferência; os pedidos em revisão continuam fora da base paga.'));
+  }
+  section.append(node('p','Valor ainda a liberar: indisponível. O repasse informado pode incluir valores já liberados. Este saldo não comprova recebimento em banco nem lucro realizado.'));target.append(section);
+ }
+ function renderMoney(){
+  const target=el('Money');target.replaceChildren();target.hidden=!value;if(target.hidden)return;
+  const section=node('section',undefined,'business-reconciliation-money');section.append(node('h4','Valores das devoluções por situação'));
+  const complete=amounts.length===value.sources.length&&value.sources.length>0;
+  section.append(node('p',amounts.length+' de '+value.sources.length+' intervalo(s) com valores por situação. '+(complete?'As contagens incluem todas as solicitações identificadas nesses intervalos, mesmo quando a lista de pedidos é limitada.':'Os valores abaixo cobrem somente os intervalos com este detalhe disponível.')));
+  if(!amounts.length){section.append(node('p','Os valores por situação ainda não estão disponíveis nesta leitura salva. Os detalhes individuais e o repasse informado permanecem na conferência abaixo.'));target.append(section);return;}
+  section.append(node('p','Aceita é a situação registrada no fluxo da Shopee; não determina sozinha uma movimentação bancária ou uma dedução adicional do vendedor. Os valores abaixo são os reembolsos informados nas solicitações.'));
+  if(value.reports.some(report=>report.pending.includes('RETURN_REFERENCES_MISSING')))section.append(node('p','Ainda faltam referências de devolução. Este quadro cobre as solicitações já identificadas; não confirma o total de todas as devoluções do mês.'));
+  for(const cohort of ['PAID','REVIEW','OTHER']){
+   const groups=amounts.map(item=>item.money.groups.find(group=>group.cohort===cohort)),group=node('section');group.append(node('h5',moneyCohorts[cohort]));
+   group.append(node('p',cohort==='PAID'?'Pedidos incluídos nos valores pagos do resumo.':'Pedidos fora dos valores pagos do resumo. Os valores de reembolso deste grupo não são descontados da base paga.'));
+   const oldest=groups.map(item=>item.source_checked_at.oldest_at).filter(at=>at!==null),latest=groups.map(item=>item.source_checked_at.latest_at).filter(at=>at!==null);
+   group.append(node('p',oldest.length?'Devoluções consultadas de '+time(Math.min(...oldest))+' a '+time(Math.max(...latest))+'.':'Detalhes de devolução ainda não consultados neste grupo.'));
+   const rows=moneyStatuses.map(status=>{const found=groups.map(item=>item.statuses.find(row=>row.status===status));return {status,cases:sum(found.map(item=>item.cases)),known:sum(found.map(item=>item.amount_known)),amount:sum(found.map(item=>item.known_amount_cents))};}).filter(item=>item.cases>0);
+   if(!rows.length){group.append(node('p','Nenhuma solicitação identificada neste grupo nas evidências disponíveis.'));section.append(group);continue;}
+   const wrap=node('div',undefined,'business-reconciliation-money-table'),table=node('table'),head=node('thead'),headers=node('tr');for(const label of ['Situação informada','Solicitações','Valor de reembolso informado'])headers.append(node('th',label));head.append(headers);table.append(head);const body=node('tbody');
+   for(const item of rows){
+    const row=node('tr',undefined,['ACCEPTED','REFUND_PAID'].includes(item.status)?'status-highlight':undefined),label=node('td',moneyLabels[item.status]),amount=node('td',item.known>0?money(item.amount):'Não informado');
+    if(item.status==='ACCEPTED')label.append(node('span','Valor informado em solicitações aceitas; sem concluir o recebimento no banco.'));
+    if(item.status==='REFUND_PAID')label.append(node('span','Estado de pagamento informado pela Shopee; sem comprovação bancária nesta conferência.'));
+    if(item.status==='CANCELLED')label.append(node('span','O valor da solicitação cancelada não é uma despesa confirmada.'));
+    if(item.status==='CLOSED')label.append(node('span','Encerramento da solicitação não define sozinho o valor pago.'));
+    amount.append(node('span',item.known+' de '+item.cases+' com valor informado'+(item.known<item.cases?' · soma parcial dos valores conhecidos.':'.')));row.append(label,node('td',String(item.cases)),amount);body.append(row);
+   }
+   table.append(body);wrap.append(table);group.append(wrap);section.append(group);
+  }
+  target.append(section);
+ }
+ function renderPayout(payout){
+  const section=node('div',undefined,'business-reconciliation-payout');
+  if(!payout){section.append(node('span','Repasse por pedido ainda não disponível nesta leitura salva.'));return section;}
+  section.append(node('span',moneyCohorts[payout.cohort]+' · financeiro observado em '+time(payout.source_checked_at)+'.'));
+  if(payout.state==='NOT_IN_PAID_COHORT'){section.append(node('span','Pedido fora dos valores pagos do resumo. O repasse deste pedido não está disponível nesta conferência.'));return section;}
+  section.append(node('span','Repasse base informado: '+money(payout.base_repass_cents)+'.'));
+  if(payout.state==='AVAILABLE')section.append(node('span','Ajuste com sinal: '+signedMoney(payout.adjustment_cents)+'.'),node('span','Repasse após ajustes informado: '+money(payout.after_adjustment_repass_cents)+'.'),node('span','O valor da devolução não é descontado novamente desse repasse.'));
+  else section.append(node('span',payout.state==='CONFLICT'?'Repasse após ajustes em conferência: os valores informados não são compatíveis.':'Repasse após ajustes não informado por completo. Ausência de informação não é valor zero.'));
+  return section;
+ }
  function renderReview(report,review){
   const section=node('section',undefined,'business-reconciliation-review');section.append(node('h5','Pedidos em revisão'));
   section.append(node('p',report.coverage.review_orders+' pedido(s) fora dos valores dos pedidos pagos. São acompanhados separadamente dos '+report.coverage.return_orders+' pedido(s) pagos com devolução identificada.'));
@@ -56,9 +130,9 @@ export const BUSINESS_RECONCILIATION_CLIENT=String.raw`
   return section;
  }
  function renderCase(item){
-  const row=node('article',undefined,'business-reconciliation-case'),description=node('div');description.append(node('strong','Solicitação '+item.case_hash.slice(0,8)+' · '+caseLabels[item.status]),node('span',item.checked_at===null?'Detalhes ainda não consultados.':'Consultada em '+time(item.checked_at)+'.'));if(item.status==='CANCELLED')description.append(node('span','Cancelamento da solicitação; este valor não é uma despesa confirmada.'));row.append(description,node('span','Valor solicitado informado: '+money(item.requested_refund_cents)));return row;
+  const row=node('article',undefined,'business-reconciliation-case'),description=node('div');description.append(node('strong','Solicitação '+item.case_hash.slice(0,8)+' · '+caseLabels[item.status]),node('span',item.checked_at===null?'Detalhes ainda não consultados.':'Consultada em '+time(item.checked_at)+'.'));if(item.status==='CANCELLED')description.append(node('span','Cancelamento da solicitação; este valor não é uma despesa confirmada.'));if(item.status==='ACCEPTED')description.append(node('span','Valor informado em uma solicitação aceita; a situação não comprova recebimento em banco.'));if(item.status==='CLOSED')description.append(node('span','Solicitação encerrada; este estado não define sozinho o valor pago.'));row.append(description,node('span','Valor de reembolso informado: '+money(item.requested_refund_cents)));return row;
  }
- function renderRun(report,review){
+ function renderRun(report,review,amount){
   const section=node('section',undefined,'business-reconciliation-run');
   section.append(node('h4',day(report.start_date)+' a '+day(report.end_date)),node('p','Financeiro: '+time(report.source_checked_at.finance_oldest_at)+' a '+time(report.source_checked_at.finance_latest_at)+' · revisão '+report.source_revision+'.'));
   const coverage=report.coverage,adjustments=report.adjustments,returns=report.returns;
@@ -74,16 +148,18 @@ export const BUSINESS_RECONCILIATION_CLIENT=String.raw`
   if(report.pending.includes('RETURN_REFERENCES_MISSING'))notes.push('Há ocorrências de devolução sem todas as referências necessárias para consultar seus detalhes.');
   if(returns.permission==='DENIED')notes.push('A Shopee não liberou os detalhes de devoluções nesta integração. As consultas de repasse e anúncios continuam disponíveis.');
   else if(returns.pending_count>0)notes.push(returns.pending_count+' solicitação(ões) aguardando detalhes. A conferência continua pelo servidor.');
-  if(returns.checked_count>0)section.append(node('p','Detalhes de devolução: '+time(report.source_checked_at.returns_oldest_at)+' a '+time(report.source_checked_at.returns_latest_at)+'. Valores abaixo são os solicitados informados pela Shopee.'));
+  if(returns.checked_count>0)section.append(node('p','Detalhes de devolução: '+time(report.source_checked_at.returns_oldest_at)+' a '+time(report.source_checked_at.returns_latest_at)+'. Valores abaixo são os reembolsos informados nas solicitações da Shopee.'));
   if(notes.length){const list=node('ul');for(const text of notes)list.append(node('li',text));section.append(list);}
-  if(report.cases.length){const groups=new Map();for(const item of report.cases){if(!groups.has(item.order_hash))groups.set(item.order_hash,[]);groups.get(item.order_hash).push(item);}for(const [hash,items] of groups){const group=node('section',undefined,'business-reconciliation-order-group');group.id=orderTarget(report,hash);group.append(node('h5','Solicitações do pedido interno '+hash.slice(0,12)));if(review?.orders.some(item=>item.order_hash===hash))group.append(node('p','Este pedido está em revisão e fora dos valores dos pedidos pagos.'));for(const item of items)group.append(renderCase(item));section.append(group);}}
+  const groups=new Map();for(const item of report.cases){if(!groups.has(item.order_hash))groups.set(item.order_hash,[]);groups.get(item.order_hash).push(item);}for(const payout of amount?.payouts??[])if(!groups.has(payout.order_hash))groups.set(payout.order_hash,[]);
+  for(const [hash,items] of groups){const payout=amount?.payouts.find(item=>item.order_hash===hash),group=node('section',undefined,'business-reconciliation-order-group');group.id=orderTarget(report,hash);group.append(node('h5',(items.length?'Solicitações do pedido interno ':'Pedido interno ')+hash.slice(0,12)));if(review?.orders.some(item=>item.order_hash===hash))group.append(node('p','Este pedido está em revisão e fora dos valores dos pedidos pagos.'));group.append(renderPayout(payout));for(const item of items)group.append(renderCase(item));if(!items.length)group.append(node('p',payout.reference_count===null?'Referências de devolução ainda não disponíveis; os valores de reembolso permanecem sem detalhamento.':payout.reference_count===0?'Nenhuma solicitação identificada na consulta registrada. Isso não confirma o encerramento da situação.':'As solicitações deste pedido estão fora do limite da lista exibida. Os totais por situação incluem suas evidências.'));section.append(group);}
+  if(amount?.truncation.truncated)section.append(node('p',amount.truncation.payouts_included+' de '+amount.truncation.payouts_total+' pedidos com devolução têm o detalhe de repasse exibido. Os totais por situação incluem todas as solicitações identificadas.'));
   if(report.truncation.truncated)section.append(node('p',report.truncation.cases_included+' de '+report.truncation.cases_total+' solicitações exibidas. A cobertura informada acima considera o intervalo completo.'));
   return section;
  }
  function render(){
   if(!el(''))return;
   const metrics=el('Metrics'),runs=el('Runs'),notice=el('Notice');metrics.replaceChildren();runs.replaceChildren();notice.hidden=true;notice.textContent='';
-  if(!value){metrics.hidden=true;el('Scope').textContent=month?'Mês de referência: '+month.slice(5)+'/'+month.slice(0,4)+' · Brasília.':'A consulta acompanha as mesmas datas do resumo concluído.';return;}
+  if(!value){metrics.hidden=true;renderAdjustedBalance();renderMoney();el('Scope').textContent=month?'Mês de referência: '+month.slice(5)+'/'+month.slice(0,4)+' · Brasília.':'A consulta acompanha as mesmas datas do resumo concluído.';return;}
   el('Scope').textContent=value.end_date===null?'Mês de referência: '+value.month.slice(5)+'/'+value.month.slice(0,4)+'. Aguardando a conclusão de um período financeiro.':'Período desta conferência: '+day(value.start_date)+' a '+day(value.end_date)+' · Brasília. Revisão '+value.source_revision+'.';
   const reports=value.reports,covered=reports.length,complete=covered===value.sources.length&&value.sources.length>0;
   showMessage(value.status==='COLLECTING'?'Aguardando o resumo completo para conferir as mesmas datas.':covered+' de '+value.sources.length+' intervalo(s) com evidências consultadas. A conferência continua automaticamente.',value.status==='CHECKED'?'Evidências disponíveis':value.status==='UNAVAILABLE'?'Fonte indisponível':'Em conferência');
@@ -100,37 +176,39 @@ export const BUSINESS_RECONCILIATION_CLIENT=String.raw`
    const reviewCount=sum(reports.map(report=>report.coverage.review_orders)),paidReturns=sum(reports.map(report=>report.coverage.return_orders)),unknownReturns=sum(reports.map(report=>report.coverage.return_unknown_orders));
    metric('Pedidos em revisão',String(reviewCount),'Fora dos valores dos pedidos pagos.'+(complete?'':' Contagem dos intervalos já consultados.'));
    metric('Pedidos pagos com devolução identificada',String(paidReturns),'Não inclui os pedidos em revisão.'+(unknownReturns>0?' Há ainda '+unknownReturns+' pedido(s) pago(s) sem confirmação de devolução.':'')+(complete?'':' Contagem dos intervalos já consultados.'));
-   for(const report of reports)runs.append(renderRun(report,reviews.find(row=>row.run_id===report.run_id&&row.source_revision===report.source_revision)?.review??null));
+   for(const report of reports)runs.append(renderRun(report,reviews.find(row=>row.run_id===report.run_id&&row.source_revision===report.source_revision)?.review??null,amounts.find(row=>row.run_id===report.run_id&&row.source_revision===report.source_revision)?.money??null));
   }
+  renderAdjustedBalance();renderMoney();
   const failed=value.attempts.some(attempt=>attempt.status==='UNAVAILABLE');
   if(failed||value.pending.includes('SOURCE_UNAVAILABLE')){notice.hidden=false;notice.textContent='Parte da fonte não pôde ser consultada. As evidências salvas mantêm suas datas originais; o servidor tentará novamente.';}
   else if(!reports.length&&value.status!=='COLLECTING'){notice.hidden=false;notice.textContent='A conferência será preenchida pela coleta do servidor. Não é necessário consultar a Shopee manualmente.';}
  }
- function observe(selected,selectedScope=null){
+ function observe(selected,selectedScope=null,monthly=null){
   if(!started||!validMonth(selected))return Promise.resolve(false);
   const projectedScope=projectBusinessMonthAuditScope(selectedScope),scope=projectedScope?.start_date===selected+'-01'?projectedScope:null,selectedScopeKey=scope===null?'':JSON.stringify(scope);
+  monthlyContext=scope===null?null:monthly;auditScopeContext=scope;
   const changedMonth=selected!==month,changedScope=selectedScopeKey!==scopeKey;
   if(changedMonth||changedScope){
    generation++;month=selected;scopeKey=selectedScopeKey;pending=null;
    const saved=cache.get(selected),reuse=changedMonth&&saved?.scopeKey===selectedScopeKey;
-   value=reuse?saved.value:null;reviews=reuse?saved.reviews:[];
+   value=reuse?saved.value:null;reviews=reuse?saved.reviews:[];amounts=reuse?saved.amounts:[];
    if(!reuse){cache.delete(selected);attempted.delete(selected);}
    render();showMessage(value?'Mostrando as últimas evidências salvas deste mês.':'Conferindo as evidências salvas deste mês…');
-  }
-  if(scope===null){value=null;reviews=[];render();showMessage('Aguardando um resumo publicado para conferir os mesmos pedidos.','Aguardando resumo');return Promise.resolve(false);}
+  }else renderAdjustedBalance();
+  if(scope===null){value=null;reviews=[];amounts=[];render();showMessage('Aguardando um resumo publicado para conferir os mesmos pedidos.','Aguardando resumo');return Promise.resolve(false);}
   if(document.hidden)return Promise.resolve(false);
   if(pending?.month===selected&&pending.scopeKey===selectedScopeKey)return pending.task;
   const stamp=Date.now(),last=attempted.get(selected);if(last?.scopeKey===selectedScopeKey&&stamp>=last.at&&stamp-last.at<60000)return Promise.resolve(value!==null);
   attempted.set(selected,{scopeKey:selectedScopeKey,at:stamp});while(attempted.size>12){const first=attempted.keys().next().value;attempted.delete(first);cache.delete(first);}const token=generation,current=()=>started&&generation===token&&month===selected&&scopeKey===selectedScopeKey;
   const task=(async()=>{
    await Promise.resolve();
-   try{const raw=await api('finance/reconciliation?month='+encodeURIComponent(selected)+'&evidence=review-v1');if(!current())return false;const evidence=projectBusinessReconciliationEvidence(raw,{projectBusiness:projectBusinessReconciliation,projectFrame:projectReconciliationFrame,projectEvidenceFrame:projectReconciliationEvidenceFrame}),checked=evidence?.report??projectBusinessReconciliation(raw,projectReconciliationFrame);if(!checked||checked.month!==selected)throw Error('INVALID_RECONCILIATION');const receivedScope=projectBusinessMonthAuditScope({publication_revision:checked.source_revision,start_date:checked.start_date,end_date:checked.end_date,sources:checked.sources});if(receivedScope===null||JSON.stringify(receivedScope)!==selectedScopeKey)throw Error('RECONCILIATION_SCOPE_MISMATCH');value=checked;reviews=evidence?.reviews??[];cache.set(selected,{scopeKey:selectedScopeKey,value:checked,reviews});while(cache.size>12){const first=cache.keys().next().value;cache.delete(first);attempted.delete(first);}render();return true;}
+   try{const raw=await api('finance/reconciliation?month='+encodeURIComponent(selected)+'&evidence=refunds-v1');if(!current())return false;const moneyEvidence=projectBusinessReconciliationMoney(raw,{projectBusiness:projectBusinessReconciliation,projectFrame:projectReconciliationFrame,projectEvidenceFrame:projectReconciliationEvidenceFrame,projectMoneyFrame:projectReconciliationMoneyFrame}),evidence=moneyEvidence??projectBusinessReconciliationEvidence(raw,{projectBusiness:projectBusinessReconciliation,projectFrame:projectReconciliationFrame,projectEvidenceFrame:projectReconciliationEvidenceFrame}),checked=evidence?.report??projectBusinessReconciliation(raw,projectReconciliationFrame);if(!checked||checked.month!==selected)throw Error('INVALID_RECONCILIATION');const receivedScope=projectBusinessMonthAuditScope({publication_revision:checked.source_revision,start_date:checked.start_date,end_date:checked.end_date,sources:checked.sources});if(receivedScope===null||JSON.stringify(receivedScope)!==selectedScopeKey)throw Error('RECONCILIATION_SCOPE_MISMATCH');value=checked;reviews=evidence?.reviews??[];amounts=moneyEvidence?.money??[];cache.set(selected,{scopeKey:selectedScopeKey,value:checked,reviews,amounts});while(cache.size>12){const first=cache.keys().next().value;cache.delete(first);attempted.delete(first);}render();return true;}
    catch{if(current())showMessage(value?'Não foi possível atualizar a conferência agora. As evidências salvas e suas datas foram preservadas.':'A conferência ainda não pôde ser carregada. A coleta do servidor continua e tentaremos novamente.','Em conferência');return false;}
    finally{if(current()&&pending?.task===task)pending=null;}
   })();
   pending={month:selected,scopeKey:selectedScopeKey,task};return task;
  }
- function start(options){if(!el('')||typeof options?.api!=='function')return false;if(started&&api===options.api)return true;generation++;api=options.api;started=true;month='';scopeKey='';pending=null;value=null;reviews=[];cache.clear();attempted.clear();render();showMessage('Aguardando o resumo salvo do mês.');return true;}
+ function start(options){if(!el('')||typeof options?.api!=='function')return false;if(started&&api===options.api)return true;generation++;api=options.api;started=true;month='';scopeKey='';pending=null;value=null;reviews=[];amounts=[];monthlyContext=null;auditScopeContext=null;cache.clear();attempted.clear();render();showMessage('Aguardando o resumo salvo do mês.');return true;}
  function stop(){started=false;generation++;api=null;pending=null;}
  function open(){const details=el('Details');if(!started||!details)return false;details.open=true;details.scrollIntoView?.({behavior:'smooth',block:'start'});el('Summary')?.focus?.({preventScroll:true});return true;}
  globalThis.brazaReconciliation={start,observe,stop,open};

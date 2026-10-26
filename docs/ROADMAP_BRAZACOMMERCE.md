@@ -25,9 +25,10 @@ funcionários, boletos, parcelas e recuperação de custos após remover um tama
 O total anterior de despesas é preservado e sua transição exige conferência
 explícita para evitar dupla contagem.
 O complemento do custo histórico do tamanho 16 foi publicado em `4853bbf`
-pela PR #5. A continuidade atual detalha os pedidos em revisão e relaciona
-suas solicitações de devolução com as evidências já salvas. Isso prepara a
-conferência das pendências financeiras sem acrescentar coleta externa.
+pela PR #5. O detalhe dos pedidos em revisão e suas solicitações foi publicado
+em `b97d55e` pela PR #6. A continuidade atual mostra os
+[valores de devolução por situação e o saldo após ajustes informados](VALORES_DE_DEVOLUCOES_E_SALDO_AJUSTADO.md),
+sem acrescentar coleta externa ou descontar o reembolso duas vezes.
 O diagnóstico e os limites dessa correção estão em
 [abertura do painel](ABERTURA_DO_PAINEL.md#limite-diário-do-d1--26102026).
 A atualização da ponte Hermes no Droplet permanece uma etapa separada; ela não
@@ -64,7 +65,8 @@ testes locais.
 | Eficiência da coleta e dos custos | Publicada em `5322d70` pela PR #3 | Checkpoints idênticos de pagamento e quantidades mensais não são regravados; falhas persistentes da fonte seguem esperas de 5/10/20/30 minutos. A medição por banco em produção permanece pendente; os testes não projetam a fatura. |
 | Despesas operacionais e contas a pagar | Publicadas em `2d6c320` pela PR #4 | Cadastro discriminado de aluguel, funcionários, boletos e outras despesas; parcelas mensais finitas, vencimento e pagamento informado. A competência determina o custo e a conferência explícita impede duplicar o total agregado anterior. Não executa pagamentos. |
 | Variações removidas do catálogo | PR #4 publicada; complemento do custo histórico publicado em `4853bbf` pela PR #5 | Preserva correções históricas e variações atuais. A evidência aprovada do tamanho 16 pode usar a regra infantil atual quando ela for inequívoca; os demais bloqueios e as decisões manuais permanecem. Recalcula dados salvos sem nova consulta externa. A conferência do resultado atualizado da conta continua separada dos testes. |
-| Pedidos em revisão e suas devoluções | Implementados nesta continuidade | Detalha situação, referências, cobertura e horários com os dados já salvos. Separa os pedidos em revisão dos pagos com devolução, corrige a falsa exigência de referência em cancelamentos e mantém as pendências de recebimento e reembolso. O atalho para a conferência não inicia consultas. |
+| Pedidos em revisão e suas devoluções | Publicados em `b97d55e` pela PR #6 | Detalha situação, referências, cobertura e horários com os dados já salvos. Separa os pedidos em revisão dos pagos com devolução, corrige a falsa exigência de referência em cancelamentos e mantém as pendências de recebimento e reembolso. O atalho para a conferência não inicia consultas. |
+| Valores de devolução e saldo após ajustes | Implementados nesta continuidade | Totais por situação e base financeira, repasse por pedido afetado e saldo provisório com os custos da mesma publicação. Não duplica deduções, não transforma aprovação em comprovante bancário e mantém o saldo ainda a liberar indisponível. |
 | Diagnóstico da conta | Versionado em `main` (`6f9ce23`); ativação a conferir | Calcula TACOS, saldo disponível antes de Ads, cobertura dos custos e próximas tarefas a partir do mês validado. Dados ausentes bloqueiam os indicadores correspondentes. Não autoriza investimento. |
 | Hermes com financeiro da loja | Publicado (`11f45ce`); atualização da ponte pendente | Cada análise preserva o mês financeiro, custos, DAS, anúncios, pendências e até três próximas ações. A ponte antiga não recebe tarefas novas. Exige atualização no Droplet e observação de uma execução real com a nova referência. |
 | Alterar anúncios, campanhas e promoções | Ainda não implementado para execução comercial | As proteções de somente leitura e Ads/PROMO `LOCKED` continuam vigentes. A coleta autônoma não cria permissão de escrita na Shopee. |
@@ -191,16 +193,18 @@ conciliação financeira segue em paralelo. Ainda faltam armazenamento
 centralizado das artes, regras para composições especiais, consumo real de
 material e calibração da saída física; não há impressão autônoma na máquina.
 
-1. Confirmar a atualização da conta após a correção do par histórico
-   `58270722536 / 189628289642`: o diagnóstico enviado em 26/10 já comprova o
-   tamanho 16, mas ainda mostrava 267 de 268 unidades com custo. Conferir também
-   o cadastro de despesas e comparar
+1. O novo diagnóstico de 26/10, `checked_at: 1793024105`, mostra 267 de 267
+   unidades com custo e nenhuma pendência de produção na base atual. A base de
+   pedidos mudou; conferir o par histórico `58270722536 / 189628289642` mantém
+   seu escopo próprio. Conferir também o cadastro de despesas e comparar
    consumo D1 por banco com o avanço da coleta. Conferir cache inicial, cron sem
    aba aberta, pausa, concorrência, falhas e horários reais; registrar
    observações de produção separadamente dos testes locais.
 2. Conferir as despesas por competência e usar o detalhe dos pedidos em revisão
    para identificar as pendências de situação, referências e detalhes de
-   devolução. Conferir a cobertura e as diferenças nas liberações. Conciliar recebimentos e valores
+   devolução. Conferir os valores por situação e os ajustes do repasse, sem
+   presumir que cada ajuste corresponde a uma devolução específica. Conferir a
+   cobertura e as diferenças nas liberações. Conciliar recebimentos e valores
    efetivos de reembolso antes de chamar o resultado de realizado.
 3. Documentar e validar os contratos oficiais de estoque e campanhas, incluindo
    permissões de escrita por ação e limites próprios de investimento em Ads.

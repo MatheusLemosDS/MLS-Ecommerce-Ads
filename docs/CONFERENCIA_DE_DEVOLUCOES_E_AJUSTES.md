@@ -90,10 +90,18 @@ renovação de acesso. Há cache, leases por execução e caso, espera após fal
 prioridade para casos ainda não consultados. Uma permissão ausente para
 Returns é indicada separadamente e não desconecta o financeiro.
 
-O valor `refund_amount` é exibido como **valor solicitado informado**. Pode
-existir inclusive em uma solicitação cancelada; não comprova reembolso pago.
-Não é descontado novamente do repasse. Status novos ou desconhecidos continuam
-explícitos. Ausência de valor ou referência não se transforma em zero.
+O valor `refund_amount` é exibido como **valor de reembolso informado pela
+Shopee**, acompanhado da situação da solicitação. Pode existir inclusive em
+uma solicitação cancelada; esse campo sozinho não comprova crédito bancário
+ou débito no repasse do vendedor. Não é descontado novamente do repasse.
+Status novos ou desconhecidos continuam explícitos. Ausência de valor ou
+referência não se transforma em zero.
+
+A continuidade de [valores das devoluções e saldo após ajustes](VALORES_DE_DEVOLUCOES_E_SALDO_AJUSTADO.md)
+totaliza as referências por situação e por base financeira, antes do limite
+visual, e apresenta o repasse compatível de cada pedido afetado. Um quadro
+provisório combina o repasse após ajustes com os custos da mesma publicação.
+O saldo ainda a liberar permanece separado e indisponível até sua conciliação.
 
 ## Ajustes e resultado
 
