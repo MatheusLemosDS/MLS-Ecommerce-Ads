@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import {D1} from './sqlite-d1.mjs';
 import {BUSINESS_MONTH_PUBLICATION_SCHEMA,saveCompletedBusinessMonth} from '../src/business-month-publication.mjs';
-import {BUSINESS_RECONCILIATION_SCHEMA,BusinessReconciliationError,readBusinessReconciliation,readBusinessReconciliationEvidence,runBusinessReconciliation,projectBusinessReconciliation,projectBusinessReconciliationEvidence} from '../src/business-reconciliation.mjs';
-import {projectReconciliationFrame,projectReconciliationEvidenceFrame} from '../../finance/src/reconciliation-frame.mjs';
+import {BUSINESS_RECONCILIATION_SCHEMA,BusinessReconciliationError,readBusinessReconciliation,readBusinessReconciliationEvidence,readBusinessReconciliationMoney,runBusinessReconciliation,projectBusinessReconciliation,projectBusinessReconciliationEvidence,projectBusinessReconciliationMoney} from '../src/business-reconciliation.mjs';
+import {projectReconciliationFrame,projectReconciliationEvidenceFrame,projectReconciliationMoneyFrame} from '../../finance/src/reconciliation-frame.mjs';
 import {projectBusinessPeriodFrame} from '../../finance/src/business-period-frame.mjs';
 const month='2026-10',at=Date.UTC(2026,9,25,15),stamp=at/1000,uuid=index=>'11111111-1111-4111-8111-'+String(index).padStart(12,'0');
 function sourceFrame(index,offset=0,withReview=false){
@@ -36,6 +36,15 @@ function reviewEvidence(source){
  const orders=count?[{...base,order_hash:'c'.repeat(64),status:'IN_CANCEL',reference_state:'NOT_APPLICABLE',reference_count:null,references_checked_at:null,checked_cases:null,pending_cases:null},{...base,order_hash:'d'.repeat(64),status:'TO_RETURN',reference_state:'KNOWN_EMPTY',reference_count:0,references_checked_at:stamp,checked_cases:0,pending_cases:0}]:[];
  const value={schema:'finance_reconciliation_v2',report:legacy,review:{schema:'finance_review_orders_v1',summary:{orders:count,in_cancel:count?1:0,to_return:count?1:0,other:0,unknown:0},orders,truncation:{truncated:false,orders_total:count,orders_included:count},basis:'REVIEW_ORDERS_OUTSIDE_PAID_COHORT'}};
  assert.ok(projectReconciliationEvidenceFrame(value,projectReconciliationFrame));return value;
+}
+
+const moneyValidators={...evidenceValidators,projectMoneyFrame:projectReconciliationMoneyFrame};
+function moneyEvidence(source){
+ const value=reviewEvidence(source),statuses=['PENDING','UNKNOWN','REQUESTED','ACCEPTED','CANCELLED','JUDGING','REFUND_PAID','CLOSED','PROCESSING'];
+ const groups=['PAID','REVIEW','OTHER'].map(cohort=>({cohort,statuses:statuses.map(status=>({status,cases:cohort==='PAID'&&status==='ACCEPTED'?1:0,amount_known:cohort==='PAID'&&status==='ACCEPTED'?1:0,known_amount_cents:cohort==='PAID'&&status==='ACCEPTED'?1000:0})),source_checked_at:{oldest_at:cohort==='PAID'?stamp:null,latest_at:cohort==='PAID'?stamp:null}}));
+ const payouts=[{order_hash:'b'.repeat(64),cohort:'PAID',source_checked_at:stamp-1,reference_count:1,state:'AVAILABLE',base_repass_cents:8000,adjustment_cents:100,after_adjustment_repass_cents:8100},...value.review.orders.filter(row=>row.status==='TO_RETURN').map(row=>({order_hash:row.order_hash,cohort:'REVIEW',source_checked_at:row.source_checked_at,reference_count:row.reference_count,state:'NOT_IN_PAID_COHORT',base_repass_cents:null,adjustment_cents:null,after_adjustment_repass_cents:null}))];
+ const result={...value,schema:'finance_reconciliation_v3',money:{schema:'finance_reconciliation_money_v1',currency:'BRL',groups,payouts,truncation:{truncated:false,payouts_total:payouts.length,payouts_included:payouts.length},basis:'SAVED_RETURN_AMOUNTS_AND_PAID_PAYOUT_AFTER_ADJUSTMENTS'}};
+ assert.ok(projectReconciliationMoneyFrame(result,projectReconciliationFrame,projectReconciliationEvidenceFrame));return result;
 }
 
 test('local observation requires the exact completed publication and cannot initiate a provider collection',async t=>{
@@ -120,4 +129,29 @@ test('review evidence rejects foreign revisions, unknown fields and stale public
 test('an unavailable review response preserves the last validated details and their original source times',async t=>{
  const f=await fixture(t,{withReview:true});await runBusinessReconciliation(f.env,async()=>reviewEvidence(f.frames[0]),{month},{now:f.now});await runBusinessReconciliation(f.env,async()=>report(f.frames[1]),{month},{now:f.now});const before=await readBusinessReconciliationEvidence(f.env,{month},{now:f.now});f.clock.time+=901000;
  const result=await runBusinessReconciliation(f.env,async()=>({schema:'finance_reconciliation_unavailable_v1',status:'UNAVAILABLE',diagnostic:{code:'FINANCE_RECONCILIATION_TIMEOUT',http:504}}),{month},{now:f.now});assert.equal(result.status,'UNAVAILABLE');const after=await readBusinessReconciliationEvidence(f.env,{month},{now:f.now});assert.deepEqual(after.reviews,before.reviews);assert.deepEqual(after.report.reports,before.report.reports);assert.ok(after.report.pending.includes('SOURCE_UNAVAILABLE'));assert.equal(after.reviews[0].review.orders[0].source_checked_at,stamp-1);
+});
+
+test('monetary sidecars use the same saved report, preserve exact v1/v2 readers and add no local queries or writes',async t=>{
+ const f=await fixture(t,{withReview:true}),publication=f.db.db.prepare('SELECT * FROM business_month_publications').get();let calls=0;
+ await runBusinessReconciliation(f.env,async()=>{calls++;return moneyEvidence(f.frames[0]);},{month},{now:f.now});await runBusinessReconciliation(f.env,async()=>{calls++;return reviewEvidence(f.frames[1]);},{month},{now:f.now});
+ const legacy=await readBusinessReconciliation(f.env,{month},{now:f.now}),v2=await readBusinessReconciliationEvidence(f.env,{month},{now:f.now}),before=stored(f),changes=f.db.db.prepare('SELECT total_changes() AS n').get().n;
+ const oldCalls=f.db.rpc;await readBusinessReconciliationEvidence(f.env,{month},{now:f.now});const oldReadCost=f.db.rpc-oldCalls,nextCalls=f.db.rpc;
+ const value=await readBusinessReconciliationMoney(f.env,{month},{now:f.now});assert.equal(f.db.rpc-nextCalls,oldReadCost);assert.ok(projectBusinessReconciliationMoney(value,moneyValidators));assert.deepEqual(value.report,legacy);assert.deepEqual(value.reviews,v2.reviews);assert.equal(value.money.length,1);assert.equal(value.money[0].run_id,f.frames[0].run_id);assert.equal(value.money[0].money.groups[0].statuses.find(row=>row.status==='ACCEPTED').known_amount_cents,1000);assert.equal(value.money[0].money.payouts[0].after_adjustment_repass_cents,8100);
+ assert.equal(f.db.db.prepare('SELECT total_changes() AS n').get().n,changes);assert.deepEqual(stored(f),before);assert.equal(calls,2);assert.deepEqual(f.db.db.prepare('SELECT * FROM business_month_publications').get(),publication);assert.equal(projectBusinessReconciliationEvidence(value,evidenceValidators),null);
+ const context=vm.createContext({serialized:JSON.stringify(value),TextEncoder});vm.runInContext([projectReconciliationFrame,projectReconciliationEvidenceFrame,projectReconciliationMoneyFrame,projectBusinessReconciliation,projectBusinessReconciliationMoney].map(fn=>fn.toString()).join('\n')+'\nglobalThis.output=projectBusinessReconciliationMoney(JSON.parse(serialized),{projectBusiness:projectBusinessReconciliation,projectFrame:projectReconciliationFrame,projectEvidenceFrame:projectReconciliationEvidenceFrame,projectMoneyFrame:projectReconciliationMoneyFrame});',context);assert.deepEqual(JSON.parse(JSON.stringify(context.output)),value);
+ const detached=projectBusinessReconciliationMoney(value,moneyValidators);detached.money[0].money.payouts[0].after_adjustment_repass_cents=0;assert.equal(value.money[0].money.payouts[0].after_adjustment_repass_cents,8100);
+});
+
+test('monetary detail cannot substitute another source, double its amount, expose private fields or downgrade a malformed extension',async t=>{
+ const f=await fixture(t,{withReview:true});await runBusinessReconciliation(f.env,async()=>moneyEvidence(f.frames[0]),{month},{now:f.now});const value=await readBusinessReconciliationMoney(f.env,{month},{now:f.now});
+ for(const mutate of [v=>v.money[0].source_revision++,v=>v.money[0].run_id=uuid(99),v=>v.money.push(v.money[0]),v=>v.reviews=[],v=>v.money[0].money.payouts[0].order_sn='PRIVATE',v=>v.money[0].money.payouts[0].after_adjustment_repass_cents-=1000,v=>v.money[0].money.groups[0].statuses[3].known_amount_cents*=2,v=>v.money[0].money.groups[0].cohort='REVIEW']){const invalid=structuredClone(value);mutate(invalid);assert.equal(projectBusinessReconciliationMoney(invalid,moneyValidators),null);}
+ let invoked=false;const poison={...value};Object.defineProperty(poison,'money',{enumerable:true,get(){invoked=true;throw Error('private accessor');}});assert.equal(projectBusinessReconciliationMoney(poison,moneyValidators),null);assert.equal(invoked,false);
+ const previous=stored(f).reports,malformed=moneyEvidence(f.frames[1]);malformed.money.payouts[0].after_adjustment_repass_cents=0;let calls=0;const failure=await runBusinessReconciliation(f.env,async()=>{calls++;return malformed;},{month},{now:f.now});assert.equal(failure.status,'UNAVAILABLE');assert.equal(calls,1);assert.deepEqual(stored(f).reports,previous);
+ await f.publish(11,10);const replacement=await readBusinessReconciliationMoney(f.env,{month},{now:f.now});assert.equal(replacement.report.source_revision,11);assert.deepEqual(replacement.report.reports,[]);assert.deepEqual(replacement.reviews,[]);assert.deepEqual(replacement.money,[]);
+});
+
+test('a later source failure preserves monetary observations, while a valid legacy response explicitly withdraws unavailable detail',async t=>{
+ const f=await fixture(t);for(const source of f.frames)await runBusinessReconciliation(f.env,async()=>moneyEvidence(source),{month},{now:f.now});const before=await readBusinessReconciliationMoney(f.env,{month},{now:f.now});f.clock.time+=901000;
+ await runBusinessReconciliation(f.env,async()=>({schema:'finance_reconciliation_unavailable_v1',status:'UNAVAILABLE',diagnostic:{code:'FINANCE_RECONCILIATION_TIMEOUT',http:504}}),{month},{now:f.now});const failed=await readBusinessReconciliationMoney(f.env,{month},{now:f.now});assert.deepEqual(failed.money,before.money);assert.deepEqual(failed.report.reports,before.report.reports);assert.ok(failed.report.pending.includes('SOURCE_UNAVAILABLE'));
+ await runBusinessReconciliation(f.env,async(_,input)=>report(f.frames.find(row=>row.run_id===input.run_id),Math.floor(f.now()/1000)),{month},{now:f.now});const mixed=await readBusinessReconciliationMoney(f.env,{month},{now:f.now});assert.equal(mixed.money.length,1);assert.equal(mixed.reviews.length,1);assert.equal(mixed.report.reports.length,2);
 });

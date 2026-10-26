@@ -2,8 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import {BUSINESS_RECONCILIATION_CLIENT,BUSINESS_RECONCILIATION_CSS,businessReconciliationBody} from '../src/business-reconciliation-view.mjs';
-import {projectBusinessReconciliation,projectBusinessReconciliationEvidence} from '../src/business-reconciliation.mjs';
-import {projectReconciliationFrame,projectReconciliationEvidenceFrame} from '../../finance/src/reconciliation-frame.mjs';
+import {projectBusinessReconciliation,projectBusinessReconciliationEvidence,projectBusinessReconciliationMoney} from '../src/business-reconciliation.mjs';
+import {projectReconciliationFrame,projectReconciliationEvidenceFrame,projectReconciliationMoneyFrame} from '../../finance/src/reconciliation-frame.mjs';
+import {projectBusinessMonth} from '../src/business-month.mjs';
+import {buildAdsMeasurement} from '../src/ads-measurement.mjs';
+import {buildAdsCalendar} from '../src/ads-calendar.mjs';
 
 const clock=Date.UTC(2026,9,25,15),stamp=clock/1000,uuid='11111111-1111-4111-8111-111111111111';
 function observation({month='2026-10',denied=false,missing=false}={}){
@@ -12,8 +15,10 @@ function observation({month='2026-10',denied=false,missing=false}={}){
  const value={schema:'business_reconciliation_v1',month,start_date:start,end_date:end,checked_at:stamp,status:denied||missing?'PARTIAL':'CHECKED',source_revision:7,sources:[{run_id:uuid,source_revision:2,start_date:start,end_date:end}],reports:[report],attempts:[{run_id:uuid,source_revision:2,checked_at:stamp-100,status:'SUCCESS',code:null,next_attempt_at:stamp+600}],pending:denied||missing?['RECONCILIATION_PENDING']:[]};
  assert.ok(projectReconciliationFrame(report));assert.ok(projectBusinessReconciliation(value,projectReconciliationFrame));return value;
 }
-function auditScope(value){value=value.schema==='business_reconciliation_v2'?value.report:value;return value.sources.length?{publication_revision:value.source_revision,start_date:value.start_date,end_date:value.end_date,sources:value.sources.map(({run_id,source_revision,start_date,end_date})=>({run_id,source_revision,start_date,end_date}))}:null;}
+function auditScope(value){value=['business_reconciliation_v2','business_reconciliation_v3'].includes(value.schema)?value.report:value;return value.sources.length?{publication_revision:value.source_revision,start_date:value.start_date,end_date:value.end_date,sources:value.sources.map(({run_id,source_revision,start_date,end_date})=>({run_id,source_revision,start_date,end_date}))}:null;}
 const validators={projectBusiness:projectBusinessReconciliation,projectFrame:projectReconciliationFrame,projectEvidenceFrame:projectReconciliationEvidenceFrame};
+const moneyValidators={...validators,projectMoneyFrame:projectReconciliationMoneyFrame};
+const moneyStatuses=['PENDING','UNKNOWN','REQUESTED','ACCEPTED','CANCELLED','JUDGING','REFUND_PAID','CLOSED','PROCESSING'];
 const internalHash=index=>String(index).padEnd(64,'a');
 function reviewObservation(){
  const value=observation(),report=value.reports[0];
@@ -24,6 +29,21 @@ function reviewObservation(){
  report.truncation={truncated:false,cases_total:6,cases_included:6};
  const review={schema:'finance_review_orders_v1',summary:{orders:2,in_cancel:0,to_return:2,other:0,unknown:0},orders:[5,6].map(index=>({order_hash:internalHash(index),status:'TO_RETURN',source_checked_at:stamp-400,reference_state:'AVAILABLE',reference_count:1,references_checked_at:stamp-300,reference_diagnostic:null,next_attempt_at:null,checked_cases:1,pending_cases:0})),truncation:{truncated:false,orders_total:2,orders_included:2},basis:'REVIEW_ORDERS_OUTSIDE_PAID_COHORT'};
  const wrapper={schema:'business_reconciliation_v2',report:value,reviews:[{run_id:report.run_id,source_revision:report.source_revision,review}]};assert.ok(projectBusinessReconciliationEvidence(wrapper,validators));return wrapper;
+}
+function moneyObservation(){
+ const old=reviewObservation(),report=old.report.reports[0],statuses=['ACCEPTED','REFUND_PAID','CANCELLED','CLOSED','ACCEPTED','UNKNOWN'],amounts=[1000,2000,3000,0,4000,null];
+ report.status='PARTIAL';old.report.status='PARTIAL';old.report.pending=['RECONCILIATION_PENDING'];report.pending.push('RETURN_STATUS_UNRECOGNIZED');
+ report.cases.forEach((row,index)=>Object.assign(row,{status:statuses[index],requested_refund_cents:amounts[index],diagnostic:statuses[index]==='UNKNOWN'?'UNKNOWN_STATUS':null}));report.returns.known_requested_refund_cents=10000;report.returns.requested_amount_complete=false;
+ const groups=['PAID','REVIEW','OTHER'].map(cohort=>{const cases=cohort==='PAID'?report.cases.slice(0,4):cohort==='REVIEW'?report.cases.slice(4):[];return {cohort,statuses:moneyStatuses.map(status=>{const rows=cases.filter(row=>row.status===status),known=rows.filter(row=>row.requested_refund_cents!==null);return {status,cases:rows.length,amount_known:known.length,known_amount_cents:known.reduce((sum,row)=>sum+row.requested_refund_cents,0)};}),source_checked_at:{oldest_at:cases.length?stamp-270:null,latest_at:cases.length?stamp-270:null}};});
+ const payouts=report.cases.map((row,index)=>({order_hash:row.order_hash,cohort:index<4?'PAID':'REVIEW',source_checked_at:stamp-400,reference_count:1,state:index<4?'AVAILABLE':'NOT_IN_PAID_COHORT',base_repass_cents:index<4?8000:null,adjustment_cents:index<4?100:null,after_adjustment_repass_cents:index<4?8100:null}));
+ const money={schema:'finance_reconciliation_money_v1',currency:'BRL',groups,payouts,truncation:{truncated:false,payouts_total:6,payouts_included:6},basis:'SAVED_RETURN_AMOUNTS_AND_PAID_PAYOUT_AFTER_ADJUSTMENTS'},value={schema:'business_reconciliation_v3',report:old.report,reviews:old.reviews,money:[{run_id:report.run_id,source_revision:report.source_revision,money}]};
+ assert.ok(projectBusinessReconciliationMoney(value,moneyValidators));return value;
+}
+function monthlyObservation(value=moneyObservation()){
+ const report=value.report.reports[0],selection={start_date:report.start_date,end_date:report.end_date},daily=Array.from({length:Number(report.end_date.slice(8))},(_,index)=>({date:report.start_date.slice(0,8)+String(index+1).padStart(2,'0'),expense:index===0?'10':'0',broad_gmv:index===0?'200':'0',broad_order:index===0?5:0,broad_roas:20,direct_gmv:0,direct_order:0,direct_roas:0}));
+ const ads=buildAdsCalendar([buildAdsMeasurement({status:'ok',connected:true,shop:{id:1178167501},period:selection,balance:0,daily},selection,stamp-60)],selection,stamp-60);
+ const c=report.coverage,frame={schema:'business_month_v1',month:value.report.month,start_date:report.start_date,end_date:report.end_date,status:'COMPLETE',checked_at:stamp,progress:{windows_total:1,windows_complete:1,pages_read:Math.ceil(c.orders/5)},coverage:{orders:c.orders,paid:c.paid_orders,completed:c.paid_orders,ongoing:0,cancelled:c.orders-c.paid_orders-c.review_orders,cancel_pending:0,unpaid:0,other:c.review_orders,unknown:0,payment_covered:c.paid_orders,payment_missing:0,returns:c.return_orders,returns_unknown:c.return_unknown_orders},sales_cents:40000,known_sales_cents:40000,expected_repass_cents:report.adjustments.base_repass_cents,known_expected_repass_cents:report.adjustments.base_repass_cents,production_cost_cents:4000,known_production_cost_cents:4000,invoice_tax_cents:800,known_invoice_tax_cents:800,ads_adjustment_cents:0,ads,expenses:{revision:1,external_expenses_cents:500,recharge_treatment:'UNCONFIRMED',updated_at:new Date(clock).toISOString()},result:{net_estimate_cents:null,net_profit_cents:null,net_margin_bps:null,pending:['STATUS_REVIEW_REQUIRED','RETURNS_NOT_RECONCILED'],basis:'PAID_ORDER_CREATE_MONTH_AND_CALENDAR_ADS_ESTIMATE'},unmapped_variants:[],bindings_revision:2,costs_revision:3,source_checked_at:{finance_oldest_at:report.source_checked_at.finance_oldest_at,finance_latest_at:report.source_checked_at.finance_latest_at,ads_at:ads.fetched_at}};
+ assert.ok(projectBusinessMonth(frame));return frame;
 }
 function browser(value=observation()){
  const ids=[...businessReconciliationBody().matchAll(/\bid="([^"]+)"/g)].map(match=>match[1]),context=vm.createContext({serialized:JSON.stringify(value),TextEncoder});
@@ -37,14 +57,14 @@ test('the evidence section is collapsed, responsive and displays requested refun
  const b=browser();assert.equal(b.run('brazaReconciliation.start({api})'),true);assert.equal(await b.run('brazaReconciliation.observe("2026-10",selectedScope)'),true);
  assert.equal(b.run('control("Details").open'),false);assert.match(b.text('Scope'),/01\/10\/2026 a 15\/10\/2026.*Revisão 7/);assert.match(b.text('Metrics'),/2 de 2.*81,00.*1 de 1/);
  assert.match(b.text('Runs'),/Repasse base informado:.*80,00.*Ajustes informados:.*1,00.*Repasse após ajustes informado:.*81,00/);
- assert.match(b.text('Runs'),/Solicitação cancelada.*não é uma despesa confirmada.*Valor solicitado informado:.*10,00/);assert.equal(b.run('financialNet.textContent'),'R$ 2.250,13');
- assert.equal(b.text('Badge'),'Evidências disponíveis');assert.match(body,/não comprovam pagamento ou recebimento no banco/);assert.deepEqual(b.calls(),[{path:'finance/reconciliation?month=2026-10&evidence=review-v1'}]);
+ assert.match(b.text('Runs'),/Solicitação cancelada.*não é uma despesa confirmada.*Valor de reembolso informado:.*10,00/);assert.equal(b.run('financialNet.textContent'),'R$ 2.250,13');
+ assert.equal(b.text('Badge'),'Evidências disponíveis');assert.match(body,/não comprovam pagamento ou recebimento no banco/);assert.deepEqual(b.calls(),[{path:'finance/reconciliation?month=2026-10&evidence=refunds-v1'}]);
 });
 
 test('absent adjusted payout and denied return permission stay unavailable rather than becoming zero or a new deduction',async()=>{
  const b=browser(observation({denied:true,missing:true}));b.run('brazaReconciliation.start({api})');await b.run('brazaReconciliation.observe("2026-10",selectedScope)');
  assert.match(b.text('Metrics'),/Repasse após ajustes informado\s+Não informado/);assert.match(b.text('Runs'),/Ajustes nos pedidos com valores compatíveis: Não informado/);
- assert.match(b.text('Runs'),/Shopee não liberou os detalhes de devoluções.*repasse e anúncios continuam disponíveis/);assert.match(b.text('Runs'),/Valor solicitado informado: Não informado/);assert.doesNotMatch(b.text('Runs'),/Valor solicitado informado:.*0,00/);
+ assert.match(b.text('Runs'),/Shopee não liberou os detalhes de devoluções.*repasse e anúncios continuam disponíveis/);assert.match(b.text('Runs'),/Valor de reembolso informado: Não informado/);assert.doesNotMatch(b.text('Runs'),/Valor de reembolso informado:.*0,00/);
  assert.equal(b.run('financialNet.textContent'),'R$ 2.250,13');assert.equal(b.calls().length,1);assert.equal(b.run('control("Metrics").hidden'),false);
 });
 
@@ -53,7 +73,7 @@ test('same-month observations coalesce and are throttled without an independent 
  await Promise.resolve();assert.equal(b.calls().length,1);b.run('finish(JSON.parse(JSON.stringify(current)));');assert.equal(await b.run('first'),true);
  for(let i=0;i<3;i++)assert.equal(await b.run('brazaReconciliation.observe("2026-10",selectedScope)'),true);assert.equal(b.calls().length,1);
  b.run('clock+=60000;customApi=async()=>{throw Error("PRIVATE_PROVIDER_TOKEN");};');assert.equal(await b.run('brazaReconciliation.observe("2026-10",selectedScope)'),false);assert.match(b.text('Status'),/evidências salvas e suas datas foram preservadas/);assert.doesNotMatch(b.text('Status'),/PRIVATE_PROVIDER_TOKEN/);assert.match(b.text('Runs'),/81,00/);
- assert.ok(b.calls().every(call=>call.body===undefined&&call.path==='finance/reconciliation?month=2026-10&evidence=review-v1'));assert.equal(b.run('typeof setTimeout'),'undefined');
+ assert.ok(b.calls().every(call=>call.body===undefined&&call.path==='finance/reconciliation?month=2026-10&evidence=refunds-v1'));assert.equal(b.run('typeof setTimeout'),'undefined');
 });
 
 test('a late response from another month cannot replace the selected period or refresh its source timestamps',async()=>{
@@ -90,7 +110,7 @@ test('a new cohort in the same month invalidates the cache and ignores an older 
  b.run('clock+=60000;let refreshCount=0;customApi=()=>new Promise(resolve=>{if(++refreshCount===1)globalThis.finishOldCohort=resolve;else globalThis.finishNewCohort=resolve;});globalThis.oldRequest=brazaReconciliation.observe("2026-10",selectedScope);');await Promise.resolve();assert.equal(b.calls().length,2);
  b.run('globalThis.newRequest=brazaReconciliation.observe("2026-10",auditScope(JSON.parse(nextObservation)));globalThis.sameCohortRequest=brazaReconciliation.observe("2026-10",auditScope(JSON.parse(nextObservation)));');assert.equal(b.run('newRequest===sameCohortRequest'),true);assert.equal(b.text('Runs'),'','old same-month totals are hidden while the newly selected cohort is observed');await Promise.resolve();assert.equal(b.calls().length,3);
  b.run('finishNewCohort(JSON.parse(nextObservation));');assert.equal(await b.run('newRequest'),true);const metrics=b.text('Metrics'),scope=b.text('Scope');assert.match(metrics,/3 de 3.*162,00/);assert.match(scope,/Revisão 8/);
- b.run('finishOldCohort(JSON.parse(JSON.stringify(current)));');assert.equal(await b.run('oldRequest'),false);assert.equal(b.text('Metrics'),metrics);assert.equal(b.text('Scope'),scope);assert.equal(await b.run('brazaReconciliation.observe("2026-10",auditScope(JSON.parse(nextObservation)))'),true);assert.equal(b.calls().length,3);assert.ok(b.calls().every(call=>call.body===undefined&&call.path==='finance/reconciliation?month=2026-10&evidence=review-v1'));assert.equal(b.run('financialNet.textContent'),'R$ 2.250,13');
+ b.run('finishOldCohort(JSON.parse(JSON.stringify(current)));');assert.equal(await b.run('oldRequest'),false);assert.equal(b.text('Metrics'),metrics);assert.equal(b.text('Scope'),scope);assert.equal(await b.run('brazaReconciliation.observe("2026-10",auditScope(JSON.parse(nextObservation)))'),true);assert.equal(b.calls().length,3);assert.ok(b.calls().every(call=>call.body===undefined&&call.path==='finance/reconciliation?month=2026-10&evidence=refunds-v1'));assert.equal(b.run('financialNet.textContent'),'R$ 2.250,13');
 });
 
 test('a valid reconciliation from another publication or source cannot pass solely because its dates, counts and amounts match',async()=>{
@@ -132,7 +152,7 @@ test('review evidence distinguishes two excluded TO_RETURN orders from four paid
  assert.match(b.text('Metrics'),/Pedidos em revisão 2/);assert.match(b.text('Metrics'),/Pedidos pagos com devolução identificada 4/);assert.match(b.text('Metrics'),/6 de 6/);
  assert.match(b.text('Runs'),/2 pedido\(s\) fora dos valores dos pedidos pagos.*4 pedido\(s\) pagos com devolução/);assert.match(b.text('Runs'),/2 em devolução/);assert.match(b.text('Runs'),/Devolução em andamento.*situação observada.*Referências consultadas/);
  assert.match(b.text('Runs'),/Solicitações do pedido interno/);assert.match(b.text('Runs'),/Ver solicitações deste pedido/);assert.match(b.text('Runs'),/referências abaixo são internas.*não são os números dos pedidos na Shopee/);assert.match(b.text('Runs'),/reembolso efetivo continua sem conciliação/);assert.equal(b.run('financialNet.textContent'),'R$ 2.250,13');
- assert.deepEqual(b.calls(),[{path:'finance/reconciliation?month=2026-10&evidence=review-v1'}]);assert.equal(b.run('control("Details").open'),false);
+ assert.deepEqual(b.calls(),[{path:'finance/reconciliation?month=2026-10&evidence=refunds-v1'}]);assert.equal(b.run('control("Details").open'),false);
  const calls=b.calls().length;assert.equal(b.run('brazaReconciliation.open()'),true);assert.equal(b.run('control("Details").open'),true);assert.equal(b.run('control("Details").scrolled'),true);assert.equal(b.run('control("Summary").focused'),true);assert.equal(b.calls().length,calls,'opening the saved queue does not query a source or the App');
 });
 
@@ -165,4 +185,86 @@ test('sidecars from a different source or malformed private fields cannot overwr
  for(const mutate of [v=>{v.reviews[0].source_revision++;},v=>{v.reviews[0].review.orders[0].order_sn='PRIVATE_SERIAL';},v=>{v.reviews[0].review.orders[0].reference_count++;}]){
   const malformed=structuredClone(value);mutate(malformed);b.load(malformed);b.run('clock+=60000;');assert.equal(await b.run('brazaReconciliation.observe("2026-10",selectedScope)'),false);assert.equal(b.text('Runs'),text);assert.doesNotMatch(b.text('Runs'),/PRIVATE_SERIAL/);
  }
+});
+
+test('refund amounts remain separated by situation and cohort while the adjusted balance uses the provided payout only once',async()=>{
+ const value=moneyObservation(),b=browser(value);b.context.monthly=JSON.stringify(monthlyObservation(value));b.run('brazaReconciliation.start({api})');assert.equal(await b.run('brazaReconciliation.observe("2026-10",selectedScope,JSON.parse(monthly))'),true);
+ const groups=JSON.parse(b.run('JSON.stringify(control("Money").children[0].children.filter(node=>node.tag==="section").map(text))'));
+ assert.match(groups[0],/Pedidos pagos.*Solicitações aceitas.*10,00.*Status de reembolso pago informado.*20,00/);assert.doesNotMatch(groups[0],/40,00/);
+ assert.match(groups[1],/Pedidos em revisão.*fora dos valores pagos.*Solicitações aceitas.*40,00/);assert.match(groups[1],/Situação não reconhecida.*Não informado.*0 de 1 com valor informado/);
+ assert.match(groups[0],/Solicitação cancelada.*despesa confirmada.*30,00/);assert.match(groups[0],/Solicitação encerrada.*não define sozinho.*0,00.*1 de 1 com valor informado/);
+ assert.doesNotMatch(b.text('Money')+' '+b.text('Runs'),/Pagamento do reembolso ainda não confirmado|Pagamento ainda não confirmado|lucro realizado:/);
+ assert.match(b.text('Runs'),/Repasse base informado:.*80,00.*Ajuste com sinal: \+.*1,00.*Repasse após ajustes informado:.*81,00/);assert.match(b.text('Runs'),/Pedido fora dos valores pagos.*repasse deste pedido não está disponível/);
+ assert.match(b.text('AdjustedBalance'),/Saldo após ajustes informados.*261,00.*Saldo provisório/);assert.match(b.text('AdjustedBalance'),/Repasse após ajustes informado.*324,00.*Custos após o repasse.*63,00/);assert.match(b.text('AdjustedBalance'),/Ajuste com sinal aplicado ao repasse: \+.*4,00/);assert.match(b.text('AdjustedBalance'),/Valor ainda a liberar: indisponível/);assert.doesNotMatch(b.text('AdjustedBalance'),/161,00/);
+ assert.equal(b.run('financialNet.textContent'),'R$ 2.250,13');assert.deepEqual(b.calls(),[{path:'finance/reconciliation?month=2026-10&evidence=refunds-v1'}]);assert.equal(b.run('typeof setTimeout'),'undefined');
+ const calls=b.calls().length;b.run('brazaReconciliation.open()');assert.equal(b.calls().length,calls);
+});
+
+test('known state totals remain complete beyond the visible case limit without summing the forty displayed rows',async()=>{
+ const value=moneyObservation(),report=value.report.reports[0],money=value.money[0].money;
+ const extra=Array.from({length:40},(_,index)=>({case_hash:internalHash(index+100),order_hash:internalHash(1),status:'REFUND_PAID',requested_refund_cents:100,checked_at:stamp-270,diagnostic:null}));
+ report.cases=[...report.cases,...extra].slice(0,40);Object.assign(report.returns,{reference_count:46,checked_count:46,known_requested_refund_cents:14000});report.truncation={truncated:true,cases_total:46,cases_included:40};
+ Object.assign(money.groups[0].statuses.find(row=>row.status==='REFUND_PAID'),{cases:41,amount_known:41,known_amount_cents:6000});money.payouts[0].reference_count=41;assert.ok(projectBusinessReconciliationMoney(value,moneyValidators));
+ const b=browser(value);b.run('brazaReconciliation.start({api})');assert.equal(await b.run('brazaReconciliation.observe("2026-10",selectedScope)'),true);assert.match(b.text('Money'),/Status de reembolso pago informado.*41.*60,00.*41 de 41 com valor informado/);assert.match(b.text('Money'),/mesmo quando a lista de pedidos é limitada/);assert.match(b.text('Runs'),/40 de 46 solicitações exibidas/);assert.equal(b.calls().length,1);
+});
+
+test('denied or missing amounts and conflicting payouts stay unavailable while explicit zero stays visible',async()=>{
+ const value=moneyObservation(),report=value.report.reports[0],money=value.money[0].money;
+ report.status='BLOCKED';report.returns.permission='DENIED';report.returns.checked_count=5;report.returns.pending_count=1;report.returns.known_requested_refund_cents=9000;report.pending.push('RETURN_DETAILS_PENDING','RETURN_PERMISSION_REQUIRED','ADJUSTMENT_CONFLICT');
+ Object.assign(report.cases[0],{status:'PENDING',requested_refund_cents:null,checked_at:null,diagnostic:'PERMISSION_DENIED'});Object.assign(money.groups[0].statuses.find(row=>row.status==='ACCEPTED'),{cases:0,amount_known:0,known_amount_cents:0});money.groups[0].statuses.find(row=>row.status==='PENDING').cases=1;
+ Object.assign(report.adjustments,{reported_orders:3,conflicting_orders:1,known_adjustment_cents:300,after_adjustment_repass_cents:null});Object.assign(money.payouts[0],{state:'CONFLICT',adjustment_cents:null,after_adjustment_repass_cents:null});assert.ok(projectBusinessReconciliationMoney(value,moneyValidators));
+ const b=browser(value);b.context.monthly=JSON.stringify(monthlyObservation(value));b.run('brazaReconciliation.start({api})');assert.equal(await b.run('brazaReconciliation.observe("2026-10",selectedScope,JSON.parse(monthly))'),true);
+ assert.match(b.text('Money'),/Detalhes pendentes.*Não informado.*0 de 1 com valor informado/);assert.match(b.text('Money'),/Solicitação encerrada.*0,00/);assert.match(b.text('Runs'),/valores informados não são compatíveis/);assert.match(b.text('Runs'),/Shopee não liberou os detalhes de devoluções/);assert.match(b.text('AdjustedBalance'),/Em conferência.*repasses ou ajustes sem valores compatíveis/);assert.doesNotMatch(b.text('AdjustedBalance'),/Saldo provisório|0,00/);
+});
+
+test('legacy or mixed evidence keeps refund aggregates unavailable and never fabricates them from visible cases',async()=>{
+ for(const value of [observation(),reviewObservation(),{...moneyObservation(),money:[]}]){
+  const b=browser(value);b.run('brazaReconciliation.start({api})');assert.equal(await b.run('brazaReconciliation.observe("2026-10",selectedScope)'),true);assert.match(b.text('Money'),/valores por situação ainda não estão disponíveis/);assert.doesNotMatch(b.text('Money'),/Solicitações aceitas|Status de reembolso pago informado/);assert.equal(b.calls().length,1);assert.match(b.text('Runs'),/Valor de reembolso informado/);
+ }
+ const value=moneyObservation();value.report.end_date='2026-10-25';value.report.sources.push({run_id:'22222222-2222-4222-8222-222222222222',source_revision:3,start_date:'2026-10-16',end_date:'2026-10-25'});assert.ok(projectBusinessReconciliationMoney(value,moneyValidators));const b=browser(value);b.run('brazaReconciliation.start({api})');assert.equal(await b.run('brazaReconciliation.observe("2026-10",selectedScope)'),true);assert.match(b.text('Money'),/1 de 2 intervalo.*somente os intervalos com este detalhe disponível/);assert.match(b.text('Metrics'),/Repasse após ajustes informado Não informado/);
+});
+
+test('same-publication cost changes recalculate the adjusted balance locally and a pending response uses the latest costs',async()=>{
+ const value=moneyObservation(),b=browser(value);b.context.monthly=JSON.stringify(monthlyObservation(value));b.run('let currentMonthly=JSON.parse(monthly);brazaReconciliation.start({api})');assert.equal(await b.run('brazaReconciliation.observe("2026-10",selectedScope,currentMonthly)'),true);assert.match(b.text('AdjustedBalance'),/261,00/);
+ b.run('currentMonthly.expenses.external_expenses_cents=1500;currentMonthly.expenses.revision++;');assert.equal(await b.run('brazaReconciliation.observe("2026-10",selectedScope,currentMonthly)'),true);assert.match(b.text('AdjustedBalance'),/251,00/);assert.equal(b.calls().length,1);
+ b.run('clock+=60000;customApi=()=>new Promise(resolve=>globalThis.finish=resolve);globalThis.waiting=brazaReconciliation.observe("2026-10",selectedScope,currentMonthly);');await Promise.resolve();assert.equal(b.calls().length,2);
+ b.run('currentMonthly.expenses.external_expenses_cents=2500;currentMonthly.expenses.revision++;globalThis.updated=brazaReconciliation.observe("2026-10",selectedScope,currentMonthly);');assert.equal(b.run('waiting===updated'),true);assert.match(b.text('AdjustedBalance'),/241,00/);assert.equal(b.calls().length,2);
+ b.run('finish(JSON.parse(JSON.stringify(current)));');assert.equal(await b.run('waiting'),true);assert.match(b.text('AdjustedBalance'),/241,00/);assert.doesNotMatch(b.text('AdjustedBalance'),/261,00|251,00/);
+ b.run('currentMonthly.source_checked_at.finance_latest_at--;');assert.equal(await b.run('brazaReconciliation.observe("2026-10",selectedScope,currentMonthly)'),true);assert.match(b.text('AdjustedBalance'),/Em conferência.*mesmos pedidos e à mesma publicação/);assert.doesNotMatch(b.text('AdjustedBalance'),/241,00/);assert.equal(b.calls().length,2);
+});
+
+test('negative signed adjustments and incomplete production remain provisional without changing the strict monthly result',async()=>{
+ const value=moneyObservation(),report=value.report.reports[0];report.adjustments.known_adjustment_cents=-400;report.adjustments.after_adjustment_repass_cents=31600;value.money[0].money.payouts.filter(row=>row.cohort==='PAID').forEach(row=>Object.assign(row,{adjustment_cents:-100,after_adjustment_repass_cents:7900}));assert.ok(projectBusinessReconciliationMoney(value,moneyValidators));
+ const monthly=monthlyObservation(value);monthly.production_cost_cents=null;monthly.known_production_cost_cents=3000;monthly.unmapped_variants=[{item_id:'200',model_id:'300',quantity:1}];monthly.result.pending.push('PRODUCTION_COST_INCOMPLETE');assert.ok(projectBusinessMonth(monthly));
+ const b=browser(value);b.context.monthly=JSON.stringify(monthly);b.run('brazaReconciliation.start({api})');assert.equal(await b.run('brazaReconciliation.observe("2026-10",selectedScope,JSON.parse(monthly))'),true);assert.match(b.text('AdjustedBalance'),/263,00.*custos de produção já identificados.*produtos sem custo completo/);assert.match(b.text('AdjustedBalance'),/Ajuste com sinal aplicado ao repasse: -.*4,00/);assert.match(b.text('Runs'),/Ajuste com sinal: -.*1,00.*Repasse após ajustes informado:.*79,00/);assert.equal(monthly.result.net_estimate_cents,null);assert.equal(b.run('financialNet.textContent'),'R$ 2.250,13');
+});
+
+test('a money sidecar from another source or an inconsistent total cannot replace verified amounts',async()=>{
+ const value=moneyObservation(),b=browser(value);b.run('brazaReconciliation.start({api})');assert.equal(await b.run('brazaReconciliation.observe("2026-10",selectedScope)'),true);const shown=b.text('Money'),details=b.text('Runs');
+ for(const mutate of [v=>v.money[0].source_revision++,v=>v.money[0].money.groups[0].statuses.find(row=>row.status==='ACCEPTED').known_amount_cents++,v=>{v.money[0].money.payouts[0].order_sn='PRIVATE_ORDER';}]){
+  const malformed=structuredClone(value);mutate(malformed);b.load(malformed);b.run('clock+=60000');assert.equal(await b.run('brazaReconciliation.observe("2026-10",selectedScope)'),false);assert.equal(b.text('Money'),shown);assert.equal(b.text('Runs'),details);assert.doesNotMatch(b.text('Runs'),/PRIVATE_ORDER/);
+ }
+});
+
+test('affected orders without a visible case still display their saved payout evidence and reference uncertainty',async()=>{
+ const value=moneyObservation(),report=value.report.reports[0],money=value.money[0].money,review=value.reviews[0].review;
+ report.cases.splice(4,1);Object.assign(report.returns,{reference_count:5,checked_count:5,known_requested_refund_cents:6000});report.truncation={truncated:false,cases_total:5,cases_included:5};Object.assign(review.orders[0],{reference_state:'KNOWN_EMPTY',reference_count:0,checked_cases:0});money.payouts[4].reference_count=0;Object.assign(money.groups[1].statuses.find(row=>row.status==='ACCEPTED'),{cases:0,amount_known:0,known_amount_cents:0});assert.ok(projectBusinessReconciliationMoney(value,moneyValidators));
+ const b=browser(value);b.run('brazaReconciliation.start({api})');assert.equal(await b.run('brazaReconciliation.observe("2026-10",selectedScope)'),true);
+ const detail=b.run('control("Runs").children[0].children.find(node=>node.id?.endsWith("'+internalHash(5)+'"))');assert.ok(detail);assert.match(b.run('text(control("Runs").children[0].children.find(node=>node.id?.endsWith("'+internalHash(5)+'")))'),/Pedido interno.*Pedido fora dos valores pagos.*repasse deste pedido não está disponível.*Nenhuma solicitação identificada.*não confirma o encerramento/);assert.equal(b.calls().length,1);
+});
+
+test('a replaced publication clears money and balance together and a late response cannot restore either',async()=>{
+ const value=moneyObservation(),next=moneyObservation();next.report.source_revision++;for(const row of [next.report.sources[0],next.report.reports[0],next.report.attempts[0],next.reviews[0],next.money[0]])row.source_revision++;
+ next.report.reports[0].cases[0].requested_refund_cents=1500;next.report.reports[0].returns.known_requested_refund_cents+=500;next.money[0].money.groups[0].statuses.find(row=>row.status==='ACCEPTED').known_amount_cents=1500;assert.ok(projectBusinessReconciliationMoney(next,moneyValidators));
+ const monthly=monthlyObservation(value),nextMonthly=monthlyObservation(next);nextMonthly.expenses.external_expenses_cents=1500;assert.ok(projectBusinessMonth(nextMonthly));
+ const b=browser(value);Object.assign(b.context,{monthly:JSON.stringify(monthly),nextMonthly:JSON.stringify(nextMonthly),nextObservation:JSON.stringify(next)});b.run('brazaReconciliation.start({api})');assert.equal(await b.run('brazaReconciliation.observe("2026-10",selectedScope,JSON.parse(monthly))'),true);
+ b.run('clock+=60000;let attempts=0;customApi=()=>new Promise(resolve=>{if(++attempts===1)globalThis.finishOld=resolve;else globalThis.finishNew=resolve;});globalThis.oldRequest=brazaReconciliation.observe("2026-10",selectedScope,JSON.parse(monthly));');await Promise.resolve();
+ b.run('globalThis.newRequest=brazaReconciliation.observe("2026-10",auditScope(JSON.parse(nextObservation)),JSON.parse(nextMonthly));');assert.equal(b.text('Money'),'');assert.equal(b.text('AdjustedBalance'),'');await Promise.resolve();assert.equal(b.calls().length,3);
+ b.run('finishNew(JSON.parse(nextObservation));');assert.equal(await b.run('newRequest'),true);const money=b.text('Money'),balance=b.text('AdjustedBalance');assert.match(money,/Solicitações aceitas.*15,00/);assert.match(balance,/251,00/);
+ b.run('finishOld(JSON.parse(JSON.stringify(current)));');assert.equal(await b.run('oldRequest'),false);assert.equal(b.text('Money'),money);assert.equal(b.text('AdjustedBalance'),balance);assert.equal(await b.run('brazaReconciliation.observe("2026-10",null,null)'),false);assert.equal(b.text('Money'),'');assert.equal(b.text('AdjustedBalance'),'');assert.equal(b.calls().length,3);
+});
+
+test('dated financial evidence stays visible with its stale-source warning in the adjusted balance',async()=>{
+ const value=moneyObservation(),monthly=monthlyObservation(value);monthly.checked_at+=600;monthly.result.pending.push('FINANCIAL_SOURCE_STALE');assert.ok(projectBusinessMonth(monthly));const b=browser(value);b.context.monthly=JSON.stringify(monthly);b.run('brazaReconciliation.start({api})');assert.equal(await b.run('brazaReconciliation.observe("2026-10",selectedScope,JSON.parse(monthly))'),true);
+ assert.match(b.text('AdjustedBalance'),/261,00.*Financeiro consultado de.*anúncios em.*leitura financeira precisa ser atualizada.*valores e as datas salvos/);assert.equal(b.calls().length,1);assert.equal(monthly.result.net_estimate_cents,null);
 });

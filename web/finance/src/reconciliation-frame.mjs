@@ -106,3 +106,76 @@ export function projectReconciliationEvidenceFrame(value,projectLegacy){
   return JSON.stringify(result).length<=65536?result:null;
  }catch{return null;}
 }
+
+// The extension preserves the provider's exact case statuses and amounts.
+// Neither ACCEPTED nor REFUND_PAID proves a bank movement or a seller debit.
+export function projectReconciliationMoneyFrame(value,projectLegacy,projectReview){
+ const plain=item=>item!==null&&typeof item==='object'&&[Object.prototype,null].includes(Object.getPrototypeOf(item));
+ const exact=(item,keys)=>plain(item)&&Reflect.ownKeys(item).length===keys.length&&keys.every(key=>Object.hasOwn(Object.getOwnPropertyDescriptor(item,key)||{},'value'));
+ const array=(item,max)=>Array.isArray(item)&&Object.getPrototypeOf(item)===Array.prototype&&item.length<=max&&Reflect.ownKeys(item).length===item.length+1&&Array.from({length:item.length},(_,index)=>Object.getOwnPropertyDescriptor(item,String(index))).every(row=>row&&Object.hasOwn(row,'value'));
+ const int=(item,min=0,max=Number.MAX_SAFE_INTEGER)=>Number.isSafeInteger(item)&&!Object.is(item,-0)&&item>=min&&item<=max;
+ const cent=item=>item===null||int(item,Number.MIN_SAFE_INTEGER);
+ const hash=item=>typeof item==='string'&&/^[a-f0-9]{64}$/.test(item);
+ const cohorts=['PAID','REVIEW','OTHER'],statuses=['PENDING','UNKNOWN','REQUESTED','ACCEPTED','CANCELLED','JUDGING','REFUND_PAID','CLOSED','PROCESSING'];
+ try{
+  if(typeof projectLegacy!=='function'||typeof projectReview!=='function'||!exact(value,['schema','report','review','money'])||value.schema!=='finance_reconciliation_v3')return null;
+  const evidence=projectReview({schema:'finance_reconciliation_v2',report:value.report,review:value.review},projectLegacy),m=value.money;
+  if(!evidence||!exact(m,['schema','currency','groups','payouts','truncation','basis'])||m.schema!=='finance_reconciliation_money_v1'||m.currency!=='BRL'||m.basis!=='SAVED_RETURN_AMOUNTS_AND_PAID_PAYOUT_AFTER_ADJUSTMENTS'||!array(m.groups,3)||m.groups.length!==3||!array(m.payouts,40))return null;
+  const report=evidence.report,review=evidence.review,groups=[],byCohort=new Map(),sourceTimes=[],cohortLimits={PAID:report.coverage.paid_orders,REVIEW:report.coverage.review_orders,OTHER:report.coverage.orders-report.coverage.paid_orders-report.coverage.review_orders};
+  let allCases=0,allChecked=0,allKnown=0,allAmount=0n,unknown=0;
+  for(let groupIndex=0;groupIndex<cohorts.length;groupIndex++){
+   const row=m.groups[groupIndex];if(!exact(row,['cohort','statuses','source_checked_at'])||row.cohort!==cohorts[groupIndex]||!array(row.statuses,statuses.length)||row.statuses.length!==statuses.length||!exact(row.source_checked_at,['oldest_at','latest_at']))return null;
+   let cases=0,observed=0;const checkedStatuses=[];
+   for(let index=0;index<statuses.length;index++){
+    const item=row.statuses[index];if(!exact(item,['status','cases','amount_known','known_amount_cents'])||item.status!==statuses[index]||!int(item.cases,0,100000)||!int(item.amount_known,0,item.cases)||!int(item.known_amount_cents)||item.amount_known===0&&item.known_amount_cents!==0||item.status==='PENDING'&&(item.amount_known!==0||item.known_amount_cents!==0))return null;
+    cases+=item.cases;if(item.status!=='PENDING')observed+=item.cases;if(item.status==='UNKNOWN')unknown+=item.cases;allKnown+=item.amount_known;allAmount+=BigInt(item.known_amount_cents);checkedStatuses.push({...item});
+   }
+   if(cohortLimits[row.cohort]===0&&cases!==0)return null;
+   const s=row.source_checked_at;
+   if(observed===0){if(s.oldest_at!==null||s.latest_at!==null)return null;}
+   else{if(!int(s.oldest_at,report.source_checked_at.returns_oldest_at??1,report.source_checked_at.returns_latest_at??0)||!int(s.latest_at,s.oldest_at,report.source_checked_at.returns_latest_at??0))return null;sourceTimes.push(s.oldest_at,s.latest_at);}
+   const projected={cohort:row.cohort,statuses:checkedStatuses,source_checked_at:{...s}};groups.push(projected);byCohort.set(row.cohort,{value:projected,cases,observed,visible:statuses.map(status=>({status,cases:0,amount_known:0,known_amount_cents:0n})),visibleTimes:[],payoutReferences:0,payoutCount:0});allCases+=cases;allChecked+=observed;
+  }
+  if(allCases!==report.returns.reference_count||allChecked!==report.returns.checked_count||allCases-allChecked!==report.returns.pending_count||allAmount!==BigInt(report.returns.known_requested_refund_cents)||report.returns.requested_amount_complete!==(allKnown===allCases)||unknown>0&&!report.pending.includes('RETURN_STATUS_UNRECOGNIZED'))return null;
+  if(sourceTimes.length?(Math.min(...sourceTimes)!==report.source_checked_at.returns_oldest_at||Math.max(...sourceTimes)!==report.source_checked_at.returns_latest_at):report.source_checked_at.returns_oldest_at!==null)return null;
+  const t=m.truncation;if(!exact(t,['truncated','payouts_total','payouts_included'])||typeof t.truncated!=='boolean'||!int(t.payouts_total,report.coverage.return_orders+review.summary.to_return,report.coverage.orders)||t.payouts_included!==m.payouts.length||t.payouts_included!==Math.min(40,t.payouts_total)||t.truncated!==(t.payouts_included<t.payouts_total))return null;
+  const payouts=[],byHash=new Map(),reviewByHash=new Map(review.orders.map(row=>[row.order_hash,row])),paidStates={AVAILABLE:0,MISSING:0,CONFLICT:0};let paidBase=0n,paidBaseKnown=true,paidDelta=0n,paidAfter=0n;
+  for(const row of m.payouts){
+   if(!exact(row,['order_hash','cohort','source_checked_at','reference_count','state','base_repass_cents','adjustment_cents','after_adjustment_repass_cents'])||!hash(row.order_hash)||byHash.has(row.order_hash)||!cohorts.includes(row.cohort)||!int(row.source_checked_at,report.source_checked_at.finance_oldest_at??1,report.source_checked_at.finance_latest_at??0)||row.reference_count!==null&&!int(row.reference_count,0,100)||!['AVAILABLE','MISSING','CONFLICT','NOT_IN_PAID_COHORT'].includes(row.state)||!cent(row.base_repass_cents)||!cent(row.adjustment_cents)||!cent(row.after_adjustment_repass_cents))return null;
+   const group=byCohort.get(row.cohort),linked=reviewByHash.get(row.order_hash);group.payoutCount++;group.payoutReferences+=row.reference_count??0;
+   if(group.payoutCount>cohortLimits[row.cohort]||linked&&(row.cohort!=='REVIEW'||row.source_checked_at!==linked.source_checked_at||row.reference_count!==linked.reference_count)||row.cohort==='REVIEW'&&!review.truncation.truncated&&!linked)return null;
+   if(row.cohort!=='PAID'){
+    if(row.state!=='NOT_IN_PAID_COHORT'||row.base_repass_cents!==null||row.adjustment_cents!==null||row.after_adjustment_repass_cents!==null)return null;
+   }else{
+    if(row.state==='NOT_IN_PAID_COHORT'||report.adjustments.base_repass_cents!==null&&row.base_repass_cents===null)return null;
+    paidStates[row.state]++;if(row.base_repass_cents===null)paidBaseKnown=false;else paidBase+=BigInt(row.base_repass_cents);
+    if(row.state==='AVAILABLE'){
+     if(row.base_repass_cents===null||row.adjustment_cents===null||row.after_adjustment_repass_cents===null||BigInt(row.base_repass_cents)+BigInt(row.adjustment_cents)!==BigInt(row.after_adjustment_repass_cents))return null;
+     paidDelta+=BigInt(row.adjustment_cents);paidAfter+=BigInt(row.after_adjustment_repass_cents);
+    }else if(row.adjustment_cents!==null||row.after_adjustment_repass_cents!==null)return null;
+   }
+   const cases=report.cases.filter(item=>item.order_hash===row.order_hash);
+   if(cases.length>(row.reference_count??0)||!report.truncation.truncated&&row.reference_count!==null&&cases.length!==row.reference_count)return null;
+   const projected={...row};payouts.push(projected);byHash.set(row.order_hash,projected);
+  }
+  if(paidStates.AVAILABLE>report.adjustments.reported_orders||paidStates.MISSING>report.adjustments.missing_orders||paidStates.CONFLICT>report.adjustments.conflicting_orders)return null;
+  if(paidStates.AVAILABLE===report.adjustments.reported_orders&&paidDelta!==BigInt(report.adjustments.known_adjustment_cents))return null;
+  if(byCohort.get('PAID').payoutCount===report.coverage.paid_orders){
+   if(paidStates.AVAILABLE!==report.adjustments.reported_orders||paidStates.MISSING!==report.adjustments.missing_orders||paidStates.CONFLICT!==report.adjustments.conflicting_orders||paidBaseKnown!==(report.adjustments.base_repass_cents!==null)||paidBaseKnown&&paidBase!==BigInt(report.adjustments.base_repass_cents)||report.adjustments.after_adjustment_repass_cents!==null&&paidAfter!==BigInt(report.adjustments.after_adjustment_repass_cents))return null;
+  }
+  for(const item of report.cases){
+   const payout=byHash.get(item.order_hash);if(!payout)return null;const group=byCohort.get(payout.cohort),visible=group.visible[statuses.indexOf(item.status)];visible.cases++;
+   if(item.requested_refund_cents!==null){visible.amount_known++;visible.known_amount_cents+=BigInt(item.requested_refund_cents);}
+   if(item.checked_at!==null){if(item.checked_at<group.value.source_checked_at.oldest_at||item.checked_at>group.value.source_checked_at.latest_at)return null;group.visibleTimes.push(item.checked_at);}
+  }
+  for(const group of byCohort.values()){
+   if(group.payoutReferences>group.cases||!t.truncated&&group.payoutReferences!==group.cases)return null;
+   for(let index=0;index<statuses.length;index++){const full=group.value.statuses[index],seen=group.visible[index];if(seen.cases>full.cases||seen.amount_known>full.amount_known||seen.known_amount_cents>BigInt(full.known_amount_cents)||!report.truncation.truncated&&(seen.cases!==full.cases||seen.amount_known!==full.amount_known||seen.known_amount_cents!==BigInt(full.known_amount_cents)))return null;}
+   if(!report.truncation.truncated&&group.visibleTimes.length&&(Math.min(...group.visibleTimes)!==group.value.source_checked_at.oldest_at||Math.max(...group.visibleTimes)!==group.value.source_checked_at.latest_at))return null;
+  }
+  if(!review.truncation.truncated&&review.orders.reduce((count,row)=>count+(row.reference_count??0),0)!==byCohort.get('REVIEW').cases)return null;
+  const result={schema:'finance_reconciliation_v3',report,review,money:{schema:m.schema,currency:m.currency,groups,payouts,truncation:{...t},basis:m.basis}};
+  // All projected strings are ASCII identifiers or fixed allowlisted labels.
+  return JSON.stringify(result).length<=65536?result:null;
+ }catch{return null;}
+}

@@ -6,7 +6,7 @@ import {projectBusinessPeriodRequest,projectBusinessPeriodFrame} from './busines
 import {projectProductionOrdersRequest,projectProductionOrdersFrame,productionOrdersRequestMatches} from './production-orders-frame.mjs';
 import {projectProductIndexRequest,projectProductIndexFrame,productIndexRequestMatches,financeProductIndexDiagnostic} from './product-index-frame.mjs';
 import {projectEscrowReleaseRequest,projectEscrowReleaseFrame,escrowReleaseRequestMatches} from './escrow-release-frame.mjs';
-import {projectReconciliationRequest,projectReconciliationFrame,projectReconciliationEvidenceFrame,reconciliationRequestMatches} from './reconciliation-frame.mjs';
+import {projectReconciliationRequest,projectReconciliationFrame,projectReconciliationEvidenceFrame,projectReconciliationMoneyFrame,reconciliationRequestMatches} from './reconciliation-frame.mjs';
 import {projectHistoricalVariantEvidenceRequest,projectHistoricalVariantEvidenceFrame,historicalVariantEvidenceRequestMatches,historicalVariantEvidenceDiagnostic} from './historical-variant-evidence-frame.mjs';
 
 // Candidate router: only the isolated financial Service Binding can handle these paths.
@@ -103,6 +103,8 @@ export async function forwardFinancePaymentSample(request,env,{validateInternalA
  try{if(typeof validateInternalApp!=='function'||!await validateInternalApp(request,env))return routerFailure('UNAUTHORIZED',401);}catch{return unavailable();}
  const reconciliationContract=reconciliation?request.headers.get('x-braza-client-contract'):null;
  if(reconciliationContract!==null&&!['finance-reconciliation-v1','finance-reconciliation-v2'].includes(reconciliationContract))return routerFailure('INVALID_REQUEST',400);
+ const refundContract=reconciliation?request.headers.get('x-braza-refund-contract'):null;
+ if(refundContract!==null&&(refundContract!=='refunds-v1'||reconciliationContract!=='finance-reconciliation-v2'))return routerFailure('INVALID_REQUEST',400);
  const secret=env?.FINANCE_ROUTER_SECRET;
  if(typeof secret!=='string'||! /^[\x21-\x7e]{32,256}$/.test(secret)||typeof env?.SHOPEE_FINANCE_SERVICE?.fetch!=='function')return routerFailure('FINANCE_CONFIGURATION_PENDING',503);
  if(!/^application\/json(?:\s*;\s*charset\s*=\s*(?:utf-8|"utf-8"))?\s*$/i.test(request.headers.get('content-type')||''))return routerFailure('INVALID_REQUEST',400);
@@ -120,6 +122,7 @@ export async function forwardFinancePaymentSample(request,env,{validateInternalA
   const responseMaximum=catalog&&input.include_cost_catalog?1048576:maximum;
   const headers={'content-type':'application/json',accept:'application/json','X-Braza-Finance-Router':secret};
   if(reconciliationContract!==null)headers['X-Braza-Client-Contract']=reconciliationContract;
+  if(refundContract!==null)headers['X-Braza-Refund-Contract']=refundContract;
   const upstream=await env.SHOPEE_FINANCE_SERVICE.fetch(new Request(FINANCE_ORIGIN+url.pathname,{method:'POST',headers,body:JSON.stringify(input),redirect:'manual',signal:controller.signal}));
   // A service binding may finish after our deadline despite its aborted signal.
   // Its late response must be canceled before acquiring a stalled body reader.
@@ -142,10 +145,11 @@ export async function forwardFinancePaymentSample(request,env,{validateInternalA
   }
   if(catalog&&projectVariantCatalogFailure(value))return catalogFailure(502,value);
   const preview=url.pathname===PAYMENT_PREVIEW_PATH;
-  const reconciliationEvidence=reconciliation?projectReconciliationEvidenceFrame(value,projectReconciliationFrame):null;
+  const reconciliationMoney=reconciliation?projectReconciliationMoneyFrame(value,projectReconciliationFrame,projectReconciliationEvidenceFrame):null;
+  const reconciliationEvidence=reconciliation?projectReconciliationEvidenceFrame(reconciliationMoney?{schema:'finance_reconciliation_v2',report:reconciliationMoney.report,review:reconciliationMoney.review}:value,projectReconciliationFrame):null;
   const frame=escrowReleases?projectEscrowReleaseFrame(value):reconciliation?reconciliationEvidence?.report??projectReconciliationFrame(value):historical?projectHistoricalVariantEvidenceFrame(value):index?projectProductIndexFrame(value):production?projectProductionOrdersFrame(value):storePeriod?(business?projectBusinessPeriodFrame(value):projectStorePeriodFrame(value)):catalog?projectVariantCatalog(value):preview?projectFinancePaymentPreview(value):sampleFrame(value);
   if(escrowReleases)return frame&&escrowReleaseRequestMatches(input,frame)?new Response(JSON.stringify(frame),{headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}}):unavailable();
-  if(reconciliation)return frame&&reconciliationRequestMatches(input,frame)?new Response(JSON.stringify(reconciliationContract==='finance-reconciliation-v2'&&reconciliationEvidence?reconciliationEvidence:frame),{headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}}):unavailable();
+  if(reconciliation)return frame&&reconciliationRequestMatches(input,frame)?new Response(JSON.stringify(refundContract==='refunds-v1'&&reconciliationMoney?reconciliationMoney:reconciliationContract==='finance-reconciliation-v2'&&reconciliationEvidence?reconciliationEvidence:frame),{headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}}):unavailable();
   if(historical)return frame&&historicalVariantEvidenceRequestMatches(input,frame)?new Response(JSON.stringify(frame),{headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}}):historicalFailure();
   if(index)return frame&&productIndexRequestMatches(input,frame)?new Response(JSON.stringify(frame),{headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}}):indexFailure();
   if(production)return frame&&productionOrdersRequestMatches(input,frame)?new Response(JSON.stringify(frame),{headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}}):productionFailure();

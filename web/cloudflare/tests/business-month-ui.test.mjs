@@ -85,7 +85,7 @@ test('the dashboard binds both financial panels to the exact published view and 
  const b=browser();
  b.run(`
   const auditCalls=[];
-  globalThis.brazaReconciliation={start:()=>true,stop(){},observe:(selected,scope)=>{auditCalls.push({panel:'returns',selected,scope:scope===null?null:JSON.parse(JSON.stringify(scope))});return Promise.resolve(scope!==null);}};
+  globalThis.brazaReconciliation={start:()=>true,stop(){},observe:(selected,scope,monthly)=>{auditCalls.push({panel:'returns',selected,scope:scope===null?null:JSON.parse(JSON.stringify(scope)),monthly:monthly===null?null:JSON.parse(JSON.stringify(monthly))});return Promise.resolve(scope!==null);}};
   globalThis.brazaEscrowReleases={start:()=>true,stop(){},observe:(selected,scope)=>{auditCalls.push({panel:'releases',selected,scope:scope===null?null:JSON.parse(JSON.stringify(scope))});return Promise.resolve(scope!==null);}};
   let publishedScope={publication_revision:7,start_date:'2026-10-01',end_date:'2026-10-22',sources:[{run_id:'11111111-1111-4111-8111-111111111111',source_revision:2,start_date:'2026-10-01',end_date:'2026-10-15'},{run_id:'22222222-2222-4222-8222-222222222222',source_revision:3,start_date:'2026-10-16',end_date:'2026-10-22'}]};
   customViewApi=()=>({...savedView(currentFrame),schema:'business_month_view_v2',display_source:'PUBLISHED',audit_scope:JSON.parse(JSON.stringify(publishedScope))});
@@ -93,6 +93,7 @@ test('the dashboard binds both financial panels to the exact published view and 
  assert.equal(await b.run('brazaMonthDashboard.start({api,syncVariants})'),true);
  const first=JSON.parse(b.run('JSON.stringify(auditCalls.filter(call=>call.scope!==null))'));
  assert.equal(first.length,2);assert.deepEqual(first.map(call=>call.panel),['returns','releases']);assert.equal(first[0].scope.publication_revision,7);assert.deepEqual(first[0].scope,first[1].scope);assert.equal(first[0].scope.sources.length,2);
+ assert.equal(first[0].monthly.schema,'business_month_v1');assert.equal(first[0].monthly.month,first[0].selected);assert.equal(first[0].monthly.expected_repass_cents,8000);assert.equal(first[1].monthly,undefined);
  const initialNet=b.text('Net');
  b.run('publishedScope.publication_revision=8;publishedScope.sources[0].run_id="33333333-3333-4333-8333-333333333333";');
  assert.equal(await b.run('control("Refresh").onclick()'),true);
@@ -100,6 +101,7 @@ test('the dashboard binds both financial panels to the exact published view and 
  assert.ok(changed.every(call=>call.scope.publication_revision===8&&call.scope.sources[0].run_id.startsWith('33333333')));assert.equal(b.text('Net'),initialNet,'equal aggregates cannot hide a new publication identity');
  b.run('customApi=async(path,body)=>body?.operation==="start"?new Promise(resolve=>globalThis.finishManual=resolve):JSON.parse(JSON.stringify(currentFrame));globalThis.manual=control("SourceRefresh").onclick();');await b.settle();
  assert.ok(JSON.parse(b.run('JSON.stringify(auditCalls.slice(-2))')).every(call=>call.scope===null),'manual work clears the published identity before its response');
+ assert.equal(b.run('auditCalls.at(-2).monthly'),null,'manual work also clears the monthly cost context');
  b.run('finishManual(JSON.parse(JSON.stringify(currentFrame)));');await b.run('manual');
  assert.ok(JSON.parse(b.run('JSON.stringify(auditCalls.slice(-2))')).every(call=>call.scope===null));
  assert.equal(await b.run('brazaMonthDashboard.refresh()'),true);

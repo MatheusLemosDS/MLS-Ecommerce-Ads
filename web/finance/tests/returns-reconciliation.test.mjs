@@ -6,7 +6,7 @@ import {createFinanceStore,FINANCE_PROFILE} from '../src/connection-store.mjs';
 import {runFinanceBusinessPeriod} from '../src/business-period.mjs';
 import {FINANCIAL_ORDER_EVIDENCE_SCHEMA,buildFinancialOrderEvidence} from '../src/financial-order-evidence.mjs';
 import {runFinanceReturnsReconciliation} from '../src/returns-reconciliation.mjs';
-import {projectReconciliationFrame,projectReconciliationEvidenceFrame} from '../src/reconciliation-frame.mjs';
+import {projectReconciliationFrame,projectReconciliationEvidenceFrame,projectReconciliationMoneyFrame} from '../src/reconciliation-frame.mjs';
 
 const digest=value=>createHash('sha256').update(value).digest('hex'),key='returns-fixture-private-key',access='PRIVATE_RETURNS_ACCESS',refresh='PRIVATE_RETURNS_REFRESH';
 async function fixture(t,{count=3,status='COMPLETE',legacy=false,adjustment=-10,hasAdjustment=true}={}){
@@ -42,6 +42,14 @@ async function makeReview(f,index=0,status='TO_RETURN'){
  f.db.db.prepare('UPDATE finance_business_period_orders SET bucket=?,payment_covered=0,sales_raw=NULL,escrow_raw=NULL,ads_raw=NULL,returns_seen=NULL,items=?,source_hash=? WHERE run_id=? AND order_hash=?').run(record.bucket,record.items,record.source_hash,f.run.run_id,record.order_hash);
  const evidence=await buildFinancialOrderEvidence({order_sn:original.order_sn,order_status:status,currency:'BRL',payment:null,record});f.db.db.prepare('UPDATE finance_business_order_evidence SET source_hash=?,payload=?,payload_hash=? WHERE run_id=? AND order_hash=?').run(record.source_hash,evidence.payload,evidence.payload_hash,f.run.run_id,record.order_hash);original.record=record;
  return original;
+}
+async function customizeEvidence(f,index,{returns,bucket='completed',status='COMPLETED',income}={}){
+ const original=f.originals[index],record={...original.record};delete record.source_hash;record.bucket=bucket;
+ if(!['completed','ongoing'].includes(bucket))Object.assign(record,{payment_covered:0,sales_raw:null,escrow_raw:null,ads_raw:null,returns_seen:null,items:'[]'});
+ else if(Array.isArray(returns))record.returns_seen=Number(returns.length>0);
+ record.source_hash=digest(JSON.stringify(record));const payment={order_sn:original.order_sn,return_order_sn_list:returns??[original.return_sn],order_income:income??original.payment.order_income},evidence=await buildFinancialOrderEvidence({order_sn:original.order_sn,order_status:status,currency:'BRL',payment,record});
+ f.db.db.prepare('UPDATE finance_business_period_orders SET bucket=?,payment_covered=?,sales_raw=?,escrow_raw=?,ads_raw=?,returns_seen=?,items=?,source_hash=? WHERE run_id=? AND order_hash=?').run(record.bucket,record.payment_covered,record.sales_raw,record.escrow_raw,record.ads_raw,record.returns_seen,record.items,record.source_hash,f.run.run_id,record.order_hash);
+ f.db.db.prepare('UPDATE finance_business_order_evidence SET source_hash=?,payload=?,payload_hash=? WHERE run_id=? AND order_hash=?').run(record.source_hash,evidence.payload,evidence.payload_hash,f.run.run_id,record.order_hash);original.record=record;original.payment=payment;
 }
 function probeFetch(f,respond=null){
  return async request=>{
@@ -194,6 +202,43 @@ test('review detail is bounded while full counts remain available and reads crea
 });
 
 test('contradictory return ownership keeps the safe partial legacy report instead of guessing per-order associations',async t=>{
- const f=await fixture(t,{count:2});await makeReview(f,0);await makeReview(f,1);const fetchImpl=probeFetch(f,(_,row)=>Response.json({error:'',response:{order_sn:row.order_sn,return_order_sn_list:[f.originals[0].return_sn]}})),invoke=()=>runFinanceReturnsReconciliation(f.env,{operation:'step',run_id:f.run.run_id,now:f.now,fetchImpl,includeReview:true});
+ const f=await fixture(t,{count:2});await makeReview(f,0);await makeReview(f,1);const fetchImpl=probeFetch(f,(_,row)=>Response.json({error:'',response:{order_sn:row.order_sn,return_order_sn_list:[f.originals[0].return_sn]}})),invoke=()=>runFinanceReturnsReconciliation(f.env,{operation:'step',run_id:f.run.run_id,now:f.now,fetchImpl,includeReview:true,includeMoney:true});
  await invoke();f.clock.time+=301000;const before=f.calls.length,value=await invoke();assert.equal(f.calls.length-before,1);assert.equal(value.schema,'finance_reconciliation_v1');assert.equal(value.status,'PARTIAL');assert.ok(value.pending.includes('RETURN_REFERENCES_MISSING'));assert.equal(value.returns.reference_count,1);assert.equal(value.coverage.review_orders,2);assert.ok(projectReconciliationFrame(value));assert.equal(projectReconciliationEvidenceFrame(value,projectReconciliationFrame),null);assert.doesNotMatch(JSON.stringify(value),/PRIVATE_|order_sn|return_sn/);
+});
+
+test('money evidence separates multiple partial cases, review orders and other statuses without deducting refunds from the adjusted payout',async t=>{
+ const f=await fixture(t,{count:5}),second='PRIVATE_SECOND_PARTIAL_RETURN';await customizeEvidence(f,0,{returns:[f.originals[0].return_sn,second]});await makeReview(f,2);await customizeEvidence(f,3,{bucket:'cancelled',status:'CANCELLED'});await customizeEvidence(f,4,{returns:[]});
+ const rowsBefore=f.db.db.prepare('SELECT * FROM finance_business_period_orders ORDER BY order_hash').all(),evidenceBefore=f.db.db.prepare('SELECT * FROM finance_business_order_evidence ORDER BY order_hash').all(),details=new Map([[f.originals[0].return_sn,{index:0,status:'ACCEPTED',amount:30}],[second,{index:0,status:'REFUND_PAID',amount:10}],[f.originals[1].return_sn,{index:1,status:'CLOSED',amount:null}],[f.originals[2].return_sn,{index:2,status:'REFUND_PAID',amount:15}],[f.originals[3].return_sn,{index:3,status:'CANCELLED',amount:5}]]),probe=probeFetch(f),fetchImpl=async request=>{
+  const url=new URL(request.url);if(url.pathname==='/api/v2/payment/get_escrow_detail')return probe(request);assert.equal(url.pathname,'/api/v2/returns/get_return_detail');assert.equal(request.method,'GET');f.calls.push(request);const detail=details.get(url.searchParams.get('return_sn'));assert.ok(detail);return Response.json({error:'',response:{order_sn:f.originals[detail.index].order_sn,return_sn:url.searchParams.get('return_sn'),status:detail.status,currency:'BRL',refund_amount:detail.amount}});
+ },invoke=operation=>runFinanceReturnsReconciliation(f.env,{operation,run_id:f.run.run_id,now:f.now,fetchImpl,includeReview:true,includeMoney:true});
+ const initial=await invoke('read');assert.equal(initial.schema,'finance_reconciliation_v3');assert.equal(initial.money.payouts.find(row=>row.order_hash===f.originals[2].record.order_hash).state,'NOT_IN_PAID_COHORT');assert.equal(initial.money.payouts.find(row=>row.order_hash===f.originals[2].record.order_hash).base_repass_cents,null);assert.equal(f.calls.length,0);
+ f.clock.time+=17000;let value;for(let step=0;step<6;step++){const count=f.calls.length;value=await invoke('step');assert.ok(f.calls.length-count<=2);if(value.report.returns.checked_count===5)break;}
+ assert.ok(projectReconciliationMoneyFrame(value,projectReconciliationFrame,projectReconciliationEvidenceFrame));assert.equal(value.report.returns.checked_count,5);assert.equal(value.report.returns.known_requested_refund_cents,6000);assert.equal(value.report.returns.requested_amount_complete,false);assert.equal(value.report.adjustments.base_repass_cents,24000);assert.equal(value.report.adjustments.after_adjustment_repass_cents,21000);assert.equal(value.money.truncation.payouts_total,4);
+ const group=(cohort,status)=>value.money.groups.find(row=>row.cohort===cohort).statuses.find(row=>row.status===status);assert.deepEqual(group('PAID','ACCEPTED'),{status:'ACCEPTED',cases:1,amount_known:1,known_amount_cents:3000});assert.equal(group('PAID','REFUND_PAID').known_amount_cents,1000);assert.deepEqual(group('PAID','CLOSED'),{status:'CLOSED',cases:1,amount_known:0,known_amount_cents:0});assert.equal(group('REVIEW','REFUND_PAID').known_amount_cents,1500);assert.equal(group('OTHER','CANCELLED').known_amount_cents,500);
+ const paid=value.money.payouts.find(row=>row.order_hash===f.originals[0].record.order_hash);assert.equal(paid.reference_count,2);assert.equal(paid.base_repass_cents,8000);assert.equal(paid.adjustment_cents,-1000);assert.equal(paid.after_adjustment_repass_cents,7000);assert.equal(value.money.payouts.find(row=>row.cohort==='REVIEW').after_adjustment_repass_cents,null);assert.ok(value.money.payouts.every(row=>row.source_checked_at===rowsBefore[0].checked_at));assert.ok(value.money.groups.every(row=>row.source_checked_at.oldest_at===f.now()/1000));
+ const count=f.calls.length,changes=f.db.db.prepare('SELECT total_changes() AS n').get().n;assert.deepEqual(await invoke('read'),value);assert.equal(f.calls.length,count);assert.equal(f.db.db.prepare('SELECT total_changes() AS n').get().n,changes);assert.deepEqual(f.db.db.prepare('SELECT * FROM finance_business_period_orders ORDER BY order_hash').all(),rowsBefore);assert.deepEqual(f.db.db.prepare('SELECT * FROM finance_business_order_evidence ORDER BY order_hash').all(),evidenceBefore);assert.doesNotMatch(JSON.stringify(value),/PRIVATE_|order_sn|return_sn|access_token|buyer/);
+});
+
+test('money payout states distinguish missing, conflicting and explicit zero amounts using the saved financial evidence',async t=>{
+ for(const kind of ['MISSING','CONFLICT','ZERO']){
+  const f=await fixture(t,{count:1,hasAdjustment:kind!=='MISSING',adjustment:kind==='ZERO'?-80:-10});if(kind==='CONFLICT')await customizeEvidence(f,0,{income:{escrow_amount:80,escrow_amount_after_adjustment:79,total_adjustment_amount:0}});f.mode.status='REFUND_PAID';f.mode.amount=0;
+  const value=await runFinanceReturnsReconciliation(f.env,{operation:'step',run_id:f.run.run_id,now:f.now,fetchImpl:f.fetchImpl,includeReview:true,includeMoney:true}),payout=value.money.payouts[0],amount=value.money.groups[0].statuses.find(row=>row.status==='REFUND_PAID');assert.equal(payout.state,kind==='ZERO'?'AVAILABLE':kind);assert.equal(payout.base_repass_cents,8000);assert.equal(payout.after_adjustment_repass_cents,kind==='ZERO'?0:null);assert.equal(amount.amount_known,1);assert.equal(amount.known_amount_cents,0);assert.equal(value.report.returns.requested_amount_complete,true);
+ }
+});
+
+test('grouped amounts and case counts include cases beyond the forty visible rows without new read calls or SQL',async t=>{
+ const f=await fixture(t,{count:41});f.mode.status='ACCEPTED';const invoke=operation=>runFinanceReturnsReconciliation(f.env,{operation,run_id:f.run.run_id,now:f.now,fetchImpl:f.fetchImpl,includeReview:true,includeMoney:true});let value;
+ for(let step=0;step<21;step++){const count=f.calls.length;value=await invoke('step');assert.ok(f.calls.length-count<=2);}
+ assert.equal(value.report.returns.checked_count,41);assert.equal(value.report.cases.length,40);assert.equal(value.money.payouts.length,40);assert.deepEqual(value.money.truncation,{truncated:true,payouts_total:41,payouts_included:40});const accepted=value.money.groups[0].statuses.find(row=>row.status==='ACCEPTED');assert.deepEqual(accepted,{status:'ACCEPTED',cases:41,amount_known:41,known_amount_cents:51250});assert.equal(value.report.returns.known_requested_refund_cents,51250);
+ const calls=f.calls.length,sql=[],prepare=f.db.prepare.bind(f.db);f.db.prepare=query=>{sql.push(query);return prepare(query);};await f.invoke('read');const legacySql=sql.splice(0);assert.deepEqual(await invoke('read'),value);assert.deepEqual(sql,legacySql);assert.equal(f.calls.length,calls);assert.ok(Buffer.byteLength(JSON.stringify(value))<65536);
+});
+
+test('references beyond the two thousand case queue remain explicit pending counts by cohort',async t=>{
+ const f=await fixture(t,{count:21});for(let index=0;index<21;index++)await customizeEvidence(f,index,{returns:Array.from({length:100},(_,entry)=>`PRIVATE_BOUNDED_RETURN_${index}_${entry}`)});
+ const value=await runFinanceReturnsReconciliation(f.env,{operation:'read',run_id:f.run.run_id,now:f.now,includeReview:true,includeMoney:true});assert.equal(value.report.returns.reference_count,2100);assert.equal(value.report.cases.length,40);assert.equal(value.money.groups[0].statuses[0].cases,2100);assert.equal(value.money.groups[0].statuses[0].amount_known,0);assert.deepEqual(value.money.groups[0].source_checked_at,{oldest_at:null,latest_at:null});assert.equal(value.money.payouts.length,21);assert.ok(value.money.payouts.every(row=>row.reference_count===100));assert.equal(f.calls.length,0);
+});
+
+test('the optional money extension cannot change the request body or enable itself without review negotiation',async t=>{
+ const f=await fixture(t,{count:1});for(const options of [{includeMoney:true},{includeMoney:true,includeReview:false},{includeMoney:'true',includeReview:true},{includeMoney:true,includeReview:'true'}])await assert.rejects(runFinanceReturnsReconciliation(f.env,{operation:'read',run_id:f.run.run_id,now:f.now,...options}),error=>error.code==='FINANCE_RECONCILIATION_REQUEST_INVALID');
+ assert.equal(f.calls.length,0);assert.equal((await runFinanceReturnsReconciliation(f.env,{operation:'read',run_id:f.run.run_id,now:f.now,includeReview:true,includeMoney:false})).schema,'finance_reconciliation_v2');assert.equal((await f.invoke('read')).schema,'finance_reconciliation_v1');
 });

@@ -2,7 +2,7 @@ import {FINANCE_PROFILE,FinanceConnectionError} from './connection-store.mjs';
 import {ensureFinanceAccessToken} from './refresh-coordinator.mjs';
 import {requestFinanceAuthJson} from './auth-json-transport.mjs';
 import {readFinancialOrderEvidence} from './financial-order-evidence.mjs';
-import {projectReconciliationRequest,projectReconciliationFrame,projectReconciliationEvidenceFrame} from './reconciliation-frame.mjs';
+import {projectReconciliationRequest,projectReconciliationFrame,projectReconciliationEvidenceFrame,projectReconciliationMoneyFrame} from './reconciliation-frame.mjs';
 
 // Return amounts are observations of requests, never additional deductions
 // from escrow and never proof of a paid refund or a bank settlement.
@@ -109,7 +109,41 @@ function reviewEvidence(source,refs,snapshot,stamp,probes){
  }
  return {schema:'finance_review_orders_v1',summary,orders,truncation:{truncated:selected.length>orders.length,orders_total:selected.length,orders_included:orders.length},basis:'REVIEW_ORDERS_OUTSIDE_PAID_COHORT'};
 }
-function report(source,refs,snapshot,stamp,probes,includeReview=false){
+function moneyEvidence(source,refs,snapshot,probes,report){
+ const cohort=row=>paid(row)?'PAID':review(row)?'REVIEW':'OTHER',statuses=['PENDING','UNKNOWN','REQUESTED','ACCEPTED','CANCELLED','JUDGING','REFUND_PAID','CLOSED','PROCESSING'];
+ const groups=['PAID','REVIEW','OTHER'].map(cohort=>({cohort,statuses:statuses.map(status=>({status,cases:0,amount_known:0,known_amount_cents:0})),source_checked_at:{oldest_at:null,latest_at:null}})),byCohort=new Map(groups.map(row=>[row.cohort,row])),bySerial=new Map(refs.entries.map(row=>[row.return_sn,row]));
+ const affected=[],byHash=new Map();
+ for(const row of source.orders){
+  byHash.set(row.order_hash,row);const list=effectiveReferences(row,probes),group=byCohort.get(cohort(row));
+  if(row.returns_seen===1||list?.length>0||row.evidence?.order_status==='TO_RETURN')affected.push(row);
+  // Reference counts include work beyond the bounded detail queue. Those
+  // cases remain PENDING instead of disappearing from the status breakdown.
+  for(const serial of list??[]){
+   const reference=bySerial.get(serial),value=reference?snapshot.map.get(reference.case_hash)?.observation:null,bucket=group.statuses[statuses.indexOf(value?.status??'PENDING')];bucket.cases++;
+   if(value){
+    const dates=group.source_checked_at;dates.oldest_at=dates.oldest_at===null?value.checked_at:Math.min(dates.oldest_at,value.checked_at);dates.latest_at=dates.latest_at===null?value.checked_at:Math.max(dates.latest_at,value.checked_at);
+    if(value.requested_refund_cents!==null){bucket.amount_known++;bucket.known_amount_cents=safe(BigInt(bucket.known_amount_cents)+BigInt(value.requested_refund_cents));if(bucket.known_amount_cents===null)fail('ARITHMETIC_UNSAFE');}
+   }
+  }
+ }
+ const selected=[],seen=new Set();
+ for(const orderHash of [...report.cases.map(row=>row.order_hash),...affected.map(row=>row.order_hash)]){
+  if(seen.has(orderHash))continue;seen.add(orderHash);if(selected.length<40)selected.push(byHash.get(orderHash));
+ }
+ const payouts=selected.map(row=>{
+  const list=effectiveReferences(row,probes),result={order_hash:row.order_hash,cohort:cohort(row),source_checked_at:row.checked_at,reference_count:list===null?null:list.length,state:'NOT_IN_PAID_COHORT',base_repass_cents:null,adjustment_cents:null,after_adjustment_repass_cents:null};
+  if(!paid(row))return result;
+  const original=rawCents(row.escrow_raw),evidence=row.evidence,amounts=evidence?.amounts,before=rawCents(amounts?.escrow_amount_raw),after=rawCents(amounts?.escrow_amount_after_adjustment_raw),delta=rawCents(amounts?.total_adjustment_amount_raw);
+  if(row.payment_covered===1&&original!==null){result.base_repass_cents=safe(original);if(result.base_repass_cents===null)fail('ARITHMETIC_UNSAFE');}
+  if(evidence?.diagnostic==='INVALID'||evidence?.diagnostic==='ADJUSTMENT_MISMATCH'||evidence?.currency!==undefined&&evidence.currency!==null&&evidence.currency!=='BRL')result.state='CONFLICT';
+  else if(before===null||after===null||delta===null||evidence?.currency!=='BRL')result.state='MISSING';
+  else if(original!==before||before+delta!==after)result.state='CONFLICT';
+  else{result.state='AVAILABLE';result.adjustment_cents=safe(delta);result.after_adjustment_repass_cents=safe(after);if(result.base_repass_cents===null||result.adjustment_cents===null||result.after_adjustment_repass_cents===null)fail('ARITHMETIC_UNSAFE');}
+  return result;
+ });
+ return {schema:'finance_reconciliation_money_v1',currency:'BRL',groups,payouts,truncation:{truncated:affected.length>payouts.length,payouts_total:affected.length,payouts_included:payouts.length},basis:'SAVED_RETURN_AMOUNTS_AND_PAID_PAYOUT_AFTER_ADJUSTMENTS'};
+}
+function report(source,refs,snapshot,stamp,probes,includeReview=false,includeMoney=false){
  const orders=source.orders,coverage={orders:orders.length,evidence_orders:orders.filter(row=>row.evidence!==null).length,missing_evidence_orders:orders.filter(row=>row.evidence===null).length,paid_orders:orders.filter(paid).length,review_orders:orders.filter(review).length,return_orders:orders.filter(row=>paid(row)&&row.returns_seen===1).length,return_unknown_orders:orders.filter(row=>paid(row)&&row.returns_seen===null).length};
  const adjustments={reported_orders:0,missing_orders:0,conflicting_orders:0,known_adjustment_cents:0,base_repass_cents:null,after_adjustment_repass_cents:null};let base=0n,baseKnown=true,delta=0n;
  for(const row of orders.filter(paid)){
@@ -144,31 +178,32 @@ function report(source,refs,snapshot,stamp,probes,includeReview=false){
  // Contradictory reference ownership has no safe per-order association. Keep
  // its existing partial report instead of guessing or failing the whole read.
  if(!includeReview||refs.conflict)return projected;
- const evidence=projectReconciliationEvidenceFrame({schema:'finance_reconciliation_v2',report:projected,review:reviewEvidence(source,refs,snapshot,stamp,probes)},projectReconciliationFrame);if(!evidence)fail('RESULT_INVALID');return evidence;
+ const evidence=projectReconciliationEvidenceFrame({schema:'finance_reconciliation_v2',report:projected,review:reviewEvidence(source,refs,snapshot,stamp,probes)},projectReconciliationFrame);if(!evidence)fail('RESULT_INVALID');if(!includeMoney)return evidence;
+ const money=projectReconciliationMoneyFrame({schema:'finance_reconciliation_v3',report:projected,review:evidence.review,money:moneyEvidence(source,refs,snapshot,probes,projected)},projectReconciliationFrame,projectReconciliationEvidenceFrame);if(!money)fail('RESULT_INVALID');return money;
 }
 
 export async function runFinanceReturnsReconciliation(env,options={}){
- if(!plain(options)||Reflect.ownKeys(options).some(key=>!['operation','run_id','fetchImpl','now','timeoutMs','includeReview'].includes(key)||!Object.hasOwn(Object.getOwnPropertyDescriptor(options,key)||{},'value'))||Object.hasOwn(options,'includeReview')&&typeof options.includeReview!=='boolean')fail('REQUEST_INVALID',400);
+ if(!plain(options)||Reflect.ownKeys(options).some(key=>!['operation','run_id','fetchImpl','now','timeoutMs','includeReview','includeMoney'].includes(key)||!Object.hasOwn(Object.getOwnPropertyDescriptor(options,key)||{},'value'))||['includeReview','includeMoney'].some(key=>Object.hasOwn(options,key)&&typeof options[key]!=='boolean')||options.includeMoney===true&&options.includeReview!==true)fail('REQUEST_INVALID',400);
  const selection=projectReconciliationRequest({operation:options.operation,run_id:options.run_id});if(!selection)fail('REQUEST_INVALID',400);
- const {fetchImpl,now=()=>Date.now(),timeoutMs=5000,includeReview=false}=options,epoch=()=>{let value;try{value=now();}catch{fail('CLOCK_INVALID');}if(!integer(value,1,9999999999999))fail('CLOCK_INVALID');return Math.floor(value/1000);};
+ const {fetchImpl,now=()=>Date.now(),timeoutMs=5000,includeReview=false,includeMoney=false}=options,epoch=()=>{let value;try{value=now();}catch{fail('CLOCK_INVALID');}if(!integer(value,1,9999999999999))fail('CLOCK_INVALID');return Math.floor(value/1000);};
  const stamp=epoch(),db=env?.FINANCE_DB;if(env?.FINANCE_CONNECTION_ENABLED!=='true'||typeof db?.batch!=='function'||typeof db?.prepare!=='function')fail('CONFIGURATION');
  if(!ready.has(db)){await db.batch(RETURNS_RECONCILIATION_SCHEMA.map(sql=>db.prepare(sql)));ready.add(db);}
  const source=await readFinancialOrderEvidence(env,{run_id:selection.run_id},{now}),candidates=reviewCandidates(source);
  let probes=await readProbes(db,candidates,stamp),refs=await references(source,probes);
  let snapshot=await rows(db,selection.run_id,refs,stamp);
- if(selection.operation==='read'||refs.conflict||!refs.entries.length&&!candidates.length)return report(source,refs,snapshot,stamp,probes,includeReview);
+ if(selection.operation==='read'||refs.conflict||!refs.entries.length&&!candidates.length)return report(source,refs,snapshot,stamp,probes,includeReview,includeMoney);
  if(typeof fetchImpl!=='function'||!integer(timeoutMs,5,5000))fail('CONFIGURATION');
- if(snapshot.state?.next_attempt_at>stamp||snapshot.state?.lease_until>stamp)return report(source,refs,snapshot,stamp,probes,includeReview);
+ if(snapshot.state?.next_attempt_at>stamp||snapshot.state?.lease_until>stamp)return report(source,refs,snapshot,stamp,probes,includeReview,includeMoney);
  const probeDue=candidates.filter(row=>{const item=probes.get(row.order_hash);return (!item?.observation||stamp-item.observation.checked_at>=300)&&(!item?.row.next_attempt_at||item.row.next_attempt_at<=stamp)&&(!item?.row.lease_until||item.row.lease_until<=stamp);}).sort((a,b)=>{
   const left=probes.get(a.order_hash),right=probes.get(b.order_hash),first=left?.observation,last=right?.observation;
   if(Boolean(first)!==Boolean(last))return first?1:-1;
   return first?first.checked_at-last.checked_at:(left?.row.failure_count??0)-(right?.row.failure_count??0);
  })[0];
- if(!dueCases(refs,snapshot,stamp).length&&!probeDue)return report(source,refs,snapshot,stamp,probes,includeReview);
+ if(!dueCases(refs,snapshot,stamp).length&&!probeDue)return report(source,refs,snapshot,stamp,probes,includeReview,includeMoney);
  const owner=crypto.randomUUID(),leaseUntil=stamp+45;
  await db.batch([db.prepare('INSERT OR IGNORE INTO finance_returns_reconciliation_runs(run_id,partner_id,shop_id,revision,permission,checked_at,next_attempt_at,last_error,lease_owner,lease_until) SELECT ?,?,?,1,\'UNKNOWN\',0,0,NULL,NULL,NULL WHERE EXISTS(SELECT 1 FROM finance_business_period_runs WHERE run_id=? AND partner_id=? AND shop_id=?)').bind(selection.run_id,...identity,selection.run_id,...identity)]);
  const lease=await db.prepare('UPDATE finance_returns_reconciliation_runs SET lease_owner=?,lease_until=? WHERE run_id=? AND partner_id=? AND shop_id=? AND next_attempt_at<=? AND (lease_owner IS NULL OR lease_until<=?)').bind(owner,leaseUntil,selection.run_id,...identity,stamp,stamp).run();
- if(lease?.meta?.changes!==1)return report(source,refs,await rows(db,selection.run_id,refs,epoch()),epoch(),probes,includeReview);
+ if(lease?.meta?.changes!==1)return report(source,refs,await rows(db,selection.run_id,refs,epoch()),epoch(),probes,includeReview,includeMoney);
  let permission=snapshot.state?.permission??'UNKNOWN',lastError=null,nextAttempt=stamp;
  try{
   const partnerKey=env.SHOPEE_FINANCE_PARTNER_KEY;if(typeof partnerKey!=='string'||!partnerKey.length||partnerKey.length>4096||/[\u0000-\u001f\u007f]/.test(partnerKey))fail('SIGNING_CONFIGURATION');
@@ -231,5 +266,5 @@ export async function runFinanceReturnsReconciliation(env,options={}){
  finally{
   const finished=epoch();await db.prepare('UPDATE finance_returns_reconciliation_runs SET revision=revision+1,permission=?,checked_at=?,next_attempt_at=?,last_error=?,lease_owner=NULL,lease_until=NULL WHERE run_id=? AND lease_owner=?').bind(permission,finished,nextAttempt,lastError,selection.run_id,owner).run();
  }
- snapshot=await rows(db,selection.run_id,refs,epoch());return report(source,refs,snapshot,epoch(),probes,includeReview);
+ snapshot=await rows(db,selection.run_id,refs,epoch());return report(source,refs,snapshot,epoch(),probes,includeReview,includeMoney);
 }

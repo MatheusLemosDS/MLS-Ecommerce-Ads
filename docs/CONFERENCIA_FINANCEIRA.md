@@ -92,12 +92,16 @@ A base já integra três leituras distintas:
 | Leitura | Evidência preservada | Limite da interpretação |
 | --- | --- | --- |
 | `GET /api/v2/payment/get_escrow_detail` | Repasse esperado, referências de devolução e campos de ajuste disponíveis por pedido. | Repasse esperado e ajuste informado não comprovam recebimento bancário. |
-| `GET /api/v2/returns/get_return_detail` | Situação e valor solicitado informado de cada referência exata de devolução. | O valor solicitado não é tratado como reembolso efetivo nem descontado novamente. |
+| `GET /api/v2/returns/get_return_detail` | Situação e valor de reembolso informado de cada referência exata de devolução. | O valor informado não comprova crédito bancário ou débito no repasse do vendedor e não é descontado novamente. |
 | `GET /api/v2/payment/get_escrow_list` | Calendário de liberações, vínculos exatos com pedidos e parcelas monetárias compatíveis. | Liberação na Shopee, data de criação do pedido e depósito bancário são eventos distintos. |
 
 O [cruzamento das liberações](LIBERACOES_E_PEDIDOS.md) mantém explícitos os
 registros repetidos, valores incompatíveis e fontes ausentes. A consulta de
 detalhes não encerra, por si só, a conciliação de recebimentos e reembolsos.
+O [saldo após ajustes informados](VALORES_DE_DEVOLUCOES_E_SALDO_AJUSTADO.md)
+acrescenta uma apresentação provisória: usa o repasse após ajustes da mesma
+base paga, os custos identificados e a recarga reconhecida. Os valores das
+devoluções ficam na conferência por situação, sem gerar outro desconto.
 Por isso, o histórico mantém `realized_net_cents: null` e
 `realization: "UNVERIFIED"`, inclusive quando a previsão está completa.
 
