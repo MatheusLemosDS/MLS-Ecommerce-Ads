@@ -67,3 +67,42 @@ export function reconciliationRequestMatches(request,frame){
  const selection=projectReconciliationRequest(request),value=projectReconciliationFrame(frame);
  return selection!==null&&value!==null&&selection.run_id===value.run_id;
 }
+
+// Explicit dependency keeps the negotiated evidence projector safe to embed
+// in the owner page. Legacy responses remain a separate, unchanged contract.
+export function projectReconciliationEvidenceFrame(value,projectLegacy){
+ const plain=item=>item!==null&&typeof item==='object'&&[Object.prototype,null].includes(Object.getPrototypeOf(item));
+ const exact=(item,keys)=>plain(item)&&Reflect.ownKeys(item).length===keys.length&&keys.every(key=>Object.hasOwn(Object.getOwnPropertyDescriptor(item,key)||{},'value'));
+ const array=(item,max)=>Array.isArray(item)&&Object.getPrototypeOf(item)===Array.prototype&&item.length<=max&&Reflect.ownKeys(item).length===item.length+1&&Array.from({length:item.length},(_,index)=>Object.getOwnPropertyDescriptor(item,String(index))).every(row=>row&&Object.hasOwn(row,'value'));
+ const int=(item,min=0,max=Number.MAX_SAFE_INTEGER)=>Number.isSafeInteger(item)&&!Object.is(item,-0)&&item>=min&&item<=max;
+ const hash=item=>typeof item==='string'&&/^[a-f0-9]{64}$/.test(item);
+ const states=['NOT_APPLICABLE','PENDING','RETRY_WAIT','KNOWN_EMPTY','AVAILABLE'],categories={IN_CANCEL:'in_cancel',TO_RETURN:'to_return',OTHER_STATUS:'other',UNKNOWN_STATUS:'unknown'},diagnostics=['DETAILS_PENDING','PERMISSION_DENIED','RATE_LIMIT','TIMEOUT','UNAVAILABLE','INVALID_RESPONSE','UNKNOWN_STATUS','CURRENCY_MISMATCH'];
+ try{
+  if(typeof projectLegacy!=='function'||!exact(value,['schema','report','review'])||value.schema!=='finance_reconciliation_v2')return null;
+  const report=projectLegacy(value.report),r=value.review;if(!report||!exact(r,['schema','summary','orders','truncation','basis'])||r.schema!=='finance_review_orders_v1'||r.basis!=='REVIEW_ORDERS_OUTSIDE_PAID_COHORT'||!exact(r.summary,['orders','in_cancel','to_return','other','unknown'])||!Object.values(r.summary).every(count=>int(count,0,1000))||r.summary.orders!==report.coverage.review_orders||r.summary.in_cancel+r.summary.to_return+r.summary.other+r.summary.unknown!==r.summary.orders||!array(r.orders,40))return null;
+  const t=r.truncation;if(!exact(t,['truncated','orders_total','orders_included'])||typeof t.truncated!=='boolean'||t.orders_total!==r.summary.orders||t.orders_included!==r.orders.length||t.orders_included!==Math.min(40,t.orders_total)||t.truncated!==(t.orders_included<t.orders_total))return null;
+  const seen=new Set(),orders=[],counts={in_cancel:0,to_return:0,other:0,unknown:0};let references=0,checked=0,pending=0;
+  for(const row of r.orders){
+   if(!exact(row,['order_hash','status','source_checked_at','reference_state','reference_count','references_checked_at','reference_diagnostic','next_attempt_at','checked_cases','pending_cases'])||!hash(row.order_hash)||seen.has(row.order_hash)||!Object.hasOwn(categories,row.status)||!int(row.source_checked_at,report.source_checked_at.finance_oldest_at??1,report.source_checked_at.finance_latest_at??0)||!states.includes(row.reference_state)||row.reference_diagnostic!==null&&!diagnostics.includes(row.reference_diagnostic)||row.next_attempt_at!==null&&!int(row.next_attempt_at,1,9999999999))return null;
+   seen.add(row.order_hash);counts[categories[row.status]]++;
+   const known=['KNOWN_EMPTY','AVAILABLE'].includes(row.reference_state),cases=report.cases.filter(item=>item.order_hash===row.order_hash),visibleChecked=cases.filter(item=>item.checked_at!==null).length;
+   if(known){
+    if(!int(row.reference_count,0,100)||!int(row.checked_cases,0,row.reference_count)||!int(row.pending_cases,0,row.reference_count)||row.checked_cases+row.pending_cases!==row.reference_count||!int(row.references_checked_at,1,report.checked_at)||(row.reference_state==='KNOWN_EMPTY')!==(row.reference_count===0)||row.reference_diagnostic==='DETAILS_PENDING'||visibleChecked>row.checked_cases||cases.length-visibleChecked>row.pending_cases)return null;
+    if(!report.truncation.truncated&&(cases.length!==row.reference_count||visibleChecked!==row.checked_cases))return null;
+    references+=row.reference_count;checked+=row.checked_cases;pending+=row.pending_cases;
+   }else{
+    if(row.reference_count!==null||row.references_checked_at!==null||row.checked_cases!==null||row.pending_cases!==null||cases.length)return null;
+    if(row.reference_state==='NOT_APPLICABLE'){if(row.status==='TO_RETURN'||row.reference_diagnostic!==null||row.next_attempt_at!==null)return null;}
+    else if(row.status!=='TO_RETURN')return null;
+    if(row.reference_state==='RETRY_WAIT'&&(row.next_attempt_at===null||row.next_attempt_at<=report.checked_at||row.reference_diagnostic===null||row.reference_diagnostic==='DETAILS_PENDING'))return null;
+    if(row.reference_state==='PENDING'&&row.reference_diagnostic!==null&&row.reference_diagnostic!=='DETAILS_PENDING'&&row.next_attempt_at!==null&&row.next_attempt_at>report.checked_at)return null;
+   }
+   orders.push({...row});
+  }
+  if(Object.entries(counts).some(([key,count])=>count>r.summary[key]||!t.truncated&&count!==r.summary[key])||references>report.returns.reference_count||checked>report.returns.checked_count||pending>report.returns.pending_count)return null;
+  if(!t.truncated&&report.coverage.orders===report.coverage.review_orders&&report.cases.some(row=>!seen.has(row.order_hash)))return null;
+  const result={schema:'finance_reconciliation_v2',report,review:{schema:r.schema,summary:{...r.summary},orders,truncation:{...t},basis:r.basis}};
+  // Every surviving string is an ASCII identifier, date or allowlisted enum.
+  return JSON.stringify(result).length<=65536?result:null;
+ }catch{return null;}
+}

@@ -8,7 +8,7 @@ import {projectProductionOrdersRequest,projectProductionOrdersFrame,productionOr
 import {projectProductIndexRequest,projectProductIndexFrame,productIndexRequestMatches,financeProductIndexDiagnostic} from './product-index-frame.mjs';
 import {projectHistoricalVariantEvidenceRequest,projectHistoricalVariantEvidenceFrame,historicalVariantEvidenceRequestMatches,historicalVariantEvidenceDiagnostic} from './historical-variant-evidence-frame.mjs';
 import {projectEscrowReleaseRequest,projectEscrowReleaseFrame,escrowReleaseRequestMatches} from './escrow-release-frame.mjs';
-import {projectReconciliationRequest,projectReconciliationFrame,reconciliationRequestMatches} from './reconciliation-frame.mjs';
+import {projectReconciliationRequest,projectReconciliationFrame,projectReconciliationEvidenceFrame,reconciliationRequestMatches} from './reconciliation-frame.mjs';
 
 const ORIGIN = 'https://auth.brazacommerce.com.br';
 const PREFIX = '/shopee/finance';
@@ -296,8 +296,10 @@ export function createFinanceWorker({adapter, paymentSample, paymentPreview, var
         if(url.search)return failure('INVALID_REQUEST',400);
         const routerError=await trustedRouter(request,env);if(routerError)return failure(routerError,routerError==='FORBIDDEN'?403:503);
         if(env?.FINANCE_CONNECTION_ENABLED!=='true'||typeof reconciliation!=='function'||typeof fetchImpl!=='function'||typeof now!=='function')return failure('CONFIGURATION_PENDING',503);
+        const contract=request.headers.get('x-braza-client-contract');if(contract!==null&&!['finance-reconciliation-v1','finance-reconciliation-v2'].includes(contract))return failure('INVALID_REQUEST',400);
+        const includeReview=contract==='finance-reconciliation-v2';
         const input=await privateFinanceBody(request,false,false,false,false,false,false,true);if(!input)return failure('INVALID_REQUEST',400);
-        try{const frame=projectReconciliationFrame(await reconciliation(env,{...input,fetchImpl,now}));if(!frame||!reconciliationRequestMatches(input,frame))throw Error();return response(frame,200,{json:true});}
+        try{const raw=await reconciliation(env,{...input,fetchImpl,now,...(includeReview?{includeReview:true}:{})}),evidence=projectReconciliationEvidenceFrame(raw,projectReconciliationFrame),frame=evidence?.report??projectReconciliationFrame(raw);if(!frame||!reconciliationRequestMatches(input,frame))throw Error();return response(includeReview&&evidence?evidence:frame,200,{json:true});}
         catch{return response({error:'FINANCE_RECONCILIATION_UNAVAILABLE'},502,{json:true});}
       }
       if(url.pathname===HISTORICAL_EVIDENCE_PATH){

@@ -24,6 +24,10 @@ e atualização de variações](DESPESAS_OPERACIONAIS_E_VARIACOES.md): aluguel,
 funcionários, boletos, parcelas e recuperação de custos após remover um tamanho.
 O total anterior de despesas é preservado e sua transição exige conferência
 explícita para evitar dupla contagem.
+O complemento do custo histórico do tamanho 16 foi publicado em `4853bbf`
+pela PR #5. A continuidade atual detalha os pedidos em revisão e relaciona
+suas solicitações de devolução com as evidências já salvas. Isso prepara a
+conferência das pendências financeiras sem acrescentar coleta externa.
 O diagnóstico e os limites dessa correção estão em
 [abertura do painel](ABERTURA_DO_PAINEL.md#limite-diário-do-d1--26102026).
 A atualização da ponte Hermes no Droplet permanece uma etapa separada; ela não
@@ -46,7 +50,7 @@ testes locais.
 | Catálogo salvo e custos por semana/mês | Implementado neste incremento | Cadastro completo por páginas, variações por cor/tamanho, recálculo local, prévia de avulsas e kits e cobertura dos custos. Primeira importação da conta é observada separadamente. [Detalhes](CATALOGO_SALVO_E_CUSTOS_POR_PERIODO.md). |
 | Acesso unificado, painéis, produtos, custos e histórico | Já versionados em `main` | A interface reúne gestão e Ads. Custos são os padrões cadastrados; catálogo e quantidades não equivalem a estoque disponível. |
 | Financeiro por pedido e resumo mensal | Já versionados em `main` | Consulta repasse esperado, pedidos pagos, produção, cancelamentos e cobertura de devoluções. Recebimentos liquidados e valores efetivos de reembolso ainda exigem conciliação. |
-| Conferência e histórico do cálculo | Versionados em `main` (`1ffd3b2`) | Preserva automaticamente mudanças financeiras, pendências e revisões usadas, com as 128 versões mais recentes por mês. Corrige o frescor de coletas demoradas. Continua sendo previsão; contratos de liquidação e reembolso monetário ainda não foram confirmados. |
+| Conferência e histórico do cálculo | Versionados em `main` (`1ffd3b2`) e ampliados por auditorias posteriores | Preserva automaticamente mudanças financeiras, pendências e revisões usadas, com as 128 versões mais recentes por mês. Corrige o frescor de coletas demoradas. Detalhes de devoluções e liberações oferecem evidências separadas; o resultado recebido ainda depende da conciliação da conta. |
 | Fila persistente de identificação e subtotal conhecido | Já publicados (`192235cb`) | Adultos, kits, infantis e regras personalizadas usam a mesma fila; erros isolados não interrompem os demais. Classificações não expiram apenas pela idade do catálogo. Subtotal dos pedidos exclusivos conhecidos permanece separado do saldo final e das pendências do mês. |
 | Reconhecimento infantil e aprendizado de custos | Versionados em `main` (`9ebee7b`, `c07d1fe`) | Tamanhos 2 a 16 e referência de R$ 12,50; correções inequívocas podem ser reaproveitadas em variações compatíveis. Composições ambíguas permanecem pendentes. |
 | Detalhamento mensal por produto/variação | Já versionado em `main` | Mantém pedidos exclusivos separados dos mistos, sem inventar rateio de repasse ou de Ads. Não entrega lucro líquido por SKU. |
@@ -59,7 +63,8 @@ testes locais.
 | Pausa e retomada durante o encerramento | Corrigidas nesta continuidade | O estado final e a auditoria respeitam a política confirmada durante a gravação. A retomada mantém sua agenda; uma lease substituída não é liberada pela execução anterior. |
 | Eficiência da coleta e dos custos | Publicada em `5322d70` pela PR #3 | Checkpoints idênticos de pagamento e quantidades mensais não são regravados; falhas persistentes da fonte seguem esperas de 5/10/20/30 minutos. A medição por banco em produção permanece pendente; os testes não projetam a fatura. |
 | Despesas operacionais e contas a pagar | Publicadas em `2d6c320` pela PR #4 | Cadastro discriminado de aluguel, funcionários, boletos e outras despesas; parcelas mensais finitas, vencimento e pagamento informado. A competência determina o custo e a conferência explícita impede duplicar o total agregado anterior. Não executa pagamentos. |
-| Variações removidas do catálogo | PR #4 publicada; complemento do custo histórico reproduzido com diagnóstico do operador | Preserva correções históricas e variações atuais. A evidência aprovada do tamanho 16 pode usar a regra infantil atual quando ela for inequívoca; os demais bloqueios e as decisões manuais permanecem. Recalcula dados salvos sem nova consulta externa. A conferência do resultado atualizado da conta continua separada dos testes. |
+| Variações removidas do catálogo | PR #4 publicada; complemento do custo histórico publicado em `4853bbf` pela PR #5 | Preserva correções históricas e variações atuais. A evidência aprovada do tamanho 16 pode usar a regra infantil atual quando ela for inequívoca; os demais bloqueios e as decisões manuais permanecem. Recalcula dados salvos sem nova consulta externa. A conferência do resultado atualizado da conta continua separada dos testes. |
+| Pedidos em revisão e suas devoluções | Implementados nesta continuidade | Detalha situação, referências, cobertura e horários com os dados já salvos. Separa os pedidos em revisão dos pagos com devolução, corrige a falsa exigência de referência em cancelamentos e mantém as pendências de recebimento e reembolso. O atalho para a conferência não inicia consultas. |
 | Diagnóstico da conta | Versionado em `main` (`6f9ce23`); ativação a conferir | Calcula TACOS, saldo disponível antes de Ads, cobertura dos custos e próximas tarefas a partir do mês validado. Dados ausentes bloqueiam os indicadores correspondentes. Não autoriza investimento. |
 | Hermes com financeiro da loja | Publicado (`11f45ce`); atualização da ponte pendente | Cada análise preserva o mês financeiro, custos, DAS, anúncios, pendências e até três próximas ações. A ponte antiga não recebe tarefas novas. Exige atualização no Droplet e observação de uma execução real com a nova referência. |
 | Alterar anúncios, campanhas e promoções | Ainda não implementado para execução comercial | As proteções de somente leitura e Ads/PROMO `LOCKED` continuam vigentes. A coleta autônoma não cria permissão de escrita na Shopee. |
@@ -193,8 +198,9 @@ material e calibração da saída física; não há impressão autônoma na máq
    consumo D1 por banco com o avanço da coleta. Conferir cache inicial, cron sem
    aba aberta, pausa, concorrência, falhas e horários reais; registrar
    observações de produção separadamente dos testes locais.
-2. Conferir as despesas por competência e usar as próximas tarefas do diagnóstico
-   para fechar pendências de custo, pagamento, devolução e atualização. Conciliar recebimentos e valores
+2. Conferir as despesas por competência e usar o detalhe dos pedidos em revisão
+   para identificar as pendências de situação, referências e detalhes de
+   devolução. Conferir a cobertura e as diferenças nas liberações. Conciliar recebimentos e valores
    efetivos de reembolso antes de chamar o resultado de realizado.
 3. Documentar e validar os contratos oficiais de estoque e campanhas, incluindo
    permissões de escrita por ação e limites próprios de investimento em Ads.

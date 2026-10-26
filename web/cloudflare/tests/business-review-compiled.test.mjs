@@ -1,0 +1,61 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import vm from 'node:vm';
+import {build} from 'esbuild';
+import {fileURLToPath} from 'node:url';
+import {collectionFixture} from './business-collection-fixture.mjs';
+import {createFinanceStore} from '../../finance/src/connection-store.mjs';
+import {projectBusinessReconciliation,projectBusinessReconciliationEvidence} from '../src/business-reconciliation.mjs';
+import {projectReconciliationFrame,projectReconciliationEvidenceFrame} from '../../finance/src/reconciliation-frame.mjs';
+
+async function compiledWorker(name,minify){
+ const output=await build({entryPoints:[fileURLToPath(new URL('../../../dist/'+name+'-worker.mjs',import.meta.url))],bundle:true,write:false,format:'esm',platform:'browser',target:'es2022',minify});
+ return (await import('data:text/javascript;base64,'+Buffer.from(output.outputFiles[0].text).toString('base64'))).default;
+}
+
+for(const minify of [false,true])test(`three shipped Workers distinguish two TO_RETURN reviews from four paid returns without changing money (minify=${minify})`,async t=>{
+ const [app,auth,finance]=await Promise.all(['app','auth','finance'].map(name=>compiledWorker(name,minify)));
+ const f=await collectionFixture({windowCounts:[8,0],allPaid:true,paymentDelayMs:0}),SavedDate=globalThis.Date,savedFetch=globalThis.fetch;
+ f.clock.time=SavedDate.UTC(2026,9,25,15);globalThis.Date=class extends SavedDate{constructor(...args){super(...(args.length?args:[f.clock.time]));}static now(){return f.clock.time;}};
+ t.after(()=>{globalThis.Date=SavedDate;globalThis.fetch=savedFetch;f.env.ADMIN_DB.db.close();f.financeEnv.FINANCE_DB.db.close();});
+ const tokenStore=await createFinanceStore(f.financeEnv,{now:f.now}),old=await tokenStore.readTokens();await tokenStore.saveTokens({access_token:'PRIVATE_REVIEW_ACCESS',refresh_token:'PRIVATE_REVIEW_REFRESH',expires_at:f.now()/1000+14400},{expectedRevision:old.revision});
+ f.state.detailHook=async({ids})=>f.provider({order_list:ids.map(index=>({order_sn:f.serial(index),order_status:index<2?'TO_RETURN':'COMPLETED',currency:'BRL',create_time:SavedDate.UTC(2026,9,10,12)/1000,item_list:[{item_id:f.item(index),model_id:0,model_quantity_purchased:1}]}))});
+ f.state.paymentHook=async({index})=>f.provider({order_sn:f.serial(index),return_order_sn_list:index<=5?['PRIVATE_REVIEW_RETURN_'+index]:[],order_income:{order_sn:f.serial(index),original_cost_of_goods_sold:65.25,escrow_amount:47.51,escrow_amount_after_adjustment:47.51,total_adjustment_amount:0,ads_escrow_top_up_fee_or_technical_support_fee:0,items:[{item_id:f.item(index),model_id:0,line_item_id:index+1,quantity_purchased:1}]}});
+ let monthly=await f.invoke('start');for(let step=0;monthly.status==='RUNNING'&&step<8;step++)monthly=await f.invoke('step');monthly=await f.invoke('ads');assert.equal(monthly.status,'COMPLETE');assert.equal(monthly.coverage.paid,6);assert.equal(monthly.coverage.other,2);assert.equal(monthly.coverage.returns,4);assert.ok(monthly.result.pending.includes('STATUS_REVIEW_REQUIRED'));assert.ok(monthly.result.pending.includes('RETURNS_NOT_RECONCILED'));
+ const financeRows=f.financeEnv.FINANCE_DB.db.prepare('SELECT * FROM finance_business_period_orders ORDER BY run_id,order_hash').all(),sourceCalls={payments:f.calls.payment.length,lists:f.calls.list.length,details:f.calls.detail.length,ads:f.calls.ads.length},sourceTimes=monthly.source_checked_at;
+ const router='PRIVATE_REVIEW_ROUTER_'+'r'.repeat(40),appKey='PRIVATE_REVIEW_APP_'+'a'.repeat(40),origin='https://compiled.review.test';
+ const env={...f.env,APP_INTERNAL_SECRET:appKey,ADMIN_USERNAME:'review-owner',ADMIN_PASSWORD:'review-fixture-password-123456',ADMIN_SESSION_SECRET:'PRIVATE_REVIEW_SESSION_'+'s'.repeat(40)},financeEnv={...f.financeEnv,FINANCE_ROUTER_SECRET:router},calls={private:0,payment:0,returns:0};
+ const authEnv={APP_INTERNAL_SECRET:appKey,FINANCE_ROUTER_SECRET:router,SHOPEE_FINANCE_SERVICE:{fetch:async request=>{assert.equal(request.headers.get('x-braza-finance-router'),router);assert.equal(request.headers.get('x-braza-client-contract'),'finance-reconciliation-v2');for(const name of ['cookie','authorization','x-braza-app-key'])assert.equal(request.headers.get(name),null);return finance.fetch(request,financeEnv);}}};
+ globalThis.fetch=async input=>{
+  const request=input instanceof Request?input:new Request(input),url=new URL(request.url);
+  if(url.origin==='https://auth.brazacommerce.com.br'){assert.equal(url.pathname,'/internal/shopee/finance/reconciliation');assert.equal(request.headers.get('x-braza-app-key'),appKey);assert.equal(request.headers.get('x-braza-client-contract'),'finance-reconciliation-v2');calls.private++;return auth.fetch(request,authEnv);}
+  assert.equal(url.origin,'https://partner.shopeemobile.com');assert.equal(request.method,'GET');assert.equal(request.redirect,'manual');for(const name of ['cookie','authorization','x-braza-app-key','x-braza-finance-router','x-braza-client-contract'])assert.equal(request.headers.get(name),null);
+  if(url.pathname==='/api/v2/payment/get_escrow_detail'){const index=Number(url.searchParams.get('order_sn').slice('PRIVATE_INTEGRATION_ORDER_'.length));assert.ok(index===0||index===1);calls.payment++;return f.provider({order_sn:f.serial(index),return_order_sn_list:['PRIVATE_REVIEW_RETURN_'+index]});}
+  assert.equal(url.pathname,'/api/v2/returns/get_return_detail');const index=Number(url.searchParams.get('return_sn').slice('PRIVATE_REVIEW_RETURN_'.length));assert.ok(index>=0&&index<=5);calls.returns++;
+  return f.provider({return_sn:'PRIVATE_REVIEW_RETURN_'+index,order_sn:f.serial(index),currency:'BRL',status:['REQUESTED','ACCEPTED','CANCELLED','REFUND_PAID','JUDGING','PROCESSING'][index],refund_amount:10+index});
+ };
+ const login=await app.fetch(new Request(origin+'/login',{method:'POST',headers:{origin,'content-type':'application/x-www-form-urlencoded'},body:new URLSearchParams({username:env.ADMIN_USERNAME,password:env.ADMIN_PASSWORD})}),env);assert.equal(login.status,303);const cookie=login.headers.get('set-cookie').split(';')[0];
+ const path='/api/admin/finance/reconciliation?month=2026-10',get=async suffix=>{const response=await app.fetch(new Request(origin+path+suffix,{headers:{cookie}}),env);assert.equal(response.status,200,await response.clone().text());assert.equal(response.headers.get('cache-control'),'no-store');return response.json();};
+ assert.equal((await app.fetch(new Request(origin+path+'&evidence=review-v1'),env)).status,401);
+ let extended=await get('&evidence=review-v1');assert.equal(extended.schema,'business_reconciliation_v2');assert.deepEqual(extended.reviews,[]);assert.deepEqual(calls,{private:0,payment:0,returns:0});
+ for(let tick=0;tick<12;tick++){
+  env.ADMIN_DB.db.prepare("UPDATE background_collection_lane_state SET next_lane='AUXILIARY',auxiliary_index=0,lease_token=NULL,lease_until=NULL WHERE id=1").run();
+  env.ADMIN_DB.db.prepare("INSERT INTO financial_audit_turns(month,revision,next_work,lease_token,lease_until) VALUES('2026-10',1,'RETURNS',NULL,NULL) ON CONFLICT(month) DO UPDATE SET next_work='RETURNS',lease_token=NULL,lease_until=NULL").run();
+  const providerBefore=calls.payment+calls.returns,work=[];await app.scheduled({cron:'* * * * *',scheduledTime:Date.now()},env,{waitUntil:task=>work.push(task)});await Promise.all(work);assert.ok(calls.payment+calls.returns-providerBefore<=2,'the review sidecar must retain the existing provider budget');
+  extended=await get('&evidence=review-v1');
+  if(extended.report.reports.length===2&&extended.report.reports.reduce((sum,row)=>sum+row.returns.checked_count,0)===6)break;
+  f.clock.time+=61000;
+ }
+ assert.equal(extended.report.reports.length,2,JSON.stringify(extended.report.attempts));assert.equal(extended.reviews.length,2);assert.ok(projectBusinessReconciliationEvidence(extended,{projectBusiness:projectBusinessReconciliation,projectFrame:projectReconciliationFrame,projectEvidenceFrame:projectReconciliationEvidenceFrame}));
+ assert.equal(extended.report.reports.reduce((sum,row)=>sum+row.coverage.review_orders,0),2);assert.equal(extended.report.reports.reduce((sum,row)=>sum+row.coverage.return_orders,0),4);assert.equal(extended.report.reports.reduce((sum,row)=>sum+row.returns.reference_count,0),6);assert.equal(extended.report.reports.reduce((sum,row)=>sum+row.returns.checked_count,0),6);
+ const reviews=extended.reviews.flatMap(row=>row.review.orders);assert.equal(reviews.length,2);assert.ok(reviews.every(row=>row.status==='TO_RETURN'&&row.reference_state==='AVAILABLE'&&row.reference_count===1&&row.checked_cases===1&&row.pending_cases===0));
+ const cases=extended.report.reports.flatMap(row=>row.cases);assert.equal(cases.length,6);for(const row of reviews){assert.equal(cases.filter(item=>item.order_hash===row.order_hash).length,1);assert.ok(row.source_checked_at>=sourceTimes.finance_oldest_at&&row.source_checked_at<=sourceTimes.finance_latest_at);assert.ok(row.references_checked_at>=row.source_checked_at);}
+ const legacy=await get('');assert.deepEqual(legacy,extended.report);assert.ok(!JSON.stringify(legacy).includes('finance_review_orders_v1'));
+ const observedCalls={...calls},changes=env.ADMIN_DB.db.prepare('SELECT total_changes() AS n').get().n;await get('&evidence=review-v1');await get('');assert.deepEqual(calls,observedCalls);assert.equal(env.ADMIN_DB.db.prepare('SELECT total_changes() AS n').get().n,changes);
+ for(const suffix of ['&evidence=unknown','&evidence=review-v1&evidence=review-v1','&shop_id=1178167501'])assert.equal((await app.fetch(new Request(origin+path+suffix,{headers:{cookie}}),env)).status,400);
+ const response=await app.fetch(new Request(origin+'/api/admin/finance/business-month-view?month=2026-10',{headers:{cookie}}),env);assert.equal(response.status,200);const after=(await response.json()).display;assert.equal(after.expected_repass_cents,monthly.expected_repass_cents);assert.equal(after.production_cost_cents,monthly.production_cost_cents);assert.deepEqual(after.source_checked_at,sourceTimes);assert.equal(after.result.net_estimate_cents,null);assert.equal(after.result.net_profit_cents,null);assert.ok(after.result.pending.includes('STATUS_REVIEW_REQUIRED'));assert.ok(after.result.pending.includes('RETURNS_NOT_RECONCILED'));
+ assert.deepEqual(f.financeEnv.FINANCE_DB.db.prepare('SELECT * FROM finance_business_period_orders ORDER BY run_id,order_hash').all(),financeRows);assert.deepEqual({payments:f.calls.payment.length,lists:f.calls.list.length,details:f.calls.detail.length,ads:f.calls.ads.length},sourceCalls);
+ const html=await(await app.fetch(new Request(origin+'/admin',{headers:{cookie}}),env)).text();assert.match(html,/Conferir pedidos e devoluções/);const script=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match=>match[1]).find(text=>text.includes('globalThis.brazaReconciliation='));assert.ok(script);new vm.Script(script);
+ const end=script.indexOf(" const el=name=>document.getElementById('businessReconciliation'+name);"),start=script.lastIndexOf('(()=>{',end);assert.ok(end>start&&start>=0);const context=vm.createContext({serialized:JSON.stringify(extended),TextEncoder});vm.runInContext(script.slice(start+6,end)+'\nglobalThis.output=projectBusinessReconciliationEvidence(JSON.parse(serialized),{projectBusiness:projectBusinessReconciliation,projectFrame:projectReconciliationFrame,projectEvidenceFrame:projectReconciliationEvidenceFrame});',context);assert.deepEqual(JSON.parse(JSON.stringify(context.output)),extended);
+ const exposed=JSON.stringify(extended)+html;for(const secret of [appKey,router,'PRIVATE_REVIEW_ACCESS','PRIVATE_REVIEW_RETURN_','PRIVATE_INTEGRATION_ORDER_'])assert.ok(!exposed.includes(secret));
+});

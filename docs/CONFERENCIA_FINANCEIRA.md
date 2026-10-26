@@ -69,21 +69,45 @@ impedem liberar a previsão final. A população financeira é formada por pedid
 pagos **criados no mês**; o gasto de anúncios corresponde aos dias desse mês.
 Essa combinação não demonstra atribuição de anúncios a cada pedido ou produto.
 
+## Conferir as pendências de cada pedido
+
+O atalho **Conferir pedidos e devoluções** abre as evidências salvas. A seção
+separa pedidos em revisão, fora dos valores pagos, de pedidos pagos com
+devolução identificada. Mostra a situação original, a disponibilidade das
+referências, os detalhes consultados e a próxima conferência necessária.
+As referências são internas do sistema; não são números pesquisáveis de
+pedidos da Shopee. Abrir o detalhe não inicia uma consulta externa.
+
+Um cancelamento em andamento não é automaticamente uma devolução sem
+referência. Uma lista de referências vazia, quando confirmada pela fonte, é
+diferente de uma referência ainda desconhecida. Nenhuma dessas situações,
+isoladamente, encerra a revisão financeira do pedido. Os limites de cobertura,
+compatibilidade e atualização estão em
+[conferência de devoluções e ajustes](CONFERENCIA_DE_DEVOLUCOES_E_AJUSTES.md).
+
 ## O que ainda falta para comprovar lucro recebido
 
-O contrato integrado é `GET /api/v2/payment/get_escrow_detail`. O campo
-`escrow_amount` é repasse esperado. `return_order_sn_list` indica referências
-de devolução; não fornece, no contrato observado, valores efetivamente
-reembolsados, itens afetados ou datas de liquidação.
+A base já integra três leituras distintas:
 
+| Leitura | Evidência preservada | Limite da interpretação |
+| --- | --- | --- |
+| `GET /api/v2/payment/get_escrow_detail` | Repasse esperado, referências de devolução e campos de ajuste disponíveis por pedido. | Repasse esperado e ajuste informado não comprovam recebimento bancário. |
+| `GET /api/v2/returns/get_return_detail` | Situação e valor solicitado informado de cada referência exata de devolução. | O valor solicitado não é tratado como reembolso efetivo nem descontado novamente. |
+| `GET /api/v2/payment/get_escrow_list` | Calendário de liberações, vínculos exatos com pedidos e parcelas monetárias compatíveis. | Liberação na Shopee, data de criação do pedido e depósito bancário são eventos distintos. |
+
+O [cruzamento das liberações](LIBERACOES_E_PEDIDOS.md) mantém explícitos os
+registros repetidos, valores incompatíveis e fontes ausentes. A consulta de
+detalhes não encerra, por si só, a conciliação de recebimentos e reembolsos.
 Por isso, o histórico mantém `realized_net_cents: null` e
 `realization: "UNVERIFIED"`, inclusive quando a previsão está completa.
+
 **Recebimentos e reembolsos ainda não conciliados** não são uma diferença igual
-a zero. Para fechar o resultado recebido, falta confirmar e integrar um
-contrato oficial de liquidações e reembolsos efetivos, com identificação,
-datas, valores e ajustes. A pesquisa pública desta entrega não confirmou esse
-contrato: o acesso à documentação oficial foi bloqueado pelo proxy com HTTP 403.
-Nenhum endpoint presumido foi introduzido.
+a zero. Falta conferir um período completo da conta com referências financeiras
+compatíveis, explicar diferenças e identificar valores efetivos sem contar o
+mesmo ajuste duas vezes. Os contratos e os limites da documentação consultada
+estão nas pesquisas de [financeiro](PESQUISA_FINANCEIRA_SHOPEE.md) e
+[liberações](PESQUISA_LIBERACOES_SHOPEE.md). Esta continuidade detalha evidências
+existentes e não acrescenta uma API de liquidação ou uma autorização comercial.
 
 Essas verificações melhoram a rastreabilidade do cálculo. A liberação de
 alterações comerciais automáticas ainda depende também de atribuição,

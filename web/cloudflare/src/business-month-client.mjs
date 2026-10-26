@@ -502,7 +502,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
   el('Coverage').replaceChildren();for(const text of [c.paid+' pedido(s) pagos',c.completed+' concluído(s)',c.ongoing+' em andamento',c.cancelled+' cancelado(s) excluído(s)',c.unpaid+' não pago(s) excluído(s)'])el('Coverage').append(node('span',text));
   if(c.cancel_pending)el('Coverage').append(node('span',c.cancel_pending+' em cancelamento · em revisão'));
   if(c.other+c.unknown)el('Coverage').append(node('span',(c.other+c.unknown)+' com situação a conferir'));
-  const warnings=frame.result.pending.filter(code=>code!=='COLLECTING');el('Pending').hidden=!warnings.length;el('PendingTitle').textContent=warnings.length===1?'Falta uma conferência para concluir o resultado':'O que falta para concluir o resultado';el('PendingList').replaceChildren();for(const code of warnings)el('PendingList').append(node('li',code==='ADS_UNAVAILABLE'&&ads?.status==='AVAILABLE'?savedAdsHelp(ads):pendingMessages[code]||'Parte dos dados ainda precisa ser conferida.'));
+  const warnings=frame.result.pending.filter(code=>code!=='COLLECTING');el('Pending').hidden=!warnings.length;el('PendingTitle').textContent=warnings.length===1?'Falta uma conferência para concluir o resultado':'O que falta para concluir o resultado';el('OpenReconciliation').hidden=!warnings.some(code=>['STATUS_REVIEW_REQUIRED','RETURNS_NOT_RECONCILED'].includes(code));el('PendingList').replaceChildren();for(const code of warnings)el('PendingList').append(node('li',code==='ADS_UNAVAILABLE'&&ads?.status==='AVAILABLE'?savedAdsHelp(ads):pendingMessages[code]||'Parte dos dados ainda precisa ser conferida.'));
   el('Identify').hidden=true;
   if(warnings.includes('EXTERNAL_EXPENSES_REQUIRED')&&warnings.length===1)el('ExpensesDetails').open=true;
   el('RechargeField').hidden=!(frame.ads_adjustment_cents>0||warnings.includes('RECHARGE_TREATMENT_REQUIRED'));
@@ -789,6 +789,7 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
   el('Previous').onclick=()=>{const basis=validMonth(el('Select').value)?el('Select').value:today().slice(0,7),date=new Date(basis+'-01T12:00:00Z');date.setUTCMonth(date.getUTCMonth()-1);el('Select').value=date.toISOString().slice(0,7);readWorkspaceView();};
   el('Pause').onclick=()=>{paused=true;clearTimeout(timer);timer=null;el('Pause').disabled=true;status(busy?'A consulta será pausada após a resposta em andamento.':'Consulta pausada. Use Continuar consulta para retomar.');render();};
   el('ExpensesForm').onsubmit=event=>{event.preventDefault();saveExpenses();};el('ExpensesValue').oninput=expenseChanged;el('Recharge').onchange=expenseChanged;
+  el('OpenReconciliation').onclick=()=>globalThis.brazaReconciliation?.open?.()??false;
   el('OpenExpenses').onclick=()=>{el('ExpensesDetails').open=true;el('ExpensesDetails').scrollIntoView?.({behavior:'smooth',block:'start'});return globalThis.brazaExpenseLedger?.refresh();};
   el('ExpensesZero').onclick=()=>saveExpenses({zero:true});el('ExpensesReload').onclick=()=>{dirty=false;editSequence++;fillExpenses({force:true});render();schedule();scheduleCatalog();};el('Identify').onclick=identify;
   el('CostCheck').onclick=()=>checkCostDiagnostic();el('CostRecover').onclick=()=>checkCostDiagnostic({recover:true});el('CostCopy').onclick=copyCostDiagnostic;

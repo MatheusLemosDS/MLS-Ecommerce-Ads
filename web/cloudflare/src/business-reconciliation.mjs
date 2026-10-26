@@ -1,5 +1,5 @@
 import {readCompletedBusinessMonth} from './business-month-publication.mjs';
-import {projectReconciliationFrame} from '../../finance/src/reconciliation-frame.mjs';
+import {projectReconciliationFrame,projectReconciliationEvidenceFrame} from '../../finance/src/reconciliation-frame.mjs';
 
 export const BUSINESS_RECONCILIATION_SCHEMA=[
  `CREATE TABLE IF NOT EXISTS business_reconciliation_reports(run_id TEXT PRIMARY KEY NOT NULL,source_revision INTEGER NOT NULL,start_date TEXT NOT NULL,end_date TEXT NOT NULL,payload TEXT NOT NULL CHECK(length(CAST(payload AS BLOB))<=1048576),checked_at INTEGER NOT NULL)`,
@@ -45,6 +45,26 @@ export function projectBusinessReconciliation(value,projectFrame){
  }catch{return null;}
 }
 
+// An opt-in owner contract carries only review evidence for reports already
+// validated against the same published cohort. Legacy tabs keep their v1 DTO.
+export function projectBusinessReconciliationEvidence(value,validators={}){
+ const plain=item=>item!==null&&typeof item==='object'&&[Object.prototype,null].includes(Object.getPrototypeOf(item));
+ const exact=(item,keys)=>plain(item)&&Reflect.ownKeys(item).length===keys.length&&keys.every(key=>Object.hasOwn(Object.getOwnPropertyDescriptor(item,key)||{},'value'));
+ const array=(item,max)=>Array.isArray(item)&&Object.getPrototypeOf(item)===Array.prototype&&item.length<=max&&Reflect.ownKeys(item).length===item.length+1&&Array.from({length:item.length},(_,index)=>Object.getOwnPropertyDescriptor(item,String(index))).every(row=>row&&Object.hasOwn(row,'value'));
+ try{
+  if(!exact(validators,['projectBusiness','projectFrame','projectEvidenceFrame'])||!Object.values(validators).every(fn=>typeof fn==='function')||!exact(value,['schema','report','reviews'])||value.schema!=='business_reconciliation_v2'||!array(value.reviews,3))return null;
+  const report=validators.projectBusiness(value.report,validators.projectFrame);if(!report)return null;
+  const byId=new Map(report.reports.map(row=>[row.run_id,row])),seen=new Set(),reviews=[];
+  for(const row of value.reviews){
+   if(!exact(row,['run_id','source_revision','review'])||typeof row.run_id!=='string'||seen.has(row.run_id))return null;
+   const source=byId.get(row.run_id);if(!source||row.source_revision!==source.source_revision)return null;
+   const checked=validators.projectEvidenceFrame({schema:'finance_reconciliation_v2',report:source,review:row.review},validators.projectFrame);if(!checked)return null;
+   seen.add(row.run_id);reviews.push({run_id:row.run_id,source_revision:row.source_revision,review:checked.review});
+  }
+  const result={schema:'business_reconciliation_v2',report,reviews};return new TextEncoder().encode(JSON.stringify(result)).byteLength<=262144?result:null;
+ }catch{return null;}
+}
+
 function matching(frame,source){return frame&&frame.run_id===source.run_id&&frame.source_revision===source.source_revision&&frame.start_date===source.start_date&&frame.end_date===source.end_date;}
 function publishedReportMatches(frame,source,published){
  if(!matching(frame,source))return false;
@@ -61,11 +81,11 @@ function publishedReportMatches(frame,source,published){
 function sourceReferences(published){return published?.payload.slots.map(slot=>({run_id:slot.frame.run_id,source_revision:slot.frame.revision,start_date:slot.start_date,end_date:slot.end_date}))??[];}
 async function snapshot(env,month,stamp,now){
  const db=await database(env),published=await readCompletedBusinessMonth(env,month,{now}),sources=sourceReferences(published);
- if(!sources.length)return {db,published,sources,reports:[],attempts:[]};
- const ids=JSON.stringify(sources.map(source=>source.run_id)),rows=await db.batch([db.prepare('SELECT run_id,source_revision,start_date,end_date,payload,checked_at FROM business_reconciliation_reports WHERE run_id IN(SELECT value FROM json_each(?))').bind(ids),db.prepare('SELECT run_id,source_revision,checked_at,status,code,next_attempt_at FROM business_reconciliation_attempts WHERE run_id IN(SELECT value FROM json_each(?))').bind(ids)]),reports=[],attempts=[];
- for(const row of rows[0]?.results??[]){const source=sources.find(source=>source.run_id===row.run_id);if(row.source_revision!==source.source_revision)continue;let report;try{if(typeof row.payload!=='string'||encoder.encode(row.payload).byteLength>1048576)throw Error();report=projectReconciliationFrame(JSON.parse(row.payload));}catch{}if(!publishedReportMatches(report,source,published)||row.checked_at!==report.checked_at||row.start_date!==report.start_date||row.end_date!==report.end_date||report.checked_at>stamp+60)fail('BUSINESS_RECONCILIATION_STORAGE_INVALID');reports.push(report);}
+ if(!sources.length)return {db,published,sources,reports:[],reviews:[],attempts:[]};
+ const ids=JSON.stringify(sources.map(source=>source.run_id)),rows=await db.batch([db.prepare('SELECT run_id,source_revision,start_date,end_date,payload,checked_at FROM business_reconciliation_reports WHERE run_id IN(SELECT value FROM json_each(?))').bind(ids),db.prepare('SELECT run_id,source_revision,checked_at,status,code,next_attempt_at FROM business_reconciliation_attempts WHERE run_id IN(SELECT value FROM json_each(?))').bind(ids)]),reports=[],reviews=[],attempts=[];
+ for(const row of rows[0]?.results??[]){const source=sources.find(source=>source.run_id===row.run_id);if(row.source_revision!==source.source_revision)continue;let report,evidence;try{if(typeof row.payload!=='string'||encoder.encode(row.payload).byteLength>1048576)throw Error();const raw=JSON.parse(row.payload);evidence=projectReconciliationEvidenceFrame(raw,projectReconciliationFrame);report=evidence?.report??projectReconciliationFrame(raw);}catch{}if(!publishedReportMatches(report,source,published)||row.checked_at!==report.checked_at||row.start_date!==report.start_date||row.end_date!==report.end_date||report.checked_at>stamp+60)fail('BUSINESS_RECONCILIATION_STORAGE_INVALID');reports.push(report);if(evidence)reviews.push({run_id:report.run_id,source_revision:report.source_revision,review:evidence.review});}
  for(const row of rows[1]?.results??[]){const source=sources.find(source=>source.run_id===row.run_id);if(row.source_revision!==source.source_revision)continue;if(!integer(row.checked_at,1,stamp+60)||!integer(row.next_attempt_at,row.checked_at)||!['SUCCESS','UNAVAILABLE'].includes(row.status)||(row.status==='SUCCESS'?row.code!==null:!codes.includes(row.code)))fail('BUSINESS_RECONCILIATION_STORAGE_INVALID');attempts.push({...row});}
- reports.sort((a,b)=>sources.findIndex(row=>row.run_id===a.run_id)-sources.findIndex(row=>row.run_id===b.run_id));attempts.sort((a,b)=>sources.findIndex(row=>row.run_id===a.run_id)-sources.findIndex(row=>row.run_id===b.run_id));return {db,published,sources,reports,attempts};
+ const order=(a,b)=>sources.findIndex(row=>row.run_id===a.run_id)-sources.findIndex(row=>row.run_id===b.run_id);reports.sort(order);reviews.sort(order);attempts.sort(order);return {db,published,sources,reports,reviews,attempts};
 }
 function view(month,stamp,state){
  stamp=Math.max(stamp,...state.reports.map(row=>row.checked_at),...state.attempts.map(row=>row.checked_at));
@@ -74,6 +94,10 @@ function view(month,stamp,state){
  const projected=projectBusinessReconciliation(value,projectReconciliationFrame);if(!projected)fail('BUSINESS_RECONCILIATION_RESULT_INVALID');return projected;
 }
 export async function readBusinessReconciliation(env,input,{now=()=>Date.now()}={}){const stamp=clock(now),month=selection(input,stamp);return view(month,stamp,await snapshot(env,month,stamp,()=>stamp*1000));}
+export async function readBusinessReconciliationEvidence(env,input,{now=()=>Date.now()}={}){
+ const stamp=clock(now),month=selection(input,stamp),state=await snapshot(env,month,stamp,()=>stamp*1000),result=projectBusinessReconciliationEvidence({schema:'business_reconciliation_v2',report:view(month,stamp,state),reviews:state.reviews},{projectBusiness:projectBusinessReconciliation,projectFrame:projectReconciliationFrame,projectEvidenceFrame:projectReconciliationEvidenceFrame});
+ if(!result)fail('BUSINESS_RECONCILIATION_RESULT_INVALID');return result;
+}
 
 export async function runBusinessReconciliation(env,source,input,{now=()=>Date.now(),canRun=async()=>true}={}){
  const started=clock(now),month=selection(input,started);if(typeof source!=='function'||typeof canRun!=='function')fail('BUSINESS_RECONCILIATION_CONFIGURATION');
@@ -94,11 +118,11 @@ export async function runBusinessReconciliation(env,source,input,{now=()=>Date.n
   // private step. Browser observation never calls this function.
   let raw,error;try{reads++;raw=await source(env,{operation:'step',run_id:selected.run_id});}catch(value){error=value;}
   const finished=clock(now);if(!await canRun())return result('PAUSED',reads);
-  const frame=projectReconciliationFrame(raw);let code=null;
+  const evidence=projectReconciliationEvidenceFrame(raw,projectReconciliationFrame),frame=evidence?.report??projectReconciliationFrame(raw);let code=null;
   if(!frame){const diagnostic=Object.getOwnPropertyDescriptor(Object.getOwnPropertyDescriptor(raw??{},'diagnostic')?.value??{},'code')?.value??Object.getOwnPropertyDescriptor(error??{},'code')?.value;code=codes.includes(diagnostic)?diagnostic:'FINANCE_RECONCILIATION_UNAVAILABLE';}
   else if(!publishedReportMatches(frame,selected,current.published)||frame.checked_at>finished+60)code='FINANCE_RECONCILIATION_SCOPE_MISMATCH';
   const valid=code===null,stamp=valid?Math.max(finished,frame.checked_at):finished,permission=valid&&frame.returns?.permission==='DENIED',pendingCases=valid&&frame.returns?.pending_count>0&&!permission,initialDetails=pendingCases&&frame.cases.some(row=>row.checked_at===null&&row.diagnostic==='DETAILS_PENDING'),next=stamp+(permission?21600:!valid?300:initialDetails?60:pendingCases?300:900),guard='EXISTS(SELECT 1 FROM business_reconciliation_leases WHERE month=? AND lease_token=? AND lease_until>?)',args=[month,token,finished],writes=[];
-  if(valid){const payload=JSON.stringify(frame);if(encoder.encode(payload).byteLength>1048576)fail('BUSINESS_RECONCILIATION_RESPONSE_LIMIT');writes.push(db.prepare('INSERT INTO business_reconciliation_reports(run_id,source_revision,start_date,end_date,payload,checked_at) SELECT ?,?,?,?,?,? WHERE '+guard+' ON CONFLICT(run_id) DO UPDATE SET source_revision=excluded.source_revision,start_date=excluded.start_date,end_date=excluded.end_date,payload=excluded.payload,checked_at=excluded.checked_at WHERE business_reconciliation_reports.source_revision=excluded.source_revision AND business_reconciliation_reports.checked_at<=excluded.checked_at').bind(selected.run_id,selected.source_revision,selected.start_date,selected.end_date,payload,frame.checked_at,...args));}
+  if(valid){const payload=JSON.stringify(evidence??frame);if(encoder.encode(payload).byteLength>1048576)fail('BUSINESS_RECONCILIATION_RESPONSE_LIMIT');writes.push(db.prepare('INSERT INTO business_reconciliation_reports(run_id,source_revision,start_date,end_date,payload,checked_at) SELECT ?,?,?,?,?,? WHERE '+guard+' ON CONFLICT(run_id) DO UPDATE SET source_revision=excluded.source_revision,start_date=excluded.start_date,end_date=excluded.end_date,payload=excluded.payload,checked_at=excluded.checked_at WHERE business_reconciliation_reports.source_revision=excluded.source_revision AND business_reconciliation_reports.checked_at<=excluded.checked_at').bind(selected.run_id,selected.source_revision,selected.start_date,selected.end_date,payload,frame.checked_at,...args));}
   writes.push(db.prepare('INSERT INTO business_reconciliation_attempts(run_id,source_revision,checked_at,status,code,next_attempt_at) SELECT ?,?,?,?,?,? WHERE '+guard+' ON CONFLICT(run_id) DO UPDATE SET source_revision=excluded.source_revision,checked_at=excluded.checked_at,status=excluded.status,code=excluded.code,next_attempt_at=excluded.next_attempt_at WHERE business_reconciliation_attempts.checked_at<=excluded.checked_at').bind(selected.run_id,selected.source_revision,stamp,valid?'SUCCESS':'UNAVAILABLE',code,next,...args));
   const saved=await db.batch(writes);if(saved.at(-1)?.meta?.changes!==1)return result('LEASED',reads);const otherDue=current.sources.some(item=>item.run_id!==selected.run_id&&(!current.attempts.find(row=>row.run_id===item.run_id)||current.attempts.find(row=>row.run_id===item.run_id).next_attempt_at<=finished));return result(valid?'CHECKED':'UNAVAILABLE',reads,valid&&(otherDue||initialDetails));
  }finally{await db.prepare('DELETE FROM business_reconciliation_leases WHERE month=? AND lease_token=?').bind(month,token).run();}

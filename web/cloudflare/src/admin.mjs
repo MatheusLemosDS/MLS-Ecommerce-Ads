@@ -13,7 +13,7 @@ import {BUSINESS_MONTH_CLIENT} from './business-month-client.mjs';
 import {BUSINESS_MONTH_CSS} from './business-month-view.mjs';
 import {BUSINESS_ESCROW_RELEASES_SCHEMA,BusinessEscrowReleasesError,readBusinessEscrowReleases} from './business-escrow-releases.mjs';
 import {FINANCIAL_AUDIT_SCHEMA,FinancialAuditOrchestrationError,runBusinessFinancialAudits} from './financial-audit-orchestration.mjs';
-import {BUSINESS_RECONCILIATION_SCHEMA,BusinessReconciliationError,readBusinessReconciliation,runBusinessReconciliation} from './business-reconciliation.mjs';
+import {BUSINESS_RECONCILIATION_SCHEMA,BusinessReconciliationError,readBusinessReconciliation,readBusinessReconciliationEvidence,runBusinessReconciliation} from './business-reconciliation.mjs';
 import {BUSINESS_MONTH_SCHEMA,BusinessMonthError,businessMonthClientFrame,readBusinessMonthAdsState,readBusinessMonthDisplay} from './business-month.mjs';
 import {ExpenseLedgerError,readExpenseLedger,mutateExpenseLedger} from './expense-ledger.mjs';
 import {BusinessMonthViewError,buildBusinessMonthView,requestBusinessMonthRefresh} from './business-month-view-state.mjs';
@@ -394,8 +394,9 @@ async function adminFetch(request,env,services={}){const url=new URL(request.url
  }
  if(path==='/api/admin/finance/reconciliation'){
   assert(request.method==='GET','METHOD_NOT_ALLOWED',405);
-  const entries=[...url.searchParams];assert(entries.length===1&&entries[0][0]==='month','BUSINESS_RECONCILIATION_REQUEST_INVALID');
-  return json(await readBusinessReconciliation(env,{month:entries[0][1]}));
+  const entries=[...url.searchParams],keys=entries.map(([key])=>key);assert(entries.length>=1&&entries.length<=2&&new Set(keys).size===keys.length&&keys.includes('month')&&keys.every(key=>['month','evidence'].includes(key))&&(!keys.includes('evidence')||url.searchParams.get('evidence')==='review-v1'),'BUSINESS_RECONCILIATION_REQUEST_INVALID');
+  const read=url.searchParams.has('evidence')?readBusinessReconciliationEvidence:readBusinessReconciliation;
+  return json(await read(env,{month:url.searchParams.get('month')}));
  }
  if(path==='/api/admin/finance/business-month-view'){
   assert(request.method==='GET','METHOD_NOT_ALLOWED',405);
