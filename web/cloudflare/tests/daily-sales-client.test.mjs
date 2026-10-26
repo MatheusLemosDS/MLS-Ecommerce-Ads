@@ -14,7 +14,7 @@ function browser(){
   let clockNow=Date.parse(${JSON.stringify(now)});
   class ClockDate extends Date {constructor(...args){super(...(args.length?args:[clockNow]));}static now(){return clockNow;}}
   globalThis.Date=ClockDate;
-  let shopOrdersPromise=null,shopOrdersSnapshot=null,shopOrdersRefreshTimer=null,state={};
+  let shopOrdersPromise=null,shopOrdersSnapshot=null,shopOrdersRefreshTimer=null,state=null,csrf='a'.repeat(64);
   let apiCalls=0,nextTimer=0;
   const timers=new Map(),document={hidden:false};
   const setTimeout=(callback,delay)=>{const id=++nextTimer;timers.set(id,{callback,delay});return id;};

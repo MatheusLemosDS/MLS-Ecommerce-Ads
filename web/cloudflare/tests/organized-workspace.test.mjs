@@ -11,8 +11,8 @@ function navigation(search=''){
  const start=CLIENT.indexOf('function workspaceTabFromLocation()'),end=CLIENT.indexOf("document.addEventListener('visibilitychange'",start);
  assert.ok(start>=0&&end>start);
  new vm.Script(`
- let state=null,observations=0,syncs=0;
- const loadObservations=()=>observations++,syncOnProductsOpen=()=>syncs++;
+ let state=null,csrf='',observations=0,syncs=0,settingsLoads=0;
+ const loadObservations=()=>observations++,syncOnProductsOpen=()=>syncs++,loadSettings=async()=>{settingsLoads++;return false;};
  function item(tab){return {dataset:{tab},attrs:{},classList:{active:false,toggle(name,value){this[name]=value;}},setAttribute(name,value){this.attrs[name]=value;},removeAttribute(name){delete this.attrs[name];}};}
  const links=${JSON.stringify(tabs)}.map(item),sections=['overview','products','margins','hermes','history','roadmap'].map(id=>({id,hidden:id!=='overview'}));
  const controls=new Map([['pageTitle',{textContent:''}],['pageSubtitle',{textContent:''}]]),el=id=>controls.get(id);

@@ -11,9 +11,17 @@ que falhou no celular não foi observada diretamente.
 
 - O seletor recebe o mês de Brasília, ou um mês válido da URL, antes das
   consultas. Valores financeiros continuam pendentes até uma resposta validada.
-- Somente a sessão com CSRF válido é requisito para iniciar o resumo. Auditoria,
+- A confirmação da sessão usa `GET /api/admin/bootstrap`, que valida o cookie
+  assinado e devolve somente `admin_bootstrap_v1` e o CSRF existente, sem acessar
+  o D1. Somente essa confirmação é requisito para iniciar o resumo. Auditoria,
   configurações, Ads, produtos, produção e demais módulos carregam de forma
   independente; suas falhas não impedem a consulta financeira.
+- A leitura completa de `/api/admin/state` ocorre em segundo plano. Os controles
+  de configuração ficam desabilitados até receber valores válidos; falhas não
+  substituem os valores por padrões. Reabrir Custos de produção ou usar
+  Atualizar status no Hermes permite uma nova tentativa, compartilhada quando
+  outra já estiver em andamento. Configurações já carregadas não são relidas
+  nessa ação, preservando os rascunhos de edição.
 - A leitura inicial da sessão tem prazo de doze segundos. Uma falha de rede ou
   timeout sem erro HTTP permite uma única repetição, após 750 ms e com a página
   visível. Uma interrupção do corpo de uma resposta 2xx também pode repetir.
@@ -75,3 +83,51 @@ coleta e os dados financeiros.
 
 Referências: [preços e renovação do D1](https://developers.cloudflare.com/d1/platform/pricing/)
 e [erros documentados do D1](https://developers.cloudflare.com/d1/observability/debug-d1/).
+
+## Demora na confirmação da sessão — 26/10/2026
+
+Após a publicação da PR #7 (`f16bb1f`), o operador enviou um print com
+**“A consulta demorou mais que o esperado. Tente novamente.”** no topo e
+**“Aguardando consulta”** no resumo. A página autenticada e os scripts haviam
+aberto; o fluxo da interface associa essa mensagem ao timeout da confirmação
+inicial. O resumo mostrava uma segunda mensagem, incorreta para esse caso,
+que sugeria verificar a conexão.
+
+O caminho anterior usava `/api/admin/state`, com prazo de doze segundos, para
+confirmar a sessão. Antes de devolver seu JSON, essa rota aguardava `setup()`.
+Em uma instância nova, mesmo com um banco já existente, a medição local encontrou
+um batch de 97 statements, outro de 2 para consultar correções e quatro leituras
+sequenciais de configurações, heartbeat, capacidades e orçamento do Hermes.
+O cache de inicialização é local ao processo e não impede esse trabalho em
+outra instância. Esse caminho já existia antes da PR #7.
+
+A reprodução controlada suspendeu a preparação do banco e obteve o mesmo erro
+de timeout, mantendo login e HTML disponíveis. Isso comprova o bloqueio no
+código; **não mede a latência real do D1 nem identifica o motivo do atraso na
+requisição privada do celular**.
+
+A correção separa a sessão das leituras de configuração:
+
+- `/api/admin/bootstrap` fica depois da autenticação do proprietário e antes
+  de `setup()`. Não lê nem grava no banco, não chama provedores e não renova o
+  cookie. Exige GET sem parâmetros e responde com `Cache-Control: no-store`.
+- O resumo inicia sua própria leitura após essa confirmação. Uma resposta
+  lenta de configuração ou Hermes deixa de impedir o início do resumo.
+- `/api/admin/state` mantém o contrato anterior. Sua resposta tardia é
+  descartada após logout confirmado; uma saída que falha preserva a sessão.
+- A interface compartilha apenas uma categoria pública de falha com o resumo:
+  demora, rede, sessão, cota, indisponibilidade ou resposta inválida. As mensagens
+  brutas da infraestrutura continuam excluídas. Atualizar vendas fica
+  desabilitado enquanto a confirmação inicial não termina.
+
+Há **uma requisição HTTP leve adicional por abertura bem-sucedida**, sem novas
+consultas SQL, chamadas à Shopee ou agendas de coleta. A leitura de estado
+anterior continua existindo em segundo plano. Isso não constitui uma medição
+de economia nem uma projeção da fatura do Cloudflare.
+
+Os testes cobrem a sessão enquanto o mesmo banco está bloqueado na preparação,
+permissões e CSRF, os nove scripts reais da página em ordem, versões normal e
+minificada, configuração pendente ou inválida, retomada manual, descarte de
+respostas depois de sair e preservação de rascunhos. O D1 continua necessário
+para carregar os dados financeiros: sua indisponibilidade deve aparecer na
+consulta correspondente, sem ser confundida com falha na confirmação da sessão.

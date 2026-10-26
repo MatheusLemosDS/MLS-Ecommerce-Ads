@@ -318,6 +318,12 @@ async function adminFetch(request,env,services={}){const url=new URL(request.url
  if(['/','/login','/admin/login','/logout','/admin/logout'].includes(path))return workspaceAuthFetch(request,env);
  const current=await session(request,env);if(!current)return path.startsWith('/api/')?json({error:'UNAUTHORIZED'},401):Response.redirect(url.origin+'/login',303);
  if(path==='/admin'){assert(request.method==='GET','METHOD_NOT_ALLOWED',405);return dashboard();}
+ // Session confirmation must remain independent of storage initialization,
+ // financial collection and optional settings or assistant status reads.
+ if(path==='/api/admin/bootstrap'){
+  assert(request.method==='GET','METHOD_NOT_ALLOWED',405);assert(!url.search,'ADMIN_BOOTSTRAP_REQUEST_INVALID');
+  return json({schema:'admin_bootstrap_v1',csrf:current.csrf});
+ }
  assert(path.startsWith('/api/admin/'),'NOT_FOUND',404);await setup(env);
  if(path==='/api/admin/finance/expense-ledger'){
   assert(['GET','POST'].includes(request.method),'METHOD_NOT_ALLOWED',405);
