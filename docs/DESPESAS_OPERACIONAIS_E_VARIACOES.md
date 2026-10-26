@@ -1,6 +1,7 @@
 # Despesas operacionais e atualização das variações
 
-Incremento de **26/10/2026**, a partir de `5322d70` (PR #3). Atende ao pedido
+Incremento de **26/10/2026**, a partir de `5322d70` (PR #3), publicado em
+`2d6c320` (PR #4). Atende ao pedido
 do operador para cadastrar aluguel do barracão, funcionários, boletos e parcelas
 e à investigação da camiseta infantil após a remoção do tamanho 16.
 
@@ -90,9 +91,53 @@ de tamanho. A posição da opção na lista não é usada como identidade de cus
 A remoção de um tamanho não autoriza transferir seu custo para outro SKU.
 Referências históricas de pedidos e correções manuais não são apagadas.
 
-A reprodução com dados controlados demonstra os defeitos e a correção. A
-conferência do anúncio real na conta é uma verificação separada: o navegador
-disponível abriu a página de login, sem acesso à lista autenticada de produtos.
+A reprodução com dados controlados demonstra os dois defeitos e as correções
+da PR #4. O diagnóstico posteriormente enviado pelo operador identificou uma
+venda histórica ainda pendente, tratada no complemento abaixo.
+
+## Venda histórica do tamanho 16 com evidência aprovada
+
+O diagnóstico `business_cost_diagnostics_evidence_v2` fornecido pelo operador
+em 26/10/2026 identificou o produto `58270722536` e o modelo `189628289642`.
+O catálogo atual não contém esse modelo, mas o histórico de pedidos comprovou
+o nome `16`, a composição `CHILD_SINGLE` e nomes unânimes, com estado
+`APPROVED`. A regra `camiseta-infantil` estava habilitada a R$ 12,50.
+
+A referência já precificava essa composição; o cálculo a rejeitava porque o
+produto inteiro estava marcado como gerenciado por regras. O complemento
+autoriza somente o par histórico exato a atravessar essa restrição, desde que
+uma única regra atual aplicável ao produto e ao tamanho selecione a regra
+infantil habilitada. A decisão é refeita no snapshot de leitura, sem criar
+atribuição manual, novo modelo de catálogo ou migração de dados.
+
+Uma opção atual ainda não reconhecida, como o tamanho 2 fora das opções
+configuradas, não invalida a prova independente do tamanho histórico 16.
+Continuam bloqueados: modelos presentes com dados incompatíveis, mudança de
+metadados pendente, evidência incompleta, regra desativada ou sem a opção,
+regras concorrentes e decisões manuais conflitantes. Custos manuais explícitos
+mantêm sua precedência. Alterar o preço da regra recalcula o histórico.
+
+Mantidas as demais fontes e configurações do diagnóstico enviado:
+
+| Medida | Diagnóstico recebido | Resultado esperado após a correção |
+| --- | --- | --- |
+| Unidades com custo | 267 de 268 | 268 de 268 |
+| Produção | R$ 7.785,20 conhecidos, total pendente | R$ 7.797,70 completos |
+| Saldo registrado | R$ 2.390,42 | R$ 2.377,92 |
+| Estado do resumo | `PARTIAL_COSTS` | `PROVISIONAL` |
+
+As pendências `STATUS_REVIEW_REQUIRED` e `RETURNS_NOT_RECONCILED` permanecem;
+esta correção não concilia os dois pedidos em revisão nem as quatro devoluções.
+O lucro realizado e o resultado final continuam desconhecidos.
+
+Após a publicação, **Recalcular custos** usa a coorte financeira e o histórico
+já salvos. Não é necessário repetir a busca histórica ou a consulta do catálogo
+na Shopee. A regressão do Worker realmente compilado, normal e minificado,
+reproduz os agregados com uma composição sintética explícita para as outras
+267 unidades, preserva as fontes e revisões, não chama provedores e não grava
+dados em leituras repetidas. Isso valida o comportamento com a evidência
+fornecida; a confirmação do resultado atualizado da conta depende de um novo
+diagnóstico ou da leitura autenticada do painel.
 
 ## Consumo e validação
 

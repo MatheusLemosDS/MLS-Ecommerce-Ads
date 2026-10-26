@@ -58,8 +58,8 @@ testes locais.
 | Conferências vinculadas ao resumo exibido | Implementadas nesta continuidade | A interface confere revisão da publicação e identidade/revisão de todas as fontes, descarta respostas de outra atualização e suspende conferências durante consultas manuais sem publicação. O contrato anterior permanece disponível para abas antigas. |
 | Pausa e retomada durante o encerramento | Corrigidas nesta continuidade | O estado final e a auditoria respeitam a política confirmada durante a gravação. A retomada mantém sua agenda; uma lease substituída não é liberada pela execução anterior. |
 | Eficiência da coleta e dos custos | Publicada em `5322d70` pela PR #3 | Checkpoints idênticos de pagamento e quantidades mensais não são regravados; falhas persistentes da fonte seguem esperas de 5/10/20/30 minutos. A medição por banco em produção permanece pendente; os testes não projetam a fatura. |
-| Despesas operacionais e contas a pagar | Implementadas após `5322d70`, com regressões locais | Cadastro discriminado de aluguel, funcionários, boletos e outras despesas; parcelas mensais finitas, vencimento e pagamento informado. A competência determina o custo e a conferência explícita impede duplicar o total agregado anterior. Não executa pagamentos. |
-| Variações removidas do catálogo | Correção com reprodução local | Preserva a correção do modelo histórico, permite reconhecer tamanhos atuais compatíveis e encerra somente a revisão de catálogo efetivamente conferida. O produto aberto pode consultar suas variações na Shopee; a validação do anúncio real exige acesso autenticado. |
+| Despesas operacionais e contas a pagar | Publicadas em `2d6c320` pela PR #4 | Cadastro discriminado de aluguel, funcionários, boletos e outras despesas; parcelas mensais finitas, vencimento e pagamento informado. A competência determina o custo e a conferência explícita impede duplicar o total agregado anterior. Não executa pagamentos. |
+| Variações removidas do catálogo | PR #4 publicada; complemento do custo histórico reproduzido com diagnóstico do operador | Preserva correções históricas e variações atuais. A evidência aprovada do tamanho 16 pode usar a regra infantil atual quando ela for inequívoca; os demais bloqueios e as decisões manuais permanecem. Recalcula dados salvos sem nova consulta externa. A conferência do resultado atualizado da conta continua separada dos testes. |
 | Diagnóstico da conta | Versionado em `main` (`6f9ce23`); ativação a conferir | Calcula TACOS, saldo disponível antes de Ads, cobertura dos custos e próximas tarefas a partir do mês validado. Dados ausentes bloqueiam os indicadores correspondentes. Não autoriza investimento. |
 | Hermes com financeiro da loja | Publicado (`11f45ce`); atualização da ponte pendente | Cada análise preserva o mês financeiro, custos, DAS, anúncios, pendências e até três próximas ações. A ponte antiga não recebe tarefas novas. Exige atualização no Droplet e observação de uma execução real com a nova referência. |
 | Alterar anúncios, campanhas e promoções | Ainda não implementado para execução comercial | As proteções de somente leitura e Ads/PROMO `LOCKED` continuam vigentes. A coleta autônoma não cria permissão de escrita na Shopee. |
@@ -186,9 +186,10 @@ conciliação financeira segue em paralelo. Ainda faltam armazenamento
 centralizado das artes, regras para composições especiais, consumo real de
 material e calibração da saída física; não há impressão autônoma na máquina.
 
-1. Conferir no painel autenticado o cadastro de despesas e a correção de variações
-   solicitados pelo operador. Confirmar o acesso após a mudança de plano, conferir a
-   camiseta infantil após a remoção do tamanho 16 e comparar
+1. Confirmar a atualização da conta após a correção do par histórico
+   `58270722536 / 189628289642`: o diagnóstico enviado em 26/10 já comprova o
+   tamanho 16, mas ainda mostrava 267 de 268 unidades com custo. Conferir também
+   o cadastro de despesas e comparar
    consumo D1 por banco com o avanço da coleta. Conferir cache inicial, cron sem
    aba aberta, pausa, concorrência, falhas e horários reais; registrar
    observações de produção separadamente dos testes locais.
