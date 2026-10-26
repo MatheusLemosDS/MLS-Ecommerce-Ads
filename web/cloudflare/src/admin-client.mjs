@@ -794,7 +794,9 @@ el('financeSampleCopy').onclick=async()=>{try{await navigator.clipboard.writeTex
 let startupController=null,logoutPromise=null;
 function startupFeedback(value){
  const failed=value.phase==='FAILED',unauthorized=failed&&value.error?.status===401;
- const message=value.phase==='LOADING'?'Conectando ao painel…':value.phase==='RETRYING'?'A conexão foi interrompida. Tentando novamente…':failed?(unauthorized?'Sua sessão expirou. Entre novamente.':'Não foi possível conectar ao painel. Verifique sua conexão e tente novamente.') :'';
+ const quota=failed&&value.error?.status===503&&value.error?.apiCode==='ADMIN_DB_DAILY_LIMIT_EXCEEDED';
+ const failureMessage=unauthorized?'Sua sessão expirou. Entre novamente.':quota?'O painel está indisponível porque o limite diário do banco de dados foi atingido. A cota é renovada todos os dias às 21h (horário de Brasília).':value.error?.status===503?'O painel está temporariamente indisponível. Tente novamente em alguns instantes.':value.error?.code==='ADMIN_API_NETWORK_ERROR'?'Não foi possível conectar ao painel. Verifique sua conexão e tente novamente.':value.error?.code==='ADMIN_API_TIMEOUT'?'A consulta demorou mais que o esperado. Tente novamente.':'Não foi possível abrir o painel. Tente novamente.';
+ const message=value.phase==='LOADING'?'Conectando ao painel…':value.phase==='RETRYING'?'A conexão foi interrompida. Tentando novamente…':failed?failureMessage:'';
  const target=el('message');if(message){target.dataset.startup='true';notice(message);}else if(target.dataset.startup==='true'){notice('');delete target.dataset.startup;}
  const retry=el('startupRetry'),login=el('startupLogin');if(retry){retry.hidden=!failed||unauthorized;retry.disabled=!failed;}if(login)login.hidden=!unauthorized;
  globalThis.brazaMonthDashboard?.bootstrapState?.({phase:value.phase,message});
