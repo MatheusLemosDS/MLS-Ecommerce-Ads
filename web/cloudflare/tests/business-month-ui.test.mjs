@@ -836,7 +836,7 @@ test('hiding the page during one catalogue request prevents follow-up reads and 
 test('prepare fills the valid query month or the current Brasilia month before any authenticated API is available',()=>{
  for(const [search,expected] of [['?month=2026-09','2026-09'],['?month=2099-01','2026-10'],['?month=2026-13','2026-10'],['?month=2026-09&month=2026-08','2026-10'],['','2026-10']]){
   const b=browser(fixture(),search);assert.equal(b.run('brazaMonthDashboard.prepare()'),true);
-  assert.equal(b.run("control('Select').value"),expected);assert.equal(b.run("control('Select').max"),'2026-10');assert.equal(b.run("control('Select').disabled"),true);assert.equal(b.run("control('Previous').disabled"),true);assert.equal(b.run("control('Refresh').disabled"),true);
+  assert.equal(b.run("control('Select').value"),expected);assert.equal(b.run("control('Select').max"),'2026-10');assert.equal(b.run("control('Select').disabled"),true);assert.equal(b.run("control('Previous').disabled"),true);assert.equal(b.run("control('SourceRefresh').disabled"),true);assert.equal(b.run("control('Refresh').disabled"),true);
   assert.equal(b.text('Refresh'),'Conectando…');assert.match(b.text('Status'),/Conectando ao painel/);assert.equal(b.text('Sales'),'Pendente');assert.equal(b.run('calls.length'),0);assert.equal(b.run('timers.size'),0);
  }
  const boundary=browser();boundary.run("clock=Date.parse('2026-11-01T01:00:00Z');brazaMonthDashboard.prepare();");assert.equal(boundary.run("control('Select').value"),'2026-10','the local month must remain October before midnight in Brasilia');
@@ -844,10 +844,23 @@ test('prepare fills the valid query month or the current Brasilia month before a
 
 test('bootstrap failures display safe Portuguese text and one retry callback without an API request or raw fetch error',async()=>{
  const b=browser();b.run("let retries=0,releaseRetry;brazaMonthDashboard.prepare({retry:()=>{retries++;return new Promise(resolve=>releaseRetry=resolve);}});brazaMonthDashboard.bootstrapState({phase:'FAILED',message:'Failed to fetch PRIVATE_PROVIDER_TOKEN https://private.invalid'});");
- assert.match(b.text('Status'),/Não foi possível conectar ao painel/);assert.doesNotMatch(b.text('Status'),/Failed to fetch|PRIVATE|https:/);assert.equal(b.text('Refresh'),'Tentar novamente');assert.equal(b.run("control('Refresh').disabled"),false);
+ assert.match(b.text('Status'),/Não foi possível abrir o painel/);assert.doesNotMatch(b.text('Status'),/Failed to fetch|PRIVATE|https:/);assert.equal(b.text('Refresh'),'Tentar novamente');assert.equal(b.run("control('Refresh').disabled"),false);
  const first=b.run("control('Refresh').onclick()"),second=b.run("control('Refresh').onclick()");
  assert.equal(await second,false);assert.equal(b.run('retries'),1);assert.equal(b.run("control('Refresh').disabled"),true);assert.equal(b.text('Refresh'),'Conectando…');assert.match(b.text('Status'),/Tentando conectar/);
  b.run('releaseRetry(false)');assert.equal(await first,false);assert.equal(b.run("control('Refresh').disabled"),false);assert.equal(b.text('Refresh'),'Tentar novamente');assert.equal(b.run('calls.length'),0);
+});
+
+test('bootstrap timeout, session and service failures retain their public reason without showing raw errors',()=>{
+ const b=browser();b.run('brazaMonthDashboard.prepare();');
+ for(const [kind,copy] of [['TIMEOUT',/demorou mais que o esperado/],['NETWORK',/Verifique a conexão/],['SESSION',/sessão expirou/],['QUOTA',/limite diário do banco/],['UNAVAILABLE',/temporariamente indisponível/],['INVALID',/Não foi possível abrir/]]){
+  assert.equal(b.run('brazaMonthDashboard.bootstrapState({phase:"FAILED",failureKind:'+JSON.stringify(kind)+',message:"PRIVATE_UPSTREAM_TOKEN"})'),true);
+  assert.match(b.text('Status'),copy);assert.doesNotMatch(b.text('Status'),/PRIVATE/);
+  if(kind!=='NETWORK')assert.doesNotMatch(b.text('Status'),/Verifique a conexão/);
+  assert.equal(b.run("control('SourceRefresh').disabled"),true);assert.equal(b.run('calls.length'),0);
+ }
+ b.run('let failureKindReads=0;brazaMonthDashboard.bootstrapState({phase:"FAILED",get failureKind(){failureKindReads++;throw Error("PRIVATE");}});');
+ assert.equal(b.run('failureKindReads'),0);assert.match(b.text('Status'),/Não foi possível abrir/);
+ b.run('brazaMonthDashboard.bootstrapState({phase:"FAILED",failureKind:"PRIVATE_UPSTREAM_TOKEN"});');assert.doesNotMatch(b.text('Status'),/PRIVATE/);
 });
 
 test('a rejected bootstrap retry remains recoverable without reflecting its exception',async()=>{

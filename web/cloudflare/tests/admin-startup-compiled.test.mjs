@@ -16,22 +16,31 @@ async function ownerHtml(minify){
  }finally{env.ADMIN_DB.db.close();}
 }
 
-function browser(html,session,{sessionFails=false,sessionQuota=false,auditFails=false,unauthorized=false}={}){
- const ids=[...html.matchAll(/\bid="([^"]*)"/g)].map(match=>match[1]),nodes=new Map(),timers=new Map(),calls=[];let nextTimer=0,failed=sessionFails,quota=sessionQuota,logoutMode='network';
+function browser(html,session,{sessionFails=false,sessionQuota=false,auditFails=false,unauthorized=false,settingsMode='success',invalidBootstrap=false,sessionPending=false}={}){
+ const ids=[...html.matchAll(/\bid="([^"]*)"/g)].map(match=>match[1]),nodes=new Map(),timers=new Map(),calls=[];let nextTimer=0,failed=sessionFails,quota=sessionQuota,logoutMode='network';const waitingSettings=[];
  const element=(tag='div')=>({tag,value:'',textContent:'',children:[],dataset:{},hidden:false,disabled:false,open:false,style:{},classList:{toggle(){},add(){},remove(){}},append(...children){this.children.push(...children);},replaceChildren(...children){this.children=[...children];this.textContent='';},setAttribute(){},removeAttribute(){},querySelectorAll(){return [];},querySelector(){return null;},contains(){return false;},scrollIntoView(){},get childNodes(){return this.children;}});
  for(const id of ids)nodes.set(id,element());
+ const formControls={settings:['regular','mixed','plus','share'],controls:['operation','hour','billing','budget','reserve','runLimit']};
+ for(const [form,controls] of Object.entries(formControls))nodes.get(form).querySelectorAll=selector=>selector==='input,select,button'?controls.map(id=>nodes.get(id)).filter(Boolean):[];
  const context=vm.createContext({AbortController,URLSearchParams,Intl,Date,Response,TextEncoder,location:{search:'',href:'https://app.startup.test/admin'},history:{replaceState(){}},setTimeout(callback,delay){const id=++nextTimer;timers.set(id,{callback,delay});return id;},clearTimeout(id){timers.delete(id);},setInterval(){return 1;},clearInterval(){},document:{hidden:false,activeElement:null,documentElement:{dataset:{}},getElementById(id){if(!nodes.has(id))throw Error('UNKNOWN_CONTROL:'+id);return nodes.get(id);},createElement:element,querySelectorAll(){return [];},addEventListener(){}},fetch:async(url,options)=>{
-  calls.push({url,options});
+  calls.push({url,options,deadline:timers.get(nextTimer)});
   if(url==='/admin/logout'){
    if(logoutMode==='network')throw new TypeError('Failed to fetch PRIVATE_LOGOUT_DETAIL');
    if(logoutMode==='forbidden')return new Response(null,{status:403});
    if(logoutMode==='success')return new Response(null,{status:204});
    return new Promise(()=>{});
   }
-  if(url==='/api/admin/state'){
+  if(url==='/api/admin/bootstrap'){
+   if(sessionPending)return new Promise(()=>{});
    if(unauthorized)return errorResponse(401,'UNAUTHORIZED');
    if(quota)return errorResponse(503,'ADMIN_DB_DAILY_LIMIT_EXCEEDED');
    if(failed)throw new TypeError('Failed to fetch PRIVATE_NETWORK_DETAIL');
+   return Response.json({schema:invalidBootstrap?'invalid':'admin_bootstrap_v1',csrf:session.csrf});
+  }
+  if(url==='/api/admin/state'){
+   if(settingsMode==='pending')return new Promise(resolve=>waitingSettings.push(resolve));
+   if(settingsMode==='failure')return errorResponse(503,'ADMIN_UNAVAILABLE');
+   if(settingsMode==='invalid')return Response.json({...session,settings:{revision:0,values:{}}});
    return Response.json(session);
   }
   if(url==='/api/admin/audit'&&auditFails)throw new TypeError('Failed to fetch PRIVATE_AUDIT_DETAIL');
@@ -50,7 +59,7 @@ function browser(html,session,{sessionFails=false,sessionQuota=false,auditFails=
  const monthly=scripts.find(script=>script.includes('globalThis.brazaMonthDashboard=')),admin=scripts.find(script=>script.includes('let renderedReportKey='));assert.ok(monthly&&admin);
  vm.runInContext(monthly,context);vm.runInContext(admin,context);
  const flush=async()=>{for(let index=0;index<5;index++)await new Promise(resolve=>setImmediate(resolve));};
- return {nodes,timers,calls,context,flush,recover(){failed=false;quota=false;},setLogout(mode){logoutMode=mode;},run:source=>vm.runInContext(source,context),stop(){vm.runInContext('startupController.stop();brazaMonthDashboard.stop();',context);timers.clear();}};
+ return {nodes,timers,calls,context,formControls,flush,setSettings(mode){settingsMode=mode;},releaseSettings(value=session){for(const resolve of waitingSettings.splice(0))resolve(Response.json(value));},recover(){failed=false;quota=false;},setLogout(mode){logoutMode=mode;},run:source=>vm.runInContext(source,context),stop(){vm.runInContext('startupController.stop();brazaMonthDashboard.stop();',context);timers.clear();}};
 }
 
 for(const minify of [false,true]){
@@ -67,8 +76,8 @@ for(const minify of [false,true]){
  test(`the deployed owner script prepares the month offline and a manual retry safely restores initialization (minify=${minify})`,async()=>{
   const {html,session}=await ownerHtml(minify),b=browser(html,session,{sessionFails:true});
   try{await b.flush();const retry=[...b.timers.values()].find(timer=>timer.delay===750);assert.ok(retry);retry.callback();await b.flush();
-   assert.equal(b.calls.filter(call=>call.url==='/api/admin/state').length,2);assert.equal(b.calls.filter(call=>call.url.startsWith('/api/admin/finance/business-month-view?month=')).length,0);assert.equal(b.calls.filter(call=>call.url==='/api/admin/finance/business-month').length,0);assert.match(b.nodes.get('businessMonthSelect').value,/^\d{4}-\d{2}$/);assert.equal(b.nodes.get('startupRetry').hidden,false);assert.match(b.nodes.get('message').textContent,/Não foi possível conectar/);assert.doesNotMatch(b.nodes.get('message').textContent,/Failed to fetch|PRIVATE/);
-   b.recover();await b.nodes.get('startupRetry').onclick();await b.flush();assert.equal(b.run('startupController.getState().ready'),true);assert.equal(b.calls.filter(call=>call.url==='/api/admin/state').length,3);assert.equal(b.calls.filter(call=>call.url.startsWith('/api/admin/finance/business-month-view?month=')).length,1);assert.equal(b.calls.filter(call=>call.url==='/api/admin/finance/business-month').length,0);assert.equal(b.nodes.get('startupRetry').hidden,true);
+   assert.equal(b.calls.filter(call=>call.url==='/api/admin/bootstrap').length,2);assert.equal(b.calls.filter(call=>call.url.startsWith('/api/admin/finance/business-month-view?month=')).length,0);assert.equal(b.calls.filter(call=>call.url==='/api/admin/finance/business-month').length,0);assert.match(b.nodes.get('businessMonthSelect').value,/^\d{4}-\d{2}$/);assert.equal(b.nodes.get('startupRetry').hidden,false);assert.match(b.nodes.get('message').textContent,/Não foi possível conectar/);assert.doesNotMatch(b.nodes.get('message').textContent,/Failed to fetch|PRIVATE/);
+   b.recover();await b.nodes.get('startupRetry').onclick();await b.flush();assert.equal(b.run('startupController.getState().ready'),true);assert.equal(b.calls.filter(call=>call.url==='/api/admin/bootstrap').length,3);assert.equal(b.calls.filter(call=>call.url.startsWith('/api/admin/finance/business-month-view?month=')).length,1);assert.equal(b.calls.filter(call=>call.url==='/api/admin/finance/business-month').length,0);assert.equal(b.nodes.get('startupRetry').hidden,true);
   }finally{b.stop();}
  });
  test(`an expired session offers login without replaying financial requests (minify=${minify})`,async()=>{
@@ -80,11 +89,11 @@ for(const minify of [false,true]){
   const {html,session}=await ownerHtml(minify),b=browser(html,session,{sessionQuota:true});
   try{
    await b.flush();assert.equal(b.run('startupController.getState().phase'),'FAILED');assert.equal(b.run('startupController.getState().sessionReady'),false);
-   assert.equal(b.calls.filter(call=>call.url==='/api/admin/state').length,1);assert.equal(b.calls.filter(call=>call.url.startsWith('/api/admin/finance/')).length,0);assert.equal([...b.timers.values()].some(timer=>timer.delay===750),false);
+   assert.equal(b.calls.filter(call=>call.url==='/api/admin/bootstrap').length,1);assert.equal(b.calls.filter(call=>call.url.startsWith('/api/admin/finance/')).length,0);assert.equal([...b.timers.values()].some(timer=>timer.delay===750),false);
    const message=b.nodes.get('message').textContent;assert.match(message,/limite diário do banco de dados/);assert.match(message,/21h \(horário de Brasília\)/);assert.doesNotMatch(message,/Verifique sua conexão|D1_ERROR|PRIVATE|SQL/);
    assert.equal(b.nodes.get('startupRetry').hidden,false);assert.equal(b.nodes.get('startupRetry').disabled,false);assert.equal(b.nodes.get('startupLogin').hidden,true);
    b.recover();await b.nodes.get('startupRetry').onclick();await b.flush();assert.equal(b.run('startupController.getState().ready'),true);
-   assert.equal(b.calls.filter(call=>call.url==='/api/admin/state').length,2);assert.equal(b.calls.filter(call=>call.url.startsWith('/api/admin/finance/business-month-view?month=')).length,1);assert.equal(b.calls.filter(call=>call.url==='/api/admin/finance/business-month').length,0);assert.equal(b.nodes.get('startupRetry').hidden,true);assert.equal(b.nodes.get('message').textContent,'');
+   assert.equal(b.calls.filter(call=>call.url==='/api/admin/bootstrap').length,2);assert.equal(b.calls.filter(call=>call.url.startsWith('/api/admin/finance/business-month-view?month=')).length,1);assert.equal(b.calls.filter(call=>call.url==='/api/admin/finance/business-month').length,0);assert.equal(b.nodes.get('startupRetry').hidden,true);assert.equal(b.nodes.get('message').textContent,'');
   }finally{b.stop();}
  });
  test(`optional settings rendering cannot gate the financial overview (minify=${minify})`,async()=>{
@@ -100,6 +109,59 @@ for(const minify of [false,true]){
    b.setLogout('hang');const pending=b.nodes.get('logout').onsubmit({preventDefault(){}}),timeout=[...b.timers.values()].find(timer=>timer.delay===15000);assert.ok(timeout);timeout.callback();assert.equal(await pending,false);assert.equal(b.run('startupController.getState().ready'),true);assert.equal(b.run('monthlyStops'),0);
    b.setLogout('success');assert.equal(await b.nodes.get('logout').onsubmit({preventDefault(){}}),true);assert.equal(b.run('startupController.getState().phase'),'STOPPED');assert.equal(b.run('monthlyStops'),1);assert.equal(b.context.location.href,'/login');
    assert.equal(b.calls.filter(call=>call.url==='/admin/logout').length,4,'each user request issues one POST without automatic replay');
+  }finally{b.stop();}
+ });
+
+ test(`the overview opens while settings remain pending and configuration reads are deduplicated (minify=${minify})`,async()=>{
+  const {html,session}=await ownerHtml(minify),b=browser(html,session,{settingsMode:'pending'});
+  try{
+   await b.flush();assert.equal(b.run('startupController.getState().ready'),true);assert.equal(b.run('state'),null);assert.equal(b.run('csrf'),session.csrf);
+   assert.equal(b.calls.filter(call=>call.url==='/api/admin/bootstrap').length,1);assert.equal(b.calls.filter(call=>call.url==='/api/admin/state').length,1);assert.equal(b.calls.filter(call=>call.url.startsWith('/api/admin/finance/business-month-view?month=')).length,1);
+   for(const ids of Object.values(b.formControls))for(const id of ids)assert.equal(b.nodes.get(id).disabled,true,id);
+   assert.equal(typeof b.nodes.get('businessMonthRefresh').onclick,'function');assert.equal(b.nodes.get('message').textContent,'');
+   b.run("openTab('margins');openTab('hermes');void loadSettings();");await b.flush();assert.equal(b.calls.filter(call=>call.url==='/api/admin/state').length,1);assert.equal(b.calls.filter(call=>call.url==='/api/admin/bootstrap').length,1);
+  }finally{b.stop();}
+ });
+ test(`failed or invalid secondary settings can be retried without restarting the overview or overwriting drafts (minify=${minify})`,async()=>{
+  for(const settingsMode of ['failure','invalid']){
+   const {html,session}=await ownerHtml(minify),b=browser(html,session,{settingsMode});
+   try{
+    await b.flush();assert.equal(b.run('startupController.getState().ready'),true);assert.equal(b.run('state'),null);assert.match(b.nodes.get('simulation').textContent,/configurações não puderam ser carregadas/);assert.equal(b.nodes.get('message').textContent,'');
+    for(const ids of Object.values(b.formControls))for(const id of ids)assert.equal(b.nodes.get(id).disabled,true,id);
+    b.setSettings('success');b.run("openTab('margins');");await b.flush();assert.equal(b.run('state.revision'),session.settings.revision);
+    for(const ids of Object.values(b.formControls))for(const id of ids)assert.equal(b.nodes.get(id).disabled,false,id);
+    b.nodes.get('regular').value='37,41';b.run("openTab('hermes');void loadSettings();");await b.flush();assert.equal(b.nodes.get('regular').value,'37,41');assert.equal(b.calls.filter(call=>call.url==='/api/admin/state').length,2);
+    assert.equal(b.calls.filter(call=>call.url==='/api/admin/bootstrap').length,1);assert.equal(b.calls.filter(call=>call.url.startsWith('/api/admin/finance/business-month-view?month=')).length,1);
+   }finally{b.stop();}
+  }
+ });
+ test(`a settings deadline does not fail the accepted session or start another financial request (minify=${minify})`,async()=>{
+  const {html,session}=await ownerHtml(minify),b=browser(html,session,{settingsMode:'pending'});
+  try{
+   await b.flush();const read=b.calls.find(call=>call.url==='/api/admin/state');assert.ok(read.deadline);read.deadline.callback();await b.flush();
+   assert.equal(b.run('startupController.getState().ready'),true);assert.equal(b.run('state'),null);assert.equal(b.run('csrf'),session.csrf);assert.equal(b.nodes.get('message').textContent,'');assert.match(b.nodes.get('simulation').textContent,/configurações não puderam ser carregadas/);
+   assert.equal(b.calls.filter(call=>call.url==='/api/admin/bootstrap').length,1);assert.equal(b.calls.filter(call=>call.url==='/api/admin/state').length,1);assert.equal(b.calls.filter(call=>call.url.startsWith('/api/admin/finance/business-month-view?month=')).length,1);assert.equal([...b.timers.values()].some(timer=>timer.delay===750),false);
+  }finally{b.stop();}
+ });
+ test(`a late settings response after confirmed logout cannot restore controls or accepted state (minify=${minify})`,async()=>{
+  const {html,session}=await ownerHtml(minify),b=browser(html,session,{settingsMode:'pending'});
+  try{
+   await b.flush();b.setLogout('success');assert.equal(await b.nodes.get('logout').onsubmit({preventDefault(){}}),true);const count=b.calls.length;
+   b.releaseSettings();await b.flush();assert.equal(b.run('startupController.getState().phase'),'STOPPED');assert.equal(b.run('state'),null);assert.equal(b.run('csrf'),'');assert.equal(b.context.location.href,'/login');assert.equal(b.calls.length,count);
+   for(const ids of Object.values(b.formControls))for(const id of ids)assert.equal(b.nodes.get(id).disabled,true,id);
+  }finally{b.stop();}
+ });
+ test(`invalid bootstrap data is rejected before settings and financial reads (minify=${minify})`,async()=>{
+  const {html,session}=await ownerHtml(minify),b=browser(html,session,{invalidBootstrap:true});
+  try{await b.flush();assert.equal(b.run('startupController.getState().phase'),'FAILED');assert.equal(b.run('csrf'),'');assert.equal(b.calls.length,1);assert.equal(b.calls[0].url,'/api/admin/bootstrap');assert.equal([...b.timers.values()].some(timer=>timer.delay===750),false);}
+  finally{b.stop();}
+ });
+ test(`bootstrap timeout uses the same safe explanation in the top bar and monthly workspace (minify=${minify})`,async()=>{
+  const {html,session}=await ownerHtml(minify),b=browser(html,session,{sessionPending:true});
+  try{
+   await b.flush();b.calls.find(call=>call.url==='/api/admin/bootstrap').deadline.callback();await b.flush();const retry=[...b.timers.values()].find(timer=>timer.delay===750);assert.ok(retry);retry.callback();await b.flush();
+   b.calls.filter(call=>call.url==='/api/admin/bootstrap').at(-1).deadline.callback();await b.flush();assert.equal(b.run('startupController.getState().phase'),'FAILED');assert.equal(b.calls.length,2);
+   const message=b.nodes.get('message').textContent;assert.match(message,/A consulta demorou mais que o esperado/);assert.equal(b.nodes.get('businessMonthStatus').textContent,message);assert.doesNotMatch(message,/Verifique.*conexão|PRIVATE/);
   }finally{b.stop();}
  });
 }

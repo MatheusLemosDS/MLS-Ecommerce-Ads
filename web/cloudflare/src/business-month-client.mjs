@@ -43,7 +43,8 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
  const monthName=value=>validMonth(value)?new Intl.DateTimeFormat('pt-BR',{month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(value+'-01T12:00:00Z')):'mês selecionado';
  const sourceAge=value=>{if(!Number.isSafeInteger(value)||value<=0)return 'pendente';const minutes=Math.max(0,Math.floor((Date.now()-value*1000)/60000));return minutes<1?'há menos de 1 minuto':minutes<60?'há '+minutes+' minuto(s)':minutes<1440?'há '+Math.floor(minutes/60)+' hora(s)':'há '+Math.floor(minutes/1440)+' dia(s)';};
  let api=null,syncVariants=null,onCatalogChanged=null,frame=null,month='',generation=0,busy=false,adsBusy=false,saving=false,started=false,paused=false,dirty=false,editSequence=0,draftRevision=0,timer=null,message='',failed=false;
- let bootstrapPrepared=false,bootstrapCompleted=false,bootstrapPhase='LOADING',bootstrapRetry=null,bootstrapRetryPending=false;
+ let bootstrapPrepared=false,bootstrapCompleted=false,bootstrapPhase='LOADING',bootstrapRetry=null,bootstrapRetryPending=false,bootstrapFailureKind='INVALID';
+ const bootstrapFailureMessages={TIMEOUT:'A consulta demorou mais que o esperado. Tente novamente.',NETWORK:'Não foi possível conectar ao painel. Verifique a conexão e tente novamente.',SESSION:'Sua sessão expirou. Entre novamente.',QUOTA:'O painel está indisponível porque o limite diário do banco de dados foi atingido. A cota é renovada todos os dias às 21h (horário de Brasília).',UNAVAILABLE:'O painel está temporariamente indisponível. Tente novamente em alguns instantes.',INVALID:'Não foi possível abrir o painel. Tente novamente.'};
  let productPage=1,productMonth='';
  let workspaceView=null,viewRequest=0,viewPromise=null,viewFailures=0,manualCollection=false,priorityPromise=null;
  const cronOwnsCollection=()=>workspaceView?.automatic.applicable===true&&workspaceView.automatic.enabled===true;
@@ -320,9 +321,9 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
  function paintBootstrap(){
   if(started||bootstrapCompleted||!el('Select'))return false;
   const failure=bootstrapPhase==='FAILED';
-  el('Select').disabled=true;el('Previous').disabled=true;el('Pause').hidden=true;
+  el('Select').disabled=true;el('Previous').disabled=true;el('SourceRefresh').disabled=true;el('Pause').hidden=true;
   el('Refresh').disabled=!failure||bootstrapRetryPending;el('Refresh').textContent=failure?'Tentar novamente':'Conectando…';
-  status(failure?'Não foi possível conectar ao painel. Verifique a conexão e tente novamente.':bootstrapPhase==='RETRYING'?'Tentando conectar ao painel novamente…':'Conectando ao painel da loja…',failure);
+  status(failure?bootstrapFailureMessages[bootstrapFailureKind]:bootstrapPhase==='RETRYING'?'Tentando conectar ao painel novamente…':'Conectando ao painel da loja…',failure);
   return true;
  }
  async function retryBootstrap(){
@@ -343,9 +344,14 @@ export const BUSINESS_MONTH_CLIENT=String.raw`
  function bootstrapState(options={}){
   if(started||bootstrapCompleted||!['LOADING','RETRYING','FAILED','READY'].includes(options.phase))return false;
   if(!bootstrapPrepared&&!prepare())return false;
-  // The caller's error text may contain a browser/provider failure or private
-  // details. Only the known phase selects the user-facing Portuguese message.
-  bootstrapPhase=options.phase;return paintBootstrap();
+  // Only a bounded public category selects copy. Never reflect provider text
+  // or invoke an accessor while choosing the reason shown in the overview.
+  bootstrapPhase=options.phase;
+  if(bootstrapPhase==='FAILED'){
+   const descriptor=Object.getOwnPropertyDescriptor(options,'failureKind'),kind=descriptor&&Object.hasOwn(descriptor,'value')?descriptor.value:null;
+   bootstrapFailureKind=typeof kind==='string'&&Object.hasOwn(bootstrapFailureMessages,kind)?kind:'INVALID';
+  }
+  return paintBootstrap();
  }
  function controls(){
   if(bootstrapPrepared&&!bootstrapCompleted&&!started){paintBootstrap();return;}

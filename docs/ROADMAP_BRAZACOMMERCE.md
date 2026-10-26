@@ -26,9 +26,13 @@ O total anterior de despesas é preservado e sua transição exige conferência
 explícita para evitar dupla contagem.
 O complemento do custo histórico do tamanho 16 foi publicado em `4853bbf`
 pela PR #5. O detalhe dos pedidos em revisão e suas solicitações foi publicado
-em `b97d55e` pela PR #6. A continuidade atual mostra os
+em `b97d55e` pela PR #6. A PR #7, integrada em `f16bb1f`, mostra os
 [valores de devolução por situação e o saldo após ajustes informados](VALORES_DE_DEVOLUCOES_E_SALDO_AJUSTADO.md),
 sem acrescentar coleta externa ou descontar o reembolso duas vezes.
+Após o relato de timeout na abertura, a continuidade atual separa a
+[confirmação da sessão das consultas de configuração e Hermes](ABERTURA_DO_PAINEL.md#demora-na-confirmação-da-sessão--26102026).
+Uma leitura inicial sem D1 permite abrir o resumo independentemente dessas
+consultas, mantendo os dados financeiros sujeitos à disponibilidade do banco.
 O diagnóstico e os limites dessa correção estão em
 [abertura do painel](ABERTURA_DO_PAINEL.md#limite-diário-do-d1--26102026).
 A atualização da ponte Hermes no Droplet permanece uma etapa separada; ela não
@@ -66,7 +70,8 @@ testes locais.
 | Despesas operacionais e contas a pagar | Publicadas em `2d6c320` pela PR #4 | Cadastro discriminado de aluguel, funcionários, boletos e outras despesas; parcelas mensais finitas, vencimento e pagamento informado. A competência determina o custo e a conferência explícita impede duplicar o total agregado anterior. Não executa pagamentos. |
 | Variações removidas do catálogo | PR #4 publicada; complemento do custo histórico publicado em `4853bbf` pela PR #5 | Preserva correções históricas e variações atuais. A evidência aprovada do tamanho 16 pode usar a regra infantil atual quando ela for inequívoca; os demais bloqueios e as decisões manuais permanecem. Recalcula dados salvos sem nova consulta externa. A conferência do resultado atualizado da conta continua separada dos testes. |
 | Pedidos em revisão e suas devoluções | Publicados em `b97d55e` pela PR #6 | Detalha situação, referências, cobertura e horários com os dados já salvos. Separa os pedidos em revisão dos pagos com devolução, corrige a falsa exigência de referência em cancelamentos e mantém as pendências de recebimento e reembolso. O atalho para a conferência não inicia consultas. |
-| Valores de devolução e saldo após ajustes | Implementados nesta continuidade | Totais por situação e base financeira, repasse por pedido afetado e saldo provisório com os custos da mesma publicação. Não duplica deduções, não transforma aprovação em comprovante bancário e mantém o saldo ainda a liberar indisponível. |
+| Valores de devolução e saldo após ajustes | Publicados em `f16bb1f` pela PR #7 | Totais por situação e base financeira, repasse por pedido afetado e saldo provisório com os custos da mesma publicação. Não duplica deduções, não transforma aprovação em comprovante bancário e mantém o saldo ainda a liberar indisponível. |
+| Sessão independente de configuração e Hermes | Corrigida nesta continuidade após o print de timeout | Confirmação autenticada sem acesso ao D1; resumo inicia sem aguardar configuração ou orçamento. Mensagens distinguem demora, sessão e rede. A leitura dos dados financeiros continua dependendo do banco. |
 | Diagnóstico da conta | Versionado em `main` (`6f9ce23`); ativação a conferir | Calcula TACOS, saldo disponível antes de Ads, cobertura dos custos e próximas tarefas a partir do mês validado. Dados ausentes bloqueiam os indicadores correspondentes. Não autoriza investimento. |
 | Hermes com financeiro da loja | Publicado (`11f45ce`); atualização da ponte pendente | Cada análise preserva o mês financeiro, custos, DAS, anúncios, pendências e até três próximas ações. A ponte antiga não recebe tarefas novas. Exige atualização no Droplet e observação de uma execução real com a nova referência. |
 | Alterar anúncios, campanhas e promoções | Ainda não implementado para execução comercial | As proteções de somente leitura e Ads/PROMO `LOCKED` continuam vigentes. A coleta autônoma não cria permissão de escrita na Shopee. |
