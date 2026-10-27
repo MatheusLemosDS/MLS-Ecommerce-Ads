@@ -33,7 +33,7 @@ for(const minify of [false,true])test(`the deployed monthly script renders the e
  // Execute the entire emitted monthly script, including day, expense and audit
  // clients. No source module supplies browser functions to this VM.
  const {html}=await compiledOwnerReportPage(minify),b=ownerReportBrowser(html,{scriptIncludes:'globalThis.brazaMonthDashboard='});
- const calls=[],before=providerCounts(f),allowedReads=new Set(['finance/business-month-view?month=2026-10','finance/reconciliation?month=2026-10&evidence=refunds-v1','finance/escrow-releases?month=2026-10&evidence=orders-v1','finance/expense-ledger?month=2026-10']);
+ const calls=[],before=providerCounts(f),allowedReads=new Set(['finance/business-month-view?month=2026-10','finance/reconciliation?month=2026-10&evidence=refunds-v1','finance/escrow-releases?month=2026-10&evidence=orders-v1','finance/income-overview','finance/expense-ledger?month=2026-10']);
  b.context.clock=f.clock.time;
  b.context.readSaved=async(path,body)=>{
   calls.push({path,body});
