@@ -5,6 +5,7 @@ import {businessMonth} from '../src/business-month.mjs';
 import {projectBusinessMonthView,projectBusinessMonthAuditScope} from '../src/business-month-view-state.mjs';
 import {projectBusinessMonth} from '../src/business-month.mjs';
 import {projectDailyBusinessSummary} from '../src/business-daily-summary.mjs';
+import {projectExpenseSchedule} from '../src/expense-schedule.mjs';
 import {D1} from './sqlite-d1.mjs';
 
 const origin='https://app.example.test';
@@ -117,7 +118,8 @@ test('view negotiation preserves old tabs and binds audit identities to the disp
  const activeResponse=await invoke(auth,viewPath(),options,source),active=await activeResponse.json();
  assert.equal(activeResponse.status,200);assert.equal(activeResponse.headers.get('x-braza-client-contract'),options.contract);assert.equal(activeResponse.headers.get('vary'),'X-Braza-Client-Contract');assert.equal(activeResponse.headers.get('cache-control'),'no-store');
  assert.equal(active.schema,'business_month_view_v2');assert.equal(active.audit_scope,null);assert.ok(projectBusinessMonthView(active,projectBusinessMonth,projectBusinessMonthAuditScope));
- for(const contract of ['business-month-v2','business-month-view-v4',''])assert.equal((await invoke(auth,viewPath(),{contract},source)).status,409);
+ for(const contract of ['business-month-v2',''])assert.equal((await invoke(auth,viewPath(),{contract},source)).status,409);
+ const v4Response=await invoke(auth,viewPath(),{contract:'business-month-view-v4'},source);assert.equal(v4Response.status,200);const v4=await v4Response.json();assert.equal(v4.schema,'business_month_view_v4');assert.equal(v4.expense_schedule,null);assert.ok(projectBusinessMonthView(v4,projectBusinessMonth,projectBusinessMonthAuditScope,projectDailyBusinessSummary,projectExpenseSchedule));
  assert.deepEqual(source.calls,{finance:0,ads:0});
  let result=await businessMonth(auth.env,{operation:'start',month:selected},source);
  while(result.status==='RUNNING')result=await businessMonth(auth.env,{operation:'step',month:selected},source);
