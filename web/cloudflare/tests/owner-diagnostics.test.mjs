@@ -92,3 +92,37 @@ test('compiled App keeps independent owner diagnostics behind the exact session 
  const result=await(await work.fetch(req('/api/admin/diagnostics',cookie),env)).json();
  assert.equal(result.d1_probe,'READY');
 });
+
+test('independent diagnostic browser script copies only safe statuses, not stored financial values or session tokens',async()=>{
+ const vm=await import('node:vm');
+ const env={...baseEnv(),ADMIN_DB:{prepare(sql){assert.equal(sql,'SELECT 1 AS ok');return {first:async()=>({ok:1})};}}};
+ const cookie=await login(worker,env),html=await(await worker.fetch(req('/admin/diagnostics',cookie),env)).text();
+ const script=[...html.matchAll(/<script>([\\s\\S]*?)<\\/script>/g)].map(m=>m[1]).find(value=>value.includes('mlsDiagOutput'));
+ assert.ok(script,'diagnostic must have standalone browser code');
+ const nodes=new Map(['mlsDiagOutput','mlsDiagStatus','mlsDiagRetry','mlsDiagCopy'].map(id=>[id,{value:'',textContent:'',disabled:false,handlers:{},addEventListener(type,fn){this.handlers[type]=fn;},focus(){},select(){}}]));
+ const calls=[],privateValue='PRIVATE_ORDER_HASH_OR_TOKEN_12345',clipboard=[];
+ const context=vm.createContext({AbortController,Response,Intl,Date,setTimeout,clearTimeout,navigator:{clipboard:{writeText:async value=>clipboard.push(value)}},document:{getElementById:id=>nodes.get(id)},fetch:async(path,options)=>{
+  calls.push({path,options});
+  if(path==='/api/admin/diagnostics')return Response.json({schema:'mls_owner_diagnostic_v1',release:'P1_DIAGNOSTICS_20261027_V1',owner_session:'VALID',d1_probe:'READY',csrf:privateValue});
+  if(path==='/admin?tab=overview')return new Response('<main id="commandCenter"><a data-agent-placeholder="true"></a><button id="startupRetry"></button><a href="/admin/diagnostics"></a></main>',{headers:{'content-type':'text/html'}});
+  if(path.startsWith('/api/admin/finance/business-month-view?'))return Response.json({schema:'business_month_view_v4',balance_cents:987654,access_token:privateValue,orders:[{order_sn:privateValue}]});
+  throw Error('UNEXPECTED_ROUTE');
+ }});
+ new vm.Script(script,{filename:'owner-diagnostic-browser.js'}).runInContext(context);
+ for(let i=0;i<12;i++)await new Promise(resolve=>setImmediate(resolve));
+ const report=JSON.parse(nodes.get('mlsDiagOutput').value);
+ assert.equal(report.schema,'mls_owner_panel_report_v1');
+ assert.equal(report.owner_probe.http,200);
+ assert.equal(report.owner_probe.d1,'READY');
+ assert.equal(report.admin_markup.command_center,true);
+ assert.equal(report.admin_markup.agent_cards,true);
+ assert.equal(report.finance_month.http,200);
+ assert.equal(report.finance_month.schema,'business_month_view_v4');
+ assert.equal(calls.length,3);
+ assert.equal(calls.filter(call=>call.options.method&&call.options.method!=='GET').length,0);
+ assert.equal(calls[2].options.headers['X-Braza-Client-Contract'],'business-month-view-v4');
+ for(const secret of [privateValue,'987654','access_token','order_sn','csrf'])assert.ok(!nodes.get('mlsDiagOutput').value.includes(secret),secret);
+ await nodes.get('mlsDiagCopy').handlers.click();
+ assert.equal(clipboard.length,1);
+ assert.equal(clipboard[0],nodes.get('mlsDiagOutput').value);
+});
