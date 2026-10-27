@@ -49,6 +49,35 @@ test('real Chromium hydrates owner agent cards even when finance API is unavaila
  html=html.replace('<body>','<body><script>document.documentElement.dataset.theme="dark";document.documentElement.dataset.themePreference="dark";</script>'+errorScript);
  const closing=html.lastIndexOf('</body>');assert.ok(closing>0,'must inject inspector after every bundled inline script');
  html=html.slice(0,closing)+snapshotScript+html.slice(closing);
+
+ const syntheticRows=[
+  {date:'2026-10-25',state:'OPERATIONAL',net_basis:'ESTIMATE',net_cents:5000,sales_cents:30000,ads_spend_cents:3500,paid_orders:8,partial:false,comparable:true},
+  {date:'2026-10-26',state:'OPERATIONAL',net_basis:'ESTIMATE',net_cents:-5000,sales_cents:35000,ads_spend_cents:4000,paid_orders:9,partial:false,comparable:true},
+  {date:'2026-10-27',state:'OPERATIONAL',net_basis:'ESTIMATE',net_cents:-2500,sales_cents:20000,ads_spend_cents:1500,paid_orders:4,partial:true,comparable:false}
+ ];
+ const syntheticTrend={schema:'mls_mission_daily_trend_v1',month:'2026-10',selected_date:'2026-10-27',points:syntheticRows};
+ const fixtureScript='<script>(()=>{try{const trend='+JSON.stringify(syntheticTrend)+
+  ';globalThis.brazaDayDashboard={getTrend:()=>trend};'+
+  'globalThis.mlsAgentRegistry={getSnapshot:()=>({day:{net_cents:-2500},month:{balance_cents:-50000}})};'+
+  'globalThis.mlsMissionTrends.refresh();'+
+  'const report={overview_svg:document.querySelectorAll("#missionTrendGraphOverview svg").length,'+
+  'finance_svg:document.querySelectorAll("#missionTrendGraphFinance svg").length,ads_svg:document.querySelectorAll("#missionTrendGraphAds svg").length,'+
+  'points:document.querySelectorAll("#missionTrendGraphOverview circle").length,'+
+  'net_badge:document.getElementById("missionKpiDeltaNet")?.textContent,'+
+  'sales_badge:document.getElementById("missionKpiDeltaSales")?.textContent,'+
+  'ads_badge:document.getElementById("missionKpiDeltaAds")?.textContent,'+
+  'chart_tab_direction:getComputedStyle(document.querySelector(".mission-trend-controls")).flexDirection,'+
+  'chart_title:document.getElementById("missionTrendTitleOverview")?.textContent,'+
+  'net_color:getComputedStyle(document.getElementById("missionKpiDeltaNet")).color,'+
+  'sales_color:getComputedStyle(document.getElementById("missionKpiDeltaSales")).color,'+
+  'ads_color:getComputedStyle(document.getElementById("missionKpiDeltaAds")).color,'+
+  'net_tone:document.querySelector("[data-mission-metric=net]")?.dataset.resultTone,'+
+  'finance_tone:document.getElementById("mission-finance-metric-0")?.dataset.resultTone,'+
+  'profit_label:document.getElementById("missionProfitState")?.textContent,'+
+  'errors:window.__mlsErrors.slice(0,4)};'+
+  'document.documentElement.dataset.mlsTrendFixture=JSON.stringify(report);'+
+  '}catch(e){document.documentElement.dataset.mlsTrendFixtureError=String(e?.message||e).slice(0,250);}})();</script>';
+
  const requests=[];
  const server=http.createServer((request,response)=>{
   const path=(request.url||'/').split('?')[0];
@@ -57,7 +86,7 @@ test('real Chromium hydrates owner agent cards even when finance API is unavaila
   if(path==='/admin'){
    response.writeHead(200,{'Content-Type':'text/html; charset=utf-8',
     'Content-Security-Policy':admin.headers.get('content-security-policy')||"default-src 'self'; script-src 'self' 'unsafe-inline';"});
-   response.end(html);
+   response.end((request.url||'').includes('mlsFixture=trend')?html.replace('</body>',fixtureScript+'</body>'):html);
   }else if(path==='/api/admin/bootstrap'){
    response.setHeader('Content-Type','application/json');
    response.end(JSON.stringify({schema:'admin_bootstrap_v1',csrf:'a'.repeat(64)}));
@@ -90,6 +119,30 @@ test('real Chromium hydrates owner agent cards even when finance API is unavaila
   assert.deepEqual(trace.visual.bars,['0%','0%','0%'],'finance failure must never create decorative fake numeric bars');
 
   assert.deepEqual(trace.errors,[]);
+  // Real-browser synthetic fixture checks actual visual encoding of verified
+  // negative profit, consecutive day change and missing cross-day exaggeration.
+  const example=await chromeDump(url+'?mlsFixture=trend');
+
+  const encodedFixture=example.match(/data-mls-trend-fixture="([^"]+)"/);
+  assert.ok(encodedFixture,'validated-series inspector must execute in Chrome (trace: '+(example.match(/data-mls-trend-fixture-error="([^"]+)"/)?.[1]||'none')+')');
+  const fixture=JSON.parse(encodedFixture[1].replaceAll('&quot;','"').replaceAll('&amp;','&').replaceAll('&#39;',"'"));
+  console.log('MLS_TREND_BROWSER_TRACE',JSON.stringify(fixture));
+  assert.equal(fixture.overview_svg,1);
+  assert.equal(fixture.finance_svg,1);
+  assert.equal(fixture.ads_svg,1);
+  assert.equal(fixture.points,3);
+  assert.equal(fixture.chart_tab_direction,'row','chart buttons should be horizontal on desktop');
+  assert.match(fixture.chart_title,/Resultado diário estimado/);
+  assert.match(fixture.net_badge,/▼.*-R\$/);
+  assert.match(fixture.sales_badge,/▲.*\+R\$/);
+  assert.match(fixture.ads_badge,/▲.*\+R\$/);
+  assert.equal(fixture.net_tone,'loss');
+  assert.equal(fixture.finance_tone,'loss');
+  assert.match(fixture.profit_label,/Prejuízo estimado/);
+  assert.notEqual(fixture.net_color,fixture.sales_color,'loss and sales growth must use distinct colors');
+  assert.notEqual(fixture.sales_color,fixture.ads_color,'more Ad spend is amber rather than success green');
+  assert.deepEqual(fixture.errors,[]);
+
   // The direct deep links must expose only the selected agent/hub section.
   // This checks Chromium's actual hidden attribute after the real Admin client
   // processes the URL, not just an HTML string / a VM stub.
