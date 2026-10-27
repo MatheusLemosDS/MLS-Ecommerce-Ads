@@ -323,3 +323,14 @@ não substitui o Seller Centre, não acessa Shopee e não libera paginação,
 recebível ou lucro realizado. Merge `2e35ac0267757f748912f36756c89584aa13efe6`;
 CI PR `40559446787` e main `40559823142`, **2.064 Node + 67 Python**.
 Deploy Cloudflare e conferência autenticada do Seller Centre continuam pendentes de evidência.
+
+## Alerta operacional — recuperação de interface (27/10/2026)
+
+O operador informou que o painel deixou de carregar e os agentes sumiram.
+A PR #22, apesar de CI verde, é a alteração de runtime mais recente.
+Prioridade imediata: **rollback isolado da PR #22 na aplicação**, branch
+`hotfix/restore-agent-panels-after-pr22`, preservando M1 e os demais incrementos M2 já publicados.
+Este hotfix não deve criar nenhum novo endpoint, rede, polling ou acesso à
+Shopee. A causa definitiva requer logs/browser; não confundir ausência do
+painel com exclusão de dados. Até confirmação da publicação Cloudflare e
+teste autenticado, estado do incidente: **NÃO RESOLVIDO**.
