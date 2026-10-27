@@ -321,7 +321,16 @@ async function catalogStateForOwner(env,state){
  });
  return {...state,products,enabled};
 }
-function dashboard(){return page('<style>'+BUSINESS_MONTH_CSS+AUTOMATION_WORKSPACE_CSS+COST_RULE_CSS+DTF_CSS+PRODUCTION_COST_PERIODS_CSS+SAVED_CATALOG_CSS+'</style>'+adminBody().replace('<details id="legacyFinanceDetails"',automationWorkspaceBody()+'<details id="legacyFinanceDetails"').replace('<section id="margins" hidden>','<section id="margins" hidden>'+productionCostPeriodsBody()+costRulesBody()).replace('<section id="products" hidden>',dtfBody()+'<section id="products" hidden>'+savedCatalogBody())+'<script>'+DTF_ENGINE_CLIENT+'</script><script>'+DTF_CLIENT+'</script><script>'+COST_RULE_CLIENT+'</script><script>'+AUTOMATION_WORKSPACE_CLIENT+'</script><script>'+BUSINESS_MONTH_CLIENT+'</script><script>'+INCOME_OVERVIEW_CLIENT+'</script><script>'+AGENT_REGISTRY_CLIENT+'</script><script>'+PRODUCTION_COST_PERIODS_CLIENT+'</script><script>'+SAVED_CATALOG_CLIENT+'</script><script>'+CLIENT+'</script>');}
+function dashboard(){
+ const markup='<style>'+BUSINESS_MONTH_CSS+AUTOMATION_WORKSPACE_CSS+COST_RULE_CSS+DTF_CSS+PRODUCTION_COST_PERIODS_CSS+SAVED_CATALOG_CSS+'</style>'+adminBody().replace('<details id="legacyFinanceDetails"',automationWorkspaceBody()+'<details id="legacyFinanceDetails"').replace('<section id="margins" hidden>','<section id="margins" hidden>'+productionCostPeriodsBody()+costRulesBody()).replace('<section id="products" hidden>',dtfBody()+'<section id="products" hidden>'+savedCatalogBody())+'<script>'+DTF_ENGINE_CLIENT+'</script><script>'+DTF_CLIENT+'</script><script>'+COST_RULE_CLIENT+'</script><script>'+AUTOMATION_WORKSPACE_CLIENT+'</script><script>'+BUSINESS_MONTH_CLIENT+'</script><script>'+INCOME_OVERVIEW_CLIENT+'</script><script>'+AGENT_REGISTRY_CLIENT+'</script><script>'+PRODUCTION_COST_PERIODS_CLIENT+'</script><script>'+SAVED_CATALOG_CLIENT+'</script><script>'+CLIENT+'</script>';
+ // Raw control bytes inside inlined JavaScript are changed by the HTML
+ // tokenizer (U+0000 becomes U+FFFD), which can invalidate a regex character
+ // class before any client initializer runs. Encode these bytes as JavaScript
+ // unicode escapes before sending the document; preserve normal whitespace.
+ const safe=markup.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g,
+  character=>'\\u'+character.charCodeAt(0).toString(16).padStart(4,'0'));
+ return page(safe);
+}
 
 async function adminFetch(request,env,services={}){const url=new URL(request.url),path=url.pathname;try{
  if(path.startsWith('/api/hermes/')){
