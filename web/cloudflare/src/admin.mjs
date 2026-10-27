@@ -11,6 +11,7 @@ import {CSS,adminBody,loginBody} from './admin-view.mjs';
 import {CLIENT} from './admin-client.mjs';
 import {BUSINESS_MONTH_CLIENT} from './business-month-client.mjs';
 import {AGENT_REGISTRY_CLIENT} from './agent-registry-view.mjs';
+import {INCOME_OVERVIEW_CLIENT} from './income-overview-client.mjs';
 import {BUSINESS_MONTH_CSS} from './business-month-view.mjs';
 import {BUSINESS_ESCROW_RELEASES_SCHEMA,BusinessEscrowReleasesError,readBusinessEscrowReleases,readBusinessEscrowReleaseEvidence} from './business-escrow-releases.mjs';
 import {BUSINESS_ESCROW_RELEASE_COVERAGE_SCHEMA,BusinessEscrowReleaseCoverageError,readBusinessEscrowReleaseCoverage,runBusinessEscrowReleaseCoverage} from './business-escrow-release-coverage.mjs';
@@ -303,7 +304,7 @@ async function catalogStateForOwner(env,state){
  });
  return {...state,products,enabled};
 }
-function dashboard(){return page('<style>'+BUSINESS_MONTH_CSS+AUTOMATION_WORKSPACE_CSS+COST_RULE_CSS+DTF_CSS+PRODUCTION_COST_PERIODS_CSS+SAVED_CATALOG_CSS+'</style>'+adminBody().replace('<details id="legacyFinanceDetails"',automationWorkspaceBody()+'<details id="legacyFinanceDetails"').replace('<section id="margins" hidden>','<section id="margins" hidden>'+productionCostPeriodsBody()+costRulesBody()).replace('<section id="products" hidden>',dtfBody()+'<section id="products" hidden>'+savedCatalogBody())+'<script>'+DTF_ENGINE_CLIENT+'</script><script>'+DTF_CLIENT+'</script><script>'+COST_RULE_CLIENT+'</script><script>'+AUTOMATION_WORKSPACE_CLIENT+'</script><script>'+BUSINESS_MONTH_CLIENT+'</script><script>'+AGENT_REGISTRY_CLIENT+'</script><script>'+PRODUCTION_COST_PERIODS_CLIENT+'</script><script>'+SAVED_CATALOG_CLIENT+'</script><script>'+CLIENT+'</script>');}
+function dashboard(){return page('<style>'+BUSINESS_MONTH_CSS+AUTOMATION_WORKSPACE_CSS+COST_RULE_CSS+DTF_CSS+PRODUCTION_COST_PERIODS_CSS+SAVED_CATALOG_CSS+'</style>'+adminBody().replace('<details id="legacyFinanceDetails"',automationWorkspaceBody()+'<details id="legacyFinanceDetails"').replace('<section id="margins" hidden>','<section id="margins" hidden>'+productionCostPeriodsBody()+costRulesBody()).replace('<section id="products" hidden>',dtfBody()+'<section id="products" hidden>'+savedCatalogBody())+'<script>'+DTF_ENGINE_CLIENT+'</script><script>'+DTF_CLIENT+'</script><script>'+COST_RULE_CLIENT+'</script><script>'+AUTOMATION_WORKSPACE_CLIENT+'</script><script>'+BUSINESS_MONTH_CLIENT+'</script><script>'+INCOME_OVERVIEW_CLIENT+'</script><script>'+AGENT_REGISTRY_CLIENT+'</script><script>'+PRODUCTION_COST_PERIODS_CLIENT+'</script><script>'+SAVED_CATALOG_CLIENT+'</script><script>'+CLIENT+'</script>');}
 
 async function adminFetch(request,env,services={}){const url=new URL(request.url),path=url.pathname;try{
  if(path.startsWith('/api/hermes/')){
