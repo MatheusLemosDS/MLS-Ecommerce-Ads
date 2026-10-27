@@ -81,13 +81,38 @@ não apareceu no calendário consultado. Não é "não recebido" nem "valor a
 receber". `remaining_receivable_cents` e `realized_net_cents` continuam
 indisponíveis sem evidência suficiente.
 
+### Segundo incremento da M2 — PR #14
+
+Publicado pela **PR #14**, merge `1380d44f01e6ee3a0e42c828829d91fed878bb2a`.
+
+O MLS Finance agora acompanha uma coorte paga em calendários de liberações
+posteriores sem repetir a coleta Shopee só para esse cruzamento:
+
+- contrato privado `X-Braza-Release-Contract: release-coverage-v1`;
+- Finance lê apenas coorte e ledgers de `get_escrow_list` já salvos;
+- uma coorte anterior por execução do tracker;
+- 15 minutos enquanto incompleta e 6 horas após identidade completa no corte;
+- UI “Cobertura temporal das liberações” para meses passados;
+- meses/cortes ausentes, parciais e duplicidades permanecem explícitos;
+- `identity_complete_at_cutoff` nunca vira automaticamente “valor a receber”.
+
+CI: PR `40518940876`, main `40519257309`; **2.025 testes Node + 67 Python**.
+Produção: App `5614b669-da58-4582-ad21-5dd74417e048`, Auth
+`b76e3d02-7869-4750-8211-2eac1dfe498c`, Finance
+`0a6d8018-cf02-45b9-afc1-c25c0b582079`.
+
+Permanecem obrigatórios `RELEASE_CYCLE_SEMANTICS_UNVERIFIED` e
+`BANK_RECEIPT_NOT_VERIFIED`. O horizonte limitado do tracker não prova que
+uma liberação não possa ocorrer depois.
+
 ## Ponto exato de retomada
 
-**M2 continua em andamento.** Próximo incremento: acompanhar a mesma coorte paga
-através dos calendários de liberação posteriores, provar a condição de cobertura
-completa e validar a semântica oficial necessária antes de calcular “quanto ainda
-falta a Shopee liberar”. Em paralelo, adicionar vencimentos das despesas/contas
-ao resumo do MLS Finance.
+**M2 continua em andamento.** Próximo incremento: pesquisar e validar em fontes
+oﬁciais da Shopee a semântica do ciclo de escrow/liberação e do que pode ser
+considerado “ainda não liberado”. `remaining_receivable_cents` só pode sair de
+`null` se contrato + evidência real suportarem a conta. Em paralelo, observar o
+tracker temporal após a próxima virada de mês e adicionar vencimentos/atrasos das
+despesas ao MLS Finance.
 
 Prioridade de agentes visíveis:
 1. MLS Finance

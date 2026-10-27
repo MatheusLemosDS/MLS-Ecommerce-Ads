@@ -39,15 +39,20 @@
     "MLS Finance e MLS Auditor recebem tarefas de divergência, ambiguidade e ausência de correspondência",
     "Conflito entre evidências de repasse após ajuste bloqueia MLS Auditor e MLS Hermes",
     "Contrato v2 negociado preserva v1 e implantação mista",
-    "Cache de negócio reutiliza a tabela existente e owner reads permanecem sem writes"
+    "Cache de negócio reutiliza a tabela existente e owner reads permanecem sem writes",
+    "Acompanhamento temporal de coortes antigas em calendários posteriores sem nova coleta Shopee",
+    "Contrato release-coverage-v1 usa somente coorte financeira e ledgers de liberações já salvos",
+    "Round-robin acompanha uma coorte anterior por cron, com 15 minutos enquanto incompleta e 6 horas após identidade completa no corte",
+    "UI de cobertura temporal mostra calendários posteriores para meses passados sem chamar a Shopee pela tela",
+    "identity_complete_at_cutoff comprova somente cobertura de identidade e não habilita remaining_receivable"
   ],
   "remaining_this_phase": [
-    "Observar a evidência real pós-deploy da conta autenticada",
-    "Acompanhar a mesma coorte de pedidos em calendários de liberação posteriores para provar cobertura temporal",
-    "Validar contrato oficial/semântica da Shopee para o ciclo de valores ainda não liberados antes de publicar remaining_receivable",
+    "Observar a evidência real pós-deploy da conta autenticada, incluindo a primeira evolução de uma coorte para calendário posterior",
+    "Validar em fonte oficial da Shopee a semântica do ciclo de liberação e de valores ainda não liberados antes de publicar remaining_receivable",
     "Manter liquidação bancária e lucro realizado separados da liberação na Shopee",
-    "Adicionar vencimentos de despesas/contas ao resumo do MLS Finance",
-    "Resolver qualquer pedido ambíguo, valor não verificado ou conflito de evidência antes do fechamento estrito"
+    "Adicionar vencimentos, atrasos e próximos pagamentos de despesas/contas ao resumo do MLS Finance",
+    "Resolver qualquer pedido ambíguo, valor não verificado ou conflito de evidência antes do fechamento estrito",
+    "Reavaliar o horizonte limitado do tracker somente com evidência real; horizonte esgotado nunca prova ausência de liberação posterior"
   ],
   "next_phase": {
     "id": "M3_PRODUCTS_PRICING_INTELLIGENCE",
@@ -85,12 +90,11 @@
     }
   },
   "next_actions": [
-    "Validar em produção a primeira evidência orders-v1 da conta real quando a auditoria salva estiver disponível",
-    "Criar acompanhamento de cobertura da coorte paga através de calendários de liberação subsequentes sem duplicar get_escrow_list",
-    "Definir condição estrita para considerar uma coorte completamente coberta por liberações",
-    "Pesquisar e validar somente fonte oficial da Shopee para estado/ciclo de valores não liberados antes de habilitar valor ainda a liberar",
+    "Pesquisar e documentar somente fontes oficiais da Shopee sobre ciclo de escrow/liberação e significado de valores ainda não liberados",
+    "Definir uma condição estrita para remaining_receivable somente se a documentação oficial e a evidência real suportarem o cálculo; caso contrário manter null",
+    "Observar o tracker temporal real após a próxima virada de mês sem criar coleta duplicada",
     "Manter divergências e duplicidades como tarefas do MLS Finance/Returns/Auditor, nunca como valores escolhidos por heurística",
-    "Adicionar vencimentos de despesas e contas ao resumo do MLS Finance"
+    "Adicionar vencimentos, contas atrasadas e próximos pagamentos ao resumo do MLS Finance"
   ],
   "m0_followup": [
     "Conferir visual autenticado em desktop e celular durante M1; corrigir apenas branding/layout sem renomear infraestrutura"
@@ -99,35 +103,36 @@
     "Conferir visual autenticado da Central de Comando em desktop e celular; ajustes visuais podem ocorrer dentro de M2 sem alterar contratos"
   ],
   "latest_increment": {
-    "id": "M2_ORDER_LEVEL_RELEASE_RECONCILIATION",
+    "id": "M2_RELEASE_TEMPORAL_COVERAGE",
     "status": "PUBLISHED",
-    "pull_request": 13,
-    "merge_commit": "e00c7d18fc24b8211a36e850d0523ca835a1996e",
-    "documentation": "docs/CONCILIACAO_POR_PEDIDO_MLS_FINANCE_RETURNS.md",
+    "pull_request": 14,
+    "merge_commit": "1380d44f01e6ee3a0e42c828829d91fed878bb2a",
     "validation": {
-      "pr_run": 40507327612,
-      "main_run": 40507771674,
-      "node_tests": 2018,
+      "pr_run": 40518940876,
+      "main_run": 40519257309,
+      "node_tests": 2025,
       "python_tests": 67
     },
     "production": {
       "app": {
-        "build_id": "005eca11-27ea-4848-b0d2-681ed0e4adb2",
-        "version_id": "877b4184-2b0b-4919-af28-54b764153b4b"
+        "build_id": "ca33fa85-67e6-48fb-98f2-93e5d58c5330",
+        "version_id": "5614b669-da58-4582-ad21-5dd74417e048"
       },
       "auth": {
-        "build_id": "564353d0-14c2-43a7-90e9-984fe547c44e",
-        "version_id": "bdfa963d-6b08-4529-a484-baa0ecd2d392"
+        "build_id": "ed5b8ed3-4ab0-4cae-80a6-200096d72127",
+        "version_id": "b76e3d02-7869-4750-8211-2eac1dfe498c"
       },
       "finance": {
-        "build_id": "bfdaf10a-5fb1-4e8f-9462-1322aa4ee6c9",
-        "version_id": "a35ab2a0-8374-4677-b5aa-0d8921968013"
+        "build_id": "65526967-80de-471e-99f9-28cd55bae090",
+        "version_id": "0a6d8018-cf02-45b9-afc1-c25c0b582079"
       }
     },
     "limits": [
-      "NOT_LOCATED significa apenas ausência no calendário consultado",
+      "identity_complete_at_cutoff comprova somente cobertura de identidade nos calendários salvos até o corte",
+      "RELEASE_CYCLE_SEMANTICS_UNVERIFIED permanece obrigatório até validação oficial",
       "remaining_receivable_cents continua indisponível",
-      "realized_net_cents continua indisponível sem liquidação comprovada"
+      "realized_net_cents continua indisponível sem liquidação comprovada",
+      "O horizonte limitado do tracker não prova que não haverá liberação posterior"
     ]
   }
 }

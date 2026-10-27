@@ -194,7 +194,9 @@ Continuar a fase financeira atual:
 
 **Incremento publicado — PR #13:** conciliação de liberações por pedido com repasse-base, ajuste, repasse após ajuste, valor liberado verificável e cruzamento local com devoluções. Estados `NOT_LOCATED`, `AMBIGUOUS`, `LOCATED_UNVERIFIED` e `VERIFIED`. O sidecar v2 reutiliza a coleta/cache existentes; não cria endpoint Shopee, tabela D1 ou polling. [Detalhes](CONCILIACAO_POR_PEDIDO_MLS_FINANCE_RETURNS.md).
 
-**Ainda falta nesta fase:** provar cobertura temporal da mesma coorte em calendários posteriores; validar a semântica oficial para valores ainda não liberados; manter liquidação bancária separada; levar vencimentos das despesas para MLS Finance; resolver diferenças materiais.
+**Incremento publicado — PR #14:** acompanhamento temporal separa o mês de criação dos pedidos dos calendários de liberação posteriores. O contrato privado `release-coverage-v1` lê somente a coorte e os ledgers já salvos no Finance, sem capability de rede Shopee. O tracker acompanha uma coorte anterior por cron, preserva falhas, desacelera após identidade completa no corte e mostra a cobertura para meses passados. `identity_complete_at_cutoff` não comprova fim do ciclo, depósito bancário ou saldo ainda a liberar.
+
+**Ainda falta nesta fase:** observar o tracker com dados reais após a virada de mês; validar em fonte oficial a semântica do ciclo e de valores ainda não liberados antes de habilitar `remaining_receivable`; manter liquidação bancária separada; levar vencimentos/atrasos das despesas para MLS Finance; resolver diferenças materiais. O horizonte limitado do tracker nunca deve ser usado como prova de que não haverá liberação posterior.
 
 **Critério de saída:** período completo conciliado com explicação de cada diferença material.
 
@@ -297,13 +299,11 @@ Conversão de identidade M0 publicada pela **PR #11**, merge
 
 ## 10. Próximo passo ao retomar
 
-Se M0 já estiver publicada, iniciar **M1 — Central de Comando + Agent Registry somente leitura**.
+A fase canônica é **M2 — Finance/Returns confiáveis como agentes observadores**.
 
-A primeira implementação deve:
-- reaproveitar o lucro diário já publicado;
-- projetar o estado dos agentes sem nova coleta externa;
-- criar cards de agentes;
-- destacar prioridades;
-- manter os detalhes financeiros existentes em drill-down;
-- preservar layout mobile;
-- não habilitar escrita em Shopee.
+Retomar por:
+- validar em fontes oficiais da Shopee a semântica do ciclo de escrow/liberação e de valores ainda não liberados;
+- somente habilitar `remaining_receivable` se houver contrato e evidência suficientes; caso contrário manter `null`;
+- observar o tracker temporal real após a próxima virada de mês sem duplicar coleta;
+- adicionar vencimentos, atrasos e próximos pagamentos ao resumo do MLS Finance;
+- manter Ads/PROMO LOCKED e o lucro realizado desconhecido sem liquidação comprovada.
