@@ -16,7 +16,7 @@ function request(auth,path='',body,options={}){
 }
 function source(){
  const calls=[];let status='READY_TO_SHIP';
- const getFinanceProductionOrders=async(_,input)=>{calls.push(input);const stamp=Math.floor(Date.now()/1000);return {schema:'production_orders_v1',shop_id:1178167501,checked_at:stamp,start_date:input.operation==='scan'?input.start_date:null,end_date:input.operation==='scan'?input.end_date:null,complete:true,orders:input.operation==='scan'&&input.end_date<new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date(stamp*1000))?[]:[{order_id:'FIXTURE0001',status,create_time:stamp-600,update_time:stamp,lines:status==='CANCELLED'?[]:[{line_key:'101:0',item_id:'101',model_id:'0',sku:'vivaosanos80-27',quantity:2,model_name:'M'}]}]};};
+ const getFinanceProductionOrders=async(_,input)=>{calls.push(input);const stamp=Math.floor(Date.now()/1000),today=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date(stamp*1000)),dayStart=Math.floor(Date.parse(today+'T00:00:00-03:00')/1000);return {schema:'production_orders_v1',shop_id:1178167501,checked_at:stamp,start_date:input.operation==='scan'?input.start_date:null,end_date:input.operation==='scan'?input.end_date:null,complete:true,orders:input.operation==='scan'&&input.end_date<today?[]:[{order_id:'FIXTURE0001',status,create_time:Math.max(stamp-600,dayStart),update_time:stamp,lines:status==='CANCELLED'?[]:[{line_key:'101:0',item_id:'101',model_id:'0',sku:'vivaosanos80-27',quantity:2,model_name:'M'}]}]};};
  return {services:{getFinanceProductionOrders},calls,cancel(){status='CANCELLED';}};
 }
 

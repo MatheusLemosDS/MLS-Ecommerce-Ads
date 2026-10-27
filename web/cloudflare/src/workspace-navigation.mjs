@@ -1,6 +1,7 @@
 // Fixed destinations shared by store management and the restricted Ads review.
 const workspaceNavigationItems=Object.freeze({
  overview:{href:'/admin?tab=overview',label:'Visão geral',hint:'Vendas, custos e resultado',icon:'<rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>'},
+ agents:{href:'#commandAgents',label:'Agentes',hint:'Equipe digital e prioridades',icon:'<circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2"/><path d="M4 20v-2a5 5 0 0 1 10 0v2M14 20v-1a4 4 0 0 1 6-3"/>'},
  products:{href:'/admin?tab=products',label:'Produtos',hint:'Variações e custos por produto',icon:'<path d="m12 3 9 5-9 5-9-5 9-5ZM3 8v9l9 5 9-5V8M12 13v9"/>'},
  production:{href:'/admin?tab=production',label:'Produção',hint:'Pedidos, artes e montagem DTF',icon:'<path d="M6 8V3h12v5M6 17H4V8h16v9h-2M6 14h12v7H6zM16 11h1"/>'},
  ads:{href:'/dashboard',label:'Anúncios',hint:'Investimento, vendas e ROAS',icon:'<path d="M4 19V9m8 10V4m8 15v-7M2 21h20"/>'},
@@ -14,7 +15,7 @@ const workspaceNavigationItems=Object.freeze({
 });
 const workspaceOwnerPrimary=['overview','products','production','ads','margins','automation'];
 const workspaceReviewPrimary=['ads','campaigns','automation'];
-const workspaceOwnerSecondary=['campaigns','hermes','integrations','history','roadmap'];
+const workspaceOwnerSecondary=['agents','campaigns','hermes','integrations','history','roadmap'];
 const workspaceReviewSecondary=['integrations'];
 function workspaceActiveKey(active){
  if(Object.hasOwn(workspaceNavigationItems,active))return active;

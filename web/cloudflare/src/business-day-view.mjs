@@ -82,7 +82,13 @@ export const BUSINESS_DAY_CLIENT=String.raw`
  function reset(options={}){
   if(stopped||!prepare())return false;const month=options.month;if(validMonth(month)){if(pendingRequest!==null&&pendingRequest.month!==month){pendingMonth=null;pendingRequest=null;}contextMonth=month;if(selected.slice(0,7)!==month){selected=month===today().slice(0,7)?today():month+'-01';saveSelection();}}loadedMonth=null;summary=null;invalidSummary=false;selectionFailed=false;render();return true;
  }
+ function snapshot(){
+  if(!prepared)prepare();const item=summary?.days?.find?.(row=>row.date===selected)??null;
+  if(!item)return Object.freeze({schema:'mls_day_snapshot_v1',date:selected,state:'PENDING',net_cents:null,net_basis:null,sales_cents:null,ads_spend_cents:null,paid_orders:null,pending:[]});
+  const partial=item.state==='PARTIAL_COSTS',amount=partial?item.known_estimate_cents:item.estimate_cents,coverage=item.coverage,production=item.production_coverage;
+  return Object.freeze({schema:'mls_day_snapshot_v1',date:selected,state:item.state,net_cents:Number.isSafeInteger(amount)?amount:null,net_basis:Number.isSafeInteger(amount)?partial?'KNOWN_COSTS':'ESTIMATE':null,sales_cents:Number.isSafeInteger(item.sales_cents)?item.sales_cents:null,ads_spend_cents:Number.isSafeInteger(item.ads_spend_cents)?item.ads_spend_cents:null,paid_orders:Number.isSafeInteger(coverage?.paid)?coverage.paid:null,pending:Array.isArray(item.pending)?[...item.pending]:[],production_coverage:production?Object.freeze({known_units:Number.isSafeInteger(production.known_units)?production.known_units:null,total_units:Number.isSafeInteger(production.total_units)?production.total_units:null,pending_units:Number.isSafeInteger(production.pending_units)?production.pending_units:null}):null});
+ }
  function stop(){stopped=true;active=false;summary=null;pendingMonth=null;pendingRequest=null;loadedMonth=null;render();}
- globalThis.brazaDayDashboard=Object.freeze({prepare,bootstrapState,setContext,reset,stop,getSelection:()=>{if(!prepared)prepare();return selected;}});
+ globalThis.brazaDayDashboard=Object.freeze({prepare,bootstrapState,setContext,reset,stop,getSelection:()=>{if(!prepared)prepare();return selected;},getSnapshot:snapshot});
 })();
 `;

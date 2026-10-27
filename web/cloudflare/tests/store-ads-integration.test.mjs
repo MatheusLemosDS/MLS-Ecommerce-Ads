@@ -194,7 +194,7 @@ test('automatic reads use refreshed source cents while preserving saved audit an
 });
 
 test('today Ads expires after sixty seconds while closed-period reads keep their fifteen-minute cache',async()=>{
- const stamp=now();
+ const stamp=Math.floor(Date.parse(day(0)+'T15:00:00Z')/1000);
  for(const current of [true,false]){
   const auth=await login(),selection=current?{start_date:day(0),end_date:day(0)}:dates();
   const financial=frame({...selection,cutoff_at:stamp-60,checked_at:stamp-30});
