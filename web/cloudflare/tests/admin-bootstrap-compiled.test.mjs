@@ -27,7 +27,7 @@ function fullBrowser(html,fetchImpl){
   response.json=async()=>vm.runInContext('JSON.parse',context)(await response.text());return response;
  }});
  vm.runInContext('globalThis.window=globalThis;window.matchMedia=()=>({matches:false,addEventListener(){}});globalThis.addEventListener=()=>{};',context);
- const scripts=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match=>match[1]);assert.equal(scripts.length,11);
+ const scripts=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match=>match[1]);assert.equal(scripts.length,12);
  for(const [index,script] of scripts.entries())vm.runInContext(script,context,{filename:'owner-script-'+index+'.js'});
  return {nodes,timers,calls,run:source=>vm.runInContext(source,context),stop(){vm.runInContext('startupController.stop();brazaMonthDashboard.stop();',context);timers.clear();}};
 }

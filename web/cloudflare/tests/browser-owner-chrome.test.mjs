@@ -81,6 +81,24 @@ test('real Chromium hydrates owner agent cards even when finance API is unavaila
   assert.equal(trace.fallback_count,0,'static placeholders must be replaced after script hydration');
   assert.equal(trace.net_value,'—','no financial number may be fabricated');
   assert.deepEqual(trace.errors,[]);
+  // The direct deep links must expose only the selected agent/hub section.
+  // This checks Chromium's actual hidden attribute after the real Admin client
+  // processes the URL, not just an HTML string / a VM stub.
+  for(const tab of ['agents','agent-finance','agent-returns']){
+   const routed=await chromeDump(url+'?tab='+tab);
+   const active=/data-active-panel="([^"]+)"/.exec(routed)?.[1];
+   assert.equal(active,tab,'Chrome must activate the requested agent tab');
+   const escaped=tab.replace(/[-]/g,'\\-');
+   const tag=new RegExp('<section\\b[^>]*id="'+escaped+'"[^>]*>','i').exec(routed)?.[0];
+   assert.ok(tag,'dedicated section exists: '+tab);
+   assert.doesNotMatch(tag,/\shidden(?:=|\s|>)/,'active section must be visible: '+tab);
+   if(tab!=='agents'){
+    const overview=/<section\b[^>]*id="overview"[^>]*>/i.exec(routed)?.[0];
+    assert.ok(overview&&/\shidden(?:=|\s|>)/.test(overview),'overview must be hidden for '+tab);
+   }
+   assert.ok(routed.includes('id="mission-'+(tab==='agents'?'finance':tab.slice(6))+'-tasks"'),'dedicated agent tools remain in DOM');
+  }
+
  }finally{
   server.closeAllConnections?.();
   server.close();

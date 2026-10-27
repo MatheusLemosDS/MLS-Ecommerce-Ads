@@ -870,27 +870,36 @@ function logoutWorkspace(event){
 el('logout').onsubmit=logoutWorkspace;
 function workspaceTabFromLocation(){try{const values=new URLSearchParams(globalThis.location?.search||'').getAll('tab');return values.length===1?values[0]:'overview';}catch{return 'overview';}}
 function openTab(tab,{updateUrl=true}={}){
- const titles={production:['Produção e DTF','Organize os pedidos, encontre as artes pelo SKU e monte seus lotes de impressão.'],overview:['Central de Comando','Acompanhe o resultado de hoje, as prioridades e o estado dos agentes. Os detalhes continuam disponíveis abaixo.'],margins:['Custos de produção','Cadastre o custo por peça. Os produtos identificados recebem o cálculo automaticamente.'],hermes:['Análises do Hermes','Peça uma análise e acompanhe o andamento, os limites e o histórico.'],products:['Produtos e variações','Consulte os produtos e seus custos. Revise somente as identificações pendentes.'],history:['Histórico e auditoria','Confira o que foi alterado e as versões salvas dos seus dados.'],roadmap:['Plano de evolução','Veja o que já está disponível e o que falta para automatizar as vendas.']};
+ const titles={production:['Produção e DTF','Organize os pedidos, encontre as artes pelo SKU e monte seus lotes de impressão.'],overview:['Central de Comando','Acompanhe o resultado de hoje, as prioridades e o estado dos agentes. Os detalhes continuam disponíveis abaixo.'],margins:['Custos de produção','Cadastre o custo por peça. Os produtos identificados recebem o cálculo automaticamente.'],hermes:['Análises do Hermes','Peça uma análise e acompanhe o andamento, os limites e o histórico.'],products:['Produtos e variações','Consulte os produtos e seus custos. Revise somente as identificações pendentes.'],history:['Histórico e auditoria','Confira o que foi alterado e as versões salvas dos seus dados.'],roadmap:['Plano de evolução','Veja o que já está disponível e o que falta para automatizar as vendas.'],agents:['Central de agentes','Sua equipe digital, cada especialista com seu painel e dados validados.'],'agent-finance':['MLS Finance','Conciliação, Pending, repasses e despesas em um painel exclusivo.'],'agent-ads':['MLS Ads','Leitura de anúncios e oportunidades sem alterações comerciais.'],'agent-products':['MLS Products','Produtos, custos conhecidos e métricas das unidades vendidas.'],'agent-production':['MLS Production','Pedidos, montagem DTF e cobertura de custos da produção.'],'agent-returns':['MLS Returns','Devoluções, reembolsos e ajustes para revisão.'],'agent-auditor':['MLS Auditor','Confiabilidade e divergências de evidência da operação.'],'agent-hermes':['MLS Hermes','Supervisão, prioridades e controles operacionais.']};
  if(!Object.hasOwn(titles,tab))tab='overview';
  if(['margins','hermes'].includes(tab)&&csrf&&!state)void loadSettings();
  if(tab==='products'){if(csrf)loadObservations();if(globalThis.brazaSavedCatalog)globalThis.brazaSavedCatalog.refresh();else syncOnProductsOpen();}
  document.querySelectorAll('.workspace > section').forEach(section=>section.hidden=section.id!==tab);
- document.querySelectorAll('[data-tab]').forEach(link=>{const selected=link.dataset.tab===tab;link.classList.toggle('active',selected);if(selected)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');});
+ document.querySelectorAll('[data-tab]').forEach(link=>{const selected=link.dataset.tab===tab||tab.startsWith('agent-')&&link.dataset.tab==='agents';link.classList.toggle('active',selected);if(selected)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');});
  document.querySelectorAll('.workspace-more').forEach(menu=>{menu.dataset.active=String(!!menu.querySelector('[aria-current="page"]'));menu.open=false;});
  el('pageTitle').textContent=titles[tab][0];el('pageSubtitle').textContent=titles[tab][1];document.documentElement.dataset.activePanel=tab;if(tab==='production')globalThis.brazaDtfWorkspace?.open?.();
  if(updateUrl&&globalThis.history?.pushState&&globalThis.location?.href){try{const target=new URL(globalThis.location.href);target.pathname='/admin';target.searchParams.set('tab',tab);target.hash='';if(target.href!==globalThis.location.href)globalThis.history.pushState({tab},'',target.pathname+target.search);}catch{}}
 }
 
 document.querySelectorAll('[data-tab]').forEach(link=>link.onclick=event=>{if(event?.button>0||event?.metaKey||event?.ctrlKey||event?.shiftKey||event?.altKey)return;event?.preventDefault();openTab(link.dataset.tab);});
-document.querySelectorAll('[data-workspace-key="agents"]').forEach(link=>link.onclick=event=>{
+const missionPanels=new Set(['overview','agents','agent-finance','agent-ads','agent-products','agent-production','agent-returns','agent-auditor','agent-hermes']);
+if(typeof document.addEventListener==='function')document.addEventListener('click',event=>{
  if(event?.button>0||event?.metaKey||event?.ctrlKey||event?.shiftKey||event?.altKey)return;
- event?.preventDefault();
- openTab('overview');
- document.getElementById('commandAgents')?.scrollIntoView?.({behavior:'smooth',block:'start'});
+ const link=event?.target?.closest?.('[data-mission-open]');
+ const tab=link?.dataset?.missionOpen;
+ if(!missionPanels.has(tab)||!link||link.target==='_blank')return;
+ event.preventDefault();
+ openTab(tab);
+ globalThis.scrollTo?.(0,0);
 });
 document.querySelectorAll('[data-open]').forEach(button=>button.onclick=()=>openTab(button.dataset.open));
 if(globalThis.addEventListener)globalThis.addEventListener('popstate',()=>openTab(workspaceTabFromLocation(),{updateUrl:false}));
 openTab(workspaceTabFromLocation(),{updateUrl:false});
+if(globalThis.location?.hash&&typeof document.getElementById==='function'){
+ const target=globalThis.location.hash.slice(1);
+ if(/^[a-zA-Z][a-zA-Z0-9_-]{0,90}$/.test(target))Promise.resolve().then(()=>document.getElementById(target)?.scrollIntoView?.({block:'start'}));
+}
+
 
 document.addEventListener('visibilitychange',()=>{if(document.hidden){clearTimeout(pollTimer);clearTimeout(shopOrdersRefreshTimer);shopOrdersRefreshTimer=null;clearTimeout(storeAdsRefreshTimer);storeAdsRefreshTimer=null;}else if(csrf){pollLive();loadShopOrders();refreshStoreAds({automatic:true});scheduleStoreAdsRefresh();}});
 setInterval(()=>{if(document.hidden)return;updateShopSnapshotAge();updateObservationCaptureState();for(const button of el('jobs').querySelectorAll('[data-job-id]')){const job=rows.find(row=>row.id===button.dataset.jobId);if(job)button.textContent=jobLabel(job);}const selected=rows.find(job=>job.id===selectedJobId);if(selected&&['queued','running'].includes(selected.status))selectedResult();},1000);

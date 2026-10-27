@@ -8,7 +8,7 @@ import {enhanceAdsPageHtml} from '../src/ads-presentation.mjs';
 
 const primary=html=>html.match(/<nav class="workspace-nav[^"]*"[^>]*>([\s\S]*?)<\/nav>/)?.[1]||'';
 const destinations=html=>[...html.matchAll(/href="([^"]*)"/g)].map(match=>match[1]);
-const owner=['/admin?tab=overview','/admin?tab=overview#commandAgents','/admin?tab=products','/admin?tab=production','/dashboard','/optimization'];
+const owner=['/admin?tab=overview','/admin?tab=agents','/admin?tab=products','/admin?tab=production','/dashboard','/optimization'];
 
 test('owner has the same six main destinations and ordering on Admin, Ads, desktop and mobile',()=>{
  for(const active of ['overview','agents','products','production','/dashboard','/optimization']){
@@ -26,7 +26,7 @@ test('owner has the same six main destinations and ordering on Admin, Ads, deskt
 test('secondary work stays grouped without automatically opening a mobile overlay',()=>{
  const html=workspaceNavigation('/campaigns',{role:'owner'}),secondary=workspaceSecondaryNavigation('hermes',{role:'owner'});
  assert.ok(!destinations(primary(html)).includes('/campaigns'));
- for(const route of ['/admin?tab=overview#commandAgents','/admin?tab=margins','/campaigns','/admin?tab=hermes','/integrations','/admin?tab=history','/admin?tab=roadmap'])assert.ok(destinations(html).includes(route),route);
+ for(const route of ['/admin?tab=agents','/admin?tab=margins','/campaigns','/admin?tab=hermes','/integrations','/admin?tab=history','/admin?tab=roadmap'])assert.ok(destinations(html).includes(route),route);
  assert.equal((html.match(/aria-current="page"/g)||[]).length,1);
  assert.match(secondary,/<details class="workspace-more" data-active="true">/);
  assert.doesNotMatch(secondary,/<details[^>]*\bopen(?:\s|>)/);
@@ -77,7 +77,17 @@ test('agent destination is always visible on mobile and uses an overview route r
  const desktop=workspaceNavigation('overview',{role:'owner'});
  assert.match(primary(mobile),/data-workspace-key="agents"/);
  assert.match(primary(desktop),/data-workspace-key="agents"/);
- assert.match(primary(mobile),/href="\/admin\?tab=overview#commandAgents"/);
- assert.doesNotMatch(primary(mobile),/data-tab="agents"/);
+ assert.match(primary(mobile),/href="\/admin\?tab=agents"/);
+ assert.match(primary(mobile),/data-tab="agents"/);
  assert.doesNotMatch(workspaceSecondaryNavigation('overview'),/data-workspace-key="agents"/);
+});
+
+test('agent subpages preserve the fleet as selected and never expose owner navigation to review roles',()=>{
+ for(const tab of ['agents','agent-finance','agent-ads','agent-products','agent-production','agent-returns','agent-auditor','agent-hermes']){
+  const html=workspaceNavigation('/admin?tab='+tab,{role:'owner'});
+  assert.match(html,/aria-current="page" data-workspace-key="agents"/);
+  assert.equal((primary(html).match(/aria-current="page"/g)||[]).length,1);
+ }
+ const restricted=workspaceNavigation('agents',{role:'review'});
+ assert.doesNotMatch(restricted,/data-workspace-key="agents"|\/admin\?tab=agent-/);
 });
