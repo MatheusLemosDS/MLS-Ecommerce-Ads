@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import {MISSION_CSS,MISSION_CLIENT,MISSION_AGENTS,missionWorkspacesBody} from '../src/mission-control.mjs';
 import {adminBody} from '../src/admin-view.mjs';
+import {commandCenterBody,AGENT_REGISTRY_CLIENT} from '../src/agent-registry-view.mjs';
 import {buildMlsAgentRegistry} from '../src/agent-registry.mjs';
 
 const names=['finance','ads','products','production','returns','auditor','hermes'];
@@ -95,4 +96,44 @@ test('unavailable sources never become fake amounts, healthy agents or fake prod
  assert.match(nodes.get('mission-finance-tasks').children[0].textContent,/Nenhuma prioridade/);
  assert.match(nodes.get('mission-finance-message').textContent,/Aguardando/);
  assert.equal(nodes.get('mission-finance-metric-3').textContent,'—');
+});
+
+test('approved Mission Control V2 actually exposes colored cockpit, real observation charts and seven dedicated agents',()=>{
+ const html=commandCenterBody(),fleet=missionWorkspacesBody();
+ for(const key of ['mission-dashboard','mission-command-hero','mission-command-orbit','mission-overview-cta','mission-day-intelligence','missionDayBarSales','missionDayBarNet','missionDayBarAds','missionHealthRing','missionHealthHealthy','missionHealthWorking','missionHealthAttention','missionHealthBlocked']){
+  assert.ok(html.includes(key),key+' missing from shipped owner page');
+ }
+ for(const key of ['net','sales','ads','margin','paid','alerts'])assert.ok(html.includes('data-mission-metric="'+key+'"'),key);
+ for(const name of ['finance','ads','products','production','returns','auditor'])assert.ok(html.includes('data-mission-accent="'+name+'"'));
+ assert.equal((html.match(/data-agent-placeholder="true"/g)||[]).length,6);
+ assert.ok(html.indexOf('mission-day-intelligence')>html.indexOf('commandCenterAgents'));
+ for(const name of names){
+  assert.match(fleet,new RegExp('mission-agent--'+name));
+  assert.ok(fleet.includes('id="mission-'+name+'-tools"'));
+  assert.match(fleet,new RegExp('href="#mission-'+name+'-tasks"'));
+  assert.ok(fleet.includes('id="mission-'+name+'-metric-3"'));
+ }
+ assert.equal((fleet.match(/class="mission-hub-card /g)||[]).length,7);
+ assert.match(fleet,/mission-mini-orb mission-agent-avatar/);
+ assert.match(fleet,/mission-orb mission-agent-avatar/);
+ assert.match(fleet,/href="#businessMonth"/);
+ for(const text of ['Mission Control V2','mission-agent-avatar','mission-satellite','mission-day-intelligence','mission-comparison-track','mission-health-ring','mission-page-tabs']){
+  assert.ok(MISSION_CSS.includes(text),text);
+ }
+ assert.match(MISSION_CSS,/radial-gradient/);
+ assert.match(MISSION_CSS,/prefers-reduced-motion/);
+ assert.match(AGENT_REGISTRY_CLIENT,/renderDayIntelligence/);
+ assert.match(AGENT_REGISTRY_CLIENT,/safeInteger|Number\.isSafeInteger/);
+ assert.doesNotMatch(AGENT_REGISTRY_CLIENT,/\bfetch\s*\(|setInterval\s*\(|\/api\//);
+});
+
+test('Mission Control V2 decorative surfaces cannot invent financial history or authorize business writes',()=>{
+ const html=commandCenterBody();
+ assert.match(html,/não representam histórico/);
+ assert.match(html,/não representa.*série histórica|barras não representam histórico/i);
+ assert.match(html,/valores indisponíveis permanecem como —/i);
+ assert.doesNotMatch(html,/ROAS\s*(?:[0-9]|de)/i);
+ assert.doesNotMatch(html,/data-action="(?:approve|execute|scale)"/);
+ assert.doesNotMatch(MISSION_CLIENT,/\bfetch\s*\(|setInterval\s*\(|\/api\//);
+ assert.match(MISSION_CSS,/data-theme=light/);
 });

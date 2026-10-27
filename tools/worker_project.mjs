@@ -82,6 +82,10 @@ export const TARGETS = Object.freeze({
     '38329c3970c44e94b9f9ba52cf6461a793783f4a44434c9927076e1aea68085f',
     // Reviewed final Mission Control UI bundle with dark/light accessibility refinements.
     '6d21df2b0a5c8137b314fc732923b2d48863ff9538372f4d0a522092e9ad6596',
+    // Reviewed Mission Control V2 cosmetic App bundle: browser and financial fixtures passed.
+    '617c00ff2d1ed14e76ceb61be920e30fae8b34b5cae0a8d5ce44e935be4ad0e9',
+    // Mission Control V2 final styling with light theme contrast; compiled and Chrome-tested.
+    '4d3f45e406e3c9f5cab6041ca9d2aa0fb7dc3e0598c16d8eeb40889fce841a8c',
   ]}),
   auth: Object.freeze({name: 'brazacommerce-auth', main: '../../dist/auth-worker.mjs', baselineHashes: [
     '45d0142709c5087e373cc4da146070ed39c472805f6f64c00f00b6555f0e1f56',
