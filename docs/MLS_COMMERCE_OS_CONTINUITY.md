@@ -53,9 +53,41 @@ CI: PR `40442142269`, main `40442459393`; **2.008 testes Node + 67 Python**.
 Produção: App `48f8a3bf-019d-498a-9f5e-a2b9f356e999`, Auth `d2ee194f-fc43-481e-b09b-209c7b849b87`,
 Finance `e6aec23b-5e05-450b-8cb0-64ee7e7cdca5`.
 
+## M2 — incremento publicado
+
+A primeira entrega da M2 foi publicada pela **PR #13**, merge
+`e00c7d18fc24b8211a36e850d0523ca835a1996e`.
+
+Ela acrescenta conciliação por pedido em **Liberações da Shopee**, com:
+- repasse-base;
+- ajuste assinado;
+- repasse após ajuste;
+- valor/data da liberação quando verificável;
+- cruzamento local com devoluções/reembolsos;
+- tarefas para MLS Finance/Returns/Auditor;
+- bloqueio do Hermes quando fontes de repasse após ajuste divergem.
+
+Contrato privado opt-in: `X-Braza-Release-Contract: release-orders-v1`.
+Chamadores antigos permanecem em v1. Não há novo endpoint Shopee, nova tabela D1
+ou polling no navegador.
+
+CI: PR `40507327612`, main `40507771674`; **2.018 testes Node + 67 Python**.
+Produção: App `877b4184-2b0b-4919-af28-54b764153b4b`, Auth
+`bdfa963d-6b08-4529-a484-baa0ecd2d392`, Finance
+`a35ab2a0-8374-4677-b5aa-0d8921968013`.
+
+Limite permanente desta entrega: `NOT_LOCATED` significa apenas que o pedido
+não apareceu no calendário consultado. Não é "não recebido" nem "valor a
+receber". `remaining_receivable_cents` e `realized_net_cents` continuam
+indisponíveis sem evidência suficiente.
+
 ## Ponto exato de retomada
 
-**M2 — MLS Finance + MLS Returns: conciliação de liberações, devoluções e diferenças por pedido.**
+**M2 continua em andamento.** Próximo incremento: acompanhar a mesma coorte paga
+através dos calendários de liberação posteriores, provar a condição de cobertura
+completa e validar a semântica oficial necessária antes de calcular “quanto ainda
+falta a Shopee liberar”. Em paralelo, adicionar vencimentos das despesas/contas
+ao resumo do MLS Finance.
 
 Prioridade de agentes visíveis:
 1. MLS Finance

@@ -182,7 +182,7 @@ Agentes iniciais na tela:
 
 **Publicação:** PR #12, merge `91fc0cf169f67a9440a8e58a033c925b9ce98eed`. Agent Registry em modo Observer, sem chamadas externas adicionais, com CI 2.008 + 67 e deploy dos três Workers confirmado.
 
-### M2 — Finance/Returns confiáveis como agentes observadores — **PRÓXIMA FASE / PONTO DE RETOMADA**
+### M2 — Finance/Returns confiáveis como agentes observadores — **EM ANDAMENTO / PONTO DE RETOMADA**
 Continuar a fase financeira atual:
 
 - fechar cruzamento de liberações por pedido;
@@ -191,6 +191,10 @@ Continuar a fase financeira atual:
 - manter lucro realizado desconhecido quando não houver liquidação comprovada;
 - transformar pendências em tarefas do MLS Finance/Returns;
 - adicionar vencimentos de despesas e contas no resumo do agente.
+
+**Incremento publicado — PR #13:** conciliação de liberações por pedido com repasse-base, ajuste, repasse após ajuste, valor liberado verificável e cruzamento local com devoluções. Estados `NOT_LOCATED`, `AMBIGUOUS`, `LOCATED_UNVERIFIED` e `VERIFIED`. O sidecar v2 reutiliza a coleta/cache existentes; não cria endpoint Shopee, tabela D1 ou polling. [Detalhes](CONCILIACAO_POR_PEDIDO_MLS_FINANCE_RETURNS.md).
+
+**Ainda falta nesta fase:** provar cobertura temporal da mesma coorte em calendários posteriores; validar a semântica oficial para valores ainda não liberados; manter liquidação bancária separada; levar vencimentos das despesas para MLS Finance; resolver diferenças materiais.
 
 **Critério de saída:** período completo conciliado com explicação de cada diferença material.
 

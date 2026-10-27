@@ -31,11 +31,27 @@
   },
   "current_phase": "M2_FINANCE_RETURNS_RECONCILIATION",
   "working_branch": null,
-  "current_status": "READY_TO_START",
-  "completed_this_phase": [],
-  "remaining_this_phase": [],
+  "current_status": "IN_PROGRESS",
+  "completed_this_phase": [
+    "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
+    "Repasse-base, ajuste, repasse após ajuste e liberação exibidos sem dupla dedução",
+    "Cruzamento local com devoluções/reembolsos já salvos pelo mesmo order_hash",
+    "MLS Finance e MLS Auditor recebem tarefas de divergência, ambiguidade e ausência de correspondência",
+    "Conflito entre evidências de repasse após ajuste bloqueia MLS Auditor e MLS Hermes",
+    "Contrato v2 negociado preserva v1 e implantação mista",
+    "Cache de negócio reutiliza a tabela existente e owner reads permanecem sem writes"
+  ],
+  "remaining_this_phase": [
+    "Observar a evidência real pós-deploy da conta autenticada",
+    "Acompanhar a mesma coorte de pedidos em calendários de liberação posteriores para provar cobertura temporal",
+    "Validar contrato oficial/semântica da Shopee para o ciclo de valores ainda não liberados antes de publicar remaining_receivable",
+    "Manter liquidação bancária e lucro realizado separados da liberação na Shopee",
+    "Adicionar vencimentos de despesas/contas ao resumo do MLS Finance",
+    "Resolver qualquer pedido ambíguo, valor não verificado ou conflito de evidência antes do fechamento estrito"
+  ],
   "next_phase": {
     "id": "M3_PRODUCTS_PRICING_INTELLIGENCE",
+    "gate": "M2 só libera M3 como fase principal depois da conciliação financeira atingir seu critério de saída",
     "rules": [
       "Contribuição e curva ABC somente com atribuição/custos compatíveis",
       "Preço mínimo/ideal e ROAS mínimo precisam de base de margem verificável",
@@ -69,17 +85,49 @@
     }
   },
   "next_actions": [
-    "Detalhar liberações por pedido e referência usando evidência já persistida",
-    "Cruzar liberações, ajustes e devoluções sem dupla contagem",
-    "Transformar diferenças em tarefas do MLS Finance e MLS Returns",
-    "Mostrar o que já foi conferido, o que diverge e o que ainda não tem correspondência",
-    "Preservar realized_net_cents como desconhecido até haver evidência suficiente de liquidação",
-    "Não adicionar coleta externa só para os agentes; reutilizar auditorias existentes sempre que possível"
+    "Validar em produção a primeira evidência orders-v1 da conta real quando a auditoria salva estiver disponível",
+    "Criar acompanhamento de cobertura da coorte paga através de calendários de liberação subsequentes sem duplicar get_escrow_list",
+    "Definir condição estrita para considerar uma coorte completamente coberta por liberações",
+    "Pesquisar e validar somente fonte oficial da Shopee para estado/ciclo de valores não liberados antes de habilitar valor ainda a liberar",
+    "Manter divergências e duplicidades como tarefas do MLS Finance/Returns/Auditor, nunca como valores escolhidos por heurística",
+    "Adicionar vencimentos de despesas e contas ao resumo do MLS Finance"
   ],
   "m0_followup": [
     "Conferir visual autenticado em desktop e celular durante M1; corrigir apenas branding/layout sem renomear infraestrutura"
   ],
   "m1_followup": [
     "Conferir visual autenticado da Central de Comando em desktop e celular; ajustes visuais podem ocorrer dentro de M2 sem alterar contratos"
-  ]
+  ],
+  "latest_increment": {
+    "id": "M2_ORDER_LEVEL_RELEASE_RECONCILIATION",
+    "status": "PUBLISHED",
+    "pull_request": 13,
+    "merge_commit": "e00c7d18fc24b8211a36e850d0523ca835a1996e",
+    "documentation": "docs/CONCILIACAO_POR_PEDIDO_MLS_FINANCE_RETURNS.md",
+    "validation": {
+      "pr_run": 40507327612,
+      "main_run": 40507771674,
+      "node_tests": 2018,
+      "python_tests": 67
+    },
+    "production": {
+      "app": {
+        "build_id": "005eca11-27ea-4848-b0d2-681ed0e4adb2",
+        "version_id": "877b4184-2b0b-4919-af28-54b764153b4b"
+      },
+      "auth": {
+        "build_id": "564353d0-14c2-43a7-90e9-984fe547c44e",
+        "version_id": "bdfa963d-6b08-4529-a484-baa0ecd2d392"
+      },
+      "finance": {
+        "build_id": "bfdaf10a-5fb1-4e8f-9462-1322aa4ee6c9",
+        "version_id": "a35ab2a0-8374-4677-b5aa-0d8921968013"
+      }
+    },
+    "limits": [
+      "NOT_LOCATED significa apenas ausência no calendário consultado",
+      "remaining_receivable_cents continua indisponível",
+      "realized_net_cents continua indisponível sem liquidação comprovada"
+    ]
+  }
 }
