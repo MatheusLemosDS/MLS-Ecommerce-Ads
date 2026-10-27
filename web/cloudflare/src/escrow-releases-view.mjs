@@ -1,5 +1,6 @@
-import {projectEscrowReleaseFrame,projectEscrowReleaseEvidenceFrame} from '../../finance/src/escrow-release-frame.mjs';
+import {projectEscrowReleaseFrame,projectEscrowReleaseEvidenceFrame,projectEscrowReleaseCoverageFrame} from '../../finance/src/escrow-release-frame.mjs';
 import {projectBusinessEscrowReleases,projectBusinessEscrowReleaseEvidence} from './business-escrow-releases.mjs';
+import {projectBusinessEscrowReleaseCoverage} from './business-escrow-release-coverage.mjs';
 import {projectBusinessMonthAuditScope} from './business-month-view-state.mjs';
 
 export const ESCROW_RELEASES_CSS=String.raw`
@@ -15,35 +16,38 @@ export const ESCROW_RELEASES_CSS=String.raw`
 .escrow-releases-matching ul{padding-left:18px;margin:12px 0}.escrow-releases-matching li{font-size:11px;line-height:1.75;color:var(--muted);overflow-wrap:anywhere}
 .escrow-releases-notice{padding:11px 12px;border-radius:8px;background:var(--surface-raised);font-size:11px;color:var(--muted);line-height:1.75}
 .escrow-order-detail{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}.escrow-order-detail>h4{font-size:13px;margin:0 0 6px}.escrow-order-detail>p{font-size:11px;color:var(--muted);line-height:1.7}.escrow-order-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:12px 0}.escrow-order-summary article{padding:11px;border:1px solid var(--line);border-radius:9px;min-width:0}.escrow-order-summary small,.escrow-order-summary span{display:block;font-size:9px;color:var(--muted);line-height:1.55}.escrow-order-summary strong{display:block;margin:5px 0;font-size:15px;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}.escrow-order-list{display:grid;gap:9px;margin-top:12px}.escrow-order-card{padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);min-width:0}.escrow-order-card[data-state=AMBIGUOUS],.escrow-order-card[data-state=LOCATED_UNVERIFIED]{border-left:3px solid #d29a25}.escrow-order-card[data-state=NOT_LOCATED]{border-left:3px solid var(--muted)}.escrow-order-card[data-state=VERIFIED]{border-left:3px solid var(--positive,#17845c)}.escrow-order-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}.escrow-order-head strong{font-size:11px;overflow-wrap:anywhere}.escrow-order-head span{font-size:9px;color:var(--muted)}.escrow-order-values{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:10px 0}.escrow-order-values div{min-width:0}.escrow-order-values small,.escrow-order-values span{display:block;font-size:9px;color:var(--muted);line-height:1.5}.escrow-order-values b{display:block;font-size:11px;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}.escrow-order-return{margin:8px 0 0;font-size:10px;line-height:1.65;color:var(--muted)}.escrow-order-warning{margin-top:10px;padding:9px 10px;border-radius:8px;background:var(--surface-raised);font-size:10px;line-height:1.65;color:var(--muted)}
+.escrow-release-coverage{margin-top:16px;padding:14px;border:1px solid var(--line);border-radius:10px;background:var(--surface-raised)}.escrow-release-coverage h4{margin:0 0 6px;font-size:13px}.escrow-release-coverage p{margin:5px 0;font-size:10px;line-height:1.7;color:var(--muted)}.escrow-release-coverage-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:10px}.escrow-release-coverage-grid div{min-width:0;padding:9px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}.escrow-release-coverage-grid small,.escrow-release-coverage-grid strong{display:block}.escrow-release-coverage-grid small{font-size:9px;color:var(--muted);line-height:1.45}.escrow-release-coverage-grid strong{margin-top:4px;font-size:12px;overflow-wrap:anywhere}.escrow-release-calendar-list{margin:10px 0 0;padding-left:18px}.escrow-release-calendar-list li{font-size:10px;line-height:1.65;color:var(--muted)}
 .escrow-releases [hidden]{display:none!important}.escrow-releases summary:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
-@media(max-width:640px){.escrow-releases-metrics{grid-template-columns:minmax(0,1fr)}.escrow-releases>details>summary{align-items:flex-start;gap:10px}.escrow-releases-badge{max-width:105px}.escrow-order-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.escrow-order-values{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:640px){.escrow-releases-metrics{grid-template-columns:minmax(0,1fr)}.escrow-releases>details>summary{align-items:flex-start;gap:10px}.escrow-releases-badge{max-width:105px}.escrow-order-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.escrow-order-values{grid-template-columns:repeat(2,minmax(0,1fr))}.escrow-release-coverage-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 `;
 
 export function escrowReleasesBody(){
- return `<section id="businessEscrowReleases" class="escrow-releases" aria-labelledby="businessEscrowReleasesTitle"><details id="businessEscrowReleasesDetails"><summary><span class="escrow-releases-heading"><strong id="businessEscrowReleasesTitle">Liberações da Shopee</strong><span id="businessEscrowReleasesStatus" role="status" aria-live="polite">Aguardando a consulta salva do mês.</span></span><span id="businessEscrowReleasesBadge" class="escrow-releases-badge">Em conferência</span></summary><div class="escrow-releases-body"><p id="businessEscrowReleasesScope">As liberações são consultadas pela data em que a Shopee as informou.</p><p id="businessEscrowReleasesCohort">O vínculo usa os pedidos pagos do resumo salvo, pela data de criação.</p><p>Liberação na Shopee e recebimento no banco são etapas diferentes. Os valores abaixo não são somados nem descontados novamente do resultado líquido.</p><div id="businessEscrowReleasesMetrics" class="escrow-releases-metrics" hidden></div><p id="businessEscrowReleasesNotice" class="escrow-releases-notice" hidden></p><div id="businessEscrowReleasesMatching" class="escrow-releases-matching"></div><div id="businessEscrowReleasesOrders" class="escrow-order-detail" hidden></div></div></details></section>`;
+ return `<section id="businessEscrowReleases" class="escrow-releases" aria-labelledby="businessEscrowReleasesTitle"><details id="businessEscrowReleasesDetails"><summary><span class="escrow-releases-heading"><strong id="businessEscrowReleasesTitle">Liberações da Shopee</strong><span id="businessEscrowReleasesStatus" role="status" aria-live="polite">Aguardando a consulta salva do mês.</span></span><span id="businessEscrowReleasesBadge" class="escrow-releases-badge">Em conferência</span></summary><div class="escrow-releases-body"><p id="businessEscrowReleasesScope">As liberações são consultadas pela data em que a Shopee as informou.</p><p id="businessEscrowReleasesCohort">O vínculo usa os pedidos pagos do resumo salvo, pela data de criação.</p><p>Liberação na Shopee e recebimento no banco são etapas diferentes. Os valores abaixo não são somados nem descontados novamente do resultado líquido.</p><div id="businessEscrowReleasesMetrics" class="escrow-releases-metrics" hidden></div><p id="businessEscrowReleasesNotice" class="escrow-releases-notice" hidden></p><div id="businessEscrowReleasesMatching" class="escrow-releases-matching"></div><div id="businessEscrowReleasesCoverage" class="escrow-release-coverage"></div><div id="businessEscrowReleasesOrders" class="escrow-order-detail" hidden></div></div></details></section>`;
 }
 
 export const ESCROW_RELEASES_CLIENT=String.raw`
 (()=>{
  ${projectEscrowReleaseFrame.toString()}
  ${projectEscrowReleaseEvidenceFrame.toString()}
+ ${projectEscrowReleaseCoverageFrame.toString()}
  ${projectBusinessEscrowReleases.toString()}
  ${projectBusinessEscrowReleaseEvidence.toString()}
+ ${projectBusinessEscrowReleaseCoverage.toString()}
  ${projectBusinessMonthAuditScope.toString()}
  const el=name=>document.getElementById('businessEscrowReleases'+name);
  const node=(tag,text,cls)=>{const result=document.createElement(tag);if(text!==undefined)result.textContent=text;if(cls)result.className=cls;return result;};
  const money=value=>{if(!Number.isSafeInteger(value))return 'Não informado';const cents=BigInt(value),absolute=cents<0n?-cents:cents,fraction=String(absolute%100n).padStart(2,'0');const text=new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).formatToParts(absolute/100n).map(part=>part.type==='fraction'?fraction:part.value).join('');return (cents<0n?'-':'')+text;};
  const time=value=>Number.isSafeInteger(value)&&value>0?new Intl.DateTimeFormat('pt-BR',{dateStyle:'short',timeStyle:'short',timeZone:'America/Sao_Paulo'}).format(new Date(value*1000)):'Não consultado';
  const day=value=>typeof value==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(value)?value.slice(8)+'/'+value.slice(5,7)+'/'+value.slice(0,4):'—';
- let api=null,started=false,month='',scopeKey='',generation=0,pending=null,value=null,orders=null;
+ let api=null,started=false,month='',scopeKey='',generation=0,pending=null,value=null,orders=null,coverage=null;
  const cache=new Map(),attempted=new Map();
  function validMonth(selected){try{return typeof selected==='string'&&/^\d{4}-(0[1-9]|1[0-2])$/.test(selected)&&selected>='2000-01'&&selected<=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date()).slice(0,7);}catch{return false;}}
  function showMessage(text,badge='Em conferência'){if(el('Status'))el('Status').textContent=text;if(el('Badge'))el('Badge').textContent=badge;}
  function render(){
   if(!el(''))return;
-  const metrics=el('Metrics'),matching=el('Matching'),notice=el('Notice'),orderTarget=el('Orders');metrics.replaceChildren();matching.replaceChildren();notice.hidden=true;notice.textContent='';orderTarget.replaceChildren();orderTarget.hidden=true;
-  if(!value){metrics.hidden=true;el('Scope').textContent=month?'Mês das liberações: '+month.slice(5)+'/'+month.slice(0,4)+' · Brasília.':'As liberações são consultadas pela data em que a Shopee as informou.';el('Cohort').textContent='O vínculo usa os pedidos pagos do resumo salvo, pela data de criação.';return;}
-  renderEvidence(value,metrics,matching,notice);renderOrders(orderTarget);
+  const metrics=el('Metrics'),matching=el('Matching'),notice=el('Notice'),orderTarget=el('Orders'),coverageTarget=el('Coverage');metrics.replaceChildren();matching.replaceChildren();notice.hidden=true;notice.textContent='';orderTarget.replaceChildren();orderTarget.hidden=true;coverageTarget.replaceChildren();
+  if(!value){metrics.hidden=true;el('Scope').textContent=month?'Mês das liberações: '+month.slice(5)+'/'+month.slice(0,4)+' · Brasília.':'As liberações são consultadas pela data em que a Shopee as informou.';el('Cohort').textContent='O vínculo usa os pedidos pagos do resumo salvo, pela data de criação.';renderCoverage(coverageTarget);return;}
+  renderEvidence(value,metrics,matching,notice);renderCoverage(coverageTarget);renderOrders(orderTarget);
  }
  function renderEvidence(observation,metrics,matching,notice){
   // Scope, coverage and monetary completeness are supplied by the shared
@@ -85,6 +89,19 @@ export const ESCROW_RELEASES_CLIENT=String.raw`
   if(link.status==='SOURCE_MISSING')notes.push('Falta recuperar parte da evidência dos pedidos do resumo para concluir o vínculo.');
   if(observation.attempt?.status==='UNAVAILABLE'||report.pending.includes('RELEASE_SOURCE_UNAVAILABLE')||collection.status==='BLOCKED'||collection.status==='RETRY_WAIT')notes.push('Parte da fonte não pôde ser consultada. Os valores salvos mantêm suas datas originais e o servidor retomará a conferência.');
   if(notes.length){notice.hidden=false;notice.textContent=notes.join(' ');}
+ }
+ function currentMonth(){try{return new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date()).slice(0,7);}catch{return '';}}
+ function renderCoverage(target){
+  target.append(node('h4','Cobertura temporal das liberações'));
+  if(!month){target.append(node('p','Selecione um mês para acompanhar a coorte de pedidos pagos nos calendários posteriores.'));return;}
+  if(month>=currentMonth()){target.append(node('p','Este ainda é o mês corrente. O acompanhamento em calendários posteriores começa automaticamente após a virada do mês; a conferência acima continua usando o corte atual.'));return;}
+  if(!coverage?.report){target.append(node('p',coverage?.status==='UNAVAILABLE'?'O acompanhamento temporal ainda não pôde ser atualizado. O cron tentará novamente sem consultar a Shopee por esta tela.':'Aguardando o tracker automático cruzar esta coorte com os calendários salvos dos meses seguintes.'));return;}
+  const report=coverage.report,summary=report.coverage,grid=node('div',undefined,'escrow-release-coverage-grid'),cell=(label,value)=>{const box=node('div');box.append(node('small',label),node('strong',value));grid.append(box);};
+  cell('Calendários conferidos',summary.calendars_complete+' de '+summary.calendars_total);cell('Pedidos localizados',summary.paid_orders===null?String(summary.located_orders):summary.located_orders+' de '+summary.paid_orders);cell('Ainda não localizados',summary.not_located_orders===null?'Coorte incompleta':String(summary.not_located_orders));cell('Identidade ambígua',String(summary.ambiguous_orders));target.append(grid);
+  const through=report.through_month.slice(5)+'/'+report.through_month.slice(0,4);
+  target.append(node('p',summary.identity_complete_at_cutoff?'Todos os pedidos pagos conhecidos aparecem exatamente uma vez nos calendários salvos até '+through+'. Isso prova somente cobertura de identidade no corte; não prova que o ciclo de liberação terminou nem que houve depósito bancário.':'A cobertura ainda está incompleta até '+through+'. Um pedido sem ocorrência significa apenas que ele não apareceu nos calendários salvos acompanhados.'));
+  const list=node('ul',undefined,'escrow-release-calendar-list'),labels={COMPLETE:'conferido no corte salvo',PARTIAL:'consulta parcial',MISSING:'calendário ainda sem snapshot completo'};for(const item of report.calendars)list.append(node('li',item.month.slice(5)+'/'+item.month.slice(0,4)+' · '+labels[item.status]+(item.cohort_observations?' · '+item.cohort_observations+' ocorrência(s) da coorte':'')));target.append(list);
+  target.append(node('p','Mesmo com identidade completa, “valor ainda a liberar” e lucro realizado permanecem indisponíveis enquanto a semântica do ciclo e a liquidação não forem comprovadas.'));
  }
  function reconciliationIndex(){
   let snapshot=null;try{snapshot=globalThis.brazaReconciliation?.getSnapshot?.()??null;}catch{}if(!snapshot||snapshot.month!==month||snapshot.scope_key!==scopeKey)return null;
@@ -129,26 +146,26 @@ export const ESCROW_RELEASES_CLIENT=String.raw`
   if(changedMonth||changedScope){
    generation++;month=selected;scopeKey=selectedScopeKey;pending=null;
    const saved=cache.get(selected),reuse=changedMonth&&saved?.scopeKey===selectedScopeKey;
-   value=reuse?saved.value:null;orders=reuse?saved.orders:null;
+   value=reuse?saved.value:null;orders=reuse?saved.orders:null;coverage=reuse?saved.coverage:null;
    if(!reuse){cache.delete(selected);attempted.delete(selected);}
    render();showMessage(value?'Mostrando as últimas liberações salvas deste mês.':'Conferindo as liberações salvas deste mês…');
   }
-  if(scope===null){value=null;orders=null;render();showMessage('Aguardando um resumo publicado para conferir os mesmos pedidos.','Aguardando resumo');return Promise.resolve(false);}
+  if(scope===null){value=null;orders=null;coverage=null;render();showMessage('Aguardando um resumo publicado para conferir os mesmos pedidos.','Aguardando resumo');return Promise.resolve(false);}
   if(document.hidden)return Promise.resolve(false);
   if(pending?.month===selected&&pending.scopeKey===selectedScopeKey)return pending.task;
   const stamp=Date.now(),last=attempted.get(selected);if(last?.scopeKey===selectedScopeKey&&stamp>=last.at&&stamp-last.at<60000)return Promise.resolve(value!==null);
   attempted.set(selected,{scopeKey:selectedScopeKey,at:stamp});while(attempted.size>12){const first=attempted.keys().next().value;attempted.delete(first);cache.delete(first);}const token=generation,current=()=>started&&generation===token&&month===selected&&scopeKey===selectedScopeKey;
   const task=(async()=>{
    await Promise.resolve();
-   try{const raw=await api('finance/escrow-releases?month='+encodeURIComponent(selected)+'&evidence=orders-v1'),evidence=projectBusinessEscrowReleaseEvidence(raw,{projectBusiness:projectBusinessEscrowReleases,projectFrame:projectEscrowReleaseFrame,projectEvidenceFrame:projectEscrowReleaseEvidenceFrame}),checked=evidence?.report??projectBusinessEscrowReleases(raw,projectEscrowReleaseFrame);if(!current())return false;if(!checked||checked.month!==selected)throw Error('INVALID_RECONCILIATION');const receivedScope=projectBusinessMonthAuditScope(checked.cohort===null?null:{publication_revision:checked.cohort.publication_revision,start_date:checked.cohort.start_date,end_date:checked.cohort.end_date,sources:checked.cohort.sources.map(({run_id,source_revision,start_date,end_date})=>({run_id,source_revision,start_date,end_date}))});if(receivedScope===null||JSON.stringify(receivedScope)!==selectedScopeKey)throw Error('RECONCILIATION_SCOPE_MISMATCH');value=checked;orders=evidence?.orders??null;cache.set(selected,{scopeKey:selectedScopeKey,value:checked,orders});while(cache.size>12){const first=cache.keys().next().value;cache.delete(first);attempted.delete(first);}render();try{globalThis.mlsAgentRegistry?.refresh?.();}catch{}return true;}
+   try{const raw=await api('finance/escrow-releases?month='+encodeURIComponent(selected)+'&evidence=orders-v1'),evidence=projectBusinessEscrowReleaseEvidence(raw,{projectBusiness:projectBusinessEscrowReleases,projectFrame:projectEscrowReleaseFrame,projectEvidenceFrame:projectEscrowReleaseEvidenceFrame}),checked=evidence?.report??projectBusinessEscrowReleases(raw,projectEscrowReleaseFrame);if(!current())return false;if(!checked||checked.month!==selected)throw Error('INVALID_RECONCILIATION');const receivedScope=projectBusinessMonthAuditScope(checked.cohort===null?null:{publication_revision:checked.cohort.publication_revision,start_date:checked.cohort.start_date,end_date:checked.cohort.end_date,sources:checked.cohort.sources.map(({run_id,source_revision,start_date,end_date})=>({run_id,source_revision,start_date,end_date}))});if(receivedScope===null||JSON.stringify(receivedScope)!==selectedScopeKey)throw Error('RECONCILIATION_SCOPE_MISMATCH');value=checked;orders=evidence?.orders??null;coverage=null;if(selected<currentMonth()){try{const coverageRaw=await api('finance/escrow-release-coverage?month='+encodeURIComponent(selected));if(current())coverage=projectBusinessEscrowReleaseCoverage(coverageRaw,projectEscrowReleaseCoverageFrame);}catch{coverage=null;}}if(!current())return false;cache.set(selected,{scopeKey:selectedScopeKey,value:checked,orders,coverage});while(cache.size>12){const first=cache.keys().next().value;cache.delete(first);attempted.delete(first);}render();try{globalThis.mlsAgentRegistry?.refresh?.();}catch{}return true;}
    catch{if(current())showMessage(value?'Não foi possível atualizar as liberações agora. Os valores conferidos e suas datas foram preservados.':'As liberações ainda não puderam ser carregadas. A coleta do servidor continua e tentaremos novamente.','Em conferência');return false;}
    finally{if(current()&&pending?.task===task)pending=null;}
   })();
   pending={month:selected,scopeKey:selectedScopeKey,task};return task;
  }
- function snapshot(){return started&&value?{schema:'mls_escrow_releases_snapshot_v1',month,scope_key:scopeKey,report:value,orders}:null;}
- function start(options){if(!el('')||typeof options?.api!=='function')return false;if(started&&api===options.api)return true;generation++;api=options.api;started=true;month='';scopeKey='';pending=null;value=null;orders=null;cache.clear();attempted.clear();render();showMessage('Aguardando a consulta salva do mês.');return true;}
- function stop(){started=false;generation++;api=null;pending=null;orders=null;}
+ function snapshot(){return started&&value?{schema:'mls_escrow_releases_snapshot_v1',month,scope_key:scopeKey,report:value,orders,coverage}:null;}
+ function start(options){if(!el('')||typeof options?.api!=='function')return false;if(started&&api===options.api)return true;generation++;api=options.api;started=true;month='';scopeKey='';pending=null;value=null;orders=null;coverage=null;cache.clear();attempted.clear();render();showMessage('Aguardando a consulta salva do mês.');return true;}
+ function stop(){started=false;generation++;api=null;pending=null;orders=null;coverage=null;}
  globalThis.brazaEscrowReleases={start,observe,stop,getSnapshot:snapshot,refreshJoin:render};
 })();
 `;
