@@ -244,6 +244,6 @@ test('Command Center offers copyable Pending evidence without network or client-
  assert.match(html,/id="commandCenterPendingCopyNote"/);
  assert.match(html,/aria-live="polite"/);
  assert.match(AGENT_REGISTRY_CLIENT,/buildPendingAuditEvidence/);
- assert.match(AGENT_REGISTRY_CLIENT,/navigator\\?\\.clipboard\\?\\.writeText/);
- assert.doesNotMatch(AGENT_REGISTRY_CLIENT,/setInterval\\(|setTimeout\\(/);
+ assert.ok(AGENT_REGISTRY_CLIENT.includes('navigator?.clipboard?.writeText'));
+ assert.ok(!AGENT_REGISTRY_CLIENT.includes('setInterval(')&&!AGENT_REGISTRY_CLIENT.includes('setTimeout('));
 });
