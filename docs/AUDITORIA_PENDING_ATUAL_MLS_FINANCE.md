@@ -79,3 +79,28 @@ competência mensal.
 - `estimated_payout_time` é previsão;
 - `realized_net_cents` continua indisponível sem liquidação bancária;
 - Ads/PROMO permanece **LOCKED**.
+
+
+## Preparação para validação da conta real — diagnóstico copiável (PR em revisão)
+
+A Central de Comando passa a oferecer **Copiar diagnóstico (sem pedidos)** dentro
+de **Pending atual por pedido**. O botão usa somente o resultado local de
+`buildPendingIncomeAudit` e a área de transferência do navegador. Não introduz
+endpoint, coleta, escrita na Shopee, tabela D1 ou polling.
+
+O JSON `mls_pending_audit_evidence_v1` contém apenas: estado da auditoria,
+horários do overview/detalhe em epoch segundos, Pending Overview em centavos,
+contagem de registros e pedidos únicos, `has_more`, contagem de valores
+conhecidos/desconhecidos, subtotal visível em centavos, diferença descritiva
+quando comparável, flag de comparabilidade e nota de limitação.
+
+Não inclui `order_sn`, `order_hash`, `shop_id`, cookies, credenciais ou
+linhas/payloads brutos do provedor. Copiar só ocorre por clique expresso do
+operador. Se o navegador bloquear clipboard, a interface informa o erro.
+
+**Roteiro de verificação:** abrir Central de Comando → Pending atual por pedido,
+esperar o carregamento local e clicar **Copiar diagnóstico (sem pedidos)**.
+Anotar separadamente os valores/horários vistos no Seller Centre. Enviar o
+diagnóstico junto da conferência para decidir se existe `PARTIAL_PAGE` ou
+`OBSERVED_DIFFERENT`. Nunca inferir liquidação bancária, competência ou
+`remaining_receivable` a partir deste JSON.
