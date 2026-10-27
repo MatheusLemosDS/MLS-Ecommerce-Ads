@@ -225,3 +225,31 @@ temporariamente**.
 Não afirmar que causa raiz esteja comprovada: não há acesso de navegador
 autenticado/Cloudflare no conector desta sessão. Exigir CI, deploy real e
 prova visual autenticada antes de encerrar o incidente.
+
+
+## P1: diagnóstico público e hotfix de navegação dos agentes (27/10/2026)
+
+A PR #24 foi usada **somente em branch** como teste anônimo e encerrada sem
+merge. GitHub Actions run `40563757410` confirmou DNS de App/Auth/Gateway;
+`/login` HTTP 200 com branding MLS, `/health` HTTP 200,
+`/` e `/admin` redirecionam 303, e `/api/admin/bootstrap`
+anônimo retorna 401 (esperado). Isso **não testa uma sessão autenticada**.
+
+A inspeção do código encontrou que a entrada **Agentes** ficava em "Mais
+opções" e usava `#commandAgents` sem reabrir o `overview` quando outra aba
+estava ativa. Além disso, `commandCenterAgents` iniciava vazio antes do
+JavaScript, fazendo todos os cartões sumirem se a hidratação falhasse.
+
+A PR #25 (merge `7c62247058066e49b6f86544de359786b2bd60ac`) move Agentes para a navegação principal, tanto
+no desktop quanto no celular; o clique muda primeiro para a Visão geral e
+depois rola para a equipe. Seis cartões de placeholder "Aguardando dados" são
+renderizados pelo Worker sem pressupor valor financeiro; a hidratação os
+substitui pelos dados reais. Não há novos requests, coletores, D1 ou alterações
+na Shopee. CI PR `40564669598` e main `40564933755` passaram com **2.064
+Node + 67 Python**. Os três check-runs Cloudflare Workers Builds do merge
+também reportaram **SUCCESS**.
+
+**Incidente permanece aberto.** O usuário ainda não confirmou a tela pós-PR25.
+Histórico real de cota D1 em 26/10 merece nova verificação em 27/10; não
+inferir automaticamente que a cota esteja esgotada hoje. Recuperação de
+navigation/placeholder não equivale à retomada das consultas financeiras.

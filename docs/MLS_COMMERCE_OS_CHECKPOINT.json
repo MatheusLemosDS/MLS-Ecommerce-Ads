@@ -30,8 +30,8 @@
     "merge_commit": "9c418fd3010f46957d1ce52345baacd76041c788"
   },
   "current_phase": "M2_FINANCE_RETURNS_RECONCILIATION",
-  "working_branch": "hotfix/restore-agent-panels-after-pr22",
-  "current_status": "M2_IN_PROGRESS_UI_RECOVERY",
+  "working_branch": null,
+  "current_status": "P1_AUTHENTICATED_PANEL_VERIFICATION_REQUIRED",
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
     "Repasse-base, ajuste, repasse após ajuste e liberação exibidos sem dupla dedução",
@@ -109,12 +109,10 @@
     }
   },
   "next_actions": [
-    "Prioridade P1: validar e publicar hotfix da Central de Comando para restaurar estado anterior à PR22",
-    "Após deploy abrir Central autenticada e verificar agentes e lucro diário; coletar código de erro seguro caso persista",
-    "NÃO religar botão de diagnóstico da PR22 até reproduzir regressão em ambiente de teste",
-    "Somente se PARTIAL_PAGE aparecer e a resposta real for consistente, implementar paginação cursor em background mantendo uma leitura privada por oportunidade",
-    "Manter remaining_receivable_cents separado: Pending atual não é automaticamente saldo de uma competência",
-    "Manter realized_net_cents indisponível até existir evidência de liquidação bancária"
+    "Abrir sessao autenticada apos versao App da PR #25: verificar se lucro diario e seis agentes aparecem, anotar mensagem/codigo seguro em caso de falha",
+    "Conferir Cloudflare D1 Row Metrics e alertas em 27/10 antes de concluir que a cota foi excedida",
+    "Se continuar travado, coletar screenshot sem dados pessoais e path/status HTTP de /api/admin/bootstrap e /api/admin/finance/business-month-view, sem enviar cookies ou tokens",
+    "Somente apos restauracao observada, retomar validacao Pending Overview x Seller Centre da fase M2"
   ],
   "m0_followup": [
     "Conferir visual autenticado em desktop e celular durante M1; corrigir apenas branding/layout sem renomear infraestrutura"
@@ -123,43 +121,25 @@
     "Conferir visual autenticado da Central de Comando em desktop e celular; ajustes visuais podem ocorrer dentro de M2 sem alterar contratos"
   ],
   "latest_increment": {
-    "id": "M2_PENDING_AUDIT",
-    "status": "PUBLISHED",
-    "pull_request": 21,
-    "merge_commit": "2433cd9c55de271034def246fbca8dc98a1d4dae",
+    "id": "P1_AGENT_NAV_FALLBACK",
+    "status": "MERGED_CI_AND_CLOUDFLARE_BUILDS_PASS_AUTHENTICATED_NOT_VERIFIED",
+    "pull_request": 25,
+    "merge_commit": "7c62247058066e49b6f86544de359786b2bd60ac",
     "validation": {
-      "pr_run": 40555474962,
-      "main_run": 40555756177,
-      "node_tests": 2061,
+      "pr_run": 40564669598,
+      "main_run": 40564933755,
+      "node_tests": 2064,
       "python_tests": 67
     },
-    "production": {
-      "app": {
-        "build_id": "0f7e863c-96df-4626-83d8-8075d147bbd0",
-        "version_id": "669b1ad9-e5e1-4002-b65b-ae386ff093b4"
-      },
-      "auth": {
-        "build_id": "f714ae09-4eb9-4faf-9b16-801c70632604",
-        "version_id": "dd7c7cd4-0470-4ec4-b7a3-52d486a2c782"
-      },
-      "finance": {
-        "build_id": "a800ebcc-7f31-4a0a-a497-8bc493af5644",
-        "version_id": "c231b7e6-72d4-4c7e-9e89-ecb22c252fc9"
-      }
-    },
-    "facts": [
-      "Auditoria compara Pending Overview e subtotal visível do Pending Detail somente de forma descritiva",
-      "has_more=true mantém a auditoria PARTIAL_PAGE e bloqueia inferência de total",
-      "Detalhe anterior ao Overview suspende comparação monetária",
-      "Valores não convertíveis em centavos são preservados sem arredondamento",
-      "A seção fechada não carrega detalhe D1 apenas para alimentar agentes",
-      "Nenhuma chamada Shopee, polling ou tabela nova foi adicionada por esta auditoria"
+    "features": [
+      "Agentes visiveis no menu principal desktop/mobile",
+      "Clique em agentes abre overview antes de rolar evitando aba oculta",
+      "Seis cartoes de agente fallback Aguardando dados independente da hidratacao do browser"
     ],
-    "limits": [
-      "OBSERVED_MATCH não comprova competência mensal, remaining_receivable ou banco",
-      "OBSERVED_DIFFERENT não é automaticamente erro contábil",
-      "Paginação completa continua condicionada à validação real do cursor/semântica",
-      "realized_net_cents permanece indisponível sem liquidação bancária"
+    "limitations": [
+      "Falha da conta autenticada nao foi reproduzida diretamente",
+      "Nao confirma integridade financeira ou ausencia de cota D1 excedida",
+      "Sem alteracao de dados, Auth/Finance APIs, OAuth ou Shopee"
     ]
   },
   "incident": {
@@ -174,7 +154,7 @@
     },
     "planned_resolution": "Restaurar cinco arquivos de runtime/build/test da base anterior 729db271; nao alterar Auth, Finance, OAuth, D1, contas ou secrets",
     "rollback_branch": "hotfix/restore-agent-panels-after-pr22",
-    "rollback_status": "IN_REVIEW_CI_AND_DEPLOY_UNCONFIRMED",
+    "rollback_status": "PR23_MERGED_CI_PASS_CLOUDFLARE_CHECKS_SUCCESS_NOT_RESOLVED_FOR_OPERATOR",
     "verification_required": [
       "CI do hotfix",
       "merge na main",
@@ -182,6 +162,29 @@
       "abertura autenticada em desktop/mobile",
       "central de comando, agente Hermes, MLS Finance e demais agentes visiveis",
       "lucro diario e resumo mensal carregam sem erro"
-    ]
+    ],
+    "diagnosis": "DNS App/Auth/Gateway OK; anonymous /login=200, /health=200, /api/admin/bootstrap=401 expected; authenticated view and D1 have not been observed",
+    "source": "GitHub Actions public smoke run 40563757410 and Cloudflare check-runs on 6328a855",
+    "recovery_followup": {
+      "pr": 25,
+      "merge_commit": "7c62247058066e49b6f86544de359786b2bd60ac",
+      "ci_run_pr": 40564669598,
+      "ci_run_main": 40564933755,
+      "node_tests": 2064,
+      "python_tests": 67,
+      "cloudflare_checks": [
+        "brazacommerce-app SUCCESS",
+        "brazacommerce-auth SUCCESS",
+        "brazacommerce-finance SUCCESS"
+      ],
+      "scope": "Nav Agents primary, direct overview cross-tab navigation, static six placeholder cards, no finance/network changes",
+      "runtime_authenticated": "NOT_VERIFIED"
+    },
+    "unresolved": [
+      "Operador ainda nao confirmou carregamento autenticado apos PR25",
+      "D1 daily quota pode estar esgotada como em 26/10, mas nao foi verificada em 27/10",
+      "Necessario screenshot ou erro HTTP seguro do login/Finance sem credenciais"
+    ],
+    "status": "OPEN"
   }
 }
