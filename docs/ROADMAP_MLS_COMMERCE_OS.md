@@ -142,7 +142,7 @@ No celular, priorizar Início, Agentes, Produtos, Produção, Ads e Mais.
 
 ## 7. Fases da conversão MLS Commerce OS
 
-### M0 — Branding seguro e continuidade canônica — **EM ANDAMENTO**
+### M0 — Branding seguro e continuidade canônica — **PUBLICADO**
 - [x] Definir nome MLS Commerce OS.
 - [x] Definir MLS Hermes como supervisor.
 - [x] Definir família inicial de agentes.
@@ -150,13 +150,13 @@ No celular, priorizar Início, Agentes, Produtos, Produção, Ads e Mais.
 - [x] Criar este roadmap canônico.
 - [x] Criar checkpoint de continuidade.
 - [x] Iniciar troca do branding visível no login, gestão e Ads.
-- [ ] Validar suíte/CI e publicar o branding.
+- [x] Validar suíte/CI e publicar o branding pela PR #11.
 - [ ] Conferir visual real autenticado em desktop e celular.
 - [ ] Manter aliases técnicos antigos sem renomear infraestrutura.
 
 **Critério de saída:** marca nova publicada sem regressão, roadmap canônico e checkpoint apontando para a versão publicada.
 
-### M1 — Central de Comando + Agent Registry — **PRÓXIMA FASE**
+### M1 — Central de Comando + Agent Registry — **PRÓXIMA FASE / PONTO DE RETOMADA**
 Criar uma nova home seguindo a hierarquia visual definida:
 
 - faixa executiva Hoje;
@@ -268,8 +268,11 @@ A conversão não reinicia o projeto. O MLS Commerce OS herda integralmente o qu
 - abertura do painel desacoplada das configurações;
 - redução de gravações D1 redundantes.
 
-Última base confirmada antes desta conversão: **PR #10**, merge
+Base anterior à conversão: **PR #10**, merge
 `9c418fd3010f46957d1ce52345baacd76041c788`.
+
+Conversão de identidade M0 publicada pela **PR #11**, merge
+`3dab8f0be54d331bcded1fba4c09e9bfdf68256b`. CI de `main` passou e App/Auth/Finance foram publicados. O próximo desenvolvimento começa em **M1**.
 
 ## 9. Regras permanentes de continuidade
 

@@ -29,32 +29,46 @@
     "pr": 10,
     "merge_commit": "9c418fd3010f46957d1ce52345baacd76041c788"
   },
-  "current_phase": "M0_BRANDING_AND_CANONICAL_CONTINUITY",
-  "working_branch": "chatgpt/mls-commerce-os-branding-roadmap-20261027",
-  "current_status": "IN_PROGRESS",
-  "completed_this_phase": [
-    "Nome MLS Commerce OS definido",
-    "MLS Hermes definido como supervisor",
-    "Arquitetura multiagente e níveis de autonomia definidos",
-    "Branding visível iniciado no painel/login/Ads",
-    "Roadmap canônico criado",
-    "Handoff de continuidade criado"
-  ],
-  "remaining_this_phase": [
-    "Atualizar testes de branding quando necessário",
-    "Executar CI",
-    "Abrir/validar PR",
-    "Mesclar e confirmar deploy de produção",
-    "Atualizar este checkpoint para PUBLISHED"
-  ],
+  "current_phase": "M1_COMMAND_CENTER_AGENT_REGISTRY",
+  "working_branch": null,
+  "current_status": "READY_TO_START",
+  "completed_this_phase": [],
+  "remaining_this_phase": [],
   "next_phase": {
-    "id": "M1_COMMAND_CENTER_AGENT_REGISTRY",
+    "id": "M2_FINANCE_RETURNS_RECONCILIATION",
     "rules": [
-      "Agent Registry somente leitura",
-      "Reaproveitar dados existentes",
-      "Não adicionar chamadas Shopee apenas para agentes",
-      "Cards MLS Finance/Ads/Products/Production/Returns/Auditor/Hermes",
-      "Manter Ads/PROMO LOCKED"
+      "Fechar liberações por pedido e diferenças",
+      "Transformar pendências em tarefas do MLS Finance/Returns",
+      "Não afirmar lucro realizado sem liquidação comprovada"
     ]
-  }
+  },
+  "previous_phase": {
+    "id": "M0_BRANDING_AND_CANONICAL_CONTINUITY",
+    "status": "PUBLISHED",
+    "pull_request": 11,
+    "merge_commit": "3dab8f0be54d331bcded1fba4c09e9bfdf68256b",
+    "validation_run": 40438431534,
+    "production": {
+      "app": {
+        "version_id": "688b04a0-22a3-4c1d-a1cd-e588c3fcc070"
+      },
+      "auth": {
+        "version_id": "e95cd942-5ea6-4151-a7e0-a46e0b37593c"
+      },
+      "finance": {
+        "version_id": "fadb9a57-8a9c-454e-a9c8-70b58528bc2f"
+      }
+    }
+  },
+  "next_actions": [
+    "Criar Agent Registry somente leitura usando dados já existentes",
+    "Criar Central de Comando com lucro/vendas/Ads/margem/pedidos/alertas",
+    "Exibir cards MLS Finance, MLS Ads, MLS Products, MLS Production, MLS Returns, MLS Auditor e MLS Hermes",
+    "Criar prioridades do dia e drill-down para as áreas existentes",
+    "Não adicionar chamadas Shopee somente para alimentar agentes",
+    "Manter Ads/PROMO LOCKED"
+  ],
+  "m0_followup": [
+    "Conferir visual autenticado em desktop e celular durante M1; corrigir apenas branding/layout sem renomear infraestrutura"
+  ]
 }

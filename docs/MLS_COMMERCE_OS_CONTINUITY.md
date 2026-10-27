@@ -19,13 +19,13 @@ Este arquivo é um handoff curto. O roadmap canônico é
 MLS Finance, MLS Ads, MLS Pricing, MLS Products, MLS Production, MLS Creative,
 MLS Inventory, MLS Marketplace, MLS Returns, MLS Auditor e MLS Hermes.
 
-## Estado técnico de partida
+## Estado técnico atual
 
-Base publicada anterior: PR #10 / merge
-`9c418fd3010f46957d1ce52345baacd76041c788`.
+A conversão M0 foi **publicada** pela PR #11, merge
+`3dab8f0be54d331bcded1fba4c09e9bfdf68256b`.
 
-Conversão M0 iniciada na branch:
-`chatgpt/mls-commerce-os-branding-roadmap-20261027`.
+CI de `main`: run `40438431534`, sucesso. Produção confirmada nos três Workers:
+App `688b04a0-22a3-4c1d-a1cd-e588c3fcc070`, Auth `e95cd942-5ea6-4151-a7e0-a46e0b37593c`, Finance `fadb9a57-8a9c-454e-a9c8-70b58528bc2f`.
 
 Mudanças iniciadas:
 - login e painel proprietário: MLS Commerce OS;
@@ -40,7 +40,7 @@ Mudanças iniciadas:
 Workers, D1, domínio, rotas, cookies, headers X-Braza, tabelas/schemas e contratos
 persistidos. Primeiro branding; infraestrutura depois, com aliases.
 
-## Próxima implementação após M0
+## Ponto exato de retomada
 
 **M1 — Central de Comando + Agent Registry somente leitura.**
 
