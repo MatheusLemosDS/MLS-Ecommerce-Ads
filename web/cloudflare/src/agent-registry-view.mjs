@@ -26,10 +26,12 @@ export const AGENT_REGISTRY_CLIENT=String.raw`
  const statusLabel={HEALTHY:'Saudável',WORKING:'Trabalhando',ATTENTION:'Atenção',BLOCKED:'Bloqueado'};
  let lastKey='',observer=null,queued=false,registry=null;
  function read(){
-  let day=null,month=null;
+  let day=null,month=null,reconciliation=null,releases=null;
   try{day=globalThis.brazaDayDashboard?.getSnapshot?.()??null;}catch{}
   try{month=globalThis.brazaMonthDashboard?.getSnapshot?.()??null;}catch{}
-  return buildMlsAgentRegistry({day,month});
+  try{reconciliation=globalThis.brazaReconciliation?.getSnapshot?.()??null;}catch{}
+  try{releases=globalThis.brazaEscrowReleases?.getSnapshot?.()??null;}catch{}
+  return buildMlsAgentRegistry({day,month,reconciliation,releases});
  }
  function metricValue(agent){
   if(agent.metric_kind==='money')return money(agent.metric);
