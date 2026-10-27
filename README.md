@@ -1,6 +1,6 @@
-# BrazaCommerce — App, Auth e Financeiro
+# MLS Commerce OS — App, Auth e Financeiro
 
-Um repositório para os três Workers Cloudflare. Cada Worker tem build e deploy
+Repositório do **MLS Commerce OS** para os três Workers Cloudflare. Cada Worker tem build e deploy
 próprios; o Cloudflare acompanha a branch `main` após a configuração inicial.
 
 O App e o Auth existentes serão ligados ao Git. O Financeiro é um projeto novo.
@@ -30,3 +30,11 @@ Configuração financeira: [Financeiro](web/finance/DEPLOY.md).
 
 Segredos continuam no Cloudflare. Arquivos de credenciais, bancos, logs e
 entregas antigas ficam fora do Git. O fluxo de Ads permanece LOCKED.
+
+
+## Identidade e continuidade
+
+A marca oficial do produto é **MLS Commerce OS**. Os nomes técnicos `brazacommerce-*`, domínio, bindings, rotas e contratos antigos permanecem temporariamente como aliases de compatibilidade e não devem ser renomeados sem uma migração específica.
+
+Roadmap canônico: [MLS Commerce OS](docs/ROADMAP_MLS_COMMERCE_OS.md).  
+Checkpoint para retomada: [MLS_COMMERCE_OS_CHECKPOINT.json](docs/MLS_COMMERCE_OS_CHECKPOINT.json).

@@ -8,11 +8,11 @@ const sample=()=>`<!doctype html><html lang="en"><head><title>Advertising Dashbo
 test('Ads presentation localizes UI and branding while preserving provider values and executable blocks',()=>{
  const result=enhanceAdsPageHtml(sample());
  assert.match(result,/<html lang="pt-BR">/);
- assert.match(result,/<title>Painel de anúncios · BrazaCommerce<\/title>/);
+ assert.match(result,/<title>Painel de anúncios · MLS Commerce OS<\/title>/);
  assert.match(result,/<h1>Painel de anúncios<\/h1>/);
  assert.match(result,/<div class="label">Investimento em anúncios<\/div>/);
  assert.match(result,/<th>Pedidos atribuídos<\/th>/);
- assert.match(result,/<span class="ads-brand-name">BrazaCommerce<\/span>/);
+ assert.match(result,/<span class="ads-brand-name">MLS Commerce OS<\/span>/);
  for(const value of ['<div class="value">R$ 123,45</div>','<strong>Orders</strong>','<td>7</td>','<td>123.45</td>',
   'href="/campaigns?filter=active&amp;id=12345"','Customer &lt;name&gt;',
   '<script>const fixture={label:\'Orders\',value:123.45};</script>','<style>.fixture::after{content:"Advertising Spend"}</style>'])assert.ok(result.includes(value),value);
@@ -28,7 +28,7 @@ test('presentation does not inject a duplicate financial banner or privileged li
 test('legacy login receives matching presentation and keeps the form method and field names',()=>{
  const result=enhanceAdsPageHtml('<html lang="en"><head><title>MLS Commerce Ads</title></head><body><div class="brand">MLS Commerce <span>Ads</span></div><h1>Shopee Ads Intelligence</h1><div class="right"><h2>Sign in</h2><form method="POST" action="/login"><label>Username</label><input name="username" required><label>Password</label><input type="password" name="password" required><button>Sign in</button></form></div></body></html>');
  assert.match(result,/<body class="ads-login">/);
- assert.match(result,/<title>BrazaCommerce<\/title>/);
+ assert.match(result,/<title>MLS Commerce OS<\/title>/);
  assert.match(result,/<h2>Entrar<\/h2>/);
  assert.match(result,/<label>Usuário<\/label>/);
  assert.match(result,/<form method="POST" action="\/login">/);
