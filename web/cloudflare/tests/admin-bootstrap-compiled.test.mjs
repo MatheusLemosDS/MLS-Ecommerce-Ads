@@ -29,6 +29,13 @@ function fullBrowser(html,fetchImpl){
  vm.runInContext('globalThis.window=globalThis;window.matchMedia=()=>({matches:false,addEventListener(){}});globalThis.addEventListener=()=>{};',context);
  const scripts=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match=>match[1]);assert.equal(scripts.length,11);
  for(const [index,script] of scripts.entries())vm.runInContext(script,context,{filename:'owner-script-'+index+'.js'});
+ // Verify that the real inline Agent Registry hydrates the initially static
+ // recovery cards instead of just rendering unchanged fallback HTML.
+ assert.equal(vm.runInContext('typeof globalThis.mlsAgentRegistry',context),'object','agent client must install its registry');
+ assert.equal(vm.runInContext('mlsAgentRegistry.getSnapshot()?.schema',context),'mls_agent_registry_v1');
+ assert.equal(nodes.get('commandCenterAgents')?.children?.length,6,'six agents must replace fallback cards on startup');
+ assert.equal(nodes.get('commandCenterNet')?.textContent,'—','missing daily values must not be fabricated');
+
  return {nodes,timers,calls,run:source=>vm.runInContext(source,context),stop(){vm.runInContext('startupController.stop();brazaMonthDashboard.stop();',context);timers.clear();}};
 }
 
