@@ -227,7 +227,7 @@ async function scheduledWork(env,services,now=()=>Date.now()){
     if(selection.ready&&typeof services?.getFinanceHistoricalVariantEvidence==='function'){
      const historical=await syncHistoricalCostEvidence(env,{month,item_ids:selection.item_ids},services.getFinanceHistoricalVariantEvidence,{now,canRun});output.history=historical.work;repeatHistory=historical.work==='PROGRESSED'&&!historical.scan.complete;
     }else if(selection.ready)output.history='UNAVAILABLE';
-    if(!selection.ready&&(typeof services?.getFinanceReconciliation==='function'||typeof services?.getFinanceEscrowReleases==='function')){
+    if(!selection.ready&&(typeof services?.getFinanceReconciliation==='function'||typeof services?.getFinanceEscrowReleases==='function'||typeof services?.getFinanceIncomeOverview==='function'||typeof services?.getFinanceIncomeDetail==='function')){
      const audit=await runBusinessFinancialAudits(env,services,{month},{now,canRun});
      output.reconciliation=audit.returns_status;output.releases=audit.releases_status;output.income=audit.income_status;output.income_detail=audit.income_detail_status;repeatHistory=audit.repeat;
     }
