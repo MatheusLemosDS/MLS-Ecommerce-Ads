@@ -40,9 +40,22 @@ Mudanças iniciadas:
 Workers, D1, domínio, rotas, cookies, headers X-Braza, tabelas/schemas e contratos
 persistidos. Primeiro branding; infraestrutura depois, com aliases.
 
+## Estado publicado mais recente
+
+A **M1 — Central de Comando + Agent Registry somente leitura** foi publicada pela PR #12,
+merge `91fc0cf169f67a9440a8e58a033c925b9ce98eed`.
+
+A Central de Comando usa snapshots locais validados do resultado diário/mensal e não cria
+`fetch`, polling ou chamadas Shopee extras para os agentes. MLS Hermes, Finance, Ads,
+Products, Production, Returns e Auditor operam em modo **OBSERVER**. Ads/PROMO permanece LOCKED.
+
+CI: PR `40442142269`, main `40442459393`; **2.008 testes Node + 67 Python**.
+Produção: App `48f8a3bf-019d-498a-9f5e-a2b9f356e999`, Auth `d2ee194f-fc43-481e-b09b-209c7b849b87`,
+Finance `e6aec23b-5e05-450b-8cb0-64ee7e7cdca5`.
+
 ## Ponto exato de retomada
 
-**M1 — Central de Comando + Agent Registry somente leitura.**
+**M2 — MLS Finance + MLS Returns: conciliação de liberações, devoluções e diferenças por pedido.**
 
 Prioridade de agentes visíveis:
 1. MLS Finance

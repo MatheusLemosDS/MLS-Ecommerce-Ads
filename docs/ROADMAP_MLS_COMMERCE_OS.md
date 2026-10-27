@@ -156,7 +156,7 @@ No celular, priorizar Início, Agentes, Produtos, Produção, Ads e Mais.
 
 **Critério de saída:** marca nova publicada sem regressão, roadmap canônico e checkpoint apontando para a versão publicada.
 
-### M1 — Central de Comando + Agent Registry — **PRÓXIMA FASE / PONTO DE RETOMADA**
+### M1 — Central de Comando + Agent Registry — **PUBLICADO**
 Criar uma nova home seguindo a hierarquia visual definida:
 
 - faixa executiva Hoje;
@@ -180,7 +180,9 @@ Agentes iniciais na tela:
 
 **Critério de saída:** a Central de Comando deve conseguir dizer “o que está acontecendo e o que precisa de ação” usando apenas dados existentes, sem executar alterações comerciais.
 
-### M2 — Finance/Returns confiáveis como agentes observadores
+**Publicação:** PR #12, merge `91fc0cf169f67a9440a8e58a033c925b9ce98eed`. Agent Registry em modo Observer, sem chamadas externas adicionais, com CI 2.008 + 67 e deploy dos três Workers confirmado.
+
+### M2 — Finance/Returns confiáveis como agentes observadores — **PRÓXIMA FASE / PONTO DE RETOMADA**
 Continuar a fase financeira atual:
 
 - fechar cruzamento de liberações por pedido;
@@ -272,7 +274,7 @@ Base anterior à conversão: **PR #10**, merge
 `9c418fd3010f46957d1ce52345baacd76041c788`.
 
 Conversão de identidade M0 publicada pela **PR #11**, merge
-`3dab8f0be54d331bcded1fba4c09e9bfdf68256b`. CI de `main` passou e App/Auth/Finance foram publicados. O próximo desenvolvimento começa em **M1**.
+`3dab8f0be54d331bcded1fba4c09e9bfdf68256b`. CI de `main` passou e App/Auth/Finance foram publicados. A **M1** foi publicada pela PR #12; o próximo desenvolvimento começa em **M2**.
 
 ## 9. Regras permanentes de continuidade
 

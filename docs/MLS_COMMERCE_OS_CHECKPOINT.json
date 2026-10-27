@@ -29,46 +29,57 @@
     "pr": 10,
     "merge_commit": "9c418fd3010f46957d1ce52345baacd76041c788"
   },
-  "current_phase": "M1_COMMAND_CENTER_AGENT_REGISTRY",
+  "current_phase": "M2_FINANCE_RETURNS_RECONCILIATION",
   "working_branch": null,
   "current_status": "READY_TO_START",
   "completed_this_phase": [],
   "remaining_this_phase": [],
   "next_phase": {
-    "id": "M2_FINANCE_RETURNS_RECONCILIATION",
+    "id": "M3_PRODUCTS_PRICING_INTELLIGENCE",
     "rules": [
-      "Fechar liberações por pedido e diferenças",
-      "Transformar pendências em tarefas do MLS Finance/Returns",
-      "Não afirmar lucro realizado sem liquidação comprovada"
+      "Contribuição e curva ABC somente com atribuição/custos compatíveis",
+      "Preço mínimo/ideal e ROAS mínimo precisam de base de margem verificável",
+      "Estoque desconhecido bloqueia recomendações de escala"
     ]
   },
   "previous_phase": {
-    "id": "M0_BRANDING_AND_CANONICAL_CONTINUITY",
+    "id": "M1_COMMAND_CENTER_AGENT_REGISTRY",
     "status": "PUBLISHED",
-    "pull_request": 11,
-    "merge_commit": "3dab8f0be54d331bcded1fba4c09e9bfdf68256b",
-    "validation_run": 40438431534,
+    "pull_request": 12,
+    "merge_commit": "91fc0cf169f67a9440a8e58a033c925b9ce98eed",
+    "validation": {
+      "pr_run": 40442142269,
+      "main_run": 40442459393,
+      "node_tests": 2008,
+      "python_tests": 67
+    },
     "production": {
       "app": {
-        "version_id": "688b04a0-22a3-4c1d-a1cd-e588c3fcc070"
+        "build_id": "e91939af-665d-442e-a80a-d95d27463211",
+        "version_id": "48f8a3bf-019d-498a-9f5e-a2b9f356e999"
       },
       "auth": {
-        "version_id": "e95cd942-5ea6-4151-a7e0-a46e0b37593c"
+        "build_id": "4be3e426-a014-4a67-bda9-158838d99a68",
+        "version_id": "d2ee194f-fc43-481e-b09b-209c7b849b87"
       },
       "finance": {
-        "version_id": "fadb9a57-8a9c-454e-a9c8-70b58528bc2f"
+        "build_id": "33c07ae8-e172-4771-b096-972af256e5dc",
+        "version_id": "e6aec23b-5e05-450b-8cb0-64ee7e7cdca5"
       }
     }
   },
   "next_actions": [
-    "Criar Agent Registry somente leitura usando dados já existentes",
-    "Criar Central de Comando com lucro/vendas/Ads/margem/pedidos/alertas",
-    "Exibir cards MLS Finance, MLS Ads, MLS Products, MLS Production, MLS Returns, MLS Auditor e MLS Hermes",
-    "Criar prioridades do dia e drill-down para as áreas existentes",
-    "Não adicionar chamadas Shopee somente para alimentar agentes",
-    "Manter Ads/PROMO LOCKED"
+    "Detalhar liberações por pedido e referência usando evidência já persistida",
+    "Cruzar liberações, ajustes e devoluções sem dupla contagem",
+    "Transformar diferenças em tarefas do MLS Finance e MLS Returns",
+    "Mostrar o que já foi conferido, o que diverge e o que ainda não tem correspondência",
+    "Preservar realized_net_cents como desconhecido até haver evidência suficiente de liquidação",
+    "Não adicionar coleta externa só para os agentes; reutilizar auditorias existentes sempre que possível"
   ],
   "m0_followup": [
     "Conferir visual autenticado em desktop e celular durante M1; corrigir apenas branding/layout sem renomear infraestrutura"
+  ],
+  "m1_followup": [
+    "Conferir visual autenticado da Central de Comando em desktop e celular; ajustes visuais podem ocorrer dentro de M2 sem alterar contratos"
   ]
 }
