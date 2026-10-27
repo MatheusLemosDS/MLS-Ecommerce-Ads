@@ -452,3 +452,78 @@ export function missionTrendPanelBody(id='overview'){
   '<p class="mission-trend-note" id="missionTrendNote'+suffix+'">As leituras parciais são sinalizadas. Sem série inventada.</p>'+
   '</section>';
 }
+
+export const MISSION_TRENDS_CSS=String.raw`
+
+/* Mission Control financial charts: strictly scoped; values projected from the existing monthly cache. */
+.mission-dashboard .mission-trend-panel,.mission-workspace .mission-trend-panel{
+ --trend-bg:#091b38;position:relative;min-width:0;overflow:hidden;margin:17px 0 22px;
+ padding:22px 24px 17px;border:1px solid rgba(99,167,250,.33);border-radius:20px;
+ background:radial-gradient(ellipse at 75% -30%,rgba(92,91,227,.21),transparent 55%),linear-gradient(125deg,#0d2548,#07142b 88%);
+ box-shadow:inset 0 1px rgba(161,201,255,.11),0 12px 36px rgba(0,11,35,.17);color:#e9f6ff
+}
+.mission-trend-panel:before{content:"";position:absolute;inset:0 0 auto;height:2px;background:linear-gradient(90deg,#28e3b4,#4c9efb,#b67cff,transparent 93%);opacity:.8}
+.mission-trend-heading{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:14px;margin:0 0 14px}
+.mission-trend-heading h3{font-size:20px;letter-spacing:-.5px;margin:6px 0;color:#f6faff}
+.mission-trend-heading p{font-size:11px;color:#a9c1df;margin:3px 0;line-height:1.6}
+.mission-trend-controls{display:flex;gap:5px;padding:4px;border:1px solid rgba(113,157,230,.2);background:rgba(4,17,41,.66);border-radius:12px}
+.mission-trend-controls button{min-height:36px;padding:8px 13px;border-radius:9px;border:1px solid transparent;font-size:11px;cursor:pointer;font-weight:700;color:#a9c9e7;background:transparent}
+.mission-trend-controls button:hover{color:#fff;background:rgba(66,119,226,.25)}
+.mission-trend-controls button[aria-pressed=true]{color:#e9faff;background:linear-gradient(110deg,#2055ba,#276bba);border-color:rgba(121,189,255,.62);box-shadow:0 3px 13px rgba(14,90,229,.22)}
+.mission-trend-controls button:focus-visible{outline:3px solid #78d8ff;outline-offset:2px}
+.mission-trend-graph{position:relative;min-width:0;height:277px;border-radius:12px;border:1px solid rgba(123,169,230,.12);background:repeating-linear-gradient(0deg,rgba(107,155,231,.03) 0 1px,transparent 1px 40px),rgba(5,18,43,.37)}
+.mission-trend-svg{display:block;width:100%;height:100%;overflow:visible}
+.mission-trend-empty{display:grid;place-items:center;min-height:240px;padding:20px;text-align:center;font-size:12px;line-height:1.7;color:#b9cae3}
+.mission-trend-note{min-height:17px;margin:12px 0 0;font-size:10px;line-height:1.6;color:#92b3d4}
+.mission-workspace .mission-trend-panel{border-color:rgba(var(--mission-rgb),.47);background:radial-gradient(ellipse at 100% -35%,rgba(var(--mission-rgb),.22),transparent 57%),linear-gradient(120deg,#0b213f,#06162c 91%)}
+.mission-workspace .mission-trend-panel:before{background:linear-gradient(90deg,var(--mission-accent),transparent)}
+.mission-workspace .mission-trend-heading .mission-panel-eyebrow{color:var(--mission-accent)}
+.mission-dashboard .command-center-metrics .command-metric{min-height:178px;display:flex;flex-direction:column;gap:3px}
+.mission-dashboard .command-center-metrics .command-metric small{display:block}
+.mission-dashboard .command-metric .mission-kpi-delta{
+ display:inline-flex;align-items:center;min-height:22px;max-width:100%;margin-top:auto;padding:4px 0 1px;
+ line-height:1.45;font-size:10px;font-weight:800;letter-spacing:-.05px;color:#a7bdde
+}
+.mission-dashboard .command-metric .mission-kpi-delta[data-direction=UP]{color:#37e4ad}
+.mission-dashboard .command-metric .mission-kpi-delta[data-direction=DOWN]{color:#ff819c}
+.mission-dashboard .command-metric .mission-kpi-delta[data-direction=FLAT]{color:#95b2db}
+.mission-dashboard .command-metric .mission-kpi-delta[data-direction=UNAVAILABLE]{color:#89a8cd;font-weight:600;font-size:9px}
+.mission-dashboard .command-metric .mission-kpi-delta[data-metric=ads][data-direction=UP]{color:#ffb26a}
+.mission-dashboard .command-metric .mission-kpi-delta[data-metric=ads][data-direction=DOWN]{color:#88dcff}
+.mission-dashboard .command-metric .mission-kpi-comparison-date{display:block;font-size:9px;font-weight:450;line-height:1.5;color:#8da5c8;min-height:28px}
+.mission-dashboard .command-metric .mission-profit-state{display:block;font-size:9px;font-weight:800;min-height:18px;color:#a0b7d8}
+.mission-dashboard .command-metric .mission-profit-state[data-tone=profit]{color:#41efb2}
+.mission-dashboard .command-metric .mission-profit-state[data-tone=loss]{color:#ff829c}
+.mission-dashboard .command-metric[data-mission-metric=net][data-result-tone=loss] strong{color:#ff899f}
+.mission-dashboard .command-metric[data-mission-metric=net][data-result-tone=profit] strong{color:#4ff2bc}
+.mission-dashboard .command-metric[data-mission-metric=net][data-result-tone=loss]{border-color:rgba(250,99,151,.62);background:radial-gradient(circle at 90% 60%,rgba(255,82,123,.19),transparent 60%),linear-gradient(140deg,#1c1837,#101627)}
+.mission-dashboard .command-metric[data-mission-metric=alerts][data-result-tone=alert] strong{color:#ffb85e}
+.mission-dashboard .command-metric[data-mission-metric=alerts][data-result-tone=healthy] strong{color:#55e9b3}
+.mission-workspace .mission-stat strong[data-result-tone=profit]{color:#48eeb9}
+.mission-workspace .mission-stat strong[data-result-tone=loss]{color:#ff849e}
+:root[data-theme=light] .mission-dashboard .mission-trend-panel,:root[data-theme=light] .mission-workspace .mission-trend-panel{background:radial-gradient(ellipse at 95% 0%,rgba(107,165,250,.13),transparent 55%),linear-gradient(125deg,#f8fbff,#ecf4ff);color:#19354b;border-color:rgba(61,128,221,.24)}
+:root[data-theme=light] .mission-trend-heading h3{color:#153956}
+:root[data-theme=light] .mission-trend-heading p,:root[data-theme=light] .mission-trend-note{color:#547291}
+:root[data-theme=light] .mission-trend-graph{background:linear-gradient(rgba(73,134,204,.055) 1px,transparent 1px) 0 0/100% 40px,#f7faff;border-color:rgba(85,151,225,.15)}
+:root[data-theme=light] .mission-trend-controls{background:#eaf1fe;border-color:#b6ccee}
+:root[data-theme=light] .mission-trend-controls button{color:#416688}
+:root[data-theme=light] .mission-trend-controls button[aria-pressed=true]{color:#fff}
+:root[data-theme=light] .mission-trend-empty{color:#496b89}
+:root[data-theme=light] .mission-dashboard .command-metric .mission-kpi-delta[data-direction=UP]{color:#076c4d}
+:root[data-theme=light] .mission-dashboard .command-metric .mission-kpi-delta[data-direction=DOWN]{color:#b92c52}
+:root[data-theme=light] .mission-dashboard .command-metric .mission-kpi-delta[data-metric=ads][data-direction=UP]{color:#955313}
+:root[data-theme=light] .mission-dashboard .command-metric .mission-kpi-delta[data-metric=ads][data-direction=DOWN]{color:#125f9b}
+:root[data-theme=light] .mission-dashboard .command-metric .mission-kpi-comparison-date,:root[data-theme=light] .mission-dashboard .command-metric .mission-kpi-delta[data-direction=UNAVAILABLE]{color:#576f8a}
+:root[data-theme=light] .mission-dashboard .command-metric .mission-profit-state[data-tone=profit]{color:#137553}
+:root[data-theme=light] .mission-dashboard .command-metric .mission-profit-state[data-tone=loss]{color:#b82e53}
+:root[data-theme=light] .mission-dashboard .command-metric[data-mission-metric=net][data-result-tone=loss] strong{color:#ba3159}
+:root[data-theme=light] .mission-dashboard .command-metric[data-mission-metric=net][data-result-tone=profit] strong{color:#167653}
+:root[data-theme=light] .mission-dashboard .command-metric[data-mission-metric=net][data-result-tone=loss]{background:#fff1f4}
+:root[data-theme=light] .mission-workspace .mission-stat strong[data-result-tone=profit]{color:#137653}
+:root[data-theme=light] .mission-workspace .mission-stat strong[data-result-tone=loss]{color:#bd3959}
+@media(max-width:1150px){.mission-dashboard .command-center-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:720px){.mission-dashboard .command-center-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.mission-trend-panel{padding:17px!important}.mission-trend-heading{gap:10px}.mission-trend-controls{width:100%;justify-content:space-between}.mission-trend-controls button{flex:1}.mission-dashboard .command-center-metrics .command-metric{min-height:152px}.mission-trend-graph{height:233px}}
+@media(max-width:420px){.mission-dashboard .command-center-metrics{grid-template-columns:minmax(0,1fr)}.mission-dashboard .command-center-metrics .command-metric{min-height:141px}.mission-trend-heading h3{font-size:17px}}
+@media(prefers-reduced-motion:reduce){.mission-trend-controls button,.mission-trend-svg *{transition:none!important}}
+
+`;
