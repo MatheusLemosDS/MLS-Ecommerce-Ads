@@ -85,7 +85,7 @@ test('agent destination is always visible on mobile and uses an overview route r
 test('agent subpages preserve the fleet as selected and never expose owner navigation to review roles',()=>{
  for(const tab of ['agents','agent-finance','agent-ads','agent-products','agent-production','agent-returns','agent-auditor','agent-hermes']){
   const html=workspaceNavigation('/admin?tab='+tab,{role:'owner'});
-  assert.match(html,/data-workspace-key="agents"[^>]*aria-current="page"/);
+  assert.match(html,/aria-current="page" data-workspace-key="agents"/);
   assert.equal((primary(html).match(/aria-current="page"/g)||[]).length,1);
  }
  const restricted=workspaceNavigation('agents',{role:'review'});
