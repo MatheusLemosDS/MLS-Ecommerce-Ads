@@ -527,4 +527,39 @@ export const MISSION_TRENDS_CSS=String.raw`
 @media(max-width:420px){.mission-dashboard .command-center-metrics{grid-template-columns:minmax(0,1fr)}.mission-dashboard .command-center-metrics .command-metric{min-height:141px}.mission-trend-heading h3{font-size:17px}}
 @media(prefers-reduced-motion:reduce){.mission-trend-controls button,.mission-trend-svg *{transition:none!important}}
 
+
+/* V3 / compact authenticated agent workspaces — CSS-only, zero financial mutations. */
+.mission-workspace .mission-crumb{margin-bottom:9px}
+.mission-workspace .mission-hero{padding:17px 20px;gap:14px}
+.mission-workspace .mission-hero h2{font-size:clamp(22px,2.4vw,29px)}
+.mission-workspace .mission-orb{flex-basis:60px;width:60px;height:60px;font-size:29px;border-radius:18px}
+.mission-workspace .mission-stats{gap:10px;margin:12px 0}
+.mission-workspace .mission-stat{padding:15px;min-height:0}
+.mission-workspace .mission-stat small{min-height:0}
+.mission-workspace .mission-module{padding:17px}
+.mission-dashboard .command-center-head{padding:18px 22px!important;margin-bottom:12px!important}
+.mission-dashboard .command-center-head h2{font-size:clamp(25px,2.5vw,32px)}
+.mission-dashboard .command-center-metrics{gap:10px;margin-bottom:12px}
+.mission-dashboard .command-metric{padding:13px 15px;min-height:110px}
+.mission-dashboard .agent-grid{gap:10px}
+.mission-dashboard .agent-card{min-height:127px;padding:13px}
+.mission-dashboard .agent-card p{margin:7px 0}
+.mission-dashboard .hermes-command{padding:16px}
+.mission-dashboard .hermes-command-summary{margin:9px 0;padding:10px}
+.mission-dashboard .command-priorities{margin:10px 0}
+.mission-dashboard .command-priority{padding:8px 10px}
+.mission-dashboard .agent-card:focus-visible{outline:3px solid #70c7ff;outline-offset:3px}
+@media(min-width:1181px){
+ .mission-dashboard .command-center-metrics{grid-template-columns:repeat(6,minmax(0,1fr))}
+ .mission-dashboard .command-center-grid{grid-template-columns:minmax(0,1fr) minmax(0,3fr)}
+ .mission-dashboard .agent-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:720px){
+ .mission-workspace .mission-hero{padding:16px;flex-wrap:wrap}
+ .mission-workspace .mission-hero-main{gap:12px}
+ .mission-workspace .mission-orb{flex-basis:48px;width:48px;height:48px;font-size:24px}
+ .mission-workspace .mission-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .mission-workspace .mission-stat{padding:13px}
+}
+
 `;
