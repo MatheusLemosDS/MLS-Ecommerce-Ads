@@ -30,7 +30,7 @@
     "merge_commit": "9c418fd3010f46957d1ce52345baacd76041c788"
   },
   "current_phase": "M2_FINANCE_RETURNS_RECONCILIATION",
-  "working_branch": null,
+  "working_branch": "feature/m2-pending-evidence-copy",
   "current_status": "IN_PROGRESS",
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
@@ -108,9 +108,9 @@
     }
   },
   "next_actions": [
-    "Abrir Central de Comando -> Pending atual por pedido para carregar somente o snapshot D1 local e observar o estado da auditoria",
-    "Registrar Overview, quantidade de registros/pedidos, subtotal visível, valores conhecidos, has_more e horários exibidos",
-    "Comparar esses dados com o Seller Centre; OBSERVED_MATCH é apenas coincidência descritiva e OBSERVED_DIFFERENT ainda não é erro contábil",
+    "Revisar CI e PR do diagnóstico Pending copiável; publicar apenas após aprovação e deploy confirmados",
+    "Na Central de Comando abrir Pending atual por pedido e copiar evidência sanitizada de overview/detail/auditoria",
+    "Comparar estados, valores e horários com o Seller Centre antes de permitir paginação ou interpretação financeira",
     "Somente se PARTIAL_PAGE aparecer e a resposta real for consistente, implementar paginação cursor em background mantendo uma leitura privada por oportunidade",
     "Manter remaining_receivable_cents separado: Pending atual não é automaticamente saldo de uma competência",
     "Manter realized_net_cents indisponível até existir evidência de liquidação bancária"
@@ -159,6 +159,19 @@
       "OBSERVED_DIFFERENT não é automaticamente erro contábil",
       "Paginação completa continua condicionada à validação real do cursor/semântica",
       "realized_net_cents permanece indisponível sem liquidação bancária"
+    ]
+  },
+  "pending_increment": {
+    "id": "M2_PENDING_EVIDENCE_COPY",
+    "status": "IN_REVIEW",
+    "branch": "feature/m2-pending-evidence-copy",
+    "contract": "mls_pending_audit_evidence_v1",
+    "scope": "READ_ONLY_LOCAL_NO_SHOPEE_CALLS_NO_D1_EXTRA_NO_ORDER_HASHES",
+    "requires": [
+      "CI_PASS",
+      "PR_MERGED",
+      "DEPLOY_CONFIRMED",
+      "SELLER_CENTRE_VALIDATION"
     ]
   }
 }
