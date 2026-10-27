@@ -28,6 +28,35 @@ jobs:
           cache: npm
       - name: Instalar versões fixadas
         run: npm ci
+      - name: Diagnóstico público não autenticado (somente leitura)
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import dns from 'node:dns/promises';
+          const hosts=['app.brazacommerce.com.br','auth.brazacommerce.com.br','gateway.brazacommerce.com.br'];
+          for(const host of hosts){
+            try{
+              const records=await dns.lookup(host,{all:true});
+              console.log('MLS_SMOKE_DNS',JSON.stringify({host,ok:records.length>0,families:[...new Set(records.map(r=>r.family))]}));
+            }catch(e){console.log('MLS_SMOKE_DNS',JSON.stringify({host,ok:false,error:e.code||e.name}));}
+          }
+          for(const path of ['/','/admin','/health']){
+            const url='https://app.brazacommerce.com.br'+path;
+            try{
+              const response=await fetch(url,{redirect:'manual',signal:AbortSignal.timeout(12000),headers:{'user-agent':'MLS-OS-Public-Safety-Smoke/1.0','cache-control':'no-cache'}});
+              const body=(await response.text()).slice(0,2*1024*1024);
+              const flags={
+                mls:body.includes('MLS Commerce OS')||body.includes('MLS COMMERCE OS'),
+                commandCenter:body.includes('commandCenter'),
+                agents:body.includes('commandCenterAgents')||body.includes('Seus agentes'),
+                pendingCopy:body.includes('commandCenterPendingCopy'),
+                login:body.includes('loginForm')||body.includes('Entrar')||body.includes('login'),
+                cloudflareError:/cloudflare error|error (?:1101|1102|1020)|worker threw exception/i.test(body)
+              };
+              console.log('MLS_SMOKE_HTTP',JSON.stringify({path,status:response.status,bytes:body.length,contentType:(response.headers.get('content-type')||'').slice(0,80),flags,cfRayPresent:Boolean(response.headers.get('cf-ray')),redirect:response.status>=300&&response.status<400?'YES':'NO'}));
+            }catch(e){console.log('MLS_SMOKE_HTTP',JSON.stringify({path,error:e.cause?.code||e.code||e.name}));}
+          }
+          NODE
       - name: Executar testes
         run: npm test
       - name: Validar ponte financeira e atualização do Hermes
