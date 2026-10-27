@@ -41,6 +41,6 @@ test('permission, foreign identity and malformed money fail closed without leaki
 
 test('expired access refresh and overview share the same two-call budget',async t=>{
  const f=await fixture(t),tokens=await (await createFinanceStore(f.env,{now:f.now})).readTokens();const store=await createFinanceStore(f.env,{now:f.now});await store.saveTokens({access_token:access,refresh_token:refresh,expires_at:f.now()/1000+1},{expectedRevision:tokens.revision});f.clock.time+=2000;let external=0;
- const fetchImpl=async request=>{external++;const url=new URL(request.url);if(url.pathname==='/api/v2/auth/access_token/get')return Response.json({error:'',request_id:'x',partner_id:FINANCE_PROFILE.partner_id,shop_id:FINANCE_PROFILE.shop_id,access_token:access+'2',refresh_token:refresh+'2',expire_in:14400});return Response.json({error:'',response:{total_income:{pending_amount:1,released_amount:2}}});};
+ const fetchImpl=async request=>{external++;const url=new URL(request.url);if(url.pathname==='/api/v2/auth/access_token/get')return Response.json({error:'',message:'',request_id:'x',partner_id:FINANCE_PROFILE.partner_id,shop_id:FINANCE_PROFILE.shop_id,access_token:access+'2',refresh_token:refresh+'2',expire_in:14400});return Response.json({error:'',response:{total_income:{pending_amount:1,released_amount:2}}});};
  const value=await readFinanceIncomeOverview(f.env,{now:f.now,fetchImpl});assert.equal(external,2);assert.equal(value.pending.cents,100);
 });
