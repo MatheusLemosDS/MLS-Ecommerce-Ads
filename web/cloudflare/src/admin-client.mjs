@@ -882,6 +882,12 @@ function openTab(tab,{updateUrl=true}={}){
 }
 
 document.querySelectorAll('[data-tab]').forEach(link=>link.onclick=event=>{if(event?.button>0||event?.metaKey||event?.ctrlKey||event?.shiftKey||event?.altKey)return;event?.preventDefault();openTab(link.dataset.tab);});
+document.querySelectorAll('[data-workspace-key="agents"]').forEach(link=>link.onclick=event=>{
+ if(event?.button>0||event?.metaKey||event?.ctrlKey||event?.shiftKey||event?.altKey)return;
+ event?.preventDefault();
+ openTab('overview');
+ document.getElementById('commandAgents')?.scrollIntoView?.({behavior:'smooth',block:'start'});
+});
 document.querySelectorAll('[data-open]').forEach(button=>button.onclick=()=>openTab(button.dataset.open));
 if(globalThis.addEventListener)globalThis.addEventListener('popstate',()=>openTab(workspaceTabFromLocation(),{updateUrl:false}));
 openTab(workspaceTabFromLocation(),{updateUrl:false});

@@ -1,7 +1,7 @@
 // Fixed destinations shared by store management and the restricted Ads review.
 const workspaceNavigationItems=Object.freeze({
  overview:{href:'/admin?tab=overview',label:'Visão geral',hint:'Vendas, custos e resultado',icon:'<rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>'},
- agents:{href:'#commandAgents',label:'Agentes',hint:'Equipe digital e prioridades',icon:'<circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2"/><path d="M4 20v-2a5 5 0 0 1 10 0v2M14 20v-1a4 4 0 0 1 6-3"/>'},
+ agents:{href:'/admin?tab=overview#commandAgents',label:'Agentes',hint:'Equipe digital e prioridades',icon:'<circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2"/><path d="M4 20v-2a5 5 0 0 1 10 0v2M14 20v-1a4 4 0 0 1 6-3"/>'},
  products:{href:'/admin?tab=products',label:'Produtos',hint:'Variações e custos por produto',icon:'<path d="m12 3 9 5-9 5-9-5 9-5ZM3 8v9l9 5 9-5V8M12 13v9"/>'},
  production:{href:'/admin?tab=production',label:'Produção',hint:'Pedidos, artes e montagem DTF',icon:'<path d="M6 8V3h12v5M6 17H4V8h16v9h-2M6 14h12v7H6zM16 11h1"/>'},
  ads:{href:'/dashboard',label:'Anúncios',hint:'Investimento, vendas e ROAS',icon:'<path d="M4 19V9m8 10V4m8 15v-7M2 21h20"/>'},
@@ -13,9 +13,9 @@ const workspaceNavigationItems=Object.freeze({
  history:{href:'/admin?tab=history',label:'Histórico',hint:'Alterações e versões salvas',icon:'<path d="M3 11a9 9 0 1 1 2 7M3 5v6h6M12 7v5l3 2"/>'},
  roadmap:{href:'/admin?tab=roadmap',label:'Plano de evolução',hint:'Etapas e dados que faltam',icon:'<path d="M5 20V4h12l-2 4 2 4H5M3 20h4"/>'},
 });
-const workspaceOwnerPrimary=['overview','products','production','ads','margins','automation'];
+const workspaceOwnerPrimary=['overview','agents','products','production','ads','automation'];
 const workspaceReviewPrimary=['ads','campaigns','automation'];
-const workspaceOwnerSecondary=['agents','campaigns','hermes','integrations','history','roadmap'];
+const workspaceOwnerSecondary=['margins','campaigns','hermes','integrations','history','roadmap'];
 const workspaceReviewSecondary=['integrations'];
 function workspaceActiveKey(active){
  if(Object.hasOwn(workspaceNavigationItems,active))return active;
@@ -25,7 +25,7 @@ function workspaceActiveKey(active){
  return '';
 }
 function workspaceNavLink(key,current,{mobile=false}={}){
- const item=workspaceNavigationItems[key],selected=key===current,tab=item.href.startsWith('/admin?tab=')?key:null;
+ const item=workspaceNavigationItems[key],selected=key===current,tab=key==='agents'?null:item.href.startsWith('/admin?tab=')?key:null;
  return `<a class="workspace-nav-link${selected?' active':''}" href="${item.href}"${selected?' aria-current="page"':''} data-workspace-key="${key}"${tab?' data-tab="'+tab+'" data-workspace-tab="'+tab+'"':''}><span class="workspace-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${item.icon}</svg></span><span class="workspace-nav-copy"><span class="workspace-nav-label">${item.label}</span>${mobile?'':'<small>'+item.hint+'</small>'}</span></a>`;
 }
 

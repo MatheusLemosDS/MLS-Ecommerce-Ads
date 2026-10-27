@@ -210,3 +210,13 @@ test('missing current income never becomes zero or changes the Finance month res
  const value=buildMlsAgentRegistry({day:day(),month:month(),incomeOverview:{schema:'mls_income_overview_snapshot_v1',checked_at:1793080000,status:'AVAILABLE',pending_cents:null,released_cents:null,currency_basis:'FIXED_BRAZIL_SHOP_PROFILE',basis:'CURRENT_PROVIDER_INCOME_STATUS_NOT_BANK_RECEIPT_OR_HISTORICAL_MONTH'}});
  const finance=value.agents.find(agent=>agent.id==='finance');assert.equal(finance.metric,240000);assert.equal(finance.secondary_metric,null);assert.equal(value.income.current_pending_cents,null);
 });
+
+test('command center has six static observer cards even when hydration scripts do not run',()=>{
+ const html=commandCenterBody();
+ const cards=[...html.matchAll(/data-agent-placeholder="true"/g)];
+ assert.equal(cards.length,6);
+ for(const name of ['MLS Finance','MLS Ads','MLS Products','MLS Production','MLS Returns','MLS Auditor'])assert.match(html,new RegExp('<h4>'+name+'</h4>'));
+ assert.match(html,/Aguardando dados/);
+ assert.match(html,/Nenhum valor é presumido/);
+ assert.doesNotMatch(html,/R\\$ [1-9]\\d*,\\d{2}/);
+});

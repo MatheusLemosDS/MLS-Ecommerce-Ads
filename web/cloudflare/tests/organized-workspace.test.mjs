@@ -25,10 +25,11 @@ function navigation(search=''){
  let state=null,csrf='',observations=0,syncs=0,settingsLoads=0;
  const loadObservations=()=>observations++,syncOnProductsOpen=()=>syncs++,loadSettings=async()=>{settingsLoads++;return false;};
  function item(tab){return {dataset:{tab},attrs:{},classList:{active:false,toggle(name,value){this[name]=value;}},setAttribute(name,value){this.attrs[name]=value;},removeAttribute(name){delete this.attrs[name];}};}
+ let agentScrollCount=0; const agentLinks=[{onclick:null},{onclick:null}];
  const links=${JSON.stringify(tabs)}.map(item),sections=['overview','products','margins','hermes','history','roadmap'].map(id=>({id,hidden:id!=='overview'}));
  const controls=new Map([['pageTitle',{textContent:''}],['pageSubtitle',{textContent:''}]]),el=id=>controls.get(id);
  const menus=[{dataset:{},open:true,querySelector(){return links.find(link=>['hermes','history','roadmap'].includes(link.dataset.tab)&&link.attrs['aria-current']==='page');}}];
- const document={documentElement:{dataset:{}},querySelectorAll(selector){return selector==='.workspace > section'?sections:selector==='[data-tab]'?links:selector==='.workspace-more'?menus:[];}};
+ const document={documentElement:{dataset:{}},querySelectorAll(selector){return selector==='.workspace > section'?sections:selector==='[data-tab]'?links:selector==='.workspace-more'?menus:selector==='[data-workspace-key="agents"]'?agentLinks:[];},getElementById(id){return id==='commandAgents'?{scrollIntoView(){agentScrollCount++;}}:null;}};
  globalThis.location=new URL('https://app.example.test/admin'+${JSON.stringify(search)});const historyCalls=[],handlers={};
  globalThis.history={pushState(state,title,path){historyCalls.push({state,path});globalThis.location=new URL(path,globalThis.location);}};
  globalThis.addEventListener=(name,callback)=>handlers[name]=callback;
@@ -93,4 +94,15 @@ test('modified clicks keep ordinary link behavior and invalid or duplicate tabs 
  const b=navigation('?tab=history&tab=products');assert.equal(b.run('document.documentElement.dataset.activePanel'),'overview');
  b.run("links.find(link=>link.dataset.tab==='products').onclick({ctrlKey:true,preventDefault(){throw Error('modified click must follow its href');}})");assert.equal(b.run('document.documentElement.dataset.activePanel'),'overview');assert.equal(b.run('syncs'),0);
  b.run("openTab('__proto__')");assert.equal(b.run('document.documentElement.dataset.activePanel'),'overview');assert.deepEqual(b.json('sections.filter(section=>!section.hidden).map(section=>section.id)'),['overview']);
+});
+
+test('opening Agents from another owner tab shows the overview before scrolling instead of targeting hidden content',()=>{
+ const browser=navigation('?tab=products');
+ assert.equal(browser.run("document.documentElement.dataset.activePanel"),'products');
+ assert.equal(browser.run("typeof agentLinks[0].onclick"),'function');
+ browser.run("agentLinks[0].onclick({button:0,preventDefault(){}})");
+ assert.equal(browser.run("document.documentElement.dataset.activePanel"),'overview');
+ assert.deepEqual(browser.json('sections.filter(section=>!section.hidden).map(section=>section.id)'),['overview']);
+ assert.equal(browser.run('agentScrollCount'),1);
+ assert.equal(browser.run('globalThis.location.search'),'?tab=overview');
 });
