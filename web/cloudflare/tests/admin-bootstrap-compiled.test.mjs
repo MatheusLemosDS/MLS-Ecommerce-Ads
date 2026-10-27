@@ -70,7 +70,7 @@ for(const minify of [false,true]){
    assert.equal(browser.run('startupController.getState().ready'),true,'database initialization must not hold the authenticated session gate');
    assert.equal(browser.run('state'),null,'pending settings must not invent a revision or values');
    assert.equal(browser.nodes.get('startupRetry').hidden,true);assert.equal(browser.nodes.get('message').textContent,'');
-   const monthly=browser.calls.filter(call=>call.url.startsWith('/api/admin/finance/business-month-view?month='));assert.equal(monthly.length,1);assert.equal(monthly[0].options.method,'GET');assert.equal(monthly[0].options.headers['X-Braza-Client-Contract'],'business-month-view-v3');assert.equal(monthly[0].options.headers['X-CSRF-Token'],undefined);
+   const monthly=browser.calls.filter(call=>call.url.startsWith('/api/admin/finance/business-month-view?month='));assert.equal(monthly.length,1);assert.equal(monthly[0].options.method,'GET');assert.equal(monthly[0].options.headers['X-Braza-Client-Contract'],'business-month-view-v4');assert.equal(monthly[0].options.headers['X-CSRF-Token'],undefined);
    assert.equal(browser.calls.filter(call=>call.url==='/api/admin/bootstrap').length,1);assert.equal(browser.calls.filter(call=>call.url==='/api/admin/state').length,1);assert.equal(browser.calls.some(call=>call.options.method!=='GET'),false,'loading the page must not submit financial, catalog or settings writes');
    const bootstrapCsrf=browser.run('csrf');assert.equal(bootstrapCsrf,saved.csrf);
    const settingsLoaded=browser.run('settingsPromise');assert.equal(typeof settingsLoaded?.then,'function');
