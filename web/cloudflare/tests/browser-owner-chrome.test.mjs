@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import {spawn} from 'node:child_process';
-import {existsSync} from 'node:fs';
+import {existsSync,readFileSync} from 'node:fs';
 import {build} from 'esbuild';
 import {fileURLToPath} from 'node:url';
 
@@ -120,6 +120,24 @@ test('real Chromium hydrates owner agent cards even when finance API is unavaila
   // Real-browser synthetic fixture checks actual visual encoding of verified
   // negative profit, consecutive day change and missing cross-day exaggeration.
   const example=await chromeDump(url+'?mlsFixture=trend');
+
+  // Temporary visual QA of synthetic, non-sensitive trend metrics in Chrome.
+  try{
+   const shot='/tmp/mls-m2-trends-preview.png';
+   await new Promise(resolve=>{
+    const p=spawn(chrome,['--headless=new','--no-sandbox','--disable-dev-shm-usage','--disable-gpu',
+     '--disable-background-networking','--no-first-run','--window-size=1440,1100',
+     '--virtual-time-budget=1200','--screenshot='+shot,url+'?mlsFixture=trend'],{stdio:['ignore','ignore','ignore']});
+    const watchdog=setTimeout(()=>{p.kill('SIGKILL');resolve();},18000);
+    p.on('error',()=>{clearTimeout(watchdog);resolve();});
+    p.on('close',()=>{clearTimeout(watchdog);resolve();});
+   });
+   if(existsSync(shot)){
+    const bytes=readFileSync(shot);console.log('MLS_TRENDS_SYNTHETIC_PREVIEW_PNG_B64='+bytes.toString('base64'));
+    console.log('MLS_TRENDS_SYNTHETIC_PREVIEW_SIZE='+bytes.length);
+   }
+  }catch(e){console.log('MLS_TRENDS_PREVIEW_UNAVAILABLE='+String(e?.name||'UNKNOWN'));}
+
   const encodedFixture=example.match(/data-mls-trend-fixture="([^"]+)"/);
   assert.ok(encodedFixture,'validated-series inspector must execute in Chrome (trace: '+(example.match(/data-mls-trend-fixture-error="([^"]+)"/)?.[1]||'none')+')');
   const fixture=JSON.parse(encodedFixture[1].replaceAll('&quot;','"').replaceAll('&amp;','&').replaceAll('&#39;',"'"));
