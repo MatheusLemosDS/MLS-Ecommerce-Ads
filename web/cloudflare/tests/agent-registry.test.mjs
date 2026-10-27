@@ -144,6 +144,22 @@ test('conflicting after-adjustment payout evidence blocks Auditor and Hermes ins
 });
 
 
+test('overdue and due-today owner expenses become MLS Finance attention without changing the month balance',()=>{
+ const expense_schedule={schema:'expense_schedule_v1',month:'2026-10',today:'2026-10-27',status:'AVAILABLE',mode:'CONFIRMED',open_count:4,open_cents:100000,overdue_count:2,overdue_cents:50000,due_today_count:1,due_today_cents:20000,due_next_7_days_count:1,due_next_7_days_cents:30000,next_due_date:'2026-10-27',next_due_count:1,next_due_cents:20000,upcoming:[],basis:'OWNER_DECLARED_DUE_DATES_NOT_BANK_SETTLEMENT'};
+ const value=buildMlsAgentRegistry({day:day(),month:month({expense_schedule}),now:1793080100}),finance=value.agents.find(agent=>agent.id==='finance');
+ assert.equal(value.health,'ATTENTION');assert.equal(finance.status,'ATTENTION');assert.equal(finance.metric,240000);
+ assert.ok(value.priorities.some(item=>item.code==='EXPENSES_OVERDUE'&&item.agent_id==='finance'));
+ assert.ok(value.priorities.some(item=>item.code==='EXPENSES_DUE_TODAY'&&item.agent_id==='finance'));
+ assert.equal(value.expenses.overdue_cents,50000);assert.equal(value.expenses.due_today_cents,20000);assert.equal(value.expenses.next_due_date,'2026-10-27');assert.match(value.expenses.basis,/NOT_BANK_SETTLEMENT/);
+ assert.match(finance.message,/2 conta\(s\) atrasada/);assert.notEqual(value.month.balance_cents,value.expenses.overdue_cents);
+});
+
+test('upcoming expenses are working state, while an unknown schedule never fabricates zero',()=>{
+ const schedule={schema:'expense_schedule_v1',month:'2026-10',today:'2026-10-27',status:'AVAILABLE',mode:'CONFIRMED',open_count:1,open_cents:30000,overdue_count:0,overdue_cents:0,due_today_count:0,due_today_cents:0,due_next_7_days_count:1,due_next_7_days_cents:30000,next_due_date:'2026-10-30',next_due_count:1,next_due_cents:30000,upcoming:[],basis:'OWNER_DECLARED_DUE_DATES_NOT_BANK_SETTLEMENT'};
+ const working=buildMlsAgentRegistry({day:day(),month:month({expense_schedule:schedule})});assert.equal(working.health,'WORKING');assert.equal(working.agents.find(agent=>agent.id==='finance').status,'WORKING');assert.ok(working.priorities.some(item=>item.code==='EXPENSES_DUE_SOON'));
+ const unknown=buildMlsAgentRegistry({day:day(),month:month({expense_schedule:null})});assert.equal(unknown.expenses.open_cents,null);assert.equal(unknown.expenses.overdue_count,null);assert.equal(unknown.expenses.next_due_date,null);
+});
+
 test('current Shopee Pending stays separate from the month balance and is exposed only as a secondary Finance metric',()=>{
  const incomeOverview={schema:'mls_income_overview_snapshot_v1',checked_at:1793080000,status:'AVAILABLE',pending_cents:32145,released_cents:99999,currency_basis:'FIXED_BRAZIL_SHOP_PROFILE',basis:'CURRENT_PROVIDER_INCOME_STATUS_NOT_BANK_RECEIPT_OR_HISTORICAL_MONTH'};
  const value=buildMlsAgentRegistry({day:day(),month:month(),incomeOverview,now:1793080100}),finance=value.agents.find(agent=>agent.id==='finance');
