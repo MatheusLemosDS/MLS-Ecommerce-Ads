@@ -137,3 +137,24 @@ test('Mission Control V2 decorative surfaces cannot invent financial history or 
  assert.doesNotMatch(MISSION_CLIENT,/\bfetch\s*\(|setInterval\s*\(|\/api\//);
  assert.match(MISSION_CSS,/data-theme=light/);
 });
+
+
+test('V3 compact dashboard retains all six real KPIs, six agent links, and historical chart anchor',()=>{
+ const html=commandCenterBody();
+ for(const id of ['commandCenterNet','commandCenterSales','commandCenterAds','commandCenterAlerts','commandCenterAgents'])assert.match(html,new RegExp('id="'+id+'"'));
+ for(const id of ['finance','ads','products','production','returns','auditor'])assert.match(html,new RegExp('href="/admin\\?tab=agent-'+id+'"'));
+ assert.match(MISSION_CSS,/V3 cockpit layout/);
+ assert.match(MISSION_CSS,/grid-template-columns:repeat\(6,minmax\(0,1fr\)\)/);
+ assert.match(MISSION_CSS,/\.mission-dashboard \.agent-card:focus-visible/);
+});
+test('V3 workspaces avoid redundant footer and section navigation while preserving meaningful tools',()=>{
+ const html=missionWorkspacesBody('<div id="preservedFinanceControl">Original</div>');
+ assert.doesNotMatch(html,/← Voltar à equipe de agentes/);
+ assert.doesNotMatch(html,/aria-label="Seções de MLS/);
+ for(const id of names){
+  assert.match(html,new RegExp('id="mission-'+id+'-tools"'));
+  assert.match(html,new RegExp('id="mission-'+id+'-tasks"'));
+ }
+ assert.match(html,/href="#businessMonth"/);
+ assert.equal((html.match(/id="preservedFinanceControl"/g)||[]).length,1);
+});
