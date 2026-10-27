@@ -86,6 +86,8 @@ export const TARGETS = Object.freeze({
     '617c00ff2d1ed14e76ceb61be920e30fae8b34b5cae0a8d5ce44e935be4ad0e9',
     // Mission Control V2 final styling with light theme contrast; compiled and Chrome-tested.
     '4d3f45e406e3c9f5cab6041ca9d2aa0fb7dc3e0598c16d8eeb40889fce841a8c',
+    // Reviewed M2 read-only 14-day charts, signed P&L and comparisons; real Chrome tested.
+    '52fd0ee0a058ccb30160b8c8d13d26eb5775b146dc5b100c49abf626021d5cc2',
   ]}),
   auth: Object.freeze({name: 'brazacommerce-auth', main: '../../dist/auth-worker.mjs', baselineHashes: [
     '45d0142709c5087e373cc4da146070ed39c472805f6f64c00f00b6555f0e1f56',
