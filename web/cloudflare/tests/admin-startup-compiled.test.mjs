@@ -172,5 +172,5 @@ test('compiled Admin inline scripts contain no raw HTML control characters that 
  assert.equal(scripts.length,11);
  const forbidden=/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/;
  for(const [index,script] of scripts.entries())assert.doesNotMatch(script,forbidden,'unsafe control byte inside inline script '+index);
- assert.ok(scripts.some(script=>script.includes(String.raw -)), 'regex escapes should survive the HTML tokenizer');
+ assert.ok(scripts.some(script=>script.includes('\\u0000-\\u001f')), 'regex escapes should survive the HTML tokenizer');
 });
