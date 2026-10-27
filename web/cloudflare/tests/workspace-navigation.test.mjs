@@ -8,15 +8,15 @@ import {enhanceAdsPageHtml} from '../src/ads-presentation.mjs';
 
 const primary=html=>html.match(/<nav class="workspace-nav[^"]*"[^>]*>([\s\S]*?)<\/nav>/)?.[1]||'';
 const destinations=html=>[...html.matchAll(/href="([^"]*)"/g)].map(match=>match[1]);
-const owner=['/admin?tab=overview','/admin?tab=products','/admin?tab=production','/dashboard','/admin?tab=margins','/optimization'];
+const owner=['/admin?tab=overview','/admin?tab=overview#commandAgents','/admin?tab=products','/admin?tab=production','/dashboard','/optimization'];
 
 test('owner has the same six main destinations and ordering on Admin, Ads, desktop and mobile',()=>{
- for(const active of ['overview','products','production','/dashboard','margins','/optimization']){
+ for(const active of ['overview','agents','products','production','/dashboard','/optimization']){
   for(const mobile of [false,true]){
    const html=workspaceNavigation(active,{role:'owner',mobile});
    assert.deepEqual(destinations(primary(html)),owner);
    assert.equal((primary(html).match(/aria-current="page"/g)||[]).length,1);
-   for(const tab of ['overview','products','production','margins'])assert.match(html,new RegExp('data-tab="'+tab+'" data-workspace-tab="'+tab+'"'));
+   for(const tab of ['overview','products','production'])assert.match(html,new RegExp('data-tab="'+tab+'" data-workspace-tab="'+tab+'"'));
   }
  }
  assert.deepEqual(destinations(primary(shellDesktopNavigation('/dashboard',{role:'owner'}))),owner);
@@ -26,7 +26,7 @@ test('owner has the same six main destinations and ordering on Admin, Ads, deskt
 test('secondary work stays grouped without automatically opening a mobile overlay',()=>{
  const html=workspaceNavigation('/campaigns',{role:'owner'}),secondary=workspaceSecondaryNavigation('hermes',{role:'owner'});
  assert.ok(!destinations(primary(html)).includes('/campaigns'));
- for(const route of ['#commandAgents','/campaigns','/admin?tab=hermes','/integrations','/admin?tab=history','/admin?tab=roadmap'])assert.ok(destinations(html).includes(route),route);
+ for(const route of ['/admin?tab=overview#commandAgents','/admin?tab=margins','/campaigns','/admin?tab=hermes','/integrations','/admin?tab=history','/admin?tab=roadmap'])assert.ok(destinations(html).includes(route),route);
  assert.equal((html.match(/aria-current="page"/g)||[]).length,1);
  assert.match(secondary,/<details class="workspace-more" data-active="true">/);
  assert.doesNotMatch(secondary,/<details[^>]*\bopen(?:\s|>)/);
@@ -70,4 +70,14 @@ test('every restricted Ads route and presentation omits financial navigation whi
  const presentation=enhanceAdsPageHtml('<html><head></head><body><main class="main"><div class="top"><div><h1>Advertising</h1></div><div class="system">System Online</div></div></main></body></html>');
  assert.doesNotMatch(presentation,/<a[^>]*href="\/admin/);
  assert.doesNotMatch(presentation,/class="ads-source-banner"/);
+});
+
+test('agent destination is always visible on mobile and uses an overview route rather than a hidden hash-only tab',()=>{
+ const mobile=workspaceNavigation('overview',{role:'owner',mobile:true});
+ const desktop=workspaceNavigation('overview',{role:'owner'});
+ assert.match(primary(mobile),/data-workspace-key="agents"/);
+ assert.match(primary(desktop),/data-workspace-key="agents"/);
+ assert.match(primary(mobile),/href="\/admin\?tab=overview#commandAgents"/);
+ assert.doesNotMatch(primary(mobile),/data-tab="agents"/);
+ assert.doesNotMatch(workspaceSecondaryNavigation('overview'),/data-workspace-key="agents"/);
 });
