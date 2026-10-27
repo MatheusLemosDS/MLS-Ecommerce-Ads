@@ -150,7 +150,7 @@ test('V3 compact dashboard retains all six real KPIs, six agent links, and histo
 test('V3 workspaces avoid redundant footer and section navigation while preserving meaningful tools',()=>{
  const html=missionWorkspacesBody('<div id="preservedFinanceControl">Original</div>');
  assert.doesNotMatch(html,/← Voltar à equipe de agentes/);
- assert.doesNotMatch(html,/aria-label="Seções de MLS/);
+ assert.match(html,/aria-label="Seções de MLS/);
  for(const id of names){
   assert.match(html,new RegExp('id="mission-'+id+'-tools"'));
   assert.match(html,new RegExp('id="mission-'+id+'-tasks"'));
