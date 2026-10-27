@@ -90,6 +90,8 @@ export const TARGETS = Object.freeze({
     '52fd0ee0a058ccb30160b8c8d13d26eb5775b146dc5b100c49abf626021d5cc2',
     // Reviewed final signed-trend UI with accurate partial-cost labels, horizontal controls and validated Chrome SVG.
     '44fd6b79785a9eeeaf76e92eae177c86a8d03884233d70635f9e7182cad8d71a',
+    // V3 UI-only candidate bundle from Actions 40604512748: approval requires green full CI and browser review before merge.
+    '525c277c5057d794e586b3c8b6098dbdd2e87b08a58d1e34d07b3a8721a80e8e',
   ]}),
   auth: Object.freeze({name: 'brazacommerce-auth', main: '../../dist/auth-worker.mjs', baselineHashes: [
     '45d0142709c5087e373cc4da146070ed39c472805f6f64c00f00b6555f0e1f56',
