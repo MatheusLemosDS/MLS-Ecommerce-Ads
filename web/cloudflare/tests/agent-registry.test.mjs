@@ -45,6 +45,19 @@ const reconciliation=(payouts=[])=>({
  reviews:[],
  money:[{run_id:'11111111-1111-4111-8111-111111111111',source_revision:1,money:{payouts}}]
 });
+const expenseSchedule=(overrides={})=>({
+ schema:'mls_expense_schedule_snapshot_v1',
+ checked_at:1793080000,
+ today:'2026-10-27',
+ open:{count:3,cents:90000},
+ overdue:{count:1,cents:30000},
+ due_today:{count:1,cents:20000},
+ due_next_7_days:{count:1,cents:40000},
+ next_due:{date:'2026-10-27',count:1,cents:20000},
+ scheduled_months:2,
+ has_unallocated_due_dates:false,
+ ...overrides
+});
 
 
 test('healthy snapshots create one observer registry with the executive day metrics and no invented actions',()=>{
@@ -118,7 +131,7 @@ test('command center is read-only, renders the initial agent surfaces and adds n
  assert.doesNotMatch(AGENT_REGISTRY_CLIENT,/\bfetch\s*\(|setInterval\s*\(|\/api\//);
  assert.match(AGENT_REGISTRY_CLIENT,/MutationObserver/);
  assert.match(AGENT_REGISTRY_CLIENT,/brazaDayDashboard/);
- assert.match(AGENT_REGISTRY_CLIENT,/brazaMonthDashboard/);assert.match(AGENT_REGISTRY_CLIENT,/brazaReconciliation/);assert.match(AGENT_REGISTRY_CLIENT,/brazaEscrowReleases/);assert.match(AGENT_REGISTRY_CLIENT,/brazaIncomeOverview/);
+ assert.match(AGENT_REGISTRY_CLIENT,/brazaMonthDashboard/);assert.match(AGENT_REGISTRY_CLIENT,/brazaReconciliation/);assert.match(AGENT_REGISTRY_CLIENT,/brazaEscrowReleases/);assert.match(AGENT_REGISTRY_CLIENT,/brazaIncomeOverview/);assert.match(AGENT_REGISTRY_CLIENT,/brazaExpenseSchedule/);
 });
 
 test('release matching becomes Finance work without calling an unlocated order unpaid or received',()=>{
@@ -155,4 +168,20 @@ test('current Shopee Pending stays separate from the month balance and is expose
 test('missing current income never becomes zero or changes the Finance month result',()=>{
  const value=buildMlsAgentRegistry({day:day(),month:month(),incomeOverview:{schema:'mls_income_overview_snapshot_v1',checked_at:1793080000,status:'AVAILABLE',pending_cents:null,released_cents:null,currency_basis:'FIXED_BRAZIL_SHOP_PROFILE',basis:'CURRENT_PROVIDER_INCOME_STATUS_NOT_BANK_RECEIPT_OR_HISTORICAL_MONTH'}});
  const finance=value.agents.find(agent=>agent.id==='finance');assert.equal(finance.metric,240000);assert.equal(finance.secondary_metric,null);assert.equal(value.income.current_pending_cents,null);
+});
+
+
+test('overdue and due-today expenses become Finance priorities without changing the monthly result',()=>{
+ const value=buildMlsAgentRegistry({day:day(),month:month(),expenseSchedule:expenseSchedule(),now:1793080100}),finance=value.agents.find(agent=>agent.id==='finance');
+ assert.equal(value.month.balance_cents,240000);assert.equal(value.expense_schedule.overdue_count,1);assert.equal(value.expense_schedule.overdue_cents,30000);assert.equal(value.expense_schedule.due_today_count,1);assert.equal(value.expense_schedule.next_due_date,'2026-10-27');
+ assert.ok(value.priorities.some(item=>item.code==='EXPENSES_OVERDUE'&&item.agent_id==='finance'&&item.severity==='ATTENTION'));
+ assert.ok(value.priorities.some(item=>item.code==='EXPENSES_DUE_TODAY'&&item.agent_id==='finance'&&item.severity==='ATTENTION'));
+ assert.equal(finance.status,'ATTENTION');assert.match(finance.message,/1 conta\(s\) atrasada/);
+});
+
+test('next payment appears in Finance context without creating a warning when nothing is overdue or due today',()=>{
+ const schedule=expenseSchedule({overdue:{count:0,cents:0},due_today:{count:0,cents:0},next_due:{date:'2026-10-29',count:2,cents:40000}});
+ const value=buildMlsAgentRegistry({day:day(),month:month(),expenseSchedule:schedule,now:1793080100}),finance=value.agents.find(agent=>agent.id==='finance');
+ assert.equal(finance.status,'HEALTHY');assert.match(finance.message,/Próximo vencimento cadastrado: 2026-10-29/);assert.equal(value.expense_schedule.next_due_count,2);assert.equal(value.expense_schedule.next_due_cents,40000);
+ assert.ok(!value.priorities.some(item=>item.code.startsWith('EXPENSES_')));
 });

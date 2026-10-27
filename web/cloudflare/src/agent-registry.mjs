@@ -1,4 +1,4 @@
-export function buildMlsAgentRegistry({day=null,month=null,reconciliation=null,releases=null,incomeOverview=null,now=null}={}){
+export function buildMlsAgentRegistry({day=null,month=null,reconciliation=null,releases=null,incomeOverview=null,expenseSchedule=null,now=null}={}){
  const safe=value=>Number.isSafeInteger(value)&&!Object.is(value,-0);
  const money=value=>safe(value)?value:null;
  const list=value=>Array.isArray(value)?value.filter(item=>typeof item==='string'&&item.length<=80):[];
@@ -54,6 +54,9 @@ export function buildMlsAgentRegistry({day=null,month=null,reconciliation=null,r
  }
  const monthBalance=money(month?.balance_cents);
  const currentPending=incomeOverview?.status&&money(incomeOverview?.pending_cents),incomeCheckedAt=safe(incomeOverview?.checked_at)?incomeOverview.checked_at:null;
+ const scheduleValid=expenseSchedule&&typeof expenseSchedule==='object',overdueCount=safe(expenseSchedule?.overdue?.count)?expenseSchedule.overdue.count:0,overdueCents=money(expenseSchedule?.overdue?.cents),dueTodayCount=safe(expenseSchedule?.due_today?.count)?expenseSchedule.due_today.count:0,dueTodayCents=money(expenseSchedule?.due_today?.cents),dueNextCount=safe(expenseSchedule?.due_next_7_days?.count)?expenseSchedule.due_next_7_days.count:0,dueNextCents=money(expenseSchedule?.due_next_7_days?.cents),nextDue=expenseSchedule?.next_due&&typeof expenseSchedule.next_due==='object'?expenseSchedule.next_due:null;
+ if(scheduleValid&&overdueCount>0)priorities.push(Object.freeze({code:'EXPENSES_OVERDUE',severity:'ATTENTION',title:'Contas atrasadas',detail:overdueCount+' conta(s) cadastrada(s) passaram do vencimento e seguem em aberto.',href:'#businessMonthExpensesDetails',agent_id:'finance'}));
+ if(scheduleValid&&dueTodayCount>0)priorities.push(Object.freeze({code:'EXPENSES_DUE_TODAY',severity:'ATTENTION',title:'Contas vencem hoje',detail:dueTodayCount+' conta(s) cadastrada(s) vencem hoje e seguem em aberto.',href:'#businessMonthExpensesDetails',agent_id:'finance'}));
  const coverage=month?.production_coverage&&typeof month.production_coverage==='object'?month.production_coverage:null;
  const knownUnits=safe(coverage?.known_units)&&coverage.known_units>=0?coverage.known_units:null,totalUnits=safe(coverage?.total_units)&&coverage.total_units>=0?coverage.total_units:null;
  const returns=safe(month?.coverage?.returns)&&month.coverage.returns>=0?month.coverage.returns:0;
@@ -65,7 +68,7 @@ export function buildMlsAgentRegistry({day=null,month=null,reconciliation=null,r
  const attention=priorities.some(item=>item.severity==='ATTENTION');
  const overall=blocked?'BLOCKED':attention?'ATTENTION':working?'WORKING':month?'HEALTHY':'WORKING';
  const agent=(id,name,area,status,message,href,metric=null,metric_kind=null,secondary_metric=null,secondary_metric_kind=null,secondary_metric_label=null)=>Object.freeze({id,name,area,mode:'OBSERVER',status,message,href,metric,metric_kind,secondary_metric,secondary_metric_kind,secondary_metric_label,last_checked_at:safe(month?.checked_at)?month.checked_at:null});
- const financeAttention=['PAYMENT_INCOMPLETE','TAX_POLICY_REQUIRED','INVOICE_TAX_UNAVAILABLE','EXTERNAL_EXPENSES_REQUIRED','ADJUSTMENT_UNAVAILABLE','ADJUSTMENTS_PENDING','ADJUSTMENT_CONFLICT','FINANCIAL_SOURCE_STALE','SOURCE_UNAVAILABLE','RELEASE_IDENTITY_AMBIGUOUS','RELEASE_AMOUNT_UNVERIFIED','FINANCIAL_EVIDENCE_MISSING'].some(has);
+ const financeAttention=['PAYMENT_INCOMPLETE','TAX_POLICY_REQUIRED','INVOICE_TAX_UNAVAILABLE','EXTERNAL_EXPENSES_REQUIRED','ADJUSTMENT_UNAVAILABLE','ADJUSTMENTS_PENDING','ADJUSTMENT_CONFLICT','FINANCIAL_SOURCE_STALE','SOURCE_UNAVAILABLE','RELEASE_IDENTITY_AMBIGUOUS','RELEASE_AMOUNT_UNVERIFIED','FINANCIAL_EVIDENCE_MISSING'].some(has)||overdueCount>0||dueTodayCount>0;
  const adsAttention=['ADS_UNAVAILABLE','ADS_SOURCE_STALE','RECHARGE_TREATMENT_REQUIRED','ADJUSTMENT_UNAVAILABLE','ADJUSTMENT_CONFLICT'].some(has);
  const productAttention=has('PRODUCTION_COST_INCOMPLETE');
  const returnAttention=has('RETURNS_NOT_RECONCILED')||has('STATUS_REVIEW_REQUIRED')||returns+returnsUnknown+reviews>0;
@@ -79,7 +82,7 @@ export function buildMlsAgentRegistry({day=null,month=null,reconciliation=null,r
  const returnsStatus=month?returnAttention?'ATTENTION':collectionWorking?'WORKING':'HEALTHY':'WORKING';
  const auditorStatus=auditBlocked?'BLOCKED':auditAttention?'ATTENTION':collectionWorking?'WORKING':month?'HEALTHY':'WORKING';
  const agents=[
-  agent('finance','MLS Finance','Financeiro',financeStatus,releaseSummary?(releaseSummary.verified_orders+' liberação(ões) conferida(s); '+releaseSummary.not_located_orders+' pedido(s) sem liberação localizada neste calendário.'):(monthBalance!==null?'Resultado mensal estimado disponível para acompanhamento.':financeAttention?'O fechamento financeiro ainda depende de conferências.':'Aguardando o resumo financeiro validado.'),'#businessEscrowReleases',monthBalance,'money',currentPending,'money',currentPending!==null?'Pendente atual na Shopee':null),
+  agent('finance','MLS Finance','Financeiro',financeStatus,overdueCount>0?overdueCount+' conta(s) atrasada(s).'+(nextDue?.date?' Próximo vencimento em '+nextDue.date+'.':''):dueTodayCount>0?dueTodayCount+' conta(s) vencem hoje.':nextDue?.date?'Próximo vencimento cadastrado: '+nextDue.date+' ('+nextDue.count+' conta(s)).':releaseSummary?(releaseSummary.verified_orders+' liberação(ões) conferida(s); '+releaseSummary.not_located_orders+' pedido(s) sem liberação localizada neste calendário.'):(monthBalance!==null?'Resultado mensal estimado disponível para acompanhamento.':financeAttention?'O fechamento financeiro ainda depende de conferências.':'Aguardando o resumo financeiro validado.'),'#businessMonthExpensesDetails',monthBalance,'money',currentPending,'money',currentPending!==null?'Pendente atual na Shopee':null),
   agent('ads','MLS Ads','Anúncios',adsStatus,dailyAds!==null?'Investimento do dia acompanha a mesma leitura usada no resultado.':adsAttention?'A leitura de anúncios requer atenção.':'Aguardando o gasto diário validado.','/dashboard',dailyAds,'money'),
   agent('products','MLS Products','Produtos',productStatus,productAttention?'Existem unidades vendidas sem custo confirmado.':month?'Custos dos itens vendidos não apresentam bloqueio de cobertura.':'Aguardando o catálogo financeiro do mês.','/admin?tab=products',totalUnits,'units'),
   agent('production','MLS Production','Produção',productionStatus,knownUnits!==null&&totalUnits!==null?knownUnits+' de '+totalUnits+' unidade(s) com custo conhecido.':'Aguardando a cobertura de custos da produção.','/admin?tab=production',knownUnits,'units'),
@@ -116,6 +119,7 @@ export function buildMlsAgentRegistry({day=null,month=null,reconciliation=null,r
    evidence_conflicts:settlementConflicts
   }),
   income:Object.freeze({current_pending_cents:currentPending,checked_at:incomeCheckedAt,status:typeof incomeOverview?.status==='string'?incomeOverview.status:null,basis:incomeOverview?.basis==='CURRENT_PROVIDER_INCOME_STATUS_NOT_BANK_RECEIPT_OR_HISTORICAL_MONTH'?incomeOverview.basis:null}),
+  expense_schedule:Object.freeze({overdue_count:overdueCount,overdue_cents:overdueCents,due_today_count:dueTodayCount,due_today_cents:dueTodayCents,due_next_7_days_count:dueNextCount,due_next_7_days_cents:dueNextCents,next_due_date:typeof nextDue?.date==='string'?nextDue.date:null,next_due_count:safe(nextDue?.count)?nextDue.count:null,next_due_cents:money(nextDue?.cents),checked_at:safe(expenseSchedule?.checked_at)?expenseSchedule.checked_at:null}),
   priorities:Object.freeze(priorities.slice(0,8)),
   hermes,
   agents:Object.freeze(agents)
