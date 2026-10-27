@@ -8,7 +8,7 @@ const sample=()=>`<!doctype html><html lang="en"><head><title>Advertising Dashbo
 test('Ads presentation localizes UI and branding while preserving provider values and executable blocks',()=>{
  const result=enhanceAdsPageHtml(sample());
  assert.match(result,/<html lang="pt-BR">/);
- assert.match(result,/<title>Painel de anúncios · BrazaCommerce<\/title>/);
+ assert.match(result,/<title>Painel de anúncios · MLS Commerce OS<\/title>/);
  assert.match(result,/<h1>Painel de anúncios<\/h1>/);
  assert.match(result,/<div class="label">Investimento em anúncios<\/div>/);
  assert.match(result,/<th>Pedidos atribuídos<\/th>/);
