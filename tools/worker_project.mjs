@@ -92,6 +92,8 @@ export const TARGETS = Object.freeze({
     '44fd6b79785a9eeeaf76e92eae177c86a8d03884233d70635f9e7182cad8d71a',
     // V3 UI-only candidate bundle from Actions 40604512748: approval requires green full CI and browser review before merge.
     '525c277c5057d794e586b3c8b6098dbdd2e87b08a58d1e34d07b3a8721a80e8e',
+    // V3 compact screenshot refinement, exact App build from GH Actions #218; CI gate required.
+    '273dd2a046c5fe1d42efa65fd7642f0603cb3a6631b219753e3d4af442065593',
   ]}),
   auth: Object.freeze({name: 'brazacommerce-auth', main: '../../dist/auth-worker.mjs', baselineHashes: [
     '45d0142709c5087e373cc4da146070ed39c472805f6f64c00f00b6555f0e1f56',
