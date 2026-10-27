@@ -287,14 +287,15 @@ export function createFinanceWorker({adapter, paymentSample, paymentPreview, var
         if(request.method!=='POST')return failure('METHOD_NOT_ALLOWED',405);
         if(url.search)return failure('INVALID_REQUEST',400);
         const routerError=await trustedRouter(request,env);if(routerError)return failure(routerError,routerError==='FORBIDDEN'?403:503);
-        if(env?.FINANCE_CONNECTION_ENABLED!=='true'||typeof escrowReleases!=='function'||typeof fetchImpl!=='function'||typeof now!=='function')return failure('CONFIGURATION_PENDING',503);
         const releaseContract=request.headers.get('x-braza-release-contract');if(releaseContract!==null&&!['release-orders-v1','release-coverage-v1'].includes(releaseContract))return failure('INVALID_REQUEST',400);
+        if(env?.FINANCE_CONNECTION_ENABLED!=='true'||typeof now!=='function')return failure('CONFIGURATION_PENDING',503);
         if(releaseContract==='release-coverage-v1'){
-          if(typeof escrowReleaseCoverage!=='function'||typeof now!=='function')return failure('CONFIGURATION_PENDING',503);
+          if(typeof escrowReleaseCoverage!=='function')return failure('CONFIGURATION_PENDING',503);
           const input=await privateFinanceBody(request,false,false,false,false,false,false,false,false,true);if(!input)return failure('INVALID_REQUEST',400);
           try{const frame=projectEscrowReleaseCoverageFrame(await escrowReleaseCoverage(env,{...input,now}));if(!frame||!escrowReleaseCoverageRequestMatches(input,frame))throw Error();return response(frame,200,{json:true});}
           catch{return response({error:'FINANCE_ESCROW_RELEASES_UNAVAILABLE'},502,{json:true});}
         }
+        if(typeof escrowReleases!=='function'||typeof fetchImpl!=='function')return failure('CONFIGURATION_PENDING',503);
         const input=await privateFinanceBody(request,false,false,false,false,false,false,false,true);if(!input)return failure('INVALID_REQUEST',400);
         try{const raw=await escrowReleases(env,{...input,fetchImpl,now,...(releaseContract==='release-orders-v1'?{includeOrders:true}:{})}),evidence=projectEscrowReleaseEvidenceFrame(raw,projectEscrowReleaseFrame),frame=evidence?.report??projectEscrowReleaseFrame(raw);if(!frame||!escrowReleaseRequestMatches(input,frame))throw Error();return response(releaseContract==='release-orders-v1'&&evidence?evidence:frame,200,{json:true});}
         catch{return response({error:'FINANCE_ESCROW_RELEASES_UNAVAILABLE'},502,{json:true});}
