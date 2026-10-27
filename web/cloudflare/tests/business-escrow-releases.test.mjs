@@ -3,9 +3,9 @@ import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import {D1} from './sqlite-d1.mjs';
 import {BUSINESS_MONTH_PUBLICATION_SCHEMA,saveCompletedBusinessMonth} from '../src/business-month-publication.mjs';
-import {BUSINESS_ESCROW_RELEASES_SCHEMA,BusinessEscrowReleasesError,projectBusinessEscrowReleases,readBusinessEscrowReleases,runBusinessEscrowReleases} from '../src/business-escrow-releases.mjs';
+import {BUSINESS_ESCROW_RELEASES_SCHEMA,BusinessEscrowReleasesError,projectBusinessEscrowReleases,projectBusinessEscrowReleaseEvidence,readBusinessEscrowReleases,readBusinessEscrowReleaseEvidence,runBusinessEscrowReleases} from '../src/business-escrow-releases.mjs';
 import {projectBusinessPeriodFrame} from '../../finance/src/business-period-frame.mjs';
-import {projectEscrowReleaseFrame} from '../../finance/src/escrow-release-frame.mjs';
+import {projectEscrowReleaseFrame,projectEscrowReleaseEvidenceFrame} from '../../finance/src/escrow-release-frame.mjs';
 const month='2026-10',at=Date.UTC(2026,9,25,15),stamp=at/1000,monthFrom=Date.UTC(2026,9,1,3)/1000,uuid=index=>'11111111-1111-4111-8111-'+String(index).padStart(12,'0');
 function sourceFrame(index,offset=0){
  const start_date=month+'-'+String(index*15+1).padStart(2,'0'),end_date=month+'-'+String(Math.min(25,index*15+15)).padStart(2,'0');
@@ -16,6 +16,11 @@ function report(frames,checked=stamp){
  const value={schema:'finance_escrow_releases_v1',month,checked_at:checked,status:'CHECKED',sources:frames.map(frame=>({run_id:frame.run_id,source_revision:frame.revision,start_date:frame.start_date,end_date:frame.end_date,status:'AVAILABLE',orders:frame.coverage.orders,paid_orders:frame.coverage.paid,finance_oldest_at:frame.source_checked_at.oldest_at,finance_latest_at:frame.source_checked_at.latest_at,expected_repass_cents:8000})),calendar:{scan_id:uuid(80),status:'COMPLETE',from_at:monthFrom,end_before_at:cutoff,cutoff_at:cutoff,source_oldest_at:stamp-10,source_latest_at:stamp-2,observations:count,unique_orders:count,ambiguous_orders:0,verified_orders:count,unverified_orders:0,known_verified_release_cents:count*8100,total_release_cents:count*8100},collection:{scan_id:uuid(80),status:'COMPLETE',cutoff_at:cutoff,windows_total:windows,windows_complete:windows,pages_read:windows,observations:count,next_attempt_at:0,diagnostic:null},matching:{status:'AVAILABLE',paid_orders:count,located_paid_orders:count,unlocated_paid_orders:0,ambiguous_paid_orders:0,verified_paid_orders:count,known_expected_located_cents:count*8000,expected_located_cents:count*8000,known_verified_release_cents:count*8100,verified_release_cents:count*8100,comparison_difference_cents:count*100,outside_cohort_orders:0},pending:['BANK_RECEIPT_NOT_VERIFIED'],basis:'RELEASE_CALENDAR_AND_ORDER_CREATE_COHORT_NOT_BANK_RECEIPT'};
  if(!count){value.status='PARTIAL';value.calendar={...value.calendar,observations:2,unique_orders:2,verified_orders:0,unverified_orders:2,known_verified_release_cents:0,total_release_cents:null};value.collection.observations=2;value.matching={...value.matching,status:'SOURCE_MISSING',paid_orders:null,unlocated_paid_orders:null,expected_located_cents:null,verified_release_cents:null,comparison_difference_cents:null,outside_cohort_orders:null};value.pending=['SOURCE_MISSING','MATCHING_INCOMPLETE','RELEASE_AMOUNT_UNVERIFIED','BANK_RECEIPT_NOT_VERIFIED'];}
  assert.ok(projectEscrowReleaseFrame(value));return value;
+}
+function reportEvidence(frames,checked=stamp){
+ const legacy=report(frames,checked),rows=frames.map((frame,index)=>({order_hash:(index?'b':'a').repeat(64),state:'VERIFIED',reference_count:1,release_time:checked-120-index,financial_checked_at:frame.source_checked_at.latest_at,release_checked_at:checked-2,base_repass_cents:8000,adjustment_cents:100,after_adjustment_repass_cents:8100,release_cents:8100,comparison_basis:'AFTER_ADJUSTMENT',difference_from_base_cents:100}));
+ const orders={schema:'finance_escrow_release_orders_v1',summary:{known_paid_orders:frames.length,located_orders:frames.length,ambiguous_orders:0,verified_orders:frames.length,unverified_orders:0,not_located_orders:0,adjusted_orders:frames.length,after_adjustment_known_orders:frames.length,known_after_adjustment_cents:frames.length*8100,not_located_after_adjustment_known_orders:0,known_not_located_after_adjustment_cents:0},rows,truncation:{truncated:false,orders_total:frames.length,orders_included:frames.length},basis:'PAID_ORDER_COHORT_RELEASE_MATCHING_NOT_BANK_RECEIPT'};
+ const value={schema:'finance_escrow_releases_v2',report:legacy,orders};assert.ok(projectEscrowReleaseEvidenceFrame(value,projectEscrowReleaseFrame));return value;
 }
 class ObservedD1 extends D1{
  constructor(){super();this.beforeClaim=null;}
@@ -41,6 +46,15 @@ test('one scheduler request binds the published source identity, money and origi
  const work=await runBusinessEscrowReleases(f.env,async(_,input)=>{calls.push(input);return report(f.frames);},{month},{now:f.now});assert.equal(work.source_reads,1);assert.equal(work.repeat,false);assert.deepEqual(calls,[{operation:'step',month,sources:f.frames.map(frame=>({run_id:frame.run_id,source_revision:frame.revision}))}]);
  const value=await readBusinessEscrowReleases(f.env,{month},{now:f.now});assert.equal(value.status,'CHECKED');assert.equal(value.cohort.publication_revision,10);assert.equal(value.cohort.end_date,'2026-10-25');assert.equal(value.report.calendar.cutoff_at,stamp-60);assert.equal(value.report.sources[0].finance_oldest_at,stamp-1);assert.equal(value.report.matching.comparison_difference_cents,200);assert.equal(value.attempt.next_attempt_at,stamp+900);assert.deepEqual(f.db.db.prepare('SELECT * FROM business_month_publications').get(),publication);assert.ok(!Object.hasOwn(value.report,'net_profit_cents'));
  assert.equal((await runBusinessEscrowReleases(f.env,async()=>{throw Error('not due');},{month},{now:f.now})).source_reads,0);
+});
+
+test('opt-in business evidence reuses the same cached payload and exposes per-order release details without changing legacy reads',async t=>{
+ const f=await fixture(t),source=reportEvidence(f.frames),before=stored(f);const work=await runBusinessEscrowReleases(f.env,async()=>source,{month},{now:f.now});assert.equal(work.status,'CHECKED');assert.equal(work.source_reads,1);
+ const after=stored(f);assert.equal(after.reports.length,before.reports.length+1);assert.equal(after.attempts.length,before.attempts.length+1);
+ const legacy=await readBusinessEscrowReleases(f.env,{month},{now:f.now});assert.equal(legacy.schema,'business_escrow_releases_v1');assert.equal(Object.hasOwn(legacy,'orders'),false);
+ const evidence=await readBusinessEscrowReleaseEvidence(f.env,{month},{now:f.now});assert.equal(evidence.schema,'business_escrow_releases_v2');assert.equal(evidence.orders.rows.length,2);assert.equal(evidence.orders.summary.adjusted_orders,2);assert.equal(evidence.orders.rows[0].after_adjustment_repass_cents,8100);
+ assert.ok(projectBusinessEscrowReleaseEvidence(evidence,{projectBusiness:projectBusinessEscrowReleases,projectFrame:projectEscrowReleaseFrame,projectEvidenceFrame:projectEscrowReleaseEvidenceFrame}));assert.doesNotMatch(JSON.stringify(evidence),/order_sn|payout_raw/);
+ assert.deepEqual(stored(f),after,'owner evidence reads keep the same two D1 queries and never rewrite cache rows');
 });
 
 test('provider failure retains a validated report and its original observation dates without exporting unknown provider errors',async t=>{
