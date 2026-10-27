@@ -16,12 +16,14 @@ function observation({month='2026-10',release=12000,revision=2,partial=false,amb
  assert.ok(projectEscrowReleaseFrame(report),'valid release fixture');assert.ok(projectBusinessEscrowReleases(value,projectEscrowReleaseFrame),'valid owner fixture');return value;
 }
 function evidenceObservation(){
- const legacy=observation({release:12000}),hashA='a'.repeat(64),hashB='b'.repeat(64);
- const orders={schema:'finance_escrow_release_orders_v1',summary:{known_paid_orders:2,located_orders:1,ambiguous_orders:0,verified_orders:1,unverified_orders:0,not_located_orders:1,adjusted_orders:1,after_adjustment_known_orders:2,known_after_adjustment_cents:10000,not_located_after_adjustment_known_orders:1,known_not_located_after_adjustment_cents:4000},rows:[
+ const legacy=observation({release:12000}),hashA='a'.repeat(64),hashB='b'.repeat(64),report=legacy.report;
+ report.status='PARTIAL';Object.assign(report.calendar,{observations:1,unique_orders:1,verified_orders:1,unverified_orders:0,known_verified_release_cents:6000,total_release_cents:6000});report.collection.observations=1;
+ Object.assign(report.matching,{paid_orders:2,located_paid_orders:1,unlocated_paid_orders:1,ambiguous_paid_orders:0,verified_paid_orders:1,known_expected_located_cents:5000,expected_located_cents:5000,known_verified_release_cents:6000,verified_release_cents:6000,comparison_difference_cents:1000,outside_cohort_orders:0});report.pending=['MATCHING_INCOMPLETE','BANK_RECEIPT_NOT_VERIFIED'];legacy.status='PARTIAL';
+ const orders={schema:'finance_escrow_release_orders_v1',summary:{known_paid_orders:2,located_orders:1,ambiguous_orders:0,verified_orders:1,unverified_orders:0,not_located_orders:1,adjusted_orders:1,after_adjustment_known_orders:2,known_after_adjustment_cents:11000,not_located_after_adjustment_known_orders:1,known_not_located_after_adjustment_cents:5000},rows:[
   {order_hash:hashA,state:'VERIFIED',reference_count:1,release_time:stamp-600,financial_checked_at:stamp-1400,release_checked_at:stamp-400,base_repass_cents:5000,adjustment_cents:1000,after_adjustment_repass_cents:6000,release_cents:6000,comparison_basis:'AFTER_ADJUSTMENT',difference_from_base_cents:1000},
-  {order_hash:hashB,state:'NOT_LOCATED',reference_count:0,release_time:null,financial_checked_at:stamp-1400,release_checked_at:null,base_repass_cents:4000,adjustment_cents:0,after_adjustment_repass_cents:4000,release_cents:null,comparison_basis:null,difference_from_base_cents:null}
+  {order_hash:hashB,state:'NOT_LOCATED',reference_count:0,release_time:null,financial_checked_at:stamp-1400,release_checked_at:null,base_repass_cents:5000,adjustment_cents:0,after_adjustment_repass_cents:5000,release_cents:null,comparison_basis:null,difference_from_base_cents:null}
  ],truncation:{truncated:false,orders_total:2,orders_included:2},basis:'PAID_ORDER_COHORT_RELEASE_MATCHING_NOT_BANK_RECEIPT'};
- const finance={schema:'finance_escrow_releases_v2',report:legacy.report,orders};assert.ok(projectEscrowReleaseEvidenceFrame(finance,projectEscrowReleaseFrame));
+ const finance={schema:'finance_escrow_releases_v2',report,orders};assert.ok(projectEscrowReleaseEvidenceFrame(finance,projectEscrowReleaseFrame));
  const value={schema:'business_escrow_releases_v2',report:legacy,orders};assert.ok(projectBusinessEscrowReleaseEvidence(value,{projectBusiness:projectBusinessEscrowReleases,projectFrame:projectEscrowReleaseFrame,projectEvidenceFrame:projectEscrowReleaseEvidenceFrame}));return value;
 }
 function auditScope(value){const cohort=value.cohort;return cohort===null?null:{publication_revision:cohort.publication_revision,start_date:cohort.start_date,end_date:cohort.end_date,sources:cohort.sources.map(({run_id,source_revision,start_date,end_date})=>({run_id,source_revision,start_date,end_date}))};}
