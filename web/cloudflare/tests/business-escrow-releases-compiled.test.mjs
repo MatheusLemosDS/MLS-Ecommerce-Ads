@@ -8,7 +8,7 @@ import {collectionFixture} from './business-collection-fixture.mjs';
 import {createFinanceStore} from '../../finance/src/connection-store.mjs';
 import {readCompletedBusinessMonth} from '../src/business-month-publication.mjs';
 import {projectBusinessEscrowReleases} from '../src/business-escrow-releases.mjs';
-import {projectEscrowReleaseFrame} from '../../finance/src/escrow-release-frame.mjs';
+import {projectEscrowReleaseFrame,projectEscrowReleaseEvidenceFrame} from '../../finance/src/escrow-release-frame.mjs';
 import {getFinanceEscrowReleases} from '../src/app-escrow-releases.mjs';
 import {projectBusinessMonth} from '../src/business-month.mjs';
 import {projectBusinessMonthView,projectBusinessMonthAuditScope} from '../src/business-month-view-state.mjs';
@@ -64,7 +64,7 @@ for(const minify of [false,true])for(const mode of ['matched','duplicate','hundr
   for(const secret of [access,routerSecret,appSecret,'PRIVATE_INTEGRATION_ORDER_','PRIVATE_RELEASE_OUTSIDE_COHORT'])assert.ok(!(JSON.stringify(value)+html).includes(secret));
   if(mode==='matched'){
    f.financeEnv.FINANCE_DB.db.prepare('DELETE FROM finance_business_period_runs WHERE run_id IN(?,?)').run(...sources.map(row=>row.run_id));
-   const retained=await getFinanceEscrowReleases(env,{operation:'read',month:'2026-10',sources});assert.ok(projectEscrowReleaseFrame(retained));assert.ok(retained.sources.every(row=>row.status==='AVAILABLE'));assert.equal(retained.matching.known_verified_release_cents,9502);assert.equal(calls.releases.length,completedCalls.releases,'retained source matching survives Finance run eviction without a provider call');
+   const retained=await getFinanceEscrowReleases(env,{operation:'read',month:'2026-10',sources}),retainedEvidence=projectEscrowReleaseEvidenceFrame(retained,projectEscrowReleaseFrame),retainedReport=retainedEvidence?.report??projectEscrowReleaseFrame(retained);assert.ok(retainedReport);assert.ok(retainedReport.sources.every(row=>row.status==='AVAILABLE'));assert.equal(retainedReport.matching.known_verified_release_cents,9502);assert.equal(calls.releases.length,completedCalls.releases,'retained source matching survives Finance run eviction without a provider call');
   }
  }finally{globalThis.fetch=savedFetch;}
 });

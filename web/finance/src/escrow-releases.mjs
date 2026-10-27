@@ -1,7 +1,7 @@
 import {FINANCE_PROFILE,FinanceConnectionError} from './connection-store.mjs';
 import {readFinancialOrderEvidence} from './financial-order-evidence.mjs';
 import {runEscrowReleaseLedger,ESCROW_RELEASE_LEDGER_SCHEMA} from './escrow-release-ledger.mjs';
-import {projectEscrowReleaseRequest,projectEscrowReleaseFrame} from './escrow-release-frame.mjs';
+import {projectEscrowReleaseRequest,projectEscrowReleaseFrame,projectEscrowReleaseEvidenceFrame} from './escrow-release-frame.mjs';
 
 // Release observations and order-creation cohorts have different clocks. This
 // audit keeps both, and never turns either into bank receipts or realized net.
@@ -105,7 +105,37 @@ function verifiedValue(row,observation){
  if(release===original||after!==null&&delta!==null&&before+delta===after&&release===after)return safe(release);
  return null;
 }
-function construct(month,stamp,source,ledger){
+function orderMoney(row){
+ if(row.currency!=='BRL'||row.payment_covered!==1)return {base:null,adjustment:null,after:null};
+ const base=cents(row.escrow_raw),before=cents(row.amounts.escrow_amount_raw),after=cents(row.amounts.escrow_amount_after_adjustment_raw),delta=cents(row.amounts.total_adjustment_amount_raw);
+ if(base===null)return {base:null,adjustment:null,after:null};
+ if(row.diagnostic===null&&before===base&&after!==null&&delta!==null&&before+delta===after)return {base:safe(base),adjustment:safe(delta),after:safe(after)};
+ return {base:safe(base),adjustment:null,after:null};
+}
+function releaseOrderSidecar(source,byOrder){
+ const paidMembers=source.members.filter(paid),rows=[];let located=0,ambiguous=0,verified=0,unverified=0,notLocated=0,adjusted=0,afterKnown=0,afterMoney=0n,notLocatedAfterKnown=0,notLocatedAfterMoney=0n;
+ for(const member of paidMembers){
+  const observations=byOrder.get(member.order_hash)??[],money=orderMoney(member);let state='NOT_LOCATED',releaseTime=null,releaseCheckedAt=null,release=null,basis=null,difference=null;
+  if(money.after!==null){afterKnown++;afterMoney+=BigInt(money.after);if(money.adjustment!==0)adjusted++;}
+  if(observations.length===0){notLocated++;if(money.after!==null){notLocatedAfterKnown++;notLocatedAfterMoney+=BigInt(money.after);}}
+  else if(observations.length>1){state='AMBIGUOUS';ambiguous++;}
+  else{
+   located++;releaseTime=observations[0].release_time;releaseCheckedAt=observations[0].checked_at;release=verifiedValue(member,observations[0]);
+   if(release===null){state='LOCATED_UNVERIFIED';unverified++;}
+   else{
+    state='VERIFIED';verified++;if(money.after!==null&&release===money.after)basis='AFTER_ADJUSTMENT';else if(money.base!==null&&release===money.base)basis='BASE_REPASS';else fail('RESULT_INVALID');
+    difference=money.base===null?null:safe(BigInt(release)-BigInt(money.base));if(difference===null)fail('ARITHMETIC_UNSAFE');
+   }
+  }
+  rows.push({order_hash:member.order_hash,state,reference_count:observations.length,release_time:releaseTime,financial_checked_at:member.checked_at,release_checked_at:releaseCheckedAt,base_repass_cents:money.base,adjustment_cents:money.adjustment,after_adjustment_repass_cents:money.after,release_cents:release,comparison_basis:basis,difference_from_base_cents:difference});
+ }
+ const knownAfter=safe(afterMoney),knownNotLocated=safe(notLocatedAfterMoney);if(knownAfter===null||knownNotLocated===null)fail('ARITHMETIC_UNSAFE');
+ const rank={AMBIGUOUS:0,LOCATED_UNVERIFIED:1,NOT_LOCATED:2,VERIFIED:3};
+ rows.sort((a,b)=>(a.adjustment_cents!==null&&a.adjustment_cents!==0?0:1)-(b.adjustment_cents!==null&&b.adjustment_cents!==0?0:1)||rank[a.state]-rank[b.state]||a.order_hash.localeCompare(b.order_hash));
+ const visible=rows.slice(0,40);
+ return {schema:'finance_escrow_release_orders_v1',summary:{known_paid_orders:paidMembers.length,located_orders:located,ambiguous_orders:ambiguous,verified_orders:verified,unverified_orders:unverified,not_located_orders:notLocated,adjusted_orders:adjusted,after_adjustment_known_orders:afterKnown,known_after_adjustment_cents:knownAfter,not_located_after_adjustment_known_orders:notLocatedAfterKnown,known_not_located_after_adjustment_cents:knownNotLocated},rows:visible,truncation:{truncated:visible.length<rows.length,orders_total:rows.length,orders_included:visible.length},basis:'PAID_ORDER_COHORT_RELEASE_MATCHING_NOT_BANK_RECEIPT'};
+}
+function construct(month,stamp,source,ledger,{includeOrders=false}={}){
  const calendarSource=ledger.published??ledger.active??null,active=ledger.active??ledger.published??null,rows=calendarSource?.rows??ledger.rows??[],byOrder=new Map(),members=new Map(source.members.map(row=>[row.order_hash,row])),paidMembers=source.members.filter(paid);
  for(const row of rows){if(!digest(row.order_hash))fail('LEDGER_INVALID');const group=byOrder.get(row.order_hash)??[];group.push(row);byOrder.set(row.order_hash,group);}
  let ambiguous=0,located=0,ambiguousPaid=0,verified=0,expectedKnown=0n,expectedComplete=true,verifiedMoney=0n,financialMissing=false;
@@ -123,11 +153,12 @@ function construct(month,stamp,source,ledger){
  const pending=['BANK_RECEIPT_NOT_VERIFIED'];if(!complete)pending.push('SOURCE_MISSING','MATCHING_INCOMPLETE');if(calendar.status!=='COMPLETE')pending.push('RELEASES_COLLECTING');if(ambiguous)pending.push('RELEASE_IDENTITY_AMBIGUOUS');if(calendar.unverified_orders)pending.push('RELEASE_AMOUNT_UNVERIFIED');if(collection.diagnostic!==null)pending.push('RELEASE_SOURCE_UNAVAILABLE');if(matching.status==='AVAILABLE'&&(matching.unlocated_paid_orders>0||ambiguousPaid>0||verified!==located))pending.push('MATCHING_INCOMPLETE');if(financialMissing||source.sources.some(row=>row.status==='AVAILABLE'&&row.expected_repass_cents===null))pending.push('FINANCIAL_EVIDENCE_MISSING');
  const finalStatus=collection.status==='BLOCKED'&&calendar.status!=='COMPLETE'?'BLOCKED':collection.status==='LIMIT_REACHED'&&calendar.status!=='COMPLETE'?'LIMIT_REACHED':calendar.status==='MISSING'||calendar.status==='RUNNING'?'COLLECTING':pending.length===1?'CHECKED':'PARTIAL';
  const value={schema:'finance_escrow_releases_v1',month,checked_at:stamp,status:finalStatus,sources:source.sources,calendar,collection,matching,pending,basis:'RELEASE_CALENDAR_AND_ORDER_CREATE_COHORT_NOT_BANK_RECEIPT'};
- const frame=projectEscrowReleaseFrame(value);if(!frame)fail('RESULT_INVALID');return frame;
+ const frame=projectEscrowReleaseFrame(value);if(!frame)fail('RESULT_INVALID');if(!includeOrders)return frame;
+ const evidence=projectEscrowReleaseEvidenceFrame({schema:'finance_escrow_releases_v2',report:frame,orders:releaseOrderSidecar(source,byOrder)},projectEscrowReleaseFrame);if(!evidence)fail('RESULT_INVALID');return evidence;
 }
 
 export async function runFinanceEscrowReleases(env,options={}){
- if(!plain(options)||Reflect.ownKeys(options).some(key=>!['operation','month','sources','fetchImpl','now','timeoutMs'].includes(key)||!Object.hasOwn(Object.getOwnPropertyDescriptor(options,key)||{},'value')))fail('REQUEST_INVALID',400);
+ if(!plain(options)||Reflect.ownKeys(options).some(key=>!['operation','month','sources','fetchImpl','now','timeoutMs','includeOrders'].includes(key)||!Object.hasOwn(Object.getOwnPropertyDescriptor(options,key)||{},'value')))fail('REQUEST_INVALID',400);if(Object.hasOwn(options,'includeOrders')&&typeof options.includeOrders!=='boolean')fail('REQUEST_INVALID',400);
  const selection=projectEscrowReleaseRequest({operation:options.operation,month:options.month,sources:options.sources});if(!selection)fail('REQUEST_INVALID',400);
  const {now=()=>Date.now(),fetchImpl,timeoutMs=5000}=options,stamp=epoch(now),db=env?.FINANCE_DB;
  if(selection.month>new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date(stamp*1000)).slice(0,7))fail('REQUEST_INVALID',400);
@@ -136,5 +167,5 @@ export async function runFinanceEscrowReleases(env,options={}){
  const selections=[...selection.sources].sort((a,b)=>a.run_id.localeCompare(b.run_id)),source=await cohort(env,db,selections,selection.month,stamp,now);
  const ledger=await runEscrowReleaseLedger(env,{operation:selection.operation,month:selection.month,fetchImpl,now,timeoutMs});
  const checkedAt=Math.max(stamp,ledger.checked_at??stamp,...source.sources.filter(row=>row.status==='AVAILABLE').map(row=>row.finance_latest_at));
- return construct(selection.month,checkedAt,source,ledger);
+ return construct(selection.month,checkedAt,source,ledger,{includeOrders:options.includeOrders===true});
 }

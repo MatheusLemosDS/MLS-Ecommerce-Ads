@@ -29,6 +29,23 @@ const month=(overrides={})=>({
  collection:{schema:'business_month_collection_v1',state:'READY',code:null,retry_after_seconds:0},
  ...overrides
 });
+const releases=(overrides={})=>({
+ schema:'mls_escrow_releases_snapshot_v1',
+ month:'2026-10',
+ scope_key:'scope',
+ report:{report:{pending:['BANK_RECEIPT_NOT_VERIFIED']}},
+ orders:{summary:{known_paid_orders:250,located_orders:200,ambiguous_orders:0,verified_orders:198,unverified_orders:2,not_located_orders:50,adjusted_orders:4,after_adjustment_known_orders:250,known_after_adjustment_cents:1000000,not_located_after_adjustment_known_orders:50,known_not_located_after_adjustment_cents:200000},rows:[],truncation:{truncated:true,orders_total:250,orders_included:40}},
+ ...overrides
+});
+const reconciliation=(payouts=[])=>({
+ schema:'mls_reconciliation_snapshot_v1',
+ month:'2026-10',
+ scope_key:'scope',
+ report:{reports:[]},
+ reviews:[],
+ money:[{run_id:'11111111-1111-4111-8111-111111111111',source_revision:1,money:{payouts}}]
+});
+
 
 test('healthy snapshots create one observer registry with the executive day metrics and no invented actions',()=>{
  const value=buildMlsAgentRegistry({day:day(),month:month(),now:1793070100});
@@ -101,5 +118,27 @@ test('command center is read-only, renders the initial agent surfaces and adds n
  assert.doesNotMatch(AGENT_REGISTRY_CLIENT,/\bfetch\s*\(|setInterval\s*\(|\/api\//);
  assert.match(AGENT_REGISTRY_CLIENT,/MutationObserver/);
  assert.match(AGENT_REGISTRY_CLIENT,/brazaDayDashboard/);
- assert.match(AGENT_REGISTRY_CLIENT,/brazaMonthDashboard/);
+ assert.match(AGENT_REGISTRY_CLIENT,/brazaMonthDashboard/);assert.match(AGENT_REGISTRY_CLIENT,/brazaReconciliation/);assert.match(AGENT_REGISTRY_CLIENT,/brazaEscrowReleases/);
+});
+
+test('release matching becomes Finance work without calling an unlocated order unpaid or received',()=>{
+ const value=buildMlsAgentRegistry({day:day(),month:month(),releases:releases(),reconciliation:reconciliation(),now:1793070100});
+ assert.equal(value.settlement.release_orders_known,250);assert.equal(value.settlement.releases_verified,198);assert.equal(value.settlement.releases_not_located,50);
+ assert.ok(value.priorities.some(item=>item.code==='RELEASES_NOT_LOCATED'&&item.severity==='WORKING')||value.priorities.some(item=>item.code==='MATCHING_INCOMPLETE'));
+ const finance=value.agents.find(agent=>agent.id==='finance');assert.match(finance.message,/198 liberação/);assert.match(finance.message,/50 pedido/);assert.doesNotMatch(finance.message,/não recebido|não pago|a receber/i);
+});
+
+test('ambiguous and unverified releases create attention tasks owned by MLS Finance',()=>{
+ const value=buildMlsAgentRegistry({day:day(),month:month(),releases:releases({report:{report:{pending:['RELEASE_IDENTITY_AMBIGUOUS','RELEASE_AMOUNT_UNVERIFIED','BANK_RECEIPT_NOT_VERIFIED']}},orders:{...releases().orders,summary:{...releases().orders.summary,ambiguous_orders:1,unverified_orders:2}}}),now:1793070100});
+ assert.equal(value.health,'ATTENTION');
+ for(const code of ['RELEASE_IDENTITY_AMBIGUOUS','RELEASE_AMOUNT_UNVERIFIED'])assert.ok(value.priorities.some(item=>item.code===code&&item.agent_id==='finance'),code);
+ assert.equal(value.agents.find(agent=>agent.id==='finance').status,'ATTENTION');
+});
+
+test('conflicting after-adjustment payout evidence blocks Auditor and Hermes instead of choosing one source',()=>{
+ const hash='a'.repeat(64),release=releases({orders:{...releases().orders,summary:{...releases().orders.summary,known_paid_orders:1,located_orders:1,verified_orders:1,unverified_orders:0,not_located_orders:0,adjusted_orders:1,after_adjustment_known_orders:1,known_after_adjustment_cents:8000,not_located_after_adjustment_known_orders:0,known_not_located_after_adjustment_cents:0},rows:[{order_hash:hash,state:'VERIFIED',after_adjustment_repass_cents:8000}],truncation:{truncated:false,orders_total:1,orders_included:1}}});
+ const value=buildMlsAgentRegistry({day:day(),month:month(),releases:release,reconciliation:reconciliation([{order_hash:hash,after_adjustment_repass_cents:7900}]),now:1793070100});
+ assert.equal(value.health,'BLOCKED');assert.equal(value.settlement.evidence_conflicts,1);
+ assert.ok(value.priorities.some(item=>item.code==='SETTLEMENT_EVIDENCE_CONFLICT'&&item.severity==='BLOCKED'));
+ assert.equal(value.agents.find(agent=>agent.id==='auditor').status,'BLOCKED');assert.equal(value.hermes.status,'BLOCKED');
 });

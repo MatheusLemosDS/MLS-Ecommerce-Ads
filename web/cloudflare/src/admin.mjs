@@ -12,7 +12,7 @@ import {CLIENT} from './admin-client.mjs';
 import {BUSINESS_MONTH_CLIENT} from './business-month-client.mjs';
 import {AGENT_REGISTRY_CLIENT} from './agent-registry-view.mjs';
 import {BUSINESS_MONTH_CSS} from './business-month-view.mjs';
-import {BUSINESS_ESCROW_RELEASES_SCHEMA,BusinessEscrowReleasesError,readBusinessEscrowReleases} from './business-escrow-releases.mjs';
+import {BUSINESS_ESCROW_RELEASES_SCHEMA,BusinessEscrowReleasesError,readBusinessEscrowReleases,readBusinessEscrowReleaseEvidence} from './business-escrow-releases.mjs';
 import {FINANCIAL_AUDIT_SCHEMA,FinancialAuditOrchestrationError,runBusinessFinancialAudits} from './financial-audit-orchestration.mjs';
 import {BUSINESS_RECONCILIATION_SCHEMA,BusinessReconciliationError,readBusinessReconciliation,readBusinessReconciliationEvidence,readBusinessReconciliationMoney,runBusinessReconciliation} from './business-reconciliation.mjs';
 import {BUSINESS_MONTH_SCHEMA,BusinessMonthError,businessMonthClientFrame,readBusinessMonthAdsState,readBusinessMonthDisplay} from './business-month.mjs';
@@ -396,8 +396,8 @@ async function adminFetch(request,env,services={}){const url=new URL(request.url
  }
  if(path==='/api/admin/finance/escrow-releases'){
   assert(request.method==='GET','METHOD_NOT_ALLOWED',405);
-  const entries=[...url.searchParams];assert(entries.length===1&&entries[0][0]==='month','BUSINESS_ESCROW_RELEASES_REQUEST_INVALID');
-  return json(await readBusinessEscrowReleases(env,{month:entries[0][1]}));
+  const entries=[...url.searchParams],keys=entries.map(([key])=>key),evidence=url.searchParams.get('evidence');assert(entries.length>=1&&entries.length<=2&&new Set(keys).size===keys.length&&keys.includes('month')&&keys.every(key=>['month','evidence'].includes(key))&&(evidence===null||evidence==='orders-v1'),'BUSINESS_ESCROW_RELEASES_REQUEST_INVALID');
+  const month=url.searchParams.get('month');return json(await(evidence==='orders-v1'?readBusinessEscrowReleaseEvidence(env,{month}):readBusinessEscrowReleases(env,{month})));
  }
  if(path==='/api/admin/finance/reconciliation'){
   assert(request.method==='GET','METHOD_NOT_ALLOWED',405);

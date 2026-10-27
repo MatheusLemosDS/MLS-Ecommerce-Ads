@@ -1,4 +1,4 @@
-import {projectEscrowReleaseRequest,projectEscrowReleaseFrame,escrowReleaseRequestMatches} from '../../finance/src/escrow-release-frame.mjs';
+import {projectEscrowReleaseRequest,projectEscrowReleaseFrame,projectEscrowReleaseEvidenceFrame,escrowReleaseRequestMatches} from '../../finance/src/escrow-release-frame.mjs';
 
 // Only the fixed financial service can supply this private evidence report. There
 // is no caller-selected shop, provider URL, token, order serial or API path.
@@ -13,7 +13,7 @@ export async function getFinanceEscrowReleases(env,input,{fetchImpl=request=>fet
  const deadline=new Promise((resolve,reject)=>{timer=setTimeout(()=>{controller.abort();cancel();reject(Error('deadline'));},timeoutMs);});
  const run=async()=>{
   response=await fetchImpl(new Request('https://auth.brazacommerce.com.br/internal/shopee/finance/escrow-releases',{
-   method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json','X-Braza-App-Key':env.APP_INTERNAL_SECRET},
+   method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json','X-Braza-App-Key':env.APP_INTERNAL_SECRET,'X-Braza-Release-Contract':'release-orders-v1'},
    body:JSON.stringify(body),redirect:'manual',signal:controller.signal}));
   checkDeadline();
   if(!(response instanceof Response))return failure('RESPONSE_INVALID');
@@ -31,10 +31,10 @@ export async function getFinanceEscrowReleases(env,input,{fetchImpl=request=>fet
   finally{cancel();try{reader.releaseLock();}catch{}reader=undefined;}
   const bytes=new Uint8Array(length);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.length;}
   let raw;try{raw=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes));}catch{return failure('JSON_INVALID',response.status);}
-  const frame=projectEscrowReleaseFrame(raw);
+  const evidence=projectEscrowReleaseEvidenceFrame(raw,projectEscrowReleaseFrame),frame=evidence?.report??projectEscrowReleaseFrame(raw);
   if(!frame)return failure('FRAME_INVALID',response.status);
   if(!escrowReleaseRequestMatches(body,frame))return failure('SCOPE_MISMATCH',response.status);
-  return frame;
+  return evidence??frame;
  };
  try{return await Promise.race([run(),deadline]);}
  catch{return failure(controller.signal.aborted?'TIMEOUT':stage==='FETCH'?'NETWORK_ERROR':'BODY_READ_ERROR',response instanceof Response?response.status:null);}
