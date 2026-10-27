@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {randomUUID} from 'node:crypto';
 import {collectionFixture} from '../../cloudflare/tests/business-collection-fixture.mjs';
 import {runFinanceEscrowReleases} from '../src/escrow-releases.mjs';
-import {projectEscrowReleaseFrame} from '../src/escrow-release-frame.mjs';
+import {projectEscrowReleaseFrame,projectEscrowReleaseEvidenceFrame} from '../src/escrow-release-frame.mjs';
 
 const month='2026-10',path='/api/v2/payment/get_escrow_list';
 async function fixture(t,{count=2,second=0,rows=null,income=null}={}){
@@ -23,6 +23,23 @@ test('the release-date ledger matches exact paid order hashes without replacing 
  const result=await f.finish();assert.equal(result.calendar.observations,1);assert.equal(result.calendar.verified_orders,1);assert.equal(result.calendar.total_release_cents,4751);assert.equal(result.matching.located_paid_orders,1);assert.equal(result.matching.unlocated_paid_orders,1);assert.equal(result.matching.expected_located_cents,4751);assert.equal(result.matching.verified_release_cents,4751);assert.equal(result.matching.comparison_difference_cents,0);assert.equal(result.status,'PARTIAL');assert.ok(result.pending.includes('MATCHING_INCOMPLETE'));assert.ok(result.pending.includes('BANK_RECEIPT_NOT_VERIFIED'));
  assert.equal(f.baseline.expected_repass_cents,9502);assert.equal(Object.hasOwn(result,'net_profit_cents'),false);assert.ok(!JSON.stringify(result).includes('PRIVATE_INTEGRATION_ORDER'));
  const count=f.calls.length;assert.deepEqual(await f.run(),result);assert.equal(f.calls.length,count,'owner reads never recollect the source');
+});
+
+test('opt-in order evidence lists verified, unlocated and adjusted paid orders without exposing provider serials',async t=>{
+ const f=await fixture(t),legacy=await f.finish(),evidence=await f.run('read',{includeOrders:true}),checked=projectEscrowReleaseEvidenceFrame(evidence,projectEscrowReleaseFrame);
+ assert.ok(checked);assert.deepEqual(checked.report,legacy);assert.equal(checked.orders.summary.known_paid_orders,2);assert.equal(checked.orders.summary.verified_orders,1);assert.equal(checked.orders.summary.not_located_orders,1);assert.equal(checked.orders.truncation.orders_total,2);
+ const verified=checked.orders.rows.find(row=>row.state==='VERIFIED'),unlocated=checked.orders.rows.find(row=>row.state==='NOT_LOCATED');assert.ok(verified&&unlocated);assert.equal(verified.release_cents,4751);assert.equal(verified.comparison_basis,'BASE_REPASS');assert.equal(verified.difference_from_base_cents,0);assert.equal(unlocated.release_cents,null);assert.equal(unlocated.reference_count,0);
+ assert.ok(!JSON.stringify(evidence).includes(f.serial(0)));assert.ok(!JSON.stringify(evidence).includes('order_sn'));
+});
+
+test('order evidence preserves a coherent signed adjustment and identifies release after adjustment without double deduction',async t=>{
+ const f=await fixture(t,{count:1,income:{escrow_amount_after_adjustment:48.51,total_adjustment_amount:1}});f.releaseRows[0].payout_amount=48.51;await f.finish();const evidence=await f.run('read',{includeOrders:true}),checked=projectEscrowReleaseEvidenceFrame(evidence,projectEscrowReleaseFrame);assert.ok(checked);
+ const row=checked.orders.rows[0];assert.equal(row.state,'VERIFIED');assert.equal(row.base_repass_cents,4751);assert.equal(row.adjustment_cents,100);assert.equal(row.after_adjustment_repass_cents,4851);assert.equal(row.release_cents,4851);assert.equal(row.comparison_basis,'AFTER_ADJUSTMENT');assert.equal(row.difference_from_base_cents,100);assert.equal(checked.orders.summary.adjusted_orders,1);assert.equal(checked.orders.summary.known_after_adjustment_cents,4851);
+});
+
+test('order evidence is opt-in and invalid negotiation input fails before provider work',async t=>{
+ const f=await fixture(t,{count:1});await f.finish();const legacy=await f.run('read');assert.equal(legacy.schema,'finance_escrow_releases_v1');assert.equal(Object.hasOwn(legacy,'orders'),false);
+ await assert.rejects(f.run('read',{includeOrders:'yes'}),error=>error.code==='FINANCE_ESCROW_RELEASE_REQUEST_INVALID');
 });
 
 test('raw currency and units are not inferred for unmatched, hundred-times, missing or sub-cent payout observations',async t=>{
