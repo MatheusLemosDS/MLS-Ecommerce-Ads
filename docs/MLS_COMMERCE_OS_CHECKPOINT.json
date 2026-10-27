@@ -48,14 +48,14 @@
     "Income Overview atual da Shopee separado do resultado mensal e de recebimento bancário",
     "MLS Finance mostra Pendente atual na Shopee como métrica secundária, sem alterar o saldo do mês",
     "Round-robin financeiro RELEASES -> RETURNS -> INCOME mantém uma leitura privada por oportunidade",
-    "Snapshot current income preserva missing, zero e valores com unidade monetária não convertível sem arredondar"
+    "Snapshot current income preserva missing, zero e valores com unidade monetária não convertível sem arredondar",
+    "Agenda de despesas por vencimento no MLS Finance via business-month-view-v4, derivada do mesmo join mensal D1 sem query extra"
   ],
   "remaining_this_phase": [
     "Observar o pending_amount real da conta autenticada e comparar com o Seller Centre antes de detalhar Pending por pedido",
     "Decidir se get_income_detail será usado para explicar Pending por pedido após validar a resposta real da conta",
     "Observar a evidência real pós-deploy da conta autenticada, incluindo a primeira evolução de uma coorte para calendário posterior",
     "Manter liquidação bancária e lucro realizado separados da liberação na Shopee",
-    "Adicionar vencimentos, atrasos e próximos pagamentos de despesas/contas ao resumo do MLS Finance",
     "Resolver qualquer pedido ambíguo, valor não verificado ou conflito de evidência antes do fechamento estrito",
     "Reavaliar o horizonte limitado do tracker somente com evidência real; horizonte esgotado nunca prova ausência de liberação posterior"
   ],
@@ -98,7 +98,6 @@
     "Observar o primeiro snapshot real de get_income_overview após o cron financeiro e conferir Pendente atual na Shopee",
     "Comparar o pending_amount com o Seller Centre sem misturar o snapshot atual com a competência mensal",
     "Se a resposta real for consistente, avaliar get_income_detail para detalhar Pending por pedido sem criar polling de navegador",
-    "Adicionar vencimentos, contas atrasadas e próximos pagamentos ao resumo do MLS Finance",
     "Manter remaining_receivable_cents separado: o Pending atual não é automaticamente o saldo de uma competência",
     "Manter realized_net_cents indisponível até existir evidência de liquidação bancária"
   ],
@@ -109,41 +108,41 @@
     "Conferir visual autenticado da Central de Comando em desktop e celular; ajustes visuais podem ocorrer dentro de M2 sem alterar contratos"
   ],
   "latest_increment": {
-    "id": "M2_CURRENT_INCOME_OVERVIEW",
+    "id": "M2_FINANCE_EXPENSE_DUE_SUMMARY",
     "status": "PUBLISHED",
-    "pull_request": 16,
-    "merge_commit": "6e7dedc7ab7d29412c787967a04a743cf70f8f92",
+    "pull_request": 18,
+    "merge_commit": "df86f2879b74b9ee930e7cf4d69cf53a06a48a02",
     "validation": {
-      "pr_run": 40537753112,
-      "main_run": 40538302859,
-      "node_tests": 2036,
+      "pr_run": 40545184881,
+      "main_run": 40545546459,
+      "node_tests": 2045,
       "python_tests": 67
     },
     "production": {
       "app": {
-        "build_id": "04c3b56b-50d4-411e-ac29-e406204a6a1c",
-        "version_id": "c966a233-ae77-4778-a41f-e1f5e76ac0bf"
+        "build_id": "9d091bff-db3b-41a2-bb6a-28541ca4feed",
+        "version_id": "c47c5e30-054b-4f42-9dfa-2c9a0015827b"
       },
       "auth": {
-        "build_id": "26805f85-bb8c-4408-b1b1-b05ce97b363a",
-        "version_id": "824b11f7-c04e-4b3b-bc71-853c7b9badf7"
+        "build_id": "258102ae-8292-4a20-a8ec-bca1a79f288a",
+        "version_id": "1e97ff32-813e-43c8-9b8c-72c885bb2701"
       },
       "finance": {
-        "build_id": "599311ba-e460-4af2-9ee7-93ca6b37c822",
-        "version_id": "3ffc62c1-6b2d-42ff-9ee9-0791fb1d8c6d"
+        "build_id": "f155d67f-e362-4bd3-a502-13bc12e098ed",
+        "version_id": "135ce2e9-2b2d-484f-93a4-f0423070b4e5"
       }
     },
     "facts": [
-      "Local Shop: income_status 1=Released e 2=Pending no contrato atual pesquisado",
-      "pending_amount é tratado como snapshot atual pendente de liberação, não histórico mensal",
-      "to_release_amount não é aplicado à loja local",
-      "Pendente atual não entra na fórmula do saldo mensal"
+      "business-month-view-v4 preserva display, audit_scope e daily_summary e acrescenta expense_schedule",
+      "A agenda usa o payload do ledger no mesmo LEFT JOIN mensal existente, sem query D1 separada",
+      "MLS Finance diferencia contas atrasadas, vencendo hoje, próximos 7 dias e próximo vencimento",
+      "NOT_ITEMIZED mantém valores desconhecidos como null em vez de zero"
     ],
     "limits": [
-      "O snapshot atual não é atribuído automaticamente a uma competência mensal",
-      "pending_amount não comprova depósito bancário",
-      "remaining_receivable_cents continua separado e não é derivado automaticamente deste snapshot",
-      "realized_net_cents continua indisponível sem liquidação comprovada"
+      "Vencimentos são datas declaradas pelo proprietário e não comprovam movimentação bancária",
+      "Marcar uma despesa como paga é controle interno e não executa pagamento",
+      "A agenda não altera o saldo mensal nem realized_net_cents",
+      "Pendente atual na Shopee permanece separado da agenda e da competência mensal"
     ]
   }
 }

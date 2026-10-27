@@ -198,7 +198,9 @@ Continuar a fase financeira atual:
 
 **Incremento publicado — PR #16:** o MLS Finance agora lê o `get_income_overview` em background e mostra **Pendente atual na Shopee** separado do mês. Para a loja local, o contrato atual diferencia `Released` e `Pending`; `pending_amount` é tratado como snapshot atual, não como competência, depósito bancário ou lucro. O round-robin financeiro passa a `RELEASES -> RETURNS -> INCOME` sem aumentar o orçamento de uma leitura privada por oportunidade. [Pesquisa](PESQUISA_INCOME_OVERVIEW_SHOPEE_2026_10_27.md).
 
-**Ainda falta nesta fase:** observar o `pending_amount` real da conta e comparar com Seller Centre; decidir se `get_income_detail` deve detalhar Pending por pedido; manter `remaining_receivable` separado do snapshot atual; levar vencimentos/atrasos das despesas para MLS Finance; resolver diferenças materiais. O horizonte limitado do tracker nunca deve ser usado como prova de que não haverá liberação posterior.
+**Incremento publicado — PR #18:** o MLS Finance agora resume **contas atrasadas, vencendo hoje, próximos 7 dias e próximo vencimento** a partir das datas declaradas no ledger. O `business-month-view-v4` reutiliza o mesmo `LEFT JOIN` mensal já existente, sem query D1 adicional, tabela nova, polling ou chamada Shopee. `NOT_ITEMIZED` continua desconhecido em vez de zero; marcar como pago permanece controle interno e não comprova liquidação bancária.
+
+**Ainda falta nesta fase:** observar o `pending_amount` real da conta e comparar com Seller Centre; decidir se `get_income_detail` deve detalhar Pending por pedido; manter `remaining_receivable` separado do snapshot atual; resolver diferenças materiais. O horizonte limitado do tracker nunca deve ser usado como prova de que não haverá liberação posterior.
 
 **Critério de saída:** período completo conciliado com explicação de cada diferença material.
 
@@ -307,5 +309,4 @@ Retomar por:
 - validar em fontes oficiais da Shopee a semântica do ciclo de escrow/liberação e de valores ainda não liberados;
 - somente habilitar `remaining_receivable` se houver contrato e evidência suficientes; caso contrário manter `null`;
 - observar o tracker temporal real após a próxima virada de mês sem duplicar coleta;
-- adicionar vencimentos, atrasos e próximos pagamentos ao resumo do MLS Finance;
 - manter Ads/PROMO LOCKED e o lucro realizado desconhecido sem liquidação comprovada.

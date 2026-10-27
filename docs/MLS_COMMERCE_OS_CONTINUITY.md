@@ -128,13 +128,31 @@ Produção: App `c966a233-ae77-4778-a41f-e1f5e76ac0bf`, Auth
 
 Pesquisa: [PESQUISA_INCOME_OVERVIEW_SHOPEE_2026_10_27.md](PESQUISA_INCOME_OVERVIEW_SHOPEE_2026_10_27.md).
 
+
+### Quarto incremento da M2 — PR #18
+
+Publicado pela **PR #18**, merge `df86f2879b74b9ee930e7cf4d69cf53a06a48a02`.
+
+O MLS Finance agora mostra contas atrasadas, vencimentos de hoje, próximos 7 dias
+e próximo vencimento. A agenda usa o payload do ledger no mesmo `LEFT JOIN`
+mensal já existente; não adiciona query D1, tabela, polling ou chamada Shopee.
+
+Contrato owner: `business-month-view-v4`. V1–V3 continuam compatíveis.
+`NOT_ITEMIZED` permanece desconhecido em vez de zero. Marcar como pago é apenas
+controle interno, não execução de pagamento nem comprovante bancário.
+
+CI: PR `40545184881`, main `40545546459`; **2.045 testes Node + 67 Python**.
+Produção: App `c47c5e30-054b-4f42-9dfa-2c9a0015827b`, Auth
+`1e97ff32-813e-43c8-9b8c-72c885bb2701`, Finance
+`135ce2e9-2b2d-484f-93a4-f0423070b4e5`.
+
 ## Ponto exato de retomada
 
 **M2 continua em andamento.** O próximo passo é observar o primeiro
 `pending_amount` real da conta autenticada e conferir a leitura contra o Seller
 Centre. Se a evidência real for consistente, avaliar `get_income_detail` para
-explicar o Pending por pedido. Em paralelo, adicionar vencimentos, atrasos e
-próximos pagamentos das despesas ao MLS Finance.
+explicar o Pending por pedido. A agenda de vencimentos do MLS Finance já foi
+publicada pela PR #18.
 
 `remaining_receivable_cents` permanece separado do Pending atual e
 `realized_net_cents` continua indisponível sem liquidação bancária comprovada.
