@@ -91,8 +91,55 @@ export function projectEscrowReleaseFrame(value){
  }catch{return null;}
 }
 
+export function projectEscrowReleaseEvidenceFrame(value,projectLegacy){
+ const plain=item=>item!==null&&typeof item==='object'&&[Object.prototype,null].includes(Object.getPrototypeOf(item));
+ const exact=(item,keys)=>plain(item)&&Reflect.ownKeys(item).length===keys.length&&keys.every(key=>Object.hasOwn(Object.getOwnPropertyDescriptor(item,key)||{},'value'));
+ const array=(item,max)=>Array.isArray(item)&&Object.getPrototypeOf(item)===Array.prototype&&item.length<=max&&Reflect.ownKeys(item).length===item.length+1&&Array.from({length:item.length},(_,index)=>Object.getOwnPropertyDescriptor(item,String(index))).every(row=>row&&Object.hasOwn(row,'value'));
+ const int=(item,min=0,max=Number.MAX_SAFE_INTEGER)=>Number.isSafeInteger(item)&&!Object.is(item,-0)&&item>=min&&item<=max;
+ const cent=item=>item===null||int(item,Number.MIN_SAFE_INTEGER);
+ const hash=item=>typeof item==='string'&&/^[a-f0-9]{64}$/.test(item);
+ const time=item=>item===null||int(item,1,9999999999);
+ try{
+  if(typeof projectLegacy!=='function'||!exact(value,['schema','report','orders'])||value.schema!=='finance_escrow_releases_v2')return null;
+  const report=projectLegacy(value.report),o=value.orders;if(!report||!exact(o,['schema','summary','rows','truncation','basis'])||o.schema!=='finance_escrow_release_orders_v1'||o.basis!=='PAID_ORDER_COHORT_RELEASE_MATCHING_NOT_BANK_RECEIPT'||!array(o.rows,40))return null;
+  const s=o.summary,t=o.truncation;
+  const summaryKeys=['known_paid_orders','located_orders','ambiguous_orders','verified_orders','unverified_orders','not_located_orders','adjusted_orders','after_adjustment_known_orders','known_after_adjustment_cents','not_located_after_adjustment_known_orders','known_not_located_after_adjustment_cents'];
+  if(!exact(s,summaryKeys)||!summaryKeys.slice(0,9).every(key=>int(s[key],0,100000))||!int(s.known_after_adjustment_cents,Number.MIN_SAFE_INTEGER)||!int(s.known_not_located_after_adjustment_cents,Number.MIN_SAFE_INTEGER))return null;
+  if(s.located_orders+s.ambiguous_orders+s.not_located_orders!==s.known_paid_orders||s.verified_orders+s.unverified_orders!==s.located_orders||s.after_adjustment_known_orders>s.known_paid_orders||s.adjusted_orders>s.after_adjustment_known_orders||s.not_located_after_adjustment_known_orders>s.not_located_orders||s.after_adjustment_known_orders===0&&s.known_after_adjustment_cents!==0||s.not_located_after_adjustment_known_orders===0&&s.known_not_located_after_adjustment_cents!==0)return null;
+  if(!exact(t,['truncated','orders_total','orders_included'])||typeof t.truncated!=='boolean'||t.orders_total!==s.known_paid_orders||!int(t.orders_included,0,Math.min(40,t.orders_total))||t.orders_included!==o.rows.length||t.truncated!==(t.orders_included<t.orders_total))return null;
+  const states=['NOT_LOCATED','AMBIGUOUS','LOCATED_UNVERIFIED','VERIFIED'],bases=['BASE_REPASS','AFTER_ADJUSTMENT'],seen=new Set(),visible={NOT_LOCATED:0,AMBIGUOUS:0,LOCATED_UNVERIFIED:0,VERIFIED:0},visibleAdjusted=0,visibleAfterKnown=0,visibleAfter=0n,visibleNotLocatedKnown=0,visibleNotLocated=0n;
+  for(const row of o.rows){
+   const keys=['order_hash','state','reference_count','release_time','financial_checked_at','release_checked_at','base_repass_cents','adjustment_cents','after_adjustment_repass_cents','release_cents','comparison_basis','difference_from_base_cents'];
+   if(!exact(row,keys)||!hash(row.order_hash)||seen.has(row.order_hash)||!states.includes(row.state)||!int(row.reference_count,0,100)||!time(row.release_time)||!int(row.financial_checked_at,1,report.checked_at)||!time(row.release_checked_at)||!cent(row.base_repass_cents)||!cent(row.adjustment_cents)||!cent(row.after_adjustment_repass_cents)||!cent(row.release_cents)||row.comparison_basis!==null&&!bases.includes(row.comparison_basis)||!cent(row.difference_from_base_cents))return null;
+   seen.add(row.order_hash);visible[row.state]++;
+   const adjusted=row.adjustment_cents!==null&&row.after_adjustment_repass_cents!==null;
+   if(adjusted){if(row.base_repass_cents===null||BigInt(row.base_repass_cents)+BigInt(row.adjustment_cents)!==BigInt(row.after_adjustment_repass_cents))return null;visibleAfterKnown++;visibleAfter+=BigInt(row.after_adjustment_repass_cents);if(row.adjustment_cents!==0)visibleAdjusted++;}
+   else if(row.adjustment_cents!==null||row.after_adjustment_repass_cents!==null)return null;
+   if(row.state==='NOT_LOCATED'){
+    if(row.reference_count!==0||row.release_time!==null||row.release_checked_at!==null||row.release_cents!==null||row.comparison_basis!==null||row.difference_from_base_cents!==null)return null;
+    if(adjusted){visibleNotLocatedKnown++;visibleNotLocated+=BigInt(row.after_adjustment_repass_cents);}
+   }else if(row.state==='AMBIGUOUS'){
+    if(row.reference_count<2||row.release_time!==null||row.release_checked_at!==null||row.release_cents!==null||row.comparison_basis!==null||row.difference_from_base_cents!==null)return null;
+   }else{
+    if(row.reference_count!==1||row.release_time===null||row.release_checked_at===null)return null;
+    if(row.state==='LOCATED_UNVERIFIED'){
+     if(row.release_cents!==null||row.comparison_basis!==null||row.difference_from_base_cents!==null)return null;
+    }else{
+     if(row.release_cents===null||row.base_repass_cents===null||row.comparison_basis===null||row.difference_from_base_cents===null||BigInt(row.release_cents)-BigInt(row.base_repass_cents)!==BigInt(row.difference_from_base_cents))return null;
+     if(row.comparison_basis==='BASE_REPASS'&&row.release_cents!==row.base_repass_cents||row.comparison_basis==='AFTER_ADJUSTMENT'&&(!adjusted||row.release_cents!==row.after_adjustment_repass_cents))return null;
+    }
+   }
+  }
+  if(!t.truncated){
+   if(visible.NOT_LOCATED!==s.not_located_orders||visible.AMBIGUOUS!==s.ambiguous_orders||visible.VERIFIED!==s.verified_orders||visible.LOCATED_UNVERIFIED!==s.unverified_orders||visibleAdjusted!==s.adjusted_orders||visibleAfterKnown!==s.after_adjustment_known_orders||visibleAfter!==BigInt(s.known_after_adjustment_cents)||visibleNotLocatedKnown!==s.not_located_after_adjustment_known_orders||visibleNotLocated!==BigInt(s.known_not_located_after_adjustment_cents))return null;
+  }else if(visible.NOT_LOCATED>s.not_located_orders||visible.AMBIGUOUS>s.ambiguous_orders||visible.VERIFIED>s.verified_orders||visible.LOCATED_UNVERIFIED>s.unverified_orders||visibleAdjusted>s.adjusted_orders||visibleAfterKnown>s.after_adjustment_known_orders||visibleAfter>BigInt(s.known_after_adjustment_cents)||visibleNotLocatedKnown>s.not_located_after_adjustment_known_orders||visibleNotLocated>BigInt(s.known_not_located_after_adjustment_cents))return null;
+  const result={schema:'finance_escrow_releases_v2',report,orders:{schema:o.schema,summary:{...s},rows:o.rows.map(row=>({...row})),truncation:{...t},basis:o.basis}};
+  return new TextEncoder().encode(JSON.stringify(result)).byteLength<=65536?result:null;
+ }catch{return null;}
+}
+
 export function escrowReleaseRequestMatches(request,frame){
- const selection=projectEscrowReleaseRequest(request),value=projectEscrowReleaseFrame(frame);
+ const selection=projectEscrowReleaseRequest(request),legacy=projectEscrowReleaseFrame(frame),evidence=legacy?null:projectEscrowReleaseEvidenceFrame(frame,projectEscrowReleaseFrame),value=legacy??evidence?.report;
  const scopes=rows=>rows.map(({run_id,source_revision})=>run_id+':'+source_revision).sort();
  return selection!==null&&value!==null&&selection.month===value.month&&JSON.stringify(scopes(selection.sources))===JSON.stringify(scopes(value.sources));
 }
