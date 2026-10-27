@@ -5,7 +5,7 @@ import {projectStorePeriodRequest,projectStorePeriodFrame} from './store-period-
 import {projectBusinessPeriodRequest,projectBusinessPeriodFrame} from './business-period-frame.mjs';
 import {projectProductionOrdersRequest,projectProductionOrdersFrame,productionOrdersRequestMatches} from './production-orders-frame.mjs';
 import {projectProductIndexRequest,projectProductIndexFrame,productIndexRequestMatches,financeProductIndexDiagnostic} from './product-index-frame.mjs';
-import {projectEscrowReleaseRequest,projectEscrowReleaseFrame,escrowReleaseRequestMatches} from './escrow-release-frame.mjs';
+import {projectEscrowReleaseRequest,projectEscrowReleaseFrame,projectEscrowReleaseEvidenceFrame,escrowReleaseRequestMatches} from './escrow-release-frame.mjs';
 import {projectReconciliationRequest,projectReconciliationFrame,projectReconciliationEvidenceFrame,projectReconciliationMoneyFrame,reconciliationRequestMatches} from './reconciliation-frame.mjs';
 import {projectHistoricalVariantEvidenceRequest,projectHistoricalVariantEvidenceFrame,historicalVariantEvidenceRequestMatches,historicalVariantEvidenceDiagnostic} from './historical-variant-evidence-frame.mjs';
 
@@ -105,6 +105,8 @@ export async function forwardFinancePaymentSample(request,env,{validateInternalA
  if(reconciliationContract!==null&&!['finance-reconciliation-v1','finance-reconciliation-v2'].includes(reconciliationContract))return routerFailure('INVALID_REQUEST',400);
  const refundContract=reconciliation?request.headers.get('x-braza-refund-contract'):null;
  if(refundContract!==null&&(refundContract!=='refunds-v1'||reconciliationContract!=='finance-reconciliation-v2'))return routerFailure('INVALID_REQUEST',400);
+ const releaseContract=escrowReleases?request.headers.get('x-braza-release-contract'):null;
+ if(releaseContract!==null&&releaseContract!=='release-orders-v1')return routerFailure('INVALID_REQUEST',400);
  const dailyContract=business?request.headers.get('x-braza-daily-contract'):null;
  if(dailyContract!==null&&dailyContract!=='daily-profit-v1')return routerFailure('INVALID_REQUEST',400);
  const secret=env?.FINANCE_ROUTER_SECRET;
@@ -125,6 +127,7 @@ export async function forwardFinancePaymentSample(request,env,{validateInternalA
   const headers={'content-type':'application/json',accept:'application/json','X-Braza-Finance-Router':secret};
   if(reconciliationContract!==null)headers['X-Braza-Client-Contract']=reconciliationContract;
   if(refundContract!==null)headers['X-Braza-Refund-Contract']=refundContract;
+  if(releaseContract!==null)headers['X-Braza-Release-Contract']=releaseContract;
   if(dailyContract!==null)headers['X-Braza-Daily-Contract']=dailyContract;
   const upstream=await env.SHOPEE_FINANCE_SERVICE.fetch(new Request(FINANCE_ORIGIN+url.pathname,{method:'POST',headers,body:JSON.stringify(input),redirect:'manual',signal:controller.signal}));
   // A service binding may finish after our deadline despite its aborted signal.
@@ -150,8 +153,9 @@ export async function forwardFinancePaymentSample(request,env,{validateInternalA
   const preview=url.pathname===PAYMENT_PREVIEW_PATH;
   const reconciliationMoney=reconciliation?projectReconciliationMoneyFrame(value,projectReconciliationFrame,projectReconciliationEvidenceFrame):null;
   const reconciliationEvidence=reconciliation?projectReconciliationEvidenceFrame(reconciliationMoney?{schema:'finance_reconciliation_v2',report:reconciliationMoney.report,review:reconciliationMoney.review}:value,projectReconciliationFrame):null;
-  const frame=escrowReleases?projectEscrowReleaseFrame(value):reconciliation?reconciliationEvidence?.report??projectReconciliationFrame(value):historical?projectHistoricalVariantEvidenceFrame(value):index?projectProductIndexFrame(value):production?projectProductionOrdersFrame(value):storePeriod?(business?projectBusinessPeriodFrame(value):projectStorePeriodFrame(value)):catalog?projectVariantCatalog(value):preview?projectFinancePaymentPreview(value):sampleFrame(value);
-  if(escrowReleases)return frame&&escrowReleaseRequestMatches(input,frame)?new Response(JSON.stringify(frame),{headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}}):unavailable();
+  const releaseEvidence=escrowReleases?projectEscrowReleaseEvidenceFrame(value,projectEscrowReleaseFrame):null;
+  const frame=escrowReleases?releaseEvidence?.report??projectEscrowReleaseFrame(value):reconciliation?reconciliationEvidence?.report??projectReconciliationFrame(value):historical?projectHistoricalVariantEvidenceFrame(value):index?projectProductIndexFrame(value):production?projectProductionOrdersFrame(value):storePeriod?(business?projectBusinessPeriodFrame(value):projectStorePeriodFrame(value)):catalog?projectVariantCatalog(value):preview?projectFinancePaymentPreview(value):sampleFrame(value);
+  if(escrowReleases)return frame&&escrowReleaseRequestMatches(input,frame)?new Response(JSON.stringify(releaseContract==='release-orders-v1'&&releaseEvidence?releaseEvidence:frame),{headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}}):unavailable();
   if(reconciliation)return frame&&reconciliationRequestMatches(input,frame)?new Response(JSON.stringify(refundContract==='refunds-v1'&&reconciliationMoney?reconciliationMoney:reconciliationContract==='finance-reconciliation-v2'&&reconciliationEvidence?reconciliationEvidence:frame),{headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}}):unavailable();
   if(historical)return frame&&historicalVariantEvidenceRequestMatches(input,frame)?new Response(JSON.stringify(frame),{headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}}):historicalFailure();
   if(index)return frame&&productIndexRequestMatches(input,frame)?new Response(JSON.stringify(frame),{headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}}):indexFailure();
