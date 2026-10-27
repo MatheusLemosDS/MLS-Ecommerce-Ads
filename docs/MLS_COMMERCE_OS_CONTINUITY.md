@@ -253,3 +253,14 @@ também reportaram **SUCCESS**.
 Histórico real de cota D1 em 26/10 merece nova verificação em 27/10; não
 inferir automaticamente que a cota esteja esgotada hoje. Recuperação de
 navigation/placeholder não equivale à retomada das consultas financeiras.
+
+
+### Evidência adicional sobre D1 (27/10/2026)
+
+Notificações da própria Cloudflare disponíveis na conta mostram atualização para
+**Workers Paid em 26/10/2026**, posterior aos alertas de limite diário do
+Workers Free daquele dia. A pesquisa de notificações de 27/10 não encontrou
+novo alerta de cota diária. Portanto, a explicação "aguardar 21h por limite
+Free" **não está fundamentada para o incidente atual**. Isso não comprova que
+o D1 esteja saudável: ainda faltam o código HTTP autenticado e métricas atuais
+do banco. Não alterar plano, cron nem custos sem essa evidência.

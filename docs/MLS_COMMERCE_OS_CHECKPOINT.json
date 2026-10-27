@@ -110,7 +110,7 @@
   },
   "next_actions": [
     "Abrir sessao autenticada apos versao App da PR #25: verificar se lucro diario e seis agentes aparecem, anotar mensagem/codigo seguro em caso de falha",
-    "Conferir Cloudflare D1 Row Metrics e alertas em 27/10 antes de concluir que a cota foi excedida",
+    "Se API autenticada falhar, consultar primeiro o erro/HTTP real e as metricas do D1; conta ja migrada para Workers Paid em 26/10",
     "Se continuar travado, coletar screenshot sem dados pessoais e path/status HTTP de /api/admin/bootstrap e /api/admin/finance/business-month-view, sem enviar cookies ou tokens",
     "Somente apos restauracao observada, retomar validacao Pending Overview x Seller Centre da fase M2"
   ],
@@ -185,6 +185,11 @@
       "D1 daily quota pode estar esgotada como em 26/10, mas nao foi verificada em 27/10",
       "Necessario screenshot ou erro HTTP seguro do login/Finance sem credenciais"
     ],
-    "status": "OPEN"
+    "status": "OPEN",
+    "account_plan_evidence": {
+      "workers_paid_upgrade_confirmed_on": "2026-10-26",
+      "no_new_daily_limit_alert_seen_on": "2026-10-27",
+      "note": "Evidence from account notifications, not a live query against D1 limits. Never assume fresh quota exhaustion without Cloudflare metrics."
+    }
   }
 }
