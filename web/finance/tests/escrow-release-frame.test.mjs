@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
-import {projectEscrowReleaseRequest,projectEscrowReleaseFrame,escrowReleaseRequestMatches} from '../src/escrow-release-frame.mjs';
+import {projectEscrowReleaseRequest,projectEscrowReleaseFrame,projectEscrowReleaseCoverageRequest,projectEscrowReleaseCoverageFrame,escrowReleaseRequestMatches,escrowReleaseCoverageRequestMatches} from '../src/escrow-release-frame.mjs';
 
 const run='11111111-1111-4111-8111-111111111111',scan='22222222-2222-4222-8222-222222222222';
 const at=Date.UTC(2026,9,25,15)/1000,from=Date.UTC(2026,9,1,3)/1000,cutoff=at-100;
@@ -61,3 +61,33 @@ test('seven-day progress uses historical Brasília calendar days across daylight
  const wrong=structuredClone(value);wrong.collection.windows_total=5;wrong.collection.windows_complete=5;wrong.collection.pages_read=5;assert.equal(projectEscrowReleaseFrame(wrong),null);
  const boundary=structuredClone(value);boundary.status='PARTIAL';const day22=Date.UTC(2018,1,22,3)/1000;Object.assign(boundary.calendar,{end_before_at:day22,cutoff_at:day22});Object.assign(boundary.collection,{cutoff_at:day22,windows_total:3,windows_complete:3,pages_read:3});assert.ok(projectEscrowReleaseFrame(boundary),'an exclusive midnight cutoff includes only the preceding 21 local days');
 });
+
+function coverageFrame({missing=false,ambiguous=false}={}){
+ const calendars=[
+  {month:'2026-10',status:'COMPLETE',scan_id:scan,cutoff_at:at-100,source_oldest_at:at-90,source_latest_at:at-80,observations:1,cohort_observations:1,unique_cohort_orders:1,ambiguous_cohort_orders:0},
+  missing
+   ?{month:'2026-11',status:'MISSING',scan_id:null,cutoff_at:null,source_oldest_at:null,source_latest_at:null,observations:0,cohort_observations:0,unique_cohort_orders:0,ambiguous_cohort_orders:0}
+   :{month:'2026-11',status:'COMPLETE',scan_id:'33333333-3333-4333-8333-333333333333',cutoff_at:Date.UTC(2026,10,10,12)/1000,source_oldest_at:Date.UTC(2026,10,10,11)/1000,source_latest_at:Date.UTC(2026,10,10,11,30)/1000,observations:ambiguous?2:1,cohort_observations:ambiguous?2:1,unique_cohort_orders:1,ambiguous_cohort_orders:ambiguous?1:0}
+ ];
+ const located=ambiguous?1:missing?1:2,amb=ambiguous?1:0,notLocated=2-located,identity=!missing&&!ambiguous&&notLocated===0;
+ return {schema:'finance_escrow_release_coverage_v1',cohort_month:'2026-10',through_month:'2026-11',checked_at:Date.UTC(2026,10,10,15)/1000,status:missing?'COLLECTING':identity?'IDENTITY_COMPLETE':'PARTIAL',sources:[{run_id:run,source_revision:2,start_date:'2026-10-01',end_date:'2026-10-15',status:'AVAILABLE',orders:2,paid_orders:2,finance_oldest_at:at-60,finance_latest_at:at-50,expected_repass_cents:20000}],calendars,coverage:{paid_orders:2,located_orders:located,not_located_orders:notLocated,ambiguous_orders:amb,single_orders:located-amb,calendars_total:2,calendars_complete:missing?1:2,identity_complete_at_cutoff:identity},pending:[...(missing?['CALENDAR_MISSING']:[]),...(notLocated?['ORDER_NOT_LOCATED']:[]),...(ambiguous?['RELEASE_IDENTITY_AMBIGUOUS']:[]),'BANK_RECEIPT_NOT_VERIFIED','RELEASE_CYCLE_SEMANTICS_UNVERIFIED'],basis:'SAVED_RELEASE_CALENDARS_AGAINST_PAID_ORDER_COHORT_NOT_BANK_RECEIPT'};
+}
+
+test('coverage contract separates order cohort from later release calendars and never certifies settlement',()=>{
+ const request={operation:'coverage',cohort_month:'2026-10',through_month:'2026-11',sources:[{run_id:run,source_revision:2}]};
+ assert.deepEqual(projectEscrowReleaseCoverageRequest(request),request);
+ const value=coverageFrame();assert.deepEqual(projectEscrowReleaseCoverageFrame(value),value);assert.equal(value.status,'IDENTITY_COMPLETE');assert.equal(value.coverage.identity_complete_at_cutoff,true);
+ assert.ok(value.pending.includes('BANK_RECEIPT_NOT_VERIFIED'));assert.ok(value.pending.includes('RELEASE_CYCLE_SEMANTICS_UNVERIFIED'));assert.equal(escrowReleaseCoverageRequestMatches(request,value),true);
+ for(const mutate of [v=>v.remaining_receivable_cents=0,v=>v.realized_net_cents=0,v=>v.coverage.not_located_orders=1,v=>v.pending=[],v=>v.calendars[1].month='2026-12',v=>v.sources[0].start_date='2026-11-01']){const wrong=coverageFrame();mutate(wrong);assert.equal(projectEscrowReleaseCoverageFrame(wrong),null);}
+});
+
+test('missing later calendars and repeated order observations remain explicit incomplete coverage',()=>{
+ const missing=coverageFrame({missing:true});assert.deepEqual(projectEscrowReleaseCoverageFrame(missing),missing);assert.equal(missing.status,'COLLECTING');assert.ok(missing.pending.includes('CALENDAR_MISSING'));assert.ok(missing.pending.includes('ORDER_NOT_LOCATED'));
+ const ambiguous=coverageFrame({ambiguous:true});assert.deepEqual(projectEscrowReleaseCoverageFrame(ambiguous),ambiguous);assert.equal(ambiguous.status,'PARTIAL');assert.equal(ambiguous.coverage.identity_complete_at_cutoff,false);assert.ok(ambiguous.pending.includes('RELEASE_IDENTITY_AMBIGUOUS'));
+ for(const request of [
+  {operation:'coverage',cohort_month:'2026-11',through_month:'2026-10',sources:[]},
+  {operation:'coverage',cohort_month:'2026-01',through_month:'2026-07',sources:[]},
+  {operation:'read',cohort_month:'2026-10',through_month:'2026-11',sources:[]}
+ ])assert.equal(projectEscrowReleaseCoverageRequest(request),null);
+});
+
