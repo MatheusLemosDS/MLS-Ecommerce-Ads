@@ -76,6 +76,8 @@ export const TARGETS = Object.freeze({
     'e157ec1cb36199e270b0238e5c3ffee090d8d09b9f6168e49e3071945ea2d97e',
     // Reviewed App with owner-only read-only recovery diagnostic, PR #26.
     '982e362ebf5e453cf3089a9584190060078d42c0385159e749af07ca64c36fb1',
+    // Reviewed P1 repair: null-month agent projection and control-byte-safe HTML.
+    '9343fd6830cae6ab9d36fb5319e28f0b44dae966dfc21f4416c7845ab96f17b0',
   ]}),
   auth: Object.freeze({name: 'brazacommerce-auth', main: '../../dist/auth-worker.mjs', baselineHashes: [
     '45d0142709c5087e373cc4da146070ed39c472805f6f64c00f00b6555f0e1f56',
