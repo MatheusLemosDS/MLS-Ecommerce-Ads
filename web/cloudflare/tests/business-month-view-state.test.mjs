@@ -5,6 +5,7 @@ import {D1} from './sqlite-d1.mjs';
 import {projectBusinessMonth} from '../src/business-month.mjs';
 import {BUSINESS_SYNC_SCHEMA,readBusinessSyncState} from '../src/business-sync.mjs';
 import {buildBusinessMonthView,projectBusinessMonthView,projectBusinessMonthAuditScope,requestBusinessMonthRefresh,BusinessMonthViewError} from '../src/business-month-view-state.mjs';
+import {projectExpenseSchedule} from '../src/expense-schedule.mjs';
 
 const clock=Date.UTC(2026,9,25,15),stamp=clock/1000,now=()=>clock;
 function monthly({complete=false,month='2026-10',at=stamp}={}){
@@ -63,6 +64,16 @@ test('negotiated view carries the exact published identities and keeps the previ
  const next=structuredClone(observed);next.audit_scope.publication_revision++;next.audit_scope.sources[0].run_id='99999999-9999-4999-8999-999999999999';
  const updated=buildBusinessMonthView(next,policy(),{now,contract:'business-month-view-v2'});
  assert.deepEqual(updated.display,legacy.display);assert.notDeepEqual(updated.audit_scope,audit_scope);
+});
+
+test('v4 carries an expense due schedule only for the same published month and preserves v1-v3 shapes',()=>{
+ const display=monthly({complete:true}),active=monthly(),audit_scope=publishedScope(display),expense_schedule={schema:'expense_schedule_v1',month:'2026-10',today:'2026-10-25',status:'AVAILABLE',mode:'CONFIRMED',open_count:2,open_cents:30000,overdue_count:1,overdue_cents:10000,due_today_count:0,due_today_cents:0,due_next_7_days_count:1,due_next_7_days_cents:20000,next_due_date:'2026-10-27',next_due_count:1,next_due_cents:20000,upcoming:[{id:'11111111-1111-4111-8111-111111111111',category:'BILL',description:'Conta de energia',amount_cents:20000,due_date:'2026-10-27',installment_number:1,installments:1}],basis:'OWNER_DECLARED_DUE_DATES_NOT_BANK_SETTLEMENT'};
+ const observed={display,active,display_source:'PUBLISHED',audit_scope,source_frames:[],expense_schedule};
+ const v3=buildBusinessMonthView(observed,policy(),{now,contract:'business-month-view-v3'});assert.equal(Object.hasOwn(v3,'expense_schedule'),false);
+ const v4=buildBusinessMonthView(observed,policy(),{now,contract:'business-month-view-v4'});assert.equal(v4.schema,'business_month_view_v4');assert.deepEqual(v4.expense_schedule,expense_schedule);assert.deepEqual(v4.audit_scope,audit_scope);assert.ok(Object.hasOwn(v4,'daily_summary'));
+ assert.deepEqual(projectBusinessMonthView(v4,projectBusinessMonth,projectBusinessMonthAuditScope,value=>value,projectExpenseSchedule),v4);
+ const wrong=structuredClone(v4);wrong.expense_schedule.month='2026-09';assert.equal(projectBusinessMonthView(wrong,projectBusinessMonth,projectBusinessMonthAuditScope,value=>value,projectExpenseSchedule),null);
+ const activeV4=buildBusinessMonthView({display:active,active,display_source:'ACTIVE',audit_scope:null,source_frames:null,expense_schedule:null},policy(),{now,contract:'business-month-view-v4'});assert.equal(activeV4.expense_schedule,null);
 });
 
 test('active or unscoped views cannot claim a published audit cohort',()=>{
