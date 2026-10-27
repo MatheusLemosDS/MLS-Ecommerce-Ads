@@ -7,7 +7,7 @@ const workspaceNavigationItems=Object.freeze({
  margins:{href:'/admin?tab=margins',label:'Custos',hint:'Produção e regras de cálculo',icon:'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 12h2m4 0h2M8 16h2m4 0h2"/>'},
  automation:{href:'/optimization',label:'Automação',hint:'Metas e oportunidades',icon:'<path d="m12 3 2.4 6.6L21 12l-6.6 2.4L12 21l-2.4-6.6L3 12l6.6-2.4L12 3Z"/>'},
  campaigns:{href:'/campaigns',label:'Campanhas',hint:'Product Ads e GMV Max',icon:'<path d="m3 10 16-6v16L3 14v-4Zm4 5 2 6h4l-2-5M22 8v8"/>'},
- hermes:{href:'/admin?tab=hermes',label:'Análises do Hermes',hint:'Análises e limites de uso',icon:'<path d="M8 3v3m8-3v3M3 10h18M5 6h14v15H5zM9 14h6m-6 4h4"/>'},
+ hermes:{href:'/admin?tab=hermes',label:'MLS Hermes',hint:'Supervisor, análises e limites de uso',icon:'<path d="M8 3v3m8-3v3M3 10h18M5 6h14v15H5zM9 14h6m-6 4h4"/>'},
  integrations:{href:'/integrations',label:'Conexões',hint:'Integração com a Shopee',icon:'<path d="m8 8 3-3a4 4 0 0 1 6 6l-3 3M16 16l-3 3a4 4 0 0 1-6-6l3-3m-1 5 6-6"/>'},
  history:{href:'/admin?tab=history',label:'Histórico',hint:'Alterações e versões salvas',icon:'<path d="M3 11a9 9 0 1 1 2 7M3 5v6h6M12 7v5l3 2"/>'},
  roadmap:{href:'/admin?tab=roadmap',label:'Plano de evolução',hint:'Etapas e dados que faltam',icon:'<path d="M5 20V4h12l-2 4 2 4H5M3 20h4"/>'},
