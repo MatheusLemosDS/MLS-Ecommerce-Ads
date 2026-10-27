@@ -201,6 +201,15 @@ export const MISSION_CSS="\n/* MLS Commerce OS / Mission Control: cosmetic only,
 :root[data-theme=light] .mission-dashboard .agent-card p,:root[data-theme=light] .mission-dashboard .agent-card small{color:#556d82}
 :root[data-theme=light] .mission-dashboard .agent-card .agent-card-metric{color:#17344e}
 :root[data-theme=light] .mission-dashboard .agent-card .mission-card-link{color:#123f62}
+:root[data-theme=light] .mission-dashboard .agent-card .agent-status{background:rgba(var(--mission-rgb),.12);border-color:rgba(var(--mission-rgb),.34);color:#23465c}
+:root[data-theme=light] .mission-dashboard .agent-card .agent-status[data-status=HEALTHY]{color:#086c50}
+:root[data-theme=light] .mission-dashboard .agent-card .agent-status[data-status=ATTENTION]{background:#fff3da;color:#8c550d;border-color:#dcac61}
+:root[data-theme=light] .mission-dashboard .agent-card .agent-status[data-status=BLOCKED]{background:#fff0f4;color:#9a2452;border-color:#de9eb6}
+:root[data-theme=light] .mission-dashboard .hermes-command .agent-status{color:#294865;background:#e6edfc}
+:root[data-theme=light] .mission-dashboard .hermes-command-foot a{color:#165c99}
+:root[data-theme=light] .mission-dashboard .agent-panel-head .mission-fleet-link{color:#195d92;background:#e8f3ff;border-color:#8ab7e1}
+:root[data-theme=light] .mission-dashboard .command-center-note{color:#556c85}
+
 :root[data-theme=light] .mission-data-panel{background:linear-gradient(120deg,#f1f6ff,#fff);color:#203b58}
 :root[data-theme=light] .mission-data-panel h3,:root[data-theme=light] .mission-comparison-row header strong,:root[data-theme=light] .mission-health-list strong{color:#19344e}
 :root[data-theme=light] .mission-data-panel p,:root[data-theme=light] .mission-comparison-row header span,:root[data-theme=light] .mission-health-caption,:root[data-theme=light] .mission-health-list div{color:#506987}
