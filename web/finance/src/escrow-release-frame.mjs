@@ -144,3 +144,81 @@ export function escrowReleaseRequestMatches(request,frame){
  const scopes=rows=>rows.map(({run_id,source_revision})=>run_id+':'+source_revision).sort();
  return selection!==null&&value!==null&&selection.month===value.month&&JSON.stringify(scopes(selection.sources))===JSON.stringify(scopes(value.sources));
 }
+
+export function projectEscrowReleaseCoverageRequest(value){
+ try{
+  const plain=item=>item!==null&&typeof item==='object'&&[Object.prototype,null].includes(Object.getPrototypeOf(item));
+  const exact=(item,keys)=>plain(item)&&Reflect.ownKeys(item).length===keys.length&&keys.every(key=>Object.hasOwn(Object.getOwnPropertyDescriptor(item,key)||{},'value'));
+  const uuid=item=>typeof item==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(item);
+  const month=item=>typeof item==='string'&&/^\d{4}-(0[1-9]|1[0-2])$/.test(item)&&item>='2000-01';
+  const index=item=>Number(item.slice(0,4))*12+Number(item.slice(5,7))-1;
+  if(!exact(value,['operation','cohort_month','through_month','sources'])||value.operation!=='coverage'||!month(value.cohort_month)||!month(value.through_month)||value.cohort_month>value.through_month||index(value.through_month)-index(value.cohort_month)>5||!Array.isArray(value.sources)||Object.getPrototypeOf(value.sources)!==Array.prototype||value.sources.length>3||Reflect.ownKeys(value.sources).length!==value.sources.length+1)return null;
+  const seen=new Set(),sources=[];
+  for(let position=0;position<value.sources.length;position++){
+   const descriptor=Object.getOwnPropertyDescriptor(value.sources,String(position));if(!descriptor||!Object.hasOwn(descriptor,'value'))return null;
+   const row=descriptor.value;if(!exact(row,['run_id','source_revision'])||!uuid(row.run_id)||seen.has(row.run_id)||!Number.isSafeInteger(row.source_revision)||row.source_revision<1||row.source_revision>2147483647)return null;
+   seen.add(row.run_id);sources.push({run_id:row.run_id,source_revision:row.source_revision});
+  }
+  return {operation:'coverage',cohort_month:value.cohort_month,through_month:value.through_month,sources};
+ }catch{return null;}
+}
+
+export function projectEscrowReleaseCoverageFrame(value){
+ const plain=item=>item!==null&&typeof item==='object'&&[Object.prototype,null].includes(Object.getPrototypeOf(item));
+ const exact=(item,keys)=>plain(item)&&Reflect.ownKeys(item).length===keys.length&&keys.every(key=>Object.hasOwn(Object.getOwnPropertyDescriptor(item,key)||{},'value'));
+ const array=(item,max)=>Array.isArray(item)&&Object.getPrototypeOf(item)===Array.prototype&&item.length<=max&&Reflect.ownKeys(item).length===item.length+1&&Array.from({length:item.length},(_,index)=>Object.getOwnPropertyDescriptor(item,String(index))).every(row=>row&&Object.hasOwn(row,'value'));
+ const int=(item,min=0,max=Number.MAX_SAFE_INTEGER)=>Number.isSafeInteger(item)&&!Object.is(item,-0)&&item>=min&&item<=max;
+ const month=item=>typeof item==='string'&&/^\d{4}-(0[1-9]|1[0-2])$/.test(item)&&item>='2000-01';
+ const monthIndex=item=>Number(item.slice(0,4))*12+Number(item.slice(5,7))-1;
+ const nextMonth=item=>{const date=new Date(item+'-01T00:00:00Z');date.setUTCMonth(date.getUTCMonth()+1);return date.toISOString().slice(0,7);};
+ const uuid=item=>typeof item==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(item);
+ const day=item=>typeof item==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(item)&&Number.isFinite(Date.parse(item+'T00:00:00Z'))&&new Date(item+'T00:00:00Z').toISOString().slice(0,10)===item;
+ const cents=item=>item===null||int(item,Number.MIN_SAFE_INTEGER);
+ const time=item=>item===null||int(item,1,9999999999);
+ const allowedPending=['SOURCE_MISSING','CALENDAR_MISSING','CALENDAR_PARTIAL','ORDER_NOT_LOCATED','RELEASE_IDENTITY_AMBIGUOUS','BANK_RECEIPT_NOT_VERIFIED','RELEASE_CYCLE_SEMANTICS_UNVERIFIED'];
+ try{
+  if(!exact(value,['schema','cohort_month','through_month','checked_at','status','sources','calendars','coverage','pending','basis'])||value.schema!=='finance_escrow_release_coverage_v1'||!month(value.cohort_month)||!month(value.through_month)||value.cohort_month>value.through_month||monthIndex(value.through_month)-monthIndex(value.cohort_month)>5||!int(value.checked_at,1,9999999999)||!['COLLECTING','PARTIAL','IDENTITY_COMPLETE'].includes(value.status)||value.basis!=='SAVED_RELEASE_CALENDARS_AGAINST_PAID_ORDER_COHORT_NOT_BANK_RECEIPT'||!array(value.sources,3))return null;
+  const today=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date(value.checked_at*1000)).slice(0,7);if(value.through_month>today)return null;
+  const sources=[],seen=new Set();let paid=0,allSources=value.sources.length>0;
+  for(const item of value.sources){
+   if(!exact(item,['run_id','source_revision','start_date','end_date','status','orders','paid_orders','finance_oldest_at','finance_latest_at','expected_repass_cents'])||!uuid(item.run_id)||seen.has(item.run_id)||!int(item.source_revision,1,2147483647)||!['AVAILABLE','MISSING'].includes(item.status))return null;seen.add(item.run_id);
+   if(item.status==='MISSING'){
+    if(['start_date','end_date','orders','paid_orders','finance_oldest_at','finance_latest_at','expected_repass_cents'].some(key=>item[key]!==null))return null;allSources=false;
+   }else{
+    if(!day(item.start_date)||!day(item.end_date)||item.start_date.slice(0,7)!==value.cohort_month||item.end_date.slice(0,7)!==value.cohort_month||item.end_date<item.start_date||(Date.parse(item.end_date)-Date.parse(item.start_date))/86400000>14||!int(item.orders,0,1000)||!int(item.paid_orders,0,item.orders)||!cents(item.expected_repass_cents)||!int(item.finance_oldest_at,1,value.checked_at)||!int(item.finance_latest_at,item.finance_oldest_at,value.checked_at))return null;
+    paid+=item.paid_orders;
+   }
+   sources.push({...item});
+  }
+  const months=monthIndex(value.through_month)-monthIndex(value.cohort_month)+1;if(!array(value.calendars,6)||value.calendars.length!==months)return null;
+  const calendars=[];let expected=value.cohort_month,completeCalendars=0,hasMissing=false,hasPartial=false;
+  for(const item of value.calendars){
+   if(!exact(item,['month','status','scan_id','cutoff_at','source_oldest_at','source_latest_at','observations','cohort_observations','unique_cohort_orders','ambiguous_cohort_orders'])||item.month!==expected||!['MISSING','PARTIAL','COMPLETE'].includes(item.status)||!int(item.observations,0,10000)||!int(item.cohort_observations,0,item.observations)||!int(item.unique_cohort_orders,0,item.cohort_observations)||!int(item.ambiguous_cohort_orders,0,item.unique_cohort_orders))return null;
+   if(item.status==='MISSING'){
+    if(item.scan_id!==null||item.cutoff_at!==null||item.source_oldest_at!==null||item.source_latest_at!==null||item.observations!==0||item.cohort_observations!==0||item.unique_cohort_orders!==0||item.ambiguous_cohort_orders!==0)return null;hasMissing=true;
+   }else{
+    if(!uuid(item.scan_id)||!int(item.cutoff_at,1,value.checked_at)||(item.source_oldest_at===null)!==(item.source_latest_at===null)||item.source_oldest_at!==null&&(!int(item.source_oldest_at,1,value.checked_at)||!int(item.source_latest_at,item.source_oldest_at,value.checked_at))||item.observations>0&&item.source_oldest_at===null)return null;
+    if(item.status==='COMPLETE')completeCalendars++;else hasPartial=true;
+   }
+   calendars.push({...item});expected=nextMonth(expected);
+  }
+  const coverage=value.coverage;if(!exact(coverage,['paid_orders','located_orders','not_located_orders','ambiguous_orders','single_orders','calendars_total','calendars_complete','identity_complete_at_cutoff'])||coverage.paid_orders!==null&&!int(coverage.paid_orders,0,3000)||!int(coverage.located_orders,0,3000)||coverage.not_located_orders!==null&&!int(coverage.not_located_orders,0,3000)||!int(coverage.ambiguous_orders,0,coverage.located_orders)||!int(coverage.single_orders,0,coverage.located_orders)||coverage.single_orders+coverage.ambiguous_orders!==coverage.located_orders||coverage.calendars_total!==calendars.length||coverage.calendars_complete!==completeCalendars||typeof coverage.identity_complete_at_cutoff!=='boolean')return null;
+  if(allSources){
+   if(coverage.paid_orders!==paid||coverage.not_located_orders!==paid-coverage.located_orders||coverage.located_orders>paid)return null;
+  }else if(coverage.paid_orders!==null||coverage.not_located_orders!==null)return null;
+  const identity=allSources&&!hasMissing&&!hasPartial&&coverage.not_located_orders===0&&coverage.ambiguous_orders===0;
+  if(coverage.identity_complete_at_cutoff!==identity)return null;
+  if(!array(value.pending,allowedPending.length)||new Set(value.pending).size!==value.pending.length||!value.pending.every(code=>allowedPending.includes(code))||!value.pending.includes('BANK_RECEIPT_NOT_VERIFIED')||!value.pending.includes('RELEASE_CYCLE_SEMANTICS_UNVERIFIED'))return null;
+  const required=[...(!allSources?['SOURCE_MISSING']:[]),...(hasMissing?['CALENDAR_MISSING']:[]),...(hasPartial?['CALENDAR_PARTIAL']:[]),...(allSources&&coverage.not_located_orders>0?['ORDER_NOT_LOCATED']:[]),...(coverage.ambiguous_orders>0?['RELEASE_IDENTITY_AMBIGUOUS']:[])];
+  if(!required.every(code=>value.pending.includes(code)))return null;
+  const status=!allSources||hasMissing||hasPartial?'COLLECTING':identity?'IDENTITY_COMPLETE':'PARTIAL';if(value.status!==status)return null;
+  return {schema:value.schema,cohort_month:value.cohort_month,through_month:value.through_month,checked_at:value.checked_at,status,sources,calendars,coverage:{...coverage},pending:[...value.pending],basis:value.basis};
+ }catch{return null;}
+}
+
+export function escrowReleaseCoverageRequestMatches(request,frame){
+ const selection=projectEscrowReleaseCoverageRequest(request),value=projectEscrowReleaseCoverageFrame(frame);
+ if(!selection||!value||selection.cohort_month!==value.cohort_month||selection.through_month!==value.through_month)return false;
+ const scopes=rows=>rows.map(({run_id,source_revision})=>run_id+':'+source_revision).sort();
+ return JSON.stringify(scopes(selection.sources))===JSON.stringify(scopes(value.sources));
+}
