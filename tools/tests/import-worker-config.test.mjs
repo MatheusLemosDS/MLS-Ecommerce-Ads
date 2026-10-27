@@ -9,6 +9,8 @@ import {PROJECT_ROOT, TARGETS, sha256, stableJson} from '../worker_project.mjs';
 
 const authSource = readFileSync(resolve(PROJECT_ROOT, 'web/cloudflare/auth-worker.mjs'));
 const appSource = readFileSync(resolve(PROJECT_ROOT, 'web/cloudflare/app-worker.mjs'));
+// Temporary diagnostics: record only the built source fingerprint, never source or secrets.
+console.log('MLS_APP_BUILT_SHA256=' + sha256(appSource));
 const ADMIN_ID = '12345678-1234-1234-1234-123456789abc';
 const FINANCE_ID = '87654321-4321-4321-4321-cba987654321';
 const secret = 'FIXTURE_SECRET_MUST_NEVER_ENTER_IMPORTED_OUTPUT';
