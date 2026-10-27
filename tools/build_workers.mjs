@@ -27,5 +27,5 @@ export function buildWorkers(target = 'all', {root = PROJECT_ROOT, run = execFil
 
 if (process.argv[1] && path.resolve(process.argv[1]) === path.join(PROJECT_ROOT, 'tools/build_workers.mjs')) {
   try { console.log(stableJson(buildWorkers(process.argv[2] || 'all')).trim()); }
-  catch (failure) { console.error(failure?.code || 'WORKER_BUILD_FAILED'); process.exitCode = 1; }
+  catch (failure) { console.error(failure?.code || 'WORKER_BUILD_FAILED'); if(failure?.stack) console.error(failure.stack); process.exitCode = 1; }
 }
