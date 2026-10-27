@@ -1,5 +1,5 @@
 import {readCompletedBusinessMonth} from './business-month-publication.mjs';
-import {projectEscrowReleaseFrame} from '../../finance/src/escrow-release-frame.mjs';
+import {projectEscrowReleaseFrame,projectEscrowReleaseEvidenceFrame} from '../../finance/src/escrow-release-frame.mjs';
 
 export const BUSINESS_ESCROW_RELEASES_SCHEMA=[
  `CREATE TABLE IF NOT EXISTS business_escrow_release_reports(month TEXT NOT NULL,cohort_key TEXT NOT NULL,payload TEXT NOT NULL CHECK(length(CAST(payload AS BLOB))<=65536),checked_at INTEGER NOT NULL,PRIMARY KEY(month,cohort_key))`,
@@ -65,18 +65,36 @@ export function projectBusinessEscrowReleases(value,projectFrame){
  }catch{return null;}
 }
 
+export function projectBusinessEscrowReleaseEvidence(value,validators={}){
+ const plain=item=>item!==null&&typeof item==='object'&&[Object.prototype,null].includes(Object.getPrototypeOf(item));
+ const exact=(item,keys)=>plain(item)&&Reflect.ownKeys(item).length===keys.length&&keys.every(key=>Object.hasOwn(Object.getOwnPropertyDescriptor(item,key)||{},'value'));
+ try{
+  if(!exact(validators,['projectBusiness','projectFrame','projectEvidenceFrame'])||!Object.values(validators).every(fn=>typeof fn==='function')||!exact(value,['schema','report','orders'])||value.schema!=='business_escrow_releases_v2')return null;
+  const report=validators.projectBusiness(value.report,validators.projectFrame);if(!report||report.report===null)return null;
+  const evidence=validators.projectEvidenceFrame({schema:'finance_escrow_releases_v2',report:report.report,orders:value.orders},validators.projectFrame);if(!evidence)return null;
+  const result={schema:'business_escrow_releases_v2',report,orders:evidence.orders};return new TextEncoder().encode(JSON.stringify(result)).byteLength<=262144?result:null;
+ }catch{return null;}
+}
+
 async function snapshot(env,month,stamp,now){
  const db=await database(env),published=await readCompletedBusinessMonth(env,month,{now}),cohort=cohortOf(published),requestSources=(cohort?.sources??[]).map(({run_id,source_revision})=>({run_id,source_revision})),key=JSON.stringify(requestSources);
  const rows=await db.batch([db.prepare('SELECT payload,checked_at FROM business_escrow_release_reports WHERE month=? AND cohort_key=?').bind(month,key),db.prepare('SELECT checked_at,status,code,next_attempt_at FROM business_escrow_release_attempts WHERE month=? AND cohort_key=?').bind(month,key)]);
- let report=null;const stored=rows[0]?.results?.[0];if(stored){try{if(typeof stored.payload!=='string'||encoder.encode(stored.payload).byteLength>65536)throw Error();report=projectEscrowReleaseFrame(JSON.parse(stored.payload));}catch{}if(!reportMatches(report,cohort,month)||report.checked_at!==stored.checked_at||report.checked_at>stamp+60)fail('BUSINESS_ESCROW_RELEASES_STORAGE_INVALID');}
+ let report=null,orders=null;const stored=rows[0]?.results?.[0];if(stored){try{if(typeof stored.payload!=='string'||encoder.encode(stored.payload).byteLength>65536)throw Error();const raw=JSON.parse(stored.payload),evidence=projectEscrowReleaseEvidenceFrame(raw,projectEscrowReleaseFrame);report=evidence?.report??projectEscrowReleaseFrame(raw);orders=evidence?.orders??null;}catch{}if(!reportMatches(report,cohort,month)||report.checked_at!==stored.checked_at||report.checked_at>stamp+60)fail('BUSINESS_ESCROW_RELEASES_STORAGE_INVALID');}
  const attempt=rows[1]?.results?.[0]??null;if(attempt&&(!integer(attempt.checked_at,1,stamp+60)||!integer(attempt.next_attempt_at,attempt.checked_at)||!['SUCCESS','UNAVAILABLE'].includes(attempt.status)||(attempt.status==='SUCCESS'?attempt.code!==null:!codes.includes(attempt.code))))fail('BUSINESS_ESCROW_RELEASES_STORAGE_INVALID');
- return {db,cohort,requestSources,key,report,attempt};
+ return {db,cohort,requestSources,key,report,orders,attempt};
 }
 function view(month,stamp,state){
  stamp=Math.max(stamp,state.report?.checked_at??0,state.attempt?.checked_at??0);const unavailable=state.attempt?.status==='UNAVAILABLE',status=state.report?(state.report.status==='CHECKED'&&!unavailable?'CHECKED':state.report.status==='COLLECTING'&&!unavailable?'RUNNING':'PARTIAL'):unavailable?'UNAVAILABLE':'COLLECTING';
  const projected=projectBusinessEscrowReleases({schema:'business_escrow_releases_v1',month,checked_at:stamp,status,cohort:state.cohort,report:state.report,attempt:state.attempt},projectEscrowReleaseFrame);if(!projected)fail('BUSINESS_ESCROW_RELEASES_RESULT_INVALID');return projected;
 }
 export async function readBusinessEscrowReleases(env,input,{now=()=>Date.now()}={}){const stamp=clock(now),month=selection(input,stamp);return view(month,stamp,await snapshot(env,month,stamp,()=>stamp*1000));}
+
+export async function readBusinessEscrowReleaseEvidence(env,input,{now=()=>Date.now()}={}){
+ const stamp=clock(now),month=selection(input,stamp),state=await snapshot(env,month,stamp,()=>stamp*1000),report=view(month,stamp,state);
+ if(state.orders===null)return report;
+ const value=projectBusinessEscrowReleaseEvidence({schema:'business_escrow_releases_v2',report,orders:state.orders},{projectBusiness:projectBusinessEscrowReleases,projectFrame:projectEscrowReleaseFrame,projectEvidenceFrame:projectEscrowReleaseEvidenceFrame});
+ if(!value)fail('BUSINESS_ESCROW_RELEASES_RESULT_INVALID');return value;
+}
 
 export async function runBusinessEscrowReleases(env,source,input,{now=()=>Date.now(),canRun=async()=>true}={}){
  const started=clock(now),month=selection(input,started);if(typeof source!=='function'||typeof canRun!=='function')fail('BUSINESS_ESCROW_RELEASES_CONFIGURATION');
@@ -88,11 +106,11 @@ export async function runBusinessEscrowReleases(env,source,input,{now=()=>Date.n
   if(!await canRun())return result('PAUSED');const current=await snapshot(env,month,clock(now),now);if(current.attempt?.next_attempt_at>clock(now))return result('RETRY_WAIT');
   let raw,error;try{reads++;raw=await source(env,{operation:'step',month,sources:current.requestSources});}catch(value){error=value;}
   const finished=clock(now);if(!await canRun())return result('PAUSED',reads);
-  const frame=projectEscrowReleaseFrame(raw);let code=null;
+  const evidence=projectEscrowReleaseEvidenceFrame(raw,projectEscrowReleaseFrame),frame=evidence?.report??projectEscrowReleaseFrame(raw);let code=null;
   if(!frame){const diagnostic=Object.getOwnPropertyDescriptor(Object.getOwnPropertyDescriptor(raw??{},'diagnostic')?.value??{},'code')?.value??Object.getOwnPropertyDescriptor(error??{},'code')?.value;code=codes.includes(diagnostic)?diagnostic:'FINANCE_ESCROW_RELEASES_UNAVAILABLE';}
   else if(!reportMatches(frame,current.cohort,month)||frame.checked_at>finished+60)code='FINANCE_ESCROW_RELEASES_SCOPE_MISMATCH';
   const valid=code===null,stamp=valid?Math.max(finished,frame.checked_at):finished,collection=valid?frame.collection:null,progress=valid&&collection.status==='RUNNING'&&collection.diagnostic===null,blocked=valid&&collection.status==='BLOCKED',next=valid?Math.max(stamp+(blocked?21600:progress?60:collection.status==='RETRY_WAIT'?60:900),collection.next_attempt_at):stamp+300,repeat=progress&&next<=stamp+60,guard='EXISTS(SELECT 1 FROM business_escrow_release_leases WHERE month=? AND lease_token=? AND lease_until>?)',args=[month,token,finished],writes=[];
-  if(valid){const payload=JSON.stringify(frame);if(encoder.encode(payload).byteLength>65536)fail('BUSINESS_ESCROW_RELEASES_RESPONSE_LIMIT');writes.push(db.prepare('INSERT INTO business_escrow_release_reports(month,cohort_key,payload,checked_at) SELECT ?,?,?,? WHERE '+guard+' ON CONFLICT(month,cohort_key) DO UPDATE SET payload=excluded.payload,checked_at=excluded.checked_at WHERE business_escrow_release_reports.checked_at<=excluded.checked_at').bind(month,current.key,payload,frame.checked_at,...args));}
+  if(valid){const payload=JSON.stringify(evidence??frame);if(encoder.encode(payload).byteLength>65536)fail('BUSINESS_ESCROW_RELEASES_RESPONSE_LIMIT');writes.push(db.prepare('INSERT INTO business_escrow_release_reports(month,cohort_key,payload,checked_at) SELECT ?,?,?,? WHERE '+guard+' ON CONFLICT(month,cohort_key) DO UPDATE SET payload=excluded.payload,checked_at=excluded.checked_at WHERE business_escrow_release_reports.checked_at<=excluded.checked_at').bind(month,current.key,payload,frame.checked_at,...args));}
   writes.push(db.prepare('INSERT INTO business_escrow_release_attempts(month,cohort_key,checked_at,status,code,next_attempt_at) SELECT ?,?,?,?,?,? WHERE '+guard+' ON CONFLICT(month,cohort_key) DO UPDATE SET checked_at=excluded.checked_at,status=excluded.status,code=excluded.code,next_attempt_at=excluded.next_attempt_at WHERE business_escrow_release_attempts.checked_at<=excluded.checked_at').bind(month,current.key,stamp,valid?'SUCCESS':'UNAVAILABLE',code,next,...args));
   const attemptIndex=writes.length-1;
   // These are inaccessible presentation-cache signatures, not financial
