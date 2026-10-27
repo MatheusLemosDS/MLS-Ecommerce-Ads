@@ -7,9 +7,40 @@ export const BUSINESS_DAY_CSS=String.raw`
 
 export function businessDayBody(){return `<section id="businessDay" class="business-day" aria-labelledby="businessDayTitle"><header class="business-day-heading"><div><h2 id="businessDayTitle">Lucro estimado do dia</h2><p>Por pedidos criados neste dia (Brasília).</p></div></header><div class="business-day-controls"><div class="business-day-presets" role="group" aria-label="Escolher o dia"><button id="businessDayToday" type="button" aria-pressed="true" disabled>Hoje</button><button id="businessDayYesterday" type="button" aria-pressed="false" disabled>Ontem</button></div><div class="business-day-date"><label for="businessDayDate">Data · Brasília</label><input id="businessDayDate" type="date" min="2000-01-01" disabled></div></div><article id="businessDayResult" class="business-day-result" data-state="waiting"><div class="business-day-result-top"><span id="businessDayPeriod">Preparando o dia</span><span id="businessDayBadge" class="badge">Em apuração</span></div><strong id="businessDayNet">Em apuração</strong><p id="businessDayNetLabel">Estimativa após os custos do dia.</p><p id="businessDayHelp">O resultado aparece quando os pedidos, anúncios e custos deste dia estiverem disponíveis.</p></article><div class="business-day-support" aria-label="Valores do dia"><article><small>Vendas dos pedidos pagos</small><strong id="businessDaySales">—</strong><span id="businessDaySalesHelp">Valores informados pela Shopee.</span></article><article><small>Anúncios na data</small><strong id="businessDayAds">—</strong><span>Data informada pela Shopee.</span></article><article><small>Pedidos pagos</small><strong id="businessDayPaid">—</strong><span id="businessDayCoverage">Aguardando a leitura salva.</span></article></div><p id="businessDayStatus" class="business-day-status" role="status" aria-live="polite">Preparando a consulta do dia…</p><details id="businessDayCalculationDetails" class="business-day-details"><summary>Ver cálculo e pendências do dia</summary><dl id="businessDayWaterfall" class="business-day-waterfall"></dl><p id="businessDayAllocation">DAS e despesas mensais entram como uma parcela diária, distribuída pelos dias do mês. A conta mensal mantém o valor completo.</p><ul id="businessDayPending"></ul><p id="businessDaySources">Os horários das fontes serão mostrados após a leitura.</p><p>É uma estimativa operacional. Recebimentos bancários e devoluções ainda dependem de conciliação. As deduções já incluídas no repasse não são descontadas novamente.</p></details></section>`;}
 
+
+/**
+ * Read-only subset of the already-projected monthly day rows.
+ * Never starts collection, leaks order rows, or guesses gaps as zero.
+ */
+export function projectMissionDailyTrend(summary, selected){
+ const safe=value=>Number.isSafeInteger(value)&&!Object.is(value,-0);
+ const validDate=value=>typeof value==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(value);
+ if(!summary||summary.schema!=='business_daily_summary_v1'||!validDate(selected)||selected.slice(0,7)!==summary.month||!Array.isArray(summary.days))return null;
+ const forbidden=new Set(['SOURCE_UNAVAILABLE','ARITHMETIC_UNSAFE','FINANCIAL_SOURCE_STALE','PAYMENT_INCOMPLETE','ADS_SOURCE_STALE']);
+ const all=summary.days.filter(row=>validDate(row?.date)&&row.date<=selected).slice(-14);
+ if(!all.length)return null;
+ const points=all.map(row=>{
+  const state=['OPERATIONAL','PARTIAL_COSTS'].includes(row.state)?row.state:'UNAVAILABLE';
+  const partial=Boolean(row.day_partial),basis=state==='PARTIAL_COSTS'?'KNOWN_COSTS':state==='OPERATIONAL'?'ESTIMATE':null;
+  const unknown=state==='UNAVAILABLE',net=unknown?null:state==='PARTIAL_COSTS'?row.known_estimate_cents:row.estimate_cents;
+  const pending=Array.isArray(row.pending)?row.pending:[];
+  const comparable=!partial&&state==='OPERATIONAL'&&!pending.some(code=>forbidden.has(code));
+  return Object.freeze({
+   date:row.date,state,partial,net_basis:basis,
+   net_cents:safe(net)?net:null,
+   sales_cents:!unknown&&safe(row.sales_cents)?row.sales_cents:null,
+   ads_spend_cents:!unknown&&safe(row.ads_spend_cents)?row.ads_spend_cents:null,
+   paid_orders:!unknown&&safe(row.coverage?.paid)&&row.coverage.paid>=0?row.coverage.paid:null,
+   comparable
+  });
+ });
+ return Object.freeze({schema:'mls_mission_daily_trend_v1',month:summary.month,selected_date:selected,basis:'PAID_CREATE_DAY_AND_CALENDAR_ADS_OPERATIONAL_ESTIMATE',points:Object.freeze(points)});
+}
+
 export const BUSINESS_DAY_CLIENT=String.raw`
 (()=>{
  ${projectDailyBusinessSummary.toString()}
+ const projectMissionDailyTrend=${projectMissionDailyTrend.toString()};
  const el=name=>document.getElementById('businessDay'+name),node=(tag,text)=>{const element=document.createElement(tag);if(text!==undefined)element.textContent=text;return element;};
  const money=value=>{if(!Number.isSafeInteger(value))return 'Não informado';const cents=BigInt(value),absolute=cents<0n?-cents:cents,fraction=String(absolute%100n).padStart(2,'0');const text=new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).formatToParts(absolute/100n).map(part=>part.type==='fraction'?fraction:part.value).join('');return (cents<0n?'-':'')+text;};
  const day=value=>typeof value==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(value)?value.slice(8)+'/'+value.slice(5,7)+'/'+value.slice(0,4):'—';
@@ -89,6 +120,6 @@ export const BUSINESS_DAY_CLIENT=String.raw`
   return Object.freeze({schema:'mls_day_snapshot_v1',date:selected,state:item.state,net_cents:Number.isSafeInteger(amount)?amount:null,net_basis:Number.isSafeInteger(amount)?partial?'KNOWN_COSTS':'ESTIMATE':null,sales_cents:Number.isSafeInteger(item.sales_cents)?item.sales_cents:null,ads_spend_cents:Number.isSafeInteger(item.ads_spend_cents)?item.ads_spend_cents:null,paid_orders:Number.isSafeInteger(coverage?.paid)?coverage.paid:null,pending:Array.isArray(item.pending)?[...item.pending]:[],production_coverage:production?Object.freeze({known_units:Number.isSafeInteger(production.known_units)?production.known_units:null,total_units:Number.isSafeInteger(production.total_units)?production.total_units:null,pending_units:Number.isSafeInteger(production.pending_units)?production.pending_units:null}):null});
  }
  function stop(){stopped=true;active=false;summary=null;pendingMonth=null;pendingRequest=null;loadedMonth=null;render();}
- globalThis.brazaDayDashboard=Object.freeze({prepare,bootstrapState,setContext,reset,stop,getSelection:()=>{if(!prepared)prepare();return selected;},getSnapshot:snapshot});
+ globalThis.brazaDayDashboard=Object.freeze({prepare,bootstrapState,setContext,reset,stop,getSelection:()=>{if(!prepared)prepare();return selected;},getSnapshot:snapshot,getTrend:()=>projectMissionDailyTrend(summary,selected)});
 })();
 `;
