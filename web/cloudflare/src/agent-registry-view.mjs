@@ -26,13 +26,14 @@ export const AGENT_REGISTRY_CLIENT=String.raw`
  const statusLabel={HEALTHY:'Saudável',WORKING:'Trabalhando',ATTENTION:'Atenção',BLOCKED:'Bloqueado'};
  let lastKey='',observer=null,queued=false,registry=null;
  function read(){
-  let day=null,month=null,reconciliation=null,releases=null,incomeOverview=null;
+  let day=null,month=null,reconciliation=null,releases=null,incomeOverview=null,expenseSchedule=null;
   try{day=globalThis.brazaDayDashboard?.getSnapshot?.()??null;}catch{}
   try{month=globalThis.brazaMonthDashboard?.getSnapshot?.()??null;}catch{}
   try{reconciliation=globalThis.brazaReconciliation?.getSnapshot?.()??null;}catch{}
   try{releases=globalThis.brazaEscrowReleases?.getSnapshot?.()??null;}catch{}
   try{incomeOverview=globalThis.brazaIncomeOverview?.getSnapshot?.()??null;}catch{}
-  return buildMlsAgentRegistry({day,month,reconciliation,releases,incomeOverview});
+  try{expenseSchedule=globalThis.brazaExpenseSchedule?.getSnapshot?.()??null;}catch{}
+  return buildMlsAgentRegistry({day,month,reconciliation,releases,incomeOverview,expenseSchedule});
  }
  function metricValue(agent,secondary=false){
   const kind=secondary?agent.secondary_metric_kind:agent.metric_kind,value=secondary?agent.secondary_metric:agent.metric;
