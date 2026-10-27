@@ -73,7 +73,7 @@ def build():
     if re.search(r'^import\b',escrow_release,re.M):
         raise SystemExit('Unreviewed escrow release frame import; candidate not built.')
     escrow_release=re.sub(r'^export\s+', '', escrow_release, flags=re.M)
-    escrow_release_names='projectEscrowReleaseRequest,projectEscrowReleaseFrame,escrowReleaseRequestMatches'
+    escrow_release_names='projectEscrowReleaseRequest,projectEscrowReleaseFrame,projectEscrowReleaseEvidenceFrame,escrowReleaseRequestMatches'
     escrow_release_bundle='const brazaEscrowReleaseFrame = (() => {\n'+escrow_release+'\nreturn {'+escrow_release_names+'};\n})();\n'
     escrow_release_import="import {"+escrow_release_names+"} from './escrow-release-frame.mjs';\n"
     daily=(FINANCE/'src/daily-orders-frame.mjs').read_text()
