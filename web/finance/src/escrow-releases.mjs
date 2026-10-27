@@ -158,7 +158,7 @@ function construct(month,stamp,source,ledger,{includeOrders=false}={}){
 }
 
 export async function runFinanceEscrowReleases(env,options={}){
- if(!plain(options)||Reflect.ownKeys(options).some(key=>!['operation','month','sources','fetchImpl','now','timeoutMs'].includes(key)||!Object.hasOwn(Object.getOwnPropertyDescriptor(options,key)||{},'value')))fail('REQUEST_INVALID',400);
+ if(!plain(options)||Reflect.ownKeys(options).some(key=>!['operation','month','sources','fetchImpl','now','timeoutMs','includeOrders'].includes(key)||!Object.hasOwn(Object.getOwnPropertyDescriptor(options,key)||{},'value')))fail('REQUEST_INVALID',400);if(Object.hasOwn(options,'includeOrders')&&typeof options.includeOrders!=='boolean')fail('REQUEST_INVALID',400);
  const selection=projectEscrowReleaseRequest({operation:options.operation,month:options.month,sources:options.sources});if(!selection)fail('REQUEST_INVALID',400);
  const {now=()=>Date.now(),fetchImpl,timeoutMs=5000}=options,stamp=epoch(now),db=env?.FINANCE_DB;
  if(selection.month>new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date(stamp*1000)).slice(0,7))fail('REQUEST_INVALID',400);
@@ -167,5 +167,5 @@ export async function runFinanceEscrowReleases(env,options={}){
  const selections=[...selection.sources].sort((a,b)=>a.run_id.localeCompare(b.run_id)),source=await cohort(env,db,selections,selection.month,stamp,now);
  const ledger=await runEscrowReleaseLedger(env,{operation:selection.operation,month:selection.month,fetchImpl,now,timeoutMs});
  const checkedAt=Math.max(stamp,ledger.checked_at??stamp,...source.sources.filter(row=>row.status==='AVAILABLE').map(row=>row.finance_latest_at));
- return construct(selection.month,checkedAt,source,ledger);
+ return construct(selection.month,checkedAt,source,ledger,{includeOrders:options.includeOrders===true});
 }
