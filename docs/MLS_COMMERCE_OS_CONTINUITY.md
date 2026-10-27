@@ -168,3 +168,11 @@ Prioridade de agentes visíveis:
 
 A Central de Comando deve usar dados já coletados; não criar polling ou chamadas
 Shopee extras apenas para “animar” agentes.
+
+## Incremento M2 publicado — Pending Detail
+
+A PR #19, merge `20965a486fa0110261685ea05f700a7e71443f15`, adicionou `get_income_detail` para **Pending atual** em background. O coletor só chama o provedor quando o Income Overview já confirma `pending_cents > 0`, usa `income_status=2`, primeira página de até 100 registros e preserva `has_more` como cobertura parcial. O Finance Worker converte `order_sn` em hash antes de expor o contrato. A Central de Comando mostra **Pending atual por pedido** somente ao abrir o bloco, lendo o D1 local.
+
+CI: **2.057 Node + 67 Python**, main `40551187391`. Produção: App `7001aa3c-81c1-4404-be56-7252c0b88a4c`, Auth `c337d274-265a-4b60-9d0c-78a1b0abea9d`, Finance `3087ddfb-d735-4492-b71e-90b44d1d1507`.
+
+O próximo gate da M2 é observar a resposta real da loja e comparar Pending Overview + Pending Detail com o Seller Centre. Não implementar paginação completa nem `remaining_receivable_cents` até essa validação.

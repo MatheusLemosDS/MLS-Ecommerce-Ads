@@ -200,7 +200,9 @@ Continuar a fase financeira atual:
 
 **Incremento publicado — PR #18:** o MLS Finance agora resume **contas atrasadas, vencendo hoje, próximos 7 dias e próximo vencimento** a partir das datas declaradas no ledger. O `business-month-view-v4` reutiliza o mesmo `LEFT JOIN` mensal já existente, sem query D1 adicional, tabela nova, polling ou chamada Shopee. `NOT_ITEMIZED` continua desconhecido em vez de zero; marcar como pago permanece controle interno e não comprova liquidação bancária.
 
-**Ainda falta nesta fase:** observar o `pending_amount` real da conta e comparar com Seller Centre; decidir se `get_income_detail` deve detalhar Pending por pedido; manter `remaining_receivable` separado do snapshot atual; resolver diferenças materiais. O horizonte limitado do tracker nunca deve ser usado como prova de que não haverá liberação posterior.
+**Incremento publicado — PR #19:** o MLS Finance agora coleta `get_income_detail` para **Pending atual** somente quando o Income Overview confirma valor pendente maior que zero. A primeira página mantém até 100 registros, `has_more` sinaliza cobertura parcial e `order_sn` nunca sai do Finance Worker: a UI recebe apenas hashes internos, moeda, status, escrow estimado e previsão de liberação. O bloco **Pending atual por pedido** faz somente leitura local D1 ao ser aberto. O round-robin financeiro passa a `RELEASES -> RETURNS -> INCOME -> INCOME_DETAIL`, mantendo uma leitura privada por oportunidade. [Pesquisa](PESQUISA_INCOME_DETAIL_SHOPEE_2026_10_27.md).
+
+**Ainda falta nesta fase:** observar o `pending_amount` e o primeiro `get_income_detail` reais da conta e comparar com o Seller Centre; validar cursor/primeira página antes de paginação completa; manter `remaining_receivable` separado do snapshot atual; resolver diferenças materiais. O horizonte limitado do tracker nunca deve ser usado como prova de que não haverá liberação posterior.
 
 **Critério de saída:** período completo conciliado com explicação de cada diferença material.
 
