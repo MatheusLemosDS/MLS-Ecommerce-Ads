@@ -1,0 +1,60 @@
+{
+  "schema": "mls_commerce_os_checkpoint_v1",
+  "canonical_roadmap": "docs/ROADMAP_MLS_COMMERCE_OS.md",
+  "legacy_roadmap": "docs/ROADMAP_BRAZACOMMERCE.md",
+  "updated_at": "2026-10-27",
+  "product": {
+    "name": "MLS Commerce OS",
+    "supervisor": "MLS Hermes",
+    "target": "Sistema operacional multiagente para e-commerce",
+    "autonomy_modes": [
+      "OBSERVER",
+      "ASSISTED",
+      "AUTONOMOUS_LIMITED"
+    ]
+  },
+  "infrastructure_alias_policy": {
+    "branding_may_change": true,
+    "keep_technical_names": [
+      "brazacommerce-app",
+      "brazacommerce-auth",
+      "brazacommerce-finance",
+      "app.brazacommerce.com.br",
+      "X-Braza-*",
+      "D1 bindings/tables",
+      "existing routes/cookies/schemas"
+    ]
+  },
+  "base_before_conversion": {
+    "pr": 10,
+    "merge_commit": "9c418fd3010f46957d1ce52345baacd76041c788"
+  },
+  "current_phase": "M0_BRANDING_AND_CANONICAL_CONTINUITY",
+  "working_branch": "chatgpt/mls-commerce-os-branding-roadmap-20261027",
+  "current_status": "IN_PROGRESS",
+  "completed_this_phase": [
+    "Nome MLS Commerce OS definido",
+    "MLS Hermes definido como supervisor",
+    "Arquitetura multiagente e níveis de autonomia definidos",
+    "Branding visível iniciado no painel/login/Ads",
+    "Roadmap canônico criado",
+    "Handoff de continuidade criado"
+  ],
+  "remaining_this_phase": [
+    "Atualizar testes de branding quando necessário",
+    "Executar CI",
+    "Abrir/validar PR",
+    "Mesclar e confirmar deploy de produção",
+    "Atualizar este checkpoint para PUBLISHED"
+  ],
+  "next_phase": {
+    "id": "M1_COMMAND_CENTER_AGENT_REGISTRY",
+    "rules": [
+      "Agent Registry somente leitura",
+      "Reaproveitar dados existentes",
+      "Não adicionar chamadas Shopee apenas para agentes",
+      "Cards MLS Finance/Ads/Products/Production/Returns/Auditor/Hermes",
+      "Manter Ads/PROMO LOCKED"
+    ]
+  }
+}
