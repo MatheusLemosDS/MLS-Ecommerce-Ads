@@ -17,14 +17,14 @@ function browser(){
 }
 
 test('Pending diagnostic contains only hashed order evidence and explicit non-settlement semantics',async()=>{
- const b=browser();assert.equal(b.brazaIncomeOverview.start({api:b.api}),true);await Promise.resolve();await Promise.resolve();assert.equal(await b.brazaIncomeOverview.observeDetail(),true);
+ const b=browser();assert.equal(b.brazaIncomeOverview.start({api:b.api}),true);assert.equal(await b.brazaIncomeOverview.observe(),true);assert.equal(await b.brazaIncomeOverview.observeDetail(),true);
  const value=b.brazaIncomeOverview.getDiagnostic();assert.equal(value.schema,'mls_pending_diagnostic_v1');assert.deepEqual(JSON.parse(JSON.stringify(value.semantics)),{scope:'CURRENT_SHOPEE_PENDING_NOT_MONTHLY_COMPETENCE',bank_receipt:false,realized_profit:false,remaining_receivable:false});
  assert.equal(value.overview.pending_cents,10000);assert.equal(value.detail.returned_count,1);assert.equal(value.detail.known_amount_rows,1);assert.equal(value.detail.known_estimated_escrow_cents,4751);assert.equal(value.detail.rows[0].order_hash,hash);
  const raw=JSON.stringify(value);assert.doesNotMatch(raw,/order_sn|access_token|refresh_token|PRIVATE_/i);assert.equal(b.calls.filter(x=>x==='finance/income-detail').length,1);
 });
 
 test('diagnostic preserves partial coverage and unknown cents instead of inventing a total',async()=>{
- const b=browser(),partial=structuredClone(detail);partial.report.has_more=true;partial.report.next_cursor_present=true;partial.report.rows[0].estimated_escrow_raw='10.123';partial.report.rows[0].estimated_escrow_cents=null;b.api=async path=>path==='finance/income-detail'?partial:overview;b.brazaIncomeOverview.stop();b.brazaIncomeOverview.start({api:b.api});await Promise.resolve();await Promise.resolve();await b.brazaIncomeOverview.observeDetail();
+ const b=browser(),partial=structuredClone(detail);partial.report.has_more=true;partial.report.next_cursor_present=true;partial.report.rows[0].estimated_escrow_raw='10.123';partial.report.rows[0].estimated_escrow_cents=null;b.api=async path=>path==='finance/income-detail'?partial:overview;b.brazaIncomeOverview.stop();b.brazaIncomeOverview.start({api:b.api});await b.brazaIncomeOverview.observe();await b.brazaIncomeOverview.observeDetail();
  const value=b.brazaIncomeOverview.getDiagnostic();assert.equal(value.detail.has_more,true);assert.equal(value.detail.known_amount_rows,0);assert.equal(value.detail.known_estimated_escrow_cents,0);assert.equal(value.detail.rows[0].estimated_escrow_cents,null);assert.equal(value.semantics.remaining_receivable,false);
 });
 
