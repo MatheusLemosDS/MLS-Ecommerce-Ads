@@ -78,7 +78,7 @@ export function enhanceAdsPageHtml(html){
   if(translated)return '<'+tag+attrs+'>'+translated+'</'+tag+'>';
   if(tag.toLowerCase()==='title'){
    const heading=normalized.replace(/ - MLS Commerce Ads$/,'');
-   return '<title>'+(adsUiLabels.get(heading)||heading).replace(/^MLS Commerce Ads$/,'BrazaCommerce')+(heading!==normalized?' · BrazaCommerce':'')+'</title>';
+   return '<title>'+(adsUiLabels.get(heading)||heading).replace(/^MLS Commerce Ads$/,'MLS Commerce OS')+(heading!==normalized?' · MLS Commerce OS':'')+'</title>';
   }
   return whole;
  }).replace(/(<div class="(?:feature|signal(?: [^"]*)?|locked|unlocked)">\s*<strong>)([^<>]*)(<\/strong>)/g,(whole,start,text,end)=>{
@@ -90,7 +90,7 @@ export function enhanceAdsPageHtml(html){
  })).join('');
  result=result.replace('<html lang="en">','<html lang="pt-BR">')
   .replace(/<div class="(logo|brand)">\s*MLS Commerce\s*<span>Ads<\/span>\s*<\/div>/g,
-   '<div class="$1"><span class="ads-brand-mark">B</span><span class="ads-brand-name">BrazaCommerce</span></div>');
+   '<div class="$1"><span class="ads-brand-mark">MLS</span><span class="ads-brand-name">MLS Commerce OS</span></div>');
  const toggle='<button type="button" class="ads-theme-toggle theme-toggle" data-braza-theme-toggle aria-label="Alterar tema">Tema</button>';
  if(result.includes('<main class="main">')){
   result=result.replace(/(<div class="top">[\s\S]*?)(<div class="system">)/,'$1<div class="ads-top-actions">'+toggle+'$2')
@@ -107,7 +107,7 @@ a{color:var(--accent)}
 .app{width:100%;min-width:0;align-items:flex-start}
 .sidebar{position:sticky;top:0;height:100dvh;width:236px;flex:0 0 236px;padding:30px 20px 20px;background:var(--surface);color:var(--text);border-right:1px solid var(--line);overflow-y:auto}
 .logo,.brand{display:flex;align-items:center;gap:10px;color:var(--text);font-size:18px;font-weight:800;letter-spacing:-.6px;margin-bottom:36px}
-.logo .ads-brand-mark,.brand .ads-brand-mark{display:grid;place-items:center;width:37px;height:39px;flex:0 0 37px;border-radius:12px;background:var(--accent);color:var(--on-accent,#fff);font-size:18px;letter-spacing:0}
+.logo .ads-brand-mark,.brand .ads-brand-mark{display:grid;place-items:center;width:43px;height:39px;flex:0 0 43px;border-radius:12px;background:var(--accent);color:var(--on-accent,#fff);font-size:10px;letter-spacing:.45px}
 .logo .ads-brand-name,.brand .ads-brand-name{color:var(--text)}
 .sidebar .nav{display:flex;align-items:center;min-height:44px;padding:12px 15px;margin:5px 0;border:1px solid transparent;border-radius:11px;color:var(--muted);font-size:13px;font-weight:600;transition:background .15s,color .15s}
 .sidebar .nav:hover{color:var(--text);background:var(--surface-raised)}
