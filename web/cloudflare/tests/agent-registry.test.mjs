@@ -221,7 +221,8 @@ test('Pending audit evidence is explicitly whitelisted, never copies provider ro
  assert.equal(exported.has_more,true);
  assert.equal(exported.comparable,false);
  const serialized=JSON.stringify(exported);
- for(const forbidden of ['sensitive-order','secret-token','order_hash','order_sn','shop_id','access_token','provider_payload','rows'])assert.ok(!serialized.includes(forbidden),forbidden);
+ for(const forbidden of ['sensitive-order','secret-token','order_hash','order_sn','shop_id','access_token','provider_payload'])assert.ok(!serialized.includes(forbidden),forbidden);
+ assert.ok(!serialized.includes('"rows":'),'raw provider rows must not leave the browser');
  assert.equal(exported.difference_cents,null);
  assert.match(exported.notice,/Nao comprova competencia mensal/);
  assert.ok(Object.isFrozen(exported));
