@@ -55,14 +55,20 @@
     "Primeira página de até 100 registros expõe apenas hashes internos, moeda, status, escrow estimado e previsão",
     "has_more preserva cobertura parcial e bloqueia interpretação como saldo completo",
     "Central de Comando carrega Pending por pedido somente sob demanda a partir do D1 local",
-    "Round-robin RELEASES -> RETURNS -> INCOME -> INCOME_DETAIL mantém uma leitura privada por oportunidade"
+    "Round-robin RELEASES -> RETURNS -> INCOME -> INCOME_DETAIL mantém uma leitura privada por oportunidade",
+    "Auditoria local do Pending atual classifica cobertura e sincronia sem criar chamadas Shopee ou polling",
+    "Pending Detail fechado não cria prioridade nem leitura D1 adicional só para alimentar agentes",
+    "has_more, detalhe anterior, valores não convertíveis e diferença descritiva viram estados explícitos do MLS Finance",
+    "OBSERVED_MATCH não vira prova de competência mensal, saldo a receber ou depósito bancário",
+    "OBSERVED_DIFFERENT vira trabalho de validação no Seller Centre, não erro contábil",
+    "Overflow na soma visível bloqueia MLS Auditor e Hermes em vez de fabricar valor"
   ],
   "remaining_this_phase": [
-    "Observar o primeiro snapshot real de Pending Detail da conta autenticada e comparar quantidade/valores com o Seller Centre",
-    "Comparar o pending_amount do Income Overview com o Seller Centre e com a primeira página do Pending Detail sem misturar competência mensal",
-    "Decidir paginação completa do Pending Detail somente após validar cursor e semântica na resposta real da loja",
+    "Observar o estado real da nova auditoria Pending na conta autenticada e comparar quantidade/valores/horários com o Seller Centre",
+    "Se a auditoria retornar PARTIAL_PAGE, validar o cursor e a semântica na resposta real antes de implementar paginação completa",
+    "Se retornar OBSERVED_DIFFERENT, determinar se a diferença vem de timing ou de bases diferentes antes de tratá-la como divergência material",
     "Observar a evidência real pós-deploy da conta autenticada, incluindo a evolução de coortes para calendários de liberação posteriores",
-    "Manter liquidação bancária e lucro realizado separados de Pending e liberação na Shopee",
+    "Manter liquidação bancária, remaining_receivable e lucro realizado separados de Pending e liberação na Shopee",
     "Resolver qualquer pedido ambíguo, valor não verificado ou conflito de evidência antes do fechamento estrito",
     "Reavaliar o horizonte limitado do tracker somente com evidência real; horizonte esgotado nunca prova ausência de liberação posterior"
   ],
@@ -102,10 +108,10 @@
     }
   },
   "next_actions": [
-    "Aguardar o cron financeiro produzir o primeiro snapshot real de Income Detail Pending",
-    "Abrir Central de Comando -> Pending atual por pedido e conferir quantidade, has_more, valores e horários estimados",
-    "Comparar pending_amount e os pedidos visíveis com o Seller Centre; não somar Pending ao resultado mensal",
-    "Se has_more=true e a resposta real for consistente, implementar paginação cursor em background mantendo uma leitura privada por oportunidade",
+    "Abrir Central de Comando -> Pending atual por pedido para carregar somente o snapshot D1 local e observar o estado da auditoria",
+    "Registrar Overview, quantidade de registros/pedidos, subtotal visível, valores conhecidos, has_more e horários exibidos",
+    "Comparar esses dados com o Seller Centre; OBSERVED_MATCH é apenas coincidência descritiva e OBSERVED_DIFFERENT ainda não é erro contábil",
+    "Somente se PARTIAL_PAGE aparecer e a resposta real for consistente, implementar paginação cursor em background mantendo uma leitura privada por oportunidade",
     "Manter remaining_receivable_cents separado: Pending atual não é automaticamente saldo de uma competência",
     "Manter realized_net_cents indisponível até existir evidência de liquidação bancária"
   ],
@@ -116,43 +122,42 @@
     "Conferir visual autenticado da Central de Comando em desktop e celular; ajustes visuais podem ocorrer dentro de M2 sem alterar contratos"
   ],
   "latest_increment": {
-    "id": "M2_PENDING_INCOME_DETAIL",
+    "id": "M2_PENDING_AUDIT",
     "status": "PUBLISHED",
-    "pull_request": 19,
-    "merge_commit": "20965a486fa0110261685ea05f700a7e71443f15",
+    "pull_request": 21,
+    "merge_commit": "2433cd9c55de271034def246fbca8dc98a1d4dae",
     "validation": {
-      "pr_run": 40550794415,
-      "main_run": 40551187391,
-      "node_tests": 2057,
+      "pr_run": 40555474962,
+      "main_run": 40555756177,
+      "node_tests": 2061,
       "python_tests": 67
     },
     "production": {
       "app": {
-        "build_id": "fe9f4a28-a20e-453f-8a32-031b4d76c59f",
-        "version_id": "7001aa3c-81c1-4404-be56-7252c0b88a4c"
+        "build_id": "0f7e863c-96df-4626-83d8-8075d147bbd0",
+        "version_id": "669b1ad9-e5e1-4002-b65b-ae386ff093b4"
       },
       "auth": {
-        "build_id": "e288f573-5522-43a2-b9c3-3593cecc4862",
-        "version_id": "c337d274-265a-4b60-9d0c-78a1b0abea9d"
+        "build_id": "f714ae09-4eb9-4faf-9b16-801c70632604",
+        "version_id": "dd7c7cd4-0470-4ec4-b7a3-52d486a2c782"
       },
       "finance": {
-        "build_id": "9a4b6cb8-17f3-4c12-8bd6-cf1167f5dcb8",
-        "version_id": "3087ddfb-d735-4492-b71e-90b44d1d1507"
+        "build_id": "a800ebcc-7f31-4a0a-a497-8bc493af5644",
+        "version_id": "c231b7e6-72d4-4c7e-9e89-ecb22c252fc9"
       }
     },
     "facts": [
-      "get_income_detail é usado somente para Pending atual da loja local (income_status=2)",
-      "A chamada de detalhe é bloqueada quando Income Overview não comprova pending_cents > 0",
-      "Primeira página usa page_size=100 e has_more mantém cobertura parcial",
-      "order_sn é transformado em SHA-256 dentro do Finance Worker e não atravessa o contrato",
-      "Abrir o detalhe no painel lê somente D1 local e não inicia chamada Shopee",
-      "Round-robin financeiro agora é RELEASES -> RETURNS -> INCOME -> INCOME_DETAIL com uma leitura privada por oportunidade"
+      "Auditoria compara Pending Overview e subtotal visível do Pending Detail somente de forma descritiva",
+      "has_more=true mantém a auditoria PARTIAL_PAGE e bloqueia inferência de total",
+      "Detalhe anterior ao Overview suspende comparação monetária",
+      "Valores não convertíveis em centavos são preservados sem arredondamento",
+      "A seção fechada não carrega detalhe D1 apenas para alimentar agentes",
+      "Nenhuma chamada Shopee, polling ou tabela nova foi adicionada por esta auditoria"
     ],
     "limits": [
-      "Pending atual não é competência mensal nem remaining_receivable da competência",
-      "estimated_escrow_amount não comprova depósito bancário",
-      "estimated_payout_time é previsão do provedor",
-      "Primeira página incompleta não permite inferir total por pedido",
+      "OBSERVED_MATCH não comprova competência mensal, remaining_receivable ou banco",
+      "OBSERVED_DIFFERENT não é automaticamente erro contábil",
+      "Paginação completa continua condicionada à validação real do cursor/semântica",
       "realized_net_cents permanece indisponível sem liquidação bancária"
     ]
   }

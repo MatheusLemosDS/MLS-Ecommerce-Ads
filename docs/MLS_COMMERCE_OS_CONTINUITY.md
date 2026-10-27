@@ -176,3 +176,18 @@ A PR #19, merge `20965a486fa0110261685ea05f700a7e71443f15`, adicionou `get_incom
 CI: **2.057 Node + 67 Python**, main `40551187391`. Produção: App `7001aa3c-81c1-4404-be56-7252c0b88a4c`, Auth `c337d274-265a-4b60-9d0c-78a1b0abea9d`, Finance `3087ddfb-d735-4492-b71e-90b44d1d1507`.
 
 O próximo gate da M2 é observar a resposta real da loja e comparar Pending Overview + Pending Detail com o Seller Centre. Não implementar paginação completa nem `remaining_receivable_cents` até essa validação.
+
+
+## Incremento M2 publicado — Auditoria Pending atual
+
+A PR #21, merge `2433cd9c55de271034def246fbca8dc98a1d4dae`, adicionou uma auditoria local do snapshot atual de Pending antes de qualquer paginação completa. Ela compara `pending_amount` do Income Overview com o subtotal visível de `estimated_escrow_amount` somente quando os snapshots são comparáveis.
+
+Estados importantes: `DETAIL_NOT_LOADED`, `WAITING_SAVED_DETAIL`, `DETAIL_OLDER_THAN_OVERVIEW`, `PARTIAL_PAGE`, `AMOUNT_PARTIAL`, `OBSERVED_MATCH`, `OBSERVED_DIFFERENT` e `ARITHMETIC_UNSAFE`.
+
+A seção fechada não faz leitura D1 só para alimentar agentes. Ao abrir, usa o endpoint owner local já existente; não consulta a Shopee. `has_more=true` mantém a cobertura parcial. Coincidência não prova competência/recebimento; diferença não é automaticamente erro contábil.
+
+CI: PR `40555474962`, main `40555756177`; **2.061 Node + 67 Python**. Produção: App `669b1ad9-e5e1-4002-b65b-ae386ff093b4`, Auth `dd7c7cd4-0470-4ec4-b7a3-52d486a2c782`, Finance `c231b7e6-72d4-4c7e-9e89-ecb22c252fc9`.
+
+### Ponto exato de retomada após PR #21
+
+Abrir **Central de Comando → Pending atual por pedido**, observar o estado real da auditoria e comparar os números/horários com o Seller Centre. Só implementar paginação cursor se a conta real apresentar `PARTIAL_PAGE` e a semântica do cursor for validada. `remaining_receivable_cents` e `realized_net_cents` continuam indisponíveis.
