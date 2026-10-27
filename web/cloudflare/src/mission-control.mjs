@@ -435,3 +435,19 @@ export const MISSION_TRENDS_CLIENT=String.raw`
  refresh();
 })();
 `;
+
+
+export function missionTrendPanelBody(id='overview'){
+ if(!['overview','finance','ads'].includes(id))return '';
+ const suffix=id[0].toUpperCase()+id.slice(1),defaultSeries=id==='ads'?'ads':'net';
+ const control=key=>'<button type="button" data-mission-chart="'+id+'" data-mission-series="'+key+'" aria-pressed="'+String(key===defaultSeries)+'">'+
+  (key==='net'?'Resultado':key==='sales'?'Vendas':'Ads')+'</button>';
+ const title=id==='ads'?'Evolução dos gastos com anúncios':id==='finance'?'Evolução do resultado financeiro':'Evolução financeira real';
+ return '<section class="mission-trend-panel" id="missionTrends'+suffix+'" aria-label="'+title+'">'+
+  '<header class="mission-trend-heading"><div><span class="mission-panel-eyebrow">SÉRIE DIÁRIA VALIDADA</span><h3>'+title+'</h3>'+
+  '<p id="missionTrendScope'+suffix+'">'+(id==='overview'?'Últimos até 14 dias do período observado':'Histórico diário do período selecionado')+'</p></div>'+
+  '<nav class="mission-trend-controls" aria-label="Métrica do gráfico">'+['net','sales','ads'].map(control).join('')+'</nav></header>'+
+  '<div class="mission-trend-graph" id="missionTrendGraph'+suffix+'"><p class="mission-trend-empty">Aguardando o histórico diário validado.</p></div>'+
+  '<p class="mission-trend-note" id="missionTrendNote'+suffix+'">As leituras parciais são sinalizadas. Sem série inventada.</p>'+
+  '</section>';
+}
