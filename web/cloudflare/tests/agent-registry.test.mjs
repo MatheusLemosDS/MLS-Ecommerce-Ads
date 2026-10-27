@@ -118,7 +118,7 @@ test('command center is read-only, renders the initial agent surfaces and adds n
  assert.doesNotMatch(AGENT_REGISTRY_CLIENT,/\bfetch\s*\(|setInterval\s*\(|\/api\//);
  assert.match(AGENT_REGISTRY_CLIENT,/MutationObserver/);
  assert.match(AGENT_REGISTRY_CLIENT,/brazaDayDashboard/);
- assert.match(AGENT_REGISTRY_CLIENT,/brazaMonthDashboard/);assert.match(AGENT_REGISTRY_CLIENT,/brazaReconciliation/);assert.match(AGENT_REGISTRY_CLIENT,/brazaEscrowReleases/);
+ assert.match(AGENT_REGISTRY_CLIENT,/brazaMonthDashboard/);assert.match(AGENT_REGISTRY_CLIENT,/brazaReconciliation/);assert.match(AGENT_REGISTRY_CLIENT,/brazaEscrowReleases/);assert.match(AGENT_REGISTRY_CLIENT,/brazaIncomeOverview/);
 });
 
 test('release matching becomes Finance work without calling an unlocated order unpaid or received',()=>{
@@ -141,4 +141,18 @@ test('conflicting after-adjustment payout evidence blocks Auditor and Hermes ins
  assert.equal(value.health,'BLOCKED');assert.equal(value.settlement.evidence_conflicts,1);
  assert.ok(value.priorities.some(item=>item.code==='SETTLEMENT_EVIDENCE_CONFLICT'&&item.severity==='BLOCKED'));
  assert.equal(value.agents.find(agent=>agent.id==='auditor').status,'BLOCKED');assert.equal(value.hermes.status,'BLOCKED');
+});
+
+
+test('current Shopee Pending stays separate from the month balance and is exposed only as a secondary Finance metric',()=>{
+ const incomeOverview={schema:'mls_income_overview_snapshot_v1',checked_at:1793080000,status:'AVAILABLE',pending_cents:32145,released_cents:99999,currency_basis:'FIXED_BRAZIL_SHOP_PROFILE',basis:'CURRENT_PROVIDER_INCOME_STATUS_NOT_BANK_RECEIPT_OR_HISTORICAL_MONTH'};
+ const value=buildMlsAgentRegistry({day:day(),month:month(),incomeOverview,now:1793080100}),finance=value.agents.find(agent=>agent.id==='finance');
+ assert.equal(finance.metric,240000);assert.equal(finance.metric_kind,'money');assert.equal(finance.secondary_metric,32145);assert.equal(finance.secondary_metric_kind,'money');assert.equal(finance.secondary_metric_label,'Pendente atual na Shopee');
+ assert.equal(value.income.current_pending_cents,32145);assert.equal(value.income.status,'AVAILABLE');assert.match(value.income.basis,/NOT_BANK_RECEIPT/);
+ assert.notEqual(value.month.balance_cents,value.income.current_pending_cents);
+});
+
+test('missing current income never becomes zero or changes the Finance month result',()=>{
+ const value=buildMlsAgentRegistry({day:day(),month:month(),incomeOverview:{schema:'mls_income_overview_snapshot_v1',checked_at:1793080000,status:'AVAILABLE',pending_cents:null,released_cents:null,currency_basis:'FIXED_BRAZIL_SHOP_PROFILE',basis:'CURRENT_PROVIDER_INCOME_STATUS_NOT_BANK_RECEIPT_OR_HISTORICAL_MONTH'}});
+ const finance=value.agents.find(agent=>agent.id==='finance');assert.equal(finance.metric,240000);assert.equal(finance.secondary_metric,null);assert.equal(value.income.current_pending_cents,null);
 });
