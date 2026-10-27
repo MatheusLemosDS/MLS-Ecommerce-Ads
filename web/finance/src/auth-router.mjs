@@ -5,7 +5,7 @@ import {projectStorePeriodRequest,projectStorePeriodFrame} from './store-period-
 import {projectBusinessPeriodRequest,projectBusinessPeriodFrame} from './business-period-frame.mjs';
 import {projectProductionOrdersRequest,projectProductionOrdersFrame,productionOrdersRequestMatches} from './production-orders-frame.mjs';
 import {projectProductIndexRequest,projectProductIndexFrame,productIndexRequestMatches,financeProductIndexDiagnostic} from './product-index-frame.mjs';
-import {projectEscrowReleaseRequest,projectEscrowReleaseFrame,projectEscrowReleaseEvidenceFrame,escrowReleaseRequestMatches} from './escrow-release-frame.mjs';
+import {projectEscrowReleaseRequest,projectEscrowReleaseFrame,projectEscrowReleaseEvidenceFrame,projectEscrowReleaseCoverageRequest,projectEscrowReleaseCoverageFrame,escrowReleaseRequestMatches,escrowReleaseCoverageRequestMatches} from './escrow-release-frame.mjs';
 import {projectReconciliationRequest,projectReconciliationFrame,projectReconciliationEvidenceFrame,projectReconciliationMoneyFrame,reconciliationRequestMatches} from './reconciliation-frame.mjs';
 import {projectHistoricalVariantEvidenceRequest,projectHistoricalVariantEvidenceFrame,historicalVariantEvidenceRequestMatches,historicalVariantEvidenceDiagnostic} from './historical-variant-evidence-frame.mjs';
 
@@ -106,7 +106,7 @@ export async function forwardFinancePaymentSample(request,env,{validateInternalA
  const refundContract=reconciliation?request.headers.get('x-braza-refund-contract'):null;
  if(refundContract!==null&&(refundContract!=='refunds-v1'||reconciliationContract!=='finance-reconciliation-v2'))return routerFailure('INVALID_REQUEST',400);
  const releaseContract=escrowReleases?request.headers.get('x-braza-release-contract'):null;
- if(releaseContract!==null&&releaseContract!=='release-orders-v1')return routerFailure('INVALID_REQUEST',400);
+ if(releaseContract!==null&&!['release-orders-v1','release-coverage-v1'].includes(releaseContract))return routerFailure('INVALID_REQUEST',400);
  const dailyContract=business?request.headers.get('x-braza-daily-contract'):null;
  if(dailyContract!==null&&dailyContract!=='daily-profit-v1')return routerFailure('INVALID_REQUEST',400);
  const secret=env?.FINANCE_ROUTER_SECRET;
@@ -120,7 +120,7 @@ export async function forwardFinancePaymentSample(request,env,{validateInternalA
  const deadline=new Promise((resolve,reject)=>{timer=setTimeout(()=>{controller.abort();try{reader?.cancel().catch(()=>{});}catch{}reject(Error('DEADLINE'));},historical?30000:business||reconciliation||escrowReleases?35000:45000);});
  const work=async()=>{
   let body;try{body=await readSampleBody(request.body,maximumInput,controller,value=>{reader=value;});}catch{return routerFailure('INVALID_REQUEST',400);}
-  const input=escrowReleases?projectEscrowReleaseRequest(body):reconciliation?projectReconciliationRequest(body):historical?projectHistoricalVariantEvidenceRequest(body):index?projectProductIndexRequest(body):production?projectProductionOrdersRequest(body):storePeriod?(business?projectBusinessPeriodRequest(body):projectStorePeriodRequest(body)):catalog?projectVariantCatalogRequest(body):body;
+  const input=escrowReleases?(releaseContract==='release-coverage-v1'?projectEscrowReleaseCoverageRequest(body):projectEscrowReleaseRequest(body)):reconciliation?projectReconciliationRequest(body):historical?projectHistoricalVariantEvidenceRequest(body):index?projectProductIndexRequest(body):production?projectProductionOrdersRequest(body):storePeriod?(business?projectBusinessPeriodRequest(body):projectStorePeriodRequest(body)):catalog?projectVariantCatalogRequest(body):body;
   if(!input||(!escrowReleases&&!reconciliation&&!historical&&!index&&!production&&!catalog&&!storePeriod&&(typeof input!=='object'||Array.isArray(input)||Object.keys(input).length!==0)))return routerFailure('INVALID_REQUEST',400);
   if(controller.signal.aborted)return unavailable();
   const responseMaximum=catalog&&input.include_cost_catalog?1048576:maximum;
@@ -153,9 +153,13 @@ export async function forwardFinancePaymentSample(request,env,{validateInternalA
   const preview=url.pathname===PAYMENT_PREVIEW_PATH;
   const reconciliationMoney=reconciliation?projectReconciliationMoneyFrame(value,projectReconciliationFrame,projectReconciliationEvidenceFrame):null;
   const reconciliationEvidence=reconciliation?projectReconciliationEvidenceFrame(reconciliationMoney?{schema:'finance_reconciliation_v2',report:reconciliationMoney.report,review:reconciliationMoney.review}:value,projectReconciliationFrame):null;
-  const releaseEvidence=escrowReleases?projectEscrowReleaseEvidenceFrame(value,projectEscrowReleaseFrame):null;
-  const frame=escrowReleases?releaseEvidence?.report??projectEscrowReleaseFrame(value):reconciliation?reconciliationEvidence?.report??projectReconciliationFrame(value):historical?projectHistoricalVariantEvidenceFrame(value):index?projectProductIndexFrame(value):production?projectProductionOrdersFrame(value):storePeriod?(business?projectBusinessPeriodFrame(value):projectStorePeriodFrame(value)):catalog?projectVariantCatalog(value):preview?projectFinancePaymentPreview(value):sampleFrame(value);
-  if(escrowReleases)return frame&&escrowReleaseRequestMatches(input,frame)?new Response(JSON.stringify(releaseContract==='release-orders-v1'&&releaseEvidence?releaseEvidence:frame),{headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}}):unavailable();
+  const releaseCoverage=escrowReleases&&releaseContract==='release-coverage-v1'?projectEscrowReleaseCoverageFrame(value):null;
+  const releaseEvidence=escrowReleases&&releaseContract!=='release-coverage-v1'?projectEscrowReleaseEvidenceFrame(value,projectEscrowReleaseFrame):null;
+  const frame=escrowReleases?(releaseCoverage??releaseEvidence?.report??projectEscrowReleaseFrame(value)):reconciliation?reconciliationEvidence?.report??projectReconciliationFrame(value):historical?projectHistoricalVariantEvidenceFrame(value):index?projectProductIndexFrame(value):production?projectProductionOrdersFrame(value):storePeriod?(business?projectBusinessPeriodFrame(value):projectStorePeriodFrame(value)):catalog?projectVariantCatalog(value):preview?projectFinancePaymentPreview(value):sampleFrame(value);
+  if(escrowReleases){
+   if(releaseContract==='release-coverage-v1')return releaseCoverage&&escrowReleaseCoverageRequestMatches(input,releaseCoverage)?new Response(JSON.stringify(releaseCoverage),{headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}}):unavailable();
+   return frame&&escrowReleaseRequestMatches(input,frame)?new Response(JSON.stringify(releaseContract==='release-orders-v1'&&releaseEvidence?releaseEvidence:frame),{headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}}):unavailable();
+  }
   if(reconciliation)return frame&&reconciliationRequestMatches(input,frame)?new Response(JSON.stringify(refundContract==='refunds-v1'&&reconciliationMoney?reconciliationMoney:reconciliationContract==='finance-reconciliation-v2'&&reconciliationEvidence?reconciliationEvidence:frame),{headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}}):unavailable();
   if(historical)return frame&&historicalVariantEvidenceRequestMatches(input,frame)?new Response(JSON.stringify(frame),{headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}}):historicalFailure();
   if(index)return frame&&productIndexRequestMatches(input,frame)?new Response(JSON.stringify(frame),{headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}}):indexFailure();
