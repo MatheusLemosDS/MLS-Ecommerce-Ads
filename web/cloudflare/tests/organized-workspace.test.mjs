@@ -52,8 +52,8 @@ test('owner workspace keeps one shared navigation, intact controls and advanced 
  assert.match(CSS,/\.app-shell>\.sidebar\{display:none\}/);assert.match(CSS,/safe-area-inset-bottom/);
 });
 
-test('daily profit leads the overview and monthly result leads its four secondary metrics',()=>{
- const html=adminBody();assert.ok(html.indexOf('id="businessDay"')<html.indexOf('id="businessMonth"'));assert.ok(html.indexOf('id="businessMonth"')<html.indexOf('id="legacyFinanceDetails"'));
+test('command center leads the overview, followed by daily profit and the monthly result',()=>{
+ const html=adminBody();assert.ok(html.indexOf('id="commandCenter"')<html.indexOf('id="businessDay"'));assert.ok(html.indexOf('id="businessDay"')<html.indexOf('id="businessMonth"'));assert.ok(html.indexOf('id="businessMonth"')<html.indexOf('id="legacyFinanceDetails"'));assert.match(html,/id="commandAgents"/);assert.match(html,/MLS Hermes/);
  const body=businessMonthBody();assert.equal([...body.matchAll(/class="month-metric(?: month-net)?"/g)].length,4);
  assert.match(body,/Resultado do mês/);assert.ok(body.indexOf('businessMonthNetCard')<body.indexOf('businessMonthSalesCard'));
  assert.ok(body.indexOf('businessMonthSalesCard')<body.indexOf('businessMonthCalculationTitle'));
