@@ -1,4 +1,30 @@
-export function buildMlsAgentRegistry({day=null,month=null,reconciliation=null,releases=null,incomeOverview=null,now=null}={}){
+export function buildPendingIncomeAudit({overview=null,detail=null,detailLoaded=false}={}){
+ const safe=value=>Number.isSafeInteger(value)&&!Object.is(value,-0);
+ const money=value=>safe(value)?value:null;
+ const base={schema:'pending_income_audit_v1',state:'NO_OVERVIEW',overview_checked_at:null,detail_checked_at:null,pending_cents:null,returned_count:null,unique_orders:null,has_more:null,known_amount_rows:null,unknown_amount_rows:null,visible_estimated_cents:null,difference_cents:null,comparable:false,basis:'CURRENT_PENDING_OVERVIEW_VS_VISIBLE_ESTIMATED_ESCROW_DESCRIPTIVE_ONLY'};
+ if(!overview||!safe(overview.checked_at))return Object.freeze(base);
+ const pending=money(overview.pending_cents),head={...base,overview_checked_at:overview.checked_at,pending_cents:pending};
+ if(pending===null)return Object.freeze({...head,state:'OVERVIEW_AMOUNT_UNVERIFIED'});
+ if(pending===0)return Object.freeze({...head,state:'NO_PENDING',returned_count:0,unique_orders:0,has_more:false,known_amount_rows:0,unknown_amount_rows:0,visible_estimated_cents:0,difference_cents:0,comparable:true});
+ if(!detailLoaded)return Object.freeze({...head,state:'DETAIL_NOT_LOADED'});
+ if(!detail||!safe(detail.checked_at)||!Array.isArray(detail.rows)||!safe(detail.returned_count)||detail.returned_count!==detail.rows.length||typeof detail.has_more!=='boolean')return Object.freeze({...head,state:'WAITING_SAVED_DETAIL'});
+ let known=0,unknown=0,total=0n,unsafe=false;const orders=new Set();
+ for(const row of detail.rows){
+  if(typeof row?.order_hash==='string')orders.add(row.order_hash);
+  if(safe(row?.estimated_escrow_cents)){known++;total+=BigInt(row.estimated_escrow_cents);if(total<BigInt(Number.MIN_SAFE_INTEGER)||total>BigInt(Number.MAX_SAFE_INTEGER))unsafe=true;}
+  else unknown++;
+ }
+ const visible=unsafe?null:Number(total),aligned=detail.checked_at>=overview.checked_at;
+ const common={...head,detail_checked_at:detail.checked_at,returned_count:detail.returned_count,unique_orders:orders.size,has_more:detail.has_more,known_amount_rows:known,unknown_amount_rows:unknown,visible_estimated_cents:visible};
+ if(unsafe)return Object.freeze({...common,state:'ARITHMETIC_UNSAFE'});
+ if(!aligned)return Object.freeze({...common,state:'DETAIL_OLDER_THAN_OVERVIEW'});
+ if(detail.has_more)return Object.freeze({...common,state:'PARTIAL_PAGE'});
+ if(unknown>0)return Object.freeze({...common,state:'AMOUNT_PARTIAL'});
+ const difference=BigInt(visible)-BigInt(pending);if(difference<BigInt(Number.MIN_SAFE_INTEGER)||difference>BigInt(Number.MAX_SAFE_INTEGER))return Object.freeze({...common,state:'ARITHMETIC_UNSAFE'});
+ const delta=Number(difference);return Object.freeze({...common,state:delta===0?'OBSERVED_MATCH':'OBSERVED_DIFFERENT',difference_cents:delta,comparable:true});
+}
+
+export function buildMlsAgentRegistry({day=null,month=null,reconciliation=null,releases=null,incomeOverview=null,pendingAudit=null,now=null}={}){
  const safe=value=>Number.isSafeInteger(value)&&!Object.is(value,-0);
  const money=value=>safe(value)?value:null;
  const list=value=>Array.isArray(value)?value.filter(item=>typeof item==='string'&&item.length<=80):[];
@@ -15,6 +41,13 @@ export function buildMlsAgentRegistry({day=null,month=null,reconciliation=null,r
  if(safe(expenseSchedule?.overdue_count)&&expenseSchedule.overdue_count>0)priorities.push(Object.freeze({code:'EXPENSES_OVERDUE',severity:'ATTENTION',title:'Contas vencidas precisam de conferência',detail:expenseSchedule.overdue_count+' lançamento(s) em aberto passaram do vencimento informado.',href:'#businessMonthExpensesDetails',agent_id:'finance'}));
  if(safe(expenseSchedule?.due_today_count)&&expenseSchedule.due_today_count>0)priorities.push(Object.freeze({code:'EXPENSES_DUE_TODAY',severity:'ATTENTION',title:'Contas vencem hoje',detail:expenseSchedule.due_today_count+' lançamento(s) em aberto vencem hoje.',href:'#businessMonthExpensesDetails',agent_id:'finance'}));
  if((expenseSchedule?.overdue_count??0)===0&&(expenseSchedule?.due_today_count??0)===0&&safe(expenseSchedule?.due_next_7_days_count)&&expenseSchedule.due_next_7_days_count>0)priorities.push(Object.freeze({code:'EXPENSES_DUE_SOON',severity:'WORKING',title:'Próximos pagamentos',detail:expenseSchedule.due_next_7_days_count+' lançamento(s) vencem nos próximos 7 dias.',href:'#businessMonthExpensesDetails',agent_id:'finance'}));
+ const pendingAuditState=typeof pendingAudit?.state==='string'?pendingAudit.state:null;
+ if(pendingAuditState==='WAITING_SAVED_DETAIL')priorities.push(Object.freeze({code:'PENDING_DETAIL_WAITING',severity:'WORKING',title:'Aguardando detalhe do Pending atual',detail:'O Income Overview informa valor pendente, mas o primeiro snapshot local por pedido ainda não está disponível.',href:'#commandPendingIncomeDetails',agent_id:'finance'}));
+ if(pendingAuditState==='DETAIL_OLDER_THAN_OVERVIEW')priorities.push(Object.freeze({code:'PENDING_DETAIL_STALE',severity:'WORKING',title:'Detalhe Pending anterior ao Overview',detail:'O detalhe por pedido é mais antigo que o snapshot atual do Pending; a comparação monetária ficou suspensa.',href:'#commandPendingIncomeDetails',agent_id:'finance'}));
+ if(pendingAuditState==='PARTIAL_PAGE')priorities.push(Object.freeze({code:'PENDING_DETAIL_PARTIAL',severity:'WORKING',title:'Pending atual possui mais páginas',detail:'A primeira página é parcial. O MLS Finance não soma esse recorte como saldo total e mantém a paginação completa bloqueada até validação real.',href:'#commandPendingIncomeDetails',agent_id:'finance'}));
+ if(pendingAuditState==='AMOUNT_PARTIAL')priorities.push(Object.freeze({code:'PENDING_DETAIL_AMOUNT_PARTIAL',severity:'WORKING',title:'Parte dos valores Pending não é convertível em centavos',detail:'O detalhe foi preservado sem arredondar valores com unidade monetária ainda não comprovada.',href:'#commandPendingIncomeDetails',agent_id:'finance'}));
+ if(pendingAuditState==='OBSERVED_DIFFERENT')priorities.push(Object.freeze({code:'PENDING_BASES_DIFFER',severity:'WORKING',title:'Comparar Pending com o Seller Centre',detail:'A soma visível do escrow estimado não coincide com o Pending do Overview neste recorte. Isso é uma diferença descritiva, não erro contábil nem saldo mensal.',href:'#commandPendingIncomeDetails',agent_id:'finance'}));
+ if(pendingAuditState==='ARITHMETIC_UNSAFE')priorities.push(Object.freeze({code:'PENDING_AUDIT_ARITHMETIC_UNSAFE',severity:'BLOCKED',title:'Auditoria Pending excedeu o limite seguro',detail:'A soma dos valores visíveis não pode ser calculada com segurança.',href:'#commandPendingIncomeDetails',agent_id:'auditor'}));
  const priorityMap={
   ARITHMETIC_UNSAFE:['BLOCKED','Auditoria bloqueada','Um valor não pôde ser calculado com segurança.','#businessMonthCalculationDetails','auditor'],
   SOURCE_UNAVAILABLE:['BLOCKED','Fonte financeira indisponível','Parte da base financeira ainda não está disponível.','#businessMonth','auditor'],
@@ -75,9 +108,10 @@ export function buildMlsAgentRegistry({day=null,month=null,reconciliation=null,r
  const adsAttention=['ADS_UNAVAILABLE','ADS_SOURCE_STALE','RECHARGE_TREATMENT_REQUIRED','ADJUSTMENT_UNAVAILABLE','ADJUSTMENT_CONFLICT'].some(has);
  const productAttention=has('PRODUCTION_COST_INCOMPLETE');
  const returnAttention=has('RETURNS_NOT_RECONCILED')||has('STATUS_REVIEW_REQUIRED')||returns+returnsUnknown+reviews>0;
- const auditBlocked=has('ARITHMETIC_UNSAFE')||has('SOURCE_UNAVAILABLE')||has('ADJUSTMENT_CONFLICT')||settlementConflicts>0;
+ const auditBlocked=has('ARITHMETIC_UNSAFE')||has('SOURCE_UNAVAILABLE')||has('ADJUSTMENT_CONFLICT')||settlementConflicts>0||pendingAuditState==='ARITHMETIC_UNSAFE';
  const auditAttention=auditBlocked||has('FINANCIAL_SOURCE_STALE')||has('PERIOD_LIMIT_REACHED')||has('RELEASE_SOURCE_UNAVAILABLE')||has('SOURCE_MISSING');
- const financeWorking=expenseUpcoming||collectionWorking||has('MATCHING_INCOMPLETE')||has('RELEASES_COLLECTING')||(safe(releaseSummary?.not_located_orders)&&releaseSummary.not_located_orders>0);
+ const pendingAuditWorking=['WAITING_SAVED_DETAIL','DETAIL_OLDER_THAN_OVERVIEW','PARTIAL_PAGE','AMOUNT_PARTIAL','OBSERVED_DIFFERENT'].includes(pendingAuditState);
+ const financeWorking=expenseUpcoming||pendingAuditWorking||collectionWorking||has('MATCHING_INCOMPLETE')||has('RELEASES_COLLECTING')||(safe(releaseSummary?.not_located_orders)&&releaseSummary.not_located_orders>0);
  const financeStatus=month?financeAttention?'ATTENTION':financeWorking?'WORKING':'HEALTHY':'WORKING';
  const adsStatus=month?adsAttention?'ATTENTION':collectionWorking?'WORKING':'HEALTHY':'WORKING';
  const productStatus=month?productAttention?'ATTENTION':collectionWorking?'WORKING':'HEALTHY':'WORKING';
@@ -121,7 +155,7 @@ export function buildMlsAgentRegistry({day=null,month=null,reconciliation=null,r
    release_ambiguous:safe(releaseSummary?.ambiguous_orders)?releaseSummary.ambiguous_orders:null,
    evidence_conflicts:settlementConflicts
   }),
-  income:Object.freeze({current_pending_cents:currentPending,checked_at:incomeCheckedAt,status:typeof incomeOverview?.status==='string'?incomeOverview.status:null,basis:incomeOverview?.basis==='CURRENT_PROVIDER_INCOME_STATUS_NOT_BANK_RECEIPT_OR_HISTORICAL_MONTH'?incomeOverview.basis:null}),
+  income:Object.freeze({current_pending_cents:currentPending,checked_at:incomeCheckedAt,status:typeof incomeOverview?.status==='string'?incomeOverview.status:null,basis:incomeOverview?.basis==='CURRENT_PROVIDER_INCOME_STATUS_NOT_BANK_RECEIPT_OR_HISTORICAL_MONTH'?incomeOverview.basis:null,audit:pendingAudit&&pendingAudit.schema==='pending_income_audit_v1'?Object.freeze({...pendingAudit}):null}),
   expenses:Object.freeze({status:expenseSchedule?.status??null,open_count:safe(expenseSchedule?.open_count)?expenseSchedule.open_count:null,open_cents:money(expenseSchedule?.open_cents),overdue_count:safe(expenseSchedule?.overdue_count)?expenseSchedule.overdue_count:null,overdue_cents:money(expenseSchedule?.overdue_cents),due_today_count:safe(expenseSchedule?.due_today_count)?expenseSchedule.due_today_count:null,due_today_cents:money(expenseSchedule?.due_today_cents),due_next_7_days_count:safe(expenseSchedule?.due_next_7_days_count)?expenseSchedule.due_next_7_days_count:null,due_next_7_days_cents:money(expenseSchedule?.due_next_7_days_cents),next_due_date:typeof expenseSchedule?.next_due_date==='string'?expenseSchedule.next_due_date:null,next_due_count:safe(expenseSchedule?.next_due_count)?expenseSchedule.next_due_count:null,next_due_cents:money(expenseSchedule?.next_due_cents),basis:expenseSchedule?.basis==='OWNER_DECLARED_DUE_DATES_NOT_BANK_SETTLEMENT'?expenseSchedule.basis:null}),
   priorities:Object.freeze(priorities.slice(0,8)),
   hermes,

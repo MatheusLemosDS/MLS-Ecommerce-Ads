@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {buildMlsAgentRegistry} from '../src/agent-registry.mjs';
+import {buildPendingIncomeAudit,buildMlsAgentRegistry} from '../src/agent-registry.mjs';
 import {AGENT_REGISTRY_CLIENT,commandCenterBody} from '../src/agent-registry-view.mjs';
 
 const day=(overrides={})=>({
@@ -118,7 +118,7 @@ test('command center is read-only, renders the initial agent surfaces and adds n
  assert.doesNotMatch(AGENT_REGISTRY_CLIENT,/\bfetch\s*\(|setInterval\s*\(|\/api\//);
  assert.match(AGENT_REGISTRY_CLIENT,/MutationObserver/);
  assert.match(AGENT_REGISTRY_CLIENT,/brazaDayDashboard/);
- assert.match(AGENT_REGISTRY_CLIENT,/brazaMonthDashboard/);assert.match(AGENT_REGISTRY_CLIENT,/brazaReconciliation/);assert.match(AGENT_REGISTRY_CLIENT,/brazaEscrowReleases/);assert.match(AGENT_REGISTRY_CLIENT,/brazaIncomeOverview/);
+ assert.match(AGENT_REGISTRY_CLIENT,/brazaMonthDashboard/);assert.match(AGENT_REGISTRY_CLIENT,/brazaReconciliation/);assert.match(AGENT_REGISTRY_CLIENT,/brazaEscrowReleases/);assert.match(AGENT_REGISTRY_CLIENT,/brazaIncomeOverview/);assert.match(AGENT_REGISTRY_CLIENT,/buildPendingIncomeAudit/);
 });
 
 test('release matching becomes Finance work without calling an unlocated order unpaid or received',()=>{
@@ -158,6 +158,44 @@ test('upcoming expenses are working state, while an unknown schedule never fabri
  const schedule={schema:'expense_schedule_v1',month:'2026-10',today:'2026-10-27',status:'AVAILABLE',mode:'CONFIRMED',open_count:1,open_cents:30000,overdue_count:0,overdue_cents:0,due_today_count:0,due_today_cents:0,due_next_7_days_count:1,due_next_7_days_cents:30000,next_due_date:'2026-10-30',next_due_count:1,next_due_cents:30000,upcoming:[],basis:'OWNER_DECLARED_DUE_DATES_NOT_BANK_SETTLEMENT'};
  const working=buildMlsAgentRegistry({day:day(),month:month({expense_schedule:schedule})});assert.equal(working.health,'WORKING');assert.equal(working.agents.find(agent=>agent.id==='finance').status,'WORKING');assert.ok(working.priorities.some(item=>item.code==='EXPENSES_DUE_SOON'));
  const unknown=buildMlsAgentRegistry({day:day(),month:month({expense_schedule:null})});assert.equal(unknown.expenses.open_cents,null);assert.equal(unknown.expenses.overdue_count,null);assert.equal(unknown.expenses.next_due_date,null);
+});
+
+test('Pending audit stays passive until the local detail is opened and never fabricates a receivable total',()=>{
+ const overview={schema:'mls_income_overview_snapshot_v1',checked_at:1793080000,status:'AVAILABLE',pending_cents:32145,released_cents:99999,currency_basis:'FIXED_BRAZIL_SHOP_PROFILE',basis:'CURRENT_PROVIDER_INCOME_STATUS_NOT_BANK_RECEIPT_OR_HISTORICAL_MONTH'};
+ const audit=buildPendingIncomeAudit({overview,detail:null,detailLoaded:false});
+ assert.equal(audit.state,'DETAIL_NOT_LOADED');assert.equal(audit.pending_cents,32145);assert.equal(audit.visible_estimated_cents,null);assert.equal(audit.comparable,false);assert.match(audit.basis,/DESCRIPTIVE_ONLY/);
+ const value=buildMlsAgentRegistry({day:day(),month:month(),incomeOverview:overview,pendingAudit:audit,now:1793080100});
+ assert.ok(!value.priorities.some(item=>item.code.startsWith('PENDING_DETAIL_')),'closed optional detail cannot create D1-driven work');
+ assert.equal(value.income.audit.state,'DETAIL_NOT_LOADED');
+});
+
+test('Pending audit marks has_more as partial and keeps the visible subtotal separate from the Overview amount',()=>{
+ const overview={schema:'mls_income_overview_snapshot_v1',checked_at:1793080000,status:'AVAILABLE',pending_cents:10000,released_cents:0,currency_basis:'FIXED_BRAZIL_SHOP_PROFILE',basis:'CURRENT_PROVIDER_INCOME_STATUS_NOT_BANK_RECEIPT_OR_HISTORICAL_MONTH'};
+ const detail={schema:'mls_income_detail_snapshot_v1',checked_at:1793080060,status:'AVAILABLE',returned_count:2,has_more:true,rows:[
+  {order_hash:'a'.repeat(64),estimated_escrow_cents:4751},
+  {order_hash:'b'.repeat(64),estimated_escrow_cents:2500}
+ ],basis:'CURRENT_PENDING_PROVIDER_INCOME_DETAIL_NOT_MONTH_OR_BANK_RECEIPT'};
+ const audit=buildPendingIncomeAudit({overview,detail,detailLoaded:true});assert.equal(audit.state,'PARTIAL_PAGE');assert.equal(audit.returned_count,2);assert.equal(audit.unique_orders,2);assert.equal(audit.visible_estimated_cents,7251);assert.equal(audit.difference_cents,null);assert.equal(audit.comparable,false);
+ const value=buildMlsAgentRegistry({day:day(),month:month(),incomeOverview:overview,pendingAudit:audit});assert.equal(value.health,'WORKING');assert.ok(value.priorities.some(item=>item.code==='PENDING_DETAIL_PARTIAL'&&item.agent_id==='finance'));assert.notEqual(value.month.balance_cents,audit.visible_estimated_cents);
+});
+
+test('complete Pending snapshots can describe match or difference without calling either one a monthly balance',()=>{
+ const overview={schema:'mls_income_overview_snapshot_v1',checked_at:1793080000,status:'AVAILABLE',pending_cents:10000,released_cents:0,currency_basis:'FIXED_BRAZIL_SHOP_PROFILE',basis:'CURRENT_PROVIDER_INCOME_STATUS_NOT_BANK_RECEIPT_OR_HISTORICAL_MONTH'};
+ const base={schema:'mls_income_detail_snapshot_v1',checked_at:1793080060,status:'AVAILABLE',returned_count:2,has_more:false,rows:[
+  {order_hash:'a'.repeat(64),estimated_escrow_cents:6000},
+  {order_hash:'b'.repeat(64),estimated_escrow_cents:4000}
+ ],basis:'CURRENT_PENDING_PROVIDER_INCOME_DETAIL_NOT_MONTH_OR_BANK_RECEIPT'};
+ const match=buildPendingIncomeAudit({overview,detail:base,detailLoaded:true});assert.equal(match.state,'OBSERVED_MATCH');assert.equal(match.visible_estimated_cents,10000);assert.equal(match.difference_cents,0);assert.equal(match.comparable,true);
+ const different=buildPendingIncomeAudit({overview,detail:{...base,rows:[base.rows[0],{...base.rows[1],estimated_escrow_cents:3500}]},detailLoaded:true});assert.equal(different.state,'OBSERVED_DIFFERENT');assert.equal(different.visible_estimated_cents,9500);assert.equal(different.difference_cents,-500);assert.equal(different.comparable,true);
+ const value=buildMlsAgentRegistry({day:day(),month:month(),incomeOverview:overview,pendingAudit:different});assert.equal(value.health,'WORKING');assert.ok(value.priorities.some(item=>item.code==='PENDING_BASES_DIFFER'&&item.severity==='WORKING'));assert.match(value.priorities.find(item=>item.code==='PENDING_BASES_DIFFER').detail,/não erro contábil nem saldo mensal/i);
+});
+
+test('older or non-convertible Pending detail suspends monetary comparison instead of forcing zero or rounding',()=>{
+ const overview={schema:'mls_income_overview_snapshot_v1',checked_at:1793080100,status:'AVAILABLE',pending_cents:10000,released_cents:0,currency_basis:'FIXED_BRAZIL_SHOP_PROFILE',basis:'CURRENT_PROVIDER_INCOME_STATUS_NOT_BANK_RECEIPT_OR_HISTORICAL_MONTH'};
+ const stale=buildPendingIncomeAudit({overview,detail:{schema:'mls_income_detail_snapshot_v1',checked_at:1793080000,status:'AVAILABLE',returned_count:1,has_more:false,rows:[{order_hash:'a'.repeat(64),estimated_escrow_cents:10000}],basis:'CURRENT_PENDING_PROVIDER_INCOME_DETAIL_NOT_MONTH_OR_BANK_RECEIPT'},detailLoaded:true});
+ assert.equal(stale.state,'DETAIL_OLDER_THAN_OVERVIEW');assert.equal(stale.comparable,false);assert.equal(stale.difference_cents,null);
+ const partial=buildPendingIncomeAudit({overview,detail:{schema:'mls_income_detail_snapshot_v1',checked_at:1793080200,status:'AVAILABLE',returned_count:1,has_more:false,rows:[{order_hash:'a'.repeat(64),estimated_escrow_cents:null}],basis:'CURRENT_PENDING_PROVIDER_INCOME_DETAIL_NOT_MONTH_OR_BANK_RECEIPT'},detailLoaded:true});
+ assert.equal(partial.state,'AMOUNT_PARTIAL');assert.equal(partial.known_amount_rows,0);assert.equal(partial.unknown_amount_rows,1);assert.equal(partial.visible_estimated_cents,0);assert.equal(partial.comparable,false);
 });
 
 test('current Shopee Pending stays separate from the month balance and is exposed only as a secondary Finance metric',()=>{
