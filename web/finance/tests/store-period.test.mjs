@@ -65,8 +65,11 @@ test('two bounded pages collect every completed order exactly once with raw deci
  const first=await f.run({operation:'step',run_id:started.run_id});assert.equal(first.status,'RUNNING');assert.equal(first.pages_read,1);assert.equal(first.order_count,5);assert.equal(first.escrow_amount_raw,'30.675');assert.equal(first.returns_orders,1);assert.equal(first.ads_recharge_or_support_raw,'0');
  const second=await f.run({operation:'step',run_id:started.run_id});assert.equal(second.status,'COMPLETE');assert.equal(second.pages_read,2);assert.equal(second.order_count,7);assert.equal(second.escrow_amount_raw,'50.925');assert.deepEqual(second.items,[{item_id:'100',model_id:'0',quantity:8},{item_id:'100',model_id:'1',quantity:6}]);assert.equal(f.state.maxActive,2);
  const calls=f.calls.length;assert.deepEqual(await f.run({operation:'step',run_id:started.run_id}),second);assert.equal(f.calls.length,calls);assert.deepEqual(await f.store.readTokens(),tokens);
- for(const secret of [key,access,refresh,'PRIVATE_ORDER','PRIVATE_RETURN','PRIVATE_BUYER','cursor-','selling_price','999'])assert.ok(!JSON.stringify(second).includes(secret));
- const stored=JSON.stringify(rows(f));for(const secret of [key,access,refresh,'PRIVATE_ORDER','PRIVATE_RETURN','PRIVATE_BUYER','selling_price','999'])assert.ok(!stored.includes(secret));
+ for(const secret of [key,access,refresh,'PRIVATE_ORDER','PRIVATE_RETURN','PRIVATE_BUYER','cursor-','selling_price'])assert.ok(!JSON.stringify(second).includes(secret),secret);
+ // Never scan raw "999" through opaque SHA-256 hashes and random UUIDs:
+ // unrelated identities can naturally include those three digits. The exact
+ // projection and the selling_price field guard above prove exclusion instead.
+ const stored=JSON.stringify(rows(f));for(const secret of [key,access,refresh,'PRIVATE_ORDER','PRIVATE_RETURN','PRIVATE_BUYER','selling_price'])assert.ok(!stored.includes(secret),secret);
  assert.equal(rows(f).orders.length,7);assert.equal(rows(f).orders[0].order_hash,createHash('sha256').update(serial(0)).digest('hex'));
 });
 
