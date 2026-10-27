@@ -1,4 +1,4 @@
-import {buildMlsAgentRegistry} from './agent-registry.mjs';
+import {buildPendingIncomeAudit,buildMlsAgentRegistry} from './agent-registry.mjs';
 
 export const COMMAND_CENTER_CSS=String.raw`
 .command-center{margin-bottom:26px}.command-center-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:16px}.command-center-head h2{font-size:25px;margin:4px 0 7px;letter-spacing:-.6px}.command-center-head p{margin:0;color:var(--muted);font-size:12px;max-width:760px}.command-center-mode{display:inline-flex;align-items:center;gap:7px;padding:7px 11px;border:1px solid var(--line);border-radius:999px;background:var(--surface);font-size:10px;font-weight:700;color:var(--muted);white-space:nowrap}.command-center-mode:before{content:"";width:7px;height:7px;border-radius:50%;background:var(--positive,#17845c)}
@@ -17,6 +17,7 @@ export function commandCenterBody(){
 
 export const AGENT_REGISTRY_CLIENT=String.raw`
 (()=>{
+ const buildPendingIncomeAudit=${buildPendingIncomeAudit.toString()};
  const buildMlsAgentRegistry=${buildMlsAgentRegistry.toString()};
  const el=name=>document.getElementById('commandCenter'+name);
  const node=(tag,text,cls)=>{const value=document.createElement(tag);if(text!==undefined)value.textContent=text;if(cls)value.className=cls;return value;};
@@ -25,22 +26,36 @@ export const AGENT_REGISTRY_CLIENT=String.raw`
  const shortDay=value=>typeof value==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(value)?value.slice(8)+'/'+value.slice(5,7):'—';
  const count=value=>Number.isSafeInteger(value)?new Intl.NumberFormat('pt-BR').format(value):'—';
  const statusLabel={HEALTHY:'Saudável',WORKING:'Trabalhando',ATTENTION:'Atenção',BLOCKED:'Bloqueado'};
- let lastKey='',observer=null,queued=false,registry=null;
+ let lastKey='',observer=null,queued=false,registry=null,pendingDetailLoaded=false;
  function read(){
-  let day=null,month=null,reconciliation=null,releases=null,incomeOverview=null;
+  let day=null,month=null,reconciliation=null,releases=null,incomeOverview=null,incomeDetail=null;
   try{day=globalThis.brazaDayDashboard?.getSnapshot?.()??null;}catch{}
   try{month=globalThis.brazaMonthDashboard?.getSnapshot?.()??null;}catch{}
   try{reconciliation=globalThis.brazaReconciliation?.getSnapshot?.()??null;}catch{}
   try{releases=globalThis.brazaEscrowReleases?.getSnapshot?.()??null;}catch{}
   try{incomeOverview=globalThis.brazaIncomeOverview?.getSnapshot?.()??null;}catch{}
-  return buildMlsAgentRegistry({day,month,reconciliation,releases,incomeOverview});
+  try{incomeDetail=globalThis.brazaIncomeOverview?.getDetailSnapshot?.()??null;}catch{}
+  const pendingAudit=buildPendingIncomeAudit({overview:incomeOverview,detail:incomeDetail,detailLoaded:pendingDetailLoaded});
+  return buildMlsAgentRegistry({day,month,reconciliation,releases,incomeOverview,pendingAudit});
  }
  function renderPending(){
   const status=el('PendingStatus'),target=el('PendingRows');if(!status||!target)return;target.replaceChildren();let detail=null,overview=null;try{detail=globalThis.brazaIncomeOverview?.getDetailSnapshot?.()??null;overview=globalThis.brazaIncomeOverview?.getSnapshot?.()??null;}catch{}
-  if(!Number.isSafeInteger(overview?.pending_cents)){status.textContent='O valor Pending atual ainda não foi confirmado pela coleta.';return;}
-  if(overview.pending_cents===0){status.textContent='A Shopee informa Pending atual igual a R$ 0,00 neste snapshot.';return;}
-  if(!detail){status.textContent='O MLS Finance ainda não possui o primeiro detalhe Pending salvo. O cron fará a coleta sem depender desta tela.';return;}
-  status.textContent='Snapshot local: '+count(detail.returned_count)+' registro(s)'+(detail.has_more?' · há mais páginas, portanto a lista é parcial.':'.')+' Esses valores não são competência mensal nem depósito bancário.';
+  const audit=buildPendingIncomeAudit({overview,detail,detailLoaded:pendingDetailLoaded});
+  const time=value=>Number.isSafeInteger(value)?new Intl.DateTimeFormat('pt-BR',{dateStyle:'short',timeStyle:'short',timeZone:'America/Sao_Paulo'}).format(new Date(value*1000)):'—';
+  if(audit.state==='NO_OVERVIEW'||audit.state==='OVERVIEW_AMOUNT_UNVERIFIED'){status.textContent='O valor Pending atual ainda não foi confirmado pela coleta.';return;}
+  if(audit.state==='NO_PENDING'){status.textContent='A Shopee informa Pending atual igual a R$ 0,00 neste snapshot. Nenhum detalhe por pedido é necessário.';return;}
+  if(audit.state==='DETAIL_NOT_LOADED'){status.textContent='Abra esta seção para ler o snapshot local por pedido. Isso não consulta a Shopee.';return;}
+  if(audit.state==='WAITING_SAVED_DETAIL'){status.textContent='O MLS Finance ainda não possui o primeiro detalhe Pending salvo. O cron fará a coleta sem depender desta tela.';return;}
+  const parts=['Overview: '+money(audit.pending_cents),'Detalhe: '+count(audit.returned_count)+' registro(s) / '+count(audit.unique_orders)+' pedido(s)','Subtotal visível: '+money(audit.visible_estimated_cents),'Valores conhecidos: '+count(audit.known_amount_rows)+' de '+count(audit.returned_count)];
+  if(audit.state==='DETAIL_OLDER_THAN_OVERVIEW')parts.push('Detalhe anterior ao Overview; comparação suspensa');
+  else if(audit.state==='PARTIAL_PAGE')parts.push('Há mais páginas; cobertura parcial');
+  else if(audit.state==='AMOUNT_PARTIAL')parts.push('Há valor(es) sem conversão segura para centavos');
+  else if(audit.state==='OBSERVED_MATCH')parts.push('Os valores coincidem neste recorte, sem provar competência mensal ou depósito');
+  else if(audit.state==='OBSERVED_DIFFERENT')parts.push('Diferença descritiva: '+(audit.difference_cents>0?'+':'')+money(audit.difference_cents)+'; validar semântica no Seller Centre');
+  else if(audit.state==='ARITHMETIC_UNSAFE')parts.push('Soma fora do limite seguro; auditoria bloqueada');
+  parts.push('Overview em '+time(audit.overview_checked_at)+' · detalhe em '+time(audit.detail_checked_at));
+  status.textContent=parts.join(' · ')+'.';
+  if(!detail)return;
   for(const row of detail.rows){const card=node('article',undefined,'command-pending-row'),ref='Pedido interno '+row.order_hash.slice(0,10)+'…';card.append(node('strong',ref),node('span',row.status||'Pending'));const amount=Number.isSafeInteger(row.estimated_escrow_cents)?money(row.estimated_escrow_cents):'Valor em unidade ainda não convertível';card.append(node('small','Escrow estimado: '+amount));if(Number.isSafeInteger(row.estimated_payout_time))card.append(node('small','Previsão informada: '+new Intl.DateTimeFormat('pt-BR',{dateStyle:'short',timeStyle:'short',timeZone:'America/Sao_Paulo'}).format(new Date(row.estimated_payout_time*1000))));target.append(card);}
  }
  function metricValue(agent,secondary=false){
@@ -67,11 +82,11 @@ export const AGENT_REGISTRY_CLIENT=String.raw`
  }
  function queue(){if(queued)return;queued=true;Promise.resolve().then(()=>{queued=false;render();});}
  function start(){
-  render();const details=document.getElementById('commandPendingIncomeDetails');if(details)details.ontoggle=()=>{if(!details.open)return;let task;try{task=globalThis.brazaIncomeOverview?.observeDetail?.();}catch{}Promise.resolve(task).then(()=>{lastKey='';render();}).catch(()=>{});};
+  render();const details=document.getElementById('commandPendingIncomeDetails');if(details)details.ontoggle=()=>{if(!details.open)return;let task;try{task=globalThis.brazaIncomeOverview?.observeDetail?.();}catch{}Promise.resolve(task).then(()=>{pendingDetailLoaded=true;lastKey='';render();}).catch(()=>{pendingDetailLoaded=true;lastKey='';render();});};
   if(typeof globalThis.MutationObserver==='function'){observer=new globalThis.MutationObserver(queue);for(const id of ['businessDay','businessMonth']){const target=document.getElementById(id);if(target)observer.observe(target,{subtree:true,childList:true,characterData:true,attributes:true});}}
   return true;
  }
- function stop(){try{observer?.disconnect?.();}catch{}observer=null;lastKey='';registry=null;}
+ function stop(){try{observer?.disconnect?.();}catch{}observer=null;lastKey='';registry=null;pendingDetailLoaded=false;}
  globalThis.mlsAgentRegistry=Object.freeze({start,stop,refresh:render,getSnapshot:()=>registry??render()});
  start();
 })();
