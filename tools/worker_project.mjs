@@ -72,6 +72,8 @@ export const TARGETS = Object.freeze({
     'd6fe49f413953b431d4f26d56d30bd735b7e5e9279fc0f5b4431fbea9ac5df97',
     '3091bd91262804d92d2c4878b901382d964988b0d6a1e23df9545c185738e0b9',
     'a13122251291d5434240bb618822b6121fdb79831cffbb6dec7a5af5fab3e631',
+    // Reviewed App build: persistent agent cards and direct agent navigation (PR #25).
+    'e157ec1cb36199e270b0238e5c3ffee090d8d09b9f6168e49e3071945ea2d97e',
   ]}),
   auth: Object.freeze({name: 'brazacommerce-auth', main: '../../dist/auth-worker.mjs', baselineHashes: [
     '45d0142709c5087e373cc4da146070ed39c472805f6f64c00f00b6555f0e1f56',
