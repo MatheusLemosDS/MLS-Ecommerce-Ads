@@ -97,7 +97,7 @@ test('independent diagnostic browser script copies only safe statuses, not store
  const vm=await import('node:vm');
  const env={...baseEnv(),ADMIN_DB:{prepare(sql){assert.equal(sql,'SELECT 1 AS ok');return {first:async()=>({ok:1})};}}};
  const cookie=await login(worker,env),html=await(await worker.fetch(req('/admin/diagnostics',cookie),env)).text();
- const script=[...html.matchAll(/<script>([\\s\\S]*?)<\\/script>/g)].map(m=>m[1]).find(value=>value.includes('mlsDiagOutput'));
+ const script=html.split('<script>').slice(1).map(part=>part.split('</script>')[0]).find(value=>value.includes('mlsDiagOutput'));
  assert.ok(script,'diagnostic must have standalone browser code');
  const nodes=new Map(['mlsDiagOutput','mlsDiagStatus','mlsDiagRetry','mlsDiagCopy'].map(id=>[id,{value:'',textContent:'',disabled:false,handlers:{},addEventListener(type,fn){this.handlers[type]=fn;},focus(){},select(){}}]));
  const calls=[],privateValue='PRIVATE_ORDER_HASH_OR_TOKEN_12345',clipboard=[];
