@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {buildPendingIncomeAudit,buildMlsAgentRegistry} from '../src/agent-registry.mjs';
+import {buildPendingIncomeAudit,buildPendingAuditEvidence,buildMlsAgentRegistry} from '../src/agent-registry.mjs';
 import {AGENT_REGISTRY_CLIENT,commandCenterBody} from '../src/agent-registry-view.mjs';
 
 const day=(overrides={})=>({
@@ -209,4 +209,41 @@ test('current Shopee Pending stays separate from the month balance and is expose
 test('missing current income never becomes zero or changes the Finance month result',()=>{
  const value=buildMlsAgentRegistry({day:day(),month:month(),incomeOverview:{schema:'mls_income_overview_snapshot_v1',checked_at:1793080000,status:'AVAILABLE',pending_cents:null,released_cents:null,currency_basis:'FIXED_BRAZIL_SHOP_PROFILE',basis:'CURRENT_PROVIDER_INCOME_STATUS_NOT_BANK_RECEIPT_OR_HISTORICAL_MONTH'}});
  const finance=value.agents.find(agent=>agent.id==='finance');assert.equal(finance.metric,240000);assert.equal(finance.secondary_metric,null);assert.equal(value.income.current_pending_cents,null);
+});
+
+test('Pending audit evidence is explicitly whitelisted, never copies provider rows or identifiers',()=>{
+ const original={state:'PARTIAL_PAGE',overview_checked_at:1793080000,detail_checked_at:1793080050,pending_cents:10000,returned_count:2,unique_orders:2,has_more:true,known_amount_rows:2,unknown_amount_rows:0,visible_estimated_cents:7000,difference_cents:null,comparable:false,order_hash:'sensitive-order',access_token:'secret-token',shop_id:123,rows:[{order_sn:'sensitive-order',estimated_escrow_cents:3500}],provider_payload:{secret:'secret-token'}};
+ const exported=buildPendingAuditEvidence(original);
+ assert.equal(exported.schema,'mls_pending_audit_evidence_v1');
+ assert.equal(exported.state,'PARTIAL_PAGE');
+ assert.equal(exported.pending_cents,10000);
+ assert.equal(exported.visible_estimated_cents,7000);
+ assert.equal(exported.has_more,true);
+ assert.equal(exported.comparable,false);
+ const serialized=JSON.stringify(exported);
+ for(const forbidden of ['sensitive-order','secret-token','order_hash','order_sn','shop_id','access_token','provider_payload','rows'])assert.ok(!serialized.includes(forbidden),forbidden);
+ assert.equal(exported.difference_cents,null);
+ assert.match(exported.notice,/Nao comprova competencia mensal/);
+ assert.ok(Object.isFrozen(exported));
+});
+
+test('Pending evidence rejects untrusted textual states and unsafe numbers rather than fabricating data',()=>{
+ const diagnostic=buildPendingAuditEvidence({state:'<unsafe>',pending_cents:Number.MAX_SAFE_INTEGER+1,returned_count:-0,overview_checked_at:'2026-10-27',has_more:'true',comparable:'yes',rows:[{order_hash:'hidden'}]});
+ assert.equal(diagnostic.state,'NO_OVERVIEW');
+ assert.equal(diagnostic.pending_cents,null);
+ assert.equal(diagnostic.returned_count,null);
+ assert.equal(diagnostic.overview_checked_at,null);
+ assert.equal(diagnostic.has_more,null);
+ assert.equal(diagnostic.comparable,false);
+ assert.equal(buildPendingAuditEvidence(null).state,'NO_OVERVIEW');
+});
+
+test('Command Center offers copyable Pending evidence without network or client-side polling',()=>{
+ const html=commandCenterBody();
+ assert.match(html,/id="commandCenterPendingCopy"/);
+ assert.match(html,/id="commandCenterPendingCopyNote"/);
+ assert.match(html,/aria-live="polite"/);
+ assert.match(AGENT_REGISTRY_CLIENT,/buildPendingAuditEvidence/);
+ assert.match(AGENT_REGISTRY_CLIENT,/navigator\\?\\.clipboard\\?\\.writeText/);
+ assert.doesNotMatch(AGENT_REGISTRY_CLIENT,/setInterval\\(|setTimeout\\(/);
 });
