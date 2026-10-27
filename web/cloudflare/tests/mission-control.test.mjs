@@ -158,3 +158,12 @@ test('V3 workspaces avoid redundant footer and section navigation while preservi
  assert.match(html,/href="#businessMonth"/);
  assert.equal((html.match(/id="preservedFinanceControl"/g)||[]).length,1);
 });
+
+
+test('V3 second pass eliminates double agent icons and constrains executive hero height',()=>{
+ assert.match(MISSION_CSS,/V3 density pass 2/);
+ assert.match(MISSION_CSS,/\.mission-dashboard \.agent-card-head:before\{display:none\}/);
+ assert.match(MISSION_CSS,/\.mission-dashboard \.mission-command-orbit\{display:none\}/);
+ assert.match(MISSION_CSS,/grid-template-columns:repeat\(6,minmax\(0,1fr\)\)!important/);
+ for(const id of ['finance','ads','products','production','returns','auditor'])assert.match(commandCenterBody(),new RegExp('data-mission-accent="'+id+'"'));
+});
