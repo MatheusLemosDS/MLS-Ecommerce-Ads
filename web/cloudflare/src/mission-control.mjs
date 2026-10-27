@@ -253,7 +253,8 @@ function missionWorkspace(item,financeHtml){
  const id=item.id,tab='agent-'+id,missionMetrics=[0,1,2,3].map(index=>
   '<article class="mission-stat"><small id="mission-'+id+'-label-'+index+'">Indicador em preparação</small>'+
   '<strong id="mission-'+id+'-metric-'+index+'">—</strong><span id="mission-'+id+'-hint-'+index+'">Aguardando fonte validada.</span></article>').join('');
- const shortcuts=item.actions.map(([label,href])=>'<a class="mission-action" href="'+missionSourceLink(href,tab)+'"><span>'+label+'</span><span aria-hidden="true">›</span></a>').join('');
+ const seenShortcuts=new Set();
+ const shortcuts=item.actions.filter(([,href])=>{const target=missionSourceLink(href,tab);if(seenShortcuts.has(target))return false;seenShortcuts.add(target);return true;}).map(([label,href])=>'<a class="mission-action" href="'+missionSourceLink(href,tab)+'"><span>'+label+'</span><span aria-hidden="true">›</span></a>').join('');
  const coverage=['products','production'].includes(id)?
   '<section class="mission-coverage" id="mission-'+id+'-coverage" hidden>'+
   '<header><strong>Cobertura de custo das unidades vendidas</strong><span id="mission-'+id+'-coverage-label">—</span></header>'+
@@ -265,14 +266,14 @@ function missionWorkspace(item,financeHtml){
   '<header class="mission-hero"><div><nav class="mission-crumb" aria-label="Localização"><a href="/admin?tab=overview" data-mission-open="overview">Visão Geral</a><span>›</span><a href="/admin?tab=agents" data-mission-open="agents">Agentes</a><span>›</span><strong>'+item.name+'</strong></nav>'+
   '<div class="mission-hero-main"><span class="mission-orb mission-agent-avatar" aria-hidden="true">'+item.symbol+'</span><div><span class="mission-eyebrow">'+item.tag+'</span><h2>'+item.name+'</h2><p>'+item.summary+'</p></div></div></div>'+
   '<div class="mission-intro-status"><span class="mission-status" data-mission-status="'+id+'">Aguardando dados</span><span class="mission-breadcrumb-pill">Modo Observador · sem escrita comercial</span></div></header>'+
-  '<nav class="mission-page-tabs" aria-label="Seções de '+item.name+'"><a href="#mission-'+id+'-tasks">Prioridades</a><a href="#mission-'+id+'-tools">Ferramentas</a>'+(id==='finance'?'<a href="#businessMonth">Financeiro detalhado</a>':'')+'</nav>'+ 
+  (id==='finance'?'<nav class="mission-page-tabs" aria-label="Acesso ao financeiro detalhado"><a href="#businessMonth">Financeiro detalhado ↓</a></nav>':'')+ 
   '<div class="mission-stats" aria-label="Indicadores de '+item.name+'">'+missionMetrics+'</div>'+
   (id==='finance'||id==='ads'?missionTrendPanelBody(id):'')+
   '<div class="mission-panels"><section class="mission-module"><div class="mission-module-head"><h3>Prioridades e alertas</h3><small>Somente evidências verificáveis</small></div><div id="mission-'+id+'-tasks" class="mission-tasks"><p class="mission-empty">Aguardando indicadores do agente.</p></div>'+coverage+
   '<p class="mission-last" id="mission-'+id+'-checked">Última leitura: aguardando dados.</p></section>'+
   '<aside class="mission-module" id="mission-'+id+'-tools"><div class="mission-module-head"><h3>Ferramentas e detalhes</h3><small>Acessos existentes</small></div><div class="mission-actions">'+shortcuts+'</div>'+
   '<p class="mission-footnote" id="mission-'+id+'-message">Nenhuma decisão automática é executada nesta fase. Dados ausentes continuam indisponíveis.</p></aside></div>'+
-  hermes+body+'<a class="mission-return" href="/admin?tab=agents" data-mission-open="agents">← Voltar à equipe de agentes</a></section>';
+  hermes+body+'</section>';
 }
 export function missionWorkspacesBody(financeHtml=''){
  const hub='<section class="mission-hub" id="agents" hidden><div class="mission-hero mission-hub-hero"><div>'+
