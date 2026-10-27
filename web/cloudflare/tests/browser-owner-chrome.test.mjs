@@ -66,6 +66,8 @@ test('real Chromium hydrates owner agent cards even when finance API is unavaila
   'net_badge:document.getElementById("missionKpiDeltaNet")?.textContent,'+
   'sales_badge:document.getElementById("missionKpiDeltaSales")?.textContent,'+
   'ads_badge:document.getElementById("missionKpiDeltaAds")?.textContent,'+
+  'chart_tab_direction:getComputedStyle(document.querySelector(".mission-trend-controls")).flexDirection,'+
+  'chart_title:document.getElementById("missionTrendTitleOverview")?.textContent,'+
   'net_color:getComputedStyle(document.getElementById("missionKpiDeltaNet")).color,'+
   'sales_color:getComputedStyle(document.getElementById("missionKpiDeltaSales")).color,'+
   'ads_color:getComputedStyle(document.getElementById("missionKpiDeltaAds")).color,'+
@@ -129,6 +131,8 @@ test('real Chromium hydrates owner agent cards even when finance API is unavaila
   assert.equal(fixture.finance_svg,1);
   assert.equal(fixture.ads_svg,1);
   assert.equal(fixture.points,3);
+  assert.equal(fixture.chart_tab_direction,'row','chart buttons should be horizontal on desktop');
+  assert.match(fixture.chart_title,/Resultado diário estimado/);
   assert.match(fixture.net_badge,/▼.*-R\$/);
   assert.match(fixture.sales_badge,/▲.*\+R\$/);
   assert.match(fixture.ads_badge,/▲.*\+R\$/);
