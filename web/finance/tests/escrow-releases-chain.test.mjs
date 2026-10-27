@@ -5,7 +5,7 @@ import {build} from 'esbuild';
 import {getFinanceEscrowReleases} from '../../cloudflare/src/app-escrow-releases.mjs';
 import {forwardFinancePaymentSample} from '../src/auth-router.mjs';
 import {createFinanceWorker} from '../src/connection-worker.mjs';
-import {projectEscrowReleaseFrame} from '../src/escrow-release-frame.mjs';
+import {projectEscrowReleaseFrame,projectEscrowReleaseEvidenceFrame} from '../src/escrow-release-frame.mjs';
 
 const origin='https://auth.brazacommerce.com.br',path='/internal/shopee/finance/escrow-releases',appKey='PRIVATE_RELEASES_APP_'+'a'.repeat(40),router='PRIVATE_RELEASES_ROUTER_'+'r'.repeat(40);
 const ids=['11111111-1111-4111-8111-111111111111','22222222-2222-4222-8222-222222222222','33333333-3333-4333-8333-333333333333'],scan='44444444-4444-4444-8444-444444444444',at=Date.UTC(2026,9,25,15)/1000,cutoff=at-100;
@@ -16,6 +16,12 @@ function frame(count=1){
  if(count===3){value.month='2026-08';Object.assign(value.sources[0],{start_date:'2026-08-01',end_date:'2026-08-15'});value.sources.push({...value.sources[0],run_id:ids[1],start_date:'2026-08-16',end_date:'2026-08-30',orders:0,paid_orders:0,expected_repass_cents:0},{...value.sources[0],run_id:ids[2],start_date:'2026-08-31',end_date:'2026-08-31',orders:0,paid_orders:0,expected_repass_cents:0});const end=Date.UTC(2026,8,1,3)/1000;Object.assign(value.calendar,{from_at:Date.UTC(2026,7,1,3)/1000,end_before_at:end,cutoff_at:end});Object.assign(value.collection,{cutoff_at:end,windows_total:5,windows_complete:5,pages_read:5});}
  return value;
 }
+function evidenceFrame(){
+ const legacy=frame(),hashA='a'.repeat(64),hashB='b'.repeat(64),orders={schema:'finance_escrow_release_orders_v1',summary:{known_paid_orders:2,located_orders:2,ambiguous_orders:0,verified_orders:2,unverified_orders:0,not_located_orders:0,adjusted_orders:2,after_adjustment_known_orders:2,known_after_adjustment_cents:21000,not_located_after_adjustment_known_orders:0,known_not_located_after_adjustment_cents:0},rows:[
+  {order_hash:hashA,state:'VERIFIED',reference_count:1,release_time:at-1000,financial_checked_at:at-50,release_checked_at:at-80,base_repass_cents:10000,adjustment_cents:500,after_adjustment_repass_cents:10500,release_cents:10500,comparison_basis:'AFTER_ADJUSTMENT',difference_from_base_cents:500},
+  {order_hash:hashB,state:'VERIFIED',reference_count:1,release_time:at-900,financial_checked_at:at-50,release_checked_at:at-80,base_repass_cents:10000,adjustment_cents:500,after_adjustment_repass_cents:10500,release_cents:10500,comparison_basis:'AFTER_ADJUSTMENT',difference_from_base_cents:500}
+ ],truncation:{truncated:false,orders_total:2,orders_included:2},basis:'PAID_ORDER_COHORT_RELEASE_MATCHING_NOT_BANK_RECEIPT'},value={schema:'finance_escrow_releases_v2',report:legacy,orders};assert.ok(projectEscrowReleaseEvidenceFrame(value,projectEscrowReleaseFrame));return value;
+}
 const selection=(value=frame(),operation='read')=>({operation,month:value.month,sources:value.sources.map(({run_id,source_revision})=>({run_id,source_revision}))});
 const input=selection(),financeEnv={FINANCE_ROUTER_SECRET:router,FINANCE_CONNECTION_ENABLED:'true'};
 const request=(body=input,{headers={},method='POST',search='',host=origin,route=path,raw}={})=>new Request(host+route+search,{method,headers:{'content-type':'application/json','x-braza-app-key':appKey,...headers},body:method==='GET'?undefined:raw??JSON.stringify(body)});
@@ -23,8 +29,8 @@ const validateInternalApp=req=>req.headers.get('x-braza-app-key')===appKey;
 const sourceModules={getFinanceEscrowReleases,forwardFinancePaymentSample,createFinanceWorker};
 function chain(modules=sourceModules,report=()=>frame()){
  const calls={app:0,auth:0,finance:0,provider:0},selections=[];
- const finance=modules.createFinanceWorker({escrowReleases:async(env,options)=>{calls.finance++;assert.equal(env.APP_INTERNAL_SECRET,undefined);assert.deepEqual(Object.keys(options).sort(),['fetchImpl','month','now','operation','sources']);assert.equal(typeof options.now,'function');assert.equal(typeof options.fetchImpl,'function');selections.push({operation:options.operation,month:options.month,sources:options.sources});return report(options);},now:()=>at*1000,fetchImpl:async()=>{calls.provider++;throw Error('No provider access in a projected fake capability');}});
- const authEnv={FINANCE_ROUTER_SECRET:router,SHOPEE_FINANCE_SERVICE:{fetch:async routed=>{calls.auth++;assert.equal(routed.url,origin+path);assert.equal(routed.method,'POST');assert.equal(routed.redirect,'manual');assert.equal(routed.headers.get('x-braza-finance-router'),router);for(const name of ['x-braza-app-key','cookie','authorization','origin','referer'])assert.equal(routed.headers.get(name),null);return finance.fetch(routed,financeEnv);}}};
+ const finance=modules.createFinanceWorker({escrowReleases:async(env,options)=>{calls.finance++;assert.equal(env.APP_INTERNAL_SECRET,undefined);const keys=Object.keys(options).sort();assert.deepEqual(keys,options.includeOrders===true?['fetchImpl','includeOrders','month','now','operation','sources']:['fetchImpl','month','now','operation','sources']);assert.equal(typeof options.now,'function');assert.equal(typeof options.fetchImpl,'function');selections.push({operation:options.operation,month:options.month,sources:options.sources,includeOrders:options.includeOrders===true});return report(options);},now:()=>at*1000,fetchImpl:async()=>{calls.provider++;throw Error('No provider access in a projected fake capability');}});
+ const authEnv={FINANCE_ROUTER_SECRET:router,SHOPEE_FINANCE_SERVICE:{fetch:async routed=>{calls.auth++;assert.equal(routed.url,origin+path);assert.equal(routed.method,'POST');assert.equal(routed.redirect,'manual');assert.equal(routed.headers.get('x-braza-finance-router'),router);const contract=routed.headers.get('x-braza-release-contract');assert.ok(contract===null||contract==='release-orders-v1');for(const name of ['x-braza-app-key','cookie','authorization','origin','referer'])assert.equal(routed.headers.get(name),null);return finance.fetch(routed,financeEnv);}}};
  const fetchImpl=async routed=>{calls.app++;assert.equal(routed.url,origin+path);assert.equal(routed.method,'POST');assert.equal(routed.redirect,'manual');assert.equal(routed.headers.get('x-braza-app-key'),appKey);for(const name of ['x-braza-finance-router','cookie','authorization','origin','referer'])assert.equal(routed.headers.get(name),null);return modules.forwardFinancePaymentSample(routed,authEnv,{validateInternalApp});};
  return {calls,selections,finance,authEnv,fetchImpl,run:body=>modules.getFinanceEscrowReleases({APP_INTERNAL_SECRET:appKey},body,{fetchImpl})};
 }
@@ -32,8 +38,15 @@ const blocked=()=>{const value=frame();value.status='BLOCKED';Object.assign(valu
 
 test('three fixed release boundaries retain their private credentials and exact month/source scope without exposing raw payout or bank profit',async()=>{
  const f=chain();assert.ok(projectEscrowReleaseFrame(frame()));for(const operation of ['read','step']){const value=await f.run({...input,operation});assert.deepEqual(value,frame());assert.equal(value.calendar.total_release_cents,21000);assert.equal(value.matching.comparison_difference_cents,1000);assert.deepEqual(value.pending,['BANK_RECEIPT_NOT_VERIFIED']);assert.doesNotMatch(JSON.stringify(value),/PRIVATE_|payout_raw|order_sn|access_token|net_profit|bank_received/);}
- assert.deepEqual(f.selections,[input,{...input,operation:'step'}]);assert.deepEqual(f.calls,{app:2,auth:2,finance:2,provider:0});
+ assert.deepEqual(f.selections,[{...input,includeOrders:true},{...input,operation:'step',includeOrders:true}]);assert.deepEqual(f.calls,{app:2,auth:2,finance:2,provider:0});
  const response=await forwardFinancePaymentSample(request(input,{headers:{cookie:'PRIVATE_OWNER_COOKIE',authorization:'PRIVATE_OWNER_TOKEN',origin:'https://app.brazacommerce.com.br',referer:'https://app.brazacommerce.com.br/admin'}}),f.authEnv,{validateInternalApp});assert.equal(response.status,200);assert.equal(response.headers.get('cache-control'),'no-store');assert.equal(response.headers.get('set-cookie'),null);assert.deepEqual(await response.json(),frame());
+});
+
+test('release-orders-v1 negotiates a v2 sidecar end-to-end while legacy private callers still receive exact v1',async()=>{
+ const f=chain(sourceModules,options=>options.includeOrders?evidenceFrame():frame()),value=await f.run(input),checked=projectEscrowReleaseEvidenceFrame(value,projectEscrowReleaseFrame);assert.ok(checked);assert.equal(checked.orders.rows.length,2);assert.equal(checked.orders.summary.known_after_adjustment_cents,21000);assert.equal(checked.report.schema,'finance_escrow_releases_v1');
+ assert.equal(f.selections[0].includeOrders,true);assert.doesNotMatch(JSON.stringify(value),/order_sn|payout_raw|PRIVATE_/);
+ const legacy=await forwardFinancePaymentSample(request(input),f.authEnv,{validateInternalApp});assert.equal(legacy.status,200);assert.deepEqual(await legacy.json(),frame());assert.equal(f.selections.at(-1).includeOrders,false);
+ const invalid=await forwardFinancePaymentSample(request(input,{headers:{'x-braza-release-contract':'PRIVATE_V2'}}),f.authEnv,{validateInternalApp});assert.equal(invalid.status,400);
 });
 
 test('no publication sources remain an unknown cohort and a denied release source remains a finite report without fabricated money',async()=>{
