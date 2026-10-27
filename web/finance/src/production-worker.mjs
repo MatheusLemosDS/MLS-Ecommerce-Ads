@@ -10,6 +10,7 @@ import {runFinanceProductIndex} from './product-index.mjs';
 import {runFinanceHistoricalVariantEvidence} from './historical-variant-evidence.mjs';
 import {runFinanceEscrowReleases,readFinanceEscrowReleaseCoverage} from './escrow-releases.mjs';
 import {runFinanceReturnsReconciliation} from './returns-reconciliation.mjs';
+import {readFinanceIncomeOverview} from './income-overview.mjs';
 
 // Deployment entry only. Configuration and FINANCE_CONNECTION_ENABLED='true'
 // are still required; importing this entry never makes a provider request.
@@ -26,6 +27,7 @@ export default createFinanceWorker({
   reconciliation: runFinanceReturnsReconciliation,
   escrowReleases: runFinanceEscrowReleases,
   escrowReleaseCoverage: readFinanceEscrowReleaseCoverage,
+  incomeOverview: readFinanceIncomeOverview,
   fetchImpl: request => fetch(request),
   adapter: createFinanceProviderAdapter({fetchImpl: request => fetch(request)}),
 });
