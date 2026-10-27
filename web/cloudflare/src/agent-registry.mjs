@@ -59,10 +59,10 @@ export function buildMlsAgentRegistry({day=null,month=null,reconciliation=null,r
  const returnsUnknown=safe(month?.coverage?.returns_unknown)&&month.coverage.returns_unknown>=0?month.coverage.returns_unknown:0;
  const reviews=['cancel_pending','other','unknown'].reduce((total,key)=>total+(safe(month?.coverage?.[key])&&month.coverage[key]>=0?month.coverage[key]:0),0);
  const has=code=>pending.includes(code);
- const collectionWorking=month?.status==='RUNNING'||has('COLLECTING');
+ const collectionWorking=month?.status==='RUNNING'||has('COLLECTING'),working=collectionWorking||priorities.some(item=>item.severity==='WORKING');
  const blocked=priorities.some(item=>item.severity==='BLOCKED');
  const attention=priorities.some(item=>item.severity==='ATTENTION');
- const overall=blocked?'BLOCKED':attention?'ATTENTION':collectionWorking?'WORKING':month?'HEALTHY':'WORKING';
+ const overall=blocked?'BLOCKED':attention?'ATTENTION':working?'WORKING':month?'HEALTHY':'WORKING';
  const agent=(id,name,area,status,message,href,metric=null,metric_kind=null)=>Object.freeze({id,name,area,mode:'OBSERVER',status,message,href,metric,metric_kind,last_checked_at:safe(month?.checked_at)?month.checked_at:null});
  const financeAttention=['PAYMENT_INCOMPLETE','TAX_POLICY_REQUIRED','INVOICE_TAX_UNAVAILABLE','EXTERNAL_EXPENSES_REQUIRED','ADJUSTMENT_UNAVAILABLE','ADJUSTMENTS_PENDING','ADJUSTMENT_CONFLICT','FINANCIAL_SOURCE_STALE','SOURCE_UNAVAILABLE','RELEASE_IDENTITY_AMBIGUOUS','RELEASE_AMOUNT_UNVERIFIED','FINANCIAL_EVIDENCE_MISSING'].some(has);
  const adsAttention=['ADS_UNAVAILABLE','ADS_SOURCE_STALE','RECHARGE_TREATMENT_REQUIRED','ADJUSTMENT_UNAVAILABLE','ADJUSTMENT_CONFLICT'].some(has);
@@ -70,7 +70,8 @@ export function buildMlsAgentRegistry({day=null,month=null,reconciliation=null,r
  const returnAttention=has('RETURNS_NOT_RECONCILED')||has('STATUS_REVIEW_REQUIRED')||returns+returnsUnknown+reviews>0;
  const auditBlocked=has('ARITHMETIC_UNSAFE')||has('SOURCE_UNAVAILABLE')||has('ADJUSTMENT_CONFLICT')||settlementConflicts>0;
  const auditAttention=auditBlocked||has('FINANCIAL_SOURCE_STALE')||has('PERIOD_LIMIT_REACHED')||has('RELEASE_SOURCE_UNAVAILABLE')||has('SOURCE_MISSING');
- const financeStatus=month?financeAttention?'ATTENTION':collectionWorking?'WORKING':'HEALTHY':'WORKING';
+ const financeWorking=collectionWorking||has('MATCHING_INCOMPLETE')||has('RELEASES_COLLECTING')||(safe(releaseSummary?.not_located_orders)&&releaseSummary.not_located_orders>0);
+ const financeStatus=month?financeAttention?'ATTENTION':financeWorking?'WORKING':'HEALTHY':'WORKING';
  const adsStatus=month?adsAttention?'ATTENTION':collectionWorking?'WORKING':'HEALTHY':'WORKING';
  const productStatus=month?productAttention?'ATTENTION':collectionWorking?'WORKING':'HEALTHY':'WORKING';
  const productionStatus=month?productAttention?'ATTENTION':collectionWorking?'WORKING':'HEALTHY':'WORKING';
@@ -85,7 +86,7 @@ export function buildMlsAgentRegistry({day=null,month=null,reconciliation=null,r
   agent('auditor','MLS Auditor','Auditoria',auditorStatus,settlementConflicts?settlementConflicts+' divergência(s) entre evidências de repasse após ajustes precisam ser resolvidas.':auditBlocked?'Uma inconsistência impede tratar os dados como confiáveis.':auditAttention?'A qualidade ou o frescor dos dados precisa de atenção.':collectionWorking?'Aguardando a conclusão da coleta do servidor.':'As validações do resumo não indicam bloqueios.','#businessEscrowReleases',priorities.length,'count')
  ];
  const hermesStatus=overall==='BLOCKED'?'BLOCKED':overall==='ATTENTION'?'ATTENTION':overall==='WORKING'?'WORKING':'HEALTHY';
- const hermes=agent('hermes','MLS Hermes','Supervisor',hermesStatus,blocked?'Há um bloqueio que deve ser resolvido antes de qualquer automação.':attention?priorities.filter(item=>item.severity==='ATTENTION').length+' prioridade(s) precisam de atenção.':collectionWorking?'Os agentes estão aguardando a atualização do período.':'Monitoramento estável. Nenhuma ação comercial é executada automaticamente.','/admin?tab=hermes',priorities.length,'count');
+ const hermes=agent('hermes','MLS Hermes','Supervisor',hermesStatus,blocked?'Há um bloqueio que deve ser resolvido antes de qualquer automação.':attention?priorities.filter(item=>item.severity==='ATTENTION').length+' prioridade(s) precisam de atenção.':working?'Há conferências em andamento; nenhuma ausência de liberação é tratada como falta de recebimento.':'Monitoramento estável. Nenhuma ação comercial é executada automaticamente.','/admin?tab=hermes',priorities.length,'count');
  return Object.freeze({
   schema:'mls_agent_registry_v1',
   generated_at:safe(now)&&now>0?now:Math.floor(Date.now()/1000),
