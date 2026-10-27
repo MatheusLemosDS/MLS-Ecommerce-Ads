@@ -2,8 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import {ESCROW_RELEASES_CLIENT,ESCROW_RELEASES_CSS,escrowReleasesBody} from '../src/escrow-releases-view.mjs';
-import {projectBusinessEscrowReleases} from '../src/business-escrow-releases.mjs';
-import {projectEscrowReleaseFrame} from '../../finance/src/escrow-release-frame.mjs';
+import {projectBusinessEscrowReleases,projectBusinessEscrowReleaseEvidence} from '../src/business-escrow-releases.mjs';
+import {projectEscrowReleaseFrame,projectEscrowReleaseEvidenceFrame} from '../../finance/src/escrow-release-frame.mjs';
 
 const clock=Date.UTC(2026,9,25,15),stamp=clock/1000;
 const uuid='11111111-1111-4111-8111-111111111111',scan='22222222-2222-4222-8222-222222222222';
@@ -15,10 +15,19 @@ function observation({month='2026-10',release=12000,revision=2,partial=false,amb
  const value={schema:'business_escrow_releases_v1',month,checked_at:stamp,status:partial||ambiguous?'PARTIAL':'CHECKED',cohort,report,attempt:{checked_at:stamp-100,status:'SUCCESS',code:null,next_attempt_at:stamp+900}};
  assert.ok(projectEscrowReleaseFrame(report),'valid release fixture');assert.ok(projectBusinessEscrowReleases(value,projectEscrowReleaseFrame),'valid owner fixture');return value;
 }
+function evidenceObservation(){
+ const legacy=observation({release:12000}),hashA='a'.repeat(64),hashB='b'.repeat(64);
+ const orders={schema:'finance_escrow_release_orders_v1',summary:{known_paid_orders:2,located_orders:1,ambiguous_orders:0,verified_orders:1,unverified_orders:0,not_located_orders:1,adjusted_orders:1,after_adjustment_known_orders:2,known_after_adjustment_cents:10000,not_located_after_adjustment_known_orders:1,known_not_located_after_adjustment_cents:4000},rows:[
+  {order_hash:hashA,state:'VERIFIED',reference_count:1,release_time:stamp-600,financial_checked_at:stamp-1400,release_checked_at:stamp-400,base_repass_cents:5000,adjustment_cents:1000,after_adjustment_repass_cents:6000,release_cents:6000,comparison_basis:'AFTER_ADJUSTMENT',difference_from_base_cents:1000},
+  {order_hash:hashB,state:'NOT_LOCATED',reference_count:0,release_time:null,financial_checked_at:stamp-1400,release_checked_at:null,base_repass_cents:4000,adjustment_cents:0,after_adjustment_repass_cents:4000,release_cents:null,comparison_basis:null,difference_from_base_cents:null}
+ ],truncation:{truncated:false,orders_total:2,orders_included:2},basis:'PAID_ORDER_COHORT_RELEASE_MATCHING_NOT_BANK_RECEIPT'};
+ const finance={schema:'finance_escrow_releases_v2',report:legacy.report,orders};assert.ok(projectEscrowReleaseEvidenceFrame(finance,projectEscrowReleaseFrame));
+ const value={schema:'business_escrow_releases_v2',report:legacy,orders};assert.ok(projectBusinessEscrowReleaseEvidence(value,{projectBusiness:projectBusinessEscrowReleases,projectFrame:projectEscrowReleaseFrame,projectEvidenceFrame:projectEscrowReleaseEvidenceFrame}));return value;
+}
 function auditScope(value){const cohort=value.cohort;return cohort===null?null:{publication_revision:cohort.publication_revision,start_date:cohort.start_date,end_date:cohort.end_date,sources:cohort.sources.map(({run_id,source_revision,start_date,end_date})=>({run_id,source_revision,start_date,end_date}))};}
 function browser(value=observation()){
  const ids=[...escrowReleasesBody().matchAll(/\bid="([^"]+)"/g)].map(match=>match[1]),context=vm.createContext({serialized:JSON.stringify(value)});
- vm.runInContext(`${auditScope.toString()}let clock=${clock};class ClockDate extends Date{constructor(...args){super(...(args.length?args:[clock]));}static now(){return clock;}}globalThis.Date=ClockDate;function node(tag='div'){return {tag,textContent:'',className:'',hidden:false,open:false,children:[],append(...values){this.children.push(...values);},replaceChildren(...values){this.textContent='';this.children=[...values];}};}const controls=new Map(${JSON.stringify(ids)}.map(id=>[id,node()]));const document={hidden:false,getElementById:id=>controls.get(id),createElement:tag=>node(tag)};const text=node=>node.textContent+node.children.map(text).join(' '),control=name=>controls.get('businessEscrowReleases'+name);let current=JSON.parse(serialized),selectedScope=auditScope(current),customApi=null;const calls=[];const api=async(path,body)=>{calls.push({path,body});return customApi?customApi(path,body):JSON.parse(JSON.stringify(current));};const financialNet={textContent:'R$ 2.250,13'};`+ESCROW_RELEASES_CLIENT,context);
+ vm.runInContext(`${auditScope.toString()}let clock=${clock};class ClockDate extends Date{constructor(...args){super(...(args.length?args:[clock]));}static now(){return clock;}}globalThis.Date=ClockDate;function node(tag='div'){return {tag,textContent:'',className:'',dataset:{},hidden:false,open:false,children:[],append(...values){this.children.push(...values);},replaceChildren(...values){this.textContent='';this.children=[...values];}};}const controls=new Map(${JSON.stringify(ids)}.map(id=>[id,node()]));const document={hidden:false,getElementById:id=>controls.get(id),createElement:tag=>node(tag)};const text=node=>node.textContent+node.children.map(text).join(' '),control=name=>controls.get('businessEscrowReleases'+name);let current=JSON.parse(serialized),selectedScope=auditScope(current.schema==='business_escrow_releases_v2'?current.report:current),customApi=null;const calls=[];const api=async(path,body)=>{calls.push({path,body});return customApi?customApi(path,body):JSON.parse(JSON.stringify(current));};const financialNet={textContent:'R$ 2.250,13'};`+ESCROW_RELEASES_CLIENT,context);
  const run=code=>vm.runInContext(code,context);
  return {context,run,text:name=>run('text(control('+JSON.stringify(name)+'))'),calls:()=>JSON.parse(run('JSON.stringify(calls)')),load(value){context.serialized=JSON.stringify(value);run('current=JSON.parse(serialized);');}};
 }
@@ -28,7 +37,7 @@ function browser(value=observation()){
  const b=browser();assert.equal(b.run('brazaEscrowReleases.start({api})'),true);assert.equal(await b.run('brazaEscrowReleases.observe("2026-10",selectedScope)'),true);
  assert.equal(b.run('control("Details").open'),false);assert.match(b.text('Scope'),/Liberações de.*Fonte consultada de/);assert.match(b.text('Cohort'),/Pedidos criados de 01\/10\/2026 a 15\/10\/2026.*Financeiro consultado/);
  assert.match(b.text('Metrics'),/Valor liberado conferido.*120,00/);assert.match(b.text('Matching'),/Repasse previsto dos pedidos localizados:.*100,00.*Liberações com valor compatível:.*120,00.*Diferença no conjunto comparável:.*20,00/);
- assert.match(body,/não são somados nem descontados novamente/);assert.match(body,/recebimento no banco/);assert.equal(b.run('financialNet.textContent'),'R$ 2.250,13');assert.deepEqual(b.calls(),[{path:'finance/escrow-releases?month=2026-10'}]);
+ assert.match(body,/não são somados nem descontados novamente/);assert.match(body,/recebimento no banco/);assert.equal(b.run('financialNet.textContent'),'R$ 2.250,13');assert.deepEqual(b.calls(),[{path:'finance/escrow-releases?month=2026-10&evidence=orders-v1'}]);
  });
 
  test('a partial calendar displays only explicitly verified partial values and preserves its collection coverage',async()=>{
@@ -50,7 +59,7 @@ function browser(value=observation()){
  test('coalesced passive reads retain good values and original source times after a failed refresh',async()=>{
  const b=browser();b.run('brazaEscrowReleases.start({api});customApi=()=>new Promise(resolve=>globalThis.finish=resolve);globalThis.first=brazaEscrowReleases.observe("2026-10",selectedScope);globalThis.second=brazaEscrowReleases.observe("2026-10",selectedScope);');assert.equal(b.run('first===second'),true);await Promise.resolve();assert.equal(b.calls().length,1);b.run('finish(JSON.parse(JSON.stringify(current)));');assert.equal(await b.run('first'),true);const dates=b.text('Scope');
  for(let i=0;i<3;i++)assert.equal(await b.run('brazaEscrowReleases.observe("2026-10",selectedScope)'),true);assert.equal(b.calls().length,1);
- b.run('clock+=60000;customApi=async()=>{throw Error("PRIVATE_PROVIDER_TOKEN");};');assert.equal(await b.run('brazaEscrowReleases.observe("2026-10",selectedScope)'),false);assert.match(b.text('Status'),/valores conferidos e suas datas foram preservados/);assert.equal(b.text('Scope'),dates);assert.match(b.text('Metrics'),/120,00/);assert.doesNotMatch(b.text('Status'),/PRIVATE_PROVIDER_TOKEN/);assert.ok(b.calls().every(call=>call.body===undefined&&call.path==='finance/escrow-releases?month=2026-10'));assert.equal(b.run('typeof setTimeout'),'undefined');
+ b.run('clock+=60000;customApi=async()=>{throw Error("PRIVATE_PROVIDER_TOKEN");};');assert.equal(await b.run('brazaEscrowReleases.observe("2026-10",selectedScope)'),false);assert.match(b.text('Status'),/valores conferidos e suas datas foram preservados/);assert.equal(b.text('Scope'),dates);assert.match(b.text('Metrics'),/120,00/);assert.doesNotMatch(b.text('Status'),/PRIVATE_PROVIDER_TOKEN/);assert.ok(b.calls().every(call=>call.body===undefined&&call.path==='finance/escrow-releases?month=2026-10&evidence=orders-v1'));assert.equal(b.run('typeof setTimeout'),'undefined');
  });
 
  test('a new same-month cohort invalidates prior values and ignores its older in-flight response',async()=>{
@@ -130,4 +139,17 @@ test('hidden tabs invalidate replaced or suspended publications before an older 
   b.run('document.hidden=false;customApi=null;'+(change==='replacement'?'current=JSON.parse(nextObservation);selectedScope=auditScope(current);':''));
   assert.equal(await b.run('brazaEscrowReleases.observe("2026-10",selectedScope)'),true);assert.match(b.text('Metrics'),/120,00/);assert.equal(b.calls().length,3);
  }
+});
+
+test('order-level release evidence shows adjustment, verified release and saved refund side-by-side without calling it receivable',async()=>{
+ const value=evidenceObservation(),b=browser(value),hash='a'.repeat(64);
+ b.run(`globalThis.brazaReconciliation={getSnapshot:()=>({month:"2026-10",scope_key:JSON.stringify(selectedScope),report:{reports:[{cases:[{order_hash:"${hash}",status:"ACCEPTED",requested_refund_cents:1000}],truncation:{truncated:false}}]},money:[{money:{payouts:[{order_hash:"${hash}",after_adjustment_repass_cents:6000}]}}]})};`);
+ b.run('brazaEscrowReleases.start({api})');assert.equal(await b.run('brazaEscrowReleases.observe("2026-10",selectedScope)'),true);
+ const text=b.text('Orders');assert.match(text,/Conciliação por pedido/);assert.match(text,/Repasse-base.*50,00/);assert.match(text,/Ajuste informado.*10,00/);assert.match(text,/Repasse após ajuste.*60,00/);assert.match(text,/Valor liberado conferido.*60,00/);assert.match(text,/ACCEPTED/);assert.match(text,/subtotal.*10,00/);assert.match(text,/não é “valor a receber”/i);assert.match(text,/não significa falta de pagamento/i);
+ assert.doesNotMatch(text,/PRIVATE|order_sn/);assert.equal(b.run('financialNet.textContent'),'R$ 2.250,13');
+ assert.deepEqual(b.calls(),[{path:'finance/escrow-releases?month=2026-10&evidence=orders-v1'}]);
+});
+
+test('legacy release payload remains compatible when the v2 sidecar is unavailable',async()=>{
+ const b=browser(observation());b.run('brazaEscrowReleases.start({api})');assert.equal(await b.run('brazaEscrowReleases.observe("2026-10",selectedScope)'),true);assert.equal(b.run('control("Orders").hidden'),true);assert.match(b.text('Metrics'),/120,00/);
 });
