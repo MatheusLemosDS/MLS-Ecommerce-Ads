@@ -1,8 +1,9 @@
 import {businessMonthBody} from './business-month-view.mjs';
 import {businessDayBody,BUSINESS_DAY_CSS} from './business-day-view.mjs';
-import {commandCenterBody,COMMAND_CENTER_CSS} from './agent-registry-view.mjs';
+import {commandCenterBody,pendingIncomeBody,COMMAND_CENTER_CSS} from './agent-registry-view.mjs';
+import {MISSION_CSS,missionWorkspacesBody} from './mission-control.mjs';
 import {workspaceNavigation,workspaceSecondaryNavigation,WORKSPACE_NAVIGATION_CSS} from './workspace-navigation.mjs';
-export const CSS=BUSINESS_DAY_CSS+COMMAND_CENTER_CSS+String.raw`
+export const CSS=BUSINESS_DAY_CSS+COMMAND_CENTER_CSS+MISSION_CSS+String.raw`
 .hermes-live-monitor{margin:0 0 22px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}.hermes-live-monitor>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:48px;padding:14px 16px;font-size:12px;font-weight:650;cursor:pointer}.hermes-live-monitor>summary span{font-size:10px;color:var(--muted);font-weight:400}.hermes-live-monitor .source-comparison{margin:0}.hermes-live-monitor[open]>summary{border-bottom:1px solid var(--line)}@media(max-width:640px){.hermes-live-monitor>summary{align-items:flex-start;flex-direction:column;gap:5px}.hero{margin-bottom:18px}.hero h1{font-size:22px}}
 .store-ads-measurement{margin:24px 0;padding-top:24px;border-top:1px solid var(--line,#e2e6e9);min-width:0}.ads-measurement-days{min-width:0;margin:18px 0}.ads-measurement-days summary{cursor:pointer;font-size:12px;font-weight:650}.ads-measurement-days .table-wrap{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}.ads-measurement-days table{min-width:660px;width:100%;border-collapse:collapse;margin:12px 0}.ads-measurement-days th,.ads-measurement-days td{text-align:left;padding:12px 10px;border-bottom:1px solid var(--line,#e2e6e9);font-size:11px;font-variant-numeric:tabular-nums}.ads-measurement-days th{color:var(--muted,#606c76)}
 
@@ -65,5 +66,11 @@ export function adminBody(){
  const original=legacyAdminBody(),opening='<section id="overview">',start=original.indexOf(opening),end=original.indexOf('</section>',start);
  if(start<0||end<start)throw Error('MONTH_VIEW_INSERTION_INVALID');
  const legacy=original.slice(start+opening.length,end);
- return original.slice(0,start)+opening+commandCenterBody()+businessDayBody()+businessMonthBody()+'<details id="legacyFinanceDetails" class="card monthly-legacy-details" hidden><summary>Referência anterior de pedidos concluídos</summary><p class="field-help">Esta referência preserva a regra antiga por pedido. Para o MEI, use o resumo mensal, que desconta o DAS uma vez no mês.</p>'+legacy+'</details></section>'+original.slice(end+10)+'<div class="workspace-mobile-navigation">'+workspaceNavigation('overview',{role:'owner',mobile:true})+'</div>';
+ // Keep the original financial nodes, IDs and handlers, but move their display
+ // off the executive overview and into the dedicated Finance agent workspace.
+ const financeDetails=businessDayBody()+businessMonthBody()+pendingIncomeBody()+
+  '<details id="legacyFinanceDetails" class="card monthly-legacy-details" hidden><summary>Referência anterior de pedidos concluídos</summary><p class="field-help">Esta referência preserva a regra antiga por pedido. Para o MEI, use o resumo mensal, que desconta o DAS uma vez no mês.</p>'+legacy+'</details>';
+ return original.slice(0,start)+opening+commandCenterBody()+'</section>'+
+  missionWorkspacesBody(financeDetails)+original.slice(end+10)+
+  '<div class="workspace-mobile-navigation">'+workspaceNavigation('overview',{role:'owner',mobile:true})+'</div>';
 }
