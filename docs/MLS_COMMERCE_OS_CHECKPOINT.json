@@ -123,7 +123,7 @@
   ],
   "latest_increment": {
     "id": "M1_1_MISSION_CONTROL_OPTION_3",
-    "status": "MERGED_CI_CLOUDFLARE_CHECKS_SUCCESS_OWNER_VISUAL_REVIEW_PENDING",
+    "status": "MERGED_AND_DEPLOYED_CLOUDFLARE_LATEST_PR30_BUILDS_SUCCESS_OWNER_VISUAL_REVIEW_PENDING",
     "pull_request": 29,
     "merge_commit": "2522f33132563d19704c6f6c57ff4206067bc2ab",
     "validation": {
@@ -165,7 +165,23 @@
       "Confirm main nav and card drilldown on authenticated desktop and mobile",
       "Confirm one agent view at a time and old Finance, Products, DTF, Ads and Hermes tools remain reachable",
       "Validate real M2 Pending with Seller Centre and keep receiving/bank settlement unverified otherwise"
-    ]
+    ],
+    "cloudflare_delivery": {
+      "source_commit": "8f2d3e4d928d6d4c699af39f54740d31cd97cd92",
+      "app": {
+        "build_id": "d89151c3-a166-40d0-8b08-e1931113aad5",
+        "version_id": "9e051db8-e81d-4e3e-bd12-c00d0127bd3b"
+      },
+      "auth": {
+        "build_id": "586fd9bf-bb7b-432d-b8f9-91c4c18e83a8",
+        "version_id": "69828598-fb14-493f-a393-9b247258fe04"
+      },
+      "finance": {
+        "build_id": "84d2a82d-a13a-4d9a-a913-31997e291a2f",
+        "version_id": "d618515a-1c04-4799-9644-1a6af8f29185"
+      },
+      "note": "First Cloudflare builds for PR29 merge failed; subsequent PR30 test-only merge builds succeeded and published versions. Runtime App bundle unchanged since PR29."
+    }
   },
   "incident": {
     "id": "INCIDENT_2026_10_27_PANEL_AGENT_REGRESSION",
@@ -325,7 +341,7 @@
     "milestone": "M1_1_MISSION_CONTROL",
     "approved_option": 3,
     "version": "2026-10-27",
-    "state": "DEPLOY_BUILDS_SUCCESS_VISUAL_PENDING",
+    "state": "CLOUDFLARE_VERSIONS_PUBLISHED_POST_PR30_OWNER_VISUAL_PENDING",
     "tabs": [
       "agents",
       "agent-finance",

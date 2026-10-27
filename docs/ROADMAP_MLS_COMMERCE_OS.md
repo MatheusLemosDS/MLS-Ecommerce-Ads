@@ -214,7 +214,7 @@ Validação PR #29: **2.080 testes Node + 67 Python**, incluindo Chrome real
 de navegação entre Central de Agentes, Finance e Returns. CI final da
 `main` reexecutado com sucesso; builds Cloudflare App/Auth/Finance `SUCCESS`.
 PR #30 corrige apenas teste financeiro intermitente sobre dígitos acidentais
-em hashes; não modifica runtime. CI final `main` run `40585084151` sucesso.
+em hashes; não modifica runtime. CI final `main` run `40585084151` sucesso. O primeiro disparo de builds do merge da PR #29 falhou; a PR #30 (somente teste, mesmo código App) publicou as três versões com SUCCESS, identificadas no checkpoint.
 
 **M2 continua sendo a fase de negócio atual.** Este redesign é uma melhoria
 de UX da M1, não uma antecipação de Pricing, Ads autônomo ou M3. Falta apenas

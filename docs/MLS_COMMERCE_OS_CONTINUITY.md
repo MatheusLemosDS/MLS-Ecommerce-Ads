@@ -358,3 +358,23 @@ Roadmap de negócio continua **M2**, próximo gate validação real Pending
 Overview x Seller Centre; `realized_net_cents` e
 `remaining_receivable_cents` seguem desconhecidos sem evidência,
 Ads/PROMO continuam LOCKED.
+
+
+### Build/publish verification after M1.1 — 27/10/2026
+
+O primeiro disparo dos três Cloudflare Workers no merge da PR #29
+(`2522f3313256`) reportou **FAILURE**, apesar de CI GitHub verde.
+O merge posterior da PR #30 (`8f2d3e4d928d`, **apenas teste**, runtime
+idêntico ao #29) disparou novo build e teve **SUCCESS** para App,
+Auth e Finance. Versões confirmadas pelos check-runs Cloudflare:
+
+- App: build `d89151c3-a166-40d0-8b08-e1931113aad5`,
+  versão `9e051db8-e81d-4e3e-bd12-c00d0127bd3b`.
+- Auth: build `586fd9bf-bb7b-432d-b8f9-91c4c18e83a8`,
+  versão `69828598-fb14-493f-a393-9b247258fe04`.
+- Finance: build `84d2a82d-a13a-4d9a-a913-31997e291a2f`,
+  versão `d618515a-1c04-4799-9644-1a6af8f29185`.
+
+CI final run `40585084151` validou 2.080 Node + 67 Python com
+sucesso. A interface **ainda exige conferência visual autenticada** em
+desktop e celular; sucesso de build não prova navegação real no dispositivo.
