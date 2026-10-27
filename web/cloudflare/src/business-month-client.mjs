@@ -24,6 +24,7 @@ export const BUSINESS_MONTH_CLIENT=BUSINESS_DAY_CLIENT+String.raw`
  ${projectBusinessMonthAuditScope.toString()}
  ${projectDailyBusinessSummary.toString()}
  ${projectBusinessMonthView.toString()}
+ ${projectExpenseSchedule.toString()}
  ${buildBusinessCheckpoint.toString()}
  ${buildAccountDiagnosis.toString()}
  ${buildMonthlyFinancialSummary.toString()}
