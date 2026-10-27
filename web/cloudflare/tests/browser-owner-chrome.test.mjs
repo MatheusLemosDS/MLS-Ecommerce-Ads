@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import {spawn} from 'node:child_process';
-import {existsSync,readFileSync} from 'node:fs';
+import {existsSync} from 'node:fs';
 import {build} from 'esbuild';
 import {fileURLToPath} from 'node:url';
 
@@ -45,7 +45,7 @@ test('real Chromium hydrates owner agent cards even when finance API is unavaila
  // Set the synthetic test browser's theme preference before the real head bootstrap.
  html=html.replace('<head>','<head><script>try{localStorage.setItem("braza-theme","dark")}catch(e){}</script>');
  const errorScript='<script>document.documentElement.setAttribute("data-mls-early","YES");window.__mlsErrors=[];window.addEventListener("error",e=>window.__mlsErrors.push(String(e.message||"ERROR").slice(0,250)));window.addEventListener("unhandledrejection",e=>window.__mlsErrors.push(String(e.reason?.message||e.reason||"REJECTION").slice(0,250)));setTimeout(()=>document.documentElement.setAttribute("data-mls-runtime-errors",JSON.stringify(window.__mlsErrors)),2200);</script>';
- const snapshotScript='<script>document.documentElement.setAttribute("data-mls-late","YES");document.documentElement.dataset.theme="dark";document.documentElement.dataset.themePreference="dark";try{(()=>{function snapshot(){const root=document.getElementById("commandCenterAgents");const trace={registry:typeof globalThis.mlsAgentRegistry,agent_count:root?.children.length||0,fallback_count:root?.querySelectorAll("[data-agent-placeholder=true]").length||0,registry_status:globalThis.mlsAgentRegistry?.getSnapshot?.()?.schema||"MISSING",net_value:(document.getElementById("commandCenterNet")?.textContent||"").slice(0,25),bootstrap_status:(document.getElementById("message")?.textContent||"").slice(0,100),visual:{hero_bg:getComputedStyle(document.querySelector(".mission-command-hero")).backgroundImage.slice(0,180),hero_height:getComputedStyle(document.querySelector(".mission-command-hero")).minHeight,agent_bg:root?.firstElementChild?getComputedStyle(root.firstElementChild).backgroundImage.slice(0,180):"NONE",agent_avatar:root?.firstElementChild?getComputedStyle(root.firstElementChild,"::before").content:"NONE",bars:[...document.querySelectorAll(".mission-comparison-track span")].map(item=>item.style.width),visual_panels:document.querySelectorAll(".mission-data-panel").length},errors:window.__mlsErrors.slice(0,3)};document.documentElement.dataset.mlsHydrationTrace=JSON.stringify(trace);}snapshot();setTimeout(snapshot,200);setTimeout(snapshot,1000);setTimeout(snapshot,2400);})();}catch(e){document.documentElement.setAttribute("data-mls-snapshot-error",String(e?.message||e).slice(0,220));}</script>';
+ const snapshotScript='<script>document.documentElement.setAttribute("data-mls-late","YES");document.documentElement.dataset.theme="dark";document.documentElement.dataset.themePreference="dark";try{(()=>{function snapshot(){const root=document.getElementById("commandCenterAgents");const trace={registry:typeof globalThis.mlsAgentRegistry,agent_count:root?.children.length||0,fallback_count:root?.querySelectorAll("[data-agent-placeholder=true]").length||0,registry_status:globalThis.mlsAgentRegistry?.getSnapshot?.()?.schema||"MISSING",net_value:(document.getElementById("commandCenterNet")?.textContent||"").slice(0,25),bootstrap_status:(document.getElementById("message")?.textContent||"").slice(0,100),visual:{theme:document.documentElement.dataset.theme,hero_bg:getComputedStyle(document.querySelector(".mission-command-hero")).backgroundImage.slice(0,180),hero_height:getComputedStyle(document.querySelector(".mission-command-hero")).minHeight,agent_bg:root?.firstElementChild?getComputedStyle(root.firstElementChild).backgroundImage.slice(0,180):"NONE",agent_avatar:root?.firstElementChild?getComputedStyle(root.firstElementChild,"::before").content:"NONE",bars:[...document.querySelectorAll(".mission-comparison-track span")].map(item=>item.style.width),visual_panels:document.querySelectorAll(".mission-data-panel").length},errors:window.__mlsErrors.slice(0,3)};document.documentElement.dataset.mlsHydrationTrace=JSON.stringify(trace);}snapshot();setTimeout(snapshot,200);setTimeout(snapshot,1000);setTimeout(snapshot,2400);})();}catch(e){document.documentElement.setAttribute("data-mls-snapshot-error",String(e?.message||e).slice(0,220));}</script>';
  html=html.replace('<body>','<body><script>document.documentElement.dataset.theme="dark";document.documentElement.dataset.themePreference="dark";</script>'+errorScript);
  const closing=html.lastIndexOf('</body>');assert.ok(closing>0,'must inject inspector after every bundled inline script');
  html=html.slice(0,closing)+snapshotScript+html.slice(closing);
@@ -71,24 +71,6 @@ test('real Chromium hydrates owner agent cards even when finance API is unavaila
  try{
   const url='http://127.0.0.1:'+server.address().port+'/admin';
   const output=await chromeDump(url);
-  // Temporary screenshot QA of a synthetic, non-sensitive owner workspace.
-  try{
-   const shot='/tmp/mls-mission-v2-preview.png';
-   await new Promise(resolve=>{
-    const p=spawn(chrome,['--headless=new','--no-sandbox','--disable-gpu','--disable-dev-shm-usage','--no-first-run',
-     '--disable-background-networking','--window-size=1440,1000','--virtual-time-budget=1200','--screenshot='+shot,url],
-      {stdio:['ignore','ignore','ignore']});
-    const watchdog=setTimeout(()=>{p.kill('SIGKILL');resolve();},12000);
-    p.on('error',()=>{clearTimeout(watchdog);resolve();});
-    p.on('close',()=>{clearTimeout(watchdog);resolve();});
-   });
-   if(existsSync(shot)){
-    const file=readFileSync(shot);
-    console.log('MLS_MISSION_V2_PREVIEW_PNG_B64='+file.toString('base64'));
-    console.log('MLS_MISSION_V2_PREVIEW_BYTES='+file.length);
-   }else console.log('MLS_MISSION_V2_PREVIEW_UNAVAILABLE');
-  }catch(e){console.log('MLS_MISSION_V2_PREVIEW_SKIPPED='+String(e?.name||'UNKNOWN'));}
-
   const encoded=output.match(/data-mls-hydration-trace="([^"]+)"/);
   if(!encoded){const pos=output.indexOf('id="commandCenterAgents"');console.log('MLS_BROWSER_MISSING_TRACE',JSON.stringify({html_bytes:html.length,output_bytes:output.length,early:output.includes('data-mls-early="YES"'),late:output.includes('data-mls-late="YES"'),runtime_errors:output.match(/data-mls-runtime-errors="([^"]*)"/)?.[1]?.slice(0,400)||null,snapshot_error:output.match(/data-mls-snapshot-error="([^"]*)"/)?.[1]?.slice(0,260)||null,agents_markup:output.slice(pos,pos+1300),tail:output.slice(-190)}));}
   assert.ok(encoded,'Chrome must run trailing DOM inspection');
@@ -100,6 +82,7 @@ test('real Chromium hydrates owner agent cards even when finance API is unavaila
   assert.equal(trace.agent_count,6);
   assert.equal(trace.fallback_count,0,'static placeholders must be replaced after script hydration');
   assert.equal(trace.net_value,'—','no financial number may be fabricated');
+  assert.equal(trace.visual.theme,'dark','approved Mission Control theme must be inspected in dark mode');
   assert.match(trace.visual.hero_bg,/gradient/i,'Mission Control hero must be styled with multi-tone spatial gradient');
   assert.match(trace.visual.agent_bg,/gradient/i,'real agent cards need colored gradient surfaces');
   assert.ok(trace.visual.agent_avatar&&!['none','normal','NONE'].includes(trace.visual.agent_avatar),'robotic avatar must be visible');
