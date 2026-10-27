@@ -220,3 +220,23 @@ test('command center has six static observer cards even when hydration scripts d
  assert.match(html,/Nenhum valor é presumido/);
  assert.doesNotMatch(html,/R\\$ [1-9]\\d*,\\d{2}/);
 });
+
+test('agent registry starts from null month without accessing expense_schedule or hiding observer cards',()=>{
+ const noData=buildMlsAgentRegistry();
+ assert.equal(noData.schema,'mls_agent_registry_v1');
+ assert.equal(noData.mode,'OBSERVER');
+ assert.equal(noData.month.balance_cents,null);
+ assert.equal(noData.expenses.status,null);
+ assert.equal(noData.health,'WORKING');
+ assert.equal(noData.agents.length,6);
+ assert.equal(noData.hermes.status,'WORKING');
+ for(const agent of noData.agents)assert.equal(agent.status,'WORKING');
+ assert.equal(noData.day.net_cents,null);
+ const dayOnly=buildMlsAgentRegistry({day:day()});
+ assert.equal(dayOnly.day.net_cents,25000);
+ assert.equal(dayOnly.expenses.open_cents,null);
+ assert.equal(dayOnly.agents.find(agent=>agent.id==='finance').status,'WORKING');
+ const emptyMonth=buildMlsAgentRegistry({month:month({expense_schedule:null})});
+ assert.equal(emptyMonth.expenses.status,null);
+ assert.equal(emptyMonth.agents.length,6);
+});
