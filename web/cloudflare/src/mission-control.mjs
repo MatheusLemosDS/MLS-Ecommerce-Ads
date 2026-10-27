@@ -291,6 +291,49 @@ export const MISSION_CSS="\n/* MLS Commerce OS / Mission Control: cosmetic only,
 :root[data-theme=light] .mission-dashboard .agent-card{background:linear-gradient(145deg,rgba(var(--agent-rgb,65,135,245),.10),rgba(255,255,255,.94) 85%);border-color:rgba(var(--agent-rgb,65,135,245),.27)}
 :root[data-theme=light] .mission-dashboard .agent-card .mission-card-link{color:#18558a}
 
+
+/* V3 density pass 2: approved screenshot refinements, strictly visual and responsive. */
+@media(min-width:1250px){
+ .mission-dashboard{grid-template-columns:minmax(0,1fr) 250px;row-gap:10px}
+ .mission-dashboard>.command-center-head{min-height:0!important;height:auto!important;max-height:190px;padding:16px 20px!important}
+ .mission-dashboard .mission-command-orbit{display:none}
+ .mission-dashboard .mission-overview-copy{max-width:100%}
+ .mission-dashboard .command-center-head h2{font-size:clamp(24px,2vw,30px);margin:5px 0}
+ .mission-dashboard .command-center-head p{max-width:670px;line-height:1.35}
+ .mission-dashboard .mission-overview-cta{margin-top:8px}
+ .mission-dashboard>.command-center-metrics{gap:9px}
+ .mission-dashboard .command-metric{min-height:100px;padding:12px}
+ .mission-dashboard .command-metric strong{font-size:clamp(18px,1.45vw,23px)}
+ .mission-dashboard .agent-grid{grid-template-columns:repeat(6,minmax(0,1fr))!important;gap:8px}
+ .mission-dashboard .agent-card{min-height:184px;padding:12px;gap:5px}
+ .mission-dashboard .agent-card-head{display:flex;flex-direction:row;align-items:center;gap:7px;flex-wrap:wrap}
+ .mission-dashboard .agent-card-head:before{display:none}
+ .mission-dashboard .agent-card h4{font-size:12px}
+ .mission-dashboard .agent-card p{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.4;max-height:3em}
+ .mission-dashboard .agent-card .agent-card-metric{margin-top:auto;font-size:13px}
+ .mission-dashboard .agent-card .mission-card-link{padding-top:4px;margin-top:4px}
+ .mission-dashboard .hermes-command{padding:14px;overflow:hidden}
+ .mission-dashboard .hermes-command .command-priority{padding:7px 9px}
+ .mission-dashboard .hermes-command .command-priority span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+}
+@media(min-width:1250px) and (max-width:1500px){
+ .mission-dashboard{grid-template-columns:minmax(0,1fr) 240px}
+ .mission-dashboard .agent-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+ .mission-dashboard .agent-card{min-height:155px}
+}
+@media(min-width:1501px) and (max-width:1750px){
+ .mission-dashboard .agent-card{min-height:190px;padding:10px}
+}
+@media(max-width:1249px){
+ .mission-dashboard .agent-card-head:before{display:none}
+ .mission-dashboard .agent-card{min-height:145px}
+}
+@media(max-width:720px){
+ .mission-dashboard .mission-command-orbit{display:none}
+ .mission-dashboard .command-center-head{min-height:0!important}
+ .mission-dashboard .agent-card{min-height:135px}
+}
+
 `;
 
 export const MISSION_AGENTS=Object.freeze([
