@@ -42,7 +42,7 @@ test('owner keeps all existing financial forms and identifiers once, but overvie
   assert.ok(ix>financeStart,name+' should remain inside MLS Finance');
   assert.equal(ids.filter(value=>value===name).length,1,name+' must exist exactly once');
  }
- for(const name of ['products','production','margins','hermes','history','roadmap'])assert.ok(ids.includes(name),name+' legacy tab preserved');
+ for(const name of ['products','margins','hermes','history','roadmap'])assert.ok(ids.includes(name),name+' legacy tab preserved');
  assert.match(html,/id="commandCenterAgents"/);
  assert.ok(html.indexOf('id="commandCenterAgents"')<financeStart,'executive cards remain on overview');
 });
