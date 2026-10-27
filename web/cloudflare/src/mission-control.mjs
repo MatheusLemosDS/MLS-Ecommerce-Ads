@@ -319,3 +319,119 @@ export function buildMissionTrendComparison(trend,key){
  }
  return null;
 }
+
+export const MISSION_TRENDS_CLIENT=String.raw`
+(()=>{
+ const buildMissionTrendComparison=${buildMissionTrendComparison.toString()};
+ const ns='http://www.w3.org/2000/svg',byId=id=>document.getElementById(id);
+ const safe=value=>Number.isSafeInteger(value)&&!Object.is(value,-0);
+ const names={net:'Resultado estimado',sales:'Vendas pagas',ads:'Gastos Ads'};
+ const fields={net:'net_cents',sales:'sales_cents',ads:'ads_spend_cents'};
+ const colors={net:'#39e8af',sales:'#6caaff',ads:'#ffb365'};
+ const choice={overview:'net',finance:'net',ads:'ads'};
+ let timeline=null;
+ function money(value){
+  if(!safe(value))return '—';
+  const amount=BigInt(value),abs=amount<0n?-amount:amount;
+  const frac=String(abs%100n).padStart(2,'0');
+  const text=new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).formatToParts(abs/100n).map(part=>part.type==='fraction'?frac:part.value).join('');
+  return (amount<0n?'-':'')+text;
+ }
+ const signedMoney=value=>safe(value)?(value>0?'+':'')+money(value):'—';
+ const count=value=>safe(value)?new Intl.NumberFormat('pt-BR').format(value):'—';
+ const percentage=value=>safe(value)?(value>0?'+':'')+new Intl.NumberFormat('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1}).format(value/100)+'%':null;
+ const briefDate=value=>typeof value==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(value)?value.slice(8)+'/'+value.slice(5,7):'—';
+ function el(tag,attributes={},content){
+  const node=document.createElementNS(ns,tag);
+  for(const [name,value] of Object.entries(attributes))node.setAttribute(name,String(value));
+  if(content!==undefined)node.textContent=content;
+  return node;
+ }
+ function renderGraph(panel){
+  const suffix=panel[0].toUpperCase()+panel.slice(1);
+  const target=byId('missionTrendGraph'+suffix),note=byId('missionTrendNote'+suffix);
+  if(!target||!note)return;
+  target.replaceChildren();
+  const field=fields[choice[panel]],key=choice[panel];
+  const rows=timeline?.schema==='mls_mission_daily_trend_v1'&&Array.isArray(timeline.points)?timeline.points:[];
+  const known=rows.map((r,index)=>({index,row:r,value:safe(r?.[field])?r[field]:null})).filter(r=>r.value!==null);
+  if(known.length<2){
+   const empty=document.createElement('p');empty.className='mission-trend-empty';empty.textContent=known.length?'Apenas um dia observado. Não há série suficiente para exibir a evolução.':'Histórico diário ainda indisponível. Aguardando dados validados, sem criar zeros artificiais.';
+   target.append(empty);note.textContent=rows.length?count(known.length)+' dia(s) com leitura; comparação suspensa.':'Nenhuma série salva disponível para esta referência.';return;
+  }
+  const w=740,h=250,left=54,right=726,top=16,bottom=211;
+  const max=Math.max(0,...known.map(r=>r.value)),min=Math.min(0,...known.map(r=>r.value)),span=max-min||1;
+  const X=i=>left+i*(right-left)/Math.max(1,rows.length-1);
+  const Y=v=>top+(max-v)/span*(bottom-top);
+  const zero=Y(0),tint=v=>key==='net'&&v<0?'#ff7899':colors[key];
+  const graph=el('svg',{class:'mission-trend-svg',viewBox:'0 0 '+w+' '+h,preserveAspectRatio:'none',role:'img','aria-label':names[key]+': '+count(known.length)+' dias observados'});
+  graph.append(el('title',{},names[key]+': pontos reais do histórico, sem interpolar valores ausentes'));
+  for(let line=0;line<=4;line++){
+   const yy=top+line*(bottom-top)/4;
+   graph.append(el('line',{x1:left,y1:yy,x2:right,y2:yy,stroke:'rgba(123,167,230,.22)','stroke-width':1,'stroke-dasharray':'3 5'}));
+   const amount=max-line*span/4;
+   graph.append(el('text',{x:left-8,y:yy+3,'text-anchor':'end',fill:'#9eb9d7','font-size':11},new Intl.NumberFormat('pt-BR',{notation:'compact',maximumFractionDigits:1}).format(amount/100)));
+  }
+  if(min<0&&max>0)graph.append(el('line',{x1:left,y1:zero,x2:right,y2:zero,stroke:'rgba(206,229,255,.6)','stroke-width':1.2}));
+  for(let i=1;i<rows.length;i++){
+   const previous=rows[i-1]?.[field],current=rows[i]?.[field];
+   if(!safe(previous)||!safe(current))continue;
+   const a=X(i-1),b=X(i),c=tint(current);
+   graph.append(el('polygon',{points:a+','+Y(previous)+' '+b+','+Y(current)+' '+b+','+zero+' '+a+','+zero,fill:c,'fill-opacity':.10}));
+   graph.append(el('line',{x1:a,y1:Y(previous),x2:b,y2:Y(current),stroke:c,'stroke-width':3.2,'stroke-linecap':'round'}));
+  }
+  for(let i=0;i<rows.length;i++){
+   const row=rows[i],v=row?.[field];
+   if(i===0||i===rows.length-1||i%3===0)graph.append(el('text',{x:X(i),y:h-14,'text-anchor':'middle',fill:'#a3bcda','font-size':11},briefDate(row?.date)));
+   if(!safe(v))continue;
+   const dot=el('circle',{cx:X(i),cy:Y(v),r:row.partial?3.5:4,fill:row.partial?'#f7c57f':tint(v),stroke:'#081a35','stroke-width':1.6});
+   dot.append(el('title',{},briefDate(row.date)+' · '+money(v)+(row.partial?' · dia parcial':'')+(row.net_basis==='KNOWN_COSTS'&&key==='net'?' · subtotal com custos conhecidos':'')));
+   graph.append(dot);
+  }
+  target.append(graph);
+  note.textContent=count(known.length)+' de '+count(rows.length)+' dia(s) com valores · '+briefDate(rows[0].date)+' a '+briefDate(rows.at(-1).date)+'. '+(known.some(item=>item.row.partial)?'Pontos âmbar = dia parcial. ':'')+'Resultado estimado, não recebimento bancário.';
+ }
+ function paintIndicators(registry){
+  const day=registry?.day||{},net=day.net_cents,month=registry?.month?.balance_cents;
+  const netCard=byId('commandCenterNet')?.closest?.('.command-metric');
+  const netTone=!safe(net)?'unknown':net<0?'loss':net>0?'profit':'flat';
+  if(netCard)netCard.dataset.resultTone=netTone;
+  const netState=byId('missionProfitState');
+  if(netState){netState.dataset.tone=netTone;netState.textContent=!safe(net)?'Resultado em apuração':net<0?'▼ Prejuízo estimado':net>0?'▲ Resultado estimado positivo':'● Resultado estimado em equilíbrio';}
+  const financeMonthly=byId('mission-finance-metric-0');
+  if(financeMonthly)financeMonthly.dataset.resultTone=!safe(month)?'unknown':month<0?'loss':month>0?'profit':'flat';
+  for(const [suffix,key] of Object.entries({Net:'net',Sales:'sales',Ads:'ads',Margin:'margin',Paid:'paid'})){
+   const badge=byId('missionKpiDelta'+suffix);if(!badge)continue;
+   const details=byId('missionKpiDeltaDate'+suffix),result=buildMissionTrendComparison(timeline,key);
+   badge.dataset.direction=result?.direction||'UNAVAILABLE';badge.dataset.metric=key;
+   if(!result){badge.textContent='↔ Sem comparação de dias completos';badge.title='Requer dois dias consecutivos, completos e com valores válidos.';if(details)details.textContent='Aguardando dias comparáveis';continue;}
+   const arrow=result.direction==='UP'?'▲':result.direction==='DOWN'?'▼':'●';
+   const diff=key==='margin'?(result.delta>0?'+':'')+new Intl.NumberFormat('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:2}).format(result.delta/100)+' p.p.':key==='paid'?(result.delta>0?'+':'')+count(result.delta):signedMoney(result.delta);
+   badge.textContent=arrow+' '+diff+(result.percent_bps===null?'':' · '+percentage(result.percent_bps));
+   badge.title='Variação real: '+briefDate(result.current_date)+' versus '+briefDate(result.previous_date)+'.';
+   if(details)details.textContent=briefDate(result.current_date)+' vs '+briefDate(result.previous_date)+' · dias completos';
+  }
+ }
+ function refresh(){
+  let trend=null,registry=null;
+  try{trend=globalThis.brazaDayDashboard?.getTrend?.()??null;}catch{}
+  try{registry=globalThis.mlsAgentRegistry?.getSnapshot?.()??null;}catch{}
+  timeline=trend?.schema==='mls_mission_daily_trend_v1'?trend:null;
+  for(const id of Object.keys(choice))renderGraph(id);
+  paintIndicators(registry);
+  const period=byId('missionTrendScopeOverview');
+  if(period)period.textContent=timeline?'Histórico de '+timeline.month.slice(5)+'/'+timeline.month.slice(0,4)+' · últimos até 14 dias':'Aguardando série validada';
+ }
+ for(const button of document.querySelectorAll('[data-mission-chart][data-mission-series]')){
+  button.onclick=()=>{
+   const id=button.dataset.missionChart,key=button.dataset.missionSeries;
+   if(!Object.hasOwn(choice,id)||!Object.hasOwn(fields,key))return;
+   choice[id]=key;
+   for(const peer of document.querySelectorAll('[data-mission-chart="'+id+'"]'))peer.setAttribute('aria-pressed',String(peer===button));
+   renderGraph(id);
+  };
+ }
+ globalThis.mlsMissionTrends=Object.freeze({refresh});
+ refresh();
+})();
+`;
