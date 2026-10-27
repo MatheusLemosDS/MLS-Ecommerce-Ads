@@ -332,3 +332,29 @@ Se a página voltar a hidratar agentes mas os números permanecerem em branco,
 usar `/admin/diagnostics` para obter `owner_probe` e `finance_month`.
 Nenhuma autorização da Shopee, orçamento Ads, dado persistido ou Worker Auth/
 Finance foi alterado pela correção.
+## 27/10/2026 — Mission Control option 3 / M1.1 entregue no Git
+
+PR #29, merge `2522f33132563d19704c6f6c57ff4206067bc2ab`:
+central executive-only, hub em `?tab=agents` e sete painéis individuais
+`agent-*` (Finance, Ads, Products, Production, Returns, Auditor, Hermes).
+As seções financeiras `businessDay`, `businessMonth`, Pending e
+`legacyFinanceDetails` mudaram **somente de posição no HTML** para o Finance;
+os mesmos IDs, contratos, APIs e cálculos foram mantidos. Automation workspace
+anterior foi movido para dentro da área Hermes. Cards abrem a rota interna,
+com back/forward, link direto e navegação mobile.
+
+Novo `web/cloudflare/src/mission-control.mjs`, namespace incluído pelo
+builder manual; CSS futurista com tema claro/escuro, foco acessível e redução
+de movimento, sem ativos remotos. MLS Pricing, Creative, Inventory e
+Marketplace ainda NÃO são agentes operacionais, só prévia das próximas fases.
+
+Testes PR #29 e CI pós-merge com **2.080 Node + 67 Python**, Chrome real
+e builds Cloudflare App/Auth/Finance `SUCCESS`. PR #30 apenas estabilizou
+um teste legado Finance removendo match falso de `999` dentro de
+UUID/hash; runtime financeiro intocado. Testes CI final `40585084151`
+verdes. Resta validação visual autenticada no aparelho do operador.
+
+Roadmap de negócio continua **M2**, próximo gate validação real Pending
+Overview x Seller Centre; `realized_net_cents` e
+`remaining_receivable_cents` seguem desconhecidos sem evidência,
+Ads/PROMO continuam LOCKED.

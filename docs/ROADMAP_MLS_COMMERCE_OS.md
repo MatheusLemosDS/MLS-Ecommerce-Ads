@@ -182,6 +182,44 @@ Agentes iniciais na tela:
 
 **Publicação:** PR #12, merge `91fc0cf169f67a9440a8e58a033c925b9ce98eed`. Agent Registry em modo Observer, sem chamadas externas adicionais, com CI 2.008 + 67 e deploy dos três Workers confirmado.
 
+
+### M1.1 — Redesign Mission Control (opção 3) — **INTEGRADO / VALIDAÇÃO VISUAL PENDENTE**
+
+Entrega visual solicitada e aprovada pelo operador em 27/10/2026.
+A PR #29, merge `2522f33132563d19704c6f6c57ff4206067bc2ab`,
+transforma a Central de Comando em um overview executivo mais enxuto e abre
+**uma tela individual** ao selecionar cada agente (tabs com URL estável):
+
+- `/admin?tab=agents`: Hub da equipe, status e navegação.
+- `/admin?tab=agent-finance`: MLS Finance, com os mesmos controles e nós de
+  lucro diário/mensal, Pending, conciliação e despesas, sem duplicar o D1.
+- `/admin?tab=agent-ads`: MLS Ads, leituras observadas e links para campanhas
+  e Ads atuais sem execução externa.
+- `/admin?tab=agent-products`: MLS Products, cobertura de custos e catálogo.
+- `/admin?tab=agent-production`: MLS Production, referência DTF e custos.
+- `/admin?tab=agent-returns`: MLS Returns, estados, alertas e conciliação.
+- `/admin?tab=agent-auditor`: MLS Auditor, diferenças e confiança nas fontes.
+- `/admin?tab=agent-hermes`: MLS Hermes e seu controle de coleta já existente.
+
+Identidade visual: tema premium/futurista, acentos próprios por agente,
+cards, navegação hierárquica, responsivo e `prefers-reduced-motion`.
+**Não exibir gráficos históricos inventados:** as telas usam os snapshots
+financeiros já existentes, com valores ausentes como desconhecidos. Pricing,
+Creative, Inventory e Marketplace aparecem apenas como **planejados**.
+
+Nenhuma mudança no backend, na autorização Shopee, nos bancos D1, nos
+cron triggers, nos schemas, no cálculo de lucro ou nas permissões Ads/PROMO.
+
+Validação PR #29: **2.080 testes Node + 67 Python**, incluindo Chrome real
+de navegação entre Central de Agentes, Finance e Returns. CI final da
+`main` reexecutado com sucesso; builds Cloudflare App/Auth/Finance `SUCCESS`.
+PR #30 corrige apenas teste financeiro intermitente sobre dígitos acidentais
+em hashes; não modifica runtime. CI final `main` run `40585084151` sucesso.
+
+**M2 continua sendo a fase de negócio atual.** Este redesign é uma melhoria
+de UX da M1, não uma antecipação de Pricing, Ads autônomo ou M3. Falta apenas
+a conferência visual autenticada do novo layout e o gate financeiro M2.
+
 ### M2 — Finance/Returns confiáveis como agentes observadores — **EM ANDAMENTO / PONTO DE RETOMADA**
 Continuar a fase financeira atual:
 

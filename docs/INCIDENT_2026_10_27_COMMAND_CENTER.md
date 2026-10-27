@@ -137,3 +137,13 @@ Se a página voltar a hidratar agentes mas os números permanecerem em branco,
 usar `/admin/diagnostics` para obter `owner_probe` e `finance_month`.
 Nenhuma autorização da Shopee, orçamento Ads, dado persistido ou Worker Auth/
 Finance foi alterado pela correção.
+## Fechamento da pane visual original e acompanhamento do redesign
+
+O operador confirmou em 27/10/2026 que a Central de Comando voltou a
+funcionar após a correção do parser HTML e guard do mês nulo (PR #28).
+Incidente visual original resolvido por evidência do operador; não confundir
+com conferência final da verdade financeira.
+
+O redesign Mission Control (PR #29) foi publicado no código, testado em
+Chrome/CI e teve builds Cloudflare bem-sucedidos. A aceitação real do novo
+layout por desktop e Android ainda precisa de conferência.
