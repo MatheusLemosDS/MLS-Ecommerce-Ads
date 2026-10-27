@@ -237,7 +237,7 @@ function missionSourceLink(href,tab){
 }
 function missionCard(item){
  return '<a class="mission-hub-card mission-agent--'+item.id+'" href="/admin?tab=agent-'+item.id+'" data-mission-open="agent-'+item.id+'">'+
-  '<div class="mission-hub-card-top"><span class="mission-mini-orb" aria-hidden="true">'+item.symbol+'</span><span class="mission-status" data-mission-status="'+item.id+'">Aguardando dados</span></div>'+
+  '<div class="mission-hub-card-top"><span class="mission-mini-orb mission-agent-avatar" aria-hidden="true">'+item.symbol+'</span><span class="mission-status" data-mission-status="'+item.id+'">Aguardando dados</span></div>'+
   '<h4>'+item.name+'</h4><p>'+item.summary+'</p><div class="mission-hub-card-bottom"><span class="mission-breadcrumb-pill">Observador</span><span class="mission-open">Abrir painel →</span></div></a>';
 }
 function missionWorkspace(item,financeHtml){
@@ -254,19 +254,20 @@ function missionWorkspace(item,financeHtml){
  const hermes=id==='hermes'?'<div id="missionHermesTools"></div>':'';
  return '<section class="mission-workspace mission-agent--'+id+'" id="'+tab+'" data-mission-page="'+id+'" hidden>'+
   '<header class="mission-hero"><div><nav class="mission-crumb" aria-label="Localização"><a href="/admin?tab=overview" data-mission-open="overview">Visão Geral</a><span>›</span><a href="/admin?tab=agents" data-mission-open="agents">Agentes</a><span>›</span><strong>'+item.name+'</strong></nav>'+
-  '<div class="mission-hero-main"><span class="mission-orb" aria-hidden="true">'+item.symbol+'</span><div><span class="mission-eyebrow">'+item.tag+'</span><h2>'+item.name+'</h2><p>'+item.summary+'</p></div></div></div>'+
+  '<div class="mission-hero-main"><span class="mission-orb mission-agent-avatar" aria-hidden="true">'+item.symbol+'</span><div><span class="mission-eyebrow">'+item.tag+'</span><h2>'+item.name+'</h2><p>'+item.summary+'</p></div></div></div>'+
   '<div class="mission-intro-status"><span class="mission-status" data-mission-status="'+id+'">Aguardando dados</span><span class="mission-breadcrumb-pill">Modo Observador · sem escrita comercial</span></div></header>'+
+  '<nav class="mission-page-tabs" aria-label="Seções de '+item.name+'"><a href="#mission-'+id+'-tasks">Prioridades</a><a href="#mission-'+id+'-tools">Ferramentas</a>'+(id==='finance'?'<a href="#businessMonth">Financeiro detalhado</a>':'')+'</nav>'+ 
   '<div class="mission-stats" aria-label="Indicadores de '+item.name+'">'+missionMetrics+'</div>'+
   '<div class="mission-panels"><section class="mission-module"><div class="mission-module-head"><h3>Prioridades e alertas</h3><small>Somente evidências verificáveis</small></div><div id="mission-'+id+'-tasks" class="mission-tasks"><p class="mission-empty">Aguardando indicadores do agente.</p></div>'+coverage+
   '<p class="mission-last" id="mission-'+id+'-checked">Última leitura: aguardando dados.</p></section>'+
-  '<aside class="mission-module"><div class="mission-module-head"><h3>Ferramentas e detalhes</h3><small>Acessos existentes</small></div><div class="mission-actions">'+shortcuts+'</div>'+
+  '<aside class="mission-module" id="mission-'+id+'-tools"><div class="mission-module-head"><h3>Ferramentas e detalhes</h3><small>Acessos existentes</small></div><div class="mission-actions">'+shortcuts+'</div>'+
   '<p class="mission-footnote" id="mission-'+id+'-message">Nenhuma decisão automática é executada nesta fase. Dados ausentes continuam indisponíveis.</p></aside></div>'+
   hermes+body+'<a class="mission-return" href="/admin?tab=agents" data-mission-open="agents">← Voltar à equipe de agentes</a></section>';
 }
 export function missionWorkspacesBody(financeHtml=''){
  const hub='<section class="mission-hub" id="agents" hidden><div class="mission-hero mission-hub-hero"><div>'+
   '<nav class="mission-crumb" aria-label="Localização"><a href="/admin?tab=overview" data-mission-open="overview">Visão Geral</a><span>›</span><strong>Equipe digital</strong></nav>'+
-  '<div class="mission-hero-main"><span class="mission-orb" aria-hidden="true">✦</span><div><span class="mission-eyebrow">MLS MISSION CONTROL</span><h2>Equipe de agentes</h2>'+
+  '<div class="mission-hero-main"><span class="mission-orb mission-agent-avatar" aria-hidden="true">✦</span><div><span class="mission-eyebrow">MLS MISSION CONTROL</span><h2>Equipe de agentes</h2>'+
   '<p>Cada especialista tem um painel independente. Todos compartilham as mesmas fontes validadas e seguem os limites do MLS Hermes.</p></div></div></div>'+
   '<div class="mission-intro-status"><span class="mission-status" id="missionFleetStatus">Monitorando</span><span class="mission-breadcrumb-pill">Automação comercial bloqueada</span></div></div>'+
   '<div class="mission-hub-bar"><div><h3>Especialistas da operação</h3><p>Escolha um agente para abrir seu espaço completo.</p></div>'+
