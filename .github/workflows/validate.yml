@@ -40,7 +40,7 @@ jobs:
               console.log('MLS_SMOKE_DNS',JSON.stringify({host,ok:records.length>0,families:[...new Set(records.map(r=>r.family))]}));
             }catch(e){console.log('MLS_SMOKE_DNS',JSON.stringify({host,ok:false,error:e.code||e.name}));}
           }
-          for(const path of ['/','/admin','/health']){
+          for(const path of ['/','/admin','/login','/api/admin/bootstrap','/health']){
             const url='https://app.brazacommerce.com.br'+path;
             try{
               const response=await fetch(url,{redirect:'manual',signal:AbortSignal.timeout(12000),headers:{'user-agent':'MLS-OS-Public-Safety-Smoke/1.0','cache-control':'no-cache'}});
