@@ -362,3 +362,38 @@ também reportaram **SUCCESS**.
 Histórico real de cota D1 em 26/10 merece nova verificação em 27/10; não
 inferir automaticamente que a cota esteja esgotada hoje. Recuperação de
 navigation/placeholder não equivale à retomada das consultas financeiras.
+
+
+## 27/10/2026 — PR #26: diagnóstico autenticado seguro, incidente P1 ainda aberto
+
+A falha de carregamento **começou antes da PR #22**; logo a reversão isolada
+não era diagnóstico suficiente. O CI de PRs #23 e #25 e os builds Cloudflare
+foram aprovados, porém a tela financeira autenticada continuou indisponível
+segundo o operador.
+
+A **PR #26** foi integrada pelo merge `4310316be3ac3cf449fde975697a869e2529fb53`, testes
+**2.070 Node + 67 Python** na branch (run `40570346863`) e no main
+(run `40570582583`). Check-runs Cloudflare de App/Auth/Finance foram
+**SUCCESS**. Isso comprova a validação e builds, não a execução de sessão
+autenticada no dispositivo.
+
+Nova página `https://app.brazacommerce.com.br/admin/diagnostics`:
+funciona separadamente do painel principal, exige cookie de proprietário e
+permite **Copiar diagnóstico**. `GET /api/admin/diagnostics` confirma a
+sessão e faz somente `SELECT 1 AS ok` com prazo de 3,5s, sem esquema,
+gravações nem provedores. A página verifica também a presença do HTML de
+Agentes e a **rota financeira já existente**, `business-month-view-v4`,
+que por sua vez pode executar manutenção normal de esquema/cache; nenhuma
+nova ação comercial é criada. O relatório contém somente estados HTTP,
+códigos seguros, booleanos de HTML, duração, mês e marcador do release.
+
+**Próximo passo obrigatório:** receber JSON com esquema
+`mls_owner_panel_report_v1` e comparar `owner_probe.d1` com
+`finance_month.http/error`. Nada de supor bloqueio do D1 ou erro de frontend
+sem observar esses campos. Não alterar credenciais Shopee, chaves, D1 ou custos.
+
+Se o link direto redirecionar para login, autenticar como proprietário e usar
+o link estático "Diagnosticar carregamento" do topo do Admin, no mesmo
+navegador; abrir um link cross-site pode não enviar cookie SameSite=Strict na
+primeira navegação. Caso o JavaScript do diagnóstico também falhe, enviar
+somente a tela de diagnóstico, sem credenciais.

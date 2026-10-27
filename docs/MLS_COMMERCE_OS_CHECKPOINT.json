@@ -31,7 +31,7 @@
   },
   "current_phase": "M2_FINANCE_RETURNS_RECONCILIATION",
   "working_branch": null,
-  "current_status": "P1_AUTHENTICATED_PANEL_VERIFICATION_REQUIRED",
+  "current_status": "P1_AWAITING_AUTHENTICATED_DIAGNOSTIC",
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
     "Repasse-base, ajuste, repasse após ajuste e liberação exibidos sem dupla dedução",
@@ -109,10 +109,11 @@
     }
   },
   "next_actions": [
-    "Abrir sessao autenticada apos versao App da PR #25: verificar se lucro diario e seis agentes aparecem, anotar mensagem/codigo seguro em caso de falha",
-    "Se API autenticada falhar, consultar primeiro o erro/HTTP real e as metricas do D1; conta ja migrada para Workers Paid em 26/10",
-    "Se continuar travado, coletar screenshot sem dados pessoais e path/status HTTP de /api/admin/bootstrap e /api/admin/finance/business-month-view, sem enviar cookies ou tokens",
-    "Somente apos restauracao observada, retomar validacao Pending Overview x Seller Centre da fase M2"
+    "Owner abrir /admin/diagnostics na mesma sessão, copiar relatório sanitizado e enviar no chat; nunca enviar cookies/tokens",
+    "Interpretar owner_probe.http/d1 versus finance_month.http/error para localizar exatamente a etapa que falha",
+    "Se direct D1 READY e finance falhar, investigar setup e query mensal; se D1 falhar, investigar binding/limite/latência; se ambos READY, reproduzir JS no dispositivo",
+    "Após correção específica, observar tela autenticada e lucro diário/MLS Finance/agentes no celular; só então encerrar P1",
+    "Manter execução Ads/PROMO LOCKED e continuar M2 após recuperação"
   ],
   "m0_followup": [
     "Conferir visual autenticado em desktop e celular durante M1; corrigir apenas branding/layout sem renomear infraestrutura"
@@ -121,25 +122,33 @@
     "Conferir visual autenticado da Central de Comando em desktop e celular; ajustes visuais podem ocorrer dentro de M2 sem alterar contratos"
   ],
   "latest_increment": {
-    "id": "P1_AGENT_NAV_FALLBACK",
-    "status": "MERGED_CI_AND_CLOUDFLARE_BUILDS_PASS_AUTHENTICATED_NOT_VERIFIED",
-    "pull_request": 25,
-    "merge_commit": "7c62247058066e49b6f86544de359786b2bd60ac",
+    "id": "P1_OWNER_DIAGNOSTICS",
+    "status": "MERGED_CI_AND_CLOUDFLARE_CHECKS_SUCCESS_AWAITING_OWNER_RESULT",
+    "pull_request": 26,
+    "merge_commit": "4310316be3ac3cf449fde975697a869e2529fb53",
     "validation": {
-      "pr_run": 40564669598,
-      "main_run": 40564933755,
-      "node_tests": 2064,
+      "pr_run": 40570346863,
+      "main_run": 40570582583,
+      "node_tests": 2070,
       "python_tests": 67
     },
+    "delivery": {
+      "app_build": "SUCCESS",
+      "auth_build": "SUCCESS",
+      "finance_build": "SUCCESS",
+      "authenticated_runtime": "NOT_VERIFIED"
+    },
+    "route": "/admin/diagnostics",
     "features": [
-      "Agentes visiveis no menu principal desktop/mobile",
-      "Clique em agentes abre overview antes de rolar evitando aba oculta",
-      "Seis cartoes de agente fallback Aguardando dados independente da hidratacao do browser"
+      "Owner-only diagnostics page independent of full dashboard JavaScript and database setup",
+      "Read-only SELECT 1 on ADMIN_DB for connectivity status, no provider access or schema writes in diagnostics API",
+      "Same existing business-month-view-v4 finance endpoint checked from diagnostics UI, may perform its normal internal cache/schema maintenance",
+      "Only statuses, safe error codes, basic DOM markers and timing copied; no CSRF, credentials, orders or financial amounts"
     ],
-    "limitations": [
-      "Falha da conta autenticada nao foi reproduzida diretamente",
-      "Nao confirma integridade financeira ou ausencia de cota D1 excedida",
-      "Sem alteracao de dados, Auth/Finance APIs, OAuth ou Shopee"
+    "limits": [
+      "This does NOT resolve the underlying authenticated financial failure automatically",
+      "Root cause remains unknown until owner sends diagnostic report",
+      "Do not repeat blind rollbacks or credential changes"
     ]
   },
   "incident": {
@@ -185,11 +194,31 @@
       "D1 daily quota pode estar esgotada como em 26/10, mas nao foi verificada em 27/10",
       "Necessario screenshot ou erro HTTP seguro do login/Finance sem credenciais"
     ],
-    "status": "OPEN",
+    "status": "OPEN_AWAITING_AUTHENTICATED_DIAG",
     "account_plan_evidence": {
       "workers_paid_upgrade_confirmed_on": "2026-10-26",
       "no_new_daily_limit_alert_seen_on": "2026-10-27",
       "note": "Evidence from account notifications, not a live query against D1 limits. Never assume fresh quota exhaustion without Cloudflare metrics."
-    }
+    },
+    "onset": "BEFORE_PR22",
+    "confirmed_checks": {
+      "login_http": 200,
+      "health_http": 200,
+      "anonymous_admin": 303,
+      "cloudflare_app_auth_finance_builds": "SUCCESS_PR26"
+    },
+    "current_gate": "Read copyable safe report from authenticated /admin/diagnostics",
+    "owner_report_schema": "mls_owner_panel_report_v1",
+    "recovered_features": [
+      "Direct owner-only safe diagnostic route",
+      "Stateless D1 SELECT 1 connectivity probe",
+      "Panel markup and saved-month HTTP status comparison"
+    ],
+    "forbidden": [
+      "Reauthorize Shopee",
+      "Reset D1",
+      "Rotate secrets without evidence",
+      "Call diagnostic success proof of resolved finances"
+    ]
   }
 }
