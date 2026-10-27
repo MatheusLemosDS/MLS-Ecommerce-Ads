@@ -44,7 +44,7 @@ test('a mutation carries the current CSRF once and never replays after a network
 test('only the exact monthly view route requests its versioned publication identity while existing monthly contracts stay intact',async()=>{
  const calls=[],api=createAdminApiClient({fetchImpl:async(url,options)=>{calls.push({url,options});return Response.json({ok:true});}});
  for(const path of ['finance/business-month-view','finance/business-month-view?month=2026-10','finance/business-month-view/history','finance/business-month-views','finance/reconciliation?month=2026-10','finance/escrow-releases?month=2026-10','finance/business-month?month=2026-10'])await api(path);
- assert.deepEqual(calls.map(call=>call.options.headers['X-Braza-Client-Contract']),['business-month-view-v3','business-month-view-v3',undefined,undefined,undefined,undefined,'business-month-v2']);
+ assert.deepEqual(calls.map(call=>call.options.headers['X-Braza-Client-Contract']),['business-month-view-v4','business-month-view-v4',undefined,undefined,undefined,undefined,'business-month-v2']);
  assert.ok(calls.every(call=>call.options.method==='GET'&&call.options.body===undefined&&call.options.headers['X-CSRF-Token']===undefined));
 });
 
@@ -112,6 +112,6 @@ test('the factory works from its isolated browser source without a module closur
  const actual=await vm.runInContext("client('state',undefined,{timeoutMs:12000})",context);assert.equal(actual.url,'/api/admin/state');assert.equal(actual.method,'GET');
  assert.equal(actual.headers['X-Braza-Client-Contract'],undefined);
  const month=await vm.runInContext("client('finance/business-month?month=2026-10')",context);assert.equal(month.headers['X-Braza-Client-Contract'],'business-month-v2');assert.equal(month.method,'GET');
- const view=await vm.runInContext("client('finance/business-month-view?month=2026-10')",context);assert.equal(view.headers['X-Braza-Client-Contract'],'business-month-view-v3');assert.equal(view.method,'GET');
+ const view=await vm.runInContext("client('finance/business-month-view?month=2026-10')",context);assert.equal(view.headers['X-Braza-Client-Contract'],'business-month-view-v4');assert.equal(view.method,'GET');
  const settings=await vm.runInContext("client('settings',{revision:1})",context);assert.equal(settings.headers['X-Braza-Client-Contract'],undefined);assert.equal(settings.headers['X-CSRF-Token'],'csrf');assert.equal(settings.method,'POST');
 });

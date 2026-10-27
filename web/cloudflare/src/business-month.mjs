@@ -9,6 +9,7 @@ import {catalogClassificationQueries,catalogClassificationsFromSnapshot} from '.
 import {BUSINESS_MONTH_PUBLICATION_SCHEMA,completedBusinessMonthPublicationStatements,saveCompletedBusinessMonth,readCompletedBusinessMonth} from './business-month-publication.mjs';
 import {BUSINESS_MONTH_ADS_HISTORY_SCHEMA,businessMonthAdsHistoryQueries,businessMonthAdsHistoryStatements} from './business-month-ads-history.mjs';
 import {EXPENSE_LEDGER_SCHEMA} from './expense-ledger.mjs';
+import {buildExpenseSchedule} from './expense-schedule.mjs';
 
 export class BusinessMonthError extends Error {
  constructor(code,status=400,diagnostic=null){super(code);this.status=status;if(diagnostic!==null)this.diagnostic=Object.freeze({...diagnostic});}
@@ -161,15 +162,15 @@ export async function readBusinessMonthDisplay(env,{month},{now=()=>Date.now()}=
  if(observed?.complete&&(!published||published.row.revision<observed.row.revision)){
   published=await saveCompletedBusinessMonth(env,month,observed,{now})||await readCompletedBusinessMonth(env,month,{now});
  }
- if(!published)return {display:active,active,display_source:'ACTIVE',audit_scope:null,source_frames:null};
+ if(!published)return {display:active,active,display_source:'ACTIVE',audit_scope:null,source_frames:null,expense_schedule:null};
  const savedRange={start_date:published.payload.start_date,end_date:published.payload.end_date,slots:published.payload.slots,current:range.current};
- const display=await businessMonthBundle(db,month,savedRange,stamp,published);
+ const displayed=await businessMonthBundle(db,month,savedRange,stamp,published,{withExpenseSchedule:true}),display=displayed.frame,expense_schedule=displayed.expense_schedule;
  // Carry the exact publication used for the displayed calculation. Aggregated
  // dates, order counts and money can coincide across different source runs.
  const audit_scope={publication_revision:published.publication.source_revision,start_date:published.payload.start_date,end_date:published.payload.end_date,sources:published.payload.slots.map(slot=>({run_id:slot.frame.run_id,source_revision:slot.frame.revision,start_date:slot.start_date,end_date:slot.end_date}))};
  // The daily calculation consumes these same immutable copies. They stay on
  // the server; opening or changing a day never starts a second collector.
- return {display,active,display_source:'PUBLISHED',audit_scope,source_frames:published.payload.slots.map(slot=>slot.frame)};
+ return {display,active,display_source:'PUBLISHED',audit_scope,source_frames:published.payload.slots.map(slot=>slot.frame),expense_schedule};
 }
 async function businessMonthOperation(env,input,services,{now=()=>Date.now(),actor='admin',onProductsDiscovered=null}={}){
  let stamp;try{const clock=now();if(!Number.isSafeInteger(clock)||clock<=0)throw Error();stamp=Math.floor(clock/1000);}catch{businessMonthFail('BUSINESS_MONTH_CLOCK',503);}
@@ -350,14 +351,14 @@ async function businessMonthAdvance(env,db,month,range,stamp,observed,services){
  return businessMonthLoadRun(db,month,range,Math.max(stamp,frame.checked_at));
 }
 
-async function businessMonthBundle(db,month,range,stamp,observed){
+async function businessMonthBundle(db,month,range,stamp,observed,{withExpenseSchedule=false}={}){
  const year=Number(month.slice(0,4));
  const sourceItems=observed.payload.slots.flatMap(slot=>slot.frame?.items||[]),itemIds=sourceItems.map(row=>row.item_id);
  const ruleQueries=costRuleSnapshotQueries(db,itemIds),classificationQueries=catalogClassificationQueries(db,itemIds,sourceItems);
  const rows=await db.batch([
   db.prepare('SELECT revision,payload,updated_at FROM variant_bindings_state WHERE id=1'),
   db.prepare('SELECT revision,payload,updated_at FROM production_costs_state WHERE id=1'),
-  db.prepare('SELECT saved.revision,saved.external_expenses_cents,saved.recharge_treatment,saved.updated_at,ledger.mode AS ledger_mode FROM (SELECT ? AS month) AS selected LEFT JOIN business_month_expenses AS saved ON saved.month=selected.month LEFT JOIN business_expense_ledger_months AS ledger ON ledger.month=selected.month').bind(month),
+  db.prepare('SELECT saved.revision,saved.external_expenses_cents,saved.recharge_treatment,saved.updated_at,ledger.mode AS ledger_mode,ledger.payload AS ledger_payload FROM (SELECT ? AS month) AS selected LEFT JOIN business_month_expenses AS saved ON saved.month=selected.month LEFT JOIN business_expense_ledger_months AS ledger ON ledger.month=selected.month').bind(month),
   db.prepare('SELECT payload,updated_at FROM business_month_ads WHERE month=?').bind(month),
   ...ruleQueries,...classificationQueries,
   ...businessMonthAdsHistoryQueries(db,month,range),
@@ -365,13 +366,14 @@ async function businessMonthBundle(db,month,range,stamp,observed){
   db.prepare('SELECT revision,payload,updated_at FROM business_tax_policy_state WHERE year=?').bind(year),
   db.prepare('SELECT revision FROM business_tax_policy_audit WHERE year=? LIMIT 1').bind(year),
  ]);
- let bindings,costs,expense,taxPolicy,ads=null,adsFresh=false,expensesDraft=false;
+ let bindings,costs,expense,taxPolicy,ads=null,adsFresh=false,expensesDraft=false,expenseSchedule=null;
  try{
   const b=rows[0].results[0],c=rows[1].results[0];if(!b||!c||!Number.isSafeInteger(b.revision)||b.revision<1||!Number.isSafeInteger(c.revision)||c.revision<1)throw Error();
   bindings={revision:b.revision,bindings:validateVariantBindings(JSON.parse(b.payload))};costs={revision:c.revision,values:validateProductionCosts(JSON.parse(c.payload))};
   const expenseRow=rows[2].results[0];expensesDraft=expenseRow?.ledger_mode==='DRAFT';
   if(expenseRow?.ledger_mode!==null&&expenseRow?.ledger_mode!==undefined&&!['DRAFT','CONFIRMED'].includes(expenseRow.ledger_mode))throw Error();
   expense=expenseRow?.revision!==null&&expenseRow?.revision!==undefined?{revision:expenseRow.revision,external_expenses_cents:expenseRow.external_expenses_cents,recharge_treatment:expenseRow.recharge_treatment,updated_at:expenseRow.updated_at}:{revision:0,external_expenses_cents:null,recharge_treatment:'UNCONFIRMED',updated_at:null};
+  if(withExpenseSchedule){const today=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date(stamp*1000));try{expenseSchedule=buildExpenseSchedule({month,today,mode:expenseRow?.ledger_mode??null,payload:expenseRow?.ledger_payload??null});}catch{expenseSchedule=null;}}
   let observedAds=businessMonthAdsRead(rows[3].results[0],rows.at(-3).results[0],range,stamp);
   const retained=rows[3].results[0]?JSON.parse(rows[3].results[0].payload):null;
   if(rows.at(-4).results[0]&&!(retained?.status==='AVAILABLE'&&retained.start_date===range.start_date&&retained.end_date===range.end_date))observedAds=businessMonthAdsRead(rows.at(-4).results[0],rows.at(-3).results[0],range,stamp);
@@ -416,5 +418,5 @@ async function businessMonthBundle(db,month,range,stamp,observed){
  result.tax=taxPolicy;result.source_checked_at=sourceCheckedAt;result.collection=collection;
  result.cost_rules_revision=automaticCosts.revision;result.classification_revision=automaticCosts.classification_revision;
  result.product_summary=buildBusinessMonthProducts(frames,result,variantReferences,bindings);
- const projected=projectBusinessMonth(result);if(!projected)businessMonthFail('BUSINESS_MONTH_RESULT_INVALID',503);return projected;
+ const projected=projectBusinessMonth(result);if(!projected)businessMonthFail('BUSINESS_MONTH_RESULT_INVALID',503);return withExpenseSchedule?{frame:projected,expense_schedule:expenseSchedule}:projected;
 }
