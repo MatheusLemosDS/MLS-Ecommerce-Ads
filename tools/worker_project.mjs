@@ -69,6 +69,8 @@ export const TARGETS = Object.freeze({
     'b43a3f4e7449df757fffadfe3f02ccfae5bf2432f4715cc5008bf2508c1359be',
     '53a2ec24e33b863fb954b21c116a5b799a443f4df9fd20b4e455df04e0221f2e',
     '4dcb5f2c437e0a5255fa62ba28b3c85075836130be464319b23f443f427779b6',
+    'd6fe49f413953b431d4f26d56d30bd735b7e5e9279fc0f5b4431fbea9ac5df97',
+    '3091bd91262804d92d2c4878b901382d964988b0d6a1e23df9545c185738e0b9',
   ]}),
   auth: Object.freeze({name: 'brazacommerce-auth', main: '../../dist/auth-worker.mjs', baselineHashes: [
     '45d0142709c5087e373cc4da146070ed39c472805f6f64c00f00b6555f0e1f56',
@@ -103,6 +105,7 @@ export const TARGETS = Object.freeze({
     'fb505f6f9f272999de48fe32f32221d089b125f47f16f7f1bc2222553d8051ee',
     'f677e2e6e710ce57cccf22dbc6009febc051f308790be3f010ae05ad8cb5ada0',
     '2f8e66d909d66a83df8dc10aba0280fb4103ba53be5c42c1ce257cd8a27aa1fb',
+    '1fef431c8573e05563c7938d95be0976a160bc603340084aa747ee0b73e7ec64',
   ]}),
   finance: Object.freeze({name: 'brazacommerce-finance', main: '../../dist/finance-worker.mjs', baselineHashes: []}),
 });
