@@ -32,7 +32,7 @@ export function buildMlsAgentRegistry({day=null,month=null,reconciliation=null,r
  const pending=[...new Set([...list(month?.pending),...list(day?.pending),...releasePending])];
  const priorities=[];
  const releaseOrders=releases?.month===month?.month&&releases?.orders&&typeof releases.orders==='object'?releases.orders:null,releaseSummary=releaseOrders?.summary&&typeof releaseOrders.summary==='object'?releaseOrders.summary:null,releaseRows=Array.isArray(releaseOrders?.rows)?releaseOrders.rows:[];
- const expenseSchedule=month?.expense_schedule?.month===month?.month&&month.expense_schedule?.status==='AVAILABLE'?month.expense_schedule:null;
+ const expenseSchedule=month&&month.expense_schedule?.month===month.month&&month.expense_schedule?.status==='AVAILABLE'?month.expense_schedule:null;
  const reconciliationMoney=reconciliation?.month===month?.month&&Array.isArray(reconciliation?.money)?reconciliation.money:[],reconciliationPayouts=new Map();
  for(const group of reconciliationMoney)for(const payout of Array.isArray(group?.money?.payouts)?group.money.payouts:[])if(typeof payout?.order_hash==='string')reconciliationPayouts.set(payout.order_hash,payout);
  let settlementConflicts=0;
