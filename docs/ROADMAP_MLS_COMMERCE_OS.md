@@ -196,7 +196,9 @@ Continuar a fase financeira atual:
 
 **Incremento publicado — PR #14:** acompanhamento temporal separa o mês de criação dos pedidos dos calendários de liberação posteriores. O contrato privado `release-coverage-v1` lê somente a coorte e os ledgers já salvos no Finance, sem capability de rede Shopee. O tracker acompanha uma coorte anterior por cron, preserva falhas, desacelera após identidade completa no corte e mostra a cobertura para meses passados. `identity_complete_at_cutoff` não comprova fim do ciclo, depósito bancário ou saldo ainda a liberar.
 
-**Ainda falta nesta fase:** observar o tracker com dados reais após a virada de mês; validar em fonte oficial a semântica do ciclo e de valores ainda não liberados antes de habilitar `remaining_receivable`; manter liquidação bancária separada; levar vencimentos/atrasos das despesas para MLS Finance; resolver diferenças materiais. O horizonte limitado do tracker nunca deve ser usado como prova de que não haverá liberação posterior.
+**Incremento publicado — PR #16:** o MLS Finance agora lê o `get_income_overview` em background e mostra **Pendente atual na Shopee** separado do mês. Para a loja local, o contrato atual diferencia `Released` e `Pending`; `pending_amount` é tratado como snapshot atual, não como competência, depósito bancário ou lucro. O round-robin financeiro passa a `RELEASES -> RETURNS -> INCOME` sem aumentar o orçamento de uma leitura privada por oportunidade. [Pesquisa](PESQUISA_INCOME_OVERVIEW_SHOPEE_2026_10_27.md).
+
+**Ainda falta nesta fase:** observar o `pending_amount` real da conta e comparar com Seller Centre; decidir se `get_income_detail` deve detalhar Pending por pedido; manter `remaining_receivable` separado do snapshot atual; levar vencimentos/atrasos das despesas para MLS Finance; resolver diferenças materiais. O horizonte limitado do tracker nunca deve ser usado como prova de que não haverá liberação posterior.
 
 **Critério de saída:** período completo conciliado com explicação de cada diferença material.
 

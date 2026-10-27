@@ -105,14 +105,39 @@ Permanecem obrigatórios `RELEASE_CYCLE_SEMANTICS_UNVERIFIED` e
 `BANK_RECEIPT_NOT_VERIFIED`. O horizonte limitado do tracker não prova que
 uma liberação não possa ocorrer depois.
 
+### Terceiro incremento da M2 — PR #16
+
+Publicado pela **PR #16**, merge `6e7dedc7ab7d29412c787967a04a743cf70f8f92`.
+
+O MLS Finance agora possui um indicador separado de **Pendente atual na Shopee**,
+alimentado pelo Payment `get_income_overview`:
+
+- loja local: estados `Released` e `Pending`;
+- `pending_amount` fica separado do resultado mensal;
+- o navegador lê apenas o cache local;
+- o cron financeiro roda `RELEASES -> RETURNS -> INCOME`, mantendo no máximo uma
+  leitura privada Finance por oportunidade;
+- missing não vira zero e valores com mais de duas casas não são arredondados
+  para centavos;
+- não é tratado como depósito bancário, lucro ou competência mensal.
+
+CI: PR `40537753112`, main `40538302859`; **2.036 testes Node + 67 Python**.
+Produção: App `c966a233-ae77-4778-a41f-e1f5e76ac0bf`, Auth
+`824b11f7-c04e-4b3b-bc71-853c7b9badf7`, Finance
+`3ffc62c1-6b2d-42ff-9ee9-0791fb1d8c6d`.
+
+Pesquisa: [PESQUISA_INCOME_OVERVIEW_SHOPEE_2026_10_27.md](PESQUISA_INCOME_OVERVIEW_SHOPEE_2026_10_27.md).
+
 ## Ponto exato de retomada
 
-**M2 continua em andamento.** Próximo incremento: pesquisar e validar em fontes
-oﬁciais da Shopee a semântica do ciclo de escrow/liberação e do que pode ser
-considerado “ainda não liberado”. `remaining_receivable_cents` só pode sair de
-`null` se contrato + evidência real suportarem a conta. Em paralelo, observar o
-tracker temporal após a próxima virada de mês e adicionar vencimentos/atrasos das
-despesas ao MLS Finance.
+**M2 continua em andamento.** O próximo passo é observar o primeiro
+`pending_amount` real da conta autenticada e conferir a leitura contra o Seller
+Centre. Se a evidência real for consistente, avaliar `get_income_detail` para
+explicar o Pending por pedido. Em paralelo, adicionar vencimentos, atrasos e
+próximos pagamentos das despesas ao MLS Finance.
+
+`remaining_receivable_cents` permanece separado do Pending atual e
+`realized_net_cents` continua indisponível sem liquidação bancária comprovada.
 
 Prioridade de agentes visíveis:
 1. MLS Finance

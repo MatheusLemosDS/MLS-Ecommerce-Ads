@@ -44,11 +44,16 @@
     "Contrato release-coverage-v1 usa somente coorte financeira e ledgers de liberações já salvos",
     "Round-robin acompanha uma coorte anterior por cron, com 15 minutos enquanto incompleta e 6 horas após identidade completa no corte",
     "UI de cobertura temporal mostra calendários posteriores para meses passados sem chamar a Shopee pela tela",
-    "identity_complete_at_cutoff comprova somente cobertura de identidade e não habilita remaining_receivable"
+    "identity_complete_at_cutoff comprova somente cobertura de identidade e não habilita remaining_receivable",
+    "Income Overview atual da Shopee separado do resultado mensal e de recebimento bancário",
+    "MLS Finance mostra Pendente atual na Shopee como métrica secundária, sem alterar o saldo do mês",
+    "Round-robin financeiro RELEASES -> RETURNS -> INCOME mantém uma leitura privada por oportunidade",
+    "Snapshot current income preserva missing, zero e valores com unidade monetária não convertível sem arredondar"
   ],
   "remaining_this_phase": [
+    "Observar o pending_amount real da conta autenticada e comparar com o Seller Centre antes de detalhar Pending por pedido",
+    "Decidir se get_income_detail será usado para explicar Pending por pedido após validar a resposta real da conta",
     "Observar a evidência real pós-deploy da conta autenticada, incluindo a primeira evolução de uma coorte para calendário posterior",
-    "Validar em fonte oficial da Shopee a semântica do ciclo de liberação e de valores ainda não liberados antes de publicar remaining_receivable",
     "Manter liquidação bancária e lucro realizado separados da liberação na Shopee",
     "Adicionar vencimentos, atrasos e próximos pagamentos de despesas/contas ao resumo do MLS Finance",
     "Resolver qualquer pedido ambíguo, valor não verificado ou conflito de evidência antes do fechamento estrito",
@@ -90,11 +95,12 @@
     }
   },
   "next_actions": [
-    "Pesquisar e documentar somente fontes oficiais da Shopee sobre ciclo de escrow/liberação e significado de valores ainda não liberados",
-    "Definir uma condição estrita para remaining_receivable somente se a documentação oficial e a evidência real suportarem o cálculo; caso contrário manter null",
-    "Observar o tracker temporal real após a próxima virada de mês sem criar coleta duplicada",
-    "Manter divergências e duplicidades como tarefas do MLS Finance/Returns/Auditor, nunca como valores escolhidos por heurística",
-    "Adicionar vencimentos, contas atrasadas e próximos pagamentos ao resumo do MLS Finance"
+    "Observar o primeiro snapshot real de get_income_overview após o cron financeiro e conferir Pendente atual na Shopee",
+    "Comparar o pending_amount com o Seller Centre sem misturar o snapshot atual com a competência mensal",
+    "Se a resposta real for consistente, avaliar get_income_detail para detalhar Pending por pedido sem criar polling de navegador",
+    "Adicionar vencimentos, contas atrasadas e próximos pagamentos ao resumo do MLS Finance",
+    "Manter remaining_receivable_cents separado: o Pending atual não é automaticamente o saldo de uma competência",
+    "Manter realized_net_cents indisponível até existir evidência de liquidação bancária"
   ],
   "m0_followup": [
     "Conferir visual autenticado em desktop e celular durante M1; corrigir apenas branding/layout sem renomear infraestrutura"
@@ -103,36 +109,41 @@
     "Conferir visual autenticado da Central de Comando em desktop e celular; ajustes visuais podem ocorrer dentro de M2 sem alterar contratos"
   ],
   "latest_increment": {
-    "id": "M2_RELEASE_TEMPORAL_COVERAGE",
+    "id": "M2_CURRENT_INCOME_OVERVIEW",
     "status": "PUBLISHED",
-    "pull_request": 14,
-    "merge_commit": "1380d44f01e6ee3a0e42c828829d91fed878bb2a",
+    "pull_request": 16,
+    "merge_commit": "6e7dedc7ab7d29412c787967a04a743cf70f8f92",
     "validation": {
-      "pr_run": 40518940876,
-      "main_run": 40519257309,
-      "node_tests": 2025,
+      "pr_run": 40537753112,
+      "main_run": 40538302859,
+      "node_tests": 2036,
       "python_tests": 67
     },
     "production": {
       "app": {
-        "build_id": "ca33fa85-67e6-48fb-98f2-93e5d58c5330",
-        "version_id": "5614b669-da58-4582-ad21-5dd74417e048"
+        "build_id": "04c3b56b-50d4-411e-ac29-e406204a6a1c",
+        "version_id": "c966a233-ae77-4778-a41f-e1f5e76ac0bf"
       },
       "auth": {
-        "build_id": "ed5b8ed3-4ab0-4cae-80a6-200096d72127",
-        "version_id": "b76e3d02-7869-4750-8211-2eac1dfe498c"
+        "build_id": "26805f85-bb8c-4408-b1b1-b05ce97b363a",
+        "version_id": "824b11f7-c04e-4b3b-bc71-853c7b9badf7"
       },
       "finance": {
-        "build_id": "65526967-80de-471e-99f9-28cd55bae090",
-        "version_id": "0a6d8018-cf02-45b9-afc1-c25c0b582079"
+        "build_id": "599311ba-e460-4af2-9ee7-93ca6b37c822",
+        "version_id": "3ffc62c1-6b2d-42ff-9ee9-0791fb1d8c6d"
       }
     },
+    "facts": [
+      "Local Shop: income_status 1=Released e 2=Pending no contrato atual pesquisado",
+      "pending_amount é tratado como snapshot atual pendente de liberação, não histórico mensal",
+      "to_release_amount não é aplicado à loja local",
+      "Pendente atual não entra na fórmula do saldo mensal"
+    ],
     "limits": [
-      "identity_complete_at_cutoff comprova somente cobertura de identidade nos calendários salvos até o corte",
-      "RELEASE_CYCLE_SEMANTICS_UNVERIFIED permanece obrigatório até validação oficial",
-      "remaining_receivable_cents continua indisponível",
-      "realized_net_cents continua indisponível sem liquidação comprovada",
-      "O horizonte limitado do tracker não prova que não haverá liberação posterior"
+      "O snapshot atual não é atribuído automaticamente a uma competência mensal",
+      "pending_amount não comprova depósito bancário",
+      "remaining_receivable_cents continua separado e não é derivado automaticamente deste snapshot",
+      "realized_net_cents continua indisponível sem liquidação comprovada"
     ]
   }
 }
