@@ -1,4 +1,4 @@
-# Roadmap BrazaCommerce
+# Roadmap BrazaCommerce — LEGADO
 
 Atualizado em **26/10/2026 UTC**. Base anterior: `a8636c4`, com
 [resumo financeiro total](RESUMO_FINANCEIRO_TOTAL.md) e
@@ -243,3 +243,8 @@ comerciais descrevem trabalho ainda necessário para tornar a autonomia
 executável e verificável; não indicam que campanhas já estão sendo alteradas.
 Pausar impede novas ações, mas não desfaz anúncios já consumidos ou vendas
 concluídas. Nenhum aprendizado aumenta permissões ou limites por conta própria.
+
+
+---
+
+> **Arquivo histórico.** Novas decisões e novas fases devem ser registradas somente em [ROADMAP_MLS_COMMERCE_OS.md](ROADMAP_MLS_COMMERCE_OS.md). Para retomar o trabalho, leia também [MLS_COMMERCE_OS_CHECKPOINT.json](MLS_COMMERCE_OS_CHECKPOINT.json).
