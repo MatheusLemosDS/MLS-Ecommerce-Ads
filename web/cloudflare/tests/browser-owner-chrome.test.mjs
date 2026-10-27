@@ -44,7 +44,9 @@ test('real Chromium hydrates owner agent cards even when finance API is unavaila
  let html=await admin.text();
  const errorScript='<script>window.__mlsErrors=[];window.addEventListener("error",e=>window.__mlsErrors.push(String(e.message||"ERROR").slice(0,250)));window.addEventListener("unhandledrejection",e=>window.__mlsErrors.push(String(e.reason?.message||e.reason||"REJECTION").slice(0,250)));</script>';
  const snapshotScript='<script>(()=>{function snapshot(){const root=document.getElementById("commandCenterAgents");const trace={registry:typeof globalThis.mlsAgentRegistry,agent_count:root?.children.length||0,fallback_count:root?.querySelectorAll("[data-agent-placeholder=true]").length||0,registry_status:globalThis.mlsAgentRegistry?.getSnapshot?.()?.schema||"MISSING",net_value:(document.getElementById("commandCenterNet")?.textContent||"").slice(0,25),bootstrap_status:(document.getElementById("message")?.textContent||"").slice(0,100),errors:window.__mlsErrors.slice(0,3)};document.documentElement.dataset.mlsHydrationTrace=JSON.stringify(trace);}snapshot();setTimeout(snapshot,200);setTimeout(snapshot,1000);setTimeout(snapshot,2400);})();</script>';
- html=html.replace('<body>','<body>'+errorScript).replace('</body>',snapshotScript+'</body>');
+ html=html.replace('<body>','<body>'+errorScript);
+ const closing=html.lastIndexOf('</body>');assert.ok(closing>0,'must inject inspector after every bundled inline script');
+ html=html.slice(0,closing)+snapshotScript+html.slice(closing);
  const requests=[];
  const server=http.createServer((request,response)=>{
   const path=(request.url||'/').split('?')[0];
@@ -68,6 +70,7 @@ test('real Chromium hydrates owner agent cards even when finance API is unavaila
   const url='http://127.0.0.1:'+server.address().port+'/admin';
   const output=await chromeDump(url);
   const encoded=output.match(/data-mls-hydration-trace="([^"]+)"/);
+  if(!encoded)console.log('MLS_BROWSER_MISSING_TRACE',JSON.stringify({html_bytes:html.length,output_bytes:output.length,output_start:output.slice(0,280),output_tail:output.slice(-280),has_probe:output.includes('mlsHydrationTrace'),has_registry:output.includes('mlsAgentRegistry')}));
   assert.ok(encoded,'Chrome must run trailing DOM inspection');
   const decode=encoded[1].replaceAll('&quot;','"').replaceAll('&amp;','&').replaceAll('&#39;',"'");
   const trace=JSON.parse(decode);
