@@ -1,7 +1,7 @@
 import {FINANCE_PROFILE,FinanceConnectionError} from './connection-store.mjs';
 import {readFinancialOrderEvidence} from './financial-order-evidence.mjs';
 import {runEscrowReleaseLedger,ESCROW_RELEASE_LEDGER_SCHEMA} from './escrow-release-ledger.mjs';
-import {projectEscrowReleaseRequest,projectEscrowReleaseFrame,projectEscrowReleaseEvidenceFrame} from './escrow-release-frame.mjs';
+import {projectEscrowReleaseRequest,projectEscrowReleaseFrame,projectEscrowReleaseEvidenceFrame,projectEscrowReleaseCoverageRequest,projectEscrowReleaseCoverageFrame} from './escrow-release-frame.mjs';
 
 // Release observations and order-creation cohorts have different clocks. This
 // audit keeps both, and never turns either into bank receipts or realized net.
@@ -168,4 +168,33 @@ export async function runFinanceEscrowReleases(env,options={}){
  const ledger=await runEscrowReleaseLedger(env,{operation:selection.operation,month:selection.month,fetchImpl,now,timeoutMs});
  const checkedAt=Math.max(stamp,ledger.checked_at??stamp,...source.sources.filter(row=>row.status==='AVAILABLE').map(row=>row.finance_latest_at));
  return construct(selection.month,checkedAt,source,ledger,{includeOrders:options.includeOrders===true});
+}
+
+function monthSequence(from,to){
+ const result=[];for(let current=from;;){result.push(current);if(current===to)break;const value=new Date(current+'-01T00:00:00Z');value.setUTCMonth(value.getUTCMonth()+1);current=value.toISOString().slice(0,7);if(result.length>6)fail('REQUEST_INVALID',400);}return result;
+}
+
+export async function readFinanceEscrowReleaseCoverage(env,options={}){
+ if(!plain(options)||Reflect.ownKeys(options).some(key=>!['operation','cohort_month','through_month','sources','now'].includes(key)||!Object.hasOwn(Object.getOwnPropertyDescriptor(options,key)||{},'value')))fail('REQUEST_INVALID',400);
+ const selection=projectEscrowReleaseCoverageRequest({operation:options.operation,cohort_month:options.cohort_month,through_month:options.through_month,sources:options.sources});if(!selection)fail('REQUEST_INVALID',400);
+ const now=options.now??(()=>Date.now()),stamp=epoch(now),today=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date(stamp*1000)).slice(0,7),db=env?.FINANCE_DB;
+ if(selection.through_month>today)fail('REQUEST_INVALID',400);
+ if(env?.FINANCE_CONNECTION_ENABLED!=='true'||typeof db?.prepare!=='function'||typeof db?.batch!=='function'||db===env.ADMIN_DB)fail('CONFIGURATION');
+ if(!ready.has(db)){await db.batch(ESCROW_RELEASES_SCHEMA.map(sql=>db.prepare(sql)));ready.add(db);}
+ const selections=[...selection.sources].sort((a,b)=>a.run_id.localeCompare(b.run_id)),source=await cohort(env,db,selections,selection.cohort_month,stamp,now),paidMembers=source.members.filter(paid),paidHashes=new Set(paidMembers.map(row=>row.order_hash)),globalCounts=new Map(),calendars=[];
+ for(const month of monthSequence(selection.cohort_month,selection.through_month)){
+  const ledger=await runEscrowReleaseLedger(env,{operation:'read',month,now}),calendar=ledger.published??ledger.active??null,rows=calendar?.rows??ledger.rows??[],local=new Map();let cohortObservations=0;
+  for(const row of rows){if(!digest(row.order_hash))fail('LEDGER_INVALID');if(!paidHashes.has(row.order_hash))continue;cohortObservations++;local.set(row.order_hash,(local.get(row.order_hash)??0)+1);globalCounts.set(row.order_hash,(globalCounts.get(row.order_hash)??0)+1);}
+  const status=calendar===null?'MISSING':calendar.status==='COMPLETE'?'COMPLETE':'PARTIAL',times=calendar?.source_checked_at??{oldest_at:null,latest_at:null};
+  calendars.push({month,status,scan_id:calendar?.scan_id??null,cutoff_at:calendar?.cutoff_at??null,source_oldest_at:times.oldest_at??null,source_latest_at:times.latest_at??null,observations:rows.length,cohort_observations:cohortObservations,unique_cohort_orders:local.size,ambiguous_cohort_orders:[...local.values()].filter(count=>count>1).length});
+ }
+ const located=globalCounts.size,ambiguous=[...globalCounts.values()].filter(count=>count>1).length,single=located-ambiguous,paidOrders=source.complete?paidMembers.length:null,notLocated=source.complete?paidMembers.length-located:null,completeCalendars=calendars.filter(row=>row.status==='COMPLETE').length,identityComplete=source.complete&&completeCalendars===calendars.length&&notLocated===0&&ambiguous===0,pending=['BANK_RECEIPT_NOT_VERIFIED','RELEASE_CYCLE_SEMANTICS_UNVERIFIED'];
+ if(!source.complete)pending.unshift('SOURCE_MISSING');
+ if(calendars.some(row=>row.status==='MISSING'))pending.unshift('CALENDAR_MISSING');
+ if(calendars.some(row=>row.status==='PARTIAL'))pending.unshift('CALENDAR_PARTIAL');
+ if(source.complete&&notLocated>0)pending.unshift('ORDER_NOT_LOCATED');
+ if(ambiguous>0)pending.unshift('RELEASE_IDENTITY_AMBIGUOUS');
+ const status=!source.complete||calendars.some(row=>row.status!=='COMPLETE')?'COLLECTING':identityComplete?'IDENTITY_COMPLETE':'PARTIAL';
+ const value={schema:'finance_escrow_release_coverage_v1',cohort_month:selection.cohort_month,through_month:selection.through_month,checked_at:stamp,status,sources:source.sources,calendars,coverage:{paid_orders:paidOrders,located_orders:located,not_located_orders:notLocated,ambiguous_orders:ambiguous,single_orders:single,calendars_total:calendars.length,calendars_complete:completeCalendars,identity_complete_at_cutoff:identityComplete},pending,basis:'SAVED_RELEASE_CALENDARS_AGAINST_PAID_ORDER_COHORT_NOT_BANK_RECEIPT'};
+ const frame=projectEscrowReleaseCoverageFrame(value);if(!frame)fail('RESULT_INVALID');return frame;
 }
