@@ -24,21 +24,6 @@ export function buildPendingIncomeAudit({overview=null,detail=null,detailLoaded=
  const delta=Number(difference);return Object.freeze({...common,state:delta===0?'OBSERVED_MATCH':'OBSERVED_DIFFERENT',difference_cents:delta,comparable:true});
 }
 
-
-/**
- * A shareable, intentionally minimal diagnostic for comparing the current Shopee
- * Pending overview with its saved detail. No rows, order hashes, shop IDs,
- * credentials, or provider payloads are serialized.
- */
-export function buildPendingAuditEvidence(audit){
- const safe=value=>Number.isSafeInteger(value)&&!Object.is(value,-0)?value:null;
- const states=new Set(['NO_OVERVIEW','OVERVIEW_AMOUNT_UNVERIFIED','NO_PENDING','DETAIL_NOT_LOADED','WAITING_SAVED_DETAIL','DETAIL_OLDER_THAN_OVERVIEW','PARTIAL_PAGE','AMOUNT_PARTIAL','OBSERVED_MATCH','OBSERVED_DIFFERENT','ARITHMETIC_UNSAFE']);
- const fields=['overview_checked_at','detail_checked_at','pending_cents','returned_count','unique_orders','known_amount_rows','unknown_amount_rows','visible_estimated_cents','difference_cents'];
- const evidence={schema:'mls_pending_audit_evidence_v1',state:states.has(audit?.state)?audit.state:'NO_OVERVIEW',has_more:typeof audit?.has_more==='boolean'?audit.has_more:null,comparable:audit?.comparable===true,basis:'CURRENT_PENDING_OVERVIEW_VS_VISIBLE_ESTIMATED_ESCROW_DESCRIPTIVE_ONLY',notice:'Snapshot descritivo. Nao comprova competencia mensal, saldo a receber nem liquidacao bancaria.'};
- for(const field of fields)evidence[field]=safe(audit?.[field]);
- return Object.freeze(evidence);
-}
-
 export function buildMlsAgentRegistry({day=null,month=null,reconciliation=null,releases=null,incomeOverview=null,pendingAudit=null,now=null}={}){
  const safe=value=>Number.isSafeInteger(value)&&!Object.is(value,-0);
  const money=value=>safe(value)?value:null;

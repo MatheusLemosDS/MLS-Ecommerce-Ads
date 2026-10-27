@@ -30,8 +30,8 @@
     "merge_commit": "9c418fd3010f46957d1ce52345baacd76041c788"
   },
   "current_phase": "M2_FINANCE_RETURNS_RECONCILIATION",
-  "working_branch": null,
-  "current_status": "IN_PROGRESS",
+  "working_branch": "hotfix/restore-agent-panels-after-pr22",
+  "current_status": "M2_IN_PROGRESS_UI_RECOVERY",
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
     "Repasse-base, ajuste, repasse após ajuste e liberação exibidos sem dupla dedução",
@@ -109,9 +109,9 @@
     }
   },
   "next_actions": [
-    "Confirmar que a compilacao Cloudflare App correspondente ao merge 2e35ac026775 foi publicada, sem assumir deploy somente pelo CI GitHub",
-    "Abrir Central de Comando > Pending atual por pedido e usar Copiar diagnostico (sem pedidos)",
-    "Comparar overview, subtotal, cobertura, has_more e timestamps com o Seller Centre antes de paginar ou inferir valores realizados",
+    "Prioridade P1: validar e publicar hotfix da Central de Comando para restaurar estado anterior à PR22",
+    "Após deploy abrir Central autenticada e verificar agentes e lucro diário; coletar código de erro seguro caso persista",
+    "NÃO religar botão de diagnóstico da PR22 até reproduzir regressão em ambiente de teste",
     "Somente se PARTIAL_PAGE aparecer e a resposta real for consistente, implementar paginação cursor em background mantendo uma leitura privada por oportunidade",
     "Manter remaining_receivable_cents separado: Pending atual não é automaticamente saldo de uma competência",
     "Manter realized_net_cents indisponível até existir evidência de liquidação bancária"
@@ -123,28 +123,6 @@
     "Conferir visual autenticado da Central de Comando em desktop e celular; ajustes visuais podem ocorrer dentro de M2 sem alterar contratos"
   ],
   "latest_increment": {
-    "id": "M2_PENDING_EVIDENCE_COPY",
-    "status": "MERGED_CI_PASS_DEPLOY_NOT_YET_VERIFIED",
-    "pull_request": 22,
-    "merge_commit": "2e35ac0267757f748912f36756c89584aa13efe6",
-    "validation": {
-      "pr_run": 40559446787,
-      "main_run": 40559823142,
-      "node_tests": 2064,
-      "python_tests": 67
-    },
-    "features": [
-      "Copia voluntaria de evidencia Pending agregada, com contrato whitelist e nenhuma linha ou identificador de pedido",
-      "Feedback acessivel em navegadores sem permissao de clipboard",
-      "Sem calls Shopee ou D1 novas e sem polling ou escrita externa"
-    ],
-    "limits": [
-      "Deploy Cloudflare ainda requer confirmacao na conta",
-      "Seller Centre real nao conferido",
-      "remaining_receivable_cents e realized_net_cents seguem indisponiveis sem evidencia"
-    ]
-  },
-  "last_confirmed_production_increment": {
     "id": "M2_PENDING_AUDIT",
     "status": "PUBLISHED",
     "pull_request": 21,
@@ -182,6 +160,28 @@
       "OBSERVED_DIFFERENT não é automaticamente erro contábil",
       "Paginação completa continua condicionada à validação real do cursor/semântica",
       "realized_net_cents permanece indisponível sem liquidação bancária"
+    ]
+  },
+  "incident": {
+    "id": "INCIDENT_2026_10_27_PANEL_AGENT_REGRESSION",
+    "reported_at": "2026-10-27",
+    "severity": "P1_UI_UNAVAILABLE",
+    "symptom": "Painel nao carrega e paineis de agentes desapareceram apos PR22",
+    "cause_status": "UNVERIFIED_SUSPECTED_PR22_BROWSER_OR_CLOUDFLARE_DEPLOY",
+    "affected_delivery": {
+      "pr": 22,
+      "merge_commit": "2e35ac0267757f748912f36756c89584aa13efe6"
+    },
+    "planned_resolution": "Restaurar cinco arquivos de runtime/build/test da base anterior 729db271; nao alterar Auth, Finance, OAuth, D1, contas ou secrets",
+    "rollback_branch": "hotfix/restore-agent-panels-after-pr22",
+    "rollback_status": "IN_REVIEW_CI_AND_DEPLOY_UNCONFIRMED",
+    "verification_required": [
+      "CI do hotfix",
+      "merge na main",
+      "deploy Cloudflare do App confirmado",
+      "abertura autenticada em desktop/mobile",
+      "central de comando, agente Hermes, MLS Finance e demais agentes visiveis",
+      "lucro diario e resumo mensal carregam sem erro"
     ]
   }
 }

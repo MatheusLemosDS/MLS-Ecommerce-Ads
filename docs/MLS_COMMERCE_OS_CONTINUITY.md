@@ -205,3 +205,23 @@ Cloudflare ainda requer verificação**, portanto não marcar como publicado sem
 
 M2 mantém o bloqueio para paginação cursor sem evidência real e mantém
 `remaining_receivable_cents` e `realized_net_cents` indisponíveis.
+
+## Incidente P1 em 27/10/2026 — Central de Comando
+
+Operador relatou **painel que não carrega** e desaparecimento dos painéis de
+agentes após a PR #22. A validação CI (2.064 Node + 67 Python) passou,
+mas isso não comprova runtime Cloudflare nem tela autenticada.
+
+**Hotfix de recuperação:** `hotfix/restore-agent-panels-after-pr22`.
+Restaurar EXCLUSIVAMENTE os arquivos da PR #22 que alteraram runtime/build
+da base conhecida anterior (`729db2716b13d2869f7ee3033ebb3569c82cdf70`): 
+`agent-registry.mjs`, `agent-registry-view.mjs`, `build.py`,
+`worker_project.mjs` e o teste `agent-registry.test.mjs`.
+Nenhuma mudança em Workers Auth/Finance, OAuth, banco D1, APIs de coleta,
+custos, histórico de pedidos ou Ads. PR22 fica preservada no histórico
+para investigar depois, porém **a função copiar diagnóstico é retirada
+temporariamente**.
+
+Não afirmar que causa raiz esteja comprovada: não há acesso de navegador
+autenticado/Cloudflare no conector desta sessão. Exigir CI, deploy real e
+prova visual autenticada antes de encerrar o incidente.
