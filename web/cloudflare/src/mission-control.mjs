@@ -326,7 +326,7 @@ export const MISSION_TRENDS_CLIENT=String.raw`
  const buildMissionTrendComparison=${buildMissionTrendComparison.toString()};
  const ns='http://www.w3.org/2000/svg',byId=id=>document.getElementById(id);
  const safe=value=>Number.isSafeInteger(value)&&!Object.is(value,-0);
- const names={net:'Resultado estimado',sales:'Vendas pagas',ads:'Gastos Ads'};
+ const names={net:'Resultado diário estimado',sales:'Vendas dos pedidos pagos',ads:'Gastos com Ads'};
  const fields={net:'net_cents',sales:'sales_cents',ads:'ads_spend_cents'};
  const colors={net:'#39e8af',sales:'#6caaff',ads:'#ffb365'};
  const choice={overview:'net',finance:'net',ads:'ads'};
@@ -353,7 +353,7 @@ export const MISSION_TRENDS_CLIENT=String.raw`
   const target=byId('missionTrendGraph'+suffix),note=byId('missionTrendNote'+suffix);
   if(!target||!note)return;
   target.replaceChildren();
-  const field=fields[choice[panel]],key=choice[panel];
+  const field=fields[choice[panel]],key=choice[panel],title=byId('missionTrendTitle'+suffix);if(title)title.textContent=names[key]+' · últimos dias';
   const rows=timeline?.schema==='mls_mission_daily_trend_v1'&&Array.isArray(timeline.points)?timeline.points:[];
   const known=rows.map((r,index)=>({index,row:r,value:safe(r?.[field])?r[field]:null})).filter(r=>r.value!==null);
   if(known.length<2){
@@ -367,6 +367,168 @@ export const MISSION_TRENDS_CLIENT=String.raw`
   const zero=Y(0),tint=v=>key==='net'&&v<0?'#ff7899':colors[key];
   const graph=el('svg',{class:'mission-trend-svg',viewBox:'0 0 '+w+' '+h,preserveAspectRatio:'none',role:'img','aria-label':names[key]+': '+count(known.length)+' dias observados'});
   graph.append(el('title',{},names[key]+': pontos reais do histórico, sem interpolar valores ausentes'));
+  graph.append(el('text',{x:8,y:13,fill:'#a7c3e2','font-size':11},'R
+  for(let line=0;line<=4;line++){
+   const yy=top+line*(bottom-top)/4;
+   graph.append(el('line',{x1:left,y1:yy,x2:right,y2:yy,stroke:'rgba(123,167,230,.22)','stroke-width':1,'stroke-dasharray':'3 5'}));
+   const amount=max-line*span/4;
+   graph.append(el('text',{x:left-8,y:yy+3,'text-anchor':'end',fill:'#9eb9d7','font-size':11},new Intl.NumberFormat('pt-BR',{notation:'compact',maximumFractionDigits:1}).format(amount/100)));
+  }
+  if(min<0&&max>0)graph.append(el('line',{x1:left,y1:zero,x2:right,y2:zero,stroke:'rgba(206,229,255,.6)','stroke-width':1.2}));
+  for(let i=1;i<rows.length;i++){
+   const previous=rows[i-1]?.[field],current=rows[i]?.[field];
+   if(!safe(previous)||!safe(current))continue;
+   const a=X(i-1),b=X(i),c=tint(current);
+   graph.append(el('polygon',{points:a+','+Y(previous)+' '+b+','+Y(current)+' '+b+','+zero+' '+a+','+zero,fill:c,'fill-opacity':.10}));
+   graph.append(el('line',{x1:a,y1:Y(previous),x2:b,y2:Y(current),stroke:c,'stroke-width':3.2,'stroke-linecap':'round'}));
+  }
+  for(let i=0;i<rows.length;i++){
+   const row=rows[i],v=row?.[field];
+   if(i===0||i===rows.length-1||i%3===0)graph.append(el('text',{x:X(i),y:h-14,'text-anchor':'middle',fill:'#a3bcda','font-size':11},briefDate(row?.date)));
+   if(!safe(v))continue;
+   const dot=el('circle',{cx:X(i),cy:Y(v),r:row.partial?3.5:4,fill:row.partial?'#f7c57f':tint(v),stroke:'#081a35','stroke-width':1.6});
+   dot.append(el('title',{},briefDate(row.date)+' · '+money(v)+(row.partial?' · dia parcial':'')+(row.net_basis==='KNOWN_COSTS'&&key==='net'?' · subtotal com custos conhecidos':'')));
+   graph.append(dot);
+  }
+  target.append(graph);
+  note.textContent=count(known.length)+' de '+count(rows.length)+' dia(s) com valores · '+briefDate(rows[0].date)+' a '+briefDate(rows.at(-1).date)+'. '+(known.some(item=>item.row.partial)?'Pontos âmbar = dia parcial. ':'')+'Resultado estimado, não recebimento bancário.';
+ }
+ function paintIndicators(registry){
+  const day=registry?.day||{},net=day.net_cents,month=registry?.month?.balance_cents;
+  const netCard=byId('commandCenterNet')?.closest?.('.command-metric');
+  const netTone=!safe(net)?'unknown':net<0?'loss':net>0?'profit':'flat';
+  if(netCard)netCard.dataset.resultTone=netTone;
+  const netState=byId('missionProfitState');
+  if(netState){netState.dataset.tone=netTone;netState.textContent=!safe(net)?'Resultado em apuração':day.net_basis==='KNOWN_COSTS'?net<0?'▼ Saldo parcial negativo':net>0?'▲ Saldo após custos conhecidos':'● Saldo parcial em equilíbrio':net<0?'▼ Prejuízo estimado':net>0?'▲ Resultado estimado positivo':'● Resultado estimado em equilíbrio';}
+  const financeMonthly=byId('mission-finance-metric-0');
+  if(financeMonthly)financeMonthly.dataset.resultTone=!safe(month)?'unknown':month<0?'loss':month>0?'profit':'flat';
+  for(const [suffix,key] of Object.entries({Net:'net',Sales:'sales',Ads:'ads',Margin:'margin',Paid:'paid'})){
+   const badge=byId('missionKpiDelta'+suffix);if(!badge)continue;
+   const details=byId('missionKpiDeltaDate'+suffix),result=buildMissionTrendComparison(timeline,key);
+   badge.dataset.direction=result?.direction||'UNAVAILABLE';badge.dataset.metric=key;
+   if(!result){badge.textContent='↔ Sem comparação de dias completos';badge.title='Requer dois dias consecutivos, completos e com valores válidos.';if(details)details.textContent='Aguardando dias comparáveis';continue;}
+   const arrow=result.direction==='UP'?'▲':result.direction==='DOWN'?'▼':'●';
+   const diff=key==='margin'?(result.delta>0?'+':'')+new Intl.NumberFormat('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:2}).format(result.delta/100)+' p.p.':key==='paid'?(result.delta>0?'+':'')+count(result.delta):signedMoney(result.delta);
+   badge.textContent=arrow+' '+diff+((key==='margin'||result.percent_bps===null)?'':' · '+percentage(result.percent_bps));
+   badge.title='Variação real: '+briefDate(result.current_date)+' versus '+briefDate(result.previous_date)+'.';
+   if(details)details.textContent=briefDate(result.current_date)+' vs '+briefDate(result.previous_date)+' · dias completos';
+  }
+ }
+ function refresh(){
+  let trend=null,registry=null;
+  try{trend=globalThis.brazaDayDashboard?.getTrend?.()??null;}catch{}
+  try{registry=globalThis.mlsAgentRegistry?.getSnapshot?.()??null;}catch{}
+  timeline=trend?.schema==='mls_mission_daily_trend_v1'?trend:null;
+  for(const id of Object.keys(choice))renderGraph(id);
+  paintIndicators(registry);
+  const period=byId('missionTrendScopeOverview');
+  if(period)period.textContent=timeline?'Histórico de '+timeline.month.slice(5)+'/'+timeline.month.slice(0,4)+' · últimos até 14 dias':'Aguardando série validada';
+ }
+ for(const button of document.querySelectorAll('[data-mission-chart][data-mission-series]')){
+  button.onclick=()=>{
+   const id=button.dataset.missionChart,key=button.dataset.missionSeries;
+   if(!Object.hasOwn(choice,id)||!Object.hasOwn(fields,key))return;
+   choice[id]=key;
+   for(const peer of document.querySelectorAll('[data-mission-chart="'+id+'"]'))peer.setAttribute('aria-pressed',String(peer===button));
+   renderGraph(id);
+  };
+ }
+ globalThis.mlsMissionTrends=Object.freeze({refresh});
+ refresh();
+})();
+`;
+
+
+export function missionTrendPanelBody(id='overview'){
+ if(!['overview','finance','ads'].includes(id))return '';
+ const suffix=id[0].toUpperCase()+id.slice(1),defaultSeries=id==='ads'?'ads':'net';
+ const control=key=>'<button type="button" data-mission-chart="'+id+'" data-mission-series="'+key+'" aria-pressed="'+String(key===defaultSeries)+'">'+
+  (key==='net'?'Resultado':key==='sales'?'Vendas':'Ads')+'</button>';
+ const title=id==='ads'?'Evolução dos gastos com anúncios':id==='finance'?'Evolução do resultado financeiro':'Evolução financeira real';
+ return '<section class="mission-trend-panel" id="missionTrends'+suffix+'" aria-label="'+title+'">'+
+  '<header class="mission-trend-heading"><div><span class="mission-panel-eyebrow">SÉRIE DIÁRIA VALIDADA</span><h3 id="missionTrendTitle'+suffix+'">'+title+'</h3>'+
+  '<p id="missionTrendScope'+suffix+'">'+(id==='overview'?'Últimos até 14 dias do período observado':'Histórico diário do período selecionado')+'</p></div>'+
+  '<div class="mission-trend-controls" role="group" aria-label="Métrica do gráfico">'+['net','sales','ads'].map(control).join('')+'</div></header>'+
+  '<div class="mission-trend-graph" id="missionTrendGraph'+suffix+'"><p class="mission-trend-empty">Aguardando o histórico diário validado.</p></div>'+
+  '<p class="mission-trend-note" id="missionTrendNote'+suffix+'">As leituras parciais são sinalizadas. Sem série inventada.</p>'+
+  '</section>';
+}
+
+export const MISSION_TRENDS_CSS=String.raw`
+
+/* Mission Control financial charts: strictly scoped; values projected from the existing monthly cache. */
+.mission-dashboard .mission-trend-panel,.mission-workspace .mission-trend-panel{
+ --trend-bg:#091b38;position:relative;min-width:0;overflow:hidden;margin:17px 0 22px;
+ padding:22px 24px 17px;border:1px solid rgba(99,167,250,.33);border-radius:20px;
+ background:radial-gradient(ellipse at 75% -30%,rgba(92,91,227,.21),transparent 55%),linear-gradient(125deg,#0d2548,#07142b 88%);
+ box-shadow:inset 0 1px rgba(161,201,255,.11),0 12px 36px rgba(0,11,35,.17);color:#e9f6ff
+}
+.mission-trend-panel:before{content:"";position:absolute;inset:0 0 auto;height:2px;background:linear-gradient(90deg,#28e3b4,#4c9efb,#b67cff,transparent 93%);opacity:.8}
+.mission-trend-heading{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:14px;margin:0 0 14px}
+.mission-trend-heading h3{font-size:20px;letter-spacing:-.5px;margin:6px 0;color:#f6faff}
+.mission-trend-heading p{font-size:11px;color:#a9c1df;margin:3px 0;line-height:1.6}
+.mission-trend-controls{display:flex;gap:5px;padding:4px;border:1px solid rgba(113,157,230,.2);background:rgba(4,17,41,.66);border-radius:12px}
+.mission-trend-controls button{min-height:36px;padding:8px 13px;border-radius:9px;border:1px solid transparent;font-size:11px;cursor:pointer;font-weight:700;color:#a9c9e7;background:transparent}
+.mission-trend-controls button:hover{color:#fff;background:rgba(66,119,226,.25)}
+.mission-trend-controls button[aria-pressed=true]{color:#e9faff;background:linear-gradient(110deg,#2055ba,#276bba);border-color:rgba(121,189,255,.62);box-shadow:0 3px 13px rgba(14,90,229,.22)}
+.mission-trend-controls button:focus-visible{outline:3px solid #78d8ff;outline-offset:2px}
+.mission-trend-graph{position:relative;min-width:0;height:277px;border-radius:12px;border:1px solid rgba(123,169,230,.12);background:repeating-linear-gradient(0deg,rgba(107,155,231,.03) 0 1px,transparent 1px 40px),rgba(5,18,43,.37)}
+.mission-trend-svg{display:block;width:100%;height:100%;overflow:visible}
+.mission-trend-empty{display:grid;place-items:center;min-height:240px;padding:20px;text-align:center;font-size:12px;line-height:1.7;color:#b9cae3}
+.mission-trend-note{min-height:17px;margin:12px 0 0;font-size:10px;line-height:1.6;color:#92b3d4}
+.mission-workspace .mission-trend-panel{border-color:rgba(var(--mission-rgb),.47);background:radial-gradient(ellipse at 100% -35%,rgba(var(--mission-rgb),.22),transparent 57%),linear-gradient(120deg,#0b213f,#06162c 91%)}
+.mission-workspace .mission-trend-panel:before{background:linear-gradient(90deg,var(--mission-accent),transparent)}
+.mission-workspace .mission-trend-heading .mission-panel-eyebrow{color:var(--mission-accent)}
+.mission-dashboard .command-center-metrics .command-metric{min-height:178px;display:flex;flex-direction:column;gap:3px}
+.mission-dashboard .command-center-metrics .command-metric small{display:block}
+.mission-dashboard .command-metric .mission-kpi-delta{
+ display:inline-flex;align-items:center;min-height:22px;max-width:100%;margin-top:auto;padding:4px 0 1px;
+ line-height:1.45;font-size:10px;font-weight:800;letter-spacing:-.05px;color:#a7bdde
+}
+.mission-dashboard .command-metric .mission-kpi-delta[data-direction=UP]{color:#37e4ad}
+.mission-dashboard .command-metric .mission-kpi-delta[data-direction=DOWN]{color:#ff819c}
+.mission-dashboard .command-metric .mission-kpi-delta[data-direction=FLAT]{color:#95b2db}
+.mission-dashboard .command-metric .mission-kpi-delta[data-direction=UNAVAILABLE]{color:#89a8cd;font-weight:600;font-size:9px}
+.mission-dashboard .command-metric .mission-kpi-delta[data-metric=ads][data-direction=UP]{color:#ffb26a}
+.mission-dashboard .command-metric .mission-kpi-delta[data-metric=ads][data-direction=DOWN]{color:#88dcff}
+.mission-dashboard .command-metric .mission-kpi-comparison-date{display:block;font-size:9px;font-weight:450;line-height:1.5;color:#8da5c8;min-height:28px}
+.mission-dashboard .command-metric .mission-profit-state{display:block;font-size:9px;font-weight:800;min-height:18px;color:#a0b7d8}
+.mission-dashboard .command-metric .mission-profit-state[data-tone=profit]{color:#41efb2}
+.mission-dashboard .command-metric .mission-profit-state[data-tone=loss]{color:#ff829c}
+.mission-dashboard .command-metric[data-mission-metric=net][data-result-tone=loss] strong{color:#ff899f}
+.mission-dashboard .command-metric[data-mission-metric=net][data-result-tone=profit] strong{color:#4ff2bc}
+.mission-dashboard .command-metric[data-mission-metric=net][data-result-tone=loss]{border-color:rgba(250,99,151,.62);background:radial-gradient(circle at 90% 60%,rgba(255,82,123,.19),transparent 60%),linear-gradient(140deg,#1c1837,#101627)}
+.mission-dashboard .command-metric[data-mission-metric=alerts][data-result-tone=alert] strong{color:#ffb85e}
+.mission-dashboard .command-metric[data-mission-metric=alerts][data-result-tone=healthy] strong{color:#55e9b3}
+.mission-workspace .mission-stat strong[data-result-tone=profit]{color:#48eeb9}
+.mission-workspace .mission-stat strong[data-result-tone=loss]{color:#ff849e}
+:root[data-theme=light] .mission-dashboard .mission-trend-panel,:root[data-theme=light] .mission-workspace .mission-trend-panel{background:radial-gradient(ellipse at 95% 0%,rgba(107,165,250,.13),transparent 55%),linear-gradient(125deg,#f8fbff,#ecf4ff);color:#19354b;border-color:rgba(61,128,221,.24)}
+:root[data-theme=light] .mission-trend-heading h3{color:#153956}
+:root[data-theme=light] .mission-trend-heading p,:root[data-theme=light] .mission-trend-note{color:#547291}
+:root[data-theme=light] .mission-trend-graph{background:linear-gradient(rgba(73,134,204,.055) 1px,transparent 1px) 0 0/100% 40px,#f7faff;border-color:rgba(85,151,225,.15)}
+:root[data-theme=light] .mission-trend-controls{background:#eaf1fe;border-color:#b6ccee}
+:root[data-theme=light] .mission-trend-controls button{color:#416688}
+:root[data-theme=light] .mission-trend-controls button[aria-pressed=true]{color:#fff}
+:root[data-theme=light] .mission-trend-empty{color:#496b89}
+:root[data-theme=light] .mission-dashboard .command-metric .mission-kpi-delta[data-direction=UP]{color:#076c4d}
+:root[data-theme=light] .mission-dashboard .command-metric .mission-kpi-delta[data-direction=DOWN]{color:#b92c52}
+:root[data-theme=light] .mission-dashboard .command-metric .mission-kpi-delta[data-metric=ads][data-direction=UP]{color:#955313}
+:root[data-theme=light] .mission-dashboard .command-metric .mission-kpi-delta[data-metric=ads][data-direction=DOWN]{color:#125f9b}
+:root[data-theme=light] .mission-dashboard .command-metric .mission-kpi-comparison-date,:root[data-theme=light] .mission-dashboard .command-metric .mission-kpi-delta[data-direction=UNAVAILABLE]{color:#576f8a}
+:root[data-theme=light] .mission-dashboard .command-metric .mission-profit-state[data-tone=profit]{color:#137553}
+:root[data-theme=light] .mission-dashboard .command-metric .mission-profit-state[data-tone=loss]{color:#b82e53}
+:root[data-theme=light] .mission-dashboard .command-metric[data-mission-metric=net][data-result-tone=loss] strong{color:#ba3159}
+:root[data-theme=light] .mission-dashboard .command-metric[data-mission-metric=net][data-result-tone=profit] strong{color:#167653}
+:root[data-theme=light] .mission-dashboard .command-metric[data-mission-metric=net][data-result-tone=loss]{background:#fff1f4}
+:root[data-theme=light] .mission-workspace .mission-stat strong[data-result-tone=profit]{color:#137653}
+:root[data-theme=light] .mission-workspace .mission-stat strong[data-result-tone=loss]{color:#bd3959}
+@media(max-width:1150px){.mission-dashboard .command-center-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:720px){.mission-dashboard .command-center-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.mission-trend-panel{padding:17px!important}.mission-trend-heading{gap:10px}.mission-trend-controls{width:100%;justify-content:space-between}.mission-trend-controls button{flex:1}.mission-dashboard .command-center-metrics .command-metric{min-height:152px}.mission-trend-graph{height:233px}}
+@media(max-width:420px){.mission-dashboard .command-center-metrics{grid-template-columns:minmax(0,1fr)}.mission-dashboard .command-center-metrics .command-metric{min-height:141px}.mission-trend-heading h3{font-size:17px}}
+@media(prefers-reduced-motion:reduce){.mission-trend-controls button,.mission-trend-svg *{transition:none!important}}
+
+`;
+));
   for(let line=0;line<=4;line++){
    const yy=top+line*(bottom-top)/4;
    graph.append(el('line',{x1:left,y1:yy,x2:right,y2:yy,stroke:'rgba(123,167,230,.22)','stroke-width':1,'stroke-dasharray':'3 5'}));
@@ -445,9 +607,9 @@ export function missionTrendPanelBody(id='overview'){
   (key==='net'?'Resultado':key==='sales'?'Vendas':'Ads')+'</button>';
  const title=id==='ads'?'Evolução dos gastos com anúncios':id==='finance'?'Evolução do resultado financeiro':'Evolução financeira real';
  return '<section class="mission-trend-panel" id="missionTrends'+suffix+'" aria-label="'+title+'">'+
-  '<header class="mission-trend-heading"><div><span class="mission-panel-eyebrow">SÉRIE DIÁRIA VALIDADA</span><h3>'+title+'</h3>'+
+  '<header class="mission-trend-heading"><div><span class="mission-panel-eyebrow">SÉRIE DIÁRIA VALIDADA</span><h3 id="missionTrendTitle'+suffix+'">'+title+'</h3>'+
   '<p id="missionTrendScope'+suffix+'">'+(id==='overview'?'Últimos até 14 dias do período observado':'Histórico diário do período selecionado')+'</p></div>'+
-  '<nav class="mission-trend-controls" aria-label="Métrica do gráfico">'+['net','sales','ads'].map(control).join('')+'</nav></header>'+
+  '<div class="mission-trend-controls" role="group" aria-label="Métrica do gráfico">'+['net','sales','ads'].map(control).join('')+'</div></header>'+
   '<div class="mission-trend-graph" id="missionTrendGraph'+suffix+'"><p class="mission-trend-empty">Aguardando o histórico diário validado.</p></div>'+
   '<p class="mission-trend-note" id="missionTrendNote'+suffix+'">As leituras parciais são sinalizadas. Sem série inventada.</p>'+
   '</section>';
