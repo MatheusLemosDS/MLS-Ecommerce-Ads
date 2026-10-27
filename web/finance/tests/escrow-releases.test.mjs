@@ -2,8 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {randomUUID} from 'node:crypto';
 import {collectionFixture} from '../../cloudflare/tests/business-collection-fixture.mjs';
-import {runFinanceEscrowReleases} from '../src/escrow-releases.mjs';
-import {projectEscrowReleaseFrame,projectEscrowReleaseEvidenceFrame} from '../src/escrow-release-frame.mjs';
+import {runFinanceEscrowReleases,readFinanceEscrowReleaseCoverage} from '../src/escrow-releases.mjs';
+import {projectEscrowReleaseFrame,projectEscrowReleaseEvidenceFrame,projectEscrowReleaseCoverageFrame} from '../src/escrow-release-frame.mjs';
 
 const month='2026-10',path='/api/v2/payment/get_escrow_list';
 async function fixture(t,{count=2,second=0,rows=null,income=null}={}){
@@ -40,6 +40,18 @@ test('order evidence preserves a coherent signed adjustment and identifies relea
 test('order evidence is opt-in and invalid negotiation input fails before provider work',async t=>{
  const f=await fixture(t,{count:1});await f.finish();const legacy=await f.run('read');assert.equal(legacy.schema,'finance_escrow_releases_v1');assert.equal(Object.hasOwn(legacy,'orders'),false);
  await assert.rejects(f.run('read',{includeOrders:'yes'}),error=>error.code==='FINANCE_ESCROW_RELEASE_REQUEST_INVALID');
+});
+
+
+test('temporal coverage reuses saved calendars and reports a missing later month without a provider call',async t=>{
+ const f=await fixture(t),october=await f.finish(),before=f.calls.length;assert.equal(october.calendar.status,'COMPLETE');
+ f.clock.time=Date.UTC(2026,10,10,15);
+ const value=await readFinanceEscrowReleaseCoverage(f.financeEnv,{operation:'coverage',cohort_month:'2026-10',through_month:'2026-11',sources:f.sources,now:f.now});
+ assert.ok(projectEscrowReleaseCoverageFrame(value));assert.equal(f.calls.length,before,'coverage reads only saved release ledgers');
+ assert.equal(value.status,'COLLECTING');assert.equal(value.coverage.paid_orders,2);assert.equal(value.coverage.located_orders,1);assert.equal(value.coverage.not_located_orders,1);assert.equal(value.coverage.identity_complete_at_cutoff,false);
+ assert.deepEqual(value.calendars.map(row=>[row.month,row.status]),[['2026-10','COMPLETE'],['2026-11','MISSING']]);
+ assert.ok(value.pending.includes('CALENDAR_MISSING'));assert.ok(value.pending.includes('ORDER_NOT_LOCATED'));assert.ok(value.pending.includes('RELEASE_CYCLE_SEMANTICS_UNVERIFIED'));assert.equal(Object.hasOwn(value,'remaining_receivable_cents'),false);
+ await assert.rejects(readFinanceEscrowReleaseCoverage(f.financeEnv,{operation:'coverage',cohort_month:'2026-10',through_month:'2026-12',sources:f.sources,now:f.now}),error=>error.code==='FINANCE_ESCROW_RELEASE_REQUEST_INVALID');
 });
 
 test('raw currency and units are not inferred for unmatched, hundred-times, missing or sub-cent payout observations',async t=>{
