@@ -378,3 +378,35 @@ Auth e Finance. Versões confirmadas pelos check-runs Cloudflare:
 CI final run `40585084151` validou 2.080 Node + 67 Python com
 sucesso. A interface **ainda exige conferência visual autenticada** em
 desktop e celular; sucesso de build não prova navegação real no dispositivo.
+
+## 27/10/2026 — Mission Control V2 corrigido para refletir a opção 3
+
+O operador rejeitou a primeira implementação visual por ainda parecer o
+layout anterior. A **PR #31** (merge `74e23ff5f8bd7888f54b98a61ff20e82fa10a583`)
+refez o próprio cockpit da Visão Geral, não só o link dos agentes:
+hero orbital azul-naval do Hermes, seis cartões com avatares robóticos
+neon por especialidade, métricas coloridas, comparação dos três valores
+monetários observados do dia e distribuição dos estados reais dos agentes.
+
+A Central de Agentes e os sete workspaces individuais ganharam avatares
+maiores, cabeçalhos de vidro escuro, gradientes coloridos, subtabs e
+painéis mais legíveis, em desktop, mobile e tema claro/escuro. O modo
+escuro foi **inspecionado em screenshot real do Chrome**, com a captura
+gerada apenas de um cenário de teste sem dados de loja. A captura
+temporária foi removida do código final de CI.
+
+**Validação:** PR run `40589733166` e main `40589983415`,
+**2.082 Node / 0 falhas + 67 Python**. Teste Chromium real confirma
+seis agentes, nenhum placeholder restante, gradientes calculados, ícones,
+dois painéis de observação, ausência de valores fictícios e zero erros JS.
+Check-runs Cloudflare para App/Auth/Finance **SUCCESS** no merge V2.
+
+Sem mudanças no backend, banco, custos, OAuth, contratos Shopee, cron ou
+Ads/PROMO. Gráficos de barras do dia só usam vendas/lucro estimado/gasto
+Ads do snapshot realmente validado; proporção de agentes saudáveis é
+contagem do Agent Registry, **não** rentabilidade nem lucro comprovado.
+
+**A aprovação visual final segue pendente** após login no dispositivo do
+operador. Fase financeira continua **M2**, Pending atual e repasses
+devem ser comparados ao Seller Centre antes de fechar; sem compromisso
+de competência ou liquidação bancária.

@@ -31,7 +31,7 @@
   },
   "current_phase": "M2_FINANCE_RETURNS_RECONCILIATION",
   "working_branch": null,
-  "current_status": "M2_IN_PROGRESS_MISSION_CONTROL_DELIVERED",
+  "current_status": "M2_IN_PROGRESS_MISSION_CONTROL_V2_DEPLOYED_AWAITING_VISUAL_APPROVAL",
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
     "Repasse-base, ajuste, repasse após ajuste e liberação exibidos sem dupla dedução",
@@ -109,11 +109,11 @@
     }
   },
   "next_actions": [
-    "Conferir ao vivo visual Mission Control desktop/mobile e navegação entre 7 painéis do agente pela Central de Agentes",
-    "MLS Finance: validar Pending atual por pedido com horários, cobertura e montantes do Seller Centre real",
-    "Se has_more=true, confirmar cursor e semântica antes de paginar; diferenças descritivas não equivalem a saldo incorreto",
-    "Preservar data/contratos/cron existentes e bloquear Ads/PROMO até fase específica com aprovação e auditoria",
-    "Após critério de saída M2, avançar M3 Pricing/Products Intelligence sem refazer M1"
+    "Operador conferir visual Mission Control V2 no tema escuro na Visão Geral, Central de Agentes, Finance e demais painéis no desktop e celular; registrar aprovação visual",
+    "Verificar acesso aos controles já publicados de Finance, catálogo, Produção DTF, Ads e Hermes; novo visual não executa ações",
+    "MLS Finance M2: validar Pending atual por pedido com montantes, quantidade e horários do Seller Centre",
+    "Se has_more=true, revisar semântica/cursor antes de paginação; não inferir realized_net nem remaining_receivable sem evidência bancária",
+    "M3 Products/Pricing só após critério de saída M2; Ads/PROMO continuam LOCKED"
   ],
   "m0_followup": [
     "Conferir visual autenticado em desktop e celular durante M1; corrigir apenas branding/layout sem renomear infraestrutura"
@@ -122,66 +122,43 @@
     "Mission Control M1.1 (opção 3) integrado com 7 painéis independentes; conferir visual autenticado desktop/celular e retorno às telas antigas"
   ],
   "latest_increment": {
-    "id": "M1_1_MISSION_CONTROL_OPTION_3",
-    "status": "MERGED_AND_DEPLOYED_CLOUDFLARE_LATEST_PR30_BUILDS_SUCCESS_OWNER_VISUAL_REVIEW_PENDING",
-    "pull_request": 29,
-    "merge_commit": "2522f33132563d19704c6f6c57ff4206067bc2ab",
+    "id": "M1_2_MISSION_CONTROL_V2_VISUAL_FIDELITY",
+    "status": "MERGED_CI_AND_CLOUDFLARE_CHECKS_SUCCESS_OWNER_DESIGN_APPROVAL_PENDING",
+    "pull_request": 31,
+    "merge_commit": "74e23ff5f8bd7888f54b98a61ff20e82fa10a583",
     "validation": {
-      "pr_run": 40583992441,
-      "main_run": 40584255014,
-      "post_test_only_main_run": 40585084151,
-      "node_tests": 2080,
+      "pr_run": 40589733166,
+      "main_run": 40589983415,
+      "node_tests": 2082,
+      "node_pass": 2082,
       "node_fail": 0,
       "python_tests": 67,
-      "chrome_navigation": [
-        "agents",
-        "agent-finance",
-        "agent-returns"
-      ]
+      "browser": "REAL_HEADLESS_CHROME_DARK",
+      "js_errors": 0,
+      "agent_cards": 6
     },
-    "design": "FUTURISTIC_MISSION_CONTROL_DARK_AND_LIGHT",
-    "workspaces": [
-      "agents",
-      "agent-finance",
-      "agent-ads",
-      "agent-products",
-      "agent-production",
-      "agent-returns",
-      "agent-auditor",
-      "agent-hermes"
+    "design": "OPTION_3_ORBITAL_COCKPIT_NAVY_NEON",
+    "improvements": [
+      "Orbital Hermes hero and distinct neon robot-style faces per agent",
+      "Six color-coded verified metrics; health ring and honest single-day comparisons based only on Agent Registry",
+      "Hub and seven individual workspaces with richer headers, internal anchors, glass gradients and accessibility light/dark/mobile",
+      "Light-theme contrast repaired; reduced-motion and focus-visible retained"
     ],
-    "backend_changes": "NONE: no D1, Shopee, Auth/Finance, cron, Ads/PROMO or financial contracts changed",
-    "immutable_limits": [
-      "Agent Registry continues OBSERVER",
-      "No invented historical series, SKU attribution or confirmed bank settlement",
-      "Pricing, Creative, Inventory and Marketplace remain future roadmap agents"
-    ],
-    "companion_test_fix": {
-      "pr": 30,
-      "merge_commit": "8f2d3e4d928d6d4c699af39f54740d31cd97cd92",
-      "change": "Remove flaky bare digit substring detection from cryptographic hashes in test only"
+    "new_provider_requests": 0,
+    "new_db_queries": 0,
+    "backend_changes": "NONE: Shopee/Auth/Finance/D1/cron/Ads policy, existing routes and persisted contracts unchanged",
+    "cloudflare_checks": {
+      "app": "SUCCESS",
+      "auth": "SUCCESS",
+      "finance": "SUCCESS",
+      "commit": "74e23ff5f8bd7888f54b98a61ff20e82fa10a583"
     },
-    "owner_gate": [
-      "Confirm main nav and card drilldown on authenticated desktop and mobile",
-      "Confirm one agent view at a time and old Finance, Products, DTF, Ads and Hermes tools remain reachable",
-      "Validate real M2 Pending with Seller Centre and keep receiving/bank settlement unverified otherwise"
+    "limitations": [
+      "No fabricated historical series, ROI, bank liquidation, pricing margins or order states",
+      "The owner has not yet approved the final deployed screenshots on desktop/mobile",
+      "M2 Seller Centre Pending / escrow reconciliation remains an independent financial exit gate"
     ],
-    "cloudflare_delivery": {
-      "source_commit": "8f2d3e4d928d6d4c699af39f54740d31cd97cd92",
-      "app": {
-        "build_id": "d89151c3-a166-40d0-8b08-e1931113aad5",
-        "version_id": "9e051db8-e81d-4e3e-bd12-c00d0127bd3b"
-      },
-      "auth": {
-        "build_id": "586fd9bf-bb7b-432d-b8f9-91c4c18e83a8",
-        "version_id": "69828598-fb14-493f-a393-9b247258fe04"
-      },
-      "finance": {
-        "build_id": "84d2a82d-a13a-4d9a-a913-31997e291a2f",
-        "version_id": "d618515a-1c04-4799-9644-1a6af8f29185"
-      },
-      "note": "First Cloudflare builds for PR29 merge failed; subsequent PR30 test-only merge builds succeeded and published versions. Runtime App bundle unchanged since PR29."
-    }
+    "visual_guide": "docs/MISSION_CONTROL_V2_VISUAL_GUIDE.md"
   },
   "incident": {
     "id": "INCIDENT_2026_10_27_PANEL_AGENT_REGRESSION",
@@ -226,7 +203,7 @@
       "D1 daily quota pode estar esgotada como em 26/10, mas nao foi verificada em 27/10",
       "Necessario screenshot ou erro HTTP seguro do login/Finance sem credenciais"
     ],
-    "status": "UI_RECOVERED_OPERATOR_CONFIRMED_2026_10_27",
+    "status": "UI_RECOVERY_CONFIRMED_BY_OPERATOR",
     "account_plan_evidence": {
       "workers_paid_upgrade_confirmed_on": "2026-10-26",
       "no_new_daily_limit_alert_seen_on": "2026-10-27",
@@ -267,7 +244,9 @@
       "Post-PR29 Mission Control mobile/desktop acceptance and M2 Pending seller validation"
     ],
     "probable_d1_cause": "UNVERIFIED_DO_NOT_ASSUME",
-    "recovered_via": "PR28 fix browser scripts, confirmed by operator as funcionando"
+    "recovered_via": "PR28 fix browser scripts, confirmed by operator as funcionando",
+    "owner_confirmed_at": "2026-10-27",
+    "remaining_gate": "Visual v2 and M2 financial comparison; do not confuse UI recovery with bank settlement"
   },
   "last_diagnostic_increment": {
     "id": "P1_OWNER_DIAGNOSTICS",
@@ -354,5 +333,67 @@
     ],
     "detail_policy": "ONE_AGENT_WORKSPACE_AT_A_TIME",
     "data_policy": "SHARED_EXISTING_SNAPSHOTS_NO_NEW_PROVIDER_REQUESTS"
+  },
+  "last_visual_increment": {
+    "id": "M1_1_MISSION_CONTROL_OPTION_3",
+    "status": "MERGED_AND_DEPLOYED_CLOUDFLARE_LATEST_PR30_BUILDS_SUCCESS_OWNER_VISUAL_REVIEW_PENDING",
+    "pull_request": 29,
+    "merge_commit": "2522f33132563d19704c6f6c57ff4206067bc2ab",
+    "validation": {
+      "pr_run": 40583992441,
+      "main_run": 40584255014,
+      "post_test_only_main_run": 40585084151,
+      "node_tests": 2080,
+      "node_fail": 0,
+      "python_tests": 67,
+      "chrome_navigation": [
+        "agents",
+        "agent-finance",
+        "agent-returns"
+      ]
+    },
+    "design": "FUTURISTIC_MISSION_CONTROL_DARK_AND_LIGHT",
+    "workspaces": [
+      "agents",
+      "agent-finance",
+      "agent-ads",
+      "agent-products",
+      "agent-production",
+      "agent-returns",
+      "agent-auditor",
+      "agent-hermes"
+    ],
+    "backend_changes": "NONE: no D1, Shopee, Auth/Finance, cron, Ads/PROMO or financial contracts changed",
+    "immutable_limits": [
+      "Agent Registry continues OBSERVER",
+      "No invented historical series, SKU attribution or confirmed bank settlement",
+      "Pricing, Creative, Inventory and Marketplace remain future roadmap agents"
+    ],
+    "companion_test_fix": {
+      "pr": 30,
+      "merge_commit": "8f2d3e4d928d6d4c699af39f54740d31cd97cd92",
+      "change": "Remove flaky bare digit substring detection from cryptographic hashes in test only"
+    },
+    "owner_gate": [
+      "Confirm main nav and card drilldown on authenticated desktop and mobile",
+      "Confirm one agent view at a time and old Finance, Products, DTF, Ads and Hermes tools remain reachable",
+      "Validate real M2 Pending with Seller Centre and keep receiving/bank settlement unverified otherwise"
+    ],
+    "cloudflare_delivery": {
+      "source_commit": "8f2d3e4d928d6d4c699af39f54740d31cd97cd92",
+      "app": {
+        "build_id": "d89151c3-a166-40d0-8b08-e1931113aad5",
+        "version_id": "9e051db8-e81d-4e3e-bd12-c00d0127bd3b"
+      },
+      "auth": {
+        "build_id": "586fd9bf-bb7b-432d-b8f9-91c4c18e83a8",
+        "version_id": "69828598-fb14-493f-a393-9b247258fe04"
+      },
+      "finance": {
+        "build_id": "84d2a82d-a13a-4d9a-a913-31997e291a2f",
+        "version_id": "d618515a-1c04-4799-9644-1a6af8f29185"
+      },
+      "note": "First Cloudflare builds for PR29 merge failed; subsequent PR30 test-only merge builds succeeded and published versions. Runtime App bundle unchanged since PR29."
+    }
   }
 }
