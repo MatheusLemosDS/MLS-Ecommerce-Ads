@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {buildPendingIncomeAudit,buildMlsAgentRegistry} from '../src/agent-registry.mjs';
-import {AGENT_REGISTRY_CLIENT,commandCenterBody} from '../src/agent-registry-view.mjs';
+import {AGENT_REGISTRY_CLIENT,commandCenterBody,pendingIncomeBody} from '../src/agent-registry-view.mjs';
 
 const day=(overrides={})=>({
  schema:'mls_day_snapshot_v1',
@@ -239,4 +239,13 @@ test('agent registry starts from null month without accessing expense_schedule o
  const emptyMonth=buildMlsAgentRegistry({month:month({expense_schedule:null})});
  assert.equal(emptyMonth.expenses.status,null);
  assert.equal(emptyMonth.agents.length,6);
+});
+
+test('Pending detail moves to Finance while overview only provides dedicated panel links',()=>{
+ const home=commandCenterBody(),details=pendingIncomeBody();
+ assert.doesNotMatch(home,/id="commandPendingIncomeDetails"/);
+ assert.match(details,/id="commandPendingIncomeDetails"/);
+ for(const id of ['finance','ads','products','production','returns','auditor'])assert.match(home,new RegExp('href="/admin\\?tab=agent-'+id+'"'));
+ assert.match(AGENT_REGISTRY_CLIENT,/data|missionOpen/);
+ assert.doesNotMatch(AGENT_REGISTRY_CLIENT,/\bfetch\s*\(/);
 });
