@@ -32,7 +32,7 @@ test('a fully itemized month with no open entries has explicit zero schedule whi
 });
 
 test('next due aggregates multiple entries on the same day and upcoming list stays bounded and ordered',()=>{
- const items=Array.from({length:7},(_,index)=>item(crypto.randomUUID(),index<3?'2026-10-28':'2026-10-'+String(29+index).padStart(2,'0'),1000+index));
+ const days=['2026-10-28','2026-10-28','2026-10-28','2026-10-29','2026-10-30','2026-10-31','2026-10-31'],items=days.map((due,index)=>item(crypto.randomUUID(),due,1000+index));
  const value=buildExpenseSchedule({month,today,mode:'CONFIRMED',payload:JSON.stringify(items)});
  assert.equal(value.next_due_date,'2026-10-28');assert.equal(value.next_due_count,3);assert.equal(value.next_due_cents,3003);assert.equal(value.upcoming.length,5);
  for(let index=1;index<value.upcoming.length;index++)assert.ok(value.upcoming[index-1].due_date<=value.upcoming[index].due_date);
