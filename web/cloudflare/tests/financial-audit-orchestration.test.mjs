@@ -6,22 +6,22 @@ import {runBusinessFinancialAudits} from '../src/financial-audit-orchestration.m
 const month='2026-10',time=Date.UTC(2026,9,25,15);
 function fixture(t){
  const db=new D1();t.after(()=>db.db.close());const env={ADMIN_DB:db},calls=[],state={enabled:true};
- const services={getFinanceReconciliation:async()=>{calls.push('RETURNS');return {};},getFinanceEscrowReleases:async()=>{calls.push('RELEASES');return {};}};
+ const services={getFinanceReconciliation:async()=>{calls.push('RETURNS');return {};},getFinanceEscrowReleases:async()=>{calls.push('RELEASES');return {};},getFinanceIncomeOverview:async()=>{calls.push('INCOME');return {};}};
  const runner=async(_,source)=>{await source();return {status:'CHECKED',source_reads:999,repeat:false};};
- const options={now:()=>time,canRun:async()=>state.enabled,runReturns:runner,runReleases:runner};
+ const options={now:()=>time,canRun:async()=>state.enabled,runReturns:runner,runReleases:runner,runIncome:runner};
  return {env,db,calls,state,services,options,run:more=>runBusinessFinancialAudits(env,services,{month},{...options,...more})};
 }
 
-test('persistent audit turns alternate releases and returns with exactly one actual private call per opportunity',async t=>{
+test('persistent audit turns rotate releases, returns and current income with exactly one actual private call per opportunity',async t=>{
  const f=fixture(t),first=await f.run(),second=await f.run(),third=await f.run();
- assert.deepEqual(f.calls,['RELEASES','RETURNS','RELEASES']);
+ assert.deepEqual(f.calls,['RELEASES','RETURNS','INCOME']);
  for(const value of [first,second,third])assert.equal(value.source_reads,1,'child-reported call counts cannot inflate or hide actual calls');
- assert.equal(f.db.db.prepare('SELECT next_work FROM financial_audit_turns').get().next_work,'RETURNS');
+ assert.equal(f.db.db.prepare('SELECT next_work FROM financial_audit_turns').get().next_work,'RELEASES');
 });
 
 test('a locally waiting queue yields to the other eligible queue without spending two source calls',async t=>{
  const f=fixture(t),value=await f.run({runReleases:async()=>({status:'RETRY_WAIT',source_reads:0,repeat:false})});
- assert.equal(value.selected,'RETURNS');assert.equal(value.releases_status,'RETRY_WAIT');assert.equal(value.source_reads,1);assert.deepEqual(f.calls,['RETURNS']);
+ assert.equal(value.selected,'RETURNS');assert.equal(value.releases_status,'RETRY_WAIT');assert.equal(value.source_reads,1);assert.deepEqual(f.calls,['RETURNS']);assert.equal(value.income_status,'DEFERRED');
 });
 
 test('failure after a source request cannot replay another queue and cannot pin the history lane',async t=>{
@@ -56,4 +56,10 @@ test('local work outliving its lease cannot start a source request after a newer
  await waiting;clock.time+=91000;const winner=await f.run({now});assert.equal(winner.selected,'RELEASES');assert.equal(winner.source_reads,1);
  release();const stale=await old;assert.equal(stale.source_reads,0);assert.equal(stale.status,'LEASED');assert.equal(stale.repeat,false);assert.deepEqual(f.calls,['RELEASES']);
  assert.equal(f.db.db.prepare('SELECT next_work FROM financial_audit_turns').get().next_work,'RETURNS');
+});
+
+
+test('income overview participates in the one-read budget and a local retry wait yields without starving releases',async t=>{
+ const f=fixture(t);await f.run();await f.run();const income=await f.run();assert.equal(income.selected,'INCOME');assert.equal(income.income_status,'CHECKED');assert.equal(income.source_reads,1);assert.deepEqual(f.calls,['RELEASES','RETURNS','INCOME']);
+ const next=await f.run({runReleases:async()=>({status:'RETRY_WAIT',source_reads:0,repeat:false})});assert.ok(['RETURNS','INCOME'].includes(next.selected));assert.equal(next.source_reads,1);
 });
