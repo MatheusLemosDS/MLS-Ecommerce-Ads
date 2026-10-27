@@ -397,3 +397,36 @@ o link estático "Diagnosticar carregamento" do topo do Admin, no mesmo
 navegador; abrir um link cross-site pode não enviar cookie SameSite=Strict na
 primeira navegação. Caso o JavaScript do diagnóstico também falhe, enviar
 somente a tela de diagnóstico, sem credenciais.
+
+
+## Incidente P1 — causa JS reproduzida e corrigida pela PR #28 (27/10/2026)
+
+A investigação em **Chromium real** encontrou dois erros que os testes anteriores
+de HTML/VM não detectavam:
+
+1. `Cannot read properties of null (reading 'expense_schedule')`:
+   `buildMlsAgentRegistry` permitia `undefined === undefined` quando o
+   snapshot mensal ainda não existia e tentava acessar `month.expense_schedule`.
+2. `Invalid regular expression` durante a inicialização: bytes de controle
+   incluídos no JavaScript inline eram processados pelo tokenizer HTML, que
+   substitui U+0000 por U+FFFD, destruindo a ordem de um range de regex e
+   impedindo outros scripts de iniciarem.
+
+A **PR #28** (merge `6ea975e13694f094bba034103b7572d30b07e308`) adicionou o guard de `month` antes de
+consultar despesas e codifica caracteres de controle não imprimíveis no HTML
+do Admin como escapes JavaScript antes de enviá-los ao navegador.
+
+Validação: CI PR `40576473744`, CI `main` `40576723167`,
+**2.073 testes Node, 0 falhas + 67 Python**. Teste Chromium real com
+consulta financeira simulada em HTTP 503: registry instalado, seis agentes
+hidratados, zero placeholders remanescentes, valor diário indisponível
+sem inventar lucro, **zero erros de JavaScript**. Build checks Cloudflare
+App/Auth/Finance concluídos **SUCCESS**.
+
+Limites: o teste simula sessão de proprietário e não lê a conta privada;
+a conexão da rota mensal em produção continua sem evidência do operador.
+**Não afirmar ainda que lucro diário, repasses ou D1 estejam funcionando**.
+Se a página voltar a hidratar agentes mas os números permanecerem em branco,
+usar `/admin/diagnostics` para obter `owner_probe` e `finance_month`.
+Nenhuma autorização da Shopee, orçamento Ads, dado persistido ou Worker Auth/
+Finance foi alterado pela correção.

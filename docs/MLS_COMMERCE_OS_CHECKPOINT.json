@@ -31,7 +31,7 @@
   },
   "current_phase": "M2_FINANCE_RETURNS_RECONCILIATION",
   "working_branch": null,
-  "current_status": "P1_AWAITING_AUTHENTICATED_DIAGNOSTIC",
+  "current_status": "P1_SCRIPT_BUG_FIXED_OWNER_FINANCIAL_VERIFY_PENDING",
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
     "Repasse-base, ajuste, repasse após ajuste e liberação exibidos sem dupla dedução",
@@ -109,11 +109,11 @@
     }
   },
   "next_actions": [
-    "Owner abrir /admin/diagnostics na mesma sessão, copiar relatório sanitizado e enviar no chat; nunca enviar cookies/tokens",
-    "Interpretar owner_probe.http/d1 versus finance_month.http/error para localizar exatamente a etapa que falha",
-    "Se direct D1 READY e finance falhar, investigar setup e query mensal; se D1 falhar, investigar binding/limite/latência; se ambos READY, reproduzir JS no dispositivo",
-    "Após correção específica, observar tela autenticada e lucro diário/MLS Finance/agentes no celular; só então encerrar P1",
-    "Manter execução Ads/PROMO LOCKED e continuar M2 após recuperação"
+    "Após PR28, operador recarrega /admin?tab=overview em sua sessão e confirma se cartões agora exibem estados reais sem marcador Aguardando dados",
+    "Se lucro diário/mês ainda ficarem indisponíveis, usar /admin/diagnostics e compartilhar JSON sanitizado owner_probe e finance_month; nenhuma credencial",
+    "Separar erro financeiro de API/ D1 de erros de JavaScript já corrigidos no Chrome; preservar null para números ausentes",
+    "Somente encerrar incidente após abertura autenticada e resultado financeiro visível e verificado",
+    "Continuar a fase M2 financeira após restaurar operacionalidade e manter Ads/PROMO LOCKED"
   ],
   "m0_followup": [
     "Conferir visual autenticado em desktop e celular durante M1; corrigir apenas branding/layout sem renomear infraestrutura"
@@ -122,33 +122,41 @@
     "Conferir visual autenticado da Central de Comando em desktop e celular; ajustes visuais podem ocorrer dentro de M2 sem alterar contratos"
   ],
   "latest_increment": {
-    "id": "P1_OWNER_DIAGNOSTICS",
-    "status": "MERGED_CI_AND_CLOUDFLARE_CHECKS_SUCCESS_AWAITING_OWNER_RESULT",
-    "pull_request": 26,
-    "merge_commit": "4310316be3ac3cf449fde975697a869e2529fb53",
+    "id": "P1_BROWSER_JS_HYDRATION_FIX",
+    "status": "MERGED_CI_CLOUDFLARE_CHECKS_SUCCESS_AWAITING_OWNER_AUTHENTICATED_VALIDATION",
+    "pull_request": 28,
+    "merge_commit": "6ea975e13694f094bba034103b7572d30b07e308",
     "validation": {
-      "pr_run": 40570346863,
-      "main_run": 40570582583,
-      "node_tests": 2070,
+      "pr_run": 40576473744,
+      "main_run": 40576723167,
+      "node_tests": 2073,
+      "node_pass": 2073,
+      "node_fail": 0,
       "python_tests": 67
     },
-    "delivery": {
-      "app_build": "SUCCESS",
-      "auth_build": "SUCCESS",
-      "finance_build": "SUCCESS",
-      "authenticated_runtime": "NOT_VERIFIED"
+    "runtime_smoke": {
+      "browser": "HEADLESS_CHROME",
+      "finance_api": "SIMULATED_HTTP_503",
+      "agent_registry": "INITIALIZED",
+      "agent_cards": 6,
+      "placeholder_cards": 0,
+      "javascript_errors": 0,
+      "net_cents": "UNKNOWN_NOT_FABRICATED"
     },
-    "route": "/admin/diagnostics",
-    "features": [
-      "Owner-only diagnostics page independent of full dashboard JavaScript and database setup",
-      "Read-only SELECT 1 on ADMIN_DB for connectivity status, no provider access or schema writes in diagnostics API",
-      "Same existing business-month-view-v4 finance endpoint checked from diagnostics UI, may perform its normal internal cache/schema maintenance",
-      "Only statuses, safe error codes, basic DOM markers and timing copied; no CSRF, credentials, orders or financial amounts"
+    "cloudflare_checks": {
+      "app": "SUCCESS",
+      "auth": "SUCCESS",
+      "finance": "SUCCESS"
+    },
+    "fixes": [
+      "Agent Registry safely handles null month and absent expense schedule before first month snapshot",
+      "Admin server escapes raw non-printable script control characters before browser HTML parsing to preserve valid JavaScript regex ranges",
+      "Null month and compiled HTML inline-script safety now covered by regression tests, plus real Chrome integration"
     ],
-    "limits": [
-      "This does NOT resolve the underlying authenticated financial failure automatically",
-      "Root cause remains unknown until owner sends diagnostic report",
-      "Do not repeat blind rollbacks or credential changes"
+    "limitations": [
+      "Validated against local synthetic authenticated Worker and mocked finance error, not the operator's private D1 response",
+      "Actual finance-month API connection on operator account still needs owner verification",
+      "No Shopee API, D1 data, Ads/PROMO writes, OAuth, secrets or worker bindings were changed"
     ]
   },
   "incident": {
@@ -156,7 +164,7 @@
     "reported_at": "2026-10-27",
     "severity": "P1_UI_UNAVAILABLE",
     "symptom": "Painel nao carrega e paineis de agentes desapareceram apos PR22",
-    "cause_status": "UNVERIFIED_SUSPECTED_PR22_BROWSER_OR_CLOUDFLARE_DEPLOY",
+    "cause_status": "CONFIRMED_BROWSER_JS_ERRORS",
     "affected_delivery": {
       "pr": 22,
       "merge_commit": "2e35ac0267757f748912f36756c89584aa13efe6"
@@ -194,7 +202,7 @@
       "D1 daily quota pode estar esgotada como em 26/10, mas nao foi verificada em 27/10",
       "Necessario screenshot ou erro HTTP seguro do login/Finance sem credenciais"
     ],
-    "status": "OPEN_AWAITING_AUTHENTICATED_DIAG",
+    "status": "OPEN_AWAITING_AUTHENTICATED_MONTH_EVIDENCE",
     "account_plan_evidence": {
       "workers_paid_upgrade_confirmed_on": "2026-10-26",
       "no_new_daily_limit_alert_seen_on": "2026-10-27",
@@ -219,6 +227,52 @@
       "Reset D1",
       "Rotate secrets without evidence",
       "Call diagnostic success proof of resolved finances"
+    ],
+    "root_causes": [
+      "On first render without month, agent registry evaluated month.expense_schedule after optional equality matched undefined===undefined, causing TypeError reading expense_schedule of null",
+      "Raw C0/DEL characters in inline JavaScript were altered by the browser HTML tokenizer (NULL -> U+FFFD), creating an invalid regex character range SyntaxError"
+    ],
+    "fixes_published": {
+      "pr": 28,
+      "merge_commit": "6ea975e13694f094bba034103b7572d30b07e308",
+      "ci_main_run": 40576723167,
+      "cloudflare_checks": "APP_AUTH_FINANCE_SUCCESS"
+    },
+    "html_hydration_status": "CHROME_FIX_CONFIRMED_IN_SYNTHETIC_SESSION",
+    "pending_production_evidence": [
+      "Operator reloads the owner workspace after PR28 and confirms live agent cards no longer say Aguardando dados",
+      "Owner verifies real daily and monthly financial API/metrics or provides sanitised /admin/diagnostics report"
+    ],
+    "probable_d1_cause": "UNVERIFIED_DO_NOT_ASSUME"
+  },
+  "last_diagnostic_increment": {
+    "id": "P1_OWNER_DIAGNOSTICS",
+    "status": "MERGED_CI_AND_CLOUDFLARE_CHECKS_SUCCESS_AWAITING_OWNER_RESULT",
+    "pull_request": 26,
+    "merge_commit": "4310316be3ac3cf449fde975697a869e2529fb53",
+    "validation": {
+      "pr_run": 40570346863,
+      "main_run": 40570582583,
+      "node_tests": 2070,
+      "python_tests": 67
+    },
+    "delivery": {
+      "app_build": "SUCCESS",
+      "auth_build": "SUCCESS",
+      "finance_build": "SUCCESS",
+      "authenticated_runtime": "NOT_VERIFIED"
+    },
+    "route": "/admin/diagnostics",
+    "features": [
+      "Owner-only diagnostics page independent of full dashboard JavaScript and database setup",
+      "Read-only SELECT 1 on ADMIN_DB for connectivity status, no provider access or schema writes in diagnostics API",
+      "Same existing business-month-view-v4 finance endpoint checked from diagnostics UI, may perform its normal internal cache/schema maintenance",
+      "Only statuses, safe error codes, basic DOM markers and timing copied; no CSRF, credentials, orders or financial amounts"
+    ],
+    "limits": [
+      "This does NOT resolve the underlying authenticated financial failure automatically",
+      "Root cause remains unknown until owner sends diagnostic report",
+      "Do not repeat blind rollbacks or credential changes"
     ]
   }
 }
