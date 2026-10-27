@@ -54,3 +54,23 @@ Em atualizações futuras, conferir também login e dados existentes após o dep
 O histórico de versões anterior do Worker fica como referência de recuperação.
 O status público `/health` mantém uma versão legada e não identifica sozinho
 o release v11; usar o commit do deploy para essa confirmação.
+
+
+## Recovery publish request — 27/10/2026 (incident P1)
+
+The owner reported that the Command Center fails to load and agent cards are
+missing. PR #23 restored the pre-PR22 UI code at merge
+`6328a8557d806b2d0d7755271860d5f985f7c4bd`; its PR and main checks
+passed, but cloud deployment from Git was not independently confirmed.
+
+This documentation-only change intentionally touches `workers/app/**` so an
+App Cloudflare Git build with a scoped watch path can detect a change on main.
+Build command stays `npm run build:app`; deploy command stays
+`npm run deploy:app`. Neither code, D1, secrets, cron nor bindings change.
+
+**After this lands:** verify a successful App deployment of main in
+Cloudflare Workers & Pages -> brazacommerce-app -> Deployments. If no new build
+appears, inspect the Git integration's production branch, automatic deployments
+and Build watch paths, then trigger Retry build manually. GitHub CI does not
+prove Cloudflare deployment. Record the deployed version/build ID before
+declaring the UI recovered. Do not reauthorize Shopee or recreate data.
