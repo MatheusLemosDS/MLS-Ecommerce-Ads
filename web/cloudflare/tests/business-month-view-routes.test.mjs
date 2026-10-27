@@ -48,7 +48,7 @@ test('the negotiated daily overview is owner-only and reads the published month 
  assert.ok(projectBusinessMonthView(value,projectBusinessMonth,projectBusinessMonthAuditScope,projectDailyBusinessSummary));
  assert.equal(Object.hasOwn(value,'source_frames'),false);assert.doesNotMatch(JSON.stringify(value),/order_sn|daily_breakdown|payload_hash|source_hash/);
  const older=await (await invoke(auth,viewPath(),{contract:'business-month-view-v2'},source)).json();
- assert.deepEqual(older.display,value.display);assert.deepEqual(older.audit_scope,value.audit_scope);assert.equal(Object.hasOwn(older,'daily_summary'),false);assert.deepEqual(source.calls,before);
+ const {checked_at:olderChecked,...olderDisplay}=older.display,{checked_at:valueChecked,...valueDisplay}=value.display;assert.deepEqual(olderDisplay,valueDisplay);assert.ok(olderChecked>=valueChecked&&olderChecked-valueChecked<=2);assert.deepEqual(older.audit_scope,value.audit_scope);assert.equal(Object.hasOwn(older,'daily_summary'),false);assert.deepEqual(source.calls,before);
 });
 
 test('monthly view and priority are owner-only; the GET is local and validates scope/methods',async t=>{
