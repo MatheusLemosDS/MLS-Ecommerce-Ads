@@ -26,7 +26,7 @@ test('owner has the same six main destinations and ordering on Admin, Ads, deskt
 test('secondary work stays grouped without automatically opening a mobile overlay',()=>{
  const html=workspaceNavigation('/campaigns',{role:'owner'}),secondary=workspaceSecondaryNavigation('hermes',{role:'owner'});
  assert.ok(!destinations(primary(html)).includes('/campaigns'));
- for(const route of ['/campaigns','/admin?tab=hermes','/integrations','/admin?tab=history','/admin?tab=roadmap'])assert.ok(destinations(html).includes(route),route);
+ for(const route of ['#commandAgents','/campaigns','/admin?tab=hermes','/integrations','/admin?tab=history','/admin?tab=roadmap'])assert.ok(destinations(html).includes(route),route);
  assert.equal((html.match(/aria-current="page"/g)||[]).length,1);
  assert.match(secondary,/<details class="workspace-more" data-active="true">/);
  assert.doesNotMatch(secondary,/<details[^>]*\bopen(?:\s|>)/);
