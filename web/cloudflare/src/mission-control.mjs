@@ -267,6 +267,7 @@ function missionWorkspace(item,financeHtml){
   '<div class="mission-intro-status"><span class="mission-status" data-mission-status="'+id+'">Aguardando dados</span><span class="mission-breadcrumb-pill">Modo Observador · sem escrita comercial</span></div></header>'+
   '<nav class="mission-page-tabs" aria-label="Seções de '+item.name+'"><a href="#mission-'+id+'-tasks">Prioridades</a><a href="#mission-'+id+'-tools">Ferramentas</a>'+(id==='finance'?'<a href="#businessMonth">Financeiro detalhado</a>':'')+'</nav>'+ 
   '<div class="mission-stats" aria-label="Indicadores de '+item.name+'">'+missionMetrics+'</div>'+
+  (id==='finance'||id==='ads'?missionTrendPanelBody(id):'')+
   '<div class="mission-panels"><section class="mission-module"><div class="mission-module-head"><h3>Prioridades e alertas</h3><small>Somente evidências verificáveis</small></div><div id="mission-'+id+'-tasks" class="mission-tasks"><p class="mission-empty">Aguardando indicadores do agente.</p></div>'+coverage+
   '<p class="mission-last" id="mission-'+id+'-checked">Última leitura: aguardando dados.</p></section>'+
   '<aside class="mission-module" id="mission-'+id+'-tools"><div class="mission-module-head"><h3>Ferramentas e detalhes</h3><small>Acessos existentes</small></div><div class="mission-actions">'+shortcuts+'</div>'+
