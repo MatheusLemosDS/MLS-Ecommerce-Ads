@@ -502,3 +502,33 @@ Se a página voltar a hidratar agentes mas os números permanecerem em branco,
 usar `/admin/diagnostics` para obter `owner_probe` e `finance_month`.
 Nenhuma autorização da Shopee, orçamento Ads, dado persistido ou Worker Auth/
 Finance foi alterado pela correção.
+
+## M2 — PR #32: gráficos financeiros observacionais + setas de lucro/prejuízo (27/10/2026)
+
+O operador solicitou gráficos mais úteis e indicadores visuais de
+lucro/prejuízo em verde/vermelho. A PR #32 (merge `78f1ed1514bcc72a4bfebc069e7c39ce3f466995`)
+agrega uma série SVG diária de até **14 dias**, reutilizando **exclusivamente**
+o projetor `business_daily_summary_v1` já validado pelo
+`brazaDayDashboard`. Não há nova query D1, `fetch`, cron ou endpoint Shopee.
+
+Agora a **Visão Geral**, **MLS Finance** e **MLS Ads** têm seletor
+Resultado/Vendas/Ads. Os cartões da Central sinalizam resultados estimados
+positivos (verde), negativos (vermelho) e diferenças monetárias com
+setas ↑/↓ e percentual quando a base anterior não é zero.
+
+**Comparação só entre datas consecutivas, completas, com cobertura validada**.
+Hoje parcial não é comparado com ontem fechado; o chip identifica as datas
+efetivamente comparadas. Dias sem dados interrompem linhas, não viram zero.
+Saldo após custos conhecidos é exibido como parcial, e o aumento do gasto
+em Ads é laranja (não prova prejuízo). Lucro realizado, saldo bancário e
+atribuição Ads por SKU continuam não comprovados.
+
+CI PR `40599192490` e main `40599428231`: **2.087 testes
+Node / 0 falhas e 67 Python**, com Chrome real confirmando os três
+gráficos SVG, setas, valores, abas horizontais e zero erros JS.
+Cloudflare Builds App/Auth/Finance: **SUCCESS**.
+
+Status do produto: M2 financeira permanece EM ANDAMENTO e ainda precisa
+verificação autenticada dos dados reais da loja e da comparação Pending
+x Seller Centre. A mudança é UI/consumo local do snapshot validado, sem
+alterações comerciais e sem desbloqueio Ads/PROMO.
