@@ -193,14 +193,15 @@ CI: PR `40555474962`, main `40555756177`; **2.061 Node + 67 Python**. Produção
 Abrir **Central de Comando → Pending atual por pedido**, observar o estado real da auditoria e comparar os números/horários com o Seller Centre. Só implementar paginação cursor se a conta real apresentar `PARTIAL_PAGE` e a semântica do cursor for validada. `remaining_receivable_cents` e `realized_net_cents` continuam indisponíveis.
 
 
-## Retomada em 27/10/2026 — proposta em revisão
+## Retomada em 27/10/2026 — PR #22 integrada e CI validado
 
-Branch `feature/m2-pending-evidence-copy`: botão **Copiar diagnóstico
+PR #22 (merge `2e35ac0267757f748912f36756c89584aa13efe6`): botão **Copiar diagnóstico
 (sem pedidos)** dentro de Pending atual por pedido, serializado por whitelist
 em `mls_pending_audit_evidence_v1`. Sem linha, hash, identificador de loja,
 credencial, network, polling ou D1 extra. Suporta comparar horários e valores
-com o Seller Centre. Os testes de contrato e UI foram acrescentados; até
-confirmação de CI/merge/deploy, **não tratar como publicado**.
+com o Seller Centre. Validação GitHub concluída: **2.064 Node + 67 Python**, PR run `40559446787`,
+main run `40559823142`. Merge e CI estão confirmados; **deploy efetivo
+Cloudflare ainda requer verificação**, portanto não marcar como publicado sem evidência.
 
 M2 mantém o bloqueio para paginação cursor sem evidência real e mantém
 `remaining_receivable_cents` e `realized_net_cents` indisponíveis.

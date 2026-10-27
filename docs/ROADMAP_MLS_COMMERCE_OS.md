@@ -316,9 +316,10 @@ Retomar por:
 - manter Ads/PROMO LOCKED e o lucro realizado desconhecido sem liquidação comprovada.
 
 
-**Incremento em revisão — evidência local de Pending:** acrescentar ação
+**Incremento integrado — PR #22, evidência local de Pending:** acrescentar ação
 manual de copiar um JSON sanitizado com estado, cobertura, valores agregados e
 horários da auditoria Pending. É um apoio para a observação da conta real,
 não substitui o Seller Centre, não acessa Shopee e não libera paginação,
-recebível ou lucro realizado. Branch `feature/m2-pending-evidence-copy`;
-publicação depende de PR, CI e deploy confirmados.
+recebível ou lucro realizado. Merge `2e35ac0267757f748912f36756c89584aa13efe6`;
+CI PR `40559446787` e main `40559823142`, **2.064 Node + 67 Python**.
+Deploy Cloudflare e conferência autenticada do Seller Centre continuam pendentes de evidência.

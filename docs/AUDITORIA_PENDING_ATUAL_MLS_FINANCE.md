@@ -81,7 +81,7 @@ competência mensal.
 - Ads/PROMO permanece **LOCKED**.
 
 
-## Preparação para validação da conta real — diagnóstico copiável (PR em revisão)
+## Preparação para validação da conta real — diagnóstico copiável (PR #22 integrada; deploy a confirmar)
 
 A Central de Comando passa a oferecer **Copiar diagnóstico (sem pedidos)** dentro
 de **Pending atual por pedido**. O botão usa somente o resultado local de

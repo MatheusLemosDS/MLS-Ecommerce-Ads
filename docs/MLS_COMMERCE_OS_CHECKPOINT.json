@@ -30,7 +30,7 @@
     "merge_commit": "9c418fd3010f46957d1ce52345baacd76041c788"
   },
   "current_phase": "M2_FINANCE_RETURNS_RECONCILIATION",
-  "working_branch": "feature/m2-pending-evidence-copy",
+  "working_branch": null,
   "current_status": "IN_PROGRESS",
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
@@ -61,7 +61,8 @@
     "has_more, detalhe anterior, valores não convertíveis e diferença descritiva viram estados explícitos do MLS Finance",
     "OBSERVED_MATCH não vira prova de competência mensal, saldo a receber ou depósito bancário",
     "OBSERVED_DIFFERENT vira trabalho de validação no Seller Centre, não erro contábil",
-    "Overflow na soma visível bloqueia MLS Auditor e Hermes em vez de fabricar valor"
+    "Overflow na soma visível bloqueia MLS Auditor e Hermes em vez de fabricar valor",
+    "Diagnostico Pending atual copiavel com whitelist sem hashes/identificadores de pedidos, sem provider ou D1 extra"
   ],
   "remaining_this_phase": [
     "Observar o estado real da nova auditoria Pending na conta autenticada e comparar quantidade/valores/horários com o Seller Centre",
@@ -108,9 +109,9 @@
     }
   },
   "next_actions": [
-    "Revisar CI e PR do diagnóstico Pending copiável; publicar apenas após aprovação e deploy confirmados",
-    "Na Central de Comando abrir Pending atual por pedido e copiar evidência sanitizada de overview/detail/auditoria",
-    "Comparar estados, valores e horários com o Seller Centre antes de permitir paginação ou interpretação financeira",
+    "Confirmar que a compilacao Cloudflare App correspondente ao merge 2e35ac026775 foi publicada, sem assumir deploy somente pelo CI GitHub",
+    "Abrir Central de Comando > Pending atual por pedido e usar Copiar diagnostico (sem pedidos)",
+    "Comparar overview, subtotal, cobertura, has_more e timestamps com o Seller Centre antes de paginar ou inferir valores realizados",
     "Somente se PARTIAL_PAGE aparecer e a resposta real for consistente, implementar paginação cursor em background mantendo uma leitura privada por oportunidade",
     "Manter remaining_receivable_cents separado: Pending atual não é automaticamente saldo de uma competência",
     "Manter realized_net_cents indisponível até existir evidência de liquidação bancária"
@@ -122,6 +123,28 @@
     "Conferir visual autenticado da Central de Comando em desktop e celular; ajustes visuais podem ocorrer dentro de M2 sem alterar contratos"
   ],
   "latest_increment": {
+    "id": "M2_PENDING_EVIDENCE_COPY",
+    "status": "MERGED_CI_PASS_DEPLOY_NOT_YET_VERIFIED",
+    "pull_request": 22,
+    "merge_commit": "2e35ac0267757f748912f36756c89584aa13efe6",
+    "validation": {
+      "pr_run": 40559446787,
+      "main_run": 40559823142,
+      "node_tests": 2064,
+      "python_tests": 67
+    },
+    "features": [
+      "Copia voluntaria de evidencia Pending agregada, com contrato whitelist e nenhuma linha ou identificador de pedido",
+      "Feedback acessivel em navegadores sem permissao de clipboard",
+      "Sem calls Shopee ou D1 novas e sem polling ou escrita externa"
+    ],
+    "limits": [
+      "Deploy Cloudflare ainda requer confirmacao na conta",
+      "Seller Centre real nao conferido",
+      "remaining_receivable_cents e realized_net_cents seguem indisponiveis sem evidencia"
+    ]
+  },
+  "last_confirmed_production_increment": {
     "id": "M2_PENDING_AUDIT",
     "status": "PUBLISHED",
     "pull_request": 21,
@@ -159,19 +182,6 @@
       "OBSERVED_DIFFERENT não é automaticamente erro contábil",
       "Paginação completa continua condicionada à validação real do cursor/semântica",
       "realized_net_cents permanece indisponível sem liquidação bancária"
-    ]
-  },
-  "pending_increment": {
-    "id": "M2_PENDING_EVIDENCE_COPY",
-    "status": "IN_REVIEW",
-    "branch": "feature/m2-pending-evidence-copy",
-    "contract": "mls_pending_audit_evidence_v1",
-    "scope": "READ_ONLY_LOCAL_NO_SHOPEE_CALLS_NO_D1_EXTRA_NO_ORDER_HASHES",
-    "requires": [
-      "CI_PASS",
-      "PR_MERGED",
-      "DEPLOY_CONFIRMED",
-      "SELLER_CENTRE_VALIDATION"
     ]
   }
 }
