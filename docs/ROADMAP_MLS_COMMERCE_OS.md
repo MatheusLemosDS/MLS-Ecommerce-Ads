@@ -314,3 +314,11 @@ Retomar por:
 - somente habilitar `remaining_receivable` se houver contrato e evidência suficientes; caso contrário manter `null`;
 - observar o tracker temporal real após a próxima virada de mês sem duplicar coleta;
 - manter Ads/PROMO LOCKED e o lucro realizado desconhecido sem liquidação comprovada.
+
+
+**Incremento em revisão — evidência local de Pending:** acrescentar ação
+manual de copiar um JSON sanitizado com estado, cobertura, valores agregados e
+horários da auditoria Pending. É um apoio para a observação da conta real,
+não substitui o Seller Centre, não acessa Shopee e não libera paginação,
+recebível ou lucro realizado. Branch `feature/m2-pending-evidence-copy`;
+publicação depende de PR, CI e deploy confirmados.
