@@ -205,7 +205,7 @@ function page(body,title='MLS Commerce OS · Gestão da loja'){return new Respon
 function loginPage(error=''){return page(loginBody(error));}
 async function scheduledWork(env,services,now=()=>Date.now()){
  await setup(env);
- const output={analysis:'DEFERRED',collection:'DEFERRED',classification:'DEFERRED',production:'DEFERRED',registry:'DEFERRED',costs:'DEFERRED',history:'DEFERRED',reconciliation:'DEFERRED',releases:'DEFERRED',lane:'MAINTENANCE'};
+ const output={analysis:'DEFERRED',collection:'DEFERRED',classification:'DEFERRED',production:'DEFERRED',registry:'DEFERRED',costs:'DEFERRED',history:'DEFERRED',reconciliation:'DEFERRED',releases:'DEFERRED',release_coverage:'DEFERRED',lane:'MAINTENANCE'};
  // First-time corrections can themselves consume the invocation budget. The
  // marker is consumed once even if an owner request initialized this isolate.
  if(MAINTENANCE_PENDING.delete(env.ADMIN_DB)){output.collection='MAINTENANCE';return output;}
@@ -214,7 +214,7 @@ async function scheduledWork(env,services,now=()=>Date.now()){
  let repeatHistory=false;const canRun=async()=>(await readBusinessSyncState(env)).enabled;
  const productionSource=async(...args)=>{if(!await canRun())throw Error('BACKGROUND_COLLECTION_PAUSED');return services.getFinanceProductionOrders(...args);};
  try{
-  if(lease.lane==='PAUSED'){for(const key of ['collection','classification','production','registry','costs','history','reconciliation','releases'])output[key]='PAUSED';return output;}
+  if(lease.lane==='PAUSED'){for(const key of ['collection','classification','production','registry','costs','history','reconciliation','releases','release_coverage'])output[key]='PAUSED';return output;}
   if(lease.lane==='FINANCE'){
    // Retain the previous complete creation-date cohort before opening a day.
    try{await captureProductionCostMonth(env,month,{now});}catch{}
@@ -224,9 +224,15 @@ async function scheduledWork(env,services,now=()=>Date.now()){
     if(selection.ready&&typeof services?.getFinanceHistoricalVariantEvidence==='function'){
      const historical=await syncHistoricalCostEvidence(env,{month,item_ids:selection.item_ids},services.getFinanceHistoricalVariantEvidence,{now,canRun});output.history=historical.work;repeatHistory=historical.work==='PROGRESSED'&&!historical.scan.complete;
     }else if(selection.ready)output.history='UNAVAILABLE';
-    if(!selection.ready&&(typeof services?.getFinanceReconciliation==='function'||typeof services?.getFinanceEscrowReleases==='function')){
-     const audit=await runBusinessFinancialAudits(env,services,{month},{now,canRun});
-     output.reconciliation=audit.returns_status;output.releases=audit.releases_status;repeatHistory=audit.repeat;
+    if(!selection.ready){
+     if(typeof services?.getFinanceReconciliation==='function'||typeof services?.getFinanceEscrowReleases==='function'){
+      const audit=await runBusinessFinancialAudits(env,services,{month},{now,canRun});
+      output.reconciliation=audit.returns_status;output.releases=audit.releases_status;repeatHistory=audit.repeat;
+     }
+     if(typeof services?.getFinanceEscrowReleaseCoverage==='function'){
+      try{const coverage=await runBusinessEscrowReleaseCoverage(env,services.getFinanceEscrowReleaseCoverage,{through_month:month},{now,canRun});output.release_coverage=coverage.status;}
+      catch{output.release_coverage='ERROR';}
+     }else output.release_coverage='NO_SOURCE';
     }
    }catch{output.history='ERROR';}
   }else if(lease.lane==='CATALOG'){
