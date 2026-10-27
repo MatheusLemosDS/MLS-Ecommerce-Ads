@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {buildMlsAgentRegistry} from '../src/agent-registry.mjs';
+import {AGENT_REGISTRY_CLIENT,commandCenterBody} from '../src/agent-registry-view.mjs';
 
 const day=(overrides={})=>({
  schema:'mls_day_snapshot_v1',
@@ -90,4 +91,15 @@ test('running collection is working rather than healthy and creates no provider-
  assert.equal(value.hermes.status,'WORKING');
  assert.ok(value.priorities.some(item=>item.code==='COLLECTING'&&item.severity==='WORKING'));
  assert.ok(value.agents.every(agent=>['WORKING','HEALTHY'].includes(agent.status)));
+});
+
+
+test('command center is read-only, renders the initial agent surfaces and adds no timer or provider request',()=>{
+ const html=commandCenterBody();
+ for(const id of ['commandCenter','commandCenterNet','commandCenterPriorities','commandCenterAgents','commandAgents'])assert.match(html,new RegExp('id="'+id+'"'));
+ for(const label of ['Central de Comando','MLS Hermes','Agentes em modo Observador'])assert.match(html,new RegExp(label));
+ assert.doesNotMatch(AGENT_REGISTRY_CLIENT,/\bfetch\s*\(|setInterval\s*\(|\/api\//);
+ assert.match(AGENT_REGISTRY_CLIENT,/MutationObserver/);
+ assert.match(AGENT_REGISTRY_CLIENT,/brazaDayDashboard/);
+ assert.match(AGENT_REGISTRY_CLIENT,/brazaMonthDashboard/);
 });
