@@ -9,6 +9,7 @@ import {projectProductIndexRequest,projectProductIndexFrame,productIndexRequestM
 import {projectHistoricalVariantEvidenceRequest,projectHistoricalVariantEvidenceFrame,historicalVariantEvidenceRequestMatches,historicalVariantEvidenceDiagnostic} from './historical-variant-evidence-frame.mjs';
 import {projectEscrowReleaseRequest,projectEscrowReleaseFrame,projectEscrowReleaseEvidenceFrame,projectEscrowReleaseCoverageRequest,projectEscrowReleaseCoverageFrame,escrowReleaseRequestMatches,escrowReleaseCoverageRequestMatches} from './escrow-release-frame.mjs';
 import {projectReconciliationRequest,projectReconciliationFrame,projectReconciliationEvidenceFrame,projectReconciliationMoneyFrame,reconciliationRequestMatches} from './reconciliation-frame.mjs';
+import {projectIncomeOverviewFrame} from './income-overview-frame.mjs';
 
 const ORIGIN = 'https://auth.brazacommerce.com.br';
 const PREFIX = '/shopee/finance';
@@ -34,6 +35,7 @@ const PRODUCT_INDEX_PATH = '/internal/shopee/finance/product-index';
 const HISTORICAL_EVIDENCE_PATH = '/internal/shopee/finance/historical-variant-evidence';
 const RECONCILIATION_PATH = '/internal/shopee/finance/reconciliation';
 const ESCROW_RELEASES_PATH = '/internal/shopee/finance/escrow-releases';
+const INCOME_OVERVIEW_PATH = '/internal/shopee/finance/income-overview';
 const SAMPLE_FIELDS = ['escrow_amount','original_cost_of_goods_sold','buyer_total_amount','commission_fee','service_fee','seller_transaction_fee','actual_shipping_fee','ads_escrow_top_up_fee_or_technical_support_fee','items'];
 const SAMPLE_ITEM_FIELDS = ['item_id','model_id','line_item_id','quantity_purchased','original_price','selling_price','order_discounted_price','is_kit','kit_items'];
 const SAMPLE_TYPES = new Set(['number','string','boolean','object','array','null','mixed']);
@@ -271,7 +273,7 @@ function safeStatus(value) {
   };
 }
 
-export function createFinanceWorker({adapter, paymentSample, paymentPreview, variantCatalog, storePeriod, businessPeriod, dailyOrders, productionOrders, productIndex, historicalVariantEvidence, reconciliation, escrowReleases, escrowReleaseCoverage, fetchImpl, now = () => Date.now()} = {}) {
+export function createFinanceWorker({adapter, paymentSample, paymentPreview, variantCatalog, storePeriod, businessPeriod, dailyOrders, productionOrders, productIndex, historicalVariantEvidence, reconciliation, escrowReleases, escrowReleaseCoverage, incomeOverview, fetchImpl, now = () => Date.now()} = {}) {
   return {
     async fetch(request, env) {
       let url;
@@ -283,6 +285,15 @@ export function createFinanceWorker({adapter, paymentSample, paymentPreview, var
       }
       const callback = url.pathname === PREFIX + '/callback';
       if (url.origin !== ORIGIN || url.username || url.password || url.hash) return failure('NOT_FOUND', 404, callback);
+      if(url.pathname===INCOME_OVERVIEW_PATH){
+        if(request.method!=='POST')return failure('METHOD_NOT_ALLOWED',405);
+        if(url.search)return failure('INVALID_REQUEST',400);
+        const routerError=await trustedRouter(request,env);if(routerError)return failure(routerError,routerError==='FORBIDDEN'?403:503);
+        if(env?.FINANCE_CONNECTION_ENABLED!=='true'||typeof incomeOverview!=='function'||typeof fetchImpl!=='function'||typeof now!=='function')return failure('CONFIGURATION_PENDING',503);
+        const input=await privateFinanceBody(request);if(!input)return failure('INVALID_REQUEST',400);
+        try{const frame=projectIncomeOverviewFrame(await incomeOverview(env,{fetchImpl,now}));if(!frame)throw Error();return response(frame,200,{json:true});}
+        catch{return response({error:'FINANCE_INCOME_OVERVIEW_UNAVAILABLE'},502,{json:true});}
+      }
       if(url.pathname===ESCROW_RELEASES_PATH){
         if(request.method!=='POST')return failure('METHOD_NOT_ALLOWED',405);
         if(url.search)return failure('INVALID_REQUEST',400);
