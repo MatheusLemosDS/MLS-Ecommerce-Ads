@@ -20,7 +20,10 @@ export function projectMissionDailyTrend(summary, selected){
  const all=summary.days.filter(row=>validDate(row?.date)&&row.date<=selected).slice(-14);
  if(!all.length)return null;
  const points=all.map(row=>{
-  const state=['OPERATIONAL','PARTIAL_COSTS'].includes(row.state)?row.state:'UNAVAILABLE';
+  // The validated financial daily projector emits PROVISIONAL, while the
+  // read-only chart contract names the equivalent available state OPERATIONAL.
+  // Without this translation, real days are incorrectly rendered as missing.
+  const state=row.state==='PROVISIONAL'||row.state==='OPERATIONAL'?'OPERATIONAL':row.state==='PARTIAL_COSTS'?'PARTIAL_COSTS':'UNAVAILABLE';
   const partial=Boolean(row.day_partial),basis=state==='PARTIAL_COSTS'?'KNOWN_COSTS':state==='OPERATIONAL'?'ESTIMATE':null;
   const unknown=state==='UNAVAILABLE',net=unknown?null:state==='PARTIAL_COSTS'?row.known_estimate_cents:row.estimate_cents;
   const pending=Array.isArray(row.pending)?row.pending:[];
