@@ -1,6 +1,6 @@
 # MLS Listing Factory V1 — preparador local de anúncios (28/10/2026)
 
-STATUS: PROTÓTIPO FUNCIONAL DE REVISÃO LOCAL EM PR #51. Não publicado no MLS Commerce OS, não consulta Shopee, não faz upload nem cria anúncios.
+STATUS: PR #51 contém o CLI local; PR #56 (draft, empilhada) contém o editor visual de rascunhos no painel autenticado Produtos. Nenhuma PR foi integrada ou publicada no MLS Commerce OS. Não consulta Shopee, não faz upload nem cria anúncios.
 
 ## Requisitos
 
@@ -52,3 +52,23 @@ O arquivo revisao.json conterá total por lote, pendências e cada anúncio prop
 ## Limites de segurança
 
 O script não acessa a internet nem roda operações Shopee. Nunca carregue credenciais/cookies/IDs de compradores no JSON. A assinatura de imagem e o hash não garantem que um arquivo será aceito no marketplace; uma futura etapa fará decodificação real, validação por categoria e MediaSpace. O schema pode evoluir sem alterar a base M2.
+
+## Editor visual no painel Produtos — PR #56
+
+Na versão de teste da PR #56, abra **Produtos → Fábrica de anúncios** como administrador. Informe código da arte, prefixo SKU, título e descrição. Tamanhos P/M/G/GG estão pré-selecionados; G1/G2/G3 e outros tamanhos (ex.: 2, 4, 6, 8, Único) são opcionais. O preço base (R$) é aplicado automaticamente aos tamanhos ainda não editados; preços individualizados permanecem. O botão **Aplicar a todos os tamanhos** substitui os preços individuais quando usado explicitamente. Estoque vazio é UNKNOWN, não zero.
+
+Selecione de **5 a 9 arquivos JPG/PNG** da sua pasta de mockups. O navegador confere assinatura do formato, dimensões de cabeçalho antes da decodificação (limite de 16 milhões de pixels), decodifica realmente cada imagem, cria uma prévia pequena e calcula SHA-256 dos bytes. O processamento é local com até três arquivos por vez. Uma imagem malformada permanece como pendência; nunca é contada como aprovada. **O editor guarda apenas metadados, hashes e prévias leves em memória desta aba; não faz upload nem conserva os arquivos brutos**. Não feche a aba antes de exportar.
+
+Clique **Adicionar à fila de revisão** por arte. A fila permite **Editar**, **Remover** e **Limpar fila**. Exporte **anúncios JSON** (mesmo schema do CLI, com nomes das fotos) e **revisão JSON** (metadados das imagens, erros e avisos). O CLI continua disponível independentemente. `READY_FOR_OPERATOR_REVIEW` não significa estoque validado, preço rentável, permissão na Shopee ou anúncio publicado.
+
+**Teste automatizado**: `web/cloudflare/tests/mls-listing-factory-owner-ui.test.mjs` verifica HTML compilado normal/minificado; `web/cloudflare/tests/mls-listing-factory-chrome.test.mjs` abre o Chrome real e valida PNGs, extensão falsa, imagens excessivas, preços por tamanho, edição, conteúdo escapado e JSON exportado. A PR permanece draft até validação visual autenticada no desktop/celular e checagem dos gates.
+
+## Continuar um lote pelo JSON — incremento PR #56
+
+O editor exige preço informado pelo operador: **não há preço padrão**. O preço base atualiza somente tamanhos ainda não personalizados; o botão Aplicar a todos substitui os preços individuais por solicitação expressa.
+
+Depois de criar seus anúncios, clique em **Exportar anúncios JSON**. Use **Retomar anúncios de um arquivo JSON anterior** para importar um manifesto do mesmo formato (até 1 MiB e até 500 anúncios). A importação substitui a fila somente após confirmação. O relatório de revisão não é aceito como entrada. O leitor rejeita nomes de imagens inválidos, variações malformadas e campos inesperados. Para continuar no Codex, use o mesmo arquivo JSON, sem incluir tokens.
+
+As fotos não fazem parte do JSON: o editor conserva seus nomes, mas exige **reanexar os mockups locais** antes de considerar um anúncio pronto para revisão. Pode editar o título sem perder as referências às fotos, porém sem os arquivos originais o estado continua NEEDS_CORRECTION. A fila mostra **8 anúncios por página** para não sobrecarregar o celular quando houver centenas de artes.
+
+Os testes Chrome incluem retorno do manifesto, conteúdo HTML escapado, arquivo JPEG falso, dimensões excessivas e paginação de 19 anúncios. A CI final da integração passou no run #40788713558: **2.126 testes Node e 67 Python**, com Chrome real, 13/13 blobs de código idênticos aos da PR #56 e builds App/Auth/Finance gerados. **Não houve merge ou deploy**; QA visual autenticada no desktop/celular segue pendente. Ver MLS_LISTING_FACTORY_CI_2026_10_28.md.

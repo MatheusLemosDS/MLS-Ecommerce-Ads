@@ -9,8 +9,8 @@ Leia, nesta ordem, antes de qualquer alteração:
 ## Regras que não podem ser ignoradas
 
 - Produto: MLS Commerce OS. MLS Hermes é supervisor, modo OBSERVER até autorização específica.
-- PR #48: busca V3.6 sobre a main. PR #47: M3 Products/Pricing Observer. PR #51: fundamentos da pesquisa Shopee/Listing Factory. São branches diferentes; NÃO combinar ou fazer merge automático; revalidar conflitos e CI por ordem.
-- A main é baseline publicada em b058e832 no momento deste handoff. Antes de trabalhar, releia a main e os PRs porque outros agentes podem ter avançado.
+- PR #48: busca V3.6 sobre a main. PR #47: M3 Products/Pricing Observer. PR #51: fundamentos da pesquisa Shopee/Listing Factory. PR #56: UI owner Listing Factory, empilhada sobre #51. São branches diferentes; NÃO combinar ou fazer merge automático; revalidar conflitos e CI por ordem.
+- A main de referência está no merge documental da PR #55: a137b9d68971a632fceee2c8c41ab236bbc90a69. Antes de trabalhar, releia a main e os PRs porque outros agentes podem ter avançado.
 - M2 Finance/Returns NÃO foi encerrada: Seller Centre, Pending, liberações e devoluções devem ser validados na conta. Issue #50.
 - Não inventar lucros, estoque, taxas, preços, vendas, eventos ou permissões Shopee. Dados ausentes = UNKNOWN/BLOCKED, jamais zero.
 - Ads/PROMO continuam LOCKED. Nunca enviar anúncios, alterar preços/campanhas, criar promoção, confirmar eventos de push, reconectar OAuth ou modificar pedidos sem permissão real e aprovação do operador. M6/M7 definem os gates de escrita.
@@ -31,3 +31,5 @@ Leia, nesta ordem, antes de qualquer alteração:
 6. Atualizar o roadmap, checkpoint, docs/MLS_CODEX_HANDOFF_2026_10_28.md e NEXT_CHAT_HANDOFF.txt ao completar cada fase; registrar id do PR, commit e gates pendentes.
 
 Para usar o gerador local: docs/MLS_LISTING_FACTORY_V1.md. Usar Node >=24. Nenhum script deste projeto deve publicar na Shopee por padrão.
+
+- PR #56: retomada JSON, preço vazio por segurança, fila com oito por página. CI final verde #40788713558 em candidato sem conflitos PR #58 (13/13 arquivos idênticos), SHA App bbbe1b9efdf0a6c11e507c34c92730ddbb8502fb367c5cfe33c031ba3850d3cd. PR #58 fechada sem merge; #56 novamente empilhada sobre #51. Falta QA visual autenticada, merge ordenado e validação real de permissões/financeiro. Não publicar automaticamente.

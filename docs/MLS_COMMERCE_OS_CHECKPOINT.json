@@ -30,8 +30,8 @@
     "merge_commit": "9c418fd3010f46957d1ce52345baacd76041c788"
   },
   "current_phase": "M2_FINANCE_RETURNS_RECONCILIATION",
-  "working_branch": "feature/shopee-research-listing-factory-foundations-20261028",
-  "current_status": "M2_OPEN_M3_SHADOW_PR47_OPEN_LISTING_FACTORY_PR51_DRAFT_CI_GREEN_PRODUCTION_UNCHANGED",
+  "working_branch": "feature/mls-listing-factory-owner-ui-20261028",
+  "current_status": "M2_NOT_CLOSED_M3_SHADOW_PR47_DRAFT_PR51_PR56_CI_GREEN_OWNER_QA_PENDING_NO_PROD_DEPLOY",
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
     "Repasse-base, ajuste, repasse após ajuste e liberação exibidos sem dupla dedução",
@@ -120,7 +120,10 @@
     "Codex e ChatGPT usarem AGENTS.md + docs/MLS_CODEX_HANDOFF_2026_10_28.md; evitar branch simultanea",
     "Implementar UI owner Listing Factory apos CI e integracao consciente com PR #48",
     "Verificar categoria do app/escopos Shopee, escrows em lote GET/POST e push recovery sem ACK",
-    "Manter M2 issue #50 aberta e anuncios/precificacao/estoque externos BLOQUEADOS"
+    "Manter M2 issue #50 aberta e anuncios/precificacao/estoque externos BLOQUEADOS",
+    "PR #56 Listing Factory UI: revisar CI do HEAD e hash App, QA desktop/mobile e integração sobre PR #51",
+    "Run current PR #56 Node+Python+Chrome+Workers CI (manual workflow_dispatch if Actions does not auto-start), then restore stacked base PR #51",
+    "PR #56: CI green 40788713558 (PR #58 temporária fechada); QA desktop/mobile autenticada antes de integrar PR #51→#56"
   ],
   "m0_followup": [
     "Conferir visual autenticado em desktop e celular durante M1; corrigir apenas branding/layout sem renomear infraestrutura"
@@ -477,7 +480,68 @@
         "finance_escrow_contract": 53,
         "push_recovery": 54
       },
-      "next_action": "Implement owner-only Listing Factory preview/export after PR #51 verified (issue #52), keep permission and M2 gates"
+      "next_action": "Implement owner-only Listing Factory preview/export after PR #51 verified (issue #52), keep permission and M2 gates",
+      "owner_ui": {
+        "issue": 52,
+        "pr": 56,
+        "branch": "feature/mls-listing-factory-owner-ui-20261028",
+        "head_sha": "433ec7484fb3f10153d159f6cd353225bec6dfed",
+        "status": "DRAFT_CI_GREEN_2126_NODE_67_PYTHON_OWNER_QA_PENDING_NO_MERGE_NO_DEPLOY",
+        "last_successful_pre_refinement_run": 40784356050,
+        "last_green_node": 2126,
+        "last_green_python": 67,
+        "features": [
+          "owner Products local listing editor",
+          "file header and genuine bitmap decode",
+          "sha256 and compressed preview only, no binary storage",
+          "5-to-9 photo internal review policy",
+          "per-size prices and explicit override",
+          "edit/delete/clear draft queue",
+          "manifest and review JSON downloads",
+          "no storage, provider I/O or Ads writes",
+          "safe JSON import for draft continuation, requires reattaching local photos",
+          "eight-card pagination across up to 500 drafts",
+          "no prefilled fictitious price; explicitly operator supplied"
+        ],
+        "open_gates": [
+          "Owner desktop and mobile authenticated visual QA and file-size trial",
+          "Integrate PR #51 then PR #56, reconcile PR #48 catalog UI",
+          "M2 issue #50 financial reconciliation",
+          "Official Shopee app grants, stock/cost/taxes/Ads attribution before any official publishing"
+        ],
+        "safety": "OBSERVER_ONLY",
+        "last_ci_attempt": {
+          "run": 40784720891,
+          "status": "FAILED_TEST_FIX_AND_APP_SHA_PENDING_NEW_RUN",
+          "node_pass": 2121,
+          "node_fail": 5,
+          "comment": "4 SHA integrity misses fixed in later commit; Chrome filename mismatch corrected with canonical validFile on HEAD."
+        },
+        "latest_code_patch": "ValidFile import safety, operator-provided price, JPEG/PNG decode limits, JSON roundtrip and queue pagination. Exact 13 source/test blobs confirmed by CI PR58.",
+        "ci_status": "GREEN_VALIDATED_ON_CLEAN_MAIN_INTEGRATION_PR58_SOURCE_BLOBS_MATCH_13_OF_13",
+        "verification": {
+          "run": 40788713558,
+          "status": "SUCCESS",
+          "node_pass": 2126,
+          "node_fail": 0,
+          "python_pass": 67,
+          "chromium": "PASS",
+          "app_build": "PASS",
+          "auth_build": "PASS",
+          "finance_build": "PASS",
+          "source_file_identity": "13_OF_13_SHA_IDENTICAL_WITH_PR56",
+          "app_sha256": "bbbe1b9efdf0a6c11e507c34c92730ddbb8502fb367c5cfe33c031ba3850d3cd",
+          "auth_sha256": "1fef431c8573e05563c7938d95be0976a160bc603340084aa747ee0b73e7ec64",
+          "finance_sha256": "b2483fc6107ecb4782e746becfe1b69ee6e3b9d3f0a6109351390b11b9303ca3",
+          "validation_pr": 58,
+          "validation_pr_state": "CLOSED_WITHOUT_MERGE",
+          "authenticated_owner_visual_qa": "PENDING",
+          "external_shopee_publication": "NOT_ALLOWED",
+          "documentation": "docs/MLS_LISTING_FACTORY_CI_2026_10_28.md"
+        },
+        "last_verified_code_commit": "433ec7484fb3f10153d159f6cd353225bec6dfed",
+        "last_verified_ci_run": 40788713558
+      }
     }
   }
 }
