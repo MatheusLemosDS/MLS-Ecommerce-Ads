@@ -109,6 +109,7 @@ export function buildMlsAgentRegistry({day=null,month=null,reconciliation=null,r
  if(month?.status==='RUNNING'&&!priorities.some(item=>item.code==='COLLECTING'))priorities.push(Object.freeze({code:'COLLECTING',severity:'WORKING',title:'Coleta financeira em andamento',detail:'O servidor está atualizando o mês sem depender desta aba.',href:'#businessMonth',agent_id:'auditor'}));
  if(safe(releaseSummary?.not_located_orders)&&releaseSummary.not_located_orders>0&&!priorities.some(item=>item.code==='MATCHING_INCOMPLETE'))priorities.push(Object.freeze({code:'RELEASES_NOT_LOCATED',severity:'WORKING',title:'Pedidos sem liberação localizada neste calendário',detail:releaseSummary.not_located_orders+' pedido(s) pagos ainda não aparecem no calendário de liberações consultado. Isso não comprova falta de recebimento.',href:'#businessEscrowReleases',agent_id:'finance'}));
  const dailyNet=money(day?.net_cents),dailySales=money(day?.sales_cents),dailyAds=money(day?.ads_spend_cents),dailyPaid=safe(day?.paid_orders)&&day.paid_orders>=0?day.paid_orders:null;
+ const dailyObserved=day?.schema==='mls_day_snapshot_v1'&&[dailyNet,dailySales,dailyAds,dailyPaid].some(value=>value!==null);
  let margin=null;
  if(dailyNet!==null&&dailySales!==null&&dailySales>0){
   const value=BigInt(dailyNet)*10000n/BigInt(dailySales);
@@ -124,7 +125,7 @@ export function buildMlsAgentRegistry({day=null,month=null,reconciliation=null,r
  const reviews=['cancel_pending','other','unknown'].reduce((total,key)=>total+(safe(month?.coverage?.[key])&&month.coverage[key]>=0?month.coverage[key]:0),0);
  const returnsMetric=monthReady&&safe(month?.coverage?.returns)&&month.coverage.returns>=0?returns+returnsUnknown+reviews:null;
  const has=code=>pending.includes(code);
- const collectionWorking=month?.status==='RUNNING'||has('COLLECTING'),working=collectionWorking||priorities.some(item=>item.severity==='WORKING');
+ const collectionWorking=month?.status==='RUNNING'||has('COLLECTING'),working=collectionWorking||(monthReady&&!dailyObserved)||priorities.some(item=>item.severity==='WORKING');
  const blocked=priorities.some(item=>item.severity==='BLOCKED');
  const attention=priorities.some(item=>item.severity==='ATTENTION');
  const overall=blocked?'BLOCKED':attention?'ATTENTION':working?'WORKING':monthReady?'HEALTHY':'WORKING';
@@ -139,8 +140,8 @@ export function buildMlsAgentRegistry({day=null,month=null,reconciliation=null,r
  const auditAttention=auditBlocked||has('FINANCIAL_SOURCE_STALE')||has('PERIOD_LIMIT_REACHED')||has('RELEASE_SOURCE_UNAVAILABLE')||has('SOURCE_MISSING');
  const pendingAuditWorking=['WAITING_SAVED_DETAIL','DETAIL_OLDER_THAN_OVERVIEW','PARTIAL_PAGE','AMOUNT_PARTIAL','OBSERVED_DIFFERENT'].includes(pendingAuditState);
  const financeWorking=expenseUpcoming||pendingAuditWorking||collectionWorking||has('MATCHING_INCOMPLETE')||has('RELEASES_COLLECTING')||(safe(releaseSummary?.not_located_orders)&&releaseSummary.not_located_orders>0);
- const financeStatus=monthReady?financeAttention?'ATTENTION':financeWorking?'WORKING':'HEALTHY':'WORKING';
- const adsStatus=monthReady?adsAttention?'ATTENTION':collectionWorking?'WORKING':'HEALTHY':'WORKING';
+ const financeStatus=monthReady?financeAttention?'ATTENTION':financeWorking||!dailyObserved?'WORKING':'HEALTHY':'WORKING';
+ const adsStatus=monthReady?adsAttention?'ATTENTION':collectionWorking||!dailyObserved?'WORKING':'HEALTHY':'WORKING';
  const productStatus=monthReady?productAttention?'ATTENTION':collectionWorking?'WORKING':'HEALTHY':'WORKING';
  const productionStatus=monthReady?productAttention?'ATTENTION':collectionWorking?'WORKING':'HEALTHY':'WORKING';
  const returnsStatus=monthReady?returnAttention?'ATTENTION':collectionWorking?'WORKING':'HEALTHY':'WORKING';
