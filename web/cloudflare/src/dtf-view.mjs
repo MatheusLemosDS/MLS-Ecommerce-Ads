@@ -66,6 +66,32 @@ export const DTF_CLIENT=String.raw`(()=>{
  async function open(){if(!api||!active||!visible()||busy)return;await sync();}
  function stop(){active=false;lifecycle++;clearInterval(timer);timer=null;releaseDownloads();library?.close();library=null;}
  async function start(options){if(started||!el('Queue')||typeof options?.api!=='function'||!engine())return;started=true;active=true;state=null;api=options.api;const generation=++lifecycle;el('Search').oninput=()=>{page=0;renderQueue();};el('Previous').onclick=()=>{page--;renderQueue();};el('Next').onclick=()=>{page++;renderQueue();};el('Sync').onclick=sync;el('ClearSelection').onclick=()=>{selected.clear();invalidate();renderQueue();};el('SelectReady').onclick=selectReadyBatch;el('ArtFiles').onchange=event=>importArts([...event.target.files]);el('SettingsForm').onsubmit=event=>{event.preventDefault();return saveSettings();};for(const name of ['FilmWidth','MaxLength','Gap','Margin','Dpi','Rotate']){el(name).oninput=()=>{dirtySettings=true;settingsVersion++;invalidate();};el(name).onchange=el(name).oninput;}el('ReloadSettings').onclick=async()=>{if(busy)return;dirtySettings=false;await read();invalidate();};el('PreviewButton').onclick=showPreview;el('Prepare').onclick=prepare;try{await Promise.all([loadLibrary(),read()]);if(!active||generation!==lifecycle)return;msg('Selecione as linhas aptas. Atualizar pedidos confere a situação atual na Shopee.');if(visible())sync();}catch{if(active)msg('Não foi possível carregar a fila de produção. Use Atualizar pedidos para tentar novamente.');}if(active){timer=setInterval(()=>{if(visible())sync();},60000);document.addEventListener?.('visibilitychange',()=>{if(visible())sync();});}controls();}
+
+ // Search only the queue already read by the Production workspace. This is
+ // explicitly not a full Shopee order search or a new provider request.
+ function searchLines(query,offset=0){
+  if(typeof query!=='string'||query.trim().length<2||query.length>90||/[\u0000-\u001f\u007f]/.test(query)||
+   !Number.isSafeInteger(offset)||offset<0||offset>3000||!active||!accepted(state))return null;
+  const needle=query.trim().normalize('NFC').toLocaleLowerCase('pt-BR');
+  const matching=state.lines.filter(line=>[line.order_id,line.sku,line.model_name||'',line.item_id||'']
+   .some(value=>String(value).normalize('NFC').toLocaleLowerCase('pt-BR').includes(needle)));
+  const limit=8,subset=matching.slice(offset,offset+limit);
+  const text=(value,max=110)=>typeof value==='string'?value.slice(0,max):'';
+  return Object.freeze({schema:'mls_saved_dtf_search_v1',total:matching.length,offset,limit,more:offset+limit<matching.length,
+   rows:Object.freeze(subset.map(line=>Object.freeze({
+    order_id:text(line.order_id,64),sku:text(line.sku,100),item_id:text(line.item_id,32),
+    model_name:text(line.model_name,100),production_state:line.production_state,
+    quantity:line.quantity
+   })))});
+ }
+ function findLine(value){
+  if(typeof value!=='string'||value.trim().length<2||value.length>90||/[\u0000-\u001f\u007f]/.test(value))return false;
+  const input=el('Search');if(!input)return false;
+  input.value=value.trim();page=0;
+  if(active&&accepted(state))renderQueue();
+  return active;
+ }
+
  function getSnapshot(){
   if(!active||!accepted(state))return null;
   const lines=state.lines, batches=state.batches;
@@ -75,5 +101,5 @@ export const DTF_CLIENT=String.raw`(()=>{
    produced_lines:count('PRODUCED'),blocked_lines:count('BLOCKED'),
    batch_count:batches.length,basis:'SAVED_DTF_LINES_NOT_PAID_ORDERS_OR_UNIT_COUNTS'});
  }
- globalThis.brazaDtfWorkspace={start,open,stop,getSnapshot};
+ globalThis.brazaDtfWorkspace={start,open,stop,getSnapshot,searchLines,findLine};
 })();`;

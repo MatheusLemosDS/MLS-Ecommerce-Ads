@@ -2,8 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {workspaceNavigation,workspaceSecondaryNavigation} from '../src/workspace-navigation.mjs';
 import {adminBody,CSS} from '../src/admin-view.mjs';
-import {savedCatalogBody} from '../src/saved-catalog-view.mjs';
 import {CLIENT} from '../src/admin-client.mjs';
+import {SAVED_CATALOG_CLIENT,savedCatalogBody} from '../src/saved-catalog-view.mjs';
+import {DTF_CLIENT} from '../src/dtf-view.mjs';
 import {shellDesktopNavigation,shellMobileNavigation} from '../src/shell-navigation.mjs';
 import {renderAdsWorkspace} from '../src/ads-workspace-view.mjs';
 import {renderWorkspaceConnections} from '../src/scaling-preparation.mjs';
@@ -116,10 +117,39 @@ test('Mission Control V3.5 has one keyboard navigation palette with only existin
  assert.match(search,/event\.key==='Enter'/);
  assert.match(search,/event\.key==='Escape'/);
  assert.match(search,/key==='k'/);
- assert.match(search,/input\.addEventListener\('input',render\)/);
+ assert.match(search,/input\.addEventListener\('input',\(\)=>/);
  assert.match(search,/globalThis\.mlsWorkspaceSearch=Object\.freeze/);
  assert.doesNotMatch(search,/\bfetch\s*\(|\bsetInterval\s*\(|\/api\//);
  assert.doesNotMatch(search,/access_token|refresh_token|FINANCE_TOKEN_ENCRYPTION_KEY|APP_INTERNAL_SECRET/);
+});
+
+test('V3.6 scopes trigger only explicit validated persisted-product and saved-DTF searches',()=>{
+ const html=adminBody();
+ for(const scope of ['navigation','products','dtf'])
+  assert.match(html,new RegExp('data-mission-scope="'+scope+'"'));
+ for(const id of ['missionSearchExecute','missionSearchMore','missionSearchPageInfo'])
+  assert.match(html,new RegExp('id="'+id+'"'));
+ assert.match(html,/Pedidos na fila DTF/);
+ assert.match(html,/Produtos salvos/);
+ assert.match(CSS,/mission-search-scopes/);
+ const block=CLIENT.slice(CLIENT.indexOf('(function installMissionSearch(){'),CLIENT.indexOf("document.querySelectorAll('[data-tab]').forEach(link=>link.onclick"));
+ assert.match(block,/async function searchRecords\(offset=0\)/);
+ assert.match(block,/input\.value\.trim\(\)\.length<2/);
+ assert.match(block,/searchRecords\(currentOffset\+8\)/);
+ assert.match(block,/raw\?\.schema!=='product_registry_v1'/);
+ assert.match(block,/page\.more!==\(offset\+8<page\.total\)/);
+ assert.match(block,/validId\(row\.item_id\)&&validName\(row\.product_name\)/);
+ assert.match(block,/api\('product-registry\?'\+queryString,undefined,\{timeoutMs:15000\}\)/);
+ assert.match(block,/globalThis\.brazaDtfWorkspace\?\.searchLines\?\.\(query,offset\)/);
+ assert.match(block,/globalThis\.brazaSavedCatalog\?\.find\?\.\(item\.productId\)/);
+ assert.match(block,/globalThis\.brazaDtfWorkspace\?\.findLine\?\.\(item\.orderId\)/);
+ assert.match(block,/execute\.onclick=\(\)=>searchRecords\(0\)/);
+ assert.match(block,/mode==='navigation'\?choose\(selected\[active\]\):searchRecords\(0\)/);
+ assert.doesNotMatch(block,/\bfetch\s*\(|\bsetInterval\s*\(|product-registry\/sync/);
+ assert.match(SAVED_CATALOG_CLIENT,/async function find\(search\)/);
+ assert.match(DTF_CLIENT,/function searchLines\(query,offset=0\)/);
+ assert.match(DTF_CLIENT,/SAVED_DTF_LINES_NOT_PAID_ORDERS_OR_UNIT_COUNTS/);
+ assert.match(DTF_CLIENT,/searchLines,findLine/);
 });
 
 test('V3.6 product search is user-confirmed and delegates to the saved catalog form',()=>{

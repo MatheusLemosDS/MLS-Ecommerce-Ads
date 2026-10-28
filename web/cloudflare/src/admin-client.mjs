@@ -940,17 +940,30 @@ const missionSearchRoutes=Object.freeze([
 (function installMissionSearch(){
  const overlay=el('missionGlobalSearch'),openButton=el('missionSearchOpen'),
   closeButton=el('missionSearchClose'),input=el('missionSearchInput'),results=el('missionSearchResults');
- if(!overlay||!openButton||!closeButton||!input||!results||typeof overlay.addEventListener!=='function'||typeof results.addEventListener!=='function'||typeof input.addEventListener!=='function'||typeof document.addEventListener!=='function')return;
  const normalize=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-BR');
  const byKey=new Map(missionSearchRoutes.map(item=>[item.key,item]));
- let selected=[],active=0,restoreFocus=null;
+ const scopeButtons=typeof overlay?.querySelectorAll==='function'?[...overlay.querySelectorAll('[data-mission-scope]')]:[],execute=el('missionSearchExecute'),
+  more=el('missionSearchMore'),pageInfo=el('missionSearchPageInfo'),scopeLabel=el('missionSearchScope');
+ let selected=[],active=0,restoreFocus=null,mode='navigation',lookupEpoch=0,busy=false,
+  currentQuery='',currentOffset=0,moreAvailable=false;
+ if(!overlay||!openButton||!closeButton||!input||!results||!execute||!more||!pageInfo||!scopeLabel||typeof overlay.addEventListener!=='function'||typeof results.addEventListener!=='function'||typeof input.addEventListener!=='function'||typeof document.addEventListener!=='function')return;
  function hide({focus=true}={}){
   if(overlay.hidden)return;
-  overlay.hidden=true;
+  ++lookupEpoch;overlay.hidden=true;
   document.documentElement.dataset.missionSearch='closed';
   if(focus&&restoreFocus?.focus)restoreFocus.focus();
  }
  function render(){
+  if(mode!=='navigation'){
+   selected=[];active=0;results.replaceChildren();pageInfo.textContent='';
+   more.hidden=true;moreAvailable=false;execute.disabled=busy||input.value.trim().length<2;
+   const empty=document.createElement('p');empty.className='mission-search-empty';
+   empty.textContent=input.value.trim().length<2?'Digite pelo menos 2 caracteres.':'Pressione Enter ou Pesquisar para consultar este escopo.';
+   results.append(empty);
+   scopeLabel.textContent=mode==='products'?'Busca no catálogo persistido e paginado, não consulta diretamente a Shopee.':
+    'Somente pedidos já presentes na fila DTF salva; não inclui o histórico completo da Shopee.';
+   return;
+  }
   const query=normalize(input.value.trim());
   const rawQuery=input.value.trim();
   const terms=query.split(/\s+/).filter(Boolean);
@@ -983,8 +996,117 @@ const missionSearchRoutes=Object.freeze([
    results.append(empty);
   }
   const scope=el('missionSearchScope');
-  if(scope)scope.textContent=rawQuery.length>=2?'Escolha Buscar no catálogo para consultar produtos salvos. Nenhum pedido é pesquisado automaticamente.':'Digite um nome ou código para pesquisar produtos salvos, ou escolha um painel e ferramenta.';
+  if(scope)scope.textContent=rawQuery.length>=2?'Busque no catálogo salvo após confirmação, ou escolha um painel. Pedidos não são consultados automaticamente.':'Selecione um escopo: Painéis, Produtos salvos ou Pedidos na fila DTF.';
  }
+
+ function showRecords(items,total,offset,hasMore,source){
+  selected=items;active=0;currentOffset=offset;moreAvailable=hasMore;
+  results.replaceChildren();
+  for(const [index,item] of selected.entries()){
+   const link=document.createElement('a');link.className='mission-search-result';
+   link.dataset.searchRoute=item.key;link.dataset.active=String(index===active);
+   link.dataset.type=item.type;
+   link.href='/admin?tab='+item.panel;
+   const copy=document.createElement('span'),title=document.createElement('strong'),
+    description=document.createElement('small'),kind=document.createElement('em');
+   title.textContent=item.title;description.textContent=item.description;kind.textContent=item.group;
+   copy.append(title,description);link.append(copy,kind);results.append(link);
+  }
+  if(!items.length){
+   const empty=document.createElement('p');empty.className='mission-search-empty';
+   empty.textContent='Nenhum registro corresponde à consulta neste escopo.';
+   results.append(empty);
+  }
+  const first=total?offset+1:0,through=Math.min(total,offset+items.length);
+  pageInfo.textContent=first+'–'+through+' de '+total+' resultado(s) disponíveis';
+  more.hidden=!hasMore;more.disabled=false;
+  scopeLabel.textContent=source;
+ }
+ async function searchRecords(offset=0){
+  if(mode==='navigation'||busy)return;
+  const query=input.value.trim(),sourceMode=mode;
+  if(query.length<2||query.length>90||/[\u0000-\u001f\u007f]/.test(query))return;
+  const requestId=++lookupEpoch;
+  selected=[];active=0;currentQuery='';moreAvailable=false;more.hidden=true;
+  busy=true;execute.disabled=true;more.disabled=true;
+  results.replaceChildren();
+  const loading=document.createElement('p');loading.className='mission-search-empty';
+  loading.textContent=sourceMode==='products'?'Pesquisando no catálogo salvo…':'Conferindo pedidos presentes na fila DTF…';
+  results.append(loading);
+  try{
+   let items=[],total=0,hasMore=false,source='';
+   if(sourceMode==='products'){
+    if(!csrf)throw Error('SESSION_NOT_READY');
+    const queryString=new URLSearchParams({limit:'8',offset:String(offset),search:query,item_status:'ACTIVE'}).toString();
+    const raw=await api('product-registry?'+queryString,undefined,{timeoutMs:15000});
+    const page=raw?.pagination,products=raw?.products;
+    const validId=value=>typeof value==='string'&&/^[1-9]\d{0,19}$/.test(value);
+    const validName=value=>value===null||typeof value==='string'&&value.length<=1024&&!/[\u0000-\u001f\u007f-\u009f]/.test(value);
+    if(raw?.schema!=='product_registry_v1'||!page||page.limit!==8||page.offset!==offset||
+      !Number.isSafeInteger(page.total)||page.total<0||page.total>10000000||
+      typeof page.more!=='boolean'||page.more!==(offset+8<page.total)||
+      !Array.isArray(products)||products.length>8||products.length!==Math.max(0,Math.min(8,page.total-offset))||
+      !products.every(row=>row&&validId(row.item_id)&&validName(row.product_name)&&
+       ['NORMAL','UNLIST','BANNED','REVIEWING','UNKNOWN'].includes(row.item_status)))
+      throw Error('INVALID_RESPONSE');
+    const frame=raw;
+    total=frame.pagination.total;hasMore=frame.pagination.more;
+    const labels={NORMAL:'Normal',UNLIST:'Não listado',BANNED:'Suspenso',REVIEWING:'Em revisão',UNKNOWN:'A conferir'};
+    items=frame.products.map(row=>({key:'product:'+row.item_id,type:'product',productId:row.item_id,
+     panel:'products',title:row.product_name||'Produto #'+row.item_id,
+     description:'Produto #'+row.item_id+' · '+(labels[row.item_status]||'Cadastro salvo'),group:'Produto salvo'}));
+    source=frame.discovery.complete?'Catálogo indexado · fonte salva, não estoque disponível.':
+     'Indexação do catálogo ainda em andamento; produtos não identificados podem estar ausentes.';
+   }else{
+    const frame=globalThis.brazaDtfWorkspace?.searchLines?.(query,offset);
+    if(!frame){
+     if(requestId===lookupEpoch){results.replaceChildren();const empty=document.createElement('p');empty.className='mission-search-empty';
+      empty.textContent='Fila DTF ainda não carregada. Abra Produção para consultar os pedidos registrados no módulo.';
+      results.append(empty);scopeLabel.textContent='Ausência de fila carregada não significa que o pedido não existe.';}
+     return;
+    }
+    if(frame.schema!=='mls_saved_dtf_search_v1'||frame.offset!==offset||frame.limit!==8||
+      !Number.isSafeInteger(frame.total)||frame.total<0||!Array.isArray(frame.rows)||frame.rows.length>8||
+      typeof frame.more!=='boolean')throw Error('INVALID_QUEUE');
+    total=frame.total;hasMore=frame.more;
+    const labels={PENDING:'Pendente',RESERVED:'Reservada',PRODUCED:'Produzida',BLOCKED:'Bloqueada'};
+    items=frame.rows.map((row,index)=>({key:'dtf:'+offset+':'+index,type:'dtf',
+     orderId:row.order_id,panel:'production',title:'Pedido '+row.order_id,
+     description:'SKU '+(row.sku||'não informado')+' · '+(labels[row.production_state]||'Em conferência')+
+      ' · '+String(row.quantity)+' unidade(s)',group:'Fila DTF'}));
+    source='Apenas linhas da fila DTF salva, não o histórico completo de pedidos da Shopee.';
+   }
+   if(requestId!==lookupEpoch||overlay.hidden||mode!==sourceMode||input.value.trim()!==query)return;
+   currentQuery=query;
+   showRecords(items,total,offset,hasMore,source);
+  }catch(error){
+   if(requestId!==lookupEpoch||overlay.hidden||mode!==sourceMode)return;
+   results.replaceChildren();const empty=document.createElement('p');empty.className='mission-search-empty';
+   const kind=error?.status===401||error?.code==='UNAUTHORIZED'?'SESSION':error?.message==='INVALID_RESPONSE'?'INVALID_PAGE':
+    error?.code==='ADMIN_API_NETWORK_ERROR'?'NETWORK':error?.code==='ADMIN_API_TIMEOUT'?'TIMEOUT':
+    error?.code==='ADMIN_API_RESPONSE_INVALID'?'CLIENT_CONTRACT':error?.code==='ADMIN_API_HTTP_ERROR'?'SERVER':
+    error instanceof ReferenceError?'RUNTIME':'UNAVAILABLE';
+   empty.dataset.searchFailure=kind;
+   empty.textContent=error?.status===401||error?.code==='UNAUTHORIZED'?'Sessão administrativa expirada. Entre novamente neste navegador.':
+    error?.message==='INVALID_RESPONSE'?'A página retornada pelo catálogo não passou na validação. O cadastro foi preservado.':
+    error?.code==='ADMIN_API_NETWORK_ERROR'?'A conexão com o catálogo salvo falhou. Confira sua rede e tente novamente.':
+    error?.code==='ADMIN_API_TIMEOUT'?'O catálogo salvo demorou demais para responder. Tente novamente.':
+    'Consulta indisponível. O cadastro salvo foi preservado; tente novamente ou abra o módulo especializado.';
+   results.append(empty);pageInfo.textContent='';more.hidden=true;
+  }finally{
+   if(requestId===lookupEpoch){busy=false;execute.disabled=input.value.trim().length<2;more.disabled=false;}
+  }
+ }
+ function setScope(next){
+  if(!['navigation','products','dtf'].includes(next))return;
+  ++lookupEpoch;busy=false;mode=next;currentQuery='';currentOffset=0;
+  input.value='';execute.hidden=next==='navigation';
+  input.placeholder=next==='navigation'?'Buscar painéis, agentes e ferramentas…':
+   next==='products'?'Pesquisar produto por nome ou código…':'Pesquisar pedido, SKU ou item na fila DTF…';
+  for(const button of scopeButtons)button.setAttribute('aria-pressed',String(button.dataset.missionScope===next));
+  render();input.focus();
+ }
+
  function move(amount){
   if(!selected.length)return;
   active=(active+amount+selected.length)%selected.length;
@@ -994,10 +1116,20 @@ const missionSearchRoutes=Object.freeze([
  function choose(item){
   if(!item)return;
   hide();
+  if(item.type==='product'){
+   openTab('products');
+   Promise.resolve().then(()=>globalThis.brazaSavedCatalog?.find?.(item.productId));
+   document.getElementById('savedCatalog')?.scrollIntoView?.({block:'start'});
+   return;
+  }
+  if(item.type==='dtf'){
+   openTab('production');
+   globalThis.brazaDtfWorkspace?.findLine?.(item.orderId);
+   document.getElementById('dtfSearch')?.scrollIntoView?.({block:'start'});
+   return;
+  }
   if(item.panel){
    if(typeof item.catalogQuery==='string'&&item.catalogQuery.length>=2&&item.catalogQuery.length<=90){
-    // Fill before openTab: its existing products handler starts the
-    // authorized paginated catalog read with the user's query.
     const search=document.getElementById('savedCatalogSearch');
     if(search)search.value=item.catalogQuery;
    }
@@ -1014,7 +1146,7 @@ const missionSearchRoutes=Object.freeze([
   restoreFocus=document.activeElement;
   overlay.hidden=false;
   document.documentElement.dataset.missionSearch='open';
-  input.value='';render();input.focus();
+  setScope('navigation');
  }
  openButton.onclick=show;
  closeButton.onclick=()=>hide();
@@ -1022,16 +1154,19 @@ const missionSearchRoutes=Object.freeze([
  results.addEventListener('click',event=>{
   const link=event.target?.closest?.('[data-search-route]');
   if(!link||event.button>0||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;
-  const item=selected.find(value=>value.key===link.dataset.searchRoute)||byKey.get(link.dataset.searchRoute);
+  const item=selected.find(value=>value.key===link.dataset.searchRoute);
   if(!item)return;
   if(item.panel){event.preventDefault();choose(item);}
   else hide({focus:false});
  });
- input.addEventListener('input',render);
+ for(const button of scopeButtons)button.onclick=()=>setScope(button.dataset.missionScope);
+ execute.onclick=()=>searchRecords(0);
+ more.onclick=()=>{if(moreAvailable&&input.value.trim()===currentQuery)searchRecords(currentOffset+8);};
+ input.addEventListener('input',()=>{++lookupEpoch;busy=false;render();});
  input.addEventListener('keydown',event=>{
   if(event.key==='ArrowDown'){event.preventDefault();move(1);}
   else if(event.key==='ArrowUp'){event.preventDefault();move(-1);}
-  else if(event.key==='Enter'){event.preventDefault();choose(selected[active]);}
+  else if(event.key==='Enter'){event.preventDefault();mode==='navigation'?choose(selected[active]):searchRecords(0);}
  });
  overlay.addEventListener('keydown',event=>{
   if(event.key==='Escape'){event.preventDefault();hide();return;}
@@ -1051,7 +1186,7 @@ const missionSearchRoutes=Object.freeze([
   if(target?.isContentEditable||['input','select','textarea'].includes(tag))return;
   event.preventDefault();show();
  });
- globalThis.mlsWorkspaceSearch=Object.freeze({open:show,close:()=>hide()});
+ globalThis.mlsWorkspaceSearch=Object.freeze({open:show,close:()=>hide(),scope:setScope});
 })();
 
 document.querySelectorAll('[data-tab]').forEach(link=>link.onclick=event=>{if(event?.button>0||event?.metaKey||event?.ctrlKey||event?.shiftKey||event?.altKey)return;event?.preventDefault();openTab(link.dataset.tab);});
