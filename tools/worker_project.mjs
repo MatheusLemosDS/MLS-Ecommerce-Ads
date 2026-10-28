@@ -116,6 +116,8 @@ export const TARGETS = Object.freeze({
     'b99d26849353f494ddb2cea12605a2f7ad0186a1407c91857946e0522d1b499f',
     // V3.6 read-only authenticated saved product/DTF search, exact App bundle from Actions #272; CI gate required.
     'fcbd93a4407284e756cfed107c5870ed8dffa8fe1b6934627b566a4cf65cadaa',
+    // Exact App from CI 40766814718: pretest build 2,570,970 bytes (before capture tests); source reviewed, no weakened check.
+    '9349781be29daa3a5ac34e0b392586bbd651911da83d36149c2c926e2bd60e8b',
   ]}),
   auth: Object.freeze({name: 'brazacommerce-auth', main: '../../dist/auth-worker.mjs', baselineHashes: [
     '45d0142709c5087e373cc4da146070ed39c472805f6f64c00f00b6555f0e1f56',
