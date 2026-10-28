@@ -2,7 +2,7 @@
   "schema": "mls_commerce_os_checkpoint_v1",
   "canonical_roadmap": "docs/ROADMAP_MLS_COMMERCE_OS.md",
   "legacy_roadmap": "docs/ROADMAP_BRAZACOMMERCE.md",
-  "updated_at": "2026-10-27",
+  "updated_at": "2026-10-28",
   "product": {
     "name": "MLS Commerce OS",
     "supervisor": "MLS Hermes",
@@ -30,8 +30,8 @@
     "merge_commit": "9c418fd3010f46957d1ce52345baacd76041c788"
   },
   "current_phase": "M2_FINANCE_RETURNS_RECONCILIATION",
-  "working_branch": null,
-  "current_status": "M2_IN_PROGRESS_REAL_DAILY_TREND_CHARTS_PUBLISHED_OWNER_REVIEW_PENDING",
+  "working_branch": "feature/mls-m3-products-pricing-observer-20261028",
+  "current_status": "M2_NOT_CLOSED_M3_SHADOW_OBSERVER_CI_GREEN_PRODUCTION_NOT_VERIFIED",
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
     "Repasse-base, ajuste, repasse após ajuste e liberação exibidos sem dupla dedução",
@@ -374,5 +374,62 @@
       "M2 Seller Centre Pending / escrow reconciliation remains an independent financial exit gate"
     ],
     "visual_guide": "docs/MISSION_CONTROL_V2_VISUAL_GUIDE.md"
+  },
+  "checkpoint_2026_10_28": {
+    "schema": "mls_m2_m3_execution_checkpoint_v1",
+    "baseline_main": "b058e832f8450ce787370c4087cf78db9cca9fca",
+    "delivered_main": {
+      "v36_catalog_handoff": {
+        "pr": 46,
+        "status": "MERGED_CI_SUCCESS",
+        "run": 40769541414
+      }
+    },
+    "successor_ui": {
+      "pr": 48,
+      "branch": "feature/mission-v36-search-reconcile-main-20261028",
+      "status": "DRAFT_CI_PASS_NO_MERGE",
+      "node_tests": 2115,
+      "python_tests": 67,
+      "run": 40772868816,
+      "app_sha256": "080bcd884f1842023e384e180cd4e9e33fe3c58681596c86b4b6f0552216b68f",
+      "previous_pr45": "CLOSED_SUPERSEDED"
+    },
+    "m2_finance": {
+      "status": "NOT_CLOSED",
+      "issue": 50,
+      "required": "AUTHENTICATED_SELLER_CENTRE_PENDING_RELEASES_RETURNS_FINANCIAL_RECONCILIATION",
+      "bank_liquidation": "UNVERIFIED"
+    },
+    "m3_shadow": {
+      "pr": 47,
+      "branch": "feature/mls-m3-products-pricing-observer-20261028",
+      "status": "DRAFT_CI_PASS_NO_MERGE_NO_DEPLOY",
+      "run": 40773883621,
+      "node_tests": 2124,
+      "python_tests": 67,
+      "app_sha256": "bdbd554f8fb7b4879b7c8df4a4b7b242e274eedd6abb90033d9f53da83b1d801",
+      "auth_sha256": "1fef431c8573e05563c7938d95be0976a160bc603340084aa747ee0b73e7ec64",
+      "finance_sha256": "b2483fc6107ecb4782e746becfe1b69ee6e3b9d3f0a6109351390b11b9303ca3",
+      "features": [
+        "ABC sold units not inventory",
+        "revenue ABC only exclusively attributable and complete",
+        "exclusive partial balance before Ads and expenses",
+        "manual mathematical price scenario only",
+        "no marketplace/Ads writes"
+      ],
+      "safety": "OBSERVER_ADS_PROMO_LOCKED"
+    },
+    "gates": [
+      "Operator authenticated desktop and mobile QA",
+      "M2 exact financial reconciliation and Seller Centre comparison",
+      "Official marketplace fee, freight, tax and Ads attribution contracts",
+      "Inventory verifiable before recommendations",
+      "No prod merge or deploy until approved"
+    ],
+    "references": [
+      "docs/ROADMAP_MLS_COMMERCE_OS.md",
+      "docs/MLS_M2_M3_EXECUTION_2026_10_28.md"
+    ]
   }
 }
