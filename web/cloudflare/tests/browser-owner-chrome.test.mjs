@@ -4,6 +4,7 @@ import http from 'node:http';
 import {spawn} from 'node:child_process';
 import {existsSync} from 'node:fs';
 import {build} from 'esbuild';
+import {projectProductRegistryFrame} from '../src/product-registry.mjs';
 import {fileURLToPath} from 'node:url';
 
 const chrome=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium','/usr/bin/chromium-browser'].find(existsSync);
@@ -99,11 +100,13 @@ test('real Chromium hydrates owner agent cards even when finance API is unavaila
      catalog_status:'MATCHED',model_count:1,resolved_count:1,metadata_changed:false};
    });
    response.setHeader('Content-Type','application/json');
-   response.end(JSON.stringify({schema:'product_registry_v1',checked_at:1793200000,revision:1,
+   const frame={schema:'product_registry_v1',checked_at:1793200000,revision:1,
     counts:{total:9,indexed:9,pending_catalog:0},
     discovery:{status:'IDLE',item_status:'NORMAL',offset:0,pages_read:1,last_attempt_at:null,last_success_at:1793200000,
      next_run_at:0,last_error:null,complete:true},
-    pagination:{limit:8,offset,total:9,more:offset+8<9},products}));
+    pagination:{limit:8,offset,total:9,more:offset+8<9},products};
+   assert.ok(projectProductRegistryFrame(frame),'fixture is a valid saved catalog response');
+   response.end(JSON.stringify(frame));
   }else if(path==='/api/admin/bootstrap'){
    response.setHeader('Content-Type','application/json');
    response.end(JSON.stringify({schema:'admin_bootstrap_v1',csrf:'a'.repeat(64)}));
