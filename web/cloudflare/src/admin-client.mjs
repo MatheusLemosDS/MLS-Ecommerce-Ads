@@ -3,7 +3,6 @@ import {projectAdsMeasurement} from './ads-measurement.mjs';
 import {createAdminApiClient} from './admin-api-client.mjs';
 import {createAdminStartup} from './admin-startup.mjs';
 import {projectHermesFinancialContext} from './hermes-financial-context.mjs';
-import {projectProductRegistryFrame} from './product-registry.mjs';
 export const CLIENT=String.raw`
 ${createAdminApiClient.toString()}
 ${createAdminStartup.toString()}
@@ -939,7 +938,6 @@ const missionSearchRoutes=Object.freeze([
  {key:'diagnostics',title:'Diagnóstico do sistema',group:'Ferramentas',description:'Verificações administrativas',terms:'erro carregamento diagnosticar fonte',href:'/admin/diagnostics'}
 ].map(item=>Object.freeze(item)));
 (function installMissionSearch(){
- ${projectProductRegistryFrame.toString()}
  const overlay=el('missionGlobalSearch'),openButton=el('missionSearchOpen'),
   closeButton=el('missionSearchClose'),input=el('missionSearchInput'),results=el('missionSearchResults');
  const normalize=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-BR');
@@ -1036,8 +1034,17 @@ const missionSearchRoutes=Object.freeze([
     if(!csrf)throw Error('SESSION_NOT_READY');
     const queryString=new URLSearchParams({limit:'8',offset:String(offset),search:query,item_status:'ACTIVE'}).toString();
     const raw=await api('product-registry?'+queryString,undefined,{timeoutMs:15000});
-    const frame=projectProductRegistryFrame(raw);
-    if(!frame||frame.schema!=='product_registry_v1'||frame.pagination.limit!==8||frame.pagination.offset!==offset)throw Error('INVALID_RESPONSE');
+    const page=raw?.pagination,products=raw?.products;
+    const validId=value=>typeof value==='string'&&/^[1-9]\d{0,19}$/.test(value);
+    const validName=value=>value===null||typeof value==='string'&&value.length<=1024&&!/[\u0000-\u001f\u007f-\u009f]/.test(value);
+    if(raw?.schema!=='product_registry_v1'||!page||page.limit!==8||page.offset!==offset||
+      !Number.isSafeInteger(page.total)||page.total<0||page.total>10000000||
+      typeof page.more!=='boolean'||page.more!==(offset+8<page.total)||
+      !Array.isArray(products)||products.length>8||products.length!==Math.max(0,Math.min(8,page.total-offset))||
+      !products.every(row=>row&&validId(row.item_id)&&validName(row.product_name)&&
+       ['NORMAL','UNLIST','BANNED','REVIEWING','UNKNOWN'].includes(row.item_status)))
+      throw Error('INVALID_RESPONSE');
+    const frame=raw;
     total=frame.pagination.total;hasMore=frame.pagination.more;
     const labels={NORMAL:'Normal',UNLIST:'Não listado',BANNED:'Suspenso',REVIEWING:'Em revisão',UNKNOWN:'A conferir'};
     items=frame.products.map(row=>({key:'product:'+row.item_id,type:'product',productId:row.item_id,
