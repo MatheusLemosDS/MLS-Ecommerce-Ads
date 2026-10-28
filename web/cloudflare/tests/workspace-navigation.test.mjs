@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {workspaceNavigation,workspaceSecondaryNavigation} from '../src/workspace-navigation.mjs';
 import {adminBody,CSS} from '../src/admin-view.mjs';
+import {savedCatalogBody} from '../src/saved-catalog-view.mjs';
 import {CLIENT} from '../src/admin-client.mjs';
 import {shellDesktopNavigation,shellMobileNavigation} from '../src/shell-navigation.mjs';
 import {renderAdsWorkspace} from '../src/ads-workspace-view.mjs';
@@ -122,7 +123,7 @@ test('Mission Control V3.5 has one keyboard navigation palette with only existin
 });
 
 test('V3.6 product search is user-confirmed and delegates to the saved catalog form',()=>{
- const markup=adminBody();
+ const markup=savedCatalogBody();
  assert.match(markup,/id="savedCatalogSearchForm"/);
  assert.match(markup,/id="savedCatalogSearch"/);
  const start=CLIENT.indexOf('// Mission Control V3.5:');
