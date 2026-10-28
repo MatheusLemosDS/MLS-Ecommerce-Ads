@@ -179,7 +179,8 @@ test('observer workspaces expose category charts backed by existing registry onl
  }
  assert.match(MISSION_CSS,/mission-evidence-panel/);
  assert.match(MISSION_CLIENT,/renderEvidence/);
- assert.doesNotMatch(MISSION_CLIENT,/\\bfetch\\s*\\(|setInterval\\s*\\(/);
+ assert.equal(MISSION_CLIENT.includes('fetch('),false);
+ assert.equal(MISSION_CLIENT.includes('setInterval('),false);
 });
 test('financial sparklines are slots for cached daily observations, not decorative random history',()=>{
  const html=commandCenterBody();
