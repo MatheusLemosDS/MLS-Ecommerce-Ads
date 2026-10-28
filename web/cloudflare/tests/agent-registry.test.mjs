@@ -306,3 +306,13 @@ test('validated month without an observed selected day does not imply current-da
  assert.equal(result.hermes.status,'WORKING');
  assert.equal(result.day.net_cents,null);
 });
+
+test('finance authorization recovery is visible only for the exact validated auth error and never refreshes tokens implicitly',()=>{
+ const html=commandCenterBody();
+ assert.match(html,/id="missionFinanceAuthRecovery" hidden/);
+ assert.match(html,/https:\/\/auth\.brazacommerce\.com\.br\/shopee\/finance\/status/);
+ assert.match(html,/https:\/\/auth\.brazacommerce\.com\.br\/shopee\/finance\/connect/);
+ assert.match(html,/target="_blank" rel="noopener noreferrer"/);
+ assert.match(AGENT_REGISTRY_CLIENT,/coverage\?\.collection_code!=='BUSINESS_PERIOD_AUTH_REQUIRED'/);
+ assert.doesNotMatch(AGENT_REGISTRY_CLIENT,/\bfetch\s*\(|\bsetInterval\s*\(|\/api\/admin\/finance\/auth/);
+});
