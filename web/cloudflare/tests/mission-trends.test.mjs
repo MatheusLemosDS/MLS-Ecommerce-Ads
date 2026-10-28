@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {projectMissionDailyTrend,BUSINESS_DAY_CLIENT} from '../src/business-day-view.mjs';
 import {BUSINESS_MONTH_CLIENT} from '../src/business-month-client.mjs';
-import {buildMissionTrendComparison,missionTrendPanelBody,MISSION_TRENDS_CLIENT,MISSION_TRENDS_CSS} from '../src/mission-control.mjs';
+import {buildMissionTrendComparison,explainMissionTrendGap,missionTrendPanelBody,MISSION_TRENDS_CLIENT,MISSION_TRENDS_CSS} from '../src/mission-control.mjs';
 import {commandCenterBody,AGENT_REGISTRY_CLIENT} from '../src/agent-registry-view.mjs';
 import {missionWorkspacesBody} from '../src/mission-control.mjs';
 import {adminBody} from '../src/admin-view.mjs';
@@ -139,4 +139,31 @@ test('source gap exposes bounded automatic-collector progress and prioritisable 
  assert.match(AGENT_REGISTRY_CLIENT,/Priorizar coleta|prioritizeCurrentMonth/);
  assert.match(AGENT_REGISTRY_CLIENT,/sourcePriorityBusy/);
  assert.doesNotMatch(AGENT_REGISTRY_CLIENT,/\bfetch\s*\(|setInterval\s*\(|\/api\//);
+});
+
+
+test('missing comparisons explain actual daily coverage instead of showing an unexplained generic wait',()=>{
+ const nothing=explainMissionTrendGap(null,'net');
+ assert.equal(nothing.label,'Histórico ainda não salvo');
+ assert.match(nothing.detail,/série diária validada/);
+ const single=snapshot([row(28,{state:'PROVISIONAL',net:10345,sales:64465,ads:3866,paid:10})],'2026-10-28');
+ const one=explainMissionTrendGap(single,'net');
+ assert.equal(one.label,'Somente 1 dia observado');
+ assert.match(one.coverage,/1 de 1 dia\(s\)/);
+ assert.match(one.detail,/28\/10/);
+ assert.equal(buildMissionTrendComparison(single,'net'),null);
+ const absent=snapshot([row(25),row(26,{state:'UNAVAILABLE'}),row(27,{state:'UNAVAILABLE'})],'2026-10-27');
+ assert.equal(explainMissionTrendGap(absent,'sales').label,'Somente 1 dia observado');
+ const partial=snapshot([row(27,{state:'PARTIAL_COSTS',net:1200}),row(28,{state:'OPERATIONAL',net:2200,partial:true})],'2026-10-28');
+ assert.equal(explainMissionTrendGap(partial,'net').label,'Dias ainda não comparáveis');
+ const gap=snapshot([row(25,{net:10000}),row(26,{state:'UNAVAILABLE'}),row(27,{net:11500})],'2026-10-27');
+ assert.equal(explainMissionTrendGap(gap,'net').label,'Sem dias consecutivos');
+ assert.equal(explainMissionTrendGap(gap,'unsupported').label,'Sem comparação');
+});
+test('trend UI uses validated coverage labels without interpolating sparse dates or inventing numbers',()=>{
+ assert.match(MISSION_TRENDS_CLIENT,/explainMissionTrendGap/);
+ assert.match(MISSION_TRENDS_CLIENT,/Somente 1 dia observado/);
+ assert.match(MISSION_TRENDS_CLIENT,/badge\.textContent='↔ '\+info\.label/);
+ assert.match(MISSION_TRENDS_CLIENT,/Não foram criados zeros nem pontos artificiais/);
+ assert.doesNotMatch(MISSION_TRENDS_CLIENT,/\bfetch\s*\(|\bsetInterval\s*\(/);
 });

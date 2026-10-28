@@ -123,7 +123,8 @@ export function buildMlsAgentRegistry({day=null,month=null,reconciliation=null,r
  const returns=safe(month?.coverage?.returns)&&month.coverage.returns>=0?month.coverage.returns:0;
  const returnsUnknown=safe(month?.coverage?.returns_unknown)&&month.coverage.returns_unknown>=0?month.coverage.returns_unknown:0;
  const reviews=['cancel_pending','other','unknown'].reduce((total,key)=>total+(safe(month?.coverage?.[key])&&month.coverage[key]>=0?month.coverage[key]:0),0);
- const returnsMetric=monthReady&&safe(month?.coverage?.returns)&&month.coverage.returns>=0?returns+returnsUnknown+reviews:null;
+ const returnsCovered=monthReady&&['returns','returns_unknown','cancel_pending','other','unknown'].every(key=>safe(month?.coverage?.[key])&&month.coverage[key]>=0);
+ const returnsMetric=returnsCovered?returns+returnsUnknown+reviews:null;
  const has=code=>pending.includes(code);
  const collectionWorking=month?.status==='RUNNING'||has('COLLECTING'),working=collectionWorking||(monthReady&&!dailyObserved)||priorities.some(item=>item.severity==='WORKING');
  const blocked=priorities.some(item=>item.severity==='BLOCKED');
@@ -183,6 +184,7 @@ export function buildMlsAgentRegistry({day=null,month=null,reconciliation=null,r
    release_ambiguous:safe(releaseSummary?.ambiguous_orders)?releaseSummary.ambiguous_orders:null,
    evidence_conflicts:settlementConflicts
   }),
+  returns:Object.freeze({month:returnsCovered?month.month:null,paid_returns:returnsCovered?returns:null,paid_returns_unknown:returnsCovered?returnsUnknown:null,status_reviews:returnsCovered?reviews:null}),
   sources:Object.freeze({catalog:catData,production_period:periodData,dtf_queue:dtfData}),
   income:Object.freeze({current_pending_cents:currentPending,checked_at:incomeCheckedAt,status:typeof incomeOverview?.status==='string'?incomeOverview.status:null,basis:incomeOverview?.basis==='CURRENT_PROVIDER_INCOME_STATUS_NOT_BANK_RECEIPT_OR_HISTORICAL_MONTH'?incomeOverview.basis:null,audit:pendingAudit&&pendingAudit.schema==='pending_income_audit_v1'?Object.freeze({...pendingAudit}):null}),
   expenses:Object.freeze({status:expenseSchedule?.status??null,open_count:safe(expenseSchedule?.open_count)?expenseSchedule.open_count:null,open_cents:money(expenseSchedule?.open_cents),overdue_count:safe(expenseSchedule?.overdue_count)?expenseSchedule.overdue_count:null,overdue_cents:money(expenseSchedule?.overdue_cents),due_today_count:safe(expenseSchedule?.due_today_count)?expenseSchedule.due_today_count:null,due_today_cents:money(expenseSchedule?.due_today_cents),due_next_7_days_count:safe(expenseSchedule?.due_next_7_days_count)?expenseSchedule.due_next_7_days_count:null,due_next_7_days_cents:money(expenseSchedule?.due_next_7_days_cents),next_due_date:typeof expenseSchedule?.next_due_date==='string'?expenseSchedule.next_due_date:null,next_due_count:safe(expenseSchedule?.next_due_count)?expenseSchedule.next_due_count:null,next_due_cents:money(expenseSchedule?.next_due_cents),basis:expenseSchedule?.basis==='OWNER_DECLARED_DUE_DATES_NOT_BANK_SETTLEMENT'?expenseSchedule.basis:null}),

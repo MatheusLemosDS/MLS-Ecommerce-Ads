@@ -110,6 +110,8 @@ export const TARGETS = Object.freeze({
     '618f8fcce4722f32834f92b6b23032137a4ac981644229d3302c3e533ea17d62',
     // Owner-only click-to-read finance scheduler diagnosis; exact App build from GH Actions #256, full CI/Chromium gate required.
     '34f13bfaeb81c8467d9a92dbf5d496dce90066b83906f11a10c59e38ce19b6aa',
+    // V3.4 source-specific verified agent charts and truthful 14-day comparison diagnostics; exact App from CI #259.
+    '618688a971b52f96df474c2e651ce42d1dd7cac5e3d1cb01d2cb1a1bced92f8b',
   ]}),
   auth: Object.freeze({name: 'brazacommerce-auth', main: '../../dist/auth-worker.mjs', baselineHashes: [
     '45d0142709c5087e373cc4da146070ed39c472805f6f64c00f00b6555f0e1f56',
