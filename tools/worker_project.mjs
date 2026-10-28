@@ -120,6 +120,8 @@ export const TARGETS = Object.freeze({
     'e228e899603c5b08b5d432558de6277faa4217d030c8cc0bb8d9692391c4ca4a',
     // Listing Factory local image decompression guard and default price propagation; exact CI App build from 40784662417.
     'd1bb7c43d40034f1629d18f159a8558cb6e8e7d540e3531d998a56377a3120b9',
+    // MLS Listing Factory JSON resume, price-source gate and paged owner UI; exact App digest from CI 40788461939, full rerun required.
+    'bbbe1b9efdf0a6c11e507c34c92730ddbb8502fb367c5cfe33c031ba3850d3cd',
   ]}),
   auth: Object.freeze({name: 'brazacommerce-auth', main: '../../dist/auth-worker.mjs', baselineHashes: [
     '45d0142709c5087e373cc4da146070ed39c472805f6f64c00f00b6555f0e1f56',
