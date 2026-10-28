@@ -3,12 +3,14 @@ import {projectAdsMeasurement} from './ads-measurement.mjs';
 import {createAdminApiClient} from './admin-api-client.mjs';
 import {createAdminStartup} from './admin-startup.mjs';
 import {projectHermesFinancialContext} from './hermes-financial-context.mjs';
+import {projectProductRegistryFrame} from './product-registry.mjs';
 export const CLIENT=String.raw`
 ${createAdminApiClient.toString()}
 ${createAdminStartup.toString()}
 ${parseReport.toString()}
 ${projectAdsMeasurement.toString()}
 ${projectHermesFinancialContext.toString()}
+${projectProductRegistryFrame.toString()}
 let renderedReportKey=null,todayAdsPromise=null,shopOrdersPromise=null,shopOrdersSnapshot=null,shopOrdersRefreshTimer=null;
 let state=null,csrf='',rows=[],selectedJobId=null,pollTimer=null,pollPromise=null,submitting=false,activeBilling='unverified',settingsPromise=null,settingsLoadGeneration=0;
 let itemsPromise=null,itemsData=null,variantGroups=new Map(),bindingState=null,bindingConflict=null,bindingStale=false,bindingLoadFailed=false,bindingSaving=false,bindingDrafts=new Map(),bindingDraftSequence=0,catalogAutomatingItemId=null,productUnitSelections=new Map();
