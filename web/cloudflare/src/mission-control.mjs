@@ -745,4 +745,39 @@ export const MISSION_TRENDS_CSS=String.raw`
 
 
 
+
+/* Mobile owner cockpit V3: keep real labels, remove redundant empty comparison text. */
+@media(max-width:570px){
+ .mission-dashboard .command-center-head.mission-command-hero{min-height:0!important;max-height:none!important;height:auto!important;padding:15px!important;gap:8px}
+ .mission-dashboard .command-center-head h2{font-size:clamp(22px,6vw,27px)!important;line-height:1.12}
+ .mission-dashboard .command-center-head p{font-size:11px;line-height:1.45}
+ .mission-dashboard .command-center-head .command-center-mode{margin-top:8px;max-width:100%;white-space:normal}
+ .mission-dashboard .command-center-metrics{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important;margin:10px 0 14px!important}
+ .mission-dashboard .command-center-metrics .command-metric{display:flex;flex-direction:column;align-items:stretch;gap:5px;min-width:0;min-height:0!important;height:auto!important;padding:12px 11px!important;border-radius:14px}
+ .mission-dashboard .command-metric:before{width:28px;height:28px;right:8px;top:8px;font-size:14px}
+ .mission-dashboard .command-metric>small:first-child{font-size:11px;line-height:1.3;min-height:28px;max-width:calc(100% - 32px)}
+ .mission-dashboard .command-metric strong{font-size:clamp(17px,4.7vw,24px);line-height:1.15;letter-spacing:-.35px;margin:2px 0 0;overflow-wrap:anywhere}
+ .mission-dashboard .command-metric .mission-profit-state{font-size:9px;line-height:1.3}
+ .mission-dashboard .command-metric .mission-kpi-delta{font-size:9px;line-height:1.3}
+ .mission-dashboard .command-metric .mission-kpi-delta[data-direction=UNAVAILABLE]{display:none}
+ .mission-dashboard .command-metric .mission-kpi-comparison-date{display:none}
+ .mission-dashboard .command-metric>span:not(.mission-kpi-delta):not(.mission-profit-state){display:none}
+ .mission-dashboard .command-metric .mission-kpi-sparkline:empty{display:none}
+ .mission-dashboard .agent-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px}
+ .mission-dashboard .agent-card{min-width:0;min-height:0!important;padding:11px!important;gap:5px}
+ .mission-dashboard .agent-card p{font-size:10px;line-height:1.45}
+ .mission-dashboard .agent-card .agent-card-metric{font-size:12px;overflow-wrap:anywhere}
+ .mission-dashboard .agent-panel-head{gap:8px;align-items:center}
+ .mission-dashboard .agent-panel-head h3{font-size:17px}
+ .mission-dashboard .hermes-command{min-height:0;padding:13px}
+ .mission-dashboard .hermes-command .command-priorities{max-height:190px;overflow:auto;overscroll-behavior:contain}
+ .mission-trend-graph{height:195px}
+}
+@media(max-width:350px){
+ .mission-dashboard .command-center-metrics{gap:7px!important}
+ .mission-dashboard .command-center-metrics .command-metric{padding:10px 9px!important}
+ .mission-dashboard .command-metric strong{font-size:17px}
+ .mission-dashboard .agent-card{padding:9px!important}
+}
+
 `;
