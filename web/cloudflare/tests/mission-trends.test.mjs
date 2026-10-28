@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {projectMissionDailyTrend,BUSINESS_DAY_CLIENT} from '../src/business-day-view.mjs';
+import {BUSINESS_MONTH_CLIENT} from '../src/business-month-client.mjs';
 import {buildMissionTrendComparison,missionTrendPanelBody,MISSION_TRENDS_CLIENT,MISSION_TRENDS_CSS} from '../src/mission-control.mjs';
 import {commandCenterBody,AGENT_REGISTRY_CLIENT} from '../src/agent-registry-view.mjs';
 import {missionWorkspacesBody} from '../src/mission-control.mjs';
@@ -112,4 +113,14 @@ test('real monthly projector PROVISIONAL rows become observed trend and safe com
  assert.equal(buildMissionTrendComparison(t,'net').current_date,'2026-10-27');
  assert.equal(buildMissionTrendComparison(t,'net').delta,2400);
  assert.equal(buildMissionTrendComparison(t,'sales').delta,6000);
+});
+
+test('owner overview can distinguish an uncovered date from a monthly source without daily evidence',()=>{
+ assert.match(BUSINESS_MONTH_CLIENT,/getSourceStatus/);
+ assert.match(BUSINESS_MONTH_CLIENT,/published_through/);
+ assert.match(BUSINESS_MONTH_CLIENT,/daily_summary_present/);
+ assert.match(AGENT_REGISTRY_CLIENT,/mls_finance_source_coverage_v1/);
+ assert.match(AGENT_REGISTRY_CLIENT,/O último resumo validado cobre até/);
+ assert.match(AGENT_REGISTRY_CLIENT,/detalhamento diário pendente/);
+ assert.match(AGENT_REGISTRY_CLIENT,/A coleta automática está desativada/);
 });
