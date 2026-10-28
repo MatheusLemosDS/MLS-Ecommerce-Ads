@@ -114,6 +114,8 @@ export const TARGETS = Object.freeze({
     '618688a971b52f96df474c2e651ce42d1dd7cac5e3d1cb01d2cb1a1bced92f8b',
     // Mission Control V3.5 global navigation and source provenance; exact App from GH Actions #266, full CI still required.
     'b99d26849353f494ddb2cea12605a2f7ad0186a1407c91857946e0522d1b499f',
+    // V3.6 read-only authenticated saved product/DTF search, exact App bundle from Actions #272; CI gate required.
+    'fcbd93a4407284e756cfed107c5870ed8dffa8fe1b6934627b566a4cf65cadaa',
   ]}),
   auth: Object.freeze({name: 'brazacommerce-auth', main: '../../dist/auth-worker.mjs', baselineHashes: [
     '45d0142709c5087e373cc4da146070ed39c472805f6f64c00f00b6555f0e1f56',
