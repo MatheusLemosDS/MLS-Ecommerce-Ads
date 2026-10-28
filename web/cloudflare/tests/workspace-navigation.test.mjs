@@ -120,3 +120,21 @@ test('Mission Control V3.5 has one keyboard navigation palette with only existin
  assert.doesNotMatch(search,/\bfetch\s*\(|\bsetInterval\s*\(|\/api\//);
  assert.doesNotMatch(search,/access_token|refresh_token|FINANCE_TOKEN_ENCRYPTION_KEY|APP_INTERNAL_SECRET/);
 });
+
+test('V3.6 product search is user-confirmed and delegates to the saved catalog form',()=>{
+ const markup=adminBody();
+ assert.match(markup,/id="savedCatalogSearchForm"/);
+ assert.match(markup,/id="savedCatalogSearch"/);
+ const start=CLIENT.indexOf('// Mission Control V3.5:');
+ const end=CLIENT.indexOf("document.querySelectorAll('[data-tab]').forEach(link=>link.onclick",start);
+ const source=CLIENT.slice(start,end);
+ assert.match(source,/key:'product-query'/);
+ assert.match(source,/rawQuery\.length>=2&&rawQuery\.length<=90/);
+ assert.match(source,/selected\.find\(value=>value\.key===link\.dataset\.searchRoute\)/);
+ assert.match(source,/item\.catalogQuery/);
+ assert.match(source,/savedCatalogSearchForm/);
+ assert.match(source,/form\.requestSubmit\(\)/);
+ assert.match(source,/search\.value=item\.catalogQuery/);
+ assert.doesNotMatch(source,/\bfetch\s*\(|\bsetInterval\s*\(|\/api\//);
+ assert.doesNotMatch(source,/location\.assign\(.*catalogQuery/);
+});
