@@ -13,7 +13,7 @@ export const MLS_LISTING_FACTORY_CSS=String.raw`
 .mls-lf-field textarea{min-height:95px;resize:vertical}
 .mls-lf-help{color:var(--muted,#68778a);font-size:11px;overflow-wrap:anywhere}
 .mls-lf-sizes{display:flex;gap:7px;flex-wrap:wrap}.mls-lf-size{display:inline-flex;align-items:center;gap:5px;padding:7px 9px;border:1px solid var(--line,#dce2e9);border-radius:8px;font-size:12px}
-.mls-lf-size input{min-height:0;width:auto}.mls-lf-table-wrap{overflow:auto;border:1px solid var(--line,#dce2e9);border-radius:12px}
+.mls-lf-field .mls-lf-size input{min-height:0;width:auto;padding:0;flex:none}.mls-lf-table-wrap{overflow:auto;border:1px solid var(--line,#dce2e9);border-radius:12px}
 .mls-lf-table{border-collapse:collapse;width:100%;min-width:435px;font-size:12px}
 .mls-lf-table th,.mls-lf-table td{text-align:left;padding:9px 11px;border-bottom:1px solid var(--line,#e4e8ec)}
 .mls-lf-table tbody tr:last-child td{border-bottom:0}
@@ -44,7 +44,7 @@ export function mlsListingFactoryBody(){return String.raw`
   <div class="mls-lf-field"><label for="mlsLfTitle">Título do anúncio</label><input id="mlsLfTitle" maxlength="120" placeholder="Camiseta retrô anos 2000 unissex" required><span class="mls-lf-help">Título de autoria do operador; regras de categoria devem ser revistas no Seller Centre.</span></div>
   <div class="mls-lf-field"><label for="mlsLfDescription">Descrição</label><textarea id="mlsLfDescription" maxlength="5000" placeholder="Detalhes do tecido, medidas, cuidados com a estampa e prazo de produção..." required></textarea></div>
   <div class="mls-lf-grid">
-   <div class="mls-lf-field"><label for="mlsLfPrice">Preço base para novos tamanhos (R$)</label><input id="mlsLfPrice" inputmode="decimal" value="49,90"><span class="mls-lf-help">Valor declarado, não é recomendação de margem.</span></div>
+   <div class="mls-lf-field"><label for="mlsLfPrice">Preço base (R$)</label><input id="mlsLfPrice" inputmode="decimal" value="49,90"><button type="button" id="mlsLfApplyPrice" class="mls-lf-btn">Aplicar a todos os tamanhos</button><span class="mls-lf-help">Alterações no preço base atualizam tamanhos ainda não editados. Você pode definir preços diferentes por variação. Valor declarado, não é recomendação de margem.</span></div>
    <div class="mls-lf-field"><label for="mlsLfExtraSizes">Outros tamanhos (separados por vírgula)</label><input id="mlsLfExtraSizes" maxlength="200" placeholder="2, 4, 6, 8 ou Único"><span class="mls-lf-help">Opcional; cada tamanho pode ter preço diferente.</span></div>
   </div>
   <div class="mls-lf-field"><label>Tamanhos padrão</label><div class="mls-lf-sizes" id="mlsLfSizeList">
@@ -102,15 +102,15 @@ export const MLS_LISTING_FACTORY_CLIENT=String.raw`
  }
  function remember(){
   for(const row of table.querySelectorAll('tr[data-size]'))
-   state.rows.set(row.dataset.size,{price:row.querySelector('[data-role=price]')?.value??'',
+   state.rows.set(row.dataset.size,{...(state.rows.get(row.dataset.size)||{}),price:row.querySelector('[data-role=price]')?.value??'',
     quantity:row.querySelector('[data-role=quantity]')?.value??''});
  }
- function variantRows(){
-  remember();table.replaceChildren();
+ function variantRows(skipRemember=false){
+  if(skipRemember!==true)remember();table.replaceChildren();
   const available=selectedSizes();
   if(!available){table.append(el('tr','Tamanhos duplicados ou inválidos.'));return;}
   for(const size of available){
-   const data=state.rows.get(size)||{price:by('Price').value.trim(),quantity:''};
+   const data=state.rows.get(size)||{price:by('Price').value.trim(),quantity:'',manualPrice:false};
    state.rows.set(size,data);
    const tr=el('tr');tr.dataset.size=size;
    const a=el('td'),b=el('td'),c=el('td');
@@ -118,7 +118,7 @@ export const MLS_LISTING_FACTORY_CLIENT=String.raw`
    for(const [cell,key] of [[b,'price'],[c,'quantity']]){
     const i=el('input');i.type='text';i.inputMode=key==='price'?'decimal':'numeric';
     i.value=data[key];i.dataset.role=key;i.setAttribute('aria-label',(key==='price'?'Preço ':'Quantidade ')+size);
-    i.oninput=()=>{data[key]=i.value;};cell.append(i);
+    i.oninput=()=>{data[key]=i.value;if(key==='price')data.manualPrice=true;};cell.append(i);
    }
    tr.append(a,b,c);table.append(tr);
   }
@@ -129,6 +129,28 @@ export const MLS_LISTING_FACTORY_CLIENT=String.raw`
   const jpg=bytes.length>4&&bytes[0]===255&&bytes[1]===216;
   return png&&name.toLowerCase().endsWith('.png')?'image/png':
    jpg&&/\.jpe?g$/i.test(name)?'image/jpeg':null;
+ }
+ function dimensionsFromHeader(bytes,mime){
+  if(mime==='image/png'){
+   if(bytes.length<24)return null;
+   const v=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength);
+   return {width:v.getUint32(16),height:v.getUint32(20)};
+  }
+  let offset=2;
+  while(offset+4<bytes.length){
+   if(bytes[offset]!==255)return null;
+   while(bytes[offset]===255)offset++;
+   const marker=bytes[offset++];
+   if(marker===217||marker===218)break;
+   if(marker===1||marker>=208&&marker<=215)continue;
+   if(offset+2>bytes.length)break;
+   const length=bytes[offset]*256+bytes[offset+1];
+   if(length<2||offset+length>bytes.length)return null;
+   if(marker>=192&&marker<=207&&![196,200,204].includes(marker)&&length>=7)
+    return {height:bytes[offset+3]*256+bytes[offset+4],width:bytes[offset+5]*256+bytes[offset+6]};
+   offset+=length;
+  }
+  return null;
  }
  async function inspect(file){
   const row={name:file.name,frame:null,preview:null,issue:null};
@@ -142,11 +164,15 @@ export const MLS_LISTING_FACTORY_CLIENT=String.raw`
    row.issue='Navegador sem verificação segura';return row;
   }
   try{
-   const buf=await file.arrayBuffer(),mime=headerType(new Uint8Array(buf),file.name);
+   const buf=await file.arrayBuffer(),bytes=new Uint8Array(buf),mime=headerType(bytes,file.name);
    if(!mime||file.type&&file.type!==mime){row.issue='Formato real incompatível com a extensão';return row;}
+   const dims=dimensionsFromHeader(bytes,mime);
+   if(!dims||!dims.width||!dims.height||dims.width>8000||dims.height>8000||dims.width*dims.height>16000000){
+    row.issue='Dimensões excessivas ou cabeçalho incompleto';return row;
+   }
    const bitmap=await createImageBitmap(file);
    try{
-    if(bitmap.width<1||bitmap.height<1||bitmap.width>50000||bitmap.height>50000){
+    if(bitmap.width!==dims.width||bitmap.height!==dims.height){
      row.issue='Dimensões fora do limite';return row;
     }
     const size=Math.min(180/bitmap.width,180/bitmap.height,1),canvas=document.createElement('canvas');
@@ -226,7 +252,7 @@ export const MLS_LISTING_FACTORY_CLIENT=String.raw`
   for(const checkbox of sizes.querySelectorAll('[data-lf-size]'))checkbox.checked=d.item.variants.some(v=>v.size===checkbox.dataset.lfSize);
   for(const v of d.item.variants){
    if(!standard.has(v.size))extras.push(v.size);
-   state.rows.set(v.size,{price:shownPrice(v.price_cents),quantity:v.stock_quantity===null?'':String(v.stock_quantity)});
+   state.rows.set(v.size,{price:shownPrice(v.price_cents),quantity:v.stock_quantity===null?'':String(v.stock_quantity),manualPrice:true});
   }
   by('ExtraSizes').value=extras.join(', ');variantRows();preview();
   by('Save').textContent='Salvar alterações';by('Cancel').hidden=false;
@@ -265,16 +291,16 @@ export const MLS_LISTING_FACTORY_CLIENT=String.raw`
  });
  for(const checkbox of sizes.querySelectorAll('[data-lf-size]'))checkbox.addEventListener('change',variantRows);
  by('ExtraSizes').addEventListener('input',variantRows);by('Sku').addEventListener('input',variantRows);
- by('Price').addEventListener('input',()=>tell('O preço base afeta apenas novos tamanhos; revise os preços existentes individualmente.'));
+ by('Price').addEventListener('input',()=>{remember();for(const v of state.rows.values())if(!v.manualPrice)v.price=by('Price').value.trim();variantRows(true);tell('Preço base aplicado aos tamanhos sem alteração individual.');});
+ by('ApplyPrice').onclick=()=>{remember();for(const v of state.rows.values()){v.price=by('Price').value.trim();v.manualPrice=false;}variantRows(true);tell('Preço base aplicado a todos os tamanhos. Confira a margem antes da publicação futura.');};
  input.addEventListener('change',async()=>{
   const seq=++state.sequence,selected=[...input.files];input.value='';
   if(selected.length>30){tell('Seleção acima de 30 arquivos. Use 5 a 9 por anúncio.');return;}
   state.busy=true;state.files=[];by('Save').disabled=true;preview();list();
   tell('Decodificando arquivos e calculando hashes neste navegador…');
-  const examined=[];
-  for(const file of selected){
-   const observed=await inspect(file);if(seq!==state.sequence)return;examined.push(observed);
-  }
+  const examined=new Array(selected.length);let cursor=0;
+  async function worker(){while(cursor<selected.length){const i=cursor++;examined[i]=await inspect(selected[i]);if(seq!==state.sequence)return;}}
+  await Promise.all(Array.from({length:Math.min(3,selected.length)},worker));
   if(seq!==state.sequence)return;
   state.files=examined;state.busy=false;by('Save').disabled=false;preview();list();
   tell(examined.length+' imagem(ns) analisada(s); '+examined.filter(x=>!x.frame||x.issue).length+' aviso(s).');
