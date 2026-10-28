@@ -72,3 +72,11 @@ Depois de criar seus anúncios, clique em **Exportar anúncios JSON**. Use **Ret
 As fotos não fazem parte do JSON: o editor conserva seus nomes, mas exige **reanexar os mockups locais** antes de considerar um anúncio pronto para revisão. Pode editar o título sem perder as referências às fotos, porém sem os arquivos originais o estado continua NEEDS_CORRECTION. A fila mostra **8 anúncios por página** para não sobrecarregar o celular quando houver centenas de artes.
 
 Os testes Chrome incluem retorno do manifesto, conteúdo HTML escapado, arquivo JPEG falso, dimensões excessivas e paginação de 19 anúncios. A CI final da integração passou no run #40788713558: **2.126 testes Node e 67 Python**, com Chrome real, 13/13 blobs de código idênticos aos da PR #56 e builds App/Auth/Finance gerados. **Não houve merge ou deploy**; QA visual autenticada no desktop/celular segue pendente. Ver MLS_LISTING_FACTORY_CI_2026_10_28.md.
+
+## Reanexar mockups em lote — PR #60
+
+Com anúncio importado por JSON, use **Reanexar mockups em lote**. Selecione até 200 JPG/PNG (máximo 64 MiB somados) ou uma pasta no Chrome/Edge. O navegador associa cada arquivo pelo nome exato a todos os rascunhos que tenham essa referência — ideal quando fotos de tabela de medidas, cuidados ou detalhes são reutilizadas em várias estampas. A verificação usa hash SHA-256, decodificação real e três processos locais simultâneos. Se encontrar dois nomes iguais na seleção, arquivo inválido ou mudança de hash em foto já vinculada, o lote é recusado sem alterações parciais. Arquivos sem correspondência são ignorados com contagem. Consulte [o guia de imagens em lote](MLS_LISTING_FACTORY_BATCH_RELINK_2026_10_28.md).
+
+**Atenção:** o JSON não guarda a imagem original nem seu hash anterior; nome igual exige conferência visual e não autoriza publicar. Esta PR está isolada sem merge/deploy.
+
+**Reanexação em lote (PR #60):** seleção de até 200 imagens/64 MiB por vez, com correspondência exata dos nomes de fotos entre anúncios, bloqueio por hash alterado/nome duplicado, sem upload. CI #40790629421 verde (2.132 Node + 67 Python), não publicado. Guia: [MLS_LISTING_FACTORY_BATCH_RELINK_2026_10_28.md](MLS_LISTING_FACTORY_BATCH_RELINK_2026_10_28.md).

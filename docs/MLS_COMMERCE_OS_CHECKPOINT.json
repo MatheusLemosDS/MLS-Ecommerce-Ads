@@ -31,7 +31,7 @@
   },
   "current_phase": "M2_FINANCE_RETURNS_RECONCILIATION",
   "working_branch": "feature/mls-listing-factory-owner-ui-20261028",
-  "current_status": "M2_NOT_CLOSED_M3_SHADOW_PR47_DRAFT_PR51_PR56_CI_GREEN_OWNER_QA_PENDING_NO_PROD_DEPLOY",
+  "current_status": "M2_OPEN_PR47_PR48_PR51_PR56_PR60_DRAFT_CI_GREEN_OWNER_QA_PENDING_NO_PROD_DEPLOY",
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
     "Repasse-base, ajuste, repasse após ajuste e liberação exibidos sem dupla dedução",
@@ -123,7 +123,10 @@
     "Manter M2 issue #50 aberta e anuncios/precificacao/estoque externos BLOQUEADOS",
     "PR #56 Listing Factory UI: revisar CI do HEAD e hash App, QA desktop/mobile e integração sobre PR #51",
     "Run current PR #56 Node+Python+Chrome+Workers CI (manual workflow_dispatch if Actions does not auto-start), then restore stacked base PR #51",
-    "PR #56: CI green 40788713558 (PR #58 temporária fechada); QA desktop/mobile autenticada antes de integrar PR #51→#56"
+    "PR #56: CI green 40788713558 (PR #58 temporária fechada); QA desktop/mobile autenticada antes de integrar PR #51→#56",
+    "PR60 batch mockups: CI rerun after App SHA review; close temporary #61 without merge when green; verify 14/14 source/test blobs",
+    "Codex can continue bulk media matching QA for user assets, do not change PR51/56 concurrently",
+    "PR60 CI GREEN 40790629421 (2132 Node,67 Python,14/14 source blobs), prepare QA real files and ordered merge only when approved."
   ],
   "m0_followup": [
     "Conferir visual autenticado em desktop e celular durante M1; corrigir apenas branding/layout sem renomear infraestrutura"
@@ -541,6 +544,48 @@
         },
         "last_verified_code_commit": "433ec7484fb3f10153d159f6cd353225bec6dfed",
         "last_verified_ci_run": 40788713558
+      },
+      "batch_media": {
+        "schema": "mls_listing_batch_media_checkpoint_v1",
+        "pr": 60,
+        "base_pr": 56,
+        "branch": "feature/mls-listing-factory-batch-relink-20261028",
+        "status": "DRAFT_CI_GREEN_OWNER_QA_PENDING_NO_MERGE_NO_DEPLOY",
+        "temporary_ci_pr": 61,
+        "first_ci_run": 40790379512,
+        "first_ci_node_tests": 2132,
+        "first_ci_node_pass": 2128,
+        "first_ci_failures": "APP_EXACT_SHA_UNRECOGNIZED_ONLY",
+        "app_sha256": "63da28d212c45d1e7e93444dbe4ac2ac49ad113af273dddf65370f668156180d",
+        "features": [
+          "bulk file or folder selection up to 200 images and 64 MiB",
+          "exact filename relinking across imported drafts",
+          "atomic rejection of duplicate or changed-hash images",
+          "reuse one common photo for multiple listings",
+          "transparent missing/unmatched counts",
+          "no Shopee/API/D1/Ads writes"
+        ],
+        "gates": [
+          "Owner desktop/mobile login QA with real mockups",
+          "Integrate PR #51 then #56 then #60 preserving PR #48 after approval",
+          "M2 issue #50 and marketplace permissions, costs and stock remain unverified"
+        ],
+        "latest_ci_run": 40790629421,
+        "verification": {
+          "conclusion": "SUCCESS",
+          "node_pass": 2132,
+          "node_fail": 0,
+          "python_pass": 67,
+          "chromium": "PASS",
+          "code_test_blobs": "14_OF_14_IDENTICAL_PR60_PR61",
+          "app_sha256": "63da28d212c45d1e7e93444dbe4ac2ac49ad113af273dddf65370f668156180d",
+          "auth_sha256": "1fef431c8573e05563c7938d95be0976a160bc603340084aa747ee0b73e7ec64",
+          "finance_sha256": "b2483fc6107ecb4782e746becfe1b69ee6e3b9d3f0a6109351390b11b9303ca3",
+          "temporary_pr": 61,
+          "temporary_pr_status": "CLOSED_WITHOUT_MERGE",
+          "human_authenticated_qa": "NOT_DONE",
+          "published": "NO"
+        }
       }
     }
   }

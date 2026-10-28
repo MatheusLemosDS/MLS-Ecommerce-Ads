@@ -111,3 +111,37 @@ test('real Chrome owner validates PNG bytes, rejects spoofed JPG, edits and expo
   assert.deepEqual(data.errors,[]);
  }finally{server.closeAllConnections?.();server.close();}
 });
+
+const batchFixture="\n(async()=>{\n const by=id=>document.getElementById('mlsLf'+id);\n const info={};\n try{\n  const canvas=document.createElement('canvas');canvas.width=1024;canvas.height=1024;\n  const ctx=canvas.getContext('2d');\n  function png(color){\n   ctx.fillStyle=color;ctx.fillRect(0,0,1024,1024);\n   const data=atob(canvas.toDataURL('image/png').split(',')[1]),bytes=new Uint8Array(data.length);\n   for(let i=0;i<data.length;i++)bytes[i]=data.charCodeAt(i);\n   return bytes;\n  }\n  const bytes=png('#3366aa'),different=png('#bb6633');\n  const names=['a.png','b.png','c.png','d.png','e.png'];\n  const manifest={schema:'mls_listing_factory_input_v1',marketplace:'SHOPEE_BR',items:\n   Array.from({length:19},(_,i)=>({\n    client_ref:'bulk-'+String(i+1).padStart(3,'0'),\n    title:'Camiseta retrô original coleção nostálgica arte '+(i+1),\n    description:'Camiseta personalizada. Confira todas as medidas, cores e cuidados com a peça.',\n    images:names.slice(),\n    variants:[{sku:'BULK'+String(i+1)+'-M',size:'M',price_cents:6500,stock_quantity:null}]\n   }))};\n  window.confirm=()=>true;\n  async function choose(id,files,expect){\n   by(id).value='';\n   const transfer=new DataTransfer();\n   for(const [name,data] of files)transfer.items.add(new File([data],name,{type:'image/png'}));\n   by(id).files=transfer.files;\n   by(id).dispatchEvent(new Event('change',{bubbles:true}));\n   for(let i=0;i<100;i++){\n    if(by('Message').textContent.includes(expect))return;\n    await new Promise(done=>setTimeout(done,55));\n   }\n   throw Error('BATCH_TIMEOUT_'+expect+': '+by('Message').textContent);\n  }\n  const imported=new File([JSON.stringify(manifest)],'runners.json',{type:'application/json'});\n  const transfer=new DataTransfer();transfer.items.add(imported);by('Import').files=transfer.files;\n  by('Import').dispatchEvent(new Event('change',{bubbles:true}));\n  for(let i=0;i<100&&!by('Message').textContent.includes('Importados 19');i++)\n   await new Promise(done=>setTimeout(done,55));\n  if(!by('Message').textContent.includes('Importados 19'))throw Error('IMPORT_TIMEOUT');\n  info.initial={ready:by('Stats').textContent,shown:by('Drafts').querySelectorAll('article').length,\n   photos:by('Drafts').querySelectorAll('.mls-lf-thumbs img').length};\n  await choose('BatchFiles',names.slice(0,4).map(name=>[name,bytes]),'associado(s)');\n  info.partial={ready:by('Stats').textContent,shown:by('Drafts').querySelectorAll('article').length,\n   status:by('BatchStatus').textContent};\n  await choose('BatchFiles',names.map(name=>[name,bytes]),'associado(s)');\n  info.complete={ready:by('Stats').textContent,\n   status:by('BatchStatus').textContent,\n   shown:by('Drafts').querySelectorAll('article').length,\n   thumbCount:by('Drafts').querySelectorAll('.mls-lf-thumbs img').length};\n  await choose('BatchFiles',[['a.png',different]],'mudou de conteúdo');\n  info.changed={message:by('Message').textContent,ready:by('Stats').textContent};\n  await choose('BatchFiles',[['a.png',bytes],['a.png',different]],'nome repetido');\n  info.duplicate={message:by('Message').textContent,ready:by('Stats').textContent};\n  await choose('BatchFiles',[['a.png',bytes],['unused.png',bytes]],'associado(s)');\n  info.unused={status:by('BatchStatus').textContent,ready:by('Stats').textContent};\n  const blobs=[];URL.createObjectURL=blob=>{blobs.push(blob);return 'blob:fixture';};\n  HTMLAnchorElement.prototype.click=function(){};\n  by('ExportReview').click();\n  info.review=JSON.parse(await blobs.at(-1).text());\n  info.errors=window.__lfErrors.slice();\n }catch(e){info.failure=String(e?.stack||e).slice(0,1300);}\n document.documentElement.dataset.mlsLfE2e=JSON.stringify(info);\n})();";
+
+test('Chrome bulk relinks 19 imported drafts from exact local filenames, and rejects changed/duplicate bytes',{timeout:65000},async t=>{
+ if(!chrome)return t.skip('Chrome unavailable');
+ let html=(await compiledOwnerReportPage(false)).html;
+ html=html.replace('<head>','<head><script>window.__lfErrors=[];addEventListener("error",e=>window.__lfErrors.push(String(e.message)));addEventListener("unhandledrejection",e=>window.__lfErrors.push(String(e.reason)));</script>');
+ const server=http.createServer((req,res)=>{res.writeHead(200,{'content-type':'text/html; charset=utf-8'});res.end(html);});
+ await new Promise(done=>server.listen(0,'127.0.0.1',done));
+ try{
+  const data=await chromeEvaluate('http://127.0.0.1:'+server.address().port+'/?tab=products',batchFixture);
+  assert.equal(data.failure,undefined,data.failure);
+  assert.match(data.initial.ready,/0 pronto\(s\) para revisão/);
+  assert.equal(data.initial.shown,8);
+  assert.equal(data.initial.photos,0);
+  assert.match(data.partial.ready,/0 pronto\(s\) para revisão/);
+  assert.match(data.partial.status,/4 arquivo\(s\) associado\(s\) a 19 anúncio\(s\)/);
+  assert.match(data.complete.ready,/19 pronto\(s\) para revisão/);
+  assert.equal(data.complete.shown,8);
+  assert.equal(data.complete.thumbCount,40);
+  assert.match(data.complete.status,/Associação por nome, não comprovação/);
+  assert.match(data.changed.message,/mudou de conteúdo/);
+  assert.match(data.changed.ready,/19 pronto\(s\) para revisão/);
+  assert.match(data.duplicate.message,/nome repetido/);
+  assert.match(data.duplicate.ready,/19 pronto\(s\) para revisão/);
+  assert.match(data.unused.status,/1 arquivo\(s\) sem correspondência ignorado\(s\)/);
+  assert.equal(data.review.execution_allowed,false);
+  assert.equal(data.review.api_permission_verified,false);
+  assert.equal(data.review.summary.ready_for_review,19);
+  assert.equal(data.review.products[18].images.length,5);
+  assert.ok(data.review.products.every(p=>p.seller_publication_allowed===false));
+  assert.deepEqual(data.errors,[]);
+ }finally{server.closeAllConnections?.();server.close();}
+});

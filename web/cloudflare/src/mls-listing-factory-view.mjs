@@ -27,10 +27,12 @@ export const MLS_LISTING_FACTORY_CSS=String.raw`
 .mls-lf .mls-lf-btn:focus-visible{outline:3px solid #56a1e9;outline-offset:2px}
 .mls-lf .mls-lf-btn.primary{background:#2459a6;color:#fff;border-color:#2459a6}.mls-lf .mls-lf-btn:disabled{opacity:.45;cursor:not-allowed}
 .mls-lf-message{font-size:12px;padding:10px 12px;border-radius:10px;background:var(--surface-raised,rgba(128,128,128,.07));min-height:36px}
+.mls-lf-bulk{display:grid;gap:11px;margin:14px 0;padding:16px;border-radius:13px;border:1px solid var(--line,#dce2e9);background:var(--surface-raised,var(--surface,#fff))}
+.mls-lf-bulk h4{margin:0;font-size:14px}.mls-lf-bulk-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.mls-lf-bulk [type=file]{max-width:100%;min-width:0;font-size:12px}.mls-lf-bulk [type=file]:disabled{opacity:.5}.mls-lf-bulk-status{font-size:12px;overflow-wrap:anywhere}
 .mls-lf-queue{display:grid;gap:11px;margin:15px 0}.mls-lf-item{border:1px solid var(--line,#dce2e9);border-left:3px solid #c78037;padding:14px;border-radius:12px;display:grid;gap:9px;min-width:0}
 .mls-lf-item[data-ready=true]{border-left-color:#218665}.mls-lf-item-head,.mls-lf-queue-head{display:flex;gap:12px;justify-content:space-between;align-items:flex-start;flex-wrap:wrap}
 .mls-lf-item strong{overflow-wrap:anywhere}.mls-lf-thumbs{display:flex;gap:5px;overflow:auto}.mls-lf-thumbs img{width:54px;height:54px;border-radius:7px;object-fit:contain;background:#f0f0f0;flex:none}
-@media(max-width:700px){.mls-lf{padding:15px}.mls-lf-grid{grid-template-columns:1fr}.mls-lf-actions>*{flex:1;min-width:125px}}
+@media(max-width:700px){.mls-lf{padding:15px}.mls-lf-grid,.mls-lf-bulk-grid{grid-template-columns:1fr}.mls-lf-actions>*{flex:1;min-width:125px}}
 `;
 export function mlsListingFactoryBody(){return String.raw`
 <section id="mlsListingFactory" class="mls-lf" aria-labelledby="mlsLfHeading">
@@ -64,6 +66,15 @@ export function mlsListingFactoryBody(){return String.raw`
  </form>
  <p id="mlsLfMessage" class="mls-lf-message" role="status" aria-live="polite">Rascunhos mantidos apenas nesta aba. Exporte o JSON antes de sair.</p>
  <div class="mls-lf-queue-head"><h3>Fila de rascunhos</h3><span id="mlsLfStats" class="mls-lf-help">0 anúncios</span></div>
+ <div class="mls-lf-bulk" id="mlsLfBulk" aria-labelledby="mlsLfBulkHeading">
+  <h4 id="mlsLfBulkHeading">Reanexar mockups em lote</h4>
+  <p class="mls-lf-help">Para anúncios importados por JSON, selecione seus JPG/PNG originais em uma única operação. O sistema associa o nome exato do arquivo aos rascunhos, inclusive repetidos em várias artes. Não usa diretórios nem envia arquivos à internet.</p>
+  <div class="mls-lf-bulk-grid">
+   <div class="mls-lf-field"><label for="mlsLfBatchFiles">Selecionar várias imagens</label><input id="mlsLfBatchFiles" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png" multiple disabled></div>
+   <div class="mls-lf-field"><label for="mlsLfBatchFolder">Ou escolher uma pasta de mockups (Chrome/Edge)</label><input id="mlsLfBatchFolder" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png" multiple webkitdirectory directory disabled></div>
+  </div>
+  <p id="mlsLfBatchStatus" class="mls-lf-bulk-status mls-lf-help" role="status" aria-live="polite">Importe um lote JSON ou adicione anúncios para habilitar a associação. Máximo 200 arquivos/64 MB por seleção; nomes duplicados bloqueiam o lote.</p>
+ </div>
  <div id="mlsLfDrafts" class="mls-lf-queue"></div>
  <div class="mls-lf-actions" aria-label="Navegação da fila">
   <button class="mls-lf-btn" id="mlsLfPrevious" type="button" disabled>Anterior</button>
@@ -232,6 +243,7 @@ export const MLS_LISTING_FACTORY_CLIENT=String.raw`
   by('Stats').textContent=n+' anúncio(s) · '+(plan?.summary.ready_for_review||0)+' pronto(s) para revisão · '+
    (plan?.summary.needs_correction||0)+' com pendências · '+(plan?.summary.batches||0)+' lote(s)';
   for(const id of ['ExportManifest','ExportReview','Clear'])by(id).disabled=!n||!plan||state.busy;
+  for(const id of ['BatchFiles','BatchFolder'])by(id).disabled=!n||!plan||state.busy||state.editing!==null;
   if(!n){queue.append(el('p','Adicione uma arte para iniciar a fila.','mls-lf-help'));return;}
   if(!plan){queue.append(el('p','Fila inválida: revise SKUs ou códigos duplicados.','mls-lf-help'));return;}
   state.drafts.slice(first,first+pageSize).forEach((d,index)=>{
@@ -258,6 +270,7 @@ export const MLS_LISTING_FACTORY_CLIENT=String.raw`
  }
  function edit(i){
   const d=state.drafts[i];if(!d||state.busy)return;reset();state.editing=i;state.files=d.files.slice();
+  by('BatchFiles').disabled=true;by('BatchFolder').disabled=true;
   by('Ref').value=d.item.client_ref;by('Title').value=d.item.title;by('Description').value=d.item.description;
   const standard=new Set([...sizes.querySelectorAll('[data-lf-size]')].map(x=>x.dataset.lfSize));
   const original=d.item.variants[0];by('Sku').value=original?.sku?.replace(/-[^-]+$/,'')||'';
@@ -358,6 +371,88 @@ export const MLS_LISTING_FACTORY_CLIENT=String.raw`
    tell('Importados '+plan.summary.items+' anúncio(s) para conferência. Reanexe 5–9 mockups por arte antes de exportar a revisão final; imagens e estoque não foram validados.');
   }catch(error){tell(error?.message||'Não foi possível importar este manifesto JSON.');}
  });
+
+ async function reattachBatch(picker){
+  const selected=[...picker.files];picker.value='';
+  if(state.busy){tell('Aguarde a verificação anterior terminar.');return;}
+  if(state.editing!==null){tell('Salve ou cancele a edição atual antes de vincular imagens em lote.');return;}
+  if(!state.drafts.length){tell('Importe rascunhos JSON ou adicione anúncios antes de selecionar imagens.');return;}
+  if(selected.length<1)return;
+  if(selected.length>200){tell('Máximo 200 imagens por seleção. Divida a pasta em partes.');return;}
+  let bytes=0;const picked=new Map();
+  for(const file of selected){
+   if(!validFile(file.name)||!Number.isSafeInteger(file.size)||file.size<1||file.size>2097152){
+    tell('Lote recusado: arquivo com nome inválido ou acima de 2 MB. Nenhum rascunho foi alterado.');return;
+   }
+   bytes+=file.size;
+   if(bytes>64*1024*1024){tell('Lote acima de 64 MB. Selecione menos imagens; nada foi modificado.');return;}
+   if(picked.has(file.name)){
+    tell('Lote recusado: nome repetido '+file.name+'. Pastas com arquivos homônimos devem ser separadas; nenhum rascunho foi alterado.');return;
+   }
+   picked.set(file.name,file);
+  }
+  const needed=new Set(state.drafts.flatMap(d=>d.item.images));
+  const matching=[...picked.values()].filter(file=>needed.has(file.name));
+  const ignored=selected.length-matching.length;
+  if(!matching.length){
+   tell('Nenhum nome de arquivo corresponde às fotos informadas no JSON. Confira nomes e extensão.');return;
+  }
+  const sequence=++state.sequence;
+  state.busy=true;by('Save').disabled=true;list();
+  by('BatchStatus').textContent='Conferindo '+matching.length+' imagem(ns) locais em grupos de até três...';
+  tell('Conferindo '+matching.length+' imagem(ns) locais. A fila permanece bloqueada durante a verificação.');
+  const scanned=new Array(matching.length);let cursor=0;
+  try{
+   async function worker(){
+    while(cursor<matching.length){
+     const n=cursor++;
+     scanned[n]=await inspect(matching[n]);
+     if(sequence!==state.sequence)return;
+    }
+   }
+   await Promise.all(Array.from({length:Math.min(3,matching.length)},worker));
+   if(sequence!==state.sequence)return;
+   const invalid=scanned.find(row=>!row?.frame||
+    row.issue&&!row.issue.startsWith('Qualidade:'));
+   if(invalid)throw Error('Lote recusado: '+invalid.name+' — '+(invalid.issue||'imagem incompleta')+'. Nenhum arquivo foi associado.');
+   const manifest={schema:'mls_listing_factory_input_v1',marketplace:'SHOPEE_BR',
+    items:state.drafts.map(d=>d.item)};
+   const plan=planMlsDraftBatchMedia(manifest,scanned.map(row=>row.frame));
+   if(!plan)throw Error('Não foi possível validar nomes e metadados do lote. Nenhum anúncio foi alterado.');
+   const scannedMap=new Map(scanned.map(row=>[row.name,row]));
+   for(const draft of state.drafts){
+    for(const previous of draft.files){
+     const current=scannedMap.get(previous.name);
+     if(current&&previous.frame&&previous.frame.sha256!==current.frame.sha256)
+      throw Error('Arquivo '+previous.name+' mudou de conteúdo (hash diferente). Renomeie ou revise a imagem individualmente; lote não aplicado.');
+    }
+   }
+   const next=state.drafts.map(draft=>{
+    const byName=new Map(draft.files.filter(row=>draft.item.images.includes(row.name)).map(row=>[row.name,row]));
+    for(const name of draft.item.images)if(scannedMap.has(name))byName.set(name,scannedMap.get(name));
+    return {item:draft.item,files:draft.item.images.filter(name=>byName.has(name)).map(name=>byName.get(name))};
+   });
+   const after=projection(next);
+   if(!after?.review)throw Error('A revisão do lote foi rejeitada. Nenhum anúncio foi alterado.');
+   state.drafts=next;
+   const ready=after.review.summary.ready_for_review;
+   const message=plan.matched_unique_files+' arquivo(s) associado(s) a '+plan.matched_item_count+
+    ' anúncio(s); '+ready+' de '+after.review.summary.items+
+    ' prontos para revisão interna. '+ignored+' arquivo(s) sem correspondência ignorado(s).';
+   by('BatchStatus').textContent=message+' Associação por nome, não comprovação do mockup original: confira visualmente.';
+   tell(message+' Sem upload ou publicação. Estoque, custos e permissões ainda exigem conferência.');
+  }catch(error){
+   const message=error?.message||'Erro de validação local do lote.';
+   by('BatchStatus').textContent=message;
+   tell(message);
+  }finally{
+   if(sequence===state.sequence){
+    state.busy=false;by('Save').disabled=false;list();
+   }
+  }
+ }
+ by('BatchFiles').addEventListener('change',()=>reattachBatch(by('BatchFiles')));
+ by('BatchFolder').addEventListener('change',()=>reattachBatch(by('BatchFolder')));
  by('Previous').onclick=()=>{if(state.busy)return;state.page=Math.max(0,state.page-1);list();};
  by('Next').onclick=()=>{if(state.busy)return;state.page++;list();};
  by('Clear').onclick=()=>{
