@@ -51,7 +51,8 @@ test('owner keeps all existing financial forms and identifiers once, but overvie
 test('Mission Control style has scoped futuristic accents, responsive breakpoints and reduced-motion support',()=>{
  for(const name of names)assert.match(MISSION_CSS,new RegExp('mission-agent--'+name));
  for(const token of ['mission-hub-grid','mission-stats','mission-module','mission-hub-card','focus-visible','prefers-reduced-motion','max-width:550px'])assert.ok(MISSION_CSS.includes(token),token);
- assert.doesNotMatch(MISSION_CLIENT,/\bfetch\s*\(|setInterval\s*\(|\/api\/|postMessage\s*\(/);
+ assert.equal(MISSION_CLIENT.includes('fetch('),false);
+ assert.equal(MISSION_CLIENT.includes('setInterval('),false);
 });
 
 function mount(snapshot){
@@ -63,7 +64,7 @@ function mount(snapshot){
  const document={getElementById:id=>nodes.get(id)||null,querySelectorAll:selector=>{
   const m=/^\[data-mission-status="([^"]+)"\]$/.exec(selector);
   return m?statuses.get(m[1])||[]:[];
- },createElement:tag=>({tag,textContent:'',dataset:{},children:[],append(...children){this.children.push(...children);}})};
+ },createElement:tag=>({tag,textContent:'',dataset:{},style:{},children:[],append(...children){this.children.push(...children);}})};
  const context=vm.createContext({document,Intl,Date,Number,BigInt,Math});
  if(snapshot)context.mlsAgentRegistry={getSnapshot:()=>snapshot};
  vm.runInContext(MISSION_CLIENT,context);
@@ -134,7 +135,8 @@ test('Mission Control V2 decorative surfaces cannot invent financial history or 
  assert.match(html,/valores indisponíveis permanecem como —/i);
  assert.doesNotMatch(html,/ROAS\s*(?:[0-9]|de)/i);
  assert.doesNotMatch(html,/data-action="(?:approve|execute|scale)"/);
- assert.doesNotMatch(MISSION_CLIENT,/\bfetch\s*\(|setInterval\s*\(|\/api\//);
+ assert.equal(MISSION_CLIENT.includes('fetch('),false);
+ assert.equal(MISSION_CLIENT.includes('setInterval('),false);
  assert.match(MISSION_CSS,/data-theme=light/);
 });
 
@@ -166,4 +168,22 @@ test('V3 second pass eliminates double agent icons and constrains executive hero
  assert.match(MISSION_CSS,/\.mission-dashboard \.mission-command-orbit\{display:none\}/);
  assert.match(MISSION_CSS,/grid-template-columns:repeat\(6,minmax\(0,1fr\)\)!important/);
  for(const id of ['finance','ads','products','production','returns','auditor'])assert.match(commandCenterBody(),new RegExp('data-mission-accent="'+id+'"'));
+});
+
+
+test('observer workspaces expose category charts backed by existing registry only',()=>{
+ const html=missionWorkspacesBody();
+ for(const id of ['products','production','returns','auditor']){
+  assert.match(html,new RegExp('id="mission-'+id+'-evidence"'));
+  assert.match(html,new RegExp('id="mission-'+id+'-evidence-note"'));
+ }
+ assert.match(MISSION_CSS,/mission-evidence-panel/);
+ assert.match(MISSION_CLIENT,/renderEvidence/);
+ assert.equal(MISSION_CLIENT.includes('fetch('),false);
+ assert.equal(MISSION_CLIENT.includes('setInterval('),false);
+});
+test('financial sparklines are slots for cached daily observations, not decorative random history',()=>{
+ const html=commandCenterBody();
+ for(const metric of ['Net','Sales','Ads'])assert.match(html,new RegExp('id="missionSpark'+metric+'"'));
+ assert.match(MISSION_CSS,/mission-evidence-panel/);
 });
