@@ -125,9 +125,9 @@ export const AGENT_REGISTRY_CLIENT=String.raw`
 
  function paintSourceState(){
   const box=document.getElementById('missionSourceState'),title=document.getElementById('missionSourceTitle'),
-   message=document.getElementById('missionSourceDescription'),retry=document.getElementById('missionSourceRetry'),
-   hero=document.querySelector('.mission-command-hero');
+   message=document.getElementById('missionSourceDescription'),retry=document.getElementById('missionSourceRetry');
   if(!box||!title||!message)return;
+  const hero=typeof document.querySelector==='function'?document.querySelector('.mission-command-hero'):null;
   let day=null,month=null,trend=null;
   try{day=globalThis.brazaDayDashboard?.getSnapshot?.()??null;}catch{}
   try{month=globalThis.brazaMonthDashboard?.getSnapshot?.()??null;}catch{}
