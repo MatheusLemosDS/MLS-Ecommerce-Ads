@@ -296,3 +296,13 @@ test('overview reports a source-state panel rather than treating unknown sales a
  assert.match(AGENT_REGISTRY_CLIENT,/selectMonth/);
  assert.doesNotMatch(AGENT_REGISTRY_CLIENT,/\bfetch\s*\(|setInterval\s*\(/);
 });
+
+test('validated month without an observed selected day does not imply current-day agent health',()=>{
+ const pendingDay={schema:'mls_day_snapshot_v1',date:'2026-10-28',state:'PENDING',net_cents:null,net_basis:null,sales_cents:null,ads_spend_cents:null,paid_orders:null,pending:[]};
+ const result=buildMlsAgentRegistry({day:pendingDay,month:month()});
+ assert.equal(result.health,'WORKING');
+ assert.equal(result.agents.find(agent=>agent.id==='finance').status,'WORKING');
+ assert.equal(result.agents.find(agent=>agent.id==='ads').status,'WORKING');
+ assert.equal(result.hermes.status,'WORKING');
+ assert.equal(result.day.net_cents,null);
+});
