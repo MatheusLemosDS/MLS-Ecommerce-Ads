@@ -79,6 +79,7 @@ test('real Chromium hydrates owner agent cards even when finance API is unavaila
   '}catch(e){document.documentElement.dataset.mlsTrendFixtureError=String(e?.message||e).slice(0,250);}})();</script>';
 
  const agentsFixtureScript="<script>(()=>{try{\n const catalog={schema:\"mls_agent_catalog_snapshot_v1\",total:345,indexed:300,pending_catalog:45,checked_at:1793200000,discovery_status:\"IDLE\"};\n const dtf={schema:\"mls_agent_dtf_queue_v1\",line_count:10,pending_lines:4,reserved_lines:2,produced_lines:3,blocked_lines:1,batch_count:2};\n if(globalThis.brazaSavedCatalog)globalThis.brazaSavedCatalog.getSnapshot=()=>catalog;\n if(globalThis.brazaDtfWorkspace)globalThis.brazaDtfWorkspace.getSnapshot=()=>dtf;\n globalThis.mlsAgentRegistry?.notify?.();\n setTimeout(()=>{const snapshot=globalThis.mlsAgentRegistry?.getSnapshot?.();document.documentElement.dataset.mlsAgentSourcesFixture=JSON.stringify({catalog:snapshot?.sources?.catalog?.total,dtf:snapshot?.sources?.dtf_queue?.pending_lines,products:document.getElementById(\"mission-products-metric-0\")?.textContent,production:document.getElementById(\"mission-production-metric-0\")?.textContent,errors:window.__mlsErrors.slice(0,4)});},350);\n }catch(error){document.documentElement.dataset.mlsAgentSourcesError=String(error?.message||error).slice(0,200)}})();</script>";
+ const financeAuthFixtureScript="<script>(()=>{try{\n const prior=globalThis.brazaMonthDashboard;\n globalThis.brazaMonthDashboard={\n   getSnapshot:()=>prior?.getSnapshot?.()??null,\n   getSourceStatus:()=>({schema:'mls_finance_source_coverage_v1',collection_code:'BUSINESS_PERIOD_AUTH_REQUIRED'})\n };\n globalThis.mlsAgentRegistry?.refresh?.();\n const box=document.getElementById('missionFinanceAuthRecovery');\n document.documentElement.dataset.mlsFinanceAuthFixture=JSON.stringify({\n  visible:box?.hidden===false,\n  links:[...(box?.querySelectorAll('a')||[])].map(a=>({href:a.href,target:a.target,rel:a.rel})),\n  errors:window.__mlsErrors?.slice(0,3)||[]\n });\n }catch(e){document.documentElement.dataset.mlsFinanceAuthFixtureError=String(e?.message||e).slice(0,200)}})();</script>";
  const requests=[];
  const server=http.createServer((request,response)=>{
   const path=(request.url||'/').split('?')[0];
@@ -87,7 +88,7 @@ test('real Chromium hydrates owner agent cards even when finance API is unavaila
   if(path==='/admin'){
    response.writeHead(200,{'Content-Type':'text/html; charset=utf-8',
     'Content-Security-Policy':admin.headers.get('content-security-policy')||"default-src 'self'; script-src 'self' 'unsafe-inline';"});
-   response.end((request.url||'').includes('mlsFixture=trend')?html.replace('</body>',fixtureScript+'</body>'):(request.url||'').includes('mlsFixture=agents')?html.replace('</body>',agentsFixtureScript+'</body>'):html);
+   response.end((request.url||'').includes('mlsFixture=trend')?html.replace('</body>',fixtureScript+'</body>'):(request.url||'').includes('mlsFixture=agents')?html.replace('</body>',agentsFixtureScript+'</body>'):(request.url||'').includes('mlsFixture=financeAuth')?html.replace('</body>',financeAuthFixtureScript+'</body>'):html);
   }else if(path==='/api/admin/bootstrap'){
    response.setHeader('Content-Type','application/json');
    response.end(JSON.stringify({schema:'admin_bootstrap_v1',csrf:'a'.repeat(64)}));
@@ -159,6 +160,18 @@ test('real Chromium hydrates owner agent cards even when finance API is unavaila
   assert.equal(source.products,'345');
   assert.equal(source.production,'4');
   assert.deepEqual(source.errors,[]);
+
+  const authorization=await chromeDump(url+'?mlsFixture=financeAuth');
+  const encodedAuth=authorization.match(/data-mls-finance-auth-fixture="([^"]+)"/);
+  assert.ok(encodedAuth,'Auth-recovery inspector must execute (error '+(authorization.match(/data-mls-finance-auth-fixture-error="([^"]+)"/)?.[1]||'none')+')');
+  const auth=JSON.parse(encodedAuth[1].replaceAll('&quot;','"').replaceAll('&amp;','&').replaceAll('&#39;',"'"));
+  assert.equal(auth.visible,true,'only the exact AUTH_REQUIRED code exposes recovery links');
+  assert.deepEqual(auth.links.map(x=>x.href),[
+   'https://auth.brazacommerce.com.br/shopee/finance/status',
+   'https://auth.brazacommerce.com.br/shopee/finance/connect'
+  ]);
+  assert.ok(auth.links.every(x=>x.target==='_blank'&&x.rel.includes('noopener')&&x.rel.includes('noreferrer')));
+  assert.deepEqual(auth.errors,[]);
 
   // The direct deep links must expose only the selected agent/hub section.
   // This checks Chromium's actual hidden attribute after the real Admin client
