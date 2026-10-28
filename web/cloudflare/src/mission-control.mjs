@@ -485,9 +485,41 @@ export function buildMissionTrendComparison(trend,key){
  return null;
 }
 
+/**
+ * Explain why a real daily series cannot produce a comparison. This never
+ * infers yesterday's values, interpolates missing days, or treats partial
+ * evidence as a complete close.
+ */
+export function explainMissionTrendGap(trend,key){
+ const fields={net:'net_cents',sales:'sales_cents',ads:'ads_spend_cents',paid:'paid_orders',margin:'margin_bps'};
+ const safe=value=>Number.isSafeInteger(value)&&!Object.is(value,-0);
+ const validDate=value=>typeof value==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(value);
+ if(!Object.hasOwn(fields,key))return Object.freeze({label:'Sem comparação',detail:'Métrica desconhecida.',coverage:'Métrica indisponível'});
+ const rows=trend?.schema==='mls_mission_daily_trend_v1'&&Array.isArray(trend.points)?trend.points:[];
+ if(!rows.length)return Object.freeze({label:'Histórico ainda não salvo',detail:'A coleta do dia pode estar disponível, mas a série diária validada ainda não contém leituras.',coverage:'0 dias com série validada'});
+ const metric=row=>key==='margin'?safe(row?.net_cents)&&safe(row?.sales_cents)&&row.sales_cents>0&&row.net_basis==='ESTIMATE':
+  safe(row?.[fields[key]]);
+ const observed=rows.filter(row=>validDate(row?.date)&&metric(row));
+ const eligible=observed.filter(row=>row.comparable===true&&row.partial!==true);
+ const latest=observed.length?observed.at(-1).date:null;
+ const short=value=>validDate(value)?value.slice(8)+'/'+value.slice(5,7):'—';
+ const coverage=observed.length+' de '+rows.length+' dia(s) com leitura'+(latest?' · última: '+short(latest):'');
+ if(observed.length===0)return Object.freeze({label:'Sem dias validados',detail:'O histórico do período ainda não tem valor confirmado para esta métrica.',coverage});
+ if(observed.length===1)return Object.freeze({label:'Somente 1 dia observado',detail:'A leitura de '+short(latest)+' existe, mas a comparação exige dois dias consecutivos completos.',coverage});
+ if(eligible.length<2)return Object.freeze({label:'Dias ainda não comparáveis',detail:'Há '+observed.length+' leituras, mas faltam dois fechamentos completos e válidos para a métrica.',coverage});
+ let adjacent=false;
+ for(let i=1;i<rows.length;i++){
+  const a=rows[i-1],b=rows[i];
+  if(!validDate(a?.date)||!validDate(b?.date)||!metric(a)||!metric(b)||a.comparable!==true||b.comparable!==true||a.partial===true||b.partial===true)continue;
+  if(Date.parse(b.date+'T00:00:00Z')-Date.parse(a.date+'T00:00:00Z')===86400000){adjacent=true;break;}
+ }
+ return Object.freeze({label:adjacent?'Comparação em validação':'Sem dias consecutivos',detail:adjacent?'Os dados do período não produziram uma variação aritmeticamente segura.':'Existem leituras completas, mas não em dois dias consecutivos para esta métrica.',coverage});
+}
+
 export const MISSION_TRENDS_CLIENT=String.raw`
 (()=>{
  const buildMissionTrendComparison=${buildMissionTrendComparison.toString()};
+ const explainMissionTrendGap=${explainMissionTrendGap.toString()};
  const ns='http://www.w3.org/2000/svg',byId=id=>document.getElementById(id);
  const safe=value=>Number.isSafeInteger(value)&&!Object.is(value,-0);
  const names={net:'Resultado diário estimado',sales:'Vendas dos pedidos pagos',ads:'Gastos com Ads'};
@@ -521,8 +553,9 @@ export const MISSION_TRENDS_CLIENT=String.raw`
   const rows=timeline?.schema==='mls_mission_daily_trend_v1'&&Array.isArray(timeline.points)?timeline.points:[];
   const known=rows.map((r,index)=>({index,row:r,value:safe(r?.[field])?r[field]:null})).filter(r=>r.value!==null);
   if(known.length<2){
-   const empty=document.createElement('p');empty.className='mission-trend-empty';empty.textContent=known.length?'Apenas um dia observado. Não há série suficiente para exibir a evolução.':'Histórico diário ainda indisponível. Aguardando dados validados, sem criar zeros artificiais.';
-   target.append(empty);note.textContent=rows.length?count(known.length)+' dia(s) com leitura; comparação suspensa.':'Nenhuma série salva disponível para esta referência.';return;
+   const info=explainMissionTrendGap(timeline,key);
+   const empty=document.createElement('p');empty.className='mission-trend-empty';empty.textContent=info.label+'. '+info.detail;
+   target.append(empty);note.textContent=info.coverage+'. Não foram criados zeros nem pontos artificiais.';return;
   }
   const w=740,h=250,left=54,right=726,top=16,bottom=211;
   const max=Math.max(0,...known.map(r=>r.value)),min=Math.min(0,...known.map(r=>r.value)),span=max-min||1;
@@ -594,7 +627,7 @@ export const MISSION_TRENDS_CLIENT=String.raw`
    const badge=byId('missionKpiDelta'+suffix);if(!badge)continue;
    const details=byId('missionKpiDeltaDate'+suffix),result=buildMissionTrendComparison(timeline,key);
    badge.dataset.direction=result?.direction||'UNAVAILABLE';badge.dataset.metric=key;
-   if(!result){badge.textContent='↔ Sem comparação de dias completos';badge.title='Requer dois dias consecutivos, completos e com valores válidos.';if(details)details.textContent='Aguardando dias comparáveis';continue;}
+   if(!result){const info=explainMissionTrendGap(timeline,key);badge.textContent='↔ '+info.label;badge.title=info.detail;if(details)details.textContent=info.coverage;continue;}
    const arrow=result.direction==='UP'?'▲':result.direction==='DOWN'?'▼':'●';
    const diff=key==='margin'?(result.delta>0?'+':'')+new Intl.NumberFormat('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:2}).format(result.delta/100)+' p.p.':key==='paid'?(result.delta>0?'+':'')+count(result.delta):signedMoney(result.delta);
    badge.textContent=arrow+' '+diff+((key==='margin'||result.percent_bps===null)?'':' · '+percentage(result.percent_bps));
@@ -611,7 +644,7 @@ export const MISSION_TRENDS_CLIENT=String.raw`
   paintIndicators(registry);
   renderSparklines();
   const period=byId('missionTrendScopeOverview');
-  if(period)period.textContent=timeline?'Histórico de '+timeline.month.slice(5)+'/'+timeline.month.slice(0,4)+' · últimos até 14 dias':'Aguardando série validada';
+  if(period){const info=explainMissionTrendGap(timeline,'net');period.textContent=timeline?'Histórico '+timeline.month.slice(5)+'/'+timeline.month.slice(0,4)+' · '+info.coverage:'Histórico ainda não salvo · resultado do dia permanece independente';}
  }
  for(const button of document.querySelectorAll('[data-mission-chart][data-mission-series]')){
   button.onclick=()=>{
