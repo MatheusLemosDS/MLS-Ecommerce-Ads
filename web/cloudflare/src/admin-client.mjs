@@ -942,13 +942,13 @@ const missionSearchRoutes=Object.freeze([
 (function installMissionSearch(){
  const overlay=el('missionGlobalSearch'),openButton=el('missionSearchOpen'),
   closeButton=el('missionSearchClose'),input=el('missionSearchInput'),results=el('missionSearchResults');
- if(!overlay||!openButton||!closeButton||!input||!results||!execute||!more||!pageInfo||!scopeLabel||typeof overlay.addEventListener!=='function'||typeof results.addEventListener!=='function'||typeof input.addEventListener!=='function'||typeof document.addEventListener!=='function')return;
  const normalize=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-BR');
  const byKey=new Map(missionSearchRoutes.map(item=>[item.key,item]));
  const scopeButtons=[...overlay.querySelectorAll('[data-mission-scope]')],execute=el('missionSearchExecute'),
   more=el('missionSearchMore'),pageInfo=el('missionSearchPageInfo'),scopeLabel=el('missionSearchScope');
  let selected=[],active=0,restoreFocus=null,mode='navigation',lookupEpoch=0,busy=false,
   currentQuery='',currentOffset=0,moreAvailable=false;
+ if(!overlay||!openButton||!closeButton||!input||!results||!execute||!more||!pageInfo||!scopeLabel||typeof overlay.addEventListener!=='function'||typeof results.addEventListener!=='function'||typeof input.addEventListener!=='function'||typeof document.addEventListener!=='function')return;
  function hide({focus=true}={}){
   if(overlay.hidden)return;
   ++lookupEpoch;overlay.hidden=true;
