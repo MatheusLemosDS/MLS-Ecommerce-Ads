@@ -10,7 +10,6 @@ ${createAdminStartup.toString()}
 ${parseReport.toString()}
 ${projectAdsMeasurement.toString()}
 ${projectHermesFinancialContext.toString()}
-${projectProductRegistryFrame.toString()}
 let renderedReportKey=null,todayAdsPromise=null,shopOrdersPromise=null,shopOrdersSnapshot=null,shopOrdersRefreshTimer=null;
 let state=null,csrf='',rows=[],selectedJobId=null,pollTimer=null,pollPromise=null,submitting=false,activeBilling='unverified',settingsPromise=null,settingsLoadGeneration=0;
 let itemsPromise=null,itemsData=null,variantGroups=new Map(),bindingState=null,bindingConflict=null,bindingStale=false,bindingLoadFailed=false,bindingSaving=false,bindingDrafts=new Map(),bindingDraftSequence=0,catalogAutomatingItemId=null,productUnitSelections=new Map();
@@ -940,6 +939,7 @@ const missionSearchRoutes=Object.freeze([
  {key:'diagnostics',title:'Diagnóstico do sistema',group:'Ferramentas',description:'Verificações administrativas',terms:'erro carregamento diagnosticar fonte',href:'/admin/diagnostics'}
 ].map(item=>Object.freeze(item)));
 (function installMissionSearch(){
+ ${projectProductRegistryFrame.toString()}
  const overlay=el('missionGlobalSearch'),openButton=el('missionSearchOpen'),
   closeButton=el('missionSearchClose'),input=el('missionSearchInput'),results=el('missionSearchResults');
  const normalize=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-BR');
