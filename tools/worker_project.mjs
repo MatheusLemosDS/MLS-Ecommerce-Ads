@@ -102,6 +102,8 @@ export const TARGETS = Object.freeze({
     '145c430ba855aa2ae3de646a54473fa4a56ae3500d9d725d298ae40f873cfb1e',
     // Mobile source-state feedback + two-column KPI layout; exact candidate App hash from CI #242, full regression gates required.
     '86d32027ed941cb2dbdc90e3a65d5151deef67a30cc4d5173695539a20a6d34b',
+    // Reviewed candidate: PROVISIONAL daily-chart repair and published-date explanation, exact App bundle from Actions #246.
+    'fefc0610966859991961706f93acbc3f960d476078a7bb4ab8e6afa2bdb65ba8',
   ]}),
   auth: Object.freeze({name: 'brazacommerce-auth', main: '../../dist/auth-worker.mjs', baselineHashes: [
     '45d0142709c5087e373cc4da146070ed39c472805f6f64c00f00b6555f0e1f56',
