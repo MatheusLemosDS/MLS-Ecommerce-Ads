@@ -149,7 +149,7 @@ export const AGENT_REGISTRY_CLIENT=String.raw`
   const collected=coverage?.collection_status==='RUNNING';
   const auto=coverage?.automatic_enabled===false?' A coleta automática está desativada.':coverage?.automatic_enabled===true&&collected?' Há uma coleta automática em andamento.':'';
   if(monthlyReady&&currentMonth===selectedMonth&&end&&selected&&selected>end){
-   title.textContent='28/10 ainda não consta na publicação financeira'.replace('28/10',short(selected).slice(0,5));
+   title.textContent='O dia '+short(selected)+' ainda não consta na publicação financeira';
    message.textContent='O último resumo validado cobre até '+short(end)+'. '+short(selected)+' ainda está fora desse recorte; não é venda zero nem falha de cálculo.'+auto;
   }else if(monthlyReady&&currentMonth===selectedMonth&&coverage?.daily_summary_present===false&&coverage?.display_source==='PUBLISHED'){
    title.textContent='Resumo mensal disponível, detalhamento diário pendente';
