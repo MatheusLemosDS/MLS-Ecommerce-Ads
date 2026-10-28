@@ -106,7 +106,10 @@ test('Mission Control V3.5 has one keyboard navigation palette with only existin
  for(const route of ['agent-finance','agent-ads','agent-products','agent-production','agent-returns','agent-auditor','agent-hermes','products','production','margins','history','roadmap']){
   assert.ok(CLIENT.includes("key:'"+route+"'"),route);
  }
- const search=CLIENT.slice(CLIENT.indexOf('// Mission Control V3.5:'),CLIENT.indexOf("document.querySelectorAll('[data-tab]').forEach"));
+ const searchStart=CLIENT.indexOf('// Mission Control V3.5:');
+ const searchEnd=CLIENT.indexOf("document.querySelectorAll('[data-tab]').forEach(link=>link.onclick",searchStart);
+ assert.ok(searchStart>=0&&searchEnd>searchStart);
+ const search=CLIENT.slice(searchStart,searchEnd);
  assert.match(search,/missionSearchRoutes=Object\.freeze/);
  assert.match(search,/document\.addEventListener\('keydown'/);
  assert.match(search,/event\.key==='Enter'/);
