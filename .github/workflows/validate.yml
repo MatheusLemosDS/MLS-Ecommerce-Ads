@@ -28,12 +28,8 @@ jobs:
           cache: npm
       - name: Instalar versões fixadas
         run: npm ci
-      - name: Diagnóstico isolado M3 (temporário)
-        run: |
-          npm run build
-          node tools/m3_diagnostic.mjs
-      - name: Diagnóstico somente, sem suíte completa (PR temporária)
-        run: echo 'M3_DIAG_ONLY'
+      - name: Executar testes
+        run: npm test
       - name: Validar ponte financeira e atualização do Hermes
         run: python3 -m unittest web/bridge/test_hermes_bridge.py tools/test_install_hermes_web_bridge.py tools/test_build_hermes_web_bridge_install.py tools/test_activate_hermes_web_bridge.py tools/test_build_hermes_web_bridge_activation.py -q
       - name: Gerar os três Workers
