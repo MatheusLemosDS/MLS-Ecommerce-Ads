@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {workspaceNavigation,workspaceSecondaryNavigation} from '../src/workspace-navigation.mjs';
+import {adminBody,CSS} from '../src/admin-view.mjs';
+import {CLIENT} from '../src/admin-client.mjs';
 import {shellDesktopNavigation,shellMobileNavigation} from '../src/shell-navigation.mjs';
 import {renderAdsWorkspace} from '../src/ads-workspace-view.mjs';
 import {renderWorkspaceConnections} from '../src/scaling-preparation.mjs';
@@ -90,4 +92,28 @@ test('agent subpages preserve the fleet as selected and never expose owner navig
  }
  const restricted=workspaceNavigation('agents',{role:'review'});
  assert.doesNotMatch(restricted,/data-workspace-key="agents"|\/admin\?tab=agent-/);
+});
+
+test('Mission Control V3.5 has one keyboard navigation palette with only existing owner destinations',()=>{
+ const html=adminBody(),sources=[...html.matchAll(/\bid="([^"]+)"/g)].map(match=>match[1]);
+ assert.equal(sources.length,new Set(sources).size,'global search must not introduce duplicate IDs');
+ for(const id of ['missionSearchOpen','missionGlobalSearch','missionSearchClose','missionSearchInput','missionSearchResults','missionSearchTitle','missionSearchScope'])
+  assert.ok(sources.includes(id),id);
+ assert.match(html,/id="missionGlobalSearch" role="dialog" aria-modal="true" aria-labelledby="missionSearchTitle" hidden/);
+ assert.match(html,/aria-keyshortcuts="Control\+K Meta\+K"/);
+ assert.match(CSS,/mission-search-overlay\[hidden\]/);
+ assert.match(CSS,/@media\(max-width:850px\)\{\.topbar \.mission-search-trigger/);
+ for(const route of ['agent-finance','agent-ads','agent-products','agent-production','agent-returns','agent-auditor','agent-hermes','products','production','margins','history','roadmap']){
+  assert.ok(CLIENT.includes("key:'"+route+"'"),route);
+ }
+ const search=CLIENT.slice(CLIENT.indexOf('// Mission Control V3.5:'),CLIENT.indexOf("document.querySelectorAll('[data-tab]').forEach"));
+ assert.match(search,/missionSearchRoutes=Object\.freeze/);
+ assert.match(search,/document\.addEventListener\('keydown'/);
+ assert.match(search,/event\.key==='Enter'/);
+ assert.match(search,/event\.key==='Escape'/);
+ assert.match(search,/key==='k'/);
+ assert.match(search,/input\.addEventListener\('input',render\)/);
+ assert.match(search,/globalThis\.mlsWorkspaceSearch=Object\.freeze/);
+ assert.doesNotMatch(search,/\bfetch\s*\(|\bsetInterval\s*\(|\/api\//);
+ assert.doesNotMatch(search,/access_token|refresh_token|FINANCE_TOKEN_ENCRYPTION_KEY|APP_INTERNAL_SECRET/);
 });
