@@ -32,4 +32,4 @@ Leia, nesta ordem, antes de qualquer alteração:
 
 Para usar o gerador local: docs/MLS_LISTING_FACTORY_V1.md. Usar Node >=24. Nenhum script deste projeto deve publicar na Shopee por padrão.
 
-- PR #56: retomada JSON, preço vazio por segurança, fila com oito por página. Último CI verde foi pré-refinamento; executar a CI do HEAD e conferir SHA App/Auth/Finance antes de merge. A base pode estar temporariamente main para permitir o evento de GitHub Actions; reverter para a branch PR #51 após validação.
+- PR #56: retomada JSON, preço vazio por segurança, fila com oito por página. CI final verde #40788713558 em candidato sem conflitos PR #58 (13/13 arquivos idênticos), SHA App bbbe1b9efdf0a6c11e507c34c92730ddbb8502fb367c5cfe33c031ba3850d3cd. PR #58 fechada sem merge; #56 novamente empilhada sobre #51. Falta QA visual autenticada, merge ordenado e validação real de permissões/financeiro. Não publicar automaticamente.
