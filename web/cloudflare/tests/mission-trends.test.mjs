@@ -124,3 +124,19 @@ test('owner overview can distinguish an uncovered date from a monthly source wit
  assert.match(AGENT_REGISTRY_CLIENT,/detalhamento diário pendente/);
  assert.match(AGENT_REGISTRY_CLIENT,/A coleta automática está desativada/);
 });
+
+test('source gap exposes bounded automatic-collector progress and prioritisable owner action only',()=>{
+ const markup=commandCenterBody();
+ for(const id of ['missionCollectorStatus','missionCollectorFeedback','missionSourcePriority'])
+  assert.ok(markup.includes('id="'+id+'"'),id);
+ for(const field of ['windows_complete','windows_total','pages_read','collection_checked_at','collection_code','automatic_last_attempt_at','automatic_next_run_at','automatic_applicable'])
+  assert.match(BUSINESS_MONTH_CLIENT,new RegExp(field));
+ assert.match(BUSINESS_MONTH_CLIENT,/function prioritizeCurrentMonth\(/);
+ assert.match(BUSINESS_MONTH_CLIENT,/!cronOwnsCollection\(\)/);
+ assert.match(BUSINESS_MONTH_CLIENT,/return requestSalesUpdate\(\)/);
+ assert.match(AGENT_REGISTRY_CLIENT,/BUSINESS_PERIOD_RATE_LIMIT/);
+ assert.match(AGENT_REGISTRY_CLIENT,/BUSINESS_PERIOD_AUTH_REQUIRED/);
+ assert.match(AGENT_REGISTRY_CLIENT,/Priorizar coleta|prioritizeCurrentMonth/);
+ assert.match(AGENT_REGISTRY_CLIENT,/sourcePriorityBusy/);
+ assert.doesNotMatch(AGENT_REGISTRY_CLIENT,/\bfetch\s*\(|setInterval\s*\(|\/api\//);
+});
