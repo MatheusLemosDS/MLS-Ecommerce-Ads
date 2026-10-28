@@ -103,3 +103,50 @@ export function planMlsListingFactory(input,mediaIndex){
     batches:chunks.length},batches:chunks,products};
  }catch{return null;}
 }
+
+
+// Pure filename-to-draft matcher for locally decoded media. Never performs I/O.
+// A repeated filename in a selection is ambiguous even when bytes appear equal.
+export function planMlsDraftBatchMedia(manifest,observed){
+ try{
+  const staged=planMlsListingFactory(manifest,Object.create(null));
+  if(!staged||!Array.isArray(observed)||observed.length<1||observed.length>200||
+   Object.getPrototypeOf(observed)!==Array.prototype)return null;
+  const requested=new Set();
+  for(const row of manifest.items){
+   if(!Array.isArray(row.images)||row.images.length>30)return null;
+   const local=new Set();
+   for(const name of row.images){
+    if(!validFile(name)||local.has(name))return null;
+    local.add(name);requested.add(name);
+   }
+  }
+  const media=new Map();let bytes=0;
+  for(const raw of observed){
+   if(!isPlain(raw)||!validFile(raw.name)||media.has(raw.name))return null;
+   const checked=projectMedia(raw.name,raw);
+   if(!checked)return null;
+   bytes+=checked.size_bytes;
+   if(bytes>64*1024*1024)return null;
+   media.set(checked.name,checked);
+  }
+  const matched_names=[...media.keys()].filter(name=>requested.has(name));
+  if(!matched_names.length)return null;
+  const per_item=manifest.items.map(item=>({
+   client_ref:item.client_ref,
+   expected_count:item.images.length,
+   matched_names:item.images.filter(name=>media.has(name)),
+   not_in_selection:item.images.filter(name=>!media.has(name))
+  }));
+  return {
+   schema:'mls_listing_batch_media_relink_v1',mode:'LOCAL_ONLY',
+   published:false,execution_allowed:false,
+   selected_count:observed.length,matched_unique_files:matched_names.length,
+   matched_item_count:per_item.filter(x=>x.matched_names.length>0).length,
+   reused_across_items:per_item.reduce((total,x)=>total+x.matched_names.length,0)-matched_names.length,
+   unused_names:[...media.keys()].filter(name=>!requested.has(name)),
+   per_item,match_basis:'EXACT_FILENAME_AND_DECODED_LOCAL_METADATA_NOT_ORIGINAL_HASH_ATTESTATION',
+   owner_review_required:true
+  };
+ }catch{return null;}
+}
