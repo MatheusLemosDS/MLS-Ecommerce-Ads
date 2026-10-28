@@ -1,6 +1,10 @@
 # Roadmap canônico — MLS Commerce OS
 
-Atualizado em **27/10/2026**.
+Atualizado em **28/10/2026**.
+
+> **Checkpoint multi-branch 28/10/2026:** A main continua em b058e832 (PR #46 integrada); PR #48 de busca V3.6 segue draft/CI verde (2.115 Node + 67 Python); PR #47 M3 Products/Pricing Observer segue draft/CI verde (2.124 Node + 67 Python); PR #51 abre a pesquisa Shopee/Listing Factory, com CI inicial verde (2.122 Node + 67 Python). Nenhuma dessas três PRs foi integrada ou publicada. **M2 Finance continua aberta (issue #50).** A M3 de precificação comercial não está aprovada.
+>
+> Guia da pesquisa e implementação: [SHOPEE_RESEARCH_TO_MLS_2026_10_28.md](SHOPEE_RESEARCH_TO_MLS_2026_10_28.md) · [MLS_CODEX_HANDOFF_2026_10_28.md](MLS_CODEX_HANDOFF_2026_10_28.md) · [MLS_LISTING_FACTORY_V1.md](MLS_LISTING_FACTORY_V1.md).
 
 > **ESTE É O ROADMAP CANÔNICO DO PROJETO.**
 > Toda nova conversa, conexão, sessão do Codex ou continuidade deve começar por este arquivo e por
@@ -280,6 +284,18 @@ Continuar a fase financeira atual:
 
 **Critério de saída:** período completo conciliado com explicação de cada diferença material.
 
+### M2.1 — Shopee API: auditoria de permissões e robustez financeira (pesquisa 28/10)
+
+Esta é uma trilha técnica independente que **não substitui o gate de saída da M2**:
+
+- [x] Levantar SDKs da API oficial, ERP/filas e Agent Toolkit, registrando links, licenças, limitações e riscos na pesquisa canônica.
+- [x] Adicionar matriz offline de capacidades candidatas (PR #51). UNKNOWN/DENIED bloqueiam; uma evidência GRANTED isolada jamais autoriza executar chamadas.
+- [x] Planejar recuperação de push perdida com deduplicação somente de metadados e confirmação bloqueada até persistência (PR #51).
+- [ ] Operador verificar categoria do app, escopos, região BR, endpoints disponíveis, validade da autorização Finance e dados do Seller Centre, sem compartilhar tokens.
+- [ ] Validar contrato/método GET ou POST e lote do escrow batch conforme a versão oficial, antes de tocar no Finance Worker. A comunidade documenta divergência histórica.
+- [ ] Validar identidade/cursor, replay e assinatura de webhook em sandbox antes de criar fila real ou habilitar ACK.
+- [ ] Confirmar M2 Pending, liberações e devoluções (issue #50). Não presumir depósito bancário.
+
 ### M3 — Products + Pricing Intelligence
 - contribuição por SKU;
 - curva ABC;
@@ -289,6 +305,19 @@ Continuar a fase financeira atual:
 - preço promocional seguro;
 - ROAS mínimo/ponto de equilíbrio somente quando a base de receita for compatível;
 - bloqueio por custo/atribuição/estoque desconhecido.
+
+#### M3.0 Observer e M3-L0 Listing Factory antecipada (trabalho isolado)
+
+- **PR #47 (draft/CI aprovado):** curva ABC por unidades vendidas, saldo de pedidos exclusivos e simulador matemático manual de preço; fonte de vendas não comprova estoque nem lucro líquido por SKU. Não merged/deployed.
+- **PR #51 (draft):** inspeção local de JPG/PNG, manifesto para preparar muitos anúncios com 5–9 imagens, variações por tamanho, SKU, preço declarado e estoque explícito; particionamento interno até 100 por lote. Não é formato oficial da API nem upload de mídia. Não merged/deployed.
+- [ ] M3.1: conciliação e contratos de custo/taxas/frete/impostos por SKU e período; sem rateio arbitrário de pedidos mistos.
+- [ ] M3.2: com evidência apropriada, preço mínimo/alvo/promocional, lucro por SKU e ROAS mínimo com atribuição real; estoque verificado, revisões e auditoria.
+- [ ] Próxima entrega pós-PR #51: UI owner em Produtos com seleção de arquivos locais, validação, preview, status de correção, export do manifesto e revisão de lotes, sem rede.
+- [ ] M8 integração posterior: MediaSpace, criação em lote e confirmação assíncrona somente após categoria/permissão real, M6 aprovação assistida, idempotência e tratamento de resultado incerto.
+- [ ] MLS Creative: cadeia pesquisa → estratégia de SKU → título/descrição → mockup → imagem e vídeo → revisão → publicação assistida; direitos de uso das imagens e políticas oficiais validados.
+- [ ] MLS Ads/Returns: análise de avaliações e diagnóstico de funil, com melhorias propostas por Hermes; escrita continua LOCKED.
+
+**Política de classificação:** READY_FOR_OPERATOR_REVIEW no preparador só significa que o rascunho passou regras internas locais; não significa READY_TO_PUBLISH nem confirmação de permissões, estoque, tarifa ou compatibilidade na Shopee.
 
 ### M4 — MLS Ads em Shadow Mode
 - contrato oficial de campanha/atribuição;
