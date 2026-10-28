@@ -995,6 +995,97 @@ const missionSearchRoutes=Object.freeze([
   const scope=el('missionSearchScope');
   if(scope)scope.textContent=selected.length+' destino(s) disponível(is) · busca de navegação, sem consultar produtos ou pedidos individualmente.';
  }
+
+ function showRecords(items,total,offset,hasMore,source){
+  selected=items;active=0;currentOffset=offset;moreAvailable=hasMore;
+  results.replaceChildren();
+  for(const [index,item] of selected.entries()){
+   const link=document.createElement('a');link.className='mission-search-result';
+   link.dataset.searchRoute=item.key;link.dataset.active=String(index===active);
+   link.dataset.type=item.type;
+   link.href='/admin?tab='+item.panel;
+   const copy=document.createElement('span'),title=document.createElement('strong'),
+    description=document.createElement('small'),kind=document.createElement('em');
+   title.textContent=item.title;description.textContent=item.description;kind.textContent=item.group;
+   copy.append(title,description);link.append(copy,kind);results.append(link);
+  }
+  if(!items.length){
+   const empty=document.createElement('p');empty.className='mission-search-empty';
+   empty.textContent='Nenhum registro corresponde à consulta neste escopo.';
+   results.append(empty);
+  }
+  const first=total?offset+1:0,through=Math.min(total,offset+items.length);
+  pageInfo.textContent=first+'–'+through+' de '+total+' resultado(s) disponíveis';
+  more.hidden=!hasMore;more.disabled=false;
+  scopeLabel.textContent=source;
+ }
+ async function searchRecords(offset=0){
+  if(mode==='navigation'||busy)return;
+  const query=input.value.trim(),sourceMode=mode;
+  if(query.length<2||query.length>90||/[\u0000-\u001f\u007f]/.test(query))return;
+  const requestId=++lookupEpoch;
+  busy=true;execute.disabled=true;more.disabled=true;
+  results.replaceChildren();
+  const loading=document.createElement('p');loading.className='mission-search-empty';
+  loading.textContent=sourceMode==='products'?'Pesquisando no catálogo salvo…':'Conferindo pedidos presentes na fila DTF…';
+  results.append(loading);
+  try{
+   let items=[],total=0,hasMore=false,source='';
+   if(sourceMode==='products'){
+    if(!csrf)throw Error('SESSION_NOT_READY');
+    const queryString=new URLSearchParams({limit:'8',offset:String(offset),search:query,item_status:'ACTIVE'}).toString();
+    const raw=await api('product-registry?'+queryString,undefined,{timeoutMs:15000});
+    const frame=projectProductRegistryFrame(raw);
+    if(!frame||frame.schema!=='product_registry_v1'||frame.pagination.limit!==8||frame.pagination.offset!==offset)throw Error('INVALID_RESPONSE');
+    total=frame.pagination.total;hasMore=frame.pagination.more;
+    const labels={NORMAL:'Normal',UNLIST:'Não listado',BANNED:'Suspenso',REVIEWING:'Em revisão',UNKNOWN:'A conferir'};
+    items=frame.products.map(row=>({key:'product:'+row.item_id,type:'product',productId:row.item_id,
+     panel:'products',title:row.product_name||'Produto #'+row.item_id,
+     description:'Produto #'+row.item_id+' · '+(labels[row.item_status]||'Cadastro salvo'),group:'Produto salvo'}));
+    source=frame.discovery.complete?'Catálogo indexado · fonte salva, não estoque disponível.':
+     'Indexação do catálogo ainda em andamento; produtos não identificados podem estar ausentes.';
+   }else{
+    const frame=globalThis.brazaDtfWorkspace?.searchLines?.(query,offset);
+    if(!frame){
+     if(requestId===lookupEpoch){results.replaceChildren();const empty=document.createElement('p');empty.className='mission-search-empty';
+      empty.textContent='Fila DTF ainda não carregada. Abra Produção para consultar os pedidos registrados no módulo.';
+      results.append(empty);scopeLabel.textContent='Ausência de fila carregada não significa que o pedido não existe.';}
+     return;
+    }
+    if(frame.schema!=='mls_saved_dtf_search_v1'||frame.offset!==offset||frame.limit!==8||
+      !Number.isSafeInteger(frame.total)||frame.total<0||!Array.isArray(frame.rows)||frame.rows.length>8||
+      typeof frame.more!=='boolean')throw Error('INVALID_QUEUE');
+    total=frame.total;hasMore=frame.more;
+    const labels={PENDING:'Pendente',RESERVED:'Reservada',PRODUCED:'Produzida',BLOCKED:'Bloqueada'};
+    items=frame.rows.map((row,index)=>({key:'dtf:'+offset+':'+index,type:'dtf',
+     orderId:row.order_id,panel:'production',title:'Pedido '+row.order_id,
+     description:'SKU '+(row.sku||'não informado')+' · '+(labels[row.production_state]||'Em conferência')+
+      ' · '+String(row.quantity)+' unidade(s)',group:'Fila DTF'}));
+    source='Apenas linhas da fila DTF salva, não o histórico completo de pedidos da Shopee.';
+   }
+   if(requestId!==lookupEpoch||overlay.hidden||mode!==sourceMode||input.value.trim()!==query)return;
+   currentQuery=query;
+   showRecords(items,total,offset,hasMore,source);
+  }catch(error){
+   if(requestId!==lookupEpoch||overlay.hidden||mode!==sourceMode)return;
+   results.replaceChildren();const empty=document.createElement('p');empty.className='mission-search-empty';
+   empty.textContent=error?.status===401?'Sessão administrativa expirada. Entre novamente neste navegador.':
+    'Consulta indisponível. O cadastro salvo foi preservado; tente novamente ou abra o módulo especializado.';
+   results.append(empty);pageInfo.textContent='';more.hidden=true;
+  }finally{
+   if(requestId===lookupEpoch){busy=false;execute.disabled=input.value.trim().length<2;more.disabled=false;}
+  }
+ }
+ function setScope(next){
+  if(!['navigation','products','dtf'].includes(next))return;
+  ++lookupEpoch;busy=false;mode=next;currentQuery='';currentOffset=0;
+  input.value='';execute.hidden=next==='navigation';
+  input.placeholder=next==='navigation'?'Buscar painéis, agentes e ferramentas…':
+   next==='products'?'Pesquisar produto por nome ou código…':'Pesquisar pedido, SKU ou item na fila DTF…';
+  for(const button of scopeButtons)button.setAttribute('aria-pressed',String(button.dataset.missionScope===next));
+  render();input.focus();
+ }
+
  function move(amount){
   if(!selected.length)return;
   active=(active+amount+selected.length)%selected.length;
