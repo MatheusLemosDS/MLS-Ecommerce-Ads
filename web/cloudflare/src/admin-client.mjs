@@ -940,7 +940,7 @@ const missionSearchRoutes=Object.freeze([
 (function installMissionSearch(){
  const overlay=el('missionGlobalSearch'),openButton=el('missionSearchOpen'),
   closeButton=el('missionSearchClose'),input=el('missionSearchInput'),results=el('missionSearchResults');
- if(!overlay||!openButton||!closeButton||!input||!results)return;
+ if(!overlay||!openButton||!closeButton||!input||!results||typeof overlay.addEventListener!=='function'||typeof results.addEventListener!=='function'||typeof input.addEventListener!=='function'||typeof document.addEventListener!=='function')return;
  const normalize=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-BR');
  const byKey=new Map(missionSearchRoutes.map(item=>[item.key,item]));
  let selected=[],active=0,restoreFocus=null;
@@ -988,7 +988,7 @@ const missionSearchRoutes=Object.freeze([
  }
  function choose(item){
   if(!item)return;
-  hide({focus:false});
+  hide();
   if(item.panel){
    openTab(item.panel);
    globalThis.scrollTo?.(0,0);
