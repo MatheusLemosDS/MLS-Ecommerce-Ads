@@ -83,7 +83,7 @@ test('real Chromium hydrates owner agent cards even when finance API is unavaila
  const requests=[];
  const server=http.createServer((request,response)=>{
   const path=(request.url||'/').split('?')[0];
-  requests.push(path);
+  requests.push(request.url||path);
   response.setHeader('Cache-Control','no-store');
   if(path==='/admin'){
    response.writeHead(200,{'Content-Type':'text/html; charset=utf-8',
@@ -186,7 +186,7 @@ test('real Chromium hydrates owner agent cards even when finance API is unavaila
   const recordMatch=specialist.match(/data-mls-record-search-fixture="([^"]+)"/);
   assert.ok(recordMatch,'authenticated global record search executed in Chrome: '+(specialist.match(/data-mls-record-search-error="([^"]+)"/)?.[1]||'no trace'));
   const record=JSON.parse(recordMatch[1].replaceAll('&quot;','"').replaceAll('&amp;','&').replaceAll('&#39;',"'"));
-  console.log('MLS_RECORD_SEARCH_TRACE',JSON.stringify({record,registry_requests:requests.filter(url=>url==='/api/admin/product-registry')}));
+  console.log('MLS_RECORD_SEARCH_TRACE',JSON.stringify({record,registry_requests:requests.filter(url=>url.startsWith('/api/admin/product-registry'))}));
   assert.equal(record.firstCount,8,'saved catalog search shows eight validated results');
   assert.equal(record.firstMore,true,'saved catalog explicit pagination is available');
   assert.equal(record.lastTitle,'Camiseta Modelo 9');
