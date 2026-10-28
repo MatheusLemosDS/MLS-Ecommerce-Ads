@@ -98,6 +98,8 @@ export const TARGETS = Object.freeze({
     '8ab1e794a6b44f9f80e6464da73db99f188c492abdd1d376bc65a771bc50d5af',
     // Reviewed candidate for bounded Hermes panel; exact App SHA from Actions #232, pending full CI.
     '777829a30410de6ecd89cb2a4fa066540537262f4b6484dfa25e9eaa2fe5ed02',
+    // Agent source bridge: verified cached catalog/production/DTF data with Chromium late-hydration checks; exact Actions #235/#237 App build.
+    '145c430ba855aa2ae3de646a54473fa4a56ae3500d9d725d298ae40f873cfb1e',
   ]}),
   auth: Object.freeze({name: 'brazacommerce-auth', main: '../../dist/auth-worker.mjs', baselineHashes: [
     '45d0142709c5087e373cc4da146070ed39c472805f6f64c00f00b6555f0e1f56',
