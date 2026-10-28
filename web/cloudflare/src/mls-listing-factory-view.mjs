@@ -400,6 +400,7 @@ export const MLS_LISTING_FACTORY_CLIENT=String.raw`
   const sequence=++state.sequence;
   state.busy=true;by('Save').disabled=true;list();
   by('BatchStatus').textContent='Conferindo '+matching.length+' imagem(ns) locais em grupos de até três...';
+  tell('Conferindo '+matching.length+' imagem(ns) locais. A fila permanece bloqueada durante a verificação.');
   const scanned=new Array(matching.length);let cursor=0;
   try{
    async function worker(){
