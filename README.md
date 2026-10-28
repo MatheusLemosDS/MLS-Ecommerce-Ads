@@ -38,3 +38,6 @@ A marca oficial do produto é **MLS Commerce OS**. Os nomes técnicos `brazacomm
 
 Roadmap canônico: [MLS Commerce OS](docs/ROADMAP_MLS_COMMERCE_OS.md).  
 Checkpoint para retomada: [MLS_COMMERCE_OS_CHECKPOINT.json](docs/MLS_COMMERCE_OS_CHECKPOINT.json).
+
+Continuidade entre ChatGPT e Codex: [AGENTS.md](AGENTS.md) · [Handoff técnico](docs/MLS_CODEX_HANDOFF_2026_10_28.md) · [Pesquisa Shopee](docs/SHOPEE_RESEARCH_TO_MLS_2026_10_28.md) · [Listing Factory local](docs/MLS_LISTING_FACTORY_V1.md). A PR #51 introduz módulos **sem rede nem publicação na Shopee**; M2 permanece aberta e PRs #47/#48 seguem isoladas.
+
