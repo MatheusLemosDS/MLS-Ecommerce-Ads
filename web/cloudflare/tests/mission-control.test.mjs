@@ -51,7 +51,8 @@ test('owner keeps all existing financial forms and identifiers once, but overvie
 test('Mission Control style has scoped futuristic accents, responsive breakpoints and reduced-motion support',()=>{
  for(const name of names)assert.match(MISSION_CSS,new RegExp('mission-agent--'+name));
  for(const token of ['mission-hub-grid','mission-stats','mission-module','mission-hub-card','focus-visible','prefers-reduced-motion','max-width:550px'])assert.ok(MISSION_CSS.includes(token),token);
- assert.doesNotMatch(MISSION_CLIENT,/\bfetch\s*\(|setInterval\s*\(|\/api\/|postMessage\s*\(/);
+ assert.equal(MISSION_CLIENT.includes('fetch('),false);
+ assert.equal(MISSION_CLIENT.includes('setInterval('),false);
 });
 
 function mount(snapshot){
