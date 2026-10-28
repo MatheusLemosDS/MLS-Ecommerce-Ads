@@ -995,17 +995,15 @@ const missionSearchRoutes=Object.freeze([
   if(!item)return;
   hide();
   if(item.panel){
+   if(typeof item.catalogQuery==='string'&&item.catalogQuery.length>=2&&item.catalogQuery.length<=90){
+    // Fill before openTab: its existing products handler starts the
+    // authorized paginated catalog read with the user's query.
+    const search=document.getElementById('savedCatalogSearch');
+    if(search)search.value=item.catalogQuery;
+   }
    openTab(item.panel);
    globalThis.scrollTo?.(0,0);
-   if(typeof item.catalogQuery==='string'){
-    const search=document.getElementById('savedCatalogSearch'),form=document.getElementById('savedCatalogSearchForm');
-    if(search&&form&&item.catalogQuery.length>=2&&item.catalogQuery.length<=90){
-     search.value=item.catalogQuery;
-     if(typeof form.requestSubmit==='function')form.requestSubmit();
-     else if(typeof form.onsubmit==='function')form.onsubmit({preventDefault(){}});
-     search.scrollIntoView?.({block:'center'});
-    }
-   }
+   if(typeof item.catalogQuery==='string')document.getElementById('savedCatalogSearch')?.scrollIntoView?.({block:'center'});
    if(item.hash)Promise.resolve().then(()=>document.getElementById(item.hash)?.scrollIntoView?.({block:'start'}));
    return;
   }
