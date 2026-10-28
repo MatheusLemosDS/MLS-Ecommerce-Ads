@@ -5,12 +5,14 @@ import {MLS_LISTING_FACTORY_CSS,mlsListingFactoryBody,MLS_LISTING_FACTORY_CLIENT
 
 test('owner Listing Factory presents a draft-only form with separated size pricing and upload-free review',()=>{
  const html=mlsListingFactoryBody();
- for(const key of ['mlsListingFactory','mlsLfForm','mlsLfFiles','mlsLfVariants','mlsLfDrafts','mlsLfImport','mlsLfExportManifest','mlsLfExportReview'])
+ for(const key of ['mlsListingFactory','mlsLfForm','mlsLfFiles','mlsLfVariants','mlsLfDrafts','mlsLfImport','mlsLfPrevious','mlsLfPage','mlsLfNext','mlsLfExportManifest','mlsLfExportReview'])
   assert.match(html,new RegExp('id="'+key+'"'));
  assert.match(html,/SEM PUBLICAÇÃO/);
  assert.doesNotMatch(html,/id="mlsLfPrice"[^>]*\bvalue=/,'price must come from operator, never preset');
  assert.match(html,/manifesto MLS|Retomar anúncios/);
  assert.match(MLS_LISTING_FACTORY_CLIENT,/by\('Import'\)\.addEventListener\('change'/);
+ assert.match(MLS_LISTING_FACTORY_CLIENT,/const pageSize=8;/);
+ assert.match(MLS_LISTING_FACTORY_CLIENT,/state\.drafts\.slice\(first,first\+pageSize\)/);
  assert.match(MLS_LISTING_FACTORY_CSS,/@media\(max-width:700px\)/);
  assert.match(MLS_LISTING_FACTORY_CLIENT,/__MLS_LISTING_FACTORY_CORE__/);
  for(const forbidden of ['fetch(','XMLHttpRequest','WebSocket(','sendBeacon(','localStorage','sessionStorage','indexedDB','/api/admin/'])
