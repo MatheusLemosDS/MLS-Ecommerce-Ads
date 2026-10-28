@@ -64,7 +64,7 @@ function mount(snapshot){
  const document={getElementById:id=>nodes.get(id)||null,querySelectorAll:selector=>{
   const m=/^\[data-mission-status="([^"]+)"\]$/.exec(selector);
   return m?statuses.get(m[1])||[]:[];
- },createElement:tag=>({tag,textContent:'',dataset:{},children:[],append(...children){this.children.push(...children);}})};
+ },createElement:tag=>({tag,textContent:'',dataset:{},style:{},children:[],append(...children){this.children.push(...children);}})};
  const context=vm.createContext({document,Intl,Date,Number,BigInt,Math});
  if(snapshot)context.mlsAgentRegistry={getSnapshot:()=>snapshot};
  vm.runInContext(MISSION_CLIENT,context);
