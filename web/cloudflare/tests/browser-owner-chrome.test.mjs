@@ -89,6 +89,21 @@ test('real Chromium hydrates owner agent cards even when finance API is unavaila
    response.writeHead(200,{'Content-Type':'text/html; charset=utf-8',
     'Content-Security-Policy':admin.headers.get('content-security-policy')||"default-src 'self'; script-src 'self' 'unsafe-inline';"});
    response.end((request.url||'').includes('mlsFixture=trend')?html.replace('</body>',fixtureScript+'</body>'):(request.url||'').includes('mlsFixture=agents')?html.replace('</body>',agentsFixtureScript+'</body>'):(request.url||'').includes('mlsFixture=financeAuth')?html.replace('</body>',financeAuthFixtureScript+'</body>'):html);
+
+  }else if(path==='/api/admin/product-registry'&&new URL(request.url||'/', 'http://localhost').searchParams.get('search')==='Camiseta'){
+   const params=new URL(request.url,'http://localhost').searchParams,offset=Number(params.get('offset')||0),end=Math.min(9,offset+8);
+   const products=Array.from({length:Math.max(0,end-offset)},(_,index)=>{
+    const item=700001+offset+index;
+    return {item_id:String(item),item_status:'NORMAL',product_name:'Camiseta Modelo '+String(offset+index+1),
+     source_update_time:null,last_seen_at:1793200000,catalog_checked_at:1793200000,
+     catalog_status:'MATCHED',model_count:1,resolved_count:1,metadata_changed:false};
+   });
+   response.setHeader('Content-Type','application/json');
+   response.end(JSON.stringify({schema:'product_registry_v1',checked_at:1793200000,revision:1,
+    counts:{total:9,indexed:9,pending_catalog:0},
+    discovery:{status:'IDLE',item_status:'NORMAL',offset:0,pages_read:1,last_attempt_at:null,last_success_at:1793200000,
+     next_run_at:0,last_error:null,complete:true},
+    pagination:{limit:8,offset,total:9,more:offset+8<9},products}));
   }else if(path==='/api/admin/bootstrap'){
    response.setHeader('Content-Type','application/json');
    response.end(JSON.stringify({schema:'admin_bootstrap_v1',csrf:'a'.repeat(64)}));
