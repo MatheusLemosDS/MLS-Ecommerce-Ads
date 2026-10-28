@@ -28,10 +28,6 @@ jobs:
           cache: npm
       - name: Instalar versões fixadas
         run: npm ci
-      - name: Diagnóstico isolado M3 (temporário)
-        run: |
-          npm run build
-          node tools/m3_diagnostic.mjs
       - name: Executar testes
         run: npm test
       - name: Validar ponte financeira e atualização do Hermes

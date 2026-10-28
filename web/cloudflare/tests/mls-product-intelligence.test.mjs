@@ -1,3 +1,4 @@
+import {readFileSync} from 'node:fs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
@@ -120,4 +121,14 @@ test('M3 observer UI is mounted in the existing protected monthly workspace',()=
  assert.doesNotThrow(()=>new vm.Script(BUSINESS_MONTH_CLIENT),
    'compiled inline script must remain valid JavaScript');
  assert.match(missionWorkspacesBody(''),/Curva ABC e cenário de preço/);
+});
+
+test('Python paste-ready Worker builder freezes BOTH M3 browser helpers rather than leaving unresolved imports',()=>{
+ const buildFile=readFileSync(new URL('../build.py',import.meta.url),'utf8');
+ for(const entry of ["'buildMlsProductIntelligence':'mls-product-intelligence.mjs'",
+  "'simulateMlsPricingScenario':'mls-product-intelligence.mjs'"])
+   assert.ok(buildFile.includes(entry),entry);
+ const month=readFileSync(new URL('../src/business-month-client.mjs',import.meta.url),'utf8');
+ assert.match(month,/\$\{buildMlsProductIntelligence\.toString\(\)\}/);
+ assert.match(month,/\$\{simulateMlsPricingScenario\.toString\(\)\}/);
 });
