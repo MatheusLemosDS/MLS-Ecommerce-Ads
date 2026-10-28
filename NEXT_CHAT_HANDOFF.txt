@@ -13,3 +13,11 @@ MLS COMMERCE OS — HANDOFF 28/10/2026
 11. Após PR/CI, atualizar ROADMAP, CHECKPOINT, docs/MLS_CODEX_HANDOFF_2026_10_28.md e ESTE arquivo. Não sobrepor branches de ChatGPT e Codex simultaneamente.
 
 ISSUES PARA CODEX: #52 (UI owner), #53 (Finance escrow somente auditoria), #54 (Push recovery). ISSUE #50 bloqueia fechamento M2.
+
+PR #56: editor owner visual de rascunhos concluído em branch `feature/mls-listing-factory-owner-ui-20261028`; CI inicial #40784356050 2.126 Node/67 Python verde, refinamento de preços/dimensões ainda requer CI final. SEM merge/deploy. Codex: priorizar QA dos mockups/variantes, alinhar PR #48 e renovar checkpoint.
+
+HEAD DA PR #56 EM REVISÃO: `1d8e7cc9dc86257e73ecce7e5331708f78d118d4` (correção de nome curto usando regra canônica). Último CI verde #40784356050 pertence à versão pré-refinamento. HEAD ATUAL **AINDA SEM CI GITHUB**; CI anterior #40784720891 falhou 4 hashes (fixados no código posterior) + filename test (corrigido), sem comprovante novo. TESTAR ANTES DO MERGE. PR #57 temporária fechada sem merge. PR #56 voltou à base #51 para continuidade ordenada.
+
+28/10 PR #56 avançou: JSON seguro para retomar rascunhos, sem preço fictício e fila de 8 anúncios por página, inclusive 19/500. JS fonte e testes passam parsing V8, mas sem CI do HEAD. Último CI verde #40784356050 pertence a versão anterior. Base #56 temporariamente MAIN para gatilho de CI; quando validar, restaurar base PR #51. Não mergear/publicar. M2 #50 aberta; Ads/PROMO LOCKED.
+
+ATUALIZAÇÃO MAIS RECENTE (SUBSTITUI OS ESTADOS ANTERIORES DE CI): PR #58 temporária validou 13/13 arquivos identicamente aos da PR #56 sobre a main atual. RUN #40788713558 SUCCESS: Node 2126/2126; Python 67/67; Chrome e builds 3 Workers. SHA App bbbe1b9efdf0a6c11e507c34c92730ddbb8502fb367c5cfe33c031ba3850d3cd; Auth/Finance inalterados. PR #58 CLOSED WITHOUT MERGE; PR #56 voltou à base PR #51 e continua DRAFT. Próximo: QA desktop/mobile autenticado, revisão PR #48 e integração #51 → #56 ordenada. Ads/PROMO LOCKED, M2 #50 ainda aberta.
