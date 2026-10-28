@@ -1,6 +1,11 @@
 # Roadmap canônico — MLS Commerce OS
 
-Atualizado em **27/10/2026**.
+Atualizado em **28/10/2026** (adendo M2 → M3).
+
+> **Checkpoint 28/10:** Mission Control V3.5 e V3.6 (busca no catálogo, PR #46) integrados à main b058e832 e CI #40769541414 verde. A busca ampliada por registros/DTF da PR #45 permanece draft com gate de integridade em correção. M2 Finance/Returns **não está encerrada** sem conferência autenticada do Seller Centre, Pending e liberações por pedido.
+>
+> **M3.0 em execução (PR #47, draft):** inteligência ABC por unidades vendidas de fonte mensal validada, ABC por vendas exclusivas somente quando não houver lacunas/pedidos mistos, contribuição parcial de pedidos exclusivos e simulador com hipóteses explícitas. Tudo em OBSERVER, sem publicação de preço, sem estoque presumido e sem escrita Ads/PROMO. CI/QA pendentes; este adendo **não declara M3 concluída**. Plano e gates: [Execução M2→M3](MLS_M2_M3_EXECUTION_2026_10_28.md).
+
 
 > **ESTE É O ROADMAP CANÔNICO DO PROJETO.**
 > Toda nova conversa, conexão, sessão do Codex ou continuidade deve começar por este arquivo e por
@@ -280,7 +285,7 @@ Continuar a fase financeira atual:
 
 **Critério de saída:** período completo conciliado com explicação de cada diferença material.
 
-### M3 — Products + Pricing Intelligence
+### M3 — Products + Pricing Intelligence — **SHADOW EM PR #47 / GATE M2 PENDENTE**
 - contribuição por SKU;
 - curva ABC;
 - custo e margem por produto/variação;
