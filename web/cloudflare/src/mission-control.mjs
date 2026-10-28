@@ -561,6 +561,30 @@ export const MISSION_TRENDS_CLIENT=String.raw`
   target.append(graph);
   note.textContent=count(known.length)+' de '+count(rows.length)+' dia(s) com valores · '+briefDate(rows[0].date)+' a '+briefDate(rows.at(-1).date)+'. '+(known.some(item=>item.row.partial)?'Pontos âmbar = dia parcial. ':'')+'Resultado estimado, não recebimento bancário.';
  }
+
+ function renderSparklines(){
+  for(const [suffix,key] of Object.entries({Net:'net',Sales:'sales',Ads:'ads'})){
+   const host=byId('missionSpark'+suffix);
+   if(!host)continue;
+   host.replaceChildren();
+   const rows=timeline?.schema==='mls_mission_daily_trend_v1'&&Array.isArray(timeline.points)?timeline.points:[];
+   const field=fields[key];
+   const valid=rows.map((row,i)=>({row,i,v:row?.[field]})).filter(x=>safe(x.v));
+   if(valid.length<2){host.setAttribute('aria-label','Histórico insuficiente para tendência');continue;}
+   const vals=valid.map(x=>x.v),min=Math.min(...vals),max=Math.max(...vals),span=max-min||1;
+   const svg=el('svg',{viewBox:'0 0 200 38',preserveAspectRatio:'none','aria-hidden':'true'});
+   const x=i=>5+i*190/Math.max(1,rows.length-1),y=v=>34-(v-min)/span*30;
+   for(let i=1;i<rows.length;i++){
+    const a=rows[i-1]?.[field],b=rows[i]?.[field];
+    if(!safe(a)||!safe(b))continue;
+    svg.append(el('line',{x1:x(i-1),y1:y(a),x2:x(i),y2:y(b),stroke:key==='net'&&b<0?'#ff7899':colors[key],'stroke-width':2.5,'stroke-linecap':'round'}));
+   }
+   for(const item of valid)svg.append(el('circle',{cx:x(item.i),cy:y(item.v),r:1.7,fill:item.row?.partial?'#f7c57f':key==='net'&&item.v<0?'#ff7899':colors[key]}));
+   host.append(svg);
+   host.setAttribute('aria-label',valid.length+' leituras diárias reais; lacunas não conectadas');
+  }
+ }
+
  function paintIndicators(registry){
   const day=registry?.day||{},net=day.net_cents,month=registry?.month?.balance_cents;
   const netCard=byId('commandCenterNet')?.closest?.('.command-metric');
@@ -589,6 +613,7 @@ export const MISSION_TRENDS_CLIENT=String.raw`
   timeline=trend?.schema==='mls_mission_daily_trend_v1'?trend:null;
   for(const id of Object.keys(choice))renderGraph(id);
   paintIndicators(registry);
+  renderSparklines();
   const period=byId('missionTrendScopeOverview');
   if(period)period.textContent=timeline?'Histórico de '+timeline.month.slice(5)+'/'+timeline.month.slice(0,4)+' · últimos até 14 dias':'Aguardando série validada';
  }
@@ -623,6 +648,10 @@ export function missionTrendPanelBody(id='overview'){
 }
 
 export const MISSION_TRENDS_CSS=String.raw`
+
+.mission-kpi-sparkline{height:30px;min-height:30px;margin-top:6px;overflow:hidden;opacity:.9}
+.mission-kpi-sparkline svg{width:100%;height:100%;display:block}
+@media(max-width:720px){.mission-kpi-sparkline{height:25px;min-height:25px}}
 
 /* Mission Control financial charts: strictly scoped; values projected from the existing monthly cache. */
 .mission-dashboard .mission-trend-panel,.mission-workspace .mission-trend-panel{
