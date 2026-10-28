@@ -909,6 +909,139 @@ function openTab(tab,{updateUrl=true}={}){
  if(updateUrl&&globalThis.history?.pushState&&globalThis.location?.href){try{const target=new URL(globalThis.location.href);target.pathname='/admin';target.searchParams.set('tab',tab);target.hash='';if(target.href!==globalThis.location.href)globalThis.history.pushState({tab},'',target.pathname+target.search);}catch{}}
 }
 
+
+// Mission Control V3.5: navigation-only command search. It never queries live
+// products or orders, never opens unauthorized workspaces, and never calls APIs.
+const missionSearchRoutes=Object.freeze([
+ {key:'overview',title:'Visão Geral',group:'Painéis',description:'Resultados e prioridades da loja',terms:'central comando lucro vendas hoje indicadores',panel:'overview'},
+ {key:'agents',title:'Central de Agentes',group:'Painéis',description:'Sete especialidades e Hermes',terms:'equipe especialistas status',panel:'agents'},
+ {key:'agent-finance',title:'MLS Finance',group:'Agentes',description:'Conciliação, Pending e repasses',terms:'financeiro lucro pagamentos recebimentos receita',panel:'agent-finance'},
+ {key:'agent-ads',title:'MLS Ads',group:'Agentes',description:'Investimento e histórico de anúncios',terms:'publicidade roas gastos campanhas',panel:'agent-ads'},
+ {key:'agent-products',title:'MLS Products',group:'Agentes',description:'Catálogo e cobertura de custos',terms:'produtos ativos cadastrados indexados',panel:'agent-products'},
+ {key:'agent-production',title:'MLS Production',group:'Agentes',description:'Fila DTF e produção',terms:'pedidos impressao ordens arte fabrica',panel:'agent-production'},
+ {key:'agent-returns',title:'MLS Returns',group:'Agentes',description:'Devoluções, status e reembolsos',terms:'devolucao retorno reembolso disputa pos venda',panel:'agent-returns'},
+ {key:'agent-auditor',title:'MLS Auditor',group:'Agentes',description:'Auditorias e conflitos de evidência',terms:'logs seguranca alertas compliance',panel:'agent-auditor'},
+ {key:'agent-hermes',title:'MLS Hermes · Supervisor',group:'Agentes',description:'Prioridades e supervisão dos agentes',terms:'assistente inteligência artificial automacao supervisor',panel:'agent-hermes'},
+ {key:'products',title:'Catálogo de produtos',group:'Ferramentas',description:'Produtos cadastrados e variações',terms:'consultar sku pesquisar nome variacao shopee',panel:'products'},
+ {key:'production',title:'Montador e fila DTF',group:'Ferramentas',description:'Pedidos, artes e lotes de impressão',terms:'produção impressão dtf ordem trabalho',panel:'production'},
+ {key:'margins',title:'Custos de produção',group:'Ferramentas',description:'Custos, composições e precificação',terms:'margem regras lucro calculo custo',panel:'margins'},
+ {key:'hermes',title:'Console do Hermes',group:'Ferramentas',description:'Análises e histórico de solicitações',terms:'supervisor comando ai chat',panel:'hermes'},
+ {key:'history',title:'Histórico e auditoria',group:'Ferramentas',description:'Alterações e versões salvas',terms:'registros auditor versoes',panel:'history'},
+ {key:'roadmap',title:'Plano de evolução',group:'Ferramentas',description:'Próximas fases do projeto',terms:'roadmap etapas recursos',panel:'roadmap'},
+ {key:'pending',title:'Pending financeiro',group:'Financeiro',description:'Saldo pendente e análise por pedido',terms:'a receber escrow saldo repasse',panel:'agent-finance',hash:'commandPendingIncomeDetails'},
+ {key:'reconciliation',title:'Conciliação de devoluções',group:'Financeiro',description:'Revisar ajustes, reembolsos e diferenças',terms:'pedido retorno estorno refunds',panel:'agent-finance',hash:'businessReconciliation'},
+ {key:'escrow',title:'Liberações da Shopee',group:'Financeiro',description:'Calendário e conferência de repasses',terms:'escrow liberacoes payout status',panel:'agent-finance',hash:'businessEscrowReleases'},
+ {key:'ads-main',title:'Painel de Anúncios',group:'Ferramentas',description:'Resultados de Ads e ROAS',terms:'performance advertising product ads',href:'/dashboard'},
+ {key:'campaigns',title:'Campanhas',group:'Ferramentas',description:'Campanhas e GMV Max',terms:'shopee anuncios ads criativos',href:'/campaigns'},
+ {key:'automation',title:'Oportunidades e Automação',group:'Ferramentas',description:'Recomendações e metas',terms:'optimization oportunidades campanha',href:'/optimization'},
+ {key:'integrations',title:'Conexões Shopee',group:'Ferramentas',description:'Status e integrações',terms:'autorizacao oauth conectar finance',href:'/integrations'},
+ {key:'diagnostics',title:'Diagnóstico do sistema',group:'Ferramentas',description:'Verificações administrativas',terms:'erro carregamento diagnosticar fonte',href:'/admin/diagnostics'}
+].map(item=>Object.freeze(item)));
+(function installMissionSearch(){
+ const overlay=el('missionGlobalSearch'),openButton=el('missionSearchOpen'),
+  closeButton=el('missionSearchClose'),input=el('missionSearchInput'),results=el('missionSearchResults');
+ if(!overlay||!openButton||!closeButton||!input||!results)return;
+ const normalize=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-BR');
+ const byKey=new Map(missionSearchRoutes.map(item=>[item.key,item]));
+ let selected=[],active=0,restoreFocus=null;
+ function hide({focus=true}={}){
+  if(overlay.hidden)return;
+  overlay.hidden=true;
+  document.documentElement.dataset.missionSearch='closed';
+  if(focus&&restoreFocus?.focus)restoreFocus.focus();
+ }
+ function render(){
+  const query=normalize(input.value.trim());
+  const terms=query.split(/\s+/).filter(Boolean);
+  selected=missionSearchRoutes.filter(item=>{
+   if(!terms.length)return true;
+   const hay=normalize(item.title+' '+item.description+' '+item.terms+' '+item.group);
+   return terms.every(term=>hay.includes(term));
+  }).sort((a,b)=>{
+   const score=item=>normalize(item.title).startsWith(query)?0:normalize(item.title).includes(query)?1:2;
+   return score(a)-score(b);
+  }).slice(0,10);
+  active=0;results.replaceChildren();
+  for(const [index,item] of selected.entries()){
+   const link=document.createElement('a');
+   link.className='mission-search-result';
+   link.href=item.href||'/admin?tab='+item.panel+(item.hash?'#'+item.hash:'');
+   link.dataset.searchRoute=item.key;
+   link.dataset.active=String(index===active);
+   const copy=document.createElement('span'),name=document.createElement('strong'),description=document.createElement('small'),kind=document.createElement('em');
+   name.textContent=item.title;description.textContent=item.description;kind.textContent=item.group;
+   copy.append(name,description);link.append(copy,kind);results.append(link);
+  }
+  if(!selected.length){
+   const empty=document.createElement('p');empty.className='mission-search-empty';
+   empty.textContent='Nenhum painel ou ferramenta corresponde a essa busca. Produtos e pedidos individuais são pesquisados em seus próprios módulos.';
+   results.append(empty);
+  }
+  const scope=el('missionSearchScope');
+  if(scope)scope.textContent=selected.length+' destino(s) disponível(is) · busca de navegação, sem consultar produtos ou pedidos individualmente.';
+ }
+ function move(amount){
+  if(!selected.length)return;
+  active=(active+amount+selected.length)%selected.length;
+  for(const [index,link] of [...results.querySelectorAll('[data-search-route]')].entries())link.dataset.active=String(index===active);
+  results.querySelectorAll('[data-search-route]')[active]?.scrollIntoView?.({block:'nearest'});
+ }
+ function choose(item){
+  if(!item)return;
+  hide({focus:false});
+  if(item.panel){
+   openTab(item.panel);
+   globalThis.scrollTo?.(0,0);
+   if(item.hash)Promise.resolve().then(()=>document.getElementById(item.hash)?.scrollIntoView?.({block:'start'}));
+   return;
+  }
+  if(typeof item.href==='string')globalThis.location.assign(item.href);
+ }
+ function show(){
+  if(!overlay.hidden)return;
+  restoreFocus=document.activeElement;
+  overlay.hidden=false;
+  document.documentElement.dataset.missionSearch='open';
+  input.value='';render();input.focus();
+ }
+ openButton.onclick=show;
+ closeButton.onclick=()=>hide();
+ overlay.addEventListener('click',event=>{if(event.target===overlay)hide();});
+ results.addEventListener('click',event=>{
+  const link=event.target?.closest?.('[data-search-route]');
+  if(!link||event.button>0||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;
+  const item=byKey.get(link.dataset.searchRoute);
+  if(!item)return;
+  if(item.panel){event.preventDefault();choose(item);}
+  else hide({focus:false});
+ });
+ input.addEventListener('input',render);
+ input.addEventListener('keydown',event=>{
+  if(event.key==='ArrowDown'){event.preventDefault();move(1);}
+  else if(event.key==='ArrowUp'){event.preventDefault();move(-1);}
+  else if(event.key==='Enter'){event.preventDefault();choose(selected[active]);}
+ });
+ overlay.addEventListener('keydown',event=>{
+  if(event.key==='Escape'){event.preventDefault();hide();return;}
+  if(event.key!=='Tab')return;
+  const controls=[...overlay.querySelectorAll('button:not([disabled]),input:not([disabled]),a[href]')].filter(node=>!node.hidden);
+  if(!controls.length)return;
+  if(event.shiftKey&&document.activeElement===controls[0]){event.preventDefault();controls.at(-1).focus();}
+  else if(!event.shiftKey&&document.activeElement===controls.at(-1)){event.preventDefault();controls[0].focus();}
+ });
+ document.addEventListener('keydown',event=>{
+  if(event.defaultPrevented)return;
+  const key=event.key.toLowerCase();
+  if(key==='k'&&(event.ctrlKey||event.metaKey)){event.preventDefault();overlay.hidden?show():hide();return;}
+  if(event.key==='Escape'&&!overlay.hidden){event.preventDefault();hide();return;}
+  if(key!=='/'||!overlay.hidden||event.ctrlKey||event.altKey||event.metaKey)return;
+  const target=event.target,tag=target?.tagName?.toLowerCase?.();
+  if(target?.isContentEditable||['input','select','textarea'].includes(tag))return;
+  event.preventDefault();show();
+ });
+ globalThis.mlsWorkspaceSearch=Object.freeze({open:show,close:()=>hide()});
+})();
+
 document.querySelectorAll('[data-tab]').forEach(link=>link.onclick=event=>{if(event?.button>0||event?.metaKey||event?.ctrlKey||event?.shiftKey||event?.altKey)return;event?.preventDefault();openTab(link.dataset.tab);});
 const missionPanels=new Set(['overview','agents','agent-finance','agent-ads','agent-products','agent-production','agent-returns','agent-auditor','agent-hermes']);
 if(typeof document.addEventListener==='function')document.addEventListener('click',event=>{
