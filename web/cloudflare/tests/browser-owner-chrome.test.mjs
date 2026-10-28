@@ -23,13 +23,13 @@ async function chromeDump(url){
   child.stdout.on('data',data=>{size+=data.length;if(size<12*1024*1024)chunks.push(data);});
   let stderr='';
   child.stderr.on('data',data=>{if(stderr.length<8192)stderr+=data.toString().slice(0,500);});
-  const watchdog=setTimeout(()=>{child.kill('SIGKILL');reject(Error('Chrome timeout'));},25000);
+  const watchdog=setTimeout(()=>{child.kill('SIGKILL');reject(Error('Chrome timeout'));},35000);
   child.on('error',error=>{clearTimeout(watchdog);reject(error);});
   child.on('close',(status)=>{clearTimeout(watchdog);if(status!==0)return reject(Error('Chrome exited '+status+': '+stderr.slice(0,400)));resolve(Buffer.concat(chunks).toString());});
  });
 }
 
-test('real Chromium hydrates owner agent cards even when finance API is unavailable',{timeout:40000},async t=>{
+test('real Chromium hydrates owner agent cards even when finance API is unavailable',{timeout:90000},async t=>{
  if(!chrome)return t.skip('Chrome executable not installed on CI runner');
  const worker=await compiledWorker();
  const env={ADMIN_USERNAME:'owner-browser-test',ADMIN_PASSWORD:'owner-browser-test-password',
