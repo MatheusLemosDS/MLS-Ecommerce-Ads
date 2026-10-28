@@ -878,10 +878,29 @@ export const BUSINESS_MONTH_CLIENT=BUSINESS_DAY_CLIENT+String.raw`
    daily_summary_present:daily!==null,
    collection_status:typeof collection?.status==='string'&&['RUNNING','COMPLETE','PARTIAL','LIMIT_REACHED','ERROR','PAUSED'].includes(collection.status)?collection.status:null,
    automatic_enabled:typeof automatic?.enabled==='boolean'?automatic.enabled:null,
-   automatic_status:typeof automatic?.status==='string'&&['IDLE','RUNNING','COMPLETE','PARTIAL','LIMIT_REACHED','ERROR','PAUSED'].includes(automatic.status)?automatic.status:null
+   automatic_status:typeof automatic?.status==='string'&&['IDLE','RUNNING','COMPLETE','PARTIAL','LIMIT_REACHED','ERROR','PAUSED'].includes(automatic.status)?automatic.status:null,
+   // Each value is already included in the validated owner monthly-view response.
+   // No second provider/database query and no exposed tokens, order IDs or money.
+   windows_complete:Number.isSafeInteger(collection?.progress?.windows_complete)?collection.progress.windows_complete:null,
+   windows_total:Number.isSafeInteger(collection?.progress?.windows_total)?collection.progress.windows_total:null,
+   pages_read:Number.isSafeInteger(collection?.progress?.pages_read)?collection.progress.pages_read:null,
+   collection_checked_at:Number.isSafeInteger(collection?.checked_at)?collection.checked_at:null,
+   collection_phase:['READY','RETRY_WAIT','BLOCKED'].includes(collection?.collection?.state)?collection.collection.state:null,
+   collection_code:typeof collection?.collection?.code==='string'&&/^BUSINESS_PERIOD_[A-Z_]{3,55}$/.test(collection.collection.code)?collection.collection.code:null,
+   retry_after_seconds:Number.isSafeInteger(collection?.collection?.retry_after_seconds)?collection.collection.retry_after_seconds:null,
+   automatic_applicable:typeof automatic?.applicable==='boolean'?automatic.applicable:null,
+   automatic_next_run_at:Number.isSafeInteger(automatic?.next_run_at)?automatic.next_run_at:null,
+   automatic_last_attempt_at:Number.isSafeInteger(automatic?.last_attempt_at)?automatic.last_attempt_at:null
   });
  }
 
- globalThis.brazaMonthDashboard={clientContract,prepare,bootstrapState,start,refresh,refreshCosts,selectMonth,stop,supportsCatalogQueue:catalogFeature,syncCatalogCandidates,refreshCatalog:()=>{catalogNeedsRead=true;return updateCatalog();},catalogMetadata:item=>catalogProducts.get(item)||null,getSnapshot:snapshot,getSourceStatus};
+ // Only an explicit owner interaction may prioritize an existing eligible
+ // automatic run. This reuses the Finance workbench's validated request and
+ // cannot fall back to a manual provider collection from the overview.
+ function prioritizeCurrentMonth(){
+  if(!started||!workspaceView||!validMonth(month)||month!==today().slice(0,7)||!cronOwnsCollection()||priorityPromise)return Promise.resolve(false);
+  return requestSalesUpdate();
+ }
+ globalThis.brazaMonthDashboard={clientContract,prepare,bootstrapState,start,refresh,refreshCosts,selectMonth,prioritizeCurrentMonth,stop,supportsCatalogQueue:catalogFeature,syncCatalogCandidates,refreshCatalog:()=>{catalogNeedsRead=true;return updateCatalog();},catalogMetadata:item=>catalogProducts.get(item)||null,getSnapshot:snapshot,getSourceStatus};
 })();
 `+EXPENSE_LEDGER_CLIENT+BUSINESS_RECONCILIATION_CLIENT+ESCROW_RELEASES_CLIENT;
