@@ -1,0 +1,15 @@
+MLS COMMERCE OS — HANDOFF 28/10/2026
+
+1. Repositório: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads
+2. LEIA: AGENTS.md, docs/ROADMAP_MLS_COMMERCE_OS.md, docs/MLS_COMMERCE_OS_CHECKPOINT.json e docs/MLS_CODEX_HANDOFF_2026_10_28.md.
+3. Main verificada: b058e832f8450ce787370c4087cf78db9cca9fca (PR #46 merged).
+4. PR #48 V3.6 busca completa, draft, CI 40772868816 verde; não publicada.
+5. PR #47 M3 Products/Pricing Observer, draft, CI 40774245543 verde; M2 continua aberta.
+6. Issue #50: cotejo Seller Centre/Finance, Pending, devoluções, liberações e depósitos; nunca declarar concluída sem sessão real.
+7. PR #51: pesquisa Shopee + módulo de Listing Factory local/CLI + capabilities + replay sem ack. Confira HEAD/CI antes de continuar.
+8. Próxima implementação: aprovação CI da PR #51, interface owner para montar pacotes 5-9 mockups por anúncio, preview e export JSON. Depois verificar grants oficiais Shopee e só na fase assistida publicar.
+9. Operação atual: OBSERVER. Ads/PROMO LOCKED. Não publicar preços nem estoque presumido.
+10. Comandos: npm ci; npm test; python3 -m unittest web/bridge/test_hermes_bridge.py tools/test_install_hermes_web_bridge.py tools/test_build_hermes_web_bridge_install.py tools/test_activate_hermes_web_bridge.py tools/test_build_hermes_web_bridge_activation.py -q; npm run build.
+11. Após PR/CI, atualizar ROADMAP, CHECKPOINT, docs/MLS_CODEX_HANDOFF_2026_10_28.md e ESTE arquivo. Não sobrepor branches de ChatGPT e Codex simultaneamente.
+
+ISSUES PARA CODEX: #52 (UI owner), #53 (Finance escrow somente auditoria), #54 (Push recovery). ISSUE #50 bloqueia fechamento M2.

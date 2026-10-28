@@ -2,7 +2,7 @@
   "schema": "mls_commerce_os_checkpoint_v1",
   "canonical_roadmap": "docs/ROADMAP_MLS_COMMERCE_OS.md",
   "legacy_roadmap": "docs/ROADMAP_BRAZACOMMERCE.md",
-  "updated_at": "2026-10-27",
+  "updated_at": "2026-10-28",
   "product": {
     "name": "MLS Commerce OS",
     "supervisor": "MLS Hermes",
@@ -30,8 +30,8 @@
     "merge_commit": "9c418fd3010f46957d1ce52345baacd76041c788"
   },
   "current_phase": "M2_FINANCE_RETURNS_RECONCILIATION",
-  "working_branch": null,
-  "current_status": "M2_IN_PROGRESS_REAL_DAILY_TREND_CHARTS_PUBLISHED_OWNER_REVIEW_PENDING",
+  "working_branch": "feature/shopee-research-listing-factory-foundations-20261028",
+  "current_status": "M2_OPEN_M3_SHADOW_PR47_OPEN_LISTING_FACTORY_PR51_DRAFT_CI_GREEN_PRODUCTION_UNCHANGED",
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
     "Repasse-base, ajuste, repasse após ajuste e liberação exibidos sem dupla dedução",
@@ -115,7 +115,12 @@
     "Distinguir prejuizo estimado, lucro estimado, saldo parcial KNOWN_COSTS e variacao entre dias completos",
     "MLS Finance M2: validar Pending atual com montantes, quantidades e horarios reais do Seller Centre",
     "Se has_more, revisar cursor e semantica antes de paginacao; nao inferir liquidacao bancaria ou remaining_receivable",
-    "Manter Ads/PROMO LOCKED ate escrita oficial assistida; M3 Products/Pricing so apos criterio de saida M2"
+    "Manter Ads/PROMO LOCKED ate escrita oficial assistida; M3 Products/Pricing so apos criterio de saida M2",
+    "Conferir PR #51 e CI; validar mockups locais do operador sem publicar ou enviar imagens",
+    "Codex e ChatGPT usarem AGENTS.md + docs/MLS_CODEX_HANDOFF_2026_10_28.md; evitar branch simultanea",
+    "Implementar UI owner Listing Factory apos CI e integracao consciente com PR #48",
+    "Verificar categoria do app/escopos Shopee, escrows em lote GET/POST e push recovery sem ACK",
+    "Manter M2 issue #50 aberta e anuncios/precificacao/estoque externos BLOQUEADOS"
   ],
   "m0_followup": [
     "Conferir visual autenticado em desktop e celular durante M1; corrigir apenas branding/layout sem renomear infraestrutura"
@@ -374,5 +379,105 @@
       "M2 Seller Centre Pending / escrow reconciliation remains an independent financial exit gate"
     ],
     "visual_guide": "docs/MISSION_CONTROL_V2_VISUAL_GUIDE.md"
+  },
+  "checkpoint_2026_10_28": {
+    "schema": "mls_m2_m3_execution_checkpoint_v1",
+    "baseline_main": "b058e832f8450ce787370c4087cf78db9cca9fca",
+    "delivered_main": {
+      "v36_catalog_handoff": {
+        "pr": 46,
+        "status": "MERGED_CI_SUCCESS",
+        "run": 40769541414
+      }
+    },
+    "successor_ui": {
+      "pr": 48,
+      "branch": "feature/mission-v36-search-reconcile-main-20261028",
+      "status": "DRAFT_CI_PASS_NO_MERGE",
+      "node_tests": 2115,
+      "python_tests": 67,
+      "run": 40772868816,
+      "app_sha256": "080bcd884f1842023e384e180cd4e9e33fe3c58681596c86b4b6f0552216b68f",
+      "previous_pr45": "CLOSED_SUPERSEDED"
+    },
+    "m2_finance": {
+      "status": "NOT_CLOSED",
+      "issue": 50,
+      "required": "AUTHENTICATED_SELLER_CENTRE_PENDING_RELEASES_RETURNS_FINANCIAL_RECONCILIATION",
+      "bank_liquidation": "UNVERIFIED"
+    },
+    "m3_shadow": {
+      "pr": 47,
+      "branch": "feature/mls-m3-products-pricing-observer-20261028",
+      "status": "DRAFT_CI_PASS_NO_MERGE_NO_DEPLOY",
+      "run": 40773883621,
+      "node_tests": 2124,
+      "python_tests": 67,
+      "app_sha256": "bdbd554f8fb7b4879b7c8df4a4b7b242e274eedd6abb90033d9f53da83b1d801",
+      "auth_sha256": "1fef431c8573e05563c7938d95be0976a160bc603340084aa747ee0b73e7ec64",
+      "finance_sha256": "b2483fc6107ecb4782e746becfe1b69ee6e3b9d3f0a6109351390b11b9303ca3",
+      "features": [
+        "ABC sold units not inventory",
+        "revenue ABC only exclusively attributable and complete",
+        "exclusive partial balance before Ads and expenses",
+        "manual mathematical price scenario only",
+        "no marketplace/Ads writes"
+      ],
+      "safety": "OBSERVER_ADS_PROMO_LOCKED"
+    },
+    "gates": [
+      "Operator authenticated desktop and mobile QA",
+      "M2 exact financial reconciliation and Seller Centre comparison",
+      "Official marketplace fee, freight, tax and Ads attribution contracts",
+      "Inventory verifiable before recommendations",
+      "No prod merge or deploy until approved"
+    ],
+    "references": [
+      "docs/ROADMAP_MLS_COMMERCE_OS.md",
+      "docs/MLS_M2_M3_EXECUTION_2026_10_28.md"
+    ],
+    "shopee_research": {
+      "schema": "mls_shopee_research_delivery_v1",
+      "objective": "Automation-first improvements derived from public Shopee GitHub projects, always behind official auth and business gates",
+      "references": [
+        "docs/SHOPEE_RESEARCH_TO_MLS_2026_10_28.md",
+        "docs/MLS_CODEX_HANDOFF_2026_10_28.md",
+        "docs/MLS_LISTING_FACTORY_V1.md",
+        "AGENTS.md",
+        "NEXT_CHAT_HANDOFF.txt"
+      ],
+      "pr": 51,
+      "branch": "feature/shopee-research-listing-factory-foundations-20261028",
+      "status": "DRAFT_CI_INITIAL_GREEN_NO_MERGE_NO_DEPLOY",
+      "ci_run": 40781843992,
+      "node_pass": 2122,
+      "python_pass": 67,
+      "worker_hashes_unchanged": {
+        "app": "55645f1f5ec777136254e0deb6e09e88cd542649097786992e3fb212af298078",
+        "auth": "1fef431c8573e05563c7938d95be0976a160bc603340084aa747ee0b73e7ec64",
+        "finance": "b2483fc6107ecb4782e746becfe1b69ee6e3b9d3f0a6109351390b11b9303ca3"
+      },
+      "shipped_code": [
+        "offline listing factory manifest planner",
+        "local PNG/JPEG header inspection CLI and SHA256",
+        "explicit Shopee feature evidence matrix",
+        "lost push replay plan without acknowledgement"
+      ],
+      "remains": [
+        "operator UI for local mockups and batch review",
+        "live account/category scopes verification",
+        "official endpoint and HTTP method verification",
+        "M2 issue #50 seller centre comparison",
+        "any media upload/publishing after M6 approval"
+      ],
+      "safety": "OBSERVER_ONLY_NO_PROVIDER_REQUEST_NO_ADS_PROMO_WRITE",
+      "tracked_issues": {
+        "m2_owner_validation": 50,
+        "listing_factory_owner_ui": 52,
+        "finance_escrow_contract": 53,
+        "push_recovery": 54
+      },
+      "next_action": "Implement owner-only Listing Factory preview/export after PR #51 verified (issue #52), keep permission and M2 gates"
+    }
   }
 }
