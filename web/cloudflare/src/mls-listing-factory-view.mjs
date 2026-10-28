@@ -154,7 +154,7 @@ export const MLS_LISTING_FACTORY_CLIENT=String.raw`
  }
  async function inspect(file){
   const row={name:file.name,frame:null,preview:null,issue:null};
-  if(!/^[^\/\\\u0000-\u001f\u007f.][^\/\\\u0000-\u001f\u007f]{3,159}\.(png|jpe?g)$/i.test(file.name)){
+  if(!validFile(file.name)){
    row.issue='Nome ou extensão inválidos';return row;
   }
   if(!Number.isSafeInteger(file.size)||file.size<1||file.size>2097152){
