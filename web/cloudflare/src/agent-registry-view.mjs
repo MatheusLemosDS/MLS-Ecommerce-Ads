@@ -52,15 +52,18 @@ export const AGENT_REGISTRY_CLIENT=String.raw`
  const statusLabel={HEALTHY:'Saudável',WORKING:'Trabalhando',ATTENTION:'Atenção',BLOCKED:'Bloqueado'};
  let lastKey='',observer=null,queued=false,registry=null,pendingDetailLoaded=false;
  function read(){
-  let day=null,month=null,reconciliation=null,releases=null,incomeOverview=null,incomeDetail=null;
+  let day=null,month=null,reconciliation=null,releases=null,incomeOverview=null,incomeDetail=null,catalog=null,productionPeriod=null,dtfQueue=null;
   try{day=globalThis.brazaDayDashboard?.getSnapshot?.()??null;}catch{}
   try{month=globalThis.brazaMonthDashboard?.getSnapshot?.()??null;}catch{}
   try{reconciliation=globalThis.brazaReconciliation?.getSnapshot?.()??null;}catch{}
   try{releases=globalThis.brazaEscrowReleases?.getSnapshot?.()??null;}catch{}
   try{incomeOverview=globalThis.brazaIncomeOverview?.getSnapshot?.()??null;}catch{}
   try{incomeDetail=globalThis.brazaIncomeOverview?.getDetailSnapshot?.()??null;}catch{}
+  try{catalog=globalThis.brazaSavedCatalog?.getSnapshot?.()??null;}catch{}
+  try{productionPeriod=globalThis.brazaProductionCostPeriods?.getSnapshot?.()??null;}catch{}
+  try{dtfQueue=globalThis.brazaDtfWorkspace?.getSnapshot?.()??null;}catch{}
   const pendingAudit=buildPendingIncomeAudit({overview:incomeOverview,detail:incomeDetail,detailLoaded:pendingDetailLoaded});
-  return buildMlsAgentRegistry({day,month,reconciliation,releases,incomeOverview,pendingAudit});
+  return buildMlsAgentRegistry({day,month,reconciliation,releases,incomeOverview,pendingAudit,catalog,productionPeriod,dtfQueue});
  }
  function renderPending(){
   const status=el('PendingStatus'),target=el('PendingRows');if(!status||!target)return;target.replaceChildren();let detail=null,overview=null;try{detail=globalThis.brazaIncomeOverview?.getDetailSnapshot?.()??null;overview=globalThis.brazaIncomeOverview?.getSnapshot?.()??null;}catch{}
@@ -87,6 +90,7 @@ export const AGENT_REGISTRY_CLIENT=String.raw`
   if(kind==='money')return money(value);
   if(kind==='units')return Number.isSafeInteger(value)?count(value)+' unidade(s)':'—';
   if(kind==='count')return Number.isSafeInteger(value)?count(value)+' item(ns)':'—';
+  if(kind==='lines')return Number.isSafeInteger(value)?count(value)+' linha(s)':'—';
   return '';
  }
  function renderDayIntelligence(value){
@@ -122,11 +126,11 @@ export const AGENT_REGISTRY_CLIENT=String.raw`
  function queue(){if(queued)return;queued=true;Promise.resolve().then(()=>{queued=false;render();});}
  function start(){
   render();const details=document.getElementById('commandPendingIncomeDetails');if(details)details.ontoggle=()=>{if(!details.open)return;let task;try{task=globalThis.brazaIncomeOverview?.observeDetail?.();}catch{}Promise.resolve(task).then(()=>{pendingDetailLoaded=true;lastKey='';render();}).catch(()=>{pendingDetailLoaded=true;lastKey='';render();});};
-  if(typeof globalThis.MutationObserver==='function'){observer=new globalThis.MutationObserver(queue);for(const id of ['businessDay','businessMonth']){const target=document.getElementById(id);if(target)observer.observe(target,{subtree:true,childList:true,characterData:true,attributes:true});}}
+  if(typeof globalThis.MutationObserver==='function'){observer=new globalThis.MutationObserver(queue);for(const id of ['businessDay','businessMonth','savedCatalogList','costPeriodsMonthly','dtfQueue']){const target=document.getElementById(id);if(target)observer.observe(target,{subtree:true,childList:true,characterData:true,attributes:true});}}
   return true;
  }
  function stop(){try{observer?.disconnect?.();}catch{}observer=null;lastKey='';registry=null;pendingDetailLoaded=false;}
- globalThis.mlsAgentRegistry=Object.freeze({start,stop,refresh:render,getSnapshot:()=>registry??render()});
+ globalThis.mlsAgentRegistry=Object.freeze({start,stop,refresh:render,notify:queue,getSnapshot:()=>registry??render()});
  start();
 })();
 `;

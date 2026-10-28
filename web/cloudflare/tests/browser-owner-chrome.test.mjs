@@ -78,6 +78,7 @@ test('real Chromium hydrates owner agent cards even when finance API is unavaila
   'document.documentElement.dataset.mlsTrendFixture=JSON.stringify(report);'+
   '}catch(e){document.documentElement.dataset.mlsTrendFixtureError=String(e?.message||e).slice(0,250);}})();</script>';
 
+ const agentsFixtureScript="<script>(()=>{try{\n const catalog={schema:\"mls_agent_catalog_snapshot_v1\",total:345,indexed:300,pending_catalog:45,checked_at:1793200000,discovery_status:\"IDLE\"};\n const dtf={schema:\"mls_agent_dtf_queue_v1\",line_count:10,pending_lines:4,reserved_lines:2,produced_lines:3,blocked_lines:1,batch_count:2};\n if(globalThis.brazaSavedCatalog)globalThis.brazaSavedCatalog.getSnapshot=()=>catalog;\n if(globalThis.brazaDtfWorkspace)globalThis.brazaDtfWorkspace.getSnapshot=()=>dtf;\n globalThis.mlsAgentRegistry?.notify?.();\n setTimeout(()=>{const snapshot=globalThis.mlsAgentRegistry?.getSnapshot?.();document.documentElement.dataset.mlsAgentSourcesFixture=JSON.stringify({catalog:snapshot?.sources?.catalog?.total,dtf:snapshot?.sources?.dtf_queue?.pending_lines,products:document.getElementById(\"mission-products-metric-0\")?.textContent,production:document.getElementById(\"mission-production-metric-0\")?.textContent,errors:window.__mlsErrors.slice(0,4)});},350);\n }catch(error){document.documentElement.dataset.mlsAgentSourcesError=String(error?.message||error).slice(0,200)}})();</script>";
  const requests=[];
  const server=http.createServer((request,response)=>{
   const path=(request.url||'/').split('?')[0];
@@ -86,7 +87,7 @@ test('real Chromium hydrates owner agent cards even when finance API is unavaila
   if(path==='/admin'){
    response.writeHead(200,{'Content-Type':'text/html; charset=utf-8',
     'Content-Security-Policy':admin.headers.get('content-security-policy')||"default-src 'self'; script-src 'self' 'unsafe-inline';"});
-   response.end((request.url||'').includes('mlsFixture=trend')?html.replace('</body>',fixtureScript+'</body>'):html);
+   response.end((request.url||'').includes('mlsFixture=trend')?html.replace('</body>',fixtureScript+'</body>'):(request.url||'').includes('mlsFixture=agents')?html.replace('</body>',agentsFixtureScript+'</body>'):html);
   }else if(path==='/api/admin/bootstrap'){
    response.setHeader('Content-Type','application/json');
    response.end(JSON.stringify({schema:'admin_bootstrap_v1',csrf:'a'.repeat(64)}));
@@ -142,6 +143,17 @@ test('real Chromium hydrates owner agent cards even when finance API is unavaila
   assert.notEqual(fixture.net_color,fixture.sales_color,'loss and sales growth must use distinct colors');
   assert.notEqual(fixture.sales_color,fixture.ads_color,'more Ad spend is amber rather than success green');
   assert.deepEqual(fixture.errors,[]);
+
+
+  const specialist=await chromeDump(url+'?mlsFixture=agents');
+  const captured=specialist.match(/data-mls-agent-sources-fixture="([^"]+)"/);
+  assert.ok(captured,'specialist sources must update real Chromium DOM (error: '+(specialist.match(/data-mls-agent-sources-error="([^"]+)"/)?.[1]||'none')+')');
+  const source=JSON.parse(captured[1].replaceAll('&quot;','"').replaceAll('&amp;','&').replaceAll('&#39;',"'"));
+  assert.equal(source.catalog,345);
+  assert.equal(source.dtf,4);
+  assert.equal(source.products,'345');
+  assert.equal(source.production,'4');
+  assert.deepEqual(source.errors,[]);
 
   // The direct deep links must expose only the selected agent/hub section.
   // This checks Chromium's actual hidden attribute after the real Admin client

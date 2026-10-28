@@ -24,7 +24,7 @@ export function buildPendingIncomeAudit({overview=null,detail=null,detailLoaded=
  const delta=Number(difference);return Object.freeze({...common,state:delta===0?'OBSERVED_MATCH':'OBSERVED_DIFFERENT',difference_cents:delta,comparable:true});
 }
 
-export function buildMlsAgentRegistry({day=null,month=null,reconciliation=null,releases=null,incomeOverview=null,pendingAudit=null,now=null}={}){
+export function buildMlsAgentRegistry({day=null,month=null,reconciliation=null,releases=null,incomeOverview=null,pendingAudit=null,catalog=null,productionPeriod=null,dtfQueue=null,now=null}={}){
  const safe=value=>Number.isSafeInteger(value)&&!Object.is(value,-0);
  const money=value=>safe(value)?value:null;
  const list=value=>Array.isArray(value)?value.filter(item=>typeof item==='string'&&item.length<=80):[];
@@ -32,6 +32,31 @@ export function buildMlsAgentRegistry({day=null,month=null,reconciliation=null,r
  const pending=[...new Set([...list(month?.pending),...list(day?.pending),...releasePending])];
  const priorities=[];
  const releaseOrders=releases?.month===month?.month&&releases?.orders&&typeof releases.orders==='object'?releases.orders:null,releaseSummary=releaseOrders?.summary&&typeof releaseOrders.summary==='object'?releaseOrders.summary:null,releaseRows=Array.isArray(releaseOrders?.rows)?releaseOrders.rows:[];
+
+ // Operational sources are projections of existing validated browser caches.
+ // No provider reads, SKU identifiers or order payloads reach the Agent Registry.
+ const cat=catalog?.schema==='mls_agent_catalog_snapshot_v1'?catalog:null;
+ const periods=productionPeriod?.schema==='mls_agent_production_period_v1'&&(!month?.month||productionPeriod.reference_month===month.month)?productionPeriod:null;
+ const queue=dtfQueue?.schema==='mls_agent_dtf_queue_v1'?dtfQueue:null;
+ const nonnegative=value=>safe(value)&&value>=0?value:null;
+ const catData=cat?Object.freeze({
+  total:nonnegative(cat.total),indexed:nonnegative(cat.indexed),
+  pending_catalog:nonnegative(cat.pending_catalog),checked_at:nonnegative(cat.checked_at),
+  discovery_status:['IDLE','RUNNING','RETRY_WAIT'].includes(cat.discovery_status)?cat.discovery_status:null
+ }):null;
+ const periodData=periods?Object.freeze({
+  month:typeof periods.reference_month==='string'?periods.reference_month:null,
+  state:['COMPLETE','PARTIAL','UNAVAILABLE'].includes(periods.state)?periods.state:null,
+  eligible_orders:nonnegative(periods.eligible_orders),total_units:nonnegative(periods.total_units),
+  known_units:nonnegative(periods.known_units),pending_units:nonnegative(periods.pending_units),
+  cost_cents:nonnegative(periods.cost_cents),known_cost_cents:nonnegative(periods.known_cost_cents),
+  checked_at:nonnegative(periods.checked_at),source_checked_at:nonnegative(periods.source_checked_at)
+ }):null;
+ const dtfData=queue?Object.freeze({
+  line_count:nonnegative(queue.line_count),pending_lines:nonnegative(queue.pending_lines),
+  reserved_lines:nonnegative(queue.reserved_lines),produced_lines:nonnegative(queue.produced_lines),
+  blocked_lines:nonnegative(queue.blocked_lines),batch_count:nonnegative(queue.batch_count)
+ }):null;
  const expenseSchedule=month&&month.expense_schedule?.month===month.month&&month.expense_schedule?.status==='AVAILABLE'?month.expense_schedule:null;
  const reconciliationMoney=reconciliation?.month===month?.month&&Array.isArray(reconciliation?.money)?reconciliation.money:[],reconciliationPayouts=new Map();
  for(const group of reconciliationMoney)for(const payout of Array.isArray(group?.money?.payouts)?group.money.payouts:[])if(typeof payout?.order_hash==='string')reconciliationPayouts.set(payout.order_hash,payout);
@@ -121,8 +146,8 @@ export function buildMlsAgentRegistry({day=null,month=null,reconciliation=null,r
  const agents=[
   agent('finance','MLS Finance','Financeiro',financeStatus,expenseUrgent?(expenseSchedule.overdue_count+' conta(s) atrasada(s) e '+expenseSchedule.due_today_count+' vencendo hoje precisam de conferência.'):(expenseUpcoming?expenseSchedule.due_next_7_days_count+' pagamento(s) vencem nos próximos 7 dias.':releaseSummary?(releaseSummary.verified_orders+' liberação(ões) conferida(s); '+releaseSummary.not_located_orders+' pedido(s) sem liberação localizada neste calendário.'):(monthBalance!==null?'Resultado mensal estimado disponível para acompanhamento.':financeAttention?'O fechamento financeiro ainda depende de conferências.':'Aguardando o resumo financeiro validado.')),'#businessMonthExpensesDetails',monthBalance,'money',currentPending,'money',currentPending!==null?'Pendente atual na Shopee':null),
   agent('ads','MLS Ads','Anúncios',adsStatus,dailyAds!==null?'Investimento do dia acompanha a mesma leitura usada no resultado.':adsAttention?'A leitura de anúncios requer atenção.':'Aguardando o gasto diário validado.','/dashboard',dailyAds,'money'),
-  agent('products','MLS Products','Produtos',productStatus,productAttention?'Existem unidades vendidas sem custo confirmado.':month?'Custos dos itens vendidos não apresentam bloqueio de cobertura.':'Aguardando o catálogo financeiro do mês.','/admin?tab=products',totalUnits,'units'),
-  agent('production','MLS Production','Produção',productionStatus,knownUnits!==null&&totalUnits!==null?knownUnits+' de '+totalUnits+' unidade(s) com custo conhecido.':'Aguardando a cobertura de custos da produção.','/admin?tab=production',knownUnits,'units'),
+  agent('products','MLS Products','Produtos',productStatus,productAttention?'Existem unidades vendidas sem custo confirmado.':catData?'Catálogo salvo: '+catData.total+' produto(s) registrados. A cobertura de custos do mês é uma fonte independente.':month?'Custos dos itens vendidos não apresentam bloqueio de cobertura.':'Aguardando o catálogo financeiro do mês.','/admin?tab=products',totalUnits,'units',catData?.total??null,'count',catData?'Produtos registrados no catálogo salvo':null),
+  agent('production','MLS Production','Produção',productionStatus,dtfData?'Fila DTF salva: '+dtfData.pending_lines+' linha(s) pendente(s) e '+dtfData.produced_lines+' produzida(s); não são quantidades de pedidos.':knownUnits!==null&&totalUnits!==null?knownUnits+' de '+totalUnits+' unidade(s) com custo conhecido.':periodData?'Período de custos de produção: '+periodData.month+' ('+periodData.state+').':'Aguardando a cobertura de custos da produção.','/admin?tab=production',knownUnits,'units',dtfData?.pending_lines??null,'lines',dtfData?'Linhas DTF pendentes':null),
   agent('returns','MLS Returns','Devoluções',returnsStatus,returnAttention?(returns+returnsUnknown)+' pedido(s) pagos com devolução e '+reviews+' em revisão exigem acompanhamento.':'Nenhuma pendência de devolução foi sinalizada no mês.','#businessReconciliation',returns+returnsUnknown+reviews,'count'),
   agent('auditor','MLS Auditor','Auditoria',auditorStatus,settlementConflicts?settlementConflicts+' divergência(s) entre evidências de repasse após ajustes precisam ser resolvidas.':auditBlocked?'Uma inconsistência impede tratar os dados como confiáveis.':auditAttention?'A qualidade ou o frescor dos dados precisa de atenção.':collectionWorking?'Aguardando a conclusão da coleta do servidor.':'As validações do resumo não indicam bloqueios.','#businessEscrowReleases',priorities.length,'count')
  ];
@@ -155,6 +180,7 @@ export function buildMlsAgentRegistry({day=null,month=null,reconciliation=null,r
    release_ambiguous:safe(releaseSummary?.ambiguous_orders)?releaseSummary.ambiguous_orders:null,
    evidence_conflicts:settlementConflicts
   }),
+  sources:Object.freeze({catalog:catData,production_period:periodData,dtf_queue:dtfData}),
   income:Object.freeze({current_pending_cents:currentPending,checked_at:incomeCheckedAt,status:typeof incomeOverview?.status==='string'?incomeOverview.status:null,basis:incomeOverview?.basis==='CURRENT_PROVIDER_INCOME_STATUS_NOT_BANK_RECEIPT_OR_HISTORICAL_MONTH'?incomeOverview.basis:null,audit:pendingAudit&&pendingAudit.schema==='pending_income_audit_v1'?Object.freeze({...pendingAudit}):null}),
   expenses:Object.freeze({status:expenseSchedule?.status??null,open_count:safe(expenseSchedule?.open_count)?expenseSchedule.open_count:null,open_cents:money(expenseSchedule?.open_cents),overdue_count:safe(expenseSchedule?.overdue_count)?expenseSchedule.overdue_count:null,overdue_cents:money(expenseSchedule?.overdue_cents),due_today_count:safe(expenseSchedule?.due_today_count)?expenseSchedule.due_today_count:null,due_today_cents:money(expenseSchedule?.due_today_cents),due_next_7_days_count:safe(expenseSchedule?.due_next_7_days_count)?expenseSchedule.due_next_7_days_count:null,due_next_7_days_cents:money(expenseSchedule?.due_next_7_days_cents),next_due_date:typeof expenseSchedule?.next_due_date==='string'?expenseSchedule.next_due_date:null,next_due_count:safe(expenseSchedule?.next_due_count)?expenseSchedule.next_due_count:null,next_due_cents:money(expenseSchedule?.next_due_cents),basis:expenseSchedule?.basis==='OWNER_DECLARED_DUE_DATES_NOT_BANK_SETTLEMENT'?expenseSchedule.basis:null}),
   priorities:Object.freeze(priorities.slice(0,8)),

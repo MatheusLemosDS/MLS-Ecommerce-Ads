@@ -249,3 +249,32 @@ test('Pending detail moves to Finance while overview only provides dedicated pan
  assert.match(AGENT_REGISTRY_CLIENT,/data|missionOpen/);
  assert.doesNotMatch(AGENT_REGISTRY_CLIENT,/\bfetch\s*\(/);
 });
+
+
+test('catalog and DTF adapters update observer registry without borrowing financial quantities',()=>{
+ const catalog={schema:'mls_agent_catalog_snapshot_v1',total:294,indexed:275,pending_catalog:19,checked_at:1793200000,discovery_status:'RUNNING'};
+ const productionPeriod={schema:'mls_agent_production_period_v1',reference_month:'2026-10',state:'PARTIAL',eligible_orders:63,total_units:137,known_units:120,pending_units:17,known_cost_cents:185000,cost_cents:null,checked_at:1793200000,source_checked_at:1793199000};
+ const dtfQueue={schema:'mls_agent_dtf_queue_v1',line_count:14,pending_lines:5,reserved_lines:3,produced_lines:4,blocked_lines:2,batch_count:2};
+ const result=buildMlsAgentRegistry({day:day(),month:month(),catalog,productionPeriod,dtfQueue});
+ assert.equal(result.sources.catalog.total,294);
+ assert.equal(result.sources.catalog.pending_catalog,19);
+ assert.equal(result.sources.production_period.eligible_orders,63);
+ assert.equal(result.sources.production_period.known_cost_cents,185000);
+ assert.equal(result.sources.dtf_queue.pending_lines,5);
+ assert.equal(result.agents.find(item=>item.id==='products').secondary_metric,294);
+ assert.equal(result.agents.find(item=>item.id==='production').secondary_metric,5);
+ assert.equal(result.agents.find(item=>item.id==='production').secondary_metric_kind,'lines');
+ assert.equal(result.agents.find(item=>item.id==='production').metric,month().production_coverage.known_units);
+});
+test('invalid and mismatched source snapshots cannot cross fiscal month or invent available data',()=>{
+ const result=buildMlsAgentRegistry({month:month(),catalog:{schema:'untrusted',total:999},productionPeriod:{schema:'mls_agent_production_period_v1',reference_month:'2026-09',eligible_orders:100},dtfQueue:{schema:'wrong',pending_lines:100}});
+ assert.equal(result.sources.catalog,null);
+ assert.equal(result.sources.production_period,null);
+ assert.equal(result.sources.dtf_queue,null);
+ assert.equal(result.agents.find(item=>item.id==='products').secondary_metric,null);
+});
+test('registry browser reads existing specialist caches and supports no-network change notification',()=>{
+ for(const token of ['brazaSavedCatalog?.getSnapshot','brazaProductionCostPeriods?.getSnapshot','brazaDtfWorkspace?.getSnapshot','notify:queue'])assert.ok(AGENT_REGISTRY_CLIENT.includes(token),token);
+ assert.equal(AGENT_REGISTRY_CLIENT.includes('fetch('),false);
+ assert.equal(AGENT_REGISTRY_CLIENT.includes('setInterval('),false);
+});
