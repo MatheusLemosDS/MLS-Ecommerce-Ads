@@ -33,7 +33,7 @@ globalThis.mlsFinanceSyncInspector=Object.freeze({read:async()=>{
  const counter=x=>Number.isSafeInteger(x)&&x>=0&&x<=1000000?x:null;
  const diagnostic=x=>typeof x==='string'&&/^BUSINESS_SYNC_[A-Z_]{1,64}$/.test(x)?x:null;
  const sourceCode=x=>typeof x==='string'&&/^BUSINESS_PERIOD_[A-Z_]{1,64}$/.test(x)?x:null;
- const month=x=>typeof x==='string'&&/^\\d{4}-(0[1-9]|1[0-2])$/.test(x)?x:null;
+ const month=x=>typeof x==='string'&&/^\d{4}-(0[1-9]|1[0-2])$/.test(x)?x:null;
  const phase=x=>['READY','RETRY_WAIT','BLOCKED'].includes(x)?x:null;
  const progress=value.summary?.progress;
  return Object.freeze({
