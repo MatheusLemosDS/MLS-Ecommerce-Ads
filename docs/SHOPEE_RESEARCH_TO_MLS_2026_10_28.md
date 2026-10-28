@@ -49,6 +49,10 @@ Projetos examinados (referências de arquitetura, não comprovantes de permissã
 
 Nenhuma API, endpoint, D1, financeiro, cron, autenticação, layout aprovado, preço real, Ads ou Shopee deve ser alterado nesta PR.
 
+## Execução delegável
+
+A implementação da interface está detalhada na issue #52. A auditoria do escrow batch está na issue #53. O webhook/replay está na issue #54. Todas mantêm a issue #50 como gate financeiro externo e a PR #51 como base de módulos offline.
+
 ## Critérios para fechar este levantamento
 
 A documentação só é guia até a execução. Para cada API futura: confirmar licença/versão, grant/escopo, método, limites, paginação, retry, idempotência, estabilidade temporal, segurança do callback, compatibilidade Worker, QA sandbox e um pequeno piloto autenticado. Registrar os resultados no checkpoint sem presumir sucesso.

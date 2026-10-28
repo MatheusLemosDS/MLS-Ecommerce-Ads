@@ -28,6 +28,13 @@ Não alterar branches da outra ferramenta ao mesmo tempo sem combinar a posse do
 4. Planejamento offline do replay de eventos perdidos: web/cloudflare/src/mls-lost-push-recovery.mjs.
 5. Testes de schema, segurança e CLI: web/cloudflare/tests/mls-listing-factory-foundations.test.mjs.
 
+## Issues para dividir trabalho sem conflitos
+
+- [#52 — UI owner Listing Factory](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/issues/52): usar após CI da PR #51, preferencialmente via Codex; sem API externa.
+- [#53 — Finance M2 escrow batch](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/issues/53): verificar método/escopo e evidência do Seller Centre, sem tocar em produção sem aprovação.
+- [#54 — Push lost events](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/issues/54): preparar assinatura/idempotência/ACK persistido e testes depois que a autorização estiver confirmada.
+- [#50 — Gate M2](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/issues/50): obrigação do operador e do MLS Finance; não pode ser substituída por fixture.
+
 ## Próximas tarefas técnicas, nesta ordem
 
 ### 1. Inspecionar e finalizar PR #51

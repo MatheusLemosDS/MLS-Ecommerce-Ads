@@ -470,7 +470,14 @@
         "M2 issue #50 seller centre comparison",
         "any media upload/publishing after M6 approval"
       ],
-      "safety": "OBSERVER_ONLY_NO_PROVIDER_REQUEST_NO_ADS_PROMO_WRITE"
+      "safety": "OBSERVER_ONLY_NO_PROVIDER_REQUEST_NO_ADS_PROMO_WRITE",
+      "tracked_issues": {
+        "m2_owner_validation": 50,
+        "listing_factory_owner_ui": 52,
+        "finance_escrow_contract": 53,
+        "push_recovery": 54
+      },
+      "next_action": "Implement owner-only Listing Factory preview/export after PR #51 verified (issue #52), keep permission and M2 gates"
     }
   }
 }

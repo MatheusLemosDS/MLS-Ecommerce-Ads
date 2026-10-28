@@ -4,6 +4,8 @@ Atualizado em **28/10/2026**.
 
 > **Checkpoint multi-branch 28/10/2026:** A main continua em b058e832 (PR #46 integrada); PR #48 de busca V3.6 segue draft/CI verde (2.115 Node + 67 Python); PR #47 M3 Products/Pricing Observer segue draft/CI verde (2.124 Node + 67 Python); PR #51 abre a pesquisa Shopee/Listing Factory, com CI inicial verde (2.122 Node + 67 Python). Nenhuma dessas três PRs foi integrada ou publicada. **M2 Finance continua aberta (issue #50).** A M3 de precificação comercial não está aprovada.
 >
+> Execução rastreada: issue #50 (M2), #52 (Listing Factory UI), #53 (escrow batch), #54 (push).
+>
 > Guia da pesquisa e implementação: [SHOPEE_RESEARCH_TO_MLS_2026_10_28.md](SHOPEE_RESEARCH_TO_MLS_2026_10_28.md) · [MLS_CODEX_HANDOFF_2026_10_28.md](MLS_CODEX_HANDOFF_2026_10_28.md) · [MLS_LISTING_FACTORY_V1.md](MLS_LISTING_FACTORY_V1.md).
 
 > **ESTE É O ROADMAP CANÔNICO DO PROJETO.**
