@@ -133,7 +133,7 @@ test('V3.6 product search is user-confirmed and delegates to the saved catalog f
  assert.match(source,/rawQuery\.length>=2&&rawQuery\.length<=90/);
  assert.match(source,/selected\.find\(value=>value\.key===link\.dataset\.searchRoute\)/);
  assert.match(source,/item\.catalogQuery/);
- assert.match(source,/savedCatalogSearchForm/);
+ assert.match(source,/savedCatalogSearch/);
  assert.match(source,/openTab\(item\.panel\)/);
  assert.match(source,/search\.value=item\.catalogQuery/);
  assert.doesNotMatch(source,/\bfetch\s*\(|\bsetInterval\s*\(|\/api\//);
