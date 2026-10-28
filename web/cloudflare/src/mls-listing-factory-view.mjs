@@ -331,6 +331,10 @@ export const MLS_LISTING_FACTORY_CLIENT=String.raw`
    const value=JSON.parse(await file.text());
    const plan=planMlsListingFactory(value,Object.create(null));
    if(!plan)throw Error('O JSON não corresponde ao contrato MLS Listing Factory. Não é a revisão JSON.');
+   if(!value.items.every((item,i)=>item.variants.length>0&&
+    item.variants.length===plan.products[i].variants.length&&
+    item.images.every(name=>validFile(name))&&new Set(item.images).size===item.images.length))
+    throw Error('Arquivo contém SKU, variação ou nome de imagem inválido. Corrija o manifesto antes de importar.');
    if(!globalThis.confirm?.('Substituir a fila local por '+plan.summary.items+' anúncio(s) deste JSON? Reanexe os mockups em cada anúncio.'))return;
    state.drafts=value.items.map(item=>({item:{
     client_ref:item.client_ref,title:item.title,description:item.description,
