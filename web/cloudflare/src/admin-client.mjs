@@ -1070,7 +1070,10 @@ const missionSearchRoutes=Object.freeze([
   }catch(error){
    if(requestId!==lookupEpoch||overlay.hidden||mode!==sourceMode)return;
    results.replaceChildren();const empty=document.createElement('p');empty.className='mission-search-empty';
-   empty.textContent=error?.status===401?'Sessão administrativa expirada. Entre novamente neste navegador.':
+   empty.textContent=error?.status===401||error?.code==='UNAUTHORIZED'?'Sessão administrativa expirada. Entre novamente neste navegador.':
+    error?.message==='INVALID_RESPONSE'?'A página retornada pelo catálogo não passou na validação. O cadastro foi preservado.':
+    error?.code==='ADMIN_API_NETWORK_ERROR'?'A conexão com o catálogo salvo falhou. Confira sua rede e tente novamente.':
+    error?.code==='ADMIN_API_TIMEOUT'?'O catálogo salvo demorou demais para responder. Tente novamente.':
     'Consulta indisponível. O cadastro salvo foi preservado; tente novamente ou abra o módulo especializado.';
    results.append(empty);pageInfo.textContent='';more.hidden=true;
   }finally{
