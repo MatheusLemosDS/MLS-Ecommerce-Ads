@@ -1024,7 +1024,7 @@ const missionSearchRoutes=Object.freeze([
  results.addEventListener('click',event=>{
   const link=event.target?.closest?.('[data-search-route]');
   if(!link||event.button>0||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;
-  const item=byKey.get(link.dataset.searchRoute);
+  const item=selected.find(value=>value.key===link.dataset.searchRoute)||byKey.get(link.dataset.searchRoute);
   if(!item)return;
   if(item.panel){event.preventDefault();choose(item);}
   else hide({focus:false});
