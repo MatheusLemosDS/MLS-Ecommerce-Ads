@@ -4,7 +4,7 @@ Base auditada: main b058e832f8450ce787370c4087cf78db9cca9fca. Este documento com
 
 ## Estado
 
-M0 e M1 publicados. PR #46 de busca integrada ao catálogo foi incorporada com CI verde. PR #45 permanece draft, sem CI aprovado, com quatro testes WORKER_SOURCE_UNRECOGNIZED. A M2 financeira não está concluída: a conta autenticada precisa de comparação real com o Seller Centre. Esta PR #47 entrega uma primeira parte da M3 em modo OBSERVER, não uma precificação comercial segura.
+M0 e M1 publicados. PR #46 integrada com CI verde. PR #45 encerrada sem merge, substituída pela PR #48 (busca de catálogo e fila DTF; CI verde com 2.115 Node e 67 Python; ainda sem merge/deploy). A M2 financeira não está concluída: a conta autenticada precisa de comparação real com o Seller Centre. Esta PR #47 entrega uma primeira parte da M3 em modo OBSERVER, CI verde e produção não validada, não uma precificação comercial segura.
 
 ## Gates M2 que não podem ser simulados
 
@@ -29,7 +29,8 @@ Não compartilhar tokens, cookies, URLs de callback nem identificadores sensíve
 - [x] Simulação de preço por variação com custo conhecido e taxas/Ads/margem/custo adicional explicitamente informados; centavos exatos, arredondamento para cima.
 - [x] Proibir publicação ou atualização de Ads/PROMO a partir de cenário.
 - [x] Adicionar painel M3 ao mês e testes de contratos.
-- [ ] Gate CI, hash exato, Chromium, QA autenticado desktop e mobile.
+- [x] CI de testes Node/Python, integração sintética e SHA exato App confirmados pela execução #40773883621 (2.124 Node + 67 Python).
+- [ ] QA visual/autenticado em desktop e mobile após publicação controlada; sem declarar deploy nesta PR.
 
 Preço ilustrativo = arredondamento para cima de (custo unitário + custo extra informado) / (1 − taxas estimadas − Ads estimado − margem desejada). Este cálculo não valida imposto, frete, campanhas, estoque, devoluções ou comissão oficial e NÃO é preço mínimo seguro para publicar.
 

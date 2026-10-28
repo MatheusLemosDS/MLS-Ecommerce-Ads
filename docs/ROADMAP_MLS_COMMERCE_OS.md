@@ -2,9 +2,9 @@
 
 Atualizado em **28/10/2026** (adendo M2 → M3).
 
-> **Checkpoint 28/10:** Mission Control V3.5 e V3.6 (busca no catálogo, PR #46) integrados à main b058e832 e CI #40769541414 verde. A busca ampliada por registros/DTF da PR #45 permanece draft com gate de integridade em correção. M2 Finance/Returns **não está encerrada** sem conferência autenticada do Seller Centre, Pending e liberações por pedido.
+> **Checkpoint 28/10:** Mission Control V3.5 e V3.6 (busca no catálogo, PR #46) integrados à main b058e832 e CI #40769541414 verde. A PR #45 foi encerrada sem merge, substituída pela PR #48, que reuniu catálogo salvo e fila DTF na V3.6 sobre a PR #46. PR #48 com CI #40772868816 verde: 2.115 Node e 67 Python; merge/deploy aguardam QA autenticado. M2 Finance/Returns **não está encerrada** sem conferência autenticada do Seller Centre, Pending e liberações por pedido.
 >
-> **M3.0 em execução (PR #47, draft):** inteligência ABC por unidades vendidas de fonte mensal validada, ABC por vendas exclusivas somente quando não houver lacunas/pedidos mistos, contribuição parcial de pedidos exclusivos e simulador com hipóteses explícitas. Tudo em OBSERVER, sem publicação de preço, sem estoque presumido e sem escrita Ads/PROMO. CI/QA pendentes; este adendo **não declara M3 concluída**. Plano e gates: [Execução M2→M3](MLS_M2_M3_EXECUTION_2026_10_28.md).
+> **M3.0 Observer tecnicamente validada (PR #47, draft):** inteligência ABC por unidades vendidas de fonte mensal validada, ABC por vendas exclusivas somente quando não houver lacunas/pedidos mistos, contribuição parcial de pedidos exclusivos e simulador com hipóteses explícitas. Tudo em OBSERVER, sem publicação de preço, sem estoque presumido e sem escrita Ads/PROMO. CI #40773883621 aprovado (2.124 Node e 67 Python; App SHA256 bdbd554f8fb7b4879b7c8df4a4b7b242e274eedd6abb90033d9f53da83b1d801); QA autenticado, M2 e publicação comercial continuam pendentes. Este adendo **não declara M3 de preços seguros concluída**. Plano e gates: [Execução M2→M3](MLS_M2_M3_EXECUTION_2026_10_28.md).
 
 
 > **ESTE É O ROADMAP CANÔNICO DO PROJETO.**
