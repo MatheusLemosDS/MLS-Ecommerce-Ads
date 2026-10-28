@@ -31,7 +31,7 @@
   },
   "current_phase": "M2_FINANCE_RETURNS_RECONCILIATION",
   "working_branch": "feature/mls-listing-factory-owner-ui-20261028",
-  "current_status": "M2_OPEN_PR47_PR48_PR51_PR56_DRAFT_CI_PENDING_LATEST_HEAD_NO_DEPLOY",
+  "current_status": "M2_NOT_CLOSED_M3_OBSERVER_SHOPEE_FACTORY_PR56_JSON_IMPORT_CI_HEAD_PENDING",
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
     "Repasse-base, ajuste, repasse após ajuste e liberação exibidos sem dupla dedução",
@@ -121,7 +121,8 @@
     "Implementar UI owner Listing Factory apos CI e integracao consciente com PR #48",
     "Verificar categoria do app/escopos Shopee, escrows em lote GET/POST e push recovery sem ACK",
     "Manter M2 issue #50 aberta e anuncios/precificacao/estoque externos BLOQUEADOS",
-    "PR #56 Listing Factory UI: revisar CI do HEAD e hash App, QA desktop/mobile e integração sobre PR #51"
+    "PR #56 Listing Factory UI: revisar CI do HEAD e hash App, QA desktop/mobile e integração sobre PR #51",
+    "Run current PR #56 Node+Python+Chrome+Workers CI (manual workflow_dispatch if Actions does not auto-start), then restore stacked base PR #51"
   ],
   "m0_followup": [
     "Conferir visual autenticado em desktop e celular durante M1; corrigir apenas branding/layout sem renomear infraestrutura"
@@ -483,8 +484,8 @@
         "issue": 52,
         "pr": 56,
         "branch": "feature/mls-listing-factory-owner-ui-20261028",
-        "head_sha": "1d8e7cc9dc86257e73ecce7e5331708f78d118d4",
-        "status": "DRAFT_HEAD_UNVERIFIED_CI_NO_MERGE_NO_DEPLOY",
+        "head_sha": "5f37658e722f683c4298fd7ac3ea35f95e4ec72c",
+        "status": "DRAFT_STATIC_SYNTAX_OK_CURRENT_HEAD_CI_PENDING_NO_DEPLOY",
         "last_successful_pre_refinement_run": 40784356050,
         "last_green_node": 2126,
         "last_green_python": 67,
@@ -496,14 +497,17 @@
           "per-size prices and explicit override",
           "edit/delete/clear draft queue",
           "manifest and review JSON downloads",
-          "no storage, provider I/O or Ads writes"
+          "no storage, provider I/O or Ads writes",
+          "safe JSON import for draft continuation, requires reattaching local photos",
+          "eight-card pagination across up to 500 drafts",
+          "no prefilled fictitious price; explicitly operator supplied"
         ],
         "open_gates": [
-          "final CI and exact App SHA review",
-          "owner desktop/mobile QA",
-          "PR #48 catalog integration reconciliation",
-          "operator official Shopee app permissions",
-          "M2 issue #50 financial reconciliation"
+          "Full GitHub Actions current head CI, exact reviewed App SHA and generated Workers",
+          "Authenticated desktop and mobile owner QA",
+          "Restore stacked PR base to #51 after CI",
+          "Reconcile PR #48 search UI in integration",
+          "M2 issue #50, stock and Shopee permissions"
         ],
         "safety": "OBSERVER_ONLY",
         "last_ci_attempt": {
@@ -514,7 +518,14 @@
           "comment": "4 SHA integrity misses fixed in later commit; Chrome filename mismatch corrected with canonical validFile on HEAD."
         },
         "latest_code_patch": "single canonical validFile for PNG/JPEG browser and offline planner, short valid filenames allowed",
-        "ci_status": "CI_NOT_RUN_ON_CURRENT_HEAD"
+        "ci_status": "NO_GITHUB_ACTIONS_RUN_FOR_CURRENT_HEAD",
+        "verification": {
+          "last_green_older_ci": 40784356050,
+          "applies_to_current_head": false,
+          "source_syntax_v8": "PASS",
+          "full_node_python_chrome": "PENDING",
+          "current_app_sha256": "UNVERIFIED"
+        }
       }
     }
   }

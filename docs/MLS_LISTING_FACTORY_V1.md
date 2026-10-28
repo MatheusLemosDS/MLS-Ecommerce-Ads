@@ -62,3 +62,13 @@ Selecione de **5 a 9 arquivos JPG/PNG** da sua pasta de mockups. O navegador con
 Clique **Adicionar à fila de revisão** por arte. A fila permite **Editar**, **Remover** e **Limpar fila**. Exporte **anúncios JSON** (mesmo schema do CLI, com nomes das fotos) e **revisão JSON** (metadados das imagens, erros e avisos). O CLI continua disponível independentemente. `READY_FOR_OPERATOR_REVIEW` não significa estoque validado, preço rentável, permissão na Shopee ou anúncio publicado.
 
 **Teste automatizado**: `web/cloudflare/tests/mls-listing-factory-owner-ui.test.mjs` verifica HTML compilado normal/minificado; `web/cloudflare/tests/mls-listing-factory-chrome.test.mjs` abre o Chrome real e valida PNGs, extensão falsa, imagens excessivas, preços por tamanho, edição, conteúdo escapado e JSON exportado. A PR permanece draft até validação visual autenticada no desktop/celular e checagem dos gates.
+
+## Continuar um lote pelo JSON — incremento PR #56
+
+O editor exige preço informado pelo operador: **não há preço padrão**. O preço base atualiza somente tamanhos ainda não personalizados; o botão Aplicar a todos substitui os preços individuais por solicitação expressa.
+
+Depois de criar seus anúncios, clique em **Exportar anúncios JSON**. Use **Retomar anúncios de um arquivo JSON anterior** para importar um manifesto do mesmo formato (até 1 MiB e até 500 anúncios). A importação substitui a fila somente após confirmação. O relatório de revisão não é aceito como entrada. O leitor rejeita nomes de imagens inválidos, variações malformadas e campos inesperados. Para continuar no Codex, use o mesmo arquivo JSON, sem incluir tokens.
+
+As fotos não fazem parte do JSON: o editor conserva seus nomes, mas exige **reanexar os mockups locais** antes de considerar um anúncio pronto para revisão. Pode editar o título sem perder as referências às fotos, porém sem os arquivos originais o estado continua NEEDS_CORRECTION. A fila mostra **8 anúncios por página** para não sobrecarregar o celular quando houver centenas de artes.
+
+Os testes Chrome incluem retorno do manifesto, conteúdo HTML escapado, arquivo JPEG falso, dimensões excessivas e paginação de 19 anúncios. O código do HEAD passou verificação sintática V8; **CI completa e QA autenticada do HEAD continuam pendentes**, sem merge nem deploy.
