@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
-import {MISSION_CSS,MISSION_CLIENT,MISSION_AGENTS,missionWorkspacesBody} from '../src/mission-control.mjs';
+import {MISSION_CSS,MISSION_TRENDS_CSS,MISSION_CLIENT,MISSION_AGENTS,missionWorkspacesBody} from '../src/mission-control.mjs';
 import {adminBody} from '../src/admin-view.mjs';
 import {commandCenterBody,AGENT_REGISTRY_CLIENT} from '../src/agent-registry-view.mjs';
 import {buildMlsAgentRegistry} from '../src/agent-registry.mjs';
@@ -210,4 +210,12 @@ test('specialist workspaces hydrate observed catalog and saved DTF queue counts'
  assert.equal(nodes.get('mission-production-metric-1').textContent,'2');
  assert.equal(nodes.get('mission-production-metric-2').textContent,'3');
  assert.equal(nodes.get('mission-production-metric-3').textContent,'1');
+});
+
+
+test('mobile overview uses compact two-column cards and hides unavailable comparison clutter',()=>{
+ assert.match(MISSION_TRENDS_CSS,/Mobile owner cockpit V3/);
+ assert.match(MISSION_TRENDS_CSS,/grid-template-columns:repeat\(2,minmax\(0,1fr\)\)!important/);
+ assert.match(MISSION_TRENDS_CSS,/mission-kpi-delta\[data-direction=UNAVAILABLE\]\{display:none\}/);
+ assert.match(MISSION_TRENDS_CSS,/\.mission-dashboard \.agent-grid\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)!important/);
 });
