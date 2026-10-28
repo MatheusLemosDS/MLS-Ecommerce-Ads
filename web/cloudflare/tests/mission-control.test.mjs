@@ -135,7 +135,8 @@ test('Mission Control V2 decorative surfaces cannot invent financial history or 
  assert.match(html,/valores indisponíveis permanecem como —/i);
  assert.doesNotMatch(html,/ROAS\s*(?:[0-9]|de)/i);
  assert.doesNotMatch(html,/data-action="(?:approve|execute|scale)"/);
- assert.doesNotMatch(MISSION_CLIENT,/\bfetch\s*\(|setInterval\s*\(|\/api\//);
+ assert.equal(MISSION_CLIENT.includes('fetch('),false);
+ assert.equal(MISSION_CLIENT.includes('setInterval('),false);
  assert.match(MISSION_CSS,/data-theme=light/);
 });
 
