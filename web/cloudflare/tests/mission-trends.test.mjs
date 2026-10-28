@@ -1,13 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {projectMissionDailyTrend,BUSINESS_DAY_CLIENT} from '../src/business-day-view.mjs';
+import {BUSINESS_MONTH_CLIENT} from '../src/business-month-client.mjs';
 import {buildMissionTrendComparison,missionTrendPanelBody,MISSION_TRENDS_CLIENT,MISSION_TRENDS_CSS} from '../src/mission-control.mjs';
 import {commandCenterBody,AGENT_REGISTRY_CLIENT} from '../src/agent-registry-view.mjs';
 import {missionWorkspacesBody} from '../src/mission-control.mjs';
 import {adminBody} from '../src/admin-view.mjs';
 
 function row(day,{state='OPERATIONAL',partial=false,net=8000,sales=17000,ads=2500,paid=8,pending=[]}={}){
- return {date:'2026-10-'+String(day).padStart(2,'0'),state,day_partial:partial,estimate_cents:state==='OPERATIONAL'?net:null,
+ return {date:'2026-10-'+String(day).padStart(2,'0'),state,day_partial:partial,estimate_cents:['OPERATIONAL','PROVISIONAL'].includes(state)?net:null,
   known_estimate_cents:state==='PARTIAL_COSTS'?net:null,sales_cents:sales,ads_spend_cents:ads,coverage:{paid},pending};
 }
 const summary=(rows)=>({schema:'business_daily_summary_v1',month:'2026-10',days:rows});
@@ -95,4 +96,31 @@ test('the three chart panels reuse identical cached evidence and preserve all cu
  assert.match(MISSION_TRENDS_CLIENT,/createElementNS/);
  assert.match(MISSION_TRENDS_CSS,/mission-kpi-delta/);
  assert.match(MISSION_TRENDS_CSS,/result-tone=loss/);
+});
+
+test('real monthly projector PROVISIONAL rows become observed trend and safe comparisons',()=>{
+ const t=snapshot([
+  row(26,{state:'PROVISIONAL',net:9900,sales:24000,ads:2500,paid:6}),
+  row(27,{state:'PROVISIONAL',net:12300,sales:30000,ads:2800,paid:8}),
+  row(28,{state:'UNAVAILABLE',net:null,sales:null,ads:null,paid:null})
+ ],'2026-10-28');
+ assert.equal(t.points[0].state,'OPERATIONAL');
+ assert.equal(t.points[0].net_basis,'ESTIMATE');
+ assert.equal(t.points[1].sales_cents,30000);
+ assert.equal(t.points[1].ads_spend_cents,2800);
+ assert.equal(t.points[2].state,'UNAVAILABLE');
+ assert.equal(t.points[2].net_cents,null);
+ assert.equal(buildMissionTrendComparison(t,'net').current_date,'2026-10-27');
+ assert.equal(buildMissionTrendComparison(t,'net').delta,2400);
+ assert.equal(buildMissionTrendComparison(t,'sales').delta,6000);
+});
+
+test('owner overview can distinguish an uncovered date from a monthly source without daily evidence',()=>{
+ assert.match(BUSINESS_MONTH_CLIENT,/getSourceStatus/);
+ assert.match(BUSINESS_MONTH_CLIENT,/published_through/);
+ assert.match(BUSINESS_MONTH_CLIENT,/daily_summary_present/);
+ assert.match(AGENT_REGISTRY_CLIENT,/mls_finance_source_coverage_v1/);
+ assert.match(AGENT_REGISTRY_CLIENT,/O último resumo validado cobre até/);
+ assert.match(AGENT_REGISTRY_CLIENT,/detalhamento diário pendente/);
+ assert.match(AGENT_REGISTRY_CLIENT,/A coleta automática está desativada/);
 });

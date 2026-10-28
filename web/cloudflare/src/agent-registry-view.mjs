@@ -128,10 +128,11 @@ export const AGENT_REGISTRY_CLIENT=String.raw`
    message=document.getElementById('missionSourceDescription'),retry=document.getElementById('missionSourceRetry');
   if(!box||!title||!message)return;
   const hero=typeof document.querySelector==='function'?document.querySelector('.mission-command-hero'):null;
-  let day=null,month=null,trend=null;
+  let day=null,month=null,trend=null,coverage=null;
   try{day=globalThis.brazaDayDashboard?.getSnapshot?.()??null;}catch{}
   try{month=globalThis.brazaMonthDashboard?.getSnapshot?.()??null;}catch{}
   try{trend=globalThis.brazaDayDashboard?.getTrend?.()??null;}catch{}
+  try{coverage=globalThis.brazaMonthDashboard?.getSourceStatus?.()??null;}catch{}
   const complete=day&&['net_cents','sales_cents','ads_spend_cents','paid_orders'].some(key=>Number.isSafeInteger(day[key]));
   box.hidden=!!complete;
   if(hero)hero.dataset.sourceState=complete?'ready':'missing';
@@ -144,7 +145,19 @@ export const AGENT_REGISTRY_CLIENT=String.raw`
   const short=key=>key?.slice(8,10)+'/'+key?.slice(5,7)+'/'+key?.slice(0,4);
   const observed=trend?.schema==='mls_mission_daily_trend_v1'&&Array.isArray(trend.points)?trend.points.filter(row=>validDay(row?.date)&&['net_cents','sales_cents','ads_spend_cents'].some(key=>Number.isSafeInteger(row[key]))):[];
   const latest=observed.length?observed[observed.length-1].date:null;
-  if(monthlyReady&&currentMonth!==null&&selectedMonth!==null&&currentMonth!==selectedMonth){
+  const end=coverage?.schema==='mls_finance_source_coverage_v1'&&validDay(coverage.published_through)?coverage.published_through:null;
+  const collected=coverage?.collection_status==='RUNNING';
+  const auto=coverage?.automatic_enabled===false?' A coleta automática está desativada.':coverage?.automatic_enabled===true&&collected?' Há uma coleta automática em andamento.':'';
+  if(monthlyReady&&currentMonth===selectedMonth&&end&&selected&&selected>end){
+   title.textContent='O dia '+short(selected)+' ainda não consta na publicação financeira';
+   message.textContent='O último resumo validado cobre até '+short(end)+'. '+short(selected)+' ainda está fora desse recorte; não é venda zero nem falha de cálculo.'+auto;
+  }else if(monthlyReady&&currentMonth===selectedMonth&&coverage?.daily_summary_present===false&&coverage?.display_source==='PUBLISHED'){
+   title.textContent='Resumo mensal disponível, detalhamento diário pendente';
+   message.textContent='Há publicação mensal, mas a série diária ainda não passou pela validação de origem e custos.'+(end?' Período publicado até '+short(end)+'.':'')+auto;
+  }else if(monthlyReady&&currentMonth===selectedMonth&&coverage?.daily_summary_state==='UNAVAILABLE'){
+   title.textContent='Detalhamento diário sem valores suficientes';
+   message.textContent='O recorte mensal está carregado, porém o histórico por dia não contém evidência financeira completa para esta data.'+(end?' Publicação até '+short(end)+'.':'')+auto;
+  }else if(monthlyReady&&currentMonth!==null&&selectedMonth!==null&&currentMonth!==selectedMonth){
    title.textContent='O período financeiro está diferente da data selecionada';
    message.textContent='Data do painel: '+short(selected)+'. Referência mensal: '+currentMonth.slice(5)+'/'+currentMonth.slice(0,4)+'. Use a leitura salva do período correto.';
   }else if(monthlyReady&&month.status==='RUNNING'){

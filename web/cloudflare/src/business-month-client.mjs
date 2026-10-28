@@ -859,6 +859,29 @@ export const BUSINESS_MONTH_CLIENT=BUSINESS_DAY_CLIENT+String.raw`
  }
  function stop(){try{globalThis.brazaExpenseLedger?.stop();globalThis.brazaReconciliation?.stop();globalThis.brazaEscrowReleases?.stop();globalThis.brazaIncomeOverview?.stop?.();}catch{}started=false;viewRequest++;viewPromise=null;priorityPromise=null;manualCollection=false;resetCostDiagnostic();catalogRequest++;catalogBusy=false;clearTimeout(catalogTimer);catalogTimer=null;paused=true;resumeOnVisible=false;collectionRecovery=null;generation++;checkpointHistoryRequest++;checkpointHistoryBusy=false;busy=false;adsBusy=false;clearTimeout(timer);timer=null;controls();}
  function selectMonth(selected){if(!started||saving||!validMonth(selected))return Promise.resolve(false);el('Select').value=selected;return readWorkspaceView({selected});}
- globalThis.brazaMonthDashboard={clientContract,prepare,bootstrapState,start,refresh,refreshCosts,selectMonth,stop,supportsCatalogQueue:catalogFeature,syncCatalogCandidates,refreshCatalog:()=>{catalogNeedsRead=true;return updateCatalog();},catalogMetadata:item=>catalogProducts.get(item)||null,getSnapshot:snapshot};
+
+ // Read-only source coverage for the operator; no additional D1 or provider reads.
+ // A COMPLETE saved month may end before the selected day.
+ function getSourceStatus(){
+  const validMonth=value=>typeof value==='string'&&/^\d{4}-(0[1-9]|1[0-2])$/.test(value);
+  const validDate=value=>typeof value==='string'&&/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(value);
+  const published=workspaceView?.display_source==='PUBLISHED'&&frame?.status==='COMPLETE';
+  const daily=workspaceView?.daily_summary?.schema==='business_daily_summary_v1'?workspaceView.daily_summary:null;
+  const collection=workspaceView?.collection,automatic=workspaceView?.automatic;
+  return Object.freeze({
+   schema:'mls_finance_source_coverage_v1',
+   month:validMonth(frame?.month)?frame.month:null,
+   published_through:published&&validDate(frame?.end_date)?frame.end_date:null,
+   published_checked_at:published&&Number.isSafeInteger(frame?.checked_at)?frame.checked_at:null,
+   display_source:['PUBLISHED','ACTIVE'].includes(workspaceView?.display_source)?workspaceView.display_source:null,
+   daily_summary_state:daily&&['AVAILABLE','PARTIAL','UNAVAILABLE'].includes(daily.state)?daily.state:null,
+   daily_summary_present:daily!==null,
+   collection_status:typeof collection?.status==='string'&&['RUNNING','COMPLETE','PARTIAL','LIMIT_REACHED','ERROR','PAUSED'].includes(collection.status)?collection.status:null,
+   automatic_enabled:typeof automatic?.enabled==='boolean'?automatic.enabled:null,
+   automatic_status:typeof automatic?.status==='string'&&['IDLE','RUNNING','COMPLETE','PARTIAL','LIMIT_REACHED','ERROR','PAUSED'].includes(automatic.status)?automatic.status:null
+  });
+ }
+
+ globalThis.brazaMonthDashboard={clientContract,prepare,bootstrapState,start,refresh,refreshCosts,selectMonth,stop,supportsCatalogQueue:catalogFeature,syncCatalogCandidates,refreshCatalog:()=>{catalogNeedsRead=true;return updateCatalog();},catalogMetadata:item=>catalogProducts.get(item)||null,getSnapshot:snapshot,getSourceStatus};
 })();
 `+EXPENSE_LEDGER_CLIENT+BUSINESS_RECONCILIATION_CLIENT+ESCROW_RELEASES_CLIENT;
