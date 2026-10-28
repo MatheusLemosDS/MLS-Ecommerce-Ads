@@ -942,10 +942,13 @@ const missionSearchRoutes=Object.freeze([
 (function installMissionSearch(){
  const overlay=el('missionGlobalSearch'),openButton=el('missionSearchOpen'),
   closeButton=el('missionSearchClose'),input=el('missionSearchInput'),results=el('missionSearchResults');
- if(!overlay||!openButton||!closeButton||!input||!results||typeof overlay.addEventListener!=='function'||typeof results.addEventListener!=='function'||typeof input.addEventListener!=='function'||typeof document.addEventListener!=='function')return;
+ if(!overlay||!openButton||!closeButton||!input||!results||!execute||!more||!pageInfo||!scopeLabel||typeof overlay.addEventListener!=='function'||typeof results.addEventListener!=='function'||typeof input.addEventListener!=='function'||typeof document.addEventListener!=='function')return;
  const normalize=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-BR');
  const byKey=new Map(missionSearchRoutes.map(item=>[item.key,item]));
- let selected=[],active=0,restoreFocus=null;
+ const scopeButtons=[...overlay.querySelectorAll('[data-mission-scope]')],execute=el('missionSearchExecute'),
+  more=el('missionSearchMore'),pageInfo=el('missionSearchPageInfo'),scopeLabel=el('missionSearchScope');
+ let selected=[],active=0,restoreFocus=null,mode='navigation',lookupEpoch=0,busy=false,
+  currentQuery='',currentOffset=0,moreAvailable=false;
  function hide({focus=true}={}){
   if(overlay.hidden)return;
   overlay.hidden=true;
@@ -953,6 +956,16 @@ const missionSearchRoutes=Object.freeze([
   if(focus&&restoreFocus?.focus)restoreFocus.focus();
  }
  function render(){
+  if(mode!=='navigation'){
+   selected=[];active=0;results.replaceChildren();pageInfo.textContent='';
+   more.hidden=true;moreAvailable=false;execute.disabled=busy||input.value.trim().length<2;
+   const empty=document.createElement('p');empty.className='mission-search-empty';
+   empty.textContent=input.value.trim().length<2?'Digite pelo menos 2 caracteres.':'Pressione Enter ou Pesquisar para consultar este escopo.';
+   results.append(empty);
+   scopeLabel.textContent=mode==='products'?'Busca no catálogo persistido e paginado, não consulta diretamente a Shopee.':
+    'Somente pedidos já presentes na fila DTF salva; não inclui o histórico completo da Shopee.';
+   return;
+  }
   const query=normalize(input.value.trim());
   const terms=query.split(/\s+/).filter(Boolean);
   selected=missionSearchRoutes.filter(item=>{
