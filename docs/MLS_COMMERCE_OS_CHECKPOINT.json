@@ -30,8 +30,8 @@
     "merge_commit": "9c418fd3010f46957d1ce52345baacd76041c788"
   },
   "current_phase": "M2_FINANCE_RETURNS_RECONCILIATION",
-  "working_branch": "feature/shopee-research-listing-factory-foundations-20261028",
-  "current_status": "M2_OPEN_M3_SHADOW_PR47_OPEN_LISTING_FACTORY_PR51_DRAFT_CI_GREEN_PRODUCTION_UNCHANGED",
+  "working_branch": "feature/mls-listing-factory-owner-ui-20261028",
+  "current_status": "M2_OPEN_M3_SHADOW_PR47_OPEN_LISTING_FACTORY_PR51_AND_PR56_DRAFT_NOT_DEPLOYED",
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
     "Repasse-base, ajuste, repasse após ajuste e liberação exibidos sem dupla dedução",
@@ -120,7 +120,8 @@
     "Codex e ChatGPT usarem AGENTS.md + docs/MLS_CODEX_HANDOFF_2026_10_28.md; evitar branch simultanea",
     "Implementar UI owner Listing Factory apos CI e integracao consciente com PR #48",
     "Verificar categoria do app/escopos Shopee, escrows em lote GET/POST e push recovery sem ACK",
-    "Manter M2 issue #50 aberta e anuncios/precificacao/estoque externos BLOQUEADOS"
+    "Manter M2 issue #50 aberta e anuncios/precificacao/estoque externos BLOQUEADOS",
+    "PR #56 Listing Factory UI: revisar CI do HEAD e hash App, QA desktop/mobile e integração sobre PR #51"
   ],
   "m0_followup": [
     "Conferir visual autenticado em desktop e celular durante M1; corrigir apenas branding/layout sem renomear infraestrutura"
@@ -477,7 +478,35 @@
         "finance_escrow_contract": 53,
         "push_recovery": 54
       },
-      "next_action": "Implement owner-only Listing Factory preview/export after PR #51 verified (issue #52), keep permission and M2 gates"
+      "next_action": "Implement owner-only Listing Factory preview/export after PR #51 verified (issue #52), keep permission and M2 gates",
+      "owner_ui": {
+        "issue": 52,
+        "pr": 56,
+        "branch": "feature/mls-listing-factory-owner-ui-20261028",
+        "head_sha": "52c50da6bbcd738cacadcb0f28929d2e5937a6aa",
+        "status": "DRAFT_FINAL_CI_PENDING_NO_MERGE_NO_DEPLOY",
+        "last_successful_pre_refinement_run": 40784356050,
+        "last_green_node": 2126,
+        "last_green_python": 67,
+        "features": [
+          "owner Products local listing editor",
+          "file header and genuine bitmap decode",
+          "sha256 and compressed preview only, no binary storage",
+          "5-to-9 photo internal review policy",
+          "per-size prices and explicit override",
+          "edit/delete/clear draft queue",
+          "manifest and review JSON downloads",
+          "no storage, provider I/O or Ads writes"
+        ],
+        "open_gates": [
+          "final CI and exact App SHA review",
+          "owner desktop/mobile QA",
+          "PR #48 catalog integration reconciliation",
+          "operator official Shopee app permissions",
+          "M2 issue #50 financial reconciliation"
+        ],
+        "safety": "OBSERVER_ONLY"
+      }
     }
   }
 }

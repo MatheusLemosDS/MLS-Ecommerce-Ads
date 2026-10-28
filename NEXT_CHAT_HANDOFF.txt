@@ -13,3 +13,5 @@ MLS COMMERCE OS — HANDOFF 28/10/2026
 11. Após PR/CI, atualizar ROADMAP, CHECKPOINT, docs/MLS_CODEX_HANDOFF_2026_10_28.md e ESTE arquivo. Não sobrepor branches de ChatGPT e Codex simultaneamente.
 
 ISSUES PARA CODEX: #52 (UI owner), #53 (Finance escrow somente auditoria), #54 (Push recovery). ISSUE #50 bloqueia fechamento M2.
+
+PR #56: editor owner visual de rascunhos concluído em branch `feature/mls-listing-factory-owner-ui-20261028`; CI inicial #40784356050 2.126 Node/67 Python verde, refinamento de preços/dimensões ainda requer CI final. SEM merge/deploy. Codex: priorizar QA dos mockups/variantes, alinhar PR #48 e renovar checkpoint.

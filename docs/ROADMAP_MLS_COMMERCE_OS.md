@@ -314,7 +314,8 @@ Esta é uma trilha técnica independente que **não substitui o gate de saída d
 - **PR #51 (draft):** inspeção local de JPG/PNG, manifesto para preparar muitos anúncios com 5–9 imagens, variações por tamanho, SKU, preço declarado e estoque explícito; particionamento interno até 100 por lote. Não é formato oficial da API nem upload de mídia. Não merged/deployed.
 - [ ] M3.1: conciliação e contratos de custo/taxas/frete/impostos por SKU e período; sem rateio arbitrário de pedidos mistos.
 - [ ] M3.2: com evidência apropriada, preço mínimo/alvo/promocional, lucro por SKU e ROAS mínimo com atribuição real; estoque verificado, revisões e auditoria.
-- [ ] Próxima entrega pós-PR #51: UI owner em Produtos com seleção de arquivos locais, validação, preview, status de correção, export do manifesto e revisão de lotes, sem rede.
+- [x] **PR #56 draft / não publicada:** UI owner em Produtos com seleção e decodificação local de imagens JPG/PNG, proteção de dimensões, hash SHA-256, preço base/manual por tamanho, estoque desconhecido explícito, fila editável, revisão e export de dois JSON, sem rede. CI de versão inicial verde #40784356050 (2.126 Node + 67 Python); ajustes finais submetidos para nova CI.
+- [ ] Gate final #56: QA autenticada no desktop/celular, conferir interação com PR #48, revisão de permissões e integração ordenada PR #51 → #56; nunca publicar anúncios automaticamente.
 - [ ] M8 integração posterior: MediaSpace, criação em lote e confirmação assíncrona somente após categoria/permissão real, M6 aprovação assistida, idempotência e tratamento de resultado incerto.
 - [ ] MLS Creative: cadeia pesquisa → estratégia de SKU → título/descrição → mockup → imagem e vídeo → revisão → publicação assistida; direitos de uso das imagens e políticas oficiais validados.
 - [ ] MLS Ads/Returns: análise de avaliações e diagnóstico de funil, com melhorias propostas por Hermes; escrita continua LOCKED.

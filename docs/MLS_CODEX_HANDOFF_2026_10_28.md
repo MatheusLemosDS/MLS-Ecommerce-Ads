@@ -16,7 +16,8 @@ IMPORTANTE: não reiniciar o sistema. Os Workers legados em Cloudflare continuam
 - PR #48 feature/mission-v36-search-reconcile-main-20261028: V3.6 catálogo+fila DTF (draft, CI 40772868816: Node 2115, Python 67, NO MERGE/DEPLOY).
 - PR #47 feature/mls-m3-products-pricing-observer-20261028: M3 ABC e simulador (draft, CI 40774245543: Node 2124, Python 67, NO MERGE/DEPLOY).
 - Issue #50: M2 Seller Centre Finance/Pending/escrow/devoluções, não concluída.
-- PR #51 feature/shopee-research-listing-factory-foundations-20261028: primeira entrega modular da pesquisa; conferir CI/head antes de mexer.
+- PR #51 feature/shopee-research-listing-factory-foundations-20261028: componentes offline e CLI, draft; CI #40782374293 verde.
+- PR #56 feature/mls-listing-factory-owner-ui-20261028: editor owner Produtos em PR draft (baseado no código #51). Teste pré-refinamento Chrome/Node/Python CI #40784356050 verde; refinamento preço + limite de imagem em nova validação, SEM merge/deploy. Revalidar o HEAD antes de agir.
 
 Não alterar branches da outra ferramenta ao mesmo tempo sem combinar a posse dos arquivos. Se o Codex estiver editando a PR #47, o ChatGPT trabalha só na PR #51; se quiser unificar, criar nova branch de integração e conferir os três conjuntos de commits/arquivos em ordem com CI.
 
@@ -30,7 +31,7 @@ Não alterar branches da outra ferramenta ao mesmo tempo sem combinar a posse do
 
 ## Issues para dividir trabalho sem conflitos
 
-- [#52 — UI owner Listing Factory](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/issues/52): usar após CI da PR #51, preferencialmente via Codex; sem API externa.
+- [#52 — UI owner Listing Factory](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/issues/52): PR #56 draft em validação; Codex pode assumir QA/UX de desktop/mobile e resolver eventuais conflitos antes de merge, sem API externa.
 - [#53 — Finance M2 escrow batch](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/issues/53): verificar método/escopo e evidência do Seller Centre, sem tocar em produção sem aprovação.
 - [#54 — Push lost events](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/issues/54): preparar assinatura/idempotência/ACK persistido e testes depois que a autorização estiver confirmada.
 - [#50 — Gate M2](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/issues/50): obrigação do operador e do MLS Finance; não pode ser substituída por fixture.
@@ -44,12 +45,12 @@ Não alterar branches da outra ferramenta ao mesmo tempo sem combinar a posse do
 - Validar manifesto real com JPG/PNG de teste e erro de faltante, duplicata, arquivo grande, symlink, variações, estoque desconhecido.
 - Abrir revisão de segurança. Não integrar em main sem os gates.
 
-### 2. UI owner Listing Factory (nova PR empilhada sobre #51 depois de CI)
-- Adicionar painel sob Produtos, sem nova rota pública. Reaproveitar design e CSS; sem tocar Finance/Ads.
-- Selecionar imagens locais, informar arte/título/descrição/SKUs/preços/quantidades, visualizar 5-9 imagens e erros de regra; exportar manifesto JSON de revisão, sem upload.
-- Vincular 1:1 aos nomes e hashes locais, sem transformar mockup em estampa ou redimensionar fotos sem autorização.
-- Em web/cloudflare/build.py congelar helpers inseridos via template literal. Chromium: 13 scripts existentes não devem mudar sem revisão explícita.
-- Ficar compatível com PR #48 que também edita saved-catalog-view.mjs; fazer merge de conflitos conscientemente.
+### 2. UI owner Listing Factory (PR #56 — implementada em draft, QA final pendente)
+- [x] Adicionado painel sob Produtos, sem nova rota pública. Reaproveita design/CSS; sem tocar Finance/Ads.
+- [x] Seleção e inspeção local real PNG/JPEG, arte/título/descrição/SKUs/preços por tamanho/quantidades; prévias, fila local e export de dois JSON. Sem upload, sem persistência.
+- [x] Nomes e hashes SHA-256 dos arquivos originais; gera miniaturas somente para preview, não altera mockup original nem exporta bytes.
+- [x] `web/cloudflare/build.py` injeta o mesmo planner puro dentro do 14º script; testes do painel atualizados intencionalmente de 13 para 14. Chromium e hash App precisam passar no HEAD.
+- [ ] Em integração final, reconciliar PR #48 sem sobrescrever os módulos de catálogo; a PR #56 não editou `saved-catalog-view.mjs`. Só aceitar merge/deploy após CI, visual owner e QA no celular.
 
 ### 3. Finance M2 — pesquisa escrow batch OFFLINE, sem mudar Auth/Finance até gate
 - Verificar GET/POST, parâmetros e escopos em versão atual da API oficial; o Shopee SDK possui histórico de divergências nessa chamada.

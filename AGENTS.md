@@ -9,7 +9,7 @@ Leia, nesta ordem, antes de qualquer alteração:
 ## Regras que não podem ser ignoradas
 
 - Produto: MLS Commerce OS. MLS Hermes é supervisor, modo OBSERVER até autorização específica.
-- PR #48: busca V3.6 sobre a main. PR #47: M3 Products/Pricing Observer. PR #51: fundamentos da pesquisa Shopee/Listing Factory. São branches diferentes; NÃO combinar ou fazer merge automático; revalidar conflitos e CI por ordem.
+- PR #48: busca V3.6 sobre a main. PR #47: M3 Products/Pricing Observer. PR #51: fundamentos da pesquisa Shopee/Listing Factory. PR #56: UI owner Listing Factory, empilhada sobre #51. São branches diferentes; NÃO combinar ou fazer merge automático; revalidar conflitos e CI por ordem.
 - A main é baseline publicada em b058e832 no momento deste handoff. Antes de trabalhar, releia a main e os PRs porque outros agentes podem ter avançado.
 - M2 Finance/Returns NÃO foi encerrada: Seller Centre, Pending, liberações e devoluções devem ser validados na conta. Issue #50.
 - Não inventar lucros, estoque, taxas, preços, vendas, eventos ou permissões Shopee. Dados ausentes = UNKNOWN/BLOCKED, jamais zero.
