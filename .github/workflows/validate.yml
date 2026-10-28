@@ -28,6 +28,10 @@ jobs:
           cache: npm
       - name: Instalar versões fixadas
         run: npm ci
+      - name: Diagnóstico isolado M3 (temporário)
+        run: |
+          npm run build
+          node --test --test-reporter=tap web/cloudflare/tests/mls-product-intelligence.test.mjs web/cloudflare/tests/admin-bootstrap-compiled.test.mjs web/cloudflare/tests/admin-startup-compiled.test.mjs
       - name: Executar testes
         run: npm test
       - name: Validar ponte financeira e atualização do Hermes
