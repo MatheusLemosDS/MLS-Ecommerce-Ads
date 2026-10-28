@@ -571,6 +571,7 @@ alterações comerciais e sem desbloqueio Ads/PROMO.
 - [x] Associação pelo nome exato a todos os anúncios importados que utilizam a mesma foto, evitando editar cada arte individualmente.
 - [x] Falha atômica para nome duplicado, hash diferente, imagem inválida, limite excedido; arquivo extra é ignorado com contagem e aviso.
 - [x] Testes puros até 500 anúncios e Chromium real em 19 anúncios, cobrindo parcial/completo/duplicado/trocado.
-- [ ] CI final e hash exato na PR temporária #61; QA autenticada no desktop/celular, integração ordenada #51 → #56 → #60 sem sobrescrever PR #48.
+- [x] **CI GREEN** #40790629421: 2.132 Node + 67 Python, Chromium e três Workers; 14/14 arquivos de runtime e testes idênticos ao candidato #61, que foi fechado sem merge.
+- [ ] QA autenticada desktop/celular com mockups reais, integração #51 → #56 → #60 e revisão da PR #48. Nenhum upload/publicação comercial.
 
 Guia: [MLS_LISTING_FACTORY_BATCH_RELINK_2026_10_28.md](MLS_LISTING_FACTORY_BATCH_RELINK_2026_10_28.md). M2 issue #50 permanece aberta e nenhuma publicação Shopee é autorizada.

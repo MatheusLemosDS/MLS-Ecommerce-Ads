@@ -98,3 +98,7 @@ O Listing Factory importa manifestos exportados (máximo 1 MiB, até 500 anúnci
 ### PR #60 — Anexar mockups em lote a 500 rascunhos
 
 Implementado o bulk relink offline em cima da PR #56: seleciona até 200 fotos/64 MiB por vez (arquivos ou pasta), associa cada nome exato a todas as artes que o utilizam, detecta duplicação/arquivo trocado por hash e aborta sem efeitos parciais. Nunca faz upload. O usuário tem que confirmar visualmente que o nome corresponde à imagem esperada. Teste Node 500 drafts e Chrome real 19 drafts foram criados. Guia: docs/MLS_LISTING_FACTORY_BATCH_RELINK_2026_10_28.md. PR #60 draft, validação temporária #61. CI inicial #40790379512 passou 2.128/2.132 Node, só bloqueio SHA App novo; hash correto já adicionado para repetição da CI. Não mesclar/deploy antes do verde e QA owner. Depois integrar #51 → #56 → #60 e conciliar #48. Ads/PROMO LOCKED; M2 #50 aberta.
+
+### PR #60 — CI final aprovado
+
+A seleção de mockups em lote passou [CI 40790629421](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/40790629421): **2.132 Node + 67 Python**, Chromium, build App/Auth/Finance. O runtime e os testes da branch #60 são iguais ao candidato de validação #61 em **14/14 blobs**, e #61 foi fechada sem merge. Novo SHA App 63da28d212c45d1e7e93444dbe4ac2ac49ad113af273dddf65370f668156180d; Auth/Finance não alterados. Ainda falta QA no login real desktop/mobile, integração #51 → #56 → #60 e preservação #48. Não há upload/marketplace write, M2 issue #50 aberta e Ads/PROMO LOCKED.

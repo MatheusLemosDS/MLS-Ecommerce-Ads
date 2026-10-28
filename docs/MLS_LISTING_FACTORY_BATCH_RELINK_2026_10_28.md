@@ -30,8 +30,8 @@ PR de CI temporária #61 (não mesclar): https://github.com/MatheusLemosDS/MLS-E
 Contrato puro: web/cloudflare/src/mls-listing-factory-planner.mjs (planMlsDraftBatchMedia).
 Editor local: web/cloudflare/src/mls-listing-factory-view.mjs.
 Testes: web/cloudflare/tests/mls-listing-factory-batch-media.test.mjs e mlS-listing-factory-chrome.test.mjs (nome correto no código: mls-listing-factory-chrome.test.mjs).
-CI inicial 40790379512: 2.132 Node, 2.128 PASS e quatro falhas de integridade por App SHA novo; nenhum teste de funcionalidade falhou. App SHA revisado: 63da28d212c45d1e7e93444dbe4ac2ac49ad113af273dddf65370f668156180d. Precisa CI verde da revisão final.
+**CI final SUCCESS #40790629421:** 2.132 Node + 67 Python, Chromium, três Workers; 14/14 blobs de runtime/testes idênticos à branch canônica #60. App SHA revisado 63da28d212c45d1e7e93444dbe4ac2ac49ad113af273dddf65370f668156180d. PR #61 temporária encerrada SEM MERGE. Próximo gate: QA visual real e integração das PRs. Relatório: docs/MLS_LISTING_FACTORY_BATCH_CI_2026_10_28.md.
 
 ## Gates
 
-CI inteira Node/Python/Chrome e App SHA; QA autenticada desktop e celular com mockups de verdade; integração PR #51 → #56 → #60; conferir PR #48; preservar M2 issue #50 e Ads/PROMO LOCKED. Nenhum merge/deploy nesta PR sem aprovações.
+CI Node/Python/Chrome e SHA App aprovados; **QA autenticada desktop e celular** com mockups de verdade ainda pendente; integração PR #51 → #56 → #60; conferir PR #48; preservar M2 issue #50 e Ads/PROMO LOCKED. Nenhum merge/deploy nesta PR sem aprovações.
