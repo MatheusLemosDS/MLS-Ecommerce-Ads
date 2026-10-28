@@ -4,6 +4,7 @@ import http from 'node:http';
 import {spawn} from 'node:child_process';
 import {existsSync} from 'node:fs';
 import {build} from 'esbuild';
+import {projectProductRegistryFrame} from '../src/product-registry.mjs';
 import {fileURLToPath} from 'node:url';
 
 const chrome=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium','/usr/bin/chromium-browser'].find(existsSync);
@@ -23,13 +24,13 @@ async function chromeDump(url){
   child.stdout.on('data',data=>{size+=data.length;if(size<12*1024*1024)chunks.push(data);});
   let stderr='';
   child.stderr.on('data',data=>{if(stderr.length<8192)stderr+=data.toString().slice(0,500);});
-  const watchdog=setTimeout(()=>{child.kill('SIGKILL');reject(Error('Chrome timeout'));},25000);
+  const watchdog=setTimeout(()=>{child.kill('SIGKILL');reject(Error('Chrome timeout'));},35000);
   child.on('error',error=>{clearTimeout(watchdog);reject(error);});
   child.on('close',(status)=>{clearTimeout(watchdog);if(status!==0)return reject(Error('Chrome exited '+status+': '+stderr.slice(0,400)));resolve(Buffer.concat(chunks).toString());});
  });
 }
 
-test('real Chromium hydrates owner agent cards even when finance API is unavailable',{timeout:40000},async t=>{
+test('real Chromium hydrates owner agent cards even when finance API is unavailable',{timeout:90000},async t=>{
  if(!chrome)return t.skip('Chrome executable not installed on CI runner');
  const worker=await compiledWorker();
  const env={ADMIN_USERNAME:'owner-browser-test',ADMIN_PASSWORD:'owner-browser-test-password',
@@ -78,17 +79,34 @@ test('real Chromium hydrates owner agent cards even when finance API is unavaila
   'document.documentElement.dataset.mlsTrendFixture=JSON.stringify(report);'+
   '}catch(e){document.documentElement.dataset.mlsTrendFixtureError=String(e?.message||e).slice(0,250);}})();</script>';
 
- const agentsFixtureScript="<script>(()=>{try{\n const catalog={schema:\"mls_agent_catalog_snapshot_v1\",total:345,indexed:300,pending_catalog:45,checked_at:1793200000,discovery_status:\"IDLE\"};\n const dtf={schema:\"mls_agent_dtf_queue_v1\",line_count:10,pending_lines:4,reserved_lines:2,produced_lines:3,blocked_lines:1,batch_count:2};\n if(globalThis.brazaSavedCatalog)globalThis.brazaSavedCatalog.getSnapshot=()=>catalog;\n if(globalThis.brazaDtfWorkspace)globalThis.brazaDtfWorkspace.getSnapshot=()=>dtf;\n globalThis.mlsAgentRegistry?.notify?.();\n setTimeout(()=>{const opener=document.getElementById('missionSearchOpen');opener?.click();const search=document.getElementById('missionSearchInput');if(search){search.value='dtf';search.dispatchEvent(new Event('input',{bubbles:true}));}const snapshot=globalThis.mlsAgentRegistry?.getSnapshot?.();document.documentElement.dataset.mlsAgentSourcesFixture=JSON.stringify({catalog:snapshot?.sources?.catalog?.total,dtf:snapshot?.sources?.dtf_queue?.pending_lines,products:document.getElementById(\"mission-products-metric-0\")?.textContent,production:document.getElementById(\"mission-production-metric-0\")?.textContent,catalog_chart:document.getElementById(\"mission-products-evidence\")?.dataset.evidenceSource,queue_chart:document.getElementById(\"mission-production-evidence\")?.dataset.evidenceSource,catalog_chart_rows:document.querySelectorAll(\"#mission-products-evidence .mission-evidence-row\").length,queue_chart_rows:document.querySelectorAll(\"#mission-production-evidence .mission-evidence-row\").length,search_open:document.getElementById('missionGlobalSearch')?.hidden===false,search_titles:[...document.querySelectorAll('#missionSearchResults .mission-search-result strong')].map(el=>el.textContent),search_destinations:[...document.querySelectorAll('#missionSearchResults .mission-search-result')].map(el=>new URL(el.href).searchParams.get('tab')),errors:window.__mlsErrors.slice(0,4)});if(search){search.value='camiseta natal';search.dispatchEvent(new Event('input',{bubbles:true}));document.querySelector('[data-search-route=product-query]')?.click();document.documentElement.dataset.mlsCatalogHandoff=JSON.stringify({tab:document.documentElement.dataset.activePanel,term:document.getElementById('savedCatalogSearch')?.value,closed:document.getElementById('missionGlobalSearch')?.hidden===true,errors:window.__mlsErrors.slice(0,4)});}},350);\n }catch(error){document.documentElement.dataset.mlsAgentSourcesError=String(error?.message||error).slice(0,200)}})();</script>";
+ const agentsFixtureScript="<script>(()=>{try{\n const catalog={schema:\"mls_agent_catalog_snapshot_v1\",total:345,indexed:300,pending_catalog:45,checked_at:1793200000,discovery_status:\"IDLE\"};\n const dtf={schema:\"mls_agent_dtf_queue_v1\",line_count:10,pending_lines:4,reserved_lines:2,produced_lines:3,blocked_lines:1,batch_count:2};\n if(globalThis.brazaSavedCatalog)globalThis.brazaSavedCatalog.getSnapshot=()=>catalog;\n if(globalThis.brazaDtfWorkspace)globalThis.brazaDtfWorkspace.getSnapshot=()=>dtf;\n globalThis.mlsAgentRegistry?.notify?.();\n setTimeout(()=>{const opener=document.getElementById('missionSearchOpen');opener?.click();const search=document.getElementById('missionSearchInput');if(search){search.value='dtf';search.dispatchEvent(new Event('input',{bubbles:true}));}const snapshot=globalThis.mlsAgentRegistry?.getSnapshot?.();document.documentElement.dataset.mlsAgentSourcesFixture=JSON.stringify({catalog:snapshot?.sources?.catalog?.total,dtf:snapshot?.sources?.dtf_queue?.pending_lines,products:document.getElementById(\"mission-products-metric-0\")?.textContent,production:document.getElementById(\"mission-production-metric-0\")?.textContent,catalog_chart:document.getElementById(\"mission-products-evidence\")?.dataset.evidenceSource,queue_chart:document.getElementById(\"mission-production-evidence\")?.dataset.evidenceSource,catalog_chart_rows:document.querySelectorAll(\"#mission-products-evidence .mission-evidence-row\").length,queue_chart_rows:document.querySelectorAll(\"#mission-production-evidence .mission-evidence-row\").length,search_open:document.getElementById('missionGlobalSearch')?.hidden===false,search_titles:[...document.querySelectorAll('#missionSearchResults .mission-search-result strong')].map(el=>el.textContent),search_destinations:[...document.querySelectorAll('#missionSearchResults .mission-search-result')].map(el=>new URL(el.href).searchParams.get('tab')),errors:window.__mlsErrors.slice(0,4)});},350);\n\n setTimeout(async()=>{try{\n  const palette=globalThis.mlsWorkspaceSearch,input=document.getElementById('missionSearchInput');\n  if(!palette||!input)throw Error('PALETTE_MISSING');\n  const originalFetch=globalThis.fetch.bind(globalThis);\n  globalThis.fetch=async (...args)=>{\n   const response=await originalFetch(...args);\n   if(String(args[0]).includes('search=Camiseta')){\n    document.documentElement.dataset.mlsMockHttpStatus=String(response.status);\n    response.clone().json().then(value=>{\n     document.documentElement.dataset.mlsMockResponseSchema=String(value?.schema||'none');\n     document.documentElement.dataset.mlsMockResponseValid=String(!!globalThis.projectProductRegistryFrame?.(value));\n    }).catch(()=>{document.documentElement.dataset.mlsMockResponseSchema='parse-failed';});\n   }\n   return response;\n  };\n  palette.scope('products');input.value='Camiseta';input.dispatchEvent(new Event('input',{bubbles:true}));\n  document.getElementById('missionSearchExecute').click();\n  await new Promise(resolve=>setTimeout(resolve,230));\n  const firstCount=document.querySelectorAll('#missionSearchResults .mission-search-result').length;\n  const firstMessage=(document.getElementById('missionSearchResults')?.textContent||'').slice(0,230);\n  const firstScope=(document.getElementById('missionSearchScope')?.textContent||'').slice(0,230);\n  const firstKind=document.querySelector('#missionSearchResults .mission-search-empty')?.dataset.searchFailure||null;\n  const firstMore=document.getElementById('missionSearchMore').hidden===false;\n  document.getElementById('missionSearchMore').click();\n  await new Promise(resolve=>setTimeout(resolve,230));\n  const lastTitle=document.querySelector('#missionSearchResults .mission-search-result strong')?.textContent||'';\n  const lastLink=document.querySelector('#missionSearchResults .mission-search-result');\n  lastLink?.click();\n  await new Promise(resolve=>setTimeout(resolve,65));\n  const productPanel=document.documentElement.dataset.activePanel;\n  const productFilter=document.getElementById('savedCatalogSearch')?.value||'';\n  const dtf=globalThis.brazaDtfWorkspace;\n  if(!dtf)throw Error('DTF_MISSING');\n  dtf.searchLines=(query,offset)=>({schema:'mls_saved_dtf_search_v1',total:1,offset,limit:8,more:false,rows:[\n   {order_id:'998877',sku:'AB123-ESTAMPA',item_id:'700009',model_name:'M',production_state:'PENDING',quantity:2}\n  ]});\n  dtf.findLine=id=>{document.documentElement.dataset.mlsSelectedOrder=id;return true;};\n  palette.open();palette.scope('dtf');input.value='AB123';input.dispatchEvent(new Event('input',{bubbles:true}));\n  document.getElementById('missionSearchExecute').click();\n  await new Promise(resolve=>setTimeout(resolve,80));\n  const orderTitle=document.querySelector('#missionSearchResults .mission-search-result strong')?.textContent||'';\n  document.querySelector('#missionSearchResults .mission-search-result')?.click();\n  await new Promise(resolve=>setTimeout(resolve,50));\n  document.documentElement.dataset.mlsRecordSearchFixture=JSON.stringify({\n   firstCount,firstMessage,firstScope,firstKind,mockHttp:document.documentElement.dataset.mlsMockHttpStatus,mockSchema:document.documentElement.dataset.mlsMockResponseSchema,mockValid:document.documentElement.dataset.mlsMockResponseValid,validatorType:typeof globalThis.projectProductRegistryFrame,firstMore,lastTitle,productPanel,productFilter,orderTitle,\n   dtfPanel:document.documentElement.dataset.activePanel,selectedOrder:document.documentElement.dataset.mlsSelectedOrder,\n   errors:window.__mlsErrors.slice(0,4)\n  });\n  // Check that V3.6 PR46 catalog handoff works after switching back to navigation.\n  document.getElementById('missionSearchOpen')?.click();\n  const handoffInput=document.getElementById('missionSearchInput');\n  if(handoffInput){\n   handoffInput.value='camiseta natal';\n   handoffInput.dispatchEvent(new Event('input',{bubbles:true}));\n   document.querySelector('[data-search-route=product-query]')?.click();\n   document.documentElement.dataset.mlsCatalogHandoff=JSON.stringify({\n    tab:document.documentElement.dataset.activePanel,\n    term:document.getElementById('savedCatalogSearch')?.value,\n    closed:document.getElementById('missionGlobalSearch')?.hidden===true,\n    errors:window.__mlsErrors.slice(0,4)\n   });\n  }\n }catch(error){document.documentElement.dataset.mlsRecordSearchError=String(error?.message||error).slice(0,260);}},600);\n }catch(error){document.documentElement.dataset.mlsAgentSourcesError=String(error?.message||error).slice(0,200)}})();</script>";
  const financeAuthFixtureScript="<script>(()=>{try{\n const prior=globalThis.brazaMonthDashboard;\n globalThis.brazaMonthDashboard={\n   getSnapshot:()=>prior?.getSnapshot?.()??null,\n   getSourceStatus:()=>({schema:'mls_finance_source_coverage_v1',collection_code:'BUSINESS_PERIOD_AUTH_REQUIRED'})\n };\n globalThis.mlsAgentRegistry?.refresh?.();\n const box=document.getElementById('missionFinanceAuthRecovery');\n document.documentElement.dataset.mlsFinanceAuthFixture=JSON.stringify({\n  visible:box?.hidden===false,\n  links:[...(box?.querySelectorAll('a')||[])].map(a=>({href:a.href,target:a.target,rel:a.rel})),\n  errors:window.__mlsErrors?.slice(0,3)||[]\n });\n }catch(e){document.documentElement.dataset.mlsFinanceAuthFixtureError=String(e?.message||e).slice(0,200)}})();</script>";
  const requests=[];
  const server=http.createServer((request,response)=>{
   const path=(request.url||'/').split('?')[0];
-  requests.push(path);
+  requests.push(request.url||path);
   response.setHeader('Cache-Control','no-store');
   if(path==='/admin'){
    response.writeHead(200,{'Content-Type':'text/html; charset=utf-8',
     'Content-Security-Policy':admin.headers.get('content-security-policy')||"default-src 'self'; script-src 'self' 'unsafe-inline';"});
    response.end((request.url||'').includes('mlsFixture=trend')?html.replace('</body>',fixtureScript+'</body>'):(request.url||'').includes('mlsFixture=agents')?html.replace('</body>',agentsFixtureScript+'</body>'):(request.url||'').includes('mlsFixture=financeAuth')?html.replace('</body>',financeAuthFixtureScript+'</body>'):html);
+
+  }else if(path==='/api/admin/product-registry'&&new URL(request.url||'/', 'http://localhost').searchParams.get('search')==='Camiseta'){
+   const params=new URL(request.url,'http://localhost').searchParams,offset=Number(params.get('offset')||0),end=Math.min(9,offset+8);
+   const products=Array.from({length:Math.max(0,end-offset)},(_,index)=>{
+    const item=700001+offset+index;
+    return {item_id:String(item),item_status:'NORMAL',product_name:'Camiseta Modelo '+String(offset+index+1),
+     source_update_time:null,last_seen_at:1793200000,catalog_checked_at:1793200000,
+     catalog_status:'MATCHED',model_count:1,resolved_count:1,metadata_changed:false};
+   });
+   response.setHeader('Content-Type','application/json');
+   const frame={schema:'product_registry_v1',checked_at:1793200000,revision:1,
+    counts:{total:9,indexed:9,pending_catalog:0},
+    discovery:{status:'IDLE',item_status:'NORMAL',offset:0,pages_read:1,last_attempt_at:null,last_success_at:1793200000,
+     next_run_at:0,last_error:null,complete:true},
+    pagination:{limit:8,offset,total:9,more:offset+8<9},products};
+   assert.ok(projectProductRegistryFrame(frame),'fixture is a valid saved catalog response');
+   response.end(JSON.stringify(frame));
   }else if(path==='/api/admin/bootstrap'){
    response.setHeader('Content-Type','application/json');
    response.end(JSON.stringify({schema:'admin_bootstrap_v1',csrf:'a'.repeat(64)}));
@@ -175,6 +193,21 @@ test('real Chromium hydrates owner agent cards even when finance API is unavaila
   assert.deepEqual(handoff.errors,[]);
 
   assert.deepEqual(source.errors,[]);
+
+  const recordMatch=specialist.match(/data-mls-record-search-fixture="([^"]+)"/);
+  assert.ok(recordMatch,'authenticated global record search executed in Chrome: '+(specialist.match(/data-mls-record-search-error="([^"]+)"/)?.[1]||'no trace'));
+  const record=JSON.parse(recordMatch[1].replaceAll('&quot;','"').replaceAll('&amp;','&').replaceAll('&#39;',"'"));
+  console.log('MLS_RECORD_SEARCH_TRACE',JSON.stringify({record,registry_requests:requests.filter(url=>url.startsWith('/api/admin/product-registry'))}));
+  assert.equal(record.firstCount,8,'saved catalog search shows eight validated results');
+  assert.equal(record.firstMore,true,'saved catalog explicit pagination is available');
+  assert.equal(record.lastTitle,'Camiseta Modelo 9');
+  assert.equal(record.productPanel,'products');
+  assert.equal(record.productFilter,'700009','selected product filters the specialized saved catalog');
+  assert.equal(record.orderTitle,'Pedido 998877');
+  assert.equal(record.dtfPanel,'production');
+  assert.equal(record.selectedOrder,'998877');
+  assert.deepEqual(record.errors,[]);
+
 
   const authorization=await chromeDump(url+'?mlsFixture=financeAuth');
   const encodedAuth=authorization.match(/data-mls-finance-auth-fixture="([^"]+)"/);
