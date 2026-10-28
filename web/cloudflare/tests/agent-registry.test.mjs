@@ -278,3 +278,21 @@ test('registry browser reads existing specialist caches and supports no-network 
  assert.equal(AGENT_REGISTRY_CLIENT.includes('fetch('),false);
  assert.equal(AGENT_REGISTRY_CLIENT.includes('setInterval('),false);
 });
+
+
+test('an unloaded monthly placeholder cannot mark agents healthy or report zero returns',()=>{
+ const empty={schema:'mls_month_snapshot_v1',month:'2026-10',status:null,checked_at:null,balance_cents:null,pending:[],coverage:null,production_coverage:null};
+ const result=buildMlsAgentRegistry({month:empty});
+ assert.equal(result.health,'WORKING');
+ assert.equal(result.hermes.status,'WORKING');
+ assert.ok(result.agents.every(agent=>agent.status!=='HEALTHY'));
+ assert.equal(result.agents.find(agent=>agent.id==='returns').metric,null);
+ assert.match(result.agents.find(agent=>agent.id==='returns').message,/Aguardando a base mensal validada/);
+});
+test('overview reports a source-state panel rather than treating unknown sales as zero',()=>{
+ const html=commandCenterBody();
+ for(const id of ['missionSourceState','missionSourceTitle','missionSourceDescription','missionSourceRetry'])assert.ok(html.includes('id="'+id+'"'),id);
+ assert.match(AGENT_REGISTRY_CLIENT,/paintSourceState/);
+ assert.match(AGENT_REGISTRY_CLIENT,/selectMonth/);
+ assert.doesNotMatch(AGENT_REGISTRY_CLIENT,/\bfetch\s*\(|setInterval\s*\(/);
+});
