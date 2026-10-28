@@ -1077,6 +1077,11 @@ const missionSearchRoutes=Object.freeze([
   }catch(error){
    if(requestId!==lookupEpoch||overlay.hidden||mode!==sourceMode)return;
    results.replaceChildren();const empty=document.createElement('p');empty.className='mission-search-empty';
+   const kind=error?.status===401||error?.code==='UNAUTHORIZED'?'SESSION':error?.message==='INVALID_RESPONSE'?'INVALID_PAGE':
+    error?.code==='ADMIN_API_NETWORK_ERROR'?'NETWORK':error?.code==='ADMIN_API_TIMEOUT'?'TIMEOUT':
+    error?.code==='ADMIN_API_RESPONSE_INVALID'?'CLIENT_CONTRACT':error?.code==='ADMIN_API_HTTP_ERROR'?'SERVER':
+    error instanceof ReferenceError?'RUNTIME':'UNAVAILABLE';
+   empty.dataset.searchFailure=kind;
    empty.textContent=error?.status===401||error?.code==='UNAUTHORIZED'?'Sessão administrativa expirada. Entre novamente neste navegador.':
     error?.message==='INVALID_RESPONSE'?'A página retornada pelo catálogo não passou na validação. O cadastro foi preservado.':
     error?.code==='ADMIN_API_NETWORK_ERROR'?'A conexão com o catálogo salvo falhou. Confira sua rede e tente novamente.':
