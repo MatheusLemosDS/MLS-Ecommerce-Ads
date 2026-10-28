@@ -94,7 +94,7 @@ test('unavailable sources never become fake amounts, healthy agents or fake prod
  assert.equal(nodes.get('mission-ads-metric-0').textContent,'—');
  assert.equal(nodes.get('mission-products-metric-0').textContent,'—');
  assert.equal(nodes.get('mission-products-coverage').hidden,true);
- assert.match(nodes.get('mission-finance-tasks').children[0].textContent,/Nenhuma prioridade/);
+ assert.match(nodes.get('mission-finance-tasks').children[0].textContent,/Sem prioridades verificáveis/);
  assert.match(nodes.get('mission-finance-message').textContent,/Aguardando/);
  assert.equal(nodes.get('mission-finance-metric-3').textContent,'—');
 });
@@ -259,4 +259,25 @@ test('missing operational sources stay visibly unknown, and Production avoids du
  const view=mount(result).nodes;
  assert.equal(view.get('mission-production-evidence').dataset.evidenceSource,'PERIOD_COST');
  assert.equal(view.get('mission-production-coverage').hidden,true);
+});
+
+test('V3.5 agent headers identify operational source freshness without repeating monthly timestamps under priorities',()=>{
+ const html=missionWorkspacesBody();
+ for(const id of names){
+  const start=html.indexOf('id="agent-'+id+'"'),stamp=html.indexOf('id="mission-'+id+'-checked"'),tasks=html.indexOf('id="mission-'+id+'-tasks"');
+  assert.ok(start>=0&&stamp>start&&stamp<tasks,'source provenance belongs in agent hero before tasks: '+id);
+  assert.equal((html.match(new RegExp('id="mission-'+id+'-checked"','g'))||[]).length,1);
+ }
+ const month={schema:'mls_month_snapshot_v1',month:'2026-10',status:'COMPLETE',balance_cents:30000,checked_at:1793070100,coverage:{returns:0,returns_unknown:0,cancel_pending:0,other:0,unknown:0},production_coverage:{total_units:20,known_units:20},pending:[]};
+ const catalog={schema:'mls_agent_catalog_snapshot_v1',total:47,indexed:42,pending_catalog:5,checked_at:1793200000,discovery_status:'IDLE'};
+ const dtf={schema:'mls_agent_dtf_queue_v1',line_count:5,pending_lines:2,reserved_lines:1,produced_lines:2,blocked_lines:0,batch_count:1};
+ const snapshot=buildMlsAgentRegistry({month,catalog,dtfQueue:dtf});
+ const {nodes}=mount(snapshot);
+ assert.match(nodes.get('mission-products-checked').textContent,/Catálogo salvo.*atualizado.*estoque não confirmado/);
+ assert.match(nodes.get('mission-production-checked').textContent,/Fila DTF salva.*sem horário individual/);
+ assert.match(nodes.get('mission-finance-checked').textContent,/Referência financeira mensal/);
+ assert.match(nodes.get('mission-returns-tasks').children[0].textContent,/Sem prioridades verificáveis/);
+ const old=mount(buildMlsAgentRegistry()).nodes;
+ assert.match(old.get('mission-finance-checked').textContent,/não validada/);
+ assert.match(MISSION_CSS,/mission-source-provenance/);
 });
