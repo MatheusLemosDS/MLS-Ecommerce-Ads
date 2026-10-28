@@ -951,7 +951,7 @@ const missionSearchRoutes=Object.freeze([
   currentQuery='',currentOffset=0,moreAvailable=false;
  function hide({focus=true}={}){
   if(overlay.hidden)return;
-  overlay.hidden=true;
+  ++lookupEpoch;overlay.hidden=true;
   document.documentElement.dataset.missionSearch='closed';
   if(focus&&restoreFocus?.focus)restoreFocus.focus();
  }
@@ -1095,6 +1095,18 @@ const missionSearchRoutes=Object.freeze([
  function choose(item){
   if(!item)return;
   hide();
+  if(item.type==='product'){
+   openTab('products');
+   Promise.resolve().then(()=>globalThis.brazaSavedCatalog?.find?.(item.productId));
+   document.getElementById('savedCatalog')?.scrollIntoView?.({block:'start'});
+   return;
+  }
+  if(item.type==='dtf'){
+   openTab('production');
+   globalThis.brazaDtfWorkspace?.findLine?.(item.orderId);
+   document.getElementById('dtfSearch')?.scrollIntoView?.({block:'start'});
+   return;
+  }
   if(item.panel){
    openTab(item.panel);
    globalThis.scrollTo?.(0,0);
@@ -1108,7 +1120,7 @@ const missionSearchRoutes=Object.freeze([
   restoreFocus=document.activeElement;
   overlay.hidden=false;
   document.documentElement.dataset.missionSearch='open';
-  input.value='';render();input.focus();
+  setScope('navigation');
  }
  openButton.onclick=show;
  closeButton.onclick=()=>hide();
@@ -1116,16 +1128,19 @@ const missionSearchRoutes=Object.freeze([
  results.addEventListener('click',event=>{
   const link=event.target?.closest?.('[data-search-route]');
   if(!link||event.button>0||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;
-  const item=byKey.get(link.dataset.searchRoute);
+  const item=selected.find(item=>item.key===link.dataset.searchRoute);
   if(!item)return;
   if(item.panel){event.preventDefault();choose(item);}
   else hide({focus:false});
  });
- input.addEventListener('input',render);
+ for(const button of scopeButtons)button.onclick=()=>setScope(button.dataset.missionScope);
+ execute.onclick=()=>searchRecords(0);
+ more.onclick=()=>{if(moreAvailable&&input.value.trim()===currentQuery)searchRecords(currentOffset+8);};
+ input.addEventListener('input',()=>{++lookupEpoch;busy=false;render();});
  input.addEventListener('keydown',event=>{
   if(event.key==='ArrowDown'){event.preventDefault();move(1);}
   else if(event.key==='ArrowUp'){event.preventDefault();move(-1);}
-  else if(event.key==='Enter'){event.preventDefault();choose(selected[active]);}
+  else if(event.key==='Enter'){event.preventDefault();mode==='navigation'?choose(selected[active]):searchRecords(0);}
  });
  overlay.addEventListener('keydown',event=>{
   if(event.key==='Escape'){event.preventDefault();hide();return;}
@@ -1145,7 +1160,7 @@ const missionSearchRoutes=Object.freeze([
   if(target?.isContentEditable||['input','select','textarea'].includes(tag))return;
   event.preventDefault();show();
  });
- globalThis.mlsWorkspaceSearch=Object.freeze({open:show,close:()=>hide()});
+ globalThis.mlsWorkspaceSearch=Object.freeze({open:show,close:()=>hide(),scope:setScope});
 })();
 
 document.querySelectorAll('[data-tab]').forEach(link=>link.onclick=event=>{if(event?.button>0||event?.metaKey||event?.ctrlKey||event?.shiftKey||event?.altKey)return;event?.preventDefault();openTab(link.dataset.tab);});
