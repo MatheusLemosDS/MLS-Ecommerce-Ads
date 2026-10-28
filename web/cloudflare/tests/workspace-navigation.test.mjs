@@ -117,7 +117,7 @@ test('Mission Control V3.5 has one keyboard navigation palette with only existin
  assert.match(search,/event\.key==='Enter'/);
  assert.match(search,/event\.key==='Escape'/);
  assert.match(search,/key==='k'/);
- assert.match(search,/input\.addEventListener\('input',render\)/);
+ assert.match(search,/input\.addEventListener\('input',\(\)=>/);
  assert.match(search,/globalThis\.mlsWorkspaceSearch=Object\.freeze/);
  assert.doesNotMatch(search,/\bfetch\s*\(|\bsetInterval\s*\(|\/api\//);
  assert.doesNotMatch(search,/access_token|refresh_token|FINANCE_TOKEN_ENCRYPTION_KEY|APP_INTERNAL_SECRET/);
