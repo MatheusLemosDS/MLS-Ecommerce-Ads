@@ -2,37 +2,81 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import {spawn} from 'node:child_process';
-import {existsSync} from 'node:fs';
+import {existsSync,mkdtempSync,readFileSync,rmSync} from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import {compiledOwnerReportPage} from './owner-report-browser-fixture.mjs';
 
 const chrome=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium','/usr/bin/chromium-browser'].find(existsSync);
-function chromeDump(url){
- return new Promise((resolve,reject)=>{
-  const args=['--headless=new','--no-sandbox','--disable-dev-shm-usage','--disable-gpu','--disable-background-networking','--disable-extensions',
-   '--window-size=420,950','--virtual-time-budget=9000','--dump-dom',url];
-  const proc=spawn(chrome,args,{stdio:['ignore','pipe','pipe']}),chunks=[];let size=0,err='';
-  const timer=setTimeout(()=>{proc.kill('SIGKILL');reject(Error('Chrome timeout'));},35000);
-  proc.stdout.on('data',chunk=>{size+=chunk.length;if(size<14000000)chunks.push(chunk);});
-  proc.stderr.on('data',chunk=>{if(err.length<4000)err+=chunk.toString().slice(0,160);});
-  proc.on('error',e=>{clearTimeout(timer);reject(e);});
-  proc.on('close',code=>{clearTimeout(timer);code===0?resolve(Buffer.concat(chunks).toString()):reject(Error('Chrome '+code+' '+err.slice(0,200)));});
- });
+const sleep=milliseconds=>new Promise(done=>setTimeout(done,milliseconds));
+
+async function chromeEvaluate(url,source){
+ const profile=mkdtempSync(path.join(os.tmpdir(),'mls-listing-cdp-'));
+ const child=spawn(chrome,['--headless=new','--no-sandbox','--disable-dev-shm-usage','--disable-gpu',
+  '--disable-background-networking','--disable-extensions','--remote-allow-origins=*',
+  '--remote-debugging-port=0','--user-data-dir='+profile,'about:blank'],{stdio:'ignore'});
+ let socket;
+ try{
+  let port=null;
+  for(let i=0;i<100;i++){
+   try{const rows=readFileSync(path.join(profile,'DevToolsActivePort'),'utf8').split('\n');port=Number(rows[0]);if(port>0)break;}
+   catch{}await sleep(100);
+  }
+  if(!port)throw Error('CHROME_DEBUG_PORT_UNAVAILABLE');
+  const pages=await(await fetch('http://127.0.0.1:'+port+'/json/list')).json();
+  const endpoint=pages.find(item=>item.type==='page')?.webSocketDebuggerUrl;
+  if(!endpoint)throw Error('CHROME_PAGE_UNAVAILABLE');
+  socket=new WebSocket(endpoint);
+  await new Promise((resolve,reject)=>{
+   const timeout=setTimeout(()=>reject(Error('CHROME_SOCKET_TIMEOUT')),10000);
+   socket.addEventListener('open',()=>{clearTimeout(timeout);resolve();},{once:true});
+   socket.addEventListener('error',event=>{clearTimeout(timeout);reject(Error('CHROME_SOCKET_ERROR'));},{once:true});
+  });
+  let seq=0;const requests=new Map();
+  socket.addEventListener('message',event=>{
+   let msg;try{msg=JSON.parse(event.data);}catch{return;}
+   if(!msg.id)return;
+   const pending=requests.get(msg.id);if(!pending)return;
+   requests.delete(msg.id);
+   msg.error?pending.reject(Error('CDP_'+msg.error.message)):pending.resolve(msg.result);
+  });
+  const send=(method,params={})=>new Promise((resolve,reject)=>{
+   const id=++seq;requests.set(id,{resolve,reject});
+   socket.send(JSON.stringify({id,method,params}));
+  });
+  await send('Page.enable');
+  await send('Runtime.enable');
+  await send('Page.navigate',{url});
+  let ready=false;
+  for(let i=0;i<100;i++){
+   const state=await send('Runtime.evaluate',{expression:"document.readyState==='complete' && !!document.getElementById('mlsLfForm')",returnByValue:true});
+   if(state?.result?.value){ready=true;break;}
+   await sleep(100);
+  }
+  if(!ready)throw Error('CHROME_OWNER_DOCUMENT_NOT_READY');
+  const expression=source.replace('document.documentElement.dataset.mlsLfE2e=JSON.stringify(info);','return info;');
+  const completion=send('Runtime.evaluate',{expression,awaitPromise:true,returnByValue:true});
+  const result=await Promise.race([completion,new Promise((_,reject)=>setTimeout(()=>reject(Error('CHROME_IMAGE_E2E_TIMEOUT')),25000))]);
+  if(result?.exceptionDetails)throw Error('CHROME_FIXTURE_EXCEPTION: '+result.exceptionDetails.text);
+  if(result?.result?.type!=='object')throw Error('CHROME_FIXTURE_RESULT_INVALID');
+  return result.result.value;
+ }finally{
+  try{socket?.close();}catch{}
+  try{child.kill('SIGKILL');}catch{}
+  rmSync(profile,{recursive:true,force:true});
+ }
 }
+
 const fixture="\n(async()=>{\n const by=id=>document.getElementById('mlsLf'+id),info={};\n try{\n  const root=document.getElementById('mlsListingFactory');\n  info.visible=!document.getElementById('products').hidden&&root.getBoundingClientRect().height>0;\n  by('Ref').value='test-art-001';by('Sku').value='ART001';\n  by('Title').value='Camiseta <img src=x onerror=alert(1)> anos 2000';\n  by('Description').value='Camiseta estampada em tecido macio. Confira as medidas antes de escolher o tamanho.';\n  const canvas=document.createElement('canvas');canvas.width=1024;canvas.height=1024;\n  const ctx=canvas.getContext('2d');ctx.fillStyle='#ddd';ctx.fillRect(0,0,1024,1024);\n  const data=canvas.toDataURL('image/png').split(',')[1];\n  const raw=atob(data),bytes=new Uint8Array(raw.length);\n  for(let i=0;i<raw.length;i++)bytes[i]=raw.charCodeAt(i);\n  function choose(names){\n   const selected=new DataTransfer();\n   for(const name of names)selected.items.add(new File([bytes],name,{type:name.endsWith('.jpg')?'image/jpeg':'image/png'}));\n   by('Files').files=selected.files;by('Files').dispatchEvent(new Event('change',{bubbles:true}));\n  }\n  async function settled(){\n   for(let i=0;i<75;i++){\n    if(!by('Save').disabled)return;\n    await new Promise(done=>setTimeout(done,100));\n   }\n   throw Error('IMAGE_TIMEOUT');\n  }\n  choose(['foto-invalida.jpg']);await settled();\n  info.spoofed=by('ImagePreview').textContent;\n  choose(['foto1.png','foto2.png','foto3.png','foto4.png','foto5.png']);await settled();\n  info.inspected=by('ImagePreview').querySelectorAll('figure').length;\n  const cost=by('Variants').querySelector('[data-role=price]');\n  cost.value='58,50';cost.dispatchEvent(new Event('input',{bubbles:true}));\n  by('Form').requestSubmit();\n  info.cards=by('Drafts').querySelectorAll('article').length;\n  info.ready=by('Drafts').querySelector('article')?.dataset.ready;\n  info.safe=by('Drafts').querySelectorAll('img').length===5&&\n   by('Drafts').textContent.includes('<img src=x onerror=alert(1)>');\n  by('Drafts').querySelector('button').click();\n  info.editing={ref:by('Ref').value,sku:by('Sku').value,cancelVisible:!by('Cancel').hidden};\n  by('Cancel').click();\n  info.stillOne=by('Drafts').querySelectorAll('article').length===1;\n  const blobs=[];URL.createObjectURL=blob=>{blobs.push(blob);return 'blob:local-test';};\n  HTMLAnchorElement.prototype.click=function(){};\n  by('ExportManifest').click();by('ExportReview').click();\n  info.exported=[];for(const blob of blobs)info.exported.push(JSON.parse(await blob.text()));\n  info.errors=window.__lfErrors.slice();\n }catch(error){info.failure=String(error?.stack||error).slice(0,1400);}\n document.documentElement.dataset.mlsLfE2e=JSON.stringify(info);\n})();";
 
-test('owner Chromium editor validates real images, edits, prevents XSS and exports drafts offline',{timeout:60000},async t=>{
+test('real Chrome owner validates PNG bytes, rejects spoofed JPG, edits and exports offline',{timeout:65000},async t=>{
  if(!chrome)return t.skip('Chrome unavailable');
  let html=(await compiledOwnerReportPage(false)).html;
  html=html.replace('<head>','<head><script>window.__lfErrors=[];addEventListener("error",e=>window.__lfErrors.push(String(e.message)));addEventListener("unhandledrejection",e=>window.__lfErrors.push(String(e.reason)));</script>');
- const index=html.lastIndexOf('</body>');assert.ok(index>0);
- html=html.slice(0,index)+'<script>'+fixture+'</script>'+html.slice(index);
  const server=http.createServer((req,res)=>{res.writeHead(200,{'content-type':'text/html; charset=utf-8'});res.end(html);});
- await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+ await new Promise(done=>server.listen(0,'127.0.0.1',done));
  try{
-  const result=await chromeDump('http://127.0.0.1:'+server.address().port+'/?tab=products');
-  const match=result.match(/data-mls-lf-e2e="([^"]+)"/);
-  assert.ok(match,'Chromium inspector must execute');
-  const data=JSON.parse(match[1].replaceAll('&quot;','"').replaceAll('&#39;',"'").replaceAll('&amp;','&'));
+  const data=await chromeEvaluate('http://127.0.0.1:'+server.address().port+'/?tab=products',fixture);
   assert.equal(data.failure,undefined,data.failure);
   assert.equal(data.visible,true);
   assert.match(data.spoofed,/Formato real incompatível/);
