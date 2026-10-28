@@ -9,7 +9,7 @@ import {buildMlsAgentRegistry} from '../src/agent-registry.mjs';
 const names=['finance','ads','products','production','returns','auditor','hermes'];
 const fixture=()=>buildMlsAgentRegistry({
  day:{schema:'mls_day_snapshot_v1',date:'2026-10-27',state:'READY',net_cents:13784,sales_cents:76276,ads_spend_cents:3777,paid_orders:11,net_basis:'ESTIMATE'},
- month:{schema:'mls_month_snapshot_v1',month:'2026-10',status:'COMPLETE',balance_cents:258761,checked_at:1793070100,coverage:{returns:2},production_coverage:{total_units:294,known_units:294},pending:['RETURNS_NOT_RECONCILED']},
+ month:{schema:'mls_month_snapshot_v1',month:'2026-10',status:'COMPLETE',balance_cents:258761,checked_at:1793070100,coverage:{returns:2,returns_unknown:0,cancel_pending:0,other:0,unknown:0},production_coverage:{total_units:294,known_units:294},pending:['RETURNS_NOT_RECONCILED']},
  now:1793070150
 });
 
@@ -218,4 +218,45 @@ test('mobile overview uses compact two-column cards and hides unavailable compar
  assert.match(MISSION_TRENDS_CSS,/grid-template-columns:repeat\(2,minmax\(0,1fr\)\)!important/);
  assert.match(MISSION_TRENDS_CSS,/mission-kpi-delta\[data-direction=UNAVAILABLE\]\{display:none\}/);
  assert.match(MISSION_TRENDS_CSS,/\.mission-dashboard \.agent-grid\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)!important/);
+});
+
+
+test('Products uses actual catalog counts, DTF uses queue states, and Returns splits validated order statuses',()=>{
+ const month={schema:'mls_month_snapshot_v1',month:'2026-10',status:'COMPLETE',checked_at:1793070100,balance_cents:25000,
+  coverage:{returns:5,returns_unknown:1,cancel_pending:2,other:3,unknown:1},
+  production_coverage:{total_units:307,known_units:307},pending:[]};
+ const catalog={schema:'mls_agent_catalog_snapshot_v1',total:47,indexed:42,pending_catalog:5,checked_at:1793070100,discovery_status:'IDLE'};
+ const dtfQueue={schema:'mls_agent_dtf_queue_v1',line_count:18,pending_lines:5,reserved_lines:3,produced_lines:4,blocked_lines:2,batch_count:2};
+ const registry=buildMlsAgentRegistry({month,catalog,dtfQueue});
+ const {nodes}=mount(registry);
+ const products=nodes.get('mission-products-evidence'),production=nodes.get('mission-production-evidence'),returns=nodes.get('mission-returns-evidence'),audit=nodes.get('mission-auditor-evidence');
+ const labels=host=>host.children.map(child=>child.children[0].children[0].textContent);
+ const values=host=>host.children.map(child=>child.children[0].children[1].textContent);
+ assert.equal(products.dataset.evidenceSource,'CATALOG');
+ assert.deepEqual(labels(products),['Produtos registrados','Produtos indexados','Cadastros pendentes']);
+ assert.deepEqual(values(products),['47','42','5']);
+ assert.equal(production.dataset.evidenceSource,'DTF_QUEUE');
+ assert.deepEqual(labels(production),['Linhas pendentes','Linhas reservadas','Linhas produzidas','Linhas bloqueadas','Sem estado classificado']);
+ assert.deepEqual(values(production),['5','3','4','2','4']);
+ assert.equal(nodes.get('mission-production-coverage').hidden,false,'DTF operations may show independent month cost coverage');
+ assert.equal(returns.dataset.evidenceSource,'RETURNS');
+ assert.deepEqual(values(returns),['5','1','6'],'status review must be explicit, not mixed into paid returns');
+ assert.match(nodes.get('mission-returns-evidence-note').textContent,/não confirmam reembolso/i);
+ assert.equal(audit.dataset.evidenceSource,'AUDIT');
+ assert.equal(audit.children.length,4);
+ assert.match(nodes.get('mission-auditor-evidence-note').textContent,/não representam prejuízo/i);
+});
+test('missing operational sources stay visibly unknown, and Production avoids duplicate financial cost charts',()=>{
+ const {nodes}=mount(buildMlsAgentRegistry());
+ for(const id of ['products','production','returns']){
+  const host=nodes.get('mission-'+id+'-evidence');
+  assert.ok(host.children.some(child=>child.children?.[0]?.children?.[1]?.textContent==='—'),id+' unknown counts must not turn into zero');
+ }
+ assert.equal(nodes.get('mission-production-coverage').hidden,true);
+ assert.match(nodes.get('mission-returns-evidence-note').textContent,/Aguardando estados mensais validados/);
+ const period={schema:'mls_agent_production_period_v1',reference_month:'2026-10',state:'PARTIAL',eligible_orders:12,total_units:20,known_units:15,pending_units:5,cost_cents:null,known_cost_cents:5000,checked_at:1793070100,source_checked_at:1793070100};
+ const result=buildMlsAgentRegistry({month:{schema:'mls_month_snapshot_v1',month:'2026-10',status:'COMPLETE',checked_at:1793070100,coverage:{returns:0,returns_unknown:0,cancel_pending:0,other:0,unknown:0},production_coverage:{total_units:20,known_units:15},pending:[]},productionPeriod:period});
+ const view=mount(result).nodes;
+ assert.equal(view.get('mission-production-evidence').dataset.evidenceSource,'PERIOD_COST');
+ assert.equal(view.get('mission-production-coverage').hidden,true);
 });
