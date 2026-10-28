@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {workspaceNavigation,workspaceSecondaryNavigation} from '../src/workspace-navigation.mjs';
 import {adminBody,CSS} from '../src/admin-view.mjs';
+import {savedCatalogBody} from '../src/saved-catalog-view.mjs';
 import {CLIENT} from '../src/admin-client.mjs';
 import {shellDesktopNavigation,shellMobileNavigation} from '../src/shell-navigation.mjs';
 import {renderAdsWorkspace} from '../src/ads-workspace-view.mjs';
@@ -119,4 +120,22 @@ test('Mission Control V3.5 has one keyboard navigation palette with only existin
  assert.match(search,/globalThis\.mlsWorkspaceSearch=Object\.freeze/);
  assert.doesNotMatch(search,/\bfetch\s*\(|\bsetInterval\s*\(|\/api\//);
  assert.doesNotMatch(search,/access_token|refresh_token|FINANCE_TOKEN_ENCRYPTION_KEY|APP_INTERNAL_SECRET/);
+});
+
+test('V3.6 product search is user-confirmed and delegates to the saved catalog form',()=>{
+ const markup=savedCatalogBody();
+ assert.match(markup,/id="savedCatalogSearchForm"/);
+ assert.match(markup,/id="savedCatalogSearch"/);
+ const start=CLIENT.indexOf('// Mission Control V3.5:');
+ const end=CLIENT.indexOf("document.querySelectorAll('[data-tab]').forEach(link=>link.onclick",start);
+ const source=CLIENT.slice(start,end);
+ assert.match(source,/key:'product-query'/);
+ assert.match(source,/rawQuery\.length>=2&&rawQuery\.length<=90/);
+ assert.match(source,/selected\.find\(value=>value\.key===link\.dataset\.searchRoute\)/);
+ assert.match(source,/item\.catalogQuery/);
+ assert.match(source,/savedCatalogSearch/);
+ assert.match(source,/openTab\(item\.panel\)/);
+ assert.match(source,/search\.value=item\.catalogQuery/);
+ assert.doesNotMatch(source,/\bfetch\s*\(|\bsetInterval\s*\(|\/api\//);
+ assert.doesNotMatch(source,/location\.assign\(.*catalogQuery/);
 });

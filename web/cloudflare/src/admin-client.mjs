@@ -952,6 +952,7 @@ const missionSearchRoutes=Object.freeze([
  }
  function render(){
   const query=normalize(input.value.trim());
+  const rawQuery=input.value.trim();
   const terms=query.split(/\s+/).filter(Boolean);
   selected=missionSearchRoutes.filter(item=>{
    if(!terms.length)return true;
@@ -961,6 +962,10 @@ const missionSearchRoutes=Object.freeze([
    const score=item=>normalize(item.title).startsWith(query)?0:normalize(item.title).includes(query)?1:2;
    return score(a)-score(b);
   }).slice(0,10);
+  if(rawQuery.length>=2&&rawQuery.length<=90){
+   selected.unshift({key:'product-query',title:'Buscar "'+rawQuery+'" no catálogo',group:'Pesquisa real',description:'Consultar produtos salvos e suas variações · até 20 por página',panel:'products',catalogQuery:rawQuery});
+   selected=selected.slice(0,10);
+  }
   active=0;results.replaceChildren();
   for(const [index,item] of selected.entries()){
    const link=document.createElement('a');
@@ -978,7 +983,7 @@ const missionSearchRoutes=Object.freeze([
    results.append(empty);
   }
   const scope=el('missionSearchScope');
-  if(scope)scope.textContent=selected.length+' destino(s) disponível(is) · busca de navegação, sem consultar produtos ou pedidos individualmente.';
+  if(scope)scope.textContent=rawQuery.length>=2?'Escolha Buscar no catálogo para consultar produtos salvos. Nenhum pedido é pesquisado automaticamente.':'Digite um nome ou código para pesquisar produtos salvos, ou escolha um painel e ferramenta.';
  }
  function move(amount){
   if(!selected.length)return;
@@ -990,8 +995,15 @@ const missionSearchRoutes=Object.freeze([
   if(!item)return;
   hide();
   if(item.panel){
+   if(typeof item.catalogQuery==='string'&&item.catalogQuery.length>=2&&item.catalogQuery.length<=90){
+    // Fill before openTab: its existing products handler starts the
+    // authorized paginated catalog read with the user's query.
+    const search=document.getElementById('savedCatalogSearch');
+    if(search)search.value=item.catalogQuery;
+   }
    openTab(item.panel);
    globalThis.scrollTo?.(0,0);
+   if(typeof item.catalogQuery==='string')document.getElementById('savedCatalogSearch')?.scrollIntoView?.({block:'center'});
    if(item.hash)Promise.resolve().then(()=>document.getElementById(item.hash)?.scrollIntoView?.({block:'start'}));
    return;
   }
@@ -1010,7 +1022,7 @@ const missionSearchRoutes=Object.freeze([
  results.addEventListener('click',event=>{
   const link=event.target?.closest?.('[data-search-route]');
   if(!link||event.button>0||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;
-  const item=byKey.get(link.dataset.searchRoute);
+  const item=selected.find(value=>value.key===link.dataset.searchRoute)||byKey.get(link.dataset.searchRoute);
   if(!item)return;
   if(item.panel){event.preventDefault();choose(item);}
   else hide({focus:false});
