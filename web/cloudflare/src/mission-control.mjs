@@ -358,6 +358,24 @@ export const MISSION_CSS="\n/* MLS Commerce OS / Mission Control: cosmetic only,
 .mission-hub-search input:focus-visible{outline:3px solid var(--mission-accent,#78a9ff);outline-offset:2px}
 .mission-hub-search span{font-size:10px;color:var(--muted)}
 
+
+/* Fix: Hermes content must never set the height of the executive KPI grid rows. */
+@media(min-width:1250px){
+ .mission-dashboard{grid-template-rows:auto auto auto auto auto;align-items:start}
+ .mission-dashboard>.command-center-grid>.hermes-command{
+  grid-column:2;grid-row:1 / span 2;align-self:start;min-height:0;
+  max-height:360px;overflow:hidden;display:flex;flex-direction:column
+ }
+ .mission-dashboard .hermes-command .command-priorities{
+  overflow:auto;min-height:0;max-height:195px;overscroll-behavior:contain;
+  scrollbar-width:thin
+ }
+ .mission-dashboard .hermes-command .hermes-command-foot{flex-shrink:0;margin-top:auto}
+ .mission-dashboard>.command-center-head{align-self:start}
+ .mission-dashboard>.command-center-metrics{align-self:start}
+ .mission-dashboard>.command-center-grid>.agent-panel{align-self:start}
+}
+
 `;
 
 export const MISSION_AGENTS=Object.freeze([
