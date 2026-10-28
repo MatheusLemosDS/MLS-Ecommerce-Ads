@@ -9,7 +9,7 @@ import {buildMlsAgentRegistry} from '../src/agent-registry.mjs';
 const names=['finance','ads','products','production','returns','auditor','hermes'];
 const fixture=()=>buildMlsAgentRegistry({
  day:{date:'2026-10-27',net_cents:13784,sales_cents:76276,ads_spend_cents:3777,paid_orders:11,net_basis:'ESTIMATE'},
- month:{month:'2026-10',status:'COMPLETE',balance_cents:258761,checked_at:1793070100,coverage:{returns:2},production_coverage:{total_units:294,known_units:294},pending:['RETURNS_NOT_RECONCILED']},
+ month:{schema:'mls_month_snapshot_v1',month:'2026-10',status:'COMPLETE',balance_cents:258761,checked_at:1793070100,coverage:{returns:2},production_coverage:{total_units:294,known_units:294},pending:['RETURNS_NOT_RECONCILED']},
  now:1793070150
 });
 
