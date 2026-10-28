@@ -944,7 +944,7 @@ const missionSearchRoutes=Object.freeze([
   closeButton=el('missionSearchClose'),input=el('missionSearchInput'),results=el('missionSearchResults');
  const normalize=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-BR');
  const byKey=new Map(missionSearchRoutes.map(item=>[item.key,item]));
- const scopeButtons=[...overlay.querySelectorAll('[data-mission-scope]')],execute=el('missionSearchExecute'),
+ const scopeButtons=typeof overlay?.querySelectorAll==='function'?[...overlay.querySelectorAll('[data-mission-scope]')]:[],execute=el('missionSearchExecute'),
   more=el('missionSearchMore'),pageInfo=el('missionSearchPageInfo'),scopeLabel=el('missionSearchScope');
  let selected=[],active=0,restoreFocus=null,mode='navigation',lookupEpoch=0,busy=false,
   currentQuery='',currentOffset=0,moreAvailable=false;
