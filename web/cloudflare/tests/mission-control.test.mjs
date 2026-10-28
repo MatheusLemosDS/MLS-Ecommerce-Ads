@@ -195,3 +195,19 @@ test('Hermes priority overflow stays bounded without stretching KPI rows',()=>{
  assert.match(MISSION_CSS,/max-height:195px;overscroll-behavior:contain/);
  assert.match(commandCenterBody(),/id="commandCenterPriorities"/);
 });
+
+
+test('specialist workspaces hydrate observed catalog and saved DTF queue counts',()=>{
+ const month={month:'2026-10',status:'COMPLETE',balance_cents:20000,checked_at:1793200000,coverage:{returns:0},production_coverage:{known_units:30,total_units:40},pending:[]};
+ const catalog={schema:'mls_agent_catalog_snapshot_v1',total:345,indexed:300,pending_catalog:45,checked_at:1793200000,discovery_status:'RUNNING'};
+ const dtfQueue={schema:'mls_agent_dtf_queue_v1',line_count:10,pending_lines:4,reserved_lines:2,produced_lines:3,blocked_lines:1,batch_count:3};
+ const registry=buildMlsAgentRegistry({month,catalog,dtfQueue});
+ const {nodes}=mount(registry);
+ assert.equal(nodes.get('mission-products-metric-0').textContent,'345');
+ assert.equal(nodes.get('mission-products-metric-1').textContent,'300');
+ assert.equal(nodes.get('mission-products-metric-2').textContent,'45');
+ assert.equal(nodes.get('mission-production-metric-0').textContent,'4');
+ assert.equal(nodes.get('mission-production-metric-1').textContent,'2');
+ assert.equal(nodes.get('mission-production-metric-2').textContent,'3');
+ assert.equal(nodes.get('mission-production-metric-3').textContent,'1');
+});
