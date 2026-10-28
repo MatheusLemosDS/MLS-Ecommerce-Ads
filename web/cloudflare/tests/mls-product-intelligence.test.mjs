@@ -2,6 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import {buildMlsProductIntelligence,simulateMlsPricingScenario} from '../src/mls-product-intelligence.mjs';
+import {businessMonthBody} from '../src/business-month-view.mjs';
+import {BUSINESS_MONTH_CLIENT} from '../src/business-month-client.mjs';
+import {missionWorkspacesBody} from '../src/mission-control.mjs';
 
 const row=(id,quantity,sales,contribution)=>({
  item_id:id,quantity,orders:1,exclusive_orders:1,mixed_orders:0,pending:[],
@@ -101,4 +104,20 @@ test('pricing and M3 processors can be embedded unchanged in a browser inline sc
  ).runInContext(context);
  assert.equal(context.result.total_products,3);
  assert.equal(context.price.calculated_scenario_price_cents,1429);
+});
+
+test('M3 observer UI is mounted in the existing protected monthly workspace',()=>{
+ const html=businessMonthBody();
+ for(const id of ['businessMonthPricingObserver','businessMonthPricingScope',
+  'businessMonthPricingStats','businessMonthPricingRows','businessMonthPricingVariant',
+  'businessMonthPricingExtra','businessMonthPricingFee','businessMonthPricingAds',
+  'businessMonthPricingMargin','businessMonthPricingCalculate','businessMonthPricingResult'])
+   assert.ok(html.includes('id="'+id+'"'),id);
+ assert.match(html,/Simulação sem alterar anúncios|simulação sem alterar anúncios|Simulador ilustrativo/);
+ assert.match(BUSINESS_MONTH_CLIENT,/function buildMlsProductIntelligence\(/);
+ assert.match(BUSINESS_MONTH_CLIENT,/function simulateMlsPricingScenario\(/);
+ assert.match(BUSINESS_MONTH_CLIENT,/drawPricingObserver\(\);drawCatalogStatus\(\)/);
+ assert.doesNotThrow(()=>new vm.Script(BUSINESS_MONTH_CLIENT),
+   'compiled inline script must remain valid JavaScript');
+ assert.match(missionWorkspacesBody(''),/Curva ABC e cenário de preço/);
 });
