@@ -44,7 +44,7 @@ export function mlsListingFactoryBody(){return String.raw`
   <div class="mls-lf-field"><label for="mlsLfTitle">Título do anúncio</label><input id="mlsLfTitle" maxlength="120" placeholder="Camiseta retrô anos 2000 unissex" required><span class="mls-lf-help">Título de autoria do operador; regras de categoria devem ser revistas no Seller Centre.</span></div>
   <div class="mls-lf-field"><label for="mlsLfDescription">Descrição</label><textarea id="mlsLfDescription" maxlength="5000" placeholder="Detalhes do tecido, medidas, cuidados com a estampa e prazo de produção..." required></textarea></div>
   <div class="mls-lf-grid">
-   <div class="mls-lf-field"><label for="mlsLfPrice">Preço base (R$)</label><input id="mlsLfPrice" inputmode="decimal" value="49,90"><button type="button" id="mlsLfApplyPrice" class="mls-lf-btn">Aplicar a todos os tamanhos</button><span class="mls-lf-help">Alterações no preço base atualizam tamanhos ainda não editados. Você pode definir preços diferentes por variação. Valor declarado, não é recomendação de margem.</span></div>
+   <div class="mls-lf-field"><label for="mlsLfPrice">Preço base (R$)</label><input id="mlsLfPrice" inputmode="decimal" placeholder="Informe o preço"><button type="button" id="mlsLfApplyPrice" class="mls-lf-btn">Aplicar a todos os tamanhos</button><span class="mls-lf-help">Alterações no preço base atualizam tamanhos ainda não editados. Você pode definir preços diferentes por variação. Informe seu preço; o sistema não utiliza tarifa ou margem presumida.</span></div>
    <div class="mls-lf-field"><label for="mlsLfExtraSizes">Outros tamanhos (separados por vírgula)</label><input id="mlsLfExtraSizes" maxlength="200" placeholder="2, 4, 6, 8 ou Único"><span class="mls-lf-help">Opcional; cada tamanho pode ter preço diferente.</span></div>
   </div>
   <div class="mls-lf-field"><label>Tamanhos padrão</label><div class="mls-lf-sizes" id="mlsLfSizeList">
@@ -65,6 +65,7 @@ export function mlsListingFactoryBody(){return String.raw`
  <p id="mlsLfMessage" class="mls-lf-message" role="status" aria-live="polite">Rascunhos mantidos apenas nesta aba. Exporte o JSON antes de sair.</p>
  <div class="mls-lf-queue-head"><h3>Fila de rascunhos</h3><span id="mlsLfStats" class="mls-lf-help">0 anúncios</span></div>
  <div id="mlsLfDrafts" class="mls-lf-queue"></div>
+ <div class="mls-lf-field" style="margin:10px 0 12px"><label for="mlsLfImport">Retomar anúncios de um arquivo JSON anterior</label><input id="mlsLfImport" type="file" accept=".json,application/json"><span class="mls-lf-help">Aceita apenas manifesto MLS (anúncios JSON); importar substitui esta fila após confirmação. Os mockups não estão no JSON: reanexe as imagens locais e confira os custos antes de revisar.</span></div>
  <div class="mls-lf-actions"><button class="mls-lf-btn primary" id="mlsLfExportManifest" type="button" disabled>Exportar anúncios JSON</button>
   <button class="mls-lf-btn" id="mlsLfExportReview" type="button" disabled>Exportar revisão JSON</button>
   <button class="mls-lf-btn" id="mlsLfClear" type="button" disabled>Limpar fila</button></div>
@@ -239,7 +240,7 @@ export const MLS_LISTING_FACTORY_CLIENT=String.raw`
  }
  function reset(){
   state.sequence++;state.files=[];state.rows.clear();state.editing=null;state.busy=false;
-  form.reset();by('Price').value='49,90';input.value='';by('Save').textContent='Adicionar à fila de revisão';by('Save').disabled=false;
+  form.reset();by('Price').value='';input.value='';by('Save').textContent='Adicionar à fila de revisão';by('Save').disabled=false;
   by('Cancel').hidden=true;variantRows();preview();list();
  }
  function edit(i){
@@ -256,7 +257,7 @@ export const MLS_LISTING_FACTORY_CLIENT=String.raw`
   }
   by('ExtraSizes').value=extras.join(', ');variantRows();preview();
   by('Save').textContent='Salvar alterações';by('Cancel').hidden=false;
-  tell('Editando '+d.item.client_ref+'. Nenhuma informação foi publicada.');
+  tell('Editando '+d.item.client_ref+(d.files.length?' · imagens locais disponíveis.':' · selecione novamente os mockups: o JSON contém apenas seus nomes.')+' Nenhuma informação foi publicada.');
   root.scrollIntoView?.({block:'start'});
  }
  function formDraft(){
@@ -273,7 +274,7 @@ export const MLS_LISTING_FACTORY_CLIENT=String.raw`
    return {sku:sku(size),size,price_cents:price,stock_quantity:quantity};
   });
   return {item:{client_ref:ref,title:by('Title').value,description:by('Description').value,
-   images:state.files.map(x=>x.name),variants},files:state.files.slice()};
+   images:state.files.length?state.files.map(x=>x.name):(state.editing===null?[]:state.drafts[state.editing].item.images.slice()),variants},files:state.files.slice()};
  }
  form.addEventListener('submit',event=>{
   event.preventDefault();if(state.busy){tell('Imagens ainda estão sendo verificadas.');return;}
@@ -316,6 +317,29 @@ export const MLS_LISTING_FACTORY_CLIENT=String.raw`
  }
  by('ExportManifest').onclick=()=>{const d=projection();if(d?.review)exportJson(d.input,'mls-listing-factory-anuncios.json');};
  by('ExportReview').onclick=()=>{const d=projection();if(d?.review)exportJson(d.review,'mls-listing-factory-revisao.json');};
+
+ by('Import').addEventListener('change',async()=>{
+  const files=[...by('Import').files];by('Import').value='';
+  if(state.busy){tell('Conclua primeiro a verificação das imagens atuais.');return;}
+  if(files.length!==1){tell('Selecione somente um manifesto JSON.');return;}
+  const file=files[0];
+  if(!/^[^\/\\\u0000-\u001f\u007f]{1,150}\.json$/i.test(file.name)||
+   !Number.isSafeInteger(file.size)||file.size<2||file.size>1048576){
+   tell('O manifesto JSON precisa ter nome válido e até 1 MB.');return;
+  }
+  try{
+   const value=JSON.parse(await file.text());
+   const plan=planMlsListingFactory(value,Object.create(null));
+   if(!plan)throw Error('O JSON não corresponde ao contrato MLS Listing Factory. Não é a revisão JSON.');
+   if(!globalThis.confirm?.('Substituir a fila local por '+plan.summary.items+' anúncio(s) deste JSON? Reanexe os mockups em cada anúncio.'))return;
+   state.drafts=value.items.map(item=>({item:{
+    client_ref:item.client_ref,title:item.title,description:item.description,
+    images:item.images.slice(),variants:item.variants.map(v=>({...v}))
+   },files:[]}));
+   reset();
+   tell('Importados '+plan.summary.items+' anúncio(s) para conferência. Reanexe 5–9 mockups por arte antes de exportar a revisão final; imagens e estoque não foram validados.');
+  }catch(error){tell(error?.message||'Não foi possível importar este manifesto JSON.');}
+ });
  by('Clear').onclick=()=>{
   if(state.busy||!state.drafts.length)return;
   if(!globalThis.confirm?.('Limpar todos os rascunhos locais? Exporte o JSON antes.'))return;
