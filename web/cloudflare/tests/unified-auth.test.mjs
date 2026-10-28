@@ -111,3 +111,19 @@ test('missing or weak signing configuration cannot authenticate either role or s
  const unicode={...e,REVIEW_USERNAME:'revisão-fixture'},response=await handle(post(unicode,'review'),unicode),cookie=activeCookie(response);assert.equal((await readWorkspaceSession(withCookie(cookie),unicode,{now})).user,'revisão-fixture');
  const existingShortReview={...e,REVIEW_PASSWORD:'legacy-review'},legacy=await handle(post(existingShortReview,'review'),existingShortReview);assert.equal(legacy.status,303);assert.equal((await readWorkspaceSession(withCookie(activeCookie(legacy)),existingShortReview,{now})).role,'review');
 });
+
+test('finance scheduler status requires owner cookie and accepts that cookie in the already-open app',async()=>{
+ const e=env(),owner=activeCookie(await handleWorkspaceAuth(post(e),e,{renderLogin}));
+ const response=await adminFetch(withCookie(owner,'/api/admin/finance/sync-state'),e);
+ assert.equal(response.status,200,'owner in same session can read the existing scheduler status');
+ const data=await response.json();
+ assert.equal(data.schema,'business_sync_state_v1');
+ assert.equal(typeof data.enabled,'boolean');
+ assert.ok(['IDLE','RUNNING','COMPLETE','PARTIAL','LIMIT_REACHED','ERROR','PAUSED'].includes(data.status));
+ const anonymous=await adminFetch(request('/api/admin/finance/sync-state'),e);
+ assert.equal(anonymous.status,401);
+ assert.deepEqual(await anonymous.json(),{error:'UNAUTHORIZED'});
+ const review=activeCookie(await handleWorkspaceAuth(post(e,'review'),e,{renderLogin}));
+ const forbidden=await adminFetch(withCookie(review,'/api/admin/finance/sync-state'),e);
+ assert.equal(forbidden.status,401);
+});

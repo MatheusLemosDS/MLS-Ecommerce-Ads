@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {buildPendingIncomeAudit,buildMlsAgentRegistry} from '../src/agent-registry.mjs';
 import {AGENT_REGISTRY_CLIENT,commandCenterBody,pendingIncomeBody} from '../src/agent-registry-view.mjs';
+import {CLIENT as ADMIN_CLIENT} from '../src/admin-client.mjs';
 
 const day=(overrides={})=>({
  schema:'mls_day_snapshot_v1',
@@ -315,4 +316,18 @@ test('finance authorization recovery is visible only for the exact validated aut
  assert.match(html,/target="_blank" rel="noopener noreferrer"/);
  assert.match(AGENT_REGISTRY_CLIENT,/coverage\?\.collection_code!=='BUSINESS_PERIOD_AUTH_REQUIRED'/);
  assert.doesNotMatch(AGENT_REGISTRY_CLIENT,/\bfetch\s*\(|\bsetInterval\s*\(|\/api\/admin\/finance\/auth/);
+});
+
+test('owner on-demand finance diagnostic stays in signed same-origin client, never reads at startup or leaks tokens',()=>{
+ const html=commandCenterBody();
+ for(const id of ['missionSourceInspect','missionInlineDiagnostic','missionInlineDiagnosticResult','missionInlineDiagnosticLogin'])
+  assert.ok(html.includes('id="'+id+'"'),id);
+ assert.match(ADMIN_CLIENT,/mlsFinanceSyncInspector=Object\.freeze/);
+ assert.match(ADMIN_CLIENT,/adminRequest\('finance\/sync-state',undefined,\{timeoutMs:15000\}\)/);
+ assert.match(ADMIN_CLIENT,/schema:'mls_owner_finance_sync_diagnostic_v1'/);
+ assert.match(AGENT_REGISTRY_CLIENT,/inspect\.onclick=async\(\)=>/);
+ assert.match(AGENT_REGISTRY_CLIENT,/error\?\.status===401/);
+ assert.match(AGENT_REGISTRY_CLIENT,/diagnosticLogin\.hidden=false/);
+ assert.doesNotMatch(AGENT_REGISTRY_CLIENT,/\bfetch\s*\(|\bsetInterval\s*\(/);
+ assert.doesNotMatch(ADMIN_CLIENT.slice(ADMIN_CLIENT.indexOf('mlsFinanceSyncInspector'),ADMIN_CLIENT.indexOf('function notice')),/access_token|refresh_token|FINANCE_TOKEN_ENCRYPTION_KEY|FINANCE_ROUTER_SECRET/);
 });
