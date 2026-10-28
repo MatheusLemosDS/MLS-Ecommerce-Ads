@@ -187,3 +187,11 @@ test('financial sparklines are slots for cached daily observations, not decorati
  for(const metric of ['Net','Sales','Ads'])assert.match(html,new RegExp('id="missionSpark'+metric+'"'));
  assert.match(MISSION_CSS,/mission-evidence-panel/);
 });
+
+
+test('Hermes priority overflow stays bounded without stretching KPI rows',()=>{
+ assert.match(MISSION_CSS,/Hermes content must never set the height/);
+ assert.match(MISSION_CSS,/max-height:360px;overflow:hidden/);
+ assert.match(MISSION_CSS,/max-height:195px;overscroll-behavior:contain/);
+ assert.match(commandCenterBody(),/id="commandCenterPriorities"/);
+});
