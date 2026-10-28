@@ -1024,6 +1024,7 @@ const missionSearchRoutes=Object.freeze([
   const query=input.value.trim(),sourceMode=mode;
   if(query.length<2||query.length>90||/[\u0000-\u001f\u007f]/.test(query))return;
   const requestId=++lookupEpoch;
+  selected=[];active=0;currentQuery='';moreAvailable=false;more.hidden=true;
   busy=true;execute.disabled=true;more.disabled=true;
   results.replaceChildren();
   const loading=document.createElement('p');loading.className='mission-search-empty';
