@@ -31,7 +31,7 @@
   },
   "current_phase": "M2_FINANCE_RETURNS_RECONCILIATION",
   "working_branch": "feature/mls-listing-factory-owner-ui-20261028",
-  "current_status": "M2_OPEN_M3_SHADOW_PR47_OPEN_LISTING_FACTORY_PR51_AND_PR56_DRAFT_NOT_DEPLOYED",
+  "current_status": "M2_OPEN_PR47_PR48_PR51_PR56_DRAFT_CI_PENDING_LATEST_HEAD_NO_DEPLOY",
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
     "Repasse-base, ajuste, repasse após ajuste e liberação exibidos sem dupla dedução",
@@ -483,8 +483,8 @@
         "issue": 52,
         "pr": 56,
         "branch": "feature/mls-listing-factory-owner-ui-20261028",
-        "head_sha": "52c50da6bbcd738cacadcb0f28929d2e5937a6aa",
-        "status": "DRAFT_FINAL_CI_PENDING_NO_MERGE_NO_DEPLOY",
+        "head_sha": "1d8e7cc9dc86257e73ecce7e5331708f78d118d4",
+        "status": "DRAFT_HEAD_UNVERIFIED_CI_NO_MERGE_NO_DEPLOY",
         "last_successful_pre_refinement_run": 40784356050,
         "last_green_node": 2126,
         "last_green_python": 67,
@@ -505,7 +505,16 @@
           "operator official Shopee app permissions",
           "M2 issue #50 financial reconciliation"
         ],
-        "safety": "OBSERVER_ONLY"
+        "safety": "OBSERVER_ONLY",
+        "last_ci_attempt": {
+          "run": 40784720891,
+          "status": "FAILED_TEST_FIX_AND_APP_SHA_PENDING_NEW_RUN",
+          "node_pass": 2121,
+          "node_fail": 5,
+          "comment": "4 SHA integrity misses fixed in later commit; Chrome filename mismatch corrected with canonical validFile on HEAD."
+        },
+        "latest_code_patch": "single canonical validFile for PNG/JPEG browser and offline planner, short valid filenames allowed",
+        "ci_status": "CI_NOT_RUN_ON_CURRENT_HEAD"
       }
     }
   }

@@ -15,3 +15,5 @@ MLS COMMERCE OS — HANDOFF 28/10/2026
 ISSUES PARA CODEX: #52 (UI owner), #53 (Finance escrow somente auditoria), #54 (Push recovery). ISSUE #50 bloqueia fechamento M2.
 
 PR #56: editor owner visual de rascunhos concluído em branch `feature/mls-listing-factory-owner-ui-20261028`; CI inicial #40784356050 2.126 Node/67 Python verde, refinamento de preços/dimensões ainda requer CI final. SEM merge/deploy. Codex: priorizar QA dos mockups/variantes, alinhar PR #48 e renovar checkpoint.
+
+HEAD DA PR #56 EM REVISÃO: `1d8e7cc9dc86257e73ecce7e5331708f78d118d4` (correção de nome curto usando regra canônica). Último CI verde #40784356050 pertence à versão pré-refinamento. HEAD ATUAL **AINDA SEM CI GITHUB**; CI anterior #40784720891 falhou 4 hashes (fixados no código posterior) + filename test (corrigido), sem comprovante novo. TESTAR ANTES DO MERGE. PR #57 temporária fechada sem merge. PR #56 voltou à base #51 para continuidade ordenada.
