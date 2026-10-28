@@ -109,11 +109,13 @@ export function buildMlsAgentRegistry({day=null,month=null,reconciliation=null,r
  if(month?.status==='RUNNING'&&!priorities.some(item=>item.code==='COLLECTING'))priorities.push(Object.freeze({code:'COLLECTING',severity:'WORKING',title:'Coleta financeira em andamento',detail:'O servidor está atualizando o mês sem depender desta aba.',href:'#businessMonth',agent_id:'auditor'}));
  if(safe(releaseSummary?.not_located_orders)&&releaseSummary.not_located_orders>0&&!priorities.some(item=>item.code==='MATCHING_INCOMPLETE'))priorities.push(Object.freeze({code:'RELEASES_NOT_LOCATED',severity:'WORKING',title:'Pedidos sem liberação localizada neste calendário',detail:releaseSummary.not_located_orders+' pedido(s) pagos ainda não aparecem no calendário de liberações consultado. Isso não comprova falta de recebimento.',href:'#businessEscrowReleases',agent_id:'finance'}));
  const dailyNet=money(day?.net_cents),dailySales=money(day?.sales_cents),dailyAds=money(day?.ads_spend_cents),dailyPaid=safe(day?.paid_orders)&&day.paid_orders>=0?day.paid_orders:null;
+ const dailyObserved=day?.schema==='mls_day_snapshot_v1'&&[dailyNet,dailySales,dailyAds,dailyPaid].some(value=>value!==null);
  let margin=null;
  if(dailyNet!==null&&dailySales!==null&&dailySales>0){
   const value=BigInt(dailyNet)*10000n/BigInt(dailySales);
   if(value>=BigInt(Number.MIN_SAFE_INTEGER)&&value<=BigInt(Number.MAX_SAFE_INTEGER))margin=Number(value);
  }
+ const monthReady=month?.schema==='mls_month_snapshot_v1'&&['RUNNING','COMPLETE'].includes(month.status)&&safe(month.checked_at)&&month.checked_at>0;
  const monthBalance=money(month?.balance_cents);
  const currentPending=incomeOverview?.status&&money(incomeOverview?.pending_cents),incomeCheckedAt=safe(incomeOverview?.checked_at)?incomeOverview.checked_at:null;
  const coverage=month?.production_coverage&&typeof month.production_coverage==='object'?month.production_coverage:null;
@@ -121,11 +123,12 @@ export function buildMlsAgentRegistry({day=null,month=null,reconciliation=null,r
  const returns=safe(month?.coverage?.returns)&&month.coverage.returns>=0?month.coverage.returns:0;
  const returnsUnknown=safe(month?.coverage?.returns_unknown)&&month.coverage.returns_unknown>=0?month.coverage.returns_unknown:0;
  const reviews=['cancel_pending','other','unknown'].reduce((total,key)=>total+(safe(month?.coverage?.[key])&&month.coverage[key]>=0?month.coverage[key]:0),0);
+ const returnsMetric=monthReady&&safe(month?.coverage?.returns)&&month.coverage.returns>=0?returns+returnsUnknown+reviews:null;
  const has=code=>pending.includes(code);
- const collectionWorking=month?.status==='RUNNING'||has('COLLECTING'),working=collectionWorking||priorities.some(item=>item.severity==='WORKING');
+ const collectionWorking=month?.status==='RUNNING'||has('COLLECTING'),working=collectionWorking||(monthReady&&!dailyObserved)||priorities.some(item=>item.severity==='WORKING');
  const blocked=priorities.some(item=>item.severity==='BLOCKED');
  const attention=priorities.some(item=>item.severity==='ATTENTION');
- const overall=blocked?'BLOCKED':attention?'ATTENTION':working?'WORKING':month?'HEALTHY':'WORKING';
+ const overall=blocked?'BLOCKED':attention?'ATTENTION':working?'WORKING':monthReady?'HEALTHY':'WORKING';
  const agent=(id,name,area,status,message,href,metric=null,metric_kind=null,secondary_metric=null,secondary_metric_kind=null,secondary_metric_label=null)=>Object.freeze({id,name,area,mode:'OBSERVER',status,message,href,metric,metric_kind,secondary_metric,secondary_metric_kind,secondary_metric_label,last_checked_at:safe(month?.checked_at)?month.checked_at:null});
  const expenseUrgent=(safe(expenseSchedule?.overdue_count)&&expenseSchedule.overdue_count>0)||(safe(expenseSchedule?.due_today_count)&&expenseSchedule.due_today_count>0);
  const expenseUpcoming=safe(expenseSchedule?.due_next_7_days_count)&&expenseSchedule.due_next_7_days_count>0;
@@ -137,18 +140,18 @@ export function buildMlsAgentRegistry({day=null,month=null,reconciliation=null,r
  const auditAttention=auditBlocked||has('FINANCIAL_SOURCE_STALE')||has('PERIOD_LIMIT_REACHED')||has('RELEASE_SOURCE_UNAVAILABLE')||has('SOURCE_MISSING');
  const pendingAuditWorking=['WAITING_SAVED_DETAIL','DETAIL_OLDER_THAN_OVERVIEW','PARTIAL_PAGE','AMOUNT_PARTIAL','OBSERVED_DIFFERENT'].includes(pendingAuditState);
  const financeWorking=expenseUpcoming||pendingAuditWorking||collectionWorking||has('MATCHING_INCOMPLETE')||has('RELEASES_COLLECTING')||(safe(releaseSummary?.not_located_orders)&&releaseSummary.not_located_orders>0);
- const financeStatus=month?financeAttention?'ATTENTION':financeWorking?'WORKING':'HEALTHY':'WORKING';
- const adsStatus=month?adsAttention?'ATTENTION':collectionWorking?'WORKING':'HEALTHY':'WORKING';
- const productStatus=month?productAttention?'ATTENTION':collectionWorking?'WORKING':'HEALTHY':'WORKING';
- const productionStatus=month?productAttention?'ATTENTION':collectionWorking?'WORKING':'HEALTHY':'WORKING';
- const returnsStatus=month?returnAttention?'ATTENTION':collectionWorking?'WORKING':'HEALTHY':'WORKING';
- const auditorStatus=auditBlocked?'BLOCKED':auditAttention?'ATTENTION':collectionWorking?'WORKING':month?'HEALTHY':'WORKING';
+ const financeStatus=monthReady?financeAttention?'ATTENTION':financeWorking||!dailyObserved?'WORKING':'HEALTHY':'WORKING';
+ const adsStatus=monthReady?adsAttention?'ATTENTION':collectionWorking||!dailyObserved?'WORKING':'HEALTHY':'WORKING';
+ const productStatus=monthReady?productAttention?'ATTENTION':collectionWorking?'WORKING':'HEALTHY':'WORKING';
+ const productionStatus=monthReady?productAttention?'ATTENTION':collectionWorking?'WORKING':'HEALTHY':'WORKING';
+ const returnsStatus=monthReady?returnAttention?'ATTENTION':collectionWorking?'WORKING':'HEALTHY':'WORKING';
+ const auditorStatus=auditBlocked?'BLOCKED':auditAttention?'ATTENTION':collectionWorking?'WORKING':monthReady?'HEALTHY':'WORKING';
  const agents=[
   agent('finance','MLS Finance','Financeiro',financeStatus,expenseUrgent?(expenseSchedule.overdue_count+' conta(s) atrasada(s) e '+expenseSchedule.due_today_count+' vencendo hoje precisam de conferência.'):(expenseUpcoming?expenseSchedule.due_next_7_days_count+' pagamento(s) vencem nos próximos 7 dias.':releaseSummary?(releaseSummary.verified_orders+' liberação(ões) conferida(s); '+releaseSummary.not_located_orders+' pedido(s) sem liberação localizada neste calendário.'):(monthBalance!==null?'Resultado mensal estimado disponível para acompanhamento.':financeAttention?'O fechamento financeiro ainda depende de conferências.':'Aguardando o resumo financeiro validado.')),'#businessMonthExpensesDetails',monthBalance,'money',currentPending,'money',currentPending!==null?'Pendente atual na Shopee':null),
   agent('ads','MLS Ads','Anúncios',adsStatus,dailyAds!==null?'Investimento do dia acompanha a mesma leitura usada no resultado.':adsAttention?'A leitura de anúncios requer atenção.':'Aguardando o gasto diário validado.','/dashboard',dailyAds,'money'),
   agent('products','MLS Products','Produtos',productStatus,productAttention?'Existem unidades vendidas sem custo confirmado.':catData?'Catálogo salvo: '+catData.total+' produto(s) registrados. A cobertura de custos do mês é uma fonte independente.':month?'Custos dos itens vendidos não apresentam bloqueio de cobertura.':'Aguardando o catálogo financeiro do mês.','/admin?tab=products',totalUnits,'units',catData?.total??null,'count',catData?'Produtos registrados no catálogo salvo':null),
   agent('production','MLS Production','Produção',productionStatus,dtfData?'Fila DTF salva: '+dtfData.pending_lines+' linha(s) pendente(s) e '+dtfData.produced_lines+' produzida(s); não são quantidades de pedidos.':knownUnits!==null&&totalUnits!==null?knownUnits+' de '+totalUnits+' unidade(s) com custo conhecido.':periodData?'Período de custos de produção: '+periodData.month+' ('+periodData.state+').':'Aguardando a cobertura de custos da produção.','/admin?tab=production',knownUnits,'units',dtfData?.pending_lines??null,'lines',dtfData?'Linhas DTF pendentes':null),
-  agent('returns','MLS Returns','Devoluções',returnsStatus,returnAttention?(returns+returnsUnknown)+' pedido(s) pagos com devolução e '+reviews+' em revisão exigem acompanhamento.':'Nenhuma pendência de devolução foi sinalizada no mês.','#businessReconciliation',returns+returnsUnknown+reviews,'count'),
+  agent('returns','MLS Returns','Devoluções',returnsStatus,returnAttention?(returns+returnsUnknown)+' pedido(s) pagos com devolução e '+reviews+' em revisão exigem acompanhamento.':returnsMetric===null?'Aguardando a base mensal validada de devoluções.':'Nenhuma pendência de devolução foi sinalizada no mês.','#businessReconciliation',returnsMetric,'count'),
   agent('auditor','MLS Auditor','Auditoria',auditorStatus,settlementConflicts?settlementConflicts+' divergência(s) entre evidências de repasse após ajustes precisam ser resolvidas.':auditBlocked?'Uma inconsistência impede tratar os dados como confiáveis.':auditAttention?'A qualidade ou o frescor dos dados precisa de atenção.':collectionWorking?'Aguardando a conclusão da coleta do servidor.':'As validações do resumo não indicam bloqueios.','#businessEscrowReleases',priorities.length,'count')
  ];
  const hermesStatus=overall==='BLOCKED'?'BLOCKED':overall==='ATTENTION'?'ATTENTION':overall==='WORKING'?'WORKING':'HEALTHY';

@@ -1,15 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
-import {MISSION_CSS,MISSION_CLIENT,MISSION_AGENTS,missionWorkspacesBody} from '../src/mission-control.mjs';
+import {MISSION_CSS,MISSION_TRENDS_CSS,MISSION_CLIENT,MISSION_AGENTS,missionWorkspacesBody} from '../src/mission-control.mjs';
 import {adminBody} from '../src/admin-view.mjs';
 import {commandCenterBody,AGENT_REGISTRY_CLIENT} from '../src/agent-registry-view.mjs';
 import {buildMlsAgentRegistry} from '../src/agent-registry.mjs';
 
 const names=['finance','ads','products','production','returns','auditor','hermes'];
 const fixture=()=>buildMlsAgentRegistry({
- day:{date:'2026-10-27',net_cents:13784,sales_cents:76276,ads_spend_cents:3777,paid_orders:11,net_basis:'ESTIMATE'},
- month:{month:'2026-10',status:'COMPLETE',balance_cents:258761,checked_at:1793070100,coverage:{returns:2},production_coverage:{total_units:294,known_units:294},pending:['RETURNS_NOT_RECONCILED']},
+ day:{schema:'mls_day_snapshot_v1',date:'2026-10-27',state:'READY',net_cents:13784,sales_cents:76276,ads_spend_cents:3777,paid_orders:11,net_basis:'ESTIMATE'},
+ month:{schema:'mls_month_snapshot_v1',month:'2026-10',status:'COMPLETE',balance_cents:258761,checked_at:1793070100,coverage:{returns:2},production_coverage:{total_units:294,known_units:294},pending:['RETURNS_NOT_RECONCILED']},
  now:1793070150
 });
 
@@ -210,4 +210,12 @@ test('specialist workspaces hydrate observed catalog and saved DTF queue counts'
  assert.equal(nodes.get('mission-production-metric-1').textContent,'2');
  assert.equal(nodes.get('mission-production-metric-2').textContent,'3');
  assert.equal(nodes.get('mission-production-metric-3').textContent,'1');
+});
+
+
+test('mobile overview uses compact two-column cards and hides unavailable comparison clutter',()=>{
+ assert.match(MISSION_TRENDS_CSS,/Mobile owner cockpit V3/);
+ assert.match(MISSION_TRENDS_CSS,/grid-template-columns:repeat\(2,minmax\(0,1fr\)\)!important/);
+ assert.match(MISSION_TRENDS_CSS,/mission-kpi-delta\[data-direction=UNAVAILABLE\]\{display:none\}/);
+ assert.match(MISSION_TRENDS_CSS,/\.mission-dashboard \.agent-grid\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)!important/);
 });
