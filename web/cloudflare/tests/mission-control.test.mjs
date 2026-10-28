@@ -94,7 +94,7 @@ test('unavailable sources never become fake amounts, healthy agents or fake prod
  assert.equal(nodes.get('mission-ads-metric-0').textContent,'—');
  assert.equal(nodes.get('mission-products-metric-0').textContent,'—');
  assert.equal(nodes.get('mission-products-coverage').hidden,true);
- assert.match(nodes.get('mission-finance-tasks').children[0].textContent,/Nenhuma prioridade/);
+ assert.match(nodes.get('mission-finance-tasks').children[0].textContent,/Sem prioridades verificáveis/);
  assert.match(nodes.get('mission-finance-message').textContent,/Aguardando/);
  assert.equal(nodes.get('mission-finance-metric-3').textContent,'—');
 });
