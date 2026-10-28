@@ -136,7 +136,9 @@ test('V3.6 scopes trigger only explicit validated persisted-product and saved-DT
  assert.match(block,/async function searchRecords\(offset=0\)/);
  assert.match(block,/input\.value\.trim\(\)\.length<2/);
  assert.match(block,/searchRecords\(currentOffset\+8\)/);
- assert.match(block,/projectProductRegistryFrame\(raw\)/);
+ assert.match(block,/raw\?\.schema!=='product_registry_v1'/);
+ assert.match(block,/page\.more!==\(offset\+8<page\.total\)/);
+ assert.match(block,/validId\(row\.item_id\)&&validName\(row\.product_name\)/);
  assert.match(block,/api\('product-registry\?'\+queryString,undefined,\{timeoutMs:15000\}\)/);
  assert.match(block,/globalThis\.brazaDtfWorkspace\?\.searchLines\?\.\(query,offset\)/);
  assert.match(block,/globalThis\.brazaSavedCatalog\?\.find\?\.\(item\.productId\)/);
