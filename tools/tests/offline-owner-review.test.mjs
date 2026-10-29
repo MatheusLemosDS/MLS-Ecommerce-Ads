@@ -9,7 +9,7 @@ const sample=()=>{
   '<script>window.fetch("https://example.com/private")</script>'+
   '<a href="https://example.com/exit">remote</a><a href="/admin?tab=agent-finance">Finance</a>'+
   '<img src="https://example.com/screenshot"><iframe src="https://example.com/private"></iframe>'+
-  '<form method="POST" action="/api/delete" onsubmit="alert(1)"><button onclick="alert(1)">Excluir</button><input value="fixture"></form>'+
+  '<form method="POST" action="/api/delete" hidden onsubmit="alert(1)"><button onclick="alert(1)">Excluir</button><input value="fixture"></form>'+
   '</main></body></html>';
 };
 test('offline review strips app JS, remote URLs, forms and write controls',()=>{
@@ -20,6 +20,7 @@ test('offline review strips app JS, remote URLs, forms and write controls',()=>{
  assert.match(html,/href="#agent-finance"/);
  assert.match(html,/href="#review-unavailable"/);
  assert.match(html,/disabled="disabled"/);
+ assert.match(html,/class="review-inert-form" data-review-form="disabled" hidden/);
  assert.match(html,/QA SINTÉTICA · SEM DADOS REAIS/);
  assert.doesNotMatch(html,/<script\b|<iframe\b|<form\b|<img\b|<link\b/);
  assert.doesNotMatch(html,/href="https?:|action=|onsubmit=|onclick=|https:\/\/example/);
