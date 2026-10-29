@@ -128,6 +128,8 @@ export const TARGETS = Object.freeze({
     'bbbe1b9efdf0a6c11e507c34c92730ddbb8502fb367c5cfe33c031ba3850d3cd',
     // Bulk local media relink in MLS Listing Factory, exact App SHA from Actions 40790379512; full validation required.
     '63da28d212c45d1e7e93444dbe4ac2ac49ad113af273dddf65370f668156180d',
+    // V3.6 real catalog/DTF search + Listing Factory owner draft integration, exact App digest from GH Actions 40792060142; full CI required.
+    '8ed059ddb6f0901a48d277d6b9b806a23d52a1e5e105ed0e2e456e2aea6701f5',
   ]}),
   auth: Object.freeze({name: 'brazacommerce-auth', main: '../../dist/auth-worker.mjs', baselineHashes: [
     '45d0142709c5087e373cc4da146070ed39c472805f6f64c00f00b6555f0e1f56',
