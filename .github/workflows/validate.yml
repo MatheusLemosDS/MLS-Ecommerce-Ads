@@ -31,7 +31,10 @@ jobs:
       - name: Executar testes
         env:
           MLS_PRODUCTION_SCREENSHOT_DIR: ${{ runner.temp }}/mls-production-dtf-visual
-        run: npm test
+        # Same full npm test suite and pretest build; limit parallel files so Chrome smoke tests do not starve each other.
+        run: |
+          npm run build
+          node --test --test-concurrency=4 web/cloudflare/tests/*.test.mjs web/finance/tests/*.test.mjs tools/tests/*.test.mjs
       - name: Guardar capturas sintéticas da Produção DTF
         if: always()
         uses: actions/upload-artifact@v4
