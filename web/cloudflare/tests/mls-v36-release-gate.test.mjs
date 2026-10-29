@@ -2,9 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {compiledOwnerReportPage} from './owner-report-browser-fixture.mjs';
 
-const scriptCount=html=>[...html.matchAll(/<script>([\\s\\S]*?)<\\/script>/g)].length;
+const scriptCount=html=>html.split('<script>').length-1;
 const checkUniqueIds=html=>{
- const ids=[...html.matchAll(/\\bid="([^"]+)"/g)].map(x=>x[1]);
+ const ids=[...html.matchAll(/id="([^"]+)"/g)].map(x=>x[1]);
  assert.equal(new Set(ids).size,ids.length,'owner HTML must never reuse an element ID');
 };
 
@@ -19,8 +19,8 @@ for(const minify of [false,true]){
   assert.match(html,/id="missionSearchOpen"/);
   assert.match(html,/id="businessMonthSelect"/);
   assert.doesNotMatch(html,/id="mlsListingFactory"|id="mlsLfBatchFiles"|id="mlsLfFiles"/);
-  assert.doesNotMatch(html,/const root=document\\.getElementById\\('mlsListingFactory'\\)/);
-  assert.doesNotMatch(html,/<style>[\\s\\S]*?\\.mls-lf-head/);
+  assert.equal(html.includes("const root=document.getElementById('mlsListingFactory')"),false);
+  assert.equal(html.includes('.mls-lf-head'),false,'no editor CSS when disabled');
   assert.equal(scriptCount(html),13,'V3.6 off must not ship the editor script');
  });
  test('V3.6 exact owner opt-in ships draft editor and record search (minify='+minify+')',async()=>{
