@@ -258,4 +258,105 @@ html[data-theme=dark] :focus-visible{outline-color:#75c8ff}
  .mission-hub .mission-hub-card,.mls-products-hub .products-hub-card,
  .dtf-workspace .dtf-flow-step,.topbar .mission-search-trigger{transition:none!important;transform:none!important}
 }
+
+
+/* MLS reference fidelity: compact cockpit and horizontal specialist navigation.
+ * Layout only; existing states, reports and business contracts are unchanged. */
+@media(min-width:901px){
+ .app-shell{grid-template-columns:185px minmax(0,1fr)!important}
+ .sidebar{padding:15px 11px!important;gap:20px!important}
+ .sidebar .brand{font-size:13px;gap:7px}
+ .sidebar .brand small{font-size:8px;letter-spacing:1px}
+ .sidebar .brand-mark{width:36px;height:36px;border-radius:11px}
+ .workspace-nav:not(.workspace-nav-mobile) .workspace-nav-link{padding:8px 10px!important;min-height:39px!important;font-size:12px;gap:9px}
+ .workspace-nav:not(.workspace-nav-mobile) .workspace-nav-link small{display:none!important}
+ .sidebar-foot p{font-size:9px;line-height:1.5;padding:5px}
+ .topbar{min-height:56px!important;padding:7px 20px!important}
+ .topbar .workspace-context>.brand-mark{display:none}
+ .top-actions{gap:12px}
+ .workspace{max-width:none!important;padding:16px 19px 45px!important}
+ .mission-dashboard{display:flex!important;flex-direction:column!important;gap:12px!important;max-width:none!important}
+ .mission-dashboard>.command-center-head{order:1!important;min-height:83px!important;padding:8px 10px!important;margin:0!important;border:0!important;background:transparent!important;box-shadow:none!important;display:block!important}
+ .mission-dashboard>.command-center-head:before,.mission-dashboard>.command-center-head:after{display:none!important}
+ .mission-dashboard .mission-command-orbit{width:170px!important;height:110px!important;opacity:.43!important;right:45px!important;top:-18px!important;pointer-events:none}
+ .mission-dashboard .mission-overview-copy>.eyebrow{display:none}
+ .mission-dashboard .command-center-head h2{font-size:27px!important;line-height:1.2!important;margin:0 0 4px!important}
+ .mission-dashboard .command-center-head p{font-size:11px!important;max-width:710px;line-height:1.4!important}
+ .mission-dashboard .mission-overview-cta{display:none!important}
+ .mission-dashboard .command-center-head .command-center-mode{top:11px!important;right:8px!important}
+ .mission-dashboard>.command-center-metrics{order:2!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;display:grid!important;gap:9px!important;margin:0!important;width:100%!important}
+ .mission-dashboard .command-metric{height:122px!important;min-height:0!important;display:flex!important;flex-direction:column!important;padding:10px!important;gap:4px!important;border-radius:11px!important}
+ .mission-dashboard .command-metric>small:first-child{font-size:10px!important;line-height:1.25!important;min-height:0!important}
+ .mission-dashboard .command-metric strong{font-size:19px!important;margin:0!important;line-height:1.2!important;min-height:24px!important}
+ .mission-dashboard .command-metric .mission-profit-state,.mission-dashboard .command-metric .mission-kpi-delta{font-size:9px!important;line-height:1.25!important}
+ .mission-dashboard .command-metric .mission-kpi-comparison-date,.mission-dashboard .command-metric>span:not(.mission-profit-state):not(.mission-kpi-delta){display:none!important}
+ .mission-dashboard .command-metric:before{width:24px!important;height:24px!important;top:8px!important;right:8px!important;font-size:13px!important}
+ .mission-dashboard .mission-kpi-sparkline{height:18px!important;margin-top:auto!important}
+ .mission-dashboard>.command-center-grid{display:contents!important}
+ .mission-dashboard>.command-center-grid>.agent-panel{order:3!important;grid-column:auto!important;grid-row:auto!important;align-self:stretch!important;margin:0!important;padding:0!important}
+ .mission-dashboard .agent-panel-head{margin:0 0 9px!important;align-items:center}
+ .mission-dashboard .agent-panel-head h3{font-size:19px!important;margin:0}
+ .mission-dashboard .agent-panel-head p{font-size:10px}
+ .mission-dashboard .agent-grid{display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;gap:9px!important}
+ .mission-dashboard .agent-card{display:flex!important;flex-direction:column!important;gap:6px!important;min-height:157px!important;padding:11px!important;border-radius:13px!important;box-shadow:inset 0 0 23px rgba(var(--agent-rgb,65,135,255),.12),0 8px 25px rgba(1,6,23,.25)}
+ .mission-dashboard .agent-card:before{content:"◈"!important;position:relative!important;inset:auto!important;display:grid!important;place-items:center!important;width:38px!important;height:38px!important;min-height:38px!important;margin:0 0 1px!important;border-radius:12px!important;font-size:23px!important;color:var(--agent-accent,#6bbaff)!important;background:radial-gradient(circle at 31% 22%,rgba(var(--agent-rgb,65,135,255),.48),rgba(var(--agent-rgb,65,135,255),.06) 75%)!important;border:1px solid rgba(var(--agent-rgb,65,135,255),.55)!important;text-shadow:0 0 12px currentColor!important;box-shadow:0 0 20px rgba(var(--agent-rgb,65,135,255),.20)!important}
+ .mission-dashboard .agent-card[data-mission-accent=finance]:before{content:"▣"!important}
+ .mission-dashboard .agent-card[data-mission-accent=ads]:before{content:"◎"!important}
+ .mission-dashboard .agent-card[data-mission-accent=products]:before{content:"⬡"!important}
+ .mission-dashboard .agent-card[data-mission-accent=production]:before{content:"▤"!important}
+ .mission-dashboard .agent-card[data-mission-accent=returns]:before{content:"↺"!important}
+ .mission-dashboard .agent-card[data-mission-accent=auditor]:before{content:"◇"!important}
+ .mission-dashboard .agent-card:after{display:none!important}
+ .mission-dashboard .agent-card-head{display:block!important}
+ .mission-dashboard .agent-card h4{font-size:12px!important;margin:0!important;line-height:1.25!important}
+ .mission-dashboard .agent-card-head small{display:none!important}
+ .mission-dashboard .agent-card .agent-status{max-width:100%;width:max-content;font-size:8px!important;padding:3px 7px!important;margin-top:5px!important;white-space:normal}
+ .mission-dashboard .agent-card p{font-size:9px!important;line-height:1.35!important;display:-webkit-box!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical!important;overflow:hidden!important;margin:0!important}
+ .mission-dashboard .agent-card .mission-card-link{font-size:9px!important;margin-top:auto!important;padding:4px 0 0!important}
+ .mission-dashboard>.mission-trend-panel{order:4!important;grid-column:auto!important;margin:0!important}
+ .mission-dashboard>.mission-day-intelligence{order:5!important;grid-column:auto!important;margin:0!important}
+ .mission-dashboard>.command-center-grid>.hermes-command{order:6!important;grid-column:auto!important;grid-row:auto!important;align-self:stretch!important;max-height:none!important;min-height:0!important;display:grid!important;grid-template-columns:220px minmax(0,1fr) 220px!important;align-items:center!important;gap:12px!important;margin:0!important;padding:13px 16px!important}
+ .mission-dashboard .hermes-command .command-priorities{max-height:110px!important}
+ .mission-dashboard>.command-center-note{order:7!important;margin:0!important}
+ .mission-workspace{display:flex!important;flex-direction:column!important;gap:12px!important;max-width:none!important;align-items:stretch!important}
+ .mission-workspace>.mission-hero{order:1!important;min-height:103px!important;padding:14px 17px!important;margin:0!important;display:flex!important;align-items:center!important;gap:16px!important;border-radius:14px!important}
+ .mission-workspace .mission-crumb{margin:0 0 7px!important;font-size:10px!important;gap:6px!important;display:flex!important;align-items:center!important}
+ .mission-workspace .mission-hero-main{align-items:center!important;gap:12px!important}
+ .mission-workspace .mission-orb{width:50px!important;height:50px!important;flex-basis:50px!important;border-radius:15px!important;font-size:25px!important}
+ .mission-workspace .mission-hero h2{font-size:22px!important;margin:0 0 3px!important}
+ .mission-workspace .mission-hero p{font-size:10px!important;line-height:1.35!important;margin:0!important}
+ .mission-workspace .mission-hero p.mission-last{font-size:9px!important;margin:4px 0 0!important}
+ .mission-workspace .mission-intro-status{flex-direction:row!important;flex-wrap:wrap!important;justify-content:flex-end!important;gap:8px!important}
+ .mission-workspace>.mission-page-tabs{order:2!important;display:flex!important;position:static!important;flex-direction:row!important;flex-wrap:nowrap!important;align-items:center!important;gap:7px!important;margin:0!important;padding:7px 8px!important;min-width:0!important;max-width:none!important;width:100%!important;overflow-x:auto!important;white-space:nowrap!important;border:1px solid #27456e!important;border-radius:10px!important;background:#0a1933!important}
+ .mission-workspace .mission-page-tabs-title{display:none!important}
+ .mission-workspace .mission-page-tabs a{display:inline-flex!important;flex:0 0 auto!important;width:auto!important;min-height:27px!important;padding:6px 10px!important;border-radius:8px!important;font-size:10px!important;line-height:1.2!important}
+ .mission-workspace>.mission-stats{order:3!important;display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:10px!important;margin:0!important;width:100%!important}
+ .mission-workspace .mission-stat{min-height:93px!important;padding:12px 14px!important;margin:0!important;border-radius:12px!important}
+ .mission-workspace .mission-stat small{font-size:10px!important;min-height:0!important}
+ .mission-workspace .mission-stat strong{font-size:23px!important;margin:7px 0 3px!important}
+ .mission-workspace .mission-stat span{font-size:10px!important}
+ .mission-workspace>.mission-trend-panel{order:4!important;margin:0!important;padding:16px!important}
+ .mission-workspace>.mission-evidence-panel{order:5!important;margin:0!important;padding:16px!important}
+ .mission-workspace>.mission-panels{order:6!important;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important;margin:0!important}
+ .mission-workspace>.mission-panels .mission-module{padding:14px!important;margin:0!important}
+ .mission-workspace>.mission-finance-source{order:7!important}
+}
+@media(min-width:901px) and (max-width:1299px){
+ .mission-dashboard .command-center-head .command-center-mode{display:none!important}
+ .mission-dashboard .command-metric{padding:9px 8px!important}
+ .mission-dashboard .command-metric strong{font-size:17px!important}
+ .mission-dashboard .agent-card{padding:8px!important}
+}
+@media(min-width:701px) and (max-width:900px){
+ .mission-dashboard .command-center-metrics,.mission-dashboard .agent-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+ .mission-workspace>.mission-page-tabs{position:static!important;display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;overflow-x:auto!important}
+}
+@media(max-width:700px){
+ .mission-dashboard .command-center-head h2{font-size:23px!important}
+ .mission-dashboard .command-center-metrics,.mission-dashboard .agent-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ .mission-workspace>.mission-page-tabs{position:static!important;display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;overflow-x:auto!important;width:100%!important}
+ .mission-workspace .mission-page-tabs-title{display:none!important}
+ .mission-workspace .mission-page-tabs a{flex:0 0 auto!important}
+}
+
 `;
