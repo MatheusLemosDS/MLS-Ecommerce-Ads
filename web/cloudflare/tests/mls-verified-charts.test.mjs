@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
- projectMlsDailyChart,projectMlsDistribution,projectMlsDtfStateChart,renderMlsVerifiedChart
+ projectMlsDailyChart,projectMlsDistribution,projectMlsDtfStateChart,projectMlsCategoricalChart,renderMlsVerifiedChart
 } from '../src/mls-verified-charts.mjs';
 
 const daily = (points)=>({schema:'mls_mission_daily_trend_v1',points});
@@ -94,4 +94,32 @@ test('chart labels are escaped; no untrusted markup or remote resources',()=>{
  assert.doesNotMatch(html,/<script\b|<img\b|onerror=|https?:\/\//);
  assert.match(html,/&lt;script&gt;/);
  assert.match(html,/A &amp; B/);
+});
+
+test('vertical bars use only complete real input, no inferred hourly buckets',()=>{
+ const missing=projectMlsCategoricalChart({complete:false,segments:[{label:'08h',value:3}]});
+ assert.equal(missing.status,'UNAVAILABLE');
+ assert.doesNotMatch(renderMlsVerifiedChart(missing),/<svg\b/);
+ const bars=projectMlsCategoricalChart({source:'VERIFIED_HOURLY_DTF',complete:true,unit:'COUNT',
+  segments:[{label:'08h',value:0},{label:'09h',value:4},{label:'10h',value:1}]});
+ assert.equal(bars.status,'READY');
+ const svg=renderMlsVerifiedChart(bars,{palette:'production'});
+ assert.match(svg,/<svg\b/);
+ assert.match(svg,/09h: 4/);
+ assert.match(svg,/>08h</);
+ assert.doesNotMatch(svg,/https?:\/\//);
+});
+test('horizontal category bars preserve zero and reject duplicates or unsafe amounts',()=>{
+ const horizontal=projectMlsCategoricalChart({complete:true,orientation:'horizontal',
+  segments:[{label:'Logística',value:6},{label:'Defeito',value:0}]});
+ assert.equal(horizontal.status,'READY');
+ assert.match(renderMlsVerifiedChart(horizontal,{palette:'returns'}),/Logística: 6/);
+ const dup=projectMlsCategoricalChart({complete:true,segments:[
+  {label:'X',value:1},{label:'X',value:2}
+ ]});
+ assert.equal(dup.status,'UNAVAILABLE');
+ const unsafe=projectMlsCategoricalChart({complete:true,segments:[
+  {label:'X',value:Number.MAX_SAFE_INTEGER+2}
+ ]});
+ assert.equal(unsafe.status,'UNAVAILABLE');
 });
