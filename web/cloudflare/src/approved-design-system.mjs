@@ -1,6 +1,10 @@
 export const MLS_APPROVED_DESIGN_CSS=String.raw`
 
 /* MLS Commerce OS — approved neon design, presentation only. */
+/* Scroll targets clear the authenticated fixed topbar, including screenshots. */
+main.workspace>section,main.workspace>#overview,.mission-workspace,.mission-hub,#commandCenter{scroll-margin-top:99px}
+@media(max-width:850px){main.workspace>section,main.workspace>#overview,.mission-workspace,.mission-hub,#commandCenter{scroll-margin-top:82px}}
+
 :root[data-theme=dark]{
  --app-bg:#040d21;--canvas:#040d21;--bg:#040d21;
  --surface:#09182f;--card:#09182f;--surface-raised:#102442;
@@ -246,6 +250,10 @@ html[data-theme=dark] :focus-visible{outline-color:#75c8ff}
  .mission-workspace .mission-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
  .mission-workspace .mission-stat{padding:13px}
 }
+/* Readable KPI columns from the approved dashboard: 4 wide, 3 medium, 2 mobile. */
+@media(min-width:1201px){.mission-dashboard .command-center-metrics{grid-template-columns:repeat(4,minmax(0,1fr))!important}}
+@media(min-width:641px) and (max-width:1200px){.mission-dashboard .command-center-metrics{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+@media(max-width:640px){.mission-dashboard .command-center-metrics{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 @media(prefers-reduced-motion:reduce){
  .mission-hub .mission-hub-card,.mls-products-hub .products-hub-card,
  .dtf-workspace .dtf-flow-step,.topbar .mission-search-trigger{transition:none!important;transform:none!important}
