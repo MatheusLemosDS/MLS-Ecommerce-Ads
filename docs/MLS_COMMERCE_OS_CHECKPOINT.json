@@ -2,7 +2,7 @@
   "schema": "mls_commerce_os_checkpoint_v1",
   "canonical_roadmap": "docs/ROADMAP_MLS_COMMERCE_OS.md",
   "legacy_roadmap": "docs/ROADMAP_BRAZACOMMERCE.md",
-  "updated_at": "2026-10-28",
+  "updated_at": "2026-10-29",
   "product": {
     "name": "MLS Commerce OS",
     "supervisor": "MLS Hermes",
@@ -660,5 +660,34 @@
         "documented_in": "docs/MLS_OWNER_SYNTHETIC_VISUAL_QA_2026_10_28.md"
       }
     }
+  },
+  "visual_rework_production_20261029": {
+    "schema": "mls_production_dtf_visual_rework_v1",
+    "branch": "design/mission-control-production-rework-20261029",
+    "base_branch": "main",
+    "status": "DRAFT_NOT_MERGED_NOT_DEPLOYED",
+    "features": [
+      "DTF five-stage UI",
+      "account vs device source explanation",
+      "viewport-specific layout",
+      "read-only visual navigation"
+    ],
+    "protected_contracts": [
+      "DTF_CLIENT unchanged",
+      "DTF_ENGINE_CLIENT unchanged",
+      "existing production state/actions",
+      "Worker Auth and Finance identical"
+    ],
+    "owner_authenticated_qa": "PENDING",
+    "production_release_authorized": false,
+    "ads_promo": "LOCKED",
+    "m2_finance": "ISSUE_50_OPEN",
+    "related_visual_prs": [
+      69,
+      71,
+      72
+    ],
+    "v36_release_pr": 68,
+    "documentation": "docs/MLS_PRODUCTION_DTF_REWORK_2026_10_29.md"
   }
 }

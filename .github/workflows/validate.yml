@@ -29,7 +29,20 @@ jobs:
       - name: Instalar versões fixadas
         run: npm ci
       - name: Executar testes
-        run: npm test
+        env:
+          MLS_PRODUCTION_SCREENSHOT_DIR: ${{ runner.temp }}/mls-production-dtf-visual
+        # Same full npm test suite and pretest build; limit parallel files so Chrome smoke tests do not starve each other.
+        run: |
+          npm run build
+          node --test --test-concurrency=4 web/cloudflare/tests/*.test.mjs web/finance/tests/*.test.mjs tools/tests/*.test.mjs
+      - name: Guardar capturas sintéticas da Produção DTF
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mls-production-dtf-synthetic-qa
+          path: ${{ runner.temp }}/mls-production-dtf-visual
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Validar ponte financeira e atualização do Hermes
         run: python3 -m unittest web/bridge/test_hermes_bridge.py tools/test_install_hermes_web_bridge.py tools/test_build_hermes_web_bridge_install.py tools/test_activate_hermes_web_bridge.py tools/test_build_hermes_web_bridge_activation.py -q
       - name: Gerar os três Workers

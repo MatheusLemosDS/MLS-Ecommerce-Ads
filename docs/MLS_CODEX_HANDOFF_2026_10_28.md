@@ -106,3 +106,10 @@ A seleção de mockups em lote passou [CI 40790629421](https://github.com/Matheu
 ### Integração PR #63 — handoff 28/10/2026
 
 Mission Control V3.6 da PR #48 e Listing Factory PRs #51/#56/#60 foram combinados numa branch isolada sobre a main: integration/mls-v36-search-listing-factory-20261028. A comparação Git confirmou 13/13 fontes da PR #60 e 7/7 da PR #48 idênticas, com união da allowlist SHA em tools/worker_project.mjs. CI #40792253729 SUCCESS (2.136 Node + 67 Python + Chrome, App/Auth/Finance builds), SHA App 8ed059ddb6f0901a48d277d6b9b806a23d52a1e5e105ed0e2e456e2aea6701f5. Nenhum merge/deploy de código. Próxima tarefa do Codex: QA autenticada desktop/mobile com catálogo real, fila DTF e mockups locais; depois escolher PR63 como release única ou merges sequenciais, não as duas opções. M2 #50 continua aberta, Ads/PROMO LOCKED. Documento: docs/MLS_V36_LISTING_FACTORY_INTEGRATION_2026_10_28.md.
+
+
+### 29/10/2026 — Rework Produção DTF em branch separada
+
+A branch `design/mission-control-production-rework-20261029` parte da `main` e modifica **somente HTML/CSS** em `web/cloudflare/src/dtf-view.mjs` (cinco etapas navegáveis, diferenciação conta vs dispositivo e layout mobile). Não alterar `DTF_CLIENT`, `DTF_ENGINE_CLIENT`, produção de folhas, endpoints, D1, reservas, Auth/Finance, cron ou automações Shopee. As artes PNG continuam locais, lotes/filas persistidos e rechecados antes do download.
+
+Testes `web/cloudflare/tests/mls-production-rework.test.mjs` e `mls-production-rework-chrome.test.mjs` preservam IDs, contratos, builds, visual 1365×900/390×844 com stubs sintéticos e screenshots. CI verde no HEAD exato, SHA do App verificado, Auth/Finance intactos e QA owner real são gates antes de qualquer merge/deploy. O candidato é paralelo ao Plano #69, Agentes #71, Produtos #72 e release V3.6 #68. Reconciliar todas as branches por uma única trilha de integração, não fazer merges concorrentes. Manual em `docs/MLS_PRODUCTION_DTF_REWORK_2026_10_29.md`.

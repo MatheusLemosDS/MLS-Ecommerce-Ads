@@ -1,6 +1,6 @@
 # Roadmap canônico — MLS Commerce OS
 
-Atualizado em **28/10/2026**.
+Atualizado em **29/10/2026**.
 
 > **Checkpoint multi-branch 28/10/2026:** A main continua em b058e832 (PR #46 integrada); PR #48 de busca V3.6 segue draft/CI verde (2.115 Node + 67 Python); PR #47 M3 Products/Pricing Observer segue draft/CI verde (2.124 Node + 67 Python); PR #51 abre a pesquisa Shopee/Listing Factory, com CI inicial verde (2.122 Node + 67 Python). Nenhuma dessas três PRs foi integrada ou publicada. **M2 Finance continua aberta (issue #50).** A M3 de precificação comercial não está aprovada.
 >
@@ -586,3 +586,13 @@ Guia: [MLS_LISTING_FACTORY_BATCH_RELINK_2026_10_28.md](MLS_LISTING_FACTORY_BATCH
 - [ ] M2 Finance issue #50 e permissões Shopee ainda bloqueiam qualquer ação comercial automática. Ads/PROMO LOCKED.
 
 [Evidência e plano de QA](MLS_V36_LISTING_FACTORY_INTEGRATION_2026_10_28.md).
+
+
+## 29/10/2026 — rework Produção DTF, branch isolada
+
+- Branch `design/mission-control-production-rework-20261029` em DRAFT, **sem merge ou deploy**: nova hierarquia visual da Produção DTF, organizada em Fila → Artes por SKU → Filme → Prévia → Lotes.
+- Preserva os mesmos dados, IDs, formulários, código `DTF_CLIENT`, motor de layout `DTF_ENGINE_CLIENT`, reservação/cancelamentos, auditoria dos pedidos e download do lote.
+- Explicitamente diferencia: **fila e lotes persistidos na conta** x **biblioteca de PNG neste navegador/dispositivo**. Largura útil de 57 cm permanece valor de referência configurado, não certificado de material consumido.
+- Sem mudanças Auth/Finance, D1, cron, OAuth, Shopee, Ads/PROMO, novas chamadas de rede nem qualquer publicação externa. Dados desconhecidos continuam desconhecidos.
+- Testes HTML normal/minificado, Chrome sintético 1365×900 e 390×844; QA real e rollback ainda exigidos. Integrar apenas após coordenar com as PRs visuais #69/#71/#72 e release #63/#65/#68, com novo CI da união.
+- Documento: [MLS_PRODUCTION_DTF_REWORK_2026_10_29.md](MLS_PRODUCTION_DTF_REWORK_2026_10_29.md). Trilha de rework: issue #70; financeiro M2: issue #50.
