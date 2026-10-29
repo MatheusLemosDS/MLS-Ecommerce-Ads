@@ -1,3 +1,4 @@
+import {MLS_APPROVED_DESIGN_CSS} from './approved-design-system.mjs';
 import {projectAdsCalendar} from './ads-calendar.mjs';
 import {projectAdsMeasurement} from './ads-measurement.mjs';
 
@@ -76,7 +77,7 @@ function workspaceFinanceLink(month,role){
 }
 
 export function renderAdsWorkspace(currentPath,{ads,view='product',content='',opportunityContent='',role='review',periodMode=null,now=Date.now()}={}){
- const prefix='<style>'+ADS_WORKSPACE_CSS+'</style>';
+ const prefix='<style>'+ADS_WORKSPACE_CSS+MLS_APPROVED_DESIGN_CSS+'</style>';
  if(currentPath==='/dashboard')return prefix+'<section class="ads-workspace" data-ads-route="dashboard">'+workspaceDashboard(ads,now,role,periodMode)+'</section>';
  if(currentPath==='/campaigns')return prefix+'<section class="ads-workspace" data-ads-route="campaigns"><div class="ads-workspace-head"><div><h2>Seus anúncios, organizados por campanha</h2><p>Confira onde estão o investimento e as conversões de cada tipo de anúncio.</p></div></div><nav class="ads-workspace-tabs" aria-label="Tipo de anúncio"><a href="/campaigns?view=product"'+(view!=='gmv-max'?' aria-current="page"':'')+'>Product Ads</a><a href="/campaigns?view=gmv-max"'+(view==='gmv-max'?' aria-current="page"':'')+'>GMV Max</a></nav><p class="ads-workspace-route-note">Cada fonte por campanha tem seu próprio período. O investimento total da conta fica no Resumo mensal; não some os recortes das campanhas a esse total.</p>'+workspaceSlot(content)+'</section>';
  if(currentPath==='/optimization')return prefix+'<section class="ads-workspace" data-ads-route="automation">'+(role==='owner'?'<div class="ads-workspace-actions"><a href="/admin?tab=overview">Conferir resultado da loja</a><a href="/admin?tab=roadmap">Ver próximas etapas</a></div>':'')+workspaceSlot(content)+(opportunityContent?'<details class="ads-workspace-details"><summary>Oportunidades sugeridas pela Shopee</summary>'+workspaceSlot(opportunityContent)+'</details>':'')+'</section>';
