@@ -2,7 +2,7 @@
   "schema": "mls_commerce_os_checkpoint_v1",
   "canonical_roadmap": "docs/ROADMAP_MLS_COMMERCE_OS.md",
   "legacy_roadmap": "docs/ROADMAP_BRAZACOMMERCE.md",
-  "updated_at": "2026-10-28",
+  "updated_at": "2026-10-29",
   "product": {
     "name": "MLS Commerce OS",
     "supervisor": "MLS Hermes",
@@ -660,5 +660,32 @@
         "documented_in": "docs/MLS_OWNER_SYNTHETIC_VISUAL_QA_2026_10_28.md"
       }
     }
+  },
+  "visual_rework_products_20261029": {
+    "schema": "mls_products_rework_checkpoint_v1",
+    "pr": 72,
+    "branch": "design/mission-control-products-rework-20261029",
+    "base_branch": "main",
+    "status": "DRAFT_NOT_MERGED_NOT_DEPLOYED",
+    "scope": [
+      "saved catalog vs cost references",
+      "Listing Factory V3.6 status draft only",
+      "M3 pricing observer status draft only",
+      "desktop/mobile synthetic QA"
+    ],
+    "backend_change": false,
+    "shopee_write": false,
+    "ads_promo": "LOCKED",
+    "owner_authenticated_qa": "PENDING",
+    "release_authorized": false,
+    "separate_prs": [
+      63,
+      65,
+      68,
+      69,
+      71
+    ],
+    "integration_note": "reconcile saved-catalog-view.mjs with V3.6 integration before release",
+    "docs": "docs/MLS_PRODUCTS_REWORK_2026_10_29.md"
   }
 }
