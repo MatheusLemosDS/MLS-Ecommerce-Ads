@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {spawn} from 'node:child_process';
-import {writeOfflineOwnerReview} from '../build_offline_owner_review.mjs';
+import {writeOfflineOwnerReview,REVIEW_SECTIONS} from '../build_offline_owner_review.mjs';
 
 const chrome=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable',
  '/usr/bin/chromium','/usr/bin/chromium-browser'].find(fs.existsSync);
@@ -117,6 +117,75 @@ test('offline artifact CSS-only navigation works on 1365px desktop and 390px mob
    assert.notEqual(products.shown,'none');
    assert.equal(products.catalog,true);
    assert.equal(products.scriptCount,0);
+  }
+ }finally{
+  try{browser?.close();}finally{fs.rmSync(directory,{recursive:true,force:true});}
+ }
+});
+
+
+test('offline matrix covers every one of 15 panels in OFF/ON at desktop/mobile',{timeout:120000},async t=>{
+ if(!chrome)return t.skip('Chromium is unavailable');
+ const directory=fs.mkdtempSync(path.join(os.tmpdir(),'mls-offline-panel-matrix-'));
+ let browser;
+ const evidence=[];
+ const screenshots=process.env.MLS_OFFLINE_SCREENSHOT_DIR||null;
+ try{
+  await writeOfflineOwnerReview(directory);
+  browser=await openBrowser();
+  for(const mode of ['off','on']){
+   for(const viewport of [{name:'desktop',width:1365,height:900,mobile:false},
+    {name:'mobile',width:390,height:844,mobile:true}]){
+    await browser.send('Emulation.setDeviceMetricsOverride',{
+     width:viewport.width,height:viewport.height,deviceScaleFactor:1,mobile:viewport.mobile
+    });
+    await browser.send('Page.navigate',{
+     url:pathToFileURL(path.join(directory,'preview-'+mode+'.html')).href
+    });
+    let ready=false;
+    for(let i=0;i<130;i++){
+     ready=await browser.eval("document.readyState==='complete'&&!!document.querySelector('.review-strip nav')&&!!document.getElementById('history')");
+     if(ready)break;
+     await pause(60);
+    }
+    assert.equal(ready,true,mode+'/'+viewport.name+': offline preview did not load');
+    for(const [id] of REVIEW_SECTIONS){
+     // The review strips application scripts; real anchor clicks must reveal exactly one section.
+     const expression="(()=>{const id="+JSON.stringify(id)+";"+
+      "const link=document.querySelector('.review-strip nav a[href=\"#'+id+'\"]');"+
+      "if(!link)return {error:'missing-link',id};link.click();"+
+      "const root=document.querySelector('main.workspace');"+
+      "const visible=[...root.children].filter(e=>e.tagName==='SECTION'&&getComputedStyle(e).display!=='none').map(e=>e.id);"+
+      "return {hash:location.hash,visible,width:innerWidth,scroll:document.documentElement.scrollWidth,"+
+      "mode:document.body.dataset.qaPreview,scripts:document.scripts.length,"+
+      "inert:[...document.querySelectorAll('button,input,select,textarea')].every(e=>e.disabled)};})()";
+     const result=await browser.eval(expression);
+     const label=mode+'/'+viewport.name+'/'+id;
+     assert.equal(result.error,undefined,label+': missing navigation link');
+     assert.equal(result.hash,'#'+id,label+': anchor did not navigate');
+     assert.deepEqual(result.visible,[id],label+': incorrect or multiple visible sections '+JSON.stringify(result));
+     assert.equal(result.mode,mode,label+': mode changed');
+     assert.equal(result.scripts,0,label+': executable scripts present');
+     assert.equal(result.inert,true,label+': active form control found');
+     assert.equal(result.width,viewport.width,label+': responsive viewport expanded');
+     assert.ok(result.scroll<=viewport.width+3,label+': page overflows '+JSON.stringify(result));
+     evidence.push({mode,viewport:viewport.name,panel:id,visible:true,overflow:false});
+     if(screenshots&&['overview','products','roadmap'].includes(id)){
+      fs.mkdirSync(screenshots,{recursive:true});
+      await browser.screenshot(path.join(screenshots,'offline-'+mode+'-'+viewport.name+'-'+id+'.png'));
+     }
+    }
+    const factory=await browser.eval("!!document.getElementById('mlsListingFactory')");
+    assert.equal(factory,mode==='on',mode+'/'+viewport.name+': V3.6 visibility differs from flag');
+   }
+  }
+  assert.equal(evidence.length,60,'15 panels × 2 modes × 2 viewports expected');
+  if(screenshots){
+   fs.mkdirSync(screenshots,{recursive:true});
+   fs.writeFileSync(path.join(screenshots,'navigation-matrix.json'),JSON.stringify({
+    schema:'mls_offline_15_panels_matrix_v1',synthetic:true,ownerAuthenticated:false,
+    productionReleaseApproved:false,checks:evidence
+   },null,2)+'\n');
   }
  }finally{
   try{browser?.close();}finally{fs.rmSync(directory,{recursive:true,force:true});}
