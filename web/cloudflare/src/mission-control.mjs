@@ -401,6 +401,9 @@ export const MISSION_CSS="\n/* MLS Commerce OS / Mission Control: cosmetic only,
 
 
 /* Agent hub V3.7 visual-only cockpit. Read-only Agent Registry, no new transport. */
+.mission-hub .mission-crumb{flex-direction:row;align-items:center;flex-wrap:wrap;gap:7px}
+.mission-hub .mission-crumb>a,.mission-hub .mission-crumb strong,.mission-hub .mission-crumb span{line-height:1.45}
+
 .mission-hub{--mission-hub-blue:#6caaff;--mission-hub-green:#50d6ae;--mission-hub-orange:#e9b872;scroll-margin-top:90px}
 .mission-hub-hero{--mission-rgb:92,152,249;display:grid;grid-template-columns:minmax(0,1.75fr) minmax(235px,.65fr);align-items:stretch;gap:22px;padding:clamp(22px,2.7vw,34px);background:radial-gradient(ellipse at 74% -12%,rgba(73,120,230,.17),transparent 54%),linear-gradient(128deg,rgba(92,152,249,.07),transparent 65%),var(--surface)}
 .mission-hub-hero-content{min-width:0;display:flex;flex-direction:column}
@@ -471,6 +474,7 @@ export const MISSION_CSS="\n/* MLS Commerce OS / Mission Control: cosmetic only,
 :root[data-theme=light] .mission-hub{--mission-hub-blue:#185bbb;--mission-hub-green:#147651;--mission-hub-orange:#895919}
 @media(max-width:1120px){.mission-hub-hero{grid-template-columns:minmax(0,1fr)}.mission-hub-policy{display:grid;grid-template-columns:auto 1fr;gap:8px 14px}.mission-hub-policy>p{grid-column:1/-1}.mission-hub-policy-lock{grid-column:1/-1}.mission-hub-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.mission-hub-insights{grid-template-columns:minmax(0,1fr)}.mission-hub-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:680px){.mission-hub-hero{padding:21px 17px}.mission-hub-hero .mission-hero-main h2{font-size:26px}.mission-hub-hero .mission-hero-main{flex-wrap:wrap}.mission-hub-summary{gap:9px}.mission-hub-summary-card{padding:15px}.mission-hub-summary-card strong{font-size:23px}.mission-hub-priority-module,.mission-hub-evidence-module{padding:17px}.mission-hub-toolbar .mission-hub-search{max-width:none;width:100%}.mission-hub-filters{width:100%}.mission-hub-filters button{flex:1;min-width:calc(50% - 5px)}.mission-hub-grid{grid-template-columns:minmax(0,1fr)}.mission-hub-card{min-height:175px}.mission-hub-card p{min-height:0}.mission-hub-future{padding:17px}.mission-hub-policy{display:flex}.mission-hub-policy-lock{margin-top:4px}}
+@media(max-width:680px){.mission-hub-hero .mission-hero-main{flex-wrap:nowrap;align-items:flex-start;gap:11px}.mission-hub-hero .mission-hero-main .mission-orb{width:54px;height:54px;flex:0 0 54px;font-size:22px}.mission-hub-hero .mission-hero-main h2{font-size:23px}.mission-hub-hero-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%}.mission-hub-hero-links a{min-width:0;justify-content:space-between;padding:9px 10px}.mission-hub-policy{padding:16px}}
 @media(prefers-reduced-motion:reduce){.mission-hub .mission-hub-card{transition:none}.mission-hub .mission-hub-card:hover{transform:none}}
 
 `;
