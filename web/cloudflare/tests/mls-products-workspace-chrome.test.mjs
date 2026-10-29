@@ -94,6 +94,7 @@ test('real Chrome renders read-only Products hub and legacy controls without hor
    assert.equal(loaded,true,device.name+': Products did not load');
    const result=await browser.evaluate("(()=>{"+
     "const products=document.getElementById('products');products.hidden=false;"+
+    "const startup=document.querySelector('.startup-recovery');if(startup)startup.hidden=true;"+
     "document.querySelectorAll('main.workspace>section').forEach(s=>{if(s!==products)s.hidden=true});"+
     "const intro=document.getElementById('productsHub'),catalog=document.getElementById('savedCatalog'),editor=document.getElementById('legacyProductEditor');"+
     "intro.scrollIntoView({block:'start',behavior:'instant'});"+
