@@ -35,6 +35,7 @@
   "visual_rework_20261029": {
     "schema": "mls_panel_visual_rework_checkpoint_v1",
     "branch": "design/mission-control-roadmap-rework-20261029",
+    "pull_request": 69,
     "base_branch": "main",
     "status": "DRAFT_NOT_MERGED_NOT_DEPLOYED",
     "scope": ["roadmap workspace visual hierarchy", "release stage truthfulness", "desktop/mobile synthetic QA", "no new business APIs"],
