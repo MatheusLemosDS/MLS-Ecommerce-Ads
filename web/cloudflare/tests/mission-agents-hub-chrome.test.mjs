@@ -100,6 +100,7 @@ test('Chrome synthetic owner Agent Hub keeps status evidence and responsive layo
    assert.equal(ready,true,item.name+': Agent Hub did not initialize');
    const value=await browser.evaluate("(()=>{"+
     "const hub=document.getElementById('agents');hub.hidden=false;"+
+    "const setup=document.querySelector('.startup-recovery');if(setup)setup.hidden=true;"+
     "document.querySelectorAll('main.workspace>section').forEach(node=>{if(node!==hub)node.hidden=true});"+
     "globalThis.mlsMission.refresh("+JSON.stringify(snapshot)+");"+
     "hub.scrollIntoView({block:'start',behavior:'instant'});"+
@@ -128,6 +129,11 @@ test('Chrome synthetic owner Agent Hub keeps status evidence and responsive layo
    assert.equal(value.priorityCount,String(snapshot.priorities.length));
    assert.ok(value.statuses.every(state=>['HEALTHY','WORKING','ATTENTION','BLOCKED'].includes(state)));
    await browser.screenshot('agents-'+item.name+'.png');
+   // Capture secondary viewports to inspect summary and specialist cards, not just the hero.
+   await browser.evaluate("document.querySelector('#agents .mission-hub-summary').scrollIntoView({block:'start',behavior:'instant'})");
+   await browser.screenshot('agents-'+item.name+'-summary.png');
+   await browser.evaluate("document.querySelector('#agents .mission-hub-grid').scrollIntoView({block:'start',behavior:'instant'})");
+   await browser.screenshot('agents-'+item.name+'-cards.png');
    const interaction=await browser.evaluate("(()=>{"+
     "const group=document.querySelector('[data-mission-hub-filter=ATTENTION]');group.click();"+
     "const selected=[...document.querySelectorAll('.mission-hub-card')].filter(card=>!card.hidden).map(card=>card.dataset.missionHubState);"+
