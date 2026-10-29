@@ -116,6 +116,8 @@ export const TARGETS = Object.freeze({
     'b99d26849353f494ddb2cea12605a2f7ad0186a1407c91857946e0522d1b499f',
     // V3.6 explicit saved-catalog search handoff from keyboard palette, exact App from Actions #290; CI required.
     '55645f1f5ec777136254e0deb6e09e88cd542649097786992e3fb212af298078',
+    // Mission Control roadmap UI-only rework (PR #69) in CI 40800954779: exact App code digest, Auth/Finance preserved.
+    'c39fbc83c362daf202ca957d24c8c99cace4acce603f41eb03643e21a230fc5e',
   ]}),
   auth: Object.freeze({name: 'brazacommerce-auth', main: '../../dist/auth-worker.mjs', baselineHashes: [
     '45d0142709c5087e373cc4da146070ed39c472805f6f64c00f00b6555f0e1f56',

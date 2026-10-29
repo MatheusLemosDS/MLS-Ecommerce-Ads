@@ -2,7 +2,7 @@
   "schema": "mls_commerce_os_checkpoint_v1",
   "canonical_roadmap": "docs/ROADMAP_MLS_COMMERCE_OS.md",
   "legacy_roadmap": "docs/ROADMAP_BRAZACOMMERCE.md",
-  "updated_at": "2026-10-28",
+  "updated_at": "2026-10-29",
   "product": {
     "name": "MLS Commerce OS",
     "supervisor": "MLS Hermes",
@@ -31,7 +31,21 @@
   },
   "current_phase": "M2_FINANCE_RETURNS_RECONCILIATION",
   "working_branch": "integration/mls-v36-search-listing-factory-20261028",
-  "current_status": "M2_OPEN_PR47_SHADOW_PR63_CI_GREEN_MOBILE_FIXED_PR65_SYNTHETIC_QA_GREEN_REAL_OWNER_QA_PENDING",
+  "current_status": "M2_OPEN_PR47_SHADOW_PR63_PR65_PR68_DRAFT_RELEASE_FLAG_CI_GREEN_VISUAL_REWORK_ISOLATED_OWNER_QA_PENDING",
+  "visual_rework_20261029": {
+    "schema": "mls_panel_visual_rework_checkpoint_v1",
+    "branch": "design/mission-control-roadmap-rework-20261029",
+    "pull_request": 69,
+    "base_branch": "main",
+    "status": "DRAFT_NOT_MERGED_NOT_DEPLOYED",
+    "scope": ["roadmap workspace visual hierarchy", "release stage truthfulness", "desktop/mobile synthetic QA", "no new business APIs"],
+    "primary_business_phase": "M2_FINANCE_RETURNS_RECONCILIATION",
+    "v36_release_pr": 68,
+    "v36_release_state": "DRAFT_CI_2143_NODE_67_PYTHON_OWNER_QA_PENDING",
+    "ads_promo": "LOCKED",
+    "owner_authenticated_review": "PENDING",
+    "production_release_approved": false
+  },
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
     "Repasse-base, ajuste, repasse após ajuste e liberação exibidos sem dupla dedução",
