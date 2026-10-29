@@ -1,8 +1,96 @@
 import {projectProductRegistryFrame} from './product-registry.mjs';
 
-export const SAVED_CATALOG_CSS=String.raw`.saved-catalog-toolbar{display:flex;align-items:end;gap:12px;flex-wrap:wrap}.saved-catalog-toolbar .field{flex:1;min-width:180px}.saved-catalog-list{display:grid;gap:12px;margin:18px 0}.saved-catalog-product{border:1px solid var(--line,#e2e6e9);border-radius:14px;padding:18px;min-width:0}.saved-catalog-product h3{margin:0;overflow-wrap:anywhere}.saved-catalog-meta{display:flex;justify-content:space-between;gap:12px;align-items:start}.saved-catalog-detail{margin-top:18px;border-top:1px solid var(--line,#e2e6e9);padding-top:16px}.saved-catalog-variants{display:grid;gap:10px}.saved-catalog-variant{padding:14px;border:1px solid var(--line,#e2e6e9);border-radius:12px;min-width:0}.saved-catalog-variant h4{margin:0 0 8px;overflow-wrap:anywhere}.saved-catalog-variant .observation-toolbar{margin-top:12px}.saved-catalog-cost{font-size:1.2rem;font-weight:750;margin:8px 0}.saved-catalog-assignment{margin-top:12px}.saved-catalog-page{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.saved-catalog-page .actions{display:flex;gap:8px}.saved-catalog-scope{margin-top:18px}@media(max-width:700px){.saved-catalog-toolbar{align-items:stretch}.saved-catalog-toolbar>*{width:100%}.saved-catalog-meta{display:block}.saved-catalog-meta>button{margin-top:12px}.saved-catalog-product{padding:16px}.saved-catalog-page .actions{width:100%}.saved-catalog-page .actions button{flex:1}}`;
+export const SAVED_CATALOG_CSS=String.raw`.saved-catalog-toolbar{display:flex;align-items:end;gap:12px;flex-wrap:wrap}.saved-catalog-toolbar .field{flex:1;min-width:180px}.saved-catalog-list{display:grid;gap:12px;margin:18px 0}.saved-catalog-product{border:1px solid var(--line,#e2e6e9);border-radius:14px;padding:18px;min-width:0}.saved-catalog-product h3{margin:0;overflow-wrap:anywhere}.saved-catalog-meta{display:flex;justify-content:space-between;gap:12px;align-items:start}.saved-catalog-detail{margin-top:18px;border-top:1px solid var(--line,#e2e6e9);padding-top:16px}.saved-catalog-variants{display:grid;gap:10px}.saved-catalog-variant{padding:14px;border:1px solid var(--line,#e2e6e9);border-radius:12px;min-width:0}.saved-catalog-variant h4{margin:0 0 8px;overflow-wrap:anywhere}.saved-catalog-variant .observation-toolbar{margin-top:12px}.saved-catalog-cost{font-size:1.2rem;font-weight:750;margin:8px 0}.saved-catalog-assignment{margin-top:12px}.saved-catalog-page{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.saved-catalog-page .actions{display:flex;gap:8px}.saved-catalog-scope{margin-top:18px}@media(max-width:700px){.saved-catalog-toolbar{align-items:stretch}.saved-catalog-toolbar>*{width:100%}.saved-catalog-meta{display:block}.saved-catalog-meta>button{margin-top:12px}.saved-catalog-product{padding:16px}.saved-catalog-page .actions{width:100%}.saved-catalog-page .actions button{flex:1}}
 
-export function savedCatalogBody(){return `<section id="savedCatalog" class="card saved-catalog"><div class="card-head"><div><span class="eyebrow">CATÁLOGO SALVO</span><h2>Seus produtos e custos</h2><p class="muted">Encontre qualquer produto cadastrado, abra suas variações e confira o custo completo de cada unidade ou kit.</p></div></div><form id="savedCatalogSearchForm" class="saved-catalog-toolbar"><div class="field"><label for="savedCatalogSearch">Nome ou código do produto</label><input id="savedCatalogSearch" type="search" maxlength="120" autocomplete="off" placeholder="Ex.: infantil, camiseta ou código"></div><div class="field"><label for="savedCatalogStatus">Produtos exibidos</label><select id="savedCatalogStatus"><option value="ACTIVE">Sem produtos excluídos</option><option value="ALL">Incluir histórico de excluídos</option><option value="UNKNOWN">Cadastro em conferência</option><option value="NORMAL">Status normal na Shopee</option><option value="UNLIST">Não listados</option><option value="BANNED">Suspensos</option><option value="REVIEWING">Em revisão</option></select></div><button id="savedCatalogFind" type="submit" class="button-secondary">Buscar</button><button id="savedCatalogRefresh" type="button" class="button-secondary">Recarregar catálogo salvo</button></form><p id="savedCatalogMessage" class="field-help" role="status" aria-live="polite">Preparando o catálogo salvo…</p><p id="savedCatalogCoverage" class="field-help"></p><div id="savedCatalogList" class="saved-catalog-list"></div><div class="saved-catalog-page"><p id="savedCatalogPage" class="field-help"></p><div class="actions"><button id="savedCatalogPrevious" type="button" class="button-secondary" disabled>Anterior</button><button id="savedCatalogNext" type="button" class="button-secondary" disabled>Próxima</button></div></div><details class="saved-catalog-scope"><summary>Atualização e cobertura do catálogo</summary><p id="savedCatalogSource" class="field-help"></p><p class="field-help">A lista usa o cadastro persistido e os custos atuais. Abrir uma variação não consulta a Shopee. A indexação automática inclui produtos sem vendas recentes; enquanto ela estiver em andamento, alguns produtos podem ainda não aparecer. O status cadastral não informa estoque nem disponibilidade para venda.</p><button id="savedCatalogSync" type="button" class="button-secondary">Atualizar cadastro na Shopee</button></details></section>`;}
+/* MLS Products hub: read-only visual overview of shipped vs draft features. */
+.mls-products-hub{--products-blue:#6da8ff;--products-green:#50d6aa;--products-amber:#e7bb7b;min-width:0;margin:0 0 22px;scroll-margin-top:90px}
+.mls-products-hub *{box-sizing:border-box}
+.mls-products-hub .products-hub-hero{position:relative;overflow:hidden;display:grid;grid-template-columns:minmax(0,1.65fr) minmax(240px,.7fr);gap:21px;padding:clamp(21px,2.75vw,34px);background:radial-gradient(ellipse at 85% -30%,rgba(91,157,255,.19),transparent 55%),linear-gradient(118deg,rgba(77,136,234,.08),transparent 65%),var(--surface);border:1px solid var(--line);border-radius:20px}
+.mls-products-hub .products-hub-hero:before{content:"";position:absolute;right:-100px;top:-200px;width:370px;height:370px;border:1px solid rgba(110,170,255,.20);border-radius:50%;pointer-events:none}
+.mls-products-hub .products-hub-copy{position:relative;min-width:0}
+.mls-products-hub .products-hub-eyebrow{font-size:10px;font-weight:800;line-height:1.55;letter-spacing:1.45px;color:var(--products-blue)}
+.mls-products-hub .products-hub-copy h2{font-size:clamp(25px,2.55vw,35px);letter-spacing:-.8px;line-height:1.17;margin:11px 0 12px;max-width:720px;color:var(--text)}
+.mls-products-hub .products-hub-copy>p{font-size:13px;line-height:1.7;color:var(--muted);max-width:700px;margin:0}
+.mls-products-hub .products-hub-actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:20px}
+.mls-products-hub .products-hub-actions a{display:inline-flex;min-height:41px;align-items:center;justify-content:center;gap:9px;padding:10px 14px;border:1px solid var(--line);border-radius:10px;color:var(--text);text-decoration:none;font-size:11px;font-weight:750;background:var(--surface-raised)}
+.mls-products-hub .products-hub-actions a:first-child{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.mls-products-hub .products-hub-actions a:hover{border-color:var(--products-blue)}
+.mls-products-hub .products-hub-state{position:relative;display:flex;flex-direction:column;gap:10px;min-width:0;padding:20px;border:1px solid rgba(109,168,255,.25);border-radius:16px;background:linear-gradient(143deg,rgba(109,168,255,.09),transparent 70%),var(--surface-raised)}
+.mls-products-hub .products-hub-state-label{font-size:10px;font-weight:800;letter-spacing:1.2px;color:var(--muted)}
+.mls-products-hub .products-hub-state strong{font-size:20px;letter-spacing:-.35px;line-height:1.3}
+.mls-products-hub .products-hub-state p{margin:0;font-size:11px;line-height:1.7;color:var(--muted)}
+.mls-products-hub .products-hub-pill{display:inline-flex;align-self:flex-start;gap:7px;align-items:center;max-width:100%;padding:6px 9px;border:1px solid var(--line);border-radius:999px;background:var(--surface-raised);color:var(--muted);font-size:10px;line-height:1.45;font-weight:750}
+.mls-products-hub .products-hub-pill--available{border-color:rgba(80,214,170,.30);color:var(--products-green);background:rgba(80,214,170,.07)}
+.mls-products-hub .products-hub-pill--review{border-color:rgba(231,187,123,.30);color:var(--products-amber);background:rgba(231,187,123,.065)}
+.mls-products-hub .products-hub-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px;margin:15px 0}
+.mls-products-hub .products-hub-card{min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:9px;padding:18px;border:1px solid var(--line);border-top:2px solid var(--products-blue);border-radius:14px;background:var(--surface)}
+.mls-products-hub .products-hub-card[data-stage=review]{border-top-color:var(--products-amber)}
+.mls-products-hub .products-hub-number{font-size:10px;letter-spacing:1.5px;font-weight:850;color:var(--muted)}
+.mls-products-hub .products-hub-card h3{font-size:16px;line-height:1.35;letter-spacing:-.3px;margin:3px 0 0;color:var(--text)}
+.mls-products-hub .products-hub-card p{font-size:11px;line-height:1.6;color:var(--muted);margin:0}
+.mls-products-hub .products-hub-card .products-hub-link{font-size:11px;font-weight:800;line-height:1.45;color:var(--accent);margin-top:auto;padding-top:7px;text-decoration:underline;text-underline-offset:3px;overflow-wrap:anywhere}
+.mls-products-hub .products-hub-caution{display:flex;gap:10px;align-items:flex-start;padding:13px 17px;border:1px solid var(--line);border-radius:12px;background:var(--surface-raised)}
+.mls-products-hub .products-hub-caution strong{font-size:10px;font-weight:850;letter-spacing:1px;color:var(--products-blue);white-space:nowrap}
+.mls-products-hub .products-hub-caution p{margin:0;color:var(--muted);font-size:11px;line-height:1.65}
+#savedCatalog,#legacyProductEditor,#savedCatalogSearch,#productSearch{scroll-margin-top:92px}
+:root[data-theme=light] .mls-products-hub{--products-blue:#185bbb;--products-green:#167653;--products-amber:#8c5d1b}
+@media(max-width:1230px){.mls-products-hub .products-hub-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:850px){.mls-products-hub .products-hub-hero{grid-template-columns:minmax(0,1fr)}.mls-products-hub .products-hub-state{padding:17px}}
+@media(max-width:600px){.mls-products-hub .products-hub-hero{padding:22px 18px;gap:17px}.mls-products-hub .products-hub-copy h2{font-size:25px}.mls-products-hub .products-hub-grid{grid-template-columns:minmax(0,1fr)}.mls-products-hub .products-hub-actions{display:grid;grid-template-columns:1fr}.mls-products-hub .products-hub-card{padding:17px}.mls-products-hub .products-hub-caution{display:block}.mls-products-hub .products-hub-caution strong{display:block;margin-bottom:6px}.mls-products-hub .products-hub-state{gap:8px}}
+`;
+
+export function savedCatalogBody(){return `
+<section id="productsHub" class="mls-products-hub" aria-labelledby="productsHubTitle">
+ <header class="products-hub-hero">
+  <div class="products-hub-copy">
+   <span class="products-hub-eyebrow">MLS PRODUCTS · CENTRAL DE PRODUTOS</span>
+   <h2 id="productsHubTitle">Catálogo, custos e oportunidades em um só lugar.</h2>
+   <p>Consulte o cadastro salvo, revise custos por variação e acompanhe as próximas ferramentas. Cadastro, vendas e rentabilidade são fontes diferentes e não devem ser confundidas.</p>
+   <div class="products-hub-actions">
+    <a href="#savedCatalog">Explorar catálogo salvo <span aria-hidden="true">›</span></a>
+    <a href="/admin?tab=margins">Abrir custos de produção <span aria-hidden="true">›</span></a>
+   </div>
+  </div>
+  <aside class="products-hub-state" aria-label="Estado da área de Produtos">
+   <span class="products-hub-state-label">STATUS DA ÁREA</span>
+   <strong>Leitura e conferência</strong>
+   <span class="products-hub-pill products-hub-pill--available">Disponível no painel atual</span>
+   <p>O catálogo persistido e os controles atuais de custo estão disponíveis. Alterações na Shopee exigem ações próprias e autorização; abrir esta área não publica anúncios.</p>
+  </aside>
+ </header>
+ <div class="products-hub-grid" aria-label="Ferramentas por estágio de entrega">
+  <article class="products-hub-card" data-stage="available">
+   <span class="products-hub-number">01 · CADASTRO SALVO</span>
+   <h3>Pesquisar produtos</h3>
+   <span class="products-hub-pill products-hub-pill--available">Disponível</span>
+   <p>Localize produtos, confira variações e acompanhe a cobertura da indexação. Status cadastral não representa estoque.</p>
+   <a class="products-hub-link" href="#savedCatalog">Ir para o catálogo salvo</a>
+  </article>
+  <article class="products-hub-card" data-stage="available">
+   <span class="products-hub-number">02 · REFERÊNCIAS DE CUSTO</span>
+   <h3>Custos e vínculos</h3>
+   <span class="products-hub-pill products-hub-pill--available">Disponível</span>
+   <p>Consulte custos cadastrados, abra as variações e revise vínculos avançados. Custo conhecido não comprova lucro líquido.</p>
+   <a class="products-hub-link" href="#legacyProductEditor">Ir à revisão avançada de vínculos</a>
+  </article>
+  <article class="products-hub-card" data-stage="review">
+   <span class="products-hub-number">03 · CRIAÇÃO DE ANÚNCIOS</span>
+   <h3>Fábrica de Anúncios</h3>
+   <span class="products-hub-pill products-hub-pill--review">Homologação · não publicada</span>
+   <p>Rascunhos locais com títulos, variações e mockups estão em revisão técnica. Nenhum envio automático à Shopee está liberado.</p>
+   <a class="products-hub-link" href="https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/68" target="_blank" rel="noopener noreferrer">Ver candidato V3.6 no GitHub</a>
+  </article>
+  <article class="products-hub-card" data-stage="review">
+   <span class="products-hub-number">04 · ANÁLISE E PREÇOS</span>
+   <h3>MLS Pricing</h3>
+   <span class="products-hub-pill products-hub-pill--review">Observer em revisão</span>
+   <p>Curva ABC e simulação manual estão em PR separada. Recomendar preço exige custos, taxas, Ads e estoque verificáveis.</p>
+   <a class="products-hub-link" href="https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/47" target="_blank" rel="noopener noreferrer">Ver proposta M3 no GitHub</a>
+  </article>
+ </div>
+ <div class="products-hub-caution"><strong>FONTES DISTINTAS</strong><p>Catálogo salvo não é estoque vendável; unidades vendidas não são pedidos únicos; custo cadastrado não é lucro; rascunho de anúncio não é publicação. Ads e PROMO continuam bloqueados para execução automática.</p></div>
+</section>
+<section id="savedCatalog" class="card saved-catalog"><div class="card-head"><div><span class="eyebrow">CATÁLOGO SALVO</span><h2>Seus produtos e custos</h2><p class="muted">Encontre qualquer produto cadastrado, abra suas variações e confira o custo completo de cada unidade ou kit.</p></div></div><form id="savedCatalogSearchForm" class="saved-catalog-toolbar"><div class="field"><label for="savedCatalogSearch">Nome ou código do produto</label><input id="savedCatalogSearch" type="search" maxlength="120" autocomplete="off" placeholder="Ex.: infantil, camiseta ou código"></div><div class="field"><label for="savedCatalogStatus">Produtos exibidos</label><select id="savedCatalogStatus"><option value="ACTIVE">Sem produtos excluídos</option><option value="ALL">Incluir histórico de excluídos</option><option value="UNKNOWN">Cadastro em conferência</option><option value="NORMAL">Status normal na Shopee</option><option value="UNLIST">Não listados</option><option value="BANNED">Suspensos</option><option value="REVIEWING">Em revisão</option></select></div><button id="savedCatalogFind" type="submit" class="button-secondary">Buscar</button><button id="savedCatalogRefresh" type="button" class="button-secondary">Recarregar catálogo salvo</button></form><p id="savedCatalogMessage" class="field-help" role="status" aria-live="polite">Preparando o catálogo salvo…</p><p id="savedCatalogCoverage" class="field-help"></p><div id="savedCatalogList" class="saved-catalog-list"></div><div class="saved-catalog-page"><p id="savedCatalogPage" class="field-help"></p><div class="actions"><button id="savedCatalogPrevious" type="button" class="button-secondary" disabled>Anterior</button><button id="savedCatalogNext" type="button" class="button-secondary" disabled>Próxima</button></div></div><details class="saved-catalog-scope"><summary>Atualização e cobertura do catálogo</summary><p id="savedCatalogSource" class="field-help"></p><p class="field-help">A lista usa o cadastro persistido e os custos atuais. Abrir uma variação não consulta a Shopee. A indexação automática inclui produtos sem vendas recentes; enquanto ela estiver em andamento, alguns produtos podem ainda não aparecer. O status cadastral não informa estoque nem disponibilidade para venda.</p><button id="savedCatalogSync" type="button" class="button-secondary">Atualizar cadastro na Shopee</button></details></section>`;}
 
 export const SAVED_CATALOG_CLIENT=String.raw`
 (()=>{
