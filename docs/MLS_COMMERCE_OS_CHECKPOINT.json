@@ -704,5 +704,29 @@
     "v36_release": "PR_68_DRAFT_FLAG_OFF_NOT_DEPLOYED",
     "safety": "NO_BUSINESS_WRITES_NO_AUTH_FINANCE_D1_OAUTH_CRON_CHANGES",
     "docs": "docs/MLS_APPROVED_DESIGN_SYSTEM_2026_10_29.md"
+  },
+  "visual_v36_integrated_20261029": {
+    "schema": "mls_v36_approved_ui_integration_v1",
+    "pull_request": 75,
+    "branch": "integration/mls-approved-ui-v36-owner-gated-20261029",
+    "base_pr": 68,
+    "source_visual_pr": 74,
+    "status": "DRAFT_NOT_MERGED_NOT_DEPLOYED",
+    "flag": "MLS_V36_OWNER_PREVIEW",
+    "flag_default": "OFF_UNLESS_EXACT_ENABLED_AND_OWNER_SESSION",
+    "files_reconciled": [
+      "web/cloudflare/src/admin-view.mjs",
+      "web/cloudflare/src/dtf-view.mjs",
+      "web/cloudflare/src/saved-catalog-view.mjs",
+      "web/cloudflare/build.py"
+    ],
+    "integration_tests": "web/cloudflare/tests/mls-v36-approved-integration-gates.test.mjs",
+    "owner_qa": "PENDING",
+    "cloudflare_rollback": "PENDING",
+    "approval": false,
+    "finance_m2": "ISSUE_50_OPEN",
+    "ads_promo": "LOCKED",
+    "shopee_write": false,
+    "docs": "docs/MLS_INTEGRATED_OWNER_RELEASE_2026_10_29.md"
   }
 }
