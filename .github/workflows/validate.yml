@@ -3,7 +3,7 @@ name: Validar Workers
 on:
   push:
     branches: [main, cloudflare-git]
-  # Also validate stacked PRs targeting integration branches before release.
+  # Validate stacked preview PRs before any merge into main.
   pull_request: {}
   workflow_dispatch:
 
@@ -28,16 +28,23 @@ jobs:
           cache: npm
       - name: Instalar versões fixadas
         run: npm ci
-      - name: Executar testes
+      - name: Executar suíte Node completa com concorrência limitada para Chrome
         env:
-          MLS_QA_SCREENSHOT_DIR: ${{ runner.temp }}/mls-owner-visual-qa
-        run: npm test
-      - name: Guardar capturas sintéticas de QA visual
+          MLS_QA_SCREENSHOT_DIR: ${{ runner.temp }}/mls-approved-design/v36
+          MLS_APPROVED_SCREENSHOT_DIR: ${{ runner.temp }}/mls-approved-design/all-panels
+          MLS_ROADMAP_SCREENSHOT_DIR: ${{ runner.temp }}/mls-approved-design/roadmap
+          MLS_AGENTS_SCREENSHOT_DIR: ${{ runner.temp }}/mls-approved-design/agents
+          MLS_PRODUCTS_SCREENSHOT_DIR: ${{ runner.temp }}/mls-approved-design/products
+          MLS_PRODUCTION_SCREENSHOT_DIR: ${{ runner.temp }}/mls-approved-design/production
+        run: |
+          npm run build
+          node --test --test-reporter=tap --test-concurrency=3 web/cloudflare/tests/*.test.mjs web/finance/tests/*.test.mjs tools/tests/*.test.mjs
+      - name: Guardar capturas sintéticas dos painéis
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: mls-owner-synthetic-desktop-mobile-qa
-          path: ${{ runner.temp }}/mls-owner-visual-qa
+          name: mls-approved-design-all-panels-qa
+          path: ${{ runner.temp }}/mls-approved-design
           if-no-files-found: ignore
           retention-days: 7
       - name: Validar ponte financeira e atualização do Hermes

@@ -102,3 +102,27 @@ Implementado o bulk relink offline em cima da PR #56: seleciona até 200 fotos/6
 ### PR #60 — CI final aprovado
 
 A seleção de mockups em lote passou [CI 40790629421](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/40790629421): **2.132 Node + 67 Python**, Chromium, build App/Auth/Finance. O runtime e os testes da branch #60 são iguais ao candidato de validação #61 em **14/14 blobs**, e #61 foi fechada sem merge. Novo SHA App 63da28d212c45d1e7e93444dbe4ac2ac49ad113af273dddf65370f668156180d; Auth/Finance não alterados. Ainda falta QA no login real desktop/mobile, integração #51 → #56 → #60 e preservação #48. Não há upload/marketplace write, M2 issue #50 aberta e Ads/PROMO LOCKED.
+
+### Integração PR #63 — handoff 28/10/2026
+
+Mission Control V3.6 da PR #48 e Listing Factory PRs #51/#56/#60 foram combinados numa branch isolada sobre a main: integration/mls-v36-search-listing-factory-20261028. A comparação Git confirmou 13/13 fontes da PR #60 e 7/7 da PR #48 idênticas, com união da allowlist SHA em tools/worker_project.mjs. CI #40792253729 SUCCESS (2.136 Node + 67 Python + Chrome, App/Auth/Finance builds), SHA App 8ed059ddb6f0901a48d277d6b9b806a23d52a1e5e105ed0e2e456e2aea6701f5. Nenhum merge/deploy de código. Próxima tarefa do Codex: QA autenticada desktop/mobile com catálogo real, fila DTF e mockups locais; depois escolher PR63 como release única ou merges sequenciais, não as duas opções. M2 #50 continua aberta, Ads/PROMO LOCKED. Documento: docs/MLS_V36_LISTING_FACTORY_INTEGRATION_2026_10_28.md.
+
+
+### 29/10/2026 — PR #74, integração visual conforme mockup aprovado
+
+Branch `design/approved-neon-all-panels-integration-20261029` baseada na `main`, PR #74 DRAFT. Consolidou código/testes visuais das PRs #69, #71, #72 e #73 e adicionou `web/cloudflare/src/approved-design-system.mjs`. Nova paleta compartilhada de todos os agentes, shell, KPIs, mini-sidebar interna dos sete especialistas, cabeçalhos Ads/Campanhas/Optimization/Conexões, tema escuro/claro, responsividade e leitura honesta das fontes, sem criar métricas ou históricos.
+
+**Atenção técnica:** o App tem um empacotador manual `web/cloudflare/build.py` que remove imports. Ele foi atualizado para incluir `MLS_APPROVED_DESIGN_CSS` uma única vez em escopo externo, antes dos módulos Admin e Ads. Sem isso, a compilação do Worker original causou ReferenceError em testes de integração. **Não reverter a correção nem afrouxar os testes.**
+
+A suíte completa agora usa TAP e concorrência de 3 arquivos para não esgotar memória do Node reporter ou Chrome, preservando os mesmos globs, 67 Python e builds. Teste `mls-approved-all-panels-chrome.test.mjs` verifica 15 seções no desktop 1365 e mobile 390 sem acessar dados reais. Teste `mls-approved-design-system.test.mjs` cobre tokens, diferenciação Observer/Ads e integridade de IDs. Revalidar o SHA final do Worker App e confirmar hashes Auth/Finance intocados; CI final e QA owner real são gates.
+
+Continuam independentes: V3.6 de busca + Listing Factory nas PRs #63/#65/#68 (feature flag OFF), financeiro M2 issue #50 e Ads/PROMO LOCKED. **Não mesclar PR #74 e #68 em paralelo sem reconciliação e novo CI.** Não fazer deploy sem aprovação.
+
+
+### 29/10/2026 — PR #75, uma única trilha de homologação (design aprovado + V3.6)
+
+Branch `integration/mls-approved-ui-v36-owner-gated-20261029` derivada da PR #68 com mudanças visuais da PR #74. Reconciliados **quatro arquivos que ambos modificaram**: `admin-view.mjs` (paleta/todos painéis + menu de busca), `dtf-view.mjs` (cinco etapas + `searchLines/findLine`), `saved-catalog-view.mjs` (cockpit Produtos + `find`) e `build.py` (planner Listing Factory + CSS injetado no bundle App). Não alterar essa união ou substituir com a versão de somente uma das PRs.
+
+Os testes de interface de #74 usam `compiledOwnerReportPage(...,{ownerPreview:false})` para representar o deploy inicial; a QA V3.6 continua usando `ownerPreview:true`. Teste novo `mls-v36-approved-integration-gates.test.mjs` protege os dois estados e os métodos de pesquisa em registros salvos. `MLS_V36_OWNER_PREVIEW` ausente = OFF. **Nada de write Shopee/Ads/PROMO.**
+
+Antes de release: CI verde no HEAD exato, SHA App revisado e Auth/Finance iguais, QA real autenticada, revisão de Cloudflare/rollback e aprovação explícita. **Não mesclar separadamente #63/#65/#68/#69/#71/#72/#73/#74 se #75 for a trilha final.** Documento [MLS_INTEGRATED_OWNER_RELEASE_2026_10_29.md](MLS_INTEGRATED_OWNER_RELEASE_2026_10_29.md).
