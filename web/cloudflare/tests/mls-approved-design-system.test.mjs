@@ -18,6 +18,8 @@ test('single approved visual language defines actual agent colors, responsive la
   '#history .card','#margins .card']){
   assert.ok(MLS_APPROVED_DESIGN_CSS.includes(selector),selector);
  }
+ assert.match(MLS_APPROVED_DESIGN_CSS,/@media\(min-width:1201px\)[\s\S]*?repeat\(4,minmax\(0,1fr\)\)!important/);
+ assert.match(MLS_APPROVED_DESIGN_CSS,/scroll-margin-top:99px/);
  assert.match(MLS_APPROVED_DESIGN_CSS,/:root\[data-theme=dark\]/);
  assert.match(MLS_APPROVED_DESIGN_CSS,/:root\[data-theme=light\]/);
  for(const width of ['1200','850','640','390'])
