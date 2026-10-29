@@ -134,6 +134,9 @@ export const TARGETS = Object.freeze({
     '805caf375c1d060c3b3fcc88b6764c03153931a5ce97b017f5245752027e35c7',
     // Owner-only V3.6 server feature flag OFF-by-default; exact App digest in CI 40798972739 (five source-identity/startup fixture failures to rerun).
     '0b7c120c6b858a05941e00efc5d89478e10500af720ff7faf8e3668dafc12edb',
+    // PR #75 integrated approved visual design with V3.6 owner preview OFF by default;
+    // exact App build in CI #40900296254; Auth and Finance hashes unchanged.
+    'd1618ca222afa4604cb6e1c5c938735c6415a0fc475b3901f5b04b3d9f0eb2f1',
   ]}),
   auth: Object.freeze({name: 'brazacommerce-auth', main: '../../dist/auth-worker.mjs', baselineHashes: [
     '45d0142709c5087e373cc4da146070ed39c472805f6f64c00f00b6555f0e1f56',
