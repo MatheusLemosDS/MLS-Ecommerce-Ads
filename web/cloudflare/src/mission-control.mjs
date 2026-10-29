@@ -398,6 +398,81 @@ export const MISSION_CSS="\n/* MLS Commerce OS / Mission Control: cosmetic only,
 .mission-workspace .mission-module-head small{font-size:10px;line-height:1.35}
 @media(max-width:550px){.mission-workspace .mission-page-tabs{flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-x:contain;padding-bottom:4px}.mission-workspace .mission-page-tabs a{flex:0 0 auto}.mission-workspace .mission-source-provenance{font-size:10px}}
 
+
+
+/* Agent hub V3.7 visual-only cockpit. Read-only Agent Registry, no new transport. */
+.mission-hub{--mission-hub-blue:#6caaff;--mission-hub-green:#50d6ae;--mission-hub-orange:#e9b872;scroll-margin-top:90px}
+.mission-hub-hero{--mission-rgb:92,152,249;display:grid;grid-template-columns:minmax(0,1.75fr) minmax(235px,.65fr);align-items:stretch;gap:22px;padding:clamp(22px,2.7vw,34px);background:radial-gradient(ellipse at 74% -12%,rgba(73,120,230,.17),transparent 54%),linear-gradient(128deg,rgba(92,152,249,.07),transparent 65%),var(--surface)}
+.mission-hub-hero-content{min-width:0;display:flex;flex-direction:column}
+.mission-hub-hero .mission-hero-main h2{font-size:clamp(25px,2.45vw,35px);letter-spacing:-.8px;line-height:1.18}
+.mission-hub-hero .mission-hero-main p{max-width:620px;font-size:12px;line-height:1.65}
+.mission-hub-hero-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
+.mission-hub-hero-links a{display:inline-flex;align-items:center;gap:14px;min-height:41px;padding:9px 13px;border:1px solid var(--line);border-radius:10px;background:var(--surface-raised);color:var(--text);font-size:11px;font-weight:750;text-decoration:none}
+.mission-hub-hero-links a:first-child{background:rgba(100,165,255,.13);border-color:rgba(100,165,255,.32)}
+.mission-hub-hero-links a:hover{border-color:var(--mission-hub-blue)}
+.mission-hub-policy{display:flex;flex-direction:column;align-items:flex-start;gap:11px;padding:20px;min-width:0;border:1px solid rgba(100,165,255,.23);background:linear-gradient(130deg,rgba(100,165,255,.07),transparent 60%),var(--surface-raised);border-radius:16px}
+.mission-hub-policy-kicker,.mission-hub-eyebrow{font-size:10px;font-weight:800;line-height:1.6;letter-spacing:1.25px;color:var(--muted)}
+.mission-hub-policy .mission-status{max-width:100%}
+.mission-hub-policy>strong{font-size:18px;letter-spacing:-.3px}
+.mission-hub-policy>p{font-size:11px;line-height:1.65;color:var(--muted);margin:0}
+.mission-hub-policy-lock{margin-top:auto;display:inline-flex;padding:7px 9px;border-radius:8px;border:1px solid rgba(233,184,114,.24);background:rgba(233,184,114,.08);font-size:10px;font-weight:750;color:var(--mission-hub-orange)}
+.mission-hub-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:15px 0 20px}
+.mission-hub-summary-card{min-width:0;position:relative;overflow:hidden;border:1px solid var(--line);border-radius:15px;background:var(--surface);padding:17px 19px}
+.mission-hub-summary-card:before{content:"";position:absolute;top:0;left:0;width:44%;height:2px;background:linear-gradient(90deg,var(--mission-hub-blue),transparent)}
+.mission-hub-summary-card span{display:block;font-size:11px;font-weight:650;color:var(--muted);line-height:1.45}
+.mission-hub-summary-card strong{display:block;font-size:27px;line-height:1.2;letter-spacing:-.7px;margin:9px 0 7px;font-variant-numeric:tabular-nums}
+.mission-hub-summary-card small{display:block;font-size:10px;line-height:1.55;color:var(--muted)}
+.mission-hub-insights{display:grid;grid-template-columns:minmax(0,1.75fr) minmax(245px,.85fr);gap:14px;align-items:stretch}
+.mission-hub-priority-module,.mission-hub-evidence-module{min-width:0;border:1px solid var(--line);background:var(--surface);border-radius:17px;padding:21px}
+.mission-hub-module-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.mission-hub-module-heading h3,.mission-hub-evidence-module h3{font-size:17px;letter-spacing:-.3px;line-height:1.4;margin:4px 0 5px}
+.mission-hub-module-heading p,.mission-hub-evidence-module p{font-size:11px;line-height:1.6;color:var(--muted);margin:0}
+.mission-hub-module-tag{font-size:10px;white-space:nowrap;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:6px 9px;background:var(--surface-raised)}
+.mission-hub-priority-list{display:grid;gap:9px}
+.mission-hub-priority-row{display:flex;align-items:flex-start;gap:13px;padding:13px 14px;border:1px solid var(--line);border-left:3px solid var(--mission-hub-blue);background:var(--surface-raised);border-radius:11px;text-decoration:none;color:var(--text);min-width:0}
+.mission-hub-priority-row[data-severity=ATTENTION]{border-left-color:var(--mission-hub-orange)}
+.mission-hub-priority-row[data-severity=BLOCKED]{border-left-color:#ef7592}
+.mission-hub-priority-row:hover{border-color:var(--mission-hub-blue);text-decoration:none}
+.mission-hub-priority-rank{display:grid;place-items:center;flex:none;width:26px;height:26px;border-radius:8px;border:1px solid var(--line);font-size:11px;font-weight:800;color:var(--muted)}
+.mission-hub-priority-copy{display:block;min-width:0}
+.mission-hub-priority-copy strong{display:block;font-size:12px;line-height:1.45}
+.mission-hub-priority-copy small{display:block;margin-top:4px;font-size:10px;line-height:1.6;color:var(--muted)}
+.mission-hub-priority-more{display:inline-flex;font-size:11px;color:var(--muted);padding:4px 0}
+.mission-hub-evidence-module{background:linear-gradient(140deg,rgba(93,157,255,.055),transparent 70%),var(--surface)}
+.mission-hub-evidence-module h3{font-size:18px;margin:8px 0 8px}
+.mission-hub-evidence-module p{font-size:12px}
+.mission-hub-evidence-footer{display:grid;gap:9px;margin-top:19px;padding-top:15px;border-top:1px solid var(--line)}
+.mission-hub-evidence-footer span{font-size:10px;color:var(--muted);line-height:1.55}
+.mission-hub-list-heading{margin-top:29px}
+.mission-hub-list-heading h3{font-size:20px;margin:4px 0}
+.mission-hub-toolbar{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap;margin:0 0 16px}
+.mission-hub-toolbar .mission-hub-search{min-width:min(100%,290px);flex:1;max-width:460px;margin:0;display:grid;gap:4px}
+.mission-hub-toolbar .mission-hub-search label{font-size:11px;font-weight:750}
+.mission-hub-toolbar .mission-hub-search input{width:100%;min-width:0}
+.mission-hub-toolbar .mission-hub-search span{color:var(--muted);font-size:10px}
+.mission-hub-filters{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.mission-hub-filters button{background:var(--surface);color:var(--muted);border:1px solid var(--line);min-height:38px;padding:8px 11px;border-radius:10px;font-size:10px;font-weight:750;white-space:normal}
+.mission-hub-filters button:hover{border-color:var(--mission-hub-blue)}
+.mission-hub-filters button[aria-pressed=true]{background:rgba(100,165,255,.12);border-color:rgba(100,165,255,.49);color:var(--text)}
+.mission-hub-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+.mission-hub-card{min-height:217px;gap:9px;border-top:2px solid var(--mission-accent);padding:19px}
+.mission-hub-card-top{gap:10px}
+.mission-hub-card-heading span{font-size:10px;font-weight:700;color:var(--mission-accent)}
+.mission-hub-card h4{font-size:17px;line-height:1.3;margin:4px 0 0}
+.mission-hub-card p{font-size:12px;min-height:53px}
+.mission-hub-card-tasks{font-size:10px;line-height:1.5;color:var(--muted);margin-top:auto}
+.mission-hub-card-bottom{margin-top:0}
+.mission-hub-empty{border:1px dashed var(--line);border-radius:11px;color:var(--muted);font-size:12px;line-height:1.65;padding:18px;background:var(--surface-raised);margin:0}
+.mission-hub-future{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;flex-wrap:wrap;margin:25px 0 10px;padding:19px 21px;border:1px solid var(--line);border-radius:15px;background:var(--surface)}
+.mission-hub-future h3{font-size:16px;letter-spacing:-.25px;margin:4px 0}
+.mission-hub-future p{font-size:11px;line-height:1.5;color:var(--muted);margin:0;max-width:500px}
+.mission-hub-future .mission-future{margin:0}
+.mission-hub-future .mission-future span{border-style:solid}
+:root[data-theme=light] .mission-hub{--mission-hub-blue:#185bbb;--mission-hub-green:#147651;--mission-hub-orange:#895919}
+@media(max-width:1120px){.mission-hub-hero{grid-template-columns:minmax(0,1fr)}.mission-hub-policy{display:grid;grid-template-columns:auto 1fr;gap:8px 14px}.mission-hub-policy>p{grid-column:1/-1}.mission-hub-policy-lock{grid-column:1/-1}.mission-hub-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.mission-hub-insights{grid-template-columns:minmax(0,1fr)}.mission-hub-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:680px){.mission-hub-hero{padding:21px 17px}.mission-hub-hero .mission-hero-main h2{font-size:26px}.mission-hub-hero .mission-hero-main{flex-wrap:wrap}.mission-hub-summary{gap:9px}.mission-hub-summary-card{padding:15px}.mission-hub-summary-card strong{font-size:23px}.mission-hub-priority-module,.mission-hub-evidence-module{padding:17px}.mission-hub-toolbar .mission-hub-search{max-width:none;width:100%}.mission-hub-filters{width:100%}.mission-hub-filters button{flex:1;min-width:calc(50% - 5px)}.mission-hub-grid{grid-template-columns:minmax(0,1fr)}.mission-hub-card{min-height:175px}.mission-hub-card p{min-height:0}.mission-hub-future{padding:17px}.mission-hub-policy{display:flex}.mission-hub-policy-lock{margin-top:4px}}
+@media(prefers-reduced-motion:reduce){.mission-hub .mission-hub-card{transition:none}.mission-hub .mission-hub-card:hover{transform:none}}
+
 `;
 
 export const MISSION_AGENTS=Object.freeze([
@@ -418,7 +493,9 @@ function missionSourceLink(href,tab){
 function missionCard(item){
  return '<a class="mission-hub-card mission-agent--'+item.id+'" href="/admin?tab=agent-'+item.id+'" data-mission-open="agent-'+item.id+'">'+
   '<div class="mission-hub-card-top"><span class="mission-mini-orb mission-agent-avatar" aria-hidden="true">'+item.symbol+'</span><span class="mission-status" data-mission-status="'+item.id+'">Aguardando dados</span></div>'+
-  '<h4>'+item.name+'</h4><p>'+item.summary+'</p><div class="mission-hub-card-bottom"><span class="mission-breadcrumb-pill">Observador</span><span class="mission-open">Abrir painel →</span></div></a>';
+  '<div class="mission-hub-card-heading"><span>'+item.area+'</span><h4>'+item.name+'</h4></div><p>'+item.summary+'</p>'+
+  '<span class="mission-hub-card-tasks" data-mission-task-count="'+item.id+'">Prioridades: aguardando leitura</span>'+
+  '<div class="mission-hub-card-bottom"><span class="mission-breadcrumb-pill">Observador</span><span class="mission-open">Abrir painel →</span></div></a>';
 }
 function missionWorkspace(item,financeHtml){
  const id=item.id,tab='agent-'+id,missionMetrics=[0,1,2,3].map(index=>
@@ -448,17 +525,47 @@ function missionWorkspace(item,financeHtml){
   hermes+body+'</section>';
 }
 export function missionWorkspacesBody(financeHtml=''){
- const hub='<section class="mission-hub" id="agents" hidden><div class="mission-hero mission-hub-hero"><div>'+
+ const hub='<section class="mission-hub" id="agents" aria-labelledby="missionHubTitle" hidden>'+
+  '<header class="mission-hero mission-hub-hero"><div class="mission-hub-hero-content">'+
   '<nav class="mission-crumb" aria-label="Localização"><a href="/admin?tab=overview" data-mission-open="overview">Visão Geral</a><span>›</span><strong>Equipe digital</strong></nav>'+
-  '<div class="mission-hero-main"><span class="mission-orb mission-agent-avatar" aria-hidden="true">✦</span><div><span class="mission-eyebrow">MLS MISSION CONTROL</span><h2>Equipe de agentes</h2>'+
-  '<p>Cada especialista tem um painel independente. Todos compartilham as mesmas fontes validadas e seguem os limites do MLS Hermes.</p></div></div></div>'+
-  '<div class="mission-intro-status"><span class="mission-status" id="missionFleetStatus">Monitorando</span><span class="mission-breadcrumb-pill">Automação comercial bloqueada</span></div></div>'+
-  '<div class="mission-hub-bar"><div><h3>Especialistas da operação</h3><p>Escolha um agente para abrir seu espaço completo.</p></div>'+
+  '<div class="mission-hero-main"><span class="mission-orb mission-agent-avatar" aria-hidden="true">✦</span><div><span class="mission-eyebrow">MLS MISSION CONTROL · EQUIPE DIGITAL</span><h2 id="missionHubTitle">Equipe de agentes</h2>'+
+  '<p>Sete especialistas acompanham a operação com as fontes já disponíveis. Cada um tem seu painel; nenhum executa alterações comerciais nesta etapa.</p></div></div>'+
+  '<div class="mission-hub-hero-links"><a href="/admin?tab=agent-hermes" data-mission-open="agent-hermes">Abrir MLS Hermes <span aria-hidden="true">›</span></a>'+
+  '<a href="/admin?tab=roadmap" data-mission-open="roadmap">Plano de evolução <span aria-hidden="true">›</span></a></div></div>'+
+  '<aside class="mission-hub-policy" aria-label="Modo atual dos agentes"><span class="mission-hub-policy-kicker">SUPERVISÃO DO HERMES</span>'+
+  '<span class="mission-status" id="missionFleetStatus">Aguardando leitura</span>'+
+  '<strong>Modo Observador</strong><p>Os agentes analisam e recomendam. Nenhuma campanha, preço, promoção ou anúncio é alterado automaticamente.</p>'+
+  '<span class="mission-hub-policy-lock">Ads e PROMO · bloqueados</span></aside></header>'+
+  '<section class="mission-hub-summary" aria-label="Indicadores do estado dos agentes">'+
+  '<article class="mission-hub-summary-card"><span>Especialistas cadastrados</span><strong>7</strong><small>Seis áreas + MLS Hermes</small></article>'+
+  '<article class="mission-hub-summary-card"><span>Em atenção ou bloqueados</span><strong id="missionHubAttentionCount">—</strong><small>Status operacional, não prejuízo</small></article>'+
+  '<article class="mission-hub-summary-card"><span>Em acompanhamento</span><strong id="missionHubWorkingCount">—</strong><small>Fontes ou conferências pendentes</small></article>'+
+  '<article class="mission-hub-summary-card"><span>Prioridades sinalizadas</span><strong id="missionHubPriorityCount">—</strong><small>Somente evidências do registro</small></article></section>'+
+  '<div class="mission-hub-insights"><section class="mission-hub-priority-module" aria-labelledby="missionHubPriorityHeading">'+
+  '<div class="mission-hub-module-heading"><div><span class="mission-hub-eyebrow">O QUE PRECISA DE ATENÇÃO</span><h3 id="missionHubPriorityHeading">Prioridades dos especialistas</h3>'+
+  '<p>Exibidas diretamente do registro de agentes, sem criar tarefas ou alterar pedidos.</p></div>'+
+  '<span class="mission-hub-module-tag" id="missionHubPriorityLabel">Aguardando dados</span></div>'+
+  '<div id="missionHubPriorityList" class="mission-hub-priority-list" aria-live="polite"><p class="mission-hub-empty">Aguardando a leitura validada das prioridades.</p></div>'+
+  '</section><aside class="mission-hub-evidence-module"><span class="mission-hub-eyebrow">COMO LER OS INDICADORES</span>'+
+  '<h3>Estado técnico não é lucro</h3>'+
+  '<p>“Saudável” indica o estado de acompanhamento do agente, não margem positiva, saldo bancário confirmado ou estoque disponível.</p>'+
+  '<div class="mission-hub-evidence-footer"><span>Fonte: Agent Registry já existente</span>'+
+  '<span id="missionHubSnapshot" role="status">Sem leitura validada</span></div></aside></div>'+
+  '<div class="mission-hub-bar mission-hub-list-heading"><div><span class="mission-hub-eyebrow">EQUIPE OPERACIONAL</span><h3>Explorar especialistas</h3><p>Busque por função ou filtre por estado para ir direto ao painel certo.</p></div>'+
   '<span class="mission-breadcrumb-pill">7 painéis · Observador</span></div>'+
-  '<div class="mission-hub-search"><label for="missionAgentSearch">Buscar especialista</label><input id="missionAgentSearch" type="search" autocomplete="off" placeholder="Buscar por nome ou área..." aria-controls="missionHubGrid"><span id="missionAgentSearchCount" aria-live="polite">7 especialistas</span></div>'+ 
+  '<div class="mission-hub-toolbar"><div class="mission-hub-search"><label for="missionAgentSearch">Buscar especialista</label>'+
+  '<input id="missionAgentSearch" type="search" autocomplete="off" maxlength="80" placeholder="Nome, área ou função..." aria-controls="missionHubGrid">'+
+  '<span id="missionAgentSearchCount" aria-live="polite">7 especialistas</span></div>'+
+  '<div class="mission-hub-filters" role="group" aria-label="Filtrar especialistas por estado">'+
+  '<button type="button" data-mission-hub-filter="all" aria-pressed="true">Todos</button>'+
+  '<button type="button" data-mission-hub-filter="ATTENTION" aria-pressed="false">Atenção / bloqueio</button>'+
+  '<button type="button" data-mission-hub-filter="WORKING" aria-pressed="false">Em acompanhamento</button>'+
+  '<button type="button" data-mission-hub-filter="HEALTHY" aria-pressed="false">Saudáveis</button></div></div>'+
+  '<p id="missionHubFilterEmpty" class="mission-hub-empty" role="status" hidden>Nenhum especialista corresponde aos filtros. Tente Todos ou outra busca.</p>'+
   '<div class="mission-hub-grid" id="missionHubGrid">'+MISSION_AGENTS.map(missionCard).join('')+'</div>'+
-  '<div class="mission-hub-bar"><div><h3>Expansão planejada</h3><p>Estes agentes só serão habilitados nas fases previstas do roadmap.</p></div></div>'+
-  '<div class="mission-future"><span>MLS Pricing · M3</span><span>MLS Creative · M8</span><span>MLS Inventory · fase futura</span><span>MLS Marketplace · M8</span></div></section>';
+  '<div class="mission-hub-future"><div><span class="mission-hub-eyebrow">EXPANSÃO PLANEJADA</span><h3>Novos módulos, quando houver evidências</h3>'+
+  '<p>Pricing, Creative, Inventory e Marketplace seguem planejados. Não representam agentes ativos nem permissões concedidas.</p></div>'+
+  '<div class="mission-future"><span>MLS Pricing · M3</span><span>MLS Creative · M8</span><span>MLS Inventory · fase futura</span><span>MLS Marketplace · M8</span></div></div></section>';
  return hub+MISSION_AGENTS.map(item=>missionWorkspace(item,financeHtml)).join('');
 }
 
