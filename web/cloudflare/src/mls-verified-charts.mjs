@@ -59,6 +59,24 @@ export function projectMlsDistribution(input){
   total,segments:Object.freeze(categories)});
 }
 
+
+export function projectMlsCategoricalChart(input){
+ const {source,segments,complete,orientation='vertical',unit='COUNT'}=input||{};
+ if(complete!==true)return fail('Cobertura por categoria não verificada');
+ if(!['vertical','horizontal'].includes(orientation)||!['COUNT','BRL_CENTS'].includes(unit))
+  return fail('Tipo de série não reconhecido');
+ if(!Array.isArray(segments)||segments.length<1||segments.length>24)
+  return fail('Categorias indisponíveis ou em excesso');
+ const used=new Set(),rows=[];
+ for(const row of segments){
+  if(typeof row?.label!=='string'||!row.label.trim()||row.label.length>72||
+   !SAFE(row.value)||row.value<0||used.has(row.label))return fail('Valores ou categorias inválidas');
+  used.add(row.label);rows.push(Object.freeze({label:row.label,value:row.value}));
+ }
+ return Object.freeze({status:'READY',type:orientation==='horizontal'?'horizontalBar':'bar',
+  source:typeof source==='string'?source:'VERIFIED_CATEGORY_SERIES',unit,segments:Object.freeze(rows)});
+}
+
 export function projectMlsDtfStateChart(queue){
  if(!queue||!SAFE(queue.line_count)||queue.line_count<=0)return fail('Fila DTF sem contagem validada');
  const fields=[
@@ -123,6 +141,43 @@ export function renderMlsVerifiedChart(model,{title='Gráfico de dados observado
     graphics+='<text x="'+x(k)+'" y="214" text-anchor="middle" font-size="10" fill="#96b5d9">'+esc(point.date.slice(5))+'</text>';
   }
   return svgFrame(graphics,title+'; '+known.length+' observações reais, '+model.missing+' lacunas',w,h);
+ }
+
+ if(model.type==='bar'||model.type==='horizontalBar'){
+  const rows=model.segments;
+  if(!Array.isArray(rows)||!rows.length||rows.some(r=>!SAFE(r.value)||r.value<0))
+   return '<div class="mls-chart-unavailable" role="status">Valores categóricos inconsistentes</div>';
+  const max=Math.max(1,...rows.map(r=>r.value)),fill=color;
+  const number=value=>model.unit==='BRL_CENTS'?'R$ '+(value/100).toFixed(2):String(value);
+  if(model.type==='bar'){
+   const w=620,h=226,left=44,right=609,top=15,bottom=182,space=(right-left)/rows.length;
+   let body='';
+   for(let line=0;line<5;line++){
+    const yy=top+line*(bottom-top)/4;
+    body+='<line x1="'+left+'" y1="'+yy+'" x2="'+right+'" y2="'+yy+'" stroke="#315274" stroke-opacity=".45" stroke-dasharray="3 5"/>';
+   }
+   for(let i=0;i<rows.length;i++){
+    const row=rows[i],bar=Math.max(0,(row.value/max)*(bottom-top));
+    const x=left+i*space+space*.18,y=bottom-bar;
+    body+='<rect x="'+x+'" y="'+y+'" width="'+(space*.64)+'" height="'+bar+
+     '" rx="5" fill="'+fill+'" fill-opacity=".84"><title>'+esc(row.label+': '+number(row.value))+'</title></rect>'+
+     '<text x="'+(left+(i+.5)*space)+'" y="201" font-size="10" fill="#a8c2e5" text-anchor="middle">'+
+     esc(row.label.slice(0,10))+'</text>';
+   }
+   return svgFrame(body,title+'; '+rows.length+' categorias observadas',w,h);
+  }
+  const w=620,h=Math.max(90,rows.length*35+20),left=148,right=550;
+  let body='';
+  for(let i=0;i<rows.length;i++){
+   const row=rows[i],y=10+i*35,bar=row.value/max*(right-left);
+   body+='<text x="'+(left-9)+'" y="'+(y+18)+'" font-size="11" fill="#c2d9f0" text-anchor="end">'+
+    esc(row.label.slice(0,22))+'</text>'+
+    '<rect x="'+left+'" y="'+y+'" width="'+(right-left)+'" height="21" rx="5" fill="#16314c"/>'+
+    '<rect x="'+left+'" y="'+y+'" width="'+bar+'" height="21" rx="5" fill="'+fill+'">'+
+    '<title>'+esc(row.label+': '+number(row.value))+'</title></rect>'+
+    '<text x="'+(right+8)+'" y="'+(y+16)+'" font-size="11" fill="#eaf7ff">'+esc(number(row.value))+'</text>';
+  }
+  return svgFrame(body,title+'; '+rows.length+' categorias observadas',w,h);
  }
  if(model.type==='donut'){
   const rows=model.segments,total=model.total;
