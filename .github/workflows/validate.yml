@@ -33,6 +33,7 @@ jobs:
         run: npm ci
       - name: Executar suíte Node completa com concorrência limitada para Chrome
         env:
+          MLS_OFFLINE_SCREENSHOT_DIR: ${{ runner.temp }}/mls-offline-owner-review
           MLS_QA_SCREENSHOT_DIR: ${{ runner.temp }}/mls-approved-design/v36
           MLS_APPROVED_SCREENSHOT_DIR: ${{ runner.temp }}/mls-approved-design/all-panels
           MLS_ROADMAP_SCREENSHOT_DIR: ${{ runner.temp }}/mls-approved-design/roadmap
@@ -54,6 +55,15 @@ jobs:
         run: python3 -m unittest web/bridge/test_hermes_bridge.py tools/test_install_hermes_web_bridge.py tools/test_build_hermes_web_bridge_install.py tools/test_activate_hermes_web_bridge.py tools/test_build_hermes_web_bridge_activation.py -q
       - name: Gerar os três Workers
         run: npm run build
+      - name: Gerar prévia offline sintética (sem scripts, credenciais ou deploy)
+        run: node tools/build_offline_owner_review.mjs --output="${RUNNER_TEMP}/mls-offline-owner-review"
+      - name: Entregar prévia navegável OFF e ON para revisão visual
+        uses: actions/upload-artifact@v4
+        with:
+          name: mls-offline-owner-visual-review
+          path: ${{ runner.temp }}/mls-offline-owner-review
+          if-no-files-found: error
+          retention-days: 7
       - name: Pré-release local e não destrutivo
         if: github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'main'
         run: node tools/release_preflight.mjs --base=origin/main

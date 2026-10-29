@@ -56,9 +56,9 @@ async function launch(){
    if(!res?.data||res.data.length>15*1024*1024)throw Error('Screenshot invalid');
    mkdirSync(qaDir,{recursive:true});
    writeFileSync(path.join(qaDir,filename),Buffer.from(res.data,'base64'));
-  },close(){try{ws?.close();}catch{}try{child.kill('SIGKILL');}catch{}rmSync(profile,{recursive:true,force:true});}};
+  },close(){try{ws?.close();}catch{}try{child.kill('SIGKILL');}catch{}rmSync(profile,{recursive:true,force:true,maxRetries:8,retryDelay:100});}};
  }catch(error){
-  try{ws?.close();}catch{}try{child.kill('SIGKILL');}catch{}rmSync(profile,{recursive:true,force:true});throw error;
+  try{ws?.close();}catch{}try{child.kill('SIGKILL');}catch{}rmSync(profile,{recursive:true,force:true,maxRetries:8,retryDelay:100});throw error;
  }
 }
 
