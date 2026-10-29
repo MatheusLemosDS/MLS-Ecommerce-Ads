@@ -8,7 +8,7 @@ import {D1} from './sqlite-d1.mjs';
 async function ownerHtml(minify){
  const compiled=await build({entryPoints:[fileURLToPath(new URL('../../../dist/app-worker.mjs',import.meta.url))],bundle:true,write:false,format:'esm',platform:'browser',target:'es2022',minify});
  const {default:worker}=await import('data:text/javascript;base64,'+Buffer.from(compiled.outputFiles[0].text).toString('base64'));
- const origin='https://app.startup.test',env={ADMIN_DB:new D1(),ADMIN_SESSION_SECRET:'startup-compiled-session-'+ 's'.repeat(32),ADMIN_USERNAME:'startup-owner',ADMIN_PASSWORD:'startup-fixture-password-123456'};
+ const origin='https://app.startup.test',env={ADMIN_DB:new D1(),ADMIN_SESSION_SECRET:'startup-compiled-session-'+ 's'.repeat(32),ADMIN_USERNAME:'startup-owner',ADMIN_PASSWORD:'startup-fixture-password-123456',MLS_V36_OWNER_PREVIEW:'ENABLED'};
  try{
   const login=await worker.fetch(new Request(origin+'/login',{method:'POST',headers:{origin,'content-type':'application/x-www-form-urlencoded'},body:new URLSearchParams({username:env.ADMIN_USERNAME,password:env.ADMIN_PASSWORD})}),env);assert.equal(login.status,303);const cookie=login.headers.get('set-cookie').split(';')[0];
   const session=await(await worker.fetch(new Request(origin+'/api/admin/state',{headers:{cookie}}),env)).json();

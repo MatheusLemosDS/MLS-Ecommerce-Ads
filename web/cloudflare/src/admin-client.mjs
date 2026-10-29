@@ -940,6 +940,7 @@ const missionSearchRoutes=Object.freeze([
 (function installMissionSearch(){
  const overlay=el('missionGlobalSearch'),openButton=el('missionSearchOpen'),
   closeButton=el('missionSearchClose'),input=el('missionSearchInput'),results=el('missionSearchResults');
+ const v36Preview=overlay?.dataset?.mlsV36Preview==='enabled';
  const normalize=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-BR');
  const byKey=new Map(missionSearchRoutes.map(item=>[item.key,item]));
  const scopeButtons=typeof overlay?.querySelectorAll==='function'?[...overlay.querySelectorAll('[data-mission-scope]')]:[],execute=el('missionSearchExecute'),
@@ -975,7 +976,7 @@ const missionSearchRoutes=Object.freeze([
    const score=item=>normalize(item.title).startsWith(query)?0:normalize(item.title).includes(query)?1:2;
    return score(a)-score(b);
   }).slice(0,10);
-  if(rawQuery.length>=2&&rawQuery.length<=90){
+  if(v36Preview&&rawQuery.length>=2&&rawQuery.length<=90){
    selected.unshift({key:'product-query',title:'Buscar "'+rawQuery+'" no catálogo',group:'Pesquisa real',description:'Consultar produtos salvos e suas variações · até 20 por página',panel:'products',catalogQuery:rawQuery});
    selected=selected.slice(0,10);
   }
@@ -996,7 +997,7 @@ const missionSearchRoutes=Object.freeze([
    results.append(empty);
   }
   const scope=el('missionSearchScope');
-  if(scope)scope.textContent=rawQuery.length>=2?'Busque no catálogo salvo após confirmação, ou escolha um painel. Pedidos não são consultados automaticamente.':'Selecione um escopo: Painéis, Produtos salvos ou Pedidos na fila DTF.';
+  if(scope)scope.textContent=!v36Preview?'Pesquise painéis, agentes e ferramentas.':rawQuery.length>=2?'Busque no catálogo salvo após confirmação, ou escolha um painel. Pedidos não são consultados automaticamente.':'Selecione um escopo: Painéis, Produtos salvos ou Pedidos na fila DTF.';
  }
 
  function showRecords(items,total,offset,hasMore,source){
@@ -1023,7 +1024,7 @@ const missionSearchRoutes=Object.freeze([
   scopeLabel.textContent=source;
  }
  async function searchRecords(offset=0){
-  if(mode==='navigation'||busy)return;
+  if(!v36Preview||mode==='navigation'||busy)return;
   const query=input.value.trim(),sourceMode=mode;
   if(query.length<2||query.length>90||/[\u0000-\u001f\u007f]/.test(query))return;
   const requestId=++lookupEpoch;
@@ -1098,7 +1099,7 @@ const missionSearchRoutes=Object.freeze([
   }
  }
  function setScope(next){
-  if(!['navigation','products','dtf'].includes(next))return;
+  if(!['navigation','products','dtf'].includes(next)||!v36Preview&&next!=='navigation')return;
   ++lookupEpoch;busy=false;mode=next;currentQuery='';currentOffset=0;
   input.value='';execute.hidden=next==='navigation';
   input.placeholder=next==='navigation'?'Buscar painéis, agentes e ferramentas…':

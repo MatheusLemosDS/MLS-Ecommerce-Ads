@@ -34,7 +34,8 @@ test('real Chromium hydrates owner agent cards even when finance API is unavaila
  if(!chrome)return t.skip('Chrome executable not installed on CI runner');
  const worker=await compiledWorker();
  const env={ADMIN_USERNAME:'owner-browser-test',ADMIN_PASSWORD:'owner-browser-test-password',
-  ADMIN_SESSION_SECRET:'owner-browser-test-session-'+ 'x'.repeat(40)};
+  ADMIN_SESSION_SECRET:'owner-browser-test-session-'+ 'x'.repeat(40),
+  MLS_V36_OWNER_PREVIEW:'ENABLED'};
  const login=await worker.fetch(new Request('https://app.browser.fixture/login',{method:'POST',
   headers:{origin:'https://app.browser.fixture','content-type':'application/x-www-form-urlencoded'},
   body:new URLSearchParams({username:env.ADMIN_USERNAME,password:env.ADMIN_PASSWORD})}),env);

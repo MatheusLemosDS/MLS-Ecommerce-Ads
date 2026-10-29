@@ -323,8 +323,27 @@ async function catalogStateForOwner(env,state){
  });
  return {...state,products,enabled};
 }
-function dashboard(){
- const markup='<style>'+BUSINESS_MONTH_CSS+AUTOMATION_WORKSPACE_CSS+COST_RULE_CSS+DTF_CSS+PRODUCTION_COST_PERIODS_CSS+SAVED_CATALOG_CSS+MLS_LISTING_FACTORY_CSS+'</style>'+adminBody().replace('<div id="missionHermesTools"></div>','<div id="missionHermesTools">'+automationWorkspaceBody()+'</div>').replace('<section id="margins" hidden>','<section id="margins" hidden>'+productionCostPeriodsBody()+costRulesBody()).replace('<section id="products" hidden>',dtfBody()+'<section id="products" hidden>'+mlsListingFactoryBody()+savedCatalogBody())+'<script>'+DTF_ENGINE_CLIENT+'</script><script>'+DTF_CLIENT+'</script><script>'+COST_RULE_CLIENT+'</script><script>'+AUTOMATION_WORKSPACE_CLIENT+'</script><script>'+BUSINESS_MONTH_CLIENT+'</script><script>'+INCOME_OVERVIEW_CLIENT+'</script><script>'+AGENT_REGISTRY_CLIENT+'</script><script>'+MISSION_CLIENT+'</script><script>'+MISSION_TRENDS_CLIENT+'</script><script>'+PRODUCTION_COST_PERIODS_CLIENT+'</script><script>'+SAVED_CATALOG_CLIENT+'</script><script>'+MLS_LISTING_FACTORY_CLIENT+'</script><script>'+CLIENT+'</script>';
+// Deploy-safe release gate. Exact owner-only opt-in; absent or malformed values stay OFF.
+// The setting is read on every authenticated /admin request, not stored in D1 or a cookie.
+function mlsV36OwnerPreviewEnabled(env,ownerSession){
+ return ownerSession?.role==='owner'&&env?.MLS_V36_OWNER_PREVIEW==='ENABLED';
+}
+function dashboard(env,ownerSession){
+ const legacyScope='<button type="button" data-mission-scope="navigation" aria-pressed="true">Painéis</button>';
+ const productsScope='<button type="button" data-mission-scope="products" aria-pressed="false">Produtos salvos</button>';
+ const dtfScope='<button type="button" data-mission-scope="dtf" aria-pressed="false">Pedidos na fila DTF</button>';
+ let body=adminBody();
+ // A future navigation markup change must not turn a disabled feature into an
+ // owner dashboard outage. Unexpected markup also fails closed (preview OFF).
+ const markupCompatible=body.includes(legacyScope)&&body.includes(productsScope)&&
+  body.includes(dtfScope)&&body.includes('id="missionGlobalSearch"');
+ const preview=markupCompatible&&mlsV36OwnerPreviewEnabled(env,ownerSession);
+ if(!preview){
+  body=body.replace(productsScope,'').replace(dtfScope,'');
+  body=body.replace('Selecione Painéis, Produtos salvos ou Pedidos na fila DTF. A busca por pedidos não é um histórico completo da Shopee.','Pesquise painéis, agentes e ferramentas.');
+ }
+ body=body.replace('id="missionGlobalSearch"','id="missionGlobalSearch" data-mls-v36-preview="'+(preview?'enabled':'disabled')+'"');
+ const markup='<style>'+BUSINESS_MONTH_CSS+AUTOMATION_WORKSPACE_CSS+COST_RULE_CSS+DTF_CSS+PRODUCTION_COST_PERIODS_CSS+SAVED_CATALOG_CSS+(preview?MLS_LISTING_FACTORY_CSS:'')+'</style>'+body.replace('<div id="missionHermesTools"></div>','<div id="missionHermesTools">'+automationWorkspaceBody()+'</div>').replace('<section id="margins" hidden>','<section id="margins" hidden>'+productionCostPeriodsBody()+costRulesBody()).replace('<section id="products" hidden>',dtfBody()+'<section id="products" hidden>'+(preview?mlsListingFactoryBody():'')+savedCatalogBody())+'<script>'+DTF_ENGINE_CLIENT+'</script><script>'+DTF_CLIENT+'</script><script>'+COST_RULE_CLIENT+'</script><script>'+AUTOMATION_WORKSPACE_CLIENT+'</script><script>'+BUSINESS_MONTH_CLIENT+'</script><script>'+INCOME_OVERVIEW_CLIENT+'</script><script>'+AGENT_REGISTRY_CLIENT+'</script><script>'+MISSION_CLIENT+'</script><script>'+MISSION_TRENDS_CLIENT+'</script><script>'+PRODUCTION_COST_PERIODS_CLIENT+'</script><script>'+SAVED_CATALOG_CLIENT+'</script>'+(preview?'<script>'+MLS_LISTING_FACTORY_CLIENT+'</script>':'')+'<script>'+CLIENT+'</script>';
  // Raw control bytes inside inlined JavaScript are changed by the HTML
  // tokenizer (U+0000 becomes U+FFFD), which can invalidate a regex character
  // class before any client initializer runs. Encode these bytes as JavaScript
@@ -351,7 +370,7 @@ async function adminFetch(request,env,services={}){const url=new URL(request.url
  const current=await session(request,env);if(!current)return path.startsWith('/api/')?json({error:'UNAUTHORIZED'},401):Response.redirect(url.origin+'/login',303);
  if(path==='/admin/diagnostics'){assert(request.method==='GET','METHOD_NOT_ALLOWED',405);assert(!url.search,'ADMIN_DIAGNOSTICS_REQUEST_INVALID');return panelDiagnosticsPage();}
  if(path==='/api/admin/diagnostics'){assert(request.method==='GET','METHOD_NOT_ALLOWED',405);assert(!url.search,'ADMIN_DIAGNOSTICS_REQUEST_INVALID');return json(await panelD1Probe(env));}
- if(path==='/admin'){assert(request.method==='GET','METHOD_NOT_ALLOWED',405);return dashboard();}
+ if(path==='/admin'){assert(request.method==='GET','METHOD_NOT_ALLOWED',405);return dashboard(env,current);}
  // Session confirmation must remain independent of storage initialization,
  // financial collection and optional settings or assistant status reads.
  if(path==='/api/admin/bootstrap'){
