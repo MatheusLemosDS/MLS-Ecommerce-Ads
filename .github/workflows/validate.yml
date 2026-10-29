@@ -3,8 +3,8 @@ name: Validar Workers
 on:
   push:
     branches: [main, cloudflare-git]
-  pull_request:
-    branches: [main, cloudflare-git]
+  # Also validate stacked PRs targeting integration branches before release.
+  pull_request: {}
   workflow_dispatch:
 
 permissions:
@@ -29,7 +29,17 @@ jobs:
       - name: Instalar versões fixadas
         run: npm ci
       - name: Executar testes
+        env:
+          MLS_QA_SCREENSHOT_DIR: ${{ runner.temp }}/mls-owner-visual-qa
         run: npm test
+      - name: Guardar capturas sintéticas de QA visual
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mls-owner-synthetic-desktop-mobile-qa
+          path: ${{ runner.temp }}/mls-owner-visual-qa
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Validar ponte financeira e atualização do Hermes
         run: python3 -m unittest web/bridge/test_hermes_bridge.py tools/test_install_hermes_web_bridge.py tools/test_build_hermes_web_bridge_install.py tools/test_activate_hermes_web_bridge.py tools/test_build_hermes_web_bridge_activation.py -q
       - name: Gerar os três Workers
