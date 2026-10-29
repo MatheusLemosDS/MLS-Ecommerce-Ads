@@ -37,7 +37,7 @@ jobs:
           MLS_PRODUCTION_SCREENSHOT_DIR: ${{ runner.temp }}/mls-approved-design/production
         run: |
           npm run build
-          node --test --test-concurrency=3 web/cloudflare/tests/*.test.mjs web/finance/tests/*.test.mjs tools/tests/*.test.mjs
+          node --test --test-reporter=tap --test-concurrency=3 web/cloudflare/tests/*.test.mjs web/finance/tests/*.test.mjs tools/tests/*.test.mjs
       - name: Guardar capturas sintéticas dos painéis
         if: always()
         uses: actions/upload-artifact@v4
