@@ -575,3 +575,14 @@ alterações comerciais e sem desbloqueio Ads/PROMO.
 - [ ] QA autenticada desktop/celular com mockups reais, integração #51 → #56 → #60 e revisão da PR #48. Nenhum upload/publicação comercial.
 
 Guia: [MLS_LISTING_FACTORY_BATCH_RELINK_2026_10_28.md](MLS_LISTING_FACTORY_BATCH_RELINK_2026_10_28.md). M2 issue #50 permanece aberta e nenhuma publicação Shopee é autorizada.
+
+### M1/M3-L2 — Integração V3.6 + Fábrica de Anúncios (PR #63, DRAFT)
+
+- [x] Combinar busca global da PR #48 com os módulos das PRs #51, #56 e #60 sobre a main canônica, sem modificar Finance/Auth/D1/OAuth, Ads ou cron.
+- [x] Verificar integridade de arquivos: 13/13 blobs da PR #60 e 7/7 da PR #48 preservados. Allowlist dos Workers recebe somente o novo SHA App exato.
+- [x] CI #40792253729 **GREEN: 2.136 Node + 67 Python**, Chrome real e três builds; App SHA 8ed059ddb6f0901a48d277d6b9b806a23d52a1e5e105ed0e2e456e2aea6701f5.
+- [x] Adicionar teste de coexistência do catálogo, DTF, busca e editor local em HTML normal/minificado.
+- [ ] QA visual autenticada do operador em desktop/celular e decisão de release: PR #63 única ou PRs #48/#51/#56/#60 sequenciais, não ambas.
+- [ ] M2 Finance issue #50 e permissões Shopee ainda bloqueiam qualquer ação comercial automática. Ads/PROMO LOCKED.
+
+[Evidência e plano de QA](MLS_V36_LISTING_FACTORY_INTEGRATION_2026_10_28.md).

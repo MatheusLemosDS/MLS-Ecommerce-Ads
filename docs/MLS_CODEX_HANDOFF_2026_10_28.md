@@ -102,3 +102,7 @@ Implementado o bulk relink offline em cima da PR #56: seleciona até 200 fotos/6
 ### PR #60 — CI final aprovado
 
 A seleção de mockups em lote passou [CI 40790629421](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/40790629421): **2.132 Node + 67 Python**, Chromium, build App/Auth/Finance. O runtime e os testes da branch #60 são iguais ao candidato de validação #61 em **14/14 blobs**, e #61 foi fechada sem merge. Novo SHA App 63da28d212c45d1e7e93444dbe4ac2ac49ad113af273dddf65370f668156180d; Auth/Finance não alterados. Ainda falta QA no login real desktop/mobile, integração #51 → #56 → #60 e preservação #48. Não há upload/marketplace write, M2 issue #50 aberta e Ads/PROMO LOCKED.
+
+### Integração PR #63 — handoff 28/10/2026
+
+Mission Control V3.6 da PR #48 e Listing Factory PRs #51/#56/#60 foram combinados numa branch isolada sobre a main: integration/mls-v36-search-listing-factory-20261028. A comparação Git confirmou 13/13 fontes da PR #60 e 7/7 da PR #48 idênticas, com união da allowlist SHA em tools/worker_project.mjs. CI #40792253729 SUCCESS (2.136 Node + 67 Python + Chrome, App/Auth/Finance builds), SHA App 8ed059ddb6f0901a48d277d6b9b806a23d52a1e5e105ed0e2e456e2aea6701f5. Nenhum merge/deploy de código. Próxima tarefa do Codex: QA autenticada desktop/mobile com catálogo real, fila DTF e mockups locais; depois escolher PR63 como release única ou merges sequenciais, não as duas opções. M2 #50 continua aberta, Ads/PROMO LOCKED. Documento: docs/MLS_V36_LISTING_FACTORY_INTEGRATION_2026_10_28.md.
