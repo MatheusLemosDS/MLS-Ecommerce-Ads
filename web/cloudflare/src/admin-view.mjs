@@ -79,7 +79,8 @@ export const CSS=BUSINESS_DAY_CSS+COMMAND_CENTER_CSS+String.raw`
 @media(prefers-reduced-motion:reduce){.mission-search-overlay{backdrop-filter:none}}
 
 /* MLS Roadmap workspace: visual-only status from the canonical roadmap; no runtime data requests. */
-.mls-roadmap{--roadmap-line:var(--line,#dce2e9);--roadmap-soft:var(--surface-raised,#f5f7f9);--roadmap-blue:#64a5ff;--roadmap-green:#46d9a9;--roadmap-amber:#eebf82;max-width:1440px;margin:0 auto 32px;min-width:0}
+html[data-theme=dark] .mls-roadmap{--roadmap-blue:#64a5ff;--roadmap-green:#46d9a9;--roadmap-amber:#eebf82}
+.mls-roadmap{--roadmap-line:var(--line,#dce2e9);--roadmap-soft:var(--surface-raised,#f5f7f9);--roadmap-blue:#24649d;--roadmap-green:#147554;--roadmap-amber:#916018;max-width:1440px;margin:0 auto 32px;min-width:0;scroll-margin-top:96px}
 .mls-roadmap *{box-sizing:border-box}
 .mls-roadmap .roadmap-hero{position:relative;isolation:isolate;overflow:hidden;display:grid;grid-template-columns:minmax(0,1.7fr) minmax(260px,.8fr);gap:28px;padding:clamp(24px,3.5vw,42px);border:1px solid var(--roadmap-line);border-radius:23px;background:radial-gradient(circle at 82% 0%,rgba(100,165,255,.16),transparent 40%),linear-gradient(118deg,rgba(100,165,255,.07),transparent 65%),var(--surface,#fff);margin-bottom:18px}
 .mls-roadmap .roadmap-hero:before{content:"";position:absolute;z-index:-1;right:-104px;top:-163px;width:370px;height:370px;border:1px solid rgba(100,165,255,.18);box-shadow:0 0 0 47px rgba(100,165,255,.035),0 0 0 99px rgba(100,165,255,.02);border-radius:50%}
