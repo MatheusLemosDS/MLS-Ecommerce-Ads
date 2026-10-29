@@ -113,6 +113,6 @@ for(const minify of [false,true]){
   assert.match(html,/id="mlsRoadmapHeading"/);
   assert.match(html,/--mls-finance/);
   assert.match(html,/id="dtfHeroTitle"/);
-  assert.doesNotMatch(html,/id="missionSearchPage"[^I]/);
+  assert.match(html,/id="missionSearchPageInfo"/);
  });
 }
