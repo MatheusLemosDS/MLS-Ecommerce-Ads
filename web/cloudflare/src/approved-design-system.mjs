@@ -371,4 +371,85 @@ html[data-theme=dark] :focus-visible{outline-color:#75c8ff}
  .mission-workspace .mission-orb.mission-agent-avatar:after{display:block!important;top:17px!important;font-size:11px!important;letter-spacing:2px!important;line-height:1!important}
 }
 
+
+
+/* Fidelity review 3 — reference-style agent bot, not a photo or a fake data metric.
+ * All graphics are decorative CSS; business results remain wired to real sources. */
+@media(min-width:901px){
+ .mission-dashboard{
+  display:grid!important;
+  grid-template-columns:minmax(0,1.32fr) minmax(0,1fr) minmax(0,1fr)!important;
+  grid-template-rows:auto auto auto minmax(210px,auto) auto!important;
+  gap:12px!important;align-items:start!important;
+ }
+ .mission-dashboard>.command-center-head{grid-row:1!important;grid-column:1/-1!important}
+ .mission-dashboard>.command-center-metrics{grid-row:2!important;grid-column:1/-1!important}
+ .mission-dashboard>.command-center-grid{display:contents!important}
+ .mission-dashboard>.command-center-grid>.agent-panel{
+  grid-row:3!important;grid-column:1/-1!important;
+ }
+ .mission-dashboard>.mission-trend-panel{grid-row:4!important;grid-column:1!important;min-height:250px!important;max-height:300px!important;overflow:hidden!important}
+ .mission-dashboard>.mission-day-intelligence{grid-row:4!important;grid-column:2!important;min-height:250px!important;max-height:300px!important;overflow-y:auto!important;padding:14px!important}
+ .mission-dashboard>.command-center-grid>.hermes-command{
+  grid-row:4!important;grid-column:3!important;max-height:300px!important;min-height:250px!important;overflow-y:auto!important;
+  display:flex!important;flex-direction:column!important;align-items:stretch!important;justify-content:space-between!important;gap:7px!important;padding:15px!important;
+ }
+ .mission-dashboard>.command-center-note{grid-row:5!important;grid-column:1/-1!important}
+ .mission-dashboard .mission-trend-heading{gap:7px!important;margin-bottom:8px!important}
+ .mission-dashboard .mission-trend-heading h3{font-size:15px!important}
+ .mission-dashboard .mission-trend-graph{max-height:160px!important;height:145px!important;min-height:80px!important}
+ .mission-dashboard .mission-day-intelligence>article{min-width:0!important}
+ .mission-dashboard .mission-day-intelligence .mission-data-panel{padding:10px!important}
+ .mission-dashboard .hermes-command .hermes-command-head{min-width:0!important}
+ .mission-dashboard .hermes-command .command-priorities{max-height:170px!important;overflow-y:auto!important}
+ .mission-dashboard .agent-card{
+  --bot-color:#57adff;--bot-rgb:87,173,255;
+  position:relative!important;min-height:178px!important;overflow:hidden!important;
+  background:radial-gradient(ellipse at 50% 8%,rgba(var(--bot-rgb),.17),transparent 55%),linear-gradient(150deg,rgba(var(--bot-rgb),.07),rgba(3,13,35,.86))!important;
+  border:1px solid rgba(var(--bot-rgb),.68)!important;
+  box-shadow:0 0 18px rgba(var(--bot-rgb),.12),inset 0 1px 19px rgba(var(--bot-rgb),.08)!important;
+ }
+ .mission-dashboard .agent-card[data-mission-accent=finance]{--bot-color:#49e9b8;--bot-rgb:73,233,184}
+ .mission-dashboard .agent-card[data-mission-accent=ads]{--bot-color:#fcaa55;--bot-rgb:252,170,85}
+ .mission-dashboard .agent-card[data-mission-accent=products]{--bot-color:#5cb3ff;--bot-rgb:92,179,255}
+ .mission-dashboard .agent-card[data-mission-accent=production]{--bot-color:#b990ff;--bot-rgb:185,144,255}
+ .mission-dashboard .agent-card[data-mission-accent=returns]{--bot-color:#ff679a;--bot-rgb:255,103,154}
+ .mission-dashboard .agent-card[data-mission-accent=auditor]{--bot-color:#52e5f5;--bot-rgb:82,229,245}
+ .mission-dashboard .agent-card:before{
+  content:""!important;
+  position:relative!important;inset:auto!important;
+  display:block!important;width:52px!important;height:49px!important;min-width:52px!important;min-height:49px!important;
+  border:2px solid var(--bot-color)!important;border-radius:20px!important;
+  margin:1px 0 4px!important;
+  background:
+   radial-gradient(circle at 35% 46%,#eaffff 0 2px,var(--bot-color) 2.5px 4px,transparent 5.5px),
+   radial-gradient(circle at 65% 46%,#eaffff 0 2px,var(--bot-color) 2.5px 4px,transparent 5.5px),
+   radial-gradient(ellipse 32% 13% at 50% 70%,rgba(var(--bot-rgb),.95),rgba(var(--bot-rgb),0) 83%),
+   linear-gradient(140deg,rgba(var(--bot-rgb),.25),rgba(4,13,37,.85) 60%);
+  box-shadow:0 0 0 5px rgba(var(--bot-rgb),.075),0 0 22px rgba(var(--bot-rgb),.54),inset 0 0 14px rgba(var(--bot-rgb),.19)!important;
+  transform:none!important;filter:drop-shadow(0 3px 9px rgba(var(--bot-rgb),.24))!important;
+  z-index:1!important;
+ }
+ .mission-dashboard .agent-card:after{
+  content:""!important;display:block!important;
+  position:absolute!important;top:8px!important;left:34px!important;right:auto!important;bottom:auto!important;
+  width:13px!important;height:7px!important;border-top:2px solid var(--bot-color)!important;border-radius:8px!important;
+  background:radial-gradient(circle at 50% 0,var(--bot-color),transparent 70%)!important;
+  box-shadow:0 -4px 11px rgba(var(--bot-rgb),.37)!important;
+  z-index:0!important;
+ }
+ .mission-dashboard .agent-card-head{margin:0!important}
+ .mission-dashboard .agent-card h4{font-size:12px!important;color:#f1f8ff!important}
+ .mission-dashboard .agent-card .agent-status{margin-top:4px!important;background:rgba(var(--bot-rgb),.13)!important;border-color:rgba(var(--bot-rgb),.50)!important;color:var(--bot-color)!important}
+ .mission-dashboard .agent-card p{font-size:9px!important;line-height:1.35!important;-webkit-line-clamp:2!important}
+ .mission-dashboard .agent-card .mission-card-link{color:var(--bot-color)!important;border:1px solid rgba(var(--bot-rgb),.57)!important;background:rgba(var(--bot-rgb),.10)!important;padding:6px!important;border-radius:7px!important;text-align:center!important}
+}
+@media(min-width:901px) and (max-width:1150px){
+ .mission-dashboard{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ .mission-dashboard>.mission-trend-panel{grid-column:1!important;grid-row:4!important}
+ .mission-dashboard>.mission-day-intelligence{grid-column:2!important;grid-row:4!important}
+ .mission-dashboard>.command-center-grid>.hermes-command{grid-column:1/-1!important;grid-row:5!important;min-height:120px!important}
+ .mission-dashboard>.command-center-note{grid-row:6!important}
+}
+
 `;
