@@ -61,6 +61,21 @@ export const SAVED_CATALOG_CLIENT=String.raw`
  }
  async function sync(){if(stopped||sourceBusy||promise||backgroundPromise)return false;clearSourceTimer();sourcePaused=false;const seq=generation;sourceBusy=true;controls();el('Message').textContent='Consultando a próxima página do cadastro na Shopee…';try{const raw=await api('product-registry/sync',{});if(stopped||seq!==generation)return false;const status=acceptSyncStatus(raw);await refresh();if(seq===generation&&!stopped)el('Message').textContent=status==='PAUSED'?'A atualização está pausada nas configurações. Os produtos salvos continuam disponíveis.':status==='LEASED'?'Outra atualização está em andamento. O cadastro continuará automaticamente.':status==='ERROR'?'A atualização será retomada em instantes. Os produtos salvos foram preservados.':'Cadastro atualizado. A indexação continuará automaticamente até concluir todas as páginas.';return status!=='PAUSED'&&status!=='ERROR';}catch{if(seq===generation&&!stopped){sourceRetryAt=Date.now()+120000;el('Message').textContent='Não foi possível atualizar o cadastro agora. Os produtos salvos foram preservados e a atualização automática tentará novamente.';}return false;}finally{if(seq===generation){sourceBusy=false;controls();scheduleSource();}}}
  document.addEventListener?.('visibilitychange',()=>{if(document.hidden)clearSourceTimer();else scheduleSource();});
+
+ // Navigation from global search reuses this module's existing paginated
+ // saved-catalog filter. It does not request a provider sync.
+ async function find(search){
+  if(typeof search!=='string'||search.trim().length<2||search.length>90||/[\u0000-\u001f\u007f]/.test(search))return false;
+  const input=el('Search'),status=el('Status');
+  if(!input||!status)return false;
+  input.value=search.trim();status.value='ACTIVE';offset=0;closeDetail();
+  if(stopped||!api)return false;
+  const pending=promise;
+  if(pending)try{await pending;}catch{}
+  if(stopped||!api)return false;
+  return refresh({reset:true});
+ }
+
  function getSnapshot(){
   if(stopped||frame?.schema!=='product_registry_v1')return null;
   const counts=frame.counts||{},discovery=frame.discovery||{};
@@ -71,5 +86,5 @@ export const SAVED_CATALOG_CLIENT=String.raw`
    discovery_status:['IDLE','RUNNING','RETRY_WAIT'].includes(discovery.status)?discovery.status:null,
    source:'SAVED_PRODUCT_REGISTRY'});
  }
- globalThis.brazaSavedCatalog={start(options={}){if(!el('List')||typeof options.api!=='function')return Promise.resolve(false);api=options.api;onConfigureCost=typeof options.onConfigureCost==='function'?options.onConfigureCost:null;onAssignRule=typeof options.onAssignRule==='function'?options.onAssignRule:null;generation++;stopped=false;frame=null;discovery=null;promise=null;backgroundPromise=null;variantRefreshPromise=null;sourceBusy=false;sourceRetryAt=0;sourcePaused=false;clearSourceTimer();closeDetail();el('SearchForm').onsubmit=event=>{event.preventDefault();return refresh({reset:true});};el('Refresh').onclick=()=>refresh();el('Status').onchange=()=>refresh({reset:true});el('Previous').onclick=()=>{if(!frame||!frame.pagination.offset||promise)return;offset=Math.max(0,frame.pagination.offset-frame.pagination.limit);return refresh();};el('Next').onclick=()=>{if(!frame?.pagination.more||promise)return;offset=frame.pagination.offset+frame.pagination.limit;return refresh();};el('Sync').onclick=sync;return refresh();},refresh:()=>refresh(),getSnapshot,resume(){sourcePaused=false;sourceRetryAt=0;scheduleSource();},stop(){stopped=true;generation++;promise=null;sourceBusy=false;backgroundPromise=null;variantRefreshPromise=null;clearSourceTimer();closeDetail();}};
+ globalThis.brazaSavedCatalog={start(options={}){if(!el('List')||typeof options.api!=='function')return Promise.resolve(false);api=options.api;onConfigureCost=typeof options.onConfigureCost==='function'?options.onConfigureCost:null;onAssignRule=typeof options.onAssignRule==='function'?options.onAssignRule:null;generation++;stopped=false;frame=null;discovery=null;promise=null;backgroundPromise=null;variantRefreshPromise=null;sourceBusy=false;sourceRetryAt=0;sourcePaused=false;clearSourceTimer();closeDetail();el('SearchForm').onsubmit=event=>{event.preventDefault();return refresh({reset:true});};el('Refresh').onclick=()=>refresh();el('Status').onchange=()=>refresh({reset:true});el('Previous').onclick=()=>{if(!frame||!frame.pagination.offset||promise)return;offset=Math.max(0,frame.pagination.offset-frame.pagination.limit);return refresh();};el('Next').onclick=()=>{if(!frame?.pagination.more||promise)return;offset=frame.pagination.offset+frame.pagination.limit;return refresh();};el('Sync').onclick=sync;return refresh();},refresh:()=>refresh(),find,getSnapshot,resume(){sourcePaused=false;sourceRetryAt=0;scheduleSource();},stop(){stopped=true;generation++;promise=null;sourceBusy=false;backgroundPromise=null;variantRefreshPromise=null;clearSourceTimer();closeDetail();}};
 })();`;

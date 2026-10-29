@@ -116,6 +116,18 @@ export const TARGETS = Object.freeze({
     'b99d26849353f494ddb2cea12605a2f7ad0186a1407c91857946e0522d1b499f',
     // V3.6 explicit saved-catalog search handoff from keyboard palette, exact App from Actions #290; CI required.
     '55645f1f5ec777136254e0deb6e09e88cd542649097786992e3fb212af298078',
+    // Reviewed PR45 V3.6 catalog source compatibility.
+    '9349781be29daa3a5ac34e0b392586bbd651911da83d36149c2c926e2bd60e8b',
+    // Reviewed PR48 V3.6 combined saved catalog and DTF search source.
+    '080bcd884f1842023e384e180cd4e9e33fe3c58681596c86b4b6f0552216b68f',
+    // MLS Listing Factory owner draft-only UI from Actions 40783813679; requires full CI/Chrome before review.
+    'e228e899603c5b08b5d432558de6277faa4217d030c8cc0bb8d9692391c4ca4a',
+    // Listing Factory local image decompression guard and default price propagation; exact CI App build from 40784662417.
+    'd1bb7c43d40034f1629d18f159a8558cb6e8e7d540e3531d998a56377a3120b9',
+    // MLS Listing Factory JSON resume, price-source gate and paged owner UI; exact App digest from CI 40788461939, full rerun required.
+    'bbbe1b9efdf0a6c11e507c34c92730ddbb8502fb367c5cfe33c031ba3850d3cd',
+    // Bulk local media relink in MLS Listing Factory, exact App SHA from Actions 40790379512; full validation required.
+    '63da28d212c45d1e7e93444dbe4ac2ac49ad113af273dddf65370f668156180d',
   ]}),
   auth: Object.freeze({name: 'brazacommerce-auth', main: '../../dist/auth-worker.mjs', baselineHashes: [
     '45d0142709c5087e373cc4da146070ed39c472805f6f64c00f00b6555f0e1f56',
