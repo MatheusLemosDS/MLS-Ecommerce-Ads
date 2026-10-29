@@ -2,7 +2,7 @@
   "schema": "mls_commerce_os_checkpoint_v1",
   "canonical_roadmap": "docs/ROADMAP_MLS_COMMERCE_OS.md",
   "legacy_roadmap": "docs/ROADMAP_BRAZACOMMERCE.md",
-  "updated_at": "2026-10-28",
+  "updated_at": "2026-10-29",
   "product": {
     "name": "MLS Commerce OS",
     "supervisor": "MLS Hermes",
@@ -660,5 +660,49 @@
         "documented_in": "docs/MLS_OWNER_SYNTHETIC_VISUAL_QA_2026_10_28.md"
       }
     }
+  },
+  "visual_approved_20261029": {
+    "schema": "mls_approved_visual_integration_v1",
+    "branch": "design/approved-neon-all-panels-integration-20261029",
+    "pr": 74,
+    "base_branch": "main",
+    "status": "DRAFT_CI_PENDING_NO_MERGE_NO_DEPLOY",
+    "upstream_visual_prs": [
+      69,
+      71,
+      72,
+      73
+    ],
+    "design_system": "web/cloudflare/src/approved-design-system.mjs",
+    "bundle_integration": "web/cloudflare/build.py updated to inject shared CSS into App scope",
+    "coverage": [
+      "overview",
+      "agents",
+      "agent-finance",
+      "agent-ads",
+      "agent-products",
+      "agent-production",
+      "agent-returns",
+      "agent-auditor",
+      "agent-hermes",
+      "products",
+      "production",
+      "roadmap",
+      "hermes",
+      "margins",
+      "history",
+      "ads-dashboard",
+      "campaigns",
+      "automation",
+      "integrations"
+    ],
+    "qa": "synthetic desktop 1365x900 mobile 390x844; real owner pending",
+    "owner_authenticated_qa": "PENDING",
+    "production_authorized": false,
+    "finance_m2": "ISSUE_50_OPEN",
+    "ads_promo": "LOCKED",
+    "v36_release": "PR_68_DRAFT_FLAG_OFF_NOT_DEPLOYED",
+    "safety": "NO_BUSINESS_WRITES_NO_AUTH_FINANCE_D1_OAUTH_CRON_CHANGES",
+    "docs": "docs/MLS_APPROVED_DESIGN_SYSTEM_2026_10_29.md"
   }
 }
