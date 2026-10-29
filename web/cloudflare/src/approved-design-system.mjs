@@ -452,4 +452,23 @@ html[data-theme=dark] :focus-visible{outline-color:#75c8ff}
  .mission-dashboard>.command-center-note{grid-row:6!important}
 }
 
+
+
+/* Fidelity review 4: resolve agent-specific pseudo-element precedence;
+ * no decorative placeholder may be read as shop performance. */
+@media(min-width:901px){
+ .mission-dashboard .agent-card[data-mission-accent]:before{
+  content:""!important;
+  background:
+   radial-gradient(circle at 34% 43%,#f6ffff 0 2px,var(--bot-color) 2.5px 4.8px,transparent 6px),
+   radial-gradient(circle at 66% 43%,#f6ffff 0 2px,var(--bot-color) 2.5px 4.8px,transparent 6px),
+   linear-gradient(90deg,transparent,var(--bot-color),transparent) center 69%/18px 3px no-repeat,
+   radial-gradient(ellipse at 50% 42%,rgba(var(--bot-rgb),.36),transparent 67%),
+   linear-gradient(135deg,rgba(var(--bot-rgb),.17),#071934 72%)!important;
+  color:transparent!important;text-shadow:none!important;
+ }
+ .mission-dashboard>.mission-day-intelligence{display:flex!important;flex-direction:column!important;gap:10px!important;min-width:0!important}
+ .mission-dashboard>.mission-day-intelligence>.mission-data-panel{flex:0 0 auto!important;width:100%!important;min-width:0!important;max-width:100%!important}
+}
+
 `;
