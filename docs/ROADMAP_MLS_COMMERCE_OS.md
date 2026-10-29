@@ -40,7 +40,7 @@ Atualizado em **29/10/2026**.
 
 Começar pelo **Plano de Evolução** como painel executivo: mostrar fatos publicados, trilhas em andamento, candidato de release, gates e horizonte M5–M9 sem percentuais inventados. Usar o mesmo padrão de hierarquia visual nos painéis **Agentes → Produtos → Produção → Ads/Automação**, sempre preservando a fonte e os controles já existentes. A nova apresentação é uma fotografia técnica do roadmap, **não** uma consulta financeira nova.
 
-O rework visual tem branch independente `design/mission-control-roadmap-rework-20261029`, derivada da `main`, sem tocar nas PRs #63/#65/#68. Reconciliar com o candidato V3.6 somente após revisão e testes de integração; jamais mesclar duas trilhas de release simultaneamente.
+O rework visual tem branch independente `design/mission-control-roadmap-rework-20261029` (**PR #69 DRAFT**), derivada da `main`, sem tocar nas PRs #63/#65/#68. Reconciliar com o candidato V3.6 somente após revisão e testes de integração; jamais mesclar duas trilhas de release simultaneamente.
 
 ---
 
