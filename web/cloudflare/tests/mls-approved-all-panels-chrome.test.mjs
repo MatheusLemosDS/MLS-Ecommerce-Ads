@@ -112,7 +112,7 @@ test('approved design smoke: fifteen real owner workspaces at desktop and 390px 
      "const rect=section.getBoundingClientRect(),nav=section.querySelector('.mission-page-tabs');"+
      "const navRect=nav?.getBoundingClientRect();"+
      "return {id,inner:innerWidth,scroll:document.documentElement.scrollWidth,"+
-     "section:{left:rect.left,right:rect.right,width:rect.width},nav:navRect?{left:navRect.left,right:navRect.right}:null,"+
+     "section:{left:rect.left,right:rect.right,top:rect.top,width:rect.width},nav:navRect?{left:navRect.left,right:navRect.right}:null,"+
      "theme:document.documentElement.dataset.theme,visible:getComputedStyle(section).display!=='none',"+
      "workspaces:document.querySelectorAll('.mission-workspace').length};"+
      "})()");
@@ -120,6 +120,7 @@ test('approved design smoke: fifteen real owner workspaces at desktop and 390px 
     assert.equal(result.theme,'dark',id+': theme not applied');
     assert.equal(result.inner,viewport.width,id+': device width expanded');
     assert.equal(result.visible,true,id+': section hidden');
+    assert.ok(result.section.top>=70,viewport.name+'/'+id+': panel header hidden behind sticky topbar '+JSON.stringify(result));
     assert.ok(result.section.left>=-2&&result.section.right<=viewport.width+3,
      viewport.name+'/'+id+': panel clipped '+JSON.stringify(result));
     assert.ok(result.scroll<=viewport.width+3,
