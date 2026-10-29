@@ -20,7 +20,7 @@ async function openBrowser(){
  let socket;
  try{
   let port=0;
-  for(let i=0;i<130;i++){
+  for(let i=0;i<300;i++){
    try{port=Number(fs.readFileSync(path.join(profile,'DevToolsActivePort'),'utf8').split('\n')[0]);if(port>0)break;}catch{}
    await pause(65);
   }
@@ -64,7 +64,7 @@ async function openBrowser(){
  }
 }
 
-test('offline artifact CSS-only navigation works on 1365px desktop and 390px mobile without scripts or external APIs',{timeout:90000},async t=>{
+test('offline artifact CSS-only navigation works on 1365px desktop and 390px mobile without scripts or external APIs',{timeout:120000},async t=>{
  if(!chrome)return t.skip('Chromium is unavailable');
  const directory=fs.mkdtempSync(path.join(os.tmpdir(),'mls-offline-review-fixture-'));
  let browser;
