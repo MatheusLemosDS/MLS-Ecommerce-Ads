@@ -25,6 +25,7 @@ Mockup fornecido pelo proprietário em 29/10/2026: shell azul-marinho quase pret
 - Hub Produtos com catálogo/custos existentes e diferenciação de V3.6 Listing Factory ainda não publicada e M3 Pricing em PR (PR #72).
 - Produção DTF organizada em Fila → Artes → Filme → Prévia → Lotes; sem tocar no montador e em reservas (PR #73).
 - Shell principal, sidebar, topbar, estados, botões, cards KPI e relatórios com tokens visuais unificados.
+- Layout legível das seis métricas atuais: quatro cards por linha no desktop amplo, três nas telas intermediárias e dois no celular. Âncoras dos painéis respeitam o deslocamento da topbar fixa, evitando títulos cortados.
 - Seis KPIs principais da Visão Geral mantidos com **os campos reais** e o mesmo significado anterior; cores e faixas de contraste são decorativas.
 - Os sete painéis de agentes recebem navegação funcional por âncoras: Visão Geral, Indicadores, Prioridades, Ferramentas e seções específicas existentes.
 - Campanhas, Ads Dashboard, Automação/Optimization e Conexões passam a utilizar a mesma camada visual. Avisos de modo Observador e leitura apenas são explícitos.
