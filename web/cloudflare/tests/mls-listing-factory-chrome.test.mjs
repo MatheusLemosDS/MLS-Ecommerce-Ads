@@ -63,7 +63,7 @@ async function chromeEvaluate(url,source){
  }finally{
   try{socket?.close();}catch{}
   try{child.kill('SIGKILL');}catch{}
-  rmSync(profile,{recursive:true,force:true});
+  rmSync(profile,{recursive:true,force:true,maxRetries:12,retryDelay:100});
  }
 }
 
