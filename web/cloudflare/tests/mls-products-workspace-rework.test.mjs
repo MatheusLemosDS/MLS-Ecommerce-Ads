@@ -34,7 +34,7 @@ test('Products workspace truthfully distinguishes shipped catalog/costs from dra
 });
 for(const minify of [false,true]){
  test('compiled owner page keeps every Products identifier once, no new provider endpoints (minify='+minify+')',async()=>{
-  const {html}=await compiledOwnerReportPage(minify);
+  const {html}=await compiledOwnerReportPage(minify,{ownerPreview:false});
   const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(match=>match[1]);
   assert.equal(ids.length,new Set(ids).size,'duplicate owner DOM IDs');
   for(const id of ['products','productsHub','productsHubTitle','savedCatalog','savedCatalogSearch',
