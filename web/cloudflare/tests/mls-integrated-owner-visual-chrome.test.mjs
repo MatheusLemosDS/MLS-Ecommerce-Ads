@@ -116,10 +116,10 @@ test('synthetic owner visual smoke in desktop and mobile Chrome with zero real-a
    assert.deepEqual(palette.scopeIds,['navigation','products','dtf']);
    assert.deepEqual(palette.initial,{pressed:'true',hidden:false,disabled:true});
    assert.equal(palette.queryEnabled,true);
-   assert.ok(palette.bounds.left>=0&&palette.bounds.right<=item.width+2,
-    item.name+': modal overflows screen');
-   assert.ok(palette.bounds.bottom<=item.height+4,item.name+': modal overflows height');
    await cdp.screenshot('owner-search-'+item.name+'.png');
+   assert.ok(palette.bounds.left>=0&&palette.bounds.right<=item.width+2,
+    item.name+': modal overflows screen: '+JSON.stringify(palette));
+   assert.ok(palette.bounds.bottom<=item.height+4,item.name+': modal overflows height: '+JSON.stringify(palette));
    const result=await cdp.evaluate(dtf);
    assert.equal(result.found,true);
    assert.equal(result.title,'Pedido 998877');
