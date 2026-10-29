@@ -45,7 +45,7 @@ export function projectMlsDistribution(input){
  // not assumed from overlapping settlement or refund counters.
  const {source,total,segments,complete}=input||{};
  if(complete!==true||!SAFE(total)||total<=0)return fail('Cobertura completa não verificada');
- if(!Array.isArray(segments)||segments.length<2||segments.length>12)
+ if(!Array.isArray(segments)||segments.length<1||segments.length>8)
   return fail('Categorias não verificadas');
  let sum=0;const categories=[];
  for(const row of segments){
