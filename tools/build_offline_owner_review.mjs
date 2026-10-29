@@ -30,7 +30,7 @@ const reviewCss=[
  '.review-strip nav a:hover,.review-strip nav a:focus-visible{border-color:#6ad5ff;background:#184673}',
  'main.workspace>section{display:none!important}',
  'main.workspace>section#overview{display:block!important}',
- 'main.workspace:has(>section:target)>#overview,main.workspace:has(>section :target)>#overview{display:none!important}',
+ 'main.workspace:has(>section:not(#overview):target)>#overview,main.workspace:has(>section:not(#overview) :target)>#overview{display:none!important}',
  'main.workspace>section:target,main.workspace>section:has(:target){display:block!important}',
  'main.workspace>section:target[hidden],main.workspace>section:has(:target)[hidden]{display:block!important}',
  'main.workspace>section.mission-workspace:target,main.workspace>section.mission-workspace:has(:target){display:grid!important}',
