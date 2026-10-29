@@ -64,3 +64,12 @@ test('real compiled owner OFF/ON can be reviewed with zero app scripts, no live 
   assert.doesNotMatch(preview,/\bhref="https?:|\bhref="\/admin|\bonclick=|\baction=/);
  }
 });
+
+
+test('offline preview keeps Visão geral visible when #overview is explicitly selected',()=>{
+ const html=buildOfflineOwnerReview(sample());
+ assert.ok(html.includes('main.workspace:has(>section:not(#overview):target)>#overview'),
+  'targeting #overview must not trigger the rule that hides Overview');
+ assert.ok(!html.includes('main.workspace:has(>section:target)>#overview'),
+  'generic section :target rule would hide the selected Overview');
+});
