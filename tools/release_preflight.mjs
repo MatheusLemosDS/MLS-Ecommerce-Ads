@@ -28,6 +28,7 @@ export const RELEASE_ALLOWED_FILES=Object.freeze([
   "tools/build_offline_owner_review.mjs",
   "tools/mls_listing_factory_cli.mjs",
   "tools/release_preflight.mjs",
+  "tools/tests/offline-owner-review-chrome.test.mjs",
   "tools/tests/offline-owner-review.test.mjs",
   "tools/tests/release-preflight.test.mjs",
   "tools/worker_project.mjs",
