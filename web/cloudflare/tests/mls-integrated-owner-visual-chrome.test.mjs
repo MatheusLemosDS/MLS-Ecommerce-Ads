@@ -179,3 +179,47 @@ test('synthetic owner visual smoke in desktop and mobile Chrome with zero real-a
   }
  }finally{try{cdp?.close();}finally{host.closeAllConnections?.();host.close();}}
 });
+
+
+test('disabled release switch keeps legacy Ctrl+K navigation usable in real Chrome',{timeout:45000},async t=>{
+ if(!chrome)return t.skip('Chrome is not installed');
+ const {html}=await compiledOwnerReportPage(false,{ownerPreview:false});
+ const host=http.createServer((req,res)=>{
+  if(req.url?.startsWith('/api/')){res.writeHead(503,{'content-type':'application/json'});res.end('{"error":"SYNTHETIC_NO_REMOTE_API"}');return;}
+  res.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store'});res.end(html);
+ });
+ await new Promise(done=>host.listen(0,'127.0.0.1',done));
+ let cdp;
+ try{
+  cdp=await launch();
+  await cdp.send('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
+  await cdp.send('Page.navigate',{url:'http://127.0.0.1:'+host.address().port+'/admin?tab=overview'});
+  let ready=false;
+  for(let i=0;i<120;i++){
+   if(await cdp.evaluate("document.readyState==='complete'&&!!globalThis.mlsWorkspaceSearch")){
+    ready=true;break;
+   }
+   await sleep(75);
+  }
+  assert.equal(ready,true,'legacy owner navigation was not initialized');
+  const result=await cdp.evaluate("(()=>{"+
+   "const overlay=document.getElementById('missionGlobalSearch');"+
+   "const panel=globalThis.mlsWorkspaceSearch;panel.open();"+
+   "panel.scope('products');panel.scope('dtf');"+
+   "const input=document.getElementById('missionSearchInput');"+
+   "input.value='finance';input.dispatchEvent(new Event('input',{bubbles:true}));"+
+   "return {factory:!!document.getElementById('mlsListingFactory'),marker:overlay.dataset.mlsV36Preview,"+
+   "scopes:[...overlay.querySelectorAll('[data-mission-scope]')].map(x=>x.dataset.missionScope),"+
+   "executeHidden:document.getElementById('missionSearchExecute').hidden,"+
+   "navigation:[...document.querySelectorAll('#missionSearchResults .mission-search-result strong')].map(x=>x.textContent),"+
+   "searchOpen:!overlay.hidden,clientWidth:document.documentElement.clientWidth,scrollWidth:document.documentElement.scrollWidth};"+
+   "})()");
+  assert.equal(result.factory,false);
+  assert.equal(result.marker,'disabled');
+  assert.deepEqual(result.scopes,['navigation']);
+  assert.equal(result.executeHidden,true);
+  assert.equal(result.searchOpen,true);
+  assert.ok(result.navigation.some(title=>title.includes('Finance')),'original panel search remains usable');
+  assert.ok(result.scrollWidth<=390+2,'legacy mobile shell must not overflow horizontally');
+ }finally{try{cdp?.close();}finally{host.closeAllConnections?.();host.close();}}
+});
