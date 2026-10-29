@@ -87,12 +87,13 @@ test('offline artifact CSS-only navigation works on 1365px desktop and 390px mob
    assert.equal(ready,true,'offline local document failed to load');
    const initial=await browser.eval("(()=>({protocol:location.protocol,scriptCount:document.scripts.length,"+
     "mode:document.body.dataset.qaPreview,section:getComputedStyle(document.getElementById('overview')).display,"+
-    "width:innerWidth,scroll:document.documentElement.scrollWidth}))()");
+    "width:innerWidth,scroll:document.documentElement.scrollWidth,"+
+    "offenders:[...document.querySelectorAll('body *')].filter(e=>{const r=e.getBoundingClientRect();return r.right>innerWidth+3&&r.width>0&&getComputedStyle(e).display!=='none'}).slice(0,18).map(e=>{const r=e.getBoundingClientRect();return {tag:e.tagName,id:e.id,cls:String(e.className?.baseVal||e.className||'').slice(0,85),right:Math.round(r.right),width:Math.round(r.width)}})}))()");
    assert.equal(initial.protocol,'file:');
    assert.equal(initial.scriptCount,0);
    assert.equal(initial.mode,'off');
    assert.notEqual(initial.section,'none');
-   assert.ok(initial.scroll<=viewport.width+3,viewport.name+': unexpected overflow of overview');
+   assert.ok(initial.scroll<=viewport.width+3,viewport.name+': unexpected overflow of overview '+JSON.stringify(initial));
    const financeUrl=url+'#agent-finance';
    await browser.send('Page.navigate',{url:financeUrl});
    await pause(100);
