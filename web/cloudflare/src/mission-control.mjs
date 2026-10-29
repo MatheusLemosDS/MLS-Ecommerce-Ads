@@ -401,6 +401,9 @@ export const MISSION_CSS="\n/* MLS Commerce OS / Mission Control: cosmetic only,
 
 
 /* Agent hub V3.7 visual-only cockpit. Read-only Agent Registry, no new transport. */
+.mission-workspace .mission-page-tabs-title{display:block;padding:8px 10px;font-size:9px;font-weight:850;letter-spacing:1.25px;color:var(--muted)}
+.mission-workspace .mission-stats,.mission-workspace .mission-module,.mission-workspace .mission-hero,.mission-workspace .mission-evidence-list{scroll-margin-top:98px}
+
 .mission-hub .mission-crumb{flex-direction:row;align-items:center;flex-wrap:wrap;gap:7px}
 .mission-hub .mission-crumb>a,.mission-hub .mission-crumb strong,.mission-hub .mission-crumb span{line-height:1.45}
 
@@ -515,11 +518,16 @@ function missionWorkspace(item,financeHtml){
    '<p class="mission-source-note">Os valores e os controles abaixo são os mesmos do sistema anterior, sem duplicação de cálculos.</p>'+financeHtml+'</div>':'';
  const hermes=id==='hermes'?'<div id="missionHermesTools"></div>':'';
  return '<section class="mission-workspace mission-agent--'+id+'" id="'+tab+'" data-mission-page="'+id+'" hidden>'+
-  '<header class="mission-hero"><div><nav class="mission-crumb" aria-label="Localização"><a href="/admin?tab=overview" data-mission-open="overview">Visão Geral</a><span>›</span><a href="/admin?tab=agents" data-mission-open="agents">Agentes</a><span>›</span><strong>'+item.name+'</strong></nav>'+
+  '<header class="mission-hero" id="mission-'+id+'-top"><div><nav class="mission-crumb" aria-label="Localização"><a href="/admin?tab=overview" data-mission-open="overview">Visão Geral</a><span>›</span><a href="/admin?tab=agents" data-mission-open="agents">Agentes</a><span>›</span><strong>'+item.name+'</strong></nav>'+
   '<div class="mission-hero-main"><span class="mission-orb mission-agent-avatar" aria-hidden="true">'+item.symbol+'</span><div><span class="mission-eyebrow">'+item.tag+'</span><h2>'+item.name+'</h2><p>'+item.summary+'</p><p class="mission-last mission-source-provenance" id="mission-'+id+'-checked">Aguardando fonte do agente.</p></div></div></div>'+
   '<div class="mission-intro-status"><span class="mission-status" data-mission-status="'+id+'">Aguardando dados</span><span class="mission-breadcrumb-pill">Modo Observador · sem escrita comercial</span></div></header>'+
-  '<nav class="mission-page-tabs" aria-label="Seções de '+item.name+'"><a href="#mission-'+id+'-tasks">Prioridades</a><a href="#mission-'+id+'-tools">Ferramentas</a>'+(id==='finance'?'<a href="#businessMonth">Financeiro detalhado</a>':'')+'</nav>'+ 
-  '<div class="mission-stats" aria-label="Indicadores de '+item.name+'">'+missionMetrics+'</div>'+
+  '<nav class="mission-page-tabs" aria-label="Seções de '+item.name+'"><span class="mission-page-tabs-title">PAINEL ESPECIALIZADO</span>'+
+  '<a href="#mission-'+id+'-top">Visão geral</a><a href="#mission-'+id+'-metrics">Indicadores</a>'+
+  '<a href="#mission-'+id+'-tasks">Prioridades</a><a href="#mission-'+id+'-tools">Ferramentas</a>'+
+  (id==='finance'?'<a href="#businessMonth">Financeiro detalhado</a>':'')+
+  (['products','production','returns','auditor'].includes(id)?'<a href="#mission-'+id+'-evidence">Evidências</a>':'')+
+  '<a href="/admin?tab=agents" data-mission-open="agents">Equipe digital</a></nav>'+
+  '<div class="mission-stats" id="mission-'+id+'-metrics" aria-label="Indicadores de '+item.name+'">'+missionMetrics+'</div>'+
   (id==='finance'||id==='ads'?missionTrendPanelBody(id):'')+
   (['products','production','returns','auditor'].includes(id)?'<section class="mission-evidence-panel" aria-label="Indicadores observados de '+item.name+'"><header><div><span class="mission-eyebrow">SNAPSHOT VERIFICADO</span><h3>Indicadores disponíveis</h3><p>Comparação de contagens observadas. Não representa evolução histórica.</p></div><span class="mission-breadcrumb-pill">Sem projeções</span></header><div class="mission-evidence-list" id="mission-'+id+'-evidence"><p class="mission-empty">Aguardando fonte validada.</p></div><p class="mission-evidence-foot" id="mission-'+id+'-evidence-note">Dados desconhecidos permanecem indisponíveis.</p></section>':'')+
   '<div class="mission-panels"><section class="mission-module"><div class="mission-module-head"><h3>Prioridades e alertas</h3><small>Somente evidências verificáveis</small></div><div id="mission-'+id+'-tasks" class="mission-tasks"><p class="mission-empty">Aguardando indicadores do agente.</p></div>'+coverage+
