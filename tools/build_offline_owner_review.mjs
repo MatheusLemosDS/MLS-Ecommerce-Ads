@@ -64,7 +64,9 @@ export function buildOfflineOwnerReview(html,{previewEnabled=false}={}){
   return ' href="'+(match&&targets.has(match[1])?'#'+match[1]:'#review-unavailable')+'"';
  });
  // Forms and every state-changing control are inert even when offline.
- body=body.replace(/<form\b[^>]*>/gi,'<div class="review-inert-form" data-review-form="disabled">')
+ body=body.replace(/<form\b[^>]*>/gi,tag=>
+  '<div class="review-inert-form" data-review-form="disabled"'+
+  (/\shidden(?:\s|>|=)/i.test(tag)?' hidden':'')+'>')
   .replace(/<\/form\s*>/gi,'</div>')
   .replace(/<(button|input|select|textarea)\b/gi,'<$1 disabled="disabled"')
   .replace(/\s(?:target|ping)\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi,'');
