@@ -29,7 +29,17 @@ jobs:
       - name: Instalar versões fixadas
         run: npm ci
       - name: Executar testes
+        env:
+          MLS_AGENTS_SCREENSHOT_DIR: ${{ runner.temp }}/mls-agents-hub-visual
         run: npm test
+      - name: Capturas sintéticas do painel Agentes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mls-agents-hub-synthetic-visual-qa
+          path: ${{ runner.temp }}/mls-agents-hub-visual
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Validar ponte financeira e atualização do Hermes
         run: python3 -m unittest web/bridge/test_hermes_bridge.py tools/test_install_hermes_web_bridge.py tools/test_build_hermes_web_bridge_install.py tools/test_activate_hermes_web_bridge.py tools/test_build_hermes_web_bridge_activation.py -q
       - name: Gerar os três Workers
