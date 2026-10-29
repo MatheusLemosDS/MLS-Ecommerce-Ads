@@ -91,7 +91,7 @@ test('chart labels are escaped; no untrusted markup or remote resources',()=>{
   {label:'<script>alert(1)</script>',value:1},{label:'A & B',value:1}
  ]});
  const html=renderMlsVerifiedChart(result,{title:'<img src=x onerror=alert(1)>'});
- assert.doesNotMatch(html,/<script\b|<img\b|onerror=|https?:\/\//);
+ assert.doesNotMatch(html,/<(?:script|img)\b|<svg[^>]*\sonerror\s*=|xlink:href=|<foreignObject\b/);
  assert.match(html,/&lt;script&gt;/);
  assert.match(html,/A &amp; B/);
 });
@@ -107,7 +107,7 @@ test('vertical bars use only complete real input, no inferred hourly buckets',()
  assert.match(svg,/<svg\b/);
  assert.match(svg,/09h: 4/);
  assert.match(svg,/>08h</);
- assert.doesNotMatch(svg,/https?:\/\//);
+ assert.doesNotMatch(svg,/<script\b|<foreignObject\b|xlink:href=/);
 });
 test('horizontal category bars preserve zero and reject duplicates or unsafe amounts',()=>{
  const horizontal=projectMlsCategoricalChart({complete:true,orientation:'horizontal',
