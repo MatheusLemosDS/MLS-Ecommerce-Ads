@@ -96,6 +96,7 @@ test('Chrome synthetic DTF rework renders five workflow steps without clipping o
    const result=await browser.evaluate("(()=>{"+
     "const stage=document.getElementById('production');stage.hidden=false;"+
     "const startup=document.querySelector('.startup-recovery');if(startup)startup.hidden=true;"+
+    "const globalStatus=document.getElementById('message');if(globalStatus)globalStatus.hidden=true;"+
     "document.querySelectorAll('main.workspace>section').forEach(el=>{if(el!==stage)el.hidden=true});"+
     "stage.scrollIntoView({block:'start',behavior:'instant'});"+
     "const box=el=>{const r=el.getBoundingClientRect();return {left:r.left,right:r.right,top:r.top,width:r.width,height:r.height}};"+
@@ -105,6 +106,7 @@ test('Chrome synthetic DTF rework renders five workflow steps without clipping o
     "stage:box(stage),hero:box(hero),flow:box(flow),cols:getComputedStyle(flow).gridTemplateColumns.trim().split(/\\s+/).length,"+
     "links:links.map(n=>({href:n.getAttribute('href'),rect:box(n)})),"+
     "sections:['dtfQueueStage','dtfArtworkStage','dtfFilmStage','dtfPreviewStage','dtfBatchStage'].map(id=>!!document.getElementById(id)),"+
+    "stageTitleDirection:getComputedStyle(document.querySelector('#dtfPreviewStage .dtf-section-head')).flexDirection,"+
     "oldControls:['dtfSearch','dtfArtFiles','dtfFilmWidth','dtfPreviewButton','dtfPrepare','dtfBatches'].every(id=>!!document.getElementById(id)),"+
     "clipped:[...links,hero,...stage.querySelectorAll('.dtf-summary article')].some(el=>box(el).right>innerWidth+3)};"+
     "})()");
@@ -116,6 +118,7 @@ test('Chrome synthetic DTF rework renders five workflow steps without clipping o
    assert.equal(result.clipped,false,device.name+': stage cards extend beyond viewport');
    assert.equal(result.cols,device.mobile?1:5,device.name+': wrong workflow grid columns');
    assert.equal(result.links.length,5);
+   assert.equal(result.stageTitleDirection,device.mobile?'column':'row',device.name+': stage label/title alignment');
    assert.ok(result.links.every((link,index)=>link.href==='#'+['dtfQueueStage','dtfArtworkStage','dtfFilmStage','dtfPreviewStage','dtfBatchStage'][index]));
    assert.ok(result.sections.every(Boolean),device.name+': missing stage');
    assert.equal(result.oldControls,true,device.name+': legacy controls missing');
