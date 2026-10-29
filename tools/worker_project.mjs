@@ -116,6 +116,8 @@ export const TARGETS = Object.freeze({
     'b99d26849353f494ddb2cea12605a2f7ad0186a1407c91857946e0522d1b499f',
     // V3.6 explicit saved-catalog search handoff from keyboard palette, exact App from Actions #290; CI required.
     '55645f1f5ec777136254e0deb6e09e88cd542649097786992e3fb212af298078',
+    // Agent Hub Observer-only UI candidate #71; exact App digest from CI #40802776784 (all UI/Chrome tests passed, source identity rerun required).
+    '3cfe752e441a734a529d0ee5449e4b69ebcb687d121d3e6b110e2247cf509d8c',
   ]}),
   auth: Object.freeze({name: 'brazacommerce-auth', main: '../../dist/auth-worker.mjs', baselineHashes: [
     '45d0142709c5087e373cc4da146070ed39c472805f6f64c00f00b6555f0e1f56',

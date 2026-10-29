@@ -2,7 +2,7 @@
   "schema": "mls_commerce_os_checkpoint_v1",
   "canonical_roadmap": "docs/ROADMAP_MLS_COMMERCE_OS.md",
   "legacy_roadmap": "docs/ROADMAP_BRAZACOMMERCE.md",
-  "updated_at": "2026-10-28",
+  "updated_at": "2026-10-29",
   "product": {
     "name": "MLS Commerce OS",
     "supervisor": "MLS Hermes",
@@ -660,5 +660,19 @@
         "documented_in": "docs/MLS_OWNER_SYNTHETIC_VISUAL_QA_2026_10_28.md"
       }
     }
+  },
+  "visual_rework_agents_20261029": {
+    "schema": "mls_agents_hub_visual_rework_v1",
+    "pull_request": 71,
+    "branch": "design/mission-control-agents-rework-20261029",
+    "base_branch": "main",
+    "status": "DRAFT_NO_MERGE_NO_DEPLOY",
+    "features": ["Agent Registry operational status cards", "priorities from existing registry only", "local status filters", "synthetic Chrome desktop/mobile visual QA"],
+    "owner_authenticated_qa": "PENDING",
+    "release_authorized": false,
+    "separate_release_prs": [63, 65, 68, 69],
+    "finance_m2": "ISSUE_50_OPEN",
+    "ads_promo": "LOCKED",
+    "documentation": "docs/MLS_AGENT_HUB_REWORK_2026_10_29.md"
   }
 }

@@ -106,3 +106,10 @@ A seleção de mockups em lote passou [CI 40790629421](https://github.com/Matheu
 ### Integração PR #63 — handoff 28/10/2026
 
 Mission Control V3.6 da PR #48 e Listing Factory PRs #51/#56/#60 foram combinados numa branch isolada sobre a main: integration/mls-v36-search-listing-factory-20261028. A comparação Git confirmou 13/13 fontes da PR #60 e 7/7 da PR #48 idênticas, com união da allowlist SHA em tools/worker_project.mjs. CI #40792253729 SUCCESS (2.136 Node + 67 Python + Chrome, App/Auth/Finance builds), SHA App 8ed059ddb6f0901a48d277d6b9b806a23d52a1e5e105ed0e2e456e2aea6701f5. Nenhum merge/deploy de código. Próxima tarefa do Codex: QA autenticada desktop/mobile com catálogo real, fila DTF e mockups locais; depois escolher PR63 como release única ou merges sequenciais, não as duas opções. M2 #50 continua aberta, Ads/PROMO LOCKED. Documento: docs/MLS_V36_LISTING_FACTORY_INTEGRATION_2026_10_28.md.
+
+
+### 29/10/2026 — PR #71, rework do hub Agentes
+
+Branch `design/mission-control-agents-rework-20261029` sobre `main`, **PR #71 DRAFT**, paralela à PR #69 do roadmap e à trilha de release V3.6 (#63/#65/#68). A UI `web/cloudflare/src/mission-control.mjs` agora exibe status e prioridades **somente do Agent Registry**, filtros de atenção/bloqueio/acompanhamento/saudáveis, busca local, avisos de Observer e barreira Ads/PROMO. Não há fetch, armazenamento, novas rotas Shopee, escrita nem mudança em Auth/Finance.
+
+Testes `mission-agents-hub-rework.test.mjs` e `mission-agents-hub-chrome.test.mjs` cobrem dados desconhecidos, texto malicioso não executável, URL fixa segura, filtros e Chrome 1365×900/390×844 com screenshots sintéticos. Para fechar: validar HEAD exato, registrar hash novo App sem alterar allowlist anterior, confirmar Auth/Finance iguais, revisar imagens e realizar QA owner autenticada antes de qualquer merge. Não misturar com a PR #69 sem revalidação final. Manual em `docs/MLS_AGENT_HUB_REWORK_2026_10_29.md`.
