@@ -35,6 +35,7 @@ const reviewCss=[
  'main.workspace>section:target[hidden],main.workspace>section:has(:target)[hidden]{display:block!important}',
  'main.workspace>section.mission-workspace:target,main.workspace>section.mission-workspace:has(:target){display:grid!important}',
  '@media(max-width:850px){main.workspace>section.mission-workspace:target,main.workspace>section.mission-workspace:has(:target){display:block!important}}',
+ '@media(max-width:720px){.mission-dashboard .agent-card-head{flex-wrap:wrap;min-width:0;align-items:flex-start}.mission-dashboard .agent-card .agent-status{white-space:normal;max-width:100%;min-width:0;overflow-wrap:anywhere}.mission-dashboard .agent-card h4{min-width:0;overflow-wrap:anywhere}}',
  '.review-inert-form{min-width:0}',
  '@media(max-width:600px){.review-strip{padding:13px}.review-strip nav{gap:6px}.review-strip nav a{padding:8px 9px}}'
 ].join('\n');
