@@ -162,6 +162,9 @@ ads_measurement_view=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'sr
 ads_period=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/ads-period.mjs').read_text(),flags=re.M), flags=re.M)
 ads_calendar=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/ads-calendar.mjs').read_text(),flags=re.M), flags=re.M)
 ads_calendar='const brazaAdsCalendar = (() => {\n'+ads_calendar+'\nreturn {projectAdsCalendarRequest,projectAdsCalendar,getAdsCalendar,buildAdsCalendar};\n})();\nconst {projectAdsCalendarRequest,projectAdsCalendar,getAdsCalendar,buildAdsCalendar}=brazaAdsCalendar;\n'
+# Shared approved design is explicitly injected into the legacy paste-ready App bundle.
+# Keep one source in the outer scope before Ads and Admin (imports are stripped).
+approved_design=re.sub(r'^export ', '', (root/'src/approved-design-system.mjs').read_text(), flags=re.M)
 ads_workspace=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/ads-workspace-view.mjs').read_text(),flags=re.M), flags=re.M)
 scaling_preparation=re.sub(r'^export ', '', (root/'src/scaling-preparation.mjs').read_text(),flags=re.M)
 app_ads_summary=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/app-ads-summary.mjs').read_text(),flags=re.M), flags=re.M)
@@ -302,7 +305,7 @@ insertion='''  const view=ads.workspace_view||'product';
   if(workspaceTitles[currentPath])[title,subtitle]=workspaceTitles[currentPath];
 '''
 updated=updated[:point]+insertion+updated[point:]
-output=updated+'\n\n'+theme+'\n'+workspace_auth+'\n'+workspace_navigation+'\n'+ads_presentation+'\n'+shell_navigation+'\n'+orders_diagnostic+'\n'+orders_http+'\n'+app_orders+'\n'+app_items+'\n'+finance_sample_frame+'\n'+finance_preview_frame+'\n'+variant_catalog_frame+'\n'+historical_variant_frame+'\n'+app_historical_variant+'\n'+app_finance_sample+'\n'+daily_orders_frame+'\n'+store_period_frame+'\n'+business_period_frame+'\n' +reconciliation_frame+'\n'+escrow_release_frame+'\n'+income_overview_frame+'\n'+income_detail_frame+'\n'+production_orders_frame+'\n'+product_index_frame+'\n'+app_product_index+'\n'+app_production_orders+'\n'+app_store_period+'\n'+app_business_period+'\n' +app_reconciliation+'\n'+app_escrow_releases+'\n'+app_income_overview+'\n'+app_income_detail+'\n'+ads_measurement+'\n'+ads_measurement_view+'\n'+ads_period+'\n'+ads_calendar+'\n'+app_ads_summary+'\n'+ads_workspace+'\n'+scaling_preparation+'\n\nconst brazaAdmin = (() => {\n'+admin+'\nreturn {adminFetch,schedule,scheduledWork,workspaceAuthFetch};\n})();\n'
+output=updated+'\n\n'+theme+'\n'+workspace_auth+'\n'+workspace_navigation+'\n'+ads_presentation+'\n'+shell_navigation+'\n'+orders_diagnostic+'\n'+orders_http+'\n'+app_orders+'\n'+app_items+'\n'+finance_sample_frame+'\n'+finance_preview_frame+'\n'+variant_catalog_frame+'\n'+historical_variant_frame+'\n'+app_historical_variant+'\n'+app_finance_sample+'\n'+daily_orders_frame+'\n'+store_period_frame+'\n'+business_period_frame+'\n' +reconciliation_frame+'\n'+escrow_release_frame+'\n'+income_overview_frame+'\n'+income_detail_frame+'\n'+production_orders_frame+'\n'+product_index_frame+'\n'+app_product_index+'\n'+app_production_orders+'\n'+app_store_period+'\n'+app_business_period+'\n' +app_reconciliation+'\n'+app_escrow_releases+'\n'+app_income_overview+'\n'+app_income_detail+'\n'+ads_measurement+'\n'+ads_measurement_view+'\n'+ads_period+'\n'+ads_calendar+'\n'+app_ads_summary+'\n'+approved_design+'\n'+ads_workspace+'\n'+scaling_preparation+'\n\nconst brazaAdmin = (() => {\n'+admin+'\nreturn {adminFetch,schedule,scheduledWork,workspaceAuthFetch};\n})();\n'
 (root/'app-worker.mjs').write_text(output)
 auth_original=(root/'original/auth-worker.mjs').read_text()
 needle='    const url = new URL(request.url);'
