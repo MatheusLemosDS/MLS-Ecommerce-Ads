@@ -31,7 +31,7 @@
   },
   "current_phase": "M2_FINANCE_RETURNS_RECONCILIATION",
   "working_branch": "integration/mls-v36-search-listing-factory-20261028",
-  "current_status": "M2_OPEN_PR47_SHADOW_PR63_SEARCH_FACTORY_CI_GREEN_OWNER_QA_PENDING_NO_DEPLOY",
+  "current_status": "M2_OPEN_PR47_SHADOW_PR63_CI_GREEN_MOBILE_FIXED_PR65_SYNTHETIC_QA_GREEN_REAL_OWNER_QA_PENDING",
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
     "Repasse-base, ajuste, repasse após ajuste e liberação exibidos sem dupla dedução",
@@ -128,7 +128,9 @@
     "Codex can continue bulk media matching QA for user assets, do not change PR51/56 concurrently",
     "PR60 CI GREEN 40790629421 (2132 Node,67 Python,14/14 source blobs), prepare QA real files and ordered merge only when approved.",
     "PR63 V3.6+Listing Factory CI GREEN 40792253729 2136 Node/67 Python, 20 source blobs unchanged; owner desktop/mobile QA and merge strategy pending",
-    "Release gate: choose PR63 unified OR PR48→51→56→60, not both; preserve M2 issue #50 and Ads/PROMO LOCKED"
+    "Release gate: choose PR63 unified OR PR48→51→56→60, not both; preserve M2 issue #50 and Ads/PROMO LOCKED",
+    "PR63 responsive mobile CSS fixed (390px viewport previously expanded to 469px), CI 40794715203 rerun GREEN 2136 Node/67 Python",
+    "PR65 synthetic desktop/mobile QA CI 40794727173 GREEN 2137 Node/67 Python; artifact 12862897797; real owner QA still NOT DONE"
   ],
   "m0_followup": [
     "Conferir visual autenticado em desktop e celular durante M1; corrigir apenas branding/layout sem renomear infraestrutura"
@@ -603,19 +605,60 @@
       ],
       "source_parity": "13/13 Listing Factory PR60 and 7/7 V3.6 PR48 exact blobs",
       "ci": {
-        "run": 40792253729,
+        "run": 40794715203,
+        "attempt": 2,
+        "conclusion": "SUCCESS",
         "node_pass": 2136,
         "node_fail": 0,
         "python_pass": 67,
         "chrome": "PASS",
-        "app_sha256": "8ed059ddb6f0901a48d277d6b9b806a23d52a1e5e105ed0e2e456e2aea6701f5",
+        "app_sha256": "805caf375c1d060c3b3fcc88b6764c03153931a5ce97b017f5245752027e35c7",
         "auth_sha256": "1fef431c8573e05563c7938d95be0976a160bc603340084aa747ee0b73e7ec64",
-        "finance_sha256": "b2483fc6107ecb4782e746becfe1b69ee6e3b9d3f0a6109351390b11b9303ca3"
+        "finance_sha256": "b2483fc6107ecb4782e746becfe1b69ee6e3b9d3f0a6109351390b11b9303ca3",
+        "note": "First attempt failed flaky legacy Chromium timeout; rerun passed; mobile CSS from synthetic QA included"
       },
-      "qa": "AUTHENTICATED_OWNER_DESKTOP_MOBILE_PENDING",
+      "qa": "SYNTHETIC_DESKTOP_MOBILE_GREEN_REAL_OWNER_QA_PENDING",
       "m2_finance": "ISSUE_50_OPEN",
       "ads_promo": "LOCKED",
-      "next": "QA real; choose one reviewed release strategy; no merge/deploy before approval"
+      "next": "Real owner desktop/mobile QA and M2 verification; choose one release strategy, no merge/deploy before approval",
+      "mobile_repair": {
+        "cause": "LISTING_FORM_MIN_CONTENT_OVERFLOW_EXPANDS_390PX_TO_469PX",
+        "corrected_runtime_pr": 63,
+        "status": "SYNTHETIC_CHROME_VALIDATED",
+        "app_hash_changed": true
+      },
+      "synthetic_visual_qa": {
+        "pr": 65,
+        "head": "30b017d60192d7331719710e2baa87927ddac9d3",
+        "state": "DRAFT_CI_GREEN_HUMAN_OWNER_QA_PENDING",
+        "ci_run": 40794727173,
+        "node_pass": 2137,
+        "python_pass": 67,
+        "screenshot_artifact_id": 12862897797,
+        "screenshot_url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/40794727173/artifacts/12862897797",
+        "sizes": [
+          {
+            "width": 1365,
+            "height": 900
+          },
+          {
+            "width": 390,
+            "height": 844
+          }
+        ],
+        "actual_owner_data_used": false,
+        "actual_owner_login_used": false,
+        "live_shop_verified": false,
+        "checks": [
+          "responsive grids",
+          "no clipped fields",
+          "no invented prices",
+          "modal focus/scopes",
+          "synthetic saved DTF order navigation",
+          "Escape closes"
+        ],
+        "documented_in": "docs/MLS_OWNER_SYNTHETIC_VISUAL_QA_2026_10_28.md"
+      }
     }
   }
 }
