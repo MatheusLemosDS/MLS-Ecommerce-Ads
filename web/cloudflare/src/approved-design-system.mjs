@@ -359,4 +359,16 @@ html[data-theme=dark] :focus-visible{outline-color:#75c8ff}
  .mission-workspace .mission-page-tabs a{flex:0 0 auto!important}
 }
 
+
+
+/* Fidelity review 2: breadcrumb single-line, proportionate avatar face. */
+@media(min-width:901px){
+ .sidebar .brand{font-size:12px!important;white-space:nowrap!important}
+ .sidebar .brand small{white-space:normal!important}
+ .mission-workspace .mission-crumb{display:flex!important;flex-direction:row!important;flex-wrap:wrap!important;align-items:center!important;justify-content:flex-start!important;gap:5px!important;margin:0 0 6px!important}
+ .mission-workspace .mission-crumb>*{display:inline!important;flex:0 0 auto!important;line-height:1.3!important}
+ .mission-workspace .mission-orb.mission-agent-avatar:before{display:block!important;inset:7px 6px 10px!important;border-radius:10px!important}
+ .mission-workspace .mission-orb.mission-agent-avatar:after{display:block!important;top:17px!important;font-size:11px!important;letter-spacing:2px!important;line-height:1!important}
+}
+
 `;
