@@ -70,7 +70,7 @@ const screenshotPages=new Set(['overview','agents','agent-finance','agent-ads','
  'agent-returns','agent-auditor','agent-hermes','products','production','roadmap','hermes']);
 test('approved design smoke: fifteen real owner workspaces at desktop and 390px mobile, no fabricated shop data',{timeout:120000},async t=>{
  if(!chrome)return t.skip('Chrome not installed');
- let {html}=await compiledOwnerReportPage(false);
+ let {html}=await compiledOwnerReportPage(false,{ownerPreview:false});
  html=html.replace('<head>','<head><script>try{localStorage.setItem("braza-theme","dark")}catch(e){}</script>');
  html=html.replace('<body>','<body><div style="position:fixed;right:8px;bottom:8px;z-index:99999;pointer-events:none;border:1px solid #729bcc;background:#0d2341;color:#e8f7ff;font:10px sans-serif;padding:6px 9px;border-radius:6px">QA SINTÉTICA · SEM DADOS REAIS</div>');
  const server=http.createServer((req,res)=>{
