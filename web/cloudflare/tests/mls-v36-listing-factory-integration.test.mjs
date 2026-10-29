@@ -34,7 +34,7 @@ for(const minify of [false,true]){
    'missionSearchInput','missionSearchResults','dtfQueue','mlsLfBatchFiles',
    'mlsLfBatchFolder','mlsLfExportManifest','mlsLfExportReview'])
     assert.ok(html.includes('id="'+id+'"'),'missing owner control '+id);
-  for(const scope of ['panels','products','dtf'])
+  for(const scope of ['navigation','products','dtf'])
     assert.ok(html.includes('data-mission-scope="'+scope+'"'),'missing V3.6 search scope '+scope);
   const scripts=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(x=>x[1]);
   assert.equal(scripts.length,14,'retain the existing 13 owner scripts plus one Listing Factory script');
