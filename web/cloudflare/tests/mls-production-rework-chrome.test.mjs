@@ -64,7 +64,7 @@ async function launch(){
 
 test('Chrome synthetic DTF rework renders five workflow steps without clipping on desktop/mobile',{timeout:90000},async t=>{
  if(!chrome)return t.skip('Chrome not installed');
- let {html}=await compiledOwnerReportPage(false);
+ let {html}=await compiledOwnerReportPage(false,{ownerPreview:false});
  // Only local screenshots. The API is stubbed and NO real shop/network endpoints exist.
  html=html.replace('<head>','<head><script>try{localStorage.setItem("braza-theme","dark")}catch(e){}</script>');
  html=html.replace('<body>','<body><div style="position:fixed;bottom:8px;right:8px;z-index:99999;pointer-events:none;background:#15233a;color:#e4f6ff;border:1px solid #5c79a5;border-radius:6px;padding:5px 8px;font:10px sans-serif">QA SINTÉTICA · SEM DADOS REAIS</div>');
