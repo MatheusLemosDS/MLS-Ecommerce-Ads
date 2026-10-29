@@ -55,7 +55,7 @@ async function syntheticPage(){
  const html=await response.text();
  assert.equal(html.includes('id="mlsRoadmapHeading"'),true);
  assert.equal(html.includes('id="roadmapFuture"'),true);
- return html.replace('<body>','<body><div style="position:fixed;z-index:99999;bottom:8px;right:8px;pointer-events:none;padding:5px 8px;background:#212f46;color:white;border:1px solid #5172a5;border-radius:6px;font:10px sans-serif">QA SINTÉTICA · SEM DADOS DA LOJA</div>');
+ return html.replace('<head>','<head><script>try{localStorage.setItem("braza-theme","dark")}catch(e){}</script>').replace('<body>','<body><div style="position:fixed;z-index:99999;bottom:8px;right:8px;pointer-events:none;padding:5px 8px;background:#212f46;color:white;border:1px solid #5172a5;border-radius:6px;font:10px sans-serif">QA SINTÉTICA · SEM DADOS DA LOJA</div>');
 }
 async function startChrome(){
  const profile=mkdtempSync(path.join(os.tmpdir(),'mls-roadmap-'));
@@ -140,7 +140,7 @@ test('real Chrome renders roadmap on desktop and 390px mobile without horizontal
    const values=await browser.eval("(()=>{"+
     "const r=document.getElementById('roadmap');r.hidden=false;document.querySelectorAll('main.workspace>section').forEach(s=>{if(s!==r)s.hidden=true;});"+
     "r.scrollIntoView({block:'start',behavior:'instant'});"+
-    "const box=n=>{const b=n.getBoundingClientRect();return {left:b.left,right:b.right,width:b.width,height:b.height}};"+
+    "const box=n=>{const b=n.getBoundingClientRect();return {left:b.left,right:b.right,top:b.top,width:b.width,height:b.height}};"+
     "return {inner:innerWidth,client:document.documentElement.clientWidth,scroll:document.documentElement.scrollWidth,"+
     "roadmap:box(r),hero:box(r.querySelector('.roadmap-hero')),gates:box(r.querySelector('.roadmap-gate-card')),"+
     "summary:[...r.querySelectorAll('.roadmap-summary-card')].map(box),stages:r.querySelectorAll('[data-roadmap-stage]').length,"+
@@ -151,6 +151,7 @@ test('real Chrome renders roadmap on desktop and 390px mobile without horizontal
    assert.ok(values.scroll<=device.width+2,device.name+': horizontal page overflow '+JSON.stringify(values));
    assert.ok(values.roadmap.left>=-2&&values.roadmap.right<=device.width+3,device.name+': roadmap clipped');
    assert.ok(values.hero.left>=-2&&values.hero.right<=device.width+3,device.name+': roadmap hero clipped');
+   assert.ok(values.hero.top>=70,device.name+': roadmap heading is hidden under sticky header: '+JSON.stringify(values.hero));
    assert.ok(values.gates.right<=device.width+3,device.name+': gates clipped');
    assert.ok(values.summary.every(x=>x.left>=-2&&x.right<=device.width+3),device.name+': status cards clipped');
    assert.equal(values.hasOverflow,false,device.name+': roadmap card clipped');
