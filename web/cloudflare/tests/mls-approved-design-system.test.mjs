@@ -89,14 +89,30 @@ test('previously validated roadmap, Products and Production reworks remain intac
 
 for(const minify of [false,true]){
  test('owner deployable bundle applies neon CSS to all verified sections without changing scripts (minify='+minify+')',async()=>{
-  const {html}=await compiledOwnerReportPage(minify);
+  const {html}=await compiledOwnerReportPage(minify,{ownerPreview:false});
   for(const token of ['--mls-finance','--mls-ads','--mls-products','--mls-production','--mls-returns','--mls-auditor',
    'id="agent-finance"','id="agent-ads"','id="agent-returns"','id="agent-auditor"','id="productsHub"',
    'id="dtfHeroTitle"','id="mlsRoadmapHeading"']){
    assert.ok(html.includes(token),'missing in compiled owner HTML: '+token);
   }
-  assert.ok(!html.includes('id="mlsListingFactory"'),'draft V3.6 not shipped in main branch');
+  assert.ok(!html.includes('id="mlsListingFactory"'),'V3.6 must not ship in the OFF release state');
   const found=[...html.matchAll(/\bid="([^"]+)"/g)].map(row=>row[1]);
   assert.equal(found.length,new Set(found).size,'compiled HTML must maintain unique IDs');
+ });
+}
+
+
+for(const minify of [false,true]){
+ test('approved design and V3.6 coexist only with explicit owner preview ON (minify='+minify+')',async()=>{
+  const {html}=await compiledOwnerReportPage(minify,{ownerPreview:true});
+  assert.match(html,/id="missionGlobalSearch" data-mls-v36-preview="enabled"/);
+  assert.match(html,/data-mission-scope="products"/);
+  assert.match(html,/data-mission-scope="dtf"/);
+  assert.match(html,/id="mlsListingFactory"/);
+  assert.match(html,/id="productsHub"/);
+  assert.match(html,/id="mlsRoadmapHeading"/);
+  assert.match(html,/--mls-finance/);
+  assert.match(html,/id="dtfHeroTitle"/);
+  assert.doesNotMatch(html,/id="missionSearchPage"[^I]/);
  });
 }
