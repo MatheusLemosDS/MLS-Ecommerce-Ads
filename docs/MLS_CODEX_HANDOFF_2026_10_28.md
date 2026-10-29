@@ -106,3 +106,10 @@ A seleção de mockups em lote passou [CI 40790629421](https://github.com/Matheu
 ### Integração PR #63 — handoff 28/10/2026
 
 Mission Control V3.6 da PR #48 e Listing Factory PRs #51/#56/#60 foram combinados numa branch isolada sobre a main: integration/mls-v36-search-listing-factory-20261028. A comparação Git confirmou 13/13 fontes da PR #60 e 7/7 da PR #48 idênticas, com união da allowlist SHA em tools/worker_project.mjs. CI #40792253729 SUCCESS (2.136 Node + 67 Python + Chrome, App/Auth/Finance builds), SHA App 8ed059ddb6f0901a48d277d6b9b806a23d52a1e5e105ed0e2e456e2aea6701f5. Nenhum merge/deploy de código. Próxima tarefa do Codex: QA autenticada desktop/mobile com catálogo real, fila DTF e mockups locais; depois escolher PR63 como release única ou merges sequenciais, não as duas opções. M2 #50 continua aberta, Ads/PROMO LOCKED. Documento: docs/MLS_V36_LISTING_FACTORY_INTEGRATION_2026_10_28.md.
+
+
+### 29/10/2026 — Rework Produtos, PR #72
+
+Branch `design/mission-control-products-rework-20261029` baseada na `main`. PR #72 DRAFT. A tela Produtos ganhou hub no início de `savedCatalogBody()` com 4 cards de estado: Catálogo e Custos disponíveis, Listing Factory V3.6 candidato em #68 e M3 Pricing Observer candidato #47, com semântica de fontes preservada.
+
+Mudança visual apenas em `web/cloudflare/src/saved-catalog-view.mjs`; a implementação da API e `SAVED_CATALOG_CLIENT` não foram editadas. Testes `mls-products-workspace-rework.test.mjs` (markup/IDs/normal/minificado) e `mls-products-workspace-chrome.test.mjs` (1365×900 e 390×844, capturas sintéticas, sem chamadas Shopee). Confirmar CI verde no SHA exato e App/Auth/Finance digest antes de considerar a QA concluída; proprietário ainda precisa homologar. Reconciliar obrigatoriamente `saved-catalog-view.mjs` com a PR #68 para não perder a integração de busca. Sem merge/deploy ou escrita externa. Manual: `docs/MLS_PRODUCTS_REWORK_2026_10_29.md`.
