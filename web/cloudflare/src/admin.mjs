@@ -329,12 +329,15 @@ function mlsV36OwnerPreviewEnabled(env,ownerSession){
  return ownerSession?.role==='owner'&&env?.MLS_V36_OWNER_PREVIEW==='ENABLED';
 }
 function dashboard(env,ownerSession){
- const preview=mlsV36OwnerPreviewEnabled(env,ownerSession);
  const legacyScope='<button type="button" data-mission-scope="navigation" aria-pressed="true">Painéis</button>';
  const productsScope='<button type="button" data-mission-scope="products" aria-pressed="false">Produtos salvos</button>';
  const dtfScope='<button type="button" data-mission-scope="dtf" aria-pressed="false">Pedidos na fila DTF</button>';
  let body=adminBody();
- if(!body.includes(legacyScope)||!body.includes(productsScope)||!body.includes(dtfScope)||!body.includes('id="missionGlobalSearch"'))throw Error('MLS_V36_RELEASE_MARKUP_INVALID');
+ // A future navigation markup change must not turn a disabled feature into an
+ // owner dashboard outage. Unexpected markup also fails closed (preview OFF).
+ const markupCompatible=body.includes(legacyScope)&&body.includes(productsScope)&&
+  body.includes(dtfScope)&&body.includes('id="missionGlobalSearch"');
+ const preview=markupCompatible&&mlsV36OwnerPreviewEnabled(env,ownerSession);
  if(!preview){
   body=body.replace(productsScope,'').replace(dtfScope,'');
   body=body.replace('Selecione Painéis, Produtos salvos ou Pedidos na fila DTF. A busca por pedidos não é um histórico completo da Shopee.','Pesquise painéis, agentes e ferramentas.');
