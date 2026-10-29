@@ -1,10 +1,10 @@
 # Roadmap canônico — MLS Commerce OS
 
-Atualizado em **28/10/2026**.
+Atualizado em **29/10/2026**.
 
-> **Checkpoint multi-branch 28/10/2026:** A main continua em b058e832 (PR #46 integrada); PR #48 de busca V3.6 segue draft/CI verde (2.115 Node + 67 Python); PR #47 M3 Products/Pricing Observer segue draft/CI verde (2.124 Node + 67 Python); PR #51 abre a pesquisa Shopee/Listing Factory, com CI inicial verde (2.122 Node + 67 Python). Nenhuma dessas três PRs foi integrada ou publicada. **M2 Finance continua aberta (issue #50).** A M3 de precificação comercial não está aprovada.
+> **Checkpoint 29/10/2026 — produção protegida:** M0/M1 continuam publicados; M2 Finance/Returns depende da conferência real na issue #50. V3.6 + Fábrica de Anúncios permanecem em código de PR #63, testes de QA PR #65 e feature flag desligada por padrão na PR #68. O CI da PR #68 passou com 2.143 Node e 67 Python, mas **nenhuma dessas três PRs foi integrada à main nem implantada**. A PR #47 mantém M3 Observer isolada. Ads/PROMO e publicação de anúncios continuam bloqueados.
 >
-> Execução rastreada: issue #50 (M2), #52 (Listing Factory UI), #53 (escrow batch), #54 (push).
+> Execução rastreada: issues #50 (M2), #52 (Listing Factory UI), #53 (escrow batch), #54 (push) e #67 (homologação progressiva V3.6).
 >
 > Guia da pesquisa e implementação: [SHOPEE_RESEARCH_TO_MLS_2026_10_28.md](SHOPEE_RESEARCH_TO_MLS_2026_10_28.md) · [MLS_CODEX_HANDOFF_2026_10_28.md](MLS_CODEX_HANDOFF_2026_10_28.md) · [MLS_LISTING_FACTORY_V1.md](MLS_LISTING_FACTORY_V1.md).
 
@@ -12,6 +12,37 @@ Atualizado em **28/10/2026**.
 > Toda nova conversa, conexão, sessão do Codex ou continuidade deve começar por este arquivo e por
 > [MLS_COMMERCE_OS_CHECKPOINT.json](MLS_COMMERCE_OS_CHECKPOINT.json).
 > O arquivo `ROADMAP_BRAZACOMMERCE.md` passa a ser histórico e não deve receber novas decisões de produto.
+
+## 0. Entregas progressivas e rework dos painéis — 29/10/2026
+
+**Decisão do produto:** desenvolvimento continua em branches independentes; somente versões homologadas e aprovadas entram em produção. A `main` não é branch de experimentos. O App antigo, Auth, Financeiro, D1, OAuth e Ads/PROMO permanecem protegidos.
+
+### Status que o painel Plano de Evolução deve mostrar
+
+| Trilha | Situação demonstrável | Próximo gate |
+| --- | --- | --- |
+| **M0 + M1 — Identidade, Central e Agentes** | Publicados; melhorias visuais V2/V3 já integradas | Revisão visual autenticada contínua |
+| **M2 — Finance/Returns** | Conciliação em andamento, com leituras locais e indicadores disponíveis | Comparar Pending, liberações, devoluções e recortes no Seller Centre · #50 |
+| **V3.6 — Busca + Fábrica de Anúncios local** | Código testado em PRs #63/#65/#68; CI verde; **não publicado** | QA owner desktop/mobile, segurança, rollback, deploy com flag OFF e aprovação · #67 |
+| **M3 — Products + Pricing** | Observer/ABC e simulador em PR #47, sem merge | M2 e fonte compatível de custos, taxas, Ads e estoque antes de rentabilidade e preço comercial |
+| **M4 — Ads Shadow** | Planejado; sem execução de campanhas | Propostas com evidência e auditoria |
+| **M5 a M9** | Fases futuras | Permissões oficiais, aprovação e políticas verificadas antes de qualquer escrita externa |
+
+**Não confundir** CI aprovado com código publicado, plano de anúncios com anúncio publicado, venda com lucro por SKU, nem Pending com repasse recebido.
+
+### Estratégia de entrega sem interromper o desenvolvimento
+
+1. **V3.6, primeira liberação:** somente Busca V3.6 e Fábrica local, após QA e aprovação; flag `MLS_V36_OWNER_PREVIEW` OFF no primeiro deploy, ativação controlada para proprietário depois.
+2. **V3.7, produtividade:** melhoria dos fluxos de catálogo, mockups, preparação de lotes e experiência mobile; pode ser desenvolvida paralelamente, sem alterar Auth/Finance nem habilitar escrita Shopee.
+3. **Próximas versões:** análises Products/Pricing Observer e Ads Shadow; publicação assistida na Shopee só após fase M6, contratos oficiais, idempotência, auditoria e aprovação.
+
+### Rework dos painéis
+
+Começar pelo **Plano de Evolução** como painel executivo: mostrar fatos publicados, trilhas em andamento, candidato de release, gates e horizonte M5–M9 sem percentuais inventados. Usar o mesmo padrão de hierarquia visual nos painéis **Agentes → Produtos → Produção → Ads/Automação**, sempre preservando a fonte e os controles já existentes. A nova apresentação é uma fotografia técnica do roadmap, **não** uma consulta financeira nova.
+
+O rework visual tem branch independente `design/mission-control-roadmap-rework-20261029`, derivada da `main`, sem tocar nas PRs #63/#65/#68. Reconciliar com o candidato V3.6 somente após revisão e testes de integração; jamais mesclar duas trilhas de release simultaneamente.
+
+---
 
 ## 1. Identidade oficial
 
