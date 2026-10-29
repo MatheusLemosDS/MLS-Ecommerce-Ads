@@ -53,7 +53,7 @@ test('DTF redesign separates five real steps while retaining queue, artwork, set
 
 for(const minify of [false,true]){
  test('compiled owner keeps all original DTF and Finance nodes without duplicates, minify='+minify,async()=>{
-  const {html}=await compiledOwnerReportPage(minify);
+  const {html}=await compiledOwnerReportPage(minify,{ownerPreview:false});
   const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(match=>match[1]);
   assert.equal(ids.length,new Set(ids).size,'owner page duplicates DOM IDs');
   for(const id of ['production','dtfHeroTitle',...stages.map(x=>x[0]),'dtfQueue','dtfBatches','dtfSettingsForm',
