@@ -76,7 +76,7 @@ async function browserCDP(){
 test('Chrome synthetic owner Agent Hub keeps status evidence and responsive layout on desktop/mobile',{timeout:85000},async t=>{
  if(!chrome)return t.skip('Chrome not installed');
  const snapshot=fixture();
- let {html}=await compiledOwnerReportPage(false);
+ let {html}=await compiledOwnerReportPage(false,{ownerPreview:false});
  // Applies only to a local synthetic server with no provider/production endpoints.
  html=html.replace('<head>','<head><script>try{localStorage.setItem("braza-theme","dark")}catch(e){}</script>');
  html=html.replace('<body>','<body><div style="position:fixed;bottom:8px;right:8px;pointer-events:none;z-index:99999;background:#13243d;color:#e8f5ff;border:1px solid #5477a9;padding:5px 8px;border-radius:6px;font:10px sans-serif">QA SINTÉTICA · SEM DADOS REAIS</div>');
