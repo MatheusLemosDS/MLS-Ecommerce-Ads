@@ -73,10 +73,10 @@ test('previously validated roadmap, Products and Production reworks remain intac
  const html=adminBody();
  const idList=[...html.matchAll(/\bid="([^"]+)"/g)].map(row=>row[1]);
  assert.equal(idList.length,new Set(idList).size,'no duplicate owner IDs');
+ // adminBody is the source template. Saved catalog and DTF are inserted by the
+ // App dashboard composer, so their IDs belong to the compiled-page assertion.
  for(const id of ['overview','commandCenter','roadmap','mlsRoadmapHeading','agents','missionHubTitle',
-  'products','productsHub','savedCatalog','legacyProductEditor',
-  'production','dtfHeroTitle','dtfQueue','dtfArtworkStage','dtfPreviewStage',
-  'hermes','margins','history','missionGlobalSearch'])
+  'products','legacyProductEditor','hermes','margins','history','missionGlobalSearch'])
   assert.ok(idList.includes(id),'missing preserved panel '+id);
  assert.match(savedCatalogBody(),/Homologação · não publicada/);
  assert.match(dtfBody(),/Conta \+ dispositivo/);
