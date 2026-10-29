@@ -6,10 +6,10 @@ export const MLS_LISTING_FACTORY_CSS=String.raw`
 .mls-lf-kicker{font-size:11px;font-weight:750;letter-spacing:1px;color:var(--muted,#68778a)}
 .mls-lf-pill{font-size:11px;font-weight:700;color:#157450;border:1px solid #82bba1;border-radius:30px;background:rgba(39,164,111,.08);padding:7px 10px}
 .mls-lf-copy{max-width:750px;color:var(--muted,#68778a);font-size:13px}
-.mls-lf-form{display:grid;gap:15px;margin:18px 0;border-top:1px solid var(--line,#dce2e9);padding-top:17px}
-.mls-lf-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
-.mls-lf-field{display:grid;gap:5px;min-width:0}.mls-lf-field label{font-weight:650;font-size:12px}
-.mls-lf-field input,.mls-lf-field textarea{width:100%;min-width:0;border:1px solid var(--line,#cfd8df);border-radius:10px;min-height:40px;padding:10px 12px;background:var(--surface-raised,var(--surface,#fff));color:var(--text,#222);font-size:13px}
+.mls-lf-form{display:grid;grid-template-columns:minmax(0,1fr);min-width:0;width:100%;gap:15px;margin:18px 0;border-top:1px solid var(--line,#dce2e9);padding-top:17px}
+.mls-lf-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;min-width:0;width:100%}
+.mls-lf-field{display:grid;grid-template-columns:minmax(0,1fr);gap:5px;min-width:0;max-width:100%}.mls-lf-field label{font-weight:650;font-size:12px}
+.mls-lf-field input,.mls-lf-field textarea{width:100%;max-width:100%;min-width:0;border:1px solid var(--line,#cfd8df);border-radius:10px;min-height:40px;padding:10px 12px;background:var(--surface-raised,var(--surface,#fff));color:var(--text,#222);font-size:13px}
 .mls-lf-field textarea{min-height:95px;resize:vertical}
 .mls-lf-help{color:var(--muted,#68778a);font-size:11px;overflow-wrap:anywhere}
 .mls-lf-sizes{display:flex;gap:7px;flex-wrap:wrap}.mls-lf-size{display:inline-flex;align-items:center;gap:5px;padding:7px 9px;border:1px solid var(--line,#dce2e9);border-radius:8px;font-size:12px}
