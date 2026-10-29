@@ -33,6 +33,7 @@ jobs:
         run: npm ci
       - name: Executar suíte Node completa com concorrência limitada para Chrome
         env:
+          MLS_OFFLINE_SCREENSHOT_DIR: ${{ runner.temp }}/mls-offline-owner-review
           MLS_QA_SCREENSHOT_DIR: ${{ runner.temp }}/mls-approved-design/v36
           MLS_APPROVED_SCREENSHOT_DIR: ${{ runner.temp }}/mls-approved-design/all-panels
           MLS_ROADMAP_SCREENSHOT_DIR: ${{ runner.temp }}/mls-approved-design/roadmap
