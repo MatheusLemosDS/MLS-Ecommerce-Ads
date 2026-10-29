@@ -1,6 +1,6 @@
 # Roadmap canônico — MLS Commerce OS
 
-Atualizado em **28/10/2026**.
+Atualizado em **29/10/2026**.
 
 > **Checkpoint multi-branch 28/10/2026:** A main continua em b058e832 (PR #46 integrada); PR #48 de busca V3.6 segue draft/CI verde (2.115 Node + 67 Python); PR #47 M3 Products/Pricing Observer segue draft/CI verde (2.124 Node + 67 Python); PR #51 abre a pesquisa Shopee/Listing Factory, com CI inicial verde (2.122 Node + 67 Python). Nenhuma dessas três PRs foi integrada ou publicada. **M2 Finance continua aberta (issue #50).** A M3 de precificação comercial não está aprovada.
 >
@@ -586,3 +586,14 @@ Guia: [MLS_LISTING_FACTORY_BATCH_RELINK_2026_10_28.md](MLS_LISTING_FACTORY_BATCH
 - [ ] M2 Finance issue #50 e permissões Shopee ainda bloqueiam qualquer ação comercial automática. Ads/PROMO LOCKED.
 
 [Evidência e plano de QA](MLS_V36_LISTING_FACTORY_INTEGRATION_2026_10_28.md).
+
+
+## 29/10/2026 — painel Produtos, rework isolado PR #72
+
+- PR **#72 DRAFT**, branch `design/mission-control-products-rework-20261029`, derivada da `main`: hub visual Produtos, CSS responsivo e quatro estados de entrega — catálogo e custos existentes; Fábrica de Anúncios V3.6 em PRs #63/#65/#68 não publicada; M3 Pricing Observer em PR #47 não publicada.
+- A mudança adiciona **somente HTML/CSS** a `savedCatalogBody()`, antes do catálogo persistido. Nenhuma nova rede, D1, Worker, OAuth, cron ou ação comercial é habilitada.
+- Esta branch é **paralela** ao Plano de Evolução #69 e ao hub Agentes #71; as PRs não são substitutas nem devem ser mescladas todas de uma vez sem integração e CI final.
+- Critério da tela: catálogo não comprova estoque; custo não comprova lucro; rascunho não é publicação; ações Ads/PROMO continuam LOCKED. M2 continua aberta (#50).
+- Testes sintéticos Chrome desktop/celular, IDs e builds antes do review real. CI e SHA do candidato serão registrados depois da execução final.
+
+Documentação: [MLS_PRODUCTS_REWORK_2026_10_29.md](MLS_PRODUCTS_REWORK_2026_10_29.md). Issue #70.
