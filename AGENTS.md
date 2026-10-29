@@ -33,3 +33,5 @@ Leia, nesta ordem, antes de qualquer alteração:
 Para usar o gerador local: docs/MLS_LISTING_FACTORY_V1.md. Usar Node >=24. Nenhum script deste projeto deve publicar na Shopee por padrão.
 
 - PR #56: retomada JSON, preço vazio por segurança, fila com oito por página. CI final verde #40788713558 em candidato sem conflitos PR #58 (13/13 arquivos idênticos), SHA App bbbe1b9efdf0a6c11e507c34c92730ddbb8502fb367c5cfe33c031ba3850d3cd. PR #58 fechada sem merge; #56 novamente empilhada sobre #51. Falta QA visual autenticada, merge ordenado e validação real de permissões/financeiro. Não publicar automaticamente.
+
+- PR #60: associação de mockups por nome exato e hash (até 200 imagens/64 MiB por vez), base #56 → #51. CI #40790629421 verde: 2.132 Node + 67 Python + Chrome, 14/14 blobs idênticos à validação temporária #61 (fechada sem merge). Sem publicar ou tocar em Ads/PROMO; próxima entrega é QA autenticada e integração ordenada com PR #48 protegida. Guia: docs/MLS_LISTING_FACTORY_BATCH_RELINK_2026_10_28.md.

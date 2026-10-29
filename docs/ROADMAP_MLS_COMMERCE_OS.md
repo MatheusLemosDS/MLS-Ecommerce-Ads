@@ -564,3 +564,14 @@ Status do produto: M2 financeira permanece EM ANDAMENTO e ainda precisa
 verificação autenticada dos dados reais da loja e da comparação Pending
 x Seller Centre. A mudança é UI/consumo local do snapshot validado, sem
 alterações comerciais e sem desbloqueio Ads/PROMO.
+
+### M3-L1 — Reanexação de mockups em lote (PR #60 draft)
+
+- [x] Seleção local de arquivos ou pasta: até **200 imagens e 64 MiB** por execução, decodificação JPG/PNG e SHA-256 em até três operações simultâneas.
+- [x] Associação pelo nome exato a todos os anúncios importados que utilizam a mesma foto, evitando editar cada arte individualmente.
+- [x] Falha atômica para nome duplicado, hash diferente, imagem inválida, limite excedido; arquivo extra é ignorado com contagem e aviso.
+- [x] Testes puros até 500 anúncios e Chromium real em 19 anúncios, cobrindo parcial/completo/duplicado/trocado.
+- [x] **CI GREEN** #40790629421: 2.132 Node + 67 Python, Chromium e três Workers; 14/14 arquivos de runtime e testes idênticos ao candidato #61, que foi fechado sem merge.
+- [ ] QA autenticada desktop/celular com mockups reais, integração #51 → #56 → #60 e revisão da PR #48. Nenhum upload/publicação comercial.
+
+Guia: [MLS_LISTING_FACTORY_BATCH_RELINK_2026_10_28.md](MLS_LISTING_FACTORY_BATCH_RELINK_2026_10_28.md). M2 issue #50 permanece aberta e nenhuma publicação Shopee é autorizada.
