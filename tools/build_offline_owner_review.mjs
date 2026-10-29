@@ -34,6 +34,7 @@ const reviewCss=[
  'main.workspace>section:target,main.workspace>section:has(:target){display:block!important}',
  'main.workspace>section:target[hidden],main.workspace>section:has(:target)[hidden]{display:block!important}',
  'main.workspace>section.mission-workspace:target,main.workspace>section.mission-workspace:has(:target){display:grid!important}',
+ '@media(max-width:850px){main.workspace>section.mission-workspace:target,main.workspace>section.mission-workspace:has(:target){display:block!important}}',
  '.review-inert-form{min-width:0}',
  '@media(max-width:600px){.review-strip{padding:13px}.review-strip nav{gap:6px}.review-strip nav a{padding:8px 9px}}'
 ].join('\n');
