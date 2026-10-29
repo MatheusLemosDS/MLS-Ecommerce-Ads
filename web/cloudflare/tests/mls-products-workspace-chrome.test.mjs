@@ -65,7 +65,7 @@ async function connectChrome(){
 
 test('real Chrome renders read-only Products hub and legacy controls without horizontal overflow',{timeout:90000},async t=>{
  if(!chrome)return t.skip('Chrome unavailable');
- let {html}=await compiledOwnerReportPage(false);
+ let {html}=await compiledOwnerReportPage(false,{ownerPreview:false});
  // Synthetic only: theme and marker use local test context; no real shop endpoints.
  html=html.replace('<head>','<head><script>try{localStorage.setItem("braza-theme","dark")}catch(e){}</script>');
  html=html.replace('<body>','<body><div style="position:fixed;z-index:99999;right:8px;bottom:8px;pointer-events:none;background:#13243d;color:#edf6ff;border:1px solid #6485b9;padding:5px 8px;border-radius:6px;font:10px sans-serif">QA SINTÉTICA · SEM DADOS REAIS</div>');
