@@ -106,3 +106,14 @@ A seleção de mockups em lote passou [CI 40790629421](https://github.com/Matheu
 ### Integração PR #63 — handoff 28/10/2026
 
 Mission Control V3.6 da PR #48 e Listing Factory PRs #51/#56/#60 foram combinados numa branch isolada sobre a main: integration/mls-v36-search-listing-factory-20261028. A comparação Git confirmou 13/13 fontes da PR #60 e 7/7 da PR #48 idênticas, com união da allowlist SHA em tools/worker_project.mjs. CI #40792253729 SUCCESS (2.136 Node + 67 Python + Chrome, App/Auth/Finance builds), SHA App 8ed059ddb6f0901a48d277d6b9b806a23d52a1e5e105ed0e2e456e2aea6701f5. Nenhum merge/deploy de código. Próxima tarefa do Codex: QA autenticada desktop/mobile com catálogo real, fila DTF e mockups locais; depois escolher PR63 como release única ou merges sequenciais, não as duas opções. M2 #50 continua aberta, Ads/PROMO LOCKED. Documento: docs/MLS_V36_LISTING_FACTORY_INTEGRATION_2026_10_28.md.
+
+
+### 29/10/2026 — PR #74, integração visual conforme mockup aprovado
+
+Branch `design/approved-neon-all-panels-integration-20261029` baseada na `main`, PR #74 DRAFT. Consolidou código/testes visuais das PRs #69, #71, #72 e #73 e adicionou `web/cloudflare/src/approved-design-system.mjs`. Nova paleta compartilhada de todos os agentes, shell, KPIs, mini-sidebar interna dos sete especialistas, cabeçalhos Ads/Campanhas/Optimization/Conexões, tema escuro/claro, responsividade e leitura honesta das fontes, sem criar métricas ou históricos.
+
+**Atenção técnica:** o App tem um empacotador manual `web/cloudflare/build.py` que remove imports. Ele foi atualizado para incluir `MLS_APPROVED_DESIGN_CSS` uma única vez em escopo externo, antes dos módulos Admin e Ads. Sem isso, a compilação do Worker original causou ReferenceError em testes de integração. **Não reverter a correção nem afrouxar os testes.**
+
+A suíte completa agora usa TAP e concorrência de 3 arquivos para não esgotar memória do Node reporter ou Chrome, preservando os mesmos globs, 67 Python e builds. Teste `mls-approved-all-panels-chrome.test.mjs` verifica 15 seções no desktop 1365 e mobile 390 sem acessar dados reais. Teste `mls-approved-design-system.test.mjs` cobre tokens, diferenciação Observer/Ads e integridade de IDs. Revalidar o SHA final do Worker App e confirmar hashes Auth/Finance intocados; CI final e QA owner real são gates.
+
+Continuam independentes: V3.6 de busca + Listing Factory nas PRs #63/#65/#68 (feature flag OFF), financeiro M2 issue #50 e Ads/PROMO LOCKED. **Não mesclar PR #74 e #68 em paralelo sem reconciliação e novo CI.** Não fazer deploy sem aprovação.
