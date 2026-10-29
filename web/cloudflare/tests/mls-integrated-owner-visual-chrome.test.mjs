@@ -104,6 +104,14 @@ test('synthetic owner visual smoke in desktop and mobile Chrome with zero real-a
    assert.equal(first.factory.visible,true);
    assert.ok(first.viewport.width<=item.width+2,
     item.name+': layout viewport expanded unexpectedly '+JSON.stringify(first.viewport));
+   assert.ok(first.viewport.scrollWidth<=item.width+2,
+    item.name+': document has horizontal overflow: '+JSON.stringify(first.viewport));
+   assert.ok(first.viewport.clientWidth<=item.width+2,
+    item.name+': documentElement clientWidth exceeds device width: '+JSON.stringify(first.viewport));
+   assert.ok(first.viewport.visualWidth<=item.width+2,
+    item.name+': visual viewport exceeds device width: '+JSON.stringify(first.viewport));
+   assert.ok(first.search.left>=-2&&first.search.right<=item.width+2,
+    item.name+': search trigger is clipped: '+JSON.stringify(first.search));
    assert.ok(first.inputs.every(x=>x.left>=-2&&x.right<=item.width+2),
     item.name+': Listing Factory input overflow: '+JSON.stringify(first.inputs.filter(x=>x.right>item.width+2)));
    assert.ok(first.factory.left>=-2&&first.factory.right<=item.width+3,
