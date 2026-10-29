@@ -1,3 +1,4 @@
+import {MLS_APPROVED_DESIGN_CSS} from './approved-design-system.mjs';
 import {businessMonthBody} from './business-month-view.mjs';
 import {businessDayBody,BUSINESS_DAY_CSS} from './business-day-view.mjs';
 import {commandCenterBody,pendingIncomeBody,COMMAND_CENTER_CSS} from './agent-registry-view.mjs';
@@ -168,7 +169,7 @@ html[data-theme=dark] .mls-roadmap{--roadmap-blue:#64a5ff;--roadmap-green:#46d9a
 @media(max-width:640px){.mls-roadmap .roadmap-hero{padding:23px 19px;border-radius:17px;gap:16px}.mls-roadmap .roadmap-hero h2{font-size:25px}.mls-roadmap .roadmap-hero-copy>p{font-size:13px}.mls-roadmap .roadmap-hero-actions{display:grid;grid-template-columns:minmax(0,1fr)}.mls-roadmap .roadmap-focus{padding:17px}.mls-roadmap .roadmap-summary-card{padding:15px}.mls-roadmap .roadmap-section-title h3{font-size:19px}.mls-roadmap .roadmap-main-grid{gap:15px}.mls-roadmap .roadmap-stage{padding:19px 17px}.mls-roadmap .roadmap-stage h4{font-size:17px}.mls-roadmap .roadmap-next-grid{grid-template-columns:minmax(0,1fr)}.mls-roadmap .roadmap-side{display:grid;grid-template-columns:minmax(0,1fr)}.mls-roadmap .roadmap-guard-card,.mls-roadmap .roadmap-origin{grid-column:1}.mls-roadmap .roadmap-gate-card{padding:19px}.mls-roadmap .roadmap-future summary{padding:17px}.mls-roadmap .roadmap-future-grid{padding:0 15px 17px;grid-template-columns:minmax(0,1fr)}}
 @media(prefers-reduced-motion:reduce){.mls-roadmap .roadmap-future-toggle{transition:none}}
 
-`+MISSION_CSS+MISSION_TRENDS_CSS;
+`+MISSION_CSS+MISSION_TRENDS_CSS+MLS_APPROVED_DESIGN_CSS;
 function sizeOptions(){return ['P','M','G','GG','G1','G2','G3'].map(x=>`<option>${x}</option>`).join('');}
 export function loginBody(error){return `<div class="login-theme"><button type="button" class="theme-button" data-braza-theme-toggle aria-label="Alternar tema">Tema claro / escuro</button></div><main class="login card"><div class="brand"><span class="brand-mark">MLS</span><div>MLS Commerce OS<small>Seu e-commerce em um só lugar</small></div></div><h1>Entre para acompanhar sua loja</h1><p class="muted login-description">Vendas, anúncios, produtos e custos no mesmo painel.</p>${error?'<p class="alert" role="alert">Usuário ou senha não conferem. Tente novamente.</p>':''}<form method="post" action="/login"><label for="username">Usuário</label><input id="username" name="username" autocomplete="username" required maxlength="100"><label for="password">Senha</label><input id="password" name="password" type="password" autocomplete="current-password" required maxlength="200"><button type="submit">Entrar</button></form><p class="login-note">Use seu acesso já cadastrado. As opções disponíveis acompanham as permissões da sua conta.</p></main>`;}
 
