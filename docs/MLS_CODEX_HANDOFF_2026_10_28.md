@@ -117,3 +117,12 @@ Branch `design/approved-neon-all-panels-integration-20261029` baseada na `main`,
 A suíte completa agora usa TAP e concorrência de 3 arquivos para não esgotar memória do Node reporter ou Chrome, preservando os mesmos globs, 67 Python e builds. Teste `mls-approved-all-panels-chrome.test.mjs` verifica 15 seções no desktop 1365 e mobile 390 sem acessar dados reais. Teste `mls-approved-design-system.test.mjs` cobre tokens, diferenciação Observer/Ads e integridade de IDs. Revalidar o SHA final do Worker App e confirmar hashes Auth/Finance intocados; CI final e QA owner real são gates.
 
 Continuam independentes: V3.6 de busca + Listing Factory nas PRs #63/#65/#68 (feature flag OFF), financeiro M2 issue #50 e Ads/PROMO LOCKED. **Não mesclar PR #74 e #68 em paralelo sem reconciliação e novo CI.** Não fazer deploy sem aprovação.
+
+
+### 29/10/2026 — PR #75, uma única trilha de homologação (design aprovado + V3.6)
+
+Branch `integration/mls-approved-ui-v36-owner-gated-20261029` derivada da PR #68 com mudanças visuais da PR #74. Reconciliados **quatro arquivos que ambos modificaram**: `admin-view.mjs` (paleta/todos painéis + menu de busca), `dtf-view.mjs` (cinco etapas + `searchLines/findLine`), `saved-catalog-view.mjs` (cockpit Produtos + `find`) e `build.py` (planner Listing Factory + CSS injetado no bundle App). Não alterar essa união ou substituir com a versão de somente uma das PRs.
+
+Os testes de interface de #74 usam `compiledOwnerReportPage(...,{ownerPreview:false})` para representar o deploy inicial; a QA V3.6 continua usando `ownerPreview:true`. Teste novo `mls-v36-approved-integration-gates.test.mjs` protege os dois estados e os métodos de pesquisa em registros salvos. `MLS_V36_OWNER_PREVIEW` ausente = OFF. **Nada de write Shopee/Ads/PROMO.**
+
+Antes de release: CI verde no HEAD exato, SHA App revisado e Auth/Finance iguais, QA real autenticada, revisão de Cloudflare/rollback e aprovação explícita. **Não mesclar separadamente #63/#65/#68/#69/#71/#72/#73/#74 se #75 for a trilha final.** Documento [MLS_INTEGRATED_OWNER_RELEASE_2026_10_29.md](MLS_INTEGRATED_OWNER_RELEASE_2026_10_29.md).
