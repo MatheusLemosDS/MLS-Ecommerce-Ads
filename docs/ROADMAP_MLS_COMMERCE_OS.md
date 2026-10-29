@@ -586,3 +586,13 @@ Guia: [MLS_LISTING_FACTORY_BATCH_RELINK_2026_10_28.md](MLS_LISTING_FACTORY_BATCH
 - [ ] M2 Finance issue #50 e permissões Shopee ainda bloqueiam qualquer ação comercial automática. Ads/PROMO LOCKED.
 
 [Evidência e plano de QA](MLS_V36_LISTING_FACTORY_INTEGRATION_2026_10_28.md).
+
+
+## 29/10/2026 — rework do painel Agentes em PR isolada #71
+
+- **Branch:** `design/mission-control-agents-rework-20261029`, baseada na `main`; **DRAFT, sem merge ou deploy**.
+- O hub dos sete especialistas passa a apresentar estado e prioridades a partir do **Agent Registry existente**, com busca e filtros locais, navegação segura, mensagens honestas para dados ausentes e sem solicitações externas adicionais.
+- “Saudável” é apenas condição técnica da projeção do agente. Não demonstra lucro, estoque, tarifas, valor recebido ou permissão para escrever na Shopee.
+- O visual é independente do Plano de Evolução #69 e do gate V3.6 #68. Reconciliar em uma única trilha somente após ambos validados; preservar `main`, Auth, Financeiro, D1, cron e Ads/PROMO LOCKED.
+- QA automatizada usa Chrome desktop 1365×900 e celular 390×844 com **dados fictícios**; evidências não substituem revisão da conta autenticada. Resultado final do CI deve ser registrado no HEAD depois do teste.
+- **Referência técnica:** [MLS_AGENT_HUB_REWORK_2026_10_29.md](MLS_AGENT_HUB_REWORK_2026_10_29.md); acompanhamento da sequência na issue #70.
