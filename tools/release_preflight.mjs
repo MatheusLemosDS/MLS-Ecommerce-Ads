@@ -22,6 +22,7 @@ export const RELEASE_ALLOWED_FILES=Object.freeze([
   "docs/MLS_CODEX_HANDOFF_2026_10_28.md",
   "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
   "docs/MLS_INTEGRATED_OWNER_RELEASE_2026_10_29.md",
+  "docs/MLS_OFFLINE_OWNER_REVIEW_2026_10_29.md",
   "docs/MLS_V36_OWNER_PREVIEW_RELEASE.md",
   "docs/ROADMAP_MLS_COMMERCE_OS.md",
   "tools/build_offline_owner_review.mjs",
