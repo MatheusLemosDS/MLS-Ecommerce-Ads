@@ -137,6 +137,9 @@ export const TARGETS = Object.freeze({
     // PR #75 integrated approved visual design with V3.6 owner preview OFF by default;
     // exact App build in CI #40900296254; Auth and Finance hashes unchanged.
     'd1618ca222afa4604cb6e1c5c938735c6415a0fc475b3901f5b04b3d9f0eb2f1',
+    // PR79 original-reference component layout, verified charts and Hermes published cohort;
+    // exact local build; full regression and review remain required, no deployment.
+    '9e704d09411fa5a9db9cb6d1c2721314db6ffda92ab5edfc97b724329929a08a',
   ]}),
   auth: Object.freeze({name: 'brazacommerce-auth', main: '../../dist/auth-worker.mjs', baselineHashes: [
     '45d0142709c5087e373cc4da146070ed39c472805f6f64c00f00b6555f0e1f56',

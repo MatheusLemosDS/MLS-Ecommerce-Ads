@@ -216,7 +216,7 @@ test('command center has six static observer cards even when hydration scripts d
  const html=commandCenterBody();
  const cards=[...html.matchAll(/data-agent-placeholder="true"/g)];
  assert.equal(cards.length,6);
- for(const name of ['MLS Finance','MLS Ads','MLS Products','MLS Production','MLS Returns','MLS Auditor'])assert.match(html,new RegExp('<h4>'+name+'</h4>'));
+ for(const name of ['MLS Hermes','MLS Finance','MLS Ads','MLS Products','MLS Production','MLS Returns'])assert.match(html,new RegExp('<h4>'+name+'</h4>'));
  assert.match(html,/Aguardando dados/);
  assert.match(html,/Nenhum valor é presumido/);
  assert.doesNotMatch(html,/R\\$ [1-9]\\d*,\\d{2}/);

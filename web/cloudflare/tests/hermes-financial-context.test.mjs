@@ -7,7 +7,7 @@ import {fileURLToPath} from 'node:url';
 import {D1} from './sqlite-d1.mjs';
 import {collectionFixture} from './business-collection-fixture.mjs';
 import {buildHermesFinancialContext,projectHermesFinancialContext,prepareHermesFinancialContext,readHermesFinancialContext,HermesFinancialContextError} from '../src/hermes-financial-context.mjs';
-import {projectBusinessMonth} from '../src/business-month.mjs';
+import {businessMonth,projectBusinessMonth,readBusinessMonthDisplay} from '../src/business-month.mjs';
 import {buildMonthlyFinancialSummary} from '../src/business-month-summary.mjs';
 
 const analysisDate='2026-10-23',jobId='11111111-1111-4111-8111-111111111111',otherId='22222222-2222-4222-8222-222222222222';
@@ -113,6 +113,39 @@ test('preparation reads local stored totals only and the context commits atomica
  const read=await readHermesFinancialContext(f.env,jobId);assert.deepEqual(read.context,prepared.context);assert.equal(read.fingerprint,prepared.fingerprint);assert.equal(read.job_id,jobId);assert.equal(read.fingerprint,createHash('sha256').update(JSON.stringify({job_id:jobId,context:prepared.context})).digest('hex'));
  const saved=f.env.ADMIN_DB.db.prepare('SELECT * FROM hermes_financial_contexts').get(),costs=JSON.parse(f.env.ADMIN_DB.db.prepare('SELECT payload FROM production_costs_state').get().payload);costs.inclusive_regular_cents=2000;f.env.ADMIN_DB.db.prepare('UPDATE production_costs_state SET revision=8,payload=?').run(JSON.stringify(costs));f.clock.time+=1000;
  const later=await prepareHermesFinancialContext(f.env,jobId,analysisDate,{now:f.now,taskRaw});assert.notEqual(later.fingerprint,prepared.fingerprint);assert.equal((await later.statement.run()).meta.changes,0);assert.deepEqual(f.env.ADMIN_DB.db.prepare('SELECT * FROM hermes_financial_contexts').get(),saved);assert.deepEqual(await readHermesFinancialContext(f.env,jobId),read);
+});
+
+test('Hermes uses the owner publication while a replacement is partial and applies the same current costs',async()=>{
+ const f=await fixture(),selection={month:'2026-10'},published=await readBusinessMonthDisplay(f.env,selection,{now:f.now});
+ assert.equal(published.display_source,'PUBLISHED');assert.equal(published.display.coverage.paid,96);
+ const sourceTimes={...published.display.source_checked_at};
+ f.clock.time+=61000;
+ await assert.rejects(businessMonth(f.env,{operation:'start',...selection},{getFinanceBusinessPeriod:async()=>{throw Error('replacement source unavailable');}},{now:f.now}));
+ const active=await f.invoke('read');assert.equal(active.status,'RUNNING');assert.equal(active.coverage.paid,0);
+ const costs=JSON.parse(f.env.ADMIN_DB.db.prepare('SELECT payload FROM production_costs_state').get().payload);costs.inclusive_regular_cents=2000;
+ f.env.ADMIN_DB.db.prepare('UPDATE production_costs_state SET revision=8,payload=?').run(JSON.stringify(costs));
+ const before=structuredClone(f.calls),owner=await readBusinessMonthDisplay(f.env,selection,{now:f.now}),prepared=await prepareHermesFinancialContext(f.env,jobId,analysisDate,{now:f.now,taskRaw});
+ assert.equal(owner.display_source,'PUBLISHED');assert.equal(owner.active.status,'RUNNING');
+ assert.deepEqual(prepared.context,buildHermesFinancialContext(owner.display,{analysisDate,capturedAt:Math.floor(f.now()/1000)}));
+ assert.equal(prepared.context.available,true);assert.equal(prepared.context.monthly.status,'COMPLETE');
+ assert.equal(prepared.context.monthly.order_coverage.paid,96);assert.equal(prepared.context.monthly.versions.costs,8);
+ assert.equal(prepared.context.monthly.totals.production_cost_cents,192000);
+ assert.deepEqual(prepared.context.monthly.source_checked_at,sourceTimes);assert.deepEqual(f.calls,before);
+ assert.equal(prepared.context.monthly.actual_profit_cents,null);assert.equal(prepared.context.monthly.execution,'READ_ONLY');
+ assert.equal(legacyPythonContext(prepared.context).accepted,true);
+});
+
+test('a new local day keeps the publication date scope and source age shared with the owner instead of the empty active cohort',async()=>{
+ const f=await fixture(),selection={month:'2026-10'},published=await readBusinessMonthDisplay(f.env,selection,{now:f.now});
+ assert.equal(published.display.end_date,'2026-10-24');const before=structuredClone(f.calls);
+ f.clock.time+=86400000;
+ const owner=await readBusinessMonthDisplay(f.env,selection,{now:f.now}),prepared=await prepareHermesFinancialContext(f.env,jobId,analysisDate,{now:f.now,taskRaw});
+ assert.equal(owner.display_source,'PUBLISHED');assert.equal(owner.active.end_date,'2026-10-25');assert.equal(owner.active.status,'RUNNING');
+ assert.deepEqual(prepared.context,buildHermesFinancialContext(owner.display,{analysisDate,capturedAt:Math.floor(f.now()/1000)}));
+ assert.equal(prepared.context.monthly.end_date,'2026-10-24');assert.equal(prepared.context.monthly.order_coverage.paid,96);
+ assert.deepEqual(prepared.context.monthly.source_checked_at,published.display.source_checked_at);
+ assert.ok(prepared.context.monthly.pending.includes('FINANCIAL_SOURCE_STALE'));assert.equal(prepared.context.monthly.totals.net_estimate_cents,null);
+ assert.deepEqual(f.calls,before);assert.equal(legacyPythonContext(prepared.context).accepted,true);
 });
 
 test('immutable context fingerprints are bound to job identity and reject cross-job swaps and corrupted payloads',async()=>{

@@ -15,6 +15,7 @@ async function chromeEvaluate(url,source){
  const child=spawn(chrome,['--headless=new','--no-sandbox','--disable-dev-shm-usage','--disable-gpu',
   '--disable-background-networking','--disable-extensions','--remote-allow-origins=*',
   '--remote-debugging-port=0','--user-data-dir='+profile,'about:blank'],{stdio:'ignore'});
+ const closed=new Promise(resolve=>child.once('close',resolve));
  let socket;
  try{
   let port=null;
@@ -63,7 +64,12 @@ async function chromeEvaluate(url,source){
  }finally{
   try{socket?.close();}catch{}
   try{child.kill('SIGKILL');}catch{}
-  rmSync(profile,{recursive:true,force:true});
+  // Chromium may still write its profile until process shutdown completes.
+  await new Promise((resolve,reject)=>{
+   const timeout=setTimeout(()=>reject(Error('CHROME_SHUTDOWN_TIMEOUT')),2000);
+   closed.then(()=>{clearTimeout(timeout);resolve();});
+  });
+  rmSync(profile,{recursive:true,force:true,maxRetries:5,retryDelay:50});
  }
 }
 

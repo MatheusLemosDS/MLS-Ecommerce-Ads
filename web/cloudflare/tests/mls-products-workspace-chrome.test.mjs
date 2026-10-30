@@ -2,10 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import {spawn} from 'node:child_process';
-import {existsSync,mkdtempSync,mkdirSync,readFileSync,writeFileSync,rmSync} from 'node:fs';
+import {existsSync,mkdtempSync,mkdirSync,readFileSync,writeFileSync} from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {compiledOwnerReportPage} from './owner-report-browser-fixture.mjs';
+import {createChromeProfileCleanup} from './chrome-profile-cleanup.mjs';
 
 const chrome=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium','/usr/bin/chromium-browser'].find(existsSync);
 const qaDir=process.env.MLS_PRODUCTS_SCREENSHOT_DIR||null;
@@ -15,6 +16,7 @@ async function connectChrome(){
  const child=spawn(chrome,['--headless=new','--no-sandbox','--disable-dev-shm-usage','--disable-gpu',
   '--disable-background-networking','--disable-extensions','--remote-allow-origins=*',
   '--remote-debugging-port=0','--user-data-dir='+profile,'about:blank'],{stdio:'ignore'});
+ const cleanup=createChromeProfileCleanup(child,profile);
  let ws;
  try{
   let port=0;
@@ -52,13 +54,9 @@ async function connectChrome(){
    if(!r?.data)throw Error('Screenshot missing');
    mkdirSync(qaDir,{recursive:true});
    writeFileSync(path.join(qaDir,name),Buffer.from(r.data,'base64'));
-  },close(){
-   try{ws?.close();}catch{}try{child.kill('SIGKILL');}catch{}
-   try{rmSync(profile,{recursive:true,force:true});}catch{}
-  }};
+  },async close(){await cleanup(ws);}};
  }catch(error){
-  try{ws?.close();}catch{}try{child.kill('SIGKILL');}catch{}
-  try{rmSync(profile,{recursive:true,force:true});}catch{}
+  await cleanup(ws);
   throw error;
  }
 }
@@ -136,5 +134,5 @@ test('real Chrome renders read-only Products hub and legacy controls without hor
    },null,2)+'\n');
    writeFileSync(path.join(qaDir,'README.txt'),'MLS Products QA: synthetic only. No real user data, D1, Shopee calls or publication. Release not authorized.\n');
   }
- }finally{try{browser?.close();}finally{host.closeAllConnections?.();host.close();}}
+ }finally{try{await browser?.close();}finally{host.closeAllConnections?.();host.close();}}
 });

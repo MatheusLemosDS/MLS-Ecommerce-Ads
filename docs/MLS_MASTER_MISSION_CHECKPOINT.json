@@ -1,0 +1,86 @@
+{
+  "schema": "mls_master_mission_checkpoint_v1",
+  "updated_at": "2026-10-30",
+  "base_visual_sha": "8d860b2c4f26531c53c4cdba0e06a14f51a7eef4",
+  "visual_branch": "feature/mls-mockup-parity-real-charts-20261029",
+  "visual_pr": 79,
+  "integration_branch": null,
+  "integration_pr": null,
+  "authorization": {
+    "development": true,
+    "draft_pr": true,
+    "merge_main": false,
+    "production_deploy": false,
+    "commercial_writes": false
+  },
+  "phase0": {
+    "state": "COMPLETE",
+    "inspected_prs": [
+      76,
+      79,
+      81
+    ],
+    "inspected_issues": [
+      50,
+      80,
+      82
+    ],
+    "findings": [
+      "Current workspace predates remote main; isolated PR79 worktree created without changing original checkout.",
+      "Financial M2 requires authenticated Seller Centre evidence.",
+      "Hermes used active partial collection instead of published monthly source.",
+      "Listing edit regenerates imported custom SKUs.",
+      "Pricing observer lives on separate PR47.",
+      "Listing mockup JSON contains metadata, not original image bytes."
+    ]
+  },
+  "phase1": {
+    "state": "TECHNICALLY_VALIDATED_OWNER_VISUAL_REVIEW_PENDING",
+    "visual_reference_state": "AVAILABLE_HASHED_ORIGINALS",
+    "reference_package": "MLS_CODEX_VISUAL_REFERENCES_2026-10-29.zip",
+    "mockup_parity_approved": false,
+    "technical_tests": {
+      "node_pass": 2214,
+      "node_fail": 0,
+      "node_skipped": 0,
+      "python_pass": 67,
+      "compiled_chromium_scenarios": {
+        "error_navigation": 60,
+        "local_connected_navigation": 24,
+        "overview_normal_minified": 8
+      },
+      "app_sha256": "9e704d09411fa5a9db9cb6d1c2721314db6ffda92ab5edfc97b724329929a08a",
+      "auth_sha256": "1fef431c8573e05563c7938d95be0976a160bc603340084aa747ee0b73e7ec64",
+      "finance_sha256": "b2483fc6107ecb4782e746becfe1b69ee6e3b9d3f0a6109351390b11b9303ca3"
+    },
+    "reference_manifest": "docs/visual-references/mls-2026-10-29/manifest.json",
+    "screenshots": "docs/qa/mls-visual-2026-10-30/README.md",
+    "github_ci": "PENDING_BRANCH_PUSH"
+  },
+  "phase2": {
+    "state": "PENDING"
+  },
+  "phase3": {
+    "state": "PENDING"
+  },
+  "phase4": {
+    "state": "PENDING"
+  },
+  "phase5": {
+    "state": "PENDING"
+  },
+  "phase6": {
+    "state": "PENDING"
+  },
+  "external_blockers": [
+    "Authenticated Seller Centre comparison and owner QA unavailable.",
+    "TikTok affiliate and publishing grants unverified.",
+    "Real shop media rights/bytes require authorized local files."
+  ],
+  "safety": {
+    "ads_promo": "LOCKED",
+    "hermes": "OBSERVER",
+    "finance_m2": "OPEN_ISSUE_50",
+    "bank_realized_net": "UNKNOWN"
+  }
+}

@@ -18,13 +18,15 @@ test('single approved visual language defines actual agent colors, responsive la
   '#history .card','#margins .card']){
   assert.ok(MLS_APPROVED_DESIGN_CSS.includes(selector),selector);
  }
- assert.match(MLS_APPROVED_DESIGN_CSS,/@media\(min-width:1201px\)[\s\S]*?repeat\(4,minmax\(0,1fr\)\)!important/);
+ assert.match(MLS_APPROVED_DESIGN_CSS,/\.mission-dashboard \.command-center-metrics\{grid-template-columns:repeat\(6,minmax\(0,1fr\)\)/);
+ assert.doesNotMatch(MLS_APPROVED_DESIGN_CSS,/grid-template-columns:repeat\(4,minmax\(0,1fr\)\)!important/);
  assert.match(MLS_APPROVED_DESIGN_CSS,/scroll-margin-top:99px/);
  assert.match(MLS_APPROVED_DESIGN_CSS,/:root\[data-theme=dark\]/);
  assert.match(MLS_APPROVED_DESIGN_CSS,/:root\[data-theme=light\]/);
  for(const width of ['1200','850','640','390'])
   assert.ok(MLS_APPROVED_DESIGN_CSS.includes('max-width:'+width+'px'),width+' responsive breakpoint');
  assert.ok(CSS.endsWith(MLS_APPROVED_DESIGN_CSS),'shared theme must be the final owner CSS layer');
+ assert.equal(CSS.split(MLS_APPROVED_DESIGN_CSS).length,2,'canonical owner layer must not be duplicated');
  assert.doesNotMatch(MLS_APPROVED_DESIGN_CSS,/https?:\/\/|url\(["']?https?:|R\$\s*\d+|roas:\s*\d+/i);
 });
 
