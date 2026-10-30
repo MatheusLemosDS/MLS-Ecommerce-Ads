@@ -2,13 +2,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import {spawn} from 'node:child_process';
-import {existsSync,mkdtempSync,readFileSync,rmSync,mkdirSync,writeFileSync} from 'node:fs';
+import {existsSync,mkdtempSync,readFileSync,mkdirSync,writeFileSync} from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {commandCenterBody} from '../src/agent-registry-view.mjs';
 import {MLS_APPROVED_DESIGN_CSS} from '../src/approved-design-system.mjs';
 import {MISSION_CSS} from '../src/mission-control.mjs';
 import {compiledOwnerReportPage} from './owner-report-browser-fixture.mjs';
+import {createChromeProfileCleanup} from './chrome-profile-cleanup.mjs';
 
 const chrome=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium','/usr/bin/chromium-browser'].find(existsSync);
 const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
@@ -34,6 +35,7 @@ async function browser(url,{width,height,theme,minify}){
  const child=spawn(chrome,['--headless=new','--no-sandbox','--disable-dev-shm-usage','--disable-gpu',
   '--disable-background-networking','--disable-extensions','--remote-allow-origins=*','--remote-debugging-port=0',
   '--user-data-dir='+profile,'about:blank'],{stdio:'ignore'});
+ const cleanup=createChromeProfileCleanup(child,profile);
  let socket;
  try{
   let port=0;for(let n=0;n<120;n++){try{port=Number(readFileSync(path.join(profile,'DevToolsActivePort'),'utf8').split('\n')[0]);}catch{}if(port)break;await pause(75);}
@@ -99,7 +101,7 @@ async function browser(url,{width,height,theme,minify}){
   assert.equal(periodProof.custom,'2026-10-03');assert.equal(periodProof.customVisible,true);assert.equal(periodProof.invalidRejected,true);
   assert.ok(periodProof.monthReads>=0&&periodProof.monthReads<=2,'only the original date controller may select the month');
   return {...proof,periodProxy:periodProof};
- }finally{try{socket?.close();}catch{}child.kill('SIGKILL');await pause(50);rmSync(profile,{recursive:true,force:true});}
+ }finally{await cleanup(socket);}
 }
 
 test('compiled overview preserves six-by-six desktop composition and mobile access in both themes',{timeout:120000},async t=>{

@@ -2,10 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import {spawn} from 'node:child_process';
-import {existsSync,mkdtempSync,readFileSync,mkdirSync,writeFileSync,rmSync} from 'node:fs';
+import {existsSync,mkdtempSync,readFileSync,mkdirSync,writeFileSync} from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {compiledOwnerReportPage} from './owner-report-browser-fixture.mjs';
+import {createChromeProfileCleanup} from './chrome-profile-cleanup.mjs';
 
 const chrome=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium','/usr/bin/chromium-browser'].find(existsSync);
 const qaDir=process.env.MLS_PRODUCTION_SCREENSHOT_DIR||null;
@@ -15,6 +16,7 @@ async function launch(){
  const child=spawn(chrome,['--headless=new','--no-sandbox','--disable-dev-shm-usage','--disable-gpu',
   '--disable-background-networking','--disable-extensions','--remote-allow-origins=*',
   '--remote-debugging-port=0','--user-data-dir='+profile,'about:blank'],{stdio:'ignore'});
+ const cleanup=createChromeProfileCleanup(child,profile);
  let ws;
  try{
   let port=0;
@@ -51,13 +53,9 @@ async function launch(){
    const r=await send('Page.captureScreenshot',{format:'png',fromSurface:true,captureBeyondViewport:false});
    if(!r?.data)throw Error('Chrome screenshot missing');
    mkdirSync(qaDir,{recursive:true});writeFileSync(path.join(qaDir,filename),Buffer.from(r.data,'base64'));
-  },close(){
-   try{ws?.close();}catch{}try{child.kill('SIGKILL');}catch{}
-   try{rmSync(profile,{recursive:true,force:true});}catch{}
-  }};
+  },async close(){await cleanup(ws);}};
  }catch(e){
-  try{ws?.close();}catch{}try{child.kill('SIGKILL');}catch{}
-  try{rmSync(profile,{recursive:true,force:true});}catch{}
+  await cleanup(ws);
   throw e;
  }
 }
@@ -139,5 +137,5 @@ test('Chrome synthetic DTF rework renders five workflow steps without clipping o
    },null,2)+'\n');
    writeFileSync(path.join(qaDir,'README.txt'),'MLS Production DTF rework: synthetic browser ONLY, API stubs, no private shop, no uploads or commercial actions. Do not deploy without approval.\n');
   }
- }finally{try{browser?.close();}finally{server.closeAllConnections?.();server.close();}}
+ }finally{try{await browser?.close();}finally{server.closeAllConnections?.();server.close();}}
 });

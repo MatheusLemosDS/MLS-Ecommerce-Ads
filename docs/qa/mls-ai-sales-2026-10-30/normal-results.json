@@ -1,0 +1,448 @@
+{
+  "schema": "mls_ai_sales_compiled_visual_qa_v1",
+  "source": "SYNTHETIC_LOCAL_OWNER_NO_EXTERNAL_SERVICE",
+  "real_owner_authenticated": false,
+  "owner_visual_approval": "PENDING",
+  "minified": false,
+  "worker_sha256": "a5ba3298faf4b8c2eaa32e98674f1d7408f4c4616236d8f04a2fba72bbfb91c8",
+  "scenarios": [
+    {
+      "tabs": [
+        {
+          "name": "campaigns",
+          "theme": "light",
+          "selected": "true",
+          "visible": [
+            "aiSalesPanel-campaigns"
+          ],
+          "overflow": false,
+          "panelTop": 157.046875,
+          "tabsTop": 85.046875,
+          "activeTabVisible": true,
+          "viewport": {
+            "width": 1365,
+            "height": 900
+          },
+          "image": {
+            "file": "normal-light-1365-campaigns.png",
+            "sha256": "a6ede144b2a3fc13dba944a5bff37e4cb3a523009a38c28d86db748774374137",
+            "bytes": 125089
+          }
+        },
+        {
+          "name": "studio",
+          "theme": "light",
+          "selected": "true",
+          "visible": [
+            "aiSalesPanel-studio"
+          ],
+          "overflow": false,
+          "panelTop": 499.046875,
+          "tabsTop": 427.046875,
+          "activeTabVisible": true,
+          "viewport": {
+            "width": 1365,
+            "height": 900
+          },
+          "image": {
+            "file": "normal-light-1365-studio.png",
+            "sha256": "a47fa1170c329ec9fe7e4e35c18040fee17a35f59557ef5e3588f11848ccf1ed",
+            "bytes": 176303
+          }
+        },
+        {
+          "name": "affiliates",
+          "theme": "light",
+          "selected": "true",
+          "visible": [
+            "aiSalesPanel-affiliates"
+          ],
+          "overflow": false,
+          "panelTop": 267.046875,
+          "tabsTop": 195.046875,
+          "activeTabVisible": true,
+          "viewport": {
+            "width": 1365,
+            "height": 900
+          },
+          "image": {
+            "file": "normal-light-1365-affiliates.png",
+            "sha256": "fae8b83665b4fc1139711df052bba30f765946bbb7e8b54e01e37f19b013e1d0",
+            "bytes": 119339
+          }
+        },
+        {
+          "name": "performance",
+          "theme": "light",
+          "selected": "true",
+          "visible": [
+            "aiSalesPanel-performance"
+          ],
+          "overflow": false,
+          "panelTop": 368.046875,
+          "tabsTop": 296.046875,
+          "activeTabVisible": true,
+          "viewport": {
+            "width": 1365,
+            "height": 900
+          },
+          "image": {
+            "file": "normal-light-1365-performance.png",
+            "sha256": "93b8f77e206e724c8d68d59e540b888f7ac1657b3900429eb71099b89bdfa392",
+            "bytes": 100035
+          }
+        },
+        {
+          "name": "integrations",
+          "theme": "light",
+          "selected": "true",
+          "visible": [
+            "aiSalesPanel-integrations"
+          ],
+          "overflow": false,
+          "panelTop": 281.046875,
+          "tabsTop": 209.046875,
+          "activeTabVisible": true,
+          "viewport": {
+            "width": 1365,
+            "height": 900
+          },
+          "image": {
+            "file": "normal-light-1365-integrations.png",
+            "sha256": "d380c896e80c320b9230515e70b0679c4662720d861779c9c0167c7f125291e8",
+            "bytes": 121391
+          }
+        },
+        {
+          "name": "campaigns",
+          "theme": "dark",
+          "selected": "true",
+          "visible": [
+            "aiSalesPanel-campaigns"
+          ],
+          "overflow": false,
+          "panelTop": 157.34375,
+          "tabsTop": 85.34375,
+          "activeTabVisible": true,
+          "viewport": {
+            "width": 1365,
+            "height": 900
+          },
+          "image": {
+            "file": "normal-dark-1365-campaigns.png",
+            "sha256": "c47ff1effc4c06c735f3b97d678f1be4ec8f004a1dce9c5ce9b7acfd4e436b1d",
+            "bytes": 163645
+          }
+        },
+        {
+          "name": "studio",
+          "theme": "dark",
+          "selected": "true",
+          "visible": [
+            "aiSalesPanel-studio"
+          ],
+          "overflow": false,
+          "panelTop": 499.34375,
+          "tabsTop": 427.34375,
+          "activeTabVisible": true,
+          "viewport": {
+            "width": 1365,
+            "height": 900
+          },
+          "image": {
+            "file": "normal-dark-1365-studio.png",
+            "sha256": "531bb05f5b91c8d90d3ff4240497f0cfd0252abfda78ea115973ba8e81550980",
+            "bytes": 208461
+          }
+        },
+        {
+          "name": "affiliates",
+          "theme": "dark",
+          "selected": "true",
+          "visible": [
+            "aiSalesPanel-affiliates"
+          ],
+          "overflow": false,
+          "panelTop": 267.34375,
+          "tabsTop": 195.34375,
+          "activeTabVisible": true,
+          "viewport": {
+            "width": 1365,
+            "height": 900
+          },
+          "image": {
+            "file": "normal-dark-1365-affiliates.png",
+            "sha256": "feb5e68dd16f61ef67feae02d5d6cbd99aad20672dad13ed1e388a7c5022fa37",
+            "bytes": 157345
+          }
+        },
+        {
+          "name": "performance",
+          "theme": "dark",
+          "selected": "true",
+          "visible": [
+            "aiSalesPanel-performance"
+          ],
+          "overflow": false,
+          "panelTop": 367.34375,
+          "tabsTop": 295.34375,
+          "activeTabVisible": true,
+          "viewport": {
+            "width": 1365,
+            "height": 900
+          },
+          "image": {
+            "file": "normal-dark-1365-performance.png",
+            "sha256": "d33e1e860b91a64d5b655d449a5a3895628c4e4eb281d71a16075d67284b54e6",
+            "bytes": 134350
+          }
+        },
+        {
+          "name": "integrations",
+          "theme": "dark",
+          "selected": "true",
+          "visible": [
+            "aiSalesPanel-integrations"
+          ],
+          "overflow": false,
+          "panelTop": 280.34375,
+          "tabsTop": 208.34375,
+          "activeTabVisible": true,
+          "viewport": {
+            "width": 1365,
+            "height": 900
+          },
+          "image": {
+            "file": "normal-dark-1365-integrations.png",
+            "sha256": "1b1d67419f9b8e8c1a6f8d9de8967d4eb5f43967503c79be7e195b0633e1ab57",
+            "bytes": 155489
+          }
+        }
+      ],
+      "heading": "MLS AI Sales",
+      "errors": [],
+      "tabsDirection": "row",
+      "localCalls": [],
+      "rootVisible": true
+    },
+    {
+      "tabs": [
+        {
+          "name": "campaigns",
+          "theme": "light",
+          "selected": "true",
+          "visible": [
+            "aiSalesPanel-campaigns"
+          ],
+          "overflow": false,
+          "panelTop": 157.328125,
+          "tabsTop": 85.328125,
+          "activeTabVisible": true,
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "image": {
+            "file": "normal-light-390-campaigns.png",
+            "sha256": "52c2bea90c7f5300d338ac37a999a19734d26917f40a796743110a54c234ff8e",
+            "bytes": 53236
+          }
+        },
+        {
+          "name": "studio",
+          "theme": "light",
+          "selected": "true",
+          "visible": [
+            "aiSalesPanel-studio"
+          ],
+          "overflow": false,
+          "panelTop": 157.328125,
+          "tabsTop": 85.328125,
+          "activeTabVisible": true,
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "image": {
+            "file": "normal-light-390-studio.png",
+            "sha256": "e0a8fbc7cbdc9dfc3e110bd5e37905fccac719d0aea7b889d89b0c2bfd987a88",
+            "bytes": 66303
+          }
+        },
+        {
+          "name": "affiliates",
+          "theme": "light",
+          "selected": "true",
+          "visible": [
+            "aiSalesPanel-affiliates"
+          ],
+          "overflow": false,
+          "panelTop": 157.328125,
+          "tabsTop": 85.328125,
+          "activeTabVisible": true,
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "image": {
+            "file": "normal-light-390-affiliates.png",
+            "sha256": "67625953c0cebcea598bbc049fb1ab08c94a63872528335d2dc848c27a9a8305",
+            "bytes": 46176
+          }
+        },
+        {
+          "name": "performance",
+          "theme": "light",
+          "selected": "true",
+          "visible": [
+            "aiSalesPanel-performance"
+          ],
+          "overflow": false,
+          "panelTop": 157.328125,
+          "tabsTop": 85.328125,
+          "activeTabVisible": true,
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "image": {
+            "file": "normal-light-390-performance.png",
+            "sha256": "62a0db0650eb90c3cce58f66ff67ff942072bc4b0d9256043ab7694113534dd5",
+            "bytes": 47940
+          }
+        },
+        {
+          "name": "integrations",
+          "theme": "light",
+          "selected": "true",
+          "visible": [
+            "aiSalesPanel-integrations"
+          ],
+          "overflow": false,
+          "panelTop": 157.328125,
+          "tabsTop": 85.328125,
+          "activeTabVisible": true,
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "image": {
+            "file": "normal-light-390-integrations.png",
+            "sha256": "7cd3dcccfbb898a7af8bef5385ccb63db643764067d27fa8bf0032e51d0d90ac",
+            "bytes": 65385
+          }
+        },
+        {
+          "name": "campaigns",
+          "theme": "dark",
+          "selected": "true",
+          "visible": [
+            "aiSalesPanel-campaigns"
+          ],
+          "overflow": false,
+          "panelTop": 156.734375,
+          "tabsTop": 84.734375,
+          "activeTabVisible": true,
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "image": {
+            "file": "normal-dark-390-campaigns.png",
+            "sha256": "ef34be4df9e3212afdc48d784dc4df8d2917b299bd980b6b170036469f745b32",
+            "bytes": 62117
+          }
+        },
+        {
+          "name": "studio",
+          "theme": "dark",
+          "selected": "true",
+          "visible": [
+            "aiSalesPanel-studio"
+          ],
+          "overflow": false,
+          "panelTop": 156.734375,
+          "tabsTop": 84.734375,
+          "activeTabVisible": true,
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "image": {
+            "file": "normal-dark-390-studio.png",
+            "sha256": "aeb808a4f91d927624eddfbfae6dd04fc35356bcbbba110ba3c6f71289829d5e",
+            "bytes": 75471
+          }
+        },
+        {
+          "name": "affiliates",
+          "theme": "dark",
+          "selected": "true",
+          "visible": [
+            "aiSalesPanel-affiliates"
+          ],
+          "overflow": false,
+          "panelTop": 156.734375,
+          "tabsTop": 84.734375,
+          "activeTabVisible": true,
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "image": {
+            "file": "normal-dark-390-affiliates.png",
+            "sha256": "245637dd2564393788d83ff2a81e6c304f7fde2563905f0cc1e8e7797b771cc7",
+            "bytes": 54125
+          }
+        },
+        {
+          "name": "performance",
+          "theme": "dark",
+          "selected": "true",
+          "visible": [
+            "aiSalesPanel-performance"
+          ],
+          "overflow": false,
+          "panelTop": 156.734375,
+          "tabsTop": 84.734375,
+          "activeTabVisible": true,
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "image": {
+            "file": "normal-dark-390-performance.png",
+            "sha256": "1b295fcc332ba4b2da05f54391dc95f3afe9725bab566938502f047ca86bb196",
+            "bytes": 55823
+          }
+        },
+        {
+          "name": "integrations",
+          "theme": "dark",
+          "selected": "true",
+          "visible": [
+            "aiSalesPanel-integrations"
+          ],
+          "overflow": false,
+          "panelTop": 156.734375,
+          "tabsTop": 84.734375,
+          "activeTabVisible": true,
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "image": {
+            "file": "normal-dark-390-integrations.png",
+            "sha256": "741f85bcd99b06ecdd0400d2f256210ae27624ec8432a5465f1e94d566d8a5ac",
+            "bytes": 73379
+          }
+        }
+      ],
+      "heading": "MLS AI Sales",
+      "errors": [],
+      "tabsDirection": "row",
+      "localCalls": [],
+      "rootVisible": true
+    }
+  ]
+}

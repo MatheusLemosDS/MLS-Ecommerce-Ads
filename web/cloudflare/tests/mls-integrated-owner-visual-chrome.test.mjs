@@ -3,10 +3,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import {spawn} from 'node:child_process';
-import {existsSync,mkdtempSync,mkdirSync,writeFileSync,readFileSync,rmSync} from 'node:fs';
+import {existsSync,mkdtempSync,mkdirSync,writeFileSync,readFileSync} from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {compiledOwnerReportPage} from './owner-report-browser-fixture.mjs';
+import {createChromeProfileCleanup} from './chrome-profile-cleanup.mjs';
 
 const chrome=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium','/usr/bin/chromium-browser'].find(existsSync);
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
@@ -17,6 +18,7 @@ async function launch(){
  const child=spawn(chrome,['--headless=new','--no-sandbox','--disable-dev-shm-usage','--disable-gpu',
   '--disable-background-networking','--disable-extensions','--remote-allow-origins=*',
   '--remote-debugging-port=0','--user-data-dir='+profile,'about:blank'],{stdio:'ignore'});
+ const cleanup=createChromeProfileCleanup(child,profile);
  let ws=null;
  try{
   let port=null;
@@ -56,9 +58,9 @@ async function launch(){
    if(!res?.data||res.data.length>15*1024*1024)throw Error('Screenshot invalid');
    mkdirSync(qaDir,{recursive:true});
    writeFileSync(path.join(qaDir,filename),Buffer.from(res.data,'base64'));
-  },close(){try{ws?.close();}catch{}try{child.kill('SIGKILL');}catch{}rmSync(profile,{recursive:true,force:true});}};
+  },async close(){await cleanup(ws);}};
  }catch(error){
-  try{ws?.close();}catch{}try{child.kill('SIGKILL');}catch{}rmSync(profile,{recursive:true,force:true});throw error;
+  await cleanup(ws);throw error;
  }
 }
 
@@ -177,7 +179,7 @@ test('synthetic owner visual smoke in desktop and mobile Chrome with zero real-a
    writeFileSync(path.join(qaDir,'results.json'),JSON.stringify({schema:'mls_owner_visual_synthetic_qa_v1',
     owner_real_session_verified:false,production_approved:false,observations:report},null,2)+'\n');
   }
- }finally{try{cdp?.close();}finally{host.closeAllConnections?.();host.close();}}
+ }finally{try{await cdp?.close();}finally{host.closeAllConnections?.();host.close();}}
 });
 
 
@@ -221,5 +223,5 @@ test('disabled release switch keeps legacy Ctrl+K navigation usable in real Chro
   assert.equal(result.searchOpen,true);
   assert.ok(result.navigation.some(title=>title.includes('Finance')),'original panel search remains usable');
   assert.ok(result.scrollWidth<=390+2,'legacy mobile shell must not overflow horizontally');
- }finally{try{cdp?.close();}finally{host.closeAllConnections?.();host.close();}}
+ }finally{try{await cdp?.close();}finally{host.closeAllConnections?.();host.close();}}
 });

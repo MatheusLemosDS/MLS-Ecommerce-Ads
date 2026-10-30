@@ -5,7 +5,7 @@ import {MLS_LISTING_FACTORY_CSS,mlsListingFactoryBody,MLS_LISTING_FACTORY_CLIENT
 
 test('owner Listing Factory presents a draft-only form with separated size pricing and upload-free review',()=>{
  const html=mlsListingFactoryBody();
- for(const key of ['mlsListingFactory','mlsLfForm','mlsLfFiles','mlsLfVariants','mlsLfDrafts','mlsLfImport','mlsLfBatchFiles','mlsLfBatchFolder','mlsLfBatchStatus','mlsLfPrevious','mlsLfPage','mlsLfNext','mlsLfExportManifest','mlsLfExportReview'])
+ for(const key of ['mlsListingFactory','mlsLfForm','mlsLfFiles','mlsLfVariants','mlsLfDrafts','mlsLfImport','mlsLfBatchFiles','mlsLfBatchFolder','mlsLfBatchStatus','mlsLfPrevious','mlsLfPage','mlsLfNext','mlsLfExportManifest','mlsLfExportReview','mlsLfReplaceSkus'])
   assert.match(html,new RegExp('id="'+key+'"'));
  assert.match(html,/SEM PUBLICAÇÃO/);
  assert.doesNotMatch(html,/id="mlsLfPrice"[^>]*\bvalue=/,'price must come from operator, never preset');
@@ -33,6 +33,8 @@ for(const minify of [false,true]){
   assert.equal(clients.length,1);
   assert.match(clients[0],/function planMlsListingFactory\(input,mediaIndex\)/);
   assert.match(clients[0],/function planMlsDraftBatchMedia\(manifest,observed\)/);
+  assert.match(clients[0],/function planMlsListingVariantRows\(sizes,originals=/);
+  assert.match(clients[0],/function generateMlsListingSku\(prefix,size\)/);
   assert.doesNotMatch(clients[0],/__MLS_LISTING_FACTORY_CORE__/);
   const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(x=>x[1]);
   assert.equal(ids.length,new Set(ids).size);

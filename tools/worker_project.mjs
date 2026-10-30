@@ -140,6 +140,8 @@ export const TARGETS = Object.freeze({
     // PR79 original-reference component layout, verified charts and Hermes published cohort;
     // exact local build; full regression and review remain required, no deployment.
     '9e704d09411fa5a9db9cb6d1c2721314db6ffda92ab5edfc97b724329929a08a',
+    // Local AI Sales owner preview and SKU/pricing observer integration, no deployment.
+    'a5ba3298faf4b8c2eaa32e98674f1d7408f4c4616236d8f04a2fba72bbfb91c8',
   ]}),
   auth: Object.freeze({name: 'brazacommerce-auth', main: '../../dist/auth-worker.mjs', baselineHashes: [
     '45d0142709c5087e373cc4da146070ed39c472805f6f64c00f00b6555f0e1f56',

@@ -2,10 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import {spawn} from 'node:child_process';
-import {existsSync,mkdtempSync,mkdirSync,readFileSync,writeFileSync,rmSync} from 'node:fs';
+import {existsSync,mkdtempSync,mkdirSync,readFileSync,writeFileSync} from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {compiledOwnerReportPage} from './owner-report-browser-fixture.mjs';
+import {createChromeProfileCleanup} from './chrome-profile-cleanup.mjs';
 import {buildMlsAgentRegistry} from '../src/agent-registry.mjs';
 
 const chrome=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium','/usr/bin/chromium-browser'].find(existsSync);
@@ -26,6 +27,7 @@ async function browserCDP(){
  const child=spawn(chrome,['--headless=new','--no-sandbox','--disable-dev-shm-usage','--disable-gpu',
   '--disable-background-networking','--disable-extensions','--remote-allow-origins=*',
   '--remote-debugging-port=0','--user-data-dir='+profile,'about:blank'],{stdio:'ignore'});
+ const cleanup=createChromeProfileCleanup(child,profile);
  let ws;
  try{
   let port=0;
@@ -62,13 +64,9 @@ async function browserCDP(){
    const result=await send('Page.captureScreenshot',{format:'png',fromSurface:true,captureBeyondViewport:false});
    if(!result?.data)throw Error('Screenshot missing');
    mkdirSync(qaDir,{recursive:true});writeFileSync(path.join(qaDir,filename),Buffer.from(result.data,'base64'));
-  },close(){
-   try{ws?.close();}catch{}try{child.kill('SIGKILL');}catch{}
-   try{rmSync(profile,{recursive:true,force:true});}catch{}
-  }};
+  },async close(){await cleanup(ws);}};
  }catch(error){
-  try{ws?.close();}catch{}try{child.kill('SIGKILL');}catch{}
-  try{rmSync(profile,{recursive:true,force:true});}catch{}
+  await cleanup(ws);
   throw error;
  }
 }
@@ -152,5 +150,5 @@ test('Chrome synthetic owner Agent Hub keeps status evidence and responsive layo
    writeFileSync(path.join(qaDir,'results.json'),JSON.stringify({schema:'mls_agents_hub_visual_qa_v1',owner_real_session_verified:false,production_approved:false,observations:report},null,2)+'\n');
    writeFileSync(path.join(qaDir,'README.txt'),'MLS Agents Hub: SYNTHETIC ONLY. No real shop, buyer, Finance or Shopee API data. No production approval.\n');
   }
- }finally{try{browser?.close();}finally{host.closeAllConnections?.();host.close();}}
+ }finally{try{await browser?.close();}finally{host.closeAllConnections?.();host.close();}}
 });

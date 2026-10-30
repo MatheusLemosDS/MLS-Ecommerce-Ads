@@ -2,7 +2,7 @@
 
 Atualizado em **30/10/2026**.
 
-> **Execução atual — 30/10/2026:** missão mestre de desenvolvimento em andamento, **sem merge nem deploy**. Prioridade PR #79; seis PNGs originais recebidos e registrados em `docs/visual-references/mls-2026-10-29/manifest.json`. Depois do congelamento técnico, integração e AI Sales seguem em branch separada. Estado atual: [checkpoint da missão](MLS_MASTER_MISSION_CHECKPOINT.json) e [registro técnico](MLS_MASTER_MISSION_EXECUTION_2026_10_30.md). M2 financeira permanece aberta; exemplos visuais não são dados da loja.
+> **Execução atual — 30/10/2026:** PR #79 congelada com CI verde `e7ce5009`/41131654577 e seis PNGs originais versionados. A branch `integration/mls-commerce-os-ai-sales-20261030` integra a preservação de SKUs, Products/Pricing observador e MVP local AI Sales com três MP4s reais PT-BR e cinco abas nativas; regressão final registrada no [checkpoint da missão](MLS_MASTER_MISSION_CHECKPOINT.json). [Guia de homologação e limites](MLS_AI_SALES_INTEGRATION_2026_10_30.md). Sem merge/deploy/writes. M2, QA owner, grants e acesso LLM continuam externos; nenhum lucro bancário foi inventado.
 
 
 

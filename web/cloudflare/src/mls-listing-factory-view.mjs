@@ -41,13 +41,13 @@ export function mlsListingFactoryBody(){return String.raw`
  <form id="mlsLfForm" class="mls-lf-form" autocomplete="off">
   <div class="mls-lf-grid">
    <div class="mls-lf-field"><label for="mlsLfRef">Código interno da arte</label><input id="mlsLfRef" maxlength="64" placeholder="retro-2000-001" required><span class="mls-lf-help">Identificador único, sem espaços.</span></div>
-   <div class="mls-lf-field"><label for="mlsLfSku">Prefixo SKU</label><input id="mlsLfSku" maxlength="60" placeholder="RETRO2000-001" required><span class="mls-lf-help">Combinado automaticamente com o tamanho.</span></div>
+   <div class="mls-lf-field"><label for="mlsLfSku">Prefixo para novos SKUs</label><input id="mlsLfSku" maxlength="60" placeholder="RETRO2000-001"><button type="button" id="mlsLfReplaceSkus" class="mls-lf-btn">Aplicar prefixo a todas as variações</button><span class="mls-lf-help">Novos tamanhos usam o prefixo e o tamanho. SKUs existentes são preservados; edite cada um na tabela ou use o botão para substituí-los neste rascunho.</span></div>
   </div>
   <div class="mls-lf-field"><label for="mlsLfTitle">Título do anúncio</label><input id="mlsLfTitle" maxlength="120" placeholder="Camiseta retrô anos 2000 unissex" required><span class="mls-lf-help">Título de autoria do operador; regras de categoria devem ser revistas no Seller Centre.</span></div>
   <div class="mls-lf-field"><label for="mlsLfDescription">Descrição</label><textarea id="mlsLfDescription" maxlength="5000" placeholder="Detalhes do tecido, medidas, cuidados com a estampa e prazo de produção..." required></textarea></div>
   <div class="mls-lf-grid">
    <div class="mls-lf-field"><label for="mlsLfPrice">Preço base (R$)</label><input id="mlsLfPrice" inputmode="decimal" placeholder="Informe o preço"><button type="button" id="mlsLfApplyPrice" class="mls-lf-btn">Aplicar a todos os tamanhos</button><span class="mls-lf-help">Alterações no preço base atualizam tamanhos ainda não editados. Você pode definir preços diferentes por variação. Informe seu preço; o sistema não utiliza tarifa ou margem presumida.</span></div>
-   <div class="mls-lf-field"><label for="mlsLfExtraSizes">Outros tamanhos (separados por vírgula)</label><input id="mlsLfExtraSizes" maxlength="200" placeholder="2, 4, 6, 8 ou Único"><span class="mls-lf-help">Opcional; cada tamanho pode ter preço diferente.</span></div>
+   <div class="mls-lf-field"><label for="mlsLfExtraSizes">Outros tamanhos ou kits (separados por vírgula)</label><input id="mlsLfExtraSizes" maxlength="200" placeholder="2, 4, P/M, P + G3 ou Único"><span class="mls-lf-help">Opcional; cada variação pode ter SKU, preço e quantidade próprios. O rótulo do kit não altera automaticamente a produção ou o estoque.</span></div>
   </div>
   <div class="mls-lf-field"><label>Tamanhos padrão</label><div class="mls-lf-sizes" id="mlsLfSizeList">
    <label class="mls-lf-size"><input type="checkbox" data-lf-size="P" checked>P</label><label class="mls-lf-size"><input type="checkbox" data-lf-size="M" checked>M</label>
@@ -95,7 +95,7 @@ export const MLS_LISTING_FACTORY_CLIENT=String.raw`
  const by=id=>document.getElementById('mlsLf'+id);
  const form=by('Form'),notice=by('Message'),sizes=by('SizeList'),table=by('Variants'),
   chosen=by('ImagePreview'),queue=by('Drafts'),input=by('Files');
- const state={drafts:[],files:[],rows:new Map(),editing:null,busy:false,sequence:0,page:0};
+ const state={drafts:[],files:[],rows:new Map(),originals:[],editing:null,busy:false,sequence:0,page:0};
  const pageSize=8;
  const button=(label,fn)=>{const e=document.createElement('button');e.type='button';e.className='mls-lf-btn';e.textContent=label;e.onclick=fn;return e;};
  const el=(tag,txt,cl)=>{const e=document.createElement(tag);if(txt!==undefined)e.textContent=String(txt);if(cl)e.className=cl;return e;};
@@ -112,27 +112,29 @@ export const MLS_LISTING_FACTORY_CLIENT=String.raw`
    .concat(by('ExtraSizes').value.split(',').map(x=>x.trim()).filter(Boolean));
   const unique=v.map(x=>x.normalize('NFC').toUpperCase());
   return v.length>32||unique.length!==new Set(unique).size||
-   !v.every(x=>x.length<=40&&/^[\p{L}\p{N} .\/_-]{1,40}$/u.test(x))?null:v;
+   !v.every(validSize)?null:v;
  }
- function sku(size){
-  const suffix=size.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z0-9_-]+/g,'-').replace(/^-+|-+$/g,'');
-  return by('Sku').value.trim().toUpperCase()+'-'+suffix;
- }
+ const sku=size=>generateMlsListingSku(by('Sku').value.trim(),size)||'';
+ const rowPlan=()=>{const available=selectedSizes();return available&&planMlsListingVariantRows(available,state.originals);};
  function remember(){
-  for(const row of table.querySelectorAll('tr[data-size]'))
-   state.rows.set(row.dataset.size,{...(state.rows.get(row.dataset.size)||{}),price:row.querySelector('[data-role=price]')?.value??'',
+  for(const row of table.querySelectorAll('tr[data-variant-key]'))
+   state.rows.set(row.dataset.variantKey,{...(state.rows.get(row.dataset.variantKey)||{}),sku:row.querySelector('[data-role=sku]')?.value??'',price:row.querySelector('[data-role=price]')?.value??'',
     quantity:row.querySelector('[data-role=quantity]')?.value??''});
  }
  function variantRows(skipRemember=false){
   if(skipRemember!==true)remember();table.replaceChildren();
-  const available=selectedSizes();
-  if(!available){table.append(el('tr','Tamanhos duplicados ou inválidos.'));return;}
-  for(const size of available){
-   const data=state.rows.get(size)||{price:by('Price').value.trim(),quantity:'',manualPrice:false};
-   state.rows.set(size,data);
-   const tr=el('tr');tr.dataset.size=size;
+  const available=rowPlan();
+  if(!available){table.append(el('tr','Tamanhos ou variações inválidos.'));return;}
+  for(const variant of available){
+   const {size,key}=variant;
+   const data=state.rows.get(key)||{price:by('Price').value.trim(),quantity:'',manualPrice:false,sku:variant.sku||sku(size),manualSku:variant.original};
+   if(!data.manualSku)data.sku=sku(size);
+   state.rows.set(key,data);
+   const tr=el('tr');tr.dataset.size=size;tr.dataset.variantKey=key;
    const a=el('td'),b=el('td'),c=el('td');
-   a.append(el('strong',size),el('div',sku(size),'mls-lf-help'));
+   const skuInput=el('input');skuInput.type='text';skuInput.maxLength=80;skuInput.value=data.sku;skuInput.dataset.role='sku';
+   skuInput.setAttribute('aria-label','SKU '+size);skuInput.oninput=()=>{data.sku=skuInput.value;data.manualSku=true;};
+   a.append(el('strong',size),skuInput);
    for(const [cell,key] of [[b,'price'],[c,'quantity']]){
     const i=el('input');i.type='text';i.inputMode=key==='price'?'decimal':'numeric';
     i.value=data[key];i.dataset.role=key;i.setAttribute('aria-label',(key==='price'?'Preço ':'Quantidade ')+size);
@@ -264,7 +266,7 @@ export const MLS_LISTING_FACTORY_CLIENT=String.raw`
   });
  }
  function reset(){
-  state.sequence++;state.files=[];state.rows.clear();state.editing=null;state.busy=false;
+  state.sequence++;state.files=[];state.rows.clear();state.originals=[];state.editing=null;state.busy=false;
   form.reset();by('Price').value='';input.value='';by('Save').textContent='Adicionar à fila de revisão';by('Save').disabled=false;
   by('Cancel').hidden=true;variantRows();preview();list();
  }
@@ -272,32 +274,35 @@ export const MLS_LISTING_FACTORY_CLIENT=String.raw`
   const d=state.drafts[i];if(!d||state.busy)return;reset();state.editing=i;state.files=d.files.slice();
   by('BatchFiles').disabled=true;by('BatchFolder').disabled=true;
   by('Ref').value=d.item.client_ref;by('Title').value=d.item.title;by('Description').value=d.item.description;
-  const standard=new Set([...sizes.querySelectorAll('[data-lf-size]')].map(x=>x.dataset.lfSize));
-  const original=d.item.variants[0];by('Sku').value=original?.sku?.replace(/-[^-]+$/,'')||'';
+  const standard=new Set([...sizes.querySelectorAll('[data-lf-size]')].map(x=>variantSizeKey(x.dataset.lfSize)));
+  const original=d.item.variants[0],suffix=generateMlsListingSku('S',original?.size||'')?.slice(2);
+  const prefix=suffix&&original.sku.toUpperCase().endsWith('-'+suffix)?original.sku.slice(0,-suffix.length-1):original?.sku||'';
+  by('Sku').value=prefix.slice(0,60);
   by('Price').value=shownPrice(original?.price_cents);
-  const extras=[];
-  for(const checkbox of sizes.querySelectorAll('[data-lf-size]'))checkbox.checked=d.item.variants.some(v=>v.size===checkbox.dataset.lfSize);
-  for(const v of d.item.variants){
-   if(!standard.has(v.size))extras.push(v.size);
-   state.rows.set(v.size,{price:shownPrice(v.price_cents),quantity:v.stock_quantity===null?'':String(v.stock_quantity),manualPrice:true});
+  const extras=[],seen=new Set();state.originals=d.item.variants.map(v=>({size:v.size,sku:v.sku}));
+  for(const checkbox of sizes.querySelectorAll('[data-lf-size]'))checkbox.checked=d.item.variants.some(v=>variantSizeKey(v.size)===variantSizeKey(checkbox.dataset.lfSize));
+  for(const [index,v] of d.item.variants.entries()){
+   const key=variantSizeKey(v.size);if(!standard.has(key)&&!seen.has(key)){extras.push(v.size);seen.add(key);}
+   state.rows.set('saved-'+index,{price:shownPrice(v.price_cents),quantity:v.stock_quantity===null?'':String(v.stock_quantity),manualPrice:true,sku:v.sku,manualSku:true});
   }
-  by('ExtraSizes').value=extras.join(', ');variantRows();preview();
+  by('ExtraSizes').value=extras.join(', ');variantRows(true);preview();
   by('Save').textContent='Salvar alterações';by('Cancel').hidden=false;
   tell('Editando '+d.item.client_ref+(d.files.length?' · imagens locais disponíveis.':' · selecione novamente os mockups: o JSON contém apenas seus nomes.')+' Nenhuma informação foi publicada.');
   root.scrollIntoView?.({block:'start'});
  }
  function formDraft(){
-  remember();const ref=by('Ref').value.trim(),prefix=by('Sku').value.trim(),available=selectedSizes();
+  remember();const ref=by('Ref').value.trim(),available=rowPlan();
   if(!/^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/.test(ref))throw Error('Informe um código interno válido, sem espaços.');
-  if(!/^[A-Za-z0-9][A-Za-z0-9._\/-]{0,59}$/.test(prefix))throw Error('Prefixo SKU inválido.');
   if(!available?.length)throw Error('Selecione ao menos um tamanho válido.');
-  const variants=available.map(size=>{
-   const r=state.rows.get(size)||{},price=valuePrice(r.price),qty=String(r.quantity??'').trim();
+  const skus=new Set(),variants=available.map(({size,key})=>{
+   const r=state.rows.get(key)||{},price=valuePrice(r.price),qty=String(r.quantity??'').trim();
+   if(!validSku(r.sku)||skus.has(r.sku))throw Error('SKU inválido ou repetido para '+size+'. Confira cada variação.');
+   skus.add(r.sku);
    if(price===null)throw Error('Preço inválido para tamanho '+size+'.');
    if(qty&&!/^\d{1,7}$/.test(qty))throw Error('Quantidade inválida para '+size+'.');
    const quantity=qty===''?null:Number(qty);
    if(quantity!==null&&quantity>1000000)throw Error('Quantidade fora do limite: '+size+'.');
-   return {sku:sku(size),size,price_cents:price,stock_quantity:quantity};
+   return {sku:r.sku,size,price_cents:price,stock_quantity:quantity};
   });
   return {item:{client_ref:ref,title:by('Title').value,description:by('Description').value,
    images:state.files.length?state.files.map(x=>x.name):(state.editing===null?[]:state.drafts[state.editing].item.images.slice()),variants},files:state.files.slice()};
@@ -311,6 +316,7 @@ export const MLS_LISTING_FACTORY_CLIENT=String.raw`
    if(state.editing===null)items.push(candidate);else items[at]=candidate;
    const data=projection(items);
    if(!data?.review)throw Error('SKU ou identificador duplicado. Revise as variações.');
+   if(data.review.products.some((product,index)=>product.variants.length!==items[index].item.variants.length))throw Error('SKU repetido entre rascunhos ou variação inválida. Revise a fila.');
    state.drafts=items;state.page=Math.floor(at/pageSize);
    const ready=data.review.products[at].status==='READY_FOR_OPERATOR_REVIEW';
    reset();tell(ready?'Rascunho pronto para revisão interna. Sem publicação nem estoque/tarifa comprovados.':
@@ -319,6 +325,16 @@ export const MLS_LISTING_FACTORY_CLIENT=String.raw`
  });
  for(const checkbox of sizes.querySelectorAll('[data-lf-size]'))checkbox.addEventListener('change',variantRows);
  by('ExtraSizes').addEventListener('input',variantRows);by('Sku').addEventListener('input',variantRows);
+ by('ReplaceSkus').onclick=()=>{
+  if(state.busy)return;remember();const available=rowPlan();
+  if(!available?.length){tell('Confira os tamanhos antes de substituir os SKUs.');return;}
+  const replacement=available.map(row=>sku(row.size));
+  if(replacement.some(value=>!validSku(value))||new Set(replacement).size!==replacement.length){
+   tell('O prefixo não gera SKUs únicos e válidos. Variações com o mesmo tamanho precisam de SKUs individuais; nenhum foi substituído.');return;
+  }
+  available.forEach((row,index)=>{const data=state.rows.get(row.key);if(data){data.sku=replacement[index];data.manualSku=true;}});
+  variantRows(true);tell('SKUs substituídos somente neste rascunho. Confira todas as variações antes de salvar.');
+ };
  by('Price').addEventListener('input',()=>{remember();for(const v of state.rows.values())if(!v.manualPrice)v.price=by('Price').value.trim();variantRows(true);tell('Preço base aplicado aos tamanhos sem alteração individual.');});
  by('ApplyPrice').onclick=()=>{remember();for(const v of state.rows.values()){v.price=by('Price').value.trim();v.manualPrice=false;}variantRows(true);tell('Preço base aplicado a todos os tamanhos. Confira a margem antes da publicação futura.');};
  input.addEventListener('change',async()=>{

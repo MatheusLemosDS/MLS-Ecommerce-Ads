@@ -5,17 +5,18 @@ import {fileURLToPath} from 'node:url';
 import {D1} from './sqlite-d1.mjs';
 
 // Test fixture deliberately opts into the owner preview; production defaults OFF.
-export async function compiledOwnerReportPage(minify,{ownerPreview=true,flagValue,localReadSnapshot=false}={}){
+export async function compiledOwnerReportPage(minify,{ownerPreview=true,flagValue,aiSalesPreview=false,aiSalesFlagValue,localReadSnapshot=false}={}){
  const compiled=await build({entryPoints:[fileURLToPath(new URL('../../../dist/app-worker.mjs',import.meta.url))],bundle:true,write:false,format:'esm',platform:'browser',target:'es2022',minify});
  const worker=(await import('data:text/javascript;base64,'+Buffer.from(compiled.outputFiles[0].text).toString('base64'))).default;
  const origin='https://owner-report.test',env={ADMIN_DB:new D1(),ADMIN_SESSION_SECRET:'owner-report-test-session-'+'s'.repeat(32),ADMIN_USERNAME:'owner-report',ADMIN_PASSWORD:'owner-report-fixture-password-123456',
-  ...(flagValue!==undefined?{MLS_V36_OWNER_PREVIEW:flagValue}:ownerPreview?{MLS_V36_OWNER_PREVIEW:'ENABLED'}:{})};
+  ...(flagValue!==undefined?{MLS_V36_OWNER_PREVIEW:flagValue}:ownerPreview?{MLS_V36_OWNER_PREVIEW:'ENABLED'}:{}),
+  ...(aiSalesFlagValue!==undefined?{MLS_AI_SALES_OWNER_PREVIEW:aiSalesFlagValue}:aiSalesPreview?{MLS_AI_SALES_OWNER_PREVIEW:'ENABLED'}:{})};
  try{
   const login=await worker.fetch(new Request(origin+'/login',{method:'POST',headers:{origin,'content-type':'application/x-www-form-urlencoded'},body:new URLSearchParams({username:env.ADMIN_USERNAME,password:env.ADMIN_PASSWORD})}),env);assert.equal(login.status,303);
   const cookie=login.headers.get('set-cookie').split(';')[0],session=await(await worker.fetch(new Request(origin+'/api/admin/state',{headers:{cookie}}),env)).json();
   const response=await worker.fetch(new Request(origin+'/admin?tab=hermes',{headers:{cookie}}),env);assert.equal(response.status,200);
   const html=await response.text();
-  if(!localReadSnapshot)return {html,session};
+  if(!localReadSnapshot)return {html,session,headers:Object.fromEntries(response.headers)};
   // Capture only real read responses from this same fresh in-memory D1 and
   // authenticated synthetic owner. No remote service binding is configured.
   const month=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit'}).format(new Date()).slice(0,7);

@@ -13,7 +13,7 @@ A autorização atual permite desenvolvimento, testes, commits e PRs DRAFT. Pro�
 
 Finance/Returns, liberações, Pending e coleta em segundo plano estão implementados; seu aceite financeiro M2 continua bloqueado pela comparação real no Seller Centre. Catálogo/custos e DTF têm persistência e testes. Listing Factory suporta planejamento, importação/exportação JSON e reanexação local de imagens; não publica. Busca V3.6 permanece owner-only e OFF. Pricing Observer da PR #47 requer reconciliação consciente, sem liberar preços comerciais. TikTok/afiliados não têm grants comprovados.
 
-O código da PR #79 contém o motor SVG sem integração. O pacote com seis PNGs aprovados não está disponível nos anexos locais desta sessão. A fidelidade visual fica BLOCKED; não serão inventados mockups nem aprovada paridade sem os originais. Integrações de dados e QA técnica podem avançar independentemente.
+Na auditoria inicial, o motor SVG ainda não estava integrado e o pacote aprovado ainda não havia sido recebido. Esse bloqueio histórico foi removido após o envio dos seis originais, conforme o registro abaixo. Não se inventaram mockups ou valores comerciais.
 
 ## Checkpoints
 
@@ -35,3 +35,15 @@ A composição é implementada com HTML/SVG/CSS editáveis, usando o PNG apenas 
 - **Validação local final: 2.214 Node aprovados, 0 falhas/skip; 67 Python aprovados; três Workers compilados.** Auth e Finance mantêm os hashes anteriores. Fonte/helper renderizam em build normal e minificado. 60 cenários de erro, 24 com bootstrap/D1 sintético válido e oito cenários adicionais da composição, desktop 1365×900/celular 390×844, claro/escuro, sem overflow/erro JS.
 - Evidências versionadas em `docs/qa/mls-visual-2026-10-30/`. A fixture normal mantém vendas, Ads e líquido desconhecidos. A comparação HTML da CI registra aprovação humana pendente; não cria baseline autoaprovado. O aceite financeiro M2 segue externo.
 - Próxima etapa: branch de integração a partir deste HEAD técnico, preservando PR #79 e sem merge/deploy.
+
+
+## Fases 2–6 — integração local testada
+
+- Branch separada `integration/mls-commerce-os-ai-sales-20261030`, a partir do congelamento visual `fa5c96c`; correções de teardown Chromium da PR79 espelhadas sem misturar runtime adicional na PR visual. PR79 final `e7ce5009`, CI41131654577 verde, continua DRAFT.
+- Listing Factory preserva SKUs e variações importadas, kits/quantidades; prefixos somente por ação explícita atômica. Products/Pricing puro da PR47 revisado e integrado ao resumo, sem merge automático nem preço comercial.
+- AI Sales: contratos fechados, vínculo exato de variantes salvas, componentes de kits com cobertura MAX por componente, direitos/hashes, campanhas/jobs; CRM local assistido e ledger observado sem duplicação/cancelados fictícios. Roteiros do render continuam `LOCAL_TEMPLATE`; adaptador opcional de revisão por modelo não executa LLM nem custo externo.
+- Renderer Node/FFmpeg isolado gerou os três templates reais com eSpeak NG PT-BR e QA integral. Guards de arquivos, symlinks, bytes, codecs, leases, atomicidade, cache, idempotência, orçamento e deadline testados. UI nativa com cinco abas e flag owner independente OFF padrão, sem processar vídeo dentro do Worker.
+- Revisão independente encontrou e corrigiu aprovações importadas, produto alterado sem replanejamento completo, IDs de criador repetidos em lojas diferentes, revogação de campanha entre produtos e estabilidade da ordem ao reanexar a mesma mídia. Regressores mantidos; nenhuma validação removida.
+- Regressão local final: **2308 Node, 67 Python, zero falha/skip**, três builds. App `a5ba3298faf4b8c2eaa32e98674f1d7408f4c4616236d8f04a2fba72bbfb91c8`; Auth/Finance idênticos à fase1. Chromium normal/minificado com 40 capturas, fontes sintéticas, sem erro JS/overflow. A primeira execução identificou26 falhas de fixture na detecção opcional do módulo OFF; corrigida a detecção para usar o módulo realmente registrado e reexecutada a suite completa com sucesso.
+- Código puro/render registrado no commit `f513dca`; integração final e PR DRAFT seguem no histórico desta branch. [Evidências](qa/mls-ai-sales-2026-10-30/README.md) e [guia de homologação, arquivos e limites](MLS_AI_SALES_INTEGRATION_2026_10_30.md).
+- M2/Seller Centre/banco, aceite visual/auditivo humano, grants oficiais e acesso LLM permanecem externos. Sem main merge, deploy, gasto, OAuth, envio de mensagem, publicação ou alteração de preços/estoque/comissões. Não declarar autonomia comercial total nem precisão bancária comprovada.

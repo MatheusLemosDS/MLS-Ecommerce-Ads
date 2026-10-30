@@ -2,10 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import {spawn} from 'node:child_process';
-import {existsSync,mkdtempSync,rmSync,readFileSync} from 'node:fs';
+import {existsSync,mkdtempSync,readFileSync} from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {compiledOwnerReportPage} from './owner-report-browser-fixture.mjs';
+import {createChromeProfileCleanup} from './chrome-profile-cleanup.mjs';
 
 const chrome=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium','/usr/bin/chromium-browser'].find(existsSync);
 async function dump(url,width,height){
@@ -13,6 +14,7 @@ async function dump(url,width,height){
  const child=spawn(chrome,['--headless=new','--no-sandbox','--disable-dev-shm-usage','--disable-gpu',
   '--disable-background-networking','--disable-extensions','--remote-allow-origins=*','--remote-debugging-port=0',
   '--user-data-dir='+profile,'about:blank'],{stdio:'ignore'});
+ const cleanup=createChromeProfileCleanup(child,profile);
  let socket;const pause=()=>new Promise(resolve=>setTimeout(resolve,75));
  try{
   let port=0;
@@ -35,7 +37,7 @@ async function dump(url,width,height){
   for(let n=0;n<120;n++){if(await evaluate('!!(document.documentElement?.dataset.chartProof||document.documentElement?.dataset.chartError)')){complete=true;break;}await pause();}
   assert.equal(complete,true,'compiled chart fixture did not finish');
   return await evaluate('document.documentElement.outerHTML');
- }finally{try{socket?.close();}catch{}child.kill('SIGKILL');rmSync(profile,{recursive:true,force:true});}
+ }finally{await cleanup(socket);}
 }
 
 const fixture=()=>{

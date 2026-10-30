@@ -2,10 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import {spawn} from 'node:child_process';
-import {existsSync,readFileSync,mkdtempSync,mkdirSync,writeFileSync,rmSync} from 'node:fs';
+import {existsSync,readFileSync,mkdtempSync,mkdirSync,writeFileSync} from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {compiledOwnerReportPage} from './owner-report-browser-fixture.mjs';
+import {createChromeProfileCleanup} from './chrome-profile-cleanup.mjs';
 
 const chrome=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium','/usr/bin/chromium-browser'].find(existsSync);
 const output=process.env.MLS_APPROVED_SCREENSHOT_DIR||null;
@@ -15,6 +16,7 @@ async function start({captureDirectory=output}={}){
  const child=spawn(chrome,['--headless=new','--no-sandbox','--disable-dev-shm-usage','--disable-gpu','--disable-extensions',
   '--disable-background-networking','--remote-allow-origins=*','--remote-debugging-port=0',
   '--user-data-dir='+profile,'about:blank'],{stdio:'ignore'});
+ const cleanup=createChromeProfileCleanup(child,profile);
  let socket;
  try{
   let port=0;
@@ -53,13 +55,9 @@ async function start({captureDirectory=output}={}){
    if(!data?.data)throw Error('PNG capture missing');
    mkdirSync(captureDirectory,{recursive:true});
    writeFileSync(path.join(captureDirectory,file),Buffer.from(data.data,'base64'));
-  },close(){
-   try{socket?.close();}catch{}try{child.kill('SIGKILL');}catch{}
-   try{rmSync(profile,{recursive:true,force:true});}catch{}
-  }};
+  },async close(){await cleanup(socket);}};
  }catch(e){
-  try{socket?.close();}catch{}try{child.kill('SIGKILL');}catch{}
-  try{rmSync(profile,{recursive:true,force:true});}catch{}
+  await cleanup(socket);
   throw e;
  }
 }
@@ -208,7 +206,7 @@ test('owner design smoke: fifteen real workspaces, real navigation and light/dar
    writeFileSync(path.join(output,'README.txt'),
     'MLS technical design QA: real navigation controls and real light/dark theme toggle at 1365x900 and 390x844. Synthetic local HTML and stubs only. No Shop, D1, Finance, Ads or Shopee source is fetched. All amounts on the screenshots are UNKNOWN unless clearly marked as fixture. NOT a mockup-parity approval, owner review or production deployment.\n');
   }
- }finally{try{cdp?.close();}finally{server.closeAllConnections?.();server.close();}}
+ }finally{try{await cdp?.close();}finally{server.closeAllConnections?.();server.close();}}
 });
 
 test('fresh local D1 owner bootstrap captures six connected workspaces while financial amounts remain unknown',{timeout:120000},async t=>{
@@ -271,5 +269,5 @@ test('fresh local D1 owner bootstrap captures six connected workspaces while fin
    mkdirSync(captureDirectory,{recursive:true});writeFileSync(path.join(captureDirectory,'results.json'),JSON.stringify({schema:'mls_approved_design_all_panels_qa_v1',owner_authenticated:false,production_approved:false,mockup_parity_approved:false,source:'synthetic owner',scenario:'CONNECTED_FRESH_LOCAL_D1_UNKNOWN_FINANCE',real_shop_verified:false,checks},null,2)+'\n');
    writeFileSync(path.join(captureDirectory,'README.txt'),'Connected visual QA uses real responses from the compiled Worker with fresh synthetic SQLite D1 and no external service bindings. Bootstrap is valid; sales, payout, Ads and profit remain unknown. All unmapped API routes return503. No startup error is hidden by CSS. Native dark/light desktop/mobile captures are for human comparison, not visual approval or Seller Centre evidence.\n');
   }
- }finally{try{cdp?.close();}finally{server.closeAllConnections?.();server.close();}}
+ }finally{try{await cdp?.close();}finally{server.closeAllConnections?.();server.close();}}
 });
