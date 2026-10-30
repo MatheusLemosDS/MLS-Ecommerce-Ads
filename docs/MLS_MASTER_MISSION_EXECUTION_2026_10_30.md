@@ -49,3 +49,14 @@ A composição é implementada com HTML/SVG/CSS editáveis, usando o PNG apenas 
 - M2/Seller Centre/banco, aceite visual/auditivo humano, grants oficiais e acesso LLM permanecem externos. Sem main merge, deploy, gasto, OAuth, envio de mensagem, publicação ou alteração de preços/estoque/comissões. Não declarar autonomia comercial total nem precisão bancária comprovada.
 
 - PR de integração DRAFT [#83](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/83), base PR79; commits de implementação `f513dca` e `54b87e5`. CI do HEAD rastreada nos checks da PR; nenhuma mesclagem ou implantação executada.
+
+
+## Homologação local solicitada pelo proprietário
+
+Em 30/10/2026, o proprietário pediu para ver o sistema funcionando e informou que não existe URL de homologação. Foi criada a branch `feature/mls-owner-homologation-preview-20261030`, baseada na PR #83, sem alterar o Worker App/Auth/Finance. O ambiente não está autenticado na Cloudflare; nenhuma URL pública, conta ou banco remoto foi criado.
+
+O servidor local executa o Worker real em VM sem tráfego externo e SQLite com catálogo sintético. Login, cookies Secure, CSRF, custo salvo e recálculo das variações foram testados por HTTP real, sem mocks de API. O exportador produz HTML autossuficiente com snapshots somente leitura e funções locais do AI Sales. A política do navegador bloqueia `file://`; o mesmo artefato foi testado por HTTP estático, sem alterar a política.
+
+Validação final: **2327 Node/67 Python, zero falha/skip**, três builds com os mesmos hashes da PR #83. Três casos Chromium cobrem 16 painéis, cinco abas AI Sales, dois tamanhos/temas, 74 capturas, recálculo adulto/infantil/kit e campanha criada na interface → CLI → render MP4 → reanexação → aprovação local. O clique sintético não constitui aprovação visual/auditiva humana. O pacote contém exemplos próprios e três MP4s; não contém dados da loja nem autoriza publicação.
+
+Guia: `docs/MLS_OWNER_HOMOLOGATION_2026_10_30.md`. Estado: `docs/MLS_OWNER_PREVIEW_CHECKPOINT.json`. Evidências: `docs/qa/mls-owner-preview-2026-10-30/README.md`. A próxima dependência externa é acesso seguro à Cloudflare para preparar uma homologação online isolada. M2/Seller Centre/banco e autorização posterior para merge/deploy em produção permanecem pendentes.

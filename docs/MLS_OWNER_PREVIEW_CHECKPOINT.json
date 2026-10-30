@@ -1,0 +1,40 @@
+{
+  "schema": "mls_owner_homologation_checkpoint_v1",
+  "date": "2026-10-30",
+  "branch": "feature/mls-owner-homologation-preview-20261030",
+  "base_pr": 83,
+  "base_commit": "00561afc7af0d5393f085c86df2c82fc73853786",
+  "preview_pr": null,
+  "state": "LOCAL_HOMOLOGATION_READY_ONLINE_ACCESS_REQUIRED",
+  "worker_sha256": "a5ba3298faf4b8c2eaa32e98674f1d7408f4c4616236d8f04a2fba72bbfb91c8",
+  "production_worker_changes": false,
+  "modes": {
+    "server": "ACTUAL_WORKER_SQLITE_SYNTHETIC_LOOPBACK_ONLY",
+    "download": "ACTUAL_UI_READ_ONLY_BACKEND_SNAPSHOTS_LOCAL_AI_FORMS",
+    "browser_transport": "HTTP_STATIC",
+    "file_protocol": "BLOCKED_BY_BROWSER_ADMINISTRATOR_POLICY_NOT_VALIDATED"
+  },
+  "merchant_data": false,
+  "cloudflare_authenticated": false,
+  "staging_url": null,
+  "authorization": {
+    "development": true,
+    "draft_pr": true,
+    "merge_main": false,
+    "production_deploy": false,
+    "commercial_writes": false
+  },
+  "next_external_step": "SECURE_CLOUDFLARE_ACCESS_FOR_ONLINE_HOMOLOGATION",
+  "financial_m2": "OPEN_ISSUE_50_SELLER_CENTRE_BANK_REVIEW",
+  "guide": "docs/MLS_OWNER_HOMOLOGATION_2026_10_30.md",
+  "regression": "docs/qa/mls-owner-preview-2026-10-30/regression.json",
+  "validation": {
+    "node_pass": 2327,
+    "node_fail": 0,
+    "node_skipped": 0,
+    "python_pass": 67,
+    "browser_cases": 3,
+    "captures_generated": 74,
+    "github_ci": "CHECK_DRAFT_PR_EXACT_HEAD"
+  }
+}

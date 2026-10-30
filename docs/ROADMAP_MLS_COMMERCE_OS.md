@@ -1,3 +1,5 @@
+Homologação local — 30/10/2026: branch `feature/mls-owner-homologation-preview-20261030`, baseada na PR #83. Servidor Worker/SQLite real com dados sintéticos e exportação HTML interativa; sem alteração do App/Auth/Finance. Consultar `docs/MLS_OWNER_PREVIEW_CHECKPOINT.json` e `docs/MLS_OWNER_HOMOLOGATION_2026_10_30.md`. Não existe URL de homologação; a Cloudflare não está autenticada. Merge, produção e escritas comerciais continuam sem autorização.
+
 PR de integração DRAFT #83: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/83 · commits f513dca/54b87e5 · local2308Node/67Python,40capturas · Appa5ba3298…bbfb91c8. Conferir checks do HEAD; semmerge/deploy.
 
 # Roadmap canônico — MLS Commerce OS
