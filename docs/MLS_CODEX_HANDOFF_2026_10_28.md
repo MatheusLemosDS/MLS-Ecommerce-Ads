@@ -1,4 +1,6 @@
-> Checkpoint 30/10/2026: missão mestre atual em `docs/MLS_MASTER_MISSION_CHECKPOINT.json`. PR #79 tecnicamente validada, seis originais e 24 capturas candidatas versionados; 2.214 Node + 67 Python, builds App/Auth/Finance, sem deploy/merge. Owner visual QA e M2 permanecem pendentes. Próxima implementação em branch de integração separada.
+PR de integração DRAFT #83: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/83 · commits f513dca/54b87e5 · local2308Node/67Python,40capturas · Appa5ba3298…bbfb91c8. Conferir checks do HEAD; semmerge/deploy.
+
+> Checkpoint atual 30/10/2026: PR #79 congelada/CI verde `e7ce5009`/41131654577. Integração e AI Sales local implementados em `integration/mls-commerce-os-ai-sales-20261030`; conferir regressão/PR no checkpoint da missão e [guia de homologação](MLS_AI_SALES_INTEGRATION_2026_10_30.md). Sem merge/deploy/writes; QA owner, M2/Seller Centre, grants e acesso LLM pendentes. Os registros antigos abaixo são históricos.
 
 # Handoff executável — MLS Commerce OS / Codex / ChatGPT — 28/10/2026
 

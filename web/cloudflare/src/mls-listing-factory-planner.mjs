@@ -12,7 +12,45 @@ const validFile=name=>typeof name==='string'&&name.length>4&&name.length<=160&&
  !/[/\\\u0000-\u001f\u007f]/.test(name)&&!name.startsWith('.')&&
  /\.(png|jpe?g)$/i.test(name);
 const validRef=value=>typeof value==='string'&&/^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/.test(value);
-const validSku=value=>typeof value==='string'&&/^[\w][\w.\/-]{0,79}$/.test(value);
+const validSku=value=>typeof value==='string'&&/^[\w][\w.\/+\-]{0,79}$/.test(value);
+const validSize=value=>typeof value==='string'&&value.length<=40&&
+ /^[\p{L}\p{N} .\/+_-]{1,40}$/u.test(value)&&value.trim().length>0;
+const variantSizeKey=value=>value.normalize('NFC').trim().toUpperCase();
+
+// Stable editor identities are independent of a size label: two colours may
+// both be M, and existing SKUs are not derivable from a shared prefix.
+export function planMlsListingVariantRows(sizes,originals=[]){
+ try{
+  const dense=(rows,max)=>Array.isArray(rows)&&Object.getPrototypeOf(rows)===Array.prototype&&
+   rows.length<=max&&Reflect.ownKeys(rows).length===rows.length+1&&
+   Array.from({length:rows.length},(_,i)=>Object.getOwnPropertyDescriptor(rows,String(i)))
+    .every(row=>row&&Object.hasOwn(row,'value'));
+  if(!dense(sizes,32)||!dense(originals,50)||!sizes.every(validSize)||
+   !originals.every(row=>isExact(row,['size','sku'])&&validSize(row.size)&&validSku(row.sku)))return null;
+  const keys=sizes.map(variantSizeKey),selected=new Set(keys),skus=new Set();
+  if(selected.size!==sizes.length)return null;
+  for(const row of originals){if(skus.has(row.sku))return null;skus.add(row.sku);}
+  const retained=new Set(),rows=[];
+  for(let index=0;index<originals.length;index++){
+   const row=originals[index],key=variantSizeKey(row.size);
+   if(!selected.has(key))continue;
+   retained.add(key);rows.push({key:'saved-'+index,size:row.size,sku:row.sku,original:true});
+  }
+  for(let index=0;index<sizes.length;index++)if(!retained.has(keys[index]))
+   rows.push({key:'new-'+keys[index],size:sizes[index],sku:null,original:false});
+  return rows.length<=50?rows:null;
+ }catch{return null;}
+}
+
+// Used only for a new row or an explicit prefix replacement, never to recover
+// an imported SKU. This is an internal naming aid, not a marketplace rule.
+export function generateMlsListingSku(prefix,size){
+ if(typeof prefix!=='string'||!/^[\w][\w.\/+\-]{0,59}$/.test(prefix)||!validSize(size))return null;
+ const suffix=size.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase()
+  .replace(/[^A-Z0-9_-]+/g,'-').replace(/^-+|-+$/g,'');
+ const value=prefix.toUpperCase()+'-'+suffix;
+ return suffix&&validSku(value)?value:null;
+}
 
 function projectMedia(name,media){
  if(!isExact(media,['name','mime','width','height','size_bytes','sha256','inspection'])||
@@ -68,8 +106,7 @@ export function planMlsListingFactory(input,mediaIndex){
    for(const variant of item.variants){
     if(!isExact(variant,['sku','size','price_cents','stock_quantity'])||
      !validSku(variant.sku)||localSkus.has(variant.sku)||skus.has(variant.sku)||
-     typeof variant.size!=='string'||variant.size.length>40||
-     !/^[\p{L}\p{N} .\/_-]{1,40}$/u.test(variant.size)||
+     !validSize(variant.size)||
      !safeInt(variant.price_cents,1,100000000)||
      !(variant.stock_quantity===null||safeInt(variant.stock_quantity,0,1000000))){
       errors.push('VARIANT_DATA_INVALID');continue;

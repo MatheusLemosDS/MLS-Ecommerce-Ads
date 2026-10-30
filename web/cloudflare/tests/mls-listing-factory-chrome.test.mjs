@@ -120,6 +120,90 @@ test('real Chrome owner validates PNG bytes, rejects spoofed JPG, edits and expo
 
 const batchFixture="\n(async()=>{\n const by=id=>document.getElementById('mlsLf'+id);\n const info={};\n try{\n  const canvas=document.createElement('canvas');canvas.width=1024;canvas.height=1024;\n  const ctx=canvas.getContext('2d');\n  function png(color){\n   ctx.fillStyle=color;ctx.fillRect(0,0,1024,1024);\n   const data=atob(canvas.toDataURL('image/png').split(',')[1]),bytes=new Uint8Array(data.length);\n   for(let i=0;i<data.length;i++)bytes[i]=data.charCodeAt(i);\n   return bytes;\n  }\n  const bytes=png('#3366aa'),different=png('#bb6633');\n  const names=['a.png','b.png','c.png','d.png','e.png'];\n  const manifest={schema:'mls_listing_factory_input_v1',marketplace:'SHOPEE_BR',items:\n   Array.from({length:19},(_,i)=>({\n    client_ref:'bulk-'+String(i+1).padStart(3,'0'),\n    title:'Camiseta retrô original coleção nostálgica arte '+(i+1),\n    description:'Camiseta personalizada. Confira todas as medidas, cores e cuidados com a peça.',\n    images:names.slice(),\n    variants:[{sku:'BULK'+String(i+1)+'-M',size:'M',price_cents:6500,stock_quantity:null}]\n   }))};\n  window.confirm=()=>true;\n  async function choose(id,files,expect){\n   by(id).value='';\n   const transfer=new DataTransfer();\n   for(const [name,data] of files)transfer.items.add(new File([data],name,{type:'image/png'}));\n   by(id).files=transfer.files;\n   by(id).dispatchEvent(new Event('change',{bubbles:true}));\n   for(let i=0;i<100;i++){\n    if(by('Message').textContent.includes(expect))return;\n    await new Promise(done=>setTimeout(done,55));\n   }\n   throw Error('BATCH_TIMEOUT_'+expect+': '+by('Message').textContent);\n  }\n  const imported=new File([JSON.stringify(manifest)],'runners.json',{type:'application/json'});\n  const transfer=new DataTransfer();transfer.items.add(imported);by('Import').files=transfer.files;\n  by('Import').dispatchEvent(new Event('change',{bubbles:true}));\n  for(let i=0;i<100&&!by('Message').textContent.includes('Importados 19');i++)\n   await new Promise(done=>setTimeout(done,55));\n  if(!by('Message').textContent.includes('Importados 19'))throw Error('IMPORT_TIMEOUT');\n  info.initial={ready:by('Stats').textContent,shown:by('Drafts').querySelectorAll('article').length,\n   photos:by('Drafts').querySelectorAll('.mls-lf-thumbs img').length};\n  await choose('BatchFiles',names.slice(0,4).map(name=>[name,bytes]),'associado(s)');\n  info.partial={ready:by('Stats').textContent,shown:by('Drafts').querySelectorAll('article').length,\n   status:by('BatchStatus').textContent};\n  await choose('BatchFiles',names.map(name=>[name,bytes]),'associado(s)');\n  info.complete={ready:by('Stats').textContent,\n   status:by('BatchStatus').textContent,\n   shown:by('Drafts').querySelectorAll('article').length,\n   thumbCount:by('Drafts').querySelectorAll('.mls-lf-thumbs img').length};\n  await choose('BatchFiles',[['a.png',different]],'mudou de conteúdo');\n  info.changed={message:by('Message').textContent,ready:by('Stats').textContent};\n  await choose('BatchFiles',[['a.png',bytes],['a.png',different]],'nome repetido');\n  info.duplicate={message:by('Message').textContent,ready:by('Stats').textContent};\n  await choose('BatchFiles',[['a.png',bytes],['unused.png',bytes]],'associado(s)');\n  info.unused={status:by('BatchStatus').textContent,ready:by('Stats').textContent};\n  const blobs=[];URL.createObjectURL=blob=>{blobs.push(blob);return 'blob:fixture';};\n  HTMLAnchorElement.prototype.click=function(){};\n  by('ExportReview').click();\n  info.review=JSON.parse(await blobs.at(-1).text());\n  info.errors=window.__lfErrors.slice();\n }catch(e){info.failure=String(e?.stack||e).slice(0,1300);}\n document.documentElement.dataset.mlsLfE2e=JSON.stringify(info);\n})();";
 
+const variantFixture=String.raw`
+(async()=>{
+ const by=id=>document.getElementById('mlsLf'+id),info={};
+ try{
+  const variants=[
+   {size:'m',sku:'retro/vermelho.M-27',price_cents:5800,stock_quantity:null},
+   {size:'P/M',sku:'s'.repeat(80),price_cents:5900,stock_quantity:0},
+   {size:'M',sku:'OTHER_azul',price_cents:6000,stock_quantity:3},
+   {size:'P + G3',sku:'viva-27+viva-27',price_cents:9900,stock_quantity:2}
+  ];
+  const item={client_ref:'variant-roundtrip',title:'Kit com estampas originais para revisão',
+   description:'Confira as cores, medidas e composição antes de revisar este rascunho.',
+   images:['a.png','b.png','c.png','d.png','e.png'],variants};
+  const manifest=product=>({schema:'mls_listing_factory_input_v1',marketplace:'SHOPEE_BR',items:[product]});
+  window.confirm=()=>true;
+  async function importItem(product){
+   const transfer=new DataTransfer();transfer.items.add(new File([JSON.stringify(manifest(product))],'drafts.json',{type:'application/json'}));
+   by('Message').textContent='IMPORTING';by('Import').value='';by('Import').files=transfer.files;
+   by('Import').dispatchEvent(new Event('change',{bubbles:true}));
+   for(let i=0;i<100;i++){
+    if(by('Message').textContent!=='IMPORTING')break;
+    await new Promise(done=>setTimeout(done,30));
+   }
+   if(!by('Message').textContent.includes('Importados 1'))throw Error(by('Message').textContent);
+   by('Drafts').querySelector('button').click();
+  }
+  const allSkus=()=>[...by('Variants').querySelectorAll('[data-role=sku]')].map(input=>input.value);
+  const rows=()=>[...by('Variants').querySelectorAll('tr[data-variant-key]')];
+  const input=(element,value)=>{element.value=value;element.dispatchEvent(new Event('input',{bubbles:true}));};
+  const blobs=[];URL.createObjectURL=blob=>{blobs.push(blob);return 'blob:fixture';};HTMLAnchorElement.prototype.click=function(){};
+  async function exported(){by('ExportManifest').click();return JSON.parse(await blobs.at(-1).text());}
+  await importItem(item);info.importedSkus=allSkus();info.rowKeys=rows().map(row=>row.dataset.variantKey);
+  input(by('Sku'),'UNUSED');info.afterTypingPrefix=allSkus();
+  by('ReplaceSkus').click();info.duplicateReplacementMessage=by('Message').textContent;
+  info.afterRejectedReplacement=allSkus();
+  by('Title').value='Título revisado sem mudar a identificação das variações';
+  input(rows()[0].querySelector('[data-role=price]'),'59,99');
+  input(rows()[2].querySelector('[data-role=quantity]'),'5');
+  by('Form').requestSubmit();info.roundtrip=await exported();
+  const single={...item,client_ref:'single-compound',variants:[{size:'P/M',sku:'Orig-P-M',price_cents:6500,stock_quantity:3}]};
+  await importItem(single);info.inferredPrefix=by('Sku').value;
+  input(by('Sku'),'NEW');info.singleBeforeExplicit=allSkus();
+  by('ReplaceSkus').click();info.singleAfterExplicit=allSkus();
+  input(by('ExtraSizes'),'P/M, G1');info.withNewSize=allSkus();
+  input(rows()[1].querySelector('[data-role=sku]'),'manualG1.lower/27');
+  input(by('Sku'),'LATER');info.withManualSku=allSkus();
+  by('Form').requestSubmit();info.explicit=await exported();
+  by('ExportReview').click();info.review=JSON.parse(await blobs.at(-1).text());
+  info.errors=window.__lfErrors.slice();
+ }catch(error){info.failure=String(error?.stack||error).slice(0,1800);}
+ document.documentElement.dataset.mlsLfE2e=JSON.stringify(info);
+})();`;
+
+for(const minify of [false,true])test('compiled Chrome preserves custom and kit SKUs through edit/export; prefix replacement is explicit (minify='+minify+')',{timeout:65000},async t=>{
+ if(!chrome)return t.skip('Chrome unavailable');
+ let html=(await compiledOwnerReportPage(minify)).html;
+ html=html.replace('<head>','<head><script>window.__lfErrors=[];addEventListener("error",e=>window.__lfErrors.push(String(e.message)));addEventListener("unhandledrejection",e=>window.__lfErrors.push(String(e.reason)));</script>');
+ const server=http.createServer((_req,res)=>{res.writeHead(200,{'content-type':'text/html; charset=utf-8'});res.end(html);});
+ await new Promise(done=>server.listen(0,'127.0.0.1',done));
+ try{
+  const result=await chromeEvaluate('http://127.0.0.1:'+server.address().port+'/?tab=products',variantFixture);
+  assert.equal(result.failure,undefined,result.failure);
+  const skus=['retro/vermelho.M-27','s'.repeat(80),'OTHER_azul','viva-27+viva-27'];
+  assert.deepEqual(result.importedSkus,skus);assert.deepEqual(result.afterTypingPrefix,skus);
+  assert.deepEqual(result.rowKeys,['saved-0','saved-1','saved-2','saved-3']);
+  assert.match(result.duplicateReplacementMessage,/nenhum foi substituído/);assert.deepEqual(result.afterRejectedReplacement,skus);
+  assert.deepEqual(result.roundtrip.items[0].variants,[
+   {size:'m',sku:skus[0],price_cents:5999,stock_quantity:null},
+   {size:'P/M',sku:skus[1],price_cents:5900,stock_quantity:0},
+   {size:'M',sku:skus[2],price_cents:6000,stock_quantity:5},
+   {size:'P + G3',sku:skus[3],price_cents:9900,stock_quantity:2}
+  ]);
+  assert.equal(result.inferredPrefix,'Orig');assert.deepEqual(result.singleBeforeExplicit,['Orig-P-M']);
+  assert.deepEqual(result.singleAfterExplicit,['NEW-P-M']);assert.deepEqual(result.withNewSize,['NEW-P-M','NEW-G1']);
+  assert.deepEqual(result.withManualSku,['NEW-P-M','manualG1.lower/27']);
+  assert.deepEqual(result.explicit.items[0].variants,[
+   {size:'P/M',sku:'NEW-P-M',price_cents:6500,stock_quantity:3},
+   {size:'G1',sku:'manualG1.lower/27',price_cents:6500,stock_quantity:null}
+  ]);
+  assert.equal(result.review.execution_allowed,false);assert.equal(result.review.published,false);
+  assert.equal(result.review.products[0].seller_publication_allowed,false);assert.deepEqual(result.errors,[]);
+ }finally{server.closeAllConnections?.();server.close();}
+});
+
 test('Chrome bulk relinks 19 imported drafts from exact local filenames, and rejects changed/duplicate bytes',{timeout:65000},async t=>{
  if(!chrome)return t.skip('Chrome unavailable');
  let html=(await compiledOwnerReportPage(false)).html;

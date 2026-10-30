@@ -31,6 +31,8 @@ jobs:
           cache: npm
       - name: Instalar versões fixadas
         run: npm ci
+      - name: Preparar renderização local de vídeo e voz PT-BR
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg espeak-ng fonts-dejavu-core
       - name: Executar suíte Node completa com concorrência limitada para Chrome
         env:
           MLS_QA_SCREENSHOT_DIR: ${{ runner.temp }}/mls-approved-design/v36
@@ -38,6 +40,7 @@ jobs:
           MLS_ROADMAP_SCREENSHOT_DIR: ${{ runner.temp }}/mls-approved-design/roadmap
           MLS_AGENTS_SCREENSHOT_DIR: ${{ runner.temp }}/mls-approved-design/agents
           MLS_PRODUCTS_SCREENSHOT_DIR: ${{ runner.temp }}/mls-approved-design/products
+          MLS_AI_SALES_SCREENSHOT_DIR: ${{ runner.temp }}/mls-approved-design/ai-sales
           MLS_PRODUCTION_SCREENSHOT_DIR: ${{ runner.temp }}/mls-approved-design/production
         run: |
           npm run build

@@ -30,8 +30,8 @@
     "merge_commit": "9c418fd3010f46957d1ce52345baacd76041c788"
   },
   "current_phase": "M2_FINANCE_RETURNS_RECONCILIATION",
-  "working_branch": "feature/mls-mockup-parity-real-charts-20261029",
-  "current_status": "MASTER_MISSION_PHASE_1_TECHNICALLY_VALIDATED_OWNER_REVIEW_PENDING",
+  "working_branch": "integration/mls-commerce-os-ai-sales-20261030",
+  "current_status": "MASTER_MISSION_LOCAL_MVP_TESTED_DRAFT_REVIEW_PENDING",
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
     "Repasse-base, ajuste, repasse após ajuste e liberação exibidos sem dupla dedução",
@@ -729,6 +729,20 @@
       "python_pass": 67,
       "visual_approval": "PENDING",
       "financial_m2": "OPEN"
+    },
+    "integration_guide": "docs/MLS_AI_SALES_INTEGRATION_2026_10_30.md",
+    "visual_ci": 41131654577,
+    "integration_pr": 83,
+    "production_deploy": false,
+    "owner_visual_approval": "PENDING",
+    "finance_m2": "OPEN_ISSUE_50",
+    "integration_app_sha256": "a5ba3298faf4b8c2eaa32e98674f1d7408f4c4616236d8f04a2fba72bbfb91c8",
+    "integration_validation": {
+      "node_pass": 2308,
+      "python_pass": 67,
+      "screenshots": 40,
+      "evidence": "docs/qa/mls-ai-sales-2026-10-30/regression.json",
+      "github_ci": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/83/checks"
     }
   }
 }
