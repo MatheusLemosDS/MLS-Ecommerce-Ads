@@ -1,6 +1,10 @@
 # Roadmap canônico — MLS Commerce OS
 
-Atualizado em **29/10/2026**.
+Atualizado em **30/10/2026**.
+
+> **Execução atual — 30/10/2026:** missão mestre de desenvolvimento em andamento, **sem merge nem deploy**. Prioridade PR #79; seis PNGs originais recebidos e registrados em `docs/visual-references/mls-2026-10-29/manifest.json`. Depois do congelamento técnico, integração e AI Sales seguem em branch separada. Estado atual: [checkpoint da missão](MLS_MASTER_MISSION_CHECKPOINT.json) e [registro técnico](MLS_MASTER_MISSION_EXECUTION_2026_10_30.md). M2 financeira permanece aberta; exemplos visuais não são dados da loja.
+
+
 
 > **Checkpoint multi-branch 28/10/2026:** A main continua em b058e832 (PR #46 integrada); PR #48 de busca V3.6 segue draft/CI verde (2.115 Node + 67 Python); PR #47 M3 Products/Pricing Observer segue draft/CI verde (2.124 Node + 67 Python); PR #51 abre a pesquisa Shopee/Listing Factory, com CI inicial verde (2.122 Node + 67 Python). Nenhuma dessas três PRs foi integrada ou publicada. **M2 Finance continua aberta (issue #50).** A M3 de precificação comercial não está aprovada.
 >

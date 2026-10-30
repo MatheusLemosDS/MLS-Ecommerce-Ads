@@ -31,7 +31,7 @@ function workspaceNavLink(key,current,{mobile=false}={}){
 
 export function workspaceSecondaryNavigation(active,{role='owner'}={}){
  const current=workspaceActiveKey(active),keys=role==='owner'?workspaceOwnerSecondary:workspaceReviewSecondary;
- return `<details class="workspace-more" data-active="${keys.includes(current)?'true':'false'}"><summary><span>Mais opções</span><span aria-hidden="true">⌄</span></summary><nav aria-label="Mais opções do painel">${keys.map(key=>workspaceNavLink(key,current)).join('')}<a class="workspace-nav-link workspace-signout" href="/logout"><span class="workspace-nav-label">Sair da conta</span></a></nav></details>`;
+ return `<details class="workspace-more" data-active="${keys.includes(current)?'true':'false'}"><summary><span>Mais opções</span><span aria-hidden="true">⌄</span></summary><nav aria-label="Mais opções do painel">${keys.map(key=>workspaceNavLink(key,current)).join('')}${role==='owner'?'<a class="workspace-nav-link" href="/admin/diagnostics"><span class="workspace-nav-label">Diagnosticar carregamento</span></a>':''}<a class="workspace-nav-link workspace-signout" href="/logout"><span class="workspace-nav-label">Sair da conta</span></a></nav></details>`;
 }
 
 export function workspaceNavigation(active,{role='owner',mobile=false}={}){

@@ -1,3 +1,8 @@
+VALIDAÇÃO TÉCNICA FASE1: App SHA9e704d09411fa5a9db9cb6d1c2721314db6ffda92ab5edfc97b724329929a08a; 2214 Node/67 Python, zero falhas; Auth/Finance idênticos. 24 capturas candidatas em docs/qa/mls-visual-2026-10-30, QA owner PENDENTE, nenhuma publicação. Continuar Fase2 em branch separada após commit desta base; não alterar main/PR76.
+
+CHECKPOINT ATUAL — MISSÃO MESTRE 30/10/2026
+Ler primeiro docs/MLS_MASTER_MISSION_CHECKPOINT.json e docs/MLS_MASTER_MISSION_EXECUTION_2026_10_30.md. Código na branch PR79 feature/mls-mockup-parity-real-charts-20261029, worktree /workspace/mls-commerce-os. Seis PNGs originais já recebidos e registrados em docs/visual-references/mls-2026-10-29/manifest.json. Main observada a96bb1c preservada. Desenvolvimento/testes/commits/DRAFT autorizados; merge, deploy e writes comerciais PROIBIDOS nesta missão. Concluir visual, congelar HEAD técnico sem aprovação visual automática, depois seguir módulos/AI Sales em branch separada. M2 issue50 continua bloqueada por Seller Centre/QA real. Os checkpoints históricos abaixo não substituem este estado atual.
+
 MLS COMMERCE OS — HANDOFF 28/10/2026
 
 1. Repositório: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads

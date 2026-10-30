@@ -1,6 +1,6 @@
 # MLS Commerce OS — instruções do repositório (ChatGPT, Codex e colaboradores)
 
-> **Checkpoint de 29/10/2026 para Codex nesta branch:** prioridade única é a [PR #79](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/79) e [issue #80](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/issues/80), com o briefing `docs/MLS_MOCKUP_PARITY_CODEX_2026_10_29.md`. Os seis PNGs originais estão no pacote do proprietário `MLS_CODEX_VISUAL_REFERENCES_2026-10-29.zip` e devem ser disponibilizados à sessão Codex. PR #78 foi fechada **sem merge** por não atingir fidelidade. PR #76 permanece DRAFT. Nenhum deploy, Ads/PROMO ou Shopee write é autorizado. **Motor SVG desta branch não está integrado à UI.**
+> **Checkpoint de 29/10/2026 para Codex nesta branch:** prioridade única é a [PR #79](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/79) e [issue #80](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/issues/80), com o briefing `docs/MLS_MOCKUP_PARITY_CODEX_2026_10_29.md`. Os seis PNGs originais foram recebidos em 30/10/2026 e estão em `docs/visual-references/mls-2026-10-29/`, com hashes no manifesto. PR #78 foi fechada **sem merge** por não atingir fidelidade. PR #76 permanece DRAFT. Nenhum deploy, Ads/PROMO ou Shopee write é autorizado. **Motor SVG desta branch não está integrado à UI.**
 
 Leia, nesta ordem, antes de qualquer alteração:
 1. docs/ROADMAP_MLS_COMMERCE_OS.md (fonte canônica da estratégia).

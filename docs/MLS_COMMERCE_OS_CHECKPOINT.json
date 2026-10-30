@@ -2,7 +2,7 @@
   "schema": "mls_commerce_os_checkpoint_v1",
   "canonical_roadmap": "docs/ROADMAP_MLS_COMMERCE_OS.md",
   "legacy_roadmap": "docs/ROADMAP_BRAZACOMMERCE.md",
-  "updated_at": "2026-10-29",
+  "updated_at": "2026-10-30",
   "product": {
     "name": "MLS Commerce OS",
     "supervisor": "MLS Hermes",
@@ -30,8 +30,8 @@
     "merge_commit": "9c418fd3010f46957d1ce52345baacd76041c788"
   },
   "current_phase": "M2_FINANCE_RETURNS_RECONCILIATION",
-  "working_branch": "integration/mls-v36-search-listing-factory-20261028",
-  "current_status": "M2_OPEN_PR47_SHADOW_PR63_CI_GREEN_MOBILE_FIXED_PR65_SYNTHETIC_QA_GREEN_REAL_OWNER_QA_PENDING",
+  "working_branch": "feature/mls-mockup-parity-real-charts-20261029",
+  "current_status": "MASTER_MISSION_PHASE_1_TECHNICALLY_VALIDATED_OWNER_REVIEW_PENDING",
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
     "Repasse-base, ajuste, repasse após ajuste e liberação exibidos sem dupla dedução",
@@ -111,26 +111,10 @@
     }
   },
   "next_actions": [
-    "Operador conferir graficos e setas em Visao Geral, MLS Finance e MLS Ads no desktop/celular apos PR32",
-    "Distinguir prejuizo estimado, lucro estimado, saldo parcial KNOWN_COSTS e variacao entre dias completos",
-    "MLS Finance M2: validar Pending atual com montantes, quantidades e horarios reais do Seller Centre",
-    "Se has_more, revisar cursor e semantica antes de paginacao; nao inferir liquidacao bancaria ou remaining_receivable",
-    "Manter Ads/PROMO LOCKED ate escrita oficial assistida; M3 Products/Pricing so apos criterio de saida M2",
-    "Conferir PR #51 e CI; validar mockups locais do operador sem publicar ou enviar imagens",
-    "Codex e ChatGPT usarem AGENTS.md + docs/MLS_CODEX_HANDOFF_2026_10_28.md; evitar branch simultanea",
-    "Implementar UI owner Listing Factory apos CI e integracao consciente com PR #48",
-    "Verificar categoria do app/escopos Shopee, escrows em lote GET/POST e push recovery sem ACK",
-    "Manter M2 issue #50 aberta e anuncios/precificacao/estoque externos BLOQUEADOS",
-    "PR #56 Listing Factory UI: revisar CI do HEAD e hash App, QA desktop/mobile e integração sobre PR #51",
-    "Run current PR #56 Node+Python+Chrome+Workers CI (manual workflow_dispatch if Actions does not auto-start), then restore stacked base PR #51",
-    "PR #56: CI green 40788713558 (PR #58 temporária fechada); QA desktop/mobile autenticada antes de integrar PR #51→#56",
-    "PR60 batch mockups: CI rerun after App SHA review; close temporary #61 without merge when green; verify 14/14 source/test blobs",
-    "Codex can continue bulk media matching QA for user assets, do not change PR51/56 concurrently",
-    "PR60 CI GREEN 40790629421 (2132 Node,67 Python,14/14 source blobs), prepare QA real files and ordered merge only when approved.",
-    "PR63 V3.6+Listing Factory CI GREEN 40792253729 2136 Node/67 Python, 20 source blobs unchanged; owner desktop/mobile QA and merge strategy pending",
-    "Release gate: choose PR63 unified OR PR48→51→56→60, not both; preserve M2 issue #50 and Ads/PROMO LOCKED",
-    "PR63 responsive mobile CSS fixed (390px viewport previously expanded to 469px), CI 40794715203 rerun GREEN 2136 Node/67 Python",
-    "PR65 synthetic desktop/mobile QA CI 40794727173 GREEN 2137 Node/67 Python; artifact 12862897797; real owner QA still NOT DONE"
+    "Finish PR79 against six owner PNGs; validate compiled Worker screenshots dark/light desktop/mobile.",
+    "Freeze technically validated visual HEAD without merge/deploy; branch integration separately.",
+    "Complete existing modules and MLS AI Sales offline/assisted MVP according to master mission, recording external blocks.",
+    "Keep M2 issue50 open until real Seller Centre evidence; preserve Ads/PROMO LOCKED and bank net unknown."
   ],
   "m0_followup": [
     "Conferir visual autenticado em desktop e celular durante M1; corrigir apenas branding/layout sem renomear infraestrutura"
@@ -728,5 +712,23 @@
     "ads_promo": "LOCKED",
     "shopee_write": false,
     "docs": "docs/MLS_INTEGRATED_OWNER_RELEASE_2026_10_29.md"
+  },
+  "master_mission_20261030": {
+    "checkpoint": "docs/MLS_MASTER_MISSION_CHECKPOINT.json",
+    "execution": "docs/MLS_MASTER_MISSION_EXECUTION_2026_10_30.md",
+    "main_observed_sha": "a96bb1c56aaea54a63bede5c177a0de8ab2ea890",
+    "visual_pr": 79,
+    "visual_references": "docs/visual-references/mls-2026-10-29/manifest.json",
+    "visual_approval": "PENDING",
+    "merge_authorized": false,
+    "deploy_authorized": false,
+    "commercial_writes": "LOCKED",
+    "technical_app_sha256": "9e704d09411fa5a9db9cb6d1c2721314db6ffda92ab5edfc97b724329929a08a",
+    "validation": {
+      "node_pass": 2214,
+      "python_pass": 67,
+      "visual_approval": "PENDING",
+      "financial_m2": "OPEN"
+    }
   }
 }

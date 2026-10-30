@@ -1,4 +1,4 @@
-import {businessMonth,projectBusinessMonth} from './business-month.mjs';
+import {readBusinessMonthDisplay,projectBusinessMonth} from './business-month.mjs';
 import {buildMonthlyFinancialSummary} from './business-month-summary.mjs';
 import {buildAccountDiagnosis} from './account-diagnosis.mjs';
 import {buildBusinessCheckpoint} from './business-checkpoint.mjs';
@@ -99,7 +99,10 @@ function taskDate(raw){try{if(typeof raw!=='string'||encoder.encode(raw).byteLen
 
 export async function prepareHermesFinancialContext(env,jobId,analysisDate,{now=()=>Date.now(),taskRaw}={}){
  if(!jobIdentity(jobId)||!day(analysisDate)||taskDate(taskRaw)!==analysisDate||typeof now!=='function')fail('HERMES_CONTEXT_REQUEST_INVALID',400);
- const db=await setup(env);epoch(now);let frame=null;try{frame=await businessMonth(env,{operation:'read',month:analysisDate.slice(0,7)},{},{now,actor:'hermes-context'});}catch{}
+ // Use the same selected, immutable finance publication as the owner view.
+ // A background replacement may be partial while the last complete cohort is
+ // still displayed; the shared read also reapplies current local costs.
+ const db=await setup(env);epoch(now);let frame=null;try{frame=(await readBusinessMonthDisplay(env,{month:analysisDate.slice(0,7)},{now})).display;}catch{}
  const context=buildHermesFinancialContext(frame,{analysisDate,capturedAt:epoch(now)});if(!context)fail('HERMES_CONTEXT_INVALID');
  const payload=JSON.stringify(context);if(encoder.encode(payload).byteLength>12288)fail('HERMES_CONTEXT_INVALID');const hash=await fingerprint(jobId,payload);
  const statement=db.prepare('INSERT INTO hermes_financial_contexts(job_id,analysis_date,captured_at,fingerprint,payload) SELECT ?,?,?,?,? WHERE EXISTS(SELECT 1 FROM hermes_jobs WHERE id=? AND task=?) ON CONFLICT(job_id) DO NOTHING').bind(jobId,analysisDate,context.captured_at,hash,payload,jobId,taskRaw);

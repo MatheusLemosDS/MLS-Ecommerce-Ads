@@ -20,8 +20,9 @@ test('daily area retains real values and never interpolates a missing day',()=>{
  assert.match(html,/2026-10-27: R\$ 32\.00 \(parcial\)/);
  assert.match(html,/2026-10-28: R\$ -1\.00/);
  assert.match(html,/2 observações reais|3 observações reais/);
- // Must be two independent paths rather than a fabricated 25th->27th segment.
- assert.equal((html.match(/stroke-width="2\.8"/g)||[]).length,1);
+ // Only the 27th->28th segment exists, split at zero to retain the loss color.
+ // The missing 26th must never become a fabricated 25th->27th segment.
+ assert.equal((html.match(/stroke-width="2\.8"/g)||[]).length,2);
 });
 test('missing, malformed, duplicated, or unordered dates never become a chart',()=>{
  for(const input of [
@@ -122,4 +123,25 @@ test('horizontal category bars preserve zero and reject duplicates or unsafe amo
   {label:'X',value:Number.MAX_SAFE_INTEGER+2}
  ]});
  assert.equal(unsafe.status,'UNAVAILABLE');
+});
+
+test('SVG labels, grids and tracks inherit theme tokens while semantic series retain their colors',()=>{
+ const models=[
+  projectMlsDailyChart(daily([{date:'2026-10-27',net_cents:-200},{date:'2026-10-28',net_cents:100}])),
+  projectMlsCategoricalChart({complete:true,segments:[{label:'A',value:2}]}),
+  projectMlsCategoricalChart({complete:true,orientation:'horizontal',segments:[{label:'A',value:2}]}),
+  projectMlsDistribution({complete:true,total:2,segments:[{label:'A',value:2}]})
+ ];
+ for(const model of models){
+  const svg=renderMlsVerifiedChart(model);
+  const texts=[...svg.matchAll(/<text\b[^>]*>/g)].map(match=>match[0]);
+  assert.ok(texts.length>0);
+  for(const text of texts)assert.match(text,/fill="var\(--(?:text|muted),#[0-9a-f]{6}\)"/);
+  for(const line of svg.matchAll(/<line\b[^>]*>/g))assert.match(line[0],/stroke="var\(--line,#[0-9a-f]{6}\)"/);
+ }
+ const horizontal=renderMlsVerifiedChart(models[2]);
+ assert.match(horizontal,/fill="var\(--surface-raised,#16314c\)"/);
+ const mixed=renderMlsVerifiedChart(models[0]);
+ assert.match(mixed,/stroke="#ff7899"/,'negative values retain their loss color');
+ assert.match(mixed,/stroke="#35e6ae"/,'positive values retain their series color');
 });
