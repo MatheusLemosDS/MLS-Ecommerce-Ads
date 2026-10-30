@@ -1,3 +1,5 @@
+PR de integração DRAFT #83: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/83 · commits f513dca/54b87e5 · local2308Node/67Python,40capturas · Appa5ba3298…bbfb91c8. Conferir checks do HEAD; semmerge/deploy.
+
 # Roadmap canônico — MLS Commerce OS
 
 Atualizado em **30/10/2026**.

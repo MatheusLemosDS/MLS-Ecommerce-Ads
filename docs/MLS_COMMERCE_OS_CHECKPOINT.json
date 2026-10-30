@@ -732,7 +732,7 @@
     },
     "integration_guide": "docs/MLS_AI_SALES_INTEGRATION_2026_10_30.md",
     "visual_ci": 41131654577,
-    "integration_pr": null,
+    "integration_pr": 83,
     "production_deploy": false,
     "owner_visual_approval": "PENDING",
     "finance_m2": "OPEN_ISSUE_50",
@@ -742,7 +742,7 @@
       "python_pass": 67,
       "screenshots": 40,
       "evidence": "docs/qa/mls-ai-sales-2026-10-30/regression.json",
-      "github_ci": "CHECK_EXACT_HEAD_DRAFT_PR"
+      "github_ci": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/83/checks"
     }
   }
 }

@@ -1,3 +1,5 @@
+PR de integração DRAFT #83: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/83 · commits f513dca/54b87e5 · local2308Node/67Python,40capturas · Appa5ba3298…bbfb91c8. Conferir checks do HEAD; semmerge/deploy.
+
 CHECKPOINT ATUAL — MISSÃO MESTRE 30/10/2026
 Ler docs/MLS_MASTER_MISSION_CHECKPOINT.json, docs/MLS_AI_SALES_INTEGRATION_2026_10_30.md e docs/MLS_MASTER_MISSION_EXECUTION_2026_10_30.md. Branch integration/mls-commerce-os-ai-sales-20261030, worktree /workspace/mls-commerce-os. PR79 congelada, CI verde e7ce5009/41131654577; App visual9e704d...; referências e24capturas em docs. Integração preserva SKUs/variantes e adiciona ABC/pricing observador +AI Sales local5abas,3MP4reais PTBR1080x1920. Conferir CI/hash finais no checkpoint/PR antes de qualquer decisão. Flag MLS_AI_SALES_OWNER_PREVIEW=ENABLED só owner, OFF padrão; V36 independente. Main observadaa96bb1c preservada. Sem merge/deploy/writes; Hermes OBSERVER, Ads/PROMO LOCKED. M2/issue50 depende de Seller Centre/banco; QA visual/auditiva humana, grants e LLM externos. Nunca tratar lucro desconhecido comozero ou confirmar aprovação pelo JSON importado.
 

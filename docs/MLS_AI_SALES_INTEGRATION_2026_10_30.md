@@ -1,6 +1,6 @@
 # Integração MLS Commerce OS + AI Sales — homologação local
 
-30/10/2026. Branch `integration/mls-commerce-os-ai-sales-20261030`, baseada no congelamento visual da PR #79. Desenvolvimento autorizado pela missão mestre; nenhuma mesclagem em main, implantação, chamada paga, publicação, convite ou alteração comercial foi executada.
+30/10/2026. [PR DRAFT #83](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/83), empilhada na [PR visual #79](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/79). [CI do HEAD atual](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/83/checks). Branch `integration/mls-commerce-os-ai-sales-20261030`, baseada no congelamento visual da PR #79. Desenvolvimento autorizado pela missão mestre; nenhuma mesclagem em main, implantação, chamada paga, publicação, convite ou alteração comercial foi executada.
 
 ## Entregas executáveis
 
@@ -44,3 +44,5 @@ MoneyPrinterTurbo foi inspecionado em SHA fixo e sua geometria testada isoladame
 - Grants reais por loja/região para Shopee/TikTok Affiliate, Creator, publicação e âncora. Sem eles, somente exportação e fluxo manual/assistido.
 
 Hermes permanece OBSERVER; Ads/PROMO e todas as escritas comerciais permanecem LOCKED. A conclusão é do MVP local testável; autonomia comercial e precisão bancária integral não foram declaradas.
+
+Validação local final registrada: 2308 Node/67 Python, zero falha/skip; App `a5ba3298faf4b8c2eaa32e98674f1d7408f4c4616236d8f04a2fba72bbfb91c8`. Código puro/render `f513dca`; integração/UI e40capturas `54b87e5`. Este registro não concede aprovação visual nem altera produção.

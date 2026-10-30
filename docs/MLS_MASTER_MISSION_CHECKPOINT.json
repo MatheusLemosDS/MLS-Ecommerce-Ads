@@ -5,7 +5,7 @@
   "visual_branch": "feature/mls-mockup-parity-real-charts-20261029",
   "visual_pr": 79,
   "integration_branch": "integration/mls-commerce-os-ai-sales-20261030",
-  "integration_pr": null,
+  "integration_pr": 83,
   "authorization": {
     "development": true,
     "draft_pr": true,
@@ -99,7 +99,7 @@
     "flag": "MLS_AI_SALES_OWNER_PREVIEW=ENABLED; exact owner opt-in, default OFF"
   },
   "phase6": {
-    "state": "LOCAL_REGRESSION_GREEN_GITHUB_DRAFT_PR_PENDING",
+    "state": "LOCAL_REGRESSION_GREEN_DRAFT_PR_REVIEW_PENDING",
     "node_pass": 2308,
     "node_fail": 0,
     "node_skipped": 0,
@@ -123,7 +123,10 @@
     },
     "ai_screenshots": 40,
     "evidence": "docs/qa/mls-ai-sales-2026-10-30/regression.json",
-    "github_ci": "CHECK_EXACT_HEAD_DRAFT_PR"
+    "github_ci": {
+      "exact_head_status": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/83/checks",
+      "note": "Inspect current PR HEAD; local evidence is bound to exact App hash."
+    }
   },
   "external_blockers": [
     "Authenticated Seller Centre comparison and owner QA unavailable.",
