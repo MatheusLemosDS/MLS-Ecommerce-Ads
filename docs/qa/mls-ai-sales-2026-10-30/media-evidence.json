@@ -1,0 +1,289 @@
+{
+  "schema": "mls_ai_sales_local_render_evidence_v1",
+  "date": "2026-10-30",
+  "fixture": "ORIGINAL_SYNTHETIC_TEST_SHIRTS_NOT_MERCHANT_DATA",
+  "real_merchant_media": false,
+  "commercial_writes": false,
+  "human_visual_approval": "PENDING",
+  "human_audio_approval": "PENDING",
+  "test_command": "node --test tools/tests/mls-ai-sales-media.test.mjs",
+  "tests": {
+    "passed": 15,
+    "failed": 0,
+    "skipped": 0,
+    "duration_ms": 40155.979662
+  },
+  "tool_versions": {
+    "node": "v24.19.0",
+    "ffmpeg": "ffmpeg version 7.1.5-0+deb13u1 Copyright (c) 2000-2026 the FFmpeg developers",
+    "ffprobe": "ffprobe version 7.1.5-0+deb13u1 Copyright (c) 2007-2026 the FFmpeg developers",
+    "espeak_ng": "1.52.0+dfsg-5 (external Debian package, R0 signature/hash chain)"
+  },
+  "source_modules": [
+    {
+      "path": "tools/mls-ai-sales/process.mjs",
+      "sha256": "167d2555b9d42a84b0f4f5ab43f8d5b47aca71feed3f75c41ae0fc52d6d75ab4"
+    },
+    {
+      "path": "tools/mls-ai-sales/media.mjs",
+      "sha256": "63780f329a6ca247310c445f6cebf66ae3e30a6160ed88ecc678c11eebe8f1e1"
+    },
+    {
+      "path": "tools/mls-ai-sales/render.mjs",
+      "sha256": "a833c1c7997c8bb0e91e63ee1f831e36731becd49927dc8aeb7dfcad6e4fa6f2"
+    },
+    {
+      "path": "tools/mls_ai_sales_cli.mjs",
+      "sha256": "21b4f22d06b9298a64d093de49e9d1da2e4389b5334c3f2c74838e4cd6d13a1c"
+    },
+    {
+      "path": "tools/tests/mls-ai-sales-media.test.mjs",
+      "sha256": "78f4effb048fd8aa7b6da99d61e28d43a300c124a19d40ebaed8360c87aede77"
+    },
+    {
+      "path": "tools/tests/fixtures/mls-ai-sales-media-fixture.mjs",
+      "sha256": "e56c3c9ce9923f246a0624169003b1ffaa66949863144113626cebf9799abef7"
+    },
+    {
+      "path": "web/cloudflare/src/mls-ai-sales-contracts.mjs",
+      "sha256": "a1cdfdacc22c387c0d66a2400d8c11e6ec39d37e4dedacc52a0ca4ab6d4d01fd"
+    },
+    {
+      "path": "web/cloudflare/src/mls-ai-sales-campaign-planner.mjs",
+      "sha256": "c7f9855a94fd192cb3bc1c1d42dd632cf9d03596e82c0762d699ddca33915fb2"
+    }
+  ],
+  "checks": [
+    "THREE_REAL_MP4S",
+    "PT_BR_OFFLINE_NARRATION",
+    "H264_AAC_1080X1920_30FPS",
+    "FULL_VIDEO_DECODE",
+    "15_TO_30_SECONDS",
+    "ORIGINAL_BYTES_UNCHANGED",
+    "ASYMMETRIC_ART_POSITION_PRESERVED",
+    "CONTAIN_SOURCE_EDGES_PRESERVED",
+    "EXACT_KIT_COMPONENT_COVERAGE",
+    "ATOMIC_OUTPUT_AND_IDEMPOTENT_REUSE",
+    "TAMPERED_CACHE_APPROVAL_BLOCKED",
+    "MUTATED_ORIGINAL_BYTES_BLOCKED",
+    "DEADLINE_CLEARS_STAGING_AND_LEASE",
+    "NO_NETWORK_OR_MARKETPLACE_WRITES"
+  ],
+  "templates": [
+    {
+      "template_id": "NOSTALGIA_80_90_2000",
+      "video_sha256": "f20d3d813288ddf9ced40bd1734e561ffabbbaddc00adcf845e56fae1f8abdc6",
+      "duration_ms": 15000,
+      "size_bytes": 276497,
+      "output_directory": "mls-video-363a15f76cb07628e02dc3d2",
+      "provider_cost_cents": 0,
+      "local_compute_cost_cents": null,
+      "qa": {
+        "status": "PASSED",
+        "width": 1080,
+        "height": 1920,
+        "duration_ms": 15000,
+        "fps": 30,
+        "video_codec": "h264",
+        "audio_codec": "aac",
+        "full_decode": true,
+        "sha256": "f20d3d813288ddf9ced40bd1734e561ffabbbaddc00adcf845e56fae1f8abdc6",
+        "size_bytes": 276497
+      },
+      "files": [
+        {
+          "name": "video.mp4",
+          "sha256": "f20d3d813288ddf9ced40bd1734e561ffabbbaddc00adcf845e56fae1f8abdc6",
+          "size_bytes": 276497
+        },
+        {
+          "name": "thumbnail.jpg",
+          "sha256": "ee57991f47e91774fd4650e53047750641f0652e1099667bd934ef777b47b4f7",
+          "size_bytes": 12358
+        },
+        {
+          "name": "captions.srt",
+          "sha256": "46d61c48977694fa785c6eefae03a98ab399d65b0f845fce18b150abcf9a9450",
+          "size_bytes": 212
+        },
+        {
+          "name": "script.txt",
+          "sha256": "fd086825c7a0b8c78f3ad4a40a2a213d749b310b618c8a471bafe1ad1a334257",
+          "size_bytes": 142
+        }
+      ],
+      "source_assets": [
+        {
+          "asset_id": "fixture-photo-0-0",
+          "sha256": "6c7c422c0a17243ce9170a52fe12946399642596e53bd26c5c57ab0e0f5538cc",
+          "manifest_hash": "3c1525dac526083413a1c3c97a4142dc75a842a046c20b244627ec719d45eaac",
+          "component_coverage": [
+            {
+              "component_ref": "component-0",
+              "quantity": 1
+            }
+          ],
+          "preserve_geometry": true,
+          "role": "MOCKUP_ORIGINAL"
+        }
+      ],
+      "narration": {
+        "source": "ESPEAK_NG_OFFLINE_PT_BR",
+        "language": "pt-BR",
+        "source_sha256": "be68414a06878cd37609abfc33835fb861959d7b401b0f219fadc70a7ff5e4f7",
+        "rights_reference": "EXTERNAL_ESPEAK_NG_GPL3_PLUS_SYNTHETIC_VOICE"
+      },
+      "approval": "PENDING",
+      "elapsed_ms": 14094
+    },
+    {
+      "template_id": "PRODUCT_DETAILS",
+      "video_sha256": "16a229c4508d362a0e7a05275db8d7ac0dc5141b8d9ff37e623c2ad4996a19f4",
+      "duration_ms": 15000,
+      "size_bytes": 276189,
+      "output_directory": "mls-video-d49f94e7bb788e659ec54b2b",
+      "provider_cost_cents": 0,
+      "local_compute_cost_cents": null,
+      "qa": {
+        "status": "PASSED",
+        "width": 1080,
+        "height": 1920,
+        "duration_ms": 15000,
+        "fps": 30,
+        "video_codec": "h264",
+        "audio_codec": "aac",
+        "full_decode": true,
+        "sha256": "16a229c4508d362a0e7a05275db8d7ac0dc5141b8d9ff37e623c2ad4996a19f4",
+        "size_bytes": 276189
+      },
+      "files": [
+        {
+          "name": "video.mp4",
+          "sha256": "16a229c4508d362a0e7a05275db8d7ac0dc5141b8d9ff37e623c2ad4996a19f4",
+          "size_bytes": 276189
+        },
+        {
+          "name": "thumbnail.jpg",
+          "sha256": "591c564c88ad341995c51091ddb07c695c8c295c6c8aea0decab3076a3d4b4ea",
+          "size_bytes": 13103
+        },
+        {
+          "name": "captions.srt",
+          "sha256": "a5ec2b8d29f489ea6cf501b4f2560c3ca8216951072584979f90a75e407e4a81",
+          "size_bytes": 208
+        },
+        {
+          "name": "script.txt",
+          "sha256": "6b1d70d3142a3f27773a15bc97b88a176d10e3b3c5ccce7254d2923d9234cda5",
+          "size_bytes": 138
+        }
+      ],
+      "source_assets": [
+        {
+          "asset_id": "fixture-photo-1-0",
+          "sha256": "3100e90563006bb84ee000cd93370447b7e5a0897d5b0b8560de383c93a6487e",
+          "manifest_hash": "aaed05de54097fc8d16ce08588ff7ecaadd15f33210aa98467055d68695afd43",
+          "component_coverage": [
+            {
+              "component_ref": "component-0",
+              "quantity": 1
+            }
+          ],
+          "preserve_geometry": true,
+          "role": "MOCKUP_ORIGINAL"
+        }
+      ],
+      "narration": {
+        "source": "ESPEAK_NG_OFFLINE_PT_BR",
+        "language": "pt-BR",
+        "source_sha256": "313f7b9bd64f3945d8255c8e70d53408e843776c5476f26e7e97c0365cd352e4",
+        "rights_reference": "EXTERNAL_ESPEAK_NG_GPL3_PLUS_SYNTHETIC_VOICE"
+      },
+      "approval": "PENDING",
+      "elapsed_ms": 14281
+    },
+    {
+      "template_id": "COUPLE_KIT",
+      "video_sha256": "697f1729a26571d68b475a3e34e5a8ac0be68e0588e12f68154a90b612cb0357",
+      "duration_ms": 15000,
+      "size_bytes": 312639,
+      "output_directory": "mls-video-824ec983f9bd11fa01325df4",
+      "provider_cost_cents": 0,
+      "local_compute_cost_cents": null,
+      "qa": {
+        "status": "PASSED",
+        "width": 1080,
+        "height": 1920,
+        "duration_ms": 15000,
+        "fps": 30,
+        "video_codec": "h264",
+        "audio_codec": "aac",
+        "full_decode": true,
+        "sha256": "697f1729a26571d68b475a3e34e5a8ac0be68e0588e12f68154a90b612cb0357",
+        "size_bytes": 312639
+      },
+      "files": [
+        {
+          "name": "video.mp4",
+          "sha256": "697f1729a26571d68b475a3e34e5a8ac0be68e0588e12f68154a90b612cb0357",
+          "size_bytes": 312639
+        },
+        {
+          "name": "thumbnail.jpg",
+          "sha256": "f591910bd3db2288f6b303a8a21039540b4f95f2eb1bb96e363cf210ca907aed",
+          "size_bytes": 13009
+        },
+        {
+          "name": "captions.srt",
+          "sha256": "6811615e006e8210c1d5fb48325c4aa790932bad2824828efeb4b35f765474ed",
+          "size_bytes": 220
+        },
+        {
+          "name": "script.txt",
+          "sha256": "7ab4eb5d27e93cce58a19ddd9989985b2e5047f1b4e55f5f152b8287b5037f70",
+          "size_bytes": 163
+        }
+      ],
+      "source_assets": [
+        {
+          "asset_id": "fixture-photo-2-0",
+          "sha256": "6c7c422c0a17243ce9170a52fe12946399642596e53bd26c5c57ab0e0f5538cc",
+          "manifest_hash": "80d57d1d1584847596d88106e11e144b11104e1de0aa4299e2db98f4c42bf980",
+          "component_coverage": [
+            {
+              "component_ref": "component-0",
+              "quantity": 1
+            }
+          ],
+          "preserve_geometry": true,
+          "role": "MOCKUP_ORIGINAL"
+        },
+        {
+          "asset_id": "fixture-photo-2-1",
+          "sha256": "3100e90563006bb84ee000cd93370447b7e5a0897d5b0b8560de383c93a6487e",
+          "manifest_hash": "d0c1d6ebc6c3b7804b066a73b945d41e54a4c3b4ded6544a6addb4b3813e42cc",
+          "component_coverage": [
+            {
+              "component_ref": "component-1",
+              "quantity": 1
+            }
+          ],
+          "preserve_geometry": true,
+          "role": "MOCKUP_ORIGINAL"
+        }
+      ],
+      "narration": {
+        "source": "ESPEAK_NG_OFFLINE_PT_BR",
+        "language": "pt-BR",
+        "source_sha256": "0dfe20a9f2ad0eaafd61bfbb101d4d04d3a3749cc4467a35172e25dcff1b2470",
+        "rights_reference": "EXTERNAL_ESPEAK_NG_GPL3_PLUS_SYNTHETIC_VOICE"
+      },
+      "approval": "PENDING",
+      "elapsed_ms": 6353
+    }
+  ],
+  "binary_artifacts_in_repository": false,
+  "provider_cost_cents": 0,
+  "currency": "BRL",
+  "local_compute_cost_cents": null
+}
