@@ -20,7 +20,10 @@
     "deploy:finance": "node tools/worker_deploy.mjs deploy finance",
     "capture:app": "node tools/capture_worker_config.mjs app",
     "capture:auth": "node tools/capture_worker_config.mjs auth",
-    "repair:finance-router": "node tools/sync_finance_router_secret.mjs"
+    "repair:finance-router": "node tools/sync_finance_router_secret.mjs",
+    "preview:owner": "node tools/mls_owner_preview_server.mjs",
+    "preview:assets": "node tools/mls_owner_preview_assets.mjs",
+    "preview:export": "node tools/mls_owner_preview_export.mjs"
   },
   "devDependencies": {
     "jsonc-parser": "3.3.1",

@@ -139,5 +139,13 @@
     "finance_m2": "OPEN_ISSUE_50",
     "bank_realized_net": "UNKNOWN"
   },
-  "integration_guide": "docs/MLS_AI_SALES_INTEGRATION_2026_10_30.md"
+  "integration_guide": "docs/MLS_AI_SALES_INTEGRATION_2026_10_30.md",
+  "owner_homologation": {
+    "checkpoint": "docs/MLS_OWNER_PREVIEW_CHECKPOINT.json",
+    "branch": "feature/mls-owner-homologation-preview-20261030",
+    "base_pr": 83,
+    "production_worker_changes": false,
+    "cloudflare_authenticated": false,
+    "preview_pr": 84
+  }
 }

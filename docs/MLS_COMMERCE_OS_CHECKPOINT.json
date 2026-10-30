@@ -30,8 +30,8 @@
     "merge_commit": "9c418fd3010f46957d1ce52345baacd76041c788"
   },
   "current_phase": "M2_FINANCE_RETURNS_RECONCILIATION",
-  "working_branch": "integration/mls-commerce-os-ai-sales-20261030",
-  "current_status": "MASTER_MISSION_LOCAL_MVP_TESTED_DRAFT_REVIEW_PENDING",
+  "working_branch": "feature/mls-owner-homologation-preview-20261030",
+  "current_status": "OWNER_HOMOLOGATION_READY_CLOUDFLARE_ACCESS_REQUIRED_NO_PRODUCTION_CHANGE",
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
     "Repasse-base, ajuste, repasse após ajuste e liberação exibidos sem dupla dedução",
@@ -744,5 +744,14 @@
       "evidence": "docs/qa/mls-ai-sales-2026-10-30/regression.json",
       "github_ci": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/83/checks"
     }
+  },
+  "owner_homologation_20261030": {
+    "checkpoint": "docs/MLS_OWNER_PREVIEW_CHECKPOINT.json",
+    "guide": "docs/MLS_OWNER_HOMOLOGATION_2026_10_30.md",
+    "base_pr": 83,
+    "staging_url": null,
+    "cloudflare_authenticated": false,
+    "merchant_data": false,
+    "preview_pr": 84
   }
 }
