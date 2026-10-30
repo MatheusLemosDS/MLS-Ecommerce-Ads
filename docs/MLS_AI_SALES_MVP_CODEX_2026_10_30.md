@@ -120,8 +120,8 @@ Pedidos atribuídos e dados reais --> Aggregator OBSERVER --> MLS Hermes + Audit
 
 Fontes oficiais (reler e comparar vigência, BR, scopes e termos ANTES de implementar chamadas):
 - TikTok Shop Affiliate API Solution Guide: https://partner.tiktokshop.com/docv2/page/affiliate-integration
-- TikTok Content Posting API — Getting Started: https://developers.tiktok.com/doc/content-posting-api-get-started
-- TikTok Content Posting API — Direct Post: https://developers.tiktok.com/doc/content-posting-api-reference-direct-post
+- TikTok Content Posting API — Getting Started: https://developers.tiktok.com/docs/en/content-posting-api-get-started
+- TikTok Content Posting API — Direct Post: https://developers.tiktok.com/docs/en/content-posting-api-reference-direct-post?enter_method=left_navigation
 - TikTok Shop BR — restrições IA: https://seller-br.tiktok.com/university/essay?knowledge_id=2324329879832321
 - TikTok Help — rótulo de IA: https://support.tiktok.com/pt_BR/using-tiktok/creating-videos/ai-generated-content
 - Shopee BR — programa do vendedor participante: https://help.shopee.com.br/portal/4/article/76443-%5BPol%C3%ADticas%5D-Termos-e-Condi%C3%A7%C3%B5es-%7C-Programa-de-Afiliados-da-Shopee---Vendedor-Participante?seo=1
