@@ -1,4 +1,4 @@
-node_modules/
+node_modules
 dist/
 .wrangler/
 __pycache__/

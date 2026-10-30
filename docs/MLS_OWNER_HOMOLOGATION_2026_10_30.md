@@ -1,6 +1,6 @@
 # Homologação navegável do MLS Commerce OS
 
-30/10/2026. Continuação da PR #83, sem merge ou deploy. O proprietário informou que ainda não existe URL de homologação. O ambiente atual não está autenticado na Cloudflare. Foram preparados testes locais e uma demonstração que pode ser aberta sem acessar a loja.
+30/10/2026. [PR DRAFT #84](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/84), baseada na PR #83, sem merge ou deploy. [CI do HEAD](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/84/checks). O proprietário informou que ainda não existe URL de homologação. O ambiente atual não está autenticado na Cloudflare. Foram preparados testes locais e uma demonstração que pode ser aberta sem acessar a loja.
 
 ## Escolha a forma de testar
 
@@ -56,3 +56,5 @@ npm run preview:export -- --output /tmp/MLS_OWNER_PREVIA_INTERATIVA.html --media
 6. Somente em ambiente autorizado com dados reais, confrontar Seller Centre, DAS-MEI registrado, custos, anúncios, devoluções, repasses e banco. A demonstração não encerra M2/issue #50 nem comprova lucro bancário.
 
 App base: `a5ba3298faf4b8c2eaa32e98674f1d7408f4c4616236d8f04a2fba72bbfb91c8`. Auth e Finance não foram alterados. O Worker de produção não recebe endpoints de prévia, FFmpeg, bypass de autenticação ou novos bindings. Hermes segue OBSERVER; publicações, convites, preços, estoque, comissões e Ads/PROMO continuam bloqueados.
+
+Validação registrada: 2.327 Node e 67 Python, zero falha/skip; três builds com hashes inalterados. Commit de implementação `1574f9e`. [Evidências e capturas](qa/mls-owner-preview-2026-10-30/README.md).

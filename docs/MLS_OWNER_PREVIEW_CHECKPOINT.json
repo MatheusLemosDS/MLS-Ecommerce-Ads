@@ -4,7 +4,7 @@
   "branch": "feature/mls-owner-homologation-preview-20261030",
   "base_pr": 83,
   "base_commit": "00561afc7af0d5393f085c86df2c82fc73853786",
-  "preview_pr": null,
+  "preview_pr": 84,
   "state": "LOCAL_HOMOLOGATION_READY_ONLINE_ACCESS_REQUIRED",
   "worker_sha256": "a5ba3298faf4b8c2eaa32e98674f1d7408f4c4616236d8f04a2fba72bbfb91c8",
   "production_worker_changes": false,
@@ -35,6 +35,7 @@
     "python_pass": 67,
     "browser_cases": 3,
     "captures_generated": 74,
-    "github_ci": "CHECK_DRAFT_PR_EXACT_HEAD"
-  }
+    "github_ci": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/84/checks"
+  },
+  "implementation_commit": "1574f9e"
 }
