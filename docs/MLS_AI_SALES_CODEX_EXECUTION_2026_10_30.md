@@ -1,6 +1,12 @@
 # Codex — fila executável do MLS AI Sales (somente planejamento)
 **Criado:** 30/10/2026 · **Referência detalhada:** docs/MLS_AI_SALES_MVP_CODEX_2026_10_30.md
 
+## Pesquisa de repositórios pronta para reutilização — 30/10/2026
+
+**LEITURA OBRIGATÓRIA ANTES DE S2/S4:** [MLS_AI_SALES_OPEN_SOURCE_AUDIT_2026_10_30.md](MLS_AI_SALES_OPEN_SOURCE_AUDIT_2026_10_30.md). O documento verifica código real, licenças e limitações de MoneyPrinterTurbo, TikTok Shop SDK com Affiliate Seller, Shopee SDK, OpenAPI TikTok, Remotion, OpenShorts e alternativas. Descreve o spike R0 para testar 3 vídeos de camisetas com mockups preservados antes de construir novo motor, e proíbe copiar demos não funcionais.
+
+**Decisão provisória:** MoneyPrinterTurbo para POC local de vídeo (não substituir Workers); hsib19/tiktok-shop-sdk e isaackogan/TikTok-Shop-Api-SDKs para validação dos contratos do Affiliate Seller, sem grant real; congminh1254/shopee-sdk como referência para lacunas Shopee, sem substituir o conector existente. Remotion tem licença própria, OpenShorts tem exceção comercial em cloud/. Toda escrita TikTok/Shopee continua LOCKED. A PR #79 visual mantém prioridade.
+
 ## Leia isto antes de começar
 
 O proprietário confirmou **Shopee e TikTok Shop ativos** e solicitou um **MVP integrado ao MLS Commerce OS** com geração de vídeos e gestão de afiliados. Não foi confirmado acesso às APIs. **Não confunda “loja ativa” com “API autorizada”.**
