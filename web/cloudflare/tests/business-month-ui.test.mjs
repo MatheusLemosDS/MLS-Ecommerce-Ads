@@ -304,7 +304,7 @@ test('transient observation failures back off but an owner authorization failure
 
 test('monthly body has one clear card per business metric and responsive scoped markup',()=>{
  const body=businessMonthBody(),ids=[...body.matchAll(/\bid="([^"]+)"/g)].map(match=>match[1]);
- assert.equal(new Set(ids).size,ids.length);assert.ok(ids.every(id=>id.startsWith('businessMonth')||id.startsWith('businessReconciliation')||id.startsWith('businessEscrowReleases')));
+ assert.equal(new Set(ids).size,ids.length);assert.ok(ids.every(id=>id.startsWith('businessMonth')||id.startsWith('businessReconciliation')||id.startsWith('businessEscrowReleases')||id.startsWith('businessFinancialCloseout')));
  for(const title of ['Vendas da loja','Investimento em anúncios','ROAS dos anúncios','Resultado líquido previsto','Ver cálculo e custos do mês','Base para crescer com lucro'])assert.ok(body.includes(title),title);
  assert.match(body,/type="month"/);assert.match(body,/Não tenho outras despesas/);assert.doesNotMatch(body,/api[_ -]?key|token de acesso|password/i);
  assert.match(BUSINESS_MONTH_CSS,/minmax\(0,1fr\)/);assert.match(BUSINESS_MONTH_CSS,/@media\(max-width:640px\)/);assert.doesNotMatch(BUSINESS_MONTH_CSS,/(?:^|\n)(?:body|html)\s*\{/);

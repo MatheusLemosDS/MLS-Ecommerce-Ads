@@ -484,18 +484,11 @@ function missionWorkspaceNavLink(label,href,current=false){
  const route=tab?(tab.startsWith('agent-')?' data-mission-open="'+tab+'"':' data-tab="'+tab+'"'):'';
  return '<a href="'+href+'"'+route+(current?' aria-current="page"':'')+'><span class="mls-module-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M8 9h8M8 13h5M8 17h7"/></svg></span><span>'+label+'</span></a>';
 }
-function missionWorkspaceRail(item){
- return '<aside class="mls-agent-mini-nav" aria-label="Navegação de '+item.name+'"><nav aria-label="Navegação especializada de '+item.name+'">'+
-  missionWorkspaceNavLink('Visão geral','/admin?tab=overview')+
-  missionWorkspaceNavLink(item.name,'#mission-'+item.id+'-top',true)+
-  missionWorkspaceNavigation[item.id].map(([label,href])=>missionWorkspaceNavLink(label,href)).join('')+
-  missionWorkspaceNavLink('Conexões','/integrations')+'</nav></aside>';
-}
 function missionWorkspaceTabs(item,specialist){
  const id=item.id;
  if(specialist)return '<nav class="mission-page-tabs mls-module-tabs" aria-label="Seções de '+item.name+'">'+
   missionWorkspaceNavLink('Visão geral','#mission-'+id+'-top',true)+
-  missionWorkspaceNavigation[id].map(([label,href])=>missionWorkspaceNavLink(label,href)).join('')+'</nav>';
+  [...missionWorkspaceNavigation[id],['Prioridades','#mission-'+id+'-tasks'],['Ferramentas','#mission-'+id+'-tools']].filter((entry,index,all)=>all.findIndex(value=>value[1]===entry[1])===index).map(([label,href])=>missionWorkspaceNavLink(label,href)).join('')+'</nav>';
  return '<nav class="mission-page-tabs" aria-label="Seções de '+item.name+'"><span class="mission-page-tabs-title">PAINEL ESPECIALIZADO</span>'+
   '<a href="#mission-'+id+'-top">Visão geral</a><a href="#mission-'+id+'-metrics">Indicadores</a>'+
   '<a href="#mission-'+id+'-tasks">Prioridades</a><a href="#mission-'+id+'-tools">Ferramentas</a>'+
@@ -505,7 +498,7 @@ function missionWorkspaceTabs(item,specialist){
 }
 function missionWorkspaceAction(item){
  const id=item.id;
- if(id==='ads')return '<div class="mls-workspace-primary-action"><button type="button" class="mls-workspace-primary" disabled aria-describedby="mission-ads-action-note">Criar campanha <svg aria-hidden="true" focusable="false" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 18 18 6M7 6h11v11"/></svg></button><small id="mission-ads-action-note">Bloqueado no modo Observador</small></div>';
+ if(id==='ads')return '<div class="mls-workspace-primary-action"><a class="mls-workspace-primary" href="/campaigns" aria-describedby="mission-ads-action-note">Ver campanhas <span aria-hidden="true">↗</span></a><small id="mission-ads-action-note">Somente leitura · alterações comerciais bloqueadas</small></div>';
  const actions={finance:['Ver resumo','#businessMonth'],products:['Abrir catálogo','/admin?tab=products'],production:['Montar DTF','/admin?tab=production'],returns:['Conferir pendências','/admin?tab=agent-finance#businessReconciliation']};
  const [label,href]=actions[id];
  const tab=/^\/admin\?tab=([a-z-]+)$/.exec(href)?.[1];
@@ -535,9 +528,8 @@ function missionWorkspace(item,financeHtml){
   (id==='ads'?missionTrendPanelBody(id):'')+missionSpecialistPanelsBody(id)+'</div>':'';
  const financialTrend=id==='finance'?'<details class="mls-workspace-history"><summary>Histórico diário observado · resultado, vendas e anúncios</summary>'+missionTrendPanelBody(id)+'</details>':'';
  return '<section class="mission-workspace mission-agent--'+id+(specialist?' mls-agent-workspace':'')+'" id="'+tab+'" data-mission-page="'+id+'" hidden>'+
-  (specialist?missionWorkspaceRail(item):'')+header+
+  header+
   (specialist?metrics+missionWorkspaceTabs(item,true):missionWorkspaceTabs(item,false)+metrics)+charts+financialTrend+
-  (specialist?'<nav class="mls-workspace-quicklinks" aria-label="Detalhes de '+item.name+'"><a href="#mission-'+id+'-metrics">Indicadores</a><a href="#mission-'+id+'-tasks">Prioridades e alertas</a><a href="#mission-'+id+'-tools">Ferramentas e detalhes</a><a href="/admin?tab=agents" data-mission-open="agents">Equipe digital</a></nav>':'')+
   (['products','production','returns','auditor'].includes(id)?'<section class="mission-evidence-panel" aria-label="Indicadores observados de '+item.name+'"><header><div><span class="mission-eyebrow">SNAPSHOT VERIFICADO</span><h3>Indicadores disponíveis</h3><p>Comparação de contagens observadas. Não representa evolução histórica.</p></div><span class="mission-breadcrumb-pill">Sem projeções</span></header><div class="mission-evidence-list" id="mission-'+id+'-evidence"><p class="mission-empty">Aguardando fonte validada.</p></div><p class="mission-evidence-foot" id="mission-'+id+'-evidence-note">Dados desconhecidos permanecem indisponíveis.</p></section>':'')+
   '<div class="mission-panels"><section class="mission-module"><div class="mission-module-head"><h3>Prioridades e alertas</h3><small>Somente evidências verificáveis</small></div><div id="mission-'+id+'-tasks" class="mission-tasks"><p class="mission-empty">Aguardando indicadores do agente.</p></div>'+coverage+
   '</section>'+

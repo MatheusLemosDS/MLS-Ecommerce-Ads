@@ -11,6 +11,7 @@ import {projectEscrowReleaseRequest,projectEscrowReleaseFrame,projectEscrowRelea
 import {projectReconciliationRequest,projectReconciliationFrame,projectReconciliationEvidenceFrame,projectReconciliationMoneyFrame,reconciliationRequestMatches} from './reconciliation-frame.mjs';
 import {projectIncomeOverviewFrame} from './income-overview-frame.mjs';
 import {projectIncomeDetailFrame} from './income-detail-frame.mjs';
+import {projectIncomeDetailDiagnostic,incomeDetailFailureDiagnostic} from './income-detail-diagnostic.mjs';
 
 const ORIGIN = 'https://auth.brazacommerce.com.br';
 const PREFIX = '/shopee/finance';
@@ -302,8 +303,8 @@ export function createFinanceWorker({adapter, paymentSample, paymentPreview, var
         const routerError=await trustedRouter(request,env);if(routerError)return failure(routerError,routerError==='FORBIDDEN'?403:503);
         if(env?.FINANCE_CONNECTION_ENABLED!=='true'||typeof incomeDetail!=='function'||typeof fetchImpl!=='function'||typeof now!=='function')return failure('CONFIGURATION_PENDING',503);
         const input=await privateFinanceBody(request);if(!input)return failure('INVALID_REQUEST',400);
-        try{const frame=projectIncomeDetailFrame(await incomeDetail(env,{fetchImpl,now}));if(!frame)throw Error();return response(frame,200,{json:true});}
-        catch{return response({error:'FINANCE_INCOME_DETAIL_UNAVAILABLE'},502,{json:true});}
+        try{const frame=projectIncomeDetailFrame(await incomeDetail(env,{fetchImpl,now}));if(!frame)throw new FinanceConnectionError('FINANCE_INCOME_DETAIL_RESULT_INVALID',502);return response(frame,200,{json:true});}
+        catch(error){return response({error:'FINANCE_INCOME_DETAIL_UNAVAILABLE',diagnostic:incomeDetailFailureDiagnostic(error)},error instanceof FinanceConnectionError&&[400,401,403,409,429,502,503,504].includes(error.status)?error.status:502,{json:true});}
       }
       if(url.pathname===ESCROW_RELEASES_PATH){
         if(request.method!=='POST')return failure('METHOD_NOT_ALLOWED',405);

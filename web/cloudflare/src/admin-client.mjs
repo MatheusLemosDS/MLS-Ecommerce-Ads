@@ -897,7 +897,10 @@ function logoutWorkspace(event){
 }
 el('logout').onsubmit=logoutWorkspace;
 function workspaceTabFromLocation(){try{const values=new URLSearchParams(globalThis.location?.search||'').getAll('tab');return values.length===1?values[0]:'overview';}catch{return 'overview';}}
-function openTab(tab,{updateUrl=true}={}){
+let workspaceNavigationEpoch=0,workspaceAnchorCleanup=null;
+function workspaceClearAnchor(){workspaceAnchorCleanup?.();workspaceAnchorCleanup=null;}
+function openTab(tab,{updateUrl=true,hash='',focus=false}={}){
+ const navigationEpoch=++workspaceNavigationEpoch;workspaceClearAnchor();
  const titles={production:['Produção e DTF','Organize os pedidos, encontre as artes pelo SKU e monte seus lotes de impressão.'],overview:['Central de Comando','Acompanhe o resultado de hoje, as prioridades e o estado dos agentes. Os detalhes continuam disponíveis abaixo.'],margins:['Custos de produção','Cadastre o custo por peça. Os produtos identificados recebem o cálculo automaticamente.'],hermes:['Análises do Hermes','Peça uma análise e acompanhe o andamento, os limites e o histórico.'],products:['Produtos e variações','Consulte os produtos e seus custos. Revise somente as identificações pendentes.'],history:['Histórico e auditoria','Confira o que foi alterado e as versões salvas dos seus dados.'],roadmap:['Plano de evolução','Veja o que já está disponível e o que falta para automatizar as vendas.'],agents:['Central de agentes','Sua equipe digital, cada especialista com seu painel e dados validados.'],'agent-finance':['MLS Finance','Conciliação, Pending, repasses e despesas em um painel exclusivo.'],'agent-ads':['MLS Ads','Leitura de anúncios e oportunidades sem alterações comerciais.'],'agent-products':['MLS Products','Produtos, custos conhecidos e métricas das unidades vendidas.'],'agent-production':['MLS Production','Pedidos, montagem DTF e cobertura de custos da produção.'],'agent-returns':['MLS Returns','Devoluções, reembolsos e ajustes para revisão.'],'agent-auditor':['MLS Auditor','Confiabilidade e divergências de evidência da operação.'],'agent-hermes':['MLS Hermes','Supervisão, prioridades e controles operacionais.']};
  if(globalThis.mlsAiSalesWorkspace)titles['ai-sales']=['MLS AI Sales','Prepare campanhas, vídeos e propostas locais. Confira o desempenho antes de ampliar.'];
  if(!Object.hasOwn(titles,tab))tab='overview';
@@ -905,9 +908,42 @@ function openTab(tab,{updateUrl=true}={}){
  if(tab==='products'){if(csrf)loadObservations();if(globalThis.brazaSavedCatalog)globalThis.brazaSavedCatalog.refresh();else syncOnProductsOpen();}
  document.querySelectorAll('.workspace > section').forEach(section=>section.hidden=section.id!==tab);
  document.querySelectorAll('[data-tab]').forEach(link=>{const selected=link.dataset.tab===tab||tab.startsWith('agent-')&&link.dataset.tab==='agents';link.classList.toggle('active',selected);if(selected)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');});
+ workspaceSyncContextNavigation(hash);
  document.querySelectorAll('.workspace-more').forEach(menu=>{menu.dataset.active=String(!!menu.querySelector('[aria-current="page"]'));menu.open=false;});
  el('pageTitle').textContent=titles[tab][0];el('pageSubtitle').textContent=titles[tab][1];document.documentElement.dataset.activePanel=tab;if(tab==='production')globalThis.brazaDtfWorkspace?.open?.();if(tab==='ai-sales')globalThis.mlsAiSalesWorkspace?.open?.();
- if(updateUrl&&globalThis.history?.pushState&&globalThis.location?.href){try{const target=new URL(globalThis.location.href);target.pathname='/admin';target.searchParams.set('tab',tab);target.hash='';if(target.href!==globalThis.location.href)globalThis.history.pushState({tab},'',target.pathname+target.search);}catch{}}
+ if(updateUrl&&globalThis.history?.pushState&&globalThis.location?.href){try{const target=new URL(globalThis.location.href);target.pathname='/admin';target.searchParams.set('tab',tab);target.hash=hash;if(target.href!==globalThis.location.href)globalThis.history.pushState({tab},'',target.pathname+target.search+target.hash);}catch{}}
+ if(focus&&!hash){const heading=el('pageTitle');heading?.setAttribute?.('tabindex','-1');heading?.focus?.({preventScroll:true});globalThis.scrollTo?.({top:0,left:0,behavior:'instant'});globalThis.requestAnimationFrame?.(()=>{if(navigationEpoch===workspaceNavigationEpoch)globalThis.scrollTo?.({top:0,left:0,behavior:'instant'});});}
+}
+function workspaceSyncContextNavigation(hash=''){
+ for(const nav of document.querySelectorAll('.mission-page-tabs')){const links=[...nav.querySelectorAll('a')];const selected=hash?links.find(link=>link.getAttribute('href')===hash):links[0];for(const link of links){if(link===selected)link.setAttribute('aria-current','location');else link.removeAttribute('aria-current');}}
+}
+// Keep a freshly opened hash attached while cached panels mount above it.
+// The first user gesture or another navigation cancels this bounded alignment.
+function workspaceStabilizeAnchor(target){
+ workspaceClearAnchor();
+ if(typeof globalThis.ResizeObserver!=='function'||typeof globalThis.requestAnimationFrame!=='function')return;
+ const root=target.closest?.('.workspace');if(!root)return;
+ const hash='#'+target.id,inputs=['wheel','touchstart','pointerdown','keydown'];let frame=null,timer=null,stopped=false,observer;
+ const stop=()=>{if(stopped)return;stopped=true;observer?.disconnect();if(frame!==null)globalThis.cancelAnimationFrame?.(frame);if(timer!==null)clearTimeout(timer);for(const type of inputs)globalThis.removeEventListener?.(type,stop,true);};
+ const align=()=>{frame=null;if(stopped)return;if(globalThis.location?.hash!==hash||target.isConnected===false){stop();return;}const offset=parseFloat(globalThis.getComputedStyle?.(target)?.scrollMarginTop)||160;if(Math.abs(target.getBoundingClientRect().top-offset)>1)target.scrollIntoView?.({block:'start',behavior:'instant'});};
+ observer=new globalThis.ResizeObserver(()=>{if(!stopped&&frame===null)frame=globalThis.requestAnimationFrame(align);});
+ observer.observe(root);observer.observe(target);timer=setTimeout(stop,5000);for(const type of inputs)globalThis.addEventListener?.(type,stop,{capture:true,passive:true});workspaceAnchorCleanup=stop;
+}
+// Resolve fragment links across workspaces before scrolling. Hidden sections and
+// collapsed details must not make an apparently valid link appear unresponsive.
+function workspaceOpenFragment(hash,{focus=false,updateUrl=false}={}){
+ if(typeof hash!=='string'||!/^#[a-zA-Z][a-zA-Z0-9_-]{0,90}$/.test(hash))return false;
+ const target=document.getElementById?.(hash.slice(1));if(!target)return false;
+ const panel=target.closest?.('.workspace > section');
+ if(panel?.id)openTab(panel.id,{updateUrl,hash,focus:false});
+ else if(updateUrl&&globalThis.history?.pushState&&globalThis.location?.href){try{const next=new URL(globalThis.location.href);next.hash=hash;if(next.href!==globalThis.location.href)globalThis.history.pushState({tab:document.documentElement.dataset.activePanel},'',next.pathname+next.search+next.hash);}catch{}}
+ for(let parent=target;parent;parent=parent.parentElement){if(parent.tagName==='DETAILS'&&!parent.hidden)parent.open=true;}
+ workspaceSyncContextNavigation(hash);
+ // Empty optional data blocks stay hidden; their visible parent explains the
+ // unavailable source instead of leaving the user focused on invisible content.
+ let destination=target;while(destination.parentElement&&typeof destination.checkVisibility==='function'&&!destination.checkVisibility({checkVisibilityCSS:true}))destination=destination.parentElement;
+ if(focus){destination.setAttribute?.('tabindex','-1');destination.focus?.({preventScroll:true});}
+ destination.scrollIntoView?.({block:'start',behavior:'instant'});workspaceStabilizeAnchor(destination);return true;
 }
 
 
@@ -1192,24 +1228,35 @@ const missionSearchRoutes=Object.freeze([
  globalThis.mlsWorkspaceSearch=Object.freeze({open:show,close:()=>hide(),scope:setScope});
 })();
 
-document.querySelectorAll('[data-tab]').forEach(link=>link.onclick=event=>{if(event?.button>0||event?.metaKey||event?.ctrlKey||event?.shiftKey||event?.altKey)return;event?.preventDefault();openTab(link.dataset.tab);});
-const missionPanels=new Set(['overview','agents','agent-finance','agent-ads','agent-products','agent-production','agent-returns','agent-auditor','agent-hermes']);
-if(typeof document.addEventListener==='function')document.addEventListener('click',event=>{
- if(event?.button>0||event?.metaKey||event?.ctrlKey||event?.shiftKey||event?.altKey)return;
- const link=event?.target?.closest?.('[data-mission-open]');
- const tab=link?.dataset?.missionOpen;
- if(!missionPanels.has(tab)||!link||link.target==='_blank')return;
- event.preventDefault();
- openTab(tab);
- globalThis.scrollTo?.(0,0);
-});
-document.querySelectorAll('[data-open]').forEach(button=>button.onclick=()=>openTab(button.dataset.open));
-if(globalThis.addEventListener)globalThis.addEventListener('popstate',()=>openTab(workspaceTabFromLocation(),{updateUrl:false}));
-openTab(workspaceTabFromLocation(),{updateUrl:false});
-if(globalThis.location?.hash&&typeof document.getElementById==='function'){
- const target=globalThis.location.hash.slice(1);
- if(/^[a-zA-Z][a-zA-Z0-9_-]{0,90}$/.test(target))Promise.resolve().then(()=>document.getElementById(target)?.scrollIntoView?.({block:'start'}));
+document.querySelectorAll('[data-tab]').forEach(link=>link.onclick=event=>{if(event?.button>0||event?.metaKey||event?.ctrlKey||event?.shiftKey||event?.altKey)return;event?.preventDefault();openTab(link.dataset.tab,{focus:true});});
+const missionPanels=new Set(['overview','agents','agent-finance','agent-ads','agent-products','agent-production','agent-returns','agent-auditor','agent-hermes','products','production','margins','hermes','history','roadmap','ai-sales']);
+if(typeof document.addEventListener==='function'){
+ document.addEventListener('click',event=>{
+  for(const menu of document.querySelectorAll('.workspace-more'))if(menu.open&&!menu.contains?.(event.target))menu.open=false;
+  if(event?.defaultPrevented||event?.button>0||event?.metaKey||event?.ctrlKey||event?.shiftKey||event?.altKey)return;
+  const link=event?.target?.closest?.('[data-mission-open],a[href]');
+  if(!link||link.target==='_blank'||link.hasAttribute?.('download'))return;
+  const href=link.getAttribute?.('href'),tab=link.dataset?.missionOpen;
+  if(missionPanels.has(tab)){event.preventDefault();openTab(tab,{focus:true});return;}
+  if(typeof href!=='string'||!globalThis.location?.href)return;
+  let target;try{target=new URL(href,globalThis.location.href);}catch{return;}
+  const current=new URL(globalThis.location.href);
+  if(target.origin!==current.origin||target.pathname!=='/admin')return;
+  const tabs=target.searchParams.getAll('tab'),destination=tabs.length===1?tabs[0]:document.documentElement.dataset.activePanel;
+  if(!missionPanels.has(destination)||destination==='ai-sales'&&!globalThis.mlsAiSalesWorkspace)return;
+  if(!target.hash){event.preventDefault();openTab(destination,{focus:true});return;}
+  if(!/^#[a-zA-Z][a-zA-Z0-9_-]{0,90}$/.test(target.hash)||!document.getElementById?.(target.hash.slice(1)))return;
+  event.preventDefault();openTab(destination,{updateUrl:false});workspaceOpenFragment(target.hash,{focus:true,updateUrl:true});
+ });
+ document.addEventListener('keydown',event=>{if(event.key!=='Escape')return;for(const menu of document.querySelectorAll('.workspace-more'))if(menu.open){menu.open=false;menu.querySelector?.('summary')?.focus?.();event.preventDefault();}});
 }
+document.querySelectorAll('[data-open]').forEach(button=>button.onclick=()=>openTab(button.dataset.open,{focus:true}));
+if(globalThis.addEventListener){
+ globalThis.addEventListener('popstate',()=>{openTab(workspaceTabFromLocation(),{updateUrl:false});workspaceOpenFragment(globalThis.location?.hash);});
+ globalThis.addEventListener('hashchange',()=>workspaceOpenFragment(globalThis.location?.hash));
+}
+openTab(workspaceTabFromLocation(),{updateUrl:false});
+if(globalThis.location?.hash)Promise.resolve().then(()=>workspaceOpenFragment(globalThis.location.hash));
 
 
 document.addEventListener('visibilitychange',()=>{if(document.hidden){clearTimeout(pollTimer);clearTimeout(shopOrdersRefreshTimer);shopOrdersRefreshTimer=null;clearTimeout(storeAdsRefreshTimer);storeAdsRefreshTimer=null;}else if(csrf){pollLive();loadShopOrders();refreshStoreAds({automatic:true});scheduleStoreAdsRefresh();}});

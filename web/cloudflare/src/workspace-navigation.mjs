@@ -31,7 +31,7 @@ function workspaceNavLink(key,current,{mobile=false}={}){
 
 export function workspaceSecondaryNavigation(active,{role='owner'}={}){
  const current=workspaceActiveKey(active),keys=role==='owner'?workspaceOwnerSecondary:workspaceReviewSecondary;
- return `<details class="workspace-more" data-active="${keys.includes(current)?'true':'false'}"><summary><span>Mais opções</span><span aria-hidden="true">⌄</span></summary><nav aria-label="Mais opções do painel">${keys.map(key=>workspaceNavLink(key,current)).join('')}${role==='owner'?'<a class="workspace-nav-link" href="/admin/diagnostics"><span class="workspace-nav-label">Diagnosticar carregamento</span></a>':''}<a class="workspace-nav-link workspace-signout" href="/logout"><span class="workspace-nav-label">Sair da conta</span></a></nav></details>`;
+ return `<details class="workspace-more" data-active="${keys.includes(current)?'true':'false'}"><summary><span>Mais opções</span><span aria-hidden="true">⌄</span></summary><nav aria-label="Mais opções do painel">${keys.map(key=>(role==='owner'&&key==='margins'?'<span class="workspace-menu-label">Operação da loja</span>':role==='owner'&&key==='hermes'?'<span class="workspace-menu-label">Gestão e configurações</span>':'')+workspaceNavLink(key,current)).join('')}${role==='owner'?'<a class="workspace-nav-link" href="/admin/diagnostics"><span class="workspace-nav-label">Diagnosticar carregamento</span></a>':''}<a class="workspace-nav-link workspace-signout" href="/logout"><span class="workspace-nav-label">Sair da conta</span></a></nav></details>`;
 }
 
 export function workspaceNavigation(active,{role='owner',mobile=false}={}){
@@ -48,7 +48,7 @@ export const WORKSPACE_NAVIGATION_CSS=String.raw`
 .workspace-more{position:relative;min-width:0;margin-top:18px;border-top:1px solid var(--line);padding-top:10px}.workspace-more>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;padding:10px 12px;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;list-style:none;border-radius:9px;touch-action:manipulation}.workspace-more>summary::-webkit-details-marker{display:none}.workspace-more>summary:hover{color:var(--text);background:var(--surface-raised)}
 .workspace-more nav{display:flex;flex-direction:column;gap:3px;padding:5px 0}.workspace-more .workspace-nav-copy small{display:none}.workspace-more .workspace-nav-link{min-height:42px;font-size:11px}.workspace-signout{margin-top:7px;border-top:1px solid var(--line)!important;border-radius:0!important}
 .workspace-more[data-active=true]>summary{color:var(--text);background:var(--surface-raised)}
-.workspace-nav-mobile{display:none}.workspace-nav :focus-visible,.workspace-more :focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.workspace-menu-label{display:block;padding:10px 12px 3px;color:var(--muted);font-size:9px;letter-spacing:.08em;text-transform:uppercase}.workspace-nav-link{touch-action:manipulation;transition:background-color .16s ease,border-color .16s ease,color .16s ease}.workspace-nav-mobile{display:none}.workspace-nav :focus-visible,.workspace-more :focus-visible{outline:3px solid var(--accent);outline-offset:3px}
 @media(min-width:851px){.workspace-header-menu{display:none}}
 @media(max-width:850px){
  .workspace-nav-mobile{box-sizing:border-box;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:3px;position:fixed;bottom:0;left:0;right:0;width:100%;z-index:60;padding:7px 8px calc(7px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:var(--surface)}
@@ -59,5 +59,6 @@ export const WORKSPACE_NAVIGATION_CSS=String.raw`
  .workspace-header-menu .workspace-more nav{box-sizing:border-box;position:absolute;top:calc(100% + 8px);right:0;z-index:80;display:flex;flex-direction:column;gap:3px;width:min(290px,calc(100vw - 24px));max-height:60vh;max-height:60dvh;padding:8px;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);overflow-y:auto;overscroll-behavior:contain}
  .workspace-header-menu .workspace-more .workspace-nav-link{min-height:44px;flex-direction:row;text-align:left;justify-content:flex-start;font-size:12px}.workspace-header-menu .workspace-more .workspace-nav-label{font-size:12px}.workspace-header-menu .workspace-more .workspace-nav-copy small{display:block;font-size:10px}.workspace-header-menu .workspace-more .workspace-signout{padding-left:12px}
 }
+@media(prefers-reduced-motion:reduce){.workspace-nav-link{transition:none}}
 @media(max-width:360px){.workspace-nav-mobile .workspace-nav-label{font-size:9px}.workspace-nav-mobile{padding-left:4px;padding-right:4px}.workspace-header-menu .workspace-more>summary{padding:8px;font-size:10px}}
 `;

@@ -5,6 +5,14 @@ import path from 'node:path';
 export const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const TARGETS = Object.freeze({
   app: Object.freeze({name: 'brazacommerce-app', main: '../../dist/app-worker.mjs', baselineHashes: [
+    '629b1f2ce21c4d391cb04ddf5df5affd4f3093e3e7f9d7131d82d79f8fc5fc75',
+    '07eabb013efa88002285a4de1177a9e8ca3e51bd6c60dbe24414c3b150cc2617',
+    '2b2ef6d0cd48a51abcf0fcdb0106a5bb7f18fc0017fce8196db82238a8f8e1b9',
+    '37f43b13f7f6e130e6ddb10e4065abb1744e3edb8aacf3124c2fd05ea1a99ed2',
+    '6737c5654248ded292c168a9e3f9ad77c9be1543a3af41b9f480591683495e24',
+    'a6bbda610f89fd6b7ed9c07900f515229a588f8df3786c93b31bfe0fb9a79cb2',
+    'c1f16970681d587771e6912b6462d0978d0c0d485825211bac3fb6b0d480e081',
+    '98c5c1e436d1fb35377dbaedb33888169b5cfe8c15855634d6386d044748396e',
     // Reviewed closed-month coverage gaps in completed scans with shorter cutoffs.
     'da9c248a849ba7c0af70dbd81ee79aa6ce4c23cac2c82c55aed785cdfbc8a850',
     // Reviewed bounded three-month calendar continuation with persisted target rotation.
@@ -169,6 +177,7 @@ export const TARGETS = Object.freeze({
     '6535b56d5a4548468a4af454c31e72642dd4353f56d8cb918ce902fff0f45bb9',
   ]}),
   auth: Object.freeze({name: 'brazacommerce-auth', main: '../../dist/auth-worker.mjs', baselineHashes: [
+    'cf326e9a4917c75474b4222c87cbf5744f98ddfe459eb1fd249a05fb6f097bcb',
     '45d0142709c5087e373cc4da146070ed39c472805f6f64c00f00b6555f0e1f56',
     'c55d2339b6e227b606e8a55b6cefcc904d95466f238b70f1d2aea74599dbdb7a',
     '28a43b7d610eda4b272a2a7013c7213f966976850f78be3cb0f767adeab3146d',

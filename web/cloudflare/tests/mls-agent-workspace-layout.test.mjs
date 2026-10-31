@@ -13,12 +13,13 @@ test('approved specialist components preserve four metric bindings and real navi
  const panels=workspaces();assert.equal(panels.size,7);
  for(const id of ['finance','ads','products','production','returns']){
   const html=panels.get(id);assert.ok(html.includes('mls-agent-workspace'));
-  assert.equal((html.match(/class="mls-agent-mini-nav"/g)||[]).length,1,id);
+  assert.doesNotMatch(html,/mls-agent-mini-nav|mls-workspace-quicklinks/,id+': duplicate contextual navigation');
+  const toolbar=html.match(/<nav class="mission-page-tabs mls-module-tabs"[^>]*>([\s\S]*?)<\/nav>/)?.[1];assert.ok(toolbar,id+': one contextual toolbar');
+  const destinations=[...toolbar.matchAll(/href="([^"]+)"/g)].map(row=>row[1]);assert.equal(new Set(destinations).size,destinations.length,id+': toolbar repeats a destination');
   for(const part of ['label','metric','hint'])for(let index=0;index<4;index++)
    assert.equal((html.match(new RegExp('id="mission-'+id+'-'+part+'-'+index+'"','g'))||[]).length,1,id+'/'+part+'/'+index);
   assert.ok(html.indexOf('id="mission-'+id+'-metrics"')<html.indexOf('class="mission-page-tabs mls-module-tabs"'),id+': KPIs precede tabs');
-  assert.match(html,/href="\/admin\?tab=overview" data-tab="overview"/);
-  assert.match(html,/href="\/integrations"/);
+  assert.match(html,/href="\/admin\?tab=agents" data-mission-open="agents"/);
   assert.match(html,/Período da fonte/);assert.doesNotMatch(html,/class="mls-workspace-period"[^<]*>Hoje/);
   assert.match(html,/class="mission-orb mission-agent-avatar mls-agent-avatar"[^>]*><svg/);
  }
@@ -42,12 +43,13 @@ test('chart pairs preserve source warnings and full Finance drill-down instead o
 
 test('specialist primary actions use existing tools and commercial campaign creation remains explicitly blocked',()=>{
  const panels=workspaces();
- assert.match(panels.get('ads'),/<button[^>]+disabled aria-describedby="mission-ads-action-note">Criar campanha/);
- assert.match(panels.get('ads'),/id="mission-ads-action-note">Bloqueado no modo Observador/);
+ assert.match(panels.get('ads'),/<a class="mls-workspace-primary" href="\/campaigns" aria-describedby="mission-ads-action-note">Ver campanhas/);
+ assert.doesNotMatch(panels.get('ads'),/>Criar campanha/);
+ assert.match(panels.get('ads'),/id="mission-ads-action-note">Somente leitura · alterações comerciais bloqueadas/);
  for(const id of ['finance','products','production','returns'])assert.match(panels.get(id),/<a class="mls-workspace-primary" href="(?:#businessMonth|\/admin\?tab=)/);
  assert.doesNotMatch(MLS_AGENT_WORKSPACE_CSS,/!important|url\(/i);
- assert.match(MLS_AGENT_WORKSPACE_CSS,/sidebar-navigation>\.workspace-nav\{display:none\}/);
- assert.match(MLS_AGENT_WORKSPACE_CSS,/sidebar-navigation>\.workspace-more/);
+ assert.doesNotMatch(MLS_AGENT_WORKSPACE_CSS,/sidebar-navigation>\.workspace-nav\{display:none\}|mls-agent-mini-nav/);
+ assert.match(MLS_AGENT_WORKSPACE_CSS,/position:sticky;top:84px/);
  assert.match(MLS_AGENT_WORKSPACE_CSS,/@media\(max-width:850px\)/);
  assert.doesNotMatch(MLS_AGENT_WORKSPACE_CSS,/workspace-nav-mobile[^}]*display:none/);
 });
