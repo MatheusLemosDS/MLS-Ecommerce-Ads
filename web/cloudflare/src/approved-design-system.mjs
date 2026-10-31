@@ -142,6 +142,13 @@ html[data-theme=dark] .mission-search-field{border-color:#4990df;background:#112
 .mission-dashboard .command-metric[data-mission-metric=margin]{--mls-kpi:#35dda7;--mls-kpi-rgb:53,221,167}
 .mission-dashboard .command-metric[data-mission-metric=paid]{--mls-kpi:#579fff;--mls-kpi-rgb:87,159,255}
 .mission-dashboard .command-metric[data-mission-metric=alerts]{--mls-kpi:#f2bb65;--mls-kpi-rgb:242,187,101}
+.mission-dashboard .command-metric[data-mission-metric=roas]{--mls-kpi:#b780ff;--mls-kpi-rgb:183,128,255}
+.mission-dashboard .command-metric .mission-roas-scope,.mission-dashboard .command-metric .mission-kpi-inline-period{display:block;min-height:12px;font-size:8px;line-height:1.4;color:var(--muted);font-weight:500}
+.mission-dashboard .command-metric .mission-kpi-delta[data-metric=roas]{font-size:8px}
+.mission-dashboard .command-metric .mission-kpi-delta[data-metric=roas][data-direction=UP]{color:#c2a2ff}
+.mission-dashboard .command-metric .mission-kpi-delta[data-metric=roas][data-direction=DOWN]{color:#f9b37d}
+:root[data-theme=light] .mission-dashboard .command-metric .mission-kpi-delta[data-metric=roas][data-direction=UP]{color:#6740a2}
+:root[data-theme=light] .mission-dashboard .command-metric .mission-kpi-delta[data-metric=roas][data-direction=DOWN]{color:#88500c}
 .mission-dashboard .command-metric:before{display:none}
 .mission-dashboard .command-metric small{max-width:100%;min-height:16px;font-size:10px;line-height:1.3}
 .mission-dashboard .command-metric strong{position:relative;z-index:1;letter-spacing:-.65px;font-size:clamp(20px,1.8vw,26px);line-height:1.1;margin:0 0 3px;overflow-wrap:anywhere}

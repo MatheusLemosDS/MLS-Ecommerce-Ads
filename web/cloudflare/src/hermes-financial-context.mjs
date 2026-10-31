@@ -2,6 +2,7 @@ import {readBusinessMonthDisplay,projectBusinessMonth} from './business-month.mj
 import {buildMonthlyFinancialSummary} from './business-month-summary.mjs';
 import {buildAccountDiagnosis} from './account-diagnosis.mjs';
 import {buildBusinessCheckpoint} from './business-checkpoint.mjs';
+import {readMlsAgentLearning} from './mls-agent-learning.mjs';
 
 export const HERMES_FINANCIAL_CONTEXT_SCHEMA=[
  `CREATE TABLE IF NOT EXISTS hermes_financial_contexts(job_id TEXT PRIMARY KEY NOT NULL,analysis_date TEXT NOT NULL,captured_at INTEGER NOT NULL,fingerprint TEXT NOT NULL,payload TEXT NOT NULL CHECK(length(CAST(payload AS BLOB))<=12288))`,
@@ -92,6 +93,41 @@ export function buildHermesFinancialContext(frame,options={}){
  }catch{return projectHermesFinancialContext(base);}
 }
 
+// Carry only fixed, descriptive memory into already-determined tasks. The
+// legacy bridge's v1 keys, codes, priorities, metric refs and amounts stay exact.
+// Free-form saved lesson text is never copied into the model's instructions.
+export function applyHermesLearningEvidence(context,report){
+ const plain=v=>v!==null&&typeof v==='object'&&[Object.prototype,null].includes(Object.getPrototypeOf(v));
+ const exact=(v,keys)=>plain(v)&&Reflect.ownKeys(v).length===keys.length&&keys.every(k=>Object.hasOwn(Object.getOwnPropertyDescriptor(v,k)||{},'value'));
+ const array=(v,max)=>Array.isArray(v)&&Object.getPrototypeOf(v)===Array.prototype&&v.length<=max&&Reflect.ownKeys(v).length===v.length+1&&Array.from({length:v.length},(_,i)=>Object.hasOwn(Object.getOwnPropertyDescriptor(v,String(i))||{},'value')).every(Boolean);
+ const integer=(v,min=0,max=Number.MAX_SAFE_INTEGER)=>Number.isSafeInteger(v)&&!Object.is(v,-0)&&v>=min&&v<=max;
+ const date=v=>typeof v==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(v)&&Number.isFinite(Date.parse(v+'T00:00:00Z'))&&new Date(v+'T00:00:00Z').toISOString().slice(0,10)===v;
+ try{
+  if(!exact(context,['schema','analysis_date','captured_at','available','unavailable_code','monthly'])||context.schema!=='hermes_financial_context_v1'||context.available!==true||!integer(context.captured_at,1,9999999999)||!plain(context.monthly))return context;
+  const month=context.monthly;
+  if(!exact(report,['schema','month','checked_at','status','evidence','latest','lessons','autonomy','basis'])||report.schema!=='mls_agent_learning_report_v1'||report.month!==month.month||report.basis!=='DESCRIPTIVE_TRUSTED_OBSERVATIONS_NOT_CAUSAL_MODEL_TRAINING'||!['OBSERVING','EVIDENCE_AVAILABLE','STALE'].includes(report.status)||!integer(report.checked_at,1,context.captured_at)||!array(report.lessons,10))return context;
+  const evidence=report.evidence,latest=report.latest;
+  if(!exact(evidence,['cutoffs_observed','closed_months_observed','latest_observed_at','latest_end_date','revisions_observed','independent_financial_comparisons'])||!integer(evidence.cutoffs_observed,1,31)||!integer(evidence.closed_months_observed,0,400)||!integer(evidence.latest_observed_at,1,context.captured_at)||!date(evidence.latest_end_date)||evidence.latest_end_date>month.end_date||evidence.latest_end_date.slice(0,7)!==month.month||!integer(evidence.revisions_observed,0,400000000)||evidence.independent_financial_comparisons!==0)return context;
+  if(!plain(latest)||!Object.keys(latest).every(k=>Object.hasOwn(Object.getOwnPropertyDescriptor(latest,k)||{},'value'))||latest.schema!=='mls_agent_learning_observation_v1'||latest.month!==month.month||latest.start_date!==month.start_date||latest.end_date!==evidence.latest_end_date||!integer(latest.checked_at,1,context.captured_at)||!array(latest.pending,16)||!array(month.pending,16)||!array(month.top_actions,3))return context;
+  const conditions={COMPLETE_PRODUCTION_COSTS:['PRODUCTION_REFERENCE_INCOMPLETE','PRODUCTION_COST_INCOMPLETE'],RECONCILE_RETURNS:['RETURNS_REQUIRE_RECONCILIATION','RETURNS_NOT_RECONCILED'],COMPLETE_PAYMENT_COVERAGE:['PAYMENT_COVERAGE_REQUIRED','PAYMENT_INCOMPLETE'],RECONCILE_ORDER_STATUS:['ORDER_STATUS_REQUIRES_REVIEW','STATUS_REVIEW_REQUIRED'],REVIEW_ARITHMETIC:['ARITHMETIC_REVIEW_REQUIRED','ARITHMETIC_UNSAFE'],REFRESH_FINANCIAL_SOURCE:['SOURCE_REFRESH_REQUIRED','FINANCIAL_SOURCE_STALE'],RESTORE_FINANCIAL_SOURCE:['SOURCE_REFRESH_REQUIRED','SOURCE_UNAVAILABLE'],REFRESH_CALENDAR_ADS:['SOURCE_REFRESH_REQUIRED','ADS_UNAVAILABLE']};
+  const lessons=new Map();
+  for(const lesson of report.lessons){
+   if(!exact(lesson,['code','agent','title','detail','confidence','evidence_count','first_observed_at','last_observed_at'])||lessons.has(lesson.code)||!integer(lesson.evidence_count,1,evidence.cutoffs_observed)||lesson.confidence!==(lesson.evidence_count>1?'REPEATED':'OBSERVED')||!integer(lesson.first_observed_at,1,context.captured_at)||!integer(lesson.last_observed_at,lesson.first_observed_at,context.captured_at))return context;
+   lessons.set(lesson.code,lesson);
+  }
+  let changed=false;
+  const top_actions=month.top_actions.map(action=>{
+   const match=conditions[action.code],lesson=match&&lessons.get(match[0]);
+   if(!lesson||!month.pending.includes(match[1])||!latest.pending.includes(match[1])||typeof action.detail!=='string'||action.detail.includes('Memória observada:'))return action;
+   const sourceNote=match[0]==='SOURCE_REFRESH_REQUIRED'?'a necessidade de conferir fontes':'esta condição';
+   const suffix=' Memória observada: '+sourceNote+' consta em '+lesson.evidence_count+' recorte(s) salvo(s), até '+evidence.latest_end_date+'. Recortes cumulativos não são resultados independentes.'+(evidence.revisions_observed?' O mês tem '+evidence.revisions_observed+' correção(ões) de referência registrada(s).':'')+(report.status==='STALE'?' Referência histórica; confira a fonte atual.':'');
+   if(action.detail.length+suffix.length>700)return action;
+   changed=true;return {...action,detail:action.detail+suffix};
+  });
+  return changed?{...context,monthly:{...month,top_actions}}:context;
+ }catch{return context;}
+}
+
 async function setup(env){const db=env?.ADMIN_DB;if(!db||typeof db.prepare!=='function'||typeof db.batch!=='function')fail('HERMES_CONTEXT_CONFIGURATION');if(!ready.has(db))ready.set(db,db.batch(HERMES_FINANCIAL_CONTEXT_SCHEMA.map(sql=>db.prepare(sql))).catch(()=>{ready.delete(db);fail('HERMES_CONTEXT_STORAGE_UNAVAILABLE');}));await ready.get(db);return db;}
 function epoch(now){let value;try{value=now();}catch{fail('HERMES_CONTEXT_CLOCK_INVALID');}if(!Number.isSafeInteger(value)||value<1||Math.floor(value/1000)>9999999999)fail('HERMES_CONTEXT_CLOCK_INVALID');return Math.floor(value/1000);}
 async function fingerprint(jobId,payload){const raw='{"job_id":'+JSON.stringify(jobId)+',"context":'+payload+'}',hash=await crypto.subtle.digest('SHA-256',encoder.encode(raw));return [...new Uint8Array(hash)].map(byte=>byte.toString(16).padStart(2,'0')).join('');}
@@ -103,7 +139,9 @@ export async function prepareHermesFinancialContext(env,jobId,analysisDate,{now=
  // A background replacement may be partial while the last complete cohort is
  // still displayed; the shared read also reapplies current local costs.
  const db=await setup(env);epoch(now);let frame=null;try{frame=(await readBusinessMonthDisplay(env,{month:analysisDate.slice(0,7)},{now})).display;}catch{}
- const context=buildHermesFinancialContext(frame,{analysisDate,capturedAt:epoch(now)});if(!context)fail('HERMES_CONTEXT_INVALID');
+ let learning=null;if(frame!==null)try{learning=await readMlsAgentLearning(env,{month:analysisDate.slice(0,7)},{now});}catch{}
+ const base=buildHermesFinancialContext(frame,{analysisDate,capturedAt:epoch(now)});if(!base)fail('HERMES_CONTEXT_INVALID');
+ const context=projectHermesFinancialContext(applyHermesLearningEvidence(base,learning))||base;
  const payload=JSON.stringify(context);if(encoder.encode(payload).byteLength>12288)fail('HERMES_CONTEXT_INVALID');const hash=await fingerprint(jobId,payload);
  const statement=db.prepare('INSERT INTO hermes_financial_contexts(job_id,analysis_date,captured_at,fingerprint,payload) SELECT ?,?,?,?,? WHERE EXISTS(SELECT 1 FROM hermes_jobs WHERE id=? AND task=?) ON CONFLICT(job_id) DO NOTHING').bind(jobId,analysisDate,context.captured_at,hash,payload,jobId,taskRaw);
  return {context,fingerprint:hash,statement};

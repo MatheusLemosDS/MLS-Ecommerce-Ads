@@ -391,5 +391,21 @@
     "commercial_writes": "LOCKED",
     "finance_m2": "OPEN",
     "bank_settlement": "UNVERIFIED"
+  },
+  "agent_memory_performance_2026_10_31": {
+    "status": "VALIDATING",
+    "branch": "feature/agent-learning-performance-20261031",
+    "base_main": "8bb9718e4bc104a63a47572dceab7d32ec5e87e7",
+    "record": "docs/MLS_AGENT_MEMORY_PERFORMANCE_2026_10_31.md",
+    "features": [
+      "aggregate_evidence_memory_with_corrections_and_recurrences",
+      "advisory_known_action_policy_no_new_grants",
+      "actual_ads_calendar_roas_daily_curve",
+      "complete_day_comparison_arrows_and_approved_visual_style"
+    ],
+    "commercial_write_allowed": false,
+    "model_training": false,
+    "recommendation_effectiveness_proven": false,
+    "next_learning_stage": "Link authorized recommendations, executions and later comparable outcomes before claiming effectiveness"
   }
 }

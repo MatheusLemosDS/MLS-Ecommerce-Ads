@@ -59,7 +59,8 @@ test('Mission Control style has scoped futuristic accents, responsive breakpoint
 function mount(snapshot){
  const html=missionWorkspacesBody();
  const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);
- const nodes=new Map(ids.map(id=>[id,{id,children:[],dataset:{},style:{},hidden:false,textContent:'',
+ const nodes=new Map(ids.map(id=>[id,{id,children:[],dataset:{},style:{},hidden:false,textContent:'',listeners:new Map(),
+  addEventListener(type,handler){this.listeners.set(type,handler);},
   replaceChildren(...children){this.children=[...children];},append(...children){this.children.push(...children);}}]));
  const statuses=new Map(names.map(name=>[name,[{textContent:'',dataset:{}}]]));
  const document={getElementById:id=>nodes.get(id)||null,querySelectorAll:selector=>{

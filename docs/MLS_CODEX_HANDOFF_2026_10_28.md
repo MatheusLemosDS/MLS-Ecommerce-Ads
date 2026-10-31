@@ -1,3 +1,5 @@
+> Incremento em validação 31/10/2026: `feature/agent-learning-performance-20261031`, base mainPR88 `8bb9718`. Memória agregada/correções/recorrências, política consultiva de ações e ROAS real; aguardar provas CI/Live no [registro](MLS_AGENT_MEMORY_PERFORMANCE_2026_10_31.md). M2 e escritas comerciais mantêm seus critérios.
+
 # Handoff atual — melhorias na versão Live, 30/10/2026
 
 **Release M2 PR88 publicada — 31/10/2026:** auditorias de devolução

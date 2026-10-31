@@ -1,3 +1,12 @@
+INCREMENTO EM VALIDAÇÃO — MEMÓRIA E ROAS — 31/10/2026
+Branch feature/agent-learning-performance-20261031, base mainPR88 8bb9718.
+Memória factual agregada em D1, captura após coleta completa, correções no mesmo
+corte, relatório GET owner sem writes/provider; ações novas/arriscadas exigem
+confirmação. Não é treinamento de pesos nem eficácia comprovada. ROAS por dias
+reais do Ads, datas comparadas nas setas e estilo aprovado preservado.
+Conferir docs/MLS_AGENT_MEMORY_PERFORMANCE_2026_10_31.md para validação/Live.
+M2 ainda exige tracker de liberações posteriores e conciliação SellerCentre/banco.
+
 HANDOFF ATUAL — LIVE PR88 — 31/10/2026
 
 Branch feature/m2-returns-reconciliation-20261031; base mainPR87 51b2dfe.

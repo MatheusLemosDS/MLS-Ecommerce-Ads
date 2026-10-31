@@ -1,5 +1,7 @@
 # Roadmap canônico — MLS Commerce OS
 
+**Pedido do proprietário — 31/10/2026:** agentes devem melhorar com informações da operação, executar rotinas conhecidas dentro dos limites existentes e apresentar relatórios, solicitando confirmação para ações novas ou arriscadas. Incremento em validação: memória factual com correções/recorrências, ROAS diário de Ads e indicadores visuais no estilo aprovado. Não habilita execução comercial ou treino automático do modelo. [Registro](MLS_AGENT_MEMORY_PERFORMANCE_2026_10_31.md).
+
 **Release M2 PR88 publicada — 31/10/2026:** auditorias de devolução
 destravadas, comparação da mesma publicação e situações identificadas no MLS
 Returns. A virada diária agora encerra e retoma a coleta sem erro artificial.
