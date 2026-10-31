@@ -30,14 +30,14 @@ A entrega final também cobre a continuidade na virada do mês. Essa proteção 
 
 ## Versão e validação
 
-App **64174a2e-0657-40b5-94ab-382845dbd415**, 100% ativo, publicado em **31/10/2026 às 15:24:40 de Brasília**, código `e5ac2590f9ede5b9dfa1ee7117ab46b0cb63da5d`. CI [41228774825](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/41228774825): **2.759 testes Node e 67 Python aprovados**, zero falhas e testes ignorados. Os checks do HEAD documental ficam na própria PR.
+App **7bd0dfa7-fd2b-442a-b1f5-9abf856f0fcd**, 100% ativo, publicado em **31/10/2026 às 15:38:43 de Brasília**, código `9826b28df628805e10fa5c8c026970663a9a0418`. CI [41229871797](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/41229871797): **2.772 testes Node e 67 Python aprovados**, zero falhas e testes ignorados. Os checks do HEAD documental ficam na própria PR.
 
-Os testes direcionados finais aprovaram **93 cenários source** e **56 cenários compilados normais/minificados**. O fluxo App → Auth → Finance usou os Workers gerados e transporte sintético, exercitando retomada parcial após a virada do mês, rodízio entre os três alvos anteriores, cache de mês completo, backoff de permissão, alternância após falhas e bloqueios por política, publicação, leases e relógio. No primeiro HISTORY da versão final, o orçamento observado foi **36 chamadas D1 e 1 leitura(s) privada(s)**; durante backoff, **28 chamadas D1 e 1 leitura(s) privada(s)**. Esses valores devem corresponder à medição da versão final, mantendo no máximo uma chamada privada por oportunidade.
+Os testes direcionados finais aprovaram **104 cenários source** e **58 cenários compilados normais/minificados**. O fluxo App → Auth → Finance usou os Workers gerados e transporte sintético, exercitando retomada parcial após a virada do mês, rodízio entre os três alvos anteriores, cache de mês completo, backoff de permissão, alternância após falhas e bloqueios por política, publicação, leases e relógio. No primeiro HISTORY da versão final, o orçamento observado foi **36 chamadas D1 e 1 leitura(s) privada(s)**; durante backoff, **28 chamadas D1 e 1 leitura(s) privada(s)**. Esses valores devem corresponder à medição da versão final, mantendo no máximo uma chamada privada por oportunidade.
 
 | Artefato | SHA-256 |
 | --- | --- |
-| App final gerado | `7d9bd1772790232965cfc93d479dd8131d7eecc052a20c98684e65f8b78c1c3f` |
-| App final publicado pelo Wrangler | `c9a216d00ec6ac6d8c18f33d55a7965115cf92af9b34d9d08b658ce900e25e29` |
+| App final gerado | `da9c248a849ba7c0af70dbd81ee79aa6ce4c23cac2c82c55aed785cdfbc8a850` |
+| App final publicado pelo Wrangler | `66544525b8c7a938f4ea928ab753e5e2f4fd78ca5b737662ded88682866ba5ba` |
 | App inicial PR91 gerado | `21446508dd6ac2927359fd5574db61ef3ea574b365b75dae0b55950272eeb964` |
 | App inicial PR91 publicado | `7a6032edc97d6f3614be1d2ef299595c2648fb9ba665f56ddcb3a4b0c85c4784` |
 | App base PR90 gerado | `0dd75e25c8119c7f8d952a68b372b61387357de4092a525db8ee38a690ff8739` |
@@ -45,13 +45,13 @@ Os testes direcionados finais aprovaram **93 cenários source** e **56 cenários
 | Auth gerado, preservado | `1fef431c8573e05563c7938d95be0976a160bc603340084aa747ee0b73e7ec64` |
 | Finance gerado, preservado | `bfc27e1022e0c5b3d335498389fd64b6978b8f7f04501d3bc6eff38202bf5feb` |
 
-A conferência pós-publicação às **15:26:37 de Brasília** verificou bytes, configuração, bindings, domínio, cron, flags owner ENABLED, tabelas aditivas, campos originais preservados e valores válidos dos cursores. Auth permaneceu na versão `863fab51-ab8b-43c0-9794-4ce4039f6663`; Finance na versão `a01e40a0-d760-4958-834e-f090c62b1ca8`.
+A conferência pós-publicação às **15:39:42 de Brasília** verificou bytes, configuração, bindings, domínio, cron, flags owner ENABLED, tabelas aditivas, campos originais preservados e valores válidos dos cursores. Auth permaneceu na versão `863fab51-ab8b-43c0-9794-4ce4039f6663`; Finance na versão `a01e40a0-d760-4958-834e-f090c62b1ca8`.
 
 A entrega não altera a UI. A bateria completa mantém os testes existentes de Chrome e do estilo aprovado; testes sintéticos não substituem sessão real ou aceite visual do proprietário. O acesso público pelo executor continua limitado pelo WAF Cloudflare 1010; nenhum bypass foi usado.
 
-## Observação operacional após a publicação
+## Execução natural observada
 
-Às **15:26:37 de Brasília**, a leitura posterior à publicação confirmou **a inicialização das tabelas e o progresso da fila após o deploy; ainda não havia tentativa histórica registrada nesse corte**. O estado observado foi **aguardando a oportunidade de auditoria histórica, sem calendário declarado completo**. O Finance atual estava RUNNING, com failure_count=0 e last_error=null; as fontes de setembro continuavam recuperadas. Observações posteriores a este corte são registradas na descrição da PR91 e nas provas privadas, sem alterar os timestamps deste registro.
+Às **15:38:17 de Brasília**, a leitura posterior à publicação confirmou **a primeira etapa histórica de setembro, executada às 15:37:56 de Brasília na versão intermediária 64174a2e, com publicação revisão15, duas referências disponíveis e metadados exatos**. O estado observado foi **RUNNING, uma página, um registro de liberação e um de cinco intervalos concluído**. A tentativa foi SUCCESS, sem diagnóstico de erro. O Finance atual permaneceu RUNNING com failure_count=0 e last_error=null. A publicação de criação dos pedidos foi preservada. Esta prova pertence à versão intermediária; a versão final acrescenta a seleção de COMPLETE com corte curto, testada com os três Workers e conferida separadamente por bytes/configuração. A leitura não comprova depósito bancário nem associação daquele registro aos 24 pedidos do mês.
 
 O verificador fez somente leituras. Nenhum job, cursor, lease ou coletor foi forçado para produzir essa prova. Uma tentativa registrada comprova a execução da rotina; um scan RUNNING comprova progresso, sem declarar o calendário COMPLETE. A conclusão do calendário exige publicação válida cobrindo o mês fechado inteiro. Nenhum desses estados confirma depósito bancário ou lucro realizado.
 
@@ -65,4 +65,6 @@ Próximo M2: acompanhar a conclusão do calendário, atualizar o cruzamento com 
 
 A memória dos agentes continua descritiva. Vincular recomendações a execuções autorizadas e resultados posteriores para avaliar eficácia vem depois da conciliação. Escritas comerciais, Ads/PROMO, mudanças OAuth e novas análises pagas mantêm seus controles existentes.
 
-O pior cenário compilado, com três caches históricos inválidos antes do fallback para o mês atual, consumiu 46 chamadas D1 e uma leitura privada (47/50). A recuperação de referências por pedido continua sendo um fluxo separado, limitado ao mês imediatamente anterior; a ampliação dos calendários não inventa fontes indisponíveis de meses mais antigos.
+Uma coleta Finance marcada COMPLETE pode terminar antes do fechamento do mês. O seletor também reconhece esse intervalo descoberto pela data do corte, mesmo sem CALENDAR_PARTIAL, sem modificar o status Finance nem inventar pendências. COMPLETE até o encerramento real do mês não gera nova consulta. A simulação App/Auth/Finance verificou o recorte curto seguido de coleta completa e preservação da publicação anterior.
+
+O pior cenário observado consumiu46chamadasD1 e uma leitura privada (47/50). A recuperação de referências por pedido segue um fluxo separado, limitado ao mês imediatamente anterior; ampliar calendários não reconstrói fontes indisponíveis mais antigas nem confirma banco.

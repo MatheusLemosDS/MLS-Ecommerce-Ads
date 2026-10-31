@@ -1,23 +1,22 @@
-LIVE PR91 — M2 CALENDÁRIOS HISTÓRICOS E VIRADA — 31/10/2026
+LIVE PR91 — M2 CALENDÁRIOS HISTÓRICOS E CORTE COMPLETO — 31/10/2026
 Branch feature/m2-historical-release-calendars-20261031, base mainPR90 8cdad2a.
-Código e5ac259, CI41228774825 GREEN2759Node/67Python/Chromium.
-App64174a2e-0657-40b5-94ab-382845dbd415100%, publicado15:24:40Brasília.
-SHAgerado7d9bd177, publicadoc9a216d0; bytes/config/flags/Auth/Finance,
-novas tabelas, enumlegado e progresso apósdeploy conferidos15:26:37Brasília.
-RELEASES alternaCurrent/Historical; rodízio dos3meses anteriores, uma chamada
-privada/HISTORY. Esperas/erros locais cedem aos outros candidatos.
-Virada exige cobertura throughmonthnova e leasesnovos; mesmoscanFinance retoma.
-Guardcalendar_month usa publicaçãoexata doalvo; não deriva throughmonth-1.
-Tabelas aditivas mantêm sidecar3cols/cursor4valores/payload legados de rollback.
-Pior caso QA46D1+1privada=47/50, normal36+1; nenhuma UI/Finance/Auth alterada.
-Setembro: fontesCOMPLETE14:13Brasília, pub15,2/2disponíveis,24pagos.
-No corte15:26:37 primeira leitura de calendário histórico ainda aguardava fila;
-conferir descriçãoPR91/provasprivadas para atualizações posteriores ao corte.
-Registro docs/MLS_M2_HISTORICAL_CALENDARS_2026_10_31.md.
-Próximo: concluir calendários/cobertura e conciliar Returns/Pending/SellerCentre/banco.
-SourceMissingrecovery continua mêsanterior; 3meses de calendário não inventamfontes.
-RollbackAppf690bb92 ou17c1e9f1; preservar histórico/tabelas aditivas.
-Comercial/Ads/PROMO LOCKED; M2/banco permanecem abertos.
+Código9826b28, CI41229871797 GREEN2772Node/67Python/Chromium.
+App7bd0dfa7-fd2b-442a-b1f5-9abf856f0fcd100%, publicado15:38:43Brasília.
+SHAgeradoda9c248a, publicado66544525; póscheck15:39:42 bytes/config/flags,
+Auth/Finance/tabelas/cursorlegado conferidos. UI preservada.
+RELEASES Current/Historical; rodízio dos3meses anteriores e uma leitura privada/HISTORY.
+Virada exige cue/leases novos e retoma scan/páginas Finance; guardcalendar_month.
+COMPLETE pode ser só recorte: cutoff antesfimdomês ainda elegível sem inventarpending.
+FullclosedmonthCOMPLETE/cacheposterior impedeconsulta repetida. D1pior46+1privada=47/50.
+Prova natural em64174a2e às15:37:56, observada15:38:17Brasília: setembrorev15,
+2/2fontes, escopoexato, SUCCESS semdiagnóstico; RUNNING1página/1registro/1de5intervalos.
+Finance atualRUNNINGfailure0/errornull. A prova não é calendário completo nem banco.
+SourceRecoverysetembroCOMPLETE14:13Brasília; publicação e histórico preservados.
+Fonte docs/MLS_M2_HISTORICAL_CALENDARS_2026_10_31.md e provas privadas.
+Próximo: acompanhar conclusão/cobertura, Returns/Pending/SellerCentre/banco.
+SourceMissingrecovery segue mêsanterior; 3calendários não inventamfontes maisantigas.
+RollbackApp64174a2e ouf690bb92/17c1e9f1; não apagar históricos/tabelas aditivas.
+Comercial/Ads/PROMO LOCKED; M2 permanece aberta.
 
 REGISTROS ANTERIORES — NÃO SUBSTITUEM O INCREMENTO ACIMA
 
