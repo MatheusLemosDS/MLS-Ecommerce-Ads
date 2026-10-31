@@ -1,3 +1,9 @@
+# Estado final verificado
+
+**Release M2 PR92 publicada — 31/10/2026:** Pending recuperado e primeira página real validada (100 registros; continuação: sim), sem paginação nova. Pendências com evidências para Hermes, checklist de fechamento e navegação responsiva consolidados na Live. App`c8ab272d`, Finance`c1e31d3f`, CI41243934697 verde:2.842Node/67Python/Chromium. Bytes/config/flags/cron conferidos. Seller Centre/banco ainda NÃO COMPARADOS; M2 permanece aberta.
+
+Os registros abaixo descrevem as etapas históricas. O estado final acima e a validação no fim deste documento prevalecem sobre candidatos anteriores.
+
 # M2 — Pending, pendências do Hermes e preparação do fechamento
 
 Pedido do proprietário de 31/10/2026: corrigir o detalhamento Pending e validar a lista antes de paginação; consolidar pendências financeiras para o Hermes; preparar o fechamento de um mês; simplificar a navegação no estilo navy/neon aprovado.
@@ -81,3 +87,14 @@ Durante a consulta existente, o Finance registra somente uma projeção de48cami
 GET real às18:21:58Brasília na Finance `32af945d` alcançou JSON com quatro campos na raiz e dois em`response`, sem`income_detail_list`. O catálogo público de `ttakanawa/shopee-seller-mcp`, commit`8d1a85b4798fa1260678b0524346f79e2d712d1d`, declara o conteúdo canônico com`list` e`next_page`. O candidato reconhece essa caixa diretamente na raiz ou em`response`, reutilizando todas as validações e rejeitando formas simultâneas. Nenhum alias arbitrário foi adicionado. A telemetria privada v2 acrescenta caminhos fixos dos tipos dos campos, e somente presença de nomes de envelope de um vocabulário fechado; nomes desconhecidos viram contagem, nunca texto.
 
 A reserva do App passa a respeitar o retry da fonte e o cooldown global15min sem exigir também que a última falha ordinária tenha15min de idade. Essa exigência redundante adiava as recuperações sem novas chamadas. Orçamento, leases e cursores são preservados. O candidato ainda exige CI verde e uma página real válida; paginação não foi implementada.
+
+
+## Validação e publicação final
+
+Fonte86c6caa e CI41243934697:2.842Node/67Python, zero falhas/skips e QA Chromium320/390/768/1365 normal/minificado. Finance`c1e31d3f-3c30-4865-bef4-7c66c6923488` e App`c8ab272d-0b33-4a0e-9fed-aae9c1e38ad9` publicados, Auth`109da95f-ced9-41d2-9384-cef8edafc746` preservada nesta última etapa; os três bytes/configs/domínios/flags/cron exatos e versões únicas100% conferidos. Backups privados preservados.
+
+Primeira página natural: 100registros, 100pedidos distintos, 100entradas distintas, 100emBRL; 100valores conhecidos/0desconhecidos; has_more=True. Estrutura direta`response.list/next_page` comprovada. Comparação agregada com pagamentos salvos: `{"matched": 99, "exact_major_unit_match": 99, "unmatched": 1}`. Nenhuma escala foi aplicada. É uma fotografia atual do Pending, não total histórico mensal nem comprovante bancário.
+
+O painel existente agora mostra motivo/quantidade/valor informativo/base/fonte/data/próxima ação, sete critérios para preparação do mês, o mesmo contexto para Hermes e links funcionais. A navegação remove duplicações e agrupa funções avançadas, respeitando teclado, toque e movimento reduzido. Paginação não foi adicionada; o restante da lista continua uma tarefa explícita. Preparação concluída não significa fechamento confirmado: Seller Centre e banco continuam NÃO COMPARADOS e lucro realizado desconhecido.
+
+O acesso HTTP público do executor continua recebendo403 do WAF Cloudflare, como na release anterior; nenhum bypass foi usado. QA de navegador autenticada normal/minificada usa dados sintéticos e a verificação de fontes reais salvas ocorre offline. A conferência Cloudflare comprova o código/configuração publicados, sem simular sessão real do proprietário.

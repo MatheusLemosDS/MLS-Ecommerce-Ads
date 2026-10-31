@@ -1,5 +1,6 @@
+> **Release M2 PR92 publicada — 31/10/2026:** Pending recuperado e primeira página real validada (100 registros; continuação: sim), sem paginação nova. Pendências com evidências para Hermes, checklist de fechamento e navegação responsiva consolidados na Live. App`c8ab272d`, Finance`c1e31d3f`, CI41243934697 verde:2.842Node/67Python/Chromium. Bytes/config/flags/cron conferidos. Seller Centre/banco ainda NÃO COMPARADOS; M2 permanece aberta. [Registro](MLS_M2_PENDING_CLOSEOUT_2026_10_31.md).
+
 # Roadmap canônico — MLS Commerce OS
-> **Incremento M2 em andamento, 31/10/2026:** prioridade: recuperar a causa do erro Pending, corrigir e validar pedidos antes de paginação; depois consolidar pendências para Hermes e preparar o fechamento. Navegação navy/neon revisada em paralelo, sem apagar capacidades. [Registro](MLS_M2_PENDING_CLOSEOUT_2026_10_31.md).
 
 
 **Release M2 PR91 publicada — 31/10/2026:** calendários dos três meses anteriores em rodízio, retomada após virada e correção de COMPLETE cujo corte ainda não fecha o mês. App `7bd0dfa7`, CI41229871797 verde:2.772Node/67Python/Chromium; bytes/config/Auth/Finance preservados. Cron natural do incremento na versão64174a2e iniciou setembro às15:37:56Brasília:1página/1registro/1de5intervalos,RUNNING, sem erro e com escopo exato. Próximo: acompanhar conclusão e conciliar Returns/Pending/Seller Centre/banco; M2 aberta. [Registro](MLS_M2_HISTORICAL_CALENDARS_2026_10_31.md).

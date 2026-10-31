@@ -180,54 +180,76 @@
     }
   ],
   "current_release": {
-    "id": "M2_RETURNS_AUDIT_CONTINUITY_AND_DAILY_ROLLOVER",
-    "status": "OFFICIAL_APP_DEPLOY_VERIFIED_M2_OPEN",
-    "pull_request": 88,
-    "code_commit": "f1322ffb7ca7fe9595be4414d3148e87e60bae6d",
-    "base_main": "51b2dfea4ef87f114d21ecde3d6f0cb66e98bdda",
-    "ci_run": 41163101852,
-    "node_tests": 2459,
+    "id": "M2_PENDING_FIRST_PAGE_HERMES_CLOSEOUT_NAVIGATION",
+    "status": "OFFICIAL_LIVE_VERIFIED_M2_BANK_COMPARISON_OPEN",
+    "pull_request": 92,
+    "code_commit": "86c6caa786b4bac34750ba1757442c0b624d2509",
+    "base_main": "8b0edb28e7d769c5889ba1a956c239142314b456",
+    "ci_run": 41243934697,
+    "node_tests": 2842,
     "python_tests": 67,
-    "docs": "docs/MLS_M2_RETURNS_CONTINUITY_2026_10_31.md",
+    "docs": "docs/MLS_M2_PENDING_CLOSEOUT_2026_10_31.md",
     "deployment": {
-      "app_version": "c00861cf-68ad-4719-b213-008d7f902069",
-      "app_sha256": "6535b56d5a4548468a4af454c31e72642dd4353f56d8cb918ce902fff0f45bb9",
-      "published_app_sha256": "255aa14bb24f460c711ebedf6d554a1a629254737f4ed4c7e458df4a4848329c",
+      "versions": {
+        "app": "c8ab272d-0b33-4a0e-9fed-aae9c1e38ad9",
+        "auth": "109da95f-ced9-41d2-9384-cef8edafc746",
+        "finance": "c1e31d3f-3c30-4865-bef4-7c66c6923488"
+      },
+      "generated_sha256": {
+        "app": "629b1f2ce21c4d391cb04ddf5df5affd4f3093e3e7f9d7131d82d79f8fc5fc75",
+        "auth": "cf326e9a4917c75474b4222c87cbf5744f98ddfe459eb1fd249a05fb6f097bcb",
+        "finance": "556cc1ea667b349327c32b810200f47388fe8c46b5e9acf60e37ddf0c1533de5"
+      },
+      "published_sha256": {
+        "app": "1eb3f399aa2c52c782f7ef1e05c142b295a714cba65ea010214a22c9b2108222",
+        "auth": "1b660c4feab2572b973d6aa62663e4129f2d4b94000dec9d7d4074eb41a3bab3",
+        "finance": "9dd40d7800d94cf1edd7bf3c9bbac0264b7ccad45e1e2ba90396bc47d8c08667"
+      },
       "percentage": 100,
       "exact_bytes_verified": true,
       "existing_configuration_preserved": true,
       "owner_flags_preserved": true,
-      "auth_finance_unchanged": true,
-      "sync_failure_count": 0,
-      "last_error": null
+      "finance_change": "TARGETED_PENDING_READ_REPAIR"
     },
-    "natural_scheduler_proof": {
+    "natural_first_page": {
+      "checked_at": 1793482678,
+      "returned_count": 100,
+      "has_more": true,
+      "aggregates": {
+        "row_count": 100,
+        "unique_order_count": 100,
+        "unique_entry_count": 100,
+        "known_amount_count": 100,
+        "unknown_amount_count": 0,
+        "brl_row_count": 100,
+        "visible_known_cents": 489419
+      },
+      "money_comparison": {
+        "matched": 99,
+        "exact_major_unit_match": 99,
+        "unmatched": 1
+      },
+      "scaling_applied": false,
+      "pagination_added": false,
       "forced_jobs": false,
-      "published_scope_end_date": "2026-10-30",
-      "published_slots": 2,
-      "matching_returns_reports": 2,
-      "report_states": [
-        "CHECKED",
-        "PARTIAL"
-      ],
-      "attempts_success": 2,
-      "reserved_quota_observed": 2,
-      "other_auxiliaries_resumed": true,
-      "final_version_tick_started_utc": "2026-10-31T03:12:52Z",
-      "final_version_tick_finished_utc": "2026-10-31T03:13:15Z",
-      "finance_pages_before": 19,
-      "finance_pages_after": 22,
-      "active_collection_end_date": "2026-10-31",
-      "active_collection_slots": 3
+      "source_rpc_method": "GET",
+      "provider_shape": "response.list + response.next_page"
     },
-    "technical_browser_qa": "SYNTHETIC_NORMAL_MINIFIED_DESKTOP_MOBILE_DARK_LIGHT_PASSED",
+    "technical_browser_qa": {
+      "widths": [
+        320,
+        390,
+        768,
+        1365
+      ],
+      "normal_and_minified": true,
+      "data": "SYNTHETIC_AUTHENTICATED_AND_REAL_SAVED_SOURCE_OFFLINE"
+    },
     "actual_owner_session": "NOT_EXECUTED",
     "commercial_writes": "LOCKED",
     "finance_m2": "OPEN",
     "bank_settlement": "UNVERIFIED",
-    "branch": "feature/m2-returns-reconciliation-20261031",
-    "production_deployed": true,
-    "all_roadmap_phases_complete": false
+    "branch": "feature/m2-pending-closeout-20261031"
   },
   "validation_history": [
     {
@@ -262,14 +284,17 @@
     }
   ],
   "live_release": {
-    "pull_request": 88,
-    "status": "OFFICIAL_APP_DEPLOY_VERIFIED",
-    "docs": "docs/MLS_M2_RETURNS_CONTINUITY_2026_10_31.md",
+    "pull_request": 92,
+    "status": "OFFICIAL_LIVE_VERIFIED_M2_BANK_COMPARISON_OPEN",
+    "docs": "docs/MLS_M2_PENDING_CLOSEOUT_2026_10_31.md",
     "flags_enabled": true,
-    "workspace_tables_exist": true,
-    "auth_finance_preserved": true,
+    "configuration_preserved": true,
     "commercial_writes": false,
-    "app_version": "c00861cf-68ad-4719-b213-008d7f902069"
+    "versions": {
+      "app": "c8ab272d-0b33-4a0e-9fed-aae9c1e38ad9",
+      "auth": "109da95f-ced9-41d2-9384-cef8edafc746",
+      "finance": "c1e31d3f-3c30-4865-bef4-7c66c6923488"
+    }
   },
   "visual_chart_refinement_20261031": {
     "id": "LIVE_VISUAL_CHART_INSPECTION_AND_COST_RULE_SCOPE",
@@ -550,7 +575,7 @@
     "bank_settlement_verified": false
   },
   "pending_closeout_2026_10_31": {
-    "status": "GET_ACCOUNT_READ_CANDIDATE_PRIVATE_STRUCTURE_PROBE",
+    "status": "OFFICIAL_LIVE_VERIFIED_M2_BANK_COMPARISON_OPEN",
     "base": "8b0edb28e7d769c5889ba1a956c239142314b456",
     "branch": "feature/m2-pending-closeout-20261031",
     "live_authorization": "PERSISTENT_OWNER_VALIDATED_INCREMENT",
@@ -573,7 +598,7 @@
     "recovery_ci": "41236234686",
     "recovery_live_app": "b1bc00f3-0b62-4bb9-b220-dc3eefbdec11",
     "quiet_recovery_candidate": "9273f03053f016dbce11f36047c5d49cfbb30f86",
-    "ui_candidate_hash": "07eabb013efa88002285a4de1177a9e8ca3e51bd6c60dbe24414c3b150cc2617",
+    "ui_candidate_hash": "629b1f2ce21c4d391cb04ddf5df5affd4f3093e3e7f9d7131d82d79f8fc5fc75",
     "ui_local_node_pass": 2821,
     "ui_browser_widths": [
       320,
@@ -594,7 +619,7 @@
     "actual_cause_at": "2026-10-31T20:09:57Z",
     "provider_http": null,
     "provider_code": null,
-    "finance_candidate_hash": "b82290a8465c3c40f3412841b412b7475efd531b1e51e5657a9cb11e930e7fdd",
+    "finance_candidate_hash": "556cc1ea667b349327c32b810200f47388fe8c46b5e9acf60e37ddf0c1533de5",
     "unknown_refund_zero_fixed": true,
     "actual_cause_reaches_ui": true,
     "income_detail_timeout_ms": 10000,
@@ -602,15 +627,100 @@
     "font_regression_fixed": true,
     "finance_timeout_repair_published": true,
     "finance_timeout_live_version": "53c27861-84ec-431c-b5b5-e740f5c86e1c",
-    "current_actual_cause": "FINANCE_INCOME_DETAIL_INVALID_RESPONSE",
-    "current_response_kind": "INCOME_CONTAINER_MISSING",
+    "current_actual_cause": "RESPONSE_DIRECT_CANONICAL_BOX_FIXED",
+    "current_response_kind": null,
     "actual_response_at": "2026-10-31T20:42:00Z",
     "final_source_ci": "41238683919",
-    "pending_first_page_validated": false,
+    "pending_first_page_validated": true,
     "candidate_upstream_method": "GET",
-    "private_structure_probe": "FIXED_PATHS_TYPES_COUNTS_ONLY_16K_SINGLETON",
+    "private_structure_probe": "FIXED_PATH_TYPES_COUNTS_CLOSED_ENVELOPE_KEY_PRESENCE_ONLY_V2",
     "method_metadata_previous_inference_corrected": true,
     "private_transport_methods_changed": false,
-    "extra_provider_retries": false
+    "extra_provider_retries": false,
+    "source_code": "86c6caa786b4bac34750ba1757442c0b624d2509",
+    "source_ci": 41243934697,
+    "live_versions": {
+      "app": "c8ab272d-0b33-4a0e-9fed-aae9c1e38ad9",
+      "auth": "109da95f-ced9-41d2-9384-cef8edafc746",
+      "finance": "c1e31d3f-3c30-4865-bef4-7c66c6923488"
+    },
+    "pending_first_page": {
+      "checked_at": 1793482678,
+      "returned_count": 100,
+      "has_more": true,
+      "aggregates": {
+        "row_count": 100,
+        "unique_order_count": 100,
+        "unique_entry_count": 100,
+        "known_amount_count": 100,
+        "unknown_amount_count": 0,
+        "brl_row_count": 100,
+        "visible_known_cents": 489419
+      },
+      "money_comparison": {
+        "matched": 99,
+        "exact_major_unit_match": 99,
+        "unmatched": 1
+      },
+      "scaling_applied": false,
+      "pagination_added": false,
+      "forced_jobs": false,
+      "source_rpc_method": "GET",
+      "provider_shape": "response.list + response.next_page"
+    },
+    "source_retry_and_global_cooldown_independent": true,
+    "navigation_live": true,
+    "hermes_cases_live": true,
+    "monthly_closeout_preparation_live": true
+  },
+  "previous_release_before_pending_closeout": {
+    "id": "M2_RETURNS_AUDIT_CONTINUITY_AND_DAILY_ROLLOVER",
+    "status": "OFFICIAL_APP_DEPLOY_VERIFIED_M2_OPEN",
+    "pull_request": 88,
+    "code_commit": "f1322ffb7ca7fe9595be4414d3148e87e60bae6d",
+    "base_main": "51b2dfea4ef87f114d21ecde3d6f0cb66e98bdda",
+    "ci_run": 41163101852,
+    "node_tests": 2459,
+    "python_tests": 67,
+    "docs": "docs/MLS_M2_RETURNS_CONTINUITY_2026_10_31.md",
+    "deployment": {
+      "app_version": "c00861cf-68ad-4719-b213-008d7f902069",
+      "app_sha256": "6535b56d5a4548468a4af454c31e72642dd4353f56d8cb918ce902fff0f45bb9",
+      "published_app_sha256": "255aa14bb24f460c711ebedf6d554a1a629254737f4ed4c7e458df4a4848329c",
+      "percentage": 100,
+      "exact_bytes_verified": true,
+      "existing_configuration_preserved": true,
+      "owner_flags_preserved": true,
+      "auth_finance_unchanged": true,
+      "sync_failure_count": 0,
+      "last_error": null
+    },
+    "natural_scheduler_proof": {
+      "forced_jobs": false,
+      "published_scope_end_date": "2026-10-30",
+      "published_slots": 2,
+      "matching_returns_reports": 2,
+      "report_states": [
+        "CHECKED",
+        "PARTIAL"
+      ],
+      "attempts_success": 2,
+      "reserved_quota_observed": 2,
+      "other_auxiliaries_resumed": true,
+      "final_version_tick_started_utc": "2026-10-31T03:12:52Z",
+      "final_version_tick_finished_utc": "2026-10-31T03:13:15Z",
+      "finance_pages_before": 19,
+      "finance_pages_after": 22,
+      "active_collection_end_date": "2026-10-31",
+      "active_collection_slots": 3
+    },
+    "technical_browser_qa": "SYNTHETIC_NORMAL_MINIFIED_DESKTOP_MOBILE_DARK_LIGHT_PASSED",
+    "actual_owner_session": "NOT_EXECUTED",
+    "commercial_writes": "LOCKED",
+    "finance_m2": "OPEN",
+    "bank_settlement": "UNVERIFIED",
+    "branch": "feature/m2-returns-reconciliation-20261031",
+    "production_deployed": true,
+    "all_roadmap_phases_complete": false
   }
 }

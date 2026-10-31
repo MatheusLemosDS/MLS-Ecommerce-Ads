@@ -1,4 +1,7 @@
-M2 31/10/2026 — Pending/closeout/navigation candidate on feature/m2-pending-closeout-20261031 over mainPR91 8b0edb28. Diagnostic repair across Finance/Auth/App pending validation and actual Live cause; no pagination added. Then same-publication Hermes cases + monthly closeout preparation + isolated navigation rework. Read docs/MLS_M2_PENDING_CLOSEOUT_2026_10_31.md. Owner authorizes validated Live increments. Commercial writes/bank finality remain gated.
+LIVE PR92 — PENDING PRIMEIRA PÁGINA, HERMES/FECHAMENTO/NAVEGAÇÃO — 31/10/2026
+**Release M2 PR92 publicada — 31/10/2026:** Pending recuperado e primeira página real validada (100 registros; continuação: sim), sem paginação nova. Pendências com evidências para Hermes, checklist de fechamento e navegação responsiva consolidados na Live. App`c8ab272d`, Finance`c1e31d3f`, CI41243934697 verde:2.842Node/67Python/Chromium. Bytes/config/flags/cron conferidos. Seller Centre/banco ainda NÃO COMPARADOS; M2 permanece aberta.
+Fonte86c6caa, versão Appc8ab272d-0b33-4a0e-9fed-aae9c1e38ad9, Financec1e31d3f-3c30-4865-bef4-7c66c6923488, Auth109da95f-ced9-41d2-9384-cef8edafc746. Não confundir primeira página com cobertura total, mês conferido ou recebimento bancário. Próximo: restante da lista em incremento de paginação separado, conciliação Returns/Seller Centre/banco no mesmo recorte.
+
 
 LIVE PR91 — M2 CALENDÁRIOS HISTÓRICOS E CORTE COMPLETO — 31/10/2026
 Branch feature/m2-historical-release-calendars-20261031, base mainPR90 8cdad2a.
