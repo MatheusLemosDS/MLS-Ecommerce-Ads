@@ -30,6 +30,7 @@
     "web/cloudflare/src/financial-audit-orchestration.mjs",
     "web/cloudflare/src/historical-cost-orchestration.mjs",
     "web/cloudflare/tests/m2-historical-release-calendars-compiled.test.mjs",
-    "web/cloudflare/tests/m2-historical-release-calendars.test.mjs"
+    "web/cloudflare/tests/m2-historical-release-calendars.test.mjs",
+    "web/cloudflare/tests/mls-chart-integration-chrome.test.mjs"
   ]
 }

@@ -20,8 +20,15 @@ async function dump(url,width,height,interact){
  let socket;const pause=()=>new Promise(resolve=>setTimeout(resolve,75));
  try{
   const port=await waitForChromeDebugPort(child,profile);
-  const pages=await(await fetch('http://127.0.0.1:'+port+'/json/list')).json();
-  socket=new WebSocket(pages.find(p=>p.type==='page').webSocketDebuggerUrl);
+  // The debugger can listen before Chrome has created its initial page.
+  const pageDeadline=Date.now()+10000;let page;
+  while(Date.now()<pageDeadline){
+   if(child.exitCode!==null||child.signalCode!==null)throw Error('CHROME_PAGE_PROCESS_EXITED');
+   const pages=await(await fetch('http://127.0.0.1:'+port+'/json/list',{signal:AbortSignal.timeout(2000)})).json();
+   page=pages.find(value=>value.type==='page'&&typeof value.webSocketDebuggerUrl==='string');if(page)break;await pause();
+  }
+  assert.ok(page,'Chrome did not create a debugger page within 10 seconds');
+  socket=new WebSocket(page.webSocketDebuggerUrl);
   await new Promise((resolve,reject)=>{socket.addEventListener('open',resolve,{once:true});socket.addEventListener('error',reject,{once:true});});
   let seq=0;const pending=new Map();
   socket.addEventListener('message',event=>{const data=JSON.parse(event.data),call=pending.get(data.id);if(!call)return;pending.delete(data.id);data.error?call.reject(Error(data.error.message)):call.resolve(data.result);});
