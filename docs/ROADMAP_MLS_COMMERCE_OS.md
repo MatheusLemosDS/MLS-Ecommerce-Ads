@@ -1,6 +1,6 @@
 # Roadmap canônico — MLS Commerce OS
 
-**Incremento M2 em validação — 31/10/2026:** agendar calendários pendentes dos três meses anteriores dentro da fila RELEASES, com rodízio, retomada após virada e proteção das leituras do mês atual. [Registro](MLS_M2_HISTORICAL_CALENDARS_2026_10_31.md).
+**Release M2 PR91 publicada — 31/10/2026:** calendários dos três meses anteriores em rodízio com o atual, retomada do mesmo scan após a virada sob novos sinais/leases e guards do mês selecionado. App `64174a2e`, CI41228774825 verde:2.759Node/67Python/Chromium; bytes/config/Auth/Finance preservados. Às15:26:37Brasília, fila progredia sem erro Finance e a primeira leitura histórica ainda aguardava a oportunidade; atualizações na PR91. Próximo: acompanhar conclusão dos calendários e conciliar Returns/Pending/Seller Centre/banco. [Registro](MLS_M2_HISTORICAL_CALENDARS_2026_10_31.md).
 
 **Release M2 PR90 publicada — 31/10/2026:** acompanhamento de repasses ligado à fila, primeira conferência com cooldown próprio e recuperação limitada das referências expiradas do mês anterior. App `17c1e9f1`, CI41218926278 verde:2.637Node/67Python/Chromium, bytes/config/Auth/Finance preservados. Cron real confirmou setembro com fontes e calendário ausentes, sem inventar recebimento. Próximo: observar a recuperação, preencher calendários históricos e conciliar Returns/Pending/Seller Centre/banco; M2 continua aberta. [Registro](MLS_M2_RELEASE_TRACKER_2026_10_31.md).
 
