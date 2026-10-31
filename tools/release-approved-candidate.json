@@ -35,6 +35,8 @@
     "web/cloudflare/src/mls-returns-insights.mjs",
     "web/cloudflare/src/mls-settlement-evidence.mjs",
     "web/cloudflare/tests/agent-registry.test.mjs",
+    "web/cloudflare/tests/business-history-sync.test.mjs",
+    "web/cloudflare/tests/business-sync.test.mjs",
     "web/cloudflare/tests/m2-history-fairness-compiled.test.mjs",
     "web/cloudflare/tests/m2-history-fairness.test.mjs",
     "web/cloudflare/tests/m2-history-fixture.mjs",
