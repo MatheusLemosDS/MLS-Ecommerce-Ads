@@ -1142,7 +1142,7 @@
     "bank_settlement_verified": false
   },
   "pending_closeout_2026_10_31": {
-    "status": "RECOVERY_LIVE_UI_CANDIDATE_VALIDATED",
+    "status": "ACTUAL_TIMEOUT_RECOVERED_FINAL_CANDIDATE_VALIDATION",
     "base": "8b0edb28e7d769c5889ba1a956c239142314b456",
     "branch": "feature/m2-pending-closeout-20261031",
     "live_authorization": "PERSISTENT_OWNER_VALIDATED_INCREMENT",
@@ -1165,7 +1165,7 @@
     "recovery_ci": "41236234686",
     "recovery_live_app": "b1bc00f3-0b62-4bb9-b220-dc3eefbdec11",
     "quiet_recovery_candidate": "9273f03053f016dbce11f36047c5d49cfbb30f86",
-    "ui_candidate_hash": "37f43b13f7f6e130e6ddb10e4065abb1744e3edb8aacf3124c2fd05ea1a99ed2",
+    "ui_candidate_hash": "2b2ef6d0cd48a51abcf0fcdb0106a5bb7f18fc0017fce8196db82238a8f8e1b9",
     "ui_local_node_pass": 2821,
     "ui_browser_widths": [
       320,
@@ -1179,6 +1179,16 @@
       "checked_at": "2026-10-31T19:52:01Z",
       "bank_compared": false
     },
-    "hermes_monthly_context_enriched": true
+    "hermes_monthly_context_enriched": true,
+    "quiet_recovery_ci": "41236962815",
+    "quiet_recovery_live_app": "4c02a354-32bd-4b26-9ec7-4bcfbdaddd7e",
+    "actual_cause": "FINANCE_INCOME_DETAIL_TIMEOUT",
+    "actual_cause_at": "2026-10-31T20:09:57Z",
+    "provider_http": null,
+    "provider_code": null,
+    "finance_candidate_hash": "a45913998e242cd1dccd55f5868868cb86bb91ef36487e7d55dc6cd712f6749a",
+    "unknown_refund_zero_fixed": true,
+    "actual_cause_reaches_ui": true,
+    "income_detail_timeout_ms": 10000
   }
 }

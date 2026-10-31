@@ -36,7 +36,7 @@ export const FINANCIAL_CLOSEOUT_CLIENT=String.raw`
    const article=node('article',undefined,'financial-closeout-case');article.append(node('h5',titles[row.code]));const facts=node('dl');
    for(const [label,description] of [['Responsável',owners[row.agent_id]],['Quantidade afetada',row.affected_count===null?'Ainda não confirmada':String(row.affected_count)+' '+units[row.affected_unit]],['Valor conhecido',money(row.known_amount_cents)+' · '+amounts[row.amount_basis]],['Fonte',sourceNames[row.source.name]+' · '+time(row.source.checked_at)+' · '+freshness[row.source.freshness]],['Próxima ação',actions[row.next_action]]])facts.append(node('dt',label),node('dd',description));
    if(row.technical_code)facts.append(node('dt','Motivo técnico'),node('dd',row.technical_code));
-   if(row.technical_diagnostic){const technical=row.technical_diagnostic;facts.append(node('dt','Falha da fonte'),node('dd',[technical.stage,technical.http===null?null:'HTTP '+technical.http,technical.provider_code,technical.response_kind].filter(Boolean).join(' · ')));}
+   if(row.technical_diagnostic){const technical=row.technical_diagnostic;facts.append(node('dt','Falha da fonte'),node('dd',[technical.code,technical.stage,technical.http===null?null:'HTTP '+technical.http,technical.provider_code,technical.response_kind].filter(Boolean).join(' · ')));}
    const link=node('a','Abrir conferência');link.href=row.href;article.append(facts,link);el('Cases').append(article);
   }
   if(!value.cases.length)el('Cases').append(node('p','Nenhuma pendência interna foi sinalizada nesta preparação. As comparações externas continuam obrigatórias.'));

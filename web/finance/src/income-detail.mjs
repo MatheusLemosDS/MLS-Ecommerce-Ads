@@ -26,8 +26,8 @@ async function envelope(value,checkedAt){
   const suffix=['error_api_permission','error_auth','error_sign','error_partner_id','error_ip'].includes(value.error)?'PERMISSION_DENIED':['error_limit','error_rate_limit'].includes(value.error)?'RATE_LIMIT':'UNAVAILABLE',error=new FinanceConnectionError('FINANCE_INCOME_DETAIL_'+suffix,502),safe=incomeDetailFailureDiagnostic({code:error.code,provider_code:value.error,upstream_status:200});
   Object.defineProperties(error,{provider_code:{value:safe.provider_code},upstream_status:{value:200},upstream_diagnostic:{value:'PROVIDER_ERROR'}});throw error;
  }
- const box=value.income_detail_list;if(!plain(box))fail('INVALID_RESPONSE',502,'INCOME_CONTAINER_MISSING');if(!Array.isArray(box.list)||box.list.length>100)fail('INVALID_RESPONSE',502,'INCOME_LIST_INVALID');const next=plain(box.next_page)?box.next_page:null,cursor=next&&typeof next.cursor==='string'&&next.cursor.length<=512?next.cursor:'';
- if(next&&Object.hasOwn(next,'cursor')&&(typeof next.cursor!=='string'||next.cursor.length>512))fail('INVALID_RESPONSE',502,'PAGE_CURSOR_INVALID');if(next&&Object.hasOwn(next,'page_size')&&next.page_size!==100)fail('INVALID_RESPONSE',502,'PAGE_SIZE_INVALID');
+ const box=value.income_detail_list;if(!plain(box))fail('INVALID_RESPONSE',502,'INCOME_CONTAINER_MISSING');if(!Array.isArray(box.list)||box.list.length>100)fail('INVALID_RESPONSE',502,'INCOME_LIST_INVALID');const next=box.next_page;
+ if(!plain(next)||!Object.hasOwn(next,'cursor')||typeof next.cursor!=='string'||next.cursor.length>512)fail('INVALID_RESPONSE',502,'PAGE_CURSOR_INVALID');const cursor=next.cursor;if(Object.hasOwn(next,'page_size')&&next.page_size!==100)fail('INVALID_RESPONSE',502,'PAGE_SIZE_INVALID');
  const rows=[];
  for(const item of box.list){
   if(!plain(item)||!serial(item.order_sn))fail('INVALID_RESPONSE',502,'ROW_IDENTITY_INVALID');if(item.currency!=='BRL')fail('INVALID_RESPONSE',502,'ROW_CURRENCY_INVALID');const raw=providerRaw(item.estimated_escrow_amount);
@@ -39,8 +39,8 @@ async function envelope(value,checkedAt){
  }
  return {schema:'finance_income_detail_v1',checked_at:checkedAt,region:'BRAZIL',shop_type:'LOCAL',income_status:'PENDING',page_size:100,returned_count:rows.length,has_more:cursor.length>0,next_cursor_present:cursor.length>0,rows,basis:'CURRENT_PENDING_PROVIDER_INCOME_DETAIL_NOT_MONTH_OR_BANK_RECEIPT'};
 }
-export async function readFinanceIncomeDetail(env,{fetchImpl=request=>fetch(request),now=()=>Date.now(),timeoutMs=5000}={}){
- const rawNow=now();if(!integer(rawNow,1,9999999999999)||typeof fetchImpl!=='function'||!integer(timeoutMs,5,5000)||env?.FINANCE_CONNECTION_ENABLED!=='true')fail('CONFIGURATION');const started=Math.floor(rawNow/1000);
+export async function readFinanceIncomeDetail(env,{fetchImpl=request=>fetch(request),now=()=>Date.now(),timeoutMs=10000}={}){
+ const rawNow=now();if(!integer(rawNow,1,9999999999999)||typeof fetchImpl!=='function'||!integer(timeoutMs,5,10000)||env?.FINANCE_CONNECTION_ENABLED!=='true')fail('CONFIGURATION');const started=Math.floor(rawNow/1000);
  const keyText=env.SHOPEE_FINANCE_PARTNER_KEY;if(typeof keyText!=='string'||!keyText.length||keyText.length>4096||/[\u0000-\u001f\u007f]/.test(keyText))fail('SIGNING_CONFIGURATION');const bytes=encoder.encode(keyText);let key;try{key=await crypto.subtle.importKey('raw',bytes,{name:'HMAC',hash:'SHA-256'},false,['sign']);}finally{bytes.fill(0);}
  let calls=0;const bounded=async request=>{if(calls>=2)fail('UNAVAILABLE');calls++;return fetchImpl(request);},tokens=await ensureFinanceAccessToken(env,{fetchImpl:bounded,now,timeoutMs});const timestamp=Math.floor(now()/1000);if(tokens.expires_at<=timestamp)fail('UNAVAILABLE');
  const today=localDay(timestamp),body={cursor:'',date_from:previousDay(today),date_to:today,income_status:2,page_size:100};

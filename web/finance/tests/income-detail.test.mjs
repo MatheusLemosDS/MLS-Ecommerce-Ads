@@ -57,3 +57,34 @@ test('Pending schema failures identify the rejected structural category without 
 test('provider200 failures retain only allowlisted error tokens and their actual HTTP status',async t=>{
  const f=await fixture(t);f.state.body={error:'error_param',message:'PRIVATE_BODY'};await assert.rejects(f.run(),error=>{const cause=incomeDetailFailureDiagnostic(error);assert.equal(cause.provider_code,'error_param');assert.equal(cause.http,200);assert.equal(cause.response_kind,'PROVIDER_ERROR');assert.doesNotMatch(JSON.stringify(cause),/PRIVATE_BODY/);return true;});
 });
+
+test('default Pending deadline accepts a real response after the former five-second cutoff without retrying',async t=>{
+ const f=await fixture(t);t.mock.timers.enable({apis:['setTimeout']});let enter,complete,retained,calls=0;const entered=new Promise(resolve=>enter=resolve);
+ const pending=readFinanceIncomeDetail(f.env,{now:f.now,fetchImpl:request=>{calls++;retained=request;enter();return new Promise(resolve=>complete=resolve);}});await entered;
+ f.clock.time+=6000;t.mock.timers.tick(6000);assert.equal(retained.signal.aborted,false);complete(Response.json(f.state.body));const report=await pending;
+ assert.ok(projectIncomeDetailFrame(report));assert.equal(report.returned_count,1);assert.equal(report.checked_at,f.now()/1000);assert.equal(calls,1);
+});
+
+test('the ten-second Pending deadline still aborts a stalled provider and never retries it',async t=>{
+ const f=await fixture(t);t.mock.timers.enable({apis:['setTimeout']});let enter,retained,calls=0;const entered=new Promise(resolve=>enter=resolve);
+ const pending=readFinanceIncomeDetail(f.env,{now:f.now,fetchImpl:request=>{calls++;retained=request;enter();return new Promise(()=>{});}}),rejected=assert.rejects(pending,error=>error.code==='FINANCE_INCOME_DETAIL_TIMEOUT');await entered;
+ t.mock.timers.tick(9999);assert.equal(retained.signal.aborted,false);t.mock.timers.tick(1);await rejected;assert.equal(retained.signal.aborted,true);assert.equal(calls,1);
+});
+
+test('Pending timeout configuration cannot exceed the existing shared transport cap',async t=>{
+ const f=await fixture(t);await assert.rejects(readFinanceIncomeDetail(f.env,{now:f.now,fetchImpl:f.fetchImpl,timeoutMs:10001}),error=>error.code==='FINANCE_INCOME_DETAIL_CONFIGURATION');assert.equal(f.calls.length,0);
+});
+
+test('missing or malformed Pending pagination metadata cannot assert complete coverage',async t=>{
+ for(const change of [
+  box=>delete box.next_page,
+  box=>box.next_page=null,
+  box=>box.next_page=[],
+  box=>box.next_page='PRIVATE_PAGE',
+  box=>box.next_page={},
+  box=>box.next_page={cursor:null},
+  box=>box.next_page={cursor:123},
+  box=>box.next_page={cursor:'x'.repeat(513)},
+ ]){const f=await fixture(t);change(f.state.body.income_detail_list);await assert.rejects(f.run(),error=>{const diagnostic=incomeDetailFailureDiagnostic(error);assert.equal(error.code,'FINANCE_INCOME_DETAIL_INVALID_RESPONSE');assert.equal(diagnostic.response_kind,'PAGE_CURSOR_INVALID');assert.doesNotMatch(JSON.stringify(diagnostic),/PRIVATE_PAGE/);return true;});assert.equal(f.calls.length,1);}
+ const f=await fixture(t);f.state.body.income_detail_list.next_page={cursor:'',page_size:99};await assert.rejects(f.run(),error=>incomeDetailFailureDiagnostic(error).response_kind==='PAGE_SIZE_INVALID');
+});

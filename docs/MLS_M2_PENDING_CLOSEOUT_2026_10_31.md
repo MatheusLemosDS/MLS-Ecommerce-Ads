@@ -46,3 +46,13 @@ Navegação global estável nos especialistas, barra contextual única, ações 
 QA sintética autenticada desktop/mobile em320/390/768/1365, Worker normal/minificado: título/botão não encobertos, item do menu clicável, nenhum overflow, bootstrap sem banner de erro, relatório tipado e cópia JSON exata. Suíte integrada local:2.821Node/0falhas/0skips; regressão adicional da espera ociosa e integrações:17/17. CI e publicação do conjunto final ainda pendentes; lista real Pending continua primeiro gate.
 
 A corrida pré-existente do teste Chromium da prévia (porta DevTools aberta antes de existir uma página) foi corrigida com espera limitada pela página real, sem remover nenhuma asserção nem alterar a prévia sintética.
+
+## Causa real identificada e correção preparada
+
+Quietfix publicado App `4c02a354`, fonte `9273f03`, CI41236962815 verde, todos os bytes/configs conferidos. Primeira reserva natural às17:09:57Brasília recuperou `TRANSPORT / FINANCE_INCOME_DETAIL_TIMEOUT`, sem resposta HTTP ou código de permissão. Tentativa e diagnóstico coincidem exatamente; cursores normais preservados, cooldown até17:24:57. O prazo do transporte Pending era5s. Não foi comprovada falha de método ou de autorização.
+
+Correção candidata: prazo padrão e teto10s, compatíveis com o transporte e o coordenador existentes e abaixo dos45s do gateway. Sem retry escondido, sem aumentar o limite de duas chamadas (incluindo eventual refresh), mesmo POST/corpo/assinatura. Testes verificam resposta após6s, cancelamento no limite10s e rejeição de configurações maiores. Metadados de paginação ausentes/nulos ou cursor inválido agora falham explicitamente; cursor vazio explícito continua válido. Nenhuma paginação nova.
+
+Dois achados da revisão final também corrigidos: reembolsos totalmente indisponíveis permanecem desconhecidos em vez de0; código real da causa (por exemplo TIMEOUT) chega ao painel junto do erro externo, por vocabulário fechado. Valores positivos e zeros comprovados preservados, sem mudar o cálculo do lucro. Dados reais com timeout revalidados offline na publicação14954/3fontes; banco continua NÃO COMPARADO.
+
+O schema capturado de Shopee em `congminh1254/shopee-sdk/schemas/v2.payment.get_income_detail.json` confirmaPOST; o métodoGET gerado pelo SDK TypeScript diverge do próprio schema. Não trocamos o método com base nessa geração. Resposta e lista ainda exigem validação na execução real após a publicação do ajuste do prazo.
