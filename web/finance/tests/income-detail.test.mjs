@@ -44,7 +44,7 @@ test('expired access refresh and Pending detail share the same two-call budget',
 test('Pending schema failures identify the rejected structural category without retaining values',async t=>{
  for(const [kind,change] of [
   ['ROOT_INVALID',f=>f.state.body={private:'PRIVATE_RESPONSE'}],
-  ['INCOME_CONTAINER_MISSING',f=>f.state.body={error:'',response:{income_detail_list:{list:[]}}}],
+  ['INCOME_CONTAINER_MISSING',f=>f.state.body={error:'',response:{unrecognized_container:{list:[]}}}],
   ['INCOME_LIST_INVALID',f=>delete f.state.body.income_detail_list.list],
   ['ROW_CURRENCY_INVALID',f=>f.state.body.income_detail_list.list[0].currency='PRIVATE_CURRENCY'],
   ['ROW_IDENTITY_INVALID',f=>f.state.body.income_detail_list.list[0].order_sn='PRIVATE ORDER'],
@@ -87,4 +87,42 @@ test('missing or malformed Pending pagination metadata cannot assert complete co
   box=>box.next_page={cursor:'x'.repeat(513)},
  ]){const f=await fixture(t);change(f.state.body.income_detail_list);await assert.rejects(f.run(),error=>{const diagnostic=incomeDetailFailureDiagnostic(error);assert.equal(error.code,'FINANCE_INCOME_DETAIL_INVALID_RESPONSE');assert.equal(diagnostic.response_kind,'PAGE_CURSOR_INVALID');assert.doesNotMatch(JSON.stringify(diagnostic),/PRIVATE_PAGE/);return true;});assert.equal(f.calls.length,1);}
  const f=await fixture(t);f.state.body.income_detail_list.next_page={cursor:'',page_size:99};await assert.rejects(f.run(),error=>incomeDetailFailureDiagnostic(error).response_kind==='PAGE_SIZE_INVALID');
+});
+
+test('the two documented Pending envelope origins and finite list aliases preserve identical private projections',async t=>{
+ let baseline;
+ for(const nested of [false,true])for(const arrayBox of [false,true])for(const alias of ['list','income_detail_list_item']){
+  const f=await fixture(t),original=f.state.body.income_detail_list,box={[alias]:original.list,next_page:original.next_page},container=arrayBox?[box]:box;
+  f.state.body=nested?{error:'',response:{partner_id:FINANCE_PROFILE.partner_id,shop_id:FINANCE_PROFILE.shop_id,income_detail_list:container}}:{error:'',income_detail_list:container};const result=await f.run();
+  assert.ok(projectIncomeDetailFrame(result));assert.equal(result.returned_count,1);assert.equal(result.has_more,true);assert.equal(result.rows[0].estimated_escrow_cents,4751);assert.doesNotMatch(JSON.stringify(result),/251027ABC123|PRIVATE_INCOME_DETAIL|income_detail_list_item/);if(!baseline)baseline=result;else assert.deepEqual(result,baseline);assert.equal(f.calls.length,1);
+ }
+});
+
+test('ambiguous origins, multiple containers and mixed list aliases fail closed without merging rows',async t=>{
+ for(const [kind,change] of [
+  ['INCOME_CONTAINER_MISSING',body=>body.response={income_detail_list:structuredClone(body.income_detail_list)}],
+  ['INCOME_CONTAINER_MISSING',body=>body.response={income_detail_list:null}],
+  ['INCOME_CONTAINER_MISSING',body=>body.income_detail_list=[]],
+  ['INCOME_CONTAINER_MISSING',body=>body.income_detail_list=[body.income_detail_list,structuredClone(body.income_detail_list)]],
+  ['INCOME_CONTAINER_MISSING',body=>body.income_detail_list=[null]],
+  ['INCOME_CONTAINER_MISSING',body=>body.income_detail_list=[[]]],
+  ['INCOME_LIST_INVALID',body=>body.income_detail_list.income_detail_list_item=structuredClone(body.income_detail_list.list)],
+  ['INCOME_LIST_INVALID',body=>body.income_detail_list.income_detail_list_item=null],
+  ['INCOME_LIST_INVALID',body=>body.income_detail_list={next_page:{cursor:'',page_size:100}}],
+  ['INCOME_LIST_INVALID',body=>body.income_detail_list={income_detail_list_item:{},next_page:{cursor:'',page_size:100}}],
+  ['INCOME_LIST_INVALID',body=>body.income_detail_list={income_detail_list_item:Array.from({length:101},()=>({})),next_page:{cursor:'',page_size:100}}],
+ ]){const f=await fixture(t);change(f.state.body);await assert.rejects(f.run(),error=>{assert.equal(error.code,'FINANCE_INCOME_DETAIL_INVALID_RESPONSE');assert.equal(incomeDetailFailureDiagnostic(error).response_kind,kind);return true;});assert.equal(f.calls.length,1);}
+});
+
+test('nested and selected Pending containers cannot override the fixed shop or partner identity',async t=>{
+ for(const identity of ['partner_id','shop_id'])for(const layer of ['root','response','box']){
+  const f=await fixture(t),box=f.state.body.income_detail_list;f.state.body={error:'',response:{income_detail_list:[{income_detail_list_item:box.list,next_page:box.next_page}]}};
+  const target=layer==='root'?f.state.body:layer==='response'?f.state.body.response:f.state.body.response.income_detail_list[0];target[identity]=FINANCE_PROFILE[identity]+1;
+  await assert.rejects(f.run(),error=>incomeDetailFailureDiagnostic(error).response_kind==='IDENTITY_MISMATCH');assert.equal(f.calls.length,1);
+ }
+});
+
+test('nullable Pending description and payment method remain unknown while nontext values are rejected',async t=>{
+ const f=await fixture(t);f.state.body.income_detail_list.list[0].description=null;f.state.body.income_detail_list.list[0].payment_method=null;const result=await f.run();assert.equal(result.rows[0].description,null);assert.equal(result.rows[0].payment_method,null);assert.equal(result.rows[0].estimated_escrow_cents,4751);assert.ok(projectIncomeDetailFrame(result));
+ for(const name of ['description','payment_method'])for(const invalid of [0,false,[],{}]){const f=await fixture(t);f.state.body.income_detail_list.list[0][name]=invalid;await assert.rejects(f.run(),error=>incomeDetailFailureDiagnostic(error).response_kind==='ROW_TEXT_INVALID');}
 });

@@ -550,7 +550,7 @@
     "bank_settlement_verified": false
   },
   "pending_closeout_2026_10_31": {
-    "status": "ACTUAL_TIMEOUT_RECOVERED_FINAL_CANDIDATE_VALIDATION",
+    "status": "ACTUAL_RESPONSE_STRUCTURE_RECOVERED_COMPATIBILITY_CANDIDATE",
     "base": "8b0edb28e7d769c5889ba1a956c239142314b456",
     "branch": "feature/m2-pending-closeout-20261031",
     "live_authorization": "PERSISTENT_OWNER_VALIDATED_INCREMENT",
@@ -594,12 +594,18 @@
     "actual_cause_at": "2026-10-31T20:09:57Z",
     "provider_http": null,
     "provider_code": null,
-    "finance_candidate_hash": "a45913998e242cd1dccd55f5868868cb86bb91ef36487e7d55dc6cd712f6749a",
+    "finance_candidate_hash": "a6a6c8905662a2f363d69fd99b72f9566fda64ac271ae6cff15475bd3ccda36d",
     "unknown_refund_zero_fixed": true,
     "actual_cause_reaches_ui": true,
     "income_detail_timeout_ms": 10000,
     "final_local_node_pass": 2831,
     "font_regression_fixed": true,
-    "finance_timeout_repair_published": false
+    "finance_timeout_repair_published": true,
+    "finance_timeout_live_version": "53c27861-84ec-431c-b5b5-e740f5c86e1c",
+    "current_actual_cause": "FINANCE_INCOME_DETAIL_INVALID_RESPONSE",
+    "current_response_kind": "INCOME_CONTAINER_MISSING",
+    "actual_response_at": "2026-10-31T20:42:00Z",
+    "final_source_ci": "41238683919",
+    "pending_first_page_validated": false
   }
 }

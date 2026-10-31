@@ -58,3 +58,11 @@ Dois achados da revisão final também corrigidos: reembolsos totalmente indispo
 O schema capturado de Shopee em `congminh1254/shopee-sdk/schemas/v2.payment.get_income_detail.json` confirmaPOST; o métodoGET gerado pelo SDK TypeScript diverge do próprio schema. Não trocamos o método com base nessa geração. Resposta e lista ainda exigem validação na execução real após a publicação do ajuste do prazo.
 
 O CI41237974807 encontrou somente duas falhas de tipografia na nova QA320px com fontes mais largas do runner; Finance e as demais validações Node passaram. Publicação Finance não ocorreu, pois o gate encerrou o script. Correção responsiva: até360px, somente o cartão de situação ocupa a linha inteira; cartões numéricos continuam em duas colunas. As asserções de encaixe foram preservadas, com medidas explícitas para diagnóstico.7 testes de layout/Chromium passaram localmente; novoCI completo exigido. A suíte local anterior passou2.831Node/67Python.
+
+## Formato real de retorno
+
+A versãoFinance `53c27861`, publicada e conferida às17:30:03 com CI41238683919 verde (2.831Node/67Python), alcançou JSON válido às17:42:00. A causa mudou para `PROVIDER_RESPONSE / INVALID_RESPONSE / INCOME_CONTAINER_MISSING`: o coletor aceitava somente contêiner na raiz.
+
+Correção candidata reconhece somente variantes explícitas dos contratos públicos: uma origem na raiz ou em `response`; uma caixa objeto ou array com exatamente uma caixa; um único array `list` ou `income_detail_list_item`. Origens/aliases simultâneos, várias caixas, identidades conflitantes e paginação ausente continuam inválidos. Descrição/forma de pagamento opcionais nulas permanecem desconhecidas. MesmoPOST, prazo10s, limites monetários e de chamadas.29 testes focados e8 testes dos três Workers gerados/minificados passaram. Nenhuma escala monetária foi presumida: o schema público definefloat e não documenta divisor100000.
+
+Nova lista real ainda deve ser validada antes de publicar o conjunto visual. A confirmação monetária usará comparações agregadas entre hashes de pedidos e pagamentos salvos, sem divulgar identidades.
