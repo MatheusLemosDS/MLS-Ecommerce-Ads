@@ -548,5 +548,17 @@
     "m2_complete": false,
     "commercial_writes_allowed": false,
     "bank_settlement_verified": false
+  },
+  "pending_closeout_2026_10_31": {
+    "status": "DIAGNOSTIC_CANDIDATE_VALIDATION",
+    "base": "8b0edb28e7d769c5889ba1a956c239142314b456",
+    "branch": "feature/m2-pending-closeout-20261031",
+    "live_authorization": "PERSISTENT_OWNER_VALIDATED_INCREMENT",
+    "pending_list_validated": false,
+    "pagination_added": false,
+    "three_worker_diagnostic_repair": true,
+    "seller_centre_compared": false,
+    "bank_compared": false,
+    "record": "docs/MLS_M2_PENDING_CLOSEOUT_2026_10_31.md"
   }
 }

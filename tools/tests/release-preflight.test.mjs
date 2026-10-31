@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import {spawnSync} from 'node:child_process';
 import {pathToFileURL} from 'node:url';
-import {evaluateReleasePreflight,RELEASE_EXPECTED_SHA,RELEASE_ALLOWED_FILES,RELEASE_MANUAL_GATES,RELEASE_BASE_COMMIT,RELEASE_EXPECTED_LIVE_FLAGS} from '../release_preflight.mjs';
+import {evaluateReleasePreflight,RELEASE_EXPECTED_SHA,RELEASE_ALLOWED_FILES,RELEASE_MANUAL_GATES,RELEASE_BASE_COMMIT,RELEASE_EXPECTED_LIVE_FLAGS,RELEASE_APPROVED_PROTECTED_FILES} from '../release_preflight.mjs';
 
 function good(){
  return {
@@ -29,7 +29,21 @@ test('release preflight passes only an exact reviewed local build and leaves rem
  assert.equal(r.productionApproved,false);
  assert.ok(RELEASE_MANUAL_GATES.includes('VERIFY_REMOTE_OWNER_FLAGS_MATCH_APPROVED_VALUES'));
  assert.ok(RELEASE_ALLOWED_FILES.includes('tools/release-approved-candidate.json'));
- assert.ok(!RELEASE_ALLOWED_FILES.some(x=>x.startsWith('workers/')||x.startsWith('web/finance/')));
+ assert.ok(!RELEASE_ALLOWED_FILES.some(x=>x.startsWith('workers/')));
+ assert.ok(RELEASE_ALLOWED_FILES.filter(x=>x.startsWith('web/finance/')).every(x=>RELEASE_APPROVED_PROTECTED_FILES.includes(x)));
+});
+
+test('targeted Pending authorization never opens other protected worker files',()=>{
+ assert.equal(RELEASE_APPROVED_PROTECTED_FILES.length,9);
+ assert.ok(RELEASE_APPROVED_PROTECTED_FILES.every(x=>x.startsWith('web/finance/')&&!/[?*\\]/.test(x)));
+ for(const path of ['web/finance/src/auth-json-transport.mjs','web/finance/src/production-worker.mjs','web/auth/src/index.mjs','workers/app/wrangler.json']){
+  const data=good();data.changedPaths.push(path);
+  assert.ok(evaluateReleasePreflight(data).failures.includes('RELEASE_PROTECTED_WORKER_PATH'),path);
+ }
+ for(const path of RELEASE_APPROVED_PROTECTED_FILES.filter(path=>RELEASE_ALLOWED_FILES.includes(path))){
+  const data=good();data.changedPaths.push(path);
+  assert.equal(evaluateReleasePreflight(data).ok,true,path);
+ }
 });
 
 test('release guard refuses any exact SHA mismatch, including unchanged Auth or Finance',()=>{

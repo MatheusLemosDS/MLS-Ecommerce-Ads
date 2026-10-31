@@ -9,6 +9,7 @@ import {projectEscrowReleaseRequest,projectEscrowReleaseFrame,projectEscrowRelea
 import {projectReconciliationRequest,projectReconciliationFrame,projectReconciliationEvidenceFrame,projectReconciliationMoneyFrame,reconciliationRequestMatches} from './reconciliation-frame.mjs';
 import {projectIncomeOverviewFrame} from './income-overview-frame.mjs';
 import {projectIncomeDetailFrame} from './income-detail-frame.mjs';
+import {projectIncomeDetailDiagnostic,incomeDetailFailureDiagnostic} from './income-detail-diagnostic.mjs';
 import {projectHistoricalVariantEvidenceRequest,projectHistoricalVariantEvidenceFrame,historicalVariantEvidenceRequestMatches,historicalVariantEvidenceDiagnostic} from './historical-variant-evidence-frame.mjs';
 
 // Candidate router: only the isolated financial Service Binding can handle these paths.
@@ -63,6 +64,11 @@ function historicalFailure(status=502,value=null){
 
 function storePeriodFailure(status=502){
  return new Response(JSON.stringify({error:'FINANCE_STORE_UNAVAILABLE',diagnostic:{code:'FINANCE_STORE_UNAVAILABLE',http:null}}),{status,headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}});
+}
+
+function incomeDetailFailure(status=502,value=null){
+ const diagnostic=value?.error==='FINANCE_INCOME_DETAIL_UNAVAILABLE'?projectIncomeDetailDiagnostic(value.diagnostic):null;
+ return new Response(JSON.stringify({error:'FINANCE_INCOME_DETAIL_UNAVAILABLE',diagnostic:diagnostic??incomeDetailFailureDiagnostic(null)}),{status,headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}});
 }
 
 function sampleFrame(value){
@@ -143,6 +149,7 @@ export async function forwardFinancePaymentSample(request,env,{validateInternalA
   const value=await readSampleBody(upstream.body,responseMaximum,controller,current=>{reader=current;});
   if(controller.signal.aborted)return unavailable();
   if(upstream.status!==200){
+   if(incomeDetail)return incomeDetailFailure([400,401,403,409,429,502,503,504].includes(upstream.status)?upstream.status:502,value);
    if(escrowReleases)return routerFailure('FINANCE_ESCROW_RELEASES_UNAVAILABLE',[400,401,403,409,429,502,503,504].includes(upstream.status)?upstream.status:502);
    if(reconciliation)return routerFailure('FINANCE_RECONCILIATION_UNAVAILABLE',[400,401,403,409,429,502,503,504].includes(upstream.status)?upstream.status:502);
    if(historical)return historicalFailure([400,401,403,409,429,502,503,504].includes(upstream.status)?upstream.status:502,value);

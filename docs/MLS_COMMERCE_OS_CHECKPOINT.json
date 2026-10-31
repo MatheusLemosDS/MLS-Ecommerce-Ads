@@ -111,6 +111,10 @@
     }
   },
   "next_actions": [
+    "Recover the actual Pending failure through bounded diagnostics, correct its cause and validate rows before pagination",
+    "Consolidate same-publication financial cases for Hermes using existing reconciliation panels",
+    "Prepare monthly closeout and require real Seller Centre/bank comparison evidence",
+    "Validate and publish deduplicated responsive navy/neon navigation",
     "Observe completion of the automatically scheduled three-month historical release calendars and refresh coverage; preserve source identity, release calendars and bank receipt as separate evidence",
     "Observe remaining return-reference/detail collection and reconcile real status/adjustment differences with Seller Centre; do not infer bank settlement",
     "Keep saved catalog/cost rules current and continue compatible Products/Pricing observer improvements without commercial writes",
@@ -1136,5 +1140,17 @@
     "m2_complete": false,
     "commercial_writes_allowed": false,
     "bank_settlement_verified": false
+  },
+  "pending_closeout_2026_10_31": {
+    "status": "DIAGNOSTIC_CANDIDATE_VALIDATION",
+    "base": "8b0edb28e7d769c5889ba1a956c239142314b456",
+    "branch": "feature/m2-pending-closeout-20261031",
+    "live_authorization": "PERSISTENT_OWNER_VALIDATED_INCREMENT",
+    "pending_list_validated": false,
+    "pagination_added": false,
+    "three_worker_diagnostic_repair": true,
+    "seller_centre_compared": false,
+    "bank_compared": false,
+    "record": "docs/MLS_M2_PENDING_CLOSEOUT_2026_10_31.md"
   }
 }

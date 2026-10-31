@@ -1,9 +1,11 @@
 import {projectIncomeDetailFrame} from '../../finance/src/income-detail-frame.mjs';
 import {readBusinessIncomeOverview} from './business-income-overview.mjs';
+import {projectIncomeDetailDiagnostic} from '../../finance/src/income-detail-diagnostic.mjs';
 
 export const BUSINESS_INCOME_DETAIL_SCHEMA=[
  `CREATE TABLE IF NOT EXISTS business_income_detail(id INTEGER PRIMARY KEY CHECK(id=1),payload TEXT CHECK(payload IS NULL OR length(CAST(payload AS BLOB))<=262144),payload_checked_at INTEGER,last_attempt_at INTEGER NOT NULL,status TEXT NOT NULL,code TEXT,next_attempt_at INTEGER NOT NULL)`,
  `CREATE TABLE IF NOT EXISTS business_income_detail_lease(id INTEGER PRIMARY KEY CHECK(id=1),lease_token TEXT NOT NULL,lease_until INTEGER NOT NULL)`,
+ `CREATE TABLE IF NOT EXISTS business_income_detail_diagnostic(id INTEGER PRIMARY KEY CHECK(id=1),attempt_checked_at INTEGER NOT NULL,payload TEXT CHECK(payload IS NULL OR length(CAST(payload AS BLOB))<=2048))`,
 ];
 export class BusinessIncomeDetailError extends Error{constructor(code,status=503){super(code);this.status=status;}}
 const fail=(code,status=503)=>{throw new BusinessIncomeDetailError(code,status);},ready=new WeakSet(),encoder=new TextEncoder();
@@ -27,6 +29,13 @@ function parse(stored,stamp){
 }
 function view(stamp,state){stamp=Math.max(stamp,state.report?.checked_at??0,state.attempt?.checked_at??0);const status=state.report?(state.attempt?.status==='UNAVAILABLE'?'PARTIAL_UNAVAILABLE':'AVAILABLE'):state.attempt?.status==='UNAVAILABLE'?'UNAVAILABLE':'PENDING',value={schema:'business_income_detail_v1',checked_at:stamp,status,report:state.report,attempt:state.attempt},projected=projectBusinessIncomeDetail(value,projectIncomeDetailFrame);if(!projected)fail('BUSINESS_INCOME_DETAIL_RESULT_INVALID');return projected;}
 export async function readBusinessIncomeDetail(env,{now=()=>Date.now()}={}){const stamp=clock(now),db=await database(env);return view(stamp,parse(await row(db),stamp));}
+// Additive sidecar: the exact legacy v1 snapshot and old deployment readers are
+// unchanged. A cause is useful only when it belongs to the current failed try.
+export async function readBusinessIncomeDetailDiagnostic(env,{now=()=>Date.now()}={}){
+ const stamp=clock(now),db=await database(env),state=parse(await row(db),stamp),stored=(await db.prepare('SELECT attempt_checked_at,payload FROM business_income_detail_diagnostic WHERE id=1').all()).results?.[0];let diagnostic=null;
+ if(state.attempt?.status==='UNAVAILABLE'&&stored?.attempt_checked_at===state.attempt.checked_at&&typeof stored.payload==='string'&&encoder.encode(stored.payload).byteLength<=2048){try{diagnostic=projectIncomeDetailDiagnostic(JSON.parse(stored.payload));}catch{}}
+ return {schema:'business_income_detail_diagnostic_v1',checked_at:Math.max(stamp,state.attempt?.checked_at??0),attempt_checked_at:state.attempt?.checked_at??null,diagnostic};
+}
 export async function runBusinessIncomeDetail(env,source,{now=()=>Date.now(),canRun=async()=>true}={}){
  const started=clock(now),result=(status,reads=0)=>({schema:'business_income_detail_work_v1',status,source_reads:reads});if(typeof source!=='function'||typeof canRun!=='function')fail('BUSINESS_INCOME_DETAIL_CONFIGURATION');if(!await canRun())return result('PAUSED');
  const overview=await readBusinessIncomeOverview(env,{now});if(!overview.report||overview.status==='UNAVAILABLE')return result('NO_OVERVIEW');if(overview.report.pending.cents===0)return result('NO_PENDING');if(overview.report.pending.cents===null)return result('PENDING_AMOUNT_UNVERIFIED');
@@ -36,7 +45,11 @@ export async function runBusinessIncomeDetail(env,source,{now=()=>Date.now(),can
   if(!await canRun())return result('PAUSED');let raw,error;try{reads++;raw=await source(env);}catch(value){error=value;}const finished=clock(now);if(!await canRun())return result('PAUSED',reads);
   const frame=projectIncomeDetailFrame(raw),diagnostic=Object.getOwnPropertyDescriptor(Object.getOwnPropertyDescriptor(raw??{},'diagnostic')?.value??{},'code')?.value??Object.getOwnPropertyDescriptor(error??{},'code')?.value,valid=frame&&frame.checked_at<=finished+60,code=valid?null:codes.includes(diagnostic)?diagnostic:'FINANCE_INCOME_DETAIL_UNAVAILABLE',previous=parse(await row(db),finished),payload=valid?JSON.stringify(frame):previous.report?JSON.stringify(previous.report):null,checked=valid?frame.checked_at:previous.report?.checked_at??null,next=finished+(valid?900:300);
   if(payload!==null&&encoder.encode(payload).byteLength>262144)fail('BUSINESS_INCOME_DETAIL_RESPONSE_LIMIT');const guard='EXISTS(SELECT 1 FROM business_income_detail_lease WHERE id=1 AND lease_token=? AND lease_until>?)';
-  const saved=await db.prepare('INSERT INTO business_income_detail(id,payload,payload_checked_at,last_attempt_at,status,code,next_attempt_at) SELECT 1,?,?,?,?,?,? WHERE '+guard+' ON CONFLICT(id) DO UPDATE SET payload=excluded.payload,payload_checked_at=excluded.payload_checked_at,last_attempt_at=excluded.last_attempt_at,status=excluded.status,code=excluded.code,next_attempt_at=excluded.next_attempt_at WHERE business_income_detail.last_attempt_at<=excluded.last_attempt_at').bind(payload,checked,finished,valid?'SUCCESS':'UNAVAILABLE',code,next,token,finished).run();
+  const cause=valid?null:projectIncomeDetailDiagnostic(Object.getOwnPropertyDescriptor(Object.getOwnPropertyDescriptor(raw??{},'diagnostic')?.value??{},'cause')?.value),causePayload=cause?JSON.stringify(cause):null;
+  const [saved]=await db.batch([
+   db.prepare('INSERT INTO business_income_detail(id,payload,payload_checked_at,last_attempt_at,status,code,next_attempt_at) SELECT 1,?,?,?,?,?,? WHERE '+guard+' ON CONFLICT(id) DO UPDATE SET payload=excluded.payload,payload_checked_at=excluded.payload_checked_at,last_attempt_at=excluded.last_attempt_at,status=excluded.status,code=excluded.code,next_attempt_at=excluded.next_attempt_at WHERE business_income_detail.last_attempt_at<=excluded.last_attempt_at').bind(payload,checked,finished,valid?'SUCCESS':'UNAVAILABLE',code,next,token,finished),
+   db.prepare('INSERT INTO business_income_detail_diagnostic(id,attempt_checked_at,payload) SELECT 1,?,? WHERE '+guard+' AND EXISTS(SELECT 1 FROM business_income_detail WHERE id=1 AND last_attempt_at=?) ON CONFLICT(id) DO UPDATE SET attempt_checked_at=excluded.attempt_checked_at,payload=excluded.payload WHERE business_income_detail_diagnostic.attempt_checked_at<=excluded.attempt_checked_at').bind(finished,causePayload,token,finished,finished),
+  ]);
   if(saved?.meta?.changes!==1)return result('LEASED',reads);return result(valid?'CHECKED':'UNAVAILABLE',reads);
  }finally{await db.prepare('DELETE FROM business_income_detail_lease WHERE id=1 AND lease_token=?').bind(token).run();}
 }

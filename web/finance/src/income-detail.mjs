@@ -2,9 +2,10 @@ import {FINANCE_PROFILE,FinanceConnectionError} from './connection-store.mjs';
 import {ensureFinanceAccessToken} from './refresh-coordinator.mjs';
 import {requestFinanceAuthJson} from './auth-json-transport.mjs';
 import {projectIncomeDetailFrame} from './income-detail-frame.mjs';
+import {incomeDetailFailureDiagnostic} from './income-detail-diagnostic.mjs';
 
 const origin='https://partner.shopeemobile.com',path='/api/v2/payment/get_income_detail',encoder=new TextEncoder();
-const fail=(suffix,status=503)=>{throw new FinanceConnectionError('FINANCE_INCOME_DETAIL_'+suffix,status);};
+const fail=(suffix,status=503,kind=null)=>{const error=new FinanceConnectionError('FINANCE_INCOME_DETAIL_'+suffix,status);if(kind!==null)Object.defineProperty(error,'upstream_diagnostic',{value:kind});throw error;};
 const plain=value=>value!==null&&typeof value==='object'&&[Object.prototype,null].includes(Object.getPrototypeOf(value));
 const integer=(value,min=0,max=Number.MAX_SAFE_INTEGER)=>Number.isSafeInteger(value)&&!Object.is(value,-0)&&value>=min&&value<=max;
 const serial=value=>typeof value==='string'&&value.length>0&&value.length<=128&&!/[^\x21-\x7e]|,/.test(value);
@@ -20,16 +21,19 @@ function cents(raw){if(raw===null)return null;const m=/^(-?)(0|[1-9][0-9]*)(?:\.
 function localDay(stamp){return new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date(stamp*1000));}
 function previousDay(day){return new Date(Date.parse(day+'T12:00:00Z')-86400000).toISOString().slice(0,10);}
 async function envelope(value,checkedAt){
- if(!plain(value)||typeof value.error!=='string')fail('INVALID_RESPONSE',502);for(const row of [value,...(plain(value.response)?[value.response]:[])])for(const name of ['partner_id','shop_id'])if(Object.hasOwn(row,name)&&row[name]!==FINANCE_PROFILE[name])fail('INVALID_RESPONSE',502);
- if(value.error!=='')fail(['error_api_permission','error_auth','error_sign','error_partner_id','error_ip'].includes(value.error)?'PERMISSION_DENIED':['error_limit','error_rate_limit'].includes(value.error)?'RATE_LIMIT':'UNAVAILABLE',502);
- const box=value.income_detail_list;if(!plain(box)||!Array.isArray(box.list)||box.list.length>100)fail('INVALID_RESPONSE',502);const next=plain(box.next_page)?box.next_page:null,cursor=next&&typeof next.cursor==='string'&&next.cursor.length<=512?next.cursor:'';
- if(next&&Object.hasOwn(next,'cursor')&&typeof next.cursor!=='string')fail('INVALID_RESPONSE',502);if(next&&Object.hasOwn(next,'page_size')&&next.page_size!==100)fail('INVALID_RESPONSE',502);
+ if(!plain(value)||typeof value.error!=='string')fail('INVALID_RESPONSE',502,'ROOT_INVALID');for(const row of [value,...(plain(value.response)?[value.response]:[])])for(const name of ['partner_id','shop_id'])if(Object.hasOwn(row,name)&&row[name]!==FINANCE_PROFILE[name])fail('INVALID_RESPONSE',502,'IDENTITY_MISMATCH');
+ if(value.error!==''){
+  const suffix=['error_api_permission','error_auth','error_sign','error_partner_id','error_ip'].includes(value.error)?'PERMISSION_DENIED':['error_limit','error_rate_limit'].includes(value.error)?'RATE_LIMIT':'UNAVAILABLE',error=new FinanceConnectionError('FINANCE_INCOME_DETAIL_'+suffix,502),safe=incomeDetailFailureDiagnostic({code:error.code,provider_code:value.error,upstream_status:200});
+  Object.defineProperties(error,{provider_code:{value:safe.provider_code},upstream_status:{value:200},upstream_diagnostic:{value:'PROVIDER_ERROR'}});throw error;
+ }
+ const box=value.income_detail_list;if(!plain(box))fail('INVALID_RESPONSE',502,'INCOME_CONTAINER_MISSING');if(!Array.isArray(box.list)||box.list.length>100)fail('INVALID_RESPONSE',502,'INCOME_LIST_INVALID');const next=plain(box.next_page)?box.next_page:null,cursor=next&&typeof next.cursor==='string'&&next.cursor.length<=512?next.cursor:'';
+ if(next&&Object.hasOwn(next,'cursor')&&(typeof next.cursor!=='string'||next.cursor.length>512))fail('INVALID_RESPONSE',502,'PAGE_CURSOR_INVALID');if(next&&Object.hasOwn(next,'page_size')&&next.page_size!==100)fail('INVALID_RESPONSE',502,'PAGE_SIZE_INVALID');
  const rows=[];
  for(const item of box.list){
-  if(!plain(item)||!serial(item.order_sn)||item.currency!=='BRL')fail('INVALID_RESPONSE',502);const raw=providerRaw(item.estimated_escrow_amount);
-  if(Object.hasOwn(item,'estimated_escrow_amount')&&item.estimated_escrow_amount!==null&&raw===null)fail('INVALID_RESPONSE',502);
+  if(!plain(item)||!serial(item.order_sn))fail('INVALID_RESPONSE',502,'ROW_IDENTITY_INVALID');if(item.currency!=='BRL')fail('INVALID_RESPONSE',502,'ROW_CURRENCY_INVALID');const raw=providerRaw(item.estimated_escrow_amount);
+  if(Object.hasOwn(item,'estimated_escrow_amount')&&item.estimated_escrow_amount!==null&&raw===null)fail('INVALID_RESPONSE',502,'ROW_AMOUNT_INVALID');
   const estimated=Object.hasOwn(item,'estimated_payout_time')&&integer(item.estimated_payout_time,1,9999999999)?item.estimated_payout_time:null,created=Object.hasOwn(item,'creation_date')&&integer(item.creation_date,1,9999999999)?item.creation_date:null;
-  const status=clean(item.status);if(status===null)fail('INVALID_RESPONSE',502);const description=Object.hasOwn(item,'description')?clean(item.description):null,payment=Object.hasOwn(item,'payment_method')?clean(item.payment_method):null;if(Object.hasOwn(item,'description')&&description===null||Object.hasOwn(item,'payment_method')&&payment===null)fail('INVALID_RESPONSE',502);
+  const status=clean(item.status);if(status===null)fail('INVALID_RESPONSE',502,'ROW_STATUS_INVALID');const description=Object.hasOwn(item,'description')?clean(item.description):null,payment=Object.hasOwn(item,'payment_method')?clean(item.payment_method):null;if(Object.hasOwn(item,'description')&&description===null||Object.hasOwn(item,'payment_method')&&payment===null)fail('INVALID_RESPONSE',502,'ROW_TEXT_INVALID');
   const orderHash=await hash(item.order_sn),entryHash=await hash(JSON.stringify({order_sn:item.order_sn,status,description,payment,estimated_escrow_raw:raw,estimated_payout_time:estimated,creation_time:created}));
   rows.push({entry_hash:entryHash,order_hash:orderHash,currency:'BRL',status,description,payment_method:payment,estimated_escrow_raw:raw,estimated_escrow_cents:cents(raw),estimated_payout_time:estimated,creation_time:created});
  }

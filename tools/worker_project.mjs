@@ -5,6 +5,7 @@ import path from 'node:path';
 export const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const TARGETS = Object.freeze({
   app: Object.freeze({name: 'brazacommerce-app', main: '../../dist/app-worker.mjs', baselineHashes: [
+    '98c5c1e436d1fb35377dbaedb33888169b5cfe8c15855634d6386d044748396e',
     // Reviewed closed-month coverage gaps in completed scans with shorter cutoffs.
     'da9c248a849ba7c0af70dbd81ee79aa6ce4c23cac2c82c55aed785cdfbc8a850',
     // Reviewed bounded three-month calendar continuation with persisted target rotation.
@@ -169,6 +170,7 @@ export const TARGETS = Object.freeze({
     '6535b56d5a4548468a4af454c31e72642dd4353f56d8cb918ce902fff0f45bb9',
   ]}),
   auth: Object.freeze({name: 'brazacommerce-auth', main: '../../dist/auth-worker.mjs', baselineHashes: [
+    'cf326e9a4917c75474b4222c87cbf5744f98ddfe459eb1fd249a05fb6f097bcb',
     '45d0142709c5087e373cc4da146070ed39c472805f6f64c00f00b6555f0e1f56',
     'c55d2339b6e227b606e8a55b6cefcc904d95466f238b70f1d2aea74599dbdb7a',
     '28a43b7d610eda4b272a2a7013c7213f966976850f78be3cb0f767adeab3146d',

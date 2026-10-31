@@ -2,8 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {D1} from './sqlite-d1.mjs';
 import {runBusinessIncomeOverview} from '../src/business-income-overview.mjs';
-import {readBusinessIncomeDetail,runBusinessIncomeDetail,projectBusinessIncomeDetail} from '../src/business-income-detail.mjs';
+import {readBusinessIncomeDetail,readBusinessIncomeDetailDiagnostic,runBusinessIncomeDetail,projectBusinessIncomeDetail} from '../src/business-income-detail.mjs';
 import {projectIncomeDetailFrame} from '../../finance/src/income-detail-frame.mjs';
+import {incomeDetailFailureDiagnostic} from '../../finance/src/income-detail-diagnostic.mjs';
 
 const at=Date.UTC(2026,9,27,15),stamp=at/1000;
 const overview=pending=>({schema:'finance_income_overview_v1',checked_at:stamp,region:'BRAZIL',shop_type:'LOCAL',currency_basis:'FIXED_BRAZIL_SHOP_PROFILE',pending:{status:'PENDING',raw:String(pending/100),cents:pending},released:{status:'RELEASED',raw:'0',cents:0},to_release:{status:'TO_RELEASE_NOT_APPLICABLE_LOCAL',raw:null,cents:null},basis:'CURRENT_PROVIDER_INCOME_STATUS_NOT_BANK_RECEIPT_OR_HISTORICAL_MONTH'});
@@ -32,4 +33,18 @@ test('failed Pending detail refresh preserves last good rows and original checke
 test('sub-cent or paginated Pending detail remains descriptive instead of becoming a complete receivable total',async t=>{
  const f=await fixture(t);await runBusinessIncomeOverview(f.env,async()=>overview(10000),{now:f.now});const source=detail();source.has_more=true;source.next_cursor_present=true;source.rows[0].estimated_escrow_raw='10.123';source.rows[0].estimated_escrow_cents=null;assert.ok(projectIncomeDetailFrame(source));
  await runBusinessIncomeDetail(f.env,async()=>source,{now:f.now});const value=await readBusinessIncomeDetail(f.env,{now:f.now});assert.equal(value.report.has_more,true);assert.equal(value.report.rows[0].estimated_escrow_cents,null);assert.equal(Object.hasOwn(value.report,'remaining_receivable_cents'),false);
+});
+
+test('the additive cause sidecar is bound to one attempt and leaves legacy DTO and old payload intact',async t=>{
+ const f=await fixture(t);await runBusinessIncomeOverview(f.env,async()=>overview(10000),{now:f.now});await runBusinessIncomeDetail(f.env,async()=>detail(),{now:f.now});f.clock.time+=901000;
+ const cause=incomeDetailFailureDiagnostic({code:'FINANCE_INCOME_DETAIL_INVALID_RESPONSE',upstream_diagnostic:'INCOME_LIST_INVALID'});
+ await runBusinessIncomeDetail(f.env,async()=>({diagnostic:{code:'FINANCE_INCOME_DETAIL_HTTP_ERROR',http:502,cause},message:'PRIVATE_PROVIDER_BODY'}),{now:f.now});
+ const legacy=await readBusinessIncomeDetail(f.env,{now:f.now}),evidence=await readBusinessIncomeDetailDiagnostic(f.env,{now:f.now});assert.equal(legacy.attempt.code,'FINANCE_INCOME_DETAIL_HTTP_ERROR');assert.equal(legacy.report.checked_at,stamp);assert.equal(Object.keys(legacy).length,5);assert.equal(Object.keys(legacy.attempt).length,4);assert.deepEqual(evidence.diagnostic,cause);assert.equal(evidence.attempt_checked_at,legacy.attempt.checked_at);assert.doesNotMatch(JSON.stringify(evidence),/PRIVATE_PROVIDER_BODY/);
+ f.db.db.prepare('UPDATE business_income_detail_diagnostic SET attempt_checked_at=attempt_checked_at-1').run();assert.equal((await readBusinessIncomeDetailDiagnostic(f.env,{now:f.now})).diagnostic,null);
+ f.clock.time+=301000;await runBusinessIncomeDetail(f.env,async()=>({...detail(),checked_at:f.clock.time/1000}),{now:f.now});assert.equal((await readBusinessIncomeDetailDiagnostic(f.env,{now:f.now})).diagnostic,null);assert.equal((await readBusinessIncomeDetail(f.env,{now:f.now})).status,'AVAILABLE');
+});
+
+test('expired collection lease cannot publish a cause or replace the previous snapshot',async t=>{
+ const f=await fixture(t);await runBusinessIncomeOverview(f.env,async()=>overview(10000),{now:f.now});await runBusinessIncomeDetail(f.env,async()=>detail(),{now:f.now});f.clock.time+=901000;
+ const result=await runBusinessIncomeDetail(f.env,async()=>{f.clock.time+=91000;return {diagnostic:{code:'FINANCE_INCOME_DETAIL_HTTP_ERROR',cause:incomeDetailFailureDiagnostic(null)}};},{now:f.now});assert.equal(result.status,'LEASED');assert.equal((await readBusinessIncomeDetail(f.env,{now:f.now})).attempt.status,'SUCCESS');assert.equal((await readBusinessIncomeDetailDiagnostic(f.env,{now:f.now})).diagnostic,null);
 });

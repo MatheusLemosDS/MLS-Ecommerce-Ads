@@ -30,6 +30,22 @@ export const RELEASE_BASE_COMMIT=approvedCandidate.base_commit;
 export const RELEASE_EXPECTED_SHA=Object.freeze({...approvedCandidate.expected_hashes});
 export const RELEASE_EXPECTED_LIVE_FLAGS=Object.freeze({...validFlags});
 export const RELEASE_ALLOWED_FILES=Object.freeze([...approvedCandidate.allowed_files]);
+// The owner explicitly requested the Pending income repair. These literal files
+// are the sole protected-source exception for this candidate, still subject to
+// the exact diff and all three generated SHA-256 checks. Infrastructure, other
+// Finance/Auth sources and legacy originals remain protected.
+export const RELEASE_APPROVED_PROTECTED_FILES=Object.freeze([
+ 'web/finance/src/income-detail.mjs',
+ 'web/finance/src/income-detail-diagnostic.mjs',
+ 'web/finance/src/connection-worker.mjs',
+ 'web/finance/src/auth-router.mjs',
+ 'web/finance/tests/income-detail.test.mjs',
+ 'web/finance/tests/income-detail-chain.test.mjs',
+ 'web/finance/tests/income-detail-diagnostic.test.mjs',
+ 'web/finance/tests/connection-worker.test.mjs',
+ 'web/finance/tests/auth-router.test.mjs'
+]);
+
 
 export const RELEASE_MANUAL_GATES=Object.freeze([
  'CHECK_CLOUDFLARE_LIVE_APP_VERSION_AND_BUILD_TRIGGERS',
@@ -57,7 +73,7 @@ export function evaluateReleasePreflight({baseCommit,changedPaths,buildHashes,ap
  else{
   const allowed=new Set(RELEASE_ALLOWED_FILES);
   if(paths.some(p=>!allowed.has(p)))failures.push('RELEASE_UNREVIEWED_PATH');
-  if(paths.some(p=>/^(workers\/|web\/finance\/|web\/auth\/|web\/cloudflare\/original\/)/.test(p)))
+  if(paths.some(p=>/^(workers\/|web\/finance\/|web\/auth\/|web\/cloudflare\/original\/)/.test(p)&&!RELEASE_APPROVED_PROTECTED_FILES.includes(p)))
    failures.push('RELEASE_PROTECTED_WORKER_PATH');
  }
  if(!buildHashes||Object.keys(RELEASE_EXPECTED_SHA).some(kind=>

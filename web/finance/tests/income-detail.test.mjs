@@ -5,6 +5,7 @@ import {D1} from '../../cloudflare/tests/sqlite-d1.mjs';
 import {createFinanceStore,FINANCE_PROFILE} from '../src/connection-store.mjs';
 import {readFinanceIncomeDetail} from '../src/income-detail.mjs';
 import {projectIncomeDetailFrame} from '../src/income-detail-frame.mjs';
+import {incomeDetailFailureDiagnostic} from '../src/income-detail-diagnostic.mjs';
 
 const key='PRIVATE_INCOME_DETAIL_KEY',access='PRIVATE_INCOME_DETAIL_ACCESS',refresh='PRIVATE_INCOME_DETAIL_REFRESH',path='/api/v2/payment/get_income_detail';
 async function fixture(t){
@@ -38,4 +39,21 @@ test('expired access refresh and Pending detail share the same two-call budget',
  const f=await fixture(t),store=await createFinanceStore(f.env,{now:f.now}),tokens=await store.readTokens();await store.saveTokens({access_token:access,refresh_token:refresh,expires_at:f.now()/1000+1},{expectedRevision:tokens.revision});f.clock.time+=2000;let external=0;
  const fetchImpl=async request=>{external++;const url=new URL(request.url);if(url.pathname==='/api/v2/auth/access_token/get')return Response.json({error:'',message:'',request_id:'x',partner_id:FINANCE_PROFILE.partner_id,shop_id:FINANCE_PROFILE.shop_id,access_token:access+'2',refresh_token:refresh+'2',expire_in:14400});return Response.json({error:'',income_detail_list:{list:[],next_page:{cursor:'',page_size:100}}});};
  const value=await readFinanceIncomeDetail(f.env,{now:f.now,fetchImpl});assert.equal(external,2);assert.equal(value.returned_count,0);
+});
+
+test('Pending schema failures identify the rejected structural category without retaining values',async t=>{
+ for(const [kind,change] of [
+  ['ROOT_INVALID',f=>f.state.body={private:'PRIVATE_RESPONSE'}],
+  ['INCOME_CONTAINER_MISSING',f=>f.state.body={error:'',response:{income_detail_list:{list:[]}}}],
+  ['INCOME_LIST_INVALID',f=>delete f.state.body.income_detail_list.list],
+  ['ROW_CURRENCY_INVALID',f=>f.state.body.income_detail_list.list[0].currency='PRIVATE_CURRENCY'],
+  ['ROW_IDENTITY_INVALID',f=>f.state.body.income_detail_list.list[0].order_sn='PRIVATE ORDER'],
+  ['ROW_AMOUNT_INVALID',f=>f.state.body.income_detail_list.list[0].estimated_escrow_amount='47.51'],
+  ['ROW_STATUS_INVALID',f=>delete f.state.body.income_detail_list.list[0].status],
+  ['PAGE_CURSOR_INVALID',f=>f.state.body.income_detail_list.next_page.cursor='x'.repeat(513)],
+ ]){const f=await fixture(t);change(f);await assert.rejects(f.run(),error=>{const cause=incomeDetailFailureDiagnostic(error);assert.equal(cause.response_kind,kind);assert.doesNotMatch(JSON.stringify(cause),/PRIVATE_RESPONSE|PRIVATE_CURRENCY|PRIVATE ORDER|251027ABC123/);return true;});}
+});
+
+test('provider200 failures retain only allowlisted error tokens and their actual HTTP status',async t=>{
+ const f=await fixture(t);f.state.body={error:'error_param',message:'PRIVATE_BODY'};await assert.rejects(f.run(),error=>{const cause=incomeDetailFailureDiagnostic(error);assert.equal(cause.provider_code,'error_param');assert.equal(cause.http,200);assert.equal(cause.response_kind,'PROVIDER_ERROR');assert.doesNotMatch(JSON.stringify(cause),/PRIVATE_BODY/);return true;});
 });

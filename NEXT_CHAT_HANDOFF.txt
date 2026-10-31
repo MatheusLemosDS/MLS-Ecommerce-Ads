@@ -1,3 +1,5 @@
+M2 31/10/2026 — Pending/closeout/navigation candidate on feature/m2-pending-closeout-20261031 over mainPR91 8b0edb28. Diagnostic repair across Finance/Auth/App pending validation and actual Live cause; no pagination added. Then same-publication Hermes cases + monthly closeout preparation + isolated navigation rework. Read docs/MLS_M2_PENDING_CLOSEOUT_2026_10_31.md. Owner authorizes validated Live increments. Commercial writes/bank finality remain gated.
+
 LIVE PR91 — M2 CALENDÁRIOS HISTÓRICOS E CORTE COMPLETO — 31/10/2026
 Branch feature/m2-historical-release-calendars-20261031, base mainPR90 8cdad2a.
 Código9826b28, CI41229871797 GREEN2772Node/67Python/Chromium.

@@ -18,7 +18,7 @@ import {BUSINESS_ESCROW_RELEASES_SCHEMA,BusinessEscrowReleasesError,readBusiness
 import {BUSINESS_ESCROW_RELEASE_COVERAGE_SCHEMA,BusinessEscrowReleaseCoverageError,readBusinessEscrowReleaseCoverage,runBusinessEscrowReleaseCoverage} from './business-escrow-release-coverage.mjs';
 import {FINANCIAL_AUDIT_SCHEMA,FinancialAuditOrchestrationError,runBusinessFinancialAudits} from './financial-audit-orchestration.mjs';
 import {BUSINESS_INCOME_OVERVIEW_SCHEMA,BusinessIncomeOverviewError,readBusinessIncomeOverview} from './business-income-overview.mjs';
-import {BUSINESS_INCOME_DETAIL_SCHEMA,BusinessIncomeDetailError,readBusinessIncomeDetail} from './business-income-detail.mjs';
+import {BUSINESS_INCOME_DETAIL_SCHEMA,BusinessIncomeDetailError,readBusinessIncomeDetail,readBusinessIncomeDetailDiagnostic} from './business-income-detail.mjs';
 import {BUSINESS_RECONCILIATION_SCHEMA,BusinessReconciliationError,readBusinessReconciliation,readBusinessReconciliationEvidence,readBusinessReconciliationMoney,runBusinessReconciliation} from './business-reconciliation.mjs';
 import {BUSINESS_MONTH_SCHEMA,BusinessMonthError,businessMonthClientFrame,readBusinessMonthAdsState,readBusinessMonthDisplay} from './business-month.mjs';
 import {ExpenseLedgerError,readExpenseLedger,mutateExpenseLedger} from './expense-ledger.mjs';
@@ -496,7 +496,10 @@ async function adminFetch(request,env,services={}){const url=new URL(request.url
   assert(request.method==='GET','METHOD_NOT_ALLOWED',405);assert([...url.searchParams].length===0,'BUSINESS_INCOME_OVERVIEW_REQUEST_INVALID');return json(await readBusinessIncomeOverview(env));
  }
  if(path==='/api/admin/finance/income-detail'){
-  assert(request.method==='GET','METHOD_NOT_ALLOWED',405);assert([...url.searchParams].length===0,'BUSINESS_INCOME_DETAIL_REQUEST_INVALID');return json(await readBusinessIncomeDetail(env));
+  assert(request.method==='GET','METHOD_NOT_ALLOWED',405);
+  const entries=[...url.searchParams];assert(entries.length===0||(entries.length===1&&entries[0][0]==='evidence'&&entries[0][1]==='diagnostic-v1'),'BUSINESS_INCOME_DETAIL_REQUEST_INVALID');
+  if(entries.length){const detail=await readBusinessIncomeDetail(env);const diagnostic=await readBusinessIncomeDetailDiagnostic(env);return json({schema:'business_income_detail_evidence_v1',detail,diagnostic});}
+  return json(await readBusinessIncomeDetail(env));
  }
  if(path==='/api/admin/finance/reconciliation'){
   assert(request.method==='GET','METHOD_NOT_ALLOWED',405);
