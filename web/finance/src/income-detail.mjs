@@ -20,6 +20,24 @@ function providerRaw(value){
 function cents(raw){if(raw===null)return null;const m=/^(-?)(0|[1-9][0-9]*)(?:\.([0-9]{1,2}))?$/.exec(raw);if(!m)return null;const n=(BigInt(m[2])*100n+BigInt((m[3]??'').padEnd(2,'0')))*(m[1]?-1n:1n);return n>=BigInt(Number.MIN_SAFE_INTEGER)&&n<=BigInt(Number.MAX_SAFE_INTEGER)?Number(n):null;}
 function localDay(stamp){return new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date(stamp*1000));}
 function previousDay(day){return new Date(Date.parse(day+'T12:00:00Z')-86400000).toISOString().slice(0,10);}
+// Private structural telemetry: fixed paths and type/count metadata only. No
+// provider keys, scalar values, messages, identifiers or credentials are saved.
+function incomeDetailStructure(value){
+ const nodes={},shallow=(current,present)=>!present?{type:'MISSING'}:current===null?{type:'NULL'}:Array.isArray(current)?{type:'ARRAY',array_count:current.length}:typeof current==='object'?{type:'OBJECT',key_count:Object.keys(current).length}:({string:'STRING',number:'NUMBER',boolean:'BOOLEAN'}[typeof current]?{type:{string:'STRING',number:'NUMBER',boolean:'BOOLEAN'}[typeof current]}:{type:'MISSING'});
+ const add=segments=>{let current=value,present=true;for(const segment of segments){if(current===null||typeof current!=='object'||!Object.hasOwn(current,segment)){present=false;current=undefined;break;}current=Object.getOwnPropertyDescriptor(current,segment)?.value;}const node=shallow(current,present);if(node.type==='ARRAY')node.first=shallow(current[0],current.length>0);nodes['root'+segments.map(segment=>typeof segment==='number'?'[0]':'.'+segment).join('')]=node;};
+ for(const originPath of [[],['response'],['data'],['result']]){
+  add(originPath);add([...originPath,'income_detail_list']);
+  for(const box of [[...originPath,'income_detail_list'],[...originPath,'income_detail_list',0]])for(const suffix of [['list'],['income_detail_list_item'],['next_page'],['next_page','cursor'],['next_page','page_size']])add([...box,...suffix]);
+ }
+ return {schema:'finance_income_detail_structure_probe_v1',request_method:'GET',nodes};
+}
+async function saveIncomeDetailStructure(env,checkedAt,probe){
+ try{
+  const db=env?.FINANCE_DB;if(typeof db?.prepare!=='function'||!integer(checkedAt,1,9999999999))return;const payload=JSON.stringify(probe);if(encoder.encode(payload).byteLength>16384)return;
+  await db.prepare('CREATE TABLE IF NOT EXISTS finance_income_detail_structure_probe(id INTEGER PRIMARY KEY CHECK(id=1),checked_at INTEGER NOT NULL,payload TEXT NOT NULL CHECK(length(CAST(payload AS BLOB))<=16384))').run();
+  await db.prepare('INSERT INTO finance_income_detail_structure_probe(id,checked_at,payload) VALUES(1,?,?) ON CONFLICT(id) DO UPDATE SET checked_at=excluded.checked_at,payload=excluded.payload WHERE finance_income_detail_structure_probe.checked_at<excluded.checked_at').bind(checkedAt,payload).run();
+ }catch{/* Diagnostic storage must never replace the original result or error. */}
+}
 async function envelope(value,checkedAt){
  if(!plain(value)||typeof value.error!=='string')fail('INVALID_RESPONSE',502,'ROOT_INVALID');for(const row of [value,...(plain(value.response)?[value.response]:[])])for(const name of ['partner_id','shop_id'])if(Object.hasOwn(row,name)&&row[name]!==FINANCE_PROFILE[name])fail('INVALID_RESPONSE',502,'IDENTITY_MISMATCH');
  if(value.error!==''){
@@ -46,11 +64,13 @@ export async function readFinanceIncomeDetail(env,{fetchImpl=request=>fetch(requ
  const rawNow=now();if(!integer(rawNow,1,9999999999999)||typeof fetchImpl!=='function'||!integer(timeoutMs,5,10000)||env?.FINANCE_CONNECTION_ENABLED!=='true')fail('CONFIGURATION');const started=Math.floor(rawNow/1000);
  const keyText=env.SHOPEE_FINANCE_PARTNER_KEY;if(typeof keyText!=='string'||!keyText.length||keyText.length>4096||/[\u0000-\u001f\u007f]/.test(keyText))fail('SIGNING_CONFIGURATION');const bytes=encoder.encode(keyText);let key;try{key=await crypto.subtle.importKey('raw',bytes,{name:'HMAC',hash:'SHA-256'},false,['sign']);}finally{bytes.fill(0);}
  let calls=0;const bounded=async request=>{if(calls>=2)fail('UNAVAILABLE');calls++;return fetchImpl(request);},tokens=await ensureFinanceAccessToken(env,{fetchImpl:bounded,now,timeoutMs});const timestamp=Math.floor(now()/1000);if(tokens.expires_at<=timestamp)fail('UNAVAILABLE');
- const today=localDay(timestamp),body={cursor:'',date_from:previousDay(today),date_to:today,income_status:2,page_size:100};
- const observed=await requestFinanceAuthJson({input:{timestamp},options:{fetchImpl:bounded,now,timeoutMs},prefix:'FINANCE_INCOME_DETAIL',maximumBodyBytes:262144,buildRequest:async()=>{
+ const today=localDay(timestamp),parameters={cursor:'',date_from:previousDay(today),date_to:today,income_status:2,page_size:100};let probe=null,probeCheckedAt=started;
+ try{const observed=await requestFinanceAuthJson({input:{timestamp},options:{fetchImpl:bounded,now,timeoutMs},prefix:'FINANCE_INCOME_DETAIL',maximumBodyBytes:262144,buildRequest:async()=>{
   const signature=[...new Uint8Array(await crypto.subtle.sign('HMAC',key,encoder.encode(String(FINANCE_PROFILE.partner_id)+path+timestamp+tokens.access_token+FINANCE_PROFILE.shop_id)))].map(byte=>byte.toString(16).padStart(2,'0')).join(''),url=new URL(path,origin);
   for(const [name,value] of Object.entries({partner_id:FINANCE_PROFILE.partner_id,shop_id:FINANCE_PROFILE.shop_id,timestamp,access_token:tokens.access_token,sign:signature}))url.searchParams.set(name,String(value));
-  return new Request(url,{method:'POST',redirect:'manual',headers:{Accept:'application/json','Content-Type':'application/json'},body:JSON.stringify(body)});
- },normalizeResponse:value=>envelope(value,Math.max(started,Math.floor(now()/1000)))});
+  for(const [name,value] of Object.entries(parameters))url.searchParams.set(name,String(value));
+  return new Request(url,{method:'GET',redirect:'manual',headers:{Accept:'application/json'}});
+ },normalizeResponse:value=>{probe=incomeDetailStructure(value);probeCheckedAt=Math.max(started,Math.floor(now()/1000));return envelope(value,probeCheckedAt);}});
  const frame=projectIncomeDetailFrame(await observed);if(!frame)fail('RESULT_INVALID');return frame;
+ }finally{if(probe)await saveIncomeDetailStructure(env,probeCheckedAt,probe);}
 }

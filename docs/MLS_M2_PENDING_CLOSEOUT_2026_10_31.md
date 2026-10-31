@@ -55,7 +55,7 @@ Correção candidata: prazo padrão e teto10s, compatíveis com o transporte e o
 
 Dois achados da revisão final também corrigidos: reembolsos totalmente indisponíveis permanecem desconhecidos em vez de0; código real da causa (por exemplo TIMEOUT) chega ao painel junto do erro externo, por vocabulário fechado. Valores positivos e zeros comprovados preservados, sem mudar o cálculo do lucro. Dados reais com timeout revalidados offline na publicação14954/3fontes; banco continua NÃO COMPARADO.
 
-O schema capturado de Shopee em `congminh1254/shopee-sdk/schemas/v2.payment.get_income_detail.json` confirmaPOST; o métodoGET gerado pelo SDK TypeScript diverge do próprio schema. Não trocamos o método com base nessa geração. Resposta e lista ainda exigem validação na execução real após a publicação do ajuste do prazo.
+A interpretação inicial dos metadados capturados como prova dePOST estava incorreta: os mesmos valores0/2 aparecem nos endpointsGET já funcionais. O SDKGo usaPOST, incluindo indevidamente get_escrow_list, enquanto SDKsTypeScript/PHP usamGET. O método precisa ser validado na conta. Resposta e lista ainda exigem validação na execução real após a publicação do ajuste do prazo.
 
 O CI41237974807 encontrou somente duas falhas de tipografia na nova QA320px com fontes mais largas do runner; Finance e as demais validações Node passaram. Publicação Finance não ocorreu, pois o gate encerrou o script. Correção responsiva: até360px, somente o cartão de situação ocupa a linha inteira; cartões numéricos continuam em duas colunas. As asserções de encaixe foram preservadas, com medidas explícitas para diagnóstico.7 testes de layout/Chromium passaram localmente; novoCI completo exigido. A suíte local anterior passou2.831Node/67Python.
 
@@ -66,3 +66,11 @@ A versãoFinance `53c27861`, publicada e conferida às17:30:03 com CI41238683919
 Correção candidata reconhece somente variantes explícitas dos contratos públicos: uma origem na raiz ou em `response`; uma caixa objeto ou array com exatamente uma caixa; um único array `list` ou `income_detail_list_item`. Origens/aliases simultâneos, várias caixas, identidades conflitantes e paginação ausente continuam inválidos. Descrição/forma de pagamento opcionais nulas permanecem desconhecidas. MesmoPOST, prazo10s, limites monetários e de chamadas.29 testes focados e8 testes dos três Workers gerados/minificados passaram. Nenhuma escala monetária foi presumida: o schema público definefloat e não documenta divisor100000.
 
 Nova lista real ainda deve ser validada antes de publicar o conjunto visual. A confirmação monetária usará comparações agregadas entre hashes de pedidos e pagamentos salvos, sem divulgar identidades.
+
+## Comparação controlada do método e telemetria privada
+
+A tentativa17:58:58 na Finance `bf014004` permaneceu `INCOME_CONTAINER_MISSING`, mesmo após os seletores explícitos. O CI41240722219 passou2.835Node/67Python, porém a lista real não foi declarada válida.
+
+A checagem cruzada mostrou que `is_get_method:0,method:2` não determina o verbo: os mesmos valores existem em IncomeOverview/EscrowList/EscrowDetail que já funcionam comGET. O helperGo fazPOST real, mas tem erros demonstrados de método; os SDKsTS/PHP usamGET. O novo candidato envia uma única consultaGET com os cinco parâmetros na URL e a mesma assinatura, preservandoPOST nos transportes privados App/Auth/Finance, prazo10s e teto de duas chamadas incluindo refresh. Não há fallback, retryextra nem mudança monetária.
+
+Durante a consulta existente, o Finance registra somente uma projeção de48caminhos fixos com tipos/contagens numa tabela privada singleton `finance_income_detail_structure_probe`, até16KiB. Não registra valores, mensagens, nomes arbitrários de chaves, pedidos, identificadores, tokens ou corpo bruto. Persistência ocorre depois que o transporte encerra o prazo; falha diagnóstica não muda o resultado original.32 testes focados e8gerados/minificados passaram, incluindo assinatura/query completa, limite, privacidade e ordem das atualizações. O GET permanece candidato até resposta real válida.

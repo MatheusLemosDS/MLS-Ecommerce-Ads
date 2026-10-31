@@ -1,8 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
+import {createHmac} from 'node:crypto';
 import {build} from 'esbuild';
-import {createFinanceStore} from '../../finance/src/connection-store.mjs';
+import {createFinanceStore,FINANCE_PROFILE} from '../../finance/src/connection-store.mjs';
 import {D1} from './sqlite-d1.mjs';
 
 const endpoint='https://auth.brazacommerce.com.br/internal/shopee/finance/income-detail';
@@ -34,7 +35,7 @@ async function fixture(t,workers){
  const store=await createFinanceStore(financeEnv,{now});await store.setup();await store.saveTokens({access_token:'PRIVATE_PENDING_DIAGNOSTIC_ACCESS',refresh_token:'PRIVATE_PENDING_DIAGNOSTIC_REFRESH',expires_at:stamp+14400});
  const state={body:successfulBody(),status:200,financeResponse:null},calls={app:0,finance:0,provider:0};
  const authEnv={APP_INTERNAL_SECRET:appSecret,FINANCE_ROUTER_SECRET:routerSecret,SHOPEE_FINANCE_SERVICE:{fetch:async request=>{
-  calls.finance++;assert.equal(request.url,endpoint);assert.equal(request.headers.get('x-braza-finance-router'),routerSecret);
+  calls.finance++;assert.equal(request.url,endpoint);assert.equal(request.method,'POST');assert.equal(request.headers.get('x-braza-finance-router'),routerSecret);
   for(const name of ['x-braza-app-key','cookie','authorization','origin'])assert.equal(request.headers.get(name),null);
   if(state.financeResponse)return state.financeResponse();
   return workers.finance.fetch(request,financeEnv);
@@ -42,12 +43,18 @@ async function fixture(t,workers){
  globalThis.fetch=async input=>{
   const request=input instanceof Request?input:new Request(input),url=new URL(request.url);
   if(url.origin==='https://partner.shopeemobile.com'){
-   calls.provider++;assert.equal(url.pathname,'/api/v2/payment/get_income_detail');assert.equal(request.method,'POST');assert.equal(request.redirect,'manual');
-   assert.deepEqual(await request.clone().json(),{cursor:'',date_from:'2026-10-30',date_to:'2026-10-31',income_status:2,page_size:100});
+   calls.provider++;assert.equal(url.pathname,'/api/v2/payment/get_income_detail');assert.equal(request.method,'GET');assert.equal(request.redirect,'manual');
+   assert.equal(request.body,null);assert.equal(await request.clone().text(),'');assert.equal(request.headers.get('content-type'),null);
+   const params={cursor:'',date_from:'2026-10-30',date_to:'2026-10-31',income_status:'2',page_size:'100'};
+   assert.deepEqual([...url.searchParams.keys()].sort(),[...Object.keys(params),'partner_id','shop_id','timestamp','access_token','sign'].sort());
+   for(const [name,value] of Object.entries(params))assert.equal(url.searchParams.get(name),value,name);
+   assert.equal(url.searchParams.get('partner_id'),String(FINANCE_PROFILE.partner_id));assert.equal(url.searchParams.get('shop_id'),String(FINANCE_PROFILE.shop_id));assert.equal(url.searchParams.get('timestamp'),String(Math.floor(now()/1000)));assert.equal(url.searchParams.get('access_token'),'PRIVATE_PENDING_DIAGNOSTIC_ACCESS');
+   const signedBase=String(FINANCE_PROFILE.partner_id)+url.pathname+url.searchParams.get('timestamp')+url.searchParams.get('access_token')+FINANCE_PROFILE.shop_id;
+   assert.equal(url.searchParams.get('sign'),createHmac('sha256',financeEnv.SHOPEE_FINANCE_PARTNER_KEY).update(signedBase).digest('hex'));
    for(const name of ['x-braza-app-key','x-braza-finance-router','cookie','authorization','origin'])assert.equal(request.headers.get(name),null);
    return Response.json(state.body,{status:state.status});
   }
-  calls.app++;assert.equal(request.url,endpoint);assert.equal(request.headers.get('x-braza-app-key'),appSecret);
+  calls.app++;assert.equal(request.url,endpoint);assert.equal(request.method,'POST');assert.equal(request.headers.get('x-braza-app-key'),appSecret);
   for(const name of ['x-braza-finance-router','cookie','authorization','origin'])assert.equal(request.headers.get(name),null);
   return workers.auth.fetch(request,authEnv);
  };
