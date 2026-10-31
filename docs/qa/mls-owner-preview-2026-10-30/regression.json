@@ -1,0 +1,75 @@
+{
+  "schema": "mls_owner_homologation_regression_v1",
+  "date": "2026-10-30",
+  "source": "ACTUAL_WORKER_SQLITE_LOCAL_SYNTHETIC_DATA_NO_HTTP_MOCKS",
+  "node": {
+    "passed": 2327,
+    "failed": 0,
+    "skipped": 0,
+    "duration_ms": 117661.759191,
+    "log_sha256": "ca6383549f1d07284c1b917c0fb5aed50b317825b0ead0be8f70ed8afddd6184"
+  },
+  "python": {
+    "passed": 67,
+    "failed": 0,
+    "log_sha256": "8924d6280dfd67a8e1d5510e8067bbd286f4543459f1f300c7c5583f85481688"
+  },
+  "workers": {
+    "app": {
+      "worker": "brazacommerce-app",
+      "bytes": 2939685,
+      "sha256": "a5ba3298faf4b8c2eaa32e98674f1d7408f4c4616236d8f04a2fba72bbfb91c8"
+    },
+    "auth": {
+      "worker": "brazacommerce-auth",
+      "bytes": 251026,
+      "sha256": "1fef431c8573e05563c7938d95be0976a160bc603340084aa747ee0b73e7ec64"
+    },
+    "finance": {
+      "worker": "brazacommerce-finance",
+      "bytes": 485661,
+      "sha256": "b2483fc6107ecb4782e746becfe1b69ee6e3b9d3f0a6109351390b11b9303ca3"
+    }
+  },
+  "browser": {
+    "cases": 3,
+    "viewports": [
+      [
+        1365,
+        900
+      ],
+      [
+        390,
+        844
+      ]
+    ],
+    "native_panels": 16,
+    "ai_tabs": 5,
+    "javascript_errors": 0,
+    "captures_generated": 74,
+    "captures_versioned": 8,
+    "cost_save": "SQLITE_POST_PERSISTED; REGULAR1590_TO1690_PLUS2140_CHILD1250_KIT3730_TO3830",
+    "native_video_pipeline": "CURRENT_NATIVE_CAMPAIGN_TO_CLI_TO_FFMPEG_TO_REATTACH_TO_LOCAL_APPROVED",
+    "human_approval": "PENDING_NOT_REPLACED_BY_SYNTHETIC_TEST",
+    "offline_transport": "HTTP_STATIC_ZERO_API_BACKEND_REQUESTS",
+    "file_protocol": "BLOCKED_BY_BROWSER_ADMINISTRATOR_POLICY_NOT_VALIDATED"
+  },
+  "downloads": {
+    "html": {
+      "name": "MLS_OWNER_PREVIA_INTERATIVA.html",
+      "sha256": "3cde8d356ea8d56737d23e517d2be823ef066411015db2a7f20de1357cbc23ab",
+      "bytes": 3040764
+    },
+    "zip": {
+      "name": "MLS_OWNER_PREVIA_FUNCIONAL_2026-10-30.zip",
+      "sha256": "6fb69d38cfdd6bc18dbf69087f10e168271efc6a73f5849aed41919139f5ac51",
+      "bytes": 1987757
+    }
+  },
+  "production_worker_changes": false,
+  "real_merchant_data": false,
+  "cloudflare_authenticated": false,
+  "merge_main": false,
+  "production_deploy": false,
+  "commercial_writes": false
+}

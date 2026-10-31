@@ -1,3 +1,4 @@
+import {buildMlsProductIntelligence,simulateMlsPricingScenario} from './mls-product-intelligence.mjs';
 import {EXPENSE_LEDGER_CLIENT} from './expense-ledger-view.mjs';
 import {ESCROW_RELEASES_CLIENT} from './escrow-releases-view.mjs';
 import {BUSINESS_RECONCILIATION_CLIENT} from './business-reconciliation-view.mjs';
@@ -18,6 +19,8 @@ import {BUSINESS_DAY_CLIENT} from './business-day-view.mjs';
 
 export const BUSINESS_MONTH_CLIENT=BUSINESS_DAY_CLIENT+String.raw`
 (()=>{
+ ${buildMlsProductIntelligence.toString()}
+ ${simulateMlsPricingScenario.toString()}
  ${projectAdsCalendar.toString()}
  ${projectBusinessMonthProducts.toString()}
  ${projectBusinessMonth.toString()}
@@ -481,9 +484,100 @@ export const BUSINESS_MONTH_CLIENT=BUSINESS_DAY_CLIENT+String.raw`
   if(!frame)return;if(dirty&&!force)return;
   const saved=frame.expenses;el('ExpensesValue').value=saved.external_expenses_cents===null?'':(saved.external_expenses_cents/100).toFixed(2);el('Recharge').value=saved.recharge_treatment;draftRevision=saved.revision;dirty=false;
  }
+ let m3PricingEvidenceKey='';
+ function drawPricingObserver(){
+  const host=el('PricingObserver'),scope=el('PricingScope'),stats=el('PricingStats'),
+   rows=el('PricingRows'),selector=el('PricingVariant'),calculate=el('PricingCalculate'),
+   outcome=el('PricingResult');
+  if(!host||!scope||!stats||!rows||!selector||!calculate||!outcome)return;
+  const report=buildMlsProductIntelligence(frame);
+  const evidenceKey=report?report.month+':'+String(frame?.checked_at??'')+':'+
+    report.total_products+':'+report.total_units+':'+report.covered_exclusive_balance_cents+':'+
+    report.variants.map(v=>v.item_id+':'+v.model_id+':'+String(v.unit_cost_cents)).join('|'):'unavailable';
+  if(evidenceKey!==m3PricingEvidenceKey){
+   m3PricingEvidenceKey=evidenceKey;
+   outcome.textContent='Escolha uma variação e preencha todas as hipóteses antes de simular.';
+  }
+  stats.replaceChildren();rows.replaceChildren();
+  const previous=selector.value;selector.replaceChildren();
+  const blank=node('option','Escolher variação');blank.value='';selector.append(blank);
+  calculate.onclick=null;
+  if(!report){
+   host.dataset.sourceReady='false';scope.textContent='M3 Observador: aguardando um mês completo e o resumo de produtos validado. Os traços não significam zero, estoque ou lucro.';
+   selector.disabled=true;calculate.disabled=true;
+   outcome.textContent='Sem fonte mensal completa. Nenhuma simulação ou sugestão foi gerada.';
+   return;
+  }
+  host.dataset.sourceReady='true';
+  const count=value=>new Intl.NumberFormat('pt-BR').format(value);
+  const addStat=(label,value)=>{
+   const entry=node('div');entry.append(node('small',label),node('strong',value));stats.append(entry);
+  };
+  addStat('Produtos vendidos',count(report.total_products));
+  addStat('Unidades vendidas',count(report.total_units));
+  addStat('Saldos exclusivos com evidência',count(report.exclusive_balance_covered_products)+' / '+count(report.total_products));
+  addStat('ABC por receita de pedidos exclusivos',report.revenue_abc_status==='AVAILABLE'?'Disponível':'Bloqueada: cobertura incompleta');
+  scope.textContent='Fonte: vendas do mês '+report.month+' já validadas. ABC A/B/C por QUANTIDADE vendida, não por estoque. '+
+   (report.revenue_abc_status==='AVAILABLE'?
+    'ABC da receita bruta dos pedidos exclusivos também disponível, sem representar lucro.':
+    'ABC por receita indisponível enquanto houver pedidos mistos ou situações sem valores completos.')+
+   ' Pricing não publica preços, não altera Ads e não autoriza escala.';
+  for(const product of report.products.slice(0,12)){
+   const tr=node('tr'),name=catalogProducts.get(product.item_id)?.product_name||'Produto #'+product.item_id;
+   tr.append(node('td',name),node('td',product.abc_units||'—'),node('td',count(product.quantity)),
+    node('td',product.exclusive_after_costs_cents===null?'Em conferência':money(product.exclusive_after_costs_cents)));
+   rows.append(tr);
+  }
+  if(!report.products.length){
+   const tr=node('tr'),td=node('td','Nenhum produto vendido foi confirmado neste mês.');
+   td.colSpan=4;tr.append(td);rows.append(tr);
+  }
+  const available=report.variants.filter(v=>Number.isSafeInteger(v.unit_cost_cents)&&v.unit_cost_cents>0);
+  for(const v of available){
+   const option=node('option',(catalogProducts.get(v.item_id)?.product_name||'Produto #'+v.item_id)+
+    ' · variação #'+v.model_id+' · custo '+money(v.unit_cost_cents));
+   option.value=v.item_id+':'+v.model_id;selector.append(option);
+  }
+  if(available.some(v=>v.item_id+':'+v.model_id===previous))selector.value=previous;
+  selector.disabled=!available.length;calculate.disabled=!available.length;
+  if(!available.length)outcome.textContent='Nenhuma variação possui custo unitário confirmado acima de zero. A simulação permanece bloqueada.';
+  const assumptionsChanged=()=>{outcome.textContent='Hipóteses alteradas. Calcule novamente para conferir o cenário com os valores atuais.';};
+  selector.onchange=assumptionsChanged;
+  for(const field of ['PricingExtra','PricingFee','PricingAds','PricingMargin'])el(field).oninput=assumptionsChanged;
+  const inputCents=value=>{
+   const match=/^(0|[1-9][0-9]{0,6})(?:[.,]([0-9]{1,2}))?$/.exec(String(value||'').trim());
+   if(!match)return null;
+   const cents=BigInt(match[1])*100n+BigInt((match[2]||'').padEnd(2,'0'));
+   return cents<=100000000n?Number(cents):null;
+  };
+  const inputBps=value=>{
+   const match=/^(0|[1-9][0-9]?)(?:[.,]([0-9]{1,2}))?$/.exec(String(value||'').trim());
+   if(!match)return null;
+   const bps=Number(match[1])*100+Number((match[2]||'').padEnd(2,'0'));
+   return bps<=9000?bps:null;
+  };
+  calculate.onclick=()=>{
+   const selected=available.find(v=>v.item_id+':'+v.model_id===selector.value);
+   const extra=inputCents(el('PricingExtra').value),fee=inputBps(el('PricingFee').value),
+    ads=inputBps(el('PricingAds').value),margin=inputBps(el('PricingMargin').value);
+   if(!selected||extra===null||fee===null||ads===null||margin===null){
+    outcome.textContent='Informe a variação, custos adicionais (mesmo zero) e os três percentuais do cenário. Nenhum valor é presumido.';
+    return;
+   }
+   const scenario=simulateMlsPricingScenario({unit_cost_cents:selected.unit_cost_cents,
+    extra_cost_cents:extra,fee_bps:fee,ads_bps:ads,target_margin_bps:margin});
+   if(!scenario){
+    outcome.textContent='Cenário inválido: o total de taxas, Ads e margem precisa ser menor que 100%, e os valores devem respeitar os limites.';
+    return;
+   }
+   outcome.textContent='Preço matemático do cenário: '+money(scenario.calculated_scenario_price_cents)+
+    ' · custo base informado: '+money(scenario.supplied_cost_base_cents)+
+    '. SIMULAÇÃO, NÃO É PREÇO SEGURO NEM RECOMENDAÇÃO PARA PUBLICAR. Taxas oficiais, impostos, frete, devoluções, atribuição Ads, estoque e fechamento M2 seguem sem comprovação automática.';
+  };
+ }
  function drawProducts(){
   const target=el('ProductRows'),report=frame?.product_summary,mei=frame?.tax?.regime==='MEI';
-  drawCatalogStatus();const periodCodes=frame?.result.pending.filter(code=>['STATUS_REVIEW_REQUIRED','SOURCE_UNAVAILABLE','FINANCIAL_SOURCE_STALE'].includes(code))||[];el('ProductPeriodNotice').hidden=!periodCodes.length;el('ProductPeriodNotice').textContent=periodCodes.length?'Avisos do período: '+periodCodes.map(code=>pendingMessages[code]).join(' ')+' Os subtotais abaixo cobrem somente os pedidos já conferidos de cada produto.':'';
+  drawPricingObserver();drawCatalogStatus();const periodCodes=frame?.result.pending.filter(code=>['STATUS_REVIEW_REQUIRED','SOURCE_UNAVAILABLE','FINANCIAL_SOURCE_STALE'].includes(code))||[];el('ProductPeriodNotice').hidden=!periodCodes.length;el('ProductPeriodNotice').textContent=periodCodes.length?'Avisos do período: '+periodCodes.map(code=>pendingMessages[code]).join(' ')+' Os subtotais abaixo cobrem somente os pedidos já conferidos de cada produto.':'';
   el('ProductBalanceHeading').textContent=mei?'Saldo após produção':'Saldo após produção e imposto';
   el('ProductTaxHelp').textContent=mei?'O saldo por produto usa o repasse da Shopee, menos produção dos pedidos exclusivos. O DAS-MEI é mensal e está descontado uma única vez no resultado geral, sem rateio por produto. Anúncios e outras despesas ainda não foram conciliados por produto. Este saldo não é lucro líquido por produto.':'O saldo por produto usa o repasse da Shopee, menos produção e imposto de 2% dos pedidos exclusivos. Anúncios e outras despesas ainda não foram conciliados por produto. Este saldo não é lucro líquido por produto.';
   if(month!==productMonth){productMonth=month;productPage=1;productOpen.clear();el('ProductSearch').value='';el('ProductFilter').value='all';el('ProductSort').value='quantity_desc';el('ProductPageSize').value='20';}

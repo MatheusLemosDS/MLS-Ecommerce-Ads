@@ -146,7 +146,7 @@ async function pollLive(){if(pollPromise)return pollPromise;clearTimeout(pollTim
 const reasons={bridge_upgrade_required:'Atualização do assistente pendente. As análises financeiras ficam disponíveis após essa atualização.',disconnected:'A ponte está desconectada. A solicitação ficará disponível quando a conexão voltar.',paused:'O Hermes está pausado. Selecione Manual e salve a operação para analisar.',active:'Uma análise já está na fila ou em processamento. Aguarde a conclusão.',run_limit:'Você atingiu o limite mensal de análises definido no painel.',cost_unconfirmed:'Há custos não confirmados. Se você usa login da assinatura, selecione essa forma de uso e salve a operação. Se usa API, confira e registre os custos antes de continuar.',budget:'O orçamento de referência da API não comporta outra reserva.'};
 el('runReason').hidden=live.execution_access.allowed&&!upgradePending;el('runReason').textContent=upgradePending?reasons.bridge_upgrade_required:reasons[live.execution_access.reason]||'';
 el('budgetStatus').textContent=live.billing_mode==='subscription'?'Uso do painel: '+(live.budget.total_runs||0)+' de '+live.monthly_run_limit+' análises neste mês (UTC). Consulte limites e créditos na conta do provedor.':'Comprometido no mês (UTC): '+money(live.budget.committed_cents,'USD')+' · custo não confirmado: '+(live.budget.unknown_cost_runs||0)+' execução(ões).';
-renderJobs();const selected=rows.find(job=>job.id===selectedJobId);if(selected&&['queued','running'].includes(previous.get(selected.id))&&['completed','failed'].includes(selected.status))notice(selected.status==='completed'?'Análise concluída. A resposta foi atualizada automaticamente.':'A análise falhou. Consulte a execução antes de tentar novamente.');el('autoStatus').textContent='Atualização automática ativa · última consulta '+new Date().toLocaleTimeString('pt-BR',{timeZone:'America/Sao_Paulo'})+'.';}catch(error){el('autoStatus').textContent='Não foi possível atualizar agora. Tentaremos novamente automaticamente. '+error.message;}finally{pollPromise=null;schedulePoll();}})();return pollPromise;}
+renderJobs();const selected=rows.find(job=>job.id===selectedJobId);if(selected&&['queued','running'].includes(previous.get(selected.id))&&['completed','failed'].includes(selected.status))notice(selected.status==='completed'?'Análise concluída. A resposta foi atualizada automaticamente.':'A análise falhou. Consulte a execução antes de tentar novamente.');el('autoStatus').textContent='Atualização automática ativa · última consulta '+new Date().toLocaleTimeString('pt-BR',{timeZone:'America/Sao_Paulo'})+'.';}catch(error){el('connection').textContent='Hermes: sem leitura';el('connection').dataset.status='pending';el('autoStatus').textContent='Não foi possível atualizar agora. Tentaremos novamente automaticamente. '+error.message;}finally{pollPromise=null;schedulePoll();}})();return pollPromise;}
 async function loadTodayAds(){
  if(todayAdsPromise)return todayAdsPromise;
  todayAdsPromise=(async()=>{
@@ -827,7 +827,7 @@ function startupFeedback(value){
  const failureMessage={SESSION:'Sua sessão expirou. Entre novamente.',QUOTA:'O painel está indisponível porque o limite diário do banco de dados foi atingido. A cota é renovada todos os dias às 21h (horário de Brasília).',UNAVAILABLE:'O painel está temporariamente indisponível. Tente novamente em alguns instantes.',NETWORK:'Não foi possível conectar ao painel. Verifique sua conexão e tente novamente.',TIMEOUT:'A consulta demorou mais que o esperado. Tente novamente.',INVALID:'Não foi possível abrir o painel. Tente novamente.'}[failureKind];
  const message=value.phase==='LOADING'?'Conectando ao painel…':value.phase==='RETRYING'?'A conexão foi interrompida. Tentando novamente…':failed?failureMessage:'';
  const target=el('message');if(message){target.dataset.startup='true';notice(message);}else if(target.dataset.startup==='true'){notice('');delete target.dataset.startup;}
- const retry=el('startupRetry'),login=el('startupLogin');if(retry){retry.hidden=!failed||unauthorized;retry.disabled=!failed;}if(login)login.hidden=!unauthorized;
+ const retry=el('startupRetry'),login=el('startupLogin');if(retry){retry.hidden=!failed||unauthorized;retry.disabled=!failed;}if(login)login.hidden=!unauthorized;const recovery=retry?.closest?.('.startup-recovery');if(recovery)recovery.hidden=!failed;
  globalThis.brazaMonthDashboard?.bootstrapState?.({phase:value.phase,failureKind:failed?failureKind:null});
  globalThis.brazaDayDashboard?.bootstrapState?.({phase:value.phase,failureKind:failed?failureKind:null});
 }
@@ -852,7 +852,7 @@ function loadSettings(){
  })();settingsPromise=task;return task;
 }
 function startSecondaryPanels(){
- const work=[['settings',()=>loadSettings()],['audit',()=>loadAudit()],['live',()=>pollLive()],['ads',()=>loadTodayAds()],['orders',()=>loadShopOrders()],['products',()=>loadVariants({localOnly:true})],['catalog',()=>globalThis.brazaSavedCatalog?.start({api,onConfigureCost:configureCustomCost,onAssignRule:costRuleAssignmentControl})],['costPeriods',()=>globalThis.brazaProductionCostPeriods?.start({api})],['observations',()=>loadObservations()],['costs',()=>loadProductionCosts()],['confirmedCosts',()=>loadConfirmedCostReferences()],['automation',()=>globalThis.brazaAutomationWorkspace?.start({api})],['production',()=>globalThis.brazaDtfWorkspace?.start({api})],['costRules',()=>globalThis.brazaCostRules?.start({api,onChanged:async()=>{await loadVariants({localOnly:true});await globalThis.brazaSavedCatalog?.refresh();await globalThis.brazaProductionCostPeriods?.refresh();await globalThis.brazaMonthDashboard?.refreshCosts();}})]];
+ const work=[['settings',()=>loadSettings()],['audit',()=>loadAudit()],['live',()=>pollLive()],['ads',()=>loadTodayAds()],['orders',()=>loadShopOrders()],['products',()=>loadVariants({localOnly:true})],['catalog',()=>globalThis.brazaSavedCatalog?.start({api,onConfigureCost:configureCustomCost,onAssignRule:costRuleAssignmentControl})],['costPeriods',()=>globalThis.brazaProductionCostPeriods?.start({api})],['observations',()=>loadObservations()],['costs',()=>loadProductionCosts()],['confirmedCosts',()=>loadConfirmedCostReferences()],['automation',()=>globalThis.brazaAutomationWorkspace?.start({api})],['aiSales',()=>globalThis.mlsAiSalesWorkspace?.start({api})],['production',()=>globalThis.brazaDtfWorkspace?.start({api})],['costRules',()=>globalThis.brazaCostRules?.start({api,onChanged:async()=>{await loadVariants({localOnly:true});await globalThis.brazaSavedCatalog?.refresh();await globalThis.brazaProductionCostPeriods?.refresh();await globalThis.brazaMonthDashboard?.refreshCosts();}})]];
  return Promise.allSettled(work.map(([key,run])=>Promise.resolve().then(run).catch(()=>{secondaryFailure(key);}))).then(async()=>{renderVariantCards();if(!variantSyncOpened)variantSyncOpened=true;if(variantSyncRequested)await syncOnProductsOpen();updateStoreControls();});
 }
 function startOverview(){
@@ -865,7 +865,7 @@ function initialize(){
   loadSession:()=>api('bootstrap',undefined,{timeoutMs:12000}),
   acceptSession:data=>{if(!data||Object.keys(data).length!==2||data.schema!=='admin_bootstrap_v1'||typeof data.csrf!=='string'||!/^[a-f0-9]{64}$/.test(data.csrf))throw Error('ADMIN_SESSION_RESPONSE_INVALID');csrf=data.csrf;},
   startPrimary:startOverview,startSecondary:startSecondaryPanels,onState:startupFeedback,canRetry:()=>!document.hidden,
-  onPrimaryFailure:()=>{notice('Não foi possível abrir o resumo. Use Atualizar mês para tentar novamente.');const retry=el('startupRetry');if(retry){retry.hidden=false;retry.disabled=false;}},
+  onPrimaryFailure:()=>{notice('Não foi possível abrir o resumo. Use Atualizar mês para tentar novamente.');const retry=el('startupRetry'),recovery=retry?.closest?.('.startup-recovery');if(recovery)recovery.hidden=false;if(retry){retry.hidden=false;retry.disabled=false;}},
   onSecondaryFailure:()=>{}
  });
  if(startupController.getState().ready)return startOverview();
@@ -889,7 +889,7 @@ function logoutWorkspace(event){
    const deadline=new Promise((resolve,reject)=>{timer=setTimeout(()=>{controller.abort();reject(Error('LOGOUT_TIMEOUT'));},15000);});
    const response=await Promise.race([fetch('/admin/logout',{method:'POST',headers:{'X-CSRF-Token':csrf},credentials:'same-origin',redirect:'error',signal:controller.signal}),deadline]);
    if(!response.ok){notice('Não foi possível sair. Atualize a página e tente novamente.');return false;}
-   try{startupController?.stop();settingsLoadGeneration++;csrf='';state=null;settingsControls(false);globalThis.brazaMonthDashboard?.stop();globalThis.brazaDayDashboard?.stop();globalThis.brazaSavedCatalog?.stop();globalThis.brazaProductionCostPeriods?.stop();globalThis.brazaAutomationWorkspace?.stop();globalThis.brazaDtfWorkspace?.stop();clearTimeout(pollTimer);clearTimeout(storeAdsRefreshTimer);clearTimeout(shopOrdersRefreshTimer);}finally{location.href='/login';}
+   try{startupController?.stop();settingsLoadGeneration++;csrf='';state=null;settingsControls(false);globalThis.brazaMonthDashboard?.stop();globalThis.brazaDayDashboard?.stop();globalThis.brazaSavedCatalog?.stop();globalThis.brazaProductionCostPeriods?.stop();globalThis.brazaAutomationWorkspace?.stop();globalThis.brazaDtfWorkspace?.stop();globalThis.mlsAiSalesWorkspace?.stop();clearTimeout(pollTimer);clearTimeout(storeAdsRefreshTimer);clearTimeout(shopOrdersRefreshTimer);}finally{location.href='/login';}
    return true;
   }catch{notice('Não foi possível confirmar a saída. Verifique sua conexão e tente novamente.');return false;}
   finally{if(timer!==null)clearTimeout(timer);logoutPromise=null;}
@@ -899,13 +899,14 @@ el('logout').onsubmit=logoutWorkspace;
 function workspaceTabFromLocation(){try{const values=new URLSearchParams(globalThis.location?.search||'').getAll('tab');return values.length===1?values[0]:'overview';}catch{return 'overview';}}
 function openTab(tab,{updateUrl=true}={}){
  const titles={production:['Produção e DTF','Organize os pedidos, encontre as artes pelo SKU e monte seus lotes de impressão.'],overview:['Central de Comando','Acompanhe o resultado de hoje, as prioridades e o estado dos agentes. Os detalhes continuam disponíveis abaixo.'],margins:['Custos de produção','Cadastre o custo por peça. Os produtos identificados recebem o cálculo automaticamente.'],hermes:['Análises do Hermes','Peça uma análise e acompanhe o andamento, os limites e o histórico.'],products:['Produtos e variações','Consulte os produtos e seus custos. Revise somente as identificações pendentes.'],history:['Histórico e auditoria','Confira o que foi alterado e as versões salvas dos seus dados.'],roadmap:['Plano de evolução','Veja o que já está disponível e o que falta para automatizar as vendas.'],agents:['Central de agentes','Sua equipe digital, cada especialista com seu painel e dados validados.'],'agent-finance':['MLS Finance','Conciliação, Pending, repasses e despesas em um painel exclusivo.'],'agent-ads':['MLS Ads','Leitura de anúncios e oportunidades sem alterações comerciais.'],'agent-products':['MLS Products','Produtos, custos conhecidos e métricas das unidades vendidas.'],'agent-production':['MLS Production','Pedidos, montagem DTF e cobertura de custos da produção.'],'agent-returns':['MLS Returns','Devoluções, reembolsos e ajustes para revisão.'],'agent-auditor':['MLS Auditor','Confiabilidade e divergências de evidência da operação.'],'agent-hermes':['MLS Hermes','Supervisão, prioridades e controles operacionais.']};
+ if(globalThis.mlsAiSalesWorkspace)titles['ai-sales']=['MLS AI Sales','Prepare campanhas, vídeos e propostas locais. Confira o desempenho antes de ampliar.'];
  if(!Object.hasOwn(titles,tab))tab='overview';
  if(['margins','hermes'].includes(tab)&&csrf&&!state)void loadSettings();
  if(tab==='products'){if(csrf)loadObservations();if(globalThis.brazaSavedCatalog)globalThis.brazaSavedCatalog.refresh();else syncOnProductsOpen();}
  document.querySelectorAll('.workspace > section').forEach(section=>section.hidden=section.id!==tab);
  document.querySelectorAll('[data-tab]').forEach(link=>{const selected=link.dataset.tab===tab||tab.startsWith('agent-')&&link.dataset.tab==='agents';link.classList.toggle('active',selected);if(selected)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');});
  document.querySelectorAll('.workspace-more').forEach(menu=>{menu.dataset.active=String(!!menu.querySelector('[aria-current="page"]'));menu.open=false;});
- el('pageTitle').textContent=titles[tab][0];el('pageSubtitle').textContent=titles[tab][1];document.documentElement.dataset.activePanel=tab;if(tab==='production')globalThis.brazaDtfWorkspace?.open?.();
+ el('pageTitle').textContent=titles[tab][0];el('pageSubtitle').textContent=titles[tab][1];document.documentElement.dataset.activePanel=tab;if(tab==='production')globalThis.brazaDtfWorkspace?.open?.();if(tab==='ai-sales')globalThis.mlsAiSalesWorkspace?.open?.();
  if(updateUrl&&globalThis.history?.pushState&&globalThis.location?.href){try{const target=new URL(globalThis.location.href);target.pathname='/admin';target.searchParams.set('tab',tab);target.hash='';if(target.href!==globalThis.location.href)globalThis.history.pushState({tab},'',target.pathname+target.search);}catch{}}
 }
 
@@ -913,6 +914,7 @@ function openTab(tab,{updateUrl=true}={}){
 // Mission Control V3.5: navigation-only command search. It never queries live
 // products or orders, never opens unauthorized workspaces, and never calls APIs.
 const missionSearchRoutes=Object.freeze([
+ ...(globalThis.mlsAiSalesWorkspace?[{key:'ai-sales',title:'MLS AI Sales',group:'Ferramentas',description:'Campanhas, vídeos locais, afiliados e desempenho',terms:'studio video criador afiliado tiktok campanha ia',panel:'ai-sales'}]:[]),
  {key:'overview',title:'Visão Geral',group:'Painéis',description:'Resultados e prioridades da loja',terms:'central comando lucro vendas hoje indicadores',panel:'overview'},
  {key:'agents',title:'Central de Agentes',group:'Painéis',description:'Sete especialidades e Hermes',terms:'equipe especialistas status',panel:'agents'},
  {key:'agent-finance',title:'MLS Finance',group:'Agentes',description:'Conciliação, Pending e repasses',terms:'financeiro lucro pagamentos recebimentos receita',panel:'agent-finance'},
@@ -940,17 +942,31 @@ const missionSearchRoutes=Object.freeze([
 (function installMissionSearch(){
  const overlay=el('missionGlobalSearch'),openButton=el('missionSearchOpen'),
   closeButton=el('missionSearchClose'),input=el('missionSearchInput'),results=el('missionSearchResults');
- if(!overlay||!openButton||!closeButton||!input||!results||typeof overlay.addEventListener!=='function'||typeof results.addEventListener!=='function'||typeof input.addEventListener!=='function'||typeof document.addEventListener!=='function')return;
+ const v36Preview=overlay?.dataset?.mlsV36Preview==='enabled';
  const normalize=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-BR');
  const byKey=new Map(missionSearchRoutes.map(item=>[item.key,item]));
- let selected=[],active=0,restoreFocus=null;
+ const scopeButtons=typeof overlay?.querySelectorAll==='function'?[...overlay.querySelectorAll('[data-mission-scope]')]:[],execute=el('missionSearchExecute'),
+  more=el('missionSearchMore'),pageInfo=el('missionSearchPageInfo'),scopeLabel=el('missionSearchScope');
+ let selected=[],active=0,restoreFocus=null,mode='navigation',lookupEpoch=0,busy=false,
+  currentQuery='',currentOffset=0,moreAvailable=false;
+ if(!overlay||!openButton||!closeButton||!input||!results||!execute||!more||!pageInfo||!scopeLabel||typeof overlay.addEventListener!=='function'||typeof results.addEventListener!=='function'||typeof input.addEventListener!=='function'||typeof document.addEventListener!=='function')return;
  function hide({focus=true}={}){
   if(overlay.hidden)return;
-  overlay.hidden=true;
+  ++lookupEpoch;overlay.hidden=true;
   document.documentElement.dataset.missionSearch='closed';
   if(focus&&restoreFocus?.focus)restoreFocus.focus();
  }
  function render(){
+  if(mode!=='navigation'){
+   selected=[];active=0;results.replaceChildren();pageInfo.textContent='';
+   more.hidden=true;moreAvailable=false;execute.disabled=busy||input.value.trim().length<2;
+   const empty=document.createElement('p');empty.className='mission-search-empty';
+   empty.textContent=input.value.trim().length<2?'Digite pelo menos 2 caracteres.':'Pressione Enter ou Pesquisar para consultar este escopo.';
+   results.append(empty);
+   scopeLabel.textContent=mode==='products'?'Busca no catálogo persistido e paginado, não consulta diretamente a Shopee.':
+    'Somente pedidos já presentes na fila DTF salva; não inclui o histórico completo da Shopee.';
+   return;
+  }
   const query=normalize(input.value.trim());
   const rawQuery=input.value.trim();
   const terms=query.split(/\s+/).filter(Boolean);
@@ -962,7 +978,7 @@ const missionSearchRoutes=Object.freeze([
    const score=item=>normalize(item.title).startsWith(query)?0:normalize(item.title).includes(query)?1:2;
    return score(a)-score(b);
   }).slice(0,10);
-  if(rawQuery.length>=2&&rawQuery.length<=90){
+  if(v36Preview&&rawQuery.length>=2&&rawQuery.length<=90){
    selected.unshift({key:'product-query',title:'Buscar "'+rawQuery+'" no catálogo',group:'Pesquisa real',description:'Consultar produtos salvos e suas variações · até 20 por página',panel:'products',catalogQuery:rawQuery});
    selected=selected.slice(0,10);
   }
@@ -983,8 +999,117 @@ const missionSearchRoutes=Object.freeze([
    results.append(empty);
   }
   const scope=el('missionSearchScope');
-  if(scope)scope.textContent=rawQuery.length>=2?'Escolha Buscar no catálogo para consultar produtos salvos. Nenhum pedido é pesquisado automaticamente.':'Digite um nome ou código para pesquisar produtos salvos, ou escolha um painel e ferramenta.';
+  if(scope)scope.textContent=!v36Preview?'Pesquise painéis, agentes e ferramentas.':rawQuery.length>=2?'Busque no catálogo salvo após confirmação, ou escolha um painel. Pedidos não são consultados automaticamente.':'Selecione um escopo: Painéis, Produtos salvos ou Pedidos na fila DTF.';
  }
+
+ function showRecords(items,total,offset,hasMore,source){
+  selected=items;active=0;currentOffset=offset;moreAvailable=hasMore;
+  results.replaceChildren();
+  for(const [index,item] of selected.entries()){
+   const link=document.createElement('a');link.className='mission-search-result';
+   link.dataset.searchRoute=item.key;link.dataset.active=String(index===active);
+   link.dataset.type=item.type;
+   link.href='/admin?tab='+item.panel;
+   const copy=document.createElement('span'),title=document.createElement('strong'),
+    description=document.createElement('small'),kind=document.createElement('em');
+   title.textContent=item.title;description.textContent=item.description;kind.textContent=item.group;
+   copy.append(title,description);link.append(copy,kind);results.append(link);
+  }
+  if(!items.length){
+   const empty=document.createElement('p');empty.className='mission-search-empty';
+   empty.textContent='Nenhum registro corresponde à consulta neste escopo.';
+   results.append(empty);
+  }
+  const first=total?offset+1:0,through=Math.min(total,offset+items.length);
+  pageInfo.textContent=first+'–'+through+' de '+total+' resultado(s) disponíveis';
+  more.hidden=!hasMore;more.disabled=false;
+  scopeLabel.textContent=source;
+ }
+ async function searchRecords(offset=0){
+  if(!v36Preview||mode==='navigation'||busy)return;
+  const query=input.value.trim(),sourceMode=mode;
+  if(query.length<2||query.length>90||/[\u0000-\u001f\u007f]/.test(query))return;
+  const requestId=++lookupEpoch;
+  selected=[];active=0;currentQuery='';moreAvailable=false;more.hidden=true;
+  busy=true;execute.disabled=true;more.disabled=true;
+  results.replaceChildren();
+  const loading=document.createElement('p');loading.className='mission-search-empty';
+  loading.textContent=sourceMode==='products'?'Pesquisando no catálogo salvo…':'Conferindo pedidos presentes na fila DTF…';
+  results.append(loading);
+  try{
+   let items=[],total=0,hasMore=false,source='';
+   if(sourceMode==='products'){
+    if(!csrf)throw Error('SESSION_NOT_READY');
+    const queryString=new URLSearchParams({limit:'8',offset:String(offset),search:query,item_status:'ACTIVE'}).toString();
+    const raw=await api('product-registry?'+queryString,undefined,{timeoutMs:15000});
+    const page=raw?.pagination,products=raw?.products;
+    const validId=value=>typeof value==='string'&&/^[1-9]\d{0,19}$/.test(value);
+    const validName=value=>value===null||typeof value==='string'&&value.length<=1024&&!/[\u0000-\u001f\u007f-\u009f]/.test(value);
+    if(raw?.schema!=='product_registry_v1'||!page||page.limit!==8||page.offset!==offset||
+      !Number.isSafeInteger(page.total)||page.total<0||page.total>10000000||
+      typeof page.more!=='boolean'||page.more!==(offset+8<page.total)||
+      !Array.isArray(products)||products.length>8||products.length!==Math.max(0,Math.min(8,page.total-offset))||
+      !products.every(row=>row&&validId(row.item_id)&&validName(row.product_name)&&
+       ['NORMAL','UNLIST','BANNED','REVIEWING','UNKNOWN'].includes(row.item_status)))
+      throw Error('INVALID_RESPONSE');
+    const frame=raw;
+    total=frame.pagination.total;hasMore=frame.pagination.more;
+    const labels={NORMAL:'Normal',UNLIST:'Não listado',BANNED:'Suspenso',REVIEWING:'Em revisão',UNKNOWN:'A conferir'};
+    items=frame.products.map(row=>({key:'product:'+row.item_id,type:'product',productId:row.item_id,
+     panel:'products',title:row.product_name||'Produto #'+row.item_id,
+     description:'Produto #'+row.item_id+' · '+(labels[row.item_status]||'Cadastro salvo'),group:'Produto salvo'}));
+    source=frame.discovery.complete?'Catálogo indexado · fonte salva, não estoque disponível.':
+     'Indexação do catálogo ainda em andamento; produtos não identificados podem estar ausentes.';
+   }else{
+    const frame=globalThis.brazaDtfWorkspace?.searchLines?.(query,offset);
+    if(!frame){
+     if(requestId===lookupEpoch){results.replaceChildren();const empty=document.createElement('p');empty.className='mission-search-empty';
+      empty.textContent='Fila DTF ainda não carregada. Abra Produção para consultar os pedidos registrados no módulo.';
+      results.append(empty);scopeLabel.textContent='Ausência de fila carregada não significa que o pedido não existe.';}
+     return;
+    }
+    if(frame.schema!=='mls_saved_dtf_search_v1'||frame.offset!==offset||frame.limit!==8||
+      !Number.isSafeInteger(frame.total)||frame.total<0||!Array.isArray(frame.rows)||frame.rows.length>8||
+      typeof frame.more!=='boolean')throw Error('INVALID_QUEUE');
+    total=frame.total;hasMore=frame.more;
+    const labels={PENDING:'Pendente',RESERVED:'Reservada',PRODUCED:'Produzida',BLOCKED:'Bloqueada'};
+    items=frame.rows.map((row,index)=>({key:'dtf:'+offset+':'+index,type:'dtf',
+     orderId:row.order_id,panel:'production',title:'Pedido '+row.order_id,
+     description:'SKU '+(row.sku||'não informado')+' · '+(labels[row.production_state]||'Em conferência')+
+      ' · '+String(row.quantity)+' unidade(s)',group:'Fila DTF'}));
+    source='Apenas linhas da fila DTF salva, não o histórico completo de pedidos da Shopee.';
+   }
+   if(requestId!==lookupEpoch||overlay.hidden||mode!==sourceMode||input.value.trim()!==query)return;
+   currentQuery=query;
+   showRecords(items,total,offset,hasMore,source);
+  }catch(error){
+   if(requestId!==lookupEpoch||overlay.hidden||mode!==sourceMode)return;
+   results.replaceChildren();const empty=document.createElement('p');empty.className='mission-search-empty';
+   const kind=error?.status===401||error?.code==='UNAUTHORIZED'?'SESSION':error?.message==='INVALID_RESPONSE'?'INVALID_PAGE':
+    error?.code==='ADMIN_API_NETWORK_ERROR'?'NETWORK':error?.code==='ADMIN_API_TIMEOUT'?'TIMEOUT':
+    error?.code==='ADMIN_API_RESPONSE_INVALID'?'CLIENT_CONTRACT':error?.code==='ADMIN_API_HTTP_ERROR'?'SERVER':
+    error instanceof ReferenceError?'RUNTIME':'UNAVAILABLE';
+   empty.dataset.searchFailure=kind;
+   empty.textContent=error?.status===401||error?.code==='UNAUTHORIZED'?'Sessão administrativa expirada. Entre novamente neste navegador.':
+    error?.message==='INVALID_RESPONSE'?'A página retornada pelo catálogo não passou na validação. O cadastro foi preservado.':
+    error?.code==='ADMIN_API_NETWORK_ERROR'?'A conexão com o catálogo salvo falhou. Confira sua rede e tente novamente.':
+    error?.code==='ADMIN_API_TIMEOUT'?'O catálogo salvo demorou demais para responder. Tente novamente.':
+    'Consulta indisponível. O cadastro salvo foi preservado; tente novamente ou abra o módulo especializado.';
+   results.append(empty);pageInfo.textContent='';more.hidden=true;
+  }finally{
+   if(requestId===lookupEpoch){busy=false;execute.disabled=input.value.trim().length<2;more.disabled=false;}
+  }
+ }
+ function setScope(next){
+  if(!['navigation','products','dtf'].includes(next)||!v36Preview&&next!=='navigation')return;
+  ++lookupEpoch;busy=false;mode=next;currentQuery='';currentOffset=0;
+  input.value='';execute.hidden=next==='navigation';
+  input.placeholder=next==='navigation'?'Buscar painéis, agentes e ferramentas…':
+   next==='products'?'Pesquisar produto por nome ou código…':'Pesquisar pedido, SKU ou item na fila DTF…';
+  for(const button of scopeButtons)button.setAttribute('aria-pressed',String(button.dataset.missionScope===next));
+  render();input.focus();
+ }
+
  function move(amount){
   if(!selected.length)return;
   active=(active+amount+selected.length)%selected.length;
@@ -994,10 +1119,20 @@ const missionSearchRoutes=Object.freeze([
  function choose(item){
   if(!item)return;
   hide();
+  if(item.type==='product'){
+   openTab('products');
+   Promise.resolve().then(()=>globalThis.brazaSavedCatalog?.find?.(item.productId));
+   document.getElementById('savedCatalog')?.scrollIntoView?.({block:'start'});
+   return;
+  }
+  if(item.type==='dtf'){
+   openTab('production');
+   globalThis.brazaDtfWorkspace?.findLine?.(item.orderId);
+   document.getElementById('dtfSearch')?.scrollIntoView?.({block:'start'});
+   return;
+  }
   if(item.panel){
    if(typeof item.catalogQuery==='string'&&item.catalogQuery.length>=2&&item.catalogQuery.length<=90){
-    // Fill before openTab: its existing products handler starts the
-    // authorized paginated catalog read with the user's query.
     const search=document.getElementById('savedCatalogSearch');
     if(search)search.value=item.catalogQuery;
    }
@@ -1014,7 +1149,7 @@ const missionSearchRoutes=Object.freeze([
   restoreFocus=document.activeElement;
   overlay.hidden=false;
   document.documentElement.dataset.missionSearch='open';
-  input.value='';render();input.focus();
+  setScope('navigation');
  }
  openButton.onclick=show;
  closeButton.onclick=()=>hide();
@@ -1022,16 +1157,19 @@ const missionSearchRoutes=Object.freeze([
  results.addEventListener('click',event=>{
   const link=event.target?.closest?.('[data-search-route]');
   if(!link||event.button>0||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;
-  const item=selected.find(value=>value.key===link.dataset.searchRoute)||byKey.get(link.dataset.searchRoute);
+  const item=selected.find(value=>value.key===link.dataset.searchRoute);
   if(!item)return;
   if(item.panel){event.preventDefault();choose(item);}
   else hide({focus:false});
  });
- input.addEventListener('input',render);
+ for(const button of scopeButtons)button.onclick=()=>setScope(button.dataset.missionScope);
+ execute.onclick=()=>searchRecords(0);
+ more.onclick=()=>{if(moreAvailable&&input.value.trim()===currentQuery)searchRecords(currentOffset+8);};
+ input.addEventListener('input',()=>{++lookupEpoch;busy=false;render();});
  input.addEventListener('keydown',event=>{
   if(event.key==='ArrowDown'){event.preventDefault();move(1);}
   else if(event.key==='ArrowUp'){event.preventDefault();move(-1);}
-  else if(event.key==='Enter'){event.preventDefault();choose(selected[active]);}
+  else if(event.key==='Enter'){event.preventDefault();mode==='navigation'?choose(selected[active]):searchRecords(0);}
  });
  overlay.addEventListener('keydown',event=>{
   if(event.key==='Escape'){event.preventDefault();hide();return;}
@@ -1051,7 +1189,7 @@ const missionSearchRoutes=Object.freeze([
   if(target?.isContentEditable||['input','select','textarea'].includes(tag))return;
   event.preventDefault();show();
  });
- globalThis.mlsWorkspaceSearch=Object.freeze({open:show,close:()=>hide()});
+ globalThis.mlsWorkspaceSearch=Object.freeze({open:show,close:()=>hide(),scope:setScope});
 })();
 
 document.querySelectorAll('[data-tab]').forEach(link=>link.onclick=event=>{if(event?.button>0||event?.metaKey||event?.ctrlKey||event?.shiftKey||event?.altKey)return;event?.preventDefault();openTab(link.dataset.tab);});

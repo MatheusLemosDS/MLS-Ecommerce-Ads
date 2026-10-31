@@ -1,0 +1,96 @@
+{
+  "schema": "mls_owner_preview_browser_qa_v1",
+  "source": "ACTUAL_WORKER_SQLITE_LOCAL_SYNTHETIC_DATA_NO_HTTP_MOCKS",
+  "worker_sha256": "a5ba3298faf4b8c2eaa32e98674f1d7408f4c4616236d8f04a2fba72bbfb91c8",
+  "viewport": {
+    "width": 1365,
+    "height": 900
+  },
+  "panels": 16,
+  "ai_tabs": 5,
+  "catalog_items": 3,
+  "production_costs": {
+    "regular": 1690,
+    "adult": [
+      {
+        "model": "99000100",
+        "cost": 1690
+      },
+      {
+        "model": "99000101",
+        "cost": 1690
+      },
+      {
+        "model": "99000102",
+        "cost": 1690
+      },
+      {
+        "model": "99000103",
+        "cost": 2140
+      }
+    ],
+    "child": [
+      1250,
+      1250,
+      1250,
+      1250,
+      1250,
+      1250,
+      1250,
+      1250
+    ],
+    "kit": 3830
+  },
+  "selected_variant": "99000101",
+  "other_native_selections": [
+    {
+      "item": "990002",
+      "variant": "99000200",
+      "cost_cents": 1250,
+      "piece_count": null
+    },
+    {
+      "item": "990003",
+      "variant": "99000300",
+      "cost_cents": 3830,
+      "piece_count": 2
+    }
+  ],
+  "campaign_status": "READY_FOR_LOCAL_RENDER",
+  "local_cli_export_verified": true,
+  "exact_native_render_roundtrip": {
+    "product_ref": "SHOPEE_BR:primary-shopee:990001:99000102",
+    "video_sha256": "e444928c0c1d8e5f3ca2163484940d18ce3f8a23b5db9d5c4f8889884d53664b",
+    "qa": "PASSED",
+    "decision": "APPROVED",
+    "audit_gates": [
+      "LOCAL_BYTES_MATCHED",
+      "OWNER_VISUAL_REVIEW_DECLARED"
+    ],
+    "commercial_writes": false,
+    "human_approval": "PENDING_NOT_REPLACED_BY_SYNTHETIC_TEST"
+  },
+  "media_playback": null,
+  "javascript_errors": 0,
+  "read_count": 49,
+  "captures": [
+    {
+      "file": "preview-1365-dark-overview.png",
+      "sha256": "149c0352eecf27a182cf861d291c725cb2e63d296a975248602927b793897fce",
+      "bytes": 559144
+    },
+    {
+      "file": "preview-1365-actual-costs-saved.png",
+      "sha256": "db84894628261249de801187ac7943a1e6aa5600a4708f6cedf2e2759fb17558",
+      "bytes": 110193
+    },
+    {
+      "file": "preview-1365-native-current-campaign-mp4.png",
+      "sha256": "378bb2baaac7a62a2e218a7ace761fc4cfcd70f28a1213ce92702da2cdf04b2e",
+      "bytes": 113418
+    }
+  ],
+  "original_report_sha256": "52639e437442b7560a7348b97bfafbe839bb5c15a78d606c04d821efc73828c6",
+  "full_capture_count": 36,
+  "capture_selection": "SELECTED_VERSIONED_FILES; ALL_SCENARIOS_IN_CI_ARTIFACT"
+}

@@ -1,4 +1,56 @@
+# Handoff atual — melhorias na versão Live, 30/10/2026
+
+O proprietário autorizou promover todas as melhorias preparadas para a versão
+Live e continuar os próximos incrementos validados ali, usando ambiente
+separado apenas quando necessário. As antigas restrições de somente DRAFT e
+nenhum merge/deploy foram substituídas para a aplicação. Escrita comercial,
+gastos e alteração de OAuth continuam bloqueados; Hermes OBSERVER, Ads/PROMO
+LOCKED. Não reiniciar o projeto nem presumir M2 encerrada.
+
+Trabalho atual: `release/live-roadmap-improvements-20261030`, base oficial
+`2ab4c9d8baa3c25e5816bcca14b4a0973ea73d5a`. O commit `b17df54` reconcilia o
+pacote preparado até `4c149a7` com a correção de cancelamentos da PR #85.
+Inclui visual/gráficos, V3.6, Products/Pricing observador, Listing Factory,
+DTF, contexto do Hermes e cinco abas AI Sales. A persistência do workspace
+AI Sales está **LIVE_VALIDATED**, com 2.382 Node e 67 Python aprovados na CI
+41157082180 e App versão `2ffcefb4` conferido pela API/D1.
+
+O acesso API Cloudflare está verificado. A PR #85 foi publicada e conferida
+byte a byte, preservando bancos, domínios e cron. Os relatos de Cloudflare
+indisponível abaixo pertencem à criação histórica da prévia PR #84, que segue
+preservada com dados sintéticos. Não há sessão real owner nem aprovação humana
+visual/auditiva comprovada por fixtures.
+
+Testes integrais, CI, Chromium desktop/mobile, hashes e plano de retorno foram
+conferidos nesta entrega. V3.6 e AI Sales estão ENABLED para owner, com role
+review bloqueada. Código, configuração e saúde da coleta passaram na conferência
+Cloudflare. Repetir essas etapas nos próximos incrementos, além do merge.
+
+Fonte atual da entrega: [MLS_LIVE_ROADMAP_RELEASE_2026_10_30.md](MLS_LIVE_ROADMAP_RELEASE_2026_10_30.md).
+Pendências externas: M2/Seller Centre/Pending/devoluções/liberações/banco;
+provedor e orçamento LLM/voz neural; mídia autorizada; grants marketplace.
+O render Node/FFmpeg funciona fora do Worker, não como render cloud implícito.
+M3–M9 permanecem fases progressivas, sem declaração de conclusão total.
+
+## Registros históricos — subordinados à orientação Live acima
+
+Prévia de homologação na PR DRAFT #84: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/84 · implementação 1574f9e · 2.327 Node/67 Python aprovados, App/Auth/Finance inalterados. Naquele corte, acesso seguro à Cloudflare era a dependência para homologação online.
+
+Homologação local — registro histórico de 30/10/2026: branch `feature/mls-owner-homologation-preview-20261030`, baseada na PR #83. Servidor Worker/SQLite real com dados sintéticos e exportação HTML interativa; sem alteração do App/Auth/Finance. Consultar `docs/MLS_OWNER_PREVIEW_CHECKPOINT.json` e `docs/MLS_OWNER_HOMOLOGATION_2026_10_30.md`. Naquele corte não existia URL de homologação nem autenticação Cloudflare e não havia autorização de merge/deploy. O pedido Live substituiu essas restrições; escritas comerciais continuam bloqueadas.
+
+PR de integração DRAFT #83: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/83 · commits f513dca/54b87e5 · local2308Node/67Python,40capturas · Appa5ba3298…bbfb91c8. Conferir checks do HEAD; semmerge/deploy.
+
+> Checkpoint histórico de preparação 30/10/2026: PR #79 congelada/CI verde `e7ce5009`/41131654577. Integração e AI Sales local implementados em `integration/mls-commerce-os-ai-sales-20261030`; conferir regressão/PR no checkpoint da missão e [guia de homologação](MLS_AI_SALES_INTEGRATION_2026_10_30.md). Naquele corte sem merge/deploy/writes; QA owner, M2/Seller Centre, grants e acesso LLM pendentes. Os registros abaixo são históricos.
+
 # Handoff executável — MLS Commerce OS / Codex / ChatGPT — 28/10/2026
+
+**Entrega mais recente — PR #86:** App Live versão `2ffcefb4`, flags V3.6 e
+AI Sales ENABLED para owner, CI 41157082180 verde (2.382 Node/67 Python/Chrome).
+Rascunhos persistem no D1 com CAS/CSRF; arquivos ficam locais e restauração
+revoga aprovações. Hash, bindings, cron, coleta e Hermes conferidos; Finance/Auth
+iguais à PR85. Não mesclar as PRs históricas em duplicidade. Continuar próximos
+incrementos na Live após validação, preservando rollback e gates externos.
+Fonte: [release](MLS_LIVE_ROADMAP_RELEASE_2026_10_30.md). M2 não foi encerrada.
 
 Atualização operacional 30/10: o proprietário orientou entregar os próximos
 incrementos validados na versão oficial; separar ambiente apenas se necessário.
@@ -119,3 +171,23 @@ A seleção de mockups em lote passou [CI 40790629421](https://github.com/Matheu
 ### Integração PR #63 — handoff 28/10/2026
 
 Mission Control V3.6 da PR #48 e Listing Factory PRs #51/#56/#60 foram combinados numa branch isolada sobre a main: integration/mls-v36-search-listing-factory-20261028. A comparação Git confirmou 13/13 fontes da PR #60 e 7/7 da PR #48 idênticas, com união da allowlist SHA em tools/worker_project.mjs. CI #40792253729 SUCCESS (2.136 Node + 67 Python + Chrome, App/Auth/Finance builds), SHA App 8ed059ddb6f0901a48d277d6b9b806a23d52a1e5e105ed0e2e456e2aea6701f5. Nenhum merge/deploy de código. Próxima tarefa do Codex: QA autenticada desktop/mobile com catálogo real, fila DTF e mockups locais; depois escolher PR63 como release única ou merges sequenciais, não as duas opções. M2 #50 continua aberta, Ads/PROMO LOCKED. Documento: docs/MLS_V36_LISTING_FACTORY_INTEGRATION_2026_10_28.md.
+
+
+### 29/10/2026 — PR #74, integração visual conforme mockup aprovado
+
+Branch `design/approved-neon-all-panels-integration-20261029` baseada na `main`, PR #74 DRAFT. Consolidou código/testes visuais das PRs #69, #71, #72 e #73 e adicionou `web/cloudflare/src/approved-design-system.mjs`. Nova paleta compartilhada de todos os agentes, shell, KPIs, mini-sidebar interna dos sete especialistas, cabeçalhos Ads/Campanhas/Optimization/Conexões, tema escuro/claro, responsividade e leitura honesta das fontes, sem criar métricas ou históricos.
+
+**Atenção técnica:** o App tem um empacotador manual `web/cloudflare/build.py` que remove imports. Ele foi atualizado para incluir `MLS_APPROVED_DESIGN_CSS` uma única vez em escopo externo, antes dos módulos Admin e Ads. Sem isso, a compilação do Worker original causou ReferenceError em testes de integração. **Não reverter a correção nem afrouxar os testes.**
+
+A suíte completa agora usa TAP e concorrência de 3 arquivos para não esgotar memória do Node reporter ou Chrome, preservando os mesmos globs, 67 Python e builds. Teste `mls-approved-all-panels-chrome.test.mjs` verifica 15 seções no desktop 1365 e mobile 390 sem acessar dados reais. Teste `mls-approved-design-system.test.mjs` cobre tokens, diferenciação Observer/Ads e integridade de IDs. Revalidar o SHA final do Worker App e confirmar hashes Auth/Finance intocados; CI final e QA owner real são gates.
+
+Continuam independentes: V3.6 de busca + Listing Factory nas PRs #63/#65/#68 (feature flag OFF), financeiro M2 issue #50 e Ads/PROMO LOCKED. **Não mesclar PR #74 e #68 em paralelo sem reconciliação e novo CI.** Não fazer deploy sem aprovação.
+
+
+### 29/10/2026 — PR #75, uma única trilha de homologação (design aprovado + V3.6)
+
+Branch `integration/mls-approved-ui-v36-owner-gated-20261029` derivada da PR #68 com mudanças visuais da PR #74. Reconciliados **quatro arquivos que ambos modificaram**: `admin-view.mjs` (paleta/todos painéis + menu de busca), `dtf-view.mjs` (cinco etapas + `searchLines/findLine`), `saved-catalog-view.mjs` (cockpit Produtos + `find`) e `build.py` (planner Listing Factory + CSS injetado no bundle App). Não alterar essa união ou substituir com a versão de somente uma das PRs.
+
+Os testes de interface de #74 usam `compiledOwnerReportPage(...,{ownerPreview:false})` para representar o deploy inicial; a QA V3.6 continua usando `ownerPreview:true`. Teste novo `mls-v36-approved-integration-gates.test.mjs` protege os dois estados e os métodos de pesquisa em registros salvos. `MLS_V36_OWNER_PREVIEW` ausente = OFF. **Nada de write Shopee/Ads/PROMO.**
+
+Antes de release: CI verde no HEAD exato, SHA App revisado e Auth/Finance iguais, QA real autenticada, revisão de Cloudflare/rollback e aprovação explícita. **Não mesclar separadamente #63/#65/#68/#69/#71/#72/#73/#74 se #75 for a trilha final.** Documento [MLS_INTEGRATED_OWNER_RELEASE_2026_10_29.md](MLS_INTEGRATED_OWNER_RELEASE_2026_10_29.md).

@@ -6,7 +6,7 @@ import {fileURLToPath} from 'node:url';
 import {D1} from './sqlite-d1.mjs';
 
 const origin='https://bootstrap.compiled.test';
-const fixture=db=>({...(db?{ADMIN_DB:db}:{}),ADMIN_USERNAME:'bootstrap-owner',ADMIN_PASSWORD:'PRIVATE_BOOTSTRAP_PASSWORD_123456',ADMIN_SESSION_SECRET:'PRIVATE_BOOTSTRAP_SESSION_'+ 's'.repeat(40)});
+const fixture=db=>({...(db?{ADMIN_DB:db}:{}),ADMIN_USERNAME:'bootstrap-owner',ADMIN_PASSWORD:'PRIVATE_BOOTSTRAP_PASSWORD_123456',ADMIN_SESSION_SECRET:'PRIVATE_BOOTSTRAP_SESSION_'+ 's'.repeat(40),MLS_V36_OWNER_PREVIEW:'ENABLED'});
 async function workerFor(minify){
  const output=await build({entryPoints:[fileURLToPath(new URL('../../../dist/app-worker.mjs',import.meta.url))],bundle:true,write:false,format:'esm',platform:'browser',target:'es2022',minify});
  return (await import('data:text/javascript;base64,'+Buffer.from(output.outputFiles[0].text).toString('base64'))).default;
@@ -27,7 +27,7 @@ function fullBrowser(html,fetchImpl){
   response.json=async()=>vm.runInContext('JSON.parse',context)(await response.text());return response;
  }});
  vm.runInContext('globalThis.window=globalThis;window.matchMedia=()=>({matches:false,addEventListener(){}});globalThis.addEventListener=()=>{};',context);
- const scripts=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match=>match[1]);assert.equal(scripts.length,13);
+ const scripts=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match=>match[1]);assert.equal(scripts.length,14);
  for(const [index,script] of scripts.entries())vm.runInContext(script,context,{filename:'owner-script-'+index+'.js'});
  return {nodes,timers,calls,run:source=>vm.runInContext(source,context),stop(){vm.runInContext('startupController.stop();brazaMonthDashboard.stop();',context);timers.clear();}};
 }
