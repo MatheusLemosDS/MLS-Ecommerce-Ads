@@ -1,3 +1,17 @@
+INCREMENTO EM VALIDAÇÃO — M2 RETURNS — 31/10/2026
+
+Branch feature/m2-returns-reconciliation-20261031, mainPR87 base51b2dfe.
+Correção da starvation: HISTORYcost não pode impedir auditoria; reservar
+intervalospublicadossemrelatórioRETURNS,≤1private/tick,4/5Financecomimportcontínuo,
+quota2reservasantesauxnormal, pause/lease/CAS/backoffpreservados.
+Registry sócompara mesma publicação/versão/horários; conflito real bloqueia,
+cacheantigoespera. MLS Returns expõe situações reais/coortes/valores/cobertura
+comsnapshotsatuais, sem motivaçõesinventadas ousegunda deduçãodereembolso.
+Fonte: docs/MLS_M2_RETURNS_CONTINUITY_2026_10_31.md. Não declararpublicadoatéprovas.
+PróximoM2: ligar trackerdecrossmonth aoagendamento (códigoexistentenãotemcaller),
+validarevidênciasreaisdeSellerCentre/banco. BuildsAPI403 requerWorkersBuilds
+Configuration:Edit; causa exataautopreview desconhecida, deploymanualnormalfunciona.
+
 HANDOFF ATUAL — LIVE PR87 — 31/10/2026
 
 Branch feature/live-visual-charts-refinement-20261031, basePR86/main8d66525.

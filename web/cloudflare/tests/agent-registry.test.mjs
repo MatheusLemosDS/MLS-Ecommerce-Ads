@@ -1,8 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {buildPendingIncomeAudit,buildMlsAgentRegistry} from '../src/agent-registry.mjs';
+import {buildPendingIncomeAudit,buildMlsAgentRegistry as buildRegistry} from '../src/agent-registry.mjs';
+import {projectMlsSettlementEvidence} from '../src/mls-settlement-evidence.mjs';
+import {settlementFixture} from './mls-settlement-fixture.mjs';
 import {AGENT_REGISTRY_CLIENT,commandCenterBody,pendingIncomeBody} from '../src/agent-registry-view.mjs';
 import {CLIENT as ADMIN_CLIENT} from '../src/admin-client.mjs';
+const buildMlsAgentRegistry=input=>buildRegistry(input,{projectSettlementEvidence:projectMlsSettlementEvidence});
 
 const day=(overrides={})=>({
  schema:'mls_day_snapshot_v1',
@@ -19,6 +22,7 @@ const day=(overrides={})=>({
 const month=(overrides={})=>({
  schema:'mls_month_snapshot_v1',
  month:'2026-10',
+ audit_scope:settlementFixture().month.audit_scope,
  status:'COMPLETE',
  checked_at:1793070000,
  balance_cents:240000,
@@ -30,22 +34,30 @@ const month=(overrides={})=>({
  collection:{schema:'business_month_collection_v1',state:'READY',code:null,retry_after_seconds:0},
  ...overrides
 });
-const releases=(overrides={})=>({
+const releases=(overrides={})=>{
+ const proof=settlementFixture().releases,value={
  schema:'mls_escrow_releases_snapshot_v1',
  month:'2026-10',
- scope_key:'scope',
+ scope_key:proof.scope_key,
  report:{report:{pending:['BANK_RECEIPT_NOT_VERIFIED']}},
  orders:{summary:{known_paid_orders:250,located_orders:200,ambiguous_orders:0,verified_orders:198,unverified_orders:2,not_located_orders:50,adjusted_orders:4,after_adjustment_known_orders:250,known_after_adjustment_cents:1000000,not_located_after_adjustment_known_orders:50,known_not_located_after_adjustment_cents:200000},rows:[],truncation:{truncated:true,orders_total:250,orders_included:40}},
  ...overrides
-});
-const reconciliation=(payouts=[])=>({
+ };
+ value.report={...proof.report,...value.report,report:{...proof.report.report,...value.report.report}};
+ value.orders={...value.orders,rows:value.orders.rows.map(row=>({...proof.orders.rows[0],...row,adjustment_cents:row.after_adjustment_repass_cents-proof.orders.rows[0].base_repass_cents}))};
+ return value;
+};
+const reconciliation=(payouts=[])=>{
+ const proof=settlementFixture().reconciliation;
+ return {
  schema:'mls_reconciliation_snapshot_v1',
  month:'2026-10',
- scope_key:'scope',
- report:{reports:[]},
+ scope_key:proof.scope_key,
+ report:proof.report,
  reviews:[],
- money:[{run_id:'11111111-1111-4111-8111-111111111111',source_revision:1,money:{payouts}}]
-});
+ money:[{...proof.money[0],money:{...proof.money[0].money,payouts:payouts.map(row=>({...proof.money[0].money.payouts[0],...row,adjustment_cents:row.after_adjustment_repass_cents-proof.money[0].money.payouts[0].base_repass_cents}))}}]
+ };
+};
 
 
 test('healthy snapshots create one observer registry with the executive day metrics and no invented actions',()=>{
@@ -142,6 +154,46 @@ test('conflicting after-adjustment payout evidence blocks Auditor and Hermes ins
  assert.equal(value.health,'BLOCKED');assert.equal(value.settlement.evidence_conflicts,1);
  assert.ok(value.priorities.some(item=>item.code==='SETTLEMENT_EVIDENCE_CONFLICT'&&item.severity==='BLOCKED'));
  assert.equal(value.agents.find(agent=>agent.id==='auditor').status,'BLOCKED');assert.equal(value.hermes.status,'BLOCKED');
+});
+
+test('different or missing published scopes create waiting work instead of a false payout conflict',()=>{
+ for(const mutate of [
+  input=>input.releases.scope_key='',
+  input=>delete input.month.audit_scope,
+  input=>input.month.audit_scope.publication_revision++,
+  input=>input.releases.report.cohort.sources[0].finance_oldest_at--,
+  input=>input.reconciliation.report.reports[0].source_revision++
+ ]){
+  const input={...settlementFixture(),day:day(),month:month()};
+  Object.assign(input.reconciliation.money[0].money.payouts[0],{adjustment_cents:-100,after_adjustment_repass_cents:7900});mutate(input);
+  const result=buildMlsAgentRegistry(input);
+  assert.equal(result.settlement.evidence_state,'WAITING_SCOPE');assert.equal(result.settlement.evidence_conflicts,0);
+  assert.ok(result.priorities.some(row=>row.code==='SETTLEMENT_PUBLICATION_WAITING'&&row.severity==='WORKING'));
+  assert.ok(!result.priorities.some(row=>row.code==='SETTLEMENT_EVIDENCE_CONFLICT'));
+  assert.notEqual(result.hermes.status,'BLOCKED');assert.equal(result.agents.find(row=>row.id==='auditor').status,'WORKING');
+ }
+});
+
+test('same-publication duplicate contradictions block without overwriting saved evidence',()=>{
+ const input={...settlementFixture(),day:day(),month:month()},rows=input.reconciliation.money[0].money.payouts;
+ rows.push({...rows[0],adjustment_cents:-100,after_adjustment_repass_cents:7900});
+ const result=buildMlsAgentRegistry(input);
+ assert.equal(result.settlement.evidence_state,'CONFLICT');assert.equal(result.settlement.duplicate_conflicts,1);assert.equal(result.settlement.evidence_conflicts,1);
+ assert.equal(result.health,'BLOCKED');assert.equal(result.hermes.status,'BLOCKED');
+ assert.match(result.settlement.basis,/NOT_BANK_RECEIPT/);
+});
+
+test('release counts and pending flags are fenced to the current publication even before Returns loads',()=>{
+ const release=releases({report:{report:{pending:['RELEASE_IDENTITY_AMBIGUOUS','RELEASE_AMOUNT_UNVERIFIED']}}});
+ for(const current of [month({audit_scope:null}),month({audit_scope:{...month().audit_scope,publication_revision:5}})]){
+  const result=buildMlsAgentRegistry({day:day(),month:current,releases:release});
+  assert.equal(result.settlement.evidence_state,'WAITING_SCOPE');assert.equal(result.settlement.release_orders_known,null);assert.equal(result.settlement.releases_verified,null);
+  assert.ok(!result.priorities.some(row=>['RELEASE_IDENTITY_AMBIGUOUS','RELEASE_AMOUNT_UNVERIFIED','RELEASES_NOT_LOCATED'].includes(row.code)));
+  assert.ok(result.priorities.some(row=>row.code==='SETTLEMENT_PUBLICATION_WAITING'));
+ }
+ const valid=buildMlsAgentRegistry({day:day(),month:month(),releases:release});
+ assert.equal(valid.settlement.release_orders_known,250);assert.equal(valid.settlement.releases_verified,198);
+ assert.ok(valid.priorities.some(row=>row.code==='RELEASE_IDENTITY_AMBIGUOUS'));
 });
 
 

@@ -30,7 +30,7 @@
     "merge_commit": "9c418fd3010f46957d1ce52345baacd76041c788"
   },
   "current_phase": "M2_FINANCE_RETURNS_RECONCILIATION",
-  "working_branch": "feature/live-visual-charts-refinement-20261031",
+  "working_branch": "feature/m2-returns-reconciliation-20261031",
   "current_status": "LIVE_VISUAL_CHART_INSPECTION_VERIFIED_M2_STATUS_AND_RETURNS_OPEN",
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
@@ -925,5 +925,12 @@
       "owner_authenticated_result": "NOT_YET_VERIFIED"
     },
     "docs": "docs/M2_FINANCIAL_TRENDS_REAL_DATA.md"
+  },
+  "m2_returns_continuity_20261031": {
+    "status": "IMPLEMENTED_VALIDATING",
+    "base_main": "51b2dfea4ef87f114d21ecde3d6f0cb66e98bdda",
+    "docs": "docs/MLS_M2_RETURNS_CONTINUITY_2026_10_31.md",
+    "commercial_writes": "LOCKED",
+    "bank_settlement": "UNVERIFIED"
   }
 }

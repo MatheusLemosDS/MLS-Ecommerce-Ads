@@ -147,6 +147,7 @@ export const TARGETS = Object.freeze({
     // Reviewed Live integration, durable owner drafts and PR85 cancellation refresh.
     'eea2f01c997b9e8012160862929abab8407a81dda44215c5aea8b2b9ef3a2ef6',
     '22b4ad40c6e7e331965dad976715d89ac8ef5f2e5c3e9e098282209296590796',
+    'a1cea50f3481831781daab3caa0437cecee85494f6e6eb89e1f9b5e0d8b6790a',
   ]}),
   auth: Object.freeze({name: 'brazacommerce-auth', main: '../../dist/auth-worker.mjs', baselineHashes: [
     '45d0142709c5087e373cc4da146070ed39c472805f6f64c00f00b6555f0e1f56',

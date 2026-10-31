@@ -337,5 +337,10 @@
       "MLS_V36_OWNER_PREVIEW=ENABLED",
       "MLS_AI_SALES_OWNER_PREVIEW=ENABLED"
     ]
+  },
+  "m2_returns_continuity_20261031": {
+    "status": "IMPLEMENTED_VALIDATING",
+    "docs": "docs/MLS_M2_RETURNS_CONTINUITY_2026_10_31.md",
+    "all_roadmap_phases_complete": false
   }
 }

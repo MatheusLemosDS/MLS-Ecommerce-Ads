@@ -54,7 +54,7 @@ import {AI_SALES_WORKSPACE_STORE_SCHEMA,AiSalesWorkspaceStoreError,readAiSalesWo
 import {BusinessCostDiagnosticsError,readBusinessCostDiagnostics,readBusinessCostDiagnosticsEvidence,readBusinessCostDiagnosticsEvidenceV2,readBusinessCostDiagnosticsEvidenceV3} from './business-cost-diagnostics.mjs';
 import {HISTORICAL_COST_EVIDENCE_SCHEMA,HistoricalCostEvidenceError,readHistoricalCostEvidence,syncHistoricalCostEvidence} from './historical-cost-evidence.mjs';
 import {OPERATOR_COST_CORRECTIONS_SCHEMA,OperatorCostCorrectionError,applyConfirmedOperatorCostCorrections} from './operator-cost-corrections.mjs';
-import {BACKGROUND_LANE_SCHEMA,HistoricalCostOrchestrationError,acquireBackgroundLane,finishBackgroundLane,readHistoricalCostCandidates} from './historical-cost-orchestration.mjs';
+import {BACKGROUND_LANE_SCHEMA,HistoricalCostOrchestrationError,acquireBackgroundLane,finishBackgroundLane,readHistoricalCostCandidates,runBackgroundHistoryWork} from './historical-cost-orchestration.mjs';
 // BrazaCommerce administration. No Shopee write operations.
 const DEFAULTS = {regular_cents:1675,mixed_cents:1910,plus_cents:2070,ad_share_percent:40,hermes_mode:'manual',daily_hour:9,monthly_budget_cents:2000,run_reserve_cents:100,billing_mode:'unverified',monthly_run_limit:30};
 const SCHEMA = [...new Set([
@@ -237,7 +237,7 @@ async function scheduledWork(env,services,now=()=>Date.now()){
  if(MAINTENANCE_PENDING.delete(env.ADMIN_DB)){output.collection='MAINTENANCE';return output;}
  const month=localDay(new Date(now())).slice(0,7),lease=await acquireBackgroundLane(env,{month},{now});output.lane=lease.lane;
  if(lease.lane==='LEASED')return {...output,collection:'LEASED'};
- let repeatHistory=false;const canRun=async()=>(await readBusinessSyncState(env)).enabled;
+ let repeatHistory=false,auditSourceReads=0,historyNextWork=null;const canRun=async()=>(await readBusinessSyncState(env)).enabled;
  const productionSource=async(...args)=>{if(!await canRun())throw Error('BACKGROUND_COLLECTION_PAUSED');return services.getFinanceProductionOrders(...args);};
  try{
   if(lease.lane==='PAUSED'){for(const key of ['collection','classification','production','registry','costs','history','reconciliation','releases','income','income_detail'])output[key]='PAUSED';return output;}
@@ -249,14 +249,9 @@ async function scheduledWork(env,services,now=()=>Date.now()){
     if(output.collection==='NOT_DUE')output.history_collection=(await runBusinessHistorySync(env,services,{now,currentStatus:output.collection})).status;
    }catch{if(output.collection==='NOT_DUE')output.history_collection='ERROR';else output.collection='ERROR';}
   }else if(lease.lane==='HISTORY'){
-   try{const selection=await readHistoricalCostCandidates(env,month,{now});output.history=selection.status;
-    if(selection.ready&&typeof services?.getFinanceHistoricalVariantEvidence==='function'){
-     const historical=await syncHistoricalCostEvidence(env,{month,item_ids:selection.item_ids},services.getFinanceHistoricalVariantEvidence,{now,canRun});output.history=historical.work;repeatHistory=historical.work==='PROGRESSED'&&!historical.scan.complete;
-    }else if(selection.ready)output.history='UNAVAILABLE';
-    if(!selection.ready&&(typeof services?.getFinanceReconciliation==='function'||typeof services?.getFinanceEscrowReleases==='function'||typeof services?.getFinanceIncomeOverview==='function'||typeof services?.getFinanceIncomeDetail==='function')){
-     const audit=await runBusinessFinancialAudits(env,services,{month},{now,canRun});
-     output.reconciliation=audit.returns_status;output.releases=audit.releases_status;output.income=audit.income_status;output.income_detail=audit.income_detail_status;repeatHistory=audit.repeat;
-    }
+   try{const history=await runBackgroundHistoryWork(env,services,{month,lease},{now});
+    output.history=history.history;output.reconciliation=history.reconciliation;output.releases=history.releases;output.income=history.income;output.income_detail=history.income_detail;
+    repeatHistory=history.repeatHistory;auditSourceReads=history.audit_source_reads;historyNextWork=history.historyNextWork;
    }catch{output.history='ERROR';}
   }else if(lease.lane==='CATALOG'){
    if(typeof services?.getFinanceVariantCatalog!=='function')output.classification='UNAVAILABLE';
@@ -276,7 +271,7 @@ async function scheduledWork(env,services,now=()=>Date.now()){
    try{await schedule(env,new Date(now()));output.analysis='CHECKED';}catch{output.analysis='UNAVAILABLE';}
   }
   return output;
- }finally{try{await finishBackgroundLane(env,lease,{now,repeatHistory});}catch{}}
+ }finally{try{await finishBackgroundLane(env,lease,{now,repeatHistory,auditSourceReads,historyNextWork});}catch{}}
 }
 async function workspaceAuthFetch(request,env){return handleWorkspaceAuth(request,env,{renderLogin:loginPage,renderLogout:current=>page('<main class="login card"><div class="brand"><span class="brand-mark">MLS</span><div>MLS Commerce OS<small>Sua conta</small></div></div><h1>Sair da sua conta?</h1><p class="muted">Você precisará entrar novamente para acessar o painel.</p><form action="/logout" method="post"><input type="hidden" name="csrf" value="'+current.csrf+'"><button type="submit">Sair</button></form><p><a href="'+(current.role==='owner'?'/admin':'/dashboard')+'">Continuar no painel</a></p></main>')});}
 function costDiagnosticsSelection(url,{recovery=false}={}){

@@ -1,5 +1,10 @@
 # Roadmap canônico — MLS Commerce OS
 
+**Incremento M2 em validação — 31/10/2026:** continuidade das auditorias de
+devoluções, comparação somente da mesma publicação e situações identificadas
+no MLS Returns. Base PR87 `51b2dfe`, preservando Auth/Finance e resultado
+bancário desconhecido. [Registro](MLS_M2_RETURNS_CONTINUITY_2026_10_31.md).
+
 **Release Live PR87 conferida — 31/10/2026:** gráficos com inspeção por
 ponteiro/toque/teclado, escala PT-BR, iluminação e cabeçalho mobile corrigido.
 2.393Node/67Python/Chromium aprovados, versão App `17bb4a0c`, código e
