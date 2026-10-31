@@ -1,14 +1,24 @@
-INCREMENTO ATUAL — GRÁFICOS E PRÉVIA VISUAL — 31/10/2026
+HANDOFF ATUAL — LIVE PR87 — 31/10/2026
 
-Branch feature/live-visual-charts-refinement-20261031, base main PR86 8d66525.
-Gráficos com inspeção local por ponteiro/toque/teclado, escala/valores PT-BR,
-negativos/subtotais preservados; topbar44px sem sobreposição; globo vetorial.
-Diagnóstico diferencia histórico infantil fora da regra de falta de catálogo.
-Validação/publicação em andamento: docs/MLS_VISUAL_CHARTS_RELEASE_2026_10_31.md.
-Não declarar Live atualizada até conferir versão, bytes, configuração e fontes.
-Tamanho16 da regra infantil foi restaurado pela função normal ao preço já
-confirmado1250c, CAS6→7/+1audit, demais campos preservados. Conferir no registro
-a validação remota da cobertura; não repetir a gravação nem decrementar revisão.
+Branch feature/live-visual-charts-refinement-20261031, basePR86/main8d66525.
+Código7fcf975, CI41159508485 GREEN2393Node/67Python/Chrome normal+minificado,
+desktop/mobile/claro/escuro. PublicadoApp17bb4a0c100%; SHArawc7e9429d,
+SHAgerado22b4ad40; bytes/config/flags/bindings/domínios/cron conferidos.
+Auth/Finance preservados; coletaRUNNING failure0/last_errornull, FinanceCONNECTED.
+Entrega: inspeção de gráficos por toque/mouse/teclado, escalaPTBR, efeitos
+vetoriais/globo, topbar44px semsobreposição; diagnóstico evita recatalogar
+histórico infantil cujo tamanho está fora da regra configurada.
+Regra infantil: saveCostRules normal CAS6→7/+1audit adicionou16 a1250c,
+demaiscamposintactos. Pós-save SELECT:356/356/R$10.486,10,0custopendente.
+UI recompõe publicação salva comregra7; checkpointhistórico ainda6 naúltimaleitura,
+separado do display. Não repetir a escrita ou decrementar a revisão.
+M2 continua para revisão de pedidos/devoluções/SellerCentre/banco. Não declarar
+lucro bancário nem roadmaptotal concluído. GatescomerciaisLOCKED. Ownerbrowserreal
+nãoexecutado; fixtures sintéticas identificadas,128capturas visuais nesteincremento.
+Fonte: docs/MLS_VISUAL_CHARTS_RELEASE_2026_10_31.md. RollbackApp2ffcefb4.
+Próximos incrementos validados continuam naLive; ambiente separado sóse necessário.
+
+REGISTRO HISTÓRICO PR86 — NÃO SUBSTITUI O ESTADO ACIMA
 
 HANDOFF ATUAL — ENTREGA DAS MELHORIAS NA VERSÃO LIVE — 30/10/2026
 

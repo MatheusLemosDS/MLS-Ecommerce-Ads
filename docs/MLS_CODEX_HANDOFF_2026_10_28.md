@@ -1,9 +1,11 @@
 # Handoff atual — melhorias na versão Live, 30/10/2026
 
-**Incremento em andamento — 31/10/2026:** aproximação da prévia com inspeção
-acessível de gráficos, escala de valores, iluminação vetorial e correção da
-busca no cabeçalho mobile, sobre a main PR86 `8d66525`. Estado verificável no
-[registro visual atual](MLS_VISUAL_CHARTS_RELEASE_2026_10_31.md).
+**Release Live PR87 conferida — 31/10/2026:** gráficos com inspeção por
+ponteiro/toque/teclado, escala PT-BR, iluminação e cabeçalho mobile corrigido.
+2.393Node/67Python/Chromium aprovados, versão App `17bb4a0c`, código e
+configuração conferidos. Regra infantil16 corrigida:356/356 unidades com
+custo na leitura verificada. Próximo foco M2: estados de pedidos/devoluções.
+[Registro visual atual](MLS_VISUAL_CHARTS_RELEASE_2026_10_31.md).
 
 O proprietário autorizou promover todas as melhorias preparadas para a versão
 Live e continuar os próximos incrementos validados ali, usando ambiente
