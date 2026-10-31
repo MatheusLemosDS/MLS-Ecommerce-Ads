@@ -1,6 +1,6 @@
 {
   "schema": "mls_master_mission_checkpoint_v1",
-  "updated_at": "2026-10-30",
+  "updated_at": "2026-10-31",
   "base_visual_sha": "8d860b2c4f26531c53c4cdba0e06a14f51a7eef4",
   "visual_branch": "feature/mls-mockup-parity-real-charts-20261029",
   "visual_pr": 79,
@@ -180,38 +180,47 @@
     }
   ],
   "current_release": {
-    "branch": "release/live-roadmap-improvements-20261030",
-    "base_main": "2ab4c9d8baa3c25e5816bcca14b4a0973ea73d5a",
-    "prepared_source_head": "4c149a7e818306ddd91419494e75a12b6e14c1f4",
-    "reconciliation_commit": "b17df54",
+    "id": "LIVE_VISUAL_CHART_INSPECTION_AND_COST_RULE_SCOPE",
     "status": "OFFICIAL_APP_DEPLOY_VERIFIED",
-    "docs": "docs/MLS_LIVE_ROADMAP_RELEASE_2026_10_30.md",
-    "ready_features": [
-      "Six reference layouts and remaining native panels, shared themes and verified-source charts",
-      "Owner V3.6 search, saved catalog/costs, DTF and navigation",
-      "Listing Factory preserved imported SKUs/variants, sizes, kits, quantities and local media relinking",
-      "Read-only Products/Pricing ABC and explicit mathematical scenario",
-      "Hermes context follows the same complete publication during partial collection",
-      "Native AI Sales campaigns, local video workflow, assisted creator CRM, declared performance and capability states",
-      "PR85 daily cancellation freshness and previous-month maintenance preserved"
-    ],
-    "workspace_persistence": "LIVE_OWNER_D1_METADATA_CAS_CSRF_VERIFIED",
-    "cloudflare_api_access_verified": true,
-    "production_deployed": true,
-    "exact_release_validation": "BYTE_CONFIG_FLAGS_SCHEMA_HEALTH_VERIFIED",
-    "owner_authenticated_qa": "NOT_EXECUTED",
-    "human_visual_audio_qa": "NOT_RECORDED",
-    "all_roadmap_phases_complete": false,
-    "pull_request": 86,
-    "ci_run": 41157082180,
-    "node_tests": 2382,
+    "pull_request": 87,
+    "code_commit": "7fcf975bd65a4c315ce9256ae95c11f42b2a26b5",
+    "base_main": "8d66525bc3b96914412a9538d3ec84048ac78dbb",
+    "ci_run": 41159508485,
+    "node_tests": 2393,
     "python_tests": 67,
-    "app_version": "2ffcefb4-3103-4cd0-880c-569a61a4df69",
-    "technical_authenticated_browser_qa": "SYNTHETIC_DESKTOP_MOBILE_PASSED",
-    "active_owner_flags": [
-      "MLS_V36_OWNER_PREVIEW=ENABLED",
-      "MLS_AI_SALES_OWNER_PREVIEW=ENABLED"
-    ]
+    "docs": "docs/MLS_VISUAL_CHARTS_RELEASE_2026_10_31.md",
+    "deployment": {
+      "app_version": "17bb4a0c-fc38-43e0-8452-b0adeb06b24e",
+      "app_sha256": "22b4ad40c6e7e331965dad976715d89ac8ef5f2e5c3e9e098282209296590796",
+      "published_app_sha256": "c7e9429d77da50d475976f1f009dfc464bd86db9fadb979a9ece75cbdf8de829",
+      "percentage": 100,
+      "exact_bytes_verified": true,
+      "existing_configuration_preserved": true,
+      "owner_flags_preserved": true,
+      "auth_finance_unchanged": true,
+      "sync_failure_count": 0
+    },
+    "technical_browser_qa": "SYNTHETIC_NORMAL_MINIFIED_DESKTOP_MOBILE_DARK_LIGHT_PASSED",
+    "actual_owner_session": "NOT_EXECUTED",
+    "child16_rule_repair": {
+      "state": "LIVE_READ_MODEL_VERIFIED",
+      "before_revision": 6,
+      "after_revision": 7,
+      "audit_added": 1,
+      "unit_cost_cents": 1250,
+      "unrelated_fields_preserved": true,
+      "known_units": 356,
+      "total_units": 356,
+      "pending_units": 0,
+      "production_cents": 1048610,
+      "saved_checkpoint_cost_rule_revision_at_last_read": 6,
+      "display_uses_current_rules_over_saved_finance": true
+    },
+    "commercial_writes": "LOCKED",
+    "finance_m2": "OPEN",
+    "branch": "feature/live-visual-charts-refinement-20261031",
+    "production_deployed": true,
+    "all_roadmap_phases_complete": false
   },
   "validation_history": [
     {
@@ -246,12 +255,87 @@
     }
   ],
   "live_release": {
-    "pull_request": 86,
+    "pull_request": 87,
     "status": "OFFICIAL_APP_DEPLOY_VERIFIED",
-    "docs": "docs/MLS_LIVE_ROADMAP_RELEASE_2026_10_30.md",
+    "docs": "docs/MLS_VISUAL_CHARTS_RELEASE_2026_10_31.md",
     "flags_enabled": true,
     "workspace_tables_exist": true,
     "auth_finance_preserved": true,
-    "commercial_writes": false
+    "commercial_writes": false,
+    "app_version": "17bb4a0c-fc38-43e0-8452-b0adeb06b24e"
+  },
+  "visual_chart_refinement_20261031": {
+    "id": "LIVE_VISUAL_CHART_INSPECTION_AND_COST_RULE_SCOPE",
+    "status": "OFFICIAL_APP_DEPLOY_VERIFIED",
+    "pull_request": 87,
+    "code_commit": "7fcf975bd65a4c315ce9256ae95c11f42b2a26b5",
+    "base_main": "8d66525bc3b96914412a9538d3ec84048ac78dbb",
+    "ci_run": 41159508485,
+    "node_tests": 2393,
+    "python_tests": 67,
+    "docs": "docs/MLS_VISUAL_CHARTS_RELEASE_2026_10_31.md",
+    "deployment": {
+      "app_version": "17bb4a0c-fc38-43e0-8452-b0adeb06b24e",
+      "app_sha256": "22b4ad40c6e7e331965dad976715d89ac8ef5f2e5c3e9e098282209296590796",
+      "published_app_sha256": "c7e9429d77da50d475976f1f009dfc464bd86db9fadb979a9ece75cbdf8de829",
+      "percentage": 100,
+      "exact_bytes_verified": true,
+      "existing_configuration_preserved": true,
+      "owner_flags_preserved": true,
+      "auth_finance_unchanged": true,
+      "sync_failure_count": 0
+    },
+    "technical_browser_qa": "SYNTHETIC_NORMAL_MINIFIED_DESKTOP_MOBILE_DARK_LIGHT_PASSED",
+    "actual_owner_session": "NOT_EXECUTED",
+    "child16_rule_repair": {
+      "state": "LIVE_READ_MODEL_VERIFIED",
+      "before_revision": 6,
+      "after_revision": 7,
+      "audit_added": 1,
+      "unit_cost_cents": 1250,
+      "unrelated_fields_preserved": true,
+      "known_units": 356,
+      "total_units": 356,
+      "pending_units": 0,
+      "production_cents": 1048610,
+      "saved_checkpoint_cost_rule_revision_at_last_read": 6,
+      "display_uses_current_rules_over_saved_finance": true
+    },
+    "commercial_writes": "LOCKED",
+    "finance_m2": "OPEN"
+  },
+  "previous_live_release_pr86": {
+    "branch": "release/live-roadmap-improvements-20261030",
+    "base_main": "2ab4c9d8baa3c25e5816bcca14b4a0973ea73d5a",
+    "prepared_source_head": "4c149a7e818306ddd91419494e75a12b6e14c1f4",
+    "reconciliation_commit": "b17df54",
+    "status": "OFFICIAL_APP_DEPLOY_VERIFIED",
+    "docs": "docs/MLS_LIVE_ROADMAP_RELEASE_2026_10_30.md",
+    "ready_features": [
+      "Six reference layouts and remaining native panels, shared themes and verified-source charts",
+      "Owner V3.6 search, saved catalog/costs, DTF and navigation",
+      "Listing Factory preserved imported SKUs/variants, sizes, kits, quantities and local media relinking",
+      "Read-only Products/Pricing ABC and explicit mathematical scenario",
+      "Hermes context follows the same complete publication during partial collection",
+      "Native AI Sales campaigns, local video workflow, assisted creator CRM, declared performance and capability states",
+      "PR85 daily cancellation freshness and previous-month maintenance preserved"
+    ],
+    "workspace_persistence": "LIVE_OWNER_D1_METADATA_CAS_CSRF_VERIFIED",
+    "cloudflare_api_access_verified": true,
+    "production_deployed": true,
+    "exact_release_validation": "BYTE_CONFIG_FLAGS_SCHEMA_HEALTH_VERIFIED",
+    "owner_authenticated_qa": "NOT_EXECUTED",
+    "human_visual_audio_qa": "NOT_RECORDED",
+    "all_roadmap_phases_complete": false,
+    "pull_request": 86,
+    "ci_run": 41157082180,
+    "node_tests": 2382,
+    "python_tests": 67,
+    "app_version": "2ffcefb4-3103-4cd0-880c-569a61a4df69",
+    "technical_authenticated_browser_qa": "SYNTHETIC_DESKTOP_MOBILE_PASSED",
+    "active_owner_flags": [
+      "MLS_V36_OWNER_PREVIEW=ENABLED",
+      "MLS_AI_SALES_OWNER_PREVIEW=ENABLED"
+    ]
   }
 }

@@ -208,6 +208,7 @@ export function buildBusinessCostDiagnostics(frame,context,{now=()=>Date.now()}=
  for(let index=0;index<pairs.length;index+=1000){const current=productionCostReference({status:'AVAILABLE',rows:pairs.slice(index,index+1000)},bindings,costs,reference);for(const row of current.variants)costVariants.set(row.item_id+':'+row.model_id,row);}
  const jobs=new Map(classifications.products.map(row=>[row.item_id,row])),metadata=new Map(classifications.variants.map(row=>[row.item_id+':'+row.model_id,row])),automatic=new Map(reference.variants.map(row=>[row.item_id+':'+row.model_id,row])),learning=new Map((reference.learning||[]).map(row=>[row.item_id,row])),changed=new Set(reference.metadata_changed_item_ids||[]),ruleMap=new Map(rules.values.rules.map(row=>[row.id,row]));
  const catalogMap=new Map(catalogs.filter(row=>Object.hasOwn(row,'catalog_fingerprint')&&Object.hasOwn(row,'payload')).map(row=>[row.item_id,{...row,catalog:JSON.parse(row.payload)}])),assignmentMap=new Map((rules.values.assignments||[]).map(row=>[row.item_id+':'+(row.model_id??'*'),row]));
+ const historicalCompositions=new Map((reference.historical_compositions||[]).map(row=>[row.item_id+':'+row.model_id,row]));
  const sources=new Map();for(const row of sourceDiagnostics){const job=jobs.get(row.item_id);if(!job||job.status!=='RETRY_WAIT'||job.failure_count!==row.failure_count)continue;const diagnostic=projectVariantCatalogFailure({schema:'variant_catalog_v1',status:'UNAVAILABLE',diagnostic:JSON.parse(row.diagnostic)})?.diagnostic;if(!diagnostic||!Number.isSafeInteger(row.checked_at)||row.checked_at<1||row.checked_at>diagnosedAt+60)fail('BUSINESS_COST_DIAGNOSTICS_STORAGE_INVALID');sources.set(row.item_id,{...diagnostic,checked_at:row.checked_at});}
  let textTruncated=false;const compact=(text,max)=>{if(text===null||text===undefined)return null;let result='';for(const character of text){if(encoder.encode(result+character).byteLength>max){textTruncated=true;break;}result+=character;}return result;};
  const reasonFor=(itemId,modelId,current,catalog,variant,job,assignment)=>{
@@ -216,6 +217,11 @@ export function buildBusinessCostDiagnostics(frame,context,{now=()=>Date.now()}=
   const automaticReason=automatic.get(itemId+':'+modelId)?.reason,recognition=learning.get(itemId);
   if(assignment){const rule=ruleMap.get(assignment.rule_id);if(!rule)return 'RULE_UNAVAILABLE';if(!rule.enabled)return 'RULE_DISABLED';if(automaticReason==='RULE_ASSIGNMENT_PENDING'||rule.options.length&&assignment.model_id!==null&&!rule.options.includes(assignment.size))return 'ASSIGNMENT_PENDING';}
   if(automaticReason==='RULE_CONFLICT'||recognition?.status==='CONFLICT'||job?.reason==='CATALOG_CONFLICT')return 'CONFLICT';
+  // Approved historical names already establish the removed child model. A
+  // saved rule that cannot price that composition needs rule review; another
+  // catalogue request cannot expand the operator's configured size scope.
+  const historical=historicalCompositions.get(itemId+':'+modelId);
+  if(historical?.kind==='CHILD_SINGLE'&&historical.unit_cost_cents===null&&!variant&&!catalog?.catalog.variants.some(row=>row.model_id===modelId))return 'RULE_NOT_MATCHED';
   if(!catalog&&!job?.catalog_fingerprint)return 'NO_CATALOG';
   if(!variant&&!catalog?.catalog.variants.some(row=>row.model_id===modelId))return 'MODEL_NOT_IN_CATALOG';
   const sourceReason=variant?.reason??job?.reason;

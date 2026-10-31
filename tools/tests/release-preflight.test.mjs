@@ -10,7 +10,7 @@ import {evaluateReleasePreflight,RELEASE_EXPECTED_SHA,RELEASE_ALLOWED_FILES,RELE
 function good(){
  return {
   baseCommit:RELEASE_BASE_COMMIT,
-  changedPaths:['web/cloudflare/src/admin.mjs','tools/release_preflight.mjs'],
+  changedPaths:['tools/release-approved-candidate.json','tools/tests/release-preflight.test.mjs'],
   buildHashes:{...RELEASE_EXPECTED_SHA},
   appConfig:{
    name:'brazacommerce-app',main:'../../dist/app-worker.mjs',keep_vars:true,
@@ -28,7 +28,7 @@ test('release preflight passes only an exact reviewed local build and leaves rem
  assert.equal(r.remoteCloudflareVerified,false);
  assert.equal(r.productionApproved,false);
  assert.ok(RELEASE_MANUAL_GATES.includes('VERIFY_REMOTE_OWNER_FLAGS_MATCH_APPROVED_VALUES'));
- assert.ok(RELEASE_ALLOWED_FILES.includes('web/cloudflare/src/admin.mjs'));
+ assert.ok(RELEASE_ALLOWED_FILES.includes('tools/release-approved-candidate.json'));
  assert.ok(!RELEASE_ALLOWED_FILES.some(x=>x.startsWith('workers/')||x.startsWith('web/finance/')));
 });
 
@@ -44,6 +44,7 @@ test('release preflight blocks undocumented file modifications and any protected
  for(const path of ['workers/app/wrangler.json','workers/auth/wrangler.json',
   'workers/finance/migration.json','web/finance/src/index.mjs',
   'web/cloudflare/original/app-worker.mjs','web/cloudflare/src/new-shop-write.mjs',
+  'web/cloudflare/src/mls-ai-sales-workspace-store.mjs',
   'package-lock.json']){
   const data=good();data.changedPaths.push(path);
   const result=evaluateReleasePreflight(data);
@@ -136,5 +137,16 @@ test('a malformed candidate cannot weaken exact hashes, literal paths or commerc
   fs.writeFileSync(path.join(directory,'release-approved-candidate.json'),JSON.stringify(changed));
   const result=spawnSync(process.execPath,['--input-type=module','-e','await import('+JSON.stringify(pathToFileURL(modulePath).href)+')'],{encoding:'utf8'});
   assert.notEqual(result.status,0);assert.match(result.stderr,/RELEASE_CANDIDATE_MANIFEST_INVALID/);
+ }
+});
+
+test('the focused visual release does not inherit unrelated AI-storage or previous-candidate permissions',()=>{
+ assert.equal(RELEASE_BASE_COMMIT,'8d66525bc3b96914412a9538d3ec84048ac78dbb');
+ const oldBase=good();oldBase.baseCommit='2ab4c9d8baa3c25e5816bcca14b4a0973ea73d5a';
+ assert.ok(evaluateReleasePreflight(oldBase).failures.includes('RELEASE_BASE_MISMATCH'));
+ for(const filename of ['web/cloudflare/src/mls-ai-sales-workspace-store.mjs','tools/mls-ai-sales/render.mjs','web/cloudflare/src/admin.mjs']){
+  assert.ok(!RELEASE_ALLOWED_FILES.includes(filename),filename);
+  const input=good();input.changedPaths.push(filename);
+  assert.ok(evaluateReleasePreflight(input).failures.includes('RELEASE_UNREVIEWED_PATH'),filename);
  }
 });

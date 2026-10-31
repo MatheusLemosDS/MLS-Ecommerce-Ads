@@ -7,7 +7,16 @@
 export function createMlsVerifiedCharts(){
  const SAFE = value => Number.isSafeInteger(value) && !Object.is(value,-0);
  const DATE = /^\d{4}-\d{2}-\d{2}$/;
- const amount=value=>{const n=BigInt(value),absolute=n<0n?-n:n;return (n<0n?'-':'')+String(absolute/100n)+'.'+String(absolute%100n).padStart(2,'0');};
+ const localAmount=value=>{const n=BigInt(value),absolute=n<0n?-n:n;return (n<0n?'-':'')+'R$ '+String(absolute/100n).replace(/\B(?=(\d{3})+(?!\d))/g,'.')+','+String(absolute%100n).padStart(2,'0');};
+ const axisAmount=value=>{
+  const n=BigInt(value),absolute=n<0n?-n:n;
+  for(const [scale,suffix] of [[100000000000000n,'tri'],[100000000000n,'bi'],[100000000n,'mi'],[100000n,'mil']]){
+   if(absolute<scale)continue;
+   const tenth=(absolute*10n+scale/2n)/scale;
+   return (n<0n?'-':'')+'R$ '+String(tenth/10n)+(tenth%10n?','+String(tenth%10n):'')+' '+suffix;
+  }
+  return localAmount(value);
+ };
  const COLORS = Object.freeze({
    net:'#35e6ae',sales:'#4b9fff',ads:'#ef5ab1',finance:'#44e8ad',
    production:'#39d5eb',returns:'#ff688e',products:'#ffaa4b'
@@ -16,6 +25,9 @@ export function createMlsVerifiedCharts(){
    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
  }[c]));
  const fail = (reason,source='UNAVAILABLE')=>Object.freeze({status:'UNAVAILABLE',reason,source});
+ const markAttributes=(index,label,value,context,basis='')=>' class="mls-chart-mark" data-mls-chart-mark="'+index+'" tabindex="0" role="img"'+
+  ' data-mls-chart-label="'+esc(label)+'" data-mls-chart-value="'+esc(value)+'" data-mls-chart-context="'+esc(context)+'"'+
+  ' data-mls-chart-basis="'+esc(basis)+'"';
 
  function projectMlsDailyChart(trend,metric='net'){
   const fields={net:'net_cents',sales:'sales_cents',ads:'ads_spend_cents'};
@@ -31,7 +43,8 @@ export function createMlsVerifiedCharts(){
     return fail('Datas inválidas ou duplicadas');
    seen.add(date);
    const value=row?.[fields[metric]];
-   rows.push({date,value:SAFE(value)?value:null,partial:row?.partial===true});
+   rows.push({date,value:SAFE(value)?value:null,partial:row?.partial===true,
+    basis:metric==='net'&&['KNOWN_COSTS','ESTIMATE'].includes(row?.net_basis)?row.net_basis:null});
   }
   for(let i=1;i<rows.length;i++)if(rows[i].date<=rows[i-1].date)
    return fail('Histórico sem ordenação cronológica');
@@ -99,7 +112,7 @@ export function createMlsVerifiedCharts(){
  }
 
  function svgFrame(inner,label,w,h){
-  return '<svg xmlns="http://www.w3.org/2000/svg" class="mls-verified-chart" width="100%" viewBox="0 0 '+w+' '+h+'" role="img" aria-label="'+esc(label)+'" preserveAspectRatio="xMidYMid meet">'+
+  return '<svg xmlns="http://www.w3.org/2000/svg" class="mls-verified-chart" width="100%" viewBox="0 0 '+w+' '+h+'" role="group" aria-label="'+esc(label)+'" preserveAspectRatio="xMidYMid meet">'+
    '<title>'+esc(label)+'</title>'+inner+'</svg>';
  }
  function renderMlsVerifiedChart(model,{title='Gráfico de dados observados',palette='net'}={}){
@@ -111,7 +124,7 @@ export function createMlsVerifiedCharts(){
     return '<div class="mls-chart-unavailable" role="status">Série inválida</div>';
    const known=rows.map(x=>x.value).filter(SAFE);
    if(known.length<2)return '<div class="mls-chart-unavailable" role="status">Histórico insuficiente</div>';
-   const w=620,h=222,left=48,right=610,top=16,bottom=187;
+   const w=620,h=222,left=78,right=610,top=16,bottom=187;
    const max=Math.max(0,...known),min=Math.min(0,...known),span=max-min||1;
    const x=i=>left+(right-left)*i/Math.max(1,rows.length-1);
    const y=v=>top+(max-v)*(bottom-top)/span;
@@ -121,7 +134,10 @@ export function createMlsVerifiedCharts(){
     const yy=top+i*(bottom-top)/4;
     graphics+='<line x1="'+left+'" y1="'+yy+'" x2="'+right+'" y2="'+yy+
      '" stroke="var(--line,#335070)" stroke-opacity=".5" stroke-dasharray="2 5"/>';
+    const tick=Number(BigInt(min)+(BigInt(max)-BigInt(min))*BigInt(4-i)/4n);
+    graphics+='<text class="mls-chart-axis" x="'+(left-9)+'" y="'+(yy+3)+'" text-anchor="end" font-size="9" fill="var(--muted,#96b5d9)">'+esc(axisAmount(tick))+'</text>';
    }
+   graphics+='<path class="mls-chart-zero" d="M '+left+' '+baseline+' H '+right+'" fill="none" stroke="var(--line,#335070)" stroke-opacity=".85"/>';
    let i=0;
    while(i<rows.length){
     if(rows[i].value===null){i++;continue;}
@@ -129,8 +145,9 @@ export function createMlsVerifiedCharts(){
       Date.parse(rows[j+1].date+'T00:00:00Z')-Date.parse(rows[j].date+'T00:00:00Z')===86400000)j++;
     const piece=(ax,av,bx,bv,tint)=>{
      const path='M '+ax+' '+y(av)+' L '+bx+' '+y(bv);
-     return '<path d="'+path+' L '+bx+' '+baseline+' L '+ax+' '+baseline+' Z" fill="'+tint+'" fill-opacity=".16"/>'+
-      '<path d="'+path+'" fill="none" stroke="'+tint+'" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>';
+     return '<path class="mls-chart-area" d="'+path+' L '+bx+' '+baseline+' L '+ax+' '+baseline+' Z" fill="'+tint+'" fill-opacity=".13"/>'+
+      '<path class="mls-chart-halo" d="'+path+'" fill="none" stroke="'+tint+'" stroke-opacity=".12" stroke-width="8" stroke-linecap="round" aria-hidden="true"/>'+
+      '<path class="mls-chart-series" d="'+path+'" fill="none" stroke="'+tint+'" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>';
     };
     for(let k=i+1;k<=j;k++){
      const a=rows[k-1].value,b=rows[k].value,ax=x(k-1),bx=x(k);
@@ -145,14 +162,17 @@ export function createMlsVerifiedCharts(){
    for(let k=0;k<rows.length;k++){
     const point=rows[k];
     if(point.value!==null){
-     const label=point.date+': R$ '+amount(point.value)+(point.partial?' (parcial)':'')+
+     const label=point.date+': '+localAmount(point.value)+(point.partial?' (parcial)':'')+
        (point.basis==='KNOWN_COSTS'?' (subtotal com custos conhecidos)':'');
-     graphics+='<circle tabindex="0" role="img" aria-label="'+esc(label)+'" cx="'+x(k)+'" cy="'+y(point.value)+'" r="3.5" fill="'+
+     const context=(point.basis==='KNOWN_COSTS'?'Subtotal com custos conhecidos':model.metric==='net'?'Resultado estimado':'Valor observado')+(point.partial?' · Dia parcial':'');
+     const displayDate=point.date.slice(8)+'/'+point.date.slice(5,7)+'/'+point.date.slice(0,4);
+     graphics+='<circle'+markAttributes(k,displayDate,localAmount(point.value),context,point.basis||'')+' data-mls-chart-date="'+esc(point.date)+'"'+
+       ' data-mls-chart-x="'+x(k)+'" data-mls-chart-left="'+left+'" data-mls-chart-right="'+right+'" data-mls-chart-top="'+top+'" data-mls-chart-bottom="'+bottom+'" aria-label="'+esc(label)+'" cx="'+x(k)+'" cy="'+y(point.value)+'" r="3.5" fill="'+
        (point.partial?'#ffcf84':model.metric==='net'&&point.value<0?'#ff7899':color)+'">'+
        '<title>'+esc(label)+'</title></circle>';
     }
     if(k===0||k===rows.length-1||k%Math.max(1,Math.ceil(rows.length/5))===0)
-     graphics+='<text x="'+x(k)+'" y="214" text-anchor="middle" font-size="10" fill="var(--muted,#96b5d9)">'+esc(point.date.slice(5))+'</text>';
+     graphics+='<text x="'+x(k)+'" y="214" text-anchor="middle" font-size="10" fill="var(--muted,#96b5d9)">'+esc(point.date.slice(8)+'/'+point.date.slice(5,7))+'</text>';
    }
    return svgFrame(graphics,title+'; '+known.length+' observações reais, '+model.missing+' lacunas',w,h);
   }
@@ -162,19 +182,23 @@ export function createMlsVerifiedCharts(){
    if(!Array.isArray(rows)||!rows.length||rows.some(r=>!SAFE(r.value)||r.value<0))
     return '<div class="mls-chart-unavailable" role="status">Valores categóricos inconsistentes</div>';
    const max=Math.max(1,...rows.map(r=>r.value)),fill=color;
-   const number=value=>model.unit==='BRL_CENTS'?'R$ '+amount(value):String(value);
+   const number=value=>model.unit==='BRL_CENTS'?localAmount(value):String(value);
    if(model.type==='bar'){
-    const w=620,h=226,left=44,right=609,top=15,bottom=182,space=(right-left)/rows.length;
+    const w=620,h=226,left=78,right=609,top=15,bottom=182,space=(right-left)/rows.length;
     let body='';
     for(let line=0;line<5;line++){
      const yy=top+line*(bottom-top)/4;
      body+='<line x1="'+left+'" y1="'+yy+'" x2="'+right+'" y2="'+yy+'" stroke="var(--line,#315274)" stroke-opacity=".45" stroke-dasharray="3 5"/>';
+     const tick=Number(BigInt(max)*BigInt(4-line)/4n);
+     body+='<text class="mls-chart-axis" x="'+(left-9)+'" y="'+(yy+3)+'" text-anchor="end" font-size="9" fill="var(--muted,#96b5d9)">'+esc(model.unit==='BRL_CENTS'?axisAmount(tick):String(tick))+'</text>';
     }
     for(let i=0;i<rows.length;i++){
      const row=rows[i],bar=Math.max(0,(row.value/max)*(bottom-top));
      const x=left+i*space+space*.18,y=bottom-bar;
-     body+='<rect x="'+x+'" y="'+y+'" width="'+(space*.64)+'" height="'+bar+
-      '" rx="5" fill="'+fill+'" fill-opacity=".84"><title>'+esc(row.label+': '+number(row.value))+'</title></rect>'+
+     body+='<g'+markAttributes(i,row.label,model.unit==='BRL_CENTS'?localAmount(row.value):String(row.value),'Categoria observada')+' aria-label="'+esc(row.label+': '+number(row.value))+'">'+
+      '<rect x="'+x+'" y="'+top+'" width="'+(space*.64)+'" height="'+(bottom-top)+'" fill="transparent"/>'+
+      '<rect class="mls-chart-series" x="'+x+'" y="'+y+'" width="'+(space*.64)+'" height="'+bar+
+      '" rx="5" fill="'+fill+'" fill-opacity=".84"><title>'+esc(row.label+': '+number(row.value))+'</title></rect></g>'+
       '<text x="'+(left+(i+.5)*space)+'" y="201" font-size="10" fill="var(--muted,#a8c2e5)" text-anchor="middle">'+
       esc(row.label.slice(0,10))+'</text>';
     }
@@ -184,12 +208,13 @@ export function createMlsVerifiedCharts(){
    let body='';
    for(let i=0;i<rows.length;i++){
     const row=rows[i],y=10+i*35,bar=row.value/max*(right-left);
-    body+='<text x="'+(left-9)+'" y="'+(y+18)+'" font-size="11" fill="var(--text,#c2d9f0)" text-anchor="end">'+
+    body+='<g'+markAttributes(i,row.label,model.unit==='BRL_CENTS'?localAmount(row.value):String(row.value),'Categoria observada')+' aria-label="'+esc(row.label+': '+number(row.value))+'">'+
+     '<text x="'+(left-9)+'" y="'+(y+18)+'" font-size="11" fill="var(--text,#c2d9f0)" text-anchor="end">'+
      esc(row.label.slice(0,22))+'</text>'+
      '<rect x="'+left+'" y="'+y+'" width="'+(right-left)+'" height="21" rx="5" fill="var(--surface-raised,#16314c)"/>'+
-     '<rect x="'+left+'" y="'+y+'" width="'+bar+'" height="21" rx="5" fill="'+fill+'">'+
+     '<rect class="mls-chart-series" x="'+left+'" y="'+y+'" width="'+bar+'" height="21" rx="5" fill="'+fill+'">'+
      '<title>'+esc(row.label+': '+number(row.value))+'</title></rect>'+
-     '<text x="'+(right+8)+'" y="'+(y+16)+'" font-size="11" fill="var(--text,#eaf7ff)">'+esc(number(row.value))+'</text>';
+     '<text x="'+(right+8)+'" y="'+(y+16)+'" font-size="11" fill="var(--text,#eaf7ff)">'+esc(number(row.value))+'</text></g>';
    }
    return svgFrame(body,title+'; '+rows.length+' categorias observadas',w,h);
   }
@@ -202,23 +227,22 @@ export function createMlsVerifiedCharts(){
    const radius=66,circ=2*Math.PI*radius;
    let offset=0,segments='';
    rows.forEach((r,index)=>{
-    if(r.value===0)return;
     const length=r.value/total*circ;
-    segments+='<circle cx="110" cy="110" r="'+radius+'" fill="none" stroke="'+strokes[index%strokes.length]+'" stroke-width="24" '+
+    const percent=(100*r.value/total).toFixed(1).replace('.',','),yy=24+index*23;
+    const label=r.label+': '+r.value+' ('+percent+'%)';
+    segments+='<g'+markAttributes(index,r.label,String(r.value),percent+'% do total observado')+' aria-label="'+esc(label)+'">';
+    if(r.value>0)segments+='<circle class="mls-chart-series" cx="110" cy="110" r="'+radius+'" fill="none" stroke="'+strokes[index%strokes.length]+'" stroke-width="24" '+
      'stroke-dasharray="'+length+' '+(circ-length)+'" stroke-dashoffset="'+(-offset)+'" transform="rotate(-90 110 110)">'+
-     '<title>'+esc(r.label+': '+r.value+' ('+(100*r.value/total).toFixed(1)+'%)')+'</title></circle>';
+     '<title>'+esc(label)+'</title></circle>';
+    // The legend is also the pointer/focus target for an observed zero category.
+    segments+='<rect x="224" y="'+(yy-14)+'" width="208" height="21" rx="4" fill="transparent"/>'+
+     '<rect x="227" y="'+(yy-10)+'" width="9" height="9" rx="2" fill="'+strokes[index%strokes.length]+'"/>'+
+     '<text x="242" y="'+yy+'" font-size="11" fill="var(--text,#d3e4f8)">'+esc(r.label.slice(0,24))+'</text>'+
+     '<text x="424" y="'+yy+'" text-anchor="end" font-size="11" font-weight="700" fill="var(--text,#f2f9ff)">'+esc(percent+'%')+'</text></g>';
     offset+=length;
    });
    segments+='<text x="110" y="107" text-anchor="middle" font-size="22" font-weight="750" fill="var(--text,#f0f8ff)">'+total+'</text>'+
     '<text x="110" y="125" text-anchor="middle" font-size="10" fill="var(--muted,#a4c1e4)">total observado</text>';
-   rows.forEach((r,index)=>{
-    if(index>7)return;
-    const yy=24+index*23;
-    segments+='<rect x="227" y="'+(yy-10)+'" width="9" height="9" rx="2" fill="'+strokes[index%strokes.length]+'"/>'+
-      '<text x="242" y="'+yy+'" font-size="11" fill="var(--text,#d3e4f8)">'+esc(r.label.slice(0,24))+'</text>'+
-      '<text x="424" y="'+yy+'" text-anchor="end" font-size="11" font-weight="700" fill="var(--text,#f2f9ff)">'+
-      esc((r.value/total*100).toFixed(1)+'%')+'</text>';
-   });
    return svgFrame(segments,title+'; '+total+' registros exclusivos verificados',440,220);
   }
   return '<div class="mls-chart-unavailable" role="status">Tipo de gráfico indisponível</div>';

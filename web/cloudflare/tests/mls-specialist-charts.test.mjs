@@ -32,7 +32,7 @@ test('complete saved DTF lines are the only supported distribution source',()=>{
  assert.deepEqual(model.segments.map(s=>s.value),[4,2,3,1]);
  assert.equal(model.verified_at,null);assert.equal(model.period,null);
  const svg=renderMlsVerifiedChart(model);
- assert.match(svg,/<svg\b/);assert.match(svg,/40\.0%/);
+ assert.match(svg,/<svg\b/);assert.match(svg,/40,0%/);
  assert.equal(model.title,'Linhas da fila por estado');
  for(const key of keys.filter(key=>key!=='production-states')){
   assert.equal(projectMlsSpecialistChart(key,queue()).status,'UNAVAILABLE','DTF counts do not authorize '+key);

@@ -146,3 +146,19 @@ test('a legal itemized kit can exceed the single-component price bound while pro
  for(const field of ['production_cost_cents','known_production_cost_cents']){const poisoned=structuredClone(value);poisoned.totals[field]=-1;assert.equal(projectBusinessCostDiagnostics(poisoned),null,field);}
 });
 
+
+
+test('an approved removed child size outside the saved rule scope needs rule review, while an unknown model still needs metadata',async t=>{
+ const f=await fixture(t,{items:[{item_id:'201',model_id:'16',quantity:1},{item_id:'201',model_id:'17',quantity:1}]});
+ await catalog(f.env,{item:'201',models:['14'],size:'14',name:'Camiseta infantil Anos 80',matched:false,reason:'OPTION_NOT_RECOGNIZED'});
+ const state=await readCostRules(f.env),values=structuredClone(state.values);
+ values.rules.find(rule=>rule.id==='camiseta-infantil').options=values.rules.find(rule=>rule.id==='camiseta-infantil').options.filter(option=>option!=='16');
+ await saveCostRules(f.env,{revision:state.revision,values},'test');
+ const names={item_names:['Camiseta infantil Anos 80'],model_names:['16'],missing_item_name:false,missing_model_name:false,conflict:false,overflow:false};
+ f.env.ADMIN_DB.db.prepare('INSERT INTO historical_cost_evidence_names VALUES(?,?,?,1,?,?)').run('201','16',JSON.stringify(names),stamp-1,stamp-1);
+ const diagnostic=await f.read();
+ assert.equal(variant(diagnostic,'201','16').reason,'RULE_NOT_MATCHED');assert.equal(variant(diagnostic,'201','16').recoverable,false);assert.equal(variant(diagnostic,'201','16').unit_cost_cents,null);
+ assert.equal(variant(diagnostic,'201','17').reason,'MODEL_NOT_IN_CATALOG');assert.equal(variant(diagnostic,'201','17').recoverable,true);
+ await refreshKnownCatalogClassifications(f.env,['201'],{now});
+ const changed=await f.read();assert.equal(variant(changed,'201','16').reason,'METADATA_CHANGED','changed catalogue evidence retains priority over historical names');
+});
