@@ -11,7 +11,7 @@ const origin='https://pending-diagnostic.compiled.test';
 const base=Date.UTC(2026,9,31,18),stamp=base/1000;
 const overview={schema:'finance_income_overview_v1',checked_at:stamp,region:'BRAZIL',shop_type:'LOCAL',currency_basis:'FIXED_BRAZIL_SHOP_PROFILE',pending:{status:'PENDING',raw:'8375.15',cents:837515},released:{status:'RELEASED',raw:'0',cents:0},to_release:{status:'TO_RELEASE_NOT_APPLICABLE_LOCAL',raw:null,cents:null},basis:'CURRENT_PROVIDER_INCOME_STATUS_NOT_BANK_RECEIPT_OR_HISTORICAL_MONTH'};
 const providerRows=()=>Array.from({length:100},(_,index)=>({order_sn:'SYNTHETIC_PENDING_ORDER_'+index,currency:'BRL',status:'Pendente',description:'Order Income',payment_method:'PIX',estimated_escrow_amount:index===99?10.123:47.51,estimated_payout_time:stamp+86400,creation_date:stamp-3600}));
-const successfulBody=()=>({error:'',income_detail_list:{list:providerRows(),next_page:{cursor:'synthetic-next-page',page_size:100}}});
+const successfulBody=()=>({error:'',response:{list:providerRows(),next_page:{cursor:'synthetic-next-page',page_size:100}}});
 
 async function compiled(minify){
  const source=await readFile(new URL('../../../dist/app-worker.mjs',import.meta.url),'utf8'),seam='return {adminFetch,schedule,scheduledWork,workspaceAuthFetch};';
@@ -95,10 +95,23 @@ for(const minify of [false,true])test(`three generated Workers preserve bounded 
   assert.deepEqual(f.calls,{app:2,finance:2,provider:2});
  });
  await t.test('provider shape failures are rejected and unknown Finance diagnostics never pass through Auth',async child=>{
-  const f=await fixture(child,workers);f.state.body=successfulBody();f.state.body.income_detail_list.list[0].currency='USD';
+  const f=await fixture(child,workers);f.state.body=successfulBody();f.state.body.response.list[0].currency='USD';
   assert.equal((await f.run()).status,'UNAVAILABLE');let evidence=await(await f.get('?evidence=diagnostic-v1')).json();assert.equal(evidence.detail.report,null);assert.equal(evidence.diagnostic.diagnostic.code,'FINANCE_INCOME_DETAIL_INVALID_RESPONSE');assert.doesNotMatch(JSON.stringify(evidence),/SYNTHETIC_PENDING_ORDER_|PRIVATE_|order_sn/);
   f.clock.time+=301000;f.state.financeResponse=()=>Response.json({error:'FINANCE_INCOME_DETAIL_UNAVAILABLE',diagnostic:{schema:'finance_income_detail_diagnostic_v1',source:'SHOPEE_FINANCE_INCOME_DETAIL',stage:'PROVIDER_HTTP',code:'FINANCE_INCOME_DETAIL_UPSTREAM_HTTP',http:403,provider_code:'PRIVATE_PROVIDER_CODE',response_kind:'PRIVATE_RESPONSE_KIND'},message:'PRIVATE_BODY'},{status:502});
   assert.equal((await f.run()).status,'UNAVAILABLE');evidence=await(await f.get('?evidence=diagnostic-v1')).json();assert.equal(evidence.diagnostic.diagnostic.code,'FINANCE_INCOME_DETAIL_UNAVAILABLE');assert.equal(evidence.diagnostic.diagnostic.provider_code,null);assert.equal(evidence.diagnostic.diagnostic.response_kind,null);assert.doesNotMatch(JSON.stringify(evidence),/PRIVATE_/);
   assert.deepEqual(f.calls,{app:2,finance:2,provider:1});
+ });
+ await t.test('simultaneous wrapped and direct income containers cannot prove an unambiguous order page',async child=>{
+  const f=await fixture(child,workers);
+  for(const [index,conflicting] of [false,true].entries()){
+   if(index)f.clock.time+=301000;
+   f.state.body=successfulBody();f.state.body.income_detail_list=structuredClone(f.state.body.response);
+   if(conflicting)f.state.body.income_detail_list.list[0].estimated_escrow_amount=99.99;
+   assert.equal((await f.run()).status,'UNAVAILABLE',conflicting?'conflicting containers':'identical containers');
+   const evidence=await(await f.get('?evidence=diagnostic-v1')).json();
+   assert.equal(evidence.detail.status,'UNAVAILABLE');assert.equal(evidence.detail.report,null);assert.equal(evidence.diagnostic.diagnostic.code,'FINANCE_INCOME_DETAIL_INVALID_RESPONSE');assert.equal(evidence.diagnostic.diagnostic.response_kind,'INCOME_CONTAINER_MISSING');
+   assert.doesNotMatch(JSON.stringify(evidence),/SYNTHETIC_PENDING_ORDER_|PRIVATE_|order_sn/);
+   assert.deepEqual(f.calls,{app:index+1,finance:index+1,provider:index+1},'an ambiguous page must not trigger another request or pagination');
+  }
  });
 });

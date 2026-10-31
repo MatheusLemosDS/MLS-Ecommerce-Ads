@@ -29,7 +29,10 @@ function incomeDetailStructure(value){
   add(originPath);add([...originPath,'income_detail_list']);
   for(const box of [[...originPath,'income_detail_list'],[...originPath,'income_detail_list',0]])for(const suffix of [['list'],['income_detail_list_item'],['next_page'],['next_page','cursor'],['next_page','page_size']])add([...box,...suffix]);
  }
- return {schema:'finance_income_detail_structure_probe_v1',request_method:'GET',nodes};
+ for(const originPath of [[],['response']]){for(const suffix of [['list'],['income_detail_list_item'],['next_page'],['next_page','cursor'],['next_page','page_size']])add([...originPath,...suffix]);for(const field of ['order_sn','currency','status','estimated_escrow_amount','estimated_payout_time','creation_date','description','payment_method'])add([...originPath,'list',0,field]);}
+ const knownKeys=['error','message','request_id','response','list','next_page','income_detail_list','income_detail_list_item','partner_id','shop_id','warning','data','result'];
+ const keys=current=>plain(current)?{present:knownKeys.filter(name=>Object.hasOwn(current,name)),other_count:Object.keys(current).filter(name=>!knownKeys.includes(name)).length}:null;
+ return {schema:'finance_income_detail_structure_probe_v2',request_method:'GET',root_keys:keys(value),response_keys:keys(value?.response),nodes};
 }
 async function saveIncomeDetailStructure(env,checkedAt,probe){
  try{
@@ -44,9 +47,9 @@ async function envelope(value,checkedAt){
   const suffix=['error_api_permission','error_auth','error_sign','error_partner_id','error_ip'].includes(value.error)?'PERMISSION_DENIED':['error_limit','error_rate_limit'].includes(value.error)?'RATE_LIMIT':'UNAVAILABLE',error=new FinanceConnectionError('FINANCE_INCOME_DETAIL_'+suffix,502),safe=incomeDetailFailureDiagnostic({code:error.code,provider_code:value.error,upstream_status:200});
   Object.defineProperties(error,{provider_code:{value:safe.provider_code},upstream_status:{value:200},upstream_diagnostic:{value:'PROVIDER_ERROR'}});throw error;
  }
- // The published contracts have two finite envelope/list representations.
+ // Select exactly one documented wrapped or direct canonical response box.
  // Never merge origins, aliases or pages: ambiguity cannot prove coverage.
- const origins=[value,...(plain(value.response)?[value.response]:[])].filter(origin=>Object.hasOwn(origin,'income_detail_list'));if(origins.length!==1)fail('INVALID_RESPONSE',502,'INCOME_CONTAINER_MISSING');const container=origins[0].income_detail_list,box=Array.isArray(container)&&container.length===1?container[0]:container;if(!plain(box))fail('INVALID_RESPONSE',502,'INCOME_CONTAINER_MISSING');
+ const candidates=[];for(const origin of [value,...(plain(value.response)?[value.response]:[])]){if(Object.hasOwn(origin,'income_detail_list')){const container=origin.income_detail_list;candidates.push(Array.isArray(container)&&container.length===1?container[0]:container);}if(Object.hasOwn(origin,'list')||Object.hasOwn(origin,'income_detail_list_item')||Object.hasOwn(origin,'next_page'))candidates.push(origin);}if(candidates.length!==1||!plain(candidates[0]))fail('INVALID_RESPONSE',502,'INCOME_CONTAINER_MISSING');const box=candidates[0];
  for(const name of ['partner_id','shop_id'])if(Object.hasOwn(box,name)&&box[name]!==FINANCE_PROFILE[name])fail('INVALID_RESPONSE',502,'IDENTITY_MISMATCH');const aliases=['list','income_detail_list_item'].filter(name=>Object.hasOwn(box,name));if(aliases.length!==1)fail('INVALID_RESPONSE',502,'INCOME_LIST_INVALID');const list=box[aliases[0]];if(!Array.isArray(list)||list.length>100)fail('INVALID_RESPONSE',502,'INCOME_LIST_INVALID');const next=box.next_page;
  if(!plain(next)||!Object.hasOwn(next,'cursor')||typeof next.cursor!=='string'||next.cursor.length>512)fail('INVALID_RESPONSE',502,'PAGE_CURSOR_INVALID');const cursor=next.cursor;if(Object.hasOwn(next,'page_size')&&next.page_size!==100)fail('INVALID_RESPONSE',502,'PAGE_SIZE_INVALID');
  const rows=[];

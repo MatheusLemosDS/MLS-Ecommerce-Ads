@@ -97,15 +97,31 @@ test('pause and stolen/expired global leases prevent both Pending writes and rec
  work=await runBackgroundHistoryWork(f.env,{getFinanceIncomeDetail:async()=>{calls++;f.db.db.prepare('UPDATE background_collection_lane_state SET revision=revision+1,lease_token=?').run(crypto.randomUUID());return detail(stamp);}},{month,lease},{now:f.now});assert.equal(work.source_reads,1);assert.equal(await finishBackgroundLane(f.env,lease,{now:f.now}),false);assert.equal(f.db.db.prepare('SELECT COUNT(*) n FROM background_pending_income_recovery_attempts').get().n,0);assert.equal((await readBusinessIncomeDetail(f.env,{now:f.now})).status,'UNAVAILABLE');
 });
 
-test('positive Pending does not bypass provider retry, zero amount, a young failure, or a paused policy',async t=>{
- for(const scenario of ['retry','zero','young','paused']){
+test('positive Pending does not bypass provider retry, zero amount, a global recovery cooldown, or a paused policy',async t=>{
+ for(const scenario of ['retry','zero','cooldown','paused']){
   const f=await fixture(t);
   if(scenario==='retry')f.db.db.prepare('UPDATE business_income_detail SET next_attempt_at=?').run(stamp+60);
   if(scenario==='zero')f.db.db.prepare("UPDATE business_income_overview SET payload=json_set(payload,'$.pending.raw','0','$.pending.cents',0)").run();
-  if(scenario==='young')f.db.db.prepare('UPDATE business_income_detail SET last_attempt_at=?,next_attempt_at=?').run(stamp-899,stamp-599);
+  if(scenario==='cooldown')f.db.db.prepare('INSERT INTO background_pending_income_recovery_attempts(id,month,last_attempt_at,next_attempt_at) VALUES(1,?,?,?)').run(month,stamp-100,stamp+800);
   if(scenario==='paused')f.db.db.prepare('UPDATE business_sync_state SET enabled=0').run();
   const lease=await acquireBackgroundLane(f.env,{month},{now:f.now,pendingIncomeRecovery:true});assert.equal(lease.pending_income_recovery,undefined,scenario);if(scenario==='paused')assert.equal(lease.lane,'PAUSED');await finishBackgroundLane(f.env,lease,{now:f.now});
  }
+});
+
+test('an ordinary failed read does not extend a due recovery cooldown beyond the original source retry',async t=>{
+ const f=await fixture(t),calls=[];
+ f.db.db.prepare('INSERT INTO background_pending_income_recovery_attempts(id,month,last_attempt_at,next_attempt_at) VALUES(1,?,?,?)').run(month,stamp-901,stamp-1);
+ const previous=f.db.db.prepare('SELECT * FROM background_pending_income_recovery_attempts').get();
+ // This is a real ordinary runner attempt ten minutes after the last recovery;
+ // its existing five-minute source retry has elapsed at the next cron below.
+ f.clock.time=base-600000;
+ const ordinary=await runBusinessIncomeDetail(f.env,async()=>{calls.push('ORDINARY');return unavailable();},{now:f.now});assert.equal(ordinary.source_reads,1);
+ assert.deepEqual(f.db.db.prepare('SELECT * FROM background_pending_income_recovery_attempts').get(),previous,'ordinary attempts do not reschedule reserved recovery');
+ f.clock.time=base;const stored=f.db.db.prepare('SELECT last_attempt_at,next_attempt_at FROM business_income_detail').get();
+ assert.equal(stored.last_attempt_at,stamp-600);assert.equal(stored.next_attempt_at,stamp-300);assert.ok(stamp-stored.last_attempt_at<900);
+ const before=f.cursors();const result=await scheduledWork(f.env,{getFinanceIncomeDetail:async()=>{calls.push('RECOVERY');return detail(stamp);}},f.now);
+ assert.equal(result.lane,'HISTORY');assert.equal(result.income_detail,'CHECKED');assert.deepEqual(calls,['ORDINARY','RECOVERY']);assert.deepEqual(f.cursors(),before);
+ assert.equal(f.db.db.prepare('SELECT next_attempt_at FROM background_pending_income_recovery_attempts').get().next_attempt_at,stamp+900);
 });
 
 test('a month rollover during a Pending response cannot publish the expired context',async t=>{

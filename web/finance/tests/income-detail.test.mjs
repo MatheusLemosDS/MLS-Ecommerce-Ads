@@ -130,8 +130,8 @@ test('nullable Pending description and payment method remain unknown while nonte
 test('the private structure probe retains only fixed paths, scalar types and collection counts on failed JSON envelopes',async t=>{
  const f=await fixture(t);f.state.body={error:'',message:'PRIVATE_MESSAGE',request_id:'PRIVATE_REQUEST',PRIVATE_KEY:'PRIVATE_VALUE',response:{data:'PRIVATE_DATA'},data:{income_detail_list:{income_detail_list_item:[{order_sn:'PRIVATE_ORDER',access_token:'PRIVATE_TOKEN'}],next_page:{cursor:'PRIVATE_CURSOR',page_size:100}}},result:null};
  await assert.rejects(f.run(),error=>incomeDetailFailureDiagnostic(error).response_kind==='INCOME_CONTAINER_MISSING');assert.equal(f.calls.length,1);
- const stored=f.db.db.prepare('SELECT checked_at,payload FROM finance_income_detail_structure_probe WHERE id=1').get(),probe=JSON.parse(stored.payload);assert.equal(stored.checked_at,f.now()/1000);assert.ok(Buffer.byteLength(stored.payload)<=16384);assert.equal(probe.request_method,'GET');assert.equal(probe.schema,'finance_income_detail_structure_probe_v1');assert.equal(probe.nodes.root.type,'OBJECT');assert.equal(probe.nodes.root.key_count,7);assert.deepEqual(probe.nodes['root.data.income_detail_list.income_detail_list_item'],{type:'ARRAY',array_count:1,first:{type:'OBJECT',key_count:2}});assert.deepEqual(probe.nodes['root.data.income_detail_list.next_page.cursor'],{type:'STRING'});assert.deepEqual(probe.nodes['root.data.income_detail_list.next_page.page_size'],{type:'NUMBER'});assert.deepEqual(probe.nodes['root.result'],{type:'NULL'});assert.deepEqual(probe.nodes['root.income_detail_list'],{type:'MISSING'});assert.doesNotMatch(stored.payload,/PRIVATE_|order_sn|access_token|request_id|message/);
- for(const [fixedPath,node] of Object.entries(probe.nodes)){assert.match(fixedPath,/^root(?:\.(?:response|data|result|income_detail_list|income_detail_list_item|list|next_page|cursor|page_size)|\[0\])*$/);assert.ok(['MISSING','NULL','OBJECT','ARRAY','STRING','NUMBER','BOOLEAN'].includes(node.type));assert.ok(Object.keys(node).every(key=>['type','key_count','array_count','first'].includes(key)));}
+ const stored=f.db.db.prepare('SELECT checked_at,payload FROM finance_income_detail_structure_probe WHERE id=1').get(),probe=JSON.parse(stored.payload);assert.equal(stored.checked_at,f.now()/1000);assert.ok(Buffer.byteLength(stored.payload)<=16384);assert.equal(probe.request_method,'GET');assert.equal(probe.schema,'finance_income_detail_structure_probe_v2');assert.equal(probe.nodes.root.type,'OBJECT');assert.equal(probe.nodes.root.key_count,7);assert.deepEqual(probe.nodes['root.data.income_detail_list.income_detail_list_item'],{type:'ARRAY',array_count:1,first:{type:'OBJECT',key_count:2}});assert.deepEqual(probe.nodes['root.data.income_detail_list.next_page.cursor'],{type:'STRING'});assert.deepEqual(probe.nodes['root.data.income_detail_list.next_page.page_size'],{type:'NUMBER'});assert.deepEqual(probe.nodes['root.result'],{type:'NULL'});assert.deepEqual(probe.nodes['root.income_detail_list'],{type:'MISSING'});assert.doesNotMatch(stored.payload,/PRIVATE_|access_token/);
+ for(const [fixedPath,node] of Object.entries(probe.nodes)){assert.match(fixedPath,/^root(?:\.(?:response|data|result|income_detail_list|income_detail_list_item|list|next_page|cursor|page_size|order_sn|currency|status|estimated_escrow_amount|estimated_payout_time|creation_date|description|payment_method)|\[0\])*$/);assert.ok(['MISSING','NULL','OBJECT','ARRAY','STRING','NUMBER','BOOLEAN'].includes(node.type));assert.ok(Object.keys(node).every(key=>['type','key_count','array_count','first'].includes(key)));}
 });
 
 test('a successful Pending read persists a bounded structure probe only when its checked time is newer',async t=>{
@@ -141,4 +141,18 @@ test('a successful Pending read persists a bounded structure probe only when its
 
 test('structure diagnostic storage failures cannot replace a successful read or the original provider error',async t=>{
  const f=await fixture(t),prepare=f.db.prepare.bind(f.db);f.db.prepare=sql=>{if(sql.includes('finance_income_detail_structure_probe'))throw Error('PRIVATE_DATABASE_ERROR');return prepare(sql);};assert.ok(projectIncomeDetailFrame(await f.run()));f.state.body={error:'error_param',message:'PRIVATE_PROVIDER_ERROR'};await assert.rejects(f.run(),error=>{assert.equal(error.code,'FINANCE_INCOME_DETAIL_UNAVAILABLE');assert.equal(incomeDetailFailureDiagnostic(error).provider_code,'error_param');assert.doesNotMatch(JSON.stringify(error),/PRIVATE_DATABASE_ERROR|PRIVATE_PROVIDER_ERROR/);return true;});assert.equal(f.calls.length,2);
+});
+
+
+test('canonical direct Pending response boxes preserve validated rows and reject mixed origins',async t=>{
+ for(const nested of [false,true]){
+  const f=await fixture(t),box=structuredClone(f.state.body.income_detail_list);
+  f.state.body=nested?{error:'',response:box}:{error:'',...box};
+  const result=await f.run();assert.ok(projectIncomeDetailFrame(result));assert.equal(result.returned_count,1);assert.equal(result.rows[0].estimated_escrow_cents,4751);assert.equal(result.has_more,true);assert.equal(f.calls.length,1);
+  const stored=f.db.db.prepare('SELECT payload FROM finance_income_detail_structure_probe WHERE id=1').get(),probe=JSON.parse(stored.payload),prefix=nested?'root.response':'root';assert.deepEqual(probe.nodes[prefix+'.list[0].order_sn'],{type:'STRING'});assert.deepEqual(probe.nodes[prefix+'.list[0].estimated_escrow_amount'],{type:'NUMBER'});assert.doesNotMatch(stored.payload,/251027ABC123|PRIVATE_/);
+ }
+ for(const nested of [false,true]){
+  const f=await fixture(t),box=structuredClone(f.state.body.income_detail_list);if(nested)f.state.body.response=box;else Object.assign(f.state.body,box);
+  await assert.rejects(f.run(),error=>incomeDetailFailureDiagnostic(error).response_kind==='INCOME_CONTAINER_MISSING');assert.equal(f.calls.length,1);
+ }
 });

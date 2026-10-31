@@ -1,13 +1,13 @@
 {
   "schema": "mls_release_candidate_v1",
   "base_commit": "8b0edb28e7d769c5889ba1a956c239142314b456",
-  "prepared_source_commit": "d88195fe7f02a14c145723881968ca0689b5aa26",
+  "prepared_source_commit": "db1059b87f538554deebac032ae9214a882124b9",
   "owner_authorization": "OWNER_REQUESTED_ALL_PREPARED_IMPROVEMENTS_LIVE_2026_10_30",
   "commercial_writes_allowed": false,
   "expected_hashes": {
-    "app": "07eabb013efa88002285a4de1177a9e8ca3e51bd6c60dbe24414c3b150cc2617",
+    "app": "629b1f2ce21c4d391cb04ddf5df5affd4f3093e3e7f9d7131d82d79f8fc5fc75",
     "auth": "cf326e9a4917c75474b4222c87cbf5744f98ddfe459eb1fd249a05fb6f097bcb",
-    "finance": "b82290a8465c3c40f3412841b412b7475efd531b1e51e5657a9cb11e930e7fdd"
+    "finance": "556cc1ea667b349327c32b810200f47388fe8c46b5e9acf60e37ddf0c1533de5"
   },
   "expected_live_flags": {
     "MLS_V36_OWNER_PREVIEW": "ENABLED",
