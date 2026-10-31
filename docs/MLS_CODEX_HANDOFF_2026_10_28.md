@@ -1,4 +1,4 @@
-> Incremento em validação 31/10/2026: `feature/agent-learning-performance-20261031`, base mainPR88 `8bb9718`. Memória agregada/correções/recorrências, política consultiva de ações e ROAS real; aguardar provas CI/Live no [registro](MLS_AGENT_MEMORY_PERFORMANCE_2026_10_31.md). M2 e escritas comerciais mantêm seus critérios.
+> **Estado atual — 31/10/2026:** PR89 publicada no App `66e9c01f`, base mainPR88 `8bb9718`. CI41206928254 verde:2.536Node/67Python/Chromium; memória agregada, recorrências no contexto real do Hermes, ROAS diário e setas com datas, mantendo o estilo aprovado. Bytes/config/Auth/Finance preservados. Cron natural salvou primeiro corte da publicação14306,3intervalos/23páginas,zero erro. [Registro](MLS_AGENT_MEMORY_PERFORMANCE_2026_10_31.md). Memória não treina pesos nem concede permissões; M2 e avaliação de eficácia permanecem abertas.
 
 # Handoff atual — melhorias na versão Live, 30/10/2026
 

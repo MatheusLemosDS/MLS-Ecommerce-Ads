@@ -393,19 +393,45 @@
     "bank_settlement": "UNVERIFIED"
   },
   "agent_memory_performance_2026_10_31": {
-    "status": "VALIDATING",
+    "status": "LIVE_VERIFIED_WITH_NATURAL_MEMORY_CAPTURE",
     "branch": "feature/agent-learning-performance-20261031",
     "base_main": "8bb9718e4bc104a63a47572dceab7d32ec5e87e7",
-    "record": "docs/MLS_AGENT_MEMORY_PERFORMANCE_2026_10_31.md",
+    "pull_request": 89,
+    "code_commit": "8fb15b27692d54cb3a7994ea1ee8d3477e604265",
+    "code_ci_run": 41206928254,
+    "node_tests": 2536,
+    "python_tests": 67,
+    "app_version": "66e9c01f-3fe5-4688-8dd7-4fb14f56a609",
+    "app_generated_sha256": "6aa689d9bc36c3dfa89d46de5ee7bf82dce0ff19795d85249a08b3aec75b0819",
+    "app_published_sha256": "72fb5d90f776f2c2b0ce1ffd9e4a4730093d9677fc02fe302b4e33fe2fc8f77a",
+    "published_at": "2026-10-31T10:47:52-03:00",
+    "auth_finance_configuration_preserved": true,
+    "natural_memory_capture": {
+      "observed_at": "2026-10-31T10:50:33-03:00",
+      "captured_at": "2026-10-31T10:50:01-03:00",
+      "month": "2026-10",
+      "end_date": "2026-10-31",
+      "publication_revision": 14306,
+      "saved_cutoffs": 1,
+      "windows_complete": 3,
+      "pages_read": 23,
+      "failure_count": 0,
+      "last_error": null,
+      "exact_publication_finance_watermarks_match": true,
+      "collector_forced": false
+    },
     "features": [
-      "aggregate_evidence_memory_with_corrections_and_recurrences",
-      "advisory_known_action_policy_no_new_grants",
-      "actual_ads_calendar_roas_daily_curve",
-      "complete_day_comparison_arrows_and_approved_visual_style"
+      "aggregate_memory_corrections_recurrences",
+      "fixed_descriptive_memory_in_actual_hermes_context_v1",
+      "advisory_action_policy_no_new_grants",
+      "actual_ads_calendar_roas_curve",
+      "complete_day_arrows_and_approved_style"
     ],
     "commercial_write_allowed": false,
     "model_training": false,
     "recommendation_effectiveness_proven": false,
-    "next_learning_stage": "Link authorized recommendations, executions and later comparable outcomes before claiming effectiveness"
+    "record": "docs/MLS_AGENT_MEMORY_PERFORMANCE_2026_10_31.md",
+    "rollback_app_version": "c00861cf-68ad-4719-b213-008d7f902069",
+    "next_learning_stage": "Link authorized recommendation, execution and later comparable outcome before claiming effectiveness"
   }
 }
