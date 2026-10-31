@@ -49,7 +49,11 @@ export async function acquireBackgroundLane(env,{month},{now=()=>Date.now(),boot
  const analysisDue=row.hermes_mode==='scheduled'&&integer(row.daily_hour,0,23)&&hour>=row.daily_hour&&row.analysis_queued===0&&row.bridge_ready===1&&row.analysis_attempt_day!==today;
  if(!integer(row.finance_since_audit,0,4)||row.last_auxiliary_at!==null&&!integer(row.last_auxiliary_at,1,9999999999)||!integer(row.returns_retry_at)||!integer(row.reserved_returns_streak,0,2)||!['COST','AUDIT'].includes(row.next_history_work)||![0,1].includes(row.has_publication)||![0,1].includes(row.returns_due)||![0,1].includes(row.coverage_bootstrap_due)||![0,1].includes(row.pending_income_recovery_due))fail('BACKGROUND_LANE_STORAGE_INVALID');
  const auxiliaryDue=(row.has_publication===1||row.coverage_bootstrap_due===1)&&row.finance_since_audit>=4&&(row.last_auxiliary_at===null||stamp-row.last_auxiliary_at>=300);
- const pendingRecovery=row.pending_income_recovery_due===1&&row.next_lane==='AUXILIARY'&&(row.last_auxiliary_at===null||stamp-row.last_auxiliary_at>=300)&&(!importing||auxiliaryDue);
+ // A quiet Finance retry gap already permits ordinary auxiliary work, which
+ // refreshes last_auxiliary_at. Reapplying its five-minute gate here would let
+ // that quiet work postpone recovery forever. Busy imports retain auxiliaryDue;
+ // quiet recovery uses its own durable fifteen-minute cooldown instead.
+ const pendingRecovery=row.pending_income_recovery_due===1&&row.next_lane==='AUXILIARY'&&(!importing||auxiliaryDue);
  const reserved=!pendingRecovery&&row.returns_due===1&&row.reserved_returns_streak<2&&row.returns_retry_at<=stamp&&(row.finance_due_at>stamp||importing&&row.next_lane==='AUXILIARY'&&auxiliaryDue);
  // A bootstrap cannot repeatedly overtake other auxiliary work if its audit
  // fails before initializing the monthly marker: share the two-reservation

@@ -72,6 +72,23 @@ test('recovery never overtakes busy Finance until four opportunities and the exi
  const waiting=await acquireBackgroundLane(g.env,{month},{now:g.now,pendingIncomeRecovery:true});assert.equal(waiting.lane,'FINANCE');assert.equal(waiting.pending_income_recovery,undefined);await finishBackgroundLane(g.env,waiting,{now:g.now});
 });
 
+test('a quiet future Finance retry cannot postpone Pending recovery by repeatedly refreshing ordinary auxiliary time',async t=>{
+ const f=await fixture(t),before=f.cursors(),calls=[];
+ // A RUNNING import can be waiting on its next retry. Normal auxiliary work is
+ // allowed then, and may have run just one second ago, as in the Live failure.
+ f.db.db.prepare('UPDATE business_sync_state SET next_run_at=?').run(stamp+3600);
+ f.db.db.prepare('UPDATE background_history_fairness_state SET last_auxiliary_at=?,finance_since_audit=0').run(stamp-1);
+ const work=await scheduledWork(f.env,{getFinanceIncomeDetail:async()=>{calls.push('DETAIL');return unavailable();}},f.now);
+ assert.equal(work.lane,'HISTORY');assert.equal(work.income_detail,'UNAVAILABLE');assert.deepEqual(calls,['DETAIL']);assert.deepEqual(f.cursors(),before);
+ assert.equal(f.db.db.prepare('SELECT next_attempt_at FROM background_pending_income_recovery_attempts WHERE id=1').get().next_attempt_at,stamp+900);
+ // Another quiet auxiliary opportunity still has its normal destination. The
+ // failed source and a new ordinary timestamp cannot consume another recovery.
+ f.clock.time+=120000;f.db.db.exec("UPDATE background_collection_lane_state SET next_lane='AUXILIARY'");
+ f.db.db.prepare('UPDATE background_history_fairness_state SET last_auxiliary_at=?').run(f.clock.time/1000-1);
+ const lease=await acquireBackgroundLane(f.env,{month},{now:f.now,pendingIncomeRecovery:true});
+ assert.equal(lease.pending_income_recovery,undefined);assert.equal(lease.lane,'PRODUCTION');await finishBackgroundLane(f.env,lease,{now:f.now});assert.deepEqual(calls,['DETAIL']);
+});
+
 test('pause and stolen/expired global leases prevent both Pending writes and recovery cooldown advancement',async t=>{
  const f=await fixture(t);let lease=await acquireBackgroundLane(f.env,{month},{now:f.now,pendingIncomeRecovery:true}),calls=0;
  f.db.db.prepare('UPDATE business_sync_state SET enabled=0').run();let work=await runBackgroundHistoryWork(f.env,{getFinanceIncomeDetail:async()=>{calls++;return detail(stamp);}},{month,lease},{now:f.now});assert.equal(work.source_reads,0);assert.equal(calls,0);await finishBackgroundLane(f.env,lease,{now:f.now});assert.equal(f.db.db.prepare('SELECT COUNT(*) n FROM background_pending_income_recovery_attempts').get().n,0);
