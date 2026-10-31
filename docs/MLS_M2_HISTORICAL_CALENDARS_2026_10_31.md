@@ -10,7 +10,7 @@ O corte real às 14:55 de Brasília confirmou a publicação de setembro revisã
 
 ## Incremento em validação
 
-Selecionar o mês imediatamente anterior dentro da oportunidade RELEASES existente, com alternância limitada entre atual e histórico. Reutilizar o serviço Finance e a paginação, leases e backoff existentes; manter no máximo uma leitura privada por oportunidade HISTORY.
+Selecionar calendários pendentes dos três meses anteriores, com rodízio persistido, dentro da oportunidade RELEASES existente, com alternância limitada entre atual e histórico. Reutilizar o serviço Finance e a paginação, leases e backoff existentes; manter no máximo uma leitura privada por oportunidade HISTORY.
 
 A primeira auditoria oferece uma oportunidade RELEASES limitada após COVERAGE, preservando o próximo trabalho do cursor legado. O marcador inicial é consumido uma vez. Retentativas locais e falhas antes ou depois da leitura liberam a oportunidade do outro mês, sem exceder o orçamento.
 
@@ -20,8 +20,10 @@ Manter cursor legado e payload bruto; persistir a alternância em tabela aditiva
 
 ## Limites
 
-Completar calendário e recuperar identidades por pedido são evidências separadas. O corte não confirma recebimento bancário, encerramento do ciclo de liberações, saldo a receber ou lucro realizado. M2, Returns/Pending/Seller Centre e banco permanecem abertos. Escritas comerciais, Ads/PROMO, OAuth e novas análises pagas mantêm seus controles.
+Completar calendário e recuperar identidades por pedido são evidências separadas. O corte não confirma recebimento bancário, encerramento do ciclo de liberações, saldo a receber ou lucro realizado. A retomada precisa continuar após a virada do mês: setembro parcial não pode perder a elegibilidade ao entrar novembro. O novo mês exige novo sinal de cobertura e novos leases, preservando o scan e as páginas salvas no Finance. M2, Returns/Pending/Seller Centre e banco permanecem abertos. Escritas comerciais, Ads/PROMO, OAuth e novas análises pagas mantêm seus controles.
 
 ## Validação e publicação
+
+O primeiro incremento foi publicado no App `f690bb92` às 15:07:59 de Brasília, código `27ac1e9`, CI41227497473 verde com2.716Node/67Python. Bytes e configuração conferidos às15:08:52; coleta histórica ainda aguardava a fila às15:09. A continuação amplia a retomada na virada do mês sem alterar o Worker Finance ou o estado já salvo.
 
 Em andamento: registrar testes, CI exata, hashes, preservação de configuração, backup/rollback e progresso natural após a publicação. Nenhuma rotina deve ser forçada para produzir a prova.

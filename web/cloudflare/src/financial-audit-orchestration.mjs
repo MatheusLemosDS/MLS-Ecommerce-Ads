@@ -13,6 +13,7 @@ export const FINANCIAL_AUDIT_SCHEMA=[
  `CREATE TABLE IF NOT EXISTS financial_audit_turns(month TEXT PRIMARY KEY NOT NULL,revision INTEGER NOT NULL,next_work TEXT NOT NULL,lease_token TEXT,lease_until INTEGER)`,
  `CREATE TABLE IF NOT EXISTS financial_audit_coverage_turns(month TEXT PRIMARY KEY NOT NULL,pending INTEGER NOT NULL CHECK(pending IN (0,1)))`,
  `CREATE TABLE IF NOT EXISTS financial_audit_release_calendar_turns(month TEXT PRIMARY KEY NOT NULL,next_target TEXT NOT NULL CHECK(next_target IN('CURRENT','HISTORICAL')),bootstrap_pending INTEGER NOT NULL CHECK(bootstrap_pending IN(0,1)))`,
+ `CREATE TABLE IF NOT EXISTS financial_audit_historical_calendar_targets(month TEXT PRIMARY KEY NOT NULL,last_selected_month TEXT NOT NULL,selected_at INTEGER NOT NULL)`,
 ];
 export class FinancialAuditOrchestrationError extends Error{constructor(code,status=503){super(code);this.status=status;}}
 const ready=new WeakSet(),fail=(code,status=503)=>{throw new FinancialAuditOrchestrationError(code,status);};
@@ -39,7 +40,7 @@ export async function runBusinessFinancialAudits(env,services,input,{now=()=>Dat
  // Keep the persisted legacy cursor readable by the rollback Worker. The
  // additive pending flag offers coverage one turn without consuming a legacy
  // task; the previous Worker simply ignores this table.
- const next=kind=>order[(order.indexOf(kind)+1)%order.length];let nextWork=claim.next_work,coveragePending=claim.coverage_pending,releaseTarget=historicalEnabled?claim.release_target:'HISTORICAL',releaseNextTarget=releaseTarget,releaseCommitGuard=null,releaseBootstrap=historicalEnabled?claim.release_bootstrap:0;
+ const next=kind=>order[(order.indexOf(kind)+1)%order.length];let nextWork=claim.next_work,coveragePending=claim.coverage_pending,releaseTarget=historicalEnabled?claim.release_target:'HISTORICAL',releaseNextTarget=releaseTarget,releaseCommitGuard=null,releaseHistoricalSelection=null,releaseBootstrap=historicalEnabled?claim.release_bootstrap:0;
  const calendarClockValid=()=>{const value=clock();return value>=stamp&&value<stamp+90&&new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date(value*1000)).slice(0,7)===month;};
  const injectedBootstrap=releaseBootstrap===1&&claim.next_work!=='RELEASES';
  const opportunities=[...(coveragePending?['COVERAGE']:[]),...(injectedBootstrap?['RELEASES']:[]),...Array.from({length:order.length},(_,index)=>order[(order.indexOf(claim.next_work)+index)%order.length]).filter(kind=>!injectedBootstrap||kind!=='RELEASES')];let bootstrapVisited=false;
@@ -65,8 +66,8 @@ export async function runBusinessFinancialAudits(env,services,input,{now=()=>Dat
    try{
     const releaseWork=async()=>{
      if(historicalEnabled&&releaseTarget==='HISTORICAL'){
-      const target=await selectBusinessHistoricalReleaseCalendar(env,{month},{now,canRun,auditLease:{revision:claim.revision,token},backgroundLease});
-      if(target){
+      const selection=await selectBusinessHistoricalReleaseCalendar(env,{month},{now,canRun,auditLease:{revision:claim.revision,token},backgroundLease});
+      for(const target of selection?[selection,...selection.alternatives]:[]){
        releaseCommitGuard=target.calendarGuard;const before=sourceReads;let work;
        try{work=await runReleases(env,boundedSource,{month:target.month},{now,canRun,calendarGuard:target.calendarGuard});}
        catch(error){
@@ -77,7 +78,7 @@ export async function runBusinessFinancialAudits(env,services,input,{now=()=>Dat
         if(!calendarClockValid()||!await canRun())return {status:'PAUSED'};
         const checked=clock(),gate=await db.prepare('SELECT CASE WHEN EXISTS(SELECT 1 FROM business_sync_state WHERE id=1 AND enabled=1) AND EXISTS(SELECT 1 FROM financial_audit_turns WHERE month=? AND revision=? AND lease_token=? AND lease_until>?) AND EXISTS(SELECT 1 FROM background_collection_lane_state WHERE id=1 AND revision=? AND lease_token=? AND lease_until>?) THEN 1 ELSE 0 END AS allowed').bind(month,claim.revision,token,checked,backgroundLease.revision,backgroundLease.token,checked).first();
         if(gate?.allowed!==1||!calendarClockValid()||!await canRun()||!calendarClockValid())return {status:'PAUSED'};
-       }finally{if(sourceReads>before)releaseNextTarget='CURRENT';}
+       }finally{if(sourceReads>before){releaseNextTarget='CURRENT';releaseHistoricalSelection=target;}}
        if(sourceReads>before)return work;
        if(work?.status==='PAUSED'||!calendarClockValid())return work;
        releaseCommitGuard=null;
@@ -96,15 +97,16 @@ export async function runBusinessFinancialAudits(env,services,input,{now=()=>Dat
   if(!await canRun()){status='PAUSED';repeat=false;}
   return result();
  }finally{
-  let guard='',args=[];
+  let guard='',args=[],finished=null;
   if(historicalEnabled){
-   const finished=clock();
+   finished=clock();
    guard=' AND lease_until>? AND EXISTS(SELECT 1 FROM business_sync_state WHERE id=1 AND enabled=1) AND EXISTS(SELECT 1 FROM background_collection_lane_state WHERE id=1 AND revision=? AND lease_token=? AND lease_until>?)';args=[finished,backgroundLease.revision,backgroundLease.token,finished];
    if(!calendarClockValid())guard+=' AND 0';
-   if(releaseCommitGuard){guard+=' AND EXISTS(SELECT 1 FROM business_month_publications WHERE month=? AND source_revision=? AND write_token=? AND payload=?)';const prior=new Date(month+'-01T12:00:00Z');prior.setUTCMonth(prior.getUTCMonth()-1);args.push(prior.toISOString().slice(0,7),releaseCommitGuard.publication_revision,releaseCommitGuard.publication_write_token,releaseCommitGuard.publication_payload);}
+   if(releaseCommitGuard){guard+=' AND EXISTS(SELECT 1 FROM business_month_publications WHERE month=? AND source_revision=? AND write_token=? AND payload=?)';args.push(releaseCommitGuard.calendar_month,releaseCommitGuard.publication_revision,releaseCommitGuard.publication_write_token,releaseCommitGuard.publication_payload);}
   }
   const writes=[db.prepare('UPDATE financial_audit_turns SET revision=revision+1,next_work=?,lease_token=NULL,lease_until=NULL WHERE month=? AND revision=? AND lease_token=?'+guard).bind(nextWork,month,claim.revision,token,...args),db.prepare('INSERT INTO financial_audit_coverage_turns(month,pending) SELECT ?,? WHERE changes()=1 ON CONFLICT(month) DO UPDATE SET pending=excluded.pending').bind(month,coveragePending)];
   if(historicalEnabled)writes.push(db.prepare('INSERT INTO financial_audit_release_calendar_turns(month,next_target,bootstrap_pending) SELECT ?,?,? WHERE changes()=1 ON CONFLICT(month) DO UPDATE SET next_target=excluded.next_target,bootstrap_pending=excluded.bootstrap_pending').bind(month,releaseNextTarget,releaseBootstrap));
+  if(historicalEnabled&&releaseHistoricalSelection){const target=releaseHistoricalSelection.calendarGuard;writes.push(db.prepare('INSERT INTO financial_audit_historical_calendar_targets(month,last_selected_month,selected_at) SELECT ?,?,? WHERE changes()=1 AND EXISTS(SELECT 1 FROM business_month_publications WHERE month=? AND source_revision=? AND write_token=? AND payload=?) AND EXISTS(SELECT 1 FROM business_sync_state WHERE id=1 AND enabled=1) AND EXISTS(SELECT 1 FROM background_collection_lane_state WHERE id=1 AND revision=? AND lease_token=? AND lease_until>?) ON CONFLICT(month) DO UPDATE SET last_selected_month=excluded.last_selected_month,selected_at=excluded.selected_at').bind(month,releaseHistoricalSelection.month,finished,target.calendar_month,target.publication_revision,target.publication_write_token,target.publication_payload,backgroundLease.revision,backgroundLease.token,finished));}
   await db.batch(writes);
  }
 }

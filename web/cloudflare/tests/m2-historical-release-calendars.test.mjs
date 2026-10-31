@@ -4,15 +4,18 @@ import {SCHEMA} from '../src/admin.mjs';
 import {selectBusinessHistoricalReleaseCalendar} from '../src/business-historical-release-calendars.mjs';
 import {FINANCIAL_AUDIT_SCHEMA,runBusinessFinancialAudits} from '../src/financial-audit-orchestration.mjs';
 import {runBusinessEscrowReleases} from '../src/business-escrow-releases.mjs';
+import {saveCompletedBusinessMonth} from '../src/business-month-publication.mjs';
+import {projectBusinessPeriodFrame} from '../../finance/src/business-period-frame.mjs';
 import {projectEscrowReleaseFrame,projectEscrowReleaseCoverageFrame} from '../../finance/src/escrow-release-frame.mjs';
 import {D1} from './sqlite-d1.mjs';
 import {TrackerD1,publishTrackerMonth,trackerUuid as uuid,trackerTime,trackerMonth as previous,trackerThrough as month} from './m2-release-tracker-fixture.mjs';
 
 const stamp=trackerTime/1000;
-function coverage(frames,{at=stamp,available=false}={}){
+function coverage(frames,{at=stamp,available=false,target=previous,through=month}={}){
  const sources=frames.map(frame=>available?{run_id:frame.run_id,source_revision:frame.revision,start_date:frame.start_date,end_date:frame.end_date,status:'AVAILABLE',orders:1,paid_orders:1,finance_oldest_at:frame.source_checked_at.oldest_at,finance_latest_at:frame.source_checked_at.latest_at,expected_repass_cents:8000}:{run_id:frame.run_id,source_revision:frame.revision,start_date:null,end_date:null,status:'MISSING',orders:null,paid_orders:null,finance_oldest_at:null,finance_latest_at:null,expected_repass_cents:null});
- const calendars=[previous,month].map(value=>({month:value,status:'MISSING',scan_id:null,cutoff_at:null,source_oldest_at:null,source_latest_at:null,observations:0,cohort_observations:0,unique_cohort_orders:0,ambiguous_cohort_orders:0}));
- const value={schema:'finance_escrow_release_coverage_v1',cohort_month:previous,through_month:month,checked_at:at,status:'COLLECTING',sources,calendars,coverage:{paid_orders:available?3:null,located_orders:0,not_located_orders:available?3:null,ambiguous_orders:0,single_orders:0,calendars_total:2,calendars_complete:0,identity_complete_at_cutoff:false},pending:[...(available?['ORDER_NOT_LOCATED']:['SOURCE_MISSING']),'CALENDAR_MISSING','BANK_RECEIPT_NOT_VERIFIED','RELEASE_CYCLE_SEMANTICS_UNVERIFIED'],basis:'SAVED_RELEASE_CALENDARS_AGAINST_PAID_ORDER_COHORT_NOT_BANK_RECEIPT'};
+ const months=[];for(let value=target;value<=through;){months.push(value);const next=new Date(value+'-01T12:00:00Z');next.setUTCMonth(next.getUTCMonth()+1);value=next.toISOString().slice(0,7);assert.ok(months.length<7);}
+ const calendars=months.map(value=>({month:value,status:'MISSING',scan_id:null,cutoff_at:null,source_oldest_at:null,source_latest_at:null,observations:0,cohort_observations:0,unique_cohort_orders:0,ambiguous_cohort_orders:0}));
+ const value={schema:'finance_escrow_release_coverage_v1',cohort_month:target,through_month:through,checked_at:at,status:'COLLECTING',sources,calendars,coverage:{paid_orders:available?frames.length:null,located_orders:0,not_located_orders:available?frames.length:null,ambiguous_orders:0,single_orders:0,calendars_total:calendars.length,calendars_complete:0,identity_complete_at_cutoff:false},pending:[...(available?['ORDER_NOT_LOCATED']:['SOURCE_MISSING']),'CALENDAR_MISSING','BANK_RECEIPT_NOT_VERIFIED','RELEASE_CYCLE_SEMANTICS_UNVERIFIED'],basis:'SAVED_RELEASE_CALENDARS_AGAINST_PAID_ORDER_COHORT_NOT_BANK_RECEIPT'};
  assert.ok(projectEscrowReleaseCoverageFrame(value));return value;
 }
 function releaseReport(target,frames,{checked=stamp,complete=true,cutoff=null}={}){
@@ -24,7 +27,7 @@ function releaseReport(target,frames,{checked=stamp,complete=true,cutoff=null}={
 async function fixture(t){
  const db=new TrackerD1(),env={ADMIN_DB:db},clock={time:trackerTime},now=()=>clock.time;t.after(()=>db.db.close());await db.batch(SCHEMA.map(sql=>db.prepare(sql)));const frames=await publishTrackerMonth(env,now);
  db.db.prepare("UPDATE business_sync_state SET enabled=1,month=?,status='COMPLETE',next_run_at=? WHERE id=1").run(month,stamp+3600);
- const f={db,env,clock,now,frames,backgroundLease:{revision:99,token:uuid(900)},auditLease:{revision:10,token:uuid(901)}};
+ const f={db,env,clock,now,frames,monthFrames:new Map([[previous,frames]]),backgroundLease:{revision:99,token:uuid(900)},auditLease:{revision:10,token:uuid(901)}};
  f.renew=()=>{f.backgroundLease={revision:f.backgroundLease.revision+1,token:uuid(f.backgroundLease.revision+900)};db.db.prepare("UPDATE background_collection_lane_state SET revision=?,lease_token=?,lease_until=? WHERE id=1").run(f.backgroundLease.revision,f.backgroundLease.token,Math.floor(now()/1000)+290);};f.renew();
  f.save=(value=coverage(frames),{at=value.checked_at,status='SUCCESS',code=null,scopeRevision=7,through=month,payloadAt=value.checked_at,attemptAt=at}={})=>{
   db.db.prepare('INSERT OR REPLACE INTO business_escrow_release_coverage VALUES(?,?,?,?,?,?,?)').run(previous,JSON.stringify(value),payloadAt,at,status,code,at+900);
@@ -32,7 +35,16 @@ async function fixture(t){
  };
  f.direct=()=>{db.db.prepare("INSERT OR REPLACE INTO financial_audit_turns(month,revision,next_work,lease_token,lease_until) VALUES(?,?,'RELEASES',?,?)").run(month,f.auditLease.revision,f.auditLease.token,Math.floor(now()/1000)+90);return {now,canRun:async()=>true,auditLease:f.auditLease,backgroundLease:f.backgroundLease};};
  f.select=()=>selectBusinessHistoricalReleaseCalendar(env,{month},f.direct());
- f.saveCache=(value)=>db.db.prepare('INSERT OR REPLACE INTO business_escrow_release_reports VALUES(?,?,?,?)').run(previous,JSON.stringify(value.sources.map(({run_id,source_revision})=>({run_id,source_revision}))),JSON.stringify(value),value.checked_at);
+ f.saveCache=(value)=>db.db.prepare('INSERT OR REPLACE INTO business_escrow_release_reports VALUES(?,?,?,?)').run(value.month,JSON.stringify(value.sources.map(({run_id,source_revision})=>({run_id,source_revision}))),JSON.stringify(value),value.checked_at);
+ f.publishFor=async target=>{
+  const end=new Date(target+'-01T12:00:00Z');end.setUTCMonth(end.getUTCMonth()+1);end.setUTCDate(0);const days=end.getUTCDate(),at=Math.floor(now()/1000),offset=Number(target.slice(5))*100;
+  const selected=Array.from({length:Math.ceil(days/15)},(_,index)=>{const frame=structuredClone(frames[index]);frame.run_id=uuid(offset+index+1);frame.start_date=target+'-'+String(index*15+1).padStart(2,'0');frame.end_date=target+'-'+String(Math.min(days,index*15+15)).padStart(2,'0');assert.ok(projectBusinessPeriodFrame(frame));return frame;});
+  const payload={start_date:target+'-01',end_date:target+'-'+String(days),slots:selected.map(frame=>({start_date:frame.start_date,end_date:frame.end_date,frame}))},row={revision:7,payload:JSON.stringify(payload),created_at:at-1200,updated_at:at-900};db.db.prepare('INSERT OR REPLACE INTO business_month_runs VALUES(?,?,?,?,?)').run(target,row.revision,row.payload,row.created_at,row.updated_at);assert.ok(await saveCompletedBusinessMonth(env,target,{row,payload,complete:true},{now}));f.monthFrames.set(target,selected);return selected;
+ };
+ f.saveCueFor=(target,selected=f.monthFrames.get(target),{at=Math.floor(now()/1000),through=month,frame=coverage(selected,{at,target,through}),scopeRevision=7}={})=>{
+  db.db.prepare('INSERT OR REPLACE INTO business_escrow_release_coverage VALUES(?,?,?,?,?,?,?)').run(target,JSON.stringify(frame),frame.checked_at,at,'SUCCESS',null,at+900);db.db.prepare('INSERT OR REPLACE INTO business_escrow_release_coverage_attempt_scopes VALUES(?,?,?,?)').run(target,through,scopeRevision,at);
+ };
+ f.threeMonths=async()=>{for(const target of ['2026-09','2026-08']){await f.publishFor(target);f.saveCueFor(target);}return f;};
  f.save();return f;
 }
 const counts=f=>({reports:f.db.db.prepare('SELECT COUNT(*) AS n FROM business_escrow_release_reports').get().n,attempts:f.db.db.prepare('SELECT COUNT(*) AS n FROM business_escrow_release_attempts').get().n});
@@ -155,4 +167,67 @@ test('guard fences a changed publication before lease acquisition and an expired
 test('default legacy audit callers remain usable without publication, coverage or global-lane tables',async t=>{
  const db=new D1();t.after(()=>db.db.close());db.db.exec(FINANCIAL_AUDIT_SCHEMA.join(';'));db.db.prepare("INSERT INTO financial_audit_turns(month,revision,next_work) VALUES(?,1,'RELEASES')").run(month);db.db.prepare('INSERT INTO financial_audit_coverage_turns VALUES(?,0)').run(month);let calls=0;
  const work=await runBusinessFinancialAudits({ADMIN_DB:db},{getFinanceEscrowReleases:async()=>{calls++;return {};}},{month},{now:()=>trackerTime,runReleases:async(_,source)=>{await source();return {status:'CHECKED'};}});assert.equal(work.source_reads,1);assert.equal(calls,1);assert.equal(work.selected,'RELEASES');
+});
+
+const prepareRelease=f=>{f.renew();f.db.db.prepare("INSERT OR REPLACE INTO financial_audit_turns(month,revision,next_work) VALUES(?,1,'RELEASES')").run(month);f.db.db.prepare('INSERT OR REPLACE INTO financial_audit_coverage_turns VALUES(?,0)').run(month);};
+const targetCursor=f=>{const row=f.db.db.prepare('SELECT last_selected_month,selected_at FROM financial_audit_historical_calendar_targets WHERE month=?').get(month);return row?{...row}:null;};
+
+test('three published historical calendars rotate after the last actual read while current receives alternating opportunities',async t=>{
+ const f=await fixture(t);await f.threeMonths();const calls=[];let last=null;
+ for(let index=0;index<6;index++){
+  f.clock.time=trackerTime+index*901000;prepareRelease(f);const before=targetCursor(f),at=Math.floor(f.now()/1000);
+  const work=await runBusinessFinancialAudits(f.env,{getFinanceEscrowReleases:async(_,input)=>{calls.push(input);return releaseReport(input.month,f.monthFrames.get(input.month)??[],{checked:at,complete:input.month===month});}},{month},{now:f.now,historicalCalendars:true,backgroundLease:f.backgroundLease});assert.equal(work.source_reads,1);assert.equal(work.selected,'RELEASES');
+  if(index%2===0){last=['2026-10','2026-09','2026-08'][index/2];assert.deepEqual(targetCursor(f),{last_selected_month:last,selected_at:at});}else assert.deepEqual(targetCursor(f),before,'current calendar reads cannot rotate the historical target');
+  assert.ok(['RELEASES','RETURNS','INCOME','INCOME_DETAIL'].includes(f.db.db.prepare('SELECT next_work FROM financial_audit_turns WHERE month=?').get(month).next_work));
+ }
+ assert.deepEqual(calls.map(row=>row.month),['2026-10',month,'2026-09',month,'2026-08',month]);for(const call of calls.filter(row=>row.month!==month))assert.deepEqual(call.sources,f.monthFrames.get(call.month).map(frame=>({run_id:frame.run_id,source_revision:frame.revision})));
+});
+
+test('historical selection offers ordered alternatives without advancing its persisted target',async t=>{
+ const f=await fixture(t);await f.threeMonths();const options=f.direct(),before=f.db.writes.length,first=await selectBusinessHistoricalReleaseCalendar(f.env,{month},options);assert.equal(first.month,'2026-10');assert.deepEqual(first.alternatives.map(row=>row.month),['2026-09','2026-08']);assert.equal(f.db.writes.length,before);assert.equal(targetCursor(f),null);
+ f.db.db.prepare('INSERT INTO financial_audit_historical_calendar_targets VALUES(?,?,?)').run(month,'2026-10',stamp-1);const second=await f.select();assert.equal(second.month,'2026-09');assert.deepEqual(second.alternatives.map(row=>row.month),['2026-08','2026-10']);assert.deepEqual(targetCursor(f),{last_selected_month:'2026-10',selected_at:stamp-1});for(const row of [second,...second.alternatives])assert.equal(row.calendarGuard.calendar_month,row.month);
+});
+
+test('a fourth-old month and a cue borrowing another month publication cannot authorize historical IO',async t=>{
+ for(const mode of ['outside-horizon','wrong-publication'])await t.test(mode,async child=>{
+  const f=await fixture(child);f.db.db.exec('DELETE FROM business_escrow_release_coverage');
+  if(mode==='outside-horizon'){const frames=await f.publishFor('2026-07');f.saveCueFor('2026-07',frames);}else{const selected=await f.publishFor('2026-09'),value=coverage(selected,{target:'2026-09'});value.sources=coverage(f.frames.slice(0,selected.length)).sources;assert.ok(projectEscrowReleaseCoverageFrame(value));f.saveCueFor('2026-09',selected,{frame:value});}
+  assert.equal(await f.select(),null);assert.deepEqual(counts(f),{reports:0,attempts:0});assert.equal(targetCursor(f),null);
+ });
+});
+
+test('a blocked or actively leased closest target yields to another eligible historical calendar locally',async t=>{
+ for(const mode of ['backoff','lease'])await t.test(mode,async child=>{
+  const f=await fixture(child);await f.threeMonths();if(mode==='backoff'){const key=JSON.stringify(f.frames.map(frame=>({run_id:frame.run_id,source_revision:frame.revision})));f.db.db.prepare('INSERT INTO business_escrow_release_attempts VALUES(?,?,?,?,?,?)').run(previous,key,stamp,'UNAVAILABLE','FINANCE_ESCROW_RELEASES_PERMISSION_REQUIRED',stamp+3600);}else f.db.db.prepare('INSERT INTO business_escrow_release_leases VALUES(?,?,?)').run(previous,uuid(970),stamp+90);
+  prepareRelease(f);const calls=[],work=await runBusinessFinancialAudits(f.env,{getFinanceEscrowReleases:async(_,input)=>{calls.push(input.month);return releaseReport(input.month,f.monthFrames.get(input.month),{complete:false});}},{month},{now:f.now,historicalCalendars:true,backgroundLease:f.backgroundLease});assert.equal(work.source_reads,1);assert.deepEqual(calls,['2026-09']);assert.deepEqual(targetCursor(f),{last_selected_month:'2026-09',selected_at:stamp});
+ });
+});
+
+test('a full September calendar closes at October midnight rather than the current through-month boundary',async t=>{
+ const f=await fixture(t);await f.threeMonths();f.db.db.prepare('INSERT INTO financial_audit_historical_calendar_targets VALUES(?,?,?)').run(month,previous,stamp-1);const frame=releaseReport('2026-09',f.monthFrames.get('2026-09'));assert.equal(frame.calendar.cutoff_at,Date.UTC(2026,9,1,3)/1000);f.saveCache(frame);const selected=await f.select();assert.equal(selected.month,'2026-08');assert.ok(!selected.alternatives.some(row=>row.month==='2026-09'));
+});
+
+test('an actual historical source failure rotates its target, but wholly local failures do not',async t=>{
+ const f=await fixture(t);await f.threeMonths();prepareRelease(f);let calls=0;const failed=await runBusinessFinancialAudits(f.env,{getFinanceEscrowReleases:async()=>{calls++;throw {code:'FINANCE_ESCROW_RELEASES_TIMEOUT'};}},{month},{now:f.now,historicalCalendars:true,backgroundLease:f.backgroundLease});assert.equal(failed.source_reads,1);assert.equal(calls,1);assert.deepEqual(targetCursor(f),{last_selected_month:previous,selected_at:stamp});
+ const g=await fixture(t);await g.threeMonths();prepareRelease(g);const targets=[];const local=await runBusinessFinancialAudits(g.env,{getFinanceEscrowReleases:async()=>{throw Error('MUST_NOT_READ');}},{month},{now:g.now,historicalCalendars:true,backgroundLease:g.backgroundLease,runReleases:async(_,source,input)=>{targets.push(input.month);return {status:'RETRY_WAIT'};}});assert.equal(local.source_reads,0);assert.deepEqual(targets,['2026-10','2026-09','2026-08',month]);assert.equal(targetCursor(g),null);
+});
+
+test('a race yielding zero IO on the first target can progress another eligible calendar within the same single-read budget',async t=>{
+ for(const mode of ['RETRY_WAIT','LEASED','ERROR'])await t.test(mode,async child=>{
+  const f=await fixture(child);await f.threeMonths();prepareRelease(f);const tried=[],calls=[];
+  const work=await runBusinessFinancialAudits(f.env,{getFinanceEscrowReleases:async(_,input)=>{calls.push(input.month);return releaseReport(input.month,f.monthFrames.get(input.month),{complete:false});}},{month},{now:f.now,historicalCalendars:true,backgroundLease:f.backgroundLease,runReleases:async(env,source,input,options)=>{tried.push(input.month);if(input.month===previous){if(mode==='ERROR')throw Error('SYNTHETIC_OLDEST_LOCAL_FAILURE');return {status:mode};}return runBusinessEscrowReleases(env,source,input,options);}});assert.equal(work.source_reads,1);assert.deepEqual(tried,[previous,'2026-09']);assert.deepEqual(calls,['2026-09']);assert.deepEqual(targetCursor(f),{last_selected_month:'2026-09',selected_at:stamp});
+ });
+});
+
+test('policy, own-publication, enclosing leases and rollover fence the actual multi-month target cursor',async t=>{
+ for(const mode of ['pause','publication','auditLease','backgroundLease','rollover'])await t.test(mode,async child=>{
+  const f=await fixture(child);await f.threeMonths();f.db.db.prepare('INSERT INTO financial_audit_historical_calendar_targets VALUES(?,?,?)').run(month,previous,stamp-1);const before=targetCursor(f);prepareRelease(f);let changed=false,calls=0;
+  f.db.beforeStatement=sql=>{if(changed||mode==='rollover'||!sql.startsWith('INSERT INTO business_escrow_release_reports'))return;changed=true;if(mode==='pause')f.db.db.exec('UPDATE business_sync_state SET enabled=0');else if(mode==='publication')f.db.db.prepare('UPDATE business_month_publications SET write_token=? WHERE month=?').run(uuid(971),'2026-09');else if(mode==='auditLease')f.db.db.prepare('UPDATE financial_audit_turns SET revision=revision+1 WHERE month=?').run(month);else f.db.db.exec('UPDATE background_collection_lane_state SET revision=revision+1');};
+  const work=await runBusinessFinancialAudits(f.env,{getFinanceEscrowReleases:async(_,input)=>{calls++;assert.equal(input.month,'2026-09');const frame=releaseReport(input.month,f.monthFrames.get(input.month),{complete:false});if(mode==='rollover')f.clock.time=Date.UTC(2026,11,1,3);return frame;}},{month},{now:f.now,historicalCalendars:true,backgroundLease:f.backgroundLease});assert.equal(calls,1);assert.equal(work.source_reads,1);assert.deepEqual(targetCursor(f),before);assert.deepEqual(counts(f),{reports:0,attempts:0});
+ });
+});
+
+test('month rollover requires a newly validated through-month cue before resuming an older published calendar',async t=>{
+ const f=await fixture(t);f.clock.time=Date.UTC(2026,11,10,15);f.renew();const next='2026-12',at=Math.floor(f.now()/1000);f.db.db.prepare('UPDATE business_sync_state SET month=? WHERE id=1').run(next);f.db.db.prepare("INSERT INTO financial_audit_turns(month,revision,next_work,lease_token,lease_until) VALUES(?,?,'RELEASES',?,?)").run(next,f.auditLease.revision,f.auditLease.token,at+90);const options={now:f.now,canRun:async()=>true,auditLease:f.auditLease,backgroundLease:f.backgroundLease};
+ assert.equal(await selectBusinessHistoricalReleaseCalendar(f.env,{month:next},options),null);f.saveCueFor(previous,f.frames,{at,through:next});const selected=await selectBusinessHistoricalReleaseCalendar(f.env,{month:next},options);assert.equal(selected.month,previous);assert.equal(selected.calendarGuard.calendar_month,previous);assert.equal(selected.calendarGuard.through_month,next);
 });

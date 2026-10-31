@@ -1,6 +1,6 @@
 INCREMENTO EM VALIDAÇÃO — M2 CALENDÁRIOS HISTÓRICOS — 31/10/2026
 Branch feature/m2-historical-release-calendars-20261031, base mainPR90 8cdad2a.
-Alternância limitada RELEASES atual/anterior; um serviço privado por HISTORY.
+Alternância RELEASES atual/histórico; rodízio dos3meses anteriores e retomada apósvirada; um serviço privado por HISTORY.
 Somente CALENDAR_MISSING válido e publicação exata; completo salvo impede duplicação.
 Rollback legado e Auth/Finance/config preservados. Nenhum lucro bancário inferido.
 Conferir docs/MLS_M2_HISTORICAL_CALENDARS_2026_10_31.md; não declarar Live sem provas.
