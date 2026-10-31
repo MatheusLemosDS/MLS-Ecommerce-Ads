@@ -238,7 +238,7 @@ async function scheduledWork(env,services,now=()=>Date.now()){
  // First-time corrections can themselves consume the invocation budget. The
  // marker is consumed once even if an owner request initialized this isolate.
  if(MAINTENANCE_PENDING.delete(env.ADMIN_DB)){output.collection='MAINTENANCE';return output;}
- const month=localDay(new Date(now())).slice(0,7),lease=await acquireBackgroundLane(env,{month},{now});output.lane=lease.lane;
+ const month=localDay(new Date(now())).slice(0,7),lease=await acquireBackgroundLane(env,{month},{now,bootstrapCoverage:true});output.lane=lease.lane;
  if(lease.lane==='LEASED')return {...output,collection:'LEASED'};
  let repeatHistory=false,auditSourceReads=0,historyNextWork=null;const canRun=async()=>(await readBusinessSyncState(env)).enabled;
  const productionSource=async(...args)=>{if(!await canRun())throw Error('BACKGROUND_COLLECTION_PAUSED');return services.getFinanceProductionOrders(...args);};
