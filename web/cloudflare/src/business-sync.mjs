@@ -73,8 +73,8 @@ export async function saveBusinessSyncPolicy(env,input,actor='admin',{now=()=>Da
 // The minute cron can resume a bounded run; its five-minute lease and deadline
 // still cover the existing transport timeouts. Never detach a stateful request with Promise.race: a
 // timed-out caller must not release its lease while that request still writes.
-export async function runBusinessSync(env,services,{now=()=>Date.now(),maxSteps=4}={}){
- if(typeof now!=='function'||!syncInteger(maxSteps,1,4))syncFail('BUSINESS_SYNC_OPTIONS_INVALID',400);
+export async function runBusinessSync(env,services,{now=()=>Date.now(),maxSteps=4,onCompletedObservation=null}={}){
+ if(typeof now!=='function'||!syncInteger(maxSteps,1,4)||onCompletedObservation!==null&&typeof onCompletedObservation!=='function')syncFail('BUSINESS_SYNC_OPTIONS_INVALID',400);
  const db=await syncSetup(env),startedMs=syncClock(now),started=Math.floor(startedMs/1000),deadline=startedMs+270000,token=crypto.randomUUID(),day=syncDay(startedMs),month=day.slice(0,7);
  let {row:initialRow,state}=await syncRead(db);const result=(status,finance_steps=0,ads_reads=0)=>({status,finance_steps,ads_reads,state});
  if(!state.enabled)return result('PAUSED');
@@ -85,7 +85,8 @@ export async function runBusinessSync(env,services,{now=()=>Date.now(),maxSteps=
  if(state.next_run_at>started&&!recoverStaleBackoff)return result('NOT_DUE');
  let acquired;try{acquired=await db.prepare("UPDATE business_sync_state SET lease_token=?,lease_expires_at=?,status='RUNNING',month=?,last_attempt_at=? WHERE id=1 AND enabled=1 AND (next_run_at<=? OR (?=1 AND status='ERROR' AND last_error='BUSINESS_SYNC_COLLECTION_UNAVAILABLE' AND summary=? AND last_attempt_at=?)) AND (lease_token IS NULL OR lease_expires_at<=?)").bind(token,started+300,month,started,started,Number(recoverStaleBackoff),initialRow.summary,initialRow.last_attempt_at,started).run();}catch{syncFail('BUSINESS_SYNC_STORAGE_UNAVAILABLE');}
  if(acquired?.meta?.changes!==1){state=(await syncRead(db)).state;return result(!state.enabled?'PAUSED':state.lease_expires_at>started?'LEASED':'NOT_DUE');}
- let frame=null,financeSteps=0,adsReads=0,status='RUNNING',errorCode=null,yielded=false;
+ let frame=null,financeSteps=0,adsReads=0,status='RUNNING',errorCode=null,yielded=false,completedObservation=null;
+ const retainObservation=value=>{completedObservation=value;};
  const hasTime=(budget,clock=syncClock(now))=>clock>=startedMs&&clock+budget+5000<=deadline&&syncDay(clock)===day;
  const sourceError=()=>({BUSINESS_PERIOD_RATE_LIMIT:'BUSINESS_SYNC_SOURCE_RATE_LIMIT',BUSINESS_PERIOD_TIMEOUT:'BUSINESS_SYNC_SOURCE_TIMEOUT',BUSINESS_PERIOD_AUTH_REQUIRED:'BUSINESS_SYNC_SOURCE_AUTH_REQUIRED',BUSINESS_PERIOD_INVALID_SOURCE:'BUSINESS_SYNC_SOURCE_INVALID',BUSINESS_PERIOD_PERMISSION_DENIED:'BUSINESS_SYNC_SOURCE_PERMISSION_DENIED'})[frame?.collection?.code]||'BUSINESS_SYNC_COLLECTION_UNAVAILABLE';
  const canCall=async budget=>{
@@ -99,13 +100,13 @@ export async function runBusinessSync(env,services,{now=()=>Date.now(),maxSteps=
  try{
   for(let step=0;step<maxSteps;step++){
    if(!hasTime(45000))break;
-   frame=projectBusinessMonth(await businessMonthWithCheckpoint(env,{operation:step===0?'start':'step',month},collectors,{now,actor:'business-sync'}));
+   frame=projectBusinessMonth(await businessMonthWithCheckpoint(env,{operation:step===0?'start':'step',month},collectors,{now,actor:'business-sync',onCompletedObservation:retainObservation}));
    if(!frame||frame.month!==month)throw new BusinessSyncError('BUSINESS_SYNC_RESULT_INVALID');
    if(frame.result.pending.includes('SOURCE_UNAVAILABLE')||frame.collection?.state==='RETRY_WAIT'||frame.collection?.state==='BLOCKED')break;
    if(frame.status!=='RUNNING')break;
   }
   if(frame&&hasTime(60000)){
-   frame=projectBusinessMonth(await businessMonthWithCheckpoint(env,{operation:'ads',month},collectors,{now,actor:'business-sync'}));
+   frame=projectBusinessMonth(await businessMonthWithCheckpoint(env,{operation:'ads',month},collectors,{now,actor:'business-sync',onCompletedObservation:retainObservation}));
    if(!frame||frame.month!==month)throw new BusinessSyncError('BUSINESS_SYNC_RESULT_INVALID');
   }
   // An in-progress month can outlive the freshness window while its pages
@@ -157,5 +158,12 @@ export async function runBusinessSync(env,services,{now=()=>Date.now(),maxSteps=
  ]);}catch{syncFail('BUSINESS_SYNC_STORAGE_UNAVAILABLE');}
  if(writes[0]?.meta?.changes!==1){state=(await syncRead(db)).state;return result(state.enabled?'LEASED':'PAUSED',financeSteps,adsReads);}
  if(writes[1]?.meta?.changes!==1)syncFail('BUSINESS_SYNC_STORAGE_UNAVAILABLE');
- state=(await syncRead(db)).state;return result(state.status,financeSteps,adsReads);
+ state=(await syncRead(db)).state;
+ // Capture only the last complete aggregate, after the collector committed
+ // its state and released its lease. Memory performs no provider work and
+ // cannot turn an otherwise successful import into a collection failure.
+ if(state.enabled&&state.status!=='ERROR'&&completedObservation&&frame?.status==='COMPLETE'&&frame.month===completedObservation.frame.month&&frame.checked_at===completedObservation.frame.checked_at&&onCompletedObservation){
+  try{await onCompletedObservation(completedObservation);}catch{}
+ }
+ return result(state.status,financeSteps,adsReads);
 }

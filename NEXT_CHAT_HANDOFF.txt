@@ -1,3 +1,33 @@
+HANDOFF ATUAL — LIVE PR89 — 31/10/2026
+Branch feature/agent-learning-performance-20261031, base mainPR88 8bb9718.
+Código8fb15b2, CI41206928254 GREEN2536Node/67Python/Chromium.
+App66e9c01f-3fe5-4688-8dd7-4fb14f56a609100%; SHAgerado6aa689d9,
+SHApublicado72fb5d90, bytes/config/flags/Auth/Finance/cron conferidos.
+Memória agregada captura só após coleta completa, com CASrevisão/datas/fontes
++enabled atômico; 400cortes, correções não são amostras independentes.
+GETowner sem writes/provider; Hermes recebe contagens/datas em descrições das
+ações existentes, mantendo valores/códigos/prioridades/refs/protocolo v1/hash.
+ROASdiário broad das datas Ads, null/zero/parcial e fuso não confirmado
+explícitos; setas com datas, resultado negativo separado de melhora.
+Prova natural31/10às10:50:33Brasília: primeirocortesalvo10:50:01, outubroaté31,
+publicação14306,3/3intervalos,23páginas,COMPLETE/failure0/last_errornull.
+Sem coleta/job/análise paga forçados. Memória não treina pesos nem prova efeito.
+Fonte docs/MLS_AGENT_MEMORY_PERFORMANCE_2026_10_31.md. RollbackAppc00861cf;
+tabela aditiva preserva histórico. PróximoM2: agendar tracker de liberações
+posteriores e conciliar devoluções/Pending/SellerCentre/banco; depois avaliar
+recomendações→execuçõesautorizadas→resultados. Comercial/Ads/PROMO LOCKED.
+
+REGISTROS HISTÓRICOS — NÃO SUBSTITUEM O ESTADO ACIMA
+
+INCREMENTO EM VALIDAÇÃO — MEMÓRIA E ROAS — 31/10/2026
+Branch feature/agent-learning-performance-20261031, base mainPR88 8bb9718.
+Memória factual agregada em D1, captura após coleta completa, correções no mesmo
+corte, relatório GET owner sem writes/provider; ações novas/arriscadas exigem
+confirmação. Não é treinamento de pesos nem eficácia comprovada. ROAS por dias
+reais do Ads, datas comparadas nas setas e estilo aprovado preservado.
+Conferir docs/MLS_AGENT_MEMORY_PERFORMANCE_2026_10_31.md para validação/Live.
+M2 ainda exige tracker de liberações posteriores e conciliação SellerCentre/banco.
+
 HANDOFF ATUAL — LIVE PR88 — 31/10/2026
 
 Branch feature/m2-returns-reconciliation-20261031; base mainPR87 51b2dfe.

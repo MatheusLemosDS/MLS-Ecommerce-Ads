@@ -6,6 +6,7 @@ import {projectBusinessMonth} from './business-month.mjs';
 import {projectBusinessMonthView,projectBusinessMonthAuditScope} from './business-month-view-state.mjs';
 import {projectExpenseSchedule} from './expense-schedule.mjs';
 import {projectAdsCalendar} from './ads-calendar.mjs';
+import {projectMissionAdsSnapshot} from './mls-ads-performance.mjs';
 import {projectBusinessMonthProducts} from './business-month-products.mjs';
 import {buildAccountDiagnosis} from './account-diagnosis.mjs';
 import {buildBusinessCheckpoint} from './business-checkpoint.mjs';
@@ -19,6 +20,7 @@ import {BUSINESS_DAY_CLIENT} from './business-day-view.mjs';
 
 export const BUSINESS_MONTH_CLIENT=BUSINESS_DAY_CLIENT+String.raw`
 (()=>{
+ ${projectMissionAdsSnapshot.toString()}
  ${buildMlsProductIntelligence.toString()}
  ${simulateMlsPricingScenario.toString()}
  ${projectAdsCalendar.toString()}
@@ -997,6 +999,6 @@ export const BUSINESS_MONTH_CLIENT=BUSINESS_DAY_CLIENT+String.raw`
   if(!started||!workspaceView||!validMonth(month)||month!==today().slice(0,7)||!cronOwnsCollection()||priorityPromise)return Promise.resolve(false);
   return requestSalesUpdate();
  }
- globalThis.brazaMonthDashboard={clientContract,prepare,bootstrapState,start,refresh,refreshCosts,selectMonth,prioritizeCurrentMonth,stop,supportsCatalogQueue:catalogFeature,syncCatalogCandidates,refreshCatalog:()=>{catalogNeedsRead=true;return updateCatalog();},catalogMetadata:item=>catalogProducts.get(item)||null,getSnapshot:snapshot,getSourceStatus};
+ globalThis.brazaMonthDashboard={clientContract,prepare,bootstrapState,start,refresh,refreshCosts,selectMonth,prioritizeCurrentMonth,stop,supportsCatalogQueue:catalogFeature,syncCatalogCandidates,refreshCatalog:()=>{catalogNeedsRead=true;return updateCatalog();},catalogMetadata:item=>catalogProducts.get(item)||null,getSnapshot:snapshot,getAdsSnapshot:()=>projectMissionAdsSnapshot(frame),getSourceStatus};
 })();
 `+EXPENSE_LEDGER_CLIENT+BUSINESS_RECONCILIATION_CLIENT+ESCROW_RELEASES_CLIENT;

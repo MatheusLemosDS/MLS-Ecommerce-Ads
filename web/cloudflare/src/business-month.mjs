@@ -172,9 +172,9 @@ export async function readBusinessMonthDisplay(env,{month},{now=()=>Date.now()}=
  // the server; opening or changing a day never starts a second collector.
  return {display,active,display_source:'PUBLISHED',audit_scope,source_frames:published.payload.slots.map(slot=>slot.frame),expense_schedule};
 }
-async function businessMonthOperation(env,input,services,{now=()=>Date.now(),actor='admin',onProductsDiscovered=null}={}){
+async function businessMonthOperation(env,input,services,{now=()=>Date.now(),actor='admin',onProductsDiscovered=null,onCompletedObservation=null}={}){
  let stamp;try{const clock=now();if(!Number.isSafeInteger(clock)||clock<=0)throw Error();stamp=Math.floor(clock/1000);}catch{businessMonthFail('BUSINESS_MONTH_CLOCK',503);}
- if(!env?.ADMIN_DB||typeof env.ADMIN_DB.batch!=='function'||!businessMonthPlain(input)||onProductsDiscovered!==null&&typeof onProductsDiscovered!=='function')businessMonthFail('BUSINESS_MONTH_CONFIGURATION',503);
+ if(!env?.ADMIN_DB||typeof env.ADMIN_DB.batch!=='function'||!businessMonthPlain(input)||onProductsDiscovered!==null&&typeof onProductsDiscovered!=='function'||onCompletedObservation!==null&&typeof onCompletedObservation!=='function')businessMonthFail('BUSINESS_MONTH_CONFIGURATION',503);
  const operation=Object.getOwnPropertyDescriptor(input,'operation')?.value;
  const expenseOperation=operation==='expenses';
  if(!businessMonthExact(input,expenseOperation?['operation','month','revision','external_expenses_cents','recharge_treatment']:['operation','month'])||!['start','step','read','ads','expenses'].includes(operation))businessMonthFail('BUSINESS_MONTH_REQUEST_INVALID');
@@ -192,7 +192,14 @@ async function businessMonthOperation(env,input,services,{now=()=>Date.now(),act
  try{
   if(operation==='start'||operation==='step')observed=await businessMonthAdvance(env,db,input.month,range,stamp,observed,services);
   if(operation==='ads')await businessMonthRefreshAds(env,db,input.month,range,stamp,services,now);
-  result=await businessMonthBundle(db,input.month,range,stamp,observed);return result;
+  result=await businessMonthBundle(db,input.month,range,stamp,observed);
+  // Background callers may retain this already validated aggregate. A failed
+  // observer must never replace the collector's financial result. The exact
+  // publication revision is checked again when the observation is committed.
+  if(onCompletedObservation&&result.status==='COMPLETE'&&observed.complete){
+   try{await onCompletedObservation({frame:result,publication_revision:observed.row.revision});}catch{}
+  }
+  return result;
  }finally{
   // Discovery uses every validated imported item, including already priced
   // products in a partial month. An independent catalogue queue failure must

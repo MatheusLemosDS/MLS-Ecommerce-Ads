@@ -17,9 +17,10 @@ export function createMlsVerifiedCharts(){
   }
   return localAmount(value);
  };
+ const localRatio=value=>{const n=BigInt(value),absolute=n<0n?-n:n,rounded=(absolute+5000n)/10000n;return (n<0n?'-':'')+new Intl.NumberFormat('pt-BR').format(rounded/100n)+','+String(rounded%100n).padStart(2,'0')+'x';};
  const COLORS = Object.freeze({
    net:'#35e6ae',sales:'#4b9fff',ads:'#ef5ab1',finance:'#44e8ad',
-   production:'#39d5eb',returns:'#ff688e',products:'#ffaa4b'
+   production:'#39d5eb',returns:'#ff688e',products:'#ffaa4b',roas:'#b780ff'
  });
  const esc = value => String(value).replace(/[&<>"']/g,c=>({
    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
@@ -125,6 +126,8 @@ export function createMlsVerifiedCharts(){
    const known=rows.map(x=>x.value).filter(SAFE);
    if(known.length<2)return '<div class="mls-chart-unavailable" role="status">Histórico insuficiente</div>';
    const w=620,h=222,left=78,right=610,top=16,bottom=187;
+   const ratio=model.unit==='RATIO_MICROS',format=ratio?localRatio:localAmount,axis=ratio?localRatio:axisAmount;
+   if(ratio&&known.some(value=>value<0))return '<div class="mls-chart-unavailable" role="status">ROAS inválido</div>';
    const max=Math.max(0,...known),min=Math.min(0,...known),span=max-min||1;
    const x=i=>left+(right-left)*i/Math.max(1,rows.length-1);
    const y=v=>top+(max-v)*(bottom-top)/span;
@@ -135,7 +138,7 @@ export function createMlsVerifiedCharts(){
     graphics+='<line x1="'+left+'" y1="'+yy+'" x2="'+right+'" y2="'+yy+
      '" stroke="var(--line,#335070)" stroke-opacity=".5" stroke-dasharray="2 5"/>';
     const tick=Number(BigInt(min)+(BigInt(max)-BigInt(min))*BigInt(4-i)/4n);
-    graphics+='<text class="mls-chart-axis" x="'+(left-9)+'" y="'+(yy+3)+'" text-anchor="end" font-size="9" fill="var(--muted,#96b5d9)">'+esc(axisAmount(tick))+'</text>';
+    graphics+='<text class="mls-chart-axis" x="'+(left-9)+'" y="'+(yy+3)+'" text-anchor="end" font-size="9" fill="var(--muted,#96b5d9)">'+esc(axis(tick))+'</text>';
    }
    graphics+='<path class="mls-chart-zero" d="M '+left+' '+baseline+' H '+right+'" fill="none" stroke="var(--line,#335070)" stroke-opacity=".85"/>';
    let i=0;
@@ -162,11 +165,11 @@ export function createMlsVerifiedCharts(){
    for(let k=0;k<rows.length;k++){
     const point=rows[k];
     if(point.value!==null){
-     const label=point.date+': '+localAmount(point.value)+(point.partial?' (parcial)':'')+
+     const label=point.date+': '+format(point.value)+(point.partial?' (parcial)':'')+
        (point.basis==='KNOWN_COSTS'?' (subtotal com custos conhecidos)':'');
-     const context=(point.basis==='KNOWN_COSTS'?'Subtotal com custos conhecidos':model.metric==='net'?'Resultado estimado':'Valor observado')+(point.partial?' · Dia parcial':'');
+     const context=(ratio?'ROAS de atribuição ampla · calendário Ads · não é lucro':point.basis==='KNOWN_COSTS'?'Subtotal com custos conhecidos':model.metric==='net'?'Resultado estimado':'Valor observado')+(point.partial?' · Dia parcial':'');
      const displayDate=point.date.slice(8)+'/'+point.date.slice(5,7)+'/'+point.date.slice(0,4);
-     graphics+='<circle'+markAttributes(k,displayDate,localAmount(point.value),context,point.basis||'')+' data-mls-chart-date="'+esc(point.date)+'"'+
+     graphics+='<circle'+markAttributes(k,displayDate,format(point.value),context,point.basis||'')+' data-mls-chart-date="'+esc(point.date)+'"'+
        ' data-mls-chart-x="'+x(k)+'" data-mls-chart-left="'+left+'" data-mls-chart-right="'+right+'" data-mls-chart-top="'+top+'" data-mls-chart-bottom="'+bottom+'" aria-label="'+esc(label)+'" cx="'+x(k)+'" cy="'+y(point.value)+'" r="3.5" fill="'+
        (point.partial?'#ffcf84':model.metric==='net'&&point.value<0?'#ff7899':color)+'">'+
        '<title>'+esc(label)+'</title></circle>';

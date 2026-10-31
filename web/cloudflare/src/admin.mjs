@@ -51,6 +51,7 @@ import {SAVED_CATALOG_CSS,savedCatalogBody,SAVED_CATALOG_CLIENT} from './saved-c
 import {MLS_LISTING_FACTORY_CSS,mlsListingFactoryBody,MLS_LISTING_FACTORY_CLIENT} from './mls-listing-factory-view.mjs';
 import {MLS_AI_SALES_CSS,mlsAiSalesBody,MLS_AI_SALES_CLIENT} from './mls-ai-sales-view.mjs';
 import {AI_SALES_WORKSPACE_STORE_SCHEMA,AiSalesWorkspaceStoreError,readAiSalesWorkspace,saveAiSalesWorkspace} from './mls-ai-sales-workspace-store.mjs';
+import {MLS_AGENT_LEARNING_SCHEMA,MlsAgentLearningError,recordMlsAgentLearningObservation,readMlsAgentLearning} from './mls-agent-learning.mjs';
 import {BusinessCostDiagnosticsError,readBusinessCostDiagnostics,readBusinessCostDiagnosticsEvidence,readBusinessCostDiagnosticsEvidenceV2,readBusinessCostDiagnosticsEvidenceV3} from './business-cost-diagnostics.mjs';
 import {HISTORICAL_COST_EVIDENCE_SCHEMA,HistoricalCostEvidenceError,readHistoricalCostEvidence,syncHistoricalCostEvidence} from './historical-cost-evidence.mjs';
 import {OPERATOR_COST_CORRECTIONS_SCHEMA,OperatorCostCorrectionError,applyConfirmedOperatorCostCorrections} from './operator-cost-corrections.mjs';
@@ -69,6 +70,7 @@ const SCHEMA = [...new Set([
 ...BUSINESS_SYNC_SCHEMA,
 ...BUSINESS_HISTORY_SYNC_SCHEMA,
 ...AI_SALES_WORKSPACE_STORE_SCHEMA,
+...MLS_AGENT_LEARNING_SCHEMA,
 ...PRODUCTION_DTF_SCHEMA,
 ...OBSERVATION_SCHEMA,
 ...HERMES_FINANCIAL_CONTEXT_SCHEMA,
@@ -231,7 +233,7 @@ async function panelD1Probe(env){
 
 async function scheduledWork(env,services,now=()=>Date.now()){
  await setup(env);
- const output={analysis:'DEFERRED',collection:'DEFERRED',classification:'DEFERRED',production:'DEFERRED',registry:'DEFERRED',costs:'DEFERRED',history:'DEFERRED',reconciliation:'DEFERRED',releases:'DEFERRED',income:'DEFERRED',income_detail:'DEFERRED',lane:'MAINTENANCE'};
+ const output={analysis:'DEFERRED',collection:'DEFERRED',classification:'DEFERRED',production:'DEFERRED',registry:'DEFERRED',costs:'DEFERRED',history:'DEFERRED',reconciliation:'DEFERRED',releases:'DEFERRED',income:'DEFERRED',income_detail:'DEFERRED',learning:'DEFERRED',lane:'MAINTENANCE'};
  // First-time corrections can themselves consume the invocation budget. The
  // marker is consumed once even if an owner request initialized this isolate.
  if(MAINTENANCE_PENDING.delete(env.ADMIN_DB)){output.collection='MAINTENANCE';return output;}
@@ -240,12 +242,16 @@ async function scheduledWork(env,services,now=()=>Date.now()){
  let repeatHistory=false,auditSourceReads=0,historyNextWork=null;const canRun=async()=>(await readBusinessSyncState(env)).enabled;
  const productionSource=async(...args)=>{if(!await canRun())throw Error('BACKGROUND_COLLECTION_PAUSED');return services.getFinanceProductionOrders(...args);};
  try{
-  if(lease.lane==='PAUSED'){for(const key of ['collection','classification','production','registry','costs','history','reconciliation','releases','income','income_detail'])output[key]='PAUSED';return output;}
+  if(lease.lane==='PAUSED'){for(const key of ['collection','classification','production','registry','costs','history','reconciliation','releases','income','income_detail','learning'])output[key]='PAUSED';return output;}
   if(lease.lane==='FINANCE'){
    // Retain the previous complete creation-date cohort before opening a day.
    try{await captureProductionCostMonth(env,month,{now});}catch{}
    try{
-    output.collection=(await runBusinessSync(env,services,{now})).status;
+    output.collection=(await runBusinessSync(env,services,{now,onCompletedObservation:async observation=>{
+     // The memory INSERT checks the enabled policy atomically. Re-reading it
+     // here would add two D1 round trips after Finance already checked it.
+     try{output.learning=(await recordMlsAgentLearningObservation(env,observation,{now})).status;}catch{output.learning='UNAVAILABLE';}
+    }})).status;
     if(output.collection==='NOT_DUE')output.history_collection=(await runBusinessHistorySync(env,services,{now,currentStatus:output.collection})).status;
    }catch{if(output.collection==='NOT_DUE')output.history_collection='ERROR';else output.collection='ERROR';}
   }else if(lease.lane==='HISTORY'){
@@ -388,6 +394,13 @@ async function adminFetch(request,env,services={}){const url=new URL(request.url
  if(path==='/api/admin/bootstrap'){
   assert(request.method==='GET','METHOD_NOT_ALLOWED',405);assert(!url.search,'ADMIN_BOOTSTRAP_REQUEST_INVALID');
   return json({schema:'admin_bootstrap_v1',csrf:current.csrf});
+ }
+ // This report reads only retained aggregate memory. Opening it never starts
+ // collection, initializes tables, calls a model, or grants an execution mode.
+ if(path==='/api/admin/agents/learning'){
+  assert(request.method==='GET','METHOD_NOT_ALLOWED',405);
+  const entries=[...url.searchParams];assert(entries.length===1&&entries[0][0]==='month','MLS_AGENT_LEARNING_REQUEST_INVALID');
+  return json(await readMlsAgentLearning(env,{month:entries[0][1]}));
  }
  // Draft storage is independent of financial bootstrap and never contacts a
  // provider. The authenticated owner identity is never accepted from the body.
@@ -624,5 +637,5 @@ async function adminFetch(request,env,services={}){const url=new URL(request.url
  if(path==='/api/admin/jobs')return json({rows:(await env.ADMIN_DB.prepare(`SELECT id,json_extract(task,'$.start_date') AS start_date,json_extract(task,'$.end_date') AS end_date,trigger_type,status,settings_revision,reserve_cents,cost_cents,cost_source,result,failure,created_at,started_at,completed_at FROM hermes_jobs ORDER BY created_at DESC LIMIT 30`).all()).results});
  if(path==='/api/admin/audit')return json({rows:(await env.ADMIN_DB.prepare('SELECT revision,payload,actor,created_at FROM admin_audit ORDER BY revision DESC LIMIT 30').all()).results});
  return json({error:'NOT_FOUND'},404);
- }catch(error){if(isD1DailyLimitError(error))return json({error:'ADMIN_DB_DAILY_LIMIT_EXCEEDED'},503);return json({error:error instanceof AiSalesWorkspaceStoreError||error instanceof ExpenseLedgerError||error instanceof HistoricalCostOrchestrationError||error instanceof HistoricalCostEvidenceError||error instanceof OperatorCostCorrectionError||error instanceof BusinessCostDiagnosticsError||error instanceof ProductRegistryError||error instanceof ProductionCostPeriodsError||error instanceof SavedOrderItemsError||error instanceof HermesFinancialContextError||error instanceof AdminError||error instanceof VariantBindingError||error instanceof ObservationError||error instanceof ProductionCostError||error instanceof StoreSummaryError||error instanceof FinancialAuditOrchestrationError||error instanceof BusinessIncomeOverviewError||error instanceof BusinessIncomeDetailError||error instanceof BusinessEscrowReleaseCoverageError||error instanceof BusinessEscrowReleasesError||error instanceof BusinessReconciliationError||error instanceof BusinessMonthViewError||error instanceof BusinessMonthError||error instanceof BusinessCheckpointError||error instanceof BusinessTaxPolicyError||error instanceof BusinessSyncError||error instanceof CostRuleError||error instanceof CatalogClassificationError||error instanceof ProductionDtfError?error.message:'ADMIN_UNAVAILABLE'},error instanceof AiSalesWorkspaceStoreError||error instanceof ExpenseLedgerError||error instanceof HistoricalCostOrchestrationError||error instanceof HistoricalCostEvidenceError||error instanceof OperatorCostCorrectionError||error instanceof BusinessCostDiagnosticsError||error instanceof ProductRegistryError||error instanceof ProductionCostPeriodsError||error instanceof SavedOrderItemsError||error instanceof HermesFinancialContextError||error instanceof AdminError||error instanceof VariantBindingError||error instanceof ObservationError||error instanceof ProductionCostError||error instanceof StoreSummaryError||error instanceof FinancialAuditOrchestrationError||error instanceof BusinessIncomeOverviewError||error instanceof BusinessEscrowReleaseCoverageError||error instanceof BusinessEscrowReleasesError||error instanceof BusinessReconciliationError||error instanceof BusinessMonthViewError||error instanceof BusinessMonthError||error instanceof BusinessCheckpointError||error instanceof BusinessTaxPolicyError||error instanceof BusinessSyncError||error instanceof CostRuleError||error instanceof CatalogClassificationError||error instanceof ProductionDtfError?error.status:503);}}
+ }catch(error){if(isD1DailyLimitError(error))return json({error:'ADMIN_DB_DAILY_LIMIT_EXCEEDED'},503);return json({error:error instanceof MlsAgentLearningError||error instanceof AiSalesWorkspaceStoreError||error instanceof ExpenseLedgerError||error instanceof HistoricalCostOrchestrationError||error instanceof HistoricalCostEvidenceError||error instanceof OperatorCostCorrectionError||error instanceof BusinessCostDiagnosticsError||error instanceof ProductRegistryError||error instanceof ProductionCostPeriodsError||error instanceof SavedOrderItemsError||error instanceof HermesFinancialContextError||error instanceof AdminError||error instanceof VariantBindingError||error instanceof ObservationError||error instanceof ProductionCostError||error instanceof StoreSummaryError||error instanceof FinancialAuditOrchestrationError||error instanceof BusinessIncomeOverviewError||error instanceof BusinessIncomeDetailError||error instanceof BusinessEscrowReleaseCoverageError||error instanceof BusinessEscrowReleasesError||error instanceof BusinessReconciliationError||error instanceof BusinessMonthViewError||error instanceof BusinessMonthError||error instanceof BusinessCheckpointError||error instanceof BusinessTaxPolicyError||error instanceof BusinessSyncError||error instanceof CostRuleError||error instanceof CatalogClassificationError||error instanceof ProductionDtfError?error.message:'ADMIN_UNAVAILABLE'},error instanceof MlsAgentLearningError||error instanceof AiSalesWorkspaceStoreError||error instanceof ExpenseLedgerError||error instanceof HistoricalCostOrchestrationError||error instanceof HistoricalCostEvidenceError||error instanceof OperatorCostCorrectionError||error instanceof BusinessCostDiagnosticsError||error instanceof ProductRegistryError||error instanceof ProductionCostPeriodsError||error instanceof SavedOrderItemsError||error instanceof HermesFinancialContextError||error instanceof AdminError||error instanceof VariantBindingError||error instanceof ObservationError||error instanceof ProductionCostError||error instanceof StoreSummaryError||error instanceof FinancialAuditOrchestrationError||error instanceof BusinessIncomeOverviewError||error instanceof BusinessEscrowReleaseCoverageError||error instanceof BusinessEscrowReleasesError||error instanceof BusinessReconciliationError||error instanceof BusinessMonthViewError||error instanceof BusinessMonthError||error instanceof BusinessCheckpointError||error instanceof BusinessTaxPolicyError||error instanceof BusinessSyncError||error instanceof CostRuleError||error instanceof CatalogClassificationError||error instanceof ProductionDtfError?error.status:503);}}
 export {adminFetch,schedule,scheduledWork,DEFAULTS,SCHEMA,validateSettings,workspaceAuthFetch};
