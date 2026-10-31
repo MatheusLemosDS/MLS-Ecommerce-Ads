@@ -660,5 +660,33 @@
         "documented_in": "docs/MLS_OWNER_SYNTHETIC_VISUAL_QA_2026_10_28.md"
       }
     }
+  },
+  "official_updates_2026_10_30": {
+    "owner_policy": "VALIDATED_UPDATES_TARGET_OFFICIAL_SEPARATE_ENVIRONMENT_ONLY_WHEN_NEEDED",
+    "preview": {
+      "pull_request": 84,
+      "data": "SYNTHETIC",
+      "preserved": true
+    },
+    "cancelled_daily_profit": {
+      "branch": "fix/cancelled-daily-profit-20261030",
+      "base": "a96bb1c56aaea54a63bede5c177a0de8ab2ea890",
+      "status": "OFFICIAL_DEPLOY_VERIFIED_MAIN_PR_PENDING",
+      "docs": "docs/MLS_CANCELLED_DAILY_PROFIT_2026_10_30.md",
+      "pull_request": 85,
+      "code_commit": "dbcfae79716fbbe8785cbb615c435e0c62be1b6a",
+      "ci_run": 41155020856,
+      "node_tests": 2129,
+      "python_tests": 67,
+      "chromium": "PASS",
+      "deployment": {
+        "app_version": "db3fb95f-6a8c-4f44-93d7-2b41f5e00d35",
+        "finance_version": "a01e40a0-d760-4958-834e-f090c62b1ca8",
+        "exact_published_bytes": true,
+        "configuration_preserved": true,
+        "owner_authenticated_qa": "NOT_EXECUTED"
+      }
+    },
+    "commercial_writes": "LOCKED"
   }
 }

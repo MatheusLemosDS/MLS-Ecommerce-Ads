@@ -27,6 +27,7 @@ import {BUSINESS_CHECKPOINT_SCHEMA,businessMonthWithCheckpoint,readBusinessCheck
 import {CATALOG_CLASSIFICATION_SCHEMA,enqueueCatalogClassifications,enqueueSoldCatalogGaps,runCatalogClassifications,readCatalogClassificationState,catalogClassificationQueries,catalogClassificationsFromSnapshot,CatalogClassificationError} from './catalog-classification.mjs';
 import {readBusinessTaxPolicy,saveBusinessTaxPolicy,readBusinessTaxPolicyAudit,BusinessTaxPolicyError} from './business-tax-policy.mjs';
 import {BUSINESS_SYNC_SCHEMA,runBusinessSync,readBusinessSyncState,saveBusinessSyncPolicy,BusinessSyncError} from './business-sync.mjs';
+import {BUSINESS_HISTORY_SYNC_SCHEMA,runBusinessHistorySync} from './business-history-sync.mjs';
 import {AUTOMATION_WORKSPACE_CSS,automationWorkspaceBody,AUTOMATION_WORKSPACE_CLIENT} from './automation-workspace.mjs';
 import {projectFinanceSample} from './finance-sample-frame.mjs';
 import {projectAdminFinancePreview} from './app-finance-sample.mjs';
@@ -63,6 +64,7 @@ const SCHEMA = [...new Set([
 ...BUSINESS_CHECKPOINT_SCHEMA,
 ...CATALOG_CLASSIFICATION_SCHEMA,
 ...BUSINESS_SYNC_SCHEMA,
+...BUSINESS_HISTORY_SYNC_SCHEMA,
 ...PRODUCTION_DTF_SCHEMA,
 ...OBSERVATION_SCHEMA,
 ...HERMES_FINANCIAL_CONTEXT_SCHEMA,
@@ -238,7 +240,10 @@ async function scheduledWork(env,services,now=()=>Date.now()){
   if(lease.lane==='FINANCE'){
    // Retain the previous complete creation-date cohort before opening a day.
    try{await captureProductionCostMonth(env,month,{now});}catch{}
-   try{output.collection=(await runBusinessSync(env,services,{now})).status;}catch{output.collection='ERROR';}
+   try{
+    output.collection=(await runBusinessSync(env,services,{now})).status;
+    if(output.collection==='NOT_DUE')output.history_collection=(await runBusinessHistorySync(env,services,{now,currentStatus:output.collection})).status;
+   }catch{if(output.collection==='NOT_DUE')output.history_collection='ERROR';else output.collection='ERROR';}
   }else if(lease.lane==='HISTORY'){
    try{const selection=await readHistoricalCostCandidates(env,month,{now});output.history=selection.status;
     if(selection.ready&&typeof services?.getFinanceHistoricalVariantEvidence==='function'){

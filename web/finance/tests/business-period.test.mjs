@@ -325,12 +325,23 @@ test('explicit covered empty and cancelled-only cohorts have zero paid totals wi
  }
 });
 
-test('cache reuse is idempotent; completed current-day data expires after one minute and closed periods after fifteen',async()=>{
+test('cache reuse is idempotent; every completed window of the open month expires after one minute',async t=>{
  const f=await fixture(['COMPLETED']),running=await f.start();f.clock.time+=61000;assert.equal((await f.start()).run_id,running.run_id);const complete=await f.run({operation:'step',run_id:running.run_id});assert.equal(complete.status,'COMPLETE');
+ t.after(()=>f.db.db.close());
  // Freshness is relative to the fixed cohort cutoff, so the completed old run
  // is immediately superseded after the minute spent while collecting it.
  const fresh=await f.start();assert.notEqual(fresh.run_id,complete.run_id);assert.equal(f.calls.length,3);assert.equal((await f.start()).run_id,fresh.run_id);
- const g=await fixture([]),start=()=>g.run({operation:'start',start_date:'2026-10-13',end_date:'2026-10-19'}),job=await start();await g.run({operation:'step',run_id:job.run_id});g.clock.time+=61000;assert.equal((await start()).run_id,job.run_id);g.clock.time+=840000;assert.notEqual((await start()).run_id,job.run_id);assert.equal(g.calls.length,1);
+ const g=await fixture([]);t.after(()=>g.db.db.close());
+ const start=()=>g.run({operation:'start',start_date:'2026-10-01',end_date:'2026-10-15'}),job=await start();await g.run({operation:'step',run_id:job.run_id});g.clock.time+=59000;assert.equal((await start()).run_id,job.run_id);g.clock.time+=2000;assert.notEqual((await start()).run_id,job.run_id);assert.equal(g.calls.length,1);
+});
+
+test('a closed month retains the bounded fifteen-minute completed cache across the Brasília month boundary',async t=>{
+ const f=await fixture([]);t.after(()=>f.db.db.close());
+ f.clock.time=Date.UTC(2026,10,1,2,59); // Still October in Brasília.
+ const start=()=>f.run({operation:'start',start_date:'2026-10-01',end_date:'2026-10-15'}),job=await start();await f.run({operation:'step',run_id:job.run_id});
+ f.clock.time+=61000;assert.equal((await start()).run_id,job.run_id); // November locally.
+ f.clock.time+=838000;assert.equal((await start()).run_id,job.run_id);
+ f.clock.time+=2000;assert.notEqual((await start()).run_id,job.run_id);assert.equal(f.calls.length,1);
 });
 
 test('simultaneous starts share one run; a held page lease cannot trigger duplicate provider work',async()=>{

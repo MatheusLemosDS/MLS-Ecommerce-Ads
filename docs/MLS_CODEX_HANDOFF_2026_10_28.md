@@ -1,5 +1,18 @@
 # Handoff executável — MLS Commerce OS / Codex / ChatGPT — 28/10/2026
 
+Atualização operacional 30/10: o proprietário orientou entregar os próximos
+incrementos validados na versão oficial; separar ambiente apenas se necessário.
+Prévia demonstrativa PR #84 preservada. Correção isolada de cancelamentos na
+branch `fix/cancelled-daily-profit-20261030`, baseada na main `a96bb1c`;
+ver [registro atual](MLS_CANCELLED_DAILY_PROFIT_2026_10_30.md). As restrições
+comerciais e os gates de M2 continuam aplicáveis.
+
+PR #85: código `dbcfae7`, CI 41155020856 verde (2.129 Node/67 Python/Chromium).
+App e Finance oficiais publicados e conferidos byte a byte pela API Cloudflare;
+bindings/domínios/cron preservados. Atualização exclui cancelados após nova
+publicação completa e revisita o mês anterior em oportunidades ociosas. M2
+continua aberta; sessão owner real não foi executada nesta validação.
+
 ## Comece aqui
 
 Repo: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads

@@ -40,7 +40,17 @@ test('one complete canonical cohort publishes exact costs and a provisional bala
 });
 
 test('a partial refresh and a real source failure preserve the published monetary cohort until a complete replacement wins',async t=>{
- const f=await shop(t);await finish(f);const saved=await view(f),publication=await readCompletedBusinessMonth(f.env,month,{now:f.now});f.clock.time+=300000;await requestBusinessMonthRefresh(f.env,{month},{now:f.now});f.state.failIndex=168;const failed=await tick(f);assert.equal(failed.status,'ERROR');assert.ok(failed.state.summary.pending.includes('SOURCE_UNAVAILABLE'));const observed=await view(f);assert.equal(observed.display_source,'PUBLISHED');assert.equal(observed.collection.status,'RUNNING');assert.ok(observed.collection.coverage.orders<294);completeAmounts(observed.display);assert.equal(buildMonthlyFinancialSummary(observed.display).balance_cents,391833);assert.deepEqual(observed.display.source_checked_at.finance_oldest_at,saved.display.source_checked_at.finance_oldest_at);assert.deepEqual((await readCompletedBusinessMonth(f.env,month,{now:f.now})).storedPayload,publication.storedPayload);
+ const f=await shop(t);await finish(f);const saved=await view(f),publication=await readCompletedBusinessMonth(f.env,month,{now:f.now});f.clock.time+=300000;await requestBusinessMonthRefresh(f.env,{month},{now:f.now});f.state.failIndex=168;let failed,partialTicks=0;
+ for(let attempt=0;attempt<6;attempt++){
+  const result=await tick(f),observed=await view(f);
+  assert.equal(observed.display_source,'PUBLISHED');assert.equal(observed.collection.status,'RUNNING');assert.ok(observed.collection.coverage.orders<294);
+  completeAmounts(observed.display);assert.equal(buildMonthlyFinancialSummary(observed.display).balance_cents,391833);assert.equal(observed.display.source_checked_at.finance_oldest_at,saved.display.source_checked_at.finance_oldest_at);
+  assert.deepEqual((await readCompletedBusinessMonth(f.env,month,{now:f.now})).storedPayload,publication.storedPayload,'every partial or failed refresh must retain the same complete monetary publication');
+  if(result.status==='ERROR'){failed=result;break;}
+  assert.equal(result.status,'RUNNING');assert.ok(!result.state.summary.pending.includes('SOURCE_UNAVAILABLE'));partialTicks++;
+  f.clock.time=Math.max(f.clock.time+1000,result.state.next_run_at*1000);
+ }
+ assert.ok(partialTicks>=2,'the first window must be reread before reaching the failure in the second window');assert.ok(failed,'the bounded collector must reach the real source failure');assert.ok(failed.state.summary.pending.includes('SOURCE_UNAVAILABLE'));assert.ok(f.calls.payment.includes(168));
  f.state.failIndex=null;f.change.cancelLast=true;f.clock.time=failed.state.next_run_at*1000;await finish(f);const replacement=await view(f);completeAmounts(replacement.display,{production:743480,paid:241,payout:1144991,sales:1572525});assert.equal(replacement.display.coverage.cancelled,49);assert.ok(replacement.display.source_checked_at.finance_latest_at>saved.display.source_checked_at.finance_latest_at);assert.equal(buildMonthlyFinancialSummary(replacement.display).balance_cents,388672);assert.notDeepEqual((await readCompletedBusinessMonth(f.env,month,{now:f.now})).storedPayload,publication.storedPayload);const noReplay=f.sourceCounts();await view(f);await view(f);assert.deepEqual(f.sourceCounts(),noReplay);
 });
 

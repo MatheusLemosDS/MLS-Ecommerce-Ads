@@ -245,7 +245,10 @@ export async function runFinanceBusinessPeriod(env,options={}){
   const today=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date(initialTime*1000));if(input.end_date>today)throw businessFailure('REQUEST_INVALID',400);
   const nextDay=new Date(Date.parse(input.end_date+'T00:00:00Z')+86400000).toISOString().slice(0,10),timeFrom=businessMidnight(input.start_date),timeTo=Math.min(initialTime,businessMidnight(nextDay)-1);
   if(timeTo<timeFrom)throw businessFailure('REQUEST_INVALID',400);
-  const freshness=input.end_date===today?60:900;
+  // Every window in the open month still contains mutable order statuses.
+  // A window ending before today must not hide cancellations for another
+  // fifteen minutes after the App starts a fresh monthly collection.
+  const freshness=input.end_date.slice(0,7)===today.slice(0,7)?60:900;
   const recentSql="SELECT r.run_id FROM finance_business_period_runs r WHERE partner_id=? AND shop_id=? AND start_date=? AND end_date=? AND ((status='COMPLETE' AND cutoff_at>=? AND NOT EXISTS(SELECT 1 FROM finance_business_period_orders o WHERE o.run_id=r.run_id AND NOT EXISTS(SELECT 1 FROM finance_business_order_evidence e WHERE e.run_id=o.run_id AND e.order_hash=o.order_hash AND e.source_hash=o.source_hash AND e.checked_at=o.checked_at))) OR (status='RUNNING' AND cutoff_at>=?)) ORDER BY created_at DESC,run_id DESC LIMIT 1",recentArgs=[...businessIdentity,input.start_date,input.end_date,initialTime-freshness,initialTime-900];
   const recent=await storage(()=>prepare(recentSql,recentArgs).first());if(recent)return (await snapshot(recent.run_id)).frame;
   const cutoff=initialTime-30*86400;
