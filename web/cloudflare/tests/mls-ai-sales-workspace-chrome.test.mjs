@@ -1,12 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {spawn} from 'node:child_process';
-import {existsSync,mkdtempSync,readFileSync,mkdirSync,writeFileSync} from 'node:fs';
+import {existsSync,mkdtempSync,mkdirSync,writeFileSync} from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {startPreviewServer} from '../../../tools/mls_owner_preview_server.mjs';
 import {syntheticShirtPng} from '../../../tools/tests/fixtures/mls-ai-sales-media-fixture.mjs';
 import {createChromeProfileCleanup} from './chrome-profile-cleanup.mjs';
+import {waitForChromeDebugPort} from './chrome-debug-port.mjs';
 
 const executable=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium','/usr/bin/chromium-browser'].find(existsSync);
 const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
@@ -16,9 +17,15 @@ async function browser(viewport,exercise){
  const child=spawn(executable,['--headless=new','--no-sandbox','--disable-dev-shm-usage','--disable-gpu','--disable-background-networking','--disable-extensions','--remote-allow-origins=*','--remote-debugging-port=0','--user-data-dir='+profile,'about:blank'],{stdio:'ignore'}),cleanup=createChromeProfileCleanup(child,profile);
  let socket,sequence=0;const pending=new Map();
  try{
-  let port=0;for(let n=0;n<120&&!port;n++){try{port=Number(readFileSync(path.join(profile,'DevToolsActivePort'),'utf8').split('\n')[0]);}catch{}if(!port)await pause(50);}
-  assert.ok(port,'workspace Chromium debug port unavailable');
-  const pages=await(await fetch('http://127.0.0.1:'+port+'/json/list')).json();socket=new WebSocket(pages.find(page=>page.type==='page').webSocketDebuggerUrl);
+  const port=await waitForChromeDebugPort(child,profile),pageDeadline=Date.now()+10000;let page;
+  // The debug port can be ready before Chrome has created about:blank. Wait
+  // for this process's page, rather than dereferencing an empty target list.
+  while(!page&&Date.now()<pageDeadline){
+   const pages=await(await fetch('http://127.0.0.1:'+port+'/json/list')).json();
+   page=pages.find(item=>item.type==='page'&&typeof item.webSocketDebuggerUrl==='string');
+   if(!page)await pause(50);
+  }
+  assert.ok(page,'workspace Chromium page target unavailable');socket=new WebSocket(page.webSocketDebuggerUrl);
   await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('WORKSPACE_CHROME_OPEN_TIMEOUT')),10000);socket.addEventListener('open',()=>{clearTimeout(timer);resolve();},{once:true});socket.addEventListener('error',()=>{clearTimeout(timer);reject(Error('WORKSPACE_CHROME_OPEN_FAILED'));},{once:true});});
   socket.addEventListener('message',event=>{const result=JSON.parse(event.data),entry=pending.get(result.id);if(!entry)return;pending.delete(result.id);clearTimeout(entry.timer);result.error?entry.reject(Error(result.error.message)):entry.resolve(result.result);});
   const send=(method,params={})=>new Promise((resolve,reject)=>{const id=++sequence,timer=setTimeout(()=>{pending.delete(id);reject(Error('WORKSPACE_CDP_TIMEOUT:'+method));},20000);pending.set(id,{resolve,reject,timer});socket.send(JSON.stringify({id,method,params}));});

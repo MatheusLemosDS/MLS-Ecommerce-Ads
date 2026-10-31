@@ -1,3 +1,16 @@
+INCREMENTO EM VALIDAÇÃO — M2 LIBERAÇÕES POSTERIORES — 31/10/2026
+Branch feature/m2-release-tracker-20261031, base mainPR89 23b329e.
+Tracker agora ligado ao rodízio com sidecar; cursor legado quatro valores e
+payload Finance bruto mantêm rollback. GET owner sem DDL/provider.
+Setembro:24pagos/2fontesApp,0/2refsFinance,sem calendário09salvo; não inferir
+identidade a partir de totais. SOURCE_MISSING válido habilita manutenção do
+mês anterior um passo por oportunidade, mantendo publicação até novaCOMPLETE.
+UI valida escopo/datas e mostra ausência/histórico/tentativas no estilo atual.
+Conferir docs/MLS_M2_RELEASE_TRACKER_2026_10_31.md para provas de release.
+Comercial/Ads/PROMO LOCKED; M2/banco continuam abertos.
+
+REGISTROS HISTÓRICOS — NÃO SUBSTITUEM O INCREMENTO ACIMA
+
 HANDOFF ATUAL — LIVE PR89 — 31/10/2026
 Branch feature/agent-learning-performance-20261031, base mainPR88 8bb9718.
 Código8fb15b2, CI41206928254 GREEN2536Node/67Python/Chromium.

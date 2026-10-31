@@ -1,5 +1,7 @@
 # Roadmap canônico — MLS Commerce OS
 
+**Incremento M2 em validação — 31/10/2026:** ligar o acompanhamento de liberações posteriores à fila e recuperar referências expiradas do mês anterior apenas com SOURCE_MISSING comprovado, preservando a publicação. [Registro](MLS_M2_RELEASE_TRACKER_2026_10_31.md).
+
 **Release PR89 publicada — 31/10/2026:** memória dos agentes gravada automaticamente e usada nos detalhes das análises Hermes, ROAS diário real e indicadores com datas no visual aprovado. App `66e9c01f`, CI41206928254 verde2.536Node/67Python/Chromium; configuração e Auth/Finance preservados. Primeiro corte natural conferido:publicação14306,3intervalos/23páginas,zero erro. Memória descritiva não comprova eficácia de uma recomendação nem lucro bancário. [Registro](MLS_AGENT_MEMORY_PERFORMANCE_2026_10_31.md).
 
 **Pedido do proprietário — 31/10/2026:** agentes devem melhorar com informações da operação, executar rotinas conhecidas dentro dos limites existentes e apresentar relatórios, solicitando confirmação para ações novas ou arriscadas. Incremento em validação: memória factual com correções/recorrências, ROAS diário de Ads e indicadores visuais no estilo aprovado. Não habilita execução comercial ou treino automático do modelo. [Registro](MLS_AGENT_MEMORY_PERFORMANCE_2026_10_31.md).

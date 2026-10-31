@@ -1021,5 +1021,19 @@
     "record": "docs/MLS_AGENT_MEMORY_PERFORMANCE_2026_10_31.md",
     "rollback_app_version": "c00861cf-68ad-4719-b213-008d7f902069",
     "next_learning_stage": "Link authorized recommendation, execution and later comparable outcome before claiming effectiveness"
+  },
+  "release_tracker_2026_10_31": {
+    "status": "VALIDATING",
+    "branch": "feature/m2-release-tracker-20261031",
+    "base_main": "23b329efcb311e141366b54c4b400061f38c9301",
+    "record": "docs/MLS_M2_RELEASE_TRACKER_2026_10_31.md",
+    "features": [
+      "bounded_coverage_turn_with_legacy_cursor_sidecar",
+      "strict_publication_cas_readonly_owner_get",
+      "previous_month_source_missing_recovery_one_step",
+      "observed_calendar_and_attempt_ui"
+    ],
+    "commercial_writes_allowed": false,
+    "bank_settlement_verified": false
   }
 }

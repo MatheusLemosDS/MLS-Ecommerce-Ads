@@ -1,3 +1,5 @@
+> **Incremento em validação — 31/10/2026:** branch `feature/m2-release-tracker-20261031`, base mainPR89 `23b329e`. Acompanhamento automático de liberações posteriores e recuperação limitada das referências expiradas do mês anterior; documentação [registro](MLS_M2_RELEASE_TRACKER_2026_10_31.md). Cursor/payload compatíveis com rollback; uma leitura privada por oportunidade; nenhum fechamento bancário ou permissão comercial é inferido. Aguardar CI/bytes/prova natural antes de declarar Live.
+
 > **Estado atual — 31/10/2026:** PR89 publicada no App `66e9c01f`, base mainPR88 `8bb9718`. CI41206928254 verde:2.536Node/67Python/Chromium; memória agregada, recorrências no contexto real do Hermes, ROAS diário e setas com datas, mantendo o estilo aprovado. Bytes/config/Auth/Finance preservados. Cron natural salvou primeiro corte da publicação14306,3intervalos/23páginas,zero erro. [Registro](MLS_AGENT_MEMORY_PERFORMANCE_2026_10_31.md). Memória não treina pesos nem concede permissões; M2 e avaliação de eficácia permanecem abertas.
 
 # Handoff atual — melhorias na versão Live, 30/10/2026

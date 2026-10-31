@@ -3,6 +3,49 @@ import {projectBusinessEscrowReleases,projectBusinessEscrowReleaseEvidence} from
 import {projectBusinessEscrowReleaseCoverage} from './business-escrow-release-coverage.mjs';
 import {projectBusinessMonthAuditScope} from './business-month-view-state.mjs';
 
+// Aggregate presentation only. This function is frozen into the browser; all
+// validators are supplied explicitly so it cannot capture server-only state.
+export function projectMlsReleaseCoverageFollowup(value,selection,projectCoverage,projectFrame){
+ const plain=v=>v!==null&&typeof v==='object'&&[Object.prototype,null].includes(Object.getPrototypeOf(v));
+ const exact=(v,keys)=>plain(v)&&Reflect.ownKeys(v).length===keys.length&&keys.every(k=>Object.hasOwn(Object.getOwnPropertyDescriptor(v,k)||{},'value'));
+ const integer=(v,min=0,max=Number.MAX_SAFE_INTEGER)=>Number.isSafeInteger(v)&&!Object.is(v,-0)&&v>=min&&v<=max;
+ const month=v=>typeof v==='string'&&/^\d{4}-(0[1-9]|1[0-2])$/.test(v)&&v>='2000-01';
+ const day=v=>typeof v==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(v)&&Number.isFinite(Date.parse(v+'T00:00:00Z'))&&new Date(v+'T00:00:00Z').toISOString().slice(0,10)===v;
+ const uuid=v=>typeof v==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(v);
+ const waiting=reason=>{let selected=null;try{const descriptor=Object.getOwnPropertyDescriptor(selection??{},'month');if(descriptor&&Object.hasOwn(descriptor,'value')&&month(descriptor.value))selected=descriptor.value;}catch{}return {schema:'mls_release_coverage_followup_v1',state:'WAITING',reason,scope_compatible:false,month:selected,period:null,through_month:null,checked_at:null,attempt:null,coverage:null,calendars:[]};};
+ try{
+  if(!exact(selection,['month','scope','currentMonth','cohortSources','checkedAt'])||!integer(selection.checkedAt,1,9999999999)||!month(selection.month)||!month(selection.currentMonth)||selection.month>selection.currentMonth)return waiting('SELECTION_INVALID');
+  if(selection.month===selection.currentMonth)return {...waiting('CURRENT_MONTH'),state:'CURRENT_MONTH'};
+  const scope=selection.scope;
+  if(!exact(scope,['publication_revision','start_date','end_date','sources'])||!integer(scope.publication_revision,1,2147483647)||scope.start_date!==selection.month+'-01'||!day(scope.end_date)||scope.end_date.slice(0,7)!==selection.month||!Array.isArray(scope.sources)||scope.sources.length!==Math.ceil(Number(scope.end_date.slice(8))/15)||!Array.isArray(selection.cohortSources)||selection.cohortSources.length!==scope.sources.length)return waiting('PUBLICATION_SCOPE_REQUIRED');
+  const expected=new Map(),published=new Map();
+  for(const [index,source] of scope.sources.entries()){
+   if(!exact(source,['run_id','source_revision','start_date','end_date'])||!uuid(source.run_id)||expected.has(source.run_id)||!integer(source.source_revision,1,2147483647)||source.start_date!==selection.month+'-'+String(index*15+1).padStart(2,'0')||source.end_date!==selection.month+'-'+String(Math.min(index*15+15,Number(scope.end_date.slice(8)))).padStart(2,'0'))return waiting('PUBLICATION_SCOPE_REQUIRED');
+   expected.set(source.run_id,source);
+  }
+  for(const source of selection.cohortSources){
+   const ref=expected.get(source?.run_id);
+   if(!ref||published.has(source.run_id)||source.source_revision!==ref.source_revision||source.start_date!==ref.start_date||source.end_date!==ref.end_date||!integer(source.orders,0,1000)||!integer(source.paid_orders,0,source.orders)||source.expected_repass_cents!==null&&!integer(source.expected_repass_cents,Number.MIN_SAFE_INTEGER)||(source.finance_oldest_at===null)!==(source.finance_latest_at===null)||source.orders>0&&source.finance_oldest_at===null||source.finance_oldest_at!==null&&(!integer(source.finance_oldest_at,1,selection.checkedAt+60)||!integer(source.finance_latest_at,source.finance_oldest_at,selection.checkedAt+60)))return waiting('PUBLICATION_SCOPE_REQUIRED');
+   published.set(source.run_id,source);
+  }
+  if(typeof projectCoverage!=='function'||typeof projectFrame!=='function')return waiting('VALIDATOR_REQUIRED');
+  const observed=projectCoverage(value,projectFrame);
+  if(!observed||observed.cohort_month!==selection.month||observed.checked_at>selection.checkedAt+60)return waiting('SAVED_EVIDENCE_NOT_LOADED');
+  if(!observed.report)return {...waiting(observed.status==='UNAVAILABLE'?'SOURCE_UNAVAILABLE':'AWAITING_AUTOMATIC_CHECK'),attempt:observed.attempt?{...observed.attempt}:null};
+  const report=observed.report;
+  if(report.cohort_month!==selection.month||report.through_month>selection.currentMonth||report.sources.length!==expected.size)return waiting('PUBLICATION_MISMATCH');
+  const seen=new Set();
+  for(const source of report.sources){
+   const ref=expected.get(source.run_id),saved=published.get(source.run_id);
+   if(!ref||seen.has(source.run_id)||source.source_revision!==ref.source_revision)return waiting('PUBLICATION_MISMATCH');
+   if(source.status==='AVAILABLE'&&(source.start_date!==ref.start_date||source.end_date!==ref.end_date||source.orders!==saved.orders||source.paid_orders!==saved.paid_orders||source.expected_repass_cents!==saved.expected_repass_cents||saved.orders>0&&(source.finance_oldest_at!==saved.finance_oldest_at||source.finance_latest_at!==saved.finance_latest_at)))return waiting('PUBLICATION_MISMATCH');
+   seen.add(source.run_id);
+  }
+  const historical=report.through_month<selection.currentMonth;
+  return {schema:'mls_release_coverage_followup_v1',state:historical?'HISTORICAL':observed.status==='PARTIAL_UNAVAILABLE'?'RETRY_WAIT':'CURRENT',reason:historical?'LATER_CALENDAR_PENDING':observed.status==='PARTIAL_UNAVAILABLE'?'SOURCE_REFRESH_FAILED':null,scope_compatible:true,month:selection.month,period:{start_date:scope.start_date,end_date:scope.end_date},through_month:report.through_month,checked_at:report.checked_at,attempt:observed.attempt?{...observed.attempt}:null,coverage:{...report.coverage},calendars:report.calendars.map(row=>({...row}))};
+ }catch{return waiting('INVALID_EVIDENCE');}
+}
+
 export const ESCROW_RELEASES_CSS=String.raw`
 .escrow-releases{margin-top:18px;border:1px solid var(--line);border-radius:12px;background:var(--surface);min-width:0}
 .escrow-releases>details>summary{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px;cursor:pointer;list-style:none}
@@ -17,6 +60,7 @@ export const ESCROW_RELEASES_CSS=String.raw`
 .escrow-releases-notice{padding:11px 12px;border-radius:8px;background:var(--surface-raised);font-size:11px;color:var(--muted);line-height:1.75}
 .escrow-order-detail{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}.escrow-order-detail>h4{font-size:13px;margin:0 0 6px}.escrow-order-detail>p{font-size:11px;color:var(--muted);line-height:1.7}.escrow-order-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:12px 0}.escrow-order-summary article{padding:11px;border:1px solid var(--line);border-radius:9px;min-width:0}.escrow-order-summary small,.escrow-order-summary span{display:block;font-size:9px;color:var(--muted);line-height:1.55}.escrow-order-summary strong{display:block;margin:5px 0;font-size:15px;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}.escrow-order-list{display:grid;gap:9px;margin-top:12px}.escrow-order-card{padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);min-width:0}.escrow-order-card[data-state=AMBIGUOUS],.escrow-order-card[data-state=LOCATED_UNVERIFIED]{border-left:3px solid #d29a25}.escrow-order-card[data-state=NOT_LOCATED]{border-left:3px solid var(--muted)}.escrow-order-card[data-state=VERIFIED]{border-left:3px solid var(--positive,#17845c)}.escrow-order-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}.escrow-order-head strong{font-size:11px;overflow-wrap:anywhere}.escrow-order-head span{font-size:9px;color:var(--muted)}.escrow-order-values{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:10px 0}.escrow-order-values div{min-width:0}.escrow-order-values small,.escrow-order-values span{display:block;font-size:9px;color:var(--muted);line-height:1.5}.escrow-order-values b{display:block;font-size:11px;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}.escrow-order-return{margin:8px 0 0;font-size:10px;line-height:1.65;color:var(--muted)}.escrow-order-warning{margin-top:10px;padding:9px 10px;border-radius:8px;background:var(--surface-raised);font-size:10px;line-height:1.65;color:var(--muted)}
 .escrow-release-coverage{margin-top:16px;padding:14px;border:1px solid var(--line);border-radius:10px;background:var(--surface-raised)}.escrow-release-coverage h4{margin:0 0 6px;font-size:13px}.escrow-release-coverage p{margin:5px 0;font-size:10px;line-height:1.7;color:var(--muted)}.escrow-release-coverage-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:10px}.escrow-release-coverage-grid div{min-width:0;padding:9px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}.escrow-release-coverage-grid small,.escrow-release-coverage-grid strong{display:block}.escrow-release-coverage-grid small{font-size:9px;color:var(--muted);line-height:1.45}.escrow-release-coverage-grid strong{margin-top:4px;font-size:12px;overflow-wrap:anywhere}.escrow-release-calendar-list{margin:10px 0 0;padding-left:18px}.escrow-release-calendar-list li{font-size:10px;line-height:1.65;color:var(--muted)}
+.escrow-release-coverage-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}.escrow-release-coverage-head button{min-height:44px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--text);font-size:10px;font-weight:700;cursor:pointer}.escrow-release-coverage-head button:focus-visible{outline:3px solid var(--accent);outline-offset:3px}.escrow-release-coverage[data-state=HISTORICAL],.escrow-release-coverage[data-state=RETRY_WAIT]{border-color:var(--warning,#d29a25)}.escrow-release-coverage-attempt{padding-top:8px;border-top:1px solid var(--line)}
 .escrow-releases [hidden]{display:none!important}.escrow-releases summary:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
 @media(max-width:640px){.escrow-releases-metrics{grid-template-columns:minmax(0,1fr)}.escrow-releases>details>summary{align-items:flex-start;gap:10px}.escrow-releases-badge{max-width:105px}.escrow-order-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.escrow-order-values{grid-template-columns:repeat(2,minmax(0,1fr))}.escrow-release-coverage-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 `;
@@ -33,14 +77,15 @@ export const ESCROW_RELEASES_CLIENT=String.raw`
  ${projectBusinessEscrowReleases.toString()}
  ${projectBusinessEscrowReleaseEvidence.toString()}
  ${projectBusinessEscrowReleaseCoverage.toString()}
+ ${projectMlsReleaseCoverageFollowup.toString()}
  ${projectBusinessMonthAuditScope.toString()}
  const el=name=>document.getElementById('businessEscrowReleases'+name);
  const node=(tag,text,cls)=>{const result=document.createElement(tag);if(text!==undefined)result.textContent=text;if(cls)result.className=cls;return result;};
  const money=value=>{if(!Number.isSafeInteger(value))return 'Não informado';const cents=BigInt(value),absolute=cents<0n?-cents:cents,fraction=String(absolute%100n).padStart(2,'0');const text=new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).formatToParts(absolute/100n).map(part=>part.type==='fraction'?fraction:part.value).join('');return (cents<0n?'-':'')+text;};
  const time=value=>Number.isSafeInteger(value)&&value>0?new Intl.DateTimeFormat('pt-BR',{dateStyle:'short',timeStyle:'short',timeZone:'America/Sao_Paulo'}).format(new Date(value*1000)):'Não consultado';
  const day=value=>typeof value==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(value)?value.slice(8)+'/'+value.slice(5,7)+'/'+value.slice(0,4):'—';
- let api=null,started=false,month='',scopeKey='',generation=0,pending=null,value=null,orders=null,coverage=null;
- const cache=new Map(),attempted=new Map();
+ let api=null,started=false,month='',scopeKey='',generation=0,pending=null,value=null,orders=null,coverage=null,coveragePending=null,coverageFailed=false,coverageDetails=null;
+ const cache=new Map(),attempted=new Map(),coverageAttempted=new Map();
  function validMonth(selected){try{return typeof selected==='string'&&/^\d{4}-(0[1-9]|1[0-2])$/.test(selected)&&selected>='2000-01'&&selected<=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date()).slice(0,7);}catch{return false;}}
  function showMessage(text,badge='Em conferência'){if(el('Status'))el('Status').textContent=text;if(el('Badge'))el('Badge').textContent=badge;}
  function render(){
@@ -91,17 +136,57 @@ export const ESCROW_RELEASES_CLIENT=String.raw`
   if(notes.length){notice.hidden=false;notice.textContent=notes.join(' ');}
  }
  function currentMonth(){try{return new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date()).slice(0,7);}catch{return '';}}
+ function coveragePresentation(){
+  let scope=null;try{scope=JSON.parse(scopeKey);}catch{}
+  return projectMlsReleaseCoverageFollowup(coverage,{month,scope,currentMonth:currentMonth(),cohortSources:value?.cohort?.sources??null,checkedAt:Math.floor(Date.now()/1000)},projectBusinessEscrowReleaseCoverage,projectEscrowReleaseCoverageFrame);
+ }
  function renderCoverage(target){
-  target.append(node('h4','Cobertura temporal das liberações'));
-  if(!month){target.append(node('p','Selecione um mês para acompanhar a coorte de pedidos pagos nos calendários posteriores.'));return;}
-  if(month>=currentMonth()){target.append(node('p','Este ainda é o mês corrente. O acompanhamento em calendários posteriores começa automaticamente após a virada do mês; a conferência acima continua usando o corte atual.'));return;}
-  if(!coverage?.report){target.append(node('p',coverage?.status==='UNAVAILABLE'?'O acompanhamento temporal ainda não pôde ser atualizado. O cron tentará novamente sem consultar a Shopee por esta tela.':'Aguardando o tracker automático cruzar esta coorte com os calendários salvos dos meses seguintes.'));return;}
-  const report=coverage.report,summary=report.coverage,grid=node('div',undefined,'escrow-release-coverage-grid'),cell=(label,value)=>{const box=node('div');box.append(node('small',label),node('strong',value));grid.append(box);};
-  cell('Calendários conferidos',summary.calendars_complete+' de '+summary.calendars_total);cell('Pedidos localizados',summary.paid_orders===null?String(summary.located_orders):summary.located_orders+' de '+summary.paid_orders);cell('Ainda não localizados',summary.not_located_orders===null?'Coorte incompleta':String(summary.not_located_orders));cell('Identidade ambígua',String(summary.ambiguous_orders));target.append(grid);
-  const through=report.through_month.slice(5)+'/'+report.through_month.slice(0,4);
-  target.append(node('p',summary.identity_complete_at_cutoff?'Todos os pedidos pagos conhecidos aparecem exatamente uma vez nos calendários salvos até '+through+'. Isso prova somente cobertura de identidade no corte; não prova que o ciclo de liberação terminou nem que houve depósito bancário.':'A cobertura ainda está incompleta até '+through+'. Um pedido sem ocorrência significa apenas que ele não apareceu nos calendários salvos acompanhados.'));
-  const list=node('ul',undefined,'escrow-release-calendar-list'),labels={COMPLETE:'conferido no corte salvo',PARTIAL:'consulta parcial',MISSING:'calendário ainda sem snapshot completo'};for(const item of report.calendars)list.append(node('li',item.month.slice(5)+'/'+item.month.slice(0,4)+' · '+labels[item.status]+(item.cohort_observations?' · '+item.cohort_observations+' ocorrência(s) da coorte':'')));target.append(list);
-  target.append(node('p','Mesmo com identidade completa, “valor ainda a liberar” e lucro realizado permanecem indisponíveis enquanto a semântica do ciclo e a liquidação não forem comprovadas.'));
+  const head=node('div',undefined,'escrow-release-coverage-head');head.append(node('h4','Acompanhamento automático dos repasses'));
+  if(month&&month<currentMonth()){
+   const refresh=node('button','Conferir acompanhamento');refresh.type='button';refresh.disabled=coveragePending!==null||!value?.cohort||!scopeKey;refresh.onclick=()=>loadCoverage({force:true});head.append(refresh);
+  }
+  target.append(head);
+  if(!month){target.append(node('p','Selecione um mês para acompanhar os mesmos pedidos pagos nos calendários posteriores.'));return;}
+  const followup=coveragePresentation();target.dataset.state=followup.state;
+  if(followup.state==='CURRENT_MONTH'){target.append(node('p','Este ainda é o mês corrente. O acompanhamento dos repasses em meses posteriores começa após a virada do mês; a conferência acima continua usando o corte atual.'));return;}
+  const attempt=followup.attempt;
+  if(coveragePending)target.append(node('p','Conferindo o acompanhamento já salvo pelo servidor…'));
+  if(!followup.coverage){
+   const message=followup.reason==='PUBLICATION_MISMATCH'?'A publicação dos pedidos mudou. Aguardando o acompanhamento automático conferir exatamente este recorte.':followup.reason==='SOURCE_UNAVAILABLE'?'O acompanhamento ainda não pôde ser atualizado. O servidor tentará novamente no horário agendado.':'Aguardando a rotina automática cruzar estes pedidos com os calendários de liberação salvos dos meses seguintes.';
+   target.append(node('p',message));
+  }else{
+   const summary=followup.coverage,grid=node('div',undefined,'escrow-release-coverage-grid'),cell=(label,value)=>{const box=node('div');box.append(node('small',label),node('strong',value));grid.append(box);};
+   target.append(node('p','Pedidos criados de '+day(followup.period.start_date)+' a '+day(followup.period.end_date)+'. Último cruzamento salvo: '+time(followup.checked_at)+'.'));
+   if(followup.state==='HISTORICAL')target.append(node('p','Este é um corte histórico até '+followup.through_month.slice(5)+'/'+followup.through_month.slice(0,4)+'. O calendário de '+currentMonth().slice(5)+'/'+currentMonth().slice(0,4)+' ainda precisa entrar no acompanhamento.'));
+   else if(followup.state==='RETRY_WAIT')target.append(node('p','Mostrando o último cruzamento válido. A tentativa mais recente não pôde atualizar a fonte; as datas originais foram preservadas.'));
+   cell('Calendários conferidos',summary.calendars_complete+' de '+summary.calendars_total);cell('Pedidos localizados',summary.paid_orders===null?String(summary.located_orders)+' conhecidos':summary.located_orders+' de '+summary.paid_orders);cell('Ainda não localizados',summary.not_located_orders===null?'Coorte incompleta':String(summary.not_located_orders));cell('Identidade ambígua',String(summary.ambiguous_orders));target.append(grid);
+   const through=followup.through_month.slice(5)+'/'+followup.through_month.slice(0,4);
+   target.append(node('p',summary.identity_complete_at_cutoff?'No corte salvo até '+through+', todos os pedidos pagos conhecidos aparecem exatamente uma vez. Isso confirma somente a identidade nesse recorte; o ciclo de liberação e o recebimento bancário continuam em conferência.':'A cobertura do corte salvo até '+through+' ainda está incompleta. Um pedido sem ocorrência significa apenas que não apareceu nos calendários salvos acompanhados.'));
+   const list=node('ul',undefined,'escrow-release-calendar-list'),labels={COMPLETE:'conferido no corte salvo',PARTIAL:'consulta parcial',MISSING:'calendário ainda sem snapshot completo'};
+   for(const item of followup.calendars)list.append(node('li',item.month.slice(5)+'/'+item.month.slice(0,4)+' · '+labels[item.status]+(item.cohort_observations?' · '+item.cohort_observations+' ocorrência(s) dos pedidos acompanhados':'')));
+   target.append(list);
+  }
+  if(attempt)target.append(node('p','Última tentativa automática: '+time(attempt.checked_at)+' · '+(attempt.status==='SUCCESS'?'cruzamento salvo':'fonte indisponível')+'. Próxima conferência programada: '+time(attempt.next_attempt_at)+'. O horário é uma previsão; a fila respeita pausas e tarefas em andamento.','escrow-release-coverage-attempt'));
+  if(coverageFailed)target.append(node('p','Não foi possível conferir o acompanhamento salvo agora. Use Conferir acompanhamento para tentar novamente; as datas e evidências anteriores foram preservadas.'));
+  target.append(node('p','A rotina funciona em segundo plano. Abrir esta seção apenas lê os registros salvos. Valores a receber, valores não informados e lucro realizado não são deduzidos dessas contagens.'));
+ }
+ function loadCoverage({force=false}={}){
+  if(!started||!month||month>=currentMonth()||!value?.cohort||!scopeKey||document.hidden||!el('Details')?.open)return Promise.resolve(false);
+  const selected=month,selectedScopeKey=scopeKey,selectedThrough=currentMonth(),key=selected+'|'+selectedScopeKey+'|'+selectedThrough;
+  if(coveragePending?.key===key)return coveragePending.task;
+  const stamp=Date.now(),last=coverageAttempted.get(key);if(!force&&last!==undefined&&stamp>=last&&stamp-last<60000)return Promise.resolve(coverage!==null);
+  coverageAttempted.set(key,stamp);while(coverageAttempted.size>12)coverageAttempted.delete(coverageAttempted.keys().next().value);
+  const token=generation,current=()=>started&&generation===token&&month===selected&&scopeKey===selectedScopeKey&&currentMonth()===selectedThrough;
+  const task=(async()=>{
+   await Promise.resolve();
+   try{
+    const raw=await api('finance/escrow-release-coverage?month='+encodeURIComponent(selected));if(!current())return false;
+    const checked=projectBusinessEscrowReleaseCoverage(raw,projectEscrowReleaseCoverageFrame);if(!checked||checked.cohort_month!==selected)throw Error('INVALID_COVERAGE');
+    coverage=checked;coverageFailed=false;const saved=cache.get(selected);if(saved?.scopeKey===selectedScopeKey)saved.coverage=coverage;render();return coveragePresentation().scope_compatible;
+   }catch{if(current()){coverageFailed=true;render();}return false;}
+   finally{if(coveragePending?.task===task){coveragePending=null;if(started)render();}}
+  })();
+  coveragePending={key,task};render();return task;
  }
  function reconciliationIndex(){
   let snapshot=null;try{snapshot=globalThis.brazaReconciliation?.getSnapshot?.()??null;}catch{}if(!snapshot||snapshot.month!==month||snapshot.scope_key!==scopeKey)return null;
@@ -144,7 +229,7 @@ export const ESCROW_RELEASES_CLIENT=String.raw`
   const projectedScope=projectBusinessMonthAuditScope(selectedScope),scope=projectedScope?.start_date===selected+'-01'?projectedScope:null,selectedScopeKey=scope===null?'':JSON.stringify(scope);
   const changedMonth=selected!==month,changedScope=selectedScopeKey!==scopeKey;
   if(changedMonth||changedScope){
-   generation++;month=selected;scopeKey=selectedScopeKey;pending=null;
+   generation++;month=selected;scopeKey=selectedScopeKey;pending=null;coveragePending=null;coverageFailed=false;
    const saved=cache.get(selected),reuse=changedMonth&&saved?.scopeKey===selectedScopeKey;
    value=reuse?saved.value:null;orders=reuse?saved.orders:null;coverage=reuse?saved.coverage:null;
    if(!reuse){cache.delete(selected);attempted.delete(selected);}
@@ -153,19 +238,27 @@ export const ESCROW_RELEASES_CLIENT=String.raw`
   if(scope===null){value=null;orders=null;coverage=null;render();showMessage('Aguardando um resumo publicado para conferir os mesmos pedidos.','Aguardando resumo');return Promise.resolve(false);}
   if(document.hidden)return Promise.resolve(false);
   if(pending?.month===selected&&pending.scopeKey===selectedScopeKey)return pending.task;
-  const stamp=Date.now(),last=attempted.get(selected);if(last?.scopeKey===selectedScopeKey&&stamp>=last.at&&stamp-last.at<60000)return Promise.resolve(value!==null);
+  const stamp=Date.now(),last=attempted.get(selected);if(last?.scopeKey===selectedScopeKey&&stamp>=last.at&&stamp-last.at<60000){if(value?.cohort&&el('Details')?.open){const selectedGeneration=generation;return loadCoverage().then(()=>started&&generation===selectedGeneration&&month===selected&&scopeKey===selectedScopeKey&&value!==null);}return Promise.resolve(value!==null);}
   attempted.set(selected,{scopeKey:selectedScopeKey,at:stamp});while(attempted.size>12){const first=attempted.keys().next().value;attempted.delete(first);cache.delete(first);}const token=generation,current=()=>started&&generation===token&&month===selected&&scopeKey===selectedScopeKey;
   const task=(async()=>{
    await Promise.resolve();
-   try{const raw=await api('finance/escrow-releases?month='+encodeURIComponent(selected)+'&evidence=orders-v1'),evidence=projectBusinessEscrowReleaseEvidence(raw,{projectBusiness:projectBusinessEscrowReleases,projectFrame:projectEscrowReleaseFrame,projectEvidenceFrame:projectEscrowReleaseEvidenceFrame}),checked=evidence?.report??projectBusinessEscrowReleases(raw,projectEscrowReleaseFrame);if(!current())return false;if(!checked||checked.month!==selected)throw Error('INVALID_RECONCILIATION');const receivedScope=projectBusinessMonthAuditScope(checked.cohort===null?null:{publication_revision:checked.cohort.publication_revision,start_date:checked.cohort.start_date,end_date:checked.cohort.end_date,sources:checked.cohort.sources.map(({run_id,source_revision,start_date,end_date})=>({run_id,source_revision,start_date,end_date}))});if(receivedScope===null||JSON.stringify(receivedScope)!==selectedScopeKey)throw Error('RECONCILIATION_SCOPE_MISMATCH');value=checked;orders=evidence?.orders??null;coverage=null;if(selected<currentMonth()){try{const coverageRaw=await api('finance/escrow-release-coverage?month='+encodeURIComponent(selected));if(current())coverage=projectBusinessEscrowReleaseCoverage(coverageRaw,projectEscrowReleaseCoverageFrame);}catch{coverage=null;}}if(!current())return false;cache.set(selected,{scopeKey:selectedScopeKey,value:checked,orders,coverage});while(cache.size>12){const first=cache.keys().next().value;cache.delete(first);attempted.delete(first);}render();try{globalThis.mlsAgentRegistry?.refresh?.();}catch{}return true;}
+   try{const raw=await api('finance/escrow-releases?month='+encodeURIComponent(selected)+'&evidence=orders-v1'),evidence=projectBusinessEscrowReleaseEvidence(raw,{projectBusiness:projectBusinessEscrowReleases,projectFrame:projectEscrowReleaseFrame,projectEvidenceFrame:projectEscrowReleaseEvidenceFrame}),checked=evidence?.report??projectBusinessEscrowReleases(raw,projectEscrowReleaseFrame);if(!current())return false;if(!checked||checked.month!==selected)throw Error('INVALID_RECONCILIATION');const receivedScope=projectBusinessMonthAuditScope(checked.cohort===null?null:{publication_revision:checked.cohort.publication_revision,start_date:checked.cohort.start_date,end_date:checked.cohort.end_date,sources:checked.cohort.sources.map(({run_id,source_revision,start_date,end_date})=>({run_id,source_revision,start_date,end_date}))});if(receivedScope===null||JSON.stringify(receivedScope)!==selectedScopeKey)throw Error('RECONCILIATION_SCOPE_MISMATCH');value=checked;orders=evidence?.orders??null;if(selected<currentMonth()&&el('Details')?.open)await loadCoverage();if(!current())return false;cache.set(selected,{scopeKey:selectedScopeKey,value:checked,orders,coverage});while(cache.size>12){const first=cache.keys().next().value;cache.delete(first);attempted.delete(first);}render();try{globalThis.mlsAgentRegistry?.refresh?.();}catch{}return true;}
    catch{if(current())showMessage(value?'Não foi possível atualizar as liberações agora. Os valores conferidos e suas datas foram preservados.':'As liberações ainda não puderam ser carregadas. A coleta do servidor continua e tentaremos novamente.','Em conferência');return false;}
    finally{if(current()&&pending?.task===task)pending=null;}
   })();
   pending={month:selected,scopeKey:selectedScopeKey,task};return task;
  }
- function snapshot(){return started&&value?{schema:'mls_escrow_releases_snapshot_v1',month,scope_key:scopeKey,report:value,orders,coverage}:null;}
- function start(options){if(!el('')||typeof options?.api!=='function')return false;if(started&&api===options.api)return true;generation++;api=options.api;started=true;month='';scopeKey='';pending=null;value=null;orders=null;coverage=null;cache.clear();attempted.clear();render();showMessage('Aguardando a consulta salva do mês.');return true;}
- function stop(){started=false;generation++;api=null;pending=null;orders=null;coverage=null;}
- globalThis.brazaEscrowReleases={start,observe,stop,getSnapshot:snapshot,refreshJoin:render};
+ function snapshot(){return started&&value?{schema:'mls_escrow_releases_snapshot_v1',month,scope_key:scopeKey,report:value,orders,coverage:coveragePresentation().scope_compatible?coverage:null}:null;}
+ function onCoverageToggle(){if(coverageDetails?.open)void loadCoverage();}
+ function start(options){if(!el('')||typeof options?.api!=='function')return false;if(started&&api===options.api)return true;generation++;api=options.api;started=true;month='';scopeKey='';pending=null;value=null;orders=null;coverage=null;coveragePending=null;coverageFailed=false;cache.clear();attempted.clear();coverageAttempted.clear();
+  // This module is embedded alongside other financial panels. Bind only after
+  // its own DOM exists, and keep one stable handler across stop/start cycles.
+  const details=el('Details');if(details!==coverageDetails){
+   if(typeof coverageDetails?.removeEventListener==='function')coverageDetails.removeEventListener('toggle',onCoverageToggle);
+   coverageDetails=details;if(typeof details?.addEventListener==='function')details.addEventListener('toggle',onCoverageToggle);
+  }
+  render();showMessage('Aguardando a consulta salva do mês.');return true;}
+ function stop(){started=false;generation++;api=null;pending=null;orders=null;coverage=null;coveragePending=null;coverageFailed=false;coverageAttempted.clear();}
+ globalThis.brazaEscrowReleases={start,observe,stop,getSnapshot:snapshot,refreshJoin:render,refreshCoverage:()=>loadCoverage({force:true})};
 })();
 `;

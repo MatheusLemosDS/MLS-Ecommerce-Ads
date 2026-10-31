@@ -62,7 +62,7 @@ export async function runBackgroundHistoryWork(env,services,{month,lease},{now=(
  const started=clock(now),db=database(env),reserved=lease?.reserved_returns===true;
  if(!lease||lease.lane!=='HISTORY'||typeof lease.token!=='string'||!integer(lease.revision,1,2147483646)||!['COST','AUDIT'].includes(lease.history_turn)||typeof month!=='string'||!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)||![readCandidates,runCost,runAudits,runReturns].every(v=>typeof v==='function'))fail('BACKGROUND_HISTORY_REQUEST_INVALID',400);
  let sourceReads=0,auditReads=0;
- const result={history:'DEFERRED',reconciliation:'DEFERRED',releases:'DEFERRED',income:'DEFERRED',income_detail:'DEFERRED',source_reads:0,audit_source_reads:0,repeatHistory:false,historyNextWork:null};
+ const result={history:'DEFERRED',reconciliation:'DEFERRED',releases:'DEFERRED',income:'DEFERRED',income_detail:'DEFERRED',release_coverage:'DEFERRED',source_reads:0,audit_source_reads:0,repeatHistory:false,historyNextWork:null};
  const canRun=async()=>{
   const stamp=clock(now);if(stamp<started||stamp>=started+240)return false;
   const row=await db.prepare('SELECT revision,lease_token,lease_until,(SELECT enabled FROM business_sync_state WHERE id=1) AS enabled FROM background_collection_lane_state WHERE id=1').first();
@@ -76,9 +76,9 @@ export async function runBackgroundHistoryWork(env,services,{month,lease},{now=(
  };
  const finish=()=>({...result,source_reads:sourceReads,audit_source_reads:auditReads});
  const audit=async()=>{
-  const sources=Object.fromEntries(['getFinanceReconciliation','getFinanceEscrowReleases','getFinanceIncomeOverview','getFinanceIncomeDetail'].map(name=>[name,bounded(name)]));
+  const sources=Object.fromEntries(['getFinanceReconciliation','getFinanceEscrowReleases','getFinanceEscrowReleaseCoverage','getFinanceIncomeOverview','getFinanceIncomeDetail'].map(name=>[name,bounded(name)]));
   const work=await runAudits(env,sources,{month},{now,canRun});
-  result.reconciliation=work.returns_status;result.releases=work.releases_status;result.income=work.income_status;result.income_detail=work.income_detail_status;
+  result.reconciliation=work.returns_status;result.releases=work.releases_status;result.income=work.income_status;result.income_detail=work.income_detail_status;result.release_coverage=work.coverage_status??'DEFERRED';
   // A cost continuation may hold one HISTORY slot for the next audit turn.
   // The audit itself always releases that hold so other auxiliary lanes run.
   result.repeatHistory=false;
