@@ -1,6 +1,16 @@
+Prévia de homologação na PR DRAFT #84: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/84 · implementação 1574f9e · 2.327 Node/67 Python aprovados, App/Auth/Finance inalterados. Conferir CI do HEAD; acesso seguro à Cloudflare é a dependência para homologação online.
+
+Homologação local — 30/10/2026: branch `feature/mls-owner-homologation-preview-20261030`, baseada na PR #83. Servidor Worker/SQLite real com dados sintéticos e exportação HTML interativa; sem alteração do App/Auth/Finance. Consultar `docs/MLS_OWNER_PREVIEW_CHECKPOINT.json` e `docs/MLS_OWNER_HOMOLOGATION_2026_10_30.md`. Não existe URL de homologação; a Cloudflare não está autenticada. Merge, produção e escritas comerciais continuam sem autorização.
+
+PR de integração DRAFT #83: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/83 · commits f513dca/54b87e5 · local2308Node/67Python,40capturas · Appa5ba3298…bbfb91c8. Conferir checks do HEAD; semmerge/deploy.
+
 # Roadmap canônico — MLS Commerce OS
 
-Atualizado em **28/10/2026**.
+Atualizado em **30/10/2026**.
+
+> **Execução atual — 30/10/2026:** PR #79 congelada com CI verde `e7ce5009`/41131654577 e seis PNGs originais versionados. A branch `integration/mls-commerce-os-ai-sales-20261030` integra a preservação de SKUs, Products/Pricing observador e MVP local AI Sales com três MP4s reais PT-BR e cinco abas nativas; regressão final registrada no [checkpoint da missão](MLS_MASTER_MISSION_CHECKPOINT.json). [Guia de homologação e limites](MLS_AI_SALES_INTEGRATION_2026_10_30.md). Sem merge/deploy/writes. M2, QA owner, grants e acesso LLM continuam externos; nenhum lucro bancário foi inventado.
+
+
 
 **Orientação operacional de 30/10/2026:** os próximos incrementos validados têm
 como destino o app oficial. Ambiente separado só quando necessário; a prévia
@@ -596,3 +606,27 @@ Guia: [MLS_LISTING_FACTORY_BATCH_RELINK_2026_10_28.md](MLS_LISTING_FACTORY_BATCH
 - [ ] M2 Finance issue #50 e permissões Shopee ainda bloqueiam qualquer ação comercial automática. Ads/PROMO LOCKED.
 
 [Evidência e plano de QA](MLS_V36_LISTING_FACTORY_INTEGRATION_2026_10_28.md).
+
+
+## 29/10/2026 — integração visual de todos os painéis existentes · PR #74 (DRAFT)
+
+**Design aprovado fixado** a partir do mockup fornecido pelo proprietário: escuro azul-marinho, componentes neon discretos, KPIs e cards por agente, navegação especializada, responsividade e cores Finance verde / Ads laranja / Products azul / Production roxo / Returns vermelho / Auditor ciano. Uma única camada CSS em `web/cloudflare/src/approved-design-system.mjs` é compartilhada pelo App administrativo e pelas rotas Ads.
+
+- **PR #74** consolida os reworks individuais #69 (Plano de Evolução), #71 (Agentes), #72 (Produtos) e #73 (Produção DTF) em branch única baseada na `main`. Os testes e fontes dos quatro reworks foram incorporados sem merge da `main`.
+- Shell, Visão Geral, sete especialistas, Finance/Returns/Auditor, Hermes, Dashboard Ads, Campanhas, Optimization/Automação, Conexões, Custos, Histórico e 15 seções do proprietário são cobertos por estilos e testes de integração. Relatórios/Notificações não recebem telas fictícias se não houver rota real.
+- Mini navegação interna dos sete especialistas usa âncoras de ferramentas e indicadores existentes; evita duplicar fórmulas ou renderizar dados inventados.
+- **Sem alterações comerciais:** nenhuma publicação, modificação de campanha, Ads/PROMO, preço ou estoque; `DTF_CLIENT` e `DTF_ENGINE_CLIENT` preservados. O projeto financeiro M2 (#50) continua aberto.
+- V3.6 Listing Factory e busca (#63/#65/#68) ainda **não publicadas**; a integração com o design será reconciliada antes do primeiro release, com feature flag OFF, homologação autenticada do proprietário e rollback preparado.
+- A CI testa Node completo, 67 Python, builds dos três Workers e Chrome sintético 1365×900/390×844, incluindo 15 seções; **CI verde por si só não equivale a aprovação visual do proprietário nem deploy**.
+- Documentação: [MLS_APPROVED_DESIGN_SYSTEM_2026_10_29.md](MLS_APPROVED_DESIGN_SYSTEM_2026_10_29.md). Trilha visual: issue #70; release seguro: issue #67.
+
+**Status ao registrar:** PR #74 em DRAFT, ainda não publicada, com CI integrado em validação. Não fazer merge/deploy até CI final e aprovação explícita.
+
+
+## 29/10/2026 — candidato único de homologação visual + V3.6 · PR #75
+
+- Trilha `#63 → #65 → #68 → #75` incorpora o design aprovado #74 **por integração manual dos arquivos compartilhados**, sem mesclar as PRs visuais anteriores separadamente.
+- **Flag de release `MLS_V36_OWNER_PREVIEW`: ausente/inválida = OFF**; valor exatamente `ENABLED` e sessão owner habilitam apenas busca V3.6 e Listing Factory local. Não ativa publicação na Shopee ou Ads/PROMO.
+- `admin-view.mjs`, `dtf-view.mjs`, `saved-catalog-view.mjs` e `build.py` tiveram código de duas trilhas reconciliado preservando contratos originais.
+- Todos os painéis existentes mantêm o design aprovado, com QA desktop 1365×900/mobile 390×844 e testes integrados OFF/ON. **Não há merge/deploy nem homologação com conta real.**
+- Manual: [MLS_INTEGRATED_OWNER_RELEASE_2026_10_29.md](MLS_INTEGRATED_OWNER_RELEASE_2026_10_29.md); PR [#75](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/75). M2 Finance #50 e Ads/PROMO continuam bloqueados para execução.

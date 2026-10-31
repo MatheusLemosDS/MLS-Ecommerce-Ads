@@ -11,7 +11,7 @@ const workspaceNavigationItems=Object.freeze({
  hermes:{href:'/admin?tab=hermes',label:'MLS Hermes',hint:'Supervisor, análises e limites de uso',icon:'<path d="M8 3v3m8-3v3M3 10h18M5 6h14v15H5zM9 14h6m-6 4h4"/>'},
  integrations:{href:'/integrations',label:'Conexões',hint:'Integração com a Shopee',icon:'<path d="m8 8 3-3a4 4 0 0 1 6 6l-3 3M16 16l-3 3a4 4 0 0 1-6-6l3-3m-1 5 6-6"/>'},
  history:{href:'/admin?tab=history',label:'Histórico',hint:'Alterações e versões salvas',icon:'<path d="M3 11a9 9 0 1 1 2 7M3 5v6h6M12 7v5l3 2"/>'},
- roadmap:{href:'/admin?tab=roadmap',label:'Plano de evolução',hint:'Etapas e dados que faltam',icon:'<path d="M5 20V4h12l-2 4 2 4H5M3 20h4"/>'},
+ roadmap:{href:'/admin?tab=roadmap',label:'Plano de evolução',hint:'Entregas, gates e próximos passos',icon:'<path d="M5 20V4h12l-2 4 2 4H5M3 20h4"/>'},
 });
 const workspaceOwnerPrimary=['overview','agents','products','production','ads','automation'];
 const workspaceReviewPrimary=['ads','campaigns','automation'];
@@ -31,7 +31,7 @@ function workspaceNavLink(key,current,{mobile=false}={}){
 
 export function workspaceSecondaryNavigation(active,{role='owner'}={}){
  const current=workspaceActiveKey(active),keys=role==='owner'?workspaceOwnerSecondary:workspaceReviewSecondary;
- return `<details class="workspace-more" data-active="${keys.includes(current)?'true':'false'}"><summary><span>Mais opções</span><span aria-hidden="true">⌄</span></summary><nav aria-label="Mais opções do painel">${keys.map(key=>workspaceNavLink(key,current)).join('')}<a class="workspace-nav-link workspace-signout" href="/logout"><span class="workspace-nav-label">Sair da conta</span></a></nav></details>`;
+ return `<details class="workspace-more" data-active="${keys.includes(current)?'true':'false'}"><summary><span>Mais opções</span><span aria-hidden="true">⌄</span></summary><nav aria-label="Mais opções do painel">${keys.map(key=>workspaceNavLink(key,current)).join('')}${role==='owner'?'<a class="workspace-nav-link" href="/admin/diagnostics"><span class="workspace-nav-label">Diagnosticar carregamento</span></a>':''}<a class="workspace-nav-link workspace-signout" href="/logout"><span class="workspace-nav-label">Sair da conta</span></a></nav></details>`;
 }
 
 export function workspaceNavigation(active,{role='owner',mobile=false}={}){

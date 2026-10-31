@@ -1,0 +1,91 @@
+{
+  "schema": "mls_owner_preview_browser_qa_v1",
+  "source": "ACTUAL_WORKER_SQLITE_LOCAL_SYNTHETIC_DATA_NO_HTTP_MOCKS",
+  "worker_sha256": "a5ba3298faf4b8c2eaa32e98674f1d7408f4c4616236d8f04a2fba72bbfb91c8",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "panels": 16,
+  "ai_tabs": 5,
+  "catalog_items": 3,
+  "production_costs": {
+    "regular": 1690,
+    "adult": [
+      {
+        "model": "99000100",
+        "cost": 1690
+      },
+      {
+        "model": "99000101",
+        "cost": 1690
+      },
+      {
+        "model": "99000102",
+        "cost": 1690
+      },
+      {
+        "model": "99000103",
+        "cost": 2140
+      }
+    ],
+    "child": [
+      1250,
+      1250,
+      1250,
+      1250,
+      1250,
+      1250,
+      1250,
+      1250
+    ],
+    "kit": 3830
+  },
+  "selected_variant": "99000101",
+  "other_native_selections": [
+    {
+      "item": "990002",
+      "variant": "99000200",
+      "cost_cents": 1250,
+      "piece_count": null
+    },
+    {
+      "item": "990003",
+      "variant": "99000300",
+      "cost_cents": 3830,
+      "piece_count": 2
+    }
+  ],
+  "campaign_status": "READY_FOR_LOCAL_RENDER",
+  "local_cli_export_verified": true,
+  "exact_native_render_roundtrip": null,
+  "media_playback": {
+    "width": 1080,
+    "height": 1920,
+    "duration_ms": 15000,
+    "current_time": 0.233312,
+    "approved": "PENDING"
+  },
+  "javascript_errors": 0,
+  "read_count": 47,
+  "captures": [
+    {
+      "file": "preview-390-light-overview.png",
+      "sha256": "3f7ff6ee05ea5482588b20e041c8dcf3895dfc810cb86d222a835505cd9f73e0",
+      "bytes": 121901
+    },
+    {
+      "file": "preview-390-actual-costs-saved.png",
+      "sha256": "3e79499c1690b3cc50ef07a1ac5bd5a8fdbce67142c693b2486e5b0e2157e073",
+      "bytes": 60481
+    },
+    {
+      "file": "preview-390-actual-studio-mp4.png",
+      "sha256": "5c32d97be41c8b4d30ae2a8eba7b7346aea1ecdb75b2445053b35502f65db374",
+      "bytes": 52064
+    }
+  ],
+  "original_report_sha256": "d675dc6128d208ebb1d1730eea4cd336fcfc783b98c67d4e37f7a99d7cde1b4d",
+  "full_capture_count": 36,
+  "capture_selection": "SELECTED_VERSIONED_FILES; ALL_SCENARIOS_IN_CI_ARTIFACT"
+}

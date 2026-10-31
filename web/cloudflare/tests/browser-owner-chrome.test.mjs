@@ -2,8 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import {spawn} from 'node:child_process';
-import {existsSync} from 'node:fs';
+import {existsSync,mkdtempSync,readFileSync,rmSync} from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import {build} from 'esbuild';
+import {projectProductRegistryFrame} from '../src/product-registry.mjs';
 import {fileURLToPath} from 'node:url';
 
 const chrome=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium','/usr/bin/chromium-browser'].find(existsSync);
@@ -14,26 +17,72 @@ async function compiledWorker(){
  return (await import('data:text/javascript;base64,'+Buffer.from(compiled.outputFiles[0].text).toString('base64'))).default;
 }
 async function chromeDump(url){
+ const profile=mkdtempSync(path.join(os.tmpdir(),'mls-owner-browser-'));
+ const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
  const args=['--headless=new','--no-sandbox','--disable-dev-shm-usage','--disable-gpu','--disable-background-networking',
  '--no-first-run','--no-default-browser-check','--disable-extensions','--window-size=420,950',
- '--virtual-time-budget=2800','--dump-dom',url];
- return new Promise((resolve,reject)=>{
-  const child=spawn(chrome,args,{stdio:['ignore','pipe','pipe']});
-  const chunks=[];let size=0;
-  child.stdout.on('data',data=>{size+=data.length;if(size<12*1024*1024)chunks.push(data);});
-  let stderr='';
-  child.stderr.on('data',data=>{if(stderr.length<8192)stderr+=data.toString().slice(0,500);});
-  const watchdog=setTimeout(()=>{child.kill('SIGKILL');reject(Error('Chrome timeout'));},25000);
-  child.on('error',error=>{clearTimeout(watchdog);reject(error);});
-  child.on('close',(status)=>{clearTimeout(watchdog);if(status!==0)return reject(Error('Chrome exited '+status+': '+stderr.slice(0,400)));resolve(Buffer.concat(chunks).toString());});
- });
+ '--user-data-dir='+profile,'--remote-allow-origins=*','--remote-debugging-port=0','about:blank'];
+ const child=spawn(chrome,args,{stdio:['ignore','ignore','pipe']});
+ let stderr='',socket,watchdog,spawnError,closed=false;
+ const processExit=new Promise(resolve=>child.once('close',()=>{closed=true;resolve();}));
+ child.on('error',error=>{spawnError=error;});
+ child.stderr.on('data',data=>{if(stderr.length<8192)stderr+=data.toString().slice(0,500);});
+ const run=async()=>{
+  let port=0;
+  for(let i=0;i<120;i++){
+   if(spawnError)throw spawnError;
+   if(child.exitCode!==null)throw Error('Chrome exited '+child.exitCode+': '+stderr.slice(0,400));
+   try{port=Number(readFileSync(path.join(profile,'DevToolsActivePort'),'utf8').split('\n')[0]);if(port>0)break;}catch{}
+   await delay(75);
+  }
+  if(!port)throw Error('Chrome CDP startup failed: '+stderr.slice(0,400));
+  const pages=await(await fetch('http://127.0.0.1:'+port+'/json/list',{signal:AbortSignal.timeout(4000)})).json();
+  const target=pages.find(page=>page.type==='page')?.webSocketDebuggerUrl;
+  if(!target)throw Error('Chrome CDP page unavailable');
+  socket=new WebSocket(target);
+  await new Promise((resolve,reject)=>{
+   socket.addEventListener('open',resolve,{once:true});
+   socket.addEventListener('error',()=>reject(Error('Chrome CDP connection failed')),{once:true});
+  });
+  let sequence=0;const pending=new Map();
+  socket.addEventListener('message',event=>{
+   let data;try{data=JSON.parse(event.data);}catch{return;}
+   const request=pending.get(data.id);if(!request)return;pending.delete(data.id);
+   data.error?request.reject(Error('Chrome CDP: '+data.error.message)):request.resolve(data.result);
+  });
+  const send=(method,params={})=>new Promise((resolve,reject)=>{
+   const id=++sequence;pending.set(id,{resolve,reject});socket.send(JSON.stringify({id,method,params}));
+  });
+  await send('Page.enable');await send('Runtime.enable');
+  await send('Page.navigate',{url});
+  let loaded=false;
+  for(let i=0;i<120;i++){
+   const state=await send('Runtime.evaluate',{expression:"document.readyState==='complete'",returnByValue:true});
+   if(state.result?.value===true){loaded=true;break;}
+   await delay(75);
+  }
+  if(!loaded)throw Error('Chrome page failed to load');
+  // Keep the original 2.8-second observation window so every existing timed
+  // hydration/error snapshot executes before capturing the real browser DOM.
+  await delay(2800);
+  const result=await send('Runtime.evaluate',{expression:'document.documentElement.outerHTML',returnByValue:true});
+  if(result.exceptionDetails||typeof result.result?.value!=='string')throw Error('Chrome DOM capture failed');
+  return result.result.value;
+ };
+ try{return await Promise.race([run(),new Promise((_,reject)=>{watchdog=setTimeout(()=>reject(Error('Chrome timeout')),35000);})]);}
+ finally{
+  clearTimeout(watchdog);try{socket?.close();}catch{}
+  if(!closed){child.kill('SIGKILL');await processExit;}
+  rmSync(profile,{recursive:true,force:true});
+ }
 }
 
-test('real Chromium hydrates owner agent cards even when finance API is unavailable',{timeout:40000},async t=>{
+test('real Chromium hydrates owner agent cards even when finance API is unavailable',{timeout:90000},async t=>{
  if(!chrome)return t.skip('Chrome executable not installed on CI runner');
  const worker=await compiledWorker();
  const env={ADMIN_USERNAME:'owner-browser-test',ADMIN_PASSWORD:'owner-browser-test-password',
-  ADMIN_SESSION_SECRET:'owner-browser-test-session-'+ 'x'.repeat(40)};
+  ADMIN_SESSION_SECRET:'owner-browser-test-session-'+ 'x'.repeat(40),
+  MLS_V36_OWNER_PREVIEW:'ENABLED'};
  const login=await worker.fetch(new Request('https://app.browser.fixture/login',{method:'POST',
   headers:{origin:'https://app.browser.fixture','content-type':'application/x-www-form-urlencoded'},
   body:new URLSearchParams({username:env.ADMIN_USERNAME,password:env.ADMIN_PASSWORD})}),env);
@@ -45,7 +94,7 @@ test('real Chromium hydrates owner agent cards even when finance API is unavaila
  // Set the synthetic test browser's theme preference before the real head bootstrap.
  html=html.replace('<head>','<head><script>try{localStorage.setItem("braza-theme","dark")}catch(e){}</script>');
  const errorScript='<script>document.documentElement.setAttribute("data-mls-early","YES");window.__mlsErrors=[];window.addEventListener("error",e=>window.__mlsErrors.push(String(e.message||"ERROR").slice(0,250)));window.addEventListener("unhandledrejection",e=>window.__mlsErrors.push(String(e.reason?.message||e.reason||"REJECTION").slice(0,250)));setTimeout(()=>document.documentElement.setAttribute("data-mls-runtime-errors",JSON.stringify(window.__mlsErrors)),2200);</script>';
- const snapshotScript='<script>document.documentElement.setAttribute("data-mls-late","YES");document.documentElement.dataset.theme="dark";document.documentElement.dataset.themePreference="dark";try{(()=>{function snapshot(){const root=document.getElementById("commandCenterAgents");const trace={registry:typeof globalThis.mlsAgentRegistry,agent_count:root?.children.length||0,fallback_count:root?.querySelectorAll("[data-agent-placeholder=true]").length||0,registry_status:globalThis.mlsAgentRegistry?.getSnapshot?.()?.schema||"MISSING",net_value:(document.getElementById("commandCenterNet")?.textContent||"").slice(0,25),bootstrap_status:(document.getElementById("message")?.textContent||"").slice(0,100),visual:{theme:document.documentElement.dataset.theme,hero_bg:getComputedStyle(document.querySelector(".mission-command-hero")).backgroundImage.slice(0,180),hero_height:getComputedStyle(document.querySelector(".mission-command-hero")).minHeight,agent_bg:root?.firstElementChild?getComputedStyle(root.firstElementChild).backgroundImage.slice(0,180):"NONE",agent_avatar:root?.firstElementChild?getComputedStyle(root.firstElementChild,"::before").content:"NONE",bars:[...document.querySelectorAll(".mission-comparison-track span")].map(item=>item.style.width),visual_panels:document.querySelectorAll(".mission-data-panel").length,metric_columns:getComputedStyle(document.querySelector(".command-center-metrics")).gridTemplateColumns,source_visible:document.getElementById("missionSourceState")?.hidden===false,source_title:document.getElementById("missionSourceTitle")?.textContent||"",collection_detail:(document.getElementById("missionCollectorStatus")?.textContent||"").slice(0,220),priority_hidden:document.getElementById("missionSourcePriority")?.hidden??null},errors:window.__mlsErrors.slice(0,3)};document.documentElement.dataset.mlsHydrationTrace=JSON.stringify(trace);}snapshot();setTimeout(snapshot,200);setTimeout(snapshot,1000);setTimeout(snapshot,2400);})();}catch(e){document.documentElement.setAttribute("data-mls-snapshot-error",String(e?.message||e).slice(0,220));}</script>';
+ const snapshotScript='<script>document.documentElement.setAttribute("data-mls-late","YES");document.documentElement.dataset.theme="dark";document.documentElement.dataset.themePreference="dark";try{(()=>{function snapshot(){const root=document.getElementById("commandCenterAgents");const trace={registry:typeof globalThis.mlsAgentRegistry,agent_count:root?.children.length||0,fallback_count:root?.querySelectorAll("[data-agent-placeholder=true]").length||0,registry_status:globalThis.mlsAgentRegistry?.getSnapshot?.()?.schema||"MISSING",net_value:(document.getElementById("commandCenterNet")?.textContent||"").slice(0,25),bootstrap_status:(document.getElementById("message")?.textContent||"").slice(0,100),visual:{theme:document.documentElement.dataset.theme,hero_bg:getComputedStyle(document.querySelector(".mission-command-hero")).backgroundImage.slice(0,180),hero_height:getComputedStyle(document.querySelector(".mission-command-hero")).minHeight,hero_art:{count:document.querySelectorAll(".mls-command-globe > svg").length,decorative:document.querySelector(".mls-command-globe > svg")?.getAttribute("aria-hidden")==="true",visible:(()=>{const rect=document.querySelector(".mls-command-globe > svg")?.getBoundingClientRect();return !!rect&&rect.width>0&&rect.height>0;})(),collision_ids:document.querySelectorAll(".mls-command-globe [id]").length,externals:document.querySelectorAll(".mls-command-globe [href],.mls-command-globe image,.mls-command-globe use").length},agent_bg:root?.firstElementChild?getComputedStyle(root.firstElementChild).backgroundImage.slice(0,180):"NONE",agent_avatar:{count:root?.querySelectorAll(".mls-agent-avatar > svg").length||0,decorative:[...root.querySelectorAll(".mls-agent-avatar > svg")].every(svg=>svg.getAttribute("aria-hidden")==="true"&&svg.getAttribute("focusable")==="false"),collision_ids:root.querySelectorAll(".mls-agent-avatar [id]").length,externals:root.querySelectorAll(".mls-agent-avatar [href],.mls-agent-avatar image,.mls-agent-avatar use").length,visible:[...root.querySelectorAll(".mls-agent-avatar > svg")].every(svg=>svg.getBoundingClientRect().width>0&&svg.getBoundingClientRect().height>0)},bars:[...document.querySelectorAll(".mission-comparison-track span")].map(item=>item.style.width),visual_panels:document.querySelectorAll(".mission-data-panel").length,metric_columns:getComputedStyle(document.querySelector(".command-center-metrics")).gridTemplateColumns,source_visible:document.getElementById("missionSourceState")?.hidden===false,source_title:document.getElementById("missionSourceTitle")?.textContent||"",collection_detail:(document.getElementById("missionCollectorStatus")?.textContent||"").slice(0,220),priority_hidden:document.getElementById("missionSourcePriority")?.hidden??null},errors:window.__mlsErrors.slice(0,3)};document.documentElement.dataset.mlsHydrationTrace=JSON.stringify(trace);}snapshot();setTimeout(snapshot,200);setTimeout(snapshot,1000);setTimeout(snapshot,2400);})();}catch(e){document.documentElement.setAttribute("data-mls-snapshot-error",String(e?.message||e).slice(0,220));}</script>';
  html=html.replace('<body>','<body><script>document.documentElement.dataset.theme="dark";document.documentElement.dataset.themePreference="dark";</script>'+errorScript);
  const closing=html.lastIndexOf('</body>');assert.ok(closing>0,'must inject inspector after every bundled inline script');
  html=html.slice(0,closing)+snapshotScript+html.slice(closing);
@@ -55,7 +104,8 @@ test('real Chromium hydrates owner agent cards even when finance API is unavaila
   {date:'2026-10-26',state:'OPERATIONAL',net_basis:'ESTIMATE',net_cents:-5000,sales_cents:35000,ads_spend_cents:4000,paid_orders:9,partial:false,comparable:true},
   {date:'2026-10-27',state:'OPERATIONAL',net_basis:'ESTIMATE',net_cents:-2500,sales_cents:20000,ads_spend_cents:1500,paid_orders:4,partial:true,comparable:false}
  ];
- const syntheticTrend={schema:'mls_mission_daily_trend_v1',month:'2026-10',selected_date:'2026-10-27',points:syntheticRows};
+ const syntheticTrend={schema:'mls_mission_daily_trend_v1',month:'2026-10',selected_date:'2026-10-27',
+  basis:'PAID_CREATE_DAY_AND_CALENDAR_ADS_OPERATIONAL_ESTIMATE',points:syntheticRows};
  const fixtureScript='<script>(()=>{try{const trend='+JSON.stringify(syntheticTrend)+
   ';globalThis.brazaDayDashboard={getTrend:()=>trend};'+
   'globalThis.mlsAgentRegistry={getSnapshot:()=>({day:{net_cents:-2500},month:{balance_cents:-50000}})};'+
@@ -78,17 +128,34 @@ test('real Chromium hydrates owner agent cards even when finance API is unavaila
   'document.documentElement.dataset.mlsTrendFixture=JSON.stringify(report);'+
   '}catch(e){document.documentElement.dataset.mlsTrendFixtureError=String(e?.message||e).slice(0,250);}})();</script>';
 
- const agentsFixtureScript="<script>(()=>{try{\n const catalog={schema:\"mls_agent_catalog_snapshot_v1\",total:345,indexed:300,pending_catalog:45,checked_at:1793200000,discovery_status:\"IDLE\"};\n const dtf={schema:\"mls_agent_dtf_queue_v1\",line_count:10,pending_lines:4,reserved_lines:2,produced_lines:3,blocked_lines:1,batch_count:2};\n if(globalThis.brazaSavedCatalog)globalThis.brazaSavedCatalog.getSnapshot=()=>catalog;\n if(globalThis.brazaDtfWorkspace)globalThis.brazaDtfWorkspace.getSnapshot=()=>dtf;\n globalThis.mlsAgentRegistry?.notify?.();\n setTimeout(()=>{const opener=document.getElementById('missionSearchOpen');opener?.click();const search=document.getElementById('missionSearchInput');if(search){search.value='dtf';search.dispatchEvent(new Event('input',{bubbles:true}));}const snapshot=globalThis.mlsAgentRegistry?.getSnapshot?.();document.documentElement.dataset.mlsAgentSourcesFixture=JSON.stringify({catalog:snapshot?.sources?.catalog?.total,dtf:snapshot?.sources?.dtf_queue?.pending_lines,products:document.getElementById(\"mission-products-metric-0\")?.textContent,production:document.getElementById(\"mission-production-metric-0\")?.textContent,catalog_chart:document.getElementById(\"mission-products-evidence\")?.dataset.evidenceSource,queue_chart:document.getElementById(\"mission-production-evidence\")?.dataset.evidenceSource,catalog_chart_rows:document.querySelectorAll(\"#mission-products-evidence .mission-evidence-row\").length,queue_chart_rows:document.querySelectorAll(\"#mission-production-evidence .mission-evidence-row\").length,search_open:document.getElementById('missionGlobalSearch')?.hidden===false,search_titles:[...document.querySelectorAll('#missionSearchResults .mission-search-result strong')].map(el=>el.textContent),search_destinations:[...document.querySelectorAll('#missionSearchResults .mission-search-result')].map(el=>new URL(el.href).searchParams.get('tab')),errors:window.__mlsErrors.slice(0,4)});if(search){search.value='camiseta natal';search.dispatchEvent(new Event('input',{bubbles:true}));document.querySelector('[data-search-route=product-query]')?.click();document.documentElement.dataset.mlsCatalogHandoff=JSON.stringify({tab:document.documentElement.dataset.activePanel,term:document.getElementById('savedCatalogSearch')?.value,closed:document.getElementById('missionGlobalSearch')?.hidden===true,errors:window.__mlsErrors.slice(0,4)});}},350);\n }catch(error){document.documentElement.dataset.mlsAgentSourcesError=String(error?.message||error).slice(0,200)}})();</script>";
+ const agentsFixtureScript="<script>(()=>{try{\n const catalog={schema:\"mls_agent_catalog_snapshot_v1\",total:345,indexed:300,pending_catalog:45,checked_at:1793200000,discovery_status:\"IDLE\"};\n const dtf={schema:\"mls_agent_dtf_queue_v1\",line_count:10,pending_lines:4,reserved_lines:2,produced_lines:3,blocked_lines:1,batch_count:2};\n if(globalThis.brazaSavedCatalog)globalThis.brazaSavedCatalog.getSnapshot=()=>catalog;\n if(globalThis.brazaDtfWorkspace)globalThis.brazaDtfWorkspace.getSnapshot=()=>dtf;\n globalThis.mlsAgentRegistry?.notify?.();\n setTimeout(()=>{const opener=document.getElementById('missionSearchOpen');opener?.click();const search=document.getElementById('missionSearchInput');if(search){search.value='dtf';search.dispatchEvent(new Event('input',{bubbles:true}));}const snapshot=globalThis.mlsAgentRegistry?.getSnapshot?.();document.documentElement.dataset.mlsAgentSourcesFixture=JSON.stringify({catalog:snapshot?.sources?.catalog?.total,dtf:snapshot?.sources?.dtf_queue?.pending_lines,products:document.getElementById(\"mission-products-metric-0\")?.textContent,production:document.getElementById(\"mission-production-metric-0\")?.textContent,catalog_chart:document.getElementById(\"mission-products-evidence\")?.dataset.evidenceSource,queue_chart:document.getElementById(\"mission-production-evidence\")?.dataset.evidenceSource,catalog_chart_rows:document.querySelectorAll(\"#mission-products-evidence .mission-evidence-row\").length,queue_chart_rows:document.querySelectorAll(\"#mission-production-evidence .mission-evidence-row\").length,search_open:document.getElementById('missionGlobalSearch')?.hidden===false,search_titles:[...document.querySelectorAll('#missionSearchResults .mission-search-result strong')].map(el=>el.textContent),search_destinations:[...document.querySelectorAll('#missionSearchResults .mission-search-result')].map(el=>new URL(el.href).searchParams.get('tab')),errors:window.__mlsErrors.slice(0,4)});},350);\n\n setTimeout(async()=>{try{\n  const palette=globalThis.mlsWorkspaceSearch,input=document.getElementById('missionSearchInput');\n  if(!palette||!input)throw Error('PALETTE_MISSING');\n  const originalFetch=globalThis.fetch.bind(globalThis);\n  globalThis.fetch=async (...args)=>{\n   const response=await originalFetch(...args);\n   if(String(args[0]).includes('search=Camiseta')){\n    document.documentElement.dataset.mlsMockHttpStatus=String(response.status);\n    response.clone().json().then(value=>{\n     document.documentElement.dataset.mlsMockResponseSchema=String(value?.schema||'none');\n     document.documentElement.dataset.mlsMockResponseValid=String(!!globalThis.projectProductRegistryFrame?.(value));\n    }).catch(()=>{document.documentElement.dataset.mlsMockResponseSchema='parse-failed';});\n   }\n   return response;\n  };\n  palette.scope('products');input.value='Camiseta';input.dispatchEvent(new Event('input',{bubbles:true}));\n  document.getElementById('missionSearchExecute').click();\n  await new Promise(resolve=>setTimeout(resolve,230));\n  const firstCount=document.querySelectorAll('#missionSearchResults .mission-search-result').length;\n  const firstMessage=(document.getElementById('missionSearchResults')?.textContent||'').slice(0,230);\n  const firstScope=(document.getElementById('missionSearchScope')?.textContent||'').slice(0,230);\n  const firstKind=document.querySelector('#missionSearchResults .mission-search-empty')?.dataset.searchFailure||null;\n  const firstMore=document.getElementById('missionSearchMore').hidden===false;\n  document.getElementById('missionSearchMore').click();\n  await new Promise(resolve=>setTimeout(resolve,230));\n  const lastTitle=document.querySelector('#missionSearchResults .mission-search-result strong')?.textContent||'';\n  const lastLink=document.querySelector('#missionSearchResults .mission-search-result');\n  lastLink?.click();\n  await new Promise(resolve=>setTimeout(resolve,65));\n  const productPanel=document.documentElement.dataset.activePanel;\n  const productFilter=document.getElementById('savedCatalogSearch')?.value||'';\n  const dtf=globalThis.brazaDtfWorkspace;\n  if(!dtf)throw Error('DTF_MISSING');\n  dtf.searchLines=(query,offset)=>({schema:'mls_saved_dtf_search_v1',total:1,offset,limit:8,more:false,rows:[\n   {order_id:'998877',sku:'AB123-ESTAMPA',item_id:'700009',model_name:'M',production_state:'PENDING',quantity:2}\n  ]});\n  dtf.findLine=id=>{document.documentElement.dataset.mlsSelectedOrder=id;return true;};\n  palette.open();palette.scope('dtf');input.value='AB123';input.dispatchEvent(new Event('input',{bubbles:true}));\n  document.getElementById('missionSearchExecute').click();\n  await new Promise(resolve=>setTimeout(resolve,80));\n  const orderTitle=document.querySelector('#missionSearchResults .mission-search-result strong')?.textContent||'';\n  document.querySelector('#missionSearchResults .mission-search-result')?.click();\n  await new Promise(resolve=>setTimeout(resolve,50));\n  document.documentElement.dataset.mlsRecordSearchFixture=JSON.stringify({\n   firstCount,firstMessage,firstScope,firstKind,mockHttp:document.documentElement.dataset.mlsMockHttpStatus,mockSchema:document.documentElement.dataset.mlsMockResponseSchema,mockValid:document.documentElement.dataset.mlsMockResponseValid,validatorType:typeof globalThis.projectProductRegistryFrame,firstMore,lastTitle,productPanel,productFilter,orderTitle,\n   dtfPanel:document.documentElement.dataset.activePanel,selectedOrder:document.documentElement.dataset.mlsSelectedOrder,\n   errors:window.__mlsErrors.slice(0,4)\n  });\n  // Check that V3.6 PR46 catalog handoff works after switching back to navigation.\n  document.getElementById('missionSearchOpen')?.click();\n  const handoffInput=document.getElementById('missionSearchInput');\n  if(handoffInput){\n   handoffInput.value='camiseta natal';\n   handoffInput.dispatchEvent(new Event('input',{bubbles:true}));\n   document.querySelector('[data-search-route=product-query]')?.click();\n   document.documentElement.dataset.mlsCatalogHandoff=JSON.stringify({\n    tab:document.documentElement.dataset.activePanel,\n    term:document.getElementById('savedCatalogSearch')?.value,\n    closed:document.getElementById('missionGlobalSearch')?.hidden===true,\n    errors:window.__mlsErrors.slice(0,4)\n   });\n  }\n }catch(error){document.documentElement.dataset.mlsRecordSearchError=String(error?.message||error).slice(0,260);}},600);\n }catch(error){document.documentElement.dataset.mlsAgentSourcesError=String(error?.message||error).slice(0,200)}})();</script>";
  const financeAuthFixtureScript="<script>(()=>{try{\n const prior=globalThis.brazaMonthDashboard;\n globalThis.brazaMonthDashboard={\n   getSnapshot:()=>prior?.getSnapshot?.()??null,\n   getSourceStatus:()=>({schema:'mls_finance_source_coverage_v1',collection_code:'BUSINESS_PERIOD_AUTH_REQUIRED'})\n };\n globalThis.mlsAgentRegistry?.refresh?.();\n const box=document.getElementById('missionFinanceAuthRecovery');\n document.documentElement.dataset.mlsFinanceAuthFixture=JSON.stringify({\n  visible:box?.hidden===false,\n  links:[...(box?.querySelectorAll('a')||[])].map(a=>({href:a.href,target:a.target,rel:a.rel})),\n  errors:window.__mlsErrors?.slice(0,3)||[]\n });\n }catch(e){document.documentElement.dataset.mlsFinanceAuthFixtureError=String(e?.message||e).slice(0,200)}})();</script>";
  const requests=[];
  const server=http.createServer((request,response)=>{
   const path=(request.url||'/').split('?')[0];
-  requests.push(path);
+  requests.push(request.url||path);
   response.setHeader('Cache-Control','no-store');
   if(path==='/admin'){
    response.writeHead(200,{'Content-Type':'text/html; charset=utf-8',
     'Content-Security-Policy':admin.headers.get('content-security-policy')||"default-src 'self'; script-src 'self' 'unsafe-inline';"});
    response.end((request.url||'').includes('mlsFixture=trend')?html.replace('</body>',fixtureScript+'</body>'):(request.url||'').includes('mlsFixture=agents')?html.replace('</body>',agentsFixtureScript+'</body>'):(request.url||'').includes('mlsFixture=financeAuth')?html.replace('</body>',financeAuthFixtureScript+'</body>'):html);
+
+  }else if(path==='/api/admin/product-registry'&&new URL(request.url||'/', 'http://localhost').searchParams.get('search')==='Camiseta'){
+   const params=new URL(request.url,'http://localhost').searchParams,offset=Number(params.get('offset')||0),end=Math.min(9,offset+8);
+   const products=Array.from({length:Math.max(0,end-offset)},(_,index)=>{
+    const item=700001+offset+index;
+    return {item_id:String(item),item_status:'NORMAL',product_name:'Camiseta Modelo '+String(offset+index+1),
+     source_update_time:null,last_seen_at:1793200000,catalog_checked_at:1793200000,
+     catalog_status:'MATCHED',model_count:1,resolved_count:1,metadata_changed:false};
+   });
+   response.setHeader('Content-Type','application/json');
+   const frame={schema:'product_registry_v1',checked_at:1793200000,revision:1,
+    counts:{total:9,indexed:9,pending_catalog:0},
+    discovery:{status:'IDLE',item_status:'NORMAL',offset:0,pages_read:1,last_attempt_at:null,last_success_at:1793200000,
+     next_run_at:0,last_error:null,complete:true},
+    pagination:{limit:8,offset,total:9,more:offset+8<9},products};
+   assert.ok(projectProductRegistryFrame(frame),'fixture is a valid saved catalog response');
+   response.end(JSON.stringify(frame));
   }else if(path==='/api/admin/bootstrap'){
    response.setHeader('Content-Type','application/json');
    response.end(JSON.stringify({schema:'admin_bootstrap_v1',csrf:'a'.repeat(64)}));
@@ -114,9 +181,10 @@ test('real Chromium hydrates owner agent cards even when finance API is unavaila
   assert.equal(trace.fallback_count,0,'static placeholders must be replaced after script hydration');
   assert.equal(trace.net_value,'—','no financial number may be fabricated');
   assert.equal(trace.visual.theme,'dark','approved Mission Control theme must be inspected in dark mode');
-  assert.match(trace.visual.hero_bg,/gradient/i,'Mission Control hero must be styled with multi-tone spatial gradient');
+  assert.equal(trace.visual.hero_bg,'none','approved composition keeps a flat header behind the vector globe');
+  assert.deepEqual(trace.visual.hero_art,{count:1,decorative:true,visible:true,collision_ids:0,externals:0},'approved globe must be visible editable vector art without colliding IDs or external assets');
   assert.match(trace.visual.agent_bg,/gradient/i,'real agent cards need colored gradient surfaces');
-  assert.ok(trace.visual.agent_avatar&&!['none','normal','NONE'].includes(trace.visual.agent_avatar),'robotic avatar must be visible');
+  assert.deepEqual(trace.visual.agent_avatar,{count:6,decorative:true,collision_ids:0,externals:0,visible:true},'six editable decorative inline avatars must be visible without colliding IDs or external assets');
   assert.equal(trace.visual.visual_panels,2,'verified day + agent status analytics must exist on home');
   assert.equal(trace.visual.metric_columns.trim().split(/\s+/).length,2,'narrow real Chromium viewport must show two KPI columns');
   assert.equal(trace.visual.source_visible,true,'missing financial readings must expose a useful source state');
@@ -175,6 +243,21 @@ test('real Chromium hydrates owner agent cards even when finance API is unavaila
   assert.deepEqual(handoff.errors,[]);
 
   assert.deepEqual(source.errors,[]);
+
+  const recordMatch=specialist.match(/data-mls-record-search-fixture="([^"]+)"/);
+  assert.ok(recordMatch,'authenticated global record search executed in Chrome: '+(specialist.match(/data-mls-record-search-error="([^"]+)"/)?.[1]||'no trace'));
+  const record=JSON.parse(recordMatch[1].replaceAll('&quot;','"').replaceAll('&amp;','&').replaceAll('&#39;',"'"));
+  console.log('MLS_RECORD_SEARCH_TRACE',JSON.stringify({record,registry_requests:requests.filter(url=>url.startsWith('/api/admin/product-registry'))}));
+  assert.equal(record.firstCount,8,'saved catalog search shows eight validated results');
+  assert.equal(record.firstMore,true,'saved catalog explicit pagination is available');
+  assert.equal(record.lastTitle,'Camiseta Modelo 9');
+  assert.equal(record.productPanel,'products');
+  assert.equal(record.productFilter,'700009','selected product filters the specialized saved catalog');
+  assert.equal(record.orderTitle,'Pedido 998877');
+  assert.equal(record.dtfPanel,'production');
+  assert.equal(record.selectedOrder,'998877');
+  assert.deepEqual(record.errors,[]);
+
 
   const authorization=await chromeDump(url+'?mlsFixture=financeAuth');
   const encodedAuth=authorization.match(/data-mls-finance-auth-fixture="([^"]+)"/);

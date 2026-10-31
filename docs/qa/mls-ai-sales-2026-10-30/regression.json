@@ -1,0 +1,70 @@
+{
+  "schema": "mls_integration_regression_v1",
+  "date": "2026-10-30",
+  "branch": "integration/mls-commerce-os-ai-sales-20261030",
+  "node": {
+    "passed": 2308,
+    "failed": 0,
+    "skipped": 0,
+    "duration_ms": 97376.687909,
+    "log_sha256": "a65eea92261b2cbcd5f9095f7ad4fcdb574a8d01d5e98421d75606a7632c9ea1",
+    "command": "node --test --test-reporter=tap --test-concurrency=3 web/cloudflare/tests/*.test.mjs web/finance/tests/*.test.mjs tools/tests/*.test.mjs",
+    "tts": "OFFLINE_ESPEAK_NG_PT_BR_EXTERNAL_EXECUTABLE"
+  },
+  "python": {
+    "passed": 67,
+    "failed": 0,
+    "log_sha256": "8942ae796ceccd2728b47be79ee761fedc818a49b737c0606be851b878398414"
+  },
+  "workers": {
+    "app": {
+      "worker": "brazacommerce-app",
+      "bytes": 2939685,
+      "sha256": "a5ba3298faf4b8c2eaa32e98674f1d7408f4c4616236d8f04a2fba72bbfb91c8"
+    },
+    "auth": {
+      "worker": "brazacommerce-auth",
+      "bytes": 251026,
+      "sha256": "1fef431c8573e05563c7938d95be0976a160bc603340084aa747ee0b73e7ec64"
+    },
+    "finance": {
+      "worker": "brazacommerce-finance",
+      "bytes": 485661,
+      "sha256": "b2483fc6107ecb4782e746becfe1b69ee6e3b9d3f0a6109351390b11b9303ca3"
+    }
+  },
+  "ai_chromium": {
+    "passed": 5,
+    "failed": 0,
+    "skipped": 0,
+    "screenshots": 40,
+    "javascript_errors": 0,
+    "overflow": false,
+    "worker_modes": [
+      "NORMAL",
+      "MINIFIED"
+    ],
+    "themes": [
+      "LIGHT",
+      "DARK"
+    ],
+    "viewports": [
+      [
+        1365,
+        900
+      ],
+      [
+        390,
+        844
+      ]
+    ]
+  },
+  "security_review": "CONFIRMED_FINDINGS_FIXED_WITH_REGRESSIONS",
+  "main_observed_sha": "a96bb1c56aaea54a63bede5c177a0de8ab2ea890",
+  "real_owner_authenticated": false,
+  "human_visual_approval": "PENDING",
+  "realized_bank_net": "UNKNOWN",
+  "merge_main": false,
+  "production_deploy": false,
+  "commercial_writes": false
+}

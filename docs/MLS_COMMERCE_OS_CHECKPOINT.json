@@ -2,7 +2,7 @@
   "schema": "mls_commerce_os_checkpoint_v1",
   "canonical_roadmap": "docs/ROADMAP_MLS_COMMERCE_OS.md",
   "legacy_roadmap": "docs/ROADMAP_BRAZACOMMERCE.md",
-  "updated_at": "2026-10-28",
+  "updated_at": "2026-10-30",
   "product": {
     "name": "MLS Commerce OS",
     "supervisor": "MLS Hermes",
@@ -30,8 +30,8 @@
     "merge_commit": "9c418fd3010f46957d1ce52345baacd76041c788"
   },
   "current_phase": "M2_FINANCE_RETURNS_RECONCILIATION",
-  "working_branch": "integration/mls-v36-search-listing-factory-20261028",
-  "current_status": "M2_OPEN_PR47_SHADOW_PR63_CI_GREEN_MOBILE_FIXED_PR65_SYNTHETIC_QA_GREEN_REAL_OWNER_QA_PENDING",
+  "working_branch": "feature/mls-owner-homologation-preview-20261030",
+  "current_status": "OWNER_HOMOLOGATION_READY_CLOUDFLARE_ACCESS_REQUIRED_NO_PRODUCTION_CHANGE",
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
     "Repasse-base, ajuste, repasse após ajuste e liberação exibidos sem dupla dedução",
@@ -111,26 +111,10 @@
     }
   },
   "next_actions": [
-    "Operador conferir graficos e setas em Visao Geral, MLS Finance e MLS Ads no desktop/celular apos PR32",
-    "Distinguir prejuizo estimado, lucro estimado, saldo parcial KNOWN_COSTS e variacao entre dias completos",
-    "MLS Finance M2: validar Pending atual com montantes, quantidades e horarios reais do Seller Centre",
-    "Se has_more, revisar cursor e semantica antes de paginacao; nao inferir liquidacao bancaria ou remaining_receivable",
-    "Manter Ads/PROMO LOCKED ate escrita oficial assistida; M3 Products/Pricing so apos criterio de saida M2",
-    "Conferir PR #51 e CI; validar mockups locais do operador sem publicar ou enviar imagens",
-    "Codex e ChatGPT usarem AGENTS.md + docs/MLS_CODEX_HANDOFF_2026_10_28.md; evitar branch simultanea",
-    "Implementar UI owner Listing Factory apos CI e integracao consciente com PR #48",
-    "Verificar categoria do app/escopos Shopee, escrows em lote GET/POST e push recovery sem ACK",
-    "Manter M2 issue #50 aberta e anuncios/precificacao/estoque externos BLOQUEADOS",
-    "PR #56 Listing Factory UI: revisar CI do HEAD e hash App, QA desktop/mobile e integração sobre PR #51",
-    "Run current PR #56 Node+Python+Chrome+Workers CI (manual workflow_dispatch if Actions does not auto-start), then restore stacked base PR #51",
-    "PR #56: CI green 40788713558 (PR #58 temporária fechada); QA desktop/mobile autenticada antes de integrar PR #51→#56",
-    "PR60 batch mockups: CI rerun after App SHA review; close temporary #61 without merge when green; verify 14/14 source/test blobs",
-    "Codex can continue bulk media matching QA for user assets, do not change PR51/56 concurrently",
-    "PR60 CI GREEN 40790629421 (2132 Node,67 Python,14/14 source blobs), prepare QA real files and ordered merge only when approved.",
-    "PR63 V3.6+Listing Factory CI GREEN 40792253729 2136 Node/67 Python, 20 source blobs unchanged; owner desktop/mobile QA and merge strategy pending",
-    "Release gate: choose PR63 unified OR PR48→51→56→60, not both; preserve M2 issue #50 and Ads/PROMO LOCKED",
-    "PR63 responsive mobile CSS fixed (390px viewport previously expanded to 469px), CI 40794715203 rerun GREEN 2136 Node/67 Python",
-    "PR65 synthetic desktop/mobile QA CI 40794727173 GREEN 2137 Node/67 Python; artifact 12862897797; real owner QA still NOT DONE"
+    "Finish PR79 against six owner PNGs; validate compiled Worker screenshots dark/light desktop/mobile.",
+    "Freeze technically validated visual HEAD without merge/deploy; branch integration separately.",
+    "Complete existing modules and MLS AI Sales offline/assisted MVP according to master mission, recording external blocks.",
+    "Keep M2 issue50 open until real Seller Centre evidence; preserve Ads/PROMO LOCKED and bank net unknown."
   ],
   "m0_followup": [
     "Conferir visual autenticado em desktop e celular durante M1; corrigir apenas branding/layout sem renomear infraestrutura"
@@ -661,6 +645,115 @@
       }
     }
   },
+  "visual_approved_20261029": {
+    "schema": "mls_approved_visual_integration_v1",
+    "branch": "design/approved-neon-all-panels-integration-20261029",
+    "pr": 74,
+    "base_branch": "main",
+    "status": "DRAFT_CI_PENDING_NO_MERGE_NO_DEPLOY",
+    "upstream_visual_prs": [
+      69,
+      71,
+      72,
+      73
+    ],
+    "design_system": "web/cloudflare/src/approved-design-system.mjs",
+    "bundle_integration": "web/cloudflare/build.py updated to inject shared CSS into App scope",
+    "coverage": [
+      "overview",
+      "agents",
+      "agent-finance",
+      "agent-ads",
+      "agent-products",
+      "agent-production",
+      "agent-returns",
+      "agent-auditor",
+      "agent-hermes",
+      "products",
+      "production",
+      "roadmap",
+      "hermes",
+      "margins",
+      "history",
+      "ads-dashboard",
+      "campaigns",
+      "automation",
+      "integrations"
+    ],
+    "qa": "synthetic desktop 1365x900 mobile 390x844; real owner pending",
+    "owner_authenticated_qa": "PENDING",
+    "production_authorized": false,
+    "finance_m2": "ISSUE_50_OPEN",
+    "ads_promo": "LOCKED",
+    "v36_release": "PR_68_DRAFT_FLAG_OFF_NOT_DEPLOYED",
+    "safety": "NO_BUSINESS_WRITES_NO_AUTH_FINANCE_D1_OAUTH_CRON_CHANGES",
+    "docs": "docs/MLS_APPROVED_DESIGN_SYSTEM_2026_10_29.md"
+  },
+  "visual_v36_integrated_20261029": {
+    "schema": "mls_v36_approved_ui_integration_v1",
+    "pull_request": 75,
+    "branch": "integration/mls-approved-ui-v36-owner-gated-20261029",
+    "base_pr": 68,
+    "source_visual_pr": 74,
+    "status": "DRAFT_NOT_MERGED_NOT_DEPLOYED",
+    "flag": "MLS_V36_OWNER_PREVIEW",
+    "flag_default": "OFF_UNLESS_EXACT_ENABLED_AND_OWNER_SESSION",
+    "files_reconciled": [
+      "web/cloudflare/src/admin-view.mjs",
+      "web/cloudflare/src/dtf-view.mjs",
+      "web/cloudflare/src/saved-catalog-view.mjs",
+      "web/cloudflare/build.py"
+    ],
+    "integration_tests": "web/cloudflare/tests/mls-v36-approved-integration-gates.test.mjs",
+    "owner_qa": "PENDING",
+    "cloudflare_rollback": "PENDING",
+    "approval": false,
+    "finance_m2": "ISSUE_50_OPEN",
+    "ads_promo": "LOCKED",
+    "shopee_write": false,
+    "docs": "docs/MLS_INTEGRATED_OWNER_RELEASE_2026_10_29.md"
+  },
+  "master_mission_20261030": {
+    "checkpoint": "docs/MLS_MASTER_MISSION_CHECKPOINT.json",
+    "execution": "docs/MLS_MASTER_MISSION_EXECUTION_2026_10_30.md",
+    "main_observed_sha": "a96bb1c56aaea54a63bede5c177a0de8ab2ea890",
+    "visual_pr": 79,
+    "visual_references": "docs/visual-references/mls-2026-10-29/manifest.json",
+    "visual_approval": "PENDING",
+    "merge_authorized": false,
+    "deploy_authorized": false,
+    "commercial_writes": "LOCKED",
+    "technical_app_sha256": "9e704d09411fa5a9db9cb6d1c2721314db6ffda92ab5edfc97b724329929a08a",
+    "validation": {
+      "node_pass": 2214,
+      "python_pass": 67,
+      "visual_approval": "PENDING",
+      "financial_m2": "OPEN"
+    },
+    "integration_guide": "docs/MLS_AI_SALES_INTEGRATION_2026_10_30.md",
+    "visual_ci": 41131654577,
+    "integration_pr": 83,
+    "production_deploy": false,
+    "owner_visual_approval": "PENDING",
+    "finance_m2": "OPEN_ISSUE_50",
+    "integration_app_sha256": "a5ba3298faf4b8c2eaa32e98674f1d7408f4c4616236d8f04a2fba72bbfb91c8",
+    "integration_validation": {
+      "node_pass": 2308,
+      "python_pass": 67,
+      "screenshots": 40,
+      "evidence": "docs/qa/mls-ai-sales-2026-10-30/regression.json",
+      "github_ci": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/83/checks"
+    }
+  },
+  "owner_homologation_20261030": {
+    "checkpoint": "docs/MLS_OWNER_PREVIEW_CHECKPOINT.json",
+    "guide": "docs/MLS_OWNER_HOMOLOGATION_2026_10_30.md",
+    "base_pr": 83,
+    "staging_url": null,
+    "cloudflare_authenticated": false,
+    "merchant_data": false,
+    "preview_pr": 84
+  },
   "official_updates_2026_10_30": {
     "owner_policy": "VALIDATED_UPDATES_TARGET_OFFICIAL_SEPARATE_ENVIRONMENT_ONLY_WHEN_NEEDED",
     "preview": {
@@ -671,7 +764,7 @@
     "cancelled_daily_profit": {
       "branch": "fix/cancelled-daily-profit-20261030",
       "base": "a96bb1c56aaea54a63bede5c177a0de8ab2ea890",
-      "status": "OFFICIAL_DEPLOY_VERIFIED_MAIN_PR_PENDING",
+      "status": "OFFICIAL_DEPLOY_VERIFIED_MAIN_MERGED",
       "docs": "docs/MLS_CANCELLED_DAILY_PROFIT_2026_10_30.md",
       "pull_request": 85,
       "code_commit": "dbcfae79716fbbe8785cbb615c435e0c62be1b6a",
@@ -685,7 +778,8 @@
         "exact_published_bytes": true,
         "configuration_preserved": true,
         "owner_authenticated_qa": "NOT_EXECUTED"
-      }
+      },
+      "merge_commit": "2ab4c9d8baa3c25e5816bcca14b4a0973ea73d5a"
     },
     "commercial_writes": "LOCKED"
   }

@@ -5,6 +5,7 @@ import {MISSION_CSS,MISSION_TRENDS_CSS,MISSION_CLIENT,MISSION_AGENTS,missionWork
 import {adminBody} from '../src/admin-view.mjs';
 import {commandCenterBody,AGENT_REGISTRY_CLIENT} from '../src/agent-registry-view.mjs';
 import {buildMlsAgentRegistry} from '../src/agent-registry.mjs';
+import {MLS_APPROVED_DESIGN_CSS} from '../src/approved-design-system.mjs';
 
 const names=['finance','ads','products','production','returns','auditor','hermes'];
 const fixture=()=>buildMlsAgentRegistry({
@@ -101,11 +102,11 @@ test('unavailable sources never become fake amounts, healthy agents or fake prod
 
 test('approved Mission Control V2 actually exposes colored cockpit, real observation charts and seven dedicated agents',()=>{
  const html=commandCenterBody(),fleet=missionWorkspacesBody();
- for(const key of ['mission-dashboard','mission-command-hero','mission-command-orbit','mission-overview-cta','mission-day-intelligence','missionDayBarSales','missionDayBarNet','missionDayBarAds','missionHealthRing','missionHealthHealthy','missionHealthWorking','missionHealthAttention','missionHealthBlocked']){
+ for(const key of ['mission-dashboard','mission-command-hero','mls-command-globe','mls-overview-source','mission-day-intelligence','missionDayBarSales','missionDayBarNet','missionDayBarAds','missionHealthRing','missionHealthHealthy','missionHealthWorking','missionHealthAttention','missionHealthBlocked']){
   assert.ok(html.includes(key),key+' missing from shipped owner page');
  }
  for(const key of ['net','sales','ads','margin','paid','alerts'])assert.ok(html.includes('data-mission-metric="'+key+'"'),key);
- for(const name of ['finance','ads','products','production','returns','auditor'])assert.ok(html.includes('data-mission-accent="'+name+'"'));
+ for(const name of ['hermes','finance','ads','products','production','returns'])assert.ok(html.includes('data-mission-accent="'+name+'"'));
  assert.equal((html.match(/data-agent-placeholder="true"/g)||[]).length,6);
  assert.ok(html.indexOf('mission-day-intelligence')>html.indexOf('commandCenterAgents'));
  for(const name of names){
@@ -146,7 +147,7 @@ test('V3 compact dashboard retains all six real KPIs, six agent links, and histo
  for(const id of ['commandCenterNet','commandCenterSales','commandCenterAds','commandCenterAlerts','commandCenterAgents'])assert.match(html,new RegExp('id="'+id+'"'));
  for(const id of ['finance','ads','products','production','returns','auditor'])assert.match(html,new RegExp('href="/admin\\?tab=agent-'+id+'"'));
  assert.match(MISSION_CSS,/V3 cockpit layout/);
- assert.match(MISSION_CSS,/grid-template-columns:repeat\(6,minmax\(0,1fr\)\)/);
+ assert.match(MLS_APPROVED_DESIGN_CSS,/\.mission-dashboard \.agent-grid\{grid-template-columns:repeat\(6,minmax\(0,1fr\)\)/);
  assert.match(MISSION_CSS,/\.mission-dashboard \.agent-card:focus-visible/);
 });
 test('V3 workspaces avoid redundant footer and section navigation while preserving meaningful tools',()=>{
@@ -162,12 +163,13 @@ test('V3 workspaces avoid redundant footer and section navigation while preservi
 });
 
 
-test('V3 second pass eliminates double agent icons and constrains executive hero height',()=>{
- assert.match(MISSION_CSS,/V3 density pass 2/);
- assert.match(MISSION_CSS,/\.mission-dashboard \.agent-card-head:before\{display:none\}/);
- assert.match(MISSION_CSS,/\.mission-dashboard \.mission-command-orbit\{display:none\}/);
- assert.match(MISSION_CSS,/grid-template-columns:repeat\(6,minmax\(0,1fr\)\)!important/);
- for(const id of ['finance','ads','products','production','returns','auditor'])assert.match(commandCenterBody(),new RegExp('data-mission-accent="'+id+'"'));
+test('canonical overview removes double icons and keeps the executive hero independent of lower panels',()=>{
+ assert.doesNotMatch(MISSION_CSS,/V3 density pass 2/);
+ assert.match(MLS_APPROVED_DESIGN_CSS,/\.mission-dashboard \.agent-card-head:before\{display:none\}/);
+ assert.match(MLS_APPROVED_DESIGN_CSS,/\.mission-dashboard\{display:block\}/);
+ assert.match(MLS_APPROVED_DESIGN_CSS,/grid-template-columns:repeat\(6,minmax\(0,1fr\)\)/);
+ assert.doesNotMatch(MLS_APPROVED_DESIGN_CSS,/grid-template-columns:repeat\(4,minmax\(0,1fr\)\)!important/);
+ for(const id of ['hermes','finance','ads','products','production','returns'])assert.match(commandCenterBody(),new RegExp('data-mission-accent="'+id+'"'));
 });
 
 
@@ -189,11 +191,11 @@ test('financial sparklines are slots for cached daily observations, not decorati
 });
 
 
-test('Hermes priority overflow stays bounded without stretching KPI rows',()=>{
- assert.match(MISSION_CSS,/Hermes content must never set the height/);
- assert.match(MISSION_CSS,/max-height:360px;overflow:hidden/);
- assert.match(MISSION_CSS,/max-height:195px;overscroll-behavior:contain/);
+test('Hermes priorities remain bounded in their own lower panel without stretching KPI rows',()=>{
+ assert.match(MLS_APPROVED_DESIGN_CSS,/\.mls-overview-priorities \.command-priorities\{max-height:235px;overflow:auto;overscroll-behavior:contain/);
+ assert.match(MLS_APPROVED_DESIGN_CSS,/\.mission-dashboard \.command-center-grid>\.hermes-command\{grid-column:auto;grid-row:auto/);
  assert.match(commandCenterBody(),/id="commandCenterPriorities"/);
+ assert.ok(commandCenterBody().indexOf('class="command-center-grid mls-overview-panels"')>commandCenterBody().indexOf('id="commandAgents"'));
 });
 
 
@@ -213,11 +215,12 @@ test('specialist workspaces hydrate observed catalog and saved DTF queue counts'
 });
 
 
-test('mobile overview uses compact two-column cards and hides unavailable comparison clutter',()=>{
- assert.match(MISSION_TRENDS_CSS,/Mobile owner cockpit V3/);
- assert.match(MISSION_TRENDS_CSS,/grid-template-columns:repeat\(2,minmax\(0,1fr\)\)!important/);
- assert.match(MISSION_TRENDS_CSS,/mission-kpi-delta\[data-direction=UNAVAILABLE\]\{display:none\}/);
- assert.match(MISSION_TRENDS_CSS,/\.mission-dashboard \.agent-grid\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)!important/);
+test('mobile overview uses canonical two-column cards and hides unavailable comparison clutter',()=>{
+ assert.doesNotMatch(MISSION_TRENDS_CSS,/Mobile owner cockpit V3/);
+ assert.match(MLS_APPROVED_DESIGN_CSS,/grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+ assert.match(MLS_APPROVED_DESIGN_CSS,/mission-kpi-delta\[data-direction=UNAVAILABLE\]\{display:none\}/);
+ assert.match(MLS_APPROVED_DESIGN_CSS,/\.mission-dashboard \.agent-grid\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)\}/);
+ assert.match(MLS_APPROVED_DESIGN_CSS,/min-height:44px;height:44px/);
 });
 
 

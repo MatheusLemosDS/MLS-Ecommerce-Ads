@@ -1,0 +1,51 @@
+{
+  "schema": "mls_approved_visual_reference_manifest_v1",
+  "received_at": "2026-10-30",
+  "archive_sha256": "0624a0ad1b7469dba36d3e2306c28a4e64bca545ea998fc7c30e0debe6ab99b0",
+  "source": "OWNER_ATTACHMENT",
+  "numeric_values": "ILLUSTRATIVE_NOT_BUSINESS_DATA",
+  "references": [
+    {
+      "file": "01_overview_aprovado.png",
+      "width": 899,
+      "height": 656,
+      "bytes": 831550,
+      "sha256": "9c77291ef81462d0c0eaec878e2aa990b2b02d61cea2703b97e73d7938b2fb8a"
+    },
+    {
+      "file": "02_finance_aprovado.png",
+      "width": 515,
+      "height": 317,
+      "bytes": 236577,
+      "sha256": "783def2e9075eb3e3fc82fc8b3f4d184c5c4aaa2c939bf3d401e5ece1d8bd5d8"
+    },
+    {
+      "file": "03_ads_aprovado.png",
+      "width": 512,
+      "height": 301,
+      "bytes": 237647,
+      "sha256": "a0adaab4282cbe3a3ae13848d820687b744e082b4ccb45f9b2fc715abc4c3af9"
+    },
+    {
+      "file": "04_production_aprovado.png",
+      "width": 504,
+      "height": 273,
+      "bytes": 208714,
+      "sha256": "5d98efb77e568228d36216fcd800d4d3eda692cbdffa0fee616b845e020cc364"
+    },
+    {
+      "file": "05_returns_aprovado.png",
+      "width": 547,
+      "height": 268,
+      "bytes": 219152,
+      "sha256": "cfe0e2e30a501ecbe5918f6a81cb05074c084e7a1aa835a15201702f23ffc3ab"
+    },
+    {
+      "file": "06_products_aprovado.png",
+      "width": 515,
+      "height": 281,
+      "bytes": 227835,
+      "sha256": "b2273b0a8ea3812e9e374685b63f3ccf52970ae5c4b84255ba3c50fcfd284f9a"
+    }
+  ]
+}

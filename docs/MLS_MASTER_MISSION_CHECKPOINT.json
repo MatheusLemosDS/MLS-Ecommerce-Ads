@@ -1,0 +1,151 @@
+{
+  "schema": "mls_master_mission_checkpoint_v1",
+  "updated_at": "2026-10-30",
+  "base_visual_sha": "8d860b2c4f26531c53c4cdba0e06a14f51a7eef4",
+  "visual_branch": "feature/mls-mockup-parity-real-charts-20261029",
+  "visual_pr": 79,
+  "integration_branch": "integration/mls-commerce-os-ai-sales-20261030",
+  "integration_pr": 83,
+  "authorization": {
+    "development": true,
+    "draft_pr": true,
+    "merge_main": false,
+    "production_deploy": false,
+    "commercial_writes": false
+  },
+  "phase0": {
+    "state": "COMPLETE",
+    "inspected_prs": [
+      76,
+      79,
+      81
+    ],
+    "inspected_issues": [
+      50,
+      80,
+      82
+    ],
+    "findings": [
+      "Current workspace predates remote main; isolated PR79 worktree created without changing original checkout.",
+      "Financial M2 requires authenticated Seller Centre evidence.",
+      "Hermes used active partial collection instead of published monthly source.",
+      "Listing edit regenerates imported custom SKUs.",
+      "Pricing observer lives on separate PR47.",
+      "Listing mockup JSON contains metadata, not original image bytes."
+    ]
+  },
+  "phase1": {
+    "state": "TECHNICALLY_VALIDATED_OWNER_VISUAL_REVIEW_PENDING",
+    "visual_reference_state": "AVAILABLE_HASHED_ORIGINALS",
+    "reference_package": "MLS_CODEX_VISUAL_REFERENCES_2026-10-29.zip",
+    "mockup_parity_approved": false,
+    "technical_tests": {
+      "node_pass": 2214,
+      "node_fail": 0,
+      "node_skipped": 0,
+      "python_pass": 67,
+      "compiled_chromium_scenarios": {
+        "error_navigation": 60,
+        "local_connected_navigation": 24,
+        "overview_normal_minified": 8
+      },
+      "app_sha256": "9e704d09411fa5a9db9cb6d1c2721314db6ffda92ab5edfc97b724329929a08a",
+      "auth_sha256": "1fef431c8573e05563c7938d95be0976a160bc603340084aa747ee0b73e7ec64",
+      "finance_sha256": "b2483fc6107ecb4782e746becfe1b69ee6e3b9d3f0a6109351390b11b9303ca3"
+    },
+    "reference_manifest": "docs/visual-references/mls-2026-10-29/manifest.json",
+    "screenshots": "docs/qa/mls-visual-2026-10-30/README.md",
+    "github_ci": {
+      "state": "GREEN",
+      "head": "e7ce5009bcc1d8f4dc6dcc10be78e1caac0c2c23",
+      "run": 41131654577,
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/41131654577"
+    },
+    "frozen_head": "fa5c96c9e4016d51e93918a4a0e88b239ce02c9e"
+  },
+  "phase2": {
+    "state": "LOCAL_INTEGRATION_TESTED_EXTERNAL_M2_OPEN",
+    "fixes": [
+      "Preserve imported Listing Factory variant identities and SKUs.",
+      "Integrate PR47 pure product/pricing observer without commercial price permission."
+    ],
+    "finance_m2": "BLOCKED_EXTERNAL_SELLER_CENTRE",
+    "completed": [
+      "Listing Factory stable variants, imported custom and kit SKUs, explicit atomic prefix replacement and quantities.",
+      "PR47 product ABC and explicit read-only pricing what-if integrated without automatic merge.",
+      "Existing Finance/Returns/Ads/Hermes/DTF/auth sources preserved; M2 remains external."
+    ]
+  },
+  "phase3": {
+    "state": "LOCAL_MVP_TESTED_REAL_MP4_EXPORTS",
+    "documentation_source_pr": 81,
+    "documentation_source_sha": "c0b0279a4e74496154e64cf38a0480c22ec5de4c",
+    "features": [
+      "Exact saved-catalog variant adapter and manual evidence downgrade",
+      "Component-aware, rights-bound campaigns and jobs",
+      "Three real local PT-BR 1080x1920 MP4 templates with measured captions and QA",
+      "Manual creator CRM and gated collaboration drafts",
+      "Observed deduplicated performance ledger and bounded recommendations"
+    ],
+    "llm": "BLOCKED_PROVIDER_ACCESS_NO_PAID_EXECUTION; LOCAL_TEMPLATE render + pure optional review adapter"
+  },
+  "phase4": {
+    "state": "MINIMAL_FFMPEG_ADAPTER_IMPLEMENTED_R1_REAL_MEDIA_TESTED",
+    "evidence": "docs/MLS_AI_SALES_POC_EVIDENCE.md",
+    "media_evidence": "docs/qa/mls-ai-sales-2026-10-30/media-evidence.json"
+  },
+  "phase5": {
+    "state": "NATIVE_FIVE_TAB_OWNER_PREVIEW_TESTED",
+    "flag": "MLS_AI_SALES_OWNER_PREVIEW=ENABLED; exact owner opt-in, default OFF"
+  },
+  "phase6": {
+    "state": "LOCAL_REGRESSION_GREEN_DRAFT_PR_REVIEW_PENDING",
+    "node_pass": 2308,
+    "node_fail": 0,
+    "node_skipped": 0,
+    "python_pass": 67,
+    "worker_hashes": {
+      "app": {
+        "worker": "brazacommerce-app",
+        "bytes": 2939685,
+        "sha256": "a5ba3298faf4b8c2eaa32e98674f1d7408f4c4616236d8f04a2fba72bbfb91c8"
+      },
+      "auth": {
+        "worker": "brazacommerce-auth",
+        "bytes": 251026,
+        "sha256": "1fef431c8573e05563c7938d95be0976a160bc603340084aa747ee0b73e7ec64"
+      },
+      "finance": {
+        "worker": "brazacommerce-finance",
+        "bytes": 485661,
+        "sha256": "b2483fc6107ecb4782e746becfe1b69ee6e3b9d3f0a6109351390b11b9303ca3"
+      }
+    },
+    "ai_screenshots": 40,
+    "evidence": "docs/qa/mls-ai-sales-2026-10-30/regression.json",
+    "github_ci": {
+      "exact_head_status": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/83/checks",
+      "note": "Inspect current PR HEAD; local evidence is bound to exact App hash."
+    }
+  },
+  "external_blockers": [
+    "Authenticated Seller Centre comparison and owner QA unavailable.",
+    "TikTok affiliate and publishing grants unverified.",
+    "Real shop media rights/bytes require authorized local files."
+  ],
+  "safety": {
+    "ads_promo": "LOCKED",
+    "hermes": "OBSERVER",
+    "finance_m2": "OPEN_ISSUE_50",
+    "bank_realized_net": "UNKNOWN"
+  },
+  "integration_guide": "docs/MLS_AI_SALES_INTEGRATION_2026_10_30.md",
+  "owner_homologation": {
+    "checkpoint": "docs/MLS_OWNER_PREVIEW_CHECKPOINT.json",
+    "branch": "feature/mls-owner-homologation-preview-20261030",
+    "base_pr": 83,
+    "production_worker_changes": false,
+    "cloudflare_authenticated": false,
+    "preview_pr": 84
+  }
+}

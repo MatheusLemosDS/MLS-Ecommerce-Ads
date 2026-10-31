@@ -118,6 +118,32 @@ export const TARGETS = Object.freeze({
     '55645f1f5ec777136254e0deb6e09e88cd542649097786992e3fb212af298078',
     // Bounded previous-month cancellation refresh; exact reviewed build, full CI required.
     '5609b8412ff643f8c4864bac68e2d55461ad97878fdff9f602f3bff642246a6a',
+    // Reviewed PR45 V3.6 catalog source compatibility.
+    '9349781be29daa3a5ac34e0b392586bbd651911da83d36149c2c926e2bd60e8b',
+    // Reviewed PR48 V3.6 combined saved catalog and DTF search source.
+    '080bcd884f1842023e384e180cd4e9e33fe3c58681596c86b4b6f0552216b68f',
+    // MLS Listing Factory owner draft-only UI from Actions 40783813679; requires full CI/Chrome before review.
+    'e228e899603c5b08b5d432558de6277faa4217d030c8cc0bb8d9692391c4ca4a',
+    // Listing Factory local image decompression guard and default price propagation; exact CI App build from 40784662417.
+    'd1bb7c43d40034f1629d18f159a8558cb6e8e7d540e3531d998a56377a3120b9',
+    // MLS Listing Factory JSON resume, price-source gate and paged owner UI; exact App digest from CI 40788461939, full rerun required.
+    'bbbe1b9efdf0a6c11e507c34c92730ddbb8502fb367c5cfe33c031ba3850d3cd',
+    // Bulk local media relink in MLS Listing Factory, exact App SHA from Actions 40790379512; full validation required.
+    '63da28d212c45d1e7e93444dbe4ac2ac49ad113af273dddf65370f668156180d',
+    // V3.6 real catalog/DTF search + Listing Factory owner draft integration, exact App digest from GH Actions 40792060142; full CI required.
+    '8ed059ddb6f0901a48d277d6b9b806a23d52a1e5e105ed0e2e456e2aea6701f5',
+    // Mobile Listing Factory column-width repair observed by synthetic Chrome QA; exact App SHA from Actions 40794418436, all UI tests passed, integrity rerun required.
+    '805caf375c1d060c3b3fcc88b6764c03153931a5ce97b017f5245752027e35c7',
+    // Owner-only V3.6 server feature flag OFF-by-default; exact App digest in CI 40798972739 (five source-identity/startup fixture failures to rerun).
+    '0b7c120c6b858a05941e00efc5d89478e10500af720ff7faf8e3668dafc12edb',
+    // PR #75 integrated approved visual design with V3.6 owner preview OFF by default;
+    // exact App build in CI #40900296254; Auth and Finance hashes unchanged.
+    'd1618ca222afa4604cb6e1c5c938735c6415a0fc475b3901f5b04b3d9f0eb2f1',
+    // PR79 original-reference component layout, verified charts and Hermes published cohort;
+    // exact local build; full regression and review remain required, no deployment.
+    '9e704d09411fa5a9db9cb6d1c2721314db6ffda92ab5edfc97b724329929a08a',
+    // Local AI Sales owner preview and SKU/pricing observer integration, no deployment.
+    'a5ba3298faf4b8c2eaa32e98674f1d7408f4c4616236d8f04a2fba72bbfb91c8',
   ]}),
   auth: Object.freeze({name: 'brazacommerce-auth', main: '../../dist/auth-worker.mjs', baselineHashes: [
     '45d0142709c5087e373cc4da146070ed39c472805f6f64c00f00b6555f0e1f56',

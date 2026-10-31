@@ -1,5 +1,11 @@
 # MLS Commerce OS — instruções do repositório (ChatGPT, Codex e colaboradores)
 
+> **Homologação local validada, 30/10/2026:** a continuação da PR #83 cria somente ferramentas locais em `feature/mls-owner-homologation-preview-20261030`. Worker App permanece no hash `a5ba3298…bbfb91c8`; Auth/Finance inalterados. Estado e testes em `docs/MLS_OWNER_PREVIEW_CHECKPOINT.json`. Prévia e exemplos são sintéticos; sem Cloudflare autenticada, staging online, merge ou deploy. As notas anteriores abaixo são históricas.
+
+> **Missão mestre 30/10/2026, estado mais recente:** PR #79 congelada, CI verde `e7ce5009`/41131654577. Integração local em `integration/mls-commerce-os-ai-sales-20261030`, guia `docs/MLS_AI_SALES_INTEGRATION_2026_10_30.md` e checkpoint `docs/MLS_MASTER_MISSION_CHECKPOINT.json`. Motor SVG integrado; AI Sales em preview owner independente, OFF padrão. Esta nota atualiza o checkpoint histórico abaixo. Sem merge/deploy/writes; M2 e QA owner pendentes.
+
+> **Checkpoint de 29/10/2026 para Codex nesta branch:** prioridade única é a [PR #79](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/79) e [issue #80](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/issues/80), com o briefing `docs/MLS_MOCKUP_PARITY_CODEX_2026_10_29.md`. Os seis PNGs originais foram recebidos em 30/10/2026 e estão em `docs/visual-references/mls-2026-10-29/`, com hashes no manifesto. PR #78 foi fechada **sem merge** por não atingir fidelidade. PR #76 permanece DRAFT. Nenhum deploy, Ads/PROMO ou Shopee write é autorizado. **Motor SVG desta branch não está integrado à UI.**
+
 Leia, nesta ordem, antes de qualquer alteração:
 1. docs/ROADMAP_MLS_COMMERCE_OS.md (fonte canônica da estratégia).
 2. docs/MLS_COMMERCE_OS_CHECKPOINT.json (estado técnico e branches).

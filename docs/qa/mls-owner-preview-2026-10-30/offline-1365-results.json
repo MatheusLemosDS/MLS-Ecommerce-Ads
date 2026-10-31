@@ -1,0 +1,25 @@
+{
+  "schema": "mls_owner_offline_browser_qa_v1",
+  "source": "ACTUAL_WORKER_HTML_READ_ONLY_SNAPSHOT",
+  "transport": "HTTP_STATIC",
+  "file_protocol": "BLOCKED_BY_BROWSER_ADMINISTRATOR_POLICY_NOT_VALIDATED",
+  "worker_sha256": "a5ba3298faf4b8c2eaa32e98674f1d7408f4c4616236d8f04a2fba72bbfb91c8",
+  "viewport": {
+    "width": 1365,
+    "height": 900
+  },
+  "panels": 16,
+  "ai_tabs": 5,
+  "crypto_available": true,
+  "catalog_items": 3,
+  "selected_variant": "99000101",
+  "mutations": "EXPLICITLY_BLOCKED",
+  "embedded_mp4s": 3,
+  "javascript_errors": 0,
+  "image": {
+    "file": "offline-1365-native-catalog.png",
+    "sha256": "f651ca61751a0d18597354999ed66f81fecd5425cdf70b9e25ef02046298ccba",
+    "bytes": 208884
+  },
+  "original_report_sha256": "e9893224ebed1fddd9575d83bd754932c9a24dab35504ac0bfa596b7de461d0e"
+}

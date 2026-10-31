@@ -1,0 +1,130 @@
+{
+  "schema": "mls_visual_candidate_capture_manifest_v1",
+  "worker_sha256": "9e704d09411fa5a9db9cb6d1c2721314db6ffda92ab5edfc97b724329929a08a",
+  "synthetic": true,
+  "owner_approved": false,
+  "financial_verified": false,
+  "references": "../../visual-references/mls-2026-10-29/manifest.json",
+  "captures": [
+    {
+      "file": "approved-dark-desktop-agent-ads.png",
+      "bytes": 351755,
+      "sha256": "ef0df5b71bd1e455ce78a7e0148f787005868c31652064af537a55abc84ef57c"
+    },
+    {
+      "file": "approved-dark-desktop-agent-finance.png",
+      "bytes": 376715,
+      "sha256": "5d06613139257181f2a14a55f5eef6f97137b00a12ae26b91215dd07f9dd3302"
+    },
+    {
+      "file": "approved-dark-desktop-agent-production.png",
+      "bytes": 371519,
+      "sha256": "4c69ed0ebaffa67e806a33e38d8dc501c087b20cb4b7c188dfefd7882c3fae79"
+    },
+    {
+      "file": "approved-dark-desktop-agent-products.png",
+      "bytes": 372865,
+      "sha256": "3bdb26d0c2470e3b226d9dc84d7f4c9d9bb69672554285ea983b3e12e40b1cbe"
+    },
+    {
+      "file": "approved-dark-desktop-agent-returns.png",
+      "bytes": 387922,
+      "sha256": "6b613ca7e63d375cd96114ab7b488cd09dca5bd711cde4a6cd78eed96e389bd4"
+    },
+    {
+      "file": "approved-dark-desktop-overview.png",
+      "bytes": 560446,
+      "sha256": "2d02995fbcb44b7ea1680dbb6edde9c0167a3a56d424afa182e0942c5f445bab"
+    },
+    {
+      "file": "approved-dark-mobile-agent-ads.png",
+      "bytes": 162003,
+      "sha256": "807a054d7127e510d3b339bdec900bea5e7f1d6c7f824b07063b16c9e6987729"
+    },
+    {
+      "file": "approved-dark-mobile-agent-finance.png",
+      "bytes": 169447,
+      "sha256": "81401e779911fd8a357d41696ba022d03d07a44c6e867cff86116f9061758b37"
+    },
+    {
+      "file": "approved-dark-mobile-agent-production.png",
+      "bytes": 160696,
+      "sha256": "1c03f5924136d6d8fbd7870206021afe6e6991318b2ab84517e1b8ceab0cf7a1"
+    },
+    {
+      "file": "approved-dark-mobile-agent-products.png",
+      "bytes": 163692,
+      "sha256": "b38e60af58d3792ca5ef6ca767440ce2166bfb25147115c7b336a58e0587e3a3"
+    },
+    {
+      "file": "approved-dark-mobile-agent-returns.png",
+      "bytes": 167745,
+      "sha256": "ab0c3ddc34c63e91938534287d85e5aece7384bac9344c4bbc90c3c8d26114ce"
+    },
+    {
+      "file": "approved-dark-mobile-overview.png",
+      "bytes": 160485,
+      "sha256": "3c8998b854dc56c095e24e4f40aec6c1ef6394481f28b374d250570ee7fab22c"
+    },
+    {
+      "file": "approved-light-desktop-agent-ads.png",
+      "bytes": 325600,
+      "sha256": "cd1745964a148a564c3282c29c44b46b2d601430430f4ab29b5503a976a9ccfa"
+    },
+    {
+      "file": "approved-light-desktop-agent-finance.png",
+      "bytes": 302918,
+      "sha256": "d042399c9cd72ce0bfa826a4ef5eb0630f9945ab75dc52f01e5e388f373fc6f6"
+    },
+    {
+      "file": "approved-light-desktop-agent-production.png",
+      "bytes": 320535,
+      "sha256": "9a6e6e346764dc4a2c28941f07e68b424cb835cdb83be07fb246520d4b1f75a3"
+    },
+    {
+      "file": "approved-light-desktop-agent-products.png",
+      "bytes": 296867,
+      "sha256": "5ccac19de0fa0cd3e906aacea5355e8323aebf86fe985a01fd1086fba4324d30"
+    },
+    {
+      "file": "approved-light-desktop-agent-returns.png",
+      "bytes": 321732,
+      "sha256": "b8b637922dc8006188e05d7ddffd07d943dcd5ce3135d5ef8594907fdb2ddd95"
+    },
+    {
+      "file": "approved-light-desktop-overview.png",
+      "bytes": 476853,
+      "sha256": "a4125979b5375a12908d3613c4c31a7cdc4b7e67015ca17f9a134f7d2dd0bee1"
+    },
+    {
+      "file": "approved-light-mobile-agent-ads.png",
+      "bytes": 129567,
+      "sha256": "196d059fda0ce9e378356de926673626f0bda11d3a02197a43af65be6875111e"
+    },
+    {
+      "file": "approved-light-mobile-agent-finance.png",
+      "bytes": 128298,
+      "sha256": "f545079763c040837a3304d06875b0b97b30b29ec14422cd24c1cfbb23c75dc8"
+    },
+    {
+      "file": "approved-light-mobile-agent-production.png",
+      "bytes": 129320,
+      "sha256": "ad5857ae73c5da285bb8b053e03272492cbde8f01c7ba33f1c7681eac6ab7f9e"
+    },
+    {
+      "file": "approved-light-mobile-agent-products.png",
+      "bytes": 120727,
+      "sha256": "67d998e5e0c41ba28039878a9cf1949a523d9be71f6ef84fde049982d6974e46"
+    },
+    {
+      "file": "approved-light-mobile-agent-returns.png",
+      "bytes": 126878,
+      "sha256": "ca0ee425cf1fdd9bc400f85bac65c24fc05933ace4dff2579b46257eb2bb7bb1"
+    },
+    {
+      "file": "approved-light-mobile-overview.png",
+      "bytes": 122733,
+      "sha256": "466771abcdbd10b93ba901becb85592ca640409ddfc5a07d1b725937a89c3464"
+    }
+  ]
+}

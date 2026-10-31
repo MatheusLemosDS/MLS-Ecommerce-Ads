@@ -1,4 +1,7 @@
-export const MISSION_CSS="\n/* MLS Commerce OS / Mission Control: cosmetic only, keeps existing theme and API contracts. */\n.mission-agent--finance{--mission-accent:#46e5aa;--mission-rgb:70,229,170}\n.mission-agent--ads{--mission-accent:#f9a14e;--mission-rgb:249,161,78}\n.mission-agent--products{--mission-accent:#4b9fff;--mission-rgb:75,159,255}\n.mission-agent--production{--mission-accent:#b28aff;--mission-rgb:178,138,255}\n.mission-agent--returns{--mission-accent:#fa6f99;--mission-rgb:250,111,153}\n.mission-agent--auditor{--mission-accent:#3bd1e8;--mission-rgb:59,209,232}\n.mission-agent--hermes{--mission-accent:#7da5ff;--mission-rgb:125,165,255}\n.mission-hub,.mission-workspace{min-width:0;max-width:1500px;margin:0 auto 30px}\n.mission-hero{position:relative;isolation:isolate;overflow:hidden;display:flex;align-items:center;justify-content:space-between;gap:24px;padding:28px 30px;border:1px solid var(--line);border-radius:21px;background:linear-gradient(116deg,rgba(var(--mission-rgb),.12),transparent 58%),var(--surface);box-shadow:0 8px 36px rgba(0,0,0,.08)}\n.mission-hero:before{content:\"\";position:absolute;z-index:-1;width:300px;height:300px;right:-95px;top:-180px;border-radius:50%;border:1px solid rgba(var(--mission-rgb),.45);box-shadow:0 0 0 39px rgba(var(--mission-rgb),.04),0 0 0 91px rgba(var(--mission-rgb),.025)}\n.mission-hero:after{content:\"\";position:absolute;z-index:-1;inset:auto 0 0;height:2px;background:linear-gradient(90deg,transparent,rgba(var(--mission-rgb),.85),transparent)}\n.mission-crumb{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:18px;color:var(--muted);font-size:11px}\n.mission-crumb a{color:var(--muted);text-decoration:none}.mission-crumb a:hover{color:var(--text)}\n.mission-hero-main{min-width:0;display:flex;align-items:flex-start;gap:18px}\n.mission-orb{display:grid;place-items:center;flex:0 0 76px;width:76px;height:76px;border:1px solid rgba(var(--mission-rgb),.58);border-radius:23px;background:radial-gradient(circle at 30% 22%,rgba(var(--mission-rgb),.36),rgba(var(--mission-rgb),.08) 65%,transparent 100%);box-shadow:inset 0 0 24px rgba(var(--mission-rgb),.12),0 0 34px rgba(var(--mission-rgb),.16);color:var(--mission-accent);font-size:37px;line-height:1}\n.mission-eyebrow{display:block;margin:0 0 7px;color:var(--mission-accent);font-size:10px;letter-spacing:.15em;text-transform:uppercase;font-weight:800}\n.mission-hero h2{font-size:clamp(25px,3vw,34px);letter-spacing:-.9px;line-height:1.13;margin:0 0 9px}\n.mission-hero p{margin:0;color:var(--muted);font-size:12px;line-height:1.7;max-width:680px}\n.mission-status{display:inline-flex;align-items:center;gap:7px;padding:8px 11px;border:1px solid rgba(var(--mission-rgb),.35);border-radius:999px;background:rgba(var(--mission-rgb),.09);color:var(--text);font-size:11px;font-weight:700;white-space:nowrap}\n.mission-status:before{content:\"\";display:block;flex:0 0 7px;width:7px;height:7px;border-radius:100%;background:var(--mission-accent);box-shadow:0 0 10px var(--mission-accent)}\n.mission-status[data-status=ATTENTION],.mission-status[data-status=BLOCKED]{border-color:var(--line);background:var(--surface-raised)}\n.mission-status[data-status=ATTENTION]:before{background:#f3b44b}.mission-status[data-status=BLOCKED]:before{background:#f17691}\n.mission-breadcrumb-pill{font-size:10px;color:var(--muted);padding:7px 10px;background:var(--surface-raised);border:1px solid var(--line);border-radius:100px}\n.mission-hub-hero{--mission-accent:#78a9ff;--mission-rgb:120,169,255}\n.mission-hub-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin:24px 0 14px}\n.mission-hub-bar h3{margin:0;font-size:16px;letter-spacing:-.3px}.mission-hub-bar p{margin:4px 0 0;color:var(--muted);font-size:11px}\n.mission-hub-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}\n.mission-hub-card{display:flex;flex-direction:column;gap:11px;min-width:0;min-height:183px;padding:20px;border:1px solid var(--line);border-radius:18px;text-decoration:none;color:var(--text);background:linear-gradient(140deg,rgba(var(--mission-rgb),.11),transparent 72%),var(--surface);transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}\n.mission-hub-card:hover{transform:translateY(-3px);border-color:rgba(var(--mission-rgb),.75);box-shadow:0 13px 30px rgba(0,0,0,.11),inset 0 0 0 1px rgba(var(--mission-rgb),.13);text-decoration:none}\n.mission-hub-card:focus-visible,.mission-action:focus-visible,.mission-return:focus-visible{outline:3px solid var(--mission-accent,#4b9fff);outline-offset:3px}\n.mission-hub-card-top{display:flex;align-items:center;justify-content:space-between;gap:12px}\n.mission-mini-orb{display:grid;place-items:center;width:46px;height:46px;flex:0 0 46px;border-radius:14px;border:1px solid rgba(var(--mission-rgb),.55);background:rgba(var(--mission-rgb),.14);color:var(--mission-accent);font-size:25px;box-shadow:0 0 26px rgba(var(--mission-rgb),.12)}\n.mission-hub-card h4{margin:0;font-size:15px;letter-spacing:-.3px}.mission-hub-card p{margin:0;min-height:30px;color:var(--muted);font-size:11px;line-height:1.55}\n.mission-hub-card-bottom{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:auto;padding-top:7px;border-top:1px solid var(--line)}\n.mission-open{font-size:11px;font-weight:800;color:var(--mission-accent)}\n.mission-future{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}.mission-future span{font-size:10px;color:var(--muted);padding:8px 12px;border:1px dashed var(--line);border-radius:8px}\n.mission-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:16px 0}\n.mission-stat{position:relative;overflow:hidden;min-width:0;padding:20px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(120deg,rgba(var(--mission-rgb),.10),transparent 70%),var(--surface)}\n.mission-stat:before{content:\"\";height:2px;width:44%;position:absolute;inset:0 auto auto 0;background:linear-gradient(90deg,var(--mission-accent),transparent)}\n.mission-stat small{display:block;font-size:11px;color:var(--muted);line-height:1.5;min-height:32px}.mission-stat strong{display:block;margin:9px 0 5px;font-size:clamp(18px,2vw,27px);line-height:1.2;letter-spacing:-.6px;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}\n.mission-stat span{display:block;color:var(--muted);font-size:10px;line-height:1.55}\n.mission-panels{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(290px,1fr);gap:14px}\n.mission-module{min-width:0;border:1px solid var(--line);border-radius:17px;padding:21px;background:var(--surface)}\n.mission-module-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:15px}.mission-module-head h3{margin:0;font-size:16px}.mission-module-head small{font-size:10px;color:var(--muted)}\n.mission-tasks{display:grid;gap:9px}.mission-task{display:block;padding:13px 15px;border:1px solid var(--line);border-left:3px solid var(--mission-accent);border-radius:10px;background:var(--surface-raised);color:var(--text);text-decoration:none}.mission-task:hover{border-color:var(--mission-accent);text-decoration:none}\n.mission-task strong{display:block;font-size:12px}.mission-task p{font-size:11px;color:var(--muted);line-height:1.65;margin:5px 0 0}\n.mission-empty{font-size:12px;line-height:1.7;padding:19px;color:var(--muted);border-radius:10px;background:var(--surface-raised)}\n.mission-actions{display:grid;gap:9px}\n.mission-action{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:43px;padding:11px 13px;border:1px solid var(--line);border-radius:10px;background:var(--surface-raised);color:var(--text);text-decoration:none;font-size:12px;font-weight:700}\n.mission-action:hover{border-color:var(--mission-accent);text-decoration:none}\n.mission-action span:last-child{color:var(--mission-accent);font-size:18px}\n.mission-footnote{margin:16px 0 0;padding-top:14px;border-top:1px solid var(--line);font-size:11px;line-height:1.7;color:var(--muted)}\n.mission-coverage{margin-top:15px;padding:15px;border:1px solid var(--line);border-radius:13px;background:var(--surface)}\n.mission-coverage header{display:flex;justify-content:space-between;gap:12px;font-size:11px;margin-bottom:9px}.mission-coverage header span{color:var(--muted)}\n.mission-progress{overflow:hidden;height:7px;border-radius:100px;background:var(--surface-raised)}.mission-progress span{display:block;width:0;height:100%;background:var(--mission-accent);border-radius:100px;transition:width .24s ease}\n.mission-last{margin-top:12px;color:var(--muted);font-size:10px}\n.mission-finance-source{margin-top:20px;min-width:0}.mission-finance-source>.mission-hub-bar{margin:0 0 14px}.mission-finance-source .mission-source-note{font-size:11px;color:var(--muted);line-height:1.65;margin-bottom:12px}\n.mission-return{display:inline-flex;align-items:center;gap:7px;min-height:41px;padding:10px 12px;margin-top:14px;border:1px solid var(--line);border-radius:10px;background:var(--surface-raised);text-decoration:none;font-size:11px;font-weight:700;color:var(--text)}\n.mission-return:hover{text-decoration:none;border-color:var(--mission-accent)}\n.command-center .command-center-head{padding:22px 25px;margin-bottom:14px;border:1px solid var(--line);border-radius:19px;background:linear-gradient(115deg,rgba(65,115,226,.11),transparent 62%),var(--surface)}\n.command-center .command-center-head h2{font-size:29px}\n.command-center .command-metric{position:relative;overflow:hidden;border-radius:16px;padding:19px;background:linear-gradient(146deg,rgba(55,135,255,.055),transparent 65%),var(--surface)}\n.command-center .command-metric:after{content:\"\";position:absolute;inset:auto 0 0;height:2px;background:linear-gradient(90deg,transparent,var(--accent,#3ba6d0),transparent);opacity:.5}\n.command-center .agent-grid{grid-template-columns:repeat(3,minmax(0,1fr))}\n.command-center .agent-card{position:relative;overflow:hidden;min-height:150px;border-radius:15px;transition:transform .18s ease,border-color .18s ease}\n.command-center .agent-card:hover{transform:translateY(-2px);border-color:var(--accent,#3ba6d0)}\n.command-center .agent-card[data-mission-accent=finance]{border-top:2px solid #46e5aa}\n.command-center .agent-card[data-mission-accent=ads]{border-top:2px solid #f9a14e}\n.command-center .agent-card[data-mission-accent=products]{border-top:2px solid #4b9fff}\n.command-center .agent-card[data-mission-accent=production]{border-top:2px solid #b28aff}\n.command-center .agent-card[data-mission-accent=returns]{border-top:2px solid #fa6f99}\n.command-center .agent-card[data-mission-accent=auditor]{border-top:2px solid #3bd1e8}\n.command-center .agent-card .mission-card-link{display:block;margin-top:auto;padding-top:11px;font-size:11px;font-weight:800;color:var(--accent,#3ba6d0)}\n.command-center .agent-card-expenses,.command-center .agent-card-secondary{display:none}\n.command-center .command-center-grid{grid-template-columns:minmax(0,.9fr) minmax(0,2.1fr);gap:15px}\n.command-center .command-pending-detail{display:none}\n.mission-hero .mission-intro-status{display:flex;flex-direction:column;align-items:flex-end;gap:8px}\n.mission-app-breadcrumb{font-size:11px;color:var(--muted)}\n@media(max-width:1230px){.mission-hub-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.mission-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.command-center .agent-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.command-center .command-center-grid{grid-template-columns:1fr}}\n@media(max-width:850px){.mission-hero{padding:22px}.mission-orb{width:56px;height:56px;flex-basis:56px;border-radius:16px;font-size:29px}.mission-hero .mission-intro-status{align-items:flex-start}.mission-hero{align-items:flex-start;flex-direction:column}.mission-panels{grid-template-columns:minmax(0,1fr)}.mission-hub-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.command-center .command-center-head{padding:17px}.command-center .command-center-head h2{font-size:23px}}\n@media(max-width:550px){.mission-hub-grid,.mission-stats{grid-template-columns:1fr}.mission-hub-card{min-height:148px}.mission-hero-main{gap:12px}.mission-stat small{min-height:0}.mission-hub-card p{min-height:0}.command-center .agent-grid{grid-template-columns:1fr}.command-center .command-metric strong{font-size:19px}.mission-module{padding:16px}.mission-crumb{margin-bottom:12px}}\n@media(prefers-reduced-motion:reduce){.mission-hub-card,.command-center .agent-card,.mission-progress span{transition:none}.mission-hub-card:hover,.command-center .agent-card:hover{transform:none}}\n\n/* Keep accent labels readable in the light theme without changing existing theme variables. */\n:root[data-theme=light] .mission-agent--finance{--mission-accent:#067d58;--mission-rgb:6,125,88}\n:root[data-theme=light] .mission-agent--ads{--mission-accent:#a9520e;--mission-rgb:169,82,14}\n:root[data-theme=light] .mission-agent--products{--mission-accent:#185bbb;--mission-rgb:24,91,187}\n:root[data-theme=light] .mission-agent--production{--mission-accent:#7045b5;--mission-rgb:112,69,181}\n:root[data-theme=light] .mission-agent--returns{--mission-accent:#b32959;--mission-rgb:179,41,89}\n:root[data-theme=light] .mission-agent--auditor{--mission-accent:#097f91;--mission-rgb:9,127,145}\n:root[data-theme=light] .mission-agent--hermes{--mission-accent:#315fc1;--mission-rgb:49,95,193}\n.command-center .agent-card h4{font-size:14px}\n.command-center .agent-card p,.command-center .command-priority span{font-size:11px}\n:root[data-active-panel=overview] .workspace>.hero,:root[data-active-panel=agents] .workspace>.hero,:root[data-active-panel^=\"agent-\"] .workspace>.hero{display:none}\n"+String.raw`
+import {MLS_AGENT_ROBOT_SVG} from './mls-agent-art.mjs';
+import {createMlsVerifiedCharts} from './mls-verified-charts.mjs';
+import {projectMlsMissionChart} from './mls-chart-adapters.mjs';
+export const MISSION_CSS="\n/* MLS Commerce OS / Mission Control: cosmetic only, keeps existing theme and API contracts. */\n.mission-agent--finance{--mission-accent:#25e4b0;--mission-rgb:37,228,176}\n.mission-agent--ads{--mission-accent:#b46cf4;--mission-rgb:180,108,244}\n.mission-agent--products{--mission-accent:#ffac5b;--mission-rgb:255,172,91}\n.mission-agent--production{--mission-accent:#2dd7ed;--mission-rgb:45,215,237}\n.mission-agent--returns{--mission-accent:#f65c91;--mission-rgb:246,92,145}\n.mission-agent--auditor{--mission-accent:#68b9d5;--mission-rgb:104,185,213}\n.mission-agent--hermes{--mission-accent:#51adff;--mission-rgb:81,173,255}\n.mission-hub,.mission-workspace{min-width:0;max-width:1500px;margin:0 auto 30px}\n.mission-hero{position:relative;isolation:isolate;overflow:hidden;display:flex;align-items:center;justify-content:space-between;gap:24px;padding:28px 30px;border:1px solid var(--line);border-radius:21px;background:linear-gradient(116deg,rgba(var(--mission-rgb),.12),transparent 58%),var(--surface);box-shadow:0 8px 36px rgba(0,0,0,.08)}\n.mission-hero:before{content:\"\";position:absolute;z-index:-1;width:300px;height:300px;right:-95px;top:-180px;border-radius:50%;border:1px solid rgba(var(--mission-rgb),.45);box-shadow:0 0 0 39px rgba(var(--mission-rgb),.04),0 0 0 91px rgba(var(--mission-rgb),.025)}\n.mission-hero:after{content:\"\";position:absolute;z-index:-1;inset:auto 0 0;height:2px;background:linear-gradient(90deg,transparent,rgba(var(--mission-rgb),.85),transparent)}\n.mission-crumb{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:18px;color:var(--muted);font-size:11px}\n.mission-crumb a{color:var(--muted);text-decoration:none}.mission-crumb a:hover{color:var(--text)}\n.mission-hero-main{min-width:0;display:flex;align-items:flex-start;gap:18px}\n.mission-orb{display:grid;place-items:center;flex:0 0 76px;width:76px;height:76px;border:1px solid rgba(var(--mission-rgb),.58);border-radius:23px;background:radial-gradient(circle at 30% 22%,rgba(var(--mission-rgb),.36),rgba(var(--mission-rgb),.08) 65%,transparent 100%);box-shadow:inset 0 0 24px rgba(var(--mission-rgb),.12),0 0 34px rgba(var(--mission-rgb),.16);color:var(--mission-accent);font-size:37px;line-height:1}\n.mission-eyebrow{display:block;margin:0 0 7px;color:var(--mission-accent);font-size:10px;letter-spacing:.15em;text-transform:uppercase;font-weight:800}\n.mission-hero h2{font-size:clamp(25px,3vw,34px);letter-spacing:-.9px;line-height:1.13;margin:0 0 9px}\n.mission-hero p{margin:0;color:var(--muted);font-size:12px;line-height:1.7;max-width:680px}\n.mission-status{display:inline-flex;align-items:center;gap:7px;padding:8px 11px;border:1px solid rgba(var(--mission-rgb),.35);border-radius:999px;background:rgba(var(--mission-rgb),.09);color:var(--text);font-size:11px;font-weight:700;white-space:nowrap}\n.mission-status:before{content:\"\";display:block;flex:0 0 7px;width:7px;height:7px;border-radius:100%;background:var(--mission-accent);box-shadow:0 0 10px var(--mission-accent)}\n.mission-status[data-status=ATTENTION],.mission-status[data-status=BLOCKED]{border-color:var(--line);background:var(--surface-raised)}\n.mission-status[data-status=ATTENTION]:before{background:#f3b44b}.mission-status[data-status=BLOCKED]:before{background:#f17691}\n.mission-breadcrumb-pill{font-size:10px;color:var(--muted);padding:7px 10px;background:var(--surface-raised);border:1px solid var(--line);border-radius:100px}\n.mission-hub-hero{--mission-accent:#78a9ff;--mission-rgb:120,169,255}\n.mission-hub-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin:24px 0 14px}\n.mission-hub-bar h3{margin:0;font-size:16px;letter-spacing:-.3px}.mission-hub-bar p{margin:4px 0 0;color:var(--muted);font-size:11px}\n.mission-hub-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}\n.mission-hub-card{display:flex;flex-direction:column;gap:11px;min-width:0;min-height:183px;padding:20px;border:1px solid var(--line);border-radius:18px;text-decoration:none;color:var(--text);background:linear-gradient(140deg,rgba(var(--mission-rgb),.11),transparent 72%),var(--surface);transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}\n.mission-hub-card:hover{transform:translateY(-3px);border-color:rgba(var(--mission-rgb),.75);box-shadow:0 13px 30px rgba(0,0,0,.11),inset 0 0 0 1px rgba(var(--mission-rgb),.13);text-decoration:none}\n.mission-hub-card:focus-visible,.mission-action:focus-visible,.mission-return:focus-visible{outline:3px solid var(--mission-accent,#4b9fff);outline-offset:3px}\n.mission-hub-card-top{display:flex;align-items:center;justify-content:space-between;gap:12px}\n.mission-mini-orb{display:grid;place-items:center;width:46px;height:46px;flex:0 0 46px;border-radius:14px;border:1px solid rgba(var(--mission-rgb),.55);background:rgba(var(--mission-rgb),.14);color:var(--mission-accent);font-size:25px;box-shadow:0 0 26px rgba(var(--mission-rgb),.12)}\n.mission-hub-card h4{margin:0;font-size:15px;letter-spacing:-.3px}.mission-hub-card p{margin:0;min-height:30px;color:var(--muted);font-size:11px;line-height:1.55}\n.mission-hub-card-bottom{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:auto;padding-top:7px;border-top:1px solid var(--line)}\n.mission-open{font-size:11px;font-weight:800;color:var(--mission-accent)}\n.mission-future{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}.mission-future span{font-size:10px;color:var(--muted);padding:8px 12px;border:1px dashed var(--line);border-radius:8px}\n.mission-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:16px 0}\n.mission-stat{position:relative;overflow:hidden;min-width:0;padding:20px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(120deg,rgba(var(--mission-rgb),.10),transparent 70%),var(--surface)}\n.mission-stat:before{content:\"\";height:2px;width:44%;position:absolute;inset:0 auto auto 0;background:linear-gradient(90deg,var(--mission-accent),transparent)}\n.mission-stat small{display:block;font-size:11px;color:var(--muted);line-height:1.5;min-height:32px}.mission-stat strong{display:block;margin:9px 0 5px;font-size:clamp(18px,2vw,27px);line-height:1.2;letter-spacing:-.6px;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}\n.mission-stat span{display:block;color:var(--muted);font-size:10px;line-height:1.55}\n.mission-panels{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(290px,1fr);gap:14px}\n.mission-module{min-width:0;border:1px solid var(--line);border-radius:17px;padding:21px;background:var(--surface)}\n.mission-module-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:15px}.mission-module-head h3{margin:0;font-size:16px}.mission-module-head small{font-size:10px;color:var(--muted)}\n.mission-tasks{display:grid;gap:9px}.mission-task{display:block;padding:13px 15px;border:1px solid var(--line);border-left:3px solid var(--mission-accent);border-radius:10px;background:var(--surface-raised);color:var(--text);text-decoration:none}.mission-task:hover{border-color:var(--mission-accent);text-decoration:none}\n.mission-task strong{display:block;font-size:12px}.mission-task p{font-size:11px;color:var(--muted);line-height:1.65;margin:5px 0 0}\n.mission-empty{font-size:12px;line-height:1.7;padding:19px;color:var(--muted);border-radius:10px;background:var(--surface-raised)}\n.mission-actions{display:grid;gap:9px}\n.mission-action{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:43px;padding:11px 13px;border:1px solid var(--line);border-radius:10px;background:var(--surface-raised);color:var(--text);text-decoration:none;font-size:12px;font-weight:700}\n.mission-action:hover{border-color:var(--mission-accent);text-decoration:none}\n.mission-action span:last-child{color:var(--mission-accent);font-size:18px}\n.mission-footnote{margin:16px 0 0;padding-top:14px;border-top:1px solid var(--line);font-size:11px;line-height:1.7;color:var(--muted)}\n.mission-coverage{margin-top:15px;padding:15px;border:1px solid var(--line);border-radius:13px;background:var(--surface)}\n.mission-coverage header{display:flex;justify-content:space-between;gap:12px;font-size:11px;margin-bottom:9px}.mission-coverage header span{color:var(--muted)}\n.mission-progress{overflow:hidden;height:7px;border-radius:100px;background:var(--surface-raised)}.mission-progress span{display:block;width:0;height:100%;background:var(--mission-accent);border-radius:100px;transition:width .24s ease}\n.mission-last{margin-top:12px;color:var(--muted);font-size:10px}\n.mission-finance-source{margin-top:20px;min-width:0}.mission-finance-source>.mission-hub-bar{margin:0 0 14px}.mission-finance-source .mission-source-note{font-size:11px;color:var(--muted);line-height:1.65;margin-bottom:12px}\n.mission-return{display:inline-flex;align-items:center;gap:7px;min-height:41px;padding:10px 12px;margin-top:14px;border:1px solid var(--line);border-radius:10px;background:var(--surface-raised);text-decoration:none;font-size:11px;font-weight:700;color:var(--text)}\n.mission-return:hover{text-decoration:none;border-color:var(--mission-accent)}\n.command-center .command-center-head{padding:22px 25px;margin-bottom:14px;border:1px solid var(--line);border-radius:19px;background:linear-gradient(115deg,rgba(65,115,226,.11),transparent 62%),var(--surface)}\n.command-center .command-center-head h2{font-size:29px}\n.command-center .command-metric{position:relative;overflow:hidden;border-radius:16px;padding:19px;background:linear-gradient(146deg,rgba(55,135,255,.055),transparent 65%),var(--surface)}\n.command-center .command-metric:after{content:\"\";position:absolute;inset:auto 0 0;height:2px;background:linear-gradient(90deg,transparent,var(--accent,#3ba6d0),transparent);opacity:.5}\n.command-center .agent-grid{grid-template-columns:repeat(3,minmax(0,1fr))}\n.command-center .agent-card{position:relative;overflow:hidden;min-height:150px;border-radius:15px;transition:transform .18s ease,border-color .18s ease}\n.command-center .agent-card:hover{transform:translateY(-2px);border-color:var(--accent,#3ba6d0)}\n.command-center .agent-card[data-mission-accent=finance]{border-top:2px solid #46e5aa}\n.command-center .agent-card[data-mission-accent=ads]{border-top:2px solid #f9a14e}\n.command-center .agent-card[data-mission-accent=products]{border-top:2px solid #4b9fff}\n.command-center .agent-card[data-mission-accent=production]{border-top:2px solid #b28aff}\n.command-center .agent-card[data-mission-accent=returns]{border-top:2px solid #fa6f99}\n.command-center .agent-card[data-mission-accent=auditor]{border-top:2px solid #3bd1e8}\n.command-center .agent-card .mission-card-link{display:block;margin-top:auto;padding-top:11px;font-size:11px;font-weight:800;color:var(--accent,#3ba6d0)}\n.command-center .agent-card-expenses,.command-center .agent-card-secondary{display:none}\n.command-center .command-center-grid{grid-template-columns:minmax(0,.9fr) minmax(0,2.1fr);gap:15px}\n.command-center .command-pending-detail{display:none}\n.mission-hero .mission-intro-status{display:flex;flex-direction:column;align-items:flex-end;gap:8px}\n.mission-app-breadcrumb{font-size:11px;color:var(--muted)}\n@media(max-width:1230px){.mission-hub-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.mission-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.command-center .agent-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.command-center .command-center-grid{grid-template-columns:1fr}}\n@media(max-width:850px){.mission-hero{padding:22px}.mission-orb{width:56px;height:56px;flex-basis:56px;border-radius:16px;font-size:29px}.mission-hero .mission-intro-status{align-items:flex-start}.mission-hero{align-items:flex-start;flex-direction:column}.mission-panels{grid-template-columns:minmax(0,1fr)}.mission-hub-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.command-center .command-center-head{padding:17px}.command-center .command-center-head h2{font-size:23px}}\n@media(max-width:550px){.mission-hub-grid,.mission-stats{grid-template-columns:1fr}.mission-hub-card{min-height:148px}.mission-hero-main{gap:12px}.mission-stat small{min-height:0}.mission-hub-card p{min-height:0}.command-center .agent-grid{grid-template-columns:1fr}.command-center .command-metric strong{font-size:19px}.mission-module{padding:16px}.mission-crumb{margin-bottom:12px}}\n@media(prefers-reduced-motion:reduce){.mission-hub-card,.command-center .agent-card,.mission-progress span{transition:none}.mission-hub-card:hover,.command-center .agent-card:hover{transform:none}}\n\n/* Keep accent labels readable in the light theme without changing existing theme variables. */\n:root[data-theme=light] .mission-agent--finance{--mission-accent:#25e4b0;--mission-rgb:37,228,176}\n:root[data-theme=light] .mission-agent--ads{--mission-accent:#b46cf4;--mission-rgb:180,108,244}\n:root[data-theme=light] .mission-agent--products{--mission-accent:#ffac5b;--mission-rgb:255,172,91}\n:root[data-theme=light] .mission-agent--production{--mission-accent:#2dd7ed;--mission-rgb:45,215,237}\n:root[data-theme=light] .mission-agent--returns{--mission-accent:#f65c91;--mission-rgb:246,92,145}\n:root[data-theme=light] .mission-agent--auditor{--mission-accent:#68b9d5;--mission-rgb:104,185,213}\n:root[data-theme=light] .mission-agent--hermes{--mission-accent:#51adff;--mission-rgb:81,173,255}\n.command-center .agent-card h4{font-size:14px}\n.command-center .agent-card p,.command-center .command-priority span{font-size:11px}\n:root[data-active-panel=overview] .workspace>.hero,:root[data-active-panel=agents] .workspace>.hero,:root[data-active-panel^=\"agent-\"] .workspace>.hero{display:none}\n"+String.raw`
 /* Mission Control V2 — visual fidelity to the approved sci-fi command cockpit.
    Static art is decorative; bars and labels are hydrated from verified snapshots. */
 .mission-dashboard,.mission-hub,.mission-workspace{
@@ -228,47 +231,6 @@ export const MISSION_CSS="\n/* MLS Commerce OS / Mission Control: cosmetic only,
 @media(max-width:570px){.mission-dashboard .command-center-head.mission-command-hero{padding:24px 17px;min-height:205px}.mission-dashboard .command-center-head .mission-overview-copy{max-width:100%}.mission-command-orbit{display:none}.mission-dashboard .command-center-head .command-center-mode{position:relative;top:auto;right:auto;margin-top:12px;align-self:flex-start}.mission-dashboard .command-center-head.mission-command-hero{flex-direction:column;align-items:flex-start}.mission-dashboard .command-center-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.mission-dashboard .command-metric{padding:15px 13px;min-height:102px}.mission-dashboard .agent-grid{grid-template-columns:1fr}.mission-dashboard .agent-card{min-height:195px}.mission-dashboard .agent-card:before{width:55px;height:55px;flex-basis:55px}.mission-health-overview{gap:12px}.mission-health-ring{width:101px;height:101px;flex-basis:101px}.mission-health-ring:before{width:80px;height:80px}.mission-health-list{grid-template-columns:1fr}.mission-workspace .mission-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.mission-hub-card{min-height:205px}.mission-orb.mission-agent-avatar{width:70px;height:70px;flex-basis:70px}.mission-orb.mission-agent-avatar:before{inset:16px 12px 18px}.mission-orb.mission-agent-avatar:after{top:25px;font-size:16px}}
 @media(prefers-reduced-motion:reduce){.mission-dashboard .agent-card,.mission-comparison-track span,.mission-hub-card{transition:none}.mission-dashboard .agent-card:hover,.mission-hub-card:hover{transform:none}}
 /* V3 cockpit layout: information architecture, real sources and existing IDs unchanged */
-@media(min-width:1250px){
- .mission-dashboard{display:grid;grid-template-columns:minmax(0,1fr) 280px;column-gap:14px;row-gap:12px;align-items:start}
- .mission-dashboard>.command-center-head{grid-column:1;grid-row:1;margin:0!important;min-height:0!important}
- .mission-dashboard>.command-center-metrics{grid-column:1;grid-row:2;grid-template-columns:repeat(3,minmax(0,1fr));margin:0}
- .mission-dashboard>.command-center-grid{display:contents}
- .mission-dashboard>.command-center-grid>.hermes-command{grid-column:2;grid-row:1 / span 2;align-self:stretch}
- .mission-dashboard>.command-center-grid>.agent-panel{grid-column:1 / -1;grid-row:3}
- .mission-dashboard>.mission-trend-panel{grid-column:1 / -1;grid-row:4;margin:0}
- .mission-dashboard>.mission-day-intelligence{grid-column:1 / -1;grid-row:5}
- .mission-dashboard .agent-panel-head{margin-bottom:12px}
- .mission-dashboard .agent-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
- .mission-dashboard .agent-card{min-height:130px;padding:12px}
- .mission-dashboard .agent-card-head{display:flex;flex-direction:column;align-items:flex-start;gap:9px}
- .mission-dashboard .agent-card h4{font-size:12px}
- .mission-dashboard .agent-card .agent-status{font-size:9px}
- .mission-dashboard .agent-card p{line-height:1.4;font-size:10px}
- .mission-dashboard .agent-card .mission-card-link{font-size:10px}
- .mission-dashboard .hermes-command-summary{margin-top:12px}
- .mission-dashboard .hermes-command-head{gap:8px;flex-wrap:wrap}
- .mission-dashboard .hermes-command h3{font-size:19px}
- .mission-dashboard .hermes-command .command-priority{padding:8px}
- .mission-dashboard .mission-command-orbit{transform:scale(.7);transform-origin:right center}
-}
-@media(min-width:1250px) and (max-width:1450px){
- .mission-dashboard{grid-template-columns:minmax(0,1fr) 260px}
- .mission-dashboard .agent-card{padding:10px}
- .mission-dashboard .agent-grid{gap:8px}
-}
-@media(min-width:721px) and (max-width:1249px){
- .mission-dashboard .command-center-grid{grid-template-columns:1fr}
- .mission-dashboard .agent-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
-}
-@media(max-width:720px){
- .mission-dashboard .command-center-head{padding:17px!important}
- .mission-dashboard .agent-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
- .mission-dashboard .agent-card{min-height:125px;padding:12px}
- .mission-dashboard .hermes-command{padding:15px}
-}
-@media(max-width:390px){
- .mission-dashboard .agent-grid{grid-template-columns:minmax(0,1fr)}
-}
 .mission-dashboard .agent-card{isolation:isolate;box-shadow:inset 0 1px rgba(255,255,255,.035);border-color:rgba(112,162,225,.22);background:linear-gradient(145deg,rgba(var(--agent-rgb,65,135,245),.16),rgba(5,18,39,.95) 75%);transition:transform .17s ease,border-color .17s ease,box-shadow .17s ease}
 .mission-dashboard .agent-card:hover{transform:translateY(-2px);border-color:var(--agent-color,#70bfff);box-shadow:0 0 23px rgba(var(--agent-rgb,65,135,245),.14)}
 .mission-dashboard .agent-card[data-mission-accent=finance]{--agent-rgb:34,225,166;--agent-color:#30ebba}
@@ -290,49 +252,6 @@ export const MISSION_CSS="\n/* MLS Commerce OS / Mission Control: cosmetic only,
 .mission-workspace .mission-page-tabs a:focus-visible,.mission-dashboard .agent-card:focus-visible{outline:3px solid #74cfff;outline-offset:3px}
 :root[data-theme=light] .mission-dashboard .agent-card{background:linear-gradient(145deg,rgba(var(--agent-rgb,65,135,245),.10),rgba(255,255,255,.94) 85%);border-color:rgba(var(--agent-rgb,65,135,245),.27)}
 :root[data-theme=light] .mission-dashboard .agent-card .mission-card-link{color:#18558a}
-
-
-/* V3 density pass 2: approved screenshot refinements, strictly visual and responsive. */
-@media(min-width:1250px){
- .mission-dashboard{grid-template-columns:minmax(0,1fr) 250px;row-gap:10px}
- .mission-dashboard>.command-center-head{min-height:0!important;height:auto!important;max-height:190px;padding:16px 20px!important}
- .mission-dashboard .mission-command-orbit{display:none}
- .mission-dashboard .mission-overview-copy{max-width:100%}
- .mission-dashboard .command-center-head h2{font-size:clamp(24px,2vw,30px);margin:5px 0}
- .mission-dashboard .command-center-head p{max-width:670px;line-height:1.35}
- .mission-dashboard .mission-overview-cta{margin-top:8px}
- .mission-dashboard>.command-center-metrics{gap:9px}
- .mission-dashboard .command-metric{min-height:100px;padding:12px}
- .mission-dashboard .command-metric strong{font-size:clamp(18px,1.45vw,23px)}
- .mission-dashboard .agent-grid{grid-template-columns:repeat(6,minmax(0,1fr))!important;gap:8px}
- .mission-dashboard .agent-card{min-height:184px;padding:12px;gap:5px}
- .mission-dashboard .agent-card-head{display:flex;flex-direction:row;align-items:center;gap:7px;flex-wrap:wrap}
- .mission-dashboard .agent-card-head:before{display:none}
- .mission-dashboard .agent-card h4{font-size:12px}
- .mission-dashboard .agent-card p{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.4;max-height:3em}
- .mission-dashboard .agent-card .agent-card-metric{margin-top:auto;font-size:13px}
- .mission-dashboard .agent-card .mission-card-link{padding-top:4px;margin-top:4px}
- .mission-dashboard .hermes-command{padding:14px;overflow:hidden}
- .mission-dashboard .hermes-command .command-priority{padding:7px 9px}
- .mission-dashboard .hermes-command .command-priority span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-}
-@media(min-width:1250px) and (max-width:1500px){
- .mission-dashboard{grid-template-columns:minmax(0,1fr) 240px}
- .mission-dashboard .agent-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
- .mission-dashboard .agent-card{min-height:155px}
-}
-@media(min-width:1501px) and (max-width:1750px){
- .mission-dashboard .agent-card{min-height:190px;padding:10px}
-}
-@media(max-width:1249px){
- .mission-dashboard .agent-card-head:before{display:none}
- .mission-dashboard .agent-card{min-height:145px}
-}
-@media(max-width:720px){
- .mission-dashboard .mission-command-orbit{display:none}
- .mission-dashboard .command-center-head{min-height:0!important}
- .mission-dashboard .agent-card{min-height:135px}
-}
 
 
 /* V3 verified observer charts: categorical snapshots, NOT historical trend. */
@@ -359,24 +278,6 @@ export const MISSION_CSS="\n/* MLS Commerce OS / Mission Control: cosmetic only,
 .mission-hub-search span{font-size:10px;color:var(--muted)}
 
 
-/* Fix: Hermes content must never set the height of the executive KPI grid rows. */
-@media(min-width:1250px){
- .mission-dashboard{grid-template-rows:auto auto auto auto auto;align-items:start}
- .mission-dashboard>.command-center-grid>.hermes-command{
-  grid-column:2;grid-row:1 / span 2;align-self:start;min-height:0;
-  max-height:360px;overflow:hidden;display:flex;flex-direction:column
- }
- .mission-dashboard .hermes-command .command-priorities{
-  overflow:auto;min-height:0;max-height:195px;overscroll-behavior:contain;
-  scrollbar-width:thin
- }
- .mission-dashboard .hermes-command .hermes-command-foot{flex-shrink:0;margin-top:auto}
- .mission-dashboard>.command-center-head{align-self:start}
- .mission-dashboard>.command-center-metrics{align-self:start}
- .mission-dashboard>.command-center-grid>.agent-panel{align-self:start}
-}
-
-
 /* Specialist evidence panels: comparable source labels, denominators and safe empty states. */
 .mission-evidence-list{align-items:stretch}
 .mission-evidence-row{display:flex;flex-direction:column;justify-content:center}
@@ -398,6 +299,88 @@ export const MISSION_CSS="\n/* MLS Commerce OS / Mission Control: cosmetic only,
 .mission-workspace .mission-module-head small{font-size:10px;line-height:1.35}
 @media(max-width:550px){.mission-workspace .mission-page-tabs{flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-x:contain;padding-bottom:4px}.mission-workspace .mission-page-tabs a{flex:0 0 auto}.mission-workspace .mission-source-provenance{font-size:10px}}
 
+
+
+/* Agent hub V3.7 visual-only cockpit. Read-only Agent Registry, no new transport. */
+.mission-workspace .mission-page-tabs-title{display:block;padding:8px 10px;font-size:9px;font-weight:850;letter-spacing:1.25px;color:var(--muted)}
+.mission-workspace .mission-stats,.mission-workspace .mission-module,.mission-workspace .mission-hero,.mission-workspace .mission-evidence-list{scroll-margin-top:98px}
+
+.mission-hub .mission-crumb{flex-direction:row;align-items:center;flex-wrap:wrap;gap:7px}
+.mission-hub .mission-crumb>a,.mission-hub .mission-crumb strong,.mission-hub .mission-crumb span{line-height:1.45}
+
+.mission-hub{--mission-hub-blue:#6caaff;--mission-hub-green:#50d6ae;--mission-hub-orange:#e9b872;scroll-margin-top:90px}
+.mission-hub-hero{--mission-rgb:92,152,249;display:grid;grid-template-columns:minmax(0,1.75fr) minmax(235px,.65fr);align-items:stretch;gap:22px;padding:clamp(22px,2.7vw,34px);background:radial-gradient(ellipse at 74% -12%,rgba(73,120,230,.17),transparent 54%),linear-gradient(128deg,rgba(92,152,249,.07),transparent 65%),var(--surface)}
+.mission-hub-hero-content{min-width:0;display:flex;flex-direction:column}
+.mission-hub-hero .mission-hero-main h2{font-size:clamp(25px,2.45vw,35px);letter-spacing:-.8px;line-height:1.18}
+.mission-hub-hero .mission-hero-main p{max-width:620px;font-size:12px;line-height:1.65}
+.mission-hub-hero-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
+.mission-hub-hero-links a{display:inline-flex;align-items:center;gap:14px;min-height:41px;padding:9px 13px;border:1px solid var(--line);border-radius:10px;background:var(--surface-raised);color:var(--text);font-size:11px;font-weight:750;text-decoration:none}
+.mission-hub-hero-links a:first-child{background:rgba(100,165,255,.13);border-color:rgba(100,165,255,.32)}
+.mission-hub-hero-links a:hover{border-color:var(--mission-hub-blue)}
+.mission-hub-policy{display:flex;flex-direction:column;align-items:flex-start;gap:11px;padding:20px;min-width:0;border:1px solid rgba(100,165,255,.23);background:linear-gradient(130deg,rgba(100,165,255,.07),transparent 60%),var(--surface-raised);border-radius:16px}
+.mission-hub-policy-kicker,.mission-hub-eyebrow{font-size:10px;font-weight:800;line-height:1.6;letter-spacing:1.25px;color:var(--muted)}
+.mission-hub-policy .mission-status{max-width:100%}
+.mission-hub-policy>strong{font-size:18px;letter-spacing:-.3px}
+.mission-hub-policy>p{font-size:11px;line-height:1.65;color:var(--muted);margin:0}
+.mission-hub-policy-lock{margin-top:auto;display:inline-flex;padding:7px 9px;border-radius:8px;border:1px solid rgba(233,184,114,.24);background:rgba(233,184,114,.08);font-size:10px;font-weight:750;color:var(--mission-hub-orange)}
+.mission-hub-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:15px 0 20px}
+.mission-hub-summary-card{min-width:0;position:relative;overflow:hidden;border:1px solid var(--line);border-radius:15px;background:var(--surface);padding:17px 19px}
+.mission-hub-summary-card:before{content:"";position:absolute;top:0;left:0;width:44%;height:2px;background:linear-gradient(90deg,var(--mission-hub-blue),transparent)}
+.mission-hub-summary-card span{display:block;font-size:11px;font-weight:650;color:var(--muted);line-height:1.45}
+.mission-hub-summary-card strong{display:block;font-size:27px;line-height:1.2;letter-spacing:-.7px;margin:9px 0 7px;font-variant-numeric:tabular-nums}
+.mission-hub-summary-card small{display:block;font-size:10px;line-height:1.55;color:var(--muted)}
+.mission-hub-insights{display:grid;grid-template-columns:minmax(0,1.75fr) minmax(245px,.85fr);gap:14px;align-items:stretch}
+.mission-hub-priority-module,.mission-hub-evidence-module{min-width:0;border:1px solid var(--line);background:var(--surface);border-radius:17px;padding:21px}
+.mission-hub-module-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.mission-hub-module-heading h3,.mission-hub-evidence-module h3{font-size:17px;letter-spacing:-.3px;line-height:1.4;margin:4px 0 5px}
+.mission-hub-module-heading p,.mission-hub-evidence-module p{font-size:11px;line-height:1.6;color:var(--muted);margin:0}
+.mission-hub-module-tag{font-size:10px;white-space:nowrap;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:6px 9px;background:var(--surface-raised)}
+.mission-hub-priority-list{display:grid;gap:9px}
+.mission-hub-priority-row{display:flex;align-items:flex-start;gap:13px;padding:13px 14px;border:1px solid var(--line);border-left:3px solid var(--mission-hub-blue);background:var(--surface-raised);border-radius:11px;text-decoration:none;color:var(--text);min-width:0}
+.mission-hub-priority-row[data-severity=ATTENTION]{border-left-color:var(--mission-hub-orange)}
+.mission-hub-priority-row[data-severity=BLOCKED]{border-left-color:#ef7592}
+.mission-hub-priority-row:hover{border-color:var(--mission-hub-blue);text-decoration:none}
+.mission-hub-priority-rank{display:grid;place-items:center;flex:none;width:26px;height:26px;border-radius:8px;border:1px solid var(--line);font-size:11px;font-weight:800;color:var(--muted)}
+.mission-hub-priority-copy{display:block;min-width:0}
+.mission-hub-priority-copy strong{display:block;font-size:12px;line-height:1.45}
+.mission-hub-priority-copy small{display:block;margin-top:4px;font-size:10px;line-height:1.6;color:var(--muted)}
+.mission-hub-priority-more{display:inline-flex;font-size:11px;color:var(--muted);padding:4px 0}
+.mission-hub-evidence-module{background:linear-gradient(140deg,rgba(93,157,255,.055),transparent 70%),var(--surface)}
+.mission-hub-evidence-module h3{font-size:18px;margin:8px 0 8px}
+.mission-hub-evidence-module p{font-size:12px}
+.mission-hub-evidence-footer{display:grid;gap:9px;margin-top:19px;padding-top:15px;border-top:1px solid var(--line)}
+.mission-hub-evidence-footer span{font-size:10px;color:var(--muted);line-height:1.55}
+.mission-hub-list-heading{margin-top:29px}
+.mission-hub-list-heading h3{font-size:20px;margin:4px 0}
+.mission-hub-toolbar{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap;margin:0 0 16px}
+.mission-hub-toolbar .mission-hub-search{min-width:min(100%,290px);flex:1;max-width:460px;margin:0;display:grid;gap:4px}
+.mission-hub-toolbar .mission-hub-search label{font-size:11px;font-weight:750}
+.mission-hub-toolbar .mission-hub-search input{width:100%;min-width:0}
+.mission-hub-toolbar .mission-hub-search span{color:var(--muted);font-size:10px}
+.mission-hub-filters{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.mission-hub-filters button{background:var(--surface);color:var(--muted);border:1px solid var(--line);min-height:38px;padding:8px 11px;border-radius:10px;font-size:10px;font-weight:750;white-space:normal}
+.mission-hub-filters button:hover{border-color:var(--mission-hub-blue)}
+.mission-hub-filters button[aria-pressed=true]{background:rgba(100,165,255,.12);border-color:rgba(100,165,255,.49);color:var(--text)}
+.mission-hub-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+.mission-hub-card{min-height:217px;gap:9px;border-top:2px solid var(--mission-accent);padding:19px}
+.mission-hub-card-top{gap:10px}
+.mission-hub-card-heading span{font-size:10px;font-weight:700;color:var(--mission-accent)}
+.mission-hub-card h4{font-size:17px;line-height:1.3;margin:4px 0 0}
+.mission-hub-card p{font-size:12px;min-height:53px}
+.mission-hub-card-tasks{font-size:10px;line-height:1.5;color:var(--muted);margin-top:auto}
+.mission-hub-card-bottom{margin-top:0}
+.mission-hub-empty{border:1px dashed var(--line);border-radius:11px;color:var(--muted);font-size:12px;line-height:1.65;padding:18px;background:var(--surface-raised);margin:0}
+.mission-hub-future{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;flex-wrap:wrap;margin:25px 0 10px;padding:19px 21px;border:1px solid var(--line);border-radius:15px;background:var(--surface)}
+.mission-hub-future h3{font-size:16px;letter-spacing:-.25px;margin:4px 0}
+.mission-hub-future p{font-size:11px;line-height:1.5;color:var(--muted);margin:0;max-width:500px}
+.mission-hub-future .mission-future{margin:0}
+.mission-hub-future .mission-future span{border-style:solid}
+:root[data-theme=light] .mission-hub{--mission-hub-blue:#185bbb;--mission-hub-green:#147651;--mission-hub-orange:#895919}
+@media(max-width:1120px){.mission-hub-hero{grid-template-columns:minmax(0,1fr)}.mission-hub-policy{display:grid;grid-template-columns:auto 1fr;gap:8px 14px}.mission-hub-policy>p{grid-column:1/-1}.mission-hub-policy-lock{grid-column:1/-1}.mission-hub-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.mission-hub-insights{grid-template-columns:minmax(0,1fr)}.mission-hub-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:680px){.mission-hub-hero{padding:21px 17px}.mission-hub-hero .mission-hero-main h2{font-size:26px}.mission-hub-hero .mission-hero-main{flex-wrap:wrap}.mission-hub-summary{gap:9px}.mission-hub-summary-card{padding:15px}.mission-hub-summary-card strong{font-size:23px}.mission-hub-priority-module,.mission-hub-evidence-module{padding:17px}.mission-hub-toolbar .mission-hub-search{max-width:none;width:100%}.mission-hub-filters{width:100%}.mission-hub-filters button{flex:1;min-width:calc(50% - 5px)}.mission-hub-grid{grid-template-columns:minmax(0,1fr)}.mission-hub-card{min-height:175px}.mission-hub-card p{min-height:0}.mission-hub-future{padding:17px}.mission-hub-policy{display:flex}.mission-hub-policy-lock{margin-top:4px}}
+@media(max-width:680px){.mission-hub-hero .mission-hero-main{flex-wrap:nowrap;align-items:flex-start;gap:11px}.mission-hub-hero .mission-hero-main .mission-orb{width:54px;height:54px;flex:0 0 54px;font-size:22px}.mission-hub-hero .mission-hero-main h2{font-size:23px}.mission-hub-hero-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%}.mission-hub-hero-links a{min-width:0;justify-content:space-between;padding:9px 10px}.mission-hub-policy{padding:16px}}
+@media(prefers-reduced-motion:reduce){.mission-hub .mission-hub-card{transition:none}.mission-hub .mission-hub-card:hover{transform:none}}
+
 `;
 
 export const MISSION_AGENTS=Object.freeze([
@@ -416,14 +399,102 @@ function missionSourceLink(href,tab){
  return href;
 }
 function missionCard(item){
- return '<a class="mission-hub-card mission-agent--'+item.id+'" href="/admin?tab=agent-'+item.id+'" data-mission-open="agent-'+item.id+'">'+
+ return '<a class="mission-hub-card mission-agent--'+item.id+'" href="/admin?tab=agent-'+item.id+'" data-mission-open="agent-'+item.id+'" data-mission-agent="'+item.id+'">'+
   '<div class="mission-hub-card-top"><span class="mission-mini-orb mission-agent-avatar" aria-hidden="true">'+item.symbol+'</span><span class="mission-status" data-mission-status="'+item.id+'">Aguardando dados</span></div>'+
-  '<h4>'+item.name+'</h4><p>'+item.summary+'</p><div class="mission-hub-card-bottom"><span class="mission-breadcrumb-pill">Observador</span><span class="mission-open">Abrir painel →</span></div></a>';
+  '<div class="mission-hub-card-heading"><span>'+item.area+'</span><h4>'+item.name+'</h4></div><p>'+item.summary+'</p>'+
+  '<span class="mission-hub-card-tasks" id="missionHubTask-'+item.id+'" data-mission-task-count="'+item.id+'">Prioridades: aguardando leitura</span>'+
+  '<div class="mission-hub-card-bottom"><span class="mission-breadcrumb-pill">Observador</span><span class="mission-open">Abrir painel →</span></div></a>';
+}
+
+/** Closed chart capabilities: absence of an exclusive source is never a zero. */
+export function projectMlsSpecialistChart(key,queue=null){
+ const definitions={
+  'finance-payouts':{title:'Repasses por data de liberação',href:'/admin?tab=agent-finance#businessEscrowReleases',reason:'Falta uma série de valores verificados por data real de liberação. Vendas por data de criação não substituem repasses.'},
+  'finance-reconciliation':{title:'Status de conciliação',href:'/admin?tab=agent-finance#businessReconciliation',reason:'As contagens de conferência podem se sobrepor. Falta um conjunto completo de ocorrências exclusivas para calcular as proporções.'},
+  'ads-distribution':{title:'Distribuição do investimento',href:'/dashboard',reason:'O gasto diário observado não informa categorias exclusivas por posicionamento ou campanha. Não é possível distribuir o total com esta fonte.'},
+  'products-margin':{title:'Distribuição por margem',href:'/admin?tab=products',reason:'Faltam lucro e custos atribuídos por produto no mesmo período. A contagem do catálogo não comprova margem.'},
+  'products-ranking':{title:'Ranking por lucro',href:'/admin?tab=products',reason:'O lucro líquido por produto exige atribuição de taxas, anúncios e devoluções. Saldos de pedidos exclusivos não formam este ranking.'},
+  'returns-reasons':{title:'Motivos das devoluções',href:'/admin?tab=agent-finance#businessReconciliation',reason:'A fonte disponível contém estados e ocorrências, sem motivos canônicos agregados. Estados não serão convertidos em causas.'},
+  'returns-status':{title:'Status das devoluções',href:'/admin?tab=agent-finance#businessReconciliation',reason:'Falta uma distribuição completa por ocorrências únicas e estados exclusivos. Pedidos em revisão não serão somados a pedidos com devolução.'},
+  'production-hourly':{title:'Produção por hora',href:'/admin?tab=production',reason:'A fila salva não contém horários individuais de conclusão nesta projeção. Um total de linhas não será distribuído por hora.'},
+  'production-states':{title:'Linhas da fila por estado',href:'/admin?tab=production',reason:'A fila DTF salva ainda não foi carregada. Linhas não equivalem a pedidos ou quantidade de peças.'}
+ };
+ if(!Object.hasOwn(definitions,key))return null;
+ const definition=definitions[key],unavailable=reason=>Object.freeze({status:'UNAVAILABLE',source:'UNAVAILABLE',key,...definition,reason});
+ if(key!=='production-states')return unavailable(definition.reason);
+ if(queue?.schema!=='mls_agent_dtf_queue_v1'||queue.basis!=='SAVED_DTF_LINES_NOT_PAID_ORDERS_OR_UNIT_COUNTS')return unavailable(definition.reason);
+ const safe=value=>Number.isSafeInteger(value)&&!Object.is(value,-0)&&value>=0;
+ if(!safe(queue.line_count))return unavailable('O total de linhas da fila não foi validado. Nenhuma proporção foi calculada.');
+ const segments=[['Pendentes','pending_lines'],['Reservadas','reserved_lines'],['Produzidas','produced_lines'],['Bloqueadas','blocked_lines']].map(([label,field])=>({label,value:queue[field]}));
+ let total=0;
+ for(const segment of segments){
+  if(!safe(segment.value)||!Number.isSafeInteger(total+segment.value))return unavailable('Os estados da fila estão incompletos ou fora do limite seguro. Nenhuma proporção foi calculada.');
+  total+=segment.value;
+ }
+ if(total!==queue.line_count)return unavailable('Os estados não fecham com o total de linhas salvo. Confira a fila antes de interpretar a distribuição.');
+ if(total===0)return unavailable('A fila DTF salva está vazia. Não há linhas para distribuir por estado.');
+ return Object.freeze({key,...definition,reason:null,status:'READY',type:'donut',kind:'donut',unit:'COUNT',
+  source:'SAVED_DTF_LINES_NOT_PAID_ORDERS_OR_UNIT_COUNTS',total,segments:Object.freeze(segments.map(row=>Object.freeze(row))),
+  period:null,verified_at:null,coverage:Object.freeze({complete:true,total})});
+}
+
+export function missionSpecialistPanelsBody(id){
+ const keys={finance:['finance-payouts','finance-reconciliation'],ads:['ads-distribution'],
+  products:['products-margin','products-ranking'],returns:['returns-reasons','returns-status'],
+  production:['production-hourly','production-states']}[id];
+ if(!keys)return '';
+ return '<div class="mission-panels" aria-label="Gráficos observados do especialista">'+keys.map(key=>{
+  const model=projectMlsSpecialistChart(key);
+  return '<section class="mission-module"><div class="mission-module-head"><h3>'+model.title+'</h3><small>Fonte verificada</small></div>'+
+   '<div id="missionChart-'+key+'" data-mission-specialist-chart="'+key+'" data-chart-status="UNAVAILABLE" role="region" aria-label="'+model.title+'"><p class="mission-empty" role="status">'+model.reason+'</p></div>'+
+   '<p class="mission-footnote" id="missionChartNote-'+key+'">Dados indisponíveis permanecem desconhecidos.</p>'+
+   '<a class="mission-return" href="'+model.href+'">Conferir fonte →</a></section>';
+ }).join('')+'</div>';
+}
+
+const missionWorkspaceNavigation=Object.freeze({
+ finance:[['Pedidos','#businessMonthProductsDetails'],['Repasses','#businessEscrowReleases'],['Pagamentos','#commandPendingIncomeDetails'],['Devoluções','#businessReconciliation'],['Despesas','#businessMonthExpensesDetails'],['Conciliação','#businessReconciliationDetails']],
+ ads:[['Campanhas','/campaigns'],['Anúncios','/dashboard'],['Oportunidades','/optimization'],['Detalhes','#mission-ads-tools']],
+ products:[['Produtos','/admin?tab=products'],['Custos','/admin?tab=margins'],['Margens','#missionChart-products-margin'],['Ranking','#missionChart-products-ranking'],['Prioridades','#mission-products-tasks']],
+ production:[['Ordens','/admin?tab=production#dtfQueueStage'],['Artes','/admin?tab=production#dtfArtworkStage'],['Montagem DTF','/admin?tab=production#dtfFilmStage'],['Lotes','/admin?tab=production#dtfBatchStage'],['Custos','/admin?tab=margins']],
+ returns:[['Devoluções','/admin?tab=agent-finance#businessReconciliation'],['Reembolsos','/admin?tab=agent-finance#businessReconciliationMoney'],['Motivos','#missionChart-returns-reasons'],['Análise','#mission-returns-evidence'],['Prioridades','#mission-returns-tasks']]
+});
+function missionWorkspaceNavLink(label,href,current=false){
+ const tab=/^\/admin\?tab=([a-z-]+)$/.exec(href)?.[1];
+ const route=tab?(tab.startsWith('agent-')?' data-mission-open="'+tab+'"':' data-tab="'+tab+'"'):'';
+ return '<a href="'+href+'"'+route+(current?' aria-current="page"':'')+'><span class="mls-module-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M8 9h8M8 13h5M8 17h7"/></svg></span><span>'+label+'</span></a>';
+}
+function missionWorkspaceRail(item){
+ return '<aside class="mls-agent-mini-nav" aria-label="Navegação de '+item.name+'"><nav aria-label="Navegação especializada de '+item.name+'">'+
+  missionWorkspaceNavLink('Visão geral','/admin?tab=overview')+
+  missionWorkspaceNavLink(item.name,'#mission-'+item.id+'-top',true)+
+  missionWorkspaceNavigation[item.id].map(([label,href])=>missionWorkspaceNavLink(label,href)).join('')+
+  missionWorkspaceNavLink('Conexões','/integrations')+'</nav></aside>';
+}
+function missionWorkspaceTabs(item,specialist){
+ const id=item.id;
+ if(specialist)return '<nav class="mission-page-tabs mls-module-tabs" aria-label="Seções de '+item.name+'">'+
+  missionWorkspaceNavLink('Visão geral','#mission-'+id+'-top',true)+
+  missionWorkspaceNavigation[id].map(([label,href])=>missionWorkspaceNavLink(label,href)).join('')+'</nav>';
+ return '<nav class="mission-page-tabs" aria-label="Seções de '+item.name+'"><span class="mission-page-tabs-title">PAINEL ESPECIALIZADO</span>'+
+  '<a href="#mission-'+id+'-top">Visão geral</a><a href="#mission-'+id+'-metrics">Indicadores</a>'+
+  '<a href="#mission-'+id+'-tasks">Prioridades</a><a href="#mission-'+id+'-tools">Ferramentas</a>'+
+  (id==='finance'?'<a href="#businessMonth">Financeiro detalhado</a>':'')+
+  (['products','production','returns','auditor'].includes(id)?'<a href="#mission-'+id+'-evidence">Evidências</a>':'')+
+  '<a href="/admin?tab=agents" data-mission-open="agents">Equipe digital</a></nav>';
+}
+function missionWorkspaceAction(item){
+ const id=item.id;
+ if(id==='ads')return '<div class="mls-workspace-primary-action"><button type="button" class="mls-workspace-primary" disabled aria-describedby="mission-ads-action-note">Criar campanha <svg aria-hidden="true" focusable="false" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 18 18 6M7 6h11v11"/></svg></button><small id="mission-ads-action-note">Bloqueado no modo Observador</small></div>';
+ const actions={finance:['Ver resumo','#businessMonth'],products:['Abrir catálogo','/admin?tab=products'],production:['Montar DTF','/admin?tab=production'],returns:['Conferir pendências','/admin?tab=agent-finance#businessReconciliation']};
+ const [label,href]=actions[id];
+ const tab=/^\/admin\?tab=([a-z-]+)$/.exec(href)?.[1];
+ return '<a class="mls-workspace-primary" href="'+href+'"'+(tab?' data-tab="'+tab+'"':'')+'>'+label+' <svg aria-hidden="true" focusable="false" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 18 18 6M7 6h11v11"/></svg></a>';
 }
 function missionWorkspace(item,financeHtml){
- const id=item.id,tab='agent-'+id,missionMetrics=[0,1,2,3].map(index=>
+ const id=item.id,tab='agent-'+id,specialist=Object.hasOwn(missionWorkspaceNavigation,id),missionMetrics=[0,1,2,3].map(index=>
   '<article class="mission-stat"><small id="mission-'+id+'-label-'+index+'">Indicador em preparação</small>'+
-  '<strong id="mission-'+id+'-metric-'+index+'">—</strong><span id="mission-'+id+'-hint-'+index+'">Aguardando fonte validada.</span></article>').join('');
+  '<strong id="mission-'+id+'-metric-'+index+'"'+(['ads','returns'].includes(id)&&index===3?' class="mls-stat-status"':'')+'>—</strong><span id="mission-'+id+'-hint-'+index+'">Aguardando fonte validada.</span></article>').join('');
  const seenShortcuts=new Set();
  const shortcuts=item.actions.filter(([,href])=>{const target=missionSourceLink(href,tab);if(seenShortcuts.has(target))return false;seenShortcuts.add(target);return true;}).map(([label,href])=>'<a class="mission-action" href="'+missionSourceLink(href,tab)+'"><span>'+label+'</span><span aria-hidden="true">›</span></a>').join('');
  const coverage=['products','production'].includes(id)?
@@ -433,13 +504,20 @@ function missionWorkspace(item,financeHtml){
  const body=id==='finance'?'<div class="mission-finance-source"><div class="mission-hub-bar"><div><h3>Financeiro detalhado</h3><p>Recortes diários, mensais, Pending e conciliação em uma área exclusiva do Finance.</p></div></div>'+
    '<p class="mission-source-note">Os valores e os controles abaixo são os mesmos do sistema anterior, sem duplicação de cálculos.</p>'+financeHtml+'</div>':'';
  const hermes=id==='hermes'?'<div id="missionHermesTools"></div>':'';
- return '<section class="mission-workspace mission-agent--'+id+'" id="'+tab+'" data-mission-page="'+id+'" hidden>'+
-  '<header class="mission-hero"><div><nav class="mission-crumb" aria-label="Localização"><a href="/admin?tab=overview" data-mission-open="overview">Visão Geral</a><span>›</span><a href="/admin?tab=agents" data-mission-open="agents">Agentes</a><span>›</span><strong>'+item.name+'</strong></nav>'+
-  '<div class="mission-hero-main"><span class="mission-orb mission-agent-avatar" aria-hidden="true">'+item.symbol+'</span><div><span class="mission-eyebrow">'+item.tag+'</span><h2>'+item.name+'</h2><p>'+item.summary+'</p><p class="mission-last mission-source-provenance" id="mission-'+id+'-checked">Aguardando fonte do agente.</p></div></div></div>'+
-  '<div class="mission-intro-status"><span class="mission-status" data-mission-status="'+id+'">Aguardando dados</span><span class="mission-breadcrumb-pill">Modo Observador · sem escrita comercial</span></div></header>'+
-  '<nav class="mission-page-tabs" aria-label="Seções de '+item.name+'"><a href="#mission-'+id+'-tasks">Prioridades</a><a href="#mission-'+id+'-tools">Ferramentas</a>'+(id==='finance'?'<a href="#businessMonth">Financeiro detalhado</a>':'')+'</nav>'+ 
-  '<div class="mission-stats" aria-label="Indicadores de '+item.name+'">'+missionMetrics+'</div>'+
-  (id==='finance'||id==='ads'?missionTrendPanelBody(id):'')+
+ const metrics='<div class="mission-stats" id="mission-'+id+'-metrics" aria-label="Indicadores de '+item.name+'">'+missionMetrics+'</div>';
+ const title='<div class="mission-hero-main"><span class="mission-orb mission-agent-avatar mls-agent-avatar" aria-hidden="true">'+MLS_AGENT_ROBOT_SVG+'</span><div><nav class="mission-crumb" aria-label="Localização"><a href="/admin?tab=agents" data-mission-open="agents">Agentes</a><span>›</span><strong>'+item.area+'</strong></nav><h2>'+item.name+'</h2><p>'+item.summary+'</p></div></div>';
+ const source='<p class="mission-last mission-source-provenance" id="mission-'+id+'-checked">Aguardando fonte do agente.</p>';
+ const header=specialist?'<header class="mission-hero mls-workspace-heading" id="mission-'+id+'-top">'+title+
+  '<div class="mls-workspace-heading-actions"><span class="mls-workspace-period"><span aria-hidden="true">▦</span> Período da fonte</span>'+missionWorkspaceAction(item)+'</div></header>'+
+  '<div class="mls-workspace-source-line">'+source+'<span class="mission-status" data-mission-status="'+id+'">Aguardando dados</span></div>':
+  '<header class="mission-hero" id="mission-'+id+'-top">'+title+'<div class="mission-intro-status"><span class="mission-status" data-mission-status="'+id+'">Aguardando dados</span><span class="mission-breadcrumb-pill">Modo Observador · sem escrita comercial</span></div></header>'+source;
+ const charts=specialist?'<div class="mls-workspace-chart-pair" aria-label="Painéis de '+item.name+'">'+
+  (id==='ads'?missionTrendPanelBody(id):'')+missionSpecialistPanelsBody(id)+'</div>':'';
+ const financialTrend=id==='finance'?'<details class="mls-workspace-history"><summary>Histórico diário observado · resultado, vendas e anúncios</summary>'+missionTrendPanelBody(id)+'</details>':'';
+ return '<section class="mission-workspace mission-agent--'+id+(specialist?' mls-agent-workspace':'')+'" id="'+tab+'" data-mission-page="'+id+'" hidden>'+
+  (specialist?missionWorkspaceRail(item):'')+header+
+  (specialist?metrics+missionWorkspaceTabs(item,true):missionWorkspaceTabs(item,false)+metrics)+charts+financialTrend+
+  (specialist?'<nav class="mls-workspace-quicklinks" aria-label="Detalhes de '+item.name+'"><a href="#mission-'+id+'-metrics">Indicadores</a><a href="#mission-'+id+'-tasks">Prioridades e alertas</a><a href="#mission-'+id+'-tools">Ferramentas e detalhes</a><a href="/admin?tab=agents" data-mission-open="agents">Equipe digital</a></nav>':'')+
   (['products','production','returns','auditor'].includes(id)?'<section class="mission-evidence-panel" aria-label="Indicadores observados de '+item.name+'"><header><div><span class="mission-eyebrow">SNAPSHOT VERIFICADO</span><h3>Indicadores disponíveis</h3><p>Comparação de contagens observadas. Não representa evolução histórica.</p></div><span class="mission-breadcrumb-pill">Sem projeções</span></header><div class="mission-evidence-list" id="mission-'+id+'-evidence"><p class="mission-empty">Aguardando fonte validada.</p></div><p class="mission-evidence-foot" id="mission-'+id+'-evidence-note">Dados desconhecidos permanecem indisponíveis.</p></section>':'')+
   '<div class="mission-panels"><section class="mission-module"><div class="mission-module-head"><h3>Prioridades e alertas</h3><small>Somente evidências verificáveis</small></div><div id="mission-'+id+'-tasks" class="mission-tasks"><p class="mission-empty">Aguardando indicadores do agente.</p></div>'+coverage+
   '</section>'+
@@ -448,21 +526,51 @@ function missionWorkspace(item,financeHtml){
   hermes+body+'</section>';
 }
 export function missionWorkspacesBody(financeHtml=''){
- const hub='<section class="mission-hub" id="agents" hidden><div class="mission-hero mission-hub-hero"><div>'+
+ const hub='<section class="mission-hub" id="agents" aria-labelledby="missionHubTitle" hidden>'+
+  '<header class="mission-hero mission-hub-hero"><div class="mission-hub-hero-content">'+
   '<nav class="mission-crumb" aria-label="Localização"><a href="/admin?tab=overview" data-mission-open="overview">Visão Geral</a><span>›</span><strong>Equipe digital</strong></nav>'+
-  '<div class="mission-hero-main"><span class="mission-orb mission-agent-avatar" aria-hidden="true">✦</span><div><span class="mission-eyebrow">MLS MISSION CONTROL</span><h2>Equipe de agentes</h2>'+
-  '<p>Cada especialista tem um painel independente. Todos compartilham as mesmas fontes validadas e seguem os limites do MLS Hermes.</p></div></div></div>'+
-  '<div class="mission-intro-status"><span class="mission-status" id="missionFleetStatus">Monitorando</span><span class="mission-breadcrumb-pill">Automação comercial bloqueada</span></div></div>'+
-  '<div class="mission-hub-bar"><div><h3>Especialistas da operação</h3><p>Escolha um agente para abrir seu espaço completo.</p></div>'+
+  '<div class="mission-hero-main"><span class="mission-orb mission-agent-avatar" aria-hidden="true">✦</span><div><span class="mission-eyebrow">MLS MISSION CONTROL · EQUIPE DIGITAL</span><h2 id="missionHubTitle">Equipe de agentes</h2>'+
+  '<p>Sete especialistas acompanham a operação com as fontes já disponíveis. Cada um tem seu painel; nenhum executa alterações comerciais nesta etapa.</p></div></div>'+
+  '<div class="mission-hub-hero-links"><a href="/admin?tab=agent-hermes" data-mission-open="agent-hermes">Abrir MLS Hermes <span aria-hidden="true">›</span></a>'+
+  '<a href="/admin?tab=roadmap" data-mission-open="roadmap">Plano de evolução <span aria-hidden="true">›</span></a></div></div>'+
+  '<aside class="mission-hub-policy" aria-label="Modo atual dos agentes"><span class="mission-hub-policy-kicker">SUPERVISÃO DO HERMES</span>'+
+  '<span class="mission-status" id="missionFleetStatus">Aguardando leitura</span>'+
+  '<strong>Modo Observador</strong><p>Os agentes analisam e recomendam. Nenhuma campanha, preço, promoção ou anúncio é alterado automaticamente.</p>'+
+  '<span class="mission-hub-policy-lock">Ads e PROMO · bloqueados</span></aside></header>'+
+  '<section class="mission-hub-summary" aria-label="Indicadores do estado dos agentes">'+
+  '<article class="mission-hub-summary-card"><span>Especialistas cadastrados</span><strong>7</strong><small>Seis áreas + MLS Hermes</small></article>'+
+  '<article class="mission-hub-summary-card"><span>Em atenção ou bloqueados</span><strong id="missionHubAttentionCount">—</strong><small>Status operacional, não prejuízo</small></article>'+
+  '<article class="mission-hub-summary-card"><span>Em acompanhamento</span><strong id="missionHubWorkingCount">—</strong><small>Fontes ou conferências pendentes</small></article>'+
+  '<article class="mission-hub-summary-card"><span>Prioridades sinalizadas</span><strong id="missionHubPriorityCount">—</strong><small>Somente evidências do registro</small></article></section>'+
+  '<div class="mission-hub-insights"><section class="mission-hub-priority-module" aria-labelledby="missionHubPriorityHeading">'+
+  '<div class="mission-hub-module-heading"><div><span class="mission-hub-eyebrow">O QUE PRECISA DE ATENÇÃO</span><h3 id="missionHubPriorityHeading">Prioridades dos especialistas</h3>'+
+  '<p>Exibidas diretamente do registro de agentes, sem criar tarefas ou alterar pedidos.</p></div>'+
+  '<span class="mission-hub-module-tag" id="missionHubPriorityLabel">Aguardando dados</span></div>'+
+  '<div id="missionHubPriorityList" class="mission-hub-priority-list" aria-live="polite"><p class="mission-hub-empty">Aguardando a leitura validada das prioridades.</p></div>'+
+  '</section><aside class="mission-hub-evidence-module"><span class="mission-hub-eyebrow">COMO LER OS INDICADORES</span>'+
+  '<h3>Estado técnico não é lucro</h3>'+
+  '<p>“Saudável” indica o estado de acompanhamento do agente, não margem positiva, saldo bancário confirmado ou estoque disponível.</p>'+
+  '<div class="mission-hub-evidence-footer"><span>Fonte: Agent Registry já existente</span>'+
+  '<span id="missionHubSnapshot" role="status">Sem leitura validada</span></div></aside></div>'+
+  '<div class="mission-hub-bar mission-hub-list-heading"><div><span class="mission-hub-eyebrow">EQUIPE OPERACIONAL</span><h3>Explorar especialistas</h3><p>Busque por função ou filtre por estado para ir direto ao painel certo.</p></div>'+
   '<span class="mission-breadcrumb-pill">7 painéis · Observador</span></div>'+
-  '<div class="mission-hub-search"><label for="missionAgentSearch">Buscar especialista</label><input id="missionAgentSearch" type="search" autocomplete="off" placeholder="Buscar por nome ou área..." aria-controls="missionHubGrid"><span id="missionAgentSearchCount" aria-live="polite">7 especialistas</span></div>'+ 
+  '<div class="mission-hub-toolbar"><div class="mission-hub-search"><label for="missionAgentSearch">Buscar especialista</label>'+
+  '<input id="missionAgentSearch" type="search" autocomplete="off" maxlength="80" placeholder="Nome, área ou função..." aria-controls="missionHubGrid">'+
+  '<span id="missionAgentSearchCount" aria-live="polite">7 especialistas</span></div>'+
+  '<div class="mission-hub-filters" role="group" aria-label="Filtrar especialistas por estado">'+
+  '<button type="button" data-mission-hub-filter="all" aria-pressed="true">Todos</button>'+
+  '<button type="button" data-mission-hub-filter="ATTENTION" aria-pressed="false">Atenção / bloqueio</button>'+
+  '<button type="button" data-mission-hub-filter="WORKING" aria-pressed="false">Em acompanhamento</button>'+
+  '<button type="button" data-mission-hub-filter="HEALTHY" aria-pressed="false">Saudáveis</button></div></div>'+
+  '<p id="missionHubFilterEmpty" class="mission-hub-empty" role="status" hidden>Nenhum especialista corresponde aos filtros. Tente Todos ou outra busca.</p>'+
   '<div class="mission-hub-grid" id="missionHubGrid">'+MISSION_AGENTS.map(missionCard).join('')+'</div>'+
-  '<div class="mission-hub-bar"><div><h3>Expansão planejada</h3><p>Estes agentes só serão habilitados nas fases previstas do roadmap.</p></div></div>'+
-  '<div class="mission-future"><span>MLS Pricing · M3</span><span>MLS Creative · M8</span><span>MLS Inventory · fase futura</span><span>MLS Marketplace · M8</span></div></section>';
+  '<div class="mission-hub-future"><div><span class="mission-hub-eyebrow">EXPANSÃO PLANEJADA</span><h3>Novos módulos, quando houver evidências</h3>'+
+  '<p>Pricing, Creative, Inventory e Marketplace seguem planejados. Não representam agentes ativos nem permissões concedidas.</p></div>'+
+  '<div class="mission-future"><span>MLS Pricing · M3</span><span>MLS Creative · M8</span><span>MLS Inventory · fase futura</span><span>MLS Marketplace · M8</span></div></div></section>';
  return hub+MISSION_AGENTS.map(item=>missionWorkspace(item,financeHtml)).join('');
 }
 
-export const MISSION_CLIENT="\n(()=>{\n const byId=id=>document.getElementById(id);\n const safe=value=>Number.isSafeInteger(value)&&!Object.is(value,-0);\n const money=value=>{\n  if(!safe(value))return '—';\n  const cents=BigInt(value),negative=cents<0n,absolute=negative?-cents:cents;\n  const fraction=String(absolute%100n).padStart(2,'0');\n  const parts=new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).formatToParts(absolute/100n);\n  return (negative?'-':'')+parts.map(part=>part.type==='fraction'?fraction:part.value).join('');\n };\n const count=value=>safe(value)&&value>=0?new Intl.NumberFormat('pt-BR').format(value):'—';\n const labels={HEALTHY:'Saudável',WORKING:'Em acompanhamento',ATTENTION:'Atenção',BLOCKED:'Bloqueado'};\n const onlyStatus=value=>typeof value==='string'&&Object.hasOwn(labels,value)?labels[value]:'Aguardando dados';\n const display=(value,type)=>{\n  if(type==='money')return money(value);\n  if(type==='count')return count(value);\n  if(type==='month')return typeof value==='string'&&/^[0-9]{4}-(?:0[1-9]|1[0-2])$/.test(value)?value.slice(5)+'/'+value.slice(0,4):'—';\n  if(type==='date')return typeof value==='string'&&/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(value)?value.slice(8)+'/'+value.slice(5,7):'—';\n  if(type==='status')return onlyStatus(value);\n  return '—';\n };\n const sourceHref=href=>typeof href==='string'&&href.startsWith('#')&&(/^#business/.test(href)||href==='#commandPendingIncomeDetails')?'/admin?tab=agent-finance'+href:href;\n const metric=(title,value,type,help)=>({title,value,type,help});\n function readings(id,registry,agent,byAgent){\n  const day=registry.day||{},month=registry.month||{},settlement=registry.settlement||{},expenses=registry.expenses||{};\n  const taskCount=registry.priorities?.filter(row=>row.agent_id===id).length??0;\n  const finance=byAgent.finance||{},products=byAgent.products||{},production=byAgent.production||{};\n  if(id==='finance')return [\n   metric('Resultado mensal estimado',month.balance_cents,'money','Não é valor depositado no banco'),\n   metric('Pending atual na Shopee',registry.income?.current_pending_cents,'money','Snapshot atual, separado do mês'),\n   metric('Liberações verificadas',settlement.releases_verified,'count','Identidades conferidas, não liquidação'),\n   metric('Contas em aberto',expenses.open_count,'count','Somente despesas declaradas')\n  ];\n  if(id==='ads')return [\n   metric('Investimento hoje',day.ads_spend_cents,'money','Dados da mesma data do resumo diário'),\n   metric('Data da leitura diária',day.date,'date','Investimento sem atribuição por SKU'),\n   metric('Alertas do MLS Ads',taskCount,'count','Pendências classificadas para Ads'),\n   metric('Estado do agente',agent.status,'status','Somente leitura; campanhas bloqueadas')\n  ];\n\n  const catalog=registry?.sources?.catalog;\n  if(id==='products'&&catalog)return [\n   metric('Produtos registrados',catalog.total,'count','Catálogo salvo, não unidades vendidas nem estoque'),\n   metric('Produtos indexados',catalog.indexed,'count','Fonte: índice local validado'),\n   metric('Cadastros pendentes',catalog.pending_catalog,'count','Classificações ainda em atualização'),\n   metric('Unidades vendidas no mês',products.metric,'count','Base financeira mensal separada do catálogo')\n  ];\n  if(id==='products')return [\n   metric('Unidades vendidas no mês',products.metric,'count','Não equivale ao catálogo ativo'),\n   metric('Unidades com custo conhecido',production.metric,'count','Cobertura observada do mês'),\n   metric('Alertas de produtos',taskCount,'count','Custos e atribuições pendentes'),\n   metric('Referência mensal',month.month,'month','Mesmo período do Finance')\n  ];\n\n  const dtf=registry?.sources?.dtf_queue,period=registry?.sources?.production_period;\n  if(id==='production'&&dtf)return [\n   metric('Linhas DTF pendentes',dtf.pending_lines,'count','Linhas da fila salva, não quantidade de peças'),\n   metric('Linhas reservadas',dtf.reserved_lines,'count','Reservadas em lote'),\n   metric('Linhas produzidas',dtf.produced_lines,'count','Estado registrado da fila DTF'),\n   metric('Linhas bloqueadas',dtf.blocked_lines,'count','Situação exige conferência')\n  ];\n  if(id==='production'&&period)return [\n   metric('Pedidos elegíveis no período',period.eligible_orders,'count','Pedidos pagos do período '+(period.month||'selecionado')),\n   metric('Unidades com custo conhecido',period.known_units,'count','Não indica ordens finalizadas'),\n   metric('Unidades totais verificadas',period.total_units,'count','Cobertura de custos do período'),\n   metric('Custo de produção conhecido',period.state==='COMPLETE'?period.cost_cents:period.known_cost_cents,'money',period.state==='COMPLETE'?'Total calculado dos custos salvos':'Subtotal parcial de custos conhecidos')\n  ];\n  if(id==='production')return [\n   metric('Unidades com custo conhecido',production.metric,'count','Não indica ordens finalizadas'),\n   metric('Unidades vendidas no mês',products.metric,'count','Base financeira observada'),\n   metric('Alertas de produção',taskCount,'count','Cobertura de custo pendente'),\n   metric('Referência mensal',month.month,'month','Não substitui a fila DTF')\n  ];\n  if(id==='returns')return [\n   metric('Ocorrências para acompanhar',agent.metric,'count','Inclui devoluções e estados em revisão'),\n   metric('Alertas de devoluções',taskCount,'count','Não confirma reembolso bancário'),\n   metric('Período',month.month,'month','Pedidos da referência mensal'),\n   metric('Situação do agente',agent.status,'status','Acompanhamento sem ações externas')\n  ];\n  if(id==='auditor')return [\n   metric('Prioridades operacionais',registry.priorities?.length,'count','Alertas de toda a operação'),\n   metric('Conflitos de evidência',settlement.evidence_conflicts,'count','Diferenças de repasse após ajuste'),\n   metric('Valores não verificados',settlement.release_value_unverified,'count','Liberações sem valor compatibilizado'),\n   metric('Situação do auditor',agent.status,'status','Bloqueio quando há fonte insegura')\n  ];\n  return [\n   metric('Prioridades identificadas',registry.priorities?.length,'count','Filas de trabalho para a equipe'),\n   metric('Agentes em observação',registry.agents?.length,'count','Não executam mudanças comerciais'),\n   metric('Saúde operacional',registry.health,'status','Estado agregado validado'),\n   metric('Período de referência',month.month,'month','Mesma base compartilhada')\n  ];\n }\n\n\n function renderEvidence(id,registry,byAgent){\n  const host=byId('mission-'+id+'-evidence'),note=byId('mission-'+id+'-evidence-note');\n  if(!host)return;\n  const source=registry.sources||{},rows=[];\n  const numeric=value=>safe(value)&&value>=0?value:null;\n  const add=(label,value,base=null)=>rows.push({label,value:numeric(value),base:numeric(base)});\n  let description='',kind='';\n  if(id==='products'){\n   const catalog=source.catalog;\n   if(catalog&&numeric(catalog.total)!==null){\n    kind='CATALOG';\n    add('Produtos registrados',catalog.total,catalog.total);\n    add('Produtos indexados',catalog.indexed,catalog.total);\n    add('Cadastros pendentes',catalog.pending_catalog,catalog.total);\n    description='Fonte: catálogo salvo. Contagem de anúncios/produtos, não unidades em estoque nem vendas.';\n    if(numeric(catalog.indexed)!==null&&catalog.indexed>catalog.total||numeric(catalog.pending_catalog)!==null&&catalog.pending_catalog>catalog.total)\n     description+=' Contagens incompatíveis com o total: confira o cadastro.';\n    if(numeric(catalog.checked_at)!==null&&catalog.checked_at>0)\n     description+=' Última conferência: '+new Intl.DateTimeFormat('pt-BR',{dateStyle:'short',timeStyle:'short',timeZone:'America/Sao_Paulo'}).format(new Date(catalog.checked_at*1000))+'.';\n   }else{\n    kind='COST_COVERAGE';\n    const total=byAgent.products?.metric,known=byAgent.production?.metric;\n    if(numeric(total)!==null&&numeric(known)!==null&&known<=total){\n     add('Unidades com custo conhecido',known,total);\n     add('Unidades sem custo confirmado',total-known,total);\n    }else{\n     add('Unidades vendidas no mês',total);\n     add('Unidades com custo conhecido',known);\n    }\n    description='Aguardando catálogo salvo. Estes números são cobertura de custo das vendas do mês, não estoque.';\n   }\n  }else if(id==='production'){\n   const dtf=source.dtf_queue,period=source.production_period;\n   if(dtf&&numeric(dtf.line_count)!==null){\n    kind='DTF_QUEUE';\n    const statuses=['pending_lines','reserved_lines','produced_lines','blocked_lines'];\n    const classified=statuses.every(key=>numeric(dtf[key])!==null);\n    const sum=classified?statuses.reduce((n,key)=>n+dtf[key],0):null;\n    const base=sum!==null&&sum<=dtf.line_count?dtf.line_count:null;\n    add('Linhas pendentes',dtf.pending_lines,base);\n    add('Linhas reservadas',dtf.reserved_lines,base);\n    add('Linhas produzidas',dtf.produced_lines,base);\n    add('Linhas bloqueadas',dtf.blocked_lines,base);\n    if(sum!==null&&sum<dtf.line_count)add('Sem estado classificado',dtf.line_count-sum,dtf.line_count);\n    description='Fonte: fila DTF salva. Total: '+count(dtf.line_count)+' linha(s). Linhas não equivalem a camisetas ou pedidos.';\n    if(sum!==null&&sum>dtf.line_count)description+=' Estados excedem o total; proporções ocultadas até conferência.';\n   }else if(period&&numeric(period.total_units)!==null){\n    kind='PERIOD_COST';\n    const base=numeric(period.known_units)!==null&&period.known_units<=period.total_units?period.total_units:null;\n    add('Unidades com custo conhecido',period.known_units,base);\n    add('Unidades pendentes de custo',period.pending_units,base);\n    description='Fonte: custos do período '+(period.month||'selecionado')+'. Não representa fila DTF ou ordens concluídas.';\n   }else{\n    kind='COST_COVERAGE';\n    const total=byAgent.products?.metric,known=byAgent.production?.metric;\n    if(numeric(total)!==null&&numeric(known)!==null&&known<=total){\n     add('Unidades com custo conhecido',known,total);\n     add('Unidades sem custo confirmado',total-known,total);\n    }else{\n     add('Unidades vendidas no mês',total);\n     add('Unidades com custo conhecido',known);\n    }\n    description='Fila DTF e custos detalhados ainda não carregados. Mostrando somente cobertura financeira do mês.';\n   }\n  }else if(id==='returns'){\n   const returns=registry.returns||{};\n   kind='RETURNS';\n   add('Pedidos pagos com devolução',returns.paid_returns);\n   add('Devoluções sem confirmação',returns.paid_returns_unknown);\n   add('Pedidos em revisão de status',returns.status_reviews);\n   description=returns.month?'Fonte: estados dos pedidos de '+returns.month.slice(5)+'/'+returns.month.slice(0,4)+'. Contagens distintas; não confirmam reembolso ou crédito bancário.':'Aguardando estados mensais validados de devoluções; nenhuma ausência é tratada como zero.';\n  }else if(id==='auditor'){\n   kind='AUDIT';\n   add('Conflitos de evidência',registry.settlement?.evidence_conflicts);\n   add('Liberações sem valor verificado',registry.settlement?.release_value_unverified);\n   add('Liberações ambíguas',registry.settlement?.release_ambiguous);\n   add('Prioridades do auditor',Array.isArray(registry.priorities)?registry.priorities.filter(item=>item.agent_id===id).length:null);\n   description='Fontes: auditoria e liberações do mês. Categorias independentes; não representam prejuízo ou pagamentos não recebidos.';\n  }else return;\n  host.dataset.evidenceSource=kind;\n  host.replaceChildren();\n  const valid=rows.filter(item=>item.value!==null),maximum=Math.max(1,...valid.map(item=>item.value));\n  for(const row of rows){\n   const wrapper=document.createElement('div');wrapper.className='mission-evidence-row';\n   const heading=document.createElement('div');heading.className='mission-evidence-heading';\n   const title=document.createElement('span');title.textContent=row.label;\n   const value=document.createElement('strong');value.textContent=row.value===null?'—':count(row.value);\n   heading.append(title,value);\n   const track=document.createElement('div');track.className='mission-evidence-track';\n   const fill=document.createElement('span');fill.className='mission-evidence-fill';\n   const hasBase=row.base!==null&&row.value!==null&&row.base>=row.value&&row.base>0;\n   const share=hasBase?row.value/row.base:row.value===null?0:row.value/maximum;\n   fill.style.width=Math.min(100,Math.max(0,share*100))+'%';\n   track.append(fill);wrapper.append(heading,track);\n   if(hasBase){\n    const ratio=document.createElement('small');ratio.className='mission-evidence-ratio';\n    ratio.textContent=new Intl.NumberFormat('pt-BR',{maximumFractionDigits:1}).format(row.value/row.base*100)+'% do total validado';\n    wrapper.append(ratio);\n   }\n   host.append(wrapper);\n  }\n  if(!valid.length){\n   const empty=document.createElement('p');empty.className='mission-evidence-empty';\n   empty.textContent='Nenhuma contagem validada nesta fonte. Os indicadores permanecem indisponíveis, não zerados.';\n   host.append(empty);\n  }\n  if(note)note.textContent=description+(kind==='AUDIT'||kind==='RETURNS'?' Barras em escala relativa ao maior valor observado; não são percentuais de um total.':'');\n }\n function refresh(registry){\n  if(!registry||registry.schema!=='mls_agent_registry_v1')return;\n  const byAgent={};for(const agent of registry.agents||[])byAgent[agent.id]=agent;\n  byAgent.hermes=registry.hermes||{};\n  const fleet=byId('missionFleetStatus');\n  if(fleet){fleet.textContent=onlyStatus(registry.health);fleet.dataset.status=registry.health;}\n  for(const id of ['finance','ads','products','production','returns','auditor','hermes']){\n   const agent=byAgent[id];if(!agent)continue;\n   for(const element of document.querySelectorAll('[data-mission-status=\"'+id+'\"]')){\n    element.textContent=onlyStatus(agent.status);\n    element.dataset.status=agent.status;\n   }\n   const summary=byId('mission-'+id+'-message');\n   if(summary)summary.textContent=agent.message||'Aguardando resumo validado. Nenhuma ação comercial é executada automaticamente.';\n   const rows=readings(id,registry,agent,byAgent);\n   rows.forEach((row,index)=>{\n    const title=byId('mission-'+id+'-label-'+index),value=byId('mission-'+id+'-metric-'+index),help=byId('mission-'+id+'-hint-'+index);\n    if(title)title.textContent=row.title;\n    if(value)value.textContent=display(row.value,row.type);\n    if(help)help.textContent=row.help;\n   });\n   const tasks=byId('mission-'+id+'-tasks');\n   if(tasks){\n    tasks.replaceChildren();\n    const list=(registry.priorities||[]).filter(item=>item.agent_id===id).slice(0,8);\n    if(!list.length){const empty=document.createElement('p');empty.className='mission-empty';empty.textContent='Sem prioridades verificáveis para este agente nesta leitura.';tasks.append(empty);}\n    for(const item of list){\n     const a=document.createElement('a');a.className='mission-task';a.href=sourceHref(item.href);\n     a.dataset.severity=item.severity;\n     const heading=document.createElement('strong'),description=document.createElement('p');\n     heading.textContent=item.title;description.textContent=item.detail;a.append(heading,description);tasks.append(a);\n    }\n   }\n   const stamp=byId('mission-'+id+'-checked');\n   if(stamp){\n    const date=value=>safe(value)&&value>0?new Intl.DateTimeFormat('pt-BR',{dateStyle:'short',timeStyle:'short',timeZone:'America/Sao_Paulo'}).format(new Date(value*1000)):null;\n    const catalog=registry.sources?.catalog,period=registry.sources?.production_period,dtf=registry.sources?.dtf_queue;\n    let label=null;\n    if(id==='products'&&catalog)label='Catálogo salvo'+(date(catalog.checked_at)?' · atualizado '+date(catalog.checked_at):' · horário não informado')+' · estoque não confirmado';\n    else if(id==='production'&&dtf)label='Fila DTF salva · sem horário individual na projeção';\n    else if(id==='production'&&period)label='Custos do período '+(period.month||'observado')+(date(period.checked_at)?' · '+date(period.checked_at):'');\n    else if(date(agent.last_checked_at))label='Referência financeira mensal · '+date(agent.last_checked_at);\n    else label='Última leitura deste agente ainda não validada';\n    stamp.textContent=label;\n   }\n  }\n  for(const id of ['products','production','returns','auditor'])renderEvidence(id,registry,byAgent);\n  const known=byAgent.production?.metric,total=byAgent.products?.metric;\n  for(const id of ['products','production']){\n   const block=byId('mission-'+id+'-coverage'),bar=byId('mission-'+id+'-coverage-bar'),label=byId('mission-'+id+'-coverage-label');\n   if(!block||!bar||!label)continue;\n   const kind=byId('mission-'+id+'-evidence')?.dataset?.evidenceSource;\n   if(id==='production'&&kind!=='DTF_QUEUE'){block.hidden=true;bar.style.width='0%';label.textContent='—';continue;}\n   if(safe(total)&&total>0&&safe(known)&&known>=0&&known<=total){\n    const percent=Math.min(100,Math.max(0,Math.round(known/total*100)));\n    block.hidden=false;bar.style.width=percent+'%';label.textContent=percent+'% · '+count(known)+' / '+count(total)+' unidade(s)';\n   }else{block.hidden=true;bar.style.width='0%';label.textContent='—';}\n  }\n }\n\n const searchInput=byId('missionAgentSearch');\n if(searchInput&&typeof searchInput.addEventListener==='function')searchInput.addEventListener('input',()=>{\n  const query=searchInput.value.trim().toLocaleLowerCase('pt-BR');\n  let matches=0;\n  for(const card of document.querySelectorAll('.mission-hub-card')){\n   const fits=!query||card.textContent.toLocaleLowerCase('pt-BR').includes(query);\n   card.hidden=!fits;if(fits)matches++;\n  }\n  const label=byId('missionAgentSearchCount');if(label)label.textContent=matches+' especialista(s)';\n });\n globalThis.mlsMission=Object.freeze({refresh});\n try{refresh(globalThis.mlsAgentRegistry?.getSnapshot?.());}catch{}\n})();\n";
+export const MISSION_CLIENT="\n(()=>{\n const byId=id=>document.getElementById(id);\n const safe=value=>Number.isSafeInteger(value)&&!Object.is(value,-0);\n const money=value=>{\n  if(!safe(value))return '—';\n  const cents=BigInt(value),negative=cents<0n,absolute=negative?-cents:cents;\n  const fraction=String(absolute%100n).padStart(2,'0');\n  const parts=new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).formatToParts(absolute/100n);\n  return (negative?'-':'')+parts.map(part=>part.type==='fraction'?fraction:part.value).join('');\n };\n const count=value=>safe(value)&&value>=0?new Intl.NumberFormat('pt-BR').format(value):'—';\n const labels={HEALTHY:'Saudável',WORKING:'Em acompanhamento',ATTENTION:'Atenção',BLOCKED:'Bloqueado'};\n const onlyStatus=value=>typeof value==='string'&&Object.hasOwn(labels,value)?labels[value]:'Aguardando dados';\n const display=(value,type)=>{\n  if(type==='money')return money(value);\n  if(type==='count')return count(value);\n  if(type==='month')return typeof value==='string'&&/^[0-9]{4}-(?:0[1-9]|1[0-2])$/.test(value)?value.slice(5)+'/'+value.slice(0,4):'—';\n  if(type==='date')return typeof value==='string'&&/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(value)?value.slice(8)+'/'+value.slice(5,7):'—';\n  if(type==='status')return onlyStatus(value);\n  return '—';\n };\n const sourceHref=href=>typeof href==='string'&&href.startsWith('#')&&(/^#business/.test(href)||href==='#commandPendingIncomeDetails')?'/admin?tab=agent-finance'+href:href;\n const metric=(title,value,type,help)=>({title,value,type,help});\n function readings(id,registry,agent,byAgent){\n  const day=registry.day||{},month=registry.month||{},settlement=registry.settlement||{},expenses=registry.expenses||{};\n  const taskCount=registry.priorities?.filter(row=>row.agent_id===id).length??0;\n  const finance=byAgent.finance||{},products=byAgent.products||{},production=byAgent.production||{};\n  if(id==='finance')return [\n   metric('Resultado mensal estimado',month.balance_cents,'money','Não é valor depositado no banco'),\n   metric('Pending atual na Shopee',registry.income?.current_pending_cents,'money','Snapshot atual, separado do mês'),\n   metric('Liberações verificadas',settlement.releases_verified,'count','Identidades conferidas, não liquidação'),\n   metric('Contas em aberto',expenses.open_count,'count','Somente despesas declaradas')\n  ];\n  if(id==='ads')return [\n   metric('Investimento hoje',day.ads_spend_cents,'money','Dados da mesma data do resumo diário'),\n   metric('Data selecionada',day.date,'date','Referência do painel diário'),\n   metric('Alertas do MLS Ads',taskCount,'count','Pendências classificadas para Ads'),\n   metric('Estado do agente',agent.status,'status','Somente leitura; campanhas bloqueadas')\n  ];\n\n  const catalog=registry?.sources?.catalog;\n  if(id==='products'&&catalog)return [\n   metric('Produtos registrados',catalog.total,'count','Catálogo salvo, não unidades vendidas nem estoque'),\n   metric('Produtos indexados',catalog.indexed,'count','Fonte: índice local validado'),\n   metric('Cadastros pendentes',catalog.pending_catalog,'count','Classificações ainda em atualização'),\n   metric('Unidades vendidas no mês',products.metric,'count','Base financeira mensal separada do catálogo')\n  ];\n  if(id==='products')return [\n   metric('Unidades vendidas no mês',products.metric,'count','Não equivale ao catálogo ativo'),\n   metric('Unidades com custo conhecido',production.metric,'count','Cobertura observada do mês'),\n   metric('Alertas de produtos',taskCount,'count','Custos e atribuições pendentes'),\n   metric('Referência mensal',month.month,'month','Mesmo período do Finance')\n  ];\n\n  const dtf=registry?.sources?.dtf_queue,period=registry?.sources?.production_period;\n  if(id==='production'&&dtf)return [\n   metric('Linhas DTF pendentes',dtf.pending_lines,'count','Linhas da fila salva, não quantidade de peças'),\n   metric('Linhas reservadas',dtf.reserved_lines,'count','Reservadas em lote'),\n   metric('Linhas produzidas',dtf.produced_lines,'count','Estado registrado da fila DTF'),\n   metric('Linhas bloqueadas',dtf.blocked_lines,'count','Situação exige conferência')\n  ];\n  if(id==='production'&&period)return [\n   metric('Pedidos elegíveis no período',period.eligible_orders,'count','Pedidos pagos do período '+(period.month||'selecionado')),\n   metric('Unidades com custo conhecido',period.known_units,'count','Não indica ordens finalizadas'),\n   metric('Unidades totais verificadas',period.total_units,'count','Cobertura de custos do período'),\n   metric('Custo de produção conhecido',period.state==='COMPLETE'?period.cost_cents:period.known_cost_cents,'money',period.state==='COMPLETE'?'Total calculado dos custos salvos':'Subtotal parcial de custos conhecidos')\n  ];\n  if(id==='production')return [\n   metric('Unidades com custo conhecido',production.metric,'count','Não indica ordens finalizadas'),\n   metric('Unidades vendidas no mês',products.metric,'count','Base financeira observada'),\n   metric('Alertas de produção',taskCount,'count','Cobertura de custo pendente'),\n   metric('Referência mensal',month.month,'month','Não substitui a fila DTF')\n  ];\n  if(id==='returns')return [\n   metric('Ocorrências para acompanhar',agent.metric,'count','Inclui devoluções e estados em revisão'),\n   metric('Alertas de devoluções',taskCount,'count','Não confirma reembolso bancário'),\n   metric('Período',month.month,'month','Pedidos da referência mensal'),\n   metric('Situação do agente',agent.status,'status','Acompanhamento sem ações externas')\n  ];\n  if(id==='auditor')return [\n   metric('Prioridades operacionais',registry.priorities?.length,'count','Alertas de toda a operação'),\n   metric('Conflitos de evidência',settlement.evidence_conflicts,'count','Diferenças de repasse após ajuste'),\n   metric('Valores não verificados',settlement.release_value_unverified,'count','Liberações sem valor compatibilizado'),\n   metric('Situação do auditor',agent.status,'status','Bloqueio quando há fonte insegura')\n  ];\n  return [\n   metric('Prioridades identificadas',registry.priorities?.length,'count','Filas de trabalho para a equipe'),\n   metric('Agentes em observação',registry.agents?.length,'count','Não executam mudanças comerciais'),\n   metric('Saúde operacional',registry.health,'status','Estado agregado validado'),\n   metric('Período de referência',month.month,'month','Mesma base compartilhada')\n  ];\n }\n\n\n function renderEvidence(id,registry,byAgent){\n  const host=byId('mission-'+id+'-evidence'),note=byId('mission-'+id+'-evidence-note');\n  if(!host)return;\n  const source=registry.sources||{},rows=[];\n  const numeric=value=>safe(value)&&value>=0?value:null;\n  const add=(label,value,base=null)=>rows.push({label,value:numeric(value),base:numeric(base)});\n  let description='',kind='';\n  if(id==='products'){\n   const catalog=source.catalog;\n   if(catalog&&numeric(catalog.total)!==null){\n    kind='CATALOG';\n    add('Produtos registrados',catalog.total,catalog.total);\n    add('Produtos indexados',catalog.indexed,catalog.total);\n    add('Cadastros pendentes',catalog.pending_catalog,catalog.total);\n    description='Fonte: catálogo salvo. Contagem de anúncios/produtos, não unidades em estoque nem vendas.';\n    if(numeric(catalog.indexed)!==null&&catalog.indexed>catalog.total||numeric(catalog.pending_catalog)!==null&&catalog.pending_catalog>catalog.total)\n     description+=' Contagens incompatíveis com o total: confira o cadastro.';\n    if(numeric(catalog.checked_at)!==null&&catalog.checked_at>0)\n     description+=' Última conferência: '+new Intl.DateTimeFormat('pt-BR',{dateStyle:'short',timeStyle:'short',timeZone:'America/Sao_Paulo'}).format(new Date(catalog.checked_at*1000))+'.';\n   }else{\n    kind='COST_COVERAGE';\n    const total=byAgent.products?.metric,known=byAgent.production?.metric;\n    if(numeric(total)!==null&&numeric(known)!==null&&known<=total){\n     add('Unidades com custo conhecido',known,total);\n     add('Unidades sem custo confirmado',total-known,total);\n    }else{\n     add('Unidades vendidas no mês',total);\n     add('Unidades com custo conhecido',known);\n    }\n    description='Aguardando catálogo salvo. Estes números são cobertura de custo das vendas do mês, não estoque.';\n   }\n  }else if(id==='production'){\n   const dtf=source.dtf_queue,period=source.production_period;\n   if(dtf&&numeric(dtf.line_count)!==null){\n    kind='DTF_QUEUE';\n    const statuses=['pending_lines','reserved_lines','produced_lines','blocked_lines'];\n    const classified=statuses.every(key=>numeric(dtf[key])!==null);\n    const sum=classified?statuses.reduce((n,key)=>n+dtf[key],0):null;\n    const base=sum!==null&&sum<=dtf.line_count?dtf.line_count:null;\n    add('Linhas pendentes',dtf.pending_lines,base);\n    add('Linhas reservadas',dtf.reserved_lines,base);\n    add('Linhas produzidas',dtf.produced_lines,base);\n    add('Linhas bloqueadas',dtf.blocked_lines,base);\n    if(sum!==null&&sum<dtf.line_count)add('Sem estado classificado',dtf.line_count-sum,dtf.line_count);\n    description='Fonte: fila DTF salva. Total: '+count(dtf.line_count)+' linha(s). Linhas não equivalem a camisetas ou pedidos.';\n    if(sum!==null&&sum>dtf.line_count)description+=' Estados excedem o total; proporções ocultadas até conferência.';\n   }else if(period&&numeric(period.total_units)!==null){\n    kind='PERIOD_COST';\n    const base=numeric(period.known_units)!==null&&period.known_units<=period.total_units?period.total_units:null;\n    add('Unidades com custo conhecido',period.known_units,base);\n    add('Unidades pendentes de custo',period.pending_units,base);\n    description='Fonte: custos do período '+(period.month||'selecionado')+'. Não representa fila DTF ou ordens concluídas.';\n   }else{\n    kind='COST_COVERAGE';\n    const total=byAgent.products?.metric,known=byAgent.production?.metric;\n    if(numeric(total)!==null&&numeric(known)!==null&&known<=total){\n     add('Unidades com custo conhecido',known,total);\n     add('Unidades sem custo confirmado',total-known,total);\n    }else{\n     add('Unidades vendidas no mês',total);\n     add('Unidades com custo conhecido',known);\n    }\n    description='Fila DTF e custos detalhados ainda não carregados. Mostrando somente cobertura financeira do mês.';\n   }\n  }else if(id==='returns'){\n   const returns=registry.returns||{};\n   kind='RETURNS';\n   add('Pedidos pagos com devolução',returns.paid_returns);\n   add('Devoluções sem confirmação',returns.paid_returns_unknown);\n   add('Pedidos em revisão de status',returns.status_reviews);\n   description=returns.month?'Fonte: estados dos pedidos de '+returns.month.slice(5)+'/'+returns.month.slice(0,4)+'. Contagens distintas; não confirmam reembolso ou crédito bancário.':'Aguardando estados mensais validados de devoluções; nenhuma ausência é tratada como zero.';\n  }else if(id==='auditor'){\n   kind='AUDIT';\n   add('Conflitos de evidência',registry.settlement?.evidence_conflicts);\n   add('Liberações sem valor verificado',registry.settlement?.release_value_unverified);\n   add('Liberações ambíguas',registry.settlement?.release_ambiguous);\n   add('Prioridades do auditor',Array.isArray(registry.priorities)?registry.priorities.filter(item=>item.agent_id===id).length:null);\n   description='Fontes: auditoria e liberações do mês. Categorias independentes; não representam prejuízo ou pagamentos não recebidos.';\n  }else return;\n  host.dataset.evidenceSource=kind;\n  host.replaceChildren();\n  const valid=rows.filter(item=>item.value!==null),maximum=Math.max(1,...valid.map(item=>item.value));\n  for(const row of rows){\n   const wrapper=document.createElement('div');wrapper.className='mission-evidence-row';\n   const heading=document.createElement('div');heading.className='mission-evidence-heading';\n   const title=document.createElement('span');title.textContent=row.label;\n   const value=document.createElement('strong');value.textContent=row.value===null?'—':count(row.value);\n   heading.append(title,value);\n   const track=document.createElement('div');track.className='mission-evidence-track';\n   const fill=document.createElement('span');fill.className='mission-evidence-fill';\n   const hasBase=row.base!==null&&row.value!==null&&row.base>=row.value&&row.base>0;\n   const share=hasBase?row.value/row.base:row.value===null?0:row.value/maximum;\n   fill.style.width=Math.min(100,Math.max(0,share*100))+'%';\n   track.append(fill);wrapper.append(heading,track);\n   if(hasBase){\n    const ratio=document.createElement('small');ratio.className='mission-evidence-ratio';\n    ratio.textContent=new Intl.NumberFormat('pt-BR',{maximumFractionDigits:1}).format(row.value/row.base*100)+'% do total validado';\n    wrapper.append(ratio);\n   }\n   host.append(wrapper);\n  }\n  if(!valid.length){\n   const empty=document.createElement('p');empty.className='mission-evidence-empty';\n   empty.textContent='Nenhuma contagem validada nesta fonte. Os indicadores permanecem indisponíveis, não zerados.';\n   host.append(empty);\n  }\n  if(note)note.textContent=description+(kind==='AUDIT'||kind==='RETURNS'?' Barras em escala relativa ao maior valor observado; não são percentuais de um total.':'');\n }\n\n const hubIds=['finance','ads','products','production','returns','auditor','hermes'];\n const hubStates=['HEALTHY','WORKING','ATTENTION','BLOCKED'];\n let selectedHubFilter='all';\n const hubNormalize=value=>String(value||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLocaleLowerCase('pt-BR');\n function filterHubCards(){\n  const search=hubNormalize(byId('missionAgentSearch')?.value?.trim?.()||'');\n  let matches=0;\n  for(const card of document.querySelectorAll('.mission-hub-card')){\n   const state=card.dataset?.missionHubState||'UNKNOWN';\n   const allowed=selectedHubFilter==='all'||\n    selectedHubFilter==='ATTENTION'&&['ATTENTION','BLOCKED'].includes(state)||\n    selectedHubFilter===state;\n   const visible=allowed&&(!search||hubNormalize(card.textContent).includes(search));\n   card.hidden=!visible;\n   if(visible)matches++;\n  }\n  for(const button of document.querySelectorAll('[data-mission-hub-filter]'))\n   button.setAttribute('aria-pressed',String(button.dataset.missionHubFilter===selectedHubFilter));\n  const label=byId('missionAgentSearchCount');\n  if(label)label.textContent=matches+' especialista(s) exibido(s)';\n  const empty=byId('missionHubFilterEmpty');\n  if(empty)empty.hidden=matches!==0;\n }\n function refreshHub(registry,byAgent){\n  const statuses=hubIds.map(id=>byAgent[id]?.status);\n  const complete=statuses.every(status=>hubStates.includes(status));\n  const counts={attention:0,working:0};\n  if(complete)for(const status of statuses){\n   if(status==='ATTENTION'||status==='BLOCKED')counts.attention++;\n   if(status==='WORKING')counts.working++;\n  }\n  const attention=byId('missionHubAttentionCount'),working=byId('missionHubWorkingCount');\n  if(attention)attention.textContent=complete?String(counts.attention):'—';\n  if(working)working.textContent=complete?String(counts.working):'—';\n  const validated=Array.isArray(registry.priorities);\n  const records=validated?registry.priorities.filter(item=>\n   item&&hubIds.includes(item.agent_id)&&typeof item.title==='string'&&\n   typeof item.detail==='string'&&hubStates.includes(item.severity)):[];\n  const count=byId('missionHubPriorityCount'),label=byId('missionHubPriorityLabel');\n  if(count)count.textContent=validated?String(registry.priorities.length):'—';\n  if(label)label.textContent=validated?registry.priorities.length+' prioridade(s) no registro':'Aguardando dados';\n  const host=byId('missionHubPriorityList');\n  if(host){\n   host.replaceChildren();\n   if(!validated||!records.length){\n    const info=document.createElement('p');info.className='mission-hub-empty';\n    info.textContent=!validated?'Aguardando a leitura validada das prioridades.':\n     'Sem prioridades verificáveis neste recorte. Isso não comprova ausência de problemas na loja.';\n    host.append(info);\n   }else{\n    for(const [index,item] of records.slice(0,4).entries()){\n     const link=document.createElement('a');\n     link.className='mission-hub-priority-row';link.dataset.severity=item.severity;\n     link.href='/admin?tab=agent-'+item.agent_id;\n     const order=document.createElement('span');order.className='mission-hub-priority-rank';order.textContent=String(index+1);\n     const copy=document.createElement('span');copy.className='mission-hub-priority-copy';\n     const name=document.createElement('strong');name.textContent=item.title;\n     const detail=document.createElement('small');detail.textContent=item.detail;\n     copy.append(name,detail);link.append(order,copy);host.append(link);\n    }\n    if(records.length>4){\n     const rest=document.createElement('small');rest.className='mission-hub-priority-more';\n     rest.textContent='Mais prioridades disponíveis nos painéis dos respectivos especialistas.';\n     host.append(rest);\n    }\n   }\n  }\n  const updated=byId('missionHubSnapshot');\n  if(updated)updated.textContent=safe(registry.generated_at)&&registry.generated_at>0?\n   'Projeção do registro: '+new Intl.DateTimeFormat('pt-BR',{dateStyle:'short',timeStyle:'short',timeZone:'America/Sao_Paulo'}).format(new Date(registry.generated_at*1000))+\n   ' · não comprova atualização de cada fonte':\n   'Horário da projeção indisponível';\n  for(const card of document.querySelectorAll('.mission-hub-card')){\n   const id=card.getAttribute('data-mission-agent');\n   const agent=byAgent[id],status=agent?.status;\n   card.dataset.missionHubState=hubStates.includes(status)?status:'UNKNOWN';\n  }\n  for(const id of hubIds){\n   const countNode=byId('missionHubTask-'+id);\n   if(countNode)countNode.textContent=!validated?'Prioridades: aguardando leitura':\n    records.filter(item=>item.agent_id===id).length+' prioridade(s) nesta leitura';\n  }\n  filterHubCards();\n }\n function refresh(registry){\n  if(!registry||registry.schema!=='mls_agent_registry_v1')return;\n  const byAgent={};for(const agent of registry.agents||[])byAgent[agent.id]=agent;\n  byAgent.hermes=registry.hermes||{};\n  const fleet=byId('missionFleetStatus');\n  if(fleet){fleet.textContent=onlyStatus(registry.health);fleet.dataset.status=registry.health;}\n  refreshHub(registry,byAgent);\n  for(const id of ['finance','ads','products','production','returns','auditor','hermes']){\n   const agent=byAgent[id];if(!agent)continue;\n   for(const element of document.querySelectorAll('[data-mission-status=\"'+id+'\"]')){\n    element.textContent=onlyStatus(agent.status);\n    element.dataset.status=agent.status;\n   }\n   const summary=byId('mission-'+id+'-message');\n   if(summary)summary.textContent=agent.message||'Aguardando resumo validado. Nenhuma ação comercial é executada automaticamente.';\n   const rows=readings(id,registry,agent,byAgent);\n   rows.forEach((row,index)=>{\n    const title=byId('mission-'+id+'-label-'+index),value=byId('mission-'+id+'-metric-'+index),help=byId('mission-'+id+'-hint-'+index);\n    if(title)title.textContent=row.title;\n    if(value)value.textContent=display(row.value,row.type);\n    if(help)help.textContent=row.help;\n   });\n   const tasks=byId('mission-'+id+'-tasks');\n   if(tasks){\n    tasks.replaceChildren();\n    const list=(registry.priorities||[]).filter(item=>item.agent_id===id).slice(0,8);\n    if(!list.length){const empty=document.createElement('p');empty.className='mission-empty';empty.textContent='Sem prioridades verificáveis para este agente nesta leitura.';tasks.append(empty);}\n    for(const item of list){\n     const a=document.createElement('a');a.className='mission-task';a.href=sourceHref(item.href);\n     a.dataset.severity=item.severity;\n     const heading=document.createElement('strong'),description=document.createElement('p');\n     heading.textContent=item.title;description.textContent=item.detail;a.append(heading,description);tasks.append(a);\n    }\n   }\n   const stamp=byId('mission-'+id+'-checked');\n   if(stamp){\n    const date=value=>safe(value)&&value>0?new Intl.DateTimeFormat('pt-BR',{dateStyle:'short',timeStyle:'short',timeZone:'America/Sao_Paulo'}).format(new Date(value*1000)):null;\n    const catalog=registry.sources?.catalog,period=registry.sources?.production_period,dtf=registry.sources?.dtf_queue;\n    let label=null;\n    if(id==='products'&&catalog)label='Catálogo salvo'+(date(catalog.checked_at)?' · atualizado '+date(catalog.checked_at):' · horário não informado')+' · estoque não confirmado';\n    else if(id==='production'&&dtf)label='Fila DTF salva · sem horário individual na projeção';\n    else if(id==='production'&&period)label='Custos do período '+(period.month||'observado')+(date(period.checked_at)?' · '+date(period.checked_at):'');\n    else if(date(agent.last_checked_at))label='Referência financeira mensal · '+date(agent.last_checked_at);\n    else label='Última leitura deste agente ainda não validada';\n    stamp.textContent=label;\n   }\n  }\n  for(const id of ['products','production','returns','auditor'])renderEvidence(id,registry,byAgent);\n  const known=byAgent.production?.metric,total=byAgent.products?.metric;\n  for(const id of ['products','production']){\n   const block=byId('mission-'+id+'-coverage'),bar=byId('mission-'+id+'-coverage-bar'),label=byId('mission-'+id+'-coverage-label');\n   if(!block||!bar||!label)continue;\n   const kind=byId('mission-'+id+'-evidence')?.dataset?.evidenceSource;\n   if(id==='production'&&kind!=='DTF_QUEUE'){block.hidden=true;bar.style.width='0%';label.textContent='—';continue;}\n   if(safe(total)&&total>0&&safe(known)&&known>=0&&known<=total){\n    const percent=Math.min(100,Math.max(0,Math.round(known/total*100)));\n    block.hidden=false;bar.style.width=percent+'%';label.textContent=percent+'% · '+count(known)+' / '+count(total)+' unidade(s)';\n   }else{block.hidden=true;bar.style.width='0%';label.textContent='—';}\n  }\n }\n\n\n const searchInput=byId('missionAgentSearch');\n if(searchInput&&typeof searchInput.addEventListener==='function')\n  searchInput.addEventListener('input',filterHubCards);\n for(const button of document.querySelectorAll('[data-mission-hub-filter]')){\n  if(typeof button.addEventListener!=='function')continue;\n  button.addEventListener('click',()=>{\n   const next=button.dataset.missionHubFilter;\n   if(!['all','ATTENTION','WORKING','HEALTHY'].includes(next))return;\n   selectedHubFilter=next;\n   filterHubCards();\n  });\n }\n globalThis.mlsMission=Object.freeze({refresh});\n try{refresh(globalThis.mlsAgentRegistry?.getSnapshot?.());}catch{}\n})();\n";
 
 
 /**
@@ -530,12 +638,16 @@ export const MISSION_TRENDS_CLIENT=String.raw`
 (()=>{
  const buildMissionTrendComparison=${buildMissionTrendComparison.toString()};
  const explainMissionTrendGap=${explainMissionTrendGap.toString()};
+ const charts=(${createMlsVerifiedCharts.toString()})();
+ const projectMlsMissionChart=${projectMlsMissionChart.toString()};
+ const projectMlsSpecialistChart=${projectMlsSpecialistChart.toString()};
  const ns='http://www.w3.org/2000/svg',byId=id=>document.getElementById(id);
  const safe=value=>Number.isSafeInteger(value)&&!Object.is(value,-0);
  const names={net:'Resultado diário estimado',sales:'Vendas dos pedidos pagos',ads:'Gastos com Ads'};
  const fields={net:'net_cents',sales:'sales_cents',ads:'ads_spend_cents'};
  const colors={net:'#39e8af',sales:'#6caaff',ads:'#ffb365'};
  const choice={overview:'net',finance:'net',ads:'ads'};
+ const windows={overview:14,finance:14,ads:14};
  let timeline=null;
  function money(value){
   if(!safe(value))return '—';
@@ -556,49 +668,49 @@ export const MISSION_TRENDS_CLIENT=String.raw`
  }
  function renderGraph(panel){
   const suffix=panel[0].toUpperCase()+panel.slice(1);
-  const target=byId('missionTrendGraph'+suffix),note=byId('missionTrendNote'+suffix);
+  const target=byId('missionTrendGraph'+suffix),note=byId('missionTrendNote'+suffix),scope=byId('missionTrendScope'+suffix);
   if(!target||!note)return;
   target.replaceChildren();
-  const field=fields[choice[panel]],key=choice[panel],title=byId('missionTrendTitle'+suffix);if(title)title.textContent=names[key]+' · últimos dias';
-  const rows=timeline?.schema==='mls_mission_daily_trend_v1'&&Array.isArray(timeline.points)?timeline.points:[];
-  const known=rows.map((r,index)=>({index,row:r,value:safe(r?.[field])?r[field]:null})).filter(r=>r.value!==null);
-  if(known.length<2){
+  const key=choice[panel],title=byId('missionTrendTitle'+suffix);
+  if(title)title.textContent=names[key]+' · últimos dias';
+  const model=projectMlsMissionChart(timeline,key,windows[panel]);
+  target.dataset.chartStatus=model.status;
+  target.dataset.chartSource=model.source;
+  target.dataset.chartMetric=key;
+  const values=byId('missionTrendValues'+suffix);if(values)values.replaceChildren();
+  if(!['READY','PARTIAL'].includes(model.status)){
    const info=explainMissionTrendGap(timeline,key);
-   const empty=document.createElement('p');empty.className='mission-trend-empty';empty.textContent=info.label+'. '+info.detail;
-   target.append(empty);note.textContent=info.coverage+'. Não foram criados zeros nem pontos artificiais.';return;
+   const empty=document.createElement('p');empty.className='mission-trend-empty';
+   empty.textContent=model.reason+'. '+info.detail;
+   target.append(empty);note.textContent=info.coverage+'. Não foram criados zeros nem pontos artificiais.';
+   if(scope)scope.textContent='Janela de até '+windows[panel]+' dias · fonte diária salva';
+   return;
   }
-  const w=740,h=250,left=54,right=726,top=16,bottom=211;
-  const max=Math.max(0,...known.map(r=>r.value)),min=Math.min(0,...known.map(r=>r.value)),span=max-min||1;
-  const X=i=>left+i*(right-left)/Math.max(1,rows.length-1);
-  const Y=v=>top+(max-v)/span*(bottom-top);
-  const zero=Y(0),tint=v=>key==='net'&&v<0?'#ff7899':colors[key];
-  const graph=el('svg',{class:'mission-trend-svg',viewBox:'0 0 '+w+' '+h,preserveAspectRatio:'none',role:'img','aria-label':names[key]+': '+count(known.length)+' dias observados'});
-  graph.append(el('title',{},names[key]+': pontos reais do histórico, sem interpolar valores ausentes'));
-  graph.append(el('text',{x:8,y:13,fill:'#a7c3e2','font-size':11},'R$'));
-  for(let line=0;line<=4;line++){
-   const yy=top+line*(bottom-top)/4;
-   graph.append(el('line',{x1:left,y1:yy,x2:right,y2:yy,stroke:'rgba(123,167,230,.22)','stroke-width':1,'stroke-dasharray':'3 5'}));
-   const amount=max-line*span/4;
-   graph.append(el('text',{x:left-8,y:yy+3,'text-anchor':'end',fill:'#9eb9d7','font-size':11},new Intl.NumberFormat('pt-BR',{notation:'compact',maximumFractionDigits:1}).format(amount/100)));
+  // Parse only the escaped SVG produced by our renderer, never provider markup.
+  const parsed=new DOMParser().parseFromString(charts.renderMlsVerifiedChart(model,{title:names[key],palette:key}),'image/svg+xml');
+  const svg=parsed.documentElement;
+  if(svg.localName!=='svg'||parsed.querySelector('parsererror')){
+   const empty=document.createElement('p');empty.className='mission-trend-empty';empty.textContent='Não foi possível desenhar os dados validados.';
+   target.append(empty);note.textContent='Renderização indisponível; nenhum valor foi substituído.';return;
   }
-  if(min<0&&max>0)graph.append(el('line',{x1:left,y1:zero,x2:right,y2:zero,stroke:'rgba(206,229,255,.6)','stroke-width':1.2}));
-  for(let i=1;i<rows.length;i++){
-   const previous=rows[i-1]?.[field],current=rows[i]?.[field];
-   if(!safe(previous)||!safe(current))continue;
-   const a=X(i-1),b=X(i),c=tint(current);
-   graph.append(el('polygon',{points:a+','+Y(previous)+' '+b+','+Y(current)+' '+b+','+zero+' '+a+','+zero,fill:c,'fill-opacity':.10}));
-   graph.append(el('line',{x1:a,y1:Y(previous),x2:b,y2:Y(current),stroke:c,'stroke-width':3.2,'stroke-linecap':'round'}));
-  }
-  for(let i=0;i<rows.length;i++){
-   const row=rows[i],v=row?.[field];
-   if(i===0||i===rows.length-1||i%3===0)graph.append(el('text',{x:X(i),y:h-14,'text-anchor':'middle',fill:'#a3bcda','font-size':11},briefDate(row?.date)));
-   if(!safe(v))continue;
-   const dot=el('circle',{cx:X(i),cy:Y(v),r:row.partial?3.5:4,fill:row.partial?'#f7c57f':tint(v),stroke:'#081a35','stroke-width':1.6});
-   dot.append(el('title',{},briefDate(row.date)+' · '+money(v)+(row.partial?' · dia parcial':'')+(row.net_basis==='KNOWN_COSTS'&&key==='net'?' · subtotal com custos conhecidos':'')));
-   graph.append(dot);
-  }
+  const graph=document.importNode(svg,true);graph.classList.add('mission-trend-svg');
   target.append(graph);
-  note.textContent=count(known.length)+' de '+count(rows.length)+' dia(s) com valores · '+briefDate(rows[0].date)+' a '+briefDate(rows.at(-1).date)+'. '+(known.some(item=>item.row.partial)?'Pontos âmbar = dia parcial. ':'')+'Resultado estimado, não recebimento bancário.';
+  const range=briefDate(model.period.start_date)+' a '+briefDate(model.period.end_date);
+  if(scope)scope.textContent=range+' · janela de até '+windows[panel]+' dias · Brasília';
+  note.textContent=count(model.coverage.observed)+' de '+count(model.coverage.total)+' dia(s) com valores · '+range+'. '+
+   (model.status==='PARTIAL'?'Cobertura parcial; lacunas não conectadas. ':'')+
+   (model.coverage.partial?'Pontos âmbar = dia parcial; subtotais identificados na observação. ':'')+
+   'Fonte: resumo diário validado salvo. Resultado estimado, não recebimento bancário.';
+  const table=byId('missionTrendValues'+suffix);
+  if(table){
+   table.replaceChildren();
+   for(const point of model.points){
+    const row=document.createElement('tr'),date=document.createElement('th'),value=document.createElement('td'),state=document.createElement('td');
+    date.scope='row';date.textContent=briefDate(point.date);value.textContent=point.value===null?'Indisponível':money(point.value);
+    state.textContent=point.value===null?'Sem observação':point.basis==='KNOWN_COSTS'?'Subtotal com custos conhecidos':point.partial?'Dia parcial':'Observado';
+    row.append(date,value,state);table.append(row);
+   }
+  }
  }
 
  function renderSparklines(){
@@ -606,15 +718,15 @@ export const MISSION_TRENDS_CLIENT=String.raw`
    const host=byId('missionSpark'+suffix);
    if(!host)continue;
    host.replaceChildren();
-   const rows=timeline?.schema==='mls_mission_daily_trend_v1'&&Array.isArray(timeline.points)?timeline.points:[];
-   const field=fields[key];
-   const valid=rows.map((row,i)=>({row,i,v:row?.[field]})).filter(x=>safe(x.v));
+   const model=projectMlsMissionChart(timeline,key,14);
+   const rows=['READY','PARTIAL'].includes(model.status)?model.points:[];
+   const valid=rows.map((row,i)=>({row,i,v:row?.value})).filter(x=>safe(x.v));
    if(valid.length<2){host.setAttribute('aria-label','Histórico insuficiente para tendência');continue;}
    const vals=valid.map(x=>x.v),min=Math.min(...vals),max=Math.max(...vals),span=max-min||1;
    const svg=el('svg',{viewBox:'0 0 200 38',preserveAspectRatio:'none','aria-hidden':'true'});
    const x=i=>5+i*190/Math.max(1,rows.length-1),y=v=>34-(v-min)/span*30;
    for(let i=1;i<rows.length;i++){
-    const a=rows[i-1]?.[field],b=rows[i]?.[field];
+    const a=rows[i-1]?.value,b=rows[i]?.value;
     if(!safe(a)||!safe(b))continue;
     svg.append(el('line',{x1:x(i-1),y1:y(a),x2:x(i),y2:y(b),stroke:key==='net'&&b<0?'#ff7899':colors[key],'stroke-width':2.5,'stroke-linecap':'round'}));
    }
@@ -645,6 +757,34 @@ export const MISSION_TRENDS_CLIENT=String.raw`
    if(details)details.textContent=briefDate(result.current_date)+' vs '+briefDate(result.previous_date)+' · dias completos';
   }
  }
+ function renderSpecialistCharts(){
+  let queue=null;
+  try{queue=globalThis.brazaDtfWorkspace?.getSnapshot?.()??null;}catch{}
+  for(const host of document.querySelectorAll('[data-mission-specialist-chart]')){
+   const key=host.dataset.missionSpecialistChart,model=projectMlsSpecialistChart(key,queue);
+   if(!model)continue;
+   host.replaceChildren();host.dataset.chartStatus=model.status;host.dataset.chartSource=model.source;
+   const note=byId('missionChartNote-'+key);
+   if(model.status!=='READY'){
+    const empty=document.createElement('p');empty.className='mission-empty';empty.setAttribute('role','status');empty.textContent=model.reason;host.append(empty);
+    if(note)note.textContent='Nenhuma curva ou proporção foi inferida. Confira a fonte existente abaixo.';
+    continue;
+   }
+   const parsed=new DOMParser().parseFromString(charts.renderMlsVerifiedChart(model,{title:model.title,palette:'production'}),'image/svg+xml');
+   if(parsed.documentElement.localName!=='svg'||parsed.querySelector('parsererror')){
+    host.dataset.chartStatus='ERROR';
+    const empty=document.createElement('p');empty.className='mission-empty';empty.textContent='Não foi possível desenhar a distribuição validada.';host.append(empty);
+    if(note)note.textContent='Renderização indisponível; nenhum valor foi substituído.';
+    continue;
+   }
+   host.append(document.importNode(parsed.documentElement,true));
+   const details=document.createElement('details'),summary=document.createElement('summary'),list=document.createElement('ul');
+   summary.textContent='Conferir linhas por estado';
+   for(const segment of model.segments){const item=document.createElement('li');item.textContent=segment.label+': '+count(segment.value)+' linha(s)';list.append(item);}
+   details.append(summary,list);host.append(details);
+   if(note)note.textContent='Fonte: fila DTF salva · '+count(model.total)+' linha(s). Estados exclusivos de todas as linhas carregadas; não são pedidos, peças ou produção por hora. Horário individual indisponível.';
+  }
+ }
  function refresh(){
   let trend=null,registry=null;
   try{trend=globalThis.brazaDayDashboard?.getTrend?.()??null;}catch{}
@@ -653,8 +793,7 @@ export const MISSION_TRENDS_CLIENT=String.raw`
   for(const id of Object.keys(choice))renderGraph(id);
   paintIndicators(registry);
   renderSparklines();
-  const period=byId('missionTrendScopeOverview');
-  if(period){const info=explainMissionTrendGap(timeline,'net');period.textContent=timeline?'Histórico '+timeline.month.slice(5)+'/'+timeline.month.slice(0,4)+' · '+info.coverage:'Histórico ainda não salvo · resultado do dia permanece independente';}
+  renderSpecialistCharts();
  }
  for(const button of document.querySelectorAll('[data-mission-chart][data-mission-series]')){
   button.onclick=()=>{
@@ -663,6 +802,12 @@ export const MISSION_TRENDS_CLIENT=String.raw`
    choice[id]=key;
    for(const peer of document.querySelectorAll('[data-mission-chart="'+id+'"]'))peer.setAttribute('aria-pressed',String(peer===button));
    renderGraph(id);
+  };
+ }
+ for(const select of document.querySelectorAll('[data-mission-window]')){
+  select.onchange=()=>{const panel=select.dataset.missionWindow,value=Number(select.value);
+   if(!Object.hasOwn(windows,panel)||![7,14].includes(value))return;
+   windows[panel]=value;renderGraph(panel);
   };
  }
  globalThis.mlsMissionTrends=Object.freeze({refresh});
@@ -680,9 +825,11 @@ export function missionTrendPanelBody(id='overview'){
  return '<section class="mission-trend-panel" id="missionTrends'+suffix+'" aria-label="'+title+'">'+
   '<header class="mission-trend-heading"><div><span class="mission-panel-eyebrow">SÉRIE DIÁRIA VALIDADA</span><h3 id="missionTrendTitle'+suffix+'">'+title+'</h3>'+
   '<p id="missionTrendScope'+suffix+'">'+(id==='overview'?'Últimos até 14 dias do período observado':'Histórico diário do período selecionado')+'</p></div>'+
-  '<div class="mission-trend-controls" role="group" aria-label="Métrica do gráfico">'+['net','sales','ads'].map(control).join('')+'</div></header>'+
+  '<div class="mission-trend-tools"><div class="mission-trend-controls" role="group" aria-label="Métrica do gráfico">'+['net','sales','ads'].map(control).join('')+'</div>'+
+  '<label class="mission-trend-window">Janela <select data-mission-window="'+id+'" aria-label="Janela do gráfico '+id+'"><option value="14">Até 14 dias</option><option value="7">Até 7 dias</option></select></label></div></header>'+
   '<div class="mission-trend-graph" id="missionTrendGraph'+suffix+'"><p class="mission-trend-empty">Aguardando o histórico diário validado.</p></div>'+
   '<p class="mission-trend-note" id="missionTrendNote'+suffix+'">As leituras parciais são sinalizadas. Sem série inventada.</p>'+
+  '<details class="mission-trend-values"><summary>Conferir valores observados</summary><table><thead><tr><th>Dia</th><th>Valor</th><th>Cobertura</th></tr></thead><tbody id="missionTrendValues'+suffix+'"></tbody></table></details>'+
   '</section>';
 }
 
@@ -703,8 +850,9 @@ export const MISSION_TRENDS_CSS=String.raw`
 .mission-trend-heading{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:14px;margin:0 0 14px}
 .mission-trend-heading h3{font-size:20px;letter-spacing:-.5px;margin:6px 0;color:#f6faff}
 .mission-trend-heading p{font-size:11px;color:#a9c1df;margin:3px 0;line-height:1.6}
+.mission-trend-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.mission-trend-window{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}.mission-trend-window select{min-height:44px;max-width:140px;font-size:11px}.mission-trend-values{font-size:11px;margin-top:8px}.mission-trend-values summary{min-height:44px;display:flex;align-items:center;cursor:pointer}.mission-trend-values table{width:100%;table-layout:fixed;border-collapse:collapse}.mission-trend-values td,.mission-trend-values th{padding:8px;text-align:left;overflow-wrap:anywhere;border-bottom:1px solid var(--line)}.mission-trend-svg circle:focus{outline:2px solid currentColor;outline-offset:3px}
 .mission-trend-controls{display:flex;gap:5px;padding:4px;border:1px solid rgba(113,157,230,.2);background:rgba(4,17,41,.66);border-radius:12px}
-.mission-trend-controls button{min-height:36px;padding:8px 13px;border-radius:9px;border:1px solid transparent;font-size:11px;cursor:pointer;font-weight:700;color:#a9c9e7;background:transparent}
+.mission-trend-controls button{min-height:44px;padding:8px 13px;border-radius:9px;border:1px solid transparent;font-size:11px;cursor:pointer;font-weight:700;color:#a9c9e7;background:transparent}
 .mission-trend-controls button:hover{color:#fff;background:rgba(66,119,226,.25)}
 .mission-trend-controls button[aria-pressed=true]{color:#e9faff;background:linear-gradient(110deg,#2055ba,#276bba);border-color:rgba(121,189,255,.62);box-shadow:0 3px 13px rgba(14,90,229,.22)}
 .mission-trend-controls button:focus-visible{outline:3px solid #78d8ff;outline-offset:2px}
@@ -715,7 +863,7 @@ export const MISSION_TRENDS_CSS=String.raw`
 .mission-workspace .mission-trend-panel{border-color:rgba(var(--mission-rgb),.47);background:radial-gradient(ellipse at 100% -35%,rgba(var(--mission-rgb),.22),transparent 57%),linear-gradient(120deg,#0b213f,#06162c 91%)}
 .mission-workspace .mission-trend-panel:before{background:linear-gradient(90deg,var(--mission-accent),transparent)}
 .mission-workspace .mission-trend-heading .mission-panel-eyebrow{color:var(--mission-accent)}
-.mission-dashboard .command-center-metrics .command-metric{min-height:178px;display:flex;flex-direction:column;gap:3px}
+.mission-dashboard .command-center-metrics .command-metric{display:flex;flex-direction:column;gap:3px}
 .mission-dashboard .command-center-metrics .command-metric small{display:block}
 .mission-dashboard .command-metric .mission-kpi-delta{
  display:inline-flex;align-items:center;min-height:22px;max-width:100%;margin-top:auto;padding:4px 0 1px;
@@ -759,8 +907,8 @@ export const MISSION_TRENDS_CSS=String.raw`
 :root[data-theme=light] .mission-workspace .mission-stat strong[data-result-tone=profit]{color:#137653}
 :root[data-theme=light] .mission-workspace .mission-stat strong[data-result-tone=loss]{color:#bd3959}
 @media(max-width:1150px){.mission-dashboard .command-center-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}}
-@media(max-width:720px){.mission-dashboard .command-center-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.mission-trend-panel{padding:17px!important}.mission-trend-heading{gap:10px}.mission-trend-controls{width:100%;justify-content:space-between}.mission-trend-controls button{flex:1}.mission-dashboard .command-center-metrics .command-metric{min-height:152px}.mission-trend-graph{height:233px}}
-@media(max-width:420px){.mission-dashboard .command-center-metrics{grid-template-columns:minmax(0,1fr)}.mission-dashboard .command-center-metrics .command-metric{min-height:141px}.mission-trend-heading h3{font-size:17px}}
+@media(max-width:720px){.mission-trend-panel{padding:17px!important}.mission-trend-heading{gap:10px}.mission-trend-controls{width:100%;justify-content:space-between}.mission-trend-controls button{flex:1}.mission-trend-graph{height:233px}}
+@media(max-width:420px){.mission-trend-heading h3{font-size:17px}}
 @media(prefers-reduced-motion:reduce){.mission-trend-controls button,.mission-trend-svg *{transition:none!important}}
 
 
@@ -773,23 +921,6 @@ export const MISSION_TRENDS_CSS=String.raw`
 .mission-workspace .mission-stat{padding:15px;min-height:0}
 .mission-workspace .mission-stat small{min-height:0}
 .mission-workspace .mission-module{padding:17px}
-.mission-dashboard .command-center-head{padding:18px 22px!important;margin-bottom:12px!important}
-.mission-dashboard .command-center-head h2{font-size:clamp(25px,2.5vw,32px)}
-.mission-dashboard .command-center-metrics{gap:10px;margin-bottom:12px}
-.mission-dashboard .command-metric{padding:13px 15px;min-height:110px}
-.mission-dashboard .agent-grid{gap:10px}
-.mission-dashboard .agent-card{min-height:127px;padding:13px}
-.mission-dashboard .agent-card p{margin:7px 0}
-.mission-dashboard .hermes-command{padding:16px}
-.mission-dashboard .hermes-command-summary{margin:9px 0;padding:10px}
-.mission-dashboard .command-priorities{margin:10px 0}
-.mission-dashboard .command-priority{padding:8px 10px}
-.mission-dashboard .agent-card:focus-visible{outline:3px solid #70c7ff;outline-offset:3px}
-@media(min-width:1181px){
- .mission-dashboard .command-center-metrics{grid-template-columns:repeat(6,minmax(0,1fr))}
- .mission-dashboard .command-center-grid{grid-template-columns:minmax(0,1fr) minmax(0,3fr)}
- .mission-dashboard .agent-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
-}
 @media(max-width:720px){
  .mission-workspace .mission-hero{padding:16px;flex-wrap:wrap}
  .mission-workspace .mission-hero-main{gap:12px}
@@ -801,38 +932,7 @@ export const MISSION_TRENDS_CSS=String.raw`
 
 
 
-/* Mobile owner cockpit V3: keep real labels, remove redundant empty comparison text. */
-@media(max-width:570px){
- .mission-dashboard .command-center-head.mission-command-hero{min-height:0!important;max-height:none!important;height:auto!important;padding:15px!important;gap:8px}
- .mission-dashboard .command-center-head h2{font-size:clamp(22px,6vw,27px)!important;line-height:1.12}
- .mission-dashboard .command-center-head p{font-size:11px;line-height:1.45}
- .mission-dashboard .command-center-head .command-center-mode{margin-top:8px;max-width:100%;white-space:normal}
- .mission-dashboard .command-center-metrics{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important;margin:10px 0 14px!important}
- .mission-dashboard .command-center-metrics .command-metric{display:flex;flex-direction:column;align-items:stretch;gap:5px;min-width:0;min-height:0!important;height:auto!important;padding:12px 11px!important;border-radius:14px}
- .mission-dashboard .command-metric:before{width:28px;height:28px;right:8px;top:8px;font-size:14px}
- .mission-dashboard .command-metric>small:first-child{font-size:11px;line-height:1.3;min-height:28px;max-width:calc(100% - 32px)}
- .mission-dashboard .command-metric strong{font-size:clamp(17px,4.7vw,24px);line-height:1.15;letter-spacing:-.35px;margin:2px 0 0;overflow-wrap:anywhere}
- .mission-dashboard .command-metric .mission-profit-state{font-size:9px;line-height:1.3}
- .mission-dashboard .command-metric .mission-kpi-delta{font-size:9px;line-height:1.3}
- .mission-dashboard .command-metric .mission-kpi-delta[data-direction=UNAVAILABLE]{display:none}
- .mission-dashboard .command-metric .mission-kpi-comparison-date{display:none}
- .mission-dashboard .command-metric>span:not(.mission-kpi-delta):not(.mission-profit-state){display:none}
- .mission-dashboard .command-metric .mission-kpi-sparkline:empty{display:none}
- .mission-dashboard .agent-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px}
- .mission-dashboard .agent-card{min-width:0;min-height:0!important;padding:11px!important;gap:5px}
- .mission-dashboard .agent-card p{font-size:10px;line-height:1.45}
- .mission-dashboard .agent-card .agent-card-metric{font-size:12px;overflow-wrap:anywhere}
- .mission-dashboard .agent-panel-head{gap:8px;align-items:center}
- .mission-dashboard .agent-panel-head h3{font-size:17px}
- .mission-dashboard .hermes-command{min-height:0;padding:13px}
- .mission-dashboard .hermes-command .command-priorities{max-height:190px;overflow:auto;overscroll-behavior:contain}
- .mission-trend-graph{height:195px}
-}
-@media(max-width:350px){
- .mission-dashboard .command-center-metrics{gap:7px!important}
- .mission-dashboard .command-center-metrics .command-metric{padding:10px 9px!important}
- .mission-dashboard .command-metric strong{font-size:17px}
- .mission-dashboard .agent-card{padding:9px!important}
-}
+/* Mobile charts retain their observed-series viewport independently of shell layout. */
+@media(max-width:570px){.mission-trend-graph{height:195px}}
 
 `;
