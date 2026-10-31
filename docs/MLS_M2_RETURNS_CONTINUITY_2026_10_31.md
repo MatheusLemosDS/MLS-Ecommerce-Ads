@@ -51,6 +51,26 @@ usuário com Workers Builds Configuration: Edit, além de Workers Scripts: Read
 para descobrir o script_tag. Isso é diferente do token usado pelo build para
 publicar. A entrega oficial continua via Wrangler e conferência independente.
 
+## Virada diária observada durante a publicação
+
+A execução das02:59:52–03:00:01UTC cruzou a meia-noite de Brasília antes do
+deploy. O coletor mantinha apenas o mês, mas o intervalo mudou de30para31;
+`BUSINESS_MONTH_START_REQUIRED` local acabou registrado como falha genérica.
+Não houve erro de provider registrado. O retry normal das03:05 recuperou o
+progresso, sem execução forçada. A nova correção fixa a identidade do dia para
+esta execução, preservando o relógio real: guarda a página já recebida, interrompe
+as próximas chamadas e retoma por start com o intervalo novo. Erros genuínos
+continuam com backoff, e uma pausa/retomada durante a chamada não perde a sua
+agenda explícita. A correção está validada em74casos direcionados de fonte e
+Worker normal/minificado, aguardando a suíte integral e a segunda publicação.
+
+O primeiro deployM2 já foi confirmado na versão `ced13c23`, hash publicado
+`9321379d41775bee07f820b2bc97dbdf2df9829e416cd9c3ec9226f5400d739c`:
+2/2intervalos atuais receberam relatórios, um CHECKED e outro PARTIAL, às
+03:01:57 e03:02:58UTC. A quota2 foi respeitada e outras tarefas retomaram.
+A coleta às03:06 voltou aRUNNING, zero falhas e sem erro atual. Isso comprova
+retomada da auditoria, sem declarar todos os reembolsos ou o banco conciliados.
+
 ## Validação e publicação
 
 Em preparação. Registrar resultado real de testes, CI, hashes, versão Live,
