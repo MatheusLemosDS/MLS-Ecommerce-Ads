@@ -1,9 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
-import {ESCROW_RELEASES_CLIENT,ESCROW_RELEASES_CSS,escrowReleasesBody} from '../src/escrow-releases-view.mjs';
+import {ESCROW_RELEASES_CLIENT,ESCROW_RELEASES_CSS,escrowReleasesBody,projectMlsReleaseCoverageFollowup} from '../src/escrow-releases-view.mjs';
 import {projectBusinessEscrowReleases,projectBusinessEscrowReleaseEvidence} from '../src/business-escrow-releases.mjs';
-import {projectEscrowReleaseFrame,projectEscrowReleaseEvidenceFrame} from '../../finance/src/escrow-release-frame.mjs';
+import {projectBusinessEscrowReleaseCoverage} from '../src/business-escrow-release-coverage.mjs';
+import {projectEscrowReleaseFrame,projectEscrowReleaseEvidenceFrame,projectEscrowReleaseCoverageFrame} from '../../finance/src/escrow-release-frame.mjs';
 
 const clock=Date.UTC(2026,9,25,15),stamp=clock/1000;
 const uuid='11111111-1111-4111-8111-111111111111',scan='22222222-2222-4222-8222-222222222222';
@@ -154,4 +155,93 @@ test('order-level release evidence shows adjustment, verified release and saved 
 
 test('legacy release payload remains compatible when the v2 sidecar is unavailable',async()=>{
  const b=browser(observation());b.run('brazaEscrowReleases.start({api})');assert.equal(await b.run('brazaEscrowReleases.observe("2026-10",selectedScope)'),true);assert.equal(b.run('control("Orders").hidden'),true);assert.match(b.text('Metrics'),/120,00/);
+});
+
+
+function temporalObservation(primary=observation({month:'2026-09'})){
+ const sources=primary.cohort.sources.map(source=>({...source,status:'AVAILABLE'}));
+ const report={schema:'finance_escrow_release_coverage_v1',cohort_month:'2026-09',through_month:'2026-10',checked_at:stamp-60,status:'IDENTITY_COMPLETE',sources,calendars:[
+  {month:'2026-09',status:'COMPLETE',scan_id:scan,cutoff_at:Date.UTC(2026,9,1,3)/1000,source_oldest_at:stamp-800,source_latest_at:stamp-700,observations:1,cohort_observations:1,unique_cohort_orders:1,ambiguous_cohort_orders:0},
+  {month:'2026-10',status:'COMPLETE',scan_id:'33333333-3333-4333-8333-333333333333',cutoff_at:stamp-100,source_oldest_at:stamp-500,source_latest_at:stamp-400,observations:1,cohort_observations:1,unique_cohort_orders:1,ambiguous_cohort_orders:0}
+ ],coverage:{paid_orders:2,located_orders:2,not_located_orders:0,ambiguous_orders:0,single_orders:2,calendars_total:2,calendars_complete:2,identity_complete_at_cutoff:true},pending:['BANK_RECEIPT_NOT_VERIFIED','RELEASE_CYCLE_SEMANTICS_UNVERIFIED'],basis:'SAVED_RELEASE_CALENDARS_AGAINST_PAID_ORDER_COHORT_NOT_BANK_RECEIPT'};
+ assert.ok(projectEscrowReleaseCoverageFrame(report));
+ const value={schema:'business_escrow_release_coverage_v1',cohort_month:'2026-09',checked_at:stamp,status:'AVAILABLE',report,attempt:{checked_at:stamp-30,status:'SUCCESS',code:null,next_attempt_at:stamp+900}};
+ assert.ok(projectBusinessEscrowReleaseCoverage(value,projectEscrowReleaseCoverageFrame));return value;
+}
+function followup(value,primary=observation({month:'2026-09'}),overrides={}){return projectMlsReleaseCoverageFollowup(value,{month:'2026-09',scope:auditScope(primary),currentMonth:'2026-10',cohortSources:primary.cohort.sources,checkedAt:stamp,...overrides},projectBusinessEscrowReleaseCoverage,projectEscrowReleaseCoverageFrame);}
+
+test('temporal follow-up presents only the exact publication identity and finance observation times',()=>{
+ const value=temporalObservation(),result=followup(value);assert.equal(result.state,'CURRENT');assert.equal(result.scope_compatible,true);assert.equal(result.coverage.located_orders,2);assert.equal(result.coverage.not_located_orders,0);assert.deepEqual(result.period,{start_date:'2026-09-01',end_date:'2026-09-15'});assert.equal(result.checked_at,stamp-60);assert.equal(result.attempt.next_attempt_at,stamp+900);assert.equal(Object.hasOwn(result,'remaining_receivable_cents'),false);
+ for(const mutate of [v=>v.report.sources[0].source_revision++,v=>v.report.sources[0].start_date='2026-09-02',v=>v.report.sources[0].finance_oldest_at++,v=>v.report.sources[0].finance_latest_at++]){
+  const bad=structuredClone(value);mutate(bad);assert.ok(projectBusinessEscrowReleaseCoverage(bad,projectEscrowReleaseCoverageFrame));const rejected=followup(bad);assert.equal(rejected.state,'WAITING');assert.equal(rejected.reason,'PUBLICATION_MISMATCH');assert.equal(rejected.coverage,null);assert.equal(rejected.calendars.length,0);
+ }
+});
+
+test('an older release calendar remains historical while a failed refresh preserves its real cutoff',()=>{
+ const old=temporalObservation();old.report.through_month='2026-09';old.report.calendars.pop();Object.assign(old.report.coverage,{located_orders:1,not_located_orders:1,single_orders:1,calendars_total:1,calendars_complete:1,identity_complete_at_cutoff:false});old.report.status='PARTIAL';old.report.pending.unshift('ORDER_NOT_LOCATED');
+ const historical=followup(old);assert.equal(historical.state,'HISTORICAL');assert.equal(historical.through_month,'2026-09');assert.equal(historical.coverage.calendars_total,1);assert.equal(historical.reason,'LATER_CALENDAR_PENDING');
+ const failed=temporalObservation();failed.status='PARTIAL_UNAVAILABLE';failed.attempt.status='UNAVAILABLE';failed.attempt.code='FINANCE_ESCROW_RELEASES_TIMEOUT';const retry=followup(failed);assert.equal(retry.state,'RETRY_WAIT');assert.equal(retry.checked_at,stamp-60);assert.equal(retry.coverage.identity_complete_at_cutoff,true);assert.equal(retry.attempt.status,'UNAVAILABLE');
+});
+
+test('missing source population is unknown, pending remains empty, and invalid or future evidence is withheld',()=>{
+ const partial=temporalObservation();Object.assign(partial.report.sources[0],{status:'MISSING',start_date:null,end_date:null,orders:null,paid_orders:null,finance_oldest_at:null,finance_latest_at:null,expected_repass_cents:null});Object.assign(partial.report.coverage,{paid_orders:null,not_located_orders:null,identity_complete_at_cutoff:false});partial.report.status='COLLECTING';partial.report.pending.unshift('SOURCE_MISSING');const projected=followup(partial);assert.equal(projected.state,'CURRENT');assert.equal(projected.coverage.paid_orders,null);assert.equal(projected.coverage.not_located_orders,null);
+ const pending={schema:'business_escrow_release_coverage_v1',cohort_month:'2026-09',checked_at:stamp,status:'PENDING',report:null,attempt:null};assert.equal(followup(pending).coverage,null);assert.equal(followup(pending).reason,'AWAITING_AUTOMATIC_CHECK');
+ const future=temporalObservation();future.checked_at=stamp+61;assert.equal(followup(future).coverage,null);assert.equal(followup({...temporalObservation(),private_token:'PRIVATE'}).coverage,null);
+ const selection={get month(){throw Error('PRIVATE');}};assert.doesNotThrow(()=>projectMlsReleaseCoverageFollowup(null,selection,projectBusinessEscrowReleaseCoverage,projectEscrowReleaseCoverageFrame));
+ const sameMonth=followup(null,observation({month:'2026-09'}),{currentMonth:'2026-09'});assert.equal(sameMonth.state,'CURRENT_MONTH');assert.equal(sameMonth.coverage,null);
+});
+
+test('the temporal presentation helper survives browser serialization without server closure',()=>{
+ const value=temporalObservation(),primary=observation({month:'2026-09'}),selection={month:'2026-09',scope:auditScope(primary),currentMonth:'2026-10',cohortSources:primary.cohort.sources,checkedAt:stamp};
+ const ctx=vm.createContext({raw:JSON.stringify(value),selected:JSON.stringify(selection)});vm.runInContext(projectEscrowReleaseCoverageFrame.toString()+';'+projectBusinessEscrowReleaseCoverage.toString()+';'+projectMlsReleaseCoverageFollowup.toString()+';globalThis.result=projectMlsReleaseCoverageFollowup(JSON.parse(raw),JSON.parse(selected),projectBusinessEscrowReleaseCoverage,projectEscrowReleaseCoverageFrame);',ctx);assert.deepEqual(JSON.parse(vm.runInContext('JSON.stringify(result)',ctx)),followup(value));
+});
+
+test('opening saved release coverage loads once without polling and exposes dates plus a bounded retry action',async()=>{
+ const primary=observation({month:'2026-09'}),saved=temporalObservation(primary),b=browser(primary);b.context.savedCoverage=JSON.stringify(saved);b.run('brazaEscrowReleases.start({api});customApi=async path=>path.includes("escrow-release-coverage")?JSON.parse(savedCoverage):JSON.parse(JSON.stringify(current));');
+ assert.equal(await b.run('brazaEscrowReleases.observe("2026-09",selectedScope)'),true);assert.equal(b.calls().length,1);assert.doesNotMatch(b.text('Coverage'),/Calendários conferidos/);
+ b.run('control("Details").open=true;');assert.equal(await b.run('brazaEscrowReleases.observe("2026-09",selectedScope)'),true);assert.equal(b.calls().length,2);assert.match(b.text('Coverage'),/Último cruzamento salvo/);assert.match(b.text('Coverage'),/Calendários conferidos 2 de 2/);assert.match(b.text('Coverage'),/Ainda não localizados 0/);assert.match(b.text('Coverage'),/Última tentativa automática/);assert.match(b.text('Coverage'),/Próxima conferência programada/);assert.match(b.text('Coverage'),/ciclo de liberação e o recebimento bancário continuam em conferência/);assert.equal(b.run('typeof setTimeout'),'undefined');assert.ok(b.calls().every(row=>row.body===undefined));assert.equal(b.run('financialNet.textContent'),'R$ 2.250,13');
+ b.run('clock+=60000;customApi=async()=>{throw Error("PRIVATE_PROVIDER_TOKEN");};');assert.equal(await b.run('brazaEscrowReleases.refreshCoverage()'),false);assert.match(b.text('Coverage'),/Não foi possível conferir.*datas e evidências anteriores foram preservadas/);assert.match(b.text('Coverage'),/Calendários conferidos 2 de 2/);assert.doesNotMatch(b.text('Coverage'),/PRIVATE_PROVIDER_TOKEN/);
+});
+
+test('late coverage responses cannot cross publication changes or logout and mismatched snapshots never reach agents',async()=>{
+ const primary=observation({month:'2026-09'}),saved=temporalObservation(primary),b=browser(primary);b.context.savedCoverage=JSON.stringify(saved);b.run('brazaEscrowReleases.start({api});');await b.run('brazaEscrowReleases.observe("2026-09",selectedScope)');b.run('control("Details").open=true;customApi=()=>new Promise(resolve=>globalThis.finishCoverage=resolve);globalThis.pendingCoverage=brazaEscrowReleases.refreshCoverage();');await Promise.resolve();
+ b.run('brazaEscrowReleases.observe("2026-09",null);finishCoverage(JSON.parse(savedCoverage));');assert.equal(await b.run('pendingCoverage'),false);assert.equal(b.run('brazaEscrowReleases.getSnapshot()'),null);assert.doesNotMatch(b.text('Coverage'),/Calendários conferidos/);
+ b.run('control("Details").open=false;customApi=null;');await b.run('brazaEscrowReleases.observe("2026-09",selectedScope)');b.run('control("Details").open=true;customApi=()=>new Promise(resolve=>globalThis.finishLogout=resolve);globalThis.pendingLogout=brazaEscrowReleases.refreshCoverage();');await Promise.resolve();b.run('brazaEscrowReleases.stop();finishLogout(JSON.parse(savedCoverage));');assert.equal(await b.run('pendingLogout'),false);assert.equal(b.run('brazaEscrowReleases.getSnapshot()'),null);
+ const mismatch=browser(primary),bad=temporalObservation(primary);bad.report.sources[0].source_revision++;mismatch.context.badCoverage=JSON.stringify(bad);mismatch.run('brazaEscrowReleases.start({api});control("Details").open=true;customApi=async path=>path.includes("escrow-release-coverage")?JSON.parse(badCoverage):JSON.parse(JSON.stringify(current));');await mismatch.run('brazaEscrowReleases.observe("2026-09",selectedScope)');assert.match(mismatch.text('Coverage'),/A publicação dos pedidos mudou/);assert.equal(mismatch.run('brazaEscrowReleases.getSnapshot().coverage'),null);assert.doesNotMatch(mismatch.text('Coverage'),/Calendários conferidos/);
+});
+
+
+test('a calendar rollover during a coverage read releases the loading state for the next explicit check',async()=>{
+ const primary=observation({month:'2026-09'}),saved=temporalObservation(primary),b=browser(primary);b.context.savedCoverage=JSON.stringify(saved);b.run('brazaEscrowReleases.start({api});');await b.run('brazaEscrowReleases.observe("2026-09",selectedScope)');
+ b.run('control("Details").open=true;customApi=()=>new Promise(resolve=>globalThis.finishRollover=resolve);globalThis.pendingRollover=brazaEscrowReleases.refreshCoverage();');await Promise.resolve();b.run('clock=Date.UTC(2026,10,1,15);finishRollover(JSON.parse(savedCoverage));');assert.equal(await b.run('pendingRollover'),false);assert.equal(b.run('control("Coverage").children[0].children[1].disabled'),false);
+ b.run('customApi=async()=>JSON.parse(savedCoverage);');assert.equal(await b.run('brazaEscrowReleases.refreshCoverage()'),true);assert.match(b.text('Coverage'),/corte histórico até 10\/2026/);assert.match(b.text('Coverage'),/calendário de 11\/2026 ainda precisa entrar/);assert.equal(b.calls().length,3);assert.equal(b.run('financialNet.textContent'),'R$ 2.250,13');
+});
+
+
+test('coverage cannot change the paid population or expected payout while reusing the same source identity',()=>{
+ for(const mutate of [v=>v.report.sources[0].orders++,v=>v.report.sources[0].expected_repass_cents++,v=>{v.report.sources[0].paid_orders=1;Object.assign(v.report.coverage,{paid_orders:1,located_orders:1,single_orders:1});}]){
+  const value=temporalObservation();mutate(value);assert.ok(projectBusinessEscrowReleaseCoverage(value,projectEscrowReleaseCoverageFrame));const result=followup(value);assert.equal(result.reason,'PUBLICATION_MISMATCH');assert.equal(result.coverage,null);
+ }
+});
+
+test('a verified empty cohort keeps known zeros even when its saved financial watermark is absent',()=>{
+ const primary=observation({month:'2026-09'}),value=temporalObservation(primary);Object.assign(primary.cohort.sources[0],{orders:0,paid_orders:0,expected_repass_cents:0,finance_oldest_at:null,finance_latest_at:null});Object.assign(value.report.sources[0],{orders:0,paid_orders:0,expected_repass_cents:0});
+ for(const row of value.report.calendars)Object.assign(row,{observations:0,cohort_observations:0,unique_cohort_orders:0,ambiguous_cohort_orders:0,source_oldest_at:null,source_latest_at:null});Object.assign(value.report.coverage,{paid_orders:0,located_orders:0,not_located_orders:0,single_orders:0});assert.ok(projectBusinessEscrowReleaseCoverage(value,projectEscrowReleaseCoverageFrame));const result=followup(value,primary);assert.equal(result.state,'CURRENT');assert.equal(result.coverage.paid_orders,0);assert.equal(result.coverage.located_orders,0);assert.equal(result.coverage.not_located_orders,0);assert.equal(result.coverage.identity_complete_at_cutoff,true);
+});
+
+
+test('a cached observe waiting for coverage does not report success for another selected month',async()=>{
+ const primary=observation({month:'2026-09'}),b=browser(primary);b.context.october=JSON.stringify(observation());b.context.savedCoverage=JSON.stringify(temporalObservation(primary));b.run('brazaEscrowReleases.start({api});');await b.run('brazaEscrowReleases.observe("2026-09",selectedScope)');
+ b.run('control("Details").open=true;customApi=path=>path.includes("escrow-release-coverage")?new Promise(resolve=>globalThis.finishCachedCoverage=resolve):JSON.parse(october);globalThis.cachedObserve=brazaEscrowReleases.observe("2026-09",selectedScope);');await Promise.resolve();assert.equal(await b.run('brazaEscrowReleases.observe("2026-10",auditScope(JSON.parse(october)))'),true);const currentScope=b.text('Scope');b.run('finishCachedCoverage(JSON.parse(savedCoverage));');assert.equal(await b.run('cachedObserve'),false);assert.equal(b.text('Scope'),currentScope);assert.equal(b.run('brazaEscrowReleases.getSnapshot().month'),'2026-10');
+});
+
+
+test('the embedded release module stays inert when the host page has no release controls',()=>{
+ const lookups=[],context=vm.createContext({document:{getElementById(id){lookups.push(id);throw Error('UNKNOWN_CONTROL:'+id);}},TextEncoder});assert.doesNotThrow(()=>vm.runInContext(ESCROW_RELEASES_CLIENT,context));assert.deepEqual(lookups,[]);assert.equal(vm.runInContext('brazaEscrowReleases.getSnapshot()',context),null);assert.doesNotThrow(()=>vm.runInContext('brazaEscrowReleases.stop()',context));assert.deepEqual(lookups,[]);
+});
+
+test('coverage toggles bind lazily once and restart/remount removes the previous stable handler',()=>{
+ const b=browser();b.run('globalThis.binding={added:0,removed:0,handlers:[]};control("Details").addEventListener=(type,handler)=>{binding.added++;binding.handlers.push(handler);};control("Details").removeEventListener=(type,handler)=>{binding.removed++;if(handler!==binding.handlers[0])throw Error("HANDLER_CHANGED");};');assert.equal(b.run('binding.added'),0);
+ b.run('brazaEscrowReleases.start({api});brazaEscrowReleases.start({api});brazaEscrowReleases.stop();brazaEscrowReleases.start({api});brazaEscrowReleases.start({api:async()=>null});');assert.equal(b.run('binding.added'),1);assert.equal(b.run('binding.removed'),0);assert.equal(b.calls().length,0);
+ b.run('const replacement=node();replacement.addEventListener=(type,handler)=>{binding.added++;binding.handlers.push(handler);};controls.set("businessEscrowReleasesDetails",replacement);brazaEscrowReleases.stop();brazaEscrowReleases.start({api});');assert.equal(b.run('binding.added'),2);assert.equal(b.run('binding.removed'),1);assert.equal(b.run('binding.handlers[0]===binding.handlers[1]'),true);assert.equal(b.calls().length,0);
 });

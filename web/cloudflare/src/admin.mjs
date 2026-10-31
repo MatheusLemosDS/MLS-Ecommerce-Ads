@@ -64,6 +64,7 @@ const SCHEMA = [...new Set([
 ...BUSINESS_MONTH_SCHEMA,
 ...BUSINESS_RECONCILIATION_SCHEMA,
 ...BUSINESS_ESCROW_RELEASES_SCHEMA,
+...BUSINESS_ESCROW_RELEASE_COVERAGE_SCHEMA,
 ...FINANCIAL_AUDIT_SCHEMA,
 ...BUSINESS_CHECKPOINT_SCHEMA,
 ...CATALOG_CLASSIFICATION_SCHEMA,
@@ -233,16 +234,16 @@ async function panelD1Probe(env){
 
 async function scheduledWork(env,services,now=()=>Date.now()){
  await setup(env);
- const output={analysis:'DEFERRED',collection:'DEFERRED',classification:'DEFERRED',production:'DEFERRED',registry:'DEFERRED',costs:'DEFERRED',history:'DEFERRED',reconciliation:'DEFERRED',releases:'DEFERRED',income:'DEFERRED',income_detail:'DEFERRED',learning:'DEFERRED',lane:'MAINTENANCE'};
+ const output={analysis:'DEFERRED',collection:'DEFERRED',classification:'DEFERRED',production:'DEFERRED',registry:'DEFERRED',costs:'DEFERRED',history:'DEFERRED',reconciliation:'DEFERRED',releases:'DEFERRED',income:'DEFERRED',income_detail:'DEFERRED',release_coverage:'DEFERRED',learning:'DEFERRED',lane:'MAINTENANCE'};
  // First-time corrections can themselves consume the invocation budget. The
  // marker is consumed once even if an owner request initialized this isolate.
  if(MAINTENANCE_PENDING.delete(env.ADMIN_DB)){output.collection='MAINTENANCE';return output;}
- const month=localDay(new Date(now())).slice(0,7),lease=await acquireBackgroundLane(env,{month},{now});output.lane=lease.lane;
+ const month=localDay(new Date(now())).slice(0,7),lease=await acquireBackgroundLane(env,{month},{now,bootstrapCoverage:true});output.lane=lease.lane;
  if(lease.lane==='LEASED')return {...output,collection:'LEASED'};
  let repeatHistory=false,auditSourceReads=0,historyNextWork=null;const canRun=async()=>(await readBusinessSyncState(env)).enabled;
  const productionSource=async(...args)=>{if(!await canRun())throw Error('BACKGROUND_COLLECTION_PAUSED');return services.getFinanceProductionOrders(...args);};
  try{
-  if(lease.lane==='PAUSED'){for(const key of ['collection','classification','production','registry','costs','history','reconciliation','releases','income','income_detail','learning'])output[key]='PAUSED';return output;}
+  if(lease.lane==='PAUSED'){for(const key of ['collection','classification','production','registry','costs','history','reconciliation','releases','income','income_detail','release_coverage','learning'])output[key]='PAUSED';return output;}
   if(lease.lane==='FINANCE'){
    // Retain the previous complete creation-date cohort before opening a day.
    try{await captureProductionCostMonth(env,month,{now});}catch{}
@@ -256,7 +257,7 @@ async function scheduledWork(env,services,now=()=>Date.now()){
    }catch{if(output.collection==='NOT_DUE')output.history_collection='ERROR';else output.collection='ERROR';}
   }else if(lease.lane==='HISTORY'){
    try{const history=await runBackgroundHistoryWork(env,services,{month,lease},{now});
-    output.history=history.history;output.reconciliation=history.reconciliation;output.releases=history.releases;output.income=history.income;output.income_detail=history.income_detail;
+    output.history=history.history;output.reconciliation=history.reconciliation;output.releases=history.releases;output.income=history.income;output.income_detail=history.income_detail;output.release_coverage=history.release_coverage;
     repeatHistory=history.repeatHistory;auditSourceReads=history.audit_source_reads;historyNextWork=history.historyNextWork;
    }catch{output.history='ERROR';}
   }else if(lease.lane==='CATALOG'){
@@ -402,6 +403,10 @@ async function adminFetch(request,env,services={}){const url=new URL(request.url
   const entries=[...url.searchParams];assert(entries.length===1&&entries[0][0]==='month','MLS_AGENT_LEARNING_REQUEST_INVALID');
   return json(await readMlsAgentLearning(env,{month:entries[0][1]}));
  }
+ // Calendar follow-up is a read of retained evidence, including on a cold DB.
+ if(path==='/api/admin/finance/escrow-release-coverage'){
+  assert(request.method==='GET','METHOD_NOT_ALLOWED',405);const entries=[...url.searchParams];assert(entries.length===1&&entries[0][0]==='month','BUSINESS_ESCROW_RELEASE_COVERAGE_REQUEST_INVALID');return json(await readBusinessEscrowReleaseCoverage(env,{month:entries[0][1]}));
+ }
  // Draft storage is independent of financial bootstrap and never contacts a
  // provider. The authenticated owner identity is never accepted from the body.
  if(path==='/api/admin/ai-sales/workspace'){
@@ -486,9 +491,6 @@ async function adminFetch(request,env,services={}){const url=new URL(request.url
   assert(request.method==='GET','METHOD_NOT_ALLOWED',405);
   const entries=[...url.searchParams],keys=entries.map(([key])=>key),evidence=url.searchParams.get('evidence');assert(entries.length>=1&&entries.length<=2&&new Set(keys).size===keys.length&&keys.includes('month')&&keys.every(key=>['month','evidence'].includes(key))&&(evidence===null||evidence==='orders-v1'),'BUSINESS_ESCROW_RELEASES_REQUEST_INVALID');
   const month=url.searchParams.get('month');return json(await(evidence==='orders-v1'?readBusinessEscrowReleaseEvidence(env,{month}):readBusinessEscrowReleases(env,{month})));
- }
- if(path==='/api/admin/finance/escrow-release-coverage'){
-  assert(request.method==='GET','METHOD_NOT_ALLOWED',405);const entries=[...url.searchParams];assert(entries.length===1&&entries[0][0]==='month','BUSINESS_ESCROW_RELEASE_COVERAGE_REQUEST_INVALID');return json(await readBusinessEscrowReleaseCoverage(env,{month:entries[0][1]}));
  }
  if(path==='/api/admin/finance/income-overview'){
   assert(request.method==='GET','METHOD_NOT_ALLOWED',405);assert([...url.searchParams].length===0,'BUSINESS_INCOME_OVERVIEW_REQUEST_INVALID');return json(await readBusinessIncomeOverview(env));

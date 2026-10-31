@@ -2,10 +2,12 @@ import {readBusinessSyncState} from './business-sync.mjs';
 import {businessMonthWithCheckpoint} from './business-checkpoint.mjs';
 import {projectBusinessMonth} from './business-month.mjs';
 import {readCompletedBusinessMonth} from './business-month-publication.mjs';
+import {projectEscrowReleaseCoverageFrame} from '../../finance/src/escrow-release-frame.mjs';
 
 // A bounded status refresh, not a new accounting source. Only the immediately
 // previous creation month is revisited, and only while it has open statuses or
-// its saved publication does not yet include the final calendar day. Current
+// its saved publication does not yet include the final calendar day, or a
+// verified release audit has lost the exact Finance order sources. Current
 // month work always wins; a persistently busy current collector can defer this
 // best-effort maintenance. Older months still require an explicit refresh.
 // COMPLETE here describes the order collection only. Closing an incomplete
@@ -30,6 +32,27 @@ function stored(row,month){
  return row;
 }
 
+// A missing historical order source must be re-read by the normal Finance
+// collector, never reconstructed from the App's aggregate publication. Only a
+// successful coverage attempt tied to this exact publication can request it.
+// Legacy or absent sidecars are not a request and this check never creates one.
+async function hasHistoricalSourceGap(db,published,currentMonth,stamp){
+ try{
+  const cents=raw=>{if(raw===null)return null;if(typeof raw!=='string'||raw.length>40)return undefined;const match=/^(-?)(0|[1-9][0-9]*)(?:\.([0-9]{1,2}))?$/.exec(raw);if(!match)return undefined;const value=(BigInt(match[2])*100n+BigInt((match[3]||'').padEnd(2,'0')))*(match[1]?-1n:1n);return value>=BigInt(Number.MIN_SAFE_INTEGER)&&value<=BigInt(Number.MAX_SAFE_INTEGER)?Number(value):undefined;};
+  const tables=(await db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name IN('business_escrow_release_coverage','business_escrow_release_coverage_attempt_scopes')").all()).results;
+  if(!Array.isArray(tables)||tables.length!==2)return false;
+  const row=await db.prepare('SELECT c.payload,c.payload_checked_at,c.last_attempt_at,c.next_attempt_at,c.status,c.code,a.through_month,a.publication_revision,a.checked_at AS attempt_checked_at FROM business_escrow_release_coverage c JOIN business_escrow_release_coverage_attempt_scopes a ON a.cohort_month=c.cohort_month WHERE c.cohort_month=?').bind(published.payload.start_date.slice(0,7)).first();
+  if(!row||row.status!=='SUCCESS'||row.code!==null||row.through_month!==currentMonth||row.publication_revision!==published.publication.source_revision||row.attempt_checked_at!==row.last_attempt_at||!integer(row.last_attempt_at,1,stamp)||!integer(row.next_attempt_at,row.last_attempt_at)||typeof row.payload!=='string'||new TextEncoder().encode(row.payload).byteLength>65536)return false;
+  const report=projectEscrowReleaseCoverageFrame(JSON.parse(row.payload));
+  if(!report||report.cohort_month!==published.payload.start_date.slice(0,7)||report.through_month!==currentMonth||report.checked_at!==row.payload_checked_at||report.checked_at<published.publication.published_at||report.checked_at>row.last_attempt_at||stamp-report.checked_at>21600||!report.pending.includes('SOURCE_MISSING')||!report.sources.some(source=>source.status==='MISSING')||report.sources.length!==published.payload.slots.length)return false;
+  return published.payload.slots.every(slot=>{
+   const frame=slot.frame,source=report.sources.find(value=>value.run_id===frame.run_id&&value.source_revision===frame.revision);
+   if(!source)return false;if(source.status==='MISSING')return true;
+   return source.start_date===slot.start_date&&source.end_date===slot.end_date&&source.orders===frame.coverage.orders&&source.paid_orders===frame.coverage.paid&&source.expected_repass_cents===cents(frame.expected_repass_raw)&&(source.orders===0||source.finance_oldest_at===(frame.source_checked_at?.oldest_at??frame.cutoff_at)&&source.finance_latest_at===(frame.source_checked_at?.latest_at??frame.checked_at));
+  });
+ }catch{return false;}
+}
+
 export async function runBusinessHistorySync(env,services,{now=()=>Date.now(),currentStatus}={}){
  const result=(status,month=null,finance_steps=0)=>({status,month,finance_steps});
  // The scheduled caller must have given this invocation to current Finance
@@ -44,13 +67,19 @@ export async function runBusinessHistorySync(env,services,{now=()=>Date.now(),cu
  const db=await setup(env);
  let previous,exists;
  try{
-  exists=await db.prepare('SELECT month FROM business_month_runs WHERE month=?').bind(month).first();
+  exists=await db.prepare('SELECT month,revision,created_at FROM business_month_runs WHERE month=?').bind(month).first();
   if(!exists)return result('IDLE',month);
   previous=stored(await db.prepare('SELECT * FROM business_history_sync_state WHERE month=?').bind(month).first(),month);
  }catch(error){if(error instanceof BusinessHistorySyncError)throw error;fail('BUSINESS_HISTORY_STORAGE_UNAVAILABLE');}
  if(previous&&previous.next_run_at>started)return result('NOT_DUE',month);
  const published=await readCompletedBusinessMonth(env,month,{now});
- if(published&&published.payload.end_date===finalDay&&!published.payload.slots.some(slot=>open.some(key=>slot.frame.coverage[key]>0)))return result('IDLE',month);
+ if(published&&published.payload.end_date===finalDay&&!published.payload.slots.some(slot=>open.some(key=>slot.frame.coverage[key]>0))){
+  // Once legitimately started, a partial repair may finish even if a later
+  // coverage attempt is unavailable. A newer complete publication stops that
+  // continuation and invalidates the old sidecar instead of resetting again.
+  const continuing=previous?.status==='RUNNING'&&integer(exists.revision,1,2147483647)&&exists.revision>published.publication.source_revision&&integer(exists.created_at,published.publication.published_at,started);
+  if(!continuing&&!await hasHistoricalSourceGap(db,published,currentMonth,started))return result('IDLE',month);
+ }
  const token=crypto.randomUUID();let acquired;
  // Match the primary collector's lease: the 45-second source deadline does
  // not bound the subsequent App/D1 commit. Release it as soon as that finishes.

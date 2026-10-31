@@ -13,6 +13,7 @@ import {buildAdsCalendar} from '../src/ads-calendar.mjs';
 import {buildAdsMeasurement} from '../src/ads-measurement.mjs';
 import {readCompletedBusinessMonth} from '../src/business-month-publication.mjs';
 import {projectReconciliationFrame} from '../../finance/src/reconciliation-frame.mjs';
+import {readFinanceEscrowReleaseCoverage} from '../../finance/src/escrow-releases.mjs';
 
 const previousMonth='2026-10',currentMonth='2026-11';
 const currentRow=f=>f.env.ADMIN_DB.db.prepare('SELECT * FROM business_sync_state WHERE id=1').get();
@@ -78,6 +79,25 @@ async function currentReturnsReservation(f,schedule=scheduledWork){
  };
  const result=await schedule(f.env,{...f.services,getFinanceReconciliation},f.now);assert.equal(result.lane,'HISTORY');assert.equal(result.reconciliation,'CHECKED');assert.equal(result.collection,'DEFERRED');assert.equal(reads,1);
  assert.deepEqual(currentRow(f),before);assert.deepEqual(counts(f),called,'the reserved audit does not import Finance, Ads or previous-month orders');assert.equal(historyRow(f),null);
+}
+
+
+// Once current Returns is checked, the first coverage audit gets one bounded
+// opportunity even while the normal lane still says FINANCE. Use the actual
+// saved Finance evidence reader; it must not import either month's orders.
+async function firstCoverageReservation(f,schedule=scheduledWork){
+ const publication=await readCompletedBusinessMonth(f.env,previousMonth,{now:f.now}),before=currentRow(f),called=counts(f),options=f.options.length;let reads=0;
+ const getFinanceEscrowReleaseCoverage=async(_,input)=>{
+  reads++;assert.equal(input.operation,'coverage');assert.equal(input.cohort_month,previousMonth);assert.equal(input.through_month,currentMonth);
+  const references=value=>value.map(row=>({run_id:row.run_id,source_revision:row.source_revision})).sort((a,b)=>a.run_id.localeCompare(b.run_id));
+  assert.deepEqual(references(input.sources),references(publication.payload.slots.map(({frame})=>({run_id:frame.run_id,source_revision:frame.revision}))));
+  return readFinanceEscrowReleaseCoverage(f.financeEnv,{...input,now:f.now});
+ };
+ const result=await schedule(f.env,{...f.services,getFinanceEscrowReleaseCoverage},f.now);
+ assert.equal(result.lane,'HISTORY');assert.equal(result.release_coverage,'COLLECTING');assert.equal(result.collection,'DEFERRED');assert.equal(result.history,'DEFERRED');assert.equal(reads,1);
+ assert.deepEqual(currentRow(f),before,'initial coverage cannot change the current-month singleton');assert.deepEqual(counts(f),called,'saved coverage cannot call Finance import, Ads or the provider');assert.equal(f.options.length,options);assert.equal(historyRow(f),null);
+ assert.equal(f.env.ADMIN_DB.db.prepare('SELECT COUNT(*) AS n FROM financial_audit_coverage_turns WHERE month=?').get(currentMonth).n,1,'the real bootstrap, not a fixture marker, enables the following Finance opportunity');
+ const stored=f.env.ADMIN_DB.db.prepare('SELECT payload FROM business_escrow_release_coverage WHERE cohort_month=?').get(previousMonth);assert.ok(stored);assert.ok(JSON.parse(stored.payload).sources.every(row=>row.status==='AVAILABLE'));
 }
 
 test('previous-month paid cancellation leaves its original daily profit only after a complete coherent publication',async t=>{
@@ -174,7 +194,7 @@ for(const interrupted of ['rollover','expiry','replacement'])test(`a historical 
 
 test('the scheduled Finance lane attempts historical maintenance only after current Finance returns NOT_DUE',async t=>{
  const f=await fixture(t);assert.equal((await scheduledWork(f.env,f.services,f.now)).collection,'MAINTENANCE');
- await currentReturnsReservation(f);
+ await currentReturnsReservation(f);await firstCoverageReservation(f);
  const before=currentRow(f),calls=counts(f);
  const value=await scheduledWork(f.env,f.services,f.now);
  assert.equal(value.lane,'FINANCE');assert.equal(value.collection,'NOT_DUE');assert.equal(value.history_collection,'RUNNING');
@@ -188,7 +208,7 @@ for(const minify of [false,true])test(`the generated App cron runs previous-mont
  const compiled=await build({stdin:{contents:source+'\nexport {brazaAdmin as historySmoke};',loader:'js'},bundle:true,write:false,format:'esm',platform:'browser',target:'es2022',minify});
  const {historySmoke}=await import('data:text/javascript;base64,'+Buffer.from(compiled.outputFiles[0].text).toString('base64'));
  const f=await fixture(t);assert.equal((await historySmoke.scheduledWork(f.env,f.services,f.now)).collection,'MAINTENANCE');
- await currentReturnsReservation(f,historySmoke.scheduledWork);
+ await currentReturnsReservation(f,historySmoke.scheduledWork);await firstCoverageReservation(f,historySmoke.scheduledWork);
  const before=currentRow(f),calls=counts(f),value=await historySmoke.scheduledWork(f.env,f.services,f.now);
  assert.equal(value.lane,'FINANCE');assert.equal(value.collection,'NOT_DUE');assert.equal(value.history_collection,'RUNNING');
  assert.equal(historyRow(f).status,'RUNNING');assert.equal(historyRow(f).failure_count,0);

@@ -1,3 +1,26 @@
+LIVE PR90 — M2 LIBERAÇÕES POSTERIORES — 31/10/2026
+Branch feature/m2-release-tracker-20261031, base mainPR89 23b329e.
+Código cf89fdd, CI41218926278 GREEN2637Node/67Python/Chromium.
+App17c1e9f1-b9ac-4b6f-bd33-885c9a5aab81 100%, publicado13:22:29Brasília.
+SHAgerado0dd75e25, publicado137a7d81; bytes/config/flags/Auth/Finance,
+tabela nova e progresso auxiliar apósdeploy conferidos13:24:08Brasília.
+Tracker ligado à fila com uma leitura privada por HISTORY; cursor legado
+quatro valores e payload Finance bruto mantêm rollback. GET owner sem DDL.
+Primeira prioridade limitada, cooldown próprio300s; AUX não adia para sempre.
+Cron natural da primeira versão2ea13da1 às13:12:52Brasília: setembrorev10,
+24pagos salvos,0/2refs disponíveis,1/2calendários completos,COLLECTING.
+Escopo e metadados exatos; SOURCE_MISSING/CALENDAR_MISSING não são zero.
+Recuperação do mês anterior elegível com sinal válido, um passo por oportunidade;
+ainda não observada13:24:08. Manter publicação até novaCOMPLETE.
+UI mostra fontes/datas/tentativas/calendários no estilo aprovado.
+Próximo: observar recuperação e preencher calendários históricos; conciliar
+Returns/Pending/SellerCentre/banco. Memória é descritiva; eficácia ainda aberta.
+Registro docs/MLS_M2_RELEASE_TRACKER_2026_10_31.md, backups/provas privados.
+RollbackApp2ea13da1 ou66e9c01f; preservar tabelas aditivas e histórico.
+Comercial/Ads/PROMO LOCKED; M2/banco continuam abertos.
+
+REGISTROS HISTÓRICOS — NÃO SUBSTITUEM O INCREMENTO ACIMA
+
 HANDOFF ATUAL — LIVE PR89 — 31/10/2026
 Branch feature/agent-learning-performance-20261031, base mainPR88 8bb9718.
 Código8fb15b2, CI41206928254 GREEN2536Node/67Python/Chromium.

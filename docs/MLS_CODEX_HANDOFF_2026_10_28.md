@@ -1,3 +1,5 @@
+> **Release M2 PR90 publicada — 31/10/2026:** App `17c1e9f1`, código `cf89fdd`, CI41218926278 verde:2.637Node/67Python/Chromium. Tracker ligado à fila, primeira conferência com espera própria e recuperação limitada de fontes do mês anterior. Cron natural confirmou setembro `COLLECTING`, 0/2 referências disponíveis e 1/2 calendários completos; ausência continua pendente. Bytes/config/flags/Auth/Finance e progresso após deploy conferidos. [Registro](MLS_M2_RELEASE_TRACKER_2026_10_31.md). M2/banco e recuperação histórica continuam abertos.
+
 > **Estado atual — 31/10/2026:** PR89 publicada no App `66e9c01f`, base mainPR88 `8bb9718`. CI41206928254 verde:2.536Node/67Python/Chromium; memória agregada, recorrências no contexto real do Hermes, ROAS diário e setas com datas, mantendo o estilo aprovado. Bytes/config/Auth/Finance preservados. Cron natural salvou primeiro corte da publicação14306,3intervalos/23páginas,zero erro. [Registro](MLS_AGENT_MEMORY_PERFORMANCE_2026_10_31.md). Memória não treina pesos nem concede permissões; M2 e avaliação de eficácia permanecem abertas.
 
 # Handoff atual — melhorias na versão Live, 30/10/2026
