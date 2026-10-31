@@ -5,7 +5,7 @@
   "owner_authorization": "OWNER_REQUESTED_ALL_PREPARED_IMPROVEMENTS_LIVE_2026_10_30",
   "commercial_writes_allowed": false,
   "expected_hashes": {
-    "app": "7d9bd1772790232965cfc93d479dd8131d7eecc052a20c98684e65f8b78c1c3f",
+    "app": "da9c248a849ba7c0af70dbd81ee79aa6ce4c23cac2c82c55aed785cdfbc8a850",
     "auth": "1fef431c8573e05563c7938d95be0976a160bc603340084aa747ee0b73e7ec64",
     "finance": "bfc27e1022e0c5b3d335498389fd64b6978b8f7f04501d3bc6eff38202bf5feb"
   },

@@ -231,3 +231,29 @@ test('month rollover requires a newly validated through-month cue before resumin
  const f=await fixture(t);f.clock.time=Date.UTC(2026,11,10,15);f.renew();const next='2026-12',at=Math.floor(f.now()/1000);f.db.db.prepare('UPDATE business_sync_state SET month=? WHERE id=1').run(next);f.db.db.prepare("INSERT INTO financial_audit_turns(month,revision,next_work,lease_token,lease_until) VALUES(?,?,'RELEASES',?,?)").run(next,f.auditLease.revision,f.auditLease.token,at+90);const options={now:f.now,canRun:async()=>true,auditLease:f.auditLease,backgroundLease:f.backgroundLease};
  assert.equal(await selectBusinessHistoricalReleaseCalendar(f.env,{month:next},options),null);f.saveCueFor(previous,f.frames,{at,through:next});const selected=await selectBusinessHistoricalReleaseCalendar(f.env,{month:next},options);assert.equal(selected.month,previous);assert.equal(selected.calendarGuard.calendar_month,previous);assert.equal(selected.calendarGuard.through_month,next);
 });
+
+function completedCutoffCue(frames,cutoff,{identity=false}={}){
+ const value=coverage(frames,{available:identity});value.calendars=value.calendars.map((row,index)=>({...row,status:'COMPLETE',scan_id:uuid(980+index),cutoff_at:index?stamp-1:cutoff,...(identity&&index===1?{observations:frames.length,cohort_observations:frames.length,unique_cohort_orders:frames.length,source_oldest_at:stamp-5,source_latest_at:stamp-5}:{})}));value.coverage.calendars_complete=value.calendars.length;value.pending=value.pending.filter(code=>!['CALENDAR_MISSING','CALENDAR_PARTIAL','ORDER_NOT_LOCATED'].includes(code));
+ if(identity){value.coverage.located_orders=frames.length;value.coverage.not_located_orders=0;value.coverage.single_orders=frames.length;value.coverage.identity_complete_at_cutoff=true;value.status='IDENTITY_COMPLETE';}return value;
+}
+
+test('a COMPLETE coverage calendar ending mid-month remains eligible without CALENDAR_MISSING or CALENDAR_PARTIAL',async t=>{
+ for(const identity of [false,true])await t.test(identity?'identity-complete-cohort':'missing-source-cohort',async child=>{
+  const f=await fixture(child),frame=completedCutoffCue(f.frames,Date.UTC(2026,9,15,3)/1000,{identity});assert.ok(projectEscrowReleaseCoverageFrame(frame));assert.ok(!frame.pending.some(code=>code.startsWith('CALENDAR_')));f.save(frame);const selected=await f.select();assert.equal(selected.month,previous);assert.equal(selected.calendarGuard.calendar_month,previous);assert.deepEqual(counts(f),{reports:0,attempts:0});assert.equal(targetCursor(f),null);
+ });
+});
+
+test('a COMPLETE cue covering the closed month does not request a redundant historical read',async t=>{
+ const f=await fixture(t),frame=completedCutoffCue(f.frames,Date.UTC(2026,10,1,3)/1000,{identity:true});assert.ok(projectEscrowReleaseCoverageFrame(frame));f.save(frame);assert.equal(await f.select(),null);assert.deepEqual(counts(f),{reports:0,attempts:0});assert.equal(targetCursor(f),null);
+});
+
+test('a newer full-month saved calendar supersedes a COMPLETE-but-short coverage cue',async t=>{
+ const f=await fixture(t),frame=completedCutoffCue(f.frames,Date.UTC(2026,9,15,3)/1000);assert.ok(projectEscrowReleaseCoverageFrame(frame));f.save(frame);f.clock.time+=1000;f.renew();f.saveCache(releaseReport(previous,f.frames,{checked:stamp+1}));const before=counts(f);assert.equal(await f.select(),null);assert.deepEqual(counts(f),before);assert.equal(targetCursor(f),null);
+});
+
+test('invalid or out-of-period COMPLETE cutoffs never become a derived calendar gap',async t=>{
+ const cases=[['zero',0,false],['null',null,false],['future',stamp+1,false],['before-month',Date.UTC(2026,8,30,3)/1000,true],['month-start',Date.UTC(2026,9,1,3)/1000,true]];
+ for(const [name,cutoff,projectable] of cases)await t.test(name,async child=>{
+  const f=await fixture(child),frame=completedCutoffCue(f.frames,cutoff);assert.equal(projectEscrowReleaseCoverageFrame(frame)!==null,projectable);f.save(frame);assert.equal(await f.select(),null);assert.deepEqual(counts(f),{reports:0,attempts:0});assert.equal(targetCursor(f),null);
+ });
+});

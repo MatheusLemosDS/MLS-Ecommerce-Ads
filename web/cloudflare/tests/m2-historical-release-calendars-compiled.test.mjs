@@ -151,6 +151,25 @@ for(const minify of [false,true])test(`three generated Workers recover the previ
   f.db.db.prepare('INSERT INTO business_escrow_release_reports(month,cohort_key,payload,checked_at) VALUES(?,?,?,?)').run(trackerMonth,'[]',JSON.stringify(raw),frame.checked_at);
   const {targets}=await f.audit();assert.deepEqual(targets,[trackerMonth]);assert.equal(f.calls.auth.at(-1).month,trackerMonth);assert.equal(legacyFrame(JSON.parse(f.db.db.prepare('SELECT payload FROM business_escrow_release_reports WHERE month=? AND cohort_key<>?').get(trackerMonth,'[]').payload)).collection.cutoff_at,Date.UTC(2026,10,1,3)/1000);
  });
+ await t.test('a fresh COMPLETE coverage cutoff from midmonth still collects the full closed calendar without inventing pending codes',async child=>{
+  const f=await fixture(child,workers),saved=f.clock.time,closedEnd=Date.UTC(2026,10,1,3)/1000;f.clock.time=Date.UTC(2026,9,10,15);let raw;
+  for(let index=0;index<3;index++){raw=await f.privateRelease('step',[]);if(legacyFrame(raw).calendar.status==='COMPLETE')break;f.clock.time+=61000;}
+  const short=legacyFrame(raw);assert.equal(short.calendar.status,'COMPLETE');assert.ok(short.calendar.cutoff_at<closedEnd);f.clock.time=saved;
+  // Also finish the current calendar's existing cutoff, so the real coverage
+  // frame has neither CALENDAR_MISSING nor CALENDAR_PARTIAL to select by.
+  for(let index=0;index<3;index++){raw=await f.privateRelease('step',[],trackerThrough);if(legacyFrame(raw).calendar.status==='COMPLETE')break;f.clock.time+=61000;}
+  assert.equal(legacyFrame(raw).calendar.status,'COMPLETE');const cue=await f.cue();assert.equal(cue.calendars[0].status,'COMPLETE');assert.equal(cue.calendars[0].cutoff_at,short.calendar.cutoff_at);assert.ok(!cue.pending.includes('CALENDAR_PARTIAL'));assert.ok(!cue.pending.includes('CALENDAR_MISSING'));const originalCue=f.db.db.prepare('SELECT payload FROM business_escrow_release_coverage WHERE cohort_month=?').get(trackerMonth).payload;
+  f.force();const before=f.calls.auth.length;f.db.rpc=0;const work=await workers.api.scheduledWork(f.env,{getFinanceEscrowReleases:workers.api.getFinanceEscrowReleases},f.now);assert.equal(work.lane,'HISTORY');assert.equal(f.calls.auth.length,before+1);assert.equal(f.calls.auth.at(-1).month,trackerMonth);assert.ok(f.db.rpc+1<=50,'short COMPLETE HISTORY budget '+JSON.stringify({d1:f.db.rpc,privateReads:1}));child.diagnostic('short COMPLETE HISTORY budget '+JSON.stringify({d1:f.db.rpc,privateReads:1}));
+  const started=reportFor(f,trackerMonth),fullScan=started.collection.scan_id;assert.equal(started.calendar.scan_id,short.calendar.scan_id,'the shorter complete publication remains available while the full scan runs');assert.notEqual(fullScan,short.calendar.scan_id);assert.equal(started.calendar.cutoff_at,short.calendar.cutoff_at);assert.equal(started.collection.cutoff_at,closedEnd);assert.equal(started.collection.status,'RUNNING');let complete=false;
+  for(let index=0;index<12;index++){
+   f.clock.time+=61000;await f.audit();const frame=reportFor(f,trackerMonth);assert.equal(frame.collection.scan_id,fullScan);
+   if(frame.collection.status==='COMPLETE'){assert.equal(frame.calendar.cutoff_at,closedEnd);assert.equal(frame.calendar.scan_id,fullScan);assert.equal(frame.collection.pages_read,5);complete=true;break;}
+   assert.equal(frame.calendar.scan_id,short.calendar.scan_id);assert.equal(frame.calendar.cutoff_at,short.calendar.cutoff_at);
+  }
+  assert.equal(complete,true);assert.equal(f.db.db.prepare('SELECT payload FROM business_escrow_release_coverage WHERE cohort_month=?').get(trackerMonth).payload,originalCue,'the selector must not rewrite the Finance status or fabricate pending flags');
+  const completedCalls=f.calls.auth.filter(row=>row.operation==='step'&&row.month===trackerMonth).length;for(let index=0;index<2;index++){f.clock.time+=61000;await f.audit();}assert.equal(f.calls.auth.filter(row=>row.operation==='step'&&row.month===trackerMonth).length,completedCalls,'the newer full-month cache suppresses the stale short COMPLETE cue');
+  const fullCue=await f.cue();assert.equal(fullCue.calendars[0].status,'COMPLETE');assert.equal(fullCue.calendars[0].cutoff_at,closedEnd);assert.ok(fullCue.pending.includes('SOURCE_MISSING'));assert.equal(fullCue.coverage.paid_orders,null);assert.equal(fullCue.coverage.identity_complete_at_cutoff,false);for(let index=0;index<2;index++){f.clock.time+=61000;await f.audit();}assert.equal(f.calls.auth.filter(row=>row.operation==='step'&&row.month===trackerMonth).length,completedCalls,'a fresh full COMPLETE cue never starts a redundant historical scan');
+ });
  for(const interruption of ['pause','publication','audit-lease','global-lease','rollover','expiry','atomic-pause','atomic-publication'])await t.test(`historical ${interruption} fences the completed response before any App acknowledgement`,async child=>{
   const f=await fixture(child,workers);let fired=false;
   const interrupt=async()=>{

@@ -40,12 +40,17 @@ export async function selectBusinessHistoricalReleaseCalendar(env,{month},{now=(
    if(row.status!=='SUCCESS'||row.code!==null||row.through_month!==month||row.publication_revision!==published.publication.source_revision||row.attempt_checked_at!==row.last_attempt_at||!integer(row.last_attempt_at,1,stamp)||!integer(row.next_attempt_at,row.last_attempt_at)||typeof row.payload!=='string'||new TextEncoder().encode(row.payload).byteLength>65536||header?.source_revision!==published.publication.source_revision||header.payload!==published.row.payload||!uuid(header.write_token))continue;
    let report;try{report=projectEscrowReleaseCoverageFrame(JSON.parse(row.payload));}catch{continue;}
    if(!report||report.cohort_month!==target||report.through_month!==month||report.checked_at!==row.payload_checked_at||report.checked_at<published.publication.published_at||report.checked_at>row.last_attempt_at||stamp-report.checked_at>21600||report.sources.length!==published.payload.slots.length)continue;
-   const calendar=report.calendars.find(value=>value.month===target);if(!calendar||!(calendar.status==='MISSING'&&report.pending.includes('CALENDAR_MISSING')||calendar.status==='PARTIAL'&&report.pending.includes('CALENDAR_PARTIAL')))continue;
+   const next=new Date(target+'-01T12:00:00Z');next.setUTCMonth(next.getUTCMonth()+1);const from=midnight(target+'-01'),end=midnight(next.toISOString().slice(0,7)+'-01');
+   const calendar=report.calendars.find(value=>value.month===target);
+   // Finance COMPLETE describes its saved cutoff, which can predate the
+   // end of a now-closed month. Derive that remaining interval without
+   // rewriting the Finance status or inventing a pending code.
+   const shortCompletion=calendar?.status==='COMPLETE'&&integer(calendar.cutoff_at,from+1,end-1);
+   if(!calendar||!(calendar.status==='MISSING'&&report.pending.includes('CALENDAR_MISSING')||calendar.status==='PARTIAL'&&report.pending.includes('CALENDAR_PARTIAL')||shortCompletion))continue;
    if(!published.payload.slots.every(({frame})=>{const source=report.sources.find(value=>value.run_id===frame.run_id&&value.source_revision===frame.revision);return !!source&&(source.status==='MISSING'||source.start_date===frame.start_date&&source.end_date===frame.end_date&&source.orders===frame.coverage.orders&&source.paid_orders===frame.coverage.paid&&source.expected_repass_cents===cents(frame.expected_repass_raw)&&(frame.coverage.orders===0||source.finance_oldest_at===(frame.source_checked_at?.oldest_at??frame.cutoff_at)&&source.finance_latest_at===(frame.source_checked_at?.latest_at??frame.checked_at)));}))continue;
    const key=JSON.stringify(published.payload.slots.map(({frame})=>({run_id:frame.run_id,source_revision:frame.revision}))),attempt=(snapshot[3]?.results??[]).find(value=>value.month===target&&value.cohort_key===key),lease=(snapshot[4]?.results??[]).find(value=>value.month===target);
    if(attempt&&['SUCCESS','UNAVAILABLE'].includes(attempt.status)&&integer(attempt.checked_at,1,stamp+60)&&integer(attempt.next_attempt_at,attempt.checked_at)&&attempt.next_attempt_at>stamp)continue;
    if(lease&&uuid(lease.lease_token)&&integer(lease.lease_until,1)&&lease.lease_until>stamp)continue;
-   const next=new Date(target+'-01T12:00:00Z');next.setUTCMonth(next.getUTCMonth()+1);const end=midnight(next.toISOString().slice(0,7)+'-01');
    // A full calendar belongs to its own closed month, independently of the
    // creation-cohort signature and the later through-month of this audit.
    let complete=false;
