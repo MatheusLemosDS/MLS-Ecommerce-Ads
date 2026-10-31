@@ -31,7 +31,7 @@
   },
   "current_phase": "M2_FINANCE_RETURNS_RECONCILIATION",
   "working_branch": "release/live-roadmap-improvements-20261030",
-  "current_status": "PREPARED_IMPROVEMENTS_RECONCILED_LIVE_RELEASE_VALIDATION_IN_PROGRESS",
+  "current_status": "LIVE_PREPARED_IMPROVEMENTS_AND_OWNER_DRAFTS_VERIFIED_M2_EXTERNAL_GATES_OPEN",
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
     "Repasse-base, ajuste, repasse após ajuste e liberação exibidos sem dupla dedução",

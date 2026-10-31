@@ -9,16 +9,16 @@ para a aplicação. Não autoriza gastos, OAuth nem escritas comerciais externas
 Branch: release/live-roadmap-improvements-20261030.
 Base oficial: 2ab4c9d8baa3c25e5816bcca14b4a0973ea73d5a (PR85 publicada).
 Integração preparada: b17df54 reconcilia PR84/4c149a7 com a correção de cancelados.
-Prontos para validação Live: visual/gráficos, V3.6, catálogo/custos/DTF,
+Publicados e validados na Live: visual/gráficos, V3.6, catálogo/custos/DTF,
 Listing Factory/SKUs, Products/Pricing observador, contexto coerente Hermes e
-AI Sales5abas manual/assistido. Persistência do workspace AI Sales: IN_PROGRESS.
-O novo candidato ainda precisa de testes integrais, CI e conferência de deploy;
-não declarar sua publicação apenas por esses commits.
+AI Sales5abas manual/assistido. Persistência do workspace AI Sales: LIVE_VALIDATED.
+PR86 CI41157082180 GREEN2382Node/67Python/Chrome, App2ffcefb4 conferido por
+bytes/config/flags/tabelas e coleta pós-deploy sem erro. Repetir gates nas próximas entregas.
 
 Cloudflare API: acesso verificado, PR85 já conferida por bytes/config/bindings/
 cron. Não confundir acesso API com sessão owner ou aceite humano de mídia.
 Prévia sintética PR84 preservada; URL de homologação separada não provisionada.
-Flags owner-only V36 e AI Sales são independentes; verificar ativação real.
+Flags owner-only V36 e AI Sales são independentes e foram verificadas ENABLED.
 Fonte atual: docs/MLS_LIVE_ROADMAP_RELEASE_2026_10_30.md.
 
 Pendências externas: M2 Seller Centre/Pending/devoluções/liberações/banco;

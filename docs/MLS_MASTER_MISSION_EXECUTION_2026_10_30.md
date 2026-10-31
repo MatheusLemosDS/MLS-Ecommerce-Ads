@@ -21,8 +21,8 @@ Branch atual: `release/live-roadmap-improvements-20261030`. Base oficial
 `2ab4c9d8baa3c25e5816bcca14b4a0973ea73d5a`, com a PR #85 já publicada. O commit
 `b17df54` reconcilia as melhorias preparadas até `4c149a7` com essa base, sem
 descartar a correção de cancelamentos. A persistência do workspace AI Sales e
-a validação final do novo candidato estão em andamento. Este registro não
-declara que o novo pacote já está publicado.
+a validação final passaram; o pacote está publicado e conferido no App oficial
+na versão `2ffcefb4`, conforme a evidência da PR #86.
 
 O acesso seguro à API Cloudflare está verificado, e a PR #85 confirmou bytes,
 configurações, bindings e cron oficiais. Os relatos abaixo de falta de acesso
@@ -33,10 +33,9 @@ do proprietário comprovada pelos testes automatizados.
 As entregas preparadas abrangem visual e gráficos, V3.6, catálogo/custos,
 Products/Pricing observador, DTF, Listing Factory, contexto coerente do Hermes e
 AI Sales com campanhas, estúdio local, afiliados assistidos, desempenho e
-integrações. O novo armazenamento persistente deve respeitar owner/loja, CSRF,
-revisão concorrente e revalidação de mídia/aprovações, sem armazenar bytes ou
-credenciais no workspace. Estado de implementação: **IN_PROGRESS** até os
-testes e o congelamento do release.
+integrações. O armazenamento persistente respeita owner/loja, CSRF, revisão
+concorrente e revalidação de mídia/aprovações, sem armazenar bytes ou
+credenciais. Estado: **LIVE_VALIDATED**, com 2.382 Node e 67 Python aprovados.
 
 Permanecem externos: conciliação M2/Seller Centre/banco; provedor e orçamento
 para LLM/voz neural; direitos e arquivos reais de mídia; grants oficiais

@@ -20,9 +20,9 @@ Base oficial: `2ab4c9d8baa3c25e5816bcca14b4a0973ea73d5a` (PR #85).
 As melhorias preparadas até `4c149a7e818306ddd91419494e75a12b6e14c1f4` foram
 reconciliadas no commit `b17df54`, branch
 `release/live-roadmap-improvements-20261030`, preservando a correção de
-cancelamentos e a atualização histórica. A validação deste novo candidato e a
-persistência do workspace AI Sales estão **em andamento**, não publicadas por
-este registro. CI, hashes, versões e conferência pós-publicação ficam no
+cancelamentos e a atualização histórica. A validação e a persistência do
+workspace AI Sales foram concluídas tecnicamente e publicadas no App oficial
+pela PR #86. CI, hashes, versões e conferência pós-publicação ficam no
 [registro do release Live](MLS_LIVE_ROADMAP_RELEASE_2026_10_30.md).
 
 O pacote preparado inclui o visual das seis referências e demais painéis,

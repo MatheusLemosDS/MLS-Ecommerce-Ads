@@ -12,8 +12,8 @@ Trabalho atual: `release/live-roadmap-improvements-20261030`, base oficial
 pacote preparado até `4c149a7` com a correção de cancelamentos da PR #85.
 Inclui visual/gráficos, V3.6, Products/Pricing observador, Listing Factory,
 DTF, contexto do Hermes e cinco abas AI Sales. A persistência do workspace
-AI Sales está **IN_PROGRESS**, assim como a validação do novo candidato;
-não declarar este pacote publicado até a conferência real.
+AI Sales está **LIVE_VALIDATED**, com 2.382 Node e 67 Python aprovados na CI
+41157082180 e App versão `2ffcefb4` conferido pela API/D1.
 
 O acesso API Cloudflare está verificado. A PR #85 foi publicada e conferida
 byte a byte, preservando bancos, domínios e cron. Os relatos de Cloudflare
@@ -21,10 +21,10 @@ indisponível abaixo pertencem à criação histórica da prévia PR #84, que se
 preservada com dados sintéticos. Não há sessão real owner nem aprovação humana
 visual/auditiva comprovada por fixtures.
 
-Antes de publicar, concluir os testes integrais, CI, Chromium desktop/mobile,
-hashes e plano de retorno. V3.6 e AI Sales usam flags owner independentes;
-conferir a ativação real e o bloqueio da role review. Depois, verificar código,
-configuração e saúde da coleta no Cloudflare, não somente o merge.
+Testes integrais, CI, Chromium desktop/mobile, hashes e plano de retorno foram
+conferidos nesta entrega. V3.6 e AI Sales estão ENABLED para owner, com role
+review bloqueada. Código, configuração e saúde da coleta passaram na conferência
+Cloudflare. Repetir essas etapas nos próximos incrementos, além do merge.
 
 Fonte atual da entrega: [MLS_LIVE_ROADMAP_RELEASE_2026_10_30.md](MLS_LIVE_ROADMAP_RELEASE_2026_10_30.md).
 Pendências externas: M2/Seller Centre/Pending/devoluções/liberações/banco;
