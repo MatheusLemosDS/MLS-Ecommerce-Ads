@@ -1,5 +1,13 @@
 # Roadmap canônico — MLS Commerce OS
 
+**Release M2 PR88 publicada — 31/10/2026:** auditorias de devolução
+destravadas, comparação da mesma publicação e situações identificadas no MLS
+Returns. A virada diária agora encerra e retoma a coleta sem erro artificial.
+2.459 Node/67 Python/Chromium aprovados, App `c00861cf`, Auth/Finance e
+configuração preservados. Cron natural confirmou 2/2 relatórios da publicação
+e progresso após o deploy, sem falhas atuais. M2/banco continuam abertos.
+[Registro](MLS_M2_RETURNS_CONTINUITY_2026_10_31.md).
+
 **Release Live PR87 conferida — 31/10/2026:** gráficos com inspeção por
 ponteiro/toque/teclado, escala PT-BR, iluminação e cabeçalho mobile corrigido.
 2.393Node/67Python/Chromium aprovados, versão App `17bb4a0c`, código e

@@ -140,11 +140,13 @@ test('a malformed candidate cannot weaken exact hashes, literal paths or commerc
  }
 });
 
-test('the focused visual release does not inherit unrelated AI-storage or previous-candidate permissions',()=>{
- assert.equal(RELEASE_BASE_COMMIT,'8d66525bc3b96914412a9538d3ec84048ac78dbb');
- const oldBase=good();oldBase.baseCommit='2ab4c9d8baa3c25e5816bcca14b4a0973ea73d5a';
- assert.ok(evaluateReleasePreflight(oldBase).failures.includes('RELEASE_BASE_MISMATCH'));
- for(const filename of ['web/cloudflare/src/mls-ai-sales-workspace-store.mjs','tools/mls-ai-sales/render.mjs','web/cloudflare/src/admin.mjs']){
+test('the focused release does not inherit unrelated AI-storage or previous-candidate permissions',()=>{
+ assert.equal(RELEASE_BASE_COMMIT,'51b2dfea4ef87f114d21ecde3d6f0cb66e98bdda');
+ for(const baseCommit of ['2ab4c9d8baa3c25e5816bcca14b4a0973ea73d5a','8d66525bc3b96914412a9538d3ec84048ac78dbb']){
+  const oldBase=good();oldBase.baseCommit=baseCommit;
+  assert.ok(evaluateReleasePreflight(oldBase).failures.includes('RELEASE_BASE_MISMATCH'));
+ }
+ for(const filename of ['web/cloudflare/src/mls-ai-sales-workspace-store.mjs','tools/mls-ai-sales/render.mjs']){
   assert.ok(!RELEASE_ALLOWED_FILES.includes(filename),filename);
   const input=good();input.changedPaths.push(filename);
   assert.ok(evaluateReleasePreflight(input).failures.includes('RELEASE_UNREVIEWED_PATH'),filename);

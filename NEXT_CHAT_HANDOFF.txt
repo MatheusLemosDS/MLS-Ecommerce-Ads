@@ -1,3 +1,44 @@
+HANDOFF ATUAL — LIVE PR88 — 31/10/2026
+
+Branch feature/m2-returns-reconciliation-20261031; base mainPR87 51b2dfe.
+Código f1322ff +fixtures043ed71, CI41163101852 GREEN 2459Node/67Python/Chrome.
+App oficial c00861cf-68ad-4719-b213-008d7f902069, 100%; SHAgerado6535b56d,
+SHApublicado255aa14b, bytes/config/flags/Auth/Finance preservados.
+HISTORY agora alterna custos/auditoria e reserva relatórios Returns ausentes,
+com leases/CAS/backoff/quota2; importação contínua preserva4/5Finance.
+Registry compara publicação/revisão/horários exatos; cacheantigoespera e conflito
+real bloqueia. Returns mostra solicitações/coortes/valores/cobertura reais.
+Virada de dia Brasília encerra execução e retoma novo intervalo; não congela
+relógio nem mascara providererrors. Pausa/retomada preservam agenda explícita.
+Cron NATURAL:2/2relatórios da publicação até30/10(1CHECKED/1PARTIAL), quota2
+cedeu outras tarefas. Tickfinal03:12:52→03:13:15 avançou páginas19→22,
+failure0/last_errornull; ativo coleta31/10(3slots), publicação anterior preservada.
+Não houve job forçado ou gravação de dados sintéticos na Live.
+PróximoM2: runBusinessEscrowReleaseCoverage existe mas não tem caller de
+agendamento atual; integrá-lo respeitando orçamento e coorte. Ainda faltam
+conciliação real de devoluções/ajustes/Pending/SellerCentre/banco. Não declarar
+lucro realizado nem todas as fases completas. Escritas comerciais LOCKED.
+Cloudflare Builds preview ainda falha/log403; requer Workers Builds
+Configuration:Edit para investigar, causaexataUNKNOWN. DeployWrangler verificado.
+Fonte docs/MLS_M2_RETURNS_CONTINUITY_2026_10_31.md. Backupc008/ced13/17bb
+privados; rollbackced13 mantémM2semhotfixdiário,17bb volta préM2; tabelaaditiva.
+
+REGISTRO HISTÓRICO DA IMPLEMENTAÇÃO — NÃO SUBSTITUI O ESTADO ACIMA
+
+INCREMENTO EM VALIDAÇÃO — M2 RETURNS — 31/10/2026
+
+Branch feature/m2-returns-reconciliation-20261031, mainPR87 base51b2dfe.
+Correção da starvation: HISTORYcost não pode impedir auditoria; reservar
+intervalospublicadossemrelatórioRETURNS,≤1private/tick,4/5Financecomimportcontínuo,
+quota2reservasantesauxnormal, pause/lease/CAS/backoffpreservados.
+Registry sócompara mesma publicação/versão/horários; conflito real bloqueia,
+cacheantigoespera. MLS Returns expõe situações reais/coortes/valores/cobertura
+comsnapshotsatuais, sem motivaçõesinventadas ousegunda deduçãodereembolso.
+Fonte: docs/MLS_M2_RETURNS_CONTINUITY_2026_10_31.md. Não declararpublicadoatéprovas.
+PróximoM2: ligar trackerdecrossmonth aoagendamento (códigoexistentenãotemcaller),
+validarevidênciasreaisdeSellerCentre/banco. BuildsAPI403 requerWorkersBuilds
+Configuration:Edit; causa exataautopreview desconhecida, deploymanualnormalfunciona.
+
 HANDOFF ATUAL — LIVE PR87 — 31/10/2026
 
 Branch feature/live-visual-charts-refinement-20261031, basePR86/main8d66525.

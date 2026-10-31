@@ -1,8 +1,15 @@
-// One cron invocation owns one lane. Financial imports retain priority while
-// running; auxiliary work never accumulates catalogue, DTF and history costs.
+import {syncHistoricalCostEvidence} from './historical-cost-evidence.mjs';
+import {runBusinessFinancialAudits} from './financial-audit-orchestration.mjs';
+import {runBusinessReconciliation} from './business-reconciliation.mjs';
+
+// One cron invocation owns one lane. A published cohort can be audited without
+// mixing it with an active import; one auxiliary opportunity follows four due
+// Finance invocations at most once per five minutes while that import is busy.
 export const BACKGROUND_LANE_SCHEMA=[
  `CREATE TABLE IF NOT EXISTS background_collection_lane_state(id INTEGER PRIMARY KEY CHECK(id=1),revision INTEGER NOT NULL,next_lane TEXT NOT NULL,auxiliary_index INTEGER NOT NULL,analysis_attempt_day TEXT,lease_token TEXT,lease_until INTEGER)`,
  `INSERT OR IGNORE INTO background_collection_lane_state(id,revision,next_lane,auxiliary_index) VALUES(1,1,'FINANCE',0)`,
+ `CREATE TABLE IF NOT EXISTS background_history_fairness_state(id INTEGER PRIMARY KEY CHECK(id=1),finance_since_audit INTEGER NOT NULL CHECK(finance_since_audit BETWEEN 0 AND 4),last_auxiliary_at INTEGER,returns_retry_at INTEGER NOT NULL,reserved_returns_streak INTEGER NOT NULL CHECK(reserved_returns_streak BETWEEN 0 AND 2),next_history_work TEXT NOT NULL CHECK(next_history_work IN('COST','AUDIT')))`,
+ `INSERT OR IGNORE INTO background_history_fairness_state(id,finance_since_audit,returns_retry_at,reserved_returns_streak,next_history_work) VALUES(1,0,0,0,'COST')`,
 ];
 export class HistoricalCostOrchestrationError extends Error{constructor(code,status=503){super(code);this.status=status;}}
 const fail=(code,status=503)=>{throw new HistoricalCostOrchestrationError(code,status);};
@@ -11,24 +18,90 @@ const integer=(value,min=0,max=Number.MAX_SAFE_INTEGER)=>Number.isSafeInteger(va
 const identifier=value=>typeof value==='string'&&/^[1-9][0-9]{0,19}$/.test(value);
 const clock=now=>{let value;try{value=now();}catch{fail('BACKGROUND_LANE_CLOCK_INVALID');}if(!integer(value,1,9999999999999))fail('BACKGROUND_LANE_CLOCK_INVALID');return Math.floor(value/1000);};
 const database=env=>{if(!env?.ADMIN_DB?.prepare)fail('BACKGROUND_LANE_CONFIGURATION');return env.ADMIN_DB;};
+// Identity/due checks only select work. The existing reconciliation runner still
+// validates the immutable publication and complete source/report contracts.
+const missingReturnsSql=`EXISTS(SELECT 1 FROM business_month_publications p,json_each(p.payload,'$.slots') s WHERE p.month=?
+ AND NOT EXISTS(SELECT 1 FROM business_reconciliation_reports r WHERE r.run_id=json_extract(s.value,'$.frame.run_id') AND r.source_revision=json_extract(s.value,'$.frame.revision') AND r.start_date=json_extract(s.value,'$.start_date') AND r.end_date=json_extract(s.value,'$.end_date'))
+ AND NOT EXISTS(SELECT 1 FROM business_reconciliation_attempts a WHERE a.run_id=json_extract(s.value,'$.frame.run_id') AND a.source_revision=json_extract(s.value,'$.frame.revision') AND typeof(a.next_attempt_at)='integer' AND a.next_attempt_at BETWEEN 0 AND 9999999999 AND a.next_attempt_at>?))`;
 
 export async function acquireBackgroundLane(env,{month},{now=()=>Date.now()}={}){
  const stamp=clock(now);if(typeof month!=='string'||!/^\d{4}-(0[1-9]|1[0-2])$/.test(month))fail('BACKGROUND_LANE_REQUEST_INVALID',400);
  const db=database(env),token=crypto.randomUUID(),date=new Date(stamp*1000),today=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(date),hour=Number(new Intl.DateTimeFormat('en-GB',{timeZone:'America/Sao_Paulo',hour:'2-digit',hourCycle:'h23'}).format(date));let row;
- try{row=(await db.prepare(`UPDATE background_collection_lane_state SET revision=revision+1,lease_token=?,lease_until=? WHERE id=1 AND revision<2147483646 AND (lease_token IS NULL OR lease_until<=?) RETURNING revision,next_lane,auxiliary_index,analysis_attempt_day,(SELECT enabled FROM business_sync_state WHERE id=1) AS enabled,(SELECT next_run_at FROM business_sync_state WHERE id=1) AS finance_due_at,(SELECT summary FROM business_sync_state WHERE id=1) AS finance_summary,(SELECT json_extract(payload,'$.hermes_mode') FROM admin_settings WHERE id=1) AS hermes_mode,(SELECT json_extract(payload,'$.daily_hour') FROM admin_settings WHERE id=1) AS daily_hour,EXISTS(SELECT 1 FROM hermes_jobs WHERE dedupe_key=?) AS analysis_queued,EXISTS(SELECT 1 FROM hermes_agent_capabilities c JOIN hermes_agent a ON a.id=c.id WHERE c.id=1 AND c.protocol='hermes-finance-v1' AND c.maintenance_until<=? AND (julianday(?)-julianday(c.updated_at))*86400 BETWEEN 0 AND 90 AND (julianday(?)-julianday(a.heartbeat))*86400 BETWEEN 0 AND 90) AS bridge_ready`).bind(token,stamp+290,stamp,'daily:'+today,stamp*1000,date.toISOString(),date.toISOString()).all()).results[0];}catch{fail('BACKGROUND_LANE_STORAGE_UNAVAILABLE');}
+ try{row=(await db.prepare(`UPDATE background_collection_lane_state SET revision=revision+1,lease_token=?,lease_until=? WHERE id=1 AND revision<2147483646 AND (lease_token IS NULL OR lease_until<=?) RETURNING revision,next_lane,auxiliary_index,analysis_attempt_day,(SELECT enabled FROM business_sync_state WHERE id=1) AS enabled,(SELECT next_run_at FROM business_sync_state WHERE id=1) AS finance_due_at,(SELECT summary FROM business_sync_state WHERE id=1) AS finance_summary,(SELECT json_extract(payload,'$.hermes_mode') FROM admin_settings WHERE id=1) AS hermes_mode,(SELECT json_extract(payload,'$.daily_hour') FROM admin_settings WHERE id=1) AS daily_hour,EXISTS(SELECT 1 FROM hermes_jobs WHERE dedupe_key=?) AS analysis_queued,EXISTS(SELECT 1 FROM hermes_agent_capabilities c JOIN hermes_agent a ON a.id=c.id WHERE c.id=1 AND c.protocol='hermes-finance-v1' AND c.maintenance_until<=? AND (julianday(?)-julianday(c.updated_at))*86400 BETWEEN 0 AND 90 AND (julianday(?)-julianday(a.heartbeat))*86400 BETWEEN 0 AND 90) AS bridge_ready,(SELECT finance_since_audit FROM background_history_fairness_state WHERE id=1) AS finance_since_audit,(SELECT last_auxiliary_at FROM background_history_fairness_state WHERE id=1) AS last_auxiliary_at,(SELECT returns_retry_at FROM background_history_fairness_state WHERE id=1) AS returns_retry_at,(SELECT reserved_returns_streak FROM background_history_fairness_state WHERE id=1) AS reserved_returns_streak,(SELECT next_history_work FROM background_history_fairness_state WHERE id=1) AS next_history_work,EXISTS(SELECT 1 FROM business_month_publications WHERE month=?) AS has_publication,${missingReturnsSql} AS returns_due`).bind(token,stamp+290,stamp,'daily:'+today,stamp*1000,date.toISOString(),date.toISOString(),month,month,stamp).all()).results[0];}catch{fail('BACKGROUND_LANE_STORAGE_UNAVAILABLE');}
  if(!row)return {schema:'background_lane_v1',lane:'LEASED',token:null,revision:null,auxiliary_index:null};
  if(!integer(row.revision,1,2147483646)||!['FINANCE','AUXILIARY'].includes(row.next_lane)||!integer(row.auxiliary_index,0,4)||![0,1].includes(row.enabled)||!integer(row.finance_due_at))fail('BACKGROUND_LANE_STORAGE_INVALID');
  let importing=false;try{const summary=row.finance_summary===null?null:JSON.parse(row.finance_summary);importing=summary?.month===month&&summary.status==='RUNNING'&&row.finance_due_at<=stamp;}catch{fail('BACKGROUND_LANE_STORAGE_INVALID');}
  const analysisDue=row.hermes_mode==='scheduled'&&integer(row.daily_hour,0,23)&&hour>=row.daily_hour&&row.analysis_queued===0&&row.bridge_ready===1&&row.analysis_attempt_day!==today;
- return {schema:'background_lane_v1',lane:row.enabled===0?'PAUSED':row.next_lane==='FINANCE'||importing?'FINANCE':analysisDue?'ANALYSIS':auxiliaries[row.auxiliary_index],token,revision:row.revision,auxiliary_index:row.auxiliary_index};
+ if(!integer(row.finance_since_audit,0,4)||row.last_auxiliary_at!==null&&!integer(row.last_auxiliary_at,1,9999999999)||!integer(row.returns_retry_at)||!integer(row.reserved_returns_streak,0,2)||!['COST','AUDIT'].includes(row.next_history_work)||![0,1].includes(row.has_publication)||![0,1].includes(row.returns_due))fail('BACKGROUND_LANE_STORAGE_INVALID');
+ const auxiliaryDue=row.has_publication===1&&row.finance_since_audit>=4&&(row.last_auxiliary_at===null||stamp-row.last_auxiliary_at>=300);
+ const reserved=row.returns_due===1&&row.reserved_returns_streak<2&&row.returns_retry_at<=stamp&&(row.finance_due_at>stamp||importing&&row.next_lane==='AUXILIARY'&&auxiliaryDue);
+ const lane=row.enabled===0?'PAUSED':reserved?'HISTORY':row.next_lane==='FINANCE'||importing&&!auxiliaryDue?'FINANCE':analysisDue?'ANALYSIS':auxiliaries[row.auxiliary_index];
+ return {schema:'background_lane_v1',lane,token,revision:row.revision,auxiliary_index:row.auxiliary_index,reserved_returns:row.enabled===1&&reserved,history_turn:row.next_history_work};
 }
 
-export async function finishBackgroundLane(env,lease,{now=()=>Date.now(),repeatHistory=false}={}){
+export async function finishBackgroundLane(env,lease,{now=()=>Date.now(),repeatHistory=false,auditSourceReads=0,historyNextWork=null}={}){
  const stamp=clock(now);if(!lease?.token)return false;
- if(typeof lease.token!=='string'||!/^[a-f0-9-]{36}$/.test(lease.token)||!integer(lease.revision,1,2147483646)||!integer(lease.auxiliary_index,0,4)||!['FINANCE','PAUSED','ANALYSIS',...auxiliaries].includes(lease.lane)||typeof repeatHistory!=='boolean')fail('BACKGROUND_LANE_REQUEST_INVALID',400);
- const auxiliary=auxiliaries.includes(lease.lane),index=auxiliary&&!(lease.lane==='HISTORY'&&repeatHistory)?(lease.auxiliary_index+1)%auxiliaries.length:lease.auxiliary_index;
+ const reserved=lease.reserved_returns??false;
+ if(typeof lease.token!=='string'||!/^[a-f0-9-]{36}$/.test(lease.token)||!integer(lease.revision,1,2147483646)||!integer(lease.auxiliary_index,0,4)||!['FINANCE','PAUSED','ANALYSIS',...auxiliaries].includes(lease.lane)||typeof repeatHistory!=='boolean'||typeof reserved!=='boolean'||reserved&&lease.lane!=='HISTORY'||!integer(auditSourceReads,0,1)||![null,'COST','AUDIT'].includes(historyNextWork))fail('BACKGROUND_LANE_REQUEST_INVALID',400);
+ const auxiliary=auxiliaries.includes(lease.lane),index=auxiliary&&!reserved&&!(lease.lane==='HISTORY'&&repeatHistory)?(lease.auxiliary_index+1)%auxiliaries.length:lease.auxiliary_index;
  const analysisDay=lease.lane==='ANALYSIS'?new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date(stamp*1000)):null;
- try{return (await database(env).prepare('UPDATE background_collection_lane_state SET next_lane=CASE WHEN ? THEN next_lane ELSE ? END,auxiliary_index=?,analysis_attempt_day=COALESCE(?,analysis_attempt_day),lease_token=NULL,lease_until=NULL WHERE id=1 AND revision=? AND lease_token=? AND lease_until>?').bind(Number(lease.lane==='PAUSED'),lease.lane==='FINANCE'?'AUXILIARY':'FINANCE',index,analysisDay,lease.revision,lease.token,stamp).run()).meta.changes===1;}catch{fail('BACKGROUND_LANE_STORAGE_UNAVAILABLE');}
+ const enabled='(SELECT enabled FROM business_sync_state WHERE id=1)=1';
+ try{
+  const writes=await database(env).batch([
+   database(env).prepare('UPDATE background_collection_lane_state SET next_lane=CASE WHEN ? OR NOT '+enabled+' THEN next_lane ELSE ? END,auxiliary_index=CASE WHEN '+enabled+' THEN ? ELSE auxiliary_index END,analysis_attempt_day=CASE WHEN '+enabled+' THEN COALESCE(?,analysis_attempt_day) ELSE analysis_attempt_day END,lease_token=NULL,lease_until=NULL WHERE id=1 AND revision=? AND lease_token=? AND lease_until>?').bind(Number(lease.lane==='PAUSED'),lease.lane==='FINANCE'?'AUXILIARY':'FINANCE',index,analysisDay,lease.revision,lease.token,stamp),
+   database(env).prepare('UPDATE background_history_fairness_state SET finance_since_audit=CASE WHEN ? THEN MIN(4,finance_since_audit+1) WHEN ? THEN 0 ELSE finance_since_audit END,last_auxiliary_at=CASE WHEN ? THEN ? ELSE last_auxiliary_at END,returns_retry_at=CASE WHEN ? THEN ? WHEN ? THEN 0 ELSE returns_retry_at END,reserved_returns_streak=CASE WHEN ? THEN MIN(2,reserved_returns_streak+1) WHEN ? THEN 0 ELSE reserved_returns_streak END,next_history_work=COALESCE(?,next_history_work) WHERE id=1 AND changes()=1 AND '+enabled).bind(Number(lease.lane==='FINANCE'),auditSourceReads,Number(auxiliary||lease.lane==='ANALYSIS'),stamp,Number(reserved&&auditSourceReads===0),stamp+300,Number(reserved&&auditSourceReads===1),Number(reserved),Number((auxiliary||lease.lane==='ANALYSIS')&&!reserved),historyNextWork),
+  ]);
+  return writes[0]?.meta?.changes===1;
+ }catch{fail('BACKGROUND_LANE_STORAGE_UNAVAILABLE');}
+}
+
+// Exactly one private source across cost history and the financial audit ring.
+// The reservation handles missing reports for the frozen publication before a
+// local cost gap can monopolize HISTORY; normal HISTORY alternates both kinds.
+export async function runBackgroundHistoryWork(env,services,{month,lease},{now=()=>Date.now(),readCandidates=readHistoricalCostCandidates,runCost=syncHistoricalCostEvidence,runAudits=runBusinessFinancialAudits,runReturns=runBusinessReconciliation}={}){
+ const started=clock(now),db=database(env),reserved=lease?.reserved_returns===true;
+ if(!lease||lease.lane!=='HISTORY'||typeof lease.token!=='string'||!integer(lease.revision,1,2147483646)||!['COST','AUDIT'].includes(lease.history_turn)||typeof month!=='string'||!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)||![readCandidates,runCost,runAudits,runReturns].every(v=>typeof v==='function'))fail('BACKGROUND_HISTORY_REQUEST_INVALID',400);
+ let sourceReads=0,auditReads=0;
+ const result={history:'DEFERRED',reconciliation:'DEFERRED',releases:'DEFERRED',income:'DEFERRED',income_detail:'DEFERRED',source_reads:0,audit_source_reads:0,repeatHistory:false,historyNextWork:null};
+ const canRun=async()=>{
+  const stamp=clock(now);if(stamp<started||stamp>=started+240)return false;
+  const row=await db.prepare('SELECT revision,lease_token,lease_until,(SELECT enabled FROM business_sync_state WHERE id=1) AS enabled FROM background_collection_lane_state WHERE id=1').first();
+  return row?.enabled===1&&row.revision===lease.revision&&row.lease_token===lease.token&&row.lease_until>stamp;
+ };
+ const bounded=name=>typeof services?.[name]!=='function'?undefined:async(...args)=>{
+  if(sourceReads>=1)fail('BACKGROUND_HISTORY_READ_BUDGET');
+  if(!await canRun())fail('BACKGROUND_HISTORY_LEASE_EXPIRED');
+  sourceReads++;if(name!=='getFinanceHistoricalVariantEvidence')auditReads++;
+  return services[name](...args);
+ };
+ const finish=()=>({...result,source_reads:sourceReads,audit_source_reads:auditReads});
+ const audit=async()=>{
+  const sources=Object.fromEntries(['getFinanceReconciliation','getFinanceEscrowReleases','getFinanceIncomeOverview','getFinanceIncomeDetail'].map(name=>[name,bounded(name)]));
+  const work=await runAudits(env,sources,{month},{now,canRun});
+  result.reconciliation=work.returns_status;result.releases=work.releases_status;result.income=work.income_status;result.income_detail=work.income_detail_status;
+  // A cost continuation may hold one HISTORY slot for the next audit turn.
+  // The audit itself always releases that hold so other auxiliary lanes run.
+  result.repeatHistory=false;
+ };
+ try{
+  if(!await canRun()){result.history='PAUSED';return finish();}
+  if(reserved){
+   const source=bounded('getFinanceReconciliation');
+   result.reconciliation=source?(await runReturns(env,source,{month},{now,canRun})).status:'NO_SOURCE';
+  }else if(lease.history_turn==='AUDIT'){
+   result.historyNextWork='COST';await audit();
+  }else{
+   result.historyNextWork='AUDIT';
+   const selection=await readCandidates(env,month,{now});result.history=selection.status;
+   if(selection.ready){
+    const source=bounded('getFinanceHistoricalVariantEvidence');
+    if(source){const work=await runCost(env,{month,item_ids:selection.item_ids},source,{now,canRun});result.history=work.work;result.repeatHistory=work.work==='PROGRESSED'&&!work.scan.complete;}
+    else result.history='UNAVAILABLE';
+   }else{result.historyNextWork='COST';await audit();}
+  }
+  if(!await canRun()){result.history='PAUSED';result.repeatHistory=false;}
+ }catch{result.history='ERROR';result.repeatHistory=false;}
+ return finish();
 }
 
 // This query returns identifiers from the saved, validated financial cohort,

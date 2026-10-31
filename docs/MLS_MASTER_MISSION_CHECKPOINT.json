@@ -180,45 +180,52 @@
     }
   ],
   "current_release": {
-    "id": "LIVE_VISUAL_CHART_INSPECTION_AND_COST_RULE_SCOPE",
-    "status": "OFFICIAL_APP_DEPLOY_VERIFIED",
-    "pull_request": 87,
-    "code_commit": "7fcf975bd65a4c315ce9256ae95c11f42b2a26b5",
-    "base_main": "8d66525bc3b96914412a9538d3ec84048ac78dbb",
-    "ci_run": 41159508485,
-    "node_tests": 2393,
+    "id": "M2_RETURNS_AUDIT_CONTINUITY_AND_DAILY_ROLLOVER",
+    "status": "OFFICIAL_APP_DEPLOY_VERIFIED_M2_OPEN",
+    "pull_request": 88,
+    "code_commit": "f1322ffb7ca7fe9595be4414d3148e87e60bae6d",
+    "base_main": "51b2dfea4ef87f114d21ecde3d6f0cb66e98bdda",
+    "ci_run": 41163101852,
+    "node_tests": 2459,
     "python_tests": 67,
-    "docs": "docs/MLS_VISUAL_CHARTS_RELEASE_2026_10_31.md",
+    "docs": "docs/MLS_M2_RETURNS_CONTINUITY_2026_10_31.md",
     "deployment": {
-      "app_version": "17bb4a0c-fc38-43e0-8452-b0adeb06b24e",
-      "app_sha256": "22b4ad40c6e7e331965dad976715d89ac8ef5f2e5c3e9e098282209296590796",
-      "published_app_sha256": "c7e9429d77da50d475976f1f009dfc464bd86db9fadb979a9ece75cbdf8de829",
+      "app_version": "c00861cf-68ad-4719-b213-008d7f902069",
+      "app_sha256": "6535b56d5a4548468a4af454c31e72642dd4353f56d8cb918ce902fff0f45bb9",
+      "published_app_sha256": "255aa14bb24f460c711ebedf6d554a1a629254737f4ed4c7e458df4a4848329c",
       "percentage": 100,
       "exact_bytes_verified": true,
       "existing_configuration_preserved": true,
       "owner_flags_preserved": true,
       "auth_finance_unchanged": true,
-      "sync_failure_count": 0
+      "sync_failure_count": 0,
+      "last_error": null
+    },
+    "natural_scheduler_proof": {
+      "forced_jobs": false,
+      "published_scope_end_date": "2026-10-30",
+      "published_slots": 2,
+      "matching_returns_reports": 2,
+      "report_states": [
+        "CHECKED",
+        "PARTIAL"
+      ],
+      "attempts_success": 2,
+      "reserved_quota_observed": 2,
+      "other_auxiliaries_resumed": true,
+      "final_version_tick_started_utc": "2026-10-31T03:12:52Z",
+      "final_version_tick_finished_utc": "2026-10-31T03:13:15Z",
+      "finance_pages_before": 19,
+      "finance_pages_after": 22,
+      "active_collection_end_date": "2026-10-31",
+      "active_collection_slots": 3
     },
     "technical_browser_qa": "SYNTHETIC_NORMAL_MINIFIED_DESKTOP_MOBILE_DARK_LIGHT_PASSED",
     "actual_owner_session": "NOT_EXECUTED",
-    "child16_rule_repair": {
-      "state": "LIVE_READ_MODEL_VERIFIED",
-      "before_revision": 6,
-      "after_revision": 7,
-      "audit_added": 1,
-      "unit_cost_cents": 1250,
-      "unrelated_fields_preserved": true,
-      "known_units": 356,
-      "total_units": 356,
-      "pending_units": 0,
-      "production_cents": 1048610,
-      "saved_checkpoint_cost_rule_revision_at_last_read": 6,
-      "display_uses_current_rules_over_saved_finance": true
-    },
     "commercial_writes": "LOCKED",
     "finance_m2": "OPEN",
-    "branch": "feature/live-visual-charts-refinement-20261031",
+    "bank_settlement": "UNVERIFIED",
+    "branch": "feature/m2-returns-reconciliation-20261031",
     "production_deployed": true,
     "all_roadmap_phases_complete": false
   },
@@ -255,14 +262,14 @@
     }
   ],
   "live_release": {
-    "pull_request": 87,
+    "pull_request": 88,
     "status": "OFFICIAL_APP_DEPLOY_VERIFIED",
-    "docs": "docs/MLS_VISUAL_CHARTS_RELEASE_2026_10_31.md",
+    "docs": "docs/MLS_M2_RETURNS_CONTINUITY_2026_10_31.md",
     "flags_enabled": true,
     "workspace_tables_exist": true,
     "auth_finance_preserved": true,
     "commercial_writes": false,
-    "app_version": "17bb4a0c-fc38-43e0-8452-b0adeb06b24e"
+    "app_version": "c00861cf-68ad-4719-b213-008d7f902069"
   },
   "visual_chart_refinement_20261031": {
     "id": "LIVE_VISUAL_CHART_INSPECTION_AND_COST_RULE_SCOPE",
@@ -337,5 +344,52 @@
       "MLS_V36_OWNER_PREVIEW=ENABLED",
       "MLS_AI_SALES_OWNER_PREVIEW=ENABLED"
     ]
+  },
+  "m2_returns_continuity_20261031": {
+    "id": "M2_RETURNS_AUDIT_CONTINUITY_AND_DAILY_ROLLOVER",
+    "status": "OFFICIAL_APP_DEPLOY_VERIFIED_M2_OPEN",
+    "pull_request": 88,
+    "code_commit": "f1322ffb7ca7fe9595be4414d3148e87e60bae6d",
+    "base_main": "51b2dfea4ef87f114d21ecde3d6f0cb66e98bdda",
+    "ci_run": 41163101852,
+    "node_tests": 2459,
+    "python_tests": 67,
+    "docs": "docs/MLS_M2_RETURNS_CONTINUITY_2026_10_31.md",
+    "deployment": {
+      "app_version": "c00861cf-68ad-4719-b213-008d7f902069",
+      "app_sha256": "6535b56d5a4548468a4af454c31e72642dd4353f56d8cb918ce902fff0f45bb9",
+      "published_app_sha256": "255aa14bb24f460c711ebedf6d554a1a629254737f4ed4c7e458df4a4848329c",
+      "percentage": 100,
+      "exact_bytes_verified": true,
+      "existing_configuration_preserved": true,
+      "owner_flags_preserved": true,
+      "auth_finance_unchanged": true,
+      "sync_failure_count": 0,
+      "last_error": null
+    },
+    "natural_scheduler_proof": {
+      "forced_jobs": false,
+      "published_scope_end_date": "2026-10-30",
+      "published_slots": 2,
+      "matching_returns_reports": 2,
+      "report_states": [
+        "CHECKED",
+        "PARTIAL"
+      ],
+      "attempts_success": 2,
+      "reserved_quota_observed": 2,
+      "other_auxiliaries_resumed": true,
+      "final_version_tick_started_utc": "2026-10-31T03:12:52Z",
+      "final_version_tick_finished_utc": "2026-10-31T03:13:15Z",
+      "finance_pages_before": 19,
+      "finance_pages_after": 22,
+      "active_collection_end_date": "2026-10-31",
+      "active_collection_slots": 3
+    },
+    "technical_browser_qa": "SYNTHETIC_NORMAL_MINIFIED_DESKTOP_MOBILE_DARK_LIGHT_PASSED",
+    "actual_owner_session": "NOT_EXECUTED",
+    "commercial_writes": "LOCKED",
+    "finance_m2": "OPEN",
+    "bank_settlement": "UNVERIFIED"
   }
 }

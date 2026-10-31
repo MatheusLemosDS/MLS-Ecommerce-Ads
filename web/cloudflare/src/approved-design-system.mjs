@@ -204,6 +204,23 @@ html[data-theme=dark] .mission-dashboard .mission-kpi-sparkline{filter:drop-shad
 .mls-chart-readout-context{font-size:9px;color:var(--muted,#9cb1ca)}
 :root[data-theme=light] .mls-chart-readout{box-shadow:0 8px 22px rgba(24,61,100,.12)}
 
+/* Return cases are grouped by their saved cohort and status, never by cause. */
+.mission-evidence-list[data-evidence-source^=RETURNS_INSIGHTS]{display:block}
+.mls-returns-coverage,.mls-returns-evidence-note{margin:0 0 12px;font-size:11px;line-height:1.65;color:var(--muted);overflow-wrap:anywhere}
+.mls-returns-cohorts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0 0 14px}
+.mls-returns-cohorts article{min-width:0;padding:12px;border:1px solid rgba(var(--mission-rgb),.28);border-radius:9px;background:var(--surface-raised)}
+.mls-returns-cohorts small,.mls-returns-cohorts span{display:block;color:var(--muted);font-size:10px;line-height:1.55;overflow-wrap:anywhere}
+.mls-returns-cohorts strong{display:block;margin:6px 0;font-size:15px;line-height:1.4;font-variant-numeric:tabular-nums}
+.mls-returns-states{min-width:0;margin-bottom:13px;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.mls-returns-states table{width:100%;table-layout:fixed;border-collapse:collapse;font-size:11px;line-height:1.55}
+.mls-returns-states th,.mls-returns-states td{text-align:left;vertical-align:top;padding:10px;border-bottom:1px solid var(--line);overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.mls-returns-states th:first-child{width:43%}
+.mls-returns-states th:nth-child(2){width:20%}
+.mls-returns-states thead th{color:var(--muted);font-weight:600;background:var(--surface-raised)}
+.mls-returns-states tbody th{font-weight:600}
+.mls-returns-states tbody tr:last-child>*{border-bottom:0}
+.mls-returns-states td small{display:block;margin-top:3px;font-size:9px;line-height:1.45;color:var(--muted)}
+
 .mission-dashboard .hermes-command{
  border-color:rgba(115,91,238,.45);
  background:linear-gradient(140deg,rgba(100,71,243,.11),transparent 63%),var(--surface)
@@ -354,6 +371,8 @@ html[data-theme=dark] :focus-visible{outline-color:#75c8ff}
  html[data-theme=dark] .workspace-nav-mobile .workspace-nav-link.active{border:0;background:#163965}
 }
 @media(max-width:640px){
+ .mls-returns-cohorts{grid-template-columns:minmax(0,1fr);gap:8px}
+ .mls-returns-states th,.mls-returns-states td{padding:8px 6px;font-size:10px}
  .mission-dashboard .command-center-metrics,.mission-dashboard .agent-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
  .mission-dashboard .command-center-head .mission-overview-copy{max-width:100%}
  .mission-dashboard .command-center-head.mission-command-hero{padding:0;min-height:82px}

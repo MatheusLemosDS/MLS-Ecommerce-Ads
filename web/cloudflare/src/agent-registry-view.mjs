@@ -1,3 +1,5 @@
+import {projectMlsSettlementEvidence} from './mls-settlement-evidence.mjs';
+import {createMlsReturnsInsights} from './mls-returns-insights.mjs';
 import {buildPendingIncomeAudit,buildMlsAgentRegistry} from './agent-registry.mjs';
 import {missionTrendPanelBody} from './mission-control.mjs';
 import {MLS_AGENT_ROBOT_SVG,MLS_COMMAND_GLOBE_SVG} from './mls-agent-art.mjs';
@@ -75,6 +77,8 @@ export function pendingIncomeBody(){return "<details id=\"commandPendingIncomeDe
 
 export const AGENT_REGISTRY_CLIENT=String.raw`
 (()=>{
+ const projectSettlementEvidence=${projectMlsSettlementEvidence.toString()};
+ const projectReturnsInsights=(${createMlsReturnsInsights.toString()})().projectMlsReturnsInsights;
  const buildPendingIncomeAudit=${buildPendingIncomeAudit.toString()};
  const buildMlsAgentRegistry=${buildMlsAgentRegistry.toString()};
  const robotArtwork=${JSON.stringify(MLS_AGENT_ROBOT_SVG)};
@@ -98,7 +102,7 @@ export const AGENT_REGISTRY_CLIENT=String.raw`
   try{productionPeriod=globalThis.brazaProductionCostPeriods?.getSnapshot?.()??null;}catch{}
   try{dtfQueue=globalThis.brazaDtfWorkspace?.getSnapshot?.()??null;}catch{}
   const pendingAudit=buildPendingIncomeAudit({overview:incomeOverview,detail:incomeDetail,detailLoaded:pendingDetailLoaded});
-  return buildMlsAgentRegistry({day,month,reconciliation,releases,incomeOverview,pendingAudit,catalog,productionPeriod,dtfQueue});
+  return buildMlsAgentRegistry({day,month,reconciliation,releases,incomeOverview,pendingAudit,catalog,productionPeriod,dtfQueue},{projectSettlementEvidence,projectReturnsInsights});
  }
  function renderPending(){
   const status=el('PendingStatus'),target=el('PendingRows');if(!status||!target)return;target.replaceChildren();let detail=null,overview=null;try{detail=globalThis.brazaIncomeOverview?.getDetailSnapshot?.()??null;overview=globalThis.brazaIncomeOverview?.getSnapshot?.()??null;}catch{}

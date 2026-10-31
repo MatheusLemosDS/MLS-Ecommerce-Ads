@@ -332,7 +332,14 @@ test('unattended catalogue discovery corrects an already priced adult binding to
  const savedBindings=rows(env,'variant_bindings_state'),savedCosts=rows(env,'production_costs_state');
  const result=await run(env,services);
  assert.equal(catalogCalls.length,0,'financial pagination discovers products without running a second catalogue pipeline');
- let scheduled;const lanes=[];for(let tick=0;tick<5;tick++){scheduled=await scheduledWork(env,services,now);lanes.push(scheduled.lane);if(scheduled.classification==='PROGRESSED')break;}assert.deepEqual(lanes,['MAINTENANCE','FINANCE','HISTORY','FINANCE','CATALOG']);const month=await businessMonth(env,{operation:'read',month:'2026-10'},services,{now});
+ let scheduled;const lanes=[];for(let tick=0;tick<8;tick++){
+  const before=services.calls.finance.length+services.calls.ads.length+catalogCalls.length;
+  scheduled=await scheduledWork(env,services,now);lanes.push(scheduled.lane);
+  assert.ok(services.calls.finance.length+services.calls.ads.length+catalogCalls.length-before<=1,'each natural auxiliary opportunity retains its one-source budget');
+  if(tick===1)assert.equal(scheduled.reconciliation,'NO_SOURCE','missing published Returns reports receive the first reservation');
+  if(scheduled.classification==='PROGRESSED')break;
+ }
+ assert.deepEqual(lanes,['MAINTENANCE','HISTORY','FINANCE','HISTORY','FINANCE','CATALOG']);const month=await businessMonth(env,{operation:'read',month:'2026-10'},services,{now});
  assert.equal(scheduled.classification,'PROGRESSED');
  assert.equal(result.status,'COMPLETE');assert.equal(catalogCalls.length,1);assert.equal(result.finance_steps,2);assert.equal(result.ads_reads,1);
  assert.equal(month.production_cost_cents,5000);assert.equal(month.result.net_estimate_cents,2395);assert.deepEqual(month.unmapped_variants,[]);
