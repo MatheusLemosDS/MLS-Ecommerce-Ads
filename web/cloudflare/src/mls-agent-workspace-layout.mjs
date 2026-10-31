@@ -102,5 +102,6 @@ export const MLS_AGENT_WORKSPACE_CSS=String.raw`
  .mls-workspace-history{padding:0 12px}
 }
 @media(max-width:420px){.mission-workspace.mls-agent-workspace .mission-stat .mls-stat-status{font-size:clamp(12px,3.5vw,15px);line-height:1.4;overflow-wrap:normal;word-break:normal}}
+@media(max-width:360px){.mission-workspace.mls-agent-workspace .mission-stat:has(.mls-stat-status){grid-column:1/-1}}
 @media(prefers-reduced-motion:reduce){.mls-workspace-primary{transition:none}}
 `;

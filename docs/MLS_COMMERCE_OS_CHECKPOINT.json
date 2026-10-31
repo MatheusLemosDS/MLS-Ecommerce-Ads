@@ -1165,7 +1165,7 @@
     "recovery_ci": "41236234686",
     "recovery_live_app": "b1bc00f3-0b62-4bb9-b220-dc3eefbdec11",
     "quiet_recovery_candidate": "9273f03053f016dbce11f36047c5d49cfbb30f86",
-    "ui_candidate_hash": "2b2ef6d0cd48a51abcf0fcdb0106a5bb7f18fc0017fce8196db82238a8f8e1b9",
+    "ui_candidate_hash": "07eabb013efa88002285a4de1177a9e8ca3e51bd6c60dbe24414c3b150cc2617",
     "ui_local_node_pass": 2821,
     "ui_browser_widths": [
       320,
@@ -1189,6 +1189,9 @@
     "finance_candidate_hash": "a45913998e242cd1dccd55f5868868cb86bb91ef36487e7d55dc6cd712f6749a",
     "unknown_refund_zero_fixed": true,
     "actual_cause_reaches_ui": true,
-    "income_detail_timeout_ms": 10000
+    "income_detail_timeout_ms": 10000,
+    "final_local_node_pass": 2831,
+    "font_regression_fixed": true,
+    "finance_timeout_repair_published": false
   }
 }
