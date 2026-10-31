@@ -32,3 +32,17 @@ A observação real mostrou fila financeira parada em Returns desde16:36, enquan
 30 testes focados aprovados, incluindo cron gerado/minificado. Suíte completa e CI deste segundo candidato ainda devem ser confirmados antes da publicação.
 
 A reserva foi publicada no App `b1bc00f3`, código `e9cb6c6`, CI41236234686 verde:2.801 Node/67 Python. Pós-check16:58:29Brasília confirmou bytes `c6348452…`, Auth/Finance e demais configurações. A observação17:00:26 revelou uma borda adicional: retries Finance ainda não vencidos permitem auxiliares normais que renovavam o relógio300s, adiando a reserva. Correção preparada: usar esse relógio apenas no orçamento de importação ativa; no intervalo ocioso a reserva segue o próprio cooldown15min. O cenário real passou no cron gerado, mantendo uma chamada e cursores normais. Lista Pending ainda não validada.
+
+## Pendências, fechamento e navegação — candidato integrado
+
+Nova API owner `GET /api/admin/finance/closeout?month=AAAA-MM` compõe somente fontes salvas. O relatório fechado mostra motivo, quantidade, valor informativo e base, responsável, fonte/data e próxima ação. Revisão da publicação completa e versões dos custos impedem misturar coortes. Pending atual é separado do mês; reembolso informado não vira novo desconto. Os sete critérios cobrem calendário, repasses/ajustes, devoluções/situações, produção, anúncios, imposto e despesas. Seller Centre e banco permanecem NÃO COMPARADOS e lucro realizado desconhecido.
+
+O painel existente de repasses/devoluções recebe o relatório, links e cópia JSON. Falha de um cliente opcional não impede inicialização, observação ou parada dos demais. Hermes usa o mesmo construtor para acrescentar evidências nas tarefas mensais existentes, respeitando o contrato v1/fingerprint/12KiB e preservando jobs antigos; nenhum grant ou ação comercial foi adicionado. Pending global não é forçado para dentro de uma ação mensal.
+
+Validação offline com snapshot real atômico de16:52:01Brasília: publicação14927,3/3fontes da conciliação e todas as unidades com produção identificada; nove pedidos em revisão/nove devoluções ainda abertos. Bases mensais idênticas quando Pending atual é omitido e valores de outra publicação suprimidos. Essa leitura não é confirmação do banco.
+
+Navegação global estável nos especialistas, barra contextual única, ações avançadas agrupadas e destinos deduplicados. Atalhos abrem workspace/detalhes corretos e preservam mês/histórico/foco. Menu fecha com Escape/clique externo, camada sticky fica abaixo do cabeçalho e ancoragem se estabiliza por até5s enquanto o layout salvo monta, cessando ao gesto do usuário. Movimento reduzido respeitado.
+
+QA sintética autenticada desktop/mobile em320/390/768/1365, Worker normal/minificado: título/botão não encobertos, item do menu clicável, nenhum overflow, bootstrap sem banner de erro, relatório tipado e cópia JSON exata. Suíte integrada local:2.821Node/0falhas/0skips; regressão adicional da espera ociosa e integrações:17/17. CI e publicação do conjunto final ainda pendentes; lista real Pending continua primeiro gate.
+
+A corrida pré-existente do teste Chromium da prévia (porta DevTools aberta antes de existir uma página) foi corrigida com espera limitada pela página real, sem remover nenhuma asserção nem alterar a prévia sintética.

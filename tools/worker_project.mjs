@@ -5,6 +5,8 @@ import path from 'node:path';
 export const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const TARGETS = Object.freeze({
   app: Object.freeze({name: 'brazacommerce-app', main: '../../dist/app-worker.mjs', baselineHashes: [
+    '37f43b13f7f6e130e6ddb10e4065abb1744e3edb8aacf3124c2fd05ea1a99ed2',
+    '6737c5654248ded292c168a9e3f9ad77c9be1543a3af41b9f480591683495e24',
     'a6bbda610f89fd6b7ed9c07900f515229a588f8df3786c93b31bfe0fb9a79cb2',
     'c1f16970681d587771e6912b6462d0978d0c0d485825211bac3fb6b0d480e081',
     '98c5c1e436d1fb35377dbaedb33888169b5cfe8c15855634d6386d044748396e',

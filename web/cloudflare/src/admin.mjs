@@ -19,6 +19,7 @@ import {BUSINESS_ESCROW_RELEASE_COVERAGE_SCHEMA,BusinessEscrowReleaseCoverageErr
 import {FINANCIAL_AUDIT_SCHEMA,FinancialAuditOrchestrationError,runBusinessFinancialAudits} from './financial-audit-orchestration.mjs';
 import {BUSINESS_INCOME_OVERVIEW_SCHEMA,BusinessIncomeOverviewError,readBusinessIncomeOverview} from './business-income-overview.mjs';
 import {BUSINESS_INCOME_DETAIL_SCHEMA,BusinessIncomeDetailError,readBusinessIncomeDetail,readBusinessIncomeDetailDiagnostic} from './business-income-detail.mjs';
+import {buildBusinessFinancialCloseout} from './business-financial-closeout.mjs';
 import {BUSINESS_RECONCILIATION_SCHEMA,BusinessReconciliationError,readBusinessReconciliation,readBusinessReconciliationEvidence,readBusinessReconciliationMoney,runBusinessReconciliation} from './business-reconciliation.mjs';
 import {BUSINESS_MONTH_SCHEMA,BusinessMonthError,businessMonthClientFrame,readBusinessMonthAdsState,readBusinessMonthDisplay} from './business-month.mjs';
 import {ExpenseLedgerError,readExpenseLedger,mutateExpenseLedger} from './expense-ledger.mjs';
@@ -502,6 +503,14 @@ async function adminFetch(request,env,services={}){const url=new URL(request.url
   const entries=[...url.searchParams];assert(entries.length===0||(entries.length===1&&entries[0][0]==='evidence'&&entries[0][1]==='diagnostic-v1'),'BUSINESS_INCOME_DETAIL_REQUEST_INVALID');
   if(entries.length){const detail=await readBusinessIncomeDetail(env);const diagnostic=await readBusinessIncomeDetailDiagnostic(env);return json({schema:'business_income_detail_evidence_v1',detail,diagnostic});}
   return json(await readBusinessIncomeDetail(env));
+ }
+ if(path==='/api/admin/finance/closeout'){
+  assert(request.method==='GET','METHOD_NOT_ALLOWED',405);
+  const entries=[...url.searchParams];assert(entries.length===1&&entries[0][0]==='month','BUSINESS_FINANCIAL_CLOSEOUT_REQUEST_INVALID');
+  const captured=Date.now(),now=()=>captured,month=entries[0][1],observed=await readBusinessMonthDisplay(env,{month},{now});
+  const [reconciliation,income_overview,income_detail,income_detail_diagnostic]=await Promise.all([readBusinessReconciliation(env,{month},{now}),readBusinessIncomeOverview(env,{now}),readBusinessIncomeDetail(env,{now}),readBusinessIncomeDetailDiagnostic(env,{now})]);
+  const report=buildBusinessFinancialCloseout({monthly:observed.display,audit_scope:observed.audit_scope,reconciliation,income_overview,income_detail,income_detail_diagnostic},{now});
+  assert(report,'BUSINESS_FINANCIAL_CLOSEOUT_UNAVAILABLE',503);return json(report);
  }
  if(path==='/api/admin/finance/reconciliation'){
   assert(request.method==='GET','METHOD_NOT_ALLOWED',405);

@@ -550,7 +550,7 @@
     "bank_settlement_verified": false
   },
   "pending_closeout_2026_10_31": {
-    "status": "DIAGNOSTIC_LIVE_RECOVERY_CANDIDATE_VALIDATION",
+    "status": "RECOVERY_LIVE_UI_CANDIDATE_VALIDATED",
     "base": "8b0edb28e7d769c5889ba1a956c239142314b456",
     "branch": "feature/m2-pending-closeout-20261031",
     "live_authorization": "PERSISTENT_OWNER_VALIDATED_INCREMENT",
@@ -568,6 +568,25 @@
       "finance": "3b7dec8b",
       "verified_at": "2026-10-31T19:47:15Z"
     },
-    "recovery_cooldown_seconds": 900
+    "recovery_cooldown_seconds": 900,
+    "recovery_source": "e9cb6c64863ebe6c0eb0040e581d696d0261df14",
+    "recovery_ci": "41236234686",
+    "recovery_live_app": "b1bc00f3-0b62-4bb9-b220-dc3eefbdec11",
+    "quiet_recovery_candidate": "9273f03053f016dbce11f36047c5d49cfbb30f86",
+    "ui_candidate_hash": "37f43b13f7f6e130e6ddb10e4065abb1744e3edb8aacf3124c2fd05ea1a99ed2",
+    "ui_local_node_pass": 2821,
+    "ui_browser_widths": [
+      320,
+      390,
+      768,
+      1365
+    ],
+    "real_same_publication_validation": {
+      "publication_revision": 14927,
+      "source_reports": 3,
+      "checked_at": "2026-10-31T19:52:01Z",
+      "bank_compared": false
+    },
+    "hermes_monthly_context_enriched": true
   }
 }

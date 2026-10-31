@@ -25,8 +25,16 @@ async function browser(viewport,run){
  let socket;const pending=new Map();
  try{
   const port=await waitForChromeDebugPort(process,profile);
-  const pages=await(await fetch('http://127.0.0.1:'+port+'/json/list')).json();
-  socket=new WebSocket(pages.find(p=>p.type==='page').webSocketDebuggerUrl);
+  // DevTools may bind its port before the initial page is created.
+  const pageDeadline=Date.now()+10000;let page;
+  while(Date.now()<pageDeadline){
+   if(process.exitCode!==null||process.signalCode!==null)throw Error('PREVIEW_CDP_PROCESS_EXITED');
+   const pages=await(await fetch('http://127.0.0.1:'+port+'/json/list',{signal:AbortSignal.timeout(2000)})).json();
+   page=pages.find(value=>value.type==='page'&&typeof value.webSocketDebuggerUrl==='string');
+   if(page)break;await delay(75);
+  }
+  assert.ok(page,'Preview Chrome did not create a debugger page within 10 seconds');
+  socket=new WebSocket(page.webSocketDebuggerUrl);
   await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('PREVIEW_CDP_OPEN_TIMEOUT')),10000);socket.addEventListener('open',()=>{clearTimeout(timer);resolve();},{once:true});socket.addEventListener('error',()=>{clearTimeout(timer);reject(Error('PREVIEW_CDP_OPEN_FAILED'));},{once:true});});
   let sequence=0;socket.addEventListener('message',event=>{const v=JSON.parse(event.data),p=pending.get(v.id);if(!p)return;pending.delete(v.id);clearTimeout(p.timer);v.error?p.reject(Error(v.error.message)):p.resolve(v.result);});
   const send=(method,params={})=>new Promise((resolve,reject)=>{const id=++sequence,timer=setTimeout(()=>{pending.delete(id);reject(Error('PREVIEW_CDP_TIMEOUT:'+method));},20000);pending.set(id,{resolve,reject,timer});socket.send(JSON.stringify({id,method,params}));});

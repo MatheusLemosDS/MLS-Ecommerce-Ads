@@ -3,6 +3,8 @@ import {buildMonthlyFinancialSummary} from './business-month-summary.mjs';
 import {buildAccountDiagnosis} from './account-diagnosis.mjs';
 import {buildBusinessCheckpoint} from './business-checkpoint.mjs';
 import {readMlsAgentLearning} from './mls-agent-learning.mjs';
+import {readBusinessReconciliation} from './business-reconciliation.mjs';
+import {buildBusinessFinancialCloseout,projectBusinessFinancialCloseout} from './business-financial-closeout.mjs';
 
 export const HERMES_FINANCIAL_CONTEXT_SCHEMA=[
  `CREATE TABLE IF NOT EXISTS hermes_financial_contexts(job_id TEXT PRIMARY KEY NOT NULL,analysis_date TEXT NOT NULL,captured_at INTEGER NOT NULL,fingerprint TEXT NOT NULL,payload TEXT NOT NULL CHECK(length(CAST(payload AS BLOB))<=12288))`,
@@ -128,6 +130,59 @@ export function applyHermesLearningEvidence(context,report){
  }catch{return context;}
 }
 
+// Reuse the owner's quantified monthly cases inside the existing, immutable v1
+// task contract. Current account Pending has a different basis and is never
+// attached to a monthly task or copied into monthly amounts. All wording below
+// is fixed: neither source text nor an assistant-generated instruction enters
+// the bridge prompt through this enrichment.
+export function applyHermesCloseoutEvidence(context,report){
+ try{
+  const checked=projectHermesFinancialContext(context),closeout=projectBusinessFinancialCloseout(report);
+  if(!checked?.available||!closeout)return context;
+  const month=checked.monthly;
+  if(closeout.month!==month.month||closeout.start_date!==month.start_date||closeout.end_date!==month.end_date||closeout.checked_at>checked.captured_at||JSON.stringify(closeout.versions)!==JSON.stringify(month.versions))return context;
+  const totals={expected_repass_cents:'expected_repass_cents',known_production_cents:'known_production_cost_cents',invoice_tax_cents:'invoice_tax_cents',ads_spend_cents:'ads_spend_cents',external_expenses_cents:'external_expenses_cents'};
+  if(!Object.entries(totals).every(([caseKey,monthKey])=>closeout.totals[caseKey]===month.totals[monthKey]))return context;
+  const c=month.order_coverage;
+  const matches={
+   COMPLETE_PRODUCTION_COSTS:['PRODUCTION_COST_INCOMPLETE',month.summary.production_coverage.pending_units,month.totals.known_production_cost_cents],
+   RECONCILE_RETURNS:['RETURNS_NOT_RECONCILED',c.returns+c.returns_unknown],
+   COMPLETE_PAYMENT_COVERAGE:['PAYMENT_INCOMPLETE',c.payment_missing,month.totals.expected_repass_cents],
+   REFRESH_FINANCIAL_SOURCE:['FINANCIAL_SOURCE_STALE',c.paid,month.totals.expected_repass_cents],
+   RESTORE_FINANCIAL_SOURCE:['SOURCE_UNAVAILABLE',null,month.totals.expected_repass_cents],
+   DECLARE_MONTHLY_DAS:[month.pending.includes('INVOICE_TAX_UNAVAILABLE')?'INVOICE_TAX_UNAVAILABLE':'TAX_POLICY_REQUIRED',1,month.totals.invoice_tax_cents],
+   DECLARE_EXTERNAL_EXPENSES:['EXTERNAL_EXPENSES_REQUIRED',1,month.totals.external_expenses_cents],
+   CONFIRM_RECHARGE_TREATMENT:['RECHARGE_TREATMENT_REQUIRED',1],
+   RECONCILE_PAYMENT_ADJUSTMENTS:['ADJUSTMENT_UNAVAILABLE',null,null],
+   RECONCILE_ORDER_STATUS:['STATUS_REVIEW_REQUIRED',c.cancel_pending+c.other+c.unknown,null],
+   COMPLETE_MONTH_COLLECTION:['COLLECTING',null,month.totals.known_sales_cents],
+   REVIEW_PERIOD_COVERAGE:['PERIOD_LIMIT_REACHED',null,month.totals.known_sales_cents],
+   REFRESH_CALENDAR_ADS:['ADS_UNAVAILABLE',null,null],
+   REVIEW_ARITHMETIC:['ARITHMETIC_UNSAFE',null,null]
+  };
+  const sources={MONTHLY_FINANCE:'financeiro mensal',SAME_PUBLICATION_RECONCILIATION:'conciliação da mesma publicação',SAVED_PRODUCTION_COSTS:'custos salvos',SAVED_EXPENSES:'despesas salvas',CALENDAR_ADS:'calendário de anúncios'};
+  const units={ORDERS:'pedido(s)',UNITS:'unidade(s)',CASES:'caso(s)',DAYS:'dia(s)',SOURCES:'fonte(s)',MONTH:'mês',ROWS:'registro(s)'};
+  const bases={KNOWN_PAID_SALES:'vendas pagas',KNOWN_PAID_REPASS:'repasse previsto',REPORTED_REFUND_ALL_COHORTS_INFORMATION_ONLY:'reembolso reportado, sem dedução adicional',IDENTIFIED_PRODUCTION_COST:'produção já identificada',MONTHLY_TAX:'imposto mensal',CALENDAR_ADS_SPEND:'gasto de anúncios do calendário',DECLARED_EXTERNAL_EXPENSES:'despesas declaradas',REPORTED_RECHARGE:'recarga reportada'};
+  const actions={WAIT_FOR_COLLECTION:'aguardar a coleta',REVIEW_COLLECTION_LIMIT:'revisar o limite da coleta',RESTORE_SOURCE:'restabelecer a fonte',REVIEW_ORDER_STATUS:'conferir a situação dos pedidos',COMPLETE_PAYMENT_EVIDENCE:'completar a evidência de repasse',COMPARE_RETURN_OUTCOMES:'comparar os desfechos das devoluções',COMPLETE_VARIANT_COSTS:'completar os custos das variações',CONFIRM_MONTHLY_TAX:'confirmar o imposto mensal',WAIT_FOR_ADS_COVERAGE:'aguardar a cobertura de anúncios',CONFIRM_EXPENSES:'confirmar as despesas',CLASSIFY_RECHARGE:'classificar a recarga',COMPLETE_ADJUSTMENTS:'completar os ajustes',REVIEW_ARITHMETIC:'conferir o cálculo',WAIT_FOR_REFRESH:'aguardar a atualização'};
+  const money=amount=>{const value=BigInt(amount),positive=value<0n?-value:value;return (value<0n?'-':'')+'R$ '+(positive/100n).toString()+','+(positive%100n).toString().padStart(2,'0');};
+  let changed=false;
+  const top_actions=month.top_actions.map(action=>{
+   const match=matches[action.code],row=match&&closeout.cases.find(item=>item.code===match[0]);
+   if(!row||!month.pending.includes(row.code)||row.source.name==='CURRENT_INCOME_PENDING'||!sources[row.source.name]||!actions[row.next_action]||row.known_amount_cents!==null&&!bases[row.amount_basis]||row.affected_count!==match[1]||match.length===3&&row.known_amount_cents!==match[2]||action.detail.includes('Conciliação salva:'))return action;
+   const at=row.source.checked_at;
+   if(row.source.name==='SAME_PUBLICATION_RECONCILIATION'&&closeout.scope_status!=='SAME_PUBLICATION'||row.source.name==='MONTHLY_FINANCE'&&at!==month.source_checked_at.finance_oldest_at||row.source.name==='CALENDAR_ADS'&&at!==month.source_checked_at.ads_at||['SAVED_PRODUCTION_COSTS','SAVED_EXPENSES'].includes(row.source.name)&&at!==month.checked_at)return action;
+   const quantity=row.affected_count===null?'quantidade ainda não confirmada':row.affected_count+' '+units[row.affected_unit]+' afetado(s)';
+   const amount=row.known_amount_cents===null?'valor ainda não confirmado':'valor conhecido informativo '+money(row.known_amount_cents)+' ('+bases[row.amount_basis]+')';
+   const observed=at===null?'data ainda não confirmada':new Date(at*1000).toISOString();
+   const suffix=' Conciliação salva: '+quantity+'; '+amount+'; fonte '+sources[row.source.name]+' em '+observed+'. Próxima ação: '+actions[row.next_action]+'. Não confirma recebimento bancário.';
+   if(action.detail.length+suffix.length>700)return action;
+   changed=true;return {...action,detail:action.detail+suffix};
+  });
+  if(!changed)return context;
+  return projectHermesFinancialContext({...checked,monthly:{...month,top_actions}})||context;
+ }catch{return context;}
+}
+
 async function setup(env){const db=env?.ADMIN_DB;if(!db||typeof db.prepare!=='function'||typeof db.batch!=='function')fail('HERMES_CONTEXT_CONFIGURATION');if(!ready.has(db))ready.set(db,db.batch(HERMES_FINANCIAL_CONTEXT_SCHEMA.map(sql=>db.prepare(sql))).catch(()=>{ready.delete(db);fail('HERMES_CONTEXT_STORAGE_UNAVAILABLE');}));await ready.get(db);return db;}
 function epoch(now){let value;try{value=now();}catch{fail('HERMES_CONTEXT_CLOCK_INVALID');}if(!Number.isSafeInteger(value)||value<1||Math.floor(value/1000)>9999999999)fail('HERMES_CONTEXT_CLOCK_INVALID');return Math.floor(value/1000);}
 async function fingerprint(jobId,payload){const raw='{"job_id":'+JSON.stringify(jobId)+',"context":'+payload+'}',hash=await crypto.subtle.digest('SHA-256',encoder.encode(raw));return [...new Uint8Array(hash)].map(byte=>byte.toString(16).padStart(2,'0')).join('');}
@@ -138,10 +193,13 @@ export async function prepareHermesFinancialContext(env,jobId,analysisDate,{now=
  // Use the same selected, immutable finance publication as the owner view.
  // A background replacement may be partial while the last complete cohort is
  // still displayed; the shared read also reapplies current local costs.
- const db=await setup(env);epoch(now);let frame=null;try{frame=(await readBusinessMonthDisplay(env,{month:analysisDate.slice(0,7)},{now})).display;}catch{}
+ const db=await setup(env);epoch(now);let frame=null,observed=null;try{observed=await readBusinessMonthDisplay(env,{month:analysisDate.slice(0,7)},{now});frame=observed.display;}catch{}
  let learning=null;if(frame!==null)try{learning=await readMlsAgentLearning(env,{month:analysisDate.slice(0,7)},{now});}catch{}
+ let closeout=null;
+ if(frame!==null)try{const reconciliation=await readBusinessReconciliation(env,{month:analysisDate.slice(0,7)},{now});closeout=buildBusinessFinancialCloseout({monthly:frame,reconciliation,audit_scope:observed.audit_scope},{now});}catch{}
  const base=buildHermesFinancialContext(frame,{analysisDate,capturedAt:epoch(now)});if(!base)fail('HERMES_CONTEXT_INVALID');
- const context=projectHermesFinancialContext(applyHermesLearningEvidence(base,learning))||base;
+ const annotated=projectHermesFinancialContext(applyHermesCloseoutEvidence(base,closeout))||base;
+ const context=projectHermesFinancialContext(applyHermesLearningEvidence(annotated,learning))||annotated;
  const payload=JSON.stringify(context);if(encoder.encode(payload).byteLength>12288)fail('HERMES_CONTEXT_INVALID');const hash=await fingerprint(jobId,payload);
  const statement=db.prepare('INSERT INTO hermes_financial_contexts(job_id,analysis_date,captured_at,fingerprint,payload) SELECT ?,?,?,?,? WHERE EXISTS(SELECT 1 FROM hermes_jobs WHERE id=? AND task=?) ON CONFLICT(job_id) DO NOTHING').bind(jobId,analysisDate,context.captured_at,hash,payload,jobId,taskRaw);
  return {context,fingerprint:hash,statement};

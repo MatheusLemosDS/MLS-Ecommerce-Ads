@@ -141,7 +141,11 @@ test('a new local day keeps the publication date scope and source age shared wit
  f.clock.time+=86400000;
  const owner=await readBusinessMonthDisplay(f.env,selection,{now:f.now}),prepared=await prepareHermesFinancialContext(f.env,jobId,analysisDate,{now:f.now,taskRaw});
  assert.equal(owner.display_source,'PUBLISHED');assert.equal(owner.active.end_date,'2026-10-25');assert.equal(owner.active.status,'RUNNING');
- assert.deepEqual(prepared.context,buildHermesFinancialContext(owner.display,{analysisDate,capturedAt:Math.floor(f.now()/1000)}));
+ const original=buildHermesFinancialContext(owner.display,{analysisDate,capturedAt:Math.floor(f.now()/1000)});
+ const withoutNotes=value=>({...value,monthly:{...value.monthly,top_actions:value.monthly.top_actions.map(({detail,...action})=>action)}});
+ assert.deepEqual(withoutNotes(prepared.context),withoutNotes(original));
+ for(let i=0;i<original.monthly.top_actions.length;i++)assert.ok(prepared.context.monthly.top_actions[i].detail.startsWith(original.monthly.top_actions[i].detail));
+ assert.ok(prepared.context.monthly.top_actions.some(row=>row.detail.includes('fonte financeiro mensal em 2026-10-24T12:00:00.000Z')),'the added source note preserves the old publication timestamp rather than the new active cohort');
  assert.equal(prepared.context.monthly.end_date,'2026-10-24');assert.equal(prepared.context.monthly.order_coverage.paid,96);
  assert.deepEqual(prepared.context.monthly.source_checked_at,published.display.source_checked_at);
  assert.ok(prepared.context.monthly.pending.includes('FINANCIAL_SOURCE_STALE'));assert.equal(prepared.context.monthly.totals.net_estimate_cents,null);

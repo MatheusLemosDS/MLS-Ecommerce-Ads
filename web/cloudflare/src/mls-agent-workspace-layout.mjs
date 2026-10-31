@@ -1,10 +1,9 @@
 /** Approved specialist composition. No provider data or business behavior. */
 export const MLS_AGENT_WORKSPACE_CSS=String.raw`
-/* These five modules reuse the existing application rail instead of nesting a
-   second sidebar inside the content. Auditor and Hermes retain their own tools. */
+/* Keep the application rail stable on every page. Each specialist has one
+   contextual toolbar, with no second rail or repeated quicklink row. */
 .mission-workspace.mls-agent-workspace{display:block;min-width:0}
 .mission-workspace.mls-agent-workspace>*{min-width:0}
-.mls-agent-mini-nav{display:none}
 .mission-workspace.mls-agent-workspace>.mission-hero{
  display:flex;flex-direction:row;align-items:center;justify-content:space-between;
  min-height:100px;margin:0;padding:14px 0 12px;gap:20px;border:0;border-radius:0;
@@ -34,12 +33,12 @@ export const MLS_AGENT_WORKSPACE_CSS=String.raw`
 .mission-workspace.mls-agent-workspace .mission-stat .mls-stat-status{font-size:18px;line-height:1.35;letter-spacing:normal}
 .mls-agent-workspace .mission-stat span{font-size:10px;line-height:1.45}
 .mission-workspace.mls-agent-workspace>.mission-page-tabs{
- position:static;display:flex;flex-direction:row;align-items:center;flex-wrap:wrap;
+ position:sticky;top:84px;z-index:10;display:flex;flex-direction:row;align-items:center;flex-wrap:wrap;
  width:auto;margin:0 0 15px;padding:5px;gap:4px;border:1px solid rgba(var(--mission-rgb),.3);
  border-radius:10px;background:var(--surface);max-width:none
 }
 .mission-workspace.mls-agent-workspace>.mission-page-tabs a{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:9px 13px;font-size:11px;border-radius:7px;line-height:1.3;white-space:normal}
-.mission-workspace.mls-agent-workspace>.mission-page-tabs a[aria-current=page]{border-color:var(--mission-accent);background:rgba(var(--mission-rgb),.16);color:var(--mission-accent)}
+.mission-workspace.mls-agent-workspace>.mission-page-tabs a[aria-current]{border-color:var(--mission-accent);background:rgba(var(--mission-rgb),.16);color:var(--mission-accent)}
 .mls-module-tabs .mls-module-nav-icon{display:none}
 .mls-workspace-chart-pair{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:15px;align-items:stretch;margin:0 0 17px}
 .mls-workspace-chart-pair>.mission-panels{display:contents}
@@ -68,21 +67,11 @@ export const MLS_AGENT_WORKSPACE_CSS=String.raw`
 .mls-workspace-chart-pair .mls-verified-chart{display:block;width:100%;max-width:100%;height:auto;max-height:220px}
 .mls-workspace-history{margin:0 0 18px;border:1px solid var(--line);border-radius:9px;padding:0 14px}
 .mls-workspace-history>summary{display:flex;align-items:center;min-height:44px;cursor:pointer;font-size:11px;color:var(--muted)}
-.mls-workspace-quicklinks{display:flex;flex-direction:row;align-items:center;flex-wrap:wrap;gap:7px 18px;margin:0 0 12px;border-bottom:1px solid var(--line)}
-.mls-workspace-quicklinks a{display:inline-flex;align-items:center;min-height:44px;color:var(--mission-accent);font-size:11px;text-decoration:none}
-.mls-workspace-quicklinks a:hover{text-decoration:underline}
+.workspace :is(details[id],.mission-tasks[id],.mission-module[id],[id^="business"],[id^="missionChart-"],[id^="dtf"]){scroll-margin-top:160px}
 .mls-agent-workspace :focus-visible{outline:3px solid var(--mission-accent);outline-offset:3px}
 @media(min-width:851px){
  .mls-workspace-chart-pair .mission-trend-panel:has(.mission-trend-empty){height:280px;min-height:280px}
- :root:is([data-active-panel=agent-finance],[data-active-panel=agent-ads],[data-active-panel=agent-products],[data-active-panel=agent-production],[data-active-panel=agent-returns]) .sidebar-navigation>.workspace-nav{display:none}
- .mls-agent-mini-nav{position:fixed;z-index:22;left:20px;top:126px;display:block;box-sizing:border-box;width:calc(var(--mls-sidebar-width,236px) - 40px);max-height:calc(100dvh - 300px);overflow-y:auto;overscroll-behavior:contain}
- .mls-agent-mini-nav nav{display:grid;gap:5px}
- .mls-agent-mini-nav a{display:flex;align-items:center;gap:10px;box-sizing:border-box;min-height:44px;padding:10px 11px;border:1px solid transparent;border-radius:8px;font-size:12px;line-height:1.35;color:var(--muted);text-decoration:none}
- .mls-agent-mini-nav a:hover{border-color:rgba(var(--mission-rgb),.4);background:rgba(var(--mission-rgb),.09);color:var(--text)}
- .mls-agent-mini-nav a[aria-current=page]{color:var(--text);border-color:var(--mission-accent);background:linear-gradient(110deg,rgba(var(--mission-rgb),.28),rgba(var(--mission-rgb),.07));box-shadow:inset 2px 0 var(--mission-accent),0 0 17px rgba(var(--mission-rgb),.1)}
- .mls-module-nav-icon{display:flex;flex:0 0 19px;width:19px;height:19px;color:var(--mission-accent)}
- .mls-module-nav-icon svg{width:100%;height:100%}
- :root:is([data-active-panel=agent-finance],[data-active-panel=agent-ads],[data-active-panel=agent-products],[data-active-panel=agent-production],[data-active-panel=agent-returns]) .sidebar-navigation>.workspace-more{position:fixed;z-index:24;left:20px;bottom:112px;width:calc(var(--mls-sidebar-width,236px) - 40px);max-height:calc(100dvh - 235px);overflow:auto;background:var(--surface)}
+
 }
 @media(max-width:1120px) and (min-width:851px){
  .mission-workspace.mls-agent-workspace>.mission-hero{align-items:flex-start;flex-wrap:wrap;gap:10px}
@@ -92,11 +81,6 @@ export const MLS_AGENT_WORKSPACE_CSS=String.raw`
 }
 @media(max-width:850px){
  .mission-workspace.mls-agent-workspace{margin-bottom:26px}
- .mls-agent-mini-nav{display:block;position:static;max-width:100%;margin:0 0 12px;overflow-x:auto;border-bottom:1px solid var(--line);padding-bottom:6px}
- .mls-agent-mini-nav nav{display:flex;flex-direction:row;gap:6px;width:max-content;max-width:none}
- .mls-agent-mini-nav a{display:inline-flex;align-items:center;gap:6px;box-sizing:border-box;min-height:44px;padding:9px 11px;border:1px solid var(--line);border-radius:7px;background:var(--surface);font-size:10px;color:var(--muted);text-decoration:none;white-space:nowrap}
- .mls-agent-mini-nav a[aria-current=page]{border-color:var(--mission-accent);color:var(--mission-accent);background:rgba(var(--mission-rgb),.1)}
- .mls-agent-mini-nav .mls-module-nav-icon{display:none}
  .mission-workspace.mls-agent-workspace>.mission-hero{display:flex;flex-direction:column;align-items:stretch;min-height:0;padding:10px 0 12px;gap:15px}
  .mls-agent-workspace .mission-hero-main{gap:12px}
  .mls-agent-workspace .mission-orb.mls-agent-avatar{width:54px;height:54px;flex-basis:54px}
@@ -111,11 +95,12 @@ export const MLS_AGENT_WORKSPACE_CSS=String.raw`
  .mission-workspace.mls-agent-workspace>.mission-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:0 0 12px}
  .mls-agent-workspace .mission-stat{padding:12px;min-height:120px}
  .mls-agent-workspace .mission-stat strong{font-size:24px}
- .mission-workspace.mls-agent-workspace>.mission-page-tabs{flex-wrap:nowrap;overflow-x:auto;max-width:100%;padding:5px;gap:4px}
+ .mission-workspace.mls-agent-workspace>.mission-page-tabs{top:76px;flex-wrap:nowrap;overflow-x:auto;max-width:100%;padding:5px;gap:4px;overscroll-behavior-x:contain;scrollbar-width:thin}
  .mission-workspace.mls-agent-workspace>.mission-page-tabs a{flex:0 0 auto;white-space:nowrap;min-height:44px;padding:9px 11px;font-size:10px}
  .mls-workspace-chart-pair{grid-template-columns:minmax(0,1fr);gap:12px}
  .mls-workspace-chart-pair .mission-module,.mls-workspace-chart-pair .mission-trend-panel{height:auto;padding:15px;min-height:285px}
  .mls-workspace-history{padding:0 12px}
 }
+@media(max-width:420px){.mission-workspace.mls-agent-workspace .mission-stat .mls-stat-status{font-size:clamp(12px,3.5vw,15px);line-height:1.4;overflow-wrap:normal;word-break:normal}}
 @media(prefers-reduced-motion:reduce){.mls-workspace-primary{transition:none}}
 `;

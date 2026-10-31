@@ -31,17 +31,20 @@ test('single approved visual language defines actual agent colors, responsive la
 });
 
 test('specialists retain actual registry and chart nodes with visible local navigation, no added network path',()=>{
- const html=missionWorkspacesBody('<div id="financeFixtureProtected"></div>');
+ const html=missionWorkspacesBody('<div id="financeFixtureProtected"></div>'),rendered=adminBody();
  for(const id of ids){
   assert.match(html,new RegExp('id="agent-'+id+'"'));
   assert.match(html,new RegExp('id="mission-'+id+'-top"'));
   assert.match(html,new RegExp('id="mission-'+id+'-metrics"'));
   assert.match(html,new RegExp('href="#mission-'+id+'-tasks"'));
   assert.match(html,new RegExp('href="#mission-'+id+'-tools"'));
-  assert.match(html,new RegExp('href="#mission-'+id+'-metrics"'));
+  if(['auditor','hermes'].includes(id))assert.match(html,new RegExp('href="#mission-'+id+'-metrics"'));
+  else assert.match(html,new RegExp('href="#mission-'+id+'-top"'),'specialist toolbar starts at the real overview target');
   assert.match(html,new RegExp('data-mission-status="'+id+'"'));
  }
  assert.equal((html.match(/id="financeFixtureProtected"/g)||[]).length,1);
+ assert.doesNotMatch(html,/mls-agent-mini-nav|mls-workspace-quicklinks/,'global navigation must not be duplicated inside specialists');
+ for(const toolbar of html.matchAll(/<nav class="mission-page-tabs mls-module-tabs"[^>]*>([\s\S]*?)<\/nav>/g)){const hrefs=[...toolbar[1].matchAll(/href="([^"]+)"/g)].map(row=>row[1]);assert.equal(new Set(hrefs).size,hrefs.length,'one contextual destination per toolbar');for(const href of hrefs.filter(href=>href.startsWith('#')))assert.ok(rendered.includes('id="'+href.slice(1)+'"'),'toolbar target exists: '+href);}
  assert.match(html,/href="#businessMonth"/);
  assert.match(html,/id="mission-returns-evidence"/);
  assert.match(html,/id="mission-auditor-evidence"/);
