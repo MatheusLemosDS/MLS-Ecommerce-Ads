@@ -5,6 +5,12 @@ import path from 'node:path';
 export const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const TARGETS = Object.freeze({
   app: Object.freeze({name: 'brazacommerce-app', main: '../../dist/app-worker.mjs', baselineHashes: [
+    // Reviewed calendar alternation through current-month local retry waits.
+    '21446508dd6ac2927359fd5574db61ef3ea574b365b75dae0b55950272eeb964',
+    // Reviewed historical-calendar fairness through local and post-read failures.
+    '015354b72091e237a4eafdf87315f28b4e2273a6f66bc8e7cf0cda8b45f447f8',
+    // Reviewed bounded historical calendar selection and guarded resumable reads.
+    '7fc52c172e00f6522362c9206d4ec505c8124d821e8390ed42f4455c9f20076d',
     // Reviewed bootstrap cooldown independent of ordinary auxiliary activity.
     '0dd75e25c8119c7f8d952a68b372b61387357de4092a525db8ee38a690ff8739',
     // Reviewed bounded first-coverage scheduling; preserves Finance/Returns quotas.

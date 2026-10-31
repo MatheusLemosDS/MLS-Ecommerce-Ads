@@ -93,7 +93,7 @@ export async function runBackgroundHistoryWork(env,services,{month,lease},{now=(
  const finish=()=>({...result,source_reads:sourceReads,audit_source_reads:auditReads});
  const audit=async()=>{
   const sources=Object.fromEntries(['getFinanceReconciliation','getFinanceEscrowReleases','getFinanceEscrowReleaseCoverage','getFinanceIncomeOverview','getFinanceIncomeDetail'].map(name=>[name,bounded(name)]));
-  const work=await runAudits(env,sources,{month},{now,canRun});
+  const work=await runAudits(env,sources,{month},{now,canRun,historicalCalendars:true,backgroundLease:{token:lease.token,revision:lease.revision}});
   result.reconciliation=work.returns_status;result.releases=work.releases_status;result.income=work.income_status;result.income_detail=work.income_detail_status;result.release_coverage=work.coverage_status??'DEFERRED';
   // A cost continuation may hold one HISTORY slot for the next audit turn.
   // The audit itself always releases that hold so other auxiliary lanes run.

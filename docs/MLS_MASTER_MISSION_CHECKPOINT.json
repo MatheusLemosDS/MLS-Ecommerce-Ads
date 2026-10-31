@@ -485,5 +485,13 @@
     "m2_complete": false,
     "commercial_writes_allowed": false,
     "bank_settlement_verified": false
+  },
+  "historical_calendars_2026_10_31": {
+    "status": "VALIDATING",
+    "branch": "feature/m2-historical-release-calendars-20261031",
+    "base_main": "8cdad2a4179cf96c1c2c586f89e2ad0c37665e3e",
+    "record": "docs/MLS_M2_HISTORICAL_CALENDARS_2026_10_31.md",
+    "commercial_writes_allowed": false,
+    "bank_settlement_verified": false
   }
 }

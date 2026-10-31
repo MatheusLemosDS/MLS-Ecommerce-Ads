@@ -1,3 +1,12 @@
+INCREMENTO EM VALIDAÇÃO — M2 CALENDÁRIOS HISTÓRICOS — 31/10/2026
+Branch feature/m2-historical-release-calendars-20261031, base mainPR90 8cdad2a.
+Alternância limitada RELEASES atual/anterior; um serviço privado por HISTORY.
+Somente CALENDAR_MISSING válido e publicação exata; completo salvo impede duplicação.
+Rollback legado e Auth/Finance/config preservados. Nenhum lucro bancário inferido.
+Conferir docs/MLS_M2_HISTORICAL_CALENDARS_2026_10_31.md; não declarar Live sem provas.
+
+REGISTROS ANTERIORES — NÃO SUBSTITUEM O INCREMENTO ACIMA
+
 LIVE PR90 — M2 LIBERAÇÕES POSTERIORES — 31/10/2026
 Branch feature/m2-release-tracker-20261031, base mainPR89 23b329e.
 Código cf89fdd, CI41218926278 GREEN2637Node/67Python/Chromium.
