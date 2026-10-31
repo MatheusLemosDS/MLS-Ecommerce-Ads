@@ -5,6 +5,9 @@ oficial; ambiente separado só quando necessário. Prévia PR84 preservada com
 dados sintéticos. Correção de cancelamentos: branch fix/cancelled-daily-profit-20261030
 base main a96bb1c, sem integrar branches visuais/AI. Estado da validação e release
 em docs/MLS_CANCELLED_DAILY_PROFIT_2026_10_30.md. Não confundir merge com deploy.
+PR85: código dbcfae7, CI41155020856 GREEN 2129Node/67Python/Chromium. App e
+Finance oficiais publicados, bytes/config/bindings/cron conferidos pela API;
+Auth preservado. Sessão owner não executada. M2 continua aberta.
 
 1. Repositório: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads
 2. LEIA: AGENTS.md, docs/ROADMAP_MLS_COMMERCE_OS.md, docs/MLS_COMMERCE_OS_CHECKPOINT.json e docs/MLS_CODEX_HANDOFF_2026_10_28.md.

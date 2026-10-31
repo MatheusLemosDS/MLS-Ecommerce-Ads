@@ -8,6 +8,10 @@ demonstrativa já criada na PR #84 continua disponível. A correção de atualiz
 de cancelamentos parte da main `a96bb1c`, sem integrar as branches visuais/AI.
 Ver [auditoria e entrega](MLS_CANCELLED_DAILY_PROFIT_2026_10_30.md).
 
+PR #85: correção de atualização de cancelamentos publicada no App/Finance
+oficiais e verificada pela API Cloudflare; CI 41155020856 verde com 2.129 Node,
+67 Python e Chromium. M2 permanece aberta para conciliação financeira real.
+
 > **Checkpoint multi-branch 28/10/2026:** A main continua em b058e832 (PR #46 integrada); PR #48 de busca V3.6 segue draft/CI verde (2.115 Node + 67 Python); PR #47 M3 Products/Pricing Observer segue draft/CI verde (2.124 Node + 67 Python); PR #51 abre a pesquisa Shopee/Listing Factory, com CI inicial verde (2.122 Node + 67 Python). Nenhuma dessas três PRs foi integrada ou publicada. **M2 Finance continua aberta (issue #50).** A M3 de precificação comercial não está aprovada.
 >
 > Execução rastreada: issue #50 (M2), #52 (Listing Factory UI), #53 (escrow batch), #54 (push).

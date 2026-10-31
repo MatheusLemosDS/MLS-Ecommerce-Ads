@@ -48,18 +48,39 @@ ocorre após 301 segundos no teste, incluindo a primeira janela do mês, antes
 retida em cache por quinze minutos. Há testes de validade do cache no mês atual
 e na virada para o mês seguinte.
 
-Branch: `fix/cancelled-daily-profit-20261030`. Revisão do agendamento concluída;
-73 testes direcionados e 67 Python aprovados. O cron do App gerado foi testado
-com e sem minificação. Na execução local completa, duas expectativas antigas
-de cache foram corrigidas e revalidadas; o Chromium não criou seu perfil no
-ambiente isolado. A suíte integral, incluindo o navegador, deve passar na CI
-antes do merge. Publicação precisa ser conferida separadamente no Cloudflare.
+PR [#85](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/85), branch
+`fix/cancelled-daily-profit-20261030`, código `dbcfae79716fbbe8785cbb615c435e0c62be1b6a`.
+Revisão do agendamento concluída; 73 testes direcionados aprovados. A
+[CI 41155020856](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/41155020856)
+passou com **2.129 Node, zero falhas e 67 Python**, incluindo Chromium e os três
+builds. O cron do App gerado foi testado com e sem minificação. O navegador
+local não criou seu perfil isolado; a validação integral foi feita pela CI.
 
 Builds exatos revisados:
 
 - App: `5609b8412ff643f8c4864bac68e2d55461ad97878fdff9f602f3bff642246a6a`.
 - Auth, inalterado: `1fef431c8573e05563c7938d95be0976a160bc603340084aa747ee0b73e7ec64`.
 - Finance: `bfc27e1022e0c5b3d335498389fd64b6978b8f7f04501d3bc6eff38202bf5feb`.
+
+## Publicação oficial verificada
+
+Publicação pelos comandos reais `deploy:finance` e `deploy:app`, após CI verde,
+em 30/10/2026 Brasília (31/10 01:24 UTC). Versões:
+
+- App: `db3fb95f-6a8c-4f44-93d7-2b41f5e00d35`.
+- Finance: `a01e40a0-d760-4958-834e-f090c62b1ca8`.
+- Auth não recebeu alteração por este incremento.
+
+A conferência pela API Cloudflare baixou os três scripts e confirmou bytes
+exatos dos bundles Wrangler esperados: App
+`670bc7b79494ca44986856c5c21375812a09bab07ef66024e9e152f289b2c900`, Finance
+`1ac5eee03d0c98e7b82ccc958ae3f31d3bf453bf233db911be5adb2b799f775e`
+e Auth preservado
+`a643fefcea48df87499f5878aac424a6cb2fa22d298d82e598c2ee72aaed5b2e`.
+Configurações, valores dos bindings, domínios, privacidade e cron idênticos ao
+backup privado. SELECTs confirmaram a nova tabela histórica e o coletor ativo
+com zero falhas e sem erro de fonte. A sessão autenticada do proprietário não
+foi testada; as sondagens anônimas deste ambiente receberam HTTP 403 externo.
 
 M2 permanece aberta para devoluções, ajustes, Seller Centre e recebimento
 bancário. O resultado diário continua uma estimativa com seus bloqueios reais.
