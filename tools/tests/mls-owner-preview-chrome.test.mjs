@@ -9,6 +9,7 @@ import os from 'node:os';
 import path from 'node:path';
 import {startPreviewServer} from '../mls_owner_preview_server.mjs';
 import {createChromeProfileCleanup} from '../../web/cloudflare/tests/chrome-profile-cleanup.mjs';
+import {waitForChromeDebugPort} from '../../web/cloudflare/tests/chrome-debug-port.mjs';
 import {syntheticShirtPng,localFixtureTools} from './fixtures/mls-ai-sales-media-fixture.mjs';
 import {validateLocalAiSalesInput,renderLocalAiSales} from '../mls-ai-sales/render.mjs';
 
@@ -23,8 +24,7 @@ async function browser(viewport,run){
  const cleanup=createChromeProfileCleanup(process,profile);
  let socket;const pending=new Map();
  try{
-  let port=0;for(let i=0;i<120&&!port;i++){try{port=Number(readFileSync(path.join(profile,'DevToolsActivePort'),'utf8').split('\n')[0]);}catch{}if(!port)await delay(50);}
-  assert.ok(port,'preview Chrome debug port unavailable');
+  const port=await waitForChromeDebugPort(process,profile);
   const pages=await(await fetch('http://127.0.0.1:'+port+'/json/list')).json();
   socket=new WebSocket(pages.find(p=>p.type==='page').webSocketDebuggerUrl);
   await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('PREVIEW_CDP_OPEN_TIMEOUT')),10000);socket.addEventListener('open',()=>{clearTimeout(timer);resolve();},{once:true});socket.addEventListener('error',()=>{clearTimeout(timer);reject(Error('PREVIEW_CDP_OPEN_FAILED'));},{once:true});});

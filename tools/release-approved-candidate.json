@@ -194,6 +194,8 @@
     "web/cloudflare/tests/admin-startup-compiled.test.mjs",
     "web/cloudflare/tests/agent-registry.test.mjs",
     "web/cloudflare/tests/browser-owner-chrome.test.mjs",
+    "web/cloudflare/tests/chrome-debug-port.mjs",
+    "web/cloudflare/tests/chrome-debug-port.test.mjs",
     "web/cloudflare/tests/chrome-profile-cleanup.mjs",
     "web/cloudflare/tests/hermes-financial-context.test.mjs",
     "web/cloudflare/tests/mission-agents-hub-chrome.test.mjs",
