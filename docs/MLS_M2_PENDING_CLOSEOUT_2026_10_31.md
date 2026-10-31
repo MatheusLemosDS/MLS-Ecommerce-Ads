@@ -22,3 +22,11 @@ POST, assinatura e corpo foram conferidos com os contratos públicos pesquisados
 A autorização Live é persistente. A exceção de caminhos protegidos cobre apenas os arquivos literais desta correção Pending, sem liberar outros arquivos Finance/Auth, infraestrutura ou originais. Hashes exatos dos três Workers e configurações, flags, cron, backups e rollback devem ser conferidos antes/depois. Escritas comerciais continuam bloqueadas. A prévia visual permanece sintética.
 
 Status: candidato de diagnóstico em validação; ainda sem publicação deste incremento. M2, validação de Pending e fechamento bancário continuam abertos.
+
+## Publicação do diagnóstico e espera da fila
+
+Código `a2427c2`, CI41235375476 verde, 2.791 Node/67 Python. Publicado às16:47Brasília: App `03808a63`, Auth `109da95f`, Finance `3b7dec8b`. Verificação pós-publicação às16:47:15 confirmou os três bytes brutos exatos (`dcbfd744…`, `1b660c4f…`, `6fba6e9d…`), versões únicas100%, domínios/config/flags/cron e backups. A falha original ainda não foi reexecutada pelo rodízio; isso não valida a lista.
+
+A observação real mostrou fila financeira parada em Returns desde16:36, enquanto as outras auxiliares e coletas avançavam. Combinar cinco auxiliares com o rodízio de auditorias pode adiar o primeiro detalhe Pending por horas. O próximo candidato reserva uma oportunidade auxiliar já existente para primeiro detalhe ou falha vencida (inclusive último resultado válido preservado): cooldown global15min, retry original, orçamento4leituras/300s durante importação, lease/pausa/virada mensal e apenas uma chamada privada preservados. A reserva não avança nem reinicia os cursores normais.
+
+30 testes focados aprovados, incluindo cron gerado/minificado. Suíte completa e CI deste segundo candidato ainda devem ser confirmados antes da publicação.

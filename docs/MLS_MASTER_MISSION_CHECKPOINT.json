@@ -550,7 +550,7 @@
     "bank_settlement_verified": false
   },
   "pending_closeout_2026_10_31": {
-    "status": "DIAGNOSTIC_CANDIDATE_VALIDATION",
+    "status": "DIAGNOSTIC_LIVE_RECOVERY_CANDIDATE_VALIDATION",
     "base": "8b0edb28e7d769c5889ba1a956c239142314b456",
     "branch": "feature/m2-pending-closeout-20261031",
     "live_authorization": "PERSISTENT_OWNER_VALIDATED_INCREMENT",
@@ -559,6 +559,15 @@
     "three_worker_diagnostic_repair": true,
     "seller_centre_compared": false,
     "bank_compared": false,
-    "record": "docs/MLS_M2_PENDING_CLOSEOUT_2026_10_31.md"
+    "record": "docs/MLS_M2_PENDING_CLOSEOUT_2026_10_31.md",
+    "diagnostic_source": "a2427c274979aabd4fdf4b66baae96654f3b28d8",
+    "diagnostic_ci": "41235375476",
+    "diagnostic_live": {
+      "app": "03808a63",
+      "auth": "109da95f",
+      "finance": "3b7dec8b",
+      "verified_at": "2026-10-31T19:47:15Z"
+    },
+    "recovery_cooldown_seconds": 900
   }
 }

@@ -80,6 +80,8 @@ const SCHEMA = [...new Set([
 ...PRODUCTION_COST_PERIODS_SCHEMA,
 ...OPERATOR_COST_CORRECTIONS_SCHEMA,
 ...HISTORICAL_COST_EVIDENCE_SCHEMA,
+...BUSINESS_INCOME_OVERVIEW_SCHEMA,
+...BUSINESS_INCOME_DETAIL_SCHEMA,
 ...BACKGROUND_LANE_SCHEMA,
 `CREATE TABLE IF NOT EXISTS variant_bindings_state (id INTEGER PRIMARY KEY CHECK(id=1), revision INTEGER NOT NULL, payload TEXT NOT NULL, updated_at TEXT NOT NULL)`,
 `CREATE TABLE IF NOT EXISTS variant_bindings_audit (id INTEGER PRIMARY KEY AUTOINCREMENT, revision INTEGER UNIQUE NOT NULL, payload TEXT NOT NULL, actor TEXT NOT NULL, created_at TEXT NOT NULL)`,
@@ -238,7 +240,7 @@ async function scheduledWork(env,services,now=()=>Date.now()){
  // First-time corrections can themselves consume the invocation budget. The
  // marker is consumed once even if an owner request initialized this isolate.
  if(MAINTENANCE_PENDING.delete(env.ADMIN_DB)){output.collection='MAINTENANCE';return output;}
- const month=localDay(new Date(now())).slice(0,7),lease=await acquireBackgroundLane(env,{month},{now,bootstrapCoverage:true});output.lane=lease.lane;
+ const month=localDay(new Date(now())).slice(0,7),lease=await acquireBackgroundLane(env,{month},{now,bootstrapCoverage:true,pendingIncomeRecovery:true});output.lane=lease.lane;
  if(lease.lane==='LEASED')return {...output,collection:'LEASED'};
  let repeatHistory=false,auditSourceReads=0,historyNextWork=null;const canRun=async()=>(await readBusinessSyncState(env)).enabled;
  const productionSource=async(...args)=>{if(!await canRun())throw Error('BACKGROUND_COLLECTION_PAUSED');return services.getFinanceProductionOrders(...args);};
