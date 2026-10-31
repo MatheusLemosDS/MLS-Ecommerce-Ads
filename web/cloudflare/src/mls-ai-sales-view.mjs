@@ -44,8 +44,11 @@ export const MLS_AI_SALES_CSS=String.raw`
 export function mlsAiSalesBody(){return `<section id="ai-sales" class="mls-ai-sales" aria-labelledby="aiSalesTitle" hidden>
 <header class="mls-ai-hero"><div><span class="mls-ai-kicker">MLS COMMERCE OS · CRIATIVOS</span><h2 id="aiSalesTitle">MLS AI Sales</h2><p>Planeje vídeos com os produtos salvos, preserve suas estampas e organize colaborações. Geração local, aprovação humana e fontes explícitas.</p></div><span class="mls-ai-lock">Observador · publicação e convites bloqueados</span></header>
 <div class="mls-ai-stats" aria-label="Trabalho local"><article><small>Variações selecionadas</small><strong id="aiSalesProductCount">0</strong></article><article><small>Imagens reanexadas</small><strong id="aiSalesAssetCount">0</strong></article><article><small>Planos locais</small><strong id="aiSalesCampaignCount">0</strong></article><article><small>Vídeos em revisão</small><strong id="aiSalesVideoCount">0</strong></article></div>
-<p id="aiSalesStatus" class="mls-ai-notice" role="status" aria-live="polite">Os arquivos permanecem no seu dispositivo. Exporte o trabalho para retomá-lo depois.</p>
-<div class="mls-ai-actions"><button type="button" id="aiSalesExportWorkspace" class="mls-ai-button">Salvar trabalho em JSON</button><label class="mls-ai-button">Retomar trabalho<input id="aiSalesImportWorkspace" type="file" accept="application/json,.json"></label></div>
+<p id="aiSalesStatus" class="mls-ai-notice" role="status" aria-live="polite">Salve o rascunho no app ou exporte uma cópia em JSON. Os arquivos de imagem e vídeo permanecem no seu dispositivo.</p>
+<div class="mls-ai-actions"><button type="button" id="aiSalesLoadSaved" class="mls-ai-button" disabled>Carregar trabalho salvo</button><button type="button" id="aiSalesSaveSaved" class="mls-ai-button mls-ai-button-primary" disabled>Salvar no app</button><button type="button" id="aiSalesExportWorkspace" class="mls-ai-button">Exportar cópia em JSON</button><label class="mls-ai-button">Retomar JSON<input id="aiSalesImportWorkspace" type="file" accept="application/json,.json"></label></div>
+<p id="aiSalesSavedStatus" class="mls-ai-notice" role="status" aria-live="polite">Entre na sua conta para consultar o trabalho salvo.</p>
+<label id="aiSalesReplaceLocalLabel" class="mls-ai-check" hidden><input id="aiSalesReplaceLocal" type="checkbox">Ao carregar, substituir o trabalho aberto e liberar suas prévias de arquivos locais.</label>
+<label id="aiSalesReplaceRemoteLabel" class="mls-ai-check" hidden><input id="aiSalesReplaceRemote" type="checkbox">Ao salvar, substituir a versão que já existe no app pelo trabalho aberto.</label>
 <nav class="mls-ai-tabs" role="tablist" aria-label="Áreas do MLS AI Sales">${[['campaigns','Campanhas'],['studio','Estúdio de vídeos'],['affiliates','Afiliados'],['performance','Desempenho'],['integrations','Integrações']].map(([id,label],index)=>'<button type="button" id="aiSalesTab-'+id+'" data-ai-sales-tab="'+id+'" role="tab" aria-selected="'+String(index===0)+'" aria-controls="aiSalesPanel-'+id+'" tabindex="'+(index===0?'0':'-1')+'">'+label+'</button>').join('')}</nav>
 <div id="aiSalesPanel-campaigns" role="tabpanel" aria-labelledby="aiSalesTab-campaigns">
 <div class="mls-ai-layout"><section class="mls-ai-panel"><h3>1. Escolha o produto e a variação</h3><p>O catálogo já salvo é consultado localmente. Preço, estoque e taxas ausentes continuam desconhecidos.</p>
@@ -82,12 +85,13 @@ export const MLS_AI_SALES_CLIENT=String.raw`
  const ratio=(value,scale=100)=>{if(!safe(value))return 'Não informado';const scaled=scale===1000000?(BigInt(value)+5000n)/10000n:BigInt(value);return new Intl.NumberFormat('pt-BR',{maximumFractionDigits:0}).format(scaled/100n)+','+String(scaled%100n).padStart(2,'0')+(scale===1000000?'x':'%');};
  const shortHash=value=>typeof value==='string'?value.slice(0,14)+'…':'Não informado';
  const codeText=error=>typeof error?.code==='string'&&/^[A-Z][A-Z0-9_]{0,79}$/.test(error.code)?error.code:'AI_SALES_LOCAL_OPERATION_FAILED';
- let api=null,active=false,initialized=false,version=0,busy=false,catalog=null,catalogOffset=0,catalogSearch='',variantProduct=null,variantOffset=0,creatorEditing=null,performanceReport=null;
+ let api=null,active=false,initialized=false,version=0,busy=false,catalog=null,catalogOffset=0,catalogSearch='',variantProduct=null,variantOffset=0,creatorEditing=null,performanceReport=null,changeToken=0,savedWorkspace=null;
  const imageFiles=new Map(),imageUrls=new Map(),videoFiles=new Map(),videoUrls=new Map(),videoMetadata=new Map(),campaignProof=new Set();
  let state={schema:'mls_ai_sales_workspace_v1',revision:0,products:[],assets:[],campaigns:[],jobs:[],video_reviews:[],affiliates:core.createAiSalesAffiliateWorkspace(),performance:core.createAiSalesPerformanceLedger(),audit:[],commercial_writes:false};
- const increment=()=>{state.revision++;};
+ const changed=()=>{changeToken++;savedWorkspace?.changed();};
+ const increment=()=>{state.revision++;changed();};
  const button=(text,handler,primary=false)=>{const v=node('button',text,'mls-ai-button'+(primary?' mls-ai-button-primary':''));v.type='button';v.onclick=()=>run(handler);return v;};
- async function run(action){if(!active||busy)return false;const generation=version;busy=true;root.setAttribute('aria-busy','true');try{await action();if(active&&generation===version)render();return active&&generation===version;}catch(error){if(active&&generation===version)notice('Não foi possível concluir esta operação: '+codeText(error)+'. Confira os dados e tente novamente.',true);return false;}finally{busy=false;root.removeAttribute('aria-busy');}}
+ async function run(action){if(!active||busy)return false;const generation=version;busy=true;root.setAttribute('aria-busy','true');try{await action();if(active&&generation===version)render();return active&&generation===version;}catch(error){if(active&&generation===version)notice('Não foi possível concluir esta operação: '+codeText(error)+'. Confira os dados e tente novamente.',true);return false;}finally{if(generation===version){busy=false;root.removeAttribute('aria-busy');}}}
  const ensureSession=generation=>{if(!active||generation!==version)fail('AI_SALES_SESSION_ENDED');};
  function revoke(map,key){const url=map.get(key);if(url)URL.revokeObjectURL(url);map.delete(key);}
  function releaseFiles(){for(const key of imageUrls.keys())revoke(imageUrls,key);for(const key of videoUrls.keys())revoke(videoUrls,key);imageFiles.clear();videoFiles.clear();videoMetadata.clear();}
@@ -106,6 +110,102 @@ export const MLS_AI_SALES_CLIENT=String.raw`
  function renderVariants(){const target=el('Variants');target.replaceChildren();if(!variantProduct)return;target.append(node('h4',variantProduct.product.product_name||'Variações salvas'));for(const p of variantProduct.products){const card=node('article',undefined,'mls-ai-record');card.append(node('h4',productCaption(p)),node('p','SKU: '+(p.sku||'não informado')+' · custo registrado: '+money(p.cost_cents)+' · estoque: '+(p.inventory_units===null?'desconhecido':String(p.inventory_units))));const add=button(state.products.some(v=>v.product_key===p.product_key)?'Variação já selecionada':'Selecionar esta variação',()=>{if(state.products.length>=10)fail('AI_SALES_PRODUCT_LIMIT');if(!state.products.some(v=>v.product_key===p.product_key)){state.products.push(p);increment();notice('Variação vinculada pelo produto e ID exatos.');}});add.disabled=state.products.some(v=>v.product_key===p.product_key);card.append(add);target.append(card);}for(const row of variantProduct.blocked||[])target.append(node('p','Variação '+row.model_id+': '+row.code,'mls-ai-help'));if(!variantProduct.products.length)target.append(node('p','Sem variações elegíveis neste recorte.','mls-ai-empty'));const actions=node('div',undefined,'mls-ai-actions'),pg=variantProduct.pagination,previous=button('Variações anteriores',()=>loadVariants(variantProduct.product.item_id,Math.max(0,variantOffset-(pg?.limit||50)))),next=button('Próximas variações',()=>loadVariants(variantProduct.product.item_id,variantOffset+(pg?.limit||50)));previous.disabled=variantOffset===0;next.disabled=!pg?.more;actions.append(previous,next);target.append(actions);}
  function removeProduct(key){discardCampaigns(state.campaigns.filter(c=>c.product_refs.includes(key)).map(c=>c.campaign_id));state.products=state.products.filter(p=>p.product_key!==key);const removed=state.assets.filter(a=>a.product_key===key);for(const a of removed){revoke(imageUrls,a.asset_id);imageFiles.delete(a.asset_id);}state.assets=state.assets.filter(a=>a.product_key!==key);campaignProof.clear();increment();notice('Variação e planos dependentes retirados do trabalho local.');}
  function renderProducts(){const target=el('Selected');target.replaceChildren();for(const p of state.products){const card=node('article',undefined,'mls-ai-record');card.append(node('h4',productCaption(p)),node('p',p.marketplace+' · loja '+p.shop_ref+' · produto '+p.platform_product_id+' · variação '+(p.variant_ref||'não confirmada')));card.append(dataList([['Custo registrado',money(p.cost_cents)],['Preço',money(p.price_cents)],['Estoque',p.inventory_units===null?'Desconhecido':String(p.inventory_units)],['Peças por unidade vendida',p.piece_count===null?'A confirmar':String(p.piece_count)]]));if(p.piece_count===null){const label=node('label','Quantas peças compõem uma unidade vendida?'),input=node('input');input.type='number';input.min='1';input.max='20';input.step='1';label.append(input);const confirm=node('label',undefined,'mls-ai-check'),check=node('input');check.type='checkbox';confirm.append(check,document.createTextNode('Confiro esta composição da variação. Ela ficará registrada como declaração local.'));card.append(label,confirm,button('Confirmar composição local',()=>{const quantity=Number(input.value);if(!check.checked||!Number.isInteger(quantity)||quantity<1||quantity>20)fail('AI_SALES_COMPOSITION_CONFIRMATION_REQUIRED');const next=core.validateAiSalesProductSnapshot({...copy(p),piece_count:quantity,components:Array.from({length:quantity},(_,index)=>({component_ref:'operator-piece-'+(index+1),size:null,quantity:1,art_ref:null})),observations:[...p.observations.filter(row=>row.field!=='piece_count'),{field:'piece_count',evidence:{source:'OPERATOR_DECLARED',reference:'local-composition-'+uuid(),observed_at:epoch(),status:'DECLARED',marketplace:p.marketplace,shop_ref:p.shop_ref,currency:p.currency,basis:'SELLING_UNIT'}}]});revokeVideoApprovals(p.product_key);state.products=state.products.map(row=>row.product_key===p.product_key?next:row);campaignProof.clear();increment();notice('Composição declarada para planejamento local; não altera o catálogo ou custo da loja.');}));}card.append(button('Retirar do planejamento',()=>removeProduct(p.product_key)));target.append(card);}if(!state.products.length)empty(target,'Nenhuma variação selecionada. Escolha uma variação exata no catálogo.');const options=state.products.map(p=>[p.product_key,productCaption(p)]);selectOptions(el('AssetProduct'),options);selectOptions(el('ProposalProduct'),options);renderAssetCoverage();}
+ /*__MLS_AI_SALES_PERSISTENCE_START__*/
+ function createWorkspacePersistence(options){
+  const integer=value=>Number.isSafeInteger(value)&&!Object.is(value,-0)&&value>=0;
+  const plain=value=>value!==null&&typeof value==='object'&&!Array.isArray(value)&&Object.getPrototypeOf(value)===Object.prototype;
+  const sameKeys=(value,keys)=>plain(value)&&Reflect.ownKeys(value).length===keys.length&&keys.every(key=>Object.hasOwn(Object.getOwnPropertyDescriptor(value,key)||{},'value'));
+  const clone=value=>{
+   let nodes=0;const ancestors=new Set();
+   const walk=(current,depth)=>{
+    if(++nodes>250000||depth>64)fail();
+    if(current===null||typeof current==='boolean')return current;
+    if(typeof current==='string'){if(current.length>1048576)fail();return current;}
+    if(typeof current==='number'){if(!Number.isFinite(current)||Object.is(current,-0))fail();return current;}
+    if(typeof current!=='object'||ancestors.has(current))fail();
+    const array=Array.isArray(current);if(array?Object.getPrototypeOf(current)!==Array.prototype:!plain(current))fail();
+    const keys=Reflect.ownKeys(current);if(keys.length>250000)fail();
+    ancestors.add(current);let output;
+    if(array){
+     const length=Object.getOwnPropertyDescriptor(current,'length');if(!length||!Object.hasOwn(length,'value')||!integer(length.value)||length.value>250000||keys.length!==length.value+1)fail();
+     output=[];for(let index=0;index<length.value;index++){const descriptor=Object.getOwnPropertyDescriptor(current,String(index));if(!descriptor||!Object.hasOwn(descriptor,'value')||!descriptor.enumerable)fail();output.push(walk(descriptor.value,depth+1));}
+    }else{
+     output={};for(const key of keys){const descriptor=typeof key==='string'?Object.getOwnPropertyDescriptor(current,key):null;if(!descriptor||!Object.hasOwn(descriptor,'value')||!descriptor.enumerable||key.length>1048576)fail();Object.defineProperty(output,key,{value:walk(descriptor.value,depth+1),enumerable:true,writable:true,configurable:true});}
+    }
+    ancestors.delete(current);return output;
+   };
+   return walk(value,0);
+  };
+  let started=false,session=0,pending=false,revision=null,updatedAt=null,loaded=false,remoteExists=false,conflict=false,unavailable=false,dirty=false,message='',error=false;
+  const offline=()=>options.isOffline()===true;
+  const snapshot=()=>({active:started,pending,revision,updated_at:updatedAt,loaded,remote_exists:remoteExists,conflict,unavailable:unavailable||offline(),dirty,message,error});
+  const publish=(text=message,failed=error)=>{message=text;error=failed;options.onStatus(snapshot());};
+  const current=generation=>started&&session===generation;
+  const unchanged=(generation,token)=>current(generation)&&options.getChangeToken()===token;
+  const fail=()=>{throw Object.assign(Error('AI_SALES_SAVED_RESPONSE_INVALID'),{code:'AI_SALES_SAVED_RESPONSE_INVALID'});};
+  async function checked(raw){
+   if(!sameKeys(raw,['schema','revision','updated_at','workspace','commercial_writes'])||raw.schema!=='mls_ai_sales_saved_workspace_v1'||!integer(raw.revision)||raw.revision>2147483647||raw.commercial_writes!==false)fail();
+   if(raw.revision===0?(raw.updated_at!==null||raw.workspace!==null):(!integer(raw.updated_at)||raw.updated_at<1||raw.updated_at>options.now()+60||!plain(raw.workspace)))fail();
+   const copy=clone(raw.workspace);if(new TextEncoder().encode(JSON.stringify(copy)).length>1048576)fail();
+   const workspace=copy===null?null:await options.validateWorkspace(copy,options.now());
+   return {revision:raw.revision,updated_at:raw.updated_at,workspace};
+  }
+  function handleError(failure,generation){
+   if(!current(generation))return;
+   const status=failure?.status,code=failure?.apiCode||failure?.code;
+   if(status===409||code==='AI_SALES_WORKSPACE_CONFLICT'){
+    conflict=true;loaded=false;publish('O trabalho salvo mudou em outra sessão. Exporte uma cópia do rascunho aberto e carregue a versão atual antes de salvar novamente.',true);
+   }else if([401,403].includes(status)){
+    unavailable=true;publish('Sua sessão não permite acessar o trabalho salvo. Entre novamente; o rascunho aberto foi preservado.',true);
+   }else if([404,405].includes(status)||code==='OFFLINE_PREVIEW_READ_ONLY'){
+    unavailable=true;publish('Salvar no app não está disponível nesta prévia. Exporte o trabalho em JSON para preservá-lo.',true);
+   }else if(status===413||code==='AI_SALES_WORKSPACE_TOO_LARGE')publish('O trabalho excede o limite de armazenamento. Exporte uma cópia em JSON e reduza o conteúdo antes de salvar.',true);
+   else publish('Não foi possível conferir o trabalho salvo agora. Seu rascunho e arquivos locais foram preservados; tente novamente.',true);
+  }
+  const available=()=>started&&!pending&&!unavailable&&!offline();
+  async function load({replaceLocal=false}={}){
+   if(!available())return false;
+   if(options.hasLocalWork()&&!replaceLocal){publish('Confirme a substituição do trabalho aberto antes de carregar. Você pode exportar uma cópia em JSON para preservá-lo.',true);return false;}
+   const generation=session,token=options.getChangeToken();pending=true;publish('Consultando o trabalho salvo no app...',false);
+   try{
+    const value=await checked(await options.request());
+    if(!current(generation))return false;
+    if(!unchanged(generation,token)){publish('O trabalho foi editado durante a consulta. Nenhum rascunho ou arquivo foi substituído. Carregue novamente se desejar.',true);return false;}
+    if(value.workspace!==null)options.restore(value.workspace);
+    revision=value.revision;updatedAt=value.updated_at;remoteExists=value.workspace!==null;loaded=true;conflict=false;dirty=value.workspace===null&&options.hasLocalWork();
+    publish(value.workspace===null?'Ainda não há trabalho salvo no app. O rascunho aberto foi preservado.':'Trabalho salvo carregado. Reanexe os arquivos originais e confira os planos; aprovações anteriores não foram retomadas.',false);
+    return true;
+   }catch(failure){handleError(failure,generation);return false;}
+   finally{if(current(generation)){pending=false;publish();}}
+  }
+  async function save({replaceRemote=false}={}){
+   if(!available()||conflict)return false;
+   const generation=session,token=options.getChangeToken(),workspace=clone(options.getSnapshot());pending=true;publish('Salvando o rascunho no app...',false);
+   try{
+    if(revision===null){
+     const value=await checked(await options.request());
+     if(!current(generation))return false;
+     if(!unchanged(generation,token)){publish('O trabalho mudou durante a consulta. Nada foi enviado para salvar. Tente novamente com o rascunho atual.',true);return false;}
+     revision=value.revision;updatedAt=value.updated_at;remoteExists=value.workspace!==null;loaded=value.workspace===null;
+    }
+    if(remoteExists&&!loaded&&!replaceRemote){publish('Já existe um trabalho salvo no app. Carregue-o ou confirme a substituição pela versão aberta antes de salvar.',true);return false;}
+    const expected=revision,lastUpdated=updatedAt,value=await checked(await options.request({revision:expected,workspace}));
+    if(!current(generation))return false;
+    if(value.workspace===null||value.revision<Math.max(1,expected)||lastUpdated!==null&&value.updated_at<lastUpdated)fail();
+    revision=value.revision;updatedAt=value.updated_at;remoteExists=true;loaded=true;conflict=false;dirty=options.getChangeToken()!==token;
+    publish(dirty?'A versão enviada foi salva. Há alterações posteriores no trabalho aberto; salve-as quando terminar.':'Rascunho salvo no app. Imagens e vídeos continuam locais; ao retomar, reanexe-os e confira as aprovações.',false);
+    return true;
+   }catch(failure){handleError(failure,generation);return false;}
+   finally{if(current(generation)){pending=false;publish();}}
+  }
+  return Object.freeze({
+   start(){session++;started=true;pending=false;revision=null;updatedAt=null;loaded=false;remoteExists=false;conflict=false;unavailable=false;dirty=options.hasLocalWork();publish(offline()?'Esta prévia usa apenas leituras salvas. Exporte uma cópia em JSON para retomar seu trabalho.':'Carregue o trabalho salvo ou salve um novo rascunho no app.',false);},
+   stop(){session++;started=false;pending=false;revision=null;updatedAt=null;loaded=false;remoteExists=false;conflict=false;unavailable=false;dirty=false;publish('Sessão encerrada. O trabalho salvo no app permanece disponível para a próxima entrada.',false);},
+   changed(){dirty=true;if(!conflict&&!unavailable)publish('Há alterações no trabalho aberto que ainda não foram salvas no app.',false);else publish();},
+   load,save,getSnapshot:snapshot
+  });
+ }
+ /*__MLS_AI_SALES_PERSISTENCE_END__*/
  /*__MLS_AI_SALES_UI_VALIDATORS_START__*/
  const hashValue=value=>typeof value==='string'&&/^[a-f0-9]{64}$/.test(value);
  const boundedText=(value,max)=>typeof value==='string'&&value.length>0&&value.length<=max&&!/[\u0000-\u001f\u007f]/.test(value);
@@ -227,17 +327,38 @@ export const MLS_AI_SALES_CLIENT=String.raw`
  async function draftProposal(){const generation=version,product=selectedProduct(el('ProposalProduct').value),rate=el('ProposalRate').value.trim(),creatorKey=el('ProposalCreator').value;if(!product||!creatorKey)fail('AI_SALES_PROPOSAL_SELECTION_REQUIRED');const creator_ref=selectScopedCreator(state.affiliates.creators,creatorKey,product).internal_creator_id;if(rate&&!/^\d{1,3}(?:[.,]\d{1,2})?$/.test(rate))fail('AI_SALES_COMMISSION_RATE_INVALID');const commission_rate_bps=rate?Number(rate.replace(',','.').split('.')[0])*100+Number((rate.replace(',','.').split('.')[1]||'').padEnd(2,'0')):null;if(commission_rate_bps!==null&&(!safe(commission_rate_bps)||commission_rate_bps>10000))fail('AI_SALES_COMMISSION_RATE_INVALID');const at=epoch(),commission_evidence=commission_rate_bps===null?null:{source:'OPERATOR_DECLARED',reference:'proposal-'+uuid(),observed_at:at,status:'DECLARED',marketplace:product.marketplace,shop_ref:product.shop_ref,currency:product.currency,basis:'PROPOSED_COMMISSION'};const next=await core.draftAiSalesAffiliateProposal(state.affiliates,{plan_id:'proposal-'+uuid(),creator_ref,product,commission_rate_bps,commission_evidence,extra_cost_cents:null,extra_cost_evidence:null,returns_evidence:null,at});ensureSession(generation);state.affiliates=next;increment();notice('Proposta local registrada. Verifique os bloqueios econômicos; nenhum convite foi enviado.');}
  function renderProposals(){const host=el('Proposals');host.replaceChildren();for(const entry of state.affiliates.plans){const c=entry.collaboration,card=node('article',undefined,'mls-ai-record');card.append(node('h4',c.plan_id),node('p',c.product_ref),node('p','Estado local: '+c.status+' · comissão proposta: '+(c.commission_rate_bps===null?'não informada':ratio(c.commission_rate_bps))),node('p','Contribuição do gate: '+money(entry.gate.contribution_cents)+' · '+(entry.gate.blocked_reasons.join(' · ')||'Revisão econômica disponível')));const approve=button('Revalidar e aprovar o rascunho',async()=>{const generation=version,product=selectedProduct(c.product_ref);if(!product)fail('AI_SALES_PROPOSAL_PRODUCT_NOT_FOUND');const next=await core.approveAiSalesAffiliateProposal(state.affiliates,{plan_id:c.plan_id,product,approval_id:'approval-'+uuid(),at:epoch()});ensureSession(generation);state.affiliates=next;increment();notice('Aprovação local registrada; não é autorização de API e nenhum convite foi enviado.');});approve.disabled=entry.gate.status!=='READY';card.append(approve,button('Exportar proposta para revisão manual',()=>download(JSON.stringify({schema:'mls_ai_sales_manual_collaboration_package_v1',entry,commercial_writes:false},null,2)+'\n',c.plan_id+'.json')));host.append(card);}if(!state.affiliates.plans.length)empty(host,'Crie uma proposta local para um criador e uma variação. A comissão não será alterada na loja.');}
  function renderPerformance(){const host=el('PerformanceReport');host.replaceChildren();if(!performanceReport){empty(host,state.performance.records.length+' registro(s) no ledger. Selecione a fonte, loja e período para conferir.');return;}host.append(node('p','Observações declaradas · mesma fonte/loja/moeda/período · '+performanceReport.groups.length+' grupo(s). Pedidos e métricas são mostrados separadamente.'));for(const group of performanceReport.groups){const card=node('article',undefined,'mls-ai-record');card.append(node('h4',group.campaign_ref+' · '+(group.creative_ref||'Sem criativo')+' · '+group.kind),node('p',group.product_ref),node('p',group.state+' · fonte declarada, sem conexão de API comprovada'));card.append(dataList([['Vendas declaradas',money(group.observed?.sales_cents,performanceReport.scope.currency)],['Gasto atribuído',money(group.observed?.attributable_ad_spend_cents,performanceReport.scope.currency)],['CTR observado',ratio(group.ctr_bps)],['Conversão observada',ratio(group.conversion_bps)],['ROAS declarado',ratio(group.roas_micros,1000000)],['Contribuição estimada',money(group.contribution_estimate_cents,performanceReport.scope.currency)],['Pedidos cancelados',group.cancelled_orders===null?'Não informado':String(group.cancelled_orders)],['Lucro líquido bancário','Não confirmado']]));if(group.pending.length)card.append(node('p','Pendências: '+group.pending.join(' · ')));card.append(node('p','Limites: '+group.warnings.join(' · ')));host.append(card);}if(!performanceReport.groups.length)empty(host,'Nenhum registro compatível com esta fonte, loja, moeda e período.');if(performanceReport.pending.length)host.append(node('p','Seleção: '+performanceReport.pending.join(' · ')));for(const advice of performanceReport.recommendations){const card=node('article',undefined,'mls-ai-record');card.append(node('h4','Hermes · '+advice.code),node('p',advice.reason_codes.join(' · ')),node('p','Fonte: '+performanceReport.scope.source+' · '+advice.evidence.campaign_ref+' · '+advice.evidence.period.start_date+' a '+advice.evidence.period.end_date));host.append(card);}for(const comparison of performanceReport.comparisons){const card=node('article',undefined,'mls-ai-record');card.append(node('h4','Comparação observada · '+comparison.creative_ref+' / '+comparison.baseline_creative_ref),node('p','Diferença de contribuição declarada: '+money(comparison.contribution_delta_cents,performanceReport.scope.currency)),node('p','Comparação descritiva; não comprova efeito causal ou vencedor.'));host.append(card);}}
- function renderCapabilities(){const host=el('Capabilities');host.replaceChildren();for(const [marketplace,shop_ref] of [['SHOPEE_BR','primary-shopee'],['TIKTOK_SHOP_BR','primary-tiktok']]){const report=core.auditAiSalesCapabilities({marketplace,shop_ref,evidence:[],at:epoch()}),card=node('article',undefined,'mls-ai-record');card.append(node('h4',marketplace+' · '+shop_ref),node('p','Conexão do provedor: não verificada neste módulo.'));for(const capability of report.capabilities)card.append(node('p',capability.capability+': '+(capability.grant_status==='UNKNOWN'?'permissão desconhecida':capability.grant_status)));card.append(node('p','Escritas comerciais: bloqueadas.'));host.append(card);}}
- function render(){renderCatalog();renderVariants();renderProducts();renderAssets();renderCampaigns();renderJobs();renderReviews();renderCreators();renderProposals();renderPerformance();renderCapabilities();el('ProductCount').textContent=String(state.products.length);el('AssetCount').textContent=String(imageFiles.size);el('CampaignCount').textContent=String(state.campaigns.length);el('VideoCount').textContent=String(state.video_reviews.filter(v=>v.decision==='PENDING').length);}
+ function renderCapabilities(){const host=el('Capabilities');host.replaceChildren();const local=node('article',undefined,'mls-ai-record');local.append(node('h4','Dados e trabalho dentro do MLS'),node('p',catalog?'Catálogo salvo consultado nesta sessão. A leitura interna não comprova novas permissões na Shopee.':'O catálogo salvo pode ser consultado na aba Campanhas; nenhuma leitura foi feita nesta sessão.'),node('p','Os roteiros disponíveis usam templates locais. O vídeo é renderizado pelo CLI com FFmpeg; nenhum render remoto ou LLM está conectado aqui.'),node('p','Salvar no app guarda o rascunho. As imagens e os vídeos originais continuam no seu dispositivo.'));host.append(local);for(const [marketplace,shop_ref] of [['SHOPEE_BR','primary-shopee'],['TIKTOK_SHOP_BR','primary-tiktok']]){const report=core.auditAiSalesCapabilities({marketplace,shop_ref,evidence:[],at:epoch()}),card=node('article',undefined,'mls-ai-record');card.append(node('h4',marketplace+' · '+shop_ref),node('p','Permissões externas de afiliados, criadores e publicação: não comprovadas neste módulo.'));for(const capability of report.capabilities)card.append(node('p',capability.capability+': '+(capability.grant_status==='UNKNOWN'?'permissão desconhecida':capability.grant_status)));card.append(node('p','Escritas comerciais: bloqueadas.'));host.append(card);}}
+ function hasLocalWork(){return imageFiles.size>0||videoFiles.size>0||['products','assets','campaigns','jobs','video_reviews','audit'].some(key=>state[key].length>0)||state.affiliates.creators.length>0||state.affiliates.plans.length>0||state.performance.records.length>0;}
+ function drawSavedState(value=savedWorkspace?.getSnapshot()){
+  if(!value)return;const locked=!value.active||value.pending||value.unavailable;
+  el('LoadSaved').disabled=locked;el('SaveSaved').disabled=locked||value.conflict;
+  const prefix=value.revision===null?'':value.revision===0?'Nenhuma versão salva. ':'Revisão '+value.revision+(value.updated_at===null?'':' · '+new Date(value.updated_at*1000).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'}))+' · ';
+  el('SavedStatus').textContent=prefix+value.message;el('SavedStatus').dataset.error=String(value.error);
+  el('ReplaceLocalLabel').hidden=!value.active||!hasLocalWork();
+  el('ReplaceRemoteLabel').hidden=!value.active||!value.remote_exists||value.loaded||value.conflict;
+  if(el('ReplaceLocalLabel').hidden)el('ReplaceLocal').checked=false;
+  if(el('ReplaceRemoteLabel').hidden)el('ReplaceRemote').checked=false;
+ }
+ function render(){renderCatalog();renderVariants();renderProducts();renderAssets();renderCampaigns();renderJobs();renderReviews();renderCreators();renderProposals();renderPerformance();renderCapabilities();drawSavedState();el('ProductCount').textContent=String(state.products.length);el('AssetCount').textContent=String(imageFiles.size);el('CampaignCount').textContent=String(state.campaigns.length);el('VideoCount').textContent=String(state.video_reviews.filter(v=>v.decision==='PENDING').length);}
  async function importProducts(file){const generation=version,value=JSON.parse(await fileText(file)),rows=Array.isArray(value)?value:[value];if(rows.length<1||state.products.length+rows.length>10)fail('AI_SALES_PRODUCT_LIMIT');const products=rows.map(p=>core.importAiSalesManualProduct(p,{at:epoch()}));if(new Set([...state.products,...products].map(p=>p.product_key)).size!==state.products.length+products.length)fail('AI_SALES_PRODUCT_DUPLICATE');ensureSession(generation);state.products.push(...products);campaignProof.clear();increment();el('ImportProducts').value='';notice('Ficha(s) importada(s) como declaração local. Preços, estoque e custos não foram confirmados pelo provedor.');}
+ savedWorkspace=createWorkspacePersistence({
+  request:body=>{if(!api)fail('AI_SALES_SESSION_NOT_READY');return api('ai-sales/workspace',body,{timeoutMs:body===undefined?15000:30000});},
+  getSnapshot:()=>state,getChangeToken:()=>changeToken,hasLocalWork,
+  validateWorkspace,now:epoch,isOffline:()=>globalThis.__mlsOfflineReview?.backend_mode==='READ_ONLY_SNAPSHOT',
+  restore:next=>{releaseFiles();campaignProof.clear();state=next;changeToken++;catalog=null;variantProduct=null;performanceReport=null;creatorEditing=null;},
+  onStatus:drawSavedState
+ });
  function bind(){
   if(initialized)return;initialized=true;
+  for(const event of ['input','change'])root.addEventListener(event,value=>{if(!['aiSalesReplaceLocal','aiSalesReplaceRemote'].includes(value.target?.id))changeToken++;});
   for(const tab of root.querySelectorAll('[data-ai-sales-tab]')){tab.onclick=()=>chooseTab(tab.dataset.aiSalesTab);tab.onkeydown=event=>{const keys=['ArrowLeft','ArrowRight','Home','End'];if(!keys.includes(event.key))return;event.preventDefault();const tabs=[...root.querySelectorAll('[data-ai-sales-tab]')],index=tabs.indexOf(tab),next=event.key==='Home'?0:event.key==='End'?tabs.length-1:(index+(event.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length;chooseTab(tabs[next].dataset.aiSalesTab);tabs[next].focus();};}
   el('CatalogForm').onsubmit=event=>{event.preventDefault();run(()=>{catalogSearch=el('CatalogSearch').value.trim();return loadCatalog(0);});};el('CatalogPrevious').onclick=()=>run(()=>loadCatalog(Math.max(0,catalogOffset-20)));el('CatalogNext').onclick=()=>run(()=>loadCatalog(catalogOffset+20));
   el('AssetProduct').onchange=()=>{el('AssetCoverage').replaceChildren();renderAssetCoverage();};el('AssetRole').onchange=renderAssetCoverage;el('AssetFiles').onchange=()=>run(()=>attachImages([...el('AssetFiles').files]));el('ImportProducts').onchange=()=>run(()=>importProducts(el('ImportProducts').files[0]));
   el('Plan').onclick=()=>run(planCampaigns);el('VideoManifest').onchange=()=>run(()=>importManifest(el('VideoManifest').files[0]));
   el('ExportWorkspace').onclick=()=>run(()=>{download(JSON.stringify(state,null,2)+'\n','mls-ai-sales-trabalho.json');notice('Trabalho exportado sem bytes de imagem ou vídeo. Reanexe os originais ao retomar.');});
-  el('ImportWorkspace').onchange=()=>run(async()=>{const generation=version,next=await validateWorkspace(JSON.parse(await fileText(el('ImportWorkspace').files[0])),epoch());ensureSession(generation);releaseFiles();campaignProof.clear();state=next;catalog=null;variantProduct=null;performanceReport=null;creatorEditing=null;el('ImportWorkspace').value='';notice('Trabalho retomado como declaração local, sem arquivos nem aprovações anteriores. Reanexe as mídias e replaneje antes de gerar novos vídeos.');});
+  el('LoadSaved').onclick=()=>run(async()=>{if(await savedWorkspace.load({replaceLocal:el('ReplaceLocal').checked}))el('ReplaceLocal').checked=false;});
+  el('SaveSaved').onclick=()=>run(async()=>{if(await savedWorkspace.save({replaceRemote:el('ReplaceRemote').checked}))el('ReplaceRemote').checked=false;});
+  el('ImportWorkspace').onchange=()=>run(async()=>{const generation=version,next=await validateWorkspace(JSON.parse(await fileText(el('ImportWorkspace').files[0])),epoch());ensureSession(generation);releaseFiles();campaignProof.clear();state=next;catalog=null;variantProduct=null;performanceReport=null;creatorEditing=null;changed();el('ImportWorkspace').value='';notice('Trabalho retomado como declaração local, sem arquivos nem aprovações anteriores. Reanexe as mídias e replaneje antes de gerar novos vídeos.');});
   el('CreatorForm').onsubmit=event=>{event.preventDefault();run(saveCreator);};el('CreatorCancel').onclick=()=>run(resetCreator);el('CreatorExport').onclick=()=>run(()=>download(core.exportAiSalesAffiliateCreators(state.affiliates,{format:'csv'}),'mls-criadores.csv','text/csv;charset=utf-8'));
   el('CreatorImport').onchange=()=>run(async()=>{const generation=version,file=el('CreatorImport').files[0],text=await fileText(file),format=/\.csv$/i.test(file.name)?'csv':'json',next=core.importAiSalesAffiliateCreators(state.affiliates,text,{format,imported_at:epoch()});ensureSession(generation);state.affiliates=next;increment();el('CreatorImport').value='';notice('Criadores importados como registros manuais, sem grants de API ou aprovações herdadas.');});
   el('ProposalForm').onsubmit=event=>{event.preventDefault();run(draftProposal);};
@@ -249,9 +370,9 @@ export const MLS_AI_SALES_CLIENT=String.raw`
  // Prevent native form navigation even before an authenticated start.
  bind();
  globalThis.mlsAiSalesWorkspace=Object.freeze({
-  start({api:nextApi}={}){if(typeof nextApi!=='function')return false;api=nextApi;active=true;bind();render();return true;},
+  start({api:nextApi}={}){if(typeof nextApi!=='function')return false;const fresh=!active||api!==nextApi;if(fresh){version++;busy=false;root.removeAttribute('aria-busy');}api=nextApi;active=true;if(fresh)savedWorkspace.start();bind();render();return true;},
   open(){if(!active)return false;render();return true;},
-  stop(){active=false;version++;api=null;releaseFiles();campaignProof.clear();catalog=null;variantProduct=null;performanceReport=null;creatorEditing=null;state={schema:'mls_ai_sales_workspace_v1',revision:0,products:[],assets:[],campaigns:[],jobs:[],video_reviews:[],affiliates:core.createAiSalesAffiliateWorkspace(),performance:core.createAiSalesPerformanceLedger(),audit:[],commercial_writes:false};for(const id of ['Catalog','Variants','Selected','Assets','Campaigns','Jobs','VideoReviews','Creators','Proposals','PerformanceReport','Capabilities'])el(id).replaceChildren();for(const id of ['ProductCount','AssetCount','CampaignCount','VideoCount'])el(id).textContent='0';notice('Sessão encerrada. Os arquivos locais foram liberados.');return true;},
+  stop(){active=false;version++;changeToken++;busy=false;root.removeAttribute('aria-busy');api=null;releaseFiles();campaignProof.clear();catalog=null;variantProduct=null;performanceReport=null;creatorEditing=null;state={schema:'mls_ai_sales_workspace_v1',revision:0,products:[],assets:[],campaigns:[],jobs:[],video_reviews:[],affiliates:core.createAiSalesAffiliateWorkspace(),performance:core.createAiSalesPerformanceLedger(),audit:[],commercial_writes:false};savedWorkspace.stop();for(const id of ['Catalog','Variants','Selected','Assets','Campaigns','Jobs','VideoReviews','Creators','Proposals','PerformanceReport','Capabilities'])el(id).replaceChildren();for(const id of ['ProductCount','AssetCount','CampaignCount','VideoCount'])el(id).textContent='0';notice('Sessão encerrada. Os arquivos locais foram liberados.');return true;},
   getSnapshot(){return copy(state);}
  });
 })();

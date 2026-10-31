@@ -144,6 +144,8 @@ export const TARGETS = Object.freeze({
     '9e704d09411fa5a9db9cb6d1c2721314db6ffda92ab5edfc97b724329929a08a',
     // Local AI Sales owner preview and SKU/pricing observer integration, no deployment.
     'a5ba3298faf4b8c2eaa32e98674f1d7408f4c4616236d8f04a2fba72bbfb91c8',
+    // Reviewed Live integration, durable owner drafts and PR85 cancellation refresh.
+    'eea2f01c997b9e8012160862929abab8407a81dda44215c5aea8b2b9ef3a2ef6',
   ]}),
   auth: Object.freeze({name: 'brazacommerce-auth', main: '../../dist/auth-worker.mjs', baselineHashes: [
     '45d0142709c5087e373cc4da146070ed39c472805f6f64c00f00b6555f0e1f56',

@@ -1,6 +1,50 @@
 # Execução da missão MLS Commerce OS + AI Sales — 30/10/2026
 
-A autorização atual permite desenvolvimento, testes, commits e PRs DRAFT. Proíbe merge em main, deploy, escrita comercial, gastos e alteração de OAuth. Substitui permissões de publicação de etapas anteriores.
+## Autorização e execução atuais — versão Live
+
+O pedido mais recente do proprietário autoriza implementar todas as melhorias
+preparadas na versão Live e continuar o roadmap por incrementos validados,
+preservando a versão ativa. A restrição original de somente desenvolvimento/PR
+DRAFT foi substituída para **merge e publicação da aplicação**. Escritas
+comerciais, gastos e alterações OAuth continuam bloqueados; autorização de
+deploy não equivale a autorização de campanha, postagem ou movimentação.
+
+Branch atual: `release/live-roadmap-improvements-20261030`. Base oficial
+`2ab4c9d8baa3c25e5816bcca14b4a0973ea73d5a`, com a PR #85 já publicada. O commit
+`b17df54` reconcilia as melhorias preparadas até `4c149a7` com essa base, sem
+descartar a correção de cancelamentos. A persistência do workspace AI Sales e
+a validação final do novo candidato estão em andamento. Este registro não
+declara que o novo pacote já está publicado.
+
+O acesso seguro à API Cloudflare está verificado, e a PR #85 confirmou bytes,
+configurações, bindings e cron oficiais. Os relatos abaixo de falta de acesso
+descrevem a criação da prévia e não são mais o bloqueio atual. A prévia sintética
+da PR #84 foi preservada; não existe aprovação humana de mídia ou sessão real
+do proprietário comprovada pelos testes automatizados.
+
+As entregas preparadas abrangem visual e gráficos, V3.6, catálogo/custos,
+Products/Pricing observador, DTF, Listing Factory, contexto coerente do Hermes e
+AI Sales com campanhas, estúdio local, afiliados assistidos, desempenho e
+integrações. O novo armazenamento persistente deve respeitar owner/loja, CSRF,
+revisão concorrente e revalidação de mídia/aprovações, sem armazenar bytes ou
+credenciais no workspace. Estado de implementação: **IN_PROGRESS** até os
+testes e o congelamento do release.
+
+Permanecem externos: conciliação M2/Seller Centre/banco; provedor e orçamento
+para LLM/voz neural; direitos e arquivos reais de mídia; grants oficiais
+Shopee/TikTok de afiliados e publicação. FFmpeg executa fora do Worker; o render
+local funcional não deve ser apresentado como serviço de render em nuvem.
+M3–M9 não estão integralmente encerradas.
+
+Resultados, hashes, versões e conferência Live serão registrados em
+[MLS_LIVE_ROADMAP_RELEASE_2026_10_30.md](MLS_LIVE_ROADMAP_RELEASE_2026_10_30.md).
+
+## Histórico da missão antes da autorização Live
+
+A autorização original permitia desenvolvimento, testes, commits e PRs DRAFT.
+Naquele momento proibia merge em main e deploy. Essas duas restrições foram
+substituídas pelo pedido Live acima; a proibição de escrita comercial, gastos e
+alteração de OAuth permanece aplicável.
 
 ## Base e recuperação
 
@@ -9,7 +53,7 @@ A autorização atual permite desenvolvimento, testes, commits e PRs DRAFT. Pro�
 - Documentos canônicos e PRs #76/#79/#81, issues #50/#80/#82 consultados. PR #78 rejeitada não é base.
 - `npm ci --cache=/tmp/mls-commerce-npm-cache --no-audit --no-fund` aprovado. A primeira tentativa encontrou cache padrão fora do diretório gravável; nenhuma dependência foi alterada.
 
-## Inventário observado
+## Inventário observado na preparação
 
 Finance/Returns, liberações, Pending e coleta em segundo plano estão implementados; seu aceite financeiro M2 continua bloqueado pela comparação real no Seller Centre. Catálogo/custos e DTF têm persistência e testes. Listing Factory suporta planejamento, importação/exportação JSON e reanexação local de imagens; não publica. Busca V3.6 permanece owner-only e OFF. Pricing Observer da PR #47 requer reconciliação consciente, sem liberar preços comerciais. TikTok/afiliados não têm grants comprovados.
 
@@ -51,14 +95,14 @@ A composição é implementada com HTML/SVG/CSS editáveis, usando o PNG apenas 
 - PR de integração DRAFT [#83](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/83), base PR79; commits de implementação `f513dca` e `54b87e5`. CI do HEAD rastreada nos checks da PR; nenhuma mesclagem ou implantação executada.
 
 
-## Homologação local solicitada pelo proprietário
+## Homologação local solicitada pelo proprietário — histórico
 
-Em 30/10/2026, o proprietário pediu para ver o sistema funcionando e informou que não existe URL de homologação. Foi criada a branch `feature/mls-owner-homologation-preview-20261030`, baseada na PR #83, sem alterar o Worker App/Auth/Finance. O ambiente não está autenticado na Cloudflare; nenhuma URL pública, conta ou banco remoto foi criado.
+Em 30/10/2026, o proprietário pediu para ver o sistema funcionando e informou que não existia URL de homologação. Foi criada a branch `feature/mls-owner-homologation-preview-20261030`, baseada na PR #83, sem alterar o Worker App/Auth/Finance. Na criação dessa prévia o ambiente ainda não estava autenticado na Cloudflare; nenhuma URL pública, conta ou banco remoto foi criado por essa etapa. O acesso API atual está verificado, conforme o estado Live acima.
 
 O servidor local executa o Worker real em VM sem tráfego externo e SQLite com catálogo sintético. Login, cookies Secure, CSRF, custo salvo e recálculo das variações foram testados por HTTP real, sem mocks de API. O exportador produz HTML autossuficiente com snapshots somente leitura e funções locais do AI Sales. A política do navegador bloqueia `file://`; o mesmo artefato foi testado por HTTP estático, sem alterar a política.
 
 Validação final: **2327 Node/67 Python, zero falha/skip**, três builds com os mesmos hashes da PR #83. Três casos Chromium cobrem 16 painéis, cinco abas AI Sales, dois tamanhos/temas, 74 capturas, recálculo adulto/infantil/kit e campanha criada na interface → CLI → render MP4 → reanexação → aprovação local. O clique sintético não constitui aprovação visual/auditiva humana. O pacote contém exemplos próprios e três MP4s; não contém dados da loja nem autoriza publicação.
 
-Guia: `docs/MLS_OWNER_HOMOLOGATION_2026_10_30.md`. Estado: `docs/MLS_OWNER_PREVIEW_CHECKPOINT.json`. Evidências: `docs/qa/mls-owner-preview-2026-10-30/README.md`. A próxima dependência externa é acesso seguro à Cloudflare para preparar uma homologação online isolada. M2/Seller Centre/banco e autorização posterior para merge/deploy em produção permanecem pendentes.
+Guia: `docs/MLS_OWNER_HOMOLOGATION_2026_10_30.md`. Estado: `docs/MLS_OWNER_PREVIEW_CHECKPOINT.json`. Evidências: `docs/qa/mls-owner-preview-2026-10-30/README.md`. Nesse corte o acesso seguro à Cloudflare e a autorização de merge/deploy eram pendências, hoje substituídas pelo acesso API verificado e pela instrução Live. M2/Seller Centre/banco continua pendente.
 
 PR da prévia DRAFT [#84](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/84), base PR83, implementação `1574f9e`. CI do HEAD registrada nos checks da PR. Código da aplicação permanece no hash a5ba; somente ferramentas de homologação, testes e documentação foram adicionados.

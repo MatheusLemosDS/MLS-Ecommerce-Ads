@@ -34,6 +34,13 @@ validados na versão oficial; criar ambiente separado apenas quando necessário.
 Preservar a prévia demonstrativa da PR #84 para consulta. Isso não integra
 automaticamente PRs visuais/AI antigas nem autoriza escritas comerciais Shopee/Ads.
 
+Pedido seguinte do proprietário: promover todas as melhorias preparadas para
+a Live e manter esse destino nos próximos incrementos do roadmap. A release
+`release/live-roadmap-improvements-20261030` reconcilia conscientemente a cadeia
+PR84/83/79/76 com a main PR85, em vez de mesclar PRs históricas em duplicidade.
+As duas flags owner podem ser ativadas após os testes. Preservar contratos,
+rollback, dados reais e gates comerciais; registrar dependências externas.
+
 1. Criar branch pequena a partir de um commit verificado ou PR base explícita.
 2. Manter mudanças puras de planejamento separadas de Finance/Auth/Ads/DTF e da publicação externa.
 3. npm ci; npm test (pré-build e testes Node); python3 -m unittest web/bridge/test_hermes_bridge.py tools/test_install_hermes_web_bridge.py tools/test_build_hermes_web_bridge_install.py tools/test_activate_hermes_web_bridge.py tools/test_build_hermes_web_bridge_activation.py -q; npm run build.

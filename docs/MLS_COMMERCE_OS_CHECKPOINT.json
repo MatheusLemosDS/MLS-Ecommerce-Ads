@@ -30,8 +30,8 @@
     "merge_commit": "9c418fd3010f46957d1ce52345baacd76041c788"
   },
   "current_phase": "M2_FINANCE_RETURNS_RECONCILIATION",
-  "working_branch": "feature/mls-owner-homologation-preview-20261030",
-  "current_status": "OWNER_HOMOLOGATION_READY_CLOUDFLARE_ACCESS_REQUIRED_NO_PRODUCTION_CHANGE",
+  "working_branch": "release/live-roadmap-improvements-20261030",
+  "current_status": "PREPARED_IMPROVEMENTS_RECONCILED_LIVE_RELEASE_VALIDATION_IN_PROGRESS",
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
     "Repasse-base, ajuste, repasse após ajuste e liberação exibidos sem dupla dedução",
@@ -111,10 +111,11 @@
     }
   },
   "next_actions": [
-    "Finish PR79 against six owner PNGs; validate compiled Worker screenshots dark/light desktop/mobile.",
-    "Freeze technically validated visual HEAD without merge/deploy; branch integration separately.",
-    "Complete existing modules and MLS AI Sales offline/assisted MVP according to master mission, recording external blocks.",
-    "Keep M2 issue50 open until real Seller Centre evidence; preserve Ads/PROMO LOCKED and bank net unknown."
+    "Complete and test owner-scoped persistent AI Sales workspace with CSRF, CAS revisions and approval/media rechecks",
+    "Validate reconciled candidate end-to-end with full Node/Python/Chromium and preserve exact PR85 financial runtime",
+    "After green CI, publish validated improvements to official App and verify bytes/config/bindings/cron and owner-only feature flags",
+    "Preserve separate demonstrative PR84 artifacts; provision another environment only when necessary",
+    "Record real Seller Centre/bank evidence before closing M2; continue independent roadmap increments without commercial writes"
   ],
   "m0_followup": [
     "Conferir visual autenticado em desktop e celular durante M1; corrigir apenas branding/layout sem renomear infraestrutura"
@@ -716,12 +717,12 @@
   "master_mission_20261030": {
     "checkpoint": "docs/MLS_MASTER_MISSION_CHECKPOINT.json",
     "execution": "docs/MLS_MASTER_MISSION_EXECUTION_2026_10_30.md",
-    "main_observed_sha": "a96bb1c56aaea54a63bede5c177a0de8ab2ea890",
+    "main_observed_sha": "2ab4c9d8baa3c25e5816bcca14b4a0973ea73d5a",
     "visual_pr": 79,
     "visual_references": "docs/visual-references/mls-2026-10-29/manifest.json",
     "visual_approval": "PENDING",
-    "merge_authorized": false,
-    "deploy_authorized": false,
+    "merge_authorized": true,
+    "deploy_authorized": true,
     "commercial_writes": "LOCKED",
     "technical_app_sha256": "9e704d09411fa5a9db9cb6d1c2721314db6ffda92ab5edfc97b724329929a08a",
     "validation": {
@@ -743,19 +744,31 @@
       "screenshots": 40,
       "evidence": "docs/qa/mls-ai-sales-2026-10-30/regression.json",
       "github_ci": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/83/checks"
-    }
+    },
+    "production_deploy_state": "THIS_RECONCILED_CANDIDATE_NOT_YET_PUBLISHED",
+    "authorization_source": "LATEST_OWNER_REQUEST_PROMOTE_ALL_PREPARED_IMPROVEMENTS_TO_LIVE",
+    "current_release_branch": "release/live-roadmap-improvements-20261030",
+    "reconciliation_commit": "b17df54",
+    "prepared_source_head": "4c149a7e818306ddd91419494e75a12b6e14c1f4",
+    "current_release_doc": "docs/MLS_LIVE_ROADMAP_RELEASE_2026_10_30.md",
+    "human_visual_audio_qa": "NOT_RECORDED",
+    "all_roadmap_phases_complete": false
   },
   "owner_homologation_20261030": {
     "checkpoint": "docs/MLS_OWNER_PREVIEW_CHECKPOINT.json",
     "guide": "docs/MLS_OWNER_HOMOLOGATION_2026_10_30.md",
     "base_pr": 83,
     "staging_url": null,
-    "cloudflare_authenticated": false,
+    "cloudflare_authenticated": true,
     "merchant_data": false,
-    "preview_pr": 84
+    "preview_pr": 84,
+    "cloudflare_access_scope": "API_VERIFIED_NOT_OWNER_BROWSER_SESSION",
+    "cloudflare_authenticated_at_preview_creation": false,
+    "preview_data": "SYNTHETIC_PRESERVED",
+    "separate_staging_provisioned": false
   },
   "official_updates_2026_10_30": {
-    "owner_policy": "VALIDATED_UPDATES_TARGET_OFFICIAL_SEPARATE_ENVIRONMENT_ONLY_WHEN_NEEDED",
+    "owner_policy": "PROMOTE_ALL_PREPARED_IMPROVEMENTS_TO_LIVE_AND_CONTINUE_VALIDATED_ROADMAP_WITH_SEPARATE_ENVIRONMENT_ONLY_WHEN_NEEDED",
     "preview": {
       "pull_request": 84,
       "data": "SYNTHETIC",
@@ -781,6 +794,35 @@
       },
       "merge_commit": "2ab4c9d8baa3c25e5816bcca14b4a0973ea73d5a"
     },
-    "commercial_writes": "LOCKED"
+    "commercial_writes": "LOCKED",
+    "roadmap_improvements": {
+      "branch": "release/live-roadmap-improvements-20261030",
+      "base_main": "2ab4c9d8baa3c25e5816bcca14b4a0973ea73d5a",
+      "reconciliation_commit": "b17df54",
+      "prepared_source_head": "4c149a7e818306ddd91419494e75a12b6e14c1f4",
+      "status": "VALIDATION_AND_WORKSPACE_PERSISTENCE_IN_PROGRESS",
+      "docs": "docs/MLS_LIVE_ROADMAP_RELEASE_2026_10_30.md",
+      "ready_features": [
+        "Six reference layouts and remaining native panels, shared themes and verified-source charts",
+        "Owner V3.6 search, saved catalog/costs, DTF and navigation",
+        "Listing Factory preserved imported SKUs/variants, sizes, kits, quantities and local media relinking",
+        "Read-only Products/Pricing ABC and explicit mathematical scenario",
+        "Hermes context follows the same complete publication during partial collection",
+        "Native AI Sales campaigns, local video workflow, assisted creator CRM, declared performance and capability states",
+        "PR85 daily cancellation freshness and previous-month maintenance preserved"
+      ],
+      "workspace_persistence": "IN_PROGRESS",
+      "cloudflare_api_access_verified": true,
+      "owner_authenticated_qa": "NOT_EXECUTED",
+      "external_gates": [
+        "Authenticated Seller Centre/Pending/releases/returns and bank reconciliation still required for M2 issue50",
+        "Configured LLM or neural-voice provider access and explicit generation budget are not available",
+        "Authorized real media bytes, rights and human visual/audio review remain required",
+        "Marketplace Affiliate Seller/Creator/Posting/product-anchor grants are unverified by store and region",
+        "Node/FFmpeg render executes outside Workers; no cloud executor is configured"
+      ],
+      "commercial_writes": "LOCKED",
+      "all_roadmap_phases_complete": false
+    }
   }
 }

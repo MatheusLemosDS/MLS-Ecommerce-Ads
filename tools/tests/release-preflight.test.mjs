@@ -1,17 +1,23 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {evaluateReleasePreflight,RELEASE_EXPECTED_SHA,RELEASE_ALLOWED_FILES,RELEASE_MANUAL_GATES} from '../release_preflight.mjs';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import {spawnSync} from 'node:child_process';
+import {pathToFileURL} from 'node:url';
+import {evaluateReleasePreflight,RELEASE_EXPECTED_SHA,RELEASE_ALLOWED_FILES,RELEASE_MANUAL_GATES,RELEASE_BASE_COMMIT,RELEASE_EXPECTED_LIVE_FLAGS} from '../release_preflight.mjs';
 
 function good(){
  return {
+  baseCommit:RELEASE_BASE_COMMIT,
   changedPaths:['web/cloudflare/src/admin.mjs','tools/release_preflight.mjs'],
   buildHashes:{...RELEASE_EXPECTED_SHA},
   appConfig:{
    name:'brazacommerce-app',main:'../../dist/app-worker.mjs',keep_vars:true,
    d1_databases:[{binding:'ADMIN_DB',database_id:'fixture-uuid'}]
   },
-  adminSource:"function mlsV36OwnerPreviewEnabled(env,ownerSession){return ownerSession?.role==='owner'&&env?.MLS_V36_OWNER_PREVIEW==='ENABLED';} const preview=markupCompatible&&mlsV36OwnerPreviewEnabled(env,ownerSession);return dashboard(env,current)",
-  buildSource:"listing_factory_view=... approved_design=... '+approved_design+'\\n'+ads_workspace+",
+  adminSource:"function mlsV36OwnerPreviewEnabled(env,ownerSession){return ownerSession?.role==='owner'&&env?.MLS_V36_OWNER_PREVIEW==='ENABLED';} function mlsAiSalesOwnerPreviewEnabled(env,ownerSession){return ownerSession?.role==='owner'&&env?.MLS_AI_SALES_OWNER_PREVIEW==='ENABLED';} const preview=markupCompatible&&mlsV36OwnerPreviewEnabled(env,ownerSession); const aiPreview=mlsAiSalesOwnerPreviewEnabled(env,ownerSession);return dashboard(env,current)",
+  buildSource:"ai_sales_view=... listing_factory_view=... approved_design=... '+approved_design+'\\n'+ads_workspace+",
   workflowSource:"node --test --test-reporter=tap; python3 -m unittest"
  };
 }
@@ -21,7 +27,7 @@ test('release preflight passes only an exact reviewed local build and leaves rem
  assert.deepEqual(r.failures,[]);
  assert.equal(r.remoteCloudflareVerified,false);
  assert.equal(r.productionApproved,false);
- assert.ok(RELEASE_MANUAL_GATES.includes('VERIFY_REMOTE_MLS_V36_OWNER_PREVIEW_NOT_ENABLED'));
+ assert.ok(RELEASE_MANUAL_GATES.includes('VERIFY_REMOTE_OWNER_FLAGS_MATCH_APPROVED_VALUES'));
  assert.ok(RELEASE_ALLOWED_FILES.includes('web/cloudflare/src/admin.mjs'));
  assert.ok(!RELEASE_ALLOWED_FILES.some(x=>x.startsWith('workers/')||x.startsWith('web/finance/')));
 });
@@ -38,7 +44,7 @@ test('release preflight blocks undocumented file modifications and any protected
  for(const path of ['workers/app/wrangler.json','workers/auth/wrangler.json',
   'workers/finance/migration.json','web/finance/src/index.mjs',
   'web/cloudflare/original/app-worker.mjs','web/cloudflare/src/new-shop-write.mjs',
-  'package.json']){
+  'package-lock.json']){
   const data=good();data.changedPaths.push(path);
   const result=evaluateReleasePreflight(data);
   assert.equal(result.ok,false,path);
@@ -46,11 +52,11 @@ test('release preflight blocks undocumented file modifications and any protected
  }
 });
 
-test('release preflight rejects preview enabled in tracked wrangler vars even when keep_vars is true',()=>{
- const data=good();data.appConfig.vars={MLS_V36_OWNER_PREVIEW:'ENABLED'};
- assert.ok(evaluateReleasePreflight(data).failures.includes('RELEASE_PREVIEW_CONFIG_MUST_BE_ABSENT'));
- const deactivated=good();deactivated.appConfig.vars={MLS_V36_OWNER_PREVIEW:'DISABLED'};
- assert.ok(evaluateReleasePreflight(deactivated).failures.includes('RELEASE_PREVIEW_CONFIG_MUST_BE_ABSENT'));
+test('release preflight rejects either owner activation flag in tracked wrangler vars',()=>{
+ for(const flag of Object.keys(RELEASE_EXPECTED_LIVE_FLAGS))for(const value of ['ENABLED','DISABLED']){
+  const data=good();data.appConfig.vars={[flag]:value};
+  assert.ok(evaluateReleasePreflight(data).failures.includes('RELEASE_PREVIEW_CONFIG_MUST_BE_ABSENT'),flag+' '+value);
+ }
 });
 
 test('release preflight rejects missing App binding or a changed keep_vars policy',()=>{
@@ -71,7 +77,10 @@ test('owner-only exact flag and bundle inclusion must not be relaxed or accident
   x=>x.adminSource=x.adminSource.replace("==='ENABLED'","==='true'"),
   x=>x.adminSource=x.adminSource.replace('return dashboard(env,current)','return dashboard()'),
   x=>x.buildSource=x.buildSource.replace('approved_design=',''),
-  x=>x.buildSource=x.buildSource.replace('listing_factory_view=','')]){
+  x=>x.buildSource=x.buildSource.replace('listing_factory_view=',''),
+  x=>x.adminSource=x.adminSource.replace("env?.MLS_AI_SALES_OWNER_PREVIEW==='ENABLED'","env?.MLS_AI_SALES_OWNER_PREVIEW==='true'"),
+  x=>x.adminSource=x.adminSource.replace('const aiPreview=mlsAiSalesOwnerPreviewEnabled(env,ownerSession)','const aiPreview=true'),
+  x=>x.buildSource=x.buildSource.replace('ai_sales_view=','')]){
   const data=good();change(data);
   const failures=evaluateReleasePreflight(data).failures;
   assert.ok(failures.includes('RELEASE_OWNER_GATE_CHANGED')||
@@ -94,5 +103,38 @@ test('malformed or missing diff cannot pass',()=>{
  for(const changedPaths of [[],null,['../workers/app/wrangler.json'],['']]){
   const data=good();data.changedPaths=changedPaths;
   assert.ok(evaluateReleasePreflight(data).failures.includes('RELEASE_DIFF_UNAVAILABLE'));
+ }
+});
+
+test('release requires the exact reviewed main commit and exact independently controlled owner flags',()=>{
+ assert.deepEqual(RELEASE_EXPECTED_LIVE_FLAGS,{MLS_V36_OWNER_PREVIEW:'ENABLED',MLS_AI_SALES_OWNER_PREVIEW:'ENABLED'});
+ for(const baseCommit of [null,undefined,'0'.repeat(40),'main']){
+  const data=good();data.baseCommit=baseCommit;
+  assert.ok(evaluateReleasePreflight(data).failures.includes('RELEASE_BASE_MISMATCH'));
+ }
+ assert.ok(RELEASE_ALLOWED_FILES.includes('tools/release-approved-candidate.json'));
+ assert.equal(new Set(RELEASE_ALLOWED_FILES).size,RELEASE_ALLOWED_FILES.length);
+ assert.ok(RELEASE_ALLOWED_FILES.every(value=>!/[?*\\]/.test(value)));
+});
+
+test('a malformed candidate cannot weaken exact hashes, literal paths or commercial-write denial',t=>{
+ const directory=fs.mkdtempSync(path.join(os.tmpdir(),'mls-release-manifest-'));
+ t.after(()=>fs.rmSync(directory,{recursive:true,force:true}));
+ const source=fs.readFileSync(new URL('../release_preflight.mjs',import.meta.url),'utf8');
+ const candidate=JSON.parse(fs.readFileSync(new URL('../release-approved-candidate.json',import.meta.url),'utf8'));
+ const modulePath=path.join(directory,'release_preflight.mjs');fs.writeFileSync(modulePath,source);
+ for(const mutate of [
+  value=>delete value.expected_hashes.finance,
+  value=>value.expected_hashes.app='arbitrary',
+  value=>value.allowed_files.push('web/cloudflare/src/*'),
+  value=>value.allowed_files.push(value.allowed_files[0]),
+  value=>value.commercial_writes_allowed=true,
+  value=>value.expected_live_flags.MLS_AI_SALES_OWNER_PREVIEW='true',
+  value=>value.base_commit='main',
+ ]){
+  const changed=structuredClone(candidate);mutate(changed);
+  fs.writeFileSync(path.join(directory,'release-approved-candidate.json'),JSON.stringify(changed));
+  const result=spawnSync(process.execPath,['--input-type=module','-e','await import('+JSON.stringify(pathToFileURL(modulePath).href)+')'],{encoding:'utf8'});
+  assert.notEqual(result.status,0);assert.match(result.stderr,/RELEASE_CANDIDATE_MANIFEST_INVALID/);
  }
 });

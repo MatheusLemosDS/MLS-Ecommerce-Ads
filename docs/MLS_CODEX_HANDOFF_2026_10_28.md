@@ -1,10 +1,46 @@
-Prévia de homologação na PR DRAFT #84: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/84 · implementação 1574f9e · 2.327 Node/67 Python aprovados, App/Auth/Finance inalterados. Conferir CI do HEAD; acesso seguro à Cloudflare é a dependência para homologação online.
+# Handoff atual — melhorias na versão Live, 30/10/2026
 
-Homologação local — 30/10/2026: branch `feature/mls-owner-homologation-preview-20261030`, baseada na PR #83. Servidor Worker/SQLite real com dados sintéticos e exportação HTML interativa; sem alteração do App/Auth/Finance. Consultar `docs/MLS_OWNER_PREVIEW_CHECKPOINT.json` e `docs/MLS_OWNER_HOMOLOGATION_2026_10_30.md`. Não existe URL de homologação; a Cloudflare não está autenticada. Merge, produção e escritas comerciais continuam sem autorização.
+O proprietário autorizou promover todas as melhorias preparadas para a versão
+Live e continuar os próximos incrementos validados ali, usando ambiente
+separado apenas quando necessário. As antigas restrições de somente DRAFT e
+nenhum merge/deploy foram substituídas para a aplicação. Escrita comercial,
+gastos e alteração de OAuth continuam bloqueados; Hermes OBSERVER, Ads/PROMO
+LOCKED. Não reiniciar o projeto nem presumir M2 encerrada.
+
+Trabalho atual: `release/live-roadmap-improvements-20261030`, base oficial
+`2ab4c9d8baa3c25e5816bcca14b4a0973ea73d5a`. O commit `b17df54` reconcilia o
+pacote preparado até `4c149a7` com a correção de cancelamentos da PR #85.
+Inclui visual/gráficos, V3.6, Products/Pricing observador, Listing Factory,
+DTF, contexto do Hermes e cinco abas AI Sales. A persistência do workspace
+AI Sales está **IN_PROGRESS**, assim como a validação do novo candidato;
+não declarar este pacote publicado até a conferência real.
+
+O acesso API Cloudflare está verificado. A PR #85 foi publicada e conferida
+byte a byte, preservando bancos, domínios e cron. Os relatos de Cloudflare
+indisponível abaixo pertencem à criação histórica da prévia PR #84, que segue
+preservada com dados sintéticos. Não há sessão real owner nem aprovação humana
+visual/auditiva comprovada por fixtures.
+
+Antes de publicar, concluir os testes integrais, CI, Chromium desktop/mobile,
+hashes e plano de retorno. V3.6 e AI Sales usam flags owner independentes;
+conferir a ativação real e o bloqueio da role review. Depois, verificar código,
+configuração e saúde da coleta no Cloudflare, não somente o merge.
+
+Fonte atual da entrega: [MLS_LIVE_ROADMAP_RELEASE_2026_10_30.md](MLS_LIVE_ROADMAP_RELEASE_2026_10_30.md).
+Pendências externas: M2/Seller Centre/Pending/devoluções/liberações/banco;
+provedor e orçamento LLM/voz neural; mídia autorizada; grants marketplace.
+O render Node/FFmpeg funciona fora do Worker, não como render cloud implícito.
+M3–M9 permanecem fases progressivas, sem declaração de conclusão total.
+
+## Registros históricos — subordinados à orientação Live acima
+
+Prévia de homologação na PR DRAFT #84: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/84 · implementação 1574f9e · 2.327 Node/67 Python aprovados, App/Auth/Finance inalterados. Naquele corte, acesso seguro à Cloudflare era a dependência para homologação online.
+
+Homologação local — registro histórico de 30/10/2026: branch `feature/mls-owner-homologation-preview-20261030`, baseada na PR #83. Servidor Worker/SQLite real com dados sintéticos e exportação HTML interativa; sem alteração do App/Auth/Finance. Consultar `docs/MLS_OWNER_PREVIEW_CHECKPOINT.json` e `docs/MLS_OWNER_HOMOLOGATION_2026_10_30.md`. Naquele corte não existia URL de homologação nem autenticação Cloudflare e não havia autorização de merge/deploy. O pedido Live substituiu essas restrições; escritas comerciais continuam bloqueadas.
 
 PR de integração DRAFT #83: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/83 · commits f513dca/54b87e5 · local2308Node/67Python,40capturas · Appa5ba3298…bbfb91c8. Conferir checks do HEAD; semmerge/deploy.
 
-> Checkpoint atual 30/10/2026: PR #79 congelada/CI verde `e7ce5009`/41131654577. Integração e AI Sales local implementados em `integration/mls-commerce-os-ai-sales-20261030`; conferir regressão/PR no checkpoint da missão e [guia de homologação](MLS_AI_SALES_INTEGRATION_2026_10_30.md). Sem merge/deploy/writes; QA owner, M2/Seller Centre, grants e acesso LLM pendentes. Os registros antigos abaixo são históricos.
+> Checkpoint histórico de preparação 30/10/2026: PR #79 congelada/CI verde `e7ce5009`/41131654577. Integração e AI Sales local implementados em `integration/mls-commerce-os-ai-sales-20261030`; conferir regressão/PR no checkpoint da missão e [guia de homologação](MLS_AI_SALES_INTEGRATION_2026_10_30.md). Naquele corte sem merge/deploy/writes; QA owner, M2/Seller Centre, grants e acesso LLM pendentes. Os registros abaixo são históricos.
 
 # Handoff executável — MLS Commerce OS / Codex / ChatGPT — 28/10/2026
 

@@ -1,10 +1,42 @@
-Prévia de homologação na PR DRAFT #84: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/84 · implementação 1574f9e · 2.327 Node/67 Python aprovados, App/Auth/Finance inalterados. Conferir CI do HEAD; acesso seguro à Cloudflare é a dependência para homologação online.
+HANDOFF ATUAL — ENTREGA DAS MELHORIAS NA VERSÃO LIVE — 30/10/2026
 
-Homologação local — 30/10/2026: branch `feature/mls-owner-homologation-preview-20261030`, baseada na PR #83. Servidor Worker/SQLite real com dados sintéticos e exportação HTML interativa; sem alteração do App/Auth/Finance. Consultar `docs/MLS_OWNER_PREVIEW_CHECKPOINT.json` e `docs/MLS_OWNER_HOMOLOGATION_2026_10_30.md`. Não existe URL de homologação; a Cloudflare não está autenticada. Merge, produção e escritas comerciais continuam sem autorização.
+O proprietário autorizou implementar todas as melhorias preparadas na Live e
+continuar o próximo roadmap na versão oficial por incrementos validados, sem
+quebrar a versão ativa. Criar ambiente separado só quando necessário. As
+restrições antigas de somente DRAFT/nenhum merge ou deploy foram substituídas
+para a aplicação. Não autoriza gastos, OAuth nem escritas comerciais externas.
+
+Branch: release/live-roadmap-improvements-20261030.
+Base oficial: 2ab4c9d8baa3c25e5816bcca14b4a0973ea73d5a (PR85 publicada).
+Integração preparada: b17df54 reconcilia PR84/4c149a7 com a correção de cancelados.
+Prontos para validação Live: visual/gráficos, V3.6, catálogo/custos/DTF,
+Listing Factory/SKUs, Products/Pricing observador, contexto coerente Hermes e
+AI Sales5abas manual/assistido. Persistência do workspace AI Sales: IN_PROGRESS.
+O novo candidato ainda precisa de testes integrais, CI e conferência de deploy;
+não declarar sua publicação apenas por esses commits.
+
+Cloudflare API: acesso verificado, PR85 já conferida por bytes/config/bindings/
+cron. Não confundir acesso API com sessão owner ou aceite humano de mídia.
+Prévia sintética PR84 preservada; URL de homologação separada não provisionada.
+Flags owner-only V36 e AI Sales são independentes; verificar ativação real.
+Fonte atual: docs/MLS_LIVE_ROADMAP_RELEASE_2026_10_30.md.
+
+Pendências externas: M2 Seller Centre/Pending/devoluções/liberações/banco;
+provedor e orçamento LLM/voz neural; direitos e bytes de mídia; grants oficiais
+Shopee/TikTok. FFmpeg executa fora do Worker; render local não é serviço cloud.
+Hermes OBSERVER, Ads/PROMO LOCKED. Não declarar M3-M9 concluídas nem transformar
+dados desconhecidos em zero. Próximo trabalho deve preservar e testar a Live,
+com retorno à versão anterior preparado antes de cada publicação.
+
+REGISTROS HISTÓRICOS — NÃO SUBSTITUEM O ESTADO ACIMA
+
+Prévia de homologação na PR DRAFT #84: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/84 · implementação 1574f9e · 2.327 Node/67 Python aprovados, App/Auth/Finance inalterados. Naquele corte acesso seguro à Cloudflare era a dependência para homologação online.
+
+Homologação local — registro histórico de 30/10/2026: branch `feature/mls-owner-homologation-preview-20261030`, baseada na PR #83. Servidor Worker/SQLite real com dados sintéticos e exportação HTML interativa; sem alteração do App/Auth/Finance. Consultar `docs/MLS_OWNER_PREVIEW_CHECKPOINT.json` e `docs/MLS_OWNER_HOMOLOGATION_2026_10_30.md`. Naquele corte não existia URL de homologação nem acesso Cloudflare, e merge/deploy ainda não estavam autorizados. Isso foi substituído pelo pedido Live; escritas comerciais continuam bloqueadas.
 
 PR de integração DRAFT #83: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/83 · commits f513dca/54b87e5 · local2308Node/67Python,40capturas · Appa5ba3298…bbfb91c8. Conferir checks do HEAD; semmerge/deploy.
 
-CHECKPOINT ATUAL — MISSÃO MESTRE 30/10/2026
+CHECKPOINT HISTÓRICO — MISSÃO MESTRE 30/10/2026
 Ler docs/MLS_MASTER_MISSION_CHECKPOINT.json, docs/MLS_AI_SALES_INTEGRATION_2026_10_30.md e docs/MLS_MASTER_MISSION_EXECUTION_2026_10_30.md. Branch integration/mls-commerce-os-ai-sales-20261030, worktree /workspace/mls-commerce-os. PR79 congelada, CI verde e7ce5009/41131654577; App visual9e704d...; referências e24capturas em docs. Integração preserva SKUs/variantes e adiciona ABC/pricing observador +AI Sales local5abas,3MP4reais PTBR1080x1920. Conferir CI/hash finais no checkpoint/PR antes de qualquer decisão. Flag MLS_AI_SALES_OWNER_PREVIEW=ENABLED só owner, OFF padrão; V36 independente. Main observadaa96bb1c preservada. Sem merge/deploy/writes; Hermes OBSERVER, Ads/PROMO LOCKED. M2/issue50 depende de Seller Centre/banco; QA visual/auditiva humana, grants e LLM externos. Nunca tratar lucro desconhecido comozero ou confirmar aprovação pelo JSON importado.
 
 Os checkpoints abaixo são históricos e não substituem este estado.
