@@ -56,6 +56,46 @@ test('real Finance date evidence reaches the same App publication, with day-spec
  assert.deepEqual(providerCounts(f),before);assert.doesNotMatch(JSON.stringify(result),/PRIVATE|order_sn|create_time|payload_hash|source_hash|source_frames|daily_breakdown/);
 });
 
+for(const [status,bucket] of [['CANCELLED','cancelled'],['IN_CANCEL','cancel_pending']])test(`a paid order becoming ${status} leaves its original Brasília day after a complete refresh`,async t=>{
+ const f=await shop(t);let changed=false;
+ f.state.detailHook=({ids})=>f.provider({order_list:ids.map(index=>({
+  order_sn:f.serial(index),order_status:changed&&index===1?status:f.orderStatus(index),currency:'BRL',
+  // This is October 11 in UTC but October 10 in the shop's Brasília day.
+  create_time:(index===1?Date.UTC(2026,9,11,1,30):Date.UTC(2026,9,index<60?10:20,12))/1000,
+  item_list:[{item_id:f.item(index),model_id:0,model_quantity_purchased:1}],
+ }))});
+ await finish(f);const before=(await view(f)).result,original=before.daily_summary.days.find(row=>row.date==='2026-10-10'),paymentReads=f.calls.payment.length;
+ assert.equal(original.coverage.paid,2);assert.equal(original.sales_cents,13050);assert.equal(original.production_cost_cents,3180);
+ changed=true;f.clock.time+=301000;
+ const started=await f.invoke('start');assert.equal(started.status,'RUNNING');
+ f.clock.time+=1000;const partial=await f.invoke('step');
+ assert.equal(partial.status,'RUNNING');assert.equal(partial.coverage.paid,1);assert.equal(partial.coverage[bucket],1);
+ const during=(await view(f)).result;
+ assert.equal(during.collection.status,'RUNNING');assert.equal(during.collection.coverage[bucket],1);
+ assert.equal(during.display_source,'PUBLISHED');assert.deepEqual(during.audit_scope,before.audit_scope);
+ assert.equal(during.display.coverage.paid,3);assert.equal(during.daily_summary.days[9].coverage.paid,2,'an incomplete refresh must not mix changed orders into the last complete publication');
+ assert.deepEqual(during.daily_summary.sources,before.daily_summary.sources);
+ assert.equal(during.daily_summary.days[9].estimate_cents,original.estimate_cents);
+ await finish(f);const after=(await view(f)).result,updated=after.daily_summary.days.find(row=>row.date==='2026-10-10');
+ assert.equal(after.collection.status,'COMPLETE');assert.ok(after.audit_scope.publication_revision>before.audit_scope.publication_revision);
+ assert.notDeepEqual(after.daily_summary.sources,before.daily_summary.sources);
+ assert.equal(after.display.coverage.orders,3);assert.equal(after.display.coverage.paid,2);assert.equal(after.display.coverage[bucket],1);
+ assert.equal(updated.coverage.orders,2);assert.equal(updated.coverage.paid,1);assert.equal(updated.coverage[bucket],1);
+ assert.equal(updated.sales_cents,original.sales_cents-6525);assert.equal(updated.base_repass_cents,original.base_repass_cents-4751);
+ assert.equal(updated.payout_cents,original.payout_cents-4751);assert.equal(updated.production_cost_cents,original.production_cost_cents-1590);
+ assert.equal(updated.production_coverage.total_units,1);assert.equal(updated.estimate_cents,original.estimate_cents-4751+1590);
+ assert.equal(updated.pending.includes('STATUS_REVIEW_REQUIRED'),status==='IN_CANCEL');
+ assert.equal(after.display.sales_cents,before.display.sales_cents-6525);
+ assert.equal(after.display.expected_repass_cents,before.display.expected_repass_cents-4751);
+ assert.equal(after.display.production_cost_cents,before.display.production_cost_cents-1590);
+ assert.ok(!f.calls.payment.slice(paymentReads).includes(1),'a cancelled or cancelling order must not reuse or fetch paid escrow');
+ for(const row of after.daily_summary.days){
+  const prior=before.daily_summary.days.find(value=>value.date===row.date);
+  for(const key of ['ads_spend_cents','allocated_das_cents','allocated_expenses_cents'])assert.equal(row[key],prior[key],`${row.date} ${key} must remain an actual calendar or declared fixed cost`);
+  if(row.date!=='2026-10-10')for(const key of ['sales_cents','payout_cents','production_cost_cents','estimate_cents'])assert.equal(row[key],prior[key],`${row.date} ${key} must not receive a cancellation-day adjustment`);
+ }
+});
+
 test('daily views add no SQL calls or provider reads, reprice the saved cohort, and reject an old cost or publication identity',async t=>{
  const f=await shop(t);await finish(f);await view(f);const before=providerCounts(f);
  f.env.ADMIN_DB.calls=0;const legacy=await view(f,'business-month-view-v2'),legacyCalls=f.env.ADMIN_DB.calls;

@@ -660,5 +660,20 @@
         "documented_in": "docs/MLS_OWNER_SYNTHETIC_VISUAL_QA_2026_10_28.md"
       }
     }
+  },
+  "official_updates_2026_10_30": {
+    "owner_policy": "VALIDATED_UPDATES_TARGET_OFFICIAL_SEPARATE_ENVIRONMENT_ONLY_WHEN_NEEDED",
+    "preview": {
+      "pull_request": 84,
+      "data": "SYNTHETIC",
+      "preserved": true
+    },
+    "cancelled_daily_profit": {
+      "branch": "fix/cancelled-daily-profit-20261030",
+      "base": "a96bb1c56aaea54a63bede5c177a0de8ab2ea890",
+      "status": "IMPLEMENTATION_VALIDATION_IN_PROGRESS_NOT_DEPLOYED",
+      "docs": "docs/MLS_CANCELLED_DAILY_PROFIT_2026_10_30.md"
+    },
+    "commercial_writes": "LOCKED"
   }
 }

@@ -52,24 +52,44 @@ test('294 orders and 242 paid orders finish within the real freshness window on 
  }
 });
 
-for(const migration of ['legacy-running','cached-historical'])test('minute collection replaces one stale '+migration+' cohort without renewing its original observation times',async t=>{
+test('minute collection replaces one stale legacy-running cohort without renewing its original observation times',async t=>{
  const f=await largeMonthFixture(t),initial=f.now();let oldest;
- if(migration==='legacy-running'){
-  // An already running cohort survives deployment. Finishing it must not
-  // relabel its first orders with the new scheduler's current timestamp.
-  for(const tick of [0,1,2]){f.clock.time=initial+tick*300000;const result=await runBusinessSync(f.env,f.services,{now:f.now});assert.equal(result.status,'RUNNING');oldest=result.state.summary.source_checked_at.finance_oldest_at;}
- }else{
-  // A closed historical window may legally be reused near its 900s cache
-  // limit, while the current window still needs several new source pages.
-  let prior=await f.services.getFinanceBusinessPeriod(f.env,{operation:'start',start_date:'2026-10-01',end_date:'2026-10-15'});while(prior.status==='RUNNING')prior=await f.services.getFinanceBusinessPeriod(f.env,{operation:'step',run_id:prior.run_id});assert.equal(prior.pages_read,8);oldest=prior.source_checked_at.oldest_at;
- }
- const origin=initial+(migration==='legacy-running'?1080000:850000);let stale=null,fresh=null;
+ // An already running cohort survives deployment. Finishing it must not
+ // relabel its first orders with the new scheduler's current timestamp.
+ for(const tick of [0,1,2]){f.clock.time=initial+tick*300000;const result=await runBusinessSync(f.env,f.services,{now:f.now});assert.equal(result.status,'RUNNING');oldest=result.state.summary.source_checked_at.finance_oldest_at;}
+ const origin=initial+1080000;let stale=null,fresh=null;
  for(let tick=0;tick<10;tick++){
   f.clock.time=origin+tick*60000;f.env.ADMIN_DB.calls=0;const sourceBefore=f.calls.finance.length+f.calls.ads.length,result=await runBusinessSync(f.env,f.services,{now:f.now}),summary=result.state.summary;assert.ok(f.env.ADMIN_DB.calls+f.calls.finance.length+f.calls.ads.length-sourceBefore<=50);assert.equal(result.state.failure_count,0);assert.equal(result.state.last_error,null);
   if(summary.status==='COMPLETE'&&summary.pending.includes('FINANCIAL_SOURCE_STALE')){assert.equal(stale,null,'the complete stale cohort is replaced once rather than repeated forever');stale=summary;assert.equal(summary.source_checked_at.finance_oldest_at,oldest);assert.equal(summary.net_estimate_cents,null);assert.equal(result.status,'PARTIAL');assert.equal(result.state.last_success_at,null);assert.equal(summary.coverage.orders,294);assert.equal(summary.coverage.payment_covered,242);assert.equal(result.state.next_run_at,Math.floor(origin/1000)+tick*60+60);const frame=await f.invoke('read');assert.equal(buildMonthlyFinancialSummary(frame).state,'PROVISIONAL');assert.equal(buildMonthlyFinancialSummary(frame).balance_cents,752123);}
   else if(summary.status==='COMPLETE'){fresh=result;break;}
  }
  assert.ok(stale,'the old source timestamps remain observable until a real refresh');assert.ok(fresh,'a later minute tick finishes a genuinely new cohort');assert.equal(fresh.status,'COMPLETE');assert.equal(fresh.state.summary.coverage.orders,294);assert.equal(fresh.state.summary.coverage.paid,242);assert.equal(fresh.state.summary.coverage.cancelled,52);assert.equal(fresh.state.summary.net_estimate_cents,752123);assert.ok(fresh.state.summary.source_checked_at.finance_oldest_at>oldest);assert.ok(fresh.state.summary.checked_at-fresh.state.summary.source_checked_at.finance_oldest_at<=900);assert.equal(f.calls.payment.length,484,'each full cohort is read once without multiplying its quantities');assert.equal(new Set(f.calls.payment).size,242);const frame=await f.invoke('read');assert.equal(frame.production_cost_cents,384780);assert.equal(frame.sales_cents,1579050);assert.equal(frame.result.net_estimate_cents,752123);assert.deepEqual(frame.result.pending,[]);for(const budget of f.calls.financeBudgets)assert.ok(budget.d1+budget.fetches<=50,JSON.stringify(budget));
+});
+
+test('a completed earlier window in the open month is reread before the first full publication instead of importing its old cache age',async t=>{
+ const f=await largeMonthFixture(t),initial=f.now();
+ let prior=await f.services.getFinanceBusinessPeriod(f.env,{operation:'start',start_date:'2026-10-01',end_date:'2026-10-15'});
+ while(prior.status==='RUNNING')prior=await f.services.getFinanceBusinessPeriod(f.env,{operation:'step',run_id:prior.run_id});
+ assert.equal(prior.pages_read,8);assert.equal(prior.coverage.paid,160);assert.equal(f.calls.payment.length,160);
+ const oldest=prior.source_checked_at.oldest_at,sourceFrames=f.calls.financeFrames.length,origin=initial+850000,steps=[];let result;
+ for(let tick=0;tick<5;tick++){
+  f.clock.time=origin+tick*60000;f.env.ADMIN_DB.calls=0;const sourceBefore=f.calls.finance.length+f.calls.ads.length;
+  result=await runBusinessSync(f.env,f.services,{now:f.now});steps.push(result.finance_steps);
+  assert.ok(f.env.ADMIN_DB.calls+f.calls.finance.length+f.calls.ads.length-sourceBefore<=50);
+  assert.equal(result.state.failure_count,0);assert.equal(result.state.last_error,null);
+  assert.ok(!result.state.summary.pending.includes('FINANCIAL_SOURCE_STALE'),'the first publication must not reuse the older open-month window');
+  if(tick===0){assert.equal(result.status,'RUNNING');assert.equal(result.state.summary.coverage.orders,60);assert.notEqual(f.calls.financeFrames[sourceFrames].run_id,prior.run_id);}
+  if(result.state.summary.status==='COMPLETE')break;
+  assert.equal(result.status,'RUNNING');
+ }
+ assert.deepEqual(steps,[4,4,4,4,1]);assert.equal(result.status,'COMPLETE');assert.equal(result.state.summary.coverage.orders,294);assert.equal(result.state.summary.coverage.paid,242);assert.equal(result.state.summary.coverage.cancelled,52);assert.equal(result.state.summary.net_estimate_cents,752123);
+ assert.ok(result.state.summary.source_checked_at.finance_oldest_at>oldest);assert.ok(result.state.summary.checked_at-result.state.summary.source_checked_at.finance_oldest_at<=900);
+ assert.equal(f.calls.list.filter(row=>row.base===0).length,16,'the eight earlier-window pages are fetched again');assert.equal(f.calls.list.filter(row=>row.base===60).length,7);
+ assert.equal(f.calls.payment.length,402);assert.equal(new Set(f.calls.payment).size,242);
+ const reads=new Map();for(const index of f.calls.payment)reads.set(index,(reads.get(index)||0)+1);
+ for(let index=0;index<242;index++)assert.equal(reads.get(index),index<160?2:1,'each source cohort reads a paid order once');
+ const frame=await f.invoke('read');assert.equal(frame.production_cost_cents,384780);assert.equal(frame.sales_cents,1579050);assert.equal(frame.result.net_estimate_cents,752123);assert.deepEqual(frame.result.pending,[]);
+ for(const budget of f.calls.financeBudgets)assert.ok(budget.d1+budget.fetches<=50,JSON.stringify(budget));
 });
 
 test('an interactive Finance page and cron can race without extending a short lease conflict into five-minute backoff',async t=>{

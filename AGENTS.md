@@ -23,6 +23,11 @@ Leia, nesta ordem, antes de qualquer alteração:
 
 ## Desenvolvimento e publicação
 
+Orientação do proprietário em 30/10/2026: entregar os próximos incrementos
+validados na versão oficial; criar ambiente separado apenas quando necessário.
+Preservar a prévia demonstrativa da PR #84 para consulta. Isso não integra
+automaticamente PRs visuais/AI antigas nem autoriza escritas comerciais Shopee/Ads.
+
 1. Criar branch pequena a partir de um commit verificado ou PR base explícita.
 2. Manter mudanças puras de planejamento separadas de Finance/Auth/Ads/DTF e da publicação externa.
 3. npm ci; npm test (pré-build e testes Node); python3 -m unittest web/bridge/test_hermes_bridge.py tools/test_install_hermes_web_bridge.py tools/test_build_hermes_web_bridge_install.py tools/test_activate_hermes_web_bridge.py tools/test_build_hermes_web_bridge_activation.py -q; npm run build.
