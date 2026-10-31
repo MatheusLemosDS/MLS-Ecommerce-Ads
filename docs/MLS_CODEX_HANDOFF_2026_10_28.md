@@ -1,9 +1,12 @@
 # Handoff atual — melhorias na versão Live, 30/10/2026
 
-**Incremento M2 em validação — 31/10/2026:** continuidade das auditorias de
-devoluções, comparação somente da mesma publicação e situações identificadas
-no MLS Returns. Base PR87 `51b2dfe`, preservando Auth/Finance e resultado
-bancário desconhecido. [Registro](MLS_M2_RETURNS_CONTINUITY_2026_10_31.md).
+**Release M2 PR88 publicada — 31/10/2026:** auditorias de devolução
+destravadas, comparação da mesma publicação e situações identificadas no MLS
+Returns. A virada diária agora encerra e retoma a coleta sem erro artificial.
+2.459 Node/67 Python/Chromium aprovados, App `c00861cf`, Auth/Finance e
+configuração preservados. Cron natural confirmou 2/2 relatórios da publicação
+e progresso após o deploy, sem falhas atuais. M2/banco continuam abertos.
+[Registro](MLS_M2_RETURNS_CONTINUITY_2026_10_31.md).
 
 **Release Live PR87 conferida — 31/10/2026:** gráficos com inspeção por
 ponteiro/toque/teclado, escala PT-BR, iluminação e cabeçalho mobile corrigido.
