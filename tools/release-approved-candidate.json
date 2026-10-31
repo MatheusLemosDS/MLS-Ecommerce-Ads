@@ -5,7 +5,7 @@
   "owner_authorization": "OWNER_REQUESTED_ALL_PREPARED_IMPROVEMENTS_LIVE_2026_10_30",
   "commercial_writes_allowed": false,
   "expected_hashes": {
-    "app": "fdf8ead382bb3eaf04a3e5ed98efeb01dbc9f42d160aea64f0cb1fe8e8750e19",
+    "app": "0dd75e25c8119c7f8d952a68b372b61387357de4092a525db8ee38a690ff8739",
     "auth": "1fef431c8573e05563c7938d95be0976a160bc603340084aa747ee0b73e7ec64",
     "finance": "bfc27e1022e0c5b3d335498389fd64b6978b8f7f04501d3bc6eff38202bf5feb"
   },
@@ -32,6 +32,7 @@
     "web/cloudflare/src/financial-audit-orchestration.mjs",
     "web/cloudflare/src/historical-cost-orchestration.mjs",
     "web/cloudflare/tests/business-escrow-release-coverage.test.mjs",
+    "web/cloudflare/tests/business-history-sync.test.mjs",
     "web/cloudflare/tests/escrow-releases-ui.test.mjs",
     "web/cloudflare/tests/financial-audit-orchestration.test.mjs",
     "web/cloudflare/tests/m2-release-bootstrap-compiled.test.mjs",

@@ -47,12 +47,12 @@ test('failure before marker initialization is cooled down and cannot consume Reg
  assert.equal(f.db.db.prepare('SELECT auxiliary_index FROM background_collection_lane_state').get().auxiliary_index,3);
 });
 
-test('bootstrap failure cannot immediately repeat before its five-minute auxiliary cooldown',async t=>{
+test('bootstrap failure cannot immediately repeat before its own five-minute cooldown',async t=>{
  const f=await fixture(t,{importing:false}),lease=await acquire(f),work=await runBackgroundHistoryWork(f.env,{}, {month,lease},{now:f.now,runAudits:async()=>{throw Error('INIT');}});await finish(f,lease,work);f.clock.value+=60000;const next=await acquire(f);assert.equal(next.coverage_bootstrap,false);await finish(f,next);
 });
 
 test('default callers never query the optional coverage marker table',async t=>{
- const f=await fixture(t);f.db.db.exec('DROP TABLE financial_audit_coverage_turns');const lease=await acquireBackgroundLane(f.env,{month},{now:f.now});assert.equal(lease.coverage_bootstrap,false);await finish(f,lease);
+ const f=await fixture(t);f.db.db.exec('DROP TABLE financial_audit_coverage_turns; DROP TABLE background_coverage_bootstrap_attempts');const lease=await acquireBackgroundLane(f.env,{month},{now:f.now});assert.equal(lease.coverage_bootstrap,false);await finish(f,lease);
 });
 
 test('only a published cohort in the preceding three months makes bootstrap eligible',async t=>{
@@ -63,7 +63,7 @@ test('only a published cohort in the preceding three months makes bootstrap elig
 for(const fence of ['pause','replacement','expiry'])test(`a ${fence} fence prevents bootstrap IO and stale fairness updates`,async t=>{
  const f=await fixture(t),lease=await acquire(f),before={...f.db.db.prepare('SELECT * FROM background_history_fairness_state').get()};let calls=0;
  if(fence==='pause')f.db.db.prepare('UPDATE business_sync_state SET enabled=0').run();if(fence==='replacement')f.db.db.prepare('UPDATE background_collection_lane_state SET revision=revision+1,lease_token=?').run(trackerUuid(99));if(fence==='expiry')f.clock.value+=291000;
- const work=await runBackgroundHistoryWork(f.env,{getFinanceEscrowReleaseCoverage:async()=>{calls++;}},{month,lease},{now:f.now});assert.equal(work.history,'PAUSED');assert.equal(calls,0);await finish(f,lease,work);assert.deepEqual({...f.db.db.prepare('SELECT * FROM background_history_fairness_state').get()},before);
+ const work=await runBackgroundHistoryWork(f.env,{getFinanceEscrowReleaseCoverage:async()=>{calls++;}},{month,lease},{now:f.now});assert.equal(work.history,'PAUSED');assert.equal(calls,0);await finish(f,lease,work);assert.deepEqual({...f.db.db.prepare('SELECT * FROM background_history_fairness_state').get()},before);assert.equal(f.db.db.prepare('SELECT COUNT(*) AS n FROM background_coverage_bootstrap_attempts').get().n,0);
 });
 
 test('bootstrap source wrappers reject a second private read even when a child continues',async t=>{
@@ -74,4 +74,38 @@ test('a bootstrap source cannot use the previous month after Brasília midnight 
  const f=await fixture(t,{importing:false});f.clock.value=Date.UTC(2026,10,30,23,59,59)+3*3600000;f.db.db.prepare('UPDATE business_sync_state SET next_run_at=?').run(Math.floor(f.now()/1000)+3600);const lease=await acquire(f);assert.equal(lease.coverage_bootstrap,true);let calls=0;
  const work=await runBackgroundHistoryWork(f.env,{getFinanceEscrowReleaseCoverage:async()=>{calls++;}},{month,lease},{now:f.now,runAudits:async(_,services)=>{f.clock.value+=2000;await assert.rejects(()=>services.getFinanceEscrowReleaseCoverage(),/BACKGROUND_HISTORY_LEASE_EXPIRED/);return {coverage_status:'PAUSED'};}});
  assert.equal(work.history,'PAUSED');assert.equal(work.source_reads,0);assert.equal(calls,0);await finish(f,lease,work);
+});
+
+
+test('NOT_DUE bootstrap is not starved by a recent ordinary auxiliary finish',async t=>{
+ const f=await fixture(t,{importing:false});
+ f.db.db.prepare('UPDATE background_history_fairness_state SET last_auxiliary_at=?,finance_since_audit=0').run(stamp-120);
+ const lease=await acquire(f);assert.equal(lease.lane,'HISTORY');assert.equal(lease.coverage_bootstrap,true);assert.equal(lease.coverage_bootstrap_month,month);
+ f.db.rpc=0;await finish(f,lease);assert.equal(f.db.rpc,1,'cooldown piggybacks the existing finish batch');
+ assert.deepEqual({...f.db.db.prepare('SELECT * FROM background_coverage_bootstrap_attempts WHERE month=?').get(month)},{month,last_attempt_at:stamp,next_attempt_at:stamp+300});
+});
+
+test('ordinary auxiliary work progresses during a failed bootstrap cooldown and cannot postpone its retry',async t=>{
+ const f=await fixture(t,{importing:false}),first=await acquire(f);
+ const work=await runBackgroundHistoryWork(f.env,{}, {month,lease:first},{now:f.now,runAudits:async()=>{throw Error('INIT_FAILED');}});assert.equal(work.history,'ERROR');await finish(f,first,work);
+ const attempt={...f.db.db.prepare('SELECT * FROM background_coverage_bootstrap_attempts WHERE month=?').get(month)},lanes=[];
+ for(let tick=1;tick<=4;tick++){
+  f.clock.value=base+tick*60000;const lease=await acquire(f);lanes.push(lease.lane);assert.equal(lease.coverage_bootstrap,false);await finish(f,lease);
+  assert.deepEqual({...f.db.db.prepare('SELECT * FROM background_coverage_bootstrap_attempts WHERE month=?').get(month)},attempt);
+ }
+ assert.deepEqual(lanes,['FINANCE','REGISTRY','FINANCE','PRODUCTION']);assert.equal(f.db.db.prepare('SELECT last_auxiliary_at FROM background_history_fairness_state').get().last_auxiliary_at,stamp+240);
+ f.clock.value=base+300000;const retry=await acquire(f);assert.equal(retry.lane,'HISTORY');assert.equal(retry.coverage_bootstrap,true,'own retry deadline survives ordinary AUX every two minutes');await finish(f,retry);
+ assert.equal(f.db.db.prepare('SELECT next_attempt_at FROM background_coverage_bootstrap_attempts WHERE month=?').get(month).next_attempt_at,stamp+600);
+});
+
+test('busy imports retain the existing five-minute auxiliary gap before first bootstrap',async t=>{
+ const f=await fixture(t);f.db.db.prepare('UPDATE background_history_fairness_state SET last_auxiliary_at=?').run(stamp-120);
+ const lease=await acquire(f);assert.equal(lease.lane,'FINANCE');assert.equal(lease.coverage_bootstrap,false);await finish(f,lease);
+ assert.equal(f.db.db.prepare('SELECT COUNT(*) AS n FROM background_coverage_bootstrap_attempts').get().n,0);
+});
+
+test('invalid bootstrap month metadata cannot create a cooldown for a different scope',async t=>{
+ const f=await fixture(t,{importing:false}),lease=await acquire(f);
+ await assert.rejects(()=>finish(f,{...lease,coverage_bootstrap_month:null}),/BACKGROUND_LANE_REQUEST_INVALID/);
+ assert.equal(f.db.db.prepare('SELECT COUNT(*) AS n FROM background_coverage_bootstrap_attempts').get().n,0);await finish(f,lease);
 });

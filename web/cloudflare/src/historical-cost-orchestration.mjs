@@ -10,6 +10,7 @@ export const BACKGROUND_LANE_SCHEMA=[
  `INSERT OR IGNORE INTO background_collection_lane_state(id,revision,next_lane,auxiliary_index) VALUES(1,1,'FINANCE',0)`,
  `CREATE TABLE IF NOT EXISTS background_history_fairness_state(id INTEGER PRIMARY KEY CHECK(id=1),finance_since_audit INTEGER NOT NULL CHECK(finance_since_audit BETWEEN 0 AND 4),last_auxiliary_at INTEGER,returns_retry_at INTEGER NOT NULL,reserved_returns_streak INTEGER NOT NULL CHECK(reserved_returns_streak BETWEEN 0 AND 2),next_history_work TEXT NOT NULL CHECK(next_history_work IN('COST','AUDIT')))`,
  `INSERT OR IGNORE INTO background_history_fairness_state(id,finance_since_audit,returns_retry_at,reserved_returns_streak,next_history_work) VALUES(1,0,0,0,'COST')`,
+ `CREATE TABLE IF NOT EXISTS background_coverage_bootstrap_attempts(month TEXT PRIMARY KEY,last_attempt_at INTEGER NOT NULL,next_attempt_at INTEGER NOT NULL)`,
 ];
 export class HistoricalCostOrchestrationError extends Error{constructor(code,status=503){super(code);this.status=status;}}
 const fail=(code,status=503)=>{throw new HistoricalCostOrchestrationError(code,status);};
@@ -31,7 +32,7 @@ export async function acquireBackgroundLane(env,{month},{now=()=>Date.now(),boot
  const earliest=new Date(month+'-01T12:00:00Z');earliest.setUTCMonth(earliest.getUTCMonth()-3);
  // Only the production caller enables this cue after schema initialization.
  // Default standalone/legacy callers do not reference the additive table.
- const bootstrapSql=bootstrapCoverage?'EXISTS(SELECT 1 FROM business_month_publications WHERE month>=? AND month<?) AND NOT EXISTS(SELECT 1 FROM financial_audit_coverage_turns WHERE month=?)':'0',bootstrapArgs=bootstrapCoverage?[earliest.toISOString().slice(0,7),month,month]:[];
+ const bootstrapSql=bootstrapCoverage?'EXISTS(SELECT 1 FROM business_month_publications WHERE month>=? AND month<?) AND NOT EXISTS(SELECT 1 FROM financial_audit_coverage_turns WHERE month=?) AND NOT EXISTS(SELECT 1 FROM background_coverage_bootstrap_attempts WHERE month=? AND next_attempt_at>?)':'0',bootstrapArgs=bootstrapCoverage?[earliest.toISOString().slice(0,7),month,month,month,stamp]:[];
  try{row=(await db.prepare(`UPDATE background_collection_lane_state SET revision=revision+1,lease_token=?,lease_until=? WHERE id=1 AND revision<2147483646 AND (lease_token IS NULL OR lease_until<=?) RETURNING revision,next_lane,auxiliary_index,analysis_attempt_day,(SELECT enabled FROM business_sync_state WHERE id=1) AS enabled,(SELECT next_run_at FROM business_sync_state WHERE id=1) AS finance_due_at,(SELECT summary FROM business_sync_state WHERE id=1) AS finance_summary,(SELECT json_extract(payload,'$.hermes_mode') FROM admin_settings WHERE id=1) AS hermes_mode,(SELECT json_extract(payload,'$.daily_hour') FROM admin_settings WHERE id=1) AS daily_hour,EXISTS(SELECT 1 FROM hermes_jobs WHERE dedupe_key=?) AS analysis_queued,EXISTS(SELECT 1 FROM hermes_agent_capabilities c JOIN hermes_agent a ON a.id=c.id WHERE c.id=1 AND c.protocol='hermes-finance-v1' AND c.maintenance_until<=? AND (julianday(?)-julianday(c.updated_at))*86400 BETWEEN 0 AND 90 AND (julianday(?)-julianday(a.heartbeat))*86400 BETWEEN 0 AND 90) AS bridge_ready,(SELECT finance_since_audit FROM background_history_fairness_state WHERE id=1) AS finance_since_audit,(SELECT last_auxiliary_at FROM background_history_fairness_state WHERE id=1) AS last_auxiliary_at,(SELECT returns_retry_at FROM background_history_fairness_state WHERE id=1) AS returns_retry_at,(SELECT reserved_returns_streak FROM background_history_fairness_state WHERE id=1) AS reserved_returns_streak,(SELECT next_history_work FROM background_history_fairness_state WHERE id=1) AS next_history_work,EXISTS(SELECT 1 FROM business_month_publications WHERE month=?) AS has_publication,${missingReturnsSql} AS returns_due,${bootstrapSql} AS coverage_bootstrap_due`).bind(token,stamp+290,stamp,'daily:'+today,stamp*1000,date.toISOString(),date.toISOString(),month,month,stamp,...bootstrapArgs).all()).results[0];}catch{fail('BACKGROUND_LANE_STORAGE_UNAVAILABLE');}
  if(!row)return {schema:'background_lane_v1',lane:'LEASED',token:null,revision:null,auxiliary_index:null};
  if(!integer(row.revision,1,2147483646)||!['FINANCE','AUXILIARY'].includes(row.next_lane)||!integer(row.auxiliary_index,0,4)||![0,1].includes(row.enabled)||!integer(row.finance_due_at))fail('BACKGROUND_LANE_STORAGE_INVALID');
@@ -42,24 +43,30 @@ export async function acquireBackgroundLane(env,{month},{now=()=>Date.now(),boot
  const reserved=row.returns_due===1&&row.reserved_returns_streak<2&&row.returns_retry_at<=stamp&&(row.finance_due_at>stamp||importing&&row.next_lane==='AUXILIARY'&&auxiliaryDue);
  // A bootstrap cannot repeatedly overtake other auxiliary work if its audit
  // fails before initializing the monthly marker: share the two-reservation
- // burst limit and require a five-minute gap, without delaying Returns retries.
- const bootstrap=!reserved&&row.coverage_bootstrap_due===1&&row.reserved_returns_streak<2&&(row.last_auxiliary_at===null||stamp-row.last_auxiliary_at>=300)&&(row.finance_due_at>stamp||importing&&row.next_lane==='AUXILIARY'&&auxiliaryDue);
+ // burst limit and its own five-minute retry gap. Ordinary auxiliary activity
+ // cannot postpone the first attempt or extend a failed bootstrap's cooldown.
+ // Busy Finance imports still retain their existing 4/5 auxiliary fairness.
+ const bootstrap=!reserved&&row.coverage_bootstrap_due===1&&row.reserved_returns_streak<2&&(row.finance_due_at>stamp||importing&&row.next_lane==='AUXILIARY'&&auxiliaryDue);
  const lane=row.enabled===0?'PAUSED':reserved||bootstrap?'HISTORY':row.next_lane==='FINANCE'||importing&&!auxiliaryDue?'FINANCE':analysisDue?'ANALYSIS':auxiliaries[row.auxiliary_index];
- return {schema:'background_lane_v1',lane,token,revision:row.revision,auxiliary_index:row.auxiliary_index,reserved_returns:row.enabled===1&&reserved,coverage_bootstrap:row.enabled===1&&bootstrap,history_turn:row.next_history_work};
+ return {schema:'background_lane_v1',lane,token,revision:row.revision,auxiliary_index:row.auxiliary_index,reserved_returns:row.enabled===1&&reserved,coverage_bootstrap:row.enabled===1&&bootstrap,...(row.enabled===1&&bootstrap?{coverage_bootstrap_month:month}:{}),history_turn:row.next_history_work};
 }
 
 export async function finishBackgroundLane(env,lease,{now=()=>Date.now(),repeatHistory=false,auditSourceReads=0,historyNextWork=null}={}){
  const stamp=clock(now);if(!lease?.token)return false;
  const reserved=lease.reserved_returns??false,bootstrap=lease.coverage_bootstrap??false,priority=reserved||bootstrap;
- if(typeof lease.token!=='string'||!/^[a-f0-9-]{36}$/.test(lease.token)||!integer(lease.revision,1,2147483646)||!integer(lease.auxiliary_index,0,4)||!['FINANCE','PAUSED','ANALYSIS',...auxiliaries].includes(lease.lane)||typeof repeatHistory!=='boolean'||typeof reserved!=='boolean'||typeof bootstrap!=='boolean'||priority&&lease.lane!=='HISTORY'||reserved&&bootstrap||!integer(auditSourceReads,0,1)||![null,'COST','AUDIT'].includes(historyNextWork))fail('BACKGROUND_LANE_REQUEST_INVALID',400);
+ if(typeof lease.token!=='string'||!/^[a-f0-9-]{36}$/.test(lease.token)||!integer(lease.revision,1,2147483646)||!integer(lease.auxiliary_index,0,4)||!['FINANCE','PAUSED','ANALYSIS',...auxiliaries].includes(lease.lane)||typeof repeatHistory!=='boolean'||typeof reserved!=='boolean'||typeof bootstrap!=='boolean'||priority&&lease.lane!=='HISTORY'||reserved&&bootstrap||bootstrap&&(typeof lease.coverage_bootstrap_month!=='string'||!/^\d{4}-(0[1-9]|1[0-2])$/.test(lease.coverage_bootstrap_month))||!integer(auditSourceReads,0,1)||![null,'COST','AUDIT'].includes(historyNextWork))fail('BACKGROUND_LANE_REQUEST_INVALID',400);
  const auxiliary=auxiliaries.includes(lease.lane),index=auxiliary&&!priority&&!(lease.lane==='HISTORY'&&repeatHistory)?(lease.auxiliary_index+1)%auxiliaries.length:lease.auxiliary_index;
  const analysisDay=lease.lane==='ANALYSIS'?new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date(stamp*1000)):null;
  const enabled='(SELECT enabled FROM business_sync_state WHERE id=1)=1';
  try{
-  const writes=await database(env).batch([
+  const statements=[
    database(env).prepare('UPDATE background_collection_lane_state SET next_lane=CASE WHEN ? OR NOT '+enabled+' THEN next_lane ELSE ? END,auxiliary_index=CASE WHEN '+enabled+' THEN ? ELSE auxiliary_index END,analysis_attempt_day=CASE WHEN '+enabled+' THEN COALESCE(?,analysis_attempt_day) ELSE analysis_attempt_day END,lease_token=NULL,lease_until=NULL WHERE id=1 AND revision=? AND lease_token=? AND lease_until>?').bind(Number(lease.lane==='PAUSED'),lease.lane==='FINANCE'?'AUXILIARY':'FINANCE',index,analysisDay,lease.revision,lease.token,stamp),
    database(env).prepare('UPDATE background_history_fairness_state SET finance_since_audit=CASE WHEN ? THEN MIN(4,finance_since_audit+1) WHEN ? THEN 0 ELSE finance_since_audit END,last_auxiliary_at=CASE WHEN ? THEN ? ELSE last_auxiliary_at END,returns_retry_at=CASE WHEN ? THEN ? WHEN ? THEN 0 ELSE returns_retry_at END,reserved_returns_streak=CASE WHEN ? THEN MIN(2,reserved_returns_streak+1) WHEN ? THEN 0 ELSE reserved_returns_streak END,next_history_work=COALESCE(?,next_history_work) WHERE id=1 AND changes()=1 AND '+enabled).bind(Number(lease.lane==='FINANCE'),auditSourceReads,Number(auxiliary||lease.lane==='ANALYSIS'),stamp,Number(reserved&&auditSourceReads===0),stamp+300,Number(reserved&&auditSourceReads===1),Number(priority),Number((auxiliary||lease.lane==='ANALYSIS')&&!priority),historyNextWork),
-  ]);
+  ];
+  // The new statement is absent for legacy/default leases: SQLite resolves
+  // even WHERE-false table names, so optional schema must not be referenced.
+  if(bootstrap)statements.push(database(env).prepare('INSERT INTO background_coverage_bootstrap_attempts(month,last_attempt_at,next_attempt_at) SELECT ?,?,? WHERE changes()=1 AND '+enabled+' ON CONFLICT(month) DO UPDATE SET last_attempt_at=excluded.last_attempt_at,next_attempt_at=excluded.next_attempt_at').bind(lease.coverage_bootstrap_month,stamp,stamp+300));
+  const writes=await database(env).batch(statements);
   return writes[0]?.meta?.changes===1;
  }catch{fail('BACKGROUND_LANE_STORAGE_UNAVAILABLE');}
 }
