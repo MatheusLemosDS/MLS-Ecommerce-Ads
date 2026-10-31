@@ -1,5 +1,10 @@
 # Roadmap canônico — MLS Commerce OS
 
+**Incremento em andamento — 31/10/2026:** aproximação da prévia com inspeção
+acessível de gráficos, escala de valores, iluminação vetorial e correção da
+busca no cabeçalho mobile, sobre a main PR86 `8d66525`. Estado verificável no
+[registro visual atual](MLS_VISUAL_CHARTS_RELEASE_2026_10_31.md).
+
 **Release Live PR #86 conferida:** visual e módulos preparados integrados à
 main PR85, com rascunhos AI Sales persistentes. CI 41157082180: 2.382 Node,
 67 Python e Chromium aprovados; App oficial versão `2ffcefb4` com ambas flags

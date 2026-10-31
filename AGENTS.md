@@ -1,4 +1,5 @@
 # MLS Commerce OS — instruções do repositório (ChatGPT, Codex e colaboradores)
+> **Estado atual — 31/10/2026:** PR #86 está integrada à main `8d66525` e publicada no App oficial `2ffcefb4`, com as duas flags owner `ENABLED`, Auth/Finance preservados. O proprietário autorizou continuar o roadmap e aproximar a interface da prévia na Live por incrementos validados. A entrega de gráficos/topbar/globo em andamento está em `docs/MLS_VISUAL_CHARTS_RELEASE_2026_10_31.md`. As notas de DRAFT/sem deploy abaixo são históricas; gates comerciais e M2 permanecem abertos.
 
 > **Homologação local validada, 30/10/2026:** a continuação da PR #83 cria somente ferramentas locais em `feature/mls-owner-homologation-preview-20261030`. Worker App permanece no hash `a5ba3298…bbfb91c8`; Auth/Finance inalterados. Estado e testes em `docs/MLS_OWNER_PREVIEW_CHECKPOINT.json`. Prévia e exemplos são sintéticos; sem Cloudflare autenticada, staging online, merge ou deploy. As notas anteriores abaixo são históricas.
 

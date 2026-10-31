@@ -2,7 +2,7 @@
   "schema": "mls_commerce_os_checkpoint_v1",
   "canonical_roadmap": "docs/ROADMAP_MLS_COMMERCE_OS.md",
   "legacy_roadmap": "docs/ROADMAP_BRAZACOMMERCE.md",
-  "updated_at": "2026-10-30",
+  "updated_at": "2026-10-31",
   "product": {
     "name": "MLS Commerce OS",
     "supervisor": "MLS Hermes",
@@ -30,7 +30,7 @@
     "merge_commit": "9c418fd3010f46957d1ce52345baacd76041c788"
   },
   "current_phase": "M2_FINANCE_RETURNS_RECONCILIATION",
-  "working_branch": "release/live-roadmap-improvements-20261030",
+  "working_branch": "feature/live-visual-charts-refinement-20261031",
   "current_status": "LIVE_PREPARED_IMPROVEMENTS_AND_OWNER_DRAFTS_VERIFIED_M2_EXTERNAL_GATES_OPEN",
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
@@ -111,11 +111,10 @@
     }
   },
   "next_actions": [
-    "Complete and test owner-scoped persistent AI Sales workspace with CSRF, CAS revisions and approval/media rechecks",
-    "Validate reconciled candidate end-to-end with full Node/Python/Chromium and preserve exact PR85 financial runtime",
-    "After green CI, publish validated improvements to official App and verify bytes/config/bindings/cron and owner-only feature flags",
-    "Preserve separate demonstrative PR84 artifacts; provision another environment only when necessary",
-    "Record real Seller Centre/bank evidence before closing M2; continue independent roadmap increments without commercial writes"
+    "Validate and publish the current chart inspection, visual atmosphere and mobile topbar increment against the exact PR86 baseline",
+    "Collect real Seller Centre evidence for status review, returns and Pending/releases before closing M2; bank settlement remains distinct",
+    "Continue saved catalog and weekly/monthly cost usability, then compatible Products/Pricing observer increments without commercial writes",
+    "Preserve the synthetic PR84 preview; use a separate environment only when necessary; external AI/media/grants require real configuration and authorization"
   ],
   "m0_followup": [
     "Conferir visual autenticado em desktop e celular durante M1; corrigir apenas branding/layout sem renomear infraestrutura"
@@ -844,6 +843,21 @@
         "sync_failure_count": 0,
         "auth_finance_unchanged": true
       }
+    }
+  },
+  "visual_chart_refinement_20261031": {
+    "status": "IMPLEMENTING_VALIDATING",
+    "base_main": "8d66525bc3b96914412a9538d3ec84048ac78dbb",
+    "docs": "docs/MLS_VISUAL_CHARTS_RELEASE_2026_10_31.md",
+    "commercial_writes": "LOCKED",
+    "finance_m2": "OPEN",
+    "child16_rule_repair": {
+      "state": "NORMAL_SAVE_EXECUTED_POST_DIAGNOSTIC_PENDING",
+      "before_revision": 6,
+      "after_revision": 7,
+      "audit_added": 1,
+      "unit_cost_cents": 1250,
+      "unrelated_fields_preserved": true
     }
   }
 }

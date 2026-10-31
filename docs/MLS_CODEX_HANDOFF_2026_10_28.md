@@ -1,5 +1,10 @@
 # Handoff atual — melhorias na versão Live, 30/10/2026
 
+**Incremento em andamento — 31/10/2026:** aproximação da prévia com inspeção
+acessível de gráficos, escala de valores, iluminação vetorial e correção da
+busca no cabeçalho mobile, sobre a main PR86 `8d66525`. Estado verificável no
+[registro visual atual](MLS_VISUAL_CHARTS_RELEASE_2026_10_31.md).
+
 O proprietário autorizou promover todas as melhorias preparadas para a versão
 Live e continuar os próximos incrementos validados ali, usando ambiente
 separado apenas quando necessário. As antigas restrições de somente DRAFT e

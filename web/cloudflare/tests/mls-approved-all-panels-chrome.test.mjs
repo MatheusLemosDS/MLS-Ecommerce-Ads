@@ -2,11 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import {spawn} from 'node:child_process';
-import {existsSync,readFileSync,mkdtempSync,mkdirSync,writeFileSync} from 'node:fs';
+import {existsSync,mkdtempSync,mkdirSync,writeFileSync} from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {compiledOwnerReportPage} from './owner-report-browser-fixture.mjs';
 import {createChromeProfileCleanup} from './chrome-profile-cleanup.mjs';
+import {waitForChromeDebugPort} from './chrome-debug-port.mjs';
 
 const chrome=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium','/usr/bin/chromium-browser'].find(existsSync);
 const output=process.env.MLS_APPROVED_SCREENSHOT_DIR||null;
@@ -19,12 +20,7 @@ async function start({captureDirectory=output}={}){
  const cleanup=createChromeProfileCleanup(child,profile);
  let socket;
  try{
-  let port=0;
-  for(let i=0;i<120;i++){
-   try{port=Number(readFileSync(path.join(profile,'DevToolsActivePort'),'utf8').split('\n')[0]);if(port>0)break;}catch{}
-   await delay(75);
-  }
-  if(!port)throw Error('Chrome CDP startup failed');
+  const port=await waitForChromeDebugPort(child,profile);
   const pages=await(await fetch('http://127.0.0.1:'+port+'/json/list')).json();
   const url=pages.find(x=>x.type==='page')?.webSocketDebuggerUrl;
   if(!url)throw Error('Chrome page not found');
@@ -65,6 +61,26 @@ async function start({captureDirectory=output}={}){
 const pages=['overview','agents','agent-finance','agent-ads','agent-products','agent-production',
  'agent-returns','agent-auditor','agent-hermes','products','production','roadmap','hermes','margins','history'];
 const screenshotPages=new Set(pages);
+async function topbarBounds(cdp){
+ return cdp.evaluate(`(()=>{
+  const bar=document.querySelector('.mls-shell-topbar'),tools=bar?.querySelector('.mls-shell-tools');
+  if(!bar||!tools)return {missing:true};
+  const visible=node=>!!node&&node.checkVisibility({checkVisibilityCSS:true}),box=node=>{const r=node.getBoundingClientRect();return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height};};
+  const pieces=[bar.querySelector('.mls-shell-context'),...tools.children].filter(visible).map(node=>({name:node.id||node.className,rect:box(node)})),overlap=[];
+  for(let a=0;a<pieces.length;a++)for(let b=a+1;b<pieces.length;b++){const x=pieces[a],y=pieces[b];if(Math.min(x.rect.right,y.rect.right)-Math.max(x.rect.left,y.rect.left)>1&&Math.min(x.rect.bottom,y.rect.bottom)-Math.max(x.rect.top,y.rect.top)>1)overlap.push([x.name,y.name]);}
+  const controls=[...bar.querySelectorAll('button,summary')].filter(visible).map(node=>{const r=box(node),hit=document.elementFromPoint((r.left+r.right)/2,(r.top+r.bottom)/2);return {name:node.id||node.className,...r,hit:hit===node||node.contains(hit)};});
+  return {width:innerWidth,bar:box(bar),pieces,overlap,controls};
+ })()`);
+}
+function assertTopbar(bounds,label,width){
+ assert.equal(bounds.missing,undefined,label+': topbar missing');assert.equal(bounds.width,width);
+ assert.ok(bounds.bar.left>=-1&&bounds.bar.right<=width+1,label+': topbar clipped');
+ assert.deepEqual(bounds.overlap,[],label+': topbar sections overlap '+JSON.stringify(bounds));
+ assert.ok(bounds.controls.length>=2,label+': topbar actions missing '+JSON.stringify(bounds));
+ assert.ok(bounds.controls.some(control=>control.name==='missionSearchOpen'),label+': search action missing');
+ assert.ok(bounds.controls.some(control=>control.name.includes('theme-button')),label+': theme action missing');
+ for(const control of bounds.controls){assert.ok(control.width>=43.9&&control.height>=43.9,label+': topbar action below44px '+JSON.stringify(control));assert.ok(control.left>=-1&&control.right<=width+1,label+': topbar action clipped '+JSON.stringify(control));assert.equal(control.hit,true,label+': topbar action covered '+control.name);}
+}
 async function navigateOwnerPanel(cdp,id){
  return await cdp.evaluate("(()=>{"+
      "const id="+JSON.stringify(id)+";"+
@@ -79,9 +95,9 @@ async function navigateOwnerPanel(cdp,id){
      "return {tab:new URL(location.href).searchParams.get('tab'),active:document.documentElement.dataset.activePanel,visible:!document.getElementById(id)?.hidden};"+
      "})()");
 }
-test('owner design smoke: fifteen real workspaces, real navigation and light/dark themes at desktop and 390px mobile',{timeout:120000},async t=>{
+for(const minify of [false,true])test('owner design smoke: fifteen real workspaces, real navigation and light/dark themes at desktop and 390px mobile (minify='+minify+')',{timeout:120000},async t=>{
  if(!chrome)return t.skip('Chrome not installed');
- let {html}=await compiledOwnerReportPage(false,{ownerPreview:false});
+ let {html}=await compiledOwnerReportPage(minify,{ownerPreview:false});
  html=html.replace('<head>','<head><script>window.__mlsPanelQaErrors=[];window.addEventListener("error",event=>window.__mlsPanelQaErrors.push(String(event.message||"ERROR").slice(0,250)));window.addEventListener("unhandledrejection",event=>window.__mlsPanelQaErrors.push(String(event.reason?.message||event.reason||"REJECTION").slice(0,250)));</script>');
  html=html.replace('<body>','<body><div style="position:fixed;right:8px;bottom:8px;z-index:99999;pointer-events:none;border:1px solid #729bcc;background:#0d2341;color:#e8f7ff;font:10px sans-serif;padding:6px 9px;border-radius:6px">QA SINTÉTICA · SEM DADOS REAIS</div>');
  const server=http.createServer((req,res)=>{
@@ -124,6 +140,7 @@ test('owner design smoke: fifteen real workspaces, real navigation and light/dar
     assert.equal(selectedTheme.persisted,theme,viewport.name+': theme preference not persisted');
     assert.equal(selectedTheme.scheme,theme,viewport.name+': browser color scheme differs');
     await cdp.evaluate('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');
+    assertTopbar(await topbarBounds(cdp),viewport.name+'/'+theme+'/'+(minify?'minified':'normal'),viewport.width);
     for(const id of pages){
     const navigation=await navigateOwnerPanel(cdp,id);
     assert.equal(navigation.missing,undefined,viewport.name+'/'+theme+': destination has no usable navigation '+id);
@@ -191,15 +208,15 @@ test('owner design smoke: fifteen real workspaces, real navigation and light/dar
      if(layout.ads){assert.equal(layout.ads.disabled,true,label+': campaign creation must remain blocked');assert.equal(layout.ads.reasonVisible,true,label+': observer block reason must be visible');assert.match(layout.ads.reason,/Bloqueado.*Observador/);}
     }
     assert.deepEqual(result.errors,[],viewport.name+'/'+theme+'/'+id+': browser runtime errors');
-    if(screenshotPages.has(id))await cdp.capture('approved-'+theme+'-'+viewport.name+'-'+id+'.png');
+    if(screenshotPages.has(id))await cdp.capture('approved-'+theme+'-'+viewport.name+'-'+id+(minify?'-minified':'')+'.png');
     report.push({viewport:viewport.name,width:viewport.width,height:viewport.height,panel:id,theme,
-     navigation:'REAL_EXISTING_CONTROL',theme_selection:'REAL_THEME_TOGGLE',synthetic:true,visible:true,overflow:false});
+     minify,navigation:'REAL_EXISTING_CONTROL',theme_selection:'REAL_THEME_TOGGLE',synthetic:true,visible:true,overflow:false,topbar:'NON_OVERLAPPING_44PX_CONTROLS'});
     }
    }
   }
   if(output){
    mkdirSync(output,{recursive:true});
-   writeFileSync(path.join(output,'results.json'),JSON.stringify({
+   writeFileSync(path.join(output,minify?'results-minified.json':'results.json'),JSON.stringify({
     schema:'mls_approved_design_all_panels_qa_v1',owner_authenticated:false,
     production_approved:false,mockup_parity_approved:false,source:'synthetic owner',checks:report
    },null,2)+'\n');

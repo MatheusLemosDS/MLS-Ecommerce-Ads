@@ -1,6 +1,6 @@
 {
   "schema": "mls_master_mission_checkpoint_v1",
-  "updated_at": "2026-10-30",
+  "updated_at": "2026-10-31",
   "base_visual_sha": "8d860b2c4f26531c53c4cdba0e06a14f51a7eef4",
   "visual_branch": "feature/mls-mockup-parity-real-charts-20261029",
   "visual_pr": 79,
@@ -253,5 +253,11 @@
     "workspace_tables_exist": true,
     "auth_finance_preserved": true,
     "commercial_writes": false
+  },
+  "visual_chart_refinement_20261031": {
+    "status": "IMPLEMENTING_VALIDATING",
+    "base_main": "8d66525bc3b96914412a9538d3ec84048ac78dbb",
+    "docs": "docs/MLS_VISUAL_CHARTS_RELEASE_2026_10_31.md",
+    "all_roadmap_phases_complete": false
   }
 }

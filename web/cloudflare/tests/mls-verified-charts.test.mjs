@@ -17,8 +17,8 @@ test('daily area retains real values and never interpolates a missing day',()=>{
  assert.equal(m.points[1].value,null);
  const html=renderMlsVerifiedChart(m,{palette:'net'});
  assert.match(html,/<svg\b/);
- assert.match(html,/2026-10-27: R\$ 32\.00 \(parcial\)/);
- assert.match(html,/2026-10-28: R\$ -1\.00/);
+ assert.match(html,/2026-10-27: R\$ 32,00 \(parcial\)/);
+ assert.match(html,/2026-10-28: -R\$ 1,00/);
  assert.match(html,/2 observações reais|3 observações reais/);
  // Only the 27th->28th segment exists, split at zero to retain the loss color.
  // The missing 26th must never become a fabricated 25th->27th segment.
@@ -66,8 +66,8 @@ test('donut requires exclusive reconciled groups, never overlapping counters',()
  assert.equal(model.status,'READY');
  const html=renderMlsVerifiedChart(model,{palette:'finance'});
  assert.match(html,/<svg\b/);
- assert.match(html,/70\.0%/);
- assert.match(html,/30\.0%/);
+ assert.match(html,/70,0%/);
+ assert.match(html,/30,0%/);
  assert.match(html,/10 registros exclusivos verificados/);
 });
 test('valid fully single-state DTF queue renders 100%, incomplete queue remains honest',()=>{
@@ -75,7 +75,7 @@ test('valid fully single-state DTF queue renders 100%, incomplete queue remains 
   line_count:10,pending_lines:0,reserved_lines:0,produced_lines:10,blocked_lines:0
  });
  assert.equal(good.status,'READY');
- assert.match(renderMlsVerifiedChart(good),/100\.0%/);
+ assert.match(renderMlsVerifiedChart(good),/100,0%/);
  const incomplete=projectMlsDtfStateChart({
   line_count:10,pending_lines:3,reserved_lines:1,produced_lines:2,blocked_lines:1
  });
@@ -144,4 +144,54 @@ test('SVG labels, grids and tracks inherit theme tokens while semantic series re
  const mixed=renderMlsVerifiedChart(models[0]);
  assert.match(mixed,/stroke="#ff7899"/,'negative values retain their loss color');
  assert.match(mixed,/stroke="#35e6ae"/,'positive values retain their series color');
+});
+
+test('daily inspection exposes only real observations with exact BRL values, basis and an honest scale',()=>{
+ const model=projectMlsDailyChart(daily([
+  {date:'2026-10-24',net_cents:-125099,net_basis:'ESTIMATE'},
+  {date:'2026-10-25',net_cents:null},
+  {date:'2026-10-26',net_cents:0,partial:true,net_basis:'KNOWN_COSTS'},
+  {date:'2026-10-27',net_cents:125099,net_basis:'ESTIMATE'}
+ ]));
+ assert.equal(model.points[2].basis,'KNOWN_COSTS');
+ const svg=renderMlsVerifiedChart(model);
+ assert.equal((svg.match(/data-mls-chart-mark=/g)||[]).length,3,'a missing day has no interactive observation');
+ assert.match(svg,/data-mls-chart-value="-R\$ 1\.250,99"/);
+ assert.match(svg,/data-mls-chart-value="R\$ 0,00"/);
+ assert.match(svg,/data-mls-chart-label="26\/10\/2026"/);
+ assert.match(svg,/data-mls-chart-basis="KNOWN_COSTS"/);
+ assert.match(svg,/Subtotal com custos conhecidos · Dia parcial/);
+ assert.equal((svg.match(/class="mls-chart-axis"/g)||[]).length,5);
+ assert.match(svg,/class="mls-chart-zero"/);
+ assert.match(svg,/class="mls-chart-halo"/);
+ assert.doesNotMatch(svg,/\bid=|url\(#/,'multiple inline charts cannot collide through SVG IDs');
+ assert.equal((svg.match(/<circle\b/g)||[]).length,3,'halos never add artificial points');
+});
+
+test('categorical and donut inspection keeps zero categories reachable without inventing a visible magnitude',()=>{
+ for(const orientation of ['vertical','horizontal']){
+  const svg=renderMlsVerifiedChart(projectMlsCategoricalChart({complete:true,orientation,unit:'BRL_CENTS',
+   segments:[{label:'Zero <observado>',value:0},{label:'Custo',value:125099}]}));
+  assert.equal((svg.match(/data-mls-chart-mark=/g)||[]).length,2);
+  assert.equal((svg.match(/tabindex="0"/g)||[]).length,2);
+  assert.match(svg,/data-mls-chart-value="R\$ 0,00"/);
+  assert.match(svg,/data-mls-chart-label="Zero &lt;observado&gt;"/);
+  assert.match(svg,/data-mls-chart-value="R\$ 1\.250,99"/);
+ }
+ const svg=renderMlsVerifiedChart(projectMlsDistribution({complete:true,total:5,
+  segments:[{label:'Com linhas',value:5},{label:'Sem linhas',value:0}]}));
+ assert.equal((svg.match(/data-mls-chart-mark=/g)||[]).length,2);
+ assert.equal((svg.match(/tabindex="0"/g)||[]).length,2);
+ assert.equal((svg.match(/<circle\b/g)||[]).length,1,'zero has a legend target and no invented arc');
+ assert.match(svg,/data-mls-chart-context="0,0% do total observado"/);
+});
+
+test('locale formatting remains exact at safe-integer bounds',()=>{
+ const svg=renderMlsVerifiedChart(projectMlsDailyChart(daily([
+  {date:'2026-10-27',net_cents:-Number.MAX_SAFE_INTEGER},
+  {date:'2026-10-28',net_cents:Number.MAX_SAFE_INTEGER}
+ ])));
+ assert.match(svg,/data-mls-chart-value="-R\$ 90\.071\.992\.547\.409,91"/);
+ assert.match(svg,/data-mls-chart-value="R\$ 90\.071\.992\.547\.409,91"/);
+ assert.doesNotMatch(svg,/NaN|Infinity|undefined/);
 });

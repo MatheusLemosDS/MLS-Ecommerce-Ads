@@ -1,3 +1,15 @@
+INCREMENTO ATUAL — GRÁFICOS E PRÉVIA VISUAL — 31/10/2026
+
+Branch feature/live-visual-charts-refinement-20261031, base main PR86 8d66525.
+Gráficos com inspeção local por ponteiro/toque/teclado, escala/valores PT-BR,
+negativos/subtotais preservados; topbar44px sem sobreposição; globo vetorial.
+Diagnóstico diferencia histórico infantil fora da regra de falta de catálogo.
+Validação/publicação em andamento: docs/MLS_VISUAL_CHARTS_RELEASE_2026_10_31.md.
+Não declarar Live atualizada até conferir versão, bytes, configuração e fontes.
+Tamanho16 da regra infantil foi restaurado pela função normal ao preço já
+confirmado1250c, CAS6→7/+1audit, demais campos preservados. Conferir no registro
+a validação remota da cobertura; não repetir a gravação nem decrementar revisão.
+
 HANDOFF ATUAL — ENTREGA DAS MELHORIAS NA VERSÃO LIVE — 30/10/2026
 
 O proprietário autorizou implementar todas as melhorias preparadas na Live e

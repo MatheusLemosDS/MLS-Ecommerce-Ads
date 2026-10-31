@@ -47,7 +47,7 @@ html[data-theme=dark] .workspace-more .workspace-nav-link.active{
  color:#f0faff;box-shadow:inset 0 0 24px rgba(30,115,223,.14)
 }
 html[data-theme=dark] .topbar .mission-search-trigger{
- background:#102442;border-color:#1e4270;color:#c8def4;min-width:175px
+ background:#102442;border-color:#1e4270;color:#c8def4
 }
 html[data-theme=dark] .theme-button{background:#10233e;color:#edf6ff;border-color:#294567}
 html[data-theme=dark] .workspace .card,html[data-theme=dark] .mission-module,
@@ -84,7 +84,7 @@ html[data-theme=dark] .mission-search-field{border-color:#4990df;background:#112
 .sidebar-navigation .workspace-nav-link{min-height:45px;padding:9px 10px;border-radius:8px;font-size:12px}
 .sidebar-navigation .workspace-nav-link small{display:none}
 .mls-shell-topbar{gap:18px;min-height:72px;padding:12px 24px}
-.mls-shell-topbar .mission-search-trigger{width:min(48vw,480px);justify-content:space-between;gap:12px;min-height:40px;margin-right:auto}
+.mls-shell-topbar .mission-search-trigger{width:min(48vw,480px);min-width:175px;justify-content:space-between;gap:12px;min-height:44px;margin-right:auto}
 .mls-shell-search-label{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;font-weight:500}
 .mls-shell-context{display:none}
 .mls-shell-supervisor{display:flex;align-items:center;gap:9px;color:var(--mls-hermes,var(--accent));white-space:nowrap}
@@ -106,8 +106,9 @@ html[data-theme=dark] .mission-search-field{border-color:#4990df;background:#112
 .mission-dashboard .command-center-head .mission-overview-copy{max-width:76%;position:relative;z-index:1}
 .mission-dashboard .command-center-head .mission-overview-copy h2{font-size:clamp(26px,2.1vw,33px);margin:0 0 5px;line-height:1.2;letter-spacing:-.65px;text-shadow:none}
 .mission-dashboard .command-center-head .mission-overview-copy p{max-width:660px;font-size:12px;line-height:1.5}
-.mls-command-globe{position:absolute;right:9%;top:-35px;width:330px;height:155px;overflow:hidden;z-index:-1;pointer-events:none;filter:drop-shadow(0 0 11px rgba(35,129,255,.55));opacity:.75}
-.mls-command-globe svg{display:block;width:100%;height:auto}
+.mls-command-globe{position:absolute;right:9%;top:-35px;width:330px;height:155px;overflow:hidden;z-index:-1;pointer-events:none;filter:drop-shadow(0 0 11px rgba(35,129,255,.45));opacity:.85}
+.mls-command-globe:before{content:"";position:absolute;inset:16px 4% -30px 31%;border-radius:50%;background:radial-gradient(ellipse at 48% 42%,rgba(72,167,255,.22),rgba(30,108,255,.08) 47%,transparent 72%);filter:blur(8px)}
+.mls-command-globe svg{position:relative;display:block;width:100%;height:auto}
 .mls-overview-period{display:grid;grid-template-columns:18px minmax(0,1fr);column-gap:7px;row-gap:7px;align-items:center;position:relative;z-index:2;margin-left:auto;flex:0 0 auto;width:152px;max-width:100%;color:var(--muted)}
 .mls-overview-period select,.mls-overview-period input{height:39px;min-height:39px;font-size:11px;padding:8px 11px;border-radius:7px;border:1px solid var(--line);background:var(--surface);color:var(--text);width:100%;min-width:0}
 .mls-overview-period input{grid-column:1/-1}
@@ -188,6 +189,20 @@ html[data-theme=dark] .mission-dashboard .mission-kpi-sparkline{filter:drop-shad
 .mls-overview-detail{margin-top:18px;border:1px solid var(--line);border-radius:12px;padding:0 16px}
 .mls-overview-detail>summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-size:12px;font-weight:700}
 .mls-overview-detail .mission-day-intelligence{margin:0 0 16px}
+
+/* Inspection follows existing observed marks; decoration never adds samples. */
+.mission-trend-graph,[data-mission-specialist-chart]{position:relative}
+.mls-verified-chart .mls-chart-series{filter:drop-shadow(0 0 3px rgba(77,161,255,.2))}
+.mls-verified-chart .mls-chart-mark{cursor:crosshair;transition:filter .14s ease}
+.mls-verified-chart .mls-chart-mark:focus-visible,
+.mls-verified-chart .mls-chart-mark[data-mls-chart-selected=true]{outline:2px solid var(--accent,#5cb8ff);outline-offset:3px;filter:drop-shadow(0 0 4px rgba(102,185,255,.65))}
+.mls-verified-chart .mls-chart-crosshair{fill:none;stroke:var(--muted,#9cb1ca);stroke-width:1;stroke-dasharray:3 4;pointer-events:none}
+.mls-chart-readout{position:absolute;z-index:3;top:8px;right:8px;display:grid;gap:2px;max-width:min(270px,calc(100% - 16px));padding:9px 11px;border:1px solid var(--line,#1b3a55);border-radius:8px;background:var(--surface,#071523);box-shadow:0 8px 24px rgba(0,5,20,.26);color:var(--text,#edf6ff);line-height:1.4;pointer-events:none;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.mls-chart-readout[hidden],.mls-chart-crosshair[hidden]{display:none}
+.mls-chart-readout-label{font-size:10px;color:var(--muted,#9cb1ca)}
+.mls-chart-readout-value{font-size:13px;font-weight:750}
+.mls-chart-readout-context{font-size:9px;color:var(--muted,#9cb1ca)}
+:root[data-theme=light] .mls-chart-readout{box-shadow:0 8px 22px rgba(24,61,100,.12)}
 
 .mission-dashboard .hermes-command{
  border-color:rgba(115,91,238,.45);
@@ -322,9 +337,11 @@ html[data-theme=dark] :focus-visible{outline-color:#75c8ff}
 }
 @media(max-width:850px){
  .workspace{padding:20px 16px}
- .mls-shell-context{display:flex;min-width:0}
+ .mls-shell-context{display:flex;min-width:0;overflow:hidden}
  .mls-shell-topbar{min-height:67px;padding:10px 16px;gap:9px}
- .mls-shell-topbar .mission-search-trigger{width:auto;min-width:42px;margin:0}
+ .mls-shell-topbar .mission-search-trigger{flex:0 0 44px;width:44px;min-width:44px;height:44px;min-height:44px;padding:0;margin:0;justify-content:center}
+ .mls-shell-topbar .theme-button{width:44px;min-width:44px;height:44px;min-height:44px}
+ .mls-shell-topbar .workspace-header-menu .workspace-more>summary{min-height:44px}
  .mls-shell-search-label,.mls-shell-supervisor,.mls-shell-tools #connection{display:none}
  .mission-workspace{display:block}
  .mission-workspace>*:not(.mission-page-tabs){grid-column:auto}
@@ -367,6 +384,7 @@ html[data-theme=dark] :focus-visible{outline-color:#75c8ff}
 }
 @media(prefers-reduced-motion:reduce){
  .mission-hub .mission-hub-card,.mls-products-hub .products-hub-card,
- .dtf-workspace .dtf-flow-step,.topbar .mission-search-trigger{transition:none!important;transform:none!important}
+ .dtf-workspace .dtf-flow-step,.topbar .mission-search-trigger,
+ .mls-verified-chart .mls-chart-mark{transition:none!important;transform:none!important}
 }
 `+MLS_AGENT_WORKSPACE_CSS;
