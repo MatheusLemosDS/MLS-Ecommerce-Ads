@@ -111,7 +111,7 @@
     }
   },
   "next_actions": [
-    "Schedule the existing subsequent-calendar release-coverage tracker with the same bounded source budget; its code currently has no production scheduler caller",
+    "Observe the verified SOURCE_MISSING recovery of previous-month source references and collect missing historical release calendars; preserve immutable publications until COMPLETE",
     "Observe remaining return-reference/detail collection and reconcile real status/adjustment differences with Seller Centre; do not infer bank settlement",
     "Keep saved catalog/cost rules current and continue compatible Products/Pricing observer improvements without commercial writes",
     "Inspect Workers Builds preview configuration/logs once Workers Builds Configuration: Edit is available; use the verified official Wrangler flow meanwhile",
@@ -1023,16 +1023,54 @@
     "next_learning_stage": "Link authorized recommendation, execution and later comparable outcome before claiming effectiveness"
   },
   "release_tracker_2026_10_31": {
-    "status": "VALIDATING",
+    "status": "LIVE_VERIFIED_NATURAL_TRACKER_OBSERVED_M2_OPEN",
+    "pr": 90,
     "branch": "feature/m2-release-tracker-20261031",
     "base_main": "23b329efcb311e141366b54c4b400061f38c9301",
+    "code_commit": "cf89fdd04651af2136a0080f615a53ddb0935b09",
+    "code_ci": 41218926278,
+    "code_ci_status": "SUCCESS",
+    "app_version": "17c1e9f1-b9ac-4b6f-bd33-885c9a5aab81",
+    "deployed_at": "2026-10-31T16:22:29.26836Z",
+    "postcheck_at": "2026-10-31T16:24:08.438010+00:00",
+    "app_generated_sha256": "0dd75e25c8119c7f8d952a68b372b61387357de4092a525db8ee38a690ff8739",
+    "app_published_sha256": "137a7d8114d238e5f2fbed057a09ba30de1f742da032c6b26fb9dc31924f2c26",
+    "node_tests": 2637,
+    "python_tests": 67,
+    "failed_tests": 0,
+    "skipped_tests": 0,
     "record": "docs/MLS_M2_RELEASE_TRACKER_2026_10_31.md",
     "features": [
       "bounded_coverage_turn_with_legacy_cursor_sidecar",
       "strict_publication_cas_readonly_owner_get",
       "previous_month_source_missing_recovery_one_step",
-      "observed_calendar_and_attempt_ui"
+      "observed_calendar_and_attempt_ui",
+      "bootstrap_monthly_cooldown_independent_of_auxiliary_activity"
     ],
+    "natural_tracker": {
+      "first_release_version": "2ea13da1-d5f7-4b73-8fed-975e797506e7",
+      "attempted_at": "2026-10-31T16:12:52Z",
+      "observed_at": "2026-10-31T16:13:52.843959+00:00",
+      "cohort_month": "2026-09",
+      "publication_revision": 10,
+      "status": "COLLECTING",
+      "source_refs_requested": 2,
+      "available_source_refs": 0,
+      "calendars_total": 2,
+      "calendars_complete": 1,
+      "pending": [
+        "SOURCE_MISSING",
+        "CALENDAR_MISSING"
+      ],
+      "scope_matches": true,
+      "collector_forced": false
+    },
+    "historical_recovery": "NOT_YET_OBSERVED_AT_FINAL_POSTCHECK",
+    "current_finance_failure_count": 0,
+    "runtime_config_preserved": true,
+    "auth_finance_preserved": true,
+    "rollback_app_version": "2ea13da1-d5f7-4b73-8fed-975e797506e7",
+    "m2_complete": false,
     "commercial_writes_allowed": false,
     "bank_settlement_verified": false
   }

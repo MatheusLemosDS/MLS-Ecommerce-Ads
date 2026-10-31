@@ -1,6 +1,6 @@
 # Roadmap canônico — MLS Commerce OS
 
-**Incremento M2 em validação — 31/10/2026:** ligar o acompanhamento de liberações posteriores à fila e recuperar referências expiradas do mês anterior apenas com SOURCE_MISSING comprovado, preservando a publicação. [Registro](MLS_M2_RELEASE_TRACKER_2026_10_31.md).
+**Release M2 PR90 publicada — 31/10/2026:** acompanhamento de repasses ligado à fila, primeira conferência com cooldown próprio e recuperação limitada das referências expiradas do mês anterior. App `17c1e9f1`, CI41218926278 verde:2.637Node/67Python/Chromium, bytes/config/Auth/Finance preservados. Cron real confirmou setembro com fontes e calendário ausentes, sem inventar recebimento. Próximo: observar a recuperação, preencher calendários históricos e conciliar Returns/Pending/Seller Centre/banco; M2 continua aberta. [Registro](MLS_M2_RELEASE_TRACKER_2026_10_31.md).
 
 **Release PR89 publicada — 31/10/2026:** memória dos agentes gravada automaticamente e usada nos detalhes das análises Hermes, ROAS diário real e indicadores com datas no visual aprovado. App `66e9c01f`, CI41206928254 verde2.536Node/67Python/Chromium; configuração e Auth/Finance preservados. Primeiro corte natural conferido:publicação14306,3intervalos/23páginas,zero erro. Memória descritiva não comprova eficácia de uma recomendação nem lucro bancário. [Registro](MLS_AGENT_MEMORY_PERFORMANCE_2026_10_31.md).
 
