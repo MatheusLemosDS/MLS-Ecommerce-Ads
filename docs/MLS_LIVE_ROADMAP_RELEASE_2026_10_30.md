@@ -67,8 +67,51 @@ roadmap avança por incrementos verificáveis, registrando bloqueios externos.
 
 ## Registro da validação
 
-Em execução na branch `release/live-roadmap-improvements-20261030`. A regressão
-direcionada de cancelamentos passou novamente em 73 testes após a reconciliação.
-Os resultados finais de persistência, UI, mídia, CI e publicação serão registrados
-no fechamento da release. Merge, flags e versão ativa devem ser verificados
-separadamente; uma compilação não comprova publicação.
+PR [#86](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/86), branch
+`release/live-roadmap-improvements-20261030`, código `1c4cd20` e ajuste de teste
+`20182f422c6a1cc6b09c1bbba8924d139aa81618`.
+
+- **2.382 Node, zero falhas/skip e 67 Python**, localmente e na
+  [CI 41157082180](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/41157082180).
+- Chromium autenticado com dados sintéticos em 1365×900 e 390×844: fluxo real
+  HTTP→Worker→SQLite, salvar/recarregar, mídia local e conflito entre sessões.
+  Não foi executada sessão privada real do proprietário.
+- Três MP4s sintéticos reais, 1080×1920/H264/AAC, com hashes e decodificação
+  completos. Nova aprovação continua necessária para mídia real da loja.
+- 73 regressões de cancelamentos preservadas; Worker normal e minificado
+  testados. Auth e Finance não sofreram alteração nesta release.
+- Pré-release aprovado com **228 paths literais** e os hashes finais exatos.
+
+A primeira CI teve 2.375 sucessos e uma falha de inicialização do Chrome no
+prazo fixo de seis segundos. A espera passou a usar um prazo monotônico de vinte
+segundos, validando porta e encerramento do processo. Seis casos adicionais e
+os fluxos reais passaram; não houve restart, skip ou remoção de asserts. O ajuste
+não alterou o App.
+
+## Publicação oficial conferida
+
+App publicado em 30/10/2026 Brasília (31/10 01:52 UTC), versão
+`2ffcefb4-3103-4cd0-880c-569a61a4df69`, 100% ativa, com as duas flags exatamente
+`ENABLED`. O download via API confirmou o bundle Wrangler byte a byte:
+`2818ba24736777ebfd15cd3baee0e6969d8908e02cf1a29e1de59f3d18dfa8af`.
+O App gerado antes do Wrangler é
+`eea2f01c997b9e8012160862929abab8407a81dda44215c5aea8b2b9ef3a2ef6`.
+
+Auth conserva `1fef431c8573e05563c7938d95be0976a160bc603340084aa747ee0b73e7ec64`
+e Finance `bfc27e1022e0c5b3d335498389fd64b6978b8f7f04501d3bc6eff38202bf5feb`
+nos builds locais; seus scripts e versões publicados continuam iguais à PR85.
+Bindings, valores existentes, domínios, cron e compatibilidade foram preservados;
+as únicas adições de configuração foram as duas flags autorizadas.
+
+As duas tabelas de rascunho já existem, inicialmente vazias, sem inserir dados
+de demonstração na Live. SELECTs confirmaram coleta habilitada, estado completo,
+zero falhas, Finance conectado, heartbeat e política do Hermes preservados.
+Pendências financeiras reais continuam visíveis e não viraram lucro definitivo.
+Sondagens deste cliente permanecem bloqueadas pelo Cloudflare1010; não houve
+bypass nem alegação de login real. A confirmação remota foi pela API e D1.
+
+As entregas seguintes usam o mesmo fluxo: escopo revisado sobre a main atual,
+testes, manifesto exato, backup, publicação oficial e conferência posterior.
+Ambiente separado somente quando necessário. M2 e os contratos externos acima
+continuam abertos; esta entrega promove as melhorias preparadas, sem encerrar
+todo o roadmap comercial.

@@ -43,6 +43,13 @@ Os checkpoints abaixo são históricos e não substituem este estado.
 
 MLS COMMERCE OS — HANDOFF 28/10/2026
 
+ENTREGA LIVE PR86: versão App2ffcefb4, CI41157082180 GREEN2382Node/67Python/Chrome.
+Visual+busca/ListingFactory+ProductsObserver+AI Sales preparados integrados à
+basePR85; flagsownerENABLED; rascunhosD1/CAS/CSRF testados com mídias locais.
+DownloadAPI exato, bindings/domínios/cron, tabelas, Finance e Hermes conferidos;
+Auth/Finance preservados. Fonte docs/MLS_LIVE_ROADMAP_RELEASE_2026_10_30.md.
+M2/LLM/rendernuvem/grants continuam dependências reais; não declararroadmaptotal.
+
 ORIENTAÇÃO MAIS RECENTE 30/10/2026: próximos incrementos validados têm destino
 oficial; ambiente separado só quando necessário. Prévia PR84 preservada com
 dados sintéticos. Correção de cancelamentos: branch fix/cancelled-daily-profit-20261030

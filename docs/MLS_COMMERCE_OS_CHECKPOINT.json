@@ -800,7 +800,7 @@
       "base_main": "2ab4c9d8baa3c25e5816bcca14b4a0973ea73d5a",
       "reconciliation_commit": "b17df54",
       "prepared_source_head": "4c149a7e818306ddd91419494e75a12b6e14c1f4",
-      "status": "VALIDATION_AND_WORKSPACE_PERSISTENCE_IN_PROGRESS",
+      "status": "OFFICIAL_APP_DEPLOY_VERIFIED",
       "docs": "docs/MLS_LIVE_ROADMAP_RELEASE_2026_10_30.md",
       "ready_features": [
         "Six reference layouts and remaining native panels, shared themes and verified-source charts",
@@ -811,7 +811,7 @@
         "Native AI Sales campaigns, local video workflow, assisted creator CRM, declared performance and capability states",
         "PR85 daily cancellation freshness and previous-month maintenance preserved"
       ],
-      "workspace_persistence": "IN_PROGRESS",
+      "workspace_persistence": "LIVE_OWNER_METADATA_CAS_CSRF_VERIFIED",
       "cloudflare_api_access_verified": true,
       "owner_authenticated_qa": "NOT_EXECUTED",
       "external_gates": [
@@ -822,7 +822,28 @@
         "Node/FFmpeg render executes outside Workers; no cloud executor is configured"
       ],
       "commercial_writes": "LOCKED",
-      "all_roadmap_phases_complete": false
+      "all_roadmap_phases_complete": false,
+      "pull_request": 86,
+      "code_commit": "20182f422c6a1cc6b09c1bbba8924d139aa81618",
+      "ci_run": 41157082180,
+      "node_tests": 2382,
+      "python_tests": 67,
+      "technical_chromium_qa": "AUTHENTICATED_SYNTHETIC_DESKTOP_MOBILE_PASSED",
+      "deployment": {
+        "app_version": "2ffcefb4-3103-4cd0-880c-569a61a4df69",
+        "app_sha256": "eea2f01c997b9e8012160862929abab8407a81dda44215c5aea8b2b9ef3a2ef6",
+        "published_app_sha256": "2818ba24736777ebfd15cd3baee0e6969d8908e02cf1a29e1de59f3d18dfa8af",
+        "flags": {
+          "MLS_V36_OWNER_PREVIEW": "ENABLED",
+          "MLS_AI_SALES_OWNER_PREVIEW": "ENABLED"
+        },
+        "exact_published_bytes": true,
+        "existing_configuration_preserved": true,
+        "workspace_tables_exist": true,
+        "synthetic_data_inserted": false,
+        "sync_failure_count": 0,
+        "auth_finance_unchanged": true
+      }
     }
   }
 }

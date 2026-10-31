@@ -99,20 +99,22 @@
     "media_evidence": "docs/qa/mls-ai-sales-2026-10-30/media-evidence.json"
   },
   "phase5": {
-    "state": "NATIVE_FIVE_TAB_OWNER_PREVIEW_TESTED",
-    "flag": "MLS_AI_SALES_OWNER_PREVIEW=ENABLED; exact owner opt-in, default OFF"
+    "state": "LIVE_FIVE_TAB_OWNER_MODULE_ENABLED",
+    "flag": "MLS_AI_SALES_OWNER_PREVIEW=ENABLED; exact owner opt-in, default OFF",
+    "live_enabled": true,
+    "workspace_persistence": "OWNER_D1_METADATA_CAS_CSRF_VALIDATED"
   },
   "phase6": {
-    "state": "LOCAL_REGRESSION_GREEN_DRAFT_PR_REVIEW_PENDING",
-    "node_pass": 2308,
+    "state": "LIVE_TECHNICAL_REGRESSION_AND_DEPLOY_VERIFIED",
+    "node_pass": 2382,
     "node_fail": 0,
     "node_skipped": 0,
     "python_pass": 67,
     "worker_hashes": {
       "app": {
         "worker": "brazacommerce-app",
-        "bytes": 2939685,
-        "sha256": "a5ba3298faf4b8c2eaa32e98674f1d7408f4c4616236d8f04a2fba72bbfb91c8"
+        "bytes": 3070784,
+        "sha256": "eea2f01c997b9e8012160862929abab8407a81dda44215c5aea8b2b9ef3a2ef6"
       },
       "auth": {
         "worker": "brazacommerce-auth",
@@ -121,16 +123,22 @@
       },
       "finance": {
         "worker": "brazacommerce-finance",
-        "bytes": 485661,
-        "sha256": "b2483fc6107ecb4782e746becfe1b69ee6e3b9d3f0a6109351390b11b9303ca3"
+        "bytes": 485902,
+        "sha256": "bfc27e1022e0c5b3d335498389fd64b6978b8f7f04501d3bc6eff38202bf5feb"
       }
     },
     "ai_screenshots": 40,
-    "evidence": "docs/qa/mls-ai-sales-2026-10-30/regression.json",
+    "evidence": "docs/MLS_LIVE_ROADMAP_RELEASE_2026_10_30.md",
     "github_ci": {
-      "exact_head_status": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/83/checks",
-      "note": "Inspect current PR HEAD; local evidence is bound to exact App hash."
-    }
+      "run": 41157082180,
+      "state": "GREEN",
+      "head": "20182f422c6a1cc6b09c1bbba8924d139aa81618"
+    },
+    "live_release_pr": 86,
+    "code_commit": "20182f422c6a1cc6b09c1bbba8924d139aa81618",
+    "live_app_version": "2ffcefb4-3103-4cd0-880c-569a61a4df69",
+    "commercial_writes": false,
+    "owner_real_account_qa": false
   },
   "external_blockers": [
     "Authenticated Seller Centre/Pending/releases/returns and bank reconciliation still required for M2 issue50",
@@ -198,5 +206,46 @@
       "MLS_AI_SALES_OWNER_PREVIEW=ENABLED"
     ],
     "all_roadmap_phases_complete": false
+  },
+  "validation_history": [
+    {
+      "state": "LOCAL_REGRESSION_GREEN_DRAFT_PR_REVIEW_PENDING",
+      "node_pass": 2308,
+      "node_fail": 0,
+      "node_skipped": 0,
+      "python_pass": 67,
+      "worker_hashes": {
+        "app": {
+          "worker": "brazacommerce-app",
+          "bytes": 2939685,
+          "sha256": "a5ba3298faf4b8c2eaa32e98674f1d7408f4c4616236d8f04a2fba72bbfb91c8"
+        },
+        "auth": {
+          "worker": "brazacommerce-auth",
+          "bytes": 251026,
+          "sha256": "1fef431c8573e05563c7938d95be0976a160bc603340084aa747ee0b73e7ec64"
+        },
+        "finance": {
+          "worker": "brazacommerce-finance",
+          "bytes": 485661,
+          "sha256": "b2483fc6107ecb4782e746becfe1b69ee6e3b9d3f0a6109351390b11b9303ca3"
+        }
+      },
+      "ai_screenshots": 40,
+      "evidence": "docs/qa/mls-ai-sales-2026-10-30/regression.json",
+      "github_ci": {
+        "exact_head_status": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/83/checks",
+        "note": "Inspect current PR HEAD; local evidence is bound to exact App hash."
+      }
+    }
+  ],
+  "live_release": {
+    "pull_request": 86,
+    "status": "OFFICIAL_APP_DEPLOY_VERIFIED",
+    "docs": "docs/MLS_LIVE_ROADMAP_RELEASE_2026_10_30.md",
+    "flags_enabled": true,
+    "workspace_tables_exist": true,
+    "auth_finance_preserved": true,
+    "commercial_writes": false
   }
 }

@@ -1,5 +1,12 @@
 # Roadmap canônico — MLS Commerce OS
 
+**Release Live PR #86 conferida:** visual e módulos preparados integrados à
+main PR85, com rascunhos AI Sales persistentes. CI 41157082180: 2.382 Node,
+67 Python e Chromium aprovados; App oficial versão `2ffcefb4` com ambas flags
+owner ativadas, código/bindings/cron verificados. Auth/Finance preservados.
+Registro completo: [release Live](MLS_LIVE_ROADMAP_RELEASE_2026_10_30.md).
+M2 e integrações externas continuam abertas.
+
 ## Estado atual — entrega na versão Live, 30/10/2026
 
 O proprietário autorizou: **“Implemente todas as melhorias na versão Live, e

@@ -1,5 +1,13 @@
 # Execução da missão MLS Commerce OS + AI Sales — 30/10/2026
 
+**Entrega Live atual — PR #86:** melhorias preparadas e persistência de rascunhos
+promovidas ao App oficial após CI 41157082180 verde (2.382 Node/67 Python,
+Chromium, mídia e pré-release exato). Versão `2ffcefb4`, flags owner ENABLED,
+bytes/bindings/cron e duas tabelas novas conferidos pela API/D1. Auth/Finance
+preservados; nenhum dado sintético inserido na Live. A validação autenticada de
+UI usou dados sintéticos, não a conta privada. Limites comerciais e M2 continuam
+abertos. Ver [registro completo](MLS_LIVE_ROADMAP_RELEASE_2026_10_30.md).
+
 ## Autorização e execução atuais — versão Live
 
 O pedido mais recente do proprietário autoriza implementar todas as melhorias

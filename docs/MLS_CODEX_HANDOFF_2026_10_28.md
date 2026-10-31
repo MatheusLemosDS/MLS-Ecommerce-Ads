@@ -44,6 +44,14 @@ PR de integração DRAFT #83: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ad
 
 # Handoff executável — MLS Commerce OS / Codex / ChatGPT — 28/10/2026
 
+**Entrega mais recente — PR #86:** App Live versão `2ffcefb4`, flags V3.6 e
+AI Sales ENABLED para owner, CI 41157082180 verde (2.382 Node/67 Python/Chrome).
+Rascunhos persistem no D1 com CAS/CSRF; arquivos ficam locais e restauração
+revoga aprovações. Hash, bindings, cron, coleta e Hermes conferidos; Finance/Auth
+iguais à PR85. Não mesclar as PRs históricas em duplicidade. Continuar próximos
+incrementos na Live após validação, preservando rollback e gates externos.
+Fonte: [release](MLS_LIVE_ROADMAP_RELEASE_2026_10_30.md). M2 não foi encerrada.
+
 Atualização operacional 30/10: o proprietário orientou entregar os próximos
 incrementos validados na versão oficial; separar ambiente apenas se necessário.
 Prévia demonstrativa PR #84 preservada. Correção isolada de cancelamentos na
