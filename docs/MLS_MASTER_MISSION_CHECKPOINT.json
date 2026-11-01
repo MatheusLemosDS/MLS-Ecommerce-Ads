@@ -1,6 +1,6 @@
 {
   "schema": "mls_master_mission_checkpoint_v1",
-  "updated_at": "2026-10-31",
+  "updated_at": "2026-11-01",
   "base_visual_sha": "8d860b2c4f26531c53c4cdba0e06a14f51a7eef4",
   "visual_branch": "feature/mls-mockup-parity-real-charts-20261029",
   "visual_pr": 79,
@@ -180,76 +180,100 @@
     }
   ],
   "current_release": {
-    "id": "M2_PENDING_FIRST_PAGE_HERMES_CLOSEOUT_NAVIGATION",
-    "status": "OFFICIAL_LIVE_VERIFIED_M2_BANK_COMPARISON_OPEN",
-    "pull_request": 92,
-    "code_commit": "86c6caa786b4bac34750ba1757442c0b624d2509",
-    "base_main": "8b0edb28e7d769c5889ba1a956c239142314b456",
-    "ci_run": 41243934697,
-    "node_tests": 2842,
+    "id": "M2_DURABLE_PENDING_PAGINATION_AND_LOCAL_BROWSING",
+    "status": "OFFICIAL_LIVE_PENDING_TRAVERSAL_VERIFIED_M2_CLOSEOUT_OPEN",
+    "pull_request": 93,
+    "code_commit": "61094eace3e75b3e979fd1a07bdfa6b4a8b2d70a",
+    "reviewed_head": "61094eace3e75b3e979fd1a07bdfa6b4a8b2d70a",
+    "base_main": "9d0fd3c900f772ea15854c2c348854ad3102977c",
+    "ci_run": 41318567672,
+    "node_tests": 2908,
     "python_tests": 67,
-    "docs": "docs/MLS_M2_PENDING_CLOSEOUT_2026_10_31.md",
+    "docs": "docs/MLS_M2_PENDING_PAGINATION_2026_11_01.md",
     "deployment": {
       "versions": {
-        "app": "c8ab272d-0b33-4a0e-9fed-aae9c1e38ad9",
-        "auth": "109da95f-ced9-41d2-9384-cef8edafc746",
-        "finance": "c1e31d3f-3c30-4865-bef4-7c66c6923488"
+        "app": "2280e3b1-a7fa-40fe-842a-4c94c74e5e78",
+        "auth": "37bead27-c941-40e6-87e8-832f01d1785a",
+        "finance": "e0b258a2-e73f-45d2-912a-1cb6fd666e18"
       },
       "generated_sha256": {
-        "app": "629b1f2ce21c4d391cb04ddf5df5affd4f3093e3e7f9d7131d82d79f8fc5fc75",
-        "auth": "cf326e9a4917c75474b4222c87cbf5744f98ddfe459eb1fd249a05fb6f097bcb",
-        "finance": "556cc1ea667b349327c32b810200f47388fe8c46b5e9acf60e37ddf0c1533de5"
+        "app": "9fe5906fc04f231aaddfd2fe8106e338c6aa7a1bd1203500e3b565a8a3892b7e",
+        "auth": "c63ee09b2d98b6321e3ae7feae1066a9eec9160b49868d72fb84cb0471a0018d",
+        "finance": "dff201100ed319f3b7d4d8cabf6826237be3a140e679f562cb982cec5bdd89b4"
       },
       "published_sha256": {
-        "app": "1eb3f399aa2c52c782f7ef1e05c142b295a714cba65ea010214a22c9b2108222",
-        "auth": "1b660c4feab2572b973d6aa62663e4129f2d4b94000dec9d7d4074eb41a3bab3",
-        "finance": "9dd40d7800d94cf1edd7bf3c9bbac0264b7ccad45e1e2ba90396bc47d8c08667"
+        "app": "5b491267eb1d768fe730c5a9e8ede4b53636d5f679af755579deeaccee182c6f",
+        "auth": "46053d0b5f11ff4d738b4cf2cc1cc6afda7d21e233980b1e640f63728f32af2a",
+        "finance": "b4195212972f5a9f0f8ff08c9504e983f8bd3ca3b3c42493cb7c88addb84de8b"
       },
       "percentage": 100,
       "exact_bytes_verified": true,
       "existing_configuration_preserved": true,
-      "owner_flags_preserved": true,
-      "finance_change": "TARGETED_PENDING_READ_REPAIR"
+      "domains_preserved": true,
+      "cron_preserved": true,
+      "owner_flags_preserved": true
     },
-    "natural_first_page": {
-      "checked_at": 1793482678,
-      "returned_count": 100,
-      "has_more": true,
-      "aggregates": {
-        "row_count": 100,
-        "unique_order_count": 100,
-        "unique_entry_count": 100,
-        "known_amount_count": 100,
-        "unknown_amount_count": 0,
-        "brl_row_count": 100,
-        "visible_known_cents": 489419
-      },
-      "money_comparison": {
-        "matched": 99,
-        "exact_major_unit_match": 99,
-        "unmatched": 1
-      },
-      "scaling_applied": false,
-      "pagination_added": false,
+    "natural_complete_scan": {
+      "termination_evidence_kind": "SHORT_PAGE_WITHOUT_NEXT",
+      "pages_read": 2,
+      "row_count": 182,
+      "unique_orders": 182,
+      "duplicates": 0,
+      "conflicting_orders": 0,
+      "known_amount_cents": 893828,
+      "unknown_amount_count": 0,
+      "amount_complete": true,
+      "started_at": 1793544473,
+      "completed_at": 1793545318,
+      "source_oldest_at": 1793544480,
+      "source_latest_at": 1793545318,
+      "app_finance_publication_match": true,
+      "aggregate_integrity": true,
+      "cursor_exposed": false,
+      "provider_snapshot_atomic": false,
       "forced_jobs": false,
-      "source_rpc_method": "GET",
-      "provider_shape": "response.list + response.next_page"
+      "unit_comparison": {
+        "schema": "pending_scan_payment_unit_comparison_v1",
+        "state": "CHECKED",
+        "completed_at": 1793545318,
+        "unique_order_count": 182,
+        "comparison": {
+          "pending_rows": 182,
+          "matched_saved_paid": 177,
+          "exact_major_unit_match": 177,
+          "unmatched_saved_paid": 5
+        },
+        "exact_multipliers": {
+          "1": 177
+        },
+        "maximum_major_unit_delta": "0",
+        "payment_source_oldest_at": 1793540582,
+        "payment_source_latest_at": 1793545136,
+        "source_time_differences_are_informational": true,
+        "basis": "LATEST_SAVED_PAID_PAYMENT_VS_PAGINATED_MUTABLE_PENDING_NOT_BANK_RECEIPT",
+        "scaling_applied": false,
+        "provider_calls": 0,
+        "identities_returned": false
+      }
     },
-    "technical_browser_qa": {
-      "widths": [
+    "ui": {
+      "page_size": 50,
+      "page_navigation_source_reads": 0,
+      "browser_widths": [
         320,
         390,
         768,
         1365
       ],
       "normal_and_minified": true,
-      "data": "SYNTHETIC_AUTHENTICATED_AND_REAL_SAVED_SOURCE_OFFLINE"
+      "legacy_browser_closures_fixed": true,
+      "actual_owner_session": "NOT_EXECUTED_EXECUTOR_WAF_BLOCKED"
     },
-    "actual_owner_session": "NOT_EXECUTED",
     "commercial_writes": "LOCKED",
     "finance_m2": "OPEN",
+    "seller_centre_comparison": "NOT_COMPARED",
     "bank_settlement": "UNVERIFIED",
-    "branch": "feature/m2-pending-closeout-20261031"
+    "branch": "feature/m2-pending-pagination-20261101"
   },
   "validation_history": [
     {
@@ -284,17 +308,17 @@
     }
   ],
   "live_release": {
-    "pull_request": 92,
-    "status": "OFFICIAL_LIVE_VERIFIED_M2_BANK_COMPARISON_OPEN",
-    "docs": "docs/MLS_M2_PENDING_CLOSEOUT_2026_10_31.md",
+    "pull_request": 93,
+    "status": "OFFICIAL_LIVE_PENDING_TRAVERSAL_VERIFIED_M2_CLOSEOUT_OPEN",
+    "versions": {
+      "app": "2280e3b1-a7fa-40fe-842a-4c94c74e5e78",
+      "auth": "37bead27-c941-40e6-87e8-832f01d1785a",
+      "finance": "e0b258a2-e73f-45d2-912a-1cb6fd666e18"
+    },
     "flags_enabled": true,
     "configuration_preserved": true,
     "commercial_writes": false,
-    "versions": {
-      "app": "c8ab272d-0b33-4a0e-9fed-aae9c1e38ad9",
-      "auth": "109da95f-ced9-41d2-9384-cef8edafc746",
-      "finance": "c1e31d3f-3c30-4865-bef4-7c66c6923488"
-    }
+    "docs": "docs/MLS_M2_PENDING_PAGINATION_2026_11_01.md"
   },
   "visual_chart_refinement_20261031": {
     "id": "LIVE_VISUAL_CHART_INSPECTION_AND_COST_RULE_SCOPE",
@@ -722,5 +746,172 @@
     "branch": "feature/m2-returns-reconciliation-20261031",
     "production_deployed": true,
     "all_roadmap_phases_complete": false
+  },
+  "pending_pagination_2026_11_01": {
+    "id": "M2_DURABLE_PENDING_PAGINATION_AND_LOCAL_BROWSING",
+    "status": "OFFICIAL_LIVE_PENDING_TRAVERSAL_VERIFIED_M2_CLOSEOUT_OPEN",
+    "pull_request": 93,
+    "code_commit": "61094eace3e75b3e979fd1a07bdfa6b4a8b2d70a",
+    "reviewed_head": "61094eace3e75b3e979fd1a07bdfa6b4a8b2d70a",
+    "base_main": "9d0fd3c900f772ea15854c2c348854ad3102977c",
+    "ci_run": 41318567672,
+    "node_tests": 2908,
+    "python_tests": 67,
+    "docs": "docs/MLS_M2_PENDING_PAGINATION_2026_11_01.md",
+    "deployment": {
+      "versions": {
+        "app": "2280e3b1-a7fa-40fe-842a-4c94c74e5e78",
+        "auth": "37bead27-c941-40e6-87e8-832f01d1785a",
+        "finance": "e0b258a2-e73f-45d2-912a-1cb6fd666e18"
+      },
+      "generated_sha256": {
+        "app": "9fe5906fc04f231aaddfd2fe8106e338c6aa7a1bd1203500e3b565a8a3892b7e",
+        "auth": "c63ee09b2d98b6321e3ae7feae1066a9eec9160b49868d72fb84cb0471a0018d",
+        "finance": "dff201100ed319f3b7d4d8cabf6826237be3a140e679f562cb982cec5bdd89b4"
+      },
+      "published_sha256": {
+        "app": "5b491267eb1d768fe730c5a9e8ede4b53636d5f679af755579deeaccee182c6f",
+        "auth": "46053d0b5f11ff4d738b4cf2cc1cc6afda7d21e233980b1e640f63728f32af2a",
+        "finance": "b4195212972f5a9f0f8ff08c9504e983f8bd3ca3b3c42493cb7c88addb84de8b"
+      },
+      "percentage": 100,
+      "exact_bytes_verified": true,
+      "existing_configuration_preserved": true,
+      "domains_preserved": true,
+      "cron_preserved": true,
+      "owner_flags_preserved": true
+    },
+    "natural_complete_scan": {
+      "termination_evidence_kind": "SHORT_PAGE_WITHOUT_NEXT",
+      "pages_read": 2,
+      "row_count": 182,
+      "unique_orders": 182,
+      "duplicates": 0,
+      "conflicting_orders": 0,
+      "known_amount_cents": 893828,
+      "unknown_amount_count": 0,
+      "amount_complete": true,
+      "started_at": 1793544473,
+      "completed_at": 1793545318,
+      "source_oldest_at": 1793544480,
+      "source_latest_at": 1793545318,
+      "app_finance_publication_match": true,
+      "aggregate_integrity": true,
+      "cursor_exposed": false,
+      "provider_snapshot_atomic": false,
+      "forced_jobs": false,
+      "unit_comparison": {
+        "schema": "pending_scan_payment_unit_comparison_v1",
+        "state": "CHECKED",
+        "completed_at": 1793545318,
+        "unique_order_count": 182,
+        "comparison": {
+          "pending_rows": 182,
+          "matched_saved_paid": 177,
+          "exact_major_unit_match": 177,
+          "unmatched_saved_paid": 5
+        },
+        "exact_multipliers": {
+          "1": 177
+        },
+        "maximum_major_unit_delta": "0",
+        "payment_source_oldest_at": 1793540582,
+        "payment_source_latest_at": 1793545136,
+        "source_time_differences_are_informational": true,
+        "basis": "LATEST_SAVED_PAID_PAYMENT_VS_PAGINATED_MUTABLE_PENDING_NOT_BANK_RECEIPT",
+        "scaling_applied": false,
+        "provider_calls": 0,
+        "identities_returned": false
+      }
+    },
+    "ui": {
+      "page_size": 50,
+      "page_navigation_source_reads": 0,
+      "browser_widths": [
+        320,
+        390,
+        768,
+        1365
+      ],
+      "normal_and_minified": true,
+      "legacy_browser_closures_fixed": true,
+      "actual_owner_session": "NOT_EXECUTED_EXECUTOR_WAF_BLOCKED"
+    },
+    "commercial_writes": "LOCKED",
+    "finance_m2": "OPEN",
+    "seller_centre_comparison": "NOT_COMPARED",
+    "bank_settlement": "UNVERIFIED"
+  },
+  "previous_release_before_pending_pagination": {
+    "id": "M2_PENDING_FIRST_PAGE_HERMES_CLOSEOUT_NAVIGATION",
+    "status": "OFFICIAL_LIVE_VERIFIED_M2_BANK_COMPARISON_OPEN",
+    "pull_request": 92,
+    "code_commit": "86c6caa786b4bac34750ba1757442c0b624d2509",
+    "base_main": "8b0edb28e7d769c5889ba1a956c239142314b456",
+    "ci_run": 41243934697,
+    "node_tests": 2842,
+    "python_tests": 67,
+    "docs": "docs/MLS_M2_PENDING_CLOSEOUT_2026_10_31.md",
+    "deployment": {
+      "versions": {
+        "app": "c8ab272d-0b33-4a0e-9fed-aae9c1e38ad9",
+        "auth": "109da95f-ced9-41d2-9384-cef8edafc746",
+        "finance": "c1e31d3f-3c30-4865-bef4-7c66c6923488"
+      },
+      "generated_sha256": {
+        "app": "629b1f2ce21c4d391cb04ddf5df5affd4f3093e3e7f9d7131d82d79f8fc5fc75",
+        "auth": "cf326e9a4917c75474b4222c87cbf5744f98ddfe459eb1fd249a05fb6f097bcb",
+        "finance": "556cc1ea667b349327c32b810200f47388fe8c46b5e9acf60e37ddf0c1533de5"
+      },
+      "published_sha256": {
+        "app": "1eb3f399aa2c52c782f7ef1e05c142b295a714cba65ea010214a22c9b2108222",
+        "auth": "1b660c4feab2572b973d6aa62663e4129f2d4b94000dec9d7d4074eb41a3bab3",
+        "finance": "9dd40d7800d94cf1edd7bf3c9bbac0264b7ccad45e1e2ba90396bc47d8c08667"
+      },
+      "percentage": 100,
+      "exact_bytes_verified": true,
+      "existing_configuration_preserved": true,
+      "owner_flags_preserved": true,
+      "finance_change": "TARGETED_PENDING_READ_REPAIR"
+    },
+    "natural_first_page": {
+      "checked_at": 1793482678,
+      "returned_count": 100,
+      "has_more": true,
+      "aggregates": {
+        "row_count": 100,
+        "unique_order_count": 100,
+        "unique_entry_count": 100,
+        "known_amount_count": 100,
+        "unknown_amount_count": 0,
+        "brl_row_count": 100,
+        "visible_known_cents": 489419
+      },
+      "money_comparison": {
+        "matched": 99,
+        "exact_major_unit_match": 99,
+        "unmatched": 1
+      },
+      "scaling_applied": false,
+      "pagination_added": false,
+      "forced_jobs": false,
+      "source_rpc_method": "GET",
+      "provider_shape": "response.list + response.next_page"
+    },
+    "technical_browser_qa": {
+      "widths": [
+        320,
+        390,
+        768,
+        1365
+      ],
+      "normal_and_minified": true,
+      "data": "SYNTHETIC_AUTHENTICATED_AND_REAL_SAVED_SOURCE_OFFLINE"
+    },
+    "actual_owner_session": "NOT_EXECUTED",
+    "commercial_writes": "LOCKED",
+    "finance_m2": "OPEN",
+    "bank_settlement": "UNVERIFIED",
+    "branch": "feature/m2-pending-closeout-20261031"
   }
 }

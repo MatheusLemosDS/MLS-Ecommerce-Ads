@@ -1,7 +1,7 @@
 {
   "schema": "mls_release_candidate_v1",
   "base_commit": "9d0fd3c900f772ea15854c2c348854ad3102977c",
-  "prepared_source_commit": "32eb11679c3043061d232d21477abd070b362215",
+  "prepared_source_commit": "61094eace3e75b3e979fd1a07bdfa6b4a8b2d70a",
   "owner_authorization": "OWNER_REQUESTED_ALL_PREPARED_IMPROVEMENTS_LIVE_2026_10_30",
   "commercial_writes_allowed": false,
   "expected_hashes": {
