@@ -38,6 +38,7 @@
     "web/cloudflare/tests/app-release-discovery.test.mjs",
     "web/cloudflare/tests/app-release-discovery-chrome.test.mjs",
     "web/cloudflare/tests/mls-roadmap-ui.test.mjs",
-    "web/cloudflare/tests/mls-overview-composition-chrome.test.mjs"
+    "web/cloudflare/tests/mls-overview-composition-chrome.test.mjs",
+    "web/cloudflare/tests/workspace-navigation.test.mjs"
   ]
 }
