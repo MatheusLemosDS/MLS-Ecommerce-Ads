@@ -65,7 +65,7 @@ test('healthy snapshots create one observer registry with the executive day metr
  assert.equal(value.schema,'mls_agent_registry_v1');
  assert.equal(value.mode,'OBSERVER');
  assert.equal(value.health,'HEALTHY');
- assert.deepEqual(value.day,{date:'2026-10-27',net_cents:25000,net_basis:'ESTIMATE',sales_cents:100000,ads_spend_cents:10000,paid_orders:20,margin_bps:2500});
+ assert.deepEqual(value.day,{date:'2026-10-27',net_cents:25000,net_basis:'ESTIMATE',pending:[],presentation:null,sales_cents:100000,ads_spend_cents:10000,paid_orders:20,margin_bps:2500});
  assert.equal(value.month.balance_cents,240000);
  assert.equal(value.priorities.length,0);
  assert.equal(value.hermes.status,'HEALTHY');
@@ -348,6 +348,19 @@ test('overview reports a source-state panel rather than treating unknown sales a
  assert.match(AGENT_REGISTRY_CLIENT,/paintSourceState/);
  assert.match(AGENT_REGISTRY_CLIENT,/selectMonth/);
  assert.doesNotMatch(AGENT_REGISTRY_CLIENT,/\bfetch\s*\(|setInterval\s*\(/);
+});
+
+test('daily subtotal before unconfirmed expenses remains separate from profit, margin and monthly balance',()=>{
+ const presentation={schema:'daily_profit_presentation_v1',state:'BEFORE_MONTHLY_COSTS',basis:'BEFORE_UNCONFIRMED_EXPENSES',amount_cents:9947,monthly_costs_missing:['EXTERNAL_EXPENSES_REQUIRED'],das_included:true,expenses_included:false};
+ const input={day:day({date:'2026-11-01',net_cents:null,net_basis:null,sales_cents:58939,ads_spend_cents:2845,paid_orders:9,pending:['EXTERNAL_EXPENSES_REQUIRED'],presentation}),month:month({month:'2026-11',balance_cents:null,pending:['EXTERNAL_EXPENSES_REQUIRED']})};
+ const value=buildMlsAgentRegistry(input);
+ assert.equal(value.day.net_cents,null);assert.equal(value.day.margin_bps,null);assert.equal(value.month.balance_cents,null);
+ assert.equal(value.day.presentation.amount_cents,9947);assert.deepEqual(value.day.pending,['EXTERNAL_EXPENSES_REQUIRED']);
+ assert.ok(Object.isFrozen(value.day.presentation)&&Object.isFrozen(value.day.presentation.monthly_costs_missing));
+ for(const change of [{basis:'AFTER_DAILY_AND_ALLOCATED_MONTHLY_COSTS'},{monthly_costs_missing:[]},{expenses_included:true},{amount_cents:Infinity},{state:'ESTIMATE'}]){
+  assert.equal(buildMlsAgentRegistry({...input,day:{...input.day,presentation:{...presentation,...change}}}).day.presentation,null,'invalid local presentation metadata must fail closed');
+ }
+ assert.equal(buildMlsAgentRegistry({...input,day:{...input.day,pending:[]}}).day.presentation,null,'a subtotal must retain its missing-expense reason');
 });
 
 test('validated month without an observed selected day does not imply current-day agent health',()=>{

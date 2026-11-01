@@ -762,7 +762,7 @@ export const MISSION_TRENDS_CLIENT=String.raw`
   const netTone=!safe(net)?'unknown':net<0?'loss':net>0?'profit':'flat';
   if(netCard)netCard.dataset.resultTone=netTone;
   const netState=byId('missionProfitState');
-  if(netState){netState.dataset.tone=netTone;netState.textContent=!safe(net)?'Resultado em apuração':day.net_basis==='KNOWN_COSTS'?net<0?'▼ Saldo parcial negativo':net>0?'▲ Saldo após custos conhecidos':'● Saldo parcial em equilíbrio':net<0?'▼ Prejuízo estimado':net>0?'▲ Resultado estimado positivo':'● Resultado estimado em equilíbrio';}
+  if(netState){const presentation=day.presentation,partial=presentation?.state==='BEFORE_MONTHLY_COSTS';netState.dataset.tone=partial?'partial':netTone;netState.textContent=partial?presentation.basis==='BEFORE_UNCONFIRMED_EXPENSES'?'Despesas do mês pendentes':presentation.basis==='BEFORE_UNCONFIRMED_DAS'?'DAS mensal pendente':'DAS e despesas do mês pendentes':!safe(net)?'Resultado em apuração':day.net_basis==='KNOWN_COSTS'?net<0?'▼ Saldo parcial negativo':net>0?'▲ Saldo após custos conhecidos':'● Saldo parcial em equilíbrio':net<0?'▼ Prejuízo estimado':net>0?'▲ Resultado estimado positivo':'● Resultado estimado em equilíbrio';}
   const financeMonthly=byId('mission-finance-metric-0');
   if(financeMonthly)financeMonthly.dataset.resultTone=!safe(month)?'unknown':month<0?'loss':month>0?'profit':'flat';
   for(const [suffix,key] of Object.entries({Net:'net',Sales:'sales',Ads:'ads',Margin:'margin',Paid:'paid'})){
