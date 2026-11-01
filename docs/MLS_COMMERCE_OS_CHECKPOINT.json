@@ -30,8 +30,8 @@
     "merge_commit": "9c418fd3010f46957d1ce52345baacd76041c788"
   },
   "current_phase": "M2_FINANCE_RETURNS_RECONCILIATION",
-  "working_branch": "feature/m22-physical-return-control-20261101",
-  "current_status": "OFFICIAL_LIVE_M22_PHYSICAL_RECEIPT_INSPECTION_VERIFIED",
+  "working_branch": "feature/m22-incurred-production-ledger-20261101",
+  "current_status": "OFFICIAL_LIVE_M22B_INCURRED_PRODUCTION_LEDGER_VERIFIED",
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
     "Repasse-base, ajuste, repasse após ajuste e liberação exibidos sem dupla dedução",
@@ -68,7 +68,8 @@
     "PR93: paginação durável do Pending validada no corte observado, duas páginas e 182 registros/pedidos",
     "PR94: três relatórios Returns da publicação de outubro consultados, sem comprovar recebimento físico ou banco",
     "PR95/96: motivo das despesas mensais pendentes, saldo/margem parciais e ROAS independente de falhas de gráficos",
-    "PR98: controle físico global de recebimento parcial, quarentena, inspeção, identidade declarada, CAS/idempotência e anulação auditada; avaliação desconhecida e sem efeitos financeiros"
+    "PR98: controle físico global de recebimento parcial, quarentena, inspeção, identidade declarada, CAS/idempotência e anulação auditada; avaliação desconhecida e sem efeitos financeiros",
+    "PR99: registro de produção incorrida declarada, custo histórico imutável ou UNKNOWN, semana/mês pela data de produção, contexto DTF opcional, CAS/idempotência e anulação/substituição auditadas; cálculo financeiro separado"
   ],
   "remaining_this_phase": [
     "Observar o estado real da nova auditoria Pending na conta autenticada e comparar quantidade/valores/horários com o Seller Centre",
@@ -77,7 +78,7 @@
     "Manter liquidação bancária, remaining_receivable e lucro realizado separados de Pending e liberação na Shopee",
     "Resolver qualquer pedido ambíguo, valor não verificado ou conflito de evidência antes do fechamento estrito",
     "Reavaliar o horizonte limitado do tracker somente com evidência real; horizonte esgotado nunca prova ausência de liberação posterior",
-    "Concluir M2.2: produção incorrida, valoração histórica, reserva e consumo da peça na revenda; recebimento/inspeção interna entregues na PR98",
+    "Concluir M2.2: verificar quantidades originais, vincular fabricação/peça devolvida e integrar valoração, reserva/consumo e custos sem dupla contagem; controles internos PR98/99 entregues",
     "Confirmar custos históricos e embalagem/etiqueta incrementais antes de valorar peças recuperadas ou integrar a revenda ao lucro",
     "Conferir continuamente cobertura da paginação Pending já entregue, sem confundir o corte validado com cobertura permanente",
     "Declarar despesas de novembro e confrontar Seller Centre/banco no mesmo recorte"
@@ -118,7 +119,7 @@
     }
   },
   "next_actions": [
-    "Continuar M2.2 após recebimento/inspeção PR98: ledger de produção incorrida, valoração histórica e posterior reserva/consumo por identidade física; não repetir o cadastro físico já entregue",
+    "Após PR98/99, conferir itens/quantidades originais e vincular a peça devolvida ao registro de fabricação por identidade; implementar valoração/reserva/consumo e futura integração financeira sem somar custo incorrido e estimado da mesma peça",
     "Confirmar valores históricos e custos de nova embalagem/etiqueta por pedido/peça/kit; UNKNOWN não vira zero",
     "Declarar despesas do mês quando não confirmadas; não copiar automaticamente outro mês",
     "Renovar cobertura da publicação exata e acompanhar revisões, Returns e calendário de outubro sem reiniciar o catálogo/coleta",
@@ -132,30 +133,30 @@
     "Mission Control M1.1 (opção 3) integrado com 7 painéis independentes; conferir visual autenticado desktop/celular e retorno às telas antigas"
   ],
   "latest_increment": {
-    "id": "M22_OWNER_CONFIRMED_PHYSICAL_RETURN_RECEIPT_INSPECTION",
-    "status": "OFFICIAL_LIVE_M22_PHYSICAL_RECEIPT_INSPECTION_VERIFIED",
-    "pull_request": 98,
-    "branch": "feature/m22-physical-return-control-20261101",
-    "base_main": "9f1cf3b0e04b8a2d47c1b6e7f2075e2f0869c2a0",
-    "code_commit": "e6d6a4cd59b79d1f93cfef3e58adcba6d8ba3520",
-    "reviewed_head": "74a25eb04915e894c3d89962a35ae11c67dc7835",
-    "ci_run": 41344331375,
-    "node_tests": 3056,
+    "id": "M22B_OWNER_CONFIRMED_INCURRED_PRODUCTION_LEDGER",
+    "status": "OFFICIAL_LIVE_M22B_INCURRED_PRODUCTION_LEDGER_VERIFIED",
+    "pull_request": 99,
+    "branch": "feature/m22-incurred-production-ledger-20261101",
+    "base_main": "07cf2b8e440f2f3b9c78cc29db3b0e7fb0f48b4f",
+    "code_commit": "51128b89e67f944ecf62bf55196dac293a3eecac",
+    "reviewed_head": "0749710ba9826d6256c2ae02223ed04458a7895f",
+    "ci_run": 41347493170,
+    "node_tests": 3099,
     "python_tests": 67,
-    "docs": "docs/MLS_M22_PHYSICAL_RETURNS_2026_11_01.md",
+    "docs": "docs/MLS_M22_INCURRED_PRODUCTION_2026_11_01.md",
     "deployment": {
       "versions": {
-        "app": "2157c238-cc55-42ae-9521-7f52951ebd88",
+        "app": "c33b1d03-6ef5-4420-8452-06bb255abb89",
         "auth": "37bead27-c941-40e6-87e8-832f01d1785a",
         "finance": "e0b258a2-e73f-45d2-912a-1cb6fd666e18"
       },
       "generated_sha256": {
-        "app": "20d0ca1e46e6cef5d374b84cce2231994ced89a2aeb289f8c4b7223a3cf14ca6",
+        "app": "936c2cb0659f79805df88e66bf10ea198c30a052dfbd22cf53dfe2bccc396cab",
         "auth": "c63ee09b2d98b6321e3ae7feae1066a9eec9160b49868d72fb84cb0471a0018d",
         "finance": "dff201100ed319f3b7d4d8cabf6826237be3a140e679f562cb982cec5bdd89b4"
       },
       "published_sha256": {
-        "app": "00eb27283dc0860f4654768baadccf1f1c763fac13af307245235c4f9996422a",
+        "app": "4bc7a1e827df84720c0848d9ee735d23985e3507c30f3330078d8f3acf690eb9",
         "auth": "46053d0b5f11ff4d738b4cf2cc1cc6afda7d21e233980b1e640f63728f32af2a",
         "finance": "b4195212972f5a9f0f8ff08c9504e983f8bd3ca3b3c42493cb7c88addb84de8b"
       },
@@ -165,41 +166,38 @@
       "flags_preserved": true,
       "cron_preserved": true,
       "auth_finance_versions_preserved": true,
-      "completed_at": 1793563412
+      "completed_at": 1793565632
     },
-    "physical_receipt_inspection_implemented": true,
-    "quantities_and_identity": "OPERATOR_DECLARED_NOT_ORIGINAL_ORDER_ITEM_QUANTITY_VERIFIED",
-    "global_persistence": true,
-    "quarantine_before_inspection": true,
-    "partition": [
-      "resellable",
-      "repair",
-      "damaged",
-      "mismatch",
-      "quarantine"
-    ],
-    "cas_idempotency_normalized_receipt_reference_and_atomic_audit": true,
-    "financial_status_does_not_create_physical_stock": true,
-    "valuation": {
+    "incurred_production_cost_ledger_implemented": true,
+    "production_and_cost_confirmation": "OPERATOR_DECLARED_NOT_INVOICE_OR_PAYMENT_PROOF",
+    "quantities_and_identity": "HOMOGENEOUS_PHYSICAL_PIECES_OPERATOR_DECLARED_NOT_SAVED_SELLING_UNIT_QUANTITY",
+    "date_basis": "PRODUCED_DATE_BRT_NOT_SALES_OR_RECORDING_DATE",
+    "weekly_monthly_periods": "INDEPENDENT_OVERLAPPING_RECORDED_FACTS_NOT_ALL_STORE_COST",
+    "unit_cost": "IMMUTABLE_EXPLICIT_DECLARED_INCLUDING_ZERO_OR_UNKNOWN_NULL",
+    "saved_reference": "OPTIONAL_ADULT_ALL_INCLUSIVE_CURRENT_REFERENCE_EXPLICITLY_CONFIRMED_AS_HISTORICAL_SNAPSHOT",
+    "cancelled_or_returned_order_does_not_delete_record": true,
+    "normalized_active_reference_cas_idempotency_atomic_audit_and_linear_void_replacement": true,
+    "initial_live_manufacturing_facts_created_by_release": 0,
+    "inventory_valuation": {
       "state": "UNKNOWN",
       "amount_cents": null
     },
-    "incurred_production_cost_ledger_implemented": false,
+    "financial_integration_implemented": false,
+    "incurred_and_eligible_sales_costs_automatically_summed": false,
     "resale_reservation_consumption_implemented": false,
+    "historical_garment_consumables_decomposition": "NOT_CONFIRMED_NO_AUTOMATIC_ALL_INCLUSIVE_SPLIT",
     "packaging_label_costs": "NOT_CONFIRMED",
     "limits": {
-      "source_cases_per_report": 40,
-      "source_reports": 3,
-      "physical_cases": 100,
-      "physical_lines_per_case": 50,
-      "physical_lines_total": 1000,
-      "physical_case_bytes": 65536,
-      "physical_dto_bytes": 524288
+      "source_candidates": 50,
+      "global_records_including_void": 1000,
+      "record_bytes": 8192,
+      "complete_ledger_bytes": 1048576
     },
     "validation": {
       "node_failures": 0,
       "node_skips": 0,
       "cold_audit_d1_budget": "48_OF_50_UNCHANGED",
+      "inline_owner_script_count": 15,
       "synthetic_chromium": [
         "normal",
         "minified",
@@ -207,26 +205,23 @@
         "1365px"
       ],
       "actual_saved_source_replay": {
-        "source_month": "2026-10",
-        "publication_revision": 15953,
-        "source_cases": 18,
-        "saved_finance_month": "2026-11",
-        "financial_fixture_publication_revision": 435,
+        "source": "SAVED_DTF_AND_PRODUCTION_COSTS",
+        "references_revision": 5,
+        "financial_fixture_publication_revision": 522,
         "adapter_and_store_used": true,
         "widths": [
           320,
           1365
         ],
-        "all_receipts_simulated_local_only": true,
+        "all_records_simulated_local_only": true,
         "financial_sources_and_response_unchanged": true,
         "provider_calls": 0,
         "remote_writes": 0
       },
-      "real_owner_physical_flow": "NOT_OBSERVED_EXECUTOR_WAF_403",
-      "actual_physical_receipts_recorded_by_this_release": 0
+      "real_owner_manufacturing_flow": "NOT_OBSERVED_EXECUTOR_WAF_403"
     },
     "owner_reads": "SAVED_D1_ONLY_NO_PROVIDER_OR_DDL",
-    "internal_physical_mutations": "OWNER_CONFIRMED_ONLY_LAZY_ADDITIVE_D1_SCHEMA",
+    "internal_manufacturing_mutations": "OWNER_CONFIRMED_ONLY_LAZY_ADDITIVE_D1_SCHEMA",
     "remote_financial_values_changed": false,
     "commercial_writes": "LOCKED",
     "external_stock_write_allowed": false,
@@ -2559,6 +2554,228 @@
   },
   "previous_next_actions_before_physical_returns": [
     "Priorizar M2.2 interno: custo incorrido, recebimento/inspeção e quantidades reaproveitáveis por identidade física confirmada",
+    "Confirmar valores históricos e custos de nova embalagem/etiqueta por pedido/peça/kit; UNKNOWN não vira zero",
+    "Declarar despesas do mês quando não confirmadas; não copiar automaticamente outro mês",
+    "Renovar cobertura da publicação exata e acompanhar revisões, Returns e calendário de outubro sem reiniciar o catálogo/coleta",
+    "Comparar mesmo corte com Seller Centre/banco antes de encerrar M2 ou declarar lucro realizado",
+    "Continuar incrementos validados na Live, preservando bytes/configuração e bloqueios de escrita comercial"
+  ],
+  "previous_increment_before_incurred_production": {
+    "id": "M22_OWNER_CONFIRMED_PHYSICAL_RETURN_RECEIPT_INSPECTION",
+    "status": "OFFICIAL_LIVE_M22_PHYSICAL_RECEIPT_INSPECTION_VERIFIED",
+    "pull_request": 98,
+    "branch": "feature/m22-physical-return-control-20261101",
+    "base_main": "9f1cf3b0e04b8a2d47c1b6e7f2075e2f0869c2a0",
+    "code_commit": "e6d6a4cd59b79d1f93cfef3e58adcba6d8ba3520",
+    "reviewed_head": "74a25eb04915e894c3d89962a35ae11c67dc7835",
+    "ci_run": 41344331375,
+    "node_tests": 3056,
+    "python_tests": 67,
+    "docs": "docs/MLS_M22_PHYSICAL_RETURNS_2026_11_01.md",
+    "deployment": {
+      "versions": {
+        "app": "2157c238-cc55-42ae-9521-7f52951ebd88",
+        "auth": "37bead27-c941-40e6-87e8-832f01d1785a",
+        "finance": "e0b258a2-e73f-45d2-912a-1cb6fd666e18"
+      },
+      "generated_sha256": {
+        "app": "20d0ca1e46e6cef5d374b84cce2231994ced89a2aeb289f8c4b7223a3cf14ca6",
+        "auth": "c63ee09b2d98b6321e3ae7feae1066a9eec9160b49868d72fb84cb0471a0018d",
+        "finance": "dff201100ed319f3b7d4d8cabf6826237be3a140e679f562cb982cec5bdd89b4"
+      },
+      "published_sha256": {
+        "app": "00eb27283dc0860f4654768baadccf1f1c763fac13af307245235c4f9996422a",
+        "auth": "46053d0b5f11ff4d738b4cf2cc1cc6afda7d21e233980b1e640f63728f32af2a",
+        "finance": "b4195212972f5a9f0f8ff08c9504e983f8bd3ca3b3c42493cb7c88addb84de8b"
+      },
+      "exact_bytes_verified": true,
+      "configuration_preserved": true,
+      "domains_preserved": true,
+      "flags_preserved": true,
+      "cron_preserved": true,
+      "auth_finance_versions_preserved": true,
+      "completed_at": 1793563412
+    },
+    "physical_receipt_inspection_implemented": true,
+    "quantities_and_identity": "OPERATOR_DECLARED_NOT_ORIGINAL_ORDER_ITEM_QUANTITY_VERIFIED",
+    "global_persistence": true,
+    "quarantine_before_inspection": true,
+    "partition": [
+      "resellable",
+      "repair",
+      "damaged",
+      "mismatch",
+      "quarantine"
+    ],
+    "cas_idempotency_normalized_receipt_reference_and_atomic_audit": true,
+    "financial_status_does_not_create_physical_stock": true,
+    "valuation": {
+      "state": "UNKNOWN",
+      "amount_cents": null
+    },
+    "incurred_production_cost_ledger_implemented": false,
+    "resale_reservation_consumption_implemented": false,
+    "packaging_label_costs": "NOT_CONFIRMED",
+    "limits": {
+      "source_cases_per_report": 40,
+      "source_reports": 3,
+      "physical_cases": 100,
+      "physical_lines_per_case": 50,
+      "physical_lines_total": 1000,
+      "physical_case_bytes": 65536,
+      "physical_dto_bytes": 524288
+    },
+    "validation": {
+      "node_failures": 0,
+      "node_skips": 0,
+      "cold_audit_d1_budget": "48_OF_50_UNCHANGED",
+      "synthetic_chromium": [
+        "normal",
+        "minified",
+        "320px",
+        "1365px"
+      ],
+      "actual_saved_source_replay": {
+        "source_month": "2026-10",
+        "publication_revision": 15953,
+        "source_cases": 18,
+        "saved_finance_month": "2026-11",
+        "financial_fixture_publication_revision": 435,
+        "adapter_and_store_used": true,
+        "widths": [
+          320,
+          1365
+        ],
+        "all_receipts_simulated_local_only": true,
+        "financial_sources_and_response_unchanged": true,
+        "provider_calls": 0,
+        "remote_writes": 0
+      },
+      "real_owner_physical_flow": "NOT_OBSERVED_EXECUTOR_WAF_403",
+      "actual_physical_receipts_recorded_by_this_release": 0
+    },
+    "owner_reads": "SAVED_D1_ONLY_NO_PROVIDER_OR_DDL",
+    "internal_physical_mutations": "OWNER_CONFIRMED_ONLY_LAZY_ADDITIVE_D1_SCHEMA",
+    "remote_financial_values_changed": false,
+    "commercial_writes": "LOCKED",
+    "external_stock_write_allowed": false,
+    "finance_m2": "OPEN",
+    "m22": "PARTIAL",
+    "seller_centre_comparison": "NOT_COMPARED",
+    "bank_settlement": "UNVERIFIED",
+    "external_cloudflare_build_checks": {
+      "status": "FAILURE",
+      "cause": "UNCONFIRMED",
+      "historical_log_access": "HTTP_403_CLOUDFLARE_12004",
+      "controlled_live_publication": "THREE_WORKER_EXACT_BYTES_AND_CONFIGURATION_VERIFIED"
+    }
+  },
+  "incurred_production_2026_11_01": {
+    "id": "M22B_OWNER_CONFIRMED_INCURRED_PRODUCTION_LEDGER",
+    "status": "OFFICIAL_LIVE_M22B_INCURRED_PRODUCTION_LEDGER_VERIFIED",
+    "pull_request": 99,
+    "branch": "feature/m22-incurred-production-ledger-20261101",
+    "base_main": "07cf2b8e440f2f3b9c78cc29db3b0e7fb0f48b4f",
+    "code_commit": "51128b89e67f944ecf62bf55196dac293a3eecac",
+    "reviewed_head": "0749710ba9826d6256c2ae02223ed04458a7895f",
+    "ci_run": 41347493170,
+    "node_tests": 3099,
+    "python_tests": 67,
+    "docs": "docs/MLS_M22_INCURRED_PRODUCTION_2026_11_01.md",
+    "deployment": {
+      "versions": {
+        "app": "c33b1d03-6ef5-4420-8452-06bb255abb89",
+        "auth": "37bead27-c941-40e6-87e8-832f01d1785a",
+        "finance": "e0b258a2-e73f-45d2-912a-1cb6fd666e18"
+      },
+      "generated_sha256": {
+        "app": "936c2cb0659f79805df88e66bf10ea198c30a052dfbd22cf53dfe2bccc396cab",
+        "auth": "c63ee09b2d98b6321e3ae7feae1066a9eec9160b49868d72fb84cb0471a0018d",
+        "finance": "dff201100ed319f3b7d4d8cabf6826237be3a140e679f562cb982cec5bdd89b4"
+      },
+      "published_sha256": {
+        "app": "4bc7a1e827df84720c0848d9ee735d23985e3507c30f3330078d8f3acf690eb9",
+        "auth": "46053d0b5f11ff4d738b4cf2cc1cc6afda7d21e233980b1e640f63728f32af2a",
+        "finance": "b4195212972f5a9f0f8ff08c9504e983f8bd3ca3b3c42493cb7c88addb84de8b"
+      },
+      "exact_bytes_verified": true,
+      "configuration_preserved": true,
+      "domains_preserved": true,
+      "flags_preserved": true,
+      "cron_preserved": true,
+      "auth_finance_versions_preserved": true,
+      "completed_at": 1793565632
+    },
+    "incurred_production_cost_ledger_implemented": true,
+    "production_and_cost_confirmation": "OPERATOR_DECLARED_NOT_INVOICE_OR_PAYMENT_PROOF",
+    "quantities_and_identity": "HOMOGENEOUS_PHYSICAL_PIECES_OPERATOR_DECLARED_NOT_SAVED_SELLING_UNIT_QUANTITY",
+    "date_basis": "PRODUCED_DATE_BRT_NOT_SALES_OR_RECORDING_DATE",
+    "weekly_monthly_periods": "INDEPENDENT_OVERLAPPING_RECORDED_FACTS_NOT_ALL_STORE_COST",
+    "unit_cost": "IMMUTABLE_EXPLICIT_DECLARED_INCLUDING_ZERO_OR_UNKNOWN_NULL",
+    "saved_reference": "OPTIONAL_ADULT_ALL_INCLUSIVE_CURRENT_REFERENCE_EXPLICITLY_CONFIRMED_AS_HISTORICAL_SNAPSHOT",
+    "cancelled_or_returned_order_does_not_delete_record": true,
+    "normalized_active_reference_cas_idempotency_atomic_audit_and_linear_void_replacement": true,
+    "initial_live_manufacturing_facts_created_by_release": 0,
+    "inventory_valuation": {
+      "state": "UNKNOWN",
+      "amount_cents": null
+    },
+    "financial_integration_implemented": false,
+    "incurred_and_eligible_sales_costs_automatically_summed": false,
+    "resale_reservation_consumption_implemented": false,
+    "historical_garment_consumables_decomposition": "NOT_CONFIRMED_NO_AUTOMATIC_ALL_INCLUSIVE_SPLIT",
+    "packaging_label_costs": "NOT_CONFIRMED",
+    "limits": {
+      "source_candidates": 50,
+      "global_records_including_void": 1000,
+      "record_bytes": 8192,
+      "complete_ledger_bytes": 1048576
+    },
+    "validation": {
+      "node_failures": 0,
+      "node_skips": 0,
+      "cold_audit_d1_budget": "48_OF_50_UNCHANGED",
+      "inline_owner_script_count": 15,
+      "synthetic_chromium": [
+        "normal",
+        "minified",
+        "320px",
+        "1365px"
+      ],
+      "actual_saved_source_replay": {
+        "source": "SAVED_DTF_AND_PRODUCTION_COSTS",
+        "references_revision": 5,
+        "financial_fixture_publication_revision": 522,
+        "adapter_and_store_used": true,
+        "widths": [
+          320,
+          1365
+        ],
+        "all_records_simulated_local_only": true,
+        "financial_sources_and_response_unchanged": true,
+        "provider_calls": 0,
+        "remote_writes": 0
+      },
+      "real_owner_manufacturing_flow": "NOT_OBSERVED_EXECUTOR_WAF_403"
+    },
+    "owner_reads": "SAVED_D1_ONLY_NO_PROVIDER_OR_DDL",
+    "internal_manufacturing_mutations": "OWNER_CONFIRMED_ONLY_LAZY_ADDITIVE_D1_SCHEMA",
+    "remote_financial_values_changed": false,
+    "commercial_writes": "LOCKED",
+    "external_stock_write_allowed": false,
+    "finance_m2": "OPEN",
+    "m22": "PARTIAL",
+    "seller_centre_comparison": "NOT_COMPARED",
+    "bank_settlement": "UNVERIFIED",
+    "external_cloudflare_build_checks": {
+      "status": "FAILURE",
+      "cause": "UNCONFIRMED",
+      "historical_log_access": "HTTP_403_CLOUDFLARE_12004",
+      "controlled_live_publication": "THREE_WORKER_EXACT_BYTES_AND_CONFIGURATION_VERIFIED"
+    }
+  },
+  "previous_next_actions_before_incurred_production": [
+    "Continuar M2.2 após recebimento/inspeção PR98: ledger de produção incorrida, valoração histórica e posterior reserva/consumo por identidade física; não repetir o cadastro físico já entregue",
     "Confirmar valores históricos e custos de nova embalagem/etiqueta por pedido/peça/kit; UNKNOWN não vira zero",
     "Declarar despesas do mês quando não confirmadas; não copiar automaticamente outro mês",
     "Renovar cobertura da publicação exata e acompanhar revisões, Returns e calendário de outubro sem reiniciar o catálogo/coleta",
