@@ -17,6 +17,7 @@ import {BUSINESS_MONTH_CSS} from './business-month-view.mjs';
 import {BUSINESS_ESCROW_RELEASES_SCHEMA,BusinessEscrowReleasesError,readBusinessEscrowReleases,readBusinessEscrowReleaseEvidence} from './business-escrow-releases.mjs';
 import {BUSINESS_ESCROW_RELEASE_COVERAGE_SCHEMA,BusinessEscrowReleaseCoverageError,readBusinessEscrowReleaseCoverage,runBusinessEscrowReleaseCoverage} from './business-escrow-release-coverage.mjs';
 import {FINANCIAL_AUDIT_SCHEMA,FinancialAuditOrchestrationError,runBusinessFinancialAudits} from './financial-audit-orchestration.mjs';
+import {BUSINESS_HISTORICAL_RETURNS_SCHEMA} from './business-historical-returns.mjs';
 import {BUSINESS_INCOME_OVERVIEW_SCHEMA,BusinessIncomeOverviewError,readBusinessIncomeOverview} from './business-income-overview.mjs';
 import {BUSINESS_INCOME_DETAIL_SCHEMA,BusinessIncomeDetailError,readBusinessIncomeDetail,readBusinessIncomeDetailDiagnostic} from './business-income-detail.mjs';
 import {BUSINESS_PENDING_INCOME_SCAN_SCHEMA,BusinessPendingIncomeScanError,readBusinessPendingIncomeScan} from './business-pending-income-scan.mjs';
@@ -68,6 +69,7 @@ const SCHEMA = [...new Set([
 ...BUSINESS_ESCROW_RELEASES_SCHEMA,
 ...BUSINESS_ESCROW_RELEASE_COVERAGE_SCHEMA,
 ...FINANCIAL_AUDIT_SCHEMA,
+...BUSINESS_HISTORICAL_RETURNS_SCHEMA,
 ...BUSINESS_CHECKPOINT_SCHEMA,
 ...CATALOG_CLASSIFICATION_SCHEMA,
 ...BUSINESS_SYNC_SCHEMA,
@@ -243,7 +245,7 @@ async function scheduledWork(env,services,now=()=>Date.now()){
  // First-time corrections can themselves consume the invocation budget. The
  // marker is consumed once even if an owner request initialized this isolate.
  if(MAINTENANCE_PENDING.delete(env.ADMIN_DB)){output.collection='MAINTENANCE';return output;}
- const month=localDay(new Date(now())).slice(0,7),lease=await acquireBackgroundLane(env,{month},{now,bootstrapCoverage:true,pendingIncomeRecovery:true,pendingIncomeScan:typeof services?.getFinancePendingIncomeScan==='function'});output.lane=lease.lane;
+ const month=localDay(new Date(now())).slice(0,7),lease=await acquireBackgroundLane(env,{month},{now,bootstrapCoverage:true,pendingIncomeRecovery:true,pendingIncomeScan:typeof services?.getFinancePendingIncomeScan==='function',previousMonthReturns:typeof services?.getFinanceReconciliation==='function'});output.lane=lease.lane;
  if(lease.lane==='LEASED')return {...output,collection:'LEASED'};
  let repeatHistory=false,auditSourceReads=0,historyNextWork=null;const canRun=async()=>(await readBusinessSyncState(env)).enabled;
  const productionSource=async(...args)=>{if(!await canRun())throw Error('BACKGROUND_COLLECTION_PAUSED');return services.getFinanceProductionOrders(...args);};
@@ -261,7 +263,7 @@ async function scheduledWork(env,services,now=()=>Date.now()){
     if(output.collection==='NOT_DUE')output.history_collection=(await runBusinessHistorySync(env,services,{now,currentStatus:output.collection})).status;
    }catch{if(output.collection==='NOT_DUE')output.history_collection='ERROR';else output.collection='ERROR';}
   }else if(lease.lane==='HISTORY'){
-   try{const history=await runBackgroundHistoryWork(env,services,{month,lease},{now});
+   try{const history=await runBackgroundHistoryWork(env,services,{month,lease},{now,previousMonthReturns:typeof services?.getFinanceReconciliation==='function'});
     output.history=history.history;output.reconciliation=history.reconciliation;output.releases=history.releases;output.income=history.income;output.income_detail=history.income_detail;output.release_coverage=history.release_coverage;
     repeatHistory=history.repeatHistory;auditSourceReads=history.audit_source_reads;historyNextWork=history.historyNextWork;
    }catch{output.history='ERROR';}

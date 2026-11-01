@@ -6,7 +6,7 @@ import {projectEscrowReleaseCoverageFrame} from '../../finance/src/escrow-releas
 
 // A bounded status refresh, not a new accounting source. Only the immediately
 // previous creation month is revisited, and only while it has open statuses or
-// its saved publication does not yet include the final calendar day, or a
+// its saved publication does not yet include the final calendar day/cutoff, or a
 // verified release audit has lost the exact Finance order sources. Current
 // month work always wins; a persistently busy current collector can defer this
 // best-effort maintenance. Older months still require an explicit refresh.
@@ -73,7 +73,16 @@ export async function runBusinessHistorySync(env,services,{now=()=>Date.now(),cu
  }catch(error){if(error instanceof BusinessHistorySyncError)throw error;fail('BUSINESS_HISTORY_STORAGE_UNAVAILABLE');}
  if(previous&&previous.next_run_at>started)return result('NOT_DUE',month);
  const published=await readCompletedBusinessMonth(env,month,{now});
- if(published&&published.payload.end_date===finalDay&&!published.payload.slots.some(slot=>open.some(key=>slot.frame.coverage[key]>0))){
+ // A COMPLETE source can have been captured before the end of its final day.
+ // Dates and zero open statuses alone cannot prove the closed calendar: late
+ // orders after that cutoff may not exist in the saved cohort at all. Resolve
+ // each window's real Brasília midnight, including historical DST changes.
+ const incompleteCutoff=published?.payload.slots.some(slot=>{
+  const nextDay=new Date(Date.parse(slot.end_date+'T12:00:00Z')+86400000).toISOString().slice(0,10),target=Date.parse(nextDay+'T00:00:00Z')/1000,formatter=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'});
+  let low=target-18*3600,high=target+18*3600;while(low<high){const middle=Math.floor((low+high)/2);if(formatter.format(new Date(middle*1000))<nextDay)low=middle+1;else high=middle;}
+  return formatter.format(new Date(low*1000))===nextDay&&slot.frame.cutoff_at<low-1;
+ });
+ if(published&&published.payload.end_date===finalDay&&!incompleteCutoff&&!published.payload.slots.some(slot=>open.some(key=>slot.frame.coverage[key]>0))){
   // Once legitimately started, a partial repair may finish even if a later
   // coverage attempt is unavailable. A newer complete publication stops that
   // continuation and invalidates the old sidecar instead of resetting again.

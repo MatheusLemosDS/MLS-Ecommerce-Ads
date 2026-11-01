@@ -30,26 +30,10 @@ export const RELEASE_BASE_COMMIT=approvedCandidate.base_commit;
 export const RELEASE_EXPECTED_SHA=Object.freeze({...approvedCandidate.expected_hashes});
 export const RELEASE_EXPECTED_LIVE_FLAGS=Object.freeze({...validFlags});
 export const RELEASE_ALLOWED_FILES=Object.freeze([...approvedCandidate.allowed_files]);
-// The owner explicitly requested Pending repair and continuation of its pagination. These literal files
-// are the sole protected-source exception for this candidate, still subject to
-// the exact diff and all three generated SHA-256 checks. Infrastructure, other
-// Finance/Auth sources and legacy originals remain protected.
-export const RELEASE_APPROVED_PROTECTED_FILES=Object.freeze([
- 'web/finance/src/income-detail.mjs',
- 'web/finance/src/income-detail-diagnostic.mjs',
- 'web/finance/src/connection-worker.mjs',
- 'web/finance/src/auth-router.mjs',
- 'web/finance/tests/income-detail.test.mjs',
- 'web/finance/tests/income-detail-chain.test.mjs',
- 'web/finance/tests/income-detail-diagnostic.test.mjs',
- 'web/finance/tests/connection-worker.test.mjs',
- 'web/finance/tests/auth-router.test.mjs',
- 'web/finance/src/production-worker.mjs',
- 'web/finance/src/pending-income-frame.mjs',
- 'web/finance/src/pending-income-scan.mjs',
- 'web/finance/tests/pending-income-scan-chain.test.mjs',
- 'web/finance/tests/pending-income-scan.test.mjs'
-]);
+// This current/previous-month Returns increment changes only the App. No
+// protected Finance/Auth source, legacy original or Worker configuration is
+// authorized by this candidate. Exact paths and all three hashes still apply.
+export const RELEASE_APPROVED_PROTECTED_FILES=Object.freeze([]);
 
 
 export const RELEASE_MANUAL_GATES=Object.freeze([

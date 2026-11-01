@@ -51,9 +51,13 @@ export async function sourceRecoveryFixture(t){
  f.state.detailHook=({ids})=>f.provider({order_list:ids.map(index=>({order_sn:f.serial(index),order_status:'COMPLETED',currency:'BRL',create_time:Date.UTC(2026,9,index<60?10:20,12)/1000,item_list:[{item_id:f.item(index),model_id:0,model_quantity_purchased:1}]}))});
  f.state.listHook=({request})=>Number(new URL(request.url).searchParams.get('time_from'))>=Date.UTC(2026,9,31,3)/1000?f.provider({order_list:[],more:false,next_cursor:''}):undefined;
  f.services.getAdsCalendar=async(_,selection)=>{f.calls.ads.push(selection);return ads(selection,Math.floor(f.now()/1000));};
- f.clock.time=Date.UTC(2026,9,31,12);await tokens(f);
+ // These cases isolate retention/source-gap permission on an already complete
+ // closed calendar. An Oct31 noon snapshot has its own independent cutoff-gap
+ // repair cue, covered by business-history-cutoff-recovery.test.mjs instead.
+ f.clock.time=Date.UTC(2026,10,1,3);await tokens(f);
  let frame=await f.invoke('start');for(let n=0;frame.status==='RUNNING'&&n<30;n++)frame=await f.invoke('step');assert.equal(frame.status,'COMPLETE');await f.invoke('ads');
  f.original=await readRecoveryPublication(f);assert.equal(f.original.payload.slots.reduce((n,slot)=>n+slot.frame.coverage.paid,0),24);
+ assert.equal(f.original.payload.end_date,'2026-10-31');assert.ok(f.original.payload.slots.every(slot=>slot.frame.cutoff_at>=Date.UTC(2026,10,1,3)/1000-1),'retention fixtures must contain the complete real Brasília month-end cutoff');
  const oldIds=f.original.payload.slots.map(slot=>slot.frame.run_id),placeholders=oldIds.map(()=>'?').join(',');
  // Simulate genuine source retention loss. The immutable App copies remain.
  for(const table of ['finance_business_order_evidence','finance_business_period_orders','finance_business_period_cursors','finance_business_period_payment_cache','finance_business_period_runs'])f.financeEnv.FINANCE_DB.db.prepare('DELETE FROM '+table+' WHERE run_id IN('+placeholders+')').run(...oldIds);
