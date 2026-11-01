@@ -136,6 +136,9 @@ for(const minify of [false,true])test('compiled AI Sales keeps all five native t
     await globalThis.mlsAiSalesWorkspace.start({api:localApi});
     document.querySelector('[data-tab="ai-sales"]').click();
     await wait(()=>!document.getElementById('ai-sales').hidden);
+    // Native workspace navigation settles its scroll on the next animation frame.
+    // Finish that navigation before testing the inner tab bar's own scrolling.
+    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
     })()`,true);
     const tabs=[];
     for(const theme of ['light','dark']){
@@ -165,7 +168,7 @@ for(const minify of [false,true])test('compiled AI Sales keeps all five native t
    });
    assert.equal(result.heading,'MLS AI Sales');assert.equal(result.rootVisible,true);
    assert.equal(result.tabsDirection,'row');assert.equal(result.tabs.length,10);
-   for(const tab of result.tabs){assert.equal(tab.selected,'true');assert.deepEqual(tab.visible,['aiSalesPanel-'+tab.name]);assert.equal(tab.overflow,false,'page overflow on '+size.width+' '+tab.name);assert.ok(tab.tabsTop>=60&&tab.panelTop<size.height-100,'selected tab and its content must be visible in the captured viewport');assert.equal(tab.activeTabVisible,true,'selected tab must be visible inside the mobile tab bar');}
+   for(const tab of result.tabs){assert.equal(tab.selected,'true');assert.deepEqual(tab.visible,['aiSalesPanel-'+tab.name]);assert.equal(tab.overflow,false,'page overflow on '+size.width+' '+tab.name);assert.ok(tab.tabsTop>=60&&tab.panelTop<size.height-100,'selected tab and its content must be visible in the captured viewport: '+JSON.stringify(tab));assert.equal(tab.activeTabVisible,true,'selected tab must be visible inside the mobile tab bar');}
    assert.deepEqual(result.errors,[]);assert.equal(result.localCalls.some(row=>row.write),false);
    proof.push(result);
   }
