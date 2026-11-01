@@ -50,7 +50,7 @@ async function envelope(value,checkedAt,flexiblePageSize=false){
  // Select exactly one documented wrapped or direct canonical response box.
  // Never merge origins, aliases or pages: ambiguity cannot prove coverage.
  const candidates=[];for(const origin of [value,...(plain(value.response)?[value.response]:[])]){if(Object.hasOwn(origin,'income_detail_list')){const container=origin.income_detail_list;candidates.push(Array.isArray(container)&&container.length===1?container[0]:container);}if(Object.hasOwn(origin,'list')||Object.hasOwn(origin,'income_detail_list_item')||Object.hasOwn(origin,'next_page'))candidates.push(origin);}if(candidates.length!==1||!plain(candidates[0]))fail('INVALID_RESPONSE',502,'INCOME_CONTAINER_MISSING');const box=candidates[0];
- for(const name of ['partner_id','shop_id'])if(Object.hasOwn(box,name)&&box[name]!==FINANCE_PROFILE[name])fail('INVALID_RESPONSE',502,'IDENTITY_MISMATCH');const aliases=['list','income_detail_list_item'].filter(name=>Object.hasOwn(box,name));if(aliases.length!==1)fail('INVALID_RESPONSE',502,'INCOME_LIST_INVALID');const list=box[aliases[0]];if(!Array.isArray(list)||list.length>100)fail('INVALID_RESPONSE',502,'INCOME_LIST_INVALID');const next=box.next_page;
+ for(const name of ['partner_id','shop_id'])if(Object.hasOwn(box,name)&&box[name]!==FINANCE_PROFILE[name])fail('INVALID_RESPONSE',502,'IDENTITY_MISMATCH');const aliases=['list','income_detail_list_item'].filter(name=>Object.hasOwn(box,name));if(aliases.length!==1)fail('INVALID_RESPONSE',502,'INCOME_LIST_INVALID');const list=box[aliases[0]];if(!Array.isArray(list)||list.length>100)fail('INVALID_RESPONSE',502,'INCOME_LIST_INVALID');const shortWithoutNext=flexiblePageSize&&!Object.hasOwn(box,'next_page')&&list.length<100,next=shortWithoutNext?{cursor:''}:box.next_page;
  if(!plain(next)||!Object.hasOwn(next,'cursor')||typeof next.cursor!=='string'||next.cursor.length>512)fail('INVALID_RESPONSE',502,'PAGE_CURSOR_INVALID');const cursor=next.cursor;if(Object.hasOwn(next,'page_size')&&(flexiblePageSize?(!integer(next.page_size,0,100)||list.length>next.page_size||next.page_size===0&&(list.length!==0||cursor!=='')):next.page_size!==100))fail('INVALID_RESPONSE',502,'PAGE_SIZE_INVALID');
  const rows=[];
  for(const item of list){
@@ -61,7 +61,7 @@ async function envelope(value,checkedAt,flexiblePageSize=false){
   const orderHash=await hash(item.order_sn),entryHash=await hash(JSON.stringify({order_sn:item.order_sn,status,description,payment,estimated_escrow_raw:raw,estimated_payout_time:estimated,creation_time:created}));
   rows.push({entry_hash:entryHash,order_hash:orderHash,currency:'BRL',status,description,payment_method:payment,estimated_escrow_raw:raw,estimated_escrow_cents:cents(raw),estimated_payout_time:estimated,creation_time:created});
  }
- return {frame:{schema:'finance_income_detail_v1',checked_at:checkedAt,region:'BRAZIL',shop_type:'LOCAL',income_status:'PENDING',page_size:100,returned_count:rows.length,has_more:cursor.length>0,next_cursor_present:cursor.length>0,rows,basis:'CURRENT_PENDING_PROVIDER_INCOME_DETAIL_NOT_MONTH_OR_BANK_RECEIPT'},next_cursor:cursor};
+ return {frame:{schema:'finance_income_detail_v1',checked_at:checkedAt,region:'BRAZIL',shop_type:'LOCAL',income_status:'PENDING',page_size:100,returned_count:rows.length,has_more:cursor.length>0,next_cursor_present:cursor.length>0,rows,basis:'CURRENT_PENDING_PROVIDER_INCOME_DETAIL_NOT_MONTH_OR_BANK_RECEIPT'},next_cursor:cursor,terminal_evidence:cursor===''?(shortWithoutNext?'SHORT_PAGE_WITHOUT_NEXT':'EMPTY_CURSOR'):null};
 }
 async function readIncomeDetailPageCore(env,{fetchImpl=request=>fetch(request),now=()=>Date.now(),timeoutMs=10000,page=null}={}){
  const rawNow=now();if(!integer(rawNow,1,9999999999999)||typeof fetchImpl!=='function'||!integer(timeoutMs,5,10000)||env?.FINANCE_CONNECTION_ENABLED!=='true')fail('CONFIGURATION');const started=Math.floor(rawNow/1000);
@@ -75,7 +75,7 @@ async function readIncomeDetailPageCore(env,{fetchImpl=request=>fetch(request),n
   for(const [name,value] of Object.entries(parameters))url.searchParams.set(name,String(value));
   return new Request(url,{method:'GET',redirect:'manual',headers:{Accept:'application/json'}});
  },normalizeResponse:value=>{probe=incomeDetailStructure(value);probeCheckedAt=Math.max(started,Math.floor(now()/1000));return envelope(value,probeCheckedAt,page!==null);}});
- const result=await observed,frame=projectIncomeDetailFrame(result?.frame);if(!frame)fail('RESULT_INVALID');return {frame,next_cursor:result.next_cursor};
+ const result=await observed,frame=projectIncomeDetailFrame(result?.frame);if(!frame)fail('RESULT_INVALID');return {frame,next_cursor:result.next_cursor,...(page!==null?{terminal_evidence:result.terminal_evidence}: {})};
  }finally{if(probe)await saveIncomeDetailStructure(env,probeCheckedAt,probe);}
 }
 

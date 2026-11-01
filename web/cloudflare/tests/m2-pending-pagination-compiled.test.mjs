@@ -81,3 +81,9 @@ for(const minify of [false,true])test(`three generated Workers paginate Pending 
  const completed=structuredClone(snapshot.frame.report);f.clock.time+=901000;f.state.status=403;f.state.body={error:'error_api_permission',message:'PRIVATE_PROVIDER_BODY'};assert.equal((await f.run()).status,'UNAVAILABLE');snapshot=await(await f.get('?evidence=scan-v1')).json();assert.equal(snapshot.status,'PARTIAL_UNAVAILABLE');assert.deepEqual(snapshot.frame.report,completed);assert.equal(snapshot.frame.scan.state,'RETRY_WAIT');assert.equal(snapshot.frame.scan.error,'PERMISSION_DENIED');assert.doesNotMatch(JSON.stringify(snapshot),/PRIVATE_PROVIDER_BODY|SYNTHETIC_PENDING_ORDER_|synthetic-next-page/);
  assert.deepEqual(f.calls,{app:3,finance:3,provider:3},'owner reads, local pagination and validation never collect additional source pages');
 });
+
+
+for(const minify of [false,true])test(`three generated Workers accept the observed short terminal response without next_page (minify=${minify})`,async t=>{
+ const workers=await compiled(minify),f=await fixture(t,workers);assert.equal((await f.run()).status,'RUNNING');f.clock.time+=61000;f.state.body={error:'',response:{list:providerRows(100,82)}};
+ assert.equal((await f.run()).status,'CHECKED');const snapshot=await(await f.get('?evidence=scan-v1')).json();assert.equal(snapshot.status,'AVAILABLE');assert.equal(snapshot.frame.report.rows.length,182);assert.equal(snapshot.frame.report.pages_read,2);assert.equal(snapshot.frame.report.unique_orders,182);assert.equal(snapshot.frame.report.known_amount_cents,182*4751);assert.equal(snapshot.frame.report.amount_complete,true);assert.deepEqual(f.calls,{app:2,finance:2,provider:2});assert.doesNotMatch(JSON.stringify(snapshot),/synthetic-next-page|SYNTHETIC_PENDING_ORDER_|PRIVATE_|next_cursor/);
+});

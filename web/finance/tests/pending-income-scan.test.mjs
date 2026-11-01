@@ -137,3 +137,35 @@ test('the RPC frame cannot claim more entries than one hundred per observed page
  f.advance(61);const complete=await f.step(),onePage=structuredClone(complete);onePage.scan.pages_read=1;onePage.report.pages_read=1;assert.equal(projectPendingIncomeScanFrame(onePage),null);
  const impossibleDuplicates=structuredClone(complete);impossibleDuplicates.scan.duplicate_entries=84;impossibleDuplicates.report.duplicate_entries=84;assert.equal(projectPendingIncomeScanFrame(impossibleDuplicates),null);assert.ok(projectPendingIncomeScanFrame(complete));
 });
+
+test('the observed short terminal page without next_page completes 182 entries and stores private terminal evidence',async t=>{
+ const f=await fixture(t);f.state.handler=url=>url.searchParams.get('cursor')===''?body(Array.from({length:100},(_,i)=>providerRow(i)),'PRIVATE_PAGE_100'):{error:'',response:{list:Array.from({length:82},(_,i)=>providerRow(100+i))}};
+ const first=await f.step();assert.equal(first.scan.state,'RUNNING');assert.equal(first.report,null);f.advance(61);const complete=await f.step();assert.equal(complete.scan.state,'COMPLETE');assert.equal(complete.report.rows.length,182);assert.equal(complete.report.pages_read,2);assert.equal(complete.report.known_amount_cents,182*4751);assert.equal(f.calls.length,2);assert.ok(projectPendingIncomeScanFrame(complete));
+ const evidence=f.db.db.prepare('SELECT scan_id,checked_at,kind FROM finance_pending_income_terminal_evidence').all();assert.deepEqual(evidence.map(row=>({...row})),[{scan_id:complete.scan.scan_id,checked_at:complete.report.source_latest_at,kind:'SHORT_PAGE_WITHOUT_NEXT'}]);assert.doesNotMatch(JSON.stringify(complete),/terminal_evidence|SHORT_PAGE_WITHOUT_NEXT|PRIVATE_PAGE_100/);
+ const result=await f.read();assert.deepEqual(result.report,complete.report);assert.equal(f.calls.length,2);
+});
+
+test('only absent next_page on a short private page permits the observed terminal normalization',async t=>{
+ const f=await fixture(t),page={cursor:'PRIVATE_NEXT',date_from:'2026-10-31',date_to:'2026-11-01'},options={now:f.now,fetchImpl:f.fetchImpl};
+ f.state.handler=()=>({error:'',response:{list:Array.from({length:82},(_,i)=>providerRow(i))}});
+ const short=await readFinancePendingIncomePage(f.env,page,options);assert.equal(short.next_cursor,'');assert.equal(short.terminal_evidence,'SHORT_PAGE_WITHOUT_NEXT');assert.equal(short.frame.returned_count,82);
+ await assert.rejects(readFinanceIncomeDetail(f.env,options),error=>error.upstream_diagnostic==='PAGE_CURSOR_INVALID','legacy first-page contract remains strict');
+ for(const next of [null,{},[],{cursor:null},{cursor:123},'PRIVATE_MALFORMED']){f.state.handler=()=>({error:'',response:{list:[providerRow(1)],next_page:next}});await assert.rejects(readFinancePendingIncomePage(f.env,page,options),error=>error.upstream_diagnostic==='PAGE_CURSOR_INVALID');}
+ f.state.handler=()=>({error:'',response:{list:Array.from({length:100},(_,i)=>providerRow(i))}});await assert.rejects(readFinancePendingIncomePage(f.env,page,options),error=>error.upstream_diagnostic==='PAGE_CURSOR_INVALID','a full page without a cursor cannot prove completion');
+ f.state.handler=()=>body([providerRow(1)],'PRIVATE_STILL_MORE',1);const ongoing=await readFinancePendingIncomePage(f.env,page,options);assert.equal(ongoing.next_cursor,'PRIVATE_STILL_MORE');assert.equal(ongoing.terminal_evidence,null);assert.equal(ongoing.frame.has_more,true);
+ f.state.handler=()=>body([providerRow(1)],'',1);const explicit=await readFinancePendingIncomePage(f.env,page,options);assert.equal(explicit.terminal_evidence,'EMPTY_CURSOR');
+});
+
+test('an absent next_page on an empty private page records the same narrow terminal evidence',async t=>{
+ const f=await fixture(t);f.state.handler=()=>({error:'',response:{list:[]}});const complete=await f.step();assert.equal(complete.scan.state,'COMPLETE');assert.equal(complete.report.rows.length,0);assert.equal(complete.report.known_amount_cents,0);assert.equal(complete.report.amount_complete,true);assert.equal(f.db.db.prepare('SELECT kind FROM finance_pending_income_terminal_evidence').get().kind,'SHORT_PAGE_WITHOUT_NEXT');
+});
+
+test('terminal evidence, final rows and publication are atomic and evidence retention follows scan retention',async t=>{
+ const f=await fixture(t),old=await f.step();assert.equal(f.db.db.prepare('SELECT kind FROM finance_pending_income_terminal_evidence').get().kind,'EMPTY_CURSOR');f.advance(901);
+ f.state.handler=url=>url.searchParams.get('cursor')===''?body(Array.from({length:100},(_,i)=>providerRow(100+i)),'PRIVATE_PAGE_100'):{error:'',response:{list:Array.from({length:82},(_,i)=>providerRow(200+i))}};
+ const active=await f.step();f.advance(61);const original=f.db.prepare.bind(f.db);f.db.prepare=sql=>{const statement=original(sql);if(sql.startsWith('INSERT INTO finance_pending_income_publication'))statement.run=async()=>{throw Error('PRIVATE_PUBLICATION_FAILURE');};return statement;};
+ const failure=await f.step();assert.equal(failure.scan.state,'RETRY_WAIT');assert.equal(failure.scan.pages_read,1);assert.equal(failure.scan.unique_entries,100);assert.deepEqual(failure.report,old.report);
+ assert.equal(f.db.db.prepare('SELECT COUNT(*) count FROM finance_pending_income_terminal_evidence WHERE scan_id=?').get(active.scan.scan_id).count,0);
+ f.db.prepare=original;f.advance(301);const complete=await f.step();assert.equal(complete.scan.state,'COMPLETE');assert.equal(complete.report.rows.length,182);assert.equal(f.db.db.prepare('SELECT COUNT(*) count FROM finance_pending_income_terminal_evidence').get().count,2);
+ f.advance(901);f.state.handler=()=>body([providerRow(999)],'PRIVATE_NEW_SCAN');await f.step();assert.equal(f.db.db.prepare('SELECT COUNT(*) count FROM finance_pending_income_scans').get().count,2);assert.equal(f.db.db.prepare('SELECT COUNT(*) count FROM finance_pending_income_terminal_evidence').get().count,1);assert.equal(f.db.db.prepare('SELECT scan_id FROM finance_pending_income_terminal_evidence').get().scan_id,complete.scan.scan_id);
+});

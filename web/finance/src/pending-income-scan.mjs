@@ -9,6 +9,7 @@ export const PENDING_INCOME_SCAN_SCHEMA=[
  `CREATE TABLE IF NOT EXISTS finance_pending_income_pages(scan_id TEXT NOT NULL,page_index INTEGER NOT NULL,request_cursor_hash TEXT NOT NULL,next_cursor_hash TEXT NOT NULL,page_hash TEXT NOT NULL,entry_hashes TEXT NOT NULL,row_count INTEGER NOT NULL,checked_at INTEGER NOT NULL,PRIMARY KEY(scan_id,page_index))`,
  `CREATE TABLE IF NOT EXISTS finance_pending_income_rows(scan_id TEXT NOT NULL,entry_hash TEXT NOT NULL,order_hash TEXT NOT NULL,payload TEXT NOT NULL,PRIMARY KEY(scan_id,entry_hash))`,
  `CREATE TABLE IF NOT EXISTS finance_pending_income_publication(id INTEGER PRIMARY KEY CHECK(id=1),scan_id TEXT NOT NULL,published_at INTEGER NOT NULL,payload TEXT NOT NULL CHECK(length(CAST(payload AS BLOB))<=1032192))`,
+ `CREATE TABLE IF NOT EXISTS finance_pending_income_terminal_evidence(scan_id TEXT PRIMARY KEY,checked_at INTEGER NOT NULL,kind TEXT NOT NULL CHECK(kind IN('EMPTY_CURSOR','SHORT_PAGE_WITHOUT_NEXT')))`,
 ];
 const ready=new WeakSet(),encoder=new TextEncoder(),basis='CURRENT_PENDING_PAGINATED_MUTABLE_SOURCE_NOT_MONTH_OR_BANK_RECEIPT',identity=[FINANCE_PROFILE.partner_id,FINANCE_PROFILE.shop_id];
 const fail=(suffix,status=503)=>{throw new FinanceConnectionError('FINANCE_PENDING_INCOME_SCAN_'+suffix,status);};
@@ -80,7 +81,7 @@ export async function readOrStepFinancePendingIncomeScan(env,input,{fetchImpl=re
   await db.batch([
    db.prepare("INSERT INTO finance_pending_income_scans(scan_id,partner_id,shop_id,revision,state,started_at,updated_at,completed_at,date_from,date_to,pages_read,duplicate_entries,next_cursor,next_attempt_at,error,lease_owner,lease_until) SELECT ?,?,?,1,'RUNNING',?,?,NULL,?,?,0,0,'',0,NULL,NULL,NULL WHERE EXISTS(SELECT 1 FROM finance_pending_income_control WHERE id=1 AND active_scan_id IS ?) AND NOT EXISTS(SELECT 1 FROM finance_pending_income_scans WHERE scan_id=? AND (next_attempt_at>? OR lease_until>?))").bind(id,...identity,stamp,stamp,priorDay(today),today,oldId,oldId,stamp,stamp),
    db.prepare('UPDATE finance_pending_income_control SET active_scan_id=? WHERE id=1 AND active_scan_id IS ? AND EXISTS(SELECT 1 FROM finance_pending_income_scans WHERE scan_id=?)').bind(id,oldId,id),
-   ...['finance_pending_income_rows','finance_pending_income_pages','finance_pending_income_scans'].map(table=>db.prepare('DELETE FROM '+table+' WHERE scan_id IN(SELECT scan_id FROM finance_pending_income_scans WHERE partner_id=? AND shop_id=? AND scan_id NOT IN(SELECT active_scan_id FROM finance_pending_income_control WHERE active_scan_id IS NOT NULL UNION SELECT scan_id FROM finance_pending_income_publication)) AND EXISTS(SELECT 1 FROM finance_pending_income_control WHERE id=1 AND active_scan_id=?)').bind(...identity,id)),
+   ...['finance_pending_income_rows','finance_pending_income_pages','finance_pending_income_terminal_evidence','finance_pending_income_scans'].map(table=>db.prepare('DELETE FROM '+table+' WHERE scan_id IN(SELECT scan_id FROM finance_pending_income_scans WHERE partner_id=? AND shop_id=? AND scan_id NOT IN(SELECT active_scan_id FROM finance_pending_income_control WHERE active_scan_id IS NOT NULL UNION SELECT scan_id FROM finance_pending_income_publication)) AND EXISTS(SELECT 1 FROM finance_pending_income_control WHERE id=1 AND active_scan_id=?)').bind(...identity,id)),
   ]);
   state=await readState(db,stamp);
  }
@@ -92,6 +93,8 @@ export async function readOrStepFinancePendingIncomeScan(env,input,{fetchImpl=re
   const raw=await readPage(env,{cursor:run.next_cursor,date_from:run.date_from,date_to:run.date_to},{fetchImpl,now,timeoutMs:10000}),page=projectIncomeDetailFrame(raw?.frame),finished=clock();
   if(finished-run.started_at>=3600)fail('SCAN_EXPIRED');
   if(!page||page.checked_at<run.started_at||page.checked_at>finished||typeof raw.next_cursor!=='string'||raw.next_cursor.length>512||page.has_more!==(raw.next_cursor.length>0))fail('INVALID_RESPONSE',502);
+  const terminalEvidence=raw.terminal_evidence??(raw.next_cursor===''?'EMPTY_CURSOR':null);
+  if(raw.next_cursor===''?!['EMPTY_CURSOR','SHORT_PAGE_WITHOUT_NEXT'].includes(terminalEvidence)||terminalEvidence==='SHORT_PAGE_WITHOUT_NEXT'&&page.rows.length>=100:terminalEvidence!==null)fail('INVALID_RESPONSE',502);
   if(raw.next_cursor!==''&&page.rows.length===0)fail('EMPTY_CONTINUATION',502);
   const requestHash=await hash(run.next_cursor),nextHash=await hash(raw.next_cursor),pageHash=await hash(JSON.stringify(page.rows.map(row=>row.entry_hash).sort()));
   if(raw.next_cursor!==''&&(nextHash===requestHash||state.pages.some(previous=>previous.request_cursor_hash===nextHash||previous.next_cursor_hash===nextHash)))fail('REPEATED_CURSOR',502);
@@ -104,6 +107,7 @@ export async function readOrStepFinancePendingIncomeScan(env,input,{fetchImpl=re
   const writes=[];
   for(const row of page.rows)writes.push(db.prepare('INSERT INTO finance_pending_income_rows(scan_id,entry_hash,order_hash,payload) SELECT ?,?,?,? WHERE EXISTS(SELECT 1 FROM finance_pending_income_scans WHERE '+guard+') ON CONFLICT(scan_id,entry_hash) DO NOTHING').bind(run.scan_id,row.entry_hash,row.order_hash,JSON.stringify(row),...args(finished)));
   writes.push(db.prepare('INSERT INTO finance_pending_income_pages(scan_id,page_index,request_cursor_hash,next_cursor_hash,page_hash,entry_hashes,row_count,checked_at) SELECT ?,?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM finance_pending_income_scans WHERE '+guard+')').bind(run.scan_id,pages.length,requestHash,nextHash,pageHash,JSON.stringify(page.rows.map(row=>row.entry_hash)),page.rows.length,page.checked_at,...args(finished)));
+  if(complete)writes.push(db.prepare('INSERT INTO finance_pending_income_terminal_evidence(scan_id,checked_at,kind) SELECT ?,?,? WHERE EXISTS(SELECT 1 FROM finance_pending_income_scans WHERE '+guard+') ON CONFLICT(scan_id) DO UPDATE SET checked_at=excluded.checked_at,kind=excluded.kind').bind(run.scan_id,page.checked_at,terminalEvidence,...args(finished)));
   writes.push(db.prepare('UPDATE finance_pending_income_scans SET revision=revision+1,state=?,updated_at=?,completed_at=?,pages_read=?,duplicate_entries=?,next_cursor=?,next_attempt_at=?,error=?,lease_owner=NULL,lease_until=NULL WHERE '+guard).bind(nextState,finished,complete?finished:null,pages.length,duplicateEntries,raw.next_cursor,nextAttempt,nextError,...args(finished)));
   if(complete)writes.push(db.prepare('INSERT INTO finance_pending_income_publication(id,scan_id,published_at,payload) SELECT 1,?,?,? WHERE changes()=1 ON CONFLICT(id) DO UPDATE SET scan_id=excluded.scan_id,published_at=excluded.published_at,payload=excluded.payload').bind(run.scan_id,finished,JSON.stringify(report)));
   await db.batch(writes);
