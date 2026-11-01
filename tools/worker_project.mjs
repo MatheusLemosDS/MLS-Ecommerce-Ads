@@ -7,6 +7,7 @@ export const TARGETS = Object.freeze({
   app: Object.freeze({name: 'brazacommerce-app', main: '../../dist/app-worker.mjs', baselineHashes: [
     '926e750890a31a00d1c25acd7bca1451f9faaa10fc882e0b667745fcba656106',
     '66968768bac6a7f5f0e60cfc2ed42b0a0924330025a84ce6e8c2b8754bd6fc50',
+    'c1b1909fd49353fd065298a3852d6a2ff684980d4da11a0cff832be1eb11fe1e',
     '936c2cb0659f79805df88e66bf10ea198c30a052dfbd22cf53dfe2bccc396cab',
     '20d0ca1e46e6cef5d374b84cce2231994ced89a2aeb289f8c4b7223a3cf14ca6',
     '8cbbf7c123c4ac2a3dd128198d90cc3ad9d04e1a53a66719419ac1d60c27e7a6',
