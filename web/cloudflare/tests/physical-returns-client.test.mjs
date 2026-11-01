@@ -93,8 +93,9 @@ test('logout rejects a deferred source read and clears the visible physical data
 
 test('logout ignores a deferred mutation confirmation without replaying or restoring its form',async t=>{
  const f=fixture(t),ui=mount(f);t.after(()=>ui.stop());await ui.open();await ui.b.nodes.get('physicalReturnsRegister').onclick();await ui.b.flush();let release;
- ui.setTransport(async(path,body)=>{await f.mutate(body);const saved=await f.workspace();return new Promise(resolve=>{release=()=>resolve(JSON.stringify(saved));});});
- ui.fill('Receive',{receipt_ref:'Pacote confirmado antes de sair',quantity:'2',...manualIdentity});const sent=ui.submit('Receive');await ui.b.flush();assert.ok(release);ui.stop();release();assert.equal(await sent,false);await ui.b.flush();
+ const confirmationReady=Promise.withResolvers();
+ ui.setTransport(async(path,body)=>{try{await f.mutate(body);const saved=await f.workspace();return new Promise(resolve=>{release=()=>resolve(JSON.stringify(saved));confirmationReady.resolve();});}catch(error){confirmationReady.reject(error);throw error;}});
+ ui.fill('Receive',{receipt_ref:'Pacote confirmado antes de sair',quantity:'2',...manualIdentity});const sent=ui.submit('Receive');await confirmationReady.promise;assert.ok(release);ui.stop();release();assert.equal(await sent,false);await ui.b.flush();
  assert.equal(ui.snapshot(),null);assert.equal(ui.b.nodes.get('physicalReturnsReceiveForm').textContent,'');assert.equal(ui.b.nodes.get('physicalReturnsRetry').hidden,true);assert.match(ui.b.nodes.get('physicalReturnsStatus').textContent,/Sessão encerrada/);assert.equal(ui.calls.filter(call=>call.body?.action==='receive').length,1);assert.equal((await f.workspace()).physical.summary.active_quantity,2,'a confirmation arriving after logout cannot hide the already committed local receipt from a later authenticated read');
 });
 
