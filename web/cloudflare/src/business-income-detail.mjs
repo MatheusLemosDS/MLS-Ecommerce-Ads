@@ -15,6 +15,9 @@ function clock(now){let raw;try{raw=now();}catch{fail('BUSINESS_INCOME_DETAIL_CL
 async function database(env){const db=env?.ADMIN_DB;if(typeof db?.prepare!=='function'||typeof db?.batch!=='function')fail('BUSINESS_INCOME_DETAIL_CONFIGURATION');if(!ready.has(db)){await db.batch(BUSINESS_INCOME_DETAIL_SCHEMA.map(sql=>db.prepare(sql)));ready.add(db);}return db;}
 export function projectBusinessIncomeDetail(value,projectFrame){
  try{
+  const integer=(v,min=0,max=9999999999)=>Number.isSafeInteger(v)&&!Object.is(v,-0)&&v>=min&&v<=max;
+  const codes=['UNAVAILABLE','CONFIGURATION','RESPONSE_INVALID','REDIRECT_REJECTED','HTTP_ERROR','CONTENT_TYPE_INVALID','BODY_LIMIT','JSON_INVALID','FRAME_INVALID','TIMEOUT','NETWORK_ERROR','BODY_READ_ERROR'].map(s=>'FINANCE_INCOME_DETAIL_'+s);
+
   if(typeof projectFrame!=='function'||!value||typeof value!=='object'||Array.isArray(value)||Reflect.ownKeys(value).length!==5||value.schema!=='business_income_detail_v1'||!integer(value.checked_at,1)||!['PENDING','AVAILABLE','PARTIAL_UNAVAILABLE','UNAVAILABLE'].includes(value.status))return null;
   let report=null;if(value.report!==null){report=projectFrame(value.report);if(!report||report.checked_at>value.checked_at)return null;}
   let attempt=null;if(value.attempt!==null){const a=value.attempt;if(!a||typeof a!=='object'||Array.isArray(a)||Reflect.ownKeys(a).length!==4||!integer(a.checked_at,1,value.checked_at)||!['SUCCESS','UNAVAILABLE'].includes(a.status)||!integer(a.next_attempt_at,a.checked_at)||(a.status==='SUCCESS'?a.code!==null:!codes.includes(a.code)))return null;attempt={...a};}

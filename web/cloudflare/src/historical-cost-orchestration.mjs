@@ -2,6 +2,7 @@ import {syncHistoricalCostEvidence} from './historical-cost-evidence.mjs';
 import {runBusinessFinancialAudits} from './financial-audit-orchestration.mjs';
 import {runBusinessReconciliation} from './business-reconciliation.mjs';
 import {runBusinessIncomeDetail} from './business-income-detail.mjs';
+import {runBusinessPendingIncomeScan} from './business-pending-income-scan.mjs';
 
 // One cron invocation owns one lane. A published cohort can be audited without
 // mixing it with an active import; one auxiliary opportunity follows four due
@@ -13,6 +14,8 @@ export const BACKGROUND_LANE_SCHEMA=[
  `INSERT OR IGNORE INTO background_history_fairness_state(id,finance_since_audit,returns_retry_at,reserved_returns_streak,next_history_work) VALUES(1,0,0,0,'COST')`,
  `CREATE TABLE IF NOT EXISTS background_coverage_bootstrap_attempts(month TEXT PRIMARY KEY,last_attempt_at INTEGER NOT NULL,next_attempt_at INTEGER NOT NULL)`,
  `CREATE TABLE IF NOT EXISTS background_pending_income_recovery_attempts(id INTEGER PRIMARY KEY CHECK(id=1),month TEXT NOT NULL,last_attempt_at INTEGER NOT NULL,next_attempt_at INTEGER NOT NULL)`,
+ `CREATE TABLE IF NOT EXISTS background_pending_income_scan_turns(id INTEGER PRIMARY KEY CHECK(id=1),reserved_streak INTEGER NOT NULL CHECK(reserved_streak BETWEEN 0 AND 2),last_attempt_at INTEGER NOT NULL,next_attempt_at INTEGER NOT NULL)`,
+ `INSERT OR IGNORE INTO background_pending_income_scan_turns(id,reserved_streak,last_attempt_at,next_attempt_at) VALUES(1,0,0,0)`,
 ];
 export class HistoricalCostOrchestrationError extends Error{constructor(code,status=503){super(code);this.status=status;}}
 const fail=(code,status=503)=>{throw new HistoricalCostOrchestrationError(code,status);};
@@ -27,10 +30,10 @@ const missingReturnsSql=`EXISTS(SELECT 1 FROM business_month_publications p,json
  AND NOT EXISTS(SELECT 1 FROM business_reconciliation_reports r WHERE r.run_id=json_extract(s.value,'$.frame.run_id') AND r.source_revision=json_extract(s.value,'$.frame.revision') AND r.start_date=json_extract(s.value,'$.start_date') AND r.end_date=json_extract(s.value,'$.end_date'))
  AND NOT EXISTS(SELECT 1 FROM business_reconciliation_attempts a WHERE a.run_id=json_extract(s.value,'$.frame.run_id') AND a.source_revision=json_extract(s.value,'$.frame.revision') AND typeof(a.next_attempt_at)='integer' AND a.next_attempt_at BETWEEN 0 AND 9999999999 AND a.next_attempt_at>?))`;
 
-export async function acquireBackgroundLane(env,{month},{now=()=>Date.now(),bootstrapCoverage=false,pendingIncomeRecovery=false}={}){
- const stamp=clock(now);if(typeof month!=='string'||!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)||typeof bootstrapCoverage!=='boolean'||typeof pendingIncomeRecovery!=='boolean')fail('BACKGROUND_LANE_REQUEST_INVALID',400);
+export async function acquireBackgroundLane(env,{month},{now=()=>Date.now(),bootstrapCoverage=false,pendingIncomeRecovery=false,pendingIncomeScan=false}={}){
+ const stamp=clock(now);if(typeof month!=='string'||!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)||typeof bootstrapCoverage!=='boolean'||typeof pendingIncomeRecovery!=='boolean'||typeof pendingIncomeScan!=='boolean')fail('BACKGROUND_LANE_REQUEST_INVALID',400);
  const db=database(env),token=crypto.randomUUID(),date=new Date(stamp*1000),today=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(date),hour=Number(new Intl.DateTimeFormat('en-GB',{timeZone:'America/Sao_Paulo',hour:'2-digit',hourCycle:'h23'}).format(date));let row;
- if((bootstrapCoverage||pendingIncomeRecovery)&&month!==today.slice(0,7))fail('BACKGROUND_LANE_REQUEST_INVALID',400);
+ if((bootstrapCoverage||pendingIncomeRecovery||pendingIncomeScan)&&month!==today.slice(0,7))fail('BACKGROUND_LANE_REQUEST_INVALID',400);
  const earliest=new Date(month+'-01T12:00:00Z');earliest.setUTCMonth(earliest.getUTCMonth()-3);
  // Only the production caller enables this cue after schema initialization.
  // Default standalone/legacy callers do not reference the additive table.
@@ -39,37 +42,45 @@ export async function acquireBackgroundLane(env,{month},{now=()=>Date.now(),boot
  // publication revision. The existing source retry and a global fifteen-minute
  // recovery cooldown are independent: an ordinary ring failure must not restart
  // the recovery cooldown or add another fifteen-minute age requirement.
- const pendingSql=pendingIncomeRecovery?`EXISTS(SELECT 1 FROM business_income_overview o WHERE o.id=1 AND o.status IN('SUCCESS','UNAVAILABLE') AND o.payload_checked_at<=? AND CASE WHEN json_valid(o.payload) THEN json_extract(o.payload,'$.schema')='finance_income_overview_v1' AND json_type(o.payload,'$.pending.cents')='integer' AND json_extract(o.payload,'$.pending.cents')>0 ELSE 0 END)
+ const legacyPendingRecovery=pendingIncomeRecovery&&!pendingIncomeScan;
+ const pendingSql=legacyPendingRecovery?`EXISTS(SELECT 1 FROM business_income_overview o WHERE o.id=1 AND o.status IN('SUCCESS','UNAVAILABLE') AND o.payload_checked_at<=? AND CASE WHEN json_valid(o.payload) THEN json_extract(o.payload,'$.schema')='finance_income_overview_v1' AND json_type(o.payload,'$.pending.cents')='integer' AND json_extract(o.payload,'$.pending.cents')>0 ELSE 0 END)
  AND (NOT EXISTS(SELECT 1 FROM business_income_detail WHERE id=1) OR EXISTS(SELECT 1 FROM business_income_detail d WHERE d.id=1 AND d.status='UNAVAILABLE' AND d.next_attempt_at<=?))
  AND NOT EXISTS(SELECT 1 FROM background_pending_income_recovery_attempts WHERE id=1 AND next_attempt_at>?)`:'0';
- const pendingArgs=pendingIncomeRecovery?[stamp,stamp,stamp]:[];
- try{row=(await db.prepare(`UPDATE background_collection_lane_state SET revision=revision+1,lease_token=?,lease_until=? WHERE id=1 AND revision<2147483646 AND (lease_token IS NULL OR lease_until<=?) RETURNING revision,next_lane,auxiliary_index,analysis_attempt_day,(SELECT enabled FROM business_sync_state WHERE id=1) AS enabled,(SELECT next_run_at FROM business_sync_state WHERE id=1) AS finance_due_at,(SELECT summary FROM business_sync_state WHERE id=1) AS finance_summary,(SELECT json_extract(payload,'$.hermes_mode') FROM admin_settings WHERE id=1) AS hermes_mode,(SELECT json_extract(payload,'$.daily_hour') FROM admin_settings WHERE id=1) AS daily_hour,EXISTS(SELECT 1 FROM hermes_jobs WHERE dedupe_key=?) AS analysis_queued,EXISTS(SELECT 1 FROM hermes_agent_capabilities c JOIN hermes_agent a ON a.id=c.id WHERE c.id=1 AND c.protocol='hermes-finance-v1' AND c.maintenance_until<=? AND (julianday(?)-julianday(c.updated_at))*86400 BETWEEN 0 AND 90 AND (julianday(?)-julianday(a.heartbeat))*86400 BETWEEN 0 AND 90) AS bridge_ready,(SELECT finance_since_audit FROM background_history_fairness_state WHERE id=1) AS finance_since_audit,(SELECT last_auxiliary_at FROM background_history_fairness_state WHERE id=1) AS last_auxiliary_at,(SELECT returns_retry_at FROM background_history_fairness_state WHERE id=1) AS returns_retry_at,(SELECT reserved_returns_streak FROM background_history_fairness_state WHERE id=1) AS reserved_returns_streak,(SELECT next_history_work FROM background_history_fairness_state WHERE id=1) AS next_history_work,EXISTS(SELECT 1 FROM business_month_publications WHERE month=?) AS has_publication,${missingReturnsSql} AS returns_due,${bootstrapSql} AS coverage_bootstrap_due,${pendingSql} AS pending_income_recovery_due`).bind(token,stamp+290,stamp,'daily:'+today,stamp*1000,date.toISOString(),date.toISOString(),month,month,stamp,...bootstrapArgs,...pendingArgs).all()).results[0];}catch{fail('BACKGROUND_LANE_STORAGE_UNAVAILABLE');}
+ const pendingArgs=legacyPendingRecovery?[stamp,stamp,stamp]:[];
+ // A scan is global current-state work. Its continuation retry is independent
+ // of the legacy first-page recovery cooldown and of publication revisions.
+ const scanSql=pendingIncomeScan?`(EXISTS(SELECT 1 FROM business_pending_income_scan s WHERE s.id=1 AND s.status IN('RUNNING','COMPLETE','UNAVAILABLE') AND typeof(s.next_attempt_at)='integer' AND s.next_attempt_at BETWEEN 0 AND ?)
+ OR (NOT EXISTS(SELECT 1 FROM business_pending_income_scan WHERE id=1) AND EXISTS(SELECT 1 FROM business_income_overview o WHERE o.id=1 AND o.status IN('SUCCESS','UNAVAILABLE') AND o.payload_checked_at<=? AND CASE WHEN json_valid(o.payload) THEN json_extract(o.payload,'$.schema')='finance_income_overview_v1' AND json_type(o.payload,'$.pending.cents')='integer' AND json_extract(o.payload,'$.pending.cents')>0 ELSE 0 END)))
+ AND NOT EXISTS(SELECT 1 FROM background_pending_income_scan_turns WHERE id=1 AND next_attempt_at>?)`:'0';
+ const scanArgs=pendingIncomeScan?[stamp,stamp,stamp]:[],scanStreakSql=pendingIncomeScan?'(SELECT reserved_streak FROM background_pending_income_scan_turns WHERE id=1)':'0';
+ try{row=(await db.prepare(`UPDATE background_collection_lane_state SET revision=revision+1,lease_token=?,lease_until=? WHERE id=1 AND revision<2147483646 AND (lease_token IS NULL OR lease_until<=?) RETURNING revision,next_lane,auxiliary_index,analysis_attempt_day,(SELECT enabled FROM business_sync_state WHERE id=1) AS enabled,(SELECT next_run_at FROM business_sync_state WHERE id=1) AS finance_due_at,(SELECT summary FROM business_sync_state WHERE id=1) AS finance_summary,(SELECT json_extract(payload,'$.hermes_mode') FROM admin_settings WHERE id=1) AS hermes_mode,(SELECT json_extract(payload,'$.daily_hour') FROM admin_settings WHERE id=1) AS daily_hour,EXISTS(SELECT 1 FROM hermes_jobs WHERE dedupe_key=?) AS analysis_queued,EXISTS(SELECT 1 FROM hermes_agent_capabilities c JOIN hermes_agent a ON a.id=c.id WHERE c.id=1 AND c.protocol='hermes-finance-v1' AND c.maintenance_until<=? AND (julianday(?)-julianday(c.updated_at))*86400 BETWEEN 0 AND 90 AND (julianday(?)-julianday(a.heartbeat))*86400 BETWEEN 0 AND 90) AS bridge_ready,(SELECT finance_since_audit FROM background_history_fairness_state WHERE id=1) AS finance_since_audit,(SELECT last_auxiliary_at FROM background_history_fairness_state WHERE id=1) AS last_auxiliary_at,(SELECT returns_retry_at FROM background_history_fairness_state WHERE id=1) AS returns_retry_at,(SELECT reserved_returns_streak FROM background_history_fairness_state WHERE id=1) AS reserved_returns_streak,(SELECT next_history_work FROM background_history_fairness_state WHERE id=1) AS next_history_work,EXISTS(SELECT 1 FROM business_month_publications WHERE month=?) AS has_publication,${missingReturnsSql} AS returns_due,${bootstrapSql} AS coverage_bootstrap_due,${pendingSql} AS pending_income_recovery_due,${scanSql} AS pending_income_scan_due,${scanStreakSql} AS pending_income_scan_streak`).bind(token,stamp+290,stamp,'daily:'+today,stamp*1000,date.toISOString(),date.toISOString(),month,month,stamp,...bootstrapArgs,...pendingArgs,...scanArgs).all()).results[0];}catch{fail('BACKGROUND_LANE_STORAGE_UNAVAILABLE');}
  if(!row)return {schema:'background_lane_v1',lane:'LEASED',token:null,revision:null,auxiliary_index:null};
  if(!integer(row.revision,1,2147483646)||!['FINANCE','AUXILIARY'].includes(row.next_lane)||!integer(row.auxiliary_index,0,4)||![0,1].includes(row.enabled)||!integer(row.finance_due_at))fail('BACKGROUND_LANE_STORAGE_INVALID');
  let importing=false;try{const summary=row.finance_summary===null?null:JSON.parse(row.finance_summary);importing=summary?.month===month&&summary.status==='RUNNING'&&row.finance_due_at<=stamp;}catch{fail('BACKGROUND_LANE_STORAGE_INVALID');}
  const analysisDue=row.hermes_mode==='scheduled'&&integer(row.daily_hour,0,23)&&hour>=row.daily_hour&&row.analysis_queued===0&&row.bridge_ready===1&&row.analysis_attempt_day!==today;
- if(!integer(row.finance_since_audit,0,4)||row.last_auxiliary_at!==null&&!integer(row.last_auxiliary_at,1,9999999999)||!integer(row.returns_retry_at)||!integer(row.reserved_returns_streak,0,2)||!['COST','AUDIT'].includes(row.next_history_work)||![0,1].includes(row.has_publication)||![0,1].includes(row.returns_due)||![0,1].includes(row.coverage_bootstrap_due)||![0,1].includes(row.pending_income_recovery_due))fail('BACKGROUND_LANE_STORAGE_INVALID');
+ if(!integer(row.finance_since_audit,0,4)||row.last_auxiliary_at!==null&&!integer(row.last_auxiliary_at,1,9999999999)||!integer(row.returns_retry_at)||!integer(row.reserved_returns_streak,0,2)||!['COST','AUDIT'].includes(row.next_history_work)||![0,1].includes(row.has_publication)||![0,1].includes(row.returns_due)||![0,1].includes(row.coverage_bootstrap_due)||![0,1].includes(row.pending_income_recovery_due)||pendingIncomeScan&&(![0,1].includes(row.pending_income_scan_due)||!integer(row.pending_income_scan_streak,0,2)))fail('BACKGROUND_LANE_STORAGE_INVALID');
  const auxiliaryDue=(row.has_publication===1||row.coverage_bootstrap_due===1)&&row.finance_since_audit>=4&&(row.last_auxiliary_at===null||stamp-row.last_auxiliary_at>=300);
  // A quiet Finance retry gap already permits ordinary auxiliary work, which
  // refreshes last_auxiliary_at. Reapplying its five-minute gate here would let
  // that quiet work postpone recovery forever. Busy imports retain auxiliaryDue;
  // quiet recovery uses its own durable fifteen-minute cooldown instead.
- const pendingRecovery=row.pending_income_recovery_due===1&&row.next_lane==='AUXILIARY'&&(!importing||auxiliaryDue);
- const reserved=!pendingRecovery&&row.returns_due===1&&row.reserved_returns_streak<2&&row.returns_retry_at<=stamp&&(row.finance_due_at>stamp||importing&&row.next_lane==='AUXILIARY'&&auxiliaryDue);
+ const scanReservation=pendingIncomeScan&&row.pending_income_scan_due===1&&row.pending_income_scan_streak<2&&row.next_lane==='AUXILIARY'&&(!importing||auxiliaryDue);
+ const pendingRecovery=!scanReservation&&row.pending_income_recovery_due===1&&row.next_lane==='AUXILIARY'&&(!importing||auxiliaryDue);
+ const reserved=!scanReservation&&!pendingRecovery&&row.returns_due===1&&row.reserved_returns_streak<2&&row.returns_retry_at<=stamp&&(row.finance_due_at>stamp||importing&&row.next_lane==='AUXILIARY'&&auxiliaryDue);
  // A bootstrap cannot repeatedly overtake other auxiliary work if its audit
  // fails before initializing the monthly marker: share the two-reservation
  // burst limit and its own five-minute retry gap. Ordinary auxiliary activity
  // cannot postpone the first attempt or extend a failed bootstrap's cooldown.
  // Busy Finance imports still retain their existing 4/5 auxiliary fairness.
- const bootstrap=!pendingRecovery&&!reserved&&row.coverage_bootstrap_due===1&&row.reserved_returns_streak<2&&(row.finance_due_at>stamp||importing&&row.next_lane==='AUXILIARY'&&auxiliaryDue);
- const lane=row.enabled===0?'PAUSED':pendingRecovery||reserved||bootstrap?'HISTORY':row.next_lane==='FINANCE'||importing&&!auxiliaryDue?'FINANCE':analysisDue?'ANALYSIS':auxiliaries[row.auxiliary_index];
- return {schema:'background_lane_v1',lane,token,revision:row.revision,auxiliary_index:row.auxiliary_index,reserved_returns:row.enabled===1&&reserved,coverage_bootstrap:row.enabled===1&&bootstrap,...(row.enabled===1&&bootstrap?{coverage_bootstrap_month:month}:{}),history_turn:row.next_history_work,...(row.enabled===1&&pendingRecovery?{pending_income_recovery:true,pending_income_recovery_month:month}:{})};
+ const bootstrap=!scanReservation&&!pendingRecovery&&!reserved&&row.coverage_bootstrap_due===1&&row.reserved_returns_streak<2&&(row.finance_due_at>stamp||importing&&row.next_lane==='AUXILIARY'&&auxiliaryDue);
+ const lane=row.enabled===0?'PAUSED':scanReservation||pendingRecovery||reserved||bootstrap?'HISTORY':row.next_lane==='FINANCE'||importing&&!auxiliaryDue?'FINANCE':analysisDue?'ANALYSIS':auxiliaries[row.auxiliary_index];
+ return {schema:'background_lane_v1',lane,token,revision:row.revision,auxiliary_index:row.auxiliary_index,reserved_returns:row.enabled===1&&reserved,coverage_bootstrap:row.enabled===1&&bootstrap,...(row.enabled===1&&bootstrap?{coverage_bootstrap_month:month}:{}),history_turn:row.next_history_work,...(row.enabled===1&&pendingRecovery?{pending_income_recovery:true,pending_income_recovery_month:month}:{}),...(pendingIncomeScan?{pending_income_scan_enabled:true}:{}),...(row.enabled===1&&scanReservation?{pending_income_scan:true}:{})};
 }
 
 export async function finishBackgroundLane(env,lease,{now=()=>Date.now(),repeatHistory=false,auditSourceReads=0,historyNextWork=null}={}){
  const stamp=clock(now);if(!lease?.token)return false;
- const reserved=lease.reserved_returns??false,bootstrap=lease.coverage_bootstrap??false,pendingRecovery=lease.pending_income_recovery??false,priority=reserved||bootstrap||pendingRecovery;
- if(typeof lease.token!=='string'||!/^[a-f0-9-]{36}$/.test(lease.token)||!integer(lease.revision,1,2147483646)||!integer(lease.auxiliary_index,0,4)||!['FINANCE','PAUSED','ANALYSIS',...auxiliaries].includes(lease.lane)||typeof repeatHistory!=='boolean'||typeof reserved!=='boolean'||typeof bootstrap!=='boolean'||typeof pendingRecovery!=='boolean'||pendingRecovery&&(reserved||bootstrap||typeof lease.pending_income_recovery_month!=='string'||!/^\d{4}-(0[1-9]|1[0-2])$/.test(lease.pending_income_recovery_month))||priority&&lease.lane!=='HISTORY'||reserved&&bootstrap||bootstrap&&(typeof lease.coverage_bootstrap_month!=='string'||!/^\d{4}-(0[1-9]|1[0-2])$/.test(lease.coverage_bootstrap_month))||!integer(auditSourceReads,0,1)||![null,'COST','AUDIT'].includes(historyNextWork))fail('BACKGROUND_LANE_REQUEST_INVALID',400);
+ const reserved=lease.reserved_returns??false,bootstrap=lease.coverage_bootstrap??false,pendingRecovery=lease.pending_income_recovery??false,pendingScan=lease.pending_income_scan??false,scanEnabled=lease.pending_income_scan_enabled??false,priority=reserved||bootstrap||pendingRecovery||pendingScan;
+ if(typeof lease.token!=='string'||!/^[a-f0-9-]{36}$/.test(lease.token)||!integer(lease.revision,1,2147483646)||!integer(lease.auxiliary_index,0,4)||!['FINANCE','PAUSED','ANALYSIS',...auxiliaries].includes(lease.lane)||typeof repeatHistory!=='boolean'||typeof reserved!=='boolean'||typeof bootstrap!=='boolean'||typeof pendingRecovery!=='boolean'||typeof pendingScan!=='boolean'||typeof scanEnabled!=='boolean'||pendingScan&&(!scanEnabled||reserved||bootstrap||pendingRecovery)||pendingRecovery&&(reserved||bootstrap||typeof lease.pending_income_recovery_month!=='string'||!/^\d{4}-(0[1-9]|1[0-2])$/.test(lease.pending_income_recovery_month))||priority&&lease.lane!=='HISTORY'||reserved&&bootstrap||bootstrap&&(typeof lease.coverage_bootstrap_month!=='string'||!/^\d{4}-(0[1-9]|1[0-2])$/.test(lease.coverage_bootstrap_month))||!integer(auditSourceReads,0,1)||![null,'COST','AUDIT'].includes(historyNextWork))fail('BACKGROUND_LANE_REQUEST_INVALID',400);
  const auxiliary=auxiliaries.includes(lease.lane),index=auxiliary&&!priority&&!(lease.lane==='HISTORY'&&repeatHistory)?(lease.auxiliary_index+1)%auxiliaries.length:lease.auxiliary_index;
  const analysisDay=lease.lane==='ANALYSIS'?new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date(stamp*1000)):null;
  const enabled='(SELECT enabled FROM business_sync_state WHERE id=1)=1';
@@ -82,6 +93,7 @@ export async function finishBackgroundLane(env,lease,{now=()=>Date.now(),repeatH
   // even WHERE-false table names, so optional schema must not be referenced.
   if(bootstrap)statements.push(database(env).prepare('INSERT INTO background_coverage_bootstrap_attempts(month,last_attempt_at,next_attempt_at) SELECT ?,?,? WHERE changes()=1 AND '+enabled+' ON CONFLICT(month) DO UPDATE SET last_attempt_at=excluded.last_attempt_at,next_attempt_at=excluded.next_attempt_at').bind(lease.coverage_bootstrap_month,stamp,stamp+300));
   if(pendingRecovery)statements.push(database(env).prepare('INSERT INTO background_pending_income_recovery_attempts(id,month,last_attempt_at,next_attempt_at) SELECT 1,?,?,? WHERE changes()=1 AND '+enabled+' ON CONFLICT(id) DO UPDATE SET month=excluded.month,last_attempt_at=excluded.last_attempt_at,next_attempt_at=excluded.next_attempt_at').bind(lease.pending_income_recovery_month,stamp,stamp+900));
+  if(scanEnabled)statements.push(database(env).prepare('UPDATE background_pending_income_scan_turns SET reserved_streak=CASE WHEN ? THEN MIN(2,reserved_streak+1) WHEN ? THEN 0 ELSE reserved_streak END,last_attempt_at=CASE WHEN ? THEN ? ELSE last_attempt_at END,next_attempt_at=CASE WHEN ? THEN ? ELSE next_attempt_at END WHERE id=1 AND changes()=1 AND '+enabled).bind(Number(pendingScan),Number((auxiliary||lease.lane==='ANALYSIS')&&!priority),Number(pendingScan),stamp,Number(pendingScan),stamp+(auditSourceReads===1?60:300)));
   const writes=await database(env).batch(statements);
   return writes[0]?.meta?.changes===1;
  }catch{fail('BACKGROUND_LANE_STORAGE_UNAVAILABLE');}
@@ -90,9 +102,9 @@ export async function finishBackgroundLane(env,lease,{now=()=>Date.now(),repeatH
 // Exactly one private source across cost history and the financial audit ring.
 // The reservation handles missing reports for the frozen publication before a
 // local cost gap can monopolize HISTORY; normal HISTORY alternates both kinds.
-export async function runBackgroundHistoryWork(env,services,{month,lease},{now=()=>Date.now(),readCandidates=readHistoricalCostCandidates,runCost=syncHistoricalCostEvidence,runAudits=runBusinessFinancialAudits,runReturns=runBusinessReconciliation,runIncomeDetail=runBusinessIncomeDetail}={}){
- const started=clock(now),db=database(env),reserved=lease?.reserved_returns===true,bootstrap=lease?.coverage_bootstrap===true,pendingRecovery=lease?.pending_income_recovery===true;
- if(!lease||lease.lane!=='HISTORY'||reserved&&bootstrap||pendingRecovery&&(reserved||bootstrap||lease.pending_income_recovery_month!==month)||lease.pending_income_recovery!==undefined&&typeof lease.pending_income_recovery!=='boolean'||lease.coverage_bootstrap!==undefined&&typeof lease.coverage_bootstrap!=='boolean'||typeof lease.token!=='string'||!integer(lease.revision,1,2147483646)||!['COST','AUDIT'].includes(lease.history_turn)||typeof month!=='string'||!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)||![readCandidates,runCost,runAudits,runReturns,runIncomeDetail].every(v=>typeof v==='function'))fail('BACKGROUND_HISTORY_REQUEST_INVALID',400);
+export async function runBackgroundHistoryWork(env,services,{month,lease},{now=()=>Date.now(),readCandidates=readHistoricalCostCandidates,runCost=syncHistoricalCostEvidence,runAudits=runBusinessFinancialAudits,runReturns=runBusinessReconciliation,runIncomeDetail=runBusinessIncomeDetail,runPendingIncomeScan=runBusinessPendingIncomeScan}={}){
+ const started=clock(now),db=database(env),reserved=lease?.reserved_returns===true,bootstrap=lease?.coverage_bootstrap===true,pendingRecovery=lease?.pending_income_recovery===true,pendingScan=lease?.pending_income_scan===true;
+ if(!lease||lease.lane!=='HISTORY'||reserved&&bootstrap||pendingScan&&(reserved||bootstrap||pendingRecovery||lease.pending_income_scan_enabled!==true)||lease.pending_income_scan!==undefined&&typeof lease.pending_income_scan!=='boolean'||pendingRecovery&&(reserved||bootstrap||lease.pending_income_recovery_month!==month)||lease.pending_income_recovery!==undefined&&typeof lease.pending_income_recovery!=='boolean'||lease.coverage_bootstrap!==undefined&&typeof lease.coverage_bootstrap!=='boolean'||typeof lease.token!=='string'||!integer(lease.revision,1,2147483646)||!['COST','AUDIT'].includes(lease.history_turn)||typeof month!=='string'||!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)||![readCandidates,runCost,runAudits,runReturns,runIncomeDetail,runPendingIncomeScan].every(v=>typeof v==='function'))fail('BACKGROUND_HISTORY_REQUEST_INVALID',400);
  let sourceReads=0,auditReads=0;
  const result={history:'DEFERRED',reconciliation:'DEFERRED',releases:'DEFERRED',income:'DEFERRED',income_detail:'DEFERRED',release_coverage:'DEFERRED',source_reads:0,audit_source_reads:0,repeatHistory:false,historyNextWork:null};
  const canRun=async()=>{
@@ -108,7 +120,7 @@ export async function runBackgroundHistoryWork(env,services,{month,lease},{now=(
  };
  const finish=()=>({...result,source_reads:sourceReads,audit_source_reads:auditReads});
  const audit=async()=>{
-  const sources=Object.fromEntries(['getFinanceReconciliation','getFinanceEscrowReleases','getFinanceEscrowReleaseCoverage','getFinanceIncomeOverview','getFinanceIncomeDetail'].map(name=>[name,bounded(name)]));
+  const sources=Object.fromEntries(['getFinanceReconciliation','getFinanceEscrowReleases','getFinanceEscrowReleaseCoverage','getFinanceIncomeOverview','getFinanceIncomeDetail','getFinancePendingIncomeScan'].map(name=>[name,bounded(name)]));
   const work=await runAudits(env,sources,{month},{now,canRun,historicalCalendars:true,backgroundLease:{token:lease.token,revision:lease.revision}});
   result.reconciliation=work.returns_status;result.releases=work.releases_status;result.income=work.income_status;result.income_detail=work.income_detail_status;result.release_coverage=work.coverage_status??'DEFERRED';
   // A cost continuation may hold one HISTORY slot for the next audit turn.
@@ -117,7 +129,10 @@ export async function runBackgroundHistoryWork(env,services,{month,lease},{now=(
  };
  try{
   if(!await canRun()){result.history='PAUSED';return finish();}
-  if(pendingRecovery){
+  if(pendingScan){
+   const source=bounded('getFinancePendingIncomeScan');
+   result.income_detail=source?(await runPendingIncomeScan(env,source,{now,canRun})).status:'NO_SOURCE';
+  }else if(pendingRecovery){
    const source=bounded('getFinanceIncomeDetail');
    result.income_detail=source?(await runIncomeDetail(env,source,{now,canRun})).status:'NO_SOURCE';
   }else if(reserved){

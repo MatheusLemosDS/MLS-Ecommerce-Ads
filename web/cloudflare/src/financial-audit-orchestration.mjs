@@ -2,6 +2,7 @@ import {runBusinessReconciliation} from './business-reconciliation.mjs';
 import {runBusinessEscrowReleases} from './business-escrow-releases.mjs';
 import {runBusinessIncomeOverview} from './business-income-overview.mjs';
 import {runBusinessIncomeDetail} from './business-income-detail.mjs';
+import {runBusinessPendingIncomeScan} from './business-pending-income-scan.mjs';
 import {runBusinessEscrowReleaseCoverage} from './business-escrow-release-coverage.mjs';
 import {selectBusinessHistoricalReleaseCalendar} from './business-historical-release-calendars.mjs';
 
@@ -19,13 +20,13 @@ export class FinancialAuditOrchestrationError extends Error{constructor(code,sta
 const ready=new WeakSet(),fail=(code,status=503)=>{throw new FinancialAuditOrchestrationError(code,status);};
 const integer=value=>Number.isSafeInteger(value)&&!Object.is(value,-0)&&value>=0&&value<=9999999999;
 
-export async function runBusinessFinancialAudits(env,services,input,{now=()=>Date.now(),canRun=async()=>true,runReturns=runBusinessReconciliation,runReleases=runBusinessEscrowReleases,runIncome=runBusinessIncomeOverview,runIncomeDetail=runBusinessIncomeDetail,runCoverage=runBusinessEscrowReleaseCoverage,historicalCalendars=false,backgroundLease=null}={}){
+export async function runBusinessFinancialAudits(env,services,input,{now=()=>Date.now(),canRun=async()=>true,runReturns=runBusinessReconciliation,runReleases=runBusinessEscrowReleases,runIncome=runBusinessIncomeOverview,runIncomeDetail=runBusinessIncomeDetail,runPendingIncomeScan=runBusinessPendingIncomeScan,runCoverage=runBusinessEscrowReleaseCoverage,historicalCalendars=false,backgroundLease=null}={}){
  const clock=()=>{let raw;try{raw=now();}catch{fail('FINANCIAL_AUDIT_CLOCK_INVALID');}if(!Number.isSafeInteger(raw)||raw<=0||!integer(Math.floor(raw/1000)))fail('FINANCIAL_AUDIT_CLOCK_INVALID');return Math.floor(raw/1000);};
  const stamp=clock(),month=input&&Object.getOwnPropertyDescriptor(input,'month')?.value,today=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date(stamp*1000));
  if(!input||![Object.prototype,null].includes(Object.getPrototypeOf(input))||Reflect.ownKeys(input).length!==1||!Object.hasOwn(Object.getOwnPropertyDescriptor(input,'month')||{},'value')||typeof month!=='string'||!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)||month<'2000-01'||month>today.slice(0,7))fail('FINANCIAL_AUDIT_REQUEST_INVALID',400);
  const historicalEnabled=historicalCalendars===true&&month===today.slice(0,7)&&Number.isSafeInteger(backgroundLease?.revision)&&backgroundLease.revision>=1&&backgroundLease.revision<2147483647&&typeof backgroundLease?.token==='string'&&/^[a-f0-9-]{36}$/.test(backgroundLease.token);
  if(typeof historicalCalendars!=='boolean')fail('FINANCIAL_AUDIT_CONFIGURATION');
- if(typeof canRun!=='function'||typeof runReturns!=='function'||typeof runReleases!=='function'||typeof runIncome!=='function'||typeof runIncomeDetail!=='function'||typeof runCoverage!=='function')fail('FINANCIAL_AUDIT_CONFIGURATION');
+ if(typeof canRun!=='function'||typeof runReturns!=='function'||typeof runReleases!=='function'||typeof runIncome!=='function'||typeof runIncomeDetail!=='function'||typeof runPendingIncomeScan!=='function'||typeof runCoverage!=='function')fail('FINANCIAL_AUDIT_CONFIGURATION');
  let sourceReads=0,selected=null,repeat=false,status='IDLE',returnsStatus='DEFERRED',releasesStatus='DEFERRED',incomeStatus='DEFERRED',incomeDetailStatus='DEFERRED',coverageStatus='DEFERRED';
  const result=()=>({schema:'business_financial_audit_work_v3',month,selected,status,source_reads:sourceReads,repeat,returns_status:returnsStatus,releases_status:releasesStatus,income_status:incomeStatus,income_detail_status:incomeDetailStatus,coverage_status:coverageStatus});
  if(!await canRun()){status='PAUSED';return result();}
@@ -48,7 +49,7 @@ export async function runBusinessFinancialAudits(env,services,input,{now=()=>Dat
   for(const kind of opportunities){
    if(clock()>=stamp+90){status='LEASED';repeat=false;break;}
    if(!await canRun()){status='PAUSED';repeat=false;break;}
-   const source=kind==='RETURNS'?services?.getFinanceReconciliation:kind==='RELEASES'?services?.getFinanceEscrowReleases:kind==='INCOME'?services?.getFinanceIncomeOverview:kind==='INCOME_DETAIL'?services?.getFinanceIncomeDetail:services?.getFinanceEscrowReleaseCoverage;
+   const source=kind==='RETURNS'?services?.getFinanceReconciliation:kind==='RELEASES'?services?.getFinanceEscrowReleases:kind==='INCOME'?services?.getFinanceIncomeOverview:kind==='INCOME_DETAIL'?(typeof services?.getFinancePendingIncomeScan==='function'?services.getFinancePendingIncomeScan:services?.getFinanceIncomeDetail):services?.getFinanceEscrowReleaseCoverage;
    selected=kind;
    const bootstrap=kind==='RELEASES'&&releaseBootstrap===1&&!bootstrapVisited;if(bootstrap){bootstrapVisited=true;releaseBootstrap=0;}
    if(kind==='COVERAGE')coveragePending=0;
@@ -86,7 +87,7 @@ export async function runBusinessFinancialAudits(env,services,input,{now=()=>Dat
      }
      try{return await runReleases(env,boundedSource,{month},{now,canRun});}finally{if(historicalEnabled)releaseNextTarget='HISTORICAL';}
     };
-    const work=kind==='RETURNS'?await runReturns(env,boundedSource,{month},{now,canRun}):kind==='RELEASES'?await releaseWork():kind==='INCOME'?await runIncome(env,boundedSource,{now,canRun}):kind==='INCOME_DETAIL'?await runIncomeDetail(env,boundedSource,{now,canRun}):await runCoverage(env,boundedSource,{through_month:today.slice(0,7)},{now,canRun});
+    const work=kind==='RETURNS'?await runReturns(env,boundedSource,{month},{now,canRun}):kind==='RELEASES'?await releaseWork():kind==='INCOME'?await runIncome(env,boundedSource,{now,canRun}):kind==='INCOME_DETAIL'?await (typeof services?.getFinancePendingIncomeScan==='function'?runPendingIncomeScan:runIncomeDetail)(env,boundedSource,{now,canRun}):await runCoverage(env,boundedSource,{through_month:today.slice(0,7)},{now,canRun});
     status=typeof work?.status==='string'&&/^[A-Z_]{1,40}$/.test(work.status)?work.status:'ERROR';
     repeat=kind!=='COVERAGE'&&sourceReads===1&&work?.repeat===true&&!['ERROR','UNAVAILABLE','PAUSED','BLOCKED','RETRY_WAIT','LEASED','NO_SOURCE'].includes(status);
    }catch{status='ERROR';repeat=false;}

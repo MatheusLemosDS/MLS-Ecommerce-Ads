@@ -11,6 +11,7 @@ import {projectEscrowReleaseRequest,projectEscrowReleaseFrame,projectEscrowRelea
 import {projectReconciliationRequest,projectReconciliationFrame,projectReconciliationEvidenceFrame,projectReconciliationMoneyFrame,reconciliationRequestMatches} from './reconciliation-frame.mjs';
 import {projectIncomeOverviewFrame} from './income-overview-frame.mjs';
 import {projectIncomeDetailFrame} from './income-detail-frame.mjs';
+import {projectPendingIncomeScanRequest,projectPendingIncomeScanFrame} from './pending-income-frame.mjs';
 import {projectIncomeDetailDiagnostic,incomeDetailFailureDiagnostic} from './income-detail-diagnostic.mjs';
 
 const ORIGIN = 'https://auth.brazacommerce.com.br';
@@ -88,7 +89,7 @@ function paymentFailure(error) {
   }}, status, {json: true});
 }
 
-async function privateFinanceBody(request, catalog = false, storePeriod = false, business = false, production = false, productIndex = false, historical = false, reconciliation = false, escrowReleases = false, escrowCoverage = false) {
+async function privateFinanceBody(request, catalog = false, storePeriod = false, business = false, production = false, productIndex = false, historical = false, reconciliation = false, escrowReleases = false, escrowCoverage = false, pendingIncomeScan = false) {
   const maximum=escrowReleases||escrowCoverage?512:production||historical?8192:storePeriod||catalog||productIndex?256:128;
   const media = request.headers.get('content-type') || '';
   const declared = request.headers.get('content-length');
@@ -112,6 +113,7 @@ async function privateFinanceBody(request, catalog = false, storePeriod = false,
     const bytes = new Uint8Array(length); let offset = 0;
     for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
     const value = JSON.parse(new TextDecoder('utf-8', {fatal: true}).decode(bytes));
+    if (pendingIncomeScan) return projectPendingIncomeScanRequest(value);
     if (escrowCoverage) return projectEscrowReleaseCoverageRequest(value);
     if (escrowReleases) return projectEscrowReleaseRequest(value);
     if (reconciliation) return projectReconciliationRequest(value);
@@ -276,7 +278,7 @@ function safeStatus(value) {
   };
 }
 
-export function createFinanceWorker({adapter, paymentSample, paymentPreview, variantCatalog, storePeriod, businessPeriod, dailyOrders, productionOrders, productIndex, historicalVariantEvidence, reconciliation, escrowReleases, escrowReleaseCoverage, incomeOverview, incomeDetail, fetchImpl, now = () => Date.now()} = {}) {
+export function createFinanceWorker({adapter, paymentSample, paymentPreview, variantCatalog, storePeriod, businessPeriod, dailyOrders, productionOrders, productIndex, historicalVariantEvidence, reconciliation, escrowReleases, escrowReleaseCoverage, incomeOverview, incomeDetail, pendingIncomeScan, fetchImpl, now = () => Date.now()} = {}) {
   return {
     async fetch(request, env) {
       let url;
@@ -301,9 +303,11 @@ export function createFinanceWorker({adapter, paymentSample, paymentPreview, var
         if(request.method!=='POST')return failure('METHOD_NOT_ALLOWED',405);
         if(url.search)return failure('INVALID_REQUEST',400);
         const routerError=await trustedRouter(request,env);if(routerError)return failure(routerError,routerError==='FORBIDDEN'?403:503);
-        if(env?.FINANCE_CONNECTION_ENABLED!=='true'||typeof incomeDetail!=='function'||typeof fetchImpl!=='function'||typeof now!=='function')return failure('CONFIGURATION_PENDING',503);
-        const input=await privateFinanceBody(request);if(!input)return failure('INVALID_REQUEST',400);
-        try{const frame=projectIncomeDetailFrame(await incomeDetail(env,{fetchImpl,now}));if(!frame)throw new FinanceConnectionError('FINANCE_INCOME_DETAIL_RESULT_INVALID',502);return response(frame,200,{json:true});}
+        const incomeContract=request.headers.get('x-braza-income-contract');if(incomeContract!==null&&incomeContract!=='pending-scan-v1')return failure('INVALID_REQUEST',400);
+        const scan=incomeContract==='pending-scan-v1';
+        if(env?.FINANCE_CONNECTION_ENABLED!=='true'||typeof (scan?pendingIncomeScan:incomeDetail)!=='function'||typeof fetchImpl!=='function'||typeof now!=='function')return failure('CONFIGURATION_PENDING',503);
+        const input=await privateFinanceBody(request,false,false,false,false,false,false,false,false,false,scan);if(!input)return failure('INVALID_REQUEST',400);
+        try{const frame=scan?projectPendingIncomeScanFrame(await pendingIncomeScan(env,input,{fetchImpl,now})):projectIncomeDetailFrame(await incomeDetail(env,{fetchImpl,now}));if(!frame)throw new FinanceConnectionError('FINANCE_INCOME_DETAIL_RESULT_INVALID',502);return response(frame,200,{json:true});}
         catch(error){return response({error:'FINANCE_INCOME_DETAIL_UNAVAILABLE',diagnostic:incomeDetailFailureDiagnostic(error)},error instanceof FinanceConnectionError&&[400,401,403,409,429,502,503,504].includes(error.status)?error.status:502,{json:true});}
       }
       if(url.pathname===ESCROW_RELEASES_PATH){

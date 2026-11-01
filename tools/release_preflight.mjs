@@ -30,7 +30,7 @@ export const RELEASE_BASE_COMMIT=approvedCandidate.base_commit;
 export const RELEASE_EXPECTED_SHA=Object.freeze({...approvedCandidate.expected_hashes});
 export const RELEASE_EXPECTED_LIVE_FLAGS=Object.freeze({...validFlags});
 export const RELEASE_ALLOWED_FILES=Object.freeze([...approvedCandidate.allowed_files]);
-// The owner explicitly requested the Pending income repair. These literal files
+// The owner explicitly requested Pending repair and continuation of its pagination. These literal files
 // are the sole protected-source exception for this candidate, still subject to
 // the exact diff and all three generated SHA-256 checks. Infrastructure, other
 // Finance/Auth sources and legacy originals remain protected.
@@ -43,7 +43,12 @@ export const RELEASE_APPROVED_PROTECTED_FILES=Object.freeze([
  'web/finance/tests/income-detail-chain.test.mjs',
  'web/finance/tests/income-detail-diagnostic.test.mjs',
  'web/finance/tests/connection-worker.test.mjs',
- 'web/finance/tests/auth-router.test.mjs'
+ 'web/finance/tests/auth-router.test.mjs',
+ 'web/finance/src/production-worker.mjs',
+ 'web/finance/src/pending-income-frame.mjs',
+ 'web/finance/src/pending-income-scan.mjs',
+ 'web/finance/tests/pending-income-scan-chain.test.mjs',
+ 'web/finance/tests/pending-income-scan.test.mjs'
 ]);
 
 

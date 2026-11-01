@@ -12,6 +12,7 @@ import {runFinanceEscrowReleases,readFinanceEscrowReleaseCoverage} from './escro
 import {runFinanceReturnsReconciliation} from './returns-reconciliation.mjs';
 import {readFinanceIncomeOverview} from './income-overview.mjs';
 import {readFinanceIncomeDetail} from './income-detail.mjs';
+import {readOrStepFinancePendingIncomeScan} from './pending-income-scan.mjs';
 
 // Deployment entry only. Configuration and FINANCE_CONNECTION_ENABLED='true'
 // are still required; importing this entry never makes a provider request.
@@ -30,6 +31,7 @@ export default createFinanceWorker({
   escrowReleaseCoverage: readFinanceEscrowReleaseCoverage,
   incomeOverview: readFinanceIncomeOverview,
   incomeDetail: readFinanceIncomeDetail,
+  pendingIncomeScan: readOrStepFinancePendingIncomeScan,
   fetchImpl: request => fetch(request),
   adapter: createFinanceProviderAdapter({fetchImpl: request => fetch(request)}),
 });
