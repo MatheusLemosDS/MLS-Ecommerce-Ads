@@ -1,3 +1,5 @@
+> **Live PR101 — navegação e novidades, 01/11/2026 às 19:25:21 Brasília:** versão visível `2026-11-01.1`, App `358957d4`; cartão na Visão geral, links diretos, busca que abre os formulários e roadmap atualizado publicados e conferidos. CI 41356444549 aprovada no head `f5584fe3`; Auth/Finance, configuração, domínios, flags e cron preservados. A integração em main é conferida separadamente pelo estado da PR vinculada; CI e recibo identificam a publicação runtime. Próximo: proprietário conferir os acessos e um recebimento real; M2/M2.2, itens originais e ponte futura permanecem abertos. [Registro, caminhos de uso e limites](docs/MLS_LIVE_UPDATE_DISCOVERY_2026_11_01.md). As notas seguintes preservam o histórico.
+
 > **M2.2c PR100 publicada no App — 01/11/2026, 18:40:06 Brasília:** associação interna OWNER_CONFIRMED entre recebimento e fabricação, com limites globais de quantidade, origem congelada, CAS/auditoria e desvinculação explícita. Quantidades originais continuam UNAVAILABLE; SKU/lote não prova peça individual. App `2b1d820a`; Auth/Finance e configuração preservados. CI 41352590915 verde: 3.143 Node, 67 Python, 44 testes novos e 13 cenários D1; QA local/simulada normal/minificada 320/1365 aprovada, sem fatos Live. Valoração, reserva, revenda e ponte financeira permanecem abertas; uso real do proprietário não executado. Triggers D1 persistem no rollback: código antigo pode retornar 503; recuperar com código compatível e desvinculação explícita. PR100 ainda aguardava CI documental/merge no recibo. [Registro da associação](docs/MLS_M22_RETURN_MANUFACTURING_LINKS_2026_11_01.md).
 
 > **Registro histórico M2.2b PR99 — 01/11/2026:** ledger interno de produção declarada por peça/lote, com data de fabricação em Brasília, fotografia imutável do custo ou UNKNOWN, resumos semanais/mensais independentes e correção por anulação/substituição auditada. Quantidade DTF/kit não vira produção e CANCELLED não apaga os registros. “Referência de custo das vendas” permanece separada; sem dupla soma no resultado, valoração, reserva, revenda ou estoque externo. App `c33b1d03`; Auth/Finance e configuração preservados. CI 41347493170 verde: 3.099 Node, 67 Python e QA local/simulada normal/minificado 320/1365. Nenhum fato real de fabricação foi lançado para QA; uso real do proprietário não executado. M2 e M2.2 continuam abertas. [Registro do ledger](docs/MLS_M22_INCURRED_PRODUCTION_2026_11_01.md).
@@ -52,6 +54,20 @@ Leia, nesta ordem, antes de qualquer alteração:
 - Não reduzir nem desativar suites de teste ou a lista exata de hashes reconhecidos dos Workers. Se adicionar função embutida em script, atualizar também web/cloudflare/build.py (freeze_client_helpers) e testar Worker gerado.
 
 ## Desenvolvimento e publicação
+
+Preferência explícita do proprietário, 01/11/2026: cada relatório de entrega
+deve explicar as mudanças concretas, onde encontrá-las e como usá-las. Separar
+Git/preparação, publicação e conferência Live; identificar passos manuais,
+pendências do operador, testes relevantes e limitações. Contagens de testes
+apoiam a validação e não substituem a explicação da melhoria. Não declarar
+publicação ou aceite operacional sem evidência própria; manter um resumo atual
+curto e apontar o registro detalhado, preservando os históricos anteriores.
+
+Cada futura mudança visível ao proprietário deve atualizar `APP_RELEASE` e as
+notas visíveis da versão no mesmo incremento: identificador, data, rótulo e
+explicação coerentes com a entrega. A identificação humana não comprova deploy;
+conferir o recibo e os bytes. Disponibilidade técnica não confirma dados reais,
+aceite operacional nem encerramento de M2 ou outra fase.
 
 Orientação do proprietário em 30/10/2026: entregar os próximos incrementos
 validados na versão oficial; criar ambiente separado apenas quando necessário.

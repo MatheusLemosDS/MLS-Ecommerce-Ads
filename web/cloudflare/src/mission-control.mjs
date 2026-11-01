@@ -479,7 +479,7 @@ const missionWorkspaceNavigation=Object.freeze({
  ads:[['Campanhas','/campaigns'],['Anúncios','/dashboard'],['Oportunidades','/optimization'],['Detalhes','#mission-ads-tools']],
  products:[['Produtos','/admin?tab=products'],['Custos','/admin?tab=margins'],['Margens','#missionChart-products-margin'],['Ranking','#missionChart-products-ranking'],['Prioridades','#mission-products-tasks']],
  production:[['Ordens','/admin?tab=production#dtfQueueStage'],['Artes','/admin?tab=production#dtfArtworkStage'],['Montagem DTF','/admin?tab=production#dtfFilmStage'],['Lotes','/admin?tab=production#dtfBatchStage'],['Custos','/admin?tab=margins']],
- returns:[['Devoluções','/admin?tab=agent-finance#businessReconciliation'],['Reembolsos','/admin?tab=agent-finance#businessReconciliationMoney'],['Motivos','#missionChart-returns-reasons'],['Análise','#mission-returns-evidence'],['Prioridades','#mission-returns-tasks']]
+ returns:[['Receber e inspecionar','#physicalReturnsDetails'],['Vínculo com a produção','#returnManufacturingLinksDetails'],['Conciliação financeira','/admin?tab=agent-finance#businessReconciliation']]
 });
 function missionWorkspaceNavLink(label,href,current=false){
  const tab=/^\/admin\?tab=([a-z-]+)$/.exec(href)?.[1];
@@ -529,15 +529,16 @@ function missionWorkspace(item,financeHtml){
  const charts=specialist?'<div class="mls-workspace-chart-pair" aria-label="Painéis de '+item.name+'">'+
   (id==='ads'?missionTrendPanelBody(id):'')+missionSpecialistPanelsBody(id)+'</div>':'';
  const financialTrend=id==='finance'?'<details class="mls-workspace-history"><summary>Histórico diário observado · resultado, vendas e anúncios</summary>'+missionTrendPanelBody(id)+'</details>':'';
+ const returnControls=id==='returns'?'<p class="mission-return-workflow"><strong>Fluxo físico:</strong> 1. Registrar o recebimento → 2. Inspecionar as peças → 3. Associar à fabricação. O estado financeiro da solicitação é conferido separadamente.</p>'+physicalReturnsBody()+returnManufacturingLinksBody():'';
  return '<section class="mission-workspace mission-agent--'+id+(specialist?' mls-agent-workspace':'')+'" id="'+tab+'" data-mission-page="'+id+'" hidden>'+
   header+
-  (specialist?metrics+missionWorkspaceTabs(item,true):missionWorkspaceTabs(item,false)+metrics)+charts+financialTrend+
+  (specialist?metrics+missionWorkspaceTabs(item,true):missionWorkspaceTabs(item,false)+metrics)+returnControls+charts+financialTrend+
   (['products','production','returns','auditor'].includes(id)?'<section class="mission-evidence-panel" aria-label="Indicadores observados de '+item.name+'"><header><div><span class="mission-eyebrow">SNAPSHOT VERIFICADO</span><h3>Indicadores disponíveis</h3><p>Comparação de contagens observadas. Não representa evolução histórica.</p></div><span class="mission-breadcrumb-pill">Sem projeções</span></header><div class="mission-evidence-list" id="mission-'+id+'-evidence"><p class="mission-empty">Aguardando fonte validada.</p></div><p class="mission-evidence-foot" id="mission-'+id+'-evidence-note">Dados desconhecidos permanecem indisponíveis.</p></section>':'')+
   '<div class="mission-panels"><section class="mission-module"><div class="mission-module-head"><h3>Prioridades e alertas</h3><small>Somente evidências verificáveis</small></div><div id="mission-'+id+'-tasks" class="mission-tasks"><p class="mission-empty">Aguardando indicadores do agente.</p></div>'+coverage+
   '</section>'+
   '<aside class="mission-module" id="mission-'+id+'-tools"><div class="mission-module-head"><h3>Ferramentas e detalhes</h3><small>Acessos existentes</small></div><div class="mission-actions">'+shortcuts+'</div>'+
   '<p class="mission-footnote" id="mission-'+id+'-message">Nenhuma decisão automática é executada nesta fase. Dados ausentes continuam indisponíveis.</p></aside></div>'+
-  (id==='returns'?physicalReturnsBody()+returnManufacturingLinksBody():'')+hermes+body+'</section>';
+  hermes+body+'</section>';
 }
 export function missionWorkspacesBody(financeHtml=''){
  const hub='<section class="mission-hub" id="agents" aria-labelledby="missionHubTitle" hidden>'+

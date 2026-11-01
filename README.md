@@ -5,22 +5,23 @@ App, Auth e Financeiro. Cada Worker tem build e publicação próprios. A conex�
 financeira e as leituras reais foram verificadas; isso não comprova liquidação
 bancária nem encerra a conciliação M2.
 
-**Última release verificada — PR #100, 01/11/2026:** App
-`2b1d820a-fc1a-409a-9393-86e660458c42`, com associação confirmada pelo operador
-entre peças recebidas e fabricação registrada. A compatibilidade de identidade,
-data e limites cumulativos é conferida; a origem permanece declarada e as
-quantidades originais continuam desconhecidas.
-Inspeções de condição seguem permitidas e correções de origem exigem desvincular.
-Auth `37bead27` e Finance `e0b258a2` foram preservados. O SHA-256 do App gerado é
-`926e750890a31a00d1c25acd7bca1451f9faaa10fc882e0b667745fcba656106`;
-bytes publicados, versões e configuração foram conferidos separadamente no
-[registro da release](docs/MLS_M22_RETURN_MANUFACTURING_LINKS_2026_11_01.md). Passaram 3.143 testes Node e
-67 Python, com D1 local Miniflare/workerd e Chromium normal/minificado 320/1365.
+**Última release verificada — PR #101, 01/11/2026:** a versão
+**2026-11-01.1 — Navegação e novidades** mostra na Visão geral os controles já
+entregues e seus caminhos. Recebimento/inspeção, produção realizada e vínculo
+com fabricação têm acessos diretos; a busca abre a seção correspondente e o
+roadmap da interface apresenta o estado atual, sem as antigas mensagens PR68.
 
-Os vínculos não comprovam peças serializadas, lucro ou valor de estoque. Os
-controles internos PR98/99/100 continuam separados da integração financeira,
-valoração e revenda. As proteções D1 persistem se o Worker for revertido;
-desvincular exige código compatível, sem apagar histórico ou proteções.
+App `358957d4-60ec-4e50-ab82-95bfd1702e35`. Auth `37bead27` e Finance `e0b258a2`
+preservados. Bytes, configurações, flags, domínios e cron foram conferidos.
+Passaram 3155 testes Node e 67 Python, incluindo Chromium
+normal/minificado em 320/1365. A sessão real do proprietário continua sem
+observação neste ambiente, que recebe HTTP 403.
+[O que mudou, onde encontrar e como usar](docs/MLS_LIVE_UPDATE_DISCOVERY_2026_11_01.md).
+
+Os controles internos PR98/99/100 continuam exigindo registros e conferências
+reais. Esta atualização organiza o acesso; não integra valoração, reserva,
+revenda ou recuperação ao lucro. As proteções D1 já existentes persistem no
+rollback e sua desvinculação exige código compatível.
 
 As despesas de novembro ainda precisam ser declaradas. O saldo e a margem
 parciais não substituem o resultado líquido completo. Seller Centre e banco
