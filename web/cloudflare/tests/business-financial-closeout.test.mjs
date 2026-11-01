@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import {readFileSync} from 'node:fs';
 import {incomeDetailFailureDiagnostic} from '../../finance/src/income-detail-diagnostic.mjs';
+import {projectPendingIncomeScanFrame} from '../../finance/src/pending-income-frame.mjs';
+import {projectBusinessPendingIncomeScan} from '../src/business-pending-income-scan.mjs';
 import {collectionFixture} from './business-collection-fixture.mjs';
 import {readCompletedBusinessMonth} from '../src/business-month-publication.mjs';
 import {projectBusinessReconciliation} from '../src/business-reconciliation.mjs';
@@ -124,4 +126,81 @@ test('closeout browser diagnostic vocabulary matches every closed Finance code, 
  for(const code of [...detail,...refresh,...authorization]){input.income_detail_diagnostic.diagnostic=incomeDetailFailureDiagnostic({code});assert.equal(input.income_detail_diagnostic.diagnostic.code,code);const report=f.calculate(input);assert.ok(report,code);assert.equal(report.cases.find(row=>row.technical_diagnostic).technical_diagnostic.code,code);}
  for(const [name,key,rawKey] of [['providerCodes','provider_code','provider_code'],['responseKinds','response_kind','upstream_diagnostic']])for(const value of vocabulary(name)){input.income_detail_diagnostic.diagnostic=incomeDetailFailureDiagnostic({code:'FINANCE_INCOME_DETAIL_UPSTREAM_HTTP',[rawKey]:value});const report=f.calculate(input);assert.ok(report,value);assert.equal(report.cases.find(row=>row.technical_diagnostic).technical_diagnostic[key],value);}
  const report=f.calculate(input);report.cases.find(row=>row.technical_diagnostic).technical_diagnostic.message='PRIVATE_SOURCE_BODY';assert.equal(projectBusinessFinancialCloseout(report),null);
+});
+
+
+const pendingBasis='CURRENT_PENDING_PAGINATED_MUTABLE_SOURCE_NOT_MONTH_OR_BANK_RECEIPT';
+const pendingRow=(index,amount=1590)=>({entry_hash:(index+1).toString(16).padStart(64,'0'),order_hash:(index+1001).toString(16).padStart(64,'0'),currency:'BRL',status:'Pendente',description:null,payment_method:null,estimated_escrow_raw:(amount/100).toFixed(2),estimated_escrow_cents:amount,estimated_payout_time:null,creation_time:null});
+function pendingPublication(rows,stamp,id='00000000-0000-4000-8000-000000000001'){
+ const counts=new Map();let total=0n,unknown=0;
+ for(const row of rows){counts.set(row.order_hash,(counts.get(row.order_hash)||0)+1);if(row.estimated_escrow_cents===null)unknown++;else total+=BigInt(row.estimated_escrow_cents);}
+ const conflicting_orders=[...counts.values()].filter(count=>count>1).length,safe=total>=BigInt(Number.MIN_SAFE_INTEGER)&&total<=BigInt(Number.MAX_SAFE_INTEGER),amount_complete=unknown===0&&conflicting_orders===0&&safe;
+ return {scan_id:id,started_at:stamp-20,completed_at:stamp,source_oldest_at:stamp-5,source_latest_at:stamp,pages_read:Math.max(1,Math.ceil(rows.length/100)),rows,unique_orders:counts.size,duplicate_entries:0,conflicting_orders,known_amount_cents:amount_complete?Number(total):null,unknown_amount_count:unknown,amount_complete,basis:pendingBasis};
+}
+function paginatedPending(input,stamp,{state='COMPLETE',rows=[pendingRow(0)],retained=null,conflicts=0}={}){
+ const publication=state==='COMPLETE'?pendingPublication(rows,stamp):retained;
+ const scan={scan_id:'00000000-0000-4000-8000-000000000001',state,started_at:stamp-20,updated_at:stamp,completed_at:state==='COMPLETE'?stamp:null,date_from:'2026-10-23',date_to:'2026-10-24',pages_read:state==='COMPLETE'?publication.pages_read:1,unique_entries:state==='COMPLETE'?publication.rows.length:100,unique_orders:state==='COMPLETE'?publication.unique_orders:100,duplicate_entries:0,conflicting_orders:state==='COMPLETE'?publication.conflicting_orders:conflicts,next_attempt_at:stamp+(state==='COMPLETE'?900:60),error:state==='RETRY_WAIT'?'TIMEOUT':state==='ERROR'?'REPEATED_CURSOR':state==='LIMIT_REACHED'?'LIMIT_REACHED':null};
+ const frame={schema:'finance_pending_income_scan_v1',checked_at:stamp,scan,report:publication,basis:pendingBasis};assert.ok(projectPendingIncomeScanFrame(frame),'synthetic paginated Finance frame must satisfy the shared contract');
+ const failed=['RETRY_WAIT','ERROR','LIMIT_REACHED'].includes(state),value={schema:'business_pending_income_scan_v1',checked_at:stamp,status:failed?'PARTIAL_UNAVAILABLE':state==='RUNNING'?'COLLECTING':'AVAILABLE',frame,attempt:{checked_at:stamp,status:failed?'UNAVAILABLE':'SUCCESS',code:failed?'FINANCE_PENDING_INCOME_SCAN_'+scan.error:null,next_attempt_at:scan.next_attempt_at}};assert.ok(projectBusinessPendingIncomeScan(value,projectPendingIncomeScanFrame),'synthetic App envelope must satisfy the same browser contract');
+ return {...structuredClone(input),pending_income_scan:value};
+}
+function assertMonthlyUnchanged(actual,baseline){assert.deepEqual(actual.totals,baseline.totals);assert.deepEqual(actual.checks,baseline.checks);assert.deepEqual(actual.comparisons,baseline.comparisons);assert.deepEqual(actual.cases.filter(row=>row.source.name!=='CURRENT_INCOME_PENDING'),baseline.cases.filter(row=>row.source.name!=='CURRENT_INCOME_PENDING'));assert.equal(actual.totals.realized_profit_cents,null);}
+
+test('absent and not-yet-created paginated snapshots preserve the exact legacy closeout report',async t=>{
+ const f=await fixture(t),stamp=f.now()/1000,input=pendingInput(f.input,stamp),legacy=f.calculate(input);
+ for(const value of [null,undefined,{schema:'business_pending_income_scan_v1',checked_at:stamp,status:'PENDING',frame:null,attempt:null}])assert.deepEqual(f.calculate({...input,pending_income_scan:value}),legacy);
+});
+
+test('a complete multi-page Pending publication supersedes a legacy first-page warning without changing monthly money',async t=>{
+ const f=await fixture(t),stamp=f.now()/1000,baseline=f.calculate(),input=pendingInput(f.input,stamp),rows=Array.from({length:201},(_,index)=>pendingRow(index));
+ for(const legacyFailure of [true,false]){
+  const source=structuredClone(input);
+  if(!legacyFailure)source.income_detail={schema:'business_income_detail_v1',checked_at:stamp,status:'AVAILABLE',attempt:null,report:{schema:'finance_income_detail_v1',checked_at:stamp,region:'BRAZIL',shop_type:'LOCAL',income_status:'PENDING',page_size:100,returned_count:100,has_more:true,next_cursor_present:true,rows:rows.slice(0,100),basis:'CURRENT_PENDING_PROVIDER_INCOME_DETAIL_NOT_MONTH_OR_BANK_RECEIPT'}};
+  const report=f.calculate(paginatedPending(source,stamp,{rows}));assert.ok(report);assert.equal(report.cases.some(row=>row.source.name==='CURRENT_INCOME_PENDING'),false,'completed source traversal replaces stale v1 errors and has_more; different timestamp/basis totals are never forced equal');assertMonthlyUnchanged(report,baseline);assert.doesNotMatch(JSON.stringify(report),/entry_hash|order_hash|scan_id|CURRENT_PENDING_PAGINATED/);
+ }
+});
+
+test('running and retrying scans remain explicitly partial while a previous completed publication stays informational',async t=>{
+ const f=await fixture(t),stamp=f.now()/1000,baseline=f.calculate(),input=pendingInput(f.input,stamp),retained=pendingPublication([pendingRow(9)],stamp-80,'00000000-0000-4000-8000-000000000002');
+ for(const state of ['RUNNING','RETRY_WAIT']){
+  const report=f.calculate(paginatedPending(input,stamp,{state,retained})),row=report.cases.find(row=>row.code==='CURRENT_PENDING_PARTIAL');assert.ok(report);assert.equal(row.state,'WORKING');assert.equal(row.affected_count,100);assert.equal(row.next_action,'WAIT_FOR_REFRESH');assert.equal(row.known_amount_cents,12345);assert.equal(report.cases.some(row=>row.technical_diagnostic!==null),false,'an old v1 failure cannot become a new scan diagnostic');assertMonthlyUnchanged(report,baseline);
+ }
+});
+
+test('source errors and bounded scan limits remain blocked even with retained completed evidence',async t=>{
+ const f=await fixture(t),stamp=f.now()/1000,baseline=f.calculate(),input=pendingInput(f.input,stamp),retained=pendingPublication([pendingRow(8)],stamp-80,'00000000-0000-4000-8000-000000000002');
+ for(const state of ['ERROR','LIMIT_REACHED']){
+  const report=f.calculate(paginatedPending(input,stamp,{state,retained})),row=report.cases.find(row=>row.source.name==='CURRENT_INCOME_PENDING');assert.ok(row);assert.equal(row.state,'BLOCKED');assert.equal(row.next_action,state==='LIMIT_REACHED'?'REVIEW_COLLECTION_LIMIT':'RESTORE_PENDING_DETAIL');assertMonthlyUnchanged(report,baseline);
+ }
+ const failed=paginatedPending(input,stamp);failed.pending_income_scan.status='PARTIAL_UNAVAILABLE';failed.pending_income_scan.attempt={checked_at:stamp,status:'UNAVAILABLE',code:'FINANCE_PENDING_INCOME_SCAN_TIMEOUT',next_attempt_at:stamp+300};assert.ok(projectBusinessPendingIncomeScan(failed.pending_income_scan,projectPendingIncomeScanFrame));const report=f.calculate(failed);assert.equal(report.cases.find(row=>row.source.name==='CURRENT_INCOME_PENDING').code,'CURRENT_PENDING_DETAIL_UNAVAILABLE');assertMonthlyUnchanged(report,baseline);
+});
+
+test('conflicting and unknown Pending amounts stay review cases instead of complete or zero',async t=>{
+ const f=await fixture(t),stamp=f.now()/1000,baseline=f.calculate(),input=pendingInput(f.input,stamp),conflictRows=[pendingRow(0),pendingRow(1,2140)];conflictRows[1].order_hash=conflictRows[0].order_hash;
+ const conflict=f.calculate(paginatedPending(input,stamp,{rows:conflictRows})),row=conflict.cases.find(row=>row.code==='CURRENT_PENDING_CONFLICT');assert.ok(row);assert.equal(row.state,'BLOCKED');assert.equal(row.affected_count,1);assert.equal(row.affected_unit,'ORDERS');assert.equal(row.known_amount_cents,null);assertMonthlyUnchanged(conflict,baseline);
+ const unknownRows=[pendingRow(0)];unknownRows[0].estimated_escrow_raw='10.123';unknownRows[0].estimated_escrow_cents=null;const unknown=f.calculate(paginatedPending(input,stamp,{rows:unknownRows})),unknownCase=unknown.cases.find(row=>row.code==='CURRENT_PENDING_AMOUNT_UNVERIFIED');assert.ok(unknownCase);assert.equal(unknownCase.state,'BLOCKED');assert.equal(unknownCase.known_amount_cents,null);assert.equal(unknownCase.affected_count,1);assertMonthlyUnchanged(unknown,baseline);
+ const overflowRows=Array.from({length:100},(_,index)=>({...pendingRow(index),estimated_escrow_raw:'1000000000000',estimated_escrow_cents:100000000000000})),overflow=f.calculate(paginatedPending(input,stamp,{rows:overflowRows}));assert.equal(overflow.cases.find(row=>row.code==='CURRENT_PENDING_AMOUNT_UNVERIFIED').affected_count,100);assertMonthlyUnchanged(overflow,baseline);
+ const running=f.calculate(paginatedPending(input,stamp,{state:'RUNNING',conflicts:1}));assert.equal(running.cases.find(row=>row.code==='CURRENT_PENDING_CONFLICT').affected_count,1);assert.equal(running.cases.find(row=>row.code==='CURRENT_PENDING_PARTIAL').state,'WORKING');
+});
+
+test('an exhausted but empty Pending scan cannot clear a positive Overview or certify bank receipt',async t=>{
+ const f=await fixture(t),stamp=f.now()/1000,baseline=f.calculate(),input=pendingInput(f.input,stamp),value=paginatedPending(input,stamp,{rows:[]}),report=f.calculate(value),row=report.cases.find(row=>row.code==='CURRENT_PENDING_EMPTY_MISMATCH');assert.ok(row);assert.equal(row.state,'BLOCKED');assert.equal(row.affected_count,0);assert.equal(row.known_amount_cents,12345);assertMonthlyUnchanged(report,baseline);
+ value.income_overview.report.pending.raw='0';value.income_overview.report.pending.cents=0;assert.equal(f.calculate(value).cases.some(row=>row.source.name==='CURRENT_INCOME_PENDING'),false,'a documented empty traversal with a zero Overview is not a manufactured discrepancy');
+ value.income_overview=null;assert.equal(f.calculate(value).cases.some(row=>row.source.name==='CURRENT_INCOME_PENDING'),false);
+});
+
+test('malformed or future paginated snapshots fail closed and cannot inherit a legacy diagnostic',async t=>{
+ const f=await fixture(t),stamp=f.now()/1000,baseline=f.calculate(),input=pendingInput(f.input,stamp);
+ for(const mutate of [v=>v.pending_income_scan.frame.report.known_amount_cents=0,v=>v.pending_income_scan.checked_at=stamp+61,v=>v.pending_income_scan.frame.report.order_sn='PRIVATE_ORDER_ID']){
+  const value=paginatedPending(input,stamp);mutate(value);const report=f.calculate(value),row=report.cases.find(row=>row.code==='CURRENT_PENDING_DETAIL_UNAVAILABLE');assert.ok(report);assert.equal(row.state,'BLOCKED');assert.equal(row.technical_diagnostic,null);assertMonthlyUnchanged(report,baseline);assert.doesNotMatch(JSON.stringify(report),/PRIVATE_ORDER_ID/);
+ }
+});
+
+test('new Pending review cases survive the frozen browser projection with clear titles and strict provenance',async t=>{
+ const f=await fixture(t),stamp=f.now()/1000,input=pendingInput(f.input,stamp),conflictRows=[pendingRow(0),pendingRow(1,2140)];conflictRows[1].order_hash=conflictRows[0].order_hash;const unknownRows=[{...pendingRow(0),estimated_escrow_raw:'10.123',estimated_escrow_cents:null}];
+ for(const [rows,code,title] of [[conflictRows,'CURRENT_PENDING_CONFLICT',/Pending atual com valores conflitantes para o mesmo pedido/],[unknownRows,'CURRENT_PENDING_AMOUNT_UNVERIFIED',/Pending atual com valores ainda não confirmados/],[[],'CURRENT_PENDING_EMPTY_MISMATCH',/Pending atual tem saldo informado, mas a lista veio vazia/]]){
+  const report=f.calculate(paginatedPending(input,stamp,{rows})),b=browser(report,f.input.audit_scope);assert.ok(projectBusinessFinancialCloseout(report));b.run('brazaFinancialCloseout.start({api})');assert.equal(await b.run('brazaFinancialCloseout.observe("2026-10",scope)'),true);assert.match(b.run('text(control("Cases"))'),title);
+  const row=report.cases.find(row=>row.code===code);assert.ok(row);
+  for(const change of [r=>r.source.name='MONTHLY_FINANCE',r=>r.state='WORKING',r=>r.next_action='WAIT_FOR_REFRESH']){const poisoned=structuredClone(report);change(poisoned.cases.find(r=>r.code===code));assert.equal(projectBusinessFinancialCloseout(poisoned),null);}
+ }
 });

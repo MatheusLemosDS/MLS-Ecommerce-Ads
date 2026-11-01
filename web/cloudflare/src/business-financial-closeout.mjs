@@ -9,6 +9,8 @@ import {projectBusinessIncomeDetail} from './business-income-detail.mjs';
 import {projectIncomeOverviewFrame} from '../../finance/src/income-overview-frame.mjs';
 import {projectIncomeDetailFrame} from '../../finance/src/income-detail-frame.mjs';
 import {projectIncomeDetailDiagnostic} from '../../finance/src/income-detail-diagnostic.mjs';
+import {projectPendingIncomeScanFrame} from '../../finance/src/pending-income-frame.mjs';
+import {projectBusinessPendingIncomeScan} from './business-pending-income-scan.mjs';
 
 // One bounded report over existing saved sources. No collection, writes, order
 // identity, new deduction or bank assertion is introduced by this projection.
@@ -18,13 +20,14 @@ export function buildBusinessFinancialCloseout(input,{now=()=>Date.now()}={}){
  const integer=(v,signed=false)=>Number.isSafeInteger(v)&&!Object.is(v,-0)&&(signed||v>=0);
  const sum=rows=>{let value=0n;for(const amount of rows){if(!integer(amount,true))return null;value+=BigInt(amount);}return value>=BigInt(Number.MIN_SAFE_INTEGER)&&value<=BigInt(Number.MAX_SAFE_INTEGER)?Number(value):null;};
  try{
-  if(!plain(input)||!Reflect.ownKeys(input).every(k=>['monthly','reconciliation','audit_scope','income_overview','income_detail','income_detail_diagnostic'].includes(k)&&Object.hasOwn(Object.getOwnPropertyDescriptor(input,k)||{},'value')))return null;
+  if(!plain(input)||!Reflect.ownKeys(input).every(k=>['monthly','reconciliation','audit_scope','income_overview','income_detail','income_detail_diagnostic','pending_income_scan'].includes(k)&&Object.hasOwn(Object.getOwnPropertyDescriptor(input,k)||{},'value')))return null;
   const stamp=Math.floor(now()/1000);if(!integer(stamp)||stamp<1||stamp>9999999999)return null;
   const month=projectBusinessMonth(read(input,'monthly'));if(!month||month.checked_at>stamp+60)return null;
   const scope=projectBusinessMonthAuditScope(read(input,'audit_scope'));
   const report=projectBusinessReconciliation(read(input,'reconciliation'),projectReconciliationFrame);
   const overview=projectBusinessIncomeOverview(read(input,'income_overview'),projectIncomeOverviewFrame);
   const detail=projectBusinessIncomeDetail(read(input,'income_detail'),projectIncomeDetailFrame);
+  const pendingScanRaw=read(input,'pending_income_scan'),pendingScan=projectBusinessPendingIncomeScan(pendingScanRaw,projectPendingIncomeScanFrame);
   const sources=month.source_checked_at??{finance_oldest_at:null,finance_latest_at:null,ads_at:null};
   const summary=buildMonthlyFinancialSummary(month),coverage=month.coverage;
   const today=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date(stamp*1000));
@@ -87,14 +90,47 @@ export function buildBusinessFinancialCloseout(input,{now=()=>Date.now()}={}){
   }
   // Current Pending is a separate snapshot and is never subtracted from, or
   // added to, this month's payout, expenses or provisional result.
-  if(overview&&overview.checked_at<=stamp+60&&overview.report?.pending.cents>0){
-   const current=source('CURRENT_INCOME_PENDING',overview.report.checked_at,true),detailReport=detail&&detail.checked_at<=stamp+60?detail.report:null;
-   if(!detailReport||detail?.attempt?.status==='UNAVAILABLE')add('CURRENT_PENDING_DETAIL_UNAVAILABLE','finance',null,'ORDERS',overview.report.pending.cents,'CURRENT_PROVIDER_PENDING',current,'RESTORE_PENDING_DETAIL','#commandPendingIncomeDetails',detail?.attempt?.status==='UNAVAILABLE'?'BLOCKED':'WORKING',detail?.attempt?.code??null);
-   else if(detailReport.has_more)add('CURRENT_PENDING_PARTIAL','finance',detailReport.returned_count,'ROWS',overview.report.pending.cents,'CURRENT_PROVIDER_PENDING',current,'VALIDATE_PENDING_BEFORE_PAGINATION','#commandPendingIncomeDetails','WORKING');
-   else if(detailReport.checked_at<overview.report.checked_at)add('CURRENT_PENDING_DETAIL_STALE','finance',detailReport.returned_count,'ROWS',overview.report.pending.cents,'CURRENT_PROVIDER_PENDING',current,'WAIT_FOR_REFRESH','#commandPendingIncomeDetails','WORKING');
+  const checkedOverview=overview&&overview.checked_at<=stamp+60?overview:null;
+  const positiveOverview=checkedOverview?.report?.pending.cents>0;
+  // An absent or not-yet-created scan preserves the legacy first-page contract.
+  // Once paginated evidence exists, an old first-page failure or has_more flag
+  // cannot override it or be attached as the new scan's diagnostic.
+  const hasScanInput=pendingScanRaw!==undefined&&pendingScanRaw!==null;
+  const checkedScan=pendingScan&&pendingScan.checked_at<=stamp+60?pendingScan:null;
+  const usingPaginated=hasScanInput&&(!checkedScan||checkedScan.frame!==null||['UNAVAILABLE','PARTIAL_UNAVAILABLE'].includes(checkedScan.status));
+  if(usingPaginated){
+   const frame=checkedScan?.frame,scan=frame?.scan,observed=frame?.report;
+   const overviewAmount=checkedOverview?.report?.pending.cents??null;
+   const amount=overviewAmount??(observed?.amount_complete?observed.known_amount_cents:null);
+   const observedAt=observed?.source_latest_at??scan?.updated_at??null;
+   const current=source('CURRENT_INCOME_PENDING',overviewAmount!==null?checkedOverview.report.checked_at:observedAt,true);
+   const traversal=source('CURRENT_INCOME_PENDING',observedAt,true);
+   const count=scan?.pages_read>0?scan.unique_entries:observed?.rows.length??null;
+   if(!checkedScan||!frame)add('CURRENT_PENDING_DETAIL_UNAVAILABLE','finance',count,'ROWS',amount,amount===null?'NOT_AVAILABLE':'CURRENT_PROVIDER_PENDING',current,'RESTORE_PENDING_DETAIL','#commandPendingIncomeDetails','BLOCKED');
+   else if(scan?.state==='LIMIT_REACHED')add('CURRENT_PENDING_PARTIAL','finance',count,'ROWS',amount,amount===null?'NOT_AVAILABLE':'CURRENT_PROVIDER_PENDING',current,'REVIEW_COLLECTION_LIMIT','#commandPendingIncomeDetails','BLOCKED');
+   else if(scan?.state==='ERROR')add('CURRENT_PENDING_DETAIL_UNAVAILABLE','finance',count,'ROWS',amount,amount===null?'NOT_AVAILABLE':'CURRENT_PROVIDER_PENDING',current,'RESTORE_PENDING_DETAIL','#commandPendingIncomeDetails','BLOCKED');
+   else if(scan?.state==='RETRY_WAIT')add('CURRENT_PENDING_PARTIAL','finance',count,'ROWS',amount,amount===null?'NOT_AVAILABLE':'CURRENT_PROVIDER_PENDING',current,'WAIT_FOR_REFRESH','#commandPendingIncomeDetails','WORKING');
+   else if(checkedScan.attempt?.status==='UNAVAILABLE')add('CURRENT_PENDING_DETAIL_UNAVAILABLE','finance',count,'ROWS',amount,amount===null?'NOT_AVAILABLE':'CURRENT_PROVIDER_PENDING',current,'RESTORE_PENDING_DETAIL','#commandPendingIncomeDetails','BLOCKED');
+   else if(scan?.state==='RUNNING'||!observed){
+    add('CURRENT_PENDING_PARTIAL','finance',count,'ROWS',amount,amount===null?'NOT_AVAILABLE':'CURRENT_PROVIDER_PENDING',current,'WAIT_FOR_REFRESH','#commandPendingIncomeDetails','WORKING');
+    if(scan?.conflicting_orders>0)add('CURRENT_PENDING_CONFLICT','finance',scan.conflicting_orders,'ORDERS',null,'NOT_AVAILABLE',source('CURRENT_INCOME_PENDING',scan.updated_at,true),'RESOLVE_ADJUSTMENT_CONFLICT','#commandPendingIncomeDetails','BLOCKED');
+   }else{
+    // Cursor exhaustion proves traversal, not a stable global balance. Never
+    // force totals from different observation times to agree, and never turn
+    // conflicting/unknown rows or an empty positive-account scan into success.
+    if(observed.conflicting_orders>0)add('CURRENT_PENDING_CONFLICT','finance',observed.conflicting_orders,'ORDERS',null,'NOT_AVAILABLE',traversal,'RESOLVE_ADJUSTMENT_CONFLICT','#commandPendingIncomeDetails','BLOCKED');
+    if(observed.unknown_amount_count>0||!observed.amount_complete&&observed.conflicting_orders===0)add('CURRENT_PENDING_AMOUNT_UNVERIFIED','finance',observed.unknown_amount_count||observed.rows.length,'ROWS',null,'NOT_AVAILABLE',traversal,'REVIEW_ARITHMETIC','#commandPendingIncomeDetails','BLOCKED');
+    if(observed.rows.length===0&&positiveOverview)add('CURRENT_PENDING_EMPTY_MISMATCH','finance',0,'ROWS',overviewAmount,'CURRENT_PROVIDER_PENDING',current,'REVIEW_ARITHMETIC','#commandPendingIncomeDetails','BLOCKED');
+    else if((observed.rows.length>0||positiveOverview)&&observed.conflicting_orders===0&&observed.amount_complete&&(stamp-observed.source_latest_at>900||checkedOverview?.report&&observed.source_latest_at<checkedOverview.report.checked_at))add('CURRENT_PENDING_DETAIL_STALE','finance',observed.rows.length,'ROWS',amount,amount===null?'NOT_AVAILABLE':'CURRENT_PROVIDER_PENDING',current,'WAIT_FOR_REFRESH','#commandPendingIncomeDetails','WORKING');
+   }
+  }else if(positiveOverview){
+   const current=source('CURRENT_INCOME_PENDING',checkedOverview.report.checked_at,true),detailReport=detail&&detail.checked_at<=stamp+60?detail.report:null;
+   if(!detailReport||detail?.attempt?.status==='UNAVAILABLE')add('CURRENT_PENDING_DETAIL_UNAVAILABLE','finance',null,'ORDERS',checkedOverview.report.pending.cents,'CURRENT_PROVIDER_PENDING',current,'RESTORE_PENDING_DETAIL','#commandPendingIncomeDetails',detail?.attempt?.status==='UNAVAILABLE'?'BLOCKED':'WORKING',detail?.attempt?.code??null);
+   else if(detailReport.has_more)add('CURRENT_PENDING_PARTIAL','finance',detailReport.returned_count,'ROWS',checkedOverview.report.pending.cents,'CURRENT_PROVIDER_PENDING',current,'VALIDATE_PENDING_BEFORE_PAGINATION','#commandPendingIncomeDetails','WORKING');
+   else if(detailReport.checked_at<checkedOverview.report.checked_at)add('CURRENT_PENDING_DETAIL_STALE','finance',detailReport.returned_count,'ROWS',checkedOverview.report.pending.cents,'CURRENT_PROVIDER_PENDING',current,'WAIT_FOR_REFRESH','#commandPendingIncomeDetails','WORKING');
   }
   const sidecar=read(input,'income_detail_diagnostic'),cause=projectIncomeDetailDiagnostic(read(sidecar,'diagnostic'));
-  if(cause&&read(sidecar,'schema')==='business_income_detail_diagnostic_v1'&&integer(read(sidecar,'checked_at'))&&read(sidecar,'checked_at')<=stamp+60&&read(sidecar,'attempt_checked_at')===detail?.attempt?.checked_at&&detail?.attempt?.status==='UNAVAILABLE'){
+  if(!usingPaginated&&cause&&read(sidecar,'schema')==='business_income_detail_diagnostic_v1'&&integer(read(sidecar,'checked_at'))&&read(sidecar,'checked_at')<=stamp+60&&read(sidecar,'attempt_checked_at')===detail?.attempt?.checked_at&&detail?.attempt?.status==='UNAVAILABLE'){
    const row=cases.find(row=>row.code==='CURRENT_PENDING_DETAIL_UNAVAILABLE');if(row)row.technical_diagnostic={code:cause.code,stage:cause.stage,http:cause.http,provider_code:cause.provider_code,response_kind:cause.response_kind};
   }
   const pending=new Set(month.result.pending),after=adjusted.state==='UNAVAILABLE'?null:adjusted.after_adjustment_repass_cents;
@@ -123,7 +159,7 @@ export function projectBusinessFinancialCloseout(value){
  const hrefs=['#businessMonth','#businessReconciliation','#businessMonthCalculationDetails','#businessMonthExpensesDetails','#commandPendingIncomeDetails','/admin?tab=products','/dashboard'];
  const sources=['MONTHLY_FINANCE','SAME_PUBLICATION_RECONCILIATION','SAVED_PRODUCTION_COSTS','SAVED_EXPENSES','CALENDAR_ADS','CURRENT_INCOME_PENDING'];
  const source=v=>{if(!exact(v,['name','checked_at','freshness'])||!sources.includes(v.name)||(v.checked_at!==null&&!int(v.checked_at,1,value.checked_at+60)))return false;const currentMonth=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date(value.checked_at*1000)).slice(0,7),expected=v.checked_at===null?'UNKNOWN':value.checked_at-v.checked_at<=900?'FRESH':v.name!=='CURRENT_INCOME_PENDING'&&value.month<currentMonth?'HISTORICAL':'STALE';return v.freshness===expected;};
- const codes=['COLLECTING','PERIOD_LIMIT_REACHED','SOURCE_UNAVAILABLE','STATUS_REVIEW_REQUIRED','PAYMENT_INCOMPLETE','RETURNS_NOT_RECONCILED','PRODUCTION_COST_INCOMPLETE','INVOICE_TAX_UNAVAILABLE','TAX_POLICY_REQUIRED','ADS_UNAVAILABLE','EXTERNAL_EXPENSES_REQUIRED','RECHARGE_TREATMENT_REQUIRED','ADJUSTMENT_UNAVAILABLE','ARITHMETIC_UNSAFE','FINANCIAL_SOURCE_STALE','RECONCILIATION_SCOPE_REQUIRED','RECONCILIATION_INCOMPLETE','ADJUSTMENT_FIELDS_UNAVAILABLE','ADJUSTMENT_CONFLICT','RETURN_DETAILS_PENDING','CURRENT_PENDING_DETAIL_UNAVAILABLE','CURRENT_PENDING_PARTIAL','CURRENT_PENDING_DETAIL_STALE'];
+ const codes=['COLLECTING','PERIOD_LIMIT_REACHED','SOURCE_UNAVAILABLE','STATUS_REVIEW_REQUIRED','PAYMENT_INCOMPLETE','RETURNS_NOT_RECONCILED','PRODUCTION_COST_INCOMPLETE','INVOICE_TAX_UNAVAILABLE','TAX_POLICY_REQUIRED','ADS_UNAVAILABLE','EXTERNAL_EXPENSES_REQUIRED','RECHARGE_TREATMENT_REQUIRED','ADJUSTMENT_UNAVAILABLE','ARITHMETIC_UNSAFE','FINANCIAL_SOURCE_STALE','RECONCILIATION_SCOPE_REQUIRED','RECONCILIATION_INCOMPLETE','ADJUSTMENT_FIELDS_UNAVAILABLE','ADJUSTMENT_CONFLICT','RETURN_DETAILS_PENDING','CURRENT_PENDING_DETAIL_UNAVAILABLE','CURRENT_PENDING_PARTIAL','CURRENT_PENDING_DETAIL_STALE','CURRENT_PENDING_CONFLICT','CURRENT_PENDING_AMOUNT_UNVERIFIED','CURRENT_PENDING_EMPTY_MISMATCH'];
  const detailCodes=new Set(['CONFIGURATION','SIGNING_CONFIGURATION','UNAVAILABLE','PERMISSION_DENIED','RATE_LIMIT','INVALID_RESPONSE','RESULT_INVALID','TRANSPORT_CONFIGURATION','TRANSPORT_UNAVAILABLE','REQUEST_STALE','TIMEOUT','UPSTREAM_FAILED','UPSTREAM_HTTP','UPSTREAM_BODY_TOO_LARGE','UPSTREAM_INVALID_JSON','UPSTREAM_CONTENT_TYPE'].map(code=>'FINANCE_INCOME_DETAIL_'+code));
  const refreshCodes=new Set(['TRANSPORT_CONFIGURATION','TRANSPORT_UNAVAILABLE','REQUEST_STALE','TIMEOUT','UPSTREAM_FAILED','UPSTREAM_HTTP','UPSTREAM_BODY_TOO_LARGE','UPSTREAM_INVALID_JSON','UPSTREAM_CONTENT_TYPE','REQUEST_INVALID','TOKEN_INVALID','SIGNING_INPUT_INVALID','SIGNING_KEY_CONFIGURATION','SIGNATURE_UNAVAILABLE','API_ERROR','IDENTITY_MISMATCH','RESPONSE_CONTEXT_INVALID','RESPONSE_EXPIRED','RESPONSE_INVALID','TOKEN_NOT_ROTATED'].map(code=>'FINANCE_REFRESH_'+code));
  const authorizationCodes=new Set(['FINANCE_AUTHORIZATION_REQUIRED','FINANCE_AUTHORIZATION_IN_PROGRESS','FINANCE_AUTHORIZATION_CONFLICT','FINANCE_REFRESH_CONFLICT','FINANCE_REFRESH_IN_PROGRESS','FINANCE_REFRESH_FAILED','FINANCE_REFRESH_COORDINATOR_CONFIGURATION','FINANCE_CLOCK_CONFIGURATION','FINANCE_DATABASE_CONFIGURATION','FINANCE_ENCRYPTION_CONFIGURATION','FINANCE_ENCRYPTION_FAILED','FINANCE_ENCRYPTION_KEY_MISMATCH','FINANCE_INVALID_ENCODING','FINANCE_INVALID_LEASE','FINANCE_INVALID_REVISION','FINANCE_INVALID_TOKENS','FINANCE_REVISION_CONFLICT','FINANCE_STORAGE_UNAVAILABLE','FINANCE_TOKEN_DECRYPT_FAILED']);
@@ -142,7 +178,12 @@ export function projectBusinessFinancialCloseout(value){
   if(!exact(value.versions,['bindings','costs','cost_rules','tax_policy','expenses','classifications'])||!int(value.versions.bindings,1,2147483647)||!int(value.versions.costs,1,2147483647)||!int(value.versions.expenses,0,2147483646)||!['cost_rules','tax_policy','classifications'].every(key=>value.versions[key]===null||int(value.versions[key],key==='tax_policy'?0:1,2147483647)))return null;
   if(!exact(value.totals,['expected_repass_cents','after_adjustment_repass_cents','known_production_cents','invoice_tax_cents','ads_spend_cents','external_expenses_cents','provisional_balance_cents','reported_refund_information_cents','realized_profit_cents'])||!Object.values(value.totals).every(money)||value.totals.realized_profit_cents!==null||['known_production_cents','invoice_tax_cents','ads_spend_cents','external_expenses_cents','reported_refund_information_cents'].some(key=>value.totals[key]!==null&&value.totals[key]<0)||value.scope_status!=='SAME_PUBLICATION'&&(value.totals.after_adjustment_repass_cents!==null||value.totals.reported_refund_information_cents!==null))return null;
   if(!array(value.cases,codes.length)||new Set(value.cases.map(row=>Object.getOwnPropertyDescriptor(row||{},'code')?.value)).size!==value.cases.length)return null;
-  for(const row of value.cases){if(!exact(row,['code','agent_id','state','affected_count','affected_unit','known_amount_cents','amount_basis','source','next_action','href','technical_code','technical_diagnostic'])||!codes.includes(row.code)||!['finance','returns','products','ads','auditor'].includes(row.agent_id)||!['OPEN','WORKING','BLOCKED'].includes(row.state)||(row.affected_count!==null&&!int(row.affected_count))||!['ORDERS','UNITS','CASES','DAYS','SOURCES','MONTH','ROWS'].includes(row.affected_unit)||!money(row.known_amount_cents)||!amountBases.includes(row.amount_basis)||!source(row.source)||!actions.includes(row.next_action)||!hrefs.includes(row.href)||!technical(row.technical_diagnostic)||row.technical_diagnostic!==null&&row.code!=='CURRENT_PENDING_DETAIL_UNAVAILABLE'||(row.technical_code!==null&&!['UNAVAILABLE','CONFIGURATION','RESPONSE_INVALID','REDIRECT_REJECTED','HTTP_ERROR','CONTENT_TYPE_INVALID','BODY_LIMIT','JSON_INVALID','FRAME_INVALID','TIMEOUT','NETWORK_ERROR','BODY_READ_ERROR'].some(suffix=>row.technical_code==='FINANCE_INCOME_DETAIL_'+suffix)))return null;}
+  for(const row of value.cases){if(!exact(row,['code','agent_id','state','affected_count','affected_unit','known_amount_cents','amount_basis','source','next_action','href','technical_code','technical_diagnostic'])||!codes.includes(row.code)||!['finance','returns','products','ads','auditor'].includes(row.agent_id)||!['OPEN','WORKING','BLOCKED'].includes(row.state)||(row.affected_count!==null&&!int(row.affected_count))||!['ORDERS','UNITS','CASES','DAYS','SOURCES','MONTH','ROWS'].includes(row.affected_unit)||!money(row.known_amount_cents)||!amountBases.includes(row.amount_basis)||!source(row.source)||!actions.includes(row.next_action)||!hrefs.includes(row.href)||!technical(row.technical_diagnostic)||row.technical_diagnostic!==null&&row.code!=='CURRENT_PENDING_DETAIL_UNAVAILABLE'||(row.technical_code!==null&&!['UNAVAILABLE','CONFIGURATION','RESPONSE_INVALID','REDIRECT_REJECTED','HTTP_ERROR','CONTENT_TYPE_INVALID','BODY_LIMIT','JSON_INVALID','FRAME_INVALID','TIMEOUT','NETWORK_ERROR','BODY_READ_ERROR'].some(suffix=>row.technical_code==='FINANCE_INCOME_DETAIL_'+suffix)))return null;
+   if(['CURRENT_PENDING_CONFLICT','CURRENT_PENDING_AMOUNT_UNVERIFIED','CURRENT_PENDING_EMPTY_MISMATCH'].includes(row.code)){
+    if(row.source.name!=='CURRENT_INCOME_PENDING'||row.agent_id!=='finance'||row.state!=='BLOCKED'||row.href!=='#commandPendingIncomeDetails'||row.technical_code!==null||row.technical_diagnostic!==null)return null;
+    if(row.code==='CURRENT_PENDING_EMPTY_MISMATCH'?(row.affected_count!==0||row.affected_unit!=='ROWS'||!int(row.known_amount_cents,1)||row.amount_basis!=='CURRENT_PROVIDER_PENDING'||row.next_action!=='REVIEW_ARITHMETIC'):(!int(row.affected_count,1)||row.affected_unit!==(row.code==='CURRENT_PENDING_CONFLICT'?'ORDERS':'ROWS')||row.known_amount_cents!==null||row.amount_basis!=='NOT_AVAILABLE'||row.next_action!==(row.code==='CURRENT_PENDING_CONFLICT'?'RESOLVE_ADJUSTMENT_CONFLICT':'REVIEW_ARITHMETIC')))return null;
+   }
+  }
   const ids=['PERIOD','REPASSES','RETURNS','PRODUCTION','ADS','TAX','EXPENSES'];
   if(!array(value.checks,ids.length)||value.checks.length!==ids.length)return null;
   for(let i=0;i<ids.length;i++){const row=value.checks[i];if(!exact(row,['id','state','known_amount_cents','source','reason','href'])||row.id!==ids[i]||!['VERIFIED','PENDING'].includes(row.state)||!money(row.known_amount_cents)||!source(row.source)||!reasons.includes(row.reason)||!hrefs.includes(row.href))return null;}
