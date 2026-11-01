@@ -90,7 +90,7 @@ const targets=[
  {id:'incurredProductionDetails',panel:'margins',controller:'brazaIncurredProduction',path:'/api/admin/production/incurred'},
  {id:'returnManufacturingLinksDetails',panel:'agent-returns',controller:'brazaReturnManufacturingLinks',path:'/api/admin/returns/manufacturing-links'}
 ];
-const generatedHash=createHash('sha256').update(readFileSync(new URL('../dist/app-worker.mjs',import.meta.url))).digest('hex');
+const generatedHash=createHash('sha256').update(readFileSync(new URL('../../../dist/app-worker.mjs',import.meta.url))).digest('hex');
 const qa=[];
 const physicalRequest=row=>targets.some(target=>row.path.startsWith(target.path));
 const geometry=target=>`(()=>{const target=document.getElementById(${JSON.stringify(target.id)}),summary=target.querySelector('summary'),rect=summary.getBoundingClientRect(),bar=document.querySelector('.topbar').getBoundingClientRect(),hit=document.elementFromPoint(rect.x+rect.width/2,rect.y+rect.height/2);return {id:target.id,panel:document.documentElement.dataset.activePanel,hash:location.hash,open:target.open,focused:document.activeElement===target,summary_top:rect.top,summary_bottom:rect.bottom,topbar_bottom:bar.bottom,summary_center_hit:hit===summary||summary.contains(hit),horizontal_overflow:document.documentElement.scrollWidth>innerWidth+1,page_errors:__auditErrors};})()`;
@@ -124,7 +124,7 @@ for(const minify of [false,true])for(const width of [320,1365])test(`generated r
  try{
   cdp=await browser();await cdp.send('Emulation.setDeviceMetricsOverride',{width,height:960,deviceScaleFactor:1,mobile:width===320});
   const base='http://127.0.0.1:'+host.address().port;
-  const navigate=async suffix=>{await cdp.send('Page.navigate',{url:base+'/admin'+suffix});await waitFor(cdp,"document.readyState==='complete'&&!!globalThis.brazaPhysicalReturns&&!!globalThis.brazaIncurredProduction&&!!globalThis.brazaReturnManufacturingLinks&&Number.isSafeInteger(brazaMonthDashboard.getSnapshot().checked_at)",'the generated owner page must settle its cached financial snapshot');};
+  const navigate=async suffix=>{await cdp.send('Page.navigate',{url:'about:blank'});await waitFor(cdp,"location.href==='about:blank'&&document.readyState==='complete'",'a hard-load fixture must use a fresh document');await cdp.send('Page.navigate',{url:base+'/admin'+suffix});await waitFor(cdp,"document.readyState==='complete'&&!!globalThis.brazaPhysicalReturns&&!!globalThis.brazaIncurredProduction&&!!globalThis.brazaReturnManufacturingLinks&&Number.isSafeInteger(brazaMonthDashboard.getSnapshot().checked_at)",'the generated owner page must settle its cached financial snapshot');};
   const assertDestination=async(target,start,mode)=>{
    await waitFor(cdp,`${target.controller}.getSnapshot()!==null&&document.activeElement===document.getElementById(${JSON.stringify(target.id)})`,'a real destination must open its saved control and receive focus');
    await cdp.evaluate('document.fonts.ready.then(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))))');

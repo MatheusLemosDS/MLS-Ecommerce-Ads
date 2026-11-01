@@ -1179,10 +1179,9 @@ const missionSearchRoutes=Object.freeze([
     const search=document.getElementById('savedCatalogSearch');
     if(search)search.value=item.catalogQuery;
    }
-   openTab(item.panel);
-   globalThis.scrollTo?.(0,0);
-   if(typeof item.catalogQuery==='string')document.getElementById('savedCatalogSearch')?.scrollIntoView?.({block:'center'});
-   if(item.hash)Promise.resolve().then(()=>document.getElementById(item.hash)?.scrollIntoView?.({block:'start'}));
+   openTab(item.panel,{updateUrl:!item.hash});
+   if(item.hash)workspaceOpenFragment('#'+item.hash,{focus:true,updateUrl:true});
+   else{globalThis.scrollTo?.(0,0);if(typeof item.catalogQuery==='string')document.getElementById('savedCatalogSearch')?.scrollIntoView?.({block:'center'});}
    return;
   }
   if(typeof item.href==='string')globalThis.location.assign(item.href);
