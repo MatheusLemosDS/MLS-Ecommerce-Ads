@@ -18,11 +18,27 @@ const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 const screenshotDirectory=process.env.MLS_OWNER_PREVIEW_SCREENSHOT_DIR?path.resolve(process.env.MLS_OWNER_PREVIEW_SCREENSHOT_DIR):null;
 const panels=['overview','agents','agent-finance','agent-ads','agent-products','agent-production','agent-returns','agent-auditor','agent-hermes','products','production','margins','hermes','history','roadmap','ai-sales'];
 
+function previewProtocolError(method,details){
+ const code=Number.isSafeInteger(details?.code)?details.code:'UNKNOWN',message=typeof details?.message==='string'&&details.message.trim()?details.message.trim().slice(0,320):'EMPTY_PROTOCOL_MESSAGE';
+ return Error('PREVIEW_CDP_COMMAND_FAILED:'+method+':'+code+':'+message);
+}
+
+test('preview CDP failures retain the real command, protocol code and browser phase',async t=>{
+ if(!executable)return t.skip('Chromium unavailable');
+ await assert.rejects(browser({width:800,height:600},cdp=>cdp.send('PreviewSynthetic.missingCommand')),error=>{
+  assert.match(error.message,/PREVIEW_BROWSER_FAILED:/);assert.match(error.message,/\"phase\":\"run\"/);
+  assert.match(error.cause?.message??'',/PREVIEW_CDP_COMMAND_FAILED:PreviewSynthetic\.missingCommand:-32601:/);return true;
+ });
+ const empty=previewProtocolError('Page.captureScreenshot',{code:-32000,message:''});
+ assert.match(empty.message,/Page\.captureScreenshot:-32000:EMPTY_PROTOCOL_MESSAGE/);
+});
+
 async function browser(viewport,run){
  const profile=mkdtempSync(path.join(os.tmpdir(),'mls-preview-http-chrome-'));
  const process=spawn(executable,['--headless=new','--no-sandbox','--disable-dev-shm-usage','--disable-gpu','--disable-background-networking','--disable-extensions','--remote-allow-origins=*','--remote-debugging-port=0','--user-data-dir='+profile,'about:blank'],{stdio:'ignore'});
  const cleanup=createChromeProfileCleanup(process,profile);
- let socket;const pending=new Map();
+ let socket,phase='launch',lastMethod=null;const pending=new Map(),phases=[];
+ const mark=value=>{phase=value;phases.push(value);if(phases.length>8)phases.shift();};
  try{
   const port=await waitForChromeDebugPort(process,profile);
   // DevTools may bind its port before the initial page is created.
@@ -36,26 +52,28 @@ async function browser(viewport,run){
   assert.ok(page,'Preview Chrome did not create a debugger page within 10 seconds');
   socket=new WebSocket(page.webSocketDebuggerUrl);
   await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('PREVIEW_CDP_OPEN_TIMEOUT')),10000);socket.addEventListener('open',()=>{clearTimeout(timer);resolve();},{once:true});socket.addEventListener('error',()=>{clearTimeout(timer);reject(Error('PREVIEW_CDP_OPEN_FAILED'));},{once:true});});
-  let sequence=0;socket.addEventListener('message',event=>{const v=JSON.parse(event.data),p=pending.get(v.id);if(!p)return;pending.delete(v.id);clearTimeout(p.timer);v.error?p.reject(Error(v.error.message)):p.resolve(v.result);});
-  const send=(method,params={})=>new Promise((resolve,reject)=>{const id=++sequence,timer=setTimeout(()=>{pending.delete(id);reject(Error('PREVIEW_CDP_TIMEOUT:'+method));},20000);pending.set(id,{resolve,reject,timer});socket.send(JSON.stringify({id,method,params}));});
-  const evaluate=async expression=>{const value=await send('Runtime.evaluate',{expression,awaitPromise:true,returnByValue:true});if(value.exceptionDetails)throw Error(value.exceptionDetails.exception?.description||value.exceptionDetails.text);return value.result.value;};
-  const wait=async(expression,label)=>{for(let i=0;i<180;i++){if(await evaluate(expression))return;await delay(50);}throw Error('PREVIEW_BROWSER_WAIT:'+label+':'+JSON.stringify(await evaluate("({ready:document.readyState,errors:globalThis.__previewErrors||[],status:document.getElementById('costsStatus')?.textContent,message:document.getElementById('message')?.textContent,ai:!!globalThis.mlsAiSalesWorkspace,offline:globalThis.__mlsOfflineReview||null,title:document.title,url:location.href,body:document.body?.textContent?.slice(0,300)})")));};
+  let sequence=0;socket.addEventListener('message',event=>{const v=JSON.parse(event.data),p=pending.get(v.id);if(!p)return;pending.delete(v.id);clearTimeout(p.timer);v.error?p.reject(previewProtocolError(p.method,v.error)):p.resolve(v.result);});
+  const send=(method,params={})=>new Promise((resolve,reject)=>{lastMethod=method;const id=++sequence,timer=setTimeout(()=>{pending.delete(id);reject(Error('PREVIEW_CDP_TIMEOUT:'+method));},20000);pending.set(id,{resolve,reject,timer,method});try{socket.send(JSON.stringify({id,method,params}));}catch(error){pending.delete(id);clearTimeout(timer);reject(Error('PREVIEW_CDP_SEND_FAILED:'+method,{cause:error}));}});
+  const evaluate=async expression=>{const value=await send('Runtime.evaluate',{expression,awaitPromise:true,returnByValue:true});if(value.exceptionDetails)throw Error('PREVIEW_CDP_EVALUATION_FAILED:'+(value.exceptionDetails.exception?.description||value.exceptionDetails.text||value.exceptionDetails.exception?.className||'EMPTY_EXCEPTION_DETAILS'));return value.result.value;};
+  const wait=async(expression,label)=>{mark('wait:'+label);for(let i=0;i<180;i++){if(await evaluate(expression))return;await delay(50);}throw Error('PREVIEW_BROWSER_WAIT:'+label+':'+JSON.stringify(await evaluate("({ready:document.readyState,errors:globalThis.__previewErrors||[],status:document.getElementById('costsStatus')?.textContent,message:document.getElementById('message')?.textContent,ai:!!globalThis.mlsAiSalesWorkspace,offline:globalThis.__mlsOfflineReview||null,title:document.title,url:location.href,body:document.body?.textContent?.slice(0,300)})")));};
   await send('Page.enable');await send('Runtime.enable');
   await send('Page.addScriptToEvaluateOnNewDocument',{source:`globalThis.__previewErrors=[];globalThis.__previewReads=[];addEventListener('error',event=>__previewErrors.push(String(event.message)));addEventListener('unhandledrejection',event=>__previewErrors.push(String(event.reason?.message||event.reason)));const originalFetch=globalThis.fetch;globalThis.fetch=async(...args)=>{const response=await originalFetch(...args);const pathname=new URL(typeof args[0]==='string'?args[0]:args[0].url,location.href).pathname;__previewReads.push({pathname,method:args[1]?.method||'GET',status:response.status});return response;};`});
   await send('Emulation.setDeviceMetricsOverride',{...viewport,deviceScaleFactor:1,mobile:viewport.width===390});
-  const capture=async name=>{if(!screenshotDirectory)return null;mkdirSync(screenshotDirectory,{recursive:true});const shot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false}),bytes=Buffer.from(shot.data,'base64');writeFileSync(path.join(screenshotDirectory,name),bytes);return {file:name,sha256:createHash('sha256').update(bytes).digest('hex'),bytes:bytes.length};};
-  return await run({send,evaluate,wait,capture});
- }finally{for(const p of pending.values())clearTimeout(p.timer);try{socket?.close();}catch{}await cleanup();}
+  const capture=async name=>{if(!screenshotDirectory)return null;mark('capture:'+name);mkdirSync(screenshotDirectory,{recursive:true});const shot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false}),bytes=Buffer.from(shot.data,'base64');writeFileSync(path.join(screenshotDirectory,name),bytes);return {file:name,sha256:createHash('sha256').update(bytes).digest('hex'),bytes:bytes.length};};
+  mark('run');return await run({send,evaluate,wait,capture,mark});
+ }catch(error){throw Error('PREVIEW_BROWSER_FAILED:'+JSON.stringify({viewport,phase,lastMethod,phases,reason:typeof error?.message==='string'&&error.message?error.message:typeof error?.name==='string'?error.name:'EMPTY_REJECTION'}),{cause:error});}
+ finally{for(const p of pending.values())clearTimeout(p.timer);pending.clear();try{socket?.close();}catch{}try{await cleanup();}catch(error){throw Error('PREVIEW_BROWSER_CLEANUP_FAILED:'+phase,{cause:error});}}
 }
 
 async function navigate(cdp,id){
+ cdp.mark('navigate:'+id);
  const result=await cdp.evaluate(`(()=>{const id=${JSON.stringify(id)},visible=node=>!!node&&(node.checkVisibility?node.checkVisibility({checkVisibilityCSS:true}):node.getClientRects().length>0&&getComputedStyle(node).visibility!=='hidden');const candidates=target=>[...document.querySelectorAll('[data-tab],[data-mission-open],[data-open]')].filter(node=>node.dataset.tab===target||node.dataset.missionOpen===target||node.dataset.open===target);const click=target=>{let link=candidates(target).find(visible);if(!link){const menu=candidates(target).map(node=>node.closest('.workspace-more')).find(menu=>menu&&visible(menu.querySelector('summary')));if(menu&&!menu.open)menu.querySelector('summary').click();link=candidates(target).find(visible);}if(!link)return false;link.click();return true;};if(id.startsWith('agent-')&&!click('agents'))return {missing:'agents'};if(!click(id))return {missing:id};document.getElementById(id).scrollIntoView({block:'start',behavior:'instant'});return {active:document.documentElement.dataset.activePanel,visible:!document.getElementById(id).hidden,overflow:document.documentElement.scrollWidth>innerWidth+1};})()`);
  assert.equal(result.missing,undefined,'native navigation destination '+id);assert.equal(result.active,id);assert.equal(result.visible,true);assert.equal(result.overflow,false,'horizontal overflow '+id);
 }
 
 for(const viewport of [{width:1365,height:900},{width:390,height:844}])test('real local Worker preview authenticates, persists costs and plans media at '+viewport.width+'px',{timeout:120000},async t=>{
  if(!executable)return t.skip('Chromium unavailable');
- const server=await startPreviewServer({port:0,seed:true,...(process.env.MLS_OWNER_PREVIEW_MEDIA_DIR?{mediaDirectory:process.env.MLS_OWNER_PREVIEW_MEDIA_DIR}:{})});
+ let server;try{server=await startPreviewServer({port:0,seed:true,...(process.env.MLS_OWNER_PREVIEW_MEDIA_DIR?{mediaDirectory:process.env.MLS_OWNER_PREVIEW_MEDIA_DIR}:{})});}catch(error){throw Error('PREVIEW_SERVER_START_FAILED:'+viewport.width,{cause:error});}
  try{
   const proof=await browser(viewport,async cdp=>{
    await cdp.send('Page.navigate',{url:server.origin});
@@ -119,7 +137,7 @@ for(const viewport of [{width:1365,height:900},{width:390,height:844}])test('rea
     const root=mkdtempSync(path.join(os.tmpdir(),'mls-preview-native-roundtrip-')),assets=path.join(root,'assets'),output=path.join(root,'output');mkdirSync(assets);
     try{
      writeFileSync(path.join(assets,exported.assets[0].file_name),Buffer.from(png,'base64'));
-     const report=await renderLocalAiSales(exported,{assetsDirectory:assets,outputDirectory:output,render:true,tools:localFixtureTools()});
+     cdp.mark('render:current-native-campaign');const report=await renderLocalAiSales(exported,{assetsDirectory:assets,outputDirectory:output,render:true,tools:localFixtureTools()});
      assert.equal(report.status,'READY_FOR_OWNER');const rendered=report.jobs[0],manifest=readFileSync(path.join(rendered.output_directory,'manifest.json'),'utf8'),movie=readFileSync(path.join(rendered.output_directory,'video.mp4')).toString('base64');
      await cdp.evaluate(`(()=>{const files=new DataTransfer();files.items.add(new File([${JSON.stringify(manifest)}],'manifest.json',{type:'application/json'}));const input=document.getElementById('aiSalesVideoManifest');input.files=files.files;input.dispatchEvent(new Event('change',{bubbles:true}));document.getElementById('aiSalesTab-studio').click();})()`);
      await cdp.wait('globalThis.mlsAiSalesWorkspace.getSnapshot().video_reviews.length===1','current exact native campaign render manifest');
@@ -152,7 +170,7 @@ for(const viewport of [{width:1365,height:900},{width:390,height:844}])test('rea
    return {schema:'mls_owner_preview_browser_qa_v1',source:'ACTUAL_WORKER_SQLITE_LOCAL_SYNTHETIC_DATA_NO_HTTP_MOCKS',worker_sha256:server.workerHash,viewport,panels:panels.length,ai_tabs:5,catalog_items:initial.count,production_costs:priced,selected_variant:selection.variant_ref,other_native_selections:nativeSelections,campaign_status:finish.state.campaigns[0].status,local_cli_export_verified:true,exact_native_render_roundtrip:roundtrip,media_playback:playback,javascript_errors:finish.errors.length,read_count:finish.reads.length,captures};
   });
   if(screenshotDirectory)writeFileSync(path.join(screenshotDirectory,'preview-'+viewport.width+'-results.json'),JSON.stringify(proof,null,2)+'\n');
- }finally{await server.close();}
+ }finally{try{await server.close();}catch(error){throw Error('PREVIEW_SERVER_CLOSE_FAILED:'+viewport.width,{cause:error});}}
 });
 
 

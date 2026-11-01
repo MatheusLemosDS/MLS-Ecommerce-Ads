@@ -24,6 +24,7 @@
     "tools/build_finance_connection_candidate.py",
     "tools/release-approved-candidate.json",
     "tools/release_preflight.mjs",
+    "tools/tests/mls-owner-preview-chrome.test.mjs",
     "tools/tests/release-preflight.test.mjs",
     "tools/worker_project.mjs",
     "web/cloudflare/build.py",
