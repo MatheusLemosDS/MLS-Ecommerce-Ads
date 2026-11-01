@@ -732,11 +732,20 @@ export const MISSION_TRENDS_CLIENT=String.raw`
    }
   }
  }
+ function unavailableChart(target,note=null){
+  if(!target)return;
+  target.dataset.chartStatus='ERROR';target.textContent='Não foi possível atualizar este gráfico. Os indicadores numéricos continuam disponíveis.';
+  if(note)note.textContent='Renderização indisponível; nenhum valor ou ponto foi inventado. Nenhuma consulta adicional foi iniciada.';
+ }
+ function renderGraphSafely(panel){
+  try{renderGraph(panel);}catch{const suffix=panel[0].toUpperCase()+panel.slice(1),values=byId('missionTrendValues'+suffix),scope=byId('missionTrendScope'+suffix);unavailableChart(byId('missionTrendGraph'+suffix),byId('missionTrendNote'+suffix));if(values)values.textContent='';if(scope)scope.textContent='Histórico indisponível para esta seleção';}
+ }
 
  function renderSparklines(){
   for(const [suffix,key] of Object.entries({Net:'net',Sales:'sales',Ads:'ads',Roas:'roas'})){
    const host=byId('missionSpark'+suffix);
    if(!host)continue;
+   try{
    host.replaceChildren();
    const model=key==='roas'?projectMissionRoasChart(adsSnapshot,14):projectMlsMissionChart(timeline,key,14);
    const rows=['READY','PARTIAL'].includes(model.status)?model.points:[];
@@ -753,6 +762,7 @@ export const MISSION_TRENDS_CLIENT=String.raw`
    for(const item of valid)svg.append(el('circle',{cx:x(item.i),cy:y(item.v),r:1.7,fill:item.row?.partial?'#f7c57f':key==='net'&&item.v<0?'#ff7899':colors[key]}));
    host.append(svg);
    host.setAttribute('aria-label',valid.length+' leituras diárias reais'+(key==='roas'?' de ROAS amplo no calendário Ads':'')+'; lacunas não conectadas');
+   }catch{unavailableChart(host);}
   }
  }
 
@@ -780,6 +790,8 @@ export const MISSION_TRENDS_CLIENT=String.raw`
    if(period)period.textContent=briefDate(result.current_date)+' vs '+briefDate(result.previous_date)+' · completos';
    if(details)details.textContent=briefDate(result.current_date)+' vs '+briefDate(result.previous_date)+' · dias completos';
   }
+ }
+ function paintRoasIndicators(){
   const roas=byId('commandCenterRoas'),roasScope=byId('missionRoasScope'),roasHelp=byId('missionRoasValueHelp'),badge=byId('missionKpiDeltaRoas');
   const validated=projectMissionRoasChart(adsSnapshot,14),hasAds=adsSnapshot?.schema==='mls_month_ads_snapshot_v1'&&(['READY','PARTIAL'].includes(validated.status)||validated.evidence_valid===true);
   const full=hasAds&&adsSnapshot.status==='AVAILABLE'&&adsSnapshot.covered_days===adsSnapshot.total_days;
@@ -843,8 +855,9 @@ export const MISSION_TRENDS_CLIENT=String.raw`
   try{registry=globalThis.mlsAgentRegistry?.getSnapshot?.()??null;}catch{}
   try{adsSnapshot=globalThis.brazaMonthDashboard?.getAdsSnapshot?.()??null;}catch{adsSnapshot=null;}
   timeline=trend?.schema==='mls_mission_daily_trend_v1'?trend:null;
-  for(const id of Object.keys(choice))renderGraph(id);
+  paintRoasIndicators();
   paintIndicators(registry);
+  for(const id of Object.keys(choice))renderGraphSafely(id);
   renderSparklines();
   renderSpecialistCharts(registry);
  }
@@ -854,13 +867,13 @@ export const MISSION_TRENDS_CLIENT=String.raw`
    if(!Object.hasOwn(choice,id)||!Object.hasOwn(fields,key))return;
    choice[id]=key;
    for(const peer of document.querySelectorAll('[data-mission-chart="'+id+'"]'))peer.setAttribute('aria-pressed',String(peer===button));
-   renderGraph(id);
+   renderGraphSafely(id);
   };
  }
  for(const select of document.querySelectorAll('[data-mission-window]')){
   select.onchange=()=>{const panel=select.dataset.missionWindow,value=Number(select.value);
    if(!Object.hasOwn(windows,panel)||![7,14].includes(value))return;
-   windows[panel]=value;renderGraph(panel);
+   windows[panel]=value;renderGraphSafely(panel);
   };
  }
  globalThis.mlsMissionTrends=Object.freeze({refresh});

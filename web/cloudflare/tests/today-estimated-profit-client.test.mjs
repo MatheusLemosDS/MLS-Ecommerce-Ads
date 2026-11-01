@@ -8,6 +8,10 @@ import {SCHEMA} from '../src/admin.mjs';
 import {businessMonth,readBusinessMonthDisplay} from '../src/business-month.mjs';
 import {readBusinessSyncState} from '../src/business-sync.mjs';
 import {buildBusinessMonthView} from '../src/business-month-view-state.mjs';
+import {MISSION_TRENDS_CLIENT,missionWorkspacesBody} from '../src/mission-control.mjs';
+import {buildAdsMeasurement} from '../src/ads-measurement.mjs';
+import {buildAdsCalendar} from '../src/ads-calendar.mjs';
+import {projectMissionAdsSnapshot} from '../src/mls-ads-performance.mjs';
 
 function mountRegistry(html,{clock='2026-11-01T03:00:00Z',date='2026-11-01'}={}){
  const scripts=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)],source=scripts.find(match=>match[1].includes('globalThis.mlsAgentRegistry='))?.[1];
@@ -63,6 +67,34 @@ async function collectedWorkspace(t){
 }
 function ownerScript(html,token){const result=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match=>match[1]).find(script=>script.includes(token));assert.ok(result,'actual generated client missing: '+token);return result;}
 
+function firstDayAds(){
+ const period={start_date:'2026-11-01',end_date:'2026-11-01'},stamp=Date.parse('2026-11-01T18:00:00Z')/1000;
+ const measured=buildAdsMeasurement({status:'ok',connected:true,shop:{id:1178167501},period,balance:0,daily:[{date:period.start_date,expense:'31.29',broad_gmv:'734.71',broad_order:1,direct_gmv:0,direct_order:0}]},period,stamp);
+ const value=projectMissionAdsSnapshot({schema:'business_month_v1',month:'2026-11',...period,checked_at:stamp,ads:buildAdsCalendar([measured],period,stamp)});assert.ok(value);assert.equal(value.status,'AVAILABLE');return value;
+}
+function mountFaultedTrends(html){
+ const source=ownerScript(html,'globalThis.mlsMissionTrends='),ads=firstDayAds();
+ const setup=`globalThis.qaAds=null;globalThis.brazaMonthDashboard={getAdsSnapshot:()=>qaAds};globalThis.brazaDayDashboard={getTrend:()=>null};globalThis.mlsAgentRegistry={getSnapshot:()=>({day:{net_cents:null,margin_bps:null,presentation:{state:'BEFORE_MONTHLY_COSTS',basis:'BEFORE_UNCONFIRMED_EXPENSES',amount_cents:9947,margin_bps:1687}},month:{balance_cents:null}})};document.getElementById('missionTrendValuesOverview').textContent='STALE_VALUES_OLD_MONTH';document.getElementById('missionTrendScopeOverview').textContent='STALE_SCOPE_OLD_MONTH';document.getElementById('missionTrendGraphOverview').replaceChildren=()=>{throw Error('SYNTHETIC_GRAPH_RENDER_FAILURE');};document.getElementById('missionTrendGraphFinance').dataset.chartStatus='NOT_RENDERED';document.getElementById('missionTrendGraphAds').dataset.chartStatus='NOT_RENDERED';`;
+ const browser=ownerReportBrowser(html.replace(source,setup+source),{scriptIncludes:'globalThis.mlsMissionTrends='});browser.context.adsInput=JSON.stringify(ads);return browser;
+}
+function verifyFaultedTrends(browser){
+ assert.equal(browser.nodes.get('commandCenterRoas').textContent,'—');
+ assert.doesNotThrow(()=>browser.run('qaAds=JSON.parse(adsInput);mlsMissionTrends.refresh();'),'a chart failure must not abort the independent numeric cards');
+ assert.equal(browser.nodes.get('commandCenterRoas').textContent,'23,48x','one validated Ads observation has a real period ratio without a curve or comparison');
+ assert.equal(browser.nodes.get('missionKpiDeltaRoas').dataset.direction,'UNAVAILABLE');assert.match(browser.nodes.get('missionKpiDeltaRoas').textContent,/Sem dois dias completos/);
+ assert.equal(browser.nodes.get('missionTrendGraphOverview').dataset.chartStatus,'ERROR');assert.match(browser.nodes.get('missionTrendGraphOverview').textContent,/Não foi possível atualizar este gráfico/);assert.doesNotMatch(browser.nodes.get('missionTrendGraphOverview').textContent,/SYNTHETIC|stack|token/i);
+ assert.equal(browser.nodes.get('missionTrendValuesOverview').textContent,'');assert.equal(browser.nodes.get('missionTrendScopeOverview').textContent,'Histórico indisponível para esta seleção');
+ assert.equal(browser.nodes.get('missionTrendGraphFinance').dataset.chartStatus,'UNAVAILABLE');assert.equal(browser.nodes.get('missionTrendGraphAds').dataset.chartStatus,'UNAVAILABLE');
+ browser.run('qaAds.attributed_sales_cents++;mlsMissionTrends.refresh();');assert.equal(browser.nodes.get('commandCenterRoas').textContent,'—','invalid Ads evidence must clear the prior card value even if a chart still fails');
+ assert.equal(browser.calls.length,0,'redrawing cached cards and charts cannot request the provider or create a polling loop');
+}
+test('a first-panel render failure cannot suppress a newly available one-day ROAS card or retain invalid Ads evidence',()=>{
+ verifyFaultedTrends(mountFaultedTrends(commandCenterBody()+missionWorkspacesBody()+'<script>'+MISSION_TRENDS_CLIENT+'</script>'));
+});
+for(const minify of [false,true])test(`generated one-day ROAS cards survive chart failures and clear rejected evidence (minify=${minify})`,async()=>{
+ const {html}=await compiledOwnerReportPage(minify,{ownerPreview:false});verifyFaultedTrends(mountFaultedTrends(html));
+});
+
 for(const minify of [false,true])test(`generated partial daily amount becomes profit immediately after explicit zero-expense confirmation without provider reads (minify=${minify})`,async t=>{
  const {f,readView}=await collectedWorkspace(t);let view=await readView();
  const observed=view.daily_summary.days[19],expected=observed.operating_balance_cents-observed.allocated_das_cents;
@@ -84,6 +116,8 @@ for(const minify of [false,true])test(`generated partial daily amount becomes pr
   b.run(ownerScript(html,'globalThis.mlsAgentRegistry='));
   assert.equal(b.run('brazaDayDashboard.getSnapshot().net_cents'),null);assert.equal(b.run('mlsAgentRegistry.getSnapshot().day.net_cents'),null);
   assert.equal(b.run('mlsAgentRegistry.getSnapshot().day.margin_bps'),null);assert.equal(b.run('mlsAgentRegistry.getSnapshot().day.presentation.amount_cents'),expected);
+  const expectedMargin=Number(BigInt(expected)*10000n/BigInt(observed.sales_cents));assert.equal(b.run('mlsAgentRegistry.getSnapshot().day.presentation.margin_bps'),expectedMargin);
+  assert.equal(b.nodes.get('commandCenterMarginLabel').textContent,'Margem parcial');assert.equal(b.nodes.get('commandCenterMarginScope').hidden,false);assert.equal(b.nodes.get('commandCenterMarginScope').textContent,'Antes das despesas do mês');assert.equal(b.nodes.get('commandCenterMargin').textContent,new Intl.NumberFormat('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:2}).format(expectedMargin/100)+'%');assert.match(b.nodes.get('commandCenterMarginHelp').textContent,/não representa a margem líquida completa/);
   assert.match(b.nodes.get('businessDayNetLabel').textContent,/Saldo parcial antes das despesas mensais/);
   assert.equal(b.nodes.get('commandCenterNetLabel').textContent,'Saldo parcial · 20/10/2026');assert.match(b.nodes.get('commandCenterNet').textContent,/27,59/);
   assert.equal(b.nodes.get('missionSourceState').hidden,false,'known sales and Ads cannot hide the missing expense reason');
@@ -92,6 +126,7 @@ for(const minify of [false,true])test(`generated partial daily amount becomes pr
   assert.equal(await b.nodes.get('businessMonthExpensesZero').onclick(),true,b.nodes.get('businessMonthExpenseState').textContent);await b.flush();b.run('mlsAgentRegistry.refresh();');
   assert.equal(b.run('brazaDayDashboard.getSnapshot().net_cents'),expected);assert.equal(b.run('mlsAgentRegistry.getSnapshot().day.net_cents'),expected);
   assert.equal(b.nodes.get('commandCenterNetLabel').textContent,'Lucro estimado · 20/10/2026');assert.match(b.nodes.get('commandCenterNet').textContent,/27,59/);
+  assert.equal(b.run('mlsAgentRegistry.getSnapshot().day.margin_bps'),expectedMargin);assert.equal(b.nodes.get('commandCenterMarginLabel').textContent,'Margem estimada');assert.equal(b.nodes.get('commandCenterMarginScope').hidden,true);
   assert.equal(action.hidden,true);assert.equal(b.nodes.get('missionSourceState').hidden,true);
   assert.equal(calls.filter(call=>call.path==='finance/business-month').length,1);assert.equal(calls.filter(call=>call.path==='finance/business-month-view?month=2026-10').length,2,'confirmation must refresh the saved daily view immediately rather than wait for the next timer');
   assert.deepEqual(sourceCounts(f),before,'expense confirmation and refresh reuse the saved collection and cannot reread the provider');

@@ -351,16 +351,33 @@ test('overview reports a source-state panel rather than treating unknown sales a
 });
 
 test('daily subtotal before unconfirmed expenses remains separate from profit, margin and monthly balance',()=>{
- const presentation={schema:'daily_profit_presentation_v1',state:'BEFORE_MONTHLY_COSTS',basis:'BEFORE_UNCONFIRMED_EXPENSES',amount_cents:9947,monthly_costs_missing:['EXTERNAL_EXPENSES_REQUIRED'],das_included:true,expenses_included:false};
+ const presentation={schema:'daily_profit_presentation_v1',state:'BEFORE_MONTHLY_COSTS',basis:'BEFORE_UNCONFIRMED_EXPENSES',amount_cents:9947,margin_bps:1687,monthly_costs_missing:['EXTERNAL_EXPENSES_REQUIRED'],das_included:true,expenses_included:false};
  const input={day:day({date:'2026-11-01',net_cents:null,net_basis:null,sales_cents:58939,ads_spend_cents:2845,paid_orders:9,pending:['EXTERNAL_EXPENSES_REQUIRED'],presentation}),month:month({month:'2026-11',balance_cents:null,pending:['EXTERNAL_EXPENSES_REQUIRED']})};
  const value=buildMlsAgentRegistry(input);
  assert.equal(value.day.net_cents,null);assert.equal(value.day.margin_bps,null);assert.equal(value.month.balance_cents,null);
- assert.equal(value.day.presentation.amount_cents,9947);assert.deepEqual(value.day.pending,['EXTERNAL_EXPENSES_REQUIRED']);
+ assert.equal(value.day.presentation.amount_cents,9947);assert.equal(value.day.presentation.margin_bps,1687);assert.deepEqual(value.day.pending,['EXTERNAL_EXPENSES_REQUIRED']);
  assert.ok(Object.isFrozen(value.day.presentation)&&Object.isFrozen(value.day.presentation.monthly_costs_missing));
- for(const change of [{basis:'AFTER_DAILY_AND_ALLOCATED_MONTHLY_COSTS'},{monthly_costs_missing:[]},{expenses_included:true},{amount_cents:Infinity},{state:'ESTIMATE'}]){
+ for(const change of [{basis:'AFTER_DAILY_AND_ALLOCATED_MONTHLY_COSTS'},{monthly_costs_missing:[]},{expenses_included:true},{amount_cents:Infinity},{state:'ESTIMATE'},{margin_bps:1688},{margin_bps:null},{margin_bps:-0},{margin_bps:Infinity},{margin_bps:'1687'}]){
   assert.equal(buildMlsAgentRegistry({...input,day:{...input.day,presentation:{...presentation,...change}}}).day.presentation,null,'invalid local presentation metadata must fail closed');
  }
  assert.equal(buildMlsAgentRegistry({...input,day:{...input.day,pending:[]}}).day.presentation,null,'a subtotal must retain its missing-expense reason');
+});
+
+test('Registry independently checks partial margin against the selected day sales and preserves unknown denominators',()=>{
+ const base={schema:'daily_profit_presentation_v1',state:'BEFORE_MONTHLY_COSTS',basis:'BEFORE_UNCONFIRMED_EXPENSES',amount_cents:9947,margin_bps:1687,monthly_costs_missing:['EXTERNAL_EXPENSES_REQUIRED'],das_included:true,expenses_included:false};
+ const project=(sales,presentation=base)=>buildMlsAgentRegistry({day:day({net_cents:null,net_basis:null,sales_cents:sales,pending:['EXTERNAL_EXPENSES_REQUIRED'],presentation}),month:month({balance_cents:null})}).day;
+ assert.equal(project(58939).presentation.margin_bps,1687);assert.equal(project(100000).presentation,null,'a ratio cached against different sales fails closed');
+ for(const sales of [null,undefined,0,-0,-1,Infinity,Number.MAX_SAFE_INTEGER+1]){const value=project(sales,{...base,margin_bps:null});assert.equal(value.presentation.amount_cents,9947);assert.equal(value.presentation.margin_bps,null);assert.equal(value.margin_bps,null);assert.equal(value.net_cents,null);}
+ for(const [amount,sales,margin] of [[-9947,58939,-1687],[0,58939,0],[Number.MAX_SAFE_INTEGER,1,null],[Number.MIN_SAFE_INTEGER,1,null],[Number.MAX_SAFE_INTEGER,10000,Number.MAX_SAFE_INTEGER],[Number.MIN_SAFE_INTEGER,10000,Number.MIN_SAFE_INTEGER]]){const value=project(sales,{...base,amount_cents:amount,margin_bps:margin});assert.equal(value.presentation.amount_cents,amount);assert.equal(value.presentation.margin_bps,margin);assert.equal(value.margin_bps,null);}
+ assert.equal(project(58939,{...base,amount_cents:0,margin_bps:-0}).presentation,null);
+ const omitted={...base};delete omitted.margin_bps;assert.equal(project(58939,omitted).presentation,null);
+ let invoked=0;const getter={...base};Object.defineProperty(getter,'margin_bps',{get(){invoked++;throw Error('PRIVATE_MARGIN_GETTER');}});assert.equal(project(58939,getter).presentation,null);assert.equal(invoked,0);
+});
+
+test('a complete presentation margin matches the existing financial margin without changing its basis',()=>{
+ const presentation={schema:'daily_profit_presentation_v1',state:'ESTIMATE',basis:'AFTER_DAILY_AND_ALLOCATED_MONTHLY_COSTS',amount_cents:25000,margin_bps:2500,monthly_costs_missing:[],das_included:true,expenses_included:true};
+ const result=buildMlsAgentRegistry({day:day({presentation}),month:month()});assert.equal(result.day.net_basis,'ESTIMATE');assert.equal(result.day.net_cents,25000);assert.equal(result.day.margin_bps,2500);assert.equal(result.day.presentation.margin_bps,2500);
+ assert.equal(buildMlsAgentRegistry({day:day({presentation:{...presentation,margin_bps:2499}}),month:month()}).day.presentation,null);
 });
 
 test('validated month without an observed selected day does not imply current-day agent health',()=>{
