@@ -2,17 +2,17 @@
 
 ## Estado da entrega
 
-Preparação do follow-up96, sobre a base `8acf6b9`, na branch `fix/daily-margin-roas-presentation-20261101`. O incremento se limita ao App. Este registro distingue os dados observados na conta, a reprodução local e a conferência ainda pendente da publicação.
+Correção publicada somente no App oficial, sobre a base PR95 `8acf6b9`, na branch `fix/daily-margin-roas-presentation-20261101`. Fontes, reprodução, testes e publicação estão separados abaixo; despesas de novembro continuam uma entrada do proprietário ainda não declarada.
 
 | Evidência da entrega | Estado |
 | --- | --- |
-| PR | PENDING |
-| Commit do código | PENDING |
-| CI e contagem de testes | PENDING |
-| Versão publicada do App | PENDING |
-| SHA-256 do App gerado | PENDING |
-| SHA-256 dos bytes publicados | PENDING |
-| Conferência pós-publicação | PENDING |
+| PR | [#96](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/96) |
+| Commit do código | `b1a0883f9b41b230217f1b2b0f0ad70b43c6335e` |
+| CI e contagem de testes | [41334582368](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/41334582368); 3015 Node / 67 Python, sem falhas ou skips |
+| Versão publicada do App | `27356953-886a-4b1f-95b9-abf3c7c724f7` |
+| SHA-256 do App gerado | `8cbbf7c123c4ac2a3dd128198d90cc3ad9d04e1a53a66719419ac1d60c27e7a6` |
+| SHA-256 dos bytes publicados | `a38b5bd2988149118fbb0059f645093483d75244aee20804103f26f72c8413df` |
+| Conferência pós-publicação | Três Workers exatos; configurações, domínios, flags e cron preservados |
 
 ## Diagnóstico comprovado e limite da atribuição da causa
 
@@ -54,28 +54,33 @@ A projeção local validou essa fonte e os critérios do cartão de ROAS. O grá
 
 O fuso da fonte Ads permanece UNCONFIRMED e a atribuição é BROAD. O ROAS pertence ao calendário Ads; suas vendas atribuídas não devem ser tratadas como a mesma coorte dos pedidos da loja nem como prova de lucro ou recebimento bancário.
 
-## Correção preparada
+## Correção publicada
 
-O helper de apresentação passa a fornecer a margem derivada do subtotal que ele próprio validou, conservando sua base parcial e as pendências existentes. O cartão pode mostrar a margem parcial sem alterar os campos financeiros de margem, estimativa líquida ou os dados do gráfico.
+O helper de apresentação passa a fornecer a margem derivada do subtotal que ele próprio validou, conservando sua base parcial e as pendências existentes. O cartão mostra a margem parcial sem alterar os campos financeiros de margem, estimativa líquida ou os dados do gráfico.
 
-A atualização da visão geral deve pintar primeiro os KPIs. A pintura de cada gráfico é isolada para que uma falha acessória não bloqueie os indicadores nem os demais gráficos. O ROAS continua vindo da fonte Ads validada, com suas datas e cobertura; não depende da existência de uma série gráfica ou de um comparativo.
+A atualização da visão geral pinta primeiro os KPIs. A pintura de cada gráfico é isolada para que uma falha acessória não bloqueie os indicadores nem os demais gráficos. O ROAS continua vindo da fonte Ads validada, com suas datas e cobertura; não depende da existência de uma série gráfica ou de um comparativo.
 
-A regressão deve injetar uma exceção de gráfico, verificar que os KPIs já foram atualizados e confirmar que outros gráficos ainda recebem sua atualização. Uma única observação continua insuficiente para construir uma série que exige dois pontos ou inventar seta/comparação com um dia ausente.
+A regressão injeta uma exceção de gráfico e confirma que os KPIs já foram atualizados e os outros painéis continuam recebendo sua atualização. Uma única observação continua insuficiente para construir uma série que exige dois pontos ou inventar seta/comparação com um dia ausente.
 
 O escopo permanece somente no App: apresentação e encadeamento da atualização da interface. Finance, Auth, credenciais, configurações, bindings e semântica dos dados financeiros existentes devem ser preservados. A observação do painel não inicia chamadas extras à Shopee ou ações comerciais.
 
-## Validação a concluir
+## Validação concluída
 
-- Conferir o exemplo parcial 9947/58939 e o truncamento em 1687 pontos-base, com rótulo e base explícitos.
-- Preservar margem financeira, estimativa líquida e ponto líquido nulos quando as despesas continuarem desconhecidas.
-- Exibir o ROAS válido de uma fonte diária AVAILABLE sem exigir dois dias para o cartão.
-- Manter o gráfico e a comparação indisponíveis quando existe somente uma observação; não inserir dados, pontos ou comparações artificiais.
-- Injetar falha em um gráfico e conferir a ordem KPIs-primeiro e o isolamento de cada gráfico.
-- Validar o Worker gerado normal/minificado e a interface autenticada com dados sintéticos e reprodução de snapshots salvos, em desktop/mobile.
-- Executar os checks exigidos e conferir bytes, versões e configurações da Live antes de preencher os campos PENDING deste registro.
+- Margem de apresentação conferida em 1687 pontos-base, rótulo parcial e base explícita; finanças e ponto líquido permanecem nulos.
+- Vendas ausentes, zero, negativas/inválidas, divergência de cálculo e overflow cobertos sem fabricar percentual.
+- ROAS válido de um dia exibido; curva e comparação continuam sem dados suficientes, sem pontos inventados.
+- Fonte Ads rejeitada após válida limpa a razão anterior. Falha em um gráfico preserva indicadores e outros painéis, com ERROR visível, tabela e escopo antigos removidos.
+- Worker normal/minificado e Chromium320/1365 passaram; fluxo de confirmação explícita atualiza a margem completa pelo GET salvo, sem consultas aos provedores.
+- Suíte completa local e CI passaram, sem skips; bytes, versões e configuração dos três Workers conferidos após publicação.
 
 ## Limites financeiros e de homologação
 
 M2 permanece aberta. Seller Centre e banco continuam NÃO COMPARADOS. Margem parcial e ROAS não comprovam lucro líquido realizado.
 
 Os exemplos numéricos acima vêm de snapshots salvos e da projeção local. O acesso público do executor permanece limitado pelo WAF Cloudflare 403; testes sintéticos autenticados e reprodução local não equivalem à captura de uma exceção ou ao aceite da interface na sessão real do proprietário. Nenhum bypass integra este incremento.
+
+## Evidências e limites do replay
+
+O replay autenticado local da leitura real435 exibiu R$99,47, margem parcial16,87% e ROAS20,72x em320/1365. Após falha injetada no primeiro gráfico, os indicadores permaneceram corretos, o painel marcou ERROR e não houve erro global, GETextra ou POST. O snapshot ficou inalterado. As 42 leituras locais de outros painéis sem fixture responderam503; esse resultado pertence ao harness, não à Live. A evidência cobre os indicadores e o caminho até despesas, não a homologação global de todos os painéis.
+
+Checks externos Workers Builds continuam em falha, com causa não confirmada; o histórico de acesso aos logs é403/12004. A publicação controlada foi validada separadamente por bytes, versões e configuração.
