@@ -62,6 +62,8 @@ Prova natural da conta, concluída em 01/11/2026 às 15:01:58 UTC:
 
 A leitura owner usa somente cache. Navegar entre páginas de 50 registros não consulta a fonte; falhas preservam a última lista completa. A prova agregada fica no diretório privado ignorado `attachments/live-pending-pagination-baseline-20261101/`, arquivo `scan-observation-20261101T150213Z.json`; checkpoints versionados guardam somente os agregados.
 
+Os três checks externos “Workers Builds” da Cloudflare reportam falha. O GitHub não fornece seus logs; a API de Builds retorna HTTP 403/código 12004 com o token disponível. A causa desses checks não foi confirmada e não é classificada como gate intencional. Isso permanece uma pendência de infraestrutura distinta do CI GitHub aprovado e da publicação controlada via Wrangler, cujos bytes e funcionamento na conta foram conferidos diretamente. Nenhuma permissão ou configuração de Builds foi alterada.
+
 Sessão de navegador do proprietário não foi executada: o WAF bloqueia o acesso público do executor, como nas releases anteriores, e nenhum bypass foi usado. QA autenticada local/sintética, testes dos Workers reais gerados e leituras somente agregadas da conta são provas distintas. Seller Centre/banco seguem NÃO COMPARADOS, lucro realizado desconhecido. Próximo foco: retomar Returns do mês anterior com guarda da publicação exata e recuperar fontes expiradas sem reconstruir agregados; completar o calendário antes da confirmação externa.
 
 Rollback coordenado: Appc8ab272d-0b33-4a0e-9fed-aae9c1e38ad9 → Auth109da95f-ced9-41d2-9384-cef8edafc746 → Financec1e31d3f-3c30-4865-bef4-7c66c6923488; tabelas aditivas preservadas e contrato v1 continua legível.

@@ -273,7 +273,16 @@
     "finance_m2": "OPEN",
     "seller_centre_comparison": "NOT_COMPARED",
     "bank_settlement": "UNVERIFIED",
-    "branch": "feature/m2-pending-pagination-20261101"
+    "branch": "feature/m2-pending-pagination-20261101",
+    "external_cloudflare_build_checks": {
+      "status": "FAILURE",
+      "cause": "UNCONFIRMED",
+      "log_access": "HTTP_403_CLOUDFLARE_12004",
+      "scope": "THREE_EXTERNAL_WORKERS_BUILDS_CHECKS",
+      "github_validation": "SUCCESS",
+      "controlled_live_publication": "EXACT_BYTES_AND_NATURAL_SCAN_VERIFIED",
+      "configuration_changed": false
+    }
   },
   "validation_history": [
     {
@@ -840,7 +849,16 @@
     "commercial_writes": "LOCKED",
     "finance_m2": "OPEN",
     "seller_centre_comparison": "NOT_COMPARED",
-    "bank_settlement": "UNVERIFIED"
+    "bank_settlement": "UNVERIFIED",
+    "external_cloudflare_build_checks": {
+      "status": "FAILURE",
+      "cause": "UNCONFIRMED",
+      "log_access": "HTTP_403_CLOUDFLARE_12004",
+      "scope": "THREE_EXTERNAL_WORKERS_BUILDS_CHECKS",
+      "github_validation": "SUCCESS",
+      "controlled_live_publication": "EXACT_BYTES_AND_NATURAL_SCAN_VERIFIED",
+      "configuration_changed": false
+    }
   },
   "previous_release_before_pending_pagination": {
     "id": "M2_PENDING_FIRST_PAGE_HERMES_CLOSEOUT_NAVIGATION",
