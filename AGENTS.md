@@ -1,4 +1,4 @@
-> **Prioridade atual — descoberta das novidades, 01/11/2026:** branch `fix/live-update-discovery-navigation-20261101`, base `e9c20d6`. Navegação, cartão de novidades e identificação `2026-11-01.1` preparados, **ainda sem publicação desta atualização**. PR100/App `2b1d820a` conferido às 19:05 Brasília; publicação histórica às 18:40:06. Os controles existem, mas estavam difíceis de encontrar. Concluir CI/QA, publicar somente o App e conferir o recibo; depois retomar itens originais e a ponte futura. M2 aberta e uso real do proprietário pendente. [Registro e caminhos de uso](docs/MLS_LIVE_UPDATE_DISCOVERY_2026_11_01.md). As notas seguintes preservam o histórico.
+> **Live PR101 — navegação e novidades, 01/11/2026 às 19:25:21 Brasília:** versão visível `2026-11-01.1`, App `358957d4`; cartão na Visão geral, links diretos, busca que abre os formulários e roadmap atualizado publicados e conferidos. CI 41356444549 aprovada no head `f5584fe3`; Auth/Finance, configuração, domínios, flags e cron preservados. A integração em main é conferida separadamente pelo estado da PR vinculada; CI e recibo identificam a publicação runtime. Próximo: proprietário conferir os acessos e um recebimento real; M2/M2.2, itens originais e ponte futura permanecem abertos. [Registro, caminhos de uso e limites](docs/MLS_LIVE_UPDATE_DISCOVERY_2026_11_01.md). As notas seguintes preservam o histórico.
 
 > **M2.2c PR100 publicada no App — 01/11/2026, 18:40:06 Brasília:** associação interna OWNER_CONFIRMED entre recebimento e fabricação, com limites globais de quantidade, origem congelada, CAS/auditoria e desvinculação explícita. Quantidades originais continuam UNAVAILABLE; SKU/lote não prova peça individual. App `2b1d820a`; Auth/Finance e configuração preservados. CI 41352590915 verde: 3.143 Node, 67 Python, 44 testes novos e 13 cenários D1; QA local/simulada normal/minificada 320/1365 aprovada, sem fatos Live. Valoração, reserva, revenda e ponte financeira permanecem abertas; uso real do proprietário não executado. Triggers D1 persistem no rollback: código antigo pode retornar 503; recuperar com código compatível e desvinculação explícita. PR100 ainda aguardava CI documental/merge no recibo. [Registro da associação](docs/MLS_M22_RETURN_MANUFACTURING_LINKS_2026_11_01.md).
 
@@ -62,6 +62,12 @@ pendências do operador, testes relevantes e limitações. Contagens de testes
 apoiam a validação e não substituem a explicação da melhoria. Não declarar
 publicação ou aceite operacional sem evidência própria; manter um resumo atual
 curto e apontar o registro detalhado, preservando os históricos anteriores.
+
+Cada futura mudança visível ao proprietário deve atualizar `APP_RELEASE` e as
+notas visíveis da versão no mesmo incremento: identificador, data, rótulo e
+explicação coerentes com a entrega. A identificação humana não comprova deploy;
+conferir o recibo e os bytes. Disponibilidade técnica não confirma dados reais,
+aceite operacional nem encerramento de M2 ou outra fase.
 
 Orientação do proprietário em 30/10/2026: entregar os próximos incrementos
 validados na versão oficial; criar ambiente separado apenas quando necessário.

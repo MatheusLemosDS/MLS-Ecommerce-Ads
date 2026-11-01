@@ -1,12 +1,16 @@
 # Novidades visíveis e acesso aos controles da operação — 01/11/2026
 
-**Estado: preparado; esta atualização de navegação ainda não foi publicada.**
-Branch `fix/live-update-discovery-navigation-20261101`, base `e9c20d6`.
-A identificação humana preparada para o painel é **2026-11-01.1 — Navegação e novidades**;
-ela não é um UUID de publicação Cloudflare. CI, QA e recibo desta entrega serão
-registrados quando concluídos. Até lá, o último App Live conferido continua
-sendo o da PR [#100](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/100),
-versão `2b1d820a-fc1a-409a-9393-86e660458c42`.
+**Publicado e conferido no App em 01/11/2026 às 19:25:21 Brasília.**
+Versão visível **2026-11-01.1 — Navegação e novidades**, App Cloudflare
+`358957d4-60ec-4e50-ab82-95bfd1702e35`, PR
+[#101](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/101).
+Fonte `c0e7ccf8ac90116e693bfad8dfe3fe748c4347c1`, head validado
+`f5584fe381cda1ed66ea603f7e2f165b79cf83dd`, CI
+[41356444549](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/41356444549)
+aprovada. Branch `fix/live-update-discovery-navigation-20261101`, base `e9c20d6`.
+A versão humana não é um UUID Cloudflare. A publicação runtime está confirmada. A integração em main é conferida
+separadamente pelo estado da PR vinculada; CI e recibo acima identificam a
+publicação runtime.
 
 ## Problema observado
 
@@ -23,7 +27,7 @@ O recibo histórico da PR100 registra publicação às **18:40:06 Brasília**.
 O relato de dificuldade de descoberta não comprova falha de cache ou ausência
 do código publicado. O uso operacional real do proprietário continua pendente.
 
-## Mudanças preparadas e onde usar
+## Mudanças publicadas e onde usar
 
 A Visão geral passa a apresentar **Novidades desta versão**, com a versão
 2026-11-01.1 e três acessos diretos. O Plano de evolução explica o que já está
@@ -38,7 +42,7 @@ inspecionar**, **Vínculo com a produção** e **Conciliação financeira** sepa
 as tarefas, com os controles físicos antes dos gráficos. O fluxo indicado é
 receber, inspecionar e depois associar; essa indicação não executa ações.
 
-| Ação do proprietário | Destino preparado | Uso |
+| Ação do proprietário | Onde abrir | Uso |
 | --- | --- | --- |
 | Encontrar as novidades | `/admin?tab=overview` | Localizar o cartão **Novidades desta versão** e escolher o controle desejado. |
 | Receber e inspecionar devoluções | `/admin?tab=agent-returns#physicalReturnsDetails` | Abrir **Recebimento e inspeção das devoluções**, selecionar o contexto salvo e declarar somente as peças efetivamente recebidas e inspecionadas. |
@@ -46,17 +50,24 @@ receber, inspecionar e depois associar; essa indicação não executa ações.
 | Associar devolução à fabricação | `/admin?tab=agent-returns#returnManufacturingLinksDetails` | Abrir **Vínculo com a produção**, escolher recebimento e fabricação compatíveis, declarar a quantidade e confirmar a origem. |
 | Conferir detalhes e próximos passos | `/admin?tab=roadmap#appReleaseNotes` | Ler as notas da versão e as limitações dos três controles. |
 
-Os links diretos preparados abrem a seção correspondente. Antes desta
-publicação, o caminho já existente é **Agentes → MLS Returns**, expandindo
-manualmente recebimento/inspeção ou vínculo; a fabricação fica em
-**Mais opções → Custos**, expandindo o registro histórico. O endereço de
+Os links diretos abrem a seção correspondente. Os resultados da busca agora
+também expandem o formulário recolhido, em vez de apenas rolar até ele, usando
+a mesma navegação por fragmento e preservando URL e foco. Os caminhos de menu
+continuam **Agentes → MLS Returns** para recebimento/inspeção ou vínculo e
+**Mais opções → Custos** para o registro histórico. O endereço de
 Produção/DTF continua dedicado a pedidos, artes e montagem; sua quantidade de
 anúncio ou kit não comprova quantidade fabricada.
 
+Uma aba que já estava aberta pode manter o documento anterior até uma nova
+navegação. Abra a Visão geral novamente e confira **2026-11-01.1** antes de
+comparar as telas. Essa possibilidade não comprova que cache ou aba antiga
+tenham causado o relato original. A correção confirmada da busca trata da
+abertura de seções recolhidas.
+
 ## Conferência manual ainda necessária
 
-Depois do recibo da nova publicação, o proprietário deve conferir a versão na
-entrada e percorrer os três acessos no computador e no celular. Para validar a
+O proprietário ainda deve conferir a versão na entrada e percorrer os três
+acessos no computador e no celular. Para validar a
 operação, deve usar um recebimento e uma fabricação reais: registrar a chegada,
 inspecionar as peças e conferir a associação com a origem. Abrir uma seção ou
 executar testes sintéticos não executa essa conferência física.
@@ -71,17 +82,29 @@ uma tela nem presumir que todos os meses já estão cobertos.
 
 | Etapa desta entrega | Estado neste corte |
 | --- | --- |
-| Navegação, notas e identificação da versão | Preparadas na branch; sem confirmação de publicação. |
-| Build, testes integrais e CI do candidato final | Aguardando o registro do responsável pela release. |
-| QA autenticada desktop/mobile, normal e minificada | Aguardando o registro do responsável pela release. |
-| Publicação do App e comparação exata dos bytes/configuração | Pendente; requer recibo próprio depois dos gates. |
+| Navegação, notas e identificação da versão | Publicadas e conferidas no App `358957d4`. |
+| Build, testes integrais e CI do candidato final | CI 41356444549 aprovada no head `f5584fe3`; 3.155 Node e 67 Python aprovados, sem falhas ou skips Node. |
+| QA autenticada local/simulada desktop/mobile, normal e minificada | Quatro combinações em 320/1365 px e 28 provas de rotas; sem erros, overflow ou mutações, com estado preservado. |
+| Publicação do App e comparação exata dos bytes/configuração | Recibo concluído às 19:25:21 Brasília; três Workers conferidos, com Auth/Finance, domínios, configuração, flags e cron preservados. |
 | Uso físico real pelo proprietário | Não executado. |
 
-Os resultados anteriores da PR100 pertencem àquela entrega e não substituem
-os checks deste candidato. Merge em Git, CI aprovada e versão escrita na UI
-não comprovam que novos bytes foram publicados. O responsável pela release
-deve registrar PR/commit, CI, versão Cloudflare, horário Brasília, conferência
-dos bytes e configuração e resultado da QA antes de mudar o estado acima.
+O recibo privado, fora do Git, é
+`attachments/live-update-discovery-baseline-20261101/publication-receipt.json`
+no workspace de publicação. Ele registra App gerado SHA-256
+`c1b1909fd49353fd065298a3852d6a2ff684980d4da11a0cff832be1eb11fe1e`,
+artefato publicado bruto SHA-256
+`a96d8e6b06ddf598b0959f609f5e1ab1443b78c18bd4ba5c9a64918a0085cd24`
+e correspondência exata dos três Workers. Auth permanece
+`37bead27-c941-40e6-87e8-832f01d1785a`; Finance permanece
+`e0b258a2-e73f-45d2-912a-1cb6fd666e18`. A publicação não chamou endpoints
+owner, não fez consultas de provedor nem alterou valores financeiros remotos.
+
+A prova local com as duas flags owner contém 16 scripts, sem adicionar novos;
+o recorte com somente V3.6 contém 15. Nenhuma dessas contagens descreve uma
+sessão Live real do proprietário. A QA local/simulada e a conferência de bytes
+não executam o recebimento físico nem substituem o aceite operacional. Os
+resultados anteriores da PR100 pertencem àquela entrega; os checks aqui
+registrados são os da PR101, sem tratar as CIs substituídas como aprovadas.
 
 Este incremento trata da descoberta e organização dos controles existentes.
 Não implementa transporte novo de itens Finance/Returns, ponte contábil,
@@ -100,6 +123,12 @@ mudança e como usá-la. Separar o que está preparado em Git do que foi
 publicado e conferido na Live, identificar os passos manuais e pendências do
 operador e informar os testes relevantes com suas limitações. Contagens de
 testes apoiam a evidência; não substituem o relato concreto da melhoria.
+
+Toda futura mudança visível ao proprietário deve atualizar o identificador
+`APP_RELEASE` e as notas visíveis da versão no mesmo incremento. Data, rótulo,
+atalho e explicação devem corresponder ao que foi entregue. A disponibilidade
+técnica de um controle deve continuar separada da confirmação dos dados reais,
+do aceite operacional e do encerramento das fases do roadmap.
 
 Registros relacionados: [associação PR100](MLS_M22_RETURN_MANUFACTURING_LINKS_2026_11_01.md),
 [produção PR99](MLS_M22_INCURRED_PRODUCTION_2026_11_01.md),

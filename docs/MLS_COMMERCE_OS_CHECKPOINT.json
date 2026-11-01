@@ -2,7 +2,7 @@
   "schema": "mls_commerce_os_checkpoint_v1",
   "canonical_roadmap": "docs/ROADMAP_MLS_COMMERCE_OS.md",
   "legacy_roadmap": "docs/ROADMAP_BRAZACOMMERCE.md",
-  "updated_at": "2026-11-01",
+  "updated_at": "2026-11-01T22:25:21+00:00",
   "product": {
     "name": "MLS Commerce OS",
     "supervisor": "MLS Hermes",
@@ -30,8 +30,8 @@
     "merge_commit": "9c418fd3010f46957d1ce52345baacd76041c788"
   },
   "current_phase": "M2_FINANCE_RETURNS_RECONCILIATION",
-  "working_branch": "feature/m22-return-manufacturing-links-20261101",
-  "current_status": "OFFICIAL_LIVE_M22C_RETURN_MANUFACTURING_LINKS_VERIFIED",
+  "working_branch": "fix/live-update-discovery-navigation-20261101",
+  "current_status": "OFFICIAL_LIVE_UPDATE_DISCOVERY_NAVIGATION_VERIFIED",
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
     "Repasse-base, ajuste, repasse após ajuste e liberação exibidos sem dupla dedução",
@@ -70,7 +70,8 @@
     "PR95/96: motivo das despesas mensais pendentes, saldo/margem parciais e ROAS independente de falhas de gráficos",
     "PR98: controle físico global de recebimento parcial, quarentena, inspeção, identidade declarada, CAS/idempotência e anulação auditada; avaliação desconhecida e sem efeitos financeiros",
     "PR99: registro de produção incorrida declarada, custo histórico imutável ou UNKNOWN, semana/mês pela data de produção, contexto DTF opcional, CAS/idempotência e anulação/substituição auditadas; cálculo financeiro separado",
-    "PR100: associação declarada entre recebimento e fabricação, com limites globais, fingerprints, par ativo único e auditoria; qualidade permanece editável, origem/anulação exigem desvinculação; quantidades originais e valores continuam desconhecidos"
+    "PR100: associação declarada entre recebimento e fabricação, com limites globais, fingerprints, par ativo único e auditoria; qualidade permanece editável, origem/anulação exigem desvinculação; quantidades originais e valores continuam desconhecidos",
+    "Novidades e identificação da versão visíveis na entrada, navegação física de devoluções organizada, busca abre os controles e roadmap da interface corrigido; cálculos financeiros preservados"
   ],
   "remaining_this_phase": [
     "Observar o estado real da nova auditoria Pending na conta autenticada e comparar quantidade/valores/horários com o Seller Centre",
@@ -120,6 +121,7 @@
     }
   },
   "next_actions": [
+    "Conferir na sessão real do proprietário a versão 2026-11-01.1 e os três acessos de novidades; validar um recebimento e fabricação reais, sem criar fatos para QA nem presumir integração financeira. Depois retomar os itens originais já previstos após PR100.",
     "Após PR100, expor e validar itens de pedido já preservados no Finance quando disponíveis, e captar itens de devolução em extensão optativa Finance/Auth/App na coleta existente; devoluções legadas ficam NOT_CAPTURED e kit não vira peça física. Não repetir os vínculos internos já entregues.",
     "Confirmar valores históricos e custos de nova embalagem/etiqueta por pedido/peça/kit; UNKNOWN não vira zero",
     "Declarar despesas do mês quando não confirmadas; não copiar automaticamente outro mês",
@@ -134,30 +136,30 @@
     "Mission Control M1.1 (opção 3) integrado com 7 painéis independentes; conferir visual autenticado desktop/celular e retorno às telas antigas"
   ],
   "latest_increment": {
-    "id": "M22C_OWNER_CONFIRMED_RETURN_MANUFACTURING_LOT_ASSOCIATIONS",
-    "status": "OFFICIAL_LIVE_M22C_RETURN_MANUFACTURING_LINKS_VERIFIED",
-    "pull_request": 100,
-    "branch": "feature/m22-return-manufacturing-links-20261101",
-    "base_main": "59f42417d623f38add431cdbf42a414115781250",
-    "code_commit": "e288c3e6e8601696c0d117a4737b0d74dedcc1b2",
-    "reviewed_head": "05e8890757816cc3df546904451468e5f27d968d",
-    "ci_run": 41352590915,
-    "node_tests": 3143,
+    "id": "LIVE_UPDATE_DISCOVERY_AND_PHYSICAL_WORKFLOW_NAVIGATION",
+    "status": "OFFICIAL_LIVE_UPDATE_DISCOVERY_NAVIGATION_VERIFIED",
+    "pull_request": 101,
+    "branch": "fix/live-update-discovery-navigation-20261101",
+    "base_main": "e9c20d6f3caf007caae0efd6fb3f952e8f7a6d64",
+    "code_commit": "c0e7ccf8ac90116e693bfad8dfe3fe748c4347c1",
+    "reviewed_head": "f5584fe381cda1ed66ea603f7e2f165b79cf83dd",
+    "ci_run": 41356444549,
+    "node_tests": 3155,
     "python_tests": 67,
-    "docs": "docs/MLS_M22_RETURN_MANUFACTURING_LINKS_2026_11_01.md",
+    "docs": "docs/MLS_LIVE_UPDATE_DISCOVERY_2026_11_01.md",
     "deployment": {
       "versions": {
-        "app": "2b1d820a-fc1a-409a-9393-86e660458c42",
+        "app": "358957d4-60ec-4e50-ab82-95bfd1702e35",
         "auth": "37bead27-c941-40e6-87e8-832f01d1785a",
         "finance": "e0b258a2-e73f-45d2-912a-1cb6fd666e18"
       },
       "generated_sha256": {
-        "app": "926e750890a31a00d1c25acd7bca1451f9faaa10fc882e0b667745fcba656106",
+        "app": "c1b1909fd49353fd065298a3852d6a2ff684980d4da11a0cff832be1eb11fe1e",
         "auth": "c63ee09b2d98b6321e3ae7feae1066a9eec9160b49868d72fb84cb0471a0018d",
         "finance": "dff201100ed319f3b7d4d8cabf6826237be3a140e679f562cb982cec5bdd89b4"
       },
       "published_sha256": {
-        "app": "72b8359b438bcaa744d592c67b6d163e99a1c712b4cf97e7ee7a1de07c2dbf8b",
+        "app": "a96d8e6b06ddf598b0959f609f5e1ab1443b78c18bd4ba5c9a64918a0085cd24",
         "auth": "46053d0b5f11ff4d738b4cf2cc1cc6afda7d21e233980b1e640f63728f32af2a",
         "finance": "b4195212972f5a9f0f8ff08c9504e983f8bd3ca3b3c42493cb7c88addb84de8b"
       },
@@ -167,88 +169,50 @@
       "flags_preserved": true,
       "cron_preserved": true,
       "auth_finance_versions_preserved": true,
-      "completed_at": 1793569206
+      "completed_at": 1793571921
     },
-    "return_manufacturing_association_implemented": true,
-    "confidence": "OWNER_CONFIRMED_LOT_ASSOCIATION_NOT_SERIALIZED_UNIT_OR_PROVIDER_PROOF",
-    "original_quantities": {
-      "state": "UNAVAILABLE",
-      "expected_quantity": null,
-      "verified_quantity": null
-    },
-    "capacity_basis": "DECLARED_PHYSICAL_RECEIPT_AND_MANUFACTURING_PIECES_GLOBAL_ACTIVE_SUMS",
-    "active_parent_pair_unique": true,
-    "matching": "CONFIRMED_NORMALIZED_IDENTITY_KNOWN_CATALOG_ORDER_CONFLICTS_BLOCKED_MANUAL_UNKNOWN_ORDER_EXPLICIT",
-    "date_basis": "MANUFACTURING_PRODUCED_DATE_NOT_AFTER_RECEIVED_BRT_DAY",
-    "physical_quality_only_inspection_allowed": true,
-    "parent_identity_or_void_requires_unlink": true,
-    "unrelated_parent_changes_do_not_invalidate_origin": true,
-    "cas_targeted_fingerprints_idempotency_and_atomic_audit": true,
-    "missing_parent_or_protection": "HISTORY_AND_HELD_QUANTITY_PRESERVED_UNLINK_ALLOWED_NEW_LINKS_BLOCKED",
-    "lazy_first_valid_link_batch": {
-      "tables": 4,
-      "indexes": 3,
-      "parent_guard_triggers": 4,
-      "statements": 16,
-      "first_failure_rolls_back_all_ddl": true
-    },
-    "rollback_limit": "D1_TRIGGERS_PERSIST_OLD_APP_PARENT_WRITES_BLOCK_WITH_503_UNLINK_REQUIRES_COMPATIBLE_CODE",
-    "allocated_inventory_value_cents": null,
-    "financial_integration_implemented": false,
-    "manufacturing_cost_copied_or_summed_as_recovered_value": false,
-    "resale_reservation_consumption_implemented": false,
-    "historical_consumables_decomposition": "NOT_CONFIRMED_NO_AUTOMATIC_ALL_INCLUSIVE_SPLIT",
-    "initial_real_facts_or_associations_created_by_release": 0,
-    "limits": {
-      "links_including_void": 1000,
-      "link_bytes": 16384,
-      "ledger_bytes": 1048576,
-      "workspace_bytes": 4194304
-    },
+    "human_code_release_id": "2026-11-01.1",
+    "release_id_is_cloudflare_uuid": false,
+    "changes": [
+      "VISIBLE_OVERVIEW_RELEASE_LINK_AND_NOTES",
+      "THREE_EXACT_DETAILS_LINKS",
+      "RETURNS_PHYSICAL_ACTIONS_BEFORE_CHARTS",
+      "SEARCH_OPENS_DETAILS_AND_PRESERVES_SINGLE_HISTORY_ENTRY",
+      "CURRENT_RENDERED_ROADMAP_REPLACES_STALE_PR68_STATUS",
+      "OWNER_RELEASE_INFO_WITHOUT_STORAGE_OR_PROVIDER"
+    ],
+    "new_client_scripts": 0,
+    "new_automatic_requests": 0,
+    "release_info_get_provider_calls": 0,
+    "release_info_get_database_accesses": 0,
+    "financial_calculations_changed": false,
+    "initial_real_facts_created": 0,
     "validation": {
-      "node_failures": 0,
-      "node_skips": 0,
-      "cold_audit_d1_budget": "48_OF_50_UNCHANGED",
-      "inline_owner_script_count": 15,
-      "new_node_tests": 44,
-      "actual_local_d1_integration": "MINIFLARE_WORKERD_13_SCENARIOS_PUBLIC_REGRESSION_TEST",
       "synthetic_chromium": [
         "normal",
         "minified",
         "320px",
         "1365px"
       ],
-      "actual_saved_source_replay": {
-        "source": "SAVED_RETURN_CASE_AND_DTF_SAME_ORDER_HASH",
-        "return_publication_revision": 15953,
-        "financial_fixture_publication_revision": 553,
-        "adapter_and_store_used": true,
-        "widths": [
-          320,
-          1365
-        ],
-        "all_facts_simulated_local_only": true,
-        "financial_sources_and_rendered_response_unchanged": true,
-        "provider_calls": 0,
-        "remote_writes": 0
-      },
-      "real_owner_association_flow": "NOT_OBSERVED_EXECUTOR_WAF_403"
+      "page_errors": 0,
+      "horizontal_overflow": false,
+      "script_count_v36_fixture": 15,
+      "script_count_both_owner_flags": 16,
+      "financial_snapshot_unchanged": true,
+      "ledger_snapshots_unchanged": true,
+      "provider_calls": 0,
+      "remote_writes": 0,
+      "real_owner_browser": "NOT_OBSERVED_EXECUTOR_WAF_403"
     },
-    "owner_reads": "SAVED_D1_ONLY_NO_PROVIDER_OR_DDL",
-    "internal_association_mutations": "OWNER_CONFIRMED_ONLY_NO_EXTERNAL_STOCK_OR_FINANCIAL_AUTHORITY",
-    "remote_financial_values_changed": false,
-    "commercial_writes": "LOCKED",
-    "external_stock_write_allowed": false,
+    "cache_issue_confirmed": false,
     "finance_m2": "OPEN",
     "m22": "PARTIAL",
+    "financial_integration_implemented": false,
+    "resale_reservation_implemented": false,
     "seller_centre_comparison": "NOT_COMPARED",
     "bank_settlement": "UNVERIFIED",
-    "external_cloudflare_build_checks": {
-      "status": "FAILURE",
-      "cause": "UNCONFIRMED",
-      "historical_log_access": "HTTP_403_CLOUDFLARE_12004",
-      "controlled_live_publication": "THREE_WORKER_EXACT_BYTES_AND_CONFIGURATION_VERIFIED"
-    }
+    "commercial_writes": "LOCKED",
+    "owner_release_report_policy": "CONCRETE_CHANGES_ROUTES_HOW_TO_USE_LIVE_VS_GIT_MANUAL_PENDING_VALIDATION_LIMITS"
   },
   "incident": {
     "id": "INCIDENT_2026_10_27_PANEL_AGENT_REGRESSION",
@@ -3024,5 +2988,201 @@
     "Renovar cobertura da publicação exata e acompanhar revisões, Returns e calendário de outubro sem reiniciar o catálogo/coleta",
     "Comparar mesmo corte com Seller Centre/banco antes de encerrar M2 ou declarar lucro realizado",
     "Continuar incrementos validados na Live, preservando bytes/configuração e bloqueios de escrita comercial"
-  ]
+  ],
+  "previous_increment_before_live_discovery": {
+    "id": "M22C_OWNER_CONFIRMED_RETURN_MANUFACTURING_LOT_ASSOCIATIONS",
+    "status": "OFFICIAL_LIVE_M22C_RETURN_MANUFACTURING_LINKS_VERIFIED",
+    "pull_request": 100,
+    "branch": "feature/m22-return-manufacturing-links-20261101",
+    "base_main": "59f42417d623f38add431cdbf42a414115781250",
+    "code_commit": "e288c3e6e8601696c0d117a4737b0d74dedcc1b2",
+    "reviewed_head": "05e8890757816cc3df546904451468e5f27d968d",
+    "ci_run": 41352590915,
+    "node_tests": 3143,
+    "python_tests": 67,
+    "docs": "docs/MLS_M22_RETURN_MANUFACTURING_LINKS_2026_11_01.md",
+    "deployment": {
+      "versions": {
+        "app": "2b1d820a-fc1a-409a-9393-86e660458c42",
+        "auth": "37bead27-c941-40e6-87e8-832f01d1785a",
+        "finance": "e0b258a2-e73f-45d2-912a-1cb6fd666e18"
+      },
+      "generated_sha256": {
+        "app": "926e750890a31a00d1c25acd7bca1451f9faaa10fc882e0b667745fcba656106",
+        "auth": "c63ee09b2d98b6321e3ae7feae1066a9eec9160b49868d72fb84cb0471a0018d",
+        "finance": "dff201100ed319f3b7d4d8cabf6826237be3a140e679f562cb982cec5bdd89b4"
+      },
+      "published_sha256": {
+        "app": "72b8359b438bcaa744d592c67b6d163e99a1c712b4cf97e7ee7a1de07c2dbf8b",
+        "auth": "46053d0b5f11ff4d738b4cf2cc1cc6afda7d21e233980b1e640f63728f32af2a",
+        "finance": "b4195212972f5a9f0f8ff08c9504e983f8bd3ca3b3c42493cb7c88addb84de8b"
+      },
+      "exact_bytes_verified": true,
+      "configuration_preserved": true,
+      "domains_preserved": true,
+      "flags_preserved": true,
+      "cron_preserved": true,
+      "auth_finance_versions_preserved": true,
+      "completed_at": 1793569206
+    },
+    "return_manufacturing_association_implemented": true,
+    "confidence": "OWNER_CONFIRMED_LOT_ASSOCIATION_NOT_SERIALIZED_UNIT_OR_PROVIDER_PROOF",
+    "original_quantities": {
+      "state": "UNAVAILABLE",
+      "expected_quantity": null,
+      "verified_quantity": null
+    },
+    "capacity_basis": "DECLARED_PHYSICAL_RECEIPT_AND_MANUFACTURING_PIECES_GLOBAL_ACTIVE_SUMS",
+    "active_parent_pair_unique": true,
+    "matching": "CONFIRMED_NORMALIZED_IDENTITY_KNOWN_CATALOG_ORDER_CONFLICTS_BLOCKED_MANUAL_UNKNOWN_ORDER_EXPLICIT",
+    "date_basis": "MANUFACTURING_PRODUCED_DATE_NOT_AFTER_RECEIVED_BRT_DAY",
+    "physical_quality_only_inspection_allowed": true,
+    "parent_identity_or_void_requires_unlink": true,
+    "unrelated_parent_changes_do_not_invalidate_origin": true,
+    "cas_targeted_fingerprints_idempotency_and_atomic_audit": true,
+    "missing_parent_or_protection": "HISTORY_AND_HELD_QUANTITY_PRESERVED_UNLINK_ALLOWED_NEW_LINKS_BLOCKED",
+    "lazy_first_valid_link_batch": {
+      "tables": 4,
+      "indexes": 3,
+      "parent_guard_triggers": 4,
+      "statements": 16,
+      "first_failure_rolls_back_all_ddl": true
+    },
+    "rollback_limit": "D1_TRIGGERS_PERSIST_OLD_APP_PARENT_WRITES_BLOCK_WITH_503_UNLINK_REQUIRES_COMPATIBLE_CODE",
+    "allocated_inventory_value_cents": null,
+    "financial_integration_implemented": false,
+    "manufacturing_cost_copied_or_summed_as_recovered_value": false,
+    "resale_reservation_consumption_implemented": false,
+    "historical_consumables_decomposition": "NOT_CONFIRMED_NO_AUTOMATIC_ALL_INCLUSIVE_SPLIT",
+    "initial_real_facts_or_associations_created_by_release": 0,
+    "limits": {
+      "links_including_void": 1000,
+      "link_bytes": 16384,
+      "ledger_bytes": 1048576,
+      "workspace_bytes": 4194304
+    },
+    "validation": {
+      "node_failures": 0,
+      "node_skips": 0,
+      "cold_audit_d1_budget": "48_OF_50_UNCHANGED",
+      "inline_owner_script_count": 15,
+      "new_node_tests": 44,
+      "actual_local_d1_integration": "MINIFLARE_WORKERD_13_SCENARIOS_PUBLIC_REGRESSION_TEST",
+      "synthetic_chromium": [
+        "normal",
+        "minified",
+        "320px",
+        "1365px"
+      ],
+      "actual_saved_source_replay": {
+        "source": "SAVED_RETURN_CASE_AND_DTF_SAME_ORDER_HASH",
+        "return_publication_revision": 15953,
+        "financial_fixture_publication_revision": 553,
+        "adapter_and_store_used": true,
+        "widths": [
+          320,
+          1365
+        ],
+        "all_facts_simulated_local_only": true,
+        "financial_sources_and_rendered_response_unchanged": true,
+        "provider_calls": 0,
+        "remote_writes": 0
+      },
+      "real_owner_association_flow": "NOT_OBSERVED_EXECUTOR_WAF_403"
+    },
+    "owner_reads": "SAVED_D1_ONLY_NO_PROVIDER_OR_DDL",
+    "internal_association_mutations": "OWNER_CONFIRMED_ONLY_NO_EXTERNAL_STOCK_OR_FINANCIAL_AUTHORITY",
+    "remote_financial_values_changed": false,
+    "commercial_writes": "LOCKED",
+    "external_stock_write_allowed": false,
+    "finance_m2": "OPEN",
+    "m22": "PARTIAL",
+    "seller_centre_comparison": "NOT_COMPARED",
+    "bank_settlement": "UNVERIFIED",
+    "external_cloudflare_build_checks": {
+      "status": "FAILURE",
+      "cause": "UNCONFIRMED",
+      "historical_log_access": "HTTP_403_CLOUDFLARE_12004",
+      "controlled_live_publication": "THREE_WORKER_EXACT_BYTES_AND_CONFIGURATION_VERIFIED"
+    }
+  },
+  "live_update_discovery_2026_11_01": {
+    "id": "LIVE_UPDATE_DISCOVERY_AND_PHYSICAL_WORKFLOW_NAVIGATION",
+    "status": "OFFICIAL_LIVE_UPDATE_DISCOVERY_NAVIGATION_VERIFIED",
+    "pull_request": 101,
+    "branch": "fix/live-update-discovery-navigation-20261101",
+    "base_main": "e9c20d6f3caf007caae0efd6fb3f952e8f7a6d64",
+    "code_commit": "c0e7ccf8ac90116e693bfad8dfe3fe748c4347c1",
+    "reviewed_head": "f5584fe381cda1ed66ea603f7e2f165b79cf83dd",
+    "ci_run": 41356444549,
+    "node_tests": 3155,
+    "python_tests": 67,
+    "docs": "docs/MLS_LIVE_UPDATE_DISCOVERY_2026_11_01.md",
+    "deployment": {
+      "versions": {
+        "app": "358957d4-60ec-4e50-ab82-95bfd1702e35",
+        "auth": "37bead27-c941-40e6-87e8-832f01d1785a",
+        "finance": "e0b258a2-e73f-45d2-912a-1cb6fd666e18"
+      },
+      "generated_sha256": {
+        "app": "c1b1909fd49353fd065298a3852d6a2ff684980d4da11a0cff832be1eb11fe1e",
+        "auth": "c63ee09b2d98b6321e3ae7feae1066a9eec9160b49868d72fb84cb0471a0018d",
+        "finance": "dff201100ed319f3b7d4d8cabf6826237be3a140e679f562cb982cec5bdd89b4"
+      },
+      "published_sha256": {
+        "app": "a96d8e6b06ddf598b0959f609f5e1ab1443b78c18bd4ba5c9a64918a0085cd24",
+        "auth": "46053d0b5f11ff4d738b4cf2cc1cc6afda7d21e233980b1e640f63728f32af2a",
+        "finance": "b4195212972f5a9f0f8ff08c9504e983f8bd3ca3b3c42493cb7c88addb84de8b"
+      },
+      "exact_bytes_verified": true,
+      "configuration_preserved": true,
+      "domains_preserved": true,
+      "flags_preserved": true,
+      "cron_preserved": true,
+      "auth_finance_versions_preserved": true,
+      "completed_at": 1793571921
+    },
+    "human_code_release_id": "2026-11-01.1",
+    "release_id_is_cloudflare_uuid": false,
+    "changes": [
+      "VISIBLE_OVERVIEW_RELEASE_LINK_AND_NOTES",
+      "THREE_EXACT_DETAILS_LINKS",
+      "RETURNS_PHYSICAL_ACTIONS_BEFORE_CHARTS",
+      "SEARCH_OPENS_DETAILS_AND_PRESERVES_SINGLE_HISTORY_ENTRY",
+      "CURRENT_RENDERED_ROADMAP_REPLACES_STALE_PR68_STATUS",
+      "OWNER_RELEASE_INFO_WITHOUT_STORAGE_OR_PROVIDER"
+    ],
+    "new_client_scripts": 0,
+    "new_automatic_requests": 0,
+    "release_info_get_provider_calls": 0,
+    "release_info_get_database_accesses": 0,
+    "financial_calculations_changed": false,
+    "initial_real_facts_created": 0,
+    "validation": {
+      "synthetic_chromium": [
+        "normal",
+        "minified",
+        "320px",
+        "1365px"
+      ],
+      "page_errors": 0,
+      "horizontal_overflow": false,
+      "script_count_v36_fixture": 15,
+      "script_count_both_owner_flags": 16,
+      "financial_snapshot_unchanged": true,
+      "ledger_snapshots_unchanged": true,
+      "provider_calls": 0,
+      "remote_writes": 0,
+      "real_owner_browser": "NOT_OBSERVED_EXECUTOR_WAF_403"
+    },
+    "cache_issue_confirmed": false,
+    "finance_m2": "OPEN",
+    "m22": "PARTIAL",
+    "financial_integration_implemented": false,
+    "resale_reservation_implemented": false,
+    "seller_centre_comparison": "NOT_COMPARED",
+    "bank_settlement": "UNVERIFIED",
+    "commercial_writes": "LOCKED",
+    "owner_release_report_policy": "CONCRETE_CHANGES_ROUTES_HOW_TO_USE_LIVE_VS_GIT_MANUAL_PENDING_VALIDATION_LIMITS"
+  }
 }
