@@ -1,4 +1,6 @@
-**Auditoria de devoluções e roadmap — 01/11/2026:** M2 permanece aberta. Custos de vendas elegíveis não são um ledger de produção incorrida; recebimento físico, inspeção, estoque reaproveitável e vínculo da revenda ainda não estão implementados. Nova prioridade M2.2 especifica esses controles e separa caixa, estoque e custo consumido, sem criar custos/quantidades por inferência. Auditoria da base PR96: 232 arquivos, 120 documentos de texto, 29 JSON, cinco ferramentas históricas e 78 imagens inventariadas; 217 links locais originais válidos. Alteração somente documental; última runtime publicada permanece PR96. [Relatório](MLS_RETURNS_REUSE_ROADMAP_AUDIT_2026_11_01.md).
+**Primeira etapa M2.2 PR98 publicada no App — 01/11/2026:** controle interno de recebimento, quarentena e inspeção, com entregas parciais, referências únicas por caso, CAS, auditoria e repetição idempotente. Identidade e quantidade são declaradas pelo operador; itens/quantidade originais ainda não verificados. Avaliação UNKNOWN, sem integração financeira, reserva, revenda ou estoque externo. App `2157c238`; Auth/Finance e configuração preservados. CI 41344331375 verde: 3.056 Node, 67 Python e Chromium local/simulado normal/minificado 320/1365. Uso físico real do proprietário não executado; M2 e M2.2 permanecem abertas. [Registro da etapa](MLS_M22_PHYSICAL_RETURNS_2026_11_01.md).
+
+**Registro histórico da auditoria PR97, base PR96 — 01/11/2026:** M2 permanece aberta. Custos de vendas elegíveis não são um ledger de produção incorrida; recebimento físico, inspeção, estoque reaproveitável e vínculo da revenda ainda não estavam implementados nessa base. Nova prioridade M2.2 especifica esses controles e separa caixa, estoque e custo consumido, sem criar custos/quantidades por inferência. Auditoria da base PR96: 232 arquivos, 120 documentos de texto, 29 JSON, cinco ferramentas históricas e 78 imagens inventariadas; 217 links locais originais válidos. Alteração somente documental; naquele corte a última runtime publicada era PR96. [Relatório](MLS_RETURNS_REUSE_ROADMAP_AUDIT_2026_11_01.md).
 
 **Margem parcial e ROAS PR96 publicados — 01/11/2026:** a Visão geral mostra a margem do saldo conhecido antes das despesas não declaradas. ROAS atualiza antes dos gráficos; falhas de painel ficam isoladas, com tabela e escopo antigos removidos. Um dia Ads válido informa o índice sem inventar curva ou comparação. App `27356953`; Auth/Finance e configuração preservados. CI 41334582368 verde: 3015 Node e 67 Python, sem skips; Chromium normal/minificado 320/1365 e replay real com falha injetada aprovados. Despesas de novembro continuam desconhecidas, sem zero presumido. A exceção exata do navegador do proprietário não foi capturada; M2/banco permanecem abertos. [Registro](MLS_DAILY_MARGIN_ROAS_2026_11_01.md).
 
@@ -402,19 +404,21 @@ Esta é uma trilha técnica independente que **não substitui o gate de saída d
 - [ ] Validar identidade/cursor, replay e assinatura de webhook em sandbox antes de criar fila real ou habilitar ACK.
 - [ ] Confirmar M2 Pending, liberações e devoluções (issue #50). Não presumir depósito bancário.
 
-### M2.2 — Produção incorrida e devolução reaproveitável — **ESPECIFICADO / NÃO IMPLEMENTADO**
+### M2.2 — Produção incorrida e devolução reaproveitável — **PARCIAL / PRIMEIRO CONTROLE FÍSICO PUBLICADO**
 
-Prioridade identificada na [auditoria de devoluções e roadmap](MLS_RETURNS_REUSE_ROADMAP_AUDIT_2026_11_01.md):
+A [primeira etapa PR98](MLS_M22_PHYSICAL_RETURNS_2026_11_01.md) entrega o controle físico interno definido pela [auditoria de devoluções e roadmap](MLS_RETURNS_REUSE_ROADMAP_AUDIT_2026_11_01.md). Os fatos físicos são declarados pelo operador; publicação técnica e testes simulados não comprovam recebimentos reais nem encerram a fase.
 
-- [ ] Registrar produção realmente incorrida por unidade/lote com custo histórico, data, revisão e fonte; mudança de status da venda não apaga gasto já comprovado.
-- [ ] Separar status da Shopee, reembolso/ajuste de repasse, recebimento físico, quarentena e inspeção. CLOSED/REFUND_PAID não comprovam peça recebida.
-- [ ] Identificar estampa/SKU/variação, cor, tamanho, adulto/infantil e componentes efetivos de kits; divergência ou avaria bloqueia disponibilidade.
-- [ ] Criar quantidade recuperada somente após confirmação física, com eventos idempotentes, CAS, auditoria e reversões; kit parcial não vira kit completo.
+- [x] Separar o controle interno de recebimento, quarentena e inspeção da situação/reembolso na Shopee. CLOSED/REFUND_PAID não criam peças recebidas.
+- [x] Registrar identificação declarada de estampa, cor, tamanho, adulto/infantil e modelagem masculina/feminina/unissex; peças sem identificação confirmada não se tornam reaproveitáveis.
+- [x] Registrar entregas parciais e partição exata da inspeção, com referência única por caso, eventos idempotentes, CAS, auditoria, reinspeção e anulação sem apagar o histórico.
+- [ ] Conferir os itens e as quantidades originais esperadas de cada solicitação e a composição efetiva dos kits. Os registros atuais não fazem essa comparação; kit parcial não vira kit completo.
+- [ ] M2.2b: registrar produção realmente incorrida por unidade/lote em ledger separado da referência de vendas elegíveis, com data, identidade, quantidade, revisão, fonte e fotografia do custo histórico ou UNKNOWN. CANCELLED não apaga gasto já comprovado; não somar esse ledger novamente à produção do resultado atual.
+- [ ] Confirmar a decomposição histórica de peça/estampa recuperáveis e embalagem/etiqueta já consumidas, além dos custos incrementais de reparo e nova embalagem. As referências all-inclusive não podem ser divididas automaticamente sem fatos do operador.
 - [ ] Reservar e consumir a unidade correta na revenda, com embalagem/etiqueta incrementais declaradas. Não alterar o custo global do SKU nem registrar nova fabricação da mesma peça.
 - [ ] Separar caixa de custo por competência: recuperação em estoque não é receita/dinheiro; recuperação e consumo do valor histórico precisam de lançamentos correspondentes.
 - [ ] Validar o ciclo original → devolução → inspeção → revenda, inclusive mudança de mês, custos ausentes e reservas concorrentes, antes de integrá-lo ao resultado financeiro.
 
-A primeira entrega pode oferecer quantidades e condições internas com avaliação desconhecida. Valoração e lucro dependem das evidências de custo; atualização externa de estoque continua bloqueada. Este item não está concluído pela existência do catálogo, do DTF ou de relatórios Returns CHECKED.
+O controle publicado oferece contagens internas declaradas e condição inspecionada, com avaliação UNKNOWN/null. Não altera totais financeiros, reservas, revendas ou estoque externo. Valoração e lucro dependem das evidências de custo e da futura integração contábil; uso físico real do proprietário e o ciclo completo permanecem sem validação. M2 e M2.2 continuam abertas.
 
 ### M3 — Products + Pricing Intelligence
 - contribuição por SKU;
@@ -531,8 +535,8 @@ Conversão de identidade M0 publicada pela **PR #11**, merge
 A fase canônica é **M2 — Finance/Returns confiáveis como agentes observadores**.
 
 Retomar por:
-1. Implementar e validar o controle interno M2.2 de produção incorrida, recebimento/inspeção de devoluções e identificação das peças reaproveitáveis. Não inferir estoque pelo encerramento do caso.
-2. Confirmar a decomposição histórica de custos e os novos valores de embalagem/etiqueta; manter avaliação UNKNOWN enquanto ausentes. Registrar desembolso e consumo de estoque em bases distintas, sem dupla fabricação.
+1. Prosseguir com M2.2b: ledger de produção incorrida por unidade/lote, separado da referência de vendas elegíveis, com data, identidade, quantidade e custo histórico versionado ou UNKNOWN. Preservar o gasto comprovado após CANCELLED e impedir dupla contagem com a produção do resultado atual.
+2. Confirmar depois a decomposição histórica de peça/estampa versus embalagem/etiqueta consumidas e os custos incrementais de reparo/nova embalagem. Não dividir automaticamente custos all-inclusive; manter avaliação UNKNOWN enquanto faltarem fatos do operador e validar a futura alocação na revenda separadamente.
 3. Manter a paginação do Pending já entregue, renovar a cobertura da publicação exata e acompanhar revisões/Returns/calendários existentes sem reiniciar coleta ou catálogo.
 4. Declarar despesas do mês e confrontar o mesmo recorte com Seller Centre e banco. Somente concluir M2 com diferenças materiais explicadas; lucro realizado exige liquidação comprovada.
 5. Manter Ads/PROMO, alterações externas de preço/estoque e autonomia comercial bloqueados enquanto seus gates permanecerem abertos.

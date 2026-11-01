@@ -180,30 +180,30 @@
     }
   ],
   "current_release": {
-    "id": "DAILY_PARTIAL_MARGIN_AND_ROAS_KPI_FAULT_ISOLATION",
-    "status": "OFFICIAL_LIVE_MARGIN_PARTIAL_ROAS_FAULT_ISOLATION_VERIFIED",
-    "pull_request": 96,
-    "branch": "fix/daily-margin-roas-presentation-20261101",
-    "base_main": "8acf6b921e7368afa98453451ee6b9092c58fd54",
-    "code_commit": "b1a0883f9b41b230217f1b2b0f0ad70b43c6335e",
-    "reviewed_head": "b995ef9037e651b773baea005f9b613431a5ac72",
-    "ci_run": 41334582368,
-    "node_tests": 3015,
+    "id": "M22_OWNER_CONFIRMED_PHYSICAL_RETURN_RECEIPT_INSPECTION",
+    "status": "OFFICIAL_LIVE_M22_PHYSICAL_RECEIPT_INSPECTION_VERIFIED",
+    "pull_request": 98,
+    "branch": "feature/m22-physical-return-control-20261101",
+    "base_main": "9f1cf3b0e04b8a2d47c1b6e7f2075e2f0869c2a0",
+    "code_commit": "e6d6a4cd59b79d1f93cfef3e58adcba6d8ba3520",
+    "reviewed_head": "74a25eb04915e894c3d89962a35ae11c67dc7835",
+    "ci_run": 41344331375,
+    "node_tests": 3056,
     "python_tests": 67,
-    "docs": "docs/MLS_DAILY_MARGIN_ROAS_2026_11_01.md",
+    "docs": "docs/MLS_M22_PHYSICAL_RETURNS_2026_11_01.md",
     "deployment": {
       "versions": {
-        "app": "27356953-886a-4b1f-95b9-abf3c7c724f7",
+        "app": "2157c238-cc55-42ae-9521-7f52951ebd88",
         "auth": "37bead27-c941-40e6-87e8-832f01d1785a",
         "finance": "e0b258a2-e73f-45d2-912a-1cb6fd666e18"
       },
       "generated_sha256": {
-        "app": "8cbbf7c123c4ac2a3dd128198d90cc3ad9d04e1a53a66719419ac1d60c27e7a6",
+        "app": "20d0ca1e46e6cef5d374b84cce2231994ced89a2aeb289f8c4b7223a3cf14ca6",
         "auth": "c63ee09b2d98b6321e3ae7feae1066a9eec9160b49868d72fb84cb0471a0018d",
         "finance": "dff201100ed319f3b7d4d8cabf6826237be3a140e679f562cb982cec5bdd89b4"
       },
       "published_sha256": {
-        "app": "a38b5bd2988149118fbb0059f645093483d75244aee20804103f26f72c8413df",
+        "app": "00eb27283dc0860f4654768baadccf1f1c763fac13af307245235c4f9996422a",
         "auth": "46053d0b5f11ff4d738b4cf2cc1cc6afda7d21e233980b1e640f63728f32af2a",
         "finance": "b4195212972f5a9f0f8ff08c9504e983f8bd3ca3b3c42493cb7c88addb84de8b"
       },
@@ -212,65 +212,81 @@
       "domains_preserved": true,
       "flags_preserved": true,
       "cron_preserved": true,
-      "auth_finance_versions_preserved": true
+      "auth_finance_versions_preserved": true,
+      "completed_at": 1793563412
     },
-    "diagnosis": {
-      "financial_margin": "UNKNOWN_MONTH_EXPENSE_DECLARATION_MISSING",
-      "roas_source": "AVAILABLE_ONE_OBSERVATION",
-      "renderer_coupling": "REPRODUCED_BY_GRAPH_FAULT_INJECTION",
-      "specific_owner_browser_exception": "NOT_CAPTURED",
-      "observed_roas_at_1755_utc": "23.480665",
-      "observed_attributed_sales_cents": 73471,
-      "observed_ads_spend_cents": 3129
+    "physical_receipt_inspection_implemented": true,
+    "quantities_and_identity": "OPERATOR_DECLARED_NOT_ORIGINAL_ORDER_ITEM_QUANTITY_VERIFIED",
+    "global_persistence": true,
+    "quarantine_before_inspection": true,
+    "partition": [
+      "resellable",
+      "repair",
+      "damaged",
+      "mismatch",
+      "quarantine"
+    ],
+    "cas_idempotency_normalized_receipt_reference_and_atomic_audit": true,
+    "financial_status_does_not_create_physical_stock": true,
+    "valuation": {
+      "state": "UNKNOWN",
+      "amount_cents": null
     },
-    "presentation": {
-      "margin_field": "daily_profit_presentation_v1.margin_bps",
-      "financial_dto_changed": false,
-      "positive_same_day_sales_required": true,
-      "arithmetic": "BOUNDED_SIGNED_BIGINT_TRUNCATION",
-      "partial_net_and_financial_margin_stay_null": true,
-      "partial_not_in_profit_chart_or_comparison": true,
-      "zero_expense_presumed": false
+    "incurred_production_cost_ledger_implemented": false,
+    "resale_reservation_consumption_implemented": false,
+    "packaging_label_costs": "NOT_CONFIRMED",
+    "limits": {
+      "source_cases_per_report": 40,
+      "source_reports": 3,
+      "physical_cases": 100,
+      "physical_lines_per_case": 50,
+      "physical_lines_total": 1000,
+      "physical_case_bytes": 65536,
+      "physical_dto_bytes": 524288
     },
     "validation": {
-      "synthetic_authenticated_chromium": [
+      "node_failures": 0,
+      "node_skips": 0,
+      "cold_audit_d1_budget": "48_OF_50_UNCHANGED",
+      "synthetic_chromium": [
         "normal",
         "minified",
         "320px",
         "1365px"
       ],
-      "saved_real_replay": {
-        "publication_revision": 435,
-        "month": "2026-11",
-        "subtotal_cents": 9947,
-        "sales_cents": 58939,
-        "partial_margin_bps": 1687,
-        "roas_display": "20,72x",
+      "actual_saved_source_replay": {
+        "source_month": "2026-10",
+        "publication_revision": 15953,
+        "source_cases": 18,
+        "saved_finance_month": "2026-11",
+        "financial_fixture_publication_revision": 435,
+        "adapter_and_store_used": true,
         "widths": [
-          1365,
-          320
+          320,
+          1365
         ],
-        "fault_keeps_roas_and_margin": true,
-        "expense_posts": 0,
+        "all_receipts_simulated_local_only": true,
+        "financial_sources_and_response_unchanged": true,
         "provider_calls": 0,
         "remote_writes": 0
       },
-      "rejected_ads_clears_previous_ratio": true,
-      "failed_panel_clears_stale_table_and_scope": true,
-      "other_panels_continue": true,
-      "real_owner_live_browser": "NOT_OBSERVED_EXECUTOR_WAF_403"
+      "real_owner_physical_flow": "NOT_OBSERVED_EXECUTOR_WAF_403",
+      "actual_physical_receipts_recorded_by_this_release": 0
     },
-    "owner_reads": "CACHE_ONLY",
+    "owner_reads": "SAVED_D1_ONLY_NO_PROVIDER_OR_DDL",
+    "internal_physical_mutations": "OWNER_CONFIRMED_ONLY_LAZY_ADDITIVE_D1_SCHEMA",
     "remote_financial_values_changed": false,
     "commercial_writes": "LOCKED",
+    "external_stock_write_allowed": false,
     "finance_m2": "OPEN",
+    "m22": "PARTIAL",
     "seller_centre_comparison": "NOT_COMPARED",
     "bank_settlement": "UNVERIFIED",
     "external_cloudflare_build_checks": {
       "status": "FAILURE",
       "cause": "UNCONFIRMED",
       "historical_log_access": "HTTP_403_CLOUDFLARE_12004",
-      "controlled_live_publication": "EXACT_BYTES_AND_LOCAL_REAL_SNAPSHOT_FAULT_REPLAY_VERIFIED"
+      "controlled_live_publication": "THREE_WORKER_EXACT_BYTES_AND_CONFIGURATION_VERIFIED"
     }
   },
   "validation_history": [
@@ -306,25 +322,25 @@
     }
   ],
   "live_release": {
-    "pull_request": 96,
-    "status": "OFFICIAL_LIVE_MARGIN_PARTIAL_ROAS_FAULT_ISOLATION_VERIFIED",
+    "pull_request": 98,
+    "status": "OFFICIAL_LIVE_M22_PHYSICAL_RECEIPT_INSPECTION_VERIFIED",
     "flags_enabled": true,
     "configuration_preserved": true,
     "commercial_writes": false,
-    "docs": "docs/MLS_DAILY_MARGIN_ROAS_2026_11_01.md",
+    "docs": "docs/MLS_M22_PHYSICAL_RETURNS_2026_11_01.md",
     "deployment": {
       "versions": {
-        "app": "27356953-886a-4b1f-95b9-abf3c7c724f7",
+        "app": "2157c238-cc55-42ae-9521-7f52951ebd88",
         "auth": "37bead27-c941-40e6-87e8-832f01d1785a",
         "finance": "e0b258a2-e73f-45d2-912a-1cb6fd666e18"
       },
       "generated_sha256": {
-        "app": "8cbbf7c123c4ac2a3dd128198d90cc3ad9d04e1a53a66719419ac1d60c27e7a6",
+        "app": "20d0ca1e46e6cef5d374b84cce2231994ced89a2aeb289f8c4b7223a3cf14ca6",
         "auth": "c63ee09b2d98b6321e3ae7feae1066a9eec9160b49868d72fb84cb0471a0018d",
         "finance": "dff201100ed319f3b7d4d8cabf6826237be3a140e679f562cb982cec5bdd89b4"
       },
       "published_sha256": {
-        "app": "a38b5bd2988149118fbb0059f645093483d75244aee20804103f26f72c8413df",
+        "app": "00eb27283dc0860f4654768baadccf1f1c763fac13af307245235c4f9996422a",
         "auth": "46053d0b5f11ff4d738b4cf2cc1cc6afda7d21e233980b1e640f63728f32af2a",
         "finance": "b4195212972f5a9f0f8ff08c9504e983f8bd3ca3b3c42493cb7c88addb84de8b"
       },
@@ -333,9 +349,10 @@
       "domains_preserved": true,
       "flags_preserved": true,
       "cron_preserved": true,
-      "auth_finance_versions_preserved": true
+      "auth_finance_versions_preserved": true,
+      "completed_at": 1793563412
     },
-    "note": "Most recent runtime release; documentation audit introduces no new Worker publication"
+    "note": "First M2.2 physical receipt/inspection stage only; valuation, incurred production, reservation/resale and financial integration remain open. No physical facts fabricated in Live."
   },
   "visual_chart_refinement_20261031": {
     "id": "LIVE_VISUAL_CHART_INSPECTION_AND_COST_RULE_SCOPE",
@@ -1763,5 +1780,241 @@
     "commercial_writes": false,
     "docs": "docs/MLS_M2_PREVIOUS_MONTH_RETURNS_2026_11_01.md"
   },
-  "historical_mission_phase_context": "phase0..phase6 preserve the 2026-10-30 preparation snapshot; they are not M0..M9. current_release/live_release and canonical roadmap carry subsequent delivery evidence. M2 and bank gates remain open."
+  "historical_mission_phase_context": "phase0..phase6 preserve the 2026-10-30 preparation snapshot; they are not M0..M9. current_release/live_release and canonical roadmap carry subsequent delivery evidence. M2 and bank gates remain open.",
+  "previous_release_before_physical_returns": {
+    "id": "DAILY_PARTIAL_MARGIN_AND_ROAS_KPI_FAULT_ISOLATION",
+    "status": "OFFICIAL_LIVE_MARGIN_PARTIAL_ROAS_FAULT_ISOLATION_VERIFIED",
+    "pull_request": 96,
+    "branch": "fix/daily-margin-roas-presentation-20261101",
+    "base_main": "8acf6b921e7368afa98453451ee6b9092c58fd54",
+    "code_commit": "b1a0883f9b41b230217f1b2b0f0ad70b43c6335e",
+    "reviewed_head": "b995ef9037e651b773baea005f9b613431a5ac72",
+    "ci_run": 41334582368,
+    "node_tests": 3015,
+    "python_tests": 67,
+    "docs": "docs/MLS_DAILY_MARGIN_ROAS_2026_11_01.md",
+    "deployment": {
+      "versions": {
+        "app": "27356953-886a-4b1f-95b9-abf3c7c724f7",
+        "auth": "37bead27-c941-40e6-87e8-832f01d1785a",
+        "finance": "e0b258a2-e73f-45d2-912a-1cb6fd666e18"
+      },
+      "generated_sha256": {
+        "app": "8cbbf7c123c4ac2a3dd128198d90cc3ad9d04e1a53a66719419ac1d60c27e7a6",
+        "auth": "c63ee09b2d98b6321e3ae7feae1066a9eec9160b49868d72fb84cb0471a0018d",
+        "finance": "dff201100ed319f3b7d4d8cabf6826237be3a140e679f562cb982cec5bdd89b4"
+      },
+      "published_sha256": {
+        "app": "a38b5bd2988149118fbb0059f645093483d75244aee20804103f26f72c8413df",
+        "auth": "46053d0b5f11ff4d738b4cf2cc1cc6afda7d21e233980b1e640f63728f32af2a",
+        "finance": "b4195212972f5a9f0f8ff08c9504e983f8bd3ca3b3c42493cb7c88addb84de8b"
+      },
+      "exact_bytes_verified": true,
+      "configuration_preserved": true,
+      "domains_preserved": true,
+      "flags_preserved": true,
+      "cron_preserved": true,
+      "auth_finance_versions_preserved": true
+    },
+    "diagnosis": {
+      "financial_margin": "UNKNOWN_MONTH_EXPENSE_DECLARATION_MISSING",
+      "roas_source": "AVAILABLE_ONE_OBSERVATION",
+      "renderer_coupling": "REPRODUCED_BY_GRAPH_FAULT_INJECTION",
+      "specific_owner_browser_exception": "NOT_CAPTURED",
+      "observed_roas_at_1755_utc": "23.480665",
+      "observed_attributed_sales_cents": 73471,
+      "observed_ads_spend_cents": 3129
+    },
+    "presentation": {
+      "margin_field": "daily_profit_presentation_v1.margin_bps",
+      "financial_dto_changed": false,
+      "positive_same_day_sales_required": true,
+      "arithmetic": "BOUNDED_SIGNED_BIGINT_TRUNCATION",
+      "partial_net_and_financial_margin_stay_null": true,
+      "partial_not_in_profit_chart_or_comparison": true,
+      "zero_expense_presumed": false
+    },
+    "validation": {
+      "synthetic_authenticated_chromium": [
+        "normal",
+        "minified",
+        "320px",
+        "1365px"
+      ],
+      "saved_real_replay": {
+        "publication_revision": 435,
+        "month": "2026-11",
+        "subtotal_cents": 9947,
+        "sales_cents": 58939,
+        "partial_margin_bps": 1687,
+        "roas_display": "20,72x",
+        "widths": [
+          1365,
+          320
+        ],
+        "fault_keeps_roas_and_margin": true,
+        "expense_posts": 0,
+        "provider_calls": 0,
+        "remote_writes": 0
+      },
+      "rejected_ads_clears_previous_ratio": true,
+      "failed_panel_clears_stale_table_and_scope": true,
+      "other_panels_continue": true,
+      "real_owner_live_browser": "NOT_OBSERVED_EXECUTOR_WAF_403"
+    },
+    "owner_reads": "CACHE_ONLY",
+    "remote_financial_values_changed": false,
+    "commercial_writes": "LOCKED",
+    "finance_m2": "OPEN",
+    "seller_centre_comparison": "NOT_COMPARED",
+    "bank_settlement": "UNVERIFIED",
+    "external_cloudflare_build_checks": {
+      "status": "FAILURE",
+      "cause": "UNCONFIRMED",
+      "historical_log_access": "HTTP_403_CLOUDFLARE_12004",
+      "controlled_live_publication": "EXACT_BYTES_AND_LOCAL_REAL_SNAPSHOT_FAULT_REPLAY_VERIFIED"
+    }
+  },
+  "previous_live_release_before_physical_returns": {
+    "pull_request": 96,
+    "status": "OFFICIAL_LIVE_MARGIN_PARTIAL_ROAS_FAULT_ISOLATION_VERIFIED",
+    "flags_enabled": true,
+    "configuration_preserved": true,
+    "commercial_writes": false,
+    "docs": "docs/MLS_DAILY_MARGIN_ROAS_2026_11_01.md",
+    "deployment": {
+      "versions": {
+        "app": "27356953-886a-4b1f-95b9-abf3c7c724f7",
+        "auth": "37bead27-c941-40e6-87e8-832f01d1785a",
+        "finance": "e0b258a2-e73f-45d2-912a-1cb6fd666e18"
+      },
+      "generated_sha256": {
+        "app": "8cbbf7c123c4ac2a3dd128198d90cc3ad9d04e1a53a66719419ac1d60c27e7a6",
+        "auth": "c63ee09b2d98b6321e3ae7feae1066a9eec9160b49868d72fb84cb0471a0018d",
+        "finance": "dff201100ed319f3b7d4d8cabf6826237be3a140e679f562cb982cec5bdd89b4"
+      },
+      "published_sha256": {
+        "app": "a38b5bd2988149118fbb0059f645093483d75244aee20804103f26f72c8413df",
+        "auth": "46053d0b5f11ff4d738b4cf2cc1cc6afda7d21e233980b1e640f63728f32af2a",
+        "finance": "b4195212972f5a9f0f8ff08c9504e983f8bd3ca3b3c42493cb7c88addb84de8b"
+      },
+      "exact_bytes_verified": true,
+      "configuration_preserved": true,
+      "domains_preserved": true,
+      "flags_preserved": true,
+      "cron_preserved": true,
+      "auth_finance_versions_preserved": true
+    },
+    "note": "Most recent runtime release; documentation audit introduces no new Worker publication"
+  },
+  "physical_returns_receipt_inspection_2026_11_01": {
+    "id": "M22_OWNER_CONFIRMED_PHYSICAL_RETURN_RECEIPT_INSPECTION",
+    "status": "OFFICIAL_LIVE_M22_PHYSICAL_RECEIPT_INSPECTION_VERIFIED",
+    "pull_request": 98,
+    "branch": "feature/m22-physical-return-control-20261101",
+    "base_main": "9f1cf3b0e04b8a2d47c1b6e7f2075e2f0869c2a0",
+    "code_commit": "e6d6a4cd59b79d1f93cfef3e58adcba6d8ba3520",
+    "reviewed_head": "74a25eb04915e894c3d89962a35ae11c67dc7835",
+    "ci_run": 41344331375,
+    "node_tests": 3056,
+    "python_tests": 67,
+    "docs": "docs/MLS_M22_PHYSICAL_RETURNS_2026_11_01.md",
+    "deployment": {
+      "versions": {
+        "app": "2157c238-cc55-42ae-9521-7f52951ebd88",
+        "auth": "37bead27-c941-40e6-87e8-832f01d1785a",
+        "finance": "e0b258a2-e73f-45d2-912a-1cb6fd666e18"
+      },
+      "generated_sha256": {
+        "app": "20d0ca1e46e6cef5d374b84cce2231994ced89a2aeb289f8c4b7223a3cf14ca6",
+        "auth": "c63ee09b2d98b6321e3ae7feae1066a9eec9160b49868d72fb84cb0471a0018d",
+        "finance": "dff201100ed319f3b7d4d8cabf6826237be3a140e679f562cb982cec5bdd89b4"
+      },
+      "published_sha256": {
+        "app": "00eb27283dc0860f4654768baadccf1f1c763fac13af307245235c4f9996422a",
+        "auth": "46053d0b5f11ff4d738b4cf2cc1cc6afda7d21e233980b1e640f63728f32af2a",
+        "finance": "b4195212972f5a9f0f8ff08c9504e983f8bd3ca3b3c42493cb7c88addb84de8b"
+      },
+      "exact_bytes_verified": true,
+      "configuration_preserved": true,
+      "domains_preserved": true,
+      "flags_preserved": true,
+      "cron_preserved": true,
+      "auth_finance_versions_preserved": true,
+      "completed_at": 1793563412
+    },
+    "physical_receipt_inspection_implemented": true,
+    "quantities_and_identity": "OPERATOR_DECLARED_NOT_ORIGINAL_ORDER_ITEM_QUANTITY_VERIFIED",
+    "global_persistence": true,
+    "quarantine_before_inspection": true,
+    "partition": [
+      "resellable",
+      "repair",
+      "damaged",
+      "mismatch",
+      "quarantine"
+    ],
+    "cas_idempotency_normalized_receipt_reference_and_atomic_audit": true,
+    "financial_status_does_not_create_physical_stock": true,
+    "valuation": {
+      "state": "UNKNOWN",
+      "amount_cents": null
+    },
+    "incurred_production_cost_ledger_implemented": false,
+    "resale_reservation_consumption_implemented": false,
+    "packaging_label_costs": "NOT_CONFIRMED",
+    "limits": {
+      "source_cases_per_report": 40,
+      "source_reports": 3,
+      "physical_cases": 100,
+      "physical_lines_per_case": 50,
+      "physical_lines_total": 1000,
+      "physical_case_bytes": 65536,
+      "physical_dto_bytes": 524288
+    },
+    "validation": {
+      "node_failures": 0,
+      "node_skips": 0,
+      "cold_audit_d1_budget": "48_OF_50_UNCHANGED",
+      "synthetic_chromium": [
+        "normal",
+        "minified",
+        "320px",
+        "1365px"
+      ],
+      "actual_saved_source_replay": {
+        "source_month": "2026-10",
+        "publication_revision": 15953,
+        "source_cases": 18,
+        "saved_finance_month": "2026-11",
+        "financial_fixture_publication_revision": 435,
+        "adapter_and_store_used": true,
+        "widths": [
+          320,
+          1365
+        ],
+        "all_receipts_simulated_local_only": true,
+        "financial_sources_and_response_unchanged": true,
+        "provider_calls": 0,
+        "remote_writes": 0
+      },
+      "real_owner_physical_flow": "NOT_OBSERVED_EXECUTOR_WAF_403",
+      "actual_physical_receipts_recorded_by_this_release": 0
+    },
+    "owner_reads": "SAVED_D1_ONLY_NO_PROVIDER_OR_DDL",
+    "internal_physical_mutations": "OWNER_CONFIRMED_ONLY_LAZY_ADDITIVE_D1_SCHEMA",
+    "remote_financial_values_changed": false,
+    "commercial_writes": "LOCKED",
+    "external_stock_write_allowed": false,
+    "finance_m2": "OPEN",
+    "m22": "PARTIAL",
+    "seller_centre_comparison": "NOT_COMPARED",
+    "bank_settlement": "UNVERIFIED",
+    "external_cloudflare_build_checks": {
+      "status": "FAILURE",
+      "cause": "UNCONFIRMED",
+      "historical_log_access": "HTTP_403_CLOUDFLARE_12004",
+      "controlled_live_publication": "THREE_WORKER_EXACT_BYTES_AND_CONFIGURATION_VERIFIED"
+    }
+  }
 }
