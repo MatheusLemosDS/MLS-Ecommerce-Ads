@@ -1,6 +1,6 @@
 # M2.2c — associação declarada entre devolução e produção
 
-**DRAFT: implementação local em validação, sem publicação confirmada nesta etapa.** Branch `feature/m22-return-manufacturing-links-20261101`, base `59f4241` (PR #99). PR, commits de entrega, CI do head exato, hashes gerados/publicados e versões dos Workers estão **PENDENTES**. O uso real pelo proprietário não foi executado. Recebimentos, fabricação e associações usados nos testes são **SIMULADOS LOCALMENTE**; nenhum desses fatos foi lançado na Live para QA.
+**Primeira etapa interna M2.2c publicada no App; a fase permanece parcial.** Branch `feature/m22-return-manufacturing-links-20261101`, base `59f4241` (PR #99), PR [#100](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/100). Fonte `e288c3e6e8601696c0d117a4737b0d74dedcc1b2`, head testado `05e8890757816cc3df546904451468e5f27d968d`, CI [41352590915](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/41352590915) aprovado. Publicação concluída em **01/11/2026 às 18:40:06 Brasília**. A PR continuava aberta/DRAFT e aguardava CI documental/integração Git no momento do recibo; publicação runtime não comprova merge. O uso real pelo proprietário não foi executado. Recebimentos, fabricação e associações usados nos testes são **SIMULADOS LOCALMENTE**; nenhum desses fatos foi lançado na Live para QA.
 
 ## Problema e limite desta primeira etapa
 
@@ -41,7 +41,7 @@ O contrato mantém em todas as leituras:
 }
 ```
 
-Na fonte atual de Returns, `response.item.amount` não é preservado pelo recorte salvo. Capturar e verificar esse campo exigirá uma etapa própria, opt-in, em Finance/Auth/App, com validação de itens, unidades e cobertura. Essa captura não faz parte desta entrega. Quantidade original ausente permanece UNAVAILABLE/nula, nunca zero.
+Finance já preserva os `items` dos pedidos pagos, mas esse conteúdo não é transportado ao App pelo contrato atual. Itens vazios em TO_RETURN/pedidos não pagos são UNKNOWN, não prova de quantidade zero. Separadamente, `response.item[].amount` de Returns não é capturado pelo payload legado salvo. Expor os itens existentes e preservar a evidência Returns exigirá uma etapa própria opt-in em Finance/Auth/App, usando as chamadas já realizadas, sem novos requests de provedor, e validando itens, unidades e cobertura. Essa captura/transmissão não faz parte desta entrega. Quantidade original ausente permanece UNAVAILABLE/nula, nunca zero.
 
 ## Conservação global das quantidades
 
@@ -63,7 +63,7 @@ Não se edita nem transfere um vínculo em silêncio. A desvinculação preserva
 
 ## Persistência, concorrência e API
 
-A rota owner preparada é `/api/admin/returns/manufacturing-links`, sem parâmetros de consulta. O workspace `return_manufacturing_links_workspace_v1` reúne ledger, pais disponíveis, handles de origem e contexto derivado. A leitura não consulta provedor nem cria fatos físicos, fabricação ou associações.
+A rota owner publicada é `/api/admin/returns/manufacturing-links`, sem parâmetros de consulta. O workspace `return_manufacturing_links_workspace_v1` reúne ledger, pais disponíveis, handles de origem e contexto derivado. A leitura não consulta provedor nem cria fatos físicos, fabricação ou associações.
 
 Autenticação owner, método, consulta, origem e CSRF de mutações são conferidos antes da inicialização global. GET usa somente SELECT; banco frio devolve ledger vazio com proteção NOT_INITIALIZED, sem DDL. A inicialização não entra no schema global nem acrescenta consultas ou mutações ao cron.
 
@@ -94,7 +94,9 @@ Não há escrita financeira, em Finance/Auth, DTF, regras de custo, reserva, rev
 
 ## Validação e publicação
 
-| Evidência | Estado nesta versão DRAFT |
+A suíte completa local e o CI do head exato passaram com **3.143 testes Node e 67 Python**, sem falhas ou skips. Há **44 testes Node novos**, incluindo a regressão pública workerd/Miniflare D1 com **13 cenários**. O App gerado final, normal/minificado, foi exercitado em **320 e 1365 px** com fonte operacional salva e fatos internos exclusivamente simulados.
+
+| Evidência | Estado desta primeira etapa |
 | --- | --- |
 | Suíte adversarial independente | 8/8 testes locais aprovados; fatos exclusivamente SIMULADOS |
 | Conservação global e duplicidade | Aprovadas na suíte adversarial entre diferentes casos e registros de fabricação |
@@ -102,17 +104,37 @@ Não há escrita financeira, em Finance/Auth, DTF, regras de custo, reserva, rev
 | Cronologia Brasília e custo UNKNOWN | Aprovados localmente, inclusive gravação tardia e recebimento em dia UTC diferente do dia em Brasília |
 | Anulação/substituição | Pai protegido não muda; após desvincular, substituição não recebe associação automaticamente |
 | Ordem das chaves e inspeção | Origem semântica/fingerprint conservados no teste local; segundo lote admitido sem duplicar capacidade |
-| D1 Miniflare genérico | Prova local genérica informada: 9 testes aprovados; não substitui o exercício do módulo real |
-| D1 Miniflare do módulo real | PENDENTE |
-| Suítes completas Node/Python, adaptador e cliente | PENDENTES de execução final e contagem do head exato |
-| Worker gerado normal/minificado e Chromium 320/1365 | PENDENTES |
-| QA com fonte salva real, sem fatos reais inventados | PENDENTE |
-| PR, commit, CI GitHub, hashes e versões dos Workers | PENDENTES |
-| Publicação Live e comparação de bytes/configurações | PENDENTES |
+| D1 Miniflare genérico | Prova inicial local: nove casos aprovados; evidência histórica complementada pelo exercício específico abaixo |
+| D1 workerd/Miniflare do módulo real | Regressão pública com 13 cenários aprovada, incluindo instalação atômica, guards dos pais e rollback do primeiro schema após corrida |
+| Suítes completas Node/Python, adaptador e cliente | 3.143 Node e 67 Python aprovados, zero skips; CI do head exato GREEN |
+| Worker gerado normal/minificado e Chromium 320/1365 | APROVADOS localmente com fatos SIMULADOS |
+| QA com fonte salva real, sem fatos reais inventados | APROVADA na cópia local; fontes financeiras e fatos remotos preservados |
+| PR, commit, CI GitHub, hashes e versões dos Workers | #100, fonte/head e CI acima; versões/hashes na tabela do recibo abaixo |
+| Publicação Live e comparação de bytes/configurações | App `2b1d820a`; os três Workers e configurações exatas conferidos |
 | Uso físico real confirmado pelo proprietário | NÃO EXECUTADO |
 
-As suítes dedicadas são [núcleo](../web/cloudflare/tests/return-manufacturing-links.test.mjs), [adversarial](../web/cloudflare/tests/return-manufacturing-links-adversarial.test.mjs), [workspace](../web/cloudflare/tests/return-manufacturing-links-workspace.test.mjs), [cliente](../web/cloudflare/tests/return-manufacturing-links-client.test.mjs) e [Chromium](../web/cloudflare/tests/return-manufacturing-links-chrome.test.mjs). A existência dos arquivos não significa aprovação da bateria final. Navegação por teclado ou outras modalidades de acessibilidade não são declaradas verificadas sem exercício explícito.
+As suítes [núcleo](../web/cloudflare/tests/return-manufacturing-links.test.mjs), [adversarial](../web/cloudflare/tests/return-manufacturing-links-adversarial.test.mjs), [D1 real local](../web/cloudflare/tests/return-manufacturing-links-d1.test.mjs), [workspace](../web/cloudflare/tests/return-manufacturing-links-workspace.test.mjs), [cliente](../web/cloudflare/tests/return-manufacturing-links-client.test.mjs) e [Chromium](../web/cloudflare/tests/return-manufacturing-links-chrome.test.mjs) foram executadas. Navegação por teclado ou outras modalidades de acessibilidade não foram exercitadas explicitamente e não são declaradas verificadas.
+
+## QA com fonte salva real e fatos simulados
+
+A cópia local da fonte operacional selecionada continha Returns PROCESSING e contexto DTF TO_RETURN com o mesmo hash de pedido. Essa correspondência contextual não comprova quantidade original, fabricação ou recebimento físico. O exercício usou o App final gerado `926e750890a31a00d1c25acd7bca1451f9faaa10fc882e0b667745fcba656106`, normal/minificado, em 320/1365 px.
+
+Nos fatos **SIMULADOS LOCALMENTE**, foram declaradas três peças no recebimento, três no registro de fabricação e uma associação de duas peças. A reinspeção de qualidade permaneceu permitida; alterações protegidas dos pais retornaram 409 com estado/auditoria preservados. Desvincular liberou a quantidade, e substituições não receberam vínculo automaticamente. As quatro tabelas financeiras observadas, DTF/custos salvos e DTO financeiro v4/JSON renderizado ficaram idênticos antes/depois.
+
+Não houve escrita de fatos na Live nem chamadas de provedor pela QA. O acesso público do executor recebeu WAF 403, sem bypass. O fluxo real do proprietário permanece **NÃO EXECUTADO**; replay local autenticado e publicação técnica não substituem esse aceite.
+
+## Publicação verificada
+
+O recibo privado `publication-receipt.json`, no diretório ignorado `attachments/live-m22-return-manufacturing-links-baseline-20261101/`, confirma conclusão em `2026-11-01T21:40:06+00:00`, equivalente a **01/11/2026 às 18:40:06 Brasília (America/Sao_Paulo, UTC−03:00)**. Bytes, configurações, bindings, domínios, flags e cron dos três Workers foram conferidos. Somente o App mudou; Auth/Finance e seus contratos existentes foram preservados. Não houve escrita comercial ou alteração remota de valores financeiros.
+
+| Worker | Versão | SHA-256 gerado | SHA-256 publicado |
+| --- | --- | --- | --- |
+| app | `2b1d820a-fc1a-409a-9393-86e660458c42` | `926e750890a31a00d1c25acd7bca1451f9faaa10fc882e0b667745fcba656106` | `72b8359b438bcaa744d592c67b6d163e99a1c712b4cf97e7ee7a1de07c2dbf8b` |
+| auth | `37bead27-c941-40e6-87e8-832f01d1785a` | `c63ee09b2d98b6321e3ae7feae1066a9eec9160b49868d72fb84cb0471a0018d` | `46053d0b5f11ff4d738b4cf2cc1cc6afda7d21e233980b1e640f63728f32af2a` |
+| finance | `e0b258a2-e73f-45d2-912a-1cb6fd666e18` | `dff201100ed319f3b7d4d8cabf6826237be3a140e679f562cb982cec5bdd89b4` | `b4195212972f5a9f0f8ff08c9504e983f8bd3ca3b3c42493cb7c88addb84de8b` |
+
+A PR #100 continuava aberta/DRAFT no recibo runtime. CI documental final e merge em `main` têm confirmação própria posterior; este recibo não afirma que a integração Git já terminou.
 
 ## Próximos passos ainda abertos
 
-Conferir itens e quantidades originais esperados em uma fonte preservada e coberta; confrontá-los com as declarações sem promover um vínculo de lote a prova de peça individual. Depois confirmar a decomposição histórica de peça/estampa versus embalagem/etiqueta consumidas e os custos incrementais. Valoração, alocação de valores, reservas, consumo na revenda e ponte financeira sem dupla contagem continuam etapas futuras separadas. A associação declarada desta primeira M2.2c não encerra essas obrigações.
+Expor os itens pagos já preservados em Finance e capturar a evidência Returns nas chamadas existentes por contrato opt-in Finance/Auth/App, sem nova coleta de provedor. Conferir itens e quantidades originais esperados em fonte preservada e coberta; confrontá-los com as declarações sem promover um vínculo de lote a prova de peça individual. Depois confirmar a decomposição histórica de peça/estampa versus embalagem/etiqueta consumidas e os custos incrementais. Valoração, alocação de valores, reservas, consumo na revenda e ponte financeira sem dupla contagem continuam etapas futuras separadas. A associação declarada desta primeira M2.2c não encerra essas obrigações.

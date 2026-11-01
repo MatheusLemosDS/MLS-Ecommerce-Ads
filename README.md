@@ -5,21 +5,22 @@ App, Auth e Financeiro. Cada Worker tem build e publicação próprios. A conex�
 financeira e as leituras reais foram verificadas; isso não comprova liquidação
 bancária nem encerra a conciliação M2.
 
-**Última release verificada — PR #99, 01/11/2026:** App
-`c33b1d03-6ef5-4420-8452-06bb255abb89`, com registro histórico de produção
-realizada por peça ou lote homogêneo, data declarada e custo unitário congelado
-ou desconhecido. Semana e mês usam a data da produção em Brasília; cancelamentos
-não apagam o registro. Auth `37bead27` e Finance `e0b258a2` foram preservados.
-O SHA-256 do App gerado é
-`936c2cb0659f79805df88e66bf10ea198c30a052dfbd22cf53dfe2bccc396cab`;
+**Última release verificada — PR #100, 01/11/2026:** App
+`2b1d820a-fc1a-409a-9393-86e660458c42`, com associação confirmada pelo operador
+entre peças recebidas e fabricação registrada. A compatibilidade de identidade,
+data e limites cumulativos é conferida; a origem permanece declarada e as
+quantidades originais continuam desconhecidas.
+Inspeções de condição seguem permitidas e correções de origem exigem desvincular.
+Auth `37bead27` e Finance `e0b258a2` foram preservados. O SHA-256 do App gerado é
+`926e750890a31a00d1c25acd7bca1451f9faaa10fc882e0b667745fcba656106`;
 bytes publicados, versões e configuração foram conferidos separadamente no
-[registro da release](docs/MLS_M22_INCURRED_PRODUCTION_2026_11_01.md). Os testes passaram: 3.099 Node e
-67 Python, incluindo Chromium normal/minificado em 320/1365 px.
+[registro da release](docs/MLS_M22_RETURN_MANUFACTURING_LINKS_2026_11_01.md). Passaram 3.143 testes Node e
+67 Python, com D1 local Miniflare/workerd e Chromium normal/minificado 320/1365.
 
-Quantidade e custo são confirmados pelo operador; contexto DTF e referências
-atuais não comprovam fabricação ou pagamento. Os controles internos PR98/99
-permanecem separados do lucro. Valoração, consumíveis históricos, reserva e
-consumo na revenda ainda dependem das próximas etapas, sem dupla fabricação.
+Os vínculos não comprovam peças serializadas, lucro ou valor de estoque. Os
+controles internos PR98/99/100 continuam separados da integração financeira,
+valoração e revenda. As proteções D1 persistem se o Worker for revertido;
+desvincular exige código compatível, sem apagar histórico ou proteções.
 
 As despesas de novembro ainda precisam ser declaradas. O saldo e a margem
 parciais não substituem o resultado líquido completo. Seller Centre e banco

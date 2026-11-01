@@ -180,30 +180,30 @@
     }
   ],
   "current_release": {
-    "id": "M22B_OWNER_CONFIRMED_INCURRED_PRODUCTION_LEDGER",
-    "status": "OFFICIAL_LIVE_M22B_INCURRED_PRODUCTION_LEDGER_VERIFIED",
-    "pull_request": 99,
-    "branch": "feature/m22-incurred-production-ledger-20261101",
-    "base_main": "07cf2b8e440f2f3b9c78cc29db3b0e7fb0f48b4f",
-    "code_commit": "51128b89e67f944ecf62bf55196dac293a3eecac",
-    "reviewed_head": "0749710ba9826d6256c2ae02223ed04458a7895f",
-    "ci_run": 41347493170,
-    "node_tests": 3099,
+    "id": "M22C_OWNER_CONFIRMED_RETURN_MANUFACTURING_LOT_ASSOCIATIONS",
+    "status": "OFFICIAL_LIVE_M22C_RETURN_MANUFACTURING_LINKS_VERIFIED",
+    "pull_request": 100,
+    "branch": "feature/m22-return-manufacturing-links-20261101",
+    "base_main": "59f42417d623f38add431cdbf42a414115781250",
+    "code_commit": "e288c3e6e8601696c0d117a4737b0d74dedcc1b2",
+    "reviewed_head": "05e8890757816cc3df546904451468e5f27d968d",
+    "ci_run": 41352590915,
+    "node_tests": 3143,
     "python_tests": 67,
-    "docs": "docs/MLS_M22_INCURRED_PRODUCTION_2026_11_01.md",
+    "docs": "docs/MLS_M22_RETURN_MANUFACTURING_LINKS_2026_11_01.md",
     "deployment": {
       "versions": {
-        "app": "c33b1d03-6ef5-4420-8452-06bb255abb89",
+        "app": "2b1d820a-fc1a-409a-9393-86e660458c42",
         "auth": "37bead27-c941-40e6-87e8-832f01d1785a",
         "finance": "e0b258a2-e73f-45d2-912a-1cb6fd666e18"
       },
       "generated_sha256": {
-        "app": "936c2cb0659f79805df88e66bf10ea198c30a052dfbd22cf53dfe2bccc396cab",
+        "app": "926e750890a31a00d1c25acd7bca1451f9faaa10fc882e0b667745fcba656106",
         "auth": "c63ee09b2d98b6321e3ae7feae1066a9eec9160b49868d72fb84cb0471a0018d",
         "finance": "dff201100ed319f3b7d4d8cabf6826237be3a140e679f562cb982cec5bdd89b4"
       },
       "published_sha256": {
-        "app": "4bc7a1e827df84720c0848d9ee735d23985e3507c30f3330078d8f3acf690eb9",
+        "app": "72b8359b438bcaa744d592c67b6d163e99a1c712b4cf97e7ee7a1de07c2dbf8b",
         "auth": "46053d0b5f11ff4d738b4cf2cc1cc6afda7d21e233980b1e640f63728f32af2a",
         "finance": "b4195212972f5a9f0f8ff08c9504e983f8bd3ca3b3c42493cb7c88addb84de8b"
       },
@@ -213,38 +213,51 @@
       "flags_preserved": true,
       "cron_preserved": true,
       "auth_finance_versions_preserved": true,
-      "completed_at": 1793565632
+      "completed_at": 1793569206
     },
-    "incurred_production_cost_ledger_implemented": true,
-    "production_and_cost_confirmation": "OPERATOR_DECLARED_NOT_INVOICE_OR_PAYMENT_PROOF",
-    "quantities_and_identity": "HOMOGENEOUS_PHYSICAL_PIECES_OPERATOR_DECLARED_NOT_SAVED_SELLING_UNIT_QUANTITY",
-    "date_basis": "PRODUCED_DATE_BRT_NOT_SALES_OR_RECORDING_DATE",
-    "weekly_monthly_periods": "INDEPENDENT_OVERLAPPING_RECORDED_FACTS_NOT_ALL_STORE_COST",
-    "unit_cost": "IMMUTABLE_EXPLICIT_DECLARED_INCLUDING_ZERO_OR_UNKNOWN_NULL",
-    "saved_reference": "OPTIONAL_ADULT_ALL_INCLUSIVE_CURRENT_REFERENCE_EXPLICITLY_CONFIRMED_AS_HISTORICAL_SNAPSHOT",
-    "cancelled_or_returned_order_does_not_delete_record": true,
-    "normalized_active_reference_cas_idempotency_atomic_audit_and_linear_void_replacement": true,
-    "initial_live_manufacturing_facts_created_by_release": 0,
-    "inventory_valuation": {
-      "state": "UNKNOWN",
-      "amount_cents": null
+    "return_manufacturing_association_implemented": true,
+    "confidence": "OWNER_CONFIRMED_LOT_ASSOCIATION_NOT_SERIALIZED_UNIT_OR_PROVIDER_PROOF",
+    "original_quantities": {
+      "state": "UNAVAILABLE",
+      "expected_quantity": null,
+      "verified_quantity": null
     },
+    "capacity_basis": "DECLARED_PHYSICAL_RECEIPT_AND_MANUFACTURING_PIECES_GLOBAL_ACTIVE_SUMS",
+    "active_parent_pair_unique": true,
+    "matching": "CONFIRMED_NORMALIZED_IDENTITY_KNOWN_CATALOG_ORDER_CONFLICTS_BLOCKED_MANUAL_UNKNOWN_ORDER_EXPLICIT",
+    "date_basis": "MANUFACTURING_PRODUCED_DATE_NOT_AFTER_RECEIVED_BRT_DAY",
+    "physical_quality_only_inspection_allowed": true,
+    "parent_identity_or_void_requires_unlink": true,
+    "unrelated_parent_changes_do_not_invalidate_origin": true,
+    "cas_targeted_fingerprints_idempotency_and_atomic_audit": true,
+    "missing_parent_or_protection": "HISTORY_AND_HELD_QUANTITY_PRESERVED_UNLINK_ALLOWED_NEW_LINKS_BLOCKED",
+    "lazy_first_valid_link_batch": {
+      "tables": 4,
+      "indexes": 3,
+      "parent_guard_triggers": 4,
+      "statements": 16,
+      "first_failure_rolls_back_all_ddl": true
+    },
+    "rollback_limit": "D1_TRIGGERS_PERSIST_OLD_APP_PARENT_WRITES_BLOCK_WITH_503_UNLINK_REQUIRES_COMPATIBLE_CODE",
+    "allocated_inventory_value_cents": null,
     "financial_integration_implemented": false,
-    "incurred_and_eligible_sales_costs_automatically_summed": false,
+    "manufacturing_cost_copied_or_summed_as_recovered_value": false,
     "resale_reservation_consumption_implemented": false,
-    "historical_garment_consumables_decomposition": "NOT_CONFIRMED_NO_AUTOMATIC_ALL_INCLUSIVE_SPLIT",
-    "packaging_label_costs": "NOT_CONFIRMED",
+    "historical_consumables_decomposition": "NOT_CONFIRMED_NO_AUTOMATIC_ALL_INCLUSIVE_SPLIT",
+    "initial_real_facts_or_associations_created_by_release": 0,
     "limits": {
-      "source_candidates": 50,
-      "global_records_including_void": 1000,
-      "record_bytes": 8192,
-      "complete_ledger_bytes": 1048576
+      "links_including_void": 1000,
+      "link_bytes": 16384,
+      "ledger_bytes": 1048576,
+      "workspace_bytes": 4194304
     },
     "validation": {
       "node_failures": 0,
       "node_skips": 0,
       "cold_audit_d1_budget": "48_OF_50_UNCHANGED",
       "inline_owner_script_count": 15,
+      "new_node_tests": 44,
+      "actual_local_d1_integration": "MINIFLARE_WORKERD_13_SCENARIOS_PUBLIC_REGRESSION_TEST",
       "synthetic_chromium": [
         "normal",
         "minified",
@@ -252,23 +265,23 @@
         "1365px"
       ],
       "actual_saved_source_replay": {
-        "source": "SAVED_DTF_AND_PRODUCTION_COSTS",
-        "references_revision": 5,
-        "financial_fixture_publication_revision": 522,
+        "source": "SAVED_RETURN_CASE_AND_DTF_SAME_ORDER_HASH",
+        "return_publication_revision": 15953,
+        "financial_fixture_publication_revision": 553,
         "adapter_and_store_used": true,
         "widths": [
           320,
           1365
         ],
-        "all_records_simulated_local_only": true,
-        "financial_sources_and_response_unchanged": true,
+        "all_facts_simulated_local_only": true,
+        "financial_sources_and_rendered_response_unchanged": true,
         "provider_calls": 0,
         "remote_writes": 0
       },
-      "real_owner_manufacturing_flow": "NOT_OBSERVED_EXECUTOR_WAF_403"
+      "real_owner_association_flow": "NOT_OBSERVED_EXECUTOR_WAF_403"
     },
     "owner_reads": "SAVED_D1_ONLY_NO_PROVIDER_OR_DDL",
-    "internal_manufacturing_mutations": "OWNER_CONFIRMED_ONLY_LAZY_ADDITIVE_D1_SCHEMA",
+    "internal_association_mutations": "OWNER_CONFIRMED_ONLY_NO_EXTERNAL_STOCK_OR_FINANCIAL_AUTHORITY",
     "remote_financial_values_changed": false,
     "commercial_writes": "LOCKED",
     "external_stock_write_allowed": false,
@@ -316,25 +329,25 @@
     }
   ],
   "live_release": {
-    "pull_request": 99,
-    "status": "OFFICIAL_LIVE_M22B_INCURRED_PRODUCTION_LEDGER_VERIFIED",
+    "pull_request": 100,
+    "status": "OFFICIAL_LIVE_M22C_RETURN_MANUFACTURING_LINKS_VERIFIED",
     "flags_enabled": true,
     "configuration_preserved": true,
     "commercial_writes": false,
-    "docs": "docs/MLS_M22_INCURRED_PRODUCTION_2026_11_01.md",
+    "docs": "docs/MLS_M22_RETURN_MANUFACTURING_LINKS_2026_11_01.md",
     "deployment": {
       "versions": {
-        "app": "c33b1d03-6ef5-4420-8452-06bb255abb89",
+        "app": "2b1d820a-fc1a-409a-9393-86e660458c42",
         "auth": "37bead27-c941-40e6-87e8-832f01d1785a",
         "finance": "e0b258a2-e73f-45d2-912a-1cb6fd666e18"
       },
       "generated_sha256": {
-        "app": "936c2cb0659f79805df88e66bf10ea198c30a052dfbd22cf53dfe2bccc396cab",
+        "app": "926e750890a31a00d1c25acd7bca1451f9faaa10fc882e0b667745fcba656106",
         "auth": "c63ee09b2d98b6321e3ae7feae1066a9eec9160b49868d72fb84cb0471a0018d",
         "finance": "dff201100ed319f3b7d4d8cabf6826237be3a140e679f562cb982cec5bdd89b4"
       },
       "published_sha256": {
-        "app": "4bc7a1e827df84720c0848d9ee735d23985e3507c30f3330078d8f3acf690eb9",
+        "app": "72b8359b438bcaa744d592c67b6d163e99a1c712b4cf97e7ee7a1de07c2dbf8b",
         "auth": "46053d0b5f11ff4d738b4cf2cc1cc6afda7d21e233980b1e640f63728f32af2a",
         "finance": "b4195212972f5a9f0f8ff08c9504e983f8bd3ca3b3c42493cb7c88addb84de8b"
       },
@@ -344,9 +357,9 @@
       "flags_preserved": true,
       "cron_preserved": true,
       "auth_finance_versions_preserved": true,
-      "completed_at": 1793565632
+      "completed_at": 1793569206
     },
-    "note": "First M2.2b owner-declared manufacturing/cost history stage only. No payment proof, actual store production inferred, double summing, inventory valuation, reservation/resale or financial integration. Physical returns PR98 preserved."
+    "note": "Owner-confirmed lot association only. Original quantities, serialized-piece origin, stock valuation, reservation/resale and financial integration remain unverified/open. Lazy D1 parent protections persist across Worker rollback; compatible unlink code is required."
   },
   "visual_chart_refinement_20261031": {
     "id": "LIVE_VISUAL_CHART_INSPECTION_AND_COST_RULE_SCOPE",
@@ -2244,6 +2257,260 @@
     },
     "owner_reads": "SAVED_D1_ONLY_NO_PROVIDER_OR_DDL",
     "internal_manufacturing_mutations": "OWNER_CONFIRMED_ONLY_LAZY_ADDITIVE_D1_SCHEMA",
+    "remote_financial_values_changed": false,
+    "commercial_writes": "LOCKED",
+    "external_stock_write_allowed": false,
+    "finance_m2": "OPEN",
+    "m22": "PARTIAL",
+    "seller_centre_comparison": "NOT_COMPARED",
+    "bank_settlement": "UNVERIFIED",
+    "external_cloudflare_build_checks": {
+      "status": "FAILURE",
+      "cause": "UNCONFIRMED",
+      "historical_log_access": "HTTP_403_CLOUDFLARE_12004",
+      "controlled_live_publication": "THREE_WORKER_EXACT_BYTES_AND_CONFIGURATION_VERIFIED"
+    }
+  },
+  "previous_release_before_return_manufacturing_links": {
+    "id": "M22B_OWNER_CONFIRMED_INCURRED_PRODUCTION_LEDGER",
+    "status": "OFFICIAL_LIVE_M22B_INCURRED_PRODUCTION_LEDGER_VERIFIED",
+    "pull_request": 99,
+    "branch": "feature/m22-incurred-production-ledger-20261101",
+    "base_main": "07cf2b8e440f2f3b9c78cc29db3b0e7fb0f48b4f",
+    "code_commit": "51128b89e67f944ecf62bf55196dac293a3eecac",
+    "reviewed_head": "0749710ba9826d6256c2ae02223ed04458a7895f",
+    "ci_run": 41347493170,
+    "node_tests": 3099,
+    "python_tests": 67,
+    "docs": "docs/MLS_M22_INCURRED_PRODUCTION_2026_11_01.md",
+    "deployment": {
+      "versions": {
+        "app": "c33b1d03-6ef5-4420-8452-06bb255abb89",
+        "auth": "37bead27-c941-40e6-87e8-832f01d1785a",
+        "finance": "e0b258a2-e73f-45d2-912a-1cb6fd666e18"
+      },
+      "generated_sha256": {
+        "app": "936c2cb0659f79805df88e66bf10ea198c30a052dfbd22cf53dfe2bccc396cab",
+        "auth": "c63ee09b2d98b6321e3ae7feae1066a9eec9160b49868d72fb84cb0471a0018d",
+        "finance": "dff201100ed319f3b7d4d8cabf6826237be3a140e679f562cb982cec5bdd89b4"
+      },
+      "published_sha256": {
+        "app": "4bc7a1e827df84720c0848d9ee735d23985e3507c30f3330078d8f3acf690eb9",
+        "auth": "46053d0b5f11ff4d738b4cf2cc1cc6afda7d21e233980b1e640f63728f32af2a",
+        "finance": "b4195212972f5a9f0f8ff08c9504e983f8bd3ca3b3c42493cb7c88addb84de8b"
+      },
+      "exact_bytes_verified": true,
+      "configuration_preserved": true,
+      "domains_preserved": true,
+      "flags_preserved": true,
+      "cron_preserved": true,
+      "auth_finance_versions_preserved": true,
+      "completed_at": 1793565632
+    },
+    "incurred_production_cost_ledger_implemented": true,
+    "production_and_cost_confirmation": "OPERATOR_DECLARED_NOT_INVOICE_OR_PAYMENT_PROOF",
+    "quantities_and_identity": "HOMOGENEOUS_PHYSICAL_PIECES_OPERATOR_DECLARED_NOT_SAVED_SELLING_UNIT_QUANTITY",
+    "date_basis": "PRODUCED_DATE_BRT_NOT_SALES_OR_RECORDING_DATE",
+    "weekly_monthly_periods": "INDEPENDENT_OVERLAPPING_RECORDED_FACTS_NOT_ALL_STORE_COST",
+    "unit_cost": "IMMUTABLE_EXPLICIT_DECLARED_INCLUDING_ZERO_OR_UNKNOWN_NULL",
+    "saved_reference": "OPTIONAL_ADULT_ALL_INCLUSIVE_CURRENT_REFERENCE_EXPLICITLY_CONFIRMED_AS_HISTORICAL_SNAPSHOT",
+    "cancelled_or_returned_order_does_not_delete_record": true,
+    "normalized_active_reference_cas_idempotency_atomic_audit_and_linear_void_replacement": true,
+    "initial_live_manufacturing_facts_created_by_release": 0,
+    "inventory_valuation": {
+      "state": "UNKNOWN",
+      "amount_cents": null
+    },
+    "financial_integration_implemented": false,
+    "incurred_and_eligible_sales_costs_automatically_summed": false,
+    "resale_reservation_consumption_implemented": false,
+    "historical_garment_consumables_decomposition": "NOT_CONFIRMED_NO_AUTOMATIC_ALL_INCLUSIVE_SPLIT",
+    "packaging_label_costs": "NOT_CONFIRMED",
+    "limits": {
+      "source_candidates": 50,
+      "global_records_including_void": 1000,
+      "record_bytes": 8192,
+      "complete_ledger_bytes": 1048576
+    },
+    "validation": {
+      "node_failures": 0,
+      "node_skips": 0,
+      "cold_audit_d1_budget": "48_OF_50_UNCHANGED",
+      "inline_owner_script_count": 15,
+      "synthetic_chromium": [
+        "normal",
+        "minified",
+        "320px",
+        "1365px"
+      ],
+      "actual_saved_source_replay": {
+        "source": "SAVED_DTF_AND_PRODUCTION_COSTS",
+        "references_revision": 5,
+        "financial_fixture_publication_revision": 522,
+        "adapter_and_store_used": true,
+        "widths": [
+          320,
+          1365
+        ],
+        "all_records_simulated_local_only": true,
+        "financial_sources_and_response_unchanged": true,
+        "provider_calls": 0,
+        "remote_writes": 0
+      },
+      "real_owner_manufacturing_flow": "NOT_OBSERVED_EXECUTOR_WAF_403"
+    },
+    "owner_reads": "SAVED_D1_ONLY_NO_PROVIDER_OR_DDL",
+    "internal_manufacturing_mutations": "OWNER_CONFIRMED_ONLY_LAZY_ADDITIVE_D1_SCHEMA",
+    "remote_financial_values_changed": false,
+    "commercial_writes": "LOCKED",
+    "external_stock_write_allowed": false,
+    "finance_m2": "OPEN",
+    "m22": "PARTIAL",
+    "seller_centre_comparison": "NOT_COMPARED",
+    "bank_settlement": "UNVERIFIED",
+    "external_cloudflare_build_checks": {
+      "status": "FAILURE",
+      "cause": "UNCONFIRMED",
+      "historical_log_access": "HTTP_403_CLOUDFLARE_12004",
+      "controlled_live_publication": "THREE_WORKER_EXACT_BYTES_AND_CONFIGURATION_VERIFIED"
+    }
+  },
+  "previous_live_release_before_return_manufacturing_links": {
+    "pull_request": 99,
+    "status": "OFFICIAL_LIVE_M22B_INCURRED_PRODUCTION_LEDGER_VERIFIED",
+    "flags_enabled": true,
+    "configuration_preserved": true,
+    "commercial_writes": false,
+    "docs": "docs/MLS_M22_INCURRED_PRODUCTION_2026_11_01.md",
+    "deployment": {
+      "versions": {
+        "app": "c33b1d03-6ef5-4420-8452-06bb255abb89",
+        "auth": "37bead27-c941-40e6-87e8-832f01d1785a",
+        "finance": "e0b258a2-e73f-45d2-912a-1cb6fd666e18"
+      },
+      "generated_sha256": {
+        "app": "936c2cb0659f79805df88e66bf10ea198c30a052dfbd22cf53dfe2bccc396cab",
+        "auth": "c63ee09b2d98b6321e3ae7feae1066a9eec9160b49868d72fb84cb0471a0018d",
+        "finance": "dff201100ed319f3b7d4d8cabf6826237be3a140e679f562cb982cec5bdd89b4"
+      },
+      "published_sha256": {
+        "app": "4bc7a1e827df84720c0848d9ee735d23985e3507c30f3330078d8f3acf690eb9",
+        "auth": "46053d0b5f11ff4d738b4cf2cc1cc6afda7d21e233980b1e640f63728f32af2a",
+        "finance": "b4195212972f5a9f0f8ff08c9504e983f8bd3ca3b3c42493cb7c88addb84de8b"
+      },
+      "exact_bytes_verified": true,
+      "configuration_preserved": true,
+      "domains_preserved": true,
+      "flags_preserved": true,
+      "cron_preserved": true,
+      "auth_finance_versions_preserved": true,
+      "completed_at": 1793565632
+    },
+    "note": "First M2.2b owner-declared manufacturing/cost history stage only. No payment proof, actual store production inferred, double summing, inventory valuation, reservation/resale or financial integration. Physical returns PR98 preserved."
+  },
+  "return_manufacturing_links_2026_11_01": {
+    "id": "M22C_OWNER_CONFIRMED_RETURN_MANUFACTURING_LOT_ASSOCIATIONS",
+    "status": "OFFICIAL_LIVE_M22C_RETURN_MANUFACTURING_LINKS_VERIFIED",
+    "pull_request": 100,
+    "branch": "feature/m22-return-manufacturing-links-20261101",
+    "base_main": "59f42417d623f38add431cdbf42a414115781250",
+    "code_commit": "e288c3e6e8601696c0d117a4737b0d74dedcc1b2",
+    "reviewed_head": "05e8890757816cc3df546904451468e5f27d968d",
+    "ci_run": 41352590915,
+    "node_tests": 3143,
+    "python_tests": 67,
+    "docs": "docs/MLS_M22_RETURN_MANUFACTURING_LINKS_2026_11_01.md",
+    "deployment": {
+      "versions": {
+        "app": "2b1d820a-fc1a-409a-9393-86e660458c42",
+        "auth": "37bead27-c941-40e6-87e8-832f01d1785a",
+        "finance": "e0b258a2-e73f-45d2-912a-1cb6fd666e18"
+      },
+      "generated_sha256": {
+        "app": "926e750890a31a00d1c25acd7bca1451f9faaa10fc882e0b667745fcba656106",
+        "auth": "c63ee09b2d98b6321e3ae7feae1066a9eec9160b49868d72fb84cb0471a0018d",
+        "finance": "dff201100ed319f3b7d4d8cabf6826237be3a140e679f562cb982cec5bdd89b4"
+      },
+      "published_sha256": {
+        "app": "72b8359b438bcaa744d592c67b6d163e99a1c712b4cf97e7ee7a1de07c2dbf8b",
+        "auth": "46053d0b5f11ff4d738b4cf2cc1cc6afda7d21e233980b1e640f63728f32af2a",
+        "finance": "b4195212972f5a9f0f8ff08c9504e983f8bd3ca3b3c42493cb7c88addb84de8b"
+      },
+      "exact_bytes_verified": true,
+      "configuration_preserved": true,
+      "domains_preserved": true,
+      "flags_preserved": true,
+      "cron_preserved": true,
+      "auth_finance_versions_preserved": true,
+      "completed_at": 1793569206
+    },
+    "return_manufacturing_association_implemented": true,
+    "confidence": "OWNER_CONFIRMED_LOT_ASSOCIATION_NOT_SERIALIZED_UNIT_OR_PROVIDER_PROOF",
+    "original_quantities": {
+      "state": "UNAVAILABLE",
+      "expected_quantity": null,
+      "verified_quantity": null
+    },
+    "capacity_basis": "DECLARED_PHYSICAL_RECEIPT_AND_MANUFACTURING_PIECES_GLOBAL_ACTIVE_SUMS",
+    "active_parent_pair_unique": true,
+    "matching": "CONFIRMED_NORMALIZED_IDENTITY_KNOWN_CATALOG_ORDER_CONFLICTS_BLOCKED_MANUAL_UNKNOWN_ORDER_EXPLICIT",
+    "date_basis": "MANUFACTURING_PRODUCED_DATE_NOT_AFTER_RECEIVED_BRT_DAY",
+    "physical_quality_only_inspection_allowed": true,
+    "parent_identity_or_void_requires_unlink": true,
+    "unrelated_parent_changes_do_not_invalidate_origin": true,
+    "cas_targeted_fingerprints_idempotency_and_atomic_audit": true,
+    "missing_parent_or_protection": "HISTORY_AND_HELD_QUANTITY_PRESERVED_UNLINK_ALLOWED_NEW_LINKS_BLOCKED",
+    "lazy_first_valid_link_batch": {
+      "tables": 4,
+      "indexes": 3,
+      "parent_guard_triggers": 4,
+      "statements": 16,
+      "first_failure_rolls_back_all_ddl": true
+    },
+    "rollback_limit": "D1_TRIGGERS_PERSIST_OLD_APP_PARENT_WRITES_BLOCK_WITH_503_UNLINK_REQUIRES_COMPATIBLE_CODE",
+    "allocated_inventory_value_cents": null,
+    "financial_integration_implemented": false,
+    "manufacturing_cost_copied_or_summed_as_recovered_value": false,
+    "resale_reservation_consumption_implemented": false,
+    "historical_consumables_decomposition": "NOT_CONFIRMED_NO_AUTOMATIC_ALL_INCLUSIVE_SPLIT",
+    "initial_real_facts_or_associations_created_by_release": 0,
+    "limits": {
+      "links_including_void": 1000,
+      "link_bytes": 16384,
+      "ledger_bytes": 1048576,
+      "workspace_bytes": 4194304
+    },
+    "validation": {
+      "node_failures": 0,
+      "node_skips": 0,
+      "cold_audit_d1_budget": "48_OF_50_UNCHANGED",
+      "inline_owner_script_count": 15,
+      "new_node_tests": 44,
+      "actual_local_d1_integration": "MINIFLARE_WORKERD_13_SCENARIOS_PUBLIC_REGRESSION_TEST",
+      "synthetic_chromium": [
+        "normal",
+        "minified",
+        "320px",
+        "1365px"
+      ],
+      "actual_saved_source_replay": {
+        "source": "SAVED_RETURN_CASE_AND_DTF_SAME_ORDER_HASH",
+        "return_publication_revision": 15953,
+        "financial_fixture_publication_revision": 553,
+        "adapter_and_store_used": true,
+        "widths": [
+          320,
+          1365
+        ],
+        "all_facts_simulated_local_only": true,
+        "financial_sources_and_rendered_response_unchanged": true,
+        "provider_calls": 0,
+        "remote_writes": 0
+      },
+      "real_owner_association_flow": "NOT_OBSERVED_EXECUTOR_WAF_403"
+    },
+    "owner_reads": "SAVED_D1_ONLY_NO_PROVIDER_OR_DDL",
+    "internal_association_mutations": "OWNER_CONFIRMED_ONLY_NO_EXTERNAL_STOCK_OR_FINANCIAL_AUTHORITY",
     "remote_financial_values_changed": false,
     "commercial_writes": "LOCKED",
     "external_stock_write_allowed": false,
