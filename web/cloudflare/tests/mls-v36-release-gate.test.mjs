@@ -21,7 +21,8 @@ for(const minify of [false,true]){
   assert.doesNotMatch(html,/id="mlsListingFactory"|id="mlsLfBatchFiles"|id="mlsLfFiles"/);
   assert.equal(html.includes("const root=document.getElementById('mlsListingFactory')"),false);
   assert.equal(html.includes('.mls-lf-head'),false,'no editor CSS when disabled');
-  assert.equal(scriptCount(html),13,'V3.6 off must not ship the editor script');
+  assert.equal(scriptCount(html),14,'V3.6 off retains physical returns without shipping the editor script');
+  assert.equal([...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].filter(match=>match[1].includes('globalThis.brazaPhysicalReturns=')).length,1,'physical returns remains independent of the editor flag');
  });
  test('V3.6 exact owner opt-in ships draft editor and record search (minify='+minify+')',async()=>{
   const {html}=await compiledOwnerReportPage(minify,{ownerPreview:true});
@@ -33,7 +34,8 @@ for(const minify of [false,true]){
   assert.match(html,/id="mlsListingFactory"/);
   assert.match(html,/id="mlsLfBatchFiles"/);
   assert.match(html,/id="savedCatalog"/);
-  assert.equal(scriptCount(html),14,'draft-only editor is delivered only with exact opt-in');
+  assert.equal(scriptCount(html),15,'draft-only editor is delivered only with exact opt-in');
+  assert.equal([...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].filter(match=>match[1].includes('globalThis.brazaPhysicalReturns=')).length,1,'editor opt-in cannot duplicate the physical-return controller');
  });
 }
 

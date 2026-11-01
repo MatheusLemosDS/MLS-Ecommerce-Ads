@@ -38,6 +38,11 @@
     "web/cloudflare/tests/physical-returns-adversarial.test.mjs",
     "web/cloudflare/tests/physical-returns-workspace.test.mjs",
     "web/cloudflare/tests/physical-returns-client.test.mjs",
-    "web/cloudflare/tests/physical-returns-chrome.test.mjs"
+    "web/cloudflare/tests/physical-returns-chrome.test.mjs",
+    "web/cloudflare/tests/admin-bootstrap-compiled.test.mjs",
+    "web/cloudflare/tests/admin-startup-compiled.test.mjs",
+    "web/cloudflare/tests/mls-v36-listing-factory-integration.test.mjs",
+    "web/cloudflare/tests/mls-v36-release-gate.test.mjs",
+    "web/cloudflare/tests/m2-release-tracker-chrome.test.mjs"
   ]
 }
