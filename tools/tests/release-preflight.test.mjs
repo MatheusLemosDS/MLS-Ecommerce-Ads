@@ -155,7 +155,7 @@ test('a malformed candidate cannot weaken exact hashes, literal paths or commerc
 });
 
 test('the focused release does not inherit unrelated AI-storage or previous-candidate permissions',()=>{
- assert.equal(RELEASE_BASE_COMMIT,'78efb0c9ebfa866c28d7be79414cb5324dd2c669');
+ assert.equal(RELEASE_BASE_COMMIT,'9f1cf3b0e04b8a2d47c1b6e7f2075e2f0869c2a0');
  for(const baseCommit of ['2ab4c9d8baa3c25e5816bcca14b4a0973ea73d5a','8d66525bc3b96914412a9538d3ec84048ac78dbb']){
   const oldBase=good();oldBase.baseCommit=baseCommit;
   assert.ok(evaluateReleasePreflight(oldBase).failures.includes('RELEASE_BASE_MISMATCH'));

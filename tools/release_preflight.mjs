@@ -30,9 +30,9 @@ export const RELEASE_BASE_COMMIT=approvedCandidate.base_commit;
 export const RELEASE_EXPECTED_SHA=Object.freeze({...approvedCandidate.expected_hashes});
 export const RELEASE_EXPECTED_LIVE_FLAGS=Object.freeze({...validFlags});
 export const RELEASE_ALLOWED_FILES=Object.freeze([...approvedCandidate.allowed_files]);
-// This documentation audit preserves the exact PR96 Worker hashes. Only the
-// listed documentation and candidate metadata are authorized; no Worker source,
-// protected Finance/Auth code or deployment configuration may change.
+// M2.2 physical declarations are App-only. No Finance/Auth source or deployment
+// configuration is authorized; existing financial rules and Worker identities
+// remain preserved while the internal physical ledger stays unvalued.
 export const RELEASE_APPROVED_PROTECTED_FILES=Object.freeze([]);
 
 
