@@ -1,5 +1,33 @@
-# Codex — fila executável do MLS AI Sales (somente planejamento)
+# Codex — plano histórico de execução do MLS AI Sales
 **Criado:** 30/10/2026 · **Referência detalhada:** docs/MLS_AI_SALES_MVP_CODEX_2026_10_30.md
+
+## Estado atual — 01/11/2026
+
+A [PR #86](MLS_LIVE_ROADMAP_RELEASE_2026_10_30.md) já reconciliou e publicou
+a base de AI Sales, gráficos, V3.6 e Listing Factory na versão oficial.
+Estão disponíveis os planejadores, o estúdio com render local Node/FFmpeg,
+as cinco abas owner-only, CRM/propostas assistidos e persistência de rascunhos.
+O último App verificado é `27356953`, pela
+[PR #96](MLS_DAILY_MARGIN_ROAS_2026_11_01.md), com Auth/Finance preservados.
+
+Não reiniciar S0–S4 do zero nem mesclar novamente as PRs históricas de
+preparação. Usar o [roadmap](ROADMAP_MLS_COMMERCE_OS.md) e o
+[checkpoint](MLS_COMMERCE_OS_CHECKPOINT.json) para selecionar o próximo
+incremento e comparar o contrato já implementado com a evidência exigida.
+
+Publicação da base não significa integração comercial concluída: aceite real
+do proprietário, direitos e bytes autorizados da mídia, estoque verificado,
+grants oficiais por loja/canal e provedores/orçamento para LLM ou voz neural
+continuam gates separados. FFmpeg roda fora do Worker; render em nuvem não foi
+entregue por essa integração. APIs de postagem/afiliados e escritas comerciais
+continuam bloqueadas. M2 e comparação Seller Centre/banco permanecem abertas.
+
+## Plano preservado de 30/10/2026
+
+As prioridades, restrições de branch e o prompt abaixo são o registro anterior
+à integração da PR #86. Não são instruções atuais para refazer a preparação ou
+presumir que os módulos ainda estão ausentes. Evidências e exemplos históricos
+permanecem preservados.
 
 ## Pesquisa de repositórios pronta para reutilização — 30/10/2026
 
@@ -11,7 +39,7 @@
 
 O proprietário confirmou **Shopee e TikTok Shop ativos** e solicitou um **MVP integrado ao MLS Commerce OS** com geração de vídeos e gestão de afiliados. Não foi confirmado acesso às APIs. **Não confunda “loja ativa” com “API autorizada”.**
 
-O projeto atual NÃO está pronto para inserir o módulo diretamente na interface: PR #76 é release visual draft e PR #79/issue #80 são trabalho ativo de fidelidade visual. A PR #79 está baseada na #76. O motor de gráficos da #79 é puro e ainda não está integrado. Não sobrepor as mudanças atuais do Codex.
+Na criação deste plano, o projeto ainda não estava pronto para inserir o módulo diretamente na interface: PR #76 era release visual draft e PR #79/issue #80 eram trabalho ativo de fidelidade visual. A PR #79 estava baseada na #76; o motor de gráficos era puro e ainda não estava integrado. Esse bloqueio de preparação foi superado pela integração descrita no estado atual acima.
 
 - Repo: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads
 - PR #76: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/76
@@ -90,4 +118,4 @@ O projeto atual NÃO está pronto para inserir o módulo diretamente na interfac
 
 **O que não solicitar ao proprietário prematuramente:** tokens, senhas, cópias de cookies, IDs de compradores, acesso administrativo amplo, decisão de comissões hipotéticas ou verba Ads. A primeira fase pode ser feita com contratos e fixtures sintéticas.
 
-**Documentação, não software entregue:** este arquivo organiza a execução; a implementação real S0–S4 ainda está pendente.
+**Estado na criação do plano:** este arquivo organizava a execução; a implementação S0–S4 ainda estava pendente naquela etapa. Consultar o estado atual acima e o registro da PR #86 para distinguir a base publicada dos contratos e aceites externos ainda bloqueados.

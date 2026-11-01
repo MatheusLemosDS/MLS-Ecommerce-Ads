@@ -306,17 +306,36 @@
     }
   ],
   "live_release": {
-    "pull_request": 94,
-    "status": "OFFICIAL_LIVE_PREVIOUS_MONTH_REPORTS_VERIFIED_CLOSEOUT_OPEN",
-    "versions": {
-      "app": "1a6ca4c3-69ab-46c4-adff-a4b42d4c4c1f",
-      "auth": "37bead27-c941-40e6-87e8-832f01d1785a",
-      "finance": "e0b258a2-e73f-45d2-912a-1cb6fd666e18"
-    },
+    "pull_request": 96,
+    "status": "OFFICIAL_LIVE_MARGIN_PARTIAL_ROAS_FAULT_ISOLATION_VERIFIED",
     "flags_enabled": true,
     "configuration_preserved": true,
     "commercial_writes": false,
-    "docs": "docs/MLS_M2_PREVIOUS_MONTH_RETURNS_2026_11_01.md"
+    "docs": "docs/MLS_DAILY_MARGIN_ROAS_2026_11_01.md",
+    "deployment": {
+      "versions": {
+        "app": "27356953-886a-4b1f-95b9-abf3c7c724f7",
+        "auth": "37bead27-c941-40e6-87e8-832f01d1785a",
+        "finance": "e0b258a2-e73f-45d2-912a-1cb6fd666e18"
+      },
+      "generated_sha256": {
+        "app": "8cbbf7c123c4ac2a3dd128198d90cc3ad9d04e1a53a66719419ac1d60c27e7a6",
+        "auth": "c63ee09b2d98b6321e3ae7feae1066a9eec9160b49868d72fb84cb0471a0018d",
+        "finance": "dff201100ed319f3b7d4d8cabf6826237be3a140e679f562cb982cec5bdd89b4"
+      },
+      "published_sha256": {
+        "app": "a38b5bd2988149118fbb0059f645093483d75244aee20804103f26f72c8413df",
+        "auth": "46053d0b5f11ff4d738b4cf2cc1cc6afda7d21e233980b1e640f63728f32af2a",
+        "finance": "b4195212972f5a9f0f8ff08c9504e983f8bd3ca3b3c42493cb7c88addb84de8b"
+      },
+      "exact_bytes_verified": true,
+      "configuration_preserved": true,
+      "domains_preserved": true,
+      "flags_preserved": true,
+      "cron_preserved": true,
+      "auth_finance_versions_preserved": true
+    },
+    "note": "Most recent runtime release; documentation audit introduces no new Worker publication"
   },
   "visual_chart_refinement_20261031": {
     "id": "LIVE_VISUAL_CHART_INSPECTION_AND_COST_RULE_SCOPE",
@@ -1703,5 +1722,46 @@
       "historical_log_access": "HTTP_403_CLOUDFLARE_12004",
       "controlled_live_publication": "EXACT_BYTES_AND_LOCAL_REAL_SNAPSHOT_FAULT_REPLAY_VERIFIED"
     }
-  }
+  },
+  "documentation_audit_2026_11_01": {
+    "schema": "mls_returns_reuse_roadmap_audit_v1",
+    "audited_base_commit": "78efb0c9ebfa866c28d7be79414cb5324dd2c669",
+    "date": "2026-11-01",
+    "report": "docs/MLS_RETURNS_REUSE_ROADMAP_AUDIT_2026_11_01.md",
+    "inventory": "docs/MLS_RETURNS_REUSE_DOC_AUDIT_2026_11_01.inventory.json",
+    "files": 232,
+    "text_documents": 120,
+    "markdown_scanned": 98,
+    "json_parsed": 29,
+    "historical_tools_not_executed": 5,
+    "visual_assets_inventory_only": 78,
+    "existing_local_links_checked": 217,
+    "broken_existing_local_links": 0,
+    "runtime_changed": false,
+    "returned_stock_implemented": false,
+    "incurred_production_cost_ledger_implemented": false,
+    "resale_allocation_implemented": false,
+    "next_increment": "M2.2_INTERNAL_PHYSICAL_RETURNS_AND_INCURRED_COST_LEDGER",
+    "valuation_without_evidence": "UNKNOWN",
+    "physical_receipt_requires_confirmation": true,
+    "financial_adjustment_change": "NOT_IMPLEMENTED_BY_THIS_AUDIT",
+    "commercial_writes": "LOCKED",
+    "finance_m2": "OPEN",
+    "seller_centre_comparison": "NOT_COMPARED",
+    "bank_settlement": "UNVERIFIED"
+  },
+  "previous_live_release_before_returns_reuse_audit": {
+    "pull_request": 94,
+    "status": "OFFICIAL_LIVE_PREVIOUS_MONTH_REPORTS_VERIFIED_CLOSEOUT_OPEN",
+    "versions": {
+      "app": "1a6ca4c3-69ab-46c4-adff-a4b42d4c4c1f",
+      "auth": "37bead27-c941-40e6-87e8-832f01d1785a",
+      "finance": "e0b258a2-e73f-45d2-912a-1cb6fd666e18"
+    },
+    "flags_enabled": true,
+    "configuration_preserved": true,
+    "commercial_writes": false,
+    "docs": "docs/MLS_M2_PREVIOUS_MONTH_RETURNS_2026_11_01.md"
+  },
+  "historical_mission_phase_context": "phase0..phase6 preserve the 2026-10-30 preparation snapshot; they are not M0..M9. current_release/live_release and canonical roadmap carry subsequent delivery evidence. M2 and bank gates remain open."
 }

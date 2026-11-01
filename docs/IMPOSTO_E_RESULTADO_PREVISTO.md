@@ -1,4 +1,17 @@
-# Imposto de 2% e resultado após custos conhecidos
+# Imposto de 2% e resultado após custos conhecidos — histórico
+
+**Política configurada atualmente nesta loja:** o operador declarou regime MEI
+e DAS de **R$ 86,05 por mês de competência em 2026**, aplicado uma vez no mês.
+Esse é o valor declarado para esta conta/ano, não uma alíquota ou valor legal
+universal. Outra competência anual exige sua própria declaração. A estimativa
+anterior de 2% foi substituída; a conta atual está em
+[MEI e resultado automático](MEI_E_RESULTADO_AUTOMATICO.md) e
+[Conferência financeira](CONFERENCIA_FINANCEIRA.md).
+
+## Registro original da estimativa anterior
+
+O texto, a confirmação e os exemplos abaixo preservam a implementação antiga
+de 2%. Não aplicar essa política ao cálculo atual nem deduzi-la junto do DAS.
 
 A associação do imposto à lista financeira e sua ordenação estão em
 [Imposto por produto e ordenação](IMPOSTO_POR_PRODUTO_E_ORDENACAO.md).
