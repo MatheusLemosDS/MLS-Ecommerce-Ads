@@ -94,7 +94,7 @@ Não há escrita financeira, em Finance/Auth, DTF, regras de custo, reserva, rev
 
 ## Validação e publicação
 
-A suíte completa local e o CI do head exato passaram com **3.143 testes Node e 67 Python**, sem falhas ou skips. Há **44 testes Node novos**, incluindo a regressão pública workerd/Miniflare D1 com **13 cenários**. O App gerado final, normal/minificado, foi exercitado em **320 e 1365 px** com fonte operacional salva e fatos internos exclusivamente simulados.
+A suíte completa local e o CI do head exato passaram com **3.143 testes Node e 67 Python**, sem falhas ou skips. Há **44 testes Node novos**, incluindo a regressão pública workerd/Miniflare D1 com **13 cenários**. As versões normal/minificada do App gerado foram exercitadas em **320 e 1365 px** com cenários sintéticos. Separadamente, o replay da fonte operacional salva passou nas duas larguras, com fatos internos exclusivamente simulados.
 
 | Evidência | Estado desta primeira etapa |
 | --- | --- |
@@ -117,7 +117,7 @@ As suítes [núcleo](../web/cloudflare/tests/return-manufacturing-links.test.mjs
 
 ## QA com fonte salva real e fatos simulados
 
-A cópia local da fonte operacional selecionada continha Returns PROCESSING e contexto DTF TO_RETURN com o mesmo hash de pedido. Essa correspondência contextual não comprova quantidade original, fabricação ou recebimento físico. O exercício usou o App final gerado `926e750890a31a00d1c25acd7bca1451f9faaa10fc882e0b667745fcba656106`, normal/minificado, em 320/1365 px.
+A cópia local da fonte operacional selecionada continha Returns PROCESSING e contexto DTF TO_RETURN com o mesmo hash de pedido. Essa correspondência contextual não comprova quantidade original, fabricação ou recebimento físico. O exercício usou o App final gerado `926e750890a31a00d1c25acd7bca1451f9faaa10fc882e0b667745fcba656106`, em 320/1365 px.
 
 Nos fatos **SIMULADOS LOCALMENTE**, foram declaradas três peças no recebimento, três no registro de fabricação e uma associação de duas peças. A reinspeção de qualidade permaneceu permitida; alterações protegidas dos pais retornaram 409 com estado/auditoria preservados. Desvincular liberou a quantidade, e substituições não receberam vínculo automaticamente. As quatro tabelas financeiras observadas, DTF/custos salvos e DTO financeiro v4/JSON renderizado ficaram idênticos antes/depois.
 
