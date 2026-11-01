@@ -5,19 +5,21 @@ App, Auth e Financeiro. Cada Worker tem build e publicação próprios. A conex�
 financeira e as leituras reais foram verificadas; isso não comprova liquidação
 bancária nem encerra a conciliação M2.
 
-**Última release verificada — PR #98, 01/11/2026:** App
-`2157c238-cc55-42ae-9521-7f52951ebd88`, com controle interno de recebimento
-e inspeção de devoluções: entregas parciais, quarentena, classificação e
-correções auditadas. Auth `37bead27` e Finance `e0b258a2` foram preservados.
+**Última release verificada — PR #99, 01/11/2026:** App
+`c33b1d03-6ef5-4420-8452-06bb255abb89`, com registro histórico de produção
+realizada por peça ou lote homogêneo, data declarada e custo unitário congelado
+ou desconhecido. Semana e mês usam a data da produção em Brasília; cancelamentos
+não apagam o registro. Auth `37bead27` e Finance `e0b258a2` foram preservados.
 O SHA-256 do App gerado é
-`20d0ca1e46e6cef5d374b84cce2231994ced89a2aeb289f8c4b7223a3cf14ca6`;
+`936c2cb0659f79805df88e66bf10ea198c30a052dfbd22cf53dfe2bccc396cab`;
 bytes publicados, versões e configuração foram conferidos separadamente no
-[registro da release](docs/MLS_M22_PHYSICAL_RETURNS_2026_11_01.md). Os testes passaram: 3.056 Node e
+[registro da release](docs/MLS_M22_INCURRED_PRODUCTION_2026_11_01.md). Os testes passaram: 3.099 Node e
 67 Python, incluindo Chromium normal/minificado em 320/1365 px.
 
-Recebimentos e identidade são declarados pelo operador, sem inferência pelo
-status da Shopee. Avaliação, produção incorrida, reserva e consumo na revenda
-ainda não estão integrados; esta etapa não altera o lucro ou estoque externo.
+Quantidade e custo são confirmados pelo operador; contexto DTF e referências
+atuais não comprovam fabricação ou pagamento. Os controles internos PR98/99
+permanecem separados do lucro. Valoração, consumíveis históricos, reserva e
+consumo na revenda ainda dependem das próximas etapas, sem dupla fabricação.
 
 As despesas de novembro ainda precisam ser declaradas. O saldo e a margem
 parciais não substituem o resultado líquido completo. Seller Centre e banco
