@@ -130,31 +130,70 @@ export async function readBusinessReconciliationMoney(env,input,{now=()=>Date.no
  if(!result)fail('BUSINESS_RECONCILIATION_RESULT_INVALID');return result;
 }
 
-export async function runBusinessReconciliation(env,source,input,{now=()=>Date.now(),canRun=async()=>true}={}){
+export async function runBusinessReconciliation(env,source,input,{now=()=>Date.now(),canRun=async()=>true,publicationGuard=null}={}){
  const started=clock(now),month=selection(input,started);if(typeof source!=='function'||typeof canRun!=='function')fail('BUSINESS_RECONCILIATION_CONFIGURATION');
+ // The owner input and published DTOs remain unchanged. Only a leased internal
+ // selector supplies this optional guard for a current or prior-month target.
+ const guardKeys=['calendar_month','through_month','publication_revision','publication_write_token','publication_payload','audit_revision','audit_token','background_revision','background_token'];
+ const tokenValid=value=>typeof value==='string'&&/^[a-f0-9-]{36}$/.test(value);
+ const leasePair=(revision,token)=>revision===null&&token===null||integer(revision,1,2147483646)&&tokenValid(token);
+ const localMonth=stamp=>new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date(stamp*1000)).slice(0,7);
+ const previousMonth=current=>{const date=new Date(current+'-01T12:00:00Z');date.setUTCMonth(date.getUTCMonth()-1);return date.toISOString().slice(0,7);};
+ if(publicationGuard!==null&&(!exact(publicationGuard,guardKeys)||publicationGuard.calendar_month!==month||publicationGuard.through_month!==localMonth(started)||![publicationGuard.through_month,previousMonth(publicationGuard.through_month)].includes(month)||!integer(publicationGuard.publication_revision,1,2147483647)||!tokenValid(publicationGuard.publication_write_token)||typeof publicationGuard.publication_payload!=='string'||encoder.encode(publicationGuard.publication_payload).byteLength<1||encoder.encode(publicationGuard.publication_payload).byteLength>8192||!leasePair(publicationGuard.audit_revision,publicationGuard.audit_token)||!leasePair(publicationGuard.background_revision,publicationGuard.background_token)))fail('BUSINESS_RECONCILIATION_CONFIGURATION');
+ let lastObservedStamp=started,clockRegressed=false;
+ const observedClock=()=>{const value=clock(now);if(publicationGuard){if(value<lastObservedStamp)clockRegressed=true;lastObservedStamp=Math.max(lastObservedStamp,value);}return value;};
+ const fresh=()=>{const value=observedClock();return !publicationGuard||!clockRegressed&&value>=started&&value<started+90&&localMonth(value)===publicationGuard.through_month;};
+ const guardAt=stamp=>{
+  if(!publicationGuard)return {sql:'1',args:[]};
+  let sql='EXISTS(SELECT 1 FROM business_sync_state WHERE id=1 AND enabled=1) AND EXISTS(SELECT 1 FROM business_month_publications WHERE month=? AND source_revision=? AND write_token=? AND payload=?)';
+  const args=[month,publicationGuard.publication_revision,publicationGuard.publication_write_token,publicationGuard.publication_payload];
+  if(publicationGuard.audit_revision!==null){sql+=' AND EXISTS(SELECT 1 FROM financial_audit_turns WHERE month=? AND revision=? AND lease_token=? AND lease_until>?)';args.push(publicationGuard.through_month,publicationGuard.audit_revision,publicationGuard.audit_token,stamp);}
+  if(publicationGuard.background_revision!==null){sql+=' AND EXISTS(SELECT 1 FROM background_collection_lane_state WHERE id=1 AND revision=? AND lease_token=? AND lease_until>?)';args.push(publicationGuard.background_revision,publicationGuard.background_token,stamp);}
+  return {sql,args};
+ };
+ let ownLease=null;
+ const runnable=async()=>{
+  if(!await canRun()||!fresh())return false;if(!publicationGuard)return true;
+  const stamp=observedClock(),guard=guardAt(stamp),own=ownLease?' AND EXISTS(SELECT 1 FROM business_reconciliation_leases WHERE month=? AND lease_token=? AND lease_until>?)':'',args=[...guard.args,...(ownLease?[month,ownLease,stamp]:[])];
+  const row=await env.ADMIN_DB.prepare('SELECT CASE WHEN '+guard.sql+own+' THEN 1 ELSE 0 END AS allowed').bind(...args).first();return row?.allowed===1&&fresh();
+ };
+ const fullHistorical=published=>{
+  if(!publicationGuard||month===publicationGuard.through_month)return true;
+  const final=new Date(publicationGuard.through_month+'-01T12:00:00Z');final.setUTCDate(0);if(published?.payload.end_date!==final.toISOString().slice(0,10))return false;
+  const formatter=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'});
+  const midnight=day=>{const target=Date.parse(day+'T00:00:00Z')/1000;let low=target-18*3600,high=target+18*3600;while(low<high){const middle=Math.floor((low+high)/2);if(formatter.format(new Date(middle*1000))<day)low=middle+1;else high=middle;}return formatter.format(new Date(low*1000))===day?low:null;};
+  return published.payload.slots.every(slot=>{const next=new Date(Date.parse(slot.end_date+'T12:00:00Z')+86400000).toISOString().slice(0,10),end=midnight(next);return end!==null&&integer(slot.frame.cutoff_at,end-1);});
+ };
+ const snapshotMatches=published=>!publicationGuard||published?.publication.source_revision===publicationGuard.publication_revision&&published.row.payload===publicationGuard.publication_payload;
  const initial=await snapshot(env,month,started,()=>started*1000),result=(status,reads=0,repeat=false)=>({schema:'business_reconciliation_work_v1',month,status,source_reads:reads,repeat});
- if(!await canRun())return result('PAUSED');if(!initial.sources.length)return result('NO_PUBLICATION');
+ if(!await runnable())return result('PAUSED');if(!initial.sources.length||!fullHistorical(initial.published))return result('NO_PUBLICATION');if(!snapshotMatches(initial.published))return result('PAUSED');
  let selected=initial.sources.filter(item=>{const attempt=initial.attempts.find(row=>row.run_id===item.run_id);return !attempt||attempt.next_attempt_at<=started;}).sort((a,b)=>(initial.attempts.find(row=>row.run_id===a.run_id)?.checked_at??0)-(initial.attempts.find(row=>row.run_id===b.run_id)?.checked_at??0))[0];
  if(!selected)return result('RETRY_WAIT');
- const token=crypto.randomUUID(),db=initial.db,lease=await db.prepare('INSERT INTO business_reconciliation_leases(month,lease_token,lease_until) VALUES(?,?,?) ON CONFLICT(month) DO UPDATE SET lease_token=excluded.lease_token,lease_until=excluded.lease_until WHERE business_reconciliation_leases.lease_until<=?').bind(month,token,started+90,started).run();if(lease?.meta?.changes!==1)return result('LEASED');
+ const token=crypto.randomUUID(),db=initial.db,claimGuard=guardAt(observedClock()),lease=await db.prepare('INSERT INTO business_reconciliation_leases(month,lease_token,lease_until) '+(publicationGuard?'SELECT ?,?,? WHERE '+claimGuard.sql:'VALUES(?,?,?)')+' ON CONFLICT(month) DO UPDATE SET lease_token=excluded.lease_token,lease_until=excluded.lease_until WHERE business_reconciliation_leases.lease_until<=?').bind(month,token,started+90,...claimGuard.args,started).run();if(lease?.meta?.changes!==1)return result('LEASED');ownLease=token;
  let reads=0;
  try{
-  if(!await canRun())return result('PAUSED');
+  // No provider can run before the post-snapshot SQL check below. Checking
+  // policy/clock here avoids repeating the same publication/lease SELECT.
+  if(publicationGuard?(!await canRun()||!fresh()):!await runnable())return result('PAUSED');
   // Another eligible invocation may have finished between our first read and
   // this claim. Re-evaluate due work under the lease instead of duplicating it.
-  const current=await snapshot(env,month,clock(now),now);
-  selected=current.sources.filter(item=>{const attempt=current.attempts.find(row=>row.run_id===item.run_id);return !attempt||attempt.next_attempt_at<=clock(now);}).sort((a,b)=>(current.attempts.find(row=>row.run_id===a.run_id)?.checked_at??0)-(current.attempts.find(row=>row.run_id===b.run_id)?.checked_at??0))[0];
+  const current=await snapshot(env,month,observedClock(),now);
+  if(publicationGuard&&(!snapshotMatches(current.published)||!fullHistorical(current.published)||!fresh()))return result('PAUSED');
+  selected=current.sources.filter(item=>{const attempt=current.attempts.find(row=>row.run_id===item.run_id);return !attempt||attempt.next_attempt_at<=observedClock();}).sort((a,b)=>(current.attempts.find(row=>row.run_id===a.run_id)?.checked_at??0)-(current.attempts.find(row=>row.run_id===b.run_id)?.checked_at??0))[0];
   if(!selected)return result(current.sources.length?'RETRY_WAIT':'NO_PUBLICATION');
   // The claim is local; only the leased scheduler may send this one bounded
   // private step. Browser observation never calls this function.
+  if(publicationGuard&&!await runnable())return result('PAUSED');
   let raw,error;try{reads++;raw=await source(env,{operation:'step',run_id:selected.run_id});}catch(value){error=value;}
-  const finished=clock(now);if(!await canRun())return result('PAUSED',reads);
+  const finished=observedClock();if(!await runnable())return result('PAUSED',reads);
   const evidence=projectReconciliationMoneyFrame(raw,projectReconciliationFrame,projectReconciliationEvidenceFrame)??projectReconciliationEvidenceFrame(raw,projectReconciliationFrame),frame=evidence?.report??projectReconciliationFrame(raw);let code=null;
   if(!frame){const diagnostic=Object.getOwnPropertyDescriptor(Object.getOwnPropertyDescriptor(raw??{},'diagnostic')?.value??{},'code')?.value??Object.getOwnPropertyDescriptor(error??{},'code')?.value;code=codes.includes(diagnostic)?diagnostic:'FINANCE_RECONCILIATION_UNAVAILABLE';}
   else if(!publishedReportMatches(frame,selected,current.published)||frame.checked_at>finished+60)code='FINANCE_RECONCILIATION_SCOPE_MISMATCH';
-  const valid=code===null,stamp=valid?Math.max(finished,frame.checked_at):finished,permission=valid&&frame.returns?.permission==='DENIED',pendingCases=valid&&frame.returns?.pending_count>0&&!permission,initialDetails=pendingCases&&frame.cases.some(row=>row.checked_at===null&&row.diagnostic==='DETAILS_PENDING'),next=stamp+(permission?21600:!valid?300:initialDetails?60:pendingCases?300:900),guard='EXISTS(SELECT 1 FROM business_reconciliation_leases WHERE month=? AND lease_token=? AND lease_until>?)',args=[month,token,finished],writes=[];
+  const commitAt=publicationGuard?observedClock():finished;if(publicationGuard&&!fresh())return result('PAUSED',reads);
+  const valid=code===null,stamp=valid?Math.max(finished,frame.checked_at):finished,permission=valid&&frame.returns?.permission==='DENIED',pendingCases=valid&&frame.returns?.pending_count>0&&!permission,initialDetails=pendingCases&&frame.cases.some(row=>row.checked_at===null&&row.diagnostic==='DETAILS_PENDING'),next=stamp+(permission?21600:!valid?300:initialDetails?60:pendingCases?300:900),commitGuard=guardAt(commitAt),guard='EXISTS(SELECT 1 FROM business_reconciliation_leases WHERE month=? AND lease_token=? AND lease_until>?)'+(publicationGuard?' AND '+commitGuard.sql:''),args=[month,token,commitAt,...commitGuard.args],writes=[];
   if(valid){const payload=JSON.stringify(evidence??frame);if(encoder.encode(payload).byteLength>1048576)fail('BUSINESS_RECONCILIATION_RESPONSE_LIMIT');writes.push(db.prepare('INSERT INTO business_reconciliation_reports(run_id,source_revision,start_date,end_date,payload,checked_at) SELECT ?,?,?,?,?,? WHERE '+guard+' ON CONFLICT(run_id) DO UPDATE SET source_revision=excluded.source_revision,start_date=excluded.start_date,end_date=excluded.end_date,payload=excluded.payload,checked_at=excluded.checked_at WHERE business_reconciliation_reports.source_revision=excluded.source_revision AND business_reconciliation_reports.checked_at<=excluded.checked_at').bind(selected.run_id,selected.source_revision,selected.start_date,selected.end_date,payload,frame.checked_at,...args));}
   writes.push(db.prepare('INSERT INTO business_reconciliation_attempts(run_id,source_revision,checked_at,status,code,next_attempt_at) SELECT ?,?,?,?,?,? WHERE '+guard+' ON CONFLICT(run_id) DO UPDATE SET source_revision=excluded.source_revision,checked_at=excluded.checked_at,status=excluded.status,code=excluded.code,next_attempt_at=excluded.next_attempt_at WHERE business_reconciliation_attempts.checked_at<=excluded.checked_at').bind(selected.run_id,selected.source_revision,stamp,valid?'SUCCESS':'UNAVAILABLE',code,next,...args));
+  if(publicationGuard&&!fresh())return result('PAUSED',reads);
   const saved=await db.batch(writes);if(saved.at(-1)?.meta?.changes!==1)return result('LEASED',reads);const otherDue=current.sources.some(item=>item.run_id!==selected.run_id&&(!current.attempts.find(row=>row.run_id===item.run_id)||current.attempts.find(row=>row.run_id===item.run_id).next_attempt_at<=finished));return result(valid?'CHECKED':'UNAVAILABLE',reads,valid&&(otherDue||initialDetails));
  }finally{await db.prepare('DELETE FROM business_reconciliation_leases WHERE month=? AND lease_token=?').bind(month,token).run();}
 }

@@ -30,8 +30,8 @@
     "merge_commit": "9c418fd3010f46957d1ce52345baacd76041c788"
   },
   "current_phase": "M2_FINANCE_RETURNS_RECONCILIATION",
-  "working_branch": "feature/m2-pending-pagination-20261101",
-  "current_status": "OFFICIAL_LIVE_PENDING_TRAVERSAL_VERIFIED_M2_CLOSEOUT_OPEN",
+  "working_branch": "feature/m2-previous-month-returns-20261101",
+  "current_status": "OFFICIAL_LIVE_PREVIOUS_MONTH_REPORTS_VERIFIED_CLOSEOUT_OPEN",
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
     "Repasse-base, ajuste, repasse após ajuste e liberação exibidos sem dupla dedução",
@@ -111,10 +111,10 @@
     }
   },
   "next_actions": [
-    "Resume current/previous-month Returns automatically after rollover, fenced to the exact visible publication and retaining source-missing status until the original Finance evidence is restored",
-    "Confirm the full closed-month release calendar and compare the same cutoff against Seller Centre and bank evidence",
-    "Observe subsequent Pending refreshes and investigate any conflict/unknown amount without replacing missing evidence with zero",
-    "Continue validated roadmap increments on official Live, preserving source/config checks and commercial-write gates"
+    "Monitor the seven review-order situations and any new Returns cases; the observed eighteen details are checked with none pending, while refund outcomes and bank settlement remain unverified",
+    "Refresh the exact-publication coverage cue and resume the existing October release calendar (2/5 windows), then reconcile against the same paid cohort",
+    "Compare the same cutoff with Seller Centre and bank evidence before declaring closure or realized profit",
+    "Continue validated roadmap increments on official Live, preserving exact source/config checks and commercial-write gates"
   ],
   "m0_followup": [
     "Conferir visual autenticado em desktop e celular durante M1; corrigir apenas branding/layout sem renomear infraestrutura"
@@ -123,95 +123,207 @@
     "Mission Control M1.1 (opção 3) integrado com 7 painéis independentes; conferir visual autenticado desktop/celular e retorno às telas antigas"
   ],
   "latest_increment": {
-    "id": "M2_DURABLE_PENDING_PAGINATION_AND_LOCAL_BROWSING",
-    "status": "OFFICIAL_LIVE_PENDING_TRAVERSAL_VERIFIED_M2_CLOSEOUT_OPEN",
-    "pull_request": 93,
-    "code_commit": "61094eace3e75b3e979fd1a07bdfa6b4a8b2d70a",
-    "reviewed_head": "61094eace3e75b3e979fd1a07bdfa6b4a8b2d70a",
-    "base_main": "9d0fd3c900f772ea15854c2c348854ad3102977c",
-    "ci_run": 41318567672,
-    "node_tests": 2908,
+    "id": "M2_CURRENT_PREVIOUS_RETURNS_ROTATION_AND_CUTOFF_RECOVERY",
+    "status": "OFFICIAL_LIVE_PREVIOUS_MONTH_REPORTS_VERIFIED_CLOSEOUT_OPEN",
+    "pull_request": 94,
+    "base_main": "41417aff5b702007a9db4066d05d7902f15ee778",
+    "code_commit": "e6b8dc9ed5d5168bd4e20b0025ef013b9e488106",
+    "reviewed_head": "17c0c269370cc772a4373453399970c81a81a360",
+    "ci_run": 41325746160,
+    "node_tests": 2977,
     "python_tests": 67,
-    "docs": "docs/MLS_M2_PENDING_PAGINATION_2026_11_01.md",
+    "docs": "docs/MLS_M2_PREVIOUS_MONTH_RETURNS_2026_11_01.md",
     "deployment": {
       "versions": {
-        "app": "2280e3b1-a7fa-40fe-842a-4c94c74e5e78",
+        "app": "1a6ca4c3-69ab-46c4-adff-a4b42d4c4c1f",
         "auth": "37bead27-c941-40e6-87e8-832f01d1785a",
         "finance": "e0b258a2-e73f-45d2-912a-1cb6fd666e18"
       },
       "generated_sha256": {
-        "app": "9fe5906fc04f231aaddfd2fe8106e338c6aa7a1bd1203500e3b565a8a3892b7e",
+        "app": "b56f8241d1545a93f30d80a3d8b8d7d3928a08b6555033228c9ddc5a95fcd5a0",
         "auth": "c63ee09b2d98b6321e3ae7feae1066a9eec9160b49868d72fb84cb0471a0018d",
         "finance": "dff201100ed319f3b7d4d8cabf6826237be3a140e679f562cb982cec5bdd89b4"
       },
       "published_sha256": {
-        "app": "5b491267eb1d768fe730c5a9e8ede4b53636d5f679af755579deeaccee182c6f",
+        "app": "bfc401d7f0b54b20a0b01a1adbfb755ae6013f7dfd1682c9a55ed6da227c906d",
         "auth": "46053d0b5f11ff4d738b4cf2cc1cc6afda7d21e233980b1e640f63728f32af2a",
         "finance": "b4195212972f5a9f0f8ff08c9504e983f8bd3ca3b3c42493cb7c88addb84de8b"
       },
-      "percentage": 100,
       "exact_bytes_verified": true,
-      "existing_configuration_preserved": true,
+      "configuration_preserved": true,
       "domains_preserved": true,
+      "flags_preserved": true,
       "cron_preserved": true,
-      "owner_flags_preserved": true
+      "auth_finance_versions_preserved": true
     },
-    "natural_complete_scan": {
-      "termination_evidence_kind": "SHORT_PAGE_WITHOUT_NEXT",
-      "pages_read": 2,
-      "row_count": 182,
-      "unique_orders": 182,
-      "duplicates": 0,
-      "conflicting_orders": 0,
-      "known_amount_cents": 893828,
-      "unknown_amount_count": 0,
-      "amount_complete": true,
-      "started_at": 1793544473,
-      "completed_at": 1793545318,
-      "source_oldest_at": 1793544480,
-      "source_latest_at": 1793545318,
-      "app_finance_publication_match": true,
-      "aggregate_integrity": true,
-      "cursor_exposed": false,
-      "provider_snapshot_atomic": false,
+    "natural_observation": {
+      "checked_at": "2026-11-01T16:54:15.372917+00:00",
+      "previous_month": {
+        "month": "2026-10",
+        "publication": {
+          "month": "2026-10",
+          "source_revision": 15925,
+          "published_at": 1793551016,
+          "source_updated_at": 1793551016,
+          "start_date": "2026-10-01",
+          "end_date": "2026-10-31",
+          "slots": 3
+        },
+        "source_slots": 3,
+        "source_orders": 451,
+        "paid_orders": 358,
+        "cancelled_excluded": 82,
+        "returns": 11,
+        "review_orders": 7,
+        "payment_missing": 0,
+        "finance_sources_present": 3,
+        "finance_sources_reusable": 3,
+        "exact_report_identity_scope": 3,
+        "exact_report_cohort_evidence": 3,
+        "exact_attempts": 3,
+        "latest_exact_report_at": 1793551981,
+        "report_states": [
+          "CHECKED",
+          "CHECKED",
+          "CHECKED"
+        ],
+        "money_proof": {
+          "source_slots": 3,
+          "matching_report_scopes": 3,
+          "missing_report_scopes": 0,
+          "base_status_counts": {
+            "MATCH": 3,
+            "MISMATCH": 0,
+            "UNKNOWN_REPORT_BASE": 0,
+            "UNKNOWN_SOURCE_BASE": 0,
+            "INVALID_REPORT_BASE": 0,
+            "INVALID_SOURCE_BASE": 0,
+            "UNMATCHED_REPORT_SCOPE": 0
+          },
+          "field_known_counts": {
+            "base": 3,
+            "known_adjustments": 3,
+            "after_adjustment": 3,
+            "requested_refunds": 3
+          },
+          "field_null_counts": {
+            "base": 0,
+            "known_adjustments": 0,
+            "after_adjustment": 0,
+            "requested_refunds": 0
+          },
+          "field_invalid_counts": {
+            "base": 0,
+            "known_adjustments": 0,
+            "after_adjustment": 0,
+            "requested_refunds": 0
+          },
+          "source_base_known_count": 3,
+          "source_known_base_sum_cents": 1641991,
+          "known_report_field_subtotals_cents": {
+            "base": 1641991,
+            "known_adjustments": -5709,
+            "after_adjustment": 1636282,
+            "requested_refunds": 102174
+          },
+          "complete_report_base_sum_cents": 1641991,
+          "complete_after_adjustment_sum_cents": 1636282,
+          "base_comparison_status": "MATCH",
+          "after_adjustment_comparison_status": "MATCH",
+          "partial_subtotals_are_information_only": true,
+          "bank_settlement": "UNVERIFIED"
+        }
+      },
+      "current_month": {
+        "month": "2026-11",
+        "publication": {
+          "month": "2026-11",
+          "source_revision": 417,
+          "published_at": 1793551856,
+          "source_updated_at": 1793551856,
+          "start_date": "2026-11-01",
+          "end_date": "2026-11-01",
+          "slots": 1
+        },
+        "source_slots": 1,
+        "source_orders": 9,
+        "paid_orders": 9,
+        "cancelled_excluded": 0,
+        "returns": 0,
+        "review_orders": 0,
+        "payment_missing": 0,
+        "finance_sources_present": 1,
+        "finance_sources_reusable": 1,
+        "exact_report_identity_scope": 1,
+        "exact_report_cohort_evidence": 1,
+        "exact_attempts": 1,
+        "latest_exact_report_at": 1793552037,
+        "report_states": [
+          "CHECKED"
+        ],
+        "money_proof": {
+          "source_slots": 1,
+          "matching_report_scopes": 1,
+          "missing_report_scopes": 0,
+          "base_status_counts": {
+            "MATCH": 1,
+            "MISMATCH": 0,
+            "UNKNOWN_REPORT_BASE": 0,
+            "UNKNOWN_SOURCE_BASE": 0,
+            "INVALID_REPORT_BASE": 0,
+            "INVALID_SOURCE_BASE": 0,
+            "UNMATCHED_REPORT_SCOPE": 0
+          },
+          "field_known_counts": {
+            "base": 1,
+            "known_adjustments": 1,
+            "after_adjustment": 1,
+            "requested_refunds": 1
+          },
+          "field_null_counts": {
+            "base": 0,
+            "known_adjustments": 0,
+            "after_adjustment": 0,
+            "requested_refunds": 0
+          },
+          "field_invalid_counts": {
+            "base": 0,
+            "known_adjustments": 0,
+            "after_adjustment": 0,
+            "requested_refunds": 0
+          },
+          "source_base_known_count": 1,
+          "source_known_base_sum_cents": 41818,
+          "known_report_field_subtotals_cents": {
+            "base": 41818,
+            "known_adjustments": 0,
+            "after_adjustment": 41818,
+            "requested_refunds": 0
+          },
+          "complete_report_base_sum_cents": 41818,
+          "complete_after_adjustment_sum_cents": 41818,
+          "base_comparison_status": "MATCH",
+          "after_adjustment_comparison_status": "MATCH",
+          "partial_subtotals_are_information_only": true,
+          "bank_settlement": "UNVERIFIED"
+        }
+      },
       "forced_jobs": false,
-      "unit_comparison": {
-        "schema": "pending_scan_payment_unit_comparison_v1",
-        "state": "CHECKED",
-        "completed_at": 1793545318,
-        "unique_order_count": 182,
-        "comparison": {
-          "pending_rows": 182,
-          "matched_saved_paid": 177,
-          "exact_major_unit_match": 177,
-          "unmatched_saved_paid": 5
-        },
-        "exact_multipliers": {
-          "1": 177
-        },
-        "maximum_major_unit_delta": "0",
-        "payment_source_oldest_at": 1793540582,
-        "payment_source_latest_at": 1793545136,
-        "source_time_differences_are_informational": true,
-        "basis": "LATEST_SAVED_PAID_PAYMENT_VS_PAGINATED_MUTABLE_PENDING_NOT_BANK_RECEIPT",
-        "scaling_applied": false,
-        "provider_calls": 0,
-        "identities_returned": false
-      }
+      "provider_calls_by_observer": 0,
+      "report_completion_is_not_bank_settlement": true
     },
-    "ui": {
-      "page_size": 50,
-      "page_navigation_source_reads": 0,
-      "browser_widths": [
-        320,
-        390,
-        768,
-        1365
+    "subrequest_budget": {
+      "limit": 50,
+      "cold_ordinary": 48,
+      "normal_sequence": [
+        38,
+        37,
+        46,
+        37
       ],
-      "normal_and_minified": true,
-      "legacy_browser_closures_fixed": true,
-      "actual_owner_session": "NOT_EXECUTED_EXECUTOR_WAF_BLOCKED"
+      "validated_current_fallback": 45
     },
+    "owner_reads": "CACHE_ONLY",
     "commercial_writes": "LOCKED",
     "finance_m2": "OPEN",
     "seller_centre_comparison": "NOT_COMPARED",
@@ -220,10 +332,7 @@
       "status": "FAILURE",
       "cause": "UNCONFIRMED",
       "log_access": "HTTP_403_CLOUDFLARE_12004",
-      "scope": "THREE_EXTERNAL_WORKERS_BUILDS_CHECKS",
-      "github_validation": "SUCCESS",
-      "controlled_live_publication": "EXACT_BYTES_AND_NATURAL_SCAN_VERIFIED",
-      "configuration_changed": false
+      "controlled_live_publication": "EXACT_BYTES_AND_NATURAL_CRON_VERIFIED"
     }
   },
   "incident": {
@@ -1513,5 +1622,322 @@
     "commercial_writes": "LOCKED",
     "finance_m2": "OPEN",
     "bank_settlement": "UNVERIFIED"
+  },
+  "previous_increment_before_previous_returns": {
+    "id": "M2_DURABLE_PENDING_PAGINATION_AND_LOCAL_BROWSING",
+    "status": "OFFICIAL_LIVE_PENDING_TRAVERSAL_VERIFIED_M2_CLOSEOUT_OPEN",
+    "pull_request": 93,
+    "code_commit": "61094eace3e75b3e979fd1a07bdfa6b4a8b2d70a",
+    "reviewed_head": "61094eace3e75b3e979fd1a07bdfa6b4a8b2d70a",
+    "base_main": "9d0fd3c900f772ea15854c2c348854ad3102977c",
+    "ci_run": 41318567672,
+    "node_tests": 2908,
+    "python_tests": 67,
+    "docs": "docs/MLS_M2_PENDING_PAGINATION_2026_11_01.md",
+    "deployment": {
+      "versions": {
+        "app": "2280e3b1-a7fa-40fe-842a-4c94c74e5e78",
+        "auth": "37bead27-c941-40e6-87e8-832f01d1785a",
+        "finance": "e0b258a2-e73f-45d2-912a-1cb6fd666e18"
+      },
+      "generated_sha256": {
+        "app": "9fe5906fc04f231aaddfd2fe8106e338c6aa7a1bd1203500e3b565a8a3892b7e",
+        "auth": "c63ee09b2d98b6321e3ae7feae1066a9eec9160b49868d72fb84cb0471a0018d",
+        "finance": "dff201100ed319f3b7d4d8cabf6826237be3a140e679f562cb982cec5bdd89b4"
+      },
+      "published_sha256": {
+        "app": "5b491267eb1d768fe730c5a9e8ede4b53636d5f679af755579deeaccee182c6f",
+        "auth": "46053d0b5f11ff4d738b4cf2cc1cc6afda7d21e233980b1e640f63728f32af2a",
+        "finance": "b4195212972f5a9f0f8ff08c9504e983f8bd3ca3b3c42493cb7c88addb84de8b"
+      },
+      "percentage": 100,
+      "exact_bytes_verified": true,
+      "existing_configuration_preserved": true,
+      "domains_preserved": true,
+      "cron_preserved": true,
+      "owner_flags_preserved": true
+    },
+    "natural_complete_scan": {
+      "termination_evidence_kind": "SHORT_PAGE_WITHOUT_NEXT",
+      "pages_read": 2,
+      "row_count": 182,
+      "unique_orders": 182,
+      "duplicates": 0,
+      "conflicting_orders": 0,
+      "known_amount_cents": 893828,
+      "unknown_amount_count": 0,
+      "amount_complete": true,
+      "started_at": 1793544473,
+      "completed_at": 1793545318,
+      "source_oldest_at": 1793544480,
+      "source_latest_at": 1793545318,
+      "app_finance_publication_match": true,
+      "aggregate_integrity": true,
+      "cursor_exposed": false,
+      "provider_snapshot_atomic": false,
+      "forced_jobs": false,
+      "unit_comparison": {
+        "schema": "pending_scan_payment_unit_comparison_v1",
+        "state": "CHECKED",
+        "completed_at": 1793545318,
+        "unique_order_count": 182,
+        "comparison": {
+          "pending_rows": 182,
+          "matched_saved_paid": 177,
+          "exact_major_unit_match": 177,
+          "unmatched_saved_paid": 5
+        },
+        "exact_multipliers": {
+          "1": 177
+        },
+        "maximum_major_unit_delta": "0",
+        "payment_source_oldest_at": 1793540582,
+        "payment_source_latest_at": 1793545136,
+        "source_time_differences_are_informational": true,
+        "basis": "LATEST_SAVED_PAID_PAYMENT_VS_PAGINATED_MUTABLE_PENDING_NOT_BANK_RECEIPT",
+        "scaling_applied": false,
+        "provider_calls": 0,
+        "identities_returned": false
+      }
+    },
+    "ui": {
+      "page_size": 50,
+      "page_navigation_source_reads": 0,
+      "browser_widths": [
+        320,
+        390,
+        768,
+        1365
+      ],
+      "normal_and_minified": true,
+      "legacy_browser_closures_fixed": true,
+      "actual_owner_session": "NOT_EXECUTED_EXECUTOR_WAF_BLOCKED"
+    },
+    "commercial_writes": "LOCKED",
+    "finance_m2": "OPEN",
+    "seller_centre_comparison": "NOT_COMPARED",
+    "bank_settlement": "UNVERIFIED",
+    "external_cloudflare_build_checks": {
+      "status": "FAILURE",
+      "cause": "UNCONFIRMED",
+      "log_access": "HTTP_403_CLOUDFLARE_12004",
+      "scope": "THREE_EXTERNAL_WORKERS_BUILDS_CHECKS",
+      "github_validation": "SUCCESS",
+      "controlled_live_publication": "EXACT_BYTES_AND_NATURAL_SCAN_VERIFIED",
+      "configuration_changed": false
+    }
+  },
+  "previous_month_returns_2026_11_01": {
+    "id": "M2_CURRENT_PREVIOUS_RETURNS_ROTATION_AND_CUTOFF_RECOVERY",
+    "status": "OFFICIAL_LIVE_PREVIOUS_MONTH_REPORTS_VERIFIED_CLOSEOUT_OPEN",
+    "pull_request": 94,
+    "base_main": "41417aff5b702007a9db4066d05d7902f15ee778",
+    "code_commit": "e6b8dc9ed5d5168bd4e20b0025ef013b9e488106",
+    "reviewed_head": "17c0c269370cc772a4373453399970c81a81a360",
+    "ci_run": 41325746160,
+    "node_tests": 2977,
+    "python_tests": 67,
+    "docs": "docs/MLS_M2_PREVIOUS_MONTH_RETURNS_2026_11_01.md",
+    "deployment": {
+      "versions": {
+        "app": "1a6ca4c3-69ab-46c4-adff-a4b42d4c4c1f",
+        "auth": "37bead27-c941-40e6-87e8-832f01d1785a",
+        "finance": "e0b258a2-e73f-45d2-912a-1cb6fd666e18"
+      },
+      "generated_sha256": {
+        "app": "b56f8241d1545a93f30d80a3d8b8d7d3928a08b6555033228c9ddc5a95fcd5a0",
+        "auth": "c63ee09b2d98b6321e3ae7feae1066a9eec9160b49868d72fb84cb0471a0018d",
+        "finance": "dff201100ed319f3b7d4d8cabf6826237be3a140e679f562cb982cec5bdd89b4"
+      },
+      "published_sha256": {
+        "app": "bfc401d7f0b54b20a0b01a1adbfb755ae6013f7dfd1682c9a55ed6da227c906d",
+        "auth": "46053d0b5f11ff4d738b4cf2cc1cc6afda7d21e233980b1e640f63728f32af2a",
+        "finance": "b4195212972f5a9f0f8ff08c9504e983f8bd3ca3b3c42493cb7c88addb84de8b"
+      },
+      "exact_bytes_verified": true,
+      "configuration_preserved": true,
+      "domains_preserved": true,
+      "flags_preserved": true,
+      "cron_preserved": true,
+      "auth_finance_versions_preserved": true
+    },
+    "natural_observation": {
+      "checked_at": "2026-11-01T16:54:15.372917+00:00",
+      "previous_month": {
+        "month": "2026-10",
+        "publication": {
+          "month": "2026-10",
+          "source_revision": 15925,
+          "published_at": 1793551016,
+          "source_updated_at": 1793551016,
+          "start_date": "2026-10-01",
+          "end_date": "2026-10-31",
+          "slots": 3
+        },
+        "source_slots": 3,
+        "source_orders": 451,
+        "paid_orders": 358,
+        "cancelled_excluded": 82,
+        "returns": 11,
+        "review_orders": 7,
+        "payment_missing": 0,
+        "finance_sources_present": 3,
+        "finance_sources_reusable": 3,
+        "exact_report_identity_scope": 3,
+        "exact_report_cohort_evidence": 3,
+        "exact_attempts": 3,
+        "latest_exact_report_at": 1793551981,
+        "report_states": [
+          "CHECKED",
+          "CHECKED",
+          "CHECKED"
+        ],
+        "money_proof": {
+          "source_slots": 3,
+          "matching_report_scopes": 3,
+          "missing_report_scopes": 0,
+          "base_status_counts": {
+            "MATCH": 3,
+            "MISMATCH": 0,
+            "UNKNOWN_REPORT_BASE": 0,
+            "UNKNOWN_SOURCE_BASE": 0,
+            "INVALID_REPORT_BASE": 0,
+            "INVALID_SOURCE_BASE": 0,
+            "UNMATCHED_REPORT_SCOPE": 0
+          },
+          "field_known_counts": {
+            "base": 3,
+            "known_adjustments": 3,
+            "after_adjustment": 3,
+            "requested_refunds": 3
+          },
+          "field_null_counts": {
+            "base": 0,
+            "known_adjustments": 0,
+            "after_adjustment": 0,
+            "requested_refunds": 0
+          },
+          "field_invalid_counts": {
+            "base": 0,
+            "known_adjustments": 0,
+            "after_adjustment": 0,
+            "requested_refunds": 0
+          },
+          "source_base_known_count": 3,
+          "source_known_base_sum_cents": 1641991,
+          "known_report_field_subtotals_cents": {
+            "base": 1641991,
+            "known_adjustments": -5709,
+            "after_adjustment": 1636282,
+            "requested_refunds": 102174
+          },
+          "complete_report_base_sum_cents": 1641991,
+          "complete_after_adjustment_sum_cents": 1636282,
+          "base_comparison_status": "MATCH",
+          "after_adjustment_comparison_status": "MATCH",
+          "partial_subtotals_are_information_only": true,
+          "bank_settlement": "UNVERIFIED"
+        }
+      },
+      "current_month": {
+        "month": "2026-11",
+        "publication": {
+          "month": "2026-11",
+          "source_revision": 417,
+          "published_at": 1793551856,
+          "source_updated_at": 1793551856,
+          "start_date": "2026-11-01",
+          "end_date": "2026-11-01",
+          "slots": 1
+        },
+        "source_slots": 1,
+        "source_orders": 9,
+        "paid_orders": 9,
+        "cancelled_excluded": 0,
+        "returns": 0,
+        "review_orders": 0,
+        "payment_missing": 0,
+        "finance_sources_present": 1,
+        "finance_sources_reusable": 1,
+        "exact_report_identity_scope": 1,
+        "exact_report_cohort_evidence": 1,
+        "exact_attempts": 1,
+        "latest_exact_report_at": 1793552037,
+        "report_states": [
+          "CHECKED"
+        ],
+        "money_proof": {
+          "source_slots": 1,
+          "matching_report_scopes": 1,
+          "missing_report_scopes": 0,
+          "base_status_counts": {
+            "MATCH": 1,
+            "MISMATCH": 0,
+            "UNKNOWN_REPORT_BASE": 0,
+            "UNKNOWN_SOURCE_BASE": 0,
+            "INVALID_REPORT_BASE": 0,
+            "INVALID_SOURCE_BASE": 0,
+            "UNMATCHED_REPORT_SCOPE": 0
+          },
+          "field_known_counts": {
+            "base": 1,
+            "known_adjustments": 1,
+            "after_adjustment": 1,
+            "requested_refunds": 1
+          },
+          "field_null_counts": {
+            "base": 0,
+            "known_adjustments": 0,
+            "after_adjustment": 0,
+            "requested_refunds": 0
+          },
+          "field_invalid_counts": {
+            "base": 0,
+            "known_adjustments": 0,
+            "after_adjustment": 0,
+            "requested_refunds": 0
+          },
+          "source_base_known_count": 1,
+          "source_known_base_sum_cents": 41818,
+          "known_report_field_subtotals_cents": {
+            "base": 41818,
+            "known_adjustments": 0,
+            "after_adjustment": 41818,
+            "requested_refunds": 0
+          },
+          "complete_report_base_sum_cents": 41818,
+          "complete_after_adjustment_sum_cents": 41818,
+          "base_comparison_status": "MATCH",
+          "after_adjustment_comparison_status": "MATCH",
+          "partial_subtotals_are_information_only": true,
+          "bank_settlement": "UNVERIFIED"
+        }
+      },
+      "forced_jobs": false,
+      "provider_calls_by_observer": 0,
+      "report_completion_is_not_bank_settlement": true
+    },
+    "subrequest_budget": {
+      "limit": 50,
+      "cold_ordinary": 48,
+      "normal_sequence": [
+        38,
+        37,
+        46,
+        37
+      ],
+      "validated_current_fallback": 45
+    },
+    "owner_reads": "CACHE_ONLY",
+    "commercial_writes": "LOCKED",
+    "finance_m2": "OPEN",
+    "seller_centre_comparison": "NOT_COMPARED",
+    "bank_settlement": "UNVERIFIED",
+    "external_cloudflare_build_checks": {
+      "status": "FAILURE",
+      "cause": "UNCONFIRMED",
+      "log_access": "HTTP_403_CLOUDFLARE_12004",
+      "controlled_live_publication": "EXACT_BYTES_AND_NATURAL_CRON_VERIFIED"
+    }
   }
 }

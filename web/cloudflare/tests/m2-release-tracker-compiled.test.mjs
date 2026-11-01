@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {build} from 'esbuild';
 import {projectEscrowReleaseCoverageFrame} from '../../finance/src/escrow-release-frame.mjs';
+import {projectReconciliationFrame} from '../../finance/src/reconciliation-frame.mjs';
+import {historyReturnsReport} from './m2-history-fixture.mjs';
 import {TrackerD1,trackerMonth,trackerThrough,trackerTime,trackerStamp,publishTrackerMonth,trackerCoverage,forceTrackerHistory,setTrackerAuditTurn} from './m2-release-tracker-fixture.mjs';
 
 const origin='https://release-tracker.compiled.test',endpoint='/api/admin/finance/escrow-release-coverage';
@@ -28,6 +30,13 @@ async function context(t,app){
  const cron=async()=>{const tasks=[];await app.scheduled({cron:'* * * * *',scheduledTime:clock.time},env,{waitUntil:work=>tasks.push(work)});assert.equal(tasks.length,1);return(await Promise.all(tasks))[0];};
  return {db,env,clock,now,calls,owner,review,invoke,cron};
 }
+function saveAuditedPriorReturns(f){
+ // This transport test isolates calendar coverage while the production
+ // scheduler still has CURRENT/PREVIOUS Returns enabled and eligible by retry.
+ for(const frame of f.frames){const report=historyReturnsReport(frame,trackerStamp),c=frame.coverage;Object.assign(report.source_checked_at,{returns_oldest_at:null,returns_latest_at:null});Object.assign(report.coverage,{orders:c.orders,evidence_orders:c.orders,missing_evidence_orders:0,paid_orders:c.paid,review_orders:c.cancel_pending+c.other+c.unknown,return_orders:c.returns,return_unknown_orders:c.returns_unknown});Object.assign(report.adjustments,{known_adjustment_cents:0,after_adjustment_repass_cents:8000});Object.assign(report.returns,{reference_count:0,checked_count:0,pending_count:0,known_requested_refund_cents:0,requested_amount_complete:true,permission:'UNKNOWN'});report.cases=[];report.truncation={truncated:false,cases_total:0,cases_included:0};report.pending=['SETTLEMENT_NOT_RECONCILED'];assert.ok(projectReconciliationFrame(report));assert.equal(report.source_revision,frame.revision);assert.equal(report.start_date,frame.start_date);assert.equal(report.end_date,frame.end_date);assert.equal(report.source_checked_at.finance_oldest_at,frame.source_checked_at.oldest_at);assert.equal(report.source_checked_at.finance_latest_at,frame.source_checked_at.latest_at);assert.equal(report.coverage.orders,c.orders);assert.equal(report.coverage.paid_orders,c.paid);assert.equal(report.coverage.return_orders,c.returns);
+  f.db.db.prepare('INSERT INTO business_reconciliation_reports(run_id,source_revision,start_date,end_date,payload,checked_at) VALUES(?,?,?,?,?,?)').run(frame.run_id,frame.revision,frame.start_date,frame.end_date,JSON.stringify(report),report.checked_at);f.db.db.prepare("INSERT INTO business_reconciliation_attempts(run_id,source_revision,checked_at,status,code,next_attempt_at) VALUES(?,?,?,'SUCCESS',NULL,?)").run(frame.run_id,frame.revision,report.checked_at,report.checked_at+900);
+ }
+}
 async function prepared(t,app){const f=await context(t,app);assert.equal((await f.cron()).lane,'MAINTENANCE');const frames=await publishTrackerMonth(f.env,f.now);return {...f,frames,refs:frames.map(frame=>({run_id:frame.run_id,source_revision:frame.revision}))};}
 
 for(const minify of [false,true])test(`generated release tracker follows prior cohorts with bounded reads and immutable scope (minify=${minify})`,async t=>{
@@ -43,7 +52,7 @@ for(const minify of [false,true])test(`generated release tracker follows prior c
   assert.equal(totalChanges(f.db),before);assert.equal(f.db.writes.length,writes);assert.deepEqual(tables(f.db),[]);assert.equal(f.calls.length,0);
  });
  await t.test('a real scheduled HISTORY turn invokes the dedicated saved-calendar transport without opening the owner tab',async child=>{
-  const f=await prepared(child,app);forceTrackerHistory(f.db);let sourceReads=0;
+  const f=await prepared(child,app);saveAuditedPriorReturns(f);forceTrackerHistory(f.db);let sourceReads=0;
   globalThis.fetch=async request=>{
    sourceReads++;assert.ok(request instanceof Request);assert.equal(request.url,'https://auth.brazacommerce.com.br/internal/shopee/finance/escrow-releases');assert.equal(request.method,'POST');assert.equal(request.redirect,'manual');assert.equal(request.headers.get('x-braza-app-key'),f.env.APP_INTERNAL_SECRET);assert.equal(request.headers.get('x-braza-release-contract'),'release-coverage-v1');for(const name of ['cookie','authorization','x-braza-finance-router'])assert.equal(request.headers.get(name),null);
    assert.deepEqual(await request.json(),{operation:'coverage',cohort_month:trackerMonth,through_month:trackerThrough,sources:f.refs});return Response.json(trackerCoverage(f.frames));

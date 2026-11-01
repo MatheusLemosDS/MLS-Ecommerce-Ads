@@ -13,7 +13,16 @@ async function compiled(minify){
  const contents=source.replace(seam,'return {adminFetch,schedule,scheduledWork,workspaceAuthFetch,acquireBackgroundLane,finishBackgroundLane,runBackgroundHistoryWork,readBusinessSyncState};')+'\nexport {brazaAdmin as bootstrapSmoke};';
  const result=await build({stdin:{contents,loader:'js'},bundle:true,write:false,format:'esm',platform:'browser',target:'es2022',minify});return import('data:text/javascript;base64,'+Buffer.from(result.outputFiles[0].text).toString('base64'));
 }
-async function fixture(t,app,{prior=true}={}){
+function priorReturnsReport(frame,checked=trackerStamp){
+ const report=historyReturnsReport(frame,checked),c=frame.coverage;
+ Object.assign(report.source_checked_at,{returns_oldest_at:null,returns_latest_at:null});Object.assign(report.coverage,{orders:c.orders,evidence_orders:c.orders,missing_evidence_orders:0,paid_orders:c.paid,review_orders:c.cancel_pending+c.other+c.unknown,return_orders:c.returns,return_unknown_orders:c.returns_unknown});
+ Object.assign(report.adjustments,{known_adjustment_cents:0,after_adjustment_repass_cents:8000});Object.assign(report.returns,{reference_count:0,checked_count:0,pending_count:0,known_requested_refund_cents:0,requested_amount_complete:true,permission:'UNKNOWN'});report.cases=[];report.truncation={truncated:false,cases_total:0,cases_included:0};report.pending=['SETTLEMENT_NOT_RECONCILED'];
+ assert.ok(projectReconciliationFrame(report));assert.equal(report.run_id,frame.run_id);assert.equal(report.source_revision,frame.revision);assert.equal(report.start_date,frame.start_date);assert.equal(report.end_date,frame.end_date);assert.equal(report.source_checked_at.finance_oldest_at,frame.source_checked_at.oldest_at);assert.equal(report.source_checked_at.finance_latest_at,frame.source_checked_at.latest_at);assert.equal(report.coverage.orders,c.orders);assert.equal(report.coverage.paid_orders,c.paid);assert.equal(report.coverage.return_orders,c.returns);return report;
+}
+function savePriorReturns(db,frames){
+ for(const frame of frames){const report=priorReturnsReport(frame);db.db.prepare('INSERT INTO business_reconciliation_reports(run_id,source_revision,start_date,end_date,payload,checked_at) VALUES(?,?,?,?,?,?)').run(frame.run_id,frame.revision,frame.start_date,frame.end_date,JSON.stringify(report),report.checked_at);db.db.prepare("INSERT INTO business_reconciliation_attempts(run_id,source_revision,checked_at,status,code,next_attempt_at) VALUES(?,?,?,'SUCCESS',NULL,?)").run(frame.run_id,frame.revision,report.checked_at,report.checked_at+900);}
+}
+async function fixture(t,app,{prior=true,priorReturnsDue=false}={}){
  const db=new TrackerD1(),clock={time:trackerTime},now=()=>clock.time,SavedDate=globalThis.Date,savedFetch=globalThis.fetch;
  globalThis.Date=class extends SavedDate{constructor(...args){super(...(args.length?args:[clock.time]));}static now(){return clock.time;}};
  const env={ADMIN_DB:db,APP_INTERNAL_SECRET:'PRIVATE_BOOTSTRAP_APP_'+'a'.repeat(40),ADMIN_USERNAME:'bootstrap-owner',ADMIN_PASSWORD:'bootstrap-owner-password-123456',ADMIN_SESSION_SECRET:'PRIVATE_BOOTSTRAP_OWNER_'+'o'.repeat(40)};
@@ -21,6 +30,9 @@ async function fixture(t,app,{prior=true}={}){
  const cron=async()=>{const tasks=[];await app.scheduled({cron:'* * * * *',scheduledTime:clock.time},env,{waitUntil:task=>tasks.push(task)});assert.equal(tasks.length,1);return(await Promise.all(tasks))[0];};
  t.after(()=>{globalThis.Date=SavedDate;globalThis.fetch=savedFetch;db.db.close();});assert.equal((await cron()).lane,'MAINTENANCE');
  const frames=prior?await publishTrackerMonth(env,now):[];
+ // Coverage scenarios declare that existing prior Returns are already audited
+ // and not due; production PRIOR/CURRENT selection remains fully enabled.
+ if(!priorReturnsDue)savePriorReturns(db,frames);
  db.db.prepare("UPDATE business_sync_state SET enabled=1,status='IDLE',month=?,summary=NULL,next_run_at=?,lease_token=NULL,lease_expires_at=NULL WHERE id=1").run(trackerThrough,trackerStamp+3600);
  db.db.exec("UPDATE background_collection_lane_state SET next_lane='AUXILIARY',auxiliary_index=2,lease_token=NULL,lease_until=NULL;UPDATE background_history_fairness_state SET next_history_work='COST',finance_since_audit=0,last_auxiliary_at=NULL,returns_retry_at=0,reserved_returns_streak=0");
  return {db,env,clock,now,cron,frames,requests:()=>requests,respond(callback){globalThis.fetch=async request=>{requests.push(request);return callback(request);};}};
@@ -29,7 +41,7 @@ async function currentPublication(f,{audited=true}={}){
  const frame={...trackerSourceFrame(0),run_id:trackerUuid(301),start_date:trackerThrough+'-01',end_date:trackerThrough+'-10',cutoff_at:trackerStamp-3,checked_at:trackerStamp,source_checked_at:{oldest_at:trackerStamp-1,latest_at:trackerStamp-1},coverage:{...trackerSourceFrame(0).coverage,returns:1},items:[{item_id:'900',model_id:'0',quantity:1}]};assert.ok(projectBusinessPeriodFrame(frame));
  const payload={start_date:frame.start_date,end_date:frame.end_date,slots:[{start_date:frame.start_date,end_date:frame.end_date,frame}]},row={revision:10,payload:JSON.stringify(payload),created_at:trackerStamp-10,updated_at:trackerStamp};f.db.db.prepare('INSERT INTO business_month_runs(month,revision,payload,created_at,updated_at) VALUES(?,?,?,?,?)').run(trackerThrough,row.revision,row.payload,row.created_at,row.updated_at);assert.ok(await saveCompletedBusinessMonth(f.env,trackerThrough,{row,payload,complete:true},{now:f.now}));
  const report=historyReturnsReport(frame,trackerStamp);Object.assign(report.adjustments,{known_adjustment_cents:0,after_adjustment_repass_cents:8000});assert.ok(projectReconciliationFrame(report));
- if(audited)f.db.db.prepare('INSERT INTO business_reconciliation_reports(run_id,source_revision,start_date,end_date,payload,checked_at) VALUES(?,?,?,?,?,?)').run(frame.run_id,frame.revision,frame.start_date,frame.end_date,JSON.stringify(report),report.checked_at);
+ if(audited){f.db.db.prepare('INSERT INTO business_reconciliation_reports(run_id,source_revision,start_date,end_date,payload,checked_at) VALUES(?,?,?,?,?,?)').run(frame.run_id,frame.revision,frame.start_date,frame.end_date,JSON.stringify(report),report.checked_at);f.db.db.prepare("INSERT INTO business_reconciliation_attempts(run_id,source_revision,checked_at,status,code,next_attempt_at) VALUES(?,?,?,'SUCCESS',NULL,?)").run(frame.run_id,frame.revision,report.checked_at,report.checked_at+900);}
  return {frame,report};
 }
 function importSummary(){
@@ -44,6 +56,11 @@ for(const minify of [false,true])test(`generated coverage bootstrap is live with
   f.respond(async request=>{assert.equal(request.url,'https://auth.brazacommerce.com.br/internal/shopee/finance/escrow-releases');assert.equal(request.headers.get('x-braza-release-contract'),'release-coverage-v1');inputs.push(await request.json());return Response.json(trackerCoverage(f.frames));});
   f.db.rpc=0;const value=await f.cron();assert.equal(value.lane,'HISTORY');assert.equal(value.release_coverage,'COLLECTING');assert.equal(value.history,'DEFERRED');assert.equal(inputs.length,1);assert.equal(inputs[0].operation,'coverage');assert.equal(markerCount(f),1);assert.equal(f.db.db.prepare('SELECT auxiliary_index FROM background_collection_lane_state').get().auxiliary_index,2,'bootstrap must preserve the normal auxiliary cursor');assert.ok(f.db.rpc+inputs.length<=50,'cold bootstrap budget '+JSON.stringify({d1:f.db.rpc,privateReads:inputs.length}));assert.equal(f.db.db.prepare('SELECT pending FROM financial_audit_coverage_turns WHERE month=?').get(trackerThrough).pending,0);assert.deepEqual(bootstrapAttempt(f),{month:trackerThrough,last_attempt_at:trackerStamp,next_attempt_at:trackerStamp+300});
   assert.ok(['RELEASES','RETURNS','INCOME','INCOME_DETAIL'].includes(f.db.db.prepare('SELECT next_work FROM financial_audit_turns WHERE month=?').get(trackerThrough).next_work));
+ });
+ await t.test('due prior Returns precede a simultaneous coverage bootstrap in the production scheduler',async child=>{
+  const f=await fixture(child,app,{priorReturnsDue:true});await currentPublication(f);const inputs=[];
+  f.respond(async request=>{assert.equal(request.url,'https://auth.brazacommerce.com.br/internal/shopee/finance/reconciliation');const input=await request.json();inputs.push(input);assert.equal(input.operation,'step');assert.equal(input.run_id,f.frames[0].run_id);return Response.json(priorReturnsReport(f.frames[0],Math.floor(f.now()/1000)));});
+  f.db.rpc=0;const value=await f.cron();assert.equal(value.lane,'HISTORY');assert.equal(value.reconciliation,'CHECKED');assert.equal(value.release_coverage,'DEFERRED');assert.equal(markerCount(f),0);assert.equal(inputs.length,1);assert.equal(f.db.db.prepare('SELECT auxiliary_index FROM background_collection_lane_state').get().auxiliary_index,2);assert.ok(f.db.rpc+inputs.length<=50,'prior Returns priority budget '+JSON.stringify({d1:f.db.rpc,privateReads:inputs.length}));
  });
  await t.test('four due Finance opportunities retain priority before one eligible coverage bootstrap',async child=>{
   const f=await fixture(child,app);f.db.db.prepare("UPDATE business_sync_state SET status='RUNNING',next_run_at=?,summary=? WHERE id=1").run(trackerStamp,JSON.stringify(importSummary()));f.db.db.exec("UPDATE background_collection_lane_state SET next_lane='FINANCE'");assert.equal((await api.readBusinessSyncState(f.env)).summary.status,'RUNNING');assert.equal(f.db.db.prepare('SELECT COUNT(*) AS n FROM business_month_publications WHERE month=?').get(trackerThrough).n,0,'a new-month import may not have a current publication yet');
