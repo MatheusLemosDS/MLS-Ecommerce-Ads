@@ -49,10 +49,28 @@ test('daily overview has accessible day controls, a closed calculation and a res
 
 test('the selected date is the Brasília day, handles month links, and rejects future or invalid URL dates',async()=>{
  const data=await evidence();
- for(const [search,expected] of [['','2026-10-25'],['?date=2026-10-26','2026-10-25'],['?date=2026-02-30','2026-10-25'],['?date=2026-09-20&month=2026-10','2026-09-20'],['?month=2026-09','2026-09-01'],['?month=2026-10','2026-10-25'],['?date=2026-10-10&date=2026-10-11','2026-10-25']]){
+ for(const [search,expected] of [['','2026-10-25'],['?date=2026-10-26','2026-10-25'],['?date=2026-02-30','2026-10-25'],['?date=2026-09-20&month=2026-10','2026-09-20'],['?month=2026-09','2026-10-25'],['?tab=overview&month=2026-09','2026-10-25'],['?tab=agent-finance&month=2026-09','2026-09-01'],['?month=2026-10','2026-10-25'],['?date=2026-10-10&date=2026-10-11','2026-10-25']]){
   const b=browser(data,{search,now:'2026-10-26T02:30:00Z'});assert.equal(b.run('brazaDayDashboard.prepare()'),true);assert.equal(b.run('brazaDayDashboard.getSelection()'),expected);assert.equal(b.run('control("Date").max'),'2026-10-25');assert.equal(b.run('control("Date").disabled'),true);assert.equal(b.run('monthCalls.length'),0);
  }
  const b=browser(data,{search:'',now:'2026-11-01T02:30:00Z'});b.activate();assert.equal(b.run('brazaDayDashboard.getSelection()'),'2026-10-31');await b.run('control("Yesterday").onclick()');assert.equal(b.run('brazaDayDashboard.getSelection()'),'2026-10-30');assert.equal(b.run('monthCalls.length'),0);
+});
+
+test('Today follows the natural Brasília rollover while explicit dates and historical Finance links stay fixed',async()=>{
+ const data=await evidence(),now='2026-11-01T02:59:59Z';
+ const following=browser(data,{search:'?tab=overview&month=2026-09',now});following.activate();
+ assert.equal(following.run('brazaDayDashboard.getSelection()'),'2026-10-31');
+ following.run('clock=Date.parse("2026-11-01T03:00:00Z");');
+ assert.equal(following.run('brazaDayDashboard.getSelection()'),'2026-11-01');
+ assert.equal(following.run('brazaDayDashboard.getSnapshot().net_cents'),null,'yesterday’s publication cannot become today’s profit');
+ assert.equal(following.run('show()'),false,'an October response arriving after the rollover cannot restore October values');
+ assert.equal(following.run('monthCalls.length'),0,'synchronizing the local day never creates a new read or timer');
+ assert.equal(following.run('location.searchParams.has("date")'),false,'Today remains relative after a reload');
+ for(const search of ['?tab=overview&date=2026-10-31','?tab=agent-finance&month=2026-09']){
+  const b=browser(data,{search,now});b.activate();const selected=b.run('brazaDayDashboard.getSelection()');b.run('clock=Date.parse("2026-11-01T03:00:00Z");');
+  assert.equal(b.run('brazaDayDashboard.getSelection()'),selected,'a custom date or historical month must not advance overnight');
+ }
+ const chosen=browser(data,{now,search:'?date=2026-10-10'});chosen.activate();await chosen.run('control("Today").onclick()');chosen.run('clock=Date.parse("2026-11-01T03:00:00Z");');
+ assert.equal(chosen.run('brazaDayDashboard.getSelection()'),'2026-11-01','the Today button explicitly restores relative selection');
 });
 
 test('same-month date changes use only saved day values, preserve source times and never create a fetch or polling loop',async()=>{
@@ -77,6 +95,21 @@ test('incomplete production is labelled as a known-cost subtotal and legacy hist
  const data=await evidence();data.monthly.product_summary=null;assert.ok(projectBusinessMonth(data.monthly));data.daily=buildDailyBusinessSummary(data.monthly,data.frames,data.scope,validators);assert.ok(data.daily);const b=browser(data);b.activate();
  assert.equal(b.text('NetLabel'),'Saldo após custos conhecidos');assert.equal(b.text('Badge'),'Custos incompletos');assert.match(b.text('Help'),/não representa o lucro completo do dia/);assert.match(b.text('Waterfall'),/Produção com custo identificado.*Saldo após custos conhecidos/);
  const legacy=await evidence();delete legacy.frames[0].daily_breakdown;legacy.daily=buildDailyBusinessSummary(legacy.monthly,legacy.frames,legacy.scope,validators);assert.ok(legacy.daily);const old=browser(legacy);old.activate();assert.equal(old.text('Net'),'Em apuração');assert.equal(old.text('Sales'),'Não informado');assert.match(old.text('Help'),/próxima coleta compatível/);assert.doesNotMatch(old.text('Waterfall'),/Lucro estimado do dia R\$\s*0,00/);
+});
+
+test('unconfirmed monthly expenses expose a separate subtotal without inventing daily profit or hiding the known DAS',async()=>{
+ const data=await evidence();
+ data.monthly.expenses={revision:0,external_expenses_cents:null,recharge_treatment:'UNCONFIRMED',updated_at:null};
+ data.monthly.result={...data.monthly.result,net_estimate_cents:null,net_margin_bps:null,pending:[...new Set([...data.monthly.result.pending,'EXTERNAL_EXPENSES_REQUIRED'])]};
+ assert.ok(projectBusinessMonth(data.monthly));data.daily=buildDailyBusinessSummary(data.monthly,data.frames,data.scope,validators);assert.ok(data.daily);
+ const b=browser(data);b.activate();const original=data.daily.days[9],expected=original.operating_balance_cents-original.allocated_das_cents;
+ assert.equal(b.run('brazaDayDashboard.getSnapshot().net_cents'),null);
+ assert.equal(b.run('brazaDayDashboard.getSnapshot().presentation.amount_cents'),expected);
+ assert.equal(b.run('brazaDayDashboard.getSnapshot().presentation.expenses_included'),false);
+ assert.equal(b.run('brazaDayDashboard.getSnapshot().presentation.das_included'),true);
+ assert.match(b.text('NetLabel'),/Saldo parcial antes das despesas mensais/);assert.match(b.text('Help'),/DAS já foi descontada.*Confirme as despesas.*não representa o lucro completo/);
+ assert.match(b.text('Waterfall'),/Parcela diária das despesas mensais Não informado.*Saldo parcial antes das despesas mensais/);
+ assert.equal(b.run('brazaDayDashboard.getTrend().points.at(-1).net_cents'),null,'the subtotal is never a net-profit chart point');
 });
 
 test('a date in another month asks the existing monthly reader once and keeps the latest chosen day',async()=>{

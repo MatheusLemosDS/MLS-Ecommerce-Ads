@@ -129,6 +129,18 @@ export function buildMlsAgentRegistry({day=null,month=null,reconciliation=null,r
  if(month?.status==='RUNNING'&&!priorities.some(item=>item.code==='COLLECTING'))priorities.push(Object.freeze({code:'COLLECTING',severity:'WORKING',title:'Coleta financeira em andamento',detail:'O servidor está atualizando o mês sem depender desta aba.',href:'#businessMonth',agent_id:'auditor'}));
  if(safe(releaseSummary?.not_located_orders)&&releaseSummary.not_located_orders>0&&!priorities.some(item=>item.code==='MATCHING_INCOMPLETE'))priorities.push(Object.freeze({code:'RELEASES_NOT_LOCATED',severity:'WORKING',title:'Pedidos sem liberação localizada neste calendário',detail:releaseSummary.not_located_orders+' pedido(s) pagos ainda não aparecem no calendário de liberações consultado. Isso não comprova falta de recebimento.',href:'#businessEscrowReleases',agent_id:'finance'}));
  const dailyNet=money(day?.net_cents),dailySales=money(day?.sales_cents),dailyAds=money(day?.ads_spend_cents),dailyPaid=safe(day?.paid_orders)&&day.paid_orders>=0?day.paid_orders:null;
+ const dailyCodes=['DAILY_HISTORY_PENDING','CREATION_DATE_INCOMPLETE','PAYMENT_INCOMPLETE','PRODUCTION_COST_INCOMPLETE','ADS_UNAVAILABLE','ADS_SOURCE_STALE','EXTERNAL_EXPENSES_REQUIRED','TAX_POLICY_REQUIRED','RECHARGE_TREATMENT_REQUIRED','ADJUSTMENT_UNAVAILABLE','ADJUSTMENTS_PENDING','ADJUSTMENT_CONFLICT','STATUS_REVIEW_REQUIRED','RETURNS_NOT_RECONCILED','FINANCIAL_SOURCE_STALE','SOURCE_UNAVAILABLE','ARITHMETIC_UNSAFE'];
+ const dailyPending=[...new Set(list(day?.pending).filter(code=>dailyCodes.includes(code)))];
+ let dailyPresentation=null;
+ const presentation=day?.presentation,presentationKeys=['schema','state','basis','amount_cents','monthly_costs_missing','das_included','expenses_included'];
+ if(exact(presentation,presentationKeys)&&presentation.schema==='daily_profit_presentation_v1'&&typeof presentation.das_included==='boolean'&&typeof presentation.expenses_included==='boolean'&&Array.isArray(presentation.monthly_costs_missing)&&presentation.monthly_costs_missing.length<=2){
+  const missing=['TAX_POLICY_REQUIRED','EXTERNAL_EXPENSES_REQUIRED'].filter(code=>dailyPending.includes(code));
+  const missingMatches=missing.length===presentation.monthly_costs_missing.length&&missing.every((code,index)=>code===presentation.monthly_costs_missing[index]);
+  const basis=missing.length===2?'BEFORE_UNCONFIRMED_DAS_AND_EXPENSES':missing[0]==='TAX_POLICY_REQUIRED'?'BEFORE_UNCONFIRMED_DAS':'BEFORE_UNCONFIRMED_EXPENSES';
+  const before=missing.length>0&&dailyNet===null&&presentation.state==='BEFORE_MONTHLY_COSTS'&&presentation.basis===basis&&safe(presentation.amount_cents)&&presentation.das_included===!missing.includes('TAX_POLICY_REQUIRED')&&presentation.expenses_included===!missing.includes('EXTERNAL_EXPENSES_REQUIRED');
+  const available=missing.length===0&&dailyNet!==null&&presentation.amount_cents===dailyNet&&presentation.das_included&&presentation.expenses_included&&(day?.net_basis==='ESTIMATE'&&presentation.state==='ESTIMATE'&&presentation.basis==='AFTER_DAILY_AND_ALLOCATED_MONTHLY_COSTS'||day?.net_basis==='KNOWN_COSTS'&&presentation.state==='KNOWN_COSTS'&&presentation.basis==='AFTER_IDENTIFIED_PRODUCTION_AND_MONTHLY_COSTS');
+  if(missingMatches&&(before||available))dailyPresentation=Object.freeze({...presentation,monthly_costs_missing:Object.freeze([...missing])});
+ }
  const dailyObserved=day?.schema==='mls_day_snapshot_v1'&&[dailyNet,dailySales,dailyAds,dailyPaid].some(value=>value!==null);
  let margin=null;
  if(dailyNet!==null&&dailySales!==null&&dailySales>0){
@@ -186,6 +198,8 @@ export function buildMlsAgentRegistry({day=null,month=null,reconciliation=null,r
    date:typeof day?.date==='string'?day.date:null,
    net_cents:dailyNet,
    net_basis:day?.net_basis==='KNOWN_COSTS'?'KNOWN_COSTS':day?.net_basis==='ESTIMATE'?'ESTIMATE':null,
+   pending:Object.freeze(dailyPending),
+   presentation:dailyPresentation,
    sales_cents:dailySales,
    ads_spend_cents:dailyAds,
    paid_orders:dailyPaid,

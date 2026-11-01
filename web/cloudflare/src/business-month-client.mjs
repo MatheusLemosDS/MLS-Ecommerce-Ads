@@ -791,7 +791,7 @@ export const BUSINESS_MONTH_CLIENT=BUSINESS_DAY_CLIENT+String.raw`
  }
  function schedule(){
   clearTimeout(timer);timer=null;
-  if(!manualCollection){if(!started||document.hidden||busy||saving||costDiagnosticBusy||viewPromise)return;const delay=viewFailures?Math.min(300000,15000*2**viewFailures):workspaceView?.collection.status==='RUNNING'?15000:60000;timer=setTimeout(()=>{timer=null;return readWorkspaceView({background:true});},delay);return;}
+  if(!manualCollection){if(!started||document.hidden||busy||saving||costDiagnosticBusy||viewPromise)return;const delay=viewFailures?Math.min(300000,15000*2**viewFailures):workspaceView?.collection.status==='RUNNING'?15000:60000;timer=setTimeout(()=>{timer=null;let selected=month;try{const dailyMonth=globalThis.brazaDayDashboard?.getSelection?.()?.slice(0,7);if(!dirty&&validMonth(dailyMonth))selected=dailyMonth;}catch{}if(selected!==month)el('Select').value=selected;return readWorkspaceView({selected,background:true});},delay);return;}
   if(collectionRecovery?.waiting){if(!canRecover()||collectionRecovery.observing)return;const delay=collectionRecovery.attempts>=8?60000:Math.min(60000,Math.max(0,collectionRecovery.retryAt-Date.now()));timer=setTimeout(()=>{timer=null;return observeCollection();},delay);return;}
   if(!started||document.hidden||busy||adsBusy||saving||dirty||paused||automaticBlocked||costDiagnosticBusy||frame?.status!=='COMPLETE'&&!resumeOnVisible||month!==today().slice(0,7))return;
   // Ads updates never advance the financial clock: orders, cancellations and
@@ -902,20 +902,20 @@ export const BUSINESS_MONTH_CLIENT=BUSINESS_DAY_CLIENT+String.raw`
   if(!frame||busy||adsBusy||saving||dirty&&draftRevision!==frame.expenses.revision)return false;
   if(zero){el('ExpensesValue').value='0.00';expenseChanged();}
   let amount;try{amount=expenseAmount();}catch(error){el('ExpenseState').textContent=error.message;return false;}
-  const selected=month,token=generation,submitted=editSequence,revision=draftRevision,treatment=el('Recharge').value;saving=true;controls();el('ExpenseState').textContent='Salvando as despesas deste mês…';
+  const selected=month,token=generation,submitted=editSequence,revision=draftRevision,treatment=el('Recharge').value;let saved=false;saving=true;controls();el('ExpenseState').textContent='Salvando as despesas deste mês…';
   try{
    const raw=await api('finance/business-month',{operation:'expenses',month:selected,revision,external_expenses_cents:amount,recharge_treatment:treatment});
    if(token!==generation||selected!==month)return false;
    const result=projectBusinessMonth(raw);if(!result||result.month!==selected)throw Error('As despesas foram enviadas, mas o resultado não pôde ser conferido. Atualize o mês.');
-   frame=result;costDiagnosticContext=null;revalidateCostDiagnostic();observeAudits(selected);try{globalThis.brazaDayDashboard?.reset?.({month:selected});}catch{}invalidateCheckpointHistory();draftRevision=result.expenses.revision;
+   frame=result;costDiagnosticContext=null;revalidateCostDiagnostic();observeAudits(selected);try{const dailyMonth=globalThis.brazaDayDashboard?.getSelection?.()?.slice(0,7);if(!dailyMonth||dailyMonth===selected)globalThis.brazaDayDashboard?.reset?.({month:selected});}catch{}invalidateCheckpointHistory();draftRevision=result.expenses.revision;
    if(submitted===editSequence){dirty=false;fillExpenses({force:true});}
-   render();status('Despesas do mês salvas. Produção, imposto e anúncios continuam contabilizados separadamente.');return true;
+   saved=true;render();status('Despesas do mês salvas. Produção, imposto e anúncios continuam contabilizados separadamente.');return true;
   }catch(error){
    if(token===generation){
     el('ExpenseState').textContent=error.status===409?'As despesas mudaram em outra sessão. Sua edição foi preservada; carregue os valores salvos antes de salvar.':(error.message||'Não foi possível salvar. Sua edição foi preservada.');
     if(error.status===409){try{const raw=await request('read',selected);if(token===generation)apply(raw,selected);}catch{}}
    }return false;
-  }finally{if(token===generation){saving=false;controls();schedule();scheduleCatalog();}}
+  }finally{if(token===generation){saving=false;controls();if(saved&&!manualCollection)await readWorkspaceView({selected,background:true});else{schedule();scheduleCatalog();}}}
  }
  async function identify(){
   if(catalogFeature()){catalogNeedsRead=true;return updateCatalog();}
