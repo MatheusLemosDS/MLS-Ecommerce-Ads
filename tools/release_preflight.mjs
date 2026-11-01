@@ -30,9 +30,9 @@ export const RELEASE_BASE_COMMIT=approvedCandidate.base_commit;
 export const RELEASE_EXPECTED_SHA=Object.freeze({...approvedCandidate.expected_hashes});
 export const RELEASE_EXPECTED_LIVE_FLAGS=Object.freeze({...validFlags});
 export const RELEASE_ALLOWED_FILES=Object.freeze([...approvedCandidate.allowed_files]);
-// M2.2b manufacturing declarations are App-only. No Finance/Auth source or deployment
+// M2.2c owner-confirmed origin associations are App-only. No Finance/Auth source or deployment
 // configuration is authorized; existing financial rules and Worker identities
-// remain preserved while the incurred costs stay separate from financial totals and recovered stock value.
+// remain preserved while the association quantities stay separate from financial totals and recovered stock value.
 export const RELEASE_APPROVED_PROTECTED_FILES=Object.freeze([]);
 
 

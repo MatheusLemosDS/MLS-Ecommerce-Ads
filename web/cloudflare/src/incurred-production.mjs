@@ -145,7 +145,7 @@ function request(input,stamp){
 async function digest(value){return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',encoder.encode(JSON.stringify(value)))),v=>v.toString(16).padStart(2,'0')).join('');}
 export async function mutateIncurredProduction(env,input,actor,{now=()=>Date.now(),trustedSource=null,trustedReference=null}={}){
  try{return await mutate(env,input,actor,{now,trustedSource,trustedReference});}
- catch(error){if(error instanceof IncurredProductionError)throw error;throw new IncurredProductionError('INCURRED_PRODUCTION_UNAVAILABLE',503,{cause:error});}
+ catch(error){if(typeof error?.message==='string'&&error.message.includes('MLS_RETURN_MANUFACTURING_LINK_ACTIVE'))throw new IncurredProductionError('INCURRED_PRODUCTION_RETURN_LINK_ACTIVE',409);if(error instanceof IncurredProductionError)throw error;throw new IncurredProductionError('INCURRED_PRODUCTION_UNAVAILABLE',503,{cause:error});}
 }
 async function mutate(env,input,actor,{now,trustedSource,trustedReference}){
  const stamp=clock(now),value=request(input,stamp);if(!text(actor,256))fail('REQUEST_INVALID');

@@ -1,11 +1,11 @@
 {
   "schema": "mls_release_candidate_v1",
-  "base_commit": "07cf2b8e440f2f3b9c78cc29db3b0e7fb0f48b4f",
-  "prepared_source_commit": "51128b89e67f944ecf62bf55196dac293a3eecac",
+  "base_commit": "59f42417d623f38add431cdbf42a414115781250",
+  "prepared_source_commit": "e288c3e6e8601696c0d117a4737b0d74dedcc1b2",
   "owner_authorization": "OWNER_REQUESTED_ALL_PREPARED_IMPROVEMENTS_LIVE_2026_10_30",
   "commercial_writes_allowed": false,
   "expected_hashes": {
-    "app": "936c2cb0659f79805df88e66bf10ea198c30a052dfbd22cf53dfe2bccc396cab",
+    "app": "926e750890a31a00d1c25acd7bca1451f9faaa10fc882e0b667745fcba656106",
     "auth": "c63ee09b2d98b6321e3ae7feae1066a9eec9160b49868d72fb84cb0471a0018d",
     "finance": "dff201100ed319f3b7d4d8cabf6826237be3a140e679f562cb982cec5bdd89b4"
   },
@@ -21,7 +21,7 @@
     "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
     "docs/MLS_MASTER_MISSION_CHECKPOINT.json",
     "docs/ROADMAP_MLS_COMMERCE_OS.md",
-    "docs/MLS_M22_INCURRED_PRODUCTION_2026_11_01.md",
+    "docs/MLS_M22_RETURN_MANUFACTURING_LINKS_2026_11_01.md",
     "tools/release-approved-candidate.json",
     "tools/release_preflight.mjs",
     "tools/tests/release-preflight.test.mjs",
@@ -29,14 +29,19 @@
     "web/cloudflare/build.py",
     "web/cloudflare/src/admin-client.mjs",
     "web/cloudflare/src/admin.mjs",
-    "web/cloudflare/src/production-cost-periods-view.mjs",
+    "web/cloudflare/src/mission-control.mjs",
+    "web/cloudflare/src/physical-returns.mjs",
+    "web/cloudflare/src/physical-returns-view.mjs",
     "web/cloudflare/src/incurred-production.mjs",
-    "web/cloudflare/src/incurred-production-workspace.mjs",
     "web/cloudflare/src/incurred-production-view.mjs",
-    "web/cloudflare/tests/incurred-production.test.mjs",
-    "web/cloudflare/tests/incurred-production-adversarial.test.mjs",
-    "web/cloudflare/tests/incurred-production-workspace.test.mjs",
-    "web/cloudflare/tests/incurred-production-client.test.mjs",
-    "web/cloudflare/tests/incurred-production-chrome.test.mjs"
+    "web/cloudflare/src/return-manufacturing-links.mjs",
+    "web/cloudflare/src/return-manufacturing-links-workspace.mjs",
+    "web/cloudflare/src/return-manufacturing-links-view.mjs",
+    "web/cloudflare/tests/return-manufacturing-links.test.mjs",
+    "web/cloudflare/tests/return-manufacturing-links-adversarial.test.mjs",
+    "web/cloudflare/tests/return-manufacturing-links-workspace.test.mjs",
+    "web/cloudflare/tests/return-manufacturing-links-client.test.mjs",
+    "web/cloudflare/tests/return-manufacturing-links-chrome.test.mjs",
+    "web/cloudflare/tests/return-manufacturing-links-d1.test.mjs"
   ]
 }

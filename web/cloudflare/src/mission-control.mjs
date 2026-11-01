@@ -1,4 +1,5 @@
 import {physicalReturnsBody} from './physical-returns-view.mjs';
+import {returnManufacturingLinksBody} from './return-manufacturing-links-view.mjs';
 import {MLS_AGENT_ROBOT_SVG} from './mls-agent-art.mjs';
 import {createMlsVerifiedCharts} from './mls-verified-charts.mjs';
 import {createMlsChartInteractions} from './mls-chart-interactions.mjs';
@@ -536,7 +537,7 @@ function missionWorkspace(item,financeHtml){
   '</section>'+
   '<aside class="mission-module" id="mission-'+id+'-tools"><div class="mission-module-head"><h3>Ferramentas e detalhes</h3><small>Acessos existentes</small></div><div class="mission-actions">'+shortcuts+'</div>'+
   '<p class="mission-footnote" id="mission-'+id+'-message">Nenhuma decisão automática é executada nesta fase. Dados ausentes continuam indisponíveis.</p></aside></div>'+
-  (id==='returns'?physicalReturnsBody():'')+hermes+body+'</section>';
+  (id==='returns'?physicalReturnsBody()+returnManufacturingLinksBody():'')+hermes+body+'</section>';
 }
 export function missionWorkspacesBody(financeHtml=''){
  const hub='<section class="mission-hub" id="agents" aria-labelledby="missionHubTitle" hidden>'+
