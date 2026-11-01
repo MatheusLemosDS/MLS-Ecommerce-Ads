@@ -169,7 +169,8 @@ for(const minify of [false,true]){
 test('compiled Admin inline scripts contain no raw HTML control characters that corrupt regex ranges',{timeout:20000},async()=>{
  const {html}=await ownerHtml(false);
  const scripts=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match=>match[1]);
- assert.equal(scripts.length,14);
+ assert.equal(scripts.length,15);
+ assert.equal(scripts.filter(script=>script.includes('globalThis.brazaPhysicalReturns=')).length,1,'the additional physical-return controller remains a separate shipped script');
  const forbidden=/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/;
  for(const [index,script] of scripts.entries())assert.doesNotMatch(script,forbidden,'unsafe control byte inside inline script '+index);
  assert.ok(scripts.some(script=>script.includes('\\u0000-\\u001f')), 'regex escapes should survive the HTML tokenizer');

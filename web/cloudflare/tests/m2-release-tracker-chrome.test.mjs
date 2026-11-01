@@ -5,6 +5,7 @@ import {spawn} from 'node:child_process';
 import {existsSync,mkdtempSync,mkdirSync,writeFileSync} from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import {performance} from 'node:perf_hooks';
 import {compiledOwnerReportPage} from './owner-report-browser-fixture.mjs';
 import {createChromeProfileCleanup} from './chrome-profile-cleanup.mjs';
 import {waitForChromeDebugPort} from './chrome-debug-port.mjs';
@@ -25,7 +26,20 @@ function fixture(){
 async function browser(){
  const profile=mkdtempSync(path.join(os.tmpdir(),'mls-release-tracker-')),child=spawn(chrome,['--headless=new','--no-sandbox','--disable-dev-shm-usage','--disable-gpu','--disable-background-networking','--disable-extensions','--remote-allow-origins=*','--remote-debugging-port=0','--user-data-dir='+profile,'about:blank'],{stdio:'ignore'}),cleanup=createChromeProfileCleanup(child,profile);let socket;
  try{
-  const port=await waitForChromeDebugPort(child,profile),pages=await(await fetch('http://127.0.0.1:'+port+'/json/list')).json();socket=new WebSocket(pages.find(page=>page.type==='page').webSocketDebuggerUrl);await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('CDP_OPEN_TIMEOUT')),10000);socket.addEventListener('open',()=>{clearTimeout(timer);resolve();},{once:true});socket.addEventListener('error',()=>{clearTimeout(timer);reject(Error('CDP_OPEN_ERROR'));},{once:true});});
+  const port=await waitForChromeDebugPort(child,profile),targetDeadline=performance.now()+15000;let page;
+  // The debug port may precede the first page target on a busy runner. Wait
+  // for this process's target without restarting Chrome or retrying the test.
+  while(performance.now()<targetDeadline){
+   if(child.exitCode!==null||child.signalCode!==null||child.killed)throw Error('CDP_PAGE_PROCESS_EXITED');
+   const remaining=Math.max(1,Math.ceil(targetDeadline-performance.now()));
+   try{
+    const response=await fetch('http://127.0.0.1:'+port+'/json/list',{signal:AbortSignal.timeout(remaining)});
+    if(response.ok){const pages=await response.json();page=Array.isArray(pages)?pages.find(value=>value?.type==='page'&&typeof value.webSocketDebuggerUrl==='string'&&value.webSocketDebuggerUrl.length>0):null;if(page)break;}
+   }catch{}
+   const wait=targetDeadline-performance.now();if(wait>0)await pause(Math.min(50,wait));
+  }
+  if(!page)throw Error('CDP_PAGE_TARGET_TIMEOUT');
+  socket=new WebSocket(page.webSocketDebuggerUrl);await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('CDP_OPEN_TIMEOUT')),10000);socket.addEventListener('open',()=>{clearTimeout(timer);resolve();},{once:true});socket.addEventListener('error',()=>{clearTimeout(timer);reject(Error('CDP_OPEN_ERROR'));},{once:true});});
   let sequence=0;const pending=new Map();socket.addEventListener('message',event=>{const value=JSON.parse(event.data),call=pending.get(value.id);if(!call)return;pending.delete(value.id);clearTimeout(call.timer);value.error?call.reject(Error(value.error.message)):call.resolve(value.result);});
   const send=(method,params={})=>new Promise((resolve,reject)=>{const id=++sequence,timer=setTimeout(()=>{pending.delete(id);reject(Error('CDP_TIMEOUT:'+method));},15000);pending.set(id,{resolve,reject,timer});socket.send(JSON.stringify({id,method,params}));});await send('Page.enable');await send('Runtime.enable');
   return {send,async evaluate(expression){const value=await send('Runtime.evaluate',{expression,awaitPromise:true,returnByValue:true});if(value.exceptionDetails)throw Error(value.exceptionDetails.exception?.description||value.exceptionDetails.text);return value.result.value;},async capture(name){if(!screenshots)return;const value=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});mkdirSync(screenshots,{recursive:true});writeFileSync(path.join(screenshots,name),Buffer.from(value.data,'base64'));},close:()=>cleanup(socket)};

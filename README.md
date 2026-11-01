@@ -5,13 +5,19 @@ App, Auth e Financeiro. Cada Worker tem build e publicação próprios. A conex�
 financeira e as leituras reais foram verificadas; isso não comprova liquidação
 bancária nem encerra a conciliação M2.
 
-**Última release verificada — PR #96, 01/11/2026:** App
-`27356953-886a-4b1f-95b9-abf3c7c724f7`, com margem parcial identificada como tal
-e ROAS independente de falhas dos gráficos. Auth `37bead27` e Finance
-`e0b258a2` foram preservados. O SHA-256 do App gerado é
-`8cbbf7c123c4ac2a3dd128198d90cc3ad9d04e1a53a66719419ac1d60c27e7a6`;
+**Última release verificada — PR #98, 01/11/2026:** App
+`2157c238-cc55-42ae-9521-7f52951ebd88`, com controle interno de recebimento
+e inspeção de devoluções: entregas parciais, quarentena, classificação e
+correções auditadas. Auth `37bead27` e Finance `e0b258a2` foram preservados.
+O SHA-256 do App gerado é
+`20d0ca1e46e6cef5d374b84cce2231994ced89a2aeb289f8c4b7223a3cf14ca6`;
 bytes publicados, versões e configuração foram conferidos separadamente no
-[registro da release](docs/MLS_DAILY_MARGIN_ROAS_2026_11_01.md).
+[registro da release](docs/MLS_M22_PHYSICAL_RETURNS_2026_11_01.md). Os testes passaram: 3.056 Node e
+67 Python, incluindo Chromium normal/minificado em 320/1365 px.
+
+Recebimentos e identidade são declarados pelo operador, sem inferência pelo
+status da Shopee. Avaliação, produção incorrida, reserva e consumo na revenda
+ainda não estão integrados; esta etapa não altera o lucro ou estoque externo.
 
 As despesas de novembro ainda precisam ser declaradas. O saldo e a margem
 parciais não substituem o resultado líquido completo. Seller Centre e banco

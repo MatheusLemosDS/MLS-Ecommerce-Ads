@@ -18,7 +18,7 @@ function selection(input,stamp){
  const today=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date(stamp*1000));
  if(!exact(input,['month'])||typeof input.month!=='string'||!/^\d{4}-(0[1-9]|1[0-2])$/.test(input.month)||input.month<'2000-01'||input.month>today.slice(0,7))fail('BUSINESS_RECONCILIATION_REQUEST_INVALID',400);return input.month;
 }
-async function database(env){const db=env?.ADMIN_DB;if(typeof db?.prepare!=='function'||typeof db?.batch!=='function')fail('BUSINESS_RECONCILIATION_CONFIGURATION');if(!ready.has(db)){await db.batch(BUSINESS_RECONCILIATION_SCHEMA.map(sql=>db.prepare(sql)));ready.add(db);}return db;}
+async function database(env,initialize=true){const db=env?.ADMIN_DB;if(typeof db?.prepare!=='function'||typeof db?.batch!=='function')fail('BUSINESS_RECONCILIATION_CONFIGURATION');if(initialize&&!ready.has(db)){await db.batch(BUSINESS_RECONCILIATION_SCHEMA.map(sql=>db.prepare(sql)));ready.add(db);}return db;}
 
 // The browser passes its frozen Finance projector. This function captures no
 // database, source transport, clock or private identifier.
@@ -105,8 +105,8 @@ function publishedReportMatches(frame,source,published){
  return true;
 }
 function sourceReferences(published){return published?.payload.slots.map(slot=>({run_id:slot.frame.run_id,source_revision:slot.frame.revision,start_date:slot.start_date,end_date:slot.end_date}))??[];}
-async function snapshot(env,month,stamp,now){
- const db=await database(env),published=await readCompletedBusinessMonth(env,month,{now}),sources=sourceReferences(published);
+async function snapshot(env,month,stamp,now,{readOnly=false}={}){
+ const db=await database(env,!readOnly),published=await readCompletedBusinessMonth(env,month,{now}),sources=sourceReferences(published);
  if(!sources.length)return {db,published,sources,reports:[],reviews:[],money:[],attempts:[]};
  const ids=JSON.stringify(sources.map(source=>source.run_id)),rows=await db.batch([db.prepare('SELECT run_id,source_revision,start_date,end_date,payload,checked_at FROM business_reconciliation_reports WHERE run_id IN(SELECT value FROM json_each(?))').bind(ids),db.prepare('SELECT run_id,source_revision,checked_at,status,code,next_attempt_at FROM business_reconciliation_attempts WHERE run_id IN(SELECT value FROM json_each(?))').bind(ids)]),reports=[],reviews=[],money=[],attempts=[];
  for(const row of rows[0]?.results??[]){const source=sources.find(source=>source.run_id===row.run_id);if(row.source_revision!==source.source_revision)continue;let report,evidence,amounts;try{if(typeof row.payload!=='string'||encoder.encode(row.payload).byteLength>1048576)throw Error();const raw=JSON.parse(row.payload);amounts=projectReconciliationMoneyFrame(raw,projectReconciliationFrame,projectReconciliationEvidenceFrame);evidence=amounts??projectReconciliationEvidenceFrame(raw,projectReconciliationFrame);report=evidence?.report??projectReconciliationFrame(raw);}catch{}if(!publishedReportMatches(report,source,published)||row.checked_at!==report.checked_at||row.start_date!==report.start_date||row.end_date!==report.end_date||report.checked_at>stamp+60)fail('BUSINESS_RECONCILIATION_STORAGE_INVALID');reports.push(report);if(evidence)reviews.push({run_id:report.run_id,source_revision:report.source_revision,review:evidence.review});if(amounts)money.push({run_id:report.run_id,source_revision:report.source_revision,money:amounts.money});}
@@ -119,7 +119,7 @@ function view(month,stamp,state){
  const value={schema:'business_reconciliation_v1',month,start_date:month+'-01',end_date:state.published?.payload.end_date??null,checked_at:stamp,status:!state.sources.length?'COLLECTING':complete?'CHECKED':state.reports.length?'PARTIAL':unavailable?'UNAVAILABLE':'RUNNING',source_revision:state.published?.publication.source_revision??null,sources:state.sources,reports:state.reports,attempts:state.attempts,pending:!state.sources.length?['PUBLICATION_REQUIRED']:[...(!complete?['RECONCILIATION_PENDING']:[]),...(unavailable?['SOURCE_UNAVAILABLE']:[])]};
  const projected=projectBusinessReconciliation(value,projectReconciliationFrame);if(!projected)fail('BUSINESS_RECONCILIATION_RESULT_INVALID');return projected;
 }
-export async function readBusinessReconciliation(env,input,{now=()=>Date.now()}={}){const stamp=clock(now),month=selection(input,stamp);return view(month,stamp,await snapshot(env,month,stamp,()=>stamp*1000));}
+export async function readBusinessReconciliation(env,input,{now=()=>Date.now(),readOnly=false}={}){const stamp=clock(now),month=selection(input,stamp);return view(month,stamp,await snapshot(env,month,stamp,()=>stamp*1000,{readOnly}));}
 export async function readBusinessReconciliationEvidence(env,input,{now=()=>Date.now()}={}){
  const stamp=clock(now),month=selection(input,stamp),state=await snapshot(env,month,stamp,()=>stamp*1000),result=projectBusinessReconciliationEvidence({schema:'business_reconciliation_v2',report:view(month,stamp,state),reviews:state.reviews},{projectBusiness:projectBusinessReconciliation,projectFrame:projectReconciliationFrame,projectEvidenceFrame:projectReconciliationEvidenceFrame});
  if(!result)fail('BUSINESS_RECONCILIATION_RESULT_INVALID');return result;
