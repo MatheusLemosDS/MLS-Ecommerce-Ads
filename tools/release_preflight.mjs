@@ -30,7 +30,7 @@ export const RELEASE_BASE_COMMIT=approvedCandidate.base_commit;
 export const RELEASE_EXPECTED_SHA=Object.freeze({...approvedCandidate.expected_hashes});
 export const RELEASE_EXPECTED_LIVE_FLAGS=Object.freeze({...validFlags});
 export const RELEASE_ALLOWED_FILES=Object.freeze([...approvedCandidate.allowed_files]);
-// This daily-profit presentation repair changes only the App. No
+// This daily margin and ROAS presentation repair changes only the App. No
 // protected Finance/Auth source, legacy original or Worker configuration is
 // authorized by this candidate. Exact paths and all three hashes still apply.
 export const RELEASE_APPROVED_PROTECTED_FILES=Object.freeze([]);

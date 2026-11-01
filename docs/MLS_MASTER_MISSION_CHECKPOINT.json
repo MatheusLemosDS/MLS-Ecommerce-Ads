@@ -180,30 +180,30 @@
     }
   ],
   "current_release": {
-    "id": "DAILY_PROFIT_MONTHLY_EXPENSES_DISCLOSURE_AND_TODAY_ROLLOVER",
-    "status": "OFFICIAL_LIVE_DAILY_RESULT_FIX_VERIFIED_EXPENSE_INPUT_PENDING",
-    "pull_request": 95,
-    "branch": "fix/today-estimated-profit-20261101",
-    "base_main": "e6df6dcd7f8b7ba05af4dcaefa22437017d15721",
-    "code_commit": "5e0648d408deedac12f7a6f5d0978a98b4391d3f",
-    "reviewed_head": "c884700e582d24a6619847bcf4ee0cca27b27e5f",
-    "ci_run": 41332958729,
-    "node_tests": 3005,
+    "id": "DAILY_PARTIAL_MARGIN_AND_ROAS_KPI_FAULT_ISOLATION",
+    "status": "OFFICIAL_LIVE_MARGIN_PARTIAL_ROAS_FAULT_ISOLATION_VERIFIED",
+    "pull_request": 96,
+    "branch": "fix/daily-margin-roas-presentation-20261101",
+    "base_main": "8acf6b921e7368afa98453451ee6b9092c58fd54",
+    "code_commit": "b1a0883f9b41b230217f1b2b0f0ad70b43c6335e",
+    "reviewed_head": "b995ef9037e651b773baea005f9b613431a5ac72",
+    "ci_run": 41334582368,
+    "node_tests": 3015,
     "python_tests": 67,
-    "docs": "docs/MLS_TODAY_ESTIMATED_PROFIT_2026_11_01.md",
+    "docs": "docs/MLS_DAILY_MARGIN_ROAS_2026_11_01.md",
     "deployment": {
       "versions": {
-        "app": "47e3de73-13bc-4199-b742-8d4152f842b1",
+        "app": "27356953-886a-4b1f-95b9-abf3c7c724f7",
         "auth": "37bead27-c941-40e6-87e8-832f01d1785a",
         "finance": "e0b258a2-e73f-45d2-912a-1cb6fd666e18"
       },
       "generated_sha256": {
-        "app": "e58fb92ea20a0f0c1927386afb0349b663eb34b6514cce74a6a663f3089041eb",
+        "app": "8cbbf7c123c4ac2a3dd128198d90cc3ad9d04e1a53a66719419ac1d60c27e7a6",
         "auth": "c63ee09b2d98b6321e3ae7feae1066a9eec9160b49868d72fb84cb0471a0018d",
         "finance": "dff201100ed319f3b7d4d8cabf6826237be3a140e679f562cb982cec5bdd89b4"
       },
       "published_sha256": {
-        "app": "167847fa0809d9ffe2572b717d6340f38eece098ce990f610170e202d3f3c25a",
+        "app": "a38b5bd2988149118fbb0059f645093483d75244aee20804103f26f72c8413df",
         "auth": "46053d0b5f11ff4d738b4cf2cc1cc6afda7d21e233980b1e640f63728f32af2a",
         "finance": "b4195212972f5a9f0f8ff08c9504e983f8bd3ca3b3c42493cb7c88addb84de8b"
       },
@@ -214,20 +214,23 @@
       "cron_preserved": true,
       "auth_finance_versions_preserved": true
     },
-    "cause": {
-      "month": "2026-11",
-      "pending": [
-        "EXTERNAL_EXPENSES_REQUIRED"
-      ],
-      "expense_declaration": "MISSING_NOT_ZERO",
-      "observed_at": "2026-11-01T17:30:07Z",
-      "paid_orders": 9,
-      "payout_cents": 41818,
-      "production_cents": 28740,
-      "ads_cents": 2845,
-      "das_daily_cents": 286,
-      "before_unknown_expenses_cents": 9947,
-      "estimate_cents": null
+    "diagnosis": {
+      "financial_margin": "UNKNOWN_MONTH_EXPENSE_DECLARATION_MISSING",
+      "roas_source": "AVAILABLE_ONE_OBSERVATION",
+      "renderer_coupling": "REPRODUCED_BY_GRAPH_FAULT_INJECTION",
+      "specific_owner_browser_exception": "NOT_CAPTURED",
+      "observed_roas_at_1755_utc": "23.480665",
+      "observed_attributed_sales_cents": 73471,
+      "observed_ads_spend_cents": 3129
+    },
+    "presentation": {
+      "margin_field": "daily_profit_presentation_v1.margin_bps",
+      "financial_dto_changed": false,
+      "positive_same_day_sales_required": true,
+      "arithmetic": "BOUNDED_SIGNED_BIGINT_TRUNCATION",
+      "partial_net_and_financial_margin_stay_null": true,
+      "partial_not_in_profit_chart_or_comparison": true,
+      "zero_expense_presumed": false
     },
     "validation": {
       "synthetic_authenticated_chromium": [
@@ -236,14 +239,26 @@
         "320px",
         "1365px"
       ],
-      "real_snapshot_replay": "LOCAL_NO_PROVIDER_OR_REMOTE_WRITES",
-      "real_owner_live_browser": "NOT_OBSERVED_EXECUTOR_WAF_403",
-      "partial_not_in_net_margin_charts": true,
-      "explicit_expense_confirmation_required": true,
-      "saved_get_immediate": true,
-      "brasilia_rollover": true,
-      "historical_dates_and_dirty_drafts_preserved": true,
-      "cancelled_unpaid_excluded": true
+      "saved_real_replay": {
+        "publication_revision": 435,
+        "month": "2026-11",
+        "subtotal_cents": 9947,
+        "sales_cents": 58939,
+        "partial_margin_bps": 1687,
+        "roas_display": "20,72x",
+        "widths": [
+          1365,
+          320
+        ],
+        "fault_keeps_roas_and_margin": true,
+        "expense_posts": 0,
+        "provider_calls": 0,
+        "remote_writes": 0
+      },
+      "rejected_ads_clears_previous_ratio": true,
+      "failed_panel_clears_stale_table_and_scope": true,
+      "other_panels_continue": true,
+      "real_owner_live_browser": "NOT_OBSERVED_EXECUTOR_WAF_403"
     },
     "owner_reads": "CACHE_ONLY",
     "remote_financial_values_changed": false,
@@ -254,8 +269,8 @@
     "external_cloudflare_build_checks": {
       "status": "FAILURE",
       "cause": "UNCONFIRMED",
-      "log_access": "HTTP_403_CLOUDFLARE_12004",
-      "controlled_live_publication": "EXACT_BYTES_AND_LOCAL_REAL_SNAPSHOT_REPLAY_VERIFIED"
+      "historical_log_access": "HTTP_403_CLOUDFLARE_12004",
+      "controlled_live_publication": "EXACT_BYTES_AND_LOCAL_REAL_SNAPSHOT_FAULT_REPLAY_VERIFIED"
     }
   },
   "validation_history": [
@@ -1514,6 +1529,179 @@
       "cause": "UNCONFIRMED",
       "log_access": "HTTP_403_CLOUDFLARE_12004",
       "controlled_live_publication": "EXACT_BYTES_AND_LOCAL_REAL_SNAPSHOT_REPLAY_VERIFIED"
+    }
+  },
+  "previous_increment_before_margin_roas": {
+    "id": "DAILY_PROFIT_MONTHLY_EXPENSES_DISCLOSURE_AND_TODAY_ROLLOVER",
+    "status": "OFFICIAL_LIVE_DAILY_RESULT_FIX_VERIFIED_EXPENSE_INPUT_PENDING",
+    "pull_request": 95,
+    "branch": "fix/today-estimated-profit-20261101",
+    "base_main": "e6df6dcd7f8b7ba05af4dcaefa22437017d15721",
+    "code_commit": "5e0648d408deedac12f7a6f5d0978a98b4391d3f",
+    "reviewed_head": "c884700e582d24a6619847bcf4ee0cca27b27e5f",
+    "ci_run": 41332958729,
+    "node_tests": 3005,
+    "python_tests": 67,
+    "docs": "docs/MLS_TODAY_ESTIMATED_PROFIT_2026_11_01.md",
+    "deployment": {
+      "versions": {
+        "app": "47e3de73-13bc-4199-b742-8d4152f842b1",
+        "auth": "37bead27-c941-40e6-87e8-832f01d1785a",
+        "finance": "e0b258a2-e73f-45d2-912a-1cb6fd666e18"
+      },
+      "generated_sha256": {
+        "app": "e58fb92ea20a0f0c1927386afb0349b663eb34b6514cce74a6a663f3089041eb",
+        "auth": "c63ee09b2d98b6321e3ae7feae1066a9eec9160b49868d72fb84cb0471a0018d",
+        "finance": "dff201100ed319f3b7d4d8cabf6826237be3a140e679f562cb982cec5bdd89b4"
+      },
+      "published_sha256": {
+        "app": "167847fa0809d9ffe2572b717d6340f38eece098ce990f610170e202d3f3c25a",
+        "auth": "46053d0b5f11ff4d738b4cf2cc1cc6afda7d21e233980b1e640f63728f32af2a",
+        "finance": "b4195212972f5a9f0f8ff08c9504e983f8bd3ca3b3c42493cb7c88addb84de8b"
+      },
+      "exact_bytes_verified": true,
+      "configuration_preserved": true,
+      "domains_preserved": true,
+      "flags_preserved": true,
+      "cron_preserved": true,
+      "auth_finance_versions_preserved": true
+    },
+    "cause": {
+      "month": "2026-11",
+      "pending": [
+        "EXTERNAL_EXPENSES_REQUIRED"
+      ],
+      "expense_declaration": "MISSING_NOT_ZERO",
+      "observed_at": "2026-11-01T17:30:07Z",
+      "paid_orders": 9,
+      "payout_cents": 41818,
+      "production_cents": 28740,
+      "ads_cents": 2845,
+      "das_daily_cents": 286,
+      "before_unknown_expenses_cents": 9947,
+      "estimate_cents": null
+    },
+    "validation": {
+      "synthetic_authenticated_chromium": [
+        "normal",
+        "minified",
+        "320px",
+        "1365px"
+      ],
+      "real_snapshot_replay": "LOCAL_NO_PROVIDER_OR_REMOTE_WRITES",
+      "real_owner_live_browser": "NOT_OBSERVED_EXECUTOR_WAF_403",
+      "partial_not_in_net_margin_charts": true,
+      "explicit_expense_confirmation_required": true,
+      "saved_get_immediate": true,
+      "brasilia_rollover": true,
+      "historical_dates_and_dirty_drafts_preserved": true,
+      "cancelled_unpaid_excluded": true
+    },
+    "owner_reads": "CACHE_ONLY",
+    "remote_financial_values_changed": false,
+    "commercial_writes": "LOCKED",
+    "finance_m2": "OPEN",
+    "seller_centre_comparison": "NOT_COMPARED",
+    "bank_settlement": "UNVERIFIED",
+    "external_cloudflare_build_checks": {
+      "status": "FAILURE",
+      "cause": "UNCONFIRMED",
+      "log_access": "HTTP_403_CLOUDFLARE_12004",
+      "controlled_live_publication": "EXACT_BYTES_AND_LOCAL_REAL_SNAPSHOT_REPLAY_VERIFIED"
+    }
+  },
+  "daily_margin_roas_2026_11_01": {
+    "id": "DAILY_PARTIAL_MARGIN_AND_ROAS_KPI_FAULT_ISOLATION",
+    "status": "OFFICIAL_LIVE_MARGIN_PARTIAL_ROAS_FAULT_ISOLATION_VERIFIED",
+    "pull_request": 96,
+    "branch": "fix/daily-margin-roas-presentation-20261101",
+    "base_main": "8acf6b921e7368afa98453451ee6b9092c58fd54",
+    "code_commit": "b1a0883f9b41b230217f1b2b0f0ad70b43c6335e",
+    "reviewed_head": "b995ef9037e651b773baea005f9b613431a5ac72",
+    "ci_run": 41334582368,
+    "node_tests": 3015,
+    "python_tests": 67,
+    "docs": "docs/MLS_DAILY_MARGIN_ROAS_2026_11_01.md",
+    "deployment": {
+      "versions": {
+        "app": "27356953-886a-4b1f-95b9-abf3c7c724f7",
+        "auth": "37bead27-c941-40e6-87e8-832f01d1785a",
+        "finance": "e0b258a2-e73f-45d2-912a-1cb6fd666e18"
+      },
+      "generated_sha256": {
+        "app": "8cbbf7c123c4ac2a3dd128198d90cc3ad9d04e1a53a66719419ac1d60c27e7a6",
+        "auth": "c63ee09b2d98b6321e3ae7feae1066a9eec9160b49868d72fb84cb0471a0018d",
+        "finance": "dff201100ed319f3b7d4d8cabf6826237be3a140e679f562cb982cec5bdd89b4"
+      },
+      "published_sha256": {
+        "app": "a38b5bd2988149118fbb0059f645093483d75244aee20804103f26f72c8413df",
+        "auth": "46053d0b5f11ff4d738b4cf2cc1cc6afda7d21e233980b1e640f63728f32af2a",
+        "finance": "b4195212972f5a9f0f8ff08c9504e983f8bd3ca3b3c42493cb7c88addb84de8b"
+      },
+      "exact_bytes_verified": true,
+      "configuration_preserved": true,
+      "domains_preserved": true,
+      "flags_preserved": true,
+      "cron_preserved": true,
+      "auth_finance_versions_preserved": true
+    },
+    "diagnosis": {
+      "financial_margin": "UNKNOWN_MONTH_EXPENSE_DECLARATION_MISSING",
+      "roas_source": "AVAILABLE_ONE_OBSERVATION",
+      "renderer_coupling": "REPRODUCED_BY_GRAPH_FAULT_INJECTION",
+      "specific_owner_browser_exception": "NOT_CAPTURED",
+      "observed_roas_at_1755_utc": "23.480665",
+      "observed_attributed_sales_cents": 73471,
+      "observed_ads_spend_cents": 3129
+    },
+    "presentation": {
+      "margin_field": "daily_profit_presentation_v1.margin_bps",
+      "financial_dto_changed": false,
+      "positive_same_day_sales_required": true,
+      "arithmetic": "BOUNDED_SIGNED_BIGINT_TRUNCATION",
+      "partial_net_and_financial_margin_stay_null": true,
+      "partial_not_in_profit_chart_or_comparison": true,
+      "zero_expense_presumed": false
+    },
+    "validation": {
+      "synthetic_authenticated_chromium": [
+        "normal",
+        "minified",
+        "320px",
+        "1365px"
+      ],
+      "saved_real_replay": {
+        "publication_revision": 435,
+        "month": "2026-11",
+        "subtotal_cents": 9947,
+        "sales_cents": 58939,
+        "partial_margin_bps": 1687,
+        "roas_display": "20,72x",
+        "widths": [
+          1365,
+          320
+        ],
+        "fault_keeps_roas_and_margin": true,
+        "expense_posts": 0,
+        "provider_calls": 0,
+        "remote_writes": 0
+      },
+      "rejected_ads_clears_previous_ratio": true,
+      "failed_panel_clears_stale_table_and_scope": true,
+      "other_panels_continue": true,
+      "real_owner_live_browser": "NOT_OBSERVED_EXECUTOR_WAF_403"
+    },
+    "owner_reads": "CACHE_ONLY",
+    "remote_financial_values_changed": false,
+    "commercial_writes": "LOCKED",
+    "finance_m2": "OPEN",
+    "seller_centre_comparison": "NOT_COMPARED",
+    "bank_settlement": "UNVERIFIED",
+    "external_cloudflare_build_checks": {
+      "status": "FAILURE",
+      "cause": "UNCONFIRMED",
+      "historical_log_access": "HTTP_403_CLOUDFLARE_12004",
+      "controlled_live_publication": "EXACT_BYTES_AND_LOCAL_REAL_SNAPSHOT_FAULT_REPLAY_VERIFIED"
     }
   }
 }

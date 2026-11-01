@@ -19,7 +19,10 @@ export function projectDailyProfitPresentation(row){
   const das=read(row,'allocated_das_cents'),expenses=read(row,'allocated_expenses_cents'),ads=read(row,'ads_spend_cents'),payout=read(row,'payout_cents'),recharge=read(row,'recharge_addback_cents'),production=read(row,'production_cost_cents'),knownProduction=read(row,'known_production_cost_cents'),operating=read(row,'operating_balance_cents'),estimate=read(row,'estimate_cents'),knownEstimate=read(row,'known_estimate_cents'),p=read(row,'production_coverage'),coverage=read(row,'coverage'),payoutBasis=read(row,'payout_basis');
   if(![das,expenses,ads,recharge,production,knownProduction].every(value=>cents(value))||![payout,operating,estimate,knownEstimate].every(value=>cents(value,true))||!exact(p,['total_units','known_units','pending_units'])||!['BASE_REPASS','AFTER_ADJUSTMENTS','UNAVAILABLE'].includes(payoutBasis)||!has('TAX_POLICY_REQUIRED',das===null)||!has('EXTERNAL_EXPENSES_REQUIRED',expenses===null)||!has('ADS_UNAVAILABLE',ads===null)||!has('DAILY_HISTORY_PENDING',reason==='DAILY_HISTORY_PENDING')||!has('CREATION_DATE_INCOMPLETE',reason==='CREATION_DATE_INCOMPLETE'))return null;
   const missing=[];if(das===null)missing.push('TAX_POLICY_REQUIRED');if(expenses===null)missing.push('EXTERNAL_EXPENSES_REQUIRED');
-  const result=(presentation,basis,amount=null)=>({schema:'daily_profit_presentation_v1',state:presentation,basis,amount_cents:amount,monthly_costs_missing:[...missing],das_included:amount!==null&&das!==null,expenses_included:amount!==null&&expenses!==null});
+  // This ratio retains the subtotal's basis; it is not the financial net margin.
+  const sales=read(row,'sales_cents');
+  const margin=amount=>amount!==null&&int(sales)&&sales>0?safe(BigInt(amount)*10000n/BigInt(sales)):null;
+  const result=(presentation,basis,amount=null)=>({schema:'daily_profit_presentation_v1',state:presentation,basis,amount_cents:amount,margin_bps:margin(amount),monthly_costs_missing:[...missing],das_included:amount!==null&&das!==null,expenses_included:amount!==null&&expenses!==null});
   if(reason!==null){
    if(state!=='UNAVAILABLE'||coverage!==null||Object.values(p).some(value=>value!==null)||[payout,production,knownProduction,recharge,operating,estimate,knownEstimate].some(value=>value!==null)||payoutBasis!=='UNAVAILABLE')return null;
    return result('UNAVAILABLE','UNAVAILABLE');

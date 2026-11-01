@@ -12,11 +12,35 @@ function row({payout=12000,production=4000,knownProduction=production??4000,ads=
 const missing=(value,...codes)=>assert.deepEqual(value.monthly_costs_missing,codes);
 
 test('a fully priced daily estimate retains its exact amount and includes both confirmed monthly shares',()=>{
- const input=row(),before=structuredClone(input),value=projectDailyProfitPresentation(input);assert.deepEqual(value,{schema:base,state:'ESTIMATE',basis:'AFTER_DAILY_AND_ALLOCATED_MONTHLY_COSTS',amount_cents:6300,monthly_costs_missing:[],das_included:true,expenses_included:true});assert.deepEqual(input,before);assert.equal(input.estimate_cents,6300);
+ const input=row(),before=structuredClone(input),value=projectDailyProfitPresentation(input);assert.deepEqual(value,{schema:base,state:'ESTIMATE',basis:'AFTER_DAILY_AND_ALLOCATED_MONTHLY_COSTS',amount_cents:6300,margin_bps:4500,monthly_costs_missing:[],das_included:true,expenses_included:true});assert.deepEqual(input,before);assert.equal(input.estimate_cents,6300);
 });
 
 test('unknown monthly expenses expose a separately named subtotal after known DAS without manufacturing net profit',()=>{
  const input=row({expenses:null}),value=projectDailyProfitPresentation(input);assert.equal(value.state,'BEFORE_MONTHLY_COSTS');assert.equal(value.basis,'BEFORE_UNCONFIRMED_EXPENSES');assert.equal(value.amount_cents,6400);assert.equal(value.das_included,true);assert.equal(value.expenses_included,false);missing(value,'EXTERNAL_EXPENSES_REQUIRED');assert.equal(input.allocated_expenses_cents,null);assert.equal(input.estimate_cents,null);assert.equal(input.known_estimate_cents,null);
+});
+
+test('a before-expenses margin uses same-day sales and stays separate from unknown financial profit',()=>{
+ const input={...row({payout:41818,production:28740,ads:2845,recharge:0,das:286,expenses:null}),sales_cents:58939},before=structuredClone(input),value=projectDailyProfitPresentation(input);
+ assert.equal(value.state,'BEFORE_MONTHLY_COSTS');assert.equal(value.basis,'BEFORE_UNCONFIRMED_EXPENSES');assert.equal(value.amount_cents,9947);assert.equal(value.margin_bps,1687);assert.equal(input.estimate_cents,null);assert.equal(input.known_estimate_cents,null);assert.deepEqual(input,before);
+ const negative={...row({payout:-1000,expenses:null}),sales_cents:14000},loss=projectDailyProfitPresentation(negative);assert.equal(loss.amount_cents,-6600);assert.equal(loss.margin_bps,-4714);
+ const zero={...row({payout:5600,expenses:null}),sales_cents:14000},flat=projectDailyProfitPresentation(zero);assert.equal(flat.amount_cents,0);assert.equal(flat.margin_bps,0);assert.equal(Object.is(flat.margin_bps,-0),false);
+});
+
+test('missing, zero, negative and invalid sales preserve the subtotal without inventing a margin denominator',()=>{
+ const input=row({expenses:null}),expected=projectDailyProfitPresentation(input).amount_cents;
+ for(const sales of [null,undefined,0,-0,-1,NaN,Infinity,-Infinity,0.1,Number.MAX_SAFE_INTEGER+1,'14000',false]){const value=projectDailyProfitPresentation({...input,sales_cents:sales});assert.equal(value.amount_cents,expected);assert.equal(value.margin_bps,null,String(sales));}
+ const omitted={...input};delete omitted.sales_cents;assert.equal(projectDailyProfitPresentation(omitted).margin_bps,null);
+ let invoked=0;const accessor={...input};Object.defineProperty(accessor,'sales_cents',{get(){invoked++;throw Error('PRIVATE_SALES_GETTER');}});assert.equal(projectDailyProfitPresentation(accessor).margin_bps,null);assert.equal(invoked,0);
+ const unknown=projectDailyProfitPresentation({...row({ads:null,expenses:null}),sales_cents:14000});assert.equal(unknown.amount_cents,null);assert.equal(unknown.margin_bps,null);
+ const production=projectDailyProfitPresentation({...row({production:null,knownProduction:4000,units:2,knownUnits:1,expenses:null}),sales_cents:14000});assert.equal(production.amount_cents,null);assert.equal(production.margin_bps,null);
+});
+
+test('presentation margins use bounded signed BigInt division including truncation and overflow',()=>{
+ const maximum=Number.MAX_SAFE_INTEGER;
+ const largest={...row({payout:maximum,production:0,knownProduction:0,ads:0,recharge:0,das:0,expenses:null}),sales_cents:10000};assert.equal(projectDailyProfitPresentation(largest).margin_bps,maximum);
+ const overflow=projectDailyProfitPresentation({...largest,sales_cents:1});assert.equal(overflow.amount_cents,maximum);assert.equal(overflow.margin_bps,null);
+ const smallest={...row({payout:Number.MIN_SAFE_INTEGER,production:0,knownProduction:0,ads:0,recharge:0,das:0,expenses:null}),sales_cents:10000};assert.equal(projectDailyProfitPresentation(smallest).margin_bps,Number.MIN_SAFE_INTEGER);assert.equal(projectDailyProfitPresentation({...smallest,sales_cents:1}).margin_bps,null);
+ const tiny={...row({payout:5599,expenses:null}),sales_cents:100000};const value=projectDailyProfitPresentation(tiny);assert.equal(value.amount_cents,-1);assert.equal(value.margin_bps,0);assert.equal(Object.is(value.margin_bps,-0),false);
 });
 
 test('unknown DAS and unknown combined monthly costs have distinct bases and inclusion flags',()=>{
