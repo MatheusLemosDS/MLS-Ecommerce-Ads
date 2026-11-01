@@ -5,6 +5,8 @@ import {businessDayBody,BUSINESS_DAY_CSS} from './business-day-view.mjs';
 import {commandCenterBody,pendingIncomeBody,COMMAND_CENTER_CSS} from './agent-registry-view.mjs';
 import {MISSION_CSS,MISSION_TRENDS_CSS,missionWorkspacesBody} from './mission-control.mjs';
 import {workspaceNavigation,workspaceSecondaryNavigation,WORKSPACE_NAVIGATION_CSS} from './workspace-navigation.mjs';
+import {releaseNotesBody} from './app-release-view.mjs';
+import {APP_RELEASE} from './app-release.mjs';
 export const CSS=BUSINESS_DAY_CSS+COMMAND_CENTER_CSS+String.raw`
 .hermes-live-monitor{margin:0 0 22px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}.hermes-live-monitor>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:48px;padding:14px 16px;font-size:12px;font-weight:650;cursor:pointer}.hermes-live-monitor>summary span{font-size:10px;color:var(--muted);font-weight:400}.hermes-live-monitor .source-comparison{margin:0}.hermes-live-monitor[open]>summary{border-bottom:1px solid var(--line)}@media(max-width:640px){.hermes-live-monitor>summary{align-items:flex-start;flex-direction:column;gap:5px}.hero{margin-bottom:18px}.hero h1{font-size:22px}}
 .store-ads-measurement{margin:24px 0;padding-top:24px;border-top:1px solid var(--line,#e2e6e9);min-width:0}.ads-measurement-days{min-width:0;margin:18px 0}.ads-measurement-days summary{cursor:pointer;font-size:12px;font-weight:650}.ads-measurement-days .table-wrap{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}.ads-measurement-days table{min-width:660px;width:100%;border-collapse:collapse;margin:12px 0}.ads-measurement-days th,.ads-measurement-days td{text-align:left;padding:12px 10px;border-bottom:1px solid var(--line,#e2e6e9);font-size:11px;font-variant-numeric:tabular-nums}.ads-measurement-days th{color:var(--muted,#606c76)}
@@ -199,11 +201,11 @@ function legacyAdminBody(){return `<div class="app-shell"><aside class="sidebar"
  <header class="roadmap-hero">
   <div class="roadmap-hero-copy">
    <span class="roadmap-eyebrow">MLS COMMERCE OS · PLANO DE EVOLUÇÃO</span>
-   <h2 id="mlsRoadmapHeading">Construindo a próxima versão, sem comprometer a operação.</h2>
-   <p>Veja o que já está publicado, o que estamos homologando e quais evidências faltam para cada etapa. Desenvolvimento e liberação são processos separados.</p>
+   <h2 id="mlsRoadmapHeading">O que já funciona e o que vem a seguir.</h2>
+   <p>Conheça os controles disponíveis nesta versão e as conferências que ainda faltam. Um recurso entregue não significa que os dados reais da loja já foram confirmados.</p>
    <div class="roadmap-hero-actions">
     <a class="roadmap-action roadmap-action--primary" href="/admin?tab=agents">Explorar os agentes</a>
-    <a class="roadmap-action roadmap-action--quiet" href="https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/issues/67" target="_blank" rel="noopener noreferrer">Acompanhar homologação</a>
+    <a class="roadmap-action roadmap-action--quiet" href="#appReleaseNotes">Ver novidades desta versão</a>
    </div>
   </div>
   <div class="roadmap-focus" aria-label="Fase principal do negócio">
@@ -211,53 +213,54 @@ function legacyAdminBody(){return `<div class="app-shell"><aside class="sidebar"
    <strong>M2 <span>Finance &amp; Returns</span></strong>
    <span class="roadmap-status roadmap-status--active">Conciliação em andamento</span>
    <p>Confirmar valores e cobertura no Seller Centre antes de fechar o resultado líquido.</p>
-   <small>Checkpoint técnico · 29/10/2026</small>
+   <small>Versão ${APP_RELEASE.id} · ${APP_RELEASE.date}</small>
   </div>
  </header>
  <div class="roadmap-summary" aria-label="Resumo do progresso">
-  <div class="roadmap-summary-card"><span class="roadmap-summary-indicator roadmap-summary-indicator--done" aria-hidden="true"></span><div><span class="roadmap-summary-label">BASE PUBLICADA</span><strong>M0 + M1</strong><p>Marca MLS, Central de Comando e agentes observadores</p></div></div>
+  <div class="roadmap-summary-card"><span class="roadmap-summary-indicator roadmap-summary-indicator--done" aria-hidden="true"></span><div><span class="roadmap-summary-label">DISPONÍVEL NO PAINEL</span><strong>Central e agentes</strong><p>Busca, catálogo salvo, DTF e indicadores com fontes identificadas</p></div></div>
   <div class="roadmap-summary-card"><span class="roadmap-summary-indicator roadmap-summary-indicator--active" aria-hidden="true"></span><div><span class="roadmap-summary-label">PRIORIDADE ATUAL</span><strong>M2 Financeiro</strong><p>Pending, repasses e devoluções ainda em conferência</p></div></div>
-  <div class="roadmap-summary-card"><span class="roadmap-summary-indicator roadmap-summary-indicator--review" aria-hidden="true"></span><div><span class="roadmap-summary-label">CANDIDATO DE RELEASE</span><strong>Mission Control V3.6</strong><p>Busca e Fábrica de Anúncios locais em PRs, não publicadas</p></div></div>
+  <div class="roadmap-summary-card"><span class="roadmap-summary-indicator roadmap-summary-indicator--done" aria-hidden="true"></span><div><span class="roadmap-summary-label">CONTROLES FÍSICOS</span><strong>Receber, inspecionar e associar</strong><p>Produção histórica e devoluções com registros declarados por você</p></div></div>
  </div>
  <div class="roadmap-main-grid">
   <div class="roadmap-plan">
-   <div class="roadmap-section-title"><div><span class="roadmap-eyebrow">AGORA</span><h3>Entregas em andamento</h3><p>O trabalho técnico continua em paralelo, mas nenhuma atualização vai direto para produção.</p></div></div>
+   <div class="roadmap-section-title"><div><span class="roadmap-eyebrow">AGORA</span><h3>Capacidades e próximas conferências</h3><p>Os controles já podem ser usados. Valores desconhecidos e ações ainda não verificadas continuam sinalizados.</p></div></div>
    <article class="roadmap-stage roadmap-stage--active" data-roadmap-stage="m2">
     <div class="roadmap-stage-heading"><span class="roadmap-stage-code">M2 · FINANCEIRO</span><span class="roadmap-status roadmap-status--active">Em andamento</span></div>
     <h4>Consolidar valores da loja</h4>
     <p>Conexão financeira, custos de produção, indicadores por período e cobertura de devoluções já existem. O fechamento ainda depende de conciliar repasses, estornos e datas na conta real.</p>
-    <div class="roadmap-stage-detail"><span>Próximo gate</span><strong>Conferência autenticada no Seller Centre · Issue #50</strong></div>
-    <div class="roadmap-stage-links"><a href="/admin?tab=agent-finance">Abrir MLS Finance</a><a href="https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/issues/50" target="_blank" rel="noopener noreferrer">Ver pendências financeiras</a></div>
+    <div class="roadmap-stage-detail"><span>Próxima conferência</span><strong>Comparar o mesmo mês com Seller Centre e banco</strong></div>
+    <div class="roadmap-stage-links"><a href="/admin?tab=agent-finance">Abrir MLS Finance</a><a href="/admin?tab=agent-finance#businessFinancialCloseout">Ver pendências do fechamento</a></div>
    </article>
-   <article class="roadmap-stage roadmap-stage--review" data-roadmap-stage="v36">
-    <div class="roadmap-stage-heading"><span class="roadmap-stage-code">M1.3 + M3-L · EXPERIÊNCIA</span><span class="roadmap-status roadmap-status--review">CI aprovado · Não publicado</span></div>
-    <h4>Mission Control V3.6 e Fábrica de Anúncios</h4>
-    <p>Busca no catálogo salvo e na fila DTF; criação de rascunhos com títulos, variações, mockups e reanexação local. Código integrado e testado, sem envio de anúncios à Shopee.</p>
-    <div class="roadmap-stage-detail"><span>Próximo gate</span><strong>QA real desktop/celular, flag OFF e aprovação do release · PRs #63, #65 e #68</strong></div>
-    <div class="roadmap-stage-links"><a href="/admin?tab=products">Abrir Produtos atuais</a><a href="https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/68" target="_blank" rel="noopener noreferrer">Ver candidato V3.6</a></div>
+   <article class="roadmap-stage" data-roadmap-stage="m22">
+    <div class="roadmap-stage-heading"><span class="roadmap-stage-code">M2.2 · PRODUÇÃO E DEVOLUÇÕES</span><span class="roadmap-status roadmap-status--done">Controles disponíveis</span></div>
+    <h4>Rastrear o que foi produzido e o que voltou</h4>
+    <p>Registros físicos, inspeção, fabricação por semana e mês e vínculo com a origem já estão acessíveis. Quantidades são declaradas pelo operador; valor recuperado e impacto financeiro continuam pendentes.</p>
+    <div class="roadmap-stage-detail"><span>Próximo passo</span><strong>Conferir um recebimento real e apurar seu custo sem duplicidade</strong></div>
+    <div class="roadmap-stage-links"><a href="/admin?tab=agent-returns#physicalReturnsDetails">Abrir controle físico</a><a href="#appReleaseNotes">Entender os três controles</a></div>
    </article>
    <div class="roadmap-section-title roadmap-section-title--next"><div><span class="roadmap-eyebrow">NA SEQUÊNCIA</span><h3>Inteligência antes da automação</h3><p>Preparar análises e propostas sem inventar estoque, custo, lucro ou permissões.</p></div></div>
    <div class="roadmap-next-grid">
-    <article class="roadmap-next-card" data-roadmap-stage="m3"><span class="roadmap-stage-code">M3 · PRODUCTS + PRICING</span><h4>Identificar oportunidades de verdade</h4><p>Curva ABC e simulação manual já têm código Observer em PR #47. Contribuição por SKU, preço mínimo e ROAS exigem dados financeiros compatíveis.</p><span class="roadmap-status roadmap-status--review">Observer em revisão</span></article>
+    <article class="roadmap-next-card" data-roadmap-stage="m3"><span class="roadmap-stage-code">M3 · PRODUCTS + PRICING</span><h4>Identificar oportunidades de verdade</h4><p>Contribuição por SKU, preço mínimo e oportunidades exigem receitas e custos compatíveis. A evolução depende das pendências financeiras da M2.</p><span class="roadmap-status roadmap-status--planned">Após as conferências da M2</span></article>
     <article class="roadmap-next-card" data-roadmap-stage="m4"><span class="roadmap-stage-code">M4 · ADS SHADOW</span><h4>Recomendar antes de executar</h4><p>Classificar Escalar, Manter, Otimizar ou Pausar com evidências. Campanhas e orçamentos não serão alterados automaticamente.</p><span class="roadmap-status roadmap-status--planned">Planejado</span></article>
    </div>
   </div>
   <aside class="roadmap-side" aria-label="Critérios de segurança e liberação">
    <div class="roadmap-gate-card">
-    <span class="roadmap-eyebrow">PORTÕES DE RELEASE</span>
-    <h3>O que falta para ativar a V3.6?</h3>
+    <span class="roadmap-eyebrow">CRITÉRIOS DAS PRÓXIMAS ETAPAS</span>
+    <h3>Como avançamos com segurança</h3>
     <ol class="roadmap-gates">
-     <li data-roadmap-gate="ci" class="roadmap-gate--done"><span class="roadmap-gate-marker" aria-hidden="true">✓</span><div><strong>Testes automatizados</strong><small>PR #68: 2.143 Node + 67 Python, Chrome e builds aprovados</small></div></li>
-     <li data-roadmap-gate="owner-qa"><span class="roadmap-gate-marker" aria-hidden="true">2</span><div><strong>Homologação do proprietário</strong><small>Conferir catálogo, DTF, mockups e mobile com dados autorizados</small></div></li>
-     <li data-roadmap-gate="rollback"><span class="roadmap-gate-marker" aria-hidden="true">3</span><div><strong>Rollback e deploy controlado</strong><small>Registrar versão do App e validar flag inicialmente desligada</small></div></li>
-     <li data-roadmap-gate="approval"><span class="roadmap-gate-marker" aria-hidden="true">4</span><div><strong>Aprovação de publicação</strong><small>O código não entra na produção sem autorização explícita</small></div></li>
+     <li data-roadmap-gate="ci" class="roadmap-gate--done"><span class="roadmap-gate-marker" aria-hidden="true">✓</span><div><strong>Validação técnica</strong><small>Testes, build e navegação no computador e celular fazem parte de cada entrega</small></div></li>
+     <li data-roadmap-gate="owner-qa"><span class="roadmap-gate-marker" aria-hidden="true">2</span><div><strong>Conferência da operação real</strong><small>Confirmar recebimentos, identidades e fabricação com seus registros</small></div></li>
+     <li data-roadmap-gate="rollback"><span class="roadmap-gate-marker" aria-hidden="true">3</span><div><strong>Atualização controlada</strong><small>Identificar a versão e conferir a operação ativa após a publicação</small></div></li>
+     <li data-roadmap-gate="approval"><span class="roadmap-gate-marker" aria-hidden="true">4</span><div><strong>Confirmação de ações novas ou arriscadas</strong><small>Ações externas e decisões comerciais continuam sujeitas a confirmação</small></div></li>
     </ol>
-    <a class="roadmap-gates-link" href="https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/issues/67" target="_blank" rel="noopener noreferrer">Abrir checklist de homologação</a>
+    <a class="roadmap-gates-link" href="/admin?tab=agent-finance#businessFinancialCloseout">Conferir preparação do fechamento</a>
    </div>
    <div class="roadmap-guard-card"><span class="roadmap-guard-icon" aria-hidden="true">●</span><div><strong>Ads e PROMO continuam bloqueados</strong><p>Preparar um anúncio localmente não libera publicação, alteração de preços, promoção ou orçamento. Qualquer ação externa exige contrato oficial e aprovação.</p></div></div>
    <div class="roadmap-origin"><strong>Como ler este plano</strong><p>“Publicado” é diferente de “CI aprovado”. Os estados refletem checkpoints do projeto, não dados financeiros em tempo real. Resultado desconhecido nunca vira zero.</p></div>
   </aside>
  </div>
+ ${releaseNotesBody()}
  <details class="roadmap-future" id="roadmapFuture">
   <summary><span><strong>Visão das próximas fases · M5 a M9</strong><small>Expanda para conhecer a sequência após Products e Ads Observer.</small></span><span class="roadmap-future-toggle" aria-hidden="true">+</span></summary>
   <div class="roadmap-future-grid">

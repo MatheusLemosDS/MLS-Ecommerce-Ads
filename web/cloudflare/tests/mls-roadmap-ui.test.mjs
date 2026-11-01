@@ -13,18 +13,21 @@ const chrome=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin
 const qaDir=process.env.MLS_ROADMAP_SCREENSHOT_DIR||null;
 const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 
-test('roadmap explains current business gate, draft release and future stages without invented business values',()=>{
+test('roadmap explains available physical controls, pending financial proof and future stages without invented business values',()=>{
  const html=adminBody();
  const section=html.slice(html.indexOf('<section id="roadmap"'),html.indexOf('</section>',html.indexOf('id="roadmapFuture"'))+10);
  assert.ok(section.length>2000,'roadmap markup must be present');
- for(const stage of ['m2','v36','m3','m4'])
+ for(const stage of ['m2','m22','m3','m4'])
   assert.match(section,new RegExp('data-roadmap-stage="'+stage+'"'));
  for(const gate of ['ci','owner-qa','rollback','approval'])
   assert.match(section,new RegExp('data-roadmap-gate="'+gate+'"'));
- for(const route of ['/admin?tab=agents','/admin?tab=agent-finance','/admin?tab=products'])
+ for(const route of ['/admin?tab=agents','/admin?tab=agent-finance','/admin?tab=agent-returns#physicalReturnsDetails','/admin?tab=margins#incurredProductionDetails','/admin?tab=agent-returns#returnManufacturingLinksDetails'])
   assert.ok(section.includes('href="'+route+'"'),'missing existing owner navigation: '+route);
- assert.match(section,/Não publicado/);
- assert.match(section,/2\.143 Node \+ 67 Python/);
+ assert.match(section,/Controles disponíveis/);
+ assert.match(section,/custo histórico/);
+ assert.match(section,/Quantidades originais da solicitação e valor recuperado ainda estão indisponíveis/);
+ assert.match(section,/Seller Centre e banco/);
+ assert.doesNotMatch(section,/PR #68|2\.143 Node|Não publicado|29\/10\/2026|V3\.6/);
  assert.match(section,/M2/);
  assert.match(section,/Ads e PROMO continuam bloqueados/);
  assert.match(section,/Publicado.*diferente.*CI aprovado/s);
