@@ -1,0 +1,1761 @@
+{
+  "schema": "mls_git_documentation_audit_inventory_v1",
+  "audited_base_commit": "78efb0c9ebfa866c28d7be79414cb5324dd2c669",
+  "scope": "ALL_TRACKED_DOCS_DIRECTORY_AND_TRACKED_TEXT_DOCUMENTS_OUTSIDE_DOCS",
+  "audited_at": "2026-11-01",
+  "counts": {
+    "text_document": 120,
+    "structured_document": 29,
+    "historical_tool": 5,
+    "visual_asset": 78
+  },
+  "total_files": 232,
+  "method": "ALL_BYTES_READ_FROM_IMMUTABLE_GIT_TREE_TEXT_UTF8_JSON_PARSE_ASSET_SIGNATURE_AND_SHA256; SEMANTIC_REVIEW_SCOPE_IN_AUDIT_REPORT",
+  "not_claimed": [
+    "ALL_DOCUMENTS_MANUALLY_READ_LINE_BY_LINE",
+    "IMAGE_VISUAL_APPROVAL",
+    "OFFICIAL_API_PERMISSION",
+    "BANK_SETTLEMENT"
+  ],
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "kind": "text_document",
+      "bytes": 13746,
+      "sha256": "044cb36702e4905f59e4fa4cceffc88643a1612ae0f620ca26bb57d0bf15c8d2",
+      "utf8_readable": true,
+      "lines": 75
+    },
+    {
+      "path": "NEXT_CHAT_HANDOFF.txt",
+      "kind": "text_document",
+      "bytes": 28029,
+      "sha256": "48415197d6116da0f30b0fbeddd32fb0fb162de55179634b0e355c096343b6ae",
+      "utf8_readable": true,
+      "lines": 258
+    },
+    {
+      "path": "README.md",
+      "kind": "text_document",
+      "bytes": 2276,
+      "sha256": "c1fbfbb6c6d920054fab3e9dcbf0816ae78db680e226ebff70e1080bbe5c8b1f",
+      "utf8_readable": true,
+      "lines": 43
+    },
+    {
+      "path": "docs/ABERTURA_DO_PAINEL.md",
+      "kind": "text_document",
+      "bytes": 8751,
+      "sha256": "7f05e231e9524883d2731f0b1251c0db5025aec0ac132e56e91d89f370a4171d",
+      "utf8_readable": true,
+      "lines": 139
+    },
+    {
+      "path": "docs/ADS_BRL_CONFIRMADO_2026_10_20.json",
+      "kind": "structured_document",
+      "bytes": 405,
+      "sha256": "79a8bf4ffe327537c572d8267ab4e1c639388b26914c09e839ea729e4796614e",
+      "json_valid": true
+    },
+    {
+      "path": "docs/AUDITORIA_PENDING_ATUAL_MLS_FINANCE.md",
+      "kind": "text_document",
+      "bytes": 5049,
+      "sha256": "34304e35775e5517c0188b7108a46cb867198ded70d0fd73177a516c5ec7be5e",
+      "utf8_readable": true,
+      "lines": 106
+    },
+    {
+      "path": "docs/CATALOGO_COMPACTO_E_PROXIMOS_PASSOS.md",
+      "kind": "text_document",
+      "bytes": 3903,
+      "sha256": "dd25328b811edcbc11a89c0815c1a386c496d42d3c6bfbb31da458bb40bb2164",
+      "utf8_readable": true,
+      "lines": 69
+    },
+    {
+      "path": "docs/CATALOGO_COMPOSICAO_OBSERVADA_22199878767.json",
+      "kind": "structured_document",
+      "bytes": 580,
+      "sha256": "469444e288c5b900a4d14d0d0be9d869f4f3cf05f931fda5278ad544fcb0c082",
+      "json_valid": true
+    },
+    {
+      "path": "docs/CATALOGO_KIT_OBSERVADO_58269212782.json",
+      "kind": "structured_document",
+      "bytes": 708,
+      "sha256": "bb1a64ad1298f5fefd1401a719852d4bd93fc6fec0e3cefc50e0288e48add7fc",
+      "json_valid": true
+    },
+    {
+      "path": "docs/CATALOGO_SALVO_E_CUSTOS_POR_PERIODO.md",
+      "kind": "text_document",
+      "bytes": 4483,
+      "sha256": "7b62c54695742aa775653c7174e541b2864a43917111613b75ba296970273512",
+      "utf8_readable": true,
+      "lines": 79
+    },
+    {
+      "path": "docs/COLETA_MENSAL_E_RETOMADA.md",
+      "kind": "text_document",
+      "bytes": 11373,
+      "sha256": "c0a7fc6faea15c7df3eb2176d73a1fdf5a0848f896260daf70cc3bd7d4a517ad",
+      "utf8_readable": true,
+      "lines": 126
+    },
+    {
+      "path": "docs/CONCILIACAO_POR_PEDIDO_MLS_FINANCE_RETURNS.md",
+      "kind": "text_document",
+      "bytes": 5248,
+      "sha256": "d6b315b0652c9631188bfa68fd76dbcfe0e2bdf5d1e4e665b953638c266be6c0",
+      "utf8_readable": true,
+      "lines": 125
+    },
+    {
+      "path": "docs/CONFERENCIA_DE_CUSTOS_PENDENTES.md",
+      "kind": "text_document",
+      "bytes": 12897,
+      "sha256": "1dcf902ee4d44b7370f1719674ccf8effaa97418ce4c9d61ee38fbbeccf8f184",
+      "utf8_readable": true,
+      "lines": 209
+    },
+    {
+      "path": "docs/CONFERENCIA_DE_DEVOLUCOES_E_AJUSTES.md",
+      "kind": "text_document",
+      "bytes": 9218,
+      "sha256": "35e79564e769a8634112e6292536e3bca49c77b505356baed41d943bc742392f",
+      "utf8_readable": true,
+      "lines": 162
+    },
+    {
+      "path": "docs/CONFERENCIA_FINANCEIRA.md",
+      "kind": "text_document",
+      "bytes": 7084,
+      "sha256": "58153cacfe045192323badca03e08cc143c7283f8e74c8e562aad811880b401e",
+      "utf8_readable": true,
+      "lines": 119
+    },
+    {
+      "path": "docs/CONFERENCIA_FINANCEIRA_GUIADA.md",
+      "kind": "text_document",
+      "bytes": 6664,
+      "sha256": "b65de89086e2759319af992cb5b6bf80c60b3f9f8e661b4764668f3ce052a7bb",
+      "utf8_readable": true,
+      "lines": 121
+    },
+    {
+      "path": "docs/CUSTOS_AUTOMATICOS_E_PENDENCIAS.md",
+      "kind": "text_document",
+      "bytes": 4604,
+      "sha256": "129036f86d6a510db44feafeac8b93ad8f18674782886080045750d8f1802096",
+      "utf8_readable": true,
+      "lines": 80
+    },
+    {
+      "path": "docs/CUSTOS_AUTOMATICOS_POR_VARIACAO.md",
+      "kind": "text_document",
+      "bytes": 8734,
+      "sha256": "999f0cb652c5ff2cab40e02599e44c526bbf0f032fd50e5c0c453806bdbf1df3",
+      "utf8_readable": true,
+      "lines": 151
+    },
+    {
+      "path": "docs/CUSTOS_PERSONALIZADOS.md",
+      "kind": "text_document",
+      "bytes": 3614,
+      "sha256": "ed047876a26c7bbd2d12f1d348264ab0552c102242d3e0cdda6003b214830c55",
+      "utf8_readable": true,
+      "lines": 67
+    },
+    {
+      "path": "docs/DESPESAS_OPERACIONAIS_E_VARIACOES.md",
+      "kind": "text_document",
+      "bytes": 9349,
+      "sha256": "dc17b96f8f2ad42d5daa9a7122a7d69cbdffd3f4a1ab4569a0e2650d43f797ed",
+      "utf8_readable": true,
+      "lines": 166
+    },
+    {
+      "path": "docs/DEVOLUCOES_E_COBERTURA.md",
+      "kind": "text_document",
+      "bytes": 4468,
+      "sha256": "a5866c09544a922e9ee082b791b679d3b0f8d34e9a7b280fccabb614c88251c3",
+      "utf8_readable": true,
+      "lines": 79
+    },
+    {
+      "path": "docs/FINANCE_AUTHORIZATION_FIX.md",
+      "kind": "text_document",
+      "bytes": 11351,
+      "sha256": "1400646bd0b94c5e46f210ace2f3ad8e6b8ffb6bb04fab7ef59dc86a1c92ed65",
+      "utf8_readable": true,
+      "lines": 191
+    },
+    {
+      "path": "docs/FINANCE_AUTH_RECOVERY_2026-10-28.md",
+      "kind": "text_document",
+      "bytes": 3402,
+      "sha256": "798e460a261c79c366e405a87627b6bebe93c47929d5913650b1bb78c30f17d6",
+      "utf8_readable": true,
+      "lines": 35
+    },
+    {
+      "path": "docs/FINANCE_PAYMENT_BRL_CONFIRMADO_2026_10_20.json",
+      "kind": "structured_document",
+      "bytes": 378,
+      "sha256": "5b33de88fe4ae2596cff2e13e45b09491e3f06e87d8ec7f3b74bc641a7c6bfa1",
+      "json_valid": true
+    },
+    {
+      "path": "docs/FINANCE_PAYMENT_SAMPLE_OBSERVADO.json",
+      "kind": "structured_document",
+      "bytes": 1777,
+      "sha256": "2df2513fe9ffb05f6d07982d9756771b806cac42c50e3791ddc97ae7280baf16",
+      "json_valid": true
+    },
+    {
+      "path": "docs/FINANCE_PAYMENT_SAMPLE_OBSERVADO_1792436574.json",
+      "kind": "structured_document",
+      "bytes": 1017,
+      "sha256": "4492411b570d645fe5fc5e9b650d7152f51ae1d99ce41c31401bb2978f20aa53",
+      "json_valid": true
+    },
+    {
+      "path": "docs/H3_FINANCE_APP_APPROVED_OBSERVADA.json",
+      "kind": "structured_document",
+      "bytes": 768,
+      "sha256": "53f0517dfd5d50f7e176f52d5c9eef9324549ca5b89788dadad00aff61a22ba5",
+      "json_valid": true
+    },
+    {
+      "path": "docs/H3_FINANCE_AUTHORIZATION_OBSERVADA.json",
+      "kind": "structured_document",
+      "bytes": 1513,
+      "sha256": "c6ac297a1da97cbceb2d5bedb25f4288949309cf1e02fd3fee47e497ce5e6d83",
+      "json_valid": true
+    },
+    {
+      "path": "docs/H3_FINANCE_CONNECTED_OBSERVADO.json",
+      "kind": "structured_document",
+      "bytes": 1200,
+      "sha256": "b8ee24b2a989e0f24cc04696974bb49228abb1b0a5fe7430d832729a4524cf72",
+      "json_valid": true
+    },
+    {
+      "path": "docs/H3_FINANCE_REFRESH_RESPONSE_OBSERVADA.json",
+      "kind": "structured_document",
+      "bytes": 2721,
+      "sha256": "5e8390af06650a911d369e26eed246cd8b78c3dd716a7255c944cebe5a5a269a",
+      "json_valid": true
+    },
+    {
+      "path": "docs/HERMES_FINANCEIRO.md",
+      "kind": "text_document",
+      "bytes": 3564,
+      "sha256": "56ef490ac4275e28a831f95314ed54191d26ad4f0284d965a10a97e5049d25c4",
+      "utf8_readable": true,
+      "lines": 61
+    },
+    {
+      "path": "docs/IMPOSTO_2_POR_CENTO_CONFIRMADO.json",
+      "kind": "structured_document",
+      "bytes": 404,
+      "sha256": "913e59c81420a801d0eaef85df6b7369f7ec4209e915eb4032bf0179dbd0387b",
+      "json_valid": true
+    },
+    {
+      "path": "docs/IMPOSTO_E_RESULTADO_PREVISTO.md",
+      "kind": "text_document",
+      "bytes": 5019,
+      "sha256": "2af940f6302bae8dc2ac22b4d904918323aa3c21701316252d561af8d3a04a8b",
+      "utf8_readable": true,
+      "lines": 90
+    },
+    {
+      "path": "docs/IMPOSTO_POR_PRODUTO_E_ORDENACAO.md",
+      "kind": "text_document",
+      "bytes": 4138,
+      "sha256": "58dff470f2d33dc3da9c56e4969fb33d3d725d7347b79c48ea48053d47a1bcbf",
+      "utf8_readable": true,
+      "lines": 75
+    },
+    {
+      "path": "docs/INCIDENT_2026_10_27_COMMAND_CENTER.md",
+      "kind": "text_document",
+      "bytes": 8523,
+      "sha256": "b657ab0c219c7bb0403789fd2ccfe8cc6790f7b52b0ffb5912f057fb95b4d163",
+      "utf8_readable": true,
+      "lines": 149
+    },
+    {
+      "path": "docs/LIBERACOES_E_PEDIDOS.md",
+      "kind": "text_document",
+      "bytes": 6359,
+      "sha256": "c766ce44f818a86dfb9cb97759919f3525679f9da953c80de6ad853201bd5571",
+      "utf8_readable": true,
+      "lines": 107
+    },
+    {
+      "path": "docs/LOGIN_E_NAVEGACAO_UNIFICADOS.md",
+      "kind": "text_document",
+      "bytes": 3095,
+      "sha256": "6192097568e2ce890dc2323998873bd24ba8a2eabf0f8710b12452c213a8acb2",
+      "utf8_readable": true,
+      "lines": 58
+    },
+    {
+      "path": "docs/LUCRO_DIARIO_E_VISAO_GERAL.md",
+      "kind": "text_document",
+      "bytes": 7668,
+      "sha256": "0d9e47bed76cc0fb61b4a3f4dd4def323da3e7060b90a640d6b1fc5aa07c8bc0",
+      "utf8_readable": true,
+      "lines": 137
+    },
+    {
+      "path": "docs/M2_FINANCIAL_TRENDS_REAL_DATA.md",
+      "kind": "text_document",
+      "bytes": 2657,
+      "sha256": "13374826cab6e7ed06d6f34134539996f0ad03f9580e9c94ca153f4d18545673",
+      "utf8_readable": true,
+      "lines": 51
+    },
+    {
+      "path": "docs/MEI_E_RESULTADO_AUTOMATICO.md",
+      "kind": "text_document",
+      "bytes": 4335,
+      "sha256": "46eb4237742dd784ffef004ba4bfebaca31ee01a18406afdd04797e1c56fda69",
+      "utf8_readable": true,
+      "lines": 82
+    },
+    {
+      "path": "docs/MISSION_CONTROL_V2_VISUAL_GUIDE.md",
+      "kind": "text_document",
+      "bytes": 4046,
+      "sha256": "a8b74fa480a7e3f302b56cd1f515ec949ab1308fc3d8125b76c6382b0d9fd45f",
+      "utf8_readable": true,
+      "lines": 54
+    },
+    {
+      "path": "docs/MISSION_CONTROL_V35_NAVIGATION.md",
+      "kind": "text_document",
+      "bytes": 3236,
+      "sha256": "d0376566092bfab7c919e97117e20ee20b52aee5a7614181d7bc4eb62765bed2",
+      "utf8_readable": true,
+      "lines": 24
+    },
+    {
+      "path": "docs/MISSION_CONTROL_V36_RECORD_SEARCH.md",
+      "kind": "text_document",
+      "bytes": 2572,
+      "sha256": "ef78b435c83a1d90dcad8b7ed92ecc7afe7ba21c838130e13a6eeef0bb485cab",
+      "utf8_readable": true,
+      "lines": 21
+    },
+    {
+      "path": "docs/MISSION_CONTROL_V3_BATCH_01.md",
+      "kind": "text_document",
+      "bytes": 2099,
+      "sha256": "a6b49cba392377717395f61409b2724ddf1fa43b16863e3ac9b252632f72c726",
+      "utf8_readable": true,
+      "lines": 21
+    },
+    {
+      "path": "docs/MLS_AGENT_MEMORY_PERFORMANCE_2026_10_31.md",
+      "kind": "text_document",
+      "bytes": 7058,
+      "sha256": "28e5dcebe4db30bb15a9a9fe6eaf5e9b3589ceaf43618de00d99c1b6681e22e9",
+      "utf8_readable": true,
+      "lines": 48
+    },
+    {
+      "path": "docs/MLS_AI_SALES_CODEX_EXECUTION_2026_10_30.md",
+      "kind": "text_document",
+      "bytes": 10053,
+      "sha256": "f05a6dadcd629759dd430abc5d101a402afb2d6b0b6e4ea92ea7f5b534574955",
+      "utf8_readable": true,
+      "lines": 93
+    },
+    {
+      "path": "docs/MLS_AI_SALES_IMPLEMENTATION_CONTRACT.md",
+      "kind": "text_document",
+      "bytes": 12753,
+      "sha256": "5043388e8ad3e68edf89cdb6587b1de5d9dc7fb7f0c10cc4c885f0a3fc67a23c",
+      "utf8_readable": true,
+      "lines": 146
+    },
+    {
+      "path": "docs/MLS_AI_SALES_INTEGRATION_2026_10_30.md",
+      "kind": "text_document",
+      "bytes": 7459,
+      "sha256": "84321a741fbd5777be211174f7a6d094f68318735f63211efcea02e1781ea3f6",
+      "utf8_readable": true,
+      "lines": 48
+    },
+    {
+      "path": "docs/MLS_AI_SALES_LOCAL_RENDER.md",
+      "kind": "text_document",
+      "bytes": 5094,
+      "sha256": "75af29d54b6727956f104f5b87766ea93b034d3cbebe85a6d5e6304aad4a4bb1",
+      "utf8_readable": true,
+      "lines": 60
+    },
+    {
+      "path": "docs/MLS_AI_SALES_MVP_CODEX_2026_10_30.md",
+      "kind": "text_document",
+      "bytes": 32304,
+      "sha256": "7d809563a2a388fdbc7b61ed2f13c52aa9188716c5075a4d4d24be367d177932",
+      "utf8_readable": true,
+      "lines": 273
+    },
+    {
+      "path": "docs/MLS_AI_SALES_OPEN_SOURCE_AUDIT_2026_10_30.md",
+      "kind": "text_document",
+      "bytes": 22309,
+      "sha256": "8646a121977449cca9976b2a20b378cc3506e6fac04f49f5ec9a45c8d0f9f072",
+      "utf8_readable": true,
+      "lines": 126
+    },
+    {
+      "path": "docs/MLS_AI_SALES_POC_EVIDENCE.md",
+      "kind": "text_document",
+      "bytes": 12432,
+      "sha256": "5063f76abd0923d950b3307deb3117239835984f267cc7f4f42c895650dffee6",
+      "utf8_readable": true,
+      "lines": 107
+    },
+    {
+      "path": "docs/MLS_APPROVED_DESIGN_SYSTEM_2026_10_29.md",
+      "kind": "text_document",
+      "bytes": 5479,
+      "sha256": "f8c900f9343ffdb7c47d8ed584106be045f42eef14749d6d6db02c989b951d99",
+      "utf8_readable": true,
+      "lines": 63
+    },
+    {
+      "path": "docs/MLS_CANCELLED_DAILY_PROFIT_2026_10_30.md",
+      "kind": "text_document",
+      "bytes": 4880,
+      "sha256": "c66a045d9bb3b14e2bd0921b0bc2bfaf3cef38af24e4cb8258fc7f511c7549c9",
+      "utf8_readable": true,
+      "lines": 86
+    },
+    {
+      "path": "docs/MLS_CODEX_HANDOFF_2026_10_28.md",
+      "kind": "text_document",
+      "bytes": 25876,
+      "sha256": "26432ea5181136a877dce7d82527ae9a1fa5220580e6649ed665b9de3aaf2753",
+      "utf8_readable": true,
+      "lines": 225
+    },
+    {
+      "path": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
+      "kind": "structured_document",
+      "bytes": 92636,
+      "sha256": "5275c4c1082532b4b6cab4adff2f50f61bdd08080f027fb0f6d9499cd059fe06",
+      "json_valid": true
+    },
+    {
+      "path": "docs/MLS_COMMERCE_OS_CONTINUITY.md",
+      "kind": "text_document",
+      "bytes": 23652,
+      "sha256": "00dd3bc3d31e092708f58b2aaa726f2083a34085225c8c1f67009645d567a02b",
+      "utf8_readable": true,
+      "lines": 442
+    },
+    {
+      "path": "docs/MLS_DAILY_MARGIN_ROAS_2026_11_01.md",
+      "kind": "text_document",
+      "bytes": 7955,
+      "sha256": "3f4491123d85d3e3e49d24e48451b153d12e9e580d5f0ee93fc157c16a73193e",
+      "utf8_readable": true,
+      "lines": 86
+    },
+    {
+      "path": "docs/MLS_INTEGRATED_OWNER_RELEASE_2026_10_29.md",
+      "kind": "text_document",
+      "bytes": 4581,
+      "sha256": "517692e3e830ef5edc83162d802aba529dc56e29682cef6041922927c01eb398",
+      "utf8_readable": true,
+      "lines": 55
+    },
+    {
+      "path": "docs/MLS_LISTING_FACTORY_BATCH_CI_2026_10_28.md",
+      "kind": "text_document",
+      "bytes": 1381,
+      "sha256": "b7d8e57d1511b4bd34ad18fc1bced847989ca603640f01370b448321add97c3f",
+      "utf8_readable": true,
+      "lines": 16
+    },
+    {
+      "path": "docs/MLS_LISTING_FACTORY_BATCH_RELINK_2026_10_28.md",
+      "kind": "text_document",
+      "bytes": 3596,
+      "sha256": "8cae501f78499a3d6a1857029d1c8de350904bc263e677f430d420a6055b5351",
+      "utf8_readable": true,
+      "lines": 37
+    },
+    {
+      "path": "docs/MLS_LISTING_FACTORY_CI_2026_10_28.md",
+      "kind": "text_document",
+      "bytes": 2280,
+      "sha256": "7833d258717f7c963383230d2faebfb799031282f658287e3020dc643fe631ee",
+      "utf8_readable": true,
+      "lines": 35
+    },
+    {
+      "path": "docs/MLS_LISTING_FACTORY_V1.md",
+      "kind": "text_document",
+      "bytes": 8481,
+      "sha256": "791ea276042d6c8e22b63e8d8c2ca679ad4c4ee0424951a92b79d9ba787d2ee9",
+      "utf8_readable": true,
+      "lines": 82
+    },
+    {
+      "path": "docs/MLS_LIVE_ROADMAP_RELEASE_2026_10_30.md",
+      "kind": "text_document",
+      "bytes": 6893,
+      "sha256": "61e5cacd538fb4ac885f4aade5ee1001902284c3f3e3fb76a9d525a796c5bead",
+      "utf8_readable": true,
+      "lines": 117
+    },
+    {
+      "path": "docs/MLS_M2_HISTORICAL_CALENDARS_2026_10_31.md",
+      "kind": "text_document",
+      "bytes": 11043,
+      "sha256": "0ed317c21e7aa0bcd4360f3b437d6b241f2c6d97d88765b9aa8cdb6d8db0c921",
+      "utf8_readable": true,
+      "lines": 70
+    },
+    {
+      "path": "docs/MLS_M2_PENDING_CLOSEOUT_2026_10_31.md",
+      "kind": "text_document",
+      "bytes": 15671,
+      "sha256": "7ef7b2e46c75fffcc11791b3aeff55a2ec607a0aed686e81b3a3bded1e0b81d4",
+      "utf8_readable": true,
+      "lines": 100
+    },
+    {
+      "path": "docs/MLS_M2_PENDING_PAGINATION_2026_11_01.md",
+      "kind": "text_document",
+      "bytes": 11747,
+      "sha256": "fc258213f902e538e408f38784a4940c68058aefcb0e741eecf8a82ab4d0c156",
+      "utf8_readable": true,
+      "lines": 69
+    },
+    {
+      "path": "docs/MLS_M2_PREVIOUS_MONTH_RETURNS_2026_11_01.md",
+      "kind": "text_document",
+      "bytes": 11697,
+      "sha256": "340947653b1950d9ba9149171dbe25606b598eb8798ed6a618fc6913a9cb0118",
+      "utf8_readable": true,
+      "lines": 54
+    },
+    {
+      "path": "docs/MLS_M2_RELEASE_TRACKER_2026_10_31.md",
+      "kind": "text_document",
+      "bytes": 7121,
+      "sha256": "9a15755c522a6a203866d3062c4d8fa29436c0f162f810604888da1b79b1b343",
+      "utf8_readable": true,
+      "lines": 50
+    },
+    {
+      "path": "docs/MLS_M2_RETURNS_CONTINUITY_2026_10_31.md",
+      "kind": "text_document",
+      "bytes": 7350,
+      "sha256": "b67acebb650381b54bca7c4b857e71fff827f73741ff970c73a89592305f795f",
+      "utf8_readable": true,
+      "lines": 119
+    },
+    {
+      "path": "docs/MLS_MASTER_MISSION_CHECKPOINT.json",
+      "kind": "structured_document",
+      "bytes": 64440,
+      "sha256": "670a712dabccc4eee8747d6b10d65b06903e1f942d0347b0824174fe97c93611",
+      "json_valid": true
+    },
+    {
+      "path": "docs/MLS_MASTER_MISSION_EXECUTION_2026_10_30.md",
+      "kind": "text_document",
+      "bytes": 12972,
+      "sha256": "0c01f98b5d67ca85d0544f837b6c89548dc2d3abdc267507f058d46243076bf4",
+      "utf8_readable": true,
+      "lines": 115
+    },
+    {
+      "path": "docs/MLS_MOCKUP_PARITY_CODEX_2026_10_29.md",
+      "kind": "text_document",
+      "bytes": 12785,
+      "sha256": "4740f8f9aed024ec22efe7259a386245ffeafb757df7932976267b7c336320e0",
+      "utf8_readable": true,
+      "lines": 85
+    },
+    {
+      "path": "docs/MLS_OWNER_HOMOLOGATION_2026_10_30.md",
+      "kind": "text_document",
+      "bytes": 5756,
+      "sha256": "c149609149c8bd86f5e370fa331004d2f5dc623a5a4efc00c32604d04c5fa836",
+      "utf8_readable": true,
+      "lines": 60
+    },
+    {
+      "path": "docs/MLS_OWNER_PREVIEW_CHECKPOINT.json",
+      "kind": "structured_document",
+      "bytes": 1498,
+      "sha256": "340ae1c6cb71ce2b81a72e4dd91cdf6493793d41c628f939c49794a904fbe7f8",
+      "json_valid": true
+    },
+    {
+      "path": "docs/MLS_OWNER_PREVIEW_MEDIA.md",
+      "kind": "text_document",
+      "bytes": 4285,
+      "sha256": "0c366e90b71848b57d8e236fedc1b0cfb53f9866023d1750a398b1885ead4f48",
+      "utf8_readable": true,
+      "lines": 55
+    },
+    {
+      "path": "docs/MLS_OWNER_PREVIEW_OFFLINE.md",
+      "kind": "text_document",
+      "bytes": 4384,
+      "sha256": "a23347bd4848d851392c87c48dc8ffe13c210c034328b574e25c0b29c052bc48",
+      "utf8_readable": true,
+      "lines": 38
+    },
+    {
+      "path": "docs/MLS_OWNER_SYNTHETIC_VISUAL_QA_2026_10_28.md",
+      "kind": "text_document",
+      "bytes": 3898,
+      "sha256": "5ec4819ca0be7b596aa8e892571108f41d8d741ea50a342cfd29e6ae59b50eaf",
+      "utf8_readable": true,
+      "lines": 35
+    },
+    {
+      "path": "docs/MLS_TODAY_ESTIMATED_PROFIT_2026_11_01.md",
+      "kind": "text_document",
+      "bytes": 7161,
+      "sha256": "792b19a2562778f6b467d550bbb121977b263458eafbec03a915d482ea67a3a8",
+      "utf8_readable": true,
+      "lines": 73
+    },
+    {
+      "path": "docs/MLS_V36_LISTING_FACTORY_INTEGRATION_2026_10_28.md",
+      "kind": "text_document",
+      "bytes": 3000,
+      "sha256": "a3e1452a51ec56c405cf5285ba09112b2fde09c83441db7ec1eabd4eab3b60f7",
+      "utf8_readable": true,
+      "lines": 34
+    },
+    {
+      "path": "docs/MLS_V36_OWNER_PREVIEW_RELEASE.md",
+      "kind": "text_document",
+      "bytes": 5391,
+      "sha256": "bb3699678687d2dc84d0ef9ce6046a9ad920456f81a84f940ceb19d5a6d753e1",
+      "utf8_readable": true,
+      "lines": 58
+    },
+    {
+      "path": "docs/MLS_VISUAL_CHARTS_RELEASE_2026_10_31.md",
+      "kind": "text_document",
+      "bytes": 5200,
+      "sha256": "51de2021b271f028114e696af2ea30d6d1a2531384ce9ff5e7bde886ec4f65ee",
+      "utf8_readable": true,
+      "lines": 88
+    },
+    {
+      "path": "docs/PAINEIS_E_AUTOMACAO.md",
+      "kind": "text_document",
+      "bytes": 5677,
+      "sha256": "89d1a46f91992c0d3042b835dc09549156f18fd307d727c96466f1c6ab9d4329",
+      "utf8_readable": true,
+      "lines": 100
+    },
+    {
+      "path": "docs/PESQUISA_COLETA_AUTOMATICA.md",
+      "kind": "text_document",
+      "bytes": 9984,
+      "sha256": "8a5063e457971acbefd1847f26892b584173910923b28df64d5d2e137a6dac52",
+      "utf8_readable": true,
+      "lines": 62
+    },
+    {
+      "path": "docs/PESQUISA_FINANCEIRA_SHOPEE.md",
+      "kind": "text_document",
+      "bytes": 5686,
+      "sha256": "1ffbecdfa07dadf4bef8e5c4c90bc735d304b22ebf6709501456e11500bb3eca",
+      "utf8_readable": true,
+      "lines": 39
+    },
+    {
+      "path": "docs/PESQUISA_INCOME_DETAIL_SHOPEE_2026_10_27.md",
+      "kind": "text_document",
+      "bytes": 3530,
+      "sha256": "bfcee8baa191d7555b0c8c7197a2127b551022d1469c74b388cef44d6241a027",
+      "utf8_readable": true,
+      "lines": 100
+    },
+    {
+      "path": "docs/PESQUISA_INCOME_OVERVIEW_SHOPEE_2026_10_27.md",
+      "kind": "text_document",
+      "bytes": 4797,
+      "sha256": "ecec0f7fc3c4a3c478b8918bceff3093e332b37012afc82d0c8dad24a1640f91",
+      "utf8_readable": true,
+      "lines": 120
+    },
+    {
+      "path": "docs/PESQUISA_LIBERACOES_SHOPEE.md",
+      "kind": "text_document",
+      "bytes": 8449,
+      "sha256": "af4154fe4845821bec5a5afb9a4c464282b1cea19e6eba3923fc44fd4a0169fc",
+      "utf8_readable": true,
+      "lines": 64
+    },
+    {
+      "path": "docs/PRECISAO_ADS_E_RESUMO.md",
+      "kind": "text_document",
+      "bytes": 4101,
+      "sha256": "71bf713ff1b8e47ad7fd6cb48b2fff0d1990d21a9b1b3293e60f8ec397c32cb3",
+      "utf8_readable": true,
+      "lines": 73
+    },
+    {
+      "path": "docs/PRODUCAO_DTF.md",
+      "kind": "text_document",
+      "bytes": 7692,
+      "sha256": "38f102992337456f9c399acc438ed32990d022351b20577d010574412a9ad7fa",
+      "utf8_readable": true,
+      "lines": 127
+    },
+    {
+      "path": "docs/PRODUCT_INDEX_READONLY.md",
+      "kind": "text_document",
+      "bytes": 2117,
+      "sha256": "afb4e4ef48f33f0e4287d64fa7d34e12d39b5713abba5d4e6c6c9d5c36dc5892",
+      "utf8_readable": true,
+      "lines": 15
+    },
+    {
+      "path": "docs/PRODUTOS_DO_RESUMO_MENSAL.md",
+      "kind": "text_document",
+      "bytes": 4026,
+      "sha256": "e26a300db854d3994bceabdae250bc84c82c0d133cb6be5de225cb04111b6472",
+      "utf8_readable": true,
+      "lines": 74
+    },
+    {
+      "path": "docs/PUBLICACAO_PELO_GIT.md",
+      "kind": "text_document",
+      "bytes": 20331,
+      "sha256": "0eee470b2bad6aca45c2abecd78fc514fc2c6c33073bf7f96f8f91fd387f6c58",
+      "utf8_readable": true,
+      "lines": 371
+    },
+    {
+      "path": "docs/REPASSE_POR_PRODUTO_E_ADS.md",
+      "kind": "text_document",
+      "bytes": 5135,
+      "sha256": "3178d7aa602e3d93b928f7f53e95cf3e78785c6f9760a15259fd23abb5462cd0",
+      "utf8_readable": true,
+      "lines": 89
+    },
+    {
+      "path": "docs/RESULTADO_DA_LOJA.md",
+      "kind": "text_document",
+      "bytes": 6680,
+      "sha256": "7a692cf5c55974496069a268e47a097f84caa2fd73744f3b66625406a2ae337f",
+      "utf8_readable": true,
+      "lines": 113
+    },
+    {
+      "path": "docs/RESUMO_FINANCEIRO_TOTAL.md",
+      "kind": "text_document",
+      "bytes": 3716,
+      "sha256": "0b9d2e6b25266b11f0167bad06fc644d538a14ed7daeab919037fe7a22f7efd2",
+      "utf8_readable": true,
+      "lines": 40
+    },
+    {
+      "path": "docs/RESUMO_PUBLICADO_E_COLETA.md",
+      "kind": "text_document",
+      "bytes": 4093,
+      "sha256": "bd83ee242885e96d47a7677b23974a819f6a4a7b62d771eb2912dcb5c3ab1908",
+      "utf8_readable": true,
+      "lines": 74
+    },
+    {
+      "path": "docs/ROADMAP_BRAZACOMMERCE.md",
+      "kind": "text_document",
+      "bytes": 26029,
+      "sha256": "b3f6d9bdc3880b50d1ec884e65d60985e816f14b50e0726233bff8b0ded2c048",
+      "utf8_readable": true,
+      "lines": 250
+    },
+    {
+      "path": "docs/ROADMAP_MLS_COMMERCE_OS.md",
+      "kind": "text_document",
+      "bytes": 51523,
+      "sha256": "ba981fff5aa28d909cb99b6c3a867286d8acd2c1b8b7149cb915d9037b1cc6a6",
+      "utf8_readable": true,
+      "lines": 714
+    },
+    {
+      "path": "docs/SHOPEE_RESEARCH_TO_MLS_2026_10_28.md",
+      "kind": "text_document",
+      "bytes": 7057,
+      "sha256": "0940be7522581310a6783c4b5eabe04aae4f5149aa486ccc5b9bf8d3d68fefd3",
+      "utf8_readable": true,
+      "lines": 58
+    },
+    {
+      "path": "docs/VALIDACAO_FINANCEIRA_PELO_PAINEL.md",
+      "kind": "text_document",
+      "bytes": 7944,
+      "sha256": "354ac3a51efeaf51eb6b8d884713021aa562fcc4bbe9d9e9dee54a4deb270dd3",
+      "utf8_readable": true,
+      "lines": 132
+    },
+    {
+      "path": "docs/VALORES_DE_DEVOLUCOES_E_SALDO_AJUSTADO.md",
+      "kind": "text_document",
+      "bytes": 9344,
+      "sha256": "5347ed4ff60bec36d62ce6f3673dac43ea47b682aadbb54522df1c6920d0ca59",
+      "utf8_readable": true,
+      "lines": 172
+    },
+    {
+      "path": "docs/VARIACOES_AUTOMATICAS.md",
+      "kind": "text_document",
+      "bytes": 7672,
+      "sha256": "c5a7ec9032f8e37666ac647ab81065bd03595e9b7516cd9234b5646ede59bd9f",
+      "utf8_readable": true,
+      "lines": 118
+    },
+    {
+      "path": "docs/hermes-finance-v1-activation-delivery/README.md",
+      "kind": "text_document",
+      "bytes": 2164,
+      "sha256": "8b528e9881b2d724d71c3c7cd67d3e468e01dc45052eda2c74a6601c70d59e50",
+      "utf8_readable": true,
+      "lines": 13
+    },
+    {
+      "path": "docs/hermes-finance-v1-activation-delivery/activation-source.py",
+      "kind": "historical_tool",
+      "bytes": 10250,
+      "sha256": "8046ea6a55a3d8fb6b4c2d14e16ba613fee6852b16f9c54541ddb81548459b83"
+    },
+    {
+      "path": "docs/hermes-finance-v1-activation-delivery/console-part-1.txt",
+      "kind": "text_document",
+      "bytes": 3568,
+      "sha256": "7dfcf2d44d14352feeb8531995b9e6a8d204681697872ab874131ad3cdd1d21d",
+      "utf8_readable": true,
+      "lines": 56
+    },
+    {
+      "path": "docs/hermes-finance-v1-activation-delivery/console-part-2.txt",
+      "kind": "text_document",
+      "bytes": 3493,
+      "sha256": "e3e940b6646bf6b4001db38ffbc3f93fe325922f81d9a41f3274070b9d43d704",
+      "utf8_readable": true,
+      "lines": 50
+    },
+    {
+      "path": "docs/hermes-finance-v1-activation-delivery/console-part-3.txt",
+      "kind": "text_document",
+      "bytes": 3503,
+      "sha256": "8826eee01cb9c65f40cafcfd239eaa31827da12d164f4198af9148e944e463ce",
+      "utf8_readable": true,
+      "lines": 57
+    },
+    {
+      "path": "docs/hermes-finance-v1-activation-delivery/console-part-4.txt",
+      "kind": "text_document",
+      "bytes": 186,
+      "sha256": "56756badf184b867fb64be0220ba9aab8fb3f634b1759cd723f2f94645ec7916",
+      "utf8_readable": true,
+      "lines": 4
+    },
+    {
+      "path": "docs/hermes-finance-v1-activation-delivery/manifest.json",
+      "kind": "structured_document",
+      "bytes": 604,
+      "sha256": "234bc82f4921dd78c6981d9d56adcbc09182b9dae87a6c4f6ccfd5cd2533d10b",
+      "json_valid": true
+    },
+    {
+      "path": "docs/hermes-finance-v1-install-delivery/README.md",
+      "kind": "text_document",
+      "bytes": 1246,
+      "sha256": "ae32c1e3bbcd692cefb00bae880f3c728efb18926393abdb6e268d4e69753ab1",
+      "utf8_readable": true,
+      "lines": 9
+    },
+    {
+      "path": "docs/hermes-finance-v1-install-delivery/bridge-source.py",
+      "kind": "historical_tool",
+      "bytes": 27184,
+      "sha256": "ed0408b611516ff76a711aaac98253b1b3ceabade6bbe635913f8432ab30f9ff"
+    },
+    {
+      "path": "docs/hermes-finance-v1-install-delivery/console-part-1.txt",
+      "kind": "text_document",
+      "bytes": 3499,
+      "sha256": "4178c8ee082e8b9a90fbb3bdba5347d469261fed723f073b840183499c7059a9",
+      "utf8_readable": true,
+      "lines": 45
+    },
+    {
+      "path": "docs/hermes-finance-v1-install-delivery/console-part-2.txt",
+      "kind": "text_document",
+      "bytes": 3531,
+      "sha256": "6f03ff270cd5b7246a68a023049d37fd8db341c3af7bde49734f24fa32aa24a3",
+      "utf8_readable": true,
+      "lines": 33
+    },
+    {
+      "path": "docs/hermes-finance-v1-install-delivery/console-part-3.txt",
+      "kind": "text_document",
+      "bytes": 3531,
+      "sha256": "482787028d054cfd45d8d7ec446545a7dfc897d54b9479ca73ac5e55f47cf6ed",
+      "utf8_readable": true,
+      "lines": 33
+    },
+    {
+      "path": "docs/hermes-finance-v1-install-delivery/console-part-4.txt",
+      "kind": "text_document",
+      "bytes": 3573,
+      "sha256": "d2dd3f06c84d472ff5f88cea185e523797c3eb925905b4dae25f34d4127ff470",
+      "utf8_readable": true,
+      "lines": 54
+    },
+    {
+      "path": "docs/hermes-finance-v1-install-delivery/console-part-5.txt",
+      "kind": "text_document",
+      "bytes": 3593,
+      "sha256": "ba78e4446c4311fbe965356ad45b5a594dc96d9725436e8ec05984954b0dc6b9",
+      "utf8_readable": true,
+      "lines": 59
+    },
+    {
+      "path": "docs/hermes-finance-v1-install-delivery/console-part-6.txt",
+      "kind": "text_document",
+      "bytes": 3586,
+      "sha256": "b415a3012c67029741ae4fc781501a8ef94132eeca96419ae9330b5d70b3cde5",
+      "utf8_readable": true,
+      "lines": 64
+    },
+    {
+      "path": "docs/hermes-finance-v1-install-delivery/console-part-7.txt",
+      "kind": "text_document",
+      "bytes": 3600,
+      "sha256": "1bd8d877cd1a1b88e3d724563e42d3bc8d546f29b83dc8044025efc063733739",
+      "utf8_readable": true,
+      "lines": 57
+    },
+    {
+      "path": "docs/hermes-finance-v1-install-delivery/console-part-8.txt",
+      "kind": "text_document",
+      "bytes": 1465,
+      "sha256": "083e1073dc854ede504b918d26189f04e45b027e14829298f15695728a3bea2f",
+      "utf8_readable": true,
+      "lines": 22
+    },
+    {
+      "path": "docs/hermes-finance-v1-install-delivery/installer-source.py",
+      "kind": "historical_tool",
+      "bytes": 25900,
+      "sha256": "07ca0661334c359b6ed93949f19a5b45f0e39b78980d70fcd4bb1a8feba6bdf4"
+    },
+    {
+      "path": "docs/hermes-finance-v1-install-delivery/manifest.json",
+      "kind": "structured_document",
+      "bytes": 731,
+      "sha256": "280ac3b1dae4010bf55ae9107850bf48653b3036a99f49593f83997965df4ea6",
+      "json_valid": true
+    },
+    {
+      "path": "docs/hermes-finance-v1-upgrade-delivery/README.md",
+      "kind": "text_document",
+      "bytes": 4523,
+      "sha256": "72a4997b0776929e4b43844559d251c2c10717039ff7c822940405ae93bae45a",
+      "utf8_readable": true,
+      "lines": 29
+    },
+    {
+      "path": "docs/hermes-finance-v1-upgrade-delivery/bridge-source.py",
+      "kind": "historical_tool",
+      "bytes": 27184,
+      "sha256": "ed0408b611516ff76a711aaac98253b1b3ceabade6bbe635913f8432ab30f9ff"
+    },
+    {
+      "path": "docs/hermes-finance-v1-upgrade-delivery/console-fetch.txt",
+      "kind": "text_document",
+      "bytes": 815,
+      "sha256": "28ca3b37cc245f8467de4982091d9d68c2cbdef85263f39acc8be5ab04ecaa2e",
+      "utf8_readable": true,
+      "lines": 1
+    },
+    {
+      "path": "docs/hermes-finance-v1-upgrade-delivery/console-part-1.txt",
+      "kind": "text_document",
+      "bytes": 3519,
+      "sha256": "b8d5f7db2714e1aaca2b2029541f2d5792d413fee089700f234c298e31aae55d",
+      "utf8_readable": true,
+      "lines": 45
+    },
+    {
+      "path": "docs/hermes-finance-v1-upgrade-delivery/console-part-2.txt",
+      "kind": "text_document",
+      "bytes": 3531,
+      "sha256": "6f03ff270cd5b7246a68a023049d37fd8db341c3af7bde49734f24fa32aa24a3",
+      "utf8_readable": true,
+      "lines": 33
+    },
+    {
+      "path": "docs/hermes-finance-v1-upgrade-delivery/console-part-3.txt",
+      "kind": "text_document",
+      "bytes": 3531,
+      "sha256": "482787028d054cfd45d8d7ec446545a7dfc897d54b9479ca73ac5e55f47cf6ed",
+      "utf8_readable": true,
+      "lines": 33
+    },
+    {
+      "path": "docs/hermes-finance-v1-upgrade-delivery/console-part-4.txt",
+      "kind": "text_document",
+      "bytes": 3573,
+      "sha256": "d2dd3f06c84d472ff5f88cea185e523797c3eb925905b4dae25f34d4127ff470",
+      "utf8_readable": true,
+      "lines": 54
+    },
+    {
+      "path": "docs/hermes-finance-v1-upgrade-delivery/console-part-5.txt",
+      "kind": "text_document",
+      "bytes": 3593,
+      "sha256": "ba78e4446c4311fbe965356ad45b5a594dc96d9725436e8ec05984954b0dc6b9",
+      "utf8_readable": true,
+      "lines": 59
+    },
+    {
+      "path": "docs/hermes-finance-v1-upgrade-delivery/console-part-6.txt",
+      "kind": "text_document",
+      "bytes": 3586,
+      "sha256": "b415a3012c67029741ae4fc781501a8ef94132eeca96419ae9330b5d70b3cde5",
+      "utf8_readable": true,
+      "lines": 64
+    },
+    {
+      "path": "docs/hermes-finance-v1-upgrade-delivery/console-part-7.txt",
+      "kind": "text_document",
+      "bytes": 3600,
+      "sha256": "1bd8d877cd1a1b88e3d724563e42d3bc8d546f29b83dc8044025efc063733739",
+      "utf8_readable": true,
+      "lines": 57
+    },
+    {
+      "path": "docs/hermes-finance-v1-upgrade-delivery/console-part-8.txt",
+      "kind": "text_document",
+      "bytes": 1465,
+      "sha256": "083e1073dc854ede504b918d26189f04e45b027e14829298f15695728a3bea2f",
+      "utf8_readable": true,
+      "lines": 22
+    },
+    {
+      "path": "docs/hermes-finance-v1-upgrade-delivery/installer-source.py",
+      "kind": "historical_tool",
+      "bytes": 25900,
+      "sha256": "07ca0661334c359b6ed93949f19a5b45f0e39b78980d70fcd4bb1a8feba6bdf4"
+    },
+    {
+      "path": "docs/hermes-finance-v1-upgrade-delivery/manifest.json",
+      "kind": "structured_document",
+      "bytes": 737,
+      "sha256": "476ecd8eaaa780e19dfb53222cba480e53b6b2a1ef6eac21dfc032df6362d008",
+      "json_valid": true
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/README.md",
+      "kind": "text_document",
+      "bytes": 2404,
+      "sha256": "389a39828e00690f2d6329a166567c70855577dad638d3ea92798e56bc13b053",
+      "utf8_readable": true,
+      "lines": 19
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/media-evidence.json",
+      "kind": "structured_document",
+      "bytes": 9815,
+      "sha256": "4c663a1b3afe0f36ae938e4dd07a6d853bc28d505c8a50df27b1d7fbe1ed6f6a",
+      "json_valid": true
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/minified-dark-1365-affiliates.png",
+      "kind": "visual_asset",
+      "bytes": 157345,
+      "sha256": "feb5e68dd16f61ef67feae02d5d6cbd99aad20672dad13ed1e388a7c5022fa37",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/minified-dark-1365-campaigns.png",
+      "kind": "visual_asset",
+      "bytes": 163589,
+      "sha256": "7027a1ef06cbf4f45baef4381fbccd8a1b06755d54363d8d638da0551f2f96a5",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/minified-dark-1365-integrations.png",
+      "kind": "visual_asset",
+      "bytes": 155471,
+      "sha256": "cbf9bc77f4536aaec307ce8b6e89a3e25bf479258d35df0e180d36327e843211",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/minified-dark-1365-performance.png",
+      "kind": "visual_asset",
+      "bytes": 134308,
+      "sha256": "8dce8632abd73ba43edc5d1be7c281b0a55ea926a4043fb476ce5f0d2569a8eb",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/minified-dark-1365-studio.png",
+      "kind": "visual_asset",
+      "bytes": 208403,
+      "sha256": "18fd8fd9044c0dcb705c6db635b112c2ef3cb8269e8f14fef1fa0feab74ac062",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/minified-dark-390-affiliates.png",
+      "kind": "visual_asset",
+      "bytes": 54097,
+      "sha256": "78dc65bae9cec51b9dc6cfcb29b4ab7078c0835c448d4557396ce0f8970fc682",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/minified-dark-390-campaigns.png",
+      "kind": "visual_asset",
+      "bytes": 62041,
+      "sha256": "035d66ab28496a0eedded352eb33a27c38f8c4198242f8b34bf3e11cdaae7dbf",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/minified-dark-390-integrations.png",
+      "kind": "visual_asset",
+      "bytes": 73403,
+      "sha256": "335972ac226ca9b7528488882f1d16a6f97f71c0cc71331a50b2c4defe493966",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/minified-dark-390-performance.png",
+      "kind": "visual_asset",
+      "bytes": 55823,
+      "sha256": "1b295fcc332ba4b2da05f54391dc95f3afe9725bab566938502f047ca86bb196",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/minified-dark-390-studio.png",
+      "kind": "visual_asset",
+      "bytes": 75458,
+      "sha256": "e26f4292512689addf9e1385c872ddfb3f300b3018b2556c15a50d99b8eb4fce",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/minified-light-1365-affiliates.png",
+      "kind": "visual_asset",
+      "bytes": 118948,
+      "sha256": "c1789f5b03bc4295d12e53d5e68f0956cf0b8d53d013d98f1d4d31a306941aff",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/minified-light-1365-campaigns.png",
+      "kind": "visual_asset",
+      "bytes": 125089,
+      "sha256": "a6ede144b2a3fc13dba944a5bff37e4cb3a523009a38c28d86db748774374137",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/minified-light-1365-integrations.png",
+      "kind": "visual_asset",
+      "bytes": 121428,
+      "sha256": "f0d340206ce8a8d4196ae36e2349d3bc48296ca4c2f809fc9a6be3f9fe31a016",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/minified-light-1365-performance.png",
+      "kind": "visual_asset",
+      "bytes": 100035,
+      "sha256": "93b8f77e206e724c8d68d59e540b888f7ac1657b3900429eb71099b89bdfa392",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/minified-light-1365-studio.png",
+      "kind": "visual_asset",
+      "bytes": 176246,
+      "sha256": "48aa3628bcfda26d91defe9e6aa701ae4a9342c457b47b83324c4d4b5cca42aa",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/minified-light-390-affiliates.png",
+      "kind": "visual_asset",
+      "bytes": 46207,
+      "sha256": "cb8afac5a050691d26563d8c2bc5c36a982a9c1a60eee9b9e4b1552c82dabf1d",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/minified-light-390-campaigns.png",
+      "kind": "visual_asset",
+      "bytes": 53236,
+      "sha256": "52c2bea90c7f5300d338ac37a999a19734d26917f40a796743110a54c234ff8e",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/minified-light-390-integrations.png",
+      "kind": "visual_asset",
+      "bytes": 65558,
+      "sha256": "9adb695a8d88c52650e89aa50cd0ad78550700cbd0f29fd2dbd7cd325aa784a0",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/minified-light-390-performance.png",
+      "kind": "visual_asset",
+      "bytes": 47895,
+      "sha256": "c1154d8cb85964aca67f48b4b91903e4995c188083a08533dc87df2bec18b217",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/minified-light-390-studio.png",
+      "kind": "visual_asset",
+      "bytes": 66377,
+      "sha256": "e49ecc2913a254dc731fecfce3378dfc41ecf5b1b7d86232c537385e9acf1aa3",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/minified-results.json",
+      "kind": "structured_document",
+      "bytes": 12877,
+      "sha256": "006fdf0623c3ead7e432a01432fe9480d95448f7b50734ff33509148add3e04e",
+      "json_valid": true
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/normal-dark-1365-affiliates.png",
+      "kind": "visual_asset",
+      "bytes": 157345,
+      "sha256": "feb5e68dd16f61ef67feae02d5d6cbd99aad20672dad13ed1e388a7c5022fa37",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/normal-dark-1365-campaigns.png",
+      "kind": "visual_asset",
+      "bytes": 163645,
+      "sha256": "c47ff1effc4c06c735f3b97d678f1be4ec8f004a1dce9c5ce9b7acfd4e436b1d",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/normal-dark-1365-integrations.png",
+      "kind": "visual_asset",
+      "bytes": 155489,
+      "sha256": "1b1d67419f9b8e8c1a6f8d9de8967d4eb5f43967503c79be7e195b0633e1ab57",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/normal-dark-1365-performance.png",
+      "kind": "visual_asset",
+      "bytes": 134350,
+      "sha256": "d33e1e860b91a64d5b655d449a5a3895628c4e4eb281d71a16075d67284b54e6",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/normal-dark-1365-studio.png",
+      "kind": "visual_asset",
+      "bytes": 208461,
+      "sha256": "531bb05f5b91c8d90d3ff4240497f0cfd0252abfda78ea115973ba8e81550980",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/normal-dark-390-affiliates.png",
+      "kind": "visual_asset",
+      "bytes": 54125,
+      "sha256": "245637dd2564393788d83ff2a81e6c304f7fde2563905f0cc1e8e7797b771cc7",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/normal-dark-390-campaigns.png",
+      "kind": "visual_asset",
+      "bytes": 62117,
+      "sha256": "ef34be4df9e3212afdc48d784dc4df8d2917b299bd980b6b170036469f745b32",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/normal-dark-390-integrations.png",
+      "kind": "visual_asset",
+      "bytes": 73379,
+      "sha256": "741f85bcd99b06ecdd0400d2f256210ae27624ec8432a5465f1e94d566d8a5ac",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/normal-dark-390-performance.png",
+      "kind": "visual_asset",
+      "bytes": 55823,
+      "sha256": "1b295fcc332ba4b2da05f54391dc95f3afe9725bab566938502f047ca86bb196",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/normal-dark-390-studio.png",
+      "kind": "visual_asset",
+      "bytes": 75471,
+      "sha256": "aeb808a4f91d927624eddfbfae6dd04fc35356bcbbba110ba3c6f71289829d5e",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/normal-light-1365-affiliates.png",
+      "kind": "visual_asset",
+      "bytes": 119339,
+      "sha256": "fae8b83665b4fc1139711df052bba30f765946bbb7e8b54e01e37f19b013e1d0",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/normal-light-1365-campaigns.png",
+      "kind": "visual_asset",
+      "bytes": 125089,
+      "sha256": "a6ede144b2a3fc13dba944a5bff37e4cb3a523009a38c28d86db748774374137",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/normal-light-1365-integrations.png",
+      "kind": "visual_asset",
+      "bytes": 121391,
+      "sha256": "d380c896e80c320b9230515e70b0679c4662720d861779c9c0167c7f125291e8",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/normal-light-1365-performance.png",
+      "kind": "visual_asset",
+      "bytes": 100035,
+      "sha256": "93b8f77e206e724c8d68d59e540b888f7ac1657b3900429eb71099b89bdfa392",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/normal-light-1365-studio.png",
+      "kind": "visual_asset",
+      "bytes": 176303,
+      "sha256": "a47fa1170c329ec9fe7e4e35c18040fee17a35f59557ef5e3588f11848ccf1ed",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/normal-light-390-affiliates.png",
+      "kind": "visual_asset",
+      "bytes": 46176,
+      "sha256": "67625953c0cebcea598bbc049fb1ab08c94a63872528335d2dc848c27a9a8305",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/normal-light-390-campaigns.png",
+      "kind": "visual_asset",
+      "bytes": 53236,
+      "sha256": "52c2bea90c7f5300d338ac37a999a19734d26917f40a796743110a54c234ff8e",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/normal-light-390-integrations.png",
+      "kind": "visual_asset",
+      "bytes": 65385,
+      "sha256": "7cd3dcccfbb898a7af8bef5385ccb63db643764067d27fa8bf0032e51d0d90ac",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/normal-light-390-performance.png",
+      "kind": "visual_asset",
+      "bytes": 47940,
+      "sha256": "62a0db0650eb90c3cce58f66ff67ff942072bc4b0d9256043ab7694113534dd5",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/normal-light-390-studio.png",
+      "kind": "visual_asset",
+      "bytes": 66303,
+      "sha256": "e0a8fbc7cbdc9dfc3e110bd5e37905fccac719d0aea7b889d89b0c2bfd987a88",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/normal-results.json",
+      "kind": "structured_document",
+      "bytes": 12838,
+      "sha256": "c2bd1dfacdb103a0868525ce0433fa940b6a080854bed5e36f15a2d2f1990fde",
+      "json_valid": true
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/regression.json",
+      "kind": "structured_document",
+      "bytes": 1891,
+      "sha256": "75ad4fbec39fafd8ae4807e013951e407deefbbf77b64ac6b31ef7ce11b0d30c",
+      "json_valid": true
+    },
+    {
+      "path": "docs/qa/mls-owner-preview-2026-10-30/README.md",
+      "kind": "text_document",
+      "bytes": 2117,
+      "sha256": "f5f27e0efe5a7f0a6424707375866b45b65d80951252eb135ad3e9f3ad3e2328",
+      "utf8_readable": true,
+      "lines": 18
+    },
+    {
+      "path": "docs/qa/mls-owner-preview-2026-10-30/offline-1365-native-catalog.png",
+      "kind": "visual_asset",
+      "bytes": 208884,
+      "sha256": "f651ca61751a0d18597354999ed66f81fecd5425cdf70b9e25ef02046298ccba",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-owner-preview-2026-10-30/offline-1365-results.json",
+      "kind": "structured_document",
+      "bytes": 818,
+      "sha256": "2384214fdae40356b3a2acd7b5d4118008ea765643baad2b2625c1c74d2bbfcd",
+      "json_valid": true
+    },
+    {
+      "path": "docs/qa/mls-owner-preview-2026-10-30/offline-390-native-catalog.png",
+      "kind": "visual_asset",
+      "bytes": 85453,
+      "sha256": "f95f92bf75dd57425eea1eb0bb1c5967f57ef1901a3d046f1dcf186d449e1c59",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-owner-preview-2026-10-30/offline-390-results.json",
+      "kind": "structured_document",
+      "bytes": 815,
+      "sha256": "5e2ef020b13501cbc3f35ef6193e001b96fd5ce5152823320096449e570424b9",
+      "json_valid": true
+    },
+    {
+      "path": "docs/qa/mls-owner-preview-2026-10-30/preview-1365-actual-costs-saved.png",
+      "kind": "visual_asset",
+      "bytes": 110193,
+      "sha256": "db84894628261249de801187ac7943a1e6aa5600a4708f6cedf2e2759fb17558",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-owner-preview-2026-10-30/preview-1365-dark-overview.png",
+      "kind": "visual_asset",
+      "bytes": 559144,
+      "sha256": "149c0352eecf27a182cf861d291c725cb2e63d296a975248602927b793897fce",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-owner-preview-2026-10-30/preview-1365-native-current-campaign-mp4.png",
+      "kind": "visual_asset",
+      "bytes": 113418,
+      "sha256": "378bb2baaac7a62a2e218a7ace761fc4cfcd70f28a1213ce92702da2cdf04b2e",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-owner-preview-2026-10-30/preview-1365-results.json",
+      "kind": "structured_document",
+      "bytes": 2425,
+      "sha256": "dffccd4932690a06267e20859807fd667578c4f5180f5c3d1fbeb4f870a58670",
+      "json_valid": true
+    },
+    {
+      "path": "docs/qa/mls-owner-preview-2026-10-30/preview-390-actual-costs-saved.png",
+      "kind": "visual_asset",
+      "bytes": 60481,
+      "sha256": "3e79499c1690b3cc50ef07a1ac5bd5a8fdbce67142c693b2486e5b0e2157e073",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-owner-preview-2026-10-30/preview-390-actual-studio-mp4.png",
+      "kind": "visual_asset",
+      "bytes": 52064,
+      "sha256": "5c32d97be41c8b4d30ae2a8eba7b7346aea1ecdb75b2445053b35502f65db374",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-owner-preview-2026-10-30/preview-390-light-overview.png",
+      "kind": "visual_asset",
+      "bytes": 121901,
+      "sha256": "3f7ff6ee05ea5482588b20e041c8dcf3895dfc810cb86d222a835505cd9f73e0",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-owner-preview-2026-10-30/preview-390-results.json",
+      "kind": "structured_document",
+      "bytes": 2143,
+      "sha256": "00509258001283f36ad36e5bfcc6026f544f586a77e794a6b2897cef08a85a4e",
+      "json_valid": true
+    },
+    {
+      "path": "docs/qa/mls-owner-preview-2026-10-30/regression.json",
+      "kind": "structured_document",
+      "bytes": 2255,
+      "sha256": "7e05f17e0bd64098e6b7492a4ca36394b44655fa43e9eaab04690b066a4468a2",
+      "json_valid": true
+    },
+    {
+      "path": "docs/qa/mls-visual-2026-10-30/README.md",
+      "kind": "text_document",
+      "bytes": 2750,
+      "sha256": "95e51ea89d633225c17aefbd4285de4e460b379de6ed305dc4207a6146e30ce6",
+      "utf8_readable": true,
+      "lines": 18
+    },
+    {
+      "path": "docs/qa/mls-visual-2026-10-30/approved-dark-desktop-agent-ads.png",
+      "kind": "visual_asset",
+      "bytes": 351755,
+      "sha256": "ef0df5b71bd1e455ce78a7e0148f787005868c31652064af537a55abc84ef57c",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-visual-2026-10-30/approved-dark-desktop-agent-finance.png",
+      "kind": "visual_asset",
+      "bytes": 376715,
+      "sha256": "5d06613139257181f2a14a55f5eef6f97137b00a12ae26b91215dd07f9dd3302",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-visual-2026-10-30/approved-dark-desktop-agent-production.png",
+      "kind": "visual_asset",
+      "bytes": 371519,
+      "sha256": "4c69ed0ebaffa67e806a33e38d8dc501c087b20cb4b7c188dfefd7882c3fae79",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-visual-2026-10-30/approved-dark-desktop-agent-products.png",
+      "kind": "visual_asset",
+      "bytes": 372865,
+      "sha256": "3bdb26d0c2470e3b226d9dc84d7f4c9d9bb69672554285ea983b3e12e40b1cbe",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-visual-2026-10-30/approved-dark-desktop-agent-returns.png",
+      "kind": "visual_asset",
+      "bytes": 387922,
+      "sha256": "6b613ca7e63d375cd96114ab7b488cd09dca5bd711cde4a6cd78eed96e389bd4",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-visual-2026-10-30/approved-dark-desktop-overview.png",
+      "kind": "visual_asset",
+      "bytes": 560446,
+      "sha256": "2d02995fbcb44b7ea1680dbb6edde9c0167a3a56d424afa182e0942c5f445bab",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-visual-2026-10-30/approved-dark-mobile-agent-ads.png",
+      "kind": "visual_asset",
+      "bytes": 162003,
+      "sha256": "807a054d7127e510d3b339bdec900bea5e7f1d6c7f824b07063b16c9e6987729",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-visual-2026-10-30/approved-dark-mobile-agent-finance.png",
+      "kind": "visual_asset",
+      "bytes": 169447,
+      "sha256": "81401e779911fd8a357d41696ba022d03d07a44c6e867cff86116f9061758b37",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-visual-2026-10-30/approved-dark-mobile-agent-production.png",
+      "kind": "visual_asset",
+      "bytes": 160696,
+      "sha256": "1c03f5924136d6d8fbd7870206021afe6e6991318b2ab84517e1b8ceab0cf7a1",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-visual-2026-10-30/approved-dark-mobile-agent-products.png",
+      "kind": "visual_asset",
+      "bytes": 163692,
+      "sha256": "b38e60af58d3792ca5ef6ca767440ce2166bfb25147115c7b336a58e0587e3a3",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-visual-2026-10-30/approved-dark-mobile-agent-returns.png",
+      "kind": "visual_asset",
+      "bytes": 167745,
+      "sha256": "ab0c3ddc34c63e91938534287d85e5aece7384bac9344c4bbc90c3c8d26114ce",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-visual-2026-10-30/approved-dark-mobile-overview.png",
+      "kind": "visual_asset",
+      "bytes": 160485,
+      "sha256": "3c8998b854dc56c095e24e4f40aec6c1ef6394481f28b374d250570ee7fab22c",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-visual-2026-10-30/approved-light-desktop-agent-ads.png",
+      "kind": "visual_asset",
+      "bytes": 325600,
+      "sha256": "cd1745964a148a564c3282c29c44b46b2d601430430f4ab29b5503a976a9ccfa",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-visual-2026-10-30/approved-light-desktop-agent-finance.png",
+      "kind": "visual_asset",
+      "bytes": 302918,
+      "sha256": "d042399c9cd72ce0bfa826a4ef5eb0630f9945ab75dc52f01e5e388f373fc6f6",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-visual-2026-10-30/approved-light-desktop-agent-production.png",
+      "kind": "visual_asset",
+      "bytes": 320535,
+      "sha256": "9a6e6e346764dc4a2c28941f07e68b424cb835cdb83be07fb246520d4b1f75a3",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-visual-2026-10-30/approved-light-desktop-agent-products.png",
+      "kind": "visual_asset",
+      "bytes": 296867,
+      "sha256": "5ccac19de0fa0cd3e906aacea5355e8323aebf86fe985a01fd1086fba4324d30",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-visual-2026-10-30/approved-light-desktop-agent-returns.png",
+      "kind": "visual_asset",
+      "bytes": 321732,
+      "sha256": "b8b637922dc8006188e05d7ddffd07d943dcd5ce3135d5ef8594907fdb2ddd95",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-visual-2026-10-30/approved-light-desktop-overview.png",
+      "kind": "visual_asset",
+      "bytes": 476853,
+      "sha256": "a4125979b5375a12908d3613c4c31a7cdc4b7e67015ca17f9a134f7d2dd0bee1",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-visual-2026-10-30/approved-light-mobile-agent-ads.png",
+      "kind": "visual_asset",
+      "bytes": 129567,
+      "sha256": "196d059fda0ce9e378356de926673626f0bda11d3a02197a43af65be6875111e",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-visual-2026-10-30/approved-light-mobile-agent-finance.png",
+      "kind": "visual_asset",
+      "bytes": 128298,
+      "sha256": "f545079763c040837a3304d06875b0b97b30b29ec14422cd24c1cfbb23c75dc8",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-visual-2026-10-30/approved-light-mobile-agent-production.png",
+      "kind": "visual_asset",
+      "bytes": 129320,
+      "sha256": "ad5857ae73c5da285bb8b053e03272492cbde8f01c7ba33f1c7681eac6ab7f9e",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-visual-2026-10-30/approved-light-mobile-agent-products.png",
+      "kind": "visual_asset",
+      "bytes": 120727,
+      "sha256": "67d998e5e0c41ba28039878a9cf1949a523d9be71f6ef84fde049982d6974e46",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-visual-2026-10-30/approved-light-mobile-agent-returns.png",
+      "kind": "visual_asset",
+      "bytes": 126878,
+      "sha256": "ca0ee425cf1fdd9bc400f85bac65c24fc05933ace4dff2579b46257eb2bb7bb1",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-visual-2026-10-30/approved-light-mobile-overview.png",
+      "kind": "visual_asset",
+      "bytes": 122733,
+      "sha256": "466771abcdbd10b93ba901becb85592ca640409ddfc5a07d1b725937a89c3464",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/qa/mls-visual-2026-10-30/manifest.json",
+      "kind": "structured_document",
+      "bytes": 4521,
+      "sha256": "cafaf63f7c87a4bdedcc323b9b7c1918f4b5d58e06acc48e376bdda03d8c0455",
+      "json_valid": true
+    },
+    {
+      "path": "docs/qa/mls-visual-2026-10-30/results.json",
+      "kind": "structured_document",
+      "bytes": 11828,
+      "sha256": "40247bea78bbb35fd7adfcc272e0e207e489e70cd300842d893f0c7718caf320",
+      "json_valid": true
+    },
+    {
+      "path": "docs/visual-references/mls-2026-10-29/01_overview_aprovado.png",
+      "kind": "visual_asset",
+      "bytes": 831550,
+      "sha256": "9c77291ef81462d0c0eaec878e2aa990b2b02d61cea2703b97e73d7938b2fb8a",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/visual-references/mls-2026-10-29/02_finance_aprovado.png",
+      "kind": "visual_asset",
+      "bytes": 236577,
+      "sha256": "783def2e9075eb3e3fc82fc8b3f4d184c5c4aaa2c939bf3d401e5ece1d8bd5d8",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/visual-references/mls-2026-10-29/03_ads_aprovado.png",
+      "kind": "visual_asset",
+      "bytes": 237647,
+      "sha256": "a0adaab4282cbe3a3ae13848d820687b744e082b4ccb45f9b2fc715abc4c3af9",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/visual-references/mls-2026-10-29/04_production_aprovado.png",
+      "kind": "visual_asset",
+      "bytes": 208714,
+      "sha256": "5d98efb77e568228d36216fcd800d4d3eda692cbdffa0fee616b845e020cc364",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/visual-references/mls-2026-10-29/05_returns_aprovado.png",
+      "kind": "visual_asset",
+      "bytes": 219152,
+      "sha256": "cfe0e2e30a501ecbe5918f6a81cb05074c084e7a1aa835a15201702f23ffc3ab",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/visual-references/mls-2026-10-29/06_products_aprovado.png",
+      "kind": "visual_asset",
+      "bytes": 227835,
+      "sha256": "b2273b0a8ea3812e9e374685b63f3ccf52970ae5c4b84255ba3c50fcfd284f9a",
+      "png_signature_valid": true
+    },
+    {
+      "path": "docs/visual-references/mls-2026-10-29/manifest.json",
+      "kind": "structured_document",
+      "bytes": 1494,
+      "sha256": "b68aca833b09cb54c34433d77c66a959453b69f88d80b2dcba7cb0dd4189378a",
+      "json_valid": true
+    },
+    {
+      "path": "web/finance/DEPLOY.md",
+      "kind": "text_document",
+      "bytes": 6235,
+      "sha256": "276fb620eccccee941ffa7c0ce340179c5cebdec8c65a62f4ca29f48b82a9e38",
+      "utf8_readable": true,
+      "lines": 108
+    },
+    {
+      "path": "web/finance/README.md",
+      "kind": "text_document",
+      "bytes": 6132,
+      "sha256": "9b464e7bdd91876e92f2fb8c7e716ec761a64c22352de5e92251922abff8126a",
+      "utf8_readable": true,
+      "lines": 45
+    },
+    {
+      "path": "workers/app/RELEASE.md",
+      "kind": "text_document",
+      "bytes": 2820,
+      "sha256": "3c36cec1eb98fa0d2e826cfcd9a5cf7b1ab082eb19957bd7e993ee779f9f678b",
+      "utf8_readable": true,
+      "lines": 56
+    },
+    {
+      "path": "workers/auth/REVIEWED_CHANGES.md",
+      "kind": "text_document",
+      "bytes": 1021,
+      "sha256": "988aebeced3eeb1075788f049943a23dad13a506ab312e8d3f060342b8839aba",
+      "utf8_readable": true,
+      "lines": 18
+    }
+  ]
+}

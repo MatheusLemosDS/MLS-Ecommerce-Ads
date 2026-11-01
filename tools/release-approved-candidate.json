@@ -1,7 +1,7 @@
 {
   "schema": "mls_release_candidate_v1",
-  "base_commit": "8acf6b921e7368afa98453451ee6b9092c58fd54",
-  "prepared_source_commit": "b1a0883f9b41b230217f1b2b0f0ad70b43c6335e",
+  "base_commit": "78efb0c9ebfa866c28d7be79414cb5324dd2c669",
+  "prepared_source_commit": "78efb0c9ebfa866c28d7be79414cb5324dd2c669",
   "owner_authorization": "OWNER_REQUESTED_ALL_PREPARED_IMPROVEMENTS_LIVE_2026_10_30",
   "commercial_writes_allowed": false,
   "expected_hashes": {
@@ -16,22 +16,19 @@
   "allowed_files": [
     "AGENTS.md",
     "NEXT_CHAT_HANDOFF.txt",
+    "README.md",
+    "docs/IMPOSTO_E_RESULTADO_PREVISTO.md",
+    "docs/IMPOSTO_POR_PRODUTO_E_ORDENACAO.md",
+    "docs/MLS_AI_SALES_CODEX_EXECUTION_2026_10_30.md",
     "docs/MLS_CODEX_HANDOFF_2026_10_28.md",
     "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
     "docs/MLS_MASTER_MISSION_CHECKPOINT.json",
+    "docs/PUBLICACAO_PELO_GIT.md",
     "docs/ROADMAP_MLS_COMMERCE_OS.md",
+    "docs/MLS_RETURNS_REUSE_ROADMAP_AUDIT_2026_11_01.md",
+    "docs/MLS_RETURNS_REUSE_DOC_AUDIT_2026_11_01.inventory.json",
     "tools/release-approved-candidate.json",
     "tools/release_preflight.mjs",
-    "tools/tests/release-preflight.test.mjs",
-    "tools/worker_project.mjs",
-    "web/cloudflare/src/agent-registry-view.mjs",
-    "web/cloudflare/src/agent-registry.mjs",
-    "web/cloudflare/src/mission-control.mjs",
-    "web/cloudflare/src/daily-profit-presentation.mjs",
-    "web/cloudflare/tests/daily-profit-presentation.test.mjs",
-    "web/cloudflare/tests/today-estimated-profit-client.test.mjs",
-    "web/cloudflare/tests/agent-registry.test.mjs",
-    "web/cloudflare/tests/today-estimated-profit-chrome.test.mjs",
-    "docs/MLS_DAILY_MARGIN_ROAS_2026_11_01.md"
+    "tools/tests/release-preflight.test.mjs"
   ]
 }

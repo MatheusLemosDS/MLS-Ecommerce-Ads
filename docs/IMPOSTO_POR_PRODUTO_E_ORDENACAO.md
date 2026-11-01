@@ -1,4 +1,17 @@
-# Imposto por produto e ordenação do resultado
+# Imposto por produto e ordenação do resultado — histórico
+
+**Política atual desta loja:** o DAS-MEI declarado de **R$ 86,05 por mês em
+2026** é aplicado uma vez na competência, sem rateio inventado entre produtos.
+O valor é uma declaração da conta/ano, não uma regra legal universal. Ele
+substituiu a estimativa antiga de 2% descrita abaixo. O saldo dos pedidos
+exclusivos fica após produção, antes de DAS, anúncios e despesas gerais;
+não representa lucro líquido por produto. Consultar
+[MEI e resultado automático](MEI_E_RESULTADO_AUTOMATICO.md).
+
+## Registro original da associação de 2% por produto
+
+As regras e os exemplos seguintes documentam a entrega anterior. Não somar
+esse imposto histórico ao DAS atual nem restaurar seu rateio por produto.
 
 O imposto previsto de 2%, já disponível no resumo da loja, passa a integrar a
 lista do período financeiro. Cada produto mostra repasse previsto, custo de

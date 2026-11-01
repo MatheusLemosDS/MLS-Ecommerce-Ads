@@ -30,7 +30,7 @@
     "merge_commit": "9c418fd3010f46957d1ce52345baacd76041c788"
   },
   "current_phase": "M2_FINANCE_RETURNS_RECONCILIATION",
-  "working_branch": "fix/daily-margin-roas-presentation-20261101",
+  "working_branch": "docs/returns-reuse-roadmap-audit-20261101",
   "current_status": "OFFICIAL_LIVE_MARGIN_PARTIAL_ROAS_FAULT_ISOLATION_VERIFIED",
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
@@ -64,16 +64,22 @@
     "Overflow na soma visível bloqueia MLS Auditor e Hermes em vez de fabricar valor",
     "Diagnostico Pending atual copiavel com whitelist sem hashes/identificadores de pedidos, sem provider ou D1 extra",
     "Graficos de ate 14 dias usando somente snapshot diario validado existente (lucro estimado, vendas e Ads)",
-    "Indicativos lucro/prejuizo e diferencas reais com setas verde/vermelho, sem comparar datas parciais"
+    "Indicativos lucro/prejuizo e diferencas reais com setas verde/vermelho, sem comparar datas parciais",
+    "PR93: paginação durável do Pending validada no corte observado, duas páginas e 182 registros/pedidos",
+    "PR94: três relatórios Returns da publicação de outubro consultados, sem comprovar recebimento físico ou banco",
+    "PR95/96: motivo das despesas mensais pendentes, saldo/margem parciais e ROAS independente de falhas de gráficos"
   ],
   "remaining_this_phase": [
     "Observar o estado real da nova auditoria Pending na conta autenticada e comparar quantidade/valores/horários com o Seller Centre",
-    "Se a auditoria retornar PARTIAL_PAGE, validar o cursor e a semântica na resposta real antes de implementar paginação completa",
     "Se retornar OBSERVED_DIFFERENT, determinar se a diferença vem de timing ou de bases diferentes antes de tratá-la como divergência material",
     "Observar a evidência real pós-deploy da conta autenticada, incluindo a evolução de coortes para calendários de liberação posteriores",
     "Manter liquidação bancária, remaining_receivable e lucro realizado separados de Pending e liberação na Shopee",
     "Resolver qualquer pedido ambíguo, valor não verificado ou conflito de evidência antes do fechamento estrito",
-    "Reavaliar o horizonte limitado do tracker somente com evidência real; horizonte esgotado nunca prova ausência de liberação posterior"
+    "Reavaliar o horizonte limitado do tracker somente com evidência real; horizonte esgotado nunca prova ausência de liberação posterior",
+    "Implementar controle interno M2.2 de produção incorrida e devolução física; custo estimado de vendas não é gasto real comprovado",
+    "Confirmar custos históricos e embalagem/etiqueta incrementais antes de valorar peças recuperadas ou integrar a revenda ao lucro",
+    "Conferir continuamente cobertura da paginação Pending já entregue, sem confundir o corte validado com cobertura permanente",
+    "Declarar despesas de novembro e confrontar Seller Centre/banco no mesmo recorte"
   ],
   "next_phase": {
     "id": "M3_PRODUCTS_PRICING_INTELLIGENCE",
@@ -111,10 +117,12 @@
     }
   },
   "next_actions": [
-    "Monitor the seven review-order situations and any new Returns cases; the observed eighteen details are checked with none pending, while refund outcomes and bank settlement remain unverified",
-    "Refresh the exact-publication coverage cue and resume the existing October release calendar (2/5 windows), then reconcile against the same paid cohort",
-    "Compare the same cutoff with Seller Centre and bank evidence before declaring closure or realized profit",
-    "Continue validated roadmap increments on official Live, preserving exact source/config checks and commercial-write gates"
+    "Priorizar M2.2 interno: custo incorrido, recebimento/inspeção e quantidades reaproveitáveis por identidade física confirmada",
+    "Confirmar valores históricos e custos de nova embalagem/etiqueta por pedido/peça/kit; UNKNOWN não vira zero",
+    "Declarar despesas do mês quando não confirmadas; não copiar automaticamente outro mês",
+    "Renovar cobertura da publicação exata e acompanhar revisões, Returns e calendário de outubro sem reiniciar o catálogo/coleta",
+    "Comparar mesmo corte com Seller Centre/banco antes de encerrar M2 ou declarar lucro realizado",
+    "Continuar incrementos validados na Live, preservando bytes/configuração e bloqueios de escrita comercial"
   ],
   "m0_followup": [
     "Conferir visual autenticado em desktop e celular durante M1; corrigir apenas branding/layout sem renomear infraestrutura"
@@ -2285,5 +2293,47 @@
       "historical_log_access": "HTTP_403_CLOUDFLARE_12004",
       "controlled_live_publication": "EXACT_BYTES_AND_LOCAL_REAL_SNAPSHOT_FAULT_REPLAY_VERIFIED"
     }
-  }
+  },
+  "documentation_audit_2026_11_01": {
+    "schema": "mls_returns_reuse_roadmap_audit_v1",
+    "audited_base_commit": "78efb0c9ebfa866c28d7be79414cb5324dd2c669",
+    "date": "2026-11-01",
+    "report": "docs/MLS_RETURNS_REUSE_ROADMAP_AUDIT_2026_11_01.md",
+    "inventory": "docs/MLS_RETURNS_REUSE_DOC_AUDIT_2026_11_01.inventory.json",
+    "files": 232,
+    "text_documents": 120,
+    "markdown_scanned": 98,
+    "json_parsed": 29,
+    "historical_tools_not_executed": 5,
+    "visual_assets_inventory_only": 78,
+    "existing_local_links_checked": 217,
+    "broken_existing_local_links": 0,
+    "runtime_changed": false,
+    "returned_stock_implemented": false,
+    "incurred_production_cost_ledger_implemented": false,
+    "resale_allocation_implemented": false,
+    "next_increment": "M2.2_INTERNAL_PHYSICAL_RETURNS_AND_INCURRED_COST_LEDGER",
+    "valuation_without_evidence": "UNKNOWN",
+    "physical_receipt_requires_confirmation": true,
+    "financial_adjustment_change": "NOT_IMPLEMENTED_BY_THIS_AUDIT",
+    "commercial_writes": "LOCKED",
+    "finance_m2": "OPEN",
+    "seller_centre_comparison": "NOT_COMPARED",
+    "bank_settlement": "UNVERIFIED"
+  },
+  "previous_next_actions_before_returns_reuse_audit": [
+    "Monitor the seven review-order situations and any new Returns cases; the observed eighteen details are checked with none pending, while refund outcomes and bank settlement remain unverified",
+    "Refresh the exact-publication coverage cue and resume the existing October release calendar (2/5 windows), then reconcile against the same paid cohort",
+    "Compare the same cutoff with Seller Centre and bank evidence before declaring closure or realized profit",
+    "Continue validated roadmap increments on official Live, preserving exact source/config checks and commercial-write gates"
+  ],
+  "previous_remaining_before_returns_reuse_audit": [
+    "Observar o estado real da nova auditoria Pending na conta autenticada e comparar quantidade/valores/horários com o Seller Centre",
+    "Se a auditoria retornar PARTIAL_PAGE, validar o cursor e a semântica na resposta real antes de implementar paginação completa",
+    "Se retornar OBSERVED_DIFFERENT, determinar se a diferença vem de timing ou de bases diferentes antes de tratá-la como divergência material",
+    "Observar a evidência real pós-deploy da conta autenticada, incluindo a evolução de coortes para calendários de liberação posteriores",
+    "Manter liquidação bancária, remaining_receivable e lucro realizado separados de Pending e liberação na Shopee",
+    "Resolver qualquer pedido ambíguo, valor não verificado ou conflito de evidência antes do fechamento estrito",
+    "Reavaliar o horizonte limitado do tracker somente com evidência real; horizonte esgotado nunca prova ausência de liberação posterior"
+  ]
 }

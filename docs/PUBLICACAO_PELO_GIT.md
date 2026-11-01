@@ -1,4 +1,34 @@
-# Publicar os Workers pelo Git
+# Publicação dos Workers — estado atual e histórico do vínculo Git
+
+## Estado verificado em 01/11/2026
+
+Os três Workers App, Auth e Finance já estão ativos e configurados. A última
+release verificada é a [PR #96](MLS_DAILY_MARGIN_ROAS_2026_11_01.md): App
+`27356953`, preservando Auth `37bead27`, Finance `e0b258a2`, domínios, bindings,
+flags e cron. A conexão e as leituras financeiras reais foram verificadas;
+M2, confronto com Seller Centre/banco e lucro realizado continuam abertos.
+
+**Um push ou merge no Git não confirma deploy.** Os três checks externos
+Cloudflare Workers Builds permanecem em falha, com causa não confirmada.
+O acesso disponível aos logs de Builds retorna HTTP 403/código 12004. Não
+atribuir essas falhas a um gate intencional nem declarar a automação reparada.
+A publicação controlada via Wrangler foi conferida separadamente por bytes,
+versões e configuração dos três serviços. CI GitHub, publicação e validação
+dos dados da conta são evidências distintas.
+
+Para atualizações, seguir os gates atuais de [AGENTS.md](../AGENTS.md), o
+[roadmap](ROADMAP_MLS_COMMERCE_OS.md) e o
+[checkpoint](MLS_COMMERCE_OS_CHECKPOINT.json), preservando os recursos já
+configurados. Não repetir captura inicial, recriar D1/segredos, refazer OAuth
+ou substituir Workers por artefatos antigos para uma atualização normal.
+
+## Histórico da configuração inicial — outubro de 2026
+
+As instruções e confirmações abaixo registram o vínculo inicial pelo Git e as
+entregas daquela etapa. Referências a “próxima publicação”, App v11, Financeiro
+novo ou deploy automático descrevem esse estado histórico; não comprovam que
+Workers Builds esteja funcionando na release atual. Manter o registro para
+auditoria e consultar o estado verificado acima para a operação presente.
 
 O fluxo preparado usa o repositório **MLS-Ecommerce-Ads** e três projetos no
 Cloudflare: **App**, **Auth** e **Financeiro**. Cada projeto publica somente seu

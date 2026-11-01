@@ -1,3 +1,5 @@
+**Auditoria de devoluções e roadmap — 01/11/2026:** M2 permanece aberta. Custos de vendas elegíveis não são um ledger de produção incorrida; recebimento físico, inspeção, estoque reaproveitável e vínculo da revenda ainda não estão implementados. Nova prioridade M2.2 especifica esses controles e separa caixa, estoque e custo consumido, sem criar custos/quantidades por inferência. Auditoria da base PR96: 232 arquivos, 120 documentos de texto, 29 JSON, cinco ferramentas históricas e 78 imagens inventariadas; 217 links locais originais válidos. Alteração somente documental; última runtime publicada permanece PR96. [Relatório](MLS_RETURNS_REUSE_ROADMAP_AUDIT_2026_11_01.md).
+
 **Margem parcial e ROAS PR96 publicados — 01/11/2026:** a Visão geral mostra a margem do saldo conhecido antes das despesas não declaradas. ROAS atualiza antes dos gráficos; falhas de painel ficam isoladas, com tabela e escopo antigos removidos. Um dia Ads válido informa o índice sem inventar curva ou comparação. App `27356953`; Auth/Finance e configuração preservados. CI 41334582368 verde: 3015 Node e 67 Python, sem skips; Chromium normal/minificado 320/1365 e replay real com falha injetada aprovados. Despesas de novembro continuam desconhecidas, sem zero presumido. A exceção exata do navegador do proprietário não foi capturada; M2/banco permanecem abertos. [Registro](MLS_DAILY_MARGIN_ROAS_2026_11_01.md).
 
 **Correção do resultado de hoje PR95 publicada — 01/11/2026:** despesas de novembro ainda não declaradas eram ocultadas pelo cartão. A Live mostra o saldo parcial com motivo e acesso direto à confirmação; lucro/margem/gráficos continuam desconhecidos até a declaração. Hoje acompanha Brasília, datas históricas e rascunhos são preservados, e salvar despesas atualiza a leitura imediatamente. App `47e3de73`; Auth/Finance e configuração preservados. CI 41332958729 verde: 3.005 testes Node e 67 Python; Chromium normal/minificado 320/1365 e replay local da leitura real aprovados. Nenhuma despesa real presumida como zero. M2 e confronto Seller Centre/banco continuam abertos. [Registro](MLS_TODAY_ESTIMATED_PROFIT_2026_11_01.md).
@@ -384,7 +386,7 @@ Continuar a fase financeira atual:
 
 **Incremento publicado — PR #21:** o MLS Finance agora audita localmente o Pending atual antes de qualquer paginação: compara de forma descritiva o `pending_amount` do Overview com o subtotal visível de `estimated_escrow_amount`, registra cobertura, `has_more`, quantidade de valores convertíveis e sincronia dos snapshots. `OBSERVED_MATCH` não prova saldo/competência; `OBSERVED_DIFFERENT` vira validação no Seller Centre, não erro contábil. A seção fechada continua sem leitura D1 extra e a auditoria não cria chamada Shopee. [Detalhes](AUDITORIA_PENDING_ATUAL_MLS_FINANCE.md).
 
-**Ainda falta nesta fase:** observar o estado real da auditoria Pending na conta e comparar com o Seller Centre; se houver `PARTIAL_PAGE`, validar cursor/semântica antes da paginação; se houver `OBSERVED_DIFFERENT`, explicar timing/base antes de tratá-lo como divergência material; manter `remaining_receivable` separado do snapshot atual. O horizonte limitado do tracker nunca deve ser usado como prova de que não haverá liberação posterior.
+**Estado atual desta fase — 01/11/2026:** a PR93 já validou paginação durável do Pending em duas páginas, com 182 registros/pedidos no corte observado; a PR94 confirmou os três relatórios de Returns da publicação de outubro. Essas evidências não são cobertura permanente, desfecho de reembolso, recebimento físico ou depósito bancário. Ainda faltam reconciliar as situações em revisão, conferir o calendário de liberações da publicação exata, declarar despesas do mês e confrontar Seller Centre/banco no mesmo recorte. Manter `remaining_receivable` separado do Pending atual; horizonte esgotado não prova ausência de liberação posterior.
 
 **Critério de saída:** período completo conciliado com explicação de cada diferença material.
 
@@ -400,6 +402,20 @@ Esta é uma trilha técnica independente que **não substitui o gate de saída d
 - [ ] Validar identidade/cursor, replay e assinatura de webhook em sandbox antes de criar fila real ou habilitar ACK.
 - [ ] Confirmar M2 Pending, liberações e devoluções (issue #50). Não presumir depósito bancário.
 
+### M2.2 — Produção incorrida e devolução reaproveitável — **ESPECIFICADO / NÃO IMPLEMENTADO**
+
+Prioridade identificada na [auditoria de devoluções e roadmap](MLS_RETURNS_REUSE_ROADMAP_AUDIT_2026_11_01.md):
+
+- [ ] Registrar produção realmente incorrida por unidade/lote com custo histórico, data, revisão e fonte; mudança de status da venda não apaga gasto já comprovado.
+- [ ] Separar status da Shopee, reembolso/ajuste de repasse, recebimento físico, quarentena e inspeção. CLOSED/REFUND_PAID não comprovam peça recebida.
+- [ ] Identificar estampa/SKU/variação, cor, tamanho, adulto/infantil e componentes efetivos de kits; divergência ou avaria bloqueia disponibilidade.
+- [ ] Criar quantidade recuperada somente após confirmação física, com eventos idempotentes, CAS, auditoria e reversões; kit parcial não vira kit completo.
+- [ ] Reservar e consumir a unidade correta na revenda, com embalagem/etiqueta incrementais declaradas. Não alterar o custo global do SKU nem registrar nova fabricação da mesma peça.
+- [ ] Separar caixa de custo por competência: recuperação em estoque não é receita/dinheiro; recuperação e consumo do valor histórico precisam de lançamentos correspondentes.
+- [ ] Validar o ciclo original → devolução → inspeção → revenda, inclusive mudança de mês, custos ausentes e reservas concorrentes, antes de integrá-lo ao resultado financeiro.
+
+A primeira entrega pode oferecer quantidades e condições internas com avaliação desconhecida. Valoração e lucro dependem das evidências de custo; atualização externa de estoque continua bloqueada. Este item não está concluído pela existência do catálogo, do DTF ou de relatórios Returns CHECKED.
+
 ### M3 — Products + Pricing Intelligence
 - contribuição por SKU;
 - curva ABC;
@@ -410,17 +426,16 @@ Esta é uma trilha técnica independente que **não substitui o gate de saída d
 - ROAS mínimo/ponto de equilíbrio somente quando a base de receita for compatível;
 - bloqueio por custo/atribuição/estoque desconhecido.
 
-#### M3.0 Observer e M3-L0 Listing Factory antecipada (trabalho isolado)
+#### M3.0 Observer e M3-L0 Listing Factory antecipada — base técnica integrada
 
-- **PR #47 (draft/CI aprovado):** curva ABC por unidades vendidas, saldo de pedidos exclusivos e simulador matemático manual de preço; fonte de vendas não comprova estoque nem lucro líquido por SKU. Não merged/deployed.
-- **PR #51 (draft):** inspeção local de JPG/PNG, manifesto para preparar muitos anúncios com 5–9 imagens, variações por tamanho, SKU, preço declarado e estoque explícito; particionamento interno até 100 por lote. Não é formato oficial da API nem upload de mídia. Não merged/deployed.
-- [ ] M3.1: conciliação e contratos de custo/taxas/frete/impostos por SKU e período; sem rateio arbitrário de pedidos mistos.
-- [ ] M3.2: com evidência apropriada, preço mínimo/alvo/promocional, lucro por SKU e ROAS mínimo com atribuição real; estoque verificado, revisões e auditoria.
-- [x] **PR #56 draft / não publicada:** UI em Produtos, validação de imagens reais, SHA-256, preço declarado (sem valor fictício), variações por tamanho, **importação/exportação JSON para retomar pelo ChatGPT/Codex** e paginação de até 500 rascunhos (8 por página). Nenhuma rede nem escrita Shopee. **CI da integração final aprovado** #40788713558: 2.126 Node + 67 Python, Chrome e 3 builds. Os 13 arquivos de código/testes da PR #56 são idênticos aos aprovados na PR temporária #58 (fechada sem merge). Continua pendente QA visual autenticada, integração final #51/#48 e validação financeira M2.
-- [ ] Gate final #56: QA autenticada desktop/celular, conferir PR #48 e integrar PR #51 → #56 em ordem; revisão das permissões reais e custos/estoque da Shopee antes de qualquer escrita. Nenhuma publicação externa automática.
-- [ ] M8 integração posterior: MediaSpace, criação em lote e confirmação assíncrona somente após categoria/permissão real, M6 aprovação assistida, idempotência e tratamento de resultado incerto.
-- [ ] MLS Creative: cadeia pesquisa → estratégia de SKU → título/descrição → mockup → imagem e vídeo → revisão → publicação assistida; direitos de uso das imagens e políticas oficiais validados.
-- [ ] MLS Ads/Returns: análise de avaliações e diagnóstico de funil, com melhorias propostas por Hermes; escrita continua LOCKED.
+Os fundamentos Observer/Listing Factory e a busca V3.6 foram reconciliados na Live pela PR86 e preservados nas releases seguintes. As PRs originais e seus planos de integração são registros históricos: não repetir a sequência #51 → #56 nem refazer merges apenas porque essas branches continuam abertas.
+
+- [x] Base técnica local: catálogo/variações, rascunhos/importação/exportação, pesquisa e visual integrado; a prévia sintética continua preservada.
+- [ ] Aceite visual do operador e grants por loja/categoria continuam evidências próprias; integração técnica não os comprova.
+- [ ] M3.1: custo incorrido e histórico por unidade/lote, taxas/frete/impostos por SKU/período, sem rateio arbitrário de pedidos mistos.
+- [ ] M3.2: preços mínimo/alvo/promocional e ROAS por SKU somente com M2 confiável, estoque verificado e atribuição apropriada.
+- [ ] Reutilização de peças devolvidas exige o controle físico M2.2 e vínculo do lote à revenda; custo global do SKU não deve ser reduzido para uma única revenda.
+- [ ] M8 externo: MediaSpace/publicação em lote exige permissões reais, M6, idempotência, direitos e tratamento de resultado incerto. Fundamentos locais de Creative/AI Sales publicados não liberam escrita comercial.
 
 **Política de classificação:** READY_FOR_OPERATOR_REVIEW no preparador só significa que o rascunho passou regras internas locais; não significa READY_TO_PUBLISH nem confirmação de permissões, estoque, tarifa ou compatibilidade na Shopee.
 
@@ -516,10 +531,15 @@ Conversão de identidade M0 publicada pela **PR #11**, merge
 A fase canônica é **M2 — Finance/Returns confiáveis como agentes observadores**.
 
 Retomar por:
-- validar em fontes oficiais da Shopee a semântica do ciclo de escrow/liberação e de valores ainda não liberados;
-- somente habilitar `remaining_receivable` se houver contrato e evidência suficientes; caso contrário manter `null`;
-- observar o tracker temporal real após a próxima virada de mês sem duplicar coleta;
-- manter Ads/PROMO LOCKED e o lucro realizado desconhecido sem liquidação comprovada.
+1. Implementar e validar o controle interno M2.2 de produção incorrida, recebimento/inspeção de devoluções e identificação das peças reaproveitáveis. Não inferir estoque pelo encerramento do caso.
+2. Confirmar a decomposição histórica de custos e os novos valores de embalagem/etiqueta; manter avaliação UNKNOWN enquanto ausentes. Registrar desembolso e consumo de estoque em bases distintas, sem dupla fabricação.
+3. Manter a paginação do Pending já entregue, renovar a cobertura da publicação exata e acompanhar revisões/Returns/calendários existentes sem reiniciar coleta ou catálogo.
+4. Declarar despesas do mês e confrontar o mesmo recorte com Seller Centre e banco. Somente concluir M2 com diferenças materiais explicadas; lucro realizado exige liquidação comprovada.
+5. Manter Ads/PROMO, alterações externas de preço/estoque e autonomia comercial bloqueados enquanto seus gates permanecerem abertos.
+
+## Registros históricos abaixo
+
+As entradas datadas a seguir preservam incidentes, planos e evidências de 27–30/10. Estados DRAFT/OFF/sem deploy e instruções de integração descrevem aquele corte; não substituem o estado atual acima nem autorizam rollback, reprovisionamento ou merge repetido.
 
 
 **Incremento integrado — PR #22, evidência local de Pending:** acrescentar ação
