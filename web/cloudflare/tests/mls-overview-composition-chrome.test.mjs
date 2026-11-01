@@ -20,7 +20,7 @@ test('overview has one set of six KPI IDs, six saved-agent cards and three disti
  assert.equal(new Set(ids).size,ids.length,'controller IDs must remain unique');
  for(const id of ['commandCenterNet','commandCenterSales','commandCenterAds','commandCenterMargin','commandCenterPaid','commandCenterAlerts','commandCenterAgents','commandCenterPriorities','commandCenterHermesSummary','missionTrendGraphOverview','missionHealthRing'])assert.ok(ids.includes(id),id);
  assert.equal((body.match(/data-agent-placeholder="true"/g)||[]).length,6);
- assert.match(body,/Sem atividade auditada no período/);
+ assert.match(body,/Novidades desta versão/);assert.match(body,/id="appReleaseOverviewTitle"/);
  assert.deepEqual([...body.matchAll(/data-mission-accent="([^"]+)" data-agent-placeholder/g)].map(m=>m[1]),['hermes','finance','ads','products','production','returns']);
  assert.equal((body.match(/class="mls-agent-avatar"/g)||[]).length,6);
  assert.match(body,/mls-command-globe/);assert.match(body,/id="mlsOverviewPeriod"/);assert.match(body,/id="mlsOverviewDate"/);
@@ -72,7 +72,7 @@ async function browser(url,{width,height,theme,minify}){
   assert.equal(proof.theme,theme);assert.equal(proof.width,width);assert.ok(proof.scroll<=width+3,JSON.stringify(proof));
   assert.equal(proof.kpis.length,6);assert.equal(proof.agents.length,6);assert.equal(proof.panels.length,3);
   assert.deepEqual(proof.cardOrder,['hermes','finance','ads','products','production','returns']);assert.equal(proof.avatars,6);assert.equal(proof.globe,1);assert.equal(proof.sourceCollapsed,true);
-  assert.match(proof.activity,/Sem atividade auditada no período/);assert.equal(proof.detail,true);assert.deepEqual(proof.errors,[]);
+  assert.match(proof.activity,/Novidades desta versão/);assert.match(proof.activity,/Receber e inspecionar devoluções/);assert.match(proof.activity,/Registrar produção realizada/);assert.match(proof.activity,/Associar devolução à fabricação/);assert.equal(proof.detail,true);assert.deepEqual(proof.errors,[]);
   if(width===1365){
    for(const [kind,rows] of [['kpi',proof.kpis],['agent',proof.agents],['lower panels',proof.panels]])assert.equal(new Set(rows.map(r=>Math.round(r.top))).size,1,kind+' share one row');
    assert.ok(proof.agents[0].top>proof.kpis[0].top);assert.ok(proof.panels[0].top>proof.agents[0].top);
