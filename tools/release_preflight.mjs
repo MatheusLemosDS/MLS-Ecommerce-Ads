@@ -30,18 +30,9 @@ export const RELEASE_BASE_COMMIT=approvedCandidate.base_commit;
 export const RELEASE_EXPECTED_SHA=Object.freeze({...approvedCandidate.expected_hashes});
 export const RELEASE_EXPECTED_LIVE_FLAGS=Object.freeze({...validFlags});
 export const RELEASE_ALLOWED_FILES=Object.freeze([...approvedCandidate.allowed_files]);
-// Simplified operations crosses only these reviewed Finance/Auth source and
-// fixture files. Legacy financial contracts and read-only physical invariants
-// remain unchanged; explicit owner commands need owner intent and atomic tests.
-// All deployment configuration stays frozen; no wildcard expands this list.
-export const RELEASE_APPROVED_PROTECTED_FILES=Object.freeze([
-  "web/finance/src/auth-router.mjs",
-  "web/finance/src/catalog-media-frame.mjs",
-  "web/finance/src/connection-worker.mjs",
-  "web/finance/src/variant-catalog.mjs",
-  "web/finance/tests/catalog-media-fixture.mjs",
-  "web/finance/tests/catalog-media.test.mjs"
-]);
+// The overview card restoration changes only App presentation.
+// Finance/Auth, original Workers and deployment configuration remain closed.
+export const RELEASE_APPROVED_PROTECTED_FILES=Object.freeze([]);
 
 
 export const RELEASE_MANUAL_GATES=Object.freeze([

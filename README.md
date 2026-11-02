@@ -1,3 +1,20 @@
+<!-- OVERVIEW_AGENTS_RESTORE_RELEASE -->
+**Atualização Live — 2026-11-02.4, Agentes de volta à página inicial:**
+Os seis cartões do design aprovado voltaram à Visão geral, abaixo dos indicadores
+e antes dos gráficos: Hermes, Finance, Ads, Products, Production e Returns.
+Avatares, cores, estados e acessos aos painéis são preservados; a página Equipe
+mantém os sete agentes e seus filtros.
+
+Abrir `/admin?tab=overview#commandAgents`.
+App `16ee9374-f16a-45b3-99a9-92669d296c9b` publicado e conferido em **02/11/2026 às 19:50:54 Brasília**;
+Auth e Finance, configuração, domínios, flags e cron preservados. CI
+[41539423858](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/41539423858) aprovada: 3346 Node e 67 Python.
+**PUBLISHED_VERIFIED:** consultar a [PR #105](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/105) para o estado atual da integração Git.
+[Uso, validações e limites](docs/MLS_OVERVIEW_AGENTS_RESTORE_2026_11_02.md).
+<!-- END_OVERVIEW_AGENTS_RESTORE_RELEASE -->
+
+**Continuidade confirmada da PR104:** merge `41b95f6e93236fdfad42ff9b3deb9a85905d67ef`, em 02/11/2026 às 19:15:31 Brasília; CI documental [41534506552](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/41534506552) aprovada e árvore/runtime conferidos. A nota anterior com integração pendente preserva o corte de publicação. Três descritores de fotos já passaram pelo leitor canônico após captura natural; a exibição real no CDN foi bloqueada pelo proxy do executor. Isso não confirma recebimento, fabricação ou fechamento financeiro.
+
 <!-- SIMPLIFIED_OPERATIONS_RELEASE -->
 **Atualização Live — 2026-11-02.3, Operação simples e produção por período:**
 

@@ -6,12 +6,12 @@ import {releaseOverviewBody,releaseNotesBody,APP_RELEASE_CSS} from '../src/app-r
 import {adminBody} from '../src/admin-view.mjs';
 import {incurredProductionBody} from '../src/incurred-production-view.mjs';
 
-const targets=['/admin?tab=agent-returns#physicalReturnsQueue','/admin?tab=agent-production#incurredProductionDetails','/admin?tab=products'];
+const targets=['/admin?tab=overview#commandAgents','/admin?tab=agent-returns#physicalReturnsQueue','/admin?tab=agent-production#incurredProductionDetails','/admin?tab=products'];
 const originalTargets=['/admin?tab=agent-returns#physicalReturnsOriginalItems','/admin?tab=agent-returns#physicalReturnsDetails','/admin?tab=agent-returns#returnManufacturingLinksDetails'];
 const previousTargets=['/admin?tab=agent-returns#physicalReturnsDetails','/admin?tab=margins#incurredProductionDetails','/admin?tab=agent-returns#returnManufacturingLinksDetails'];
 const monthlyTargets=['/admin?tab=agent-finance#businessMonthNetCard','/admin?tab=agent-finance#mlsAgentPeriod','/admin?tab=agent-finance#businessMonthExpensesForm'];
 
-test('overview has one compact release link, while notes retain three current workflows and every historical control',()=>{
+test('overview has one compact release link, while notes expose the restored team and retain every existing workflow',()=>{
  const html=adminBody(),overview=releaseOverviewBody(),notes=releaseNotesBody();
  assert.equal((html.match(/id="appReleaseOverviewTitle"/g)||[]).length,1);
  assert.doesNotMatch(html,/Últimas atividades dos agentes|Sem atividade auditada no período/);
@@ -39,10 +39,12 @@ test('Returns places the receiving queue before charts and offers one distinct f
  assert.match(returns,/Escolha o caso e confira os itens de origem/);assert.match(returns,/Registre e inspecione somente as peças recebidas/);
 });
 
-test('release notes explain automatic suggestions, fabrication dates, clearer areas and unchanged financial gates',()=>{
+test('release notes explain the restored overview team and retain automatic suggestions, fabrication dates and financial gates',()=>{
  const all=releaseNotesBody(),split=all.indexOf('id="appReleaseOriginalItemsPrevious"');assert.ok(split>0);
  const current=all.slice(0,split),previous=all.slice(split);
  for(const href of targets)assert.ok(current.includes('href="'+href+'"'));
+ assert.match(current,/Hermes, Finance, Ads, Products, Production e Returns aparecem abaixo dos indicadores/);
+ assert.match(current,/A página Equipe mantém os sete especialistas e seus filtros/);
  for(const href of [...originalTargets,...previousTargets,...monthlyTargets])assert.ok(previous.includes('href="'+href+'"'));
  for(const text of ['nome, tamanho e custo atual quando os dados permitem','Foto do produto salvo e estampa local','kits ambíguos continuam pendentes','dia 15 ao 25','data de fabricação e o custo histórico registrado','referência de custo dos pedidos pagos e a montagem DTF continuam separadas','Visão geral, Produção, Devoluções, Financeiro, Produtos, Anúncios e Hermes','não publicam estoque nem alteram o lucro automaticamente'])assert.ok(current.includes(text),text);
  for(const text of ['itens vendidos e os itens informados na solicitação','Dados antigos ou ausentes permanecem desconhecidos, nunca quantidade zero','unidade comercial de kit não vira uma quantidade de camisetas por inferência','saldo antes dessas despesas','não presume zero nem copia a declaração de outro mês','Custo desconhecido permanece pendente','sem descontar a produção duas vezes','não publicam estoque, não reservam peças, não confirmam revenda e não alteram o lucro'])assert.ok(previous.includes(text),text);
