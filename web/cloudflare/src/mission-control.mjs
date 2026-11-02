@@ -393,10 +393,10 @@ export const MISSION_AGENTS=Object.freeze([
  {id:'finance',name:'MLS Finance',area:'Financeiro',symbol:'◆',summary:'Repasses, Pending, despesas e conciliação por pedido.',tag:'Conciliação e resultado',actions:[['Resumo diário e mensal','#businessMonth'],['Pending atual por pedido','#commandPendingIncomeDetails'],['Despesas e vencimentos','#businessMonthExpensesDetails']]},
  {id:'ads',name:'MLS Ads',area:'Anúncios',symbol:'↗',summary:'Investimento, desempenho e oportunidades, sem executar campanhas.',tag:'Investimento e desempenho',actions:[['Abrir Anúncios','/dashboard'],['Ver campanhas','/campaigns'],['Ver oportunidades','/optimization']]},
  {id:'products',name:'MLS Products',area:'Produtos',symbol:'⬡',summary:'Catálogo, custos conhecidos e cobertura das unidades vendidas.',tag:'Produtos e margens',actions:[['Abrir catálogo','/admin?tab=products'],['Custos e regras','/admin?tab=margins'],['Produção DTF','/admin?tab=production']]},
- {id:'production',name:'MLS Production',area:'Produção',symbol:'▣',summary:'Pedidos, artes, montagem DTF e referência de custos.',tag:'Pedidos e produção',actions:[['Abrir Produção DTF','/admin?tab=production'],['Ver produtos','/admin?tab=products'],['Custos de produção','/admin?tab=margins']]},
- {id:'returns',name:'MLS Returns',area:'Devoluções',symbol:'↺',summary:'Devoluções, reembolsos e ajustes com validação.',tag:'Pós-venda e ajustes',actions:[['Conciliação de devoluções','/admin?tab=agent-finance#businessReconciliation'],['Liberações por pedido','/admin?tab=agent-finance#businessEscrowReleases'],['Resumo financeiro','/admin?tab=agent-finance#businessMonth']]},
+ {id:'production',name:'MLS Production',area:'Produção',symbol:'▣',summary:'Registre a fabricação, confira os custos por data e prepare a impressão DTF.',tag:'Fabricação e impressão',actions:[['Registrar fabricação','#incurredProductionDetails'],['Referência de custo das vendas','#costPeriods'],['Montador e fila DTF','/admin?tab=production']]},
+ {id:'returns',name:'MLS Returns',area:'Devoluções',symbol:'↺',summary:'Encontre o caso, confira os itens e registre o recebimento e a inspeção.',tag:'Recebimento e pós-venda',actions:[['Fila de recebimento','#physicalReturnsQueue'],['Vincular à fabricação','#returnManufacturingLinksDetails'],['Conciliação financeira','/admin?tab=agent-finance#businessReconciliation']]},
  {id:'auditor',name:'MLS Auditor',area:'Auditoria',symbol:'◇',summary:'Divergências e confiabilidade antes de executar decisões.',tag:'Evidências e segurança',actions:[['Conferir liberações','/admin?tab=agent-finance#businessEscrowReleases'],['Histórico e versões','/admin?tab=history'],['Diagnóstico seguro','/admin/diagnostics']]},
- {id:'hermes',name:'MLS Hermes',area:'Supervisor',symbol:'✦',summary:'Prioriza tarefas, supervisiona agentes e mantém os limites de ação.',tag:'Supervisão operacional',actions:[['Console do Hermes','/admin?tab=hermes'],['Equipe de agentes','/admin?tab=agents'],['Histórico e auditoria','/admin?tab=history']]}
+ {id:'hermes',name:'MLS Hermes',area:'Supervisor',symbol:'✦',summary:'Prioriza tarefas, supervisiona agentes e mantém os limites de ação.',tag:'Supervisão operacional',actions:[['Console do Hermes','#missionHermesConsole'],['Equipe de agentes','/admin?tab=agents'],['Histórico e auditoria','/admin?tab=history']]}
 ].map(value=>Object.freeze({...value,actions:Object.freeze(value.actions.map(action=>Object.freeze(action)))})));
 
 function missionSourceLink(href,tab){
@@ -406,8 +406,9 @@ function missionSourceLink(href,tab){
 }
 function missionCard(item){
  return '<a class="mission-hub-card mission-agent--'+item.id+'" href="/admin?tab=agent-'+item.id+'" data-mission-open="agent-'+item.id+'" data-mission-agent="'+item.id+'">'+
-  '<div class="mission-hub-card-top"><span class="mission-mini-orb mission-agent-avatar" aria-hidden="true">'+item.symbol+'</span><span class="mission-status" data-mission-status="'+item.id+'">Aguardando dados</span></div>'+
-  '<div class="mission-hub-card-heading"><span>'+item.area+'</span><h4>'+item.name+'</h4></div><p>'+item.summary+'</p>'+
+  '<div class="mission-hub-card-top"><span class="mission-mini-orb mission-agent-avatar mls-agent-avatar" aria-hidden="true">'+MLS_AGENT_ROBOT_SVG+'</span><span class="mission-status" data-mission-status="'+item.id+'">Aguardando dados</span></div>'+
+  '<div class="mission-hub-card-heading"><span>'+item.area+'</span><h4>'+item.name+'</h4></div><p id="missionHubMessage-'+item.id+'">'+item.summary+'</p>'+
+  '<strong class="mission-hub-metric" id="missionHubMetric-'+item.id+'">Indicador ainda indisponível</strong><small class="mission-hub-secondary" id="missionHubSecondary-'+item.id+'" hidden></small>'+
   '<span class="mission-hub-card-tasks" id="missionHubTask-'+item.id+'" data-mission-task-count="'+item.id+'">Prioridades: aguardando leitura</span>'+
   '<div class="mission-hub-card-bottom"><span class="mission-breadcrumb-pill">Observador</span><span class="mission-open">Abrir painel →</span></div></a>';
 }
@@ -468,7 +469,7 @@ export function missionSpecialistPanelsBody(id){
  if(!keys)return '';
  return '<div class="mission-panels" aria-label="Gráficos observados do especialista">'+keys.map(key=>{
   const model=projectMlsSpecialistChart(key);
-  return '<section class="mission-module"><div class="mission-module-head"><h3>'+model.title+'</h3><small>Fonte verificada</small></div>'+
+  return '<section class="mission-module"><div class="mission-module-head"><h3>'+model.title+'</h3><small id="missionChartSource-'+key+'">Sem fonte para este gráfico</small></div>'+
    '<div id="missionChart-'+key+'" data-mission-specialist-chart="'+key+'" data-chart-status="UNAVAILABLE" role="region" aria-label="'+model.title+'"><p class="mission-empty" role="status">'+model.reason+'</p></div>'+
    '<p class="mission-footnote" id="missionChartNote-'+key+'">Dados indisponíveis permanecem desconhecidos.</p>'+
    '<a class="mission-return" href="'+model.href+'">Conferir fonte →</a></section>';
@@ -476,11 +477,11 @@ export function missionSpecialistPanelsBody(id){
 }
 
 const missionWorkspaceNavigation=Object.freeze({
- finance:[['Pedidos','#businessMonthProductsDetails'],['Repasses','#businessEscrowReleases'],['Pagamentos','#commandPendingIncomeDetails'],['Devoluções','#businessReconciliation'],['Despesas','#businessMonthExpensesDetails'],['Conciliação','#businessReconciliationDetails']],
- ads:[['Campanhas','/campaigns'],['Anúncios','/dashboard'],['Oportunidades','/optimization'],['Detalhes','#mission-ads-tools']],
- products:[['Produtos','/admin?tab=products'],['Custos','/admin?tab=margins'],['Margens','#missionChart-products-margin'],['Ranking','#missionChart-products-ranking'],['Prioridades','#mission-products-tasks']],
- production:[['Ordens','/admin?tab=production#dtfQueueStage'],['Artes','/admin?tab=production#dtfArtworkStage'],['Montagem DTF','/admin?tab=production#dtfFilmStage'],['Lotes','/admin?tab=production#dtfBatchStage'],['Custos','/admin?tab=margins']],
- returns:[['Itens e quantidades','#physicalReturnsOriginalItems'],['Receber e inspecionar','#physicalReturnsDetails'],['Vínculo com a produção','#returnManufacturingLinksDetails'],['Conciliação financeira','/admin?tab=agent-finance#businessReconciliation']]
+ finance:[['Resultado do mês','#businessMonth'],['Despesas','#businessMonthExpensesDetails'],['A receber','#commandPendingIncomeDetails'],['Repasses','#businessEscrowReleases'],['Conciliação','#businessReconciliation']],
+ ads:[['Resultados','/dashboard'],['Campanhas','/campaigns'],['Oportunidades','/optimization']],
+ products:[['Catálogo','/admin?tab=products'],['Custos e regras','/admin?tab=margins'],['Cobertura de custos','#mission-products-evidence']],
+ production:[['Fabricação e custos','#mission-production-operations'],['Referência das vendas','#costPeriods'],['Fila e montagem DTF','/admin?tab=production']],
+ returns:[['Fila de devoluções','#physicalReturnsQueue'],['Vínculos de fabricação','#returnManufacturingLinksDetails'],['Conciliação financeira','/admin?tab=agent-finance#businessReconciliation']]
 });
 function missionWorkspaceNavLink(label,href,current=false){
  const tab=/^\/admin\?tab=([a-z-]+)$/.exec(href)?.[1];
@@ -489,23 +490,16 @@ function missionWorkspaceNavLink(label,href,current=false){
 }
 function missionWorkspaceTabs(item,specialist){
  const id=item.id;
- if(specialist)return '<nav class="mission-page-tabs mls-module-tabs" aria-label="Seções de '+item.name+'">'+
-  missionWorkspaceNavLink('Visão geral','#mission-'+id+'-top',true)+
-  [...missionWorkspaceNavigation[id],['Prioridades','#mission-'+id+'-tasks'],['Ferramentas','#mission-'+id+'-tools']].filter((entry,index,all)=>all.findIndex(value=>value[1]===entry[1])===index).map(([label,href])=>missionWorkspaceNavLink(label,href)).join('')+'</nav>';
- return '<nav class="mission-page-tabs" aria-label="Seções de '+item.name+'"><span class="mission-page-tabs-title">PAINEL ESPECIALIZADO</span>'+
-  '<a href="#mission-'+id+'-top">Visão geral</a><a href="#mission-'+id+'-metrics">Indicadores</a>'+
-  '<a href="#mission-'+id+'-tasks">Prioridades</a><a href="#mission-'+id+'-tools">Ferramentas</a>'+
-  (id==='finance'?'<a href="#businessMonth">Financeiro detalhado</a>':'')+
-  (['products','production','returns','auditor'].includes(id)?'<a href="#mission-'+id+'-evidence">Evidências</a>':'')+
-  '<a href="/admin?tab=agents" data-mission-open="agents">Equipe digital</a></nav>';
+ const links=specialist?missionWorkspaceNavigation[id]:id==='hermes'?[['Supervisão','#mission-hermes-top'],['Análises','#missionHermesConsole'],['Aprendizado','#mlsAgentLearning'],['Equipe','/admin?tab=agents']]:[['Resumo','#mission-'+id+'-top'],['Prioridades','#mission-'+id+'-tasks'],['Evidências','#mission-'+id+'-evidence']];
+ return '<nav class="mission-page-tabs mls-module-tabs" aria-label="Seções de '+item.area+'">'+links.map(([label,href],index)=>missionWorkspaceNavLink(label,href,index===0)).join('')+'</nav>';
 }
 function missionWorkspaceAction(item){
  const id=item.id;
  if(id==='ads')return '<div class="mls-workspace-primary-action"><a class="mls-workspace-primary" href="/campaigns" aria-describedby="mission-ads-action-note">Ver campanhas <span aria-hidden="true">↗</span></a><small id="mission-ads-action-note">Somente leitura · alterações comerciais bloqueadas</small></div>';
- const actions={finance:['Ver resumo','#businessMonth'],products:['Abrir catálogo','/admin?tab=products'],production:['Montar DTF','/admin?tab=production'],returns:['Conferir pendências','/admin?tab=agent-finance#businessReconciliation']};
+ const actions={finance:['Conferir despesas','#businessMonthExpensesDetails'],products:['Abrir catálogo','/admin?tab=products'],production:['Registrar fabricação','#incurredProductionDetails'],returns:['Abrir fila de devoluções','#physicalReturnsQueue']};
  const [label,href]=actions[id];
  const tab=/^\/admin\?tab=([a-z-]+)$/.exec(href)?.[1];
- return '<a class="mls-workspace-primary" href="'+href+'"'+(tab?' data-tab="'+tab+'"':'')+'>'+label+' <svg aria-hidden="true" focusable="false" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 18 18 6M7 6h11v11"/></svg></a>';
+ return '<a class="mls-workspace-primary" href="'+href+'"'+(tab?' data-tab="'+tab+'"':'')+'>'+label+' <span aria-hidden="true">→</span></a>';
 }
 function missionWorkspace(item,financeHtml){
  const id=item.id,tab='agent-'+id,specialist=Object.hasOwn(missionWorkspaceNavigation,id),missionMetrics=[0,1,2,3].map(index=>
@@ -517,29 +511,29 @@ function missionWorkspace(item,financeHtml){
   '<section class="mission-coverage" id="mission-'+id+'-coverage" hidden>'+
   '<header><strong>Cobertura de custo das unidades vendidas</strong><span id="mission-'+id+'-coverage-label">—</span></header>'+
   '<div class="mission-progress"><span id="mission-'+id+'-coverage-bar"></span></div></section>':'';
- const body=id==='finance'?'<div class="mission-finance-source"><div class="mission-hub-bar"><div><h3>Financeiro detalhado</h3><p>Recortes diários, mensais, Pending e conciliação em uma área exclusiva do Finance.</p></div></div>'+
-   '<p class="mission-source-note">Os valores e os controles abaixo são os mesmos do sistema anterior, sem duplicação de cálculos.</p>'+financeHtml+'</div>':'';
- const hermes=id==='hermes'?mlsAgentLearningBody()+'<div id="missionHermesTools"></div>':'';
+ const body=id==='finance'?'<div class="mission-finance-source" id="mission-finance-operations">'+financeHtml+'</div>':id==='production'?'<section class="mission-operations" id="mission-production-operations" aria-labelledby="missionProductionOperationsTitle"><header class="mission-operation-heading"><div><span class="mission-eyebrow">FABRICAÇÃO REALIZADA</span><h3 id="missionProductionOperationsTitle">Produção e custo por data de fabricação</h3><p>Registre o que foi fabricado e consulte qualquer intervalo. A referência das vendas e a fila DTF têm bases próprias.</p></div><a class="mission-operation-link" href="/admin?tab=production" data-tab="production">Abrir fila e montagem DTF →</a></header><div id="missionProductionLedgerHost"></div></section>':'';
+ const hermes=id==='hermes'?'<div id="missionHermesConsole"></div>'+mlsAgentLearningBody()+'<div id="missionHermesTools"></div>':'';
  const metrics='<div class="mission-stats" id="mission-'+id+'-metrics" aria-label="Indicadores de '+item.name+'">'+missionMetrics+'</div>';
- const title='<div class="mission-hero-main"><span class="mission-orb mission-agent-avatar mls-agent-avatar" aria-hidden="true">'+MLS_AGENT_ROBOT_SVG+'</span><div><nav class="mission-crumb" aria-label="Localização"><a href="/admin?tab=agents" data-mission-open="agents">Agentes</a><span>›</span><strong>'+item.area+'</strong></nav><h2>'+item.name+'</h2><p>'+item.summary+'</p></div></div>';
+ const title='<div class="mission-hero-main"><span class="mission-orb mission-agent-avatar mls-agent-avatar" aria-hidden="true">'+MLS_AGENT_ROBOT_SVG+'</span><div><nav class="mission-crumb" aria-label="Localização"><a href="/admin?tab=agents" data-mission-open="agents">Agentes</a><span>›</span><strong>'+item.area+'</strong></nav><h2 id="mission-'+id+'-title">'+item.name+'</h2><p>'+item.summary+'</p></div></div>';
  const source='<p class="mission-last mission-source-provenance" id="mission-'+id+'-checked">Aguardando fonte do agente.</p>';
  const header=specialist?'<header class="mission-hero mls-workspace-heading" id="mission-'+id+'-top">'+title+
-  '<div class="mls-workspace-heading-actions"><span class="mls-workspace-period"><span aria-hidden="true">▦</span> Período da fonte</span>'+missionWorkspaceAction(item)+'</div></header>'+
+  '<div class="mls-workspace-heading-actions">'+missionWorkspaceAction(item)+'</div></header>'+
   '<div class="mls-workspace-source-line">'+source+'<span class="mission-status" data-mission-status="'+id+'">Aguardando dados</span></div>':
   '<header class="mission-hero" id="mission-'+id+'-top">'+title+'<div class="mission-intro-status"><span class="mission-status" data-mission-status="'+id+'">Aguardando dados</span><span class="mission-breadcrumb-pill">Modo Observador · sem escrita comercial</span></div></header>'+source;
  const charts=specialist?'<div class="mls-workspace-chart-pair" aria-label="Painéis de '+item.name+'">'+
   (id==='ads'?missionTrendPanelBody(id):'')+missionSpecialistPanelsBody(id)+'</div>':'';
  const financialTrend=id==='finance'?'<details class="mls-workspace-history"><summary>Histórico diário observado · resultado, vendas e anúncios</summary>'+missionTrendPanelBody(id)+'</details>':'';
- const returnControls=id==='returns'?'<p class="mission-return-workflow"><strong>Fluxo físico:</strong> 1. Registrar o recebimento → 2. Inspecionar as peças → 3. Associar à fabricação. O estado financeiro da solicitação é conferido separadamente.</p>'+physicalReturnsBody()+returnManufacturingLinksBody():'';
- return '<section class="mission-workspace mission-agent--'+id+(specialist?' mls-agent-workspace':'')+'" id="'+tab+'" data-mission-page="'+id+'" hidden>'+
-  header+
-  (specialist?metrics+missionWorkspaceTabs(item,true):missionWorkspaceTabs(item,false)+metrics)+returnControls+charts+financialTrend+
-  (['products','production','returns','auditor'].includes(id)?'<section class="mission-evidence-panel" aria-label="Indicadores observados de '+item.name+'"><header><div><span class="mission-eyebrow">SNAPSHOT VERIFICADO</span><h3>Indicadores disponíveis</h3><p>Comparação de contagens observadas. Não representa evolução histórica.</p></div><span class="mission-breadcrumb-pill">Sem projeções</span></header><div class="mission-evidence-list" id="mission-'+id+'-evidence"><p class="mission-empty">Aguardando fonte validada.</p></div><p class="mission-evidence-foot" id="mission-'+id+'-evidence-note">Dados desconhecidos permanecem indisponíveis.</p></section>':'')+
-  '<div class="mission-panels"><section class="mission-module"><div class="mission-module-head"><h3>Prioridades e alertas</h3><small>Somente evidências verificáveis</small></div><div id="mission-'+id+'-tasks" class="mission-tasks"><p class="mission-empty">Aguardando indicadores do agente.</p></div>'+coverage+
-  '</section>'+
-  '<aside class="mission-module" id="mission-'+id+'-tools"><div class="mission-module-head"><h3>Ferramentas e detalhes</h3><small>Acessos existentes</small></div><div class="mission-actions">'+shortcuts+'</div>'+
-  '<p class="mission-footnote" id="mission-'+id+'-message">Nenhuma decisão automática é executada nesta fase. Dados ausentes continuam indisponíveis.</p></aside></div>'+
-  hermes+body+'</section>';
+ const returnControls=id==='returns'?'<div class="mission-operations" id="mission-returns-operations"><p class="mission-return-workflow"><strong>Como acompanhar uma devolução</strong><span>1. Escolha o caso e confira os itens de origem.</span><span>2. Registre e inspecione somente as peças recebidas.</span><span>3. Vincule à fabricação quando a origem for conhecida.</span></p>'+physicalReturnsBody()+returnManufacturingLinksBody()+'</div>':'';
+ const evidence=['products','production','returns','auditor'].includes(id)?'<section class="mission-evidence-panel" aria-label="Indicadores observados de '+item.name+'"><header><div><span class="mission-eyebrow">FONTES SALVAS · COBERTURA INFORMADA</span><h3>Contagens e cobertura da fonte</h3><p>Contagens observadas, sem projeção de estoque ou lucro.</p></div></header><div class="mission-evidence-list" id="mission-'+id+'-evidence"><p class="mission-empty">Aguardando fonte validada.</p></div><p class="mission-evidence-foot" id="mission-'+id+'-evidence-note">Dados desconhecidos permanecem indisponíveis.</p></section>':'';
+ const supporting=charts+financialTrend+evidence;
+ const supportingDetails=supporting?'<details class="mission-supporting" id="mission-'+id+'-supporting"><summary>Indicadores e cobertura das fontes</summary>'+supporting+'</details>':'';
+ const metricSection=['finance','production'].includes(id)?'<details class="mission-metric-context"><summary>'+(id==='production'?'Indicadores da fila DTF e das vendas':'Indicadores de conciliação e contas')+'</summary>'+metrics+'</details>':metrics;
+ return '<section class="mission-workspace mission-agent--'+id+(specialist?' mls-agent-workspace':'')+'" id="'+tab+'" data-mission-page="'+id+'" hidden>'+header+
+  missionWorkspaceTabs(item,specialist)+body+returnControls+
+  (id==='hermes'?hermes:'')+metricSection+
+  '<div class="mission-panels mission-workflow-footer"><section class="mission-module"><div class="mission-module-head"><h3>Prioridades e alertas</h3><small>Leituras deste especialista</small></div><div id="mission-'+id+'-tasks" class="mission-tasks"><p class="mission-empty">Aguardando indicadores do agente.</p></div>'+coverage+'</section>'+
+  '<details class="mission-module mission-tools" id="mission-'+id+'-tools"><summary>Outros acessos de '+item.area+'</summary><div class="mission-actions">'+shortcuts+'</div><p class="mission-footnote" id="mission-'+id+'-message">Nenhuma decisão automática é executada nesta fase. Dados ausentes continuam indisponíveis.</p></details></div>'+supportingDetails+'</section>';
+
 }
 export function missionWorkspacesBody(financeHtml=''){
  const hub='<section class="mission-hub" id="agents" aria-labelledby="missionHubTitle" hidden>'+
@@ -568,7 +562,7 @@ export function missionWorkspacesBody(financeHtml=''){
   '<p>“Saudável” indica o estado de acompanhamento do agente, não margem positiva, saldo bancário confirmado ou estoque disponível.</p>'+
   '<div class="mission-hub-evidence-footer"><span>Fonte: Agent Registry já existente</span>'+
   '<span id="missionHubSnapshot" role="status">Sem leitura validada</span></div></aside></div>'+
-  '<div class="mission-hub-bar mission-hub-list-heading"><div><span class="mission-hub-eyebrow">EQUIPE OPERACIONAL</span><h3>Explorar especialistas</h3><p>Busque por função ou filtre por estado para ir direto ao painel certo.</p></div>'+
+  '<section id="commandAgents" aria-labelledby="commandAgentsTitle"><div class="mission-hub-bar mission-hub-list-heading"><div><span class="mission-hub-eyebrow">EQUIPE OPERACIONAL</span><h3 id="commandAgentsTitle">Explorar especialistas</h3><p>Busque por função ou filtre por estado para ir direto ao painel certo.</p></div>'+
   '<span class="mission-breadcrumb-pill">7 painéis · Observador</span></div>'+
   '<div class="mission-hub-toolbar"><div class="mission-hub-search"><label for="missionAgentSearch">Buscar especialista</label>'+
   '<input id="missionAgentSearch" type="search" autocomplete="off" maxlength="80" placeholder="Nome, área ou função..." aria-controls="missionHubGrid">'+
@@ -579,7 +573,7 @@ export function missionWorkspacesBody(financeHtml=''){
   '<button type="button" data-mission-hub-filter="WORKING" aria-pressed="false">Em acompanhamento</button>'+
   '<button type="button" data-mission-hub-filter="HEALTHY" aria-pressed="false">Saudáveis</button></div></div>'+
   '<p id="missionHubFilterEmpty" class="mission-hub-empty" role="status" hidden>Nenhum especialista corresponde aos filtros. Tente Todos ou outra busca.</p>'+
-  '<div class="mission-hub-grid" id="missionHubGrid">'+MISSION_AGENTS.map(missionCard).join('')+'</div>'+
+  '<div id="commandCenterAgents"><div class="mission-hub-grid" id="missionHubGrid">'+MISSION_AGENTS.map(missionCard).join('')+'</div></div></section>'+
   '<div class="mission-hub-future"><div><span class="mission-hub-eyebrow">EXPANSÃO PLANEJADA</span><h3>Novos módulos, quando houver evidências</h3>'+
   '<p>Pricing, Creative, Inventory e Marketplace seguem planejados. Não representam agentes ativos nem permissões concedidas.</p></div>'+
   '<div class="mission-future"><span>MLS Pricing · M3</span><span>MLS Creative · M8</span><span>MLS Inventory · fase futura</span><span>MLS Marketplace · M8</span></div></div></section>';
@@ -862,7 +856,8 @@ export const MISSION_TRENDS_CLIENT=String.raw`
    }
    chartInteractions.clear(host);
    host.replaceChildren();host.dataset.chartStatus=model.status;host.dataset.chartSource=model.source;
-   const note=byId('missionChartNote-'+key);
+   const note=byId('missionChartNote-'+key),sourceLabel=byId('missionChartSource-'+key);
+   if(sourceLabel)sourceLabel.textContent=model.status==='READY'?'Fonte salva validada para este gráfico':'Sem fonte para este gráfico';
    if(model.status!=='READY'){
     const empty=document.createElement('p');empty.className='mission-empty';empty.setAttribute('role','status');empty.textContent=model.reason;host.append(empty);
     if(note)note.textContent='Nenhuma curva ou proporção foi inferida. Confira a fonte existente abaixo.';

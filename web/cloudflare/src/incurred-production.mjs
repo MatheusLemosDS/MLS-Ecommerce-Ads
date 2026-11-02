@@ -81,6 +81,32 @@ export function incurredProductionPeriods(ledger,selection){
  }catch{return null;}
 }
 
+// A separate read-only view by the declared manufacture date. The saved ledger
+// remains the authority: changing dates neither collects orders nor infers that
+// a DTF print, shipment or material purchase manufactured a physical piece.
+export function incurredProductionRange(ledger,selection){
+ try{
+  const frame=projectIncurredProduction(ledger),plain=v=>v!==null&&typeof v==='object'&&[Object.prototype,null].includes(Object.getPrototypeOf(v));
+  const exact=(v,keys)=>plain(v)&&Reflect.ownKeys(v).length===keys.length&&keys.every(key=>Object.hasOwn(Object.getOwnPropertyDescriptor(v,key)||{},'value'));
+  const date=v=>typeof v==='string'&&/^20\d{2}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(v)&&Number.isFinite(Date.parse(v+'T12:00:00Z'))&&new Date(v+'T12:00:00Z').toISOString().slice(0,10)===v;
+  if(!frame||!exact(selection,['start_date','end_date']))return null;
+  const {start_date,end_date}=selection,today=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date(frame.checked_at*1000));
+  if(!date(start_date)||!date(end_date)||start_date>end_date||end_date>today)return null;
+  const first=Date.parse(start_date+'T12:00:00Z'),last=Date.parse(end_date+'T12:00:00Z'),span=(last-first)/86400000+1;
+  if(!Number.isInteger(span)||span<1||span>366)return null;
+  const empty=()=>({active:0,voided:0,quantity:0n,knownQuantity:0n,unknownQuantity:0n,known:0n}),total=empty(),days=new Map();
+  for(let at=first;at<=last;at+=86400000)days.set(new Date(at).toISOString().slice(0,10),empty());
+  const add=(group,row)=>{if(row.status==='VOID'){group.voided++;return;}group.active++;group.quantity+=BigInt(row.quantity);if(row.cost.state==='UNKNOWN')group.unknownQuantity+=BigInt(row.quantity);else{group.knownQuantity+=BigInt(row.quantity);group.known+=BigInt(row.quantity)*BigInt(row.cost.unit_cost_cents);}};
+  for(const row of frame.records){const group=days.get(row.produced_date);if(!group)continue;add(group,row);add(total,row);}
+  const summary=group=>{
+   if([group.quantity,group.knownQuantity,group.unknownQuantity,group.known].some(v=>v>BigInt(Number.MAX_SAFE_INTEGER)))return null;
+   return {active_records:group.active,voided_records:group.voided,produced_quantity:Number(group.quantity),known_cost_quantity:Number(group.knownQuantity),unknown_cost_quantity:Number(group.unknownQuantity),known_cost_cents:Number(group.known),total_cost_cents:group.active===0||group.unknownQuantity>0n?null:Number(group.known),state:group.active===0?'NO_RECORDS':group.unknownQuantity>0n?'PARTIAL_COSTS':'DECLARED_COSTS'};
+  };
+  const totals=summary(total),daily=[...days].map(([date,group])=>({date,summary:summary(group)}));if(!totals||daily.some(row=>!row.summary))return null;
+  return {schema:'incurred_production_range_v1',checked_at:frame.checked_at,revision:frame.revision,start_date,end_date,timezone:'America/Sao_Paulo',basis:'RECORDED_MANUFACTURE_DATE_NOT_SALES_OR_PAID_CASH',summary:totals,days:daily};
+ }catch{return null;}
+}
+
 const ready=new WeakSet(),encoder=new TextEncoder(),tables=['incurred_production_state','incurred_production_records','incurred_production_audit','incurred_production_guard'];
 const fail=(suffix,status=400)=>{throw new IncurredProductionError('INCURRED_PRODUCTION_'+suffix,status);};
 const plain=v=>v!==null&&typeof v==='object'&&[Object.prototype,null].includes(Object.getPrototypeOf(v));

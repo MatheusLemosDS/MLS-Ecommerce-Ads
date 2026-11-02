@@ -1,4 +1,6 @@
 import {projectVariantCatalog,projectVariantCatalogFailure} from '../../finance/src/variant-catalog-frame.mjs';
+import {projectCatalogMediaFrame} from '../../finance/src/catalog-media-frame.mjs';
+import {CATALOG_MEDIA_SCHEMA,prepareCatalogMediaRows,catalogMediaWriteStatement} from './saved-catalog-media.mjs';
 import {validateVariantBindings} from './variant-bindings.mjs';
 
 // A catalogue interpretation is a registered composition, not a live price.
@@ -163,7 +165,8 @@ export async function readCatalogClassificationFence(env,itemIds){
  return ids.map(item_id=>({item_id,write_token:map.get(item_id)?.write_token??null,change_token:map.get(item_id)?.change_token??null}));
 }
 async function storeFrame(env,raw,{now=()=>Date.now(),token=null,itemId=null,fence=null,changeToken=null}={}){
- const frame=projectVariantCatalog(raw),stamp=clock(now);if(!frame||frame.checked_at>stamp+60||stamp-frame.checked_at>60||frame.products.some(row=>!row.cost_catalog)||itemId!==null&&(frame.products.length!==1||frame.products[0].item_id!==itemId))fail('CATALOG_CLASSIFICATION_INVALID',503);
+ const media=projectCatalogMediaFrame(raw,projectVariantCatalog),prepared=media?await prepareCatalogMediaRows(media.media):[],byMedia=new Map(prepared.map(row=>[row.descriptor.item_id,row]));
+ const frame=media?.catalog??projectVariantCatalog(raw),stamp=clock(now);if(!frame||frame.checked_at>stamp+60||stamp-frame.checked_at>60||frame.products.some(row=>!row.cost_catalog)||itemId!==null&&(frame.products.length!==1||frame.products[0].item_id!==itemId))fail('CATALOG_CLASSIFICATION_INVALID',503);
  let fenced=null;
  if(fence!==null){if(!array(fence,3)||fence.length!==frame.products.length)fail('CATALOG_CLASSIFICATION_REQUEST_INVALID',400);fenced=new Map();for(const row of fence){const hasChange=plain(row)&&Object.hasOwn(row,'change_token');if(!exact(row,['item_id','write_token',...(hasChange?['change_token']:[])])||!id(row.item_id)||fenced.has(row.item_id)||!frame.products.some(product=>product.item_id===row.item_id)||row.write_token!==null&&(typeof row.write_token!=='string'||!/^[a-f0-9-]{36}$/.test(row.write_token))||hasChange&&row.change_token!==null&&(typeof row.change_token!=='string'||!/^[a-f0-9-]{36}$/.test(row.change_token)))fail('CATALOG_CLASSIFICATION_REQUEST_INVALID',400);fenced.set(row.item_id,{write_token:row.write_token,change_token:hasChange?row.change_token:null});}}
  const db=await setup(env),stored=[];
@@ -185,9 +188,9 @@ async function storeFrame(env,raw,{now=()=>Date.now(),token=null,itemId=null,fen
    const guardArgs=current?[product.item_id,current.checked_at,current.source_hash,current.lease_token,current.write_token]:[product.item_id];
    if(!current){await db.prepare("INSERT OR IGNORE INTO catalog_classification_jobs(item_id,status,next_attempt_at) VALUES(?,'QUEUED',?)").bind(product.item_id,stamp).run();continue;}
    const writeToken=crypto.randomUUID();
-   const mutation=db.prepare('UPDATE catalog_classification_jobs SET status=?,product_name=?,reason=?,checked_at=?,catalog_fingerprint=?,source_hash=?,model_count=?,resolved_count=?,next_attempt_at=?,failure_count=0,lease_token=NULL,lease_until=NULL,write_token=? WHERE '+guard+' AND NOT EXISTS(SELECT 1 FROM production_cost_catalog WHERE item_id=? AND checked_at>?) AND EXISTS(SELECT 1 FROM catalog_classification_state WHERE id=1 AND revision+?<=2147483646)'+(token!==null?' AND EXISTS(SELECT 1 FROM catalog_classification_state WHERE id=1 AND lease_token=? AND lease_until>?)':'')).bind(status,product.cost_catalog.product_name,reason,frame.checked_at,product.catalog_fingerprint,sourceHash,variants.length,product.bindings.length,frame.checked_at+86400,writeToken,...guardArgs,product.item_id,frame.checked_at,Number(changed),...(token!==null?[token,stamp]:[]));
+   const mutationAt=writeAt=>db.prepare('UPDATE catalog_classification_jobs SET status=?,product_name=?,reason=?,checked_at=?,catalog_fingerprint=?,source_hash=?,model_count=?,resolved_count=?,next_attempt_at=?,failure_count=0,lease_token=NULL,lease_until=NULL,write_token=? WHERE '+guard+' AND NOT EXISTS(SELECT 1 FROM production_cost_catalog WHERE item_id=? AND checked_at>?) AND EXISTS(SELECT 1 FROM catalog_classification_state WHERE id=1 AND revision+?<=2147483646)'+(token!==null?' AND EXISTS(SELECT 1 FROM catalog_classification_state WHERE id=1 AND lease_token=? AND lease_until>?)':'')).bind(status,product.cost_catalog.product_name,reason,frame.checked_at,product.catalog_fingerprint,sourceHash,variants.length,product.bindings.length,frame.checked_at+86400,writeToken,...guardArgs,product.item_id,frame.checked_at,Number(changed),...(token!==null?[token,writeAt]:[]));
    const proof='EXISTS(SELECT 1 FROM catalog_classification_jobs WHERE item_id=? AND checked_at=? AND source_hash=? AND write_token=? AND lease_token IS NULL)',proofArgs=[product.item_id,frame.checked_at,sourceHash,writeToken];
-   const statements=[mutation,
+   const statements=[mutationAt(clock(now)),
     db.prepare('UPDATE catalog_classification_state SET revision=revision+? WHERE id=1 AND changes()=1 AND revision<2147483647').bind(Number(changed)),
     db.prepare('DELETE FROM catalog_classification_variants WHERE item_id=? AND '+proof).bind(product.item_id,...proofArgs),
     db.prepare("INSERT INTO catalog_classification_variants(item_id,model_id,payload) SELECT ?,json_extract(value,'$.model_id'),json_extract(value,'$.payload') FROM json_each(?) WHERE "+proof).bind(product.item_id,JSON.stringify(variants),...proofArgs),
@@ -197,7 +200,20 @@ async function storeFrame(env,raw,{now=()=>Date.now(),token=null,itemId=null,fen
     db.prepare('INSERT INTO catalog_classification_audit(item_id,checked_at,outcome,reason,revision) SELECT ?,?,?,?,revision FROM catalog_classification_state WHERE id=1 AND '+proof).bind(product.item_id,stamp,status,reason,...proofArgs),
     db.prepare('DELETE FROM catalog_classification_audit WHERE id NOT IN (SELECT id FROM catalog_classification_audit ORDER BY id DESC LIMIT 1000)'),
    ];
-   const result=await db.batch(statements);if(result[0]?.meta?.changes===1){stored.push(product.item_id);break;}
+   const photo=byMedia.get(product.item_id);let result;
+   if(photo){
+    const optional=[...CATALOG_MEDIA_SCHEMA.map(sql=>db.prepare(sql)),catalogMediaWriteStatement(db,photo,proof,proofArgs)];
+    try{result=await db.batch([...statements,...optional]);}
+    catch{
+     // Storage of a current reference photo is optional. Preserve the same
+     // guarded legacy catalogue update; never retry its provider request.
+     const applied=await db.prepare('SELECT 1 AS applied WHERE '+proof).bind(...proofArgs).first();
+     if(applied?.applied===1){stored.push(product.item_id);break;}
+     if(token!==null&&clock(now)>=current.lease_until)fail('CATALOG_CLASSIFICATION_LEASE_LOST',409);
+     result=await db.batch([mutationAt(clock(now)),...statements.slice(1)]);
+    }
+   }else result=await db.batch(statements);
+   if(result[0]?.meta?.changes===1){stored.push(product.item_id);break;}
    if(fenced)fail('CATALOG_CLASSIFICATION_CHANGED_RETRY',409);
    if(attempt===3)fail('CATALOG_CLASSIFICATION_CHANGED_RETRY',409);
   }
@@ -221,7 +237,7 @@ export async function runCatalogClassifications(env,getCatalog,{now=()=>Date.now
    const claimed=await db.prepare("UPDATE catalog_classification_jobs SET status='RUNNING',last_attempt_at=?,lease_token=?,lease_until=? WHERE item_id=? AND next_attempt_at<=? AND (lease_token IS NULL OR lease_until<=?) AND EXISTS(SELECT 1 FROM catalog_classification_state WHERE id=1 AND lease_token=? AND lease_until>?)").bind(at,token,start+180,row.item_id,at,at,token,at).run();if(claimed?.meta?.changes!==1)continue;
    try{
     const change=await db.prepare('SELECT change_token FROM catalog_classification_changes WHERE item_id=?').bind(row.item_id).first();
-    const frame=await getCatalog(env,{item_ids:[row.item_id],selling_unit:'AUTO',include_cost_catalog:true},{timeoutMs:45000});
+    const frame=await getCatalog(env,{item_ids:[row.item_id],selling_unit:'AUTO',include_cost_catalog:true},{timeoutMs:45000,includeMedia:true});
     const unavailable=projectVariantCatalogFailure(frame);
     if(unavailable)throw Object.assign(new CatalogClassificationError('CATALOG_CLASSIFICATION_SOURCE_UNAVAILABLE'),{catalog_reason:sourceFailureReason(unavailable),catalog_diagnostic:unavailable.diagnostic});
     const result=await storeFrame(env,frame,{now,token,itemId:row.item_id,changeToken:change?.change_token??null});if(result.processed.length)processed.push(row.item_id);else fail('CATALOG_CLASSIFICATION_STALE_RESPONSE');

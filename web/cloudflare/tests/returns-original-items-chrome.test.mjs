@@ -66,8 +66,8 @@ for(const minify of [false,true])test(`original item evidence keeps contracts, s
    if(!req.url.startsWith('/api/')){res.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store'});res.end(html);return;}
    requests.push({method:req.method,path:req.url});const route=new URL(req.url,'http://synthetic.invalid'),headers={'content-type':'application/json','cache-control':'no-store'};let value=null;
    assert.equal(req.method,'GET','no owner mutation is authorized by read-only item QA');
-   if(route.pathname==='/api/admin/returns/physical'){
-    assert.equal(route.searchParams.get('evidence'),'original-items-v1');const selected=route.searchParams.get('month');assert.ok(['2026-10','2026-11'].includes(selected));value=payload(selected);
+   if(route.pathname==='/api/admin/returns/receipts'){
+    assert.equal(route.searchParams.get('evidence'),null);const selected=route.searchParams.get('month');assert.ok(['2026-10','2026-11'].includes(selected));value=payload(selected);
     if(delayNext){delayNext=false;releaseDelayed=()=>{res.writeHead(200,headers);res.end(JSON.stringify(value));};return;}
    }else{const cached=local.get(req.url);if(cached){value=cached.body;if(cached.contract)headers['x-braza-client-contract']=cached.contract;}}
    res.writeHead(value?200:503,headers);res.end(JSON.stringify(value||{error:'SYNTHETIC_UNMAPPED_SOURCE'}));
@@ -83,6 +83,7 @@ for(const minify of [false,true])test(`original item evidence keeps contracts, s
    await waitFor(cdp,"globalThis.brazaPhysicalReturns&&document.getElementById('physicalReturnsMonthSelect')&&!document.getElementById('physicalReturnsMonthSelect').disabled",'physical evidence controller must receive the existing signed owner API');
    await click(cdp,'#physicalReturnsDetails>summary');
    await waitFor(cdp,"brazaPhysicalReturns.getSnapshot()!==null",'opening existing physical controls reads a saved workspace');
+   await click(cdp,'#physicalReturnsAdvanced>summary');
    await cdp.evaluate("document.getElementById('physicalReturnsMonthSelect').value='2026-10';document.getElementById('physicalReturnsMonthSelect').dispatchEvent(new Event('change',{bubbles:true}));");
    await waitFor(cdp,"document.getElementById('physicalReturnsOriginalItems').dataset.state==='AVAILABLE'",'the selected source must display both observed item lists');
    const original=await cdp.evaluate(expression("return {physical:brazaPhysicalReturns.getSnapshot().physical,body:document.getElementById('physicalReturnsOriginalItems').textContent,source:document.getElementById('physicalReturnsOriginalItemsSources').textContent,quantity:document.querySelector('#physicalReturnsReceiveForm [name=quantity]').value,month:brazaMonthDashboard.getSnapshot()?.month,strict:{balance:brazaMonthDashboard.getSnapshot()?.balance_cents,pending:brazaMonthDashboard.getSnapshot()?.pending}};"));

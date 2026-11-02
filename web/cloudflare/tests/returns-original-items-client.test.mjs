@@ -19,7 +19,7 @@ test('original item UI reuses the physical month and source selector without add
 });
 
 test('the negotiated lazy read shows order quantity and requested quantity independently without physical autofill',async t=>{
- const initial=returnsOriginalItemsUIFixture(),before=JSON.stringify(initial),ui=mount(initial);t.after(ui.stop);assert.equal(ui.calls.length,0);await ui.open();assert.deepEqual(ui.calls,['returns/physical?month=2026-10&evidence=original-items-v1']);
+ const initial=returnsOriginalItemsUIFixture(),before=JSON.stringify(initial),ui=mount(initial);t.after(ui.stop);assert.equal(ui.calls.length,0);await ui.open();assert.deepEqual(ui.calls,['returns/receipts?month=2026-10']);
  assert.match(ui.sourcesText(),/Itens observados no pedido.*2 unidade\(s\) comercial/is);assert.match(ui.sourcesText(),/Itens observados na solicitação de devolução.*1 unidade\(s\) comercial/is);assert.match(ui.text(),/Ainda não|ainda|não comprova/);assert.equal(ui.b.nodes.get('physicalReturnsOriginalItems').dataset.state,'AVAILABLE');
  assert.deepEqual(ui.snapshot(),base(initial));assert.equal(ui.field('quantity').value,'');assert.equal(ui.snapshot().physical.summary.active_quantity,1);assert.equal(ui.snapshot().physical.valuation.amount_cents,null);assert.equal(JSON.stringify(initial),before);
 });

@@ -72,3 +72,15 @@ test('physical API authenticates before storage and rejects invalid methods, que
  assert.equal(db.db.prepare("SELECT COUNT(*) n FROM sqlite_master WHERE type='table'").get().n,0);assert.ok(db.sql.every(sql=>/^SELECT\b/.test(sql)));
  assert.ok(!SCHEMA.some(sql=>sql.includes('physical_returns_')),'the ordinary collector cold schema budget must remain unchanged');
 });
+
+test('receipt queue authenticates and validates scope before storage; observation never initializes ledgers',async t=>{
+ const db=new ReadObservedD1();t.after(()=>db.db.close());const env={ADMIN_DB:db,ADMIN_USERNAME:'synthetic-owner',ADMIN_PASSWORD:'synthetic-secret-safe-password',ADMIN_SESSION_SECRET:'s'.repeat(64)},origin='https://receipt.test';
+ const login=await adminFetch(new Request(origin+'/login',{method:'POST',headers:{origin,'content-type':'application/x-www-form-urlencoded'},body:new URLSearchParams({username:env.ADMIN_USERNAME,password:env.ADMIN_PASSWORD})}),env);const cookie=login.headers.get('set-cookie').split(';')[0];
+ const services=new Proxy({},{get(){throw Error('RECEIPT_GET_MUST_NOT_USE_PROVIDERS');}}),call=(query='',options={})=>adminFetch(new Request(origin+'/api/admin/returns/receipts'+query,{...options,headers:{cookie,...options.headers}}),env,services);
+ assert.equal((await adminFetch(new Request(origin+'/api/admin/returns/receipts?month=2026-10'),env,services)).status,401);
+ const response=await call('?month=2026-10');assert.equal(response.status,200);const value=await response.json();assert.equal(value.schema,'returns_receipt_workspace_v1');assert.equal(value.workspace.report.schema,'physical_returns_workspace_v1');assert.equal(value.cards.length,0);assert.equal(value.physical_revision,0);
+ for(const query of ['', '?month=2026-10&month=2026-10','?month=2026-10&extra=1','?month=2026-13','?month=2099-01'])assert.equal((await call(query)).status,400,query);
+ assert.equal((await call('?month=2026-10',{method:'HEAD'})).status,405);
+ for(const callerOrigin of [origin,'https://elsewhere.invalid'])assert.equal((await call('?month=2026-10',{method:'POST',headers:{origin:callerOrigin,'content-type':'application/json'},body:'{}'})).status,403);
+ assert.equal(db.db.prepare("SELECT COUNT(*) n FROM sqlite_master WHERE type='table'").get().n,0);assert.ok(db.sql.every(sql=>/^SELECT\b/.test(sql)));
+});

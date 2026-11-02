@@ -2,6 +2,7 @@ import {FINANCE_PROFILE, FinanceConnectionError} from './connection-store.mjs';
 import {ensureFinanceAccessToken} from './refresh-coordinator.mjs';
 import {requestFinanceAuthJson} from './auth-json-transport.mjs';
 import {deriveCatalogProduct,deriveProductCostCatalog, projectVariantCatalog, projectVariantCatalogRequest} from './variant-catalog-frame.mjs';
+import {deriveCatalogMediaImage,projectCatalogMediaFrame} from './catalog-media-frame.mjs';
 
 const CATALOG_PATH = '/api/v2/product/get_model_list';
 const catalogEncoder = new TextEncoder();
@@ -19,6 +20,8 @@ export async function runFinanceVariantCatalog(env, options = {}) {
     ...(Object.hasOwn(options,'include_cost_catalog')?{include_cost_catalog:options.include_cost_catalog}:{})});
   const {fetchImpl, now = () => Date.now(), timeoutMs = 10000} = options;
   if (!input) throw catalogFailure('REQUEST_INVALID', 400);
+  const includeMedia=options.includeMedia??false;
+  if(typeof includeMedia!=='boolean'||includeMedia&&!input.include_cost_catalog)throw catalogFailure('REQUEST_INVALID',400);
   if (env?.FINANCE_CONNECTION_ENABLED !== 'true' || typeof fetchImpl !== 'function'
     || typeof now !== 'function' || !Number.isInteger(timeoutMs) || timeoutMs < 5 || timeoutMs > 10000) {
     throw catalogFailure('CONFIGURATION', 503);
@@ -44,7 +47,7 @@ export async function runFinanceVariantCatalog(env, options = {}) {
   if (typeof tokens.access_token !== 'string' || !tokens.access_token.length
     || tokens.access_token.length > 8192 || /[\u0000-\u001f\u007f]/.test(tokens.access_token)
     || !Number.isSafeInteger(tokens.expires_at)) throw catalogFailure('CONFIGURATION', 503);
-  const names=new Map();
+  const names=new Map(),media=new Map();
   if(input.include_cost_catalog){
     const path='/api/v2/product/get_item_base_info',timestamp=epoch();
     if(tokens.expires_at<=timestamp)throw catalogFailure('AUTHORIZATION_EXPIRED',409);
@@ -64,6 +67,7 @@ export async function runFinanceVariantCatalog(env, options = {}) {
           const id=typeof row.item_id==='number'&&Number.isSafeInteger(row.item_id)?String(row.item_id):row.item_id;
           if(!input.item_ids.includes(id)||names.has(id))throw catalogFailure('IDENTITY_MISMATCH');
           if(typeof row.item_name!=='string'||!row.item_name.trim()||catalogEncoder.encode(row.item_name).byteLength>1024||/[\u0000-\u001f\u007f-\u009f]/.test(row.item_name))throw catalogFailure('BASE_NAME_UNAVAILABLE');names.set(id,row.item_name);
+          if(includeMedia)media.set(id,deriveCatalogMediaImage(row));
         }
         if(names.size!==input.item_ids.length)throw catalogFailure('BASE_ITEM_ABSENT');
       }}));
@@ -113,5 +117,8 @@ export async function runFinanceVariantCatalog(env, options = {}) {
   }
   const result = projectVariantCatalog({schema: 'variant_catalog_v1', checked_at: epoch(), products});
   if (!result) throw catalogFailure('RESPONSE_INVALID',502,'RESULT');
-  return result;
+  if(!includeMedia)return result;
+  const wrapped=projectCatalogMediaFrame({schema:'variant_catalog_media_v1',catalog:result,media:result.products.map(product=>({item_id:product.item_id,catalog_fingerprint:product.catalog_fingerprint,checked_at:result.checked_at,...(media.get(product.item_id)??{state:'NOT_CAPTURED',image_url:null}),basis:'CURRENT_PRODUCT_PHOTO_NOT_PRINT_ARTWORK'}))},projectVariantCatalog);
+  if(!wrapped)throw catalogFailure('RESPONSE_INVALID',502,'RESULT');
+  return wrapped;
 }

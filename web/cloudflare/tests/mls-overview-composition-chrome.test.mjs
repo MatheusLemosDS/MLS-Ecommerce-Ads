@@ -15,17 +15,16 @@ const chrome=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin
 const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 const output=process.env.MLS_OVERVIEW_SCREENSHOT_DIR||null;
 
-test('overview has one set of six KPI IDs, six saved-agent cards and three distinct lower panels',()=>{
+test('overview keeps six KPI bindings, one release strip and two focused panels without duplicating the fleet',()=>{
  const body=commandCenterBody(),ids=[...body.matchAll(/\bid="([^"]+)"/g)].map(match=>match[1]);
  assert.equal(new Set(ids).size,ids.length,'controller IDs must remain unique');
- for(const id of ['commandCenterNet','commandCenterSales','commandCenterAds','commandCenterMargin','commandCenterPaid','commandCenterAlerts','commandCenterAgents','commandCenterPriorities','commandCenterHermesSummary','missionTrendGraphOverview','missionHealthRing'])assert.ok(ids.includes(id),id);
- assert.equal((body.match(/data-agent-placeholder="true"/g)||[]).length,6);
- assert.match(body,/Novidades desta versão/);assert.match(body,/id="appReleaseOverviewTitle"/);
- assert.deepEqual([...body.matchAll(/data-mission-accent="([^"]+)" data-agent-placeholder/g)].map(m=>m[1]),['hermes','finance','ads','products','production','returns']);
- assert.equal((body.match(/class="mls-agent-avatar"/g)||[]).length,6);
+ for(const id of ['commandCenterNet','commandCenterSales','commandCenterAds','commandCenterMargin','commandCenterPaid','commandCenterAlerts','commandCenterPriorities','commandCenterHermesSummary','missionTrendGraphOverview','missionHealthRing'])assert.ok(ids.includes(id),id);
+ assert.doesNotMatch(body,/id="commandCenterAgents"|id="commandAgents"|data-agent-placeholder|class="agent-card"/);
+ assert.match(body,/id="appReleaseOverviewTitle"/);assert.equal((body.match(/class="app-release-more"/g)||[]).length,1);
+ assert.doesNotMatch(body,/class="app-release-links"/);
  assert.match(body,/mls-command-globe/);assert.match(body,/id="mlsOverviewPeriod"/);assert.match(body,/id="mlsOverviewDate"/);
  assert.match(body,/mls-overview-performance/);assert.match(body,/mls-overview-activity/);assert.match(body,/mls-overview-priorities/);
- assert.ok(body.indexOf('id="commandAgents"')<body.indexOf('class="command-center-grid mls-overview-panels"'));
+ assert.ok(body.indexOf('id="appReleaseOverviewTitle"')<body.indexOf('class="command-center-grid mls-overview-panels"'));
  assert.doesNotMatch(MLS_APPROVED_DESIGN_CSS,/repeat\(4,minmax\(0,1fr\)\).*important/);
  assert.doesNotMatch(MISSION_CSS,/V3 density pass 2|grid-template-columns:repeat\(3,minmax\(0,1fr\)\)!important/);
 });
@@ -56,31 +55,30 @@ async function browser(url,{width,height,theme,minify}){
   const proof=await evaluate(`(()=>{
    const rects=selector=>[...document.querySelectorAll(selector)].map(n=>{const r=n.getBoundingClientRect();return {left:r.left,right:r.right,top:r.top,width:r.width,height:r.height};});
    return {theme:document.documentElement.dataset.theme,width:innerWidth,scroll:document.documentElement.scrollWidth,
-    kpis:rects('#commandCenter>.command-center-metrics>.command-metric'),agents:rects('#commandCenterAgents>.agent-card'),
+    kpis:rects('#commandCenter>.command-center-metrics>.command-metric'),overviewAgents:document.querySelectorAll('#overview .agent-card,#overview .mission-hub-card').length,fleetCards:document.querySelectorAll('#missionHubGrid>.mission-hub-card').length,
     panels:rects('.mls-overview-panels>*'),
     activity:document.querySelector('.mls-overview-activity').textContent,
     detail:!!document.querySelector('.mls-overview-detail>summary'),
     heroGeometry:(()=>{const n=document.querySelector('.mission-command-hero'),c=document.querySelector('.mission-overview-copy'),p=document.querySelector('.mls-overview-period'),s=getComputedStyle(n);return {rect:n.getBoundingClientRect().toJSON(),copy:c.getBoundingClientRect().toJSON(),period:p.getBoundingClientRect().toJSON(),height:s.height,minHeight:s.minHeight,padding:s.padding,gap:s.gap,alignItems:s.alignItems,justifyContent:s.justifyContent,flexDirection:s.flexDirection,copyStyle:{height:getComputedStyle(c).height,minHeight:getComputedStyle(c).minHeight,padding:getComputedStyle(c).padding}};})(),
     kpiGeometry:(()=>{const n=document.querySelector('.command-metric'),s=getComputedStyle(n);return {height:s.height,minHeight:s.minHeight,padding:s.padding,gap:s.gap,children:[...n.children].map(c=>({id:c.id,tag:c.tagName,rect:c.getBoundingClientRect().toJSON(),minHeight:getComputedStyle(c).minHeight,padding:getComputedStyle(c).padding,margin:getComputedStyle(c).margin,lineHeight:getComputedStyle(c).lineHeight}))};})(),
-    cardOrder:[...document.querySelectorAll('#commandCenterAgents>.agent-card')].map(n=>n.dataset.missionAccent),
-    avatars:document.querySelectorAll('#commandCenterAgents .mls-agent-avatar svg').length,
+    cardOrder:[...document.querySelectorAll('#missionHubGrid>.mission-hub-card')].map(n=>n.dataset.missionAgent),
+    avatars:document.querySelectorAll('#missionHubGrid .mls-agent-avatar svg').length,releaseGeometry:document.querySelector('.mls-release-strip').getBoundingClientRect().toJSON(),releaseLinks:document.querySelectorAll('.mls-release-strip a').length,
     globe:document.querySelectorAll('.mls-command-globe svg').length,
     sourceCollapsed:document.querySelector('.mls-overview-source').open===false,
     periodTouchHeight:document.getElementById('mlsOverviewPeriod').getBoundingClientRect().height,
     errors:window.__mlsOverviewErrors||[]};})()`);
   if(output){mkdirSync(output,{recursive:true});writeFileSync(path.join(output,`geometry-${width}-${theme}-${minify?'min':'normal'}.json`),JSON.stringify(proof,null,2)+'\n');}
   assert.equal(proof.theme,theme);assert.equal(proof.width,width);assert.ok(proof.scroll<=width+3,JSON.stringify(proof));
-  assert.equal(proof.kpis.length,6);assert.equal(proof.agents.length,6);assert.equal(proof.panels.length,3);
-  assert.deepEqual(proof.cardOrder,['hermes','finance','ads','products','production','returns']);assert.equal(proof.avatars,6);assert.equal(proof.globe,1);assert.equal(proof.sourceCollapsed,true);
-  assert.match(proof.activity,/Novidades desta versão/);assert.match(proof.activity,/Conferir itens e quantidades de origem/);assert.match(proof.activity,/Receber e inspecionar devoluções/);assert.match(proof.activity,/Vincular à fabricação/);assert.match(proof.activity,/Quantidades comerciais não comprovam peças recebidas/);assert.equal(proof.detail,true);assert.deepEqual(proof.errors,[]);
+  assert.equal(proof.kpis.length,6);assert.equal(proof.overviewAgents,0);assert.equal(proof.fleetCards,7);assert.equal(proof.panels.length,2);assert.equal(proof.releaseLinks,1);assert.ok(proof.releaseGeometry.height<=125,'release notice stays compact');
+  assert.deepEqual(proof.cardOrder,['finance','ads','products','production','returns','auditor','hermes']);assert.equal(proof.avatars,7);assert.equal(proof.globe,1);assert.equal(proof.sourceCollapsed,true);
+  assert.match(proof.activity,/Versão/);assert.match(proof.activity,/Novidades/);assert.equal(proof.detail,true);assert.deepEqual(proof.errors,[]);
   if(width===1365){
-   for(const [kind,rows] of [['kpi',proof.kpis],['agent',proof.agents],['lower panels',proof.panels]])assert.equal(new Set(rows.map(r=>Math.round(r.top))).size,1,kind+' share one row');
-   assert.ok(proof.agents[0].top>proof.kpis[0].top);assert.ok(proof.panels[0].top>proof.agents[0].top);
+   for(const [kind,rows] of [['kpi',proof.kpis],['lower panels',proof.panels]])assert.equal(new Set(rows.map(r=>Math.round(r.top))).size,1,kind+' share one row');
+   assert.ok(proof.releaseGeometry.top>proof.kpis[0].top);assert.ok(proof.panels[0].top>proof.releaseGeometry.top);
    assert.ok(proof.kpis.every(row=>row.height<=145),'KPI density must match the compact original reference: '+JSON.stringify(proof.kpis));
-   assert.ok(proof.agents.every(row=>row.height<=240),'agent cards must retain compact reference density: '+JSON.stringify(proof.agents));
   }
-  if(width===390){assert.equal(new Set(proof.agents.map(r=>Math.round(r.top))).size,3,'mobile agents use three two-card rows');assert.ok(proof.periodTouchHeight>=44,'mobile date control has a44px touch target');}
-  for(const row of [...proof.kpis,...proof.agents,...proof.panels])assert.ok(row.left>=-2&&row.right<=width+3,JSON.stringify(row));
+  if(width===390){assert.equal(new Set(proof.panels.map(r=>Math.round(r.top))).size,2,'mobile work panels stack in reading order');assert.ok(proof.periodTouchHeight>=44,'mobile date control has a44px touch target');}
+  for(const row of [...proof.kpis,...proof.panels,proof.releaseGeometry])assert.ok(row.left>=-2&&row.right<=width+3,JSON.stringify(row));
   if(output){mkdirSync(output,{recursive:true});const shot=await send('Page.captureScreenshot',{format:'png',fromSurface:true,captureBeyondViewport:false});writeFileSync(path.join(output,`overview-${width}-${theme}-${minify?'min':'normal'}.png`),Buffer.from(shot.data,'base64'));}
   const periodProof=await evaluate(`(()=>{
    const period=document.getElementById('mlsOverviewPeriod'),proxy=document.getElementById('mlsOverviewDate'),original=document.getElementById('businessDayDate');
@@ -104,7 +102,7 @@ async function browser(url,{width,height,theme,minify}){
  }finally{await cleanup(socket);}
 }
 
-test('compiled overview preserves six-by-six desktop composition and mobile access in both themes',{timeout:120000},async t=>{
+test('compiled overview preserves compact KPIs, release access and focused panels in both themes',{timeout:120000},async t=>{
  if(!chrome)return t.skip('Chromium unavailable');
  const results=[];
  for(const minify of [false,true]){

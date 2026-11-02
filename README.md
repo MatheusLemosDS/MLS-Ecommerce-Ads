@@ -1,3 +1,27 @@
+<!-- SIMPLIFIED_OPERATIONS_CANDIDATE -->
+**Candidato preparado — 2026-11-02.3, Operação simples e produção por período:**
+**PREPARED_NOT_PUBLISHED** na branch
+`feature/simplified-returns-production-layout-20261102`, base oficial
+`911870590fe812202287f549240d5274119d1cad`.
+
+- **Devoluções:** fila com dados salvos, referência de custo atual e foto do
+  produto; PNG da estampa somente se disponível/verificado no dispositivo.
+  Confirmação física correta/problema atômica, sem inferir peças de kits.
+- **Produção:** escolher datas inclusivas de fabricação em Brasília, como 15–25,
+  usando custos históricos registrados. Sem registros não significa gasto zero.
+- **Navegação:** Produção, Devoluções e Financeiro visíveis entre sete destinos;
+  ledger de fabricação em Produção, com os links antigos preservados.
+
+Após a publicação, usar `/admin?tab=agent-returns#physicalReturnsQueue`,
+`/admin?tab=agent-production#incurredProductionDetails` e
+`/admin?tab=agent-finance#businessMonthNetCard`.
+A PR103 abaixo continua a última Live comprovada até o recibo efetivo deste
+incremento. M2/M2.2, uso operacional real e confronto Seller Centre/banco
+continuam abertos. A fabricação registrada não comprova pagamento nem altera o
+lucro por uma segunda soma de custos.
+[Escopo, uso, validação e critérios de publicação](docs/MLS_SIMPLIFIED_OPERATIONS_2026_11_02.md).
+<!-- END_SIMPLIFIED_OPERATIONS_CANDIDATE -->
+
 <!-- ORIGINAL_RETURN_ITEMS_RELEASE -->
 **Atualização Live — 2026-11-02.2, itens e quantidades das devoluções:**
 O MLS Returns mostra separadamente os itens salvos do pedido e da solicitação,
