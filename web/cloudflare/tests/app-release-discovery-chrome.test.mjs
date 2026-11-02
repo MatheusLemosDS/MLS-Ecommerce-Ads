@@ -11,6 +11,7 @@ import path from 'node:path';
 import {compiledOwnerReportPage} from './owner-report-browser-fixture.mjs';
 import {createChromeProfileCleanup} from './chrome-profile-cleanup.mjs';
 import {waitForChromeDebugPort} from './chrome-debug-port.mjs';
+import {APP_RELEASE} from '../src/app-release.mjs';
 import {D1} from './sqlite-d1.mjs';
 import {readPhysicalReturns,mutatePhysicalReturns} from '../src/physical-returns.mjs';
 import {readIncurredProduction,mutateIncurredProduction,incurredProductionPeriods} from '../src/incurred-production.mjs';
@@ -90,6 +91,7 @@ const targets=[
  {id:'incurredProductionDetails',panel:'margins',controller:'brazaIncurredProduction',path:'/api/admin/production/incurred'},
  {id:'returnManufacturingLinksDetails',panel:'agent-returns',controller:'brazaReturnManufacturingLinks',path:'/api/admin/returns/manufacturing-links'}
 ];
+const currentTargets=['/admin?tab=agent-finance#businessMonthNetCard','/admin?tab=agent-finance#mlsAgentPeriod','/admin?tab=agent-finance#businessMonthExpensesForm'];
 const generatedHash=createHash('sha256').update(readFileSync(new URL('../../../dist/app-worker.mjs',import.meta.url))).digest('hex');
 const qa=[];
 const physicalRequest=row=>targets.some(target=>row.path.startsWith(target.path));
@@ -136,9 +138,11 @@ for(const minify of [false,true])for(const width of [320,1365])test(`generated r
   for(const target of targets){
    let start=requests.length;await navigate('?tab=overview');
    const overview=await cdp.evaluate("({release:document.querySelector('.app-release-overview')?.dataset.appRelease,header:document.querySelector('.app-release-header-link')?.getAttribute('aria-label'),headerHref:document.querySelector('.app-release-header-link')?.getAttribute('href'),links:[...document.querySelectorAll('.app-release-overview .app-release-links a')].map(a=>({href:a.getAttribute('href'),bypass:a.hasAttribute('data-mission-open')})),scope:document.querySelector('.app-release-scope')?.textContent,financial:JSON.stringify(brazaMonthDashboard.getSnapshot()),overflow:document.documentElement.scrollWidth>innerWidth+1})");
-   assert.equal(overview.release,'2026-11-01.1');assert.match(overview.header,/2026-11-01\.1/);assert.equal(overview.headerHref,'/admin?tab=roadmap#appReleaseNotes');assert.deepEqual(overview.links.map(row=>row.href),targets.map(row=>'/admin?tab='+row.panel+'#'+row.id));assert.ok(overview.links.every(row=>row.bypass===false),'native links must retain the precise destination hash');assert.match(overview.scope,/impacto financeiro.*ainda não foi apurado/i);assert.equal(overview.overflow,false);assert.equal(requests.slice(start).filter(physicalRequest).length,0,'Overview must not fetch the three physical-control sources');
+   assert.equal(overview.release,APP_RELEASE.id);assert.ok(overview.header.includes(APP_RELEASE.id));assert.equal(overview.headerHref,'/admin?tab=roadmap#appReleaseNotes');assert.deepEqual(overview.links.map(row=>row.href),currentTargets);assert.ok(overview.links.every(row=>row.bypass===false),'native links must retain the precise destination hash');assert.match(overview.scope,/saldo parcial identifica despesas ainda não declaradas/i);assert.match(overview.scope,/Anúncios antigos mantêm a data da leitura/);assert.match(overview.scope,/valores ausentes não viram zero/);assert.equal(overview.overflow,false);assert.equal(requests.slice(start).filter(physicalRequest).length,0,'Overview must not fetch the three physical-control sources');
    if(process.env.MLS_APP_RELEASE_SCREENSHOT_DIR&&target===targets[0]){mkdirSync(process.env.MLS_APP_RELEASE_SCREENSHOT_DIR,{recursive:true});await cdp.evaluate("document.querySelector('.app-release-overview').scrollIntoView({block:'center',behavior:'instant'})");const capture=await cdp.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});writeFileSync(path.join(process.env.MLS_APP_RELEASE_SCREENSHOT_DIR,`app-release-${minify?'minified':'normal'}-${width}.png`),Buffer.from(capture.data,'base64'));}
-   start=requests.length;await click(cdp,`.app-release-overview .app-release-links a[href="/admin?tab=${target.panel}#${target.id}"]`);await assertDestination(target,start,'overview-link');assert.equal(await cdp.evaluate('JSON.stringify(brazaMonthDashboard.getSnapshot())'),overview.financial,'navigation must not change the cached financial projection');
+   await click(cdp,'.app-release-overview .app-release-more');await waitFor(cdp,"document.querySelector('main.workspace>section:not([hidden])')?.id==='roadmap'",'previous deliveries remain available in the release notes');
+   assert.equal(await cdp.evaluate("document.querySelector('.app-release-previous h3')?.textContent"),'Entregas anteriores · controles físicos');
+   start=requests.length;await click(cdp,`.app-release-previous a[href="/admin?tab=${target.panel}#${target.id}"]`);await assertDestination(target,start,'previous-release-link');assert.equal(await cdp.evaluate('JSON.stringify(brazaMonthDashboard.getSnapshot())'),overview.financial,'navigation must not change the cached financial projection');
    start=requests.length;await navigate('?tab='+target.panel+'#'+target.id);await assertDestination(target,start,'initial-deep-link');
   }
   await navigate('?tab=overview');const beforeSearch=requests.length;
@@ -146,7 +150,7 @@ for(const minify of [false,true])for(const width of [320,1365])test(`generated r
   await waitFor(cdp,"!!document.querySelector('#missionSearchResults a[data-search-route=physical-receiving]')",'local navigation search must expose the real receiving destination');
   await click(cdp,'#missionSearchResults a[data-search-route=physical-receiving]');await assertDestination(targets[0],beforeSearch,'local-search');
   const final=await cdp.evaluate('({errors:__auditErrors,overflow:document.documentElement.scrollWidth>innerWidth+1})');assert.deepEqual(final.errors,[]);assert.equal(final.overflow,false);assert.equal(serverFailure,null);assert.equal(requests.filter(row=>row.method!=='GET').length,0,'discovery cannot mutate owner data');assert.equal(JSON.stringify(await store.read()),ledgerBefore,'all saved physical, manufacturing and association data must stay unchanged');
-  qa.push({minify,width,pass:true,page_errors:0,horizontal_overflow:false,provider_calls:0,remote_writes:0,owner_mutation_requests:0,financial_snapshot_unchanged:true,release_id:'2026-11-01.1',proofs});
+  qa.push({minify,width,pass:true,page_errors:0,horizontal_overflow:false,provider_calls:0,remote_writes:0,owner_mutation_requests:0,financial_snapshot_unchanged:true,release_id:APP_RELEASE.id,proofs});
  }finally{await cdp?.close();host.closeAllConnections?.();await new Promise(resolve=>host.close(resolve));store.close();}
 });
 

@@ -12,6 +12,7 @@ import {projectBusinessMonthProducts} from './business-month-products.mjs';
 import {buildAccountDiagnosis} from './account-diagnosis.mjs';
 import {buildBusinessCheckpoint} from './business-checkpoint.mjs';
 import {buildMonthlyFinancialSummary} from './business-month-summary.mjs';
+import {projectMonthlyProfitPresentation,projectMonthlyProfitPresentationValue} from './monthly-profit-presentation.mjs';
 import {projectBusinessCostDiagnostics,projectBusinessCostDiagnosticsEvidence,projectBusinessCostDiagnosticsEvidenceV2,projectBusinessCostDiagnosticsEvidenceV3} from './business-cost-diagnostics.mjs';
 import {projectHistoricalCostPairDiagnostics,projectHistoricalCostPairDiagnosticsEvidence,deriveHistoricalCostComposition} from './historical-cost-evidence.mjs';
 import {projectBackgroundCollectionDiagnostics} from './background-collection-diagnostics.mjs';
@@ -34,6 +35,8 @@ export const BUSINESS_MONTH_CLIENT=BUSINESS_DAY_CLIENT+String.raw`
  ${buildBusinessCheckpoint.toString()}
  ${buildAccountDiagnosis.toString()}
  ${buildMonthlyFinancialSummary.toString()}
+ ${projectMonthlyProfitPresentation.toString()}
+ ${projectMonthlyProfitPresentationValue.toString()}
  ${projectBusinessCostDiagnostics.toString()}
  ${projectBusinessCostDiagnosticsEvidence.toString()}
  ${projectBusinessCostDiagnosticsEvidenceV2.toString()}
@@ -73,6 +76,8 @@ export const BUSINESS_MONTH_CLIENT=BUSINESS_DAY_CLIENT+String.raw`
  const validMonth=value=>typeof value==='string'&&/^\d{4}-(0[1-9]|1[0-2])$/.test(value)&&value>='2000-01'&&value<=today().slice(0,7);
  const monthName=value=>validMonth(value)?new Intl.DateTimeFormat('pt-BR',{month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(value+'-01T12:00:00Z')):'mês selecionado';
  const sourceAge=value=>{if(!Number.isSafeInteger(value)||value<=0)return 'pendente';const minutes=Math.max(0,Math.floor((Date.now()-value*1000)/60000));return minutes<1?'há menos de 1 minuto':minutes<60?'há '+minutes+' minuto(s)':minutes<1440?'há '+Math.floor(minutes/60)+' hora(s)':'há '+Math.floor(minutes/1440)+' dia(s)';};
+ const snapshotListeners=new Set();
+ let presentationFrame=null,presentationCache=null,monthlyPartialAction=null;
  let api=null,syncVariants=null,onCatalogChanged=null,frame=null,month='',generation=0,busy=false,adsBusy=false,saving=false,started=false,paused=false,dirty=false,editSequence=0,draftRevision=0,timer=null,message='',failed=false;
  let bootstrapPrepared=false,bootstrapCompleted=false,bootstrapPhase='LOADING',bootstrapRetry=null,bootstrapRetryPending=false,bootstrapFailureKind='INVALID';
  const bootstrapFailureMessages={TIMEOUT:'A consulta demorou mais que o esperado. Tente novamente.',NETWORK:'Não foi possível conectar ao painel. Verifique a conexão e tente novamente.',SESSION:'Sua sessão expirou. Entre novamente.',QUOTA:'O painel está indisponível porque o limite diário do banco de dados foi atingido. A cota é renovada todos os dias às 21h (horário de Brasília).',UNAVAILABLE:'O painel está temporariamente indisponível. Tente novamente em alguns instantes.',INVALID:'Não foi possível abrir o painel. Tente novamente.'};
@@ -402,6 +407,7 @@ export const BUSINESS_MONTH_CLIENT=BUSINESS_DAY_CLIENT+String.raw`
   return paintBootstrap();
  }
  function controls(){
+  notifySnapshot();
   if(bootstrapPrepared&&!bootstrapCompleted&&!started){paintBootstrap();return;}
   el('Refresh').disabled=busy||adsBusy||saving;el('Refresh').textContent=busy?'Consultando…':collectionRecovery?.waiting&&!paused?'Atualizar agora':paused||frame?.status==='RUNNING'?'Continuar consulta':frame?.status==='COMPLETE'?'Recalcular custos':'Atualizar mês';el('SourceRefresh').disabled=busy||adsBusy||saving;el('SourceRefresh').textContent='Atualizar vendas';el('Pause').hidden=!busy&&!collectionRecovery?.waiting;el('Pause').disabled=paused;el('Previous').disabled=saving;el('Select').disabled=saving;
   const conflict=!!frame&&dirty&&draftRevision!==frame.expenses.revision;
@@ -412,10 +418,11 @@ export const BUSINESS_MONTH_CLIENT=BUSINESS_DAY_CLIENT+String.raw`
   if(!manualCollection){el('Pause').hidden=true;el('Refresh').textContent=busy?'Conferindo…':'Recalcular custos';el('SourceRefresh').disabled=busy||adsBusy||saving||!!priorityPromise;}
   costDiagnosticControls();
  }
- function balanceLabel(summary){return summary?.state==='PARTIAL_COSTS'?'Saldo com custos identificados':summary?.state==='PROVISIONAL'?'Resultado líquido previsto · em conferência':'Resultado líquido previsto';}
+ function balanceLabel(summary,presentation=null){if(summary?.balance_cents===null&&Number.isSafeInteger(presentation?.amount_cents)){if(presentation.state==='BEFORE_MONTHLY_COSTS')return presentation.basis==='BEFORE_UNCONFIRMED_EXPENSES'?'Saldo parcial antes de outras despesas':presentation.basis==='BEFORE_UNCONFIRMED_DAS'?'Saldo parcial antes do DAS':'Saldo parcial antes de DAS e despesas';return presentation.ads_pending?'Saldo parcial · anúncios em conferência':'Saldo com custos identificados';}return summary?.state==='PARTIAL_COSTS'?'Saldo com custos identificados':summary?.state==='PROVISIONAL'?'Resultado líquido previsto · em conferência':'Resultado líquido previsto';}
  function summaryCount(value,singular,plural){return new Intl.NumberFormat('pt-BR').format(value)+' '+(value===1?singular:plural);}
  function missingProductionText(summary){const coverage=summary?.production_coverage;if(coverage?.pending_units>0)return 'Ainda falta descontar a produção de '+summaryCount(coverage.pending_units,'unidade','unidades')+', em '+summaryCount(coverage.pending_variants,'variação','variações')+' de '+summaryCount(coverage.pending_products,'produto','produtos')+'.';return 'Ainda há custos de produção pendentes. Eles não foram tratados como zero.';}
- function summaryBalanceHelp(summary){
+ function summaryBalanceHelp(summary,presentation=null){
+  if(summary?.balance_cents===null&&Number.isSafeInteger(presentation?.amount_cents))return partialMonthHelp(presentation,summary);
   if(!summary)return 'Os valores faltantes estão identificados abaixo.';
   const mei=frame?.tax?.regime==='MEI',deductions='Produção, '+(mei?'DAS-MEI mensal':'imposto')+', anúncios e outras despesas já descontados.';
   if(summary.state==='READY')return deductions+' É uma previsão, não o valor recebido em banco.';
@@ -428,6 +435,36 @@ export const BUSINESS_MONTH_CLIENT=BUSINESS_DAY_CLIENT+String.raw`
   const blockers=['COLLECTING','PERIOD_LIMIT_REACHED','PAYMENT_INCOMPLETE','SOURCE_UNAVAILABLE','STATUS_REVIEW_REQUIRED','ADS_UNAVAILABLE','INVOICE_TAX_UNAVAILABLE','TAX_POLICY_REQUIRED','EXTERNAL_EXPENSES_REQUIRED','RECHARGE_TREATMENT_REQUIRED','ADJUSTMENT_UNAVAILABLE','ARITHMETIC_UNSAFE'];
   const reasons=summary.pending.filter(code=>blockers.includes(code)).slice(0,2).map(code=>pendingMessages[code]);return reasons.length?reasons.join(' '):'Os valores faltantes estão identificados abaixo. Custos conhecidos não representam o total de todos os custos.';
  }
+ function monthlyPresentation(){
+  if(frame!==presentationFrame){presentationFrame=frame;presentationCache=frame?projectMonthlyProfitPresentationValue(projectMonthlyProfitPresentation(frame,projectBusinessMonth,buildMonthlyFinancialSummary)):null;}
+  return presentationCache;
+ }
+ function partialMonthHelp(presentation,summary){
+  const missing=presentation.monthly_costs_missing,parts=['Saldo parcial dos pedidos pagos, após a produção '+(summary?.production_complete?'completa':'identificada')+' e os anúncios da leitura salva.'];
+  if(presentation.das_included)parts.push(frame?.tax?.regime==='MEI'?'DAS-MEI mensal já descontado uma vez.':'Imposto conhecido já descontado.');
+  if(presentation.expenses_included)parts.push('Outras despesas declaradas já descontadas.');
+  if(missing.includes('TAX_POLICY_REQUIRED'))parts.push('Ainda falta descontar o DAS mensal não confirmado.');
+  if(missing.includes('EXTERNAL_EXPENSES_REQUIRED'))parts.push('Ainda falta descontar as despesas não declaradas. Elas continuam desconhecidas, sem assumir valor zero.');
+  if(!summary?.production_complete)parts.push(missingProductionText(summary));
+  if(presentation.ads_pending)parts.push('Anúncios em conferência: usada a leitura salva de '+checkpointTime(presentation.ads_checked_at)+' (Brasília).');
+  else if(presentation.ads_checked_at!==null)parts.push('Anúncios consultados em '+checkpointTime(presentation.ads_checked_at)+' (Brasília).');
+  if(presentation.ads_day_partial)parts.push('O último dia dessa leitura de anúncios ainda era parcial.');
+  if(summary?.pending.includes('STATUS_REVIEW_REQUIRED'))parts.push('Pedidos em revisão de situação continuam excluídos da base paga.');
+  if(summary?.pending.includes('RETURNS_NOT_RECONCILED'))parts.push('Devoluções e reembolsos ainda dependem de conciliação.');
+  if(summary?.pending.includes('FINANCIAL_SOURCE_STALE'))parts.push('A leitura financeira também precisa de atualização.');
+  parts.push('Este saldo pode mudar; não é lucro líquido final nem recebimento bancário confirmado.');
+  return parts.join(' ');
+ }
+ function drawMonthlyPartialAction(presentation){
+  const code=presentation?.state==='BEFORE_MONTHLY_COSTS'?presentation.monthly_costs_missing.includes('EXTERNAL_EXPENSES_REQUIRED')?'EXTERNAL_EXPENSES_REQUIRED':'TAX_POLICY_REQUIRED':null;
+  if(!monthlyPartialAction&&code){monthlyPartialAction=node('button',undefined,'button-link month-pending-action');monthlyPartialAction.type='button';monthlyPartialAction.id='businessMonthPartialAction';el('NetCard').append(monthlyPartialAction);}
+  if(!monthlyPartialAction)return;monthlyPartialAction.hidden=!code;monthlyPartialAction.disabled=busy||adsBusy||saving;
+  if(code){monthlyPartialAction.textContent=code==='EXTERNAL_EXPENSES_REQUIRED'?'Conferir despesas deste mês':'Conferir DAS mensal';const selected=month;monthlyPartialAction.onclick=()=>started&&selected===month?pendingAction(code)?.[1]():false;}
+ }
+ function notifySnapshot(){if(!snapshotListeners.size)return;const value=snapshot();for(const listener of [...snapshotListeners])try{listener(value);}catch{}}
+ function subscribe(listener){if(typeof listener!=='function')return ()=>{};snapshotListeners.add(listener);try{listener(snapshot());}catch{}return ()=>snapshotListeners.delete(listener);}
+ function monthChangeBlocked(){return dirty||saving;}
+ function refuseMonthChange(){el('Select').value=month;status('Salve as despesas em edição ou carregue os valores salvos antes de trocar o mês. Seus rascunhos foram preservados.',true);notifySnapshot();return false;}
  function drawCostOverview(summary){
   const target=el('CostOverview');target.replaceChildren();target.hidden=!frame||!summary;if(target.hidden)return;
   const item=(label,value,help)=>{const entry=node('article',undefined,'month-cost-overview-item');entry.append(node('small',label),node('strong',value),node('p',help,'month-detail-help'));target.append(entry);};
@@ -441,7 +478,7 @@ export const BUSINESS_MONTH_CLIENT=BUSINESS_DAY_CLIENT+String.raw`
   const counted=coverage.total_units!==null&&coverage.known_units!==null;
   item('Cobertura do custo de produção',counted?coverage.total_units===0?'Sem unidades vendidas':new Intl.NumberFormat('pt-BR').format(coverage.known_units)+' de '+new Intl.NumberFormat('pt-BR').format(coverage.total_units)+' unidades':'Quantidade ainda não disponível',coverage.pending_units>0?summaryCount(coverage.pending_units,'unidade','unidades')+' sem custo · '+summaryCount(coverage.pending_variants,'variação','variações')+' · '+summaryCount(coverage.pending_products,'produto','produtos')+'.':counted?'Todas as unidades deste recorte têm custo identificado.':'A quantidade depende do detalhamento validado dos produtos; ela não é calculada pela quantidade de pedidos.');
  }
- function drawWaterfall(summary=frame?buildMonthlyFinancialSummary(frame):null){
+ function drawWaterfall(summary=frame?buildMonthlyFinancialSummary(frame):null,presentation=monthlyPresentation()){
   const target=el('Waterfall');target.replaceChildren();if(!frame)return;
   const row=(label,amount,sign='')=>{const entry=node('div',undefined,'month-waterfall-row');entry.append(node('dt',label),node('dd',amount===null?'Pendente':sign+money(amount)));target.append(entry);};
   const mei=frame.tax?.regime==='MEI';
@@ -456,9 +493,10 @@ export const BUSINESS_MONTH_CLIENT=BUSINESS_DAY_CLIENT+String.raw`
    else if(frame.expenses.recharge_treatment==='UNCONFIRMED')row('Recarga ou suporte · tratamento a conferir',null);
   }
   row('Gasto com anúncios',frame.ads?.status==='AVAILABLE'?frame.ads.expense_cents:null,'− ');
-  row('Outras despesas do mês',frame.expenses.external_expenses_cents,'− ');
-  row(balanceLabel(summary),summary?.balance_cents??null);
-  el('CalculationHelp').textContent=summary?.state==='PARTIAL_COSTS'||summary?.state==='PROVISIONAL'?summaryBalanceHelp(summary):'A previsão usa os custos de produção atuais. Recebimentos bancários ainda não estão conciliados.';
+  const expensesConfirmed=!frame.result.pending.includes('EXTERNAL_EXPENSES_REQUIRED');
+  row(expensesConfirmed?'Outras despesas do mês':'Outras despesas do mês · não declaradas',expensesConfirmed?frame.expenses.external_expenses_cents:null,'− ');
+  row(balanceLabel(summary,presentation),summary?.balance_cents??presentation?.amount_cents??null);
+  el('CalculationHelp').textContent=Number.isSafeInteger(presentation?.amount_cents)||summary?.state==='PARTIAL_COSTS'||summary?.state==='PROVISIONAL'?summaryBalanceHelp(summary,presentation):'A previsão usa os custos de produção atuais. Recebimentos bancários ainda não estão conciliados.';
  }
  function drawTaxAndExpenses(summary=frame?buildMonthlyFinancialSummary(frame):null){
   const mei=frame?.tax?.regime==='MEI';
@@ -627,18 +665,19 @@ export const BUSINESS_MONTH_CLIENT=BUSINESS_DAY_CLIENT+String.raw`
   el('ProductPrevious').disabled=productPage<=1;el('ProductNext').disabled=productPage>=pages;
  }
  function render(){
+  notifySnapshot();
   try{globalThis.brazaExpenseLedger?.observe(month);}catch{}
   globalThis.brazaAutomationWorkspace?.render(frame?buildAccountDiagnosis(frame):null);drawCheckpoint();
   if(!frame){
-   for(const key of ['Sales','Ads','Roas']){el(key).textContent=busy?'Consultando':'Pendente';el(key+'Card').dataset.status='pending';}el('NetLabel').textContent='Resultado líquido previsto';el('Net').textContent='Em apuração';el('NetHelp').textContent='O resultado aparece após conferir os pedidos, anúncios e custos do mês.';el('NetCard').dataset.status='pending';el('Margin').textContent='';el('Coverage').replaceChildren();el('Waterfall').replaceChildren();el('Readiness').replaceChildren();el('Pending').hidden=true;el('Badge').textContent=collectionRecovery?.waiting&&!paused&&!document.hidden?'Aguardando retomada automática':busy?'Consultando':collectionFailure?'Consulta interrompida':'Aguardando consulta';drawCostOverview(null);drawTaxAndExpenses();drawProducts();drawWorkspaceCollection();controls();return;
+   for(const key of ['Sales','Ads','Roas']){el(key).textContent=busy?'Consultando':'Pendente';el(key+'Card').dataset.status='pending';}el('NetLabel').textContent='Resultado líquido previsto';el('Net').textContent='Em apuração';el('NetHelp').textContent='O resultado aparece após conferir os pedidos, anúncios e custos do mês.';el('NetCard').dataset.status='pending';drawMonthlyPartialAction(null);el('Margin').textContent='';el('Coverage').replaceChildren();el('Waterfall').replaceChildren();el('Readiness').replaceChildren();el('Pending').hidden=true;el('Badge').textContent=collectionRecovery?.waiting&&!paused&&!document.hidden?'Aguardando retomada automática':busy?'Consultando':collectionFailure?'Consulta interrompida':'Aguardando consulta';drawCostOverview(null);drawTaxAndExpenses();drawProducts();drawWorkspaceCollection();controls();return;
   }
-  const c=frame.coverage,ads=frame.ads,broad=ads?.totals.broad,net=frame.result.net_estimate_cents,summary=buildMonthlyFinancialSummary(frame),balance=summary?.balance_cents??null;
+  const c=frame.coverage,ads=frame.ads,broad=ads?.totals.broad,net=frame.result.net_estimate_cents,summary=buildMonthlyFinancialSummary(frame),presentation=monthlyPresentation(),balance=summary?.balance_cents??presentation?.amount_cents??null;
   setMetric('Sales',frame.sales_cents===null?null:money(frame.sales_cents),frame.sales_cents===null?'Já informado: '+money(frame.known_sales_cents)+'. Falta conferir parte dos pedidos pagos.':'Produtos dos '+c.paid+' pedido(s) pagos criados nas datas do mês.');
   setMetric('Ads',ads?.status==='AVAILABLE'?money(ads.expense_cents):null,savedAdsHelp(ads));
   if(ads?.status==='AVAILABLE'&&frame.result.pending.includes('ADS_UNAVAILABLE'))el('AdsCard').dataset.status='provisional';
   setMetric('Roas',broad?.calculated_roas_raw===null||broad?.calculated_roas_raw===undefined?null:ratio(broad.calculated_roas_raw),broad?.gmv_cents===null||broad?.gmv_cents===undefined?'Vendas atribuídas aos anúncios ainda pendentes.':'Vendas atribuídas aos anúncios: '+money(broad.gmv_cents)+'. Este valor difere das vendas totais da loja.');
   if(ads?.status==='AVAILABLE'&&ads.expense_cents===0&&broad?.calculated_roas_raw===null){el('Roas').textContent='Sem investimento';el('RoasCard').dataset.status='available';}
-  el('NetLabel').textContent=balanceLabel(summary);setMetric('Net',balance===null?null:money(balance),summaryBalanceHelp(summary));
+  el('NetLabel').textContent=balanceLabel(summary,presentation);setMetric('Net',balance===null?null:money(balance),summaryBalanceHelp(summary,presentation));drawMonthlyPartialAction(presentation);
   if(balance===null)el('Net').textContent=frame.status==='RUNNING'?'Em apuração':'Em conciliação';
   else if(summary.state!=='READY')el('NetCard').dataset.status='provisional';
   el('NetCard').dataset.negative=String(balance!==null&&balance<0);
@@ -682,7 +721,7 @@ export const BUSINESS_MONTH_CLIENT=BUSINESS_DAY_CLIENT+String.raw`
  function readWorkspaceView({selected=el('Select').value,background=false}={}){
   if(!started||saving||!validMonth(selected)||background&&(document.hidden||costDiagnosticBusy||manualCollection||busy))return Promise.resolve(false);
   if(viewPromise?.month===selected)return viewPromise.task;
-  const changed=selected!==month;if(changed){resetCostDiagnostic({clear:true});generation++;month=selected;frame=null;workspaceView=null;observeAudits(selected);try{globalThis.brazaDayDashboard?.reset?.({month:selected});}catch{}collectionRecovery=null;collectionFailure=null;manualCollection=false;priorityPromise=null;paused=false;automaticBlocked=false;catalogRequest++;catalogBusy=false;catalogState=null;catalogProducts.clear();catalogSignature='';catalogNeedsRead=true;dirty=false;editSequence++;draftRevision=0;el('ExpensesValue').value='';el('Recharge').value='UNCONFIRMED';invalidateCheckpointHistory();}
+  const changed=selected!==month;if(changed&&monthChangeBlocked())return Promise.resolve(refuseMonthChange());if(changed){resetCostDiagnostic({clear:true});generation++;month=selected;frame=null;workspaceView=null;observeAudits(selected);try{globalThis.brazaDayDashboard?.reset?.({month:selected});}catch{}collectionRecovery=null;collectionFailure=null;manualCollection=false;priorityPromise=null;paused=false;automaticBlocked=false;catalogRequest++;catalogBusy=false;catalogState=null;catalogProducts.clear();catalogSignature='';catalogNeedsRead=true;dirty=false;editSequence++;draftRevision=0;el('ExpensesValue').value='';el('Recharge').value='UNCONFIRMED';invalidateCheckpointHistory();}
   const token=generation,requestId=++viewRequest,current=()=>started&&token===generation&&month===selected&&requestId===viewRequest;
   if(!background){busy=true;clearTimeout(timer);timer=null;status('Conferindo o resumo salvo e o andamento da coleta…');render();}
   const task=(async()=>{try{const value=await fetchWorkspaceView(selected);if(!current())return false;workspaceView=value;manualCollection=false;collectionRecovery=null;collectionFailure=null;automaticBlocked=false;viewFailures=0;apply(value.display,selected);if(!background)status(value.collection.status==='RUNNING'?(value.display_source==='PUBLISHED'?'Atualização em andamento no servidor; o último resumo concluído está identificado abaixo.':value.automatic.enabled&&value.automatic.applicable?'A coleta automática está em andamento. O resultado do período aparece após sua conclusão.':'Há uma leitura parcial salva. Use Atualizar vendas para continuar manualmente.'):'Resumo recalculado com os pedidos, anúncios e custos salvos.');return true;}catch(error){if(current()){viewFailures=Math.min(4,viewFailures+1);status(error?.status===401?'Entre novamente para acompanhar os dados da loja.':'Não foi possível conferir o andamento agora. O último resumo e seus rascunhos foram preservados; tentaremos novamente.',true);}return false;}finally{if(current()){if(!background)busy=false;viewPromise=null;render();schedule();scheduleCatalog();}}})();viewPromise={month:selected,task};return task;
@@ -805,7 +844,7 @@ export const BUSINESS_MONTH_CLIENT=BUSINESS_DAY_CLIENT+String.raw`
   if(!manualCollection)return readWorkspaceView({background:automatic});
   if(!started||saving||automatic&&(dirty||paused||automaticBlocked||document.hidden||adsBusy))return false;
   const selected=el('Select').value;if(!validMonth(selected)){status('Escolha um mês válido até o mês atual.',true);return false;}
-  const changed=selected!==month;if(busy&&!changed)return false;
+  const changed=selected!==month;if(changed&&monthChangeBlocked())return refuseMonthChange();if(busy&&!changed)return false;
   resetCostDiagnostic({clear:true});const token=++generation;catalogRequest++;catalogBusy=false;clearTimeout(catalogTimer);catalogTimer=null;month=selected;paused=false;automaticBlocked=false;resumeOnVisible=false;collectionFailure=null;if(!observed)collectionRecovery=null;busy=true;adsBusy=false;clearTimeout(timer);timer=null;
   if(changed){adsSuccess();frame=null;observeAudits(selected);catalogState=null;catalogPaused=false;catalogProducts.clear();catalogSignature='';catalogNeedsRead=true;invalidateCheckpointHistory();dirty=false;editSequence++;draftRevision=0;el('ExpensesValue').value='';el('Recharge').value='UNCONFIRMED';}
   status(automatic?'Atualizando vendas, cancelamentos e anúncios de '+monthName(month)+'…':'Consultando os pedidos de '+monthName(month)+'…');render();
@@ -950,14 +989,15 @@ export const BUSINESS_MONTH_CLIENT=BUSINESS_DAY_CLIENT+String.raw`
   manualCollection=false;return readWorkspaceView();
  }
  function snapshot(){
-  if(!frame)return Object.freeze({schema:'mls_month_snapshot_v1',month,status:null,checked_at:null,balance_cents:null,pending:[],coverage:null,production_coverage:null,ads_spend_cents:null,product_count:null,collection:null,audit_scope:null});
+  if(!frame)return Object.freeze({schema:'mls_month_snapshot_v1',month,status:null,checked_at:null,balance_cents:null,presentation:null,period_loading:started&&busy,period_change_blocked:monthChangeBlocked(),pending:[],coverage:null,production_coverage:null,ads_spend_cents:null,ads_checked_at:null,ads_pending:null,product_count:null,collection:null,audit_scope:null});
   const summary=buildMonthlyFinancialSummary(frame),coverage=frame.coverage,production=summary?.production_coverage,ads=frame.ads;
+  const adsMatches=ads?.status==='AVAILABLE'&&ads.start_date===frame.start_date&&ads.end_date===frame.end_date;
   const scope=costDiagnosticContext?.monthly===frame?projectBusinessMonthAuditScope(costDiagnosticContext.audit_scope):null;
   const auditScope=scope?Object.freeze({...scope,sources:Object.freeze(scope.sources.map(row=>Object.freeze({...row})))}):null;
-  return Object.freeze({schema:'mls_month_snapshot_v1',month:frame.month,audit_scope:auditScope,status:frame.status,checked_at:Number.isSafeInteger(frame.checked_at)?frame.checked_at:null,balance_cents:Number.isSafeInteger(summary?.balance_cents)?summary.balance_cents:null,pending:Array.isArray(frame.result?.pending)?[...frame.result.pending]:[],coverage:coverage?Object.freeze({orders:coverage.orders,paid:coverage.paid,completed:coverage.completed,ongoing:coverage.ongoing,cancelled:coverage.cancelled,cancel_pending:coverage.cancel_pending,unpaid:coverage.unpaid,other:coverage.other,unknown:coverage.unknown,returns:coverage.returns,returns_unknown:coverage.returns_unknown}):null,production_coverage:production?Object.freeze({total_units:production.total_units,known_units:production.known_units,pending_units:production.pending_units}):null,ads_spend_cents:ads?.status==='AVAILABLE'&&Number.isSafeInteger(ads.expense_cents)?ads.expense_cents:null,product_count:Array.isArray(frame.product_summary?.products)?frame.product_summary.products.length:null,collection:frame.collection?Object.freeze({...frame.collection}):null,expense_schedule:workspaceView?.schema==='business_month_view_v4'&&workspaceView.expense_schedule?Object.freeze({...workspaceView.expense_schedule,upcoming:Object.freeze((workspaceView.expense_schedule.upcoming??[]).map(item=>Object.freeze({...item})))}):null});
+  return Object.freeze({schema:'mls_month_snapshot_v1',month:frame.month,audit_scope:auditScope,status:frame.status,checked_at:Number.isSafeInteger(frame.checked_at)?frame.checked_at:null,balance_cents:Number.isSafeInteger(summary?.balance_cents)?summary.balance_cents:null,presentation:monthlyPresentation()?Object.freeze({...monthlyPresentation(),monthly_costs_missing:Object.freeze([...monthlyPresentation().monthly_costs_missing])}):null,period_loading:busy,period_change_blocked:monthChangeBlocked(),pending:Array.isArray(frame.result?.pending)?[...frame.result.pending]:[],coverage:coverage?Object.freeze({orders:coverage.orders,paid:coverage.paid,completed:coverage.completed,ongoing:coverage.ongoing,cancelled:coverage.cancelled,cancel_pending:coverage.cancel_pending,unpaid:coverage.unpaid,other:coverage.other,unknown:coverage.unknown,returns:coverage.returns,returns_unknown:coverage.returns_unknown}):null,production_coverage:production?Object.freeze({total_units:production.total_units,known_units:production.known_units,pending_units:production.pending_units}):null,ads_spend_cents:adsMatches&&Number.isSafeInteger(ads.expense_cents)?ads.expense_cents:null,ads_checked_at:adsMatches&&Number.isSafeInteger(ads.fetched_at)?ads.fetched_at:null,ads_pending:frame.result.pending.includes('ADS_UNAVAILABLE'),product_count:Array.isArray(frame.product_summary?.products)?frame.product_summary.products.length:null,collection:frame.collection?Object.freeze({...frame.collection}):null,expense_schedule:workspaceView?.schema==='business_month_view_v4'&&workspaceView.expense_schedule?Object.freeze({...workspaceView.expense_schedule,upcoming:Object.freeze((workspaceView.expense_schedule.upcoming??[]).map(item=>Object.freeze({...item})))}):null});
  }
  function stop(){for(const shutdown of [()=>globalThis.brazaExpenseLedger?.stop(),()=>globalThis.brazaReconciliation?.stop(),()=>globalThis.brazaFinancialCloseout?.stop(),()=>globalThis.brazaEscrowReleases?.stop(),()=>globalThis.brazaIncomeOverview?.stop?.()]){try{shutdown();}catch{}}started=false;viewRequest++;viewPromise=null;priorityPromise=null;manualCollection=false;resetCostDiagnostic();catalogRequest++;catalogBusy=false;clearTimeout(catalogTimer);catalogTimer=null;paused=true;resumeOnVisible=false;collectionRecovery=null;generation++;checkpointHistoryRequest++;checkpointHistoryBusy=false;busy=false;adsBusy=false;clearTimeout(timer);timer=null;controls();}
- function selectMonth(selected){if(!started||saving||!validMonth(selected))return Promise.resolve(false);el('Select').value=selected;return readWorkspaceView({selected});}
+ function selectMonth(selected){if(!started||!validMonth(selected))return Promise.resolve(false);if(selected!==month&&monthChangeBlocked())return Promise.resolve(refuseMonthChange());if(saving)return Promise.resolve(false);el('Select').value=selected;return readWorkspaceView({selected});}
 
  // Read-only source coverage for the operator; no additional D1 or provider reads.
  // A COMPLETE saved month may end before the selected day.
@@ -1000,6 +1040,6 @@ export const BUSINESS_MONTH_CLIENT=BUSINESS_DAY_CLIENT+String.raw`
   if(!started||!workspaceView||!validMonth(month)||month!==today().slice(0,7)||!cronOwnsCollection()||priorityPromise)return Promise.resolve(false);
   return requestSalesUpdate();
  }
- globalThis.brazaMonthDashboard={clientContract,prepare,bootstrapState,start,refresh,refreshCosts,selectMonth,prioritizeCurrentMonth,stop,supportsCatalogQueue:catalogFeature,syncCatalogCandidates,refreshCatalog:()=>{catalogNeedsRead=true;return updateCatalog();},catalogMetadata:item=>catalogProducts.get(item)||null,getSnapshot:snapshot,getAdsSnapshot:()=>projectMissionAdsSnapshot(frame),getSourceStatus};
+ globalThis.brazaMonthDashboard={clientContract,prepare,bootstrapState,start,refresh,refreshCosts,selectMonth,subscribe,openExpenses:()=>started?openExpenses():false,prioritizeCurrentMonth,stop,supportsCatalogQueue:catalogFeature,syncCatalogCandidates,refreshCatalog:()=>{catalogNeedsRead=true;return updateCatalog();},catalogMetadata:item=>catalogProducts.get(item)||null,getSnapshot:snapshot,getAdsSnapshot:()=>projectMissionAdsSnapshot(frame),getSourceStatus};
 })();
 `+EXPENSE_LEDGER_CLIENT+BUSINESS_RECONCILIATION_CLIENT+FINANCIAL_CLOSEOUT_CLIENT+ESCROW_RELEASES_CLIENT;

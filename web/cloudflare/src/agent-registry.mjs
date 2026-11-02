@@ -1,3 +1,4 @@
+import {projectMonthlyProfitPresentationValue} from './monthly-profit-presentation.mjs';
 export function buildPendingIncomeAudit({overview=null,detail=null,detailLoaded=false}={}){
  const safe=value=>Number.isSafeInteger(value)&&!Object.is(value,-0);
  const money=value=>safe(value)?value:null;
@@ -24,7 +25,7 @@ export function buildPendingIncomeAudit({overview=null,detail=null,detailLoaded=
  const delta=Number(difference);return Object.freeze({...common,state:delta===0?'OBSERVED_MATCH':'OBSERVED_DIFFERENT',difference_cents:delta,comparable:true});
 }
 
-export function buildMlsAgentRegistry({day=null,month=null,reconciliation=null,releases=null,incomeOverview=null,pendingAudit=null,catalog=null,productionPeriod=null,dtfQueue=null,now=null}={}, {projectSettlementEvidence=null,projectReturnsInsights=null}={}){
+export function buildMlsAgentRegistry({day=null,month=null,reconciliation=null,releases=null,incomeOverview=null,pendingAudit=null,catalog=null,productionPeriod=null,dtfQueue=null,now=null}={}, {projectSettlementEvidence=null,projectReturnsInsights=null,projectMonthlyPresentation=null}={}){
  const safe=value=>Number.isSafeInteger(value)&&!Object.is(value,-0);
  const money=value=>safe(value)?value:null;
  const list=value=>Array.isArray(value)?value.filter(item=>typeof item==='string'&&item.length<=80):[];
@@ -154,6 +155,21 @@ export function buildMlsAgentRegistry({day=null,month=null,reconciliation=null,r
  }
  const monthReady=month?.schema==='mls_month_snapshot_v1'&&['RUNNING','COMPLETE'].includes(month.status)&&safe(month.checked_at)&&month.checked_at>0;
  const monthBalance=money(month?.balance_cents);
+ const monthlyPendingCodes=['COLLECTING','PERIOD_LIMIT_REACHED','SOURCE_UNAVAILABLE','STATUS_REVIEW_REQUIRED','PAYMENT_INCOMPLETE','RETURNS_NOT_RECONCILED','PRODUCTION_COST_INCOMPLETE','INVOICE_TAX_UNAVAILABLE','ADS_UNAVAILABLE','EXTERNAL_EXPENSES_REQUIRED','RECHARGE_TREATMENT_REQUIRED','ADJUSTMENT_UNAVAILABLE','ARITHMETIC_UNSAFE','TAX_POLICY_REQUIRED','FINANCIAL_SOURCE_STALE'];
+ const monthlyPending=[...new Set(list(month?.pending).filter(code=>monthlyPendingCodes.includes(code)))];
+ const monthlyAdsSource=monthReady&&typeof month?.month==='string'&&/^\d{4}-(0[1-9]|1[0-2])$/.test(month.month)&&safe(month.ads_spend_cents)&&month.ads_spend_cents>=0&&safe(month.ads_checked_at)&&month.ads_checked_at>0&&month.ads_checked_at<=9999999999&&typeof month.ads_pending==='boolean'&&month.ads_pending===monthlyPending.includes('ADS_UNAVAILABLE');
+ const monthlyAds=monthlyAdsSource?month.ads_spend_cents:null;
+ let monthPresentation=null;
+ try{
+  const projector=typeof projectMonthlyPresentation==='function'?projectMonthlyPresentation:typeof projectMonthlyProfitPresentationValue==='function'?projectMonthlyProfitPresentationValue:null;
+  const descriptor=plain(month)?Object.getOwnPropertyDescriptor(month,'presentation'):null;
+  const candidate=projector&&descriptor&&Object.hasOwn(descriptor,'value')?projector(descriptor.value):null;
+  const monthPending=list(month?.pending),missing=['TAX_POLICY_REQUIRED','EXTERNAL_EXPENSES_REQUIRED'].filter(code=>monthPending.includes(code)||code==='TAX_POLICY_REQUIRED'&&monthPending.includes('INVOICE_TAX_UNAVAILABLE'));
+  const missingMatch=candidate&&candidate.monthly_costs_missing.length===missing.length&&missing.every((code,index)=>candidate.monthly_costs_missing[index]===code);
+  const amountMatch=candidate&&(candidate.state==='UNAVAILABLE'||candidate.state==='BEFORE_MONTHLY_COSTS'&&monthBalance===null&&!monthPending.includes('PRODUCTION_COST_INCOMPLETE')||candidate.state==='ESTIMATE'&&monthBalance!==null&&candidate.amount_cents===monthBalance||candidate.state==='KNOWN_COSTS'&&(monthBalance!==null?candidate.amount_cents===monthBalance:candidate.ads_pending));
+  if(monthReady&&month.status==='COMPLETE'&&missingMatch&&amountMatch&&candidate.ads_pending===monthPending.includes('ADS_UNAVAILABLE'))monthPresentation=Object.freeze({...candidate,monthly_costs_missing:Object.freeze([...candidate.monthly_costs_missing])});
+ }catch{}
+
  const currentPending=incomeOverview?.status&&money(incomeOverview?.pending_cents),incomeCheckedAt=safe(incomeOverview?.checked_at)?incomeOverview.checked_at:null;
  const coverage=month?.production_coverage&&typeof month.production_coverage==='object'?month.production_coverage:null;
  const knownUnits=safe(coverage?.known_units)&&coverage.known_units>=0?coverage.known_units:null,totalUnits=safe(coverage?.total_units)&&coverage.total_units>=0?coverage.total_units:null;
@@ -186,7 +202,7 @@ export function buildMlsAgentRegistry({day=null,month=null,reconciliation=null,r
  const auditorStatus=auditBlocked?'BLOCKED':auditAttention?'ATTENTION':settlementWaiting||collectionWorking?'WORKING':monthReady?'HEALTHY':'WORKING';
  const agents=[
   agent('finance','MLS Finance','Financeiro',financeStatus,expenseUrgent?(expenseSchedule.overdue_count+' conta(s) atrasada(s) e '+expenseSchedule.due_today_count+' vencendo hoje precisam de conferência.'):(expenseUpcoming?expenseSchedule.due_next_7_days_count+' pagamento(s) vencem nos próximos 7 dias.':releaseSummary?(releaseSummary.verified_orders+' liberação(ões) conferida(s); '+releaseSummary.not_located_orders+' pedido(s) sem liberação localizada neste calendário.'):(monthBalance!==null?'Resultado mensal estimado disponível para acompanhamento.':financeAttention?'O fechamento financeiro ainda depende de conferências.':'Aguardando o resumo financeiro validado.')),'#businessMonthExpensesDetails',monthBalance,'money',currentPending,'money',currentPending!==null?'Pendente atual na Shopee':null),
-  agent('ads','MLS Ads','Anúncios',adsStatus,dailyAds!==null?'Investimento do dia acompanha a mesma leitura usada no resultado.':adsAttention?'A leitura de anúncios requer atenção.':'Aguardando o gasto diário validado.','/dashboard',dailyAds,'money'),
+  agent('ads','MLS Ads','Anúncios',adsStatus,monthlyAds!==null?'Investimento do mês selecionado usa o calendário salvo da conta de anúncios.':adsAttention?'A leitura mensal de anúncios requer atenção.':'Aguardando o gasto de anúncios validado para o mês selecionado.','/dashboard',monthlyAds,'money'),
   agent('products','MLS Products','Produtos',productStatus,productAttention?'Existem unidades vendidas sem custo confirmado.':catData?'Catálogo salvo: '+catData.total+' produto(s) registrados. A cobertura de custos do mês é uma fonte independente.':month?'Custos dos itens vendidos não apresentam bloqueio de cobertura.':'Aguardando o catálogo financeiro do mês.','/admin?tab=products',totalUnits,'units',catData?.total??null,'count',catData?'Produtos registrados no catálogo salvo':null),
   agent('production','MLS Production','Produção',productionStatus,dtfData?'Fila DTF salva: '+dtfData.pending_lines+' linha(s) pendente(s) e '+dtfData.produced_lines+' produzida(s); não são quantidades de pedidos.':knownUnits!==null&&totalUnits!==null?knownUnits+' de '+totalUnits+' unidade(s) com custo conhecido.':periodData?'Período de custos de produção: '+periodData.month+' ('+periodData.state+').':'Aguardando a cobertura de custos da produção.','/admin?tab=production',knownUnits,'units',dtfData?.pending_lines??null,'lines',dtfData?'Linhas DTF pendentes':null),
   agent('returns','MLS Returns','Devoluções',returnsStatus,returnAttention?(returns+returnsUnknown)+' pedido(s) pagos com devolução e '+reviews+' em revisão exigem acompanhamento.':returnsMetric===null?'Aguardando a base mensal validada de devoluções.':'Nenhuma pendência de devolução foi sinalizada no mês.','#businessReconciliation',returnsMetric,'count'),
@@ -213,6 +229,11 @@ export function buildMlsAgentRegistry({day=null,month=null,reconciliation=null,r
   month:Object.freeze({
    month:typeof month?.month==='string'?month.month:null,
    balance_cents:monthBalance,
+   presentation:monthPresentation,
+   pending:Object.freeze(monthlyPending),
+   ads_spend_cents:monthlyAds,
+   ads_checked_at:monthlyAdsSource?month.ads_checked_at:null,
+   ads_pending:typeof month?.ads_pending==='boolean'&&month.ads_pending===monthlyPending.includes('ADS_UNAVAILABLE')?month.ads_pending:null,
    status:typeof month?.status==='string'?month.status:null
   }),
   settlement:Object.freeze({

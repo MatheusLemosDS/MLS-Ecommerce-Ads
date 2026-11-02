@@ -10,7 +10,7 @@ import {MLS_APPROVED_DESIGN_CSS} from '../src/approved-design-system.mjs';
 const names=['finance','ads','products','production','returns','auditor','hermes'];
 const fixture=()=>buildMlsAgentRegistry({
  day:{schema:'mls_day_snapshot_v1',date:'2026-10-27',state:'READY',net_cents:13784,sales_cents:76276,ads_spend_cents:3777,paid_orders:11,net_basis:'ESTIMATE'},
- month:{schema:'mls_month_snapshot_v1',month:'2026-10',status:'COMPLETE',balance_cents:258761,checked_at:1793070100,coverage:{returns:2,returns_unknown:0,cancel_pending:0,other:0,unknown:0},production_coverage:{total_units:294,known_units:294},pending:['RETURNS_NOT_RECONCILED']},
+ month:{schema:'mls_month_snapshot_v1',month:'2026-10',status:'COMPLETE',balance_cents:258761,checked_at:1793070100,ads_spend_cents:54321,ads_checked_at:1793070000,ads_pending:false,coverage:{returns:2,returns_unknown:0,cancel_pending:0,other:0,unknown:0},production_coverage:{total_units:294,known_units:294},pending:['RETURNS_NOT_RECONCILED']},
  now:1793070150
 });
 
@@ -77,7 +77,7 @@ test('real mission client hydrates agent status, genuine source metrics and safe
  const snapshot=fixture(),mounted=mount(snapshot),{nodes,statuses}=mounted;
  assert.equal(mounted.context.mlsMission.refresh!==undefined,true);
  assert.equal(nodes.get('mission-finance-metric-0').textContent,'R$ 2.587,61');
- assert.equal(nodes.get('mission-ads-metric-0').textContent,'R$ 37,77');
+ assert.equal(nodes.get('mission-ads-metric-0').textContent,'R$ 543,21');assert.equal(nodes.get('mission-ads-label-0').textContent,'Investimento do mês');
  assert.equal(nodes.get('mission-products-metric-0').textContent,'294');
  assert.equal(nodes.get('mission-production-metric-0').textContent,'294');
  assert.equal(nodes.get('mission-returns-metric-0').textContent,'2');

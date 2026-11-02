@@ -30,6 +30,8 @@ const month=(overrides={})=>({
  coverage:{orders:300,paid:250,completed:110,ongoing:140,cancelled:45,cancel_pending:0,unpaid:5,other:0,unknown:0,returns:0,returns_unknown:0},
  production_coverage:{total_units:270,known_units:270,pending_units:0},
  ads_spend_cents:135000,
+ ads_checked_at:1793070000,
+ ads_pending:false,
  product_count:24,
  collection:{schema:'business_month_collection_v1',state:'READY',code:null,retry_after_seconds:0},
  ...overrides

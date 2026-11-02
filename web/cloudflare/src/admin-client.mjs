@@ -3,12 +3,14 @@ import {projectAdsMeasurement} from './ads-measurement.mjs';
 import {createAdminApiClient} from './admin-api-client.mjs';
 import {createAdminStartup} from './admin-startup.mjs';
 import {projectHermesFinancialContext} from './hermes-financial-context.mjs';
+import {createAgentPeriodController} from './agent-period-view.mjs';
 export const CLIENT=String.raw`
 ${createAdminApiClient.toString()}
 ${createAdminStartup.toString()}
 ${parseReport.toString()}
 ${projectAdsMeasurement.toString()}
 ${projectHermesFinancialContext.toString()}
+${createAgentPeriodController.toString()}
 let renderedReportKey=null,todayAdsPromise=null,shopOrdersPromise=null,shopOrdersSnapshot=null,shopOrdersRefreshTimer=null;
 let state=null,csrf='',rows=[],selectedJobId=null,pollTimer=null,pollPromise=null,submitting=false,activeBilling='unverified',settingsPromise=null,settingsLoadGeneration=0;
 let itemsPromise=null,itemsData=null,variantGroups=new Map(),bindingState=null,bindingConflict=null,bindingStale=false,bindingLoadFailed=false,bindingSaving=false,bindingDrafts=new Map(),bindingDraftSequence=0,catalogAutomatingItemId=null,productUnitSelections=new Map();
@@ -859,6 +861,7 @@ function startSecondaryPanels(){
  return Promise.allSettled(work.map(([key,run])=>Promise.resolve().then(run).catch(()=>{secondaryFailure(key);}))).then(async()=>{renderVariantCards();if(!variantSyncOpened)variantSyncOpened=true;if(variantSyncRequested)await syncOnProductsOpen();updateStoreControls();});
 }
 function startOverview(){
+ globalThis.mlsAgentPeriod?.sync?.();
  if(storeAutomaticStarted)return globalThis.brazaMonthDashboard?.refresh();
  storeAutomaticStarted=true;
  return globalThis.brazaMonthDashboard?globalThis.brazaMonthDashboard.start({api,syncVariants:source=>syncKnownVariants(source),onCatalogChanged:async()=>{await loadVariants({localOnly:true});if(storePeriodBundle)await refreshStoreResult();}}):runStorePeriod('start');
@@ -892,7 +895,7 @@ function logoutWorkspace(event){
    const deadline=new Promise((resolve,reject)=>{timer=setTimeout(()=>{controller.abort();reject(Error('LOGOUT_TIMEOUT'));},15000);});
    const response=await Promise.race([fetch('/admin/logout',{method:'POST',headers:{'X-CSRF-Token':csrf},credentials:'same-origin',redirect:'error',signal:controller.signal}),deadline]);
    if(!response.ok){notice('Não foi possível sair. Atualize a página e tente novamente.');return false;}
-   try{startupController?.stop();settingsLoadGeneration++;csrf='';state=null;settingsControls(false);globalThis.brazaMonthDashboard?.stop();globalThis.brazaDayDashboard?.stop();globalThis.brazaPhysicalReturns?.stop();globalThis.brazaReturnManufacturingLinks?.stop();globalThis.brazaIncurredProduction?.stop();globalThis.brazaSavedCatalog?.stop();globalThis.brazaProductionCostPeriods?.stop();globalThis.brazaAutomationWorkspace?.stop();globalThis.brazaDtfWorkspace?.stop();globalThis.mlsAiSalesWorkspace?.stop();globalThis.mlsAgentLearning?.stop();clearTimeout(pollTimer);clearTimeout(storeAdsRefreshTimer);clearTimeout(shopOrdersRefreshTimer);}finally{location.href='/login';}
+   try{startupController?.stop();globalThis.mlsAgentPeriod?.stop?.();settingsLoadGeneration++;csrf='';state=null;settingsControls(false);globalThis.brazaMonthDashboard?.stop();globalThis.brazaDayDashboard?.stop();globalThis.brazaPhysicalReturns?.stop();globalThis.brazaReturnManufacturingLinks?.stop();globalThis.brazaIncurredProduction?.stop();globalThis.brazaSavedCatalog?.stop();globalThis.brazaProductionCostPeriods?.stop();globalThis.brazaAutomationWorkspace?.stop();globalThis.brazaDtfWorkspace?.stop();globalThis.mlsAiSalesWorkspace?.stop();globalThis.mlsAgentLearning?.stop();clearTimeout(pollTimer);clearTimeout(storeAdsRefreshTimer);clearTimeout(shopOrdersRefreshTimer);}finally{location.href='/login';}
    return true;
   }catch{notice('Não foi possível confirmar a saída. Verifique sua conexão e tente novamente.');return false;}
   finally{if(timer!==null)clearTimeout(timer);logoutPromise=null;}
@@ -913,7 +916,7 @@ function openTab(tab,{updateUrl=true,hash='',focus=false}={}){
  document.querySelectorAll('[data-tab]').forEach(link=>{const selected=link.dataset.tab===tab||tab.startsWith('agent-')&&link.dataset.tab==='agents';link.classList.toggle('active',selected);if(selected)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');});
  workspaceSyncContextNavigation(hash);
  document.querySelectorAll('.workspace-more').forEach(menu=>{menu.dataset.active=String(!!menu.querySelector('[aria-current="page"]'));menu.open=false;});
- el('pageTitle').textContent=titles[tab][0];el('pageSubtitle').textContent=titles[tab][1];document.documentElement.dataset.activePanel=tab;if(tab==='production')globalThis.brazaDtfWorkspace?.open?.();if(tab==='ai-sales')globalThis.mlsAiSalesWorkspace?.open?.();
+ el('pageTitle').textContent=titles[tab][0];el('pageSubtitle').textContent=titles[tab][1];document.documentElement.dataset.activePanel=tab;globalThis.mlsAgentPeriod?.setPanel?.(tab);if(tab==='production')globalThis.brazaDtfWorkspace?.open?.();if(tab==='ai-sales')globalThis.mlsAiSalesWorkspace?.open?.();
  if(updateUrl&&globalThis.history?.pushState&&globalThis.location?.href){try{const target=new URL(globalThis.location.href);target.pathname='/admin';target.searchParams.set('tab',tab);target.hash=hash;if(target.href!==globalThis.location.href)globalThis.history.pushState({tab},'',target.pathname+target.search+target.hash);}catch{}}
  if(focus&&!hash){const heading=el('pageTitle');heading?.setAttribute?.('tabindex','-1');heading?.focus?.({preventScroll:true});globalThis.scrollTo?.({top:0,left:0,behavior:'instant'});globalThis.requestAnimationFrame?.(()=>{if(navigationEpoch===workspaceNavigationEpoch)globalThis.scrollTo?.({top:0,left:0,behavior:'instant'});});}
 }
@@ -1250,6 +1253,7 @@ if(typeof document.addEventListener==='function'){
   if(target.origin!==current.origin||target.pathname!=='/admin')return;
   const tabs=target.searchParams.getAll('tab'),destination=tabs.length===1?tabs[0]:document.documentElement.dataset.activePanel;
   if(!missionPanels.has(destination)||destination==='ai-sales'&&!globalThis.mlsAiSalesWorkspace)return;
+  if(target.searchParams.has('month'))void globalThis.mlsAgentPeriod?.syncLocation?.(target);
   if(!target.hash){event.preventDefault();openTab(destination,{focus:true});return;}
   if(!/^#[a-zA-Z][a-zA-Z0-9_-]{0,90}$/.test(target.hash)||!document.getElementById?.(target.hash.slice(1)))return;
   event.preventDefault();openTab(destination,{updateUrl:false});workspaceOpenFragment(target.hash,{focus:true,updateUrl:true});
@@ -1258,9 +1262,10 @@ if(typeof document.addEventListener==='function'){
 }
 document.querySelectorAll('[data-open]').forEach(button=>button.onclick=()=>openTab(button.dataset.open,{focus:true}));
 if(globalThis.addEventListener){
- globalThis.addEventListener('popstate',()=>{openTab(workspaceTabFromLocation(),{updateUrl:false});workspaceOpenFragment(globalThis.location?.hash);});
+ globalThis.addEventListener('popstate',()=>{void globalThis.mlsAgentPeriod?.syncLocation?.();openTab(workspaceTabFromLocation(),{updateUrl:false});workspaceOpenFragment(globalThis.location?.hash);});
  globalThis.addEventListener('hashchange',()=>workspaceOpenFragment(globalThis.location?.hash));
 }
+if(typeof createAgentPeriodController==='function'&&el('mlsAgentPeriod'))globalThis.mlsAgentPeriod=createAgentPeriodController();
 openTab(workspaceTabFromLocation(),{updateUrl:false});
 if(globalThis.location?.hash)Promise.resolve().then(()=>workspaceOpenFragment(globalThis.location.hash,{focus:true}));
 
