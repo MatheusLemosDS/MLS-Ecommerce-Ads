@@ -30,19 +30,17 @@ export const RELEASE_BASE_COMMIT=approvedCandidate.base_commit;
 export const RELEASE_EXPECTED_SHA=Object.freeze({...approvedCandidate.expected_hashes});
 export const RELEASE_EXPECTED_LIVE_FLAGS=Object.freeze({...validFlags});
 export const RELEASE_ALLOWED_FILES=Object.freeze([...approvedCandidate.allowed_files]);
-// Original-item evidence crosses only these reviewed Finance/Auth source and
-// fixture files. Legacy money/physical contracts and all deployment configuration
-// remain unchanged; no wildcard permits other protected Worker modifications.
+// Simplified operations crosses only these reviewed Finance/Auth source and
+// fixture files. Legacy financial contracts and read-only physical invariants
+// remain unchanged; explicit owner commands need owner intent and atomic tests.
+// All deployment configuration stays frozen; no wildcard expands this list.
 export const RELEASE_APPROVED_PROTECTED_FILES=Object.freeze([
   "web/finance/src/auth-router.mjs",
+  "web/finance/src/catalog-media-frame.mjs",
   "web/finance/src/connection-worker.mjs",
-  "web/finance/src/financial-order-evidence.mjs",
-  "web/finance/src/original-items-frame.mjs",
-  "web/finance/src/return-item-evidence.mjs",
-  "web/finance/src/returns-reconciliation.mjs",
-  "web/finance/tests/original-items-chain.test.mjs",
-  "web/finance/tests/original-items-evidence.test.mjs",
-  "web/finance/tests/original-items-fixture.mjs"
+  "web/finance/src/variant-catalog.mjs",
+  "web/finance/tests/catalog-media-fixture.mjs",
+  "web/finance/tests/catalog-media.test.mjs"
 ]);
 
 
