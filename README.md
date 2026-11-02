@@ -5,27 +5,26 @@ App, Auth e Financeiro. Cada Worker tem build e publicação próprios. A conex�
 financeira e as leituras reais foram verificadas; isso não comprova liquidação
 bancária nem encerra a conciliação M2.
 
-**Última release verificada — PR #101, 01/11/2026:** a versão
-**2026-11-01.1 — Navegação e novidades** mostra na Visão geral os controles já
-entregues e seus caminhos. Recebimento/inspeção, produção realizada e vínculo
-com fabricação têm acessos diretos; a busca abre a seção correspondente e o
-roadmap da interface apresenta o estado atual, sem as antigas mensagens PR68.
+**Última release verificada — PR #102, 02/11/2026:**
+**2026-11-02.1 — Líquido mensal e histórico**. O painel diferencia saldo parcial
+de líquido previsto completo, indica deduções ausentes e mantém data/último dia
+parcial dos anúncios. Os sete agentes compartilham um seletor de mês sobre
+fontes salvas; catálogo, DTF e controles físicos identificam seus próprios
+escopos. Rascunhos, Voltar/Avançar e reload histórico são preservados.
 
-App `358957d4-60ec-4e50-ab82-95bfd1702e35`. Auth `37bead27` e Finance `e0b258a2`
-preservados. Bytes, configurações, flags, domínios e cron foram conferidos.
-Passaram 3155 testes Node e 67 Python, incluindo Chromium
-normal/minificado em 320/1365. A sessão real do proprietário continua sem
-observação neste ambiente, que recebe HTTP 403.
-[O que mudou, onde encontrar e como usar](docs/MLS_LIVE_UPDATE_DISCOVERY_2026_11_01.md).
+App `8e1056d2-4e2f-4ffe-9100-84ea2758a0c5`; Auth `37bead27` e Finance `e0b258a2`
+preservados. Código, configurações, domínios, flags e cron conferidos.
+3205 testes Node e 67 Python aprovados, com Chromium
+normal/minificado em 320/1365. Sessão real do proprietário não observada pelo
+executor (HTTP403); replay privado de fontes reais e QA local são distintos.
+[Uso, evidências e limites](docs/MLS_MONTHLY_NET_HISTORY_2026_11_02.md).
 
-Os controles internos PR98/99/100 continuam exigindo registros e conferências
-reais. Esta atualização organiza o acesso; não integra valoração, reserva,
-revenda ou recuperação ao lucro. As proteções D1 já existentes persistem no
-rollback e sua desvinculação exige código compatível.
+A declaração de outras despesas de novembro foi registrada separadamente após
+confirmação explícita do proprietário, com auditoria e repetição segura. Cada
+mês exige sua própria declaração; valores ausentes continuam desconhecidos.
+A apresentação não altera o contrato financeiro, não reconcilia o banco nem
+integra o reaproveitamento ao lucro. **M2/M2.2 permanecem abertas.**
 
-As despesas de novembro ainda precisam ser declaradas. O saldo e a margem
-parciais não substituem o resultado líquido completo. Seller Centre e banco
-continuam sem comparação; **M2 permanece aberta**.
 
 ```bash
 npm ci
