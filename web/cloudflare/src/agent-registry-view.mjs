@@ -50,6 +50,9 @@ export const COMMAND_CENTER_CSS=String.raw`
 .mission-dashboard .mission-command-hero[data-source-state=missing]{max-height:none!important;height:auto!important}
 @media(max-width:570px){.mission-source-state{padding:10px}.mission-source-actions{width:100%}.mission-source-actions button,.mission-source-actions a{flex:1}}
 
+/* Allow the team heading and mode link to wrap with wider native fonts. */
+.mission-dashboard #commandAgents>.agent-panel-head{flex-wrap:wrap}
+
 `;
 
 export function commandCenterBody(){

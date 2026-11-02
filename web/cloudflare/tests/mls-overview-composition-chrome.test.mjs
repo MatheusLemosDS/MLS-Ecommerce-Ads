@@ -14,7 +14,7 @@ import {createHash} from 'node:crypto';
 
 const chrome=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium','/usr/bin/chromium-browser'].find(existsSync);
 const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
-const output=process.env.MLS_OVERVIEW_SCREENSHOT_DIR||null;
+const output=process.env.MLS_OVERVIEW_SCREENSHOT_DIR||(process.env.MLS_QA_SCREENSHOT_DIR?path.join(process.env.MLS_QA_SCREENSHOT_DIR,'overview-agents'):null);
 const overviewAgents=['hermes','finance','ads','products','production','returns'];
 const generatedHashes=Object.fromEntries(['app','auth','finance'].map(name=>[name,createHash('sha256').update(readFileSync(new URL('../../../dist/'+name+'-worker.mjs',import.meta.url))).digest('hex')]));
 
@@ -66,7 +66,9 @@ async function browser(url,{width,height,theme,minify}){
   assert.equal(ready,true,'owner modules initialize');await pause(200);
   const proof=await evaluate(`(()=>{
    const rects=selector=>[...document.querySelectorAll(selector)].map(n=>{const r=n.getBoundingClientRect();return {left:r.left,right:r.right,top:r.top,width:r.width,height:r.height};});
-   return {theme:document.documentElement.dataset.theme,width:innerWidth,scroll:document.documentElement.scrollWidth,
+   const bound=${width},overflowers=[...document.querySelectorAll('body *')].filter(n=>n instanceof HTMLElement&&n.checkVisibility({checkVisibilityCSS:true})).map(n=>{const r=n.getBoundingClientRect(),s=getComputedStyle(n);return {tag:n.tagName,id:n.id,classes:n.className.slice(0,90),right:Math.round(r.right*100)/100,width:Math.round(r.width*100)/100,client:n.clientWidth,scroll:n.scrollWidth,whiteSpace:s.whiteSpace,font:s.fontSize,minWidth:s.minWidth,flexShrink:s.flexShrink};}).filter(n=>n.right>bound+1&&n.width>0).sort((a,b)=>b.right-a.right).slice(0,12);
+   const heading=document.querySelector('#commandAgents>.agent-panel-head'),headingStyle=getComputedStyle(heading),agentHeader={rect:heading.getBoundingClientRect().toJSON(),gap:headingStyle.gap,wrap:headingStyle.flexWrap,children:[...heading.children].map(n=>{const r=n.getBoundingClientRect(),s=getComputedStyle(n);return {tag:n.tagName,rect:r.toJSON(),minWidth:s.minWidth,whiteSpace:s.whiteSpace,font:s.fontSize,flexShrink:s.flexShrink};})};
+   return {theme:document.documentElement.dataset.theme,width:innerWidth,visualWidth:visualViewport?.width??innerWidth,scroll:document.documentElement.scrollWidth,overflowers,agentHeader,
     kpis:rects('#commandCenter>.command-center-metrics>.command-metric'),overviewAgents:document.querySelectorAll('#overview .agent-card,#overview .mission-hub-card').length,fleetCards:document.querySelectorAll('#missionHubGrid>.mission-hub-card').length,
     overviewAgentRects:rects('#commandCenterAgents>.agent-card'),overviewOrder:[...document.querySelectorAll('#commandCenterAgents>.agent-card')].map(n=>n.dataset.missionAccent),overviewAvatars:document.querySelectorAll('#commandCenterAgents .mls-agent-avatar svg').length,overviewVisible:[...document.querySelectorAll('#commandCenterAgents>.agent-card')].every(n=>n.checkVisibility({checkVisibilityCSS:true})),panels:rects('.mls-overview-panels>*'),
     activity:document.querySelector('.mls-overview-activity').textContent,
@@ -80,7 +82,8 @@ async function browser(url,{width,height,theme,minify}){
     periodTouchHeight:document.getElementById('mlsOverviewPeriod').getBoundingClientRect().height,
     errors:window.__mlsOverviewErrors||[]};})()`);
   if(output){mkdirSync(output,{recursive:true});writeFileSync(path.join(output,`geometry-${width}-${theme}-${minify?'min':'normal'}.json`),JSON.stringify(proof,null,2)+'\n');}
-  assert.equal(proof.theme,theme);assert.equal(proof.width,width);assert.ok(proof.scroll<=width+3,JSON.stringify(proof));
+  const overflowDiagnostic=JSON.stringify({requestedWidth:width,layoutWidth:proof.width,documentWidth:proof.scroll,visualWidth:proof.visualWidth,overflowers:proof.overflowers,agentHeader:proof.agentHeader});
+  assert.equal(proof.theme,theme);assert.equal(proof.width,width,overflowDiagnostic);assert.ok(proof.scroll<=width+3,overflowDiagnostic);
   assert.equal(proof.kpis.length,6);assert.equal(proof.overviewAgents,6);assert.equal(proof.overviewAvatars,6);assert.equal(proof.overviewVisible,true);assert.deepEqual(proof.overviewOrder,overviewAgents);assert.equal(proof.fleetCards,7);assert.equal(proof.panels.length,2);assert.equal(proof.releaseLinks,1);assert.ok(proof.releaseGeometry.height<=125,'release notice stays compact');
   assert.deepEqual(proof.cardOrder,['finance','ads','products','production','returns','auditor','hermes']);assert.equal(proof.avatars,7);assert.equal(proof.globe,1);assert.equal(proof.sourceCollapsed,true);
   assert.match(proof.activity,/Versão/);assert.match(proof.activity,/Novidades/);assert.equal(proof.detail,true);assert.deepEqual(proof.errors,[]);
@@ -92,6 +95,13 @@ async function browser(url,{width,height,theme,minify}){
   }
   if(width<=390){assert.equal(new Set(proof.panels.map(r=>Math.round(r.top))).size,2,'mobile work panels stack in reading order');assert.ok(proof.periodTouchHeight>=44,'mobile date control has a44px touch target');assert.equal(new Set(proof.overviewAgentRects.map(r=>Math.round(r.top))).size,3,'the approved six agent cards form three compact mobile rows');for(const top of new Set(proof.overviewAgentRects.map(r=>Math.round(r.top))))assert.equal(proof.overviewAgentRects.filter(r=>Math.round(r.top)===top).length,2,'mobile rows keep two readable cards');}
   for(const row of [...proof.kpis,...proof.overviewAgentRects,...proof.panels,proof.releaseGeometry])assert.ok(row.left>=-2&&row.right<=width+3,JSON.stringify(row));
+  // A slightly wider mode-label font reproduced the CI-only intrinsic-width
+  // overflow. The real heading must reflow its controls, including when the
+  // browser's mobile layout viewport would otherwise expand to fit them.
+  const fontMetricStress=await evaluate(`(()=>{const link=document.querySelector('#commandAgents .mission-fleet-link'),heading=link.parentElement;globalThis.__overviewModeFont={value:link.style.getPropertyValue('font-size'),priority:link.style.getPropertyPriority('font-size')};link.style.setProperty('font-size','11px','important');return {width:innerWidth,scroll:document.documentElement.scrollWidth,font:getComputedStyle(link).fontSize,wrap:getComputedStyle(heading).flexWrap,heading:heading.getBoundingClientRect().toJSON(),children:[...heading.children].map(n=>n.getBoundingClientRect().toJSON())};})()`);
+  assert.equal(fontMetricStress.width,width,JSON.stringify(fontMetricStress));assert.ok(fontMetricStress.scroll<=width+3,JSON.stringify(fontMetricStress));assert.equal(fontMetricStress.font,'11px');assert.equal(fontMetricStress.wrap,'wrap');
+  for(const child of fontMetricStress.children)assert.ok(child.left>=fontMetricStress.heading.left-1&&child.right<=fontMetricStress.heading.right+1,'heading controls must reflow inside their actual content box: '+JSON.stringify(fontMetricStress));
+  await evaluate(`(()=>{const link=document.querySelector('#commandAgents .mission-fleet-link'),saved=globalThis.__overviewModeFont;if(saved.value)link.style.setProperty('font-size',saved.value,saved.priority);else link.style.removeProperty('font-size');delete globalThis.__overviewModeFont;})()`);
   if(output){mkdirSync(output,{recursive:true});const shot=await send('Page.captureScreenshot',{format:'png',fromSurface:true,captureBeyondViewport:false});writeFileSync(path.join(output,`overview-${width}-${theme}-${minify?'min':'normal'}.png`),Buffer.from(shot.data,'base64'));}
   const periodProof=await evaluate(`(()=>{
    const period=document.getElementById('mlsOverviewPeriod'),proxy=document.getElementById('mlsOverviewDate'),original=document.getElementById('businessDayDate');
@@ -137,7 +147,7 @@ async function browser(url,{width,height,theme,minify}){
   const hub=await evaluate(`(()=>{const search=document.getElementById('missionAgentSearch');search.value='finance';search.dispatchEvent(new Event('input',{bubbles:true}));globalThis.mlsAgentRegistry.refresh();return {sameSearch:search===globalThis.__restoredAgentSearch,value:search.value,count:document.querySelectorAll('#missionHubGrid>.mission-hub-card').length,visible:[...document.querySelectorAll('#missionHubGrid>.mission-hub-card')].filter(n=>n.checkVisibility({checkVisibilityCSS:true})).map(n=>n.dataset.missionAgent),month:new URL(location.href).searchParams.get('month'),financialUnchanged:globalThis.__restoredAgentFinancialBefore===JSON.stringify({day:globalThis.__restoredAgentDay,month:globalThis.__restoredAgentMonth})};})()`);
   assert.deepEqual(hub,{sameSearch:true,value:'finance',count:7,visible:['finance'],month:selectedMonth,financialUnchanged:true});
   await evaluate('history.back()');await waitFor("document.documentElement.dataset.activePanel==='overview'");assert.deepEqual(await evaluate('window.__mlsOverviewErrors'),[]);
-  return {...proof,staticFallback:staticProof,periodProxy:periodProof,hydrated,hub,navigation_history_tested:true,financial_frame_unchanged:true};
+  return {...proof,fontMetricStress,staticFallback:staticProof,periodProxy:periodProof,hydrated,hub,navigation_history_tested:true,financial_frame_unchanged:true};
  }finally{await cleanup(socket);}
 }
 
@@ -157,7 +167,7 @@ test('compiled overview restores original agent cards, native routes and directo
  }
  if(output){
   writeFileSync(path.join(output,'composition.json'),JSON.stringify({schema:'mls_overview_composition_qa_v1',synthetic:true,mockup_parity_verified:false,owner_authenticated_qa:false,generated_hashes:generatedHashes,checks:results},null,2)+'\n');
-  const rows=[];for(const minify of [false,true])for(const width of [320,1365]){const checks=results.filter(n=>n.minify===minify&&n.width===width);assert.equal(checks.length,2);rows.push({minify,width,pass:true,page_errors:0,horizontal_overflow:false,themes:checks.map(n=>n.theme),static_fallback_visible:checks.every(n=>n.staticFallback.visible),native_card_routes:6,navigation_history_tested:true,directory_search_preserved:true,financial_frame_unchanged:true});}
+  const rows=[];for(const minify of [false,true])for(const width of [320,1365]){const checks=results.filter(n=>n.minify===minify&&n.width===width);assert.equal(checks.length,2);rows.push({minify,width,pass:true,page_errors:0,horizontal_overflow:false,themes:checks.map(n=>n.theme),static_fallback_visible:checks.every(n=>n.staticFallback.visible),font_metric_stress_tested:true,heading_controls_contained:true,native_card_routes:6,navigation_history_tested:true,directory_search_preserved:true,financial_frame_unchanged:true});}
   writeFileSync(path.join(output,'overview-agents-restore-qa.json'),JSON.stringify({schema:'mls_overview_agents_restore_qa_v1',generated_hashes:generatedHashes,source:'LOCAL_SYNTHETIC_OWNER_WORKER_AND_BROWSER',overview_agents_visible:true,navigation_history_tested:true,financial_frame_unchanged:true,legacy_controls_preserved:true,remote_writes:0,owner_real_mutation_requests:0,new_provider_calls:0,results:rows},null,2)+'\n');
  }
 });
