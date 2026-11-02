@@ -50,6 +50,7 @@
     "web/cloudflare/tests/monthly-net-period-chrome.test.mjs",
     "web/cloudflare/tests/monthly-profit-presentation-ui.test.mjs",
     "web/cloudflare/tests/monthly-profit-presentation.test.mjs",
-    "web/cloudflare/tests/business-month-cost-performance-compiled.test.mjs"
+    "web/cloudflare/tests/business-month-cost-performance-compiled.test.mjs",
+    "tools/tests/mls-owner-preview-chrome.test.mjs"
   ]
 }

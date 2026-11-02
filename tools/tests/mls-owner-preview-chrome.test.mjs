@@ -45,7 +45,15 @@ async function browser(viewport,run){
   const pageDeadline=Date.now()+10000;let page;
   while(Date.now()<pageDeadline){
    if(process.exitCode!==null||process.signalCode!==null)throw Error('PREVIEW_CDP_PROCESS_EXITED');
-   const pages=await(await fetch('http://127.0.0.1:'+port+'/json/list',{signal:AbortSignal.timeout(2000)})).json();
+   let pages;
+   try{pages=await(await fetch('http://127.0.0.1:'+port+'/json/list',{signal:AbortSignal.timeout(2000)})).json();}
+   catch(error){
+    // The port can exist before DevTools responds under concurrent Chrome
+    // startup. Retry transient reads within the same bounded launch deadline.
+    if(!['TimeoutError','AbortError'].includes(error?.name)&&!(error instanceof TypeError))throw error;
+    if(Date.now()>=pageDeadline)throw error;
+    await delay(75);continue;
+   }
    page=pages.find(value=>value.type==='page'&&typeof value.webSocketDebuggerUrl==='string');
    if(page)break;await delay(75);
   }
