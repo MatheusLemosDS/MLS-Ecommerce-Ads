@@ -1,4 +1,4 @@
-**Em preparação, ainda não publicado — 02/11/2026:** `2026-11-02.2 — Itens e quantidades das devoluções`, branch `feature/returns-original-items-20261102`, base `9fc4c69`. Extensão opt-in e compatível Finance/Auth/App apresenta separadamente itens comerciais preservados do pedido pago e da solicitação Returns, com fonte/cobertura; dados antigos sem captura seguem desconhecidos, nunca zero. Consulta no mesmo caso/mês físico fixado, sem novas chamadas ao provedor ou backfill. Não converte unidades de anúncio/kit em peças e não altera quantidades físicas originais, fabricação, vínculos, estoque ou lucro. Testes/CI e publicação Finance → Auth → App ainda pendentes; última Live comprovada PR102 abaixo. M2/M2.2 abertas. [Escopo e caminhos de uso](MLS_ORIGINAL_RETURN_ITEMS_2026_11_02.md).
+**Live PR103 — itens e quantidades das devoluções, 02/11/2026 às 17:45:00 Brasília:** versão visível `2026-11-02.2`; Finance `5e3b4686`, Auth `e13c43ad` e App `0a2955bc` publicados nessa ordem e conferidos após cada etapa. CI 41520727701 aprovada no head `2e255910`: 3248 Node e 67 Python. Bytes dos três Workers conferidos; configuração, domínios, flags e cron preservados. Consulta no MLS Returns separa unidades comerciais do pedido e da solicitação, com fonte/cobertura; legado sem captura segue desconhecido. Não altera `original_quantities`, físico/fabricação, vínculos, estoque ou lucro; sem nova requisição ao provedor ou backfill. Captura natural real pós-deploy ainda requer conferência separada; M2/M2.2 permanecem abertas. Integração Git é conferida pelo estado da PR103 vinculada. [Mudanças, uso e recibo](MLS_ORIGINAL_RETURN_ITEMS_2026_11_02.md). As entregas abaixo preservam o histórico.
 
 **Live PR102 — líquido mensal e histórico, 02/11/2026 às 11:44:54 Brasília:** versão visível `2026-11-02.1`, App `8e1056d2` publicados e conferidos. Saldo mensal separado identifica despesas desconhecidas e Ads salvos com data/dia parcial; barra de mês dos agentes consulta o histórico salvo, preservando rascunhos e escopos. CI 41463788001 aprovada no head `2f13eaa1`: 3.205 Node e 67 Python aprovados. Bytes dos três Workers, Auth/Finance, configuração e domínios conferidos. A integração em main é conferida separadamente pelo estado da PR102 vinculada. A ausência de outras despesas de novembro foi declarada pelo proprietário e registrada separadamente, sem zero presumido. Resultado estrito/Hermes e gates comerciais preservados; M2/M2.2 continuam abertas. [Mudanças, uso e recibo](MLS_MONTHLY_NET_HISTORY_2026_11_02.md). As entregas abaixo preservam o histórico.
 
@@ -429,25 +429,25 @@ Esta é uma trilha técnica independente que **não substitui o gate de saída d
 
 ### M2.2 — Produção incorrida e devolução reaproveitável — **PARCIAL / CONTROLES E ASSOCIAÇÃO DECLARADA PUBLICADOS**
 
-**Incremento em preparação — 02/11/2026:** evidência separada de itens
-comerciais do pedido pago salvo e da solicitação Returns, por extensão opt-in
-Finance/Auth/App. Fonte, datas e cobertura acompanham o mesmo caso e o mês
-físico fixado; ausência legada fica `NOT_CAPTURED`/UNKNOWN. Não expande kits
-em peças, altera `orig_quantities` ou promove vínculos/físico/fabricação a
-quantidades verificadas. Captura somente nas consultas existentes futuras,
-sem novo backfill ou chamada ao provedor. Validação integrada, CI e publicação
-planejada Finance → Auth → App ainda pendentes. Não encerra M2/M2.2.
-[Escopo e uso](MLS_ORIGINAL_RETURN_ITEMS_2026_11_02.md).
+**Incremento publicado — PR103, 02/11/2026:** evidência comercial separada do
+pedido pago salvo e da solicitação Returns, com fonte/data/cobertura e o mesmo
+caso/mês físico fixado. Finance `5e3b4686`, Auth `e13c43ad` e App
+`0a2955bc` publicados em ordem, CI 41520727701 aprovada e configurações conferidas.
+Legado sem captura permanece NOT_CAPTURED/UNKNOWN; não expande kit em peças,
+altera `original_quantities`, vínculos, físico/fabricação, estoque ou lucro. Captura
+natural futura usa consultas existentes, sem novos requests/backfill; observação
+real pós-deploy ainda requer conferência. M2/M2.2 continuam abertas.
+[Registro, proveniência e uso](MLS_ORIGINAL_RETURN_ITEMS_2026_11_02.md).
 
 A [primeira etapa PR98](MLS_M22_PHYSICAL_RETURNS_2026_11_01.md) entrega o controle físico interno definido pela [auditoria de devoluções e roadmap](MLS_RETURNS_REUSE_ROADMAP_AUDIT_2026_11_01.md). A [etapa M2.2b PR99](MLS_M22_INCURRED_PRODUCTION_2026_11_01.md) acrescenta o registro histórico independente da fabricação declarada. A [primeira M2.2c PR100](MLS_M22_RETURN_MANUFACTURING_LINKS_2026_11_01.md) associa quantidades declaradas entre os dois controles, com confiança OWNER_CONFIRMED e limites globais. Os fatos são informados pelo operador; publicação técnica e testes simulados não comprovam peça individual, quantidades originais, recebimentos reais, toda a fabricação da loja ou pagamentos, nem encerram a fase.
 
 - [x] Separar o controle interno de recebimento, quarentena e inspeção da situação/reembolso na Shopee. CLOSED/REFUND_PAID não criam peças recebidas.
 - [x] Registrar identificação declarada de estampa, cor, tamanho, adulto/infantil e modelagem masculina/feminina/unissex; peças sem identificação confirmada não se tornam reaproveitáveis.
 - [x] Registrar entregas parciais e partição exata da inspeção, com referência única por caso, eventos idempotentes, CAS, auditoria, reinspeção e anulação sem apagar o histórico.
-- [ ] Conferir os itens e as quantidades originais esperadas de cada solicitação e a composição efetiva dos kits. Os registros atuais não fazem essa comparação; kit parcial não vira kit completo.
+- [ ] Conferir os itens e as quantidades físicas esperadas de cada solicitação e a composição efetiva dos kits. A PR103 separa observações comerciais preservadas; a comparação com o recebimento e a decomposição física continuam exigindo evidência. Kit parcial não vira kit completo.
 - [x] Primeira etapa M2.2b: registrar fabricação declarada pelo operador por peça/lote em ledger independente, com data de produção, identidade, quantidade, revisão, origem opcional e fotografia imutável do custo declarado ou UNKNOWN. CANCELLED não apaga esses registros; não somar o ledger novamente à referência de produção do resultado atual.
 - [x] Primeira etapa M2.2c: associar quantidades OWNER_CONFIRMED de um recebimento a um registro histórico de fabricação, com identidade confirmada, origem congelada, limites globais e par ativo único. Alterar/anular pais protegidos exige desvinculação; substituição não recebe vínculo automaticamente. Não comprova peça serializada nem a quantidade original do pedido.
-- [ ] Validar a associação contra itens e quantidades originais/recebidas em fonte preservada e coberta, sem promover igualdade de SKU/lote a prova da mesma peça individual. Itens pagos preservados em Finance ainda não chegam ao App; TO_RETURN/não pagos com `items: []` são UNKNOWN e os itens Returns legados não foram capturados.
+- [ ] Validar a associação contra itens e quantidades originais/recebidas em fonte preservada e coberta, sem promover igualdade de SKU/lote a prova da mesma peça individual. A PR103 transporta itens comerciais preservados, sem promover seus números a quantidades físicas. TO_RETURN/não pagos sem itens e Returns legados não capturados continuam UNKNOWN.
 - [ ] Confirmar a decomposição histórica de peça/estampa recuperáveis e embalagem/etiqueta já consumidas, além dos custos incrementais de reparo e nova embalagem. As referências all-inclusive não podem ser divididas automaticamente sem fatos do operador.
 - [ ] Reservar e consumir a unidade correta na revenda, com embalagem/etiqueta incrementais declaradas. Não alterar o custo global do SKU nem registrar nova fabricação da mesma peça.
 - [ ] Separar caixa de custo por competência: recuperação em estoque não é receita/dinheiro; recuperação e consumo do valor histórico precisam de lançamentos correspondentes.
@@ -569,20 +569,19 @@ Conversão de identidade M0 publicada pela **PR #11**, merge
 
 A fase canônica é **M2 — Finance/Returns confiáveis como agentes observadores**.
 
-O incremento ativo `feature/returns-original-items-20261102` prepara a
-evidência comercial de origem. Concluir seus testes, CI e recibos dos três
-Workers antes de declarar entrega. Não reiniciar coleta para preencher itens
-legados nem promover unidades comerciais a quantidades físicas esperadas.
+A PR103 está publicada e conferida nos três Workers, versão `2026-11-02.2`,
+com CI 41520727701 aprovada. Conferir a integração Git pelo estado da PR103 vinculada.
+Observar a captura natural e confrontar fonte, cobertura e recebimento no mesmo
+caso; não prometer observação real antes de sua evidência nem reiniciar coleta
+para preencher dados antigos. Unidades comerciais não liberam contagem física.
 
-A PR102 está publicada e conferida no App `8e1056d2`, versão visível
-`2026-11-02.1`, com CI 41463788001 aprovada. Sua integração em main é conferida
-separadamente pelo estado da PR102 vinculada. Usar o mês dos agentes e os avisos do
-saldo para conferir o recorte escolhido. Novembro já tem declaração explícita
-de ausência de outras despesas; outros meses continuam exigindo sua própria
-informação. A leitura numérica não encerra a conciliação M2.
+A entrega anterior PR102 continua disponível: resultado mensal separado,
+período compartilhado e despesas. Novembro já possui declaração explícita de
+ausência de outras despesas; outros meses mantêm suas próprias informações.
+A leitura numérica não encerra a conciliação M2.
 
 Retomar por:
-1. Expor itens de pedidos pagos já preservados em Finance, hoje não transportados ao App, e capturar evidência dos itens Returns nas chamadas existentes, por incremento opt-in Finance/Auth/App sem novos requests de provedor. `items: []` de TO_RETURN/não pagos é UNKNOWN, nunca quantidade zero; `response.item[].amount` não era capturado no payload legado de Returns. Conferir origem, quantidades e composição dos kits antes de promover a associação declarada. Os controles M2.2b/c já estão entregues; não refazê-los nem supor fabricação pela quantidade DTF/kit.
+1. Observar a captura natural pós-PR103 e conferir itens comerciais, fontes, datas e cobertura com o recebimento real do mesmo caso. Legados NOT_CAPTURED/UNKNOWN não viram zero nem exigem novo backfill. Conferir quantidades físicas e composição dos kits antes de promover a associação declarada. Transporte e controles M2.2b/c já estão entregues; não refazê-los nem supor fabricação pela quantidade DTF/kit.
 2. Confirmar com fatos do operador a decomposição histórica de peça/estampa versus embalagem/etiqueta consumidas e os custos incrementais de reparo/nova embalagem, antes de valorar ou alocar peças na revenda. Não dividir automaticamente all-inclusive; manter UNKNOWN e projetar a ponte contábil sem somar o custo novamente ao resultado atual.
 3. Manter a paginação do Pending já entregue, renovar a cobertura da publicação exata e acompanhar revisões/Returns/calendários existentes sem reiniciar coleta ou catálogo.
 4. Conferir a declaração de despesas do mês escolhido — novembro já foi confirmado pelo proprietário, sem transportar essa informação para outros meses — e confrontar o mesmo recorte com Seller Centre e banco. Somente concluir M2 com diferenças materiais explicadas; lucro realizado exige liquidação comprovada.

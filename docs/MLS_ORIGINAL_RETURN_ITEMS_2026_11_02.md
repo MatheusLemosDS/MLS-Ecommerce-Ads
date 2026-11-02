@@ -1,15 +1,19 @@
 # Itens e quantidades das devoluções — 02/11/2026
 
-**Estado: preparado, ainda não publicado (`PREPARED_NOT_PUBLISHED`).**
-Branch `feature/returns-original-items-20261102`, base
+**Estado: publicado e conferido nos três Workers (`ALL_THREE_LIVE_EXACT`).**
+Conferência concluída em **02/11/2026 às 17:45:00 Brasília** (`2026-11-02T20:45:00+00:00`).
+Versão visível **2026-11-02.2 — Itens e quantidades das devoluções**.
+PR [#103](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/103), branch
+`feature/returns-original-items-20261102`, base
 `9fc4c69f004e5e709931fad4fdc3bdfa385aff93`.
-Versão prevista: **2026-11-02.2 — Itens e quantidades das devoluções**.
-A última Live comprovada neste corte continua sendo a PR102, versão
-`2026-11-02.1`, App `8e1056d2-4e2f-4ffe-9100-84ea2758a0c5`.
-Validação integrada, CI, publicação e conferência deste incremento ainda
-precisam de recibos próprios. Preparação Git não comprova publicação.
+Fonte `6ada0748d5af93e8f39330438e9a9a0766ee92c5`, head validado
+`2e25591004eb658a30e8240506c29106312bbcf5`, CI
+[41520727701](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/41520727701)
+aprovada. A sequência **Finance → Auth → App** e os bytes/configurações foram
+conferidos após cada etapa. A integração Git é conferida separadamente pelo
+estado da PR103 vinculada; a versão humana não substitui os UUIDs e recibos.
 
-## O que este incremento prepara
+## O que foi entregue
 
 O proprietário precisa comparar a origem de uma devolução com o que chegou
 fisicamente. Os controles de recebimento, inspeção e associação com fabricação
@@ -34,7 +38,7 @@ isso também vale para pedidos `TO_RETURN` sem itens preservados. Cobertura
 parcial ou limite atingido permanecem visíveis e não liberam um total por
 inferência.
 
-## Onde abrir após a publicação
+## Onde abrir e como usar
 
 | Ação | Endereço | Uso |
 | --- | --- | --- |
@@ -62,22 +66,48 @@ contratos de revisão/reembolso já existentes. O envelope novo é
 As formas legadas de conciliação continuam preservadas, sem acrescentar os
 novos campos ao payload que um leitor antigo espera.
 
-No App, a evidência fica separada do relatório legado e vinculada ao seu
-conteúdo, revisão, datas e publicação exatos. O contexto agregado usa
-`business_original_items_v1`. A leitura owner opt-in de recebimento é
-`returns/physical?month=AAAA-MM&evidence=original-items-v1`, com envelope
-`physical_returns_workspace_v2`; o relatório físico legado permanece separado.
+No App, a evidência fica separada do relatório legado e depende da identidade
+Finance preservada: `run_id`, revisão, datas da fonte, bytes exatos do relatório,
+`checked_at`, pertencimento dos casos e checksum próprio dos itens. A revisão
+App registrada na captura é proveniência: deve ser positiva e menor ou igual à
+publicação App atual. Republicar as mesmas fontes Finance preserva a evidência
+compatível; o contexto apresentado ao proprietário identifica a publicação App
+atual. Mudança na fonte Finance ou no relatório invalida a reutilização.
+
+O contexto agregado usa `business_original_items_v1`. A leitura owner opt-in de
+recebimento é `returns/physical?month=AAAA-MM&evidence=original-items-v1`, com
+envelope `physical_returns_workspace_v2`; o relatório físico legado permanece
+separado. Repreço de custos, Ads ou despesas não é uma nova observação de itens.
 
 Pedido pago usa itens já preservados. Para Returns, o novo detalhe será
 capturado quando as consultas programadas existentes ocorrerem; não há novo
 backfill, reinício de coleta ou requisição adicional ao provedor para preencher
 o histórico. Abrir o bloco lê as evidências salvas, sem forçar a Shopee.
-Um sidecar ausente, antigo ou incompatível não torna válido um contexto de
-outra publicação e não transforma ausência em uma lista comprovadamente vazia.
+Um sidecar ausente, incompatível ou não capturado permanece desconhecido e não
+prova quantidade zero. A reutilização de uma captura anterior depende das
+fontes exatas descritas acima, não da igualdade entre a revisão App capturada
+e a atual. O recibo de publicação não comprova que a captura natural real da
+conta já ocorreu depois do deploy; essa conferência permanece separada.
+
+## Robustez e referência de schema
+
+Falhas no armazenamento opcional da extensão ficam isoladas da conciliação
+legada: não invalidam seu relatório nem alteram seus valores. Pares repetidos
+de item/variação são `INVALID`, sem soma ou descarte para fabricar quantidade.
+A gravação opcional exige lease ainda vigente na hora da escrita; uma resposta
+após expiração ou substituição não publica uma captura antiga. O candidato
+inclui dois testes de expiração para essa proteção.
+
+Referência comunitária pinada, sob licença MIT:
+[Shopee SDK — schema Returns, linhas 323–371](https://github.com/congminh1254/shopee-sdk/blob/abd55142a3b2ebcf2c71783fd613679be6188f9f/src/schemas/returns.ts#L323-L371).
+O schema separa `amount` de `item_price` e `refund_amount`. O incremento usa
+somente a quantidade comercial validada; preço e valor de reembolso não viram
+quantidade. É referência de schema, não prova de grant, disponibilidade na
+região ou permissão da loja. Nenhuma biblioteca SDK foi importada no runtime.
 
 ## O que permanece separado
 
-A evidência comercial não altera `orig_quantities`, recebimentos, inspeções,
+A evidência comercial não altera `original_quantities`, recebimentos, inspeções,
 fabricação declarada, vínculos, estoque, reservas ou revenda. Não preenche
 automaticamente identidade ou quantidade física. Não muda custos históricos,
 repasse, imposto, Ads, resultado estrito, lucro realizado ou contratos Hermes.
@@ -91,27 +121,41 @@ Não incluir valores da conta, pedidos privados, dados de clientes ou exemplos
 reais em documentos e fixtures. QA de telas deve ser sintética e identificada;
 os registros reais da operação não devem ser alterados para demonstrar a UI.
 
-## Validação e publicação planejadas
+## Validação e recibo da publicação
 
 | Etapa | Estado neste corte |
 | --- | --- |
-| Versão, notas e novos caminhos | Preparados; aguardam validação integrada com o bloco e os contratos. |
-| Finance, Auth e App | Incremento opt-in em preparação; contratos legados e implantação mista precisam de testes no candidato final. |
-| Testes integrais e CI | Recibo final pendente. Resultados parciais não comprovam a suíte ou publicação. |
-| QA normal/minificada em desktop e celular | Pendente no candidato integrado; preservar o harness nativo de coordenadas e todas as rotas físicas anteriores. |
-| Publicação e conferência de bytes/configuração | Ainda não executadas. Ordem planejada: **Finance → Auth → App**, com recibos exatos dos três Workers. |
-| Uso real pelo proprietário e confronto Seller Centre/banco | Não executados nesta entrega; M2/M2.2 continuam abertas. |
+| Versão, notas e caminhos | Publicados no App `0a2955bc`, versão visível `2026-11-02.2`. |
+| Finance, Auth e App | Publicados em ordem Finance → Auth → App, com bytes e configuração conferidos após cada etapa; contratos legados preservados. |
+| Testes integrais e CI | CI 41520727701 aprovada no head `2e255910`; 3248 Node e 67 Python aprovados, sem falhas, cancelamentos ou skips Node. |
+| QA normal/minificada em desktop e celular | Quatro combinações sintéticas 320/1365 aprovadas para itens, caso/mês fixado, ausência legada e preservação dos registros/finanças. |
+| Código, configuração, domínios, flags e cron | Conferidos nos três Workers ao concluir em 02/11/2026 às 17:45:00 Brasília. |
+| Captura natural real da conta após deploy | Ainda depende de conferência separada; publicação técnica não comprova os itens efetivamente capturados. |
+| Uso físico real e confronto Seller Centre/banco | Não executados nesta entrega; M2/M2.2 continuam abertas. |
 
-Antes de declarar publicação, registrar PR, head/CI aprovados, data/hora real,
-UUIDs e hashes dos três Workers e a preservação de configuração, domínios,
-bindings, flags e cron. Não confundir sucesso de CI ou merge com versão ativa.
+| Worker | UUID da versão Cloudflare | SHA-256 gerado | SHA-256 publicado |
+| --- | --- | --- | --- |
+| Finance | `5e3b4686-1011-4e24-a890-fa33050b8490` | `dd1053972a38a5f05507ef371df328d9d384cf2201ee7b1ae1276c6cd194020c` | `02eed41452928046f4180eee4e0544ddbc041c72aa4970a2081d4a21eae17d49` |
+| Auth | `e13c43ad-b096-411b-8ae7-92e24ff44991` | `9654c03c15313f816d34c14824023213178ba96105a2e351d56fa999d854384a` | `ac8e66ec61006289583f77baf356923c25cff7c91669559b30c11bab2320e3f8` |
+| App | `0a2955bc-e420-42a1-8c53-97f6fef04358` | `09c261f230ec89489b124fa071cb3e1a99fcc1b955bc886401646c7605fbe96f` | `e7e85a3f82afbb18af111bce88c627bd3928ac4e88ea4d39c4a5b7a07953cd42` |
+
+O recibo verifica os bytes e a transformação esperada dos artefatos gerados e
+publicados, além da preservação de configurações a cada etapa. O publisher não
+consultou endpoints owner nem o provedor, não gravou fatos físicos/financeiros
+e não alterou os ledgers. A publicação não é captura de dados ou aprovação do
+uso operacional. Integração em main deve ser conferida pelo estado da PR103.
+
+A declaração anterior de ausência de outras despesas de novembro permanece um
+fato separado, registrado antes da PR102. Esta publicação não a repete nem a
+transfere para outro mês. Dados e montantes privados ficam fora dos documentos.
 
 ## Retomada e rollback
 
-Concluir a integração e seus testes antes da publicação planejada. Conferir o
-comportamento dos leitores antigos e de cada etapa mista, sem reautorizar OAuth
-ou criar chamadas comerciais. Um leitor sem a extensão deve continuar usando
-o relatório legado; itens não capturados permanecem desconhecidos.
+Conferir a captura natural e sua cobertura no caso escolhido antes de afirmar
+que a conta já tem os detalhes pós-deploy. Não reautorizar OAuth, reiniciar
+coleta ou criar consultas comerciais para preencher ausências. Leitores sem a
+extensão continuam usando o relatório legado; itens não capturados permanecem
+desconhecidos. A publicação não habilita automaticamente quantidades físicas.
 
 Rollback deve preservar as evidências aditivas e os ledgers existentes, sem
 apagar registros para fazer um código antigo aceitar dados novos. Os guards e

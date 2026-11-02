@@ -2,7 +2,7 @@
   "schema": "mls_commerce_os_checkpoint_v1",
   "canonical_roadmap": "docs/ROADMAP_MLS_COMMERCE_OS.md",
   "legacy_roadmap": "docs/ROADMAP_BRAZACOMMERCE.md",
-  "updated_at": "2026-11-02T20:31:16.588029+00:00",
+  "updated_at": "2026-11-02T20:45:16.378771+00:00",
   "product": {
     "name": "MLS Commerce OS",
     "supervisor": "MLS Hermes",
@@ -31,7 +31,7 @@
   },
   "current_phase": "M2_FINANCE_RETURNS_RECONCILIATION",
   "working_branch": "feature/returns-original-items-20261102",
-  "current_status": "PREPARING_ORIGINAL_RETURN_ITEMS_NOT_PUBLISHED",
+  "current_status": "OFFICIAL_LIVE_ORIGINAL_RETURN_ITEMS_VERIFIED",
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
     "Repasse-base, ajuste, repasse após ajuste e liberação exibidos sem dupla dedução",
@@ -74,7 +74,8 @@
     "Novidades e identificação da versão visíveis na entrada, navegação física de devoluções organizada, busca abre os controles e roadmap da interface corrigido; cálculos financeiros preservados",
     "Saldo mensal separado para deduções ainda não declaradas e leituras Ads salvas, mantendo líquido e gates estritos",
     "Período compartilhado nos sete agentes, com histórico salvo, rascunhos protegidos e navegação Voltar/Avançar/reload",
-    "Declaração explícita do proprietário para outras despesas de novembro registrada pelo mutador canônico com auditoria e repetição idempotente; sem copiar outubro"
+    "Declaração explícita do proprietário para outras despesas de novembro registrada pelo mutador canônico com auditoria e repetição idempotente; sem copiar outubro",
+    "Evidência opt-in dos itens pagos e captura de quantidades comerciais de Returns na coleta existente, separada dos ledgers físicos e financeiros"
   ],
   "remaining_this_phase": [
     "Observar o estado real da nova auditoria Pending na conta autenticada e comparar quantidade/valores/horários com o Seller Centre",
@@ -125,7 +126,7 @@
   },
   "next_actions": [
     "Conferir os itens salvos do pedido e da solicitação em MLS Returns; manter unidades comerciais separadas das peças físicas, preservar UNKNOWN e validar a origem antes de integrar reaproveitamento ao lucro.",
-    "Após PR100, expor e validar itens de pedido já preservados no Finance quando disponíveis, e captar itens de devolução em extensão optativa Finance/Auth/App na coleta existente; devoluções legadas ficam NOT_CAPTURED e kit não vira peça física. Não repetir os vínculos internos já entregues.",
+    "Validar os itens originais e as quantidades físicas por caso; o transporte e a captura opt-in PR103 estão entregues. Itens legados sem evidência e TO_RETURN sem itens comprados continuam desconhecidos; não refazer o transporte nem inferir peças a partir de kits.",
     "Confirmar valores históricos e custos de nova embalagem/etiqueta por pedido/peça/kit; UNKNOWN não vira zero",
     "Manter despesas de cada novo mês confirmadas pelo operador; novembro já foi declarado explicitamente, sem cópia automática de outro mês",
     "Renovar cobertura da publicação exata e acompanhar revisões, Returns e calendário de outubro sem reiniciar o catálogo/coleta",
@@ -140,7 +141,7 @@
   ],
   "latest_increment": {
     "id": "M22_ORIGINAL_ORDER_AND_RETURN_ITEM_EVIDENCE",
-    "status": "PREPARING_ORIGINAL_RETURN_ITEMS_NOT_PUBLISHED",
+    "status": "OFFICIAL_LIVE_ORIGINAL_RETURN_ITEMS_VERIFIED",
     "branch": "feature/returns-original-items-20261102",
     "base_main": "9fc4c69f004e5e709931fad4fdc3bdfa385aff93",
     "human_code_release_id": "2026-11-02.2",
@@ -158,7 +159,48 @@
     "original_quantities_in_legacy_links": "UNAVAILABLE_UNCHANGED",
     "inventory_valuation": "UNKNOWN_NOT_IMPLEMENTED",
     "commercial_writes": "LOCKED",
-    "operator_facts_created_for_qa": false
+    "operator_facts_created_for_qa": false,
+    "pull_request": 103,
+    "code_commit": "6ada0748d5af93e8f39330438e9a9a0766ee92c5",
+    "reviewed_head": "2e25591004eb658a30e8240506c29106312bbcf5",
+    "ci_run": 41520727701,
+    "deployment": {
+      "versions": {
+        "app": "0a2955bc-e420-42a1-8c53-97f6fef04358",
+        "auth": "e13c43ad-b096-411b-8ae7-92e24ff44991",
+        "finance": "5e3b4686-1011-4e24-a890-fa33050b8490"
+      },
+      "generated_sha256": {
+        "app": "09c261f230ec89489b124fa071cb3e1a99fcc1b955bc886401646c7605fbe96f",
+        "auth": "9654c03c15313f816d34c14824023213178ba96105a2e351d56fa999d854384a",
+        "finance": "dd1053972a38a5f05507ef371df328d9d384cf2201ee7b1ae1276c6cd194020c"
+      },
+      "published_sha256": {
+        "finance": "02eed41452928046f4180eee4e0544ddbc041c72aa4970a2081d4a21eae17d49",
+        "auth": "ac8e66ec61006289583f77baf356923c25cff7c91669559b30c11bab2320e3f8",
+        "app": "e7e85a3f82afbb18af111bce88c627bd3928ac4e88ea4d39c4a5b7a07953cd42"
+      },
+      "completed_at": 1793652300,
+      "exact_bytes_verified": true,
+      "configuration_preserved": true,
+      "domains_preserved": true,
+      "flags_preserved": true,
+      "cron_preserved": true
+    },
+    "validation": {
+      "node_tests": 3248,
+      "python_tests": 67,
+      "chromium": [
+        "normal",
+        "minified",
+        "320px",
+        "1365px"
+      ],
+      "real_owner_browser": "NOT_OBSERVED_EXECUTOR_WAF_403",
+      "strict_financial_results_unchanged": true,
+      "physical_ledgers_unchanged": true,
+      "legacy_contracts_unchanged": true
+    }
   },
   "incident": {
     "id": "INCIDENT_2026_10_27_PANEL_AGENT_REGRESSION",
@@ -3394,7 +3436,7 @@
   },
   "original_return_items_2026_11_02": {
     "id": "M22_ORIGINAL_ORDER_AND_RETURN_ITEM_EVIDENCE",
-    "status": "PREPARING_ORIGINAL_RETURN_ITEMS_NOT_PUBLISHED",
+    "status": "OFFICIAL_LIVE_ORIGINAL_RETURN_ITEMS_VERIFIED",
     "branch": "feature/returns-original-items-20261102",
     "base_main": "9fc4c69f004e5e709931fad4fdc3bdfa385aff93",
     "human_code_release_id": "2026-11-02.2",
@@ -3412,6 +3454,47 @@
     "original_quantities_in_legacy_links": "UNAVAILABLE_UNCHANGED",
     "inventory_valuation": "UNKNOWN_NOT_IMPLEMENTED",
     "commercial_writes": "LOCKED",
-    "operator_facts_created_for_qa": false
+    "operator_facts_created_for_qa": false,
+    "pull_request": 103,
+    "code_commit": "6ada0748d5af93e8f39330438e9a9a0766ee92c5",
+    "reviewed_head": "2e25591004eb658a30e8240506c29106312bbcf5",
+    "ci_run": 41520727701,
+    "deployment": {
+      "versions": {
+        "app": "0a2955bc-e420-42a1-8c53-97f6fef04358",
+        "auth": "e13c43ad-b096-411b-8ae7-92e24ff44991",
+        "finance": "5e3b4686-1011-4e24-a890-fa33050b8490"
+      },
+      "generated_sha256": {
+        "app": "09c261f230ec89489b124fa071cb3e1a99fcc1b955bc886401646c7605fbe96f",
+        "auth": "9654c03c15313f816d34c14824023213178ba96105a2e351d56fa999d854384a",
+        "finance": "dd1053972a38a5f05507ef371df328d9d384cf2201ee7b1ae1276c6cd194020c"
+      },
+      "published_sha256": {
+        "finance": "02eed41452928046f4180eee4e0544ddbc041c72aa4970a2081d4a21eae17d49",
+        "auth": "ac8e66ec61006289583f77baf356923c25cff7c91669559b30c11bab2320e3f8",
+        "app": "e7e85a3f82afbb18af111bce88c627bd3928ac4e88ea4d39c4a5b7a07953cd42"
+      },
+      "completed_at": 1793652300,
+      "exact_bytes_verified": true,
+      "configuration_preserved": true,
+      "domains_preserved": true,
+      "flags_preserved": true,
+      "cron_preserved": true
+    },
+    "validation": {
+      "node_tests": 3248,
+      "python_tests": 67,
+      "chromium": [
+        "normal",
+        "minified",
+        "320px",
+        "1365px"
+      ],
+      "real_owner_browser": "NOT_OBSERVED_EXECUTOR_WAF_403",
+      "strict_financial_results_unchanged": true,
+      "physical_ledgers_unchanged": true,
+      "legacy_contracts_unchanged": true
+    }
   }
 }

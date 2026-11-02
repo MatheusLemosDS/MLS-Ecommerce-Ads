@@ -1,6 +1,6 @@
 {
   "schema": "mls_master_mission_checkpoint_v1",
-  "updated_at": "2026-11-02T20:31:16.590971+00:00",
+  "updated_at": "2026-11-02T20:45:16.381623+00:00",
   "base_visual_sha": "8d860b2c4f26531c53c4cdba0e06a14f51a7eef4",
   "visual_branch": "feature/mls-mockup-parity-real-charts-20261029",
   "visual_pr": 79,
@@ -181,7 +181,7 @@
   ],
   "current_release": {
     "id": "M22_ORIGINAL_ORDER_AND_RETURN_ITEM_EVIDENCE",
-    "status": "PREPARING_ORIGINAL_RETURN_ITEMS_NOT_PUBLISHED",
+    "status": "OFFICIAL_LIVE_ORIGINAL_RETURN_ITEMS_VERIFIED",
     "branch": "feature/returns-original-items-20261102",
     "base_main": "9fc4c69f004e5e709931fad4fdc3bdfa385aff93",
     "human_code_release_id": "2026-11-02.2",
@@ -199,7 +199,48 @@
     "original_quantities_in_legacy_links": "UNAVAILABLE_UNCHANGED",
     "inventory_valuation": "UNKNOWN_NOT_IMPLEMENTED",
     "commercial_writes": "LOCKED",
-    "operator_facts_created_for_qa": false
+    "operator_facts_created_for_qa": false,
+    "pull_request": 103,
+    "code_commit": "6ada0748d5af93e8f39330438e9a9a0766ee92c5",
+    "reviewed_head": "2e25591004eb658a30e8240506c29106312bbcf5",
+    "ci_run": 41520727701,
+    "deployment": {
+      "versions": {
+        "app": "0a2955bc-e420-42a1-8c53-97f6fef04358",
+        "auth": "e13c43ad-b096-411b-8ae7-92e24ff44991",
+        "finance": "5e3b4686-1011-4e24-a890-fa33050b8490"
+      },
+      "generated_sha256": {
+        "app": "09c261f230ec89489b124fa071cb3e1a99fcc1b955bc886401646c7605fbe96f",
+        "auth": "9654c03c15313f816d34c14824023213178ba96105a2e351d56fa999d854384a",
+        "finance": "dd1053972a38a5f05507ef371df328d9d384cf2201ee7b1ae1276c6cd194020c"
+      },
+      "published_sha256": {
+        "finance": "02eed41452928046f4180eee4e0544ddbc041c72aa4970a2081d4a21eae17d49",
+        "auth": "ac8e66ec61006289583f77baf356923c25cff7c91669559b30c11bab2320e3f8",
+        "app": "e7e85a3f82afbb18af111bce88c627bd3928ac4e88ea4d39c4a5b7a07953cd42"
+      },
+      "completed_at": 1793652300,
+      "exact_bytes_verified": true,
+      "configuration_preserved": true,
+      "domains_preserved": true,
+      "flags_preserved": true,
+      "cron_preserved": true
+    },
+    "validation": {
+      "node_tests": 3248,
+      "python_tests": 67,
+      "chromium": [
+        "normal",
+        "minified",
+        "320px",
+        "1365px"
+      ],
+      "real_owner_browser": "NOT_OBSERVED_EXECUTOR_WAF_403",
+      "strict_financial_results_unchanged": true,
+      "physical_ledgers_unchanged": true,
+      "legacy_contracts_unchanged": true
+    }
   },
   "validation_history": [
     {
@@ -234,38 +275,67 @@
     }
   ],
   "live_release": {
-    "pull_request": 102,
-    "status": "OFFICIAL_LIVE_MONTHLY_BALANCE_AGENT_HISTORY_VERIFIED",
-    "human_code_release_id": "2026-11-02.1",
-    "flags_enabled": true,
-    "configuration_preserved": true,
-    "commercial_writes": false,
-    "docs": "docs/MLS_MONTHLY_NET_HISTORY_2026_11_02.md",
+    "id": "M22_ORIGINAL_ORDER_AND_RETURN_ITEM_EVIDENCE",
+    "status": "OFFICIAL_LIVE_ORIGINAL_RETURN_ITEMS_VERIFIED",
+    "branch": "feature/returns-original-items-20261102",
+    "base_main": "9fc4c69f004e5e709931fad4fdc3bdfa385aff93",
+    "human_code_release_id": "2026-11-02.2",
+    "docs": "docs/MLS_ORIGINAL_RETURN_ITEMS_2026_11_02.md",
+    "finance_m2": "OPEN",
+    "m22": "PARTIAL",
+    "strict_financial_results_unchanged": true,
+    "physical_ledgers_and_manufacturing_links_unchanged": true,
+    "legacy_contracts_and_stored_payloads_preserved": true,
+    "listing_units_are_not_physical_pieces": true,
+    "legacy_quantities_assumed_zero": false,
+    "new_provider_requests": 0,
+    "provider_capture": "EXISTING_SCHEDULED_RETURN_DETAIL_RESPONSES_ONLY",
+    "owner_reads": "SAVED_SELECT_ONLY_NO_DDL_OR_PROVIDER",
+    "original_quantities_in_legacy_links": "UNAVAILABLE_UNCHANGED",
+    "inventory_valuation": "UNKNOWN_NOT_IMPLEMENTED",
+    "commercial_writes": "LOCKED",
+    "operator_facts_created_for_qa": false,
+    "pull_request": 103,
+    "code_commit": "6ada0748d5af93e8f39330438e9a9a0766ee92c5",
+    "reviewed_head": "2e25591004eb658a30e8240506c29106312bbcf5",
+    "ci_run": 41520727701,
     "deployment": {
       "versions": {
-        "app": "8e1056d2-4e2f-4ffe-9100-84ea2758a0c5",
-        "auth": "37bead27-c941-40e6-87e8-832f01d1785a",
-        "finance": "e0b258a2-e73f-45d2-912a-1cb6fd666e18"
+        "app": "0a2955bc-e420-42a1-8c53-97f6fef04358",
+        "auth": "e13c43ad-b096-411b-8ae7-92e24ff44991",
+        "finance": "5e3b4686-1011-4e24-a890-fa33050b8490"
       },
       "generated_sha256": {
-        "app": "53bddb0d49961150ac0f76785c07a628208c3f66201219bd4d7f6416effaccfa",
-        "auth": "c63ee09b2d98b6321e3ae7feae1066a9eec9160b49868d72fb84cb0471a0018d",
-        "finance": "dff201100ed319f3b7d4d8cabf6826237be3a140e679f562cb982cec5bdd89b4"
+        "app": "09c261f230ec89489b124fa071cb3e1a99fcc1b955bc886401646c7605fbe96f",
+        "auth": "9654c03c15313f816d34c14824023213178ba96105a2e351d56fa999d854384a",
+        "finance": "dd1053972a38a5f05507ef371df328d9d384cf2201ee7b1ae1276c6cd194020c"
       },
       "published_sha256": {
-        "app": "a455b8c8b8ce37ac3b48c0c504bb66766bcebf6894bd7c23679c67b3668be32e",
-        "auth": "46053d0b5f11ff4d738b4cf2cc1cc6afda7d21e233980b1e640f63728f32af2a",
-        "finance": "b4195212972f5a9f0f8ff08c9504e983f8bd3ca3b3c42493cb7c88addb84de8b"
+        "finance": "02eed41452928046f4180eee4e0544ddbc041c72aa4970a2081d4a21eae17d49",
+        "auth": "ac8e66ec61006289583f77baf356923c25cff7c91669559b30c11bab2320e3f8",
+        "app": "e7e85a3f82afbb18af111bce88c627bd3928ac4e88ea4d39c4a5b7a07953cd42"
       },
+      "completed_at": 1793652300,
       "exact_bytes_verified": true,
       "configuration_preserved": true,
       "domains_preserved": true,
       "flags_preserved": true,
-      "cron_preserved": true,
-      "auth_finance_versions_preserved": true,
-      "completed_at": 1793630694
+      "cron_preserved": true
     },
-    "note": "Separate bounded monthly display and saved financial month selection. Strict finance/Hermes remain unchanged. Owner-confirmed November expenses recorded separately through canonical audited mutation; no inferred zero. Physical reuse valuation, M2 and bank confirmation remain open."
+    "validation": {
+      "node_tests": 3248,
+      "python_tests": 67,
+      "chromium": [
+        "normal",
+        "minified",
+        "320px",
+        "1365px"
+      ],
+      "real_owner_browser": "NOT_OBSERVED_EXECUTOR_WAF_403",
+      "strict_financial_results_unchanged": true,
+      "physical_ledgers_unchanged": true,
+      "legacy_contracts_unchanged": true
+    }
   },
   "visual_chart_refinement_20261031": {
     "id": "LIVE_VISUAL_CHART_INSPECTION_AND_COST_RULE_SCOPE",
@@ -2957,7 +3027,7 @@
   },
   "original_return_items_2026_11_02": {
     "id": "M22_ORIGINAL_ORDER_AND_RETURN_ITEM_EVIDENCE",
-    "status": "PREPARING_ORIGINAL_RETURN_ITEMS_NOT_PUBLISHED",
+    "status": "OFFICIAL_LIVE_ORIGINAL_RETURN_ITEMS_VERIFIED",
     "branch": "feature/returns-original-items-20261102",
     "base_main": "9fc4c69f004e5e709931fad4fdc3bdfa385aff93",
     "human_code_release_id": "2026-11-02.2",
@@ -2975,6 +3045,81 @@
     "original_quantities_in_legacy_links": "UNAVAILABLE_UNCHANGED",
     "inventory_valuation": "UNKNOWN_NOT_IMPLEMENTED",
     "commercial_writes": "LOCKED",
-    "operator_facts_created_for_qa": false
+    "operator_facts_created_for_qa": false,
+    "pull_request": 103,
+    "code_commit": "6ada0748d5af93e8f39330438e9a9a0766ee92c5",
+    "reviewed_head": "2e25591004eb658a30e8240506c29106312bbcf5",
+    "ci_run": 41520727701,
+    "deployment": {
+      "versions": {
+        "app": "0a2955bc-e420-42a1-8c53-97f6fef04358",
+        "auth": "e13c43ad-b096-411b-8ae7-92e24ff44991",
+        "finance": "5e3b4686-1011-4e24-a890-fa33050b8490"
+      },
+      "generated_sha256": {
+        "app": "09c261f230ec89489b124fa071cb3e1a99fcc1b955bc886401646c7605fbe96f",
+        "auth": "9654c03c15313f816d34c14824023213178ba96105a2e351d56fa999d854384a",
+        "finance": "dd1053972a38a5f05507ef371df328d9d384cf2201ee7b1ae1276c6cd194020c"
+      },
+      "published_sha256": {
+        "finance": "02eed41452928046f4180eee4e0544ddbc041c72aa4970a2081d4a21eae17d49",
+        "auth": "ac8e66ec61006289583f77baf356923c25cff7c91669559b30c11bab2320e3f8",
+        "app": "e7e85a3f82afbb18af111bce88c627bd3928ac4e88ea4d39c4a5b7a07953cd42"
+      },
+      "completed_at": 1793652300,
+      "exact_bytes_verified": true,
+      "configuration_preserved": true,
+      "domains_preserved": true,
+      "flags_preserved": true,
+      "cron_preserved": true
+    },
+    "validation": {
+      "node_tests": 3248,
+      "python_tests": 67,
+      "chromium": [
+        "normal",
+        "minified",
+        "320px",
+        "1365px"
+      ],
+      "real_owner_browser": "NOT_OBSERVED_EXECUTOR_WAF_403",
+      "strict_financial_results_unchanged": true,
+      "physical_ledgers_unchanged": true,
+      "legacy_contracts_unchanged": true
+    }
+  },
+  "previous_live_release_before_original_return_items": {
+    "pull_request": 102,
+    "status": "OFFICIAL_LIVE_MONTHLY_BALANCE_AGENT_HISTORY_VERIFIED",
+    "human_code_release_id": "2026-11-02.1",
+    "flags_enabled": true,
+    "configuration_preserved": true,
+    "commercial_writes": false,
+    "docs": "docs/MLS_MONTHLY_NET_HISTORY_2026_11_02.md",
+    "deployment": {
+      "versions": {
+        "app": "8e1056d2-4e2f-4ffe-9100-84ea2758a0c5",
+        "auth": "37bead27-c941-40e6-87e8-832f01d1785a",
+        "finance": "e0b258a2-e73f-45d2-912a-1cb6fd666e18"
+      },
+      "generated_sha256": {
+        "app": "53bddb0d49961150ac0f76785c07a628208c3f66201219bd4d7f6416effaccfa",
+        "auth": "c63ee09b2d98b6321e3ae7feae1066a9eec9160b49868d72fb84cb0471a0018d",
+        "finance": "dff201100ed319f3b7d4d8cabf6826237be3a140e679f562cb982cec5bdd89b4"
+      },
+      "published_sha256": {
+        "app": "a455b8c8b8ce37ac3b48c0c504bb66766bcebf6894bd7c23679c67b3668be32e",
+        "auth": "46053d0b5f11ff4d738b4cf2cc1cc6afda7d21e233980b1e640f63728f32af2a",
+        "finance": "b4195212972f5a9f0f8ff08c9504e983f8bd3ca3b3c42493cb7c88addb84de8b"
+      },
+      "exact_bytes_verified": true,
+      "configuration_preserved": true,
+      "domains_preserved": true,
+      "flags_preserved": true,
+      "cron_preserved": true,
+      "auth_finance_versions_preserved": true,
+      "completed_at": 1793630694
+    },
+    "note": "Separate bounded monthly display and saved financial month selection. Strict finance/Hermes remain unchanged. Owner-confirmed November expenses recorded separately through canonical audited mutation; no inferred zero. Physical reuse valuation, M2 and bank confirmation remain open."
   }
 }
