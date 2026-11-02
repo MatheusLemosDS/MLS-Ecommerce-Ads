@@ -46,8 +46,9 @@ test('owner keeps all existing financial forms and identifiers once, but overvie
  }
  for(const name of ['products','margins','hermes','history','roadmap'])assert.ok(ids.includes(name),name+' legacy tab preserved');
  assert.match(html,/id="commandCenterAgents"/);
- assert.ok(html.indexOf('id="commandCenterAgents"')>html.indexOf('id="agents"'),'the single complete fleet belongs to Equipe');
- assert.doesNotMatch(commandCenterBody(),/id="commandCenterAgents"|class="agent-card"/);
+ assert.ok(html.indexOf('id="commandCenterAgents"')<html.indexOf('id="agents"'),'the approved six-card team belongs to the overview');
+ assert.match(html,/id="missionHubDirectory"/);assert.match(html,/id="missionHubCards"/);
+ assert.equal((commandCenterBody().match(/class="agent-card"/g)||[]).length,6);
 });
 
 test('Mission Control style has scoped futuristic accents, responsive breakpoints and reduced-motion support',()=>{
@@ -109,7 +110,7 @@ test('approved Mission Control V2 actually exposes colored cockpit, real observa
  }
  for(const key of ['net','sales','ads','margin','paid','alerts'])assert.ok(html.includes('data-mission-metric="'+key+'"'),key);
  for(const name of names)assert.ok(fleet.includes('data-mission-agent="'+name+'"'));
- assert.equal((html.match(/data-agent-placeholder="true"/g)||[]).length,0);
+ assert.equal((html.match(/data-agent-placeholder="true"/g)||[]).length,6,'agents remain visible before a saved snapshot loads');
  assert.equal((fleet.match(/class="mission-hub-card /g)||[]).length,7);
  assert.ok(html.indexOf('mission-day-intelligence')>html.indexOf('commandCenterPriorities'));
  for(const name of names){
@@ -145,10 +146,13 @@ test('Mission Control V2 decorative surfaces cannot invent financial history or 
 });
 
 
-test('overview retains six real KPIs and history while seven agent links live once in Equipe',()=>{
+test('overview retains six real KPIs, the approved six-agent team and history while Equipe keeps seven specialists',()=>{
  const html=commandCenterBody(),fleet=missionWorkspacesBody();
  for(const id of ['commandCenterNet','commandCenterSales','commandCenterAds','commandCenterAlerts','missionTrendGraphOverview'])assert.match(html,new RegExp('id="'+id+'"'));
  for(const id of names)assert.match(fleet,new RegExp('href="/admin\\?tab=agent-'+id+'"'));
+ const overviewIds=[...html.matchAll(/class="agent-card"[^>]*data-mission-open="agent-([^"]+)"/g)].map(row=>row[1]);
+ assert.deepEqual(overviewIds,['hermes','finance','ads','products','production','returns']);
+ assert.ok(html.indexOf('id="commandAgents"')<html.indexOf('class="command-center-grid mls-overview-panels"'));
  assert.match(MISSION_CSS,/V3 cockpit layout/);
  assert.match(MLS_APPROVED_DESIGN_CSS,/\.mission-dashboard \.agent-grid\{grid-template-columns:repeat\(6,minmax\(0,1fr\)\)/);
  assert.match(MISSION_CSS,/\.mission-dashboard \.agent-card:focus-visible/);
@@ -173,7 +177,7 @@ test('canonical overview removes double icons and keeps the executive hero indep
  assert.match(MLS_APPROVED_DESIGN_CSS,/grid-template-columns:repeat\(6,minmax\(0,1fr\)\)/);
  assert.doesNotMatch(MLS_APPROVED_DESIGN_CSS,/grid-template-columns:repeat\(4,minmax\(0,1fr\)\)!important/);
  for(const id of names)assert.match(missionWorkspacesBody(),new RegExp('data-mission-agent="'+id+'"'));
- assert.doesNotMatch(commandCenterBody(),/data-agent-placeholder|data-mission-accent/);
+ assert.equal((commandCenterBody().match(/data-agent-placeholder="true"/g)||[]).length,6);assert.equal((commandCenterBody().match(/data-mission-accent=/g)||[]).length,6);
 });
 
 

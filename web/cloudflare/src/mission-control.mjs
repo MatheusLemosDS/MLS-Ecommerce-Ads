@@ -562,7 +562,7 @@ export function missionWorkspacesBody(financeHtml=''){
   '<p>“Saudável” indica o estado de acompanhamento do agente, não margem positiva, saldo bancário confirmado ou estoque disponível.</p>'+
   '<div class="mission-hub-evidence-footer"><span>Fonte: Agent Registry já existente</span>'+
   '<span id="missionHubSnapshot" role="status">Sem leitura validada</span></div></aside></div>'+
-  '<section id="commandAgents" aria-labelledby="commandAgentsTitle"><div class="mission-hub-bar mission-hub-list-heading"><div><span class="mission-hub-eyebrow">EQUIPE OPERACIONAL</span><h3 id="commandAgentsTitle">Explorar especialistas</h3><p>Busque por função ou filtre por estado para ir direto ao painel certo.</p></div>'+
+  '<section id="missionHubDirectory" aria-labelledby="missionHubDirectoryTitle"><div class="mission-hub-bar mission-hub-list-heading"><div><span class="mission-hub-eyebrow">EQUIPE OPERACIONAL</span><h3 id="missionHubDirectoryTitle">Explorar especialistas</h3><p>Busque por função ou filtre por estado para ir direto ao painel certo.</p></div>'+
   '<span class="mission-breadcrumb-pill">7 painéis · Observador</span></div>'+
   '<div class="mission-hub-toolbar"><div class="mission-hub-search"><label for="missionAgentSearch">Buscar especialista</label>'+
   '<input id="missionAgentSearch" type="search" autocomplete="off" maxlength="80" placeholder="Nome, área ou função..." aria-controls="missionHubGrid">'+
@@ -573,7 +573,7 @@ export function missionWorkspacesBody(financeHtml=''){
   '<button type="button" data-mission-hub-filter="WORKING" aria-pressed="false">Em acompanhamento</button>'+
   '<button type="button" data-mission-hub-filter="HEALTHY" aria-pressed="false">Saudáveis</button></div></div>'+
   '<p id="missionHubFilterEmpty" class="mission-hub-empty" role="status" hidden>Nenhum especialista corresponde aos filtros. Tente Todos ou outra busca.</p>'+
-  '<div id="commandCenterAgents"><div class="mission-hub-grid" id="missionHubGrid">'+MISSION_AGENTS.map(missionCard).join('')+'</div></div></section>'+
+  '<div id="missionHubCards"><div class="mission-hub-grid" id="missionHubGrid">'+MISSION_AGENTS.map(missionCard).join('')+'</div></div></section>'+
   '<div class="mission-hub-future"><div><span class="mission-hub-eyebrow">EXPANSÃO PLANEJADA</span><h3>Novos módulos, quando houver evidências</h3>'+
   '<p>Pricing, Creative, Inventory e Marketplace seguem planejados. Não representam agentes ativos nem permissões concedidas.</p></div>'+
   '<div class="mission-future"><span>MLS Pricing · M3</span><span>MLS Creative · M8</span><span>MLS Inventory · fase futura</span><span>MLS Marketplace · M8</span></div></div></section>';

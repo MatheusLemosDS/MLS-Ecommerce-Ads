@@ -1,3 +1,13 @@
+<!-- OVERVIEW_AGENTS_RESTORE_RELEASE -->
+**Correção preparada — `PREPARED_NOT_PUBLISHED`:** versão proposta `2026-11-02.4 — Agentes de volta à página inicial`, base `41b95f6e93236fdfad42ff9b3deb9a85905d67ef`, branch `fix/restore-overview-agents-20261102`. Restaura os seis cartões Hermes, Finance, Ads, Products, Production e Returns na Visão geral, abaixo dos indicadores e antes dos gráficos, conforme o design aprovado. A página Equipe mantém os sete agentes e seus filtros; fontes, valores, navegação e controles existentes são preservados. Publicação App-only ainda depende dos testes, CI e recibo; a última Live comprovada continua sendo PR104/.3. M2/M2.2 permanecem abertas.
+
+Abrir `/admin?tab=overview#commandAgents` para a equipe na página inicial;
+`/admin?tab=agents#missionHubDirectory` mantém o diretório completo.
+[Correção, uso e validações](docs/MLS_OVERVIEW_AGENTS_RESTORE_2026_11_02.md).
+<!-- END_OVERVIEW_AGENTS_RESTORE_RELEASE -->
+
+**Continuidade confirmada da PR104:** merge `41b95f6e93236fdfad42ff9b3deb9a85905d67ef`, em 02/11/2026 às 19:15:31 Brasília; CI documental [41534506552](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/41534506552) aprovada e árvore/runtime conferidos. A nota anterior com integração pendente preserva o corte de publicação. Três descritores de fotos já passaram pelo leitor canônico após captura natural; a exibição real no CDN foi bloqueada pelo proxy do executor. Isso não confirma recebimento, fabricação ou fechamento financeiro.
+
 <!-- SIMPLIFIED_OPERATIONS_RELEASE -->
 **Atualização Live — 2026-11-02.3, Operação simples e produção por período:**
 

@@ -271,7 +271,10 @@ test('Equipe has seven static observer cards even when hydration scripts do not 
  const html=missionWorkspacesBody();
  const cards=[...html.matchAll(/class="mission-hub-card /g)];
  assert.equal(cards.length,7);
- assert.doesNotMatch(commandCenterBody(),/data-agent-placeholder|class="agent-card"/);
+ const overview=commandCenterBody();
+ assert.equal((overview.match(/data-agent-placeholder="true"/g)||[]).length,6);
+ assert.deepEqual([...overview.matchAll(/class="agent-card"[^>]*data-mission-open="agent-([^"]+)"/g)].map(row=>row[1]),['hermes','finance','ads','products','production','returns']);
+ assert.doesNotMatch(overview,/R\\$ [1-9]\\d*,\\d{2}/);
  for(const name of ['MLS Hermes','MLS Finance','MLS Ads','MLS Products','MLS Production','MLS Returns','MLS Auditor'])assert.match(html,new RegExp('<h4>'+name+'</h4>'));
  assert.match(html,/Aguardando dados/);
  assert.match(html,/Indicador ainda indisponível/);
