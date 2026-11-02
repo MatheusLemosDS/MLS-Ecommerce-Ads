@@ -1,5 +1,7 @@
 import {readCompletedBusinessMonth} from './business-month-publication.mjs';
 import {projectReconciliationFrame,projectReconciliationEvidenceFrame,projectReconciliationMoneyFrame} from '../../finance/src/reconciliation-frame.mjs';
+import {projectOriginalItemsFrame,projectReconciliationOriginalItemsFrame} from '../../finance/src/original-items-frame.mjs';
+import {BUSINESS_ORIGINAL_ITEMS_SCHEMA,projectBusinessOriginalItems} from './business-original-items.mjs';
 
 export const BUSINESS_RECONCILIATION_SCHEMA=[
  `CREATE TABLE IF NOT EXISTS business_reconciliation_reports(run_id TEXT PRIMARY KEY NOT NULL,source_revision INTEGER NOT NULL,start_date TEXT NOT NULL,end_date TEXT NOT NULL,payload TEXT NOT NULL CHECK(length(CAST(payload AS BLOB))<=1048576),checked_at INTEGER NOT NULL)`,
@@ -9,6 +11,7 @@ export const BUSINESS_RECONCILIATION_SCHEMA=[
 export class BusinessReconciliationError extends Error{constructor(code,status=503){super(code);this.status=status;}}
 const fail=(code,status=503)=>{throw new BusinessReconciliationError(code,status);};
 const ready=new WeakSet(),encoder=new TextEncoder();
+const payloadHash=async value=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',encoder.encode(value))),byte=>byte.toString(16).padStart(2,'0')).join('');
 const plain=value=>value!==null&&typeof value==='object'&&[Object.prototype,null].includes(Object.getPrototypeOf(value));
 const exact=(value,keys)=>plain(value)&&Reflect.ownKeys(value).length===keys.length&&keys.every(key=>Object.hasOwn(Object.getOwnPropertyDescriptor(value,key)||{},'value'));
 const integer=(value,min=0,max=9999999999)=>Number.isSafeInteger(value)&&!Object.is(value,-0)&&value>=min&&value<=max;
@@ -107,11 +110,12 @@ function publishedReportMatches(frame,source,published){
 function sourceReferences(published){return published?.payload.slots.map(slot=>({run_id:slot.frame.run_id,source_revision:slot.frame.revision,start_date:slot.start_date,end_date:slot.end_date}))??[];}
 async function snapshot(env,month,stamp,now,{readOnly=false}={}){
  const db=await database(env,!readOnly),published=await readCompletedBusinessMonth(env,month,{now}),sources=sourceReferences(published);
- if(!sources.length)return {db,published,sources,reports:[],reviews:[],money:[],attempts:[]};
+ if(!sources.length)return {db,published,sources,reports:[],reviews:[],money:[],attempts:[],legacyRows:[]};
  const ids=JSON.stringify(sources.map(source=>source.run_id)),rows=await db.batch([db.prepare('SELECT run_id,source_revision,start_date,end_date,payload,checked_at FROM business_reconciliation_reports WHERE run_id IN(SELECT value FROM json_each(?))').bind(ids),db.prepare('SELECT run_id,source_revision,checked_at,status,code,next_attempt_at FROM business_reconciliation_attempts WHERE run_id IN(SELECT value FROM json_each(?))').bind(ids)]),reports=[],reviews=[],money=[],attempts=[];
- for(const row of rows[0]?.results??[]){const source=sources.find(source=>source.run_id===row.run_id);if(row.source_revision!==source.source_revision)continue;let report,evidence,amounts;try{if(typeof row.payload!=='string'||encoder.encode(row.payload).byteLength>1048576)throw Error();const raw=JSON.parse(row.payload);amounts=projectReconciliationMoneyFrame(raw,projectReconciliationFrame,projectReconciliationEvidenceFrame);evidence=amounts??projectReconciliationEvidenceFrame(raw,projectReconciliationFrame);report=evidence?.report??projectReconciliationFrame(raw);}catch{}if(!publishedReportMatches(report,source,published)||row.checked_at!==report.checked_at||row.start_date!==report.start_date||row.end_date!==report.end_date||report.checked_at>stamp+60)fail('BUSINESS_RECONCILIATION_STORAGE_INVALID');reports.push(report);if(evidence)reviews.push({run_id:report.run_id,source_revision:report.source_revision,review:evidence.review});if(amounts)money.push({run_id:report.run_id,source_revision:report.source_revision,money:amounts.money});}
+ const legacyRows=[];
+ for(const row of rows[0]?.results??[]){const source=sources.find(source=>source.run_id===row.run_id);if(row.source_revision!==source.source_revision)continue;let report,evidence,amounts;try{if(typeof row.payload!=='string'||encoder.encode(row.payload).byteLength>1048576)throw Error();const raw=JSON.parse(row.payload);amounts=projectReconciliationMoneyFrame(raw,projectReconciliationFrame,projectReconciliationEvidenceFrame);evidence=amounts??projectReconciliationEvidenceFrame(raw,projectReconciliationFrame);report=evidence?.report??projectReconciliationFrame(raw);}catch{}if(!publishedReportMatches(report,source,published)||row.checked_at!==report.checked_at||row.start_date!==report.start_date||row.end_date!==report.end_date||report.checked_at>stamp+60)fail('BUSINESS_RECONCILIATION_STORAGE_INVALID');reports.push(report);legacyRows.push(row);if(evidence)reviews.push({run_id:report.run_id,source_revision:report.source_revision,review:evidence.review});if(amounts)money.push({run_id:report.run_id,source_revision:report.source_revision,money:amounts.money});}
  for(const row of rows[1]?.results??[]){const source=sources.find(source=>source.run_id===row.run_id);if(row.source_revision!==source.source_revision)continue;if(!integer(row.checked_at,1,stamp+60)||!integer(row.next_attempt_at,row.checked_at)||!['SUCCESS','UNAVAILABLE'].includes(row.status)||(row.status==='SUCCESS'?row.code!==null:!codes.includes(row.code)))fail('BUSINESS_RECONCILIATION_STORAGE_INVALID');attempts.push({...row});}
- const order=(a,b)=>sources.findIndex(row=>row.run_id===a.run_id)-sources.findIndex(row=>row.run_id===b.run_id);reports.sort(order);reviews.sort(order);money.sort(order);attempts.sort(order);return {db,published,sources,reports,reviews,money,attempts};
+ const order=(a,b)=>sources.findIndex(row=>row.run_id===a.run_id)-sources.findIndex(row=>row.run_id===b.run_id);reports.sort(order);reviews.sort(order);money.sort(order);attempts.sort(order);return {db,published,sources,reports,reviews,money,attempts,legacyRows};
 }
 function view(month,stamp,state){
  stamp=Math.max(stamp,...state.reports.map(row=>row.checked_at),...state.attempts.map(row=>row.checked_at));
@@ -128,6 +132,29 @@ export async function readBusinessReconciliationEvidence(env,input,{now=()=>Date
 export async function readBusinessReconciliationMoney(env,input,{now=()=>Date.now()}={}){
  const stamp=clock(now),month=selection(input,stamp),state=await snapshot(env,month,stamp,()=>stamp*1000),result=projectBusinessReconciliationMoney({schema:'business_reconciliation_v3',report:view(month,stamp,state),reviews:state.reviews,money:state.money},{projectBusiness:projectBusinessReconciliation,projectFrame:projectReconciliationFrame,projectEvidenceFrame:projectReconciliationEvidenceFrame,projectMoneyFrame:projectReconciliationMoneyFrame});
  if(!result)fail('BUSINESS_RECONCILIATION_RESULT_INVALID');return result;
+}
+
+// Owner reads use only saved data. A missing, old or malformed additive
+// sidecar cannot invalidate the legacy report or manufacture a zero quantity.
+export async function readBusinessReconciliationOriginalItems(env,input,{now=()=>Date.now(),readOnly=true}={}){
+ const stamp=clock(now),month=selection(input,stamp),state=await snapshot(env,month,stamp,()=>stamp*1000,{readOnly}),report=view(month,stamp,state),original=[];
+ try{
+  const table=await state.db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='business_reconciliation_original_items'").first();
+  if(table&&state.reports.length){
+   const rows=await state.db.prepare('SELECT run_id,source_revision,publication_revision,report_checked_at,report_hash,payload,payload_hash FROM business_reconciliation_original_items WHERE run_id IN(SELECT value FROM json_each(?))').bind(JSON.stringify(state.reports.map(row=>row.run_id))).all();
+   for(const row of rows?.results??[]){
+    const legacy=state.legacyRows.find(item=>item.run_id===row.run_id),source=state.reports.find(item=>item.run_id===row.run_id);
+    // The App can republish identical Finance sources. The capture publication
+    // is provenance, while exact Finance identity and legacy bytes prove reuse.
+    if(!legacy||!source||row.source_revision!==source.source_revision||!integer(row.publication_revision,1,report.source_revision)||row.report_checked_at!==source.checked_at||typeof row.report_hash!=='string'||!/^[a-f0-9]{64}$/.test(row.report_hash)||row.report_hash!==await payloadHash(legacy.payload)||typeof row.payload!=='string'||encoder.encode(row.payload).byteLength>65536||typeof row.payload_hash!=='string'||!/^[a-f0-9]{64}$/.test(row.payload_hash)||row.payload_hash!==await payloadHash(row.payload))continue;
+    let checked;try{const raw=JSON.parse(legacy.payload);if(raw.schema==='finance_reconciliation_v3')checked=projectReconciliationOriginalItemsFrame({schema:'finance_reconciliation_v4',report:raw.report,review:raw.review,money:raw.money,original_items:JSON.parse(row.payload)},projectReconciliationFrame,projectReconciliationEvidenceFrame,projectReconciliationMoneyFrame,projectOriginalItemsFrame);}catch{}
+    if(checked)original.push(checked.original_items);
+   }
+  }
+ }catch{/* The additive panel remains explicitly NOT_CAPTURED. */}
+ const incomplete=!report.sources.length||original.length!==report.sources.length||original.some(frame=>[...frame.orders,...frame.cases].some(row=>row.state!=='AVAILABLE'));
+ const result=projectBusinessOriginalItems({schema:'business_original_items_v1',report,original_items:original,pending:incomplete?['ORIGINAL_ITEMS_NOT_CAPTURED']:[]},projectBusinessReconciliation,projectReconciliationFrame,projectOriginalItemsFrame);
+ if(!result)fail('BUSINESS_RECONCILIATION_ORIGINAL_ITEMS_INVALID');return result;
 }
 
 export async function runBusinessReconciliation(env,source,input,{now=()=>Date.now(),canRun=async()=>true,publicationGuard=null}={}){
@@ -184,16 +211,32 @@ export async function runBusinessReconciliation(env,source,input,{now=()=>Date.n
   // The claim is local; only the leased scheduler may send this one bounded
   // private step. Browser observation never calls this function.
   if(publicationGuard&&!await runnable())return result('PAUSED');
-  let raw,error;try{reads++;raw=await source(env,{operation:'step',run_id:selected.run_id});}catch(value){error=value;}
+  let raw,error;try{reads++;raw=await source(env,{operation:'step',run_id:selected.run_id},{includeOriginalItems:true});}catch(value){error=value;}
   const finished=observedClock();if(!await runnable())return result('PAUSED',reads);
-  const evidence=projectReconciliationMoneyFrame(raw,projectReconciliationFrame,projectReconciliationEvidenceFrame)??projectReconciliationEvidenceFrame(raw,projectReconciliationFrame),frame=evidence?.report??projectReconciliationFrame(raw);let code=null;
+  const original=projectReconciliationOriginalItemsFrame(raw,projectReconciliationFrame,projectReconciliationEvidenceFrame,projectReconciliationMoneyFrame,projectOriginalItemsFrame),legacyRaw=original?{schema:'finance_reconciliation_v3',report:original.report,review:original.review,money:original.money}:raw;
+  const evidence=projectReconciliationMoneyFrame(legacyRaw,projectReconciliationFrame,projectReconciliationEvidenceFrame)??projectReconciliationEvidenceFrame(legacyRaw,projectReconciliationFrame),frame=evidence?.report??projectReconciliationFrame(legacyRaw);let code=null;
   if(!frame){const diagnostic=Object.getOwnPropertyDescriptor(Object.getOwnPropertyDescriptor(raw??{},'diagnostic')?.value??{},'code')?.value??Object.getOwnPropertyDescriptor(error??{},'code')?.value;code=codes.includes(diagnostic)?diagnostic:'FINANCE_RECONCILIATION_UNAVAILABLE';}
   else if(!publishedReportMatches(frame,selected,current.published)||frame.checked_at>finished+60)code='FINANCE_RECONCILIATION_SCOPE_MISMATCH';
   const commitAt=publicationGuard?observedClock():finished;if(publicationGuard&&!fresh())return result('PAUSED',reads);
-  const valid=code===null,stamp=valid?Math.max(finished,frame.checked_at):finished,permission=valid&&frame.returns?.permission==='DENIED',pendingCases=valid&&frame.returns?.pending_count>0&&!permission,initialDetails=pendingCases&&frame.cases.some(row=>row.checked_at===null&&row.diagnostic==='DETAILS_PENDING'),next=stamp+(permission?21600:!valid?300:initialDetails?60:pendingCases?300:900),commitGuard=guardAt(commitAt),guard='EXISTS(SELECT 1 FROM business_reconciliation_leases WHERE month=? AND lease_token=? AND lease_until>?)'+(publicationGuard?' AND '+commitGuard.sql:''),args=[month,token,commitAt,...commitGuard.args],writes=[];
-  if(valid){const payload=JSON.stringify(evidence??frame);if(encoder.encode(payload).byteLength>1048576)fail('BUSINESS_RECONCILIATION_RESPONSE_LIMIT');writes.push(db.prepare('INSERT INTO business_reconciliation_reports(run_id,source_revision,start_date,end_date,payload,checked_at) SELECT ?,?,?,?,?,? WHERE '+guard+' ON CONFLICT(run_id) DO UPDATE SET source_revision=excluded.source_revision,start_date=excluded.start_date,end_date=excluded.end_date,payload=excluded.payload,checked_at=excluded.checked_at WHERE business_reconciliation_reports.source_revision=excluded.source_revision AND business_reconciliation_reports.checked_at<=excluded.checked_at').bind(selected.run_id,selected.source_revision,selected.start_date,selected.end_date,payload,frame.checked_at,...args));}
+  const valid=code===null,stamp=valid?Math.max(finished,frame.checked_at):finished,permission=valid&&frame.returns?.permission==='DENIED',pendingCases=valid&&frame.returns?.pending_count>0&&!permission,initialDetails=pendingCases&&frame.cases.some(row=>row.checked_at===null&&row.diagnostic==='DETAILS_PENDING'),next=stamp+(permission?21600:!valid?300:initialDetails?60:pendingCases?300:900),commitGuard=guardAt(commitAt),guard='EXISTS(SELECT 1 FROM business_reconciliation_leases WHERE month=? AND lease_token=? AND lease_until>?)'+(publicationGuard?' AND '+commitGuard.sql:''),args=[month,token,commitAt,...commitGuard.args],writes=[],sidecarWrites=[];
+  if(valid){const payload=JSON.stringify(evidence??frame);if(encoder.encode(payload).byteLength>1048576)fail('BUSINESS_RECONCILIATION_RESPONSE_LIMIT');writes.push(db.prepare('INSERT INTO business_reconciliation_reports(run_id,source_revision,start_date,end_date,payload,checked_at) SELECT ?,?,?,?,?,? WHERE '+guard+' ON CONFLICT(run_id) DO UPDATE SET source_revision=excluded.source_revision,start_date=excluded.start_date,end_date=excluded.end_date,payload=excluded.payload,checked_at=excluded.checked_at WHERE business_reconciliation_reports.source_revision=excluded.source_revision AND business_reconciliation_reports.checked_at<=excluded.checked_at').bind(selected.run_id,selected.source_revision,selected.start_date,selected.end_date,payload,frame.checked_at,...args));
+   if(original){
+    sidecarWrites.push(...BUSINESS_ORIGINAL_ITEMS_SCHEMA.map(sql=>db.prepare(sql)));
+    const hash=await payloadHash(payload),items=JSON.stringify(original.original_items),itemsHash=await payloadHash(items);
+    sidecarWrites.push(db.prepare('INSERT INTO business_reconciliation_original_items(run_id,source_revision,publication_revision,report_checked_at,report_hash,payload,payload_hash) SELECT ?,?,?,?,?,?,? WHERE '+guard+' AND EXISTS(SELECT 1 FROM business_reconciliation_reports WHERE run_id=? AND source_revision=? AND checked_at=? AND payload=?) ON CONFLICT(run_id) DO UPDATE SET source_revision=excluded.source_revision,publication_revision=excluded.publication_revision,report_checked_at=excluded.report_checked_at,report_hash=excluded.report_hash,payload=excluded.payload,payload_hash=excluded.payload_hash WHERE business_reconciliation_original_items.source_revision=excluded.source_revision AND business_reconciliation_original_items.report_checked_at<=excluded.report_checked_at').bind(selected.run_id,selected.source_revision,current.published.publication.source_revision,frame.checked_at,hash,items,itemsHash,...args,selected.run_id,selected.source_revision,frame.checked_at,payload));
+   }
+  }
   writes.push(db.prepare('INSERT INTO business_reconciliation_attempts(run_id,source_revision,checked_at,status,code,next_attempt_at) SELECT ?,?,?,?,?,? WHERE '+guard+' ON CONFLICT(run_id) DO UPDATE SET source_revision=excluded.source_revision,checked_at=excluded.checked_at,status=excluded.status,code=excluded.code,next_attempt_at=excluded.next_attempt_at WHERE business_reconciliation_attempts.checked_at<=excluded.checked_at').bind(selected.run_id,selected.source_revision,stamp,valid?'SUCCESS':'UNAVAILABLE',code,next,...args));
   if(publicationGuard&&!fresh())return result('PAUSED',reads);
-  const saved=await db.batch(writes);if(saved.at(-1)?.meta?.changes!==1)return result('LEASED',reads);const otherDue=current.sources.some(item=>item.run_id!==selected.run_id&&(!current.attempts.find(row=>row.run_id===item.run_id)||current.attempts.find(row=>row.run_id===item.run_id).next_attempt_at<=finished));return result(valid?'CHECKED':'UNAVAILABLE',reads,valid&&(otherDue||initialDetails));
+  let saved;
+  try{saved=await db.batch([...writes.slice(0,-1),...sidecarWrites,writes.at(-1)]);}
+  catch(error){
+   if(!sidecarWrites.length)throw error;
+   // A failed additive store must not make the unchanged financial report
+   // unavailable. Retry only the legacy guarded statements, never the source.
+   if(publicationGuard&&!fresh())return result('PAUSED',reads);
+   saved=await db.batch(writes);
+  }
+  if(saved.at(-1)?.meta?.changes!==1)return result('LEASED',reads);const otherDue=current.sources.some(item=>item.run_id!==selected.run_id&&(!current.attempts.find(row=>row.run_id===item.run_id)||current.attempts.find(row=>row.run_id===item.run_id).next_attempt_at<=finished));return result(valid?'CHECKED':'UNAVAILABLE',reads,valid&&(otherDue||initialDetails));
  }finally{await db.prepare('DELETE FROM business_reconciliation_leases WHERE month=? AND lease_token=?').bind(month,token).run();}
 }

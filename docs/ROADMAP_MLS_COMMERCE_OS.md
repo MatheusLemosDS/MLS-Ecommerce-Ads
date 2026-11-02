@@ -1,3 +1,5 @@
+**Em preparação, ainda não publicado — 02/11/2026:** `2026-11-02.2 — Itens e quantidades das devoluções`, branch `feature/returns-original-items-20261102`, base `9fc4c69`. Extensão opt-in e compatível Finance/Auth/App apresenta separadamente itens comerciais preservados do pedido pago e da solicitação Returns, com fonte/cobertura; dados antigos sem captura seguem desconhecidos, nunca zero. Consulta no mesmo caso/mês físico fixado, sem novas chamadas ao provedor ou backfill. Não converte unidades de anúncio/kit em peças e não altera quantidades físicas originais, fabricação, vínculos, estoque ou lucro. Testes/CI e publicação Finance → Auth → App ainda pendentes; última Live comprovada PR102 abaixo. M2/M2.2 abertas. [Escopo e caminhos de uso](MLS_ORIGINAL_RETURN_ITEMS_2026_11_02.md).
+
 **Live PR102 — líquido mensal e histórico, 02/11/2026 às 11:44:54 Brasília:** versão visível `2026-11-02.1`, App `8e1056d2` publicados e conferidos. Saldo mensal separado identifica despesas desconhecidas e Ads salvos com data/dia parcial; barra de mês dos agentes consulta o histórico salvo, preservando rascunhos e escopos. CI 41463788001 aprovada no head `2f13eaa1`: 3.205 Node e 67 Python aprovados. Bytes dos três Workers, Auth/Finance, configuração e domínios conferidos. A integração em main é conferida separadamente pelo estado da PR102 vinculada. A ausência de outras despesas de novembro foi declarada pelo proprietário e registrada separadamente, sem zero presumido. Resultado estrito/Hermes e gates comerciais preservados; M2/M2.2 continuam abertas. [Mudanças, uso e recibo](MLS_MONTHLY_NET_HISTORY_2026_11_02.md). As entregas abaixo preservam o histórico.
 
 **Live PR101 — navegação e novidades, 01/11/2026 às 19:25:21 Brasília:** versão visível `2026-11-01.1`, App `358957d4`; cartão na Visão geral, acessos diretos, busca que abre os formulários e roadmap visual atualizado publicados e conferidos. CI 41356444549 aprovada no head `f5584fe3`; Auth/Finance e configuração preservados. A integração em main é conferida separadamente pelo estado da PR vinculada; CI e recibo identificam a publicação runtime. Próximo: proprietário conferir os três acessos e um recebimento real; M2/M2.2, conciliação e itens originais permanecem abertos. [Mudanças, uso, validação e limites](MLS_LIVE_UPDATE_DISCOVERY_2026_11_01.md). As entregas abaixo preservam o histórico.
@@ -427,6 +429,16 @@ Esta é uma trilha técnica independente que **não substitui o gate de saída d
 
 ### M2.2 — Produção incorrida e devolução reaproveitável — **PARCIAL / CONTROLES E ASSOCIAÇÃO DECLARADA PUBLICADOS**
 
+**Incremento em preparação — 02/11/2026:** evidência separada de itens
+comerciais do pedido pago salvo e da solicitação Returns, por extensão opt-in
+Finance/Auth/App. Fonte, datas e cobertura acompanham o mesmo caso e o mês
+físico fixado; ausência legada fica `NOT_CAPTURED`/UNKNOWN. Não expande kits
+em peças, altera `orig_quantities` ou promove vínculos/físico/fabricação a
+quantidades verificadas. Captura somente nas consultas existentes futuras,
+sem novo backfill ou chamada ao provedor. Validação integrada, CI e publicação
+planejada Finance → Auth → App ainda pendentes. Não encerra M2/M2.2.
+[Escopo e uso](MLS_ORIGINAL_RETURN_ITEMS_2026_11_02.md).
+
 A [primeira etapa PR98](MLS_M22_PHYSICAL_RETURNS_2026_11_01.md) entrega o controle físico interno definido pela [auditoria de devoluções e roadmap](MLS_RETURNS_REUSE_ROADMAP_AUDIT_2026_11_01.md). A [etapa M2.2b PR99](MLS_M22_INCURRED_PRODUCTION_2026_11_01.md) acrescenta o registro histórico independente da fabricação declarada. A [primeira M2.2c PR100](MLS_M22_RETURN_MANUFACTURING_LINKS_2026_11_01.md) associa quantidades declaradas entre os dois controles, com confiança OWNER_CONFIRMED e limites globais. Os fatos são informados pelo operador; publicação técnica e testes simulados não comprovam peça individual, quantidades originais, recebimentos reais, toda a fabricação da loja ou pagamentos, nem encerram a fase.
 
 - [x] Separar o controle interno de recebimento, quarentena e inspeção da situação/reembolso na Shopee. CLOSED/REFUND_PAID não criam peças recebidas.
@@ -556,6 +568,11 @@ Conversão de identidade M0 publicada pela **PR #11**, merge
 ## 10. Próximo passo ao retomar
 
 A fase canônica é **M2 — Finance/Returns confiáveis como agentes observadores**.
+
+O incremento ativo `feature/returns-original-items-20261102` prepara a
+evidência comercial de origem. Concluir seus testes, CI e recibos dos três
+Workers antes de declarar entrega. Não reiniciar coleta para preencher itens
+legados nem promover unidades comerciais a quantidades físicas esperadas.
 
 A PR102 está publicada e conferida no App `8e1056d2`, versão visível
 `2026-11-02.1`, com CI 41463788001 aprovada. Sua integração em main é conferida

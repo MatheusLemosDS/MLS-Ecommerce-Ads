@@ -28,7 +28,7 @@ import {BUSINESS_RECONCILIATION_SCHEMA,BusinessReconciliationError,readBusinessR
 import {BUSINESS_MONTH_SCHEMA,BusinessMonthError,businessMonthClientFrame,readBusinessMonthAdsState,readBusinessMonthDisplay} from './business-month.mjs';
 import {ExpenseLedgerError,readExpenseLedger,mutateExpenseLedger} from './expense-ledger.mjs';
 import {PhysicalReturnsError} from './physical-returns.mjs';
-import {readPhysicalReturnsWorkspace,mutatePhysicalReturnsWorkspace} from './physical-returns-workspace.mjs';
+import {readPhysicalReturnsWorkspace,readPhysicalReturnsOriginalItemsWorkspace,mutatePhysicalReturnsWorkspace} from './physical-returns-workspace.mjs';
 import {PHYSICAL_RETURNS_CSS,PHYSICAL_RETURNS_CLIENT} from './physical-returns-view.mjs';
 import {IncurredProductionError} from './incurred-production.mjs';
 import {readIncurredProductionWorkspace,mutateIncurredProductionWorkspace} from './incurred-production-workspace.mjs';
@@ -466,9 +466,10 @@ async function adminFetch(request,env,services={}){const url=new URL(request.url
  if(path==='/api/admin/returns/physical'){
   assert(current.role==='owner','FORBIDDEN',403);
   assert(['GET','POST'].includes(request.method),'METHOD_NOT_ALLOWED',405);
-  const entries=[...url.searchParams];assert(entries.length===1&&entries[0][0]==='month','PHYSICAL_RETURNS_REQUEST_INVALID');
-  const selected={month:entries[0][1]};
-  if(request.method==='GET')return json(await readPhysicalReturnsWorkspace(env,selected));
+  const entries=[...url.searchParams],originalItems=request.method==='GET'&&entries.length===2&&url.searchParams.getAll('month').length===1&&url.searchParams.getAll('evidence').length===1&&url.searchParams.get('evidence')==='original-items-v1';
+  assert(originalItems||entries.length===1&&entries[0][0]==='month','PHYSICAL_RETURNS_REQUEST_INVALID');
+  const selected={month:url.searchParams.get('month')};
+  if(request.method==='GET')return json(await (originalItems?readPhysicalReturnsOriginalItemsWorkspace:readPhysicalReturnsWorkspace)(env,selected));
   sameOrigin(request);assert(await equal(request.headers.get('x-csrf-token')||'',current.csrf),'CSRF_REJECTED',403);
   return json(await mutatePhysicalReturnsWorkspace(env,selected,await input(request,8192),current.user));
  }

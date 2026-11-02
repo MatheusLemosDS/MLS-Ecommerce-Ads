@@ -1,3 +1,11 @@
+<!-- ORIGINAL_RETURN_ITEMS_RELEASE -->
+**Em preparação, ainda não publicado — 2026-11-02.2:** evidências dos itens e
+quantidades originais no MLS Returns, com fontes e cobertura separadas dos
+registros físicos. A última Live comprovada continua PR102 abaixo. Validação
+integrada, CI, publicação dos três Workers e conferência ainda pendentes.
+[Escopo e critérios](docs/MLS_ORIGINAL_RETURN_ITEMS_2026_11_02.md).
+<!-- END_ORIGINAL_RETURN_ITEMS_RELEASE -->
+
 # MLS Commerce OS — App, Auth e Financeiro
 
 Repositório do **MLS Commerce OS** para os três Workers Cloudflare já ativos:

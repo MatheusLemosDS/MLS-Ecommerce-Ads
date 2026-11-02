@@ -46,7 +46,7 @@ test('source reads are lazy and month selection stays pinned without changing th
  const f=fixture(t),ui=mount(f);t.after(()=>ui.stop());assert.equal(ui.calls.length,0);await ui.open();assert.equal(ui.calls.length,1);assert.equal(ui.snapshot().physical.revision,0);
  await ui.b.run('brazaPhysicalReturns.observe("2026-11")');assert.equal(ui.calls.length,1,'observing the same month cannot create a new read loop');
  ui.b.nodes.get('physicalReturnsMonthSelect').value='2026-10';await ui.b.nodes.get('physicalReturnsMonthSelect').onchange();await ui.b.flush();assert.equal(ui.snapshot().month,'2026-10');assert.equal(ui.b.run('brazaMonthDashboard.getSnapshot().month'),'2026-11');
- await ui.b.run('brazaPhysicalReturns.observe("2026-11")');ui.b.run('brazaPhysicalReturns.open();');await ui.b.flush();assert.equal(ui.snapshot().month,'2026-10');assert.equal(ui.calls.at(-1).path,'returns/physical?month=2026-10');
+ await ui.b.run('brazaPhysicalReturns.observe("2026-11")');ui.b.run('brazaPhysicalReturns.open();');await ui.b.flush();assert.equal(ui.snapshot().month,'2026-10');assert.equal(ui.calls.at(-1).path,'returns/physical?month=2026-10&evidence=original-items-v1');
  ui.b.nodes.get('physicalReturnsMonthSelect').value='2026-12';assert.equal(ui.b.nodes.get('physicalReturnsMonthSelect').onchange(),false);assert.equal(ui.b.nodes.get('physicalReturnsMonthSelect').value,'2026-10');
 });
 

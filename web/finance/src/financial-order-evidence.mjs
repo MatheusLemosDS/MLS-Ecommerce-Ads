@@ -95,7 +95,8 @@ export async function buildFinancialOrderEvidence(input){
 // A single consistent local snapshot, including an optional paid-page cache.
 // Legacy/malformed sidecars stay explicit; they never acquire invented returns
 // or adjustment amounts and no provider access is performed on this path.
-export async function readFinancialOrderEvidence(env,input,{now=()=>Date.now()}={}){
+export async function readFinancialOrderEvidence(env,input,{now=()=>Date.now(),includeOriginalItems=false}={}){
+ if(typeof includeOriginalItems!=='boolean')fail('REQUEST_INVALID',400);
  if(!exact(input,['run_id'])||!projectBusinessPeriodRequest({operation:'read',run_id:input.run_id}))fail('REQUEST_INVALID',400);
  const db=env?.FINANCE_DB;if(typeof db?.prepare!=='function'||typeof db?.batch!=='function'||db===env.ADMIN_DB)fail('CONFIGURATION');
  let stamp;try{const value=now();if(!integer(value,1,9999999999999))throw Error();stamp=Math.floor(value/1000);}catch{fail('CLOCK_INVALID');}
@@ -112,7 +113,7 @@ export async function readFinancialOrderEvidence(env,input,{now=()=>Date.now()}=
     try{if(value.evidence_source_hash!==record.source_hash||value.evidence_checked_at!==record.checked_at||typeof value.evidence_payload!=='string'||encoder.encode(value.evidence_payload).byteLength>32768||!digest(value.evidence_payload_hash)||await hash(value.evidence_payload)!==value.evidence_payload_hash)throw Error();evidence=projectFinancialOrderEvidence(JSON.parse(value.evidence_payload));if(!evidence||await hash(evidence.order_sn)!==record.order_hash||record.payment_covered===1&&evidence.amounts.escrow_amount_raw!==record.escrow_raw&&evidence.diagnostic!=='INVALID'||record.returns_seen!==null&&evidence.return_order_sn_list!==null&&record.returns_seen!==Number(evidence.return_order_sn_list.length>0)&&evidence.diagnostic!=='INVALID')throw Error();}catch{evidence=null;}
     if(!cache&&(!evidence||['INVALID','ADJUSTMENT_MISMATCH'].includes(evidence.diagnostic)))invalid++;
    }else if(!cache)missing++;
-   result.push({order_hash:record.order_hash,source_hash:record.source_hash,checked_at:record.checked_at,bucket:record.bucket,payment_covered:record.payment_covered,escrow_raw:record.escrow_raw,returns_seen:record.returns_seen,evidence});
+   result.push({order_hash:record.order_hash,source_hash:record.source_hash,checked_at:record.checked_at,bucket:record.bucket,payment_covered:record.payment_covered,escrow_raw:record.escrow_raw,returns_seen:record.returns_seen,evidence,...(includeOriginalItems?{items:JSON.parse(record.items)}:{})});
   }return result;
  };
  const orders=await projectRows(committed,false),cached_orders=await projectRows(cached,true),times=orders.map(row=>row.checked_at);

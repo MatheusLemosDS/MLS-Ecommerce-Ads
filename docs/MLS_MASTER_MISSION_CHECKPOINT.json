@@ -1,6 +1,6 @@
 {
   "schema": "mls_master_mission_checkpoint_v1",
-  "updated_at": "2026-11-02T14:44:54+00:00",
+  "updated_at": "2026-11-02T20:31:16.590971+00:00",
   "base_visual_sha": "8d860b2c4f26531c53c4cdba0e06a14f51a7eef4",
   "visual_branch": "feature/mls-mockup-parity-real-charts-20261029",
   "visual_pr": 79,
@@ -180,95 +180,26 @@
     }
   ],
   "current_release": {
-    "id": "MONTHLY_BALANCE_PRESENTATION_AND_SHARED_AGENT_HISTORY",
-    "status": "OFFICIAL_LIVE_MONTHLY_BALANCE_AGENT_HISTORY_VERIFIED",
-    "pull_request": 102,
-    "branch": "fix/monthly-net-visibility-20261102",
-    "base_main": "a0900fb7148defa364ba82109ba57ac0ce6dc082",
-    "code_commit": "2554518b81e270beba4bcf0c2e48d9583d7715ce",
-    "reviewed_head": "2f13eaa19f9785207c6b2be0b66909e9116eafc4",
-    "ci_run": 41463788001,
-    "node_tests": 3205,
-    "python_tests": 67,
-    "docs": "docs/MLS_MONTHLY_NET_HISTORY_2026_11_02.md",
-    "deployment": {
-      "versions": {
-        "app": "8e1056d2-4e2f-4ffe-9100-84ea2758a0c5",
-        "auth": "37bead27-c941-40e6-87e8-832f01d1785a",
-        "finance": "e0b258a2-e73f-45d2-912a-1cb6fd666e18"
-      },
-      "generated_sha256": {
-        "app": "53bddb0d49961150ac0f76785c07a628208c3f66201219bd4d7f6416effaccfa",
-        "auth": "c63ee09b2d98b6321e3ae7feae1066a9eec9160b49868d72fb84cb0471a0018d",
-        "finance": "dff201100ed319f3b7d4d8cabf6826237be3a140e679f562cb982cec5bdd89b4"
-      },
-      "published_sha256": {
-        "app": "a455b8c8b8ce37ac3b48c0c504bb66766bcebf6894bd7c23679c67b3668be32e",
-        "auth": "46053d0b5f11ff4d738b4cf2cc1cc6afda7d21e233980b1e640f63728f32af2a",
-        "finance": "b4195212972f5a9f0f8ff08c9504e983f8bd3ca3b3c42493cb7c88addb84de8b"
-      },
-      "exact_bytes_verified": true,
-      "configuration_preserved": true,
-      "domains_preserved": true,
-      "flags_preserved": true,
-      "cron_preserved": true,
-      "auth_finance_versions_preserved": true,
-      "completed_at": 1793630694
-    },
-    "human_code_release_id": "2026-11-02.1",
-    "changes": [
-      "BOUNDED_MONTHLY_PRESENTATION_WITH_EXPLICIT_UNKNOWN_DEDUCTIONS",
-      "SAVED_ADS_TIMESTAMP_AND_PARTIAL_LAST_DAY_RETAINED",
-      "SHARED_MONTH_FOR_ALL_SEVEN_AGENT_WORKSPACES",
-      "SAVED_READS_ONLY_AND_EXPLICIT_CURRENT_SOURCE_SCOPES",
-      "BROWSER_BACK_FORWARD_AND_HISTORICAL_RELOAD",
-      "LEGACY_EXPENSE_DRAFT_GUARD",
-      "ADS_AGENT_MONTHLY_SPEND_AND_ROAS_SCOPE",
-      "TOUCH_TARGET_44PX"
-    ],
-    "strict_monthly_results_and_hermes_contracts_unchanged": true,
-    "financial_source_dtos_unchanged": true,
-    "presentation_schema": "monthly_profit_presentation_v1",
-    "missing_costs_assumed_zero": false,
-    "new_provider_calls": 0,
-    "server_schema_changed": false,
-    "owner_expense_confirmation": {
-      "month": "2026-11",
-      "status": "EXPLICIT_OWNER_CHAT_CONFIRMED_AND_AUDITED",
-      "canonical_mutator": "mutateExpenseLedger",
-      "amount_omitted_from_public_checkpoint": true,
-      "scope": "SEPARATE_AUTHORIZED_BUSINESS_FACT_NOT_RUNTIME_PUBLICATION",
-      "idempotent_replay_verified": true,
-      "other_months_unchanged": true
-    },
-    "validation": {
-      "synthetic_chromium": [
-        "normal",
-        "minified",
-        "320px",
-        "1365px"
-      ],
-      "page_errors": 0,
-      "horizontal_overflow": false,
-      "original_financial_frame_unchanged": true,
-      "strict_result_unchanged": true,
-      "period_switches_saved_reads_only": true,
-      "private_retained_data_replay": "BEFORE_AND_AFTER_SEPARATE_OWNER_EXPENSE_CONFIRMATION",
-      "real_owner_browser": "NOT_OBSERVED_EXECUTOR_WAF_403"
-    },
-    "scopes": {
-      "monthly_finance_and_ads": "SELECTED_MONTH_SAVED_SOURCES",
-      "catalog_and_dtf": "CURRENT_NOT_HISTORICAL_RECONSTRUCTION",
-      "incurred_production": "OWN_MANUFACTURING_MONTH_AND_WEEK",
-      "physical_returns": "OWN_MONTH_WHEN_PINNED",
-      "origin_links": "SAVED_GLOBAL_HISTORY"
-    },
+    "id": "M22_ORIGINAL_ORDER_AND_RETURN_ITEM_EVIDENCE",
+    "status": "PREPARING_ORIGINAL_RETURN_ITEMS_NOT_PUBLISHED",
+    "branch": "feature/returns-original-items-20261102",
+    "base_main": "9fc4c69f004e5e709931fad4fdc3bdfa385aff93",
+    "human_code_release_id": "2026-11-02.2",
+    "docs": "docs/MLS_ORIGINAL_RETURN_ITEMS_2026_11_02.md",
     "finance_m2": "OPEN",
     "m22": "PARTIAL",
-    "financial_reuse_valuation_implemented": false,
-    "seller_centre_comparison": "NOT_COMPARED",
-    "bank_settlement": "UNVERIFIED",
-    "commercial_writes": "LOCKED"
+    "strict_financial_results_unchanged": true,
+    "physical_ledgers_and_manufacturing_links_unchanged": true,
+    "legacy_contracts_and_stored_payloads_preserved": true,
+    "listing_units_are_not_physical_pieces": true,
+    "legacy_quantities_assumed_zero": false,
+    "new_provider_requests": 0,
+    "provider_capture": "EXISTING_SCHEDULED_RETURN_DETAIL_RESPONSES_ONLY",
+    "owner_reads": "SAVED_SELECT_ONLY_NO_DDL_OR_PROVIDER",
+    "original_quantities_in_legacy_links": "UNAVAILABLE_UNCHANGED",
+    "inventory_valuation": "UNKNOWN_NOT_IMPLEMENTED",
+    "commercial_writes": "LOCKED",
+    "operator_facts_created_for_qa": false
   },
   "validation_history": [
     {
@@ -2932,5 +2863,118 @@
     "seller_centre_comparison": "NOT_COMPARED",
     "bank_settlement": "UNVERIFIED",
     "commercial_writes": "LOCKED"
+  },
+  "previous_release_before_original_return_items": {
+    "id": "MONTHLY_BALANCE_PRESENTATION_AND_SHARED_AGENT_HISTORY",
+    "status": "OFFICIAL_LIVE_MONTHLY_BALANCE_AGENT_HISTORY_VERIFIED",
+    "pull_request": 102,
+    "branch": "fix/monthly-net-visibility-20261102",
+    "base_main": "a0900fb7148defa364ba82109ba57ac0ce6dc082",
+    "code_commit": "2554518b81e270beba4bcf0c2e48d9583d7715ce",
+    "reviewed_head": "2f13eaa19f9785207c6b2be0b66909e9116eafc4",
+    "ci_run": 41463788001,
+    "node_tests": 3205,
+    "python_tests": 67,
+    "docs": "docs/MLS_MONTHLY_NET_HISTORY_2026_11_02.md",
+    "deployment": {
+      "versions": {
+        "app": "8e1056d2-4e2f-4ffe-9100-84ea2758a0c5",
+        "auth": "37bead27-c941-40e6-87e8-832f01d1785a",
+        "finance": "e0b258a2-e73f-45d2-912a-1cb6fd666e18"
+      },
+      "generated_sha256": {
+        "app": "53bddb0d49961150ac0f76785c07a628208c3f66201219bd4d7f6416effaccfa",
+        "auth": "c63ee09b2d98b6321e3ae7feae1066a9eec9160b49868d72fb84cb0471a0018d",
+        "finance": "dff201100ed319f3b7d4d8cabf6826237be3a140e679f562cb982cec5bdd89b4"
+      },
+      "published_sha256": {
+        "app": "a455b8c8b8ce37ac3b48c0c504bb66766bcebf6894bd7c23679c67b3668be32e",
+        "auth": "46053d0b5f11ff4d738b4cf2cc1cc6afda7d21e233980b1e640f63728f32af2a",
+        "finance": "b4195212972f5a9f0f8ff08c9504e983f8bd3ca3b3c42493cb7c88addb84de8b"
+      },
+      "exact_bytes_verified": true,
+      "configuration_preserved": true,
+      "domains_preserved": true,
+      "flags_preserved": true,
+      "cron_preserved": true,
+      "auth_finance_versions_preserved": true,
+      "completed_at": 1793630694
+    },
+    "human_code_release_id": "2026-11-02.1",
+    "changes": [
+      "BOUNDED_MONTHLY_PRESENTATION_WITH_EXPLICIT_UNKNOWN_DEDUCTIONS",
+      "SAVED_ADS_TIMESTAMP_AND_PARTIAL_LAST_DAY_RETAINED",
+      "SHARED_MONTH_FOR_ALL_SEVEN_AGENT_WORKSPACES",
+      "SAVED_READS_ONLY_AND_EXPLICIT_CURRENT_SOURCE_SCOPES",
+      "BROWSER_BACK_FORWARD_AND_HISTORICAL_RELOAD",
+      "LEGACY_EXPENSE_DRAFT_GUARD",
+      "ADS_AGENT_MONTHLY_SPEND_AND_ROAS_SCOPE",
+      "TOUCH_TARGET_44PX"
+    ],
+    "strict_monthly_results_and_hermes_contracts_unchanged": true,
+    "financial_source_dtos_unchanged": true,
+    "presentation_schema": "monthly_profit_presentation_v1",
+    "missing_costs_assumed_zero": false,
+    "new_provider_calls": 0,
+    "server_schema_changed": false,
+    "owner_expense_confirmation": {
+      "month": "2026-11",
+      "status": "EXPLICIT_OWNER_CHAT_CONFIRMED_AND_AUDITED",
+      "canonical_mutator": "mutateExpenseLedger",
+      "amount_omitted_from_public_checkpoint": true,
+      "scope": "SEPARATE_AUTHORIZED_BUSINESS_FACT_NOT_RUNTIME_PUBLICATION",
+      "idempotent_replay_verified": true,
+      "other_months_unchanged": true
+    },
+    "validation": {
+      "synthetic_chromium": [
+        "normal",
+        "minified",
+        "320px",
+        "1365px"
+      ],
+      "page_errors": 0,
+      "horizontal_overflow": false,
+      "original_financial_frame_unchanged": true,
+      "strict_result_unchanged": true,
+      "period_switches_saved_reads_only": true,
+      "private_retained_data_replay": "BEFORE_AND_AFTER_SEPARATE_OWNER_EXPENSE_CONFIRMATION",
+      "real_owner_browser": "NOT_OBSERVED_EXECUTOR_WAF_403"
+    },
+    "scopes": {
+      "monthly_finance_and_ads": "SELECTED_MONTH_SAVED_SOURCES",
+      "catalog_and_dtf": "CURRENT_NOT_HISTORICAL_RECONSTRUCTION",
+      "incurred_production": "OWN_MANUFACTURING_MONTH_AND_WEEK",
+      "physical_returns": "OWN_MONTH_WHEN_PINNED",
+      "origin_links": "SAVED_GLOBAL_HISTORY"
+    },
+    "finance_m2": "OPEN",
+    "m22": "PARTIAL",
+    "financial_reuse_valuation_implemented": false,
+    "seller_centre_comparison": "NOT_COMPARED",
+    "bank_settlement": "UNVERIFIED",
+    "commercial_writes": "LOCKED"
+  },
+  "original_return_items_2026_11_02": {
+    "id": "M22_ORIGINAL_ORDER_AND_RETURN_ITEM_EVIDENCE",
+    "status": "PREPARING_ORIGINAL_RETURN_ITEMS_NOT_PUBLISHED",
+    "branch": "feature/returns-original-items-20261102",
+    "base_main": "9fc4c69f004e5e709931fad4fdc3bdfa385aff93",
+    "human_code_release_id": "2026-11-02.2",
+    "docs": "docs/MLS_ORIGINAL_RETURN_ITEMS_2026_11_02.md",
+    "finance_m2": "OPEN",
+    "m22": "PARTIAL",
+    "strict_financial_results_unchanged": true,
+    "physical_ledgers_and_manufacturing_links_unchanged": true,
+    "legacy_contracts_and_stored_payloads_preserved": true,
+    "listing_units_are_not_physical_pieces": true,
+    "legacy_quantities_assumed_zero": false,
+    "new_provider_requests": 0,
+    "provider_capture": "EXISTING_SCHEDULED_RETURN_DETAIL_RESPONSES_ONLY",
+    "owner_reads": "SAVED_SELECT_ONLY_NO_DDL_OR_PROVIDER",
+    "original_quantities_in_legacy_links": "UNAVAILABLE_UNCHANGED",
+    "inventory_valuation": "UNKNOWN_NOT_IMPLEMENTED",
+    "commercial_writes": "LOCKED",
+    "operator_facts_created_for_qa": false
   }
 }

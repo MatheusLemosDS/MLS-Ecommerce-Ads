@@ -9,6 +9,7 @@ import {projectProductIndexRequest,projectProductIndexFrame,productIndexRequestM
 import {projectHistoricalVariantEvidenceRequest,projectHistoricalVariantEvidenceFrame,historicalVariantEvidenceRequestMatches,historicalVariantEvidenceDiagnostic} from './historical-variant-evidence-frame.mjs';
 import {projectEscrowReleaseRequest,projectEscrowReleaseFrame,projectEscrowReleaseEvidenceFrame,projectEscrowReleaseCoverageRequest,projectEscrowReleaseCoverageFrame,escrowReleaseRequestMatches,escrowReleaseCoverageRequestMatches} from './escrow-release-frame.mjs';
 import {projectReconciliationRequest,projectReconciliationFrame,projectReconciliationEvidenceFrame,projectReconciliationMoneyFrame,reconciliationRequestMatches} from './reconciliation-frame.mjs';
+import {projectOriginalItemsFrame,projectReconciliationOriginalItemsFrame} from './original-items-frame.mjs';
 import {projectIncomeOverviewFrame} from './income-overview-frame.mjs';
 import {projectIncomeDetailFrame} from './income-detail-frame.mjs';
 import {projectPendingIncomeScanRequest,projectPendingIncomeScanFrame} from './pending-income-frame.mjs';
@@ -290,6 +291,7 @@ export function createFinanceWorker({adapter, paymentSample, paymentPreview, var
       }
       const callback = url.pathname === PREFIX + '/callback';
       if (url.origin !== ORIGIN || url.username || url.password || url.hash) return failure('NOT_FOUND', 404, callback);
+      if(url.pathname.startsWith('/internal/shopee/finance/')&&url.pathname!==RECONCILIATION_PATH&&request.headers.has('x-braza-original-items-contract'))return failure('INVALID_REQUEST',400);
       if(url.pathname===INCOME_OVERVIEW_PATH){
         if(request.method!=='POST')return failure('METHOD_NOT_ALLOWED',405);
         if(url.search)return failure('INVALID_REQUEST',400);
@@ -334,9 +336,10 @@ export function createFinanceWorker({adapter, paymentSample, paymentPreview, var
         if(env?.FINANCE_CONNECTION_ENABLED!=='true'||typeof reconciliation!=='function'||typeof fetchImpl!=='function'||typeof now!=='function')return failure('CONFIGURATION_PENDING',503);
         const contract=request.headers.get('x-braza-client-contract');if(contract!==null&&!['finance-reconciliation-v1','finance-reconciliation-v2'].includes(contract))return failure('INVALID_REQUEST',400);
         const refundContract=request.headers.get('x-braza-refund-contract');if(refundContract!==null&&(refundContract!=='refunds-v1'||contract!=='finance-reconciliation-v2'))return failure('INVALID_REQUEST',400);
-        const includeReview=contract==='finance-reconciliation-v2',includeMoney=refundContract==='refunds-v1';
+        const originalItemsContract=request.headers.get('x-braza-original-items-contract');if(originalItemsContract!==null&&(originalItemsContract!=='original-items-v1'||contract!=='finance-reconciliation-v2'||refundContract!=='refunds-v1'))return failure('INVALID_REQUEST',400);
+        const includeReview=contract==='finance-reconciliation-v2',includeMoney=refundContract==='refunds-v1',includeOriginalItems=originalItemsContract==='original-items-v1';
         const input=await privateFinanceBody(request,false,false,false,false,false,false,true);if(!input)return failure('INVALID_REQUEST',400);
-        try{const raw=await reconciliation(env,{...input,fetchImpl,now,...(includeReview?{includeReview:true}:{}),...(includeMoney?{includeMoney:true}:{})}),money=projectReconciliationMoneyFrame(raw,projectReconciliationFrame,projectReconciliationEvidenceFrame),evidence=projectReconciliationEvidenceFrame(money?{schema:'finance_reconciliation_v2',report:money.report,review:money.review}:raw,projectReconciliationFrame),frame=evidence?.report??projectReconciliationFrame(raw);if(!frame||!reconciliationRequestMatches(input,frame))throw Error();return response(includeMoney&&money?money:includeReview&&evidence?evidence:frame,200,{json:true});}
+        try{const raw=await reconciliation(env,{...input,fetchImpl,now,...(includeReview?{includeReview:true}:{}),...(includeMoney?{includeMoney:true}:{}),...(includeOriginalItems?{includeOriginalItems:true}:{})}),original=projectReconciliationOriginalItemsFrame(raw,projectReconciliationFrame,projectReconciliationEvidenceFrame,projectReconciliationMoneyFrame,projectOriginalItemsFrame),money=projectReconciliationMoneyFrame(original?{schema:'finance_reconciliation_v3',report:original.report,review:original.review,money:original.money}:raw,projectReconciliationFrame,projectReconciliationEvidenceFrame),evidence=projectReconciliationEvidenceFrame(money?{schema:'finance_reconciliation_v2',report:money.report,review:money.review}:raw,projectReconciliationFrame),frame=evidence?.report??projectReconciliationFrame(raw);if(!frame||!reconciliationRequestMatches(input,frame))throw Error();return response(includeOriginalItems&&original?original:includeMoney&&money?money:includeReview&&evidence?evidence:frame,200,{json:true});}
         catch{return response({error:'FINANCE_RECONCILIATION_UNAVAILABLE'},502,{json:true});}
       }
       if(url.pathname===HISTORICAL_EVIDENCE_PATH){

@@ -21,14 +21,17 @@ test('roadmap explains available physical controls, pending financial proof and 
   assert.match(section,new RegExp('data-roadmap-stage="'+stage+'"'));
  for(const gate of ['ci','owner-qa','rollback','approval'])
   assert.match(section,new RegExp('data-roadmap-gate="'+gate+'"'));
- for(const route of ['/admin?tab=agents','/admin?tab=agent-finance','/admin?tab=agent-finance#businessMonthNetCard','/admin?tab=agent-finance#mlsAgentPeriod','/admin?tab=agent-finance#businessMonthExpensesForm','/admin?tab=agent-returns#physicalReturnsDetails','/admin?tab=margins#incurredProductionDetails','/admin?tab=agent-returns#returnManufacturingLinksDetails'])
+ for(const route of ['/admin?tab=agents','/admin?tab=agent-finance','/admin?tab=agent-finance#businessMonthNetCard','/admin?tab=agent-finance#mlsAgentPeriod','/admin?tab=agent-finance#businessMonthExpensesForm','/admin?tab=agent-returns#physicalReturnsOriginalItems','/admin?tab=agent-returns#physicalReturnsDetails','/admin?tab=margins#incurredProductionDetails','/admin?tab=agent-returns#returnManufacturingLinksDetails'])
   assert.ok(section.includes('href="'+route+'"'),'missing existing owner navigation: '+route);
  assert.match(section,/Controles disponíveis/);
  assert.match(section,/Líquido mensal e saldo parcial/);
  assert.match(section,/não presume zero nem copia a declaração de outro mês/);
  assert.match(section,/Entregas anteriores · controles físicos/);
+ assert.match(section,/Itens do pedido e da devolução/);
+ assert.match(section,/Dados antigos ou ausentes permanecem desconhecidos, nunca quantidade zero/);
+ assert.match(section,/Entregas anteriores · líquido mensal e histórico/);
  assert.match(section,/custo histórico/);
- assert.match(section,/Quantidades originais da solicitação e valor recuperado ainda estão indisponíveis/);
+ assert.match(section,/Quando os detalhes originais não foram preservados, permanecem desconhecidos/);
  assert.match(section,/Seller Centre e banco/);
  assert.doesNotMatch(section,/PR #68|2\.143 Node|Não publicado|29\/10\/2026|V3\.6/);
  assert.match(section,/M2/);
