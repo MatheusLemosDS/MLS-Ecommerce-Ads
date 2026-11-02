@@ -30,9 +30,9 @@ export const RELEASE_BASE_COMMIT=approvedCandidate.base_commit;
 export const RELEASE_EXPECTED_SHA=Object.freeze({...approvedCandidate.expected_hashes});
 export const RELEASE_EXPECTED_LIVE_FLAGS=Object.freeze({...validFlags});
 export const RELEASE_ALLOWED_FILES=Object.freeze([...approvedCandidate.allowed_files]);
-// Release discovery and navigation are App-only. No Finance/Auth source or
-// deployment configuration is authorized; financial data and calculation
-// contracts remain unchanged. Existing physical ledgers remain independent.
+// Monthly presentation and shared agent periods are App-only. No Finance/Auth
+// source or deployment configuration is authorized; strict financial results,
+// server DTOs and commercial authority remain unchanged.
 export const RELEASE_APPROVED_PROTECTED_FILES=Object.freeze([]);
 
 

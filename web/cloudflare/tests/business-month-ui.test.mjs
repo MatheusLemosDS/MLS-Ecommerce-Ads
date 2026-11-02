@@ -369,7 +369,7 @@ test('a missing payment keeps monthly sales and net pending rather than manufact
 test('an explicit zero expense is saved once per month and recalculates only from the verified response',async()=>{
  const source=fixture(),unconfirmed=fixture({...source,expenses:{revision:0,external_expenses_cents:null,recharge_treatment:'UNCONFIRMED',updated_at:null},result:{...source.result,net_estimate_cents:null,net_margin_bps:null,pending:['EXTERNAL_EXPENSES_REQUIRED']}});
  const b=browser(unconfirmed);await b.run('brazaMonthDashboard.start({api,syncVariants})');
- assert.equal(b.run("control('ExpensesValue').value"),'');assert.equal(b.text('Net'),'Em conciliação');
+ assert.equal(b.run("control('ExpensesValue').value"),'');assert.match(b.text('Net'),/48,00/);assert.equal(b.text('NetLabel'),'Saldo parcial antes de outras despesas');assert.equal(b.run("currentFrame.result.net_estimate_cents"),null);assert.equal(b.run("currentFrame.expenses.external_expenses_cents"),null);
  b.load(fixture({...source,expenses:{revision:1,external_expenses_cents:0,recharge_treatment:'UNCONFIRMED',updated_at:current},result:{...source.result,net_estimate_cents:4800,net_margin_bps:4800}}));
  await b.run("control('ExpensesZero').onclick()");
  assert.equal(b.run("calls.filter(call=>call.body?.operation==='expenses').length"),1);
@@ -578,7 +578,7 @@ test('missing financial inputs and unresolved sources cannot become a numerical 
   ['fonte indisponível',pending({pending:['SOURCE_UNAVAILABLE']})],
   ['aritmética insegura',pending({pending:['ARITHMETIC_UNSAFE']})],
  ];
- for(const [name,value] of cases){const b=browser(value);assert.equal(await b.run('brazaMonthDashboard.start({api,syncVariants})'),true,name);assert.equal(b.text('Net'),'Em conciliação',name);assert.equal(b.text('NetLabel'),'Resultado líquido previsto',name);assert.equal(b.run('currentFrame.result.net_estimate_cents'),null,name);assert.equal(b.text('CheckpointStatus'),'Previsão com pendências',name);assert.doesNotMatch(b.text('Net'),/R\$|0,00/,name);}
+ for(const [name,value] of cases){const b=browser(value);assert.equal(await b.run('brazaMonthDashboard.start({api,syncVariants})'),true,name);if(['DAS','despesas'].includes(name)){assert.match(b.text('Net'),/R\$/,name);assert.match(b.text('NetLabel'),/Saldo parcial antes/,name);assert.match(b.text('NetHelp'),/ainda falta descontar/i,name);}else{assert.equal(b.text('Net'),'Em conciliação',name);assert.equal(b.text('NetLabel'),'Resultado líquido previsto',name);assert.doesNotMatch(b.text('Net'),/R\$|0,00/,name);}assert.equal(b.run('currentFrame.result.net_estimate_cents'),null,name);assert.equal(b.text('CheckpointStatus'),'Previsão com pendências',name);}
 });
 
 test('a fully costed forecast keeps status-review orders excluded and preserves strict financial and automation blockers',async()=>{
@@ -646,7 +646,7 @@ test('a partially costed MEI month deducts the declared DAS once without inventi
 
 test('an unknown MEI yearly DAS remains pending instead of using two percent or zero tax',async()=>{
  const b=browser(meiProductFixture({pending:true}));assert.equal(await b.run('brazaMonthDashboard.start({api,syncVariants})'),true);
- assert.equal(b.text('Net'),'Em conciliação');assert.equal(b.text('TotalExpenses'),'Pendente');assert.match(b.text('TaxSummary'),/DAS-MEI pendente para 2026/);
+ assert.match(b.text('Net'),/75,03/);assert.equal(b.text('NetLabel'),'Saldo parcial antes do DAS');assert.equal(b.run('currentFrame.result.net_estimate_cents'),null);assert.equal(b.run('currentFrame.invoice_tax_cents'),null);assert.equal(b.text('TotalExpenses'),'Pendente');assert.match(b.text('TaxSummary'),/DAS-MEI pendente para 2026/);
  assert.match(b.text('TaxHelp'),/não substitui esse valor por 2%.*nem assume imposto zero/);assert.match(b.text('PendingList'),/DAS-MEI deste ano ainda não está cadastrado/);
  const taxRow=b.run("text(control('Waterfall').children.find(row=>row.children[0].textContent.startsWith('DAS-MEI')))");assert.equal(taxRow,'DAS-MEI mensal · uma vez no mês Pendente');
  assert.match(b.text('ProductRows'),/30,00/,'a monthly tax pending status does not invent a per-product tax allocation');
@@ -916,7 +916,7 @@ test('a failed Ads read after an explicit manual update cannot become a periodic
 
 test('cost-only reads retain the last dated Ads amount and cannot call an Ads source even while its refresh is pending',async()=>{
  const source=fixture(),saved=fixture({...source,source_checked_at:{finance_oldest_at:stamp-30,finance_latest_at:stamp,ads_at:stamp},result:{...source.result,net_estimate_cents:null,net_margin_bps:null,pending:['ADS_UNAVAILABLE']}}),b=browser(saved);await b.run('brazaMonthDashboard.start({api,syncVariants})');
- assert.equal(await b.run("control('Refresh').onclick()"),true);assert.deepEqual(operations(b),['view','view']);assert.match(b.text('Ads'),/10,00/);assert.match(b.text('AdsHelp'),/último gasto|Último gasto/);assert.equal(b.text('Net'),'Em conciliação');assert.equal(b.run('currentFrame.source_checked_at.ads_at'),stamp);assert.equal(b.run('timers.size'),1);
+ assert.equal(await b.run("control('Refresh').onclick()"),true);assert.deepEqual(operations(b),['view','view']);assert.match(b.text('Ads'),/10,00/);assert.match(b.text('AdsHelp'),/último gasto|Último gasto/);assert.match(b.text('Net'),/43,00/);assert.equal(b.text('NetLabel'),'Saldo parcial · anúncios em conferência');assert.match(b.text('NetHelp'),/leitura salva.*Brasília/);assert.equal(b.run('currentFrame.result.net_estimate_cents'),null);assert.ok(b.run("currentFrame.result.pending.includes('ADS_UNAVAILABLE')"));assert.equal(b.run('currentFrame.source_checked_at.ads_at'),stamp);assert.equal(b.run('timers.size'),1);
 });
 
 

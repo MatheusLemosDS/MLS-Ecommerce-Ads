@@ -7,7 +7,8 @@ import {MISSION_CSS,MISSION_TRENDS_CSS,missionWorkspacesBody} from './mission-co
 import {workspaceNavigation,workspaceSecondaryNavigation,WORKSPACE_NAVIGATION_CSS} from './workspace-navigation.mjs';
 import {releaseNotesBody} from './app-release-view.mjs';
 import {APP_RELEASE} from './app-release.mjs';
-export const CSS=BUSINESS_DAY_CSS+COMMAND_CENTER_CSS+String.raw`
+import {AGENT_PERIOD_CSS,agentPeriodBody} from './agent-period-view.mjs';
+export const CSS=AGENT_PERIOD_CSS+BUSINESS_DAY_CSS+COMMAND_CENTER_CSS+String.raw`
 .hermes-live-monitor{margin:0 0 22px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}.hermes-live-monitor>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:48px;padding:14px 16px;font-size:12px;font-weight:650;cursor:pointer}.hermes-live-monitor>summary span{font-size:10px;color:var(--muted);font-weight:400}.hermes-live-monitor .source-comparison{margin:0}.hermes-live-monitor[open]>summary{border-bottom:1px solid var(--line)}@media(max-width:640px){.hermes-live-monitor>summary{align-items:flex-start;flex-direction:column;gap:5px}.hero{margin-bottom:18px}.hero h1{font-size:22px}}
 .store-ads-measurement{margin:24px 0;padding-top:24px;border-top:1px solid var(--line,#e2e6e9);min-width:0}.ads-measurement-days{min-width:0;margin:18px 0}.ads-measurement-days summary{cursor:pointer;font-size:12px;font-weight:650}.ads-measurement-days .table-wrap{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}.ads-measurement-days table{min-width:660px;width:100%;border-collapse:collapse;margin:12px 0}.ads-measurement-days th,.ads-measurement-days td{text-align:left;padding:12px 10px;border-bottom:1px solid var(--line,#e2e6e9);font-size:11px;font-variant-numeric:tabular-nums}.ads-measurement-days th{color:var(--muted,#606c76)}
 
@@ -282,7 +283,7 @@ export function adminBody(){
  // off the executive overview and into the dedicated Finance agent workspace.
  const financeDetails=businessDayBody()+businessMonthBody()+pendingIncomeBody()+
   '<details id="legacyFinanceDetails" class="card monthly-legacy-details" hidden><summary>Referência anterior de pedidos concluídos</summary><p class="field-help">Esta referência preserva a regra antiga por pedido. Para o MEI, use o resumo mensal, que desconta o DAS uma vez no mês.</p>'+legacy+'</details>';
- return original.slice(0,start)+opening+commandCenterBody()+'</section>'+
+ return original.slice(0,start)+agentPeriodBody()+opening+commandCenterBody()+'</section>'+
   missionWorkspacesBody(financeDetails)+original.slice(end+10)+
   '<div class="workspace-mobile-navigation">'+workspaceNavigation('overview',{role:'owner',mobile:true})+'</div>';
 }

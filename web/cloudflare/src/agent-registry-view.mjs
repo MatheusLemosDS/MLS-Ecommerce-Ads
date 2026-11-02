@@ -3,7 +3,8 @@ import {APP_RELEASE} from './app-release.mjs';
 import {projectMlsSettlementEvidence} from './mls-settlement-evidence.mjs';
 import {createMlsReturnsInsights} from './mls-returns-insights.mjs';
 import {buildPendingIncomeAudit,buildMlsAgentRegistry} from './agent-registry.mjs';
-import {missionTrendPanelBody} from './mission-control.mjs';
+import {projectMonthlyProfitPresentationValue} from './monthly-profit-presentation.mjs';
+import {missionTrendPanelBody,buildMissionMonthlyReading,buildMissionMonthlyAdsReading} from './mission-control.mjs';
 import {MLS_AGENT_ROBOT_SVG,MLS_COMMAND_GLOBE_SVG} from './mls-agent-art.mjs';
 
 export const COMMAND_CENTER_CSS=String.raw`
@@ -84,6 +85,10 @@ export const AGENT_REGISTRY_CLIENT=String.raw`
  const projectReturnsInsights=(${createMlsReturnsInsights.toString()})().projectMlsReturnsInsights;
  const buildPendingIncomeAudit=${buildPendingIncomeAudit.toString()};
  const buildMlsAgentRegistry=${buildMlsAgentRegistry.toString()};
+ const projectMonthlyProfitPresentationValue=${projectMonthlyProfitPresentationValue.toString()};
+ const projectMonthlyPresentation=projectMonthlyProfitPresentationValue;
+ const buildMissionMonthlyReading=${buildMissionMonthlyReading.toString()};
+ const buildMissionMonthlyAdsReading=${buildMissionMonthlyAdsReading.toString()};
  const robotArtwork=${JSON.stringify(MLS_AGENT_ROBOT_SVG)};
  const el=name=>document.getElementById('commandCenter'+name);
  const node=(tag,text,cls)=>{const value=document.createElement(tag);if(text!==undefined)value.textContent=text;if(cls)value.className=cls;return value;};
@@ -105,7 +110,7 @@ export const AGENT_REGISTRY_CLIENT=String.raw`
   try{productionPeriod=globalThis.brazaProductionCostPeriods?.getSnapshot?.()??null;}catch{}
   try{dtfQueue=globalThis.brazaDtfWorkspace?.getSnapshot?.()??null;}catch{}
   const pendingAudit=buildPendingIncomeAudit({overview:incomeOverview,detail:incomeDetail,detailLoaded:pendingDetailLoaded});
-  return buildMlsAgentRegistry({day,month,reconciliation,releases,incomeOverview,pendingAudit,catalog,productionPeriod,dtfQueue},{projectSettlementEvidence,projectReturnsInsights});
+  return buildMlsAgentRegistry({day,month,reconciliation,releases,incomeOverview,pendingAudit,catalog,productionPeriod,dtfQueue},{projectSettlementEvidence,projectReturnsInsights,projectMonthlyPresentation});
  }
  function renderPending(){
   try{if(globalThis.brazaIncomeOverview?.renderDetail?.())return;}catch{}
@@ -291,7 +296,7 @@ export const AGENT_REGISTRY_CLIENT=String.raw`
   else for(const item of value.priorities){const link=node('a',undefined,'command-priority');link.href=item.href?.startsWith?.('#business')||item.href==='#commandPendingIncomeDetails'?'/admin?tab=agent-finance'+item.href:item.href;link.dataset.severity=item.severity;link.append(node('strong',item.title),node('span',item.detail));priorities.append(link);}
   const agents=el('Agents');agents.replaceChildren();
   const visibleAgents=[value.hermes,...value.agents.filter(agent=>agent.id!=='auditor')];
-  for(const agent of visibleAgents){const card=node('a',undefined,'agent-card');card.href='/admin?tab=agent-'+agent.id;card.dataset.missionOpen='agent-'+agent.id;card.dataset.missionAccent=agent.id;card.dataset.status=agent.status;const avatar=node('span',undefined,'mls-agent-avatar');avatar.setAttribute('aria-hidden','true');if(typeof globalThis.DOMParser==='function'&&typeof document.importNode==='function'){try{const art=new globalThis.DOMParser().parseFromString(robotArtwork,'image/svg+xml').documentElement;avatar.append(document.importNode(art,true));}catch{}}card.append(avatar);const head=node('div',undefined,'agent-card-head'),copy=node('div');copy.append(node('h4',agent.name),node('small',agent.area+' · Observador'));const badge=node('span',statusLabel[agent.status]||agent.status,'agent-status');badge.dataset.status=agent.status;head.append(copy,badge);card.append(head,node('p',agent.message));const metric=metricValue(agent);if(metric)card.append(node('div',metric,'agent-card-metric'));const secondary=metricValue(agent,true);if(agent.secondary_metric_label&&secondary){const extra=node('div',undefined,'agent-card-secondary');extra.append(node('small',agent.secondary_metric_label),node('strong',secondary),node('span','Snapshot atual da Shopee · separado do mês e do banco.'));card.append(extra);}card.append(node('span','Abrir painel','mission-card-link'));agents.append(card);}
+  for(const agent of visibleAgents){const card=node('a',undefined,'agent-card');card.href='/admin?tab=agent-'+agent.id;card.dataset.missionOpen='agent-'+agent.id;card.dataset.missionAccent=agent.id;card.dataset.status=agent.status;const avatar=node('span',undefined,'mls-agent-avatar');avatar.setAttribute('aria-hidden','true');if(typeof globalThis.DOMParser==='function'&&typeof document.importNode==='function'){try{const art=new globalThis.DOMParser().parseFromString(robotArtwork,'image/svg+xml').documentElement;avatar.append(document.importNode(art,true));}catch{}}card.append(avatar);const head=node('div',undefined,'agent-card-head'),copy=node('div');copy.append(node('h4',agent.name),node('small',agent.area+' · Observador'));const badge=node('span',statusLabel[agent.status]||agent.status,'agent-status');badge.dataset.status=agent.status;head.append(copy,badge);card.append(head,node('p',agent.message));const monthly=agent.id==='finance'?buildMissionMonthlyReading(value.month):agent.id==='ads'?buildMissionMonthlyAdsReading(value.month):null,metric=monthly&&(monthly.partial||agent.id==='ads')?monthly.title+': '+money(monthly.value):metricValue(agent);if(metric){const entry=node('div',metric,'agent-card-metric');if(monthly?.partial){entry.dataset.resultTone='partial';entry.title=monthly.help;}card.append(entry);}const secondary=metricValue(agent,true);if(agent.secondary_metric_label&&secondary){const extra=node('div',undefined,'agent-card-secondary');extra.append(node('small',agent.secondary_metric_label),node('strong',secondary),node('span','Snapshot atual da Shopee · separado do mês e do banco.'));card.append(extra);}card.append(node('span','Abrir painel','mission-card-link'));agents.append(card);}
   renderDayIntelligence(value);renderPending();try{globalThis.mlsMission?.refresh?.(value);}catch{}try{globalThis.mlsMissionTrends?.refresh?.();}catch{}return registry;
  }
  function queue(){if(queued)return;queued=true;Promise.resolve().then(()=>{queued=false;render();});}

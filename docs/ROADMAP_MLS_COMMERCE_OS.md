@@ -1,3 +1,5 @@
+**Live PR102 — líquido mensal e histórico, 02/11/2026 às 11:44:54 Brasília:** versão visível `2026-11-02.1`, App `8e1056d2` publicados e conferidos. Saldo mensal separado identifica despesas desconhecidas e Ads salvos com data/dia parcial; barra de mês dos agentes consulta o histórico salvo, preservando rascunhos e escopos. CI 41463788001 aprovada no head `2f13eaa1`: 3.205 Node e 67 Python aprovados. Bytes dos três Workers, Auth/Finance, configuração e domínios conferidos. A integração em main é conferida separadamente pelo estado da PR102 vinculada. A ausência de outras despesas de novembro foi declarada pelo proprietário e registrada separadamente, sem zero presumido. Resultado estrito/Hermes e gates comerciais preservados; M2/M2.2 continuam abertas. [Mudanças, uso e recibo](MLS_MONTHLY_NET_HISTORY_2026_11_02.md). As entregas abaixo preservam o histórico.
+
 **Live PR101 — navegação e novidades, 01/11/2026 às 19:25:21 Brasília:** versão visível `2026-11-01.1`, App `358957d4`; cartão na Visão geral, acessos diretos, busca que abre os formulários e roadmap visual atualizado publicados e conferidos. CI 41356444549 aprovada no head `f5584fe3`; Auth/Finance e configuração preservados. A integração em main é conferida separadamente pelo estado da PR vinculada; CI e recibo identificam a publicação runtime. Próximo: proprietário conferir os três acessos e um recebimento real; M2/M2.2, conciliação e itens originais permanecem abertos. [Mudanças, uso, validação e limites](MLS_LIVE_UPDATE_DISCOVERY_2026_11_01.md). As entregas abaixo preservam o histórico.
 
 **Comunicação das próximas entregas:** apresentar mudanças concretas, local e modo de uso, Git versus Live, passos manuais/pendências do operador e validações com limitações. Contagens de testes são evidência complementar; não substituem explicar o resultado ao proprietário. Cada mudança visível deve atualizar `APP_RELEASE` e suas notas visíveis no mesmo incremento; disponibilidade técnica não confirma dados reais, aceite operacional ou encerramento das fases.
@@ -384,6 +386,17 @@ Continuar a fase financeira atual:
 - transformar pendências em tarefas do MLS Finance/Returns;
 - adicionar vencimentos de despesas e contas no resumo do agente.
 
+**Incremento publicado — PR102, 02/11/2026:** apresentação separada do saldo
+mensal com despesas desconhecidas identificadas e Ads salvos mantendo data e
+possível dia parcial. Mês compartilhado nos agentes reutiliza fontes salvas,
+preserva rascunhos e explicita escopos de catálogo/DTF, recebimento e fabricação.
+App `8e1056d2`, CI 41463788001 aprovada, bytes/configuração e Auth/Finance conferidos;
+integração Git conferida separadamente pelo estado da PR102 vinculada. A declaração de ausência
+de outras despesas de novembro foi uma confirmação operacional separada,
+registrada e auditada; não é zero inferido nem vale para outro mês. Contratos
+financeiros/Hermes e os gates continuam preservados. Não encerra M2.
+[Registro do incremento](MLS_MONTHLY_NET_HISTORY_2026_11_02.md).
+
 **Incremento publicado — PR #13:** conciliação de liberações por pedido com repasse-base, ajuste, repasse após ajuste, valor liberado verificável e cruzamento local com devoluções. Estados `NOT_LOCATED`, `AMBIGUOUS`, `LOCATED_UNVERIFIED` e `VERIFIED`. O sidecar v2 reutiliza a coleta/cache existentes; não cria endpoint Shopee, tabela D1 ou polling. [Detalhes](CONCILIACAO_POR_PEDIDO_MLS_FINANCE_RETURNS.md).
 
 **Incremento publicado — PR #14:** acompanhamento temporal separa o mês de criação dos pedidos dos calendários de liberação posteriores. O contrato privado `release-coverage-v1` lê somente a coorte e os ledgers já salvos no Finance, sem capability de rede Shopee. O tracker acompanha uma coorte anterior por cron, preserva falhas, desacelera após identidade completa no corte e mostra a cobertura para meses passados. `identity_complete_at_cutoff` não comprova fim do ciclo, depósito bancário ou saldo ainda a liberar.
@@ -544,11 +557,18 @@ Conversão de identidade M0 publicada pela **PR #11**, merge
 
 A fase canônica é **M2 — Finance/Returns confiáveis como agentes observadores**.
 
+A PR102 está publicada e conferida no App `8e1056d2`, versão visível
+`2026-11-02.1`, com CI 41463788001 aprovada. Sua integração em main é conferida
+separadamente pelo estado da PR102 vinculada. Usar o mês dos agentes e os avisos do
+saldo para conferir o recorte escolhido. Novembro já tem declaração explícita
+de ausência de outras despesas; outros meses continuam exigindo sua própria
+informação. A leitura numérica não encerra a conciliação M2.
+
 Retomar por:
 1. Expor itens de pedidos pagos já preservados em Finance, hoje não transportados ao App, e capturar evidência dos itens Returns nas chamadas existentes, por incremento opt-in Finance/Auth/App sem novos requests de provedor. `items: []` de TO_RETURN/não pagos é UNKNOWN, nunca quantidade zero; `response.item[].amount` não era capturado no payload legado de Returns. Conferir origem, quantidades e composição dos kits antes de promover a associação declarada. Os controles M2.2b/c já estão entregues; não refazê-los nem supor fabricação pela quantidade DTF/kit.
 2. Confirmar com fatos do operador a decomposição histórica de peça/estampa versus embalagem/etiqueta consumidas e os custos incrementais de reparo/nova embalagem, antes de valorar ou alocar peças na revenda. Não dividir automaticamente all-inclusive; manter UNKNOWN e projetar a ponte contábil sem somar o custo novamente ao resultado atual.
 3. Manter a paginação do Pending já entregue, renovar a cobertura da publicação exata e acompanhar revisões/Returns/calendários existentes sem reiniciar coleta ou catálogo.
-4. Declarar despesas do mês e confrontar o mesmo recorte com Seller Centre e banco. Somente concluir M2 com diferenças materiais explicadas; lucro realizado exige liquidação comprovada.
+4. Conferir a declaração de despesas do mês escolhido — novembro já foi confirmado pelo proprietário, sem transportar essa informação para outros meses — e confrontar o mesmo recorte com Seller Centre e banco. Somente concluir M2 com diferenças materiais explicadas; lucro realizado exige liquidação comprovada.
 5. Manter Ads/PROMO, alterações externas de preço/estoque e autonomia comercial bloqueados enquanto seus gates permanecerem abertos.
 
 ## Registros históricos abaixo

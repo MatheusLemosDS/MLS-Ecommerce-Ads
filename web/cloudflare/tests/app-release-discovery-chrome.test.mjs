@@ -11,6 +11,7 @@ import path from 'node:path';
 import {compiledOwnerReportPage} from './owner-report-browser-fixture.mjs';
 import {createChromeProfileCleanup} from './chrome-profile-cleanup.mjs';
 import {waitForChromeDebugPort} from './chrome-debug-port.mjs';
+import {APP_RELEASE} from '../src/app-release.mjs';
 import {D1} from './sqlite-d1.mjs';
 import {readPhysicalReturns,mutatePhysicalReturns} from '../src/physical-returns.mjs';
 import {readIncurredProduction,mutateIncurredProduction,incurredProductionPeriods} from '../src/incurred-production.mjs';
@@ -39,12 +40,58 @@ async function waitFor(cdp,expression,label,diagnostic=null){
  assert.fail(label+(diagnostic?' '+JSON.stringify(await diagnostic()):''));
 }
 
-async function click(cdp,selector){
- await cdp.evaluate(`(()=>{const node=document.querySelector(${JSON.stringify(selector)});if(!node)throw Error('RETURN_MANUFACTURING_TEST_CLICK_TARGET_MISSING');node.scrollIntoView({block:'center',behavior:'instant'});})()`);
- await cdp.evaluate('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');
- const position=await cdp.evaluate(`(()=>{const node=document.querySelector(${JSON.stringify(selector)}),rect=node.getBoundingClientRect(),hit=document.elementFromPoint(rect.x+rect.width/2,rect.y+rect.height/2);return {x:rect.x+rect.width/2,y:rect.y+rect.height/2,height:rect.height,visible:node.checkVisibility({checkVisibilityCSS:true}),unobscured:hit===node||node.contains(hit)};})()`);
+async function click(cdp,selector,{touch=false,cancelAnchor=true}={}){
+ await cdp.evaluate(`(()=>{if(!globalThis.__releaseInputLog){globalThis.__releaseInputLog=[];const describe=node=>node instanceof Element?{tag:node.tagName,id:node.id,class:node.className,href:node.closest('a[href]')?.getAttribute('href')??null}:null;for(const type of ['pointermove','mousemove','keydown','keyup','touchstart','touchend','pointerdown','mousedown','mouseup','click'])window.addEventListener(type,event=>{const point=event.touches?.[0]??event.changedTouches?.[0]??event,x=Number.isFinite(point.clientX)?point.clientX:null,y=Number.isFinite(point.clientY)?point.clientY:null,expected=document.querySelector(globalThis.__releaseExpectedSelector||':not(*)'),row={matches_expected:!!expected&&(event.target===expected||expected.contains(event.target)),type:event.type,key:event.key??null,shift:event.shiftKey??false,ctrl:event.ctrlKey??false,meta:event.metaKey??false,alt:event.altKey??false,button:event.button??null,pointer_type:event.pointerType??null,trusted:event.isTrusted,target:describe(event.target),client_x:x,client_y:y,page_x:point.pageX??null,page_y:point.pageY??null,hit_at_event:x!==null&&y!==null?describe(document.elementFromPoint(x,y)):null,path:event.composedPath().filter(node=>node instanceof Element).slice(0,6).map(describe),default_prevented:event.defaultPrevented};__releaseInputLog.push(row);if(__releaseInputLog.length>32)__releaseInputLog.shift();setTimeout(()=>{row.default_prevented=event.defaultPrevented;row.after_href=location.href;},0);},{capture:true});}__releaseInputLog.length=0;globalThis.__releaseExpectedSelector=${JSON.stringify(selector)};})()`);
+ // Escape releases the bounded hash alignment without modifier state or a
+ // compositor scroll. Search starts on a fresh document and must stay open.
+ if(cancelAnchor){await cdp.send('Input.dispatchKeyEvent',{type:'keyDown',key:'Escape',code:'Escape',windowsVirtualKeyCode:27,modifiers:0});await cdp.send('Input.dispatchKeyEvent',{type:'keyUp',key:'Escape',code:'Escape',windowsVirtualKeyCode:27,modifiers:0});}
+ const documentNode=await cdp.send('DOM.getDocument'),target=await cdp.send('DOM.querySelector',{nodeId:documentNode.root.nodeId,selector});assert.ok(target.nodeId,'the native click target must exist');
+ // Match browser automation's native scroll/quad path, then wait for a
+ // compositor surface instead of relying on JavaScript animation frames alone.
+ await cdp.send('DOM.scrollIntoViewIfNeeded',{nodeId:target.nodeId});
+ const position=await cdp.evaluate(`(async()=>{let previous=null,stable=0,position=null;await document.fonts.ready;for(let frame=0;frame<120;frame++){const node=document.querySelector(${JSON.stringify(selector)});if(!node)throw Error('RETURN_MANUFACTURING_TEST_CLICK_TARGET_MISSING');await new Promise(resolve=>requestAnimationFrame(resolve));const rect=node.getBoundingClientRect(),hit=document.elementFromPoint(rect.x+rect.width/2,rect.y+rect.height/2);position={x:rect.x+rect.width/2,y:rect.y+rect.height/2,width:rect.width,height:rect.height,visible:node.checkVisibility({checkVisibilityCSS:true}),unobscured:hit===node||node.contains(hit),stable_frames:0};stable=position.visible&&position.unobscured&&previous&&['x','y','width','height'].every(key=>Math.abs(position[key]-previous[key])<0.25)?stable+1:0;position.stable_frames=stable;if(stable>=5)return position;previous=position;}return position;})()`);
  assert.equal(position.visible,true,'the action must remain visible');assert.ok(position.height>=44,'association actions need44px touch targets');assert.equal(position.unobscured,true,'the action must not be covered by navigation');
- await cdp.send('Input.dispatchMouseEvent',{type:'mousePressed',button:'left',clickCount:1,x:position.x,y:position.y});await cdp.send('Input.dispatchMouseEvent',{type:'mouseReleased',button:'left',clickCount:1,x:position.x,y:position.y});
+ assert.ok(position.stable_frames>=5,'the visible click target must settle across five frames: '+JSON.stringify({selector,position}));
+ position.js_center={x:position.x,y:position.y};position.selector=selector;
+ async function synchronizePoint(){
+  await cdp.send('DOM.scrollIntoViewIfNeeded',{nodeId:target.nodeId});await cdp.send('Page.captureScreenshot',{format:'png',fromSurface:true,captureBeyondViewport:false});
+  const quads=await cdp.send('DOM.getContentQuads',{nodeId:target.nodeId}),quad=quads.quads?.[0];assert.equal(quad?.length,8,'native content coordinates must identify the click target');
+  position.x=(quad[0]+quad[2]+quad[4]+quad[6])/4;position.y=(quad[1]+quad[3]+quad[5]+quad[7])/4;position.native_quad=quad;position.before_metrics=await cdp.send('Page.getLayoutMetrics');
+  // Quads/input use visual-viewport CSS coordinates. DOM client coordinates
+  // include its offset; the location probe additionally needs document scroll.
+  // These measured origins can differ after mobile scroll, even at scale one.
+  const visual=position.before_metrics.cssVisualViewport;position.client_point={x:position.x+visual.offsetX,y:position.y+visual.offsetY};
+  position.document_point={x:Math.round(position.x+visual.pageX),y:Math.round(position.y+visual.pageY)};
+  const hit=await cdp.send('DOM.getNodeForLocation',{...position.document_point,includeUserAgentShadowDOM:true,ignorePointerEventsNone:false}),resolved=await cdp.send('DOM.resolveNode',{backendNodeId:hit.backendNodeId});
+  try{const native=await cdp.send('Runtime.callFunctionOn',{objectId:resolved.object.objectId,functionDeclaration:'function(selector){const target=document.querySelector(selector);return {matches:!!target&&(this===target||target.contains(this)),tag:this.tagName,id:this.id,class:this.className,href:this.closest?.("a[href]")?.getAttribute("href")??null};}',arguments:[{value:selector}],returnByValue:true});position.protocol_hit=native.result.value;assert.equal(position.protocol_hit?.matches,true,'the protocol coordinate hit must belong to the intended link: '+JSON.stringify({selector,position}));}finally{await cdp.send('Runtime.releaseObject',{objectId:resolved.object.objectId});}
+ }
+ const nativeEvent=type=>cdp.evaluate(`(async()=>{for(let sample=0;sample<20;sample++){const row=__releaseInputLog.findLast(row=>${JSON.stringify(type)}.includes(row.type)&&Math.abs(row.client_x-${position.client_point.x})<1&&Math.abs(row.client_y-${position.client_point.y})<1);if(row)return row;await new Promise(resolve=>setTimeout(resolve,16));}return null;})()`);
+ // Geometry alone cannot establish compositor hit readiness. Move without
+ // activating anything until a trusted native event reaches the actual link.
+ for(let attempt=1;attempt<=8;attempt++){
+  await synchronizePoint();await cdp.send('Input.dispatchMouseEvent',{type:'mouseMoved',x:1,y:1,modifiers:0});await cdp.send('Input.dispatchMouseEvent',{type:'mouseMoved',x:position.x,y:position.y,modifiers:0});position.native_hover=await nativeEvent(['pointermove','mousemove']);position.readiness_attempts=attempt;
+  if(position.native_hover?.trusted&&position.native_hover.matches_expected)break;
+  await pause(25);
+ }
+ if(!position.native_hover?.trusted||!position.native_hover.matches_expected)assert.fail('native hover must reach the link before activation: '+JSON.stringify(await clickDiagnostic(cdp,position)));
+ if(touch){
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:position.x,y:position.y,radiusX:1,radiusY:1,force:1,id:0}],modifiers:0});position.native_contact=await nativeEvent(['touchstart']);
+  if(!position.native_contact?.trusted||!position.native_contact.matches_expected){await cdp.send('Input.dispatchTouchEvent',{type:'touchCancel',touchPoints:[],modifiers:0});assert.fail('native touch began outside the intended link; cancelled without a click: '+JSON.stringify(await clickDiagnostic(cdp,position)));}
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[],modifiers:0});
+ }else{
+  await cdp.send('Input.dispatchMouseEvent',{type:'mousePressed',button:'left',buttons:1,clickCount:1,x:position.x,y:position.y,modifiers:0});position.native_contact=await nativeEvent(['mousedown']);
+  if(!position.native_contact?.trusted||!position.native_contact.matches_expected){await cdp.send('Input.dispatchMouseEvent',{type:'mouseReleased',button:'left',buttons:0,clickCount:1,x:1,y:1,modifiers:0});assert.fail('native press began outside the intended link: '+JSON.stringify(await clickDiagnostic(cdp,position)));}
+  await cdp.send('Input.dispatchMouseEvent',{type:'mouseReleased',button:'left',buttons:0,clickCount:1,x:position.x,y:position.y,modifiers:0});
+ }
+ return {...position,gesture:touch?'touch':'mouse'};
+}
+
+async function clickDiagnostic(cdp,position,{width,minify}={}){
+ const page=await cdp.evaluate(`(()=>{const hit=document.elementFromPoint(${position.x}+(visualViewport?.offsetLeft??0),${position.y}+(visualViewport?.offsetTop??0)),link=document.querySelector('.app-release-overview .app-release-more');return {href:location.href,panel:document.documentElement.dataset.activePanel,visible_panel:document.querySelector('main.workspace>section:not([hidden])')?.id,hit:hit?{tag:hit.tagName,id:hit.id,class:hit.className}:null,link_rect:link?.getBoundingClientRect().toJSON(),click:${JSON.stringify(position)},scroll_y:scrollY,events:globalThis.__releaseInputLog??[],errors:__auditErrors};})()`);
+ let targets;try{targets=(await cdp.send('Target.getTargets')).targetInfos.filter(row=>row.type==='page').map(row=>({type:row.type,url:row.url,attached:row.attached}));}catch{targets='TARGET_DIAGNOSTIC_UNAVAILABLE';}
+ const diagnostic={...page,targets,after_metrics:await cdp.send('Page.getLayoutMetrics')},directory=process.env.MLS_APP_RELEASE_SCREENSHOT_DIR||process.env.MLS_QA_SCREENSHOT_DIR;
+ if(directory){try{mkdirSync(directory,{recursive:true});const name='app-release-click-failure-'+width+'-'+(minify?'minified':'normal'),capture=await cdp.send('Page.captureScreenshot',{format:'png',fromSurface:true,captureBeyondViewport:false});writeFileSync(path.join(directory,name+'.png'),Buffer.from(capture.data,'base64'));writeFileSync(path.join(directory,name+'.json'),JSON.stringify(diagnostic,null,2)+'\n');}catch{diagnostic.screenshot='CAPTURE_UNAVAILABLE';}}
+ return diagnostic;
 }
 
 const clock=Date.parse('2026-11-01T18:00:00Z'),receiptClock=Date.parse('2026-11-01T02:30:00Z'),stamp=clock/1000;
@@ -90,6 +137,7 @@ const targets=[
  {id:'incurredProductionDetails',panel:'margins',controller:'brazaIncurredProduction',path:'/api/admin/production/incurred'},
  {id:'returnManufacturingLinksDetails',panel:'agent-returns',controller:'brazaReturnManufacturingLinks',path:'/api/admin/returns/manufacturing-links'}
 ];
+const currentTargets=['/admin?tab=agent-finance#businessMonthNetCard','/admin?tab=agent-finance#mlsAgentPeriod','/admin?tab=agent-finance#businessMonthExpensesForm'];
 const generatedHash=createHash('sha256').update(readFileSync(new URL('../../../dist/app-worker.mjs',import.meta.url))).digest('hex');
 const qa=[];
 const physicalRequest=row=>targets.some(target=>row.path.startsWith(target.path));
@@ -122,7 +170,7 @@ for(const minify of [false,true])for(const width of [320,1365])test(`generated r
  });
  await new Promise(resolve=>host.listen(0,'127.0.0.1',resolve));let cdp;const proofs=[];
  try{
-  cdp=await browser();await cdp.send('Emulation.setDeviceMetricsOverride',{width,height:960,deviceScaleFactor:1,mobile:width===320});
+  cdp=await browser();const touch=width===320;await cdp.send('Emulation.setDeviceMetricsOverride',{width,height:960,deviceScaleFactor:1,mobile:touch});await cdp.send('Emulation.setTouchEmulationEnabled',{enabled:touch,maxTouchPoints:1});assert.equal(await cdp.evaluate('navigator.maxTouchPoints'),touch?1:0,'mobile gestures must use actual touch emulation');
   const base='http://127.0.0.1:'+host.address().port;
   const navigate=async suffix=>{await cdp.send('Page.navigate',{url:'about:blank'});await waitFor(cdp,"location.href==='about:blank'&&document.readyState==='complete'",'a hard-load fixture must use a fresh document');await cdp.send('Page.navigate',{url:base+'/admin'+suffix});await waitFor(cdp,"document.readyState==='complete'&&!!globalThis.brazaPhysicalReturns&&!!globalThis.brazaIncurredProduction&&!!globalThis.brazaReturnManufacturingLinks&&Number.isSafeInteger(brazaMonthDashboard.getSnapshot().checked_at)",'the generated owner page must settle its cached financial snapshot');};
   const assertDestination=async(target,start,mode)=>{
@@ -136,17 +184,19 @@ for(const minify of [false,true])for(const width of [320,1365])test(`generated r
   for(const target of targets){
    let start=requests.length;await navigate('?tab=overview');
    const overview=await cdp.evaluate("({release:document.querySelector('.app-release-overview')?.dataset.appRelease,header:document.querySelector('.app-release-header-link')?.getAttribute('aria-label'),headerHref:document.querySelector('.app-release-header-link')?.getAttribute('href'),links:[...document.querySelectorAll('.app-release-overview .app-release-links a')].map(a=>({href:a.getAttribute('href'),bypass:a.hasAttribute('data-mission-open')})),scope:document.querySelector('.app-release-scope')?.textContent,financial:JSON.stringify(brazaMonthDashboard.getSnapshot()),overflow:document.documentElement.scrollWidth>innerWidth+1})");
-   assert.equal(overview.release,'2026-11-01.1');assert.match(overview.header,/2026-11-01\.1/);assert.equal(overview.headerHref,'/admin?tab=roadmap#appReleaseNotes');assert.deepEqual(overview.links.map(row=>row.href),targets.map(row=>'/admin?tab='+row.panel+'#'+row.id));assert.ok(overview.links.every(row=>row.bypass===false),'native links must retain the precise destination hash');assert.match(overview.scope,/impacto financeiro.*ainda não foi apurado/i);assert.equal(overview.overflow,false);assert.equal(requests.slice(start).filter(physicalRequest).length,0,'Overview must not fetch the three physical-control sources');
+   assert.equal(overview.release,APP_RELEASE.id);assert.ok(overview.header.includes(APP_RELEASE.id));assert.equal(overview.headerHref,'/admin?tab=roadmap#appReleaseNotes');assert.deepEqual(overview.links.map(row=>row.href),currentTargets);assert.ok(overview.links.every(row=>row.bypass===false),'native links must retain the precise destination hash');assert.match(overview.scope,/saldo parcial identifica despesas ainda não declaradas/i);assert.match(overview.scope,/Anúncios antigos mantêm a data da leitura/);assert.match(overview.scope,/valores ausentes não viram zero/);assert.equal(overview.overflow,false);assert.equal(requests.slice(start).filter(physicalRequest).length,0,'Overview must not fetch the three physical-control sources');
    if(process.env.MLS_APP_RELEASE_SCREENSHOT_DIR&&target===targets[0]){mkdirSync(process.env.MLS_APP_RELEASE_SCREENSHOT_DIR,{recursive:true});await cdp.evaluate("document.querySelector('.app-release-overview').scrollIntoView({block:'center',behavior:'instant'})");const capture=await cdp.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});writeFileSync(path.join(process.env.MLS_APP_RELEASE_SCREENSHOT_DIR,`app-release-${minify?'minified':'normal'}-${width}.png`),Buffer.from(capture.data,'base64'));}
-   start=requests.length;await click(cdp,`.app-release-overview .app-release-links a[href="/admin?tab=${target.panel}#${target.id}"]`);await assertDestination(target,start,'overview-link');assert.equal(await cdp.evaluate('JSON.stringify(brazaMonthDashboard.getSnapshot())'),overview.financial,'navigation must not change the cached financial projection');
+   const notesClick=await click(cdp,'.app-release-overview .app-release-more',{touch});await waitFor(cdp,"document.querySelector('main.workspace>section:not([hidden])')?.id==='roadmap'",'previous deliveries remain available in the release notes',()=>clickDiagnostic(cdp,notesClick,{width,minify}));
+   assert.equal(await cdp.evaluate("document.querySelector('.app-release-previous h3')?.textContent"),'Entregas anteriores · controles físicos');
+   start=requests.length;await click(cdp,`.app-release-previous a[href="/admin?tab=${target.panel}#${target.id}"]`,{touch});await assertDestination(target,start,'previous-release-link');assert.equal(await cdp.evaluate('JSON.stringify(brazaMonthDashboard.getSnapshot())'),overview.financial,'navigation must not change the cached financial projection');
    start=requests.length;await navigate('?tab='+target.panel+'#'+target.id);await assertDestination(target,start,'initial-deep-link');
   }
   await navigate('?tab=overview');const beforeSearch=requests.length;
   await cdp.evaluate("mlsWorkspaceSearch.open();const input=document.getElementById('missionSearchInput');input.value='Receber e inspecionar devoluções';input.dispatchEvent(new Event('input',{bubbles:true}));");
   await waitFor(cdp,"!!document.querySelector('#missionSearchResults a[data-search-route=physical-receiving]')",'local navigation search must expose the real receiving destination');
-  await click(cdp,'#missionSearchResults a[data-search-route=physical-receiving]');await assertDestination(targets[0],beforeSearch,'local-search');
+  await click(cdp,'#missionSearchResults a[data-search-route=physical-receiving]',{touch,cancelAnchor:false});await assertDestination(targets[0],beforeSearch,'local-search');
   const final=await cdp.evaluate('({errors:__auditErrors,overflow:document.documentElement.scrollWidth>innerWidth+1})');assert.deepEqual(final.errors,[]);assert.equal(final.overflow,false);assert.equal(serverFailure,null);assert.equal(requests.filter(row=>row.method!=='GET').length,0,'discovery cannot mutate owner data');assert.equal(JSON.stringify(await store.read()),ledgerBefore,'all saved physical, manufacturing and association data must stay unchanged');
-  qa.push({minify,width,pass:true,page_errors:0,horizontal_overflow:false,provider_calls:0,remote_writes:0,owner_mutation_requests:0,financial_snapshot_unchanged:true,release_id:'2026-11-01.1',proofs});
+  qa.push({minify,width,pass:true,page_errors:0,horizontal_overflow:false,provider_calls:0,remote_writes:0,owner_mutation_requests:0,financial_snapshot_unchanged:true,release_id:APP_RELEASE.id,proofs});
  }finally{await cdp?.close();host.closeAllConnections?.();await new Promise(resolve=>host.close(resolve));store.close();}
 });
 
