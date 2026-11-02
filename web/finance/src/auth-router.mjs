@@ -8,6 +8,7 @@ import {projectProductIndexRequest,projectProductIndexFrame,productIndexRequestM
 import {projectEscrowReleaseRequest,projectEscrowReleaseFrame,projectEscrowReleaseEvidenceFrame,projectEscrowReleaseCoverageRequest,projectEscrowReleaseCoverageFrame,escrowReleaseRequestMatches,escrowReleaseCoverageRequestMatches} from './escrow-release-frame.mjs';
 import {projectReconciliationRequest,projectReconciliationFrame,projectReconciliationEvidenceFrame,projectReconciliationMoneyFrame,reconciliationRequestMatches} from './reconciliation-frame.mjs';
 import {projectOriginalItemsFrame,projectReconciliationOriginalItemsFrame} from './original-items-frame.mjs';
+import {projectCatalogMediaFrame} from './catalog-media-frame.mjs';
 import {projectIncomeOverviewFrame} from './income-overview-frame.mjs';
 import {projectIncomeDetailFrame} from './income-detail-frame.mjs';
 import {projectPendingIncomeScanRequest,projectPendingIncomeScanFrame} from './pending-income-frame.mjs';
@@ -121,6 +122,8 @@ export async function forwardFinancePaymentSample(request,env,{validateInternalA
  if(refundContract!==null&&(refundContract!=='refunds-v1'||reconciliationContract!=='finance-reconciliation-v2'))return routerFailure('INVALID_REQUEST',400);
  const originalItemsContract=request.headers.get('x-braza-original-items-contract');
  if(originalItemsContract!==null&&(!reconciliation||originalItemsContract!=='original-items-v1'||reconciliationContract!=='finance-reconciliation-v2'||refundContract!=='refunds-v1'))return routerFailure('INVALID_REQUEST',400);
+ const catalogMediaContract=request.headers.get('x-braza-catalog-media-contract');
+ if(catalogMediaContract!==null&&(!catalog||catalogMediaContract!=='catalog-media-v1'))return routerFailure('INVALID_REQUEST',400);
  const releaseContract=escrowReleases?request.headers.get('x-braza-release-contract'):null;
  if(releaseContract!==null&&!['release-orders-v1','release-coverage-v1'].includes(releaseContract))return routerFailure('INVALID_REQUEST',400);
  const dailyContract=business?request.headers.get('x-braza-daily-contract'):null;
@@ -138,12 +141,14 @@ export async function forwardFinancePaymentSample(request,env,{validateInternalA
   let body;try{body=await readSampleBody(request.body,maximumInput,controller,value=>{reader=value;});}catch{return routerFailure('INVALID_REQUEST',400);}
   const input=pendingIncomeScan?projectPendingIncomeScanRequest(body):escrowReleases?(releaseContract==='release-coverage-v1'?projectEscrowReleaseCoverageRequest(body):projectEscrowReleaseRequest(body)):reconciliation?projectReconciliationRequest(body):historical?projectHistoricalVariantEvidenceRequest(body):index?projectProductIndexRequest(body):production?projectProductionOrdersRequest(body):storePeriod?(business?projectBusinessPeriodRequest(body):projectStorePeriodRequest(body)):catalog?projectVariantCatalogRequest(body):body;
   if(!input||(!pendingIncomeScan&&!escrowReleases&&!reconciliation&&!historical&&!index&&!production&&!catalog&&!storePeriod&&(typeof input!=='object'||Array.isArray(input)||Object.keys(input).length!==0)))return routerFailure('INVALID_REQUEST',400);
+  if(catalogMediaContract!==null&&!input.include_cost_catalog)return routerFailure('INVALID_REQUEST',400);
   if(controller.signal.aborted)return unavailable();
   const responseMaximum=catalog&&input.include_cost_catalog?1048576:maximum;
   const headers={'content-type':'application/json',accept:'application/json','X-Braza-Finance-Router':secret};
   if(reconciliationContract!==null)headers['X-Braza-Client-Contract']=reconciliationContract;
   if(refundContract!==null)headers['X-Braza-Refund-Contract']=refundContract;
   if(originalItemsContract!==null)headers['X-Braza-Original-Items-Contract']=originalItemsContract;
+  if(catalogMediaContract!==null)headers['X-Braza-Catalog-Media-Contract']=catalogMediaContract;
   if(releaseContract!==null)headers['X-Braza-Release-Contract']=releaseContract;
   if(dailyContract!==null)headers['X-Braza-Daily-Contract']=dailyContract;
   if(incomeDetail&&incomeScanContract!==null)headers['X-Braza-Income-Contract']=incomeScanContract;
@@ -170,12 +175,13 @@ export async function forwardFinancePaymentSample(request,env,{validateInternalA
   }
   if(catalog&&projectVariantCatalogFailure(value))return catalogFailure(502,value);
   const preview=url.pathname===PAYMENT_PREVIEW_PATH;
+  const catalogMedia=catalog?projectCatalogMediaFrame(value,projectVariantCatalog):null;
   const reconciliationOriginal=reconciliation?projectReconciliationOriginalItemsFrame(value,projectReconciliationFrame,projectReconciliationEvidenceFrame,projectReconciliationMoneyFrame,projectOriginalItemsFrame):null;
   const reconciliationMoney=reconciliation?projectReconciliationMoneyFrame(reconciliationOriginal?{schema:'finance_reconciliation_v3',report:reconciliationOriginal.report,review:reconciliationOriginal.review,money:reconciliationOriginal.money}:value,projectReconciliationFrame,projectReconciliationEvidenceFrame):null;
   const reconciliationEvidence=reconciliation?projectReconciliationEvidenceFrame(reconciliationMoney?{schema:'finance_reconciliation_v2',report:reconciliationMoney.report,review:reconciliationMoney.review}:value,projectReconciliationFrame):null;
   const releaseCoverage=escrowReleases&&releaseContract==='release-coverage-v1'?projectEscrowReleaseCoverageFrame(value):null;
   const releaseEvidence=escrowReleases&&releaseContract!=='release-coverage-v1'?projectEscrowReleaseEvidenceFrame(value,projectEscrowReleaseFrame):null;
-  const frame=escrowReleases?(releaseCoverage??releaseEvidence?.report??projectEscrowReleaseFrame(value)):incomeOverview?projectIncomeOverviewFrame(value):incomeDetail?(pendingIncomeScan?projectPendingIncomeScanFrame(value):projectIncomeDetailFrame(value)):reconciliation?reconciliationEvidence?.report??projectReconciliationFrame(value):historical?projectHistoricalVariantEvidenceFrame(value):index?projectProductIndexFrame(value):production?projectProductionOrdersFrame(value):storePeriod?(business?projectBusinessPeriodFrame(value):projectStorePeriodFrame(value)):catalog?projectVariantCatalog(value):preview?projectFinancePaymentPreview(value):sampleFrame(value);
+  const frame=escrowReleases?(releaseCoverage??releaseEvidence?.report??projectEscrowReleaseFrame(value)):incomeOverview?projectIncomeOverviewFrame(value):incomeDetail?(pendingIncomeScan?projectPendingIncomeScanFrame(value):projectIncomeDetailFrame(value)):reconciliation?reconciliationEvidence?.report??projectReconciliationFrame(value):historical?projectHistoricalVariantEvidenceFrame(value):index?projectProductIndexFrame(value):production?projectProductionOrdersFrame(value):storePeriod?(business?projectBusinessPeriodFrame(value):projectStorePeriodFrame(value)):catalog?catalogMedia?.catalog??projectVariantCatalog(value):preview?projectFinancePaymentPreview(value):sampleFrame(value);
   if(escrowReleases){
    if(releaseContract==='release-coverage-v1')return releaseCoverage&&escrowReleaseCoverageRequestMatches(input,releaseCoverage)?new Response(JSON.stringify(releaseCoverage),{headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}}):unavailable();
    return frame&&escrowReleaseRequestMatches(input,frame)?new Response(JSON.stringify(releaseContract==='release-orders-v1'&&releaseEvidence?releaseEvidence:frame),{headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}}):unavailable();
@@ -188,7 +194,7 @@ export async function forwardFinancePaymentSample(request,env,{validateInternalA
   if(production)return frame&&productionOrdersRequestMatches(input,frame)?new Response(JSON.stringify(frame),{headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}}):productionFailure();
   if(storePeriod&&frame&&!storePeriodRequestMatches(input,frame))return storePeriodFailure();
   if(catalog&&frame&&!catalogRequestMatches(input,frame))return catalogFailure();
-  const output=frame&&business&&dailyContract===null&&Object.hasOwn(frame,'daily_breakdown')?Object.fromEntries(Object.entries(frame).filter(([key])=>key!=='daily_breakdown')):frame;
+  const output=catalog&&catalogMediaContract==='catalog-media-v1'&&catalogMedia?catalogMedia:frame&&business&&dailyContract===null&&Object.hasOwn(frame,'daily_breakdown')?Object.fromEntries(Object.entries(frame).filter(([key])=>key!=='daily_breakdown')):frame;
   return output?new Response(JSON.stringify(output),{headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}}):storePeriod?storePeriodFailure():catalog?catalogFailure():sampleFailure(preview?'FINANCE_SAMPLE_PREVIEW_RESPONSE_INVALID':'FINANCE_SAMPLE_UNAVAILABLE');
  };
  try{return await Promise.race([work(),deadline]);}catch{return unavailable();}finally{clearTimeout(timer);controller.abort();try{reader?.cancel().catch(()=>{});}catch{}}

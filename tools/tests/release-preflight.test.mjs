@@ -33,20 +33,27 @@ test('release preflight passes only an exact reviewed local build and leaves rem
  assert.ok(RELEASE_ALLOWED_FILES.filter(x=>x.startsWith('web/finance/')).every(x=>RELEASE_APPROVED_PROTECTED_FILES.includes(x)));
 });
 
-test('original-item evidence permits only its reviewed protected source files',()=>{
+test('simplified operations permits only its reviewed protected source and fixture files',()=>{
  assert.deepEqual(RELEASE_APPROVED_PROTECTED_FILES,[
   "web/finance/src/auth-router.mjs",
+  "web/finance/src/catalog-media-frame.mjs",
   "web/finance/src/connection-worker.mjs",
-  "web/finance/src/financial-order-evidence.mjs",
-  "web/finance/src/original-items-frame.mjs",
-  "web/finance/src/return-item-evidence.mjs",
-  "web/finance/src/returns-reconciliation.mjs",
-  "web/finance/tests/original-items-chain.test.mjs",
-  "web/finance/tests/original-items-evidence.test.mjs",
-  "web/finance/tests/original-items-fixture.mjs"
+  "web/finance/src/variant-catalog.mjs",
+  "web/finance/tests/catalog-media-fixture.mjs",
+  "web/finance/tests/catalog-media.test.mjs"
 ]);
- assert.ok(RELEASE_APPROVED_PROTECTED_FILES.every(x=>x.startsWith('web/finance/')&&!/[?*\\]/.test(x)));
- for(const path of ['web/finance/src/auth-json-transport.mjs','web/finance/src/connection-store.mjs','web/finance/src/income-detail.mjs','web/finance/src/production-worker.mjs','web/finance/src/pending-income-frame.mjs','web/finance/src/pending-income-scan.mjs','web/finance/tests/pending-income-scan.test.mjs','web/auth/src/index.mjs','workers/app/wrangler.json']){
+ assert.ok(RELEASE_APPROVED_PROTECTED_FILES.every(x=>(x.startsWith('web/finance/')||x.startsWith('web/auth/')||x==='web/cloudflare/auth-worker.mjs')&&!/[?*\\]/.test(x)));
+ for(const path of [
+  "web/finance/src/auth-json-transport.mjs",
+  "web/finance/src/connection-store.mjs",
+  "web/finance/src/income-detail.mjs",
+  "web/finance/src/production-worker.mjs",
+  "web/finance/src/pending-income-frame.mjs",
+  "web/finance/src/pending-income-scan.mjs",
+  "web/finance/tests/pending-income-scan.test.mjs",
+  "web/auth/src/index.mjs",
+  "workers/app/wrangler.json"
+]){
   const data=good();data.changedPaths.push(path);
   assert.ok(evaluateReleasePreflight(data).failures.includes('RELEASE_PROTECTED_WORKER_PATH'),path);
  }
@@ -165,7 +172,7 @@ test('a malformed candidate cannot weaken exact hashes, literal paths or commerc
 });
 
 test('the focused release does not inherit unrelated AI-storage or previous-candidate permissions',()=>{
- assert.equal(RELEASE_BASE_COMMIT,'9fc4c69f004e5e709931fad4fdc3bdfa385aff93');
+ assert.equal(RELEASE_BASE_COMMIT,'911870590fe812202287f549240d5274119d1cad');
  for(const baseCommit of ['2ab4c9d8baa3c25e5816bcca14b4a0973ea73d5a','8d66525bc3b96914412a9538d3ec84048ac78dbb']){
   const oldBase=good();oldBase.baseCommit=baseCommit;
   assert.ok(evaluateReleasePreflight(oldBase).failures.includes('RELEASE_BASE_MISMATCH'));

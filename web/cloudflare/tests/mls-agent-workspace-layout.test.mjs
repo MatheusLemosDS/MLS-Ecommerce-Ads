@@ -18,9 +18,9 @@ test('approved specialist components preserve four metric bindings and real navi
   const destinations=[...toolbar.matchAll(/href="([^"]+)"/g)].map(row=>row[1]);assert.equal(new Set(destinations).size,destinations.length,id+': toolbar repeats a destination');
   for(const part of ['label','metric','hint'])for(let index=0;index<4;index++)
    assert.equal((html.match(new RegExp('id="mission-'+id+'-'+part+'-'+index+'"','g'))||[]).length,1,id+'/'+part+'/'+index);
-  assert.ok(html.indexOf('id="mission-'+id+'-metrics"')<html.indexOf('class="mission-page-tabs mls-module-tabs"'),id+': KPIs precede tabs');
+  assert.ok(html.indexOf('class="mission-page-tabs mls-module-tabs"')<html.indexOf('id="mission-'+id+'-metrics"'),id+': direct workflows precede supporting metrics');
   assert.match(html,/href="\/admin\?tab=agents" data-mission-open="agents"/);
-  assert.match(html,/Período da fonte/);assert.doesNotMatch(html,/class="mls-workspace-period"[^<]*>Hoje/);
+  assert.doesNotMatch(html,/class="mls-workspace-period"|Período da fonte/,'a decorative label must not imitate a period selector');
   assert.match(html,/class="mission-orb mission-agent-avatar mls-agent-avatar"[^>]*><svg/);
  }
  for(const id of ['auditor','hermes'])assert.ok(!panels.get(id).includes('class="mls-agent-mini-nav"'));
@@ -46,7 +46,7 @@ test('specialist primary actions use existing tools and commercial campaign crea
  assert.match(panels.get('ads'),/<a class="mls-workspace-primary" href="\/campaigns" aria-describedby="mission-ads-action-note">Ver campanhas/);
  assert.doesNotMatch(panels.get('ads'),/>Criar campanha/);
  assert.match(panels.get('ads'),/id="mission-ads-action-note">Somente leitura · alterações comerciais bloqueadas/);
- for(const id of ['finance','products','production','returns'])assert.match(panels.get(id),/<a class="mls-workspace-primary" href="(?:#businessMonth|\/admin\?tab=)/);
+ const actions={finance:'#businessMonthExpensesDetails',products:'/admin?tab=products',production:'#incurredProductionDetails',returns:'#physicalReturnsQueue'};for(const [id,href] of Object.entries(actions))assert.ok(panels.get(id).includes('<a class="mls-workspace-primary" href="'+href+'"'),id+': primary action belongs to the actual workflow');
  assert.doesNotMatch(MLS_AGENT_WORKSPACE_CSS,/!important|url\(/i);
  assert.doesNotMatch(MLS_AGENT_WORKSPACE_CSS,/sidebar-navigation>\.workspace-nav\{display:none\}|mls-agent-mini-nav/);
  assert.match(MLS_AGENT_WORKSPACE_CSS,/position:sticky;top:84px/);

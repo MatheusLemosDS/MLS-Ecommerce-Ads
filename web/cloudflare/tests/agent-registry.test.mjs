@@ -4,6 +4,7 @@ import {buildPendingIncomeAudit,buildMlsAgentRegistry as buildRegistry} from '..
 import {projectMlsSettlementEvidence} from '../src/mls-settlement-evidence.mjs';
 import {settlementFixture} from './mls-settlement-fixture.mjs';
 import {AGENT_REGISTRY_CLIENT,commandCenterBody,pendingIncomeBody} from '../src/agent-registry-view.mjs';
+import {missionWorkspacesBody} from '../src/mission-control.mjs';
 import {CLIENT as ADMIN_CLIENT} from '../src/admin-client.mjs';
 const buildMlsAgentRegistry=input=>buildRegistry(input,{projectSettlementEvidence:projectMlsSettlementEvidence});
 
@@ -128,8 +129,8 @@ test('running collection is working rather than healthy and creates no provider-
 
 test('command center is read-only, renders the initial agent surfaces and adds no timer or provider request',()=>{
  const html=commandCenterBody();
- for(const id of ['commandCenter','commandCenterNet','commandCenterPriorities','commandCenterAgents','commandAgents'])assert.match(html,new RegExp('id="'+id+'"'));
- for(const label of ['Central de Comando','MLS Hermes','Agentes em modo Observador'])assert.match(html,new RegExp(label));
+ for(const id of ['commandCenter','commandCenterNet','commandCenterPriorities','missionTrendGraphOverview'])assert.match(html,new RegExp('id="'+id+'"'));
+ for(const label of ['Central de Comando','MLS HERMES','Ads/PROMO permanecem bloqueados'])assert.match(html,new RegExp(label));
  assert.doesNotMatch(AGENT_REGISTRY_CLIENT,/\bfetch\s*\(|setInterval\s*\(|\/api\//);
  assert.match(AGENT_REGISTRY_CLIENT,/MutationObserver/);
  assert.match(AGENT_REGISTRY_CLIENT,/brazaDayDashboard/);
@@ -266,13 +267,14 @@ test('missing current income never becomes zero or changes the Finance month res
  const finance=value.agents.find(agent=>agent.id==='finance');assert.equal(finance.metric,240000);assert.equal(finance.secondary_metric,null);assert.equal(value.income.current_pending_cents,null);
 });
 
-test('command center has six static observer cards even when hydration scripts do not run',()=>{
- const html=commandCenterBody();
- const cards=[...html.matchAll(/data-agent-placeholder="true"/g)];
- assert.equal(cards.length,6);
- for(const name of ['MLS Hermes','MLS Finance','MLS Ads','MLS Products','MLS Production','MLS Returns'])assert.match(html,new RegExp('<h4>'+name+'</h4>'));
+test('Equipe has seven static observer cards even when hydration scripts do not run',()=>{
+ const html=missionWorkspacesBody();
+ const cards=[...html.matchAll(/class="mission-hub-card /g)];
+ assert.equal(cards.length,7);
+ assert.doesNotMatch(commandCenterBody(),/data-agent-placeholder|class="agent-card"/);
+ for(const name of ['MLS Hermes','MLS Finance','MLS Ads','MLS Products','MLS Production','MLS Returns','MLS Auditor'])assert.match(html,new RegExp('<h4>'+name+'</h4>'));
  assert.match(html,/Aguardando dados/);
- assert.match(html,/Nenhum valor é presumido/);
+ assert.match(html,/Indicador ainda indisponível/);
  assert.doesNotMatch(html,/R\\$ [1-9]\\d*,\\d{2}/);
 });
 
@@ -296,11 +298,11 @@ test('agent registry starts from null month without accessing expense_schedule o
  assert.equal(emptyMonth.agents.length,6);
 });
 
-test('Pending detail moves to Finance while overview only provides dedicated panel links',()=>{
- const home=commandCenterBody(),details=pendingIncomeBody();
+test('Pending detail lives in Finance and the dedicated panels remain accessible in Equipe',()=>{
+ const home=commandCenterBody(),details=pendingIncomeBody(),fleet=missionWorkspacesBody();
  assert.doesNotMatch(home,/id="commandPendingIncomeDetails"/);
  assert.match(details,/id="commandPendingIncomeDetails"/);
- for(const id of ['finance','ads','products','production','returns','auditor'])assert.match(home,new RegExp('href="/admin\\?tab=agent-'+id+'"'));
+ for(const id of ['finance','ads','products','production','returns','auditor'])assert.match(fleet,new RegExp('href="/admin\\?tab=agent-'+id+'"'));
  assert.match(AGENT_REGISTRY_CLIENT,/data|missionOpen/);
  assert.doesNotMatch(AGENT_REGISTRY_CLIENT,/\bfetch\s*\(/);
 });

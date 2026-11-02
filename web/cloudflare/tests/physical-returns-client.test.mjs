@@ -46,7 +46,7 @@ test('source reads are lazy and month selection stays pinned without changing th
  const f=fixture(t),ui=mount(f);t.after(()=>ui.stop());assert.equal(ui.calls.length,0);await ui.open();assert.equal(ui.calls.length,1);assert.equal(ui.snapshot().physical.revision,0);
  await ui.b.run('brazaPhysicalReturns.observe("2026-11")');assert.equal(ui.calls.length,1,'observing the same month cannot create a new read loop');
  ui.b.nodes.get('physicalReturnsMonthSelect').value='2026-10';await ui.b.nodes.get('physicalReturnsMonthSelect').onchange();await ui.b.flush();assert.equal(ui.snapshot().month,'2026-10');assert.equal(ui.b.run('brazaMonthDashboard.getSnapshot().month'),'2026-11');
- await ui.b.run('brazaPhysicalReturns.observe("2026-11")');ui.b.run('brazaPhysicalReturns.open();');await ui.b.flush();assert.equal(ui.snapshot().month,'2026-10');assert.equal(ui.calls.at(-1).path,'returns/physical?month=2026-10&evidence=original-items-v1');
+ await ui.b.run('brazaPhysicalReturns.observe("2026-11")');ui.b.run('brazaPhysicalReturns.open();');await ui.b.flush();assert.equal(ui.snapshot().month,'2026-10');assert.equal(ui.calls.at(-1).path,'returns/receipts?month=2026-10');
  ui.b.nodes.get('physicalReturnsMonthSelect').value='2026-12';assert.equal(ui.b.nodes.get('physicalReturnsMonthSelect').onchange(),false);assert.equal(ui.b.nodes.get('physicalReturnsMonthSelect').value,'2026-10');
 });
 
@@ -59,7 +59,7 @@ test('manual physical receipts and inspection do not infer quantities or financi
  ui.fill('Inspect',{quarantine:'1',artwork:'',confirmed:false});assert.equal(ui.submit('Inspect'),false,'unidentified pieces cannot become reusable');
  ui.fill('Inspect',{...manualIdentity,reason:'Conferência física realizada'});assert.equal(await ui.submit('Inspect'),true);await ui.b.flush();snapshot=ui.snapshot();assert.equal(snapshot.physical.summary.resellable_quantity,1);assert.equal(snapshot.physical.summary.repair_quantity,1);assert.equal(snapshot.physical.summary.quarantine_quantity,1);assert.equal(snapshot.physical.valuation.amount_cents,null);assert.equal(snapshot.physical.external_stock_write_allowed,false);
  ui.fill('Void',{reason:'Quantidade lançada por engano'});assert.equal(await ui.submit('Void'),true);await ui.b.flush();snapshot=ui.snapshot();assert.equal(snapshot.physical.summary.received_quantity,3);assert.equal(snapshot.physical.summary.voided_quantity,3);assert.equal(snapshot.physical.summary.active_quantity,0);assert.equal(snapshot.physical.summary.physically_available_quantity,0);assert.equal(snapshot.physical.cases[0].lines[0].status,'VOID');assert.match(ui.b.nodes.get('physicalReturnsSummary').textContent,/inclui anuladas/);
- assert.ok(ui.calls.every(call=>call.path.startsWith('returns/physical?month=')),'no financial or provider endpoint is part of the physical workflow');
+ assert.ok(ui.calls.every(call=>call.path.startsWith(call.body?'returns/physical?month=':'returns/receipts?month=')),'the unified saved receipt GET and original physical POST never call financial or provider mutation endpoints');
 });
 
 test('a lost confirmation retries the identical request and line IDs without receiving the pieces twice',async t=>{

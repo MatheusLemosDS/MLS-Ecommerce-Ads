@@ -2,7 +2,7 @@
   "schema": "mls_commerce_os_checkpoint_v1",
   "canonical_roadmap": "docs/ROADMAP_MLS_COMMERCE_OS.md",
   "legacy_roadmap": "docs/ROADMAP_BRAZACOMMERCE.md",
-  "updated_at": "2026-11-02T20:45:16.378771+00:00",
+  "updated_at": "2026-11-02T22:06:16+00:00",
   "product": {
     "name": "MLS Commerce OS",
     "supervisor": "MLS Hermes",
@@ -30,8 +30,8 @@
     "merge_commit": "9c418fd3010f46957d1ce52345baacd76041c788"
   },
   "current_phase": "M2_FINANCE_RETURNS_RECONCILIATION",
-  "working_branch": "feature/returns-original-items-20261102",
-  "current_status": "OFFICIAL_LIVE_ORIGINAL_RETURN_ITEMS_VERIFIED",
+  "working_branch": "feature/simplified-returns-production-layout-20261102",
+  "current_status": "PUBLISHED_VERIFIED_INTEGRATION_PENDING",
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
     "Repasse-base, ajuste, repasse após ajuste e liberação exibidos sem dupla dedução",
@@ -75,7 +75,10 @@
     "Saldo mensal separado para deduções ainda não declaradas e leituras Ads salvas, mantendo líquido e gates estritos",
     "Período compartilhado nos sete agentes, com histórico salvo, rascunhos protegidos e navegação Voltar/Avançar/reload",
     "Declaração explícita do proprietário para outras despesas de novembro registrada pelo mutador canônico com auditoria e repetição idempotente; sem copiar outubro",
-    "Evidência opt-in dos itens pagos e captura de quantidades comerciais de Returns na coleta existente, separada dos ledgers físicos e financeiros"
+    "Evidência opt-in dos itens pagos e captura de quantidades comerciais de Returns na coleta existente, separada dos ledgers físicos e financeiros",
+    "PR104: fila de devoluções com proposta salva e comando físico explícito atômico, sem inferir composição ou valorar estoque",
+    "PR104: custo histórico de fabricação por período inclusivo em Brasília, sem interpretar ausência de registros como gasto zero",
+    "PR104: sete destinos operacionais e ledger em Produção, com busca, aliases e histórico preservados"
   ],
   "remaining_this_phase": [
     "Observar o estado real da nova auditoria Pending na conta autenticada e comparar quantidade/valores/horários com o Seller Centre",
@@ -125,13 +128,12 @@
     }
   },
   "next_actions": [
-    "Conferir os itens salvos do pedido e da solicitação em MLS Returns; manter unidades comerciais separadas das peças físicas, preservar UNKNOWN e validar a origem antes de integrar reaproveitamento ao lucro.",
-    "Validar os itens originais e as quantidades físicas por caso; o transporte e a captura opt-in PR103 estão entregues. Itens legados sem evidência e TO_RETURN sem itens comprados continuam desconhecidos; não refazer o transporte nem inferir peças a partir de kits.",
-    "Confirmar valores históricos e custos de nova embalagem/etiqueta por pedido/peça/kit; UNKNOWN não vira zero",
-    "Manter despesas de cada novo mês confirmadas pelo operador; novembro já foi declarado explicitamente, sem cópia automática de outro mês",
-    "Renovar cobertura da publicação exata e acompanhar revisões, Returns e calendário de outubro sem reiniciar o catálogo/coleta",
-    "Comparar mesmo corte com Seller Centre/banco antes de encerrar M2 ou declarar lucro realizado",
-    "Continuar incrementos validados na Live, preservando bytes/configuração e bloqueios de escrita comercial"
+    "Registrar integração em main da PR104 somente após recibo Git próprio; runtime 2026-11-02.3 já publicado e conferido nos três Workers.",
+    "Conferir um caso físico real em Devoluções e um intervalo real de fabricação em Produção; ausência de registros não confirma gasto zero e QA sintética não cria fatos da conta.",
+    "Observar captura natural de itens/fotos com fonte, cobertura e horário, sem reiniciar catálogo/coleta ou inferir composição física/histórica por foto, SKU ou kit.",
+    "Confirmar decomposição histórica de peça/estampa versus embalagem/etiqueta e custos incrementais antes de valorar/reservar/revender ou integrar a ponte contábil sem dupla contagem.",
+    "Manter despesas por mês e comparar o mesmo recorte com Seller Centre/banco antes de concluir M2 ou declarar lucro realizado; novembro já tem declaração explícita, sem transporte automático a outros meses.",
+    "Preservar os históricos físicos/fabricação/vínculos, a paginação Pending e os gates de Ads/PROMO e escrita comercial."
   ],
   "m0_followup": [
     "Conferir visual autenticado em desktop e celular durante M1; corrigir apenas branding/layout sem renomear infraestrutura"
@@ -140,66 +142,168 @@
     "Mission Control M1.1 (opção 3) integrado com 7 painéis independentes; conferir visual autenticado desktop/celular e retorno às telas antigas"
   ],
   "latest_increment": {
-    "id": "M22_ORIGINAL_ORDER_AND_RETURN_ITEM_EVIDENCE",
-    "status": "OFFICIAL_LIVE_ORIGINAL_RETURN_ITEMS_VERIFIED",
-    "branch": "feature/returns-original-items-20261102",
-    "base_main": "9fc4c69f004e5e709931fad4fdc3bdfa385aff93",
-    "human_code_release_id": "2026-11-02.2",
-    "docs": "docs/MLS_ORIGINAL_RETURN_ITEMS_2026_11_02.md",
+    "id": "M22_SIMPLIFIED_OPERATIONS_AND_MANUFACTURING_DATE_RANGE",
+    "status": "PUBLISHED_VERIFIED_INTEGRATION_PENDING",
+    "branch": "feature/simplified-returns-production-layout-20261102",
+    "base_main": "911870590fe812202287f549240d5274119d1cad",
+    "human_code_release_id": "2026-11-02.3",
+    "label": "Operação simples e produção por período",
+    "docs": "docs/MLS_SIMPLIFIED_OPERATIONS_2026_11_02.md",
     "finance_m2": "OPEN",
     "m22": "PARTIAL",
-    "strict_financial_results_unchanged": true,
-    "physical_ledgers_and_manufacturing_links_unchanged": true,
-    "legacy_contracts_and_stored_payloads_preserved": true,
-    "listing_units_are_not_physical_pieces": true,
-    "legacy_quantities_assumed_zero": false,
-    "new_provider_requests": 0,
-    "provider_capture": "EXISTING_SCHEDULED_RETURN_DETAIL_RESPONSES_ONLY",
+    "m22_completion": "OPEN_PENDING_REAL_OPERATION_AND_ACCOUNTING_BRIDGE",
+    "routes": {
+      "returns": "/admin?tab=agent-returns#physicalReturnsQueue",
+      "manufacturing": "/admin?tab=agent-production#incurredProductionDetails",
+      "finance": "/admin?tab=agent-finance#businessMonthNetCard",
+      "notes": "/admin?tab=roadmap#appReleaseNotes",
+      "manufacturing_legacy_alias": "/admin?tab=margins#incurredProductionDetails"
+    },
+    "changes": {
+      "returns": "Saved original-item evidence plus current catalog names, size/color/composition and current cost; atomic owner-confirmed correct/problem receipt with CAS, audit and same-request retry; absent evidence and kit composition remain unknown.",
+      "images": "Current provider product photo from existing catalog reads is separate from print artwork. Device-local PNG appears only when present and verified; neither proves the historical item shipped.",
+      "manufacturing": "Inclusive custom date range in America/Sao_Paulo, at most 366 days, using the immutable cost snapshot and physical quantity of registered manufacturing; weekly/monthly/daily views; no records does not establish zero spending.",
+      "navigation": "Seven owner primary destinations with Finance and Returns visible; five direct mobile destinations plus Menu; seven-agent hub without duplicate overview; manufacturing ledger moves to Production and preserves old deep links, search and browser history."
+    },
     "owner_reads": "SAVED_SELECT_ONLY_NO_DDL_OR_PROVIDER",
-    "original_quantities_in_legacy_links": "UNAVAILABLE_UNCHANGED",
+    "receipt_mutations": "EXPLICIT_OWNER_COMMAND_ATOMIC_CAS_AUDIT_IDEMPOTENT_REPLAY",
+    "current_reference_is_historical_cost": false,
+    "listing_units_are_not_physical_pieces": true,
+    "unknown_quantities_or_costs_assumed_zero": false,
+    "manufacturing_date_basis": "OPERATOR_REGISTERED_FABRICATION_DATE_AMERICA_SAO_PAULO",
+    "cancelled_order_deletes_recorded_manufacturing": false,
+    "manufacturing_proves_cash_payment": false,
+    "manufacturing_and_sales_reference_costs_automatically_summed": false,
+    "strict_financial_results_and_hermes_contracts_unchanged": true,
+    "existing_physical_history_and_manufacturing_links_preserved": true,
+    "legacy_contracts_and_stored_payloads_preserved": true,
+    "catalog_media": {
+      "contract": "catalog-media-v1",
+      "current_product_photo_not_print_artwork": true,
+      "read_identity": "HASH_FINGERPRINT_AND_SOURCE_CHECKED_AT",
+      "transport": "EXISTING_BASE_INFO_AND_MODEL_LIST_RESPONSES_NO_NEW_ENDPOINT_OR_EXTRA_REQUEST_PER_CATALOG_READ",
+      "early_enrichment": "EXISTING_SCHEDULED_CATALOG_JOBS_MAX_3_ONCE_PER_ITEM_FINGERPRINT_WITH_DURABLE_MARKER",
+      "owner_get_enqueues": false,
+      "backoff_and_active_leases_preserved": true,
+      "optional_storage_failure_preserves_legacy_catalog": true,
+      "cold_budget": {
+        "d1_binding_rpcs": 23,
+        "existing_private_source_reads": 3,
+        "combined_rpcs": 26,
+        "sql_statements_in_batches": 71
+      }
+    },
     "inventory_valuation": "UNKNOWN_NOT_IMPLEMENTED",
     "commercial_writes": "LOCKED",
     "operator_facts_created_for_qa": false,
-    "pull_request": 103,
-    "code_commit": "6ada0748d5af93e8f39330438e9a9a0766ee92c5",
-    "reviewed_head": "2e25591004eb658a30e8240506c29106312bbcf5",
-    "ci_run": 41520727701,
+    "real_owner_receipt_or_manufacturing_verified": false,
+    "seller_centre_and_bank_comparison": "OPEN",
+    "validation": {
+      "media_and_legacy_catalog_focused_tests": {
+        "passed": 100,
+        "failed": 0,
+        "skipped": 0,
+        "scope": "LOCAL_SYNTHETIC"
+      },
+      "independent_receipt_backend_tests": {
+        "passed": 18,
+        "failed": 0,
+        "skipped": 0,
+        "scope": "LOCAL_SQLITE_SYNTHETIC"
+      },
+      "ten_item_receipt_gate": {
+        "parameters": 62,
+        "sql_bytes": 25083,
+        "physical_pieces_committed_in_synthetic_fixture": 10
+      },
+      "full_suite_and_integrated_qa": "PASSED_LOCAL_SYNTHETIC_NORMAL_MINIFIED_320_1365",
+      "ci": "GREEN_EXACT_REVIEWED_HEAD",
+      "full_node_counts": {
+        "tests": 3346,
+        "pass": 3346,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0
+      },
+      "python_tests": 67,
+      "real_owner_browser": "NOT_CLAIMED",
+      "real_owner_mutations": "NOT_EXECUTED"
+    },
+    "pull_request": 104,
+    "code_commit": "c7a7b35677fc30a408644225978aecd90d5fe826",
+    "reviewed_head": "94d62aa047263fbf478faf79aa87542a3ebb5037",
+    "ci_run": 41532391229,
     "deployment": {
+      "status": "ALL_THREE_LIVE_EXACT",
       "versions": {
-        "app": "0a2955bc-e420-42a1-8c53-97f6fef04358",
-        "auth": "e13c43ad-b096-411b-8ae7-92e24ff44991",
-        "finance": "5e3b4686-1011-4e24-a890-fa33050b8490"
+        "app": "4a556c39-bd1b-4962-84a6-b25bf5504e95",
+        "auth": "d6f4397f-ac4d-45cf-93da-175df8305a6d",
+        "finance": "7001376b-f065-4e37-84ea-ee9ac2ea890c"
       },
       "generated_sha256": {
-        "app": "09c261f230ec89489b124fa071cb3e1a99fcc1b955bc886401646c7605fbe96f",
-        "auth": "9654c03c15313f816d34c14824023213178ba96105a2e351d56fa999d854384a",
-        "finance": "dd1053972a38a5f05507ef371df328d9d384cf2201ee7b1ae1276c6cd194020c"
+        "app": "50baef80d8c15e4fce11a68b7c90a52a5678c4ad398034607a6e1cabf4f5fe92",
+        "auth": "851e27c703fda4143b87a8a85a79c06326b9a2f25ce16f5625d8871a589f43ec",
+        "finance": "d7e64105b88602fa20f8e733f5e16548cfa3ceefbbd7733a87dfb5e5bd8fcd49"
       },
       "published_sha256": {
-        "finance": "02eed41452928046f4180eee4e0544ddbc041c72aa4970a2081d4a21eae17d49",
-        "auth": "ac8e66ec61006289583f77baf356923c25cff7c91669559b30c11bab2320e3f8",
-        "app": "e7e85a3f82afbb18af111bce88c627bd3928ac4e88ea4d39c4a5b7a07953cd42"
+        "finance": "ea8a5abf0c818539ee02e0e14260b973d0d2ed243f2c0eb26162ae3bbb3fcb59",
+        "auth": "5e18583606c453bd4e5ecfbc983db13826e4ad7f1c336fde5b7bbe9d628b2bd6",
+        "app": "c37f8c70023f03c2bcb3a609807b9477a8ce32c7c6ee1b10358eedcee798fb24"
       },
-      "completed_at": 1793652300,
+      "started_at": 1793656934,
+      "completed_at": 1793657176,
+      "deploy_order": [
+        "finance",
+        "auth",
+        "app"
+      ],
       "exact_bytes_verified": true,
       "configuration_preserved": true,
       "domains_preserved": true,
       "flags_preserved": true,
-      "cron_preserved": true
+      "cron_preserved": true,
+      "owner_endpoints_called": false,
+      "provider_calls": 0,
+      "d1_queries": 0,
+      "physical_or_financial_fact_writes": false
     },
-    "validation": {
-      "node_tests": 3248,
-      "python_tests": 67,
-      "chromium": [
-        "normal",
-        "minified",
-        "320px",
-        "1365px"
-      ],
-      "real_owner_browser": "NOT_OBSERVED_EXECUTOR_WAF_403",
-      "strict_financial_results_unchanged": true,
-      "physical_ledgers_unchanged": true,
-      "legacy_contracts_unchanged": true
+    "publication_policy": "EXISTING_OWNER_AUTHORIZATION_OFFICIAL_LIVE_AFTER_VALIDATION_FINANCE_AUTH_APP_AND_STAGE_BY_STAGE_VERIFICATION",
+    "node_tests": 3346,
+    "python_tests": 67,
+    "integration": {
+      "status": "PENDING",
+      "pull_request": 104,
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/104",
+      "merge_commit": null
+    },
+    "publication_continuation": {
+      "mode": "EXPLICIT_APP_ONLY_CONTINUATION_AFTER_PREDEPLOY_GITHUB_READ_FAILURE",
+      "finance_auth_redeployed": false,
+      "app_deploy_invocations": 1,
+      "all_original_gates_rechecked": true,
+      "full_intermediate_and_final_vectors_verified": true,
+      "automatic_retry": false,
+      "automatic_rollback": false
+    },
+    "first_saved_data_observation": {
+      "checked_at_brasilia": "2026-11-02T19:06:36-03:00",
+      "source": "SAVED_DATABASE_SELECT_ONLY",
+      "catalog_jobs": 49,
+      "catalog_jobs_due": 3,
+      "catalog_jobs_with_failures": 0,
+      "catalog_live_leases": 0,
+      "original_return_cases_available": 10,
+      "original_return_cases_not_captured": 9,
+      "catalog_media_tables": "ABSENT_NOT_OBSERVABLE",
+      "manufacturing_tables": "ABSENT_NOT_OBSERVABLE_NOT_ZERO_SPEND",
+      "physical_case_records": 1,
+      "physical_audit_records": 1,
+      "physical_audits_after_publication": 0,
+      "select_statements": 11,
+      "remote_writes": 0,
+      "provider_calls": 0,
+      "owner_endpoint_calls": 0,
+      "cron_invoked": false
     }
   },
   "incident": {
@@ -3435,6 +3539,442 @@
     "commercial_writes": "LOCKED"
   },
   "original_return_items_2026_11_02": {
+    "id": "M22_ORIGINAL_ORDER_AND_RETURN_ITEM_EVIDENCE",
+    "status": "OFFICIAL_LIVE_ORIGINAL_RETURN_ITEMS_VERIFIED",
+    "branch": "feature/returns-original-items-20261102",
+    "base_main": "9fc4c69f004e5e709931fad4fdc3bdfa385aff93",
+    "human_code_release_id": "2026-11-02.2",
+    "docs": "docs/MLS_ORIGINAL_RETURN_ITEMS_2026_11_02.md",
+    "finance_m2": "OPEN",
+    "m22": "PARTIAL",
+    "strict_financial_results_unchanged": true,
+    "physical_ledgers_and_manufacturing_links_unchanged": true,
+    "legacy_contracts_and_stored_payloads_preserved": true,
+    "listing_units_are_not_physical_pieces": true,
+    "legacy_quantities_assumed_zero": false,
+    "new_provider_requests": 0,
+    "provider_capture": "EXISTING_SCHEDULED_RETURN_DETAIL_RESPONSES_ONLY",
+    "owner_reads": "SAVED_SELECT_ONLY_NO_DDL_OR_PROVIDER",
+    "original_quantities_in_legacy_links": "UNAVAILABLE_UNCHANGED",
+    "inventory_valuation": "UNKNOWN_NOT_IMPLEMENTED",
+    "commercial_writes": "LOCKED",
+    "operator_facts_created_for_qa": false,
+    "pull_request": 103,
+    "code_commit": "6ada0748d5af93e8f39330438e9a9a0766ee92c5",
+    "reviewed_head": "2e25591004eb658a30e8240506c29106312bbcf5",
+    "ci_run": 41520727701,
+    "deployment": {
+      "versions": {
+        "app": "0a2955bc-e420-42a1-8c53-97f6fef04358",
+        "auth": "e13c43ad-b096-411b-8ae7-92e24ff44991",
+        "finance": "5e3b4686-1011-4e24-a890-fa33050b8490"
+      },
+      "generated_sha256": {
+        "app": "09c261f230ec89489b124fa071cb3e1a99fcc1b955bc886401646c7605fbe96f",
+        "auth": "9654c03c15313f816d34c14824023213178ba96105a2e351d56fa999d854384a",
+        "finance": "dd1053972a38a5f05507ef371df328d9d384cf2201ee7b1ae1276c6cd194020c"
+      },
+      "published_sha256": {
+        "finance": "02eed41452928046f4180eee4e0544ddbc041c72aa4970a2081d4a21eae17d49",
+        "auth": "ac8e66ec61006289583f77baf356923c25cff7c91669559b30c11bab2320e3f8",
+        "app": "e7e85a3f82afbb18af111bce88c627bd3928ac4e88ea4d39c4a5b7a07953cd42"
+      },
+      "completed_at": 1793652300,
+      "exact_bytes_verified": true,
+      "configuration_preserved": true,
+      "domains_preserved": true,
+      "flags_preserved": true,
+      "cron_preserved": true
+    },
+    "validation": {
+      "node_tests": 3248,
+      "python_tests": 67,
+      "chromium": [
+        "normal",
+        "minified",
+        "320px",
+        "1365px"
+      ],
+      "real_owner_browser": "NOT_OBSERVED_EXECUTOR_WAF_403",
+      "strict_financial_results_unchanged": true,
+      "physical_ledgers_unchanged": true,
+      "legacy_contracts_unchanged": true
+    }
+  },
+  "previous_increment_before_simplified_operations": {
+    "id": "M22_ORIGINAL_ORDER_AND_RETURN_ITEM_EVIDENCE",
+    "status": "OFFICIAL_LIVE_ORIGINAL_RETURN_ITEMS_VERIFIED",
+    "branch": "feature/returns-original-items-20261102",
+    "base_main": "9fc4c69f004e5e709931fad4fdc3bdfa385aff93",
+    "human_code_release_id": "2026-11-02.2",
+    "docs": "docs/MLS_ORIGINAL_RETURN_ITEMS_2026_11_02.md",
+    "finance_m2": "OPEN",
+    "m22": "PARTIAL",
+    "strict_financial_results_unchanged": true,
+    "physical_ledgers_and_manufacturing_links_unchanged": true,
+    "legacy_contracts_and_stored_payloads_preserved": true,
+    "listing_units_are_not_physical_pieces": true,
+    "legacy_quantities_assumed_zero": false,
+    "new_provider_requests": 0,
+    "provider_capture": "EXISTING_SCHEDULED_RETURN_DETAIL_RESPONSES_ONLY",
+    "owner_reads": "SAVED_SELECT_ONLY_NO_DDL_OR_PROVIDER",
+    "original_quantities_in_legacy_links": "UNAVAILABLE_UNCHANGED",
+    "inventory_valuation": "UNKNOWN_NOT_IMPLEMENTED",
+    "commercial_writes": "LOCKED",
+    "operator_facts_created_for_qa": false,
+    "pull_request": 103,
+    "code_commit": "6ada0748d5af93e8f39330438e9a9a0766ee92c5",
+    "reviewed_head": "2e25591004eb658a30e8240506c29106312bbcf5",
+    "ci_run": 41520727701,
+    "deployment": {
+      "versions": {
+        "app": "0a2955bc-e420-42a1-8c53-97f6fef04358",
+        "auth": "e13c43ad-b096-411b-8ae7-92e24ff44991",
+        "finance": "5e3b4686-1011-4e24-a890-fa33050b8490"
+      },
+      "generated_sha256": {
+        "app": "09c261f230ec89489b124fa071cb3e1a99fcc1b955bc886401646c7605fbe96f",
+        "auth": "9654c03c15313f816d34c14824023213178ba96105a2e351d56fa999d854384a",
+        "finance": "dd1053972a38a5f05507ef371df328d9d384cf2201ee7b1ae1276c6cd194020c"
+      },
+      "published_sha256": {
+        "finance": "02eed41452928046f4180eee4e0544ddbc041c72aa4970a2081d4a21eae17d49",
+        "auth": "ac8e66ec61006289583f77baf356923c25cff7c91669559b30c11bab2320e3f8",
+        "app": "e7e85a3f82afbb18af111bce88c627bd3928ac4e88ea4d39c4a5b7a07953cd42"
+      },
+      "completed_at": 1793652300,
+      "exact_bytes_verified": true,
+      "configuration_preserved": true,
+      "domains_preserved": true,
+      "flags_preserved": true,
+      "cron_preserved": true
+    },
+    "validation": {
+      "node_tests": 3248,
+      "python_tests": 67,
+      "chromium": [
+        "normal",
+        "minified",
+        "320px",
+        "1365px"
+      ],
+      "real_owner_browser": "NOT_OBSERVED_EXECUTOR_WAF_403",
+      "strict_financial_results_unchanged": true,
+      "physical_ledgers_unchanged": true,
+      "legacy_contracts_unchanged": true
+    }
+  },
+  "last_verified_live_release": {
+    "id": "M22_SIMPLIFIED_OPERATIONS_AND_MANUFACTURING_DATE_RANGE",
+    "status": "PUBLISHED_VERIFIED_INTEGRATION_PENDING",
+    "branch": "feature/simplified-returns-production-layout-20261102",
+    "base_main": "911870590fe812202287f549240d5274119d1cad",
+    "human_code_release_id": "2026-11-02.3",
+    "label": "Operação simples e produção por período",
+    "docs": "docs/MLS_SIMPLIFIED_OPERATIONS_2026_11_02.md",
+    "finance_m2": "OPEN",
+    "m22": "PARTIAL",
+    "m22_completion": "OPEN_PENDING_REAL_OPERATION_AND_ACCOUNTING_BRIDGE",
+    "routes": {
+      "returns": "/admin?tab=agent-returns#physicalReturnsQueue",
+      "manufacturing": "/admin?tab=agent-production#incurredProductionDetails",
+      "finance": "/admin?tab=agent-finance#businessMonthNetCard",
+      "notes": "/admin?tab=roadmap#appReleaseNotes",
+      "manufacturing_legacy_alias": "/admin?tab=margins#incurredProductionDetails"
+    },
+    "changes": {
+      "returns": "Saved original-item evidence plus current catalog names, size/color/composition and current cost; atomic owner-confirmed correct/problem receipt with CAS, audit and same-request retry; absent evidence and kit composition remain unknown.",
+      "images": "Current provider product photo from existing catalog reads is separate from print artwork. Device-local PNG appears only when present and verified; neither proves the historical item shipped.",
+      "manufacturing": "Inclusive custom date range in America/Sao_Paulo, at most 366 days, using the immutable cost snapshot and physical quantity of registered manufacturing; weekly/monthly/daily views; no records does not establish zero spending.",
+      "navigation": "Seven owner primary destinations with Finance and Returns visible; five direct mobile destinations plus Menu; seven-agent hub without duplicate overview; manufacturing ledger moves to Production and preserves old deep links, search and browser history."
+    },
+    "owner_reads": "SAVED_SELECT_ONLY_NO_DDL_OR_PROVIDER",
+    "receipt_mutations": "EXPLICIT_OWNER_COMMAND_ATOMIC_CAS_AUDIT_IDEMPOTENT_REPLAY",
+    "current_reference_is_historical_cost": false,
+    "listing_units_are_not_physical_pieces": true,
+    "unknown_quantities_or_costs_assumed_zero": false,
+    "manufacturing_date_basis": "OPERATOR_REGISTERED_FABRICATION_DATE_AMERICA_SAO_PAULO",
+    "cancelled_order_deletes_recorded_manufacturing": false,
+    "manufacturing_proves_cash_payment": false,
+    "manufacturing_and_sales_reference_costs_automatically_summed": false,
+    "strict_financial_results_and_hermes_contracts_unchanged": true,
+    "existing_physical_history_and_manufacturing_links_preserved": true,
+    "legacy_contracts_and_stored_payloads_preserved": true,
+    "catalog_media": {
+      "contract": "catalog-media-v1",
+      "current_product_photo_not_print_artwork": true,
+      "read_identity": "HASH_FINGERPRINT_AND_SOURCE_CHECKED_AT",
+      "transport": "EXISTING_BASE_INFO_AND_MODEL_LIST_RESPONSES_NO_NEW_ENDPOINT_OR_EXTRA_REQUEST_PER_CATALOG_READ",
+      "early_enrichment": "EXISTING_SCHEDULED_CATALOG_JOBS_MAX_3_ONCE_PER_ITEM_FINGERPRINT_WITH_DURABLE_MARKER",
+      "owner_get_enqueues": false,
+      "backoff_and_active_leases_preserved": true,
+      "optional_storage_failure_preserves_legacy_catalog": true,
+      "cold_budget": {
+        "d1_binding_rpcs": 23,
+        "existing_private_source_reads": 3,
+        "combined_rpcs": 26,
+        "sql_statements_in_batches": 71
+      }
+    },
+    "inventory_valuation": "UNKNOWN_NOT_IMPLEMENTED",
+    "commercial_writes": "LOCKED",
+    "operator_facts_created_for_qa": false,
+    "real_owner_receipt_or_manufacturing_verified": false,
+    "seller_centre_and_bank_comparison": "OPEN",
+    "validation": {
+      "media_and_legacy_catalog_focused_tests": {
+        "passed": 100,
+        "failed": 0,
+        "skipped": 0,
+        "scope": "LOCAL_SYNTHETIC"
+      },
+      "independent_receipt_backend_tests": {
+        "passed": 18,
+        "failed": 0,
+        "skipped": 0,
+        "scope": "LOCAL_SQLITE_SYNTHETIC"
+      },
+      "ten_item_receipt_gate": {
+        "parameters": 62,
+        "sql_bytes": 25083,
+        "physical_pieces_committed_in_synthetic_fixture": 10
+      },
+      "full_suite_and_integrated_qa": "PASSED_LOCAL_SYNTHETIC_NORMAL_MINIFIED_320_1365",
+      "ci": "GREEN_EXACT_REVIEWED_HEAD",
+      "full_node_counts": {
+        "tests": 3346,
+        "pass": 3346,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0
+      },
+      "python_tests": 67,
+      "real_owner_browser": "NOT_CLAIMED",
+      "real_owner_mutations": "NOT_EXECUTED"
+    },
+    "pull_request": 104,
+    "code_commit": "c7a7b35677fc30a408644225978aecd90d5fe826",
+    "reviewed_head": "94d62aa047263fbf478faf79aa87542a3ebb5037",
+    "ci_run": 41532391229,
+    "deployment": {
+      "status": "ALL_THREE_LIVE_EXACT",
+      "versions": {
+        "app": "4a556c39-bd1b-4962-84a6-b25bf5504e95",
+        "auth": "d6f4397f-ac4d-45cf-93da-175df8305a6d",
+        "finance": "7001376b-f065-4e37-84ea-ee9ac2ea890c"
+      },
+      "generated_sha256": {
+        "app": "50baef80d8c15e4fce11a68b7c90a52a5678c4ad398034607a6e1cabf4f5fe92",
+        "auth": "851e27c703fda4143b87a8a85a79c06326b9a2f25ce16f5625d8871a589f43ec",
+        "finance": "d7e64105b88602fa20f8e733f5e16548cfa3ceefbbd7733a87dfb5e5bd8fcd49"
+      },
+      "published_sha256": {
+        "finance": "ea8a5abf0c818539ee02e0e14260b973d0d2ed243f2c0eb26162ae3bbb3fcb59",
+        "auth": "5e18583606c453bd4e5ecfbc983db13826e4ad7f1c336fde5b7bbe9d628b2bd6",
+        "app": "c37f8c70023f03c2bcb3a609807b9477a8ce32c7c6ee1b10358eedcee798fb24"
+      },
+      "started_at": 1793656934,
+      "completed_at": 1793657176,
+      "deploy_order": [
+        "finance",
+        "auth",
+        "app"
+      ],
+      "exact_bytes_verified": true,
+      "configuration_preserved": true,
+      "domains_preserved": true,
+      "flags_preserved": true,
+      "cron_preserved": true,
+      "owner_endpoints_called": false,
+      "provider_calls": 0,
+      "d1_queries": 0,
+      "physical_or_financial_fact_writes": false
+    },
+    "publication_policy": "EXISTING_OWNER_AUTHORIZATION_OFFICIAL_LIVE_AFTER_VALIDATION_FINANCE_AUTH_APP_AND_STAGE_BY_STAGE_VERIFICATION",
+    "node_tests": 3346,
+    "python_tests": 67,
+    "integration": {
+      "status": "PENDING",
+      "pull_request": 104,
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/104",
+      "merge_commit": null
+    },
+    "publication_continuation": {
+      "mode": "EXPLICIT_APP_ONLY_CONTINUATION_AFTER_PREDEPLOY_GITHUB_READ_FAILURE",
+      "finance_auth_redeployed": false,
+      "app_deploy_invocations": 1,
+      "all_original_gates_rechecked": true,
+      "full_intermediate_and_final_vectors_verified": true,
+      "automatic_retry": false,
+      "automatic_rollback": false
+    },
+    "first_saved_data_observation": {
+      "checked_at_brasilia": "2026-11-02T19:06:36-03:00",
+      "source": "SAVED_DATABASE_SELECT_ONLY",
+      "catalog_jobs": 49,
+      "catalog_jobs_due": 3,
+      "catalog_jobs_with_failures": 0,
+      "catalog_live_leases": 0,
+      "original_return_cases_available": 10,
+      "original_return_cases_not_captured": 9,
+      "catalog_media_tables": "ABSENT_NOT_OBSERVABLE",
+      "manufacturing_tables": "ABSENT_NOT_OBSERVABLE_NOT_ZERO_SPEND",
+      "physical_case_records": 1,
+      "physical_audit_records": 1,
+      "physical_audits_after_publication": 0,
+      "select_statements": 11,
+      "remote_writes": 0,
+      "provider_calls": 0,
+      "owner_endpoint_calls": 0,
+      "cron_invoked": false
+    }
+  },
+  "previous_next_actions_before_simplified_operations": [
+    "Conferir os itens salvos do pedido e da solicitação em MLS Returns; manter unidades comerciais separadas das peças físicas, preservar UNKNOWN e validar a origem antes de integrar reaproveitamento ao lucro.",
+    "Validar os itens originais e as quantidades físicas por caso; o transporte e a captura opt-in PR103 estão entregues. Itens legados sem evidência e TO_RETURN sem itens comprados continuam desconhecidos; não refazer o transporte nem inferir peças a partir de kits.",
+    "Confirmar valores históricos e custos de nova embalagem/etiqueta por pedido/peça/kit; UNKNOWN não vira zero",
+    "Manter despesas de cada novo mês confirmadas pelo operador; novembro já foi declarado explicitamente, sem cópia automática de outro mês",
+    "Renovar cobertura da publicação exata e acompanhar revisões, Returns e calendário de outubro sem reiniciar o catálogo/coleta",
+    "Comparar mesmo corte com Seller Centre/banco antes de encerrar M2 ou declarar lucro realizado",
+    "Continuar incrementos validados na Live, preservando bytes/configuração e bloqueios de escrita comercial"
+  ],
+  "simplified_operations_2026_11_02": {
+    "id": "M22_SIMPLIFIED_OPERATIONS_AND_MANUFACTURING_DATE_RANGE",
+    "status": "PUBLISHED_VERIFIED_INTEGRATION_PENDING",
+    "branch": "feature/simplified-returns-production-layout-20261102",
+    "base_main": "911870590fe812202287f549240d5274119d1cad",
+    "human_code_release_id": "2026-11-02.3",
+    "label": "Operação simples e produção por período",
+    "docs": "docs/MLS_SIMPLIFIED_OPERATIONS_2026_11_02.md",
+    "finance_m2": "OPEN",
+    "m22": "PARTIAL",
+    "m22_completion": "OPEN_PENDING_REAL_OPERATION_AND_ACCOUNTING_BRIDGE",
+    "routes": {
+      "returns": "/admin?tab=agent-returns#physicalReturnsQueue",
+      "manufacturing": "/admin?tab=agent-production#incurredProductionDetails",
+      "finance": "/admin?tab=agent-finance#businessMonthNetCard",
+      "notes": "/admin?tab=roadmap#appReleaseNotes",
+      "manufacturing_legacy_alias": "/admin?tab=margins#incurredProductionDetails"
+    },
+    "changes": {
+      "returns": "Saved original-item evidence plus current catalog names, size/color/composition and current cost; atomic owner-confirmed correct/problem receipt with CAS, audit and same-request retry; absent evidence and kit composition remain unknown.",
+      "images": "Current provider product photo from existing catalog reads is separate from print artwork. Device-local PNG appears only when present and verified; neither proves the historical item shipped.",
+      "manufacturing": "Inclusive custom date range in America/Sao_Paulo, at most 366 days, using the immutable cost snapshot and physical quantity of registered manufacturing; weekly/monthly/daily views; no records does not establish zero spending.",
+      "navigation": "Seven owner primary destinations with Finance and Returns visible; five direct mobile destinations plus Menu; seven-agent hub without duplicate overview; manufacturing ledger moves to Production and preserves old deep links, search and browser history."
+    },
+    "owner_reads": "SAVED_SELECT_ONLY_NO_DDL_OR_PROVIDER",
+    "receipt_mutations": "EXPLICIT_OWNER_COMMAND_ATOMIC_CAS_AUDIT_IDEMPOTENT_REPLAY",
+    "current_reference_is_historical_cost": false,
+    "listing_units_are_not_physical_pieces": true,
+    "unknown_quantities_or_costs_assumed_zero": false,
+    "manufacturing_date_basis": "OPERATOR_REGISTERED_FABRICATION_DATE_AMERICA_SAO_PAULO",
+    "cancelled_order_deletes_recorded_manufacturing": false,
+    "manufacturing_proves_cash_payment": false,
+    "manufacturing_and_sales_reference_costs_automatically_summed": false,
+    "strict_financial_results_and_hermes_contracts_unchanged": true,
+    "existing_physical_history_and_manufacturing_links_preserved": true,
+    "legacy_contracts_and_stored_payloads_preserved": true,
+    "catalog_media": {
+      "contract": "catalog-media-v1",
+      "current_product_photo_not_print_artwork": true,
+      "read_identity": "HASH_FINGERPRINT_AND_SOURCE_CHECKED_AT",
+      "transport": "EXISTING_BASE_INFO_AND_MODEL_LIST_RESPONSES_NO_NEW_ENDPOINT_OR_EXTRA_REQUEST_PER_CATALOG_READ",
+      "early_enrichment": "EXISTING_SCHEDULED_CATALOG_JOBS_MAX_3_ONCE_PER_ITEM_FINGERPRINT_WITH_DURABLE_MARKER",
+      "owner_get_enqueues": false,
+      "backoff_and_active_leases_preserved": true,
+      "optional_storage_failure_preserves_legacy_catalog": true,
+      "cold_budget": {
+        "d1_binding_rpcs": 23,
+        "existing_private_source_reads": 3,
+        "combined_rpcs": 26,
+        "sql_statements_in_batches": 71
+      }
+    },
+    "inventory_valuation": "UNKNOWN_NOT_IMPLEMENTED",
+    "commercial_writes": "LOCKED",
+    "operator_facts_created_for_qa": false,
+    "real_owner_receipt_or_manufacturing_verified": false,
+    "seller_centre_and_bank_comparison": "OPEN",
+    "validation": {
+      "media_and_legacy_catalog_focused_tests": {
+        "passed": 100,
+        "failed": 0,
+        "skipped": 0,
+        "scope": "LOCAL_SYNTHETIC"
+      },
+      "independent_receipt_backend_tests": {
+        "passed": 18,
+        "failed": 0,
+        "skipped": 0,
+        "scope": "LOCAL_SQLITE_SYNTHETIC"
+      },
+      "ten_item_receipt_gate": {
+        "parameters": 62,
+        "sql_bytes": 25083,
+        "physical_pieces_committed_in_synthetic_fixture": 10
+      },
+      "full_suite_and_integrated_qa": "PASSED_LOCAL_SYNTHETIC_NORMAL_MINIFIED_320_1365",
+      "ci": "GREEN_EXACT_REVIEWED_HEAD",
+      "full_node_counts": {
+        "tests": 3346,
+        "pass": 3346,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0
+      },
+      "python_tests": 67,
+      "real_owner_browser": "NOT_CLAIMED",
+      "real_owner_mutations": "NOT_EXECUTED"
+    },
+    "pull_request": 104,
+    "code_commit": "c7a7b35677fc30a408644225978aecd90d5fe826",
+    "reviewed_head": "94d62aa047263fbf478faf79aa87542a3ebb5037",
+    "ci_run": 41532391229,
+    "deployment": {
+      "status": "ALL_THREE_LIVE_EXACT",
+      "versions": {
+        "app": "4a556c39-bd1b-4962-84a6-b25bf5504e95",
+        "auth": "d6f4397f-ac4d-45cf-93da-175df8305a6d",
+        "finance": "7001376b-f065-4e37-84ea-ee9ac2ea890c"
+      },
+      "generated_sha256": {
+        "app": "50baef80d8c15e4fce11a68b7c90a52a5678c4ad398034607a6e1cabf4f5fe92",
+        "auth": "851e27c703fda4143b87a8a85a79c06326b9a2f25ce16f5625d8871a589f43ec",
+        "finance": "d7e64105b88602fa20f8e733f5e16548cfa3ceefbbd7733a87dfb5e5bd8fcd49"
+      },
+      "published_sha256": {
+        "finance": "ea8a5abf0c818539ee02e0e14260b973d0d2ed243f2c0eb26162ae3bbb3fcb59",
+        "auth": "5e18583606c453bd4e5ecfbc983db13826e4ad7f1c336fde5b7bbe9d628b2bd6",
+        "app": "c37f8c70023f03c2bcb3a609807b9477a8ce32c7c6ee1b10358eedcee798fb24"
+      },
+      "started_at": 1793656934,
+      "completed_at": 1793657176,
+      "deploy_order": [
+        "finance",
+        "auth",
+        "app"
+      ],
+      "exact_bytes_verified": true,
+      "configuration_preserved": true,
+      "domains_preserved": true,
+      "flags_preserved": true,
+      "cron_preserved": true,
+      "owner_endpoints_called": false,
+      "provider_calls": 0,
+      "d1_queries": 0,
+      "physical_or_financial_fact_writes": false
+    },
+    "publication_policy": "EXISTING_OWNER_AUTHORIZATION_OFFICIAL_LIVE_AFTER_VALIDATION_FINANCE_AUTH_APP_AND_STAGE_BY_STAGE_VERIFICATION",
+    "node_tests": 3346,
+    "python_tests": 67,
+    "integration": {
+      "status": "PENDING",
+      "pull_request": 104,
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/104",
+      "merge_commit": null
+    }
+  },
+  "previous_live_release_before_simplified_operations": {
     "id": "M22_ORIGINAL_ORDER_AND_RETURN_ITEM_EVIDENCE",
     "status": "OFFICIAL_LIVE_ORIGINAL_RETURN_ITEMS_VERIFIED",
     "branch": "feature/returns-original-items-20261102",

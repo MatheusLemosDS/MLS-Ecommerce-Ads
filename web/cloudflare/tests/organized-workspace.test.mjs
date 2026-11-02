@@ -18,18 +18,18 @@ function detailAncestors(html){
 
 function navigation(search=''){
  const context=vm.createContext({URL,URLSearchParams});
- const html=adminBody(),tabs=[...html.matchAll(/data-tab="([^"]+)"/g)].map(match=>match[1]);
+ const html=adminBody(),navigationRows=[...html.matchAll(/<a\b([^>]*)>/g)].map(match=>Object.fromEntries([...match[1].matchAll(/\bdata-(tab|workspace-key)="([^"]+)"/g)].map(row=>[row[1]==='tab'?'tab':'workspaceKey',row[2]]))).filter(row=>row.tab||row.workspaceKey);
  const start=CLIENT.indexOf('function workspaceTabFromLocation()'),end=CLIENT.indexOf("document.addEventListener('visibilitychange'",start);
  assert.ok(start>=0&&end>start);
  new vm.Script(`
  let state=null,csrf='',observations=0,syncs=0,settingsLoads=0;
  const loadObservations=()=>observations++,syncOnProductsOpen=()=>syncs++,loadSettings=async()=>{settingsLoads++;return false;};
- function item(tab){return {dataset:{tab},attrs:{},classList:{active:false,toggle(name,value){this[name]=value;}},setAttribute(name,value){this.attrs[name]=value;},removeAttribute(name){delete this.attrs[name];}};}
+ function item(dataset){return {dataset,attrs:{},classList:{active:false,toggle(name,value){this[name]=value;}},setAttribute(name,value){this.attrs[name]=value;},removeAttribute(name){delete this.attrs[name];}};}
  let agentScrollCount=0; const agentLinks=[{onclick:null},{onclick:null}];
- const links=${JSON.stringify(tabs)}.map(item),sections=['overview','agents','agent-finance','agent-ads','agent-products','agent-production','agent-returns','agent-auditor','agent-hermes','products','margins','hermes','history','roadmap'].map(id=>({id,hidden:id!=='overview'}));
+ const links=${JSON.stringify(navigationRows)}.map(item),sections=['overview','agents','agent-finance','agent-ads','agent-products','agent-production','agent-returns','agent-auditor','agent-hermes','products','margins','hermes','history','roadmap'].map(id=>({id,hidden:id!=='overview'}));
  const controls=new Map([['pageTitle',{textContent:''}],['pageSubtitle',{textContent:''}]]),el=id=>controls.get(id);
  const menus=[{dataset:{},open:true,querySelector(){return links.find(link=>['hermes','history','roadmap'].includes(link.dataset.tab)&&link.attrs['aria-current']==='page');}}];
- const handlersDoc={};const document={documentElement:{dataset:{}},addEventListener(name,fn){handlersDoc[name]=fn;},querySelectorAll(selector){return selector==='.workspace > section'?sections:selector==='[data-tab]'?links:selector==='.workspace-more'?menus:selector==='[data-workspace-key="agents"]'?agentLinks:[];},getElementById(id){return id==='commandAgents'?{scrollIntoView(){agentScrollCount++;}}:null;}};
+ const handlersDoc={};const document={documentElement:{dataset:{}},addEventListener(name,fn){handlersDoc[name]=fn;},querySelectorAll(selector){return selector==='.workspace > section'?sections:selector==='[data-tab]'?links.filter(link=>link.dataset.tab):selector==='[data-tab],[data-workspace-key]'?links:selector==='.workspace-more'?menus:selector==='[data-workspace-key="agents"]'?agentLinks:[];},getElementById(id){return id==='commandAgents'?{scrollIntoView(){agentScrollCount++;}}:null;}};
  globalThis.location=new URL('https://app.example.test/admin'+${JSON.stringify(search)});const historyCalls=[],handlers={};
  globalThis.history={pushState(state,title,path){historyCalls.push({state,path});globalThis.location=new URL(path,globalThis.location);}};
  globalThis.addEventListener=(name,callback)=>handlers[name]=callback;
@@ -53,8 +53,8 @@ test('owner workspace keeps one shared navigation, intact controls and advanced 
  assert.match(CSS,/\.app-shell>\.sidebar\{display:none\}/);assert.match(CSS,/safe-area-inset-bottom/);
 });
 
-test('command center leads the overview, followed by daily profit and the monthly result',()=>{
- const html=adminBody();assert.ok(html.indexOf('id="commandCenter"')<html.indexOf('id="businessDay"'));assert.ok(html.indexOf('id="businessDay"')<html.indexOf('id="businessMonth"'));assert.ok(html.indexOf('id="businessMonth"')<html.indexOf('id="legacyFinanceDetails"'));assert.match(html,/id="commandAgents"/);assert.match(html,/MLS Hermes/);
+test('command center leads the overview while Finance presents the monthly result before its daily reference',()=>{
+ const html=adminBody();assert.ok(html.indexOf('id="commandCenter"')<html.indexOf('id="businessMonth"'));assert.ok(html.indexOf('id="businessMonth"')<html.indexOf('id="businessDay"'));assert.ok(html.indexOf('id="businessDay"')<html.indexOf('id="legacyFinanceDetails"'));assert.ok(html.indexOf('id="commandAgents"')>html.indexOf('id="agents"'),'the existing fleet anchor belongs to the agent hub');assert.equal([...html.matchAll(/class="mission-hub-card(?:\s|")/g)].length,7,'the specialist fleet is rendered once');assert.doesNotMatch(html.slice(html.indexOf('id="overview"'),html.indexOf('id="agents"')),/class="mission-hub-card/,'overview does not duplicate the specialist fleet');assert.match(html,/MLS Hermes/);
  const body=businessMonthBody();assert.equal([...body.matchAll(/class="month-metric(?: month-net)?"/g)].length,4);
  assert.match(body,/Resultado do mês/);assert.ok(body.indexOf('businessMonthNetCard')<body.indexOf('businessMonthSalesCard'));
  assert.ok(body.indexOf('businessMonthSalesCard')<body.indexOf('businessMonthCalculationTitle'));
@@ -105,7 +105,7 @@ test('agent cards navigate to independent workspaces, preserve back and restore 
  assert.deepEqual(b.json('sections.filter(section=>!section.hidden).map(section=>section.id)'),['agent-finance']);
  assert.equal(b.run('globalThis.location.search'),'?tab=agent-finance');
  const current=b.json("links.filter(link=>link.attrs['aria-current']==='page').map(link=>link.dataset.tab)");
- assert.ok(current.includes('agents'));
+ assert.ok(current.includes('agent-finance'));assert.ok(!current.includes('agents'),'Finance selects its operational destination instead of the agent hub');
  b.run("location=new URL('https://app.example.test/admin?tab=agent-returns');handlers.popstate()");
  assert.equal(b.run('document.documentElement.dataset.activePanel'),'agent-returns');
  assert.deepEqual(b.json('sections.filter(section=>!section.hidden).map(section=>section.id)'),['agent-returns']);

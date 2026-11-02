@@ -46,7 +46,8 @@ test('owner keeps all existing financial forms and identifiers once, but overvie
  }
  for(const name of ['products','margins','hermes','history','roadmap'])assert.ok(ids.includes(name),name+' legacy tab preserved');
  assert.match(html,/id="commandCenterAgents"/);
- assert.ok(html.indexOf('id="commandCenterAgents"')<financeStart,'executive cards remain on overview');
+ assert.ok(html.indexOf('id="commandCenterAgents"')>html.indexOf('id="agents"'),'the single complete fleet belongs to Equipe');
+ assert.doesNotMatch(commandCenterBody(),/id="commandCenterAgents"|class="agent-card"/);
 });
 
 test('Mission Control style has scoped futuristic accents, responsive breakpoints and reduced-motion support',()=>{
@@ -107,13 +108,14 @@ test('approved Mission Control V2 actually exposes colored cockpit, real observa
   assert.ok(html.includes(key),key+' missing from shipped owner page');
  }
  for(const key of ['net','sales','ads','margin','paid','alerts'])assert.ok(html.includes('data-mission-metric="'+key+'"'),key);
- for(const name of ['hermes','finance','ads','products','production','returns'])assert.ok(html.includes('data-mission-accent="'+name+'"'));
- assert.equal((html.match(/data-agent-placeholder="true"/g)||[]).length,6);
- assert.ok(html.indexOf('mission-day-intelligence')>html.indexOf('commandCenterAgents'));
+ for(const name of names)assert.ok(fleet.includes('data-mission-agent="'+name+'"'));
+ assert.equal((html.match(/data-agent-placeholder="true"/g)||[]).length,0);
+ assert.equal((fleet.match(/class="mission-hub-card /g)||[]).length,7);
+ assert.ok(html.indexOf('mission-day-intelligence')>html.indexOf('commandCenterPriorities'));
  for(const name of names){
   assert.match(fleet,new RegExp('mission-agent--'+name));
   assert.ok(fleet.includes('id="mission-'+name+'-tools"'));
-  assert.match(fleet,new RegExp('href="#mission-'+name+'-tasks"'));
+  assert.ok(fleet.includes('id="mission-'+name+'-tasks"'),'every specialist retains its priorities');
   assert.ok(fleet.includes('id="mission-'+name+'-metric-3"'));
  }
  assert.equal((fleet.match(/class="mission-hub-card /g)||[]).length,7);
@@ -143,10 +145,10 @@ test('Mission Control V2 decorative surfaces cannot invent financial history or 
 });
 
 
-test('V3 compact dashboard retains all six real KPIs, six agent links, and historical chart anchor',()=>{
- const html=commandCenterBody();
- for(const id of ['commandCenterNet','commandCenterSales','commandCenterAds','commandCenterAlerts','commandCenterAgents'])assert.match(html,new RegExp('id="'+id+'"'));
- for(const id of ['finance','ads','products','production','returns','auditor'])assert.match(html,new RegExp('href="/admin\\?tab=agent-'+id+'"'));
+test('overview retains six real KPIs and history while seven agent links live once in Equipe',()=>{
+ const html=commandCenterBody(),fleet=missionWorkspacesBody();
+ for(const id of ['commandCenterNet','commandCenterSales','commandCenterAds','commandCenterAlerts','missionTrendGraphOverview'])assert.match(html,new RegExp('id="'+id+'"'));
+ for(const id of names)assert.match(fleet,new RegExp('href="/admin\\?tab=agent-'+id+'"'));
  assert.match(MISSION_CSS,/V3 cockpit layout/);
  assert.match(MLS_APPROVED_DESIGN_CSS,/\.mission-dashboard \.agent-grid\{grid-template-columns:repeat\(6,minmax\(0,1fr\)\)/);
  assert.match(MISSION_CSS,/\.mission-dashboard \.agent-card:focus-visible/);
@@ -154,7 +156,7 @@ test('V3 compact dashboard retains all six real KPIs, six agent links, and histo
 test('V3 workspaces avoid redundant footer and section navigation while preserving meaningful tools',()=>{
  const html=missionWorkspacesBody('<div id="preservedFinanceControl">Original</div>');
  assert.doesNotMatch(html,/← Voltar à equipe de agentes/);
- assert.match(html,/aria-label="Seções de MLS/);
+ assert.match(html,/aria-label="Seções de Financeiro/);
  for(const id of names){
   assert.match(html,new RegExp('id="mission-'+id+'-tools"'));
   assert.match(html,new RegExp('id="mission-'+id+'-tasks"'));
@@ -170,7 +172,8 @@ test('canonical overview removes double icons and keeps the executive hero indep
  assert.match(MLS_APPROVED_DESIGN_CSS,/\.mission-dashboard\{display:block\}/);
  assert.match(MLS_APPROVED_DESIGN_CSS,/grid-template-columns:repeat\(6,minmax\(0,1fr\)\)/);
  assert.doesNotMatch(MLS_APPROVED_DESIGN_CSS,/grid-template-columns:repeat\(4,minmax\(0,1fr\)\)!important/);
- for(const id of ['hermes','finance','ads','products','production','returns'])assert.match(commandCenterBody(),new RegExp('data-mission-accent="'+id+'"'));
+ for(const id of names)assert.match(missionWorkspacesBody(),new RegExp('data-mission-agent="'+id+'"'));
+ assert.doesNotMatch(commandCenterBody(),/data-agent-placeholder|data-mission-accent/);
 });
 
 

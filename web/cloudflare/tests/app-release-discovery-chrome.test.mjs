@@ -133,11 +133,12 @@ async function fill(cdp,form,fields){
 
 
 const targets=[
- {id:'physicalReturnsDetails',panel:'agent-returns',controller:'brazaPhysicalReturns',path:'/api/admin/returns/physical'},
- {id:'incurredProductionDetails',panel:'margins',controller:'brazaIncurredProduction',path:'/api/admin/production/incurred'},
+ {id:'physicalReturnsDetails',panel:'agent-returns',controller:'brazaPhysicalReturns',path:'/api/admin/returns/receipts'},
+ {id:'incurredProductionDetails',panel:'agent-production',legacyPanel:'margins',controller:'brazaIncurredProduction',path:'/api/admin/production/incurred'},
  {id:'returnManufacturingLinksDetails',panel:'agent-returns',controller:'brazaReturnManufacturingLinks',path:'/api/admin/returns/manufacturing-links'}
 ];
-const currentTargets=['/admin?tab=agent-returns#physicalReturnsOriginalItems','/admin?tab=agent-returns#physicalReturnsDetails','/admin?tab=agent-returns#returnManufacturingLinksDetails'];
+const retainedItemTargets=['/admin?tab=agent-returns#physicalReturnsOriginalItems','/admin?tab=agent-returns#physicalReturnsDetails','/admin?tab=agent-returns#returnManufacturingLinksDetails'];
+const currentTargets=[{href:'/admin?tab=agent-returns#physicalReturnsQueue',panel:'agent-returns',id:'physicalReturnsQueue'},{href:'/admin?tab=agent-production#incurredProductionDetails',...targets[1]},{href:'/admin?tab=products',panel:'products',id:null}];
 const generatedHash=createHash('sha256').update(readFileSync(new URL('../../../dist/app-worker.mjs',import.meta.url))).digest('hex');
 const qa=[];
 const physicalRequest=row=>targets.some(target=>row.path.startsWith(target.path));
@@ -158,7 +159,7 @@ for(const minify of [false,true])for(const width of [320,1365])test(`generated r
    if(req.method!=='GET'){res.writeHead(405,headers);res.end('{"error":"SYNTHETIC_READ_ONLY"}');return;}
    let value=null;
    if(u.pathname==='/api/admin/returns/manufacturing-links'){assert.equal(u.search,'');value=await store.read();}
-   else if(u.pathname==='/api/admin/returns/physical'){
+   else if(u.pathname==='/api/admin/returns/receipts'){
     const month=u.searchParams.get('month'),physical=await readPhysicalReturns(store.env,{now:()=>clock}),cases=physical.cases.filter(row=>row.source.month===month).map(row=>({case_hash:row.case_hash,order_hash:row.order_hash,status:row.source.status,checked_at:row.source.checked_at,publication_revision:row.source.publication_revision}));
     value={schema:'physical_returns_workspace_v1',month,checked_at:stamp,source:{status:'AVAILABLE',checked_at:stamp,cases_total:cases.length,cases_included:cases.length,truncated:false,reason:null,cases},physical};
    }else if(u.pathname==='/api/admin/production/incurred'){
@@ -183,13 +184,32 @@ for(const minify of [false,true])for(const width of [320,1365])test(`generated r
   };
   for(const target of targets){
    let start=requests.length;await navigate('?tab=overview');
-   const overview=await cdp.evaluate("({release:document.querySelector('.app-release-overview')?.dataset.appRelease,header:document.querySelector('.app-release-header-link')?.getAttribute('aria-label'),headerHref:document.querySelector('.app-release-header-link')?.getAttribute('href'),links:[...document.querySelectorAll('.app-release-overview .app-release-links a')].map(a=>({href:a.getAttribute('href'),bypass:a.hasAttribute('data-mission-open')})),scope:document.querySelector('.app-release-scope')?.textContent,financial:JSON.stringify(brazaMonthDashboard.getSnapshot()),overflow:document.documentElement.scrollWidth>innerWidth+1})");
-   assert.equal(overview.release,APP_RELEASE.id);assert.ok(overview.header.includes(APP_RELEASE.id));assert.equal(overview.headerHref,'/admin?tab=roadmap#appReleaseNotes');assert.deepEqual(overview.links.map(row=>row.href),currentTargets);assert.ok(overview.links.every(row=>row.bypass===false),'native links must retain the precise destination hash');assert.match(overview.scope,/Quantidades comerciais não comprovam peças recebidas/);assert.match(overview.scope,/Dados antigos sem detalhe permanecem desconhecidos/);assert.match(overview.scope,/estoque e lucro não são alterados automaticamente/);assert.equal(overview.overflow,false);assert.equal(requests.slice(start).filter(physicalRequest).length,0,'Overview must not fetch the three physical-control sources');
+   const overview=await cdp.evaluate("({release:document.querySelector('.app-release-overview')?.dataset.appRelease,header:document.querySelector('.app-release-header-link'),links:[...document.querySelectorAll('.app-release-overview a')].map(a=>({href:a.getAttribute('href'),bypass:a.hasAttribute('data-mission-open')})),financial:JSON.stringify(brazaMonthDashboard.getSnapshot()),overflow:document.documentElement.scrollWidth>innerWidth+1})");
+   assert.equal(overview.release,APP_RELEASE.id);assert.equal(overview.header,null,'the release no longer duplicates its header link');assert.deepEqual(overview.links.map(row=>row.href),['/admin?tab=roadmap#appReleaseNotes']);assert.ok(overview.links.every(row=>row.bypass===false),'native links must retain the precise destination hash');assert.equal(overview.overflow,false);assert.equal(requests.slice(start).filter(physicalRequest).length,0,'Overview must not fetch the three physical-control sources');
    if(process.env.MLS_APP_RELEASE_SCREENSHOT_DIR&&target===targets[0]){mkdirSync(process.env.MLS_APP_RELEASE_SCREENSHOT_DIR,{recursive:true});await cdp.evaluate("document.querySelector('.app-release-overview').scrollIntoView({block:'center',behavior:'instant'})");const capture=await cdp.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});writeFileSync(path.join(process.env.MLS_APP_RELEASE_SCREENSHOT_DIR,`app-release-${minify?'minified':'normal'}-${width}.png`),Buffer.from(capture.data,'base64'));}
    const notesClick=await click(cdp,'.app-release-overview .app-release-more',{touch});await waitFor(cdp,"document.querySelector('main.workspace>section:not([hidden])')?.id==='roadmap'",'previous deliveries remain available in the release notes',()=>clickDiagnostic(cdp,notesClick,{width,minify}));
+   const notes=await cdp.evaluate("({links:[...document.querySelectorAll('#appReleaseNotes a')].map(a=>({href:a.getAttribute('href'),bypass:a.hasAttribute('data-mission-open')})),current:[...document.querySelectorAll('#appReleaseNotes>.app-release-note-grid>article>a')].map(a=>({href:a.getAttribute('href'),bypass:a.hasAttribute('data-mission-open')})),scope:document.getElementById('appReleaseNotes').textContent})");
+   assert.deepEqual(notes.current.map(row=>row.href),currentTargets.map(row=>row.href));assert.ok(notes.current.every(row=>row.bypass===false),'current release actions preserve native routing');
+   for(const href of retainedItemTargets){const link=notes.links.find(row=>row.href===href);assert.ok(link,'the previous item-evidence control remains reachable from notes: '+href);assert.equal(link.bypass,false,'notes retain native links and destination hashes');}
+   assert.match(notes.scope,/unidade comercial.*kit.*não vira.*camisetas/);assert.match(notes.scope,/Dados antigos ou ausentes permanecem desconhecidos, nunca quantidade zero/);assert.match(notes.scope,/não atualiza estoque|não publicam estoque/);assert.match(notes.scope,/não altera.*lucro|não alteram o lucro/);
    assert.equal(await cdp.evaluate("document.querySelector('.app-release-previous h3')?.textContent"),'Entregas anteriores · controles físicos');
-   start=requests.length;await click(cdp,`.app-release-previous a[href="/admin?tab=${target.panel}#${target.id}"]`,{touch});await assertDestination(target,start,'previous-release-link');assert.equal(await cdp.evaluate('JSON.stringify(brazaMonthDashboard.getSnapshot())'),overview.financial,'navigation must not change the cached financial projection');
-   start=requests.length;await navigate('?tab='+target.panel+'#'+target.id);await assertDestination(target,start,'initial-deep-link');
+   start=requests.length;await click(cdp,`.app-release-previous a[href="/admin?tab=${target.legacyPanel||target.panel}#${target.id}"]`,{touch});await assertDestination(target,start,'previous-release-link');assert.equal(await cdp.evaluate('JSON.stringify(brazaMonthDashboard.getSnapshot())'),overview.financial,'navigation must not change the cached financial projection');
+   start=requests.length;await navigate('?tab='+(target.legacyPanel||target.panel)+'#'+target.id);await assertDestination(target,start,'initial-deep-link');
+  }
+  for(const target of currentTargets){
+   await navigate('?tab=overview');
+   const before=await cdp.evaluate('JSON.stringify(brazaMonthDashboard.getSnapshot())');
+   const notesClick=await click(cdp,'.app-release-overview .app-release-more',{touch});await waitFor(cdp,"document.documentElement.dataset.activePanel==='roadmap'",'current actions are reached through the compact release banner',()=>clickDiagnostic(cdp,notesClick,{width,minify}));
+   const start=requests.length;
+   await click(cdp,`#appReleaseNotes>.app-release-note-grid>article>a[href="${target.href}"]`,{touch});
+   if(target.controller)await assertDestination(target,start,'current-release-link');
+   else{
+    await waitFor(cdp,`document.documentElement.dataset.activePanel===${JSON.stringify(target.panel)}&&document.activeElement.id===${JSON.stringify(target.id||'pageTitle')}`,'current release action opens its real operational destination');
+    const result=await cdp.evaluate(`(()=>{const node=document.getElementById(${JSON.stringify(target.id||'pageTitle')});return {panel:document.documentElement.dataset.activePanel,hash:location.hash,focus:document.activeElement.id,visible:node.checkVisibility({checkVisibilityCSS:true}),overflow:document.documentElement.scrollWidth>innerWidth+1,errors:__auditErrors};})()`);
+    assert.equal(result.panel,target.panel);assert.equal(result.hash,target.id?'#'+target.id:'');assert.equal(result.focus,target.id||'pageTitle');assert.equal(result.visible,true);assert.equal(result.overflow,false);assert.deepEqual(result.errors,[]);
+    proofs.push({...result,id:target.id,mode:'current-release-link'});
+   }
+   assert.equal(await cdp.evaluate('JSON.stringify(brazaMonthDashboard.getSnapshot())'),before,'current release navigation cannot mutate the cached financial result');
   }
   await navigate('?tab=overview');const beforeSearch=requests.length;
   await cdp.evaluate("mlsWorkspaceSearch.open();const input=document.getElementById('missionSearchInput');input.value='Receber e inspecionar devoluções';input.dispatchEvent(new Event('input',{bubbles:true}));");

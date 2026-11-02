@@ -6,28 +6,57 @@ import {releaseOverviewBody,releaseNotesBody,APP_RELEASE_CSS} from '../src/app-r
 import {adminBody} from '../src/admin-view.mjs';
 import {incurredProductionBody} from '../src/incurred-production-view.mjs';
 
-const targets=['/admin?tab=agent-returns#physicalReturnsOriginalItems','/admin?tab=agent-returns#physicalReturnsDetails','/admin?tab=agent-returns#returnManufacturingLinksDetails'];
+const targets=['/admin?tab=agent-returns#physicalReturnsQueue','/admin?tab=agent-production#incurredProductionDetails','/admin?tab=products'];
+const originalTargets=['/admin?tab=agent-returns#physicalReturnsOriginalItems','/admin?tab=agent-returns#physicalReturnsDetails','/admin?tab=agent-returns#returnManufacturingLinksDetails'];
 const previousTargets=['/admin?tab=agent-returns#physicalReturnsDetails','/admin?tab=margins#incurredProductionDetails','/admin?tab=agent-returns#returnManufacturingLinksDetails'];
 const monthlyTargets=['/admin?tab=agent-finance#businessMonthNetCard','/admin?tab=agent-finance#mlsAgentPeriod','/admin?tab=agent-finance#businessMonthExpensesForm'];
 
-test('release discovery replaces the static activity placeholder with three real destinations and a visible build label',()=>{
- const html=adminBody(),overview=releaseOverviewBody();assert.equal((html.match(/id="appReleaseOverviewTitle"/g)||[]).length,1);assert.doesNotMatch(html,/Últimas atividades dos agentes|Sem atividade auditada no período/);assert.match(html,new RegExp('title="Versão do painel '+APP_RELEASE.id.replaceAll('.','\\.')+'"'));assert.ok(html.includes('Novidades · '+APP_RELEASE.date.slice(0,5)));assert.equal((overview.match(/<nav\b/g)||[]).length,1);
- const controls=html+incurredProductionBody();for(const href of targets){assert.equal(overview.split('href="'+href+'"').length-1,1);const id=href.split('#')[1];assert.equal((controls.match(new RegExp('id="'+id+'"','g'))||[]).length,1,'one real destination for '+id);}
- for(const href of previousTargets){const id=href.split('#')[1];assert.equal((controls.match(new RegExp('id="'+id+'"','g'))||[]).length,1);assert.match(controls,new RegExp('<details id="'+id+'"'));if(!targets.includes(href))assert.ok(!overview.includes('href="'+href+'"'),'unrelated previous controls remain in release history');}
- for(const href of monthlyTargets)assert.ok(!overview.includes('href="'+href+'"'),'the monthly release remains in its own history section');
- assert.doesNotMatch(overview,/data-mission-open|<button|<script|fetch\(/);assert.ok(overview.includes('href="/admin?tab=roadmap#appReleaseNotes"'));assert.match(overview,/Quantidades comerciais não comprovam peças recebidas/);assert.match(overview,/Dados antigos sem detalhe permanecem desconhecidos/);assert.match(overview,/estoque e lucro não são alterados automaticamente/);
+test('overview has one compact release link, while notes retain three current workflows and every historical control',()=>{
+ const html=adminBody(),overview=releaseOverviewBody(),notes=releaseNotesBody();
+ assert.equal((html.match(/id="appReleaseOverviewTitle"/g)||[]).length,1);
+ assert.doesNotMatch(html,/Últimas atividades dos agentes|Sem atividade auditada no período/);
+ assert.ok(overview.includes('title="Versão do painel '+APP_RELEASE.id+'"'));
+ assert.ok(overview.includes('Novidades · '+APP_RELEASE.date.slice(0,5)));
+ assert.equal((overview.match(/<a\b/g)||[]).length,1,'a compact announcement must not duplicate the task navigation');
+ assert.doesNotMatch(overview,/<nav\b|data-mission-open|<button|<script|fetch\(/);
+ assert.ok(overview.includes('href="/admin?tab=roadmap#appReleaseNotes"'));
+ const controls=html+incurredProductionBody();
+ for(const href of [...targets,...originalTargets,...previousTargets,...monthlyTargets]){
+  assert.ok(notes.includes('href="'+href+'"'),'preserved route '+href);
+  const id=href.includes('#')?href.split('#')[1]:new URL(href,'https://test.invalid').searchParams.get('tab');
+  assert.equal((controls.match(new RegExp('id="'+id+'"','g'))||[]).length,1,'one real destination for '+id);
+ }
+ for(const href of previousTargets)assert.match(controls,new RegExp('<details id="'+href.split('#')[1]+'"'));
 });
 
-test('Returns presents receiving and origin links before charts and keeps one distinct financial destination',()=>{
- const html=adminBody(),start=html.indexOf('id="agent-returns"'),end=html.indexOf('id="agent-auditor"',start),returns=html.slice(start,end);assert.ok(returns.indexOf('id="physicalReturns"')<returns.indexOf('id="missionChart-returns-reasons"'));assert.ok(returns.indexOf('id="returnManufacturingLinks"')<returns.indexOf('id="missionChart-returns-reasons"'));const nav=returns.match(/<nav class="mission-page-tabs[\s\S]*?<\/nav>/)?.[0];assert.ok(nav);assert.match(nav,/href="#physicalReturnsDetails"/);assert.match(nav,/href="#returnManufacturingLinksDetails"/);assert.match(nav,/Conciliação financeira/);assert.equal((nav.match(/href="\/admin\?tab=agent-finance#businessReconciliation"/g)||[]).length,1);assert.doesNotMatch(nav,/Reembolsos|>Motivos<|>Análise</);assert.match(returns,/1\. Registrar o recebimento → 2\. Inspecionar as peças → 3\. Associar à fabricação/);
+test('Returns places the receiving queue before charts and offers one distinct financial destination',()=>{
+ const html=adminBody(),start=html.indexOf('id="agent-returns"'),end=html.indexOf('id="agent-auditor"',start),returns=html.slice(start,end);
+ for(const id of ['physicalReturns','physicalReturnsQueue','returnManufacturingLinks'])assert.ok(returns.indexOf('id="'+id+'"')<returns.indexOf('id="missionChart-returns-reasons"'),id);
+ const nav=returns.match(/<nav class="mission-page-tabs[\s\S]*?<\/nav>/)?.[0];assert.ok(nav);
+ assert.match(nav,/href="#physicalReturnsQueue"/);assert.match(nav,/href="#returnManufacturingLinksDetails"/);
+ assert.equal((nav.match(/href="\/admin\?tab=agent-finance#businessReconciliation"/g)||[]).length,1);
+ assert.doesNotMatch(nav,/href="#physicalReturnsDetails"|>Motivos<|>Análise</,'the queue is not duplicated as a second subtab');
+ assert.match(returns,/Escolha o caso e confira os itens de origem/);assert.match(returns,/Registre e inspecione somente as peças recebidas/);
 });
 
-test('release notes distinguish delivered features, operator proof and unknown financial value without stale PR counts',()=>{
- const all=releaseNotesBody(),split=all.indexOf('<div class="app-release-previous"'),monthlySplit=all.indexOf('<div class="app-release-previous app-release-monthly-previous"');assert.ok(split>0,'previous physical deliveries have a separate history section');assert.ok(monthlySplit>split,'monthly delivery history remains separately available');const current=all.slice(0,split),previous=all.slice(split,monthlySplit),monthly=all.slice(monthlySplit);for(const href of targets)assert.ok(current.includes('href="'+href+'"'));for(const href of previousTargets)assert.ok(previous.includes('href="'+href+'"'));for(const href of monthlyTargets){assert.ok(monthly.includes('href="'+href+'"'));assert.ok(!current.includes('href="'+href+'"'));assert.ok(!previous.includes('href="'+href+'"'));}
- assert.match(current,/itens vendidos e os itens informados na solicitação de devolução/);assert.match(current,/fonte, as datas e a cobertura/);assert.match(current,/Dados antigos ou ausentes permanecem desconhecidos, nunca quantidade zero/);assert.match(current,/unidade comercial de kit não vira uma quantidade de camisetas por inferência/);assert.match(current,/não preenche recebimento, inspeção ou vínculos, não atualiza estoque e não altera o lucro/);
- const notes=releaseNotesBody();assert.ok(notes.includes(APP_RELEASE.id));assert.ok(notes.includes(APP_RELEASE.date));for(const href of [...targets,...previousTargets,...monthlyTargets])assert.ok(notes.includes('href="'+href+'"'));assert.match(notes,/saldo antes dessas despesas/);assert.match(notes,/data da consulta.*leitura antiga ou dia parcial/);assert.match(notes,/não presume zero nem copia a declaração de outro mês/);assert.match(notes,/um período sem leitura salva continua indisponível/);assert.match(notes,/Entregas anteriores · controles físicos/);assert.match(notes,/Entregas anteriores · líquido mensal e histórico/);assert.match(notes,/não comprovam que os registros reais/);assert.match(notes,/quantidade a uma fabricação compatível/);assert.match(notes,/sem descontar a produção duas vezes/);assert.match(notes,/não publicam estoque, não reservam peças, não confirmam revenda e não alteram o lucro/);assert.match(notes,/Custo desconhecido permanece pendente/);assert.doesNotMatch(notes,/PR ?#?101|2\.143|\d+%|<script|<button/);assert.match(APP_RELEASE_CSS,/#physicalReturnsDetails,#returnManufacturingLinksDetails,#incurredProductionDetails,#appReleaseNotes\{scroll-margin-top:160px\}/);assert.match(APP_RELEASE_CSS,/#physicalReturnsOriginalItems\{scroll-margin-top:160px\}/);assert.match(APP_RELEASE_CSS,/#businessMonthNetCard,#businessMonthExpensesForm,#mlsAgentPeriod\{scroll-margin-top:160px\}/);assert.match(APP_RELEASE_CSS,/min-height:44px/);assert.match(APP_RELEASE_CSS,/@media\(max-width:390px\)/);
+test('release notes explain automatic suggestions, fabrication dates, clearer areas and unchanged financial gates',()=>{
+ const all=releaseNotesBody(),split=all.indexOf('id="appReleaseOriginalItemsPrevious"');assert.ok(split>0);
+ const current=all.slice(0,split),previous=all.slice(split);
+ for(const href of targets)assert.ok(current.includes('href="'+href+'"'));
+ for(const href of [...originalTargets,...previousTargets,...monthlyTargets])assert.ok(previous.includes('href="'+href+'"'));
+ for(const text of ['nome, tamanho e custo atual quando os dados permitem','Foto do produto salvo e estampa local','kits ambíguos continuam pendentes','dia 15 ao 25','data de fabricação e o custo histórico registrado','referência de custo dos pedidos pagos e a montagem DTF continuam separadas','Visão geral, Produção, Devoluções, Financeiro, Produtos, Anúncios e Hermes','não publicam estoque nem alteram o lucro automaticamente'])assert.ok(current.includes(text),text);
+ for(const text of ['itens vendidos e os itens informados na solicitação','Dados antigos ou ausentes permanecem desconhecidos, nunca quantidade zero','unidade comercial de kit não vira uma quantidade de camisetas por inferência','saldo antes dessas despesas','não presume zero nem copia a declaração de outro mês','Custo desconhecido permanece pendente','sem descontar a produção duas vezes','não publicam estoque, não reservam peças, não confirmam revenda e não alteram o lucro'])assert.ok(previous.includes(text),text);
+ assert.ok(all.includes(APP_RELEASE.id));assert.ok(all.includes(APP_RELEASE.date));assert.doesNotMatch(all,/<script|<button|\d+%/);
+ for(const id of ['physicalReturnsOriginalItems','physicalReturnsDetails','incurredProductionDetails','appReleaseNotes','businessMonthNetCard','mlsAgentPeriod'])assert.ok(APP_RELEASE_CSS.includes('#'+id));
+ assert.match(APP_RELEASE_CSS,/min-height:44px/);assert.match(APP_RELEASE_CSS,/@media\(max-width:390px\)/);
 });
 
-test('existing command search reaches each new control and initial hard links use the same focus path as clicks',()=>{
- const client=readFileSync(new URL('../src/admin-client.mjs',import.meta.url),'utf8');for(const hash of [...previousTargets.map(href=>href.split('#')[1]),'appReleaseNotes'])assert.ok(client.includes("hash:'"+hash+"'"));assert.match(client,/title:'Receber e inspecionar devoluções'/);assert.match(client,/title:'Produção realizada'/);assert.match(client,/title:'Vínculo da devolução com a produção'/);assert.match(client,/Registre a produção realizada e confira, separadamente/);assert.match(client,/workspaceOpenFragment\(globalThis\.location\.hash,\{focus:true\}\)/);assert.match(client,/openTab\(item\.panel,\{updateUrl:!item\.hash\}\)/);assert.match(client,/workspaceOpenFragment\('#'\+item\.hash,\{focus:true,updateUrl:true\}\)/);
+test('command search and hard links preserve focus resolution when production moves from Costs to Production',()=>{
+ const client=readFileSync(new URL('../src/admin-client.mjs',import.meta.url),'utf8');
+ for(const hash of [...previousTargets.map(href=>href.split('#')[1]),'appReleaseNotes'])assert.ok(client.includes("hash:'"+hash+"'"));
+ assert.match(client,/title:'Receber e inspecionar devoluções'/);assert.match(client,/title:'Produção realizada'/);assert.match(client,/title:'Vínculo da devolução com a produção'/);
+ assert.match(client,/panel:'agent-production',hash:'incurredProductionDetails'/);
+ assert.match(client,/canonical=current!==panel.id/);assert.match(client,/updateUrl:updateUrl\|\|canonical/);
+ assert.match(client,/workspaceOpenFragment\(globalThis\.location\.hash,\{focus:true\}\)/);
+ assert.match(client,/openTab\(item\.panel,\{updateUrl:!item\.hash\}\)/);assert.match(client,/workspaceOpenFragment\('#'\+item\.hash,\{focus:true,updateUrl:true\}\)/);
 });

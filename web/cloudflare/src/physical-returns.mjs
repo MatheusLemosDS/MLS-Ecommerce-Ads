@@ -101,6 +101,44 @@ function request(input){
  return canonical(input);
 }
 async function digest(value){return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',encoder.encode(JSON.stringify(value)))),v=>v.toString(16).padStart(2,'0')).join('');}
+const receiptCanonical=value=>plain(value)?Object.fromEntries(Object.keys(value).sort().map(key=>[key,receiptCanonical(value[key])])):value;
+// Replay is checked before any catalogue/source lookup. A lost successful
+// response can be recovered even when its saved source is no longer available.
+export async function readPhysicalReturnReceiptReplay(env,body,{now=()=>Date.now()}={}){
+ const db=database(env),stamp=clock(now),found=await db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='physical_returns_audit'").first();if(!found)return null;
+ const observed=await snapshot(db,stamp,body.request_id);if(!observed.replay)return null;
+ if(observed.replay.request_hash!==await digest(receiptCanonical(body))||observed.replay.case_hash!==body.case_hash)fail('CONFLICT',409);
+ return observed.frame;
+}
+// Internal entry for the explicit receipt command. This appends the complete
+// confirmed delivery and its inspection in one existing CAS/audit transaction.
+// The legacy register/receive/inspect request contract is unchanged.
+export async function commitPhysicalReturnReceipt(env,body,actor,{now=()=>Date.now(),sourceCase,lines,sourceGuard}={}){
+ const stamp=clock(now),db=database(env);if(!text(actor,256)||!plain(body)||!int(body.revision,0,2147483644)||!uuid(body.request_id)||!hash(body.case_hash)||!Array.isArray(lines)||lines.length<1||lines.length>50||!exact(sourceCase,['case_hash','order_hash','status','checked_at','month','publication_revision'])||sourceCase.case_hash!==body.case_hash||!plain(sourceGuard)||typeof sourceGuard.sql!=='string'||!Array.isArray(sourceGuard.args))fail('REQUEST_INVALID');
+ const requestHash=await digest(receiptCanonical(body));await ensure(db);const observed=await snapshot(db,stamp,body.request_id);
+ if(observed.replay){if(observed.replay.request_hash!==requestHash||observed.replay.case_hash!==body.case_hash)fail('CONFLICT',409);return observed.frame;}
+ if(observed.frame.revision!==body.revision)fail('CONFLICT',409);
+ const cases=observed.frame.cases;let record=cases.find(row=>row.case_hash===body.case_hash);
+ if(record&&record.order_hash!==sourceCase.order_hash)fail('IDENTITY_CONFLICT',409);
+ if(record?.lines.some(line=>line.status!=='VOID'))fail('RECEIPT_REFERENCE_CONFLICT',409);
+ if(!record){record={case_hash:body.case_hash,order_hash:sourceCase.order_hash,source:{month:sourceCase.month,publication_revision:sourceCase.publication_revision,status:sourceCase.status,checked_at:sourceCase.checked_at},registered_at:stamp,updated_at:stamp,lines:[]};cases.push(record);}
+ const knownIds=new Set(cases.flatMap(row=>row.lines.map(line=>line.line_id)));
+ for(const line of lines){if(knownIds.has(line.line_id))fail('CONFLICT',409);knownIds.add(line.line_id);record.lines.push({...line,status:'INSPECTED',received_at:stamp,updated_at:stamp,valuation_state:'UNKNOWN',carrying_value_cents:null});}
+ record.updated_at=stamp;cases.sort((a,b)=>a.case_hash.localeCompare(b.case_hash));
+ if(cases.length>100||cases.some(row=>row.lines.length>50)||cases.reduce((n,row)=>n+row.lines.length,0)>1000||!projectPhysicalReturns(view(body.revision+1,cases,stamp)))fail('REQUEST_INVALID');
+ const serial=body.revision+1,mutationId=crypto.randomUUID(),payload=JSON.stringify(record),audit=JSON.stringify({request:body,source:sourceCase,line_ids:lines.map(line=>line.line_id)});
+ if(encoder.encode(payload).byteLength>65536||encoder.encode(audit).byteLength>8192)fail('LIMIT',409);
+ const finished=clock(now);if(finished<stamp||finished-stamp>60)fail('CLOCK_INVALID',503);
+ const gate=body.revision===0?db.prepare('INSERT OR IGNORE INTO physical_returns_state(id,revision,mutation_id,updated_at) SELECT 1,1,?,? WHERE '+sourceGuard.sql).bind(mutationId,stamp,...sourceGuard.args):db.prepare('UPDATE physical_returns_state SET revision=revision+1,mutation_id=?,updated_at=? WHERE id=1 AND revision=? AND updated_at<=? AND '+sourceGuard.sql).bind(mutationId,stamp,body.revision,stamp,...sourceGuard.args);
+ const guard='EXISTS(SELECT 1 FROM physical_returns_state WHERE id=1 AND revision=? AND mutation_id=?)',args=[serial,mutationId];
+ let result;try{result=await db.batch([gate,
+  db.prepare('INSERT INTO physical_returns_cases(case_hash,order_hash,payload) SELECT ?,?,? WHERE '+guard+' ON CONFLICT(case_hash) DO UPDATE SET payload=excluded.payload WHERE physical_returns_cases.order_hash=excluded.order_hash').bind(body.case_hash,record.order_hash,payload,...args),
+  db.prepare('INSERT INTO physical_returns_audit(revision,request_id,request_hash,case_hash,action,payload,actor,created_at) SELECT ?,?,?,?,?,?,?,? WHERE '+guard).bind(serial,body.request_id,requestHash,body.case_hash,body.decision==='PROBLEM'?'receipt_problem':'receipt_confirmed',audit,actor,stamp,...args),
+  db.prepare('INSERT INTO physical_returns_guard(id,ok) SELECT 1,CASE WHEN EXISTS(SELECT 1 FROM physical_returns_cases WHERE case_hash=? AND order_hash=? AND payload=?) AND EXISTS(SELECT 1 FROM physical_returns_audit WHERE revision=? AND request_id=? AND request_hash=?) THEN 1 ELSE 0 END WHERE '+guard+' ON CONFLICT(id) DO UPDATE SET ok=excluded.ok').bind(body.case_hash,record.order_hash,payload,serial,body.request_id,requestHash,...args),
+ ]);}catch(error){if(typeof error?.message==='string'&&error.message.includes('MLS_RETURN_MANUFACTURING_LINK_ACTIVE'))fail('MANUFACTURING_LINK_ACTIVE',409);throw new PhysicalReturnsError('PHYSICAL_RETURNS_UNAVAILABLE',503,{cause:error});}
+ if(result[0]?.meta?.changes!==1){const replay=await readPhysicalReturnReceiptReplay(env,body,{now});if(replay)return replay;fail('CONFLICT',409);}
+ if(result.some(row=>row?.meta?.changes!==1))fail('STORAGE_INVALID',503);return (await snapshot(db,clock(now))).frame;
+}
 export async function mutatePhysicalReturns(env,input,actor,{now=()=>Date.now(),sourceCase=null}={}){
  try{return await mutate(env,input,actor,{now,sourceCase});}catch(error){if(typeof error?.message==='string'&&error.message.includes('MLS_RETURN_MANUFACTURING_LINK_ACTIVE'))throw new PhysicalReturnsError('PHYSICAL_RETURNS_MANUFACTURING_LINK_ACTIVE',409);if(error instanceof PhysicalReturnsError)throw error;throw new PhysicalReturnsError('PHYSICAL_RETURNS_UNAVAILABLE',503,{cause:error});}
 }

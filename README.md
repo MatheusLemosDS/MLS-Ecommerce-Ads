@@ -1,3 +1,26 @@
+<!-- SIMPLIFIED_OPERATIONS_RELEASE -->
+**Atualização Live — 2026-11-02.3, Operação simples e produção por período:**
+
+- **Devoluções:** fila com os dados salvos e confirmação física correta/problema;
+  foto atual do produto e PNG local verificado, quando disponível neste dispositivo.
+- **Produção:** custo histórico registrado por datas inclusivas de fabricação em
+  Brasília; ausência de registros não significa gasto zero.
+- **Navegação:** Produção, Devoluções e Financeiro visíveis entre sete destinos,
+  com atalhos antigos, busca e histórico preservados.
+
+Abrir `/admin?tab=agent-returns#physicalReturnsQueue`,
+`/admin?tab=agent-production#incurredProductionDetails` e
+`/admin?tab=agent-finance#businessMonthNetCard`.
+Publicação Finance → Auth → App conferida em **02/11/2026 às 19:06:16 Brasília**;
+App `4a556c39-bd1b-4962-84a6-b25bf5504e95`, Auth `d6f4397f-ac4d-45cf-93da-175df8305a6d`,
+Finance `7001376b-f065-4e37-84ea-ee9ac2ea890c`. CI [41532391229](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/41532391229)
+aprovada: 3346 Node e 67 Python. Bytes e configuração dos três Workers
+conferidos. **Integração Git pendente de recibo próprio na PR104.**
+QA sintética não confirma captura natural de fotos ou recebimento/fabricação
+reais. M2/M2.2 e confronto Seller Centre/banco continuam abertos.
+[Uso, evidências e limites](docs/MLS_SIMPLIFIED_OPERATIONS_2026_11_02.md).
+<!-- END_SIMPLIFIED_OPERATIONS_RELEASE -->
+
 <!-- ORIGINAL_RETURN_ITEMS_RELEASE -->
 **Atualização Live — 2026-11-02.2, itens e quantidades das devoluções:**
 O MLS Returns mostra separadamente os itens salvos do pedido e da solicitação,
