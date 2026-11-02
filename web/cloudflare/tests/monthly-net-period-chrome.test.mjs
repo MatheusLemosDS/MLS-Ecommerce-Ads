@@ -59,17 +59,46 @@ async function browser(){
   for(let index=0;index<120;index++){try{page=(await(await fetch('http://127.0.0.1:'+port+'/json/list')).json()).find(row=>row.type==='page'&&row.webSocketDebuggerUrl);}catch{}if(page)break;await pause(50);}
   assert.ok(page,'Chromium page must initialize');socket=new WebSocket(page.webSocketDebuggerUrl);
   await new Promise((resolve,reject)=>{const timeout=setTimeout(()=>reject(Error('MONTHLY_PERIOD_CDP_OPEN_TIMEOUT')),10000);socket.addEventListener('open',()=>{clearTimeout(timeout);resolve();},{once:true});socket.addEventListener('error',()=>{clearTimeout(timeout);reject(Error('MONTHLY_PERIOD_CDP_OPEN_FAILED'));},{once:true});});
-  let sequence=0;const pending=new Map(),providerRequests=[];
-  socket.addEventListener('message',event=>{const value=JSON.parse(event.data);if(value.method==='Network.requestWillBeSent'&&/https?:\/\/[^/]*(?:shopee|shopeemobile)\./i.test(value.params?.request?.url||''))providerRequests.push(value.params.request.url);const call=pending.get(value.id);if(!call)return;pending.delete(value.id);clearTimeout(call.timer);value.error?call.reject(Error(value.error.message)):call.resolve(value.result);});
+  let sequence=0;const pending=new Map(),providerRequests=[],apiRequests=new Map(),network={version:0,lastActivity:Date.now()};
+  socket.addEventListener('message',event=>{
+   const value=JSON.parse(event.data),params=value.params;
+   if(value.method==='Network.requestWillBeSent'){
+    const url=params?.request?.url||'';
+    if(/https?:\/\/[^/]*(?:shopee|shopeemobile)\./i.test(url))providerRequests.push(url);
+    if(/\/api\/admin\//.test(url)){apiRequests.set(params.requestId,url);network.version++;network.lastActivity=Date.now();}
+   }else if(['Network.loadingFinished','Network.loadingFailed'].includes(value.method)&&apiRequests.delete(params?.requestId)){
+    network.version++;network.lastActivity=Date.now();
+   }
+   const call=pending.get(value.id);if(!call)return;pending.delete(value.id);clearTimeout(call.timer);value.error?call.reject(Error(value.error.message)):call.resolve(value.result);
+  });
   const send=(method,params={})=>new Promise((resolve,reject)=>{const id=++sequence,timer=setTimeout(()=>{pending.delete(id);reject(Error('MONTHLY_PERIOD_CDP_TIMEOUT:'+method));},15000);pending.set(id,{resolve,reject,timer});socket.send(JSON.stringify({id,method,params}));});
   await send('Page.enable');await send('Runtime.enable');await send('Network.enable');
-  return {send,providerRequests,async evaluate(expression){const result=await send('Runtime.evaluate',{expression,awaitPromise:true,returnByValue:true});if(result.exceptionDetails)throw Error(result.exceptionDetails.exception?.description||result.exceptionDetails.text);return result.result.value;},close:()=>cleanup(socket)};
+  return {send,providerRequests,apiRequests,network,async evaluate(expression){const result=await send('Runtime.evaluate',{expression,awaitPromise:true,returnByValue:true});if(result.exceptionDetails)throw Error(result.exceptionDetails.exception?.description||result.exceptionDetails.text);return result.result.value;},close:()=>cleanup(socket)};
  }catch(error){await cleanup(socket);throw error;}
 }
 
 async function waitFor(cdp,expression,message){
  for(let index=0;index<160;index++){if(await cdp.evaluate(expression))return;await pause(50);}
  assert.fail(message+' '+JSON.stringify(await cdp.evaluate("({month:brazaMonthDashboard?.getSnapshot?.(),message:document.getElementById('businessMonthStatus')?.textContent,errors:__monthlyPeriodErrors})")));
+}
+async function drainSavedReads(cdp,month){
+ // Network.loadingFinished covers the response body. The controls additionally
+ // prove the real ledger's parsing/finally has settled. A browser task between
+ // animation frames drains details/toggle and observer work before counters
+ // begin; no module is disabled and no request category is ignored.
+ const state=()=>cdp.evaluate(`(()=>{const field=document.getElementById('businessMonthExpenseLedgerMonth'),refresh=document.getElementById('businessMonthExpenseLedgerRefresh'),period=globalThis.brazaMonthDashboard?.getSnapshot?.();return {ledger_month:field?.value,ledger_idle:!!field&&!field.disabled&&!!refresh&&!refresh.disabled&&refresh.textContent==='Consultar despesas',period_month:period?.month,period_idle:period?.period_loading===false};})()`);
+ let last;
+ for(let index=0;index<160;index++){
+  last=await state();
+  if(!cdp.apiRequests.size&&last.ledger_month===month&&last.ledger_idle&&last.period_month===month&&last.period_idle&&Date.now()-cdp.network.lastActivity>=100){
+   const version=cdp.network.version;
+   await cdp.evaluate('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>setTimeout(resolve,0))))');
+   last=await state();
+   if(!cdp.apiRequests.size&&version===cdp.network.version&&last.ledger_month===month&&last.ledger_idle&&last.period_month===month&&last.period_idle)return;
+  }
+  await pause(25);
+ }
+ assert.fail('saved reads must finish before measuring a navigation action: '+JSON.stringify({state:last,pending:[...cdp.apiRequests.values()]}));
 }
 async function click(cdp,id){
  await cdp.evaluate(`document.getElementById(${JSON.stringify(id)}).scrollIntoView({block:'center',behavior:'instant'})`);
@@ -117,10 +146,11 @@ for(const minify of [false,true])for(const width of [320,1365])test(`generated m
   // navigation only; an unavailable optional ledger cannot turn into a save.
   const beforeCta=requests.length;await click(cdp,'businessMonthPartialAction');await waitFor(cdp,"document.getElementById('businessMonthExpensesDetails').open",'partial subtotal CTA opens expense controls');
   assert.ok(requests.slice(beforeCta).every(row=>row.method==='GET'));assert.equal(await cdp.evaluate("document.getElementById('businessMonthExpensesDetails').open"),true);
+  await drainSavedReads(cdp,'2026-11');
   // Finish this optional-workbench flow before measuring period navigation.
   // An open expense ledger legitimately reads its own saved month and Chrome
   // can restore that details state on reload; it is not an Ads-panel request.
-  await cdp.evaluate("document.getElementById('businessMonthExpensesDetails').open=false;new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))");
+  await cdp.evaluate("document.getElementById('businessMonthExpensesDetails').open=false;new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))");await drainSavedReads(cdp,'2026-11');
   for(const id of ['mlsAgentPeriod','businessMonthNetCard']){
    await cdp.evaluate(`document.getElementById(${JSON.stringify(id)}).scrollIntoView({block:'start',behavior:'instant'})`);await cdp.evaluate('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');
    const geometry=await cdp.evaluate(`(()=>{const n=document.getElementById(${JSON.stringify(id)}),r=n.getBoundingClientRect(),h=document.querySelector('.topbar').getBoundingClientRect();return {id:n.id,top:r.top,bottom:r.bottom,headerBottom:h.bottom,left:r.left,right:r.right,visible:n.checkVisibility({checkVisibilityCSS:true}),overflow:document.documentElement.scrollWidth>innerWidth+1};})()`);
@@ -134,7 +164,7 @@ for(const minify of [false,true])for(const width of [320,1365])test(`generated m
   const beforeForward=requests.length;await cdp.evaluate('history.forward()');await waitFor(cdp,"new URL(location.href).searchParams.get('month')==='2026-10'&&brazaMonthDashboard.getSnapshot().month==='2026-10'&&brazaMonthDashboard.getSnapshot().presentation?.ads_pending===true&&!brazaMonthDashboard.getSnapshot().period_loading",'browser forward must restore October');assert.equal(onlySaved(requests.slice(beforeForward)).length,1);assert.equal(await cdp.evaluate('history.length'),initialHistoryLength+1);
   assert.deepEqual((await inspect()).errors,[]);
   const beforeReload=requests.length;await cdp.send('Page.reload',{ignoreCache:true});await waitFor(cdp,"document.readyState==='complete'&&globalThis.brazaMonthDashboard?.getSnapshot?.().month==='2026-10'&&brazaMonthDashboard.getSnapshot().presentation?.ads_pending===true&&!brazaMonthDashboard.getSnapshot().period_loading",'a hard reload must preserve the historical month and its saved subtotal');assert.equal(onlySaved(requests.slice(beforeReload)).length,1);const reloaded=await inspect();assert.equal(reloaded.month,'2026-10');assert.equal(reloaded.urlMonth,'2026-10');assert.equal(reloaded.value,money(144718));assert.deepEqual(reloaded.errors,[]);
-  const beforePanels=requests.length;
+  await drainSavedReads(cdp,'2026-10');const beforePanels=requests.length;
   for(const agent of ['finance','ads','products','production','returns','auditor','hermes']){
    await cdp.evaluate(`openTab('agent-${agent}',{focus:true})`);
    const pane=await cdp.evaluate("({panel:document.documentElement.dataset.activePanel,month:document.getElementById('mlsAgentPeriodMonth').value,urlMonth:new URL(location.href).searchParams.get('month'),visible:!document.getElementById('mlsAgentPeriod').hidden,scope:document.getElementById('mlsAgentPeriodScope').textContent,overflow:document.documentElement.scrollWidth>innerWidth+1})");
@@ -142,7 +172,7 @@ for(const minify of [false,true])for(const width of [320,1365])test(`generated m
   }
   assert.equal(onlySaved(requests.slice(beforePanels)).length,0,'all agents reuse the same saved financial month');
   const beforeNovember=requests.length;await click(cdp,'mlsAgentPeriodNext');await waitFor(cdp,"brazaMonthDashboard.getSnapshot().month==='2026-11'&&brazaMonthDashboard.getSnapshot().presentation?.state==='BEFORE_MONTHLY_COSTS'&&!brazaMonthDashboard.getSnapshot().period_loading",'November must return without a provider refresh');assert.equal(onlySaved(requests.slice(beforeNovember)).length,1);
-  const beforeAdsNovember=requests.length;await cdp.evaluate("openTab('agent-ads',{focus:true})");await assertAdsMonth('2026-11',24123,2);assert.equal(requests.length,beforeAdsNovember,'opening the Ads specialist must reuse the saved monthly expense and ROAS: '+JSON.stringify(requests.slice(beforeAdsNovember)));
+  await drainSavedReads(cdp,'2026-11');const beforeAdsNovember=requests.length;await cdp.evaluate("openTab('agent-ads',{focus:true})");await assertAdsMonth('2026-11',24123,2);assert.equal(requests.length,beforeAdsNovember,'opening the Ads specialist must reuse the saved monthly expense and ROAS: '+JSON.stringify(requests.slice(beforeAdsNovember)));
   await cdp.evaluate("openTab('agent-finance',{focus:true});const input=document.getElementById('businessMonthExpensesValue');input.value='17,29';input.dispatchEvent(new Event('input',{bubbles:true}));");
   const beforeGuard=requests.length;assert.equal(await cdp.evaluate("mlsAgentPeriod.selectMonth('2026-10')"),false);assert.equal(requests.length,beforeGuard);assert.equal(await cdp.evaluate("document.getElementById('businessMonthExpensesValue').value"),'17,29');assert.equal(await cdp.evaluate("document.getElementById('mlsAgentPeriodMonth').value"),'2026-11');
   for(const invalid of ['2026-12','2026-13','2026-00','2026-1','1999-12'])assert.equal(await cdp.evaluate('mlsAgentPeriod.selectMonth('+JSON.stringify(invalid)+')'),false);
