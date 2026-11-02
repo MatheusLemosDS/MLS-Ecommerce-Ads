@@ -41,6 +41,11 @@ async function waitFor(cdp,expression,label,diagnostic=null){
 }
 
 async function click(cdp,selector){
+ // A real scroll gesture releases the preceding hash's bounded alignment.
+ // Programmatic positioning alone would otherwise race its ResizeObserver.
+ const viewport=await cdp.evaluate('({x:Math.floor(innerWidth/2),y:Math.floor(innerHeight/2)})');
+ await cdp.send('Input.dispatchMouseEvent',{type:'mouseWheel',...viewport,deltaX:0,deltaY:1});
+ await cdp.evaluate('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');
  await cdp.evaluate(`(()=>{const node=document.querySelector(${JSON.stringify(selector)});if(!node)throw Error('RETURN_MANUFACTURING_TEST_CLICK_TARGET_MISSING');node.scrollIntoView({block:'center',behavior:'instant'});})()`);
  await cdp.evaluate('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');
  const position=await cdp.evaluate(`(()=>{const node=document.querySelector(${JSON.stringify(selector)}),rect=node.getBoundingClientRect(),hit=document.elementFromPoint(rect.x+rect.width/2,rect.y+rect.height/2);return {x:rect.x+rect.width/2,y:rect.y+rect.height/2,height:rect.height,visible:node.checkVisibility({checkVisibilityCSS:true}),unobscured:hit===node||node.contains(hit)};})()`);
