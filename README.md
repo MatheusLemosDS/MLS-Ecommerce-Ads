@@ -1,3 +1,15 @@
+<!-- ORIGINAL_RETURN_ITEMS_RELEASE -->
+**Atualização Live — 2026-11-02.2, itens e quantidades das devoluções:**
+O MLS Returns mostra separadamente os itens salvos do pedido e da solicitação,
+com horários e cobertura. Itens antigos sem evidência continuam desconhecidos;
+unidades comerciais não são convertidas em peças recebidas ou estoque.
+App `0a2955bc-e420-42a1-8c53-97f6fef04358`, Auth `e13c43ad-b096-411b-8ae7-92e24ff44991` e Finance
+`5e3b4686-1011-4e24-a890-fa33050b8490` publicados e conferidos. Os registros físicos,
+vínculos, valores financeiros e contratos legados foram preservados.
+[Uso, evidências e limites](docs/MLS_ORIGINAL_RETURN_ITEMS_2026_11_02.md).
+M2/M2.2 e confronto Seller Centre/banco continuam abertos.
+<!-- END_ORIGINAL_RETURN_ITEMS_RELEASE -->
+
 # MLS Commerce OS — App, Auth e Financeiro
 
 Repositório do **MLS Commerce OS** para os três Workers Cloudflare já ativos:
@@ -5,7 +17,7 @@ App, Auth e Financeiro. Cada Worker tem build e publicação próprios. A conex�
 financeira e as leituras reais foram verificadas; isso não comprova liquidação
 bancária nem encerra a conciliação M2.
 
-**Última release verificada — PR #102, 02/11/2026:**
+**Release anterior — PR #102, 02/11/2026:**
 **2026-11-02.1 — Líquido mensal e histórico**. O painel diferencia saldo parcial
 de líquido previsto completo, indica deduções ausentes e mantém data/último dia
 parcial dos anúncios. Os sete agentes compartilham um seletor de mês sobre

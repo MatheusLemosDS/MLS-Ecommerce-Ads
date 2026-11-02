@@ -1,5 +1,5 @@
 import {PhysicalReturnsError,readPhysicalReturns,mutatePhysicalReturns} from './physical-returns.mjs';
-import {readBusinessReconciliation,projectBusinessReconciliation} from './business-reconciliation.mjs';
+import {readBusinessReconciliation,readBusinessReconciliationOriginalItems,projectBusinessReconciliation} from './business-reconciliation.mjs';
 import {projectReconciliationFrame} from '../../finance/src/reconciliation-frame.mjs';
 
 // This adapter can only read saved reconciliation evidence. No provider service,
@@ -42,6 +42,17 @@ export async function readPhysicalReturnsWorkspace(env,input,{now=()=>Date.now()
  const stamp=clock(now),month=selection(input,stamp);
  const physical=await readPhysicalReturns(env,{now}),source=await savedSource(env,month,now);
  return envelope(month,physical,source,stamp);
+}
+// This opt-in envelope leaves the v1 physical contract and all mutation paths
+// untouched. The case list and original-item context use one saved publication.
+export async function readPhysicalReturnsOriginalItemsWorkspace(env,input,{now=()=>Date.now()}={}){
+ const stamp=clock(now),month=selection(input,stamp),fixedNow=()=>stamp*1000;
+ const physical=await readPhysicalReturns(env,{now:fixedNow});let original=null;
+ try{original=await readBusinessReconciliationOriginalItems(env,{month},{now:fixedNow,readOnly:true});}catch{}
+ const source=original?buildPhysicalReturnCandidates(original.report,{now:fixedNow}):await savedSource(env,month,fixedNow);
+ const report=envelope(month,physical,source,stamp),result={schema:'physical_returns_workspace_v2',report,original_items:original};
+ if(new TextEncoder().encode(JSON.stringify(result)).byteLength>1048576)fail('LIMIT',503);
+ return result;
 }
 export async function mutatePhysicalReturnsWorkspace(env,selectionInput,body,actor,{now=()=>Date.now()}={}){
  const stamp=clock(now),month=selection(selectionInput,stamp);

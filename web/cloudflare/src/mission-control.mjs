@@ -480,7 +480,7 @@ const missionWorkspaceNavigation=Object.freeze({
  ads:[['Campanhas','/campaigns'],['Anúncios','/dashboard'],['Oportunidades','/optimization'],['Detalhes','#mission-ads-tools']],
  products:[['Produtos','/admin?tab=products'],['Custos','/admin?tab=margins'],['Margens','#missionChart-products-margin'],['Ranking','#missionChart-products-ranking'],['Prioridades','#mission-products-tasks']],
  production:[['Ordens','/admin?tab=production#dtfQueueStage'],['Artes','/admin?tab=production#dtfArtworkStage'],['Montagem DTF','/admin?tab=production#dtfFilmStage'],['Lotes','/admin?tab=production#dtfBatchStage'],['Custos','/admin?tab=margins']],
- returns:[['Receber e inspecionar','#physicalReturnsDetails'],['Vínculo com a produção','#returnManufacturingLinksDetails'],['Conciliação financeira','/admin?tab=agent-finance#businessReconciliation']]
+ returns:[['Itens e quantidades','#physicalReturnsOriginalItems'],['Receber e inspecionar','#physicalReturnsDetails'],['Vínculo com a produção','#returnManufacturingLinksDetails'],['Conciliação financeira','/admin?tab=agent-finance#businessReconciliation']]
 });
 function missionWorkspaceNavLink(label,href,current=false){
  const tab=/^\/admin\?tab=([a-z-]+)$/.exec(href)?.[1];

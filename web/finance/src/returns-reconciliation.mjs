@@ -3,6 +3,8 @@ import {ensureFinanceAccessToken} from './refresh-coordinator.mjs';
 import {requestFinanceAuthJson} from './auth-json-transport.mjs';
 import {readFinancialOrderEvidence} from './financial-order-evidence.mjs';
 import {projectReconciliationRequest,projectReconciliationFrame,projectReconciliationEvidenceFrame,projectReconciliationMoneyFrame} from './reconciliation-frame.mjs';
+import {projectOriginalItemsFrame,projectReconciliationOriginalItemsFrame} from './original-items-frame.mjs';
+import {prepareReturnItemEvidenceStore,buildReturnItemEvidence,returnItemEvidenceStatement,projectSavedReturnItemEvidence,buildOriginalItemsReport} from './return-item-evidence.mjs';
 
 // Return amounts are observations of requests, never additional deductions
 // from escrow and never proof of a paid refund or a bank settlement.
@@ -76,8 +78,11 @@ async function references(source,probes){
  }
  await Promise.all(entries.map(async row=>{row.case_hash=await hash(row.return_sn);}));return {entries,total,conflict};
 }
-async function rows(db,runId,refs,stamp){
- const result=await db.batch([db.prepare('SELECT * FROM finance_returns_reconciliation_runs WHERE run_id=? AND partner_id=? AND shop_id=?').bind(runId,...identity),db.prepare('SELECT * FROM finance_returns_reconciliation_cases WHERE case_hash IN(SELECT value FROM json_each(?))').bind(JSON.stringify(refs.entries.map(row=>row.case_hash)))]);
+async function rows(db,runId,refs,stamp,includeOriginalItems=false){
+ const statements=[db.prepare('SELECT * FROM finance_returns_reconciliation_runs WHERE run_id=? AND partner_id=? AND shop_id=?').bind(runId,...identity),db.prepare('SELECT * FROM finance_returns_reconciliation_cases WHERE case_hash IN(SELECT value FROM json_each(?))').bind(JSON.stringify(refs.entries.map(row=>row.case_hash)))];
+ let result;
+ if(includeOriginalItems){try{result=await db.batch([...statements,db.prepare('SELECT * FROM finance_return_item_evidence WHERE partner_id=? AND shop_id=? AND case_hash IN(SELECT value FROM json_each(?))').bind(...identity,JSON.stringify(refs.entries.slice(0,40).map(row=>row.case_hash)))]);}catch{result=await db.batch(statements);}}
+ else result=await db.batch(statements);
  const state=result[0]?.results?.[0]??null,map=new Map(),referencesByHash=new Map(refs.entries.map(row=>[row.case_hash,row]));
  if(state&&(!integer(state.revision,1)||!['UNKNOWN','AVAILABLE','DENIED'].includes(state.permission)||!integer(state.checked_at,0,stamp+60)||!integer(state.next_attempt_at,0,9999999999)||!diagnostics.includes(state.last_error)||(state.lease_owner===null)!==(state.lease_until===null)))fail('STORAGE_INVALID');
  for(const row of result[1]?.results??[]){
@@ -88,7 +93,9 @@ async function rows(db,runId,refs,stamp){
   }else if(row.payload_hash!==null)fail('STORAGE_INVALID');
   map.set(row.case_hash,{row,observation});
  }
- return {state,map};
+ const itemEvidence=new Map();
+ if(includeOriginalItems)for(const row of result[2]?.results??[]){const legacy=map.get(row.case_hash);if(legacy?.observation)itemEvidence.set(row.case_hash,await projectSavedReturnItemEvidence(row,legacy.row));}
+ return {state,map,...(includeOriginalItems?{itemEvidence}:{})};
 }
 function dueCases(refs,snapshot,stamp){
  return refs.entries.filter(row=>{const item=snapshot.map.get(row.case_hash);return (!item?.observation||stamp-item.observation.checked_at>=300)&&(!item?.row.next_attempt_at||item.row.next_attempt_at<=stamp)&&(!item?.row.lease_until||item.row.lease_until<=stamp);}).sort((a,b)=>{
@@ -143,7 +150,7 @@ function moneyEvidence(source,refs,snapshot,probes,report){
  });
  return {schema:'finance_reconciliation_money_v1',currency:'BRL',groups,payouts,truncation:{truncated:affected.length>payouts.length,payouts_total:affected.length,payouts_included:payouts.length},basis:'SAVED_RETURN_AMOUNTS_AND_PAID_PAYOUT_AFTER_ADJUSTMENTS'};
 }
-function report(source,refs,snapshot,stamp,probes,includeReview=false,includeMoney=false){
+function report(source,refs,snapshot,stamp,probes,includeReview=false,includeMoney=false,includeOriginalItems=false){
  const orders=source.orders,coverage={orders:orders.length,evidence_orders:orders.filter(row=>row.evidence!==null).length,missing_evidence_orders:orders.filter(row=>row.evidence===null).length,paid_orders:orders.filter(paid).length,review_orders:orders.filter(review).length,return_orders:orders.filter(row=>paid(row)&&row.returns_seen===1).length,return_unknown_orders:orders.filter(row=>paid(row)&&row.returns_seen===null).length};
  const adjustments={reported_orders:0,missing_orders:0,conflicting_orders:0,known_adjustment_cents:0,base_repass_cents:null,after_adjustment_repass_cents:null};let base=0n,baseKnown=true,delta=0n;
  for(const row of orders.filter(paid)){
@@ -179,31 +186,34 @@ function report(source,refs,snapshot,stamp,probes,includeReview=false,includeMon
  // its existing partial report instead of guessing or failing the whole read.
  if(!includeReview||refs.conflict)return projected;
  const evidence=projectReconciliationEvidenceFrame({schema:'finance_reconciliation_v2',report:projected,review:reviewEvidence(source,refs,snapshot,stamp,probes)},projectReconciliationFrame);if(!evidence)fail('RESULT_INVALID');if(!includeMoney)return evidence;
- const money=projectReconciliationMoneyFrame({schema:'finance_reconciliation_v3',report:projected,review:evidence.review,money:moneyEvidence(source,refs,snapshot,probes,projected)},projectReconciliationFrame,projectReconciliationEvidenceFrame);if(!money)fail('RESULT_INVALID');return money;
+ const money=projectReconciliationMoneyFrame({schema:'finance_reconciliation_v3',report:projected,review:evidence.review,money:moneyEvidence(source,refs,snapshot,probes,projected)},projectReconciliationFrame,projectReconciliationEvidenceFrame);if(!money)fail('RESULT_INVALID');
+ if(!includeOriginalItems)return money;
+ const original=buildOriginalItemsReport(source,projected,snapshot.itemEvidence);if(!original)return money;
+ return projectReconciliationOriginalItemsFrame({schema:'finance_reconciliation_v4',report:money.report,review:money.review,money:money.money,original_items:original},projectReconciliationFrame,projectReconciliationEvidenceFrame,projectReconciliationMoneyFrame,projectOriginalItemsFrame)??money;
 }
 
 export async function runFinanceReturnsReconciliation(env,options={}){
- if(!plain(options)||Reflect.ownKeys(options).some(key=>!['operation','run_id','fetchImpl','now','timeoutMs','includeReview','includeMoney'].includes(key)||!Object.hasOwn(Object.getOwnPropertyDescriptor(options,key)||{},'value'))||['includeReview','includeMoney'].some(key=>Object.hasOwn(options,key)&&typeof options[key]!=='boolean')||options.includeMoney===true&&options.includeReview!==true)fail('REQUEST_INVALID',400);
+ if(!plain(options)||Reflect.ownKeys(options).some(key=>!['operation','run_id','fetchImpl','now','timeoutMs','includeReview','includeMoney','includeOriginalItems'].includes(key)||!Object.hasOwn(Object.getOwnPropertyDescriptor(options,key)||{},'value'))||['includeReview','includeMoney','includeOriginalItems'].some(key=>Object.hasOwn(options,key)&&typeof options[key]!=='boolean')||options.includeMoney===true&&options.includeReview!==true||options.includeOriginalItems===true&&(options.includeReview!==true||options.includeMoney!==true))fail('REQUEST_INVALID',400);
  const selection=projectReconciliationRequest({operation:options.operation,run_id:options.run_id});if(!selection)fail('REQUEST_INVALID',400);
- const {fetchImpl,now=()=>Date.now(),timeoutMs=5000,includeReview=false,includeMoney=false}=options,epoch=()=>{let value;try{value=now();}catch{fail('CLOCK_INVALID');}if(!integer(value,1,9999999999999))fail('CLOCK_INVALID');return Math.floor(value/1000);};
+ const {fetchImpl,now=()=>Date.now(),timeoutMs=5000,includeReview=false,includeMoney=false,includeOriginalItems=false}=options,epoch=()=>{let value;try{value=now();}catch{fail('CLOCK_INVALID');}if(!integer(value,1,9999999999999))fail('CLOCK_INVALID');return Math.floor(value/1000);};
  const stamp=epoch(),db=env?.FINANCE_DB;if(env?.FINANCE_CONNECTION_ENABLED!=='true'||typeof db?.batch!=='function'||typeof db?.prepare!=='function')fail('CONFIGURATION');
  if(!ready.has(db)){await db.batch(RETURNS_RECONCILIATION_SCHEMA.map(sql=>db.prepare(sql)));ready.add(db);}
- const source=await readFinancialOrderEvidence(env,{run_id:selection.run_id},{now}),candidates=reviewCandidates(source);
+ const source=await readFinancialOrderEvidence(env,{run_id:selection.run_id},{now,includeOriginalItems}),candidates=reviewCandidates(source);
  let probes=await readProbes(db,candidates,stamp),refs=await references(source,probes);
- let snapshot=await rows(db,selection.run_id,refs,stamp);
- if(selection.operation==='read'||refs.conflict||!refs.entries.length&&!candidates.length)return report(source,refs,snapshot,stamp,probes,includeReview,includeMoney);
+ let snapshot=await rows(db,selection.run_id,refs,stamp,includeOriginalItems);
+ if(selection.operation==='read'||refs.conflict||!refs.entries.length&&!candidates.length)return report(source,refs,snapshot,stamp,probes,includeReview,includeMoney,includeOriginalItems);
  if(typeof fetchImpl!=='function'||!integer(timeoutMs,5,5000))fail('CONFIGURATION');
- if(snapshot.state?.next_attempt_at>stamp||snapshot.state?.lease_until>stamp)return report(source,refs,snapshot,stamp,probes,includeReview,includeMoney);
+ if(snapshot.state?.next_attempt_at>stamp||snapshot.state?.lease_until>stamp)return report(source,refs,snapshot,stamp,probes,includeReview,includeMoney,includeOriginalItems);
  const probeDue=candidates.filter(row=>{const item=probes.get(row.order_hash);return (!item?.observation||stamp-item.observation.checked_at>=300)&&(!item?.row.next_attempt_at||item.row.next_attempt_at<=stamp)&&(!item?.row.lease_until||item.row.lease_until<=stamp);}).sort((a,b)=>{
   const left=probes.get(a.order_hash),right=probes.get(b.order_hash),first=left?.observation,last=right?.observation;
   if(Boolean(first)!==Boolean(last))return first?1:-1;
   return first?first.checked_at-last.checked_at:(left?.row.failure_count??0)-(right?.row.failure_count??0);
  })[0];
- if(!dueCases(refs,snapshot,stamp).length&&!probeDue)return report(source,refs,snapshot,stamp,probes,includeReview,includeMoney);
+ if(!dueCases(refs,snapshot,stamp).length&&!probeDue)return report(source,refs,snapshot,stamp,probes,includeReview,includeMoney,includeOriginalItems);
  const owner=crypto.randomUUID(),leaseUntil=stamp+45;
  await db.batch([db.prepare('INSERT OR IGNORE INTO finance_returns_reconciliation_runs(run_id,partner_id,shop_id,revision,permission,checked_at,next_attempt_at,last_error,lease_owner,lease_until) SELECT ?,?,?,1,\'UNKNOWN\',0,0,NULL,NULL,NULL WHERE EXISTS(SELECT 1 FROM finance_business_period_runs WHERE run_id=? AND partner_id=? AND shop_id=?)').bind(selection.run_id,...identity,selection.run_id,...identity)]);
  const lease=await db.prepare('UPDATE finance_returns_reconciliation_runs SET lease_owner=?,lease_until=? WHERE run_id=? AND partner_id=? AND shop_id=? AND next_attempt_at<=? AND (lease_owner IS NULL OR lease_until<=?)').bind(owner,leaseUntil,selection.run_id,...identity,stamp,stamp).run();
- if(lease?.meta?.changes!==1)return report(source,refs,await rows(db,selection.run_id,refs,epoch()),epoch(),probes,includeReview,includeMoney);
+ if(lease?.meta?.changes!==1)return report(source,refs,await rows(db,selection.run_id,refs,epoch(),includeOriginalItems),epoch(),probes,includeReview,includeMoney,includeOriginalItems);
  let permission=snapshot.state?.permission??'UNKNOWN',lastError=null,nextAttempt=stamp;
  try{
   const partnerKey=env.SHOPEE_FINANCE_PARTNER_KEY;if(typeof partnerKey!=='string'||!partnerKey.length||partnerKey.length>4096||/[\u0000-\u001f\u007f]/.test(partnerKey))fail('SIGNING_CONFIGURATION');
@@ -239,7 +249,7 @@ export async function runFinanceReturnsReconciliation(env,options={}){
      await db.prepare('UPDATE finance_returns_reconciliation_probes SET diagnostic=?,failure_count=?,next_attempt_at=?,lease_owner=NULL,lease_until=NULL WHERE order_hash=? AND lease_owner=?').bind(diagnostic,count,finished+delay,reference.order_hash,owner).run();lastError=diagnostic;nextAttempt=finished+delay;
     }
    }
-   probes=await readProbes(db,candidates,epoch());refs=await references(source,probes);snapshot=await rows(db,selection.run_id,refs,epoch());
+   probes=await readProbes(db,candidates,epoch());refs=await references(source,probes);snapshot=await rows(db,selection.run_id,refs,epoch(),includeOriginalItems);
   }
   for(const reference of refs.conflict?[]:dueCases(refs,snapshot,epoch())){
    const start=epoch();if(start>=leaseUntil-5||sourceCalls>=2)break;
@@ -254,7 +264,12 @@ export async function runFinanceReturnsReconciliation(env,options={}){
     if(Object.hasOwn(response,'refund_amount')&&response.refund_amount!==null&&amount===null)fail('INVALID_RESPONSE',502);
     const checkedAt=epoch(),observation={status:caseStatuses.includes(response.status)?response.status:'UNKNOWN',requested_refund_cents:amount,checked_at:checkedAt,diagnostic:caseStatuses.includes(response.status)?null:'UNKNOWN_STATUS'},bound={...reference,partner_id:identity[0],shop_id:identity[1]};
     const digest=await storedHash(bound,observation);
-    const written=await db.prepare('UPDATE finance_returns_reconciliation_cases SET payload=?,payload_hash=?,diagnostic=NULL,failure_count=0,next_attempt_at=?,lease_owner=NULL,lease_until=NULL WHERE case_hash=? AND lease_owner=? AND lease_until>?').bind(JSON.stringify(observation),digest,checkedAt+300,reference.case_hash,owner,checkedAt).run();
+    const legacyWrite=writeAt=>db.prepare('UPDATE finance_returns_reconciliation_cases SET payload=?,payload_hash=?,diagnostic=NULL,failure_count=0,next_attempt_at=?,lease_owner=NULL,lease_until=NULL WHERE case_hash=? AND lease_owner=? AND lease_until>?').bind(JSON.stringify(observation),digest,checkedAt+300,reference.case_hash,owner,writeAt);
+    let written;
+    if(await prepareReturnItemEvidenceStore(db)){
+     try{const itemEvidence=await buildReturnItemEvidence(reference,digest,checkedAt,response),writeAt=epoch(),result=await db.batch([returnItemEvidenceStatement(db,itemEvidence,owner,writeAt),legacyWrite(writeAt)]);written=result[1];}
+     catch{written=await legacyWrite(epoch()).run();}
+    }else written=await legacyWrite(epoch()).run();
     if(written?.meta?.changes===1)permission='AVAILABLE';
    }catch(error){
     const diagnostic=classifyError(error),finished=epoch(),prior=snapshot.map.get(reference.case_hash)?.row.failure_count??0,count=Math.min(prior+1,1000000),delay=diagnostic==='PERMISSION_DENIED'?3600:diagnostic==='RATE_LIMIT'?60:[300,600,1200,1800][Math.min(count-1,3)];
@@ -266,5 +281,5 @@ export async function runFinanceReturnsReconciliation(env,options={}){
  finally{
   const finished=epoch();await db.prepare('UPDATE finance_returns_reconciliation_runs SET revision=revision+1,permission=?,checked_at=?,next_attempt_at=?,last_error=?,lease_owner=NULL,lease_until=NULL WHERE run_id=? AND lease_owner=?').bind(permission,finished,nextAttempt,lastError,selection.run_id,owner).run();
  }
- snapshot=await rows(db,selection.run_id,refs,epoch());return report(source,refs,snapshot,epoch(),probes,includeReview,includeMoney);
+ snapshot=await rows(db,selection.run_id,refs,epoch(),includeOriginalItems);return report(source,refs,snapshot,epoch(),probes,includeReview,includeMoney,includeOriginalItems);
 }

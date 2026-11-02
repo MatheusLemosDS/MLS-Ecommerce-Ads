@@ -30,10 +30,20 @@ export const RELEASE_BASE_COMMIT=approvedCandidate.base_commit;
 export const RELEASE_EXPECTED_SHA=Object.freeze({...approvedCandidate.expected_hashes});
 export const RELEASE_EXPECTED_LIVE_FLAGS=Object.freeze({...validFlags});
 export const RELEASE_ALLOWED_FILES=Object.freeze([...approvedCandidate.allowed_files]);
-// Monthly presentation and shared agent periods are App-only. No Finance/Auth
-// source or deployment configuration is authorized; strict financial results,
-// server DTOs and commercial authority remain unchanged.
-export const RELEASE_APPROVED_PROTECTED_FILES=Object.freeze([]);
+// Original-item evidence crosses only these reviewed Finance/Auth source and
+// fixture files. Legacy money/physical contracts and all deployment configuration
+// remain unchanged; no wildcard permits other protected Worker modifications.
+export const RELEASE_APPROVED_PROTECTED_FILES=Object.freeze([
+  "web/finance/src/auth-router.mjs",
+  "web/finance/src/connection-worker.mjs",
+  "web/finance/src/financial-order-evidence.mjs",
+  "web/finance/src/original-items-frame.mjs",
+  "web/finance/src/return-item-evidence.mjs",
+  "web/finance/src/returns-reconciliation.mjs",
+  "web/finance/tests/original-items-chain.test.mjs",
+  "web/finance/tests/original-items-evidence.test.mjs",
+  "web/finance/tests/original-items-fixture.mjs"
+]);
 
 
 export const RELEASE_MANUAL_GATES=Object.freeze([
