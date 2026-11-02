@@ -1,26 +1,25 @@
-<!-- SIMPLIFIED_OPERATIONS_CANDIDATE -->
-**Candidato preparado — 2026-11-02.3, Operação simples e produção por período:**
-**PREPARED_NOT_PUBLISHED** na branch
-`feature/simplified-returns-production-layout-20261102`, base oficial
-`911870590fe812202287f549240d5274119d1cad`.
+<!-- SIMPLIFIED_OPERATIONS_RELEASE -->
+**Atualização Live — 2026-11-02.3, Operação simples e produção por período:**
 
-- **Devoluções:** fila com dados salvos, referência de custo atual e foto do
-  produto; PNG da estampa somente se disponível/verificado no dispositivo.
-  Confirmação física correta/problema atômica, sem inferir peças de kits.
-- **Produção:** escolher datas inclusivas de fabricação em Brasília, como 15–25,
-  usando custos históricos registrados. Sem registros não significa gasto zero.
-- **Navegação:** Produção, Devoluções e Financeiro visíveis entre sete destinos;
-  ledger de fabricação em Produção, com os links antigos preservados.
+- **Devoluções:** fila com os dados salvos e confirmação física correta/problema;
+  foto atual do produto e PNG local verificado, quando disponível neste dispositivo.
+- **Produção:** custo histórico registrado por datas inclusivas de fabricação em
+  Brasília; ausência de registros não significa gasto zero.
+- **Navegação:** Produção, Devoluções e Financeiro visíveis entre sete destinos,
+  com atalhos antigos, busca e histórico preservados.
 
-Após a publicação, usar `/admin?tab=agent-returns#physicalReturnsQueue`,
+Abrir `/admin?tab=agent-returns#physicalReturnsQueue`,
 `/admin?tab=agent-production#incurredProductionDetails` e
 `/admin?tab=agent-finance#businessMonthNetCard`.
-A PR103 abaixo continua a última Live comprovada até o recibo efetivo deste
-incremento. M2/M2.2, uso operacional real e confronto Seller Centre/banco
-continuam abertos. A fabricação registrada não comprova pagamento nem altera o
-lucro por uma segunda soma de custos.
-[Escopo, uso, validação e critérios de publicação](docs/MLS_SIMPLIFIED_OPERATIONS_2026_11_02.md).
-<!-- END_SIMPLIFIED_OPERATIONS_CANDIDATE -->
+Publicação Finance → Auth → App conferida em **02/11/2026 às 19:06:16 Brasília**;
+App `4a556c39-bd1b-4962-84a6-b25bf5504e95`, Auth `d6f4397f-ac4d-45cf-93da-175df8305a6d`,
+Finance `7001376b-f065-4e37-84ea-ee9ac2ea890c`. CI [41532391229](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/41532391229)
+aprovada: 3346 Node e 67 Python. Bytes e configuração dos três Workers
+conferidos. **Integração Git pendente de recibo próprio na PR104.**
+QA sintética não confirma captura natural de fotos ou recebimento/fabricação
+reais. M2/M2.2 e confronto Seller Centre/banco continuam abertos.
+[Uso, evidências e limites](docs/MLS_SIMPLIFIED_OPERATIONS_2026_11_02.md).
+<!-- END_SIMPLIFIED_OPERATIONS_RELEASE -->
 
 <!-- ORIGINAL_RETURN_ITEMS_RELEASE -->
 **Atualização Live — 2026-11-02.2, itens e quantidades das devoluções:**

@@ -1,4 +1,4 @@
-**Incremento preparado — `PREPARED_NOT_PUBLISHED`, 02/11/2026:** versão proposta `2026-11-02.3 — Operação simples e produção por período`, branch `feature/simplified-returns-production-layout-20261102`, base `911870590fe812202287f549240d5274119d1cad`. Fila de devoluções com dados salvos e confirmação física correta/problema, custo por intervalo da fabricação em Brasília e navegação com sete destinos principais. Foto atual do produto e PNG local verificado têm proveniências distintas; quantidade comercial/kit não vira peça por inferência. Custo histórico registrado permanece separado do lucro e de caixa; ausência de registros não prova gasto zero. Captura de fotos reutiliza consultas e fila CATALOG existentes, limitada e sem loop. CI integral e publicação dos três Workers ainda requerem recibo; a PR103 abaixo continua a última Live comprovada. A autorização existente para incrementos validados na versão oficial permanece válida. M2/M2.2 não encerradas. [Mudanças, uso e critérios de publicação](MLS_SIMPLIFIED_OPERATIONS_2026_11_02.md).
+**Live PR104 — 02/11/2026 às 19:06:16 Brasília:** versão `2026-11-02.3 — Operação simples e produção por período`; Finance `7001376b-f065-4e37-84ea-ee9ac2ea890c`, Auth `d6f4397f-ac4d-45cf-93da-175df8305a6d` e App `4a556c39-bd1b-4962-84a6-b25bf5504e95` publicados nessa ordem, com bytes/configuração/domínios/flags/cron conferidos após cada etapa. Fonte `c7a7b35677fc30a408644225978aecd90d5fe826`, head `94d62aa047263fbf478faf79aa87542a3ebb5037`, CI [41532391229](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/41532391229) aprovada: 3346 Node e 67 Python. Fila de devoluções com dados salvos e confirmação física atômica, custo por datas de fabricação em Brasília e sete destinos operacionais. Foto atual do produto e PNG local verificado continuam separados; kits/ausências não viram peças ou custo zero. **PUBLISHED_VERIFIED_INTEGRATION_PENDING:** integração Git ainda requer recibo próprio. QA foi local/sintética; captura natural de fotos, recebimento/fabricação reais e Seller Centre/banco não foram comprovados. M2/M2.2 e ponte contábil continuam abertas. [Mudanças, uso, recibo e limites](MLS_SIMPLIFIED_OPERATIONS_2026_11_02.md).
 
 **Live PR103 — itens e quantidades das devoluções, 02/11/2026 às 17:45:00 Brasília:** versão visível `2026-11-02.2`; Finance `5e3b4686`, Auth `e13c43ad` e App `0a2955bc` publicados nessa ordem e conferidos após cada etapa. CI 41520727701 aprovada no head `2e255910`: 3248 Node e 67 Python. Bytes dos três Workers conferidos; configuração, domínios, flags e cron preservados. Consulta no MLS Returns separa unidades comerciais do pedido e da solicitação, com fonte/cobertura; legado sem captura segue desconhecido. Não altera `original_quantities`, físico/fabricação, vínculos, estoque ou lucro; sem nova requisição ao provedor ou backfill. Captura natural real pós-deploy ainda requer conferência separada; M2/M2.2 permanecem abertas. Integração Git é conferida pelo estado da PR103 vinculada. [Mudanças, uso e recibo](MLS_ORIGINAL_RETURN_ITEMS_2026_11_02.md). As entregas abaixo preservam o histórico.
 
@@ -431,15 +431,13 @@ Esta é uma trilha técnica independente que **não substitui o gate de saída d
 
 ### M2.2 — Produção incorrida e devolução reaproveitável — **PARCIAL / CONTROLES E ASSOCIAÇÃO DECLARADA PUBLICADOS**
 
-**Incremento preparado, ainda não publicado — 2026-11-02.3:** fila de
-devoluções com proposta baseada em dados salvos e confirmação física atômica;
-período inclusivo por data de fabricação, com custo histórico registrado;
-navegação operacional com Produção, Devoluções e Financeiro visíveis. A prévia
-do candidato não comprova recebimento ou fabricação reais. Ausência de
-registro não equivale a gasto zero; custo atual/foto do catálogo não provam o
-custo histórico/estampa original. O ledger e a referência de custo das vendas
-continuam separados do lucro, sem dupla soma. A publicação e o aceite real
-continuam pendentes. [Escopo e provas](MLS_SIMPLIFIED_OPERATIONS_2026_11_02.md).
+**Incremento publicado — PR104, 02/11/2026 às 19:06:16 Brasília:** fila com dados salvos,
+confirmação física correta/problema atômica, custo histórico por intervalo de
+fabricação em Brasília e navegação operacional com Finance/Returns visíveis.
+Sem registro não equivale a gasto zero; foto/custo atuais não provam a peça ou
+custo histórico. QA sintética não confirma fatos reais. Integração Git da PR104
+permanece pendente de recibo próprio; M2/M2.2 seguem abertas.
+[Uso, recibo e limites](MLS_SIMPLIFIED_OPERATIONS_2026_11_02.md).
 
 **Incremento publicado — PR103, 02/11/2026:** evidência comercial separada do
 pedido pago salvo e da solicitação Returns, com fonte/data/cobertura e o mesmo
@@ -581,17 +579,13 @@ Conversão de identidade M0 publicada pela **PR #11**, merge
 
 A fase canônica é **M2 — Finance/Returns confiáveis como agentes observadores**.
 
-A última publicação comprovada é a PR103 nos três Workers, versão
-`2026-11-02.2`, com CI 41520727701 aprovada. O candidato
-`2026-11-02.3 — Operação simples e produção por período` está
-`PREPARED_NOT_PUBLISHED` na branch
-`feature/simplified-returns-production-layout-20261102`, base
-`911870590fe812202287f549240d5274119d1cad`. Concluir regressão/CI e publicar
-Finance → Auth → App, conferindo fonte, bytes e configuração após cada etapa,
-antes de anunciar uma nova Live. A autorização existente do proprietário
-continua válida; não criar novo ciclo de confirmação. Registrar o recibo em
-[Operação simples](MLS_SIMPLIFIED_OPERATIONS_2026_11_02.md) e atualizar os
-checkpoints/handoffs com os identificadores efetivos.
+A PR104 está publicada nos três Workers, versão `2026-11-02.3`, e conferida
+em 02/11/2026 às 19:06:16 Brasília, com CI [41532391229](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/41532391229) aprovada.
+Integração em main ainda depende de recibo próprio da PR104. Conferir agora a
+fila física real e um intervalo de fabricação registrado; captura natural de
+fotos e QA owner não foram comprovadas pela publicação. Não reiniciar coleta,
+inventar fatos físicos ou transformar ausência de lançamentos em gasto zero.
+[Registro e próximos limites](MLS_SIMPLIFIED_OPERATIONS_2026_11_02.md).
 
 A entrega anterior PR102 continua disponível: resultado mensal separado,
 período compartilhado e despesas. Novembro já possui declaração explícita de
@@ -599,7 +593,7 @@ ausência de outras despesas; outros meses mantêm suas próprias informações.
 A leitura numérica não encerra a conciliação M2.
 
 Retomar por:
-1. Concluir a entrega técnica do candidato e, depois do recibo, conferir a fila de devoluções e o período de fabricação reais no mesmo escopo escolhido pelo proprietário. Confirmar a captura natural de itens/fotos, suas fontes, datas e cobertura; não prometer observação antes da evidência nem reiniciar coleta. Legados NOT_CAPTURED/UNKNOWN não viram zero. Quantidades comerciais não liberam composição física de kits, e ausência de fabricação registrada não prova gasto zero. Preservar os controles M2.2b/c existentes e os custos históricos; não refazê-los nem supor fabricação pela quantidade DTF/kit.
+1. Registrar a integração Git da PR104 somente quando comprovada e conferir a fila de devoluções e o período de fabricação reais no mesmo escopo escolhido pelo proprietário. Confirmar a captura natural de itens/fotos, suas fontes, datas e cobertura; não prometer observação antes da evidência nem reiniciar coleta. Legados NOT_CAPTURED/UNKNOWN não viram zero. Quantidades comerciais não liberam composição física de kits, e ausência de fabricação registrada não prova gasto zero. Preservar os controles M2.2b/c existentes e os custos históricos; não refazê-los nem supor fabricação pela quantidade DTF/kit.
 2. Confirmar com fatos do operador a decomposição histórica de peça/estampa versus embalagem/etiqueta consumidas e os custos incrementais de reparo/nova embalagem, antes de valorar ou alocar peças na revenda. Não dividir automaticamente all-inclusive; manter UNKNOWN e projetar a ponte contábil sem somar o custo novamente ao resultado atual.
 3. Manter a paginação do Pending já entregue, renovar a cobertura da publicação exata e acompanhar revisões/Returns/calendários existentes sem reiniciar coleta ou catálogo.
 4. Conferir a declaração de despesas do mês escolhido — novembro já foi confirmado pelo proprietário, sem transportar essa informação para outros meses — e confrontar o mesmo recorte com Seller Centre e banco. Somente concluir M2 com diferenças materiais explicadas; lucro realizado exige liquidação comprovada.

@@ -1,33 +1,35 @@
 # Operação simples e produção por período — 02/11/2026
 
-**Estado: `PREPARED_NOT_PUBLISHED`.** Versão proposta
-**2026-11-02.3 — Operação simples e produção por período**.
-Branch `feature/simplified-returns-production-layout-20261102`, base oficial
-`911870590fe812202287f549240d5274119d1cad` (main após PR103).
-Este registro descreve o candidato local; não é recibo de publicação.
-A última Live comprovada continua sendo a PR103, versão `2026-11-02.2`,
-com Finance `5e3b4686-1011-4e24-a890-fa33050b8490`, Auth
-`e13c43ad-b096-411b-8ae7-92e24ff44991` e App
-`0a2955bc-e420-42a1-8c53-97f6fef04358`.
+**Estado: `PUBLISHED_VERIFIED_INTEGRATION_PENDING`.** Publicação dos três
+Workers conferida em **02/11/2026 às 19:06:16 Brasília** (`2026-11-02T22:06:16+00:00`).
+Versão **2026-11-02.3 — Operação simples e produção por período**.
+PR [#104](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/104), branch
+`feature/simplified-returns-production-layout-20261102`, base
+`911870590fe812202287f549240d5274119d1cad`. Fonte `c7a7b35677fc30a408644225978aecd90d5fe826`,
+head aprovado `94d62aa047263fbf478faf79aa87542a3ebb5037`, CI [41532391229](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/41532391229)
+aprovada: 3346 Node e 67 Python. Publicação Finance → Auth → App,
+bytes e configurações conferidos após cada etapa. A integração Git ainda
+requer recibo próprio; publicação e CI não comprovam merge em main.
+A PR103 foi arquivada como a versão Live anterior.
 [Recibo anterior](MLS_ORIGINAL_RETURN_ITEMS_2026_11_02.md).
 
-## Pedido e resultado preparado
+## Pedido e resultado entregue
 
 O proprietário pediu dados automáticos nas devoluções, custo das peças realmente
 fabricadas entre datas escolhidas e uma navegação mais simples. Confirmou que
 o período deve considerar a **data da fabricação**, não a criação do pedido.
-O candidato reutiliza os registros existentes e concentra a operação em três
+A entrega reutiliza os registros existentes e concentra a operação em três
 fluxos; não cria outra coleta financeira ou recomeça o catálogo.
 
-| Fluxo | Caminho após a publicação | O que muda |
+| Fluxo | Caminho publicado | O que muda |
 | --- | --- | --- |
 | Conferir uma devolução | `/admin?tab=agent-returns#physicalReturnsQueue` | Fila com produto, variação, quantidades comerciais e dados atuais salvos; confirmação de recebimento correto ou com problema. |
 | Consultar fabricação por datas | `/admin?tab=agent-production#incurredProductionDetails` | Data inicial/final, semana/mês e resumo diário dos registros de fabricação. |
 | Consultar o resultado financeiro | `/admin?tab=agent-finance#businessMonthNetCard` | Acesso principal visível, preservando o resultado mensal e seus limites existentes. |
 | Ver a entrega e seus acessos | `/admin?tab=roadmap#appReleaseNotes` | Notas específicas da versão e caminhos dos controles. |
 
-Os endereços descrevem o candidato. Até o recibo deste incremento, a Live pode
-exibir os caminhos e o comportamento da versão anterior.
+Os caminhos acima estão publicados. A conferência técnica dos Workers não
+substitui a conferência de um caso físico ou de fabricação real pelo proprietário.
 
 ## Devoluções: preparar os dados, confirmar o fato físico
 
@@ -120,16 +122,49 @@ de custos conserva suas referências e regras.
 | --- | --- |
 | Contratos de mídia, transporte e catálogo legado | 100 testes focados aprovados localmente, sem falhas ou skips; dados sintéticos. |
 | Orçamento de mídia a frio | Helper limitado + três trabalhos de catálogo: 23 RPCs D1 e três leituras privadas existentes, total de 26 RPCs; 71 instruções SQL em lotes, contadas separadamente. |
-| Suite completa, QA integrada e CI do candidato | Em consolidação pelo responsável pela entrega; não substituir por contagem de outra release. |
-| Publicação Finance → Auth → App | Pendente de recibo com fonte/CI, UUIDs e conferência de bytes/configuração após cada etapa. |
+| Suite completa, QA integrada e CI | CI [41532391229](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/41532391229) aprovada no head `94d62aa047263fbf478faf79aa87542a3ebb5037`: 3346 Node e 67 Python; QA sintética normal/minificada em 320/1365, sem erros de página ou overflow. |
+| Publicação Finance → Auth → App | Concluída e conferida em 02/11/2026 às 19:06:16 Brasília; três UUIDs novos, bytes/configuração/domínios/flags/cron preservados. |
 | Captura natural de fotos e uso físico real | Ainda não comprovados neste incremento. QA sintética não confirma um recebimento ou uma fabricação da conta. |
 
-O proprietário já autorizou incrementos validados na versão oficial. Esta
-marcação de preparação não pede novamente a autorização existente; impede
-confundir código preparado com versão publicada. Só atualizar o estado para
-Live após receber a evidência efetiva. Git/merge, CI e publicação são registros
-distintos. Não inserir SQL bruto, pedidos privados, dados pessoais ou montantes
-da conta em documentação e fixtures.
+O proprietário já autorizou incrementos validados na versão oficial. O recibo
+comprova esta publicação técnica, sem repetir aquela autorização. A integração
+Git permanece pendente de evidência própria; CI, publicação e merge são
+registros distintos. Não inserir SQL bruto, pedidos privados, dados pessoais ou
+montantes da conta em documentação e fixtures.
+
+## Recibo técnico dos três Workers
+
+| Worker | UUID publicado | SHA-256 gerado | SHA-256 publicado |
+| --- | --- | --- | --- |
+| Finance | `7001376b-f065-4e37-84ea-ee9ac2ea890c` | `d7e64105b88602fa20f8e733f5e16548cfa3ceefbbd7733a87dfb5e5bd8fcd49` | `ea8a5abf0c818539ee02e0e14260b973d0d2ed243f2c0eb26162ae3bbb3fcb59` |
+| Auth | `d6f4397f-ac4d-45cf-93da-175df8305a6d` | `851e27c703fda4143b87a8a85a79c06326b9a2f25ce16f5625d8871a589f43ec` | `5e18583606c453bd4e5ecfbc983db13826e4ad7f1c336fde5b7bbe9d628b2bd6` |
+| App | `4a556c39-bd1b-4962-84a6-b25bf5504e95` | `50baef80d8c15e4fce11a68b7c90a52a5678c4ad398034607a6e1cabf4f5fe92` | `c37f8c70023f03c2bcb3a609807b9477a8ce32c7c6ee1b10358eedcee798fb24` |
+
+O publisher não consultou endpoints owner ou provedor, executou zero consultas
+D1 e não gravou fatos físicos/financeiros. As mutações da QA ocorreram somente
+em dados falsos locais. A integração Git da PR104 está **pendente** neste corte.
+
+A sequência pausou antes do App em uma consulta de leitura ao GitHub. Os
+recibos de Finance e Auth foram preservados; código, CI, fontes e o vetor
+intermediário completo foram conferidos novamente. A continuação explícita
+publicou somente o App, uma vez, e conferiu os três Workers ao terminar.
+Não houve repetição da publicação de Finance/Auth ou rollback automático.
+
+## Primeira observação dos dados salvos
+
+Leitura somente com `SELECT`, em **02/11/2026 às 19:06:36 Brasília**, vinte
+segundos após o recibo: 49 trabalhos de catálogo, três elegíveis, nenhum com
+falha ou lease ativo; 10 dos 19 casos legados tinham itens originais capturados
+e nove continuavam sem captura. As tabelas opcionais de fotos e prioridade
+ainda não existiam, portanto a captura natural de fotos não estava comprovada
+nesse corte. Nenhuma coleta, fila ou execução do cron foi forçada para o teste.
+
+O controle físico mantinha um caso e uma auditoria, sem nova auditoria depois
+da publicação. As tabelas de fabricação ainda estavam ausentes: o gasto real
+do período permanece desconhecido, sem presumir zero ou criar lançamentos a
+partir dos pedidos. Arquivos de estampa do navegador não são observáveis por
+essa consulta no servidor. Essas observações não comprovam aceite operacional
+ou encerramento de M2/M2.2.
 
 ## Continuidade, limites e rollback
 
