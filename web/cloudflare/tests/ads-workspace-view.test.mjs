@@ -114,7 +114,7 @@ test('desktop and mobile use the same restricted Ads routes by default and owner
  for(const render of [shellDesktopNavigation,shellMobileNavigation]){
   const html=render('/campaigns');for(const route of ['/dashboard','/campaigns','/optimization','/integrations'])assert.ok(html.includes('href="'+route+'"'),route);assert.ok(!html.includes('/admin'));
   for(const route of ['/advertising','/performance','/gmv-max','/opportunities'])assert.ok(!html.includes('href="'+route+'"'),route);
-  for(const label of ['Anúncios','Campanhas','Automação','Conexões'])assert.ok(html.includes(label),label);
+  for(const label of ['Anúncios','Campanhas','Oportunidades','Conexões'])assert.ok(html.includes(label),label);
   assert.equal((html.match(/aria-current="page"/g)||[]).length,1);
   for(const [alias,canonical] of [['/advertising','/dashboard'],['/performance','/dashboard'],['/gmv-max','/campaigns'],['/opportunities','/optimization']])assert.ok(render(alias).includes('href="'+canonical+'" aria-current="page"'));
   const owner=render('/dashboard',{role:'owner'});for(const route of ['/admin?tab=overview','/admin?tab=products','/admin?tab=margins'])assert.ok(owner.includes('href="'+route+'"'),route);

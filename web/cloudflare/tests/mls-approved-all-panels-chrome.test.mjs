@@ -61,6 +61,7 @@ async function start({captureDirectory=output}={}){
 const pages=['overview','agents','agent-finance','agent-ads','agent-products','agent-production',
  'agent-returns','agent-auditor','agent-hermes','products','production','roadmap','hermes','margins','history'];
 const screenshotPages=new Set(pages);
+const canonicalPanel=id=>id==='hermes'?'agent-hermes':id;
 async function topbarBounds(cdp){
  return cdp.evaluate(`(()=>{
   const bar=document.querySelector('.mls-shell-topbar'),tools=bar?.querySelector('.mls-shell-tools');
@@ -83,7 +84,7 @@ function assertTopbar(bounds,label,width){
 }
 async function navigateOwnerPanel(cdp,id){
  return await cdp.evaluate("(()=>{"+
-     "const id="+JSON.stringify(id)+";"+
+     "const id="+JSON.stringify(canonicalPanel(id))+";"+
      "const visible=node=>node.checkVisibility?node.checkVisibility({checkVisibilityCSS:true}):node.getClientRects().length>0&&getComputedStyle(node).visibility!=='hidden';"+
      "const candidates=target=>[...document.querySelectorAll('[data-tab],[data-mission-open],[data-open]')].filter(node=>node.dataset.tab===target||node.dataset.missionOpen===target||node.dataset.open===target);"+
      "const click=target=>{let link=candidates(target).find(visible);"+
@@ -91,8 +92,9 @@ async function navigateOwnerPanel(cdp,id){
      "if(menu&&!menu.open)menu.querySelector('summary').click();link=candidates(target).find(visible);}"+
      "if(!link)return false;link.click();return true;};"+
      "if(id.startsWith('agent-')&&!click('agents'))return {missing:'agents'};"+
+     "if(id==='production'&&!click('agent-production'))return {missing:'agent-production'};"+
      "if(!click(id))return {missing:id};"+
-     "return {tab:new URL(location.href).searchParams.get('tab'),active:document.documentElement.dataset.activePanel,visible:!document.getElementById(id)?.hidden};"+
+     "return {tab:new URL(location.href).searchParams.get('tab'),active:document.documentElement.dataset.activePanel,visible:visible(document.getElementById(id))};"+
      "})()");
 }
 for(const minify of [false,true])test('owner design smoke: fifteen real workspaces, real navigation and light/dark themes at desktop and 390px mobile (minify='+minify+')',{timeout:120000},async t=>{
@@ -144,11 +146,11 @@ for(const minify of [false,true])test('owner design smoke: fifteen real workspac
     for(const id of pages){
     const navigation=await navigateOwnerPanel(cdp,id);
     assert.equal(navigation.missing,undefined,viewport.name+'/'+theme+': destination has no usable navigation '+id);
-    assert.equal(navigation.tab,id,viewport.name+'/'+theme+': navigation did not update URL for '+id);
-    assert.equal(navigation.active,id,viewport.name+'/'+theme+': active workspace differs from navigation '+id);
+    assert.equal(navigation.tab,canonicalPanel(id),viewport.name+'/'+theme+': navigation did not update URL for '+id);
+    assert.equal(navigation.active,canonicalPanel(id),viewport.name+'/'+theme+': active workspace differs from navigation '+id);
     assert.equal(navigation.visible,true,viewport.name+'/'+theme+': navigation left workspace hidden '+id);
     const result=await cdp.evaluate("(()=>{"+
-     "const id="+JSON.stringify(id)+",section=document.getElementById(id);"+
+     "const id="+JSON.stringify(canonicalPanel(id))+",section=document.getElementById(id);"+
      "const workspace=document.querySelector('main.workspace');"+
      "if(!section||!workspace)return {missing:true,id};"+
      "section.scrollIntoView({block:'start',behavior:'instant'});"+
@@ -211,7 +213,7 @@ for(const minify of [false,true])test('owner design smoke: fifteen real workspac
     }
     assert.deepEqual(result.errors,[],viewport.name+'/'+theme+'/'+id+': browser runtime errors');
     if(screenshotPages.has(id))await cdp.capture('approved-'+theme+'-'+viewport.name+'-'+id+(minify?'-minified':'')+'.png');
-    report.push({viewport:viewport.name,width:viewport.width,height:viewport.height,panel:id,theme,
+    report.push({viewport:viewport.name,width:viewport.width,height:viewport.height,panel:id,canonical_panel:canonicalPanel(id),theme,
      minify,navigation:'REAL_EXISTING_CONTROL',theme_selection:'REAL_THEME_TOGGLE',synthetic:true,visible:true,overflow:false,topbar:'NON_OVERLAPPING_44PX_CONTROLS'});
     }
    }

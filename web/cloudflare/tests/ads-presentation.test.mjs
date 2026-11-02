@@ -42,7 +42,7 @@ test('mobile review navigation has three primary destinations and keeps grouped 
  for(const destination of ['/dashboard','/campaigns','/optimization','/integrations','/logout'])assert.ok(html.includes('href="'+destination+'"'),destination);
  assert.doesNotMatch(html,/href="\/admin/);
  for(const destination of ['/advertising','/gmv-max','/opportunities','/performance'])assert.ok(!html.includes('href="'+destination+'"'),destination);
- for(const label of ['Anúncios','Campanhas','Automação','Conexões','Mais opções'])assert.ok(html.includes(label),label);
+ for(const label of ['Anúncios','Campanhas','Oportunidades','Conexões','Mais opções'])assert.ok(html.includes(label),label);
  assert.match(html,/class="workspace-nav-link active" href="\/campaigns" aria-current="page"/);
  assert.match(html,/workspace-nav-mobile/);
  assert.match(html,/<button[^>]*type="button"[^>]*data-braza-theme-toggle[^>]*aria-label="Alterar tema"/);

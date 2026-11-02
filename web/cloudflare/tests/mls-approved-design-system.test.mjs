@@ -7,6 +7,8 @@ import {MISSION_AGENTS,missionWorkspacesBody,MISSION_CLIENT} from '../src/missio
 import {DTF_CLIENT,dtfBody} from '../src/dtf-view.mjs';
 import {SAVED_CATALOG_CLIENT,savedCatalogBody} from '../src/saved-catalog-view.mjs';
 import {compiledOwnerReportPage} from './owner-report-browser-fixture.mjs';
+import {incurredProductionBody} from '../src/incurred-production-view.mjs';
+import {productionCostPeriodsBody} from '../src/production-cost-periods-view.mjs';
 
 const ids=MISSION_AGENTS.map(agent=>agent.id);
 test('single approved visual language defines actual agent colors, responsive layout and dark/light contrast',()=>{
@@ -31,15 +33,17 @@ test('single approved visual language defines actual agent colors, responsive la
 });
 
 test('specialists retain actual registry and chart nodes with visible local navigation, no added network path',()=>{
- const html=missionWorkspacesBody('<div id="financeFixtureProtected"></div>'),rendered=adminBody();
+ const html=missionWorkspacesBody('<div id="financeFixtureProtected"></div>'),rendered=adminBody().replace('<div id="missionProductionLedgerHost"></div>','<div id="missionProductionLedgerHost">'+incurredProductionBody()+productionCostPeriodsBody()+'</div>');
+ const destinations={finance:['#businessMonth','#businessMonthExpensesDetails','#commandPendingIncomeDetails','#businessEscrowReleases','#businessReconciliation'],ads:['/dashboard','/campaigns','/optimization'],products:['/admin?tab=products','/admin?tab=margins','#mission-products-evidence'],production:['#mission-production-operations','#costPeriods','/admin?tab=production'],returns:['#physicalReturnsQueue','#returnManufacturingLinksDetails','/admin?tab=agent-finance#businessReconciliation'],auditor:['#mission-auditor-top','#mission-auditor-tasks','#mission-auditor-evidence'],hermes:['#mission-hermes-top','#missionHermesConsole','#mlsAgentLearning','/admin?tab=agents']};
  for(const id of ids){
   assert.match(html,new RegExp('id="agent-'+id+'"'));
   assert.match(html,new RegExp('id="mission-'+id+'-top"'));
   assert.match(html,new RegExp('id="mission-'+id+'-metrics"'));
-  assert.match(html,new RegExp('href="#mission-'+id+'-tasks"'));
-  assert.match(html,new RegExp('href="#mission-'+id+'-tools"'));
-  if(['auditor','hermes'].includes(id))assert.match(html,new RegExp('href="#mission-'+id+'-metrics"'));
-  else assert.match(html,new RegExp('href="#mission-'+id+'-top"'),'specialist toolbar starts at the real overview target');
+  assert.match(html,new RegExp('id="mission-'+id+'-tasks"'));
+  assert.match(html,new RegExp('id="mission-'+id+'-tools"'));
+  const section=html.slice(html.indexOf('id="agent-'+id+'"')),toolbar=/<nav class="mission-page-tabs mls-module-tabs"[^>]*>([\s\S]*?)<\/nav>/.exec(section)?.[1];
+  assert.ok(toolbar,id+' has one contextual workflow');
+  assert.deepEqual([...toolbar.matchAll(/href="([^"]+)"/g)].map(row=>row[1]),destinations[id],id+' links to its current operational controls');
   assert.match(html,new RegExp('data-mission-status="'+id+'"'));
  }
  assert.equal((html.match(/id="financeFixtureProtected"/g)||[]).length,1);
