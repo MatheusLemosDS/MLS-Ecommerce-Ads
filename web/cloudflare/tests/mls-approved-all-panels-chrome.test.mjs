@@ -235,7 +235,8 @@ test('fresh local D1 owner bootstrap captures six connected workspaces while fin
  const fixture=await compiledOwnerReportPage(false,{ownerPreview:false,localReadSnapshot:true}),local=fixture.localReadSnapshot;
  assert.equal(local.source,'FRESH_SYNTHETIC_SQLITE_D1');assert.equal(local.external_service_bindings,false);
  const monthResponse=local.responses.find(row=>row.path.startsWith('/api/admin/finance/business-month-view?'));
- assert.equal(monthResponse.contract,'business-month-view-v4');assert.equal(monthResponse.body.schema,'business_month_view_v4');
+ assert.equal(monthResponse.contract,'business-month-view-v5');assert.equal(monthResponse.body.schema,'business_month_view_v5');
+ assert.equal(monthResponse.body.variant_contributions,null,'an uncollected local month must not invent captured variant evidence');
  for(const field of ['sales_cents','expected_repass_cents','production_cost_cents','invoice_tax_cents'])assert.equal(monthResponse.body.display[field],null,'fresh local source cannot supply '+field);
  assert.equal(monthResponse.body.display.result.net_estimate_cents,null);assert.equal(monthResponse.body.display.result.net_profit_cents,null);
  assert.ok(Object.values(monthResponse.body.display.source_checked_at).every(value=>value===null));
@@ -280,7 +281,7 @@ test('fresh local D1 owner bootstrap captures six connected workspaces while fin
      if(viewport.mobile&&state.mini){assert.equal(state.mini.direction,'row',label+': mobile module nav is not horizontal');assert.ok(state.mini.height<=60,label+': mobile module nav is too tall');assert.ok(Math.max(...state.mini.tops)-Math.min(...state.mini.tops)<=2,label+': module links wrapped vertically');assert.ok(state.heroTop<=250,label+': connected mobile header pushed too far down');}
      if(state.ads){assert.equal(state.ads.status,'UNAVAILABLE');assert.equal(state.ads.svg,0);assert.equal(state.ads.rows,0);assert.match(state.ads.text,/indispon|observa|histórico/i);if(!viewport.mobile)assert.ok(state.ads.height<=290,label+': empty Ads graph is excessively tall');}
      await cdp.capture('approved-'+theme+'-'+viewport.name+'-'+id+'.png');
-     checks.push({viewport:viewport.name,width:viewport.width,height:viewport.height,panel:id,theme,synthetic:true,source:'FRESH_SYNTHETIC_SQLITE_D1',bootstrap:'ACTUAL_WORKER_RESPONSE',monthly_contract:'business-month-view-v4',financial_amounts:'UNKNOWN',visible:true,overflow:false,navigation:'REAL_EXISTING_CONTROL',theme_selection:'REAL_THEME_TOGGLE'});
+     checks.push({viewport:viewport.name,width:viewport.width,height:viewport.height,panel:id,theme,synthetic:true,source:'FRESH_SYNTHETIC_SQLITE_D1',bootstrap:'ACTUAL_WORKER_RESPONSE',monthly_contract:'business-month-view-v5',financial_amounts:'UNKNOWN',visible:true,overflow:false,navigation:'REAL_EXISTING_CONTROL',theme_selection:'REAL_THEME_TOGGLE'});
     }
    }
   }

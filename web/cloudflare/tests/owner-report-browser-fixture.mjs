@@ -22,7 +22,7 @@ export async function compiledOwnerReportPage(minify,{ownerPreview=true,flagValu
   const month=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit'}).format(new Date()).slice(0,7);
   const requests=[{path:'/api/admin/bootstrap',headers:{}},
    {path:'/api/admin/state',headers:{}},
-   {path:'/api/admin/finance/business-month-view?month='+month,headers:{'X-Braza-Client-Contract':'business-month-view-v4'}}];
+   {path:'/api/admin/finance/business-month-view?month='+month,headers:{'X-Braza-Client-Contract':'business-month-view-v5'}}];
   const responses=[];
   for(const request of requests){
    const result=await worker.fetch(new Request(origin+request.path,{headers:{cookie,...request.headers}}),env);

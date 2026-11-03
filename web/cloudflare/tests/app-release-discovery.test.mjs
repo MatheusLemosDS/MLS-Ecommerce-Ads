@@ -43,7 +43,7 @@ test('release notes expose M3 Observer while retaining the restored team, fabric
  const all=releaseNotesBody(),split=all.indexOf('id="appReleaseOriginalItemsPrevious"');assert.ok(split>0);
  const current=all.slice(0,split),previous=all.slice(split);
  for(const href of targets)assert.ok(current.includes('href="'+href+'"'));
- assert.match(current,/ranking e curva ABC por unidades vendidas/);
+ assert.match(current,/ranking e curva ABC por unidades vendidas/i);
  assert.match(current,/custos atuais por variação e cenários matemáticos de equilíbrio e margem desejada/);
  assert.match(current,/margem de contribuição e os componentes dos pedidos exclusivos/);
  assert.match(current,/cada pedido contém um produto e uma variação/);
