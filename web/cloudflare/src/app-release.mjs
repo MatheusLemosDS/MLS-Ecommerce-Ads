@@ -1,8 +1,8 @@
 // A human code-release identifier, not a Cloudflare deployment UUID or hash.
 // Keep it independent of build time, credentials and financial availability.
 export const APP_RELEASE=Object.freeze({
- id:'2026-11-02.5',
- label:'M3 · Produtos e cenários de preços',
+ id:'2026-11-02.6',
+ label:'M3 · Margens e evidências por produto',
  date:'02/11/2026',
 });
 

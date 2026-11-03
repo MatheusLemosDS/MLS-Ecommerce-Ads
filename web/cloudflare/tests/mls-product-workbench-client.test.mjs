@@ -11,9 +11,11 @@ function fakeDocument(){
   let ownText='';const attributes=new Map();
   const value={tagName:tag.toUpperCase(),children:[],dataset:{},style:{},value:'',className:'',id:'',hidden:false,disabled:false,open:false,
    append(...items){for(const item of items){if(item&&typeof item==='object')item.parentNode=this;this.children.push(item);}},
+   insertBefore(item,next){const index=next?this.children.indexOf(next):-1;item.parentNode=this;if(index<0)this.children.push(item);else this.children.splice(index,0,item);},
    replaceChildren(...items){for(const item of this.children)if(item&&typeof item==='object')item.parentNode=null;this.children=[];ownText='';this.append(...items);},
    setAttribute(name,text){attributes.set(name,String(text));},getAttribute(name){return attributes.get(name)??null;}};
   Object.defineProperty(value,'textContent',{get(){return ownText+this.children.map(item=>typeof item==='object'?item.textContent:String(item)).join('');},set(text){ownText=String(text);this.children=[];}});
+  Object.defineProperty(value,'nextSibling',{get(){return this.parentNode?.children[this.parentNode.children.indexOf(this)+1]??null;}});
   Object.defineProperty(value,'innerHTML',{set(){throw Error('UNSAFE_HTML_WRITE');}});return value;
  };
  const nodes=new Map([...productWorkbenchBody().matchAll(/\bid="([^"]+)"/g)].map(match=>{const value=element();value.id=match[1];return [match[1],value];}));
@@ -32,7 +34,7 @@ test('M3 local paging exposes all25 products and filters without mutating the sa
  const all=new Set(rowIds(h));h.el('Next').onclick();assert.equal(rowIds(h).length,5);for(const id of rowIds(h))all.add(id);assert.equal(all.size,25);assert.equal(view.getState().page,2);
  input(h,'Search','UNIVÉRSO','oninput');assert.deepEqual(rowIds(h),['301']);assert.equal(view.getState().page,1);
  input(h,'Search','P + P','oninput');assert.deepEqual(rowIds(h),['301'],'current variant attributes participate in search');
- input(h,'Search','','oninput');input(h,'ABC','C');assert.ok(rowIds(h).length);assert.ok(h.el('Rows').children.every(row=>row.children[1].textContent==='C'));
+ input(h,'Search','','oninput');input(h,'ABC','C');assert.ok(rowIds(h).length);assert.ok(h.el('Rows').children.filter(row=>row.dataset.m3Product).every(row=>row.children[1].textContent==='C'));
  input(h,'ABC','all');input(h,'PageSize','50');assert.equal(rowIds(h).length,25);assert.equal(h.el('Next').disabled,true);
  input(h,'Sort','contribution_desc');assert.equal(rowIds(h)[0],report.products.toSorted((a,b)=>b.exclusive_after_costs_cents-a.exclusive_after_costs_cents)[0].item_id);
  const negative=h.el('Rows').children.find(row=>row.dataset.m3Product==='304');assert.equal(negative.children[3].dataset.tone,'negative');assert.match(negative.children[3].textContent,/-/);
@@ -43,9 +45,10 @@ test('M3 variant inspection uses one commercial kit cost, current labels and saf
  const h=fakeDocument(),chosen=[],view=createMlsProductWorkbenchView({document:h.document,onSelectVariant:key=>chosen.push(key)});view.render(workbench());
  const first=h.el('Rows').children.find(row=>row.dataset.m3Product==='301'),detail=h.descendants(first).find(node=>node.tagName==='DETAILS');
  assert.ok(detail);assert.equal(h.descendants(detail).some(node=>node.dataset.m3Variant),false,'variant details stay lazy until opened');
- detail.open=true;detail.ontoggle();const card=h.descendants(detail).find(node=>node.dataset.m3Variant==='301:1');assert.ok(card);
+ detail.open=true;detail.ontoggle();const expanded=h.el('Rows').children.find(row=>row.dataset.m3DetailFor==='301');assert.ok(expanded);assert.equal(expanded.children[0].colSpan,5);const card=h.descendants(expanded).find(node=>node.dataset.m3Variant==='301:1');assert.ok(card);
  assert.match(card.textContent,/Kit P \/ P/);assert.match(card.textContent,/29,00 por unidade vendida/);assert.doesNotMatch(card.textContent,/58,00 por unidade vendida/);
- assert.match(card.textContent,/30 unidade/);assert.match(detail.textContent,/Margem por variação aguarda receita atribuída/);
+ assert.match(card.textContent,/30 unidade/);assert.match(expanded.textContent,/Margem líquida total por variação aguarda receitas e despesas atribuídas/);
+ detail.open=false;detail.ontoggle();assert.equal(expanded.hidden,true);detail.open=true;detail.ontoggle();assert.equal(expanded.hidden,false);assert.equal(h.el('Rows').children.filter(row=>row.dataset.m3DetailFor==='301').length,1);
  const select=h.descendants(card).find(node=>node.dataset.m3UseVariant==='301:1');assert.equal(select.disabled,false);select.onclick();assert.deepEqual(chosen,['301:1']);
  input(h,'Search','303','oninput');assert.match(h.el('Rows').textContent,/<img src=x onerror=alert\(1\)>/);assert.equal(h.descendants(h.el('Rows')).some(node=>['IMG','SCRIPT','IFRAME'].includes(node.tagName)),false);
 });

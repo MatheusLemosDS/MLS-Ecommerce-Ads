@@ -30,7 +30,7 @@ export const RELEASE_BASE_COMMIT=approvedCandidate.base_commit;
 export const RELEASE_EXPECTED_SHA=Object.freeze({...approvedCandidate.expected_hashes});
 export const RELEASE_EXPECTED_LIVE_FLAGS=Object.freeze({...validFlags});
 export const RELEASE_ALLOWED_FILES=Object.freeze([...approvedCandidate.allowed_files]);
-// The M3 Observer workbench changes only App presentation and pure local analysis.
+// M3 contribution evidence changes only App presentation and pure local analysis.
 // Finance/Auth, original Workers and deployment configuration remain closed.
 export const RELEASE_APPROVED_PROTECTED_FILES=Object.freeze([]);
 
