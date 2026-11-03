@@ -148,6 +148,6 @@ test('an incompatible daily snapshot clears prior values without exposing reject
 });
 
 test('daily BRL presentation keeps every cent at the positive and negative safe-integer boundaries',()=>{
- const start=BUSINESS_DAY_CLIENT.indexOf(' const money='),end=BUSINESS_DAY_CLIENT.indexOf('\n const day=',start);assert.ok(start>=0&&end>start);const context=vm.createContext();vm.runInContext(BUSINESS_DAY_CLIENT.slice(start,end),context);
+ const controller=BUSINESS_DAY_CLIENT.indexOf(" const el=name=>document.getElementById('businessDay'+name)");assert.ok(controller>=0);const start=BUSINESS_DAY_CLIENT.indexOf(' const money=',controller),end=BUSINESS_DAY_CLIENT.indexOf('\n const day=',start);assert.ok(start>=controller&&end>start);const context=vm.createContext();vm.runInContext(BUSINESS_DAY_CLIENT.slice(start,end),context);
  assert.match(vm.runInContext('money(Number.MAX_SAFE_INTEGER)',context),/^R\$\s*90\.071\.992\.547\.409,91$/);assert.match(vm.runInContext('money(Number.MIN_SAFE_INTEGER)',context),/^-R\$\s*90\.071\.992\.547\.409,91$/);assert.equal(vm.runInContext('money(null)',context),'Não informado');assert.match(vm.runInContext('money(0)',context),/^R\$\s*0,00$/);
 });

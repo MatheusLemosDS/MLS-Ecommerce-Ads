@@ -30,8 +30,19 @@ async function withAiSalesChrome(url,{width,height},exercise){
    if(!port)await pause(75);
   }
   assert.ok(port,'Chromium debug port unavailable');
-  const pages=await(await fetch('http://127.0.0.1:'+port+'/json/list')).json();
-  socket=new WebSocket(pages.find(row=>row.type==='page').webSocketDebuggerUrl);
+  // The debug port may become ready before Chrome creates its initial page.
+  const targetDeadline=performance.now()+15000;let page;
+  while(performance.now()<targetDeadline){
+   if(child.exitCode!==null||child.signalCode!==null||child.killed)throw Error('AI_SALES_CHROME_PAGE_PROCESS_EXITED');
+   const remaining=Math.max(1,Math.ceil(targetDeadline-performance.now()));
+   try{
+    const response=await fetch('http://127.0.0.1:'+port+'/json/list',{signal:AbortSignal.timeout(remaining)});
+    if(response.ok){const pages=await response.json();page=Array.isArray(pages)?pages.find(row=>row?.type==='page'&&typeof row.webSocketDebuggerUrl==='string'&&row.webSocketDebuggerUrl.length>0):null;if(page)break;}
+   }catch{}
+   const wait=targetDeadline-performance.now();if(wait>0)await pause(Math.min(50,wait));
+  }
+  if(!page)throw Error('AI_SALES_CHROME_PAGE_TARGET_TIMEOUT');
+  socket=new WebSocket(page.webSocketDebuggerUrl);
   await new Promise((resolve,reject)=>{
    const timeout=setTimeout(()=>reject(Error('AI_SALES_CHROME_SOCKET_TIMEOUT')),10000);
    socket.addEventListener('open',()=>{clearTimeout(timeout);resolve();},{once:true});

@@ -6,7 +6,7 @@ import {releaseOverviewBody,releaseNotesBody,APP_RELEASE_CSS} from '../src/app-r
 import {adminBody} from '../src/admin-view.mjs';
 import {incurredProductionBody} from '../src/incurred-production-view.mjs';
 
-const targets=['/admin?tab=agent-products#businessMonthPricingObserver','/admin?tab=overview#commandAgents','/admin?tab=agent-returns#physicalReturnsQueue','/admin?tab=agent-production#incurredProductionDetails','/admin?tab=products'];
+const targets=['/admin?tab=agent-production#incurredProductionDetails','/admin?tab=agent-hermes','/admin?tab=agent-products#businessMonthPricingObserver','/admin?tab=overview#commandAgents','/admin?tab=agent-returns#physicalReturnsQueue','/admin?tab=products'];
 const originalTargets=['/admin?tab=agent-returns#physicalReturnsOriginalItems','/admin?tab=agent-returns#physicalReturnsDetails','/admin?tab=agent-returns#returnManufacturingLinksDetails'];
 const previousTargets=['/admin?tab=agent-returns#physicalReturnsDetails','/admin?tab=margins#incurredProductionDetails','/admin?tab=agent-returns#returnManufacturingLinksDetails'];
 const monthlyTargets=['/admin?tab=agent-finance#businessMonthNetCard','/admin?tab=agent-finance#mlsAgentPeriod','/admin?tab=agent-finance#businessMonthExpensesForm'];
@@ -52,6 +52,10 @@ test('release notes expose M3 Observer while retaining the restored team, fabric
  assert.match(current,/Ads, despesas e DAS mensal continuam separados/);
  assert.match(current,/Hermes, Finance, Ads, Products, Production e Returns aparecem abaixo dos indicadores/);
  assert.match(current,/A página Equipe mantém os sete especialistas e seus filtros/);
+ assert.match(current,/Escolha o dia, o mês ou um intervalo/);
+ assert.match(current,/dias sem registro ou com custo pendente identificados/);
+ assert.match(current,/repasse, referência de produção, imposto, anúncios, outras despesas, recarga reposta e saldo/);
+ assert.match(current,/O cálculo e os relatórios históricos permanecem preservados/);
  for(const href of [...originalTargets,...previousTargets,...monthlyTargets])assert.ok(previous.includes('href="'+href+'"'));
  for(const text of ['nome, tamanho e custo atual quando os dados permitem','Foto do produto salvo e estampa local','kits ambíguos continuam pendentes','dia 15 ao 25','data de fabricação e o custo histórico registrado','referência de custo dos pedidos pagos e a montagem DTF continuam separadas','Visão geral, Produção, Devoluções, Financeiro, Produtos, Anúncios e Hermes','não publicam estoque nem alteram o lucro automaticamente'])assert.ok(current.includes(text),text);
  for(const text of ['itens vendidos e os itens informados na solicitação','Dados antigos ou ausentes permanecem desconhecidos, nunca quantidade zero','unidade comercial de kit não vira uma quantidade de camisetas por inferência','saldo antes dessas despesas','não presume zero nem copia a declaração de outro mês','Custo desconhecido permanece pendente','sem descontar a produção duas vezes','não publicam estoque, não reservam peças, não confirmam revenda e não alteram o lucro'])assert.ok(previous.includes(text),text);

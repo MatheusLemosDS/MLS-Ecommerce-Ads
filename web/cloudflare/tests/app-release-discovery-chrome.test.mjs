@@ -138,7 +138,7 @@ const targets=[
  {id:'returnManufacturingLinksDetails',panel:'agent-returns',controller:'brazaReturnManufacturingLinks',path:'/api/admin/returns/manufacturing-links'}
 ];
 const retainedItemTargets=['/admin?tab=agent-returns#physicalReturnsOriginalItems','/admin?tab=agent-returns#physicalReturnsDetails','/admin?tab=agent-returns#returnManufacturingLinksDetails'];
-const currentTargets=[{href:'/admin?tab=agent-products#businessMonthPricingObserver',panel:'agent-products',id:'businessMonthPricingObserver'},{href:'/admin?tab=overview#commandAgents',panel:'overview',id:'commandAgents'},{href:'/admin?tab=agent-returns#physicalReturnsQueue',panel:'agent-returns',id:'physicalReturnsQueue'},{href:'/admin?tab=agent-production#incurredProductionDetails',...targets[1]},{href:'/admin?tab=products',panel:'products',id:null}];
+const currentTargets=[{href:'/admin?tab=agent-production#incurredProductionDetails',...targets[1]},{href:'/admin?tab=agent-hermes',panel:'agent-hermes',id:null,focus_id:'mission-hermes-title'},{href:'/admin?tab=agent-products#businessMonthPricingObserver',panel:'agent-products',id:'businessMonthPricingObserver'},{href:'/admin?tab=overview#commandAgents',panel:'overview',id:'commandAgents'},{href:'/admin?tab=agent-returns#physicalReturnsQueue',panel:'agent-returns',id:'physicalReturnsQueue'},{href:'/admin?tab=products',panel:'products',id:null}];
 const generatedHash=createHash('sha256').update(readFileSync(new URL('../../../dist/app-worker.mjs',import.meta.url))).digest('hex');
 const qa=[];
 const physicalRequest=row=>targets.some(target=>row.path.startsWith(target.path));
@@ -209,9 +209,10 @@ for(const minify of [false,true])for(const {width,height,font_profile} of discov
    await click(cdp,`#appReleaseNotes>.app-release-note-grid>article>a[href="${target.href}"]`,{touch});
    if(target.controller)await assertDestination(target,start,'current-release-link');
    else{
-    await waitFor(cdp,`document.documentElement.dataset.activePanel===${JSON.stringify(target.panel)}&&document.activeElement.id===${JSON.stringify(target.id||'pageTitle')}`,'current release action opens its real operational destination');
-    const result=await cdp.evaluate(`(()=>{const node=document.getElementById(${JSON.stringify(target.id||'pageTitle')});return {panel:document.documentElement.dataset.activePanel,hash:location.hash,focus:document.activeElement.id,visible:node.checkVisibility({checkVisibilityCSS:true}),overflow:document.documentElement.scrollWidth>innerWidth+1,errors:__auditErrors};})()`);
-    assert.equal(result.panel,target.panel);assert.equal(result.hash,target.id?'#'+target.id:'');assert.equal(result.focus,target.id||'pageTitle');assert.equal(result.visible,true);assert.equal(result.overflow,false);assert.deepEqual(result.errors,[]);
+    const focusId=target.focus_id||target.id||'pageTitle';
+    await waitFor(cdp,`document.documentElement.dataset.activePanel===${JSON.stringify(target.panel)}&&document.activeElement.id===${JSON.stringify(focusId)}`,'current release action opens its real operational destination',()=>cdp.evaluate(`({target:${JSON.stringify(target.href)},panel:document.documentElement.dataset.activePanel,hash:location.hash,focus:document.activeElement?.id,visible:document.activeElement?.checkVisibility({checkVisibilityCSS:true}),errors:__auditErrors})`));
+    const result=await cdp.evaluate(`(()=>{const node=document.getElementById(${JSON.stringify(focusId)});return {panel:document.documentElement.dataset.activePanel,hash:location.hash,focus:document.activeElement.id,visible:node.checkVisibility({checkVisibilityCSS:true}),overflow:document.documentElement.scrollWidth>innerWidth+1,errors:__auditErrors};})()`);
+    assert.equal(result.panel,target.panel);assert.equal(result.hash,target.id?'#'+target.id:'');assert.equal(result.focus,focusId);assert.equal(result.visible,true);assert.equal(result.overflow,false);assert.deepEqual(result.errors,[]);
     proofs.push({...result,id:target.id,mode:'current-release-link'});
    }
    assert.equal(await cdp.evaluate('JSON.stringify(brazaMonthDashboard.getSnapshot())'),before,'current release navigation cannot mutate the cached financial result');
