@@ -103,7 +103,7 @@ async function firstCoverageReservation(f,schedule=scheduledWork){
 test('previous-month paid cancellation leaves its original daily profit only after a complete coherent publication',async t=>{
  const f=await fixture(t),before=await read(f),original=before.daily_summary.days[9],source=before.audit_scope;
  assert.equal(before.display.coverage.ongoing,1);assert.equal(original.coverage.paid,2);assert.equal(original.estimate_cents!==null,true);
- f.changed=true;const first=await opportunity(f,0);assert.equal(first.status,'RUNNING');
+ f.changed=true;const beforeCalls=counts(f),first=await opportunity(f,0);assert.equal(first.status,'RUNNING');assert.equal(first.finance_steps,1);assert.equal(counts(f).finance,beforeCalls.finance+1);assert.deepEqual(f.options,[{timeoutMs:45000,includeVariants:true}],'the same bounded historical source call negotiates committed variant evidence');
  assert.deepEqual((await read(f)).audit_scope,source);
  const second=await opportunity(f);assert.equal(second.status,'RUNNING');
  const during=await read(f);assert.deepEqual(during.audit_scope,source);assert.equal(during.daily_summary.days[9].coverage.paid,2);
@@ -112,7 +112,7 @@ test('previous-month paid cancellation leaves its original daily profit only aft
  assert.ok(after.audit_scope.publication_revision>source.publication_revision);assert.equal(after.display.coverage.paid,2);assert.equal(after.display.coverage.cancelled,1);
  assert.equal(updated.coverage.paid,1);assert.equal(updated.coverage.cancelled,1);
  assert.equal(updated.sales_cents,original.sales_cents-6525);assert.equal(updated.payout_cents,original.payout_cents-4751);assert.equal(updated.production_cost_cents,original.production_cost_cents-1590);assert.equal(updated.estimate_cents,original.estimate_cents-3161);
- assert.ok(f.options.length>0);assert.ok(f.options.every(options=>options.timeoutMs===45000));
+ assert.ok(f.options.length>0);for(const options of f.options)assert.deepEqual(options,{timeoutMs:45000,includeVariants:true});
  assert.equal(historyRow(f).last_error,null);assert.equal(historyRow(f).failure_count,0);
  assert.doesNotMatch(JSON.stringify(historyRow(f)),/PRIVATE|token|order_sn|buyer/);
  const calls=counts(f);assert.equal((await run(f)).status,'NOT_DUE');assert.deepEqual(counts(f),calls);
@@ -143,7 +143,7 @@ test('current-month work, failures, pause, near due time and a live lease preven
  f.env.ADMIN_DB.db.prepare('UPDATE business_sync_state SET lease_token=?,lease_expires_at=?').run(crypto.randomUUID(),Math.floor(f.now()/1000)+120);assert.equal((await run(f)).status,'LEASED');
  f.env.ADMIN_DB.db.prepare('UPDATE business_sync_state SET lease_token=NULL,lease_expires_at=NULL').run();
  const state=await readBusinessSyncState(f.env);await saveBusinessSyncPolicy(f.env,{revision:state.revision,enabled:false},'fixture-owner',{now:f.now});assert.equal((await run(f)).status,'PAUSED');
- assert.deepEqual(counts(f),before);assert.equal(historyRow(f),null);
+ assert.deepEqual(counts(f),before);assert.deepEqual(f.options,[],'variant negotiation adds no calls through current-priority, budget, lease or pause gates');assert.equal(historyRow(f),null);
 });
 
 test('a slow but complete current cohort does not add an artificial stale-age blocker to historical maintenance',async t=>{
@@ -213,5 +213,5 @@ for(const minify of [false,true])test(`the generated App cron runs previous-mont
  assert.equal(value.lane,'FINANCE');assert.equal(value.collection,'NOT_DUE');assert.equal(value.history_collection,'RUNNING');
  assert.equal(historyRow(f).status,'RUNNING');assert.equal(historyRow(f).failure_count,0);
  assert.deepEqual(currentRow(f),before);assert.equal(counts(f).finance,calls.finance+1);assert.equal(counts(f).ads,calls.ads);
- assert.deepEqual(f.options,[{timeoutMs:45000}]);
+ assert.deepEqual(f.options,[{timeoutMs:45000,includeVariants:true}]);
 });

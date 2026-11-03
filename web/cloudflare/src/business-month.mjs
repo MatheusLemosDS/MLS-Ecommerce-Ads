@@ -10,6 +10,7 @@ import {BUSINESS_MONTH_PUBLICATION_SCHEMA,completedBusinessMonthPublicationState
 import {BUSINESS_MONTH_ADS_HISTORY_SCHEMA,businessMonthAdsHistoryQueries,businessMonthAdsHistoryStatements} from './business-month-ads-history.mjs';
 import {EXPENSE_LEDGER_SCHEMA} from './expense-ledger.mjs';
 import {buildExpenseSchedule} from './expense-schedule.mjs';
+import {unwrapBusinessMonthVariantSource,captureBusinessMonthVariantAttribution} from './business-variant-attribution.mjs';
 
 export class BusinessMonthError extends Error {
  constructor(code,status=400,diagnostic=null){super(code);this.status=status;if(diagnostic!==null)this.diagnostic=Object.freeze({...diagnostic});}
@@ -323,7 +324,7 @@ async function businessMonthAdvance(env,db,month,range,stamp,observed,services){
  if(index<0||observed.payload.slots.some(slot=>slot.frame?.status==='LIMIT_REACHED'))return observed;
  if(typeof services?.getFinanceBusinessPeriod!=='function')businessMonthFail('BUSINESS_MONTH_SOURCE_UNAVAILABLE',503);
  const slot=observed.payload.slots[index],selection=slot.frame?{operation:'step',run_id:slot.frame.run_id}:{operation:'start',start_date:slot.start_date,end_date:slot.end_date};
- let source;try{source=await services.getFinanceBusinessPeriod(env,selection);}catch{businessMonthFail('BUSINESS_MONTH_SOURCE_UNAVAILABLE',503);}
+ let source;try{source=await services.getFinanceBusinessPeriod(env,selection,{includeVariants:true});}catch{businessMonthFail('BUSINESS_MONTH_SOURCE_UNAVAILABLE',503);}
  // Only this exact, bounded envelope can turn a private transport failure into
  // an owner-facing code. Provider text and unknown fields never cross here.
  if(businessMonthExact(source,['schema','status','diagnostic'])&&source.schema==='finance_business_period_v1'&&source.status==='UNAVAILABLE'){
@@ -335,7 +336,7 @@ async function businessMonthAdvance(env,db,month,range,stamp,observed,services){
   }
   businessMonthFail('BUSINESS_MONTH_SOURCE_UNAVAILABLE',503);
  }
- const frame=projectBusinessPeriodFrame(source);
+ const negotiated=await unwrapBusinessMonthVariantSource(source),frame=negotiated?.report??null;
  if(!frame||frame.start_date!==slot.start_date||frame.end_date!==slot.end_date||frame.checked_at>stamp+60||slot.frame&&(frame.run_id!==slot.frame.run_id||frame.revision<slot.frame.revision)||observed.payload.slots.some((entry,position)=>position!==index&&entry.frame?.run_id===frame.run_id))businessMonthFail('BUSINESS_MONTH_SOURCE_INVALID',503);
  const payload={...observed.payload,slots:observed.payload.slots.map((entry,position)=>position===index?{...entry,frame}:entry)};
  // Full frames each fit one bounded row. The parent keeps only three compact
@@ -355,6 +356,7 @@ async function businessMonthAdvance(env,db,month,range,stamp,observed,services){
  writes.push(...completedBusinessMonthPublicationStatements(db,month,next,{now:()=>updatedAt*1000}));
  const written=(await db.batch(writes))[parentIndex];
  if(written.meta.changes!==1){const latest=await businessMonthLoadRun(db,month,range,Math.max(stamp,frame.checked_at));if(!latest)businessMonthFail('BUSINESS_MONTH_CHANGED_RELOAD',409);return latest;}
+ if(negotiated.variant_financials)await captureBusinessMonthVariantAttribution(db,month,frame,negotiated.variant_financials,{capture_revision:next.row.revision,parent_payload:raw,slot_index:index});
  return businessMonthLoadRun(db,month,range,Math.max(stamp,frame.checked_at));
 }
 

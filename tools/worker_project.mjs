@@ -192,6 +192,8 @@ export const TARGETS = Object.freeze({
     'e20691b12dd668fa342bf6ff79e3b3de50a360378ddf0c41956f7a1b9b5b0830',
     '84989629a652503d110ca69e9b6967713e1093f4e6a08d04face741805fbcd7d',
     '1e7170f8ba3770359d5cdde96f66b0dfcb4d3aebdd0e2c7898bc1ef3a38448d0',
+    // M3 opt-in order contribution: exact frozen build, full release gates required.
+    '34299a748b1fbea76f2916521143accddf531f2a75f6f3e29655f7df581e3ef3',
   ]}),
   auth: Object.freeze({name: 'brazacommerce-auth', main: '../../dist/auth-worker.mjs', baselineHashes: [
     'c63ee09b2d98b6321e3ae7feae1066a9eec9160b49868d72fb84cb0471a0018d',
@@ -231,8 +233,9 @@ export const TARGETS = Object.freeze({
     '1fef431c8573e05563c7938d95be0976a160bc603340084aa747ee0b73e7ec64',
     '9654c03c15313f816d34c14824023213178ba96105a2e351d56fa999d854384a',
     '851e27c703fda4143b87a8a85a79c06326b9a2f25ce16f5625d8871a589f43ec',
+    '47c83f87f191fd0e5ff503d9c4bcf4671cd986b0965e66e84f1a6ed952dac925',
   ]}),
-  finance: Object.freeze({name: 'brazacommerce-finance', main: '../../dist/finance-worker.mjs', baselineHashes: []}),
+  finance: Object.freeze({name: 'brazacommerce-finance', main: '../../dist/finance-worker.mjs', baselineHashes: ['08ada5ecec92350f4f8301fdb7baa00f5f8083a0e8390296b2870e0ff3cdc1a5']}),
 });
 export const stableJson = value => JSON.stringify(value, null, 2) + '\n';
 export const sha256 = value => createHash('sha256').update(value).digest('hex');

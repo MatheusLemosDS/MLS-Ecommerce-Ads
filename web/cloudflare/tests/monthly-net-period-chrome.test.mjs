@@ -45,8 +45,8 @@ function fixture(){
   const source={...structuredClone(template),month,start_date:month+'-01',end_date:month+'-'+String(last).padStart(2,'0'),checked_at:stamp,progress:{windows_total:Math.ceil(last/15),windows_complete:Math.ceil(last/15),pages_read:november?2:6,order_capacity:november?40:120},coverage,sales_cents:sales,known_sales_cents:sales,expected_repass_cents:payout,known_expected_repass_cents:payout,production_cost_cents:production,known_production_cost_cents:production,ads_adjustment_cents:0,ads:adsCalendar(month,last,adsAt,spend),source_checked_at:{finance_oldest_at:stamp-60,finance_latest_at:stamp-1,ads_at:adsAt},expenses:november?{revision:0,external_expenses_cents:null,recharge_treatment:'UNCONFIRMED',updated_at:null}:{revision:2,external_expenses_cents:23456,recharge_treatment:'ADS_RECHARGE',updated_at:new Date((stamp-100)*1000).toISOString()},result:{net_estimate_cents:null,net_profit_cents:null,net_margin_bps:null,pending:november?['EXTERNAL_EXPENSES_REQUIRED']:['STATUS_REVIEW_REQUIRED','RETURNS_NOT_RECONCILED','ADS_UNAVAILABLE'],basis:'PAID_ORDER_CREATE_MONTH_AND_CALENDAR_ADS_ESTIMATE'}};
   const frame=projectBusinessMonth(source);assert.ok(frame,'synthetic '+month+' must pass the canonical financial projector');
   const audit_scope={publication_revision:november?31:30,start_date:frame.start_date,end_date:frame.end_date,sources:Array.from({length:Math.ceil(last/15)},(_,index)=>({run_id:'abcdef01-0000-4000-8000-'+String(index+1).padStart(12,'0'),source_revision:index+1,start_date:month+'-'+String(index*15+1).padStart(2,'0'),end_date:month+'-'+String(Math.min(last,index*15+15)).padStart(2,'0')}))};
-  const view=buildBusinessMonthView({display:frame,active:frame,display_source:'PUBLISHED',audit_scope},{enabled:true,status:'COMPLETE',next_run_at:stamp+60,last_attempt_at:stamp-5},{now:()=>clock,contract:'business-month-view-v4'});
-  assert.equal(view.schema,'business_month_view_v4');frames.set(month,frame);views.set(month,view);
+  const view=buildBusinessMonthView({display:frame,active:frame,display_source:'PUBLISHED',audit_scope},{enabled:true,status:'COMPLETE',next_run_at:stamp+60,last_attempt_at:stamp-5},{now:()=>clock,contract:'business-month-view-v5'});
+  assert.equal(view.schema,'business_month_view_v5');assert.equal(view.variant_contributions,null,'synthetic monthly totals without cached order proof must keep variant attribution unknown');frames.set(month,frame);views.set(month,view);
  }
  return {views,frames,original:JSON.stringify([...frames]),strict:JSON.stringify([...frames].map(([month,value])=>[month,value.result]))};
 }
@@ -122,7 +122,7 @@ for(const minify of [false,true])for(const width of [320,1365])test(`generated m
    const url=new URL(req.url,'http://synthetic.invalid');
    if(url.pathname==='/api/admin/bootstrap')value={schema:'admin_bootstrap_v1',csrf:owner.session.csrf};
    else if(url.pathname==='/api/admin/state')value=owner.session;
-   else if(url.pathname==='/api/admin/finance/business-month-view'){assert.equal(req.headers['x-braza-client-contract'],'business-month-view-v4');value=data.views.get(url.searchParams.get('month'));headers['x-braza-client-contract']='business-month-view-v4';}
+   else if(url.pathname==='/api/admin/finance/business-month-view'){assert.equal(req.headers['x-braza-client-contract'],'business-month-view-v5');value=data.views.get(url.searchParams.get('month'));headers['x-braza-client-contract']='business-month-view-v5';}
    res.writeHead(value?200:503,headers);res.end(JSON.stringify(value||{error:'SYNTHETIC_OPTIONAL_SOURCE_UNAVAILABLE'}));
   }catch(error){failure=error.message;res.writeHead(500,headers);res.end('{"error":"SYNTHETIC_FIXTURE_FAILURE"}');}
  });

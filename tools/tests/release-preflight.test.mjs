@@ -33,8 +33,16 @@ test('release preflight passes only an exact reviewed local build and leaves rem
  assert.ok(RELEASE_ALLOWED_FILES.filter(x=>x.startsWith('web/finance/')).every(x=>RELEASE_APPROVED_PROTECTED_FILES.includes(x)));
 });
 
-test('M3 contribution evidence keeps all protected Workers closed',()=>{
- assert.deepEqual(RELEASE_APPROVED_PROTECTED_FILES,[]);
+test('M3 order attribution opens only the exact reviewed Finance aggregate and transport files',()=>{
+ assert.deepEqual(RELEASE_APPROVED_PROTECTED_FILES,[
+ "web/finance/src/auth-router.mjs",
+ "web/finance/src/business-period.mjs",
+ "web/finance/src/business-variant-attribution.mjs",
+ "web/finance/src/connection-worker.mjs",
+ "web/finance/tests/business-period.test.mjs",
+ "web/finance/tests/business-variant-attribution.test.mjs",
+ "web/finance/tests/business-variants-transport.test.mjs"
+]);
  assert.ok(RELEASE_APPROVED_PROTECTED_FILES.every(x=>(x.startsWith('web/finance/')||x.startsWith('web/auth/')||x==='web/cloudflare/auth-worker.mjs')&&!/[?*\\]/.test(x)));
  for(const path of [
   "web/finance/src/auth-json-transport.mjs",
@@ -165,7 +173,7 @@ test('a malformed candidate cannot weaken exact hashes, literal paths or commerc
 });
 
 test('the focused release does not inherit unrelated AI-storage or previous-candidate permissions',()=>{
- assert.equal(RELEASE_BASE_COMMIT,'dea19f0ace932acccc917c63d8da46db417079c9');
+ assert.equal(RELEASE_BASE_COMMIT,'aebc3c7aec9ad9937cc43565ba401b0b4ba07cba');
  for(const baseCommit of ['2ab4c9d8baa3c25e5816bcca14b4a0973ea73d5a','8d66525bc3b96914412a9538d3ec84048ac78dbb']){
   const oldBase=good();oldBase.baseCommit=baseCommit;
   assert.ok(evaluateReleasePreflight(oldBase).failures.includes('RELEASE_BASE_MISMATCH'));

@@ -94,7 +94,7 @@ export async function runBusinessSync(env,services,{now=()=>Date.now(),maxSteps=
   const latest=await syncRead(db),checked=syncClock(now);return hasTime(budget,checked)&&latest.state.enabled&&latest.row.lease_token===token&&latest.row.lease_expires_at>Math.floor(checked/1000);
  };
  const collectors={
-  getFinanceBusinessPeriod:async(binding,input)=>{if(typeof services?.getFinanceBusinessPeriod!=='function')throw Error();if(!await canCall(45000)){yielded=true;throw Error();}financeSteps++;return services.getFinanceBusinessPeriod(binding,input,{timeoutMs:45000});},
+  getFinanceBusinessPeriod:async(binding,input,options={})=>{if(typeof services?.getFinanceBusinessPeriod!=='function')throw Error();if(!await canCall(45000)){yielded=true;throw Error();}financeSteps++;return services.getFinanceBusinessPeriod(binding,input,{timeoutMs:45000,...(options.includeVariants===true?{includeVariants:true}:{})});},
   getAdsCalendar:async(binding,input)=>{if(typeof services?.getAdsCalendar!=='function')throw Error();if(!await canCall(60000)){yielded=true;throw Object.assign(Error(),{code:'BUSINESS_MONTH_ADS_SKIPPED'});}adsReads++;return services.getAdsCalendar(binding,input,{now,timeoutMs:10000});},
  };
  try{

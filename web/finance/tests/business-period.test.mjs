@@ -205,7 +205,11 @@ test('a failed checkpoint state update rolls back changed cache records and thei
 test('transient failures in ongoing orders retain retry diagnostics while generic authorization errors never request a token reset',async()=>{
  for(const [fault,diagnostic] of [[429,'RATE_LIMIT'],['error_rate_limit','RATE_LIMIT'],['error_limit','RATE_LIMIT'],[503,'UPSTREAM_UNAVAILABLE'],['error_server','UPSTREAM_UNAVAILABLE'],['err_busy','UPSTREAM_UNAVAILABLE'],[504,'TIMEOUT'],['timeout','TIMEOUT'],['unknown_provider_error','INVALID_SOURCE'],[401,'INVALID_SOURCE'],[403,'INVALID_SOURCE'],['error_auth','INVALID_SOURCE'],['error_api_permission','INVALID_SOURCE'],['error_sign','INVALID_SOURCE'],['error_token','AUTH_REQUIRED']]){
   const f=await fixture(['SHIPPED']),job=await f.start(),tokens=await f.store.readTokens();f.state.paymentFailures[0]=fault;
-  const stopped=await f.run({operation:'step',run_id:job.run_id,timeoutMs:15});assert.equal(stopped.diagnostic,'BUSINESS_PERIOD_'+diagnostic,String(fault));assert.equal(stopped.status,'RUNNING');assert.equal(stopped.coverage.orders,0);assert.equal(stopped.pages_read,0);assert.equal(snapshot(f).cache.length,0);assert.deepEqual(await f.store.readTokens(),tokens);
+  // Only the deliberately hanging response exercises the short deadline.
+  // Immediate provider classifications retain the normal transport budget.
+  const timeoutMs=fault==='timeout'?15:5000;
+  try{const stopped=await f.run({operation:'step',run_id:job.run_id,timeoutMs});assert.equal(stopped.diagnostic,'BUSINESS_PERIOD_'+diagnostic,String(fault));assert.equal(stopped.status,'RUNNING');assert.equal(stopped.coverage.orders,0);assert.equal(stopped.pages_read,0);assert.equal(snapshot(f).cache.length,0);assert.deepEqual(await f.store.readTokens(),tokens);}
+  finally{f.db.db.close();}
  }
 });
 

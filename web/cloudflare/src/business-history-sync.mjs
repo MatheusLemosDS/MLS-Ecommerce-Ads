@@ -105,10 +105,10 @@ export async function runBusinessHistorySync(env,services,{now=()=>Date.now(),cu
  try{
   let frame=null,status='RUNNING',errorCode=null;
   try{
-   frame=projectBusinessMonth(await businessMonthWithCheckpoint(env,{operation:'start',month},{getFinanceBusinessPeriod:async(binding,input)=>{
+   frame=projectBusinessMonth(await businessMonthWithCheckpoint(env,{operation:'start',month},{getFinanceBusinessPeriod:async(binding,input,options={})=>{
     if(financeSteps!==0||typeof services?.getFinanceBusinessPeriod!=='function')throw Error();
     if(!await allowed(45000))throw Error();financeSteps++;
-    const value=await services.getFinanceBusinessPeriod(binding,input,{timeoutMs:45000});
+    const value=await services.getFinanceBusinessPeriod(binding,input,{timeoutMs:45000,...(options.includeVariants===true?{includeVariants:true}:{})});
     // A late response must not advance the App cohort after a pause, month
     // rollover, timeout or replacement of our lease. No detached request race.
     if(!await allowed())throw Error();return value;

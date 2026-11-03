@@ -43,11 +43,12 @@ test('release notes expose M3 Observer while retaining the restored team, fabric
  const all=releaseNotesBody(),split=all.indexOf('id="appReleaseOriginalItemsPrevious"');assert.ok(split>0);
  const current=all.slice(0,split),previous=all.slice(split);
  for(const href of targets)assert.ok(current.includes('href="'+href+'"'));
- assert.match(current,/ranking e curva ABC por unidades vendidas/);
+ assert.match(current,/ranking e curva ABC por unidades vendidas/i);
  assert.match(current,/custos atuais por variação e cenários matemáticos de equilíbrio e margem desejada/);
  assert.match(current,/margem de contribuição e os componentes dos pedidos exclusivos/);
- assert.match(current,/única variação vendida e os dados estão completos/);
- assert.match(current,/unidades de pedidos mistos ficam fora desse cálculo/);
+ assert.match(current,/cada pedido contém um produto e uma variação/);
+ assert.match(current,/Pedidos com vários pares ficam sem rateio/);
+ assert.match(current,/meses sem essa captura permanecem pendentes/);
  assert.match(current,/Ads, despesas e DAS mensal continuam separados/);
  assert.match(current,/Hermes, Finance, Ads, Products, Production e Returns aparecem abaixo dos indicadores/);
  assert.match(current,/A página Equipe mantém os sete especialistas e seus filtros/);

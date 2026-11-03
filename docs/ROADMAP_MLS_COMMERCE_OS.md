@@ -1,3 +1,7 @@
+<!-- M3_VARIANT_ORDER_EVIDENCE_CURRENT -->
+**M3 paralela publicada e conferida — 03/11/2026 às 12:07:27 Brasília:** versão `2026-11-03.1 — M3 · Contribuição por variação e pedido`, `PUBLISHED_VERIFIED`. Produtos recebe contribuição de referência dos pedidos com um único par produto/modelo, permitindo vários modelos vendidos no mês quando cada pedido tem atribuição comprovada. Pedidos do mesmo produto com vários modelos e pedidos mistos permanecem em buckets distintos sem rateio. Finance → Auth → App publicados nessa ordem, com os três vetores de bytes e configuração/domínios/flags/cron conferidos após cada etapa. Fonte `4dbeeb3804493d9894536eb3a201aa58573adb2d`, head `ed9e86ce72b7d37486e51fc45f95ef7d232180cb`, CI [41658488625](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/41658488625) aprovada: 3457 Node e 67 Python. Negociação opt-in e sidecar preservam os frames legados; v5 usa o mesmo GET mensal, sem nova consulta à Shopee ou backfill. Fonte sem captura continua `NOT_CAPTURED`; publicação não confirma cobertura natural da conta. Custo atual incide só na quantidade atribuída; tributo legado conserva arredondamento por pedido, DAS/Ads/despesas ficam fora e ajuste já no repasse não é reaplicado. Seis agentes, mês/rascunhos e cenários preservados. M2/M2.2 e o restante da M3 continuam abertos. Integração Git: consultar a [PR #108](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/108); publicação e CI não comprovam merge. [Uso, recibo e limites](MLS_M3_VARIANT_ORDER_EVIDENCE_2026_11_03.md).
+<!-- END_M3_VARIANT_ORDER_EVIDENCE_CURRENT -->
+
 <!-- M3_CONTRIBUTION_EVIDENCE_CURRENT -->
 **M3 paralela publicada e conferida — 03/11/2026 às 00:04:01 Brasília:** versão `2026-11-02.6 — M3 · Margens e evidências por produto`, `PUBLISHED_VERIFIED`. Produtos mostra contribuição exclusiva conferida, margem/sinal, gráfico de composição e motivos/quantidades pendentes, separando resultado estrito de valores conhecidos. Uma única variação vendida recebe evidência exclusiva somente com todos os gates válidos; múltiplas variações vendidas continuam sem atribuição financeira. Campos legados v1 de margem/lucro por variação permanecem desconhecidos. Sem rateio de dinheiro/custo misto, taxa inferida da diferença vendas–repasse ou dupla aplicação de ajuste já no repasse. Ads, DAS mensal e despesas ficam fora dessa contribuição; regime legado mantém sua referência de imposto, sem promovê-la a tributo oficial. Referência atual de custo não é fabricação/reaproveitamento. Fonte `c70b0304ec4502edabe44a7ae90e144d6a7e4b7b`, head `53580d2612b3661c8d76016a35fb5a14f41e69c9`, CI [41568940647](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/41568940647) aprovada: 3400 Node e 67 Python. App `fef9da9e-bcfc-42e1-a8c4-e38b84a656bd` publicado e vetor dos três Workers conferido; Auth/Finance, configuração, domínios, flags e cron preservados. Sem nova API/SQL/coleta/provedor ou escrita comercial. Seis agentes da inicial, mês/rascunhos e hipóteses dos cenários preservados. M2/M2.2 e Seller Centre/banco continuam abertos. Integração Git: consultar a [PR #107](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/107); publicação e CI não comprovam merge. [Uso, recibo e limites](MLS_M3_CONTRIBUTION_EVIDENCE_2026_11_03.md).
 <!-- END_M3_CONTRIBUTION_EVIDENCE_CURRENT -->
@@ -487,7 +491,10 @@ Mantém um único observador, ranking completo com busca/filtros/paginação loc
 ABC por unidades, custos/nomes atuais por variação e cenários matemáticos.
 
 Incremento de contribuição publicado: [M3 · Margens e evidências por produto](MLS_M3_CONTRIBUTION_EVIDENCE_2026_11_03.md),
-versão `2026-11-02.6`, `PUBLISHED_VERIFIED`. Detalha contribuição
+versão `2026-11-02.6`, `PUBLISHED_VERIFIED`, PR107 merge
+`aebc3c7aec9ad9937cc43565ba401b0b4ba07cba` e CI final
+[41570060190](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/41570060190)
+aprovada. Detalha contribuição
 exclusiva conferida, composição financeira, valores conhecidos e pendências.
 A nova evidência por variação exige um único modelo vendido e todos os gates
 coerentes; campos legados v1 continuam desconhecidos. Pedidos mistos não recebem
@@ -495,6 +502,14 @@ rateio, custo misto não entra no saldo exclusivo e diferença vendas–repasse
 não é taxa oficial. Ads, DAS mensal e despesas ficam no fechamento mensal.
 Sem nova API/SQL/coleta/provedor ou escrita; preservar mês, rascunhos, cenários
 e os seis agentes da inicial. Nenhuma entrega encerra M2/M2.2 ou toda M3.
+
+Incremento por pedido publicado: [M3 · Contribuição por variação e pedido](MLS_M3_VARIANT_ORDER_EVIDENCE_2026_11_03.md),
+versão `2026-11-03.1`, `PUBLISHED_VERIFIED`. Os pedidos com um único
+par permitem ampliar a atribuição mesmo com vários modelos vendidos no mês.
+Pedidos com vários modelos/produtos não recebem rateio; a captura usa as chamadas
+já existentes, com opt-in nos três Workers e cache de evidência próprio no App.
+Frames legados permanecem inalterados; dados antigos ficam `NOT_CAPTURED`.
+Regressão, CI e publicação em ordem foram conferidas; captura natural e cobertura da conta exigem evidência própria.
 
 - contribuição por SKU;
 - curva ABC;
@@ -617,15 +632,14 @@ em `dea19f0ace932acccc917c63d8da46db417079c9`; notas antigas preservam o corte h
 
 Retomar por:
 
-1. Conferir o uso da [M3 de contribuição e evidências](MLS_M3_CONTRIBUTION_EVIDENCE_2026_11_03.md)
-   com fontes reais e consultar a PR vinculada para a integração Git. Preservar
-   recorte exclusivo, custos mistos separados, resultado estrito versus valores
-   conhecidos e atribuição somente à única variação vendida com todos os gates.
-   Não refazer catálogo, engines ou coleta.
-2. Usar apenas fontes mensais/catálogo salvos: ABC por unidades não é estoque;
-   saldo de pedidos exclusivos não é lucro líquido por SKU; não há margem por
-   variação sem receita/repasse atribuídos. Cenários exigem hipóteses explícitas
-   e não liberam preço seguro, ROAS real por SKU ou execução na Shopee.
+1. Conferir a [PR #108](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/108) para a integração Git da
+   [M3 por pedido/variação](MLS_M3_VARIANT_ORDER_EVIDENCE_2026_11_03.md), publicada
+   e conferida nos três Workers. Observar captura natural e cobertura do mês com
+   fonte/revisão corretas. Não forçar backfill nem criar fatos para QA.
+2. A PR107 já foi integrada em `aebc3c7aec9ad9937cc43565ba401b0b4ba07cba`,
+   com CI final41570060190 e vetor Live conferidos. Preservar o incremento .6:
+   contribuição exclusiva e nova evidência são fontes alternativas, sem dupla
+   soma; custo atual não comprova fabricação/estoque e simulação não é preço seguro.
 3. Preservar os seis agentes da inicial e a equipe completa, a navegação,
    rascunhos por mês, histórico físico/fabricação/vínculos e paginação Pending.
 4. Continuar M2/M2.2: conferir um recebimento e uma fabricação reais, preservar
