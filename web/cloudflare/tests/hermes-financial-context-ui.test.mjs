@@ -43,6 +43,22 @@ for(const mode of [{source:true,minify:false},{source:false,minify:false},{sourc
   b.context.updated=JSON.stringify({...row,result:row.result+'\nLeitura concluída.'});b.run('rows=[JSON.parse(updated)];renderJobs();');await b.flush();assert.equal(requests(b).length,1,'a report repaint uses the immutable saved evidence');
  });
 
+ test('the recorded monthly calculation exposes every signed component and its frozen scope ('+suffix+')',async t=>{
+  const context=await financialContext(),before=JSON.stringify(context),fingerprint=envelope(firstId,context).fingerprint;
+  const b=await browser(t,{...mode,respond:async url=>url.endsWith('/financial-context')?{body:envelope(firstId,context)}:null});choose(b,[job()]);details(b).open=true;await details(b).ontoggle();
+  const root=b.nodes.get('analysisView'),rows=root.querySelector('.job-financial-deductions').children,terms=Object.fromEntries(rows.map(row=>[row.dataset.hermesFinancialTerm,row.querySelector('dd').textContent]));
+  const currency=amount=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(amount/100),totals=context.monthly.totals;
+  assert.deepEqual(Object.keys(terms),['expected_repass_cents','known_production_cost_cents','invoice_tax_cents','ads_spend_cents','external_expenses_cents','recharge_addback_cents','balance_cents']);
+  for(const key of ['known_production_cost_cents','invoice_tax_cents','ads_spend_cents','external_expenses_cents'])assert.equal(terms[key],'− '+currency(totals[key]),key+' must be visible as a deduction');
+  assert.equal(terms.expected_repass_cents,currency(totals.expected_repass_cents));assert.equal(terms.recharge_addback_cents,'+ '+currency(totals.recharge_addback_cents));
+  const calculated=BigInt(totals.expected_repass_cents)-BigInt(totals.known_production_cost_cents)-BigInt(totals.invoice_tax_cents)-BigInt(totals.ads_spend_cents)-BigInt(totals.external_expenses_cents)+BigInt(totals.recharge_addback_cents);
+  assert.equal(calculated,BigInt(context.monthly.summary.balance_cents));assert.equal(terms.balance_cents,currency(Number(calculated)),'the displayed sum includes the Ads amount exactly once');
+  const scope=root.querySelector('[data-hermes-financial-scope]');assert.ok(scope);assert.match(scope.textContent,/Acumulado mensal registrado: 01\/10\/2026 a 24\/10\/2026/);assert.match(scope.textContent,/Dia analisado dos anúncios: 23\/10\/2026/);
+  assert.match(text(b),/Custo de referência das unidades vendidas identificadas/);assert.match(text(b),/gastos por data de fabricação têm histórico próprio/);assert.match(text(b),/Saldo mensal estimado/);
+  const current=root.querySelectorAll('a').find(link=>link.textContent==='Ver a leitura atual deste mês no Financeiro');assert.ok(current);assert.equal(current.href,'/admin?tab=agent-finance&month=2026-10');
+  assert.match(text(b),/Esse acesso consulta a leitura atual/);assert.match(text(b),new RegExp(fingerprint));assert.equal(JSON.stringify(context),before);assert.equal(requests(b).length,1);assert.ok(b.calls.every(call=>(call.options.method??'GET')==='GET'),'opening the explanation cannot request a recalculation or write');
+ });
+
  test('late financial replies cannot replace a different selected job and selecting back uses the cached context ('+suffix+')',async t=>{
   const context=await financialContext(),first=deferred(),b=await browser(t,{...mode,respond:async url=>url.includes(firstId)&&url.endsWith('/financial-context')?first.promise:url.includes(secondId)&&url.endsWith('/financial-context')?{body:envelope(secondId,context)}:null});choose(b,[job(),job(secondId)]);
   details(b).open=true;const pending=details(b).ontoggle();await b.flush();choose(b,[job(),job(secondId)],secondId);details(b).open=true;await details(b).ontoggle();assert.match(text(b),new RegExp(envelope(secondId,context).fingerprint));
@@ -59,7 +75,7 @@ for(const mode of [{source:true,minify:false},{source:false,minify:false},{sourc
  test('old analyses explain missing historical evidence and an outdated assistant cannot request financial analyses ('+suffix+')',async t=>{
   const context={schema:'hermes_financial_context_v1',analysis_date:'2026-10-23',captured_at:Date.UTC(2026,9,24,12)/1000,available:false,unavailable_code:'LEGACY_CONTEXT_MISSING',monthly:null};assert.ok(projectHermesFinancialContext(context));
   const b=await browser(t,{...mode,respond:async url=>url.endsWith('/financial-context')?{body:envelope(firstId,context)}:url==='/api/admin/live'?{body:live([job()],{hermes_finance_ready:false,bridge_protocol:'LEGACY',execution_access:{allowed:false,reason:'bridge_upgrade_required'}})}:null});choose(b,[job()]);details(b).open=true;await details(b).ontoggle();
-  assert.match(text(b),/análise é anterior ao registro financeiro integrado/);assert.doesNotMatch(text(b),/Saldo estimado da loja/);assert.match(text(b),/52.77/);await b.run('pollLive()');
+  assert.match(text(b),/análise é anterior ao registro financeiro integrado/);assert.equal(b.nodes.get('analysisView').querySelector('.job-financial-metrics'),null);assert.equal(b.nodes.get('analysisView').querySelector('.job-financial-deductions'),null);assert.match(text(b),/52.77/);await b.run('pollLive()');
   assert.equal(b.nodes.get('run').disabled,true);assert.match(b.nodes.get('setup').textContent,/Atualização do assistente pendente/);assert.match(b.nodes.get('runReason').textContent,/Atualização do assistente pendente/);assert.doesNotMatch(b.nodes.get('runReason').textContent,/bridge_|protocol|SSH/);assert.equal(requests(b).length,1);
  });
 }

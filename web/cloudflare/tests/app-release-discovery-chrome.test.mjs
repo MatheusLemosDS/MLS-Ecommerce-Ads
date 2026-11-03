@@ -138,7 +138,7 @@ const targets=[
  {id:'returnManufacturingLinksDetails',panel:'agent-returns',controller:'brazaReturnManufacturingLinks',path:'/api/admin/returns/manufacturing-links'}
 ];
 const retainedItemTargets=['/admin?tab=agent-returns#physicalReturnsOriginalItems','/admin?tab=agent-returns#physicalReturnsDetails','/admin?tab=agent-returns#returnManufacturingLinksDetails'];
-const currentTargets=[{href:'/admin?tab=agent-products#businessMonthPricingObserver',panel:'agent-products',id:'businessMonthPricingObserver'},{href:'/admin?tab=overview#commandAgents',panel:'overview',id:'commandAgents'},{href:'/admin?tab=agent-returns#physicalReturnsQueue',panel:'agent-returns',id:'physicalReturnsQueue'},{href:'/admin?tab=agent-production#incurredProductionDetails',...targets[1]},{href:'/admin?tab=products',panel:'products',id:null}];
+const currentTargets=[{href:'/admin?tab=agent-production#incurredProductionDetails',...targets[1]},{href:'/admin?tab=agent-hermes',panel:'agent-hermes',id:null},{href:'/admin?tab=agent-products#businessMonthPricingObserver',panel:'agent-products',id:'businessMonthPricingObserver'},{href:'/admin?tab=overview#commandAgents',panel:'overview',id:'commandAgents'},{href:'/admin?tab=agent-returns#physicalReturnsQueue',panel:'agent-returns',id:'physicalReturnsQueue'},{href:'/admin?tab=products',panel:'products',id:null}];
 const generatedHash=createHash('sha256').update(readFileSync(new URL('../../../dist/app-worker.mjs',import.meta.url))).digest('hex');
 const qa=[];
 const physicalRequest=row=>targets.some(target=>row.path.startsWith(target.path));

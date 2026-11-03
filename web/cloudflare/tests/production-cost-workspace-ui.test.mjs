@@ -50,7 +50,7 @@ test('recalculate reads saved quantities and current costs; only the explicit we
 
 test('a verified empty paid cohort can show zero, whereas a missing source remains unavailable',async()=>{
  const zero=period('WEEK',{state:'COMPLETE',production_cost_cents:0,known_production_cost_cents:0,coverage:{...coverage,eligible_orders:0,total_units:0,known_units:0,pending_units:0,pending_variants:0},pending:[]}),missing=period('MONTH',{state:'UNAVAILABLE',production_cost_cents:null,known_production_cost_cents:null,source_start_date:null,source_end_date:null,source_checked_at:null,versions:null,pending:['SOURCE_MISSING'],coverage:{...coverage,orders:0,eligible_orders:0,total_units:null,known_units:null,pending_units:0,pending_variants:0}});
- const b=browser(productionCostPeriodsBody(),PRODUCTION_COST_PERIODS_CLIENT,'costPeriods',async()=>periods({weekly:zero,monthly:missing}));b.el('Month').value='2026-10';await b.workspace.start({api:b.api});assert.match(b.el('Weekly').textContent,/0,00.*Custo total de produção/);assert.match(b.el('Monthly').textContent,/Aguardando dados.*Sem coleta salva/);assert.doesNotMatch(b.el('Monthly').textContent,/R\$/);
+ const b=browser(productionCostPeriodsBody(),PRODUCTION_COST_PERIODS_CLIENT,'costPeriods',async()=>periods({weekly:zero,monthly:missing}));b.el('Month').value='2026-10';await b.workspace.start({api:b.api});assert.match(b.el('Weekly').textContent,/0,00.*Referência de custo das vendas/);assert.match(b.el('Monthly').textContent,/Aguardando dados.*Sem coleta salva/);assert.doesNotMatch(b.el('Monthly').textContent,/R\$/);
 });
 
 test('failed or mismatched period reads preserve prior cards and do not leak provider text; in-flight reads coalesce',async()=>{

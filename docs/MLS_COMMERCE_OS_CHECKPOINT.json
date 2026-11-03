@@ -30,8 +30,8 @@
     "merge_commit": "9c418fd3010f46957d1ce52345baacd76041c788"
   },
   "current_phase": "M2_FINANCE_RETURNS_RECONCILIATION",
-  "working_branch": "feature/m3-variant-order-evidence-20261103",
-  "current_status": "M3_VARIANT_ORDER_EVIDENCE_PUBLISHED_PARALLEL_TO_OPEN_M2",
+  "working_branch": "feature/production-daily-hermes-20261103",
+  "current_status": "PRODUCTION_DAILY_HERMES_PREPARED_NOT_PUBLISHED",
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
     "Repasse-base, ajuste, repasse após ajuste e liberação exibidos sem dupla dedução",
@@ -129,12 +129,12 @@
     }
   },
   "next_actions": [
-    "Consultar a PR#108 para integração Git; M3 por pedido/variação 2026-11-03.1 publicada nos três Workers e conferida em ordem.",
-    "Observar captura natural e cobertura do mês com fonte/revisão/quantidades corretas; ausência histórica continua NOT_CAPTURED, sem backfill forçado.",
-    "Preservar frames v1, contratos v1–v4, sidecar/CAS/hash e fonte alternativa única de contribuição, sem rateio ou dupla soma.",
-    "Preservar seis agentes, mês/rascunhos/cenários; lucro líquido por variação, preço seguro, ROAS real por SKU e estoque seguem desconhecidos.",
-    "Continuar M2/M2.2, decomposição histórica e ciclo físico/ponte contábil sem dupla contagem.",
-    "Comparar Seller Centre/banco no mesmo recorte e manter Hermes Observer/Ads-PROMO/escrita comercial nos gates."
+    "Concluir testes/QA/CI e publicar somente o App preparado, sem presumir recibos.",
+    "Preservar fabricação por data/custo histórico, unknown/zero/anulações e meses antigos; não inferir peças de pedidos, kits ou DTF.",
+    "Usar estimativa diária financeira salva em fonte separada; não deduzir novamente o ledger nem ranquear pendentes/dia atual parcial.",
+    "Expor parâmetros/Ads/equação do Hermes mantendo valores, fingerprints, datas e snapshots imutáveis.",
+    "Preservar seis agentes da inicial, mês/rascunhos, contratos/gates; M2/M2.2 continuam abertas.",
+    "Conferir fatos reais, origem/cobertura e mesmo recorte com Seller Centre/banco; não copiar declaração de despesas de novembro."
   ],
   "m0_followup": [
     "Conferir visual autenticado em desktop e celular durante M1; corrigir apenas branding/layout sem renomear infraestrutura"
@@ -143,143 +143,80 @@
     "Mission Control M1.1 (opção 3) integrado com 7 painéis independentes; conferir visual autenticado desktop/celular e retorno às telas antigas"
   ],
   "latest_increment": {
-    "id": "M3_SINGLE_PAIR_ORDER_VARIANT_EVIDENCE",
-    "status": "PUBLISHED_VERIFIED",
-    "branch": "feature/m3-variant-order-evidence-20261103",
-    "base_main": "aebc3c7aec9ad9937cc43565ba401b0b4ba07cba",
-    "human_code_release_id": "2026-11-03.1",
-    "label": "M3 · Contribuição por variação e pedido",
-    "docs": "docs/MLS_M3_VARIANT_ORDER_EVIDENCE_2026_11_03.md",
-    "phase": "M3_OBSERVER_PARALLEL_TO_M2",
+    "id": "PRODUCTION_DAILY_HISTORY_HERMES_PARAMETERS",
+    "status": "PREPARED_NOT_PUBLISHED",
+    "branch": "feature/production-daily-hermes-20261103",
+    "base_main": "d1aaa55eb92e820447318522c759b924d1c288cb",
+    "human_code_release_id": "2026-11-03.2",
+    "label": "Produção diária e parâmetros do Hermes",
+    "docs": "docs/MLS_PRODUCTION_DAILY_HERMES_2026_11_03.md",
     "finance_m2": "OPEN",
     "m22": "OPEN_PENDING_REAL_OPERATION_AND_ACCOUNTING_BRIDGE",
     "workers": [
-      "finance",
-      "auth",
       "app"
     ],
-    "deploy_order": [
-      "finance",
+    "unchanged_workers": [
       "auth",
+      "finance"
+    ],
+    "deploy_order": [
       "app"
     ],
     "routes": {
-      "analysis": "/admin?tab=agent-products#businessMonthPricingObserver",
-      "legacy_analysis_alias": "/admin?tab=agent-finance#businessMonthPricingObserver",
+      "production": "/admin?tab=agent-production#incurredProductionDetails",
+      "hermes": "/admin?tab=hermes",
       "notes": "/admin?tab=roadmap#appReleaseNotes"
     },
-    "sources": "COMMITTED_CACHED_FINANCE_BUSINESS_PERIOD_ORDERS_BOUND_TO_CANONICAL_PARENT",
-    "changes": [
-      "Single-pair-per-order evidence permits multiple sold models in the same month",
-      "Separate same-product multi-model and mixed-product unallocated buckets conserve legacy totals",
-      "Negotiated Finance/Auth/App envelope and isolated App sidecar preserve v1 payloads",
-      "Monthly v5 reuses the existing view GET; default v1-v4 remain unchanged"
-    ],
-    "legacy_v1_contracts_unchanged": true,
-    "negotiated_month_view": "business-month-view-v5",
-    "finance_envelope": "finance_business_period_variants_v1",
-    "variant_breakdown": "finance_business_variant_breakdown_v1",
-    "legacy_body_limit_bytes": 1048576,
-    "opt_in_envelope_limit_bytes": 2097152,
-    "sidecar_limit_bytes": 524288,
+    "manufacturing_source": "OPERATOR_CONFIRMED_INCURRED_PRODUCTION_V1_HISTORICAL_COST_SNAPSHOTS",
+    "manufacturing_date_basis": "RECORDED_MANUFACTURE_DATE_NOT_SALES_OR_PAID_CASH",
+    "daily_analysis": "incurred_production_analytics_v1",
+    "unknown_costs_and_no_records": "UNKNOWN_OR_NO_RECORDS_NEVER_INFERRED_ZERO",
+    "highest_cost": "ALL_TIES_OF_RECORDED_ACTIVE_DAYS_STRICT_UNKNOWN_IF_ANY_MONTH_COST_UNKNOWN",
+    "highest_quantity": "RECORDED_ACTIVE_PHYSICAL_QUANTITY_ALL_TIES",
+    "saved_history_includes_voided_months": true,
+    "all_store_manufacturing_completeness": "NOT_CLAIMED",
+    "physical_or_financial_facts_created_for_qa": false,
+    "manufacturing_financial_integration": false,
+    "production_default": "VISIBLE_MANUFACTURE_DASHBOARD_LAZY_ONLY_WHILE_PRODUCTION_OPEN",
+    "sales_reference": "SEPARATE_PANE_CURRENT_COSTS_BY_PAID_ORDER_CREATE_DATE",
+    "profit_companion": "CACHED_VALIDATED_DAILY_FINANCIAL_ESTIMATE_BY_ORDER_CREATE_DATE",
+    "profit_ranking": "FULL_SELECTED_SAVED_MONTH_EXCLUDING_PENDING_AND_CURRENT_PARTIAL_DAYS",
+    "ledger_cost_subtracted_again_from_profit": false,
+    "hermes_calculation_changed": false,
+    "hermes_snapshot_mutation": false,
+    "hermes_readability": "ALL_SAVED_PARAMETERS_PLUS_ADS_EQUATION_AND_DISTINCT_ANALYSIS_AND_MONTHLY_DATES",
     "new_endpoints": 0,
     "new_provider_calls": 0,
     "new_collectors": 0,
     "browser_backfill": false,
-    "sql_changes": "ADDITIVE_LOCAL_SIDECAR_CAPTURE_AND_READ",
-    "legacy_frame_storage": "UNCHANGED_V1_BYTES",
-    "source_binding": [
-      "run_id",
-      "revision",
-      "date_range",
-      "checked_at",
-      "canonical_report_hash",
-      "payload_hash",
-      "month_CAS"
-    ],
-    "missing_historical_source": "NOT_CAPTURED",
-    "natural_capture": "NOT_YET_VERIFIED",
-    "payment_cache_included": false,
-    "single_pair_money_allocation": "WHOLE_ORIGINAL_ORDER_ONLY",
-    "same_product_multi_model_money_allocation": "UNALLOCATED",
-    "mixed_product_money_allocation": "UNALLOCATED",
-    "production_basis": "CURRENT_REFERENCE_COST_TIMES_ATTRIBUTED_COMMERCIAL_QUANTITY_ONLY",
-    "tax_basis": {
-      "mei": "MONTHLY_DAS_NOT_ALLOCATED",
-      "legacy": "PER_ORDER_HALF_UP_TWO_PERCENT_REFERENCE_NOT_OFFICIAL_TAX"
-    },
-    "already_included_payout_adjustment_applied_again": false,
-    "legacy_evidence_and_new_evidence_added_together": false,
-    "variant_net_profit": null,
-    "safe_price": null,
-    "real_sku_roas": null,
-    "inventory_verified": false,
     "mode": "OBSERVER",
     "execution_allowed": false,
     "commercial_writes": false,
     "overview_six_agents_preserved": true,
-    "month_drafts_scenarios_preserved": true,
-    "physical_or_financial_facts_created_for_qa": false,
+    "month_drafts_preserved": true,
     "seller_centre_bank_comparison": "NOT_CLOSED",
     "validation": {
-      "focused": "PASSED",
-      "chromium": "PASSED_SYNTHETIC_NORMAL_MINIFIED_320_1365",
-      "full_node": {
-        "tests": 3457,
-        "pass": 3457,
-        "fail": 0,
-        "skipped": 0,
-        "cancelled": 0
-      },
-      "python": 67,
-      "ci": "GREEN_EXACT_REVIEWED_HEAD",
+      "focused": "PENDING",
+      "chromium": "PENDING_SYNTHETIC_NORMAL_MINIFIED_320_1365",
+      "full_node": null,
+      "python": null,
+      "ci": "PENDING",
       "real_owner_acceptance": "NOT_CLAIMED"
     },
-    "pull_request": 108,
-    "code_commit": "4dbeeb3804493d9894536eb3a201aa58573adb2d",
-    "reviewed_head": "ed9e86ce72b7d37486e51fc45f95ef7d232180cb",
-    "ci_run": 41658488625,
+    "pull_request": null,
+    "code_commit": null,
+    "reviewed_head": null,
+    "ci_run": null,
     "deployment": {
-      "status": "FINANCE_AUTH_APP_LIVE_FULL_VECTOR_VERIFIED",
-      "versions": {
-        "app": "caa919a6-096f-4427-93a6-5fb50c0ac41d",
-        "auth": "ec385ca9-a986-49ec-abab-25a29daaf33b",
-        "finance": "9ed0bd7d-269a-4e5f-81d0-63be8c6ac2c4"
-      },
-      "generated_sha256": {
-        "app": "34299a748b1fbea76f2916521143accddf531f2a75f6f3e29655f7df581e3ef3",
-        "auth": "47c83f87f191fd0e5ff503d9c4bcf4671cd986b0965e66e84f1a6ed952dac925",
-        "finance": "08ada5ecec92350f4f8301fdb7baa00f5f8083a0e8390296b2870e0ff3cdc1a5"
-      },
-      "published_sha256": {
-        "app": "0410b98910618ea2aece6c356bcea8920624c0488443ad5563c047bb3a07a94f",
-        "auth": "2a2c2433c6fba25d1c399991595c96e6b8a85045edb77879c8270c446cb45ad2",
-        "finance": "e5bf80e14ff00e5b365bfbcfb25bf3a4dc1e42bf40bb0e4259909649eea1d5cd"
-      },
-      "started_at": 1793718386,
-      "completed_at": 1793718447,
-      "completed_at_brasilia": "2026-11-03T12:07:27-03:00",
-      "deploy_order": [
-        "finance",
-        "auth",
-        "app"
-      ],
-      "all_three_exact": true,
-      "configuration_preserved": true,
-      "domains_preserved": true,
-      "flags_preserved": true,
-      "cron_preserved": true,
-      "physical_or_financial_fact_writes": false,
-      "d1_queries": 0,
-      "owner_endpoints_called": false,
-      "provider_calls": 0
+      "status": "NOT_EXECUTED",
+      "versions": null,
+      "generated_sha256": null,
+      "published_sha256": null
     },
     "integration": {
-      "status": "CHECK_LINKED_PR_CURRENT_STATE",
-      "pull_request": 108,
-      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/108",
-      "merge_commit": null,
-      "publication_receipt_does_not_prove_merge": true
+      "status": "NOT_YET_SUBMITTED",
+      "pull_request": null,
+      "merge_commit": null
     }
   },
   "incident": {
@@ -3773,10 +3710,15 @@
       "provider_calls": 0
     },
     "integration": {
-      "status": "CHECK_LINKED_PR_CURRENT_STATE",
+      "status": "MERGED_VERIFIED",
       "pull_request": 108,
       "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/108",
-      "merge_commit": null,
+      "merge_commit": "d1aaa55eb92e820447318522c759b924d1c288cb",
+      "merged_at": "2026-11-03T15:18:03Z",
+      "final_head": "ef9c9a36039bb816ea57298d296c4ea2cdc4eabe",
+      "final_ci_run": 41660632960,
+      "main_tree_matches": true,
+      "all_three_live_exact": true,
       "publication_receipt_does_not_prove_merge": true
     }
   },
@@ -4477,11 +4419,93 @@
       "provider_calls": 0
     },
     "integration": {
-      "status": "CHECK_LINKED_PR_CURRENT_STATE",
+      "status": "MERGED_VERIFIED",
       "pull_request": 108,
       "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/108",
-      "merge_commit": null,
+      "merge_commit": "d1aaa55eb92e820447318522c759b924d1c288cb",
+      "merged_at": "2026-11-03T15:18:03Z",
+      "final_head": "ef9c9a36039bb816ea57298d296c4ea2cdc4eabe",
+      "final_ci_run": 41660632960,
+      "main_tree_matches": true,
+      "all_three_live_exact": true,
       "publication_receipt_does_not_prove_merge": true
+    }
+  },
+  "production_daily_hermes_2026_11_03": {
+    "id": "PRODUCTION_DAILY_HISTORY_HERMES_PARAMETERS",
+    "status": "PREPARED_NOT_PUBLISHED",
+    "branch": "feature/production-daily-hermes-20261103",
+    "base_main": "d1aaa55eb92e820447318522c759b924d1c288cb",
+    "human_code_release_id": "2026-11-03.2",
+    "label": "Produção diária e parâmetros do Hermes",
+    "docs": "docs/MLS_PRODUCTION_DAILY_HERMES_2026_11_03.md",
+    "finance_m2": "OPEN",
+    "m22": "OPEN_PENDING_REAL_OPERATION_AND_ACCOUNTING_BRIDGE",
+    "workers": [
+      "app"
+    ],
+    "unchanged_workers": [
+      "auth",
+      "finance"
+    ],
+    "deploy_order": [
+      "app"
+    ],
+    "routes": {
+      "production": "/admin?tab=agent-production#incurredProductionDetails",
+      "hermes": "/admin?tab=hermes",
+      "notes": "/admin?tab=roadmap#appReleaseNotes"
+    },
+    "manufacturing_source": "OPERATOR_CONFIRMED_INCURRED_PRODUCTION_V1_HISTORICAL_COST_SNAPSHOTS",
+    "manufacturing_date_basis": "RECORDED_MANUFACTURE_DATE_NOT_SALES_OR_PAID_CASH",
+    "daily_analysis": "incurred_production_analytics_v1",
+    "unknown_costs_and_no_records": "UNKNOWN_OR_NO_RECORDS_NEVER_INFERRED_ZERO",
+    "highest_cost": "ALL_TIES_OF_RECORDED_ACTIVE_DAYS_STRICT_UNKNOWN_IF_ANY_MONTH_COST_UNKNOWN",
+    "highest_quantity": "RECORDED_ACTIVE_PHYSICAL_QUANTITY_ALL_TIES",
+    "saved_history_includes_voided_months": true,
+    "all_store_manufacturing_completeness": "NOT_CLAIMED",
+    "physical_or_financial_facts_created_for_qa": false,
+    "manufacturing_financial_integration": false,
+    "production_default": "VISIBLE_MANUFACTURE_DASHBOARD_LAZY_ONLY_WHILE_PRODUCTION_OPEN",
+    "sales_reference": "SEPARATE_PANE_CURRENT_COSTS_BY_PAID_ORDER_CREATE_DATE",
+    "profit_companion": "CACHED_VALIDATED_DAILY_FINANCIAL_ESTIMATE_BY_ORDER_CREATE_DATE",
+    "profit_ranking": "FULL_SELECTED_SAVED_MONTH_EXCLUDING_PENDING_AND_CURRENT_PARTIAL_DAYS",
+    "ledger_cost_subtracted_again_from_profit": false,
+    "hermes_calculation_changed": false,
+    "hermes_snapshot_mutation": false,
+    "hermes_readability": "ALL_SAVED_PARAMETERS_PLUS_ADS_EQUATION_AND_DISTINCT_ANALYSIS_AND_MONTHLY_DATES",
+    "new_endpoints": 0,
+    "new_provider_calls": 0,
+    "new_collectors": 0,
+    "browser_backfill": false,
+    "mode": "OBSERVER",
+    "execution_allowed": false,
+    "commercial_writes": false,
+    "overview_six_agents_preserved": true,
+    "month_drafts_preserved": true,
+    "seller_centre_bank_comparison": "NOT_CLOSED",
+    "validation": {
+      "focused": "PENDING",
+      "chromium": "PENDING_SYNTHETIC_NORMAL_MINIFIED_320_1365",
+      "full_node": null,
+      "python": null,
+      "ci": "PENDING",
+      "real_owner_acceptance": "NOT_CLAIMED"
+    },
+    "pull_request": null,
+    "code_commit": null,
+    "reviewed_head": null,
+    "ci_run": null,
+    "deployment": {
+      "status": "NOT_EXECUTED",
+      "versions": null,
+      "generated_sha256": null,
+      "published_sha256": null
+    },
+    "integration": {
+      "status": "NOT_YET_SUBMITTED",
+      "pull_request": null,
+      "merge_commit": null
     }
   }
 }
