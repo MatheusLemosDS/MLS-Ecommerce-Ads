@@ -1,11 +1,11 @@
 {
   "schema": "mls_release_candidate_v1",
   "base_commit": "aebc3c7aec9ad9937cc43565ba401b0b4ba07cba",
-  "prepared_source_commit": "8f740cbb2dc78c747c2108c5a743b368d7de84d6",
+  "prepared_source_commit": "4dbeeb3804493d9894536eb3a201aa58573adb2d",
   "owner_authorization": "OWNER_REQUESTED_ALL_PREPARED_IMPROVEMENTS_LIVE_2026_10_30",
   "commercial_writes_allowed": false,
   "expected_hashes": {
-    "app": "d94f851079828323a54f5b5e2def764746bce8f5d209ae5798fc73d759065452",
+    "app": "34299a748b1fbea76f2916521143accddf531f2a75f6f3e29655f7df581e3ef3",
     "auth": "47c83f87f191fd0e5ff503d9c4bcf4671cd986b0965e66e84f1a6ed952dac925",
     "finance": "08ada5ecec92350f4f8301fdb7baa00f5f8083a0e8390296b2870e0ff3cdc1a5"
   },
@@ -33,6 +33,7 @@
     "web/cloudflare/src/app-business-period.mjs",
     "web/cloudflare/src/app-release-view.mjs",
     "web/cloudflare/src/app-release.mjs",
+    "web/cloudflare/src/business-history-sync.mjs",
     "web/cloudflare/src/business-month-client.mjs",
     "web/cloudflare/src/business-month-view-state.mjs",
     "web/cloudflare/src/business-month.mjs",
@@ -42,6 +43,7 @@
     "web/cloudflare/tests/admin-api-client.test.mjs",
     "web/cloudflare/tests/app-release-discovery.test.mjs",
     "web/cloudflare/tests/app-release.test.mjs",
+    "web/cloudflare/tests/business-history-sync.test.mjs",
     "web/cloudflare/tests/business-month-variant-view.test.mjs",
     "web/cloudflare/tests/business-variant-attribution.test.mjs",
     "web/cloudflare/tests/mls-variant-order-chrome.test.mjs",
