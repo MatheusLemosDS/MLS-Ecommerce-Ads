@@ -1,5 +1,5 @@
 <!-- M3_PRODUCT_WORKBENCH_CURRENT -->
-**M3 em paralelo — candidato em preparação, `PREPARED_NOT_PUBLISHED`:** versão proposta `2026-11-02.5 — M3 · Produtos e cenários de preços`, base oficial `b840da57b9f2074e4ad120314f4871e1947aa1a5` (PR105 integrada). Reutiliza a base Observer já publicada e prepara um único painel em Produtos para ranking completo, ABC por unidades, variações/custos de referência e cenários matemáticos de equilíbrio e margem informada. A referência mensal não é fabricação incorrida; receita de pedidos mistos permanece sem rateio; não há receita/repasse próprios por variação, preço seguro, estoque ou ROAS real por SKU comprovados. O custo selecionado deve ser conhecido e positivo; as demais hipóteses exigem preenchimento explícito, inclusive zero. Usa as fontes e os controladores salvos existentes; nenhum endpoint, consulta SQL, coleta ou escrita comercial é acrescentado por esta entrega. Preservar os seis agentes da inicial, o mês, os rascunhos e os controles de Finance/Returns/Produção. M2/M2.2 continuam abertas; esta preparação não é recibo de publicação. [Escopo, uso previsto e limites](MLS_M3_PRODUCT_WORKBENCH_2026_11_02.md).
+**M3 paralela publicada e conferida — 02/11/2026 às 23:15:11 Brasília:** versão `2026-11-02.5 — M3 · Produtos e cenários de preços`, `PUBLISHED_VERIFIED`. O painel único de Produtos reutiliza o mês/catálogo salvos e oferece ranking completo, ABC por unidades, busca/filtros/ordem/paginação locais, variações e cobertura de custos de referência, gráfico e cenários matemáticos de equilíbrio/alvo. Fonte `a62fc2d3d01b1584cdeacc901bb948d8c0062dfc`, head `9e5dc518f6501fd94d5133aab46e6a25e8f2a768`, CI [41563950925](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/41563950925) aprovada: 3370 Node e 67 Python. App `124b7071-6152-44fa-bf44-5edf98eca2dc` publicado; Auth/Finance, código/configuração/domínios/flags/cron dos três conferidos. Sem novo endpoint/SQL/coleta ou escrita comercial; variante sem receita/repasse próprios continua sem margem atribuída, pedido misto sem rateio e simulação não é preço seguro. Os seis agentes da inicial permanecem. M2/M2.2 e a conferência real com Seller Centre/banco continuam abertas. Integração Git: consultar a [PR #106](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/106); este recibo de publicação não prova merge. [Uso, recibo e limites](MLS_M3_PRODUCT_WORKBENCH_2026_11_02.md).
 <!-- END_M3_PRODUCT_WORKBENCH_CURRENT -->
 
 **Live — 02/11/2026 às 19:50:54 Brasília:** versão `2026-11-02.4 — Agentes de volta à página inicial`; seis cartões Hermes, Finance, Ads, Products, Production e Returns restaurados abaixo dos indicadores e antes dos gráficos, com avatares, cores e estados das fontes salvas. App `16ee9374-f16a-45b3-99a9-92669d296c9b` publicado e vetor dos três Workers conferido; Auth/Finance, configuração, domínios, flags e cron preservados. Fonte `4d1a968f4482e8dc3deb3b2a97847a91479eacf7`, head `7a8b548830fd68a0216cb7c1b4b6fb3f554c78de`, CI [41539423858](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/41539423858) aprovada: 3346 Node e 67 Python. **PUBLISHED_VERIFIED:** publicação técnica comprovada; consultar a [PR #105](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/105) para o estado atual da integração Git. Equipe completa, navegação e controles existentes preservados; M2/M2.2 continuam abertas. [Uso, evidências e limites](MLS_OVERVIEW_AGENTS_RESTORE_2026_11_02.md).
@@ -481,10 +481,10 @@ M2 e o ciclo M2.2 permanecem abertos. Podemos preparar análises Observer e
 cenários locais enquanto a conferência financeira e operacional continua;
 isso não libera preço seguro, margem líquida por variação ou execução comercial.
 
-Primeiro candidato: [M3 · Produtos e cenários de preços](MLS_M3_PRODUCT_WORKBENCH_2026_11_02.md),
-versão proposta `2026-11-02.5`, `PREPARED_NOT_PUBLISHED`. Promove a base já
+Primeiro incremento publicado: [M3 · Produtos e cenários de preços](MLS_M3_PRODUCT_WORKBENCH_2026_11_02.md),
+versão `2026-11-02.5`, `PUBLISHED_VERIFIED`. Promove a base já
 integrada para Produtos, com uma única instância do observador e os mesmos
-controladores/fontes mensais. Prepara ranking completo com busca/filtros e
+controladores/fontes mensais. Entrega ranking completo com busca/filtros e
 paginação local, ABC por unidades, custos/nomes atuais por variação, gráfico
 e cenários matemáticos de equilíbrio/alvo. Não acrescenta consulta SQL, coleta,
 endpoint ou escrita. A cópia antiga de Pricing/Listing Factory em PR separada
@@ -615,10 +615,10 @@ integrada; referências antigas a merge pendente preservam cortes históricos.
 
 Retomar por:
 
-1. Concluir a primeira [M3 paralela](MLS_M3_PRODUCT_WORKBENCH_2026_11_02.md):
-   validar o candidato, manter o observador único em Produtos, seus IDs e o
-   alias antigo, concluir QA/CI e só registrar Live após o recibo App-only.
-   Não refazer o catálogo, os engines já integrados ou a coleta financeira.
+1. Conferir o estado atual da [PR #106](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/106) para a integração Git da
+   primeira [M3 paralela](MLS_M3_PRODUCT_WORKBENCH_2026_11_02.md), já publicada
+   e conferida no App. Validar o uso com as fontes reais e manter o observador
+   único, seus IDs e o alias antigo. Não refazer catálogo, engines ou coleta.
 2. Usar apenas fontes mensais/catálogo salvos: ABC por unidades não é estoque;
    saldo de pedidos exclusivos não é lucro líquido por SKU; não há margem por
    variação sem receita/repasse atribuídos. Cenários exigem hipóteses explícitas

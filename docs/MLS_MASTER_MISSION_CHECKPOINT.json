@@ -1,6 +1,6 @@
 {
   "schema": "mls_master_mission_checkpoint_v1",
-  "updated_at": "2026-11-02",
+  "updated_at": "2026-11-03T02:15:11+00:00",
   "base_visual_sha": "8d860b2c4f26531c53c4cdba0e06a14f51a7eef4",
   "visual_branch": "feature/mls-mockup-parity-real-charts-20261029",
   "visual_pr": 79,
@@ -181,7 +181,7 @@
   ],
   "current_release": {
     "id": "M3_OBSERVER_PRODUCT_WORKBENCH_FIRST_DELIVERY",
-    "status": "PREPARED_NOT_PUBLISHED",
+    "status": "PUBLISHED_VERIFIED",
     "branch": "feature/m3-products-intelligence-20261103",
     "base_main": "b840da57b9f2074e4ad120314f4871e1947aa1a5",
     "human_code_release_id": "2026-11-02.5",
@@ -225,25 +225,63 @@
     "physical_or_financial_facts_created_for_qa": false,
     "seller_centre_bank_comparison": "NOT_CLOSED",
     "validation": {
-      "focused": "PENDING",
-      "chromium": "PENDING_FINAL_SOURCE_BOUND_QA",
-      "full_node": "PENDING",
-      "python": "PENDING",
-      "ci": "PENDING",
+      "focused": "PASSED",
+      "chromium": "PASSED_SYNTHETIC_NORMAL_MINIFIED_320_1365",
+      "full_node": {
+        "tests": 3370,
+        "pass": 3370,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0
+      },
+      "python": 67,
+      "ci": "GREEN_EXACT_REVIEWED_HEAD",
       "real_owner_acceptance": "NOT_CLAIMED"
     },
-    "pull_request": null,
-    "code_commit": null,
-    "reviewed_head": null,
-    "ci_run": null,
+    "pull_request": 106,
+    "code_commit": "a62fc2d3d01b1584cdeacc901bb948d8c0062dfc",
+    "reviewed_head": "9e5dc518f6501fd94d5133aab46e6a25e8f2a768",
+    "ci_run": 41563950925,
     "deployment": {
-      "status": "NOT_PUBLISHED"
+      "status": "APP_LIVE_FULL_VECTOR_VERIFIED",
+      "versions": {
+        "app": "124b7071-6152-44fa-bf44-5edf98eca2dc",
+        "auth": "d6f4397f-ac4d-45cf-93da-175df8305a6d",
+        "finance": "7001376b-f065-4e37-84ea-ee9ac2ea890c"
+      },
+      "generated_sha256": {
+        "app": "e20691b12dd668fa342bf6ff79e3b3de50a360378ddf0c41956f7a1b9b5b0830",
+        "auth": "851e27c703fda4143b87a8a85a79c06326b9a2f25ce16f5625d8871a589f43ec",
+        "finance": "d7e64105b88602fa20f8e733f5e16548cfa3ceefbbd7733a87dfb5e5bd8fcd49"
+      },
+      "published_sha256": {
+        "app": "200a569624f38e98a13a250ff5db2914a5e082136842b33bbe7f49bbdf0554e9",
+        "auth": "5e18583606c453bd4e5ecfbc983db13826e4ad7f1c336fde5b7bbe9d628b2bd6",
+        "finance": "ea8a5abf0c818539ee02e0e14260b973d0d2ed243f2c0eb26162ae3bbb3fcb59"
+      },
+      "started_at": 1793672069,
+      "completed_at": 1793672111,
+      "completed_at_brasilia": "2026-11-02T23:15:11-03:00",
+      "deploy_order": [
+        "app"
+      ],
+      "all_three_exact": true,
+      "auth_finance_preserved": true,
+      "configuration_preserved": true,
+      "domains_preserved": true,
+      "flags_preserved": true,
+      "cron_preserved": true,
+      "physical_or_financial_fact_writes": false,
+      "d1_queries": 0,
+      "owner_endpoints_called": false,
+      "provider_calls": 0
     },
     "integration": {
-      "status": "NOT_PUBLISHED",
-      "pull_request": null,
-      "url": null,
-      "merge_commit": null
+      "status": "CHECK_LINKED_PR_CURRENT_STATE",
+      "pull_request": 106,
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/106",
+      "merge_commit": null,
+      "publication_receipt_does_not_prove_merge": true
     }
   },
   "validation_history": [
@@ -279,45 +317,56 @@
     }
   ],
   "live_release": {
-    "id": "OVERVIEW_AGENTS_APPROVED_DESIGN_RESTORATION",
+    "id": "M3_OBSERVER_PRODUCT_WORKBENCH_FIRST_DELIVERY",
     "status": "PUBLISHED_VERIFIED",
-    "branch": "fix/restore-overview-agents-20261102",
-    "base_main": "41b95f6e93236fdfad42ff9b3deb9a85905d67ef",
-    "human_code_release_id": "2026-11-02.4",
-    "label": "Agentes de volta à página inicial",
-    "docs": "docs/MLS_OVERVIEW_AGENTS_RESTORE_2026_11_02.md",
-    "routes": {
-      "overview": "/admin?tab=overview#commandAgents",
-      "team": "/admin?tab=agents#missionHubDirectory",
-      "notes": "/admin?tab=roadmap#appReleaseNotes"
-    },
-    "overview_agents": [
-      "hermes",
-      "finance",
-      "ads",
-      "products",
-      "production",
-      "returns"
-    ],
-    "overview_order": "AFTER_KPIS_BEFORE_CHARTS",
-    "overview_cards_preserved_by_design": true,
-    "hub_agents": 7,
-    "hub_ids_separate_from_overview": true,
-    "static_fallback_cards": 6,
-    "registry_source": "EXISTING_AGENT_REGISTRY_SAVED_READINGS",
-    "financial_contracts_unchanged": true,
-    "physical_manufacturing_facts_created": false,
-    "new_provider_calls": 0,
-    "commercial_writes": false,
-    "auth_finance_changes": false,
+    "branch": "feature/m3-products-intelligence-20261103",
+    "base_main": "b840da57b9f2074e4ad120314f4871e1947aa1a5",
+    "human_code_release_id": "2026-11-02.5",
+    "label": "M3 · Produtos e cenários de preços",
+    "docs": "docs/MLS_M3_PRODUCT_WORKBENCH_2026_11_02.md",
+    "phase": "M3_OBSERVER_PARALLEL_TO_M2",
     "finance_m2": "OPEN",
     "m22": "OPEN_PENDING_REAL_OPERATION_AND_ACCOUNTING_BRIDGE",
+    "routes": {
+      "analysis": "/admin?tab=agent-products#businessMonthPricingObserver",
+      "catalog": "/admin?tab=products",
+      "legacy_analysis_alias": "/admin?tab=agent-finance#businessMonthPricingObserver",
+      "notes": "/admin?tab=roadmap#appReleaseNotes"
+    },
+    "changes": [
+      "One existing Observer DOM promoted from Finance to Products with existing IDs and legacy alias",
+      "Complete saved-product ranking with local search, ABC filters, sorting and pagination",
+      "Current catalogue names/variants and reference-cost coverage with unit-based chart",
+      "Mathematical equilibrium and target scenarios using five explicit assumptions"
+    ],
+    "sources": "EXISTING_SAVED_MONTH_SNAPSHOT_AND_CATALOG_METADATA",
+    "legacy_engines_reused": true,
+    "new_endpoints": 0,
+    "new_sql_queries": 0,
+    "new_provider_calls": 0,
+    "new_collectors": 0,
+    "commercial_writes": false,
+    "mode": "OBSERVER",
+    "execution_allowed": false,
+    "variant_revenue_available": false,
+    "variant_margin": null,
+    "safe_price": null,
+    "real_sku_roas": null,
+    "inventory_verified": false,
+    "production_basis": "CURRENT_SALES_COST_REFERENCE_NOT_INCURRED_MANUFACTURING",
+    "exclusive_balance_basis": "VERIFIED_EXCLUSIVE_ORDERS_BEFORE_ADS_MONTHLY_DAS_UNATTRIBUTED_EXPENSES",
+    "mixed_order_money_allocation": "UNALLOCATED",
+    "scenario_assumptions": "KNOWN_POSITIVE_REFERENCE_COST_PLUS_FOUR_EXPLICIT_ASSUMPTIONS_INCLUDING_ZERO",
+    "scenario_is_safe_price": false,
+    "overview_six_agents_preserved": true,
+    "physical_or_financial_facts_created_for_qa": false,
+    "seller_centre_bank_comparison": "NOT_CLOSED",
     "validation": {
       "focused": "PASSED",
       "chromium": "PASSED_SYNTHETIC_NORMAL_MINIFIED_320_1365",
       "full_node": {
-        "tests": 3346,
-        "pass": 3346,
+        "tests": 3370,
+        "pass": 3370,
         "fail": 0,
         "skipped": 0,
         "cancelled": 0
@@ -326,29 +375,30 @@
       "ci": "GREEN_EXACT_REVIEWED_HEAD",
       "real_owner_acceptance": "NOT_CLAIMED"
     },
-    "pull_request": 105,
-    "code_commit": "4d1a968f4482e8dc3deb3b2a97847a91479eacf7",
-    "reviewed_head": "7a8b548830fd68a0216cb7c1b4b6fb3f554c78de",
-    "ci_run": 41539423858,
+    "pull_request": 106,
+    "code_commit": "a62fc2d3d01b1584cdeacc901bb948d8c0062dfc",
+    "reviewed_head": "9e5dc518f6501fd94d5133aab46e6a25e8f2a768",
+    "ci_run": 41563950925,
     "deployment": {
       "status": "APP_LIVE_FULL_VECTOR_VERIFIED",
       "versions": {
-        "app": "16ee9374-f16a-45b3-99a9-92669d296c9b",
+        "app": "124b7071-6152-44fa-bf44-5edf98eca2dc",
         "auth": "d6f4397f-ac4d-45cf-93da-175df8305a6d",
         "finance": "7001376b-f065-4e37-84ea-ee9ac2ea890c"
       },
       "generated_sha256": {
-        "app": "fbcc26be21e9f2806c985c2bf678538bbd962ca8a346c963b4bff99ac73951e1",
+        "app": "e20691b12dd668fa342bf6ff79e3b3de50a360378ddf0c41956f7a1b9b5b0830",
         "auth": "851e27c703fda4143b87a8a85a79c06326b9a2f25ce16f5625d8871a589f43ec",
         "finance": "d7e64105b88602fa20f8e733f5e16548cfa3ceefbbd7733a87dfb5e5bd8fcd49"
       },
       "published_sha256": {
-        "app": "b2ddd3cb05fccdc1b5196f763a5de1cc624064bfa051230c57d00f4a54d1614e",
+        "app": "200a569624f38e98a13a250ff5db2914a5e082136842b33bbe7f49bbdf0554e9",
         "auth": "5e18583606c453bd4e5ecfbc983db13826e4ad7f1c336fde5b7bbe9d628b2bd6",
         "finance": "ea8a5abf0c818539ee02e0e14260b973d0d2ed243f2c0eb26162ae3bbb3fcb59"
       },
-      "started_at": 1793659813,
-      "completed_at": 1793659854,
+      "started_at": 1793672069,
+      "completed_at": 1793672111,
+      "completed_at_brasilia": "2026-11-02T23:15:11-03:00",
       "deploy_order": [
         "app"
       ],
@@ -364,16 +414,11 @@
       "provider_calls": 0
     },
     "integration": {
-      "status": "MERGED_VERIFIED",
-      "pull_request": 105,
-      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/105",
-      "merge_commit": "b840da57b9f2074e4ad120314f4871e1947aa1a5",
-      "merged_at": "2026-11-02T22:59:22Z",
-      "final_head": "0fe455be7215dbec487ae3246af51002b1d54cdc",
-      "final_ci_run": 41540981824,
-      "main_tree_matches": true,
-      "all_three_live_exact": true,
-      "runtime_redeployed_for_docs": false
+      "status": "CHECK_LINKED_PR_CURRENT_STATE",
+      "pull_request": 106,
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/106",
+      "merge_commit": null,
+      "publication_receipt_does_not_prove_merge": true
     }
   },
   "visual_chart_refinement_20261031": {
@@ -3563,7 +3608,7 @@
   },
   "m3_product_workbench_2026_11_02": {
     "id": "M3_OBSERVER_PRODUCT_WORKBENCH_FIRST_DELIVERY",
-    "status": "PREPARED_NOT_PUBLISHED",
+    "status": "PUBLISHED_VERIFIED",
     "branch": "feature/m3-products-intelligence-20261103",
     "base_main": "b840da57b9f2074e4ad120314f4871e1947aa1a5",
     "human_code_release_id": "2026-11-02.5",
@@ -3607,31 +3652,69 @@
     "physical_or_financial_facts_created_for_qa": false,
     "seller_centre_bank_comparison": "NOT_CLOSED",
     "validation": {
-      "focused": "PENDING",
-      "chromium": "PENDING_FINAL_SOURCE_BOUND_QA",
-      "full_node": "PENDING",
-      "python": "PENDING",
-      "ci": "PENDING",
+      "focused": "PASSED",
+      "chromium": "PASSED_SYNTHETIC_NORMAL_MINIFIED_320_1365",
+      "full_node": {
+        "tests": 3370,
+        "pass": 3370,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0
+      },
+      "python": 67,
+      "ci": "GREEN_EXACT_REVIEWED_HEAD",
       "real_owner_acceptance": "NOT_CLAIMED"
     },
-    "pull_request": null,
-    "code_commit": null,
-    "reviewed_head": null,
-    "ci_run": null,
+    "pull_request": 106,
+    "code_commit": "a62fc2d3d01b1584cdeacc901bb948d8c0062dfc",
+    "reviewed_head": "9e5dc518f6501fd94d5133aab46e6a25e8f2a768",
+    "ci_run": 41563950925,
     "deployment": {
-      "status": "NOT_PUBLISHED"
+      "status": "APP_LIVE_FULL_VECTOR_VERIFIED",
+      "versions": {
+        "app": "124b7071-6152-44fa-bf44-5edf98eca2dc",
+        "auth": "d6f4397f-ac4d-45cf-93da-175df8305a6d",
+        "finance": "7001376b-f065-4e37-84ea-ee9ac2ea890c"
+      },
+      "generated_sha256": {
+        "app": "e20691b12dd668fa342bf6ff79e3b3de50a360378ddf0c41956f7a1b9b5b0830",
+        "auth": "851e27c703fda4143b87a8a85a79c06326b9a2f25ce16f5625d8871a589f43ec",
+        "finance": "d7e64105b88602fa20f8e733f5e16548cfa3ceefbbd7733a87dfb5e5bd8fcd49"
+      },
+      "published_sha256": {
+        "app": "200a569624f38e98a13a250ff5db2914a5e082136842b33bbe7f49bbdf0554e9",
+        "auth": "5e18583606c453bd4e5ecfbc983db13826e4ad7f1c336fde5b7bbe9d628b2bd6",
+        "finance": "ea8a5abf0c818539ee02e0e14260b973d0d2ed243f2c0eb26162ae3bbb3fcb59"
+      },
+      "started_at": 1793672069,
+      "completed_at": 1793672111,
+      "completed_at_brasilia": "2026-11-02T23:15:11-03:00",
+      "deploy_order": [
+        "app"
+      ],
+      "all_three_exact": true,
+      "auth_finance_preserved": true,
+      "configuration_preserved": true,
+      "domains_preserved": true,
+      "flags_preserved": true,
+      "cron_preserved": true,
+      "physical_or_financial_fact_writes": false,
+      "d1_queries": 0,
+      "owner_endpoints_called": false,
+      "provider_calls": 0
     },
     "integration": {
-      "status": "NOT_PUBLISHED",
-      "pull_request": null,
-      "url": null,
-      "merge_commit": null
+      "status": "CHECK_LINKED_PR_CURRENT_STATE",
+      "pull_request": 106,
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/106",
+      "merge_commit": null,
+      "publication_receipt_does_not_prove_merge": true
     }
   },
   "parallel_workstreams": {
     "m2_finance_returns": "OPEN",
     "m22_physical_manufacturing_reuse": "OPEN",
-    "m3_products_pricing_observer": "PREPARED_NOT_PUBLISHED",
+    "m3_products_pricing_observer": "FIRST_OBSERVER_DELIVERY_PUBLISHED",
     "commercial_execution": "LOCKED_UNTIL_OFFICIAL_GATES"
   }
 }

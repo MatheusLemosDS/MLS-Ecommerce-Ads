@@ -1,13 +1,14 @@
 # M3 · Produtos e cenários de preços — 02/11/2026
 
-**Estado: `PREPARED_NOT_PUBLISHED`.** Versão proposta
-**2026-11-02.5 — M3 · Produtos e cenários de preços**.
-Branch `feature/m3-products-intelligence-20261103`, base oficial
-`b840da57b9f2074e4ad120314f4871e1947aa1a5` após a PR105 integrada.
-Este documento descreve o candidato em preparação, não um recibo de publicação.
-PR, fonte, head, CI, UUID e hashes novos só serão registrados após a evidência real.
+**Estado: `PUBLISHED_VERIFIED`.** Versão **2026-11-02.5 — M3 · Produtos e cenários de preços**.
+App publicado e conferido em **02/11/2026 às 23:15:11 Brasília**; Auth e Finance preservados.
+PR [#106](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/106), branch `feature/m3-products-intelligence-20261103`, base
+`b840da57b9f2074e4ad120314f4871e1947aa1a5`. Fonte `a62fc2d3d01b1584cdeacc901bb948d8c0062dfc`, head aprovado `9e5dc518f6501fd94d5133aab46e6a25e8f2a768`, CI
+[41563950925](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/41563950925) aprovada: 3370 Node e 67 Python.
+A publicação técnica e a CI não comprovam merge: consultar a PR vinculada
+para o estado atual da integração Git. O recibo abaixo identifica a runtime entregue.
 
-A última Live comprovada continua a versão `2026-11-02.4`, publicada em
+A Live anterior comprovada era a versão `2026-11-02.4`, publicada em
 **02/11/2026 às 19:50:54 Brasília**: App
 `16ee9374-f16a-45b3-99a9-92669d296c9b`, Auth
 `d6f4397f-ac4d-45cf-93da-175df8305a6d` e Finance
@@ -16,14 +17,14 @@ A última Live comprovada continua a versão `2026-11-02.4`, publicada em
 [41540981824](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/41540981824)
 aprovada e árvore/vetor Live conferidos. [Registro anterior](MLS_OVERVIEW_AGENTS_RESTORE_2026_11_02.md).
 
-## Pedido e resultado preparado
+## Pedido e resultado entregue
 
 O proprietário autorizou construir a M3 em paralelo. A fase financeira M2 e o
 ciclo de produção/devolução M2.2 permanecem abertos. O primeiro incremento
 reaproveita o engine Observer e o simulador já integrados, antes apresentados
 dentro do detalhamento financeiro, e concentra a análise em **MLS Products**.
 
-| Fluxo | Caminho previsto | Resultado do candidato |
+| Fluxo | Caminho publicado | Comportamento entregue |
 | --- | --- | --- |
 | Análise mensal | `/admin?tab=agent-products#businessMonthPricingObserver` | Ranking completo, busca, classe ABC, ordenação e paginação locais. |
 | Variações e referência de custo | Mesmo painel, no produto selecionado | Nomes atuais, quantidades comerciais, custo da unidade vendida/kit e cobertura conhecida/pendente. |
@@ -34,7 +35,7 @@ dentro do detalhamento financeiro, e concentra a análise em **MLS Products**.
 O observador mantém uma única instância e seus IDs `businessMonthPricing*`.
 O detalhamento financeiro por produto permanece no Financeiro. A navegação,
 os seis agentes da inicial e a equipe completa com sete continuam preservados.
-As mensagens antigas de Pricing/Listing Factory em PR separada serão corrigidas
+As mensagens antigas de Pricing/Listing Factory em PR separada foram corrigidas
 para refletir as capacidades locais integradas, sem conceder permissão de publicação.
 
 ## O que os números representam
@@ -77,31 +78,42 @@ As hipóteses do cenário não reescrevem custos, despesas ou tarifas da loja.
 
 ## Fontes e desempenho
 
-O candidato usa o snapshot mensal, os metadados de catálogo e os controladores
+A entrega usa o snapshot mensal, os metadados de catálogo e os controladores
 já existentes. Buscar, filtrar, ordenar, paginar, expandir variações e calcular
 cenários reutiliza os dados carregados. A renderização respeita limites locais
 e trabalha apenas a página ativa. Não acrescenta endpoint, consulta SQL,
 coleta, polling ou chamada ao provedor; não grava fatos físicos/financeiros.
 
 Mudanças de mês, custo ou seleção exigem cenário atualizado; rascunhos do
-operador e fontes distintas continuam separados. A validação deve cobrir
+operador e fontes distintas continuam separados. A regressão cobre
 mudanças de metadados, entradas incompletas e proteção contra resultados antigos.
 
 ## Validação e publicação
 
-**Pendente:** regressão integral, QA normal/minificada em 320/1365 px e temas
-claro/escuro, CI do head exato, publicação App-only e conferência dos três Workers.
-Os testes devem validar cabeçalhos com fonte ampliada, os seis agentes da inicial,
-um único observador/alias, mês/histórico/rascunhos, filtros locais, nenhuma
-margem por variação inventada e nenhum valor financeiro modificado pela análise.
+Suíte completa aprovada: **3370 Node e 67 Python**, sem falhas ou skips;
+CI do head exato e QA local/sintética normal/minificada em 320/1365 px.
+As provas cobrem o observador único/alias, agentes da inicial, mês/histórico,
+rascunhos, filtros locais, cenários explícitos, nenhuma margem por variação
+inventada e os valores financeiros preservados. QA não confirma aceite real
+do proprietário nem fechamento financeiro.
 
-O proprietário já autorizou incrementos validados na Live. A marcação de
-preparação não repete aquela aprovação: distingue código em preparação de
-publicação efetivamente comprovada. Registro de CI não prova deploy ou merge.
+Publicação App-only concluída e vetor completo de código/configuração/domínios/
+flags/cron conferido. O publisher executou zero consultas D1 e zero chamadas
+owner/provedor; não criou fatos físicos ou financeiros. A autorização existente
+para incrementos validados na Live foi preservada.
+
+| Worker | UUID publicado/preservado | SHA-256 gerado | SHA-256 publicado |
+| --- | --- | --- | --- |
+| App | `124b7071-6152-44fa-bf44-5edf98eca2dc` | `e20691b12dd668fa342bf6ff79e3b3de50a360378ddf0c41956f7a1b9b5b0830` | `200a569624f38e98a13a250ff5db2914a5e082136842b33bbe7f49bbdf0554e9` |
+| Auth | `d6f4397f-ac4d-45cf-93da-175df8305a6d` | `851e27c703fda4143b87a8a85a79c06326b9a2f25ce16f5625d8871a589f43ec` | `5e18583606c453bd4e5ecfbc983db13826e4ad7f1c336fde5b7bbe9d628b2bd6` |
+| Finance | `7001376b-f065-4e37-84ea-ee9ac2ea890c` | `d7e64105b88602fa20f8e733f5e16548cfa3ceefbbd7733a87dfb5e5bd8fcd49` | `ea8a5abf0c818539ee02e0e14260b973d0d2ed243f2c0eb26162ae3bbb3fcb59` |
+
+Integração Git: **consultar o estado atual da PR vinculada**. O recibo da
+publicação identifica código e horário; a integração possui evidência própria.
 
 ## Continuidade e limites
 
-Após o recibo, conferir o painel com as fontes reais e continuar M2/M2.2:
+Conferir o painel entregue com as fontes reais e continuar M2/M2.2:
 fabricação e recebimento reais, quantidades/composição, decomposição histórica
 da peça versus embalagem/etiqueta/reparo, valoração/reserva/consumo na revenda,
 ponte contábil e comparação Seller Centre/banco. Ausência não é zero e publicação
