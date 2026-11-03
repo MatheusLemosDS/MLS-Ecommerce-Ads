@@ -1,7 +1,7 @@
 {
   "schema": "mls_release_candidate_v1",
   "base_commit": "b840da57b9f2074e4ad120314f4871e1947aa1a5",
-  "prepared_source_commit": "97477c254fd27534be20f7d67fc8d22368d87d82",
+  "prepared_source_commit": "a62fc2d3d01b1584cdeacc901bb948d8c0062dfc",
   "owner_authorization": "OWNER_REQUESTED_ALL_PREPARED_IMPROVEMENTS_LIVE_2026_10_30",
   "commercial_writes_allowed": false,
   "expected_hashes": {
@@ -49,6 +49,7 @@
     "web/cloudflare/tests/mls-product-workbench-fixture.mjs",
     "web/cloudflare/tests/mls-product-workbench.test.mjs",
     "web/cloudflare/tests/mls-products-workspace-chrome.test.mjs",
-    "web/cloudflare/tests/mls-products-workspace-rework.test.mjs"
+    "web/cloudflare/tests/mls-products-workspace-rework.test.mjs",
+    "web/cloudflare/tests/mls-v36-approved-integration-gates.test.mjs"
   ]
 }
