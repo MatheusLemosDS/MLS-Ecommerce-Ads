@@ -286,9 +286,17 @@ export function adminBody(){
  const legacy=original.slice(start+opening.length,end);
  // Keep the original financial nodes, IDs and handlers, but move their display
  // off the executive overview and into the dedicated Finance agent workspace.
- const financeDetails=businessMonthBody()+'<details class="mission-day-details" id="missionFinanceDayDetails"><summary>Consultar um dia específico</summary>'+businessDayBody()+'</details>'+pendingIncomeBody()+
+ // Move the existing M3 controls once; financial product detail keeps its own IDs.
+ const monthHtml=businessMonthBody(),pricingRoot=/<(section|details)\b[^>]*\bid="businessMonthPricingObserver"[^>]*>/g.exec(monthHtml);
+ if(!pricingRoot)throw Error('M3_WORKBENCH_INSERTION_INVALID');
+ const pricingStart=pricingRoot.index,pricingTags=new RegExp('</?'+pricingRoot[1]+'\\b[^>]*>','g');
+ pricingTags.lastIndex=pricingStart;let pricingDepth=0,pricingEnd=-1,pricingTag;
+ while((pricingTag=pricingTags.exec(monthHtml))){pricingDepth+=pricingTag[0].startsWith('</')?-1:1;if(pricingDepth===0){pricingEnd=pricingTags.lastIndex;break;}}
+ if(pricingEnd<pricingStart)throw Error('M3_WORKBENCH_INSERTION_INVALID');
+ const pricingHtml=monthHtml.slice(pricingStart,pricingEnd),financialMonth=monthHtml.slice(0,pricingStart)+'<a class="field-help" href="/admin?tab=agent-products#businessMonthPricingObserver">Abrir análise de produtos e cenários de preços →</a>'+monthHtml.slice(pricingEnd);
+ const financeDetails=financialMonth+'<details class="mission-day-details" id="missionFinanceDayDetails"><summary>Consultar um dia específico</summary>'+businessDayBody()+'</details>'+pendingIncomeBody()+
   '<details id="legacyFinanceDetails" class="card monthly-legacy-details" hidden><summary>Referência anterior de pedidos concluídos</summary><p class="field-help">Esta referência preserva a regra antiga por pedido. Para o MEI, use o resumo mensal, que desconta o DAS uma vez no mês.</p>'+legacy+'</details>';
  return original.slice(0,start)+agentPeriodBody()+opening+commandCenterBody()+'</section>'+
-  missionWorkspacesBody(financeDetails).replace('<div id="missionHermesConsole"></div>','<section class="mission-hermes-console" id="missionHermesConsole" aria-label="Análises do Hermes">'+hermesBody+'</section>')+original.slice(end+10)+
+  missionWorkspacesBody(financeDetails).replace('<div id="missionProductWorkbenchHost"></div>',pricingHtml).replace('<div id="missionHermesConsole"></div>','<section class="mission-hermes-console" id="missionHermesConsole" aria-label="Análises do Hermes">'+hermesBody+'</section>')+original.slice(end+10)+
   '<div class="workspace-mobile-navigation">'+workspaceNavigation('overview',{role:'owner',mobile:true})+'</div>';
 }

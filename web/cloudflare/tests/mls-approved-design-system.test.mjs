@@ -34,7 +34,7 @@ test('single approved visual language defines actual agent colors, responsive la
 
 test('specialists retain actual registry and chart nodes with visible local navigation, no added network path',()=>{
  const html=missionWorkspacesBody('<div id="financeFixtureProtected"></div>'),rendered=adminBody().replace('<div id="missionProductionLedgerHost"></div>','<div id="missionProductionLedgerHost">'+incurredProductionBody()+productionCostPeriodsBody()+'</div>');
- const destinations={finance:['#businessMonth','#businessMonthExpensesDetails','#commandPendingIncomeDetails','#businessEscrowReleases','#businessReconciliation'],ads:['/dashboard','/campaigns','/optimization'],products:['/admin?tab=products','/admin?tab=margins','#mission-products-evidence'],production:['#mission-production-operations','#costPeriods','/admin?tab=production'],returns:['#physicalReturnsQueue','#returnManufacturingLinksDetails','/admin?tab=agent-finance#businessReconciliation'],auditor:['#mission-auditor-top','#mission-auditor-tasks','#mission-auditor-evidence'],hermes:['#mission-hermes-top','#missionHermesConsole','#mlsAgentLearning','/admin?tab=agents']};
+ const destinations={finance:['#businessMonth','#businessMonthExpensesDetails','#commandPendingIncomeDetails','#businessEscrowReleases','#businessReconciliation'],ads:['/dashboard','/campaigns','/optimization'],products:['#businessMonthPricingObserver','/admin?tab=products','/admin?tab=margins'],production:['#mission-production-operations','#costPeriods','/admin?tab=production'],returns:['#physicalReturnsQueue','#returnManufacturingLinksDetails','/admin?tab=agent-finance#businessReconciliation'],auditor:['#mission-auditor-top','#mission-auditor-tasks','#mission-auditor-evidence'],hermes:['#mission-hermes-top','#missionHermesConsole','#mlsAgentLearning','/admin?tab=agents']};
  for(const id of ids){
   assert.match(html,new RegExp('id="agent-'+id+'"'));
   assert.match(html,new RegExp('id="mission-'+id+'-top"'));
@@ -89,7 +89,9 @@ test('previously validated roadmap, Products and Production reworks remain intac
  for(const id of ['overview','commandCenter','roadmap','mlsRoadmapHeading','agents','missionHubTitle',
   'products','legacyProductEditor','hermes','margins','history','missionGlobalSearch'])
   assert.ok(idList.includes(id),'missing preserved panel '+id);
- assert.match(savedCatalogBody(),/Homologação · não publicada/);
+ assert.match(savedCatalogBody(),/M3 Observador disponível/);
+ assert.match(savedCatalogBody(),/href="\/admin\?tab=agent-products#businessMonthPricingObserver"/);
+ assert.doesNotMatch(savedCatalogBody(),/Homologação · não publicada|PR separada/);
  assert.match(dtfBody(),/Conta \+ dispositivo/);
  assert.match(dtfBody(),/SEM PUBLICAÇÃO COMERCIAL/);
  assert.doesNotMatch(DTF_CLIENT,/dtf-flow-step/);

@@ -6,12 +6,12 @@ import {releaseOverviewBody,releaseNotesBody,APP_RELEASE_CSS} from '../src/app-r
 import {adminBody} from '../src/admin-view.mjs';
 import {incurredProductionBody} from '../src/incurred-production-view.mjs';
 
-const targets=['/admin?tab=overview#commandAgents','/admin?tab=agent-returns#physicalReturnsQueue','/admin?tab=agent-production#incurredProductionDetails','/admin?tab=products'];
+const targets=['/admin?tab=agent-products#businessMonthPricingObserver','/admin?tab=overview#commandAgents','/admin?tab=agent-returns#physicalReturnsQueue','/admin?tab=agent-production#incurredProductionDetails','/admin?tab=products'];
 const originalTargets=['/admin?tab=agent-returns#physicalReturnsOriginalItems','/admin?tab=agent-returns#physicalReturnsDetails','/admin?tab=agent-returns#returnManufacturingLinksDetails'];
 const previousTargets=['/admin?tab=agent-returns#physicalReturnsDetails','/admin?tab=margins#incurredProductionDetails','/admin?tab=agent-returns#returnManufacturingLinksDetails'];
 const monthlyTargets=['/admin?tab=agent-finance#businessMonthNetCard','/admin?tab=agent-finance#mlsAgentPeriod','/admin?tab=agent-finance#businessMonthExpensesForm'];
 
-test('overview has one compact release link, while notes expose the restored team and retain every existing workflow',()=>{
+test('overview has one compact release link, while M3 notes retain the restored team and every existing workflow',()=>{
  const html=adminBody(),overview=releaseOverviewBody(),notes=releaseNotesBody();
  assert.equal((html.match(/id="appReleaseOverviewTitle"/g)||[]).length,1);
  assert.doesNotMatch(html,/Últimas atividades dos agentes|Sem atividade auditada no período/);
@@ -39,10 +39,13 @@ test('Returns places the receiving queue before charts and offers one distinct f
  assert.match(returns,/Escolha o caso e confira os itens de origem/);assert.match(returns,/Registre e inspecione somente as peças recebidas/);
 });
 
-test('release notes explain the restored overview team and retain automatic suggestions, fabrication dates and financial gates',()=>{
+test('release notes expose M3 Observer while retaining the restored team, fabrication dates and financial gates',()=>{
  const all=releaseNotesBody(),split=all.indexOf('id="appReleaseOriginalItemsPrevious"');assert.ok(split>0);
  const current=all.slice(0,split),previous=all.slice(split);
  for(const href of targets)assert.ok(current.includes('href="'+href+'"'));
+ assert.match(current,/ranking e curva ABC por unidades vendidas/);
+ assert.match(current,/custos atuais por variação e cenários matemáticos de equilíbrio e margem desejada/);
+ assert.match(current,/Pedidos mistos, margem por variação sem receita própria e dados pendentes continuam identificados/);
  assert.match(current,/Hermes, Finance, Ads, Products, Production e Returns aparecem abaixo dos indicadores/);
  assert.match(current,/A página Equipe mantém os sete especialistas e seus filtros/);
  for(const href of [...originalTargets,...previousTargets,...monthlyTargets])assert.ok(previous.includes('href="'+href+'"'));

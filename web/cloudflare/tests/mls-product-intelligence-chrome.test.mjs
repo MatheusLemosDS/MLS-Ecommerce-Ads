@@ -54,7 +54,7 @@ test('compiled observer ranks actual saved units and calculates only an explicit
    };
    await globalThis.brazaMonthDashboard.start({api});
    const byId=name=>document.getElementById('businessMonthPricing'+name);
-   const initial={ready:byId('Observer').dataset.sourceReady,rows:byId('Rows').querySelectorAll('tr').length,
+   const initial={visible:byId('Observer').checkVisibility({checkVisibilityCSS:true}),ready:byId('Observer').dataset.sourceReady,rows:byId('Rows').querySelectorAll('tr').length,
     units:byId('Rows').querySelector('tr')?.children[2]?.textContent,
     band:byId('Rows').querySelector('tr')?.children[1]?.textContent,
     assumptions:['Extra','Fee','Ads','Margin'].map(name=>byId(name).value),
@@ -78,11 +78,11 @@ test('compiled observer ranks actual saved units and calculates only an explicit
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
   try{
    for(const [width,height] of [[1365,900],[390,844]]){
-    const output=await dump('http://127.0.0.1:'+server.address().port+'/admin?tab=agent-finance&month=2026-10',width,height);
+    const output=await dump('http://127.0.0.1:'+server.address().port+'/admin?tab=agent-products&month=2026-10',width,height);
     assert.doesNotMatch(output,/data-pricing-error=/);
     const match=/data-pricing-proof="([^"]+)"/.exec(output);assert.ok(match,'compiled observer proof missing');
     const proof=JSON.parse(match[1].replace(/&quot;/g,'"').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>'));
-    assert.equal(proof.initial.ready,'true');assert.equal(proof.initial.rows,1);
+    assert.equal(proof.initial.visible,true);assert.equal(proof.initial.ready,'true');assert.equal(proof.initial.rows,1);
     assert.equal(proof.initial.units,'257');assert.equal(proof.initial.band,'A');
     assert.deepEqual(proof.initial.assumptions,['','','','']);
     assert.match(proof.initial.gate,/não por estoque/);assert.match(proof.initial.gate,/não publica preços/);

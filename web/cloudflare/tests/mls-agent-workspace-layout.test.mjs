@@ -46,7 +46,7 @@ test('specialist primary actions use existing tools and commercial campaign crea
  assert.match(panels.get('ads'),/<a class="mls-workspace-primary" href="\/campaigns" aria-describedby="mission-ads-action-note">Ver campanhas/);
  assert.doesNotMatch(panels.get('ads'),/>Criar campanha/);
  assert.match(panels.get('ads'),/id="mission-ads-action-note">Somente leitura · alterações comerciais bloqueadas/);
- const actions={finance:'#businessMonthExpensesDetails',products:'/admin?tab=products',production:'#incurredProductionDetails',returns:'#physicalReturnsQueue'};for(const [id,href] of Object.entries(actions))assert.ok(panels.get(id).includes('<a class="mls-workspace-primary" href="'+href+'"'),id+': primary action belongs to the actual workflow');
+ const actions={finance:'#businessMonthExpensesDetails',products:'#businessMonthPricingObserver',production:'#incurredProductionDetails',returns:'#physicalReturnsQueue'};for(const [id,href] of Object.entries(actions))assert.ok(panels.get(id).includes('<a class="mls-workspace-primary" href="'+href+'"'),id+': primary action belongs to the actual workflow');
  assert.doesNotMatch(MLS_AGENT_WORKSPACE_CSS,/!important|url\(/i);
  assert.doesNotMatch(MLS_AGENT_WORKSPACE_CSS,/sidebar-navigation>\.workspace-nav\{display:none\}|mls-agent-mini-nav/);
  assert.match(MLS_AGENT_WORKSPACE_CSS,/position:sticky;top:84px/);

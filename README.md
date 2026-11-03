@@ -1,3 +1,7 @@
+<!-- M3_PRODUCT_WORKBENCH_CURRENT -->
+**M3 paralela publicada e conferida — 02/11/2026 às 23:15:11 Brasília:** versão `2026-11-02.5 — M3 · Produtos e cenários de preços`, `PUBLISHED_VERIFIED`. O painel único de Produtos reutiliza o mês/catálogo salvos e oferece ranking completo, ABC por unidades, busca/filtros/ordem/paginação locais, variações e cobertura de custos de referência, gráfico e cenários matemáticos de equilíbrio/alvo. Fonte `a62fc2d3d01b1584cdeacc901bb948d8c0062dfc`, head `9e5dc518f6501fd94d5133aab46e6a25e8f2a768`, CI [41563950925](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/41563950925) aprovada: 3370 Node e 67 Python. App `124b7071-6152-44fa-bf44-5edf98eca2dc` publicado; Auth/Finance, código/configuração/domínios/flags/cron dos três conferidos. Sem novo endpoint/SQL/coleta ou escrita comercial; variante sem receita/repasse próprios continua sem margem atribuída, pedido misto sem rateio e simulação não é preço seguro. Os seis agentes da inicial permanecem. M2/M2.2 e a conferência real com Seller Centre/banco continuam abertas. Integração Git: consultar a [PR #106](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/106); este recibo de publicação não prova merge. [Uso, recibo e limites](docs/MLS_M3_PRODUCT_WORKBENCH_2026_11_02.md).
+<!-- END_M3_PRODUCT_WORKBENCH_CURRENT -->
+
 <!-- OVERVIEW_AGENTS_RESTORE_RELEASE -->
 **Atualização Live — 2026-11-02.4, Agentes de volta à página inicial:**
 Os seis cartões do design aprovado voltaram à Visão geral, abaixo dos indicadores

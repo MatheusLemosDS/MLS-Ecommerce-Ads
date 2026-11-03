@@ -1,3 +1,7 @@
+<!-- M3_PRODUCT_WORKBENCH_CURRENT -->
+**M3 paralela publicada e conferida — 02/11/2026 às 23:15:11 Brasília:** versão `2026-11-02.5 — M3 · Produtos e cenários de preços`, `PUBLISHED_VERIFIED`. O painel único de Produtos reutiliza o mês/catálogo salvos e oferece ranking completo, ABC por unidades, busca/filtros/ordem/paginação locais, variações e cobertura de custos de referência, gráfico e cenários matemáticos de equilíbrio/alvo. Fonte `a62fc2d3d01b1584cdeacc901bb948d8c0062dfc`, head `9e5dc518f6501fd94d5133aab46e6a25e8f2a768`, CI [41563950925](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/41563950925) aprovada: 3370 Node e 67 Python. App `124b7071-6152-44fa-bf44-5edf98eca2dc` publicado; Auth/Finance, código/configuração/domínios/flags/cron dos três conferidos. Sem novo endpoint/SQL/coleta ou escrita comercial; variante sem receita/repasse próprios continua sem margem atribuída, pedido misto sem rateio e simulação não é preço seguro. Os seis agentes da inicial permanecem. M2/M2.2 e a conferência real com Seller Centre/banco continuam abertas. Integração Git: consultar a [PR #106](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/106); este recibo de publicação não prova merge. [Uso, recibo e limites](MLS_M3_PRODUCT_WORKBENCH_2026_11_02.md).
+<!-- END_M3_PRODUCT_WORKBENCH_CURRENT -->
+
 **Live — 02/11/2026 às 19:50:54 Brasília:** versão `2026-11-02.4 — Agentes de volta à página inicial`; seis cartões Hermes, Finance, Ads, Products, Production e Returns restaurados abaixo dos indicadores e antes dos gráficos, com avatares, cores e estados das fontes salvas. App `16ee9374-f16a-45b3-99a9-92669d296c9b` publicado e vetor dos três Workers conferido; Auth/Finance, configuração, domínios, flags e cron preservados. Fonte `4d1a968f4482e8dc3deb3b2a97847a91479eacf7`, head `7a8b548830fd68a0216cb7c1b4b6fb3f554c78de`, CI [41539423858](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/41539423858) aprovada: 3346 Node e 67 Python. **PUBLISHED_VERIFIED:** publicação técnica comprovada; consultar a [PR #105](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/105) para o estado atual da integração Git. Equipe completa, navegação e controles existentes preservados; M2/M2.2 continuam abertas. [Uso, evidências e limites](MLS_OVERVIEW_AGENTS_RESTORE_2026_11_02.md).
 
 **Continuidade confirmada da PR104:** merge `41b95f6e93236fdfad42ff9b3deb9a85905d67ef`, em 02/11/2026 às 19:15:31 Brasília; CI documental [41534506552](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/41534506552) aprovada e árvore/runtime conferidos. A nota anterior com integração pendente preserva o corte de publicação. Três descritores de fotos já passaram pelo leitor canônico após captura natural; a exibição real no CDN foi bloqueada pelo proxy do executor. Isso não confirma recebimento, fabricação ou fechamento financeiro.
@@ -439,8 +443,9 @@ Esta é uma trilha técnica independente que **não substitui o gate de saída d
 confirmação física correta/problema atômica, custo histórico por intervalo de
 fabricação em Brasília e navegação operacional com Finance/Returns visíveis.
 Sem registro não equivale a gasto zero; foto/custo atuais não provam a peça ou
-custo histórico. QA sintética não confirma fatos reais. Integração Git da PR104
-permanece pendente de recibo próprio; M2/M2.2 seguem abertas.
+custo histórico. QA sintética não confirma fatos reais. A integração Git da PR104 foi
+comprovada no merge `41b95f6e93236fdfad42ff9b3deb9a85905d67ef`; o corte
+anterior com integração pendente é histórico. M2/M2.2 seguem abertas.
 [Uso, recibo e limites](MLS_SIMPLIFIED_OPERATIONS_2026_11_02.md).
 
 **Incremento publicado — PR103, 02/11/2026:** evidência comercial separada do
@@ -470,6 +475,25 @@ A [primeira etapa PR98](MLS_M22_PHYSICAL_RETURNS_2026_11_01.md) entrega o contro
 O controle físico, o ledger e a associação publicados oferecem contagens, custos e origem internos declarados, com quantidades originais UNAVAILABLE/null e avaliação de estoque UNKNOWN/null. Não alteram totais financeiros, reservas, revendas ou estoque externo. Custos registrados não comprovam pagamento nem a completude da produção real da loja. Valoração e lucro dependem de evidências adicionais e da futura integração contábil sem dupla contagem; uso físico real do proprietário e o ciclo completo permanecem sem validação. Triggers D1 persistem no rollback: código antigo pode retornar 503, exigindo recuperação compatível e desvinculação explícita antes de corrigir os pais. M2 e M2.2 continuam abertas.
 
 ### M3 — Products + Pricing Intelligence
+
+**Trilha paralela autorizada pelo proprietário em 02/11/2026.** A fase financeira
+M2 e o ciclo M2.2 permanecem abertos. Podemos preparar análises Observer e
+cenários locais enquanto a conferência financeira e operacional continua;
+isso não libera preço seguro, margem líquida por variação ou execução comercial.
+
+Primeiro incremento publicado: [M3 · Produtos e cenários de preços](MLS_M3_PRODUCT_WORKBENCH_2026_11_02.md),
+versão `2026-11-02.5`, `PUBLISHED_VERIFIED`. Promove a base já
+integrada para Produtos, com uma única instância do observador e os mesmos
+controladores/fontes mensais. Entrega ranking completo com busca/filtros e
+paginação local, ABC por unidades, custos/nomes atuais por variação, gráfico
+e cenários matemáticos de equilíbrio/alvo. Não acrescenta consulta SQL, coleta,
+endpoint ou escrita. A cópia antiga de Pricing/Listing Factory em PR separada
+deve refletir a integração existente, mantendo os gates de publicação externa.
+
+O aceite dessa primeira entrega exige dados ausentes explícitos, pedidos mistos
+sem rateio, nenhuma margem por variação inventada, rascunhos/mês preservados e
+seis agentes na inicial. Sua conclusão técnica não encerra M2/M2.2 ou toda M3.
+
 - contribuição por SKU;
 - curva ABC;
 - custo e margem por produto/variação;
@@ -581,27 +605,35 @@ Conversão de identidade M0 publicada pela **PR #11**, merge
 
 ## 10. Próximo passo ao retomar
 
-A fase canônica é **M2 — Finance/Returns confiáveis como agentes observadores**.
-
-A PR104 está publicada nos três Workers, versão `2026-11-02.3`, e conferida
-em 02/11/2026 às 19:06:16 Brasília, com CI [41532391229](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/41532391229) aprovada.
-Integração em main ainda depende de recibo próprio da PR104. Conferir agora a
-fila física real e um intervalo de fabricação registrado; captura natural de
-fotos e QA owner não foram comprovadas pela publicação. Não reiniciar coleta,
-inventar fatos físicos ou transformar ausência de lançamentos em gasto zero.
-[Registro e próximos limites](MLS_SIMPLIFIED_OPERATIONS_2026_11_02.md).
-
-A entrega anterior PR102 continua disponível: resultado mensal separado,
-período compartilhado e despesas. Novembro já possui declaração explícita de
-ausência de outras despesas; outros meses mantêm suas próprias informações.
-A leitura numérica não encerra a conciliação M2.
+A fase financeira canônica continua **M2 — Finance/Returns confiáveis**;
+**M3 Observer avança em paralelo**, por pedido explícito do proprietário.
+A última Live comprovada é `2026-11-02.4`, PR105 integrada em
+`b840da57b9f2074e4ad120314f4871e1947aa1a5`, com CI documental
+[41540981824](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/41540981824)
+aprovada, árvore e vetor dos três Workers conferidos. A PR104 também já foi
+integrada; referências antigas a merge pendente preservam cortes históricos.
 
 Retomar por:
-1. Registrar a integração Git da PR104 somente quando comprovada e conferir a fila de devoluções e o período de fabricação reais no mesmo escopo escolhido pelo proprietário. Confirmar a captura natural de itens/fotos, suas fontes, datas e cobertura; não prometer observação antes da evidência nem reiniciar coleta. Legados NOT_CAPTURED/UNKNOWN não viram zero. Quantidades comerciais não liberam composição física de kits, e ausência de fabricação registrada não prova gasto zero. Preservar os controles M2.2b/c existentes e os custos históricos; não refazê-los nem supor fabricação pela quantidade DTF/kit.
-2. Confirmar com fatos do operador a decomposição histórica de peça/estampa versus embalagem/etiqueta consumidas e os custos incrementais de reparo/nova embalagem, antes de valorar ou alocar peças na revenda. Não dividir automaticamente all-inclusive; manter UNKNOWN e projetar a ponte contábil sem somar o custo novamente ao resultado atual.
-3. Manter a paginação do Pending já entregue, renovar a cobertura da publicação exata e acompanhar revisões/Returns/calendários existentes sem reiniciar coleta ou catálogo.
-4. Conferir a declaração de despesas do mês escolhido — novembro já foi confirmado pelo proprietário, sem transportar essa informação para outros meses — e confrontar o mesmo recorte com Seller Centre e banco. Somente concluir M2 com diferenças materiais explicadas; lucro realizado exige liquidação comprovada.
-5. Manter Ads/PROMO, alterações externas de preço/estoque e autonomia comercial bloqueados enquanto seus gates permanecerem abertos.
+
+1. Conferir o estado atual da [PR #106](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/106) para a integração Git da
+   primeira [M3 paralela](MLS_M3_PRODUCT_WORKBENCH_2026_11_02.md), já publicada
+   e conferida no App. Validar o uso com as fontes reais e manter o observador
+   único, seus IDs e o alias antigo. Não refazer catálogo, engines ou coleta.
+2. Usar apenas fontes mensais/catálogo salvos: ABC por unidades não é estoque;
+   saldo de pedidos exclusivos não é lucro líquido por SKU; não há margem por
+   variação sem receita/repasse atribuídos. Cenários exigem hipóteses explícitas
+   e não liberam preço seguro, ROAS real por SKU ou execução na Shopee.
+3. Preservar os seis agentes da inicial e a equipe completa, a navegação,
+   rascunhos por mês, histórico físico/fabricação/vínculos e paginação Pending.
+4. Continuar M2/M2.2: conferir um recebimento e uma fabricação reais, preservar
+   itens/quantidades desconhecidos, confirmar composição de kits e decomposição
+   histórica de peça/estampa versus embalagem/etiqueta/reparo antes de valorar,
+   reservar, consumir ou integrar revenda ao resultado sem dupla contagem.
+5. Conferir despesas do mês e o mesmo recorte com Seller Centre/banco, explicar
+   diferenças materiais e distinguir Pending/liberação de liquidação bancária.
+   Novembro já possui declaração explícita; não copiá-la a outros meses.
+6. Manter Ads/PROMO e escritas externas de preço/estoque bloqueados até os gates
+   oficiais. M2/M2.2 não são encerradas pela publicação deste painel Observer.
 
 ## Registros históricos abaixo
 
