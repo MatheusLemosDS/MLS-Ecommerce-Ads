@@ -1,6 +1,8 @@
-<!-- M3_PRODUCT_WORKBENCH_CURRENT -->
-**M3 paralela publicada e conferida — 02/11/2026 às 23:15:11 Brasília:** versão `2026-11-02.5 — M3 · Produtos e cenários de preços`, `PUBLISHED_VERIFIED`. O painel único de Produtos reutiliza o mês/catálogo salvos e oferece ranking completo, ABC por unidades, busca/filtros/ordem/paginação locais, variações e cobertura de custos de referência, gráfico e cenários matemáticos de equilíbrio/alvo. Fonte `a62fc2d3d01b1584cdeacc901bb948d8c0062dfc`, head `9e5dc518f6501fd94d5133aab46e6a25e8f2a768`, CI [41563950925](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/41563950925) aprovada: 3370 Node e 67 Python. App `124b7071-6152-44fa-bf44-5edf98eca2dc` publicado; Auth/Finance, código/configuração/domínios/flags/cron dos três conferidos. Sem novo endpoint/SQL/coleta ou escrita comercial; variante sem receita/repasse próprios continua sem margem atribuída, pedido misto sem rateio e simulação não é preço seguro. Os seis agentes da inicial permanecem. M2/M2.2 e a conferência real com Seller Centre/banco continuam abertas. Integração Git: consultar a [PR #106](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/106); este recibo de publicação não prova merge. [Uso, recibo e limites](MLS_M3_PRODUCT_WORKBENCH_2026_11_02.md).
-<!-- END_M3_PRODUCT_WORKBENCH_CURRENT -->
+<!-- M3_CONTRIBUTION_EVIDENCE_CURRENT -->
+**Próxima entrega M3 em preparação:** versão proposta `2026-11-02.6 — M3 · Margens e evidências por produto`, `PREPARED_NOT_PUBLISHED`. O candidato detalha a contribuição dos pedidos exclusivos: margem/sinal conferidos, gráfico de composição, valores estritos versus conhecidos e motivos/quantidades pendentes. Uma única variação vendida só recebe evidência exclusiva quando todas as condições de fonte, quantidade e valor forem verificadas; múltiplas variações vendidas continuam sem atribuição financeira. Os campos legados v1 de margem/lucro por variação permanecem desconhecidos. Sem ratear pedidos mistos ou chamar diferença vendas–repasse de taxa. Ads, DAS mensal e despesas ficam fora dessa contribuição; referência atual de custo não é fabricação incorrida ou reaproveitamento. Seis agentes da inicial, mês/rascunhos e cenários existentes devem ser preservados. M2/M2.2 e o confronto Seller Centre/banco continuam abertos.
+
+A última Live comprovada continua `2026-11-02.5`, App `124b7071-6152-44fa-bf44-5edf98eca2dc`, com Auth/Finance preservados. A [PR #106](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/106) foi integrada em `dea19f0ace932acccc917c63d8da46db417079c9`; CI documental [41565003839](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/41565003839) aprovada e árvore/vetor Live conferidos. A preparação acima não publica a próxima versão. [Escopo, uso e limites](MLS_M3_CONTRIBUTION_EVIDENCE_2026_11_03.md).
+<!-- END_M3_CONTRIBUTION_EVIDENCE_CURRENT -->
 
 **Live — 02/11/2026 às 19:50:54 Brasília:** versão `2026-11-02.4 — Agentes de volta à página inicial`; seis cartões Hermes, Finance, Ads, Products, Production e Returns restaurados abaixo dos indicadores e antes dos gráficos, com avatares, cores e estados das fontes salvas. App `16ee9374-f16a-45b3-99a9-92669d296c9b` publicado e vetor dos três Workers conferido; Auth/Finance, configuração, domínios, flags e cron preservados. Fonte `4d1a968f4482e8dc3deb3b2a97847a91479eacf7`, head `7a8b548830fd68a0216cb7c1b4b6fb3f554c78de`, CI [41539423858](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/41539423858) aprovada: 3346 Node e 67 Python. **PUBLISHED_VERIFIED:** publicação técnica comprovada; consultar a [PR #105](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/105) para o estado atual da integração Git. Equipe completa, navegação e controles existentes preservados; M2/M2.2 continuam abertas. [Uso, evidências e limites](MLS_OVERVIEW_AGENTS_RESTORE_2026_11_02.md).
 
@@ -481,18 +483,20 @@ M2 e o ciclo M2.2 permanecem abertos. Podemos preparar análises Observer e
 cenários locais enquanto a conferência financeira e operacional continua;
 isso não libera preço seguro, margem líquida por variação ou execução comercial.
 
-Primeiro incremento publicado: [M3 · Produtos e cenários de preços](MLS_M3_PRODUCT_WORKBENCH_2026_11_02.md),
-versão `2026-11-02.5`, `PUBLISHED_VERIFIED`. Promove a base já
-integrada para Produtos, com uma única instância do observador e os mesmos
-controladores/fontes mensais. Entrega ranking completo com busca/filtros e
-paginação local, ABC por unidades, custos/nomes atuais por variação, gráfico
-e cenários matemáticos de equilíbrio/alvo. Não acrescenta consulta SQL, coleta,
-endpoint ou escrita. A cópia antiga de Pricing/Listing Factory em PR separada
-deve refletir a integração existente, mantendo os gates de publicação externa.
+Primeiro incremento publicado e integrado: [M3 · Produtos e cenários de preços](MLS_M3_PRODUCT_WORKBENCH_2026_11_02.md),
+versão `2026-11-02.5`, PR106 merge `dea19f0ace932acccc917c63d8da46db417079c9`.
+Mantém um único observador, ranking completo com busca/filtros/paginação locais,
+ABC por unidades, custos/nomes atuais por variação e cenários matemáticos.
 
-O aceite dessa primeira entrega exige dados ausentes explícitos, pedidos mistos
-sem rateio, nenhuma margem por variação inventada, rascunhos/mês preservados e
-seis agentes na inicial. Sua conclusão técnica não encerra M2/M2.2 ou toda M3.
+Próximo incremento preparado: [M3 · Margens e evidências por produto](MLS_M3_CONTRIBUTION_EVIDENCE_2026_11_03.md),
+versão proposta `2026-11-02.6`, `PREPARED_NOT_PUBLISHED`. Detalha contribuição
+exclusiva conferida, composição financeira, valores conhecidos e pendências.
+A nova evidência por variação exige um único modelo vendido e todos os gates
+coerentes; campos legados v1 continuam desconhecidos. Pedidos mistos não recebem
+rateio, custo misto não entra no saldo exclusivo e diferença vendas–repasse
+não é taxa oficial. Ads, DAS mensal e despesas ficam no fechamento mensal.
+Sem nova API/SQL/coleta/provedor ou escrita; preservar mês, rascunhos, cenários
+e os seis agentes da inicial. Nenhuma entrega encerra M2/M2.2 ou toda M3.
 
 - contribuição por SKU;
 - curva ABC;
@@ -607,18 +611,20 @@ Conversão de identidade M0 publicada pela **PR #11**, merge
 
 A fase financeira canônica continua **M2 — Finance/Returns confiáveis**;
 **M3 Observer avança em paralelo**, por pedido explícito do proprietário.
-A última Live comprovada é `2026-11-02.4`, PR105 integrada em
-`b840da57b9f2074e4ad120314f4871e1947aa1a5`, com CI documental
-[41540981824](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/41540981824)
-aprovada, árvore e vetor dos três Workers conferidos. A PR104 também já foi
-integrada; referências antigas a merge pendente preservam cortes históricos.
+A última Live comprovada é `2026-11-02.5`, PR106 integrada em
+`dea19f0ace932acccc917c63d8da46db417079c9`, com CI documental
+[41565003839](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/41565003839)
+aprovada, árvore e vetor dos três Workers conferidos. Os cortes anteriores com
+integração pendente preservam o histórico, não uma tarefa ainda aberta.
 
 Retomar por:
 
-1. Conferir o estado atual da [PR #106](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/106) para a integração Git da
-   primeira [M3 paralela](MLS_M3_PRODUCT_WORKBENCH_2026_11_02.md), já publicada
-   e conferida no App. Validar o uso com as fontes reais e manter o observador
-   único, seus IDs e o alias antigo. Não refazer catálogo, engines ou coleta.
+1. Concluir a [M3 de contribuição e evidências](MLS_M3_CONTRIBUTION_EVIDENCE_2026_11_03.md),
+   ainda `PREPARED_NOT_PUBLISHED`: validar valores exclusivos, margem/sinal,
+   composição e pendências, sem contaminar o saldo com custos mistos. Atribuição
+   exclusiva de uma única variação vendida exige todos os gates de fonte,
+   quantidade e dinheiro. Publicar só App após regressões, QA e CI, com recibo
+   real do vetor completo. Não refazer catálogo, engines ou coleta.
 2. Usar apenas fontes mensais/catálogo salvos: ABC por unidades não é estoque;
    saldo de pedidos exclusivos não é lucro líquido por SKU; não há margem por
    variação sem receita/repasse atribuídos. Cenários exigem hipóteses explícitas

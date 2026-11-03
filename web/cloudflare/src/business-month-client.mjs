@@ -1,6 +1,7 @@
 import {FINANCIAL_CLOSEOUT_CLIENT} from './financial-closeout-view.mjs';
 import {buildMlsProductIntelligence,simulateMlsPricingScenario} from './mls-product-intelligence.mjs';
 import {buildMlsProductWorkbench,simulateMlsPricingWorkbench} from './mls-product-workbench.mjs';
+import {buildMlsProductFinancialEvidence} from './mls-product-contribution.mjs';
 import {createMlsProductWorkbenchView} from './mls-product-workbench-view.mjs';
 import {EXPENSE_LEDGER_CLIENT} from './expense-ledger-view.mjs';
 import {ESCROW_RELEASES_CLIENT} from './escrow-releases-view.mjs';
@@ -28,6 +29,7 @@ export const BUSINESS_MONTH_CLIENT=BUSINESS_DAY_CLIENT+String.raw`
  ${buildMlsProductIntelligence.toString()}
  ${simulateMlsPricingScenario.toString()}
  ${buildMlsProductWorkbench.toString()}
+ ${buildMlsProductFinancialEvidence.toString()}
  ${simulateMlsPricingWorkbench.toString()}
  ${createMlsProductWorkbenchView.toString()}
  ${projectAdsCalendar.toString()}
@@ -579,7 +581,8 @@ export const BUSINESS_MONTH_CLIENT=BUSINESS_DAY_CLIENT+String.raw`
    scope.textContent='M3 Observador: aguardando um mês completo e o resumo de produtos validado. Os traços não significam zero, estoque ou lucro.';
    selector.disabled=true;calculate.disabled=true;outcome.textContent='Sem fonte mensal completa. Nenhuma simulação ou sugestão foi gerada.';return;
   }
-  host.dataset.sourceReady='true';m3WorkbenchView.render(workbench);
+  const financialEvidence=buildMlsProductFinancialEvidence(frame,projectBusinessMonth);
+  host.dataset.sourceReady='true';m3WorkbenchView.render(workbench,financialEvidence);
   const humanDate=value=>typeof value==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(value)?value.slice(8,10)+'/'+value.slice(5,7)+'/'+value.slice(0,4):'data em conferência';
   scope.textContent='Fonte: recorte salvo de '+humanDate(frame.start_date)+' a '+humanDate(frame.end_date)+' · mês '+report.month+'. ABC A/B/C por QUANTIDADE vendida, não por estoque. '+
    (report.revenue_abc_status==='AVAILABLE'?'ABC da receita bruta dos pedidos exclusivos também disponível, sem representar lucro.':'ABC por receita indisponível enquanto houver pedidos mistos ou situações sem valores completos.')+
