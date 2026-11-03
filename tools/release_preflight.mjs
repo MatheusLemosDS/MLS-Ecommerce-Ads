@@ -30,9 +30,16 @@ export const RELEASE_BASE_COMMIT=approvedCandidate.base_commit;
 export const RELEASE_EXPECTED_SHA=Object.freeze({...approvedCandidate.expected_hashes});
 export const RELEASE_EXPECTED_LIVE_FLAGS=Object.freeze({...validFlags});
 export const RELEASE_ALLOWED_FILES=Object.freeze([...approvedCandidate.allowed_files]);
-// M3 contribution evidence changes only App presentation and pure local analysis.
-// Finance/Auth, original Workers and deployment configuration remain closed.
-export const RELEASE_APPROVED_PROTECTED_FILES=Object.freeze([]);
+// M3 opt-in committed-order evidence needs these exact Finance/Auth transport
+// and aggregation files; all other protected sources/configuration stay closed.
+export const RELEASE_APPROVED_PROTECTED_FILES=Object.freeze([
+ "web/finance/src/auth-router.mjs",
+ "web/finance/src/business-period.mjs",
+ "web/finance/src/business-variant-attribution.mjs",
+ "web/finance/src/connection-worker.mjs",
+ "web/finance/tests/business-variant-attribution.test.mjs",
+ "web/finance/tests/business-variants-transport.test.mjs"
+]);
 
 
 export const RELEASE_MANUAL_GATES=Object.freeze([
