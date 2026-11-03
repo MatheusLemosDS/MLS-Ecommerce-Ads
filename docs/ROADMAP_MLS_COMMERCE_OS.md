@@ -1,5 +1,5 @@
 <!-- M3_VARIANT_ORDER_EVIDENCE_CURRENT -->
-**M3 em paralelo — atribuição por pedido em preparação, `PREPARED_NOT_PUBLISHED`:** versão proposta `2026-11-03.1 — M3 · Contribuição por variação e pedido`, base oficial `aebc3c7aec9ad9937cc43565ba401b0b4ba07cba` (PR107 integrada, CI final [41570060190](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/41570060190) aprovada). A última Live comprovada continua `.6`, App `fef9da9e-bcfc-42e1-a8c4-e38b84a656bd`. O candidato usa pedidos comprometidos já preservados no Finance: um único par produto/modelo recebe os valores integrais daquele pedido; um produto com vários modelos e pedidos com vários produtos permanecem sem rateio em buckets distintos. Prepara negociação opt-in Finance → Auth → App, sidecar local vinculado ao relatório/CAS e visualização mensal v5 no GET existente, preservando frames legados e contratos v1–v4. Não acrescenta consulta à Shopee ou backfill; captura antiga fica `NOT_CAPTURED`. Custo considera só a quantidade atribuída; tributo legado conserva arredondamento por pedido, DAS mensal/Ads/despesas permanecem fora. Seis agentes, mês/rascunhos e hipóteses dos cenários preservados; M2/M2.2 e o restante da M3 continuam abertos. Publicação, CI e captura natural deste candidato ainda não comprovadas. [Escopo, uso previsto e limites](MLS_M3_VARIANT_ORDER_EVIDENCE_2026_11_03.md).
+**M3 paralela publicada e conferida — 03/11/2026 às 12:07:27 Brasília:** versão `2026-11-03.1 — M3 · Contribuição por variação e pedido`, `PUBLISHED_VERIFIED`. Produtos recebe contribuição de referência dos pedidos com um único par produto/modelo, permitindo vários modelos vendidos no mês quando cada pedido tem atribuição comprovada. Pedidos do mesmo produto com vários modelos e pedidos mistos permanecem em buckets distintos sem rateio. Finance → Auth → App publicados nessa ordem, com os três vetores de bytes e configuração/domínios/flags/cron conferidos após cada etapa. Fonte `4dbeeb3804493d9894536eb3a201aa58573adb2d`, head `ed9e86ce72b7d37486e51fc45f95ef7d232180cb`, CI [41658488625](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/41658488625) aprovada: 3457 Node e 67 Python. Negociação opt-in e sidecar preservam os frames legados; v5 usa o mesmo GET mensal, sem nova consulta à Shopee ou backfill. Fonte sem captura continua `NOT_CAPTURED`; publicação não confirma cobertura natural da conta. Custo atual incide só na quantidade atribuída; tributo legado conserva arredondamento por pedido, DAS/Ads/despesas ficam fora e ajuste já no repasse não é reaplicado. Seis agentes, mês/rascunhos e cenários preservados. M2/M2.2 e o restante da M3 continuam abertos. Integração Git: consultar a [PR #108](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/108); publicação e CI não comprovam merge. [Uso, recibo e limites](MLS_M3_VARIANT_ORDER_EVIDENCE_2026_11_03.md).
 <!-- END_M3_VARIANT_ORDER_EVIDENCE_CURRENT -->
 
 <!-- M3_CONTRIBUTION_EVIDENCE_CURRENT -->
@@ -503,13 +503,13 @@ não é taxa oficial. Ads, DAS mensal e despesas ficam no fechamento mensal.
 Sem nova API/SQL/coleta/provedor ou escrita; preservar mês, rascunhos, cenários
 e os seis agentes da inicial. Nenhuma entrega encerra M2/M2.2 ou toda M3.
 
-Próximo candidato: [M3 · Contribuição por variação e pedido](MLS_M3_VARIANT_ORDER_EVIDENCE_2026_11_03.md),
-versão proposta `2026-11-03.1`, `PREPARED_NOT_PUBLISHED`. Os pedidos com um único
+Incremento por pedido publicado: [M3 · Contribuição por variação e pedido](MLS_M3_VARIANT_ORDER_EVIDENCE_2026_11_03.md),
+versão `2026-11-03.1`, `PUBLISHED_VERIFIED`. Os pedidos com um único
 par permitem ampliar a atribuição mesmo com vários modelos vendidos no mês.
 Pedidos com vários modelos/produtos não recebem rateio; a captura usa as chamadas
 já existentes, com opt-in nos três Workers e cache de evidência próprio no App.
 Frames legados permanecem inalterados; dados antigos ficam `NOT_CAPTURED`.
-Regressão, CI, publicação em ordem e captura natural ainda exigem prova real.
+Regressão, CI e publicação em ordem foram conferidas; captura natural e cobertura da conta exigem evidência própria.
 
 - contribuição por SKU;
 - curva ABC;
@@ -632,11 +632,10 @@ em `dea19f0ace932acccc917c63d8da46db417079c9`; notas antigas preservam o corte h
 
 Retomar por:
 
-1. Concluir e validar a [M3 por pedido/variação](MLS_M3_VARIANT_ORDER_EVIDENCE_2026_11_03.md)
-   em preparação. Reutilizar pedidos comprometidos e chamadas existentes, com
-   conservação de valores, sidecar vinculado à fonte e compatibilidade legada.
-   Publicar Finance → Auth → App somente após os gates; conferir cada etapa e
-   depois observar a captura natural. Não forçar backfill ou recriar fatos.
+1. Conferir a [PR #108](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/108) para a integração Git da
+   [M3 por pedido/variação](MLS_M3_VARIANT_ORDER_EVIDENCE_2026_11_03.md), publicada
+   e conferida nos três Workers. Observar captura natural e cobertura do mês com
+   fonte/revisão corretas. Não forçar backfill nem criar fatos para QA.
 2. A PR107 já foi integrada em `aebc3c7aec9ad9937cc43565ba401b0b4ba07cba`,
    com CI final41570060190 e vetor Live conferidos. Preservar o incremento .6:
    contribuição exclusiva e nova evidência são fontes alternativas, sem dupla
