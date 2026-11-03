@@ -13,6 +13,7 @@ import {BUSINESS_MONTH_VARIANT_ATTRIBUTION_SCHEMA,unwrapBusinessMonthVariantSour
 const digest=value=>createHash('sha256').update(value).digest('hex');
 const pair=(f,id,model='1')=>f.variant_contributions.variants.find(row=>row.item_id===id&&row.model_id===model);
 const now=()=>Date.UTC(2026,10,2,12);
+const parentPayload=(frame,{end_date=frame.end_date,reference=true}={})=>JSON.stringify({start_date:frame.start_date.slice(0,7)+'-01',end_date,slots:Array.from({length:Math.ceil(Number(end_date.slice(8))/15)},(_,index)=>({start_date:end_date.slice(0,7)+'-'+String(index*15+1).padStart(2,'0'),end_date:end_date.slice(0,7)+'-'+String(Math.min(index*15+15,Number(end_date.slice(8)))).padStart(2,'0'),frame:reference&&index===0?{schema:'business_month_frame_ref_v1',run_id:frame.run_id,revision:frame.revision}:null}))});
 function database(){
  const db=new D1();db.db.exec(`CREATE TABLE business_month_runs(month TEXT PRIMARY KEY,revision INTEGER,payload TEXT);CREATE TABLE business_month_frames(month TEXT,slot_index INTEGER,run_id TEXT,revision INTEGER,payload TEXT);CREATE TABLE business_month_publications(month TEXT PRIMARY KEY,source_revision INTEGER,write_token TEXT);CREATE TABLE business_month_publication_frames(month TEXT,run_id TEXT,revision INTEGER,payload TEXT,write_token TEXT)`);return db;
 }
@@ -82,7 +83,7 @@ test('negotiated envelopes reject hash tampering before capture and legacy frame
 });
 
 test('optional capture is CAS/source guarded and pruning preserves active plus retained publication evidence',async()=>{
- const f=await variantOrderFixture(),db=database(),entry=f.captures[0],raw=JSON.stringify(entry.frame),payload='{"synthetic":"active"}';
+ const f=await variantOrderFixture(),db=database(),entry=f.captures[0],raw=JSON.stringify(entry.frame),payload=parentPayload(entry.frame);
  db.db.prepare('INSERT INTO business_month_runs VALUES(?,?,?)').run(f.frame.month,8,payload);db.db.prepare('INSERT INTO business_month_frames VALUES(?,?,?,?,?)').run(f.frame.month,0,entry.frame.run_id,entry.frame.revision,raw);
  const args={capture_revision:8,parent_payload:payload,slot_index:0};assert.equal(await captureBusinessMonthVariantAttribution(db,f.frame.month,entry.frame,entry.variant_financials,args),true);
  const before=db.db.prepare('SELECT * FROM business_month_variant_attribution').get();assert.equal(await captureBusinessMonthVariantAttribution(db,f.frame.month,entry.frame,entry.variant_financials,{...args,capture_revision:9}),false);assert.deepEqual(db.db.prepare('SELECT * FROM business_month_variant_attribution').get(),before);
@@ -92,7 +93,7 @@ test('optional capture is CAS/source guarded and pruning preserves active plus r
 });
 
 test('reusing the same Finance source retains its earliest capture revision for an older published view',async()=>{
- const f=await variantOrderFixture(),db=database(),entry=f.captures[0],raw=JSON.stringify(entry.frame),first='{"synthetic":"first"}',next='{"synthetic":"next"}';
+ const f=await variantOrderFixture(),db=database(),entry=f.captures[0],raw=JSON.stringify(entry.frame),first=parentPayload(entry.frame),next=parentPayload(entry.frame,{end_date:'2026-10-30'});
  db.db.prepare('INSERT INTO business_month_runs VALUES(?,?,?)').run(f.frame.month,8,first);db.db.prepare('INSERT INTO business_month_frames VALUES(?,?,?,?,?)').run(f.frame.month,0,entry.frame.run_id,entry.frame.revision,raw);
  assert.equal(await captureBusinessMonthVariantAttribution(db,f.frame.month,entry.frame,entry.variant_financials,{capture_revision:8,parent_payload:first,slot_index:0}),true);
  db.db.prepare('INSERT INTO business_month_publications VALUES(?,?,?)').run(f.frame.month,9,'retained');db.db.prepare('INSERT INTO business_month_publication_frames VALUES(?,?,?,?,?)').run(f.frame.month,entry.frame.run_id,entry.frame.revision,raw,'retained');db.db.prepare('UPDATE business_month_runs SET revision=10,payload=?').run(next);
@@ -116,9 +117,39 @@ class CaptureFaultD1 extends D1{
  prepare(sql){const stmt=super.prepare(sql);stmt.sql=sql;return stmt;}
  async batch(statements){if(this.failCapture&&statements.some(statement=>statement.sql?.includes(this.failCapture==='schema'?'CREATE TABLE IF NOT EXISTS business_month_variant_attribution':'INSERT INTO business_month_variant_attribution'))){this.failCapture=false;throw Error('SYNTHETIC_OPTIONAL_CAPTURE_FAILURE');}return super.batch(statements);}
 }
-function collectionEnvironment(){
- const db=new CaptureFaultD1();db.db.exec('CREATE TABLE variant_bindings_state(id INTEGER PRIMARY KEY,revision INTEGER,payload TEXT,updated_at TEXT);CREATE TABLE production_costs_state(id INTEGER PRIMARY KEY,revision INTEGER,payload TEXT,updated_at TEXT)');db.db.prepare('INSERT INTO variant_bindings_state VALUES(1,1,?,?)').run('[]',new Date(now()).toISOString());db.db.prepare('INSERT INTO production_costs_state VALUES(1,1,?,?)').run(JSON.stringify(COST_DEFAULTS),new Date(now()).toISOString());return {ADMIN_DB:db};
+function collectionEnvironment(db=new CaptureFaultD1()){
+ db.db.exec('CREATE TABLE variant_bindings_state(id INTEGER PRIMARY KEY,revision INTEGER,payload TEXT,updated_at TEXT);CREATE TABLE production_costs_state(id INTEGER PRIMARY KEY,revision INTEGER,payload TEXT,updated_at TEXT)');db.db.prepare('INSERT INTO variant_bindings_state VALUES(1,1,?,?)').run('[]',new Date(now()).toISOString());db.db.prepare('INSERT INTO production_costs_state VALUES(1,1,?,?)').run(JSON.stringify(COST_DEFAULTS),new Date(now()).toISOString());return {ADMIN_DB:db};
 }
+test('a next-slot CAS cannot lose an already committed source while its optional capture is delayed',async()=>{
+ let release,entered;const pending=new Promise(resolve=>release=resolve),started=new Promise(resolve=>entered=resolve);
+ class PausingCaptureD1 extends CaptureFaultD1{
+  async batch(statements){if(!this.paused&&statements.some(statement=>statement.sql?.includes('CREATE TABLE IF NOT EXISTS business_month_variant_attribution'))){this.paused=true;entered();await pending;}return super.batch(statements);}
+ }
+ const f=await variantOrderFixture(),env=collectionEnvironment(new PausingCaptureD1()),first=f.captures[0],second=f.captures[1];let calls=0;
+ const nextRaw={...second.frame,end_date:'2026-10-30'};delete nextRaw.daily_breakdown;const next=projectBusinessPeriodFrame(nextRaw),financials={...second.variant_financials,end_date:next.end_date,report_hash:digest(JSON.stringify(next))};
+ const envelope={schema:'finance_business_period_variants_v1',report:next,variant_financials:financials};assert.ok(await projectBusinessPeriodVariantsFrame(envelope));
+ const initial=businessMonth(env,{operation:'start',month:'2026-10'},{getFinanceBusinessPeriod:async()=>{calls++;return {schema:envelope.schema,report:first.frame,variant_financials:first.variant_financials};}},{now});
+ await started;
+ try{
+  await businessMonth(env,{operation:'step',month:'2026-10'},{getFinanceBusinessPeriod:async(_,selection)=>{calls++;assert.equal(selection.start_date,'2026-10-16');assert.equal(selection.end_date,'2026-10-30');return envelope;}},{now});
+ }finally{release();}
+ await initial;
+ assert.equal(calls,2);assert.equal(env.ADMIN_DB.db.prepare('SELECT revision FROM business_month_runs').get().revision,3);
+ const captured=env.ADMIN_DB.db.prepare('SELECT run_id,capture_revision FROM business_month_variant_attribution ORDER BY capture_revision').all();assert.deepEqual(captured.map(row=>({...row})),[{run_id:first.frame.run_id,capture_revision:2},{run_id:next.run_id,capture_revision:3}]);
+ assert.equal(env.ADMIN_DB.db.prepare('SELECT payload FROM business_month_frames WHERE slot_index=0').get().payload,JSON.stringify(first.frame));
+});
+
+test('an advanced parent cannot authorize an orphaned or replaced source slot',async()=>{
+ const f=await variantOrderFixture(),db=database(),entry=f.captures[0],raw=JSON.stringify(entry.frame),payload=parentPayload(entry.frame),args={capture_revision:8,parent_payload:payload,slot_index:0};
+ db.db.prepare('INSERT INTO business_month_runs VALUES(?,?,?)').run(f.frame.month,9,parentPayload(entry.frame,{reference:false}));db.db.prepare('INSERT INTO business_month_frames VALUES(?,?,?,?,?)').run(f.frame.month,0,entry.frame.run_id,entry.frame.revision,raw);
+ assert.equal(await captureBusinessMonthVariantAttribution(db,f.frame.month,entry.frame,entry.variant_financials,args),false,'an orphan source row is insufficient');
+ const replacement={...entry.frame,revision:entry.frame.revision+1};db.db.prepare('UPDATE business_month_runs SET payload=?').run(parentPayload(replacement));
+ assert.equal(await captureBusinessMonthVariantAttribution(db,f.frame.month,entry.frame,entry.variant_financials,args),false,'a parent reference to a replacement revision cannot authorize old evidence');
+ db.db.prepare('UPDATE business_month_runs SET payload=?').run(payload);
+ assert.equal(await captureBusinessMonthVariantAttribution(db,f.frame.month,entry.frame,entry.variant_financials,{...args,parent_payload:parentPayload(entry.frame,{reference:false})}),false,'the original successful-CAS payload must also reference the captured source');
+ assert.equal(await captureBusinessMonthVariantAttribution(db,f.frame.month,entry.frame,entry.variant_financials,{...args,slot_index:1}),false,'a matching Finance identity cannot be captured under a different monthly window');
+ assert.equal(db.db.prepare('SELECT COUNT(*) n FROM business_month_variant_attribution').get().n,0);
+});
 test('optional capture failure preserves the exact legacy frame and performs its source request once',async()=>{
  const f=await variantOrderFixture(),env=collectionEnvironment(),entry=f.captures[0],envelope={schema:'finance_business_period_variants_v1',report:entry.frame,variant_financials:entry.variant_financials};let calls=0;env.ADMIN_DB.failCapture=true;
  const result=await businessMonth(env,{operation:'start',month:'2026-10'},{getFinanceBusinessPeriod:async(_,selection,options)=>{calls++;assert.deepEqual(options,{includeVariants:true});assert.equal(selection.start_date,'2026-10-01');return envelope;}},{now});
