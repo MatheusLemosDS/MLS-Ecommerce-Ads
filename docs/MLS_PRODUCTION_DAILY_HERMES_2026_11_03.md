@@ -1,9 +1,9 @@
 # Produção diária e parâmetros do Hermes — 03/11/2026, Brasília
 
-**Estado: `PREPARED_NOT_PUBLISHED`.** Versão proposta **2026-11-03.2 — Produção diária e parâmetros do Hermes**.
+**Estado: `PUBLISHED_VERIFIED`.** Versão **2026-11-03.2 — Produção diária e parâmetros do Hermes**.
 Branch `feature/production-daily-hermes-20261103`, base `d1aaa55eb92e820447318522c759b924d1c288cb`.
 
-Este guia descreve o candidato; não registra CI final, publicação ou aceite operacional. PR, head, hashes e contagens aguardam recibos reais.
+App publicado e conferido em **03/11/2026 às 13:14:46 Brasília**. Fonte `c106ad84145d6f27265783ead318b45eea8c8e2c`, head `fef88d1d53b0354976a5f7dd2b197303c91c0ce0`, PR [#109](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/109), CI [41670540646](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/41670540646) aprovada. Consultar a PR para integração Git; publicação não comprova merge.
 
 A Live anterior comprovada é **2026-11-03.1**, App `caa919a6-096f-4427-93a6-5fb50c0ac41d`,
 Auth `ec385ca9-a986-49ec-abab-25a29daaf33b` e Finance `9ed0bd7d-269a-4e5f-81d0-63be8c6ac2c4`.
@@ -84,7 +84,19 @@ configuração, domínios, flags e cron permanecem no vetor conhecido. Os gráfi
 usam leituras salvas existentes, sem nova fonte Shopee/coletor/backfill ou fatos
 criados para QA. Seis agentes, meses/rascunhos e correções devem ser preservados.
 
-**Pendente:** testes focados/integral, QA compilada desktop/celular nos dois temas, CI exato, publicação App e conferência dos três Workers. Nenhum recibo novo foi presumido.
+Validação completa: **3483 Node e 67 Python**, sem falhas/skips/cancelamentos; CI do head exato e QA sintética normal/minificada em 320/1365 px aprovadas.
+
+| Worker | UUID publicado ou preservado | SHA-256 gerado | SHA-256 publicado |
+| --- | --- | --- | --- |
+| App | `81ca539d-6785-46f0-b854-fdb8861e80f6` | `f98abf022eb2b437bad2e14ef3d35b9d3bb04f2dd7733ab8e739e27f77273755` | `72f7a33ea88fc4171ca0dd06400a3fbee28790e493258d1192874e099c751e9f` |
+| Auth | `ec385ca9-a986-49ec-abab-25a29daaf33b` | `47c83f87f191fd0e5ff503d9c4bcf4671cd986b0965e66e84f1a6ed952dac925` | `2a2c2433c6fba25d1c399991595c96e6b8a85045edb77879c8270c446cb45ad2` |
+| Finance | `9ed0bd7d-269a-4e5f-81d0-63be8c6ac2c4` | `08ada5ecec92350f4f8301fdb7baa00f5f8083a0e8390296b2870e0ff3cdc1a5` | `e5bf80e14ff00e5b365bfbcfb25bf3a4dc1e42bf40bb0e4259909649eea1d5cd` |
+
+App publicado; Auth/Finance e vetor/configuração/domínios/flags/cron conferidos. O publisher não consultou D1/owner/provedor nem criou fatos para QA.
+
+## Histórico real antes da publicação
+
+Conferência somente leitura em 03/11/2026 às 12:34:17 Brasília, anterior à publicação, não encontrou a tabela de registros de fabricação no banco verificado. Quantidades e datas eram desconhecidas, não um histórico vazio de custo zero. As vendas não permitem reconstruir datas reais de fabricação: o operador precisa confirmar os lotes/peças realmente produzidos e suas datas/custos. A entrega não criou fabricação.
 
 ## Continuidade e limites
 
