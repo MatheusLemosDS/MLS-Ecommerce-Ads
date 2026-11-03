@@ -194,6 +194,8 @@ export const TARGETS = Object.freeze({
     '1e7170f8ba3770359d5cdde96f66b0dfcb4d3aebdd0e2c7898bc1ef3a38448d0',
     // M3 opt-in order contribution: exact frozen build, full release gates required.
     '34299a748b1fbea76f2916521143accddf531f2a75f6f3e29655f7df581e3ef3',
+    // Daily manufacturing history and explicit Hermes parameters, exact candidate.
+    '1b4d21067a2c9a1a066b528c2a1e1ace8bf00cafc82e850b957157f92b69b175',
   ]}),
   auth: Object.freeze({name: 'brazacommerce-auth', main: '../../dist/auth-worker.mjs', baselineHashes: [
     'c63ee09b2d98b6321e3ae7feae1066a9eec9160b49868d72fb84cb0471a0018d',
