@@ -1,12 +1,13 @@
 # M3 · Margens e evidências por produto — 02/11/2026, Brasília
 
-**Estado: `PREPARED_NOT_PUBLISHED`.** Versão proposta **2026-11-02.6 — M3 · Margens e evidências por produto**.
-Branch `feature/m3-contribution-evidence-20261103`, base
-`dea19f0ace932acccc917c63d8da46db417079c9`. A data do identificador proposto
-segue Brasília e será conferida antes do congelamento. Não há recibo de
-publicação, CI final ou aceite real deste candidato registrados aqui.
+**Estado: `PUBLISHED_VERIFIED`.** Versão **2026-11-02.6 — M3 · Margens e evidências por produto**.
+App publicado e conferido em **03/11/2026 às 00:04:01 Brasília**; Auth e Finance preservados.
+PR [#107](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/107), branch `feature/m3-contribution-evidence-20261103`, base
+`dea19f0ace932acccc917c63d8da46db417079c9`. Fonte `c70b0304ec4502edabe44a7ae90e144d6a7e4b7b`, head aprovado `53580d2612b3661c8d76016a35fb5a14f41e69c9`, CI
+[41568940647](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/41568940647) aprovada: 3400 Node e 67 Python.
+Publicação e CI não comprovam merge: consultar a PR vinculada para a integração Git.
 
-A última Live comprovada continua **2026-11-02.5**, publicada em
+A Live anterior comprovada era **2026-11-02.5**, publicada em
 **02/11/2026 às 23:15:11 Brasília**: App
 `124b7071-6152-44fa-bf44-5edf98eca2dc`, Auth
 `d6f4397f-ac4d-45cf-93da-175df8305a6d` e Finance
@@ -17,12 +18,12 @@ com CI documental [41565003839](https://github.com/MatheusLemosDS/MLS-Ecommerce-
 aprovada e árvore/vetor Live conferidos. O [guia anterior](MLS_M3_PRODUCT_WORKBENCH_2026_11_02.md)
 preserva o corte de publicação da primeira entrega.
 
-## Mudança preparada e caminho de uso
+## Mudança entregue e caminho de uso
 
-O proprietário autorizou avançar a M3 em paralelo. Este incremento prepara
+O proprietário autorizou avançar a M3 em paralelo. Este incremento apresenta
 evidências de contribuição no painel **MLS Products → Análise e preços**,
 `/admin?tab=agent-products#businessMonthPricingObserver`, usando o mesmo mês
-salvo. Selecionar um produto deve mostrar a composição dos valores em uma área
+salvo. Selecionar um produto mostra a composição dos valores em uma área
 própria, os motivos de pendência e a cobertura do recorte exclusivo. O ranking,
 ABC por unidades, filtros locais, variações e simulador existentes continuam.
 O alias antigo `/admin?tab=agent-finance#businessMonthPricingObserver` permanece.
@@ -41,7 +42,7 @@ No regime MEI, a contribuição é o repasse dos pedidos exclusivos menos o cust
 de referência das unidades desse mesmo recorte; o DAS mensal não é distribuído
 por produto. No regime legado, a referência de imposto por pedido já usada
 no resumo canônico é preservada e identificada como referência, não tributo
-oficial. O gráfico deve mostrar essa base sem recomputar ou atribuir taxas.
+oficial. O gráfico mostra essa base sem recomputar ou atribuir taxas.
 
 O custo de pedidos mistos pode constar na cobertura geral do produto, mas nunca
 é descontado do saldo exclusivo. Pedidos mistos não recebem receita, repasse,
@@ -80,7 +81,7 @@ os valores da nova atribuição continuam desconhecidos e os motivos são exibid
 
 ## Fontes e preservação
 
-O candidato usa `buildMlsProductFinancialEvidence(frame, projectMonth)` para
+A entrega usa `buildMlsProductFinancialEvidence(frame, projectMonth)` para
 projetar o resumo financeiro canônico do mês salvo, em um contrato separado
 e imutável `mls_product_financial_evidence_v1`. A leitura exige projeção mensal
 canônica `COMPLETE`, identifica período, datas das fontes e revisões, e mantém
@@ -99,17 +100,31 @@ comerciais continuam nos gates oficiais.
 
 ## Validação e publicação
 
-Ainda **não publicada**. A validação deve cobrir cálculo positivo/negativo/zero,
-recorte exclusivo versus misto, valores estritos versus conhecidos, ausência,
-quantidades e fontes contraditórias, uma versus múltiplas variações vendidas,
-ajuste já no repasse, mudança de mês/metadados e entradas do simulador preservadas.
-Executar regressões apropriadas e Chromium normal/minificado em 320/1365 px;
-registrar somente contagens e CI reais depois de concluídos.
+Suíte completa aprovada: **3400 Node e 67 Python**, sem falhas ou skips;
+CI do head exato e QA local/sintética normal/minificada em 320/1365 px.
+As provas cobrem contribuição positiva/negativa/zero, custo exclusivo versus
+misto, valores estritos versus conhecidos, fontes/quantidades incoerentes,
+uma versus múltiplas variações vendidas, ajuste já no repasse e preservação
+do mês, dos rascunhos e das hipóteses do simulador. QA não comprova aceite real,
+recebimento físico, fabricação incorrida ou fechamento financeiro.
 
-A publicação prevista é somente do App, com Auth/Finance preservados e vetor
-completo de bytes, configuração, domínios, flags e cron conferido. O recibo real
-é requisito para trocar este estado por `PUBLISHED_VERIFIED`. CI, publicação e
-merge são evidências distintas; QA sintética não comprova aceite operacional.
+O detalhamento financeiro cabe na área visível em 320 px, inclusive com fonte
+ampliada. Os links das novidades respeitam a navegação fixa; o clique nativo
+foi validado em telas de 900 e 960 px de altura e com Arial de 13 px, mantendo
+os testes de toque, alvo descoberto e integridade dos dados.
+
+Publicação App-only concluída, com bytes/configuração/domínios/flags/cron dos
+três Workers conferidos e Auth/Finance preservados. O publisher executou zero
+consultas D1 e zero chamadas owner/provedor; não criou fatos físicos ou financeiros.
+
+| Worker | UUID publicado/preservado | SHA-256 gerado | SHA-256 publicado |
+| --- | --- | --- | --- |
+| App | `fef9da9e-bcfc-42e1-a8c4-e38b84a656bd` | `1e7170f8ba3770359d5cdde96f66b0dfcb4d3aebdd0e2c7898bc1ef3a38448d0` | `f42606660a0debd8173c2915706bc4c888e0fba76a85bd2272142c93f1ec87fe` |
+| Auth | `d6f4397f-ac4d-45cf-93da-175df8305a6d` | `851e27c703fda4143b87a8a85a79c06326b9a2f25ce16f5625d8871a589f43ec` | `5e18583606c453bd4e5ecfbc983db13826e4ad7f1c336fde5b7bbe9d628b2bd6` |
+| Finance | `7001376b-f065-4e37-84ea-ee9ac2ea890c` | `d7e64105b88602fa20f8e733f5e16548cfa3ceefbbd7733a87dfb5e5bd8fcd49` | `ea8a5abf0c818539ee02e0e14260b973d0d2ed243f2c0eb26162ae3bbb3fcb59` |
+
+Integração Git: consultar o estado atual da PR vinculada. O recibo identifica
+código e horário publicados; merge exige evidência própria.
 
 ## Continuidade
 
