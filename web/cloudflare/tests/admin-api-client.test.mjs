@@ -115,3 +115,14 @@ test('the factory works from its isolated browser source without a module closur
  const view=await vm.runInContext("client('finance/business-month-view?month=2026-10')",context);assert.equal(view.headers['X-Braza-Client-Contract'],'business-month-view-v4');assert.equal(view.method,'GET');
  const settings=await vm.runInContext("client('settings',{revision:1})",context);assert.equal(settings.headers['X-Braza-Client-Contract'],undefined);assert.equal(settings.headers['X-CSRF-Token'],'csrf');assert.equal(settings.method,'POST');
 });
+
+test('variant view negotiation is explicit and never changes the default monthly contract',async()=>{
+ const calls=[],api=createAdminApiClient({fetchImpl:async(path,options)=>{calls.push({path,options});return Response.json({ok:true});}});
+ await api('finance/business-month-view?month=2026-11',undefined,{monthlyViewContract:'business-month-view-v5'});
+ await api('finance/business-month-view?month=2026-11');
+ await api('finance/business-month-view',undefined,{monthlyViewContract:'business-month-view-v4'});
+ assert.deepEqual(calls.map(row=>row.options.headers['X-Braza-Client-Contract']),['business-month-view-v5','business-month-view-v4','business-month-view-v4']);
+ assert.ok(calls.every(row=>row.options.method==='GET'&&row.options.credentials==='same-origin'&&row.options.cache==='no-store'&&row.options.body===undefined));
+ for(const [path,body,contract] of [['state',undefined,'business-month-view-v5'],['finance/business-month-view/history',undefined,'business-month-view-v5'],['finance/business-month-view',{},'business-month-view-v5'],['finance/business-month-view',undefined,'business-month-view-v6']])await assert.rejects(api(path,body,{monthlyViewContract:contract}),safe('ADMIN_API_RESPONSE_INVALID'));
+ assert.equal(calls.length,3,'invalid negotiation never reaches a network capability');
+});

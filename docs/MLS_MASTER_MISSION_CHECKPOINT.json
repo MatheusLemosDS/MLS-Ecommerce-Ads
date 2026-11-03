@@ -1,6 +1,6 @@
 {
   "schema": "mls_master_mission_checkpoint_v1",
-  "updated_at": "2026-11-03T03:04:01+00:00",
+  "updated_at": "2026-11-03",
   "base_visual_sha": "8d860b2c4f26531c53c4cdba0e06a14f51a7eef4",
   "visual_branch": "feature/mls-mockup-parity-real-charts-20261029",
   "visual_pr": 79,
@@ -180,119 +180,106 @@
     }
   ],
   "current_release": {
-    "id": "M3_EXCLUSIVE_CONTRIBUTION_EVIDENCE",
-    "status": "PUBLISHED_VERIFIED",
-    "branch": "feature/m3-contribution-evidence-20261103",
-    "base_main": "dea19f0ace932acccc917c63d8da46db417079c9",
-    "human_code_release_id": "2026-11-02.6",
-    "label": "M3 · Margens e evidências por produto",
-    "docs": "docs/MLS_M3_CONTRIBUTION_EVIDENCE_2026_11_03.md",
+    "id": "M3_SINGLE_PAIR_ORDER_VARIANT_EVIDENCE",
+    "status": "PREPARED_NOT_PUBLISHED",
+    "branch": "feature/m3-variant-order-evidence-20261103",
+    "base_main": "aebc3c7aec9ad9937cc43565ba401b0b4ba07cba",
+    "human_code_release_id": "2026-11-03.1",
+    "label": "M3 · Contribuição por variação e pedido",
+    "docs": "docs/MLS_M3_VARIANT_ORDER_EVIDENCE_2026_11_03.md",
     "phase": "M3_OBSERVER_PARALLEL_TO_M2",
     "finance_m2": "OPEN",
     "m22": "OPEN_PENDING_REAL_OPERATION_AND_ACCOUNTING_BRIDGE",
+    "workers": [
+      "finance",
+      "auth",
+      "app"
+    ],
+    "deploy_order": [
+      "finance",
+      "auth",
+      "app"
+    ],
     "routes": {
       "analysis": "/admin?tab=agent-products#businessMonthPricingObserver",
-      "catalog": "/admin?tab=products",
       "legacy_analysis_alias": "/admin?tab=agent-finance#businessMonthPricingObserver",
       "notes": "/admin?tab=roadmap#appReleaseNotes"
     },
+    "sources": "COMMITTED_CACHED_FINANCE_BUSINESS_PERIOD_ORDERS_BOUND_TO_CANONICAL_PARENT",
     "changes": [
-      "Strict verified exclusive contribution margin and sign by product",
-      "Financial composition chart separates strict result from recorded known exclusive values",
-      "Pending reasons and affected quantities with source and coverage",
-      "Separate single-sold-model exclusive contribution evidence only when all attribution gates pass"
+      "Single-pair-per-order evidence permits multiple sold models in the same month",
+      "Separate same-product multi-model and mixed-product unallocated buckets conserve legacy totals",
+      "Negotiated Finance/Auth/App envelope and isolated App sidecar preserve v1 payloads",
+      "Monthly v5 reuses the existing view GET; default v1-v4 remain unchanged"
     ],
-    "sources": "EXISTING_CANONICAL_MONTHLY_PRODUCT_FINANCIAL_SUMMARY",
-    "evidence_schema": "mls_product_financial_evidence_v1",
-    "evidence_builder": "buildMlsProductFinancialEvidence",
     "legacy_v1_contracts_unchanged": true,
+    "negotiated_month_view": "business-month-view-v5",
+    "finance_envelope": "finance_business_period_variants_v1",
+    "variant_breakdown": "finance_business_variant_breakdown_v1",
+    "legacy_body_limit_bytes": 1048576,
+    "opt_in_envelope_limit_bytes": 2097152,
+    "sidecar_limit_bytes": 524288,
     "new_endpoints": 0,
-    "new_sql_queries": 0,
     "new_provider_calls": 0,
     "new_collectors": 0,
-    "commercial_writes": false,
-    "mode": "OBSERVER",
-    "execution_allowed": false,
-    "variant_margin": null,
+    "browser_backfill": false,
+    "sql_changes": "ADDITIVE_LOCAL_SIDECAR_CAPTURE_AND_READ",
+    "legacy_frame_storage": "UNCHANGED_V1_BYTES",
+    "source_binding": [
+      "run_id",
+      "revision",
+      "date_range",
+      "checked_at",
+      "canonical_report_hash",
+      "payload_hash",
+      "month_CAS"
+    ],
+    "missing_historical_source": "NOT_CAPTURED",
+    "natural_capture": "NOT_YET_VERIFIED",
+    "payment_cache_included": false,
+    "single_pair_money_allocation": "WHOLE_ORIGINAL_ORDER_ONLY",
+    "same_product_multi_model_money_allocation": "UNALLOCATED",
+    "mixed_product_money_allocation": "UNALLOCATED",
+    "production_basis": "CURRENT_REFERENCE_COST_TIMES_ATTRIBUTED_COMMERCIAL_QUANTITY_ONLY",
+    "tax_basis": {
+      "mei": "MONTHLY_DAS_NOT_ALLOCATED",
+      "legacy": "PER_ORDER_HALF_UP_TWO_PERCENT_REFERENCE_NOT_OFFICIAL_TAX"
+    },
+    "already_included_payout_adjustment_applied_again": false,
+    "legacy_evidence_and_new_evidence_added_together": false,
     "variant_net_profit": null,
     "safe_price": null,
     "real_sku_roas": null,
     "inventory_verified": false,
-    "new_variant_evidence_basis": "EXCLUSIVE_REFERENCE_CONTRIBUTION_ONLY_SINGLE_SOLD_MODEL_WITH_STRICT_GATES",
-    "multiple_sold_models_money_allocation": "UNKNOWN",
-    "mixed_order_money_allocation": "UNALLOCATED",
-    "mixed_order_cost_in_exclusive_balance": false,
-    "production_basis": "CURRENT_SALES_COST_REFERENCE_NOT_INCURRED_MANUFACTURING_OR_REUSE",
-    "exclusive_balance_basis": "VERIFIED_EXCLUSIVE_ORDERS_BEFORE_ADS_MONTHLY_DAS_UNATTRIBUTED_EXPENSES",
-    "tax_basis": {
-      "mei": "MONTHLY_DAS_NOT_ALLOCATED",
-      "legacy": "LEGACY_ORDER_TAX_REFERENCE_NOT_OFFICIAL_TAX"
-    },
-    "sales_payout_difference_is_official_fee": false,
-    "already_included_payout_adjustment_subtracted_again": false,
-    "strict_and_recorded_known_values_separate": true,
+    "mode": "OBSERVER",
+    "execution_allowed": false,
+    "commercial_writes": false,
     "overview_six_agents_preserved": true,
     "month_drafts_scenarios_preserved": true,
     "physical_or_financial_facts_created_for_qa": false,
     "seller_centre_bank_comparison": "NOT_CLOSED",
     "validation": {
-      "focused": "PASSED",
-      "chromium": "PASSED_SYNTHETIC_NORMAL_MINIFIED_320_1365",
-      "full_node": {
-        "tests": 3400,
-        "pass": 3400,
-        "fail": 0,
-        "skipped": 0,
-        "cancelled": 0
-      },
-      "python": 67,
-      "ci": "GREEN_EXACT_REVIEWED_HEAD",
+      "focused": "PENDING",
+      "chromium": "PENDING_NORMAL_MINIFIED_320_1365",
+      "full_node": null,
+      "python": null,
+      "ci": "NOT_YET_VERIFIED",
       "real_owner_acceptance": "NOT_CLAIMED"
     },
-    "pull_request": 107,
-    "code_commit": "c70b0304ec4502edabe44a7ae90e144d6a7e4b7b",
-    "reviewed_head": "53580d2612b3661c8d76016a35fb5a14f41e69c9",
-    "ci_run": 41568940647,
+    "pull_request": null,
+    "code_commit": null,
+    "reviewed_head": null,
+    "ci_run": null,
     "deployment": {
-      "status": "APP_LIVE_FULL_VECTOR_VERIFIED",
-      "versions": {
-        "app": "fef9da9e-bcfc-42e1-a8c4-e38b84a656bd",
-        "auth": "d6f4397f-ac4d-45cf-93da-175df8305a6d",
-        "finance": "7001376b-f065-4e37-84ea-ee9ac2ea890c"
-      },
-      "generated_sha256": {
-        "app": "1e7170f8ba3770359d5cdde96f66b0dfcb4d3aebdd0e2c7898bc1ef3a38448d0",
-        "auth": "851e27c703fda4143b87a8a85a79c06326b9a2f25ce16f5625d8871a589f43ec",
-        "finance": "d7e64105b88602fa20f8e733f5e16548cfa3ceefbbd7733a87dfb5e5bd8fcd49"
-      },
-      "published_sha256": {
-        "app": "f42606660a0debd8173c2915706bc4c888e0fba76a85bd2272142c93f1ec87fe",
-        "auth": "5e18583606c453bd4e5ecfbc983db13826e4ad7f1c336fde5b7bbe9d628b2bd6",
-        "finance": "ea8a5abf0c818539ee02e0e14260b973d0d2ed243f2c0eb26162ae3bbb3fcb59"
-      },
-      "started_at": 1793675002,
-      "completed_at": 1793675041,
-      "completed_at_brasilia": "2026-11-03T00:04:01-03:00",
-      "deploy_order": [
-        "app"
-      ],
-      "all_three_exact": true,
-      "auth_finance_preserved": true,
-      "configuration_preserved": true,
-      "domains_preserved": true,
-      "flags_preserved": true,
-      "cron_preserved": true,
-      "physical_or_financial_fact_writes": false,
-      "d1_queries": 0,
-      "owner_endpoints_called": false,
-      "provider_calls": 0
+      "status": "NOT_PUBLISHED",
+      "versions": null,
+      "generated_sha256": null,
+      "published_sha256": null
     },
     "integration": {
-      "status": "CHECK_LINKED_PR_CURRENT_STATE",
-      "pull_request": 107,
-      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/107",
-      "merge_commit": null,
-      "publication_receipt_does_not_prove_merge": true
+      "status": "NOT_PUBLISHED_OR_MERGED",
+      "pull_request": null,
+      "merge_commit": null
     }
   },
   "validation_history": [
@@ -436,11 +423,21 @@
       "provider_calls": 0
     },
     "integration": {
-      "status": "CHECK_LINKED_PR_CURRENT_STATE",
+      "status": "MERGED_VERIFIED",
       "pull_request": 107,
       "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/107",
-      "merge_commit": null,
-      "publication_receipt_does_not_prove_merge": true
+      "merge_commit": "aebc3c7aec9ad9937cc43565ba401b0b4ba07cba",
+      "merged_at": "2026-11-03T03:12:21Z",
+      "final_head": "e9b6db52082fa055182e1b222dc73a95b381b888",
+      "final_ci_run": 41570060190,
+      "final_ci": "GREEN_EXACT_FINAL_HEAD",
+      "main_tree_matches": true,
+      "all_three_live_exact": true,
+      "auth_finance_preserved": true,
+      "configuration_domains_flags_cron_preserved": true,
+      "runtime_redeployed_for_docs": false,
+      "physical_or_financial_fact_writes": false,
+      "commercial_writes": false
     }
   },
   "visual_chart_refinement_20261031": {
@@ -3746,7 +3743,7 @@
   "parallel_workstreams": {
     "m2_finance_returns": "OPEN",
     "m22_physical_manufacturing_reuse": "OPEN",
-    "m3_products_pricing_observer": "CONTRIBUTION_OBSERVER_DELIVERY_PUBLISHED",
+    "m3_products_pricing_observer": "VARIANT_ORDER_EVIDENCE_PREPARED_NOT_PUBLISHED",
     "commercial_execution": "LOCKED_UNTIL_OFFICIAL_GATES"
   },
   "m3_contribution_evidence_2026_11_03": {
@@ -3858,11 +3855,124 @@
       "provider_calls": 0
     },
     "integration": {
-      "status": "CHECK_LINKED_PR_CURRENT_STATE",
+      "status": "MERGED_VERIFIED",
       "pull_request": 107,
       "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/107",
-      "merge_commit": null,
-      "publication_receipt_does_not_prove_merge": true
+      "merge_commit": "aebc3c7aec9ad9937cc43565ba401b0b4ba07cba",
+      "merged_at": "2026-11-03T03:12:21Z",
+      "final_head": "e9b6db52082fa055182e1b222dc73a95b381b888",
+      "final_ci_run": 41570060190,
+      "final_ci": "GREEN_EXACT_FINAL_HEAD",
+      "main_tree_matches": true,
+      "all_three_live_exact": true,
+      "auth_finance_preserved": true,
+      "configuration_domains_flags_cron_preserved": true,
+      "runtime_redeployed_for_docs": false,
+      "physical_or_financial_fact_writes": false,
+      "commercial_writes": false
+    }
+  },
+  "m3_variant_order_evidence_2026_11_03": {
+    "id": "M3_SINGLE_PAIR_ORDER_VARIANT_EVIDENCE",
+    "status": "PREPARED_NOT_PUBLISHED",
+    "branch": "feature/m3-variant-order-evidence-20261103",
+    "base_main": "aebc3c7aec9ad9937cc43565ba401b0b4ba07cba",
+    "human_code_release_id": "2026-11-03.1",
+    "label": "M3 · Contribuição por variação e pedido",
+    "docs": "docs/MLS_M3_VARIANT_ORDER_EVIDENCE_2026_11_03.md",
+    "phase": "M3_OBSERVER_PARALLEL_TO_M2",
+    "finance_m2": "OPEN",
+    "m22": "OPEN_PENDING_REAL_OPERATION_AND_ACCOUNTING_BRIDGE",
+    "workers": [
+      "finance",
+      "auth",
+      "app"
+    ],
+    "deploy_order": [
+      "finance",
+      "auth",
+      "app"
+    ],
+    "routes": {
+      "analysis": "/admin?tab=agent-products#businessMonthPricingObserver",
+      "legacy_analysis_alias": "/admin?tab=agent-finance#businessMonthPricingObserver",
+      "notes": "/admin?tab=roadmap#appReleaseNotes"
+    },
+    "sources": "COMMITTED_CACHED_FINANCE_BUSINESS_PERIOD_ORDERS_BOUND_TO_CANONICAL_PARENT",
+    "changes": [
+      "Single-pair-per-order evidence permits multiple sold models in the same month",
+      "Separate same-product multi-model and mixed-product unallocated buckets conserve legacy totals",
+      "Negotiated Finance/Auth/App envelope and isolated App sidecar preserve v1 payloads",
+      "Monthly v5 reuses the existing view GET; default v1-v4 remain unchanged"
+    ],
+    "legacy_v1_contracts_unchanged": true,
+    "negotiated_month_view": "business-month-view-v5",
+    "finance_envelope": "finance_business_period_variants_v1",
+    "variant_breakdown": "finance_business_variant_breakdown_v1",
+    "legacy_body_limit_bytes": 1048576,
+    "opt_in_envelope_limit_bytes": 2097152,
+    "sidecar_limit_bytes": 524288,
+    "new_endpoints": 0,
+    "new_provider_calls": 0,
+    "new_collectors": 0,
+    "browser_backfill": false,
+    "sql_changes": "ADDITIVE_LOCAL_SIDECAR_CAPTURE_AND_READ",
+    "legacy_frame_storage": "UNCHANGED_V1_BYTES",
+    "source_binding": [
+      "run_id",
+      "revision",
+      "date_range",
+      "checked_at",
+      "canonical_report_hash",
+      "payload_hash",
+      "month_CAS"
+    ],
+    "missing_historical_source": "NOT_CAPTURED",
+    "natural_capture": "NOT_YET_VERIFIED",
+    "payment_cache_included": false,
+    "single_pair_money_allocation": "WHOLE_ORIGINAL_ORDER_ONLY",
+    "same_product_multi_model_money_allocation": "UNALLOCATED",
+    "mixed_product_money_allocation": "UNALLOCATED",
+    "production_basis": "CURRENT_REFERENCE_COST_TIMES_ATTRIBUTED_COMMERCIAL_QUANTITY_ONLY",
+    "tax_basis": {
+      "mei": "MONTHLY_DAS_NOT_ALLOCATED",
+      "legacy": "PER_ORDER_HALF_UP_TWO_PERCENT_REFERENCE_NOT_OFFICIAL_TAX"
+    },
+    "already_included_payout_adjustment_applied_again": false,
+    "legacy_evidence_and_new_evidence_added_together": false,
+    "variant_net_profit": null,
+    "safe_price": null,
+    "real_sku_roas": null,
+    "inventory_verified": false,
+    "mode": "OBSERVER",
+    "execution_allowed": false,
+    "commercial_writes": false,
+    "overview_six_agents_preserved": true,
+    "month_drafts_scenarios_preserved": true,
+    "physical_or_financial_facts_created_for_qa": false,
+    "seller_centre_bank_comparison": "NOT_CLOSED",
+    "validation": {
+      "focused": "PENDING",
+      "chromium": "PENDING_NORMAL_MINIFIED_320_1365",
+      "full_node": null,
+      "python": null,
+      "ci": "NOT_YET_VERIFIED",
+      "real_owner_acceptance": "NOT_CLAIMED"
+    },
+    "pull_request": null,
+    "code_commit": null,
+    "reviewed_head": null,
+    "ci_run": null,
+    "deployment": {
+      "status": "NOT_PUBLISHED",
+      "versions": null,
+      "generated_sha256": null,
+      "published_sha256": null
+    },
+    "integration": {
+      "status": "NOT_PUBLISHED_OR_MERGED",
+      "pull_request": null,
+      "merge_commit": null
     }
   }
 }

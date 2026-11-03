@@ -18,13 +18,13 @@ export function createMlsProductWorkbenchView(options={}){
  const count=value=>new Intl.NumberFormat('pt-BR').format(value);
  const percent=value=>{const points=BigInt(value),absolute=points<0n?-points:points;return (points<0n?'-':'')+count(absolute/100n)+','+String(absolute%100n).padStart(2,'0')+'%';};
  const amount=value=>Number.isSafeInteger(value)?money(value):'Em conferência';
- const reasons={PRODUCTION_COST_INCOMPLETE:'Custos de produção incompletos',PAYMENT_INCOMPLETE:'Valores de pagamento incompletos',RETURNS_NOT_RECONCILED:'Devolução ou reembolso em conferência',STATUS_REVIEW_REQUIRED:'Há situações de pedidos em revisão',SOURCE_UNAVAILABLE:'Fonte financeira em conferência',FINANCIAL_SOURCE_STALE:'A leitura financeira precisa ser atualizada',NO_EXCLUSIVE_ORDERS:'Não há pedidos exclusivos neste recorte',ARITHMETIC_UNSAFE:'Valor fora do limite de cálculo'};
+ const reasons={PRODUCTION_COST_INCOMPLETE:'Custos de produção incompletos',PAYMENT_INCOMPLETE:'Valores de pagamento incompletos',RETURNS_NOT_RECONCILED:'Devolução ou reembolso em conferência',STATUS_REVIEW_REQUIRED:'Há situações de pedidos em revisão',SOURCE_UNAVAILABLE:'Fonte financeira em conferência',FINANCIAL_SOURCE_STALE:'A leitura financeira precisa ser atualizada',NO_EXCLUSIVE_ORDERS:'Não há pedidos exclusivos neste recorte',ARITHMETIC_UNSAFE:'Valor fora do limite de cálculo',VARIANT_CAPTURE_INCOMPLETE:'Parte da evidência por pedido ainda não foi capturada',VARIANT_CAPTURE_INVALID:'A captura por pedido não corresponde à fonte atual',NO_SINGLE_PAIR_ORDERS:'Não há pedidos com um único par produto/variação neste recorte'};
  const pendingText=codes=>[...new Set((codes??[]).map(code=>reasons[code]??'Evidência financeira pendente'))].join(' · ');
  const sign=value=>value<0?'negative':value>0?'positive':'neutral';
  const signedLabel=value=>value<0?'▼ Saldo negativo':value>0?'▲ Saldo positivo':'— Saldo zerado';
  const normalized=value=>String(value??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-BR');
  const sourceName=row=>row.product_name||'Produto #'+row.item_id;
- let report=null,financialEvidence=null,evidenceProducts=new Map(),state={month:null,query:'',abc:'all',sort:'quantity_desc',page:1,page_size:20},initialized=false;
+ let report=null,financialEvidence=null,evidenceProducts=new Map(),variantEvidence=null,variantOrderPairs=new Map(),state={month:null,query:'',abc:'all',sort:'quantity_desc',page:1,page_size:20},initialized=false;
  const contribution=row=>{const evidence=evidenceProducts.get(row.item_id);return evidence?evidence.strict.state==='AVAILABLE'&&Number.isSafeInteger(evidence.strict.contribution_cents)?evidence.strict.contribution_cents:null:row.exclusive_after_costs_cents;};
  const margin=row=>{const evidence=evidenceProducts.get(row.item_id);return evidence?evidence.strict.state==='AVAILABLE'&&Number.isSafeInteger(evidence.strict.margin_bps)?evidence.strict.margin_bps:null:row.exclusive_margin_bps;};
  const metric=(row,key)=>key==='exclusive_after_costs_cents'?contribution(row):key==='exclusive_margin_bps'?margin(row):row[key];
@@ -64,6 +64,60 @@ export function createMlsProductWorkbenchView(options={}){
   const checked=time(source.finance_oldest_at??source.checked_at);
   host.append(make('small','Fonte: pedidos criados de '+source.start_date+' a '+source.end_date+(checked?' · leitura financeira '+checked:'')+'. Custos atuais de referência; não é o gasto real por data de fabricação nem uma baixa de estoque.'));
  }
+ function checkedVariantEvidence(value){
+  try{
+   if(!financialEvidence||!value||value.schema!=='business_month_variant_contributions_v1'||value.month!==report.month||value.start_date!==financialEvidence.source.start_date||value.end_date!==financialEvidence.source.end_date||value.checked_at!==financialEvidence.source.checked_at||!['AVAILABLE','PARTIAL','NOT_CAPTURED'].includes(value.state)||value.basis!=='SINGLE_PAIR_PAID_ORDERS_CURRENT_REFERENCE_NOT_SETTLED'||value.cost_basis!=='CURRENT_REFERENCE_NOT_MANUFACTURING_OR_REUSE_LEDGER'||value.tax_basis!==financialEvidence.tax_basis||value.execution_allowed!==false||value.net_profit_cents!==null||value.safe_price_cents!==null||!Array.isArray(value.variants)||value.variants.length!==report.total_variants||!Array.isArray(value.windows)||value.windows.length<1||value.windows.length>3)return null;
+   const source=value.source,expected=financialEvidence.source;
+   if(!source||!Number.isSafeInteger(source.publication_revision)||source.publication_revision<1||!['bindings_revision','costs_revision','cost_rules_revision','classification_revision'].every(key=>source[key]===expected[key]))return null;
+   const current=new Map(report.products.flatMap(product=>product.variants.map(variant=>[product.item_id+':'+variant.model_id,variant]))),seen=new Set(),moneyKeys=['sales_cents','repass_cents','tax_cents','ads_adjustment_cents','production_cost_cents','contribution_cents'];
+   const integer=(number,min=0)=>Number.isSafeInteger(number)&&!Object.is(number,-0)&&number>=min,moneyValue=number=>number===null||integer(number,Number.MIN_SAFE_INTEGER),pending=codes=>Array.isArray(codes)&&codes.length<=30&&codes.every(code=>typeof code==='string'&&/^[A-Z][A-Z0-9_]{0,79}$/.test(code));
+   const safe=number=>number>=BigInt(Number.MIN_SAFE_INTEGER)&&number<=BigInt(Number.MAX_SAFE_INTEGER)?Number(number):null;
+   let units=0n,attributed=0n,unattributed=0n,available=0;
+   for(const row of value.variants){
+    const key=row.item_id+':'+row.model_id,variant=current.get(key);
+    if(!variant||seen.has(key)||row.total_quantity!==variant.quantity||row.unit_cost_cents!==variant.unit_cost_cents||!['attributed_quantity','unattributed_quantity','orders','completed','ongoing','payment_covered','payment_missing','returns','returns_unknown'].every(name=>integer(row[name]))||BigInt(row.attributed_quantity)+BigInt(row.unattributed_quantity)!==BigInt(row.total_quantity)||row.completed+row.ongoing!==row.orders||row.payment_covered+row.payment_missing!==row.orders||row.returns+row.returns_unknown>row.orders||(row.orders===0?row.attributed_quantity!==0:row.attributed_quantity<row.orders)||!pending(row.pending))return null;
+    seen.add(key);units+=BigInt(row.total_quantity);attributed+=BigInt(row.attributed_quantity);unattributed+=BigInt(row.unattributed_quantity);
+    if(!row.recorded||!row.strict||!moneyKeys.every(name=>moneyValue(row.recorded[name])&&moneyValue(row.strict[name]))||['sales_cents','tax_cents','production_cost_cents'].some(name=>row.recorded[name]!==null&&!integer(row.recorded[name]))||!moneyValue(row.strict.margin_bps)||!['AVAILABLE','BLOCKED'].includes(row.strict.state))return null;
+    if(row.strict.state==='BLOCKED'){if(moneyKeys.some(name=>row.strict[name]!==null)||row.strict.margin_bps!==null)return null;continue;}
+    if(value.state!=='AVAILABLE'||!row.orders||row.payment_missing||row.returns||row.returns_unknown||row.unit_cost_cents===null||row.pending.length||!moneyKeys.every(name=>integer(row.strict[name],['repass_cents','ads_adjustment_cents','contribution_cents'].includes(name)?Number.MIN_SAFE_INTEGER:0))||moneyKeys.some(name=>row.strict[name]!==row.recorded[name]))return null;
+    const cost=safe(BigInt(row.attributed_quantity)*BigInt(row.unit_cost_cents)),balance=cost===null?null:safe(BigInt(row.strict.repass_cents)-BigInt(cost)-BigInt(row.strict.tax_cents)),margin=balance!==null&&row.strict.sales_cents>0?safe(BigInt(balance)*10000n/BigInt(row.strict.sales_cents)):null;
+    if(cost===null||row.strict.production_cost_cents!==cost||row.strict.contribution_cents!==balance||row.strict.margin_bps!==margin)return null;
+    available++;
+   }
+   const coverage=value.coverage,captured=value.windows.filter(window=>window.state==='CAPTURED').length;
+   if(!coverage||coverage.total_units!==report.total_units||coverage.total_variants!==report.total_variants||coverage.total_units!==safe(units)||coverage.single_pair_units!==safe(attributed)||coverage.unattributed_units!==safe(unattributed)||coverage.strict_variants!==available||coverage.windows_total!==value.windows.length||coverage.windows_captured!==captured||value.windows.some(window=>!['CAPTURED','NOT_CAPTURED','INVALID'].includes(window.state))||value.state==='AVAILABLE'&&captured!==value.windows.length||!pending(value.pending))return null;
+   return value;
+  }catch{return null;}
+ }
+ function variantOrderBody(product,variant,card){
+  const row=variantOrderPairs.get(product.item_id+':'+variant.model_id);if(!row)return false;
+  const available=row.strict.state==='AVAILABLE',legacy=evidenceProducts.get(product.item_id);
+  // The original whole-month proof remains independently useful when capture
+  // of the new per-order source is incomplete. Never add the two contributions.
+  if(!available&&legacy?.strict.state==='AVAILABLE'&&legacy.attribution?.state==='ATTRIBUTED'&&legacy.attribution.model_id===variant.model_id)return false;
+  const values=available?row.strict:row.recorded,detail=make('div',undefined,'m3-attribution'),key=product.item_id+':'+variant.model_id;
+  detail.dataset.m3VariantOrderContribution=key;detail.dataset.proofSource='SINGLE_PAIR_ORDERS';detail.dataset.state=available?'AVAILABLE':variantEvidence.state==='NOT_CAPTURED'?'NOT_CAPTURED':'BLOCKED';
+  if(available)detail.dataset.m3VariantAttribution=key;
+  detail.append(make('strong',available?'Contribuição dos pedidos atribuídos a esta variação':'Atribuição por pedido em conferência'));
+  detail.append(make('p',count(row.orders)+' pedido(s) com um único par produto/variação · '+count(row.attributed_quantity)+' de '+count(row.total_quantity)+' unidade(s) com atribuição comprovada.'));
+  detail.append(make('small',count(row.unattributed_quantity)+' unidade(s) sem atribuição comprovada. Podem pertencer a pedidos com vários pares ou a fontes ainda não capturadas; nenhum repasse foi rateado.'));
+  if(!available)detail.append(make('p','Leitura registrada: pagamentos cobertos em '+count(row.payment_covered)+' de '+count(row.orders)+' pedido(s) atribuídos. A referência de produção considera as unidades atribuídas com custo conhecido. Componentes parciais não formam uma subtração.'));
+  const list=make('dl',undefined,'m3-waterfall'),line=(field,label,deduct=false)=>{const dt=make('dt',label),value=values[field],dd=make('dd',Number.isSafeInteger(value)?(deduct&&value>=0?'− ':'')+money(value):'Em conferência');dd.dataset.m3VariantMoney=field.replace(/_cents$/,'').replace('production_cost','production');list.append(dt,dd);};
+  line('sales_cents',available?'Vendas dos pedidos atribuídos':'Vendas informadas · pagamentos cobertos');
+  line('repass_cents',available?'Repasse · deduções já consideradas':'Repasse informado · pagamentos cobertos');
+  line('production_cost_cents',available?'Produção das unidades atribuídas':'Produção identificada · referência pode ser parcial',available);
+  line('tax_cents',variantEvidence.tax_basis==='MONTHLY_DAS_NOT_ALLOCATED'?'Tributo dos pedidos · DAS mensal fora deste saldo':'Tributo de referência · estimativa por pedido',available);
+  line('contribution_cents',available?'Contribuição dos pedidos atribuídos':'Subtotal registrado · sujeito à revisão');
+  detail.append(list);
+  if(Number.isSafeInteger(values.contribution_cents)){const label=make('p',signedLabel(values.contribution_cents));label.dataset.tone=sign(values.contribution_cents);detail.append(label);}
+  if(available&&Number.isSafeInteger(values.margin_bps)){const label=make('small',percent(values.margin_bps)+' sobre as vendas atribuídas');label.dataset.m3VariantMoney='margin';detail.append(label);}
+  if(Number.isSafeInteger(values.ads_adjustment_cents)&&values.ads_adjustment_cents!==0){const label=make('small','Ajuste retido já considerado no repasse: '+money(values.ads_adjustment_cents)+' · informativo, sem nova soma ou desconto.');label.dataset.m3VariantMoney='adjustment';detail.append(label);}
+  if(!available&&values.contribution_cents===null)detail.append(make('small','Contribuição pendente: não calculamos saldo a partir de componentes parciais.'));
+  if(row.pending.length)detail.append(make('p','Pendente: '+pendingText(row.pending)));
+  detail.append(make('small','Fonte por pedido: '+count(variantEvidence.coverage.windows_captured)+' de '+count(variantEvidence.coverage.windows_total)+' intervalo(s) capturado(s), de '+variantEvidence.start_date+' a '+variantEvidence.end_date+'. Custo atual de referência; não é fabricação incorrida ou consumo de peça reaproveitada.'));
+  detail.append(make('small','Ads, despesas e DAS mensal ficam fora desta contribuição. Não é lucro líquido total da variação.'));
+  card.append(detail);return true;
+ }
  function variantsBody(product,host){
   let offset=0;
   const render=()=>{
@@ -78,13 +132,14 @@ export function createMlsProductWorkbenchView(options={}){
     card.append(make('p',variant.unit_cost_cents===null?'Custo unitário pendente':money(variant.unit_cost_cents)+' por unidade vendida'));
     card.append(make('small',variant.production_cost_cents===null?'Total desta variação em conferência':'Referência das vendas: '+money(variant.production_cost_cents)));
     const evidence=evidenceProducts.get(product.item_id),attribution=evidence?.attribution;
-    if(attribution?.state==='ATTRIBUTED'&&evidence.strict.state==='AVAILABLE'&&attribution.model_id===variant.model_id&&Number.isSafeInteger(attribution.contribution_cents)){
+    const orderProofShown=variantOrderBody(product,variant,card);
+    if(!orderProofShown&&attribution?.state==='ATTRIBUTED'&&evidence.strict.state==='AVAILABLE'&&attribution.model_id===variant.model_id&&Number.isSafeInteger(attribution.contribution_cents)){
      const detail=make('div',undefined,'m3-attribution');detail.dataset.m3VariantAttribution=product.item_id+':'+variant.model_id;detail.dataset.state='ATTRIBUTED';
      detail.append(make('strong','Saldo dos pedidos exclusivos atribuídos a esta variação'),make('p',money(attribution.contribution_cents)));
      if(Number.isSafeInteger(attribution.margin_bps))detail.append(make('small',percent(attribution.margin_bps)+' sobre as vendas exclusivas'));
      detail.append(make('small','Prova: uma única variação vendida no produto. '+count(attribution.exclusive_orders)+' pedido(s) exclusivo(s) · '+count(attribution.exclusive_quantity)+' unidade(s) exclusiva(s). '+count(evidence.scope.mixed_quantity)+' unidade(s) mista(s) ficam fora. Não é lucro líquido total da variação.'));
      card.append(detail);
-    }else if(attribution?.state==='MULTIPLE_SOLD_VARIANTS')card.append(make('small','Saldo por variação indisponível: há mais de uma variação vendida. Nenhum repasse foi rateado.'));
+    }else if(!orderProofShown&&attribution?.state==='MULTIPLE_SOLD_VARIANTS')card.append(make('small','Saldo por variação indisponível: há mais de uma variação vendida. Nenhum repasse foi rateado.'));
     const button=make('button','Usar custo no cenário','button-secondary');button.type='button';button.dataset.m3UseVariant=product.item_id+':'+variant.model_id;button.disabled=!(Number.isSafeInteger(variant.unit_cost_cents)&&variant.unit_cost_cents>0);
     button.onclick=()=>{if(!button.disabled&&typeof options.onSelectVariant==='function')options.onSelectVariant(product.item_id+':'+variant.model_id);};card.append(button);list.append(card);
    }
@@ -151,15 +206,16 @@ export function createMlsProductWorkbenchView(options={}){
   if(byId('Previous'))byId('Previous').onclick=()=>{state.page--;drawRows();};if(byId('Next'))byId('Next').onclick=()=>{state.page++;drawRows();};
  }
  function clear(){
-  report=null;financialEvidence=null;evidenceProducts=new Map();for(const name of ['Stats','Rows','Chart','ABCBars'])byId(name)?.replaceChildren();if(byId('CostCoverage'))byId('CostCoverage').textContent='Aguardando a cobertura de custos do mês salvo.';if(byId('Page'))byId('Page').textContent='Sem fonte mensal completa.';for(const name of ['Previous','Next'])if(byId(name))byId(name).disabled=true;
+  report=null;financialEvidence=null;evidenceProducts=new Map();variantEvidence=null;variantOrderPairs=new Map();for(const name of ['Stats','Rows','Chart','ABCBars'])byId(name)?.replaceChildren();if(byId('CostCoverage'))byId('CostCoverage').textContent='Aguardando a cobertura de custos do mês salvo.';if(byId('Page'))byId('Page').textContent='Sem fonte mensal completa.';for(const name of ['Previous','Next'])if(byId(name))byId(name).disabled=true;
  }
- function render(value,evidence=null){
+ function render(value,evidence=null,orderEvidence=null){
   if(!byId('Rows')||!value||value.schema!=='mls_product_workbench_v1'||value.mode!=='OBSERVER'||!Array.isArray(value.products)||value.products.length>3000){clear();return false;}
   initialize();remember();if(state.month!==value.month){state=drafts.has(value.month)?{...drafts.get(value.month)}:{month:value.month,query:'',abc:'all',sort:'quantity_desc',page:1,page_size:20};}
   report=value;
   const cohort=new Map(value.products.map(product=>[product.item_id,product]));
   financialEvidence=evidence?.schema==='mls_product_financial_evidence_v1'&&evidence.mode==='OBSERVER'&&evidence.month===value.month&&evidence.execution_allowed===false&&Array.isArray(evidence.products)&&evidence.products.length===value.products.length&&new Set(evidence.products.map(product=>product.item_id)).size===value.products.length&&evidence.products.every(product=>{const row=cohort.get(product.item_id);return row&&product.scope?.quantity===row.quantity&&product.scope.exclusive_orders===row.exclusive_orders&&product.scope.mixed_orders===row.mixed_orders&&product.scope.sold_variants===row.variants.length;})?evidence:null;
   evidenceProducts=new Map((financialEvidence?.products??[]).map(product=>[product.item_id,product]));
+  variantEvidence=checkedVariantEvidence(orderEvidence);variantOrderPairs=new Map((variantEvidence?.variants??[]).map(row=>[row.item_id+':'+row.model_id,row]));
   for(const [name,key] of [['Search','query'],['ABC','abc'],['Sort','sort'],['PageSize','page_size']])if(byId(name))byId(name).value=String(state[key]);
   drawOverview();drawRows();return true;
  }

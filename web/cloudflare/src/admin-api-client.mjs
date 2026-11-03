@@ -10,8 +10,10 @@ export function createAdminApiClient(options={}){
  const fetchImpl=options.fetchImpl??((...args)=>fetch(...args)),getCsrf=options.getCsrf??(()=>''),setTimer=options.setTimeoutImpl??((...args)=>setTimeout(...args)),clearTimer=options.clearTimeoutImpl??(id=>clearTimeout(id)),Controller=options.AbortControllerImpl??AbortController;
  if([fetchImpl,getCsrf,setTimer,clearTimer,Controller].some(value=>typeof value!=='function'))throw error('ADMIN_API_RESPONSE_INVALID');
  return async function request(path,body,requestOptions={}){
-  if(typeof path!=='string'||path.length>4096||!/^([a-z][a-z0-9-]*)(\/[a-z0-9-]+)*(\?[^\s#]*)?$/.test(path)||path.includes('..')||path.includes('://')||/[\u0000-\u001f\u007f]/.test(path)||!dataKeys(requestOptions,['timeoutMs']))throw error('ADMIN_API_RESPONSE_INVALID');
+  if(typeof path!=='string'||path.length>4096||!/^([a-z][a-z0-9-]*)(\/[a-z0-9-]+)*(\?[^\s#]*)?$/.test(path)||path.includes('..')||path.includes('://')||/[\u0000-\u001f\u007f]/.test(path)||!dataKeys(requestOptions,['timeoutMs','monthlyViewContract']))throw error('ADMIN_API_RESPONSE_INVALID');
   const post=body!==undefined,timeoutMs=requestOptions.timeoutMs??(post?90000:45000);
+  const viewPath=path==='finance/business-month-view'||path.startsWith('finance/business-month-view?');
+  if(Object.hasOwn(requestOptions,'monthlyViewContract')&&(!viewPath||post||!['business-month-view-v4','business-month-view-v5'].includes(requestOptions.monthlyViewContract)))throw error('ADMIN_API_RESPONSE_INVALID');
   if(!Number.isInteger(timeoutMs)||timeoutMs<5||timeoutMs>120000)throw error('ADMIN_API_RESPONSE_INVALID');
   let serialized,csrf;
   try{
@@ -19,7 +21,7 @@ export function createAdminApiClient(options={}){
   }catch{throw error('ADMIN_API_RESPONSE_INVALID');}
   const headers=post?{'Accept':'application/json','Content-Type':'application/json','X-CSRF-Token':csrf}:{'Accept':'application/json'};
   if(path==='finance/business-month'||path.startsWith('finance/business-month?'))headers['X-Braza-Client-Contract']=monthlyContract;
-  if(path==='finance/business-month-view'||path.startsWith('finance/business-month-view?'))headers['X-Braza-Client-Contract']=monthlyViewContract;
+  if(path==='finance/business-month-view'||path.startsWith('finance/business-month-view?'))headers['X-Braza-Client-Contract']=requestOptions.monthlyViewContract??monthlyViewContract;
   let controller;try{controller=new Controller();if(!controller.signal||typeof controller.abort!=='function')throw Error();}catch{throw error('ADMIN_API_RESPONSE_INVALID');}
   let timer=null,expired=false,response=null,responseStatus=null;
   const deadline=new Promise((resolve,reject)=>{
