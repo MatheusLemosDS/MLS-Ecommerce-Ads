@@ -45,6 +45,7 @@
     "web/cloudflare/tests/incurred-production-analytics.test.mjs",
     "web/cloudflare/tests/incurred-production-chrome.test.mjs",
     "web/cloudflare/tests/incurred-production-daily-client.test.mjs",
+    "web/cloudflare/tests/mls-ai-sales-chrome.test.mjs",
     "web/cloudflare/tests/production-cost-workspace-ui.test.mjs",
     "web/cloudflare/tests/production-daily-browser-fixture.mjs",
     "web/cloudflare/tests/production-daily-finance.test.mjs",
