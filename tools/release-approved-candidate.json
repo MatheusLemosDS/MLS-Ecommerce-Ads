@@ -53,11 +53,13 @@
     "web/cloudflare/tests/mls-variant-order-client.test.mjs",
     "web/cloudflare/tests/mls-variant-order-fixture.mjs",
     "web/cloudflare/tests/mls-variant-order-rolling-compiled.test.mjs",
+    "web/cloudflare/tests/monthly-net-period-chrome.test.mjs",
     "web/cloudflare/tests/owner-report-browser-fixture.mjs",
     "web/finance/src/auth-router.mjs",
     "web/finance/src/business-period.mjs",
     "web/finance/src/business-variant-attribution.mjs",
     "web/finance/src/connection-worker.mjs",
+    "web/finance/tests/business-period.test.mjs",
     "web/finance/tests/business-variant-attribution.test.mjs",
     "web/finance/tests/business-variants-transport.test.mjs"
   ]

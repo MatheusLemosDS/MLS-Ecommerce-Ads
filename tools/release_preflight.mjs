@@ -37,6 +37,7 @@ export const RELEASE_APPROVED_PROTECTED_FILES=Object.freeze([
  "web/finance/src/business-period.mjs",
  "web/finance/src/business-variant-attribution.mjs",
  "web/finance/src/connection-worker.mjs",
+ "web/finance/tests/business-period.test.mjs",
  "web/finance/tests/business-variant-attribution.test.mjs",
  "web/finance/tests/business-variants-transport.test.mjs"
 ]);
