@@ -3,25 +3,27 @@ import assert from 'node:assert/strict';
 import {savedCatalogBody,SAVED_CATALOG_CSS,SAVED_CATALOG_CLIENT} from '../src/saved-catalog-view.mjs';
 import {compiledOwnerReportPage} from './owner-report-browser-fixture.mjs';
 
-test('Products workspace truthfully distinguishes shipped catalog/costs from draft-only Listing Factory and pricing',()=>{
+test('Products workspace exposes shipped M3 analysis and conditional local drafting without publication permissions',()=>{
  const html=savedCatalogBody();
  const intro=html.slice(0,html.indexOf('<section id="savedCatalog"'));
  assert.match(intro,/id="productsHub"/);
  assert.match(intro,/aria-labelledby="productsHubTitle"/);
  assert.match(intro,/id="productsHubTitle"/);
  assert.equal((intro.match(/class="products-hub-card"/g)||[]).length,4);
- assert.equal((intro.match(/data-stage="available"/g)||[]).length,2);
- assert.equal((intro.match(/data-stage="review"/g)||[]).length,2);
+ assert.equal((intro.match(/data-stage="available"/g)||[]).length,3);
+ assert.equal((intro.match(/data-stage="review"/g)||[]).length,1);
  assert.match(intro,/Fábrica de Anúncios/);
- assert.match(intro,/Homologação · não publicada/);
- assert.match(intro,/Observer em revisão/);
+ assert.match(intro,/Acesso conforme a configuração/);
+ assert.doesNotMatch(intro,/href="#mlsListingFactory"/);
+ const enabled=savedCatalogBody({listingFactory:true});assert.match(enabled,/href="#mlsListingFactory"/);assert.match(enabled,/Rascunhos locais disponíveis/);
+ assert.match(intro,/M3 Observador disponível/);
  assert.match(intro,/Catálogo salvo não é estoque vendável/);
  assert.match(intro,/Ads e PROMO continuam bloqueados/);
  assert.match(intro,/href="#savedCatalog"/);
  assert.match(intro,/href="#legacyProductEditor"/);
  assert.match(intro,/href="\/admin\?tab=margins"/);
- assert.match(intro,/pull\/68/);
- assert.match(intro,/pull\/47/);
+ assert.match(intro,/href="\/admin\?tab=agent-products#businessMonthPricingObserver"/);
+ assert.doesNotMatch(intro,/pull\/(?:68|47)/);
  assert.doesNotMatch(intro,/READY_TO_PUBLISH|Preço ideal: R\$|lucro líquido aprovado/i);
  assert.ok(html.indexOf('id="productsHub"')<html.indexOf('id="savedCatalog"'),'hub appears before the real saved catalog');
  assert.match(html,/id="savedCatalogSearchForm"/);
@@ -45,7 +47,8 @@ for(const minify of [false,true]){
   const hub=html.indexOf('id="productsHub"'),catalog=html.indexOf('id="savedCatalog"'),editor=html.indexOf('id="legacyProductEditor"');
   assert.ok(hub>=0&&catalog>hub&&editor>catalog,'Products hub, saved catalog and advanced editor order');
   assert.equal(html.includes('id="mlsListingFactory"'),false,'V3.6 not published in main');
-  assert.match(html,/Homologação · não publicada/);
+  assert.match(html,/Acesso conforme a configuração/);
+  assert.match(html,/M3 Observador disponível/);
   assert.match(html,/Dados da consulta e referências de custo/);
  });
 }

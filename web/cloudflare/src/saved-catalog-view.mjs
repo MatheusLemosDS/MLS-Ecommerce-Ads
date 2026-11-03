@@ -39,13 +39,13 @@ export const SAVED_CATALOG_CSS=String.raw`.saved-catalog-toolbar{display:flex;al
 @media(max-width:600px){.mls-products-hub .products-hub-hero{padding:22px 18px;gap:17px}.mls-products-hub .products-hub-copy h2{font-size:25px}.mls-products-hub .products-hub-grid{grid-template-columns:minmax(0,1fr)}.mls-products-hub .products-hub-actions{display:grid;grid-template-columns:1fr}.mls-products-hub .products-hub-card{padding:17px}.mls-products-hub .products-hub-caution{display:block}.mls-products-hub .products-hub-caution strong{display:block;margin-bottom:6px}.mls-products-hub .products-hub-state{gap:8px}}
 `;
 
-export function savedCatalogBody(){return `
+export function savedCatalogBody({listingFactory=false}={}){return `
 <section id="productsHub" class="mls-products-hub" aria-labelledby="productsHubTitle">
  <header class="products-hub-hero">
   <div class="products-hub-copy">
    <span class="products-hub-eyebrow">MLS PRODUCTS · CENTRAL DE PRODUTOS</span>
    <h2 id="productsHubTitle">Catálogo, custos e oportunidades em um só lugar.</h2>
-   <p>Consulte o cadastro salvo, revise custos por variação e acompanhe as próximas ferramentas. Cadastro, vendas e rentabilidade são fontes diferentes e não devem ser confundidas.</p>
+   <p>Consulte o cadastro salvo, revise custos por variação e analise os produtos vendidos no mês. Cadastro, vendas e rentabilidade têm fontes e coberturas próprias.</p>
    <div class="products-hub-actions">
     <a href="#savedCatalog">Explorar catálogo salvo <span aria-hidden="true">›</span></a>
     <a href="/admin?tab=margins">Abrir custos de produção <span aria-hidden="true">›</span></a>
@@ -73,19 +73,19 @@ export function savedCatalogBody(){return `
    <p>Consulte custos cadastrados, abra as variações e revise vínculos avançados. Custo conhecido não comprova lucro líquido.</p>
    <a class="products-hub-link" href="#legacyProductEditor">Ir à revisão avançada de vínculos</a>
   </article>
-  <article class="products-hub-card" data-stage="review">
-   <span class="products-hub-number">03 · CRIAÇÃO DE ANÚNCIOS</span>
+  <article class="products-hub-card" data-stage="${listingFactory?'available':'review'}">
+   <span class="products-hub-number">03 · PREPARAÇÃO LOCAL</span>
    <h3>Fábrica de Anúncios</h3>
-   <span class="products-hub-pill products-hub-pill--review">Homologação · não publicada</span>
-   <p>Rascunhos locais com títulos, variações e mockups estão em revisão técnica. Nenhum envio automático à Shopee está liberado.</p>
-   <a class="products-hub-link" href="https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/68" target="_blank" rel="noopener noreferrer">Ver candidato V3.6 no GitHub</a>
+   <span class="products-hub-pill products-hub-pill--${listingFactory?'available':'review'}">${listingFactory?'Rascunhos locais disponíveis':'Acesso conforme a configuração'}</span>
+   <p>A preparação local de títulos, variações e mockups está integrada. Rascunho não comprova estoque, permissões ou publicação na Shopee.</p>
+   ${listingFactory?'<a class="products-hub-link" href="#mlsListingFactory">Abrir preparação de anúncios</a>':'<p>A preparação aparece quando habilitada para este acesso.</p>'}
   </article>
-  <article class="products-hub-card" data-stage="review">
+  <article class="products-hub-card" data-stage="available">
    <span class="products-hub-number">04 · ANÁLISE E PREÇOS</span>
-   <h3>MLS Pricing</h3>
-   <span class="products-hub-pill products-hub-pill--review">Observer em revisão</span>
-   <p>Curva ABC e simulação manual estão em PR separada. Recomendar preço exige custos, taxas, Ads e estoque verificáveis.</p>
-   <a class="products-hub-link" href="https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/47" target="_blank" rel="noopener noreferrer">Ver proposta M3 no GitHub</a>
+   <h3>MLS Products + Pricing</h3>
+   <span class="products-hub-pill products-hub-pill--available">M3 Observador disponível</span>
+   <p>Ranking ABC por unidades, custos das vendas e saldos de pedidos exclusivos conferidos. Simule cenários com hipóteses explícitas de taxas e margem.</p>
+   <a class="products-hub-link" href="/admin?tab=agent-products#businessMonthPricingObserver">Abrir análise de produtos</a>
   </article>
  </div>
  <div class="products-hub-caution"><strong>FONTES DISTINTAS</strong><p>Catálogo salvo não é estoque vendável; unidades vendidas não são pedidos únicos; custo cadastrado não é lucro; rascunho de anúncio não é publicação. Ads e PROMO continuam bloqueados para execução automática.</p></div>

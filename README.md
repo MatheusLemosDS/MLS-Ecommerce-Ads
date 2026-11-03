@@ -1,3 +1,7 @@
+<!-- M3_PRODUCT_WORKBENCH_CURRENT -->
+**M3 em paralelo — candidato em preparação, `PREPARED_NOT_PUBLISHED`:** versão proposta `2026-11-02.5 — M3 · Produtos e cenários de preços`, base oficial `b840da57b9f2074e4ad120314f4871e1947aa1a5` (PR105 integrada). Reutiliza a base Observer já publicada e prepara um único painel em Produtos para ranking completo, ABC por unidades, variações/custos de referência e cenários matemáticos de equilíbrio e margem informada. A referência mensal não é fabricação incorrida; receita de pedidos mistos permanece sem rateio; não há receita/repasse próprios por variação, preço seguro, estoque ou ROAS real por SKU comprovados. O custo selecionado deve ser conhecido e positivo; as demais hipóteses exigem preenchimento explícito, inclusive zero. Usa as fontes e os controladores salvos existentes; nenhum endpoint, consulta SQL, coleta ou escrita comercial é acrescentado por esta entrega. Preservar os seis agentes da inicial, o mês, os rascunhos e os controles de Finance/Returns/Produção. M2/M2.2 continuam abertas; esta preparação não é recibo de publicação. [Escopo, uso previsto e limites](docs/MLS_M3_PRODUCT_WORKBENCH_2026_11_02.md).
+<!-- END_M3_PRODUCT_WORKBENCH_CURRENT -->
+
 <!-- OVERVIEW_AGENTS_RESTORE_RELEASE -->
 **Atualização Live — 2026-11-02.4, Agentes de volta à página inicial:**
 Os seis cartões do design aprovado voltaram à Visão geral, abaixo dos indicadores

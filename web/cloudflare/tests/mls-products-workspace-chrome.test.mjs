@@ -114,11 +114,11 @@ test('real Chrome renders read-only Products hub and legacy controls without hor
    assert.ok(result.catalogAfter,device.name+': catalog should follow the hub');
    assert.equal(result.cols,device.mobile?1:4);
    assert.equal(result.cards.length,4);
-   assert.equal(result.available,2);
-   assert.equal(result.review,2);
+   assert.equal(result.available,3);
+   assert.equal(result.review,1);
    assert.equal(result.catalog,true);
    assert.equal(result.editor,true);
-   assert.equal(result.factory,false,'draft Listing Factory cannot appear in main');
+   assert.equal(result.factory,false,'the disabled local factory must not produce a dead in-page link');
    assert.equal(result.overflow,false,device.name+': overview cards are clipped');
    await browser.screenshot('products-'+device.name+'.png');
    await browser.evaluate("document.querySelector('#productsHub .products-hub-grid').scrollIntoView({block:'start',behavior:'instant'})");
