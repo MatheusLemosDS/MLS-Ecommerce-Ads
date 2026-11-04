@@ -30,7 +30,7 @@ export const RELEASE_BASE_COMMIT=approvedCandidate.base_commit;
 export const RELEASE_EXPECTED_SHA=Object.freeze({...approvedCandidate.expected_hashes});
 export const RELEASE_EXPECTED_LIVE_FLAGS=Object.freeze({...validFlags});
 export const RELEASE_ALLOWED_FILES=Object.freeze([...approvedCandidate.allowed_files]);
-// Daily production analytics and Hermes readability change only the App.
+// Weekly production closing and its historical reports change only the App.
 // Finance/Auth, original Workers, configuration and bridges remain closed.
 export const RELEASE_APPROVED_PROTECTED_FILES=Object.freeze([]);
 

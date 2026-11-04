@@ -33,7 +33,7 @@ test('release preflight passes only an exact reviewed local build and leaves rem
  assert.ok(RELEASE_ALLOWED_FILES.filter(x=>x.startsWith('web/finance/')).every(x=>RELEASE_APPROVED_PROTECTED_FILES.includes(x)));
 });
 
-test('daily manufacturing and Hermes presentation keep every protected Worker closed',()=>{
+test('weekly manufacturing closes keep every protected Worker closed',()=>{
  assert.deepEqual(RELEASE_APPROVED_PROTECTED_FILES,[]);
  assert.ok(RELEASE_APPROVED_PROTECTED_FILES.every(x=>(x.startsWith('web/finance/')||x.startsWith('web/auth/')||x==='web/cloudflare/auth-worker.mjs')&&!/[?*\\]/.test(x)));
  for(const path of [
@@ -165,7 +165,7 @@ test('a malformed candidate cannot weaken exact hashes, literal paths or commerc
 });
 
 test('the focused release does not inherit unrelated AI-storage or previous-candidate permissions',()=>{
- assert.equal(RELEASE_BASE_COMMIT,'d1aaa55eb92e820447318522c759b924d1c288cb');
+ assert.equal(RELEASE_BASE_COMMIT,'d14df57d0b3305ce673a247f925d5dd0d68d191d');
  for(const baseCommit of ['2ab4c9d8baa3c25e5816bcca14b4a0973ea73d5a','8d66525bc3b96914412a9538d3ec84048ac78dbb']){
   const oldBase=good();oldBase.baseCommit=baseCommit;
   assert.ok(evaluateReleasePreflight(oldBase).failures.includes('RELEASE_BASE_MISMATCH'));
