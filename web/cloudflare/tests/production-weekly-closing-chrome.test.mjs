@@ -21,6 +21,17 @@ async function wait(cdp,expression,label){
  for(let turn=0;turn<180;turn++){if(await cdp.evaluate(expression))return;await receiptPause(50);}
  assert.fail(label+' '+JSON.stringify(await cdp.evaluate("({errors:globalThis.__weeklyErrors,status:document.getElementById('productionWeeklyClosingStatus')?.textContent,revision:globalThis.brazaProductionWeeklyClosing?.getSnapshot?.()?.revision,active:document.documentElement.dataset.activePanel})")));
 }
+async function readyFinancialBaseline(cdp,expected){
+ assert.equal(expected.status,'COMPLETE');assert.ok(Number.isSafeInteger(expected.checked_at));assert.ok(Number.isSafeInteger(expected.result.net_estimate_cents));
+ let previous=null,last=null;
+ for(let turn=0;turn<180;turn++){
+  last=await cdp.evaluate('globalThis.brazaMonthDashboard?.getSnapshot?.()??null');
+  const ready=last?.month===expected.month&&last.status==='COMPLETE'&&Number.isSafeInteger(last.checked_at)&&last.checked_at===expected.checked_at&&last.period_loading===false&&Number.isSafeInteger(last.balance_cents)&&last.balance_cents===expected.result.net_estimate_cents&&last.presentation?.state==='ESTIMATE'&&last.presentation.amount_cents===expected.result.net_estimate_cents;
+  const full=JSON.stringify(last);if(ready&&full===previous)return full;previous=ready?full:null;
+  await receiptPause(50);
+ }
+ assert.fail('FINANCIAL_BASELINE_NOT_READY '+JSON.stringify({expected:{month:expected.month,status:expected.status,checked_at:expected.checked_at,balance_cents:expected.result.net_estimate_cents,period_loading:false,presentation_state:'ESTIMATE'},actual:last}));
+}
 async function setField(cdp,selector,next,event='input'){
  await cdp.evaluate(`(()=>{const n=document.querySelector(${JSON.stringify(selector)});if(!n)throw Error('WEEKLY_QA_FIELD_MISSING:'+${JSON.stringify(selector)});if(n.type==='checkbox')n.checked=${JSON.stringify(next)};else Object.getOwnPropertyDescriptor(n.tagName==='SELECT'?HTMLSelectElement.prototype:HTMLInputElement.prototype,'value').set.call(n,${JSON.stringify(next)});n.dispatchEvent(new Event(${JSON.stringify(event)},{bubbles:true}));})()`);
 }
@@ -63,7 +74,9 @@ for(const minify of [false,true])for(const width of [320,1365])test(`compiled we
   cdp=await receiptBrowser();cdp.on('Network.requestWillBeSent',value=>network.push(value.request.url));await cdp.send('Network.enable');await cdp.send('Emulation.setDeviceMetricsOverride',{width,height:1000,deviceScaleFactor:1,mobile:width===320});
   await cdp.send('Page.navigate',{url:'http://127.0.0.1:'+server.address().port+'/admin?tab=overview&month=2026-10&date=2026-10-20'});
   await wait(cdp,"document.readyState==='complete'&&globalThis.brazaProductionWeeklyClosing&&brazaMonthDashboard?.getSnapshot?.()?.month==='2026-10'",'the compiled owner workspace must initialize');
+  const financialBaseline=await readyFinancialBaseline(cdp,fixture.finance.financialView.display);
   const overview=await cdp.evaluate("(()=>{const cards=[...document.querySelectorAll('#commandCenterAgents>.agent-card')],kpis=document.querySelector('#commandCenter>.command-center-metrics'),agents=document.getElementById('commandAgents'),charts=document.querySelector('.mls-overview-performance');return {ids:cards.map(n=>n.dataset.missionAccent),visible:cards.every(n=>n.checkVisibility()),after_kpis:!!(kpis.compareDocumentPosition(agents)&Node.DOCUMENT_POSITION_FOLLOWING),before_charts:!!(agents.compareDocumentPosition(charts)&Node.DOCUMENT_POSITION_FOLLOWING),financial:JSON.stringify(brazaMonthDashboard.getSnapshot())};})()");
+  assert.equal(overview.financial,financialBaseline,'the complete financial baseline is captured before any weekly navigation or confirmation');
   assert.deepEqual(overview.ids,['hermes','finance','ads','products','production','returns']);assert.equal(overview.visible,true);assert.equal(overview.after_kpis,true);assert.equal(overview.before_charts,true);assert.equal(weeklyReads(),0,'weekly reports remain lazy outside the manufacturing workspace');
   await receiptClick(cdp,'#commandCenterAgents [data-mission-open="agent-production"]');
   await wait(cdp,"brazaProductionWeeklyClosing.getSnapshot()?.month==='2026-10'&&!!brazaIncurredProduction.getSnapshot()",'manufacturing and weekly reports must settle');
