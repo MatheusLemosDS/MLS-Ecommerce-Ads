@@ -282,10 +282,15 @@
       "provider_calls": 0
     },
     "integration": {
-      "status": "CHECK_LINKED_PR_CURRENT_STATE",
+      "status": "MERGED_VERIFIED",
       "pull_request": 109,
       "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/109",
-      "merge_commit": null,
+      "merge_commit": "d14df57d0b3305ce673a247f925d5dd0d68d191d",
+      "merged_at": "2026-11-03T16:25:37Z",
+      "final_head": "9dc5aee86af0d79b2a355967b83e5ee9e037d152",
+      "final_ci_run": 41672307550,
+      "main_tree_matches": true,
+      "all_three_live_exact": true,
       "publication_receipt_does_not_prove_merge": true
     },
     "prepublication_manufacturing_history": {
@@ -438,10 +443,15 @@
       "provider_calls": 0
     },
     "integration": {
-      "status": "CHECK_LINKED_PR_CURRENT_STATE",
+      "status": "MERGED_VERIFIED",
       "pull_request": 109,
       "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/109",
-      "merge_commit": null,
+      "merge_commit": "d14df57d0b3305ce673a247f925d5dd0d68d191d",
+      "merged_at": "2026-11-03T16:25:37Z",
+      "final_head": "9dc5aee86af0d79b2a355967b83e5ee9e037d152",
+      "final_ci_run": 41672307550,
+      "main_tree_matches": true,
+      "all_three_live_exact": true,
       "publication_receipt_does_not_prove_merge": true
     },
     "prepublication_manufacturing_history": {
@@ -4139,10 +4149,15 @@
       "provider_calls": 0
     },
     "integration": {
-      "status": "CHECK_LINKED_PR_CURRENT_STATE",
+      "status": "MERGED_VERIFIED",
       "pull_request": 109,
       "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/109",
-      "merge_commit": null,
+      "merge_commit": "d14df57d0b3305ce673a247f925d5dd0d68d191d",
+      "merged_at": "2026-11-03T16:25:37Z",
+      "final_head": "9dc5aee86af0d79b2a355967b83e5ee9e037d152",
+      "final_ci_run": 41672307550,
+      "main_tree_matches": true,
+      "all_three_live_exact": true,
       "publication_receipt_does_not_prove_merge": true
     },
     "prepublication_manufacturing_history": {
@@ -4161,11 +4176,257 @@
     }
   },
   "next_actions": [
-    "Conferir uso real e estado atual da PR da produção diária/Hermes.",
-    "Preservar fabricação por data/custo histórico, unknown/zero/anulações e meses antigos; não inferir peças de pedidos, kits ou DTF.",
-    "Usar estimativa diária financeira salva em fonte separada; não deduzir novamente o ledger nem ranquear pendentes/dia atual parcial.",
-    "Expor parâmetros/Ads/equação do Hermes mantendo valores, fingerprints, datas e snapshots imutáveis.",
-    "Preservar seis agentes da inicial, mês/rascunhos, contratos/gates; M2/M2.2 continuam abertas.",
-    "Conferir fatos reais, origem/cobertura e mesmo recorte com Seller Centre/banco; não copiar declaração de despesas de novembro."
-  ]
+    "Concluir testes/QA/CI e publicar somente o App preparado, sem presumir recibos.",
+    "Preservar sexta13→sexta13 Brasília, fim de semana, lote dividido/confirmado e pendências nas duas semanas adjacentes.",
+    "Manter originais imutáveis, revisões/ajustes auditados e histórico retrospectivo identificado; sem fake cron passado.",
+    "Confirmar lotes/datas/custos reais antes de mostrar gastos exatos históricos; pedidos/vendas disponíveis não comprovam fabricação.",
+    "Preservar seis agentes, produção diária, Hermes, meses/rascunhos, contratos e gates; sem dupla dedução, estoque externo ou pagamentos.",
+    "Continuar M2/M2.2 e conferir o mesmo recorte com Seller Centre/banco; não copiar despesas de novembro a outros meses."
+  ],
+  "production_weekly_closing_2026_11_03": {
+    "id": "PRODUCTION_WEEKLY_FRIDAY_13_CLOSING",
+    "status": "PREPARED_NOT_PUBLISHED",
+    "branch": "feature/production-weekly-close-20261103",
+    "base_main": "d14df57d0b3305ce673a247f925d5dd0d68d191d",
+    "human_code_release_id": "2026-11-03.3",
+    "label": "Fechamento semanal da produção",
+    "docs": "docs/MLS_PRODUCTION_WEEKLY_CLOSE_2026_11_03.md",
+    "finance_m2": "OPEN",
+    "m22": "OPEN_PENDING_REAL_OPERATION_AND_ACCOUNTING_BRIDGE",
+    "workers": [
+      "app"
+    ],
+    "unchanged_workers": [
+      "auth",
+      "finance"
+    ],
+    "deploy_order": [
+      "app"
+    ],
+    "routes": {
+      "production": "/admin?tab=agent-production#productionWeeklyClosing",
+      "notes": "/admin?tab=roadmap#appReleaseNotes"
+    },
+    "weekly_policy": {
+      "timezone": "America/Sao_Paulo",
+      "start": "PREVIOUS_FRIDAY_13_00_INCLUSIVE",
+      "end": "CURRENT_FRIDAY_13_00_EXCLUSIVE",
+      "includes_weekend": true,
+      "cutoff_confirmed_by_owner": true,
+      "nominal_cutoff_distinct_from_actual_capture": true,
+      "existing_cloudflare_cron": "* * * * *",
+      "cron_configuration_changed": false
+    },
+    "manufacturing_source": "OPERATOR_CONFIRMED_INCURRED_PRODUCTION_V1_HISTORICAL_COST_SNAPSHOTS",
+    "incurred_production_v1_changed": false,
+    "friday_assignment": "OWNER_CONFIRMED_BEFORE_13_AND_AT_OR_AFTER_13_QUANTITIES_SUM_TO_PHYSICAL_RECORD",
+    "friday_assignment_bound_to_record_fingerprint": true,
+    "unknown_friday_blocks_both_adjacent_weeks": true,
+    "recorded_at_used_as_manufacture_time": false,
+    "historical_reports": "RETROSPECTIVE_WHEN_COMPUTED_NOW_NOT_FAKE_PAST_CRON",
+    "original_report_immutable": true,
+    "corrections_append_restatement_versions": true,
+    "report_write_guards": "ATOMIC_LEDGER_AND_TIMING_REVISIONS_CAS_CONTENT_HASH_IDEMPOTENCY",
+    "max_report_writes_per_tick": 2,
+    "scheduler_clock_slot_minutes": 10,
+    "off_slot_d1_queries": 0,
+    "weekly_invocation_exclusive_before_finance_setup": true,
+    "scheduler_independent_of_hermes_and_finance_pause": true,
+    "scheduled_internal_reports_allowed": true,
+    "natural_scheduler": {
+      "status": "PENDING_AFTER_PUBLICATION",
+      "natural_tick_observed": false,
+      "natural_success_observed": false,
+      "friday_cutoff_execution_verified": false,
+      "evidence_file": null,
+      "evidence_sha256": null,
+      "metadata": null,
+      "manual_scheduler_invocations": 0,
+      "real_friday_execution_not_assumed": true
+    },
+    "prepublication_manufacturing_history": {
+      "state": "MANUFACTURING_TABLE_ABSENT",
+      "observed_at": "2026-11-04T01:43:45.307955+00:00",
+      "basis": "READ_ONLY_TABLE_EXISTENCE_NOT_CANONICAL_LEDGER_VALIDATION",
+      "table_present": false,
+      "record_count": null,
+      "friday_record_count": null,
+      "earliest_produced_date": null,
+      "latest_produced_date": null,
+      "history_state": "UNKNOWN_NOT_EMPTY_ZERO",
+      "manufacturing_dates_inferred_from_sales": false,
+      "operator_confirmation_of_real_lots_required": true,
+      "manufacturing_facts_created_by_delivery": false,
+      "canonical_ledger_validation": false
+    },
+    "historical_source_available_from_owner": "ORDERS_AND_SALES_ONLY_NO_MANUFACTURE_DATES_PROVEN",
+    "all_store_manufacturing_completeness": "NOT_CLAIMED",
+    "costs_are_supplier_cash_payments": false,
+    "unknown_costs_and_no_records": "UNKNOWN_OR_NO_RECORDS_NEVER_INFERRED_ZERO",
+    "manufacturing_financial_integration": false,
+    "ledger_cost_subtracted_again_from_profit": false,
+    "cancelled_sale_erases_real_manufacture": false,
+    "physical_or_financial_facts_created_for_qa": false,
+    "new_manufacturing_facts_created_by_delivery": false,
+    "sales_reference": "SEPARATE_CURRENT_COST_REFERENCE_BY_SALES_DATE",
+    "hermes_calculation_changed": false,
+    "hermes_snapshot_mutation": false,
+    "new_endpoints": 1,
+    "new_provider_calls": 0,
+    "new_collectors": 0,
+    "manufacturing_backfill_from_sales": false,
+    "delivery_channel": "IN_APP_PRODUCTION_REPORTS_ONLY",
+    "external_notifications_sent": false,
+    "commercial_execution_allowed": false,
+    "commercial_writes": false,
+    "overview_six_agents_preserved": true,
+    "month_drafts_preserved": true,
+    "seller_centre_bank_comparison": "NOT_CLOSED",
+    "validation": {
+      "focused": "PENDING",
+      "chromium": "PENDING_SYNTHETIC_NORMAL_MINIFIED_320_1365",
+      "full_node": null,
+      "python": null,
+      "ci": "PENDING",
+      "real_owner_acceptance": "NOT_CLAIMED"
+    },
+    "pull_request": null,
+    "code_commit": null,
+    "reviewed_head": null,
+    "ci_run": null,
+    "deployment": {
+      "status": "NOT_EXECUTED",
+      "versions": null,
+      "generated_sha256": null,
+      "published_sha256": null
+    },
+    "integration": {
+      "status": "NOT_YET_SUBMITTED",
+      "pull_request": null,
+      "merge_commit": null
+    }
+  },
+  "prepared_increment": {
+    "id": "PRODUCTION_WEEKLY_FRIDAY_13_CLOSING",
+    "status": "PREPARED_NOT_PUBLISHED",
+    "branch": "feature/production-weekly-close-20261103",
+    "base_main": "d14df57d0b3305ce673a247f925d5dd0d68d191d",
+    "human_code_release_id": "2026-11-03.3",
+    "label": "Fechamento semanal da produção",
+    "docs": "docs/MLS_PRODUCTION_WEEKLY_CLOSE_2026_11_03.md",
+    "finance_m2": "OPEN",
+    "m22": "OPEN_PENDING_REAL_OPERATION_AND_ACCOUNTING_BRIDGE",
+    "workers": [
+      "app"
+    ],
+    "unchanged_workers": [
+      "auth",
+      "finance"
+    ],
+    "deploy_order": [
+      "app"
+    ],
+    "routes": {
+      "production": "/admin?tab=agent-production#productionWeeklyClosing",
+      "notes": "/admin?tab=roadmap#appReleaseNotes"
+    },
+    "weekly_policy": {
+      "timezone": "America/Sao_Paulo",
+      "start": "PREVIOUS_FRIDAY_13_00_INCLUSIVE",
+      "end": "CURRENT_FRIDAY_13_00_EXCLUSIVE",
+      "includes_weekend": true,
+      "cutoff_confirmed_by_owner": true,
+      "nominal_cutoff_distinct_from_actual_capture": true,
+      "existing_cloudflare_cron": "* * * * *",
+      "cron_configuration_changed": false
+    },
+    "manufacturing_source": "OPERATOR_CONFIRMED_INCURRED_PRODUCTION_V1_HISTORICAL_COST_SNAPSHOTS",
+    "incurred_production_v1_changed": false,
+    "friday_assignment": "OWNER_CONFIRMED_BEFORE_13_AND_AT_OR_AFTER_13_QUANTITIES_SUM_TO_PHYSICAL_RECORD",
+    "friday_assignment_bound_to_record_fingerprint": true,
+    "unknown_friday_blocks_both_adjacent_weeks": true,
+    "recorded_at_used_as_manufacture_time": false,
+    "historical_reports": "RETROSPECTIVE_WHEN_COMPUTED_NOW_NOT_FAKE_PAST_CRON",
+    "original_report_immutable": true,
+    "corrections_append_restatement_versions": true,
+    "report_write_guards": "ATOMIC_LEDGER_AND_TIMING_REVISIONS_CAS_CONTENT_HASH_IDEMPOTENCY",
+    "max_report_writes_per_tick": 2,
+    "scheduler_clock_slot_minutes": 10,
+    "off_slot_d1_queries": 0,
+    "weekly_invocation_exclusive_before_finance_setup": true,
+    "scheduler_independent_of_hermes_and_finance_pause": true,
+    "scheduled_internal_reports_allowed": true,
+    "natural_scheduler": {
+      "status": "PENDING_AFTER_PUBLICATION",
+      "natural_tick_observed": false,
+      "natural_success_observed": false,
+      "friday_cutoff_execution_verified": false,
+      "evidence_file": null,
+      "evidence_sha256": null,
+      "metadata": null,
+      "manual_scheduler_invocations": 0,
+      "real_friday_execution_not_assumed": true
+    },
+    "prepublication_manufacturing_history": {
+      "state": "MANUFACTURING_TABLE_ABSENT",
+      "observed_at": "2026-11-04T01:43:45.307955+00:00",
+      "basis": "READ_ONLY_TABLE_EXISTENCE_NOT_CANONICAL_LEDGER_VALIDATION",
+      "table_present": false,
+      "record_count": null,
+      "friday_record_count": null,
+      "earliest_produced_date": null,
+      "latest_produced_date": null,
+      "history_state": "UNKNOWN_NOT_EMPTY_ZERO",
+      "manufacturing_dates_inferred_from_sales": false,
+      "operator_confirmation_of_real_lots_required": true,
+      "manufacturing_facts_created_by_delivery": false,
+      "canonical_ledger_validation": false
+    },
+    "historical_source_available_from_owner": "ORDERS_AND_SALES_ONLY_NO_MANUFACTURE_DATES_PROVEN",
+    "all_store_manufacturing_completeness": "NOT_CLAIMED",
+    "costs_are_supplier_cash_payments": false,
+    "unknown_costs_and_no_records": "UNKNOWN_OR_NO_RECORDS_NEVER_INFERRED_ZERO",
+    "manufacturing_financial_integration": false,
+    "ledger_cost_subtracted_again_from_profit": false,
+    "cancelled_sale_erases_real_manufacture": false,
+    "physical_or_financial_facts_created_for_qa": false,
+    "new_manufacturing_facts_created_by_delivery": false,
+    "sales_reference": "SEPARATE_CURRENT_COST_REFERENCE_BY_SALES_DATE",
+    "hermes_calculation_changed": false,
+    "hermes_snapshot_mutation": false,
+    "new_endpoints": 1,
+    "new_provider_calls": 0,
+    "new_collectors": 0,
+    "manufacturing_backfill_from_sales": false,
+    "delivery_channel": "IN_APP_PRODUCTION_REPORTS_ONLY",
+    "external_notifications_sent": false,
+    "commercial_execution_allowed": false,
+    "commercial_writes": false,
+    "overview_six_agents_preserved": true,
+    "month_drafts_preserved": true,
+    "seller_centre_bank_comparison": "NOT_CLOSED",
+    "validation": {
+      "focused": "PENDING",
+      "chromium": "PENDING_SYNTHETIC_NORMAL_MINIFIED_320_1365",
+      "full_node": null,
+      "python": null,
+      "ci": "PENDING",
+      "real_owner_acceptance": "NOT_CLAIMED"
+    },
+    "pull_request": null,
+    "code_commit": null,
+    "reviewed_head": null,
+    "ci_run": null,
+    "deployment": {
+      "status": "NOT_EXECUTED",
+      "versions": null,
+      "generated_sha256": null,
+      "published_sha256": null
+    },
+    "integration": {
+      "status": "NOT_YET_SUBMITTED",
+      "pull_request": null,
+      "merge_commit": null
+    }
+  }
 }

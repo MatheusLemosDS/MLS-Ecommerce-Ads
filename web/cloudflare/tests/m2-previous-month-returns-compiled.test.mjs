@@ -28,7 +28,7 @@ async function compiled(minify){
  return {app:modules[0].default,api:modules[0].previousReturnsSmoke,auth:modules[1].default,finance:modules[2].default};
 }
 async function fixture(t,workers){
- const f=await collectionFixture({allPaid:true,paymentDelayMs:0,windowCounts:[1,1]}),SavedDate=globalThis.Date,savedFetch=globalThis.fetch;f.clock.time=Date.UTC(2026,10,1,15);
+ const f=await collectionFixture({allPaid:true,paymentDelayMs:0,windowCounts:[1,1]}),SavedDate=globalThis.Date,savedFetch=globalThis.fetch;f.clock.time=Date.UTC(2026,10,1,15,1);
  globalThis.Date=class extends SavedDate{constructor(...args){super(...(args.length?args:[f.clock.time]));}static now(){return f.clock.time;}};
  t.after(()=>{globalThis.Date=SavedDate;globalThis.fetch=savedFetch;f.env.ADMIN_DB.db.close();f.financeEnv.FINANCE_DB.db.close();});
  const tokenStore=await createFinanceStore(f.financeEnv,{now:f.now});

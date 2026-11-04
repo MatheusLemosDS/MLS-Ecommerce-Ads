@@ -7,7 +7,7 @@ import {runBusinessIncomeOverview} from '../src/business-income-overview.mjs';
 import {runBusinessIncomeDetail,readBusinessIncomeDetail} from '../src/business-income-detail.mjs';
 import {publishTrackerMonth} from './m2-release-tracker-fixture.mjs';
 
-const base=Date.UTC(2026,9,31,18),month='2026-10',stamp=base/1000;
+const base=Date.UTC(2026,9,31,18,1),month='2026-10',stamp=base/1000;
 const overview=at=>({schema:'finance_income_overview_v1',checked_at:at,region:'BRAZIL',shop_type:'LOCAL',currency_basis:'FIXED_BRAZIL_SHOP_PROFILE',pending:{status:'PENDING',raw:'100',cents:10000},released:{status:'RELEASED',raw:'0',cents:0},to_release:{status:'TO_RELEASE_NOT_APPLICABLE_LOCAL',raw:null,cents:null},basis:'CURRENT_PROVIDER_INCOME_STATUS_NOT_BANK_RECEIPT_OR_HISTORICAL_MONTH'});
 const detail=at=>({schema:'finance_income_detail_v1',checked_at:at,region:'BRAZIL',shop_type:'LOCAL',income_status:'PENDING',page_size:100,returned_count:1,has_more:false,next_cursor_present:false,rows:[{entry_hash:'a'.repeat(64),order_hash:'b'.repeat(64),currency:'BRL',status:'Pendente',description:'Order Income',payment_method:'PIX',estimated_escrow_raw:'100',estimated_escrow_cents:10000,estimated_payout_time:at+3600,creation_time:at-3600}],basis:'CURRENT_PENDING_PROVIDER_INCOME_DETAIL_NOT_MONTH_OR_BANK_RECEIPT'});
 const unavailable=()=>({schema:'finance_income_detail_unavailable_v1',status:'UNAVAILABLE',diagnostic:{code:'FINANCE_INCOME_DETAIL_HTTP_ERROR',http:502}});

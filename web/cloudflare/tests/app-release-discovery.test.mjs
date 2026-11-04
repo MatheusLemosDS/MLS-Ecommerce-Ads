@@ -5,8 +5,9 @@ import {APP_RELEASE} from '../src/app-release.mjs';
 import {releaseOverviewBody,releaseNotesBody,APP_RELEASE_CSS} from '../src/app-release-view.mjs';
 import {adminBody} from '../src/admin-view.mjs';
 import {incurredProductionBody} from '../src/incurred-production-view.mjs';
+import {productionWeeklyClosingBody} from '../src/production-weekly-view.mjs';
 
-const targets=['/admin?tab=agent-production#incurredProductionDetails','/admin?tab=agent-hermes','/admin?tab=agent-products#businessMonthPricingObserver','/admin?tab=overview#commandAgents','/admin?tab=agent-returns#physicalReturnsQueue','/admin?tab=products'];
+const targets=['/admin?tab=agent-production#productionWeeklyClosing','/admin?tab=agent-production#incurredProductionDetails','/admin?tab=agent-hermes','/admin?tab=agent-products#businessMonthPricingObserver','/admin?tab=overview#commandAgents','/admin?tab=agent-returns#physicalReturnsQueue','/admin?tab=products'];
 const originalTargets=['/admin?tab=agent-returns#physicalReturnsOriginalItems','/admin?tab=agent-returns#physicalReturnsDetails','/admin?tab=agent-returns#returnManufacturingLinksDetails'];
 const previousTargets=['/admin?tab=agent-returns#physicalReturnsDetails','/admin?tab=margins#incurredProductionDetails','/admin?tab=agent-returns#returnManufacturingLinksDetails'];
 const monthlyTargets=['/admin?tab=agent-finance#businessMonthNetCard','/admin?tab=agent-finance#mlsAgentPeriod','/admin?tab=agent-finance#businessMonthExpensesForm'];
@@ -20,7 +21,7 @@ test('overview has one compact release link, while M3 notes retain the restored 
  assert.equal((overview.match(/<a\b/g)||[]).length,1,'a compact announcement must not duplicate the task navigation');
  assert.doesNotMatch(overview,/<nav\b|data-mission-open|<button|<script|fetch\(/);
  assert.ok(overview.includes('href="/admin?tab=roadmap#appReleaseNotes"'));
- const controls=html+incurredProductionBody();
+ const controls=html+incurredProductionBody()+productionWeeklyClosingBody();
  for(const href of [...targets,...originalTargets,...previousTargets,...monthlyTargets]){
   assert.ok(notes.includes('href="'+href+'"'),'preserved route '+href);
   const id=href.includes('#')?href.split('#')[1]:new URL(href,'https://test.invalid').searchParams.get('tab');

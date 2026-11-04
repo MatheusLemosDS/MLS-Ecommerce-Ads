@@ -6,7 +6,10 @@ import {createFinanceStore} from '../../finance/src/connection-store.mjs';
 import {saveCompletedBusinessMonth} from '../src/business-month-publication.mjs';
 import {projectBusinessPeriodFrame} from '../../finance/src/business-period-frame.mjs';
 import {projectEscrowReleaseFrame,projectEscrowReleaseEvidenceFrame,projectEscrowReleaseCoverageFrame} from '../../finance/src/escrow-release-frame.mjs';
-import {TrackerD1,trackerMonth,trackerThrough,trackerTime,publishTrackerMonth,forceTrackerHistory,trackerSourceFrame,trackerUuid} from './m2-release-tracker-fixture.mjs';
+import {TrackerD1,trackerMonth,trackerThrough,trackerTime as sourceTrackerTime,publishTrackerMonth,forceTrackerHistory,trackerSourceFrame,trackerUuid} from './m2-release-tracker-fixture.mjs';
+
+// Exercise Finance on minute01; minute00 is reserved for manufacturing closure.
+const trackerTime=sourceTrackerTime+60000;
 
 const endpoint='https://auth.brazacommerce.com.br/internal/shopee/finance/escrow-releases';
 const legacyKinds=['RELEASES','RETURNS','INCOME','INCOME_DETAIL'];

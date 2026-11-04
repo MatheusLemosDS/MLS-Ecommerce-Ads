@@ -1,3 +1,7 @@
+<!-- PRODUCTION_WEEKLY_CLOSING_CURRENT -->
+**Fechamento semanal da produção — `PREPARED_NOT_PUBLISHED`:** versão proposta `2026-11-03.3 — Fechamento semanal da produção`. Semana confirmada pelo proprietário: sexta anterior às 13h até sexta às 13h, Brasília, incluindo fim de semana e sem incluir o instante final. Relatórios no painel Produção, histórico retrospectivo identificado e fechamento original preservado com revisões posteriores. Registros de sexta exigem distribuição confirmada das peças antes/a partir de 13h; sem confirmação, ambas as semanas adjacentes permanecem pendentes. Custos históricos/NO_RECORDS e fabricação real ficam separados de vendas, lucro e caixa. Cron interno usa o trigger de minuto existente, independente do Hermes/coleta; sua observação natural é registrada separadamente e não se presume execução futura de sexta. A última Live comprovada permanece `2026-11-03.2`, App `81ca539d-6785-46f0-b854-fdb8861e80f6`. PR109 integrada em `d14df57d0b3305ce673a247f925d5dd0d68d191d`, com CI final [41672307550](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/41672307550), árvore e vetor Live conferidos. PR, head, hashes, contagens e publicação deste candidato aguardam evidência real. M2/M2.2 e Seller Centre/banco continuam abertos; dados ausentes não viram custo zero nem fabricação inventada. [Uso, origem e limites](MLS_PRODUCTION_WEEKLY_CLOSE_2026_11_03.md).
+<!-- END_PRODUCTION_WEEKLY_CLOSING_CURRENT -->
+
 <!-- PRODUCTION_DAILY_HERMES_CURRENT -->
 **Produção diária e leitura do Hermes — `PUBLISHED_VERIFIED`:** versão `2026-11-03.2 — Produção diária e parâmetros do Hermes`. Fabricação registrada por dia, data selecionável e histórico mensal com gráfico, maiores custos/quantidades registrados e empates. Dias sem registro/custo desconhecido não viram zero; pico de custo fica pendente se houver custo desconhecido no mês. Lucro diário é estimativa financeira salva pela data do pedido, separada da fabricação e sem segunda dedução. Hermes mantém valores, fórmulas e snapshots; a melhoria expõe Ads, parâmetros e diferença entre dia de Ads e recorte mensal. Apenas App; Auth/Finance, contratos, seis agentes, mês/rascunhos e gates comerciais preservados. App `81ca539d-6785-46f0-b854-fdb8861e80f6` publicado e conferido em 03/11/2026 às 13:14:46 Brasília. Fonte `c106ad84145d6f27265783ead318b45eea8c8e2c`, head `fef88d1d53b0354976a5f7dd2b197303c91c0ce0`, CI [41670540646](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/41670540646) aprovada: 3483 Node e 67 Python. Auth/Finance e vetor dos três Workers/configuração/domínios/flags/cron conferidos. Integração Git: consultar a [PR #109](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/109); publicação/CI não comprovam merge. M2/M2.2 e Seller Centre/banco continuam abertos; registros não comprovam toda a fabricação da loja ou pagamento. [Uso, origem e limites](MLS_PRODUCTION_DAILY_HERMES_2026_11_03.md).
 <!-- END_PRODUCTION_DAILY_HERMES_CURRENT -->
@@ -628,16 +632,15 @@ Conversão de identidade M0 publicada pela **PR #11**, merge
 
 A fase financeira canônica continua **M2 — Finance/Returns confiáveis**;
 **M3 Observer avança em paralelo**, por pedido explícito do proprietário.
-A última Live comprovada é `2026-11-03.2`, App `81ca539d-6785-46f0-b854-fdb8861e80f6`; Auth/Finance e vetor dos três Workers conferidos.
-Fonte `c106ad84145d6f27265783ead318b45eea8c8e2c`, head `fef88d1d53b0354976a5f7dd2b197303c91c0ce0`, CI [41670540646](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/41670540646) aprovada.
-PR108 integrada em `d1aaa55eb92e820447318522c759b924d1c288cb`, CI final [41660632960](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/41660632960), árvore e vetor dos três Workers conferidos. O guia [M3 por pedido/variação](MLS_M3_VARIANT_ORDER_EVIDENCE_2026_11_03.md) preserva o corte de publicação.
+A última Live comprovada antes deste candidato é `2026-11-03.2`.
+PR109 integrada em `d14df57d0b3305ce673a247f925d5dd0d68d191d`, CI final [41672307550](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/41672307550), árvore e vetor Live conferidos. O guia [produção diária/Hermes](MLS_PRODUCTION_DAILY_HERMES_2026_11_03.md) preserva seu corte de publicação.
 
 Retomar por:
 
-1. Conferir o uso real do [painel diário de fabricação e parâmetros do Hermes](MLS_PRODUCTION_DAILY_HERMES_2026_11_03.md),
-   com fontes separadas, histórico, custos desconhecidos e snapshots preservados.
-2. PR108 já integrada em `d1aaa55eb92e820447318522c759b924d1c288cb`, CI final41660632960 e vetor Live conferidos. Preservar contratos v1–v5,
-   atribuição por pedido sem rateio/dupla soma e cobertura com fonte/revisão corretas.
+1. Concluir e validar o [fechamento semanal da produção](MLS_PRODUCTION_WEEKLY_CLOSE_2026_11_03.md),
+   sexta 13h a sexta 13h, com fontes reais, custos históricos, retrospectivos e revisões preservadas.
+2. PR109 já integrada em `d14df57d0b3305ce673a247f925d5dd0d68d191d`, CI final41672307550 e vetor Live conferidos. Preservar produção diária/Hermes,
+   contratos v1–v5 e separar referências das vendas de fabricação/custos reais.
 3. Preservar os seis agentes da inicial e a equipe completa, a navegação,
    rascunhos por mês, histórico físico/fabricação/vínculos e paginação Pending.
 4. Continuar M2/M2.2: conferir um recebimento e uma fabricação reais, preservar
