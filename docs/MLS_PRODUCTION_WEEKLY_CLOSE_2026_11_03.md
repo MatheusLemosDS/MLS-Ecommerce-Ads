@@ -1,9 +1,9 @@
 # Fechamento semanal da produção — 03/11/2026, Brasília
 
-**Estado: `PREPARED_NOT_PUBLISHED`.** Versão proposta **2026-11-03.3 — Fechamento semanal da produção**.
+**Estado: `PUBLISHED_VERIFIED`.** Versão **2026-11-03.3 — Fechamento semanal da produção**.
 Branch `feature/production-weekly-close-20261103`, base `d14df57d0b3305ce673a247f925d5dd0d68d191d`.
 
-Este guia descreve o candidato; não registra CI final, publicação, cron natural ou aceite operacional. PR, head, hashes e contagens aguardam recibos reais.
+App publicado e conferido em **03/11/2026 às 23:23:33 Brasília**. Fonte `5d570db1f6c7d7793c2c98cc5d1ee61508b81cda`, head `c84a10f44bde68d15916ecfd4d688870a7e0f739`, PR [#110](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/110), CI [41759155044](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/41759155044) aprovada. Consultar a PR para integração Git; publicação não comprova merge.
 
 A Live anterior comprovada é **2026-11-03.2**, App `81ca539d-6785-46f0-b854-fdb8861e80f6`,
 Auth `ec385ca9-a986-49ec-abab-25a29daaf33b` e Finance `9ed0bd7d-269a-4e5f-81d0-63be8c6ac2c4`.
@@ -60,7 +60,7 @@ A invocação elegível é reservada antes do setup financeiro. Ele funciona ind
 coletas financeiras. O trigger Cloudflare `* * * * *` existente é preservado;
 esta entrega não acrescenta chamadas à Shopee ou outro provedor.
 
-Observação natural do agendamento ainda pendente ou insuficiente. Publicação e QA sintética não provam que o cron executou; conferir metadados próprios após um tick natural e registrar o próximo corte. Não foi presumido fechamento real de uma sexta futura.
+Cron natural observado em 03/11/2026 às 23:31:15 Brasília: tick/sucesso posteriores à publicação, trigger existente de minuto preservado e próximo corte compatível com sexta 13h de Brasília (06/11/2026 às 13:00:00 Brasília). A conferência leu somente metadados; não acionou o cron manualmente nem criou fatos. Uma execução real de corte de sexta ainda não foi comprovada; relatórios retrospectivos não a substituem.
 
 ## Histórico real disponível
 
@@ -84,7 +84,15 @@ O canal da entrega é o relatório dentro da aplicação. Não foram enviados av
 por email, WhatsApp ou outros canais. Relatórios internos/sidecar não publicam
 estoque, alteram pedidos, criam produção, descontam lucro outra vez ou quitam caixa.
 
-**Pendente:** testes focados/integral, QA compilada desktop/celular nos dois temas, CI exato, publicação App, conferência dos três Workers e observação natural do agendamento. Nenhum recibo foi presumido.
+Validação completa: **3524 Node e 67 Python**, sem falhas/skips/cancelamentos; CI do head exato e QA sintética normal/minificada em 320/1365 px aprovadas.
+
+| Worker | UUID publicado ou preservado | SHA-256 gerado | SHA-256 publicado |
+| --- | --- | --- | --- |
+| App | `26703f97-a986-476c-bef9-d51532f68eb7` | `72f12ca703ebae2606c7e93ad96651e67160bf9a7a0126c8d0e34fba6d19ea93` | `3913ce38dabcad6a7f6fe7609edb8fffe871c10c1adc7d19d5b8733ff7fe103c` |
+| Auth | `ec385ca9-a986-49ec-abab-25a29daaf33b` | `47c83f87f191fd0e5ff503d9c4bcf4671cd986b0965e66e84f1a6ed952dac925` | `2a2c2433c6fba25d1c399991595c96e6b8a85045edb77879c8270c446cb45ad2` |
+| Finance | `9ed0bd7d-269a-4e5f-81d0-63be8c6ac2c4` | `08ada5ecec92350f4f8301fdb7baa00f5f8083a0e8390296b2870e0ff3cdc1a5` | `e5bf80e14ff00e5b365bfbcfb25bf3a4dc1e42bf40bb0e4259909649eea1d5cd` |
+
+O publisher não consultou D1/owner/provedor nem criou fatos para QA. A observação natural de metadados é separada e somente leitura.
 
 ## Continuidade
 
