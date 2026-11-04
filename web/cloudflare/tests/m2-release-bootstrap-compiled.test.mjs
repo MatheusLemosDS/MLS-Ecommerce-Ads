@@ -6,7 +6,10 @@ import {saveCompletedBusinessMonth} from '../src/business-month-publication.mjs'
 import {projectBusinessPeriodFrame} from '../../finance/src/business-period-frame.mjs';
 import {projectReconciliationFrame} from '../../finance/src/reconciliation-frame.mjs';
 import {historyReturnsReport} from './m2-history-fixture.mjs';
-import {TrackerD1,trackerThrough,trackerTime,trackerStamp,trackerUuid,trackerSourceFrame,publishTrackerMonth,trackerCoverage} from './m2-release-tracker-fixture.mjs';
+import {TrackerD1,trackerThrough,trackerTime as sourceTrackerTime,trackerUuid,trackerSourceFrame,publishTrackerMonth,trackerCoverage} from './m2-release-tracker-fixture.mjs';
+
+// Exercise Finance on minute01; minute00 is reserved for manufacturing closure.
+const trackerTime=sourceTrackerTime+60000,trackerStamp=trackerTime/1000;
 
 async function compiled(minify){
  const source=await readFile(new URL('../../../dist/app-worker.mjs',import.meta.url),'utf8'),seam='return {adminFetch,schedule,scheduledWork,workspaceAuthFetch};';assert.equal(source.split(seam).length,2);

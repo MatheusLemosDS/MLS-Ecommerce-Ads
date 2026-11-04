@@ -48,7 +48,7 @@ async function fixture(t,{full=true,ongoing=true}={}){
  f.services.getAdsCalendar=async(_,selection)=>{f.calls.ads.push(selection);return ads(selection,Math.floor(f.now()/1000));};
  f.clock.time=Date.UTC(2026,9,full?31:24,12);await tokens(f);
  let frame=await f.invoke('start');for(let n=0;frame.status==='RUNNING'&&n<20;n++)frame=await f.invoke('step');assert.equal(frame.status,'COMPLETE');await f.invoke('ads');
- f.clock.time=Date.UTC(2026,10,1,12);await tokens(f);
+ f.clock.time=Date.UTC(2026,10,1,12,1);await tokens(f);
  const current=await runBusinessSync(f.env,f.services,{now:f.now});assert.equal(current.status,'COMPLETE');assert.equal(current.state.month,currentMonth);
  const provider=f.services.getFinanceBusinessPeriod;f.options=[];
  f.services.getFinanceBusinessPeriod=async(binding,input,options)=>{f.options.push(options);return provider(binding,input,options);};

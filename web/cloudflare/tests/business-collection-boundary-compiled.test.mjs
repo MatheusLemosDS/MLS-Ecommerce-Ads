@@ -12,6 +12,7 @@ async function compiledWorker(name,minify){
 for(const minify of [false,true])test(`the three deployed Workers preserve a rate-limited page and resume only its failed payment (minify=${minify})`,async()=>{
  const [app,auth,finance]=await Promise.all(['app','auth','finance'].map(name=>compiledWorker(name,minify)));
  const f=await collectionFixture({allPaid:true,windowCounts:[40,0]}),savedFetch=globalThis.fetch,SavedDate=globalThis.Date,routerSecret='PRIVATE_COMPILED_ROUTER_'+'r'.repeat(40),appSecret='PRIVATE_COMPILED_APP_'+'a'.repeat(40),origin='https://app.compiled.collection.test',calls={auth:0,finance:0,ads:0};
+ f.clock.time+=60000;
  const env={...f.env,APP_INTERNAL_SECRET:appSecret,ADMIN_USERNAME:'compiled-collection-owner',ADMIN_PASSWORD:'compiled-collection-password-123456',ADMIN_SESSION_SECRET:'PRIVATE_COMPILED_SESSION_'+'s'.repeat(40)};
  const financeEnv={...f.financeEnv,FINANCE_ROUTER_SECRET:routerSecret};
  const authEnv={APP_INTERNAL_SECRET:appSecret,FINANCE_ROUTER_SECRET:routerSecret,SHOPEE_FINANCE_SERVICE:{fetch:async request=>{

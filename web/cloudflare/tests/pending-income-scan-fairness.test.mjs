@@ -9,7 +9,7 @@ import {runBusinessIncomeOverview} from '../src/business-income-overview.mjs';
 import {projectPendingIncomeScanFrame} from '../../finance/src/pending-income-frame.mjs';
 import {publishTrackerMonth} from './m2-release-tracker-fixture.mjs';
 
-const base=Date.UTC(2026,9,31,18),month='2026-10',stamp=base/1000,scanId='11111111-1111-4111-8111-111111111111';
+const base=Date.UTC(2026,9,31,18,1),month='2026-10',stamp=base/1000,scanId='11111111-1111-4111-8111-111111111111';
 const basis='CURRENT_PENDING_PAGINATED_MUTABLE_SOURCE_NOT_MONTH_OR_BANK_RECEIPT';
 const overview=at=>({schema:'finance_income_overview_v1',checked_at:at,region:'BRAZIL',shop_type:'LOCAL',currency_basis:'FIXED_BRAZIL_SHOP_PROFILE',pending:{status:'PENDING',raw:'100',cents:10000},released:{status:'RELEASED',raw:'0',cents:0},to_release:{status:'TO_RELEASE_NOT_APPLICABLE_LOCAL',raw:null,cents:null},basis:'CURRENT_PROVIDER_INCOME_STATUS_NOT_BANK_RECEIPT_OR_HISTORICAL_MONTH'});
 function scanFrame(at,{state='RUNNING',started=at,pages=1}={}){

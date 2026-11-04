@@ -9,7 +9,7 @@ import {scheduledWork,SCHEMA} from '../src/admin.mjs';
 import {projectBusinessPeriodFrame} from '../../finance/src/business-period-frame.mjs';
 import {runBusinessSync,readBusinessSyncState,saveBusinessSyncPolicy,BusinessSyncError} from '../src/business-sync.mjs';
 
-const clock=Date.UTC(2026,9,24,12),stamp=clock/1000,now=()=>clock;
+const clock=Date.UTC(2026,9,24,12,1),stamp=clock/1000,now=()=>clock;
 function environment(){
  const ADMIN_DB=new D1();ADMIN_DB.db.exec('CREATE TABLE variant_bindings_state(id INTEGER PRIMARY KEY,revision INTEGER,payload TEXT,updated_at TEXT);CREATE TABLE production_costs_state(id INTEGER PRIMARY KEY,revision INTEGER,payload TEXT,updated_at TEXT)');ADMIN_DB.db.exec(SCHEMA.find(sql=>sql.startsWith('CREATE TABLE IF NOT EXISTS hermes_jobs ')));
  ADMIN_DB.db.prepare('INSERT INTO variant_bindings_state VALUES(1,3,?,?)').run('[]',new Date(clock).toISOString());

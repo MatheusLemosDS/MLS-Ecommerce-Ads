@@ -126,7 +126,7 @@ test('a failed 20-order page resumes its cursor atomically without double-counti
 });
 
 test('scheduled App financial collection stays within 50 D1 RPC per tick for 120 products, excluding separate catalogue and DTF collectors',async t=>{
- const f=await fixture();await initializeOwnerState(f);verifyConfirmedCorrections(f);
+ const f=await fixture();f.clock.time+=60000;await initializeOwnerState(f);verifyConfirmedCorrections(f);
  const maintenance=await scheduledWork(f.env,f.services,f.now);assert.equal(maintenance.lane,'MAINTENANCE');assert.equal(maintenance.collection,'MAINTENANCE');assert.equal(f.calls.finance.length,0);assert.equal(f.calls.ads.length,0);
  for(let tick=0;tick<2;tick++){
   f.env.ADMIN_DB.calls=0;const financeBefore=f.calls.finance.length,adsBefore=f.calls.ads.length;
@@ -144,7 +144,7 @@ test('cold owner initialization and confirmed-cost migration stay bounded and pe
 });
 
 test('a cold Worker over an already migrated production database keeps collection and Ads inside the same request budget',async t=>{
- const f=await fixture();await initializeOwnerState(f);verifyConfirmedCorrections(f);const meter=f.env.ADMIN_DB;
+ const f=await fixture();f.clock.time+=60000;await initializeOwnerState(f);verifyConfirmedCorrections(f);const meter=f.env.ADMIN_DB;
  // New binding identity resets every module's per-isolate setup cache, while
  // retaining the actual durable database and the corrections already applied.
  f.env.ADMIN_DB={db:meter.db,prepare:meter.prepare.bind(meter),batch:meter.batch.bind(meter)};meter.calls=0;

@@ -2,7 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {build} from 'esbuild';
 import {fileURLToPath} from 'node:url';
-import {MeteredHistoryD1,base,stamp,month,historyReturnsReport,publishHistoryMonth,fairnessSnapshot} from './m2-history-fixture.mjs';
+import {MeteredHistoryD1,base as sourceBase,month,historyReturnsReport,publishHistoryMonth,fairnessSnapshot} from './m2-history-fixture.mjs';
+
+// Exercise Finance on minute01; minute00 is reserved for manufacturing closure.
+const base=sourceBase+60000,stamp=base/1000;
 
 for(const minify of [false,true])test(`the generated App prioritizes both exact published Returns slots without a second source or owner-read work (minify=${minify})`,async t=>{
  const compiled=await build({entryPoints:[fileURLToPath(new URL('../../../dist/app-worker.mjs',import.meta.url))],bundle:true,write:false,format:'esm',platform:'browser',target:'es2022',minify});

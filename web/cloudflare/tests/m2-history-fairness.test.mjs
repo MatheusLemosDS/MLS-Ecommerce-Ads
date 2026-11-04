@@ -4,7 +4,10 @@ import {scheduledWork} from '../src/admin.mjs';
 import {acquireBackgroundLane,finishBackgroundLane,readHistoricalCostCandidates,runBackgroundHistoryWork} from '../src/historical-cost-orchestration.mjs';
 import {readBusinessReconciliation} from '../src/business-reconciliation.mjs';
 import {runBusinessFinancialAudits} from '../src/financial-audit-orchestration.mjs';
-import {MeteredHistoryD1,base,stamp,month,uuid,historyReturnsReport,publishHistoryMonth,fairnessSnapshot} from './m2-history-fixture.mjs';
+import {MeteredHistoryD1,base as sourceBase,month,uuid,historyReturnsReport,publishHistoryMonth,fairnessSnapshot} from './m2-history-fixture.mjs';
+
+// Exercise Finance on minute01; minute00 is reserved for manufacturing closure.
+const base=sourceBase+60000,stamp=base/1000;
 
 async function fixture(t,{published=true}={}){
  const db=new MeteredHistoryD1(),env={ADMIN_DB:db},clock={time:base},now=()=>clock.time,calls=[];

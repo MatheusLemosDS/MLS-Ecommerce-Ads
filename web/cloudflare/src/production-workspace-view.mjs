@@ -19,6 +19,7 @@ export const PRODUCTION_WORKSPACE_CLIENT=String.raw`
   if(selected==='manufacturing'){
    const details=el('incurredProductionDetails');
    if(details&&(!details.open||!globalThis.brazaIncurredProduction?.getSnapshot?.()))globalThis.brazaIncurredProduction?.open?.();
+   globalThis.brazaProductionWeeklyClosing?.open?.();
    globalThis.brazaProductionDailyFinance?.refresh?.();
   }
   return true;
