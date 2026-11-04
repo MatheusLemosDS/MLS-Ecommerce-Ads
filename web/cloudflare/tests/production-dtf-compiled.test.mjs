@@ -5,9 +5,11 @@ import {build} from 'esbuild';
 import {fileURLToPath} from 'node:url';
 import {D1} from './sqlite-d1.mjs';
 
-for(const minify of [false,true])test(`deployable DTF reads in the background and preserves SKU dimensions after compilation (minify=${minify})`,async()=>{
+for(const minify of [false,true])test(`deployable DTF reads in the background and preserves SKU dimensions after compilation (minify=${minify})`,async t=>{
  const compiled=await build({entryPoints:[fileURLToPath(new URL('../../../dist/app-worker.mjs',import.meta.url))],bundle:true,write:false,format:'esm',platform:'browser',target:'es2022',minify});
  const {default:worker}=await import('data:text/javascript;base64,'+Buffer.from(compiled.outputFiles[0].text).toString('base64'));
+ const SavedDate=globalThis.Date,financialClock=new SavedDate();financialClock.setUTCMinutes(1,0,0);const fixedTime=financialClock.getTime();
+ globalThis.Date=class extends SavedDate{constructor(...args){super(...(args.length?args:[fixedTime]));}static now(){return fixedTime;}};t.after(()=>{globalThis.Date=SavedDate;});
  const origin='https://app.compiled.test',env={ADMIN_DB:new D1(),ADMIN_SESSION_SECRET:'compiled-production-secret-12345678901234567890',ADMIN_USERNAME:'compiled-production-owner',ADMIN_PASSWORD:'compiled-production-password-123456',APP_INTERNAL_SECRET:'fixture-private-production-key'},calls=[];
  const savedFetch=globalThis.fetch;
  globalThis.fetch=async request=>{

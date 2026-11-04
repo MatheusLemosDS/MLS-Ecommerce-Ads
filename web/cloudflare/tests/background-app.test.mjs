@@ -4,9 +4,11 @@ import {build} from 'esbuild';
 import {fileURLToPath} from 'node:url';
 import {D1} from './sqlite-d1.mjs';
 
-for(const minify of [false,true])test(`compiled App scheduled collection is wired independently of login and has an owner-only audited pause (minify=${minify})`,async()=>{
+for(const minify of [false,true])test(`compiled App scheduled collection is wired independently of login and has an owner-only audited pause (minify=${minify})`,async t=>{
  const compiled=await build({entryPoints:[fileURLToPath(new URL('../../../dist/app-worker.mjs',import.meta.url))],bundle:true,write:false,format:'esm',platform:'browser',target:'es2022',minify});
  const {default:worker}=await import('data:text/javascript;base64,'+Buffer.from(compiled.outputFiles[0].text).toString('base64'));
+ const SavedDate=globalThis.Date,financialClock=new SavedDate();financialClock.setUTCMinutes(1,0,0);const fixedTime=financialClock.getTime();
+ globalThis.Date=class extends SavedDate{constructor(...args){super(...(args.length?args:[fixedTime]));}static now(){return fixedTime;}};t.after(()=>{globalThis.Date=SavedDate;});
  const base='https://app.example.test',env={ADMIN_DB:new D1(),ADMIN_SESSION_SECRET:'background-session-fixture-'+ 's'.repeat(40),ADMIN_USERNAME:'background-owner',ADMIN_PASSWORD:'background-password-fixture-123456'};
  try{
   const tasks=[];await worker.scheduled({},env,{waitUntil(value){tasks.push(value);}});assert.equal(tasks.length,1);await Promise.all(tasks);

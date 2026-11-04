@@ -6,9 +6,11 @@ import {fileURLToPath} from 'node:url';
 import {D1} from './sqlite-d1.mjs';
 import {enqueueCatalogClassifications} from '../src/catalog-classification.mjs';
 
-for(const minify of [false,true])test(`deployable automatic classification works without a browser and keeps private cost controls after compilation (minify=${minify})`,async()=>{
+for(const minify of [false,true])test(`deployable automatic classification works without a browser and keeps private cost controls after compilation (minify=${minify})`,async t=>{
  const compiled=await build({entryPoints:[fileURLToPath(new URL('../../../dist/app-worker.mjs',import.meta.url))],bundle:true,write:false,format:'esm',platform:'browser',target:'es2022',minify});
  const {default:worker}=await import('data:text/javascript;base64,'+Buffer.from(compiled.outputFiles[0].text).toString('base64'));
+ const SavedDate=globalThis.Date,financialClock=new SavedDate();financialClock.setUTCMinutes(1,0,0);const fixedTime=financialClock.getTime();
+ globalThis.Date=class extends SavedDate{constructor(...args){super(...(args.length?args:[fixedTime]));}static now(){return fixedTime;}};t.after(()=>{globalThis.Date=SavedDate;});
  const origin='https://app.catalog.test',env={ADMIN_DB:new D1(),ADMIN_SESSION_SECRET:'compiled-catalog-session-12345678901234567890',ADMIN_USERNAME:'catalog-fixture-owner',ADMIN_PASSWORD:'catalog-fixture-password-123456',APP_INTERNAL_SECRET:'fixture-private-catalog-secret'},previousFetch=globalThis.fetch,reads=[];
  globalThis.fetch=async request=>{
   const url=new URL(request.url);

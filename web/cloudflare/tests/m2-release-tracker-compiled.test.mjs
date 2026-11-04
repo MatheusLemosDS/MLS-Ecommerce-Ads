@@ -5,7 +5,10 @@ import {build} from 'esbuild';
 import {projectEscrowReleaseCoverageFrame} from '../../finance/src/escrow-release-frame.mjs';
 import {projectReconciliationFrame} from '../../finance/src/reconciliation-frame.mjs';
 import {historyReturnsReport} from './m2-history-fixture.mjs';
-import {TrackerD1,trackerMonth,trackerThrough,trackerTime,trackerStamp,publishTrackerMonth,trackerCoverage,forceTrackerHistory,setTrackerAuditTurn} from './m2-release-tracker-fixture.mjs';
+import {TrackerD1,trackerMonth,trackerThrough,trackerTime as sourceTrackerTime,publishTrackerMonth,trackerCoverage,forceTrackerHistory,setTrackerAuditTurn} from './m2-release-tracker-fixture.mjs';
+
+// Exercise Finance on minute01; minute00 is reserved for manufacturing closure.
+const trackerTime=sourceTrackerTime+60000,trackerStamp=trackerTime/1000;
 
 const origin='https://release-tracker.compiled.test',endpoint='/api/admin/finance/escrow-release-coverage';
 const totalChanges=db=>db.db.prepare('SELECT total_changes() AS n').get().n;

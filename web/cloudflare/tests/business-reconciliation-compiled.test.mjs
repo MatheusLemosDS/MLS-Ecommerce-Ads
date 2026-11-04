@@ -24,8 +24,8 @@ for(const minify of [false,true])for(const secondWindow of [5,0])test(`three gen
  const SavedDate=globalThis.Date,actualNow=Date.now(),actualDay=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new SavedDate(actualNow));
  // Use today's clock in the deployment case. Keep this October fixture
  // reproducible when the regression suite runs in a later calendar month.
- f.clock.time=actualDay>='2026-10-21'&&actualDay<='2026-10-30'?actualNow:SavedDate.UTC(2026,9,25,15);
- if(f.clock.time!==actualNow){globalThis.Date=class extends SavedDate{constructor(...args){super(...(args.length?args:[f.clock.time]));}static now(){return f.clock.time;}};t.after(()=>{globalThis.Date=SavedDate;});}
+ const financialClock=new SavedDate(actualDay>='2026-10-21'&&actualDay<='2026-10-30'?actualNow:SavedDate.UTC(2026,9,25,15));financialClock.setUTCMinutes(1,0,0);f.clock.time=financialClock.getTime();
+ globalThis.Date=class extends SavedDate{constructor(...args){super(...(args.length?args:[f.clock.time]));}static now(){return f.clock.time;}};t.after(()=>{globalThis.Date=SavedDate;});
  const tokenStore=await createFinanceStore(f.financeEnv,{now:f.now}),old=await tokenStore.readTokens(),access='PRIVATE_COMPILED_RECON_ACCESS';
  await tokenStore.saveTokens({access_token:access,refresh_token:'PRIVATE_COMPILED_RECON_REFRESH',expires_at:Math.floor(f.now()/1000)+14400},{expectedRevision:old.revision});
  let monthly=await f.invoke('start');for(let step=0;monthly.status==='RUNNING'&&step<8;step++)monthly=await f.invoke('step');assert.equal(monthly.status,'COMPLETE');monthly=await f.invoke('ads');assert.equal(monthly.coverage.paid,5+secondWindow);assert.equal(monthly.coverage.returns,1);assert.equal(monthly.result.net_estimate_cents,null);assert.equal(monthly.result.net_profit_cents,null);

@@ -22,7 +22,7 @@ for(const minify of [false,true])for(const mode of ['matched','duplicate','hundr
  const [app,auth,finance]=await Promise.all(['app','auth','finance'].map(name=>compiledWorker(name,minify))),f=await collectionFixture({windowCounts:[5,5],allPaid:true,paymentDelayMs:0});
  t.after(()=>{f.env.ADMIN_DB.db.close();f.financeEnv.FINANCE_DB.db.close();});
  const SavedDate=globalThis.Date,actualNow=Date.now(),actualDay=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new SavedDate(actualNow));
- f.clock.time=actualDay>='2026-10-21'&&actualDay<='2026-10-30'?actualNow:SavedDate.UTC(2026,9,25,15);
+ const financialClock=new SavedDate(actualDay>='2026-10-21'&&actualDay<='2026-10-30'?actualNow:SavedDate.UTC(2026,9,25,15));financialClock.setUTCMinutes(1,0,0);f.clock.time=financialClock.getTime();
  globalThis.Date=class extends SavedDate{constructor(...args){super(...(args.length?args:[f.clock.time]));}static now(){return f.clock.time;}};t.after(()=>{globalThis.Date=SavedDate;});
  const store=await createFinanceStore(f.financeEnv,{now:f.now}),old=await store.readTokens(),access='PRIVATE_COMPILED_RELEASE_ACCESS';
  await store.saveTokens({access_token:access,refresh_token:'PRIVATE_COMPILED_RELEASE_REFRESH',expires_at:Math.floor(f.now()/1000)+14400},{expectedRevision:old.revision});
