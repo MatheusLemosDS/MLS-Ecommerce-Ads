@@ -5,12 +5,18 @@ import {createHash} from 'node:crypto';
 import {readFileSync,mkdirSync,writeFileSync} from 'node:fs';
 import path from 'node:path';
 import {compiledOwnerReportPage} from './owner-report-browser-fixture.mjs';
-import {receiptChrome,receiptBrowser,receiptClick,receiptPause} from './returns-receipts-chrome-helpers.mjs';
+import {receiptChrome,receiptBrowser,receiptClick as nativeReceiptClick,receiptPause} from './returns-receipts-chrome-helpers.mjs';
 import {weeklyProductionFixture,weeklyProductionClock} from './production-weekly-browser-fixture.mjs';
 
 const results=[],qaFile=process.env.MLS_PRODUCTION_WEEKLY_QA_FILE||null,screens=process.env.MLS_PRODUCTION_WEEKLY_SCREENSHOT_DIR||null;
 const workerHashes=()=>Object.fromEntries(['app','auth','finance'].map(name=>[name,createHash('sha256').update(readFileSync(new URL('../../../dist/'+name+'-worker.mjs',import.meta.url))).digest('hex')]));
 let frozenWorkers=null;
+async function receiptClick(cdp,selector){
+ try{return await nativeReceiptClick(cdp,selector);}catch(cause){
+  const diagnostic=await cdp.evaluate(`({selector:${JSON.stringify(selector)},exists:!!document.querySelector(${JSON.stringify(selector)}),panel:document.documentElement.dataset.activePanel,errors:globalThis.__weeklyErrors,weekly_revision:globalThis.brazaProductionWeeklyClosing?.getSnapshot?.()?.revision,ledger_revision:globalThis.brazaIncurredProduction?.getSnapshot?.()?.ledger?.revision,status:document.getElementById('productionWeeklyClosingStatus')?.textContent})`).catch(()=>null);
+  throw Error('WEEKLY_NATIVE_TARGET_FAILED '+JSON.stringify(diagnostic),{cause});
+ }
+}
 async function wait(cdp,expression,label){
  for(let turn=0;turn<180;turn++){if(await cdp.evaluate(expression))return;await receiptPause(50);}
  assert.fail(label+' '+JSON.stringify(await cdp.evaluate("({errors:globalThis.__weeklyErrors,status:document.getElementById('productionWeeklyClosingStatus')?.textContent,revision:globalThis.brazaProductionWeeklyClosing?.getSnapshot?.()?.revision,active:document.documentElement.dataset.activePanel})")));
@@ -63,7 +69,9 @@ for(const minify of [false,true])for(const width of [320,1365])test(`compiled we
   await wait(cdp,"brazaProductionWeeklyClosing.getSnapshot()?.month==='2026-10'&&!!brazaIncurredProduction.getSnapshot()",'manufacturing and weekly reports must settle');
   assert.equal(weeklyReads(),1,'opening manufacturing performs one deduplicated weekly report GET');
   const initial=await cdp.evaluate('brazaProductionWeeklyClosing.getSnapshot()');assert.deepEqual(initial,fixture.initial);assert.equal(initial.financial_integration_allowed,false);
+  assert.equal(await cdp.evaluate("document.getElementById('productionWeeklyClosingWeek').value"),fixture.expected.end_date,'the latest closed cutoff is selected before the open week');
   const original=initial.weeks.find(row=>row.end_date===fixture.expected.end_date);assert.equal(original.current.total_cost_cents,null);assert.equal(original.current.boundary_pending_quantity,3);assert.equal(original.original.total_cost_cents,9000);assert.equal(original.current.period_end_at-original.current.period_start_at,7*86400);
+  await setField(cdp,'#incurredProductionRecord',fixture.pending,'change');await wait(cdp,"!!document.querySelector('#incurredProductionVoidForm [name=reason]')",'an explicitly selected active record exposes its existing correction draft');
   await setField(cdp,'#incurredProductionForm [name="production_ref"]','Rascunho de fabricação semanal preservado');await setField(cdp,'#incurredProductionForm [name="quantity"]','9');await setField(cdp,'#incurredProductionVoidForm [name="reason"]','Rascunho de correção semanal preservado');
   await selectWeek(cdp,fixture.expected.end_date);await visibleBounds(cdp);
   if(await cdp.evaluate("document.getElementById('productionWeeklyClosingPending').tagName==='DETAILS'&&!document.getElementById('productionWeeklyClosingPending').open"))await receiptClick(cdp,'#productionWeeklyClosingPending>summary');
@@ -93,6 +101,7 @@ for(const minify of [false,true])for(const width of [320,1365])test(`compiled we
   await cdp.evaluate("(()=>{const s=document.createElement('style');s.textContent='#productionWeeklyClosing :is(p,label,button,summary,td,th,dt,dd){font-size:15px!important}';document.head.append(s);})()");await visibleBounds(cdp);
   const drafts=await cdp.evaluate("({ref:document.querySelector('#incurredProductionForm [name=production_ref]').value,quantity:document.querySelector('#incurredProductionForm [name=quantity]').value,reason:document.querySelector('#incurredProductionVoidForm [name=reason]').value})");assert.deepEqual(drafts,{ref:'Rascunho de fabricação semanal preservado',quantity:'9',reason:'Rascunho de correção semanal preservado'});
   assert.equal(await cdp.evaluate('JSON.stringify(brazaMonthDashboard.getSnapshot())'),overview.financial);assert.equal(await fixture.snapshot(),canonicalBefore);assert.equal(JSON.stringify(fixture.finance.financialView),financeBefore);assert.equal(fixture.finance.providerCalls(),providerBefore);assert.equal(serverFailure,null);assert.deepEqual(await cdp.evaluate('__weeklyErrors'),[]);assert.ok(network.every(url=>url.startsWith('http://127.0.0.1:')||/^(data:|blob:|about:)/.test(url)),'the actual browser may not call an external provider');
+  assert.equal(weeklyReads(),4,'only opening, explicit refresh and the two month changes may read weekly reports');
   assert.equal(requests.filter(row=>row.method!=='GET').length,2,'only the explicitly confirmed timing assignment and its replay may write to the disposable local store');
   results.push({minify,width,pass:true,page_errors:0,horizontal_overflow:false,themes,large_font_checked:true,legacy_contracts_unchanged:true,overview_agents_preserved:true,manufacturing_basis_preserved:true,weekly_cutoff_preserved:true,historical_reports_not_fabricated:true,month_drafts_preserved:true,synthetic_timing_requests:2,idempotent_retry:true});
  }finally{await cdp?.close();server.closeAllConnections?.();await new Promise(resolve=>server.close(resolve));fixture.close();}
