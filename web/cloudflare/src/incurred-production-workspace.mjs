@@ -53,6 +53,16 @@ async function selectedSource(db,names,body,stamp){
   return {kind:'SAVED_DTF_ORDER_LINE',key:value.key,hash:value.hash,checked_at:value.checked_at,order_hash:value.order_hash,order_status:value.order_status,selling_quantity:value.selling_quantity};
  }catch{return null;}
 }
+// Narrow SELECT-only adapter for an explicitly selected saved line. It shares
+// the ledger's source integrity checks without adding fields to its v1 DTO.
+export async function readSavedProductionSourceCandidate(env,input,{now=()=>Date.now()}={}){
+ const stamp=clock(now);if(!exact(input,['source_key','source_hash'])||!hash(input.source_key)||!hash(input.source_hash))fail('REQUEST_INVALID');
+ const db=database(env);let names;try{names=await tables(db);}catch{return null;}
+ if(!names.has('production_dtf_orders')||!names.has('production_dtf_lines'))return null;
+ let value;try{value=await candidate(await db.prepare(sourceQuery+'WHERE l.unit_key=?').bind(input.source_key).first(),stamp);}catch{return null;}
+ if(value&&value.hash!==input.source_hash)fail('SOURCE_CHANGED',409);
+ return value;
+}
 async function savedReferences(env,names,stamp){
  if(!names.has('production_costs_state'))return refsUnavailable();
  try{
