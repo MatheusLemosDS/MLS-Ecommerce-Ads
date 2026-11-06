@@ -1,6 +1,6 @@
 # Sugestões para confirmar produção — 06/11/2026
 
-**Sugestões para confirmar produção — `PREPARED_NOT_PUBLISHED`:** versão `2026-11-06.1 — Sugestões para confirmar produção`. No painel Produção, um contexto DTF salvo e o catálogo validado do mesmo produto/variação oferecem identidade e composição para conferência. A ação explícita preenche somente campos vazios; qualquer conflito bloqueia a aplicação inteira e as confirmações são desmarcadas. Quantidade vendida, custo comercial atual e dados do catálogo não viram fabricação, custo histórico por peça, estampa ou data real. O registro continua dependendo da confirmação existente do proprietário. Sem migração ou nova consulta ao provedor; seis agentes, meses/rascunhos, financeiro e corte de sexta às 13h preservados. Implementação preparada; validação completa, PR/head/CI, hashes e publicação ainda sem recibo. A Live confirmada continua na versão 2026-11-03.3. Primeiro corte natural de sexta confirmado em 06/11 às 13:00:51 Brasília: original `SCHEDULED`, fonte `NO_RECORDS`, sem comprovar custo zero ou fabricação. Próximo corte 13/11 às 13h. M2/M2.2 e Seller Centre/banco permanecem abertos. [Uso, evidências e limites](#como-usar).
+**Sugestões para confirmar produção — `PUBLISHED_VERIFIED`:** versão `2026-11-06.1 — Sugestões para confirmar produção`. No painel Produção, um contexto DTF salvo e o catálogo validado do mesmo produto/variação oferecem identidade e composição para conferência. A ação explícita preenche somente campos vazios; qualquer conflito bloqueia a aplicação inteira e as confirmações são desmarcadas. Quantidade vendida, custo comercial atual e dados do catálogo não viram fabricação, custo histórico por peça, estampa ou data real. O registro continua dependendo da confirmação existente do proprietário. Sem migração ou nova consulta ao provedor; seis agentes, meses/rascunhos, financeiro e corte de sexta às 13h preservados. App publicado e vetor dos três Workers conferido em 2026-11-06T14:01:47-03:00. Fonte `7eddce75f93106ef07f5c8c07647cb8469fb1ca4`, head `c8511feea6ee6769eff5b6a202b2be37776af326`, CI [42255966529](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/42255966529) aprovada: 3555 Node e 67 Python. Integração Git ainda depende da CI documental e merge da [PR #111](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/111). Primeiro corte natural de sexta confirmado em 06/11 às 13:00:51 Brasília: original `SCHEDULED`, fonte `NO_RECORDS`, sem comprovar custo zero ou fabricação. Próximo corte 13/11 às 13h. M2/M2.2 e Seller Centre/banco permanecem abertos. [Uso, evidências e limites](#como-usar).
 
 ## Como usar
 
@@ -26,10 +26,30 @@ O relatório está `NO_RECORDS`, revisão de origem 0, e a tabela física estava
 
 ## Estado da entrega e evidências
 
-`PREPARED_NOT_PUBLISHED`: implementação e documentação iniciais. Fonte preparada, head, PR, CI, contagens de testes, hashes e publicação deste candidato continuam **null/pendentes** até evidência concluída. A versão Live previamente conferida é 2026-11-03.3. Testes/CI/deploy ainda não são declarados aprovados.
+Publicação App conferida em 2026-11-06T14:01:47-03:00; Auth/Finance, fontes dos três Workers, configuração, domínios, subdomínios, flags e cron preservados. Fonte `7eddce75f93106ef07f5c8c07647cb8469fb1ca4`; head aprovado `c8511feea6ee6769eff5b6a202b2be37776af326`; CI [42255966529](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/42255966529), 3555 Node e 67 Python, sem falhas/skips. Chromium sintético normal/minificado em 320/1365 aprovado e vinculado aos hashes gerados. Isso não confirma uso real do proprietário. A publicação não comprova merge: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/111.
+
+```json
+{
+  "versions": {
+    "app": "802f5a14-fa26-41f7-82d8-118bf45ef72e",
+    "auth": "ec385ca9-a986-49ec-abab-25a29daaf33b",
+    "finance": "9ed0bd7d-269a-4e5f-81d0-63be8c6ac2c4"
+  },
+  "generated_sha256": {
+    "app": "477e7054779cefd866a14d84401510089e1c1d4fdcc8dae5ccdd2193ef112751",
+    "auth": "47c83f87f191fd0e5ff503d9c4bcf4671cd986b0965e66e84f1a6ed952dac925",
+    "finance": "08ada5ecec92350f4f8301fdb7baa00f5f8083a0e8390296b2870e0ff3cdc1a5"
+  },
+  "published_sha256": {
+    "app": "ad6a5eff5cee14e7dac805d05fd5f0669b1f6db2fd2bda34135e155e9a2b3402",
+    "auth": "2a2c2433c6fba25d1c399991595c96e6b8a85045edb77879c8270c446cb45ad2",
+    "finance": "e5bf80e14ff00e5b365bfbcfb25bf3a4dc1e42bf40bb0e4259909649eea1d5cd"
+  }
+}
+```
 
 ## Próximos passos e fases abertas
 
-Concluir validações e entrega técnica deste incremento; depois o proprietário deve conferir uma sugestão real e registrar somente peças que sabe terem sido fabricadas. Para semanas anteriores, pedidos/vendas sozinhos não comprovam as datas, quantidades e custos reais: confirmar os lotes e, nas sextas, a distribuição antes/a partir das 13h. Sem esses registros, os gastos exatos continuam pendentes.
+O proprietário deve conferir uma sugestão real e registrar somente peças que sabe terem sido fabricadas. Para semanas anteriores, pedidos/vendas sozinhos não comprovam as datas, quantidades e custos reais: confirmar os lotes e, nas sextas, a distribuição antes/a partir das 13h. Sem esses registros, os gastos exatos continuam pendentes.
 
 M2, M2.2, retorno físico/reaproveitamento, ponte contábil e comparação no mesmo período com Seller Centre/banco continuam abertos. A produção física não é descontada uma segunda vez do lucro e o cancelamento de venda não apaga uma fabricação real. Nenhuma reserva, estoque externo, revenda ou escrita comercial é liberada. Histórico publicado em [fechamento semanal](MLS_PRODUCTION_WEEKLY_CLOSE_2026_11_03.md) e [produção diária/Hermes](MLS_PRODUCTION_DAILY_HERMES_2026_11_03.md) permanece preservado.
