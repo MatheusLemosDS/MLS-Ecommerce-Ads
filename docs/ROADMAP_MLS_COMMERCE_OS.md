@@ -636,16 +636,16 @@ Conversão de identidade M0 publicada pela **PR #11**, merge
 
 A fase financeira canônica continua **M2 — Finance/Returns confiáveis**;
 **M3 Observer avança em paralelo**, por pedido explícito do proprietário.
-A última Live comprovada é `2026-11-03.3`, App `26703f97-a986-476c-bef9-d51532f68eb7`; Auth/Finance e vetor dos três Workers conferidos.
-Fonte `5d570db1f6c7d7793c2c98cc5d1ee61508b81cda`, head `c84a10f44bde68d15916ecfd4d688870a7e0f739`, CI [41759155044](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/41759155044) aprovada.
+A última Live comprovada é `2026-11-06.1 — Sugestões para confirmar produção`, App `802f5a14-fa26-41f7-82d8-118bf45ef72e`; Auth/Finance e vetor dos três Workers conferidos em 06/11/2026 às 14:01:47 Brasília.
+Fonte `7eddce75f93106ef07f5c8c07647cb8469fb1ca4`, head `c8511feea6ee6769eff5b6a202b2be37776af326`, CI [42255966529](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/42255966529) aprovada: 3555 Node e 67 Python. [Uso e limites](MLS_PRODUCTION_CONFIRMATION_PROPOSAL_2026_11_06.md); integração da [PR111](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/111) conferida separadamente.
+PR110 integrada em `b09026880f9370358f4539b821d18ef8d5982085`; a versão 2026-11-03.3 e seu recibo permanecem no guia do fechamento semanal.
 PR109 integrada em `d14df57d0b3305ce673a247f925d5dd0d68d191d`, CI final [41672307550](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/41672307550), árvore e vetor Live conferidos. O guia [produção diária/Hermes](MLS_PRODUCTION_DAILY_HERMES_2026_11_03.md) preserva seu corte de publicação.
 
 Retomar por:
 
-1. Conferir uso real/observação natural do [fechamento semanal da produção](MLS_PRODUCTION_WEEKLY_CLOSE_2026_11_03.md),
-   sexta 13h a sexta 13h, com fontes reais, custos históricos, retrospectivos e revisões preservadas.
-2. PR109 já integrada em `d14df57d0b3305ce673a247f925d5dd0d68d191d`, CI final41672307550 e vetor Live conferidos. Preservar produção diária/Hermes,
-   contratos v1–v5 e separar referências das vendas de fabricação/custos reais.
+1. Conferir uma sugestão real no [registro de fabricação](MLS_PRODUCTION_CONFIRMATION_PROPOSAL_2026_11_06.md),
+   confirmar somente os lotes realmente produzidos e seus custos históricos. O primeiro corte natural de sexta foi observado em 06/11 às 13:00:51, para 30/10 13h até 06/11 13h; fonte NO_RECORDS, sem confirmar custo zero. Acompanhar o próximo corte de 13/11 às 13h.
+2. Próximo incremento de M2.2: preparar a confirmação explícita da cobertura de fabricação por intervalo, vinculada aos lotes e às distribuições de sexta antes/a partir das 13h. Dias sem declaração continuam desconhecidos. A soma dos lotes registrados não comprova que toda a produção da loja foi lançada. Preservar os contratos v1–v5, produção diária/Hermes e originais/revisões semanais; referências de vendas não são fabricação real.
 3. Preservar os seis agentes da inicial e a equipe completa, a navegação,
    rascunhos por mês, histórico físico/fabricação/vínculos e paginação Pending.
 4. Continuar M2/M2.2: conferir um recebimento e uma fabricação reais, preservar
