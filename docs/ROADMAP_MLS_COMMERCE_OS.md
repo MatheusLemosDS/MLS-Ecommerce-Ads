@@ -1,3 +1,7 @@
+<!-- PRODUCTION_COVERAGE_CURRENT -->
+**Conferência da fabricação por período — `PREPARED_NOT_PUBLISHED`:** versão `2026-11-06.2`. Em Produção, confira os oito intervalos da semana de sexta 13h a sexta 13h, em Brasília. Cada intervalo encerrado exige declarar que todos os lotes reais foram registrados ou confirmar explicitamente que não houve fabricação. Ausência de registro continua desconhecida; custo pendente e sexta sem distribuição confirmada impedem o total conferido. Alterar lotes/cortes do intervalo torna a declaração anterior desatualizada; a retirada explícita mantém auditoria. A conferência não cria lotes, não usa vendas/DTF como fabricação e não altera os relatórios semanais originais, lucro ou estoque. Implementação preparada; fonte/head/PR/CI, contagens, hashes e publicação deste candidato ainda sem recibo. A Live confirmada permanece na versão 2026-11-06.1. PR111 integrada em `673dc8f4d3c6c36eaa41fcf33ae264130fa9ba18`, com vetor Live da versão 2026-11-06.1 conferido separadamente. Primeiro corte natural de sexta observado em 06/11 às 13:00:51 Brasília, fonte NO_RECORDS naquele corte; isso não comprova gasto zero. M2/M2.2 e Seller Centre/banco permanecem abertos. [Uso, evidências e limites](MLS_PRODUCTION_COVERAGE_2026_11_06.md).
+<!-- END_PRODUCTION_COVERAGE_CURRENT -->
+
 <!-- PRODUCTION_CONFIRMATION_PROPOSAL_CURRENT -->
 **Sugestões para confirmar produção — `PUBLISHED_VERIFIED`:** versão `2026-11-06.1 — Sugestões para confirmar produção`. No painel Produção, um contexto DTF salvo e o catálogo validado do mesmo produto/variação oferecem identidade e composição para conferência. A ação explícita preenche somente campos vazios; qualquer conflito bloqueia a aplicação inteira e as confirmações são desmarcadas. Quantidade vendida, custo comercial atual e dados do catálogo não viram fabricação, custo histórico por peça, estampa ou data real. O registro continua dependendo da confirmação existente do proprietário. Sem migração ou nova consulta ao provedor; seis agentes, meses/rascunhos, financeiro e corte de sexta às 13h preservados. App publicado e vetor dos três Workers conferido em 2026-11-06T14:01:47-03:00. Fonte `7eddce75f93106ef07f5c8c07647cb8469fb1ca4`, head `c8511feea6ee6769eff5b6a202b2be37776af326`, CI [42255966529](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/42255966529) aprovada: 3555 Node e 67 Python. Integração Git ainda depende da CI documental e merge da [PR #111](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/111). Primeiro corte natural de sexta confirmado em 06/11 às 13:00:51 Brasília: original `SCHEDULED`, fonte `NO_RECORDS`, sem comprovar custo zero ou fabricação. Próximo corte 13/11 às 13h. M2/M2.2 e Seller Centre/banco permanecem abertos. [Uso, evidências e limites](MLS_PRODUCTION_CONFIRMATION_PROPOSAL_2026_11_06.md).
 <!-- END_PRODUCTION_CONFIRMATION_PROPOSAL_CURRENT -->
@@ -634,29 +638,18 @@ Conversão de identidade M0 publicada pela **PR #11**, merge
 
 ## 10. Próximo passo ao retomar
 
-A fase financeira canônica continua **M2 — Finance/Returns confiáveis**;
-**M3 Observer avança em paralelo**, por pedido explícito do proprietário.
-A última Live comprovada é `2026-11-06.1 — Sugestões para confirmar produção`, App `802f5a14-fa26-41f7-82d8-118bf45ef72e`; Auth/Finance e vetor dos três Workers conferidos em 06/11/2026 às 14:01:47 Brasília.
-Fonte `7eddce75f93106ef07f5c8c07647cb8469fb1ca4`, head `c8511feea6ee6769eff5b6a202b2be37776af326`, CI [42255966529](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/42255966529) aprovada: 3555 Node e 67 Python. [Uso e limites](MLS_PRODUCTION_CONFIRMATION_PROPOSAL_2026_11_06.md); integração da [PR111](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/111) conferida separadamente.
-PR110 integrada em `b09026880f9370358f4539b821d18ef8d5982085`; a versão 2026-11-03.3 e seu recibo permanecem no guia do fechamento semanal.
-PR109 integrada em `d14df57d0b3305ce673a247f925d5dd0d68d191d`, CI final [41672307550](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/41672307550), árvore e vetor Live conferidos. O guia [produção diária/Hermes](MLS_PRODUCTION_DAILY_HERMES_2026_11_03.md) preserva seu corte de publicação.
+A fase canônica continua **M2 — Finance/Returns confiáveis**, com **M3 Observer em paralelo**.
+A última Live comprovada permanece `2026-11-06.1 — Sugestões para confirmar produção`, App `802f5a14-fa26-41f7-82d8-118bf45ef72e`; a nova conferência 2026-11-06.2 está preparada, ainda sem publicação/PR/CI/hashes deste candidato.
+PR111 integrada em `673dc8f4d3c6c36eaa41fcf33ae264130fa9ba18`, com fonte e vetor Live conferidos; guias de entregas anteriores preservam seus cortes e não substituem este resumo de retomada.
 
 Retomar por:
 
-1. Conferir uma sugestão real no [registro de fabricação](MLS_PRODUCTION_CONFIRMATION_PROPOSAL_2026_11_06.md),
-   confirmar somente os lotes realmente produzidos e seus custos históricos. O primeiro corte natural de sexta foi observado em 06/11 às 13:00:51, para 30/10 13h até 06/11 13h; fonte NO_RECORDS, sem confirmar custo zero. Acompanhar o próximo corte de 13/11 às 13h.
-2. Próximo incremento de M2.2: preparar a confirmação explícita da cobertura de fabricação por intervalo, vinculada aos lotes e às distribuições de sexta antes/a partir das 13h. Dias sem declaração continuam desconhecidos. A soma dos lotes registrados não comprova que toda a produção da loja foi lançada. Preservar os contratos v1–v5, produção diária/Hermes e originais/revisões semanais; referências de vendas não são fabricação real.
-3. Preservar os seis agentes da inicial e a equipe completa, a navegação,
-   rascunhos por mês, histórico físico/fabricação/vínculos e paginação Pending.
-4. Continuar M2/M2.2: conferir um recebimento e uma fabricação reais, preservar
-   itens/quantidades desconhecidos, confirmar composição de kits e decomposição
-   histórica de peça/estampa versus embalagem/etiqueta/reparo antes de valorar,
-   reservar, consumir ou integrar revenda ao resultado sem dupla contagem.
-5. Conferir despesas do mês e o mesmo recorte com Seller Centre/banco, explicar
-   diferenças materiais e distinguir Pending/liberação de liquidação bancária.
-   Novembro já possui declaração explícita; não copiá-la a outros meses.
-6. Manter Ads/PROMO e escritas externas de preço/estoque bloqueados até os gates
-   oficiais. M2/M2.2 não são encerradas pela publicação deste painel Observer.
+1. Concluir validação/publicação da [conferência da fabricação por período](MLS_PRODUCTION_COVERAGE_2026_11_06.md). Registrar somente lotes realmente produzidos e custos históricos conhecidos; conferir todos os intervalos encerrados.
+2. Um total semanal declarado conferido exige os oito intervalos atuais, custos conhecidos e distribuição de sexta resolvida. Dias ausentes ficam desconhecidos; zero exige declaração explícita compatível. Novos lotes/correções exigem nova conferência relevante, sem apagar auditoria ou originais/revisões.
+3. Primeiro corte natural de sexta observado em 06/11 às 13:00:51 Brasília para 30/10 13h até 06/11 13h, fonte NO_RECORDS naquele momento; não comprova gasto zero. Acompanhar o corte previsto de 13/11 às 13h sem presumir execução futura.
+4. Preservar seis agentes da inicial, equipe, navegação, meses/rascunhos, contratos v1–v5, produção diária/Hermes, histórico físico/vínculos e paginação Pending.
+5. Continuar M2/M2.2: conferir recebimento/fabricação reais, composição e decomposição histórica antes de valorar, reservar ou integrar reaproveitamento/revenda ao resultado sem dupla contagem. Pedidos/vendas e DTF não provam fabricação.
+6. Conferir despesas e o mesmo recorte com Seller Centre/banco, distinguir Pending/liberação de liquidação e manter Ads/PROMO, preço e estoque externo bloqueados até gates oficiais. M2/M2.2 continuam abertas.
 
 ## Registros históricos abaixo
 

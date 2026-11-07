@@ -82,6 +82,30 @@ async function snapshot(env,stamp,requestId=''){
  }
  fail('SOURCE_CHANGED',409);
 }
+// Narrow read adapter for coverage attestations. It validates physical facts and
+// Friday partitions without scanning or rewriting immutable weekly reports.
+export async function readProductionCoverageSource(env,{now=()=>Date.now()}={}){
+ const stamp=clock(now),db=database(env);
+ for(let attempt=0;attempt<3;attempt++){
+  const ledger=await readIncurredProduction(env,{now:()=>stamp*1000}),found=await tableNames(db),physical=found.has('incurred_production_state'),timing_present=found.has(names[0]);
+  const ledgerSql=physical?'SELECT revision FROM incurred_production_state WHERE id=1':'SELECT 0 AS revision',queries=[];
+  if(timing_present)queries.push(db.prepare('SELECT revision,mutation_id,updated_at,activated_at,last_tick_at,last_success_at,next_close_at FROM production_weekly_state WHERE id=1'),db.prepare('SELECT record_id,payload FROM production_weekly_assignments ORDER BY record_id LIMIT 1001'),db.prepare('SELECT COUNT(*) AS count,MIN(revision) AS first_revision,MAX(revision) AS last_revision FROM production_weekly_audit'));
+  queries.push(db.prepare(ledgerSql),db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name IN ('production_weekly_state','incurred_production_state')"));
+  const values=await db.batch(queries),offset=timing_present?3:0;
+  if(!Array.isArray(values)||values.length!==queries.length||values.some(v=>v?.success===false||!Array.isArray(v?.results))||values[offset].results.length>1)fail('STORAGE_INVALID');
+  const present=new Set(values[offset+1].results.map(v=>v.name));if(present.has('production_weekly_state')!==timing_present||present.has('incurred_production_state')!==physical||(values[offset].results[0]?.revision??0)!==ledger.revision)continue;
+  let timing_revision=0;const assignments=[];
+  if(timing_present){
+   if(values[0].results.length!==1||values[1].results.length>1000||values[2].results.length!==1)fail('STORAGE_INVALID');
+   const state=values[0].results[0],stats=values[2].results[0];
+   if(!exact(state,stateKeys)||!integer(state.revision,0,2147483645)||!uuid(state.mutation_id)||!integer(state.activated_at,1,stamp)||!integer(state.updated_at,state.activated_at,stamp)||!integer(state.next_close_at,1,9999999999)||![state.last_tick_at,state.last_success_at].every(v=>v===null||integer(v,state.activated_at,stamp))||state.last_success_at!==null&&(state.last_tick_at===null||state.last_success_at>state.last_tick_at)||!exact(stats,['count','first_revision','last_revision'])||stats.count!==state.revision||(state.revision===0?stats.first_revision!==null||stats.last_revision!==null:stats.first_revision!==1||stats.last_revision!==state.revision))fail('STORAGE_INVALID');
+   timing_revision=state.revision;
+   for(const row of values[1].results){let value;try{if(!exact(row,['record_id','payload'])||typeof row.payload!=='string'||encoder.encode(row.payload).byteLength>4096)throw Error();value=JSON.parse(row.payload);}catch{fail('STORAGE_INVALID');}assignment(value,stamp);if(value.record_id!==row.record_id)fail('STORAGE_INVALID');assignments.push(value);}
+  }
+  return {ledger,assignments,ledger_revision:ledger.revision,timing_revision,physical,timing_present};
+ }
+ fail('SOURCE_CHANGED',409);
+}
 async function workspace(observed,month,stamp){
  const {ledger,state,assignments,reports}=observed,revision=state?.revision??0,ends=productionWeeklyEndDates(month,stamp),allowed=new Set(ends),prepared=await prepareProductionWeeklySource(ledger,assignments),weeks=[],boundary_records=[],timing=new Map(assignments.map(row=>[row.record_id,row]));
  for(const end_date of ends){
