@@ -2,7 +2,7 @@
   "schema": "mls_commerce_os_checkpoint_v1",
   "canonical_roadmap": "docs/ROADMAP_MLS_COMMERCE_OS.md",
   "legacy_roadmap": "docs/ROADMAP_BRAZACOMMERCE.md",
-  "updated_at": "2026-11-06",
+  "updated_at": "2026-11-09",
   "product": {
     "name": "MLS Commerce OS",
     "supervisor": "MLS Hermes",
@@ -30,8 +30,8 @@
     "merge_commit": "9c418fd3010f46957d1ce52345baacd76041c788"
   },
   "current_phase": "M2_FINANCE_RETURNS_RECONCILIATION",
-  "working_branch": "feature/production-coverage-confirmation-20261106",
-  "current_status": "PRODUCTION_COVERAGE_PUBLISHED_VERIFIED",
+  "working_branch": "feature/daily-result-clarity-20261106",
+  "current_status": "DAILY_RESULT_CLARITY_PREPARED_NOT_PUBLISHED",
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
     "Repasse-base, ajuste, repasse após ajuste e liberação exibidos sem dupla dedução",
@@ -129,10 +129,10 @@
     }
   },
   "next_actions": [
-    "Conferir uma semana real, registrar somente lotes conhecidos e declarar cobertura apenas depois de lançar toda fabricação do intervalo.",
-    "Preservar os oito intervalos de sexta13 a sexta13, custos históricos e cortes de sexta; desconhecido nunca vira zero.",
-    "Alterações relevantes exigem nova conferência; originais/revisões semanais e auditoria permanecem preservados.",
-    "Preservar seis agentes, mês/rascunhos, Finance/Auth, Hermes e gates comerciais.",
+    "Concluir validação/publicação da clareza do resultado diário e depois conferir uso real.",
+    "Não tratar produção dos itens vendidos como fabricação na data, devolução informada como reembolso conciliado ou resultado estimado como caixa recebido.",
+    "Conferir uma semana real com todos os oito intervalos, custos históricos e cortes de sexta; ausência continua desconhecida.",
+    "Preservar seis agentes, mês/rascunhos, Finance/Auth, Hermes, fórmulas/DTOs/fontes e gates comerciais.",
     "Continuar M2/M2.2, devoluções/reaproveitamento e comparação Seller Centre/banco no mesmo recorte sem dupla dedução."
   ],
   "m0_followup": [
@@ -142,13 +142,14 @@
     "Mission Control M1.1 (opção 3) integrado com 7 painéis independentes; conferir visual autenticado desktop/celular e retorno às telas antigas"
   ],
   "latest_increment": {
-    "id": "PRODUCTION_COVERAGE",
-    "status": "PUBLISHED_VERIFIED",
-    "branch": "feature/production-coverage-confirmation-20261106",
-    "base_main": "673dc8f4d3c6c36eaa41fcf33ae264130fa9ba18",
-    "human_code_release_id": "2026-11-06.2",
-    "label": "Conferência da fabricação por período",
-    "docs": "docs/MLS_PRODUCTION_COVERAGE_2026_11_06.md",
+    "id": "DAILY_RESULT_CLARITY",
+    "status": "PREPARED_NOT_PUBLISHED",
+    "branch": "feature/daily-result-clarity-20261106",
+    "base_main": "96e16057dc5190917622510ffc1b2130ced47841",
+    "human_code_release_id": "2026-11-09.1",
+    "human_date": "09/11/2026",
+    "label": "Resultado diário e devoluções às claras",
+    "docs": "docs/MLS_DAILY_RESULT_CLARITY_2026_11_09.md",
     "finance_m2": "OPEN",
     "m22": "OPEN_PENDING_REAL_OPERATION_AND_ACCOUNTING_BRIDGE",
     "workers": [
@@ -162,153 +163,78 @@
       "app"
     ],
     "routes": {
-      "production": "/admin?tab=agent-production#productionCoverageDetails",
+      "overview": "/admin?tab=overview",
+      "day_details": "/admin?tab=agent-finance#businessDay",
       "notes": "/admin?tab=roadmap#appReleaseNotes"
     },
-    "new_route": "/api/admin/production/coverage",
-    "get_request": "EXACT_ONE_WEEK_END_FRIDAY_QUERY",
-    "post_request": "OWNER_ONLY_ORIGIN_CSRF_EXPLICIT_CONFIRMED_REASON_CAS_IDEMPOTENT_NO_QUERY",
-    "workspace_schema": "production_coverage_workspace_v1",
-    "basis": "OWNER_CONFIRMED_MANUFACTURING_COMPLETENESS_NOT_CASH_OR_SALES",
-    "source": "INCURRED_LEDGER_AND_CONFIRMED_FRIDAY_ALLOCATION_HASHES",
-    "intervals": {
-      "count": 8,
-      "first": "PREVIOUS_FRIDAY_AT_OR_AFTER_13",
-      "middle": "SIX_FULL_CALENDAR_DAYS",
-      "last": "CURRENT_FRIDAY_BEFORE_13",
-      "timezone": "America/Sao_Paulo",
-      "end_exclusive": true
-    },
-    "declarations": [
-      "ALL_RECORDED_NONEMPTY_INTERVAL",
-      "NO_MANUFACTURING_EXPLICIT_EMPTY_INTERVAL"
+    "scope": "EXISTING_DAILY_FINANCIAL_DATA_PRESENTATION_ONLY",
+    "daily_basis": "PAID_ORDERS_CREATED_ON_SELECTED_DATE_IN_BRASILIA",
+    "production_reference": "REFERENCE_COST_OF_THOSE_SOLD_ITEMS_NOT_MANUFACTURE_ON_SAME_DATE",
+    "ads_basis": "CALENDAR_ADS_ON_SELECTED_DATE",
+    "monthly_allocations": "EXISTING_DAILY_SHARE_OF_DECLARED_DAS_AND_MONTHLY_EXPENSES",
+    "return_counts": "REPORTED_ORDER_COUNTS_AND_UNKNOWN_COVERAGE_NOT_REFUNDED_AMOUNT",
+    "payout_basis": [
+      "BASE_REPASS",
+      "AFTER_ADJUSTMENTS"
     ],
-    "revoke": "EXPLICIT_REASON_TOMBSTONE_AND_IMMUTABLE_AUDIT",
-    "ended_intervals_only": true,
-    "missing_day_is_zero": false,
-    "total_rule": "CLOSED_WEEK_EIGHT_CURRENT_CONFIRMATIONS_ALL_COSTS_KNOWN_AND_FRIDAY_BOUNDARIES_VALID",
-    "explicit_eight_no_manufacturing_confirmations_can_yield_zero": true,
-    "invalidation": "RELEVANT_DATE_RECORDS_OR_WHOLE_FRIDAY_SHARED_HASH_CHANGES",
-    "friday_fingerprint_scope": "WHOLE_FRIDAY_RECORDS_AND_BOTH_PARTITION_COUNTS_CONSERVATIVE",
-    "opposite_friday_half_may_invalidate_confirmation": true,
-    "unrelated_source_edit_scope": "OTHER_CALENDAR_DATES_ONLY_NOT_OPPOSITE_FRIDAY_HALF",
-    "unrelated_source_edit_invalidates_old_confirmation": false,
-    "global_revisions": "SUBMIT_RACE_FENCES_ONLY",
-    "cold_get_select_only": true,
-    "storage_setup": "FOUR_INTERNAL_COVERAGE_TABLES_ON_VALID_EXPLICIT_OWNER_POST_ONLY",
+    "unreconciled_returns_notice": "VISIBLE_IN_EVERY_RESULT_STATE_WHEN_PENDING",
+    "return_reuse_credit": "NOT_AUTOMATIC_NO_INFERRED_PRODUCTION_REVERSAL",
+    "financial_math_unchanged": true,
+    "dto_unchanged": true,
+    "new_endpoints": 0,
+    "new_reads": 0,
     "new_provider_calls": 0,
     "new_collectors": 0,
     "cron_changed": false,
     "legacy_contracts_unchanged": true,
-    "incurred_production_v1_changed": false,
-    "weekly_report_v1_changed": false,
-    "weekly_originals_restatements_unchanged": true,
-    "coverage_confirmation_is_owner_statement": true,
-    "attestation_creates_manufacturing_lot": false,
-    "delivery_records_real_owner_coverage": false,
     "physical_or_financial_facts_created_by_delivery": false,
+    "owner_real_mutation_requests": 0,
     "commercial_writes": false,
     "overview_six_agents_preserved": true,
     "month_drafts_preserved": true,
     "hermes_calculation_changed": false,
+    "manufacturing_ledger_and_weekly_coverage_unchanged": true,
     "seller_centre_bank_comparison": "NOT_CLOSED",
     "previous_release_integration": {
-      "release_id": "2026-11-06.1",
-      "pull_request": 111,
+      "release_id": "2026-11-06.2",
+      "pull_request": 112,
       "status": "MERGED_ALL_THREE_LIVE_VERIFIED",
-      "merge_commit": "673dc8f4d3c6c36eaa41fcf33ae264130fa9ba18",
-      "receipt_source": "PREVIOUS_PRIVATE_RELEASE_EVIDENCE_PR111",
-      "receipt_file": "final-integration-receipt.json",
-      "receipt_sha256": "6e215682dbb5c1323371a1074a73bcdd5cf64c4fc91cab79758ba43e581b9d5e"
-    },
-    "first_friday_observation": {
-      "status": "FIRST_FRIDAY_CUTOFF_OBSERVED",
-      "observed_at": "2026-11-06T16:37:52.948661+00:00",
-      "timezone": "America/Sao_Paulo",
-      "period_start_at": 1793376000,
-      "period_end_at": 1793980800,
-      "period_start_brasilia": "2026-10-30T13:00:00-03:00",
-      "period_end_brasilia": "2026-11-06T13:00:00-03:00",
-      "original_capture_kind": "SCHEDULED",
-      "original_version": 1,
-      "captured_at": 1793980851,
-      "captured_at_brasilia": "2026-11-06T13:00:51-03:00",
-      "capture_delay_seconds": 51,
-      "friday_cutoff_execution_verified": true,
-      "next_close_at": 1794585600,
-      "next_close_at_brasilia": "2026-11-13T13:00:00-03:00",
-      "source_status": "NO_RECORDS",
-      "source_revision": 0,
-      "physical_table_state": "ABSENT",
-      "physical_record_count": null,
-      "financial_amount_validation": false,
-      "canonical_ledger_validation": false,
-      "unknown_not_zero": true,
-      "sql_statements": 1,
-      "rows_written": 0,
-      "manual_scheduler_invocations": 0,
-      "evidence_file": "first-friday-metadata-20261106T163752948788Z.json",
-      "evidence_sha256": "ae5ebca17930faafab97df5503089a4adb2e72aeb6b30f202b36d5076ef883f3"
-    },
-    "validation": {
-      "status": "PASSED_RECORDED_PUBLICATION_EVIDENCE",
-      "focused": "PASSED",
-      "full_node": {
-        "tests": 3586,
-        "pass": 3586,
-        "fail": 0,
-        "skipped": 0,
-        "cancelled": 0
-      },
-      "python": 67,
-      "chromium": "PASSED_SYNTHETIC_NORMAL_MINIFIED_320_1365",
-      "ci": "GREEN_EXACT_REVIEWED_SOURCE_HEAD",
-      "ci_url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/42333118493",
-      "real_owner_acceptance": "NOT_CLAIMED"
-    },
-    "pull_request": 112,
-    "code_commit": "7f7f8498472806e6a311aa5c44f28104466040d6",
-    "reviewed_head": "bb8b0f57cd681ca2a6b11b2ea8087572216eb597",
-    "ci_run": 42333118493,
-    "deployment": {
-      "status": "APP_LIVE_FULL_VECTOR_VERIFIED_AUTH_FINANCE_PRESERVED",
+      "merge_commit": "96e16057dc5190917622510ffc1b2130ced47841",
       "versions": {
         "app": "09621a33-2fd1-48e1-8155-f022bc18f66e",
         "auth": "ec385ca9-a986-49ec-abab-25a29daaf33b",
         "finance": "9ed0bd7d-269a-4e5f-81d0-63be8c6ac2c4"
       },
-      "generated_sha256": {
-        "app": "26612b7ea0edbea55e06f5fc817a18defd6b4fe65381e6d564b7d360b7b80278",
-        "auth": "47c83f87f191fd0e5ff503d9c4bcf4671cd986b0965e66e84f1a6ed952dac925",
-        "finance": "08ada5ecec92350f4f8301fdb7baa00f5f8083a0e8390296b2870e0ff3cdc1a5"
-      },
-      "published_sha256": {
-        "app": "e1c9a45e18a8493632c98e42b413662195e377b156472134314430c41e351b0f",
-        "auth": "2a2c2433c6fba25d1c399991595c96e6b8a85045edb77879c8270c446cb45ad2",
-        "finance": "e5bf80e14ff00e5b365bfbcfb25bf3a4dc1e42bf40bb0e4259909649eea1d5cd"
-      },
-      "started_at": 1794261152,
-      "completed_at": 1794261183,
-      "completed_at_brasilia": "2026-11-09T18:53:03-03:00",
-      "all_three_exact": true,
-      "configuration_preserved": true,
-      "domains_preserved": true,
-      "subdomains_preserved": true,
-      "flags_preserved": true,
-      "cron_preserved": true,
-      "physical_or_financial_fact_writes": false,
-      "d1_queries": 0,
-      "owner_endpoints_called": false,
-      "provider_calls": 0,
-      "receipt_file": "publication-receipt.json",
-      "receipt_sha256": "376154cf9d505fb46fc39214a2fe5fdc6044ebfec78d484f15a1e9be45a8ff89"
+      "receipt_file": "final-integration-receipt.json",
+      "receipt_sha256": "07011c77b7488bb872a969d4b9d47272ba67dce0a23375b269c8b4f72b921b82"
+    },
+    "validation": {
+      "status": "PENDING_COMPLETED_EVIDENCE",
+      "focused": null,
+      "full_node": null,
+      "python": null,
+      "chromium": null,
+      "ci": null,
+      "real_owner_acceptance": "NOT_CLAIMED"
+    },
+    "pull_request": null,
+    "code_commit": null,
+    "reviewed_head": null,
+    "ci_run": null,
+    "deployment": {
+      "status": "NOT_PUBLISHED",
+      "versions": null,
+      "generated_sha256": null,
+      "published_sha256": null,
+      "started_at": null,
+      "completed_at": null,
+      "completed_at_brasilia": null
     },
     "integration": {
-      "status": "PUBLICATION_VERIFIED_FINAL_DOCS_CI_AND_MERGE_PENDING",
-      "pull_request": 112,
-      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/112",
-      "merge_commit": null,
-      "publication_receipt_does_not_prove_merge": true
+      "status": "NOT_MERGED",
+      "pull_request": null,
+      "url": null,
+      "merge_commit": null
     }
   },
   "incident": {
@@ -5531,6 +5457,279 @@
       "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/112",
       "merge_commit": null,
       "publication_receipt_does_not_prove_merge": true
+    }
+  },
+  "previous_increment_before_daily_result_clarity": {
+    "id": "PRODUCTION_COVERAGE",
+    "status": "PUBLISHED_VERIFIED",
+    "branch": "feature/production-coverage-confirmation-20261106",
+    "base_main": "673dc8f4d3c6c36eaa41fcf33ae264130fa9ba18",
+    "human_code_release_id": "2026-11-06.2",
+    "label": "Conferência da fabricação por período",
+    "docs": "docs/MLS_PRODUCTION_COVERAGE_2026_11_06.md",
+    "finance_m2": "OPEN",
+    "m22": "OPEN_PENDING_REAL_OPERATION_AND_ACCOUNTING_BRIDGE",
+    "workers": [
+      "app"
+    ],
+    "unchanged_workers": [
+      "auth",
+      "finance"
+    ],
+    "deploy_order": [
+      "app"
+    ],
+    "routes": {
+      "production": "/admin?tab=agent-production#productionCoverageDetails",
+      "notes": "/admin?tab=roadmap#appReleaseNotes"
+    },
+    "new_route": "/api/admin/production/coverage",
+    "get_request": "EXACT_ONE_WEEK_END_FRIDAY_QUERY",
+    "post_request": "OWNER_ONLY_ORIGIN_CSRF_EXPLICIT_CONFIRMED_REASON_CAS_IDEMPOTENT_NO_QUERY",
+    "workspace_schema": "production_coverage_workspace_v1",
+    "basis": "OWNER_CONFIRMED_MANUFACTURING_COMPLETENESS_NOT_CASH_OR_SALES",
+    "source": "INCURRED_LEDGER_AND_CONFIRMED_FRIDAY_ALLOCATION_HASHES",
+    "intervals": {
+      "count": 8,
+      "first": "PREVIOUS_FRIDAY_AT_OR_AFTER_13",
+      "middle": "SIX_FULL_CALENDAR_DAYS",
+      "last": "CURRENT_FRIDAY_BEFORE_13",
+      "timezone": "America/Sao_Paulo",
+      "end_exclusive": true
+    },
+    "declarations": [
+      "ALL_RECORDED_NONEMPTY_INTERVAL",
+      "NO_MANUFACTURING_EXPLICIT_EMPTY_INTERVAL"
+    ],
+    "revoke": "EXPLICIT_REASON_TOMBSTONE_AND_IMMUTABLE_AUDIT",
+    "ended_intervals_only": true,
+    "missing_day_is_zero": false,
+    "total_rule": "CLOSED_WEEK_EIGHT_CURRENT_CONFIRMATIONS_ALL_COSTS_KNOWN_AND_FRIDAY_BOUNDARIES_VALID",
+    "explicit_eight_no_manufacturing_confirmations_can_yield_zero": true,
+    "invalidation": "RELEVANT_DATE_RECORDS_OR_WHOLE_FRIDAY_SHARED_HASH_CHANGES",
+    "friday_fingerprint_scope": "WHOLE_FRIDAY_RECORDS_AND_BOTH_PARTITION_COUNTS_CONSERVATIVE",
+    "opposite_friday_half_may_invalidate_confirmation": true,
+    "unrelated_source_edit_scope": "OTHER_CALENDAR_DATES_ONLY_NOT_OPPOSITE_FRIDAY_HALF",
+    "unrelated_source_edit_invalidates_old_confirmation": false,
+    "global_revisions": "SUBMIT_RACE_FENCES_ONLY",
+    "cold_get_select_only": true,
+    "storage_setup": "FOUR_INTERNAL_COVERAGE_TABLES_ON_VALID_EXPLICIT_OWNER_POST_ONLY",
+    "new_provider_calls": 0,
+    "new_collectors": 0,
+    "cron_changed": false,
+    "legacy_contracts_unchanged": true,
+    "incurred_production_v1_changed": false,
+    "weekly_report_v1_changed": false,
+    "weekly_originals_restatements_unchanged": true,
+    "coverage_confirmation_is_owner_statement": true,
+    "attestation_creates_manufacturing_lot": false,
+    "delivery_records_real_owner_coverage": false,
+    "physical_or_financial_facts_created_by_delivery": false,
+    "commercial_writes": false,
+    "overview_six_agents_preserved": true,
+    "month_drafts_preserved": true,
+    "hermes_calculation_changed": false,
+    "seller_centre_bank_comparison": "NOT_CLOSED",
+    "previous_release_integration": {
+      "release_id": "2026-11-06.1",
+      "pull_request": 111,
+      "status": "MERGED_ALL_THREE_LIVE_VERIFIED",
+      "merge_commit": "673dc8f4d3c6c36eaa41fcf33ae264130fa9ba18",
+      "receipt_source": "PREVIOUS_PRIVATE_RELEASE_EVIDENCE_PR111",
+      "receipt_file": "final-integration-receipt.json",
+      "receipt_sha256": "6e215682dbb5c1323371a1074a73bcdd5cf64c4fc91cab79758ba43e581b9d5e"
+    },
+    "first_friday_observation": {
+      "status": "FIRST_FRIDAY_CUTOFF_OBSERVED",
+      "observed_at": "2026-11-06T16:37:52.948661+00:00",
+      "timezone": "America/Sao_Paulo",
+      "period_start_at": 1793376000,
+      "period_end_at": 1793980800,
+      "period_start_brasilia": "2026-10-30T13:00:00-03:00",
+      "period_end_brasilia": "2026-11-06T13:00:00-03:00",
+      "original_capture_kind": "SCHEDULED",
+      "original_version": 1,
+      "captured_at": 1793980851,
+      "captured_at_brasilia": "2026-11-06T13:00:51-03:00",
+      "capture_delay_seconds": 51,
+      "friday_cutoff_execution_verified": true,
+      "next_close_at": 1794585600,
+      "next_close_at_brasilia": "2026-11-13T13:00:00-03:00",
+      "source_status": "NO_RECORDS",
+      "source_revision": 0,
+      "physical_table_state": "ABSENT",
+      "physical_record_count": null,
+      "financial_amount_validation": false,
+      "canonical_ledger_validation": false,
+      "unknown_not_zero": true,
+      "sql_statements": 1,
+      "rows_written": 0,
+      "manual_scheduler_invocations": 0,
+      "evidence_file": "first-friday-metadata-20261106T163752948788Z.json",
+      "evidence_sha256": "ae5ebca17930faafab97df5503089a4adb2e72aeb6b30f202b36d5076ef883f3"
+    },
+    "validation": {
+      "status": "PASSED_RECORDED_PUBLICATION_EVIDENCE",
+      "focused": "PASSED",
+      "full_node": {
+        "tests": 3586,
+        "pass": 3586,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0
+      },
+      "python": 67,
+      "chromium": "PASSED_SYNTHETIC_NORMAL_MINIFIED_320_1365",
+      "ci": "GREEN_EXACT_REVIEWED_SOURCE_HEAD",
+      "ci_url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/42333118493",
+      "real_owner_acceptance": "NOT_CLAIMED"
+    },
+    "pull_request": 112,
+    "code_commit": "7f7f8498472806e6a311aa5c44f28104466040d6",
+    "reviewed_head": "bb8b0f57cd681ca2a6b11b2ea8087572216eb597",
+    "ci_run": 42333118493,
+    "deployment": {
+      "status": "APP_LIVE_FULL_VECTOR_VERIFIED_AUTH_FINANCE_PRESERVED",
+      "versions": {
+        "app": "09621a33-2fd1-48e1-8155-f022bc18f66e",
+        "auth": "ec385ca9-a986-49ec-abab-25a29daaf33b",
+        "finance": "9ed0bd7d-269a-4e5f-81d0-63be8c6ac2c4"
+      },
+      "generated_sha256": {
+        "app": "26612b7ea0edbea55e06f5fc817a18defd6b4fe65381e6d564b7d360b7b80278",
+        "auth": "47c83f87f191fd0e5ff503d9c4bcf4671cd986b0965e66e84f1a6ed952dac925",
+        "finance": "08ada5ecec92350f4f8301fdb7baa00f5f8083a0e8390296b2870e0ff3cdc1a5"
+      },
+      "published_sha256": {
+        "app": "e1c9a45e18a8493632c98e42b413662195e377b156472134314430c41e351b0f",
+        "auth": "2a2c2433c6fba25d1c399991595c96e6b8a85045edb77879c8270c446cb45ad2",
+        "finance": "e5bf80e14ff00e5b365bfbcfb25bf3a4dc1e42bf40bb0e4259909649eea1d5cd"
+      },
+      "started_at": 1794261152,
+      "completed_at": 1794261183,
+      "completed_at_brasilia": "2026-11-09T18:53:03-03:00",
+      "all_three_exact": true,
+      "configuration_preserved": true,
+      "domains_preserved": true,
+      "subdomains_preserved": true,
+      "flags_preserved": true,
+      "cron_preserved": true,
+      "physical_or_financial_fact_writes": false,
+      "d1_queries": 0,
+      "owner_endpoints_called": false,
+      "provider_calls": 0,
+      "receipt_file": "publication-receipt.json",
+      "receipt_sha256": "376154cf9d505fb46fc39214a2fe5fdc6044ebfec78d484f15a1e9be45a8ff89"
+    },
+    "integration": {
+      "status": "PUBLICATION_VERIFIED_FINAL_DOCS_CI_AND_MERGE_PENDING",
+      "pull_request": 112,
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/112",
+      "merge_commit": null,
+      "publication_receipt_does_not_prove_merge": true
+    }
+  },
+  "previous_next_actions_before_daily_result_clarity": [
+    "Conferir uma semana real, registrar somente lotes conhecidos e declarar cobertura apenas depois de lançar toda fabricação do intervalo.",
+    "Preservar os oito intervalos de sexta13 a sexta13, custos históricos e cortes de sexta; desconhecido nunca vira zero.",
+    "Alterações relevantes exigem nova conferência; originais/revisões semanais e auditoria permanecem preservados.",
+    "Preservar seis agentes, mês/rascunhos, Finance/Auth, Hermes e gates comerciais.",
+    "Continuar M2/M2.2, devoluções/reaproveitamento e comparação Seller Centre/banco no mesmo recorte sem dupla dedução."
+  ],
+  "daily_result_clarity_2026_11_09": {
+    "id": "DAILY_RESULT_CLARITY",
+    "status": "PREPARED_NOT_PUBLISHED",
+    "branch": "feature/daily-result-clarity-20261106",
+    "base_main": "96e16057dc5190917622510ffc1b2130ced47841",
+    "human_code_release_id": "2026-11-09.1",
+    "human_date": "09/11/2026",
+    "label": "Resultado diário e devoluções às claras",
+    "docs": "docs/MLS_DAILY_RESULT_CLARITY_2026_11_09.md",
+    "finance_m2": "OPEN",
+    "m22": "OPEN_PENDING_REAL_OPERATION_AND_ACCOUNTING_BRIDGE",
+    "workers": [
+      "app"
+    ],
+    "unchanged_workers": [
+      "auth",
+      "finance"
+    ],
+    "deploy_order": [
+      "app"
+    ],
+    "routes": {
+      "overview": "/admin?tab=overview",
+      "day_details": "/admin?tab=agent-finance#businessDay",
+      "notes": "/admin?tab=roadmap#appReleaseNotes"
+    },
+    "scope": "EXISTING_DAILY_FINANCIAL_DATA_PRESENTATION_ONLY",
+    "daily_basis": "PAID_ORDERS_CREATED_ON_SELECTED_DATE_IN_BRASILIA",
+    "production_reference": "REFERENCE_COST_OF_THOSE_SOLD_ITEMS_NOT_MANUFACTURE_ON_SAME_DATE",
+    "ads_basis": "CALENDAR_ADS_ON_SELECTED_DATE",
+    "monthly_allocations": "EXISTING_DAILY_SHARE_OF_DECLARED_DAS_AND_MONTHLY_EXPENSES",
+    "return_counts": "REPORTED_ORDER_COUNTS_AND_UNKNOWN_COVERAGE_NOT_REFUNDED_AMOUNT",
+    "payout_basis": [
+      "BASE_REPASS",
+      "AFTER_ADJUSTMENTS"
+    ],
+    "unreconciled_returns_notice": "VISIBLE_IN_EVERY_RESULT_STATE_WHEN_PENDING",
+    "return_reuse_credit": "NOT_AUTOMATIC_NO_INFERRED_PRODUCTION_REVERSAL",
+    "financial_math_unchanged": true,
+    "dto_unchanged": true,
+    "new_endpoints": 0,
+    "new_reads": 0,
+    "new_provider_calls": 0,
+    "new_collectors": 0,
+    "cron_changed": false,
+    "legacy_contracts_unchanged": true,
+    "physical_or_financial_facts_created_by_delivery": false,
+    "owner_real_mutation_requests": 0,
+    "commercial_writes": false,
+    "overview_six_agents_preserved": true,
+    "month_drafts_preserved": true,
+    "hermes_calculation_changed": false,
+    "manufacturing_ledger_and_weekly_coverage_unchanged": true,
+    "seller_centre_bank_comparison": "NOT_CLOSED",
+    "previous_release_integration": {
+      "release_id": "2026-11-06.2",
+      "pull_request": 112,
+      "status": "MERGED_ALL_THREE_LIVE_VERIFIED",
+      "merge_commit": "96e16057dc5190917622510ffc1b2130ced47841",
+      "versions": {
+        "app": "09621a33-2fd1-48e1-8155-f022bc18f66e",
+        "auth": "ec385ca9-a986-49ec-abab-25a29daaf33b",
+        "finance": "9ed0bd7d-269a-4e5f-81d0-63be8c6ac2c4"
+      },
+      "receipt_file": "final-integration-receipt.json",
+      "receipt_sha256": "07011c77b7488bb872a969d4b9d47272ba67dce0a23375b269c8b4f72b921b82"
+    },
+    "validation": {
+      "status": "PENDING_COMPLETED_EVIDENCE",
+      "focused": null,
+      "full_node": null,
+      "python": null,
+      "chromium": null,
+      "ci": null,
+      "real_owner_acceptance": "NOT_CLAIMED"
+    },
+    "pull_request": null,
+    "code_commit": null,
+    "reviewed_head": null,
+    "ci_run": null,
+    "deployment": {
+      "status": "NOT_PUBLISHED",
+      "versions": null,
+      "generated_sha256": null,
+      "published_sha256": null,
+      "started_at": null,
+      "completed_at": null,
+      "completed_at_brasilia": null
+    },
+    "integration": {
+      "status": "NOT_MERGED",
+      "pull_request": null,
+      "url": null,
+      "merge_commit": null
     }
   }
 }
