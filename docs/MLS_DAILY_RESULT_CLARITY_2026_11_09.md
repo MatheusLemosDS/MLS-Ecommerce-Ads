@@ -1,6 +1,6 @@
 # Resultado diário e devoluções às claras — 09/11/2026
 
-**Resultado diário e devoluções às claras — `PREPARED_NOT_PUBLISHED`:** versão `2026-11-09.1`, 09/11/2026. Na Visão geral, a explicação do cartão diário fica visível. No detalhamento do dia, aparecem os pedidos com devolução informada, a cobertura ainda desconhecida, a base do repasse e o aviso quando devoluções/reembolsos ainda podem alterar a estimativa, inclusive nos estados parciais. A produção descontada corresponde aos itens dos pedidos pagos criados na data selecionada; a fabricação real por data continua separada. Ads da data e parcelas diárias de DAS/despesas mantêm os cálculos existentes. Devolução informada não comprova reembolso já conciliado ou crédito automático de produção/reaproveitamento. Preparada; fonte/head/PR/CI, contagens e hashes/publicação deste candidato continuam sem evidência final. A última Live comprovada permanece `2026-11-06.2`, App `09621a33-2fd1-48e1-8155-f022bc18f66e`, PR112 integrada em `96e16057dc5190917622510ffc1b2130ced47841`; vetor/configuração novamente conferidos por GET em 09/11/2026. Fórmulas, DTOs, leituras, Hermes, seis agentes, meses/rascunhos, fabricação e fechamento semanal preservados; sem novos endpoints/provedores ou fatos reais criados. M2/M2.2 e comparação Seller Centre/banco continuam abertos. [Uso, evidências e limites](#como-conferir).
+**Resultado diário e devoluções às claras — `PUBLISHED_VERIFIED`:** versão `2026-11-09.1`, 09/11/2026. Na Visão geral, a explicação do cartão diário fica visível. No detalhamento do dia, aparecem os pedidos com devolução informada, a cobertura ainda desconhecida, a base do repasse e o aviso quando devoluções/reembolsos ainda podem alterar a estimativa, inclusive nos estados parciais. A produção descontada corresponde aos itens dos pedidos pagos criados na data selecionada; a fabricação real por data continua separada. Ads da data e parcelas diárias de DAS/despesas mantêm os cálculos existentes. Devolução informada não comprova reembolso já conciliado ou crédito automático de produção/reaproveitamento. App publicado e vetor dos três Workers conferido em 2026-11-09T19:56:08-03:00. Fonte `fb4b91901f4e1cf8cf67ace57533ddef013a7f5c`, head `cf6978bd70ede20dad4123874459ad7924d233e7`, CI [42714393350](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/42714393350) aprovada: 3602 Node e 67 Python; Chromium sintético normal/minificado, 320/1365 e claro/escuro. O recibo registra a publicação; o estado atual da integração deve ser consultado na [PR #113](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/113). Fórmulas, DTOs, leituras, Hermes, seis agentes, meses/rascunhos, fabricação e fechamento semanal preservados; sem novos endpoints/provedores ou fatos reais criados. M2/M2.2 e comparação Seller Centre/banco continuam abertos. [Uso, evidências e limites](#como-conferir).
 
 ## Como conferir
 
@@ -28,7 +28,27 @@ A produção realizada por data e a conferência semanal de sexta 13h a sexta 13
 
 Mudança de apresentação no App, usando os contratos existentes. Auth/Finance, Hermes, seis agentes da inicial, navegação, escolha de mês, rascunhos e gates comerciais permanecem preservados. Sem migração, novo endpoint, leitura adicional, chamada ao provedor, alteração de cron ou escrita em fatos físicos/financeiros. QA usa somente dados sintéticos, sem recebimentos/devoluções/fabricação reais criados para demonstração.
 
-`PREPARED_NOT_PUBLISHED`: validação completa ainda pendente. Fonte/head/PR/CI, contagens, hashes e publicação deste candidato ficam null até os resultados reais. A última Live comprovada é `2026-11-06.2` (PR112 integrada em `96e16057dc5190917622510ffc1b2130ced47841`), com vetor dos três Workers novamente conferido por GET em 09/11/2026. Preparação de código/documentos não comprova publicação, integração ou uso real.
+Publicação do App conferida em 2026-11-09T19:56:08-03:00. Fonte `fb4b91901f4e1cf8cf67ace57533ddef013a7f5c`, head `cf6978bd70ede20dad4123874459ad7924d233e7`; CI [42714393350](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/42714393350) aprovada com 3602 Node e 67 Python, sem falhas/skips. Oito resultados Chromium sintéticos normal/minificado ×320/1365 ×claro/escuro vinculados aos hashes dos três Workers. Auth/Finance, configurações, domínios, subdomínios, flags e cron conferidos. O recibo prova a publicação naquele corte; consulte a PR para a integração atual: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/113. Aceite real do proprietário não foi presumido.
+
+```json
+{
+  "versions": {
+    "app": "36d5afa6-f53c-4b3a-96aa-69ac8c886fb6",
+    "auth": "ec385ca9-a986-49ec-abab-25a29daaf33b",
+    "finance": "9ed0bd7d-269a-4e5f-81d0-63be8c6ac2c4"
+  },
+  "generated_sha256": {
+    "app": "3ee87e09330e259bef0fdd8cb6e4a7ef2466c9aaee01140a88beb67e5ca8af65",
+    "auth": "47c83f87f191fd0e5ff503d9c4bcf4671cd986b0965e66e84f1a6ed952dac925",
+    "finance": "08ada5ecec92350f4f8301fdb7baa00f5f8083a0e8390296b2870e0ff3cdc1a5"
+  },
+  "published_sha256": {
+    "app": "15285b59c368a514ef1a65c6b49a22294541e3670df38276ee13337725566194",
+    "auth": "2a2c2433c6fba25d1c399991595c96e6b8a85045edb77879c8270c446cb45ad2",
+    "finance": "e5bf80e14ff00e5b365bfbcfb25bf3a4dc1e42bf40bb0e4259909649eea1d5cd"
+  }
+}
+```
 
 ## Continuidade do roadmap
 
