@@ -1,6 +1,6 @@
 # Conferência da fabricação por período — 06/11/2026
 
-**Conferência da fabricação por período — `PREPARED_NOT_PUBLISHED`:** versão `2026-11-06.2`. Em Produção, confira os oito intervalos da semana de sexta 13h a sexta 13h, em Brasília. Cada intervalo encerrado exige declarar que todos os lotes reais foram registrados ou confirmar explicitamente que não houve fabricação. Ausência de registro continua desconhecida; custo pendente e sexta sem distribuição confirmada impedem o total conferido. Alterar lotes/cortes do intervalo torna a declaração anterior desatualizada; a retirada explícita mantém auditoria. A conferência não cria lotes, não usa vendas/DTF como fabricação e não altera os relatórios semanais originais, lucro ou estoque. Implementação preparada; fonte/head/PR/CI, contagens, hashes e publicação deste candidato ainda sem recibo. A Live confirmada permanece na versão 2026-11-06.1. PR111 integrada em `673dc8f4d3c6c36eaa41fcf33ae264130fa9ba18`, com vetor Live da versão 2026-11-06.1 conferido separadamente. Primeiro corte natural de sexta observado em 06/11 às 13:00:51 Brasília, fonte NO_RECORDS naquele corte; isso não comprova gasto zero. M2/M2.2 e Seller Centre/banco permanecem abertos. [Uso, evidências e limites](#como-usar).
+**Conferência da fabricação por período — `PUBLISHED_VERIFIED`:** versão `2026-11-06.2`. Em Produção, confira os oito intervalos da semana de sexta 13h a sexta 13h, em Brasília. Cada intervalo encerrado exige declarar que todos os lotes reais foram registrados ou confirmar explicitamente que não houve fabricação. Ausência de registro continua desconhecida; custo pendente e sexta sem distribuição confirmada impedem o total conferido. Alterar lotes/cortes do intervalo torna a declaração anterior desatualizada; a retirada explícita mantém auditoria. A conferência não cria lotes, não usa vendas/DTF como fabricação e não altera os relatórios semanais originais, lucro ou estoque. App publicado e vetor dos três Workers conferido em 2026-11-09T18:53:03-03:00. Fonte `7f7f8498472806e6a311aa5c44f28104466040d6`, head `bb8b0f57cd681ca2a6b11b2ea8087572216eb597`, CI [42333118493](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/42333118493) aprovada: 3586 Node e 67 Python. O recibo registra a publicação; o estado atual da integração deve ser consultado na [PR #112](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/112). PR111 integrada em `673dc8f4d3c6c36eaa41fcf33ae264130fa9ba18`, com vetor Live da versão 2026-11-06.1 conferido separadamente. Primeiro corte natural de sexta observado em 06/11 às 13:00:51 Brasília, fonte NO_RECORDS naquele corte; isso não comprova gasto zero. M2/M2.2 e Seller Centre/banco permanecem abertos. [Uso, evidências e limites](#como-usar).
 
 ## Como usar
 
@@ -15,7 +15,7 @@
 
 O painel separa valores dos lotes registrados e o total declarado conferido. Um subtotal conhecido não comprova que toda a produção da loja foi lançada. A confirmação é uma declaração sua sobre a completude dos registros; não é inspeção física automática, nota fiscal, pagamento bancário ou conciliação de lucro. Dados ausentes e custos desconhecidos continuam pendentes.
 
-Cada linha pode estar aberta, aguardando distribuição de sexta, sem conferência, confirmada, desatualizada ou retirada. Uma semana aberta ou com qualquer intervalo/custo/corte pendente mantém o total conferido indisponível. Lotes novos, alterações, anulações ou mudanças relevantes na distribuição de sexta invalidam a confirmação correspondente; alterações fora daquele intervalo não apagam a conferência já feita. A auditoria preserva as declarações anteriores.
+Cada linha pode estar aberta, aguardando distribuição de sexta, sem conferência, confirmada, desatualizada ou retirada. Uma semana aberta ou com qualquer intervalo/custo/corte pendente mantém o total conferido indisponível. Lotes novos, alterações, anulações ou mudanças relevantes na distribuição de sexta invalidam a confirmação correspondente. Alterações em outras datas não invalidam a conferência daquele intervalo. Nas sextas-feiras, a validação é conservadora: os lotes do dia inteiro e as quantidades das duas metades compõem a referência compartilhada. Uma mudança na outra metade da mesma sexta, inclusive um novo lote desse dia, pode desatualizar as duas metades e exigir nova conferência. A auditoria preserva as declarações anteriores.
 
 A conferência usa os custos históricos dos lotes, não o preço de catálogo nem a referência atual dos pedidos. Não cria peças, não apaga fabricação por causa de cancelamento de venda e não aplica uma segunda dedução no financeiro. Ela é separada dos relatórios semanais originais e de suas revisões; não reescreve o que era conhecido no instante do corte.
 
@@ -31,7 +31,31 @@ A PR111 foi integrada em `673dc8f4d3c6c36eaa41fcf33ae264130fa9ba18`; a versão 2
 
 ## Estado da entrega e evidências
 
-`PREPARED_NOT_PUBLISHED`: validação completa e evidências deste candidato ainda pendentes. Fonte/head/PR/CI, contagens, hashes e publicação permanecem null até resultados reais. A Live previamente comprovada continua na versão 2026-11-06.1; preparar código/documentos não comprova deploy, merge ou uso real.
+App publicado e conferido em 2026-11-09T18:53:03-03:00. Auth/Finance, fontes dos três Workers, configuração, domínios, subdomínios, flags e cron preservados. Fonte `7f7f8498472806e6a311aa5c44f28104466040d6`; head aprovado `bb8b0f57cd681ca2a6b11b2ea8087572216eb597`; CI [42333118493](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/42333118493), 3586 Node e 67 Python, sem falhas/skips. Chromium sintético normal/minificado em 320/1365 aprovado e vinculado aos hashes. Não foram criadas declarações reais de cobertura nem lotes para QA. A publicação tem recibo próprio; consulte a PR para o estado atual da integração: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/112.
+
+```json
+{
+  "versions": {
+    "app": "09621a33-2fd1-48e1-8155-f022bc18f66e",
+    "auth": "ec385ca9-a986-49ec-abab-25a29daaf33b",
+    "finance": "9ed0bd7d-269a-4e5f-81d0-63be8c6ac2c4"
+  },
+  "generated_sha256": {
+    "app": "26612b7ea0edbea55e06f5fc817a18defd6b4fe65381e6d564b7d360b7b80278",
+    "auth": "47c83f87f191fd0e5ff503d9c4bcf4671cd986b0965e66e84f1a6ed952dac925",
+    "finance": "08ada5ecec92350f4f8301fdb7baa00f5f8083a0e8390296b2870e0ff3cdc1a5"
+  },
+  "published_sha256": {
+    "app": "e1c9a45e18a8493632c98e42b413662195e377b156472134314430c41e351b0f",
+    "auth": "2a2c2433c6fba25d1c399991595c96e6b8a85045edb77879c8270c446cb45ad2",
+    "finance": "e5bf80e14ff00e5b365bfbcfb25bf3a4dc1e42bf40bb0e4259909649eea1d5cd"
+  }
+}
+```
+
+## Limite do pacote e próximas extensões
+
+O App gerado desta entrega tem 4.193.300 bytes, sob o limite de 4.194.304 bytes mantido pelos testes. As reduções removem cópias sem consumidores no servidor; o núcleo do AI Sales no navegador foi preservado. Novas extensões precisam rever a distribuição do código antes de crescer o pacote, mantendo os limites e os testes.
 
 ## Próximos passos e fases abertas
 
