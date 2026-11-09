@@ -22,7 +22,7 @@ def freeze_client_helpers(source, helpers):
 original=(root/'original/app-worker.mjs').read_text()
 admin=(root/'src/admin.mjs').read_text().replace("import {CLIENT} from './admin-client.mjs';\n",'').replace("import {CSS,adminBody,loginBody} from './admin-view.mjs';\n",'')
 report=(root/'src/admin-report.mjs').read_text().replace('export function parseReport','function parseReport')
-client=report+'\n'+re.sub(r'^import .*\n','',freeze_client_helpers((root/'src/admin-client.mjs').read_text(),{'parseReport':'admin-report.mjs','projectAdsMeasurement':'ads-measurement.mjs','createAdminApiClient':'admin-api-client.mjs','createAdminStartup':'admin-startup.mjs','projectHermesFinancialContext':'hermes-financial-context.mjs','createAgentPeriodController':'agent-period-view.mjs'}),flags=re.M).replace('export const CLIENT','const CLIENT')
+client=re.sub(r'^import .*\n','',freeze_client_helpers((root/'src/admin-client.mjs').read_text(),{'parseReport':'admin-report.mjs','projectAdsMeasurement':'ads-measurement.mjs','createAdminApiClient':'admin-api-client.mjs','createAdminStartup':'admin-startup.mjs','projectHermesFinancialContext':'hermes-financial-context.mjs','createAgentPeriodController':'agent-period-view.mjs'}),flags=re.M).replace('export const CLIENT','const CLIENT')
 view=re.sub(r'^import .*\n','',(root/'src/admin-view.mjs').read_text(),flags=re.M).replace('export const CSS','const CSS').replace('export function adminBody','function adminBody').replace('export function loginBody','function loginBody')
 month_view=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/business-month-view.mjs').read_text(),flags=re.M),flags=re.M)
 month_client=re.sub(r'^export ', '', re.sub(r'^import .*\n','',freeze_client_helpers((root/'src/business-month-client.mjs').read_text(),{'projectMissionAdsSnapshot':'mls-ads-performance.mjs','projectDailyBusinessSummary':'business-daily-summary.mjs','projectBusinessMonthAuditScope':'business-month-view-state.mjs','projectBusinessMonthView':'business-month-view-state.mjs','projectBusinessMonthVariantContributions':'business-variant-attribution.mjs','buildMonthlyFinancialSummary':'business-month-summary.mjs','projectMonthlyProfitPresentation':'monthly-profit-presentation.mjs','projectMonthlyProfitPresentationValue':'monthly-profit-presentation.mjs','projectAdsCalendar':'ads-calendar.mjs','projectBusinessMonthProducts':'business-month-products.mjs','projectBusinessMonth':'business-month.mjs','buildBusinessCheckpoint':'business-checkpoint.mjs','buildAccountDiagnosis':'account-diagnosis.mjs','projectBusinessCostDiagnostics':'business-cost-diagnostics.mjs','projectBusinessCostDiagnosticsEvidence':'business-cost-diagnostics.mjs','projectHistoricalCostPairDiagnostics':'historical-cost-evidence.mjs','projectRecordedBusinessBalance':'business-recorded-balance.mjs','buildRecordedBusinessBalance':'business-recorded-balance.mjs','projectBusinessCostDiagnosticsEvidenceV2':'business-cost-diagnostics.mjs','projectBusinessCostDiagnosticsEvidenceV3':'business-cost-diagnostics.mjs','deriveHistoricalCostComposition':'historical-cost-evidence.mjs','projectHistoricalCostPairDiagnosticsEvidence':'historical-cost-evidence.mjs','projectBackgroundCollectionDiagnostics':'background-collection-diagnostics.mjs','projectExpenseSchedule':'expense-schedule.mjs','buildMlsProductIntelligence':'mls-product-intelligence.mjs','simulateMlsPricingScenario':'mls-product-intelligence.mjs','buildMlsProductWorkbench':'mls-product-workbench.mjs','buildMlsProductFinancialEvidence':'mls-product-contribution.mjs','simulateMlsPricingWorkbench':'mls-product-workbench.mjs','createMlsProductWorkbenchView':'mls-product-workbench-view.mjs'}),flags=re.M),flags=re.M)
@@ -79,19 +79,21 @@ month_view=product_workbench_view+'\n'+month_view
 agent_period_view=source_namespace('agent-period-view.mjs','mlsAgentPeriodView','AGENT_PERIOD_CSS,agentPeriodBody',omit_server_functions=('createAgentPeriodController',))
 monthly_profit_presentation='' # Browser consumers already embed the frozen projectors.
 expense_ledger=source_namespace('expense-ledger.mjs','brazaExpenseLedgerStore','EXPENSE_LEDGER_SCHEMA,ExpenseLedgerError,projectExpenseLedger,readExpenseLedger,mutateExpenseLedger')
-incurred_production=source_namespace('incurred-production.mjs','mlsIncurredProductionStore','INCURRED_PRODUCTION_SCHEMA,IncurredProductionError,projectIncurredProduction,readIncurredProduction,mutateIncurredProduction,incurredProductionPeriods,incurredProductionRange')
+incurred_production=source_namespace('incurred-production.mjs','mlsIncurredProductionStore','INCURRED_PRODUCTION_SCHEMA,IncurredProductionError,projectIncurredProduction,readIncurredProduction,mutateIncurredProduction,incurredProductionPeriods',omit_server_functions=('incurredProductionRange',))
 incurred_production_workspace=source_namespace('incurred-production-workspace.mjs','mlsIncurredProductionWorkspace','readIncurredProductionWorkspace,mutateIncurredProductionWorkspace,readSavedProductionSourceCandidate')
 production_confirmation_proposal=source_namespace('production-confirmation-proposal.mjs','mlsProductionConfirmationProposal','ProductionConfirmationProposalError,projectProductionConfirmationProposal,readProductionConfirmationProposal')
 production_confirmation_proposal_view=source_namespace('production-confirmation-proposal-view.mjs','mlsProductionConfirmationProposalView','PRODUCTION_CONFIRMATION_PROPOSAL_CSS,PRODUCTION_CONFIRMATION_PROPOSAL_CLIENT',{'projectProductionConfirmationProposal':'production-confirmation-proposal.mjs','buildProductionConfirmationPatch':'production-confirmation-proposal-view.mjs'},omit_server_functions=('buildProductionConfirmationPatch',))
 production_weekly_close=source_namespace('production-weekly-close.mjs','mlsProductionWeeklyClose','productionWeeklyPeriod,productionWeeklyNextClose,productionWeeklyEndDates,productionWeeklyAffectedEnds,productionWeeklyRecordHash,prepareProductionWeeklySource,buildProductionWeeklyReport,buildProductionWeeklyReportFromSource')
-production_weekly_store=source_namespace('production-weekly-store.mjs','mlsProductionWeeklyStore','PRODUCTION_WEEKLY_SCHEMA,ProductionWeeklyClosingError,readProductionWeeklyClosingWorkspace,mutateProductionWeeklyClosingWorkspace,runProductionWeeklyClosing')
+production_weekly_store=source_namespace('production-weekly-store.mjs','mlsProductionWeeklyStore','PRODUCTION_WEEKLY_SCHEMA,ProductionWeeklyClosingError,readProductionWeeklyClosingWorkspace,mutateProductionWeeklyClosingWorkspace,runProductionWeeklyClosing,readProductionCoverageSource')
+production_coverage=source_namespace('production-coverage.mjs','mlsProductionCoverage','ProductionCoverageError,readProductionCoverageWorkspace,mutateProductionCoverageWorkspace,projectProductionCoverageWorkspace')
+production_coverage_view=source_namespace('production-coverage-view.mjs','mlsProductionCoverageView','PRODUCTION_COVERAGE_CSS,productionCoverageBody,PRODUCTION_COVERAGE_CLIENT',{'projectProductionCoverageWorkspace':'production-coverage.mjs'})
 production_weekly_view=source_namespace('production-weekly-view.mjs','mlsProductionWeeklyView','PRODUCTION_WEEKLY_CSS,productionWeeklyClosingBody,PRODUCTION_WEEKLY_CLIENT',{'projectProductionWeeklyClosingWorkspace':'production-weekly-view.mjs'},omit_server_functions=('projectProductionWeeklyClosingWorkspace',))
 incurred_production_view=source_namespace('incurred-production-view.mjs','mlsIncurredProductionView','INCURRED_PRODUCTION_CSS,incurredProductionBody,INCURRED_PRODUCTION_CLIENT',{'projectIncurredProduction':'incurred-production.mjs','incurredProductionPeriods':'incurred-production.mjs','incurredProductionRange':'incurred-production.mjs','buildIncurredProductionAnalytics':'incurred-production-analytics.mjs','projectIncurredProductionWorkspace':'incurred-production-view.mjs'},omit_server_functions=('projectIncurredProductionWorkspace',))
 physical_returns=source_namespace('physical-returns.mjs','mlsPhysicalReturnsStore','PHYSICAL_RETURNS_SCHEMA,PhysicalReturnsError,projectPhysicalReturns,readPhysicalReturns,readPhysicalReturnReceiptReplay,commitPhysicalReturnReceipt,mutatePhysicalReturns')
-business_original_items=source_namespace('business-original-items.mjs','mlsBusinessOriginalItems','BUSINESS_ORIGINAL_ITEMS_SCHEMA,projectBusinessOriginalItems,projectPhysicalReturnsOriginalItemsWorkspace')
+business_original_items=source_namespace('business-original-items.mjs','mlsBusinessOriginalItems','BUSINESS_ORIGINAL_ITEMS_SCHEMA,projectBusinessOriginalItems',omit_server_functions=('projectPhysicalReturnsOriginalItemsWorkspace',))
 returns_original_items_view=source_namespace('returns-original-items-view.mjs','mlsReturnsOriginalItemsView','RETURNS_ORIGINAL_ITEMS_CSS,returnsOriginalItemsBody',omit_server_functions=('createReturnOriginalItemsView',))
 physical_returns_workspace=source_namespace('physical-returns-workspace.mjs','mlsPhysicalReturnsWorkspace','buildPhysicalReturnCandidates,readPhysicalReturnsWorkspace,readPhysicalReturnsOriginalItemsWorkspace,mutatePhysicalReturnsWorkspace')
-returns_receipt_proposal=source_namespace('returns-receipt-proposal.mjs','mlsReturnsReceiptProposal','ReturnReceiptError,projectReturnsReceiptWorkspace,readReturnReceiptContext,readReturnsReceiptWorkspace')
+returns_receipt_proposal=source_namespace('returns-receipt-proposal.mjs','mlsReturnsReceiptProposal','ReturnReceiptError,readReturnReceiptContext,readReturnsReceiptWorkspace',omit_server_functions=('projectReturnsReceiptWorkspace',))
 returns_receipt_confirmation=source_namespace('returns-receipt-confirmation.mjs','mlsReturnsReceiptConfirmation','projectReturnReceiptConfirmation,confirmReturnsReceipt')
 returns_case_cards_view=source_namespace('returns-case-cards-view.mjs','mlsReturnsCaseCardsView','RETURNS_CASE_CARDS_CSS,returnsCaseCardsBody',omit_server_functions=('createReturnCaseCardsView',))
 physical_returns_view=source_namespace('physical-returns-view.mjs','mlsPhysicalReturnsView','PHYSICAL_RETURNS_CSS,physicalReturnsBody,PHYSICAL_RETURNS_CLIENT',{'projectPhysicalReturns':'physical-returns.mjs','projectPhysicalReturnsWorkspace':'physical-returns-view.mjs','projectBusinessOriginalItems':'business-original-items.mjs','projectPhysicalReturnsOriginalItemsWorkspace':'business-original-items.mjs','projectBusinessReconciliation':'business-reconciliation.mjs','projectReconciliationFrame':'../../finance/src/reconciliation-frame.mjs','projectOriginalItemsFrame':'../../finance/src/original-items-frame.mjs','createReturnOriginalItemsView':'returns-original-items-view.mjs','projectReturnsReceiptWorkspace':'returns-receipt-proposal.mjs','createReturnCaseCardsView':'returns-case-cards-view.mjs','createReturnLocalArtworkLoader':'returns-local-artwork.mjs'},omit_server_functions=('projectPhysicalReturnsWorkspace',))
@@ -175,19 +177,46 @@ listing_factory_view=re.sub(r'^export ', '', re.sub(r'^import .*\n','',listing_f
 listing_factory_view='const mlsListingFactoryView=(()=>{\n'+listing_factory_view+'\nreturn {MLS_LISTING_FACTORY_CSS,mlsListingFactoryBody,MLS_LISTING_FACTORY_CLIENT};\n})();\nconst {MLS_LISTING_FACTORY_CSS,mlsListingFactoryBody,MLS_LISTING_FACTORY_CLIENT}=mlsListingFactoryView;\n'
 # Browser AI Sales runs only behind its independent exact owner opt-in.
 # Isolate each module: generic helper names must never collide across domains.
-def build_ai_sales_browser_core():
+def build_ai_sales_browser_core(*, server_only=False):
     parts=[]
-    registry_functions=re.findall(r'^export function projectProductRegistryFrame\([\s\S]*?^\}', (root/'src/product-registry.mjs').read_text(),flags=re.M)
-    assert len(registry_functions)==1
-    registry_function=registry_functions[0].removeprefix('export ')
-    parts.append('modules["product-registry.mjs"]={projectProductRegistryFrame:'+registry_function+'};')
+    if not server_only:
+        registry_functions=re.findall(r'^export function projectProductRegistryFrame\([\s\S]*?^\}', (root/'src/product-registry.mjs').read_text(),flags=re.M)
+        assert len(registry_functions)==1
+        registry_function=registry_functions[0].removeprefix('export ')
+        parts.append('modules["product-registry.mjs"]={projectProductRegistryFrame:'+registry_function+'};')
     filenames=['mls-ai-sales-contracts.mjs','mls-ai-sales-imports.mjs',
         'mls-ai-sales-campaign-planner.mjs','mls-ai-sales-profitability-gate.mjs',
         'mls-ai-sales-capability-audit.mjs','mls-ai-sales-catalog.mjs',
         'mls-ai-sales-affiliates.mjs','mls-ai-sales-performance.mjs']
+    if server_only:
+        filenames=[name for name in filenames if name not in ('mls-ai-sales-campaign-planner.mjs','mls-ai-sales-capability-audit.mjs')]
     names=[]
     for filename in filenames:
         source=(root/'src'/filename).read_text()
+        if server_only and filename=='mls-ai-sales-catalog.mjs':
+            registry_import="import {projectProductRegistryFrame} from './product-registry.mjs';\n"
+            assert source.count(registry_import)==1
+            source=source.replace(registry_import,'',1)
+            for name in ('projectAiSalesSavedVariant','loadAiSalesSavedCatalog','loadAiSalesSavedVariants'):
+                definitions=re.findall(r'^export (?:async )?function '+re.escape(name)+r'\([\s\S]*?^\}',source,flags=re.M)
+                assert len(definitions)==1,name
+                source=source.replace(definitions[0],'',1)
+        if server_only and filename=='mls-ai-sales-performance.mjs':
+            # Reporting and its arithmetic helpers run in the unchanged browser.
+            # Persistence keeps the full ledger/import validation path.
+            for name in ('bounded','sum','ratio'):
+                definitions=re.findall(r'^function '+re.escape(name)+r'\([^\n]*\}\r?$',source,flags=re.M)
+                assert len(definitions)==1,name
+                source=source.replace(definitions[0],'',1)
+            for name in ('covers','groupReport','buildAiSalesPerformanceReport'):
+                definitions=re.findall(r'^(?:export )?function '+re.escape(name)+r'\([\s\S]*?^\}',source,flags=re.M)
+                assert len(definitions)==1,name
+                source=source.replace(definitions[0],'',1)
+            # Remaining private references must fail closed; quoted metadata,
+            # comments, property access and object keys are not helper bindings.
+            references=re.sub(r'''"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|//[^\n]*|/\*[\s\S]*?\*/''','',source)
+            for name in ('bounded','sum','ratio','covers','groupReport','buildAiSalesPerformanceReport'):
+                assert not re.search(r'(?<![\w$.])'+re.escape(name)+r'(?![\w$]|\s*:)',references),name
         exports=re.findall(r'^export (?:async )?(?:function|class|const) ([A-Za-z_$][A-Za-z0-9_$]*)',source,flags=re.M)
         assert exports and len(exports)==len(set(exports)),filename
         assert not set(names).intersection(exports),filename
@@ -201,6 +230,12 @@ def build_ai_sales_browser_core():
         source=re.sub(r'^export ', '',source,flags=re.M)
         assert not re.search(r'^import |^export ',source,flags=re.M),filename
         parts.append('modules['+json.dumps(filename)+']=(()=>{\n'+source+'\nreturn {'+','.join(exports)+'};})();')
+    if server_only:
+        imports=re.findall(r"^import \{([^}]+)\} from './([^']+)';",(root/'src/mls-ai-sales-workspace-store.mjs').read_text(),flags=re.M)
+        assert imports
+        for required,filename in imports:
+            assert filename in filenames,filename
+            assert all(name.strip() in names for name in required.split(',')),filename
     # JSON interpolation preserves template literals/regexes through minification.
     return 'const MlsAiSalesCore=(()=>{const modules=Object.create(null);\n'+'\n'.join(parts)+'\nreturn Object.freeze(Object.assign({},'+','.join('modules['+json.dumps(f)+']' for f in filenames)+'));})();'
 ai_sales_view=(root/'src/mls-ai-sales-view.mjs').read_text()
@@ -223,7 +258,7 @@ ai_sales_store=re.sub(r"^import \{([^}]+)\} from './([^']+)';",replace_ai_store_
 ai_sales_store=re.sub(r'^export ', '',ai_sales_store,flags=re.M)
 assert not re.search(r'^import |^export ',ai_sales_store,flags=re.M)
 ai_sales_store_exports='AI_SALES_WORKSPACE_STORE_SCHEMA,AiSalesWorkspaceStoreError,normalizeAiSalesWorkspaceDraft,readAiSalesWorkspace,saveAiSalesWorkspace'
-ai_sales_store='const mlsAiSalesWorkspaceStore=(()=>{\n'+ai_sales_core+'\n'+ai_sales_store+'\nreturn {'+ai_sales_store_exports+'};\n})();\nconst {'+ai_sales_store_exports+'}=mlsAiSalesWorkspaceStore;\n'
+ai_sales_store='const mlsAiSalesWorkspaceStore=(()=>{\n'+build_ai_sales_browser_core(server_only=True)+'\n'+ai_sales_store+'\nreturn {'+ai_sales_store_exports+'};\n})();\nconst {'+ai_sales_store_exports+'}=mlsAiSalesWorkspaceStore;\n'
 ads=re.sub(r'^import .*\n','',(root/'src/admin-ads-today.mjs').read_text(),flags=re.M).replace('export function adsToday','function adsToday')
 orders=(root/'src/shop-orders.mjs').read_text().replace('export function shopOrders','function shopOrders')
 daily_shop_orders=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/daily-shop-orders.mjs').read_text(),flags=re.M),flags=re.M)
@@ -291,7 +326,7 @@ workspace_auth=re.sub(r'^export ', '', (root/'src/unified-auth.mjs').read_text()
 workspace_auth='const brazaWorkspaceAuth = (() => {\n'+workspace_auth+'\nreturn {readOwnerSession,readWorkspaceSession,handleWorkspaceAuth};\n})();\nconst {readOwnerSession,readWorkspaceSession,handleWorkspaceAuth}=brazaWorkspaceAuth;\n'
 theme=re.sub(r'^export ', '', (root/'src/theme.mjs').read_text(), flags=re.M)
 ads_presentation=re.sub(r'^export ', '', (root/'src/ads-presentation.mjs').read_text(), flags=re.M)
-admin=app_release+'\n'+app_release_view+'\n'+agent_period_view+'\n'+monthly_profit_presentation+'\n'+dtf_layout+'\n'+dtf_view+'\n'+production_dtf+'\n'+cost_rule_learning+'\n'+saved_catalog_media+'\n'+catalog_classification+'\n'+historical_cost_evidence+'\n'+historical_cost_orchestration+'\n'+cost_rules+'\n'+cost_rules_view+'\n'+expense_ledger+'\n'+expense_schedule+'\n'+expense_ledger_view+'\n'+business_products+'\n'+business_month_publication+'\n'+business_original_items+'\n'+business_reconciliation+'\n'+incurred_production+'\n'+incurred_production_workspace+'\n'+production_confirmation_proposal+'\n'+production_confirmation_proposal_view+'\n'+production_weekly_close+'\n'+production_weekly_store+'\n'+production_weekly_view+'\n'+incurred_production_view+'\n'+physical_returns+'\n'+physical_returns_workspace+'\n'+returns_receipt_proposal+'\n'+returns_receipt_confirmation+'\n'+returns_original_items_view+'\n'+returns_case_cards_view+'\n'+physical_returns_view+'\n'+return_manufacturing_links+'\n'+return_manufacturing_links_workspace+'\n'+return_manufacturing_links_view+'\n'+business_historical_returns+'\n'+business_escrow_releases+'\n'+business_escrow_release_coverage+'\n'+business_income_overview+'\n'+business_income_detail+'\n'+business_pending_income_scan+'\n'+business_historical_release_calendars+'\n'+financial_audit_orchestration+'\n'+escrow_releases_view+'\n'+business_adjusted_balance+'\n'+business_financial_closeout+'\n'+financial_closeout_view+'\n'+business_reconciliation_view+'\n'+business_month_ads_history+'\n'+business_variant_attribution+'\n'+business_month+'\n'+agent_learning_report+'\n'+agent_learning+'\n'+daily_profit_presentation+'\n'+business_daily_summary+'\n'+business_month_view_state+'\n'+business_checkpoint+'\n'+business_sync+'\n'+business_history_sync+'\n'+hermes_context+'\n'+recorded_business_balance+'\n'+background_collection_diagnostics+'\n'+business_cost_diagnostics+'\n'+saved_order_items+'\n'+product_registry+'\n'+production_cost_periods+'\n'+production_cost_periods_view+'\n'+saved_catalog_view+'\n'+listing_factory_view+'\n'+ai_sales_view+'\n'+ai_sales_store+'\n'+automation_workspace+'\n'+production_daily_finance_view+'\n'+production_workspace_view+'\n'+business_day_view+'\n'+income_overview_client+'\n'+agent_art+'\n'+agent_learning_view+'\n'+mission_view+'\n'+agent_registry_view+'\n'+month_view+'\n'+month_client+'\n'+client+'\n'+view+'\n'+ads+'\n'+orders+'\n'+daily_shop_orders+'\n'+items+'\n'+variants+'\n'+observations+'\n'+production_costs+'\n'+operator_cost_corrections+'\n'+store_summary+'\n'+store_invoice_tax+'\n'+store_product_summary+'\n'+store_returns_summary+'\n'+store_admin+'\n'+variant_sync+'\n'+re.sub(r'^import .*\n','',admin,flags=re.M)
+admin=app_release+'\n'+app_release_view+'\n'+agent_period_view+'\n'+monthly_profit_presentation+'\n'+dtf_layout+'\n'+dtf_view+'\n'+production_dtf+'\n'+cost_rule_learning+'\n'+saved_catalog_media+'\n'+catalog_classification+'\n'+historical_cost_evidence+'\n'+historical_cost_orchestration+'\n'+cost_rules+'\n'+cost_rules_view+'\n'+expense_ledger+'\n'+expense_schedule+'\n'+expense_ledger_view+'\n'+business_products+'\n'+business_month_publication+'\n'+business_original_items+'\n'+business_reconciliation+'\n'+incurred_production+'\n'+incurred_production_workspace+'\n'+production_confirmation_proposal+'\n'+production_confirmation_proposal_view+'\n'+production_weekly_close+'\n'+production_weekly_store+'\n'+production_coverage+'\n'+production_coverage_view+'\n'+production_weekly_view+'\n'+incurred_production_view+'\n'+physical_returns+'\n'+physical_returns_workspace+'\n'+returns_receipt_proposal+'\n'+returns_receipt_confirmation+'\n'+returns_original_items_view+'\n'+returns_case_cards_view+'\n'+physical_returns_view+'\n'+return_manufacturing_links+'\n'+return_manufacturing_links_workspace+'\n'+return_manufacturing_links_view+'\n'+business_historical_returns+'\n'+business_escrow_releases+'\n'+business_escrow_release_coverage+'\n'+business_income_overview+'\n'+business_income_detail+'\n'+business_pending_income_scan+'\n'+business_historical_release_calendars+'\n'+financial_audit_orchestration+'\n'+escrow_releases_view+'\n'+business_adjusted_balance+'\n'+business_financial_closeout+'\n'+financial_closeout_view+'\n'+business_reconciliation_view+'\n'+business_month_ads_history+'\n'+business_variant_attribution+'\n'+business_month+'\n'+agent_learning_report+'\n'+agent_learning+'\n'+daily_profit_presentation+'\n'+business_daily_summary+'\n'+business_month_view_state+'\n'+business_checkpoint+'\n'+business_sync+'\n'+business_history_sync+'\n'+hermes_context+'\n'+recorded_business_balance+'\n'+background_collection_diagnostics+'\n'+business_cost_diagnostics+'\n'+saved_order_items+'\n'+product_registry+'\n'+production_cost_periods+'\n'+production_cost_periods_view+'\n'+saved_catalog_view+'\n'+listing_factory_view+'\n'+ai_sales_view+'\n'+ai_sales_store+'\n'+automation_workspace+'\n'+production_daily_finance_view+'\n'+production_workspace_view+'\n'+business_day_view+'\n'+income_overview_client+'\n'+agent_art+'\n'+agent_learning_view+'\n'+mission_view+'\n'+agent_registry_view+'\n'+month_view+'\n'+month_client+'\n'+client+'\n'+view+'\n'+ads+'\n'+orders+'\n'+daily_shop_orders+'\n'+items+'\n'+variants+'\n'+observations+'\n'+production_costs+'\n'+operator_cost_corrections+'\n'+store_summary+'\n'+store_invoice_tax+'\n'+store_product_summary+'\n'+store_returns_summary+'\n'+store_admin+'\n'+variant_sync+'\n'+re.sub(r'^import .*\n','',admin,flags=re.M)
 admin=admin.replace('export {adminFetch,schedule,scheduledWork,DEFAULTS,SCHEMA,validateSettings,workspaceAuthFetch};','')
 needle='    const url = new URL(request.url);'
 assert original.count(needle)==1
