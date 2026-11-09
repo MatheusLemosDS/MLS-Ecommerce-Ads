@@ -19,7 +19,8 @@ function mountRegistry(html,{clock='2026-11-01T03:00:00Z',date='2026-11-01'}={})
  const setup=`
   const NativeDailyTestDate=Date;globalThis.Date=class extends NativeDailyTestDate{constructor(...args){super(...(args.length?args:[${Date.parse(clock)}]));}static now(){return ${Date.parse(clock)};}};
   globalThis.testSelectedDay=${JSON.stringify(date)};
-  globalThis.brazaDayDashboard={getSelection:()=>testSelectedDay,getSnapshot:()=>({schema:'mls_day_snapshot_v1',date:testSelectedDay,state:'PROVISIONAL',net_cents:0,net_basis:'ESTIMATE',sales_cents:0,ads_spend_cents:0,paid_orders:0,pending:[]}),getTrend:()=>null};
+  globalThis.testDailySnapshot={schema:'mls_day_snapshot_v1',state:'PROVISIONAL',net_cents:0,net_basis:'ESTIMATE',sales_cents:0,ads_spend_cents:0,paid_orders:0,pending:[]};
+  globalThis.brazaDayDashboard={getSelection:()=>testSelectedDay,getSnapshot:()=>({...testDailySnapshot,date:testSelectedDay}),getTrend:()=>null};
   globalThis.brazaMonthDashboard={getSnapshot:()=>null,getSourceStatus:()=>null};
  `;
  return ownerReportBrowser(html.replace(source,setup+source),{scriptIncludes:'globalThis.mlsAgentRegistry='});
@@ -47,6 +48,23 @@ test('Today, Yesterday and custom daily KPI labels match the selected Brasília 
  const beforeRollover=mountRegistry(commandCenterBody()+businessDayBody()+'<script>'+AGENT_REGISTRY_CLIENT+'</script>',{clock:'2026-11-01T02:59:59Z',date:'2026-10-31'});
  assert.equal(beforeRollover.nodes.get('commandCenterNetLabel').textContent,'Lucro estimado hoje','UTC November still belongs to October in Brasília before 03:00 UTC');
  beforeRollover.run('mlsAgentRegistry.stop();');
+});
+
+test('Home profit explanation stays visible inside its KPI and retains cost caveats alongside daily return and adjustment uncertainty',()=>{
+ const html=commandCenterBody(),card=html.match(/<article[^>]*data-mission-metric="net"[^>]*>([\s\S]*?)<\/article>/)?.[1];assert.ok(card);
+ assert.match(card,/id="commandCenterNetHelp"/);assert.ok(card.indexOf('id="commandCenterNetHelp"')<card.indexOf('id="missionProfitState"'));assert.equal([...html.matchAll(/id="commandCenterNetHelp"/g)].length,1,'the explanation is not duplicated in collapsed context');
+ const b=mountRegistry(html+businessDayBody()+'<script>'+AGENT_REGISTRY_CLIENT+'</script>'),help=()=>b.nodes.get('commandCenterNetHelp').textContent;
+ try{
+  b.run('Object.assign(testDailySnapshot,{net_cents:25000,sales_cents:100000,ads_spend_cents:10000,paid_orders:20,pending:["RETURNS_NOT_RECONCILED","ADJUSTMENTS_PENDING"]});mlsAgentRegistry.refresh();');
+  assert.match(help(),/Produção dos pedidos, anúncios e parcelas de DAS\/despesas considerados/);assert.match(help(),/Estimativa, sem confirmar recebimento/);assert.match(help(),/Devoluções e reembolsos ainda podem alterar a estimativa\./);assert.match(help(),/Ajustes do repasse ainda em conferência\./);assert.doesNotMatch(help(),/pedido\(s\) com devolução|R\$/,'Home does not invent daily return counts or refund amounts');
+  assert.equal(b.run('mlsAgentRegistry.getSnapshot().day.net_cents'),25000);assert.equal(b.run('mlsAgentRegistry.getSnapshot().day.margin_bps'),2500);
+  b.run('Object.assign(testDailySnapshot,{state:"PARTIAL_COSTS",net_cents:18000,net_basis:"KNOWN_COSTS",pending:["PRODUCTION_COST_INCOMPLETE","RETURNS_NOT_RECONCILED","ADJUSTMENT_CONFLICT"]});mlsAgentRegistry.refresh();');
+  assert.match(help(),/Saldo após custos conhecidos; ainda pode diminuir\..*Devoluções e reembolsos.*Ajustes do repasse ainda em conferência/);assert.equal(b.run('mlsAgentRegistry.getSnapshot().day.net_cents'),18000);
+  b.run('Object.assign(testDailySnapshot,{net_cents:null,net_basis:null,pending:["EXTERNAL_EXPENSES_REQUIRED","RETURNS_NOT_RECONCILED","ADJUSTMENTS_PENDING"],presentation:{schema:"daily_profit_presentation_v1",state:"BEFORE_MONTHLY_COSTS",basis:"BEFORE_UNCONFIRMED_EXPENSES",amount_cents:9947,margin_bps:994,monthly_costs_missing:["EXTERNAL_EXPENSES_REQUIRED"],das_included:true,expenses_included:false}});mlsAgentRegistry.refresh();');
+  assert.match(help(),/Subtotal antes dos custos mensais.*não representa o lucro completo.*Devoluções e reembolsos.*Ajustes do repasse ainda em conferência/);assert.equal(b.run('mlsAgentRegistry.getSnapshot().day.net_cents'),null);assert.equal(b.run('mlsAgentRegistry.getSnapshot().day.presentation.amount_cents'),9947);
+  b.run('Object.assign(testDailySnapshot,{state:"PROVISIONAL",net_cents:25000,net_basis:"ESTIMATE",presentation:null,pending:[]});mlsAgentRegistry.refresh();');
+  assert.doesNotMatch(help(),/Devoluções e reembolsos|Ajustes do repasse|Subtotal antes/,'a different daily reading clears obsolete warnings');assert.equal(b.run('mlsAgentRegistry.getSnapshot().day.net_cents'),25000);assert.equal(b.calls.length,0,'showing uncertainty uses existing daily pending flags without new reads');
+ }finally{b.run('mlsAgentRegistry.stop();');}
 });
 
 for(const minify of [false,true])test(`generated owner daily labels preserve selected dates and perform no source reads (minify=${minify})`,async()=>{

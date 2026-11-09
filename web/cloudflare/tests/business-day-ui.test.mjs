@@ -23,6 +23,16 @@ async function evidence(){
  return structuredClone(await savedEvidence);
 }
 
+async function returnEvidence(){
+ const f=await collectionFixture({daily:true,allPaid:true,windowCounts:[2,1],paymentDelayMs:0});
+ try{
+  f.state.paymentHook=({index})=>f.provider({order_sn:f.serial(index),...(index===1?{}:{return_order_sn_list:index===0?['SYNTHETIC_DAILY_RETURN']:[]}),order_income:{order_sn:f.serial(index),original_cost_of_goods_sold:65.25,escrow_amount:47.51,...(index<60?{total_adjustment_amount:index===0?-5:0,escrow_amount_after_adjustment:index===0?42.51:47.51}:{}),ads_escrow_top_up_fee_or_technical_support_fee:0,items:[{item_id:f.item(index),model_id:0,line_item_id:index+1,quantity_purchased:1}]}});
+  let monthly=await f.invoke('start');for(let n=0;monthly.status==='RUNNING'&&n<20;n++)monthly=await f.invoke('step');assert.equal(monthly.status,'COMPLETE');monthly=await f.invoke('ads');
+  const publication=await readCompletedBusinessMonth(f.env,'2026-10',{now:f.now}),frames=publication.payload.slots.map(row=>row.frame),scope={publication_revision:publication.publication.source_revision,start_date:monthly.start_date,end_date:monthly.end_date,sources:frames.map(frame=>({run_id:frame.run_id,source_revision:frame.revision,start_date:frame.start_date,end_date:frame.end_date}))};
+  const daily=buildDailyBusinessSummary(monthly,frames,scope,validators);assert.ok(daily);assert.ok(projectDailyBusinessSummary(daily,monthly,scope));return {monthly,frames,scope,daily};
+ }finally{f.env.ADMIN_DB.db.close();f.financeEnv.FINANCE_DB.db.close();}
+}
+
 function browser(value,{search='?date=2026-10-10&tab=overview',now='2026-10-26T12:00:00Z'}={}){
  const context=vm.createContext({URL,URLSearchParams,serialized:JSON.stringify(value)}),ids=[...businessDayBody().matchAll(/\bid="([^"]+)"/g)].map(match=>match[1]);
  vm.runInContext(`
@@ -41,10 +51,40 @@ function browser(value,{search='?date=2026-10-10&tab=overview',now='2026-10-26T1
 
 test('daily overview has accessible day controls, a closed calculation and a responsive primary result',()=>{
  const html=businessDayBody(),ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(match=>match[1]);assert.equal(ids.length,new Set(ids).size);
- assert.match(html,/<h2 id="businessDayTitle">Lucro estimado do dia<\/h2>/);assert.match(html,/Por pedidos criados neste dia \(Brasília\)/);
+ assert.match(html,/<h2 id="businessDayTitle">Lucro estimado do dia<\/h2>/);assert.match(html,/Por pedidos pagos criados neste dia \(Brasília\)\. A produção descontada é a dessas vendas; fabricação por data fica em Produção\./);
+ assert.match(html,/<p id="businessDayHelp"[^>]*>[\s\S]*?<\/p><p id="businessDayReturns"[^>]*aria-live="polite"[^>]*>Aguardando a leitura de devoluções do dia\.<\/p>/);
+ assert.ok(html.indexOf('id="businessDayReturns"')<html.indexOf('id="businessDayCalculationDetails"'),'the return notice is visible without expanding the calculation');
  assert.match(html,/for="businessDayDate"/);assert.match(html,/id="businessDayDate"[^>]*type="date"[^>]*disabled/);assert.match(html,/role="status" aria-live="polite"/);
  assert.doesNotMatch(html,/<details[^>]*\bopen\b/);assert.match(html,/não são descontadas novamente/);
  assert.match(BUSINESS_DAY_CSS,/@media\(max-width:640px\)/);assert.match(BUSINESS_DAY_CSS,/@media\(max-width:360px\)/);assert.match(BUSINESS_DAY_CSS,/minmax\(0,1fr\)/);
+});
+
+test('daily return notice separates known returns from unread orders and explains payout without changing the financial snapshot',async()=>{
+ const data=await returnEvidence(),before=JSON.stringify(data),b=browser(data),row=data.daily.days[9];
+ assert.deepEqual([row.coverage.returns,row.coverage.returns_unknown,row.payout_basis,row.adjustment_cents],[1,1,'AFTER_ADJUSTMENTS',-500]);
+ b.run('brazaDayDashboard.prepare();');assert.equal(b.text('Returns'),'Aguardando a leitura de devoluções do dia.');b.activate();
+ assert.match(b.text('Returns'),/1 pedido\(s\) com devolução informada nesta leitura\./);assert.match(b.text('Returns'),/A leitura de devoluções está pendente em 1 pedido\(s\)\./);
+ assert.match(b.text('Returns'),/Repasse após os ajustes informados pela Shopee\./);assert.match(b.text('Returns'),/Devoluções e reembolsos ainda podem alterar a estimativa\./);
+ assert.doesNotMatch(b.text('Returns'),/2 pedido\(s\) com devolução|reembolso.*R\$/,'unknown return readings are not counted as confirmed returns or a refund amount');
+ const snapshot=b.json('brazaDayDashboard.getSnapshot()');assert.equal(snapshot.net_cents,row.estimate_cents,'the source estimate already accounts for its payout basis; notice must not deduct an adjustment again');
+ assert.deepEqual(Object.keys(snapshot).sort(),['schema','date','state','net_cents','net_basis','sales_cents','ads_spend_cents','paid_orders','pending','presentation','production_coverage'].sort(),'return detail does not extend the daily snapshot DTO');
+ await b.run('choose("2026-10-20")');assert.match(b.text('Returns'),/Nenhuma devolução informada nesta leitura\./);assert.match(b.text('Returns'),/Repasse base; ajustes ainda em conferência\./);assert.doesNotMatch(b.text('Returns'),/1 pedido\(s\)|Devoluções e reembolsos|Repasse após os ajustes/);
+ assert.equal(b.run('brazaDayDashboard.getSnapshot().net_cents'),data.daily.days[19].estimate_cents);
+ await b.run('control("Today").onclick()');assert.equal(b.text('Returns'),'Aguardando a leitura de devoluções do dia.');assert.equal(b.run('brazaDayDashboard.getSnapshot().net_cents'),null);
+ assert.equal(b.run('monthCalls.length'),0);assert.equal(b.run('typeof fetch'),'undefined');assert.equal(b.run('typeof setInterval'),'undefined');assert.equal(JSON.stringify(data),before);
+});
+
+test('return uncertainty remains explicit with incomplete production, missing monthly expenses and legacy history',async()=>{
+ for(const mode of ['production','expenses','legacy']){
+  const data=await returnEvidence();
+  if(mode==='production')data.monthly.product_summary=null;
+  if(mode==='expenses'){data.monthly.expenses={revision:0,external_expenses_cents:null,recharge_treatment:'UNCONFIRMED',updated_at:null};data.monthly.result={...data.monthly.result,net_estimate_cents:null,net_margin_bps:null,pending:[...new Set([...data.monthly.result.pending,'EXTERNAL_EXPENSES_REQUIRED'])]};}
+  if(mode==='legacy')delete data.frames[0].daily_breakdown;
+  data.daily=buildDailyBusinessSummary(data.monthly,data.frames,data.scope,validators);assert.ok(data.daily);const before=JSON.stringify(data),b=browser(data);b.activate();const row=data.daily.days[9],snapshot=b.json('brazaDayDashboard.getSnapshot()');
+  if(mode==='legacy'){assert.equal(b.text('Returns'),'Aguardando a leitura de devoluções do dia.');assert.equal(snapshot.net_cents,null);}
+  else{assert.match(b.text('Returns'),/Devoluções e reembolsos ainda podem alterar a estimativa\./);assert.match(b.text('Help'),/não representa o lucro completo do dia/);assert.equal(snapshot.net_cents,mode==='production'?row.known_estimate_cents:null);if(mode==='expenses')assert.equal(snapshot.presentation.amount_cents,row.operating_balance_cents-row.allocated_das_cents);}
+  assert.equal(b.run('monthCalls.length'),0);assert.equal(JSON.stringify(data),before);
+ }
 });
 
 test('the selected date is the Brasília day, handles month links, and rejects future or invalid URL dates',async()=>{

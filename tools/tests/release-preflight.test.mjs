@@ -33,7 +33,7 @@ test('release preflight passes only an exact reviewed local build and leaves rem
  assert.ok(RELEASE_ALLOWED_FILES.filter(x=>x.startsWith('web/finance/')).every(x=>RELEASE_APPROVED_PROTECTED_FILES.includes(x)));
 });
 
-test('manufacturing coverage keeps every protected Worker closed',()=>{
+test('daily result presentation keeps every protected Worker closed',()=>{
  assert.deepEqual(RELEASE_APPROVED_PROTECTED_FILES,[]);
  assert.ok(RELEASE_APPROVED_PROTECTED_FILES.every(x=>(x.startsWith('web/finance/')||x.startsWith('web/auth/')||x==='web/cloudflare/auth-worker.mjs')&&!/[?*\\]/.test(x)));
  for(const path of [
@@ -165,8 +165,8 @@ test('a malformed candidate cannot weaken exact hashes, literal paths or commerc
 });
 
 test('the focused release does not inherit unrelated AI-storage or previous-candidate permissions',()=>{
- assert.equal(RELEASE_BASE_COMMIT,'673dc8f4d3c6c36eaa41fcf33ae264130fa9ba18');
- for(const baseCommit of ['b09026880f9370358f4539b821d18ef8d5982085','d14df57d0b3305ce673a247f925d5dd0d68d191d','2ab4c9d8baa3c25e5816bcca14b4a0973ea73d5a','8d66525bc3b96914412a9538d3ec84048ac78dbb']){
+ assert.equal(RELEASE_BASE_COMMIT,'96e16057dc5190917622510ffc1b2130ced47841');
+ for(const baseCommit of ['673dc8f4d3c6c36eaa41fcf33ae264130fa9ba18','b09026880f9370358f4539b821d18ef8d5982085','d14df57d0b3305ce673a247f925d5dd0d68d191d','2ab4c9d8baa3c25e5816bcca14b4a0973ea73d5a','8d66525bc3b96914412a9538d3ec84048ac78dbb']){
   const oldBase=good();oldBase.baseCommit=baseCommit;
   assert.ok(evaluateReleasePreflight(oldBase).failures.includes('RELEASE_BASE_MISMATCH'));
  }
