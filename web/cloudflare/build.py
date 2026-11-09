@@ -179,11 +179,13 @@ listing_factory_view='const mlsListingFactoryView=(()=>{\n'+listing_factory_view
 # Isolate each module: generic helper names must never collide across domains.
 def build_ai_sales_browser_core(*, server_only=False):
     parts=[]
+    exports_by_module={}
     if not server_only:
         registry_functions=re.findall(r'^export function projectProductRegistryFrame\([\s\S]*?^\}', (root/'src/product-registry.mjs').read_text(),flags=re.M)
         assert len(registry_functions)==1
         registry_function=registry_functions[0].removeprefix('export ')
         parts.append('modules["product-registry.mjs"]={projectProductRegistryFrame:'+registry_function+'};')
+        exports_by_module['product-registry.mjs']={'projectProductRegistryFrame'}
     filenames=['mls-ai-sales-contracts.mjs','mls-ai-sales-imports.mjs',
         'mls-ai-sales-campaign-planner.mjs','mls-ai-sales-profitability-gate.mjs',
         'mls-ai-sales-capability-audit.mjs','mls-ai-sales-catalog.mjs',
@@ -201,6 +203,16 @@ def build_ai_sales_browser_core(*, server_only=False):
                 definitions=re.findall(r'^export (?:async )?function '+re.escape(name)+r'\([\s\S]*?^\}',source,flags=re.M)
                 assert len(definitions)==1,name
                 source=source.replace(definitions[0],'',1)
+        if server_only and filename=='mls-ai-sales-affiliates.mjs':
+            # Proposal drafting/approval run in the unchanged browser. The server
+            # keeps workspace validation/import, including imported-plan revocation.
+            for name in ('draftAiSalesAffiliateProposal','approveAiSalesAffiliateProposal'):
+                definitions=re.findall(r'^export async function '+re.escape(name)+r'\([\s\S]*?^\}',source,flags=re.M)
+                assert len(definitions)==1,name
+                source=source.replace(definitions[0],'',1)
+            references=re.sub(r'"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'|//[^\n]*|/\*[\s\S]*?\*/','',source)
+            for name in ('draftAiSalesAffiliateProposal','approveAiSalesAffiliateProposal'):
+                assert not re.search(r'(?<![\w$.])'+re.escape(name)+r'(?![\w$]|\s*:)',references),name
         if server_only and filename=='mls-ai-sales-performance.mjs':
             # Reporting and its arithmetic helpers run in the unchanged browser.
             # Persistence keeps the full ledger/import validation path.
@@ -221,10 +233,13 @@ def build_ai_sales_browser_core(*, server_only=False):
         assert exports and len(exports)==len(set(exports)),filename
         assert not set(names).intersection(exports),filename
         names.extend(exports)
+        exports_by_module[filename]=set(exports)
         def replace_import(match):
             dependencies=match.group(1).strip()
             dependency=match.group(2)
             assert dependency in ['product-registry.mjs']+filenames[:filenames.index(filename)],dependency
+            assert dependency in exports_by_module,dependency
+            assert all(name.strip() in exports_by_module[dependency] for name in dependencies.split(',')),dependency
             return 'const {'+dependencies+'}=modules['+json.dumps(dependency)+'];'
         source=re.sub(r"^import \{([^}]+)\} from './([^']+)';",replace_import,source,flags=re.M)
         source=re.sub(r'^export ', '',source,flags=re.M)
@@ -235,7 +250,7 @@ def build_ai_sales_browser_core(*, server_only=False):
         assert imports
         for required,filename in imports:
             assert filename in filenames,filename
-            assert all(name.strip() in names for name in required.split(',')),filename
+            assert all(name.strip() in exports_by_module[filename] for name in required.split(',')),filename
     # JSON interpolation preserves template literals/regexes through minification.
     return 'const MlsAiSalesCore=(()=>{const modules=Object.create(null);\n'+'\n'.join(parts)+'\nreturn Object.freeze(Object.assign({},'+','.join('modules['+json.dumps(f)+']' for f in filenames)+'));})();'
 ai_sales_view=(root/'src/mls-ai-sales-view.mjs').read_text()
