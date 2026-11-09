@@ -50,9 +50,13 @@ test('Today, Yesterday and custom daily KPI labels match the selected Brasília 
  beforeRollover.run('mlsAgentRegistry.stop();');
 });
 
-test('Home profit explanation stays visible inside its KPI and retains cost caveats alongside daily return and adjustment uncertainty',()=>{
+test('Home profit explanation stays visible below the metrics and retains cost caveats alongside daily return and adjustment uncertainty',()=>{
  const html=commandCenterBody(),card=html.match(/<article[^>]*data-mission-metric="net"[^>]*>([\s\S]*?)<\/article>/)?.[1];assert.ok(card);
- assert.match(card,/id="commandCenterNetHelp"/);assert.ok(card.indexOf('id="commandCenterNetHelp"')<card.indexOf('id="missionProfitState"'));assert.equal([...html.matchAll(/id="commandCenterNetHelp"/g)].length,1,'the explanation is not duplicated in collapsed context');
+ assert.doesNotMatch(card,/id="commandCenterNetHelp"/,'the full explanation must not increase compact KPI card height');
+ const helpIndex=html.indexOf('id="commandCenterNetHelp"'),metricsEnd=html.indexOf('</article>',html.indexOf('data-mission-metric="roas"')),contextIndex=html.indexOf('<details class="mls-kpi-context"'),agentsIndex=html.indexOf('id="commandAgents"');
+ assert.ok(metricsEnd>=0&&helpIndex>metricsEnd&&contextIndex>helpIndex&&agentsIndex>helpIndex,'the explanation is after the metric row and before collapsed context and agents');
+ const collapsed=html.match(/<details class="mls-kpi-context">([\s\S]*?)<\/details>/)?.[1];assert.ok(collapsed);assert.doesNotMatch(collapsed,/id="commandCenterNetHelp"/);assert.equal([...html.matchAll(/id="commandCenterNetHelp"/g)].length,1,'the explanation is unique and outside collapsed context');
+ assert.match(html,/<p[^>]*class="[^"]*command-profit-note[^"]*"[^>]*><strong>Base do lucro estimado:<\/strong> <span id="commandCenterNetHelp">/);
  const b=mountRegistry(html+businessDayBody()+'<script>'+AGENT_REGISTRY_CLIENT+'</script>'),help=()=>b.nodes.get('commandCenterNetHelp').textContent;
  try{
   b.run('Object.assign(testDailySnapshot,{net_cents:25000,sales_cents:100000,ads_spend_cents:10000,paid_orders:20,pending:["RETURNS_NOT_RECONCILED","ADJUSTMENTS_PENDING"]});mlsAgentRegistry.refresh();');
