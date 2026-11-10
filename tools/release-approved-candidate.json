@@ -1,11 +1,11 @@
 {
   "schema": "mls_release_candidate_v1",
-  "base_commit": "96e16057dc5190917622510ffc1b2130ced47841",
-  "prepared_source_commit": "fb4b91901f4e1cf8cf67ace57533ddef013a7f5c",
+  "base_commit": "bd01f64d7e290abb259e9c9dc2646496494a87f0",
+  "prepared_source_commit": "2f11437b15ae656fecf38c9838c240fb3169ea28",
   "owner_authorization": "OWNER_REQUESTED_ALL_PREPARED_IMPROVEMENTS_LIVE_2026_10_30",
   "commercial_writes_allowed": false,
   "expected_hashes": {
-    "app": "3ee87e09330e259bef0fdd8cb6e4a7ef2466c9aaee01140a88beb67e5ca8af65",
+    "app": "1ddfffce64190ef09c085946605a8ed19cc5149bd52a91e42b67c40804007750",
     "auth": "47c83f87f191fd0e5ff503d9c4bcf4671cd986b0965e66e84f1a6ed952dac925",
     "finance": "08ada5ecec92350f4f8301fdb7baa00f5f8083a0e8390296b2870e0ff3cdc1a5"
   },
@@ -19,7 +19,7 @@
     "README.md",
     "docs/MLS_CODEX_HANDOFF_2026_10_28.md",
     "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
-    "docs/MLS_DAILY_RESULT_CLARITY_2026_11_09.md",
+    "docs/MLS_EDITABLE_COSTS_2026_11_09.md",
     "docs/MLS_MASTER_MISSION_CHECKPOINT.json",
     "docs/ROADMAP_MLS_COMMERCE_OS.md",
     "tools/release-approved-candidate.json",
@@ -27,14 +27,13 @@
     "tools/tests/release-preflight.test.mjs",
     "tools/worker_project.mjs",
     "web/cloudflare/build.py",
-    "web/cloudflare/src/agent-registry-view.mjs",
     "web/cloudflare/src/app-release-view.mjs",
     "web/cloudflare/src/app-release.mjs",
-    "web/cloudflare/src/business-day-view.mjs",
+    "web/cloudflare/src/cost-rules-view.mjs",
     "web/cloudflare/tests/app-release-discovery-chrome.test.mjs",
     "web/cloudflare/tests/app-release.test.mjs",
-    "web/cloudflare/tests/business-day-ui.test.mjs",
-    "web/cloudflare/tests/daily-result-clarity-chrome.test.mjs",
-    "web/cloudflare/tests/today-estimated-profit-client.test.mjs"
+    "web/cloudflare/tests/child-cost-price-change.test.mjs",
+    "web/cloudflare/tests/cost-rules-ui.test.mjs",
+    "web/cloudflare/tests/editable-costs-chrome.test.mjs"
   ]
 }
