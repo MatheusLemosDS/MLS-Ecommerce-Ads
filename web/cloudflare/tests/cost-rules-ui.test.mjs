@@ -17,7 +17,8 @@ function browser(responder){
  new vm.Script(COST_RULE_CLIENT).runInContext(context);const workspace=context.brazaCostRules;
  const api=async(path,body)=>{const request=body===undefined?undefined:JSON.parse(JSON.stringify(body));calls.push({path,body:request});return responder(path,request);};
  const el=name=>elements.get('costRules'+name),field=(key,index=0)=>el('Rows').children[index].querySelector('[data-cost-rule-field="'+key+'"]');
- return {workspace,api,el,field,calls};
+ const priceField=(id='camiseta-infantil')=>{const find=row=>row.dataset.costRulePrice===id?row:row.children.map(find).find(Boolean);return find(el('Summary'));};
+ return {workspace,api,el,field,priceField,calls};
 }
 const state=(revision=1,values=structuredClone(COST_RULE_DEFAULTS))=>({revision,values,updated_at:'2026-10-24T12:00:00Z'});
 const findAssignment=(root,key,kind='field')=>{const dataset=kind==='field'?'costRuleAssignmentField':'costRuleAssignmentAction';const walk=row=>row.dataset[dataset]===key?row:row.children.map(walk).find(Boolean);return walk(root);};
@@ -139,4 +140,75 @@ test('an unavailable saved rule is repairable in its own scope and never selects
  const widget=b.workspace.assignmentControl({item_id:'101'}),type=findAssignment(widget,'rule');
  assert.equal(type.value,'regra-antiga');assert.equal(type.children.find(option=>option.value==='regra-antiga').disabled,true);assert.equal(findAssignment(widget,'save','action').disabled,true);assert.equal(findAssignment(widget,'remove','action').hidden,false);assert.match(widgetText(widget),/Recarregue os tipos ou retire essa associação/);assert.doesNotMatch(widgetText(widget),/Para infantil, escolha/);
  await findAssignment(widget,'remove','action').onclick();assert.deepEqual(b.calls.find(call=>call.path==='cost-rules/assignments').body.assignments,[{item_id:'101',model_id:null,rule_id:null,size:null}]);assert.equal(type.value,'');assert.equal(b.workspace.hasAssignment('101'),false);
+});
+
+test('simple cost values are visible before advanced conditions and product controls link to the real editor',async()=>{
+ const html=costRulesBody();assert.equal([...html.matchAll(/id="costRulesPriceSave"/g)].length,1);assert.ok(html.indexOf('id="costRulesPriceForm"')<html.indexOf('<details class="cost-rule-editor">'));assert.doesNotMatch(html,/<details[^>]*\bopen\b/);
+ assert.match(html,/todos os produtos que usam esta regra.*períodos de vendas salvos.*Exceções manuais têm prioridade.*fabricação antigos exigem uma correção histórica explícita/);
+ const b=browser(async()=>state());await b.workspace.start({api:b.api});assert.equal(b.priceField().value,'12.50');assert.match(widgetText(b.el('Summary')),/12,50 salvo por unidade vendida/);
+ const variation=b.workspace.assignmentControl({item_id:'101',model_id:'1'});selectChild(variation,'4');assert.equal(findAssignment(variation,'save','action').textContent,'Salvar tipo e tamanho');
+ const link=variation.children.flatMap(row=>row.children).find(row=>row.tag==='a');assert.ok(link);assert.equal(link.textContent,'Alterar valor deste tipo');assert.equal(link.href,'/admin?tab=margins#costRules');assert.equal(link.hidden,false);
+ const product=b.workspace.assignmentControl({item_id:'101'});assert.equal(findAssignment(product,'save','action').textContent,'Aplicar tipo a todas as variações');
+});
+
+test('amount-only save updates R$13.50 with the exact revision and preserves every rule condition and assignment',async()=>{
+ const values=structuredClone(COST_RULE_DEFAULTS);values.rules[0].options.unshift('2');values.rules.push({...values.rules[0],id:'camiseta-basica',label:'Camiseta básica',unit_cost_cents:1590,name_patterns:['camiseta basica'],options:['P','M','G','GG']});values.assignments=[{item_id:'101',model_id:'1',rule_id:'camiseta-infantil',size:'2'}];let current=state(7,values),recalcs=0;
+ const b=browser(async(path,body)=>{if(body){assert.equal(path,'cost-rules');current=state(8,body.values);}return current;});await b.workspace.start({api:b.api,onChanged:()=>{recalcs++;}});
+ b.priceField().value='13,50';b.priceField().oninput();assert.equal(b.el('PriceSave').disabled,false);assert.match(widgetText(b.el('Summary')),/12,50 salvo/,'the saved reference does not claim a draft has persisted');
+ await b.el('PriceForm').onsubmit({preventDefault(){}});const saved=b.calls.find(row=>row.body);assert.equal(saved.body.revision,7);const expected=structuredClone(values);expected.rules[0].unit_cost_cents=1350;assert.deepEqual(saved.body.values,expected);assert.deepEqual(values.assignments,[{item_id:'101',model_id:'1',rule_id:'camiseta-infantil',size:'2'}]);validateCostRules(saved.body.values);
+ assert.equal(recalcs,1);assert.equal(b.calls.length,2);assert.ok(!b.calls.some(row=>row.path.endsWith('/sync')));assert.equal(b.priceField().value,'13.50');assert.equal(b.field('amount').value,'13.50','advanced editing starts from the newly saved price');assert.match(widgetText(b.el('Summary')),/13,50 salvo/);assert.equal(b.el('PriceSave').disabled,true);
+});
+
+test('simple prices accept dot or comma decimals and reject invalid amounts before any write',async()=>{
+ for(const raw of ['0','-1','1.234','1e2','13,500','10000.01','R$ 13,50','','1,2,3']){
+  const b=browser(async()=>state());await b.workspace.start({api:b.api});b.priceField().value=raw;b.priceField().oninput();await b.el('PriceForm').onsubmit({preventDefault(){}});assert.equal(b.calls.length,1,raw);assert.match(b.el('PriceStatus').textContent,/duas casas|0,01/);
+ }
+ for(const [raw,cents] of [['13.50',1350],['13,50',1350],['10000.00',1000000]]){
+  const b=browser(async(path,body)=>body?state(2,body.values):state());await b.workspace.start({api:b.api});b.priceField().value=raw;b.priceField().oninput();await b.el('PriceForm').onsubmit({preventDefault(){}});assert.equal(b.calls.at(-1).body.values.rules[0].unit_cost_cents,cents);
+ }
+});
+
+test('a simple-price conflict preserves the draft and requires explicit reload before another save',async()=>{
+ let current=state(),posts=0;const b=browser(async(path,body)=>{if(body){posts++;throw Object.assign(Error('changed'),{status:409});}return current;});await b.workspace.start({api:b.api});b.priceField().value='13,50';b.priceField().oninput();await b.el('PriceForm').onsubmit({preventDefault(){}});
+ assert.equal(b.priceField().value,'13,50');assert.equal(b.el('PriceSave').disabled,true);assert.match(b.el('PriceStatus').textContent,/valores foram preservados.*Carregar valores salvos/);await b.el('PriceForm').onsubmit({preventDefault(){}});assert.equal(posts,1);
+ current=state(2,{rules:[{...COST_RULE_DEFAULTS.rules[0],unit_cost_cents:1275}]});await b.el('PriceReload').onclick();assert.equal(b.priceField().value,'12.75');assert.equal(b.field('amount').value,'12.75');assert.equal(b.el('PriceSave').disabled,true);
+});
+
+test('advanced drafts block amount-only saving and cannot be overwritten by it',async()=>{
+ let current=state();const b=browser(async(path,body)=>{if(body)current=state(2,body.values);return current;});await b.workspace.start({api:b.api});b.priceField().value='13,50';b.priceField().oninput();b.field('label').value='Infantil especial';b.field('label').oninput();assert.equal(b.el('PriceSave').disabled,true);await b.el('PriceForm').onsubmit({preventDefault(){}});assert.equal(b.calls.length,1);assert.equal(b.field('label').value,'Infantil especial');assert.equal(b.priceField().value,'13,50');
+ await b.el('Form').onsubmit({preventDefault(){}});assert.equal(b.calls.at(-1).body.values.rules[0].label,'Infantil especial');assert.equal(b.calls.at(-1).body.values.rules[0].unit_cost_cents,1250,'advanced save never silently includes an unsaved simple-price draft');assert.equal(b.priceField().value,'13,50');assert.equal(b.el('PriceSave').disabled,true,'the old simple draft cannot silently rebase to the advanced save revision');assert.match(b.el('PriceStatus').textContent,/versão salva mudou.*preservados/);
+});
+
+test('an assignment in flight blocks simple save and its new revision cannot silently rebase the price draft',async()=>{
+ let current=state(),finish;const b=browser(async(path,body)=>{if(path==='cost-rules/assignments')return new Promise(resolve=>{finish=()=>{current=state(2,{...current.values,assignments:body.assignments});resolve(current);};});if(path.endsWith('/sync'))return {processed:['101'],matched_variants:[]};return current;});await b.workspace.start({api:b.api});b.priceField().value='13,50';b.priceField().oninput();const control=b.workspace.assignmentControl({item_id:'101',model_id:'1'});selectChild(control,'4');const work=findAssignment(control,'save','action').onclick();await Promise.resolve();assert.equal(b.el('PriceSave').disabled,true);await b.el('PriceForm').onsubmit({preventDefault(){}});assert.equal(b.calls.filter(row=>row.path==='cost-rules'&&row.body).length,0);
+ finish();await work;assert.equal(b.priceField().value,'13,50');assert.equal(b.el('PriceSave').disabled,true);assert.match(b.el('PriceStatus').textContent,/versão salva mudou.*preservados/);await b.el('PriceForm').onsubmit({preventDefault(){}});assert.equal(b.calls.filter(row=>row.path==='cost-rules'&&row.body).length,0);
+});
+
+test('simple save is single-flight and preserves an advanced draft created while the response is pending',async()=>{
+ let finish,recalcs=0;const b=browser(async(path,body)=>body?new Promise(resolve=>{finish=()=>resolve(state(2,body.values));}):state());await b.workspace.start({api:b.api,onChanged:()=>{recalcs++;}});b.priceField().value='13,50';b.priceField().oninput();const work=b.el('PriceForm').onsubmit({preventDefault(){}});await Promise.resolve();await b.el('PriceForm').onsubmit({preventDefault(){}});assert.equal(b.calls.filter(row=>row.body).length,1);
+ b.field('label').value='Meu rascunho infantil';b.field('label').oninput();finish();await work;assert.equal(b.field('label').value,'Meu rascunho infantil');assert.equal(b.field('amount').value,'12.50','preserved advanced fields are not rewritten by the quick response');assert.equal(b.el('Save').disabled,true,'review is required before an old advanced amount can replace the newly saved price');assert.equal(b.priceField().value,'13.50');assert.equal(recalcs,1);assert.match(b.el('Status').textContent,/rascunho avançado foi preservado.*revisar/);
+});
+
+test('a recalculation failure after persistence reports a saved value and cannot cause a duplicate cost write',async()=>{
+ let recalcs=0;const b=browser(async(path,body)=>body?state(2,body.values):state());await b.workspace.start({api:b.api,onChanged:()=>{recalcs++;throw Error('recalculation unavailable');}});b.priceField().value='13,50';b.priceField().oninput();await b.el('PriceForm').onsubmit({preventDefault(){}});assert.match(b.el('PriceStatus').textContent,/Valores salvos.*Reabra o período/);assert.equal(b.priceField().value,'13.50');assert.equal(b.el('PriceSave').disabled,true);await b.el('PriceForm').onsubmit({preventDefault(){}});assert.equal(b.calls.filter(row=>row.body).length,1);assert.equal(recalcs,1);
+});
+
+test('refreshed price inputs remain disabled until the cached recalculation has finished',async()=>{
+ let finish,recalculating;const b=browser(async(path,body)=>body?state(2,body.values):state());await b.workspace.start({api:b.api,onChanged:()=>{recalculating=true;return new Promise(resolve=>{finish=resolve;});}});b.priceField().value='13,50';b.priceField().oninput();const work=b.el('PriceForm').onsubmit({preventDefault(){}});for(let n=0;n<8&&!recalculating;n++)await Promise.resolve();assert.equal(recalculating,true);assert.equal(b.priceField().value,'13.50');assert.equal(b.priceField().disabled,true,'newly rendered saved fields keep the shared write lock while recalculation is pending');assert.equal(b.el('PriceSave').disabled,true);await b.el('PriceForm').onsubmit({preventDefault(){}});assert.equal(b.calls.filter(row=>row.body).length,1);finish();await work;assert.equal(b.priceField().disabled,false);assert.equal(b.el('PriceSave').disabled,true);
+});
+
+test('a nondiscarding refresh preserves a simple draft and explicit reload clears both editing areas',async()=>{
+ let current=state();const b=browser(async()=>current);await b.workspace.start({api:b.api});b.priceField().value='13,50';b.priceField().oninput();b.field('label').value='Rascunho avançado';b.field('label').oninput();current=state(2,{rules:[{...COST_RULE_DEFAULTS.rules[0],unit_cost_cents:1375}]});await b.workspace.start({api:b.api});assert.equal(b.priceField().value,'13,50');assert.equal(b.field('label').value,'Rascunho avançado');assert.equal(b.el('PriceSave').disabled,true);assert.equal(b.el('Save').disabled,true);await b.el('Reload').onclick();assert.equal(b.priceField().value,'13.75');assert.equal(b.field('label').value,'Camiseta infantil');assert.equal(b.field('amount').value,'13.75');assert.equal(b.el('PriceSave').disabled,true);assert.equal(b.el('Save').disabled,true);
+});
+
+test('a valid response from a later or different writer cannot confirm or rebase a simple-price draft',async()=>{
+ for(const [revision,change] of [[3,values=>{values.rules[0].unit_cost_cents=1450;}],[2,values=>{values.rules[0].unit_cost_cents=1450;}],[3,()=>{}],[2,values=>{values.rules[0].options=['2','4'];}],[2,values=>{values.assignments=[{item_id:'101',model_id:'1',rule_id:'camiseta-infantil',size:'4'}];}]]){
+  let recalcs=0;const b=browser(async(path,body)=>{if(!body)return state();const values=structuredClone(body.values);change(values);validateCostRules(values);return state(revision,values);});await b.workspace.start({api:b.api,onChanged:()=>{recalcs++;}});b.priceField().value='13,50';b.priceField().oninput();await b.el('PriceForm').onsubmit({preventDefault(){}});
+  assert.equal(b.priceField().value,'13,50');assert.equal(b.el('PriceSave').disabled,true);assert.match(b.el('PriceStatus').textContent,new RegExp('versão '+revision+'.*confirmação.*incerta.*preservados.*Carregar valores salvos'));assert.doesNotMatch(b.el('PriceStatus').textContent,/^Valores salvos/);assert.equal(recalcs,0);await b.el('PriceForm').onsubmit({preventDefault(){}});assert.equal(b.calls.filter(row=>row.body).length,1,'uncertain acknowledgement never retries with a new revision');
+ }
+});
+
+test('semantic confirmation accepts reordered JSON object keys while preserving complete rule and assignment values',async()=>{
+ const reorder=value=>Array.isArray(value)?value.map(reorder):value&&typeof value==='object'?Object.fromEntries(Object.keys(value).reverse().map(key=>[key,reorder(value[key])])):value;
+ const values=structuredClone(COST_RULE_DEFAULTS);values.assignments=[{item_id:'101',model_id:'1',rule_id:'camiseta-infantil',size:'4'}];let recalcs=0;const b=browser(async(path,body)=>body?state(2,reorder(body.values)):state(1,values));await b.workspace.start({api:b.api,onChanged:()=>{recalcs++;}});b.priceField().value='13,50';b.priceField().oninput();await b.el('PriceForm').onsubmit({preventDefault(){}});assert.equal(recalcs,1);assert.equal(b.priceField().value,'13.50');assert.equal(b.el('PriceSave').disabled,true);assert.match(b.el('PriceStatus').textContent,/Valores salvos.*versão 2/);assert.equal(b.calls.filter(row=>row.body).length,1);
 });

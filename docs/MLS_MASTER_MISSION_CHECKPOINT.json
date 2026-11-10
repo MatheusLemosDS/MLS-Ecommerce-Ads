@@ -180,14 +180,14 @@
     }
   ],
   "current_release": {
-    "id": "DAILY_RESULT_CLARITY",
-    "status": "PUBLISHED_VERIFIED",
-    "branch": "feature/daily-result-clarity-20261106",
-    "base_main": "96e16057dc5190917622510ffc1b2130ced47841",
-    "human_code_release_id": "2026-11-09.1",
+    "id": "EDITABLE_PRODUCTION_COSTS",
+    "status": "PREPARED_NOT_PUBLISHED",
+    "branch": "feature/child-cost-retroactive-20261109",
+    "base_main": "bd01f64d7e290abb259e9c9dc2646496494a87f0",
+    "human_code_release_id": "2026-11-09.2",
     "human_date": "09/11/2026",
-    "label": "Resultado diário e devoluções às claras",
-    "docs": "docs/MLS_DAILY_RESULT_CLARITY_2026_11_09.md",
+    "label": "Edição simples dos custos de produção",
+    "docs": "docs/MLS_EDITABLE_COSTS_2026_11_09.md",
     "finance_m2": "OPEN",
     "m22": "OPEN_PENDING_REAL_OPERATION_AND_ACCOUNTING_BRIDGE",
     "workers": [
@@ -201,31 +201,44 @@
       "app"
     ],
     "routes": {
-      "overview": "/admin?tab=overview",
-      "day_details": "/admin?tab=agent-finance#businessDay",
+      "costs": "/admin?tab=margins#costRules",
+      "products": "/admin?tab=products",
       "notes": "/admin?tab=roadmap#appReleaseNotes"
     },
-    "scope": "EXISTING_DAILY_FINANCIAL_DATA_PRESENTATION_ONLY",
-    "daily_basis": "PAID_ORDERS_CREATED_ON_SELECTED_DATE_IN_BRASILIA",
-    "production_reference": "REFERENCE_COST_OF_THOSE_SOLD_ITEMS_NOT_MANUFACTURE_ON_SAME_DATE",
-    "ads_basis": "CALENDAR_ADS_ON_SELECTED_DATE",
-    "monthly_allocations": "EXISTING_DAILY_SHARE_OF_DECLARED_DAS_AND_MONTHLY_EXPENSES",
-    "return_counts": "REPORTED_ORDER_COUNTS_AND_UNKNOWN_COVERAGE_NOT_REFUNDED_AMOUNT",
-    "payout_basis": [
-      "BASE_REPASS",
-      "AFTER_ADJUSTMENTS"
-    ],
-    "unreconciled_returns_notice": "VISIBLE_IN_EVERY_RESULT_STATE_WHEN_PENDING",
-    "return_reuse_credit": "NOT_AUTOMATIC_NO_INFERRED_PRODUCTION_REVERSAL",
-    "financial_math_unchanged": true,
+    "scope": "EDIT_EXISTING_COST_RULE_AMOUNTS_WITH_CURRENT_REVISION_AND_AUDIT",
+    "amount_edit": "VISIBLE_QUICK_FORM_WITH_ADVANCED_CONDITIONS_PRESERVED",
+    "cost_scope": "ALL_PRODUCTS_USING_RULE_WITH_EXPLICIT_MANUAL_OVERRIDE_PRECEDENCE",
+    "historical_sales_basis": "REPRICE_SAVED_SALES_REFERENCES_USING_CURRENT_RULE_WITHOUT_PROVIDER_RECOLLECTION",
+    "manufacturing_basis": "IMMUTABLE_DECLARED_RECORDS_SEPARATE_FROM_SALES_COST_REFERENCE",
+    "saved_child_cost_readonly_audit": {
+      "checked_at_brasilia": "2026-11-09T22:00:46.378283-03:00",
+      "rule_id": "camiseta-infantil",
+      "enabled": true,
+      "unit_cost_cents": 1350,
+      "rules_revision": 8,
+      "costs_revision": 5,
+      "price_preexisted_this_delivery": true,
+      "new_config_mutation_required": false,
+      "manual_profiles": 0,
+      "manual_assignments": 0,
+      "actual_manufacturing_records_table": "ABSENT_AT_READ",
+      "fabrication_total": "UNKNOWN_NOT_ZERO_FROM_ABSENCE",
+      "physical_records_created": false,
+      "audit_summary_sha256": "c9858e25c9bd7380d36fb68127f53d1d06b54e02c1cd2d853d58f01fbfcbca2c",
+      "audit_pins_sha256": "5e2291a3b4c6d9f7975e76d2271d0dbd719e4976b84ed18192eeb5708a812a23",
+      "noop_plan_sha256": "0bb971b1aa66a7bdd3673ba6bebcbeda0cc390d8c11ba67495e2f087ca1bec25",
+      "mutations": 0,
+      "provider_calls": 0
+    },
+    "pricing_formula_unchanged": true,
     "dto_unchanged": true,
     "new_endpoints": 0,
-    "new_reads": 0,
     "new_provider_calls": 0,
     "new_collectors": 0,
     "cron_changed": false,
     "legacy_contracts_unchanged": true,
     "physical_or_financial_facts_created_by_delivery": false,
+    "cost_config_data_writes_by_delivery": 0,
     "owner_real_mutation_requests": 0,
     "commercial_writes": false,
     "overview_six_agents_preserved": true,
@@ -234,77 +247,45 @@
     "manufacturing_ledger_and_weekly_coverage_unchanged": true,
     "seller_centre_bank_comparison": "NOT_CLOSED",
     "previous_release_integration": {
-      "release_id": "2026-11-06.2",
-      "pull_request": 112,
+      "release_id": "2026-11-09.1",
+      "pull_request": 113,
       "status": "MERGED_ALL_THREE_LIVE_VERIFIED",
-      "merge_commit": "96e16057dc5190917622510ffc1b2130ced47841",
-      "versions": {
-        "app": "09621a33-2fd1-48e1-8155-f022bc18f66e",
-        "auth": "ec385ca9-a986-49ec-abab-25a29daaf33b",
-        "finance": "9ed0bd7d-269a-4e5f-81d0-63be8c6ac2c4"
-      },
-      "receipt_file": "final-integration-receipt.json",
-      "receipt_sha256": "07011c77b7488bb872a969d4b9d47272ba67dce0a23375b269c8b4f72b921b82"
-    },
-    "validation": {
-      "status": "PASSED_RECORDED_PUBLICATION_EVIDENCE",
-      "focused": "PASSED",
-      "full_node": {
-        "tests": 3602,
-        "pass": 3602,
-        "fail": 0,
-        "skipped": 0,
-        "cancelled": 0
-      },
-      "python": 67,
-      "chromium": "PASSED_SYNTHETIC_NORMAL_MINIFIED_320_1365_LIGHT_DARK",
-      "ci": "GREEN_EXACT_REVIEWED_SOURCE_HEAD",
-      "ci_url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/42714393350",
-      "real_owner_acceptance": "NOT_CLAIMED"
-    },
-    "pull_request": 113,
-    "code_commit": "fb4b91901f4e1cf8cf67ace57533ddef013a7f5c",
-    "reviewed_head": "cf6978bd70ede20dad4123874459ad7924d233e7",
-    "ci_run": 42714393350,
-    "deployment": {
-      "status": "APP_LIVE_FULL_VECTOR_VERIFIED_AUTH_FINANCE_PRESERVED",
+      "merge_commit": "bd01f64d7e290abb259e9c9dc2646496494a87f0",
       "versions": {
         "app": "36d5afa6-f53c-4b3a-96aa-69ac8c886fb6",
         "auth": "ec385ca9-a986-49ec-abab-25a29daaf33b",
         "finance": "9ed0bd7d-269a-4e5f-81d0-63be8c6ac2c4"
       },
-      "generated_sha256": {
-        "app": "3ee87e09330e259bef0fdd8cb6e4a7ef2466c9aaee01140a88beb67e5ca8af65",
-        "auth": "47c83f87f191fd0e5ff503d9c4bcf4671cd986b0965e66e84f1a6ed952dac925",
-        "finance": "08ada5ecec92350f4f8301fdb7baa00f5f8083a0e8390296b2870e0ff3cdc1a5"
-      },
-      "published_sha256": {
-        "app": "15285b59c368a514ef1a65c6b49a22294541e3670df38276ee13337725566194",
-        "auth": "2a2c2433c6fba25d1c399991595c96e6b8a85045edb77879c8270c446cb45ad2",
-        "finance": "e5bf80e14ff00e5b365bfbcfb25bf3a4dc1e42bf40bb0e4259909649eea1d5cd"
-      },
-      "started_at": 1794264938,
-      "completed_at": 1794264968,
-      "completed_at_brasilia": "2026-11-09T19:56:08-03:00",
-      "all_three_exact": true,
-      "configuration_preserved": true,
-      "domains_preserved": true,
-      "subdomains_preserved": true,
-      "flags_preserved": true,
-      "cron_preserved": true,
-      "physical_or_financial_fact_writes": false,
-      "d1_queries": 0,
-      "owner_endpoints_called": false,
-      "provider_calls": 0,
-      "receipt_file": "publication-receipt.json",
-      "receipt_sha256": "ebb5f0d29a932b402e00c823b051493994d09a4868e584bd07245b5072a18768"
+      "receipt_file": "final-integration-receipt.json",
+      "receipt_sha256": "8953171b484c16c0fa08570116dbffb5a2f65102e96c64d334a1c5ad3ffb5847"
+    },
+    "validation": {
+      "status": "PENDING_COMPLETED_EVIDENCE",
+      "focused": null,
+      "full_node": null,
+      "python": null,
+      "chromium": null,
+      "ci": null,
+      "real_owner_acceptance": "NOT_CLAIMED"
+    },
+    "pull_request": null,
+    "code_commit": null,
+    "reviewed_head": null,
+    "ci_run": null,
+    "deployment": {
+      "status": "NOT_PUBLISHED",
+      "versions": null,
+      "generated_sha256": null,
+      "published_sha256": null,
+      "started_at": null,
+      "completed_at": null,
+      "completed_at_brasilia": null
     },
     "integration": {
-      "status": "PUBLICATION_RECEIPT_SNAPSHOT_CHECK_LINKED_PR_CURRENT_STATE",
-      "pull_request": 113,
-      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/113",
-      "merge_commit": null,
-      "publication_receipt_does_not_prove_merge": true
+      "status": "NOT_MERGED",
+      "pull_request": null,
+      "url": null,
+      "merge_commit": null
     }
   },
   "validation_history": [
@@ -4174,11 +4155,11 @@
     }
   },
   "next_actions": [
-    "Conferir uso real do resultado diário, base do repasse e cobertura de devoluções.",
-    "Não tratar produção dos itens vendidos como fabricação na data, devolução informada como reembolso conciliado ou resultado estimado como caixa recebido.",
+    "Concluir validação/publicação da edição simples dos custos e depois conferir uso real.",
+    "Infantil1350 já estava salvo na revisão8; referências antigas de vendas seguem a regra atual, sem criar fabricação ausente ou custo zero.",
     "Conferir uma semana real com todos os oito intervalos, custos históricos e cortes de sexta; ausência continua desconhecida.",
     "Preservar seis agentes, mês/rascunhos, Finance/Auth, Hermes, fórmulas/DTOs/fontes e gates comerciais.",
-    "Continuar M2/M2.2, devoluções/reaproveitamento e comparação Seller Centre/banco no mesmo recorte sem dupla dedução."
+    "Continuar M2/M2.2, origem/composição de devoluções, decomposição histórica e comparação Seller Centre/banco sem dupla contagem."
   ],
   "production_weekly_closing_2026_11_03": {
     "id": "PRODUCTION_WEEKLY_FRIDAY_13_CLOSING",
@@ -5339,6 +5320,250 @@
       "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/113",
       "merge_commit": null,
       "publication_receipt_does_not_prove_merge": true
+    }
+  },
+  "previous_increment_before_editable_costs": {
+    "id": "DAILY_RESULT_CLARITY",
+    "status": "PUBLISHED_VERIFIED",
+    "branch": "feature/daily-result-clarity-20261106",
+    "base_main": "96e16057dc5190917622510ffc1b2130ced47841",
+    "human_code_release_id": "2026-11-09.1",
+    "human_date": "09/11/2026",
+    "label": "Resultado diário e devoluções às claras",
+    "docs": "docs/MLS_DAILY_RESULT_CLARITY_2026_11_09.md",
+    "finance_m2": "OPEN",
+    "m22": "OPEN_PENDING_REAL_OPERATION_AND_ACCOUNTING_BRIDGE",
+    "workers": [
+      "app"
+    ],
+    "unchanged_workers": [
+      "auth",
+      "finance"
+    ],
+    "deploy_order": [
+      "app"
+    ],
+    "routes": {
+      "overview": "/admin?tab=overview",
+      "day_details": "/admin?tab=agent-finance#businessDay",
+      "notes": "/admin?tab=roadmap#appReleaseNotes"
+    },
+    "scope": "EXISTING_DAILY_FINANCIAL_DATA_PRESENTATION_ONLY",
+    "daily_basis": "PAID_ORDERS_CREATED_ON_SELECTED_DATE_IN_BRASILIA",
+    "production_reference": "REFERENCE_COST_OF_THOSE_SOLD_ITEMS_NOT_MANUFACTURE_ON_SAME_DATE",
+    "ads_basis": "CALENDAR_ADS_ON_SELECTED_DATE",
+    "monthly_allocations": "EXISTING_DAILY_SHARE_OF_DECLARED_DAS_AND_MONTHLY_EXPENSES",
+    "return_counts": "REPORTED_ORDER_COUNTS_AND_UNKNOWN_COVERAGE_NOT_REFUNDED_AMOUNT",
+    "payout_basis": [
+      "BASE_REPASS",
+      "AFTER_ADJUSTMENTS"
+    ],
+    "unreconciled_returns_notice": "VISIBLE_IN_EVERY_RESULT_STATE_WHEN_PENDING",
+    "return_reuse_credit": "NOT_AUTOMATIC_NO_INFERRED_PRODUCTION_REVERSAL",
+    "financial_math_unchanged": true,
+    "dto_unchanged": true,
+    "new_endpoints": 0,
+    "new_reads": 0,
+    "new_provider_calls": 0,
+    "new_collectors": 0,
+    "cron_changed": false,
+    "legacy_contracts_unchanged": true,
+    "physical_or_financial_facts_created_by_delivery": false,
+    "owner_real_mutation_requests": 0,
+    "commercial_writes": false,
+    "overview_six_agents_preserved": true,
+    "month_drafts_preserved": true,
+    "hermes_calculation_changed": false,
+    "manufacturing_ledger_and_weekly_coverage_unchanged": true,
+    "seller_centre_bank_comparison": "NOT_CLOSED",
+    "previous_release_integration": {
+      "release_id": "2026-11-06.2",
+      "pull_request": 112,
+      "status": "MERGED_ALL_THREE_LIVE_VERIFIED",
+      "merge_commit": "96e16057dc5190917622510ffc1b2130ced47841",
+      "versions": {
+        "app": "09621a33-2fd1-48e1-8155-f022bc18f66e",
+        "auth": "ec385ca9-a986-49ec-abab-25a29daaf33b",
+        "finance": "9ed0bd7d-269a-4e5f-81d0-63be8c6ac2c4"
+      },
+      "receipt_file": "final-integration-receipt.json",
+      "receipt_sha256": "07011c77b7488bb872a969d4b9d47272ba67dce0a23375b269c8b4f72b921b82"
+    },
+    "validation": {
+      "status": "PASSED_RECORDED_PUBLICATION_EVIDENCE",
+      "focused": "PASSED",
+      "full_node": {
+        "tests": 3602,
+        "pass": 3602,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0
+      },
+      "python": 67,
+      "chromium": "PASSED_SYNTHETIC_NORMAL_MINIFIED_320_1365_LIGHT_DARK",
+      "ci": "GREEN_EXACT_REVIEWED_SOURCE_HEAD",
+      "ci_url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/42714393350",
+      "real_owner_acceptance": "NOT_CLAIMED"
+    },
+    "pull_request": 113,
+    "code_commit": "fb4b91901f4e1cf8cf67ace57533ddef013a7f5c",
+    "reviewed_head": "cf6978bd70ede20dad4123874459ad7924d233e7",
+    "ci_run": 42714393350,
+    "deployment": {
+      "status": "APP_LIVE_FULL_VECTOR_VERIFIED_AUTH_FINANCE_PRESERVED",
+      "versions": {
+        "app": "36d5afa6-f53c-4b3a-96aa-69ac8c886fb6",
+        "auth": "ec385ca9-a986-49ec-abab-25a29daaf33b",
+        "finance": "9ed0bd7d-269a-4e5f-81d0-63be8c6ac2c4"
+      },
+      "generated_sha256": {
+        "app": "3ee87e09330e259bef0fdd8cb6e4a7ef2466c9aaee01140a88beb67e5ca8af65",
+        "auth": "47c83f87f191fd0e5ff503d9c4bcf4671cd986b0965e66e84f1a6ed952dac925",
+        "finance": "08ada5ecec92350f4f8301fdb7baa00f5f8083a0e8390296b2870e0ff3cdc1a5"
+      },
+      "published_sha256": {
+        "app": "15285b59c368a514ef1a65c6b49a22294541e3670df38276ee13337725566194",
+        "auth": "2a2c2433c6fba25d1c399991595c96e6b8a85045edb77879c8270c446cb45ad2",
+        "finance": "e5bf80e14ff00e5b365bfbcfb25bf3a4dc1e42bf40bb0e4259909649eea1d5cd"
+      },
+      "started_at": 1794264938,
+      "completed_at": 1794264968,
+      "completed_at_brasilia": "2026-11-09T19:56:08-03:00",
+      "all_three_exact": true,
+      "configuration_preserved": true,
+      "domains_preserved": true,
+      "subdomains_preserved": true,
+      "flags_preserved": true,
+      "cron_preserved": true,
+      "physical_or_financial_fact_writes": false,
+      "d1_queries": 0,
+      "owner_endpoints_called": false,
+      "provider_calls": 0,
+      "receipt_file": "publication-receipt.json",
+      "receipt_sha256": "ebb5f0d29a932b402e00c823b051493994d09a4868e584bd07245b5072a18768"
+    },
+    "integration": {
+      "status": "PUBLICATION_RECEIPT_SNAPSHOT_CHECK_LINKED_PR_CURRENT_STATE",
+      "pull_request": 113,
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/113",
+      "merge_commit": null,
+      "publication_receipt_does_not_prove_merge": true
+    }
+  },
+  "previous_next_actions_before_editable_costs": [
+    "Conferir uso real do resultado diário, base do repasse e cobertura de devoluções.",
+    "Não tratar produção dos itens vendidos como fabricação na data, devolução informada como reembolso conciliado ou resultado estimado como caixa recebido.",
+    "Conferir uma semana real com todos os oito intervalos, custos históricos e cortes de sexta; ausência continua desconhecida.",
+    "Preservar seis agentes, mês/rascunhos, Finance/Auth, Hermes, fórmulas/DTOs/fontes e gates comerciais.",
+    "Continuar M2/M2.2, devoluções/reaproveitamento e comparação Seller Centre/banco no mesmo recorte sem dupla dedução."
+  ],
+  "editable_costs_2026_11_09": {
+    "id": "EDITABLE_PRODUCTION_COSTS",
+    "status": "PREPARED_NOT_PUBLISHED",
+    "branch": "feature/child-cost-retroactive-20261109",
+    "base_main": "bd01f64d7e290abb259e9c9dc2646496494a87f0",
+    "human_code_release_id": "2026-11-09.2",
+    "human_date": "09/11/2026",
+    "label": "Edição simples dos custos de produção",
+    "docs": "docs/MLS_EDITABLE_COSTS_2026_11_09.md",
+    "finance_m2": "OPEN",
+    "m22": "OPEN_PENDING_REAL_OPERATION_AND_ACCOUNTING_BRIDGE",
+    "workers": [
+      "app"
+    ],
+    "unchanged_workers": [
+      "auth",
+      "finance"
+    ],
+    "deploy_order": [
+      "app"
+    ],
+    "routes": {
+      "costs": "/admin?tab=margins#costRules",
+      "products": "/admin?tab=products",
+      "notes": "/admin?tab=roadmap#appReleaseNotes"
+    },
+    "scope": "EDIT_EXISTING_COST_RULE_AMOUNTS_WITH_CURRENT_REVISION_AND_AUDIT",
+    "amount_edit": "VISIBLE_QUICK_FORM_WITH_ADVANCED_CONDITIONS_PRESERVED",
+    "cost_scope": "ALL_PRODUCTS_USING_RULE_WITH_EXPLICIT_MANUAL_OVERRIDE_PRECEDENCE",
+    "historical_sales_basis": "REPRICE_SAVED_SALES_REFERENCES_USING_CURRENT_RULE_WITHOUT_PROVIDER_RECOLLECTION",
+    "manufacturing_basis": "IMMUTABLE_DECLARED_RECORDS_SEPARATE_FROM_SALES_COST_REFERENCE",
+    "saved_child_cost_readonly_audit": {
+      "checked_at_brasilia": "2026-11-09T22:00:46.378283-03:00",
+      "rule_id": "camiseta-infantil",
+      "enabled": true,
+      "unit_cost_cents": 1350,
+      "rules_revision": 8,
+      "costs_revision": 5,
+      "price_preexisted_this_delivery": true,
+      "new_config_mutation_required": false,
+      "manual_profiles": 0,
+      "manual_assignments": 0,
+      "actual_manufacturing_records_table": "ABSENT_AT_READ",
+      "fabrication_total": "UNKNOWN_NOT_ZERO_FROM_ABSENCE",
+      "physical_records_created": false,
+      "audit_summary_sha256": "c9858e25c9bd7380d36fb68127f53d1d06b54e02c1cd2d853d58f01fbfcbca2c",
+      "audit_pins_sha256": "5e2291a3b4c6d9f7975e76d2271d0dbd719e4976b84ed18192eeb5708a812a23",
+      "noop_plan_sha256": "0bb971b1aa66a7bdd3673ba6bebcbeda0cc390d8c11ba67495e2f087ca1bec25",
+      "mutations": 0,
+      "provider_calls": 0
+    },
+    "pricing_formula_unchanged": true,
+    "dto_unchanged": true,
+    "new_endpoints": 0,
+    "new_provider_calls": 0,
+    "new_collectors": 0,
+    "cron_changed": false,
+    "legacy_contracts_unchanged": true,
+    "physical_or_financial_facts_created_by_delivery": false,
+    "cost_config_data_writes_by_delivery": 0,
+    "owner_real_mutation_requests": 0,
+    "commercial_writes": false,
+    "overview_six_agents_preserved": true,
+    "month_drafts_preserved": true,
+    "hermes_calculation_changed": false,
+    "manufacturing_ledger_and_weekly_coverage_unchanged": true,
+    "seller_centre_bank_comparison": "NOT_CLOSED",
+    "previous_release_integration": {
+      "release_id": "2026-11-09.1",
+      "pull_request": 113,
+      "status": "MERGED_ALL_THREE_LIVE_VERIFIED",
+      "merge_commit": "bd01f64d7e290abb259e9c9dc2646496494a87f0",
+      "versions": {
+        "app": "36d5afa6-f53c-4b3a-96aa-69ac8c886fb6",
+        "auth": "ec385ca9-a986-49ec-abab-25a29daaf33b",
+        "finance": "9ed0bd7d-269a-4e5f-81d0-63be8c6ac2c4"
+      },
+      "receipt_file": "final-integration-receipt.json",
+      "receipt_sha256": "8953171b484c16c0fa08570116dbffb5a2f65102e96c64d334a1c5ad3ffb5847"
+    },
+    "validation": {
+      "status": "PENDING_COMPLETED_EVIDENCE",
+      "focused": null,
+      "full_node": null,
+      "python": null,
+      "chromium": null,
+      "ci": null,
+      "real_owner_acceptance": "NOT_CLAIMED"
+    },
+    "pull_request": null,
+    "code_commit": null,
+    "reviewed_head": null,
+    "ci_run": null,
+    "deployment": {
+      "status": "NOT_PUBLISHED",
+      "versions": null,
+      "generated_sha256": null,
+      "published_sha256": null,
+      "started_at": null,
+      "completed_at": null,
+      "completed_at_brasilia": null
+    },
+    "integration": {
+      "status": "NOT_MERGED",
+      "pull_request": null,
+      "url": null,
+      "merge_commit": null
     }
   }
 }

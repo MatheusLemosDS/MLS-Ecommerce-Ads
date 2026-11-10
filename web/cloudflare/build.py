@@ -191,10 +191,18 @@ def build_ai_sales_browser_core(*, server_only=False):
         'mls-ai-sales-capability-audit.mjs','mls-ai-sales-catalog.mjs',
         'mls-ai-sales-affiliates.mjs','mls-ai-sales-performance.mjs']
     if server_only:
-        filenames=[name for name in filenames if name not in ('mls-ai-sales-campaign-planner.mjs','mls-ai-sales-capability-audit.mjs')]
+        filenames=[name for name in filenames if name not in ('mls-ai-sales-campaign-planner.mjs','mls-ai-sales-capability-audit.mjs','mls-ai-sales-profitability-gate.mjs')]
     names=[]
     for filename in filenames:
         source=(root/'src'/filename).read_text()
+        if server_only and filename=='mls-ai-sales-imports.mjs':
+            for name in ('encodeCell','exportAiSalesCsv'):
+                definitions=re.findall(r'^(?:export )?function '+re.escape(name)+r'\([\s\S]*?^\}',source,flags=re.M)
+                assert len(definitions)==1,name
+                source=source.replace(definitions[0],'',1)
+            references=re.sub(r'"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'|//[^\n]*|/\*[\s\S]*?\*/','',source)
+            for name in ('encodeCell','exportAiSalesCsv'):
+                assert not re.search(r'(?<![\w$.])'+re.escape(name)+r'(?![\w$]|\s*:)',references),name
         if server_only and filename=='mls-ai-sales-catalog.mjs':
             registry_import="import {projectProductRegistryFrame} from './product-registry.mjs';\n"
             assert source.count(registry_import)==1
@@ -204,16 +212,35 @@ def build_ai_sales_browser_core(*, server_only=False):
                 assert len(definitions)==1,name
                 source=source.replace(definitions[0],'',1)
         if server_only and filename=='mls-ai-sales-affiliates.mjs':
-            # Proposal drafting/approval run in the unchanged browser. The server
-            # keeps workspace validation/import, including imported-plan revocation.
-            for name in ('draftAiSalesAffiliateProposal','approveAiSalesAffiliateProposal'):
-                definitions=re.findall(r'^export async function '+re.escape(name)+r'\([\s\S]*?^\}',source,flags=re.M)
+            # CRM editing/proposals/export run in the unchanged browser. The
+            # server retains validation/import with imported-approval revocation.
+            omitted=('createAiSalesAffiliateWorkspace','upsertAiSalesAffiliateCreator',
+                'removeAiSalesAffiliateCreator','draftAiSalesAffiliateProposal',
+                'approveAiSalesAffiliateProposal','exportAiSalesAffiliateWorkspace',
+                'exportAiSalesAffiliateCreators','importAiSalesAffiliateCreators',
+                'aiAffiliateNext','aiAffiliateGate')
+            for name in omitted:
+                definitions=re.findall(r'^(?:export )?(?:async )?function '+re.escape(name)+r'\([^\n]*\}\r?$',source,flags=re.M)
+                if not definitions:
+                    definitions=re.findall(r'^(?:export )?(?:async )?function '+re.escape(name)+r'\([\s\S]*?^\}',source,flags=re.M)
                 assert len(definitions)==1,name
                 source=source.replace(definitions[0],'',1)
+            for name in ('aiAffiliateRef','aiAffiliateCreatorKeys','AI_SALES_AFFILIATE_CREATOR_CSV_HEADERS'):
+                definitions=re.findall(r'^(?:export )?const '+re.escape(name)+r'=[^\n]+$',source,flags=re.M)
+                assert len(definitions)==1,name
+                source=source.replace(definitions[0],'',1)
+            gate_import="import {evaluateAiSalesProfitability} from './mls-ai-sales-profitability-gate.mjs';\n"
+            assert source.count(gate_import)==1
+            source=source.replace(gate_import,'',1)
+            source=source.replace('canonicalAiSalesJson,hashAiSalesValue}', 'canonicalAiSalesJson}',1)
+            source=source.replace('parseAiSalesCsv,exportAiSalesCsv,parseAiSalesJson,parseAiSalesInteger','parseAiSalesJson',1)
             references=re.sub(r'"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'|//[^\n]*|/\*[\s\S]*?\*/','',source)
-            for name in ('draftAiSalesAffiliateProposal','approveAiSalesAffiliateProposal'):
+            for name in omitted+('aiAffiliateRef','aiAffiliateCreatorKeys','AI_SALES_AFFILIATE_CREATOR_CSV_HEADERS','evaluateAiSalesProfitability'):
                 assert not re.search(r'(?<![\w$.])'+re.escape(name)+r'(?![\w$]|\s*:)',references),name
         if server_only and filename=='mls-ai-sales-performance.mjs':
+            definitions=re.findall(r'^export function exportAiSalesPerformance\([\s\S]*?^\}',source,flags=re.M)
+            assert len(definitions)==1
+            source=source.replace(definitions[0],'',1).replace('parseAiSalesCsv,exportAiSalesCsv,parseAiSalesJson','parseAiSalesCsv,parseAiSalesJson',1)
             # Reporting and its arithmetic helpers run in the unchanged browser.
             # Persistence keeps the full ledger/import validation path.
             for name in ('bounded','sum','ratio'):
@@ -227,7 +254,7 @@ def build_ai_sales_browser_core(*, server_only=False):
             # Remaining private references must fail closed; quoted metadata,
             # comments, property access and object keys are not helper bindings.
             references=re.sub(r'''"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|//[^\n]*|/\*[\s\S]*?\*/''','',source)
-            for name in ('bounded','sum','ratio','covers','groupReport','buildAiSalesPerformanceReport'):
+            for name in ('bounded','sum','ratio','covers','groupReport','buildAiSalesPerformanceReport','exportAiSalesPerformance'):
                 assert not re.search(r'(?<![\w$.])'+re.escape(name)+r'(?![\w$]|\s*:)',references),name
         exports=re.findall(r'^export (?:async )?(?:function|class|const) ([A-Za-z_$][A-Za-z0-9_$]*)',source,flags=re.M)
         assert exports and len(exports)==len(set(exports)),filename
