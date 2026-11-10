@@ -1,6 +1,6 @@
 {
   "schema": "mls_master_mission_checkpoint_v1",
-  "updated_at": "2026-11-09",
+  "updated_at": "2026-11-10",
   "base_visual_sha": "8d860b2c4f26531c53c4cdba0e06a14f51a7eef4",
   "visual_branch": "feature/mls-mockup-parity-real-charts-20261029",
   "visual_pr": 79,
@@ -180,233 +180,145 @@
     }
   ],
   "current_release": {
-    "id": "PRODUCTION_DAILY_WEEKLY_WORKSPACE",
+    "id": "NUBANK_CASH_RECONCILIATION_2026_11_10",
     "status": "PUBLISHED_VERIFIED",
-    "branch": "feature/production-closing-workspace-20261109",
-    "base_main": "a62e11994abfd07f7df91dd38649a86b6450c1df",
-    "human_code_release_id": "2026-11-09.3",
-    "human_date": "09/11/2026",
-    "label": "Produção diária e fechamento semanal",
-    "docs": "docs/MLS_PRODUCTION_WORKSPACE_2026_11_09.md",
-    "finance_m2": "OPEN",
-    "m22": "OPEN_PENDING_REAL_OPERATION_AND_ACCOUNTING_BRIDGE",
-    "workers": [
-      "app"
-    ],
-    "unchanged_workers": [
-      "auth",
-      "finance"
-    ],
+    "branch": "feature/nubank-cash-reconciliation-20261110",
+    "base_main": "f451c15ec1b96abaa6315457324ccaa31c8d361c",
+    "human_code_release_id": "2026-11-10.1",
+    "human_date": "10/11/2026",
+    "label": "Conciliação com extrato Nubank",
+    "docs": "docs/MLS_NUBANK_RECONCILIATION_2026_11_10.md",
+    "finance_m2": "OPEN_REAL_FILE_RECONCILIATION_REQUIRED",
+    "m22": "OPEN",
+    "workers": {
+      "app": {
+        "version": "6e9e6514-8e0d-4791-bdc3-23ef8709363d",
+        "generated_sha256": "bae9f6f0c816e24954919523868160c3e932935a42b8a1d0037bafa8432df6bb",
+        "published_sha256": "fe19885f23d728fcb52ef1d77b76da2a7d4367fbe15d6f9810a352bd7160d0d3"
+      },
+      "auth": {
+        "version": "3b085dec-c506-472c-afae-6863c67cd545",
+        "generated_sha256": "c8e3fd3aecac69320666bc847064bf222bcbde35e9a63cf41fb87a4c02cb1838",
+        "published_sha256": "9259b304bf139201b93044ad83843ebc8b6c75d4817fefb86609d642ae655357"
+      },
+      "finance": {
+        "version": "4b285d05-9326-4885-b02d-c56a4ad99596",
+        "generated_sha256": "6070dc2cef50c815692b8cfad97659ff945df8504555d689bee8c6164a9e5be2",
+        "published_sha256": "bf2740e7e6c1879866a20e299e9aefedb5b453ce3ac1ca8c6021537ead10f966"
+      }
+    },
+    "unchanged_workers": [],
     "deploy_order": [
+      "finance",
+      "auth",
       "app"
     ],
     "routes": {
-      "daily": "/admin?tab=agent-production#incurredProductionCalendarTitle",
-      "weekly": "/admin?tab=agent-production#productionWeeklyClosing",
-      "register": "/admin?tab=agent-production#incurredProductionRecordsPane",
-      "range": "/admin?tab=agent-production#incurredProductionRangePane",
-      "sales_reference": "/admin?tab=agent-production#costPeriods",
-      "coverage": "/admin?tab=agent-production#productionCoverageDetails",
-      "notes": "/admin?tab=roadmap#appReleaseNotes"
+      "workspace": "/admin?tab=agent-finance#bankReconciliation",
+      "owner_api": "/api/admin/finance/external-cash",
+      "private_service": "/internal/finance/external-cash-v1"
     },
-    "scope": "PRODUCTION_NAVIGATION_ACCESSIBLE_CHARTS_EXPLICIT_DAY_CONFIRMATION_AND_READONLY_CUT_REFRESH",
-    "daily_basis": "AGGREGATION_OF_DECLARED_PHYSICAL_LOTS_BY_PRODUCED_DATE_NOT_A_NEW_IMMUTABLE_DAILY_ARTIFACT",
-    "daily_confirmation": "EXPLICIT_EXISTING_COVERAGE_INTERVAL_ATTESTATION_NOT_AUTOMATIC_MANUFACTURING",
-    "weekly_policy": {
-      "timezone": "America/Sao_Paulo",
-      "start": "PREVIOUS_FRIDAY_13_INCLUSIVE",
-      "end": "FRIDAY_13_EXCLUSIVE",
-      "weekend_included": true,
-      "friday_assignment": "EXPLICIT_BEFORE_13_AND_AT_OR_AFTER_13_PHYSICAL_QUANTITIES",
-      "coverage_intervals": 8,
-      "original_and_restatements_preserved": true
+    "scope": "OWNER_DECLARED_FILE_EVIDENCE_SEPARATE_FROM_LEGACY_PROFIT",
+    "formats": [
+      "NUBANK_ACCOUNT_CSV",
+      "NUBANK_BANKING_OFX",
+      "SHOPEE_COMPLETED_TRANSFER_CSV"
+    ],
+    "raw_files_kept_local": true,
+    "preview_sends_only_normalized_selected_rows": true,
+    "preview_read_only": true,
+    "import_and_match_require_explicit_owner_confirmation": true,
+    "matching": "EXACT_POSITIVE_BRL_ONE_TO_ONE_OWNER_CONFIRMED",
+    "amount_date_and_reference_are_suggestions_only": true,
+    "cross_month_manual_selection": true,
+    "replay_before_cas": true,
+    "immutable_evidence_and_append_only_unlink_audit": true,
+    "bank_account_scope": "OWNER_DECLARED_SINGLE_NUBANK_ACCOUNT",
+    "bank_api_connected": false,
+    "query_budget": {
+      "official_limit_free": 50,
+      "cold_1000_rows": 45,
+      "existing_1000_rows_fresh_isolate": 19,
+      "healthy_schema_missing_tenant_state": 20,
+      "objects_and_sql_verified": 31,
+      "existing_schema_ddl": 0,
+      "official_source": "https://developers.cloudflare.com/d1/platform/limits/"
     },
-    "weekly_read_refresh": {
-      "after_cut_delay_seconds": 65,
-      "stale_after_seconds": 600,
-      "automatic_read_throttle_seconds": 60,
-      "recent_missing_artifact_or_restatement_retry": "ABOUT_EVERY_TEN_MINUTES_WITHIN_24_HOURS",
-      "visibility_session_busy_pending_guards": true,
-      "read_only_existing_endpoint": true,
-      "does_not_generate_a_report": true,
-      "does_not_guarantee_provider_cron_execution": true
-    },
-    "navigation": "DAILY_MONTH_WEEKLY_REGISTER_RANGE_AND_SALES_REFERENCE_SEPARATED_WITH_DTF_PRESERVED",
-    "charts": "EXISTING_DAILY_AND_WEEKLY_SOURCE_WITH_CLICK_AND_KEYBOARD_SELECTION_NO_SYNTHETIC_LIVE_DATA",
-    "register_selected_day": "EXPLICIT_ACTION_DOES_NOT_OVERWRITE_EDITED_DRAFT",
-    "manufacturing_basis": "IMMUTABLE_DECLARED_RECORDS_SEPARATE_FROM_SALES_COST_REFERENCE",
-    "saved_child_cost_context": {
-      "unit_cost_cents": 1350,
-      "rules_revision": 8,
-      "verified_by_previous_delivery": "2026-11-09.2",
-      "this_delivery_changes_rule_data": false,
-      "new_d1_audit_claimed": false,
-      "prior_ledger_table_absence": "UNKNOWN_NOT_ZERO_NOT_PROOF_OF_NO_MANUFACTURE"
-    },
+    "legacy_contracts_unchanged": true,
     "pricing_formula_unchanged": true,
     "dto_unchanged": true,
-    "new_endpoints": 0,
+    "realized_profit_changed": false,
     "new_provider_calls": 0,
     "new_collectors": 0,
     "cron_changed": false,
-    "legacy_contracts_unchanged": true,
     "physical_or_financial_facts_created_by_delivery": false,
-    "cost_config_data_writes_by_delivery": 0,
+    "cost_config_data_writes_by_delivery": false,
     "owner_real_mutation_requests": 0,
     "commercial_writes": false,
     "overview_six_agents_preserved": true,
     "month_drafts_preserved": true,
     "hermes_calculation_changed": false,
     "manufacturing_ledger_and_weekly_coverage_unchanged": true,
-    "seller_centre_bank_comparison": "NOT_CLOSED",
-    "previous_release_integration": {
-      "release_id": "2026-11-09.2",
-      "pull_request": 114,
-      "status": "MERGED_ALL_THREE_LIVE_VERIFIED",
-      "merge_commit": "a62e11994abfd07f7df91dd38649a86b6450c1df",
-      "versions": {
-        "app": "876fcc9e-1826-4e31-aee6-6be2b44c8dbc",
-        "auth": "ec385ca9-a986-49ec-abab-25a29daaf33b",
-        "finance": "9ed0bd7d-269a-4e5f-81d0-63be8c6ac2c4"
-      },
-      "receipt_sha256": "ec73452212ad53b8e47b0b1b02ccca8cbe09f98acca2c30ae80c6cc5358d0864"
-    },
-    "fresh_readonly_baseline": {
-      "checked_at": "2026-11-10T01:57:41.484515+00:00",
-      "receipt_sha256": "b8529b20c44d3bad80552f160faba7885b833c4a7aa842a87282edabef1bf81e",
-      "methods": [
-        "GET"
-      ],
-      "remote_writes": 0,
-      "d1_queries": 0,
-      "owner_endpoints_called": false,
-      "provider_calls": 0
+    "seller_centre_bank_comparison": {
+      "legacy_monthly_state": "NOT_COMPARED",
+      "file_evidence_workspace": "AVAILABLE_OWNER_CONFIRMATION_REQUIRED",
+      "real_statement_use_by_delivery": "NOT_EXECUTED",
+      "complete_month_closed": false
     },
     "validation": {
-      "status": "PASSED_RECORDED_PUBLICATION_EVIDENCE",
-      "focused": "PASSED",
-      "full_node": {
-        "tests": 3660,
-        "pass": 3660,
-        "fail": 0,
-        "skipped": 0,
-        "cancelled": 0
-      },
-      "python": 67,
-      "chromium": "PASSED_SYNTHETIC_NORMAL_MINIFIED_320_1365_LIGHT_DARK",
-      "ci": "GREEN_EXACT_REVIEWED_SOURCE_HEAD",
-      "ci_url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/42744288094",
-      "real_owner_acceptance": "NOT_CLAIMED"
+      "source_head": "9b546e8e65278470e62c919d0711d05b2f55a18d",
+      "node_tests_pass": 3761,
+      "node_suite_source": "COMPLETE_GITHUB_ACTIONS_LOG_WITH_RAW_PROVENANCE",
+      "python_tests_pass": 67,
+      "source_ci": 42857825794,
+      "source_ci_url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/42857825794",
+      "chromium_outcomes_pass": 8,
+      "chromium_profiles": "normal/minified x320/1365 xlight/dark",
+      "all_three_generated_hashes_bound": true,
+      "qa_report_sha256": "ab7283e02ae978370933691598cec67578a1a78983839ca4e079ff9a8bd0ec49",
+      "legacy_core_files_byte_identical": 18,
+      "local_browser_followup": {
+        "full_local_pass": 3760,
+        "full_local_fail": 1,
+        "failure": "CDP_PAGE_UNAVAILABLE_BEFORE_APP_NAVIGATION",
+        "isolated_same_test_retry_pass": 1,
+        "isolated_retry_fail": 0,
+        "test_source_changed_for_retry": false
+      }
     },
-    "pull_request": 115,
-    "code_commit": "e1f74f6763a8ebb407402e2808fca2430d12b9a0",
-    "reviewed_head": "85c59749c0f93a909bc5ab00a05013155fab6921",
-    "ci_run": 42744288094,
+    "pull_request": {
+      "number": 116,
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/116",
+      "integration_state_source": "CONSULT_CURRENT_GITHUB_PULL_REQUEST",
+      "publication_does_not_prove_merge": true
+    },
+    "code_commit": "9b546e8e65278470e62c919d0711d05b2f55a18d",
+    "prepared_source_commit": "bdbfd5130ae6771b470b29071862c8179c829821",
+    "reviewed_head": "9b546e8e65278470e62c919d0711d05b2f55a18d",
+    "ci_run": 42857825794,
     "deployment": {
-      "status": "APP_LIVE_FULL_VECTOR_VERIFIED_AUTH_FINANCE_PRESERVED",
+      "published_at": "2026-11-10T14:02:41.633702-03:00",
       "versions": {
-        "app": "55d29a3f-f0a8-4481-86a6-bc4cf6715c6c",
-        "auth": "ec385ca9-a986-49ec-abab-25a29daaf33b",
-        "finance": "9ed0bd7d-269a-4e5f-81d0-63be8c6ac2c4"
+        "app": "6e9e6514-8e0d-4791-bdc3-23ef8709363d",
+        "auth": "3b085dec-c506-472c-afae-6863c67cd545",
+        "finance": "4b285d05-9326-4885-b02d-c56a4ad99596"
       },
-      "generated_sha256": {
-        "app": "a9f878afc4d89c8d20edcf04b8a8a343bf83fcbd8a327ebc05a5983c8a38b8e0",
-        "auth": "47c83f87f191fd0e5ff503d9c4bcf4671cd986b0965e66e84f1a6ed952dac925",
-        "finance": "08ada5ecec92350f4f8301fdb7baa00f5f8083a0e8390296b2870e0ff3cdc1a5"
-      },
-      "published_sha256": {
-        "app": "083ea76a0d659579512dc5022f09fdc435d503f1b5f8220e9115ea35f54ac6e7",
-        "auth": "2a2c2433c6fba25d1c399991595c96e6b8a85045edb77879c8270c446cb45ad2",
-        "finance": "e5bf80e14ff00e5b365bfbcfb25bf3a4dc1e42bf40bb0e4259909649eea1d5cd"
-      },
-      "started_at": 1794279163,
-      "completed_at": 1794279195,
-      "completed_at_brasilia": "2026-11-09T23:53:15-03:00",
       "all_three_exact": true,
-      "configuration_preserved": true,
-      "domains_preserved": true,
-      "subdomains_preserved": true,
-      "flags_preserved": true,
-      "cron_preserved": true,
-      "physical_or_financial_fact_writes": false,
-      "d1_queries": 0,
-      "owner_endpoints_called": false,
-      "provider_calls": 0,
-      "receipt_file": "publication-receipt.json",
-      "receipt_sha256": "1e2e79d2b22b03c3ac6888b8f48337e6871343c678b5d2b195ba49d6f9e082df"
+      "configuration_domains_subdomains_flags_cron_preserved": true,
+      "steps_verified": 3,
+      "receipt_sha256": "6a4a74490bdd0168ebe9d6584d5b87f01be182c81a8435db7f9ddda7ee4e4399",
+      "public_login_release_header": "2026-11-10.1",
+      "public_login_meta_verified": true,
+      "anonymous_owner_endpoint_denied": true,
+      "private_auth_missing_key_denied": true,
+      "publisher_d1_queries": 0,
+      "publisher_owner_endpoint_calls": false,
+      "provider_calls": 0
     },
     "integration": {
-      "status": "PUBLICATION_RECEIPT_SNAPSHOT_CHECK_LINKED_PR_CURRENT_STATE",
-      "pull_request": 115,
-      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/115",
-      "merge_commit": null,
-      "publication_receipt_does_not_prove_merge": true
-    },
-    "runtime_schedule_readonly": {
-      "schema": "production_schedule_readonly_summary_v1",
-      "checked_at": "2026-11-10T02:16:16.630618+00:00",
-      "checked_at_brasilia": "2026-11-09T23:16:16.630618-03:00",
-      "app_minute_cron_preserved": true,
-      "weekly_tables_present": true,
-      "weekly_state": {
-        "revision": 0,
-        "updated_at": 1793759451,
-        "activated_at": 1793759451,
-        "last_tick_at": 1794276651,
-        "last_success_at": 1794276651,
-        "next_close_at": 1794585600
-      },
-      "weekly_report_stats": {
-        "reports": 13,
-        "latest_captured_at": 1793980851
-      },
-      "nov06_original": {
-        "week_end_date": "2026-11-06",
-        "version": 1,
-        "captured_at": 1793980851,
-        "origin": "cron",
-        "source_revision": 0,
-        "timing_revision": 0,
-        "status": "NO_RECORDS",
-        "capture_kind": "SCHEDULED",
-        "period_start_at": 1793376000,
-        "period_end_at": 1793980800,
-        "total_cost_cents": null
-      },
-      "nov06_latest": {
-        "week_end_date": "2026-11-06",
-        "version": 1,
-        "captured_at": 1793980851,
-        "origin": "cron",
-        "source_revision": 0,
-        "timing_revision": 0,
-        "status": "NO_RECORDS",
-        "capture_kind": "SCHEDULED",
-        "period_start_at": 1793376000,
-        "period_end_at": 1793980800,
-        "total_cost_cents": null
-      },
-      "manufacture_state_table_present": false,
-      "manufacture_records_table_present": false,
-      "manufacture_state": null,
-      "stored_manufacture_records": null,
-      "manufacture_completeness": "NOT_PROVEN_BY_RECORD_ABSENCE_OR_COUNTS",
-      "weekly_last_error": "NOT_PERSISTED_BY_CURRENT_STORE",
-      "data_writes": 0,
-      "provider_calls": 0,
-      "owner_endpoints_called": false,
-      "manual_tick_or_setup_called": false,
-      "automatic_retry": false,
-      "audit_summary_sha256": "e6867adf907ee8f071de34fd7e75b5583c94c0172fee38573e3a7a58182b6a3e",
-      "audit_pins_sha256": "d331b41bf7440744b5782c21d1c8a501fc7aa7030e0262c2bd03f251bad35095",
-      "capture_script_sha256": "44e50898e050153b15a09603f3f3c5e23749ec4f4607736ea46c2218a61b7df0",
-      "last_tick_at_brasilia": "2026-11-09T23:10:51-03:00",
-      "last_success_at_brasilia": "2026-11-09T23:10:51-03:00",
-      "next_close_at_brasilia": "2026-11-13T13:00:00-03:00",
-      "nov06_captured_at_brasilia": "2026-11-06T13:00:51-03:00",
-      "next_close_is_schedule_not_future_execution_proof": true,
-      "ledger_absence_is_not_zero": true,
-      "last_error_absence_is_not_no_failure_proof": true
+      "current_status_source": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/116",
+      "normal_merge_required_after_documentation_ci": true,
+      "no_runtime_redeploy_for_documentation": true
     }
   },
   "validation_history": [
@@ -442,233 +354,145 @@
     }
   ],
   "live_release": {
-    "id": "PRODUCTION_DAILY_WEEKLY_WORKSPACE",
+    "id": "NUBANK_CASH_RECONCILIATION_2026_11_10",
     "status": "PUBLISHED_VERIFIED",
-    "branch": "feature/production-closing-workspace-20261109",
-    "base_main": "a62e11994abfd07f7df91dd38649a86b6450c1df",
-    "human_code_release_id": "2026-11-09.3",
-    "human_date": "09/11/2026",
-    "label": "Produção diária e fechamento semanal",
-    "docs": "docs/MLS_PRODUCTION_WORKSPACE_2026_11_09.md",
-    "finance_m2": "OPEN",
-    "m22": "OPEN_PENDING_REAL_OPERATION_AND_ACCOUNTING_BRIDGE",
-    "workers": [
-      "app"
-    ],
-    "unchanged_workers": [
-      "auth",
-      "finance"
-    ],
+    "branch": "feature/nubank-cash-reconciliation-20261110",
+    "base_main": "f451c15ec1b96abaa6315457324ccaa31c8d361c",
+    "human_code_release_id": "2026-11-10.1",
+    "human_date": "10/11/2026",
+    "label": "Conciliação com extrato Nubank",
+    "docs": "docs/MLS_NUBANK_RECONCILIATION_2026_11_10.md",
+    "finance_m2": "OPEN_REAL_FILE_RECONCILIATION_REQUIRED",
+    "m22": "OPEN",
+    "workers": {
+      "app": {
+        "version": "6e9e6514-8e0d-4791-bdc3-23ef8709363d",
+        "generated_sha256": "bae9f6f0c816e24954919523868160c3e932935a42b8a1d0037bafa8432df6bb",
+        "published_sha256": "fe19885f23d728fcb52ef1d77b76da2a7d4367fbe15d6f9810a352bd7160d0d3"
+      },
+      "auth": {
+        "version": "3b085dec-c506-472c-afae-6863c67cd545",
+        "generated_sha256": "c8e3fd3aecac69320666bc847064bf222bcbde35e9a63cf41fb87a4c02cb1838",
+        "published_sha256": "9259b304bf139201b93044ad83843ebc8b6c75d4817fefb86609d642ae655357"
+      },
+      "finance": {
+        "version": "4b285d05-9326-4885-b02d-c56a4ad99596",
+        "generated_sha256": "6070dc2cef50c815692b8cfad97659ff945df8504555d689bee8c6164a9e5be2",
+        "published_sha256": "bf2740e7e6c1879866a20e299e9aefedb5b453ce3ac1ca8c6021537ead10f966"
+      }
+    },
+    "unchanged_workers": [],
     "deploy_order": [
+      "finance",
+      "auth",
       "app"
     ],
     "routes": {
-      "daily": "/admin?tab=agent-production#incurredProductionCalendarTitle",
-      "weekly": "/admin?tab=agent-production#productionWeeklyClosing",
-      "register": "/admin?tab=agent-production#incurredProductionRecordsPane",
-      "range": "/admin?tab=agent-production#incurredProductionRangePane",
-      "sales_reference": "/admin?tab=agent-production#costPeriods",
-      "coverage": "/admin?tab=agent-production#productionCoverageDetails",
-      "notes": "/admin?tab=roadmap#appReleaseNotes"
+      "workspace": "/admin?tab=agent-finance#bankReconciliation",
+      "owner_api": "/api/admin/finance/external-cash",
+      "private_service": "/internal/finance/external-cash-v1"
     },
-    "scope": "PRODUCTION_NAVIGATION_ACCESSIBLE_CHARTS_EXPLICIT_DAY_CONFIRMATION_AND_READONLY_CUT_REFRESH",
-    "daily_basis": "AGGREGATION_OF_DECLARED_PHYSICAL_LOTS_BY_PRODUCED_DATE_NOT_A_NEW_IMMUTABLE_DAILY_ARTIFACT",
-    "daily_confirmation": "EXPLICIT_EXISTING_COVERAGE_INTERVAL_ATTESTATION_NOT_AUTOMATIC_MANUFACTURING",
-    "weekly_policy": {
-      "timezone": "America/Sao_Paulo",
-      "start": "PREVIOUS_FRIDAY_13_INCLUSIVE",
-      "end": "FRIDAY_13_EXCLUSIVE",
-      "weekend_included": true,
-      "friday_assignment": "EXPLICIT_BEFORE_13_AND_AT_OR_AFTER_13_PHYSICAL_QUANTITIES",
-      "coverage_intervals": 8,
-      "original_and_restatements_preserved": true
+    "scope": "OWNER_DECLARED_FILE_EVIDENCE_SEPARATE_FROM_LEGACY_PROFIT",
+    "formats": [
+      "NUBANK_ACCOUNT_CSV",
+      "NUBANK_BANKING_OFX",
+      "SHOPEE_COMPLETED_TRANSFER_CSV"
+    ],
+    "raw_files_kept_local": true,
+    "preview_sends_only_normalized_selected_rows": true,
+    "preview_read_only": true,
+    "import_and_match_require_explicit_owner_confirmation": true,
+    "matching": "EXACT_POSITIVE_BRL_ONE_TO_ONE_OWNER_CONFIRMED",
+    "amount_date_and_reference_are_suggestions_only": true,
+    "cross_month_manual_selection": true,
+    "replay_before_cas": true,
+    "immutable_evidence_and_append_only_unlink_audit": true,
+    "bank_account_scope": "OWNER_DECLARED_SINGLE_NUBANK_ACCOUNT",
+    "bank_api_connected": false,
+    "query_budget": {
+      "official_limit_free": 50,
+      "cold_1000_rows": 45,
+      "existing_1000_rows_fresh_isolate": 19,
+      "healthy_schema_missing_tenant_state": 20,
+      "objects_and_sql_verified": 31,
+      "existing_schema_ddl": 0,
+      "official_source": "https://developers.cloudflare.com/d1/platform/limits/"
     },
-    "weekly_read_refresh": {
-      "after_cut_delay_seconds": 65,
-      "stale_after_seconds": 600,
-      "automatic_read_throttle_seconds": 60,
-      "recent_missing_artifact_or_restatement_retry": "ABOUT_EVERY_TEN_MINUTES_WITHIN_24_HOURS",
-      "visibility_session_busy_pending_guards": true,
-      "read_only_existing_endpoint": true,
-      "does_not_generate_a_report": true,
-      "does_not_guarantee_provider_cron_execution": true
-    },
-    "navigation": "DAILY_MONTH_WEEKLY_REGISTER_RANGE_AND_SALES_REFERENCE_SEPARATED_WITH_DTF_PRESERVED",
-    "charts": "EXISTING_DAILY_AND_WEEKLY_SOURCE_WITH_CLICK_AND_KEYBOARD_SELECTION_NO_SYNTHETIC_LIVE_DATA",
-    "register_selected_day": "EXPLICIT_ACTION_DOES_NOT_OVERWRITE_EDITED_DRAFT",
-    "manufacturing_basis": "IMMUTABLE_DECLARED_RECORDS_SEPARATE_FROM_SALES_COST_REFERENCE",
-    "saved_child_cost_context": {
-      "unit_cost_cents": 1350,
-      "rules_revision": 8,
-      "verified_by_previous_delivery": "2026-11-09.2",
-      "this_delivery_changes_rule_data": false,
-      "new_d1_audit_claimed": false,
-      "prior_ledger_table_absence": "UNKNOWN_NOT_ZERO_NOT_PROOF_OF_NO_MANUFACTURE"
-    },
+    "legacy_contracts_unchanged": true,
     "pricing_formula_unchanged": true,
     "dto_unchanged": true,
-    "new_endpoints": 0,
+    "realized_profit_changed": false,
     "new_provider_calls": 0,
     "new_collectors": 0,
     "cron_changed": false,
-    "legacy_contracts_unchanged": true,
     "physical_or_financial_facts_created_by_delivery": false,
-    "cost_config_data_writes_by_delivery": 0,
+    "cost_config_data_writes_by_delivery": false,
     "owner_real_mutation_requests": 0,
     "commercial_writes": false,
     "overview_six_agents_preserved": true,
     "month_drafts_preserved": true,
     "hermes_calculation_changed": false,
     "manufacturing_ledger_and_weekly_coverage_unchanged": true,
-    "seller_centre_bank_comparison": "NOT_CLOSED",
-    "previous_release_integration": {
-      "release_id": "2026-11-09.2",
-      "pull_request": 114,
-      "status": "MERGED_ALL_THREE_LIVE_VERIFIED",
-      "merge_commit": "a62e11994abfd07f7df91dd38649a86b6450c1df",
-      "versions": {
-        "app": "876fcc9e-1826-4e31-aee6-6be2b44c8dbc",
-        "auth": "ec385ca9-a986-49ec-abab-25a29daaf33b",
-        "finance": "9ed0bd7d-269a-4e5f-81d0-63be8c6ac2c4"
-      },
-      "receipt_sha256": "ec73452212ad53b8e47b0b1b02ccca8cbe09f98acca2c30ae80c6cc5358d0864"
-    },
-    "fresh_readonly_baseline": {
-      "checked_at": "2026-11-10T01:57:41.484515+00:00",
-      "receipt_sha256": "b8529b20c44d3bad80552f160faba7885b833c4a7aa842a87282edabef1bf81e",
-      "methods": [
-        "GET"
-      ],
-      "remote_writes": 0,
-      "d1_queries": 0,
-      "owner_endpoints_called": false,
-      "provider_calls": 0
+    "seller_centre_bank_comparison": {
+      "legacy_monthly_state": "NOT_COMPARED",
+      "file_evidence_workspace": "AVAILABLE_OWNER_CONFIRMATION_REQUIRED",
+      "real_statement_use_by_delivery": "NOT_EXECUTED",
+      "complete_month_closed": false
     },
     "validation": {
-      "status": "PASSED_RECORDED_PUBLICATION_EVIDENCE",
-      "focused": "PASSED",
-      "full_node": {
-        "tests": 3660,
-        "pass": 3660,
-        "fail": 0,
-        "skipped": 0,
-        "cancelled": 0
-      },
-      "python": 67,
-      "chromium": "PASSED_SYNTHETIC_NORMAL_MINIFIED_320_1365_LIGHT_DARK",
-      "ci": "GREEN_EXACT_REVIEWED_SOURCE_HEAD",
-      "ci_url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/42744288094",
-      "real_owner_acceptance": "NOT_CLAIMED"
+      "source_head": "9b546e8e65278470e62c919d0711d05b2f55a18d",
+      "node_tests_pass": 3761,
+      "node_suite_source": "COMPLETE_GITHUB_ACTIONS_LOG_WITH_RAW_PROVENANCE",
+      "python_tests_pass": 67,
+      "source_ci": 42857825794,
+      "source_ci_url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/42857825794",
+      "chromium_outcomes_pass": 8,
+      "chromium_profiles": "normal/minified x320/1365 xlight/dark",
+      "all_three_generated_hashes_bound": true,
+      "qa_report_sha256": "ab7283e02ae978370933691598cec67578a1a78983839ca4e079ff9a8bd0ec49",
+      "legacy_core_files_byte_identical": 18,
+      "local_browser_followup": {
+        "full_local_pass": 3760,
+        "full_local_fail": 1,
+        "failure": "CDP_PAGE_UNAVAILABLE_BEFORE_APP_NAVIGATION",
+        "isolated_same_test_retry_pass": 1,
+        "isolated_retry_fail": 0,
+        "test_source_changed_for_retry": false
+      }
     },
-    "pull_request": 115,
-    "code_commit": "e1f74f6763a8ebb407402e2808fca2430d12b9a0",
-    "reviewed_head": "85c59749c0f93a909bc5ab00a05013155fab6921",
-    "ci_run": 42744288094,
+    "pull_request": {
+      "number": 116,
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/116",
+      "integration_state_source": "CONSULT_CURRENT_GITHUB_PULL_REQUEST",
+      "publication_does_not_prove_merge": true
+    },
+    "code_commit": "9b546e8e65278470e62c919d0711d05b2f55a18d",
+    "prepared_source_commit": "bdbfd5130ae6771b470b29071862c8179c829821",
+    "reviewed_head": "9b546e8e65278470e62c919d0711d05b2f55a18d",
+    "ci_run": 42857825794,
     "deployment": {
-      "status": "APP_LIVE_FULL_VECTOR_VERIFIED_AUTH_FINANCE_PRESERVED",
+      "published_at": "2026-11-10T14:02:41.633702-03:00",
       "versions": {
-        "app": "55d29a3f-f0a8-4481-86a6-bc4cf6715c6c",
-        "auth": "ec385ca9-a986-49ec-abab-25a29daaf33b",
-        "finance": "9ed0bd7d-269a-4e5f-81d0-63be8c6ac2c4"
+        "app": "6e9e6514-8e0d-4791-bdc3-23ef8709363d",
+        "auth": "3b085dec-c506-472c-afae-6863c67cd545",
+        "finance": "4b285d05-9326-4885-b02d-c56a4ad99596"
       },
-      "generated_sha256": {
-        "app": "a9f878afc4d89c8d20edcf04b8a8a343bf83fcbd8a327ebc05a5983c8a38b8e0",
-        "auth": "47c83f87f191fd0e5ff503d9c4bcf4671cd986b0965e66e84f1a6ed952dac925",
-        "finance": "08ada5ecec92350f4f8301fdb7baa00f5f8083a0e8390296b2870e0ff3cdc1a5"
-      },
-      "published_sha256": {
-        "app": "083ea76a0d659579512dc5022f09fdc435d503f1b5f8220e9115ea35f54ac6e7",
-        "auth": "2a2c2433c6fba25d1c399991595c96e6b8a85045edb77879c8270c446cb45ad2",
-        "finance": "e5bf80e14ff00e5b365bfbcfb25bf3a4dc1e42bf40bb0e4259909649eea1d5cd"
-      },
-      "started_at": 1794279163,
-      "completed_at": 1794279195,
-      "completed_at_brasilia": "2026-11-09T23:53:15-03:00",
       "all_three_exact": true,
-      "configuration_preserved": true,
-      "domains_preserved": true,
-      "subdomains_preserved": true,
-      "flags_preserved": true,
-      "cron_preserved": true,
-      "physical_or_financial_fact_writes": false,
-      "d1_queries": 0,
-      "owner_endpoints_called": false,
-      "provider_calls": 0,
-      "receipt_file": "publication-receipt.json",
-      "receipt_sha256": "1e2e79d2b22b03c3ac6888b8f48337e6871343c678b5d2b195ba49d6f9e082df"
+      "configuration_domains_subdomains_flags_cron_preserved": true,
+      "steps_verified": 3,
+      "receipt_sha256": "6a4a74490bdd0168ebe9d6584d5b87f01be182c81a8435db7f9ddda7ee4e4399",
+      "public_login_release_header": "2026-11-10.1",
+      "public_login_meta_verified": true,
+      "anonymous_owner_endpoint_denied": true,
+      "private_auth_missing_key_denied": true,
+      "publisher_d1_queries": 0,
+      "publisher_owner_endpoint_calls": false,
+      "provider_calls": 0
     },
     "integration": {
-      "status": "PUBLICATION_RECEIPT_SNAPSHOT_CHECK_LINKED_PR_CURRENT_STATE",
-      "pull_request": 115,
-      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/115",
-      "merge_commit": null,
-      "publication_receipt_does_not_prove_merge": true
-    },
-    "runtime_schedule_readonly": {
-      "schema": "production_schedule_readonly_summary_v1",
-      "checked_at": "2026-11-10T02:16:16.630618+00:00",
-      "checked_at_brasilia": "2026-11-09T23:16:16.630618-03:00",
-      "app_minute_cron_preserved": true,
-      "weekly_tables_present": true,
-      "weekly_state": {
-        "revision": 0,
-        "updated_at": 1793759451,
-        "activated_at": 1793759451,
-        "last_tick_at": 1794276651,
-        "last_success_at": 1794276651,
-        "next_close_at": 1794585600
-      },
-      "weekly_report_stats": {
-        "reports": 13,
-        "latest_captured_at": 1793980851
-      },
-      "nov06_original": {
-        "week_end_date": "2026-11-06",
-        "version": 1,
-        "captured_at": 1793980851,
-        "origin": "cron",
-        "source_revision": 0,
-        "timing_revision": 0,
-        "status": "NO_RECORDS",
-        "capture_kind": "SCHEDULED",
-        "period_start_at": 1793376000,
-        "period_end_at": 1793980800,
-        "total_cost_cents": null
-      },
-      "nov06_latest": {
-        "week_end_date": "2026-11-06",
-        "version": 1,
-        "captured_at": 1793980851,
-        "origin": "cron",
-        "source_revision": 0,
-        "timing_revision": 0,
-        "status": "NO_RECORDS",
-        "capture_kind": "SCHEDULED",
-        "period_start_at": 1793376000,
-        "period_end_at": 1793980800,
-        "total_cost_cents": null
-      },
-      "manufacture_state_table_present": false,
-      "manufacture_records_table_present": false,
-      "manufacture_state": null,
-      "stored_manufacture_records": null,
-      "manufacture_completeness": "NOT_PROVEN_BY_RECORD_ABSENCE_OR_COUNTS",
-      "weekly_last_error": "NOT_PERSISTED_BY_CURRENT_STORE",
-      "data_writes": 0,
-      "provider_calls": 0,
-      "owner_endpoints_called": false,
-      "manual_tick_or_setup_called": false,
-      "automatic_retry": false,
-      "audit_summary_sha256": "e6867adf907ee8f071de34fd7e75b5583c94c0172fee38573e3a7a58182b6a3e",
-      "audit_pins_sha256": "d331b41bf7440744b5782c21d1c8a501fc7aa7030e0262c2bd03f251bad35095",
-      "capture_script_sha256": "44e50898e050153b15a09603f3f3c5e23749ec4f4607736ea46c2218a61b7df0",
-      "last_tick_at_brasilia": "2026-11-09T23:10:51-03:00",
-      "last_success_at_brasilia": "2026-11-09T23:10:51-03:00",
-      "next_close_at_brasilia": "2026-11-13T13:00:00-03:00",
-      "nov06_captured_at_brasilia": "2026-11-06T13:00:51-03:00",
-      "next_close_is_schedule_not_future_execution_proof": true,
-      "ledger_absence_is_not_zero": true,
-      "last_error_absence_is_not_no_failure_proof": true
+      "current_status_source": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/116",
+      "normal_merge_required_after_documentation_ci": true,
+      "no_runtime_redeploy_for_documentation": true
     }
   },
   "visual_chart_refinement_20261031": {
@@ -5970,6 +5794,378 @@
     "Continuar M2/M2.2, origem/composição de devoluções, decomposição histórica e comparação Seller Centre/banco sem dupla contagem."
   ],
   "production_workspace_2026_11_09": {
+    "id": "PRODUCTION_DAILY_WEEKLY_WORKSPACE",
+    "status": "PUBLISHED_VERIFIED",
+    "branch": "feature/production-closing-workspace-20261109",
+    "base_main": "a62e11994abfd07f7df91dd38649a86b6450c1df",
+    "human_code_release_id": "2026-11-09.3",
+    "human_date": "09/11/2026",
+    "label": "Produção diária e fechamento semanal",
+    "docs": "docs/MLS_PRODUCTION_WORKSPACE_2026_11_09.md",
+    "finance_m2": "OPEN",
+    "m22": "OPEN_PENDING_REAL_OPERATION_AND_ACCOUNTING_BRIDGE",
+    "workers": [
+      "app"
+    ],
+    "unchanged_workers": [
+      "auth",
+      "finance"
+    ],
+    "deploy_order": [
+      "app"
+    ],
+    "routes": {
+      "daily": "/admin?tab=agent-production#incurredProductionCalendarTitle",
+      "weekly": "/admin?tab=agent-production#productionWeeklyClosing",
+      "register": "/admin?tab=agent-production#incurredProductionRecordsPane",
+      "range": "/admin?tab=agent-production#incurredProductionRangePane",
+      "sales_reference": "/admin?tab=agent-production#costPeriods",
+      "coverage": "/admin?tab=agent-production#productionCoverageDetails",
+      "notes": "/admin?tab=roadmap#appReleaseNotes"
+    },
+    "scope": "PRODUCTION_NAVIGATION_ACCESSIBLE_CHARTS_EXPLICIT_DAY_CONFIRMATION_AND_READONLY_CUT_REFRESH",
+    "daily_basis": "AGGREGATION_OF_DECLARED_PHYSICAL_LOTS_BY_PRODUCED_DATE_NOT_A_NEW_IMMUTABLE_DAILY_ARTIFACT",
+    "daily_confirmation": "EXPLICIT_EXISTING_COVERAGE_INTERVAL_ATTESTATION_NOT_AUTOMATIC_MANUFACTURING",
+    "weekly_policy": {
+      "timezone": "America/Sao_Paulo",
+      "start": "PREVIOUS_FRIDAY_13_INCLUSIVE",
+      "end": "FRIDAY_13_EXCLUSIVE",
+      "weekend_included": true,
+      "friday_assignment": "EXPLICIT_BEFORE_13_AND_AT_OR_AFTER_13_PHYSICAL_QUANTITIES",
+      "coverage_intervals": 8,
+      "original_and_restatements_preserved": true
+    },
+    "weekly_read_refresh": {
+      "after_cut_delay_seconds": 65,
+      "stale_after_seconds": 600,
+      "automatic_read_throttle_seconds": 60,
+      "recent_missing_artifact_or_restatement_retry": "ABOUT_EVERY_TEN_MINUTES_WITHIN_24_HOURS",
+      "visibility_session_busy_pending_guards": true,
+      "read_only_existing_endpoint": true,
+      "does_not_generate_a_report": true,
+      "does_not_guarantee_provider_cron_execution": true
+    },
+    "navigation": "DAILY_MONTH_WEEKLY_REGISTER_RANGE_AND_SALES_REFERENCE_SEPARATED_WITH_DTF_PRESERVED",
+    "charts": "EXISTING_DAILY_AND_WEEKLY_SOURCE_WITH_CLICK_AND_KEYBOARD_SELECTION_NO_SYNTHETIC_LIVE_DATA",
+    "register_selected_day": "EXPLICIT_ACTION_DOES_NOT_OVERWRITE_EDITED_DRAFT",
+    "manufacturing_basis": "IMMUTABLE_DECLARED_RECORDS_SEPARATE_FROM_SALES_COST_REFERENCE",
+    "saved_child_cost_context": {
+      "unit_cost_cents": 1350,
+      "rules_revision": 8,
+      "verified_by_previous_delivery": "2026-11-09.2",
+      "this_delivery_changes_rule_data": false,
+      "new_d1_audit_claimed": false,
+      "prior_ledger_table_absence": "UNKNOWN_NOT_ZERO_NOT_PROOF_OF_NO_MANUFACTURE"
+    },
+    "pricing_formula_unchanged": true,
+    "dto_unchanged": true,
+    "new_endpoints": 0,
+    "new_provider_calls": 0,
+    "new_collectors": 0,
+    "cron_changed": false,
+    "legacy_contracts_unchanged": true,
+    "physical_or_financial_facts_created_by_delivery": false,
+    "cost_config_data_writes_by_delivery": 0,
+    "owner_real_mutation_requests": 0,
+    "commercial_writes": false,
+    "overview_six_agents_preserved": true,
+    "month_drafts_preserved": true,
+    "hermes_calculation_changed": false,
+    "manufacturing_ledger_and_weekly_coverage_unchanged": true,
+    "seller_centre_bank_comparison": "NOT_CLOSED",
+    "previous_release_integration": {
+      "release_id": "2026-11-09.2",
+      "pull_request": 114,
+      "status": "MERGED_ALL_THREE_LIVE_VERIFIED",
+      "merge_commit": "a62e11994abfd07f7df91dd38649a86b6450c1df",
+      "versions": {
+        "app": "876fcc9e-1826-4e31-aee6-6be2b44c8dbc",
+        "auth": "ec385ca9-a986-49ec-abab-25a29daaf33b",
+        "finance": "9ed0bd7d-269a-4e5f-81d0-63be8c6ac2c4"
+      },
+      "receipt_sha256": "ec73452212ad53b8e47b0b1b02ccca8cbe09f98acca2c30ae80c6cc5358d0864"
+    },
+    "fresh_readonly_baseline": {
+      "checked_at": "2026-11-10T01:57:41.484515+00:00",
+      "receipt_sha256": "b8529b20c44d3bad80552f160faba7885b833c4a7aa842a87282edabef1bf81e",
+      "methods": [
+        "GET"
+      ],
+      "remote_writes": 0,
+      "d1_queries": 0,
+      "owner_endpoints_called": false,
+      "provider_calls": 0
+    },
+    "validation": {
+      "status": "PASSED_RECORDED_PUBLICATION_EVIDENCE",
+      "focused": "PASSED",
+      "full_node": {
+        "tests": 3660,
+        "pass": 3660,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0
+      },
+      "python": 67,
+      "chromium": "PASSED_SYNTHETIC_NORMAL_MINIFIED_320_1365_LIGHT_DARK",
+      "ci": "GREEN_EXACT_REVIEWED_SOURCE_HEAD",
+      "ci_url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/42744288094",
+      "real_owner_acceptance": "NOT_CLAIMED"
+    },
+    "pull_request": 115,
+    "code_commit": "e1f74f6763a8ebb407402e2808fca2430d12b9a0",
+    "reviewed_head": "85c59749c0f93a909bc5ab00a05013155fab6921",
+    "ci_run": 42744288094,
+    "deployment": {
+      "status": "APP_LIVE_FULL_VECTOR_VERIFIED_AUTH_FINANCE_PRESERVED",
+      "versions": {
+        "app": "55d29a3f-f0a8-4481-86a6-bc4cf6715c6c",
+        "auth": "ec385ca9-a986-49ec-abab-25a29daaf33b",
+        "finance": "9ed0bd7d-269a-4e5f-81d0-63be8c6ac2c4"
+      },
+      "generated_sha256": {
+        "app": "a9f878afc4d89c8d20edcf04b8a8a343bf83fcbd8a327ebc05a5983c8a38b8e0",
+        "auth": "47c83f87f191fd0e5ff503d9c4bcf4671cd986b0965e66e84f1a6ed952dac925",
+        "finance": "08ada5ecec92350f4f8301fdb7baa00f5f8083a0e8390296b2870e0ff3cdc1a5"
+      },
+      "published_sha256": {
+        "app": "083ea76a0d659579512dc5022f09fdc435d503f1b5f8220e9115ea35f54ac6e7",
+        "auth": "2a2c2433c6fba25d1c399991595c96e6b8a85045edb77879c8270c446cb45ad2",
+        "finance": "e5bf80e14ff00e5b365bfbcfb25bf3a4dc1e42bf40bb0e4259909649eea1d5cd"
+      },
+      "started_at": 1794279163,
+      "completed_at": 1794279195,
+      "completed_at_brasilia": "2026-11-09T23:53:15-03:00",
+      "all_three_exact": true,
+      "configuration_preserved": true,
+      "domains_preserved": true,
+      "subdomains_preserved": true,
+      "flags_preserved": true,
+      "cron_preserved": true,
+      "physical_or_financial_fact_writes": false,
+      "d1_queries": 0,
+      "owner_endpoints_called": false,
+      "provider_calls": 0,
+      "receipt_file": "publication-receipt.json",
+      "receipt_sha256": "1e2e79d2b22b03c3ac6888b8f48337e6871343c678b5d2b195ba49d6f9e082df"
+    },
+    "integration": {
+      "status": "PUBLICATION_RECEIPT_SNAPSHOT_CHECK_LINKED_PR_CURRENT_STATE",
+      "pull_request": 115,
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/115",
+      "merge_commit": null,
+      "publication_receipt_does_not_prove_merge": true
+    },
+    "runtime_schedule_readonly": {
+      "schema": "production_schedule_readonly_summary_v1",
+      "checked_at": "2026-11-10T02:16:16.630618+00:00",
+      "checked_at_brasilia": "2026-11-09T23:16:16.630618-03:00",
+      "app_minute_cron_preserved": true,
+      "weekly_tables_present": true,
+      "weekly_state": {
+        "revision": 0,
+        "updated_at": 1793759451,
+        "activated_at": 1793759451,
+        "last_tick_at": 1794276651,
+        "last_success_at": 1794276651,
+        "next_close_at": 1794585600
+      },
+      "weekly_report_stats": {
+        "reports": 13,
+        "latest_captured_at": 1793980851
+      },
+      "nov06_original": {
+        "week_end_date": "2026-11-06",
+        "version": 1,
+        "captured_at": 1793980851,
+        "origin": "cron",
+        "source_revision": 0,
+        "timing_revision": 0,
+        "status": "NO_RECORDS",
+        "capture_kind": "SCHEDULED",
+        "period_start_at": 1793376000,
+        "period_end_at": 1793980800,
+        "total_cost_cents": null
+      },
+      "nov06_latest": {
+        "week_end_date": "2026-11-06",
+        "version": 1,
+        "captured_at": 1793980851,
+        "origin": "cron",
+        "source_revision": 0,
+        "timing_revision": 0,
+        "status": "NO_RECORDS",
+        "capture_kind": "SCHEDULED",
+        "period_start_at": 1793376000,
+        "period_end_at": 1793980800,
+        "total_cost_cents": null
+      },
+      "manufacture_state_table_present": false,
+      "manufacture_records_table_present": false,
+      "manufacture_state": null,
+      "stored_manufacture_records": null,
+      "manufacture_completeness": "NOT_PROVEN_BY_RECORD_ABSENCE_OR_COUNTS",
+      "weekly_last_error": "NOT_PERSISTED_BY_CURRENT_STORE",
+      "data_writes": 0,
+      "provider_calls": 0,
+      "owner_endpoints_called": false,
+      "manual_tick_or_setup_called": false,
+      "automatic_retry": false,
+      "audit_summary_sha256": "e6867adf907ee8f071de34fd7e75b5583c94c0172fee38573e3a7a58182b6a3e",
+      "audit_pins_sha256": "d331b41bf7440744b5782c21d1c8a501fc7aa7030e0262c2bd03f251bad35095",
+      "capture_script_sha256": "44e50898e050153b15a09603f3f3c5e23749ec4f4607736ea46c2218a61b7df0",
+      "last_tick_at_brasilia": "2026-11-09T23:10:51-03:00",
+      "last_success_at_brasilia": "2026-11-09T23:10:51-03:00",
+      "next_close_at_brasilia": "2026-11-13T13:00:00-03:00",
+      "nov06_captured_at_brasilia": "2026-11-06T13:00:51-03:00",
+      "next_close_is_schedule_not_future_execution_proof": true,
+      "ledger_absence_is_not_zero": true,
+      "last_error_absence_is_not_no_failure_proof": true
+    }
+  },
+  "nubank_reconciliation_2026_11_10": {
+    "id": "NUBANK_CASH_RECONCILIATION_2026_11_10",
+    "status": "PUBLISHED_VERIFIED",
+    "branch": "feature/nubank-cash-reconciliation-20261110",
+    "base_main": "f451c15ec1b96abaa6315457324ccaa31c8d361c",
+    "human_code_release_id": "2026-11-10.1",
+    "human_date": "10/11/2026",
+    "label": "Conciliação com extrato Nubank",
+    "docs": "docs/MLS_NUBANK_RECONCILIATION_2026_11_10.md",
+    "finance_m2": "OPEN_REAL_FILE_RECONCILIATION_REQUIRED",
+    "m22": "OPEN",
+    "workers": {
+      "app": {
+        "version": "6e9e6514-8e0d-4791-bdc3-23ef8709363d",
+        "generated_sha256": "bae9f6f0c816e24954919523868160c3e932935a42b8a1d0037bafa8432df6bb",
+        "published_sha256": "fe19885f23d728fcb52ef1d77b76da2a7d4367fbe15d6f9810a352bd7160d0d3"
+      },
+      "auth": {
+        "version": "3b085dec-c506-472c-afae-6863c67cd545",
+        "generated_sha256": "c8e3fd3aecac69320666bc847064bf222bcbde35e9a63cf41fb87a4c02cb1838",
+        "published_sha256": "9259b304bf139201b93044ad83843ebc8b6c75d4817fefb86609d642ae655357"
+      },
+      "finance": {
+        "version": "4b285d05-9326-4885-b02d-c56a4ad99596",
+        "generated_sha256": "6070dc2cef50c815692b8cfad97659ff945df8504555d689bee8c6164a9e5be2",
+        "published_sha256": "bf2740e7e6c1879866a20e299e9aefedb5b453ce3ac1ca8c6021537ead10f966"
+      }
+    },
+    "unchanged_workers": [],
+    "deploy_order": [
+      "finance",
+      "auth",
+      "app"
+    ],
+    "routes": {
+      "workspace": "/admin?tab=agent-finance#bankReconciliation",
+      "owner_api": "/api/admin/finance/external-cash",
+      "private_service": "/internal/finance/external-cash-v1"
+    },
+    "scope": "OWNER_DECLARED_FILE_EVIDENCE_SEPARATE_FROM_LEGACY_PROFIT",
+    "formats": [
+      "NUBANK_ACCOUNT_CSV",
+      "NUBANK_BANKING_OFX",
+      "SHOPEE_COMPLETED_TRANSFER_CSV"
+    ],
+    "raw_files_kept_local": true,
+    "preview_sends_only_normalized_selected_rows": true,
+    "preview_read_only": true,
+    "import_and_match_require_explicit_owner_confirmation": true,
+    "matching": "EXACT_POSITIVE_BRL_ONE_TO_ONE_OWNER_CONFIRMED",
+    "amount_date_and_reference_are_suggestions_only": true,
+    "cross_month_manual_selection": true,
+    "replay_before_cas": true,
+    "immutable_evidence_and_append_only_unlink_audit": true,
+    "bank_account_scope": "OWNER_DECLARED_SINGLE_NUBANK_ACCOUNT",
+    "bank_api_connected": false,
+    "query_budget": {
+      "official_limit_free": 50,
+      "cold_1000_rows": 45,
+      "existing_1000_rows_fresh_isolate": 19,
+      "healthy_schema_missing_tenant_state": 20,
+      "objects_and_sql_verified": 31,
+      "existing_schema_ddl": 0,
+      "official_source": "https://developers.cloudflare.com/d1/platform/limits/"
+    },
+    "legacy_contracts_unchanged": true,
+    "pricing_formula_unchanged": true,
+    "dto_unchanged": true,
+    "realized_profit_changed": false,
+    "new_provider_calls": 0,
+    "new_collectors": 0,
+    "cron_changed": false,
+    "physical_or_financial_facts_created_by_delivery": false,
+    "cost_config_data_writes_by_delivery": false,
+    "owner_real_mutation_requests": 0,
+    "commercial_writes": false,
+    "overview_six_agents_preserved": true,
+    "month_drafts_preserved": true,
+    "hermes_calculation_changed": false,
+    "manufacturing_ledger_and_weekly_coverage_unchanged": true,
+    "seller_centre_bank_comparison": {
+      "legacy_monthly_state": "NOT_COMPARED",
+      "file_evidence_workspace": "AVAILABLE_OWNER_CONFIRMATION_REQUIRED",
+      "real_statement_use_by_delivery": "NOT_EXECUTED",
+      "complete_month_closed": false
+    },
+    "validation": {
+      "source_head": "9b546e8e65278470e62c919d0711d05b2f55a18d",
+      "node_tests_pass": 3761,
+      "node_suite_source": "COMPLETE_GITHUB_ACTIONS_LOG_WITH_RAW_PROVENANCE",
+      "python_tests_pass": 67,
+      "source_ci": 42857825794,
+      "source_ci_url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/42857825794",
+      "chromium_outcomes_pass": 8,
+      "chromium_profiles": "normal/minified x320/1365 xlight/dark",
+      "all_three_generated_hashes_bound": true,
+      "qa_report_sha256": "ab7283e02ae978370933691598cec67578a1a78983839ca4e079ff9a8bd0ec49",
+      "legacy_core_files_byte_identical": 18,
+      "local_browser_followup": {
+        "full_local_pass": 3760,
+        "full_local_fail": 1,
+        "failure": "CDP_PAGE_UNAVAILABLE_BEFORE_APP_NAVIGATION",
+        "isolated_same_test_retry_pass": 1,
+        "isolated_retry_fail": 0,
+        "test_source_changed_for_retry": false
+      }
+    },
+    "pull_request": {
+      "number": 116,
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/116",
+      "integration_state_source": "CONSULT_CURRENT_GITHUB_PULL_REQUEST",
+      "publication_does_not_prove_merge": true
+    },
+    "code_commit": "9b546e8e65278470e62c919d0711d05b2f55a18d",
+    "prepared_source_commit": "bdbfd5130ae6771b470b29071862c8179c829821",
+    "reviewed_head": "9b546e8e65278470e62c919d0711d05b2f55a18d",
+    "ci_run": 42857825794,
+    "deployment": {
+      "published_at": "2026-11-10T14:02:41.633702-03:00",
+      "versions": {
+        "app": "6e9e6514-8e0d-4791-bdc3-23ef8709363d",
+        "auth": "3b085dec-c506-472c-afae-6863c67cd545",
+        "finance": "4b285d05-9326-4885-b02d-c56a4ad99596"
+      },
+      "all_three_exact": true,
+      "configuration_domains_subdomains_flags_cron_preserved": true,
+      "steps_verified": 3,
+      "receipt_sha256": "6a4a74490bdd0168ebe9d6584d5b87f01be182c81a8435db7f9ddda7ee4e4399",
+      "public_login_release_header": "2026-11-10.1",
+      "public_login_meta_verified": true,
+      "anonymous_owner_endpoint_denied": true,
+      "private_auth_missing_key_denied": true,
+      "publisher_d1_queries": 0,
+      "publisher_owner_endpoint_calls": false,
+      "provider_calls": 0
+    },
+    "integration": {
+      "current_status_source": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/116",
+      "normal_merge_required_after_documentation_ci": true,
+      "no_runtime_redeploy_for_documentation": true
+    }
+  },
+  "previous_live_release_before_nubank_reconciliation": {
     "id": "PRODUCTION_DAILY_WEEKLY_WORKSPACE",
     "status": "PUBLISHED_VERIFIED",
     "branch": "feature/production-closing-workspace-20261109",

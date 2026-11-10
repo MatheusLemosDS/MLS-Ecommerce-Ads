@@ -4,19 +4,34 @@ import hashlib,json,subprocess
 import re
 root=Path(__file__).resolve().parent
 
-def freeze_client_helpers(source, helpers):
+def freeze_client_helpers(source, helpers, *, compact_helpers=()):
     """Embed helper source before Wrangler can rename functions or their closures.
 
     These named exports use column-zero closing braces. Keep the source as a
     JSON string interpolation so template literals and regular expressions in
     the helper retain their exact spelling inside the browser script.
     """
+    snapshots={}
     for name, filename in helpers.items():
         marker='${'+name+'.toString()}'
         functions=re.findall(r'^export function '+re.escape(name)+r'\([\s\S]*?^\}', (root/'src'/filename).read_text(),flags=re.M)
         if source.count(marker)!=1 or len(functions)!=1:
             raise ValueError('Cannot snapshot browser helper: '+name)
-        source=source.replace(marker,'${'+json.dumps(functions[0].removeprefix('export '))+'}',1)
+        snapshots[name]=functions[0].removeprefix('export ')
+    if compact_helpers:
+        if len(set(compact_helpers))!=len(compact_helpers) or not set(compact_helpers)<=snapshots.keys():
+            raise ValueError('Invalid compacted browser helper selection')
+        request={'schema':'worker_browser_factories_v1','factories':[{'name':name,'source':snapshots[name]} for name in compact_helpers]}
+        result=subprocess.run(['node',str(root.parent.parent/'tools'/'compact_worker_namespaces.mjs'),'browser-factories'],input=json.dumps(request),capture_output=True,text=True,check=True,timeout=30)
+        value=json.loads(result.stdout)
+        if set(value)!={'schema','factories'} or value['schema']!=request['schema'] or not isinstance(value['factories'],list) or len(value['factories'])!=len(compact_helpers):
+            raise ValueError('Invalid compacted browser helper response')
+        for original,compact in zip(request['factories'],value['factories']):
+            if set(compact)!={'name','source'} or compact['name']!=original['name'] or not isinstance(compact['source'],str) or not compact['source']:
+                raise ValueError('Invalid compacted browser helper row')
+            snapshots[compact['name']]=compact['source']
+    for name,snapshot in snapshots.items():
+        source=source.replace('${'+name+'.toString()}','${'+json.dumps(snapshot)+'}',1)
     return source
 
 original=(root/'original/app-worker.mjs').read_text()
@@ -57,9 +72,9 @@ business_checkpoint=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src
 business_checkpoint='const brazaBusinessCheckpoint = (() => {\n'+business_checkpoint+'\nreturn {BUSINESS_CHECKPOINT_SCHEMA,buildBusinessCheckpoint,recordBusinessCheckpoint,readBusinessCheckpoints,businessMonthWithCheckpoint,BusinessCheckpointError};\n})();\nconst {BUSINESS_CHECKPOINT_SCHEMA,buildBusinessCheckpoint,recordBusinessCheckpoint,readBusinessCheckpoints,businessMonthWithCheckpoint,BusinessCheckpointError}=brazaBusinessCheckpoint;\n'
 server_namespace_sources=[]
 
-def source_namespace(filename, namespace, names, helpers=None, *, omit_server_functions=()):
+def source_namespace(filename, namespace, names, helpers=None, *, omit_server_functions=(), compact_client_helpers=()):
     raw=(root/'src'/filename).read_text()
-    if helpers: raw=freeze_client_helpers(raw,helpers)
+    if helpers: raw=freeze_client_helpers(raw,helpers,compact_helpers=compact_client_helpers)
     # DOM renderers already frozen into browser clients need no server copy.
     # Keep module exports and browser source unchanged; omit only exact helpers
     # that the server namespace does not expose or interpolate at runtime.
@@ -80,14 +95,14 @@ def source_namespace(filename, namespace, names, helpers=None, *, omit_server_fu
         server_namespace_sources.append({'name':namespace,'source':output})
     return output
 
-def compact_server_namespaces(output):
+def compact_server_namespaces(output, manual_namespaces=()):
     """Batch compact reviewed host namespaces without changing browser strings.
 
     The Admin seam, supplied originals, client sources and AI browser assembly
     remain outside this transform. Exact occurrence checks prevent ambiguous
     replacement after future changes to the generated source layout.
     """
-    rows=server_namespace_sources
+    rows=[*server_namespace_sources,*manual_namespaces]
     if not rows or len({row['name'] for row in rows})!=len(rows):
         raise ValueError('Invalid server namespace selection')
     for row in rows:
@@ -105,6 +120,9 @@ def compact_server_namespaces(output):
     return output
 app_release=source_namespace('app-release.mjs','mlsAppRelease','APP_RELEASE,releaseInfo')
 app_release_view=source_namespace('app-release-view.mjs','mlsAppReleaseView','APP_RELEASE_CSS,releaseOverviewBody,releaseNotesBody')
+external_cash_frame=source_namespace('../../finance/src/external-cash-frame.mjs','mlsExternalCashFrame','EXTERNAL_CASH_PATH,EXTERNAL_CASH_REQUEST_MAXIMUM,EXTERNAL_CASH_RESPONSE_MAXIMUM,externalCashErrorStatus,projectExternalCashError,createExternalCashProtocol,projectExternalCashRequest,projectExternalCashResponse,externalCashResponseMatches,isExternalCashCompletedStatus')
+app_external_cash=source_namespace('app-external-cash.mjs','mlsAppExternalCash','getFinanceExternalCash')
+bank_reconciliation_view=source_namespace('bank-reconciliation-view.mjs','mlsBankReconciliationView','BANK_RECONCILIATION_CSS,bankReconciliationBody,BANK_RECONCILIATION_CLIENT',{'createCashStatementImportParser':'../../finance/src/cash-statement-import.mjs','createExternalCashProtocol':'../../finance/src/external-cash-frame.mjs','createBankReconciliationController':'bank-reconciliation-view.mjs'},omit_server_functions=('createBankReconciliationController',),compact_client_helpers=('createCashStatementImportParser','createExternalCashProtocol','createBankReconciliationController'))
 product_workbench_view=source_namespace('mls-product-workbench-view.mjs','mlsProductWorkbenchView','PRODUCT_WORKBENCH_CSS,productWorkbenchBody',omit_server_functions=('createMlsProductWorkbenchView',))
 month_view=product_workbench_view+'\n'+month_view
 agent_period_view=source_namespace('agent-period-view.mjs','mlsAgentPeriodView','AGENT_PERIOD_CSS,agentPeriodBody',omit_server_functions=('createAgentPeriodController',))
@@ -399,7 +417,7 @@ workspace_auth=re.sub(r'^export ', '', (root/'src/unified-auth.mjs').read_text()
 workspace_auth='const brazaWorkspaceAuth = (() => {\n'+workspace_auth+'\nreturn {readOwnerSession,readWorkspaceSession,handleWorkspaceAuth};\n})();\nconst {readOwnerSession,readWorkspaceSession,handleWorkspaceAuth}=brazaWorkspaceAuth;\n'
 theme=re.sub(r'^export ', '', (root/'src/theme.mjs').read_text(), flags=re.M)
 ads_presentation=re.sub(r'^export ', '', (root/'src/ads-presentation.mjs').read_text(), flags=re.M)
-admin=app_release+'\n'+app_release_view+'\n'+agent_period_view+'\n'+monthly_profit_presentation+'\n'+dtf_layout+'\n'+dtf_view+'\n'+production_dtf+'\n'+cost_rule_learning+'\n'+saved_catalog_media+'\n'+catalog_classification+'\n'+historical_cost_evidence+'\n'+historical_cost_orchestration+'\n'+cost_rules+'\n'+cost_rules_view+'\n'+expense_ledger+'\n'+expense_schedule+'\n'+expense_ledger_view+'\n'+business_products+'\n'+business_month_publication+'\n'+business_original_items+'\n'+business_reconciliation+'\n'+incurred_production+'\n'+incurred_production_workspace+'\n'+production_confirmation_proposal+'\n'+production_confirmation_proposal_view+'\n'+production_weekly_close+'\n'+production_weekly_store+'\n'+production_coverage+'\n'+production_coverage_view+'\n'+production_weekly_view+'\n'+incurred_production_view+'\n'+physical_returns+'\n'+physical_returns_workspace+'\n'+returns_receipt_proposal+'\n'+returns_receipt_confirmation+'\n'+returns_original_items_view+'\n'+returns_case_cards_view+'\n'+physical_returns_view+'\n'+return_manufacturing_links+'\n'+return_manufacturing_links_workspace+'\n'+return_manufacturing_links_view+'\n'+business_historical_returns+'\n'+business_escrow_releases+'\n'+business_escrow_release_coverage+'\n'+business_income_overview+'\n'+business_income_detail+'\n'+business_pending_income_scan+'\n'+business_historical_release_calendars+'\n'+financial_audit_orchestration+'\n'+escrow_releases_view+'\n'+business_adjusted_balance+'\n'+business_financial_closeout+'\n'+financial_closeout_view+'\n'+business_reconciliation_view+'\n'+business_month_ads_history+'\n'+business_variant_attribution+'\n'+business_month+'\n'+agent_learning_report+'\n'+agent_learning+'\n'+daily_profit_presentation+'\n'+business_daily_summary+'\n'+business_month_view_state+'\n'+business_checkpoint+'\n'+business_sync+'\n'+business_history_sync+'\n'+hermes_context+'\n'+recorded_business_balance+'\n'+background_collection_diagnostics+'\n'+business_cost_diagnostics+'\n'+saved_order_items+'\n'+product_registry+'\n'+production_cost_periods+'\n'+production_cost_periods_view+'\n'+saved_catalog_view+'\n'+listing_factory_view+'\n'+ai_sales_view+'\n'+ai_sales_store+'\n'+automation_workspace+'\n'+production_daily_finance_view+'\n'+production_workspace_view+'\n'+business_day_view+'\n'+income_overview_client+'\n'+agent_art+'\n'+agent_learning_view+'\n'+mission_view+'\n'+agent_registry_view+'\n'+month_view+'\n'+month_client+'\n'+client+'\n'+view+'\n'+ads+'\n'+orders+'\n'+daily_shop_orders+'\n'+items+'\n'+variants+'\n'+observations+'\n'+production_costs+'\n'+operator_cost_corrections+'\n'+store_summary+'\n'+store_invoice_tax+'\n'+store_product_summary+'\n'+store_returns_summary+'\n'+store_admin+'\n'+variant_sync+'\n'+re.sub(r'^import .*\n','',admin,flags=re.M)
+admin=app_release+'\n'+bank_reconciliation_view+'\n'+app_release_view+'\n'+agent_period_view+'\n'+monthly_profit_presentation+'\n'+dtf_layout+'\n'+dtf_view+'\n'+production_dtf+'\n'+cost_rule_learning+'\n'+saved_catalog_media+'\n'+catalog_classification+'\n'+historical_cost_evidence+'\n'+historical_cost_orchestration+'\n'+cost_rules+'\n'+cost_rules_view+'\n'+expense_ledger+'\n'+expense_schedule+'\n'+expense_ledger_view+'\n'+business_products+'\n'+business_month_publication+'\n'+business_original_items+'\n'+business_reconciliation+'\n'+incurred_production+'\n'+incurred_production_workspace+'\n'+production_confirmation_proposal+'\n'+production_confirmation_proposal_view+'\n'+production_weekly_close+'\n'+production_weekly_store+'\n'+production_coverage+'\n'+production_coverage_view+'\n'+production_weekly_view+'\n'+incurred_production_view+'\n'+physical_returns+'\n'+physical_returns_workspace+'\n'+returns_receipt_proposal+'\n'+returns_receipt_confirmation+'\n'+returns_original_items_view+'\n'+returns_case_cards_view+'\n'+physical_returns_view+'\n'+return_manufacturing_links+'\n'+return_manufacturing_links_workspace+'\n'+return_manufacturing_links_view+'\n'+business_historical_returns+'\n'+business_escrow_releases+'\n'+business_escrow_release_coverage+'\n'+business_income_overview+'\n'+business_income_detail+'\n'+business_pending_income_scan+'\n'+business_historical_release_calendars+'\n'+financial_audit_orchestration+'\n'+escrow_releases_view+'\n'+business_adjusted_balance+'\n'+business_financial_closeout+'\n'+financial_closeout_view+'\n'+business_reconciliation_view+'\n'+business_month_ads_history+'\n'+business_variant_attribution+'\n'+business_month+'\n'+agent_learning_report+'\n'+agent_learning+'\n'+daily_profit_presentation+'\n'+business_daily_summary+'\n'+business_month_view_state+'\n'+business_checkpoint+'\n'+business_sync+'\n'+business_history_sync+'\n'+hermes_context+'\n'+recorded_business_balance+'\n'+background_collection_diagnostics+'\n'+business_cost_diagnostics+'\n'+saved_order_items+'\n'+product_registry+'\n'+production_cost_periods+'\n'+production_cost_periods_view+'\n'+saved_catalog_view+'\n'+listing_factory_view+'\n'+ai_sales_view+'\n'+ai_sales_store+'\n'+automation_workspace+'\n'+production_daily_finance_view+'\n'+production_workspace_view+'\n'+business_day_view+'\n'+income_overview_client+'\n'+agent_art+'\n'+agent_learning_view+'\n'+mission_view+'\n'+agent_registry_view+'\n'+month_view+'\n'+month_client+'\n'+client+'\n'+view+'\n'+ads+'\n'+orders+'\n'+daily_shop_orders+'\n'+items+'\n'+variants+'\n'+observations+'\n'+production_costs+'\n'+operator_cost_corrections+'\n'+store_summary+'\n'+store_invoice_tax+'\n'+store_product_summary+'\n'+store_returns_summary+'\n'+store_admin+'\n'+variant_sync+'\n'+re.sub(r'^import .*\n','',admin,flags=re.M)
 admin=admin.replace('export {adminFetch,schedule,scheduledWork,DEFAULTS,SCHEMA,validateSettings,workspaceAuthFetch};','')
 needle='    const url = new URL(request.url);'
 assert original.count(needle)==1
@@ -528,8 +546,46 @@ insertion='''  const view=ads.workspace_view||'product';
   if(workspaceTitles[currentPath])[title,subtitle]=workspaceTitles[currentPath];
 '''
 updated=updated[:point]+insertion+updated[point:]
-output=updated+'\n\n'+theme+'\n'+workspace_auth+'\n'+workspace_navigation+'\n'+ads_presentation+'\n'+shell_navigation+'\n'+orders_diagnostic+'\n'+orders_http+'\n'+app_orders+'\n'+app_items+'\n'+finance_sample_frame+'\n'+finance_preview_frame+'\n'+variant_catalog_frame+'\n'+catalog_media_frame+'\n'+historical_variant_frame+'\n'+app_historical_variant+'\n'+app_finance_sample+'\n'+daily_orders_frame+'\n'+store_period_frame+'\n'+business_period_frame+'\n'+finance_business_variants+'\n' +reconciliation_frame+'\n'+original_items_frame+'\n'+escrow_release_frame+'\n'+income_overview_frame+'\n'+income_detail_frame+'\n'+pending_income_frame+'\n'+income_detail_diagnostic+'\n'+production_orders_frame+'\n'+product_index_frame+'\n'+app_product_index+'\n'+app_production_orders+'\n'+app_store_period+'\n'+app_business_period+'\n' +app_reconciliation+'\n'+app_escrow_releases+'\n'+app_income_overview+'\n'+app_income_detail+'\n'+app_pending_income_scan+'\n'+ads_measurement+'\n'+ads_measurement_view+'\n'+ads_period+'\n'+ads_calendar+'\n'+app_ads_summary+'\n'+agent_workspace_layout+'\n'+approved_design+'\n'+ads_workspace+'\n'+scaling_preparation+'\n\nconst brazaAdmin = (() => {\n'+admin+'\nreturn {adminFetch,schedule,scheduledWork,workspaceAuthFetch};\n})();\n'
-output=compact_server_namespaces(output)
+output=updated+'\n\n'+external_cash_frame+'\n'+app_external_cash+'\n'+theme+'\n'+workspace_auth+'\n'+workspace_navigation+'\n'+ads_presentation+'\n'+shell_navigation+'\n'+orders_diagnostic+'\n'+orders_http+'\n'+app_orders+'\n'+app_items+'\n'+finance_sample_frame+'\n'+finance_preview_frame+'\n'+variant_catalog_frame+'\n'+catalog_media_frame+'\n'+historical_variant_frame+'\n'+app_historical_variant+'\n'+app_finance_sample+'\n'+daily_orders_frame+'\n'+store_period_frame+'\n'+business_period_frame+'\n'+finance_business_variants+'\n' +reconciliation_frame+'\n'+original_items_frame+'\n'+escrow_release_frame+'\n'+income_overview_frame+'\n'+income_detail_frame+'\n'+pending_income_frame+'\n'+income_detail_diagnostic+'\n'+production_orders_frame+'\n'+product_index_frame+'\n'+app_product_index+'\n'+app_production_orders+'\n'+app_store_period+'\n'+app_business_period+'\n' +app_reconciliation+'\n'+app_escrow_releases+'\n'+app_income_overview+'\n'+app_income_detail+'\n'+app_pending_income_scan+'\n'+ads_measurement+'\n'+ads_measurement_view+'\n'+ads_period+'\n'+ads_calendar+'\n'+app_ads_summary+'\n'+agent_workspace_layout+'\n'+approved_design+'\n'+ads_workspace+'\n'+scaling_preparation+'\n\nconst brazaAdmin = (() => {\n'+admin+'\nreturn {adminFetch,schedule,scheduledWork,workspaceAuthFetch};\n})();\n'
+# These manually assembled host namespaces have no browser Function#toString
+# consumers. Keep the explicit selection separate from the source_namespace
+# registry: DTF, dynamic Mission/BusinessDay, Admin, AI and originals stay out.
+reviewed_manual_namespace_sources=[
+    {'name':'brazaBusinessSync','source':business_sync},
+    {'name':'brazaBusinessHistorySync','source':business_history_sync},
+    {'name':'brazaBusinessProducts','source':business_products},
+    {'name':'brazaCostRuleLearning','source':cost_rule_learning},
+    {'name':'brazaSavedCatalogMedia','source':saved_catalog_media},
+    {'name':'brazaCatalogClassification','source':catalog_classification},
+    {'name':'brazaHistoricalCostEvidence','source':historical_cost_evidence},
+    {'name':'brazaHistoricalCostOrchestration','source':historical_cost_orchestration},
+    {'name':'brazaCostRulesStore','source':cost_rules},
+    {'name':'brazaProductionDtfStore','source':production_dtf},
+    {'name':'brazaBusinessCheckpoint','source':business_checkpoint},
+    {'name':'brazaBusinessMonth','source':business_month},
+    {'name':'brazaHermesFinancialContext','source':hermes_context},
+    {'name':'brazaRecordedBusinessBalance','source':recorded_business_balance},
+    {'name':'brazaBackgroundCollectionDiagnostics','source':background_collection_diagnostics},
+    {'name':'brazaBusinessCostDiagnostics','source':business_cost_diagnostics},
+    {'name':'brazaOperatorCostCorrections','source':operator_cost_corrections},
+    {'name':'brazaSavedOrderItems','source':saved_order_items},
+    {'name':'brazaProductRegistry','source':product_registry},
+    {'name':'brazaProductionCostPeriods','source':production_cost_periods},
+    {'name':'brazaFinancePreviewFrame','source':finance_preview_frame},
+    {'name':'brazaVariantCatalogFrame','source':variant_catalog_frame},
+    {'name':'brazaHistoricalVariantFrame','source':historical_variant_frame},
+    {'name':'brazaHistoricalVariantAdapter','source':app_historical_variant},
+    {'name':'brazaDailyOrdersFrame','source':daily_orders_frame},
+    {'name':'brazaStorePeriodFrame','source':store_period_frame},
+    {'name':'brazaBusinessPeriodFrame','source':business_period_frame},
+    {'name':'brazaProductIndexFrame','source':product_index_frame},
+    {'name':'brazaFinanceBusinessVariants','source':finance_business_variants},
+    {'name':'brazaProductionOrdersFrame','source':production_orders_frame},
+    {'name':'brazaAdsMeasurement','source':ads_measurement},
+    {'name':'brazaAdsCalendar','source':ads_calendar},
+    {'name':'brazaWorkspaceAuth','source':workspace_auth},
+]
+output=compact_server_namespaces(output,reviewed_manual_namespace_sources)
 (root/'app-worker.mjs').write_text(output)
 auth_original=(root/'original/auth-worker.mjs').read_text()
 needle='    const url = new URL(request.url);'

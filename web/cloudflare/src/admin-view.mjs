@@ -294,7 +294,7 @@ export function adminBody(){
  while((pricingTag=pricingTags.exec(monthHtml))){pricingDepth+=pricingTag[0].startsWith('</')?-1:1;if(pricingDepth===0){pricingEnd=pricingTags.lastIndex;break;}}
  if(pricingEnd<pricingStart)throw Error('M3_WORKBENCH_INSERTION_INVALID');
  const pricingHtml=monthHtml.slice(pricingStart,pricingEnd),financialMonth=monthHtml.slice(0,pricingStart)+'<a class="field-help" href="/admin?tab=agent-products#businessMonthPricingObserver">Abrir análise de produtos e cenários de preços →</a>'+monthHtml.slice(pricingEnd);
- const financeDetails=financialMonth+'<details class="mission-day-details" id="missionFinanceDayDetails"><summary>Consultar um dia específico</summary>'+businessDayBody()+'</details>'+pendingIncomeBody()+
+ const financeDetails='<div id="bankReconciliationHost"></div>'+financialMonth+'<details class="mission-day-details" id="missionFinanceDayDetails"><summary>Consultar um dia específico</summary>'+businessDayBody()+'</details>'+pendingIncomeBody()+
   '<details id="legacyFinanceDetails" class="card monthly-legacy-details" hidden><summary>Referência anterior de pedidos concluídos</summary><p class="field-help">Esta referência preserva a regra antiga por pedido. Para o MEI, use o resumo mensal, que desconta o DAS uma vez no mês.</p>'+legacy+'</details>';
  return original.slice(0,start)+agentPeriodBody()+opening+commandCenterBody()+'</section>'+
   missionWorkspacesBody(financeDetails).replace('<div id="missionProductWorkbenchHost"></div>',pricingHtml).replace('<div id="missionHermesConsole"></div>','<section class="mission-hermes-console" id="missionHermesConsole" aria-label="Análises do Hermes">'+hermesBody+'</section>')+original.slice(end+10)+

@@ -13,10 +13,13 @@ import {runFinanceReturnsReconciliation} from './returns-reconciliation.mjs';
 import {readFinanceIncomeOverview} from './income-overview.mjs';
 import {readFinanceIncomeDetail} from './income-detail.mjs';
 import {readOrStepFinancePendingIncomeScan} from './pending-income-scan.mjs';
+import {EXTERNAL_CASH_PATH} from './external-cash-frame.mjs';
+import {createExternalCashWorker} from './external-cash-worker.mjs';
+import {readExternalCashWorkspace,previewExternalCashImport,mutateExternalCash} from './external-cash-store.mjs';
 
 // Deployment entry only. Configuration and FINANCE_CONNECTION_ENABLED='true'
 // are still required; importing this entry never makes a provider request.
-export default createFinanceWorker({
+const financeConnectionWorker=createFinanceWorker({
   paymentSample: runFinancePaymentSample,
   paymentPreview: runFinancePaymentPreview,
   variantCatalog: runFinanceVariantCatalog,
@@ -35,3 +38,12 @@ export default createFinanceWorker({
   fetchImpl: request => fetch(request),
   adapter: createFinanceProviderAdapter({fetchImpl: request => fetch(request)}),
 });
+
+const externalCashWorker=createExternalCashWorker({readWorkspace:readExternalCashWorkspace,previewImport:previewExternalCashImport,mutate:mutateExternalCash});
+export default {
+ async fetch(request,env,ctx){
+  let url;try{url=new URL(request.url);}catch{return financeConnectionWorker.fetch(request,env,ctx);}
+  if(url.pathname===EXTERNAL_CASH_PATH)return externalCashWorker.fetch(request,env);
+  return financeConnectionWorker.fetch(request,env,ctx);
+ },
+};

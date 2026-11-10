@@ -5,6 +5,22 @@ import {fileURLToPath} from 'node:url';
 
 const schema='worker_server_namespaces_v1';
 const exact=(value,keys)=>value&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).length===keys.length&&keys.every(key=>Object.hasOwn(value,key));
+const browserSchema='worker_browser_factories_v1';
+const browserFactoryNames=new Set(['createCashStatementImportParser','createExternalCashProtocol','createBankReconciliationController']);
+
+// Only these new, self-contained browser factories may shorten local names.
+// Legacy client values and every server namespace retain their existing profile.
+export function compactWorkerBrowserFactories(input){
+ if(!exact(input,['schema','factories'])||input.schema!==browserSchema||!Array.isArray(input.factories)||!input.factories.length||input.factories.length>browserFactoryNames.size)throw Error('WORKER_BROWSER_FACTORY_INPUT_INVALID');
+ const seen=new Set();
+ return {schema:browserSchema,factories:input.factories.map(row=>{
+  if(!exact(row,['name','source'])||!browserFactoryNames.has(row.name)||seen.has(row.name)||typeof row.source!=='string'||Buffer.byteLength(row.source)>1048576||!row.source.startsWith('function '+row.name+'('))throw Error('WORKER_BROWSER_FACTORY_ROW_INVALID');
+  seen.add(row.name);
+  const result=transformSync('export '+row.source,{loader:'js',target:'esnext',charset:'utf8',legalComments:'inline',treeShaking:false,minifyWhitespace:true,minifySyntax:false,minifyIdentifiers:true,sourcefile:row.name+'.mjs'});
+  if(result.warnings.length||!result.code.startsWith('export function '+row.name+'('))throw Error('WORKER_BROWSER_FACTORY_COMPACTION_INVALID');
+  return {name:row.name,source:result.code.slice('export '.length).trimEnd()};
+ })};
+}
 
 // Compact host JavaScript formatting with syntax optimization, identifier
 // minification and dead-code removal disabled. Exported names/arities and all
@@ -32,6 +48,6 @@ export function compactWorkerNamespaces(input){
 }
 
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){
- try{process.stdout.write(JSON.stringify(compactWorkerNamespaces(JSON.parse(readFileSync(0,'utf8')))));}
+ try{process.stdout.write(JSON.stringify((process.argv[2]==='browser-factories'?compactWorkerBrowserFactories:compactWorkerNamespaces)(JSON.parse(readFileSync(0,'utf8')))));}
  catch(error){process.stderr.write((error?.message||'WORKER_NAMESPACE_COMPACTION_FAILED')+'\n');process.exitCode=1;}
 }

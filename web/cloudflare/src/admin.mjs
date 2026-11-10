@@ -12,6 +12,9 @@ import {CSS,adminBody,loginBody} from './admin-view.mjs';
 import {CLIENT} from './admin-client.mjs';
 import {APP_RELEASE,releaseInfo} from './app-release.mjs';
 import {APP_RELEASE_CSS} from './app-release-view.mjs';
+import {BANK_RECONCILIATION_CSS,bankReconciliationBody,BANK_RECONCILIATION_CLIENT} from './bank-reconciliation-view.mjs';
+import {getFinanceExternalCash} from './app-external-cash.mjs';
+import {projectExternalCashRequest,EXTERNAL_CASH_REQUEST_MAXIMUM} from '../../finance/src/external-cash-frame.mjs';
 import {BUSINESS_MONTH_CLIENT} from './business-month-client.mjs';
 import {AGENT_REGISTRY_CLIENT} from './agent-registry-view.mjs';
 import {MISSION_CLIENT,MISSION_TRENDS_CLIENT} from './mission-control.mjs';
@@ -401,7 +404,7 @@ function dashboard(env,ownerSession){
   body=body.replace('Selecione Painéis, Produtos salvos ou Pedidos na fila DTF. A busca por pedidos não é um histórico completo da Shopee.','Pesquise painéis, agentes e ferramentas.');
  }
  body=body.replace('id="missionGlobalSearch"','id="missionGlobalSearch" data-mls-v36-preview="'+(preview?'enabled':'disabled')+'"');
- const markup='<style>'+APP_RELEASE_CSS+PRODUCTION_COVERAGE_CSS+PRODUCTION_WEEKLY_CSS+RETURN_MANUFACTURING_LINKS_CSS+PRODUCTION_CONFIRMATION_PROPOSAL_CSS+INCURRED_PRODUCTION_CSS+PRODUCTION_DAILY_FINANCE_CSS+PRODUCTION_WORKSPACE_CSS+PHYSICAL_RETURNS_CSS+BUSINESS_MONTH_CSS+AUTOMATION_WORKSPACE_CSS+COST_RULE_CSS+DTF_CSS+PRODUCTION_COST_PERIODS_CSS+SAVED_CATALOG_CSS+(preview?MLS_LISTING_FACTORY_CSS:'')+(aiPreview?MLS_AI_SALES_CSS:'')+'</style>'+body.replace('<div id="missionHermesTools"></div>','<div id="missionHermesTools">'+automationWorkspaceBody()+'</div>').replace('<div id="missionProductionLedgerHost"></div>','<div id="missionProductionLedgerHost">'+productionWorkspaceBody({daily:incurredProductionBody().replace('<div id="incurredProductionFinancialHost"></div>',productionDailyFinanceBody()),weekly:productionWeeklyClosingBody(),coverage:productionCoverageBody(),reference:productionCostPeriodsBody()})+'</div>').replace('<section id="margins" hidden>','<section id="margins" hidden>'+costRulesBody()).replace('<section id="products" hidden>',dtfBody()+(aiPreview?mlsAiSalesBody():'')+'<section id="products" hidden>'+(preview?mlsListingFactoryBody():'')+savedCatalogBody({listingFactory:preview}))+'<script>'+DTF_ENGINE_CLIENT+'</script><script>'+DTF_CLIENT+'</script><script>'+COST_RULE_CLIENT+'</script><script>'+AUTOMATION_WORKSPACE_CLIENT+'</script><script>'+BUSINESS_MONTH_CLIENT+'</script><script>'+INCOME_OVERVIEW_CLIENT+'</script><script>'+AGENT_REGISTRY_CLIENT+'</script><script>'+MISSION_CLIENT+'</script><script>'+MISSION_TRENDS_CLIENT+'</script><script>'+PRODUCTION_COST_PERIODS_CLIENT+'\n'+PRODUCTION_CONFIRMATION_PROPOSAL_CLIENT+'\n'+INCURRED_PRODUCTION_CLIENT+'\n'+PRODUCTION_DAILY_FINANCE_CLIENT+'\n'+PRODUCTION_WEEKLY_CLIENT+'\n'+PRODUCTION_COVERAGE_CLIENT+'\n'+PRODUCTION_WORKSPACE_CLIENT+'</script><script>'+SAVED_CATALOG_CLIENT+'</script>'+(preview?'<script>'+MLS_LISTING_FACTORY_CLIENT+'</script>':'')+(aiPreview?'<script>'+MLS_AI_SALES_CLIENT+'</script>':'')+'<script>'+PHYSICAL_RETURNS_CLIENT+'\n'+RETURN_MANUFACTURING_LINKS_CLIENT+'</script>'+'<script>'+CLIENT+'</script>';
+ const markup='<style>'+APP_RELEASE_CSS+BANK_RECONCILIATION_CSS+PRODUCTION_COVERAGE_CSS+PRODUCTION_WEEKLY_CSS+RETURN_MANUFACTURING_LINKS_CSS+PRODUCTION_CONFIRMATION_PROPOSAL_CSS+INCURRED_PRODUCTION_CSS+PRODUCTION_DAILY_FINANCE_CSS+PRODUCTION_WORKSPACE_CSS+PHYSICAL_RETURNS_CSS+BUSINESS_MONTH_CSS+AUTOMATION_WORKSPACE_CSS+COST_RULE_CSS+DTF_CSS+PRODUCTION_COST_PERIODS_CSS+SAVED_CATALOG_CSS+(preview?MLS_LISTING_FACTORY_CSS:'')+(aiPreview?MLS_AI_SALES_CSS:'')+'</style>'+body.replace('<div id="bankReconciliationHost"></div>',bankReconciliationBody()).replace('<div id="missionHermesTools"></div>','<div id="missionHermesTools">'+automationWorkspaceBody()+'</div>').replace('<div id="missionProductionLedgerHost"></div>','<div id="missionProductionLedgerHost">'+productionWorkspaceBody({daily:incurredProductionBody().replace('<div id="incurredProductionFinancialHost"></div>',productionDailyFinanceBody()),weekly:productionWeeklyClosingBody(),coverage:productionCoverageBody(),reference:productionCostPeriodsBody()})+'</div>').replace('<section id="margins" hidden>','<section id="margins" hidden>'+costRulesBody()).replace('<section id="products" hidden>',dtfBody()+(aiPreview?mlsAiSalesBody():'')+'<section id="products" hidden>'+(preview?mlsListingFactoryBody():'')+savedCatalogBody({listingFactory:preview}))+'<script>'+DTF_ENGINE_CLIENT+'</script><script>'+DTF_CLIENT+'</script><script>'+COST_RULE_CLIENT+'</script><script>'+AUTOMATION_WORKSPACE_CLIENT+'</script><script>'+BUSINESS_MONTH_CLIENT+'</script><script>'+INCOME_OVERVIEW_CLIENT+'</script><script>'+AGENT_REGISTRY_CLIENT+'</script><script>'+MISSION_CLIENT+'</script><script>'+MISSION_TRENDS_CLIENT+'</script><script>'+PRODUCTION_COST_PERIODS_CLIENT+'\n'+PRODUCTION_CONFIRMATION_PROPOSAL_CLIENT+'\n'+INCURRED_PRODUCTION_CLIENT+'\n'+PRODUCTION_DAILY_FINANCE_CLIENT+'\n'+PRODUCTION_WEEKLY_CLIENT+'\n'+PRODUCTION_COVERAGE_CLIENT+'\n'+PRODUCTION_WORKSPACE_CLIENT+'</script><script>'+SAVED_CATALOG_CLIENT+'</script>'+(preview?'<script>'+MLS_LISTING_FACTORY_CLIENT+'</script>':'')+(aiPreview?'<script>'+MLS_AI_SALES_CLIENT+'</script>':'')+'<script>'+PHYSICAL_RETURNS_CLIENT+'\n'+RETURN_MANUFACTURING_LINKS_CLIENT+'</script>'+'<script>'+BANK_RECONCILIATION_CLIENT+'\n'+CLIENT+'</script>';
  // Raw control bytes inside inlined JavaScript are changed by the HTML
  // tokenizer (U+0000 becomes U+FFFD), which can invalidate a regex character
  // class before any client initializer runs. Encode these bytes as JavaScript
@@ -438,6 +441,22 @@ async function adminFetch(request,env,services={}){const url=new URL(request.url
  if(path==='/api/admin/bootstrap'){
   assert(request.method==='GET','METHOD_NOT_ALLOWED',405);assert(!url.search,'ADMIN_BOOTSTRAP_REQUEST_INVALID');
   return json({schema:'admin_bootstrap_v1',csrf:current.csrf});
+ }
+ // File evidence stays independent of provider collection and legacy profit.
+ // Read is SELECT-only; normalized writes require explicit owner + Origin/CSRF.
+ if(path==='/api/admin/finance/external-cash'){
+  assert(current.role==='owner','FORBIDDEN',403);assert(['GET','POST'].includes(request.method),'METHOD_NOT_ALLOWED',405);
+  let command;
+  if(request.method==='GET'){
+   const entries=[...url.searchParams],keys=entries.map(([key])=>key);
+   assert(keys.includes('month')&&new Set(keys).size===keys.length&&keys.every(key=>['month','source','cursor','limit'].includes(key)),'FINANCE_EXTERNAL_CASH_REQUEST_INVALID');
+   const limit=url.searchParams.get('limit');assert(limit===null||/^[1-9]\d{0,2}$/.test(limit),'FINANCE_EXTERNAL_CASH_REQUEST_INVALID');
+   command=projectExternalCashRequest({schema:'external_cash_request_v1',operation:'read',month:url.searchParams.get('month'),source:url.searchParams.get('source'),cursor:url.searchParams.get('cursor'),limit:limit===null?50:Number(limit)});
+  }else{
+   assert(!url.search,'FINANCE_EXTERNAL_CASH_REQUEST_INVALID');sameOrigin(request);assert(await equal(request.headers.get('x-csrf-token')||'',current.csrf),'CSRF_REJECTED',403);
+   command=projectExternalCashRequest(await input(request,EXTERNAL_CASH_REQUEST_MAXIMUM));assert(command?.operation!=='read','FINANCE_EXTERNAL_CASH_REQUEST_INVALID');
+  }
+  assert(command,'FINANCE_EXTERNAL_CASH_REQUEST_INVALID');const result=await getFinanceExternalCash(env,command);return json(result.body,result.status);
  }
  // This report reads only retained aggregate memory. Opening it never starts
  // collection, initializes tables, calls a model, or grants an execution mode.

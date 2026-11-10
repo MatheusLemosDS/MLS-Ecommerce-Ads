@@ -1,0 +1,11 @@
+export const cashRequestId='10000000-0000-4000-8000-000000000001';
+export const cashRecordId='10000000-0000-4000-8000-000000000002';
+export const cashImportId='10000000-0000-4000-8000-000000000003';
+export const cashTransferId='10000000-0000-4000-8000-000000000004';
+export const cashHash='a'.repeat(64);
+export const cashRead=()=>({schema:'external_cash_request_v1',operation:'read',month:'2026-11',source:null,cursor:null,limit:50});
+export const cashPreview=()=>({schema:'external_cash_request_v1',operation:'preview',source:'NUBANK',bank_account_declared:true,completed_transfers_declared:false,document_hash:cashHash,selection:{format:'nubank_csv',date_format:'YMD',amount_format:'DECIMAL'},rows:[{line:2,date:'2026-11-10',amount_cents:12345,external_id:'SYNTHETIC_TRANSACTION',reference:null,description:'Synthetic bank credit',reported_status:null}],cursor:null,limit:50});
+export const cashImport=()=>{const {cursor,limit,...preview}=cashPreview();return {...preview,operation:'import',request_id:cashRequestId,expected_revision:0,preview_hash:cashHash,confirmed:true};};
+export const cashWorkspace=()=>({schema:'external_cash_workspace_v1',revision:0,records:[],matches:[],suggestions:[],next_cursor:null,summary:{record_count:0,match_count:0,unmatched_bank_count:0,unmatched_transfer_count:0,review_count:0}});
+export const cashPreviewFrame=()=>({schema:'external_cash_preview_v1',revision:0,preview_hash:cashHash,can_import:true,counts:{total:1,new:1,duplicates:0,review:0},rows:[{line:2,state:'NEW'}],next_cursor:null});
+export const cashImportFrame=()=>({schema:'external_cash_mutation_v1',operation:'import',request_id:cashRequestId,revision:1,replayed:false,result:{import_id:cashImportId,inserted_count:1,duplicate_count:0,review_count:0,match_ids:[],unlinked_match_id:null}});
