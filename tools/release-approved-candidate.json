@@ -1,11 +1,11 @@
 {
   "schema": "mls_release_candidate_v1",
   "base_commit": "a62e11994abfd07f7df91dd38649a86b6450c1df",
-  "prepared_source_commit": "f194c18424b1cded1cf738ee9a4eb24986363c8f",
+  "prepared_source_commit": "e1f74f6763a8ebb407402e2808fca2430d12b9a0",
   "owner_authorization": "OWNER_REQUESTED_ALL_PREPARED_IMPROVEMENTS_LIVE_2026_10_30",
   "commercial_writes_allowed": false,
   "expected_hashes": {
-    "app": "af4c5a7eefef1683bdc95c41f0453c717c8fb504ac5cf7a60341142655b46fba",
+    "app": "a9f878afc4d89c8d20edcf04b8a8a343bf83fcbd8a327ebc05a5983c8a38b8e0",
     "auth": "47c83f87f191fd0e5ff503d9c4bcf4671cd986b0965e66e84f1a6ed952dac925",
     "finance": "08ada5ecec92350f4f8301fdb7baa00f5f8083a0e8390296b2870e0ff3cdc1a5"
   },
