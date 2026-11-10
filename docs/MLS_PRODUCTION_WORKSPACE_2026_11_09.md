@@ -1,6 +1,6 @@
 # Produção diária e fechamento semanal — 09/11/2026
 
-**Produção diária e fechamento semanal — `PREPARED_NOT_PUBLISHED`:** versão `2026-11-09.3`, 09/11/2026. Produção separa Diário e mês, Fechamento semanal, Registrar produção, intervalo e Referência das vendas; DTF continua acessível. Gráficos usam os registros salvos e permitem selecionar por clique ou teclado. Registrar neste dia preenche somente por ação explícita e preserva rascunhos; campos opcionais ficam separados. Conferir este dia abre a declaração existente do intervalo; sexta exige escolher antes ou a partir de 13h. O diário é agregação dos lotes mais declaração de completude, sem novo artefato diário imutável. Ao cruzar o corte semanal, a tela relê o GET existente após tolerância de 65s; reentrada/foco e espera limitada por artefato evitam permanecer numa prévia antiga. Preparada, sem publicação comprovada deste candidato: fonte/head/PR/CI, contagens e hashes permanecem null. A última Live comprovada continua `2026-11-09.2`, App `876fcc9e-1826-4e31-aee6-6be2b44c8dbc`, PR114 integrada em `a62e11994abfd07f7df91dd38649a86b6450c1df`; baseline dos três Workers novamente conferida por GET. Semana preservada: sexta 13h inclusiva → sexta 13h exclusiva, Brasília, com fim de semana e oito intervalos de conferência. Relatório capturado e total declarado conferido são distintos; originais/revisões não são reescritos. Ausência de lotes/custos não vira zero nem fabricação derivada das vendas. Fórmulas, DTOs, Auth/Finance, Hermes, seis agentes, mês/rascunhos e custos cadastrados, incluindo infantil R$ 13,50 verificado na entrega anterior, preservados. Sem novo endpoint, cron ou fato real criado para QA. M2/M2.2 e comparação Seller Centre/banco continuam abertos. [Uso, evidências e limites](#como-usar).
+**Produção diária e fechamento semanal — `PUBLISHED_VERIFIED`:** versão `2026-11-09.3`, 09/11/2026. Produção separa Diário e mês, Fechamento semanal, Registrar produção, intervalo e Referência das vendas; DTF continua acessível. Gráficos usam os registros salvos e permitem selecionar por clique ou teclado. Registrar neste dia preenche somente por ação explícita e preserva rascunhos; campos opcionais ficam separados. Conferir este dia abre a declaração existente do intervalo; sexta exige escolher antes ou a partir de 13h. O diário é agregação dos lotes mais declaração de completude, sem novo artefato diário imutável. Ao cruzar o corte semanal, a tela relê o GET existente após tolerância de 65s; reentrada/foco e espera limitada por artefato evitam permanecer numa prévia antiga. App publicado e vetor dos três Workers conferido em 2026-11-09T23:53:15-03:00. Fonte `e1f74f6763a8ebb407402e2808fca2430d12b9a0`, head `85c59749c0f93a909bc5ab00a05013155fab6921`, CI [42744288094](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/42744288094) aprovada: 3660 Node e 67 Python; Chromium sintético normal/minificado, 320/1365 e claro/escuro. Consultar a [PR #115](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/115) para a integração atual; recibo de publicação não prova merge. Semana preservada: sexta 13h inclusiva → sexta 13h exclusiva, Brasília, com fim de semana e oito intervalos de conferência. Relatório capturado e total declarado conferido são distintos; originais/revisões não são reescritos. Ausência de lotes/custos não vira zero nem fabricação derivada das vendas. Fórmulas, DTOs, Auth/Finance, Hermes, seis agentes, mês/rascunhos e custos cadastrados, incluindo infantil R$ 13,50 verificado na entrega anterior, preservados. Sem novo endpoint, cron ou fato real criado para QA. M2/M2.2 e comparação Seller Centre/banco continuam abertos. [Uso, evidências e limites](#como-usar).
 
 ## Como usar
 
@@ -32,7 +32,35 @@ Fórmulas, DTOs, Auth/Finance, fabricação, conferências, originais/revisões 
 
 O layout reorganiza a Produção seguindo o estilo aprovado: superfícies, cor do agente, cartões e gráficos responsivos, com estado vazio e pendências legíveis. Os seis agentes da inicial permanecem. A compactação seletiva de whitespace no servidor preserva os scripts do navegador, APIs necessárias, limite de 4 MiB e allowlists exatas; não reduz os testes. QA usa somente exemplos sintéticos locais, sem lotes/declarações reais ou escrita comercial.
 
-`PREPARED_NOT_PUBLISHED`: fonte/head/PR/CI, contagens, hashes e publicação deste candidato permanecem null até as evidências finais. Última Live comprovada: `2026-11-09.2`, PR114 integrada em `a62e11994abfd07f7df91dd38649a86b6450c1df`, com baseline dos três Workers novamente conferida por GET. Preparação não comprova publicação ou aceite real.
+Publicação do App conferida em 2026-11-09T23:53:15-03:00. Fonte `e1f74f6763a8ebb407402e2808fca2430d12b9a0`, head `85c59749c0f93a909bc5ab00a05013155fab6921`; CI [42744288094](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/42744288094) aprovada com 3660 Node e 67 Python, sem falhas/skips/cancelamentos. Oito resultados Chromium sintéticos normal/minificado ×320/1365 ×claro/escuro vinculados aos hashes dos três Workers. Auth/Finance, configuração, domínios, subdomínios, flags e cron conferidos. Consultar a PR para o estado atual da integração: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/115. Aceite operacional real não foi presumido.
+
+```json
+{
+  "versions": {
+    "app": "55d29a3f-f0a8-4481-86a6-bc4cf6715c6c",
+    "auth": "ec385ca9-a986-49ec-abab-25a29daaf33b",
+    "finance": "9ed0bd7d-269a-4e5f-81d0-63be8c6ac2c4"
+  },
+  "generated_sha256": {
+    "app": "a9f878afc4d89c8d20edcf04b8a8a343bf83fcbd8a327ebc05a5983c8a38b8e0",
+    "auth": "47c83f87f191fd0e5ff503d9c4bcf4671cd986b0965e66e84f1a6ed952dac925",
+    "finance": "08ada5ecec92350f4f8301fdb7baa00f5f8083a0e8390296b2870e0ff3cdc1a5"
+  },
+  "published_sha256": {
+    "app": "083ea76a0d659579512dc5022f09fdc435d503f1b5f8220e9115ea35f54ac6e7",
+    "auth": "2a2c2433c6fba25d1c399991595c96e6b8a85045edb77879c8270c446cb45ad2",
+    "finance": "e5bf80e14ff00e5b365bfbcfb25bf3a4dc1e42bf40bb0e4259909649eea1d5cd"
+  }
+}
+```
+
+## Diagnóstico real do agendamento e dos registros
+
+Leitura restrita de metadados/SELECT em 2026-11-09T23:16:16.630618-03:00 confirmou o cron de minuto preservado, tabelas semanais presentes e 13 relatórios salvos. Último tick: 2026-11-09T23:10:51-03:00; último sucesso registrado: 2026-11-09T23:10:51-03:00. Próximo corte configurado: 2026-11-13T13:00:00-03:00. Esse próximo horário é agenda, não prova de execução futura.
+
+O original de 06/11 foi capturado naturalmente pelo cron em 2026-11-06T13:00:51-03:00, como SCHEDULED v1, com status NO_RECORDS e total_cost_cents null; a última versão era a mesma. Isso confirma captura naquele corte, não fabricação zero ou gasto confirmado. As tabelas de estado/registros de fabricação continuavam ausentes nessa leitura: datas, quantidades e custos reais permanecem desconhecidos.
+
+O armazenamento semanal atual não persiste last_error. A ausência desse campo não prova ausência de falhas. A auditoria não executou tick/setup manual, não chamou o proprietário/provedor e não escreveu dados. O relato conserva o corte real da observação, anterior à publicação deste incremento.
 
 ## Continuidade do roadmap
 
