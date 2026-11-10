@@ -1,11 +1,11 @@
 {
   "schema": "mls_release_candidate_v1",
   "base_commit": "f451c15ec1b96abaa6315457324ccaa31c8d361c",
-  "prepared_source_commit": "699c90aa7bc67572f58bd80997132975fd8654af",
+  "prepared_source_commit": "f4a1ddf55bc6820219041008840f923118d74dbf",
   "owner_authorization": "OWNER_REQUESTED_ALL_PREPARED_IMPROVEMENTS_LIVE_2026_10_30",
   "commercial_writes_allowed": false,
   "expected_hashes": {
-    "app": "239ca31df98d2c7c2f53141e45f61b462a6701c0047040a8bdbbcbff43ee1613",
+    "app": "bae9f6f0c816e24954919523868160c3e932935a42b8a1d0037bafa8432df6bb",
     "auth": "c8e3fd3aecac69320666bc847064bf222bcbde35e9a63cf41fb87a4c02cb1838",
     "finance": "1c79b245cd9908e9cfbe4cd9818e5bf47eebc4556159ae21c647e181b5caf404"
   },
@@ -45,8 +45,12 @@
     "web/cloudflare/tests/app-release-discovery-chrome.test.mjs",
     "web/cloudflare/tests/app-release.test.mjs",
     "web/cloudflare/tests/bank-reconciliation-ui.test.mjs",
+    "web/cloudflare/tests/bundled-client.test.mjs",
     "web/cloudflare/tests/business-financial-closeout.test.mjs",
     "web/cloudflare/tests/external-cash-owner.test.mjs",
+    "web/cloudflare/tests/m2-closeout-navigation-chrome.test.mjs",
+    "web/cloudflare/tests/m2-financial-closeout-compiled.test.mjs",
+    "web/cloudflare/tests/mls-approved-design-system.test.mjs",
     "web/finance/src/auth-router.mjs",
     "web/finance/src/cash-statement-import.mjs",
     "web/finance/src/external-cash-frame.mjs",
