@@ -9,6 +9,9 @@ import {SAVED_CATALOG_CLIENT,savedCatalogBody} from '../src/saved-catalog-view.m
 import {compiledOwnerReportPage} from './owner-report-browser-fixture.mjs';
 import {incurredProductionBody} from '../src/incurred-production-view.mjs';
 import {productionCostPeriodsBody} from '../src/production-cost-periods-view.mjs';
+import {productionWeeklyClosingBody} from '../src/production-weekly-view.mjs';
+import {productionCoverageBody} from '../src/production-coverage-view.mjs';
+import {productionWorkspaceBody} from '../src/production-workspace-view.mjs';
 
 const ids=MISSION_AGENTS.map(agent=>agent.id);
 test('single approved visual language defines actual agent colors, responsive layout and dark/light contrast',()=>{
@@ -33,8 +36,8 @@ test('single approved visual language defines actual agent colors, responsive la
 });
 
 test('specialists retain actual registry and chart nodes with visible local navigation, no added network path',()=>{
- const html=missionWorkspacesBody('<div id="financeFixtureProtected"></div>'),rendered=adminBody().replace('<div id="missionProductionLedgerHost"></div>','<div id="missionProductionLedgerHost">'+incurredProductionBody()+productionCostPeriodsBody()+'</div>');
- const destinations={finance:['#businessMonth','#businessMonthExpensesDetails','#commandPendingIncomeDetails','#businessEscrowReleases','#businessReconciliation'],ads:['/dashboard','/campaigns','/optimization'],products:['#businessMonthPricingObserver','/admin?tab=products','/admin?tab=margins'],production:['#mission-production-operations','#costPeriods','/admin?tab=production'],returns:['#physicalReturnsQueue','#returnManufacturingLinksDetails','/admin?tab=agent-finance#businessReconciliation'],auditor:['#mission-auditor-top','#mission-auditor-tasks','#mission-auditor-evidence'],hermes:['#mission-hermes-top','#missionHermesConsole','#mlsAgentLearning','/admin?tab=agents']};
+ const html=missionWorkspacesBody('<div id="financeFixtureProtected"></div>'),rendered=adminBody().replace('<div id="missionProductionLedgerHost"></div>','<div id="missionProductionLedgerHost">'+productionWorkspaceBody({daily:incurredProductionBody(),weekly:productionWeeklyClosingBody(),coverage:productionCoverageBody(),reference:productionCostPeriodsBody()})+'</div>');
+ const destinations={finance:['#businessMonth','#businessMonthExpensesDetails','#commandPendingIncomeDetails','#businessEscrowReleases','#businessReconciliation'],ads:['/dashboard','/campaigns','/optimization'],products:['#businessMonthPricingObserver','/admin?tab=products','/admin?tab=margins'],production:['#incurredProductionCalendarTitle','#productionWeeklyClosing','#incurredProductionRecordsPane','#costPeriods','/admin?tab=production'],returns:['#physicalReturnsQueue','#returnManufacturingLinksDetails','/admin?tab=agent-finance#businessReconciliation'],auditor:['#mission-auditor-top','#mission-auditor-tasks','#mission-auditor-evidence'],hermes:['#mission-hermes-top','#missionHermesConsole','#mlsAgentLearning','/admin?tab=agents']};
  for(const id of ids){
   assert.match(html,new RegExp('id="agent-'+id+'"'));
   assert.match(html,new RegExp('id="mission-'+id+'-top"'));

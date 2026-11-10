@@ -9,6 +9,7 @@ import path from 'node:path';
 import {compiledOwnerReportPage} from './owner-report-browser-fixture.mjs';
 import {createChromeProfileCleanup} from './chrome-profile-cleanup.mjs';
 import {waitForChromeDebugPort} from './chrome-debug-port.mjs';
+import {receiptClick as nativeReceiptClick} from './returns-receipts-chrome-helpers.mjs';
 import {D1} from './sqlite-d1.mjs';
 import {readIncurredProduction,mutateIncurredProduction} from '../src/incurred-production.mjs';
 import {readIncurredProductionWorkspace} from '../src/incurred-production-workspace.mjs';
@@ -31,13 +32,8 @@ async function browser(){
 }
 async function waitFor(cdp,expression,label){for(let index=0;index<160;index++){if(await cdp.evaluate(expression))return;await pause(50);}assert.fail(label);}
 async function click(cdp,selector){
- // A native gesture cancels bounded hash alignment before measuring this next action.
- await cdp.send('Input.dispatchKeyEvent',{type:'keyDown',key:'Escape',code:'Escape',windowsVirtualKeyCode:27,modifiers:0});await cdp.send('Input.dispatchKeyEvent',{type:'keyUp',key:'Escape',code:'Escape',windowsVirtualKeyCode:27,modifiers:0});
- const document=await cdp.send('DOM.getDocument'),target=await cdp.send('DOM.querySelector',{nodeId:document.root.nodeId,selector});assert.ok(target.nodeId,selector+' exists');
- await cdp.send('DOM.scrollIntoViewIfNeeded',{nodeId:target.nodeId});await cdp.send('Page.captureScreenshot',{format:'png',fromSurface:true,captureBeyondViewport:false});
- const info=await cdp.evaluate(`(()=>{const n=document.querySelector(${JSON.stringify(selector)}),r=n.getBoundingClientRect();return {height:r.height,visible:n.checkVisibility({checkVisibilityCSS:true}),enabled:!n.disabled};})()`);assert.equal(info.visible,true);assert.equal(info.enabled,true);assert.ok(info.height>=44,selector+' needs a44px touch target');
- const quads=await cdp.send('DOM.getContentQuads',{nodeId:target.nodeId}),quad=quads.quads?.[0];assert.equal(quad?.length,8);const x=(quad[0]+quad[2]+quad[4]+quad[6])/4,y=(quad[1]+quad[3]+quad[5]+quad[7])/4;
- await cdp.send('Input.dispatchMouseEvent',{type:'mousePressed',button:'left',buttons:1,clickCount:1,x,y,modifiers:0});await cdp.send('Input.dispatchMouseEvent',{type:'mouseReleased',button:'left',buttons:0,clickCount:1,x,y,modifiers:0});
+ assert.equal(await cdp.evaluate(`(()=>{const n=document.querySelector(${JSON.stringify(selector)});if(!n)throw Error('RANGE_NATIVE_ACTION_MISSING');return !n.disabled;})()`),true,selector+' must be enabled');
+ return nativeReceiptClick(cdp,selector);
 }
 async function manufacturingFixture(){
  const env={ADMIN_DB:new D1()},identity={artwork:'Arte sintética',color:'Preto',size:'M',garment_type:'ADULT',fit:'UNISEX',confirmed:true,item_id:null,model_id:null,sku:null};let index=0;

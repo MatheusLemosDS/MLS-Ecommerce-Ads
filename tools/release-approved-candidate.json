@@ -41,6 +41,7 @@
     "web/cloudflare/tests/incurred-production-chrome.test.mjs",
     "web/cloudflare/tests/incurred-production-daily-client.test.mjs",
     "web/cloudflare/tests/incurred-production-range-chrome.test.mjs",
+    "web/cloudflare/tests/mls-approved-design-system.test.mjs",
     "web/cloudflare/tests/production-closing-workspace-chrome.test.mjs",
     "web/cloudflare/tests/production-confirmation-proposal-chrome.test.mjs",
     "web/cloudflare/tests/production-coverage-chrome.test.mjs",
