@@ -1,10 +1,17 @@
 === NUBANK_RECONCILIATION_CURRENT ===
-ESTADO ATUAL DE RETOMADA — 10/11/2026. CANDIDATE_VALIDATION_PENDING, ainda sem publicação desta versão.
-Versão preparada 2026-11-10.1 — Conciliação com extrato Nubank. Branch feature/nubank-cash-reconciliation-20261110 sobre main/PR115 f451c15ec1b96abaa6315457324ccaa31c8d361c.
-Financeiro > Banco e transferências: leitura local CSV/OFX da conta Nubank e CSV de transferências concluídas da Shopee, seleção explícita, prévia antes de importar, deduplicação por fonte/ID ou arquivo/linha, evidências privadas no FINANCE_DB. Associações 1:1 de valores positivos exatos são sempre confirmadas pelo proprietário; sugestões por referência/valor/data não são recebimentos confirmados. Seleção entre meses preservada, CAS/idempotência e desfazer auditado. Status Shopee pendente/falho/desconhecido não é promovido a concluído.
-Rota separada App→Auth→Finance; tenant deriva do FINANCE_PROFILE. GET/prévia frios não criam tabelas. Sem API bancária, sem arquivo bruto em rede, sem escrita comercial, sem mudar DTO/fórmula do lucro legado ou BANK NOT_COMPARED/realized_net. Importações são fatos declarados do arquivo, não fechamento mensal completo. Seis agentes, fabricação/semana sexta13h e histórico preservados.
-Baseline GET-only de 10/11 confirma Live PR115 App55d29a3f/Auth ec385ca9/Finance9ed0bd7d. Não alegar nova publicação/QA/CI/aceite real sem recibos. Próximo: build dentro4MiB, QA compilada normal/minificada320/1365 claro/escuro, suites completas, CI exata, Finance→Auth→App guardado, merge normal e conferir3vetores. Nenhum extrato real importado para QA.
-Guia docs/MLS_NUBANK_RECONCILIATION_2026_11_10.md.
+ESTADO ATUAL DE RETOMADA — 10/11/2026. PUBLISHED_VERIFIED. Consulte a PR116 para o estado atual da integração Git; publicação não prova merge.
+
+Versão 2026-11-10.1 — Conciliação com extrato Nubank publicada e conferida em 2026-11-10T14:02:41.633702-03:00. Fonte 9b546e8e65278470e62c919d0711d05b2f55a18d. CI 42857825794 aprovada: 3.761 Node na suíte completa do GitHub, 67 Python e QA com oito perfis normal/minificado, 320/1365 e claro/escuro, vinculada aos três hashes. Uma execução local falhou ao abrir o alvo CDP, antes de navegar ao App. O mesmo teste passou isoladamente (1/1), sem mudar sua fonte; não declarar que a suíte local inteira passou.
+
+Live: App 6e9e6514-8e0d-4791-bdc3-23ef8709363d; Auth 3b085dec-c506-472c-afae-6863c67cd545; Finance 4b285d05-9326-4885-b02d-c56a4ad99596. Finance → Auth → App publicados nessa ordem, com os três vetores de bytes/versões e configuração, domínios, subdomínios, flags e cron conferidos após cada etapa. O login público confirma header/meta 2026-11-10.1, e as rotas privadas rejeitam acesso anônimo. Publicação sem consultas D1, endpoints do proprietário ou provedor. Nenhum extrato real foi usado para QA ou importado pela equipe.
+
+Abrir /admin?tab=agent-finance#bankReconciliation. CSV/OFX da conta Nubank e CSV de transferências concluídas da Shopee são lidos no navegador. A prévia envia somente as linhas normalizadas selecionadas, sem gravar. Importação, vínculos 1:1 entre valores positivos BRL exatos e desfazer exigem ação explícita, com revisão, replay e auditoria. Colunas de situação reconhecidas não podem ser omitidas; PENDING não vira concluído. Valor, data e referência geram sugestões. Escolhas entre meses ficam preservadas. Não há API bancária ou escrita comercial.
+
+Orçamento D1 corrigido: importar 1.000 linhas usa 45 instruções em banco novo e 19 sobre banco existente em nova instância, antes 51 para o limite Free de 50. Os 31 objetos SQL, incluindo 16 triggers, são verificados; estrutura ausente ou alterada bloqueia sem reparo automático. Registros importados são imutáveis; desfazer acrescenta auditoria.
+
+Lucro e DTOs legados, BANK NOT_COMPARED e realized_net continuam separados. Fabricação, fechamento de sexta às 13h, custo infantil de R$ 13,50, Hermes Observer e seis agentes preservados. M2/M2.2 permanecem abertas: confronto de arquivos reais e fechamento completo precisam de evidências do proprietário. Os três Workers Builds falharam; a causa atual não foi demonstrada e isso não prova autodeploy desativado. A publicação manual e os vetores conferidos comprovam a Live; verificar novos desvios nos próximos incrementos.
+
+PR116: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/116. Integração por merge normal após CI documental, sem novo deploy por mudança apenas documental; consulte o estado atual no GitHub e os recibos. Guia: docs/MLS_NUBANK_RECONCILIATION_2026_11_10.md. Próximo: conferir arquivos reais e pendências restantes, sem inventar saldo, fabricação ou valores.
 === END_NUBANK_RECONCILIATION_CURRENT ===
 
 === PRODUCTION_WORKSPACE_CURRENT ===
