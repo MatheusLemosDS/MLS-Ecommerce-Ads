@@ -14,6 +14,7 @@
     "MLS_AI_SALES_OWNER_PREVIEW": "ENABLED"
   },
   "allowed_files": [
+    ".github/workflows/validate.yml",
     "AGENTS.md",
     "NEXT_CHAT_HANDOFF.txt",
     "README.md",
