@@ -5,6 +5,8 @@ import path from 'node:path';
 export const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const TARGETS = Object.freeze({
   app: Object.freeze({name: 'brazacommerce-app', main: '../../dist/app-worker.mjs', baselineHashes: [
+    // Reviewed owner-confirmed Nubank/Shopee file evidence; private Finance sidecar only.
+    '66bb33d5a1175fbc2e7caed250612d8f3f850747a62e0f70d6090a11f3f89a83',
     // Reviewed daily/weekly production navigation, explicit coverage and read-only cutoff refresh.
     'a9f878afc4d89c8d20edcf04b8a8a343bf83fcbd8a327ebc05a5983c8a38b8e0',
     // Reviewed editable rule prices with scoped CAS saves; existing formulas and browser AI retained.
@@ -209,6 +211,8 @@ export const TARGETS = Object.freeze({
     '26612b7ea0edbea55e06f5fc817a18defd6b4fe65381e6d564b7d360b7b80278',
   ]}),
   auth: Object.freeze({name: 'brazacommerce-auth', main: '../../dist/auth-worker.mjs', baselineHashes: [
+    // Reviewed owner-confirmed Nubank/Shopee file evidence; private Finance sidecar only.
+    'c8e3fd3aecac69320666bc847064bf222bcbde35e9a63cf41fb87a4c02cb1838',
     'c63ee09b2d98b6321e3ae7feae1066a9eec9160b49868d72fb84cb0471a0018d',
     'cf326e9a4917c75474b4222c87cbf5744f98ddfe459eb1fd249a05fb6f097bcb',
     '45d0142709c5087e373cc4da146070ed39c472805f6f64c00f00b6555f0e1f56',
@@ -248,7 +252,9 @@ export const TARGETS = Object.freeze({
     '851e27c703fda4143b87a8a85a79c06326b9a2f25ce16f5625d8871a589f43ec',
     '47c83f87f191fd0e5ff503d9c4bcf4671cd986b0965e66e84f1a6ed952dac925',
   ]}),
-  finance: Object.freeze({name: 'brazacommerce-finance', main: '../../dist/finance-worker.mjs', baselineHashes: ['08ada5ecec92350f4f8301fdb7baa00f5f8083a0e8390296b2870e0ff3cdc1a5']}),
+  finance: Object.freeze({name: 'brazacommerce-finance', main: '../../dist/finance-worker.mjs', baselineHashes: [
+    // Reviewed owner-confirmed Nubank/Shopee file evidence; private Finance sidecar only.
+    '1c79b245cd9908e9cfbe4cd9818e5bf47eebc4556159ae21c647e181b5caf404','08ada5ecec92350f4f8301fdb7baa00f5f8083a0e8390296b2870e0ff3cdc1a5']}),
 });
 export const stableJson = value => JSON.stringify(value, null, 2) + '\n';
 export const sha256 = value => createHash('sha256').update(value).digest('hex');

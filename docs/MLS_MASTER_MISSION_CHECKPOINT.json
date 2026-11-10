@@ -1,6 +1,6 @@
 {
   "schema": "mls_master_mission_checkpoint_v1",
-  "updated_at": "2026-11-09",
+  "updated_at": "2026-11-10",
   "base_visual_sha": "8d860b2c4f26531c53c4cdba0e06a14f51a7eef4",
   "visual_branch": "feature/mls-mockup-parity-real-charts-20261029",
   "visual_pr": 79,
@@ -6198,5 +6198,34 @@
       "ledger_absence_is_not_zero": true,
       "last_error_absence_is_not_no_failure_proof": true
     }
+  },
+  "nubank_reconciliation_2026_11_10": {
+    "status": "CANDIDATE_VALIDATION_PENDING",
+    "release_id": "2026-11-10.1",
+    "label": "Conciliação com extrato Nubank",
+    "date": "2026-11-10",
+    "base_commit": "f451c15ec1b96abaa6315457324ccaa31c8d361c",
+    "branch": "feature/nubank-cash-reconciliation-20261110",
+    "guide": "docs/MLS_NUBANK_RECONCILIATION_2026_11_10.md",
+    "location": "/admin?tab=agent-finance#bankReconciliation",
+    "source_commit": null,
+    "head_commit": null,
+    "pr": null,
+    "ci": null,
+    "published_at": null,
+    "live_versions": null,
+    "validation": null,
+    "commercial_writes_allowed": false,
+    "real_statement_imported_for_qa": false,
+    "legacy_realized_profit_changed": false,
+    "m2_closed": false,
+    "scope": "OWNER_DECLARED_FILE_EVIDENCE_SEPARATE_FROM_LEGACY_PROFIT",
+    "limits": [
+      "Nubank account CSV/OFX and Shopee completed-transfer CSV; no bank API",
+      "Raw files stay local; normalized selected lines require explicit import",
+      "Every exact positive 1:1 match and unlink requires owner confirmation",
+      "Legacy net estimates, BANK NOT_COMPARED and realized_net remain unchanged",
+      "No proof of whole-month completeness; no real private statement imported for QA"
+    ]
   }
 }

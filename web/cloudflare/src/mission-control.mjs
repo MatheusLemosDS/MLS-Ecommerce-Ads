@@ -477,7 +477,7 @@ export function missionSpecialistPanelsBody(id){
 }
 
 const missionWorkspaceNavigation=Object.freeze({
- finance:[['Resultado do mês','#businessMonth'],['Despesas','#businessMonthExpensesDetails'],['A receber','#commandPendingIncomeDetails'],['Repasses','#businessEscrowReleases'],['Conciliação','#businessReconciliation']],
+ finance:[['Banco e transferências','#bankReconciliation'],['Resultado do mês','#businessMonth'],['Despesas','#businessMonthExpensesDetails'],['A receber','#commandPendingIncomeDetails'],['Repasses','#businessEscrowReleases'],['Devoluções e ajustes','#businessReconciliation']],
  ads:[['Resultados','/dashboard'],['Campanhas','/campaigns'],['Oportunidades','/optimization']],
  products:[['Análise e preços','#businessMonthPricingObserver'],['Catálogo','/admin?tab=products'],['Custos e regras','/admin?tab=margins']],
  production:[['Diário e mês','#incurredProductionCalendarTitle'],['Fechamento semanal','#productionWeeklyClosing'],['Registrar produção','#incurredProductionRecordsPane'],['Referência das vendas','#costPeriods'],['Fila e montagem DTF','/admin?tab=production']],
