@@ -59,8 +59,13 @@ def rejection(replacements):
 
 guards={
     'orphan_reference':rejection({'mls-ai-sales-affiliates.mjs':lambda source:source+'\nconst futureDraft=draftAiSalesAffiliateProposal;\n'}),
+    'orphan_crm_reference':rejection({'mls-ai-sales-affiliates.mjs':lambda source:source+'\nconst futureCreator=upsertAiSalesAffiliateCreator;\n'}),
+    'orphan_csv_reference':rejection({'mls-ai-sales-imports.mjs':lambda source:source+'\nconst futureCsv=exportAiSalesCsv;\n'}),
     'store_import_removed_export':rejection({'mls-ai-sales-workspace-store.mjs':lambda source:source.replace('import {validateAiSalesAffiliateWorkspace,','import {draftAiSalesAffiliateProposal,validateAiSalesAffiliateWorkspace,',1)}),
+    'store_import_removed_crm':rejection({'mls-ai-sales-workspace-store.mjs':lambda source:source.replace('import {validateAiSalesAffiliateWorkspace,','import {upsertAiSalesAffiliateCreator,validateAiSalesAffiliateWorkspace,',1)}),
+    'store_import_removed_module':rejection({'mls-ai-sales-workspace-store.mjs':lambda source:"import {evaluateAiSalesProfitability} from './mls-ai-sales-profitability-gate.mjs';\n"+source}),
     'core_import_removed_export':rejection({'mls-ai-sales-performance.mjs':lambda source:"import {approveAiSalesAffiliateProposal} from './mls-ai-sales-affiliates.mjs';\n"+source}),
+    'core_import_removed_module':rejection({'mls-ai-sales-performance.mjs':lambda source:"import {evaluateAiSalesProfitability} from './mls-ai-sales-profitability-gate.mjs';\n"+source}),
     'store_import_wrong_module':rejection({'mls-ai-sales-workspace-store.mjs':lambda source:source.replace('import {validateAiSalesAffiliateWorkspace,','import {createAiSalesPerformanceLedger,validateAiSalesAffiliateWorkspace,',1)}),
     'core_import_wrong_module':rejection({'mls-ai-sales-performance.mjs':lambda source:"import {createAiSalesAffiliateWorkspace} from './mls-ai-sales-catalog.mjs';\n"+source}),
 }
@@ -73,16 +78,22 @@ const profiles=JSON.parse(result.stdout);
 const loadCore=(source,name)=>vm.runInThisContext('(()=>{'+source+'\nreturn MlsAiSalesCore;})()',{filename:name});
 const browser=loadCore(profiles.browser,'ai-sales-browser-profile.js');
 const server=loadCore(profiles.server,'ai-sales-server-profile.js');
-const omitted=['draftAiSalesAffiliateProposal','approveAiSalesAffiliateProposal'];
+const omitted=['createAiSalesAffiliateWorkspace','upsertAiSalesAffiliateCreator','removeAiSalesAffiliateCreator',
+ 'draftAiSalesAffiliateProposal','approveAiSalesAffiliateProposal','exportAiSalesAffiliateWorkspace',
+ 'exportAiSalesAffiliateCreators','importAiSalesAffiliateCreators','evaluateAiSalesProfitability',
+ 'exportAiSalesPerformance','exportAiSalesCsv'];
 
 test('server pruning leaves the complete browser module assembly byte exact',()=>{
  assert.equal(profiles.browser_byte_exact,true,'the browser must retain all original modules, bodies, exports and ordering');
  assert.deepEqual(Object.keys(browser),profiles.browser_exports);
  for(const name of omitted)assert.equal(typeof browser[name],'function',name+' remains available in the browser');
+ assert.ok(Object.isFrozen(browser.AI_SALES_AFFILIATE_CREATOR_CSV_HEADERS));
 });
 
 test('the reduced server core preserves every required persistence API and retained function body',()=>{
  for(const name of omitted)assert.equal(Object.hasOwn(server,name),false,name+' is browser only');
+ assert.equal(Object.hasOwn(server,'AI_SALES_AFFILIATE_CREATOR_CSV_HEADERS'),false,'creator CSV editing is browser only');
+ assert.doesNotMatch(profiles.server,/modules\["mls-ai-sales-profitability-gate\.mjs"\]\s*=/,'the unused proposal gate has no server module copy');
  for(const [filename,names] of Object.entries(profiles.required))for(const name of names){
   assert.equal(typeof server[name],'function',filename+' must retain '+name);
   assert.equal(String(server[name]),String(browser[name]),name+' keeps its full validation implementation');
@@ -113,8 +124,13 @@ test('browser proposals remain usable and the reduced server still revokes impor
 
 for(const [guard,expected] of [
  ['orphan_reference','draftAiSalesAffiliateProposal'],
+ ['orphan_crm_reference','upsertAiSalesAffiliateCreator'],
+ ['orphan_csv_reference','exportAiSalesCsv'],
  ['store_import_removed_export','mls-ai-sales-affiliates.mjs'],
+ ['store_import_removed_crm','mls-ai-sales-affiliates.mjs'],
+ ['store_import_removed_module','mls-ai-sales-profitability-gate.mjs'],
  ['core_import_removed_export','mls-ai-sales-affiliates.mjs'],
+ ['core_import_removed_module','mls-ai-sales-profitability-gate.mjs'],
  ['store_import_wrong_module','mls-ai-sales-affiliates.mjs'],
  ['core_import_wrong_module','mls-ai-sales-catalog.mjs'],
 ])test('the server build fails closed for '+guard,()=>assert.equal(profiles.guards[guard],expected));

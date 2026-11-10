@@ -5,6 +5,8 @@ import path from 'node:path';
 export const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const TARGETS = Object.freeze({
   app: Object.freeze({name: 'brazacommerce-app', main: '../../dist/app-worker.mjs', baselineHashes: [
+    // Reviewed editable rule prices with scoped CAS saves; existing formulas and browser AI retained.
+    '1ddfffce64190ef09c085946605a8ed19cc5149bd52a91e42b67c40804007750',
     // Reviewed daily result/returns copy and mobile readability; arithmetic and DTOs unchanged.
     '3ee87e09330e259bef0fdd8cb6e4a7ef2466c9aaee01140a88beb67e5ca8af65',
     '926e750890a31a00d1c25acd7bca1451f9faaa10fc882e0b667745fcba656106',
