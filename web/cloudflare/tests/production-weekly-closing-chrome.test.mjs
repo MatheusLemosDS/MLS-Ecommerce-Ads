@@ -79,13 +79,16 @@ for(const minify of [false,true])for(const width of [320,1365])test(`compiled we
   assert.equal(overview.financial,financialBaseline,'the complete financial baseline is captured before any weekly navigation or confirmation');
   assert.deepEqual(overview.ids,['hermes','finance','ads','products','production','returns']);assert.equal(overview.visible,true);assert.equal(overview.after_kpis,true);assert.equal(overview.before_charts,true);assert.equal(weeklyReads(),0,'weekly reports remain lazy outside the manufacturing workspace');
   await receiptClick(cdp,'#commandCenterAgents [data-mission-open="agent-production"]');
+  await receiptClick(cdp,'#agent-production .mission-page-tabs a[href="#productionWeeklyClosing"]');
   await wait(cdp,"brazaProductionWeeklyClosing.getSnapshot()?.month==='2026-10'&&!!brazaIncurredProduction.getSnapshot()",'manufacturing and weekly reports must settle');
   assert.equal(weeklyReads(),1,'opening manufacturing performs one deduplicated weekly report GET');
   const initial=await cdp.evaluate('brazaProductionWeeklyClosing.getSnapshot()');assert.deepEqual(initial,fixture.initial);assert.equal(initial.financial_integration_allowed,false);
   assert.equal(await cdp.evaluate("document.getElementById('productionWeeklyClosingWeek').value"),fixture.expected.end_date,'the latest closed cutoff is selected before the open week');
   const original=initial.weeks.find(row=>row.end_date===fixture.expected.end_date);assert.equal(original.current.total_cost_cents,null);assert.equal(original.current.boundary_pending_quantity,3);assert.equal(original.original.total_cost_cents,9000);assert.equal(original.current.period_end_at-original.current.period_start_at,7*86400);
+  await receiptClick(cdp,'#agent-production .mission-page-tabs a[href="#incurredProductionRecordsPane"]');
   await setField(cdp,'#incurredProductionRecord',fixture.pending,'change');await wait(cdp,"!!document.querySelector('#incurredProductionVoidForm [name=reason]')",'an explicitly selected active record exposes its existing correction draft');
   await setField(cdp,'#incurredProductionForm [name="production_ref"]','Rascunho de fabricação semanal preservado');await setField(cdp,'#incurredProductionForm [name="quantity"]','9');await setField(cdp,'#incurredProductionVoidForm [name="reason"]','Rascunho de correção semanal preservado');
+  await receiptClick(cdp,'#agent-production .mission-page-tabs a[href="#productionWeeklyClosing"]');
   await selectWeek(cdp,fixture.expected.end_date);await visibleBounds(cdp);
   if(await cdp.evaluate("document.getElementById('productionWeeklyClosingPending').tagName==='DETAILS'&&!document.getElementById('productionWeeklyClosingPending').open"))await receiptClick(cdp,'#productionWeeklyClosingPending>summary');
   const pendingSelector='[data-weekly-record="'+fixture.pending+'"]';

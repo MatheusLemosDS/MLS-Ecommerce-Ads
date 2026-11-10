@@ -86,3 +86,53 @@ test('closing coverage prevents readiness reads and logout ignores deferred GET 
  let release;const ready=Promise.withResolvers();ui.setTransport(async(path,body)=>{const result=body?await f.mutate(body):await f.read(new URL('https://test/'+path).searchParams.get('week_end'));ready.resolve();return new Promise(resolve=>{release=()=>resolve(result);});});declaration(ui);const pending=ui.submit();await ready.promise;ui.stop();release();assert.equal(await pending,false);await ui.b.flush();assert.equal(ui.snapshot(),null);assert.equal(ui.b.nodes.get('productionCoverageIntervals').textContent,'');assert.equal(ui.b.nodes.get('productionCoverageRetry').hidden,true);
  const second=mount(f);t.after(()=>second.stop());const getReady=Promise.withResolvers();let releaseGet;second.setTransport(async(path)=>{const result=await f.read(new URL('https://test/'+path).searchParams.get('week_end'));getReady.resolve();return new Promise(resolve=>{releaseGet=()=>resolve(result);});});const read=second.open();await getReady.promise;second.stop();releaseGet();await read;assert.equal(second.snapshot(),null);
 });
+
+test('explicit day navigation selects its full civil day without confirming manufacturing or coverage',async t=>{
+ const {f,ui}=await uiFixture(t);await ui.open();const initialRevision=ui.snapshot().revision;
+ assert.equal(await ui.b.run('brazaProductionCoverage.openForDate("2026-10-19")'),true);await ui.b.flush();
+ assert.equal(ui.snapshot().week_end,'2026-10-23');assert.equal(ui.b.nodes.get('productionCoverageInterval').value,'2026-10-19:DAY');
+ assert.match(ui.b.nodes.get('productionCoverageDayMessage').textContent,/Dia completo/);assert.equal(ui.b.nodes.get('productionCoverageBefore').hidden,true);assert.equal(ui.b.nodes.get('productionCoverageAfter').hidden,true);
+ assert.equal(ui.snapshot().revision,initialRevision);assert.ok(ui.calls.every(row=>row.body===null));assert.equal(f.env.ADMIN_DB.db.prepare("SELECT COUNT(*) count FROM sqlite_master WHERE name='incurred_production_records'").get().count,0);
+});
+
+test('Friday day navigation requires explicit halves and preserves each half draft across adjacent weeks',async t=>{
+ const {ui}=await uiFixture(t);await ui.open();const initialCalls=ui.calls.length;
+ assert.equal(ui.b.run('brazaProductionCoverage.openForDate("2026-10-16")'),true);await ui.b.flush();
+ assert.equal(ui.calls.length,initialCalls,'choosing Friday is not a provider/read/mutation command');assert.equal(ui.b.nodes.get('productionCoverageIntervals').children.length,0);assert.equal(ui.b.nodes.get('productionCoverageInterval').disabled,true);assert.match(ui.b.nodes.get('productionCoverageDayMessage').textContent,/uma metade não confirma o dia inteiro/);
+ assert.equal(await ui.b.nodes.get('productionCoverageBefore').onclick(),true);await ui.b.flush();assert.equal(ui.snapshot().week_end,'2026-10-16');assert.equal(ui.b.nodes.get('productionCoverageInterval').value,'2026-10-16:BEFORE_13');declaration(ui,'NO_MANUFACTURING','Unsent before-13 draft');
+ assert.equal(await ui.b.nodes.get('productionCoverageAfter').onclick(),true);await ui.b.flush();assert.equal(ui.snapshot().week_end,'2026-10-23');assert.equal(ui.b.nodes.get('productionCoverageInterval').value,'2026-10-16:AT_OR_AFTER_13');declaration(ui,'NO_MANUFACTURING','Unsent after-13 draft');
+ assert.equal(await ui.b.nodes.get('productionCoverageBefore').onclick(),true);await ui.b.flush();assert.equal(ui.field('reason').value,'Unsent before-13 draft');assert.equal(ui.field('confirmed').checked,true);
+ assert.equal(await ui.b.nodes.get('productionCoverageAfter').onclick(),true);await ui.b.flush();assert.equal(ui.field('reason').value,'Unsent after-13 draft');assert.equal(ui.field('confirmed').checked,true);assert.ok(ui.calls.every(row=>row.body===null));
+});
+
+test('a current Friday before13 exposes the unopened second half without fetching a future week',async t=>{
+ const {f,ui}=await uiFixture(t);f.state.time=Date.parse('2026-10-23T15:00:00Z');ui.b.context.coverageClock=f.state.time;await ui.open();const initialCalls=ui.calls.length;
+ assert.equal(ui.b.run('brazaProductionCoverage.openForDate("2026-10-23")'),true);await ui.b.flush();assert.equal(ui.b.nodes.get('productionCoverageAfter').disabled,true);assert.match(ui.b.nodes.get('productionCoverageDayMessage').textContent,/disponível após esse corte/);
+ assert.equal(await ui.b.nodes.get('productionCoverageBefore').onclick(),true);await ui.b.flush();assert.equal(ui.snapshot().week_end,'2026-10-23');assert.equal(ui.b.nodes.get('productionCoverageInterval').value,'2026-10-23:BEFORE_13');assert.equal(ui.snapshot().intervals.find(row=>row.key==='2026-10-23:BEFORE_13').state,'OPEN');
+ assert.equal(ui.b.run('brazaProductionCoverage.openForDate("2026-10-23",{part:"AT_OR_AFTER_13"})'),false);assert.equal(ui.calls.length,initialCalls);assert.ok(ui.calls.every(row=>row.body===null));assert.ok(ui.calls.every(row=>!row.path.includes('2026-10-30')));
+});
+
+test('day navigation rejects invalid dates, future dates and incompatible halves without changing the current form',async t=>{
+ const {ui}=await uiFixture(t);await ui.open();const originalWeek=ui.snapshot().week_end,originalInterval=ui.b.nodes.get('productionCoverageInterval').value,initialCalls=ui.calls.length;
+ for(const expression of ['brazaProductionCoverage.openForDate("2026-02-30")','brazaProductionCoverage.openForDate("2026-10-26")','brazaProductionCoverage.openForDate("2026-10-19",{part:"BEFORE_13"})','brazaProductionCoverage.openForDate("2026-10-16",{part:"DAY"})','brazaProductionCoverage.openForDate("1999-10-19")'])assert.equal(ui.b.run(expression),false,expression);
+ assert.equal(ui.snapshot().week_end,originalWeek);assert.equal(ui.b.nodes.get('productionCoverageInterval').value,originalInterval);assert.equal(ui.calls.length,initialCalls);assert.ok(ui.calls.every(row=>row.body===null));
+});
+
+test('day navigation cannot replace an inflight read or ambiguous immutable coverage command',async t=>{
+ const {f,ui}=await uiFixture(t);await ui.open();const currentWeek=ui.snapshot().week_end,currentInterval=ui.b.nodes.get('productionCoverageInterval').value;
+ let release;const ready=Promise.withResolvers();ui.setTransport(async(path,body)=>{const response=body?await f.mutate(body):await f.read(new URL('https://test/'+path).searchParams.get('week_end'));ready.resolve();return new Promise(resolve=>{release=()=>resolve(response);});});const pending=ui.refresh();await ready.promise;assert.equal(ui.b.run('brazaProductionCoverage.openForDate("2026-10-12")'),false);assert.equal(ui.b.nodes.get('productionCoverageWeek').value,currentWeek);release();await pending;await ui.b.flush();assert.equal(ui.b.nodes.get('productionCoverageInterval').value,currentInterval);
+ ui.setTransport(async(path,body)=>{if(body){await f.mutate(body);throw Object.assign(Error('SYNTHETIC_LOST_RESPONSE'),{status:503});}return f.read(new URL('https://test/'+path).searchParams.get('week_end'));});declaration(ui,'NO_MANUFACTURING','Pending immutable declaration');assert.equal(await ui.submit(),false);const sent=clone(ui.calls.find(row=>row.body).body),before=ui.calls.length;
+ assert.equal(ui.b.run('brazaProductionCoverage.openForDate("2026-10-12")'),false);assert.equal(ui.b.nodes.get('productionCoverageWeek').value,currentWeek);assert.equal(ui.b.nodes.get('productionCoverageInterval').value,currentInterval);assert.equal(ui.calls.length,before);assert.equal(ui.field('reason').value,'Pending immutable declaration');assert.deepEqual(ui.calls.filter(row=>row.body).map(row=>row.body),[sent]);
+});
+
+test('failed day navigation cannot expose the previous week form as the selected new week',async t=>{
+ const {ui}=await uiFixture(t);await ui.open();declaration(ui,'NO_MANUFACTURING','Old week draft kept');const initialCalls=ui.calls.length;
+ ui.setTransport(async()=>{throw Object.assign(Error('SYNTHETIC_READ_FAILURE'),{status:503});});assert.equal(await ui.b.run('brazaProductionCoverage.openForDate("2026-10-12")'),false);await ui.b.flush();assert.equal(ui.b.nodes.get('productionCoverageWeek').value,'2026-10-16');assert.equal(ui.b.nodes.get('productionCoverageIntervals').children.length,0);assert.equal(ui.b.nodes.get('productionCoverageInterval').disabled,true);assert.equal(ui.calls.length,initialCalls+1);assert.ok(ui.calls.every(row=>row.body===null));
+});
+
+test('coverage stays lazy behind the daily pane and resumes the same draft when weekly becomes visible',async t=>{
+ const {ui}=await uiFixture(t,{panel:'agent-production'});const weekly={hidden:true};ui.b.nodes.set('missionProductionWeeklyPane',weekly);assert.equal(await ui.open(),false);assert.equal(ui.calls.length,0);
+ weekly.hidden=false;await ui.open();assert.equal(ui.calls.length,1);declaration(ui,'NO_MANUFACTURING','Same explicit interval draft while daily is visible');const selected=ui.b.nodes.get('productionCoverageInterval').value;
+ weekly.hidden=true;ui.b.run('for(const fn of coverageEvents["mls-production-analytics-ready"]||[])fn();');await ui.b.flush();assert.equal(ui.calls.length,1,'hidden weekly coverage cannot perform saved-data reads after daily analytics refresh');assert.equal(ui.field('reason').value,'Same explicit interval draft while daily is visible');
+ weekly.hidden=false;await ui.open();assert.equal(ui.calls.length,2);assert.equal(ui.b.nodes.get('productionCoverageInterval').value,selected);assert.equal(ui.field('reason').value,'Same explicit interval draft while daily is visible');assert.equal(ui.field('confirmed').checked,true);assert.ok(ui.calls.every(c=>c.body===null));
+});

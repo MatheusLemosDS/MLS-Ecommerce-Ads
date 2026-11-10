@@ -9,6 +9,7 @@ import path from 'node:path';
 import {compiledOwnerReportPage} from './owner-report-browser-fixture.mjs';
 import {createChromeProfileCleanup} from './chrome-profile-cleanup.mjs';
 import {waitForChromeDebugPort} from './chrome-debug-port.mjs';
+import {receiptClick as nativeReceiptClick} from './returns-receipts-chrome-helpers.mjs';
 import {D1} from './sqlite-d1.mjs';
 import {readIncurredProduction,mutateIncurredProduction} from '../src/incurred-production.mjs';
 import {readIncurredProductionWorkspace} from '../src/incurred-production-workspace.mjs';
@@ -31,11 +32,8 @@ async function browser(){
 }
 async function waitFor(cdp,expression,label){for(let index=0;index<160;index++){if(await cdp.evaluate(expression))return;await pause(50);}assert.fail(label);}
 async function click(cdp,selector){
- const document=await cdp.send('DOM.getDocument'),target=await cdp.send('DOM.querySelector',{nodeId:document.root.nodeId,selector});assert.ok(target.nodeId,selector+' exists');
- await cdp.send('DOM.scrollIntoViewIfNeeded',{nodeId:target.nodeId});await cdp.send('Page.captureScreenshot',{format:'png',fromSurface:true,captureBeyondViewport:false});
- const info=await cdp.evaluate(`(()=>{const n=document.querySelector(${JSON.stringify(selector)}),r=n.getBoundingClientRect();return {height:r.height,visible:n.checkVisibility({checkVisibilityCSS:true}),enabled:!n.disabled};})()`);assert.equal(info.visible,true);assert.equal(info.enabled,true);assert.ok(info.height>=44,selector+' needs a44px touch target');
- const quads=await cdp.send('DOM.getContentQuads',{nodeId:target.nodeId}),quad=quads.quads?.[0];assert.equal(quad?.length,8);const x=(quad[0]+quad[2]+quad[4]+quad[6])/4,y=(quad[1]+quad[3]+quad[5]+quad[7])/4;
- await cdp.send('Input.dispatchMouseEvent',{type:'mousePressed',button:'left',buttons:1,clickCount:1,x,y,modifiers:0});await cdp.send('Input.dispatchMouseEvent',{type:'mouseReleased',button:'left',buttons:0,clickCount:1,x,y,modifiers:0});
+ assert.equal(await cdp.evaluate(`(()=>{const n=document.querySelector(${JSON.stringify(selector)});if(!n)throw Error('RANGE_NATIVE_ACTION_MISSING');return !n.disabled;})()`),true,selector+' must be enabled');
+ return nativeReceiptClick(cdp,selector);
 }
 async function manufacturingFixture(){
  const env={ADMIN_DB:new D1()},identity={artwork:'Arte sintética',color:'Preto',size:'M',garment_type:'ADULT',fit:'UNISEX',confirmed:true,item_id:null,model_id:null,sku:null};let index=0;
@@ -67,7 +65,9 @@ for(const minify of [false,true])for(const width of [320,1365])test(`generated m
   await waitFor(cdp,"!!brazaIncurredProduction.getRangeSnapshot?.()",'the embedded range helper must load from the signed saved-ledger response');await waitFor(cdp,"!!brazaMonthDashboard.getSnapshot()?.month",'the immutable financial month must settle before comparison');
   const range=()=>cdp.evaluate('brazaIncurredProduction.getRangeSnapshot()'),ledgerReads=()=>requests.filter(row=>row.path.startsWith('/api/admin/production/incurred?')).length;
   const originalRange=await range(),financial=await cdp.evaluate('JSON.stringify(brazaMonthDashboard.getSnapshot())');assert.equal(originalRange.start_date,'2026-11-01');assert.equal(originalRange.end_date,'2026-11-26');assert.equal(ledgerReads(),1);
+  await click(cdp,'#agent-production .mission-page-tabs a[href="#incurredProductionRecordsPane"]');
   await cdp.evaluate("(()=>{for(const [name,value]of Object.entries({production_ref:'Rascunho sintético preservado',quantity:'9'})){const input=document.querySelector('#incurredProductionForm [name='+name+']');input.value=value;input.dispatchEvent(new Event('input',{bubbles:true}));}})()");
+  await click(cdp,'#agent-production .mission-page-tabs a[href="#incurredProductionCalendarTitle"]');await click(cdp,'#incurredProduction a[href="#incurredProductionRangePane"]');
   const apply=async(start,end)=>{await cdp.evaluate(`(()=>{for(const [id,value]of [['incurredProductionStart',${JSON.stringify(start)}],['incurredProductionEnd',${JSON.stringify(end)}]]){const input=document.getElementById(id);input.value=value;input.dispatchEvent(new Event('input',{bubbles:true}));}})()`);await click(cdp,'#incurredProductionApplyRange');};
   await apply('2026-11-15','2026-11-25');await waitFor(cdp,"brazaIncurredProduction.getRangeSnapshot().start_date==='2026-11-15'",'both range endpoints must apply');let selected=await range();assert.equal(selected.summary.known_cost_cents,6930);assert.equal(selected.summary.total_cost_cents,null);assert.equal(selected.summary.unknown_cost_quantity,1);assert.equal(selected.summary.produced_quantity,6);assert.equal(selected.days.length,11);
   const partial=await cdp.evaluate("({text:document.getElementById('incurredProductionRange').textContent,records:document.querySelectorAll('#incurredProductionRecords>.incurred-production-record').length,ref:document.querySelector('#incurredProductionForm [name=production_ref]').value,quantity:document.querySelector('#incurredProductionForm [name=quantity]').value})");assert.match(partial.text,/subtotal conhecido não é o gasto total/);assert.equal(partial.records,3);assert.equal(partial.ref,'Rascunho sintético preservado');assert.equal(partial.quantity,'9');

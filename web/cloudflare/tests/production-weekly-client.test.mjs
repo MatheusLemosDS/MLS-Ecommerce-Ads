@@ -2,15 +2,15 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {webcrypto} from 'node:crypto';
 import {productionWeeklyClosingBody,PRODUCTION_WEEKLY_CLIENT,projectProductionWeeklyClosingWorkspace} from '../src/production-weekly-view.mjs';
-import {readProductionWeeklyClosingWorkspace} from '../src/production-weekly-store.mjs';
+import {readProductionWeeklyClosingWorkspace,runProductionWeeklyClosing} from '../src/production-weekly-store.mjs';
 import {D1} from './sqlite-d1.mjs';
 import {ownerReportBrowser} from './owner-report-browser-fixture.mjs';
 import {weeklyProductionFixture,weeklyProductionClock} from './production-weekly-browser-fixture.mjs';
 
 const clone=v=>JSON.parse(JSON.stringify(v));
 function mount(f,{panel='agent-production',clock=weeklyProductionClock}={}){
- const prelude='globalThis.weeklyReadyHandlers=[];document.addEventListener=(name,handler)=>{if(name==="mls-production-analytics-ready")weeklyReadyHandlers.push(handler);};';
- const b=ownerReportBrowser('<section id="missionProductionFabricationPane"></section><input id="foreignManufacturingDraft">'+productionWeeklyClosingBody()+'<script>'+prelude+PRODUCTION_WEEKLY_CLIENT+'</script>',{scriptIncludes:'globalThis.brazaProductionWeeklyClosing='}),calls=[];
+ const prelude='globalThis.weeklyReadyHandlers=[];globalThis.weeklyEvents={};document.addEventListener=(name,handler)=>{(weeklyEvents[name]??=[]).push(handler);if(name==="mls-production-analytics-ready")weeklyReadyHandlers.push(handler);};globalThis.addEventListener=(name,handler)=>{(weeklyEvents[name]??=[]).push(handler);};';
+ const b=ownerReportBrowser('<section id="missionProductionFabricationPane"></section><section id="missionProductionWeeklyPane"></section><input id="foreignManufacturingDraft">'+productionWeeklyClosingBody()+'<script>'+prelude+PRODUCTION_WEEKLY_CLIENT+'</script>',{scriptIncludes:'globalThis.brazaProductionWeeklyClosing='}),calls=[];
  b.context.crypto=webcrypto;b.context.weeklyClock=clock;b.context.weeklyPanel=panel;
  let transport=async(path,body)=>body?f.mutate(body):f.read(new URL('https://synthetic.test/'+path).searchParams.get('month'));
  b.context.readWeeklySaved=async(path,body)=>{const copied=body===undefined?null:clone(body);calls.push({path,body:copied,frozen:body===undefined?null:Object.isFrozen(body)});return JSON.stringify(await transport(path,copied));};
@@ -18,7 +18,7 @@ function mount(f,{panel='agent-production',clock=weeklyProductionClock}={}){
  const snapshot=()=>clone(b.run('brazaProductionWeeklyClosing.getSnapshot()'));
  const field=(id,name)=>b.nodes.get('productionWeeklyClosingRecords').querySelector('[data-weekly-record="'+id+'"]').querySelector('[name="'+name+'"]');
  const fill=(id,values)=>{for(const [name,value]of Object.entries(values)){const input=field(id,name);if(name==='confirmed'){input.checked=value;input.onchange();}else{input.value=value;input.oninput();}}};
- return {b,calls,snapshot,field,fill,setTransport:value=>transport=value,async open(){const value=b.run('brazaProductionWeeklyClosing.open();');await b.flush();return value;},async refresh(){const value=b.run('brazaProductionWeeklyClosing.refresh();');await b.flush();return value;},async month(value){const input=b.nodes.get('productionWeeklyClosingMonth');input.value=value;const result=input.onchange();await b.flush();return result;},week(value){const input=b.nodes.get('productionWeeklyClosingWeek');input.value=value;return input.onchange();},submit:id=>b.nodes.get('productionWeeklyClosingRecords').querySelector('[data-weekly-record="'+id+'"]').onsubmit({preventDefault(){}}),stop(){b.run('brazaProductionWeeklyClosing.stop();');b.timers.clear();}};
+ return {b,calls,snapshot,field,fill,setTransport:value=>transport=value,setClock:value=>{b.context.weeklyClock=value;},async event(name){b.context.weeklyEventName=name;await b.run('Promise.all((weeklyEvents[weeklyEventName]||[]).map(fn=>fn()))');await b.flush();},async fireTimer(){const [id,timer]=[...b.timers][0]??[];assert.ok(timer,'a bounded refresh must be armed');b.timers.delete(id);await timer.callback();await b.flush();return timer.delay;},async open(){const value=b.run('brazaProductionWeeklyClosing.open();');await b.flush();return value;},async refresh(){const value=b.run('brazaProductionWeeklyClosing.refresh();');await b.flush();return value;},async month(value){const input=b.nodes.get('productionWeeklyClosingMonth');input.value=value;const result=input.onchange();await b.flush();return result;},week(value){const input=b.nodes.get('productionWeeklyClosingWeek');input.value=value;return input.onchange();},submit:id=>b.nodes.get('productionWeeklyClosingRecords').querySelector('[data-weekly-record="'+id+'"]').onsubmit({preventDefault(){}}),stop(){b.run('brazaProductionWeeklyClosing.stop();');b.timers.clear();}};
 }
 async function fixture(t,options){const f=await weeklyProductionFixture();t.after(()=>f.close());const ui=mount(f,options);t.after(()=>ui.stop());return {f,ui};}
 
@@ -91,4 +91,50 @@ test('logout clears weekly facts and drafts and ignores deferred committed POST 
  const {f,ui}=await fixture(t);await ui.open();const ready=Promise.withResolvers();let release;ui.setTransport(async(path,body)=>{const response=body?await f.mutate(body):await f.read(new URL('https://local.test/'+path).searchParams.get('month'));ready.resolve();return new Promise(resolve=>{release=()=>resolve(response);});});
  ui.fill(f.pending,{before13_quantity:'2',at_or_after13_quantity:'1',reason:'Rascunho sintético antes de sair',confirmed:true});const action=ui.submit(f.pending);await ready.promise;ui.stop();release();assert.equal(await action,false);await ui.b.flush();assert.equal(ui.snapshot(),null);assert.equal(ui.b.nodes.get('productionWeeklyClosingRecords').textContent,'');assert.equal(ui.b.nodes.get('productionWeeklyClosingRetry').hidden,true);assert.match(ui.b.nodes.get('productionWeeklyClosingStatus').textContent,/Sessão encerrada/);
  const second=mount(f);t.after(()=>second.stop());const getReady=Promise.withResolvers();let releaseGet;second.setTransport(async(path)=>{const response=await f.read(new URL('https://local.test/'+path).searchParams.get('month'));getReady.resolve();return new Promise(resolve=>{releaseGet=()=>resolve(response);});});const request=second.open();await getReady.promise;second.stop();releaseGet();await request;await second.b.flush();assert.equal(second.snapshot(),null);assert.equal(second.b.nodes.get('productionWeeklyClosingRecords').textContent,'');
+});
+
+test('a visible Friday panel rereads the saved closure after13h without creating any manufacturing or POST',async t=>{
+ const env={ADMIN_DB:new D1()};t.after(()=>env.ADMIN_DB.db.close());let at=Date.UTC(2026,9,30,15,50);const now=()=>at;await runProductionWeeklyClosing(env,{now});at=Date.UTC(2026,9,30,15,59,50);
+ const f={read:month=>readProductionWeeklyClosingWorkspace(env,{month},{now})},ui=mount(f,{clock:at});t.after(()=>ui.stop());
+ await ui.open();const before=ui.snapshot(),closing=before.weeks.find(w=>w.end_date==='2026-10-30');assert.equal(closing.current.status,'OPEN');assert.equal(closing.original,null);assert.equal(ui.calls.length,1);assert.equal(ui.b.timers.size,1);
+ const delay=[...ui.b.timers.values()][0].delay;assert.equal(delay,75000,'a one-shot read is scheduled65seconds after the cutoff, not a tight poll');
+ at=Date.UTC(2026,9,30,16,0,20);await runProductionWeeklyClosing(env,{now});at=Date.UTC(2026,9,30,16,1,5);ui.setClock(at);await ui.fireTimer();
+ assert.equal(ui.calls.length,2);const closed=ui.snapshot().weeks.find(w=>w.end_date==='2026-10-30');assert.equal(closed.original.capture_kind,'SCHEDULED');assert.equal(closed.current.status,'NO_RECORDS');assert.equal(closed.original.total_cost_cents,null);assert.match(ui.b.nodes.get('productionWeeklyClosingStatus').textContent,/Leitura conferida em.*Prévia não é fechamento salvo/);assert.ok(ui.calls.every(row=>row.body===null));assert.equal(env.ADMIN_DB.db.prepare("SELECT COUNT(*) n FROM sqlite_master WHERE name='incurred_production_records'").get().n,0);
+});
+
+test('a delayed weekly artifact is rechecked only on the bounded ten-minute followup',async t=>{
+ const env={ADMIN_DB:new D1()};t.after(()=>env.ADMIN_DB.db.close());let at=Date.UTC(2026,9,30,15,59,50);const now=()=>at,ui=mount({read:month=>readProductionWeeklyClosingWorkspace(env,{month},{now})},{clock:at});t.after(()=>ui.stop());await ui.open();
+ at=Date.UTC(2026,9,30,16,1,5);ui.setClock(at);await ui.fireTimer();assert.equal(ui.snapshot().weeks.find(w=>w.end_date==='2026-10-30').original,null);assert.equal(ui.b.timers.size,1);assert.equal([...ui.b.timers.values()][0].delay,600000);
+ at=Date.UTC(2026,9,30,16,10,20);await runProductionWeeklyClosing(env,{now});at=Date.UTC(2026,9,30,16,11,5);ui.setClock(at);await ui.fireTimer();assert.ok(ui.snapshot().weeks.find(w=>w.end_date==='2026-10-30').original);assert.equal(ui.calls.length,3);assert.ok(ui.calls.every(row=>row.body===null));
+});
+
+test('reentry and focus revalidate stale saved data once, preserving history choice and split drafts',async t=>{
+ const {f,ui}=await fixture(t);await ui.open();ui.week('2026-10-16');ui.fill(f.pending,{before13_quantity:'2',at_or_after13_quantity:'1',reason:'Rascunho antes de retornar',confirmed:true});
+ await ui.event('focus');assert.equal(ui.calls.length,1,'fresh focus does not poll');ui.setClock(weeklyProductionClock+601000);ui.b.run('document.documentElement.dataset.activePanel="overview";');await ui.event('focus');assert.equal(ui.calls.length,1);
+ ui.b.run('document.documentElement.dataset.activePanel="agent-production";');await ui.open();assert.equal(ui.calls.length,2);assert.equal(ui.b.nodes.get('productionWeeklyClosingWeek').value,'2026-10-16');assert.equal(ui.field(f.pending,'reason').value,'Rascunho antes de retornar');assert.equal(ui.field(f.pending,'confirmed').checked,true);await ui.event('focus');assert.equal(ui.calls.length,2,'duplicate focus is throttled even if the saved source has an older checked_at');
+ ui.setClock(weeklyProductionClock+1202000);await ui.event('focus');assert.equal(ui.calls.length,3);assert.ok(ui.calls.every(row=>row.body===null));
+});
+
+test('automatic reads respect document visibility, in-flight reads, hidden fabrication and stopped sessions',async t=>{
+ const {f,ui}=await fixture(t);await ui.open();const oldTimer=[...ui.b.timers.values()][0].callback;ui.setClock(weeklyProductionClock+601000);ui.b.run('document.hidden=true;');await ui.event('visibilitychange');assert.equal(ui.calls.length,1);assert.equal(ui.b.timers.size,0);
+ const ready=Promise.withResolvers();let release;ui.setTransport(async path=>{const response=await f.read(new URL('https://synthetic.test/'+path).searchParams.get('month'));ready.resolve();return new Promise(resolve=>{release=()=>resolve(response);});});
+ ui.b.run('document.hidden=false;');const request=ui.event('visibilitychange');await ready.promise;await ui.event('focus');assert.equal(ui.calls.length,2,'focus cannot duplicate a pending GET');release();await request;
+ ui.setClock(weeklyProductionClock+1202000);ui.b.nodes.get('missionProductionWeeklyPane').hidden=true;await ui.event('focus');assert.equal(ui.calls.length,2);assert.equal(ui.b.timers.size,0);ui.b.nodes.get('missionProductionWeeklyPane').hidden=false;ui.b.nodes.get('missionProductionFabricationPane').hidden=true;await ui.event('focus');assert.equal(ui.calls.length,2);ui.stop();await oldTimer();await ui.event('focus');assert.equal(ui.calls.length,2);assert.equal(ui.b.timers.size,0);assert.equal(ui.snapshot(),null);
+});
+
+test('suspending weekly mode cancels its timer but retains snapshots and drafts for safe reentry',async t=>{
+ const {f,ui}=await fixture(t);await ui.open();ui.fill(f.pending,{before13_quantity:'1',at_or_after13_quantity:'2',reason:'Rascunho ao trocar o modo',confirmed:true});const saved=ui.snapshot();assert.equal(ui.b.timers.size,1);
+ ui.b.run('brazaProductionWeeklyClosing.suspend();');assert.equal(ui.b.timers.size,0);assert.deepEqual(ui.snapshot(),saved);assert.equal(ui.field(f.pending,'reason').value,'Rascunho ao trocar o modo');await ui.open();assert.equal(ui.calls.length,1);assert.equal(ui.b.timers.size,1);
+});
+
+test('weekly chart exposes saved versus preview money, known subtotals and keyboard-native date selection',async t=>{
+ const {f,ui}=await fixture(t);await ui.open();const graph=ui.b.nodes.get('productionWeeklyClosingGraph'),buttons=graph.querySelectorAll('button');assert.equal(buttons.length,ui.snapshot().weeks.length);assert.ok(buttons.every(button=>button.type==='button'&&button.getAttribute('aria-label').includes('Corte ')));
+ const pending=buttons.find(button=>button.dataset.weeklyChartEnd===f.expected.end_date);assert.equal(pending.dataset.partial,'true');assert.match(pending.getAttribute('aria-label'),/subtotal.*relatório salvo/);assert.equal(pending.querySelectorAll('.production-weekly-bar').length,1);const prior=buttons.find(button=>button.dataset.weeklyChartEnd==='2026-10-16');assert.equal(prior.onclick(),true);assert.equal(ui.b.nodes.get('productionWeeklyClosingWeek').value,'2026-10-16');assert.equal(ui.calls.length,1,'chart selection uses already saved data');assert.equal(graph.querySelector('[data-weekly-chart-end="2026-10-16"]').getAttribute('aria-pressed'),'true');
+ const env={ADMIN_DB:new D1()};t.after(()=>env.ADMIN_DB.db.close());const empty=mount({read:month=>readProductionWeeklyClosingWorkspace(env,{month},{now:()=>weeklyProductionClock})});t.after(()=>empty.stop());await empty.open();assert.equal(empty.b.nodes.get('productionWeeklyClosingGraph').querySelectorAll('.production-weekly-bar').length,0);assert.doesNotMatch(empty.b.nodes.get('productionWeeklyClosingGraph').textContent,/R\$/,'unrecorded days cannot become zero-valued bars');
+});
+
+test('automatic refresh cannot overtake an ambiguous split command or discard its retry draft',async t=>{
+ const {f,ui}=await fixture(t);await ui.open();let lost=true;ui.setTransport(async(path,body)=>{if(body){const response=await f.mutate(body);if(lost){lost=false;throw Object.assign(Error('SYNTHETIC_RESPONSE_LOST'),{status:503});}return response;}return f.read(new URL('https://synthetic.test/'+path).searchParams.get('month'));});
+ ui.fill(f.pending,{before13_quantity:'2',at_or_after13_quantity:'1',reason:'Confirmação pendente de resposta',confirmed:true});assert.equal(await ui.submit(f.pending),false);const first=clone(ui.calls.find(row=>row.body).body),calls=ui.calls.length;ui.setClock(weeklyProductionClock+601000);await ui.event('focus');await ui.event('visibilitychange');assert.equal(ui.calls.length,calls);assert.equal(ui.b.timers.size,0);assert.equal(ui.field(f.pending,'reason').value,'Confirmação pendente de resposta');assert.equal(ui.b.nodes.get('productionWeeklyClosingRetry').hidden,false);
+ assert.equal(await ui.b.nodes.get('productionWeeklyClosingRetry').onclick(),true);assert.deepEqual(ui.calls.filter(row=>row.body).at(-1).body,first);assert.equal(ui.b.timers.size,1,'a confirmed retry can resume bounded revalidation');
 });

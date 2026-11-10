@@ -480,7 +480,7 @@ const missionWorkspaceNavigation=Object.freeze({
  finance:[['Resultado do mês','#businessMonth'],['Despesas','#businessMonthExpensesDetails'],['A receber','#commandPendingIncomeDetails'],['Repasses','#businessEscrowReleases'],['Conciliação','#businessReconciliation']],
  ads:[['Resultados','/dashboard'],['Campanhas','/campaigns'],['Oportunidades','/optimization']],
  products:[['Análise e preços','#businessMonthPricingObserver'],['Catálogo','/admin?tab=products'],['Custos e regras','/admin?tab=margins']],
- production:[['Fabricação e custos','#mission-production-operations'],['Referência das vendas','#costPeriods'],['Fila e montagem DTF','/admin?tab=production']],
+ production:[['Diário e mês','#incurredProductionCalendarTitle'],['Fechamento semanal','#productionWeeklyClosing'],['Registrar produção','#incurredProductionRecordsPane'],['Referência das vendas','#costPeriods'],['Fila e montagem DTF','/admin?tab=production']],
  returns:[['Fila de devoluções','#physicalReturnsQueue'],['Vínculos de fabricação','#returnManufacturingLinksDetails'],['Conciliação financeira','/admin?tab=agent-finance#businessReconciliation']]
 });
 function missionWorkspaceNavLink(label,href,current=false){

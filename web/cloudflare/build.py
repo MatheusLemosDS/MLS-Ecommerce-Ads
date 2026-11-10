@@ -1,6 +1,6 @@
 """Build paste-ready Workers, preserving supplied originals."""
 from pathlib import Path
-import hashlib,json
+import hashlib,json,subprocess
 import re
 root=Path(__file__).resolve().parent
 
@@ -55,6 +55,8 @@ production_dtf=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/prod
 production_dtf='const brazaProductionDtfStore = (() => {\n'+production_dtf+'\nreturn {PRODUCTION_DTF_SCHEMA,ProductionDtfError,readProductionDtf,saveProductionDtfSettings,syncProductionDtf,prepareProductionDtfBatch,actProductionDtfBatch};\n})();\nconst {PRODUCTION_DTF_SCHEMA,ProductionDtfError,readProductionDtf,saveProductionDtfSettings,syncProductionDtf,prepareProductionDtfBatch,actProductionDtfBatch}=brazaProductionDtfStore;\n'
 business_checkpoint=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/business-checkpoint.mjs').read_text(),flags=re.M),flags=re.M)
 business_checkpoint='const brazaBusinessCheckpoint = (() => {\n'+business_checkpoint+'\nreturn {BUSINESS_CHECKPOINT_SCHEMA,buildBusinessCheckpoint,recordBusinessCheckpoint,readBusinessCheckpoints,businessMonthWithCheckpoint,BusinessCheckpointError};\n})();\nconst {BUSINESS_CHECKPOINT_SCHEMA,buildBusinessCheckpoint,recordBusinessCheckpoint,readBusinessCheckpoints,businessMonthWithCheckpoint,BusinessCheckpointError}=brazaBusinessCheckpoint;\n'
+server_namespace_sources=[]
+
 def source_namespace(filename, namespace, names, helpers=None, *, omit_server_functions=()):
     raw=(root/'src'/filename).read_text()
     if helpers: raw=freeze_client_helpers(raw,helpers)
@@ -71,7 +73,36 @@ def source_namespace(filename, namespace, names, helpers=None, *, omit_server_fu
             raise ValueError('Cannot omit exact server function: '+name)
         raw=raw.replace(functions[0],'',1)
     source=re.sub(r'^export ', '', re.sub(r'^import .*\n','',raw,flags=re.M),flags=re.M)
-    return 'const '+namespace+' = (() => {\n'+source+'\nreturn {'+names+'};\n})();\nconst {'+names+'}='+namespace+';\n'
+    output='const '+namespace+' = (() => {\n'+source+'\nreturn {'+names+'};\n})();\nconst {'+names+'}='+namespace+';\n'
+    # Freeze-client strings are already complete here. A namespace which still
+    # interpolates Function#toString must retain its exact host formatting.
+    if not re.search(r'\$\{[^{}\n]*\.toString\(\)',output):
+        server_namespace_sources.append({'name':namespace,'source':output})
+    return output
+
+def compact_server_namespaces(output):
+    """Batch compact reviewed host namespaces without changing browser strings.
+
+    The Admin seam, supplied originals, client sources and AI browser assembly
+    remain outside this transform. Exact occurrence checks prevent ambiguous
+    replacement after future changes to the generated source layout.
+    """
+    rows=server_namespace_sources
+    if not rows or len({row['name'] for row in rows})!=len(rows):
+        raise ValueError('Invalid server namespace selection')
+    for row in rows:
+        if output.count(row['source'])!=1:
+            raise ValueError('Ambiguous server namespace: '+row['name'])
+    request={'schema':'worker_server_namespaces_v1','namespaces':rows}
+    result=subprocess.run(['node',str(root.parent.parent/'tools'/'compact_worker_namespaces.mjs')],input=json.dumps(request),capture_output=True,text=True,check=True,timeout=30)
+    value=json.loads(result.stdout)
+    if set(value)!={'schema','namespaces'} or value['schema']!=request['schema'] or not isinstance(value['namespaces'],list) or len(value['namespaces'])!=len(rows):
+        raise ValueError('Invalid compacted namespace response')
+    for original,compact in zip(rows,value['namespaces']):
+        if set(compact)!={'name','source'} or compact['name']!=original['name'] or not isinstance(compact['source'],str) or not compact['source']:
+            raise ValueError('Invalid compacted namespace row')
+        output=output.replace(original['source'],compact['source'],1)
+    return output
 app_release=source_namespace('app-release.mjs','mlsAppRelease','APP_RELEASE,releaseInfo')
 app_release_view=source_namespace('app-release-view.mjs','mlsAppReleaseView','APP_RELEASE_CSS,releaseOverviewBody,releaseNotesBody')
 product_workbench_view=source_namespace('mls-product-workbench-view.mjs','mlsProductWorkbenchView','PRODUCT_WORKBENCH_CSS,productWorkbenchBody',omit_server_functions=('createMlsProductWorkbenchView',))
@@ -131,7 +162,7 @@ daily_profit_presentation='' # Browser-only; frozen into its consumers below.
 business_daily_summary=source_namespace('business-daily-summary.mjs','brazaDailyBusinessSummary','buildDailyBusinessSummary,projectDailyBusinessSummary')
 business_day_view=source_namespace('business-day-view.mjs','brazaBusinessDayView','BUSINESS_DAY_CSS,businessDayBody,BUSINESS_DAY_CLIENT',{'projectDailyBusinessSummary':'business-daily-summary.mjs','projectDailyProfitPresentation':'daily-profit-presentation.mjs','projectProductionDailyFinance':'production-daily-finance-view.mjs'})
 production_daily_finance_view=source_namespace('production-daily-finance-view.mjs','mlsProductionDailyFinanceView','PRODUCTION_DAILY_FINANCE_CSS,productionDailyFinanceBody,PRODUCTION_DAILY_FINANCE_CLIENT',omit_server_functions=('projectProductionDailyFinance',))
-production_workspace_view=source_namespace('production-workspace-view.mjs','mlsProductionWorkspaceView','PRODUCTION_WORKSPACE_CSS,PRODUCTION_WORKSPACE_CLIENT')
+production_workspace_view=source_namespace('production-workspace-view.mjs','mlsProductionWorkspaceView','PRODUCTION_WORKSPACE_CSS,productionWorkspaceBody,PRODUCTION_WORKSPACE_CLIENT')
 income_overview_client=source_namespace('income-overview-client.mjs','brazaIncomeOverviewClient','INCOME_OVERVIEW_CLIENT',{'projectIncomeOverviewFrame':'../../finance/src/income-overview-frame.mjs','projectBusinessIncomeOverview':'business-income-overview.mjs','projectIncomeDetailFrame':'../../finance/src/income-detail-frame.mjs','projectBusinessIncomeDetail':'business-income-detail.mjs','projectPendingIncomeScanFrame':'../../finance/src/pending-income-frame.mjs','projectBusinessPendingIncomeScan':'business-pending-income-scan.mjs'})
 agent_art=source_namespace('mls-agent-art.mjs','mlsAgentArt','MLS_AGENT_ROBOT_SVG,MLS_COMMAND_GLOBE_SVG')
 agent_workspace_layout=source_namespace('mls-agent-workspace-layout.mjs','mlsAgentWorkspaceLayout','MLS_AGENT_WORKSPACE_CSS')
@@ -498,6 +529,7 @@ insertion='''  const view=ads.workspace_view||'product';
 '''
 updated=updated[:point]+insertion+updated[point:]
 output=updated+'\n\n'+theme+'\n'+workspace_auth+'\n'+workspace_navigation+'\n'+ads_presentation+'\n'+shell_navigation+'\n'+orders_diagnostic+'\n'+orders_http+'\n'+app_orders+'\n'+app_items+'\n'+finance_sample_frame+'\n'+finance_preview_frame+'\n'+variant_catalog_frame+'\n'+catalog_media_frame+'\n'+historical_variant_frame+'\n'+app_historical_variant+'\n'+app_finance_sample+'\n'+daily_orders_frame+'\n'+store_period_frame+'\n'+business_period_frame+'\n'+finance_business_variants+'\n' +reconciliation_frame+'\n'+original_items_frame+'\n'+escrow_release_frame+'\n'+income_overview_frame+'\n'+income_detail_frame+'\n'+pending_income_frame+'\n'+income_detail_diagnostic+'\n'+production_orders_frame+'\n'+product_index_frame+'\n'+app_product_index+'\n'+app_production_orders+'\n'+app_store_period+'\n'+app_business_period+'\n' +app_reconciliation+'\n'+app_escrow_releases+'\n'+app_income_overview+'\n'+app_income_detail+'\n'+app_pending_income_scan+'\n'+ads_measurement+'\n'+ads_measurement_view+'\n'+ads_period+'\n'+ads_calendar+'\n'+app_ads_summary+'\n'+agent_workspace_layout+'\n'+approved_design+'\n'+ads_workspace+'\n'+scaling_preparation+'\n\nconst brazaAdmin = (() => {\n'+admin+'\nreturn {adminFetch,schedule,scheduledWork,workspaceAuthFetch};\n})();\n'
+output=compact_server_namespaces(output)
 (root/'app-worker.mjs').write_text(output)
 auth_original=(root/'original/auth-worker.mjs').read_text()
 needle='    const url = new URL(request.url);'
