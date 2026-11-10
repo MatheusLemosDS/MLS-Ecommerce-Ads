@@ -36,6 +36,7 @@
     "web/cloudflare/src/production-coverage-view.mjs",
     "web/cloudflare/src/production-weekly-view.mjs",
     "web/cloudflare/src/production-workspace-view.mjs",
+    "web/cloudflare/tests/app-release-discovery-chrome.test.mjs",
     "web/cloudflare/tests/app-release.test.mjs",
     "web/cloudflare/tests/incurred-production-chrome.test.mjs",
     "web/cloudflare/tests/incurred-production-daily-client.test.mjs",
