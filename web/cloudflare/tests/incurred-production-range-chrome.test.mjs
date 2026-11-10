@@ -31,6 +31,8 @@ async function browser(){
 }
 async function waitFor(cdp,expression,label){for(let index=0;index<160;index++){if(await cdp.evaluate(expression))return;await pause(50);}assert.fail(label);}
 async function click(cdp,selector){
+ // A native gesture cancels bounded hash alignment before measuring this next action.
+ await cdp.send('Input.dispatchKeyEvent',{type:'keyDown',key:'Escape',code:'Escape',windowsVirtualKeyCode:27,modifiers:0});await cdp.send('Input.dispatchKeyEvent',{type:'keyUp',key:'Escape',code:'Escape',windowsVirtualKeyCode:27,modifiers:0});
  const document=await cdp.send('DOM.getDocument'),target=await cdp.send('DOM.querySelector',{nodeId:document.root.nodeId,selector});assert.ok(target.nodeId,selector+' exists');
  await cdp.send('DOM.scrollIntoViewIfNeeded',{nodeId:target.nodeId});await cdp.send('Page.captureScreenshot',{format:'png',fromSurface:true,captureBeyondViewport:false});
  const info=await cdp.evaluate(`(()=>{const n=document.querySelector(${JSON.stringify(selector)}),r=n.getBoundingClientRect();return {height:r.height,visible:n.checkVisibility({checkVisibilityCSS:true}),enabled:!n.disabled};})()`);assert.equal(info.visible,true);assert.equal(info.enabled,true);assert.ok(info.height>=44,selector+' needs a44px touch target');
