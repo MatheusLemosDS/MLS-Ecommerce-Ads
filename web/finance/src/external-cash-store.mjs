@@ -9,11 +9,9 @@ const prefix = 'FINANCE_EXTERNAL_CASH_';
 const fail = (code, status = 503) => { throw new FinanceConnectionError(prefix + code, status); };
 const hash = async value => Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',
   encoder.encode(typeof value === 'string' ? value : JSON.stringify(value)))), byte => byte.toString(16).padStart(2, '0')).join('');
-const tables = ['state', 'documents', 'imports', 'records', 'origins', 'matches', 'unlinks', 'requests', 'audit', 'guard']
-  .map(name => 'finance_external_cash_' + name);
 const initialized = new WeakMap();
 
-export const EXTERNAL_CASH_SCHEMA = [
+export const EXTERNAL_CASH_SCHEMA = Object.freeze([
   `CREATE TABLE IF NOT EXISTS finance_external_cash_state(tenant TEXT PRIMARY KEY,revision INTEGER NOT NULL CHECK(revision>=0))`,
   `CREATE TABLE IF NOT EXISTS finance_external_cash_documents(tenant TEXT NOT NULL,document_id TEXT NOT NULL,source TEXT NOT NULL,document_hash TEXT NOT NULL,normalized_digest TEXT NOT NULL,selection_json TEXT NOT NULL,declarations_json TEXT NOT NULL,created_at INTEGER NOT NULL,PRIMARY KEY(tenant,document_id))`,
   `CREATE TABLE IF NOT EXISTS finance_external_cash_imports(tenant TEXT NOT NULL,import_id TEXT NOT NULL,document_id TEXT NOT NULL,request_id TEXT NOT NULL,revision INTEGER NOT NULL,inserted_count INTEGER NOT NULL,duplicate_count INTEGER NOT NULL,review_count INTEGER NOT NULL,created_at INTEGER NOT NULL,actor TEXT NOT NULL CHECK(actor='OWNER'),PRIMARY KEY(tenant,import_id))`,
@@ -31,7 +29,15 @@ export const EXTERNAL_CASH_SCHEMA = [
   `CREATE TABLE IF NOT EXISTS finance_external_cash_guard(id INTEGER PRIMARY KEY CHECK(id=1),ok INTEGER NOT NULL CHECK(ok=1))`,
   ...['documents', 'imports', 'records', 'origins', 'matches', 'unlinks', 'requests', 'audit'].flatMap(name =>
     ['UPDATE', 'DELETE'].map(operation => `CREATE TRIGGER IF NOT EXISTS finance_external_cash_${name}_no_${operation.toLowerCase()} BEFORE ${operation} ON finance_external_cash_${name} BEGIN SELECT RAISE(ABORT,'external_cash_immutable'); END`)),
-];
+]);
+// SQLite omits IF NOT EXISTS in sqlite_master. Compare every named table,
+// index and immutable-history trigger against the definitions this version
+// understands before treating an existing schema as ready for owner writes.
+const canonicalSchemaSql = sql => sql.replace(/\bIF NOT EXISTS\s+/i, '').replace(/\s+/g, ' ').trim().replace(/;$/, '');
+const schemaObjects = new Map(EXTERNAL_CASH_SCHEMA.map(sql => {
+  const [, type, name] = /^CREATE (TABLE|INDEX|TRIGGER) IF NOT EXISTS ([a-z_]+)/.exec(sql);
+  return [name, {type: type.toLowerCase(), sql: canonicalSchemaSql(sql)}];
+}));
 
 function database(env) {
   const db = env?.FINANCE_DB;
@@ -51,10 +57,15 @@ function clock(now) {
   return Math.floor(stamp / 1000);
 }
 async function exists(db) {
-  const result = await db.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name IN(${tables.map(() => '?').join(',')})`).bind(...tables).all();
-  const count = result?.results?.length;
-  if (count === 0) return false;
-  if (count !== tables.length) fail('STORAGE_INVALID');
+  const names = [...schemaObjects.keys()];
+  const result = await db.prepare(`SELECT type,name,sql FROM sqlite_master WHERE name IN(${names.map(() => '?').join(',')})`).bind(...names).all();
+  const rows = result?.results;
+  if (!Array.isArray(rows)) fail('STORAGE_INVALID');
+  if (rows.length === 0) return false;
+  if (rows.length !== schemaObjects.size || rows.some(row => {
+    const expected = schemaObjects.get(row.name);
+    return !expected || row.type !== expected.type || typeof row.sql !== 'string' || canonicalSchemaSql(row.sql) !== expected.sql;
+  })) fail('STORAGE_INVALID');
   return true;
 }
 async function revision(db) {
@@ -64,7 +75,13 @@ async function revision(db) {
   if (!Number.isSafeInteger(state.revision) || state.revision < 0 || state.revision >= Number.MAX_SAFE_INTEGER) fail('STORAGE_INVALID');
   return state.revision;
 }
-async function setup(db) {
+async function setup(db, {schemaPresent, statePresent}) {
+  if (schemaPresent) {
+    if (!statePresent) await db.prepare('INSERT OR IGNORE INTO finance_external_cash_state(tenant,revision) VALUES(?,0)').bind(tenant).run();
+    return;
+  }
+  // A fresh isolate must not replay thirty-one DDL statements against healthy
+  // existing storage: each statement consumes the D1 invocation query budget.
   if (!initialized.has(db)) initialized.set(db, db.batch([...EXTERNAL_CASH_SCHEMA.map(sql => db.prepare(sql)),
     db.prepare('INSERT OR IGNORE INTO finance_external_cash_state(tenant,revision) VALUES(?,0)').bind(tenant)]).catch(error => {
       initialized.delete(db); throw error;
@@ -177,8 +194,9 @@ async function inspectImport(db, request) {
     payload_hash: await hash(row), review_hint: 0,
   })));
   const json = JSON.stringify(rows);
-  let savedRows = [], savedOrigins = [], similarLines = new Set();
-  if (await exists(db)) {
+  let savedRows = [], savedOrigins = [], similarLines = new Set(), statePresent = false;
+  const schemaPresent = await exists(db);
+  if (schemaPresent) {
     const found = await db.batch([
       db.prepare('SELECT revision FROM finance_external_cash_state WHERE tenant=?').bind(tenant),
       db.prepare(`SELECT record_id,date,amount_cents,currency,status FROM finance_external_cash_records WHERE tenant=? AND record_id IN(SELECT json_extract(value,'$.record_id') FROM json_each(?))`).bind(tenant, json),
@@ -186,6 +204,7 @@ async function inspectImport(db, request) {
       db.prepare(`SELECT json_extract(j.value,'$.line') AS line FROM json_each(?) j WHERE json_extract(j.value,'$.external_id') IS NULL AND EXISTS(SELECT 1 FROM finance_external_cash_records r WHERE r.tenant=? AND r.source=? AND r.date=json_extract(j.value,'$.date') AND r.amount_cents=json_extract(j.value,'$.amount_cents') AND r.record_id<>json_extract(j.value,'$.record_id'))`).bind(json, tenant, request.source),
     ]);
     if ((found[0]?.results?.[0]?.revision ?? 0) !== rev) fail('REVISION_CONFLICT', 409);
+    statePresent = Boolean(found[0]?.results?.[0]);
     savedRows = found[1].results; savedOrigins = found[2].results; similarLines = new Set(found[3].results.map(row => row.line));
   }
   const saved = new Map(savedRows.map(row => [row.record_id, row])), origins = new Map(savedOrigins.map(row => [row.line, row]));
@@ -212,7 +231,7 @@ async function inspectImport(db, request) {
     display.push({line: row.line, state}); seen.set(row.record_id, row);
   }
   const previewHash = await hash([tenant, rev, digest]);
-  return {revision: rev, digest, previewHash, rows, display, conflict,
+  return {revision: rev, digest, previewHash, rows, display, conflict, schemaPresent, statePresent,
     counts: {total: rows.length, new: rows.length - duplicateCount, duplicates: duplicateCount, review: reviewCount}};
 }
 
@@ -287,7 +306,7 @@ async function importRows(db, request, requestHash, stamp) {
     duplicate_count: inspected.counts.duplicates, review_count: inspected.counts.review};
   const response = {schema: 'external_cash_mutation_v1', operation: 'import', request_id: request.request_id,
     revision: request.expected_revision + 1, replayed: false, result};
-  await setup(db);
+  await setup(db, inspected);
   const rowsJson = JSON.stringify(inspected.rows), status = request.source === 'NUBANK' ? 'POSTED' : 'COMPLETED';
   const statements = baseStatements(db, request);
   statements.push(guard(db, `NOT EXISTS(SELECT 1 FROM json_each(?) j JOIN finance_external_cash_records r ON r.tenant=? AND r.record_id=json_extract(j.value,'$.record_id') WHERE r.date<>json_extract(j.value,'$.date') OR r.amount_cents<>json_extract(j.value,'$.amount_cents')) AND NOT EXISTS(SELECT 1 FROM json_each(?) j JOIN finance_external_cash_origins o ON o.tenant=? AND o.source=? AND o.document_hash=? AND o.line=json_extract(j.value,'$.line') WHERE o.record_id<>json_extract(j.value,'$.record_id') OR o.payload_hash<>json_extract(j.value,'$.payload_hash'))`, rowsJson, tenant, rowsJson, tenant, request.source, request.document_hash));

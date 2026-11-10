@@ -254,7 +254,7 @@ export const TARGETS = Object.freeze({
   ]}),
   finance: Object.freeze({name: 'brazacommerce-finance', main: '../../dist/finance-worker.mjs', baselineHashes: [
     // Reviewed owner-confirmed Nubank/Shopee file evidence; private Finance sidecar only.
-    '1c79b245cd9908e9cfbe4cd9818e5bf47eebc4556159ae21c647e181b5caf404','08ada5ecec92350f4f8301fdb7baa00f5f8083a0e8390296b2870e0ff3cdc1a5']}),
+    '6070dc2cef50c815692b8cfad97659ff945df8504555d689bee8c6164a9e5be2','08ada5ecec92350f4f8301fdb7baa00f5f8083a0e8390296b2870e0ff3cdc1a5']}),
 });
 export const stableJson = value => JSON.stringify(value, null, 2) + '\n';
 export const sha256 = value => createHash('sha256').update(value).digest('hex');

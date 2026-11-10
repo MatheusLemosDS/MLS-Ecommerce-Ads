@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {D1} from '../../cloudflare/tests/sqlite-d1.mjs';
 import {FINANCE_PROFILE} from '../src/connection-store.mjs';
 import {projectExternalCashResponse} from '../src/external-cash-frame.mjs';
-import {readExternalCashWorkspace, previewExternalCashImport, mutateExternalCash} from '../src/external-cash-store.mjs';
+import {EXTERNAL_CASH_SCHEMA, readExternalCashWorkspace, previewExternalCashImport, mutateExternalCash} from '../src/external-cash-store.mjs';
 
 const schema = 'external_cash_request_v1';
 const now = () => Date.parse('2026-11-10T15:00:00Z');
@@ -19,12 +19,20 @@ const readInput = (changes = {}) => ({schema, operation: 'read', month: '2026-11
 
 class ObservedD1 extends D1 {
   sql = [];
+  executed = [];
   batches = [];
   beforeBatch = null;
   afterBatch = null;
   prepare(sql) {
     this.sql.push(sql);
     const statement = super.prepare(sql);
+    for (const operation of ['run', 'all', 'first']) {
+      const execute = statement[operation];
+      statement[operation] = async (...args) => {
+        this.executed.push(sql);
+        return execute(...args);
+      };
+    }
     statement.testSql = sql;
     return statement;
   }
@@ -46,8 +54,8 @@ const revision = db => db.db.prepare('SELECT revision FROM finance_external_cash
 const records = db => db.db.prepare('SELECT * FROM finance_external_cash_records ORDER BY record_id').all();
 const snapshot = db => Object.fromEntries(['state', 'documents', 'imports', 'records', 'origins', 'matches', 'unlinks', 'requests', 'audit']
   .map(name => [name, db.db.prepare('SELECT * FROM finance_external_cash_' + name + ' ORDER BY 1,2').all()]));
-async function command(env, input, changes = {}) {
-  const preview = await previewExternalCashImport(env, input);
+async function command(env, input, changes = {}, previewImport = previewExternalCashImport) {
+  const preview = await previewImport(env, input);
   const {cursor, limit, ...payload} = input;
   return {...payload, operation: 'import', request_id: requestId(), expected_revision: preview.revision,
     preview_hash: preview.preview_hash, confirmed: true, ...changes};
@@ -91,6 +99,7 @@ test('a thousand-row import uses a bounded number of JSON1 statements and pagina
     const input = previewInput('NUBANK', Array.from({length: size}, (_, index) => row(index + 1, {amount_cents: index + 1})));
     const write = await command(f.env, input);
     f.db.sql.length = 0;
+    f.db.executed.length = 0;
     const saved = await mutateExternalCash(f.env, write, {now});
     assert.ok(projectExternalCashResponse(saved));
     assert.equal(saved.result.inserted_count, size);
@@ -98,11 +107,11 @@ test('a thousand-row import uses a bounded number of JSON1 statements and pagina
     assert.equal(count(f.db, 'origins'), size);
     assert.equal(count(f.db, 'audit'), 1);
     assert.equal(count(f.db, 'requests'), 1);
-    return {...f, queries: f.db.sql.length};
+    return {...f, queries: f.db.executed.length};
   }
   const small = await run(1), large = await run(1000);
   assert.equal(large.queries, small.queries);
-  assert.ok(large.queries < 60);
+  assert.ok(large.queries <= 45, `cold thousand-row mutation executed ${large.queries} statements`);
   assert.ok(large.db.sql.some(sql => /INSERT OR IGNORE INTO finance_external_cash_records/.test(sql) && /json_each/.test(sql)));
   const found = new Set();
   let cursor = null, pages = 0;
@@ -117,6 +126,85 @@ test('a thousand-row import uses a bounded number of JSON1 statements and pagina
   } while (cursor !== null);
   assert.equal(pages, 10);
   assert.equal(found.size, 1000);
+});
+
+test('a fresh worker isolate imports a thousand rows into an existing database within the statement budget', async () => {
+  const {db, env} = fixture();
+  await save(env, previewInput());
+  const isolated = await import('../src/external-cash-store.mjs?isolate=statement-budget-' + requestId());
+  const rows = Array.from({length: 1000}, (_, index) => row(index + 1, {
+    external_id: 'SECOND-FILE-' + index, amount_cents: index + 1,
+  }));
+  const write = await command(env, previewInput('NUBANK', rows, 2), {}, isolated.previewExternalCashImport);
+  db.executed.length = 0;
+  const saved = await isolated.mutateExternalCash(env, write, {now});
+  const executed = [...db.executed];
+  assert.ok(projectExternalCashResponse(saved));
+  assert.equal(saved.result.inserted_count, 1000);
+  assert.equal(count(db, 'records'), 1001);
+  assert.equal(count(db, 'audit'), 2);
+  assert.ok(executed.length <= 45, `fresh existing-database mutation executed ${executed.length} statements`);
+  assert.ok(executed.every(sql => !/^CREATE\b/.test(sql)), 'healthy existing schema is verified without DDL');
+  const before = snapshot(db);
+  const replayIsolate = await import('../src/external-cash-store.mjs?isolate=receipt-replay-' + requestId());
+  db.executed.length = 0;
+  const replayed = await replayIsolate.mutateExternalCash(env, write, {
+    now: () => {throw Error('replay must finish before CAS and clock validation');},
+  });
+  assert.deepEqual(replayed, {...saved, replayed: true});
+  assert.ok(db.executed.every(sql => /^SELECT\b/.test(sql)));
+  assert.deepEqual(snapshot(db), before);
+});
+
+test('a fresh isolate refuses missing or altered schema protections without DDL or financial writes', async () => {
+  for (const alteration of ['missing_trigger', 'altered_trigger', 'missing_index', 'malformed_table']) {
+    const {db, env} = fixture();
+    await save(env, previewInput());
+    const next = previewInput('NUBANK', [row(2)], 2);
+    const write = await command(env, next);
+    if (alteration.endsWith('_trigger')) {
+      const trigger = 'finance_external_cash_records_no_update';
+      db.db.exec('DROP TRIGGER ' + trigger);
+      if (alteration === 'altered_trigger') {
+        db.db.exec('CREATE TRIGGER ' + trigger + ' BEFORE UPDATE ON finance_external_cash_records BEGIN SELECT 1; END');
+      }
+    } else if (alteration === 'missing_index') {
+      db.db.exec('DROP INDEX finance_external_cash_records_amount');
+    } else {
+      db.db.exec('ALTER TABLE finance_external_cash_records ADD COLUMN unexpected_column TEXT');
+    }
+    const before = snapshot(db);
+    for (const operation of ['read', 'preview', 'import']) {
+      const isolated = await import('../src/external-cash-store.mjs?isolate=damaged-' + alteration + '-' + operation + '-' + requestId());
+      db.executed.length = 0;
+      await rejects(() => operation === 'read' ? isolated.readExternalCashWorkspace(env, readInput())
+        : operation === 'preview' ? isolated.previewExternalCashImport(env, next)
+          : isolated.mutateExternalCash(env, write, {now}), 'STORAGE_INVALID', 503);
+      assert.ok(db.executed.length > 0);
+      assert.ok(db.executed.every(sql => /^SELECT\b/.test(sql)), `${alteration} ${operation} executes only health reads`);
+      assert.deepEqual(snapshot(db), before);
+    }
+  }
+});
+
+test('an existing healthy schema without tenant state initializes only the tenant row before a bulk import', async () => {
+  const {db, env} = fixture();
+  db.db.exec(EXTERNAL_CASH_SCHEMA.join(';'));
+  assert.equal(count(db, 'state'), 0);
+  const isolated = await import('../src/external-cash-store.mjs?isolate=empty-tenant-' + requestId());
+  const rows = Array.from({length: 1000}, (_, index) => row(index + 1, {amount_cents: index + 1}));
+  const write = await command(env, previewInput('NUBANK', rows), {}, isolated.previewExternalCashImport);
+  assert.equal(write.expected_revision, 0);
+  db.executed.length = 0;
+  const saved = await isolated.mutateExternalCash(env, write, {now});
+  assert.equal(saved.revision, 1);
+  assert.equal(saved.result.inserted_count, 1000);
+  assert.equal(count(db, 'state'), 1);
+  assert.equal(count(db, 'records'), 1000);
+  assert.equal(count(db, 'audit'), 1);
+  assert.ok(db.executed.length <= 45);
+  assert.ok(db.executed.every(sql => !/^CREATE\b/.test(sql)), 'schema is verified rather than recreated');
+  assert.equal(db.executed.filter(sql => /^INSERT OR IGNORE INTO finance_external_cash_state\b/.test(sql)).length, 1);
 });
 
 test('external IDs are case sensitive and scoped by source; same ID date or amount conflict blocks the entire import', async () => {
