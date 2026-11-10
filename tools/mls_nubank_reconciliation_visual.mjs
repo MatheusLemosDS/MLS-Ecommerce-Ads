@@ -38,7 +38,13 @@ async function bankReady(page){await page.waitForFunction(()=>!document.getEleme
 async function screen(page,out,name,{bank=false}={}){
  await settled(page);const file=path.join(out,name+'.png');
  if(bank)await page.locator(selector('')).screenshot({path:file,animations:'disabled'});else await page.screenshot({path:file,animations:'disabled'});
- const bytes=readFileSync(file);return {file:path.basename(file),bytes:bytes.length,sha256:nubankQaHash(bytes)};
+ const bytes=readFileSync(file),result={file:path.basename(file),bytes:bytes.length,sha256:nubankQaHash(bytes)};
+ if(bank){
+  const anchor=name.endsWith('-preview')?'PreviewStatus':name.endsWith('-matched')?'Matches':name.endsWith('-unlinked')?'Summary':'Suggestions';
+  await page.locator(selector(anchor)).evaluate(node=>scrollTo({top:Math.max(0,node.getBoundingClientRect().top+scrollY-170),behavior:'instant'}));await settled(page);
+  const viewport=path.join(out,name+'-viewport.png');await page.screenshot({path:viewport,animations:'disabled'});const capture=readFileSync(viewport);result.viewport={file:path.basename(viewport),bytes:capture.length,sha256:nubankQaHash(capture)};
+ }
+ return result;
 }
 const bankCalls=fixture=>fixture.requests.filter(row=>row.path===bankPath);
 const bankWrites=fixture=>bankCalls(fixture).filter(row=>['import','match','unlink'].includes(row.operation));
@@ -98,7 +104,7 @@ async function outcome(browser,compiled,{root,out,width,theme,minify,source}){
   const final=await page.evaluate(()=>({theme:document.documentElement.dataset.theme,width:innerWidth,scroll:document.documentElement.scrollWidth,visible:document.getElementById('bankReconciliation').checkVisibility({checkVisibilityCSS:true}),day:globalThis.brazaDayDashboard?.getSnapshot?.()?.net_cents??null,month:globalThis.brazaMonthDashboard?.getSnapshot?.()?.balance_cents??null,touch:[...document.querySelectorAll('#bankReconciliation button,#bankReconciliation select,#bankReconciliation input:not([type=checkbox])')].filter(n=>n.checkVisibility({checkVisibilityCSS:true})).map(n=>({height:n.getBoundingClientRect().height,id:n.id}))}));
   assert.equal(final.theme,theme);assert.equal(final.width,width);assert.ok(final.scroll<=width+1,'QA_BANK_HORIZONTAL_OVERFLOW');assert.equal(final.visible,true);assert.deepEqual({day:final.day,month:final.month},financialBefore);assert.ok(final.touch.every(row=>row.height>=44),'QA_TOUCH_TARGET_TOO_SMALL');
   assert.equal(errors.length,0,'QA_PAGE_ERRORS');assert.deepEqual(external,[],'QA_BROWSER_EXTERNAL_REQUESTS');assert.ok(fixture.privateHops.length>0);assert.equal(fixture.privateHops.filter(row=>row.stage==='APP_TO_AUTH').length,fixture.privateHops.filter(row=>row.stage==='AUTH_TO_FINANCE').length);
-  const expectedLost=networkFailures.filter(row=>row.path===bankPath);assert.equal(expectedLost.length,1,'QA_EXPECT_ONE_EXPLICIT_LOST_RESPONSE');
+  assert.deepEqual(networkFailures,[],'QA_UNEXPECTED_NETWORK_FAILURE');assert.equal(lost[0].delivered_status,502,'QA_COMMITTED_RECEIPT_UNAVAILABLE_FAULT_REQUIRED');
   screenshots.push(await screen(page,out,id+'-unlinked',{bank:true}));assertSourceUnchanged(root,source);
   return {minify,width,theme,pass:true,page_errors:0,horizontal_overflow:false,synthetic:true,backend:'COMPILED_APP_AUTH_FINANCE_WITH_EPHEMERAL_SQLITE',overview_no_bank_get:true,overview_agents:overview.order,local_file_no_requests:true,preview_read_only:true,explicit_import:true,duplicate_rows:3,cas_draft_preserved:cas,lost_response_same_request_id:true,suggestions_only:true,explicit_match_and_unlink:true,zero_and_debit_preserved:true,legacy_financial_values_unchanged:true,touch_targets_at_least_44px:true,counts,private_hops:fixture.privateHops.length,blocked_nonbank_outbound_attempts:fixture.blockedOutbound.length,unexpected_external_requests:external.length,requests:fixture.requests,screenshots};
  }finally{await context.close();await fixture.close();}

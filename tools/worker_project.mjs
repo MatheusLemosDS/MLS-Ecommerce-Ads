@@ -6,7 +6,7 @@ export const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.
 export const TARGETS = Object.freeze({
   app: Object.freeze({name: 'brazacommerce-app', main: '../../dist/app-worker.mjs', baselineHashes: [
     // Reviewed owner-confirmed Nubank/Shopee file evidence; private Finance sidecar only.
-    '66bb33d5a1175fbc2e7caed250612d8f3f850747a62e0f70d6090a11f3f89a83',
+    '239ca31df98d2c7c2f53141e45f61b462a6701c0047040a8bdbbcbff43ee1613',
     // Reviewed daily/weekly production navigation, explicit coverage and read-only cutoff refresh.
     'a9f878afc4d89c8d20edcf04b8a8a343bf83fcbd8a327ebc05a5983c8a38b8e0',
     // Reviewed editable rule prices with scoped CAS saves; existing formulas and browser AI retained.

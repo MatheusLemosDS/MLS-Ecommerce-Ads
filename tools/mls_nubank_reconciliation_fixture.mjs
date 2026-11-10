@@ -91,7 +91,13 @@ export async function startNubankQaFixture(compiled){
    if(bank&&raw?.operation==='import'&&conflictNextImport){conflictNextImport=false;await concurrentImport();log.concurrent_revision_injected=true;}
    const headers={};for(const [name,value]of Object.entries(request.headers))if(value!==undefined&&!['host','cookie','connection','content-length'].includes(name))headers[name]=Array.isArray(value)?value.join(','):value;
    const result=await dispatch(url.pathname+url.search,{method,headers,body});log.status=result.status;
-   if(bank&&raw?.operation==='import'&&loseNextImport&&result.status===200){loseNextImport=false;log.response_lost_after_commit=true;await result.arrayBuffer();response.destroy();return;}
+   if(bank&&raw?.operation==='import'&&loseNextImport&&result.status===200){
+    // Chromium may transparently replay a POST after a closed socket. A fixed
+    // unavailable receipt models an intermediary losing the committed reply
+    // and lets this scenario exercise the owner's explicit retry instead.
+    loseNextImport=false;log.response_lost_after_commit=true;log.delivered_status=502;await result.arrayBuffer();
+    response.writeHead(502,{'content-type':'application/json','cache-control':'no-store'});response.end(JSON.stringify({schema:'external_cash_error_v1',error:'FINANCE_EXTERNAL_CASH_UNAVAILABLE'}));return;
+   }
    const responseHeaders=Object.fromEntries(result.headers);delete responseHeaders['content-length'];delete responseHeaders['set-cookie'];
    let bytes=Buffer.from(await result.arrayBuffer());
    if(responseHeaders['content-type']?.startsWith('text/html'))bytes=Buffer.from(bytes.toString('utf8').replace(/<body\b[^>]*>/i,'$&'+marker));
