@@ -1,3 +1,4 @@
+import {getOrderedBrowserScripts} from './browser-assets-http-fixture.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {compiledOwnerReportPage} from './owner-report-browser-fixture.mjs';
@@ -36,8 +37,8 @@ for(const minify of [false,true]){
     assert.ok(html.includes('id="'+id+'"'),'missing owner control '+id);
   for(const scope of ['navigation','products','dtf'])
     assert.ok(html.includes('data-mission-scope="'+scope+'"'),'missing V3.6 search scope '+scope);
-  const scripts=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(x=>x[1]);
-  assert.equal(scripts.length,15,'retain the existing 14 owner scripts, including physical returns, plus one Listing Factory script');
+  const scripts=getOrderedBrowserScripts(html);
+  assert.equal(scripts.length,17,'retain all existing owner clients, including physical returns and Listing Factory, plus the reviewed public asset scripts');
   assert.equal(scripts.filter(script=>script.includes('globalThis.brazaPhysicalReturns=')).length,1,'the independent physical-return controller is delivered once');
   const factoryClients=scripts.filter(x=>x.includes("const root=document.getElementById('mlsListingFactory')"));
   const searchClients=scripts.filter(x=>x.includes('const missionSearchRoutes=Object.freeze'));

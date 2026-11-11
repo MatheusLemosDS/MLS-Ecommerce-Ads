@@ -5,6 +5,8 @@ import os from 'node:os';
 import path from 'node:path';
 import {validateDeployment, deployWorker} from '../worker_deploy.mjs';
 import {PROJECT_ROOT, TARGETS, stableJson, sha256} from '../worker_project.mjs';
+import {BROWSER_ASSETS_CONFIG} from '../import_worker_config.mjs';
+import {buildBrowserAssets, EMPTY_BROWSER_ASSET_PUBLICATION} from '../browser_assets.mjs';
 
 const APP_ID = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const FINANCE_ID = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
@@ -205,4 +207,129 @@ test('checked-in App automation validates the effective one-minute trigger witho
   assert.equal(verified.config.keep_vars, true);
   assert.deepEqual(verified.config.d1_databases, original.d1_databases);
   assert.deepEqual(verified.config.routes, original.routes);
+});
+
+function enableAssets(f, name = 'app', mutate = () => {}) {
+  const captured = JSON.parse(fs.readFileSync(path.join(f.root, 'workers', name, 'wrangler.json')));
+  const authorization = {version: 1, captured_config_sha256: sha256(stableJson(captured)), assets: {...BROWSER_ASSETS_CONFIG}};
+  mutate(authorization);
+  fs.writeFileSync(path.join(f.root, 'workers', name, 'browser-assets.json'), stableJson(authorization));
+}
+
+function assetBuilder(f, mutate = () => {}) {
+  return name => {
+    f.build(name);
+    fs.writeFileSync(path.join(f.root, 'workers/app/browser-assets-published.json'), stableJson(EMPTY_BROWSER_ASSET_PUBLICATION));
+    const manifest = buildBrowserAssets({schema: 'mls_browser_assets_build_v1', entries: [{
+      id: 'bank', export_name: 'BANK_RECONCILIATION_CLIENT',
+      source: 'const BANK_RECONCILIATION_CLIENT="globalThis.fixtureBankReady=true;";',
+    }]}, {root: f.root});
+    mutate(manifest);
+  };
+}
+
+test('App assets add only their exact binding and compose with the authorized cron without rewriting captures', t => {
+  const f = fixture(t); f.automate(); enableAssets(f);
+  const original = fs.readFileSync(path.join(f.root, 'workers/app/wrangler.json'), 'utf8');
+  const snapshot = fs.readFileSync(path.join(f.root, 'workers/app/migration.json'), 'utf8');
+  const verified = validateDeployment('app', f);
+  const expected = {...JSON.parse(original), main: path.join(f.root, 'dist/app-worker.mjs'),
+    triggers: {crons: ['* * * * *']}, assets: {...BROWSER_ASSETS_CONFIG, directory: path.join(f.root, 'dist/browser-assets')}};
+  const generatedPath = path.join(f.root, 'workers/app/.wrangler/runtime.generated.json');
+  assert.deepEqual(verified.config, expected);
+  assert.equal(verified.generated, true);
+  assert.equal(verified.configPath, generatedPath);
+  assert.equal(fs.existsSync(generatedPath), false, 'config validation remains read-only');
+  assert.equal(deployWorker('app', {...f, build: assetBuilder(f), dryRun: true}), 'OK');
+  assert.deepEqual(JSON.parse(fs.readFileSync(generatedPath)), expected);
+  assert.equal(fs.readFileSync(path.join(f.root, 'workers/app/wrangler.json'), 'utf8'), original);
+  assert.equal(fs.readFileSync(path.join(f.root, 'workers/app/migration.json'), 'utf8'), snapshot);
+  assert.equal(f.calls.length, 1);
+  assert.equal(f.calls[0][1].includes(generatedPath), true);
+});
+
+test('App asset deployment cannot invoke Wrangler before the build produces its closed inventory', t => {
+  const f = fixture(t); enableAssets(f);
+  assert.throws(() => deployWorker('app', {...f, dryRun: true}), {code: 'BROWSER_ASSET_MANIFEST_MISSING'});
+  assert.deepEqual(f.built, ['app']);
+  assert.equal(f.calls.length, 0);
+  assert.equal(fs.existsSync(path.join(f.root, 'workers/app/.wrangler/runtime.generated.json')), false);
+});
+
+test('missing, altered or extra public assets block upload after build and before generated config is written', t => {
+  for (const change of ['missing', 'altered', 'extra']) {
+    const f = fixture(t); enableAssets(f);
+    const build = assetBuilder(f, manifest => {
+      const file = path.join(f.root, 'dist/browser-assets', ...manifest.assets[0].path.slice(1).split('/'));
+      if (change === 'missing') fs.unlinkSync(file);
+      else if (change === 'altered') fs.appendFileSync(file, '\n// changed after build');
+      else fs.writeFileSync(path.join(f.root, 'dist/browser-assets/unreviewed.json'), '{}');
+    });
+    assert.throws(() => deployWorker('app', {...f, build, dryRun: true}), {
+      code: change === 'altered' ? 'BROWSER_ASSET_BYTES_MISMATCH' : 'BROWSER_ASSET_INVENTORY_MISMATCH',
+    });
+    assert.deepEqual(f.built, ['app']);
+    assert.equal(f.calls.length, 0);
+    assert.equal(fs.existsSync(path.join(f.root, 'workers/app/.wrangler/runtime.generated.json')), false);
+  }
+});
+
+test('assets alone preserve the captured cron and resolve paths independently of generated config location', t => {
+  const f = fixture(t); enableAssets(f);
+  const verified = validateDeployment('app', f);
+  assert.deepEqual(verified.config.triggers.crons, ['*/15 * * * *']);
+  assert.equal(verified.config.assets.directory, path.join(f.root, 'dist/browser-assets'));
+  assert.equal(verified.config.main, path.join(f.root, 'dist/app-worker.mjs'));
+});
+
+test('asset authorization is exact, capture-bound and cannot broaden serving or replace resource bindings', t => {
+  const f = fixture(t);
+  for (const mutation of [
+    value => { value.version = 2; },
+    value => { value.captured_config_sha256 = 'c'.repeat(64); },
+    value => { value.assets.directory = '../../docs'; },
+    value => { value.assets.binding = 'ADMIN_DB'; },
+    value => { value.assets.run_worker_first = false; },
+    value => { value.assets.run_worker_first = ['/assets/mls/*']; },
+    value => { value.assets.not_found_handling = 'single-page-application'; },
+    value => { value.assets.html_handling = 'auto-trailing-slash'; },
+    value => { value.assets.base_path = '/'; },
+    value => { value.assets = null; },
+    value => { value.routes = []; },
+    value => { delete value.captured_config_sha256; },
+  ]) {
+    enableAssets(f, 'app', mutation);
+    assert.throws(() => deployWorker('app', f), {code: 'WORKER_BROWSER_ASSETS_CONFIG_INVALID'});
+  }
+  fs.writeFileSync(path.join(f.root, 'workers/app/browser-assets.json'), '{');
+  assert.throws(() => deployWorker('app', f), {code: 'WORKER_BROWSER_ASSETS_CONFIG_INVALID'});
+  assert.equal(f.built.length, 0);
+  assert.equal(f.calls.length, 0);
+});
+
+test('asset migration cannot activate on another Worker or collide with existing resource identity', t => {
+  const f = fixture(t);
+  for (const name of ['auth', 'finance']) {
+    enableAssets(f, name);
+    assert.throws(() => deployWorker(name, f), {code: 'WORKER_BROWSER_ASSETS_CONFIG_INVALID'});
+  }
+  for (const field of ['services', 'kv_namespaces', 'r2_buckets', 'd1_databases']) {
+    const config = f.config('app');
+    config[field] = [...(config[field] || []), {binding: 'ASSETS', database_id: APP_ID}];
+    f.save('app', config); enableAssets(f);
+    assert.throws(() => deployWorker('app', f), {code: 'WORKER_BINDING_INVALID'});
+  }
+  assert.equal(f.built.length, 0);
+  assert.equal(f.calls.length, 0);
+});
+
+test('checked-in browser asset migration preserves all captured routing, storage and privacy settings', () => {
+  const verified = validateDeployment('app');
+  const original = JSON.parse(fs.readFileSync(path.join(PROJECT_ROOT, 'workers/app/wrangler.json')));
+  const expected = {...original, main: path.join(PROJECT_ROOT, 'dist/app-worker.mjs'),
+    triggers: {crons: ['* * * * *']}, assets: {...BROWSER_ASSETS_CONFIG, directory: path.join(PROJECT_ROOT, 'dist/browser-assets')}};
+  assert.deepEqual(verified.config, expected);
+  assert.equal(verified.config.assets.run_worker_first, true);
+  assert.equal(verified.config.assets.html_handling, 'none');
+  assert.equal(verified.config.assets.not_found_handling, 'none');
 });

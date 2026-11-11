@@ -1,3 +1,4 @@
+import {getOrderedBrowserScripts} from './browser-assets-http-fixture.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
@@ -20,7 +21,7 @@ test('owner rules and catalogue actions enforce Origin CSRF method and exact sco
  assert.equal((await call(auth,'cost-rules/sync')).status,405);assert.equal((await call(auth,'cost-rules/sync',{item_ids:['101'],force:false,shop_id:1},services)).status,400);assert.equal((await call(auth,'cost-rules/sync?x=1',{item_ids:['101'],force:false},services)).status,400);assert.equal(reads,0);
  const assignment={revision:state.revision,assignments:[{item_id:'101',model_id:'0',rule_id:'camiseta-infantil',size:'4'}]};
  assert.equal((await call(auth,'cost-rules/assignments')).status,405);assert.equal((await call(auth,'cost-rules/assignments',assignment,services,{cookie:''})).status,401);assert.equal((await call(auth,'cost-rules/assignments',assignment,services,{csrf:''})).status,403);assert.equal((await call(auth,'cost-rules/assignments',assignment,services,{origin:'https://other.invalid'})).status,403);assert.equal((await call(auth,'cost-rules/assignments?x=1',assignment,services)).status,400);assert.equal(reads,0);
- const html=await (await adminFetch(new Request(base+'/admin?tab=margins',{headers:{cookie:auth.cookie}}),auth.env)).text();assert.match(html,/id="costRulesForm"/);assert.match(html,/Custo por tipo de produto e tamanho/);for(const [,script] of html.matchAll(/<script>([\s\S]*?)<\/script>/g))assert.doesNotThrow(()=>new vm.Script(script));
+ const html=await (await adminFetch(new Request(base+'/admin?tab=margins',{headers:{cookie:auth.cookie}}),auth.env)).text();assert.match(html,/id="costRulesForm"/);assert.match(html,/Custo por tipo de produto e tamanho/);for(const script of getOrderedBrowserScripts(html))assert.doesNotThrow(()=>new vm.Script(script));
  }finally{auth.env.ADMIN_DB.db.close();}
 });
 

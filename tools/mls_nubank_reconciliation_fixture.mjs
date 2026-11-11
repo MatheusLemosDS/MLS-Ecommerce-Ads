@@ -6,6 +6,7 @@ import {createHash,randomUUID,webcrypto} from 'node:crypto';
 import {readFileSync} from 'node:fs';
 import path from 'node:path';
 import {D1} from '../web/cloudflare/tests/sqlite-d1.mjs';
+import {createLocalBrowserAssets} from './browser_assets.mjs';
 
 export const NUBANK_QA_MONTH='2026-11';
 export const NUBANK_QA_FILES=Object.freeze({
@@ -25,6 +26,7 @@ export async function compileNubankQaWorkers(root,minify){
   const result=await build({entryPoints:[file],bundle:true,write:false,format:'iife',globalName:'NubankQaWorker',platform:'browser',target:'es2022',minify,logLevel:'silent'});
   entries[name]={code:result.outputFiles[0].text,source_sha256:nubankQaHash(source),compiled_sha256:nubankQaHash(result.outputFiles[0].text),bytes:source.length};
  }
+ entries.app.assets=createLocalBrowserAssets(root);
  return entries;
 }
 
@@ -68,7 +70,7 @@ export async function startNubankQaFixture(compiled){
   privateHops.push({stage:'APP_TO_AUTH',method:request.method,path:url.pathname});
   return auth.fetch(auth.request(request.url,{method:request.method,headers:request.headers,body:await request.arrayBuffer(),redirect:'manual'}),authEnv);
  }});
- const appEnv={ADMIN_DB:app.bridgeD1(appDb),APP_INTERNAL_SECRET:secret,ADMIN_USERNAME:'synthetic-nubank-owner',ADMIN_PASSWORD:'SYNTHETIC_QA_ONLY_PASSWORD_20261110',ADMIN_SESSION_SECRET:'SYNTHETIC_QA_SESSION_'+'c'.repeat(48)};
+ const appEnv={ASSETS:compiled.app.assets,ADMIN_DB:app.bridgeD1(appDb),APP_INTERNAL_SECRET:secret,ADMIN_USERNAME:'synthetic-nubank-owner',ADMIN_PASSWORD:'SYNTHETIC_QA_ONLY_PASSWORD_20261110',ADMIN_SESSION_SECRET:'SYNTHETIC_QA_SESSION_'+'c'.repeat(48)};
  const dispatch=(route,{method='GET',headers={},body}={})=>app.fetch(app.request(origin+route,{method,headers:{cookie,...headers},...(body!==undefined?{body}:{})}),appEnv);
  const command=body=>dispatch('/api/admin/finance/external-cash',{method:'POST',headers:{origin,'content-type':'application/json','x-csrf-token':csrf},body:JSON.stringify(body)});
  async function concurrentImport(){

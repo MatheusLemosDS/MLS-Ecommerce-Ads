@@ -1,3 +1,4 @@
+import {getOrderedBrowserScripts} from './browser-assets-http-fixture.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
@@ -32,7 +33,7 @@ for(const minify of [false,true])test(`deployable automatic classification works
   const state=await get('state'),catalog=await get('catalog-classification?item_ids=201,202&limit=20&offset=0');
   assert.equal(catalog.enabled,true);assert.equal(catalog.products.length,2);assert.ok(catalog.products.every(row=>row.status==='MATCHED'&&row.resolved_count===1));
   assert.equal(catalog.products.find(row=>row.item_id==='202').variants[0].model_name,'4');assert.ok(!JSON.stringify(catalog).includes(env.APP_INTERNAL_SECRET));
-  const html=await(await worker.fetch(new Request(origin+'/admin',{headers:{cookie}}),env)).text();for(const match of html.matchAll(/<script>([\s\S]*?)<\/script>/g))new vm.Script(match[1]);assert.match(html,/catalog-classification\/sync/);
+  const html=await(await worker.fetch(new Request(origin+'/admin',{headers:{cookie}}),env)).text();for(const script of getOrderedBrowserScripts(html))new vm.Script(script);assert.match(getOrderedBrowserScripts(html).join('\n'),/catalog-classification\/sync/);
   const policy=await get('finance/sync-state');
   const post=(path,body)=>worker.fetch(new Request(origin+'/api/admin/'+path,{method:'POST',headers:{origin,cookie,'content-type':'application/json','x-csrf-token':state.csrf},body:JSON.stringify(body)}),env);
   assert.equal((await post('catalog-classification/enqueue',{item_ids:['203']})).status,200);

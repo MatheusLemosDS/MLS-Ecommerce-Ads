@@ -1,9 +1,10 @@
+import {getOrderedBrowserScripts} from './browser-assets-http-fixture.mjs';
 import {writeFileSync,readFileSync,mkdirSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 import {after} from 'node:test';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import http from 'node:http';
+import http from './browser-assets-http-fixture.mjs';
 import {spawn} from 'node:child_process';
 import {existsSync,mkdtempSync} from 'node:fs';
 import os from 'node:os';
@@ -155,7 +156,7 @@ const discoveryProfiles=[{width:320,height:960,font_profile:'default'},{width:13
 for(const minify of [false,true])for(const {width,height,font_profile} of discoveryProfiles)test(`generated release discovery opens saved controls without financial mutations (${width}px, minify=${minify}${height===900?', height=900':font_profile!=='default'?', font=Arial13':''})`,{timeout:90000},async t=>{
  if(!chrome)return t.skip('Chromium unavailable');
  const owner=await compiledOwnerReportPage(minify,{ownerPreview:true,localReadSnapshot:true});
- assert.equal([...owner.html.matchAll(/<script>/g)].length,15,'release discovery must reuse the fifteen existing scripts');
+ assert.equal(getOrderedBrowserScripts(owner.html).length,17,'release discovery preserves existing clients and the reviewed public asset scripts');
  const local=new Map(owner.localReadSnapshot.responses.map(row=>[row.path,row])),requests=[],store=await fixture();let serverFailure=null;
  const initial=await store.read();await store.mutate({revision:initial.ledger.revision,request_id:crypto.randomUUID(),action:'link',link_id:crypto.randomUUID(),...store.choice(initial,lineId,ids.good,1),evidence:'Associação sintética para conferir navegação',confirmed:true});
  const ledgerBefore=JSON.stringify(await store.read());

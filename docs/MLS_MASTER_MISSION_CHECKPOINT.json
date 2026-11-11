@@ -1,6 +1,6 @@
 {
   "schema": "mls_master_mission_checkpoint_v1",
-  "updated_at": "2026-11-10",
+  "updated_at": "2026-11-11",
   "base_visual_sha": "8d860b2c4f26531c53c4cdba0e06a14f51a7eef4",
   "visual_branch": "feature/mls-mockup-parity-real-charts-20261029",
   "visual_pr": 79,
@@ -180,146 +180,20 @@
     }
   ],
   "current_release": {
-    "id": "NUBANK_CASH_RECONCILIATION_2026_11_10",
-    "status": "PUBLISHED_VERIFIED",
-    "branch": "feature/nubank-cash-reconciliation-20261110",
-    "base_main": "f451c15ec1b96abaa6315457324ccaa31c8d361c",
-    "human_code_release_id": "2026-11-10.1",
-    "human_date": "10/11/2026",
-    "label": "Conciliação com extrato Nubank",
-    "docs": "docs/MLS_NUBANK_RECONCILIATION_2026_11_10.md",
-    "finance_m2": "OPEN_REAL_FILE_RECONCILIATION_REQUIRED",
-    "m22": "OPEN",
-    "workers": {
-      "app": {
-        "version": "6e9e6514-8e0d-4791-bdc3-23ef8709363d",
-        "generated_sha256": "bae9f6f0c816e24954919523868160c3e932935a42b8a1d0037bafa8432df6bb",
-        "published_sha256": "fe19885f23d728fcb52ef1d77b76da2a7d4367fbe15d6f9810a352bd7160d0d3"
-      },
-      "auth": {
-        "version": "3b085dec-c506-472c-afae-6863c67cd545",
-        "generated_sha256": "c8e3fd3aecac69320666bc847064bf222bcbde35e9a63cf41fb87a4c02cb1838",
-        "published_sha256": "9259b304bf139201b93044ad83843ebc8b6c75d4817fefb86609d642ae655357"
-      },
-      "finance": {
-        "version": "4b285d05-9326-4885-b02d-c56a4ad99596",
-        "generated_sha256": "6070dc2cef50c815692b8cfad97659ff945df8504555d689bee8c6164a9e5be2",
-        "published_sha256": "bf2740e7e6c1879866a20e299e9aefedb5b453ce3ac1ca8c6021537ead10f966"
-      }
-    },
-    "unchanged_workers": [],
-    "deploy_order": [
-      "finance",
-      "auth",
-      "app"
-    ],
-    "routes": {
-      "workspace": "/admin?tab=agent-finance#bankReconciliation",
-      "owner_api": "/api/admin/finance/external-cash",
-      "private_service": "/internal/finance/external-cash-v1"
-    },
-    "scope": "OWNER_DECLARED_FILE_EVIDENCE_SEPARATE_FROM_LEGACY_PROFIT",
-    "formats": [
-      "NUBANK_ACCOUNT_CSV",
-      "NUBANK_BANKING_OFX",
-      "SHOPEE_COMPLETED_TRANSFER_CSV"
-    ],
-    "raw_files_kept_local": true,
-    "preview_sends_only_normalized_selected_rows": true,
-    "preview_read_only": true,
-    "import_and_match_require_explicit_owner_confirmation": true,
-    "matching": "EXACT_POSITIVE_BRL_ONE_TO_ONE_OWNER_CONFIRMED",
-    "amount_date_and_reference_are_suggestions_only": true,
-    "cross_month_manual_selection": true,
-    "replay_before_cas": true,
-    "immutable_evidence_and_append_only_unlink_audit": true,
-    "bank_account_scope": "OWNER_DECLARED_SINGLE_NUBANK_ACCOUNT",
-    "bank_api_connected": false,
-    "query_budget": {
-      "official_limit_free": 50,
-      "cold_1000_rows": 45,
-      "existing_1000_rows_fresh_isolate": 19,
-      "healthy_schema_missing_tenant_state": 20,
-      "objects_and_sql_verified": 31,
-      "existing_schema_ddl": 0,
-      "official_source": "https://developers.cloudflare.com/d1/platform/limits/"
-    },
-    "legacy_contracts_unchanged": true,
-    "pricing_formula_unchanged": true,
-    "dto_unchanged": true,
-    "realized_profit_changed": false,
-    "new_provider_calls": 0,
-    "new_collectors": 0,
-    "cron_changed": false,
-    "physical_or_financial_facts_created_by_delivery": false,
-    "cost_config_data_writes_by_delivery": false,
-    "owner_real_mutation_requests": 0,
+    "status": "VALIDATION_PENDING",
+    "release_id": "2026-11-11.1",
+    "label": "Pedidos e operação",
+    "branch": "feature/order-operations-20261111",
+    "base_commit": "eab85a17d7a6c4f213e67ce0b7dea0cf63932bf2",
+    "guide": "docs/MLS_ORDER_OPERATIONS_2026_11_11.md",
+    "source_commit": null,
+    "ci_run": null,
+    "published": false,
     "commercial_writes": false,
-    "overview_six_agents_preserved": true,
-    "month_drafts_preserved": true,
-    "hermes_calculation_changed": false,
-    "manufacturing_ledger_and_weekly_coverage_unchanged": true,
-    "seller_centre_bank_comparison": {
-      "legacy_monthly_state": "NOT_COMPARED",
-      "file_evidence_workspace": "AVAILABLE_OWNER_CONFIRMATION_REQUIRED",
-      "real_statement_use_by_delivery": "NOT_EXECUTED",
-      "complete_month_closed": false
-    },
-    "validation": {
-      "source_head": "9b546e8e65278470e62c919d0711d05b2f55a18d",
-      "node_tests_pass": 3761,
-      "node_suite_source": "COMPLETE_GITHUB_ACTIONS_LOG_WITH_RAW_PROVENANCE",
-      "python_tests_pass": 67,
-      "source_ci": 42857825794,
-      "source_ci_url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/42857825794",
-      "chromium_outcomes_pass": 8,
-      "chromium_profiles": "normal/minified x320/1365 xlight/dark",
-      "all_three_generated_hashes_bound": true,
-      "qa_report_sha256": "ab7283e02ae978370933691598cec67578a1a78983839ca4e079ff9a8bd0ec49",
-      "legacy_core_files_byte_identical": 18,
-      "local_browser_followup": {
-        "full_local_pass": 3760,
-        "full_local_fail": 1,
-        "failure": "CDP_PAGE_UNAVAILABLE_BEFORE_APP_NAVIGATION",
-        "isolated_same_test_retry_pass": 1,
-        "isolated_retry_fail": 0,
-        "test_source_changed_for_retry": false
-      }
-    },
-    "pull_request": {
-      "number": 116,
-      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/116",
-      "integration_state_source": "CONSULT_CURRENT_GITHUB_PULL_REQUEST",
-      "publication_does_not_prove_merge": true
-    },
-    "code_commit": "9b546e8e65278470e62c919d0711d05b2f55a18d",
-    "prepared_source_commit": "bdbfd5130ae6771b470b29071862c8179c829821",
-    "reviewed_head": "9b546e8e65278470e62c919d0711d05b2f55a18d",
-    "ci_run": 42857825794,
-    "deployment": {
-      "published_at": "2026-11-10T14:02:41.633702-03:00",
-      "versions": {
-        "app": "6e9e6514-8e0d-4791-bdc3-23ef8709363d",
-        "auth": "3b085dec-c506-472c-afae-6863c67cd545",
-        "finance": "4b285d05-9326-4885-b02d-c56a4ad99596"
-      },
-      "all_three_exact": true,
-      "configuration_domains_subdomains_flags_cron_preserved": true,
-      "steps_verified": 3,
-      "receipt_sha256": "6a4a74490bdd0168ebe9d6584d5b87f01be182c81a8435db7f9ddda7ee4e4399",
-      "public_login_release_header": "2026-11-10.1",
-      "public_login_meta_verified": true,
-      "anonymous_owner_endpoint_denied": true,
-      "private_auth_missing_key_denied": true,
-      "publisher_d1_queries": 0,
-      "publisher_owner_endpoint_calls": false,
-      "provider_calls": 0
-    },
-    "integration": {
-      "current_status_source": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/116",
-      "normal_merge_required_after_documentation_ci": true,
-      "no_runtime_redeploy_for_documentation": true
-    }
+    "physical_or_financial_fact_writes_by_publisher": false,
+    "provider_transport": "EXISTING_SHOPEE_READ_ONLY",
+    "other_platforms_connected": false,
+    "phase_closed": false
   },
   "validation_history": [
     {
@@ -4202,11 +4076,12 @@
     }
   },
   "next_actions": [
-    "Conferir uso real do diário, gráfico, rascunhos e fechamento semanal na Produção.",
-    "Registrar lotes reais e conferir os oito intervalos, custos e divisão das sextas; ausência não é zero.",
-    "Diário é agregação mais declaração existente, não novo artefato imutável; preservar originais/revisões semanais.",
-    "Preservar infantil13.50, seis agentes, mês/rascunhos, Finance/Auth, Hermes, fórmulas/DTOs e gates comerciais.",
-    "Continuar M2/M2.2 e comparação Seller Centre/banco no mesmo recorte, sem dupla contagem."
+    "Validar e publicar Pedidos e operação, com quadro por pedido, etapas internas e fonte explícita.",
+    "Conferir o fluxo real Shopee de separação até envio; fabricação e custo histórico continuam em seu ledger.",
+    "Consolidar o relatório semanal com períodos de fabricação, resultado estimado e caixa claramente separados.",
+    "Adaptar a importação Shopee para XLSX do relatório real; distinguir renda por pedido de transferência agrupada.",
+    "Preparar o próximo conector oficial conforme as plataformas usadas pelo proprietário, com OAuth e piloto real.",
+    "Concluir M2/M2.2 com Seller Centre, devoluções, repasses e Nubank no mesmo recorte, sem dupla contagem."
   ],
   "production_weekly_closing_2026_11_03": {
     "id": "PRODUCTION_WEEKLY_FRIDAY_13_CLOSING",
@@ -6393,6 +6268,171 @@
       "next_close_is_schedule_not_future_execution_proof": true,
       "ledger_absence_is_not_zero": true,
       "last_error_absence_is_not_no_failure_proof": true
+    }
+  },
+  "previous_next_actions_before_order_operations": [
+    "Conferir uso real do diário, gráfico, rascunhos e fechamento semanal na Produção.",
+    "Registrar lotes reais e conferir os oito intervalos, custos e divisão das sextas; ausência não é zero.",
+    "Diário é agregação mais declaração existente, não novo artefato imutável; preservar originais/revisões semanais.",
+    "Preservar infantil13.50, seis agentes, mês/rascunhos, Finance/Auth, Hermes, fórmulas/DTOs e gates comerciais.",
+    "Continuar M2/M2.2 e comparação Seller Centre/banco no mesmo recorte, sem dupla contagem."
+  ],
+  "order_operations_2026_11_11": {
+    "status": "VALIDATION_PENDING",
+    "release_id": "2026-11-11.1",
+    "label": "Pedidos e operação",
+    "branch": "feature/order-operations-20261111",
+    "base_commit": "eab85a17d7a6c4f213e67ce0b7dea0cf63932bf2",
+    "guide": "docs/MLS_ORDER_OPERATIONS_2026_11_11.md",
+    "source_commit": null,
+    "ci_run": null,
+    "published": false,
+    "commercial_writes": false,
+    "physical_or_financial_fact_writes_by_publisher": false,
+    "provider_transport": "EXISTING_SHOPEE_READ_ONLY",
+    "other_platforms_connected": false,
+    "phase_closed": false
+  },
+  "previous_release_before_order_operations": {
+    "id": "NUBANK_CASH_RECONCILIATION_2026_11_10",
+    "status": "PUBLISHED_VERIFIED",
+    "branch": "feature/nubank-cash-reconciliation-20261110",
+    "base_main": "f451c15ec1b96abaa6315457324ccaa31c8d361c",
+    "human_code_release_id": "2026-11-10.1",
+    "human_date": "10/11/2026",
+    "label": "Conciliação com extrato Nubank",
+    "docs": "docs/MLS_NUBANK_RECONCILIATION_2026_11_10.md",
+    "finance_m2": "OPEN_REAL_FILE_RECONCILIATION_REQUIRED",
+    "m22": "OPEN",
+    "workers": {
+      "app": {
+        "version": "6e9e6514-8e0d-4791-bdc3-23ef8709363d",
+        "generated_sha256": "bae9f6f0c816e24954919523868160c3e932935a42b8a1d0037bafa8432df6bb",
+        "published_sha256": "fe19885f23d728fcb52ef1d77b76da2a7d4367fbe15d6f9810a352bd7160d0d3"
+      },
+      "auth": {
+        "version": "3b085dec-c506-472c-afae-6863c67cd545",
+        "generated_sha256": "c8e3fd3aecac69320666bc847064bf222bcbde35e9a63cf41fb87a4c02cb1838",
+        "published_sha256": "9259b304bf139201b93044ad83843ebc8b6c75d4817fefb86609d642ae655357"
+      },
+      "finance": {
+        "version": "4b285d05-9326-4885-b02d-c56a4ad99596",
+        "generated_sha256": "6070dc2cef50c815692b8cfad97659ff945df8504555d689bee8c6164a9e5be2",
+        "published_sha256": "bf2740e7e6c1879866a20e299e9aefedb5b453ce3ac1ca8c6021537ead10f966"
+      }
+    },
+    "unchanged_workers": [],
+    "deploy_order": [
+      "finance",
+      "auth",
+      "app"
+    ],
+    "routes": {
+      "workspace": "/admin?tab=agent-finance#bankReconciliation",
+      "owner_api": "/api/admin/finance/external-cash",
+      "private_service": "/internal/finance/external-cash-v1"
+    },
+    "scope": "OWNER_DECLARED_FILE_EVIDENCE_SEPARATE_FROM_LEGACY_PROFIT",
+    "formats": [
+      "NUBANK_ACCOUNT_CSV",
+      "NUBANK_BANKING_OFX",
+      "SHOPEE_COMPLETED_TRANSFER_CSV"
+    ],
+    "raw_files_kept_local": true,
+    "preview_sends_only_normalized_selected_rows": true,
+    "preview_read_only": true,
+    "import_and_match_require_explicit_owner_confirmation": true,
+    "matching": "EXACT_POSITIVE_BRL_ONE_TO_ONE_OWNER_CONFIRMED",
+    "amount_date_and_reference_are_suggestions_only": true,
+    "cross_month_manual_selection": true,
+    "replay_before_cas": true,
+    "immutable_evidence_and_append_only_unlink_audit": true,
+    "bank_account_scope": "OWNER_DECLARED_SINGLE_NUBANK_ACCOUNT",
+    "bank_api_connected": false,
+    "query_budget": {
+      "official_limit_free": 50,
+      "cold_1000_rows": 45,
+      "existing_1000_rows_fresh_isolate": 19,
+      "healthy_schema_missing_tenant_state": 20,
+      "objects_and_sql_verified": 31,
+      "existing_schema_ddl": 0,
+      "official_source": "https://developers.cloudflare.com/d1/platform/limits/"
+    },
+    "legacy_contracts_unchanged": true,
+    "pricing_formula_unchanged": true,
+    "dto_unchanged": true,
+    "realized_profit_changed": false,
+    "new_provider_calls": 0,
+    "new_collectors": 0,
+    "cron_changed": false,
+    "physical_or_financial_facts_created_by_delivery": false,
+    "cost_config_data_writes_by_delivery": false,
+    "owner_real_mutation_requests": 0,
+    "commercial_writes": false,
+    "overview_six_agents_preserved": true,
+    "month_drafts_preserved": true,
+    "hermes_calculation_changed": false,
+    "manufacturing_ledger_and_weekly_coverage_unchanged": true,
+    "seller_centre_bank_comparison": {
+      "legacy_monthly_state": "NOT_COMPARED",
+      "file_evidence_workspace": "AVAILABLE_OWNER_CONFIRMATION_REQUIRED",
+      "real_statement_use_by_delivery": "NOT_EXECUTED",
+      "complete_month_closed": false
+    },
+    "validation": {
+      "source_head": "9b546e8e65278470e62c919d0711d05b2f55a18d",
+      "node_tests_pass": 3761,
+      "node_suite_source": "COMPLETE_GITHUB_ACTIONS_LOG_WITH_RAW_PROVENANCE",
+      "python_tests_pass": 67,
+      "source_ci": 42857825794,
+      "source_ci_url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/42857825794",
+      "chromium_outcomes_pass": 8,
+      "chromium_profiles": "normal/minified x320/1365 xlight/dark",
+      "all_three_generated_hashes_bound": true,
+      "qa_report_sha256": "ab7283e02ae978370933691598cec67578a1a78983839ca4e079ff9a8bd0ec49",
+      "legacy_core_files_byte_identical": 18,
+      "local_browser_followup": {
+        "full_local_pass": 3760,
+        "full_local_fail": 1,
+        "failure": "CDP_PAGE_UNAVAILABLE_BEFORE_APP_NAVIGATION",
+        "isolated_same_test_retry_pass": 1,
+        "isolated_retry_fail": 0,
+        "test_source_changed_for_retry": false
+      }
+    },
+    "pull_request": {
+      "number": 116,
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/116",
+      "integration_state_source": "CONSULT_CURRENT_GITHUB_PULL_REQUEST",
+      "publication_does_not_prove_merge": true
+    },
+    "code_commit": "9b546e8e65278470e62c919d0711d05b2f55a18d",
+    "prepared_source_commit": "bdbfd5130ae6771b470b29071862c8179c829821",
+    "reviewed_head": "9b546e8e65278470e62c919d0711d05b2f55a18d",
+    "ci_run": 42857825794,
+    "deployment": {
+      "published_at": "2026-11-10T14:02:41.633702-03:00",
+      "versions": {
+        "app": "6e9e6514-8e0d-4791-bdc3-23ef8709363d",
+        "auth": "3b085dec-c506-472c-afae-6863c67cd545",
+        "finance": "4b285d05-9326-4885-b02d-c56a4ad99596"
+      },
+      "all_three_exact": true,
+      "configuration_domains_subdomains_flags_cron_preserved": true,
+      "steps_verified": 3,
+      "receipt_sha256": "6a4a74490bdd0168ebe9d6584d5b87f01be182c81a8435db7f9ddda7ee4e4399",
+      "public_login_release_header": "2026-11-10.1",
+      "public_login_meta_verified": true,
+      "anonymous_owner_endpoint_denied": true,
+      "private_auth_missing_key_denied": true,
+      "publisher_d1_queries": 0,
+      "publisher_owner_endpoint_calls": false,
+      "provider_calls": 0
+    },
+    "integration": {
+      "current_status_source": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/116",
+      "normal_merge_required_after_documentation_ci": true,
+      "no_runtime_redeploy_for_documentation": true
     }
   }
 }

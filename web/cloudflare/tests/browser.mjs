@@ -1,4 +1,4 @@
-import {createServer} from 'node:http';
+import {createServer} from './browser-assets-http-fixture.mjs';
 const {chromium}=await import(process.env.BRAZA_PLAYWRIGHT_MODULE||'/workspace/.braza-browser-validation/node_modules/playwright/index.mjs');
 import assert from 'node:assert/strict';
 import {D1} from './sqlite-d1.mjs';

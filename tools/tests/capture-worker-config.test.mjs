@@ -5,7 +5,7 @@ import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {spawnSync} from 'node:child_process';
 import {captureWorkerConfig, formatCapturePacket} from '../capture_worker_config.mjs';
-import {MAX_WORKER_SOURCE_BYTES} from '../import_worker_config.mjs';
+import {MAX_WORKER_SOURCE_BYTES, BROWSER_ASSETS_CONFIG} from '../import_worker_config.mjs';
 import {PROJECT_ROOT, stableJson} from '../worker_project.mjs';
 
 const authSource = readFileSync(path.join(PROJECT_ROOT, 'web/cloudflare/auth-worker.mjs'));
@@ -64,6 +64,31 @@ test('App capture preserves its real ADMIN_DB metadata', async t => {
   assert.equal(result.config.d1_databases[0].database_id, exportFor('app').d1_databases[0].database_id);
   assert.equal(result.config.keep_vars, true);
   assert.deepEqual(readdirSync(f.temporaryRoot), []);
+});
+
+test('App capture preserves exact asset configuration as metadata without claiming asset bytes were exported', async t => {
+  const f = fixture(t);
+  let calls = 0;
+  const result = await captureWorkerConfig('app', {...f, run: (_command, _args, options) => {
+    calls++;
+    downloaded(options.cwd, 'app', {...exportFor('app'), assets: {...BROWSER_ASSETS_CONFIG}});
+  }});
+  assert.equal(calls, 1);
+  assert.deepEqual(result.config.assets, BROWSER_ASSETS_CONFIG);
+  assert.deepEqual(result.snapshot.captured_config.assets, BROWSER_ASSETS_CONFIG);
+  const packet = formatCapturePacket('app', result);
+  const value = JSON.parse(Buffer.from(packet.split('\n')[1], 'base64').toString('utf8'));
+  assert.deepEqual(value.config.assets, BROWSER_ASSETS_CONFIG);
+  assert.equal(Object.hasOwn(value, 'assets'), false, 'config capture is not a content receipt');
+  assert.equal(JSON.stringify(value).includes(PRIVATE), false);
+  assert.deepEqual(readdirSync(f.temporaryRoot), []);
+  for (const assets of [{...BROWSER_ASSETS_CONFIG, directory: '../../docs'},
+    {...BROWSER_ASSETS_CONFIG, run_worker_first: false},
+    {...BROWSER_ASSETS_CONFIG, not_found_handling: 'single-page-application'}]) {
+    await assert.rejects(captureWorkerConfig('app', {...f, run: (_command, _args, options) =>
+      downloaded(options.cwd, 'app', {...exportFor('app'), assets})}), {code: 'WORKER_BROWSER_ASSETS_CONFIG_INVALID'});
+    assert.deepEqual(readdirSync(f.temporaryRoot), []);
+  }
 });
 
 test('remote failures never expose provider stdout, stderr or exception text', async t => {

@@ -11,7 +11,7 @@ export const MAX_WORKER_SOURCE_BYTES = 4 * 1024 * 1024;
 const ALLOWED = new Set(['name', 'main', 'account_id', 'compatibility_date', 'compatibility_flags',
   'workers_dev', 'preview_urls', 'routes', 'route', 'triggers', 'd1_databases', 'kv_namespaces',
   'r2_buckets', 'services', 'placement', 'limits', 'observability', 'logpush', 'tail_consumers',
-  'keep_vars', '$schema', 'vars', 'secrets']);
+  'keep_vars', '$schema', 'vars', 'secrets', 'assets']);
 const OMIT = new Set(['main', 'keep_vars', '$schema', 'vars', 'secrets']);
 const ARRAY_FIELDS = ['compatibility_flags', 'd1_databases', 'kv_namespaces', 'r2_buckets', 'services', 'tail_consumers'];
 const OBJECT_FIELDS = ['triggers', 'placement', 'limits', 'observability'];
@@ -22,6 +22,27 @@ const plain = value => value !== null && typeof value === 'object' && !Array.isA
 const text = value => typeof value === 'string' && value.length > 0 && value.length <= 1024 && !/[\x00-\x1f\x7f]/.test(value);
 const databaseId = value => typeof value === 'string' && UUID.test(value) && !/^0{8}-0{4}-0{4}-0{4}-0{12}$/.test(value);
 const fail = code => {throw error(code);};
+
+// A specific App migration, not a general-purpose public directory setting.
+// The build places only reviewed, content-addressed browser code here.
+export const BROWSER_ASSETS_CONFIG = Object.freeze({
+  directory: '../../dist/browser-assets', binding: 'ASSETS', run_worker_first: true,
+  html_handling: 'none', not_found_handling: 'none',
+});
+
+export function validateBrowserAssetsConfig(target, assets, config = {}) {
+  if (target !== 'app' || !plain(assets)
+    || Object.keys(assets).sort().join(',') !== Object.keys(BROWSER_ASSETS_CONFIG).sort().join(',')
+    || Object.entries(BROWSER_ASSETS_CONFIG).some(([key, value]) => assets[key] !== value)) {
+    fail('WORKER_BROWSER_ASSETS_CONFIG_INVALID');
+  }
+  for (const field of ['d1_databases', 'kv_namespaces', 'r2_buckets', 'services']) {
+    if ((config[field] || []).some(item => item?.binding === BROWSER_ASSETS_CONFIG.binding)) {
+      fail('WORKER_BINDING_INVALID');
+    }
+  }
+  return assets;
+}
 
 function cloneJson(value) {
   try {
@@ -88,6 +109,7 @@ function validateConfig(config, target) {
   if (target === 'app' && !(config.d1_databases || []).some(item => item.binding === 'ADMIN_DB')) {
     fail('WORKER_ADMIN_DB_REQUIRED');
   }
+  if (own(config, 'assets')) validateBrowserAssetsConfig(target, config.assets, config);
 }
 
 function snapshotFor(target, config, mode, rawHash = null, recognizedHash = null) {
@@ -98,7 +120,8 @@ function snapshotFor(target, config, mode, rawHash = null, recognizedHash = null
 
 export function validateCapturedConfig(target, config) {
   if (!own(TARGETS, target) || !plain(config)
-    || Object.keys(config).some(key => !ALLOWED.has(key) || ['vars', 'secrets', '$schema'].includes(key))) {
+    || Object.keys(config).some(key => !ALLOWED.has(key) || ['vars', 'secrets', '$schema'].includes(key))
+    || target !== 'app' && own(config, 'assets')) {
     fail('WORKER_CONFIG_UNSUPPORTED');
   }
   validateConfig(config, target);
@@ -109,7 +132,8 @@ export function validateCapturedConfig(target, config) {
 export function importWorkerConfig(target, exportConfig, source, {root = PROJECT_ROOT} = {}) {
   void root;
   if (!own(TARGETS, target)) fail('WORKER_TARGET_INVALID');
-  if (!plain(exportConfig) || Object.keys(exportConfig).some(key => !ALLOWED.has(key))) fail('WORKER_CONFIG_UNSUPPORTED');
+  if (!plain(exportConfig) || Object.keys(exportConfig).some(key => !ALLOWED.has(key))
+    || target !== 'app' && own(exportConfig, 'assets')) fail('WORKER_CONFIG_UNSUPPORTED');
   if (exportConfig.name !== TARGETS[target].name) fail('WORKER_CONFIG_IDENTITY');
   let raw, normalized;
   try {

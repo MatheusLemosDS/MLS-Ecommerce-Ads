@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import path from 'node:path';
 import {mkdtempSync,writeFileSync,rmSync,symlinkSync} from 'node:fs';
 import os from 'node:os';
-import http from 'node:http';
+import http from '../../web/cloudflare/tests/browser-assets-http-fixture.mjs';
 import {createHash} from 'node:crypto';
 import {startPreviewServer} from '../mls_owner_preview_server.mjs';
 import {createPreviewRuntime} from '../mls-owner-preview/runtime.mjs';

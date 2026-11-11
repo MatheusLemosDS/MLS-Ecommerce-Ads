@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "captured_config_sha256": "39ad9b271f0ba4e6e9d1799e0e62a77b57daaeab340727f42c8d0eff5e46ce1a",
+  "assets": {
+    "directory": "../../dist/browser-assets",
+    "binding": "ASSETS",
+    "run_worker_first": true,
+    "html_handling": "none",
+    "not_found_handling": "none"
+  }
+}

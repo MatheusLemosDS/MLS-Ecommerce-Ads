@@ -6,6 +6,7 @@ import {writeFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 import {startPreviewServer} from './mls_owner_preview_server.mjs';
 import {projectProductRegistryFrame} from '../web/cloudflare/src/product-registry.mjs';
+import {inlineBrowserAssets} from './browser_assets.mjs';
 
 const csrf='0'.repeat(64),digest=value=>createHash('sha256').update(value).digest('hex');
 const fail=code=>{throw Object.assign(Error(code),{code});};
@@ -19,6 +20,7 @@ function sanitize(value){
 }
 export function createOfflinePreviewHtml({html,workerHash,snapshots,media=[]}){
  if(typeof html!=='string'||!html.includes('id="ai-sales"')||!html.includes('class="app-shell"')||!/^[a-f0-9]{64}$/.test(workerHash)||!Array.isArray(snapshots)||snapshots.length>100||!Array.isArray(media)||media.length>100)fail('OFFLINE_EXPORT_INPUT_INVALID');
+ html=inlineBrowserAssets(html,{root:fileURLToPath(new URL('../',import.meta.url))});
  const reads=snapshots.map(row=>{
   if(!row||typeof row.path!=='string'||!row.path.startsWith('/api/admin/')||!Number.isInteger(row.status)||row.status<200||row.status>599)fail('OFFLINE_SNAPSHOT_INVALID');
   return {path:row.path,status:row.status,body:sanitize(row.body),contract:row.contract??null};

@@ -1,3 +1,4 @@
+import {getOrderedBrowserScripts} from './browser-assets-http-fixture.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
@@ -27,7 +28,7 @@ function fullBrowser(html,fetchImpl){
   response.json=async()=>vm.runInContext('JSON.parse',context)(await response.text());return response;
  }});
  vm.runInContext('globalThis.window=globalThis;window.matchMedia=()=>({matches:false,addEventListener(){}});globalThis.addEventListener=()=>{};',context);
- const scripts=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match=>match[1]);assert.equal(scripts.length,15);
+ const scripts=getOrderedBrowserScripts(html);assert.equal(scripts.length,17);
  assert.equal(scripts.filter(script=>script.includes('globalThis.brazaPhysicalReturns=')).length,1,'the independent physical-return controller is delivered once');
  for(const [index,script] of scripts.entries())vm.runInContext(script,context,{filename:'owner-script-'+index+'.js'});
  return {nodes,timers,calls,run:source=>vm.runInContext(source,context),stop(){vm.runInContext('startupController.stop();brazaMonthDashboard.stop();',context);timers.clear();}};

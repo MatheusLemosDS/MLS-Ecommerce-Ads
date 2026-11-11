@@ -1,3 +1,4 @@
+import {getOrderedBrowserScripts} from './browser-assets-http-fixture.mjs';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {DatabaseSync} from 'node:sqlite';
@@ -88,7 +89,7 @@ test('budget and one-active-job gate, paused claims',async()=>{const e=env(),coo
 test('schedule only at configured local hour and once per day',async()=>{const e=env(),cookie=await login(e),s=await state(e,cookie);await bridge(e,'heartbeat');await call(e,cookie,'/api/admin/settings',{revision:1,values:{...DEFAULTS,hermes_mode:'scheduled',daily_hour:9}},s.csrf);await schedule(e,new Date('2026-10-13T10:00:00Z'));assert.equal((await (await call(e,cookie,'/api/admin/jobs')).json()).rows.length,0);await schedule(e,new Date('2026-10-13T12:00:00Z'));await schedule(e,new Date('2026-10-13T12:15:00Z'));assert.equal((await (await call(e,cookie,'/api/admin/jobs')).json()).rows.length,1);});
 test('owner HTML includes each workspace script, parses every script and renders answers as text',async()=>{
  const e=env(),cookie=await login(e),response=await call(e,cookie,'/admin');assert.equal(response.status,200);
- const text=await response.text(),scripts=[...text.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match=>match[1]),script=scripts.join('\n');
+ const text=await response.text(),scripts=getOrderedBrowserScripts(text),script=scripts.join('\n');
  for(const name of ['brazaDtfEngine','brazaDtfWorkspace','brazaCostRules','brazaProductionCostPeriods','brazaSavedCatalog','brazaAutomationWorkspace','brazaMonthDashboard']){
   const declaration=new RegExp('globalThis\\.'+name+'\\s*=','g');assert.equal([...script.matchAll(declaration)].length,1,name+' has exactly one workspace declaration');
  }

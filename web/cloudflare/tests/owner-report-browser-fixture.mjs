@@ -1,3 +1,4 @@
+import {getOrderedBrowserScripts} from './browser-assets-http-fixture.mjs';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import {build} from 'esbuild';
@@ -58,6 +59,6 @@ export function ownerReportBrowser(html,{respond=async()=>new Promise(()=>{}),sc
   return {ok:status>=200&&status<300,status,body:null,json:async()=>vm.runInContext('JSON.parse('+JSON.stringify(JSON.stringify(response.body))+')',context)};
  }});
  vm.runInContext("globalThis.window=globalThis;window.matchMedia=()=>({matches:false});globalThis.addEventListener=()=>{};",context);
- const script=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match=>match[1]).find(value=>value.includes(scriptIncludes));assert.ok(script,'compiled owner client not found: '+scriptIncludes);vm.runInContext(script,context);
+ const script=getOrderedBrowserScripts(html).find(value=>value.includes(scriptIncludes));assert.ok(script,'compiled owner client not found: '+scriptIncludes);vm.runInContext(script,context);
  return {nodes,calls,timers,context,run:source=>vm.runInContext(source,context),async flush(){for(let turn=0;turn<8;turn++)await new Promise(resolve=>setImmediate(resolve));},stop(){vm.runInContext('startupController.stop();clearTimeout(pollTimer);',context);timers.clear();}};
 }

@@ -1,3 +1,7 @@
+<!-- ORDER_OPERATIONS_CURRENT -->
+**Pedidos e operação — `VALIDATION_PENDING`:** versão preparada `2026-11-11.1`, branch `feature/order-operations-20261111`, base main PR116 `eab85a17d7a6c4f213e67ce0b7dea0cf63932bf2`. Novo quadro por pedido, etapas internas auditadas, status Shopee separado, atualização visível e totais por período; mudanças em itens/quantidades exigem nova conferência. Pedidos abertos já impressos voltam à revisão. Migração específica de clientes de navegador para assets públicos com hash, mesmo domínio e binding ASSETS; captura anterior, Auth/Finance, fórmulas, fabricação, sexta13h e seis agentes preservados. Nenhuma publicação nova comprovada neste corte. Conectores Mercado Livre/TikTok, relatório financeiro semanal e XLSX Shopee continuam pendentes; M2/M2.2 permanecem abertas. [Escopo, validação e caminho até a 1.0](docs/MLS_ORDER_OPERATIONS_2026_11_11.md).
+<!-- END_ORDER_OPERATIONS_CURRENT -->
+
 === NUBANK_RECONCILIATION_CURRENT ===
 ESTADO ATUAL DE RETOMADA — 10/11/2026. PUBLISHED_VERIFIED. Consulte a PR116 para o estado atual da integração Git; publicação não prova merge.
 

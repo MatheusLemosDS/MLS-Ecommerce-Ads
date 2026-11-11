@@ -4,7 +4,7 @@ import {mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync, symlinkSync
 import {tmpdir} from 'node:os';
 import {resolve} from 'node:path';
 import {spawnSync} from 'node:child_process';
-import {importWorkerConfig, createFinanceConfig, MAX_WORKER_SOURCE_BYTES} from '../import_worker_config.mjs';
+import {importWorkerConfig, createFinanceConfig, MAX_WORKER_SOURCE_BYTES, BROWSER_ASSETS_CONFIG, validateCapturedConfig} from '../import_worker_config.mjs';
 import {PROJECT_ROOT, TARGETS, sha256, stableJson} from '../worker_project.mjs';
 
 const authSource = readFileSync(resolve(PROJECT_ROOT, 'web/cloudflare/auth-worker.mjs'));
@@ -70,6 +70,40 @@ test('unsupported resource types never disappear silently from an imported expor
   for (const field of ['assets', 'unsafe', 'queues', 'durable_objects', 'env', 'secrets_store_secrets', 'build', 'migrations']) {
     rejectsCode(() => importWorkerConfig('auth', {...authExport(), [field]: {value: secret}}, authSource), 'WORKER_CONFIG_UNSUPPORTED');
   }
+});
+
+test('App capture accepts only the reviewed same-domain browser asset configuration', () => {
+  const before = {...appExport(), assets: {...BROWSER_ASSETS_CONFIG}};
+  const {config, snapshot} = importWorkerConfig('app', before, appSource);
+  assert.deepEqual(config.assets, BROWSER_ASSETS_CONFIG);
+  assert.deepEqual(snapshot.captured_config.assets, BROWSER_ASSETS_CONFIG);
+  assert.equal(snapshot.config_sha256, sha256(stableJson(config)));
+  assert.equal(validateCapturedConfig('app', config), undefined);
+  assert.deepEqual(config.routes, before.routes);
+  assert.deepEqual(config.d1_databases, before.d1_databases);
+  assert.equal(config.keep_vars, true);
+  for (const assets of [null, [], {},
+    {...BROWSER_ASSETS_CONFIG, directory: '../../docs'},
+    {...BROWSER_ASSETS_CONFIG, directory: '/tmp/public'},
+    {...BROWSER_ASSETS_CONFIG, binding: 'ADMIN_DB'},
+    {...BROWSER_ASSETS_CONFIG, run_worker_first: false},
+    {...BROWSER_ASSETS_CONFIG, run_worker_first: ['/assets/*']},
+    {...BROWSER_ASSETS_CONFIG, html_handling: 'auto-trailing-slash'},
+    {...BROWSER_ASSETS_CONFIG, not_found_handling: 'single-page-application'},
+    {...BROWSER_ASSETS_CONFIG, base_path: '/'},
+  ]) rejectsCode(() => importWorkerConfig('app', {...appExport(), assets}, appSource), 'WORKER_BROWSER_ASSETS_CONFIG_INVALID');
+});
+
+test('asset migration cannot reuse a captured resource binding or move into Auth or Finance', () => {
+  for (const field of ['services', 'd1_databases', 'kv_namespaces', 'r2_buckets']) {
+    const input = appExport();
+    input[field] = [...input[field], {...input[field][0], binding: 'ASSETS'}];
+    rejectsCode(() => importWorkerConfig('app', {...input, assets: {...BROWSER_ASSETS_CONFIG}}, appSource), 'WORKER_BINDING_INVALID');
+  }
+  rejectsCode(() => importWorkerConfig('auth', {...authExport(), assets: {...BROWSER_ASSETS_CONFIG}}, authSource), 'WORKER_CONFIG_UNSUPPORTED');
+  const {config} = importWorkerConfig('auth', authExport(), authSource);
+  rejectsCode(() => validateCapturedConfig('auth', {...config, assets: {...BROWSER_ASSETS_CONFIG}}), 'WORKER_CONFIG_UNSUPPORTED');
+  rejectsCode(() => importWorkerConfig('app', {...appExport(), assets: {...BROWSER_ASSETS_CONFIG}}, Buffer.from('unreviewed browser migration source')), 'WORKER_SOURCE_UNRECOGNIZED');
 });
 
 test('unknown source is rejected without disclosing source text or dashboard values', () => {
