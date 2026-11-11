@@ -74,7 +74,7 @@ async function fill(cdp,form,fields){
 
 for(const minify of [false,true])test(`generated incurred-production ledger preserves explicit facts, costs and corrections at320/1365px (minify=${minify})`,{timeout:150000},async t=>{
  if(!chrome)return t.skip('Chromium unavailable');
- const owner=await compiledOwnerReportPage(minify,{ownerPreview:true,localReadSnapshot:true});assert.equal(getOrderedBrowserScripts(owner.html).length,17,'the ledger client reuses the cost-period script while public assets retain their execution order');
+ const owner=await compiledOwnerReportPage(minify,{ownerPreview:true,localReadSnapshot:true});assert.equal(getOrderedBrowserScripts(owner.html).length,18,'the ledger client reuses the cost-period script while public assets retain their execution order');
  const local=new Map(owner.localReadSnapshot.responses.map(row=>[row.path,row])),requests=[],posts=[],control={browserClock:clock,conflictZero:false,unconfirmReference:false};let fixture=await ledgerFixture(),serverFailure=null;
  const html=()=>owner.html.replace('<head>','<head><script>const IncurredFixtureDate=Date;globalThis.Date=class extends IncurredFixtureDate{constructor(...args){super(...(args.length?args:['+control.browserClock+']));}static now(){return '+control.browserClock+';}};globalThis.__incurredErrors=[];globalThis.__incurredXss=false;addEventListener("error",e=>__incurredErrors.push(String(e.message)));addEventListener("unhandledrejection",e=>__incurredErrors.push(String(e.reason?.message||e.reason)));</script>');
  const host=http.createServer(async(req,res)=>{

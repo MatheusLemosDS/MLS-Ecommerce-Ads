@@ -12,11 +12,11 @@ import {enhanceAdsPageHtml} from '../src/ads-presentation.mjs';
 
 const primary=html=>html.match(/<nav class="workspace-nav[^"]*"[^>]*>([\s\S]*?)<\/nav>/)?.[1]?.split('<details')[0]||'';
 const destinations=html=>[...html.matchAll(/href="([^"]*)"/g)].map(match=>match[1]);
-const owner=['/admin?tab=overview','/admin?tab=order-operations','/admin?tab=agent-production','/admin?tab=agent-returns','/admin?tab=agent-finance','/admin?tab=products','/dashboard','/admin?tab=agent-hermes'];
+const owner=['/admin?tab=overview','/admin?tab=order-operations','/admin?tab=agent-production','/admin?tab=agent-returns','/admin?tab=agent-finance','/admin?tab=weekly-report','/admin?tab=products','/dashboard','/admin?tab=agent-hermes'];
 const mobileOwner=['/admin?tab=overview','/admin?tab=order-operations','/admin?tab=agent-production','/admin?tab=agent-finance','/admin?tab=products'];
 
-test('owner desktop gives eight operational destinations and mobile gives five direct links plus a real menu',()=>{
- for(const active of ['overview','order-operations','agent-production','agent-returns','agent-finance','products','/dashboard','agent-hermes']){
+test('owner desktop gives nine operational destinations and mobile gives five direct links plus a real menu',()=>{
+ for(const active of ['overview','order-operations','agent-production','agent-returns','agent-finance','weekly-report','products','/dashboard','agent-hermes']){
   const desktop=workspaceNavigation(active,{role:'owner'}),mobile=workspaceNavigation(active,{role:'owner',mobile:true});
   assert.deepEqual(destinations(primary(desktop)),owner);
   assert.deepEqual(destinations(primary(mobile)),mobileOwner);
@@ -95,7 +95,7 @@ test('team remains explicit in both secondary menus without occupying a main ope
 });
 
 test('legacy tabs and agent subpages select the matching operational destination without changing their URL contract',()=>{
- const mapping={'order-operations':'orders',agents:'agents','agent-finance':'finance','agent-ads':'ads','agent-products':'products','agent-production':'production','agent-returns':'returns','agent-auditor':'agents','agent-hermes':'hermes',production:'production',margins:'products',hermes:'hermes'};
+ const mapping={'weekly-report':'reports','order-operations':'orders',agents:'agents','agent-finance':'finance','agent-ads':'ads','agent-products':'products','agent-production':'production','agent-returns':'returns','agent-auditor':'agents','agent-hermes':'hermes',production:'production',margins:'products',hermes:'hermes'};
  for(const [tab,key] of Object.entries(mapping)){
   for(const active of [tab,'/admin?tab='+tab]){
    const html=workspaceNavigation(active,{role:'owner'});

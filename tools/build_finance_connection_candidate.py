@@ -143,10 +143,20 @@ def build():
     external_cash_names='EXTERNAL_CASH_PATH,EXTERNAL_CASH_REQUEST_MAXIMUM,EXTERNAL_CASH_RESPONSE_MAXIMUM,projectExternalCashRequest,projectExternalCashResponse,externalCashResponseMatches,projectExternalCashError,externalCashErrorStatus'
     external_cash_bundle='const brazaExternalCashFrame = (() => {\n'+external_cash+'\nreturn {'+external_cash_names+'};\n})();\n'
     external_cash_import="import {"+external_cash_names+"} from './external-cash-frame.mjs';\n"
+    cash_period=(FINANCE/'src/external-cash-period-frame.mjs').read_text()
+    if re.search(r'^import\b',cash_period,re.M):
+        raise SystemExit('Unreviewed cash period frame import; candidate not built.')
+    cash_period=re.sub(r'^export\s+', '', cash_period, flags=re.M)
+    cash_period_names='EXTERNAL_CASH_PERIOD_PATH,EXTERNAL_CASH_PERIOD_REQUEST_MAXIMUM,EXTERNAL_CASH_PERIOD_RESPONSE_MAXIMUM,projectExternalCashPeriodRequest,projectExternalCashPeriodResponse,externalCashPeriodResponseMatches'
+    cash_period_bundle='const brazaExternalCashPeriodFrame = (() => {\n'+cash_period+'\nreturn {'+cash_period_names+'};\n})();\n'
+    cash_period_import="import {"+cash_period_names+"} from './external-cash-period-frame.mjs';\n"
     router_source=(FINANCE/'src/auth-router.mjs').read_text()
     if router_source.count(external_cash_import)!=1:
         raise SystemExit('External cash router import not unique; candidate not built.')
     router_source=router_source.replace(external_cash_import,'')
+    if router_source.count(cash_period_import)!=1:
+        raise SystemExit('Cash period router import not unique; candidate not built.')
+    router_source=router_source.replace(cash_period_import,'')
     if router_source.count(preview_import)!=1 or router_source.count(catalog_import)!=1 or router_source.count(catalog_media_import)!=1 or router_source.count(period_import)!=1 or router_source.count(daily_import)!=1 or router_source.count(business_import)!=1 or router_source.count(business_variants_import)!=1 or router_source.count(production_import)!=1 or router_source.count(product_index_import)!=1 or router_source.count(historical_import)!=1 or router_source.count(reconciliation_import)!=1 or router_source.count(original_items_import)!=1 or router_source.count(escrow_release_import)!=1 or router_source.count(income_overview_import)!=1 or router_source.count(income_detail_import)!=1 or router_source.count(income_diagnostic_import)!=1 or router_source.count(pending_income_import)!=1:
         raise SystemExit('Shared router import not unique; candidate not built.')
     router=re.sub(r'^export\s+', '', router_source.replace(preview_import,'').replace(catalog_import,'').replace(catalog_media_import,'').replace(period_import,'').replace(daily_import,'').replace(business_import,'').replace(business_variants_import,'').replace(production_import,'').replace(product_index_import,'').replace(historical_import,'').replace(reconciliation_import,'').replace(original_items_import,'').replace(escrow_release_import,'').replace(income_overview_import,'').replace(income_detail_import,'').replace(income_diagnostic_import,'').replace(pending_income_import,''), flags=re.M)
@@ -161,14 +171,15 @@ def build():
     addition=addition.replace("url.pathname === '/internal/shopee/finance/product-index'", "url.pathname === '/internal/shopee/finance/reconciliation' || url.pathname === '/internal/shopee/finance/product-index'")
     addition=addition.replace("url.pathname === '/internal/shopee/finance/reconciliation'", "url.pathname === '/internal/shopee/finance/escrow-releases' || url.pathname === '/internal/shopee/finance/income-overview' || url.pathname === '/internal/shopee/finance/income-detail' || url.pathname === '/internal/shopee/finance/reconciliation'")
     auth=auth.replace(needle,needle+addition,1)
-    auth=auth.replace(needle,needle+"\n    if (url.pathname === '/internal/finance/external-cash-v1') return brazaFinanceRouter.forwardExternalCash(request, env, {validateInternalApp});",1)
+    auth=auth.replace(needle,needle+"\n    if (url.pathname === '/internal/finance/external-cash-v1') return brazaFinanceRouter.forwardExternalCash(request, env, {validateInternalApp});\n    if (url.pathname === '/internal/finance/external-cash-period-v1') return brazaFinanceRouter.forwardExternalCashPeriod(request, env, {validateInternalApp});",1)
     auth+='\n\n'+external_cash_bundle+'\nconst {'+external_cash_names+'}=brazaExternalCashFrame;\n'
+    auth+='\n'+cash_period_bundle+'\nconst {'+cash_period_names+'}=brazaExternalCashPeriodFrame;\n'
     auth+='\n\n'+preview_bundle+catalog_bundle+catalog_media_bundle+period_bundle+daily_bundle+business_bundle+business_variants_bundle+production_bundle+product_index_bundle+historical_bundle+reconciliation_bundle+original_items_bundle+escrow_release_bundle+income_overview_bundle+income_detail_bundle+pending_income_bundle+income_diagnostic_bundle+'\nconst brazaFinanceRouter = (() => {\nconst {'+pending_income_names+'}=brazaPendingIncomeFrame;\nconst {'+product_index_names+'}=brazaProductIndexFrame;\nconst {projectFinancePaymentPreview}=brazaFinancePreviewFrame;\nconst {'+catalog_names+'}=brazaVariantCatalogFrame;\nconst {'+catalog_media_names+'}=brazaCatalogMediaFrame;\nconst {'+historical_names+'}=brazaHistoricalVariantEvidenceFrame;\nconst {'+reconciliation_names+'}=brazaReconciliationFrame;\nconst {'+original_items_names+'}=brazaOriginalItemsFrame;\nconst {'+escrow_release_names+'}=brazaEscrowReleaseFrame;\nconst {'+income_overview_names+'}=brazaIncomeOverviewFrame;\nconst {'+income_detail_names+'}=brazaIncomeDetailFrame;\nconst {'+income_diagnostic_names+'}=brazaIncomeDetailDiagnostic;\nconst {projectStorePeriodRequest,projectStorePeriodFrame}=brazaStorePeriodFrame;\nconst {projectDailyOrdersFrame}=brazaDailyOrdersFrame;\nconst {projectBusinessPeriodRequest,projectBusinessPeriodFrame}=brazaBusinessPeriodFrame;\nconst {projectBusinessPeriodVariantsFrame}=brazaBusinessPeriodVariants;\nconst {projectProductionOrdersRequest,projectProductionOrdersFrame,productionOrdersRequestMatches}=brazaProductionOrdersFrame;\n'+router+'\nreturn {forwardFinanceConnection,forwardFinancePaymentSample,forwardFinanceDailyOrders};\n})();\n'
     store=(FINANCE/'src/connection-store.mjs').read_text()
     old_router_exports='return {forwardFinanceConnection,forwardFinancePaymentSample,forwardFinanceDailyOrders};'
     if auth.count(old_router_exports)!=1:
         raise SystemExit('Finance router exports not unique; candidate not built.')
-    auth=auth.replace(old_router_exports,'return {forwardFinanceConnection,forwardFinancePaymentSample,forwardFinanceDailyOrders,forwardExternalCash};',1)
+    auth=auth.replace(old_router_exports,'return {forwardFinanceConnection,forwardFinancePaymentSample,forwardFinanceDailyOrders,forwardExternalCash,forwardExternalCashPeriod};',1)
     store=re.sub(r'^export\s+', '', store, flags=re.M)
     worker=(FINANCE/'src/connection-worker.mjs').read_text()
     if worker.count(preview_import)!=1 or worker.count(catalog_import)!=1 or worker.count(catalog_media_import)!=1 or worker.count(period_import)!=1 or worker.count(daily_import)!=1 or worker.count(business_import)!=1 or worker.count(business_variants_import)!=1 or worker.count(production_import)!=1 or worker.count(product_index_import)!=1 or worker.count(historical_import)!=1 or worker.count(reconciliation_import)!=1 or worker.count(original_items_import)!=1 or worker.count(escrow_release_import)!=1 or worker.count(income_overview_import)!=1 or worker.count(income_detail_import)!=1 or worker.count(income_diagnostic_import)!=1 or worker.count(pending_income_import)!=1:

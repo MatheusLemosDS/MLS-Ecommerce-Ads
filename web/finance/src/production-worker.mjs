@@ -14,8 +14,10 @@ import {readFinanceIncomeOverview} from './income-overview.mjs';
 import {readFinanceIncomeDetail} from './income-detail.mjs';
 import {readOrStepFinancePendingIncomeScan} from './pending-income-scan.mjs';
 import {EXTERNAL_CASH_PATH} from './external-cash-frame.mjs';
-import {createExternalCashWorker} from './external-cash-worker.mjs';
+import {createExternalCashWorker,createExternalCashPeriodWorker} from './external-cash-worker.mjs';
 import {readExternalCashWorkspace,previewExternalCashImport,mutateExternalCash} from './external-cash-store.mjs';
+import {EXTERNAL_CASH_PERIOD_PATH} from './external-cash-period-frame.mjs';
+import {readExternalCashPeriodSummary} from './external-cash-period.mjs';
 
 // Deployment entry only. Configuration and FINANCE_CONNECTION_ENABLED='true'
 // are still required; importing this entry never makes a provider request.
@@ -40,10 +42,12 @@ const financeConnectionWorker=createFinanceWorker({
 });
 
 const externalCashWorker=createExternalCashWorker({readWorkspace:readExternalCashWorkspace,previewImport:previewExternalCashImport,mutate:mutateExternalCash});
+const externalCashPeriodWorker=createExternalCashPeriodWorker({readPeriodSummary:readExternalCashPeriodSummary});
 export default {
  async fetch(request,env,ctx){
   let url;try{url=new URL(request.url);}catch{return financeConnectionWorker.fetch(request,env,ctx);}
   if(url.pathname===EXTERNAL_CASH_PATH)return externalCashWorker.fetch(request,env);
+  if(url.pathname===EXTERNAL_CASH_PERIOD_PATH)return externalCashPeriodWorker.fetch(request,env);
   return financeConnectionWorker.fetch(request,env,ctx);
  },
 };

@@ -6,6 +6,7 @@ const workspaceNavigationItems=Object.freeze({
  products:{href:'/admin?tab=products',label:'Produtos',hint:'Variações e custos por produto',icon:'<path d="m12 3 9 5-9 5-9-5 9-5ZM3 8v9l9 5 9-5V8M12 13v9"/>'},
  production:{href:'/admin?tab=agent-production',label:'Produção',hint:'Fabricação, custos e montagem DTF',icon:'<path d="M6 8V3h12v5M6 17H4V8h16v9h-2M6 14h12v7H6zM16 11h1"/>'},
  finance:{href:'/admin?tab=agent-finance',label:'Financeiro',hint:'Resultado, repasses e despesas',icon:'<rect x="3" y="5" width="18" height="15" rx="2"/><path d="M3 10h18M7 15h3m5 0h2M7 5V3m10 2V3"/>'},
+ reports:{href:'/admin?tab=weekly-report',label:'Relatórios',hint:'Resumo semanal de produção, vendas e caixa',icon:'<path d="M5 3h10l4 4v14H5zM15 3v5h4M8 12h8M8 16h8"/>'},
  returns:{href:'/admin?tab=agent-returns',label:'Devoluções',hint:'Receber, inspecionar e conciliar',icon:'<path d="m4 8 8-4 8 4-8 4-8-4Zm0 0v10l8 4 8-4V8M12 12v10M3 3v5h5"/>'},
  ads:{href:'/dashboard',label:'Anúncios',hint:'Investimento, vendas e ROAS',icon:'<path d="M4 19V9m8 10V4m8 15v-7M2 21h20"/>'},
  margins:{href:'/admin?tab=margins',label:'Custos e regras',hint:'Referências por peça, tamanho e kit',icon:'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 12h2m4 0h2M8 16h2m4 0h2"/>'},
@@ -16,13 +17,13 @@ const workspaceNavigationItems=Object.freeze({
  history:{href:'/admin?tab=history',label:'Histórico',hint:'Alterações e versões salvas',icon:'<path d="M3 11a9 9 0 1 1 2 7M3 5v6h6M12 7v5l3 2"/>'},
  roadmap:{href:'/admin?tab=roadmap',label:'Plano e versão',hint:'Entregas, limites e próximos passos',icon:'<path d="M5 20V4h12l-2 4 2 4H5M3 20h4"/>'},
 });
-const workspaceOwnerPrimary=['overview','orders','production','returns','finance','products','ads','hermes'];
+const workspaceOwnerPrimary=['overview','orders','production','returns','finance','reports','products','ads','hermes'];
 const workspaceOwnerMobilePrimary=['overview','orders','production','finance','products'];
 const workspaceReviewPrimary=['ads','campaigns','automation'];
 const workspaceOwnerSecondary=['agents','margins','campaigns','automation','integrations','history','roadmap'];
 const workspaceReviewSecondary=['integrations'];
 function workspaceActiveKey(active){
- const tabs={'order-operations':'orders',production:'production','agent-production':'production','agent-returns':'returns','agent-finance':'finance',margins:'products','agent-products':'products',hermes:'hermes','agent-hermes':'hermes','agent-ads':'ads','agent-auditor':'agents'};
+ const tabs={'weekly-report':'reports','order-operations':'orders',production:'production','agent-production':'production','agent-returns':'returns','agent-finance':'finance',margins:'products','agent-products':'products',hermes:'hermes','agent-hermes':'hermes','agent-ads':'ads','agent-auditor':'agents'};
  if(Object.hasOwn(tabs,active))return tabs[active];
  if(Object.hasOwn(workspaceNavigationItems,active))return active;
  const aliases={'/dashboard':'ads','/advertising':'ads','/performance':'ads','/campaigns':'campaigns','/gmv-max':'campaigns','/optimization':'automation','/opportunities':'automation','/integrations':'integrations','/admin':'overview'};
@@ -36,7 +37,7 @@ function workspaceNavLink(key,current,{mobile=false}={}){
 }
 
 export function workspaceSecondaryNavigation(active,{role='owner',mobile=false}={}){
- const owner=role==='owner',current=workspaceActiveKey(active),keys=owner?(mobile?['returns','ads','hermes',...workspaceOwnerSecondary]:workspaceOwnerSecondary):workspaceReviewSecondary;
+ const owner=role==='owner',current=workspaceActiveKey(active),keys=owner?(mobile?['reports','returns','ads','hermes',...workspaceOwnerSecondary]:workspaceOwnerSecondary):workspaceReviewSecondary;
  const menuIcon='<span class="workspace-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></span>';
  return `<details class="workspace-more${mobile?' workspace-mobile-menu':''}" data-active="${keys.includes(current)?'true':'false'}"><summary>${mobile?menuIcon+'<span class="workspace-nav-label">Menu</span>':'<span>'+ (owner?'Equipe e mais':'Mais opções') +'</span><span aria-hidden="true">⌄</span>'}</summary><nav aria-label="${mobile?'Menu e outras áreas':'Outras áreas do painel'}">${keys.map(key=>(owner&&key==='agents'?'<span class="workspace-menu-label">Equipe</span>':owner&&key==='margins'?'<span class="workspace-menu-label">Operação e configurações</span>':'')+workspaceNavLink(key,current)).join('')}${owner?'<a class="workspace-nav-link" href="/admin/diagnostics"><span class="workspace-nav-label">Diagnosticar carregamento</span></a>':''}<a class="workspace-nav-link workspace-signout" href="/logout"><span class="workspace-nav-label">Sair da conta</span></a></nav></details>`;
 }

@@ -129,12 +129,11 @@
     }
   },
   "next_actions": [
-    "Concluir a CI documental e a integração normal da PR117; publicação não comprova merge.",
-    "Conferir o fluxo real Shopee de separação até envio; fabricação e custo histórico continuam em seu ledger.",
-    "Consolidar o relatório semanal com fabricação de sexta 13h a sexta 13h, resultado estimado e caixa separados.",
-    "Adaptar XLSX do relatório real Shopee, distinguindo renda por pedido de transferência agrupada.",
-    "Preparar o próximo conector oficial com OAuth e piloto real, conforme as plataformas usadas pelo proprietário.",
-    "Concluir M2/M2.2 com Seller Centre, devoluções, repasses e Nubank no mesmo recorte, sem dupla contagem."
+    "Concluir e validar o relatório semanal com bases e cobertura explícitas.",
+    "Solicitar/liberar Order API no app TikTok Shop existente; preparar conector isolado sem presumir grant ou reconectar Shopee.",
+    "Adaptar XLSX do relatório Shopee real, distinguindo renda por pedido de transferência agrupada.",
+    "Cadastrar aplicativo Mercado Livre e preparar piloto oficial de leitura.",
+    "Concluir M2/M2.2 com fabricação e devoluções reais, Seller Centre e Nubank no mesmo recorte."
   ],
   "m0_followup": [
     "Conferir visual autenticado em desktop e celular durante M1; corrigir apenas branding/layout sem renomear infraestrutura"
@@ -143,82 +142,18 @@
     "Mission Control M1.1 (opção 3) integrado com 7 painéis independentes; conferir visual autenticado desktop/celular e retorno às telas antigas"
   ],
   "latest_increment": {
-    "status": "PUBLISHED_VERIFIED",
-    "release_id": "2026-11-11.1",
-    "label": "Pedidos e operação",
-    "branch": "feature/order-operations-20261111",
-    "base_commit": "eab85a17d7a6c4f213e67ce0b7dea0cf63932bf2",
-    "guide": "docs/MLS_ORDER_OPERATIONS_2026_11_11.md",
-    "source_commit": "0e086c13e8058c6aa96b2465f0782879c8bdbbeb",
-    "ci_run": 43087471264,
-    "published": true,
+    "status": "VALIDATION_PENDING",
+    "release_id": "2026-11-11.2",
+    "label": "Relatório semanal da operação",
+    "branch": "feature/weekly-operating-report-20261111",
+    "base_commit": "18fd393e6d5a7fb098e2a71b234f2d9c15846cbb",
+    "guide": "docs/MLS_WEEKLY_OPERATING_REPORT_2026_11_11.md",
+    "source_commit": null,
+    "ci_run": null,
+    "published": false,
     "commercial_writes": false,
     "physical_or_financial_fact_writes_by_publisher": false,
-    "provider_transport": "EXISTING_SHOPEE_READ_ONLY",
-    "other_platforms_connected": false,
-    "phase_closed": false,
-    "prepared_source_commit": "e3a29e5ef122235f5ad67848fe63d96cc3dbbe22",
-    "pull_request": 117,
-    "validation": {
-      "source_head": "0e086c13e8058c6aa96b2465f0782879c8bdbbeb",
-      "source_ci": 43087471264,
-      "source_ci_url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43087471264",
-      "node_tests_pass": 3833,
-      "node_suite_source": "COMPLETE_GITHUB_ACTIONS_LOG_WITH_RAW_PROVENANCE",
-      "python_tests_pass": 67,
-      "chromium_outcomes_pass": 8,
-      "asset_failure_outcomes_pass": 3,
-      "synthetic_screenshots": 35,
-      "qa_source_head": "cb7da99fb1e6ba1c1c42b12941b6f19c6e289f8f",
-      "qa_report_sha256": "009fc8668b50154f646e80f373088dc5516cde977a163733520632b05e436e12",
-      "qa_equivalence_to_source_verified": true,
-      "owner_real_workflow": "NOT_EXECUTED"
-    },
-    "deployment": {
-      "published_at": "2026-11-11T16:54:57.220215-03:00",
-      "versions": {
-        "app": "c55d7ef5-625e-4d7b-be8e-ab3ff71b5b85",
-        "auth": "3b085dec-c506-472c-afae-6863c67cd545",
-        "finance": "4b285d05-9326-4885-b02d-c56a4ad99596"
-      },
-      "all_three_exact": true,
-      "auth_finance_preserved": true,
-      "config_change": "ONLY_REVIEWED_APP_ASSETS_BINDING_AND_CONFIG",
-      "domains_subdomains_flags_cron_preserved": true,
-      "receipt_sha256": "c9271491d0ff84b7c5fd09a77ebc96e112cdcc1775c3b32d69974a9c73f8bf37",
-      "public_assets": [
-        {
-          "id": "bank",
-          "path": "/assets/mls/0d6250f5888258fa29664eac45b2cd821d3872b1c96ac47dda46bd7fd10e6a0c.js",
-          "sha256": "0d6250f5888258fa29664eac45b2cd821d3872b1c96ac47dda46bd7fd10e6a0c",
-          "bytes": 38035,
-          "status": 200,
-          "exact": true
-        },
-        {
-          "id": "month",
-          "path": "/assets/mls/b2ec847af07b46e9a4c54295a782ccf7d1a67315edcbeb16053e034a021be4e5.js",
-          "sha256": "b2ec847af07b46e9a4c54295a782ccf7d1a67315edcbeb16053e034a021be4e5",
-          "bytes": 687069,
-          "status": 200,
-          "exact": true
-        },
-        {
-          "id": "orders",
-          "path": "/assets/mls/99c6086144a7e099920670eecaf485aba9e4f8c49d91b07f626809c7eb81208d.js",
-          "sha256": "99c6086144a7e099920670eecaf485aba9e4f8c49d91b07f626809c7eb81208d",
-          "bytes": 20935,
-          "status": 200,
-          "exact": true
-        }
-      ],
-      "public_smoke_sha256": "ff3654e83c0565e55e48401c0aee1208c4604585f7a2a7f189b616d93448dc45",
-      "public_login_release_header": "2026-11-11.1",
-      "anonymous_owner_endpoint_denied": true,
-      "publisher_d1_queries": 0,
-      "publisher_owner_requests": 0,
-      "publisher_provider_calls": 0
-    }
+    "phase_closed": false
   },
   "incident": {
     "id": "INCIDENT_2026_10_27_PANEL_AGENT_REGRESSION",
@@ -6947,5 +6882,94 @@
       "normal_merge_required_after_documentation_ci": true,
       "no_runtime_redeploy_for_documentation": true
     }
+  },
+  "previous_increment_before_weekly_operating": {
+    "status": "PUBLISHED_VERIFIED",
+    "release_id": "2026-11-11.1",
+    "label": "Pedidos e operação",
+    "branch": "feature/order-operations-20261111",
+    "base_commit": "eab85a17d7a6c4f213e67ce0b7dea0cf63932bf2",
+    "guide": "docs/MLS_ORDER_OPERATIONS_2026_11_11.md",
+    "source_commit": "0e086c13e8058c6aa96b2465f0782879c8bdbbeb",
+    "ci_run": 43087471264,
+    "published": true,
+    "commercial_writes": false,
+    "physical_or_financial_fact_writes_by_publisher": false,
+    "provider_transport": "EXISTING_SHOPEE_READ_ONLY",
+    "other_platforms_connected": false,
+    "phase_closed": false,
+    "prepared_source_commit": "e3a29e5ef122235f5ad67848fe63d96cc3dbbe22",
+    "pull_request": 117,
+    "validation": {
+      "source_head": "0e086c13e8058c6aa96b2465f0782879c8bdbbeb",
+      "source_ci": 43087471264,
+      "source_ci_url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43087471264",
+      "node_tests_pass": 3833,
+      "node_suite_source": "COMPLETE_GITHUB_ACTIONS_LOG_WITH_RAW_PROVENANCE",
+      "python_tests_pass": 67,
+      "chromium_outcomes_pass": 8,
+      "asset_failure_outcomes_pass": 3,
+      "synthetic_screenshots": 35,
+      "qa_source_head": "cb7da99fb1e6ba1c1c42b12941b6f19c6e289f8f",
+      "qa_report_sha256": "009fc8668b50154f646e80f373088dc5516cde977a163733520632b05e436e12",
+      "qa_equivalence_to_source_verified": true,
+      "owner_real_workflow": "NOT_EXECUTED"
+    },
+    "deployment": {
+      "published_at": "2026-11-11T16:54:57.220215-03:00",
+      "versions": {
+        "app": "c55d7ef5-625e-4d7b-be8e-ab3ff71b5b85",
+        "auth": "3b085dec-c506-472c-afae-6863c67cd545",
+        "finance": "4b285d05-9326-4885-b02d-c56a4ad99596"
+      },
+      "all_three_exact": true,
+      "auth_finance_preserved": true,
+      "config_change": "ONLY_REVIEWED_APP_ASSETS_BINDING_AND_CONFIG",
+      "domains_subdomains_flags_cron_preserved": true,
+      "receipt_sha256": "c9271491d0ff84b7c5fd09a77ebc96e112cdcc1775c3b32d69974a9c73f8bf37",
+      "public_assets": [
+        {
+          "id": "bank",
+          "path": "/assets/mls/0d6250f5888258fa29664eac45b2cd821d3872b1c96ac47dda46bd7fd10e6a0c.js",
+          "sha256": "0d6250f5888258fa29664eac45b2cd821d3872b1c96ac47dda46bd7fd10e6a0c",
+          "bytes": 38035,
+          "status": 200,
+          "exact": true
+        },
+        {
+          "id": "month",
+          "path": "/assets/mls/b2ec847af07b46e9a4c54295a782ccf7d1a67315edcbeb16053e034a021be4e5.js",
+          "sha256": "b2ec847af07b46e9a4c54295a782ccf7d1a67315edcbeb16053e034a021be4e5",
+          "bytes": 687069,
+          "status": 200,
+          "exact": true
+        },
+        {
+          "id": "orders",
+          "path": "/assets/mls/99c6086144a7e099920670eecaf485aba9e4f8c49d91b07f626809c7eb81208d.js",
+          "sha256": "99c6086144a7e099920670eecaf485aba9e4f8c49d91b07f626809c7eb81208d",
+          "bytes": 20935,
+          "status": 200,
+          "exact": true
+        }
+      ],
+      "public_smoke_sha256": "ff3654e83c0565e55e48401c0aee1208c4604585f7a2a7f189b616d93448dc45",
+      "public_login_release_header": "2026-11-11.1",
+      "anonymous_owner_endpoint_denied": true,
+      "publisher_d1_queries": 0,
+      "publisher_owner_requests": 0,
+      "publisher_provider_calls": 0
+    }
+  },
+  "next_marketplaces": {
+    "order": [
+      "TIKTOK_SHOP_BR",
+      "MERCADO_LIVRE_BR"
+    ],
+    "tiktok_app_owner_confirmed": true,
+    "tiktok_order_api_owner_status": "NOT_YET_GRANTED",
+    "tiktok_connected": false,
+    "mercado_livre_app_owner_confirmed": false,
+    "mercado_livre_connected": false
   }
 }

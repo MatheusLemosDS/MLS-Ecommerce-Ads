@@ -360,7 +360,9 @@ async function businessMonthAdvance(env,db,month,range,stamp,observed,services){
  return businessMonthLoadRun(db,month,range,Math.max(stamp,frame.checked_at));
 }
 
-async function businessMonthBundle(db,month,range,stamp,observed,{withExpenseSchedule=false}={}){
+// Shared by the read-only weekly adapter after validating an immutable monthly
+// publication. Keep this calculation identical to the existing monthly reader.
+export async function businessMonthBundle(db,month,range,stamp,observed,{withExpenseSchedule=false}={}){
  const year=Number(month.slice(0,4));
  const sourceItems=observed.payload.slots.flatMap(slot=>slot.frame?.items||[]),itemIds=sourceItems.map(row=>row.item_id);
  const ruleQueries=costRuleSnapshotQueries(db,itemIds),classificationQueries=catalogClassificationQueries(db,itemIds,sourceItems);

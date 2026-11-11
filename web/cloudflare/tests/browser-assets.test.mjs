@@ -9,6 +9,13 @@ import {build} from 'esbuild';
 import {MLS_BROWSER_ASSET_MANIFEST as manifest} from '../src/browser-assets-manifest.mjs';
 import {browserAssetScript,serveMlsBrowserAsset} from '../src/browser-assets.mjs';
 import {BUSINESS_MONTH_CLIENT} from '../src/business-month-client.mjs';
+import {PRODUCTION_COST_PERIODS_CLIENT} from '../src/production-cost-periods-view.mjs';
+import {PRODUCTION_CONFIRMATION_PROPOSAL_CLIENT} from '../src/production-confirmation-proposal-view.mjs';
+import {INCURRED_PRODUCTION_CLIENT} from '../src/incurred-production-view.mjs';
+import {PRODUCTION_DAILY_FINANCE_CLIENT} from '../src/production-daily-finance-view.mjs';
+import {PRODUCTION_WEEKLY_CLIENT} from '../src/production-weekly-view.mjs';
+import {PRODUCTION_COVERAGE_CLIENT} from '../src/production-coverage-view.mjs';
+import {PRODUCTION_WORKSPACE_CLIENT} from '../src/production-workspace-view.mjs';
 import {createLocalBrowserAssets,verifyBrowserAssets} from '../../../tools/browser_assets.mjs';
 
 const root=fileURLToPath(new URL('../../../',import.meta.url));
@@ -22,6 +29,28 @@ test('the monthly browser asset is byte-identical to the unchanged legacy client
  const inventory=verifyBrowserAssets(root);assert.deepEqual(inventory,manifest);
  for(const row of manifest.assets){const tag=browserAssetScript(row.id);assert.equal(tag,'<script src="'+row.path+'" integrity="'+row.integrity+'" crossorigin="anonymous"></script>');assert.doesNotMatch(tag,/\b(async|defer)\b/);}
  assert.throws(()=>browserAssetScript('private'),/BROWSER_ASSET_MANIFEST_INVALID/);
+});
+
+test('the weekly report joins the closed public inventory without changing published legacy clients',()=>{
+ assert.deepEqual(manifest.assets.map(row=>row.id),['bank','month','orders','production','weekly']);
+ const published=JSON.parse(readFileSync(path.join(root,'workers','app','browser-assets-published.json'),'utf8'));
+ for(const id of ['bank','month','orders']){
+  const current=manifest.assets.find(row=>row.id===id),previous=published.assets.find(row=>row.id===id);
+  assert.ok(previous,'the existing verified publication contains '+id);assert.deepEqual(current,previous,'weekly integration must preserve the legacy '+id+' browser bytes');
+ }
+ const weekly=manifest.assets.find(row=>row.id==='weekly');assert.ok(weekly.bytes>0&&weekly.bytes<=262144);assert.equal(browserAssetScript('weekly'),'<script src="'+weekly.path+'" integrity="'+weekly.integrity+'" crossorigin="anonymous"></script>');
+});
+
+test('the complete production asset is byte-identical to the seven legacy clients and the captured compiled prototype',()=>{
+ const row=manifest.assets.find(value=>value.id==='production'),bytes=readFileSync(path.join(root,'dist','browser-assets',...row.path.slice(1).split('/')));
+ const previousInline=[PRODUCTION_COST_PERIODS_CLIENT,PRODUCTION_CONFIRMATION_PROPOSAL_CLIENT,INCURRED_PRODUCTION_CLIENT,PRODUCTION_DAILY_FINANCE_CLIENT,PRODUCTION_WEEKLY_CLIENT,PRODUCTION_COVERAGE_CLIENT,PRODUCTION_WORKSPACE_CLIENT].join('\n').replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g,character=>'\\u'+character.charCodeAt(0).toString(16).padStart(4,'0'));
+ assert.deepEqual(bytes,Buffer.from(previousInline),'extraction cannot change or reorder any legacy production client');
+ // Captured from the authenticated synthetic HTML of the pre-extraction
+ // Wrangler prototype (4,228,030 bytes, SHA 06078c1f...52eb39), rather than
+ // computed solely from the new asset exports.
+ assert.equal(bytes.length,163799);
+ assert.equal(createHash('sha256').update(bytes).digest('hex'),'eaa685867dc256e2a48a01e77bff198aa845c8811fb5a5329c6121fb7f89acd2');
+ assert.equal(browserAssetScript('production'),'<script src="'+row.path+'" integrity="'+row.integrity+'" crossorigin="anonymous"></script>');
 });
 
 test('public serving verifies bytes, fixes safe immutable headers and strips incoming credentials',async()=>{
@@ -62,9 +91,11 @@ test('endless empty chunks and oversized bodies are cancelled within their expli
 for(const minify of [false,true])test('compiled Worker serves the exact asset inventory before session/database access (minify='+minify+')',{timeout:20000},async()=>{
  const result=await build({entryPoints:[path.join(root,'dist','app-worker.mjs')],bundle:true,write:false,format:'esm',platform:'browser',target:'es2022',minify,logLevel:'silent'}),worker=(await import('data:text/javascript;base64,'+Buffer.from(result.outputFiles[0].text).toString('base64'))).default;
  let databaseCalls=0;const local=createLocalBrowserAssets(root),env={ASSETS:local,ADMIN_DB:{prepare(){databaseCalls++;throw Error('ASSET_MUST_NOT_READ_D1');}}};
- const globals=vm.createContext({document:{getElementById(){return null;}},console,URL,URLSearchParams,TextEncoder,TextDecoder,crypto,setTimeout,clearTimeout,AbortController});
+ const globals=vm.createContext({document:{getElementById(){return null;},addEventListener(){},querySelector(){return null;},querySelectorAll(){return [];}},console,URL,URLSearchParams,TextEncoder,TextDecoder,crypto,setTimeout,clearTimeout,AbortController});
  for(const row of manifest.assets){const response=await worker.fetch(request(row),env);assert.equal(response.status,200);const bytes=Buffer.from(await response.arrayBuffer());assert.equal(createHash('sha256').update(bytes).digest('hex'),row.sha256);assert.equal(bytes.length,row.bytes);new vm.Script(bytes.toString('utf8'));if(row.id!=='month')vm.runInContext(bytes.toString('utf8'),globals);}
- assert.equal(vm.runInContext('typeof brazaBankReconciliation.start',globals),'function');assert.equal(vm.runInContext('typeof brazaOrderOperations.start',globals),'function');assert.equal(databaseCalls,0);
+ assert.equal(vm.runInContext('typeof brazaBankReconciliation.start',globals),'function');assert.equal(vm.runInContext('typeof brazaOrderOperations.start',globals),'function');assert.equal(vm.runInContext('typeof brazaWeeklyOperating.start',globals),'function');
+ for(const symbol of ['brazaProductionCostPeriods.start','brazaProductionConfirmationProposal.start','brazaIncurredProduction.start','brazaProductionDailyFinance.refresh','brazaProductionWeeklyClosing.start','brazaProductionCoverage.start','brazaProductionWorkspace.open'])assert.equal(vm.runInContext('typeof '+symbol,globals),'function');
+ assert.equal(databaseCalls,0);
  const missing=await worker.fetch(request(),{...env,ASSETS:{fetch:async()=>new Response(null,{status:404})}});assert.equal(missing.status,503);
  const wrong=await worker.fetch(request(),{...env,ASSETS:{fetch:async()=>new Response(new Uint8Array(bank.bytes))}});assert.equal(wrong.status,503);assert.equal(databaseCalls,0);
 });

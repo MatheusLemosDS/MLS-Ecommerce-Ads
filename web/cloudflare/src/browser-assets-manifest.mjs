@@ -21,6 +21,20 @@ export const MLS_BROWSER_ASSET_MANIFEST=Object.freeze({
       "sha256": "99c6086144a7e099920670eecaf485aba9e4f8c49d91b07f626809c7eb81208d",
       "integrity": "sha256-mcYIYUSn4JmSBnDuyvSFq6nk+MSdkbB/YmgJx+uBII0=",
       "bytes": 20935
+    },
+    {
+      "id": "production",
+      "path": "/assets/mls/eaa685867dc256e2a48a01e77bff198aa845c8811fb5a5329c6121fb7f89acd2.js",
+      "sha256": "eaa685867dc256e2a48a01e77bff198aa845c8811fb5a5329c6121fb7f89acd2",
+      "integrity": "sha256-6qaFhn3CVuKkigHne/8ZiqhFyIEftaUynGEh+3+JrNI=",
+      "bytes": 163799
+    },
+    {
+      "id": "weekly",
+      "path": "/assets/mls/91beb108a1bbe139adc87ac54db6abdad58e9dd1ecc8b7a0ead0d9188ccbfc9f.js",
+      "sha256": "91beb108a1bbe139adc87ac54db6abdad58e9dd1ecc8b7a0ead0d9188ccbfc9f",
+      "integrity": "sha256-kb6xCKG74TmtyHrFTbar2tWOndHsyLeg6tDZGIzL/J8=",
+      "bytes": 53495
     }
   ],
   "retained": []
