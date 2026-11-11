@@ -24,7 +24,25 @@ async function backend(){
  return {env,initial:saved,read:()=>readCostRules(env),save:body=>saveCostRules(env,body,'synthetic-owner-price-edit'),close:()=>env.ADMIN_DB.db.close(),audit:()=>env.ADMIN_DB.db.prepare('SELECT revision,payload,actor FROM production_cost_rules_audit ORDER BY revision').all()};
 }
 const pureSources=['cost-rules.mjs','production-costs.mjs','business-month.mjs','incurred-production.mjs'];
-function invariantSources(){for(const name of pureSources){const file='web/cloudflare/src/'+name,baseline=execFileSync('git',['show','bd01f64d7e290abb259e9c9dc2646496494a87f0:'+file],{cwd:new URL('../../../',import.meta.url),encoding:'utf8'});assert.equal(readFileSync(new URL('../src/'+name,import.meta.url),'utf8'),baseline,'pricing/DTO/manufacturing implementation unchanged: '+name);}}
+// The weekly reader exposes this existing helper without changing its body.
+// Normalize only the exact reviewed comment/export delta, then still compare
+// the complete monthly file and every other source against the same baseline.
+const weeklyBundleExposure=String.raw`// Shared by the read-only weekly adapter after validating an immutable monthly
+// publication. Keep this calculation identical to the existing monthly reader.
+export async function businessMonthBundle(db,month,range,stamp,observed,{withExpenseSchedule=false}={}){`;
+const originalBundleDeclaration=String.raw`async function businessMonthBundle(db,month,range,stamp,observed,{withExpenseSchedule=false}={}){`;
+function invariantSources(){
+ for(const name of pureSources){
+  const file='web/cloudflare/src/'+name,baseline=execFileSync('git',['show','bd01f64d7e290abb259e9c9dc2646496494a87f0:'+file],{cwd:new URL('../../../',import.meta.url),encoding:'utf8'}),current=readFileSync(new URL('../src/'+name,import.meta.url),'utf8');
+  let comparable=current;
+  if(name==='business-month.mjs'){
+   assert.equal(current.split(weeklyBundleExposure).length,2,'only the exact reviewed monthly helper exposure occurs once');
+   assert.equal(baseline.split(originalBundleDeclaration).length,2,'the original monthly helper declaration occurs once');
+   comparable=current.replace(weeklyBundleExposure,originalBundleDeclaration);
+  }
+  assert.equal(comparable,baseline,'pricing/DTO/manufacturing implementation unchanged except exact monthly helper exposure: '+name);
+ }
+}
 const chrome=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium','/usr/bin/chromium-browser'].find(existsSync);
 const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms)),results=[];
 const reportPath=process.env.MLS_EDITABLE_COSTS_QA_FILE||null,screenDir=process.env.MLS_EDITABLE_COSTS_SCREENSHOT_DIR||null;
