@@ -34,6 +34,7 @@
     "tools/release_preflight.mjs",
     "tools/tests/browser-assets.test.mjs",
     "tools/tests/capture-worker-config.test.mjs",
+    "tools/tests/compact-worker-namespaces.test.mjs",
     "tools/tests/import-worker-config.test.mjs",
     "tools/tests/mls-owner-preview-chrome.test.mjs",
     "tools/tests/mls-owner-preview.test.mjs",

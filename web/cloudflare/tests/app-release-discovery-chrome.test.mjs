@@ -140,6 +140,7 @@ const targets=[
 ];
 const retainedItemTargets=['/admin?tab=agent-returns#physicalReturnsOriginalItems','/admin?tab=agent-returns#physicalReturnsDetails','/admin?tab=agent-returns#returnManufacturingLinksDetails'];
 const coverageTarget={href:'/admin?tab=agent-production#productionCoverageDetails',panel:'agent-production',id:'productionCoverageDetails'};
+const orderTarget={href:'/admin?tab=order-operations',panel:'order-operations',id:null};
 const bankTarget={href:'/admin?tab=agent-finance#bankReconciliation',panel:'agent-finance',id:'bankReconciliation'};
 const dailyTarget={href:'/admin?tab=agent-production#incurredProductionCalendarTitle',panel:'agent-production',id:'incurredProductionCalendarTitle'};
 const registrationTarget={href:'/admin?tab=agent-production#incurredProductionRecordsPane',panel:'agent-production',id:'incurredProductionRecordsPane'};
@@ -199,14 +200,14 @@ for(const minify of [false,true])for(const {width,height,font_profile} of discov
    if(process.env.MLS_APP_RELEASE_SCREENSHOT_DIR&&target===targets[0]){mkdirSync(process.env.MLS_APP_RELEASE_SCREENSHOT_DIR,{recursive:true});await cdp.evaluate("document.querySelector('.app-release-overview').scrollIntoView({block:'center',behavior:'instant'})");const capture=await cdp.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});writeFileSync(path.join(process.env.MLS_APP_RELEASE_SCREENSHOT_DIR,`app-release-${minify?'minified':'normal'}-${width}${height===900?'-h900':font_profile!=='default'?'-arial13':''}.png`),Buffer.from(capture.data,'base64'));}
    const notesClick=await click(cdp,'.app-release-overview .app-release-more',{touch});await waitFor(cdp,"document.querySelector('main.workspace>section:not([hidden])')?.id==='roadmap'",'previous deliveries remain available in the release notes',()=>clickDiagnostic(cdp,notesClick,{width,minify}));
    const notes=await cdp.evaluate("({links:[...document.querySelectorAll('#appReleaseNotes a')].map(a=>({href:a.getAttribute('href'),bypass:a.hasAttribute('data-mission-open')})),current:[...document.querySelectorAll('#appReleaseNotes>.app-release-note-grid>article>a')].map(a=>({href:a.getAttribute('href'),bypass:a.hasAttribute('data-mission-open')})),scope:document.getElementById('appReleaseNotes').textContent})");
-   assert.deepEqual(notes.current.map(row=>row.href),[bankTarget.href,dailyTarget.href,'/admin?tab=margins#costRules','/admin?tab=agent-finance#businessDay',coverageTarget.href,registrationTarget.href,...currentTargets.map(row=>row.href)]);assert.ok(notes.current.every(row=>row.bypass===false),'current release actions preserve native routing');
+   assert.deepEqual(notes.current.map(row=>row.href),[orderTarget.href,bankTarget.href,dailyTarget.href,'/admin?tab=margins#costRules','/admin?tab=agent-finance#businessDay',coverageTarget.href,registrationTarget.href,...currentTargets.map(row=>row.href)]);assert.ok(notes.current.every(row=>row.bypass===false),'current release actions preserve native routing');
    for(const href of retainedItemTargets){const link=notes.links.find(row=>row.href===href);assert.ok(link,'the previous item-evidence control remains reachable from notes: '+href);assert.equal(link.bypass,false,'notes retain native links and destination hashes');}
    assert.match(notes.scope,/unidade comercial.*kit.*não vira.*camisetas/);assert.match(notes.scope,/Dados antigos ou ausentes permanecem desconhecidos, nunca quantidade zero/);assert.match(notes.scope,/não atualiza estoque|não publicam estoque/);assert.match(notes.scope,/não altera.*lucro|não alteram o lucro/);
    assert.equal(await cdp.evaluate("document.querySelector('.app-release-previous h3')?.textContent"),'Entregas anteriores · controles físicos');
    start=requests.length;await click(cdp,`.app-release-previous a[href="/admin?tab=${target.legacyPanel||target.panel}#${target.id}"]`,{touch});await assertDestination(target,start,'previous-release-link');assert.equal(await cdp.evaluate('JSON.stringify(brazaMonthDashboard.getSnapshot())'),overview.financial,'navigation must not change the cached financial projection');
    start=requests.length;await navigate('?tab='+(target.legacyPanel||target.panel)+'#'+target.id);await assertDestination(target,start,'initial-deep-link');
   }
-  for(const target of [bankTarget,dailyTarget,coverageTarget,registrationTarget,...currentTargets]){
+  for(const target of [orderTarget,bankTarget,dailyTarget,coverageTarget,registrationTarget,...currentTargets]){
    await navigate('?tab=overview');
    const before=await cdp.evaluate('JSON.stringify(brazaMonthDashboard.getSnapshot())');
    const notesClick=await click(cdp,'.app-release-overview .app-release-more',{touch});await waitFor(cdp,"document.documentElement.dataset.activePanel==='roadmap'",'current actions are reached through the compact release banner',()=>clickDiagnostic(cdp,notesClick,{width,minify}));
