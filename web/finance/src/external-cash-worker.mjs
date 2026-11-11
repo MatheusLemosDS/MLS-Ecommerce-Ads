@@ -1,5 +1,6 @@
 import {FinanceConnectionError} from './connection-store.mjs';
 import {EXTERNAL_CASH_PATH,EXTERNAL_CASH_REQUEST_MAXIMUM,EXTERNAL_CASH_RESPONSE_MAXIMUM,projectExternalCashRequest,projectExternalCashResponse,externalCashResponseMatches,externalCashErrorStatus} from './external-cash-frame.mjs';
+import {EXTERNAL_CASH_PERIOD_PATH,EXTERNAL_CASH_PERIOD_REQUEST_MAXIMUM,EXTERNAL_CASH_PERIOD_RESPONSE_MAXIMUM,projectExternalCashPeriodRequest,projectExternalCashPeriodResponse,externalCashPeriodResponseMatches} from './external-cash-period-frame.mjs';
 
 const ORIGIN='https://auth.brazacommerce.com.br';
 const HEADERS={'content-type':'application/json; charset=utf-8','cache-control':'no-store, max-age=0','referrer-policy':'no-referrer','x-content-type-options':'nosniff','content-security-policy':"default-src 'none'; frame-ancestors 'none'"};
@@ -41,6 +42,34 @@ export function createExternalCashWorker({readWorkspace,previewImport,mutate}={}
    if(typeof capability!=='function')return failure('FINANCE_EXTERNAL_CASH_CONFIGURATION');
    const frame=projectExternalCashResponse(await capability(env,input));if(!frame||!externalCashResponseMatches(input,frame))return failure();
    const body=JSON.stringify(frame);if(new TextEncoder().encode(body).byteLength>EXTERNAL_CASH_RESPONSE_MAXIMUM)return failure();
+   return new Response(body,{headers:HEADERS});
+  }catch(error){return failure(error instanceof FinanceConnectionError&&externalCashErrorStatus(error.code)!==null?error.code:undefined);}
+ }};
+}
+
+// A separate read capability: no legacy mutation operation can reach it.
+export function createExternalCashPeriodWorker({readPeriodSummary}={}){
+ return {async fetch(request,env){
+  let url;try{if(typeof request.url!=='string'||request.url.length>4096)return failure('FINANCE_EXTERNAL_CASH_REQUEST_INVALID');url=new URL(request.url);}catch{return failure('FINANCE_EXTERNAL_CASH_REQUEST_INVALID');}
+  if(url.origin!==ORIGIN||url.username||url.password||url.hash||url.pathname!==EXTERNAL_CASH_PERIOD_PATH)return failure('FINANCE_EXTERNAL_CASH_NOT_FOUND');
+  if(request.method!=='POST')return failure('FINANCE_EXTERNAL_CASH_METHOD_NOT_ALLOWED');
+  if(url.search)return failure('FINANCE_EXTERNAL_CASH_REQUEST_INVALID');
+  try{
+   const denied=await trusted(request,env);if(denied)return failure(denied);
+   const media=request.headers.get('content-type')||'',declared=request.headers.get('content-length');
+   if(!/^application\/json(?:\s*;\s*charset\s*=\s*(?:utf-8|"utf-8"))?\s*$/i.test(media)||declared!==null&&(!/^\d+$/.test(declared)||Number(declared)>EXTERNAL_CASH_PERIOD_REQUEST_MAXIMUM)||!request.body)return failure('FINANCE_EXTERNAL_CASH_REQUEST_INVALID');
+   const reader=request.body.getReader();let timer,input;
+   const deadline=new Promise((resolve,reject)=>{timer=setTimeout(()=>{try{reader.cancel().catch(()=>{});}catch{}reject(Error('DEADLINE'));},5000);});
+   const read=async()=>{
+    const chunks=[];let size=0;while(true){const chunk=await reader.read();if(chunk.done)break;if(!(chunk.value instanceof Uint8Array)||chunks.length>=1024)return null;size+=chunk.value.byteLength;if(size>EXTERNAL_CASH_PERIOD_REQUEST_MAXIMUM)return null;chunks.push(chunk.value);}
+    const bytes=new Uint8Array(size);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.byteLength;}
+    return projectExternalCashPeriodRequest(JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes)));
+   };
+   try{input=await Promise.race([read(),deadline]);}catch{input=null;}finally{clearTimeout(timer);try{reader.cancel().catch(()=>{});}catch{}try{reader.releaseLock();}catch{}}
+   if(!input)return failure('FINANCE_EXTERNAL_CASH_REQUEST_INVALID');
+   if(typeof readPeriodSummary!=='function')return failure('FINANCE_EXTERNAL_CASH_CONFIGURATION');
+   const frame=projectExternalCashPeriodResponse(await readPeriodSummary(env,input));if(!frame||!externalCashPeriodResponseMatches(input,frame))return failure();
+   const body=JSON.stringify(frame);if(new TextEncoder().encode(body).byteLength>EXTERNAL_CASH_PERIOD_RESPONSE_MAXIMUM)return failure();
    return new Response(body,{headers:HEADERS});
   }catch(error){return failure(error instanceof FinanceConnectionError&&externalCashErrorStatus(error.code)!==null?error.code:undefined);}
  }};

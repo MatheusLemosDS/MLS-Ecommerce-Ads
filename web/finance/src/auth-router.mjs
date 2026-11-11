@@ -1,3 +1,4 @@
+import {EXTERNAL_CASH_PERIOD_PATH,EXTERNAL_CASH_PERIOD_REQUEST_MAXIMUM,EXTERNAL_CASH_PERIOD_RESPONSE_MAXIMUM,projectExternalCashPeriodRequest,projectExternalCashPeriodResponse,externalCashPeriodResponseMatches} from './external-cash-period-frame.mjs';
 import {projectDailyOrdersFrame} from './daily-orders-frame.mjs';
 import {projectFinancePaymentPreview} from './payment-preview-frame.mjs';
 import {projectVariantCatalog,projectVariantCatalogRequest,financeCatalogDiagnostic,projectVariantCatalogFailure} from './variant-catalog-frame.mjs';
@@ -82,6 +83,36 @@ export async function forwardExternalCash(request,env,{validateInternalApp}={}){
   const value=await readSampleBody(upstream.body,EXTERNAL_CASH_RESPONSE_MAXIMUM,controller,current=>{reader=current;});if(controller.signal.aborted)return externalCashRouterFailure('FINANCE_EXTERNAL_CASH_TIMEOUT');
   if(upstream.status!==200){const failure=projectExternalCashError(value);return failure&&externalCashErrorStatus(failure.error)===upstream.status?externalCashRouterFailure(failure.error):externalCashRouterFailure();}
   const frame=projectExternalCashResponse(value);if(!frame||!externalCashResponseMatches(input,frame))return externalCashRouterFailure();
+  return new Response(JSON.stringify(frame),{headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}});
+ };
+ try{return await Promise.race([work(),deadline]);}catch{return externalCashRouterFailure(controller.signal.aborted?'FINANCE_EXTERNAL_CASH_TIMEOUT':'FINANCE_EXTERNAL_CASH_UNAVAILABLE');}finally{clearTimeout(timer);controller.abort();try{reader?.cancel().catch(()=>{});}catch{}}
+}
+
+// SELECT-only aggregate protocol; legacy read/import/match/unlink stays unchanged.
+export async function forwardExternalCashPeriod(request,env,{validateInternalApp}={}){
+ let url;try{url=new URL(request.url);}catch{return externalCashRouterFailure('FINANCE_EXTERNAL_CASH_REQUEST_INVALID');}
+ if(url.origin!==FINANCE_ORIGIN||url.username||url.password||url.hash||url.pathname!==EXTERNAL_CASH_PERIOD_PATH)return externalCashRouterFailure('FINANCE_EXTERNAL_CASH_NOT_FOUND');
+ if(request.method!=='POST')return externalCashRouterFailure('FINANCE_EXTERNAL_CASH_METHOD_NOT_ALLOWED');
+ if(url.search||request.url.length>4096)return externalCashRouterFailure('FINANCE_EXTERNAL_CASH_REQUEST_INVALID');
+ try{if(typeof validateInternalApp!=='function'||!await validateInternalApp(request,env))return externalCashRouterFailure('FINANCE_EXTERNAL_CASH_UNAUTHORIZED');}catch{return externalCashRouterFailure();}
+ const secret=env?.FINANCE_ROUTER_SECRET;
+ if(typeof secret!=='string'||! /^[\x21-\x7e]{32,256}$/.test(secret)||typeof env?.SHOPEE_FINANCE_SERVICE?.fetch!=='function')return externalCashRouterFailure('FINANCE_EXTERNAL_CASH_CONFIGURATION');
+ if(!/^application\/json(?:\s*;\s*charset\s*=\s*(?:utf-8|"utf-8"))?\s*$/i.test(request.headers.get('content-type')||''))return externalCashRouterFailure('FINANCE_EXTERNAL_CASH_REQUEST_INVALID');
+ const length=request.headers.get('content-length');if(length!==null&&(!/^\d+$/.test(length)||Number(length)>EXTERNAL_CASH_PERIOD_REQUEST_MAXIMUM))return externalCashRouterFailure('FINANCE_EXTERNAL_CASH_REQUEST_INVALID');
+ const controller=new AbortController();let reader,timer;
+ const deadline=new Promise((resolve,reject)=>{timer=setTimeout(()=>{controller.abort();try{reader?.cancel().catch(()=>{});}catch{}reject(Error('DEADLINE'));},15000);});
+ const work=async()=>{
+  let raw;try{raw=await readSampleBody(request.body,EXTERNAL_CASH_PERIOD_REQUEST_MAXIMUM,controller,value=>{reader=value;});}catch{return externalCashRouterFailure('FINANCE_EXTERNAL_CASH_REQUEST_INVALID');}
+  const input=projectExternalCashPeriodRequest(raw);if(!input)return externalCashRouterFailure('FINANCE_EXTERNAL_CASH_REQUEST_INVALID');
+  const body=JSON.stringify(input);if(new TextEncoder().encode(body).byteLength>EXTERNAL_CASH_PERIOD_REQUEST_MAXIMUM)return externalCashRouterFailure('FINANCE_EXTERNAL_CASH_BODY_TOO_LARGE');
+  const upstream=await env.SHOPEE_FINANCE_SERVICE.fetch(new Request(FINANCE_ORIGIN+EXTERNAL_CASH_PERIOD_PATH,{method:'POST',headers:{'content-type':'application/json',accept:'application/json','X-Braza-Finance-Router':secret},body,redirect:'manual',signal:controller.signal}));
+  if(controller.signal.aborted){try{upstream?.body?.cancel().catch(()=>{});}catch{}return externalCashRouterFailure('FINANCE_EXTERNAL_CASH_TIMEOUT');}
+  if(!(upstream instanceof Response)||upstream.redirected||upstream.status>=300&&upstream.status<400){try{upstream?.body?.cancel().catch(()=>{});}catch{}return externalCashRouterFailure();}
+  const declared=upstream.headers.get('content-length');
+  if(!/^application\/json(?:\s*;\s*charset\s*=\s*(?:utf-8|"utf-8"))?\s*$/i.test(upstream.headers.get('content-type')||'')||declared!==null&&(!/^\d+$/.test(declared)||Number(declared)>EXTERNAL_CASH_PERIOD_RESPONSE_MAXIMUM)){try{upstream.body?.cancel().catch(()=>{});}catch{}return externalCashRouterFailure();}
+  const value=await readSampleBody(upstream.body,EXTERNAL_CASH_PERIOD_RESPONSE_MAXIMUM,controller,current=>{reader=current;});if(controller.signal.aborted)return externalCashRouterFailure('FINANCE_EXTERNAL_CASH_TIMEOUT');
+  if(upstream.status!==200){const failure=projectExternalCashError(value);return failure&&externalCashErrorStatus(failure.error)===upstream.status?externalCashRouterFailure(failure.error):externalCashRouterFailure();}
+  const frame=projectExternalCashPeriodResponse(value);if(!frame||!externalCashPeriodResponseMatches(input,frame))return externalCashRouterFailure();
   return new Response(JSON.stringify(frame),{headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}});
  };
  try{return await Promise.race([work(),deadline]);}catch{return externalCashRouterFailure(controller.signal.aborted?'FINANCE_EXTERNAL_CASH_TIMEOUT':'FINANCE_EXTERNAL_CASH_UNAVAILABLE');}finally{clearTimeout(timer);controller.abort();try{reader?.cancel().catch(()=>{});}catch{}}

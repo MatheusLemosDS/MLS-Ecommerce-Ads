@@ -1,6 +1,6 @@
 import {MLS_BROWSER_ASSET_MANIFEST} from './browser-assets-manifest.mjs';
 
-const ids=new Set(['bank','month','orders']);
+const ids=new Set(['bank','month','orders','production','weekly']);
 const assetRows=()=>MLS_BROWSER_ASSET_MANIFEST.assets;
 const valid=row=>row&&ids.has(row.id)&&/^[a-f0-9]{64}$/.test(row.sha256)&&row.path==='/assets/mls/'+row.sha256+'.js'&&Number.isSafeInteger(row.bytes)&&row.bytes>0&&row.bytes<=(row.id==='month'?1048576:262144)&&/^sha256-[A-Za-z0-9+/]{43}=$/.test(row.integrity);
 

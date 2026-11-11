@@ -169,6 +169,7 @@ test('the real build preserves every namespace API and all evaluated client/CSS 
 test('real markup renderers retain exact HTML and dynamic client namespaces are excluded',()=>{
  for(const [name,key,args] of [
   ['mlsAppReleaseView','releaseOverviewBody',[]],['mlsAppReleaseView','releaseNotesBody',[]],
+  ['mlsProductionCostPeriodsView','productionCostPeriodsBody',[]],
   ['mlsIncurredProductionView','incurredProductionBody',[]],['mlsProductionWeeklyView','productionWeeklyClosingBody',[]],
   ['mlsProductionCoverageView','productionCoverageBody',[]],['mlsProductionDailyFinanceView','productionDailyFinanceBody',[]],
   ['mlsProductionWorkspaceView','productionWorkspaceBody',[{daily:'daily-fixture',weekly:'weekly-fixture',coverage:'coverage-fixture',reference:'reference-fixture'}]],
@@ -205,6 +206,10 @@ test('the explicit manual host selection preserves APIs, schema strings and froz
    }
   }
  }
- assert.equal(functions,134);assert.equal(values,17);assert.equal(strings,121);
+ // The weekly SELECT-only reader reuses the existing monthly calculation via
+ // this newly exposed helper; every prior export stays in the exact profile.
+ assert.equal(typeof raw.brazaBusinessMonth.businessMonthBundle,'function');
+ assert.equal(raw.brazaBusinessMonth.businessMonthBundle.length,5);
+ assert.equal(functions,135);assert.equal(values,17);assert.equal(strings,121);
  assert.ok(profiles.manual_saved>=48394,'additional manual formatting must save at least48394 bytes; actual '+profiles.manual_saved);
 });

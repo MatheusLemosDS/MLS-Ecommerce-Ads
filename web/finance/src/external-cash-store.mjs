@@ -363,3 +363,12 @@ export async function previewExternalCashImport(env, input) {
 export async function mutateExternalCash(env, input, options) {
   return protect(() => mutate(env, input, options));
 }
+
+// Internal SELECT-only context for aggregate readers. This deliberately does
+// not call setup or share the mutation initialization cache.
+export async function readExternalCashStorageContext(env) {
+  return protect(async () => {
+    const db = database(env);
+    return {db, tenant, schemaPresent: await exists(db)};
+  });
+}

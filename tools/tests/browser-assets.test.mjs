@@ -7,7 +7,7 @@ import {createHash} from 'node:crypto';
 import {buildBrowserAssets,verifyBrowserAssets,validateBrowserAssetManifest,createLocalBrowserAssets,recordBrowserAssetPublication,EMPTY_BROWSER_ASSET_PUBLICATION,orderedBrowserScripts,inlineBrowserAssets} from '../browser_assets.mjs';
 import {MAX_WORKER_SOURCE_BYTES} from '../import_worker_config.mjs';
 
-const names={bank:'BANK_RECONCILIATION_CLIENT',month:'BUSINESS_MONTH_CLIENT',orders:'ORDER_OPERATIONS_CLIENT'};
+const names={bank:'BANK_RECONCILIATION_CLIENT',month:'BUSINESS_MONTH_CLIENT',orders:'ORDER_OPERATIONS_CLIENT',production:'PRODUCTION_BROWSER_CLIENT',weekly:'WEEKLY_OPERATING_CLIENT'};
 const source=(id,client)=>({id,export_name:names[id],source:'const '+names[id]+'='+JSON.stringify(client)+';'});
 const request=(bank='globalThis.fixtureBank="a";\n',extras=[])=>({schema:'mls_browser_assets_build_v1',entries:[source('bank',bank),...extras]});
 function fixture(t){const root=mkdtempSync(path.join(tmpdir(),'mls-browser-assets-'));t.after(()=>rmSync(root,{recursive:true,force:true}));mkdirSync(path.join(root,'workers','app'),{recursive:true});writeFileSync(path.join(root,'workers','app','browser-assets-published.json'),JSON.stringify(EMPTY_BROWSER_ASSET_PUBLICATION));return root;}
@@ -19,6 +19,46 @@ test('public asset inventory is deterministic, hash-addressed and contains only 
  for(const row of manifest.assets){const bytes=readFileSync(filename(root,row));assert.equal(createHash('sha256').update(bytes).digest('hex'),row.sha256);assert.equal(bytes.length,row.bytes);}
  assert.equal(readFileSync(filename(root,manifest.assets.find(row=>row.id==='month')),'utf8'),month,'moving the legacy monthly client must not transform a single byte');
  assert.deepEqual(buildBrowserAssets(input,{root}),manifest);assert.deepEqual(verifyBrowserAssets(root),manifest);assert.equal(MAX_WORKER_SOURCE_BYTES,4*1024*1024);
+});
+
+test('the weekly client keeps the closed asset ids and exact byte and size guarantees',t=>{
+ const root=fixture(t),clients={bank:'globalThis.fixtureBank="unchanged";\n',month:'globalThis.fixtureMonth="unchanged";\n',orders:'globalThis.fixtureOrders="unchanged";\n',weekly:'globalThis.fixtureWeekly="new";\n'},input={schema:'mls_browser_assets_build_v1',entries:['weekly','orders','bank','month'].map(id=>source(id,clients[id]))};
+ const manifest=buildBrowserAssets(input,{root});assert.deepEqual(manifest.assets.map(row=>row.id),['bank','month','orders','weekly']);assert.deepEqual(manifest.retained,[]);
+ for(const row of manifest.assets){const bytes=readFileSync(filename(root,row));assert.deepEqual(bytes,Buffer.from(clients[row.id]));assert.equal(createHash('sha256').update(bytes).digest('hex'),row.sha256);}
+ assert.deepEqual(buildBrowserAssets(input,{root}),manifest);assert.deepEqual(verifyBrowserAssets(root),manifest);
+ const wrongExport=structuredClone(input);wrongExport.entries[0].export_name='ORDER_OPERATIONS_CLIENT';assert.throws(()=>buildBrowserAssets(wrongExport,{root}),{code:'BROWSER_ASSET_BUILD_INVALID'});
+ const unknown=structuredClone(input);unknown.entries[0].id='weekly-private';assert.throws(()=>buildBrowserAssets(unknown,{root}),{code:'BROWSER_ASSET_BUILD_INVALID'});
+ const repeated=structuredClone(input);repeated.entries.push(source('bank','globalThis.repeated=true;'));assert.throws(()=>buildBrowserAssets(repeated,{root}),{code:'BROWSER_ASSET_BUILD_INVALID'});
+ const changed=structuredClone(manifest);changed.assets.find(row=>row.id==='weekly').bytes=262145;assert.throws(()=>validateBrowserAssetManifest(changed),{code:'BROWSER_ASSET_MANIFEST_INVALID'});
+});
+
+test('adding weekly preserves the three published clients and does not rewrite the publication ledger',async t=>{
+ const root=fixture(t),legacy=request('globalThis.fixtureBank="published";\n',[source('month','globalThis.fixtureMonth="published";\n'),source('orders','globalThis.fixtureOrders="published";\n')]),before=buildBrowserAssets(legacy,{root});
+ recordBrowserAssetPublication(root,{worker_version:'11111111-1111-4111-8111-111111111111',source_sha256:'a'.repeat(64),verified_at:'2026-11-11T15:00:00.000Z'});
+ const ledger=path.join(root,'workers','app','browser-assets-published.json'),published=readFileSync(ledger),input={...legacy,entries:[...legacy.entries,source('weekly','globalThis.fixtureWeekly="prepared";\n')]},after=buildBrowserAssets(input,{root});
+ assert.deepEqual(after.assets.filter(row=>row.id!=='weekly'),before.assets);assert.deepEqual(after.retained,[],'unchanged predecessor paths remain current and are not duplicated');assert.deepEqual(readFileSync(ledger),published,'a new development generation is not a publication');
+ const binding=createLocalBrowserAssets(root);for(const row of before.assets){const response=await binding.fetch(new Request('https://fixture.local'+row.path));assert.equal(response.status,200);assert.deepEqual(Buffer.from(await response.arrayBuffer()),readFileSync(filename(root,row)));}
+ const attempt=buildBrowserAssets({...legacy,entries:[...legacy.entries,source('weekly','globalThis.fixtureWeekly="not-published";\n')]},{root});assert.deepEqual(attempt.retained,[]);assert.deepEqual(readFileSync(ledger),published);
+ assert.deepEqual(buildBrowserAssets(input,{root}),after,'an unpublished weekly attempt does not change the approved predecessor inventory');
+});
+
+test('a five-client generation retains only the preceding verified publication, including production and weekly',async t=>{
+ const root=fixture(t),input=version=>({schema:'mls_browser_assets_build_v1',entries:Object.keys(names).map(id=>source(id,'globalThis.fixture_'+id+'='+JSON.stringify(version)+';\n'))}),metadata=ordinal=>({worker_version:'11111111-1111-4111-8111-'+String(ordinal).padStart(12,'0'),source_sha256:String(ordinal).repeat(64),verified_at:'2026-11-11T15:00:00.000Z'});
+ const first=buildBrowserAssets(input('published-v1'),{root});recordBrowserAssetPublication(root,metadata(1));
+ const second=buildBrowserAssets(input('published-v2'),{root});assert.deepEqual(second.retained,first.assets);assert.equal(second.retained.length,5);
+ const developer=buildBrowserAssets(input('never-published'),{root});assert.deepEqual(developer.retained,first.assets);assert.ok(developer.retained.every(row=>!second.assets.some(value=>value.path===row.path)));
+ buildBrowserAssets(input('published-v2'),{root});recordBrowserAssetPublication(root,metadata(2));assert.deepEqual(buildBrowserAssets(input('published-v2'),{root}),second);
+ const binding=createLocalBrowserAssets(root);for(const row of first.assets){const response=await binding.fetch(new Request('https://fixture.local'+row.path));assert.equal(response.status,200);assert.match(await response.text(),/published-v1/);}
+ const third=buildBrowserAssets(input('published-v3'),{root});assert.deepEqual(third.retained,second.assets);assert.equal(third.retained.length,5);assert.ok(third.retained.every(row=>!first.assets.some(value=>value.path===row.path)));assert.deepEqual(verifyBrowserAssets(root),third);
+});
+
+test('production is an explicit fifth asset; a sixth entry or another id cannot broaden the inventory',t=>{
+ const root=fixture(t),input={schema:'mls_browser_assets_build_v1',entries:Object.keys(names).map(id=>source(id,'globalThis.fixture_'+id+'=true;'))},manifest=buildBrowserAssets(input,{root});
+ assert.deepEqual(manifest.assets.map(row=>row.id),['bank','month','orders','production','weekly']);
+ const production=manifest.assets.find(row=>row.id==='production');assert.equal(readFileSync(filename(root,production),'utf8'),'globalThis.fixture_production=true;');
+ assert.throws(()=>buildBrowserAssets({...input,entries:[...input.entries,source('bank','globalThis.extra=true;')]},{root}),{code:'BROWSER_ASSET_BUILD_INVALID'});
+ const changed=structuredClone(input);changed.entries.find(row=>row.id==='production').id='production-private';assert.throws(()=>buildBrowserAssets(changed,{root}),{code:'BROWSER_ASSET_BUILD_INVALID'});
+ const wrongExport=structuredClone(input);wrongExport.entries.find(row=>row.id==='production').export_name='PRODUCTION_WEEKLY_CLIENT';assert.throws(()=>buildBrowserAssets(wrongExport,{root}),{code:'BROWSER_ASSET_BUILD_INVALID'});
 });
 
 test('rebuilding replaces only the inventory owned by the previous build',t=>{
@@ -65,6 +105,13 @@ test('VM and offline exports preserve public script order and reject unsigned or
  assert.deepEqual(orderedBrowserScripts(html,{root}),['globalThis.first=true;','globalThis.fixtureBank="a";\n','globalThis.last=true;']);
  const offline=inlineBrowserAssets(html,{root});assert.doesNotMatch(offline,/\bsrc=/);assert.deepEqual(orderedBrowserScripts(offline,{root}),orderedBrowserScripts(html,{root}));
  for(const changed of [tag.replace(row.integrity,'sha256-'+'a'.repeat(43)+'='),tag.replace(row.path,'/private.js'),"<script src='/private.js'></script>"])assert.throws(()=>orderedBrowserScripts(changed,{root}),{code:'BROWSER_ASSET_HTML_INVALID'});
+});
+
+test('offline VM and export adapters preserve four signed client scripts in the HTML execution order',t=>{
+ const root=fixture(t),input=request('globalThis.fixtureBank=true;',[source('month','globalThis.fixtureMonth=true;'),source('orders','globalThis.fixtureOrders=true;'),source('weekly','globalThis.fixtureWeekly=true;')]),manifest=buildBrowserAssets(input,{root}),ids=['month','bank','orders','weekly'],tags=ids.map(id=>{const row=manifest.assets.find(value=>value.id===id);return '<script src="'+row.path+'" integrity="'+row.integrity+'" crossorigin="anonymous"></script>';}),html='<script>globalThis.first=true;</script>'+tags.join('')+'<script>globalThis.last=true;</script>';
+ const expected=['globalThis.first=true;',...ids.map(id=>readFileSync(filename(root,manifest.assets.find(row=>row.id===id)),'utf8')),'globalThis.last=true;'];
+ assert.deepEqual(orderedBrowserScripts(html,{root}),expected);const offline=inlineBrowserAssets(html,{root});assert.doesNotMatch(offline,/\bsrc=/);assert.deepEqual(orderedBrowserScripts(offline,{root}),expected);
+ const weekly=manifest.assets.find(row=>row.id==='weekly');assert.throws(()=>orderedBrowserScripts(html.replace(weekly.integrity,'sha256-'+'a'.repeat(43)+'='),{root}),{code:'BROWSER_ASSET_HTML_INVALID'});
 });
 
 test('only the last approved publication is retained; developer attempts never accumulate as public code',async t=>{
