@@ -1,3 +1,4 @@
+import {getOrderedBrowserScripts} from './browser-assets-http-fixture.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {webcrypto} from 'node:crypto';
@@ -96,5 +97,5 @@ test('logout ignores a deferred GET and a committed POST confirmation while clea
 });
 
 for(const minify of [false,true])test(`generated association controller embeds its pure dependency chain and keeps same script count (minify=${minify})`,async t=>{
- const f=await fixture(t),{html}=await compiledOwnerReportPage(minify,{ownerPreview:true});assert.equal((html.match(/<script\b/g)||[]).length,15);const ui=mount(f,{html});t.after(()=>ui.stop());assert.equal(ui.calls.length,0);await ui.open();fillLink(ui,f);assert.equal(await ui.submit(),true);await ui.settle();const frame=ui.snapshot();assert.equal(frame.context.summary.valid_quantity,2);assert.equal(frame.ledger.allocated_inventory_value_cents,null);assert.equal(frame.ledger.financial_integration_allowed,false);assert.equal(frame.ledger.external_stock_write_allowed,false);assert.equal(ui.calls.length,2);assert.ok(ui.calls.every(row=>row.path==='returns/manufacturing-links'));
+ const f=await fixture(t),{html}=await compiledOwnerReportPage(minify,{ownerPreview:true});assert.equal(getOrderedBrowserScripts(html).length,17);const ui=mount(f,{html});t.after(()=>ui.stop());assert.equal(ui.calls.length,0);await ui.open();fillLink(ui,f);assert.equal(await ui.submit(),true);await ui.settle();const frame=ui.snapshot();assert.equal(frame.context.summary.valid_quantity,2);assert.equal(frame.ledger.allocated_inventory_value_cents,null);assert.equal(frame.ledger.financial_integration_allowed,false);assert.equal(frame.ledger.external_stock_write_allowed,false);assert.equal(ui.calls.length,2);assert.ok(ui.calls.every(row=>row.path==='returns/manufacturing-links'));
 });

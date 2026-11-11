@@ -1,6 +1,6 @@
 import test,{after} from 'node:test';
 import assert from 'node:assert/strict';
-import http from 'node:http';
+import http from './browser-assets-http-fixture.mjs';
 import {spawn} from 'node:child_process';
 import {existsSync,mkdtempSync,readFileSync,mkdirSync,writeFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';

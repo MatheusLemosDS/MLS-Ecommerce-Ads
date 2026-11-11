@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import http from 'node:http';
+import http from './browser-assets-http-fixture.mjs';
 import {spawn} from 'node:child_process';
 import {existsSync,mkdtempSync,readFileSync,mkdirSync,writeFileSync} from 'node:fs';
 import os from 'node:os';
@@ -127,8 +127,8 @@ test('native shell menu keeps six owner cells, reachable utilities and restricte
    for(let index=0;index<80;index++){if(await cdp.evaluate("document.readyState==='complete'&&document.querySelector('h1')?.textContent==='Operação da loja'"))break;await pause(25);}
    const proof=await cdp.evaluate(`(()=>{const visible=n=>n.checkVisibility({checkVisibilityCSS:true}),nav=document.querySelector(innerWidth<=850?'.workspace-nav-mobile':'.sidebar>.workspace-nav'),menu=document.querySelector(innerWidth<=850?${JSON.stringify(role==='owner'?'.workspace-mobile-menu':'.workspace-header-menu .workspace-more')}:'.sidebar>.workspace-more');window.__nativeMenu=menu;return {width:innerWidth,scroll:document.documentElement.scrollWidth,cells:nav.children.length,links:[...nav.children].filter(n=>n.tagName==='A').map(n=>n.getAttribute('href')),visible:visible(nav),menus:[...document.querySelectorAll('.workspace-more>summary')].filter(visible).length,summaryHeight:menu.querySelector('summary').getBoundingClientRect().height,open:menu.open,ownerTop:document.querySelector('.shell-mobile-navigation .workspace-header-menu')!==null};})()`);
    assert.equal(proof.width,width);assert.ok(proof.scroll<=width+1);assert.equal(proof.visible,true);assert.equal(proof.menus,1);assert.equal(proof.open,false);assert.ok(proof.summaryHeight>=44);
-   assert.equal(proof.cells,role==='review'?3:width<=850?6:7);
-   if(role==='owner'&&width<=850){assert.deepEqual(proof.links,['/admin?tab=overview','/admin?tab=agent-production','/admin?tab=agent-returns','/admin?tab=agent-finance','/admin?tab=products']);assert.equal(proof.ownerTop,false);}
+   assert.equal(proof.cells,role==='review'?3:width<=850?6:8);
+   if(role==='owner'&&width<=850){assert.deepEqual(proof.links,['/admin?tab=overview','/admin?tab=order-operations','/admin?tab=agent-production','/admin?tab=agent-finance','/admin?tab=products']);assert.equal(proof.ownerTop,false);}
    if(role==='review')assert.deepEqual(proof.links,['/dashboard','/campaigns','/optimization']);
    await cdp.send('Page.bringToFront');
    await cdp.evaluate('window.__keyproof=[]; for(const type of ["keydown","keyup","click"])document.addEventListener(type,e=>__keyproof.push({type,key:e.key,tag:e.target.tagName,cls:e.target.className,trusted:e.isTrusted})); window.__nativeMenu.querySelector("summary").focus()');
@@ -139,7 +139,7 @@ test('native shell menu keeps six owner cells, reachable utilities and restricte
    for(const item of opened.all)assert.ok(item.height>=44,JSON.stringify({role,width,...item}));
    if(width<=850){assert.ok(opened.box.left>=0&&opened.box.right<=width+1);assert.ok(opened.box.top>=0&&opened.box.bottom<=900);assert.equal(opened.overflow,'auto');}
    if(role==='owner')for(const href of ['/admin?tab=agents','/admin?tab=margins','/optimization','/integrations','/admin?tab=history','/admin?tab=roadmap','/admin/diagnostics','/logout'])assert.ok(opened.all.some(n=>n.href===href),href);
-   if(role==='owner'&&width<=850)for(const href of ['/dashboard','/admin?tab=agent-hermes'])assert.ok(opened.all.some(n=>n.href===href),href);
+   if(role==='owner'&&width<=850)for(const href of ['/admin?tab=agent-returns','/dashboard','/admin?tab=agent-hermes'])assert.ok(opened.all.some(n=>n.href===href),href);
    if(role==='review')assert.deepEqual(opened.all.map(n=>n.href),['/integrations','/logout']);
    // Enter follows a real utility href through the browser's native activation.
    await cdp.evaluate(`window.__nativeMenu.querySelector('a[href="/integrations"]').focus()`);

@@ -1,3 +1,4 @@
+import {getOrderedBrowserScripts} from './browser-assets-http-fixture.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {AGENT_REGISTRY_CLIENT,commandCenterBody} from '../src/agent-registry-view.mjs';
@@ -14,7 +15,7 @@ import {buildAdsCalendar} from '../src/ads-calendar.mjs';
 import {projectMissionAdsSnapshot} from '../src/mls-ads-performance.mjs';
 
 function mountRegistry(html,{clock='2026-11-01T03:00:00Z',date='2026-11-01'}={}){
- const scripts=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)],source=scripts.find(match=>match[1].includes('globalThis.mlsAgentRegistry='))?.[1];
+ const scripts=getOrderedBrowserScripts(html),source=scripts.find(script=>script.includes('globalThis.mlsAgentRegistry='));
  assert.ok(source,'the actual owner registry client must be present');
  const setup=`
   const NativeDailyTestDate=Date;globalThis.Date=class extends NativeDailyTestDate{constructor(...args){super(...(args.length?args:[${Date.parse(clock)}]));}static now(){return ${Date.parse(clock)};}};
@@ -87,7 +88,7 @@ async function collectedWorkspace(t){
  const readView=async()=>buildBusinessMonthView(await readBusinessMonthDisplay(f.env,{month:'2026-10'},{now:f.now}),await readBusinessSyncState(f.env),{now:f.now,contract:'business-month-view-v3'});
  return {f,readView};
 }
-function ownerScript(html,token){const result=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match=>match[1]).find(script=>script.includes(token));assert.ok(result,'actual generated client missing: '+token);return result;}
+function ownerScript(html,token){const result=getOrderedBrowserScripts(html).find(script=>script.includes(token));assert.ok(result,'actual generated client missing: '+token);return result;}
 
 function firstDayAds(){
  const period={start_date:'2026-11-01',end_date:'2026-11-01'},stamp=Date.parse('2026-11-01T18:00:00Z')/1000;

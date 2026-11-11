@@ -3,6 +3,8 @@ import path from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {PROJECT_ROOT, TARGETS, stableJson, sha256, error, uuid} from './worker_project.mjs';
 import {buildWorkers} from './build_workers.mjs';
+import {verifyBrowserAssets} from './browser_assets.mjs';
+import {validateBrowserAssetsConfig} from './import_worker_config.mjs';
 
 function read(root, target, filename) {
   try {
@@ -36,6 +38,28 @@ function automationConfig(root, target, config, snapshot) {
   };
 }
 
+function browserAssetsConfig(root, target, config, snapshot) {
+  const file = path.join(root, 'workers', target, 'browser-assets.json');
+  let authorization;
+  try {
+    if (fs.statSync(file).size > 16 * 1024) throw error('WORKER_BROWSER_ASSETS_CONFIG_INVALID');
+    authorization = JSON.parse(fs.readFileSync(file, 'utf8'));
+  } catch (failure) {
+    if (failure?.code === 'ENOENT') return null;
+    throw error('WORKER_BROWSER_ASSETS_CONFIG_INVALID');
+  }
+  if (target !== 'app' || !authorization || Array.isArray(authorization)
+    || Object.keys(authorization).sort().join(',') !== 'assets,captured_config_sha256,version'
+    || authorization.version !== 1 || authorization.captured_config_sha256 !== snapshot.config_sha256) {
+    throw error('WORKER_BROWSER_ASSETS_CONFIG_INVALID');
+  }
+  validateBrowserAssetsConfig(target, authorization.assets, config);
+  return {...config, main: path.resolve(root, 'workers', target, config.main),
+    assets: {...authorization.assets,
+      directory: path.resolve(root, 'workers', target, authorization.assets.directory)},
+  };
+}
+
 export function validateDeployment(target, {root = PROJECT_ROOT, dependencies = true} = {}) {
   if (!Object.hasOwn(TARGETS, target)) throw error('WORKER_TARGET_INVALID');
   const expected = TARGETS[target];
@@ -57,6 +81,7 @@ export function validateDeployment(target, {root = PROJECT_ROOT, dependencies = 
     || (config.account_id !== undefined && !/^[0-9a-f]{32}$/i.test(config.account_id))) {
     throw error('WORKER_CONFIG_INVALID');
   }
+  if (Object.hasOwn(config, 'assets')) validateBrowserAssetsConfig(target, config.assets, config);
   if (['app', 'finance'].includes(target)) {
     const binding = target === 'app' ? 'ADMIN_DB' : 'FINANCE_DB';
     const matches = config.d1_databases?.filter(value => value.binding === binding);
@@ -80,16 +105,19 @@ export function validateDeployment(target, {root = PROJECT_ROOT, dependencies = 
       if (adminIds.has(config.d1_databases[0].database_id.toLowerCase())) throw error('WORKER_FINANCE_DATABASE_MUST_BE_SEPARATE');
     }
   }
-  const effective = automationConfig(root, target, config, snapshot);
+  const automated = automationConfig(root, target, config, snapshot);
+  const browserAssets = browserAssetsConfig(root, target, automated || config, snapshot);
+  const effective = browserAssets || automated;
   return {target, config: effective || config, generated: Boolean(effective),
     configPath: path.join(root, 'workers', target,
-      ...(effective ? ['.wrangler', 'automation.generated.json'] : ['wrangler.json']))};
+      ...(effective ? ['.wrangler', browserAssets ? 'runtime.generated.json' : 'automation.generated.json'] : ['wrangler.json']))};
 }
 
 export function deployWorker(target, {root = PROJECT_ROOT, run = execFileSync, build = buildWorkers, dryRun = false} = {}) {
   const verified = validateDeployment(target, {root});
   if (target === 'auth') validateDeployment('finance', {root});
   build(target, {root});
+  if(target==='app'&&verified.config.assets)verifyBrowserAssets(root);
   if (verified.generated) {
     fs.mkdirSync(path.dirname(verified.configPath), {recursive: true});
     fs.writeFileSync(verified.configPath, stableJson(verified.config));

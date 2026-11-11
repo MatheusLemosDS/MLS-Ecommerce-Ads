@@ -1,3 +1,4 @@
+import {getOrderedBrowserScripts} from './browser-assets-http-fixture.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
@@ -36,7 +37,7 @@ async function ownerHtml(minify,env){
 }
 
 for(const minify of [false,true])test(`the actual owner HTML projector accepts a cached 241-order month and its zero-order restart with retained Ads (minify=${minify})`,async t=>{
- const {f,cached,started}=await realMonthlyResponses(t),html=await ownerHtml(minify,f.env),script=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match=>match[1]).find(value=>value.includes('globalThis.brazaMonthDashboard='));assert.ok(script);
+ const {f,cached,started}=await realMonthlyResponses(t),html=await ownerHtml(minify,f.env),script=getOrderedBrowserScripts(html).find(value=>value.includes('globalThis.brazaMonthDashboard='));assert.ok(script);
  // The daily client precedes the monthly IIFE in the same shipped script.
  // Extract the actual monthly projector block, not the preceding client body.
  const start=script.indexOf('function projectAdsCalendar('),end=script.indexOf(' const el=id=>',start);

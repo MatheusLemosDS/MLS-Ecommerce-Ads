@@ -7,6 +7,7 @@ import {randomBytes,createHash} from 'node:crypto';
 import {readFileSync,lstatSync,realpathSync,openSync,closeSync,fstatSync,constants} from 'node:fs';
 import {createPreviewRuntime} from './mls-owner-preview/runtime.mjs';
 import {seedPreviewCatalog} from './mls-owner-preview/seed.mjs';
+import {createLocalBrowserAssets} from './browser_assets.mjs';
 
 const projectRoot=fileURLToPath(new URL('../',import.meta.url));
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'}});
@@ -38,7 +39,7 @@ async function bodyBytes(request){return new Promise((resolve,fail)=>{let chunks
 export async function startPreviewServer({port=0,host='127.0.0.1',workerPath=path.join(projectRoot,'dist/app-worker.mjs'),mediaDirectory,seed=true,databasePath=':memory:'}={}){
  if(host!=='127.0.0.1'||!Number.isSafeInteger(port)||port<0||port>65535)reject('PREVIEW_LOOPBACK_REQUIRED');
  const media=mediaInventory(mediaDirectory),runtime=await createPreviewRuntime(path.resolve(workerPath)),db=new PreviewD1(databasePath);
- const env={ADMIN_DB:runtime.bridgeD1(db),ADMIN_USERNAME:'local-preview',ADMIN_PASSWORD:randomBytes(24).toString('hex'),ADMIN_SESSION_SECRET:randomBytes(32).toString('hex'),MLS_V36_OWNER_PREVIEW:'ENABLED',MLS_AI_SALES_OWNER_PREVIEW:'ENABLED'};
+ const env={ASSETS:createLocalBrowserAssets(projectRoot),ADMIN_DB:runtime.bridgeD1(db),ADMIN_USERNAME:'local-preview',ADMIN_PASSWORD:randomBytes(24).toString('hex'),ADMIN_SESSION_SECRET:randomBytes(32).toString('hex'),MLS_V36_OWNER_PREVIEW:'ENABLED',MLS_AI_SALES_OWNER_PREVIEW:'ENABLED'};
  let origin='',closed=false;
  const workerCall=(url,options={})=>runtime.fetch(runtime.request(url,options),env);
  const authenticate=async headers=>{const response=await workerCall(origin+'/api/admin/bootstrap',{headers:{cookie:headers.get('cookie')||''}});if(response.status!==200)reject('UNAUTHORIZED',401);return response;};

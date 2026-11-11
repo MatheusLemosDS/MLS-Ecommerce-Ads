@@ -1,3 +1,4 @@
+import {getOrderedBrowserScripts} from './browser-assets-http-fixture.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
@@ -14,7 +15,7 @@ for(const minify of [false,true])test(`the emitted monthly owner controls recalc
  // its cancellation without relying on a still-valid historical-window cache.
  const f=await collectionFixture({allPaid:true,windowCounts:[0,1],paymentDelayMs:0});t.after(()=>{f.env.ADMIN_DB.db.close();f.financeEnv.FINANCE_DB.db.close();});
  let frame=await f.invoke('start');for(let i=0;frame.status==='RUNNING'&&i<8;i++)frame=await f.invoke('step');assert.equal(frame.status,'COMPLETE');frame=await f.invoke('ads');
- const {html}=await compiledOwnerReportPage(minify),script=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(row=>row[1]).find(value=>value.includes('globalThis.brazaMonthDashboard='));assert.ok(script);
+ const {html}=await compiledOwnerReportPage(minify),script=getOrderedBrowserScripts(html).find(value=>value.includes('globalThis.brazaMonthDashboard='));assert.ok(script);
  const ids=[...html.matchAll(/\bid="(businessMonth[^"]*)"/g)].map(row=>row[1]),calls=[],before={finance:f.calls.finance.length,ads:f.calls.ads.length};
  let hold=false,entered,release;const context=vm.createContext({URLSearchParams,clock:f.clock.time,ids,send:async(path,body)=>{calls.push({path,body});if(path==='finance/business-month-request'){assert.deepEqual(JSON.parse(JSON.stringify(body)),{month:'2026-10'});return JSON.stringify(await requestBusinessMonthRefresh(f.env,{month:'2026-10'},{now:f.now}));}assert.match(path,/^finance\/business-month-view\?month=2026-(?:09|10)$/);assert.equal(body,undefined,'passive reads cannot request private finance or Ads collection');const selected=path.slice(path.indexOf('=')+1),view=await savedView(f,selected);if(hold&&selected==='2026-10'){hold=false;entered();return new Promise(resolve=>{release=()=>resolve(JSON.stringify(view));});}return JSON.stringify(view);}});
  vm.runInContext(`

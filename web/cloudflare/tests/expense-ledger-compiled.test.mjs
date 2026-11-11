@@ -1,3 +1,4 @@
+import {getOrderedBrowserScripts} from './browser-assets-http-fixture.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
@@ -22,7 +23,7 @@ for(const minify of [false,true])test(`the deployable Worker serves and persists
   const initial=await get('finance/expense-ledger?month='+month);assert.equal(initial.schema,'expense_ledger_v1');assert.equal(initial.mode,'MANUAL');assert.equal(initial.current_external_expenses_cents,null);
   const htmlResponse=await worker.fetch(new Request(origin+'/admin',{headers:{cookie}}),env);assert.equal(htmlResponse.status,200);const html=await htmlResponse.text();
   for(const id of ['businessMonthExpenseLedger','businessMonthExpenseLedgerForm','businessMonthExpenseLedgerSave','businessMonthExpenseLedgerConfirm','businessMonthExpenseLedgerInstallments','businessMonthExpenseLedgerPaidDate','businessMonthExpenseLedgerConfirmationPreview','businessMonthExpenseLedgerConfirmationEquation','businessMonthExpenseLedgerConfirmationPrevious','businessMonthExpenseLedgerConfirmationDifference','businessMonthExpenseLedgerConfirmationPreviewStatus'])assert.ok(html.includes('id="'+id+'"'),id+' must exist in the shipped owner page');
-  const scripts=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match=>match[1]);assert.ok(scripts.length>0);for(const script of scripts)new vm.Script(script);
+  const scripts=getOrderedBrowserScripts(html);assert.ok(scripts.length>0);for(const script of scripts)new vm.Script(script);
   const browserScript=scripts.find(script=>script.includes('const projectExpenseLedger='));assert.ok(browserScript,'the deployed page must contain the ledger client');assert.match(browserScript,/finance\/expense-ledger/);
   const marker='const projectExpenseLedger=',start=browserScript.indexOf(marker)+marker.length,end=browserScript.indexOf(";\n const el=name=>document.getElementById('businessMonthExpenseLedger'+name);",start);assert.ok(end>start,'the frozen projector must be embedded before the ledger UI helpers');
   const context=vm.createContext({serialized:JSON.stringify(initial)});vm.runInContext('const projectExpenseLedger='+browserScript.slice(start,end)+';',context);assert.equal(vm.runInContext('projectExpenseLedger(JSON.parse(serialized)).mode',context),'MANUAL');

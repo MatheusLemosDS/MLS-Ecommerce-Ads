@@ -1,3 +1,4 @@
+import {getOrderedBrowserScripts} from './browser-assets-http-fixture.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
@@ -69,7 +70,7 @@ async function bundledAdminHtml(minify){
 }
 
 function verifyReportAndDailyAds(html){
- const scripts=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match=>match[1]);
+ const scripts=getOrderedBrowserScripts(html);
  const legacy=scripts.find(script=>script.includes('let renderedReportKey='));
  assert.ok(legacy,'the admin page must include the report and daily Ads client');
  // These are the real helper declarations emitted before the admin UI starts;
@@ -91,7 +92,7 @@ function verifyReportAndDailyAds(html){
 function monthlyBrowser(html,value=monthlyFrame()){
  const view=buildBusinessMonthView({display:value,active:value,display_source:'PUBLISHED'},{enabled:true,status:'COMPLETE',next_run_at:stamp+60,last_attempt_at:stamp},{now:()=>Date.parse(current)});
  assert.ok(projectBusinessMonthView(view,projectBusinessMonth),'the saved workspace fixture must satisfy the real owner view contract');
- const scripts=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match=>match[1]);
+ const scripts=getOrderedBrowserScripts(html);
  assert.ok(scripts.length>=2,'the rendered page must contain its browser scripts');
  for(const script of scripts)new vm.Script(script);
  const monthly=scripts.filter(script=>script.includes('globalThis.brazaMonthDashboard='));

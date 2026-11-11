@@ -29,28 +29,18 @@ test('release preflight passes only an exact reviewed local build and leaves rem
  assert.equal(r.productionApproved,false);
  assert.ok(RELEASE_MANUAL_GATES.includes('VERIFY_REMOTE_OWNER_FLAGS_MATCH_APPROVED_VALUES'));
  assert.ok(RELEASE_ALLOWED_FILES.includes('tools/release-approved-candidate.json'));
- assert.ok(!RELEASE_ALLOWED_FILES.some(x=>x.startsWith('workers/')));
+ assert.ok(RELEASE_ALLOWED_FILES.filter(x=>x.startsWith('workers/')).every(x=>RELEASE_APPROVED_PROTECTED_FILES.includes(x)));
+ assert.ok(!RELEASE_ALLOWED_FILES.some(x=>x.startsWith('web/finance/src/')));
  assert.ok(RELEASE_ALLOWED_FILES.filter(x=>x.startsWith('web/finance/')).every(x=>RELEASE_APPROVED_PROTECTED_FILES.includes(x)));
 });
 
-test('cash reconciliation opens only its exact reviewed private Finance files',()=>{
+test('browser assets open only their two hash-bound authorization records',()=>{
  assert.deepEqual(RELEASE_APPROVED_PROTECTED_FILES,[
- "web/finance/src/auth-router.mjs",
- "web/finance/src/cash-statement-import.mjs",
- "web/finance/src/external-cash-frame.mjs",
- "web/finance/src/external-cash-matching.mjs",
- "web/finance/src/external-cash-store.mjs",
- "web/finance/src/external-cash-worker.mjs",
- "web/finance/src/production-worker.mjs",
- "web/finance/tests/cash-statement-import.test.mjs",
- "web/finance/tests/external-cash-compiled-chain.test.mjs",
- "web/finance/tests/external-cash-fixture.mjs",
- "web/finance/tests/external-cash-frame.test.mjs",
- "web/finance/tests/external-cash-matching.test.mjs",
- "web/finance/tests/external-cash-routes.test.mjs",
- "web/finance/tests/external-cash-store.test.mjs"
-]);
- assert.ok(RELEASE_APPROVED_PROTECTED_FILES.every(x=>(x.startsWith('web/finance/')||x.startsWith('web/auth/')||x==='web/cloudflare/auth-worker.mjs')&&!/[?*\\]/.test(x)));
+  'workers/app/browser-assets.json',
+  'workers/app/browser-assets-published.json'
+ ]);
+ assert.ok(RELEASE_APPROVED_PROTECTED_FILES.every(x=>x.startsWith('workers/app/browser-assets')&&!/[?*\\]/.test(x)));
+
  for(const path of [
   "web/finance/src/auth-json-transport.mjs",
   "web/finance/src/connection-store.mjs",
@@ -179,8 +169,8 @@ test('a malformed candidate cannot weaken exact hashes, literal paths or commerc
 });
 
 test('the focused release does not inherit unrelated AI-storage or previous-candidate permissions',()=>{
- assert.equal(RELEASE_BASE_COMMIT,'f451c15ec1b96abaa6315457324ccaa31c8d361c');
- for(const baseCommit of ['96e16057dc5190917622510ffc1b2130ced47841','673dc8f4d3c6c36eaa41fcf33ae264130fa9ba18','b09026880f9370358f4539b821d18ef8d5982085','d14df57d0b3305ce673a247f925d5dd0d68d191d','2ab4c9d8baa3c25e5816bcca14b4a0973ea73d5a','8d66525bc3b96914412a9538d3ec84048ac78dbb']){
+ assert.equal(RELEASE_BASE_COMMIT,'eab85a17d7a6c4f213e67ce0b7dea0cf63932bf2');
+ for(const baseCommit of ['f451c15ec1b96abaa6315457324ccaa31c8d361c','96e16057dc5190917622510ffc1b2130ced47841','673dc8f4d3c6c36eaa41fcf33ae264130fa9ba18','b09026880f9370358f4539b821d18ef8d5982085','d14df57d0b3305ce673a247f925d5dd0d68d191d','2ab4c9d8baa3c25e5816bcca14b4a0973ea73d5a','8d66525bc3b96914412a9538d3ec84048ac78dbb']){
   const oldBase=good();oldBase.baseCommit=baseCommit;
   assert.ok(evaluateReleasePreflight(oldBase).failures.includes('RELEASE_BASE_MISMATCH'));
  }

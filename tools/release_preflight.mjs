@@ -30,23 +30,11 @@ export const RELEASE_BASE_COMMIT=approvedCandidate.base_commit;
 export const RELEASE_EXPECTED_SHA=Object.freeze({...approvedCandidate.expected_hashes});
 export const RELEASE_EXPECTED_LIVE_FLAGS=Object.freeze({...validFlags});
 export const RELEASE_ALLOWED_FILES=Object.freeze([...approvedCandidate.allowed_files]);
-// Reviewed private file-evidence route and sidecar only. Originals, connection
-// tokens, financial formulas, configuration and all other paths remain closed.
+// Specific same-domain static-asset migration. Captured Worker configurations,
+// Auth/Finance source, originals and every other protected path remain closed.
 export const RELEASE_APPROVED_PROTECTED_FILES=Object.freeze([
- "web/finance/src/auth-router.mjs",
- "web/finance/src/cash-statement-import.mjs",
- "web/finance/src/external-cash-frame.mjs",
- "web/finance/src/external-cash-matching.mjs",
- "web/finance/src/external-cash-store.mjs",
- "web/finance/src/external-cash-worker.mjs",
- "web/finance/src/production-worker.mjs",
- "web/finance/tests/cash-statement-import.test.mjs",
- "web/finance/tests/external-cash-compiled-chain.test.mjs",
- "web/finance/tests/external-cash-fixture.mjs",
- "web/finance/tests/external-cash-frame.test.mjs",
- "web/finance/tests/external-cash-matching.test.mjs",
- "web/finance/tests/external-cash-routes.test.mjs",
- "web/finance/tests/external-cash-store.test.mjs"
+ 'workers/app/browser-assets.json',
+ 'workers/app/browser-assets-published.json'
 ]);
 
 

@@ -1,3 +1,4 @@
+import {getOrderedBrowserScripts} from './browser-assets-http-fixture.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
@@ -55,7 +56,7 @@ function browser(html,session,{sessionFails=false,sessionQuota=false,auditFails=
   response.json=async()=>vm.runInContext('JSON.parse',context)(await response.text());return response;
  }
  vm.runInContext("globalThis.window=globalThis;window.matchMedia=()=>({matches:false});globalThis.addEventListener=()=>{};",context);
- const scripts=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match=>match[1]);
+ const scripts=getOrderedBrowserScripts(html);
  const monthly=scripts.find(script=>script.includes('globalThis.brazaMonthDashboard=')),admin=scripts.find(script=>script.includes('let renderedReportKey='));assert.ok(monthly&&admin);
  vm.runInContext(monthly,context);vm.runInContext(admin,context);
  const flush=async()=>{for(let index=0;index<5;index++)await new Promise(resolve=>setImmediate(resolve));};
@@ -168,8 +169,8 @@ for(const minify of [false,true]){
 
 test('compiled Admin inline scripts contain no raw HTML control characters that corrupt regex ranges',{timeout:20000},async()=>{
  const {html}=await ownerHtml(false);
- const scripts=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match=>match[1]);
- assert.equal(scripts.length,15);
+ const scripts=getOrderedBrowserScripts(html);
+ assert.equal(scripts.length,17);
  assert.equal(scripts.filter(script=>script.includes('globalThis.brazaPhysicalReturns=')).length,1,'the additional physical-return controller remains a separate shipped script');
  const forbidden=/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/;
  for(const [index,script] of scripts.entries())assert.doesNotMatch(script,forbidden,'unsafe control byte inside inline script '+index);

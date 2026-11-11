@@ -1,7 +1,7 @@
 // Owner visual QA: synthetic account only. NEVER read real Shop, buyer, or Finance data.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import http from 'node:http';
+import http from './browser-assets-http-fixture.mjs';
 import {spawn} from 'node:child_process';
 import {existsSync,mkdtempSync,mkdirSync,writeFileSync,readFileSync} from 'node:fs';
 import os from 'node:os';

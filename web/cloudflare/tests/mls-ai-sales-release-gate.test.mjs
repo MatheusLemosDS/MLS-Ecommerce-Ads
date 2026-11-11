@@ -1,3 +1,4 @@
+import {getOrderedBrowserScripts} from './browser-assets-http-fixture.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
@@ -17,8 +18,8 @@ for(const minify of [false,true]){
   assert.match(on.headers['content-security-policy'],/media-src 'self' blob:/);
   const ids=[...on.html.matchAll(/\bid="([^"]*)"/g)].map(x=>x[1]);
   assert.equal(ids.length,new Set(ids).size,'unique native IDs');
-  for(const script of [...on.html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(x=>x[1]))new vm.Script(script);
-  const client=[...on.html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(x=>x[1]).find(s=>s.includes('const MlsAiSalesCore='));
+  for(const script of getOrderedBrowserScripts(on.html))new vm.Script(script);
+  const client=getOrderedBrowserScripts(on.html).find(s=>s.includes('const MlsAiSalesCore='));
   assert.ok(client);assert.doesNotMatch(client,/__MLS_AI_SALES_(?:CORE|UI_OPERATIONS)__/);
   assert.doesNotMatch(client,/node:child_process|execFile(?:Sync)?\(|spawn\(/,'server executables cannot ship in browser');
  });

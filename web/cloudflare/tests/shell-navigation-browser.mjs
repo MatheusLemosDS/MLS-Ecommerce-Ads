@@ -1,7 +1,7 @@
 // Optional browser check: node web/cloudflare/tests/shell-navigation-browser.mjs
 // Uses the built App Worker with local fixtures; no provider requests or credentials.
 import assert from 'node:assert/strict';
-import {createServer} from 'node:http';
+import {createServer} from './browser-assets-http-fixture.mjs';
 import worker from '../app-worker.mjs';
 
 const {chromium} = await import(process.env.BRAZA_PLAYWRIGHT_MODULE || '/workspace/.braza-browser-validation/node_modules/playwright/index.mjs');

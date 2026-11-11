@@ -1,3 +1,4 @@
+import {getOrderedBrowserScripts} from './browser-assets-http-fixture.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {compiledOwnerReportPage} from './owner-report-browser-fixture.mjs';
@@ -28,7 +29,7 @@ for(const minify of [false,true]){
   const products=html.indexOf('<section id="products" hidden>');
   const factory=html.indexOf('id="mlsListingFactory"'),catalog=html.indexOf('id="savedCatalog"');
   assert.ok(products>=0&&factory>products&&catalog>factory,'new editor inserted inside Products above saved catalog');
-  const scripts=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(x=>x[1]);
+  const scripts=getOrderedBrowserScripts(html);
   const clients=scripts.filter(s=>s.includes("const root=document.getElementById('mlsListingFactory')"));
   assert.equal(clients.length,1);
   assert.match(clients[0],/function planMlsListingFactory\(input,mediaIndex\)/);

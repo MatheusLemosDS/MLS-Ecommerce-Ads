@@ -1,9 +1,9 @@
 // A human code-release identifier, not a Cloudflare deployment UUID or hash.
 // Keep it independent of build time, credentials and financial availability.
 export const APP_RELEASE=Object.freeze({
- id:'2026-11-10.1',
- label:'Conciliação com extrato Nubank',
- date:'10/11/2026',
+ id:'2026-11-11.1',
+ label:'Pedidos e operação',
+ date:'11/11/2026',
 });
 
 export function releaseInfo(){

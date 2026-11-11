@@ -98,6 +98,14 @@ test('sync is leased and cached, refreshes older pending orders and uses a bound
  const batches=[],actual=f.env.ADMIN_DB.batch.bind(f.env.ADMIN_DB);f.env.ADMIN_DB.batch=statements=>{batches.push(statements.length);return actual(statements);};f.state.time+=1000;f.state.orders=[old,...Array.from({length:100},(_,index)=>order('ORDER_'+index))];await f.sync();assert.ok(batches.includes(3));assert.ok(Math.max(...batches)<=5);assert.equal((await f.read()).queue_total,101);
 });
 
+test('produced DTF lines do not stop review of older open orders before shipment and completion',async()=>{
+ const f=await fixture(),view=await f.sync();await f.prepare(request(view.lines));await f.action('export');await f.action('produce');
+ f.state.time+=20*86400000;f.state.orders[0].status='SHIPPED';f.state.orders[0].update_time=Math.floor(f.state.time/1000)-10;f.state.calls.length=0;
+ let next=await f.sync();assert.ok(f.state.calls.some(v=>v.operation==='verify'&&v.order_ids.includes('ORDER_1')));assert.equal(next.lines[0].status,'SHIPPED');assert.equal(next.lines[0].production_state,'PRODUCED');assert.equal(next.batches[0].status,'PRODUCED');
+ f.state.time+=61000;f.state.orders[0].status='COMPLETED';f.state.orders[0].update_time++;f.state.calls.length=0;next=await f.sync();assert.equal(next.lines[0].status,'COMPLETED');assert.ok(f.state.calls.some(v=>v.operation==='verify'));
+ f.state.time+=61000;f.state.calls.length=0;await f.sync();assert.ok(f.state.calls.every(v=>v.operation!=='verify'));assert.equal(count(f,'production_dtf_audit'),3);
+});
+
 test('a busy rolling history never blocks today and older known orders are rechecked while backfill advances',async()=>{
  const history=Array.from({length:12},(_,day)=>Array.from({length:100},(_,index)=>order('OLD'+String(day).padStart(2,'0')+'_'+String(index).padStart(3,'0'),{create_time:base/1000-(day+1)*86400-3600}))).flat();
  const f=await fixture([order('TODAY'),...history]),first=await f.sync();assert.equal(first.queue_total,101);assert.ok(first.lines.some(row=>row.order_id==='TODAY'));assert.equal(first.history_next_date,'2026-10-22');

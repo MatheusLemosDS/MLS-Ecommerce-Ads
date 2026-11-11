@@ -1,3 +1,4 @@
+import {getOrderedBrowserScripts} from './browser-assets-http-fixture.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
@@ -32,7 +33,7 @@ test('production routes protect owner data, actions and exact scope before readi
  assert.equal((await adminFetch(request(auth,'/sync',{path:'PRIVATE'}),auth.env,s.services)).status,400);
  assert.equal((await adminFetch(request(auth,'/unknown',{}),auth.env,s.services)).status,404);assert.equal(s.calls.length,0);
  const page=await adminFetch(new Request(origin+'/admin?tab=production',{headers:{cookie:auth.cookie}}),auth.env,s.services),html=await page.text();assert.match(html,/id="production"/);assert.match(html,/vivaosanos80/);assert.match(html,/neste dispositivo/);assert.match(html,/href="\/admin\?tab=production"/);
- assert.doesNotThrow(()=>new vm.Script([...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match=>match[1]).join('\n')));assert.match(page.headers.get('content-security-policy'),/img-src 'self' blob: data:/);
+ assert.doesNotThrow(()=>new vm.Script(getOrderedBrowserScripts(html).join('\n')));assert.match(page.headers.get('content-security-policy'),/img-src 'self' blob: data:/);
  }finally{auth.env.ADMIN_DB.db.close();}
 });
 

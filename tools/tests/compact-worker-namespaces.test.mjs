@@ -97,7 +97,7 @@ const probe=String.raw`
 import ast,json,re,subprocess,sys
 from pathlib import Path
 root=Path(sys.argv[1]);source=(root/'build.py').read_text();tree=ast.parse(source)
-scope={'root':root,'re':re,'json':json,'subprocess':subprocess,'server_namespace_sources':[]}
+scope={'root':root,'re':re,'json':json,'subprocess':subprocess,'server_namespace_sources':[],'browser_asset_sources':[]}
 for name in ['freeze_client_helpers','source_namespace','compact_server_namespaces']:
     node=next(node for node in tree.body if isinstance(node,ast.FunctionDef) and node.name==name)
     exec(ast.get_source_segment(source,node),scope)
