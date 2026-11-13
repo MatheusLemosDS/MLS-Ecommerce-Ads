@@ -421,7 +421,7 @@ export const AGENT_REGISTRY_CLIENT=String.raw`
    }finally{inspect.disabled=false;}
   };
   const details=document.getElementById('commandPendingIncomeDetails');if(details)details.ontoggle=()=>{if(!details.open)return;let task;try{task=globalThis.brazaIncomeOverview?.observeDetail?.();}catch{}Promise.resolve(task).then(()=>{pendingDetailLoaded=true;lastKey='';render();}).catch(()=>{pendingDetailLoaded=true;lastKey='';render();});};
-  if(typeof globalThis.MutationObserver==='function'){observer=new globalThis.MutationObserver(records=>{if(records.some(record=>{const target=record.target?.nodeType===1?record.target:record.target?.parentElement;return !target?.closest?.('#missionTrendsFinance');}))queue();});for(const id of ['businessDay','businessMonth','savedCatalogList','costPeriodsMonthly','dtfQueue']){const target=document.getElementById(id);if(target)observer.observe(target,{subtree:true,childList:true,characterData:true,attributes:true});}}
+  if(typeof globalThis.MutationObserver==='function'){observer=new globalThis.MutationObserver(records=>{if(records.some(record=>{if(record.target?.isConnected===false)return false;const target=record.target?.nodeType===1?record.target:record.target?.parentElement;return !target?.closest?.('#missionTrendsFinance');}))queue();});for(const id of ['businessDay','businessMonth','savedCatalogList','costPeriodsMonthly','dtfQueue']){const target=document.getElementById(id);if(target)observer.observe(target,{subtree:true,childList:true,characterData:true,attributes:true});}}
   return true;
  }
  function stop(){try{observer?.disconnect?.();}catch{}observer=null;lastKey='';registry=null;pendingDetailLoaded=false;overviewMonthBusy=false;}

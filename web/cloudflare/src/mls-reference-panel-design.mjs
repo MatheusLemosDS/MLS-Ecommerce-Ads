@@ -121,6 +121,7 @@ html[data-theme] .mission-workspace[data-mission-page=finance] .business-month>.
 html[data-theme] .mission-workspace[data-mission-page=finance] .month-metric{display:flex;flex-direction:column;gap:6px}
 .mission-workspace[data-mission-page=finance] .month-metric>small{min-height:18px}
 html[data-theme] .mission-workspace[data-mission-page=finance] .month-metric>strong{margin:0;line-height:1.3!important}
+html[data-theme] .mission-workspace[data-mission-page=finance] .month-net[data-negative=true]>strong{color:var(--negative)}
 .mission-workspace[data-mission-page=finance] .month-metric>span{font-size:11px;line-height:1.5}
 .mission-workspace[data-mission-page=finance] .month-net-margin{min-height:0}
 .mission-workspace[data-mission-page=finance] .month-net-margin:empty{display:none}
