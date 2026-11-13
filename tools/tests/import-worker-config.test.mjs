@@ -4,7 +4,7 @@ import {mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync, symlinkSync
 import {tmpdir} from 'node:os';
 import {resolve} from 'node:path';
 import {spawnSync} from 'node:child_process';
-import {importWorkerConfig, createFinanceConfig, MAX_WORKER_SOURCE_BYTES, BROWSER_ASSETS_CONFIG, validateCapturedConfig} from '../import_worker_config.mjs';
+import {importWorkerConfig, createFinanceConfig, MAX_WORKER_SOURCE_BYTES, BROWSER_ASSETS_CONFIG, validateCapturedConfig, validateBrowserAssetsConfig} from '../import_worker_config.mjs';
 import {PROJECT_ROOT, TARGETS, sha256, stableJson} from '../worker_project.mjs';
 
 const authSource = readFileSync(resolve(PROJECT_ROOT, 'web/cloudflare/auth-worker.mjs'));
@@ -24,6 +24,14 @@ const appExport = () => ({...authExport(), name: TARGETS.app.name,
   placement: {mode: 'smart'}, limits: {cpu_ms: 50}, observability: {enabled: true, head_sampling_rate: 0.25},
   logpush: false, tail_consumers: [{service: 'existing-tail'}]});
 const rejectsCode = (fn, code) => assert.throws(fn, failure => failure.code === code && failure.message === code);
+
+test('six-client extraction preserves the exact App asset binding and four-MiB reviewed source ceiling',()=>{
+ assert.equal(MAX_WORKER_SOURCE_BYTES,4*1024*1024);
+ assert.deepEqual(BROWSER_ASSETS_CONFIG,{directory:'../../dist/browser-assets',binding:'ASSETS',run_worker_first:true,html_handling:'none',not_found_handling:'none'});
+ assert.deepEqual(validateBrowserAssetsConfig('app',{...BROWSER_ASSETS_CONFIG},appExport()),BROWSER_ASSETS_CONFIG);
+ for(const extra of [{workspace:true},{max_assets:6}])rejectsCode(()=>validateBrowserAssetsConfig('app',{...BROWSER_ASSETS_CONFIG,...extra},appExport()),'WORKER_BROWSER_ASSETS_CONFIG_INVALID');
+ for(const target of ['auth','finance'])rejectsCode(()=>validateBrowserAssetsConfig(target,{...BROWSER_ASSETS_CONFIG}),'WORKER_BROWSER_ASSETS_CONFIG_INVALID');
+});
 
 test('existing App import preserves resource configuration and strips all dashboard variable/secret data', () => {
   const before = appExport();
@@ -91,6 +99,8 @@ test('App capture accepts only the reviewed same-domain browser asset configurat
     {...BROWSER_ASSETS_CONFIG, html_handling: 'auto-trailing-slash'},
     {...BROWSER_ASSETS_CONFIG, not_found_handling: 'single-page-application'},
     {...BROWSER_ASSETS_CONFIG, base_path: '/'},
+    {...BROWSER_ASSETS_CONFIG, workspace: true},
+    {...BROWSER_ASSETS_CONFIG, max_assets: 6},
   ]) rejectsCode(() => importWorkerConfig('app', {...appExport(), assets}, appSource), 'WORKER_BROWSER_ASSETS_CONFIG_INVALID');
 });
 

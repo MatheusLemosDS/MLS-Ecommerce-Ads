@@ -1,6 +1,6 @@
 import {projectProductionOrdersRequest,projectProductionOrdersFrame,productionOrdersRequestMatches} from '../../finance/src/production-orders-frame.mjs';
 
-export async function getFinanceProductionOrders(env,input,{fetchImpl=request=>fetch(request),timeoutMs=45000}={}){
+export async function getFinanceProductionOrders(env,input,{fetchImpl=env?.COMMERCIAL_FETCH??(request=>fetch(request)),timeoutMs=45000}={}){
  const failure=()=>({schema:'production_orders_v1',status:'UNAVAILABLE',diagnostic:{code:'FINANCE_PRODUCTION_UNAVAILABLE',http:null}}),body=projectProductionOrdersRequest(input);
  if(!body||typeof env?.APP_INTERNAL_SECRET!=='string'||!env.APP_INTERNAL_SECRET||typeof fetchImpl!=='function'||!Number.isInteger(timeoutMs)||timeoutMs<5||timeoutMs>45000)return failure();
  const controller=new AbortController();let reader,response,timer;
@@ -15,7 +15,7 @@ export async function getFinanceProductionOrders(env,input,{fetchImpl=request=>f
   try{while(true){check();const chunk=await reader.read();check();if(chunk.done)break;if(!(chunk.value instanceof Uint8Array))return failure();length+=chunk.value.byteLength;if(length>1048576)return failure();chunks.push(chunk.value);}}
   finally{cancel();try{reader.releaseLock();}catch{}reader=undefined;}
   const bytes=new Uint8Array(length);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.byteLength;}
-  const frame=projectProductionOrdersFrame(JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes)));
+  const frame=projectProductionOrdersFrame(JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes)),env.COMMERCIAL_CONTEXT?.profile??undefined);
   return frame&&productionOrdersRequestMatches(body,frame)?frame:failure();
  };
  try{return await Promise.race([work(),deadline]);}catch{return failure();}finally{clearTimeout(timer);controller.abort();cancel();}

@@ -1,0 +1,18 @@
+import {DatabaseSync} from 'node:sqlite';
+import {handleAccountRequest} from '../src/account-worker.mjs';
+import {readLocalAccountOutbox} from '../src/account-service.mjs';
+import {accountToken} from '../src/account-crypto.mjs';
+
+// This adapter executes the production account store SQL and real transactions.
+// Only transport, time, test KDF cost and explicitly local mail are substituted.
+export class CommercialAccountD1{
+ constructor(){this.db=new DatabaseSync(':memory:');this.queue=Promise.resolve();}
+ prepare(sql){const db=this.db;let args=[];return {bind(...values){args=values;return this;},async run(){if(/^\s*SELECT\b/i.test(sql))return {results:db.prepare(sql).all(...args),meta:{changes:0}};const result=db.prepare(sql).run(...args);return {meta:{changes:Number(result.changes)}};},async first(){return db.prepare(sql).get(...args)??null;},async all(){return {results:db.prepare(sql).all(...args)};}};}
+ batch(statements){const run=async()=>{this.db.exec('BEGIN');try{const rows=[];for(const statement of statements)rows.push(await statement.run());this.db.exec('COMMIT');return rows;}catch(error){this.db.exec('ROLLBACK');throw error;}};const next=this.queue.then(run,run);this.queue=next.catch(()=>{});return next;}
+ close(){this.db.close();}
+}
+export const commercialTestPassword='Synthetic browser passphrase 827641';
+export function commercialAccountFixture(){
+ let time=Date.UTC(2026,10,11,18),origin='https://accounts.example.test';const db=new CommercialAccountD1(),env={ACCOUNT_DB:db,ACCOUNT_ENCRYPTION_KEY:accountToken(),ACCOUNT_MAIL_MODE:'LOCAL_TEST_ONLY'},options={local:true,test:true,passwordIterations:1000,now:()=>time};
+ const f={env,options,db,get origin(){return origin;},setOrigin(value){origin=value;},advance(seconds){time+=seconds*1000;},get time(){return time;},close(){db.close();},async request(request){return handleAccountRequest(request,env,options);},async outbox(){return readLocalAccountOutbox(env,options);},async call(path,{method='GET',data,cookie,csrf}={}){const response=await handleAccountRequest(new Request(origin+path,{method,headers:{...(method==='GET'?{}:{origin,'content-type':'application/json'}),...(cookie?{cookie}:{}),...(csrf?{'x-csrf-token':csrf}:{})},...(method==='GET'?{}:{body:JSON.stringify(data??{})})}),env,options);return {status:response.status,data:await response.json(),cookie:response.headers.getSetCookie().find(row=>row.startsWith('__Host-mls_account='))?.split(';')[0]};},async signup(email='owner@example.test',name='Pessoa sintética'){const registered=await f.call('/api/account/register',{method:'POST',data:{name,email,password:commercialTestPassword}});if(registered.status!==202)throw Error('TEST_REGISTRATION_FAILED');const mail=(await f.outbox()).find(row=>row.message.to===email&&row.purpose==='EMAIL_VERIFICATION');const verified=await f.call('/api/account/email-verification/confirm',{method:'POST',data:{token:mail.message.token}});if(verified.status!==200)throw Error('TEST_VERIFICATION_FAILED');return f.login(email);},async login(email='owner@example.test'){const logged=await f.call('/api/account/login',{method:'POST',data:{email,password:commercialTestPassword}});if(logged.status!==200)throw Error('TEST_LOGIN_FAILED');const session=await f.call('/api/account/session',{cookie:logged.cookie});return {cookie:logged.cookie,csrf:session.data.csrf,user:session.data.user,session:session.data.session};},async company(who,name='Empresa sintética A'){const result=await f.call('/api/companies',{method:'POST',cookie:who.cookie,csrf:who.csrf,data:{name,confirmed:true,request_id:crypto.randomUUID()}});if(result.status!==201)throw Error('TEST_COMPANY_FAILED');return result.data.organization;}};return f;
+}

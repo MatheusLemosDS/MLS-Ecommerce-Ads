@@ -1,3 +1,4 @@
+import {TenantInitializationMap} from './tenant-storage.mjs';
 import {readBusinessSyncState} from './business-sync.mjs';
 import {businessMonthWithCheckpoint} from './business-checkpoint.mjs';
 import {projectBusinessMonth} from './business-month.mjs';
@@ -17,7 +18,7 @@ export const BUSINESS_HISTORY_SYNC_SCHEMA=[
 ];
 export class BusinessHistorySyncError extends Error{constructor(code,status=503){super(code);this.status=status;}}
 const fail=code=>{throw new BusinessHistorySyncError(code);};
-const ready=new WeakMap(),open=['ongoing','cancel_pending','unpaid','other','unknown','payment_missing'];
+const ready=new TenantInitializationMap(),open=['ongoing','cancel_pending','unpaid','other','unknown','payment_missing'];
 const integer=(value,min=0,max=Number.MAX_SAFE_INTEGER)=>Number.isSafeInteger(value)&&!Object.is(value,-0)&&value>=min&&value<=max;
 const localMonth=ms=>new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date(ms)).slice(0,7);
 function clock(now){let value;try{value=now();}catch{fail('BUSINESS_HISTORY_CLOCK_INVALID');}if(!integer(value,1,9999999999999))fail('BUSINESS_HISTORY_CLOCK_INVALID');return value;}

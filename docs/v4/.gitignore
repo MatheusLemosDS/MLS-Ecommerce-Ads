@@ -1,0 +1,3 @@
+# Evidence logs here contain only local synthetic test output and are inputs to
+# validate-evidence.mjs. Keep them with the matrix rather than ignoring *.log.
+!evidence/*.log

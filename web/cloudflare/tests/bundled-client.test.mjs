@@ -105,7 +105,7 @@ function monthlyBrowser(html,value=monthlyFrame()){
  globalThis.Date=ClockDate;globalThis.location={search:''};
  const timers=new Map();let nextTimer=0;
  const setTimeout=(callback,delay)=>{const id=++nextTimer;timers.set(id,{callback,delay});return id;},clearTimeout=id=>timers.delete(id);
- function node(tag='div',text=''){return {tag,textContent:text,value:'',dataset:{},children:[],hidden:false,disabled:false,open:false,max:'',append(...values){this.children.push(...values);},replaceChildren(...values){this.textContent='';this.children=[...values];},setAttribute(){}};}
+ function node(tag='div',text=''){return {tag,textContent:text,value:'',dataset:{},style:{},children:[],hidden:false,disabled:false,open:false,max:'',append(...values){this.children.push(...values);},replaceChildren(...values){this.textContent='';this.children=[...values];},setAttribute(){}};}
  const controls=new Map(${JSON.stringify(ids)}.map(id=>[id,node()]));
  const document={hidden:false,getElementById(id){if(!controls.has(id))throw Error('UNKNOWN_CONTROL:'+id);return controls.get(id);},createElement:tag=>node(tag),addEventListener(){}};
  const text=element=>element.textContent+element.children.map(text).join(' '),control=name=>controls.get('businessMonth'+name);

@@ -1,0 +1,91 @@
+✖ compiled M3 workbench normal 320px: local observer, explicit scenarios and navigation (3732.718466ms)
+✖ compiled M3 workbench normal 1365px: local observer, explicit scenarios and navigation (2701.559905ms)
+✖ compiled M3 workbench minified 320px: local observer, explicit scenarios and navigation (2574.650283ms)
+✖ compiled M3 workbench minified 1365px: local observer, explicit scenarios and navigation (2617.532522ms)
+✔ generated normal/minified Ads charts reconcile source, touch, keyboard, themes and mobile reflow (10304.583291ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 1
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 11820.176557
+
+✖ failing tests:
+
+test at web/cloudflare/tests/mls-product-workbench-chrome.test.mjs:47:64
+✖ compiled M3 workbench normal 320px: local observer, explicit scenarios and navigation (3732.718466ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'Distribuição de unidades nas classes ABC'
+  - 'Distribuição da receita exclusiva coberta nas classes ABC'
+  
+      at TestContext.<anonymous> (file:///workspace/mls-commerce-os-v4/web/cloudflare/tests/mls-product-workbench-chrome.test.mjs:76:112)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'Distribuição de unidades nas classes ABC',
+    expected: 'Distribuição da receita exclusiva coberta nas classes ABC',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at web/cloudflare/tests/mls-product-workbench-chrome.test.mjs:47:64
+✖ compiled M3 workbench normal 1365px: local observer, explicit scenarios and navigation (2701.559905ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'Distribuição de unidades nas classes ABC'
+  - 'Distribuição da receita exclusiva coberta nas classes ABC'
+  
+      at TestContext.<anonymous> (file:///workspace/mls-commerce-os-v4/web/cloudflare/tests/mls-product-workbench-chrome.test.mjs:76:112)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'Distribuição de unidades nas classes ABC',
+    expected: 'Distribuição da receita exclusiva coberta nas classes ABC',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at web/cloudflare/tests/mls-product-workbench-chrome.test.mjs:47:64
+✖ compiled M3 workbench minified 320px: local observer, explicit scenarios and navigation (2574.650283ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'Distribuição de unidades nas classes ABC'
+  - 'Distribuição da receita exclusiva coberta nas classes ABC'
+  
+      at TestContext.<anonymous> (file:///workspace/mls-commerce-os-v4/web/cloudflare/tests/mls-product-workbench-chrome.test.mjs:76:112)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'Distribuição de unidades nas classes ABC',
+    expected: 'Distribuição da receita exclusiva coberta nas classes ABC',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at web/cloudflare/tests/mls-product-workbench-chrome.test.mjs:47:64
+✖ compiled M3 workbench minified 1365px: local observer, explicit scenarios and navigation (2617.532522ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'Distribuição de unidades nas classes ABC'
+  - 'Distribuição da receita exclusiva coberta nas classes ABC'
+  
+      at TestContext.<anonymous> (file:///workspace/mls-commerce-os-v4/web/cloudflare/tests/mls-product-workbench-chrome.test.mjs:76:112)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'Distribuição de unidades nas classes ABC',
+    expected: 'Distribuição da receita exclusiva coberta nas classes ABC',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

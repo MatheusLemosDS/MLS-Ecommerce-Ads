@@ -1,3 +1,7 @@
+import {TenantIsolationError,TenantInitializationMap,TenantInitializationSet} from './tenant-storage.mjs';
+import {beginCommercialAdminRequest,commercialCurrentSession,commercialOwnerAction,commercialRuntimeError} from './commercial-admin-runtime.mjs';
+import {commercialTabAllowed} from './commercial-route-policy.mjs';
+import {COMMERCIAL_WORKSPACE_CLIENT} from './commercial-workspace-client.mjs';
 import {readBusinessMonthVariantContributions} from './business-variant-attribution.mjs';
 import {shopDailyOrders} from './daily-shop-orders.mjs';
 import {orderItems} from './order-items.mjs';
@@ -13,7 +17,7 @@ import {CLIENT} from './admin-client.mjs';
 import {APP_RELEASE,releaseInfo} from './app-release.mjs';
 import {APP_RELEASE_CSS} from './app-release-view.mjs';
 import {BANK_RECONCILIATION_CSS,bankReconciliationBody} from './bank-reconciliation-view.mjs';
-import {browserAssetScript,serveMlsBrowserAsset} from './browser-assets.mjs';
+import {browserAssetScript,browserWorkspaceFailureScript,serveMlsBrowserAsset} from './browser-assets.mjs';
 import {ORDER_OPERATIONS_CSS,orderOperationsBody} from './order-operations-view.mjs';
 import {OrderOperationsError,readOrderOperationsWorkspace,mutateOrderOperationsWorkspace} from './order-operations.mjs';
 import {getFinanceExternalCash} from './app-external-cash.mjs';
@@ -73,7 +77,7 @@ import {StoreSummaryError} from './store-summary.mjs';
 import {syncVariantBindings} from './variant-sync.mjs';
 import {BRAZA_THEME_HEAD,BRAZA_THEME_CSS} from './theme.mjs';
 import {readOwnerSession,handleWorkspaceAuth} from './unified-auth.mjs';
-import {readCostRules,saveCostRules,assignCostRules,readCostRuleReference,syncCostRuleCatalog,costRuleSnapshotQueries,costRuleReferenceFromSnapshot,mergeCatalogCostReference,CostRuleError} from './cost-rules.mjs';
+import {costRuleSchemaForEnvironment,readCostRules,saveCostRules,assignCostRules,readCostRuleReference,syncCostRuleCatalog,costRuleSnapshotQueries,costRuleReferenceFromSnapshot,mergeCatalogCostReference,CostRuleError} from './cost-rules.mjs';
 import {COST_RULE_CSS,costRulesBody,COST_RULE_CLIENT} from './cost-rules-view.mjs';
 import {PRODUCTION_DTF_SCHEMA,ProductionDtfError,readProductionDtf,saveProductionDtfSettings,syncProductionDtf,prepareProductionDtfBatch,actProductionDtfBatch} from './production-dtf-store.mjs';
 import {DTF_CSS,dtfBody,DTF_CLIENT} from './dtf-view.mjs';
@@ -161,15 +165,16 @@ function assert(condition,code,status=400){if(!condition)throw new AdminError(co
 async function digest(value,secret){const key=await crypto.subtle.importKey('raw',enc.encode(secret),{name:'HMAC',hash:'SHA-256'},false,['sign']);return [...new Uint8Array(await crypto.subtle.sign('HMAC',key,enc.encode(value)))].map(x=>x.toString(16).padStart(2,'0')).join('');}
 async function equal(a,b){if(typeof a!=='string'||typeof b!=='string')return false;const x=new Uint8Array(await crypto.subtle.digest('SHA-256',enc.encode(a)));const y=new Uint8Array(await crypto.subtle.digest('SHA-256',enc.encode(b)));let difference=0;for(let i=0;i<x.length;i++)difference|=x[i]^y[i];return difference===0;}
 function secure(env){assert(typeof env.ADMIN_SESSION_SECRET==='string'&&env.ADMIN_SESSION_SECRET.length>=32,'ADMIN_SESSION_SETUP_REQUIRED',503);}
-async function session(request,env){secure(env);return readOwnerSession(request,env);}
+async function session(request,env){const account=commercialCurrentSession(env);if(account)return account;secure(env);return readOwnerSession(request,env);}
 function sameOrigin(request){assert(request.headers.get('origin')===new URL(request.url).origin,'ORIGIN_REJECTED',403);}
 async function readBody(request,maximum){const reader=request.body?.getReader();assert(reader,'BODY_REQUIRED');const pieces=[];let length=0;try{while(true){const {done,value}=await reader.read();if(done)break;length+=value.length;assert(length<=maximum,'BODY_TOO_LARGE',413);pieces.push(value);}}finally{await reader.cancel();}const raw=new Uint8Array(length);let offset=0;for(const piece of pieces){raw.set(piece,offset);offset+=piece.length;}return new TextDecoder().decode(raw);}
 async function input(request,maximum=16384){assert((request.headers.get('content-type')||'').split(';')[0]==='application/json','JSON_REQUIRED',415);const raw=await readBody(request,maximum);try{const value=JSON.parse(raw);assert(value&&typeof value==='object'&&!Array.isArray(value),'BODY_INVALID');return value;}catch(error){if(error instanceof AdminError)throw error;throw new AdminError('BODY_INVALID');}}
-const INITIALIZED_DB=new WeakMap();
-const MAINTENANCE_PENDING=new WeakSet();
+const INITIALIZED_DB=new TenantInitializationMap();
+const MAINTENANCE_PENDING=new TenantInitializationSet();
 async function setup(env){
  assert(env.ADMIN_DB&&typeof env.ADMIN_DB.prepare==='function','ADMIN_DB_SETUP_REQUIRED',503);if(INITIALIZED_DB.has(env.ADMIN_DB))return INITIALIZED_DB.get(env.ADMIN_DB);
  const ready=(async()=>{const db=env.ADMIN_DB,now=new Date().toISOString();
+  if(env.COMMERCIAL_CONTEXT){assert(typeof env.COMMERCIAL_SETUP_READY==='function','COMMERCIAL_WORKSPACE_SETUP_REQUIRED',409);await env.COMMERCIAL_SETUP_READY();return {maintenanceApplied:false};}
   const initialized=await db.batch([...SCHEMA.map(sql=>db.prepare(sql)),
    db.prepare('INSERT OR IGNORE INTO production_costs_state(id,revision,payload,updated_at) VALUES(1,1,?,?)').bind(JSON.stringify(COST_DEFAULTS),now),
    db.prepare('INSERT OR IGNORE INTO production_costs_audit(revision,payload,actor,created_at) SELECT revision,payload,?,updated_at FROM production_costs_state WHERE id=1 AND revision=1').bind('operator-confirmed-2026-10-16'),
@@ -182,10 +187,10 @@ async function setup(env){
   const maintenanceApplied=initialized.at(-1).results[0].n<3;await applyConfirmedOperatorCostCorrections(env);if(maintenanceApplied)MAINTENANCE_PENDING.add(db);return {maintenanceApplied};
  })();INITIALIZED_DB.set(env.ADMIN_DB,ready);try{return await ready;}catch(error){INITIALIZED_DB.delete(env.ADMIN_DB);throw error;}
 }
-function validateSettings(value){assert(value&&typeof value==='object'&&!Array.isArray(value),'SETTINGS_INVALID');assert(Object.keys(value).length===Object.keys(DEFAULTS).length&&Object.keys(DEFAULTS).every(key=>Object.hasOwn(value,key)),'SETTINGS_INVALID');for(const key of ['regular_cents','mixed_cents','plus_cents'])assert(Number.isInteger(value[key])&&value[key]>0&&value[key]<=1000000,'MARGIN_INVALID');assert(Number.isInteger(value.ad_share_percent)&&value.ad_share_percent>=1&&value.ad_share_percent<=100,'AD_SHARE_INVALID');assert(['manual','scheduled','paused'].includes(value.hermes_mode),'MODE_INVALID');assert(Number.isInteger(value.daily_hour)&&value.daily_hour>=0&&value.daily_hour<=23,'HOUR_INVALID');for(const key of ['monthly_budget_cents','run_reserve_cents'])assert(Number.isInteger(value[key])&&value[key]>=1&&value[key]<=1000000,'BUDGET_INVALID');assert(value.run_reserve_cents<=value.monthly_budget_cents,'RESERVE_EXCEEDS_BUDGET');assert(['unverified','subscription','api'].includes(value.billing_mode),'BILLING_MODE_INVALID');assert(Number.isInteger(value.monthly_run_limit)&&value.monthly_run_limit>=1&&value.monthly_run_limit<=1000,'RUN_LIMIT_INVALID');return value;}
-async function settings(env){const row=await env.ADMIN_DB.prepare('SELECT revision,payload,updated_at FROM admin_settings WHERE id=1').first();return {revision:row.revision,values:{...DEFAULTS,...JSON.parse(row.payload)},updated_at:row.updated_at};}
-async function saveSettings(env,body,actor){assert(Number.isInteger(body.revision)&&body.revision>=1&&Object.keys(body).length===2,'REVISION_REQUIRED');const value=validateSettings(body.values),raw=JSON.stringify(value),now=new Date().toISOString();const results=await env.ADMIN_DB.batch([
- env.ADMIN_DB.prepare('UPDATE admin_settings SET revision=revision+1,payload=?,updated_at=? WHERE id=1 AND revision=?').bind(raw,now,body.revision),
+function validateSettings(value,{commercial=false}={}){assert(value&&typeof value==='object'&&!Array.isArray(value),'SETTINGS_INVALID');assert(Object.keys(value).length===Object.keys(DEFAULTS).length&&Object.keys(DEFAULTS).every(key=>Object.hasOwn(value,key)),'SETTINGS_INVALID');for(const key of ['regular_cents','mixed_cents','plus_cents'])assert(commercial&&value[key]===null||Number.isInteger(value[key])&&value[key]>0&&value[key]<=1000000,'MARGIN_INVALID');assert(Number.isInteger(value.ad_share_percent)&&value.ad_share_percent>=1&&value.ad_share_percent<=100,'AD_SHARE_INVALID');assert(['manual','scheduled','paused'].includes(value.hermes_mode),'MODE_INVALID');assert(Number.isInteger(value.daily_hour)&&value.daily_hour>=0&&value.daily_hour<=23,'HOUR_INVALID');for(const key of ['monthly_budget_cents','run_reserve_cents'])assert(commercial&&value[key]===null||Number.isInteger(value[key])&&value[key]>=1&&value[key]<=1000000,'BUDGET_INVALID');assert(commercial&&(value.run_reserve_cents===null||value.monthly_budget_cents===null)||value.run_reserve_cents<=value.monthly_budget_cents,'RESERVE_EXCEEDS_BUDGET');assert(['unverified','subscription','api'].includes(value.billing_mode),'BILLING_MODE_INVALID');assert(Number.isInteger(value.monthly_run_limit)&&value.monthly_run_limit>=1&&value.monthly_run_limit<=1000,'RUN_LIMIT_INVALID');return value;}
+async function settings(env){const row=await env.ADMIN_DB.prepare('SELECT revision,payload,updated_at FROM admin_settings WHERE id=1').first();if(!row&&env.COMMERCIAL_CONTEXT)return {revision:0,values:{regular_cents:null,mixed_cents:null,plus_cents:null,ad_share_percent:40,hermes_mode:'paused',daily_hour:9,monthly_budget_cents:null,run_reserve_cents:null,billing_mode:'unverified',monthly_run_limit:30},updated_at:null};assert(row,'SETTINGS_CONFIGURATION_REQUIRED',409);return {revision:row.revision,values:{...(env.COMMERCIAL_CONTEXT?{}:DEFAULTS),...JSON.parse(row.payload)},updated_at:row.updated_at};}
+async function saveSettings(env,body,actor){assert(Number.isInteger(body.revision)&&(body.revision>=1||env.COMMERCIAL_CONTEXT&&body.revision===0)&&Object.keys(body).length===2,'REVISION_REQUIRED');const value=validateSettings(body.values,{commercial:!!env.COMMERCIAL_CONTEXT}),raw=JSON.stringify(value),now=new Date().toISOString();const results=await env.ADMIN_DB.batch([
+ ...(env.COMMERCIAL_CONTEXT&&body.revision===0?[env.ADMIN_DB.prepare('INSERT OR IGNORE INTO admin_settings(id,revision,payload,updated_at) VALUES(1,1,?,?)').bind(raw,now)]:[env.ADMIN_DB.prepare('UPDATE admin_settings SET revision=revision+1,payload=?,updated_at=? WHERE id=1 AND revision=?').bind(raw,now,body.revision)]),
  env.ADMIN_DB.prepare('INSERT INTO admin_audit(revision,payload,actor,created_at) SELECT revision,payload,?,updated_at FROM admin_settings WHERE id=1 AND revision=? AND updated_at=? AND NOT EXISTS(SELECT 1 FROM admin_audit WHERE revision=?)').bind(actor,body.revision+1,now,body.revision+1)]);assert(results[0].meta.changes===1,'SETTINGS_CHANGED_RELOAD',409);return settings(env);}
 function localDay(now=new Date()){return new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit'}).format(now);}
 function yesterday(){return localDay(new Date(Date.now()-86400000));}
@@ -255,7 +260,7 @@ async function finish(env,body){
 async function correctCost(env,body,actor){assert(Object.keys(body).length===2&&typeof body.id==='string'&&Number.isInteger(body.cost_cents)&&body.cost_cents>=0&&body.cost_cents<=100000000,'COST_INVALID');const now=new Date().toISOString();const results=await env.ADMIN_DB.batch([env.ADMIN_DB.prepare("INSERT INTO hermes_cost_audit(job_id,previous_cents,cost_cents,actor,created_at) SELECT id,cost_cents,?,?,? FROM hermes_jobs WHERE id=? AND status IN ('completed','failed')").bind(body.cost_cents,actor,now,body.id),env.ADMIN_DB.prepare("UPDATE hermes_jobs SET cost_cents=?,cost_source='operator_confirmed' WHERE id=? AND status IN ('completed','failed')").bind(body.cost_cents,body.id)]);assert(results[1].meta.changes===1,'COST_JOB_NOT_COMPLETED',409);return {ok:true};}
 async function schedule(env,now=new Date()){await setup(env);const cfg=await settings(env);if(cfg.values.hermes_mode!=='scheduled')return;const hour=Number(new Intl.DateTimeFormat('en-GB',{timeZone:'America/Sao_Paulo',hour:'2-digit',hourCycle:'h23'}).format(now));if(hour<cfg.values.daily_hour)return;try{await enqueue(env,'scheduled','daily:'+localDay(now));}catch(error){if(!(error instanceof AdminError))throw error;}}
 function page(body,title='MLS Commerce OS · Gestão da loja',{allowLocalVideo=false}={}){return new Response(`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="mls-app-release" content="${APP_RELEASE.id}"><title>${title}</title>${BRAZA_THEME_HEAD}<style>${BRAZA_THEME_CSS}\n${CSS}</style></head><body>${body}</body></html>`,{headers:{'content-type':'text/html; charset=utf-8','cache-control':'no-store','x-mls-app-release':APP_RELEASE.id,'content-security-policy':"default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' blob: data: https://*.img.susercontent.com https://cf.shopee.com.br https://cf.shopee.com; form-action 'self'; frame-ancestors 'none'; base-uri 'none'"+(allowLocalVideo?"; media-src 'self' blob:":''),'x-content-type-options':'nosniff','x-frame-options':'DENY','referrer-policy':'same-origin'}});}
-function loginPage(error=''){return page(loginBody(error));}
+function loginPage(error=''){return page(loginBody(error).replace('</main>','<p><a href="/account/login">Entrar com conta pessoal</a> · <a href="/register">Criar conta</a></p></main>'));}
 
 function panelDiagnosticsPage(){return page("\n<style>\n.mls-diag{max-width:780px;margin:28px auto;padding:24px;background:var(--surface,#fff);border:1px solid var(--line,#ddd);border-radius:16px;color:var(--text,#222);box-sizing:border-box}\n.mls-diag h1{font-size:22px;margin:4px 0 12px}.mls-diag p{font-size:13px;line-height:1.65}\n.mls-diag .mls-diag-tools{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}\n.mls-diag button,.mls-diag a.mls-diag-back{padding:10px 14px;border:1px solid var(--line,#ddd);border-radius:9px;font-size:12px;background:var(--surface-raised,#eee);color:var(--text,#222);text-decoration:none;cursor:pointer}\n.mls-diag textarea{box-sizing:border-box;width:100%;min-height:255px;padding:12px;resize:vertical;font:12px/1.6 monospace;background:var(--surface,#fff);color:var(--text,#222);border:1px solid var(--line,#ddd);border-radius:10px}\n</style>\n<main class=\"mls-diag\"><span class=\"eyebrow\">MLS COMMERCE OS</span>\n<h1>Diagnóstico seguro do painel</h1>\n<p>Esta tela funciona separadamente da Central de Comando. Verifica a sessão, uma leitura simples do D1 e o resumo mensal já existente. Não altera campanhas, pedidos, custos ou configurações.</p>\n<p id=\"mlsDiagStatus\" role=\"status\" aria-live=\"polite\">Verificando as três etapas…</p>\n<div class=\"mls-diag-tools\"><button id=\"mlsDiagRetry\" type=\"button\">Verificar novamente</button><button id=\"mlsDiagCopy\" type=\"button\">Copiar diagnóstico</button><a class=\"mls-diag-back\" href=\"/admin?tab=overview\">Voltar à Central</a></div>\n<label for=\"mlsDiagOutput\">Resultado seguro para compartilhar (sem credenciais e sem dados de pedidos)</label>\n<textarea id=\"mlsDiagOutput\" readonly spellcheck=\"false\">Preparando diagnóstico…</textarea>\n<p>Se o resumo mensal falhar mas a leitura simples do D1 funcionar, o problema pode estar na inicialização ou no contrato financeiro. Não envie senhas, cookies, tokens nem capturas da aba de requisições completas.</p></main>\n<script>\n(()=>{\n const out=document.getElementById('mlsDiagOutput'),status=document.getElementById('mlsDiagStatus'),retry=document.getElementById('mlsDiagRetry'),copy=document.getElementById('mlsDiagCopy');\n const release='p1-diagnostics-20261027-v1';\n let busy=false;\n const nowMonth=()=>new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit'}).format(new Date()).slice(0,7);\n const code=value=>typeof value==='string'&&/^[A-Z][A-Z0-9_]{2,79}$/.test(value)?value:null;\n const schema=value=>typeof value==='string'&&/^[a-z][a-z0-9_]{2,79}$/.test(value)?value:null;\n async function request(path,ms,headers={}){\n  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),ms),start=Date.now();\n  try{\n   const response=await fetch(path,{method:'GET',credentials:'same-origin',cache:'no-store',headers,signal:controller.signal});\n   const contentType=response.headers.get('content-type')||'';\n   const data=contentType.includes('application/json')?await response.json().catch(()=>null):null;\n   return {http:response.status,elapsed_ms:Math.min(60000,Date.now()-start),error:code(data?.error),schema:schema(data?.schema),d1:code(data?.d1_probe),release:code(data?.release)};\n  }catch(error){return {http:null,elapsed_ms:Math.min(60000,Date.now()-start),error:controller.signal.aborted?'TIMEOUT':'NETWORK_FAILURE'};}\n  finally{clearTimeout(timer);}\n }\n async function markup(){\n  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),8000),start=Date.now();\n  try{\n   const response=await fetch('/admin?tab=overview',{credentials:'same-origin',cache:'no-store',signal:controller.signal});\n   if(!response.ok)return {http:response.status,error:'HTTP_ERROR'};\n   const html=await response.text();\n   return {http:response.status,elapsed_ms:Math.min(60000,Date.now()-start),command_center:html.includes('id=\"commandCenter\"'),agent_cards:html.includes('data-agent-placeholder=\"true\"'),startup_retry:html.includes('id=\"startupRetry\"'),diagnostic_link:html.includes('href=\"/admin/diagnostics\"')};\n  }catch(error){return {http:null,error:controller.signal.aborted?'TIMEOUT':'NETWORK_FAILURE'};}\n  finally{clearTimeout(timer);}\n }\n async function run(){\n  if(busy)return;\n  busy=true;retry.disabled=true;status.textContent='Verificando autenticação e banco…';\n  const report={schema:'mls_owner_panel_report_v1',release,checked_at:new Date().toISOString(),month:nowMonth(),owner_probe:null,admin_markup:null,finance_month:null};\n  try{\n   report.owner_probe=await request('/api/admin/diagnostics',8000);\n   status.textContent='Verificando a estrutura da Central…';\n   report.admin_markup=await markup();\n   status.textContent='Verificando consulta financeira salva…';\n   report.finance_month=await request('/api/admin/finance/business-month-view?month='+encodeURIComponent(report.month),20000,{'X-Braza-Client-Contract':'business-month-view-v4'});\n   status.textContent='Diagnóstico concluído. Use Copiar diagnóstico para compartilhar apenas os códigos.';\n  }catch{status.textContent='Não foi possível concluir todos os testes. Copie as etapas disponíveis.';}\n  finally{out.value=JSON.stringify(report,null,2);busy=false;retry.disabled=false;}\n }\n retry.addEventListener('click',run);\n copy.addEventListener('click',async()=>{\n  try{\n   if(!navigator.clipboard?.writeText)throw Error('clipboard unavailable');\n   await navigator.clipboard.writeText(out.value);status.textContent='Diagnóstico copiado. Não contém dados de pedidos ou credenciais.';\n  }catch{out.focus();out.select();status.textContent='Selecione o texto do diagnóstico e copie manualmente.';}\n });\n run();\n})();\n</script>\n",'MLS Commerce OS · Diagnóstico seguro');}
 async function panelD1Probe(env){
@@ -396,6 +401,7 @@ function dashboard(env,ownerSession){
  const dtfScope='<button type="button" data-mission-scope="dtf" aria-pressed="false">Pedidos na fila DTF</button>';
  const aiPreview=mlsAiSalesOwnerPreviewEnabled(env,ownerSession);
  let body=adminBody();
+ if(ownerSession?.kind==='account'){const text=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));body=body.replaceAll('Minha loja',text(ownerSession.organizationName)).replaceAll('Shopee Brasil',text(ownerSession.storeName||'Loja selecionada'));}
  if(aiPreview){
   const anchor='<a class="workspace-nav-link" href="/admin/diagnostics">';
   const link='<a class="workspace-nav-link" href="/admin?tab=ai-sales" data-tab="ai-sales" data-workspace-tab="ai-sales" data-workspace-key="ai-sales"><span class="workspace-nav-label">MLS AI Sales</span></a>';
@@ -411,17 +417,37 @@ function dashboard(env,ownerSession){
   body=body.replace('Selecione Painéis, Produtos salvos ou Pedidos na fila DTF. A busca por pedidos não é um histórico completo da Shopee.','Pesquise painéis, agentes e ferramentas.');
  }
  body=body.replace('id="missionGlobalSearch"','id="missionGlobalSearch" data-mls-v36-preview="'+(preview?'enabled':'disabled')+'"');
- const markup='<style>'+APP_RELEASE_CSS+BANK_RECONCILIATION_CSS+ORDER_OPERATIONS_CSS+WEEKLY_OPERATING_CSS+PRODUCTION_COVERAGE_CSS+PRODUCTION_WEEKLY_CSS+RETURN_MANUFACTURING_LINKS_CSS+PRODUCTION_CONFIRMATION_PROPOSAL_CSS+INCURRED_PRODUCTION_CSS+PRODUCTION_DAILY_FINANCE_CSS+PRODUCTION_WORKSPACE_CSS+PHYSICAL_RETURNS_CSS+BUSINESS_MONTH_CSS+AUTOMATION_WORKSPACE_CSS+COST_RULE_CSS+DTF_CSS+PRODUCTION_COST_PERIODS_CSS+SAVED_CATALOG_CSS+(preview?MLS_LISTING_FACTORY_CSS:'')+(aiPreview?MLS_AI_SALES_CSS:'')+'</style>'+body.replace('<div id="bankReconciliationHost"></div>',bankReconciliationBody()).replace('<div id="missionHermesTools"></div>','<div id="missionHermesTools">'+automationWorkspaceBody()+'</div>').replace('<div id="missionProductionLedgerHost"></div>','<div id="missionProductionLedgerHost">'+productionWorkspaceBody({daily:incurredProductionBody().replace('<div id="incurredProductionFinancialHost"></div>',productionDailyFinanceBody()),weekly:productionWeeklyClosingBody(),coverage:productionCoverageBody(),reference:productionCostPeriodsBody()})+'</div>').replace('<section id="margins" hidden>','<section id="margins" hidden>'+costRulesBody()).replace('<section id="products" hidden>',weeklyOperatingBody()+orderOperationsBody()+dtfBody()+(aiPreview?mlsAiSalesBody():'')+'<section id="products" hidden>'+(preview?mlsListingFactoryBody():'')+savedCatalogBody({listingFactory:preview}))+'<script>'+DTF_ENGINE_CLIENT+'</script><script>'+DTF_CLIENT+'</script><script>'+COST_RULE_CLIENT+'</script><script>'+AUTOMATION_WORKSPACE_CLIENT+'</script>'+browserAssetScript('month')+'<script>'+INCOME_OVERVIEW_CLIENT+'</script><script>'+AGENT_REGISTRY_CLIENT+'</script><script>'+MISSION_CLIENT+'</script><script>'+MISSION_TRENDS_CLIENT+'</script>'+browserAssetScript('production')+'<script>'+SAVED_CATALOG_CLIENT+'</script>'+(preview?'<script>'+MLS_LISTING_FACTORY_CLIENT+'</script>':'')+(aiPreview?'<script>'+MLS_AI_SALES_CLIENT+'</script>':'')+'<script>'+PHYSICAL_RETURNS_CLIENT+'\n'+RETURN_MANUFACTURING_LINKS_CLIENT+'</script>'+browserAssetScript('bank')+browserAssetScript('orders')+browserAssetScript('weekly')+'<script>'+CLIENT+'</script>';
+ const markup='<style>'+APP_RELEASE_CSS+BANK_RECONCILIATION_CSS+ORDER_OPERATIONS_CSS+WEEKLY_OPERATING_CSS+PRODUCTION_COVERAGE_CSS+PRODUCTION_WEEKLY_CSS+RETURN_MANUFACTURING_LINKS_CSS+PRODUCTION_CONFIRMATION_PROPOSAL_CSS+INCURRED_PRODUCTION_CSS+PRODUCTION_DAILY_FINANCE_CSS+PRODUCTION_WORKSPACE_CSS+PHYSICAL_RETURNS_CSS+BUSINESS_MONTH_CSS+AUTOMATION_WORKSPACE_CSS+COST_RULE_CSS+DTF_CSS+PRODUCTION_COST_PERIODS_CSS+SAVED_CATALOG_CSS+(preview?MLS_LISTING_FACTORY_CSS:'')+(aiPreview?MLS_AI_SALES_CSS:'')+'</style>'+body.replace('<div id="bankReconciliationHost"></div>',bankReconciliationBody()).replace('<div id="missionHermesTools"></div>','<div id="missionHermesTools">'+automationWorkspaceBody()+'</div>').replace('<div id="missionProductionLedgerHost"></div>','<div id="missionProductionLedgerHost">'+productionWorkspaceBody({daily:incurredProductionBody().replace('<div id="incurredProductionFinancialHost"></div>',productionDailyFinanceBody()),weekly:productionWeeklyClosingBody(),coverage:productionCoverageBody(),reference:productionCostPeriodsBody()})+'</div>').replace('<section id="margins" hidden>','<section id="margins" hidden>'+costRulesBody()).replace('<section id="products" hidden>',weeklyOperatingBody()+orderOperationsBody()+dtfBody()+(aiPreview?mlsAiSalesBody():'')+'<section id="products" hidden>'+(preview?mlsListingFactoryBody():'')+savedCatalogBody({listingFactory:preview}))+'<script>'+DTF_ENGINE_CLIENT+'</script><script>'+DTF_CLIENT+'</script><script>'+COST_RULE_CLIENT+'</script><script>'+AUTOMATION_WORKSPACE_CLIENT+'</script>'+browserAssetScript('month')+'<script>'+INCOME_OVERVIEW_CLIENT+'</script><script>'+AGENT_REGISTRY_CLIENT+'</script><script>'+MISSION_CLIENT+'</script><script>'+MISSION_TRENDS_CLIENT+'</script>'+browserAssetScript('production')+'<script>'+SAVED_CATALOG_CLIENT+'</script>'+(preview?'<script>'+MLS_LISTING_FACTORY_CLIENT+'</script>':'')+(aiPreview?'<script>'+MLS_AI_SALES_CLIENT+'</script>':'')+'<script>'+PHYSICAL_RETURNS_CLIENT+'\n'+RETURN_MANUFACTURING_LINKS_CLIENT+'</script>'+browserAssetScript('bank')+browserAssetScript('orders')+browserAssetScript('weekly')+'<script>'+browserWorkspaceFailureScript()+'</script>'+browserAssetScript('workspace');
  // Raw control bytes inside inlined JavaScript are changed by the HTML
  // tokenizer (U+0000 becomes U+FFFD), which can invalidate a regex character
  // class before any client initializer runs. Encode these bytes as JavaScript
  // unicode escapes before sending the document; preserve normal whitespace.
- const safe=markup.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g,
+ let documentMarkup=markup;
+ if(ownerSession?.kind==='account'){const p=ownerSession,context={kind:'account',userId:p.userId,organizationId:p.organizationId,storeId:p.storeId,role:p.role,capabilities:p.capabilities,csrf:p.csrf,namespace:p.context.namespace,allowedTabs:['weekly-report','order-operations','overview','agents','agent-finance','agent-ads','agent-products','agent-production','agent-returns','agent-auditor','agent-hermes','products','production','margins','hermes','history','roadmap'].filter(tab=>commercialTabAllowed(p,tab))};const data=JSON.stringify(context).replaceAll('<','\\u003c');const hook='<script type="application/json" id="mls-commercial-context">'+data+'</script><script>'+COMMERCIAL_WORKSPACE_CLIENT+'</script>';documentMarkup=hook+markup;documentMarkup=documentMarkup.replace('<div class="sidebar-foot">','<div class="sidebar-foot"><p><a href="/companies">Empresas e lojas</a> · <a href="/account/profile">Minha conta</a></p>');}
+ const safe=documentMarkup.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g,
   character=>'\\u'+character.charCodeAt(0).toString(16).padStart(4,'0'));
  return page(safe,undefined,{allowLocalVideo:aiPreview});
 }
 
-async function adminFetch(request,env,services={}){const url=new URL(request.url),path=url.pathname;try{
+function commercialAccessErrorPage(status){
+ const heading=status===401?'Entre novamente':status===403?'Este acesso não está disponível':status===409?'Confira a empresa e a loja':'Não foi possível abrir esta área';
+ const detail=status===401?'A sessão terminou ou precisa ser confirmada. Seus dados salvos foram preservados.':status===403?'Seu papel ou o acesso à loja mudou. Selecione uma empresa autorizada para continuar.':status===409?'Selecione uma loja ativa e conclua a configuração indicada.':'O serviço está temporariamente indisponível. Tente novamente em alguns instantes.';
+ const response=page('<main class="login card"><div class="brand"><span class="brand-mark">MLS</span><div>MLS Commerce OS<small>Acesso à sua empresa</small></div></div><h1>'+heading+'</h1><p>'+detail+'</p><p><a href="/companies">Selecionar empresa e loja</a></p><p><a href="/account/login">Entrar com conta pessoal</a></p></main>');
+ return new Response(response.body,{status,headers:response.headers});
+}
+async function adminFetch(request,env,services={}){
+ try{
+  if(new URL(request.url).pathname.startsWith('/assets/mls/'))return serveMlsBrowserAsset(request,env);
+  const scoped=await beginCommercialAdminRequest(request,env,{schema:SCHEMA});if(scoped?.response)return scoped.response;
+  if(scoped){const response=await adminFetchLegacy(request,scoped.env,services);return await scoped.finish(response);}
+  const response=await adminFetchLegacy(request,env,services);
+  if(new URL(request.url).pathname.match(/^\/(?:admin\/)?login$/)&&request.method==='POST'&&response.status===303&&request.headers.get('cookie')?.includes('__Host-mls_account=')){
+   const headers=new Headers(response.headers);headers.append('set-cookie','__Host-mls_account=; Path=/; Secure; HttpOnly; SameSite=Lax; Max-Age=0');return new Response(response.body,{status:response.status,headers});
+  }
+  return response;
+ }catch(error){const failure=commercialRuntimeError(error);return new URL(request.url).pathname.startsWith('/api/')?failure:commercialAccessErrorPage(failure.status);}
+}
+async function adminFetchLegacy(request,env,services={}){const url=new URL(request.url),path=url.pathname;try{
  const asset=await serveMlsBrowserAsset(request,env);if(asset)return asset;
  if(path.startsWith('/api/hermes/')){
   assert(typeof env.HERMES_BRIDGE_SECRET==='string'&&env.HERMES_BRIDGE_SECRET.length>=32,'HERMES_BRIDGE_SETUP_REQUIRED',503);
@@ -439,13 +465,16 @@ async function adminFetch(request,env,services={}){const url=new URL(request.url
  const current=await session(request,env);if(!current)return path.startsWith('/api/')?json({error:'UNAUTHORIZED'},401):Response.redirect(url.origin+'/login',303);
  // Release identity is independent of business storage and provider availability.
  if(path==='/api/admin/release-info'){
-  assert(current.role==='owner','FORBIDDEN',403);assert(request.method==='GET','METHOD_NOT_ALLOWED',405);assert(!url.search,'APP_RELEASE_REQUEST_INVALID');return json(releaseInfo());
+  assert(commercialOwnerAction(current),'FORBIDDEN',403);assert(request.method==='GET','METHOD_NOT_ALLOWED',405);assert(!url.search,'APP_RELEASE_REQUEST_INVALID');return json(releaseInfo());
  }
  if(path==='/admin/diagnostics'){assert(request.method==='GET','METHOD_NOT_ALLOWED',405);assert(!url.search,'ADMIN_DIAGNOSTICS_REQUEST_INVALID');return panelDiagnosticsPage();}
  if(path==='/api/admin/diagnostics'){assert(request.method==='GET','METHOD_NOT_ALLOWED',405);assert(!url.search,'ADMIN_DIAGNOSTICS_REQUEST_INVALID');return json(await panelD1Probe(env));}
  if(path==='/admin'){assert(request.method==='GET','METHOD_NOT_ALLOWED',405);return dashboard(env,current);}
  // Session confirmation must remain independent of storage initialization,
  // financial collection and optional settings or assistant status reads.
+ if(path==='/api/admin/workspace/prepare'){
+  assert(current.kind==='account'&&typeof env.COMMERCIAL_PREPARE==='function','NOT_FOUND',404);assert(request.method==='POST','METHOD_NOT_ALLOWED',405);assert(!url.search,'COMMERCIAL_WORKSPACE_REQUEST_INVALID');sameOrigin(request);assert(await equal(request.headers.get('x-csrf-token')||'',current.csrf),'CSRF_REJECTED',403);const body=await input(request,128);assert(Object.keys(body).length===1&&Number.isSafeInteger(body.cursor)&&body.cursor>=0&&body.cursor<=1000,'COMMERCIAL_WORKSPACE_REQUEST_INVALID');return json(await env.COMMERCIAL_PREPARE(body));
+ }
  if(path==='/api/admin/bootstrap'){
   assert(request.method==='GET','METHOD_NOT_ALLOWED',405);assert(!url.search,'ADMIN_BOOTSTRAP_REQUEST_INVALID');
   return json({schema:'admin_bootstrap_v1',csrf:current.csrf});
@@ -454,7 +483,7 @@ async function adminFetch(request,env,services={}){const url=new URL(request.url
  // Read is SELECT-only; normalized writes require explicit owner + Origin/CSRF.
  // One read-only report; block provenance and periods stay independent.
  if(path==='/api/admin/reports/weekly'){
-  assert(current.role==='owner','FORBIDDEN',403);assert(request.method==='GET','METHOD_NOT_ALLOWED',405);
+  assert(commercialOwnerAction(current),'FORBIDDEN',403);assert(request.method==='GET','METHOD_NOT_ALLOWED',405);
   const entries=[...url.searchParams];assert(entries.length===1&&entries[0][0]==='week_end','WEEKLY_OPERATING_REQUEST_INVALID');
   return json(await readWeeklyOperatingReport(env,{week_end:entries[0][1]},{cashPeriod:async selected=>{
    const result=await getFinanceExternalCashPeriod(env,{schema:'external_cash_period_request_v1',...selected});
@@ -462,7 +491,7 @@ async function adminFetch(request,env,services={}){const url=new URL(request.url
   }}));
  }
  if(path==='/api/admin/finance/external-cash'){
-  assert(current.role==='owner','FORBIDDEN',403);assert(['GET','POST'].includes(request.method),'METHOD_NOT_ALLOWED',405);
+  assert(commercialOwnerAction(current),'FORBIDDEN',403);assert(['GET','POST'].includes(request.method),'METHOD_NOT_ALLOWED',405);
   let command;
   if(request.method==='GET'){
    const entries=[...url.searchParams],keys=entries.map(([key])=>key);
@@ -500,7 +529,7 @@ async function adminFetch(request,env,services={}){const url=new URL(request.url
  // This global association is an operator declaration, not provider evidence,
  // inventory valuation or a second manufacturing expense.
  if(path==='/api/admin/returns/manufacturing-links'){
-  assert(current.role==='owner','FORBIDDEN',403);
+  assert(commercialOwnerAction(current),'FORBIDDEN',403);
   assert(['GET','POST'].includes(request.method),'METHOD_NOT_ALLOWED',405);
   assert(!url.search,'RETURN_MANUFACTURING_LINKS_REQUEST_INVALID');
   if(request.method==='GET')return json(await readReturnManufacturingLinksWorkspace(env));
@@ -510,7 +539,7 @@ async function adminFetch(request,env,services={}){const url=new URL(request.url
  // Operational stages are owner declarations, separate from DTF and manufacturing.
  // Reading the saved queue never initializes its tables or contacts a provider.
  if(path==='/api/admin/order-operations'){
-  assert(current.role==='owner','FORBIDDEN',403);assert(['GET','POST'].includes(request.method),'METHOD_NOT_ALLOWED',405);
+  assert(commercialOwnerAction(current),'FORBIDDEN',403);assert(['GET','POST'].includes(request.method),'METHOD_NOT_ALLOWED',405);
   if(request.method==='GET'){
    const keys=['start_date','end_date','status','page'],entries=[...url.searchParams];
    assert(entries.length===keys.length&&keys.every(key=>url.searchParams.getAll(key).length===1),'ORDER_OPERATIONS_REQUEST_INVALID');
@@ -522,14 +551,14 @@ async function adminFetch(request,env,services={}){const url=new URL(request.url
  }
  // Owner-declared manufacturing completeness is separate from legacy weekly reports.
  if(path==='/api/admin/production/coverage'){
-  assert(current.role==='owner','FORBIDDEN',403);assert(['GET','POST'].includes(request.method),'METHOD_NOT_ALLOWED',405);
+  assert(commercialOwnerAction(current),'FORBIDDEN',403);assert(['GET','POST'].includes(request.method),'METHOD_NOT_ALLOWED',405);
   if(request.method==='GET'){const entries=[...url.searchParams];assert(entries.length===1&&url.searchParams.getAll('week_end').length===1,'PRODUCTION_COVERAGE_REQUEST_INVALID');return json(await readProductionCoverageWorkspace(env,{week_end:url.searchParams.get('week_end')}));}
   assert(!url.search,'PRODUCTION_COVERAGE_REQUEST_INVALID');sameOrigin(request);assert(await equal(request.headers.get('x-csrf-token')||'',current.csrf),'CSRF_REJECTED',403);
   return json(await mutateProductionCoverageWorkspace(env,await input(request,4096),current.user));
  }
  // Weekly reports and cutoff confirmations use saved manufacturing facts only.
  if(path==='/api/admin/production/weekly-closing'){
-  assert(current.role==='owner','FORBIDDEN',403);
+  assert(commercialOwnerAction(current),'FORBIDDEN',403);
   assert(['GET','POST'].includes(request.method),'METHOD_NOT_ALLOWED',405);
   if(request.method==='GET'){
    const entries=[...url.searchParams];assert(entries.length===1&&url.searchParams.getAll('month').length===1,'PRODUCTION_WEEKLY_REQUEST_INVALID');
@@ -540,14 +569,14 @@ async function adminFetch(request,env,services={}){const url=new URL(request.url
  }
  // Suggestions are SELECT-only, owner-scoped and never confirm manufacturing.
  if(path==='/api/admin/production/proposal'){
-  assert(current.role==='owner','FORBIDDEN',403);assert(request.method==='GET','METHOD_NOT_ALLOWED',405);
+  assert(commercialOwnerAction(current),'FORBIDDEN',403);assert(request.method==='GET','METHOD_NOT_ALLOWED',405);
   const entries=[...url.searchParams];assert(entries.length===2&&url.searchParams.getAll('source_key').length===1&&url.searchParams.getAll('source_hash').length===1,'PRODUCTION_CONFIRMATION_PROPOSAL_REQUEST_INVALID');
   return json(await readProductionConfirmationProposal(env,{source_key:url.searchParams.get('source_key'),source_hash:url.searchParams.get('source_hash')}));
  }
  // Manufacturing declarations are independent of sales eligibility and payment.
  // This route cannot initialize the financial schema or trigger a provider read.
  if(path==='/api/admin/production/incurred'){
-  assert(current.role==='owner','FORBIDDEN',403);
+  assert(commercialOwnerAction(current),'FORBIDDEN',403);
   assert(['GET','POST'].includes(request.method),'METHOD_NOT_ALLOWED',405);
   const entries=[...url.searchParams];assert(entries.length===2&&url.searchParams.getAll('month').length===1&&url.searchParams.getAll('week_of').length===1,'INCURRED_PRODUCTION_REQUEST_INVALID');
   const selected={month:url.searchParams.get('month'),week_of:url.searchParams.get('week_of')};
@@ -558,7 +587,7 @@ async function adminFetch(request,env,services={}){const url=new URL(request.url
  // The receipt queue reads saved sources only. Confirmation is an explicit,
  // atomic owner action; opening it cannot register or inspect a physical item.
  if(path==='/api/admin/returns/receipts'){
-  assert(current.role==='owner','FORBIDDEN',403);
+  assert(commercialOwnerAction(current),'FORBIDDEN',403);
   assert(['GET','POST'].includes(request.method),'METHOD_NOT_ALLOWED',405);
   const entries=[...url.searchParams];assert(entries.length===1&&entries[0][0]==='month','RETURN_RECEIPT_REQUEST_INVALID');
   const selected={month:entries[0][1]};
@@ -569,7 +598,7 @@ async function adminFetch(request,env,services={}){const url=new URL(request.url
  // Physical declarations are isolated from financial bootstrap and its schema.
  // Reads touch saved evidence only; a provider status never creates inventory.
  if(path==='/api/admin/returns/physical'){
-  assert(current.role==='owner','FORBIDDEN',403);
+  assert(commercialOwnerAction(current),'FORBIDDEN',403);
   assert(['GET','POST'].includes(request.method),'METHOD_NOT_ALLOWED',405);
   const entries=[...url.searchParams],originalItems=request.method==='GET'&&entries.length===2&&url.searchParams.getAll('month').length===1&&url.searchParams.getAll('evidence').length===1&&url.searchParams.get('evidence')==='original-items-v1';
   assert(originalItems||entries.length===1&&entries[0][0]==='month','PHYSICAL_RETURNS_REQUEST_INVALID');
@@ -585,7 +614,7 @@ async function adminFetch(request,env,services={}){const url=new URL(request.url
   assert(!url.search,'EXPENSE_LEDGER_REQUEST_INVALID');sameOrigin(request);assert(await equal(request.headers.get('x-csrf-token')||'',current.csrf),'CSRF_REJECTED',403);
   return json(await mutateExpenseLedger(env,await input(request,4096),current.user));
  }
- if(path==='/api/admin/production-costs/confirmed-references'){
+ if(path==='/api/admin/production-costs/confirmed-references'){assert(!env.COMMERCIAL_CONTEXT,'NOT_FOUND',404);
   assert(request.method==='GET','METHOD_NOT_ALLOWED',405);assert(!url.search,'OPERATOR_COST_CORRECTION_REQUEST_INVALID');return json(await applyConfirmedOperatorCostCorrections(env));
  }
  if(path==='/api/admin/finance/business-month-ads-state'){
@@ -803,7 +832,7 @@ async function adminFetch(request,env,services={}){const url=new URL(request.url
   let summary=null,diagnostic=null;
   try{if(typeof services.getShopOrders==='function')summary=await services.getShopOrders(env);}catch{diagnostic={stage:'APP_TO_AUTH',code:'INTERNAL_ERROR',http:null};}
   diagnostic=diagnostic||safeOrdersDiagnostic(summary?.diagnostic);
-  const value=summary?.schema==='shop_daily_sales_v1'?shopDailyOrders(diagnostic?null:summary):shopOrders(diagnostic?null:summary);
+  const value=summary?.schema==='shop_daily_sales_v1'?shopDailyOrders(diagnostic?null:summary,new Date(),env.COMMERCIAL_CONTEXT?.profile??undefined):shopOrders(diagnostic?null:summary);
   if(!diagnostic&&['INVALID_RESPONSE','STALE_DATE'].includes(value.status))diagnostic={stage:'APP_VALIDATION',code:value.status,http:200,validation:value.status};
   return json({...value,...(diagnostic?{diagnostic}:{}),fetched_at:new Date().toISOString()});
  }
@@ -814,5 +843,5 @@ async function adminFetch(request,env,services={}){const url=new URL(request.url
  if(path==='/api/admin/jobs')return json({rows:(await env.ADMIN_DB.prepare(`SELECT id,json_extract(task,'$.start_date') AS start_date,json_extract(task,'$.end_date') AS end_date,trigger_type,status,settings_revision,reserve_cents,cost_cents,cost_source,result,failure,created_at,started_at,completed_at FROM hermes_jobs ORDER BY created_at DESC LIMIT 30`).all()).results});
  if(path==='/api/admin/audit')return json({rows:(await env.ADMIN_DB.prepare('SELECT revision,payload,actor,created_at FROM admin_audit ORDER BY revision DESC LIMIT 30').all()).results});
  return json({error:'NOT_FOUND'},404);
- }catch(error){if(isD1DailyLimitError(error))return json({error:'ADMIN_DB_DAILY_LIMIT_EXCEEDED'},503);return json({error:error instanceof WeeklyOperatingReportError||error instanceof OrderOperationsError||error instanceof ReturnReceiptError||error instanceof ReturnManufacturingLinksError||error instanceof ProductionConfirmationProposalError||error instanceof IncurredProductionError||error instanceof ProductionCoverageError||error instanceof ProductionWeeklyClosingError||error instanceof PhysicalReturnsError||error instanceof MlsAgentLearningError||error instanceof AiSalesWorkspaceStoreError||error instanceof ExpenseLedgerError||error instanceof HistoricalCostOrchestrationError||error instanceof HistoricalCostEvidenceError||error instanceof OperatorCostCorrectionError||error instanceof BusinessCostDiagnosticsError||error instanceof ProductRegistryError||error instanceof ProductionCostPeriodsError||error instanceof SavedOrderItemsError||error instanceof HermesFinancialContextError||error instanceof AdminError||error instanceof VariantBindingError||error instanceof ObservationError||error instanceof ProductionCostError||error instanceof StoreSummaryError||error instanceof FinancialAuditOrchestrationError||error instanceof BusinessIncomeOverviewError||error instanceof BusinessPendingIncomeScanError||error instanceof BusinessIncomeDetailError||error instanceof BusinessEscrowReleaseCoverageError||error instanceof BusinessEscrowReleasesError||error instanceof BusinessReconciliationError||error instanceof BusinessMonthViewError||error instanceof BusinessMonthError||error instanceof BusinessCheckpointError||error instanceof BusinessTaxPolicyError||error instanceof BusinessSyncError||error instanceof CostRuleError||error instanceof CatalogClassificationError||error instanceof ProductionDtfError?error.message:'ADMIN_UNAVAILABLE'},error instanceof WeeklyOperatingReportError||error instanceof OrderOperationsError||error instanceof ReturnReceiptError||error instanceof ReturnManufacturingLinksError||error instanceof ProductionConfirmationProposalError||error instanceof IncurredProductionError||error instanceof ProductionCoverageError||error instanceof ProductionWeeklyClosingError||error instanceof PhysicalReturnsError||error instanceof MlsAgentLearningError||error instanceof AiSalesWorkspaceStoreError||error instanceof ExpenseLedgerError||error instanceof HistoricalCostOrchestrationError||error instanceof HistoricalCostEvidenceError||error instanceof OperatorCostCorrectionError||error instanceof BusinessCostDiagnosticsError||error instanceof ProductRegistryError||error instanceof ProductionCostPeriodsError||error instanceof SavedOrderItemsError||error instanceof HermesFinancialContextError||error instanceof AdminError||error instanceof VariantBindingError||error instanceof ObservationError||error instanceof ProductionCostError||error instanceof StoreSummaryError||error instanceof FinancialAuditOrchestrationError||error instanceof BusinessIncomeOverviewError||error instanceof BusinessEscrowReleaseCoverageError||error instanceof BusinessEscrowReleasesError||error instanceof BusinessReconciliationError||error instanceof BusinessMonthViewError||error instanceof BusinessMonthError||error instanceof BusinessCheckpointError||error instanceof BusinessTaxPolicyError||error instanceof BusinessSyncError||error instanceof CostRuleError||error instanceof CatalogClassificationError||error instanceof ProductionDtfError?error.status:503);}}
+ }catch(error){if(env.COMMERCIAL_CONTEXT&&error instanceof TenantIsolationError)return commercialRuntimeError(error);if(isD1DailyLimitError(error))return json({error:'ADMIN_DB_DAILY_LIMIT_EXCEEDED'},503);return json({error:error instanceof WeeklyOperatingReportError||error instanceof OrderOperationsError||error instanceof ReturnReceiptError||error instanceof ReturnManufacturingLinksError||error instanceof ProductionConfirmationProposalError||error instanceof IncurredProductionError||error instanceof ProductionCoverageError||error instanceof ProductionWeeklyClosingError||error instanceof PhysicalReturnsError||error instanceof MlsAgentLearningError||error instanceof AiSalesWorkspaceStoreError||error instanceof ExpenseLedgerError||error instanceof HistoricalCostOrchestrationError||error instanceof HistoricalCostEvidenceError||error instanceof OperatorCostCorrectionError||error instanceof BusinessCostDiagnosticsError||error instanceof ProductRegistryError||error instanceof ProductionCostPeriodsError||error instanceof SavedOrderItemsError||error instanceof HermesFinancialContextError||error instanceof AdminError||error instanceof VariantBindingError||error instanceof ObservationError||error instanceof ProductionCostError||error instanceof StoreSummaryError||error instanceof FinancialAuditOrchestrationError||error instanceof BusinessIncomeOverviewError||error instanceof BusinessPendingIncomeScanError||error instanceof BusinessIncomeDetailError||error instanceof BusinessEscrowReleaseCoverageError||error instanceof BusinessEscrowReleasesError||error instanceof BusinessReconciliationError||error instanceof BusinessMonthViewError||error instanceof BusinessMonthError||error instanceof BusinessCheckpointError||error instanceof BusinessTaxPolicyError||error instanceof BusinessSyncError||error instanceof CostRuleError||error instanceof CatalogClassificationError||error instanceof ProductionDtfError?error.message:'ADMIN_UNAVAILABLE'},error instanceof WeeklyOperatingReportError||error instanceof OrderOperationsError||error instanceof ReturnReceiptError||error instanceof ReturnManufacturingLinksError||error instanceof ProductionConfirmationProposalError||error instanceof IncurredProductionError||error instanceof ProductionCoverageError||error instanceof ProductionWeeklyClosingError||error instanceof PhysicalReturnsError||error instanceof MlsAgentLearningError||error instanceof AiSalesWorkspaceStoreError||error instanceof ExpenseLedgerError||error instanceof HistoricalCostOrchestrationError||error instanceof HistoricalCostEvidenceError||error instanceof OperatorCostCorrectionError||error instanceof BusinessCostDiagnosticsError||error instanceof ProductRegistryError||error instanceof ProductionCostPeriodsError||error instanceof SavedOrderItemsError||error instanceof HermesFinancialContextError||error instanceof AdminError||error instanceof VariantBindingError||error instanceof ObservationError||error instanceof ProductionCostError||error instanceof StoreSummaryError||error instanceof FinancialAuditOrchestrationError||error instanceof BusinessIncomeOverviewError||error instanceof BusinessEscrowReleaseCoverageError||error instanceof BusinessEscrowReleasesError||error instanceof BusinessReconciliationError||error instanceof BusinessMonthViewError||error instanceof BusinessMonthError||error instanceof BusinessCheckpointError||error instanceof BusinessTaxPolicyError||error instanceof BusinessSyncError||error instanceof CostRuleError||error instanceof CatalogClassificationError||error instanceof ProductionDtfError?error.status:503);}}
 export {adminFetch,schedule,scheduledWork,DEFAULTS,SCHEMA,validateSettings,workspaceAuthFetch};

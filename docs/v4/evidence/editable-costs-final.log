@@ -1,0 +1,12 @@
+✔ compiled editable costs preserve scope, drafts and audited amount-only save (320px,minify=false) (5688.295315ms)
+✔ compiled editable costs preserve scope, drafts and audited amount-only save (1365px,minify=false) (5199.560772ms)
+✔ compiled editable costs preserve scope, drafts and audited amount-only save (320px,minify=true) (4939.301406ms)
+✔ compiled editable costs preserve scope, drafts and audited amount-only save (1365px,minify=true) (4448.649022ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 20480.747762

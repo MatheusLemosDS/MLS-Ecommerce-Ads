@@ -76,7 +76,7 @@ export function projectAdsPeriod(value){
  }catch{return null;}
 }
 
-export async function getAdsPeriod(env,input,{fetchImpl=request=>fetch(request),now=()=>Date.now(),timeoutMs=10000}={}){
+export async function getAdsPeriod(env,input,{fetchImpl=env?.COMMERCIAL_FETCH??(request=>fetch(request)),now=()=>Date.now(),timeoutMs=10000}={}){
  const stamp=adsPeriodStamp(now),selection=stamp?projectAdsPeriodRequest(input,{now:()=>stamp*1000}):null;
  const failure=code=>adsPeriodEmpty(selection,stamp,code);
  if(!selection||typeof env?.APP_INTERNAL_SECRET!=='string'||!env.APP_INTERNAL_SECRET||env.APP_INTERNAL_SECRET.length>8192||/[\u0000-\u001f\u007f]/.test(env.APP_INTERNAL_SECRET)||typeof fetchImpl!=='function'||!Number.isInteger(timeoutMs)||timeoutMs<5||timeoutMs>10000)return failure('ADS_PERIOD_CONFIGURATION');

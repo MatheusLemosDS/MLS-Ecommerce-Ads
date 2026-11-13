@@ -139,10 +139,12 @@ test('compiled normal and minified owner charts filter actual windows and metric
     scope:document.getElementById('missionTrendScopeOverview').textContent};
    document.querySelector('[data-mission-chart="overview"][data-mission-series="sales"]').click();
    const sales={metric:graph().dataset.chartMetric,title:document.getElementById('missionTrendTitleOverview').textContent};
+   const paid={};for(const panel of ['overview','finance','ads']){document.querySelector('[data-mission-chart="'+panel+'"][data-mission-series="paid"]').click();const suffix=panel[0].toUpperCase()+panel.slice(1),host=document.getElementById('missionTrendGraph'+suffix);paid[panel]={metric:host.dataset.chartMetric,values:[...host.querySelectorAll('[data-mls-chart-mark]')].map(node=>node.dataset.mlsChartValue),table:[...document.querySelectorAll('#missionTrendValues'+suffix+' tr td:first-of-type')].map(node=>node.textContent),window:document.querySelector('[data-mission-window="'+panel+'"]').value};}
+   document.querySelector('[data-mission-chart="overview"][data-mission-series="sales"]').click();
    source.points[0].date='2026-02-30';globalThis.mlsMissionTrends.refresh();
    const invalid={svg:graph().querySelectorAll('svg').length,values:document.querySelectorAll('#missionTrendValuesOverview tr').length,status:graph().dataset.chartStatus};
    source=JSON.parse(JSON.stringify(fixture));globalThis.mlsMissionTrends.refresh();globalThis.__chartSynthetic={getCalls:()=>calls};
-   document.documentElement.dataset.chartProof=JSON.stringify({initial,absent,dtf,mismatch,cleared,ads,seven,sales,invalid,calls});
+   document.documentElement.dataset.chartProof=JSON.stringify({initial,absent,dtf,mismatch,cleared,ads,seven,sales,paid,invalid,calls});
   }catch(e){document.documentElement.dataset.chartError=String(e.message||e);}})();</script>`;
   html=html.replace('<body>','<body><div style="position:fixed;right:8px;bottom:8px;z-index:99999;pointer-events:none;background:#0d2341;color:#e8f7ff;padding:6px;font:10px sans-serif">QA SINTÉTICA · GRÁFICOS POPULADOS · SEM DADOS REAIS</div>').replace('</body>',script+'</body>');
   const server=http.createServer((req,res)=>{res.writeHead(req.url.startsWith('/api/')?503:200,{'content-type':req.url.startsWith('/api/')?'application/json':'text/html; charset=utf-8'});res.end(req.url.startsWith('/api/')?'{}':html);});
@@ -161,6 +163,7 @@ test('compiled normal and minified owner charts filter actual windows and metric
     assert.deepEqual(proof.ads,{metric:'ads',zeros:true});
     assert.equal(proof.seven.count,7);assert.equal(proof.seven.values,7);assert.match(proof.seven.scope,/22\/10 a 28\/10/);
     assert.equal(proof.sales.metric,'sales');assert.match(proof.sales.title,/Vendas dos pedidos pagos/);
+    for(const panel of ['overview','finance','ads']){assert.equal(proof.paid[panel].metric,'paid');assert.ok(proof.paid[panel].values.every(value=>value==='1'));assert.ok(proof.paid[panel].table.every(value=>['1','Indisponível'].includes(value)));assert.equal(proof.paid[panel].window,panel==='overview'?'7':'14');}
     assert.deepEqual(proof.invalid,{svg:0,values:0,status:'UNAVAILABLE'});
     assert.equal(proof.calls,0,'chart controls only read already-saved observations');
     assert.equal(interaction.length,2);

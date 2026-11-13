@@ -4,6 +4,7 @@ import {webcrypto,createHash} from 'node:crypto';
 import {deflateSync} from 'node:zlib';
 import vm from 'node:vm';
 import {createReturnLocalArtworkLoader} from '../src/returns-local-artwork.mjs';
+import {tenantArtworkDatabaseName} from '../src/tenant-browser-storage.mjs';
 
 function png(width=1,height=1){
  const crc=bytes=>{let value=0xffffffff;for(const byte of bytes){value^=byte;for(let i=0;i<8;i++)value=(value>>>1)^((value&1)?0xedb88320:0);}return (value^0xffffffff)>>>0;};
@@ -13,15 +14,15 @@ function png(width=1,height=1){
 }
 const sha=bytes=>createHash('sha256').update(bytes).digest('hex');
 function artwork(bytes=png(),overrides={}){return {art_key:'arte teste',sha256:sha(bytes),pixel_width:1,pixel_height:1,blob:new Blob([bytes],{type:'image/png'}),...overrides};}
-function fixture({row=artwork(),exists=true,enumerate=true,opening='success',pendingRead=false,pendingOpen=false,decodeImpl=null}={}){
- const calls={opens:0,gets:[],transactions:[],closes:0,aborts:0,upgradeAborts:0,urls:[],revoked:[],bitmapsClosed:0,decode:0,timers:0,cleared:0};
+function fixture({row=artwork(),exists=true,enumerate=true,opening='success',pendingRead=false,pendingOpen=false,decodeImpl=null,databaseName='brazacommerce-dtf-artworks-v1'}={}){
+ const calls={opens:0,openedNames:[],gets:[],transactions:[],closes:0,aborts:0,upgradeAborts:0,urls:[],revoked:[],bitmapsClosed:0,decode:0,timers:0,cleared:0};
  let openRequest,getRequest,tx,timer;
  const db={objectStoreNames:{contains:name=>name==='artworks'},close(){calls.closes++;},transaction(name,mode){
   calls.transactions.push({name,mode});assert.equal(name,'artworks');assert.equal(mode,'readonly');
   tx={abort(){calls.aborts++;tx.onabort?.();},objectStore(store){assert.equal(store,'artworks');return {get(key){calls.gets.push(key);getRequest={};if(!pendingRead)queueMicrotask(()=>{getRequest.result=row;getRequest.onsuccess?.();queueMicrotask(()=>tx.oncomplete?.());});return getRequest;},getAll(){throw Error('BROAD_READ_FORBIDDEN');},put(){throw Error('WRITE_FORBIDDEN');}};}};return tx;
  }};
- const idb={open(name,...versions){calls.opens++;assert.equal(name,'brazacommerce-dtf-artworks-v1');assert.equal(versions.length,0);openRequest={result:db,transaction:{abort(){calls.upgradeAborts++;}}};if(!pendingOpen)queueMicrotask(()=>{if(opening==='upgrade')openRequest.onupgradeneeded?.();else if(opening==='blocked')openRequest.onblocked?.();else openRequest.onsuccess?.();});return openRequest;}};
- if(enumerate)idb.databases=async()=>exists?[{name:'brazacommerce-dtf-artworks-v1',version:1}]:[];
+ const idb={open(name,...versions){calls.opens++;calls.openedNames.push(name);assert.equal(name,databaseName);assert.equal(versions.length,0);openRequest={result:db,transaction:{abort(){calls.upgradeAborts++;}}};if(!pendingOpen)queueMicrotask(()=>{if(opening==='upgrade')openRequest.onupgradeneeded?.();else if(opening==='blocked')openRequest.onblocked?.();else openRequest.onsuccess?.();});return openRequest;}};
+ if(enumerate)idb.databases=async()=>exists?[{name:databaseName,version:1}]:[];
  const options={indexedDBImpl:idb,cryptoImpl:webcrypto,BlobImpl:Blob,URLImpl:{createObjectURL(blob){assert.ok(blob instanceof Blob);const url='blob:verified-'+calls.urls.length;calls.urls.push(url);return url;},revokeObjectURL(url){calls.revoked.push(url);}},createImageBitmapImpl:decodeImpl|| (async()=>{calls.decode++;return {width:1,height:1,close(){calls.bitmapsClosed++;}};}),setTimeoutImpl(fn){calls.timers++;timer=fn;return 1;},clearTimeoutImpl(){calls.cleared++;},timeoutMs:100};
  return {calls,options,db,idb,openSuccess(){openRequest.onsuccess?.();},completeRead(...values){getRequest.result=values.length?values[0]:row;getRequest.onsuccess?.();tx.oncomplete?.();},timeout(){timer();}};
 }
@@ -115,4 +116,21 @@ test('factory survives toString embedding with no closure, network or DTF depend
  let externalCalls=0;const blocked=()=>{externalCalls++;throw Error('EXTERNAL_IO_FORBIDDEN');},f=fixture();
  const factory=vm.runInNewContext('('+createReturnLocalArtworkLoader.toString()+')',{globalThis:{},fetch:blocked,XMLHttpRequest:blocked,DTF:{start:blocked}}),loader=factory(f.options),result=await loader.load({art_key:'arte teste',sha256:null});
  assert.equal(result.state,'AVAILABLE');assert.equal(externalCalls,0);loader.dispose();
+});
+
+function commercialArtworkWorkspace(organizationId){
+ const context={kind:'account',userId:'person',organizationId,storeId:'store'},name=tenantArtworkDatabaseName(context),callbacks=new Set();let active=true;
+ return {ticket:()=>({name}),isCurrent:ticket=>active&&ticket?.name===name,artworkDatabaseName:()=>name,register(value){callbacks.add(value);return()=>callbacks.delete(value);},stop(){active=false;for(const callback of [...callbacks])callback.stop();}};
+}
+test('commercial return artwork reads the exact user/company/store namespace and never borrows the legacy library',async()=>{
+ for(const company of ['company-a','company-b']){
+  const workspace=commercialArtworkWorkspace(company),name=workspace.artworkDatabaseName(),f=fixture({databaseName:name});f.options.workspaceImpl=workspace;
+  const loader=createReturnLocalArtworkLoader(f.options),result=await loader.load({art_key:'arte teste',sha256:null});assert.equal(result.state,'AVAILABLE');assert.deepEqual(f.calls.openedNames,[name]);workspace.stop();assert.deepEqual(f.calls.revoked,[result.url]);
+ }
+ const workspace=commercialArtworkWorkspace('empty-company'),f=fixture({databaseName:workspace.artworkDatabaseName()});f.idb.databases=async()=>[{name:'brazacommerce-dtf-artworks-v1'}];f.options.workspaceImpl=workspace;
+ assert.equal((await createReturnLocalArtworkLoader(f.options).load({art_key:'arte teste',sha256:null})).reason,'LIBRARY_NOT_FOUND');assert.equal(f.calls.opens,0,'legacy data is never opened or copied automatically');
+});
+test('commercial workspace stop disposes pending artwork reads before a delayed row can create a URL',async()=>{
+ const workspace=commercialArtworkWorkspace('company-a'),f=fixture({databaseName:workspace.artworkDatabaseName(),pendingRead:true});f.options.workspaceImpl=workspace;
+ const loader=createReturnLocalArtworkLoader(f.options),pending=loader.load({art_key:'arte teste',sha256:null});await tick();workspace.stop();const result=await pending;assert.equal(result.state,'NOT_AVAILABLE');assert.equal(result.reason,'DISPOSED');f.completeRead();await tick();assert.equal(f.calls.urls.length,0);assert.equal(f.calls.aborts,1);
 });

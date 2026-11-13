@@ -1,0 +1,46 @@
+TAP version 13
+# Subtest: the human release identifier is static, frozen and safe for an HTTP header
+ok 1 - the human release identifier is static, frozen and safe for an HTTP header
+  ---
+  duration_ms: 1.894694
+  type: 'test'
+  ...
+# Subtest: the release getter returns a closed serializable DTO without sharing mutable response state
+ok 2 - the release getter returns a closed serializable DTO without sharing mutable response state
+  ---
+  duration_ms: 0.394837
+  type: 'test'
+  ...
+# Subtest: release information remains available without environment, database or provider capabilities
+ok 3 - release information remains available without environment, database or provider capabilities
+  ---
+  duration_ms: 0.190683
+  type: 'test'
+  ...
+# Subtest: owner release-info enforces session, role, GET and query guards without touching business storage or providers
+ok 4 - owner release-info enforces session, role, GET and query guards without touching business storage or providers
+  ---
+  duration_ms: 353.878908
+  type: 'test'
+  ...
+# Subtest: the emitted monthly owner controls recalculate saved costs without importing orders or Ads (minify=false)
+ok 5 - the emitted monthly owner controls recalculate saved costs without importing orders or Ads (minify=false)
+  ---
+  duration_ms: 1315.330695
+  type: 'test'
+  ...
+# Subtest: the emitted monthly owner controls recalculate saved costs without importing orders or Ads (minify=true)
+ok 6 - the emitted monthly owner controls recalculate saved costs without importing orders or Ads (minify=true)
+  ---
+  duration_ms: 1217.150746
+  type: 'test'
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2854.945844

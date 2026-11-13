@@ -1,0 +1,130 @@
+TAP version 13
+# Subtest: account APIs require dedicated D1, strict origin/schema/CSRF; pending account never reaches a company
+ok 1 - account APIs require dedicated D1, strict origin/schema/CSRF; pending account never reaches a company
+  ---
+  duration_ms: 53.550788
+  type: 'test'
+  ...
+# Subtest: verification purpose/expiry/one-use and reset revoke sessions while preserving normal login
+ok 2 - verification purpose/expiry/one-use and reset revoke sessions while preserving normal login
+  ---
+  duration_ms: 27.323157
+  type: 'test'
+  ...
+# Subtest: durable SQLite restart, migration replay, backup restoration and legacy table bytes remain intact
+ok 3 - durable SQLite restart, migration replay, backup restoration and legacy table bytes remain intact
+  ---
+  duration_ms: 9.878504
+  type: 'test'
+  ...
+# Subtest: two companies are isolated; invite requires exact verified email and membership revocation fences cached principal
+ok 4 - two companies are isolated; invite requires exact verified email and membership revocation fences cached principal
+  ---
+  duration_ms: 35.294108
+  type: 'test'
+  ...
+# Subtest: company and store idempotency, scoped test connector, billing adapter, and export authorization
+ok 5 - company and store idempotency, scoped test connector, billing adapter, and export authorization
+  ---
+  duration_ms: 24.684029
+  type: 'test'
+  ...
+# Subtest: MFA enrollment requires proof, recovery appears once and replay fails, reset preserves factor
+ok 6 - MFA enrollment requires proof, recovery appears once and replay fails, reset preserves factor
+  ---
+  duration_ms: 24.552911
+  type: 'test'
+  ...
+# Subtest: email change is verified before replacement, sessions idle/absolute boundaries and shared abuse limits
+ok 7 - email change is verified before replacement, sessions idle/absolute boundaries and shared abuse limits
+  ---
+  duration_ms: 26.011359
+  type: 'test'
+  ...
+# Subtest: ownership transfer is accepted atomically and last owner/foreign user cannot offboard company
+ok 8 - ownership transfer is accepted atomically and last owner/foreign user cannot offboard company
+  ---
+  duration_ms: 23.420614
+  type: 'test'
+  ...
+# Subtest: explicit grants enable selected viewer reads and admin connection powers without ownership elevation
+ok 9 - explicit grants enable selected viewer reads and admin connection powers without ownership elevation
+  ---
+  duration_ms: 26.426867
+  type: 'test'
+  ...
+# Subtest: OAuth states bind actor/session/company/store/provider/environment/purpose and consume exactly once
+ok 10 - OAuth states bind actor/session/company/store/provider/environment/purpose and consume exactly once
+  ---
+  duration_ms: 17.716858
+  type: 'test'
+  ...
+# Subtest: configured password corpus reaches every password writer and missing mail never claims delivery
+ok 11 - configured password corpus reaches every password writer and missing mail never claims delivery
+  ---
+  duration_ms: 7.114771
+  type: 'test'
+  ...
+# Subtest: session revocation rejects other owners and absolute expiry survives activity refreshes
+ok 12 - session revocation rejects other owners and absolute expiry survives activity refreshes
+  ---
+  duration_ms: 33.322993
+  type: 'test'
+  ...
+# Subtest: origin abuse limits ignore forged browser origin-key headers and no sender configuration leaks identity
+ok 13 - origin abuse limits ignore forged browser origin-key headers and no sender configuration leaks identity
+  ---
+  duration_ms: 5.601524
+  type: 'test'
+  ...
+# Subtest: password policy permits passphrases, Unicode and exact spaces without truncating
+ok 14 - password policy permits passphrases, Unicode and exact spaces without truncating
+  ---
+  duration_ms: 2.19626
+  type: 'test'
+  ...
+# Subtest: password records use independent salts, production cost and constant-size outputs
+ok 15 - password records use independent salts, production cost and constant-size outputs
+  ---
+  duration_ms: 291.254892
+  type: 'test'
+  ...
+# Subtest: password bytes stay exact and Unicode equivalence does not silently change credentials
+ok 16 - password bytes stay exact and Unicode equivalence does not silently change credentials
+  ---
+  duration_ms: 3.585442
+  type: 'test'
+  ...
+# Subtest: random tokens and digests use canonical formats and never retain plaintext
+ok 17 - random tokens and digests use canonical formats and never retain plaintext
+  ---
+  duration_ms: 1.594116
+  type: 'test'
+  ...
+# Subtest: AES-GCM binds encrypted secrets to the account and purpose, with fresh IVs
+ok 18 - AES-GCM binds encrypted secrets to the account and purpose, with fresh IVs
+  ---
+  duration_ms: 3.381459
+  type: 'test'
+  ...
+# Subtest: maintained TOTP library matches RFC6238 and rejects replay counters and invalid challenges
+ok 19 - maintained TOTP library matches RFC6238 and rejects replay counters and invalid challenges
+  ---
+  duration_ms: 2.785675
+  type: 'test'
+  ...
+# Subtest: roles preserve ownership separation and do not grant operational users banking or global owner
+ok 20 - roles preserve ownership separation and do not grant operational users banking or global owner
+  ---
+  duration_ms: 0.313615
+  type: 'test'
+  ...
+1..20
+# tests 20
+# suites 0
+# pass 20
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 418.972873

@@ -8,6 +8,24 @@ const row=(day,net=day*100)=>({date:'2026-10-'+String(day).padStart(2,'0'),state
 const trend=points=>({schema:'mls_mission_daily_trend_v1',month:'2026-10',selected_date:'2026-10-28',
  basis:'PAID_CREATE_DAY_AND_CALENDAR_ADS_OPERATIONAL_ESTIMATE',points});
 
+test('paid-order history keeps count units, confirmed zero, gaps and strict counts',()=>{
+ const a=row(25);a.paid_orders=0;const b=row(28);b.paid_orders=1234;b.partial=true;
+ const model=projectMlsMissionChart(trend([a,b]),'paid',7);
+ assert.equal(model.unit,'COUNT');assert.equal(model.status,'PARTIAL');
+ assert.deepEqual(model.points.map(point=>point.value),[0,null,null,1234]);
+ const svg=renderMlsVerifiedChart(model,{palette:'paid'});
+ assert.match(svg,/1\.234/);assert.match(svg,/Pedidos pagos pela data de criação/);
+ assert.doesNotMatch(svg,/R\$|1\.234,00|x<\/text>/);
+ for(const invalid of [-1,-0,0.5,undefined,Number.MAX_SAFE_INTEGER+1]){
+  const value=row(27);value.paid_orders=invalid;
+  assert.equal(projectMlsMissionChart(trend([value,row(28)]),'paid').status,'UNAVAILABLE');
+ }
+ for(const points of [[],[a],[{...a,paid_orders:null},b]])assert.equal(projectMlsMissionChart(trend(points),'paid').status,'UNAVAILABLE');
+ assert.equal(projectMlsDailyChart({schema:'mls_mission_daily_trend_v1',points:[a,b]},'paid').unit,'COUNT');
+ assert.match(renderMlsVerifiedChart({...model,unit:'BRL_CENTS'}),/R\$/);
+ assert.match(renderMlsVerifiedChart({...model,unit:'RATIO_MICROS',metric:'roas'}),/x/);
+});
+
 test('source adapter selects real calendar window, preserving gaps, zero and loss',()=>{
  const source=trend([row(15),row(21),row(22,0),row(24,-100),row(28,3200)]);
  const model=projectMlsMissionChart(source,'net',7);

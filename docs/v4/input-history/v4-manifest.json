@@ -1,0 +1,42 @@
+{
+  "schema": "mls_v4_input_manifest_v1",
+  "base_commit": "a5bd38a0902b38ecc3e90a747601eba330e7813e",
+  "normalization": "Only the HTML filename was normalized. Every copied file preserves its original bytes.",
+  "inputs": [
+    {
+      "source_attachment": "/workspace/attachments/d7549912-e7ff-4c06-bdfe-4b6b0a0df8c8/PROMPT_CODEX_MLS_LAYOUT.txt",
+      "copied_path": "docs/v4/input/PROMPT_CODEX_MLS_LAYOUT.txt",
+      "bytes": 210627,
+      "sha256": "19e794a8e3fb13a36a3cfa1688323af966df76cdbc68268b4e7f4af7decc53a1",
+      "byte_identical": true
+    },
+    {
+      "source_attachment": "/workspace/attachments/eb9fe44e-3720-42f7-983d-a622844c70bb/MATRIZ_FUNCIONAL_MLS_CODEX.json",
+      "copied_path": "docs/v4/input/MATRIZ_FUNCIONAL_MLS_CODEX.json",
+      "bytes": 302193,
+      "sha256": "a701e5539270cb3df55a8843e3998082ed93d9f824a3d0b4db954829fb437884",
+      "byte_identical": true
+    },
+    {
+      "source_attachment": "/workspace/attachments/1e51c8fa-5a45-4e47-bf28-e24e174cab54/MLS_COMMERCE_OS_LAYOUT (1).html",
+      "copied_path": "docs/v4/input/MLS_COMMERCE_OS_LAYOUT.html",
+      "bytes": 277791,
+      "sha256": "135002e7193409451e78263ee5d45fdcfb53e1061804a3a39af84fdc5edcc5f3",
+      "byte_identical": true
+    },
+    {
+      "source_attachment": "/workspace/attachments/8ca98872-db3b-4537-906b-0ccf539dce48/AUDITORIA_COBERTURA_MLS_V4.txt",
+      "copied_path": "docs/v4/input/AUDITORIA_COBERTURA_MLS_V4.txt",
+      "bytes": 13030,
+      "sha256": "bd41d3eccfdb82bea162a99cb98f0ee199f5f996cf68ef907942c8233b91083a",
+      "byte_identical": true
+    },
+    {
+      "source_attachment": "/workspace/attachments/1d91186a-ebda-4f5f-982e-39f589122c73/LEIA-ME.txt",
+      "copied_path": "docs/v4/input/LEIA-ME.txt",
+      "bytes": 6350,
+      "sha256": "74b2e21bbf1232b63f0cc8b3723779adc757cd1c71fef7525864df9ab9c52d61",
+      "byte_identical": true
+    }
+  ]
+}

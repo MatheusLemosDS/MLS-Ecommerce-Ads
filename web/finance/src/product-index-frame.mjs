@@ -13,13 +13,14 @@ export function projectProductIndexRequest(value){
  }catch{return null;}
 }
 
-export function projectProductIndexFrame(value){
+export function projectProductIndexFrame(value,expectedProfile=null){
  const plain=row=>row!==null&&typeof row==='object'&&[Object.prototype,null].includes(Object.getPrototypeOf(row));
  const exact=(row,keys)=>plain(row)&&Reflect.ownKeys(row).length===keys.length&&keys.every(key=>Object.hasOwn(Object.getOwnPropertyDescriptor(row,key)||{},'value'));
  const integer=(row,min,max)=>Number.isSafeInteger(row)&&!Object.is(row,-0)&&row>=min&&row<=max;
  const array=rows=>Array.isArray(rows)&&Object.getPrototypeOf(rows)===Array.prototype&&rows.length<=50&&Reflect.ownKeys(rows).length===rows.length+1&&Array.from({length:rows.length},(_,index)=>Object.getOwnPropertyDescriptor(rows,String(index))).every(field=>field&&Object.hasOwn(field,'value'));
  try{
-  if(!exact(value,['schema','status','shop_id','checked_at','offset','page_size','item_status','total_count','has_more','next_offset','items'])||value.schema!=='product_index_v1'||value.status!=='AVAILABLE'||value.shop_id!==1178167501||!integer(value.checked_at,1,9999999999)||!integer(value.offset,0,1000000)||!integer(value.page_size,1,50)||!['NORMAL','BANNED','UNLIST','REVIEWING','SELLER_DELETE','SHOPEE_DELETE'].includes(value.item_status)||!integer(value.total_count,0,1000000)||typeof value.has_more!=='boolean'||!array(value.items)||value.items.length>value.page_size||value.items.length>value.total_count)return null;
+  const expectedShop=expectedProfile===null?1178167501:expectedProfile?.shop_id;if(!Number.isSafeInteger(expectedShop)||expectedShop<1)return null;
+  if(!exact(value,['schema','status','shop_id','checked_at','offset','page_size','item_status','total_count','has_more','next_offset','items'])||value.schema!=='product_index_v1'||value.status!=='AVAILABLE'||value.shop_id!==expectedShop||!integer(value.checked_at,1,9999999999)||!integer(value.offset,0,1000000)||!integer(value.page_size,1,50)||!['NORMAL','BANNED','UNLIST','REVIEWING','SELLER_DELETE','SHOPEE_DELETE'].includes(value.item_status)||!integer(value.total_count,0,1000000)||typeof value.has_more!=='boolean'||!array(value.items)||value.items.length>value.page_size||value.items.length>value.total_count)return null;
   if(value.has_more?(value.items.length===0||!integer(value.next_offset,value.offset+1,Math.min(1000000,value.offset+value.page_size))):value.next_offset!==null)return null;
   const seen=new Set(),items=[];
   for(const row of value.items){

@@ -1,7 +1,7 @@
 import test,{after} from 'node:test';
 import assert from 'node:assert/strict';
 import http from './browser-assets-http-fixture.mjs';
-import {spawn,spawnSync,execFileSync} from 'node:child_process';
+import {spawn,spawnSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {existsSync,mkdtempSync,readFileSync,mkdirSync,writeFileSync} from 'node:fs';
 import os from 'node:os';
@@ -11,6 +11,7 @@ import {createChromeProfileCleanup} from './chrome-profile-cleanup.mjs';
 import {waitForChromeDebugPort} from './chrome-debug-port.mjs';
 import {D1} from './sqlite-d1.mjs';
 import {readCostRules,saveCostRules} from '../src/cost-rules.mjs';
+import {assertReviewedCostSources} from './reviewed-cost-source-invariants.mjs';
 
 // The actual canonical rule mutator runs against a fresh, synthetic SQLite D1.
 // Browser calls are confined to this loopback server; no Live account/provider
@@ -23,26 +24,7 @@ async function backend(){
  const saved=await saveCostRules(env,{revision:seed.revision,values},'synthetic-owner-existing-setup');
  return {env,initial:saved,read:()=>readCostRules(env),save:body=>saveCostRules(env,body,'synthetic-owner-price-edit'),close:()=>env.ADMIN_DB.db.close(),audit:()=>env.ADMIN_DB.db.prepare('SELECT revision,payload,actor FROM production_cost_rules_audit ORDER BY revision').all()};
 }
-const pureSources=['cost-rules.mjs','production-costs.mjs','business-month.mjs','incurred-production.mjs'];
-// The weekly reader exposes this existing helper without changing its body.
-// Normalize only the exact reviewed comment/export delta, then still compare
-// the complete monthly file and every other source against the same baseline.
-const weeklyBundleExposure=String.raw`// Shared by the read-only weekly adapter after validating an immutable monthly
-// publication. Keep this calculation identical to the existing monthly reader.
-export async function businessMonthBundle(db,month,range,stamp,observed,{withExpenseSchedule=false}={}){`;
-const originalBundleDeclaration=String.raw`async function businessMonthBundle(db,month,range,stamp,observed,{withExpenseSchedule=false}={}){`;
-function invariantSources(){
- for(const name of pureSources){
-  const file='web/cloudflare/src/'+name,baseline=execFileSync('git',['show','bd01f64d7e290abb259e9c9dc2646496494a87f0:'+file],{cwd:new URL('../../../',import.meta.url),encoding:'utf8'}),current=readFileSync(new URL('../src/'+name,import.meta.url),'utf8');
-  let comparable=current;
-  if(name==='business-month.mjs'){
-   assert.equal(current.split(weeklyBundleExposure).length,2,'only the exact reviewed monthly helper exposure occurs once');
-   assert.equal(baseline.split(originalBundleDeclaration).length,2,'the original monthly helper declaration occurs once');
-   comparable=current.replace(weeklyBundleExposure,originalBundleDeclaration);
-  }
-  assert.equal(comparable,baseline,'pricing/DTO/manufacturing implementation unchanged except exact monthly helper exposure: '+name);
- }
-}
+const invariantSources=assertReviewedCostSources;
 const chrome=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium','/usr/bin/chromium-browser'].find(existsSync);
 const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms)),results=[];
 const reportPath=process.env.MLS_EDITABLE_COSTS_QA_FILE||null,screenDir=process.env.MLS_EDITABLE_COSTS_SCREENSHOT_DIR||null;

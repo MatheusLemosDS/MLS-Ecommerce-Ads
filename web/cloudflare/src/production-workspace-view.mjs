@@ -14,7 +14,7 @@ export const PRODUCTION_WORKSPACE_CLIENT=String.raw`
  const el=id=>document.getElementById(id);
  let selected='manufacturing',mode='daily';
  const reference=hash=>hash==='#costPeriods'||typeof hash==='string'&&hash.startsWith('#costPeriods');
- function activateFragment(fragment=''){
+ function activateFragment(fragment='',{deferWeekly=false}={}){
   if(!el('missionProductionFabricationPane')||!el('missionProductionReferencePane'))return false;
   selected=reference(fragment)?'sales-reference':'manufacturing';
   mode=/^#production(Weekly|Coverage)/.test(fragment)?'weekly':/^#incurredProduction(Form|Record|Void|Proposal)/.test(fragment)?'records':/^#incurredProduction(Range|Start|End|Apply|This|Compar|Month$|Week$|DailyDetails)/.test(fragment)?'range':'daily';
@@ -30,14 +30,16 @@ export const PRODUCTION_WORKSPACE_CLIENT=String.raw`
    const details=el('incurredProductionDetails');
    if(details&&(!details.open||!globalThis.brazaIncurredProduction?.getSnapshot?.()))globalThis.brazaIncurredProduction?.open?.();
    if(mode!=='weekly')globalThis.brazaProductionWeeklyClosing?.suspend?.();
-   if(mode==='weekly'){globalThis.brazaProductionWeeklyClosing?.open?.();if(fragment.startsWith('#productionCoverage'))globalThis.brazaProductionCoverage?.open?.();}
+   if(mode==='weekly'){if(!deferWeekly)globalThis.brazaProductionWeeklyClosing?.open?.();if(fragment.startsWith('#productionCoverage'))globalThis.brazaProductionCoverage?.open?.();}
    if(mode==='daily')globalThis.brazaProductionDailyFinance?.refresh?.();
   }
   return true;
  }
  function navigate(fragment){const link=document.querySelector?.('#agent-production .mission-page-tabs a[href="'+fragment+'"]');if(link?.click){link.click();return true;}return activateFragment(fragment);}
  function confirmDay(){const date=globalThis.brazaIncurredProduction?.getAnalyticsSnapshot?.()?.selected_day?.date;if(!date)return false;navigate('#productionWeeklyClosing');const result=globalThis.brazaProductionCoverage?.openForDate?.(date)??false;const focus=ok=>{if(ok!==false&&selected==='manufacturing'&&mode==='weekly'){const target=el('productionCoverageDetails');target?.scrollIntoView?.({block:'start',behavior:'instant'});target?.querySelector?.('summary')?.focus?.();}return ok;};return result&&typeof result.then==='function'?result.then(focus):focus(result);}
+ function openContext(context){if(!activateFragment('#productionWeeklyClosing',{deferWeekly:true}))return false;return globalThis.brazaProductionWeeklyClosing?.openContext?.(context)??false;}
+ function open({fragment='',context=null}={}){if(context)return openContext(context);if(/^#productionWeekly/.test(fragment)&&typeof URLSearchParams==='function'){const params=new URLSearchParams(globalThis.location?.search||'');if(params.getAll('month').length===1&&params.getAll('week_end').length===1)return openContext({month:params.get('month'),week_end:params.get('week_end')});}return activateFragment(fragment);}
  const confirm=el('incurredProductionConfirmDay');if(confirm)confirm.onclick=confirmDay;
  document.addEventListener?.('mls-production-register-day',()=>navigate('#incurredProductionRecordsPane'));
- globalThis.brazaProductionWorkspace=Object.freeze({open:({fragment=''}={})=>activateFragment(fragment),activateFragment,confirmDay,getSnapshot:()=>Object.freeze({active_pane:selected,active_view:mode})});
+ globalThis.brazaProductionWorkspace=Object.freeze({open,openContext,activateFragment,confirmDay,getSnapshot:()=>Object.freeze({active_pane:selected,active_view:mode})});
 })();`;

@@ -1,3 +1,4 @@
+import {TenantInitializationSet} from './tenant-storage.mjs';
 // Owner-declared operating expenses. Entries are recognized by competence;
 // marking an entry paid never makes a bank transfer or deducts it a second time.
 export class ExpenseLedgerError extends Error {
@@ -38,7 +39,7 @@ export function projectExpenseLedger(value){
  }catch{return null;}
 }
 
-const ready=new WeakSet();
+const ready=new TenantInitializationSet();
 const fail=(code,status=400)=>{throw new ExpenseLedgerError(code,status);};
 const plain=v=>v!==null&&typeof v==='object'&&[Object.prototype,null].includes(Object.getPrototypeOf(v));
 const exact=(v,keys)=>plain(v)&&Reflect.ownKeys(v).length===keys.length&&keys.every(key=>Object.hasOwn(Object.getOwnPropertyDescriptor(v,key)||{},'value'));

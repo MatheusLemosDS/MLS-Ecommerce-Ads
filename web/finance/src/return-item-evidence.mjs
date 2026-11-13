@@ -1,3 +1,4 @@
+import {TenantInitializationSet} from '../../cloudflare/src/tenant-storage.mjs';
 import {FINANCE_PROFILE} from './connection-store.mjs';
 import {projectOriginalItemsFrame} from './original-items-frame.mjs';
 
@@ -7,7 +8,7 @@ export const RETURN_ITEM_EVIDENCE_SCHEMA=[
  `CREATE TABLE IF NOT EXISTS finance_return_item_evidence(partner_id INTEGER NOT NULL,shop_id INTEGER NOT NULL,case_hash TEXT NOT NULL,order_hash TEXT NOT NULL,legacy_payload_hash TEXT NOT NULL,checked_at INTEGER NOT NULL,payload TEXT NOT NULL CHECK(length(CAST(payload AS BLOB))<=65536),payload_hash TEXT NOT NULL,PRIMARY KEY(partner_id,shop_id,case_hash))`,
 ];
 const encoder=new TextEncoder(),plain=value=>value!==null&&typeof value==='object'&&[Object.prototype,null].includes(Object.getPrototypeOf(value));
-const ready=new WeakSet();
+const ready=new TenantInitializationSet();
 const read=(value,key)=>plain(value)?Object.getOwnPropertyDescriptor(value,key)?.value:undefined;
 const exact=(value,keys)=>plain(value)&&Reflect.ownKeys(value).length===keys.length&&keys.every(key=>Object.hasOwn(Object.getOwnPropertyDescriptor(value,key)||{},'value'));
 const list=(value,max)=>Array.isArray(value)&&Object.getPrototypeOf(value)===Array.prototype&&value.length<=max&&Reflect.ownKeys(value).length===value.length+1&&Array.from({length:value.length},(_,index)=>Object.getOwnPropertyDescriptor(value,String(index))).every(field=>field&&Object.hasOwn(field,'value'));
@@ -36,7 +37,7 @@ export async function prepareReturnItemEvidenceStore(db){
  try{await db.batch(RETURN_ITEM_EVIDENCE_SCHEMA.map(sql=>db.prepare(sql)));ready.add(db);return true;}catch{return false;}
 }
 
-export async function buildReturnItemEvidence(reference,legacyPayloadHash,checkedAt,response){
+export async function buildReturnItemEvidence(reference,legacyPayloadHash,checkedAt,response,profile=FINANCE_PROFILE){
  if(!digest(reference?.case_hash)||!digest(reference?.order_hash)||!digest(legacyPayloadHash)||!integer(checkedAt,1,9999999999))throw Error('RETURN_ITEM_EVIDENCE_CONTEXT_INVALID');
  let state='NOT_CAPTURED',items=[];
  try{
@@ -51,7 +52,7 @@ export async function buildReturnItemEvidence(reference,legacyPayloadHash,checke
  }catch{state='INVALID';items=[];}
  let payload={schema:'return_item_evidence_v1',state,items};
  if(encoder.encode(JSON.stringify(payload)).byteLength>65536)payload={schema:'return_item_evidence_v1',state:'LIMIT_REACHED',items:[]};
- const row={partner_id:FINANCE_PROFILE.partner_id,shop_id:FINANCE_PROFILE.shop_id,case_hash:reference.case_hash,order_hash:reference.order_hash,legacy_payload_hash:legacyPayloadHash,checked_at:checkedAt};
+ const row={partner_id:profile.partner_id,shop_id:profile.shop_id,case_hash:reference.case_hash,order_hash:reference.order_hash,legacy_payload_hash:legacyPayloadHash,checked_at:checkedAt};
  return {...row,payload:JSON.stringify(payload),payload_hash:await hash(bound(row,payload))};
 }
 
@@ -65,10 +66,10 @@ export function returnItemEvidenceStatement(db,row,owner,writeAt){
 
 // Bad optional data is localized to its count block. Neither stale evidence nor
 // another profile's row can acquire the current legacy observation's identity.
-export async function projectSavedReturnItemEvidence(row,legacy){
+export async function projectSavedReturnItemEvidence(row,legacy,profile=FINANCE_PROFILE){
  if(!row)return {state:'NOT_CAPTURED',items:[]};
  try{
-  if(row.partner_id!==FINANCE_PROFILE.partner_id||row.shop_id!==FINANCE_PROFILE.shop_id||row.case_hash!==legacy.case_hash||row.order_hash!==legacy.order_hash||row.legacy_payload_hash!==legacy.payload_hash||!integer(row.checked_at,1,9999999999)||row.checked_at!==JSON.parse(legacy.payload).checked_at||typeof row.payload!=='string'||encoder.encode(row.payload).byteLength>65536||!digest(row.payload_hash))throw Error();
+  if(row.partner_id!==profile.partner_id||row.shop_id!==profile.shop_id||row.case_hash!==legacy.case_hash||row.order_hash!==legacy.order_hash||row.legacy_payload_hash!==legacy.payload_hash||!integer(row.checked_at,1,9999999999)||row.checked_at!==JSON.parse(legacy.payload).checked_at||typeof row.payload!=='string'||encoder.encode(row.payload).byteLength>65536||!digest(row.payload_hash))throw Error();
   const payload=JSON.parse(row.payload);if(!exact(payload,['schema','state','items'])||payload.schema!=='return_item_evidence_v1'||!['AVAILABLE','NOT_CAPTURED','INVALID','LIMIT_REACHED'].includes(payload.state)||await hash(bound(row,payload))!==row.payload_hash)throw Error();
   const items=payload.state==='AVAILABLE'?canonicalItems(payload.items):list(payload.items,0)?[]:null;if(!items)throw Error();
   return {state:payload.state,items};

@@ -36,6 +36,14 @@ test('totals are independent of the visible page and each card keeps source stat
  const b=browser();b.handler(async(path)=>{const selection={start_date:'2026-11-11',end_date:'2026-11-11',status:'ALL',page:Number(new URLSearchParams(path.split('?')[1]).get('page'))},value=workspace(selection);value.totals.orders=81;value.totals.by_stage.NOT_STARTED=80;value.totals.by_stage.SHIPPED=1;value.coverage.orders_in_period=81;value.pagination={page:selection.page,page_size:50,total_orders:81,pages:2,has_more:selection.page===1};return value;});await b.controller.start({api:b.api});b.document.documentElement.dataset.activePanel='order-operations';b.controller.open();await flush();assert.match(b.text('Metrics'),/80/);assert.match(b.text('Scope'),/81 pedido/);assert.match(b.text('Orders'),/Na Shopee: A preparar/);assert.match(b.text('Orders'),/Etapa interna: não iniciada/);assert.match(b.text('Orders'),/<script>Somente texto<\/script>/);await b.el('Next').onclick();assert.match(b.calls.at(-1).path,/page=2/);assert.match(b.text('Page'),/Página 2 de 2/);assert.match(b.text('Metrics'),/80/);
 });
 
+test('distribution has every exclusive period category, equivalent counts, and clicking only filters',async()=>{
+ const b=await ready();const bars=b.buttons('Metrics');assert.deepEqual(bars.map(button=>button.dataset.orderDistributionStage),stages);
+ assert.equal(bars.some(button=>['ALL','ACTIVE'].includes(button.dataset.orderDistributionStage)),false);
+ assert.match(b.text('Other'),/Ver dados da distribuição/);assert.match(b.text('Other'),/cobertura parcial/);
+ const before=b.calls.length;await bars.find(button=>button.dataset.orderDistributionStage==='REVIEW').onclick();
+ assert.equal(b.calls.length,before+1);assert.match(b.calls.at(-1).path,/status=REVIEW/);assert.equal(b.calls.at(-1).request,undefined);
+});
+
 test('a stage requires explicit confirmation and reason and sends only the internal operation intent',async()=>{
  const b=await ready();const button=b.buttons('Orders').find(button=>button.textContent==='Atualizar etapa');button.onclick();b.el('Stage').value='SEPARATION';assert.equal(await b.el('EditorForm').onsubmit(),false);b.el('Reason').value='Conferência sintética';assert.equal(await b.el('EditorForm').onsubmit(),false);b.el('Confirm').checked=true;assert.equal(await b.el('EditorForm').onsubmit(),true);const writes=b.calls.filter(call=>call.request);assert.equal(writes.length,1);assert.equal(writes[0].path,'order-operations');assert.deepEqual(Object.keys(writes[0].request),['request_id','revision','identity','source_hash','from_stage','to_stage','reason','confirmed']);assert.equal(writes[0].request.from_stage,null);assert.equal(writes[0].request.to_stage,'SEPARATION');assert.equal(writes[0].request.confirmed,true);assert.equal(b.el('Editor').hidden,true);assert.match(b.text('Status'),/Etapa interna confirmada/);assert.equal(b.calls.some(call=>/incurred|weekly-closing|batches\/action/.test(call.path)),false);
 });

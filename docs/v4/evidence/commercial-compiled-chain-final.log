@@ -1,0 +1,12 @@
+✔ compiled Auth and Finance preserve App cash DTOs and isolate identical requests across two persistent companies (336.325443ms)
+ℹ {"financeBytes":729822,"financeSha256":"ebca9bc11a1d2aecf8bc8085360ecffdc16e7c96d59a7171088f59515f9d9f3e","authBytes":518870,"authSha256":"348e7485c9e53e1bb1dbe7e0729167e5b2ec468abec9f6a48050dfc3004dbe1e","financeGraphContextCopies":1,"financeQueries":[{"path":"/internal/finance/external-cash-v1","queries":3,"creates":0},{"path":"/internal/finance/external-cash-v1","queries":4,"creates":0},{"path":"/internal/finance/external-cash-v1","queries":50,"creates":31},{"path":"/internal/finance/external-cash-v1","queries":4,"creates":0},{"path":"/internal/finance/external-cash-v1","queries":3,"creates":0},{"path":"/internal/finance/external-cash-v1","queries":4,"creates":0},{"path":"/internal/finance/external-cash-v1","queries":50,"creates":31},{"path":"/internal/finance/external-cash-v1","queries":4,"creates":0},{"path":"/internal/finance/external-cash-v1","queries":10,"creates":0},{"path":"/internal/finance/external-cash-v1","queries":10,"creates":0}],"environment":"LOCAL_SYNTHETIC_SQLITE_COMPILED_CHAIN"}
+✔ compiled boundaries reject a stale envelope, forged tenant header and revocation in flight without returning another company (20.103259ms)
+✔ two dynamic profiles and own connector tokens survive both compiled receivers and the App identity projector (38.901321ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 489.181414

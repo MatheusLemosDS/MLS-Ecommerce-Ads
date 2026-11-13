@@ -1,4 +1,4 @@
-import {createFinanceStore, FinanceConnectionError} from './connection-store.mjs';
+import {getFinanceProfile,createFinanceStore, FinanceConnectionError} from './connection-store.mjs';
 import {buildFinanceRefreshRequest} from './refresh-request.mjs';
 import {requestFinanceRefresh} from './refresh-transport.mjs';
 
@@ -7,6 +7,7 @@ const fail = (code, status = 503) => new FinanceConnectionError(code, status);
 // Internal API only: callers receive an access token, never the rotating refresh
 // token. No public route or default provider transport is installed by this file.
 export async function ensureFinanceAccessToken(env, options = {}) {
+ const profile=getFinanceProfile(env);
   if (!options || typeof options !== 'object' || Array.isArray(options)) {
     throw fail('FINANCE_REFRESH_COORDINATOR_CONFIGURATION');
   }
@@ -36,12 +37,12 @@ export async function ensureFinanceAccessToken(env, options = {}) {
   // missing key or transport must not discard an otherwise intact connection.
   if (typeof fetchImpl !== 'function') throw fail('FINANCE_REFRESH_TRANSPORT_UNAVAILABLE');
   const partnerKey = env.SHOPEE_FINANCE_PARTNER_KEY;
-  await buildFinanceRefreshRequest({partnerKey, refreshToken: current.refresh_token, timestamp: epoch()});
+  await buildFinanceRefreshRequest({partnerKey, refreshToken: current.refresh_token, timestamp: epoch()},profile);
   const lease = await store.claimRefresh(current.revision);
   try {
     const replacement = await requestFinanceRefresh({
       partnerKey, refreshToken: current.refresh_token, timestamp: epoch(),
-    }, {fetchImpl, now, timeoutMs});
+    }, {fetchImpl, now, timeoutMs},profile);
     const saved = await store.completeRefresh(lease, replacement);
     return {access_token: replacement.access_token, expires_at: replacement.expires_at, revision: saved.revision};
   } catch (failure) {

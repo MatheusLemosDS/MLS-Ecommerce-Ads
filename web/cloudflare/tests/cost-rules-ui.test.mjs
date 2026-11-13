@@ -228,3 +228,35 @@ test('editing advanced rules during cached recalculation keeps the save acknowle
 test('advanced input cannot erase an uncertain financial-save acknowledgement warning',async()=>{
  const b=browser(async(path,body)=>body?state(3,{rules:[{...COST_RULE_DEFAULTS.rules[0],unit_cost_cents:1450}]}):state());await b.workspace.start({api:b.api});b.priceField().value='13,50';b.priceField().oninput();await b.el('PriceForm').onsubmit({preventDefault(){}});const warning=b.el('PriceStatus').textContent;assert.match(warning,/confirmação.*incerta/);b.field('label').value='Outro rascunho';b.field('label').oninput();assert.equal(b.el('PriceStatus').textContent,warning);assert.equal(b.priceField().value,'13,50');assert.equal(b.el('PriceSave').disabled,true);
 });
+
+test('stop invalidates a held rules read and its old finally cannot disturb a new active load',async()=>{
+ let finish,reads=0;const values=structuredClone(COST_RULE_DEFAULTS);values.rules[0].label='New authorized rules';
+ const b=browser(async()=>++reads===1?new Promise(resolve=>{finish=resolve;}):state(7,values)),old=b.workspace.start({api:b.api});
+ await Promise.resolve();b.workspace.stop();assert.equal(widgetText(b.el('Summary')).trim(),'');assert.equal(b.el('Form').onsubmit,null);
+ await b.workspace.start({api:b.api});assert.match(widgetText(b.el('Summary')),/New authorized rules.*versão salva 7/);
+ const privateValues=structuredClone(COST_RULE_DEFAULTS);privateValues.rules[0].label='OLD PRIVATE RULE';finish(state(9,privateValues));await old;
+ assert.match(widgetText(b.el('Summary')),/New authorized rules.*versão salva 7/);assert.doesNotMatch(widgetText(b.el('Summary')),/OLD PRIVATE RULE|versão salva 9/);assert.equal(b.el('Reload').disabled,false);
+});
+
+test('stop clears cost drafts, learning, assignments and held widgets before a delayed assignment can publish',async()=>{
+ let finish,saved=0;const values=structuredClone(COST_RULE_DEFAULTS);values.assignments=[{item_id:'101',model_id:'1',rule_id:'camiseta-infantil',size:'4'}];
+ const b=browser(async(path,body)=>path==='cost-rules/assignments'?new Promise(resolve=>{finish=()=>resolve(state(2,{...values,assignments:body.assignments}));}):path.endsWith('/sync')?{matched_variants:[{item_id:'101',model_id:'1'}],learning:[learning()]}:state(1,values));
+ await b.workspace.start({api:b.api});await b.workspace.syncCandidates([{item_id:'101'}]);assert.equal(b.workspace.isMapped('101','1'),true);assert.ok(b.workspace.learningFor('101'));assert.ok(b.workspace.assignmentFor('101','1'));
+ const price=b.priceField(),advanced=b.field('label'),widget=b.workspace.assignmentControl({item_id:'101',model_id:'1',onSaved:()=>{saved++;}});selectChild(widget,'6');const type=findAssignment(widget,'rule'),size=findAssignment(widget,'size'),submit=findAssignment(widget,'save','action'),work=submit.onclick();
+ b.workspace.stop();assert.equal(price.value,'');assert.equal(advanced.value,'');assert.equal(type.value,'');assert.equal(size.value,'');assert.equal(submit.onclick,null);assert.equal(widgetText(widget).trim(),'');assert.equal(b.workspace.isMapped('101','1'),false);assert.equal(b.workspace.learningFor('101'),null);assert.equal(b.workspace.assignmentFor('101','1'),null);assert.equal(b.workspace.hasAssignment('101','1'),false);
+ const calls=b.calls.length;finish();assert.equal(await work,false);assert.equal(saved,0);assert.equal(b.calls.length,calls);assert.equal(widgetText(b.el('Summary')).trim(),'');assert.equal(widgetText(b.el('Rows')).trim(),'');assert.equal(b.workspace.isMapped('101','1'),false);
+});
+
+test('stop suppresses delayed price confirmations and pending recalculation notices without restoring controls',async()=>{
+ for(const phase of ['response','recalculation']){
+  let finish,entered=false,recalculations=0;
+  const b=browser(async(path,body)=>body&&phase==='response'?new Promise(resolve=>{finish=()=>resolve(state(2,body.values));}):body?state(2,body.values):state());
+  await b.workspace.start({api:b.api,onChanged:()=>{recalculations++;entered=true;return new Promise(resolve=>{finish=resolve;});}});const price=b.priceField();price.value='13,50';price.oninput();const work=b.el('PriceForm').onsubmit({preventDefault(){}});
+  for(let n=0;n<12&&!finish;n++)await Promise.resolve();assert.ok(finish);assert.equal(entered,phase==='recalculation');b.workspace.stop();finish();assert.equal(await work,false);assert.equal(recalculations,phase==='recalculation'?1:0);assert.equal(price.value,'');assert.equal(b.el('PriceStatus').textContent,'');assert.equal(b.el('PriceSave').disabled,true);assert.equal(widgetText(b.el('Summary')).trim(),'');
+ }
+});
+
+test('stop prevents an in-flight or queued catalogue task from repopulating maps or starting another batch',async()=>{
+ let finish;const b=browser(async(path)=>path==='cost-rules'?state():new Promise(resolve=>{finish=()=>resolve({matched_variants:[{item_id:'101',model_id:'1'}],learning:[learning()]});}));await b.workspace.start({api:b.api});
+ const first=b.workspace.syncCandidates([{item_id:'101'},{item_id:'102'},{item_id:'103'},{item_id:'104'}]),queued=b.workspace.syncCandidates([{item_id:'201'}]);for(let n=0;n<8&&!finish;n++)await Promise.resolve();assert.ok(finish);b.workspace.stop();finish();assert.equal(await first,false);assert.equal(await queued,false);assert.equal(b.calls.filter(row=>row.path.endsWith('/sync')).length,1);assert.equal(b.workspace.isMapped('101','1'),false);assert.equal(b.workspace.learningFor('101'),null);assert.equal(b.el('Sync').textContent,'');assert.equal(await b.workspace.syncCandidates([{item_id:'301'}]),false);
+});

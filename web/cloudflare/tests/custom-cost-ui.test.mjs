@@ -40,7 +40,7 @@ function browser(values=base){
  async function api(path,body){apiCalls.push({path,body:body?structuredClone(body):undefined});if(path==='production-costs/audit')return {rows:[]};return globalThis.apiAction(path,body);}
  `+line('function variantId(')+'\n'+line('function catalogDiagnosticKeys(')+'\n'+line('function catalogDiagnosticArray(')+'\n'+line('function productionCostFrameCurrent(')+'\n'+line('function savedCustomCost(')+'\n'+CLIENT.slice(start,end)+'\n'+line('function variantCostReference(')+'\n'+line('function variantReference(')).runInContext(context);
  const run=code=>new vm.Script(code).runInContext(context),json=code=>JSON.parse(run('JSON.stringify('+code+')'));
- run('applyProductionCosts('+JSON.stringify({revision:7,values,updated_at:'2026-10-23T10:00:00Z'})+')');
+ if(values===null)run('el("costMode").value="all_inclusive";');else run('applyProductionCosts('+JSON.stringify({revision:7,values,updated_at:'2026-10-23T10:00:00Z'})+')');
  return {run,json,context};
 }
 
@@ -185,4 +185,36 @@ test('product list resolves all custom variations without a catalog binding and 
  new vm.Script('const productSellingUnit=()=>null;\n'+line('function productSearchText(')+'\n'+line('function productBrowserRows(')).runInContext(b.context);
  const rows=b.json('productBrowserRows(new Map([["123",[["123:0",{item_id:"123",model_id:"0",quantity:1}],["123:99",{item_id:"123",model_id:"99",quantity:2}]]]]))');
  assert.equal(rows[0].ready,true);assert.equal(rows[0].mapped,0);assert.equal(rows[0].customComplete,true);assert.equal(rows[0].minCost,3590);assert.equal(rows[0].maxCost,4200);assert.deepEqual(rows[0].customLabels,['Kit casal','Calça']);assert.match(rows[0].search,/calca/);assert.equal(rows[0].quantity,3);
+});
+
+
+test('a company without costs starts an empty revision-zero draft and saves only its explicit first configuration',async()=>{
+ const b=browser(null);
+ b.run('globalThis.apiAction=async(path,body)=>{if(!body)throw Object.assign(Error("configuration required"),{status:409,apiCode:"PRODUCTION_COSTS_CONFIGURATION_REQUIRED"});return {revision:1,values:body.values,updated_at:"2026-11-12T12:00:00Z"};};');
+ await b.run('loadProductionCosts()');
+ assert.equal(b.run('productionCostsState.revision'),0);assert.deepEqual(b.json('productionCostsState.values'),{});assert.equal(b.run('productionCostsBlocked'),false);
+ for(const id of ['costInclusiveRegular','costInclusivePlus','costBaseRegular','costBasePlus'])assert.equal(b.run('el('+JSON.stringify(id)+').value'),'');
+ assert.equal(b.run('el("saveProductionCosts").disabled'),true);assert.equal(b.run('el("costsVersion").textContent'),'Primeira configuração');assert.match(b.run('el("costsNotice").textContent'),/nenhum custo de outra empresa/);assert.equal(b.run('validProductionCostsState(productionCostsState)'),null);
+ await b.run('saveProductionCosts()');assert.equal(b.json('apiCalls').length,1,'empty draft never posts');
+ b.run('el("costInclusiveRegular").value="27,80";el("costInclusivePlus").value="31,25";productionCostsChanged();');assert.equal(b.run('el("saveProductionCosts").disabled'),false);
+ await b.run('saveProductionCosts()');
+ const posts=b.json('apiCalls.filter(row=>row.body)');assert.equal(posts.length,1);assert.deepEqual(posts[0].body,{revision:0,values:{mode:'all_inclusive',inclusive_regular_cents:2780,inclusive_plus_cents:3125,base_regular_cents:null,base_plus_cents:null,components:[]}});
+ assert.equal(b.run('productionCostsState.revision'),1);assert.equal(b.run('productionCostsDirty'),false);assert.equal(b.run('el("saveProductionCosts").disabled'),true);assert.equal(b.run('el("costInclusiveRegular").value'),'27.80');assert.equal(b.run('el("costInclusivePlus").value'),'31.25');
+});
+
+test('first-configuration rechecks preserve explicit drafts and a competing first save requires review',async()=>{
+ const b=browser(null);b.run('globalThis.apiAction=async()=>{throw Object.assign(Error("required"),{status:409,apiCode:"PRODUCTION_COSTS_CONFIGURATION_REQUIRED"});};');await b.run('loadProductionCosts()');
+ b.run('el("costInclusiveRegular").value="25,00";el("costInclusivePlus").value="30,00";productionCostsChanged();');await b.run('loadProductionCosts()');
+ assert.equal(b.run('el("costInclusiveRegular").value'),'25,00');assert.equal(b.run('productionCostsDirty'),true);assert.equal(b.run('el("saveProductionCosts").disabled'),false);
+ b.run('globalThis.apiAction=async()=>{throw Object.assign(Error("changed"),{status:409,apiCode:"PRODUCTION_COSTS_CHANGED_RELOAD"});};');await b.run('saveProductionCosts()');
+ assert.equal(b.run('productionCostsBlocked'),true);assert.equal(b.run('el("saveProductionCosts").disabled'),true);assert.equal(b.run('el("costInclusiveRegular").value'),'25,00');
+ const saved={revision:1,values:{...base,inclusive_regular_cents:2900,inclusive_plus_cents:3400},updated_at:'2026-11-12T12:00:00Z'};b.run('globalThis.apiAction=async()=>('+JSON.stringify(saved)+');');await b.run('loadProductionCosts()');
+ assert.equal(b.run('productionCostsConflict.revision'),1);assert.equal(b.run('productionCostsState.revision'),0);assert.equal(b.run('el("reviewProductionCosts").hidden'),false);assert.equal(b.run('el("costInclusiveRegular").value'),'25,00');assert.equal(b.run('el("saveProductionCosts").disabled'),true);
+});
+
+test('an unrelated 409 or service failure never opens first-configuration editing',async()=>{
+ for(const failure of [{status:409,apiCode:'ACCOUNT_FORBIDDEN'},{status:503,apiCode:'PRODUCTION_COSTS_CONFIGURATION_REQUIRED'},{status:409,apiCode:'PRODUCTION_COSTS_CHANGED_RELOAD'}]){
+  const b=browser(null);b.context.failure=failure;b.run('globalThis.apiAction=async()=>{throw Object.assign(Error("unavailable"),failure);};');await b.run('loadProductionCosts()');
+  assert.equal(b.run('productionCostsState'),null);assert.equal(b.run('productionCostsBlocked'),true);assert.equal(b.run('el("saveProductionCosts").disabled'),true);assert.equal(b.json('apiCalls.filter(row=>row.body)').length,0);
+ }
 });

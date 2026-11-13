@@ -1,0 +1,262 @@
+{
+  "schema": "mls_v41_visual_artifact_registry_v1",
+  "note": "Images are original local synthetic captures. A screenshot is not persistence, provider or Live proof. Commands are in the corresponding requirement evidence.",
+  "captures": [
+    {
+      "path": "/workspace/mls-v4-work/chart-qa/ads-min-1365-dark.png",
+      "bytes": 91023,
+      "sha256": "b7aad8b7da3f8d89010691b7587781df26cd752ab2719825ff66e48bc9eb8e55",
+      "environment": "LOCAL_SYNTHETIC",
+      "scope": "Ads graphs",
+      "not_live": true
+    },
+    {
+      "path": "/workspace/mls-v4-work/chart-qa/ads-min-1365-light.png",
+      "bytes": 89527,
+      "sha256": "eba6d85ac8569bfec3ee9b552cd90959112751f25d42aaefdf807a882c0f6e5e",
+      "environment": "LOCAL_SYNTHETIC",
+      "scope": "Ads graphs",
+      "not_live": true
+    },
+    {
+      "path": "/workspace/mls-v4-work/chart-qa/ads-min-320-dark.png",
+      "bytes": 43008,
+      "sha256": "3242002bc47b907aad853901a6d2a244d72ff87ac13a2085bd4391c128afa8cb",
+      "environment": "LOCAL_SYNTHETIC",
+      "scope": "Ads graphs",
+      "not_live": true
+    },
+    {
+      "path": "/workspace/mls-v4-work/chart-qa/ads-min-320-light.png",
+      "bytes": 41834,
+      "sha256": "2cd3be82fb49a9efa7d8d1ad2397e671904acf04834d7500ed0f7b0c4e8b3de1",
+      "environment": "LOCAL_SYNTHETIC",
+      "scope": "Ads graphs",
+      "not_live": true
+    },
+    {
+      "path": "/workspace/mls-v4-work/chart-qa/ads-normal-1365-dark.png",
+      "bytes": 91023,
+      "sha256": "b7aad8b7da3f8d89010691b7587781df26cd752ab2719825ff66e48bc9eb8e55",
+      "environment": "LOCAL_SYNTHETIC",
+      "scope": "Ads graphs",
+      "not_live": true
+    },
+    {
+      "path": "/workspace/mls-v4-work/chart-qa/ads-normal-1365-light.png",
+      "bytes": 89527,
+      "sha256": "eba6d85ac8569bfec3ee9b552cd90959112751f25d42aaefdf807a882c0f6e5e",
+      "environment": "LOCAL_SYNTHETIC",
+      "scope": "Ads graphs",
+      "not_live": true
+    },
+    {
+      "path": "/workspace/mls-v4-work/chart-qa/ads-normal-320-dark.png",
+      "bytes": 43008,
+      "sha256": "3242002bc47b907aad853901a6d2a244d72ff87ac13a2085bd4391c128afa8cb",
+      "environment": "LOCAL_SYNTHETIC",
+      "scope": "Ads graphs",
+      "not_live": true
+    },
+    {
+      "path": "/workspace/mls-v4-work/chart-qa/ads-normal-320-light.png",
+      "bytes": 41834,
+      "sha256": "2cd3be82fb49a9efa7d8d1ad2397e671904acf04834d7500ed0f7b0c4e8b3de1",
+      "environment": "LOCAL_SYNTHETIC",
+      "scope": "Ads graphs",
+      "not_live": true
+    },
+    {
+      "path": "/workspace/mls-v4-work/weekly-context-screens/min-1365-dark-weekly-context.png",
+      "bytes": 328551,
+      "sha256": "61597f8eb337bb94f624f3e55b29ee5b14522d95d7242736f88830c7b45ad870",
+      "environment": "LOCAL_SYNTHETIC",
+      "scope": "weekly navigation",
+      "not_live": true
+    },
+    {
+      "path": "/workspace/mls-v4-work/weekly-context-screens/min-1365-light-weekly-context.png",
+      "bytes": 296744,
+      "sha256": "3bc4d6dd006874655fa33b2b7e9d13796fb2fe72da5e29df833c39c330a30b2e",
+      "environment": "LOCAL_SYNTHETIC",
+      "scope": "weekly navigation",
+      "not_live": true
+    },
+    {
+      "path": "/workspace/mls-v4-work/weekly-context-screens/min-320-dark-weekly-context.png",
+      "bytes": 114567,
+      "sha256": "cd6925be78d38fbd57ac00420940f33a7c692c050b56ea8d8c52961b57d491c9",
+      "environment": "LOCAL_SYNTHETIC",
+      "scope": "weekly navigation",
+      "not_live": true
+    },
+    {
+      "path": "/workspace/mls-v4-work/weekly-context-screens/min-320-light-weekly-context.png",
+      "bytes": 102242,
+      "sha256": "f7fef478348c7e4a6072a4fb92fcf6b56c1c09f7bff1ab0fca3f3218479c1554",
+      "environment": "LOCAL_SYNTHETIC",
+      "scope": "weekly navigation",
+      "not_live": true
+    },
+    {
+      "path": "/workspace/mls-v4-work/weekly-context-screens/normal-1365-dark-weekly-context.png",
+      "bytes": 329670,
+      "sha256": "d2865938754912d8d1c111ac1eef08f8b758806c2aefa56f10612fe90842d805",
+      "environment": "LOCAL_SYNTHETIC",
+      "scope": "weekly navigation",
+      "not_live": true
+    },
+    {
+      "path": "/workspace/mls-v4-work/weekly-context-screens/normal-1365-light-weekly-context.png",
+      "bytes": 296743,
+      "sha256": "59b64d40012709bae11e0d8814f0475334bf08cf603dc447045bc859ae0f8a77",
+      "environment": "LOCAL_SYNTHETIC",
+      "scope": "weekly navigation",
+      "not_live": true
+    },
+    {
+      "path": "/workspace/mls-v4-work/weekly-context-screens/normal-320-dark-weekly-context.png",
+      "bytes": 114569,
+      "sha256": "4d5b659b7f032371dac4ca3c6a1d649d49ccc7f7888caeb8aee1225a4ac671f7",
+      "environment": "LOCAL_SYNTHETIC",
+      "scope": "weekly navigation",
+      "not_live": true
+    },
+    {
+      "path": "/workspace/mls-v4-work/weekly-context-screens/normal-320-light-weekly-context.png",
+      "bytes": 102170,
+      "sha256": "8b9222c951c5fe9467366706daa5cb74088922b599430dadcf3039f793a9e438",
+      "environment": "LOCAL_SYNTHETIC",
+      "scope": "weekly navigation",
+      "not_live": true
+    },
+    {
+      "path": "/workspace/mls-v4-work/chart-qa/m3/min-1365-dark.png",
+      "bytes": 215378,
+      "sha256": "379c0ed2913b5956804e24688ec017d995dba925c81df5b0ecd8ec7e987afc35",
+      "environment": "LOCAL_SYNTHETIC",
+      "scope": "M3 product graph/detail",
+      "not_live": true
+    },
+    {
+      "path": "/workspace/mls-v4-work/chart-qa/m3/min-1365-light.png",
+      "bytes": 175762,
+      "sha256": "8060814b6824037ae0ae8bf9b650778bf5d68f75760d3971ca117c6621bf01f7",
+      "environment": "LOCAL_SYNTHETIC",
+      "scope": "M3 product graph/detail",
+      "not_live": true
+    },
+    {
+      "path": "/workspace/mls-v4-work/chart-qa/m3/min-320-dark.png",
+      "bytes": 86134,
+      "sha256": "c7afac6c0fd53cb69aeaa89ba6fb5789b8939d7ac7906ca4968a2f4fa257eca2",
+      "environment": "LOCAL_SYNTHETIC",
+      "scope": "M3 product graph/detail",
+      "not_live": true
+    },
+    {
+      "path": "/workspace/mls-v4-work/chart-qa/m3/min-320-light.png",
+      "bytes": 68663,
+      "sha256": "aff4b080e2e9c31c4005825a8e32aa276e1c7295d58350a3bbbf22306993e9a9",
+      "environment": "LOCAL_SYNTHETIC",
+      "scope": "M3 product graph/detail",
+      "not_live": true
+    },
+    {
+      "path": "/workspace/mls-v4-work/chart-qa/m3/normal-1365-dark.png",
+      "bytes": 215366,
+      "sha256": "6bb3463a5e0b8b8f2000842341e54ed288e420b72f503ddfee05abbc2dd4b538",
+      "environment": "LOCAL_SYNTHETIC",
+      "scope": "M3 product graph/detail",
+      "not_live": true
+    },
+    {
+      "path": "/workspace/mls-v4-work/chart-qa/m3/normal-1365-light.png",
+      "bytes": 175650,
+      "sha256": "a6c1749a4df24df4111292e80407526d501be85af819e09473f8b2901cd5cf7e",
+      "environment": "LOCAL_SYNTHETIC",
+      "scope": "M3 product graph/detail",
+      "not_live": true
+    },
+    {
+      "path": "/workspace/mls-v4-work/chart-qa/m3/normal-320-dark.png",
+      "bytes": 86134,
+      "sha256": "c7afac6c0fd53cb69aeaa89ba6fb5789b8939d7ac7906ca4968a2f4fa257eca2",
+      "environment": "LOCAL_SYNTHETIC",
+      "scope": "M3 product graph/detail",
+      "not_live": true
+    },
+    {
+      "path": "/workspace/mls-v4-work/chart-qa/m3/normal-320-light.png",
+      "bytes": 68663,
+      "sha256": "aff4b080e2e9c31c4005825a8e32aa276e1c7295d58350a3bbbf22306993e9a9",
+      "environment": "LOCAL_SYNTHETIC",
+      "scope": "M3 product graph/detail",
+      "not_live": true
+    },
+    {
+      "path": "/workspace/mls-v4-work/account-qa/account-min-1365-dark.png",
+      "bytes": 70063,
+      "sha256": "05d29152c6ae7a99f23a9e1567e9063804c8626e4be7f8f8f8656ca5740ad3e6",
+      "environment": "LOCAL_SYNTHETIC",
+      "scope": "account UI",
+      "not_live": true
+    },
+    {
+      "path": "/workspace/mls-v4-work/account-qa/account-min-1365-light.png",
+      "bytes": 69695,
+      "sha256": "4d2c1e0ee076a9a2890c6078ae92f2f860be0e92d8aa3769966db8f52f93569d",
+      "environment": "LOCAL_SYNTHETIC",
+      "scope": "account UI",
+      "not_live": true
+    },
+    {
+      "path": "/workspace/mls-v4-work/account-qa/account-min-320-dark.png",
+      "bytes": 43312,
+      "sha256": "5d80b06633aa9d4cc461265065923a95ac6230f0cbbba1229702f8683804e7be",
+      "environment": "LOCAL_SYNTHETIC",
+      "scope": "account UI",
+      "not_live": true
+    },
+    {
+      "path": "/workspace/mls-v4-work/account-qa/account-min-320-light.png",
+      "bytes": 42820,
+      "sha256": "736dcf890af01fe98134913f225a537785ce6ba7a8f8c30b4931f926f2f1d86e",
+      "environment": "LOCAL_SYNTHETIC",
+      "scope": "account UI",
+      "not_live": true
+    },
+    {
+      "path": "/workspace/mls-v4-work/account-qa/account-normal-1365-dark.png",
+      "bytes": 70063,
+      "sha256": "05d29152c6ae7a99f23a9e1567e9063804c8626e4be7f8f8f8656ca5740ad3e6",
+      "environment": "LOCAL_SYNTHETIC",
+      "scope": "account UI",
+      "not_live": true
+    },
+    {
+      "path": "/workspace/mls-v4-work/account-qa/account-normal-1365-light.png",
+      "bytes": 69695,
+      "sha256": "4d2c1e0ee076a9a2890c6078ae92f2f860be0e92d8aa3769966db8f52f93569d",
+      "environment": "LOCAL_SYNTHETIC",
+      "scope": "account UI",
+      "not_live": true
+    },
+    {
+      "path": "/workspace/mls-v4-work/account-qa/account-normal-320-dark.png",
+      "bytes": 43312,
+      "sha256": "5d80b06633aa9d4cc461265065923a95ac6230f0cbbba1229702f8683804e7be",
+      "environment": "LOCAL_SYNTHETIC",
+      "scope": "account UI",
+      "not_live": true
+    },
+    {
+      "path": "/workspace/mls-v4-work/account-qa/account-normal-320-light.png",
+      "bytes": 42820,
+      "sha256": "736dcf890af01fe98134913f225a537785ce6ba7a8f8c30b4931f926f2f1d86e",
+      "environment": "LOCAL_SYNTHETIC",
+      "scope": "account UI",
+      "not_live": true
+    }
+  ]
+}

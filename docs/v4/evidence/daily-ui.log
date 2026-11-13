@@ -1,0 +1,24 @@
+✔ daily overview has accessible day controls, a closed calculation and a responsive primary result (1.177609ms)
+✔ daily signed composition uses the same canonical payout, deductions and result as the equivalent list (160.115386ms)
+✔ daily return notice separates known returns from unread orders and explains payout without changing the financial snapshot (94.149863ms)
+✔ return uncertainty remains explicit with incomplete production, missing monthly expenses and legacy history (208.307729ms)
+✔ the selected date is the Brasília day, handles month links, and rejects future or invalid URL dates (57.675684ms)
+✔ Today follows the natural Brasília rollover while explicit dates and historical Finance links stay fixed (46.023829ms)
+✔ same-month date changes use only saved day values, preserve source times and never create a fetch or polling loop (13.515955ms)
+✔ confirmed empty days show their negative fixed-cost estimate while uncovered dates never become zero (96.759983ms)
+✔ incomplete production is labelled as a known-cost subtotal and legacy history stays unavailable (32.333216ms)
+✔ unconfirmed monthly expenses expose a separate subtotal without inventing daily profit or hiding the known DAS (22.979416ms)
+✔ a date in another month asks the existing monthly reader once and keeps the latest chosen day (12.064588ms)
+✔ failed or rejected month reads release their pending request and allow a retry after the real reset ordering (29.460968ms)
+✔ rapid changes between months and a manual month reset ignore late failures and late foreign contexts (33.135178ms)
+✔ bootstrap failures expose only the shared category and logout cannot restore or request financial values (19.650811ms)
+✔ an incompatible daily snapshot clears prior values without exposing rejected payloads or changing monthly state (11.550013ms)
+✔ daily BRL presentation keeps every cent at the positive and negative safe-integer boundaries (1.69553ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 973.692284

@@ -58,6 +58,7 @@ def rejection(replacements):
     return None
 
 guards={
+    'unreviewed_storage_import':rejection({'mls-ai-sales-workspace-store.mjs':lambda source:source.replace('import {TenantInitializationMap}', 'import {createTenantDatabase}',1)}),
     'orphan_reference':rejection({'mls-ai-sales-affiliates.mjs':lambda source:source+'\nconst futureDraft=draftAiSalesAffiliateProposal;\n'}),
     'orphan_crm_reference':rejection({'mls-ai-sales-affiliates.mjs':lambda source:source+'\nconst futureCreator=upsertAiSalesAffiliateCreator;\n'}),
     'orphan_csv_reference':rejection({'mls-ai-sales-imports.mjs':lambda source:source+'\nconst futureCsv=exportAiSalesCsv;\n'}),
@@ -94,7 +95,9 @@ test('the reduced server core preserves every required persistence API and retai
  for(const name of omitted)assert.equal(Object.hasOwn(server,name),false,name+' is browser only');
  assert.equal(Object.hasOwn(server,'AI_SALES_AFFILIATE_CREATOR_CSV_HEADERS'),false,'creator CSV editing is browser only');
  assert.doesNotMatch(profiles.server,/modules\["mls-ai-sales-profitability-gate\.mjs"\]\s*=/,'the unused proposal gate has no server module copy');
- for(const [filename,names] of Object.entries(profiles.required))for(const name of names){
+ const external=profiles.required['tenant-storage.mjs'];assert.deepEqual(external,['TenantInitializationMap']);
+ for(const name of external){assert.equal(Object.hasOwn(server,name),false,'domain storage remains outside the sales business core');assert.equal(Object.hasOwn(browser,name),false,'domain storage is never exposed by the browser business core');}
+ for(const [filename,names] of Object.entries(profiles.required).filter(([filename])=>filename!=='tenant-storage.mjs'))for(const name of names){
   assert.equal(typeof server[name],'function',filename+' must retain '+name);
   assert.equal(String(server[name]),String(browser[name]),name+' keeps its full validation implementation');
  }
@@ -123,6 +126,7 @@ test('browser proposals remain usable and the reduced server still revokes impor
 });
 
 for(const [guard,expected] of [
+ ['unreviewed_storage_import','tenant-storage.mjs'],
  ['orphan_reference','draftAiSalesAffiliateProposal'],
  ['orphan_crm_reference','upsertAiSalesAffiliateCreator'],
  ['orphan_csv_reference','exportAiSalesCsv'],

@@ -1,0 +1,589 @@
+{
+  "schema": "mls_tenant_storage_inventory_v1",
+  "source": "STATIC_LOCAL_SOURCE_INVENTORY",
+  "counts": {
+    "app_tables": 121,
+    "finance_tables": 38,
+    "schema_objects": 195
+  },
+  "object_kinds": {
+    "admin_audit": "table",
+    "admin_settings": "table",
+    "background_collection_lane_state": "table",
+    "background_coverage_bootstrap_attempts": "table",
+    "background_history_fairness_state": "table",
+    "background_pending_income_recovery_attempts": "table",
+    "background_pending_income_scan_turns": "table",
+    "business_checkpoint_history": "table",
+    "business_checkpoint_state": "table",
+    "business_escrow_release_attempts": "table",
+    "business_escrow_release_coverage": "table",
+    "business_escrow_release_coverage_attempt_scopes": "table",
+    "business_escrow_release_coverage_leases": "table",
+    "business_escrow_release_leases": "table",
+    "business_escrow_release_reports": "table",
+    "business_expense_ledger_audit": "table",
+    "business_expense_ledger_months": "table",
+    "business_expense_ledger_state": "table",
+    "business_historical_returns_turns": "table",
+    "business_history_sync_state": "table",
+    "business_income_detail": "table",
+    "business_income_detail_diagnostic": "table",
+    "business_income_detail_lease": "table",
+    "business_income_overview": "table",
+    "business_income_overview_lease": "table",
+    "business_month_ads": "table",
+    "business_month_ads_attempts": "table",
+    "business_month_ads_history": "table",
+    "business_month_expenses": "table",
+    "business_month_expenses_audit": "table",
+    "business_month_frames": "table",
+    "business_month_publication_frames": "table",
+    "business_month_publications": "table",
+    "business_month_runs": "table",
+    "business_month_variant_attribution": "table",
+    "business_pending_income_scan": "table",
+    "business_pending_income_scan_lease": "table",
+    "business_reconciliation_attempts": "table",
+    "business_reconciliation_leases": "table",
+    "business_reconciliation_original_items": "table",
+    "business_reconciliation_reports": "table",
+    "business_sync_audit": "table",
+    "business_sync_state": "table",
+    "business_tax_policy_audit": "table",
+    "business_tax_policy_state": "table",
+    "catalog_classification_audit": "table",
+    "catalog_classification_changes": "table",
+    "catalog_classification_due": "index",
+    "catalog_classification_jobs": "table",
+    "catalog_classification_sold_gaps": "table",
+    "catalog_classification_source_diagnostics": "table",
+    "catalog_classification_state": "table",
+    "catalog_classification_variants": "table",
+    "catalog_media_priorities": "table",
+    "catalog_product_media": "table",
+    "finance_business_order_evidence": "table",
+    "finance_business_period_cursors": "table",
+    "finance_business_period_orders": "table",
+    "finance_business_period_payment_cache": "table",
+    "finance_business_period_runs": "table",
+    "finance_connections": "table",
+    "finance_escrow_release_cohort_sources": "table",
+    "finance_escrow_release_cohorts": "table",
+    "finance_escrow_release_pages": "table",
+    "finance_escrow_release_publications": "table",
+    "finance_escrow_release_rows": "table",
+    "finance_escrow_release_scans": "table",
+    "finance_external_cash_audit": "table",
+    "finance_external_cash_audit_no_delete": "trigger",
+    "finance_external_cash_audit_no_update": "trigger",
+    "finance_external_cash_documents": "table",
+    "finance_external_cash_documents_no_delete": "trigger",
+    "finance_external_cash_documents_no_update": "trigger",
+    "finance_external_cash_guard": "table",
+    "finance_external_cash_imports": "table",
+    "finance_external_cash_imports_no_delete": "trigger",
+    "finance_external_cash_imports_no_update": "trigger",
+    "finance_external_cash_match_bank": "index",
+    "finance_external_cash_match_transfer": "index",
+    "finance_external_cash_matches": "table",
+    "finance_external_cash_matches_no_delete": "trigger",
+    "finance_external_cash_matches_no_update": "trigger",
+    "finance_external_cash_origins": "table",
+    "finance_external_cash_origins_no_delete": "trigger",
+    "finance_external_cash_origins_no_update": "trigger",
+    "finance_external_cash_records": "table",
+    "finance_external_cash_records_amount": "index",
+    "finance_external_cash_records_date": "index",
+    "finance_external_cash_records_no_delete": "trigger",
+    "finance_external_cash_records_no_update": "trigger",
+    "finance_external_cash_records_reference": "index",
+    "finance_external_cash_requests": "table",
+    "finance_external_cash_requests_no_delete": "trigger",
+    "finance_external_cash_requests_no_update": "trigger",
+    "finance_external_cash_state": "table",
+    "finance_external_cash_unlinks": "table",
+    "finance_external_cash_unlinks_no_delete": "trigger",
+    "finance_external_cash_unlinks_no_update": "trigger",
+    "finance_income_detail_structure_probe": "table",
+    "finance_oauth_states": "table",
+    "finance_pending_income_control": "table",
+    "finance_pending_income_pages": "table",
+    "finance_pending_income_publication": "table",
+    "finance_pending_income_rows": "table",
+    "finance_pending_income_scans": "table",
+    "finance_pending_income_terminal_evidence": "table",
+    "finance_return_item_evidence": "table",
+    "finance_returns_reconciliation_cases": "table",
+    "finance_returns_reconciliation_probes": "table",
+    "finance_returns_reconciliation_runs": "table",
+    "finance_store_period_cursors": "table",
+    "finance_store_period_invoice_bases": "table",
+    "finance_store_period_orders": "table",
+    "finance_store_period_runs": "table",
+    "financial_audit_coverage_turns": "table",
+    "financial_audit_historical_calendar_targets": "table",
+    "financial_audit_release_calendar_turns": "table",
+    "financial_audit_turns": "table",
+    "hermes_agent": "table",
+    "hermes_agent_capabilities": "table",
+    "hermes_cost_audit": "table",
+    "hermes_financial_contexts": "table",
+    "hermes_jobs": "table",
+    "historical_cost_evidence_cursors": "table",
+    "historical_cost_evidence_members": "table",
+    "historical_cost_evidence_names": "table",
+    "historical_cost_evidence_runs": "table",
+    "historical_cost_evidence_state": "table",
+    "incurred_production_audit": "table",
+    "incurred_production_guard": "table",
+    "incurred_production_records": "table",
+    "incurred_production_state": "table",
+    "mls_agent_learning_observations": "table",
+    "mls_ai_sales_workspace_audit": "table",
+    "mls_ai_sales_workspaces": "table",
+    "operator_cost_corrections": "table",
+    "order_observations": "table",
+    "order_observations_saved_at_id": "index",
+    "order_operations_events": "table",
+    "order_operations_events_no_delete": "trigger",
+    "order_operations_events_no_update": "trigger",
+    "order_operations_guard": "table",
+    "order_operations_identity": "index",
+    "order_operations_state": "table",
+    "physical_returns_audit": "table",
+    "physical_returns_cases": "table",
+    "physical_returns_guard": "table",
+    "physical_returns_state": "table",
+    "product_registry_items": "table",
+    "product_registry_pending": "index",
+    "product_registry_state": "table",
+    "production_cost_catalog": "table",
+    "production_cost_month_quantities": "table",
+    "production_cost_rules_audit": "table",
+    "production_cost_rules_state": "table",
+    "production_cost_week_state": "table",
+    "production_costs_audit": "table",
+    "production_costs_state": "table",
+    "production_coverage_audit": "table",
+    "production_coverage_guard": "table",
+    "production_coverage_intervals": "table",
+    "production_coverage_state": "table",
+    "production_dtf_audit": "table",
+    "production_dtf_batches": "table",
+    "production_dtf_guard": "table",
+    "production_dtf_lines": "table",
+    "production_dtf_lines_order": "index",
+    "production_dtf_orders": "table",
+    "production_dtf_reservations": "table",
+    "production_dtf_reservations_batch": "index",
+    "production_dtf_settings": "table",
+    "production_dtf_settings_audit": "table",
+    "production_dtf_sync_state": "table",
+    "production_weekly_assignments": "table",
+    "production_weekly_audit": "table",
+    "production_weekly_guard": "table",
+    "production_weekly_reports": "table",
+    "production_weekly_state": "table",
+    "return_manufacturing_links_audit": "table",
+    "return_manufacturing_links_guard": "table",
+    "return_manufacturing_links_pair_active": "index",
+    "return_manufacturing_links_physical_active": "index",
+    "return_manufacturing_links_physical_delete": "trigger",
+    "return_manufacturing_links_physical_update": "trigger",
+    "return_manufacturing_links_production_active": "index",
+    "return_manufacturing_links_production_delete": "trigger",
+    "return_manufacturing_links_production_update": "trigger",
+    "return_manufacturing_links_records": "table",
+    "return_manufacturing_links_state": "table",
+    "saved_order_items": "table",
+    "store_period_adjustments": "table",
+    "store_period_adjustments_audit": "table",
+    "store_period_ads_cache": "table",
+    "variant_bindings_audit": "table",
+    "variant_bindings_state": "table"
+  },
+  "sources": {
+    "web/cloudflare/src/admin.mjs": [
+      "admin_audit",
+      "admin_settings",
+      "hermes_agent",
+      "hermes_agent_capabilities",
+      "hermes_cost_audit",
+      "hermes_jobs",
+      "variant_bindings_audit",
+      "variant_bindings_state"
+    ],
+    "web/cloudflare/src/business-checkpoint.mjs": [
+      "business_checkpoint_history",
+      "business_checkpoint_state"
+    ],
+    "web/cloudflare/src/business-escrow-release-coverage.mjs": [
+      "business_escrow_release_coverage",
+      "business_escrow_release_coverage_attempt_scopes",
+      "business_escrow_release_coverage_leases"
+    ],
+    "web/cloudflare/src/business-escrow-releases.mjs": [
+      "business_escrow_release_attempts",
+      "business_escrow_release_leases",
+      "business_escrow_release_reports"
+    ],
+    "web/cloudflare/src/business-historical-returns.mjs": [
+      "business_historical_returns_turns"
+    ],
+    "web/cloudflare/src/business-history-sync.mjs": [
+      "business_history_sync_state"
+    ],
+    "web/cloudflare/src/business-income-detail.mjs": [
+      "business_income_detail",
+      "business_income_detail_diagnostic",
+      "business_income_detail_lease"
+    ],
+    "web/cloudflare/src/business-income-overview.mjs": [
+      "business_income_overview",
+      "business_income_overview_lease"
+    ],
+    "web/cloudflare/src/business-month-ads-history.mjs": [
+      "business_month_ads_history"
+    ],
+    "web/cloudflare/src/business-month-publication.mjs": [
+      "business_month_publication_frames",
+      "business_month_publications"
+    ],
+    "web/cloudflare/src/business-month.mjs": [
+      "business_month_ads",
+      "business_month_ads_attempts",
+      "business_month_expenses",
+      "business_month_expenses_audit",
+      "business_month_frames",
+      "business_month_runs"
+    ],
+    "web/cloudflare/src/business-original-items.mjs": [
+      "business_reconciliation_original_items"
+    ],
+    "web/cloudflare/src/business-pending-income-scan.mjs": [
+      "business_pending_income_scan",
+      "business_pending_income_scan_lease"
+    ],
+    "web/cloudflare/src/business-reconciliation.mjs": [
+      "business_reconciliation_attempts",
+      "business_reconciliation_leases",
+      "business_reconciliation_reports"
+    ],
+    "web/cloudflare/src/business-sync.mjs": [
+      "business_sync_audit",
+      "business_sync_state"
+    ],
+    "web/cloudflare/src/business-tax-policy.mjs": [
+      "business_tax_policy_audit",
+      "business_tax_policy_state"
+    ],
+    "web/cloudflare/src/business-variant-attribution.mjs": [
+      "business_month_variant_attribution"
+    ],
+    "web/cloudflare/src/catalog-classification.mjs": [
+      "catalog_classification_audit",
+      "catalog_classification_changes",
+      "catalog_classification_due",
+      "catalog_classification_jobs",
+      "catalog_classification_sold_gaps",
+      "catalog_classification_source_diagnostics",
+      "catalog_classification_state",
+      "catalog_classification_variants",
+      "production_cost_catalog"
+    ],
+    "web/cloudflare/src/cost-rules.mjs": [
+      "production_cost_catalog",
+      "production_cost_rules_audit",
+      "production_cost_rules_state"
+    ],
+    "web/cloudflare/src/expense-ledger.mjs": [
+      "business_expense_ledger_audit",
+      "business_expense_ledger_months",
+      "business_expense_ledger_state"
+    ],
+    "web/cloudflare/src/financial-audit-orchestration.mjs": [
+      "financial_audit_coverage_turns",
+      "financial_audit_historical_calendar_targets",
+      "financial_audit_release_calendar_turns",
+      "financial_audit_turns"
+    ],
+    "web/cloudflare/src/hermes-financial-context.mjs": [
+      "hermes_financial_contexts"
+    ],
+    "web/cloudflare/src/historical-cost-evidence.mjs": [
+      "historical_cost_evidence_cursors",
+      "historical_cost_evidence_members",
+      "historical_cost_evidence_names",
+      "historical_cost_evidence_runs",
+      "historical_cost_evidence_state"
+    ],
+    "web/cloudflare/src/historical-cost-orchestration.mjs": [
+      "background_collection_lane_state",
+      "background_coverage_bootstrap_attempts",
+      "background_history_fairness_state",
+      "background_pending_income_recovery_attempts",
+      "background_pending_income_scan_turns"
+    ],
+    "web/cloudflare/src/incurred-production.mjs": [
+      "incurred_production_audit",
+      "incurred_production_guard",
+      "incurred_production_records",
+      "incurred_production_state"
+    ],
+    "web/cloudflare/src/mls-agent-learning.mjs": [
+      "mls_agent_learning_observations"
+    ],
+    "web/cloudflare/src/mls-ai-sales-workspace-store.mjs": [
+      "mls_ai_sales_workspace_audit",
+      "mls_ai_sales_workspaces"
+    ],
+    "web/cloudflare/src/operator-cost-corrections.mjs": [
+      "operator_cost_corrections"
+    ],
+    "web/cloudflare/src/order-observations.mjs": [
+      "order_observations",
+      "order_observations_saved_at_id"
+    ],
+    "web/cloudflare/src/order-operations.mjs": [
+      "order_operations_events",
+      "order_operations_events_no_delete",
+      "order_operations_events_no_update",
+      "order_operations_guard",
+      "order_operations_identity",
+      "order_operations_state"
+    ],
+    "web/cloudflare/src/physical-returns.mjs": [
+      "physical_returns_audit",
+      "physical_returns_cases",
+      "physical_returns_guard",
+      "physical_returns_state"
+    ],
+    "web/cloudflare/src/product-registry.mjs": [
+      "product_registry_items",
+      "product_registry_pending",
+      "product_registry_state"
+    ],
+    "web/cloudflare/src/production-cost-periods.mjs": [
+      "production_cost_month_quantities",
+      "production_cost_week_state"
+    ],
+    "web/cloudflare/src/production-costs.mjs": [
+      "production_costs_audit",
+      "production_costs_state"
+    ],
+    "web/cloudflare/src/production-coverage.mjs": [
+      "production_coverage_audit",
+      "production_coverage_guard",
+      "production_coverage_intervals",
+      "production_coverage_state"
+    ],
+    "web/cloudflare/src/production-dtf-store.mjs": [
+      "production_dtf_audit",
+      "production_dtf_batches",
+      "production_dtf_guard",
+      "production_dtf_lines",
+      "production_dtf_lines_order",
+      "production_dtf_orders",
+      "production_dtf_reservations",
+      "production_dtf_reservations_batch",
+      "production_dtf_settings",
+      "production_dtf_settings_audit",
+      "production_dtf_sync_state"
+    ],
+    "web/cloudflare/src/production-weekly-store.mjs": [
+      "production_weekly_assignments",
+      "production_weekly_audit",
+      "production_weekly_guard",
+      "production_weekly_reports",
+      "production_weekly_state"
+    ],
+    "web/cloudflare/src/return-manufacturing-links.mjs": [
+      "return_manufacturing_links_audit",
+      "return_manufacturing_links_guard",
+      "return_manufacturing_links_pair_active",
+      "return_manufacturing_links_physical_active",
+      "return_manufacturing_links_physical_delete",
+      "return_manufacturing_links_physical_update",
+      "return_manufacturing_links_production_active",
+      "return_manufacturing_links_production_delete",
+      "return_manufacturing_links_production_update",
+      "return_manufacturing_links_records",
+      "return_manufacturing_links_state"
+    ],
+    "web/cloudflare/src/saved-catalog-media.mjs": [
+      "catalog_media_priorities",
+      "catalog_product_media"
+    ],
+    "web/cloudflare/src/saved-order-items.mjs": [
+      "saved_order_items"
+    ],
+    "web/cloudflare/src/store-admin.mjs": [
+      "store_period_adjustments",
+      "store_period_adjustments_audit",
+      "store_period_ads_cache"
+    ],
+    "web/finance/src/business-period.mjs": [
+      "finance_business_period_cursors",
+      "finance_business_period_orders",
+      "finance_business_period_payment_cache",
+      "finance_business_period_runs"
+    ],
+    "web/finance/src/connection-store.mjs": [
+      "finance_connections",
+      "finance_oauth_states"
+    ],
+    "web/finance/src/escrow-release-ledger.mjs": [
+      "finance_escrow_release_pages",
+      "finance_escrow_release_publications",
+      "finance_escrow_release_rows",
+      "finance_escrow_release_scans"
+    ],
+    "web/finance/src/escrow-releases.mjs": [
+      "finance_escrow_release_cohort_sources",
+      "finance_escrow_release_cohorts"
+    ],
+    "web/finance/src/external-cash-store.mjs": [
+      "finance_external_cash_audit",
+      "finance_external_cash_audit_no_delete",
+      "finance_external_cash_audit_no_update",
+      "finance_external_cash_documents",
+      "finance_external_cash_documents_no_delete",
+      "finance_external_cash_documents_no_update",
+      "finance_external_cash_guard",
+      "finance_external_cash_imports",
+      "finance_external_cash_imports_no_delete",
+      "finance_external_cash_imports_no_update",
+      "finance_external_cash_match_bank",
+      "finance_external_cash_match_transfer",
+      "finance_external_cash_matches",
+      "finance_external_cash_matches_no_delete",
+      "finance_external_cash_matches_no_update",
+      "finance_external_cash_origins",
+      "finance_external_cash_origins_no_delete",
+      "finance_external_cash_origins_no_update",
+      "finance_external_cash_records",
+      "finance_external_cash_records_amount",
+      "finance_external_cash_records_date",
+      "finance_external_cash_records_no_delete",
+      "finance_external_cash_records_no_update",
+      "finance_external_cash_records_reference",
+      "finance_external_cash_requests",
+      "finance_external_cash_requests_no_delete",
+      "finance_external_cash_requests_no_update",
+      "finance_external_cash_state",
+      "finance_external_cash_unlinks",
+      "finance_external_cash_unlinks_no_delete",
+      "finance_external_cash_unlinks_no_update"
+    ],
+    "web/finance/src/financial-order-evidence.mjs": [
+      "finance_business_order_evidence"
+    ],
+    "web/finance/src/income-detail.mjs": [
+      "finance_income_detail_structure_probe"
+    ],
+    "web/finance/src/pending-income-scan.mjs": [
+      "finance_pending_income_control",
+      "finance_pending_income_pages",
+      "finance_pending_income_publication",
+      "finance_pending_income_rows",
+      "finance_pending_income_scans",
+      "finance_pending_income_terminal_evidence"
+    ],
+    "web/finance/src/return-item-evidence.mjs": [
+      "finance_return_item_evidence"
+    ],
+    "web/finance/src/returns-reconciliation.mjs": [
+      "finance_returns_reconciliation_cases",
+      "finance_returns_reconciliation_probes",
+      "finance_returns_reconciliation_runs"
+    ],
+    "web/finance/src/store-period.mjs": [
+      "finance_store_period_cursors",
+      "finance_store_period_invoice_bases",
+      "finance_store_period_orders",
+      "finance_store_period_runs"
+    ]
+  },
+  "storage": {
+    "d1Json": {
+      "scope": "PHYSICAL_ORG_STORE_NAMESPACE",
+      "columns": [
+        "payload",
+        "payload_hash",
+        "values_json",
+        "settings_snapshot",
+        "result",
+        "summary",
+        "items",
+        "selection_json",
+        "declarations_json",
+        "response_json",
+        "details_json",
+        "model_ids_json",
+        "lines_json"
+      ],
+      "rule": "Preserve stored JSON bytes, snapshots, hashes, revisions and idempotency keys; namespace the owning SQL object, never rewrite payload values."
+    },
+    "browserPersistent": [
+      {
+        "api": "indexedDB",
+        "name": "brazacommerce-dtf-artworks-v1",
+        "store": "artworks",
+        "keyPath": "art_key",
+        "source": "web/cloudflare/src/dtf-view.mjs",
+        "rule": "Use a user/org/store database name for commercial principals; legacy library stays with the legacy principal only."
+      }
+    ],
+    "sharedVisualPreference": {
+      "api": "localStorage",
+      "name": "braza-theme",
+      "source": "web/cloudflare/src/theme.mjs",
+      "data": "NON_DOMAIN_VISUAL_PREFERENCE"
+    },
+    "serverCaches": {
+      "key": "DATABASE_WRAPPER_IDENTITY",
+      "rule": "Reuse one scoped wrapper per underlying binding and trusted org/store namespace; never reuse an unscoped ready/cache identity between tenants.",
+      "sources": [
+        "web/cloudflare/src/admin.mjs",
+        "web/cloudflare/src/production-weekly-close.mjs",
+        "web/cloudflare/src/weekly-operating-store.mjs",
+        "web/finance/src/external-cash-store.mjs"
+      ]
+    },
+    "browserTransient": [
+      "web/cloudflare/src/admin-client.mjs",
+      "web/cloudflare/src/business-month-client.mjs",
+      "web/cloudflare/src/business-reconciliation-view.mjs",
+      "web/cloudflare/src/escrow-releases-view.mjs",
+      "web/cloudflare/src/mls-product-workbench-view.mjs",
+      "web/cloudflare/src/cost-rules-view.mjs",
+      "web/cloudflare/src/saved-catalog-view.mjs",
+      "web/cloudflare/src/physical-returns-view.mjs",
+      "web/cloudflare/src/returns-case-cards-view.mjs",
+      "web/cloudflare/src/incurred-production-view.mjs",
+      "web/cloudflare/src/production-coverage-view.mjs",
+      "web/cloudflare/src/production-weekly-view.mjs",
+      "web/cloudflare/src/return-manufacturing-links-view.mjs",
+      "web/cloudflare/src/dtf-view.mjs",
+      "web/cloudflare/src/bank-reconciliation-view.mjs",
+      "web/cloudflare/src/mls-listing-factory-view.mjs",
+      "web/cloudflare/src/mls-ai-sales-view.mjs"
+    ],
+    "scopeChangeRule": "Abort pending requests; close IndexedDB handles; revoke Blob URLs; clear all in-memory snapshots, charts, month/record caches, drafts and attachment proofs before mounting the next principal. A full document navigation satisfies teardown only if persistent storage is scoped.",
+    "legacyProviderIdentity": {
+      "finance": "web/finance/src/connection-store.mjs:FINANCE_PROFILE",
+      "appOrderOperations": "web/cloudflare/src/order-operations.mjs:ooShop",
+      "appObservation": "web/cloudflare/src/order-observations.mjs:expected.shop_id",
+      "rule": "Physical namespace isolation does not authorize the legacy provider identity. Resolve an explicit trusted connector or report NOT_CONNECTED."
+    }
+  },
+  "hazards": [
+    "sqlite_master must be represented as a tenant-filtered virtual catalog, including nested guards, LIKE patterns, bound object names and name/sql results.",
+    "External cash and order operation schema checks compare canonical SQL definitions from sqlite_master; schema names and SQL must appear logical to existing readers.",
+    "Never rewrite SQL string values or JSON payload fields: immutable hashes, snapshots, provider identifiers and domain messages must remain byte-identical.",
+    "Physical namespace must cover indexes and trigger names, trigger targets and bodies, all idempotency tables, singletons, month keys and lease tables.",
+    "Do not expose cross-tenant tables via unfiltered sqlite_master, schema qualifiers, attach, pragmas, unknown table names, quoted identifiers or D1 raw prepared statements.",
+    "The trusted physical commercial namespace is on ACCOUNT_DB; legacy ADMIN_DB and static FINANCE_PROFILE remain legacy-only."
+  ]
+}

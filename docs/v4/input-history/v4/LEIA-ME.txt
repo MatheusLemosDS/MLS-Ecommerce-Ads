@@ -1,0 +1,55 @@
+MLS COMMERCE OS — PROMPT E PRÉVIA V4
+Base auditada em 11/11/2026: a5bd38a0902b38ecc3e90a747601eba330e7813e.
+
+COMECE AQUI
+
+Esta V4 substitui integralmente o prompt V3 e amplia a prévia visual com acesso, conta/empresa/equipe e relatório semanal. O código do site não foi alterado. A implementação real é a tarefa atribuída ao Codex no prompt.
+
+ARQUIVOS
+
+1. PROMPT_CODEX_MLS_LAYOUT.txt: instrução completa e autossuficiente para implementação local. 27 seções, 227 requisitos com aceite, 158 requisitos anteriores preservados, 69 novos e catálogo de 22 famílias de gráficos/contratos.
+2. MATRIZ_FUNCIONAL_MLS_CODEX.json: mesmos requisitos, classificação de escopo, fontes de partida e campos de comprovação. Estado inicial ESPECIFICADO. Inclui o registro dos 22 gráficos/famílias. Não é uma lista de funções já implementadas nesta entrega.
+3. MLS_COMMERCE_OS_LAYOUT.html: prévia independente e interativa; dados fictícios, sem conexão à sua loja, autenticação real ou envio de convites. Telas novas mostram a proposta, não contas criadas no sistema. Não digite senhas reais.
+4. AUDITORIA_COBERTURA_MLS_V4.txt: achados da revisão, diferenças entre existente/novo/sem fonte e limites do que foi observado.
+5. LEIA-ME.txt: estas instruções.
+
+O ZIP reúne somente esses cinco arquivos. Não inclui código privado do repositório, credenciais ou relatórios operacionais reais.
+
+COMO USAR NO CODEX
+
+Selecione MatheusLemosDS/MLS-Ecommerce-Ads. Anexe o TXT completo, a matriz JSON e o HTML. O relatório de auditoria é apoio; o prompt funciona sozinho. As três imagens originais podem ser anexadas como referência de atmosfera visual.
+
+Cole esta instrução:
+
+Leia integralmente PROMPT_CODEX_MLS_LAYOUT.txt e implemente a V4 no repositório MatheusLemosDS/MLS-Ecommerce-Ads. Use MLS_COMMERCE_OS_LAYOUT.html como referência visual e MATRIZ_FUNCIONAL_MLS_CODEX.json como controle de cobertura. Confira a HEAD atual; preserve todas as funções existentes, integre os gráficos às fontes reais e desenvolva a base comercial de login, conta, empresa, equipe e isolamento de dados descrita no prompt. Execute e valide as duas trilhas em ambiente local, com dados sintéticos. Entregue o candidato, a prévia local, a matriz preenchida e evidências. Não faça push, merge ou deploy, não envie mensagens reais e não altere o site nem os dados de produção.
+
+Não envie apenas capturas do HTML: elas não contêm os contratos de dados, formulários e permissões. O Codex deve ler o arquivo TXT inteiro e ampliar a matriz com qualquer função mais recente encontrada na base atual.
+
+COMO EXPLORAR A PRÉVIA
+
+Extraia o pacote e abra MLS_COMMERCE_OS_LAYOUT.html no navegador. Use o menu principal e os atalhos da barra da proposta. Os gráficos possuem interação de leitura e tabelas de dados. Alterne tema, largura e estado preenchido/parcial/vazio/falha na barra da demonstração.
+
+Novidades visuais: Tela de entrada; Criar conta; Verificação; Recuperação/nova senha; Primeiros passos; Minha conta; Segurança/sessões; Empresa; Pessoas e acessos; Assinatura ilustrativa; Relatórios/Resumo semanal.
+
+Conta/perfil/equipe usam estado somente em memória; recarregar reinicia o exemplo. Senhas não são lidas, persistidas ou enviadas pelo código novo de contas. Não há autenticação nem isolamento de dados reais no HTML; esses contratos são implementação exigida no aplicativo real. A simulação de convite não envia e-mail. Pacotes comerciais são ilustrativos, sem preço, contratação ou checkout.
+
+Os painéis operacionais anteriores continuam referências de layout e interação. Nem todos os formulários avançados do sistema estão reproduzidos no protótipo: o prompt e a matriz são a especificação completa de sua preservação. O HTML não é uma substituição do aplicativo.
+
+DATA E SEMANAS DA DEMONSTRAÇÃO
+
+O relógio demonstrativo permanece em 11/11/2026. Relatórios permite semana de 06/11 (histórica fictícia) e 13/11 (aberta; datas futuras ficam pendentes). Fabricação tem oito intervalos entre sexta13h e sexta13h; estimativa de vendas tem sete dias civis; caixa tem categorias por origem, sem somar créditos/transferências como receitas diferentes.
+
+O QUE A IMPLEMENTAÇÃO PRECISA ENTREGAR
+
+Trilha A: redesign e paridade dos recursos atuais, com todos os estados, contratos e ações reais, incluindo relatório semanal, cinco assets e gráficos existentes/estendidos.
+Trilha B: contas pessoais, cadastro/verificação/recuperação, sessões revogáveis, empresa/equipe/papéis, onboarding, migrações e isolamento entre clientes. O login atual owner/review não é uma conta SaaS por empresa. Essas áreas são novas e precisam de backend e testes.
+
+As duas trilhas têm validação local obrigatória. Serviços externos não configurados — e-mail real, cobrança, conectores por empresa — devem aparecer como dependências específicas. Layout, build ou testes sintéticos não provam prontidão comercial ou funcionamento em produção.
+
+LIMITES DESTA REVISÃO
+
+A main foi comparada à base V3 e os módulos/contratos relevantes foram reexaminados, com árvore completa de 1.014 entradas. O navegador público redirecionou o painel para /login; a página de entrada foi observada. Não houve sessão autenticada do proprietário, gravação operacional, importação real, envio, alteração de repositório/site ou deploy.
+
+A validação desta entrega cobre a integridade textual do prompt/matriz, a cobertura dos 158 IDs anteriores e fontes existentes na árvore. A prévia passou em análise de sintaxe JavaScript, renderização com DOM sintético das 27 áreas, 24 combinações de semana/estado/bloco e fluxos simulados de perfil, mudança de e-mail, convite e recuperação. Essa verificação não mede layout, toque ou acessibilidade num navegador real.
+
+A nova inspeção visual do HTML V4 no navegador não foi concluída: o navegador compartilhado não conectou ao servidor local e o Chromium isolado não pôde criar o socket necessário neste ambiente. Não houve contorno dessas restrições. A prévia deve receber QA visual no candidato local do Codex antes de servir de referência final de publicação. Isso não impede ler/usar o prompt nem abrir o HTML no seu navegador. Não é nova execução dos testes/build do sistema real.

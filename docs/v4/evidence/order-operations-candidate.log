@@ -1,0 +1,52 @@
+TAP version 13
+# Subtest: compiled order operations with real assets, SQLite, CAS and lifecycle normal 320
+ok 1 - compiled order operations with real assets, SQLite, CAS and lifecycle normal 320
+  ---
+  duration_ms: 27482.06847
+  type: 'test'
+  ...
+# Subtest: compiled order operations with real assets, SQLite, CAS and lifecycle normal 1365
+ok 2 - compiled order operations with real assets, SQLite, CAS and lifecycle normal 1365
+  ---
+  duration_ms: 31421.429333
+  type: 'test'
+  ...
+# Subtest: compiled order operations with real assets, SQLite, CAS and lifecycle minified 320
+ok 3 - compiled order operations with real assets, SQLite, CAS and lifecycle minified 320
+  ---
+  duration_ms: 26207.257127
+  type: 'test'
+  ...
+# Subtest: compiled order operations with real assets, SQLite, CAS and lifecycle minified 1365
+ok 4 - compiled order operations with real assets, SQLite, CAS and lifecycle minified 1365
+  ---
+  duration_ms: 31429.693898
+  type: 'test'
+  ...
+# Subtest: compiled order startup explains unavailable bank asset without provider fallback
+ok 5 - compiled order startup explains unavailable bank asset without provider fallback
+  ---
+  duration_ms: 1413.501465
+  type: 'test'
+  ...
+# Subtest: compiled order startup explains unavailable orders asset without provider fallback
+ok 6 - compiled order startup explains unavailable orders asset without provider fallback
+  ---
+  duration_ms: 1087.144686
+  type: 'test'
+  ...
+# Subtest: compiled order startup explains unavailable month asset without provider fallback
+ok 7 - compiled order startup explains unavailable month asset without provider fallback
+  ---
+  duration_ms: 783.838365
+  type: 'test'
+  ...
+1..7
+# tests 7
+# suites 0
+# pass 7
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 119928.609189

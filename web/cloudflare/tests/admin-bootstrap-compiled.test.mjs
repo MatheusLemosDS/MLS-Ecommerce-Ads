@@ -28,7 +28,7 @@ function fullBrowser(html,fetchImpl){
   response.json=async()=>vm.runInContext('JSON.parse',context)(await response.text());return response;
  }});
  vm.runInContext('globalThis.window=globalThis;window.matchMedia=()=>({matches:false,addEventListener(){}});globalThis.addEventListener=()=>{};',context);
- const scripts=getOrderedBrowserScripts(html);assert.equal(scripts.length,18);
+ const scripts=getOrderedBrowserScripts(html);assert.equal(scripts.length,19,'the six assets and exact workspace failure listener are all loaded');
  assert.equal(scripts.filter(script=>script.includes('globalThis.brazaPhysicalReturns=')).length,1,'the independent physical-return controller is delivered once');
  for(const [index,script] of scripts.entries())vm.runInContext(script,context,{filename:'owner-script-'+index+'.js'});
  return {nodes,timers,calls,run:source=>vm.runInContext(source,context),stop(){vm.runInContext('startupController.stop();brazaMonthDashboard.stop();',context);timers.clear();}};

@@ -170,7 +170,7 @@ for(const minify of [false,true]){
 test('compiled Admin inline scripts contain no raw HTML control characters that corrupt regex ranges',{timeout:20000},async()=>{
  const {html}=await ownerHtml(false);
  const scripts=getOrderedBrowserScripts(html);
- assert.equal(scripts.length,18);
+ assert.equal(scripts.length,19,'the six assets and exact workspace failure listener are all loaded');
  assert.equal(scripts.filter(script=>script.includes('globalThis.brazaPhysicalReturns=')).length,1,'the additional physical-return controller remains a separate shipped script');
  const forbidden=/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/;
  for(const [index,script] of scripts.entries())assert.doesNotMatch(script,forbidden,'unsafe control byte inside inline script '+index);

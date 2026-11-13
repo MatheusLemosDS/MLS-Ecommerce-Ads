@@ -58,7 +58,7 @@ export async function startPreviewServer({port=0,host='127.0.0.1',workerPath=pat
    else if(url.pathname.startsWith('/__preview/media/')&&['GET','HEAD'].includes(method)){
     await authenticate(headers);const id=url.pathname.slice('/__preview/media/'.length),file=media.files.get(id);if(!file||url.search)reject('PREVIEW_MEDIA_NOT_FOUND',404);
     result=new Response(method==='HEAD'?null:file.bytes,{headers:{'content-type':file.mime,'content-length':String(file.bytes.length),'cache-control':'no-store','x-content-type-options':'nosniff','content-security-policy':"default-src 'none'"}});
-   }else if(['/login','/logout','/admin/logout','/admin','/admin/diagnostics','/dashboard','/campaigns','/optimization','/integrations'].includes(url.pathname)||url.pathname.startsWith('/api/admin/')){
+   }else if(['/login','/logout','/admin/logout','/admin','/admin/diagnostics','/dashboard','/campaigns','/optimization','/integrations'].includes(url.pathname)||url.pathname.startsWith('/api/admin/')||/^\/assets\/mls\/[a-f0-9]{64}\.js$/.test(url.pathname)){
     const body=['GET','HEAD'].includes(method)?undefined:await bodyBytes(request);result=await workerCall(url.href,{method,headers,body});
    }else reject('PREVIEW_ROUTE_NOT_FOUND',404);
    if((result.headers.get('content-type')||'').startsWith('text/html')){const text=(await result.text()).replace(/<body\b[^>]*>/i,'$&<aside id="mlsLocalPreviewBanner" role="note" style="padding:10px 16px;background:#fff3cf;color:#342500;font:600 13px system-ui;position:relative;z-index:50">Prévia local · dados fictícios · sem conexão com a loja</aside>');result=new Response(text,{status:result.status,headers:result.headers});}

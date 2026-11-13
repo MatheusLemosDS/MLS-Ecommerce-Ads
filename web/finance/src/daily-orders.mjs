@@ -1,7 +1,10 @@
-import {FINANCE_PROFILE, FinanceConnectionError} from './connection-store.mjs';
+import {getFinanceProfile, FinanceConnectionError} from './connection-store.mjs';
 import {ensureFinanceAccessToken} from './refresh-coordinator.mjs';
 import {requestFinanceAuthJson} from './auth-json-transport.mjs';
 import {projectDailyOrdersFrame} from './daily-orders-frame.mjs';
+
+function createTenantDailyOrders(profile){
+const projectDailyOrdersFrameScoped=value=>projectDailyOrdersFrame(value,profile);
 
 const DAILY_ORDER_LIST = '/api/v2/order/get_order_list';
 const DAILY_ORDER_DETAIL = '/api/v2/order/get_order_detail';
@@ -26,7 +29,7 @@ function dailyEnvelope(payload){
   if(!dailyPlain(payload.response))throw dailyFailure('RESPONSE_INVALID');
   for(const value of [payload,payload.response]){
     for(const field of ['partner_id','shop_id']){
-      if(Object.hasOwn(value,field)&&value[field]!==FINANCE_PROFILE[field])throw dailyFailure('IDENTITY_MISMATCH');
+      if(Object.hasOwn(value,field)&&value[field]!==profile[field])throw dailyFailure('IDENTITY_MISMATCH');
     }
   }
   return payload.response;
@@ -44,7 +47,7 @@ function dailyBucket(status){
 // Read the complete creation-time cohort again on each invocation. Only current
 // order-level statuses determine the counters; item lines and Ads never do.
 // No order numbers, cursors or provider payloads enter persistent storage.
-export async function runFinanceDailyOrders(env,options={}){
+async function runFinanceDailyOrders(env,options={}){
   if(!dailyPlain(options)||Reflect.ownKeys(options).some(key=>!['fetchImpl','now','timeoutMs'].includes(key)
     ||!Object.hasOwn(Object.getOwnPropertyDescriptor(options,key)||{},'value')))throw dailyFailure('REQUEST_INVALID',400);
   const {fetchImpl,now=()=>Date.now(),timeoutMs=5000}=options;
@@ -92,13 +95,13 @@ export async function runFinanceDailyOrders(env,options={}){
         options:{fetchImpl,now,timeoutMs:timeout},
         buildRequest:async()=>{
           remaining();
-          const base=String(FINANCE_PROFILE.partner_id)+path+timestamp+tokens.access_token+FINANCE_PROFILE.shop_id;
+          const base=String(profile.partner_id)+path+timestamp+tokens.access_token+profile.shop_id;
           const digest=new Uint8Array(await crypto.subtle.sign('HMAC',key,dailyEncoder.encode(base)));
           remaining();
           const sign=Array.from(digest,byte=>byte.toString(16).padStart(2,'0')).join('');
           const url=new URL(path,'https://partner.shopeemobile.com');
-          for(const [name,value] of Object.entries({partner_id:FINANCE_PROFILE.partner_id,timestamp,
-            access_token:tokens.access_token,shop_id:FINANCE_PROFILE.shop_id,sign,...parameters}))url.searchParams.set(name,String(value));
+          for(const [name,value] of Object.entries({partner_id:profile.partner_id,timestamp,
+            access_token:tokens.access_token,shop_id:profile.shop_id,sign,...parameters}))url.searchParams.set(name,String(value));
           return new Request(url,{method:'GET',redirect:'manual',headers:{Accept:'application/json'}});
         },normalizeResponse:payload=>{remaining();return dailyEnvelope(payload);}});
     };
@@ -128,14 +131,14 @@ export async function runFinanceDailyOrders(env,options={}){
       if(!Array.isArray(response.order_list)||response.order_list.length!==selected.length)throw dailyFailure('DETAIL_SET_INVALID');
       for(const row of response.order_list){
         if(!dailyPlain(row)||!dailyOrderId(row.order_sn)||!expected.has(row.order_sn)||received.has(row.order_sn))throw dailyFailure('DETAIL_SET_INVALID');
-        for(const field of ['shop_id','partner_id'])if(Object.hasOwn(row,field)&&row[field]!==FINANCE_PROFILE[field])throw dailyFailure('IDENTITY_MISMATCH');
+        for(const field of ['shop_id','partner_id'])if(Object.hasOwn(row,field)&&row[field]!==profile[field])throw dailyFailure('IDENTITY_MISMATCH');
         if(Object.hasOwn(row,'create_time')&&(!Number.isSafeInteger(row.create_time)||row.create_time<from||row.create_time>cutoff))throw dailyFailure('IDENTITY_MISMATCH');
         received.add(row.order_sn);counters[dailyBucket(row.order_status)]++;
       }
       if(received.size!==expected.size)throw dailyFailure('DETAIL_SET_INVALID');
     }
     remaining();
-    const result=projectDailyOrdersFrame({schema:'shop_daily_sales_v1',shop_id:FINANCE_PROFILE.shop_id,date:day,
+    const result=projectDailyOrdersFrameScoped({schema:'shop_daily_sales_v1',shop_id:profile.shop_id,date:day,
       timezone:'America/Sao_Paulo',through_at:through,day_partial:true,orders_in_api_window:identifiers.length,
       orders_with_details:identifiers.length,...counters,pagination_complete:true,pages_read:pages,duplicate_rows:duplicates,
       count_basis:'UNIQUE_ORDER_SN_CREATE_TIME_CURRENT_STATUS',source:'shopee_get_order_list_and_detail'});
@@ -146,3 +149,7 @@ export async function runFinanceDailyOrders(env,options={}){
   try{return await Promise.race([work(),deadline]);}
   finally{stopped=true;clearTimeout(timer);}
 }
+
+return {runFinanceDailyOrders};
+}
+export async function runFinanceDailyOrders(env,options={}){return createTenantDailyOrders(getFinanceProfile(env)).runFinanceDailyOrders(env,options);}

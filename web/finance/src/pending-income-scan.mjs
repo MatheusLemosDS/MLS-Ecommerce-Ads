@@ -1,4 +1,5 @@
-import {FINANCE_PROFILE,FinanceConnectionError} from './connection-store.mjs';
+import {TenantInitializationSet} from '../../cloudflare/src/tenant-storage.mjs';
+import {getFinanceProfile,FinanceConnectionError} from './connection-store.mjs';
 import {readFinancePendingIncomePage} from './income-detail.mjs';
 import {projectIncomeDetailFrame} from './income-detail-frame.mjs';
 import {projectPendingIncomeScanRequest,projectPendingIncomeScanFrame} from './pending-income-frame.mjs';
@@ -11,7 +12,11 @@ export const PENDING_INCOME_SCAN_SCHEMA=[
  `CREATE TABLE IF NOT EXISTS finance_pending_income_publication(id INTEGER PRIMARY KEY CHECK(id=1),scan_id TEXT NOT NULL,published_at INTEGER NOT NULL,payload TEXT NOT NULL CHECK(length(CAST(payload AS BLOB))<=1032192))`,
  `CREATE TABLE IF NOT EXISTS finance_pending_income_terminal_evidence(scan_id TEXT PRIMARY KEY,checked_at INTEGER NOT NULL,kind TEXT NOT NULL CHECK(kind IN('EMPTY_CURSOR','SHORT_PAGE_WITHOUT_NEXT')))`,
 ];
-const ready=new WeakSet(),encoder=new TextEncoder(),basis='CURRENT_PENDING_PAGINATED_MUTABLE_SOURCE_NOT_MONTH_OR_BANK_RECEIPT',identity=[FINANCE_PROFILE.partner_id,FINANCE_PROFILE.shop_id];
+const ready=new TenantInitializationSet();
+function createTenantPendingIncome(profile){
+
+
+const encoder=new TextEncoder(),basis='CURRENT_PENDING_PAGINATED_MUTABLE_SOURCE_NOT_MONTH_OR_BANK_RECEIPT',identity=[profile.partner_id,profile.shop_id];
 const fail=(suffix,status=503)=>{throw new FinanceConnectionError('FINANCE_PENDING_INCOME_SCAN_'+suffix,status);};
 const integer=(value,min=0,max=Number.MAX_SAFE_INTEGER)=>Number.isSafeInteger(value)&&!Object.is(value,-0)&&value>=min&&value<=max;
 const uuid=value=>typeof value==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(value);
@@ -70,7 +75,7 @@ async function readState(db,stamp){
  return {frame:projected,run,pages,rows};
 }
 
-export async function readOrStepFinancePendingIncomeScan(env,input,{fetchImpl=request=>fetch(request),now=()=>Date.now(),readPage=readFinancePendingIncomePage}={}){
+async function readOrStepFinancePendingIncomeScan(env,input,{fetchImpl=request=>fetch(request),now=()=>Date.now(),readPage=readFinancePendingIncomePage}={}){
  const request=projectPendingIncomeScanRequest(input);if(!request)fail('REQUEST_INVALID',400);
  if(typeof now!=='function')fail('CONFIGURATION');let latestClock=0;const clock=()=>{let value;try{value=now();}catch{fail('CLOCK_INVALID');}if(!integer(value,1,9999999999999))fail('CLOCK_INVALID');const stamp=Math.floor(value/1000);if(stamp<latestClock)fail('CLOCK_INVALID');latestClock=stamp;return stamp;};
  const stamp=clock(),db=await setup(env);let state=await readState(db,stamp);if(request.operation==='read')return state.frame;
@@ -119,3 +124,7 @@ export async function readOrStepFinancePendingIncomeScan(env,input,{fetchImpl=re
  }
  return (await readState(db,clock())).frame;
 }
+
+return {readOrStepFinancePendingIncomeScan};
+}
+export async function readOrStepFinancePendingIncomeScan(env,...args){return createTenantPendingIncome(getFinanceProfile(env)).readOrStepFinancePendingIncomeScan(env,...args);}

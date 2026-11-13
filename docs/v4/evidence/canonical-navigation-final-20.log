@@ -1,0 +1,130 @@
+TAP version 13
+# Subtest: generated release discovery opens saved controls without financial mutations (320px, minify=false)
+ok 1 - generated release discovery opens saved controls without financial mutations (320px, minify=false)
+  ---
+  duration_ms: 21106.950296
+  type: 'test'
+  ...
+# Subtest: generated release discovery opens saved controls without financial mutations (1365px, minify=false)
+ok 2 - generated release discovery opens saved controls without financial mutations (1365px, minify=false)
+  ---
+  duration_ms: 23435.039081
+  type: 'test'
+  ...
+# Subtest: generated release discovery opens saved controls without financial mutations (320px, minify=false, height=900)
+ok 3 - generated release discovery opens saved controls without financial mutations (320px, minify=false, height=900)
+  ---
+  duration_ms: 22388.843248
+  type: 'test'
+  ...
+# Subtest: generated release discovery opens saved controls without financial mutations (320px, minify=false, font=Arial13)
+ok 4 - generated release discovery opens saved controls without financial mutations (320px, minify=false, font=Arial13)
+  ---
+  duration_ms: 21150.948041
+  type: 'test'
+  ...
+# Subtest: generated release discovery opens saved controls without financial mutations (320px, minify=true)
+ok 5 - generated release discovery opens saved controls without financial mutations (320px, minify=true)
+  ---
+  duration_ms: 25921.785427
+  type: 'test'
+  ...
+# Subtest: generated release discovery opens saved controls without financial mutations (1365px, minify=true)
+ok 6 - generated release discovery opens saved controls without financial mutations (1365px, minify=true)
+  ---
+  duration_ms: 27563.04612
+  type: 'test'
+  ...
+# Subtest: generated release discovery opens saved controls without financial mutations (320px, minify=true, height=900)
+ok 7 - generated release discovery opens saved controls without financial mutations (320px, minify=true, height=900)
+  ---
+  duration_ms: 22848.574124
+  type: 'test'
+  ...
+# Subtest: generated release discovery opens saved controls without financial mutations (320px, minify=true, font=Arial13)
+ok 8 - generated release discovery opens saved controls without financial mutations (320px, minify=true, font=Arial13)
+  ---
+  duration_ms: 23994.913333
+  type: 'test'
+  ...
+# Subtest: one login form covers the whole workspace and does not send the owner to a second login
+ok 9 - one login form covers the whole workspace and does not send the owner to a second login
+  ---
+  duration_ms: 1.027345
+  type: 'test'
+  ...
+# Subtest: owner workspace keeps one shared navigation, intact controls and advanced finance closed
+ok 10 - owner workspace keeps one shared navigation, intact controls and advanced finance closed
+  ---
+  duration_ms: 7.558381
+  type: 'test'
+  ...
+# Subtest: command center leads the overview while Finance presents the monthly result before its daily reference
+ok 11 - command center leads the overview while Finance presents the monthly result before its daily reference
+  ---
+  duration_ms: 2.382016
+  type: 'test'
+  ...
+# Subtest: monthly tools open independent closed sections while preserving all cost, product and reconciliation controls
+ok 12 - monthly tools open independent closed sections while preserving all cost, product and reconciliation controls
+  ---
+  duration_ms: 3.045531
+  type: 'test'
+  ...
+# Subtest: the separate Hermes monitor is closed and keeps the existing daily sales and Ads identifiers
+ok 13 - the separate Hermes monitor is closed and keeps the existing daily sales and Ads identifiers
+  ---
+  duration_ms: 14.311316
+  type: 'test'
+  ...
+# Subtest: direct tab URLs select the correct section and do not reload or discard the selected month
+ok 14 - direct tab URLs select the correct section and do not reload or discard the selected month
+  ---
+  duration_ms: 9.712449
+  type: 'test'
+  ...
+# Subtest: modified clicks keep ordinary link behavior and invalid or duplicate tabs fall back safely
+ok 15 - modified clicks keep ordinary link behavior and invalid or duplicate tabs fall back safely
+  ---
+  duration_ms: 5.916783
+  type: 'test'
+  ...
+# Subtest: agent cards navigate to independent workspaces, preserve back and restore tab from URL
+ok 16 - agent cards navigate to independent workspaces, preserve back and restore tab from URL
+  ---
+  duration_ms: 9.61166
+  type: 'test'
+  ...
+# Subtest: weekly source navigation applies exact day/month/cut and preserves drafts (320px,minify=false)
+ok 17 - weekly source navigation applies exact day/month/cut and preserves drafts (320px,minify=false)
+  ---
+  duration_ms: 6164.657083
+  type: 'test'
+  ...
+# Subtest: weekly source navigation applies exact day/month/cut and preserves drafts (1365px,minify=false)
+ok 18 - weekly source navigation applies exact day/month/cut and preserves drafts (1365px,minify=false)
+  ---
+  duration_ms: 6828.435771
+  type: 'test'
+  ...
+# Subtest: weekly source navigation applies exact day/month/cut and preserves drafts (320px,minify=true)
+ok 19 - weekly source navigation applies exact day/month/cut and preserves drafts (320px,minify=true)
+  ---
+  duration_ms: 6434.34932
+  type: 'test'
+  ...
+# Subtest: weekly source navigation applies exact day/month/cut and preserves drafts (1365px,minify=true)
+ok 20 - weekly source navigation applies exact day/month/cut and preserves drafts (1365px,minify=true)
+  ---
+  duration_ms: 6716.248731
+  type: 'test'
+  ...
+1..20
+# tests 20
+# suites 0
+# pass 20
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 215242.727732

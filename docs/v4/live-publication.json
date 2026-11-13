@@ -1,0 +1,233 @@
+{
+  "schema": "mls_v41_live_publication_v1",
+  "status": "PUBLISHED_VERIFIED_IN_RECORDED_SCOPE",
+  "live_url": "https://app.brazacommerce.com.br",
+  "dashboard_url": "https://app.brazacommerce.com.br/admin?tab=overview",
+  "app_release": "2026-11-12.1",
+  "source_commit": "7ec3ffa0ed27366eca0792d5d277979bb991f679",
+  "implementation_source_commit": "bdbc857ac443f58376613225dcbbfd02a108d41c",
+  "base_commit": "a5bd38a0902b38ecc3e90a747601eba330e7813e",
+  "pr": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/119",
+  "ci": {
+    "run_id": 43456719793,
+    "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43456719793",
+    "head_sha": "7ec3ffa0ed27366eca0792d5d277979bb991f679",
+    "conclusion": "success",
+    "node_passed": 4106,
+    "node_failed": 0,
+    "node_skipped": 0,
+    "python_passed": 67
+  },
+  "compiled_workers": {
+    "app": {
+      "worker": "brazacommerce-app",
+      "bytes": 3495838,
+      "sha256": "82fe3d3ecf19b0f72254dc5778e8a8335505bfc4db4071cc01afce4cfb7cea48"
+    },
+    "auth": {
+      "worker": "brazacommerce-auth",
+      "bytes": 524070,
+      "sha256": "d5eed8ab9cddaa8d6917f4e4ca668a3f7074bad5603254656414db5a490dc172"
+    },
+    "finance": {
+      "worker": "brazacommerce-finance",
+      "bytes": 730516,
+      "sha256": "ffbcea3b7ffe5c0a94b0d4d8c4908738e6da76386040995bba982060a5f9bb71"
+    }
+  },
+  "raw_published_workers": {
+    "finance": {
+      "bytes": 764601,
+      "sha256": "c81f2f28bf4ba16c3a65478e7ca4ab153fff54e00f5ed9c9d73a2698366a6913"
+    },
+    "auth": {
+      "bytes": 593500,
+      "sha256": "d0e1093e22bcfd8dfb314f25edc7d7e9cd6694a65872e1f1f35e47d916cd83b7"
+    },
+    "app": {
+      "bytes": 3895841,
+      "sha256": "4a1d4b279fb1f06fb3717d41ac38b0e3802cf89aa824192f882949d75f17882b"
+    }
+  },
+  "active_and_latest_versions": {
+    "finance": {
+      "active": [
+        {
+          "version_id": "d3bf1196-e75b-491b-bc40-f523029db483",
+          "percentage": 100
+        }
+      ],
+      "latest_version_id": "d3bf1196-e75b-491b-bc40-f523029db483"
+    },
+    "auth": {
+      "active": [
+        {
+          "version_id": "59f4e183-ea0a-45d3-8291-c56ce737047a",
+          "percentage": 100
+        }
+      ],
+      "latest_version_id": "59f4e183-ea0a-45d3-8291-c56ce737047a"
+    },
+    "app": {
+      "active": [
+        {
+          "version_id": "68bb7328-b635-49bb-a64a-b8dff7f0c417",
+          "percentage": 100
+        }
+      ],
+      "latest_version_id": "68bb7328-b635-49bb-a64a-b8dff7f0c417"
+    }
+  },
+  "activated_in_order": [
+    "finance",
+    "auth",
+    "app"
+  ],
+  "deployment_steps": [
+    {
+      "operation": "migration-0001",
+      "completed_at": "2026-11-13T16:02:11.823Z",
+      "receipt_sha256": "a199eff351a654a22348e147f6d61054df342bf9e7aa9e9983b8a6d6a2ddd93a",
+      "cli_log_sha256": "9ee82ad26287d3af1976e14213bec38871757c9b226860acaf29c647a5d1a10e"
+    },
+    {
+      "operation": "migration-0002",
+      "completed_at": "2026-11-13T16:02:23.837Z",
+      "receipt_sha256": "9207b329b6882eb7457fb4c368ac0e3cf81d592009a88168f534fd897bcefdb4",
+      "cli_log_sha256": "582e9fdf51f67fcf7977842d7a9d6087e5ad8a4da50ead85273bf8c84d4e73dd"
+    },
+    {
+      "operation": "upload-finance",
+      "completed_at": "2026-11-13T16:05:00.879Z",
+      "receipt_sha256": "ca6aaa773c10c6df031c4d25c809b6bf806ba5a458c134cb4373e3fa33affa06",
+      "cli_log_sha256": "6f8d9e2457b31794eda46251d84ebc834156ed4126d94326f9b29082613fee2c"
+    },
+    {
+      "operation": "upload-auth",
+      "completed_at": "2026-11-13T16:08:47.761Z",
+      "receipt_sha256": "87d3baf008fb1b6926631d6b840e51c37e7c7809eec55445294aa9e8b5210cd4",
+      "cli_log_sha256": "fe2965e0ee71868cbd7b72eb1f53270589a436eaf1cf5f81e04570b95ff0a2f6"
+    },
+    {
+      "operation": "upload-app",
+      "completed_at": "2026-11-13T16:09:47.190Z",
+      "receipt_sha256": "62531efebcb1034d705f8e7f04e5b1a71b19c551603d1e7dd02d3313fac7be0c",
+      "cli_log_sha256": "5b65652f9c5a121663a9d06a56b3f34f71ec623431463617e75863af14a5ee20"
+    },
+    {
+      "operation": "activate-finance",
+      "completed_at": "2026-11-13T16:10:56.714Z",
+      "receipt_sha256": "136db4538fe32ea0c08924a6f6dac18587a3929d7cecd3cc91dbe452e9635770",
+      "cli_log_sha256": "f2fe4fbcf62eae83614c75be95ccb8526bfa31d9c0e73701fbd37c6ceda9534d"
+    },
+    {
+      "operation": "activate-auth",
+      "completed_at": "2026-11-13T16:11:46.932Z",
+      "receipt_sha256": "b0668e573839c637b25978cbaeab137b030411fc956478a7519096ccfac064de",
+      "cli_log_sha256": "3bebcd0d25b4675151d540ad64a7f01af5eb3fb1b084aedb3741200f17017f24"
+    },
+    {
+      "operation": "activate-app",
+      "completed_at": "2026-11-13T16:12:49.073Z",
+      "receipt_sha256": "125e7246b296f63f4baf96f130deb82d010611159697748d2640ed06ce242fd1",
+      "cli_log_sha256": "4acde93687e4d976e06ae7ea9bdfb12538d5624731e5378f75aea8bcb5b66ca0"
+    }
+  ],
+  "control_plane_verified_at": "2026-11-13T16:13:44.142628+00:00",
+  "public_site_verified_at": "2026-11-13T16:14:50.063Z",
+  "control_plane_receipt_sha256": "3e16b05c2341d29f45f718b27c96f31d3f8f4bfa828d36e0e44fee547971f72d",
+  "control_plane_payload_sha256": "ab7e15c53575116ceb511bd4d506e62efde7d121d909b1ac35ef7eb05e25bdfc",
+  "verified_invariants": [
+    "Exact active100% and latest version vector for all three Workers",
+    "Exact raw source hashes and bytes against reviewed Wrangler dry-run outputs",
+    "Legacy D1 bindings, service bindings, plain variables, existing secret names, flags, schedules and domains preserved; only ACCOUNT_DB on all three and ACCOUNT_ENCRYPTION_KEY on Auth added",
+    "Finance remains private with no public route, preview or workers.dev endpoint",
+    "Finance exact three reviewed helper named exports match compiled source ABI; default HTTP handler preserved",
+    "Six current and four retained browser assets fetched with exact SHA-256 and length"
+  ],
+  "account_migrations": {
+    "database": "Dedicated ACCOUNT_DB distinct from both legacy databases",
+    "versions": [
+      1,
+      2
+    ],
+    "application_tables": 6,
+    "explicit_indexes": 1,
+    "migration_journal_rows": 2,
+    "account_identity_or_domain_fact_rows": 0,
+    "pre_backup_and_bookmark_verified": true,
+    "pre_receipt_sha256": "e0f2919645c1ab9d9327c7cd23ab896e83e2fbe7687ada96d3c76ffc8ba05fc6",
+    "post_receipt_sha256": "58ab453cfbb2c11e28496ecda08fb81044306578558340287ca6cbf25310be4d",
+    "legacy_database_queries_or_migrations_by_release": 0
+  },
+  "public_verification": {
+    "http_checks": 15,
+    "assets": 10,
+    "browser_profiles": 24,
+    "result": "PASS",
+    "transport": "VERIFIED_TLS_NODE_GET_CDP_RENDERING",
+    "tls_verification_disabled": false,
+    "native_browser_proxy_ca_limit": "Native Chromium did not trust this execution environment proxy CA. Actual site responses used verified TLS Node GET requests and were rendered in Chromium through CDP; this is not a native browser HTTPS transport claim.",
+    "owner_session_available": false,
+    "authenticated_live_qa": "NOT_PERFORMED",
+    "real_financial_acceptance": "NOT_PERFORMED",
+    "source_report_sha256": "2ff2a9cd1a704a6924d6d7559bed483b4f3e9fffeb88cc3a87f2dbc0ddd27184"
+  },
+  "external_dependencies": [
+    "Transactional email delivery",
+    "Billing provider and approved plans",
+    "Per-company marketplace credentials/scopes",
+    "Approved legal and retention policy",
+    "Authorized owner operational acceptance and M2/M2.2 reconciliation"
+  ],
+  "cloudflare_git_builds": {
+    "status": "PREEXISTING_FAILED_CHECKS",
+    "detail": "The same three failed Cloudflare Workers Builds checks are present on published PR118 source4a9fce1 and initialPR119. Their configuration/log APIs returned403. Existing manual Wrangler publication succeeded and was independently verified. GitHub validate succeeded.",
+    "diagnostic_requirement": "User-scoped Cloudflare API token with Workers Builds Configuration: Edit to inspect configuration/logs."
+  },
+  "production_qa_writes": {
+    "orders": 0,
+    "expenses": 0,
+    "returns": 0,
+    "campaigns": 0,
+    "charges": 0,
+    "invitations": 0,
+    "messages": 0,
+    "synthetic_accounts": 0
+  },
+  "rollback": "Restore coordinated previously captured App/Auth/Finance code versions when required, retaining ACCOUNT_DB/schema/new writes and the new encryption key. Do not drop tables or restore legacy backups over newer business facts.",
+  "git_merge_status": "PR_OPEN_AT_PUBLICATION",
+  "deployment_identifiers": {
+    "finance": {
+      "deployment_id": "0aa8a4fe-e197-48fa-ba4e-9eb9b55a9745",
+      "created_on": "2026-11-13T16:10:56.021632Z",
+      "versions": [
+        {
+          "version_id": "d3bf1196-e75b-491b-bc40-f523029db483",
+          "percentage": 100
+        }
+      ]
+    },
+    "auth": {
+      "deployment_id": "0984c1a1-a60b-4e9f-9b06-9e5a1c35719f",
+      "created_on": "2026-11-13T16:11:45.647871Z",
+      "versions": [
+        {
+          "version_id": "59f4e183-ea0a-45d3-8291-c56ce737047a",
+          "percentage": 100
+        }
+      ]
+    },
+    "app": {
+      "deployment_id": "34460ff9-67c3-41c7-9c17-a0ddab5db5c5",
+      "created_on": "2026-11-13T16:12:47.46702Z",
+      "versions": [
+        {
+          "version_id": "68bb7328-b635-49bb-a64a-b8dff7f0c417",
+          "percentage": 100
+        }
+      ]
+    }
+  },
+  "deployment_identifier_receipt_sha256": "10601330a50321767b651b9d99e2079b75998567bffd2b25507bd93cfb3626ed"
+}

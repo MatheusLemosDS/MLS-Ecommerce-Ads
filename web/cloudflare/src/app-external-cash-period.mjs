@@ -5,7 +5,7 @@ import {projectExternalCashError,externalCashErrorStatus} from '../../finance/sr
 // No files, tenant selectors or provider URLs are accepted by this gateway.
 export async function getFinanceExternalCashPeriod(env,input,options={}){
  const failure=suffix=>({status:externalCashErrorStatus('FINANCE_EXTERNAL_CASH_'+suffix),body:{schema:'external_cash_error_v1',error:'FINANCE_EXTERNAL_CASH_'+suffix}});
- let fetchImpl=request=>fetch(request),timeoutMs=20000;
+ let fetchImpl=env?.COMMERCIAL_FETCH??(request=>fetch(request)),timeoutMs=20000;
  try{
   if(!options||![Object.prototype,null].includes(Object.getPrototypeOf(options)))return failure('CONFIGURATION');
   for(const key of Reflect.ownKeys(options)){

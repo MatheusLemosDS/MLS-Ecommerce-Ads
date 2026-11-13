@@ -1,0 +1,58 @@
+TAP version 13
+# Subtest: deployed monthly client validates and renders financial and Ads responses after esbuild (minify=false)
+ok 1 - deployed monthly client validates and renders financial and Ads responses after esbuild (minify=false)
+  ---
+  duration_ms: 638.558351
+  type: 'test'
+  ...
+# Subtest: deployed reconciliation explains the observation and reads only its private monthly history after esbuild (minify=false)
+ok 2 - deployed reconciliation explains the observation and reads only its private monthly history after esbuild (minify=false)
+  ---
+  duration_ms: 449.176467
+  type: 'test'
+  ...
+# Subtest: deployed monthly client renders custom product costs as text without changing financial balances (minify=false)
+ok 3 - deployed monthly client renders custom product costs as text without changing financial balances (minify=false)
+  ---
+  duration_ms: 542.788628
+  type: 'test'
+  ...
+# Subtest: deployed monthly client deducts one MEI DAS and keeps product balances before the fixed monthly tax (minify=false)
+ok 4 - deployed monthly client deducts one MEI DAS and keeps product balances before the fixed monthly tax (minify=false)
+  ---
+  duration_ms: 466.092606
+  type: 'test'
+  ...
+# Subtest: deployed monthly client validates and renders financial and Ads responses after esbuild (minify=true)
+ok 5 - deployed monthly client validates and renders financial and Ads responses after esbuild (minify=true)
+  ---
+  duration_ms: 491.273909
+  type: 'test'
+  ...
+# Subtest: deployed reconciliation explains the observation and reads only its private monthly history after esbuild (minify=true)
+ok 6 - deployed reconciliation explains the observation and reads only its private monthly history after esbuild (minify=true)
+  ---
+  duration_ms: 368.896002
+  type: 'test'
+  ...
+# Subtest: deployed monthly client renders custom product costs as text without changing financial balances (minify=true)
+ok 7 - deployed monthly client renders custom product costs as text without changing financial balances (minify=true)
+  ---
+  duration_ms: 343.451289
+  type: 'test'
+  ...
+# Subtest: deployed monthly client deducts one MEI DAS and keeps product balances before the fixed monthly tax (minify=true)
+ok 8 - deployed monthly client deducts one MEI DAS and keeps product balances before the fixed monthly tax (minify=true)
+  ---
+  duration_ms: 441.682267
+  type: 'test'
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 8
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3926.179405

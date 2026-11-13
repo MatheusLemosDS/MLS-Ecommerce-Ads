@@ -1,15 +1,18 @@
+import {isCommercialContext} from '../../cloudflare/src/commercial-context.mjs';
+import {TenantInitializationMap} from '../../cloudflare/src/tenant-storage.mjs';
 // Private, owner-declared file evidence. Never reads a bank API or changes profit.
 import {FINANCE_PROFILE, FinanceConnectionError} from './connection-store.mjs';
 import {projectExternalCashRequest, projectExternalCashResponse, isExternalCashCompletedStatus} from './external-cash-frame.mjs';
 
 const encoder = new TextEncoder();
-const tenant = [FINANCE_PROFILE.partner_id, FINANCE_PROFILE.shop_id, FINANCE_PROFILE.environment,
-  FINANCE_PROFILE.region, 'external-cash-v1'].join(':');
+const legacyTenant = [FINANCE_PROFILE.partner_id, FINANCE_PROFILE.shop_id, FINANCE_PROFILE.environment,FINANCE_PROFILE.region,'external-cash-v1'].join(':');
+const cashContexts=new WeakMap();
+const tenantForDatabase=db=>{const context=cashContexts.get(db);if(!context)fail('CONFIGURATION');return context.tenant;};
 const prefix = 'FINANCE_EXTERNAL_CASH_';
 const fail = (code, status = 503) => { throw new FinanceConnectionError(prefix + code, status); };
 const hash = async value => Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',
   encoder.encode(typeof value === 'string' ? value : JSON.stringify(value)))), byte => byte.toString(16).padStart(2, '0')).join('');
-const initialized = new WeakMap();
+const initialized = new TenantInitializationMap();
 
 export const EXTERNAL_CASH_SCHEMA = Object.freeze([
   `CREATE TABLE IF NOT EXISTS finance_external_cash_state(tenant TEXT PRIMARY KEY,revision INTEGER NOT NULL CHECK(revision>=0))`,
@@ -42,6 +45,8 @@ const schemaObjects = new Map(EXTERNAL_CASH_SCHEMA.map(sql => {
 function database(env) {
   const db = env?.FINANCE_DB;
   if (!db || db === env.ADMIN_DB || typeof db.prepare !== 'function' || typeof db.batch !== 'function') fail('CONFIGURATION');
+  const context=env.COMMERCIAL_CONTEXT;if(context&&!isCommercialContext(context))fail('FORBIDDEN',403);
+  cashContexts.set(db,{tenant:context?(context.legacyCashTenant??'commercial:'+context.namespace+':external-cash-v1'):legacyTenant,actor:context??null});
   return db;
 }
 function requestFor(input, operation) {
@@ -69,6 +74,7 @@ async function exists(db) {
   return true;
 }
 async function revision(db) {
+  const tenant=tenantForDatabase(db);
   if (!await exists(db)) return 0;
   const state = await db.prepare('SELECT revision FROM finance_external_cash_state WHERE tenant=?').bind(tenant).first();
   if (!state) return 0;
@@ -76,6 +82,7 @@ async function revision(db) {
   return state.revision;
 }
 async function setup(db, {schemaPresent, statePresent}) {
+  const tenant=tenantForDatabase(db);
   if (schemaPresent) {
     if (!statePresent) await db.prepare('INSERT OR IGNORE INTO finance_external_cash_state(tenant,revision) VALUES(?,0)').bind(tenant).run();
     return;
@@ -102,7 +109,7 @@ function bounded(value) {
 }
 
 async function readWorkspace(env, input) {
-  const request = requestFor(input, 'read'), db = database(env);
+  const request = requestFor(input, 'read'), db = database(env),tenant=tenantForDatabase(db);
   if (!await exists(db)) {
     if (request.cursor !== null) fail('CURSOR_STALE', 409);
     return emptyWorkspace();
@@ -187,6 +194,7 @@ function importBody(request) {
     selection: request.selection, rows: [...request.rows].sort((a, b) => a.line - b.line)};
 }
 async function inspectImport(db, request) {
+  const tenant=tenantForDatabase(db);
   statusAllowed(request);
   const normalized = importBody(request), digest = await hash(normalized), rev = await revision(db);
   const rows = await Promise.all(normalized.rows.map(async row => ({...row,
@@ -254,6 +262,7 @@ function guard(db, condition, ...args) {
   return db.prepare(`INSERT INTO finance_external_cash_guard(id,ok) VALUES(1,CASE WHEN (${condition}) THEN 1 ELSE 0 END) ON CONFLICT(id) DO UPDATE SET ok=excluded.ok`).bind(...args);
 }
 async function replay(db, requestId, requestHash) {
+  const tenant=tenantForDatabase(db);
   if (!await exists(db)) return null;
   const row = await db.prepare('SELECT request_hash,response_json FROM finance_external_cash_requests WHERE tenant=? AND request_id=?').bind(tenant, requestId).first();
   if (!row) return null;
@@ -264,12 +273,17 @@ async function replay(db, requestId, requestHash) {
 }
 const mutationResult = () => ({import_id: null, inserted_count: 0, duplicate_count: 0, review_count: 0, match_ids: [], unlinked_match_id: null});
 function baseStatements(db, request) {
+  const tenant=tenantForDatabase(db);
   return [db.prepare('UPDATE finance_external_cash_state SET revision=revision+1 WHERE tenant=? AND revision=?').bind(tenant, request.expected_revision), guard(db, 'changes()=1')];
 }
 async function persist(db, request, requestHash, response, statements, stamp, conflictCode) {
+  const tenant=tenantForDatabase(db);
   const details = JSON.stringify(response.result);
   statements.push(db.prepare("INSERT INTO finance_external_cash_audit(tenant,request_id,operation,revision,actor,created_at,details_json) VALUES(?,?,?,?,'OWNER',?,?)").bind(tenant, request.request_id, request.operation, response.revision, stamp, details));
   statements.push(db.prepare('INSERT INTO finance_external_cash_requests(tenant,request_id,request_hash,response_json,created_at) VALUES(?,?,?,?,?)').bind(tenant, request.request_id, requestHash, JSON.stringify(response), stamp));
+  const actor=cashContexts.get(db)?.actor;
+  if(actor){const event=JSON.stringify({schema:'commercial_actor_event_v1',actor_user_id:actor.userId,organization_id:actor.organizationId,store_id:actor.storeId,membership_id:actor.membershipId,capability:actor.requiredCapability,operation:request.operation,request_id:request.request_id});statements.push(db.prepare("INSERT INTO finance_external_cash_audit(tenant,request_id,operation,revision,actor,created_at,details_json) VALUES(?,?,'ACTOR_CONTEXT_V1',?,'OWNER',?,?)").bind(tenant,request.request_id+':actor-v1',response.revision,stamp,event));}
+
   try { await db.batch(statements); } catch (cause) {
     let previous, current;
     try { previous = await replay(db, request.request_id, requestHash); current = await revision(db); }
@@ -297,6 +311,7 @@ async function mutate(env, input, {now = () => Date.now()} = {}) {
 }
 
 async function importRows(db, request, requestHash, stamp) {
+  const tenant=tenantForDatabase(db);
   const inspected = await inspectImport(db, request);
   if (inspected.revision !== request.expected_revision) fail('REVISION_CONFLICT', 409);
   if (inspected.previewHash !== request.preview_hash) fail('PREVIEW_MISMATCH', 409);
@@ -321,6 +336,7 @@ async function importRows(db, request, requestHash, stamp) {
 }
 
 async function mutateMatch(db, request, requestHash, stamp) {
+  const tenant=tenantForDatabase(db);
   const current = await revision(db);
   if (current !== request.expected_revision) fail('REVISION_CONFLICT', 409);
   if (!await exists(db)) fail('MATCH_NOT_FOUND', 404);
@@ -369,6 +385,6 @@ export async function mutateExternalCash(env, input, options) {
 export async function readExternalCashStorageContext(env) {
   return protect(async () => {
     const db = database(env);
-    return {db, tenant, schemaPresent: await exists(db)};
+    return {db, tenant:tenantForDatabase(db), schemaPresent: await exists(db)};
   });
 }

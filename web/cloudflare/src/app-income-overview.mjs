@@ -1,6 +1,6 @@
 import {projectIncomeOverviewFrame} from '../../finance/src/income-overview-frame.mjs';
 
-export async function getFinanceIncomeOverview(env,{fetchImpl=request=>fetch(request),timeoutMs=45000}={}){
+export async function getFinanceIncomeOverview(env,{fetchImpl=env?.COMMERCIAL_FETCH??(request=>fetch(request)),timeoutMs=45000}={}){
  const failure=(suffix='UNAVAILABLE',http=null)=>({schema:'finance_income_overview_unavailable_v1',status:'UNAVAILABLE',diagnostic:{code:'FINANCE_INCOME_OVERVIEW_'+suffix,http:Number.isInteger(http)&&http>=100&&http<=599?http:null}});
  if(typeof env?.APP_INTERNAL_SECRET!=='string'||!env.APP_INTERNAL_SECRET||typeof fetchImpl!=='function'||!Number.isInteger(timeoutMs)||timeoutMs<5||timeoutMs>45000)return failure('CONFIGURATION');
  const controller=new AbortController();let timer,reader,response,stage='FETCH';

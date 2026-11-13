@@ -1,0 +1,29 @@
+✔ only a trusted resolver chooses context; hostile identity headers and absent bindings never select legacy storage (111.807822ms)
+✔ envelope v2 binds method, exact path/query, body, issuer/audience and fresh persisted authorization (73.199492ms)
+✔ a forged or stale signed service claim cannot inherit a different tenant, capability or session (8.324136ms)
+✔ read response is withheld if persisted membership is revoked in flight (10.08665ms)
+✔ jobs with equal IDs and leases persist in independent namespaces and revalidate actor before completion (11.005445ms)
+✔ browser drafts/media are separated by user, company and store; switching aborts stale responses and revokes blobs (1.392506ms)
+✔ verified additive legacy backfill preserves exact values, hashes, counts, revisions and old access; replay preserves new writes (116.210417ms)
+ℹ {"environment":"LOCAL_SYNTHETIC_SQLITE","domain":"app","backup_sha256":"3b89b7baa1cf267116100174e3d0dc340bffe6d5066032a99855fc0857f1e374","tables":12,"rows":9,"counts_verified":12}
+✔ interrupted table copy resumes idempotently, and never assigns legacy facts to an unconfirmed new company (102.903751ms)
+✔ snapshot restores into a separate empty SQLite database and refuses corrupt backup or overwriting newer writes (16.917713ms)
+✔ Finance imported money, idempotency and immutable history survive isolated backfill and verified restore (93.149425ms)
+ℹ {"environment":"LOCAL_SYNTHETIC_SQLITE","domain":"finance","backup_sha256":"137dfbfe2f97b7069271c2b853a6fb6663c69645ee40e727dac7c4ea64673da7","tables":10,"rows":8,"counts_verified":10}
+✔ every inventoried App/Finance table, index and trigger installs independently in two real SQLite namespaces (510.17064ms)
+✔ same month, singleton, revision and request IDs persist independently, including joins and immutable schema metadata (3.734423ms)
+✔ domain string values and bound payloads remain unchanged in mixed schema guards (1.953199ms)
+✔ actual incurred production replays equal IDs separately and parent link triggers protect only their namespace (43.398543ms)
+✔ actual cash import and idempotency are isolated for equal document, external and request IDs; history triggers stay immutable (30.331009ms)
+✔ a batch rejects foreign scoped and raw D1 statements before any write (5.096154ms)
+✔ hostile SQL cannot read identity tables, another namespace, unknown tables or SQLite control surfaces (1.707304ms)
+✔ local and nested CTEs, quoted logical tables and qualified column references keep working (1.839931ms)
+✔ write authorization is rechecked before mutation and a revoked guard cannot change persisted data (1.931327ms)
+ℹ tests 19
+ℹ suites 0
+ℹ pass 19
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 766.923474

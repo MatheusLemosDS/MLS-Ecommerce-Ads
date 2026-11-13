@@ -10,19 +10,20 @@ import {receiptChrome,receiptBrowser,receiptClick,receiptPause} from './returns-
 import {weeklyProductionFixture,weeklyProductionClock} from './production-weekly-browser-fixture.mjs';
 import {readProductionCoverageWorkspace,mutateProductionCoverageWorkspace} from '../src/production-coverage.mjs';
 import {incurredProductionRange} from '../src/incurred-production.mjs';
+import {assertReviewedCostSources,REVIEWED_COST_SOURCE_PINS} from './reviewed-cost-source-invariants.mjs';
 
 const results=[],reportFile=process.env.MLS_PRODUCTION_WORKSPACE_QA_FILE||null,screens=process.env.MLS_PRODUCTION_WORKSPACE_SCREENSHOT_DIR||null;
 const guards=['legacy_contracts_unchanged','overview_agents_preserved','daily_cost_chart_interactive','selected_day_drafts_preserved','weekly_cut_refresh_verified','friday_boundary_explicit','coverage_confirmation_explicit','pricing_formula_unchanged','dto_unchanged','no_new_provider_reads','unknown_not_zero','month_drafts_preserved','weekly_originals_preserved'];
 const digest=value=>createHash('sha256').update(value).digest('hex');
 const sourcePins={
- 'incurred-production.mjs':'d751d925874e6c86c61d3c15ebdcf41072e5ab282e2a13dd88690191befd4956',
+ 'incurred-production.mjs':Object.values(REVIEWED_COST_SOURCE_PINS['incurred-production.mjs']),
  'incurred-production-analytics.mjs':'0f036977f09119e924c9762e644296c856239552b2ea5d23c1064cb7c91fcd4c',
- 'production-costs.mjs':'190287869d819d5511a6b41288ef3c270394de4ee1a8f1f56ea8068cd0e70e4b',
+ 'production-costs.mjs':Object.values(REVIEWED_COST_SOURCE_PINS['production-costs.mjs']),
  'production-weekly-close.mjs':'806d27bb9beef6b2779bcbad556914474ded33869912c90f9e9d8770f5bfb572',
  'production-weekly-store.mjs':'6774503f20b3aa1a7861d8fc92b54220d809625f36228ffe701dd6a9379d1229',
  'production-coverage.mjs':'a0896f3d2b3cdafd38659abb9e7a0624d00d807f89ab28076878a475e13df3d0'
 };
-function invariantSources(){for(const [name,expected]of Object.entries(sourcePins))assert.equal(digest(readFileSync(new URL('../src/'+name,import.meta.url))),expected,'canonical production formulas and DTOs remain unchanged: '+name);}
+function invariantSources(){assertReviewedCostSources();for(const [name,expected]of Object.entries(sourcePins))assert.ok((Array.isArray(expected)?expected:[expected]).includes(digest(readFileSync(new URL('../src/'+name,import.meta.url)))),'canonical production formulas and DTOs retain exact reviewed source: '+name);}
 const workerHashes=()=>Object.fromEntries(['app','auth','finance'].map(name=>[name,digest(readFileSync(new URL('../../../dist/'+name+'-worker.mjs',import.meta.url)))]));
 let frozenWorkers=null;
 async function wait(cdp,expression,label){for(let n=0;n<180;n++){if(await cdp.evaluate(expression))return;await receiptPause(50);}assert.fail(label+' '+JSON.stringify(await cdp.evaluate('({errors:globalThis.__productionWorkspaceErrors,view:globalThis.brazaProductionWorkspace?.getSnapshot?.(),status:document.getElementById("incurredProductionStatus")?.textContent,coverage:document.getElementById("productionCoverageStatus")?.textContent})')));}

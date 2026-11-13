@@ -1,0 +1,172 @@
+{
+  "schema": "mls_m3_workbench_qa_v1",
+  "source": "LOCAL_SYNTHETIC_OWNER_WORKER_AND_BROWSER",
+  "generated_hashes": {
+    "app": "d9187e2fc48ba450c208c8182b5746874e15fc58db4dc0319bcf393cf7d89b7f",
+    "auth": "ecce0b8ee8ee2b02147498ad336effaf9a8fef0a33e5281fa0805abbb9accb11",
+    "finance": "46443ef4d0e98005ada9d516ff6bbee06f0e044861fafb512a2223218b3af7cf"
+  },
+  "results": [
+    {
+      "minify": false,
+      "width": 320,
+      "pass": true,
+      "page_errors": 0,
+      "horizontal_overflow": false,
+      "themes": [
+        "dark",
+        "light"
+      ],
+      "proofs": [
+        {
+          "theme": "dark",
+          "page_errors": 0,
+          "horizontal_overflow": false,
+          "font_stress_overflow": false,
+          "products_reached": 25,
+          "overview_agents": 6,
+          "scenario_only": true,
+          "screenshot": "/workspace/mls-v4-work/chart-qa/m3/normal-320-dark.png",
+          "api_calls": 28
+        },
+        {
+          "theme": "light",
+          "page_errors": 0,
+          "horizontal_overflow": false,
+          "font_stress_overflow": false,
+          "products_reached": 25,
+          "overview_agents": 6,
+          "scenario_only": true,
+          "screenshot": "/workspace/mls-v4-work/chart-qa/m3/normal-320-light.png",
+          "api_calls": 28
+        }
+      ]
+    },
+    {
+      "minify": false,
+      "width": 1365,
+      "pass": true,
+      "page_errors": 0,
+      "horizontal_overflow": false,
+      "themes": [
+        "dark",
+        "light"
+      ],
+      "proofs": [
+        {
+          "theme": "dark",
+          "page_errors": 0,
+          "horizontal_overflow": false,
+          "font_stress_overflow": false,
+          "products_reached": 25,
+          "overview_agents": 6,
+          "scenario_only": true,
+          "screenshot": "/workspace/mls-v4-work/chart-qa/m3/normal-1365-dark.png",
+          "api_calls": 28
+        },
+        {
+          "theme": "light",
+          "page_errors": 0,
+          "horizontal_overflow": false,
+          "font_stress_overflow": false,
+          "products_reached": 25,
+          "overview_agents": 6,
+          "scenario_only": true,
+          "screenshot": "/workspace/mls-v4-work/chart-qa/m3/normal-1365-light.png",
+          "api_calls": 28
+        }
+      ]
+    },
+    {
+      "minify": true,
+      "width": 320,
+      "pass": true,
+      "page_errors": 0,
+      "horizontal_overflow": false,
+      "themes": [
+        "dark",
+        "light"
+      ],
+      "proofs": [
+        {
+          "theme": "dark",
+          "page_errors": 0,
+          "horizontal_overflow": false,
+          "font_stress_overflow": false,
+          "products_reached": 25,
+          "overview_agents": 6,
+          "scenario_only": true,
+          "screenshot": "/workspace/mls-v4-work/chart-qa/m3/min-320-dark.png",
+          "api_calls": 28
+        },
+        {
+          "theme": "light",
+          "page_errors": 0,
+          "horizontal_overflow": false,
+          "font_stress_overflow": false,
+          "products_reached": 25,
+          "overview_agents": 6,
+          "scenario_only": true,
+          "screenshot": "/workspace/mls-v4-work/chart-qa/m3/min-320-light.png",
+          "api_calls": 28
+        }
+      ]
+    },
+    {
+      "minify": true,
+      "width": 1365,
+      "pass": true,
+      "page_errors": 0,
+      "horizontal_overflow": false,
+      "themes": [
+        "dark",
+        "light"
+      ],
+      "proofs": [
+        {
+          "theme": "dark",
+          "page_errors": 0,
+          "horizontal_overflow": false,
+          "font_stress_overflow": false,
+          "products_reached": 25,
+          "overview_agents": 6,
+          "scenario_only": true,
+          "screenshot": "/workspace/mls-v4-work/chart-qa/m3/min-1365-dark.png",
+          "api_calls": 28
+        },
+        {
+          "theme": "light",
+          "page_errors": 0,
+          "horizontal_overflow": false,
+          "font_stress_overflow": false,
+          "products_reached": 25,
+          "overview_agents": 6,
+          "scenario_only": true,
+          "screenshot": "/workspace/mls-v4-work/chart-qa/m3/min-1365-light.png",
+          "api_calls": 28
+        }
+      ]
+    }
+  ],
+  "legacy_contracts_unchanged": true,
+  "overview_agents_preserved": true,
+  "m3_sources_unchanged": true,
+  "scenario_only": true,
+  "month_navigation_preserved": true,
+  "remote_writes": 0,
+  "owner_real_mutation_requests": 0,
+  "new_provider_calls": 0,
+  "evidence": {
+    "scope": "Synthetic fixtures validated by real monthly/product projectors; compiled owner Worker; real CSP and native Chrome input; both themes, source changes, metadata, local filters, browser Back and font stress.",
+    "screenshots": [
+      "/workspace/mls-v4-work/chart-qa/m3/normal-320-dark.png",
+      "/workspace/mls-v4-work/chart-qa/m3/normal-320-light.png",
+      "/workspace/mls-v4-work/chart-qa/m3/normal-1365-dark.png",
+      "/workspace/mls-v4-work/chart-qa/m3/normal-1365-light.png",
+      "/workspace/mls-v4-work/chart-qa/m3/min-320-dark.png",
+      "/workspace/mls-v4-work/chart-qa/m3/min-320-light.png",
+      "/workspace/mls-v4-work/chart-qa/m3/min-1365-dark.png",
+      "/workspace/mls-v4-work/chart-qa/m3/min-1365-light.png"
+    ]
+  }
+}

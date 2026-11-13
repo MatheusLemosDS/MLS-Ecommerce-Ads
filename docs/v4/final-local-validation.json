@@ -1,0 +1,1775 @@
+{
+  "schema": "mls_v41_final_local_validation_v1",
+  "recorded_at": "2026-11-13T15:31:46.220533+00:00",
+  "base_commit": "a5bd38a0902b38ecc3e90a747601eba330e7813e",
+  "candidate_branch": "feature/v41-layout-commercial-live-20261112",
+  "app_release": "2026-11-12.1",
+  "worker_build": {
+    "app": {
+      "worker": "brazacommerce-app",
+      "bytes": 3495460,
+      "sha256": "ae11ec6d2fc4c84db96c834fd3d20be67cc9d142ae241aed926a806c8e956ea6"
+    },
+    "auth": {
+      "worker": "brazacommerce-auth",
+      "bytes": 524070,
+      "sha256": "d5eed8ab9cddaa8d6917f4e4ca668a3f7074bad5603254656414db5a490dc172"
+    },
+    "finance": {
+      "worker": "brazacommerce-finance",
+      "bytes": 730516,
+      "sha256": "ffbcea3b7ffe5c0a94b0d4d8c4908738e6da76386040995bba982060a5f9bb71"
+    }
+  },
+  "evidence": [
+    {
+      "id": "WHOLE-NODE-FINAL-4106",
+      "ambiente": "LOCAL_SINTETICO",
+      "tipo": "SUITE_COMPLETA_COM_MAPEAMENTO_POR_REQUISITO",
+      "comando": "npm test",
+      "arquivo": "docs/v4/evidence/whole-node-final-4106.log",
+      "sha256": "dfb54277ac28402d040f78ff701c9b13c2929089d7244f29587d231491aa961c",
+      "resultado": "PASSOU",
+      "contagem": {
+        "tests": 4106,
+        "passou": 4106,
+        "falhou": 0,
+        "ignorados": 0
+      },
+      "duracao_ms": 519799.020926,
+      "limite": "Testes locais e Chromium com fixtures. Não comprova operação real, serviço externo, CI, publicação ou QA autenticado Live. O conjunto de testes de cada linha delimita o alcance da evidência."
+    },
+    {
+      "id": "WHOLE-PYTHON-FINAL-67",
+      "ambiente": "LOCAL_SINTETICO",
+      "tipo": "PONTE_E_INSTALACAO",
+      "comando": "python3 -m unittest web/bridge/test_hermes_bridge.py tools/test_install_hermes_web_bridge.py tools/test_build_hermes_web_bridge_install.py tools/test_activate_hermes_web_bridge.py tools/test_build_hermes_web_bridge_activation.py -q",
+      "arquivo": "docs/v4/evidence/whole-python-final-67.log",
+      "sha256": "284180517cb0d2817a56da3e6ad08a45f148c9fbdad084f37bc325935b53888a",
+      "resultado": "PASSOU",
+      "contagem": {
+        "passou": 67,
+        "falhou": 0,
+        "ignorados": 0
+      },
+      "limite": "Contratos e ferramentas de ponte locais; nenhuma instalação ou execução remota é comprovada."
+    },
+    {
+      "id": "CANONICAL-NAVIGATION-FINAL-20",
+      "ambiente": "LOCAL_SINTETICO",
+      "tipo": "CHROMIUM_E_CONTROLADORES_GERADOS",
+      "comando": "node --test --test-reporter=tap --test-concurrency=1 web/cloudflare/tests/app-release-discovery-chrome.test.mjs web/cloudflare/tests/organized-workspace.test.mjs web/cloudflare/tests/weekly-context-navigation-chrome.test.mjs",
+      "arquivo": "docs/v4/evidence/canonical-navigation-final-20.log",
+      "sha256": "ea0c7f741ca4d342b95546dc5693a578dfba73c1eeb02a4940517ba06833af47",
+      "resultado": "PASSOU",
+      "contagem": {
+        "passou": 20,
+        "falhou": 0,
+        "ignorados": 0
+      },
+      "escopo": "Oito perfis das novidades, oito contratos de navegação e quatro jornadas semanais. Alias antigo resolve painel pelo destino confiável antes de focar; mantém mês/data/corte, capability e rascunhos. Sem escrita financeira/física."
+    }
+  ],
+  "test_files_in_complete_node_command": [
+    {
+      "path": "tools/tests/ai-sales-build-profiles.test.mjs",
+      "sha256": "d9a55d2e5f2b154475b5a58eafb80a2fa1e34f0354faeea72780712de1b35246"
+    },
+    {
+      "path": "tools/tests/apply-worker-capture.test.mjs",
+      "sha256": "e73a4f26dd965c6aa9c98f648ee0f16a23b0606403f82dca661a5d85de6052cd"
+    },
+    {
+      "path": "tools/tests/browser-assets.test.mjs",
+      "sha256": "dd7ca003a835be7677910bff05047e4dcccbb7047f18b67828834d6575d12efb"
+    },
+    {
+      "path": "tools/tests/capture-worker-config.test.mjs",
+      "sha256": "52eaa39b6ed673e99616f3ab1e225f13ebfd6a242d6ee4aa5db16183a96ba482"
+    },
+    {
+      "path": "tools/tests/commercial-auth-baseline.test.mjs",
+      "sha256": "3f47d2d97c55e9224ab5fb7d339471041c3336b0d64a744634eea506d13f93ae"
+    },
+    {
+      "path": "tools/tests/compact-worker-namespaces.test.mjs",
+      "sha256": "54771071de9de0c5d42bb366815fcb47b9519f02c47b037bed2abe6e39cdc9f3"
+    },
+    {
+      "path": "tools/tests/import-worker-config.test.mjs",
+      "sha256": "7961def332b8eb8f6a63cae46e1859497b204daddd8a8a9e2dc9b2d7bbee2caf"
+    },
+    {
+      "path": "tools/tests/mls-ai-sales-media.test.mjs",
+      "sha256": "78f4effb048fd8aa7b6da99d61e28d43a300c124a19d40ebaed8360c87aede77"
+    },
+    {
+      "path": "tools/tests/mls-owner-preview-assets.test.mjs",
+      "sha256": "085b8438cfb1966b897e8cc2a57d959383dbf7bc93ac2610e7a89462999de92f"
+    },
+    {
+      "path": "tools/tests/mls-owner-preview-chrome.test.mjs",
+      "sha256": "d7b4f47ad95da597ddaa9001a3c29ae3082a9087f0e417c416a53b02f7512c4b"
+    },
+    {
+      "path": "tools/tests/mls-owner-preview-export.test.mjs",
+      "sha256": "56209fe7562e71fbe6f6ef8f02c1ca72918868bc7186d7337e7e2c6ce46c9127"
+    },
+    {
+      "path": "tools/tests/mls-owner-preview.test.mjs",
+      "sha256": "2555ba96173eaefab0041edb1af171bdf186c5f73609932c9c637711118a42c4"
+    },
+    {
+      "path": "tools/tests/mls-visual-references.test.mjs",
+      "sha256": "b2d37121645d5f1d249f5770044e99da936c2a25bd54cba83e7e56fc337331fd"
+    },
+    {
+      "path": "tools/tests/release-preflight.test.mjs",
+      "sha256": "d9470297d7d29f47872c2ae6f2f7b712397dc19c10f1b185c6f9f39fd117715b"
+    },
+    {
+      "path": "tools/tests/sync-finance-router-secret.test.mjs",
+      "sha256": "54cc7fbdb7b204fd41aaa59c04c5b9e2d4eac07ad6824494ca7939554a4a3563"
+    },
+    {
+      "path": "tools/tests/worker-commercial-account-deploy.test.mjs",
+      "sha256": "2e9fefe18f891ba119048969fc703462b8e48673e94216fd616440929a072cc2"
+    },
+    {
+      "path": "tools/tests/worker-deploy.test.mjs",
+      "sha256": "ac4f11e1f1a57d7b9d9c830043ca90ba649e6901fc7a2ab74881248d3277738a"
+    },
+    {
+      "path": "web/cloudflare/tests/account-auth-worker.test.mjs",
+      "sha256": "f28195f87fdc89a491b1eb631fd71c55e412d486dbe77e6655db90f1422aedb8"
+    },
+    {
+      "path": "web/cloudflare/tests/account-backend.test.mjs",
+      "sha256": "b022f0cd85eab10712237de5d758cef91b127c991ead7aac25519ba727b93f9c"
+    },
+    {
+      "path": "web/cloudflare/tests/account-bounded-security.test.mjs",
+      "sha256": "598b5143fa06e7ad2a7e1b55a5b23053231b06b3f10538885817d9436ef81cd6"
+    },
+    {
+      "path": "web/cloudflare/tests/account-bridge.test.mjs",
+      "sha256": "b064928d9ab3c10505b1fce02f89984c366e84ef4cd8ce556cb868bd23aa7137"
+    },
+    {
+      "path": "web/cloudflare/tests/account-crypto.test.mjs",
+      "sha256": "0d09c6c79cddd72cf08c59992a69436981e1941ae8981925a717e5618f329bf1"
+    },
+    {
+      "path": "web/cloudflare/tests/account-diagnosis.test.mjs",
+      "sha256": "2855eb76f72cf8e31a0e3cb21b59cfa8cc51fa65e4b599c03da62a1575db1bab"
+    },
+    {
+      "path": "web/cloudflare/tests/account-principal-snapshot.test.mjs",
+      "sha256": "3c23a420862a0bbae2987c12829e44b5274218b29751c2763220ccf3967b4a37"
+    },
+    {
+      "path": "web/cloudflare/tests/admin-ads-precision-client.test.mjs",
+      "sha256": "6ad09933b17e66b32856864b98e916e5e4882d431feca23e6624d8dc4d47c361"
+    },
+    {
+      "path": "web/cloudflare/tests/admin-api-client.test.mjs",
+      "sha256": "d5559a6cafab6c021004176f263f2e2da09c5da6ae6fcdb980dd35cb080d849d"
+    },
+    {
+      "path": "web/cloudflare/tests/admin-api-wrapper.test.mjs",
+      "sha256": "0c96af97b2e797934c027251e2b10c8ef27e7646dfa957f946fffcaa2774ad41"
+    },
+    {
+      "path": "web/cloudflare/tests/admin-bootstrap-compiled.test.mjs",
+      "sha256": "44768f5edfc9505af01b7297805f9c0584628dfddf15076bc4ee5ba23c780ade"
+    },
+    {
+      "path": "web/cloudflare/tests/admin-bootstrap.test.mjs",
+      "sha256": "bce2dc9057d0c1c1926da71809028bf7da1457acc1e8066c19d6d5c647825cd4"
+    },
+    {
+      "path": "web/cloudflare/tests/admin-db-quota.test.mjs",
+      "sha256": "0c0c5bb0bb7dc83f20e54399e669aba29a1d226885e6334c97518c4b234dce38"
+    },
+    {
+      "path": "web/cloudflare/tests/admin-startup-compiled.test.mjs",
+      "sha256": "39b11e58ed499ac849ab6d40170722d9f72d17cd5bbd5b52f80ae90ccd1bcbd8"
+    },
+    {
+      "path": "web/cloudflare/tests/admin-startup-feedback.test.mjs",
+      "sha256": "eab5cc11c316f7f40d105ae799fbbbf00c89dae26ef0695f4a3670770a2b0faa"
+    },
+    {
+      "path": "web/cloudflare/tests/admin-startup.test.mjs",
+      "sha256": "666ac1bbc5ede478b6fb58a124863af50cb301056d2adb581c267b0a5c6cf98c"
+    },
+    {
+      "path": "web/cloudflare/tests/admin.test.mjs",
+      "sha256": "39f4227758951db0f12c084c7207a6e89821f33d2b124caafe2dc5c62db53d6c"
+    },
+    {
+      "path": "web/cloudflare/tests/ads-account-summary.test.mjs",
+      "sha256": "3ed0e1a0070d8373ec9f643420519911ae7350133858bf79ab550e3a3a1517b6"
+    },
+    {
+      "path": "web/cloudflare/tests/ads-calendar.test.mjs",
+      "sha256": "9014986ca19d03fc73a36130f5f9b16d6ada45464d8c9bd8adce5cb40b065837"
+    },
+    {
+      "path": "web/cloudflare/tests/ads-measurement-view.test.mjs",
+      "sha256": "c580c92a31d8725f712217528e5b8bec3a75ca611fa7a7bc92d10b1ed6854a70"
+    },
+    {
+      "path": "web/cloudflare/tests/ads-measurement.test.mjs",
+      "sha256": "898d8cf6a2c88062b767fc968a3f4bdf0af692b4424d55c081db6da5443e7acb"
+    },
+    {
+      "path": "web/cloudflare/tests/ads-period.test.mjs",
+      "sha256": "0ca3851e2704783339e5dde07b212be75ccd9b218983bfee0530df850cfd1d4e"
+    },
+    {
+      "path": "web/cloudflare/tests/ads-presentation.test.mjs",
+      "sha256": "41ed2a14446af808058bd712463638ba35de5cf696cece4fdfa7a50e62adae0e"
+    },
+    {
+      "path": "web/cloudflare/tests/ads-today.test.mjs",
+      "sha256": "9fdc9cad06f9fbf2f5649f0fcea3e636f2bccb1a8374878de537efd4f781194e"
+    },
+    {
+      "path": "web/cloudflare/tests/ads-workspace-view.test.mjs",
+      "sha256": "1eb1cd1041aa9386a2d60fb8acff8730d6070822841dacd42c6c551438bcbca3"
+    },
+    {
+      "path": "web/cloudflare/tests/agent-period-view.test.mjs",
+      "sha256": "32a1556e00d0ef80c0c0746c04e0821dd90866a2000572da80549cf991ae94a8"
+    },
+    {
+      "path": "web/cloudflare/tests/agent-registry.test.mjs",
+      "sha256": "4e82ad55c9e137c5b2289ba5c7e514e61ab044e32ae849b6639db745656e0b6f"
+    },
+    {
+      "path": "web/cloudflare/tests/app-business-period-diagnostic.test.mjs",
+      "sha256": "46ee42457cae88009991f219a310fbb7e6631b3112bf916ecee69ab467adc34c"
+    },
+    {
+      "path": "web/cloudflare/tests/app-external-cash-period.test.mjs",
+      "sha256": "3feedfa4d38aa9741bb1127002cbee0b64974cb43b06c986fd74cc7bacecbb43"
+    },
+    {
+      "path": "web/cloudflare/tests/app-external-cash.test.mjs",
+      "sha256": "2879ea812150ab9e3321c03ada5d375b2079c06020a9fed72880cfb17565086f"
+    },
+    {
+      "path": "web/cloudflare/tests/app-finance-preview.test.mjs",
+      "sha256": "773557e3740b6d1341f17adf6240aeacdbaac2ada36a34a7355faa81ffe8aa11"
+    },
+    {
+      "path": "web/cloudflare/tests/app-finance-sample.test.mjs",
+      "sha256": "447e73a76954c3a8a2eba2508742fb465cfd5838856717a7fd3bb1192e979dd9"
+    },
+    {
+      "path": "web/cloudflare/tests/app-release-discovery-chrome.test.mjs",
+      "sha256": "e9952913fc133b591e2cd8a9fa00ed2ae02996b96fe3bc54c771ab871bc791f9"
+    },
+    {
+      "path": "web/cloudflare/tests/app-release-discovery.test.mjs",
+      "sha256": "836853a4004a5c70e2d6c47c1dbc4114d071e920b1c6cf4508ec8ab123cfb048"
+    },
+    {
+      "path": "web/cloudflare/tests/app-release.test.mjs",
+      "sha256": "f9125541ae13d1bef2af7678957661637b3adc21c599bd9d7d6a3786e8e79532"
+    },
+    {
+      "path": "web/cloudflare/tests/automation-workspace.test.mjs",
+      "sha256": "1ef573cb8a2fc8635d4ad7408bfa742de7e5ec96a83fab2c22b542713eb56732"
+    },
+    {
+      "path": "web/cloudflare/tests/background-app.test.mjs",
+      "sha256": "d9c234b2cb91579f4da26da12d429895ed02a369645dd56e65af23c59293866a"
+    },
+    {
+      "path": "web/cloudflare/tests/background-collection-diagnostics.test.mjs",
+      "sha256": "32c65ff21acb601f969e592aa558c9d53e24d2e55c7784e6b2487518715315e1"
+    },
+    {
+      "path": "web/cloudflare/tests/bank-reconciliation-ui.test.mjs",
+      "sha256": "c1fc9fd8f1fed4fcf80dbd78a7680187afd6ccd4b254499bba9873acf2568a2e"
+    },
+    {
+      "path": "web/cloudflare/tests/browser-assets.test.mjs",
+      "sha256": "453a7f32b5245614a60aec1688ac9a68cedf155855b568c2c43f49143e02b18d"
+    },
+    {
+      "path": "web/cloudflare/tests/browser-owner-chrome.test.mjs",
+      "sha256": "f20d2fdca4e1638e2a3ec9edf857825feb3eb2e91a0873a9972fb938c95dc223"
+    },
+    {
+      "path": "web/cloudflare/tests/bundled-client.test.mjs",
+      "sha256": "a0143336c148600ddffa367c1540c5982ef553961b475968f9b1435efcbb4687"
+    },
+    {
+      "path": "web/cloudflare/tests/business-adjusted-balance.test.mjs",
+      "sha256": "51c5c2e7bd0bad154fbc73f71166083c56c1ccc7022e76db49d8e0ae46e0ec35"
+    },
+    {
+      "path": "web/cloudflare/tests/business-checkpoint-compiled.test.mjs",
+      "sha256": "ab8bb0b526edd40a5f98c2f355cee4e405a58688d3352f1e181e5be563df342f"
+    },
+    {
+      "path": "web/cloudflare/tests/business-checkpoint-routes.test.mjs",
+      "sha256": "f07de310b500a1b7e3c0a9d7f2a541c69918911f96b918a359a8fb041e769e27"
+    },
+    {
+      "path": "web/cloudflare/tests/business-checkpoint.test.mjs",
+      "sha256": "79eef3400f5ff8e0524c166a71e7947a094cef95e8b1dc66824b955c70a9677b"
+    },
+    {
+      "path": "web/cloudflare/tests/business-collection-boundary-compiled.test.mjs",
+      "sha256": "c77c71557811edb485a5624a616999a460e996199716d6432562304872347652"
+    },
+    {
+      "path": "web/cloudflare/tests/business-collection-failures.test.mjs",
+      "sha256": "8c6b6dd946047d7f3d4b60bf479c0b33b11f68d9ab5822302aeb4ca58606802c"
+    },
+    {
+      "path": "web/cloudflare/tests/business-collection-integration.test.mjs",
+      "sha256": "30bca9a1ab93ecbca62e14b8f541290485290ded11d3fb8803a33cc9842c6dcf"
+    },
+    {
+      "path": "web/cloudflare/tests/business-collection-state.test.mjs",
+      "sha256": "6a02f79c35f287d8ebc7dcb34d64087a63934f1461496b1b7c17c86b362e369d"
+    },
+    {
+      "path": "web/cloudflare/tests/business-cost-diagnostics-evidence-v2.test.mjs",
+      "sha256": "d6852e1a42926d269e025cc6f190c5e2da36c69a6e97e40404a5f67dfb5dcb13"
+    },
+    {
+      "path": "web/cloudflare/tests/business-cost-diagnostics-evidence-v3.test.mjs",
+      "sha256": "c0a8a40ef767743ae942f22f9ef1aa08328ad6b5896b02ead35a5d54f2135f76"
+    },
+    {
+      "path": "web/cloudflare/tests/business-cost-diagnostics-evidence.test.mjs",
+      "sha256": "19fd261a12f086c89c8fc89c6ba65cb0691706a6c4d45dcb230fb452c27fe93b"
+    },
+    {
+      "path": "web/cloudflare/tests/business-cost-diagnostics-snapshot-race.test.mjs",
+      "sha256": "5843798e26cbe64725bc762badc94e37fc95d36405b47e01c6725719fc6f0194"
+    },
+    {
+      "path": "web/cloudflare/tests/business-cost-diagnostics-ui-compiled.test.mjs",
+      "sha256": "44adb4e2b8642d3e725ea1043b06360ba0988abddc8f11d901458ecfd912ac36"
+    },
+    {
+      "path": "web/cloudflare/tests/business-cost-diagnostics-ui-v3.test.mjs",
+      "sha256": "5a78999ecf07c944df4973988b5ec1db1d18bbe12a434bff1d05d6d4dcd09b20"
+    },
+    {
+      "path": "web/cloudflare/tests/business-cost-diagnostics.test.mjs",
+      "sha256": "523ec71e12cff51399bc2fb3096e07eab10783227eac07986d4272f91b65d457"
+    },
+    {
+      "path": "web/cloudflare/tests/business-cost-recovery-routes.test.mjs",
+      "sha256": "31c4f8744e90925e1c3ec6d5cec97377c3fdf2e20f803d0d5091276a4d77447b"
+    },
+    {
+      "path": "web/cloudflare/tests/business-daily-compiled.test.mjs",
+      "sha256": "535812d9323a624229a50d942da31081ed3ba1c6d004457da305bdcd52a3f43d"
+    },
+    {
+      "path": "web/cloudflare/tests/business-daily-integration.test.mjs",
+      "sha256": "77e261b14adcbb2cb4d53de077fbb165f7d7893f9574a9988856fea332239bd1"
+    },
+    {
+      "path": "web/cloudflare/tests/business-daily-summary.test.mjs",
+      "sha256": "0dc672191a15a743f3993e41323dc240384e8d23c60af94210be8583c022f338"
+    },
+    {
+      "path": "web/cloudflare/tests/business-day-ui.test.mjs",
+      "sha256": "272951eed844de8bbc921fe1b71684a7a93b8eea895459cf3e2db53010d143af"
+    },
+    {
+      "path": "web/cloudflare/tests/business-escrow-release-coverage.test.mjs",
+      "sha256": "b2800e0ebf46815a21d9b58bc0606697d923aef4c3eac1153aee66bd6c5578e9"
+    },
+    {
+      "path": "web/cloudflare/tests/business-escrow-releases-compiled.test.mjs",
+      "sha256": "7d921ece90f8fe1d6306f7baea1f8e3281b0c880f89e8296d64a8936c5810c34"
+    },
+    {
+      "path": "web/cloudflare/tests/business-escrow-releases.test.mjs",
+      "sha256": "794958340b6fdd9d40c5288b21bf6e5bdd94340882b3a90e8dbd55cf7c145c71"
+    },
+    {
+      "path": "web/cloudflare/tests/business-financial-closeout.test.mjs",
+      "sha256": "3af13970dc9ab36f1d7521eb7b3bbce74c9a5b0cb9758c68d8ea460b39987f20"
+    },
+    {
+      "path": "web/cloudflare/tests/business-historical-returns.test.mjs",
+      "sha256": "c9db4ccdaaacba72b016b6a24603914cc050b40494814b81e80feebe9fba03cd"
+    },
+    {
+      "path": "web/cloudflare/tests/business-history-cutoff-recovery.test.mjs",
+      "sha256": "72ae76ceb66f03ef4fd7b2f0e28717b06b86b95be6562cb4955f018203ef7f84"
+    },
+    {
+      "path": "web/cloudflare/tests/business-history-sync.test.mjs",
+      "sha256": "19a4d90dac50f487ddd6b2d4747c62a9f27852acd978a8def0df4f765d5446e8"
+    },
+    {
+      "path": "web/cloudflare/tests/business-income-detail.test.mjs",
+      "sha256": "9bab7aec03ef4428bf473ae5656f67d31382b1043c671aa5164c3afa2a0cbf0b"
+    },
+    {
+      "path": "web/cloudflare/tests/business-income-overview.test.mjs",
+      "sha256": "cedde2059ce5fe403d686bddb8805901f2e5ad8bbd89da681b9287242e1b17df"
+    },
+    {
+      "path": "web/cloudflare/tests/business-month-ads-history.test.mjs",
+      "sha256": "f2bbbad2c49a915d94b4ecb7a406729a1351503361c7a0a334bf049268aa2f63"
+    },
+    {
+      "path": "web/cloudflare/tests/business-month-cost-performance-compiled.test.mjs",
+      "sha256": "587cd321e1139147443bebce97ca64e21c3e0fe44ee2c9379226a7e69aed8b86"
+    },
+    {
+      "path": "web/cloudflare/tests/business-month-expense-schedule.test.mjs",
+      "sha256": "11429885c55108d63bda45c4151b412f61b4de61b9de350537d588d91c8fd542"
+    },
+    {
+      "path": "web/cloudflare/tests/business-month-financial-summary.test.mjs",
+      "sha256": "0b93a60e232f2eccec0035a38652039f66244a677412118329e46c88d9c45a87"
+    },
+    {
+      "path": "web/cloudflare/tests/business-month-products.test.mjs",
+      "sha256": "9ed4eb740cc50d450dd61fbc7189731f3fbefb93d719feed106564db3be9bfbb"
+    },
+    {
+      "path": "web/cloudflare/tests/business-month-projection-compiled.test.mjs",
+      "sha256": "266ff3f9961ce96df41b98f66dc9693e43bbe82f942b461bdc69cab58feee605"
+    },
+    {
+      "path": "web/cloudflare/tests/business-month-publication.test.mjs",
+      "sha256": "3a59e819eea58e2c6dcd7a23971cbee8ab57e9280eabaf8a4573d6799cf83b3d"
+    },
+    {
+      "path": "web/cloudflare/tests/business-month-routes.test.mjs",
+      "sha256": "20c82e5ff8fab55ec6bb09d57a63d3cd676fe16f2eac67ffc9cab833872d718f"
+    },
+    {
+      "path": "web/cloudflare/tests/business-month-storage.test.mjs",
+      "sha256": "c6421fce0d1dfa7933de90ad8b1f72213853065927197ba75016f7844b953c4c"
+    },
+    {
+      "path": "web/cloudflare/tests/business-month-ui.test.mjs",
+      "sha256": "64ea4771cea9915987e7ff9e2d957010a110675ba8252b72fbc82199fdf4bd4e"
+    },
+    {
+      "path": "web/cloudflare/tests/business-month-variant-view.test.mjs",
+      "sha256": "3bd0fd488ed7ad94967fa65324e1a4ff10c88d9099b67960d4dfde834d525937"
+    },
+    {
+      "path": "web/cloudflare/tests/business-month-view-routes.test.mjs",
+      "sha256": "98f77f10c491a698480cc7a5c94a64c8a3424756ab059747da138bbac184beb9"
+    },
+    {
+      "path": "web/cloudflare/tests/business-month-view-state.test.mjs",
+      "sha256": "d6deea8526c1e34cffa976a12a31dfbcf7dc07aa982ebdd04adb94eaa7d596f0"
+    },
+    {
+      "path": "web/cloudflare/tests/business-month-workspace-ui.test.mjs",
+      "sha256": "0a6ae8fdd4138a91f54dd27bcb6c84fcdabe91726a4a9fb115523af5a32ea480"
+    },
+    {
+      "path": "web/cloudflare/tests/business-month.test.mjs",
+      "sha256": "779370347536457f8caed31beccce43dea2b94f83b4639fc9ee3adc3502087c6"
+    },
+    {
+      "path": "web/cloudflare/tests/business-original-items.test.mjs",
+      "sha256": "5f6bef4e497e83ead4a8ea355a1ac7e5682eff7485c8e9225c46d1e3b0acf580"
+    },
+    {
+      "path": "web/cloudflare/tests/business-pending-income-scan.test.mjs",
+      "sha256": "3aee390fae74bf8830e95f3081bbd2211e94fc29712a603ae1cd334a37b79caf"
+    },
+    {
+      "path": "web/cloudflare/tests/business-reconciliation-compiled.test.mjs",
+      "sha256": "f61f4cceee09432173e07b628bc6748b7915913f50ccd721af52ce2c19e0fa31"
+    },
+    {
+      "path": "web/cloudflare/tests/business-reconciliation-publication-guard.test.mjs",
+      "sha256": "3e25892ceba52fdaf5acb859d2ac32df18abad240828d709fbe4046119856366"
+    },
+    {
+      "path": "web/cloudflare/tests/business-reconciliation-ui.test.mjs",
+      "sha256": "0b861d9094bf5a90c8f42a4df89ef834b68130818c557bb4ee7b1f382a558934"
+    },
+    {
+      "path": "web/cloudflare/tests/business-reconciliation.test.mjs",
+      "sha256": "6689c81f1de0cd9105e5e3badf76bc59b26bbf77212b5d4431f54a816fe2c4e8"
+    },
+    {
+      "path": "web/cloudflare/tests/business-recorded-balance.test.mjs",
+      "sha256": "7edbf060d1651311dfc64ac2ebabf647cf99bf0bdb3c67ff0f44eee2e329cb2e"
+    },
+    {
+      "path": "web/cloudflare/tests/business-review-compiled.test.mjs",
+      "sha256": "34a1d6cd26643eebf36c92d6b36d9c7b3f05952390e830667365f58b478b8f73"
+    },
+    {
+      "path": "web/cloudflare/tests/business-sync-rollover-compiled.test.mjs",
+      "sha256": "3bb7983d1b4a11b3fd9c3c4ec67b73ba14a9aad870216d54c4c339147bb18673"
+    },
+    {
+      "path": "web/cloudflare/tests/business-sync-rollover.test.mjs",
+      "sha256": "b9054c7aed6ad926beceb88c340f8f82805cb54c5d72ce19a7bb788617f980b9"
+    },
+    {
+      "path": "web/cloudflare/tests/business-sync.test.mjs",
+      "sha256": "96fca87931e1dac1db3a538d383d2934012e635a7a983581f1382c33651afb15"
+    },
+    {
+      "path": "web/cloudflare/tests/business-tax-policy-routes.test.mjs",
+      "sha256": "4f7b2d78459052d70eab7b847492a38153cc000bb17b974d43ef99875ec911c4"
+    },
+    {
+      "path": "web/cloudflare/tests/business-tax-policy.test.mjs",
+      "sha256": "672ec1cea51622af5e50cc1559dd2aa2a5a3772a87eda96009ef3150a4596644"
+    },
+    {
+      "path": "web/cloudflare/tests/business-variant-attribution.test.mjs",
+      "sha256": "eeebfd85092e4b6f5ab9ca8734f15c7b70a284381d611bc2b465ecb309777c52"
+    },
+    {
+      "path": "web/cloudflare/tests/catalog-classification-client.test.mjs",
+      "sha256": "64ea3e1ce596652f85d080399764c445b12e1b98b67bb32ccc35235597ada8cc"
+    },
+    {
+      "path": "web/cloudflare/tests/catalog-classification-compiled.test.mjs",
+      "sha256": "69959e6a498403eb7c77fe39d317db95ddc5eeb6e89c166b63ff84d39d8140ad"
+    },
+    {
+      "path": "web/cloudflare/tests/catalog-classification-routes.test.mjs",
+      "sha256": "0abea0ca61c2e1a6e157e105637a01bdcb4f1162f24f4a78c76641eba620b8cb"
+    },
+    {
+      "path": "web/cloudflare/tests/catalog-classification.test.mjs",
+      "sha256": "818ef533c7746af33a08a0ce05372057cdbaca01b7546ec52ac52d6638ba942a"
+    },
+    {
+      "path": "web/cloudflare/tests/catalog-cost-engine.test.mjs",
+      "sha256": "7f28d99b8352165f60657ed82cda48d6db29ad9cacb116033e1b325b86e06125"
+    },
+    {
+      "path": "web/cloudflare/tests/child-cost-client.test.mjs",
+      "sha256": "73644fd3e8a1167821c034ebf544f5e07668317ec6b6d46d096332fe125abc1f"
+    },
+    {
+      "path": "web/cloudflare/tests/child-cost-price-change.test.mjs",
+      "sha256": "bed42a546505ebd692e8d5c65d9dc2abfb9eb20235c257c21708ea2d302a16db"
+    },
+    {
+      "path": "web/cloudflare/tests/chrome-debug-port.test.mjs",
+      "sha256": "630dc15c390309775c644a9ccc2ecd606b94d3d25fe7ee8be4657518cf994f47"
+    },
+    {
+      "path": "web/cloudflare/tests/commercial-account-gateway.test.mjs",
+      "sha256": "f8684b6c2948dca084a4670e557ae990e2e5cdefe569034a9b691918cd3416c0"
+    },
+    {
+      "path": "web/cloudflare/tests/commercial-account-view-chrome.test.mjs",
+      "sha256": "c818856782e6913d7761234121a3f08f614326618a8f41e99d5f6089e45ddfcb"
+    },
+    {
+      "path": "web/cloudflare/tests/commercial-account-view.test.mjs",
+      "sha256": "8e7e8b83f99b1a47b77913eefd46c3fa7157b564953fca4b1bb8e03fc673a79e"
+    },
+    {
+      "path": "web/cloudflare/tests/commercial-admin-runtime.test.mjs",
+      "sha256": "91e7073fadbd75070cd5e931aa5b22ed1b3c551bb32abd4d5eea7d0be9d0d785"
+    },
+    {
+      "path": "web/cloudflare/tests/commercial-route-policy.test.mjs",
+      "sha256": "cf35e5148fb2cf9a9adc3e7779364ec519b54410c1343de56d907c4715162e00"
+    },
+    {
+      "path": "web/cloudflare/tests/commercial-tenant-context.test.mjs",
+      "sha256": "bad3ec5bc1c803eb638012435141b70821df6b9504232b8afee0f20c6f8c5ce0"
+    },
+    {
+      "path": "web/cloudflare/tests/commercial-workspace-client.test.mjs",
+      "sha256": "35e28d6c994698ac15b30605b8a51f02896d17e2f6ede45177fe04db36584f16"
+    },
+    {
+      "path": "web/cloudflare/tests/commercial-workspace-idb-chrome.test.mjs",
+      "sha256": "252bd83dc0004a4d70c6f585fee67cb98cc4dee705bbc20c3eb0cfc5f5ba7f2a"
+    },
+    {
+      "path": "web/cloudflare/tests/commercial-workspace-setup.test.mjs",
+      "sha256": "6386af7cf5e655f54366b599f4c0e24e94a5d586e50b558aafa74eec2e0a36ec"
+    },
+    {
+      "path": "web/cloudflare/tests/composition-cost-ui-compiled.test.mjs",
+      "sha256": "19aa06d8aa5943b6252804cc87f18353928d1db9f2d1db0e840ea564d39c9213"
+    },
+    {
+      "path": "web/cloudflare/tests/cost-rule-learning-compiled.test.mjs",
+      "sha256": "d9b31cbbd840284d2e9ed6d580dfcd9edc4769a8229f7c2a09fa45cd513cd1ec"
+    },
+    {
+      "path": "web/cloudflare/tests/cost-rule-learning-integration.test.mjs",
+      "sha256": "33f1f167cf8d4aebf588235647d5bcc9b913cc12889846588e156a2cddd1900a"
+    },
+    {
+      "path": "web/cloudflare/tests/cost-rule-learning.test.mjs",
+      "sha256": "ed78ce0497a4e787fec58043ea1ccdd2bdb0d008e23793da1f94e2e636518708"
+    },
+    {
+      "path": "web/cloudflare/tests/cost-rules-routes.test.mjs",
+      "sha256": "fc90369803336650db33a7e6ec9afcd75d7fd049f8476c106ede89cd7d68b25d"
+    },
+    {
+      "path": "web/cloudflare/tests/cost-rules-ui.test.mjs",
+      "sha256": "da39356a99fde8bc5b81d2692bfa0f17a7df937586083bcee4271cd5fe8cafb0"
+    },
+    {
+      "path": "web/cloudflare/tests/cost-rules.test.mjs",
+      "sha256": "f44472d49dc531fcb4b1095dd9fd388e45f5785982092bec1b6267fe2e7b99e5"
+    },
+    {
+      "path": "web/cloudflare/tests/custom-cost-admin.test.mjs",
+      "sha256": "d65c5a3cda97326cdbb1976664cb9e920dee07fe885401b7aa6c6683d30b95af"
+    },
+    {
+      "path": "web/cloudflare/tests/custom-cost-ui.test.mjs",
+      "sha256": "fd2427d33b1b8e4f3325e1901ac38c1db02695cc0b4d9fd918739d11b2373500"
+    },
+    {
+      "path": "web/cloudflare/tests/custom-production-costs.test.mjs",
+      "sha256": "3acb4984fb0b7c009408f1c1aee389ffd95e08ff16bc1ec21136fd5be6eaf2a5"
+    },
+    {
+      "path": "web/cloudflare/tests/daily-profit-presentation.test.mjs",
+      "sha256": "bfb000e2086e197835abc489d56f5fc5278fa2e6a7f8341a3ae12f8417c48a94"
+    },
+    {
+      "path": "web/cloudflare/tests/daily-result-clarity-chrome.test.mjs",
+      "sha256": "3501f3a803f318823bec555e2bb0c39ad874429ea9896bc8d32b144f138c9bfb"
+    },
+    {
+      "path": "web/cloudflare/tests/daily-sales-client.test.mjs",
+      "sha256": "4dc5c517be1e49190c7658b4f662839a61aed4704ed36d495ed13bcd7ffe4746"
+    },
+    {
+      "path": "web/cloudflare/tests/daily-shop-orders.test.mjs",
+      "sha256": "9fe69c6d2b9b5c443a77ea32315ef3b5b35877986df7a6811a2c9a8f441edab7"
+    },
+    {
+      "path": "web/cloudflare/tests/dtf-layout.test.mjs",
+      "sha256": "a2b0213c583435c623c7f5562f715a2670fcd48ff8bfca0d9a7881e1a75fba12"
+    },
+    {
+      "path": "web/cloudflare/tests/dtf-ui.test.mjs",
+      "sha256": "1e2ed284bfc465872296947e73a2774e59118d195c8f76d94e2b33ef6bbec58d"
+    },
+    {
+      "path": "web/cloudflare/tests/editable-costs-chrome.test.mjs",
+      "sha256": "75ab0e906300db758529e8afee53fa6e997a1a05d85412127314649ddc6108a1"
+    },
+    {
+      "path": "web/cloudflare/tests/escrow-releases-ui.test.mjs",
+      "sha256": "6168caa47b1b876c64743f3c7e9807452168039dac86ce5ae6cd0ed8c24d9832"
+    },
+    {
+      "path": "web/cloudflare/tests/expense-ledger-compiled.test.mjs",
+      "sha256": "cdccbc15e8b4fbfbe15036dc57f1d236633bdbc47e8c55b3f24c0d532370dfc9"
+    },
+    {
+      "path": "web/cloudflare/tests/expense-ledger-consumers.test.mjs",
+      "sha256": "bab4c66f980d34b5399a08d6da6ea0f960c00c750ffa828347f6165713b007ff"
+    },
+    {
+      "path": "web/cloudflare/tests/expense-ledger-routes.test.mjs",
+      "sha256": "f0be6a2b55623ff65ec395214e188c30c6417f04094ed6917ee2685811972853"
+    },
+    {
+      "path": "web/cloudflare/tests/expense-ledger-ui.test.mjs",
+      "sha256": "645de0b69c02b1f003a2091caebef02a42ee0db2a6060c879a70330e8a4de3ea"
+    },
+    {
+      "path": "web/cloudflare/tests/expense-ledger.test.mjs",
+      "sha256": "15b04c5078146778fba182c231d99505bb5f7258cf8589a8c79e74a058d19e49"
+    },
+    {
+      "path": "web/cloudflare/tests/expense-schedule.test.mjs",
+      "sha256": "908bd09fde42fcc4ff34c5fc78134ac296beb55cd362e68870b3b380d9092db6"
+    },
+    {
+      "path": "web/cloudflare/tests/external-cash-owner.test.mjs",
+      "sha256": "4e0f8f60ed4bc4342be8795925ce35c2738403c1787510ef64c6d5fb8c4d463e"
+    },
+    {
+      "path": "web/cloudflare/tests/financial-audit-orchestration.test.mjs",
+      "sha256": "66b673b98337a8a6a9910269af3cb43cae7fc33c86e841bf5802018c283c9b31"
+    },
+    {
+      "path": "web/cloudflare/tests/hermes-closeout-evidence.test.mjs",
+      "sha256": "f35a8f342976561a75ece8f918e32b8251ccd49e45e3f5881545a33a2c43b322"
+    },
+    {
+      "path": "web/cloudflare/tests/hermes-financial-context-routes.test.mjs",
+      "sha256": "98ae603410d32973d0e4c4659ae6d23bfca3db2cab6eeff07346ffaa1b9de4e1"
+    },
+    {
+      "path": "web/cloudflare/tests/hermes-financial-context-ui.test.mjs",
+      "sha256": "39cabe0f67a04a25258fc6c9fc687a02a2430d28cf5c54bd427c53b4ba005f08"
+    },
+    {
+      "path": "web/cloudflare/tests/hermes-financial-context.test.mjs",
+      "sha256": "2c9613e0607fdc1ec66898f44031b1fe61acddccff5d22b7218aa0338456bc98"
+    },
+    {
+      "path": "web/cloudflare/tests/hermes-learning-evidence.test.mjs",
+      "sha256": "758b416e82233225c134ee82b055cd07db7fe0e6d4393db6e3c08606978376e2"
+    },
+    {
+      "path": "web/cloudflare/tests/historical-child-cost-compiled.test.mjs",
+      "sha256": "39950a24a2fba7c9f478235f39a3e20bf324867363672d66b5304412f05134d2"
+    },
+    {
+      "path": "web/cloudflare/tests/historical-cost-evidence.test.mjs",
+      "sha256": "3f2a01636eba635030525b565b5dd439087b720ed02cf041a1191e9fc34f0803"
+    },
+    {
+      "path": "web/cloudflare/tests/historical-cost-orchestration.test.mjs",
+      "sha256": "0ae6fbbfd629e150a374e2cd51ac340863c788230d38c12329317bbb3ea85bd7"
+    },
+    {
+      "path": "web/cloudflare/tests/historical-cost-pair-diagnostics.test.mjs",
+      "sha256": "13224005df905aae511920dfa36d9d98d8ec704d9ea74dcc72ceca6d44704061"
+    },
+    {
+      "path": "web/cloudflare/tests/historical-cost-recovery-compiled.test.mjs",
+      "sha256": "aa8d02df27073e42adaa93e3cc8dc9f97e7835e24b65abbb5de383e92d136f12"
+    },
+    {
+      "path": "web/cloudflare/tests/historical-cost-semantic-consensus.test.mjs",
+      "sha256": "601014691fe6b1dbb0428f70de9ca2832a8a444bd1eb7ff9b57f5b2236950a47"
+    },
+    {
+      "path": "web/cloudflare/tests/historical-current-cost-reference.test.mjs",
+      "sha256": "9e01cbab3ea9d57aec2e08cce70cdda21939226f41f46c795f7adafce27e2ba6"
+    },
+    {
+      "path": "web/cloudflare/tests/historical-deleted-child-cost.test.mjs",
+      "sha256": "cf990aa57054a21d19ced3af210b39369e207737117510d7dec64218a3b8252f"
+    },
+    {
+      "path": "web/cloudflare/tests/historical-returns-orchestration.test.mjs",
+      "sha256": "f20fa74d5432d4d087c4a7c078acb5f905238218714d88918392094c0885a101"
+    },
+    {
+      "path": "web/cloudflare/tests/incurred-production-adversarial.test.mjs",
+      "sha256": "c48898135604137f79992863138be2ebc297fe64a991e9fa9c8e0cbb168239cc"
+    },
+    {
+      "path": "web/cloudflare/tests/incurred-production-analytics.test.mjs",
+      "sha256": "d47ae2cfbc2f98820392050ffa7a39e90a87b5d398284bf61ba59d23b206d9f9"
+    },
+    {
+      "path": "web/cloudflare/tests/incurred-production-chrome.test.mjs",
+      "sha256": "7f9f3a2847859f1d7689f314132c2c53b1f8fdb00b68658e205de7292a7ee8ae"
+    },
+    {
+      "path": "web/cloudflare/tests/incurred-production-client.test.mjs",
+      "sha256": "f0bd21f567b4a9942e9ddcd4978be4adafc2c46056bfd0994f93f532fc99f520"
+    },
+    {
+      "path": "web/cloudflare/tests/incurred-production-daily-client.test.mjs",
+      "sha256": "6030fa5a5783dbe82e40fcbb869934a903cb90a731c228fc039e97eae67616c4"
+    },
+    {
+      "path": "web/cloudflare/tests/incurred-production-range-chrome.test.mjs",
+      "sha256": "703238013e170cb8339f20df4209676027d81158b7f65e93d7ef67badbb8db1f"
+    },
+    {
+      "path": "web/cloudflare/tests/incurred-production-range.test.mjs",
+      "sha256": "9402fbfc457ea250cfe751f3f9a0b0a226b1e068cb9b8e5917b75a50e108875d"
+    },
+    {
+      "path": "web/cloudflare/tests/incurred-production-workspace.test.mjs",
+      "sha256": "4c3609d914fd9f4a308fe2b22283c5f31a0d25fafbd97a1afba75dbcb1eed3c6"
+    },
+    {
+      "path": "web/cloudflare/tests/incurred-production.test.mjs",
+      "sha256": "00ccb6c257384b162c5ce2e8aeff7c0c84bc70df92bc0779a9ce134151460614"
+    },
+    {
+      "path": "web/cloudflare/tests/m2-closeout-navigation-chrome.test.mjs",
+      "sha256": "1e033853578f14afe9cf0723fecc8b9357fc997f52a0d4ca5a585d5b5b93a226"
+    },
+    {
+      "path": "web/cloudflare/tests/m2-financial-closeout-compiled.test.mjs",
+      "sha256": "44409368f0b3a19c6f04a20d689819a96a3a14e884f5eb94167377128f5269ca"
+    },
+    {
+      "path": "web/cloudflare/tests/m2-historical-release-calendars-compiled.test.mjs",
+      "sha256": "149d950ddd92a005e9b5c31022f21e63fbe960680028a7506d72991cb18fd82f"
+    },
+    {
+      "path": "web/cloudflare/tests/m2-historical-release-calendars.test.mjs",
+      "sha256": "13beb15d8b7e72ea4ae53125e1bae190df4b60c3edfc89512ce999ea8b4c382f"
+    },
+    {
+      "path": "web/cloudflare/tests/m2-history-fairness-compiled.test.mjs",
+      "sha256": "a9abc73dfff72eab44ee471ee8beb77385442baae76ff8677b29d074c0ad29b3"
+    },
+    {
+      "path": "web/cloudflare/tests/m2-history-fairness.test.mjs",
+      "sha256": "5f4e3f513dd035dccfeee3a461ef09cf98b911c95612527519ca036de1714d9b"
+    },
+    {
+      "path": "web/cloudflare/tests/m2-income-detail-diagnostic-compiled.test.mjs",
+      "sha256": "0a45a97a63788b9da8a130e5ecec177aa8f633788ee00e899d80dc2b21093191"
+    },
+    {
+      "path": "web/cloudflare/tests/m2-pending-pagination-compiled.test.mjs",
+      "sha256": "c2b6ad13729d92d0105c1b8fa1c6a3742b1b1167c51db60e2ae52dddf0394400"
+    },
+    {
+      "path": "web/cloudflare/tests/m2-previous-month-returns-compiled.test.mjs",
+      "sha256": "4d69d3688663e820f09ee8b503b01099e6b4724c458ccdd626f0b404da5c4234"
+    },
+    {
+      "path": "web/cloudflare/tests/m2-release-bootstrap-compiled.test.mjs",
+      "sha256": "3ad177e71431c17fc03f9440aaab8689a50df37b46fd9e99adee75482fb5a29c"
+    },
+    {
+      "path": "web/cloudflare/tests/m2-release-bootstrap.test.mjs",
+      "sha256": "9f2cfa7d05ed8d9de611e52543eb208e3ee292e4bedbadc4c3b4420880955ae5"
+    },
+    {
+      "path": "web/cloudflare/tests/m2-release-source-recovery-compiled.test.mjs",
+      "sha256": "8cd63d7b87a6a34a8c4123d0d75489b5c729fd64d6318e8743d9aa671a99c390"
+    },
+    {
+      "path": "web/cloudflare/tests/m2-release-source-recovery.test.mjs",
+      "sha256": "6fed92c7f193253a13a1000c97acca9af79e61589538206eac968cd7228e3b30"
+    },
+    {
+      "path": "web/cloudflare/tests/m2-release-tracker-chrome.test.mjs",
+      "sha256": "0e89e3ed7b75daedbaab2ce4cd2cd080e53e182d6b0c7b0d2aad3329e09acfa6"
+    },
+    {
+      "path": "web/cloudflare/tests/m2-release-tracker-compiled.test.mjs",
+      "sha256": "e0fa85902446509cf5201db34905ebcaf41ea8047a2326c4d0360623624cb7dd"
+    },
+    {
+      "path": "web/cloudflare/tests/m2-returns-insights-chrome.test.mjs",
+      "sha256": "f0bb12447264c954bbb053be31e80a4e63d536bb0e8f82a142ed23cff19bb992"
+    },
+    {
+      "path": "web/cloudflare/tests/mission-agents-hub-chrome.test.mjs",
+      "sha256": "c5e6cc113745fab8e272e5aa56bb3e502fbd682430601b4b57c9e472fb1c2794"
+    },
+    {
+      "path": "web/cloudflare/tests/mission-agents-hub-rework.test.mjs",
+      "sha256": "ccf99d3ddf7663696939061ddd350ab5e8d427c8066406802d181db25cbed282"
+    },
+    {
+      "path": "web/cloudflare/tests/mission-control.test.mjs",
+      "sha256": "f521da60d7cdb1a7308494c2ad057a57f4f184c5557b9e9cc2b975baea258661"
+    },
+    {
+      "path": "web/cloudflare/tests/mission-roas-performance-chrome.test.mjs",
+      "sha256": "4deee960c5de6b63f8e4b96aebc502958d16baf4cf17a8d37dd9a9e9ee21b5f7"
+    },
+    {
+      "path": "web/cloudflare/tests/mission-roas-performance.test.mjs",
+      "sha256": "6e155536635b3969e1eed839751abdb9d322901860db6f2dd48c7aba51110f74"
+    },
+    {
+      "path": "web/cloudflare/tests/mission-trends.test.mjs",
+      "sha256": "75f13b75b77ba3ed1bf28e2a5ed87b91a24e52a078e4c715648c6a9b49e6920e"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-agent-art.test.mjs",
+      "sha256": "7746d13f45a4b3e73fe3fb7f6688ac76b0583593f4ff208fa0f7bd12ae7fbe3a"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-agent-learning-compiled.test.mjs",
+      "sha256": "658807da1d70f5afd3ebe0eafc3b95859713b48d1cdc788a54c35d31784f9012"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-agent-learning-hermes-compiled.test.mjs",
+      "sha256": "9211f3c951cf0e0bc7bea70094ba37ba100aee14ad5ecf20f36d64217017c445"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-agent-learning-view.test.mjs",
+      "sha256": "371321e8711fb803c34c682cf3ebcf25a7b75b16aab9cefd8e2a0f21665868db"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-agent-learning.test.mjs",
+      "sha256": "eb3a14159011c0ffb464500c741f9f41204075a619aa85f66714ccd0b71b3b0f"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-agent-workspace-layout.test.mjs",
+      "sha256": "2f306f1c272d85f606bee5100600ad5934c68d49807e8cfe65dc7b95bd5e35d4"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-ai-sales-affiliates.test.mjs",
+      "sha256": "13e24675e77067f3d0a7ad755373d282904ff85d0529574f243d5a3394148075"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-ai-sales-catalog.test.mjs",
+      "sha256": "d28e3dc4fdabbd1f0fca02f340631b0121002d6650e62beedc1a5fbb4a4378fd"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-ai-sales-chrome.test.mjs",
+      "sha256": "5f51b7c3e12d115517220e593faa18ecee0cb063a833e8149741c559af34b3e1"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-ai-sales-domain.test.mjs",
+      "sha256": "5e0aae9663b9a612a02956b323984b20b7ff7c1fecf099a48fbac4d3974b322f"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-ai-sales-imports.test.mjs",
+      "sha256": "d21cf7b7b50152bc24e35bd179bf4138538b044fc3015f3fdd72063ca6193b39"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-ai-sales-performance.test.mjs",
+      "sha256": "058f085883356389015fa54d6d1367eb0bf23b86f0772fd9abf3bc1ac2a5c0ca"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-ai-sales-release-gate.test.mjs",
+      "sha256": "3239f1d9e9c0263f9612bb9254c5314db1e438ee903897d13e702fe588003fcb"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-ai-sales-script-adapter.test.mjs",
+      "sha256": "35adcb8f045bc3374243c1540c9f0d576ac32a0492d3b7c1d91256313b1b8a2b"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-ai-sales-view.test.mjs",
+      "sha256": "2273cf8583e19f872cfabb7b9784cdaad70eb742e77a3817d206eca4ac5899a3"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-ai-sales-workspace-chrome.test.mjs",
+      "sha256": "02b75e3877153024af9b68d94522087edaad7f9d25f0fad4b099b84b214e7d13"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-ai-sales-workspace-client.test.mjs",
+      "sha256": "99bf3edff075ec182ccbb295e40b30c808febec805840f501fd7da314b52b5d5"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-ai-sales-workspace-routes.test.mjs",
+      "sha256": "0f57384213b07b4781406ac3f1f9648bf3ff2d94ad3a97454eeb15426abdff01"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-ai-sales-workspace-store.test.mjs",
+      "sha256": "f63e79a96e48180ec73be44a5830876dee6dc9802436525ce379b56841894934"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-approved-all-panels-chrome.test.mjs",
+      "sha256": "72b21049e44b9fe82c2c65eea42ea997400b976b941782259c89939143845aaf"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-approved-design-system.test.mjs",
+      "sha256": "a1d329f9814793ed26469aa30c7918325d98c0e78d94e0533afbabc8069ea5fe"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-chart-adapters.test.mjs",
+      "sha256": "6c11e5e1a854e5a47ce8255c5fa20ca8792a282ce4c1daefc904cc17d5b1538e"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-chart-integration-chrome.test.mjs",
+      "sha256": "e40c1b3454b531bb78b540bc777f555ff336c199ededfca932305570dd8f177c"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-chart-interactions.test.mjs",
+      "sha256": "3d23bc75080620df40db13ca9d27cc5a6b8019f44caa23f3da540ecb14943a07"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-financial-bars.test.mjs",
+      "sha256": "b87369c98986fa5e675659642e324f583ce7e438527735c44ed332782801fead"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-integrated-owner-visual-chrome.test.mjs",
+      "sha256": "24d4e4a4dd5ef9ab1bc5cf49969f5f5b0b5ca2b7906540cce26479c02770be7a"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-listing-factory-batch-media.test.mjs",
+      "sha256": "10ad5e2c1b7e3f91a20de7f5c76b7c42ce052e1486696acd6c3d8d6debe02204"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-listing-factory-chrome.test.mjs",
+      "sha256": "9fa31e55d8a68ef3b0086f6b4c612d1bbe5f0d93f6f4602c55cc0c3b0f7aa73c"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-listing-factory-foundations.test.mjs",
+      "sha256": "b86a19e1ecdcabe38c66203e39759b54853c923fa0b92a84970c7e8009b57033"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-listing-factory-owner-ui.test.mjs",
+      "sha256": "ca274979fb3231fbdd51bdcf4c6f9e315e26270f4c80d288deaf2469da41a984"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-listing-variant-editor.test.mjs",
+      "sha256": "02329359f43aa88166c5904bcba0d05f95a77faa866b44c69c77b3465f025607"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-overview-composition-chrome.test.mjs",
+      "sha256": "9a328c8b3cd8fd38d8a76ec89e061d5de6205b848e80bc0275ba9da8a2700207"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-product-contribution-chrome.test.mjs",
+      "sha256": "afb0c80bb98774dcb7d4bd86b7e1125d6e248db09190843b325b6828c2fcf7f7"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-product-contribution-client.test.mjs",
+      "sha256": "bab03fa28d4fd6be5f456c047b5f11dacb105a659413a945b11779c74fe45512"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-product-contribution.test.mjs",
+      "sha256": "984a10b4d9b0523b6092a5f103baa2f5da2605358c33da234beea5e1335629e5"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-product-intelligence-chrome.test.mjs",
+      "sha256": "c84b85a31e8d67989b1ab16cd016b76381ab437f3e9d4f8af7378fbed4775ba6"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-product-intelligence.test.mjs",
+      "sha256": "85f0f8b334ce1bddde4561ebdddcfbc69dddb2230f636388a66d861ae68f0b8d"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-product-workbench-chrome.test.mjs",
+      "sha256": "6fcc4436b7d11cf7764c3b67ba5753f0ea7fa88830e74621a6548f177cf97128"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-product-workbench-client.test.mjs",
+      "sha256": "2d87c6681eaf030321426264724a5893a529628b6ace162656e408ce7febb33e"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-product-workbench.test.mjs",
+      "sha256": "3a5bc91010548083a82dd99a60f4530a9cca48c6f8669d04b9c14b63d83fb495"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-production-rework-chrome.test.mjs",
+      "sha256": "91c46959238052fb506d8dc979e24ebda126d638442328b89356a09dba3fe229"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-production-rework.test.mjs",
+      "sha256": "ec008b319c4e99d0fccd346114adffafc2c76a02c25b0e530231df84d780d9e5"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-products-workspace-chrome.test.mjs",
+      "sha256": "ca092bf16874fc8a6287fd5040fb713b0fbc433eb3995217a5c72bf534d178de"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-products-workspace-rework.test.mjs",
+      "sha256": "5cf211acf64b288c8dfa00509b79345580aaa6ac3544838d99c88b01ffcfb710"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-returns-insights.test.mjs",
+      "sha256": "e518d038f3b57a4527cad4e5464d3f266136a687ad2fc88108467ccfefd8d88f"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-roadmap-ui.test.mjs",
+      "sha256": "1a3d7366f6de93c43065c25cdb465c6d07b5e0c42b3f746321b9319a955a2296"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-settlement-evidence.test.mjs",
+      "sha256": "8f983c542ba22648057096375bbf7dfbdd68861e25740e65717cf59efb8a532b"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-specialist-charts.test.mjs",
+      "sha256": "ec105490af6e073ae62eeda4492c70e85b142978db447a3319a5bedb0a3d6c41"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-v36-approved-integration-gates.test.mjs",
+      "sha256": "eb624a58df0e4f8eb23fe36423e5c1082d534c0ea07dab3ae2b65fbab96a0706"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-v36-listing-factory-integration.test.mjs",
+      "sha256": "a289a6b705beaef5912b1a4a833652f09f4ace96a5e2d6d1bfbbfdd743a4ac04"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-v36-release-gate.test.mjs",
+      "sha256": "1fdd72fe42f660b1cf1cf5b521277429639ace564133c669ee7308bcce7b0548"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-variant-order-chrome.test.mjs",
+      "sha256": "432d0eb935e843ac01252a80dac2e783f3d5243102787071e14faaed5e8e0c38"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-variant-order-client.test.mjs",
+      "sha256": "e2ef08034044bc573f616ff1b7b95ffccf51c7b41ee0caabd51cec8158c5e8a7"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-variant-order-rolling-compiled.test.mjs",
+      "sha256": "4dc18dff476a059fc337f7582c0eeac23507409b394aa3d35f7389fffb2e81ce"
+    },
+    {
+      "path": "web/cloudflare/tests/mls-verified-charts.test.mjs",
+      "sha256": "396cf80165be4234e244ae09c5c22c06b224b867a87d194e8e8ee4352d758652"
+    },
+    {
+      "path": "web/cloudflare/tests/monthly-net-period-chrome.test.mjs",
+      "sha256": "0777e989900cc612723d40fa8bad20d7a178ffe9366839a39117bbd5408af3e8"
+    },
+    {
+      "path": "web/cloudflare/tests/monthly-profit-presentation-ui.test.mjs",
+      "sha256": "11984dac891fef75b209f34e51aad435c5a596ead2155a2c8707fec6f91b1723"
+    },
+    {
+      "path": "web/cloudflare/tests/monthly-profit-presentation.test.mjs",
+      "sha256": "84e7418e1f458178f9aeec49ca10e70e65ee61dda56712c4b7523bb331ea5729"
+    },
+    {
+      "path": "web/cloudflare/tests/operator-cost-corrections-routes.test.mjs",
+      "sha256": "ea69d9914968fb958e493cc0063f17f2198a6846bc73f646d4db1c746b11f712"
+    },
+    {
+      "path": "web/cloudflare/tests/operator-cost-corrections.test.mjs",
+      "sha256": "f07885e6658347968b19348f3ac2f21f4e02faaa9c0fea5bd4341de4930ab2c8"
+    },
+    {
+      "path": "web/cloudflare/tests/order-items.test.mjs",
+      "sha256": "a1b1c11598782eea801b65ff2398d15a50d614917d0c893dcb0062eef20dd80f"
+    },
+    {
+      "path": "web/cloudflare/tests/order-observations.test.mjs",
+      "sha256": "c3778f79e650b5649c32bde84827fd701e7dd999941e46c2c32a6d54334f40e9"
+    },
+    {
+      "path": "web/cloudflare/tests/order-operations-chrome.test.mjs",
+      "sha256": "87b3fd6ef4d2eeeedd537cab4a4b149bf0186f54dbad05e4a9fdb0a184d02eba"
+    },
+    {
+      "path": "web/cloudflare/tests/order-operations-routes.test.mjs",
+      "sha256": "a8c89c13b83df83e7407016d91e497b7ddd4b1835e46d22aad10e69092f3efa8"
+    },
+    {
+      "path": "web/cloudflare/tests/order-operations-ui.test.mjs",
+      "sha256": "c8996964ae9a6562a866d768b0ff7604650d60fa93e22d0f9db8d17fb329fac3"
+    },
+    {
+      "path": "web/cloudflare/tests/order-operations.test.mjs",
+      "sha256": "191d41169a02826ae61a6dc4a379f454af69034835f48ff82383851e01bba92e"
+    },
+    {
+      "path": "web/cloudflare/tests/orders-diagnostic.test.mjs",
+      "sha256": "6bb4369b2318aaa92c8b074eebf1d4b0cb1550a530faeb45dd0ea8be2d1935ca"
+    },
+    {
+      "path": "web/cloudflare/tests/organized-workspace.test.mjs",
+      "sha256": "d520e9dc6a59536e7aedf9a36ab8ec03bbacf69324081dbec12be612cb4df5e3"
+    },
+    {
+      "path": "web/cloudflare/tests/owner-diagnostics.test.mjs",
+      "sha256": "bb9c3f591decb18fa40b82ea6fda01f70288ac3303dc8e501d9c272faab39ac0"
+    },
+    {
+      "path": "web/cloudflare/tests/pending-income-client-chrome.test.mjs",
+      "sha256": "cc9fae31dfbdc831129b0900da9dfa9a65730d0cb92803105dcdce235c0b68b8"
+    },
+    {
+      "path": "web/cloudflare/tests/pending-income-recovery-fairness.test.mjs",
+      "sha256": "5703353bdb12e4097ead5a33778b4239744a6af4f4fb6b2f32809369745059de"
+    },
+    {
+      "path": "web/cloudflare/tests/pending-income-scan-fairness.test.mjs",
+      "sha256": "b6f50812c97a10ba9519815bd0fbe1df0353f28b645573eb8a78d122bffe5b4a"
+    },
+    {
+      "path": "web/cloudflare/tests/persisted-production-routes.test.mjs",
+      "sha256": "995eca07055572c3b4d220d17df37c881e9adabb5513ddf194dc44adf71c062a"
+    },
+    {
+      "path": "web/cloudflare/tests/physical-returns-adversarial.test.mjs",
+      "sha256": "d9a00eb14842dbe43f34ab2279bc931f2294e72a67494ed4d2187145fd1bfe4f"
+    },
+    {
+      "path": "web/cloudflare/tests/physical-returns-chrome.test.mjs",
+      "sha256": "d592a5203ae6f3f6e81f806015c8ecc0c4d1b3159e252095a469b74cff354b82"
+    },
+    {
+      "path": "web/cloudflare/tests/physical-returns-client.test.mjs",
+      "sha256": "b689af04004931e3e9c1a82fb63aed37588b5412a75096ea892a78a600295639"
+    },
+    {
+      "path": "web/cloudflare/tests/physical-returns-workspace.test.mjs",
+      "sha256": "3771e9b07ddd0f0551f659f2015a34f81021e4aa666060565f132b96231531ae"
+    },
+    {
+      "path": "web/cloudflare/tests/physical-returns.test.mjs",
+      "sha256": "d86bd472783b3ed58a3282f65612eb7850ea459baab5a0791f7f0c604234cb5b"
+    },
+    {
+      "path": "web/cloudflare/tests/product-browser.test.mjs",
+      "sha256": "a532bbd0007853942fedc467bcff531b293517312822916ce6f8e9f75f187eb6"
+    },
+    {
+      "path": "web/cloudflare/tests/product-cost-routing.test.mjs",
+      "sha256": "e53a4e62d1b5a593e0bca2af00f096cbab917b0897dc84efa62870fe5e13d773"
+    },
+    {
+      "path": "web/cloudflare/tests/product-registry.test.mjs",
+      "sha256": "18221dfbe50c66ba2582ed63c90e467ff41d6f9f5a62e493446bad3b084e92b1"
+    },
+    {
+      "path": "web/cloudflare/tests/production-business-view-integration.test.mjs",
+      "sha256": "af65d6ca9eac25eb21aa967721959e3f03b7dfcc5e2e58e66598511356564152"
+    },
+    {
+      "path": "web/cloudflare/tests/production-closing-workspace-chrome.test.mjs",
+      "sha256": "2a966de5c94e7bfa2792ed2467824a4466238d083fe056e02050febf0ca978b4"
+    },
+    {
+      "path": "web/cloudflare/tests/production-confirmation-proposal-chrome.test.mjs",
+      "sha256": "6ec27cbeec6eae9b69dee1f4e9d33acddc7722ea8041a1a68d5d07538a08d160"
+    },
+    {
+      "path": "web/cloudflare/tests/production-confirmation-proposal-client.test.mjs",
+      "sha256": "e420e45fa18c0df626d7dea782ca8cf84be60709e79262fc5ceccc4c916aae6d"
+    },
+    {
+      "path": "web/cloudflare/tests/production-confirmation-proposal-compiled.test.mjs",
+      "sha256": "4cb22f364c0df2380351bc4e214eb022c784e1b8f36165fcdc790683edae0f4e"
+    },
+    {
+      "path": "web/cloudflare/tests/production-confirmation-proposal.test.mjs",
+      "sha256": "ebe70331831b487c6ddfea1bca46a4d4a23b02e3b1f95ee5855908bfc738c3d7"
+    },
+    {
+      "path": "web/cloudflare/tests/production-cost-periods.test.mjs",
+      "sha256": "f1a5c17c0b6927e39ab37287c3e902d26693595515245759256ab0455ab9c41d"
+    },
+    {
+      "path": "web/cloudflare/tests/production-cost-workspace-compiled.test.mjs",
+      "sha256": "80707b664c4f6f3e741a7e4edff17eb5b6bb715dbdcfc34b979c4ad31c1cd610"
+    },
+    {
+      "path": "web/cloudflare/tests/production-cost-workspace-ui.test.mjs",
+      "sha256": "45e3b97fa7d532cc57e5629e1e8f0a1e0aa4c4adc410ec33a4f43fb4abea77a1"
+    },
+    {
+      "path": "web/cloudflare/tests/production-costs.test.mjs",
+      "sha256": "9d9189e4d019fd1e831fd186346c678d23c1ad76bfaba548d333ad1a1e757d41"
+    },
+    {
+      "path": "web/cloudflare/tests/production-coverage-chrome.test.mjs",
+      "sha256": "59448f2b2d1207927fa8eba4320276a78d1f01fe9c6ce3764c45ec1b8e701810"
+    },
+    {
+      "path": "web/cloudflare/tests/production-coverage-client.test.mjs",
+      "sha256": "fdc5bb073134c342510099efae8a3c0e78e2b6fc2c79c5d4d5aa0d9a3b21261f"
+    },
+    {
+      "path": "web/cloudflare/tests/production-coverage-compiled.test.mjs",
+      "sha256": "786b1e6ed9ba57aa7969741743811d2883a953b933edf401d63db5a46d5bc43a"
+    },
+    {
+      "path": "web/cloudflare/tests/production-coverage.test.mjs",
+      "sha256": "52f355b454b3e35eca146d42bd8015ee576d297e33c39693c32a49ee8417b6c1"
+    },
+    {
+      "path": "web/cloudflare/tests/production-daily-finance.test.mjs",
+      "sha256": "2315fb5386e7c0d3977971610bdbc24f76a1261bb04ef8078918de3ec8311f58"
+    },
+    {
+      "path": "web/cloudflare/tests/production-daily-hermes-chrome.test.mjs",
+      "sha256": "b814688cc1c9b3383e6fe4b054b9d8162026dbab6255d413e8d4696610169907"
+    },
+    {
+      "path": "web/cloudflare/tests/production-dtf-compiled.test.mjs",
+      "sha256": "4a35d4f98292e4c0580f7cf9e2f47da4e05482034297dea1c9630f10562e4bb9"
+    },
+    {
+      "path": "web/cloudflare/tests/production-dtf-routes.test.mjs",
+      "sha256": "17a6dd25229836a469ac3c969bbee888f907c558dc47aa773dd1fe790355a27b"
+    },
+    {
+      "path": "web/cloudflare/tests/production-dtf-store.test.mjs",
+      "sha256": "30a774ab4fea497c92754a61f745d9e66dc59372f5f2f0a0983450c83f7ac9e3"
+    },
+    {
+      "path": "web/cloudflare/tests/production-weekly-client.test.mjs",
+      "sha256": "76552041475d8f9d7bc7fe7c56c4d7b85211d10d3ccda6e564ccd3d448d64466"
+    },
+    {
+      "path": "web/cloudflare/tests/production-weekly-close.test.mjs",
+      "sha256": "6d96515da873f94beba1d6ec2f5b93e6dc03958483d70735cd5f64847894b315"
+    },
+    {
+      "path": "web/cloudflare/tests/production-weekly-closing-chrome.test.mjs",
+      "sha256": "8871995ce1452891d3a6fbc316b7beb2380e698af771638ad711c813bf0e2778"
+    },
+    {
+      "path": "web/cloudflare/tests/production-weekly-routes-compiled.test.mjs",
+      "sha256": "3aa8e798a823bfc5f5d228eb1a3c58323137def9a14cd32dcc321c758f1bb00e"
+    },
+    {
+      "path": "web/cloudflare/tests/production-weekly-routes.test.mjs",
+      "sha256": "1b4ae8298454d38aa4707860c6b17ee1b4aa757015aed5d53f5798f69453cd1a"
+    },
+    {
+      "path": "web/cloudflare/tests/production-weekly-store.test.mjs",
+      "sha256": "ca81fb5e9ec5df39f4a1622ccf72963079eafbc8af27b6c0c386c9b9a19642c8"
+    },
+    {
+      "path": "web/cloudflare/tests/production-workspace-view.test.mjs",
+      "sha256": "f0ad8af7013a199c1239f108b3d833498ad29a449b4fdb976b2109ce33fa04ca"
+    },
+    {
+      "path": "web/cloudflare/tests/receipt-logout-navigation.test.mjs",
+      "sha256": "47183115e053ef670c7fdb2bce197e7e1c26e968ec71d67a0723a7868093290e"
+    },
+    {
+      "path": "web/cloudflare/tests/report.test.mjs",
+      "sha256": "e944c915cd34859724d89953556a43dfa69dfc618ec53e8b73cfedbd16391b36"
+    },
+    {
+      "path": "web/cloudflare/tests/return-manufacturing-links-adversarial.test.mjs",
+      "sha256": "05ca10a4e7ee27560328a3560a60c84676df50a0b05fdd872ee3917bf845738f"
+    },
+    {
+      "path": "web/cloudflare/tests/return-manufacturing-links-chrome.test.mjs",
+      "sha256": "17a17a21c54146c87b7f0deb1cbffbfbafbe3b35378a9ab397ffc7ce3c374232"
+    },
+    {
+      "path": "web/cloudflare/tests/return-manufacturing-links-client.test.mjs",
+      "sha256": "a1edbe08f5e35d7d793ca296a1f596f043e16cd308c87cf5551f0d1dd6314e09"
+    },
+    {
+      "path": "web/cloudflare/tests/return-manufacturing-links-d1.test.mjs",
+      "sha256": "27cd68b1fa5c29efb820d342dd027310c9a0665ccdd5c3368ff3890f80431831"
+    },
+    {
+      "path": "web/cloudflare/tests/return-manufacturing-links-workspace.test.mjs",
+      "sha256": "5bb87d56b630dafc88b4da513ff523ad41e4768a0a57479e1a404b52d6f42191"
+    },
+    {
+      "path": "web/cloudflare/tests/return-manufacturing-links.test.mjs",
+      "sha256": "136230e11200609ccff65f670352ec65d4b06480b1ac9ad9fa833783409b1300"
+    },
+    {
+      "path": "web/cloudflare/tests/returns-case-cards-view.test.mjs",
+      "sha256": "8bccca22e8112ad677c35932feb236836fb3c98572f931dcedc45f7f0902e9c8"
+    },
+    {
+      "path": "web/cloudflare/tests/returns-local-artwork.test.mjs",
+      "sha256": "8ed47bacdac9c343c76f4133fceb068df9239e367fa5ac567d536f386fa51426"
+    },
+    {
+      "path": "web/cloudflare/tests/returns-original-items-chrome.test.mjs",
+      "sha256": "2d4dbfa1517338ec47c90eb84ae8ce98a8ebfb6751ee30e3dc84feeb0565358d"
+    },
+    {
+      "path": "web/cloudflare/tests/returns-original-items-client.test.mjs",
+      "sha256": "d6b465a1e0acbcb4423a701d8c3c1b5d35cede97a7ac5f33612d71de23e18f63"
+    },
+    {
+      "path": "web/cloudflare/tests/returns-receipt-backend.test.mjs",
+      "sha256": "fa5e51a5ca701b75bcde41e4064938e0dc765d212ba57a7d662135ba4421bdb6"
+    },
+    {
+      "path": "web/cloudflare/tests/returns-receipts-chrome.test.mjs",
+      "sha256": "f56e1cc08ad1fbca29f4f49a927c9eb6877122734e807b72052bc28a067c6158"
+    },
+    {
+      "path": "web/cloudflare/tests/returns-receipts-client.test.mjs",
+      "sha256": "89f71ec4c38ffe12f2a99cc628d1f8acb9d5e17480e93327efe7cbc18176e309"
+    },
+    {
+      "path": "web/cloudflare/tests/reviewed-cost-source-invariants.test.mjs",
+      "sha256": "a9346d42d8d4c3f22dd2d5942408e0d19e92473d76b2cf3ee46c2aad4f5bab3a"
+    },
+    {
+      "path": "web/cloudflare/tests/saved-catalog-media.test.mjs",
+      "sha256": "7a21ae24bc91519e59342d75cb4a4d1768e41c47af1c8ea29a3b76e433b70b75"
+    },
+    {
+      "path": "web/cloudflare/tests/saved-order-items.test.mjs",
+      "sha256": "84bb3eddd3ad8665e54706be9abfa1c1fbd8b9a1b3e653db5cf182b8ac3d01fa"
+    },
+    {
+      "path": "web/cloudflare/tests/shop-orders.test.mjs",
+      "sha256": "283eab8b935877fbb467ccf7ca320e020d407aab9173a08054935d989a28b85f"
+    },
+    {
+      "path": "web/cloudflare/tests/store-admin.test.mjs",
+      "sha256": "9d62627cef6f23c677c6b6ebfc249cf60be5ecffb97c7560652bd965e67d1da6"
+    },
+    {
+      "path": "web/cloudflare/tests/store-ads-integration.test.mjs",
+      "sha256": "33c0d68b5edfb5777421088432f742d007967b5b9b8eadfad33906c2260f7e2c"
+    },
+    {
+      "path": "web/cloudflare/tests/store-invoice-tax.test.mjs",
+      "sha256": "02b8ec2c7593607e08798f1fd4908df29be78eafd40737dc89ab9d3df8b2f2b7"
+    },
+    {
+      "path": "web/cloudflare/tests/store-product-summary.test.mjs",
+      "sha256": "c02a90e9cfd9dad177efdd8176a4ea0a4096fe168d2f83bf3b9f084d460f9f53"
+    },
+    {
+      "path": "web/cloudflare/tests/store-returns-summary.test.mjs",
+      "sha256": "671fb39b74d49335336ab15a4accedbda81ba4554a1b071114fb641a347b60c8"
+    },
+    {
+      "path": "web/cloudflare/tests/store-summary.test.mjs",
+      "sha256": "65d9894af29be4ede3e15bba56c46ed38516bd449d10c5d2ee179bb0a42ed068"
+    },
+    {
+      "path": "web/cloudflare/tests/tenant-migration.test.mjs",
+      "sha256": "a0b8f7beab0a1809b977a1c9fcbf82617b4823d659d129c0070b26a1fcdc3802"
+    },
+    {
+      "path": "web/cloudflare/tests/tenant-sql-isolation.test.mjs",
+      "sha256": "c9cb170ffcfc3dc51024c04a55d4fffc400739a14d6770c51438acd9c892d3b5"
+    },
+    {
+      "path": "web/cloudflare/tests/today-estimated-profit-chrome.test.mjs",
+      "sha256": "aacf66d40b96d740f462355e0c023af09616743b97ae810b947d17a142a83ebd"
+    },
+    {
+      "path": "web/cloudflare/tests/today-estimated-profit-client.test.mjs",
+      "sha256": "c0105dd7436e0ac7e925acecdacc96e04677c1aa3cb428ae825fa2d9ae009ffa"
+    },
+    {
+      "path": "web/cloudflare/tests/unified-app.test.mjs",
+      "sha256": "088c19437ae39ff1671fd3e29e62bbf2d081328b9be7fad75f802611b9df6c29"
+    },
+    {
+      "path": "web/cloudflare/tests/unified-auth.test.mjs",
+      "sha256": "415883bcb05f21bccaffbfc99d3a80799fa02efd5070391e27984f40249c4201"
+    },
+    {
+      "path": "web/cloudflare/tests/v4-ads-charts-chrome.test.mjs",
+      "sha256": "2fa16d568e613159f56316c2509f313b6aabb5a67e73e486c4363387cb8cff25"
+    },
+    {
+      "path": "web/cloudflare/tests/variant-automation.test.mjs",
+      "sha256": "37c91c7c20b3b40b9159144f2bfcce050737634db83e5ff2724861bb3f7b1825"
+    },
+    {
+      "path": "web/cloudflare/tests/variant-bindings.test.mjs",
+      "sha256": "dc951d2464fe77ba8bad8859bf1538c20beb2495efa6bbe6da0a51987fd5378d"
+    },
+    {
+      "path": "web/cloudflare/tests/variant-sync-client.test.mjs",
+      "sha256": "6883964b2bad2356bf57570a7017e97481e6d7f426a2c2041c32dd38661a7f19"
+    },
+    {
+      "path": "web/cloudflare/tests/variant-sync.test.mjs",
+      "sha256": "24c189151d382545d5729b5f2e4bbec1b9bc411cf34b74e1f800db334237f9fc"
+    },
+    {
+      "path": "web/cloudflare/tests/weekly-context-navigation-chrome.test.mjs",
+      "sha256": "1162dbd4dc27217bcdee9923e1dde6ffe88d2ea45ad16e55f5d678efd5b99102"
+    },
+    {
+      "path": "web/cloudflare/tests/weekly-operating-report.test.mjs",
+      "sha256": "f815c7d6950e7b525cc7ed6db83e54de76161c7a20bc33d8760405978fd20ab8"
+    },
+    {
+      "path": "web/cloudflare/tests/weekly-operating-routes.test.mjs",
+      "sha256": "8e458feedebc1f7617efc27760c499a317be04a477f803724d9048dab68bfd40"
+    },
+    {
+      "path": "web/cloudflare/tests/weekly-operating-store.test.mjs",
+      "sha256": "6bef15a8ee5bd8f036d8d3bfd05ef6905eb89d7c4e0227ff91beb493aea17362"
+    },
+    {
+      "path": "web/cloudflare/tests/weekly-operating-ui.test.mjs",
+      "sha256": "21a88a0c12814b85b8049c9481197c4bec6f50ca1b2c145f2a36ee082335abba"
+    },
+    {
+      "path": "web/cloudflare/tests/workspace-browser-asset-chrome.test.mjs",
+      "sha256": "39001d2379a9ba941ed5e5d38c609672320557481e6c44d9db70a79162a4e19f"
+    },
+    {
+      "path": "web/cloudflare/tests/workspace-navigation-rework-chrome.test.mjs",
+      "sha256": "fa92e0e1fcad888004bb152c251f3611c4591fa54d78ae6d779ad8c095777742"
+    },
+    {
+      "path": "web/cloudflare/tests/workspace-navigation.test.mjs",
+      "sha256": "96dabb5a88dabb5610663ea99e71971e2695ac705f7e3c3afed414e7ef67000d"
+    },
+    {
+      "path": "web/finance/tests/auth-json-transport.test.mjs",
+      "sha256": "77b9b38d6417af76eee2ec9b9b99eca18041f96993fdad5dd642927de3ba2f6c"
+    },
+    {
+      "path": "web/finance/tests/auth-router.test.mjs",
+      "sha256": "48961ab4b7aa0ba2aa13c52eb270381c03c152c9c43fb99918ab88aab8060efa"
+    },
+    {
+      "path": "web/finance/tests/business-period-daily.test.mjs",
+      "sha256": "05bab554f3b9cf309883432d75b770cd477348daa0500baf8f51c5bdea128ed3"
+    },
+    {
+      "path": "web/finance/tests/business-period-evidence.test.mjs",
+      "sha256": "81f4a48776fefddb218f0de4e012fa74699ca64a6c9854c939531d2c31634ef7"
+    },
+    {
+      "path": "web/finance/tests/business-period-frame.test.mjs",
+      "sha256": "4364ad5eea76b73f1441d48b1736a110715c10ca10c11336485173b77c0e461d"
+    },
+    {
+      "path": "web/finance/tests/business-period-routes.test.mjs",
+      "sha256": "3cef77aed1f41f83ec8254fc66b9436732efa5e9a9f8ab37651e5a6f6bfe2cec"
+    },
+    {
+      "path": "web/finance/tests/business-period.test.mjs",
+      "sha256": "f64517f7a27bddd361703823fe7ec79395baa491fbcdd7e2a6d80f01b0e82238"
+    },
+    {
+      "path": "web/finance/tests/business-variant-attribution.test.mjs",
+      "sha256": "2253b2e02478a0d570a7aa32387512aa23a5c0712261e424dd8afbfa5fd423e4"
+    },
+    {
+      "path": "web/finance/tests/business-variants-transport.test.mjs",
+      "sha256": "3d0613c55a1eb230cfef26680d9aaee129425b0e61ce0f313633e72c2ef6c066"
+    },
+    {
+      "path": "web/finance/tests/cash-statement-import.test.mjs",
+      "sha256": "736510c42d9c6fbf536484767244ac87c7e47acca679e2b1b47189deae42e914"
+    },
+    {
+      "path": "web/finance/tests/catalog-media.test.mjs",
+      "sha256": "8e5fb34340f7f3818653298e8086ce07eabae1fb5040f02528e9fc968114d2b3"
+    },
+    {
+      "path": "web/finance/tests/commercial-compiled-chain.test.mjs",
+      "sha256": "28e05a2762c58a8497ed05aeaad9f1ead9a2752d7424d0e40136a627f572deea"
+    },
+    {
+      "path": "web/finance/tests/connection-store.test.mjs",
+      "sha256": "f7fe4a1fb7e7bbd935399789258affc42a647a5ea647a431ad56e9fd4fc43f8e"
+    },
+    {
+      "path": "web/finance/tests/connection-worker.test.mjs",
+      "sha256": "dcf9cf8a1ff802005f6569eb3b6f7637cb9efb8aceaea1892fec0e057b75d73d"
+    },
+    {
+      "path": "web/finance/tests/daily-orders-frame.test.mjs",
+      "sha256": "45e5d19a3b1e91a14f0485f5d99761e04b1ee9b90ef13c2a8f7321451ee7d780"
+    },
+    {
+      "path": "web/finance/tests/daily-orders-routes.test.mjs",
+      "sha256": "d98723371b8e55258ff6f21480f3bd5de5ccc0ee1e6487074506c71de01b23ea"
+    },
+    {
+      "path": "web/finance/tests/daily-orders.test.mjs",
+      "sha256": "20bf4b27624a6f267637d0d5116308bb1ee9147b7d65cad06550068cccbc6a66"
+    },
+    {
+      "path": "web/finance/tests/escrow-release-frame.test.mjs",
+      "sha256": "81a12e7d237d8ce8282796a71db388141256f99713797bdf1212d80cfa5febf9"
+    },
+    {
+      "path": "web/finance/tests/escrow-release-ledger.test.mjs",
+      "sha256": "4218a87f4e9da325d03aa7594b6cc44b7d0e4cc27d52e9736f118108ebebd703"
+    },
+    {
+      "path": "web/finance/tests/escrow-releases-chain.test.mjs",
+      "sha256": "35b40a1f70ced47c5ba0452c844962ec35c0a9440e9ee44c4d49c8d6271f7bbc"
+    },
+    {
+      "path": "web/finance/tests/escrow-releases.test.mjs",
+      "sha256": "066a8e094435b980d64839ad24891070c9a55643e0557a2307eb3dd62d621466"
+    },
+    {
+      "path": "web/finance/tests/external-cash-compiled-chain.test.mjs",
+      "sha256": "eaedaf17fb36a093b43060e2d08555b40f07129ff7fe3b9a133f050808440b69"
+    },
+    {
+      "path": "web/finance/tests/external-cash-frame.test.mjs",
+      "sha256": "1f84d8bb87cf9d931df072cbc035a855332f3dac79ba48caaae2a8d6d98eb8e5"
+    },
+    {
+      "path": "web/finance/tests/external-cash-matching.test.mjs",
+      "sha256": "a6525adedf8099613afe83674d18167ae461b79079070fdf91d49f60026f7a21"
+    },
+    {
+      "path": "web/finance/tests/external-cash-period-frame.test.mjs",
+      "sha256": "28fc39f068b6e6296b011293cf86377e48d39b84fa1fcd2cff3427046fa96d74"
+    },
+    {
+      "path": "web/finance/tests/external-cash-period-routes.test.mjs",
+      "sha256": "046681e8f6c4b357318689aa758560b9c8ee051fa681d0ff7d2774ce2d8518de"
+    },
+    {
+      "path": "web/finance/tests/external-cash-period.test.mjs",
+      "sha256": "d61e276f1f99294dd21a618a8800225eb83d1bd53a574ec76a52a9468c599a85"
+    },
+    {
+      "path": "web/finance/tests/external-cash-routes.test.mjs",
+      "sha256": "3582b38c42cb49c42dc74ffc61de0f2826d8a68b7a0823cd4ef1f6a2b43aa286"
+    },
+    {
+      "path": "web/finance/tests/external-cash-store.test.mjs",
+      "sha256": "eb3c953788e82c198b866899d5c5b1aa98067813934f12045c7fd8e11f95b763"
+    },
+    {
+      "path": "web/finance/tests/financial-order-evidence.test.mjs",
+      "sha256": "d19070c93424f1e5c5820f4c6297ea248760f2113549fc194b375918a3ef498e"
+    },
+    {
+      "path": "web/finance/tests/historical-evidence-compiled.test.mjs",
+      "sha256": "e4d2b6009ea8136b22e205a4241a0dbf3e0a8404dcc793c7963c79f38babc393"
+    },
+    {
+      "path": "web/finance/tests/historical-evidence-routes.test.mjs",
+      "sha256": "27f70328ee01a336eb16b09e19e4d2e148ba7ff1c0bad7fe7d142c7890cd1ec6"
+    },
+    {
+      "path": "web/finance/tests/historical-variant-evidence.test.mjs",
+      "sha256": "93275037e40b70bd03fccf3a84595e00dcf94a9cb2b5f8fbdb840b2e3f18be9a"
+    },
+    {
+      "path": "web/finance/tests/income-detail-chain.test.mjs",
+      "sha256": "521c862ce1fb464f50c3cc901bb396545efbbadf5d649ecd50918e4182201b7d"
+    },
+    {
+      "path": "web/finance/tests/income-detail-frame.test.mjs",
+      "sha256": "31db987e5bc88d3b7697f907410232e8c5076fb0d6462bad6ff98f961bd29ec5"
+    },
+    {
+      "path": "web/finance/tests/income-detail.test.mjs",
+      "sha256": "92b13d9f10724ba5be1b2f9c541fc22564c94da11e44621e1690f25b23aafba0"
+    },
+    {
+      "path": "web/finance/tests/income-overview.test.mjs",
+      "sha256": "a402a50ac9ad90fa6f2f137a07b9264c3281a857fdcc16e0443e95adc0190d95"
+    },
+    {
+      "path": "web/finance/tests/initial-exchange.test.mjs",
+      "sha256": "e441e01a76632742ebd46c87dbf7479a986d80c8c43d5a2498e9ab717cf6ab0b"
+    },
+    {
+      "path": "web/finance/tests/original-items-chain.test.mjs",
+      "sha256": "faec594dbd92f96c0ee88ecd9ac46bf8f8074a0c1b60318834baded573c1ed89"
+    },
+    {
+      "path": "web/finance/tests/original-items-evidence.test.mjs",
+      "sha256": "762171388a24a81405140c622b0c4af93f0a316c032e6eee34224b87193b030a"
+    },
+    {
+      "path": "web/finance/tests/payment-preview.test.mjs",
+      "sha256": "31e91c5db18597997c16632a41f60bfdc71691ca7da716b243b003ec3f0bcb70"
+    },
+    {
+      "path": "web/finance/tests/payment-sample.test.mjs",
+      "sha256": "1b8995f81780167d2923a1c07ebe054338f98ee9e87820631f1e23f31d254793"
+    },
+    {
+      "path": "web/finance/tests/pending-income-scan-chain.test.mjs",
+      "sha256": "bc919f116fed4043e2d40767fa7b7d1e96b41f65969123b10003b855f004d6fd"
+    },
+    {
+      "path": "web/finance/tests/pending-income-scan.test.mjs",
+      "sha256": "c2797b9e6d89573f50ad0a64e68cd3c5aad8579e5db184b13ba42fff3728f5d9"
+    },
+    {
+      "path": "web/finance/tests/product-index-compiled.test.mjs",
+      "sha256": "919d469c7b26406128d736f01ab60ce2f96be72831a5bfc34216f1d45eeb9ff5"
+    },
+    {
+      "path": "web/finance/tests/product-index-routes.test.mjs",
+      "sha256": "53be03dc7b685fa09de04d447f775f503b053838e56861fc4f49c2a2ff769586"
+    },
+    {
+      "path": "web/finance/tests/product-index.test.mjs",
+      "sha256": "b4125e61cd87c63ba130293d72ff41d9150b88565d8810233ec356c3a36c6e09"
+    },
+    {
+      "path": "web/finance/tests/production-orders.test.mjs",
+      "sha256": "dd6e2c90ef6baf6bd4f079fde8aacf251ea5326b732250c2e51502415fcbe7df"
+    },
+    {
+      "path": "web/finance/tests/provider-adapter.test.mjs",
+      "sha256": "809e15789830f272d2c8c5d8c26ef79f3fc556cf952c7999fdcf97ebf96f94e0"
+    },
+    {
+      "path": "web/finance/tests/reconciliation-chain.test.mjs",
+      "sha256": "b29547992467581bf58129ce082cf50b01fc9405fbb183e6585ff2e9285cef9f"
+    },
+    {
+      "path": "web/finance/tests/reconciliation-frame.test.mjs",
+      "sha256": "7193b226ef86e3d7141721e0985d8c95c3429f70e32283b716158fdecff5cd60"
+    },
+    {
+      "path": "web/finance/tests/reconciliation-money-frame.test.mjs",
+      "sha256": "41fe7ba0218f3e63512c193880ff7b0caa98353cb2cedc1455b5fbd6bd32371c"
+    },
+    {
+      "path": "web/finance/tests/reconciliation-review-frame.test.mjs",
+      "sha256": "a4d789f940474a6c9b7d96ecf425a8474b2392425ded4a9584988ea157446b55"
+    },
+    {
+      "path": "web/finance/tests/refresh-coordinator.test.mjs",
+      "sha256": "815039f73498aae361505a2e9984258bbd87512efb1af9e8bfd4eb91b75f0923"
+    },
+    {
+      "path": "web/finance/tests/refresh-request.test.mjs",
+      "sha256": "7b6be8cf048ca006930e97d2ae8ed05c8f40197ad5b12ca2eb6bc2a1516ef679"
+    },
+    {
+      "path": "web/finance/tests/refresh-response.test.mjs",
+      "sha256": "279a186b0b434e9abf01b64ab238838f5440b84404dfc37e1612adfe2b572efb"
+    },
+    {
+      "path": "web/finance/tests/refresh-signature.test.mjs",
+      "sha256": "b518b5706f7c998810d4b5a6932399460b959fcc5873163621a64d87ddd93948"
+    },
+    {
+      "path": "web/finance/tests/refresh-transport.test.mjs",
+      "sha256": "bf042f4ee9daddc76d51b3150233c9cdfcd58916034ae9caa0985a5c62c8d928"
+    },
+    {
+      "path": "web/finance/tests/returns-reconciliation.test.mjs",
+      "sha256": "61096126301c248cd4e4996372d682ad3456b12da9fe22ffbaa4013694df86a6"
+    },
+    {
+      "path": "web/finance/tests/store-period-frame.test.mjs",
+      "sha256": "dc510dc2122f8888a9183a26007670cfa02abd1d78be6c98e12b7be4ba65ea6b"
+    },
+    {
+      "path": "web/finance/tests/store-period-transport.test.mjs",
+      "sha256": "88800c8cedc6b6d2fe401a64db8645bec88cbe5f84bdc03d6e54430e0a67d8e1"
+    },
+    {
+      "path": "web/finance/tests/store-period.test.mjs",
+      "sha256": "63a9fb81026ed4d96d1861702164cade4a4202b7f64dc11c17e68fc069a9eee0"
+    },
+    {
+      "path": "web/finance/tests/tenant-finance-profile.test.mjs",
+      "sha256": "64197340909cc2119d6ee7835d8b8b04b3aaa099f2107d3fc6ca4ff76b45e41d"
+    },
+    {
+      "path": "web/finance/tests/variant-catalog-diagnostics.test.mjs",
+      "sha256": "c548280f0347a7dbf84ff8f387477e3b5e5ebf77f4694b2676ce4b98c310ced4"
+    },
+    {
+      "path": "web/finance/tests/variant-catalog-frame.test.mjs",
+      "sha256": "a5fc7f84f2fc3be724e8240ebce1eacffcdbd12f9f4734cbdf93e61995c4dd20"
+    },
+    {
+      "path": "web/finance/tests/variant-catalog-transport.test.mjs",
+      "sha256": "5c6d15ee3e1a5a545002fa6e44e80801ecbac4b37f1c3b2cb2cff27c74e7790f"
+    },
+    {
+      "path": "web/finance/tests/variant-catalog.test.mjs",
+      "sha256": "4b12a4edd6ce43598428b4bfcaf9c375d67f52651a294e69ccc09230e1fe3a5e"
+    }
+  ],
+  "publication": "NAO_PUBLICADO_POR_ESTA_TAREFA",
+  "live_authenticated_qa": "NAO_EXECUTADA_SEM_SESSAO_REAL_DISPONIVEL",
+  "real_messages": 0,
+  "production_test_facts": 0,
+  "meaning": "Source/test hashes and logs establish the local candidate only. The CI and deployment receipts must be recorded independently.",
+  "scope_notice": "HISTORICO_S1_S2: resultados4106/67 e hashes/testes originais preservados; não é execução completa da correção CSS posterior.",
+  "superseded_current_candidate_record": "docs/v4/ci-validation.json",
+  "current_publication_record": "docs/v4/live-publication.json"
+}

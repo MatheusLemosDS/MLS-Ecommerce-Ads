@@ -1,3 +1,4 @@
+import {TenantInitializationMap} from './tenant-storage.mjs';
 import {readAiSalesRecord,readAiSalesList,validateAiSalesProductSnapshot,validateAiSalesAsset,validateAiSalesCampaignPlan,validateAiSalesVideoJob,validateAiSalesActionAudit,hashAiSalesValue} from './mls-ai-sales-contracts.mjs';
 import {importAiSalesManualProduct} from './mls-ai-sales-catalog.mjs';
 import {validateAiSalesAffiliateWorkspace,importAiSalesAffiliateWorkspace} from './mls-ai-sales-affiliates.mjs';
@@ -12,7 +13,7 @@ export const AI_SALES_WORKSPACE_STORE_SCHEMA=[
 ];
 export class AiSalesWorkspaceStoreError extends Error{constructor(code,status=400){super(code);this.name='AiSalesWorkspaceStoreError';this.code=code;this.status=status;}}
 const fail=(code,status=400)=>{throw new AiSalesWorkspaceStoreError(code,status);};
-const LIMIT=1048576,MAX_REVISION=2147483647,encoder=new TextEncoder(),ready=new WeakMap();
+const LIMIT=1048576,MAX_REVISION=2147483647,encoder=new TextEncoder(),ready=new TenantInitializationMap();
 const integer=(value,min=0,max=Number.MAX_SAFE_INTEGER)=>Number.isSafeInteger(value)&&!Object.is(value,-0)&&value>=min&&value<=max;
 const hash=value=>typeof value==='string'&&/^[a-f0-9]{64}$/.test(value);
 const ref=value=>typeof value==='string'&&/^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$/.test(value);

@@ -38,7 +38,7 @@ for(const minify of [false,true]){
   for(const scope of ['navigation','products','dtf'])
     assert.ok(html.includes('data-mission-scope="'+scope+'"'),'missing V3.6 search scope '+scope);
   const scripts=getOrderedBrowserScripts(html);
-  assert.equal(scripts.length,18,'retain all existing owner clients, including physical returns and Listing Factory, plus the reviewed public asset scripts');
+  assert.equal(scripts.length,19,'retain all existing owner clients, including physical returns and Listing Factory, plus the reviewed public asset scripts');
   assert.equal(scripts.filter(script=>script.includes('globalThis.brazaPhysicalReturns=')).length,1,'the independent physical-return controller is delivered once');
   const factoryClients=scripts.filter(x=>x.includes("const root=document.getElementById('mlsListingFactory')"));
   const searchClients=scripts.filter(x=>x.includes('const missionSearchRoutes=Object.freeze'));

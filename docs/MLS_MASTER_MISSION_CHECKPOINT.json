@@ -1,6 +1,6 @@
 {
   "schema": "mls_master_mission_checkpoint_v1",
-  "updated_at": "2026-11-11",
+  "updated_at": "2026-11-13",
   "base_visual_sha": "8d860b2c4f26531c53c4cdba0e06a14f51a7eef4",
   "visual_branch": "feature/mls-mockup-parity-real-charts-20261029",
   "visual_pr": 79,
@@ -6766,5 +6766,53 @@
     "tiktok_connected": false,
     "mercado_livre_app_owner_confirmed": false,
     "mercado_livre_connected": false
+  },
+  "v41_layout_commercial_candidate": {
+    "state": "PUBLISHED_VERIFIED_IN_TECHNICAL_PUBLIC_SCOPE",
+    "base_commit": "a5bd38a0902b38ecc3e90a747601eba330e7813e",
+    "branch": "feature/v41-layout-commercial-live-20261112",
+    "app_release": "2026-11-12.1",
+    "node_failed": 0,
+    "node_skipped": 0,
+    "worker_build": {
+      "app": {
+        "worker": "brazacommerce-app",
+        "bytes": 3495838,
+        "sha256": "82fe3d3ecf19b0f72254dc5778e8a8335505bfc4db4071cc01afce4cfb7cea48"
+      },
+      "auth": {
+        "worker": "brazacommerce-auth",
+        "bytes": 524070,
+        "sha256": "d5eed8ab9cddaa8d6917f4e4ca668a3f7074bad5603254656414db5a490dc172"
+      },
+      "finance": {
+        "worker": "brazacommerce-finance",
+        "bytes": 730516,
+        "sha256": "ffbcea3b7ffe5c0a94b0d4d8c4908738e6da76386040995bba982060a5f9bb71"
+      }
+    },
+    "evidence": "docs/v4/final-local-validation.json",
+    "coverage": "docs/v4/functional-coverage.json",
+    "publication": "PUBLISHED_VERIFIED",
+    "live_owner_qa": "NOT_PERFORMED_NO_SESSION",
+    "external_dependencies": "docs/v4/EXTERNAL_DEPENDENCIES.json",
+    "m2_m22": "OPEN",
+    "source_commit": "7ec3ffa0ed27366eca0792d5d277979bb991f679",
+    "historical_node_tests": 4106,
+    "historical_python_tests": 67,
+    "ci_failure_run": 43453964784,
+    "ci_failure_count": 2,
+    "current_focused_tests": 4,
+    "current_complete_ci": "PASS_4106_NODE_67_PYTHON",
+    "current_evidence": "docs/v4/ci-validation.json",
+    "implementation_source_commit": "bdbc857ac443f58376613225dcbbfd02a108d41c",
+    "ci_run": 43456719793,
+    "ci_url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43456719793",
+    "public_verification": "PASS_15_HTTP_10_ASSETS_24_PROFILES",
+    "published_verified_at": "2026-11-13T16:14:50.063Z",
+    "publication_receipt": "docs/v4/live-publication.json",
+    "public_receipt": "docs/v4/public-live-verification.json",
+    "pr": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/119",
+    "git_merge_status": "CHECK_LINKED_PR_CURRENT_STATE"
   }
 }

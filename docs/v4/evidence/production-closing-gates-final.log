@@ -1,0 +1,12 @@
+✔ compiled daily and weekly production workspace preserves physical facts and explicit confirmation (320px,minify=false) (16639.474977ms)
+✔ compiled daily and weekly production workspace preserves physical facts and explicit confirmation (1365px,minify=false) (14117.941637ms)
+✔ compiled daily and weekly production workspace preserves physical facts and explicit confirmation (320px,minify=true) (17819.71991ms)
+✔ compiled daily and weekly production workspace preserves physical facts and explicit confirmation (1365px,minify=true) (20702.639755ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 69895.202809

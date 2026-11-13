@@ -1,5 +1,5 @@
 import {projectDailyOrdersFrame} from './daily-orders-frame.mjs';
-import {FINANCE_PROFILE, FinanceConnectionError, createFinanceStore} from './connection-store.mjs';
+import {getFinanceProfile, FinanceConnectionError, createFinanceStore} from './connection-store.mjs';
 import {projectFinancePaymentPreview} from './payment-preview-frame.mjs';
 import {projectVariantCatalog,projectVariantCatalogRequest,financeCatalogDiagnostic,projectVariantCatalogFailure} from './variant-catalog-frame.mjs';
 import {projectStorePeriodRequest,projectStorePeriodFrame} from './store-period-frame.mjs';
@@ -220,7 +220,7 @@ function adapterReady(adapter, env) {
 
 // The Global browser authorization must return the outer OAuth state unchanged.
 // Keep its fixed callback and browser-bound nonce separate from the API routes.
-function checkedAuthorizationUrl(raw, state) {
+function checkedAuthorizationUrl(raw, state, profile) {
   if (typeof raw !== 'string' || raw.length > MAX_URL_LENGTH || /[\x00-\x20\x7f]/.test(raw)) throw new Error('INVALID_AUTHORIZATION_URL');
   const url = new URL(raw);
   const expectedFields = new Set(['partner_id', 'auth_type', 'redirect_uri', 'response_type', 'state']);
@@ -228,7 +228,7 @@ function checkedAuthorizationUrl(raw, state) {
       (url.port !== '' && url.port !== '443') || url.username || url.password || url.hash ||
       [...expectedFields].some(key => url.searchParams.getAll(key).length !== 1) ||
       [...url.searchParams.keys()].some(key => !expectedFields.has(key)) ||
-      url.searchParams.get('partner_id') !== String(FINANCE_PROFILE.partner_id) ||
+      url.searchParams.get('partner_id') !== String(profile.partner_id) ||
       url.searchParams.get('auth_type') !== 'seller' ||
       url.searchParams.get('redirect_uri') !== CALLBACK ||
       url.searchParams.get('response_type') !== 'code' ||
@@ -238,7 +238,7 @@ function checkedAuthorizationUrl(raw, state) {
   return url.toString();
 }
 
-function callbackParams(url) {
+function callbackParams(url,profile) {
   const allowed = new Set(['state', 'code', 'shop_id', 'main_account_id', 'error']);
   for (const key of url.searchParams.keys()) {
     if (!allowed.has(key) || url.searchParams.getAll(key).length !== 1) throw new Error('INVALID_CALLBACK');
@@ -249,7 +249,7 @@ function callbackParams(url) {
   const account = url.searchParams.get('main_account_id');
   const error = url.searchParams.get('error');
   if (typeof state !== 'string' || !/^[A-Za-z0-9_-]{43}$/.test(state) ||
-      shop !== String(FINANCE_PROFILE.shop_id) ||
+      shop !== String(profile.shop_id) ||
       (account !== null && !/^[1-9][0-9]{0,19}$/.test(account)) ||
       (error !== null && !/^[A-Za-z0-9_.-]{1,80}$/.test(error))) throw new Error('INVALID_CALLBACK');
   if (error !== null) {
@@ -270,14 +270,14 @@ function browserSecret(request) {
   return secret;
 }
 
-function safeStatus(value) {
+function safeStatus(value,profile) {
   return {
     connected: value.connected,
     status: value.status,
     revision: value.revision,
     expires_at: value.expires_at,
-    partner_id: FINANCE_PROFILE.partner_id,
-    shop_id: FINANCE_PROFILE.shop_id,
+    partner_id: profile.partner_id,
+    shop_id: profile.shop_id,
   };
 }
 
@@ -292,6 +292,7 @@ export function createFinanceWorker({adapter, paymentSample, paymentPreview, var
         return failure('INVALID_REQUEST', 400);
       }
       const callback = url.pathname === PREFIX + '/callback';
+      let profile;try{profile=getFinanceProfile(env,{optional:true});}catch{return failure('CONFIGURATION_PENDING',503,callback);}
       if (url.origin !== ORIGIN || url.username || url.password || url.hash) return failure('NOT_FOUND', 404, callback);
       const businessVariantsContract=request.headers.get('x-braza-business-variants-contract');
       if(businessVariantsContract!==null&&(url.pathname!==BUSINESS_PERIOD_PATH||businessVariantsContract!=='single-pair-v1'))return failure('INVALID_REQUEST',400);
@@ -352,7 +353,7 @@ export function createFinanceWorker({adapter, paymentSample, paymentPreview, var
         const routerError=await trustedRouter(request,env);if(routerError)return failure(routerError,routerError==='FORBIDDEN'?403:503);
         if(env?.FINANCE_CONNECTION_ENABLED!=='true'||typeof historicalVariantEvidence!=='function'||typeof fetchImpl!=='function'||typeof now!=='function')return failure('CONFIGURATION_PENDING',503);
         const input=await privateFinanceBody(request,false,false,false,false,false,true);if(!input)return failure('INVALID_REQUEST',400);
-        try{const frame=projectHistoricalVariantEvidenceFrame(await historicalVariantEvidence(env,{...input,fetchImpl,now}));if(!frame||!historicalVariantEvidenceRequestMatches(input,frame))throw new FinanceConnectionError('FINANCE_HISTORICAL_EVIDENCE_RESPONSE_INVALID',502);return response(frame,200,{json:true});}
+        try{const frame=projectHistoricalVariantEvidenceFrame(await historicalVariantEvidence(env,{...input,fetchImpl,now}),profile);if(!frame||!historicalVariantEvidenceRequestMatches(input,frame))throw new FinanceConnectionError('FINANCE_HISTORICAL_EVIDENCE_RESPONSE_INVALID',502);return response(frame,200,{json:true});}
         catch(error){return response({error:'FINANCE_HISTORICAL_EVIDENCE_UNAVAILABLE',diagnostic:historicalVariantEvidenceDiagnostic(error)},error instanceof FinanceConnectionError&&[400,401,403,409,429,502,503,504].includes(error.status)?error.status:502,{json:true});}
       }
       if(url.pathname===PRODUCT_INDEX_PATH){
@@ -361,7 +362,7 @@ export function createFinanceWorker({adapter, paymentSample, paymentPreview, var
         const routerError=await trustedRouter(request,env);if(routerError)return failure(routerError,routerError==='FORBIDDEN'?403:503);
         if(env?.FINANCE_CONNECTION_ENABLED!=='true'||typeof productIndex!=='function'||typeof fetchImpl!=='function'||typeof now!=='function')return failure('CONFIGURATION_PENDING',503);
         const input=await privateFinanceBody(request,false,false,false,false,true);if(!input)return failure('INVALID_REQUEST',400);
-        try{const frame=projectProductIndexFrame(await productIndex(env,{...input,fetchImpl,now}));if(!frame||!productIndexRequestMatches(input,frame))throw new FinanceConnectionError('FINANCE_PRODUCT_INDEX_RESPONSE_INVALID',502);return response(frame,200,{json:true});}
+        try{const frame=projectProductIndexFrame(await productIndex(env,{...input,fetchImpl,now}),profile);if(!frame||!productIndexRequestMatches(input,frame))throw new FinanceConnectionError('FINANCE_PRODUCT_INDEX_RESPONSE_INVALID',502);return response(frame,200,{json:true});}
         catch(error){return response({error:'FINANCE_PRODUCT_INDEX_UNAVAILABLE',diagnostic:financeProductIndexDiagnostic(error)},error instanceof FinanceConnectionError&&[400,409,429,502,503,504].includes(error.status)?error.status:502,{json:true});}
       }
       if (url.pathname === '/internal/shopee/finance/daily-orders') {
@@ -371,7 +372,7 @@ export function createFinanceWorker({adapter, paymentSample, paymentPreview, var
         if (routerError) return failure(routerError,routerError==='FORBIDDEN'?403:503);
         if (env?.FINANCE_CONNECTION_ENABLED!=='true'||typeof dailyOrders!=='function'||typeof fetchImpl!=='function'||typeof now!=='function') return failure('CONFIGURATION_PENDING',503);
         try {
-          const frame=projectDailyOrdersFrame(await dailyOrders(env,{fetchImpl,now}));
+          const frame=projectDailyOrdersFrame(await dailyOrders(env,{fetchImpl,now}),profile);
           if (!frame) throw Error('INVALID_DAILY_ORDERS');
           return response(frame,200,{json:true});
         } catch {return response({error:'SHOP_ORDERS_UNAVAILABLE'},502,{json:true});}
@@ -402,7 +403,7 @@ export function createFinanceWorker({adapter, paymentSample, paymentPreview, var
           if(catalog){const unavailable=projectVariantCatalogFailure(result);if(unavailable)return response(unavailable,502,{json:true});}
           const catalogMedia=catalog?projectCatalogMediaFrame(result,projectVariantCatalog):null;
           const variants=business&&businessVariantsContract==='single-pair-v1'?await projectBusinessPeriodVariantsFrame(result):null;
-          const frame = production ? projectProductionOrdersFrame(result) : period ? (business ? variants?.report??projectBusinessPeriodFrame(result) : projectStorePeriodFrame(result)) : catalog ? catalogMedia?.catalog??projectVariantCatalog(result) : preview ? projectFinancePaymentPreview(result) : sampleFrame(result);
+          const frame = production ? projectProductionOrdersFrame(result,profile) : period ? (business ? variants?.report??projectBusinessPeriodFrame(result) : projectStorePeriodFrame(result)) : catalog ? catalogMedia?.catalog??projectVariantCatalog(result) : preview ? projectFinancePaymentPreview(result) : sampleFrame(result);
           if (production) return frame&&productionOrdersRequestMatches(input,frame) ? response(frame,200,{json:true}) : response({error:'FINANCE_PRODUCTION_UNAVAILABLE'},502,{json:true});
           if (period && (!frame || (input.operation === 'start' ? frame.start_date !== input.start_date || frame.end_date !== input.end_date : frame.run_id !== input.run_id))) return response({error:'FINANCE_STORE_UNAVAILABLE',diagnostic:{code:'FINANCE_STORE_UNAVAILABLE',http:null}},502,{json:true});
           if (catalog && (!frame || frame.products.length !== input.item_ids.length || frame.products.some(product => !input.item_ids.includes(product.item_id) || Boolean(input.include_cost_catalog)!==Object.hasOwn(product,'cost_catalog') || input.selling_unit !== 'AUTO' && (product.selling_unit || 'ONE_MALE_ONE_FEMALE_KIT') !== (input.selling_unit || 'ONE_MALE_ONE_FEMALE_KIT')))) return response({schema:'variant_catalog_v1',status:'UNAVAILABLE',diagnostic:financeCatalogDiagnostic({code:'FINANCE_CATALOG_RESPONSE_INVALID',catalog_stage:'RESULT'})},502,{json:true});
@@ -420,10 +421,11 @@ export function createFinanceWorker({adapter, paymentSample, paymentPreview, var
       if (!callback && url.search !== '') return failure('INVALID_REQUEST', 400);
 
       if (url.pathname === PREFIX + '/status') {
+        if(env.COMMERCIAL_CONTEXT&&profile===null)return response({schema:'commercial_finance_connection_v1',connected:false,status:'NO_CONNECTION',revision:null,expires_at:null,partner_id:null,shop_id:null},200,{json:true});
         try {
           const store = await createFinanceStore(env, {now});
           await store.setup();
-          return response(safeStatus(await store.status()), 200, {json: true});
+          return response(safeStatus(await store.status(),profile), 200, {json: true});
         } catch {
           return failure('CONFIGURATION_PENDING');
         }
@@ -440,9 +442,9 @@ export function createFinanceWorker({adapter, paymentSample, paymentPreview, var
           const location = checkedAuthorizationUrl(await adapter.authorizationUrl({
             state: issued.state,
             redirect_uri: CALLBACK,
-            partner_id: FINANCE_PROFILE.partner_id,
-            shop_id: FINANCE_PROFILE.shop_id,
-          }, env), issued.state);
+            partner_id: profile.partner_id,
+            shop_id: profile.shop_id,
+          }, env), issued.state,profile);
           return response('', 302, {headers: {
             Location: location,
             'Set-Cookie': `${COOKIE}=${issued.browser_secret}; Path=${PREFIX}; Max-Age=600; HttpOnly; Secure; SameSite=Lax`,
@@ -454,7 +456,7 @@ export function createFinanceWorker({adapter, paymentSample, paymentPreview, var
 
       let params, secret;
       try {
-        params = callbackParams(url);
+        params = callbackParams(url,profile);
         secret = browserSecret(request);
       } catch {
         return failure('INVALID_CALLBACK', 400, true);
@@ -471,8 +473,8 @@ export function createFinanceWorker({adapter, paymentSample, paymentPreview, var
         lease = await store.claimAuthorization(prior.revision ?? 0);
         const tokens = await adapter.exchange({
           code: params.code,
-          shop_id: FINANCE_PROFILE.shop_id,
-          partner_id: FINANCE_PROFILE.partner_id,
+          shop_id: profile.shop_id,
+          partner_id: profile.partner_id,
         }, env);
         await store.completeAuthorization(lease, tokens);
         lease = null;

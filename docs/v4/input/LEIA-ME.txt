@@ -1,0 +1,37 @@
+MLS COMMERCE OS — V4.1 — IMPLEMENTAR E PUBLICAR NO SITE LIVE
+
+OBJETIVO ATUAL
+O proprietário agora quer o redesign e as funcionalidades implementados e publicados em https://app.brazacommerce.com.br. A V4.1 substitui a limitação anterior de entregar somente candidato local. Commit/push, PR/merge pelo fluxo permitido, migrações aditivas necessárias já ensaiadas, deploy e verificação live estão incluídos no trabalho a executar pelo Codex. Não é preciso pedir novamente autorização genérica para a mesma publicação.
+
+ESTADO DESTA ENTREGA
+Esta revisão atualizou o prompt, a matriz e as instruções. Ela não executou mudanças no repositório nem publicou o site. A execução e a comprovação da publicação são a tarefa atribuída ao Codex. A base funcional continua a auditoria V4, commit a5bd38a0902b38ecc3e90a747601eba330e7813e; não houve nova auditoria de HEAD nesta alteração de autorização.
+
+ARQUIVOS DO PACOTE
+1. PROMPT_CODEX_MLS_LAYOUT.txt: especificação completa V4.1, 28 seções, 233 requisitos com aceite. Preserva os 227 requisitos V4 e acrescenta LIVE-01..06. Catálogo de 22 famílias de gráficos/contratos preservado.
+2. MATRIZ_FUNCIONAL_MLS_CODEX.json: cobertura correspondente, fontes e campos de evidência. Estado inicial ESPECIFICADO; nenhum requisito está marcado como implementado ou publicado antecipadamente.
+3. MLS_COMMERCE_OS_LAYOUT.html: a mesma prévia demonstrativa V4, com 27 áreas. Abra no navegador para explorar layout e interações. Dados fictícios, sem autenticação ou conexão real à loja; não digite senhas reais. Não publique este HTML como substituto do aplicativo.
+4. AUDITORIA_COBERTURA_MLS_V4.txt: auditoria histórica preservada, com nota de atualização de escopo V4.1.
+5. LEIA-ME.txt: estas instruções.
+
+COMO USAR
+Selecione MatheusLemosDS/MLS-Ecommerce-Ads no Codex. Anexe o TXT completo, a matriz JSON e o HTML. Use as três imagens originais como referência visual adicional, se desejar. Envie a instrução abaixo; não envie apenas capturas da prévia, pois os contratos completos estão no TXT.
+
+Leia integralmente PROMPT_CODEX_MLS_LAYOUT.txt, versão V4.1, e implemente no repositório MatheusLemosDS/MLS-Ecommerce-Ads.
+
+Quero o resultado publicado e funcionando em https://app.brazacommerce.com.br.
+Minha orientação atual autoriza implementação, testes, commit/push, PR/merge conforme o fluxo do projeto, migrações aditivas necessárias já ensaiadas, deploy e verificação do site live. Ela substitui a antiga restrição de entregar somente um candidato local. Respeite os gates e controles reais da plataforma; não peça novamente autorização genérica para a mesma publicação.
+
+Use MLS_COMMERCE_OS_LAYOUT.html como referência visual e MATRIZ_FUNCIONAL_MLS_CODEX.json como controle de cobertura. Confira a HEAD, preserve todas as funções e os dados existentes, integre os gráficos às fontes reais e conclua login, conta, empresa, equipe e isolamento descritos no prompt.
+
+Conclua as duas trilhas de implementação e cumpra LIVE-01..06. Publique pelo processo existente, confirme a versão realmente servida no domínio e entregue URL, commit, resultados de testes, deploy e verificações posteriores. Não encerre apenas com mockup, plano ou prévia local.
+
+Preserve o acesso e a operação da minha loja. Não use dados fictícios em produção nem envie mensagens, convites, cobranças ou operações comerciais reais para testar. Se faltar credencial, serviço ou gate indispensável, conclua o restante e informe o bloqueio específico, sem afirmar que publicou ou que funciona o que não verificou.
+
+O QUE MUDOU DA V4 PARA A V4.1
+Foram removidas as proibições de publicação repetidas na missão, arquitetura, produção, fases comerciais, migrações, validação, notas de versão e conclusão. Foram acrescentados destino correto, preservação dos dados/acesso, gates remotos, deploy, verificação posterior e evidências da versão servida. O desenvolvimento local continua sendo uma etapa; o resultado solicitado agora é o site live.
+
+LIMITES MANTIDOS
+Dados, históricos, pedidos, produção, financeiro, integrações e acesso da loja devem ser preservados. Testes de gravação continuam em ambiente próprio. Publicação não autoriza contratar serviços, definir preços, enviar mensagens a terceiros ou fazer operações comerciais reais de teste. Contas multiempresa exigem isolamento comprovado. Integrações ausentes são dependências específicas, nunca sucesso simulado. Proteções reais de branch e infraestrutura continuam aplicáveis.
+
+PRÉVIA E VALIDAÇÃO
+A prévia HTML permanece inalterada nesta V4.1: 27 áreas demonstrativas, conta/equipe em memória, dados semanais fictícios e gráficos de referência. Ela não reproduz todos os formulários avançados; a preservação completa está no prompt/matriz. A V4 passou por verificação de sintaxe e DOM sintético, mas sua inspeção visual completa em navegador não foi concluída neste ambiente. A publicação deve incluir QA real de navegador no candidato e verificações do domínio live. A edição V4.1 conferiu a coerência do texto, os 233 IDs, os aceites e a correspondência entre prompt e matriz; não executou testes/build novos do aplicativo real.

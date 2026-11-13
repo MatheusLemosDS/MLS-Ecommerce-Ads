@@ -1,4 +1,5 @@
-import {FINANCE_PROFILE,FinanceConnectionError} from './connection-store.mjs';
+import {TenantInitializationSet} from '../../cloudflare/src/tenant-storage.mjs';
+import {getFinanceProfile,FinanceConnectionError} from './connection-store.mjs';
 import {ensureFinanceAccessToken} from './refresh-coordinator.mjs';
 import {requestFinanceAuthJson} from './auth-json-transport.mjs';
 import {readFinancialOrderEvidence} from './financial-order-evidence.mjs';
@@ -6,20 +7,26 @@ import {projectReconciliationRequest,projectReconciliationFrame,projectReconcili
 import {projectOriginalItemsFrame,projectReconciliationOriginalItemsFrame} from './original-items-frame.mjs';
 import {prepareReturnItemEvidenceStore,buildReturnItemEvidence,returnItemEvidenceStatement,projectSavedReturnItemEvidence,buildOriginalItemsReport} from './return-item-evidence.mjs';
 
-// Return amounts are observations of requests, never additional deductions
-// from escrow and never proof of a paid refund or a bank settlement.
 export const RETURNS_RECONCILIATION_SCHEMA=[
  `CREATE TABLE IF NOT EXISTS finance_returns_reconciliation_runs(run_id TEXT PRIMARY KEY,partner_id INTEGER NOT NULL,shop_id INTEGER NOT NULL,revision INTEGER NOT NULL,permission TEXT NOT NULL,checked_at INTEGER NOT NULL,next_attempt_at INTEGER NOT NULL,last_error TEXT,lease_owner TEXT,lease_until INTEGER)`,
  `CREATE TABLE IF NOT EXISTS finance_returns_reconciliation_cases(case_hash TEXT PRIMARY KEY,partner_id INTEGER NOT NULL,shop_id INTEGER NOT NULL,order_hash TEXT NOT NULL,order_sn TEXT NOT NULL,return_sn TEXT NOT NULL,payload TEXT,payload_hash TEXT,diagnostic TEXT,failure_count INTEGER NOT NULL,next_attempt_at INTEGER NOT NULL,lease_owner TEXT,lease_until INTEGER)`,
  `CREATE TABLE IF NOT EXISTS finance_returns_reconciliation_probes(order_hash TEXT PRIMARY KEY,partner_id INTEGER NOT NULL,shop_id INTEGER NOT NULL,order_sn TEXT NOT NULL,source_hash TEXT NOT NULL,payload TEXT,payload_hash TEXT,diagnostic TEXT,failure_count INTEGER NOT NULL,next_attempt_at INTEGER NOT NULL,lease_owner TEXT,lease_until INTEGER)`,
 ];
-const origin='https://partner.shopeemobile.com',path='/api/v2/returns/get_return_detail',paymentPath='/api/v2/payment/get_escrow_detail',encoder=new TextEncoder(),ready=new WeakSet();
+const ready=new TenantInitializationSet();
+function createTenantReturnsReconciliation(profile){
+const buildReturnItemEvidenceScoped=(...args)=>buildReturnItemEvidence(...args,profile);
+const projectSavedReturnItemEvidenceScoped=(...args)=>projectSavedReturnItemEvidence(...args,profile);
+
+// Return amounts are observations of requests, never additional deductions
+// from escrow and never proof of a paid refund or a bank settlement.
+
+const origin='https://partner.shopeemobile.com',path='/api/v2/returns/get_return_detail',paymentPath='/api/v2/payment/get_escrow_detail',encoder=new TextEncoder();
 const fail=(suffix,status=503)=>{throw new FinanceConnectionError('FINANCE_RECONCILIATION_'+suffix,status);};
 const plain=value=>value!==null&&typeof value==='object'&&[Object.prototype,null].includes(Object.getPrototypeOf(value));
 const exact=(value,keys)=>plain(value)&&Reflect.ownKeys(value).length===keys.length&&keys.every(key=>Object.hasOwn(Object.getOwnPropertyDescriptor(value,key)||{},'value'));
 const integer=(value,min=0,max=Number.MAX_SAFE_INTEGER)=>Number.isSafeInteger(value)&&!Object.is(value,-0)&&value>=min&&value<=max;
 const hash=async value=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',encoder.encode(value))),byte=>byte.toString(16).padStart(2,'0')).join('');
-const identity=[FINANCE_PROFILE.partner_id,FINANCE_PROFILE.shop_id],paid=row=>['completed','ongoing'].includes(row.bucket),review=row=>['cancel_pending','other','unknown'].includes(row.bucket);
+const identity=[profile.partner_id,profile.shop_id],paid=row=>['completed','ongoing'].includes(row.bucket),review=row=>['cancel_pending','other','unknown'].includes(row.bucket);
 const caseStatuses=['REQUESTED','ACCEPTED','CANCELLED','JUDGING','REFUND_PAID','CLOSED','PROCESSING'];
 const diagnostics=[null,'DETAILS_PENDING','PERMISSION_DENIED','RATE_LIMIT','TIMEOUT','UNAVAILABLE','INVALID_RESPONSE','UNKNOWN_STATUS','CURRENCY_MISMATCH'];
 const serial=value=>typeof value==='string'&&value.length>0&&value.length<=128&&!/[^\x21-\x7e]|,/.test(value);
@@ -37,7 +44,7 @@ function providerCents(value){
 const storedHash=(row,payload)=>hash(JSON.stringify({partner_id:row.partner_id,shop_id:row.shop_id,case_hash:row.case_hash,order_hash:row.order_hash,order_sn:row.order_sn,return_sn:row.return_sn,payload}));
 function envelope(value){
  if(!plain(value)||typeof value.error!=='string')fail('INVALID_RESPONSE',502);
- for(const item of [value,plain(value.response)?value.response:{}])for(const key of ['partner_id','shop_id'])if(Object.hasOwn(item,key)&&item[key]!==FINANCE_PROFILE[key])fail('INVALID_RESPONSE',502);
+ for(const item of [value,plain(value.response)?value.response:{}])for(const key of ['partner_id','shop_id'])if(Object.hasOwn(item,key)&&item[key]!==profile[key])fail('INVALID_RESPONSE',502);
  if(value.error!=='')fail(['error_perm','error_api_permission','error_auth','error_sign','error_partner_id','error_ip'].includes(value.error)?'PERMISSION_DENIED':['error_rate_limit','error_limit'].includes(value.error)?'RATE_LIMIT':'UNAVAILABLE',502);
  if(!plain(value.response))fail('INVALID_RESPONSE',502);return value.response;
 }
@@ -94,7 +101,7 @@ async function rows(db,runId,refs,stamp,includeOriginalItems=false){
   map.set(row.case_hash,{row,observation});
  }
  const itemEvidence=new Map();
- if(includeOriginalItems)for(const row of result[2]?.results??[]){const legacy=map.get(row.case_hash);if(legacy?.observation)itemEvidence.set(row.case_hash,await projectSavedReturnItemEvidence(row,legacy.row));}
+ if(includeOriginalItems)for(const row of result[2]?.results??[]){const legacy=map.get(row.case_hash);if(legacy?.observation)itemEvidence.set(row.case_hash,await projectSavedReturnItemEvidenceScoped(row,legacy.row));}
  return {state,map,...(includeOriginalItems?{itemEvidence}:{})};
 }
 function dueCases(refs,snapshot,stamp){
@@ -192,7 +199,7 @@ function report(source,refs,snapshot,stamp,probes,includeReview=false,includeMon
  return projectReconciliationOriginalItemsFrame({schema:'finance_reconciliation_v4',report:money.report,review:money.review,money:money.money,original_items:original},projectReconciliationFrame,projectReconciliationEvidenceFrame,projectReconciliationMoneyFrame,projectOriginalItemsFrame)??money;
 }
 
-export async function runFinanceReturnsReconciliation(env,options={}){
+async function runFinanceReturnsReconciliation(env,options={}){
  if(!plain(options)||Reflect.ownKeys(options).some(key=>!['operation','run_id','fetchImpl','now','timeoutMs','includeReview','includeMoney','includeOriginalItems'].includes(key)||!Object.hasOwn(Object.getOwnPropertyDescriptor(options,key)||{},'value'))||['includeReview','includeMoney','includeOriginalItems'].some(key=>Object.hasOwn(options,key)&&typeof options[key]!=='boolean')||options.includeMoney===true&&options.includeReview!==true||options.includeOriginalItems===true&&(options.includeReview!==true||options.includeMoney!==true))fail('REQUEST_INVALID',400);
  const selection=projectReconciliationRequest({operation:options.operation,run_id:options.run_id});if(!selection)fail('REQUEST_INVALID',400);
  const {fetchImpl,now=()=>Date.now(),timeoutMs=5000,includeReview=false,includeMoney=false,includeOriginalItems=false}=options,epoch=()=>{let value;try{value=now();}catch{fail('CLOCK_INVALID');}if(!integer(value,1,9999999999999))fail('CLOCK_INVALID');return Math.floor(value/1000);};
@@ -239,7 +246,7 @@ export async function runFinanceReturnsReconciliation(env,options={}){
      const response=await get(paymentPath,{order_sn:reference.order_sn}),returns=response.return_order_sn_list;
      if(response.order_sn!==reference.order_sn||!Array.isArray(returns)||returns.length>100||!returns.every(serial)||new Set(returns).size!==returns.length)fail('INVALID_RESPONSE',502);
      for(const item of [response,...(plain(response.order_income)?[response.order_income]:[])]){
-      for(const field of ['partner_id','shop_id','order_sn'])if(Object.hasOwn(item,field)&&item[field]!==(['partner_id','shop_id'].includes(field)?FINANCE_PROFILE[field]:reference.order_sn))fail('INVALID_RESPONSE',502);
+      for(const field of ['partner_id','shop_id','order_sn'])if(Object.hasOwn(item,field)&&item[field]!==(['partner_id','shop_id'].includes(field)?profile[field]:reference.order_sn))fail('INVALID_RESPONSE',502);
       if(Object.hasOwn(item,'currency')&&item.currency!=='BRL')fail('CURRENCY_MISMATCH',502);
      }
      const checkedAt=epoch(),observation={return_order_sn_list:[...returns],checked_at:checkedAt},bound={...reference,partner_id:identity[0],shop_id:identity[1]},digest=await probeHash(bound,observation);
@@ -267,7 +274,7 @@ export async function runFinanceReturnsReconciliation(env,options={}){
     const legacyWrite=writeAt=>db.prepare('UPDATE finance_returns_reconciliation_cases SET payload=?,payload_hash=?,diagnostic=NULL,failure_count=0,next_attempt_at=?,lease_owner=NULL,lease_until=NULL WHERE case_hash=? AND lease_owner=? AND lease_until>?').bind(JSON.stringify(observation),digest,checkedAt+300,reference.case_hash,owner,writeAt);
     let written;
     if(await prepareReturnItemEvidenceStore(db)){
-     try{const itemEvidence=await buildReturnItemEvidence(reference,digest,checkedAt,response),writeAt=epoch(),result=await db.batch([returnItemEvidenceStatement(db,itemEvidence,owner,writeAt),legacyWrite(writeAt)]);written=result[1];}
+     try{const itemEvidence=await buildReturnItemEvidenceScoped(reference,digest,checkedAt,response),writeAt=epoch(),result=await db.batch([returnItemEvidenceStatement(db,itemEvidence,owner,writeAt),legacyWrite(writeAt)]);written=result[1];}
      catch{written=await legacyWrite(epoch()).run();}
     }else written=await legacyWrite(epoch()).run();
     if(written?.meta?.changes===1)permission='AVAILABLE';
@@ -283,3 +290,7 @@ export async function runFinanceReturnsReconciliation(env,options={}){
  }
  snapshot=await rows(db,selection.run_id,refs,epoch(),includeOriginalItems);return report(source,refs,snapshot,epoch(),probes,includeReview,includeMoney,includeOriginalItems);
 }
+
+return {runFinanceReturnsReconciliation};
+}
+export async function runFinanceReturnsReconciliation(env,...args){return createTenantReturnsReconciliation(getFinanceProfile(env)).runFinanceReturnsReconciliation(env,...args);}

@@ -4,7 +4,7 @@ export function projectMlsMissionChart(trend,metric='net',windowDays=14){
  const date=value=>typeof value==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(value)&&
   Number.isFinite(Date.parse(value+'T00:00:00Z'))&&new Date(value+'T00:00:00Z').toISOString().slice(0,10)===value;
  const unavailable=reason=>Object.freeze({status:'UNAVAILABLE',reason,source:'mls_mission_daily_trend_v1'});
- const fields={net:'net_cents',sales:'sales_cents',ads:'ads_spend_cents'};
+ const fields={net:'net_cents',sales:'sales_cents',ads:'ads_spend_cents',paid:'paid_orders'};
  if(!Object.hasOwn(fields,metric)||![7,14].includes(windowDays))return unavailable('Métrica ou janela não reconhecida');
  if(trend?.schema!=='mls_mission_daily_trend_v1'||trend.basis!=='PAID_CREATE_DAY_AND_CALENDAR_ADS_OPERATIONAL_ESTIMATE'||
   !date(trend.selected_date)||trend.selected_date.slice(0,7)!==trend.month||
@@ -40,7 +40,7 @@ export function projectMlsMissionChart(trend,metric='net',windowDays=14){
  if(known<2)return unavailable('Necessárias duas observações reais nesta janela');
  const missing=points.length-known,partial=points.some(row=>row.partial||row.basis==='KNOWN_COSTS');
  return Object.freeze({status:missing||partial?'PARTIAL':'READY',type:'area',kind:'area',metric,
-  source:'mls_mission_daily_trend_v1',unit:'BRL_CENTS',
+  source:'mls_mission_daily_trend_v1',unit:metric==='paid'?'COUNT':'BRL_CENTS',
   period:Object.freeze({start_date:points[0].date,end_date:points.at(-1).date,selected_date:trend.selected_date,window_days:windowDays}),
   verified_at:null,coverage:Object.freeze({observed:known,total:points.length,missing,partial}),
   missing,points:Object.freeze(points)});

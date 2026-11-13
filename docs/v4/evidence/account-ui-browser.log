@@ -1,0 +1,15 @@
+✔ real account worker UI normal 320px: access, persistence, company and honest unavailable states (14263.728991ms)
+✔ real account worker UI normal 1365px: access, persistence, company and honest unavailable states (9495.848546ms)
+✔ real account worker UI minified 320px: access, persistence, company and honest unavailable states (6150.39061ms)
+✔ real account worker UI minified 1365px: access, persistence, company and honest unavailable states (6666.653932ms)
+✔ every public, personal and company route renders one accessible real account controller (52.385827ms)
+✔ account pages reject unsupported methods and paths without confusing legacy login or protected app (0.652039ms)
+✔ release text is escaped and link tokens are absent from server-rendered account configuration (1.328874ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 36691.151607

@@ -1,0 +1,48 @@
+✔ weekly projector accepts canonical stored versions but rejects forged money, sources, quantities and accessors (469.991573ms)
+✔ cold weekly history stays unknown and links to the separate sales reference without inventing manufacture (25.340613ms)
+✔ weekly selection is local, month reads preserve split drafts and immutable original closure values (302.96009ms)
+✔ the first visible card prioritizes the latest closed week while explicit history choices survive refresh and readiness (262.304049ms)
+✔ Friday split requires explicit conserved quantities and confirmation, then preserves the physical ledger (259.544641ms)
+✔ an ambiguously committed split retries the identical command, locks date controls and cannot increment twice (244.02216ms)
+✔ weekly reads remain lazy outside fabrication and duplicate readiness notifications share one saved-data request (294.622605ms)
+✔ a stale sidecar writer reloads the saved source after 409 and preserves the unaccepted split draft (263.395886ms)
+✔ logout clears weekly facts and drafts and ignores deferred committed POST and GET responses (219.455054ms)
+✔ a visible Friday panel rereads the saved closure after13h without creating any manufacturing or POST (38.057408ms)
+✔ a delayed weekly artifact is rechecked only on the bounded ten-minute followup (25.711454ms)
+✔ reentry and focus revalidate stale saved data once, preserving history choice and split drafts (279.231581ms)
+✔ automatic reads respect document visibility, in-flight reads, hidden fabrication and stopped sessions (272.365765ms)
+✔ suspending weekly mode cancels its timer but retains snapshots and drafts for safe reentry (215.992655ms)
+✔ weekly chart exposes saved versus preview money, known subtotals and keyboard-native date selection (212.449607ms)
+✔ automatic refresh cannot overtake an ambiguous split command or discard its retry draft (296.838314ms)
+✔ explicit weekly context selects only a validated loaded Friday and preserves split drafts across months (286.747517ms)
+✔ a deferred older weekly context cannot select its Friday after a newer context or logout (253.343375ms)
+✔ the production controller stays lazy on startup and opens fabrication only when its pane is selected (7.108792ms)
+✔ switching visible sources preserves the existing ledger, selection and unsaved controls without refetching loaded facts (4.052455ms)
+✔ daily, weekly, interval and registration destinations retain their controls and show one task at a time (0.82914ms)
+✔ confirm day transfers only the selected date to the explicit coverage flow (0.842321ms)
+✔ markup puts daily records before weekly reports and keeps all existing source hosts (0.429608ms)
+✔ pages without production hosts do not call operational controllers (0.654952ms)
+✔ weekly context delegates to the saved-week controller without a competing current-month read (0.837283ms)
+✔ the asset is importable before DOM exists and opening the report performs only a lazy saved-data GET (70.085858ms)
+✔ cross-month cuts stay separate: eight manufacturing intervals, seven civil sales dates and imported cash origins (28.052889ms)
+✔ chart points respond to clicks and keyboard arrows without changing the selected week or querying another source (44.188669ms)
+✔ one unavailable block does not hide the other valid sources and does not create a zero manufacturing cost (23.191893ms)
+✔ missing days produce a labelled known subtotal and a gap instead of a fabricated complete weekly result (26.069836ms)
+✔ unknown manufacturing cost remains partial while the independent sales estimate is unchanged (29.743678ms)
+✔ a recorded zero unit cost remains a known zero point while an unconfirmed empty interval remains a gap (97.951919ms)
+✔ no imported records keeps cash values pending; genuine zero and negative imported amounts remain distinct (93.770222ms)
+✔ Friday controls reject other weekdays and future cuts and support earlier valid weeks (109.611926ms)
+✔ refreshing saved data preserves an unapplied date draft and marks the actually displayed week (113.84608ms)
+✔ out-of-order replies cannot overwrite a later selection and the API read remains bound to its requested Friday (94.050759ms)
+✔ transport or invalid closed-contract responses preserve the old report with its original date visible (56.677286ms)
+✔ hiding and logout invalidate outstanding responses and remove all private displayed values (67.195688ms)
+✔ self-contained read-only asset and responsive styles retain separate bases and usable report links (1.451334ms)
+✔ weekly source links carry the selected sales date and exact manufacturing cut across month boundaries (24.764757ms)
+ℹ tests 40
+ℹ suites 0
+ℹ pass 40
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4533.391408

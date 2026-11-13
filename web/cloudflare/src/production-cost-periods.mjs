@@ -1,3 +1,4 @@
+import {TenantInitializationMap} from './tenant-storage.mjs';
 import {businessMonth} from './business-month.mjs';
 import {projectBusinessPeriodFrame} from '../../finance/src/business-period-frame.mjs';
 import {productionCostReference,validateProductionCosts} from './production-costs.mjs';
@@ -13,7 +14,7 @@ export const PRODUCTION_COST_PERIODS_SCHEMA=[
  `INSERT OR IGNORE INTO production_cost_week_state(id,revision) VALUES(1,0)`,
  `CREATE TABLE IF NOT EXISTS production_cost_month_quantities(month TEXT PRIMARY KEY NOT NULL,end_date TEXT NOT NULL,source_checked_at INTEGER NOT NULL,payload TEXT NOT NULL CHECK(length(CAST(payload AS BLOB))<=1048576))`,
 ];
-const ready=new WeakMap(),encoder=new TextEncoder();
+const ready=new TenantInitializationMap(),encoder=new TextEncoder();
 const plain=value=>value!==null&&typeof value==='object'&&[Object.prototype,null].includes(Object.getPrototypeOf(value));
 const exact=(value,keys)=>plain(value)&&Reflect.ownKeys(value).length===keys.length&&keys.every(key=>Object.hasOwn(Object.getOwnPropertyDescriptor(value,key)||{},'value'));
 const int=(value,min=0,max=Number.MAX_SAFE_INTEGER)=>Number.isSafeInteger(value)&&!Object.is(value,-0)&&value>=min&&value<=max;

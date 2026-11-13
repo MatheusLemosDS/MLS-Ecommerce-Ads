@@ -1,0 +1,6 @@
+{
+  "fixture": "SYNTHETIC_ONLY",
+  "sessions": 4,
+  "status": 200,
+  "cold_auth_mfa_confirm_sql": 52
+}

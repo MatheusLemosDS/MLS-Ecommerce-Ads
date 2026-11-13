@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {execFileSync} from 'node:child_process';
+import {randomUUID} from 'node:crypto';
 import {PROJECT_ROOT, TARGETS, stableJson, sha256, error, uuid} from './worker_project.mjs';
 import {buildWorkers} from './build_workers.mjs';
 import {verifyBrowserAssets} from './browser_assets.mjs';
@@ -60,7 +61,10 @@ function browserAssetsConfig(root, target, config, snapshot) {
   };
 }
 
-export function validateDeployment(target, {root = PROJECT_ROOT, dependencies = true} = {}) {
+// Validate the immutable captures before applying any reviewed, additive
+// authorization. In particular Finance keeps exactly one legacy FINANCE_DB;
+// the shared account database is never included in that isolation comparison.
+function capturedDeployment(target, {root = PROJECT_ROOT, dependencies = true} = {}) {
   if (!Object.hasOwn(TARGETS, target)) throw error('WORKER_TARGET_INVALID');
   const expected = TARGETS[target];
   const config = read(root, target, 'wrangler.json');
@@ -100,7 +104,7 @@ export function validateDeployment(target, {root = PROJECT_ROOT, dependencies = 
       || config.route || config.triggers?.crons?.length || config.services?.length
       || config.d1_databases.length !== 1) throw error('WORKER_FINANCE_MUST_BE_PRIVATE');
     if (dependencies) {
-      const app = validateDeployment('app', {root, dependencies: false}).config;
+      const app = capturedDeployment('app', {root, dependencies: false}).config;
       const adminIds = new Set(app.d1_databases.map(value => value.database_id.toLowerCase()));
       if (adminIds.has(config.d1_databases[0].database_id.toLowerCase())) throw error('WORKER_FINANCE_DATABASE_MUST_BE_SEPARATE');
     }
@@ -108,19 +112,144 @@ export function validateDeployment(target, {root = PROJECT_ROOT, dependencies = 
   const automated = automationConfig(root, target, config, snapshot);
   const browserAssets = browserAssetsConfig(root, target, automated || config, snapshot);
   const effective = browserAssets || automated;
-  return {target, config: effective || config, generated: Boolean(effective),
+  return {target, config: effective || config, captured: config, snapshot, generated: Boolean(effective),
     configPath: path.join(root, 'workers', target,
       ...(effective ? ['.wrangler', browserAssets ? 'runtime.generated.json' : 'automation.generated.json'] : ['wrangler.json']))};
+}
+
+const COMMERCIAL_ACCOUNT_CONFIG = 'commercial-account.json';
+const COMMERCIAL_ACCOUNT_CONFIG_ERROR = 'WORKER_COMMERCIAL_ACCOUNT_CONFIG_INVALID';
+const COMMERCIAL_ACCOUNT_TARGETS = Object.freeze(['app', 'auth', 'finance']);
+const deploymentAuthorizations = new WeakMap();
+
+function accountAuthorization(root, target) {
+  const directory = path.resolve(root, 'workers', target);
+  const file = path.join(directory, COMMERCIAL_ACCOUNT_CONFIG);
+  let descriptor, exists = false;
+  try {
+    // An authorization must be a local regular file, not an alias to another
+    // target or to a mutable external configuration. Open once, then read that
+    // descriptor so a path replacement cannot mix its size and its contents.
+    const metadata = fs.lstatSync(file);
+    exists = true;
+    if (!metadata.isFile() || metadata.nlink !== 1
+      || fs.realpathSync(directory) !== directory) throw error(COMMERCIAL_ACCOUNT_CONFIG_ERROR);
+    descriptor = fs.openSync(file, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW);
+    const opened = fs.fstatSync(descriptor);
+    if (!opened.isFile() || opened.nlink !== 1 || opened.size > 4096
+      || opened.dev !== metadata.dev || opened.ino !== metadata.ino) throw error(COMMERCIAL_ACCOUNT_CONFIG_ERROR);
+    const buffer = Buffer.alloc(4097);let length = 0;
+    while (length < buffer.length) {
+      const count = fs.readSync(descriptor, buffer, length, buffer.length - length, length);
+      if (!count) break;
+      length += count;
+    }
+    const bytes = buffer.subarray(0, length);
+    const after = fs.fstatSync(descriptor);
+    if (bytes.length > 4096 || after.size !== bytes.length
+      || opened.size !== after.size || opened.mtimeMs !== after.mtimeMs
+      || opened.ctimeMs !== after.ctimeMs) throw error(COMMERCIAL_ACCOUNT_CONFIG_ERROR);
+    const source = new TextDecoder('utf-8', {fatal: true}).decode(bytes);
+    const parsed = JSON.parse(source);
+    // The authorization is deliberately flat. Repeated JSON member names
+    // cannot hide an earlier value from the human reviewing this sidecar.
+    if ([...source.matchAll(/"(?:[^"\\]|\\.)*"\s*:/gs)].length !== 3) throw error(COMMERCIAL_ACCOUNT_CONFIG_ERROR);
+    return parsed;
+  } catch (failure) {
+    if (failure?.code === 'ENOENT' && !exists) return undefined;
+    throw error(COMMERCIAL_ACCOUNT_CONFIG_ERROR);
+  } finally {
+    if (descriptor !== undefined) fs.closeSync(descriptor);
+  }
+}
+
+function accountBindingCollision(value) {
+  if (!value || typeof value !== 'object') return false;
+  return Object.entries(value).some(([key, entry]) =>
+    key.trim().toUpperCase() === 'ACCOUNT_DB'
+    || ['binding', 'name'].includes(key) && typeof entry === 'string'
+      && entry.trim().toUpperCase() === 'ACCOUNT_DB'
+    || accountBindingCollision(entry));
+}
+
+function commercialAccountConfig(root, target, verified) {
+  const names = COMMERCIAL_ACCOUNT_TARGETS;
+  const authorizations = names.map(name => accountAuthorization(root, name));
+  if (authorizations.every(value => value === undefined)) return null;
+  if (!names.includes(target) || authorizations.some(value => value === undefined)) throw error(COMMERCIAL_ACCOUNT_CONFIG_ERROR);
+  const captures = names.map(name => name === target ? verified : capturedDeployment(name, {root}));
+  let accountId;
+  const legacyIds = new Set();
+  for (let index = 0; index < names.length; index++) {
+    const authorization = authorizations[index], capture = captures[index];
+    if (!authorization || Array.isArray(authorization)
+      || Object.keys(authorization).sort().join(',') !== 'account_database_id,captured_config_sha256,version'
+      || authorization.version !== 1 || !uuid(authorization.account_database_id)
+      || authorization.account_database_id === '00000000-0000-0000-0000-000000000000'
+      || !/^[0-9a-f]{64}$/.test(authorization.captured_config_sha256 ?? '')
+      || authorization.captured_config_sha256 !== capture.snapshot.config_sha256
+      || accountBindingCollision(capture.config)) throw error(COMMERCIAL_ACCOUNT_CONFIG_ERROR);
+    const id = authorization.account_database_id.toLowerCase();
+    if (accountId !== undefined && accountId !== id) throw error(COMMERCIAL_ACCOUNT_CONFIG_ERROR);
+    accountId = id;
+    for (const database of capture.captured.d1_databases || []) legacyIds.add(database.database_id.toLowerCase());
+  }
+  if (legacyIds.has(accountId)) throw error('WORKER_COMMERCIAL_ACCOUNT_DATABASE_MUST_BE_SEPARATE');
+  const config = verified.config;
+  const effective = {...config,
+    main: path.resolve(root, 'workers', target, config.main),
+    ...(config.assets ? {assets: {...config.assets,
+      directory: path.resolve(root, 'workers', target, config.assets.directory)}} : {}),
+    d1_databases: [...(config.d1_databases || []), {binding: 'ACCOUNT_DB', database_id: accountId}],
+  };
+  return {config: effective, fingerprint: sha256(stableJson({authorizations,
+    captures: captures.map(capture => ({target: capture.target, captured: capture.captured,
+      snapshot: capture.snapshot, effective: capture.config}))}))};
+}
+
+export function validateDeployment(target, {root = PROJECT_ROOT, dependencies = true} = {}) {
+  const verified = capturedDeployment(target, {root, dependencies});
+  const accountConfig = commercialAccountConfig(root, target, verified);
+  const result = {target, config: accountConfig?.config || verified.config, generated: Boolean(accountConfig) || verified.generated,
+    configPath: accountConfig
+      ? path.join(root, 'workers', target, '.wrangler', 'runtime.generated.json')
+      : verified.configPath};
+  deploymentAuthorizations.set(result, accountConfig?.fingerprint ?? null);
+  return result;
+}
+
+function writeGeneratedDeployment(verified) {
+  const directory = path.resolve(path.dirname(verified.configPath));
+  fs.mkdirSync(directory, {recursive: true});
+  if (!fs.lstatSync(directory).isDirectory() || fs.realpathSync(directory) !== directory) throw error('WORKER_GENERATED_CONFIG_INVALID');
+  try {
+    const previous = fs.lstatSync(verified.configPath);
+    if (!previous.isFile() || previous.nlink !== 1) throw error('WORKER_GENERATED_CONFIG_INVALID');
+  } catch (failure) {
+    if (failure?.code !== 'ENOENT') throw failure;
+  }
+  const temporary = path.join(directory, '.deployment-' + randomUUID() + '.json');
+  try {
+    fs.writeFileSync(temporary, stableJson(verified.config), {flag: 'wx', mode: 0o600});
+    fs.renameSync(temporary, verified.configPath);
+  } finally {
+    try { fs.unlinkSync(temporary); } catch (failure) { if (failure?.code !== 'ENOENT') throw failure; }
+  }
 }
 
 export function deployWorker(target, {root = PROJECT_ROOT, run = execFileSync, build = buildWorkers, dryRun = false} = {}) {
   const verified = validateDeployment(target, {root});
   if (target === 'auth') validateDeployment('finance', {root});
   build(target, {root});
+  // A build is allowed to emit artifacts, never to replace the reviewed
+  // deployment authorization or any captured domain, resource or schedule.
+  const afterBuild = validateDeployment(target, {root});
+  if (stableJson(afterBuild) !== stableJson(verified)
+    || deploymentAuthorizations.get(afterBuild) !== deploymentAuthorizations.get(verified)) throw error('WORKER_DEPLOYMENT_CONFIG_CHANGED');
+  if (target === 'auth') validateDeployment('finance', {root});
   if(target==='app'&&verified.config.assets)verifyBrowserAssets(root);
   if (verified.generated) {
-    fs.mkdirSync(path.dirname(verified.configPath), {recursive: true});
-    fs.writeFileSync(verified.configPath, stableJson(verified.config));
+    writeGeneratedDeployment(verified);
   }
   const wrangler = path.join(root, 'node_modules/wrangler/bin/wrangler.js');
   return run(process.execPath, [wrangler, 'deploy', '--config', verified.configPath,

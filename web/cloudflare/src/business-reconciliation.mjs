@@ -1,3 +1,4 @@
+import {TenantInitializationSet} from './tenant-storage.mjs';
 import {readCompletedBusinessMonth} from './business-month-publication.mjs';
 import {projectReconciliationFrame,projectReconciliationEvidenceFrame,projectReconciliationMoneyFrame} from '../../finance/src/reconciliation-frame.mjs';
 import {projectOriginalItemsFrame,projectReconciliationOriginalItemsFrame} from '../../finance/src/original-items-frame.mjs';
@@ -10,7 +11,7 @@ export const BUSINESS_RECONCILIATION_SCHEMA=[
 ];
 export class BusinessReconciliationError extends Error{constructor(code,status=503){super(code);this.status=status;}}
 const fail=(code,status=503)=>{throw new BusinessReconciliationError(code,status);};
-const ready=new WeakSet(),encoder=new TextEncoder();
+const ready=new TenantInitializationSet(),encoder=new TextEncoder();
 const payloadHash=async value=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',encoder.encode(value))),byte=>byte.toString(16).padStart(2,'0')).join('');
 const plain=value=>value!==null&&typeof value==='object'&&[Object.prototype,null].includes(Object.getPrototypeOf(value));
 const exact=(value,keys)=>plain(value)&&Reflect.ownKeys(value).length===keys.length&&keys.every(key=>Object.hasOwn(Object.getOwnPropertyDescriptor(value,key)||{},'value'));

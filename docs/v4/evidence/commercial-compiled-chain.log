@@ -1,0 +1,12 @@
+✔ compiled Auth and Finance preserve App cash DTOs and isolate identical requests across two persistent companies (243.078975ms)
+ℹ {"financeBytes":726839,"authBytes":516403,"financeGraphContextCopies":1,"financeQueries":[{"path":"/internal/finance/external-cash-v1","queries":13,"creates":0},{"path":"/internal/finance/external-cash-v1","queries":14,"creates":0},{"path":"/internal/finance/external-cash-v1","queries":60,"creates":31},{"path":"/internal/finance/external-cash-v1","queries":14,"creates":0},{"path":"/internal/finance/external-cash-v1","queries":13,"creates":0},{"path":"/internal/finance/external-cash-v1","queries":14,"creates":0},{"path":"/internal/finance/external-cash-v1","queries":60,"creates":31},{"path":"/internal/finance/external-cash-v1","queries":14,"creates":0},{"path":"/internal/finance/external-cash-v1","queries":20,"creates":0},{"path":"/internal/finance/external-cash-v1","queries":20,"creates":0}],"environment":"LOCAL_SYNTHETIC_SQLITE_COMPILED_CHAIN"}
+✔ compiled boundaries reject a stale envelope, forged tenant header and revocation in flight without returning another company (16.710181ms)
+✔ a dynamic profile and explicit own connector key survive both compiled receivers and the App identity projector (19.086206ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 355.7092

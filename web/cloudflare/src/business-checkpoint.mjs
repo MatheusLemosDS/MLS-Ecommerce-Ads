@@ -1,3 +1,4 @@
+import {TenantInitializationMap} from './tenant-storage.mjs';
 import {businessMonth,projectBusinessMonth} from './business-month.mjs';
 import {enqueueCatalogClassifications,enqueueSoldCatalogGaps} from './catalog-classification.mjs';
 
@@ -63,7 +64,7 @@ const checkpointCoverage=['orders','paid','completed','ongoing','cancelled','can
 const checkpointPending=['COLLECTING','PERIOD_LIMIT_REACHED','SOURCE_UNAVAILABLE','STATUS_REVIEW_REQUIRED','PAYMENT_INCOMPLETE','RETURNS_NOT_RECONCILED','PRODUCTION_COST_INCOMPLETE','INVOICE_TAX_UNAVAILABLE','ADS_UNAVAILABLE','EXTERNAL_EXPENSES_REQUIRED','RECHARGE_TREATMENT_REQUIRED','ADJUSTMENT_UNAVAILABLE','ARITHMETIC_UNSAFE','TAX_POLICY_REQUIRED','FINANCIAL_SOURCE_STALE'];
 const checkpointLineCodes=['EXPECTED_PAYOUT','PRODUCTION','TAX','ADS_CONSUMPTION','OTHER_EXPENSES','ADS_RECHARGE_RESTORE'];
 const checkpointRetention=128;
-const checkpointReady=new WeakMap();
+const checkpointReady=new TenantInitializationMap();
 
 function checkpointProject(value){
  try{

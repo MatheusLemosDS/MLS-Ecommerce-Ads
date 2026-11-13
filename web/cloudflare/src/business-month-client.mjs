@@ -1,3 +1,4 @@
+import {createMlsFinancialBars} from './mls-financial-bars.mjs';
 import {projectBusinessMonthVariantContributions} from './business-variant-attribution.mjs';
 import {FINANCIAL_CLOSEOUT_CLIENT} from './financial-closeout-view.mjs';
 import {buildMlsProductIntelligence,simulateMlsPricingScenario} from './mls-product-intelligence.mjs';
@@ -26,6 +27,7 @@ import {BUSINESS_DAY_CLIENT} from './business-day-view.mjs';
 
 export const BUSINESS_MONTH_CLIENT=BUSINESS_DAY_CLIENT+String.raw`
 (()=>{
+ const financialBars=(${createMlsFinancialBars.toString()})(document);
  ${projectMissionAdsSnapshot.toString()}
  ${buildMlsProductIntelligence.toString()}
  ${simulateMlsPricingScenario.toString()}
@@ -266,8 +268,9 @@ export const BUSINESS_MONTH_CLIENT=BUSINESS_DAY_CLIENT+String.raw`
   if(!catalogFeature())return null;if(!Array.isArray(rows)||rows.length>3000)return false;
   const ids=[...new Set(rows.map(row=>row?.item_id).filter(value=>typeof value==='string'&&/^[1-9][0-9]{0,19}$/.test(value)))];
   if(!ids.length)return true;
-  try{const raw=await api('catalog-classification/enqueue',{item_ids:ids});takeCatalogState(raw);catalogNeedsRead=true;drawCatalogStatus();scheduleCatalog();return true;}
-  catch{catalogError='A fila não pôde ser atualizada agora. Os custos e ajustes salvos foram preservados.';drawCatalogStatus();return false;}
+  const token=generation,selected=month,current=()=>!globalThis.mlsCommercialWorkspace||started&&token===generation&&selected===month;
+  try{const raw=await api('catalog-classification/enqueue',{item_ids:ids});if(!current())return false;takeCatalogState(raw);catalogNeedsRead=true;drawCatalogStatus();scheduleCatalog();return true;}
+  catch{if(current()){catalogError='A fila não pôde ser atualizada agora. Os custos e ajustes salvos foram preservados.';drawCatalogStatus();}return false;}
  }
  let checkpointHistory=null,checkpointHistoryMonth='',checkpointHistoryBusy=false,checkpointHistoryError='',checkpointHistoryStale=false,checkpointHistoryRequest=0;
  const checkpointHistoryOpen=new Set();
@@ -491,7 +494,7 @@ export const BUSINESS_MONTH_CLIENT=BUSINESS_DAY_CLIENT+String.raw`
   item('Cobertura do custo de produção',counted?coverage.total_units===0?'Sem unidades vendidas':new Intl.NumberFormat('pt-BR').format(coverage.known_units)+' de '+new Intl.NumberFormat('pt-BR').format(coverage.total_units)+' unidades':'Quantidade ainda não disponível',coverage.pending_units>0?summaryCount(coverage.pending_units,'unidade','unidades')+' sem custo · '+summaryCount(coverage.pending_variants,'variação','variações')+' · '+summaryCount(coverage.pending_products,'produto','produtos')+'.':counted?'Todas as unidades deste recorte têm custo identificado.':'A quantidade depende do detalhamento validado dos produtos; ela não é calculada pela quantidade de pedidos.');
  }
  function drawWaterfall(summary=frame?buildMonthlyFinancialSummary(frame):null,presentation=monthlyPresentation()){
-  const target=el('Waterfall');target.replaceChildren();if(!frame)return;
+  const target=el('Waterfall');target.replaceChildren();el('CompositionChart')?.replaceChildren();if(!frame)return;
   const row=(label,amount,sign='')=>{const entry=node('div',undefined,'month-waterfall-row');entry.append(node('dt',label),node('dd',amount===null?'Pendente':sign+money(amount)));target.append(entry);};
   const mei=frame.tax?.regime==='MEI';
   row('Vendas dos produtos',frame.sales_cents);
@@ -508,6 +511,8 @@ export const BUSINESS_MONTH_CLIENT=BUSINESS_DAY_CLIENT+String.raw`
   const expensesConfirmed=!frame.result.pending.includes('EXTERNAL_EXPENSES_REQUIRED');
   row(expensesConfirmed?'Outras despesas do mês':'Outras despesas do mês · não declaradas',expensesConfirmed?frame.expenses.external_expenses_cents:null,'− ');
   row(balanceLabel(summary,presentation),summary?.balance_cents??presentation?.amount_cents??null);
+  const negative=value=>Number.isSafeInteger(value)?value===0?0:-value:null;
+  financialBars.draw(el('CompositionChart'),[{label:'Vendas dos produtos · contexto',value:frame.sales_cents,role:'CONTEXT'},{label:'Diferença vendas e repasse · informativa',value:adjustment,role:'CONTEXT'},{label:'Repasse previsto',value:frame.expected_repass_cents,role:'START'},{label:summary?.production_complete?'Produção de referência':'Produção identificada · parcial',value:negative(summary?.known_production_cents??null),role:'DEDUCTION'},{label:mei?'DAS mensal':'Imposto previsto',value:negative(frame.invoice_tax_cents),role:'DEDUCTION'},{label:'Recarga classificada reposta',value:frame.ads_adjustment_cents>0?(frame.expenses.recharge_treatment==='ADS_RECHARGE'?frame.ads_adjustment_cents:frame.expenses.recharge_treatment==='UNCONFIRMED'?null:0):0,role:'ADJUSTMENT'},{label:'Gasto com Ads',value:negative(frame.ads?.status==='AVAILABLE'?frame.ads.expense_cents:null),role:'DEDUCTION'},{label:'Outras despesas',value:negative(expensesConfirmed?frame.expenses.external_expenses_cents:null),role:'DEDUCTION'},{label:balanceLabel(summary,presentation),value:summary?.balance_cents??presentation?.amount_cents??null,role:'RESULT'}],{title:'Componentes do mês · valores assinados',basis:frame.month+' · referência comercial atual. Contexto não é deduzido outra vez; fabricação física separada.',complete:summary?.state==='READY'});
   el('CalculationHelp').textContent=Number.isSafeInteger(presentation?.amount_cents)||summary?.state==='PARTIAL_COSTS'||summary?.state==='PROVISIONAL'?summaryBalanceHelp(summary,presentation):'A previsão usa os custos de produção atuais. Recebimentos bancários ainda não estão conciliados.';
  }
  function drawTaxAndExpenses(summary=frame?buildMonthlyFinancialSummary(frame):null){
@@ -564,7 +569,7 @@ export const BUSINESS_MONTH_CLIENT=BUSINESS_DAY_CLIENT+String.raw`
     attributes:(variant.attributes??[]).map(attribute=>({name:attribute.name,value:attribute.value}))
    }))}];});
   const workbench=report?buildMlsProductWorkbench(report,catalog):null;
-  if(!m3WorkbenchView)m3WorkbenchView=createMlsProductWorkbenchView({document,onSelectVariant:key=>{
+  if(!m3WorkbenchView)m3WorkbenchView=createMlsProductWorkbenchView({document,financialBars,onSelectVariant:key=>{
    const control=el('PricingVariant');if(!control||control.disabled)return;
    const available=[...(control.options??control.children??[])].some(option=>option.value===key);if(!available)return;
    control.value=key;control.onchange?.();
@@ -680,7 +685,7 @@ export const BUSINESS_MONTH_CLIENT=BUSINESS_DAY_CLIENT+String.raw`
   try{globalThis.brazaExpenseLedger?.observe(month);}catch{}
   globalThis.brazaAutomationWorkspace?.render(frame?buildAccountDiagnosis(frame):null);drawCheckpoint();
   if(!frame){
-   for(const key of ['Sales','Ads','Roas']){el(key).textContent=busy?'Consultando':'Pendente';el(key+'Card').dataset.status='pending';}el('NetLabel').textContent='Resultado líquido previsto';el('Net').textContent='Em apuração';el('NetHelp').textContent='O resultado aparece após conferir os pedidos, anúncios e custos do mês.';el('NetCard').dataset.status='pending';drawMonthlyPartialAction(null);el('Margin').textContent='';el('Coverage').replaceChildren();el('Waterfall').replaceChildren();el('Readiness').replaceChildren();el('Pending').hidden=true;el('Badge').textContent=collectionRecovery?.waiting&&!paused&&!document.hidden?'Aguardando retomada automática':busy?'Consultando':collectionFailure?'Consulta interrompida':'Aguardando consulta';drawCostOverview(null);drawTaxAndExpenses();drawProducts();drawWorkspaceCollection();controls();return;
+   for(const key of ['Sales','Ads','Roas']){el(key).textContent=busy?'Consultando':'Pendente';el(key+'Card').dataset.status='pending';}el('NetLabel').textContent='Resultado líquido previsto';el('Net').textContent='Em apuração';el('NetHelp').textContent='O resultado aparece após conferir os pedidos, anúncios e custos do mês.';el('NetCard').dataset.status='pending';drawMonthlyPartialAction(null);el('Margin').textContent='';el('Coverage').replaceChildren();el('Waterfall').replaceChildren();el('CompositionChart')?.replaceChildren();el('Readiness').replaceChildren();el('Pending').hidden=true;el('Badge').textContent=collectionRecovery?.waiting&&!paused&&!document.hidden?'Aguardando retomada automática':busy?'Consultando':collectionFailure?'Consulta interrompida':'Aguardando consulta';drawCostOverview(null);drawTaxAndExpenses();drawProducts();drawWorkspaceCollection();controls();return;
   }
   const c=frame.coverage,ads=frame.ads,broad=ads?.totals.broad,net=frame.result.net_estimate_cents,summary=buildMonthlyFinancialSummary(frame),presentation=monthlyPresentation(),balance=summary?.balance_cents??presentation?.amount_cents??null;
   setMetric('Sales',frame.sales_cents===null?null:money(frame.sales_cents),frame.sales_cents===null?'Já informado: '+money(frame.known_sales_cents)+'. Falta conferir parte dos pedidos pagos.':'Produtos dos '+c.paid+' pedido(s) pagos criados nas datas do mês.');
@@ -978,7 +983,9 @@ export const BUSINESS_MONTH_CLIENT=BUSINESS_DAY_CLIENT+String.raw`
   catch{if(token===generation)status('A identificação automática ficou pendente. Confira os produtos e custos; os vínculos salvos foram preservados.',true);}
   finally{if(token===generation){busy=false;render();schedule();}}
  }
+ function visibilityChanged(){if(!started)return;if(document.hidden){clearTimeout(timer);timer=null;clearTimeout(catalogTimer);catalogTimer=null;}else{schedule();scheduleCatalog();}}
  async function start(options={}){
+  if(globalThis.mlsCommercialWorkspace?.isActive?.()===false)return false;
   if(started)return false;if(typeof options.api!=='function'||!el('Select'))return false;
   api=options.api;for(const initialize of [()=>globalThis.brazaExpenseLedger?.start({api,onChanged:async selected=>{if(started&&selected===month)return refreshCosts();}}),()=>globalThis.brazaReconciliation?.start({api}),()=>globalThis.brazaFinancialCloseout?.start({api}),()=>globalThis.brazaEscrowReleases?.start({api}),()=>globalThis.brazaIncomeOverview?.start?.({api})]){try{initialize();}catch{}}syncVariants=options.syncVariants;onCatalogChanged=options.onCatalogChanged;bootstrapPhase='READY';bootstrapCompleted=true;started=true;
   let selected;try{const params=new URLSearchParams(globalThis.location?.search||'');selected=params.getAll('month').length===1?params.get('month'):null;}catch{}try{const dailyMonth=globalThis.brazaDayDashboard?.getSelection?.()?.slice(0,7);if(validMonth(dailyMonth))selected=dailyMonth;}catch{}
@@ -999,7 +1006,7 @@ export const BUSINESS_MONTH_CLIENT=BUSINESS_DAY_CLIENT+String.raw`
   el('CheckpointHistoryRefresh').onclick=()=>{checkpointHistoryStale=true;return loadCheckpointHistory();};
   for(const name of ['ProductSearch','ProductFilter','ProductSort','ProductPageSize'])el(name)[name==='ProductSearch'?'oninput':'onchange']=()=>{productPage=1;drawProducts();scheduleCatalog();};
   el('ProductPrevious').onclick=()=>{productPage--;drawProducts();scheduleCatalog();};el('ProductNext').onclick=()=>{productPage++;drawProducts();scheduleCatalog();};
-  document.addEventListener('visibilitychange',()=>{if(document.hidden){clearTimeout(timer);timer=null;clearTimeout(catalogTimer);catalogTimer=null;}else{schedule();scheduleCatalog();}});
+  document.addEventListener('visibilitychange',visibilityChanged);
   manualCollection=false;return readWorkspaceView();
  }
  function snapshot(){
@@ -1010,7 +1017,17 @@ export const BUSINESS_MONTH_CLIENT=BUSINESS_DAY_CLIENT+String.raw`
   const auditScope=scope?Object.freeze({...scope,sources:Object.freeze(scope.sources.map(row=>Object.freeze({...row})))}):null;
   return Object.freeze({schema:'mls_month_snapshot_v1',month:frame.month,audit_scope:auditScope,status:frame.status,checked_at:Number.isSafeInteger(frame.checked_at)?frame.checked_at:null,balance_cents:Number.isSafeInteger(summary?.balance_cents)?summary.balance_cents:null,presentation:monthlyPresentation()?Object.freeze({...monthlyPresentation(),monthly_costs_missing:Object.freeze([...monthlyPresentation().monthly_costs_missing])}):null,period_loading:busy,period_change_blocked:monthChangeBlocked(),pending:Array.isArray(frame.result?.pending)?[...frame.result.pending]:[],coverage:coverage?Object.freeze({orders:coverage.orders,paid:coverage.paid,completed:coverage.completed,ongoing:coverage.ongoing,cancelled:coverage.cancelled,cancel_pending:coverage.cancel_pending,unpaid:coverage.unpaid,other:coverage.other,unknown:coverage.unknown,returns:coverage.returns,returns_unknown:coverage.returns_unknown}):null,production_coverage:production?Object.freeze({total_units:production.total_units,known_units:production.known_units,pending_units:production.pending_units}):null,ads_spend_cents:adsMatches&&Number.isSafeInteger(ads.expense_cents)?ads.expense_cents:null,ads_checked_at:adsMatches&&Number.isSafeInteger(ads.fetched_at)?ads.fetched_at:null,ads_pending:frame.result.pending.includes('ADS_UNAVAILABLE'),product_count:Array.isArray(frame.product_summary?.products)?frame.product_summary.products.length:null,collection:frame.collection?Object.freeze({...frame.collection}):null,expense_schedule:['business_month_view_v4','business_month_view_v5'].includes(workspaceView?.schema)&&workspaceView.expense_schedule?Object.freeze({...workspaceView.expense_schedule,upcoming:Object.freeze((workspaceView.expense_schedule.upcoming??[]).map(item=>Object.freeze({...item})))}):null});
  }
- function stop(){for(const shutdown of [()=>globalThis.brazaExpenseLedger?.stop(),()=>globalThis.brazaReconciliation?.stop(),()=>globalThis.brazaFinancialCloseout?.stop(),()=>globalThis.brazaEscrowReleases?.stop(),()=>globalThis.brazaIncomeOverview?.stop?.()]){try{shutdown();}catch{}}started=false;viewRequest++;viewPromise=null;priorityPromise=null;manualCollection=false;resetCostDiagnostic();catalogRequest++;catalogBusy=false;clearTimeout(catalogTimer);catalogTimer=null;paused=true;resumeOnVisible=false;collectionRecovery=null;generation++;checkpointHistoryRequest++;checkpointHistoryBusy=false;busy=false;adsBusy=false;clearTimeout(timer);timer=null;controls();}
+ function stop(){for(const shutdown of [()=>globalThis.brazaExpenseLedger?.stop(),()=>globalThis.brazaReconciliation?.stop(),()=>globalThis.brazaFinancialCloseout?.stop(),()=>globalThis.brazaEscrowReleases?.stop(),()=>globalThis.brazaIncomeOverview?.stop?.()]){try{shutdown();}catch{}}started=false;viewRequest++;viewPromise=null;priorityPromise=null;manualCollection=false;resetCostDiagnostic();catalogRequest++;catalogBusy=false;clearTimeout(catalogTimer);catalogTimer=null;paused=true;resumeOnVisible=false;collectionRecovery=null;generation++;checkpointHistoryRequest++;checkpointHistoryBusy=false;busy=false;adsBusy=false;clearTimeout(timer);timer=null;
+  if(!globalThis.mlsCommercialWorkspace){controls();return;}
+  frame=null;workspaceView=null;variantContributionContext=null;presentationFrame=null;presentationCache=null;month='';saving=false;dirty=false;editSequence++;draftRevision=0;message='';failed=false;
+  collectionFailure=null;lastFinancialRefreshAt=0;automaticBlocked=true;adsFailures=0;adsRetryAt=0;viewFailures=0;
+  catalogState=null;catalogProducts.clear();catalogVisibleIds=[];catalogSignature='';catalogNeedsRead=true;catalogError='';catalogPaused=false;catalogProductsChanged=false;
+  costDiagnosticContext=null;costDiagnostic=null;costDiagnosticEvidence=null;costDiagnosticRaw='';checkpointHistory=null;checkpointHistoryMonth='';checkpointHistoryError='';checkpointHistoryStale=false;checkpointHistoryOpen.clear();productOpen.clear();productPage=1;productMonth='';
+  try{m3WorkbenchView?.clear();}catch{}m3WorkbenchView=null;m3PricingDrafts.clear();m3PricingSelections.clear();m3PricingDraftKey=null;m3PricingEvidenceKey='';
+  snapshotListeners.clear();document.removeEventListener?.('visibilitychange',visibilityChanged);api=null;syncVariants=null;onCatalogChanged=null;bootstrapRetry=null;bootstrapRetryPending=false;bootstrapPrepared=false;bootstrapCompleted=true;
+  for(const value of document.querySelectorAll?.('[id^="businessMonth"],#businessMonth *,#businessMonthPricingObserver *')??[]){if('value'in value)value.value='';if('checked'in value)value.checked=false;value.disabled=true;for(const handler of ['onclick','oninput','onchange','onsubmit','ontoggle','onkeydown','onfocus'])value[handler]=null;value.replaceChildren?.();value.textContent='';}
+  monthlyPartialAction=null;
+ }
  function selectMonth(selected){if(!started||!validMonth(selected))return Promise.resolve(false);if(selected!==month&&monthChangeBlocked())return Promise.resolve(refuseMonthChange());if(saving)return Promise.resolve(false);el('Select').value=selected;return readWorkspaceView({selected});}
 
  // Read-only source coverage for the operator; no additional D1 or provider reads.

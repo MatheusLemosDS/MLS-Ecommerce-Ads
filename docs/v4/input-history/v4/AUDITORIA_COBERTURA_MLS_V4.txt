@@ -1,0 +1,98 @@
+AUDITORIA DE COBERTURA V4 — MLS COMMERCE OS
+Repositório: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads
+Base: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/tree/a5bd38a0902b38ecc3e90a747601eba330e7813e
+Comparação: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/compare/18fd393e6d5a7fb098e2a71b234f2d9c15846cbb...a5bd38a0902b38ecc3e90a747601eba330e7813e
+
+RESULTADO
+
+O prompt V3 precisava de complementos. A main avançou seis commits e incorporou Relatórios/Resumo semanal, caixa por período e distribuição de cinco assets. Também faltava uma especificação comercial de contas de clientes e uma distinção mais rigorosa entre gráficos atuais, extensões e slots sem fonte.
+
+A V4 preserva os 158 IDs de requisito anteriores e acrescenta 69, totalizando 227 requisitos em 27 seções. Cada um possui aceite. O catálogo adicional identifica 22 famílias de gráfico/contrato; esse número inclui gráficos existentes, extensões e estados sem fonte, não significa 22 novos gráficos já integrados. A matriz JSON distingue esses escopos e começa em ESPECIFICADO.
+
+O escopo foi auditado por árvore, composição de build, rotas, handlers, projetores, renderers, stores e testes-fonte relevantes. A árvore completa tem 1.014 entradas; isso não quer dizer que 1.014 arquivos foram lidos linha a linha. A comparação de 23 módulos anteriores de catálogo/custos/pricing/Ads/Hermes/memória/coleta confirmou hashes idênticos entre as bases. A implementação final deverá reconferir HEAD e incluir qualquer mudança posterior.
+
+1. CORREÇÕES MAIS IMPORTANTES
+
+Resumo semanal e gráficos reais
+Incluído /admin?tab=weekly-report e GET /api/admin/reports/weekly?week_end, navegação/busca, seleção de sexta, semana aberta, refresh de dados salvos, carregamento sob demanda e recuperação. Os três gráficos são separados: oito intervalos da fabricação, sete datas de estimativa das vendas e caixa agregado por origem. O relatório consulta, não fabrica/fecha/importa. Foram incluídos WKR-01..09, ECP-01..03, WAS-01 e WQA-01.
+
+Leitura de caixa
+Agregado completo independente da página da tabela; ausência de origem conserva valores nulos; matched/unmatched usa vínculos ativos e datas de cada origem; vínculos podem cruzar semanas. Créditos Nubank e transferências Shopee podem ser o mesmo dinheiro. Nenhum total deve chamá-los de duas receitas ou lucro realizado.
+
+Navegação para a fonte
+Os links atuais do novo relatório não transportam integralmente data/semana ao destino. WKR-08 exige implementação explícita do contexto, inclusive semanas cruzando mês. Um href existente não foi contado como comprovação dessa melhoria.
+
+Assets
+O inventário passou de referências explícitas a month/bank/orders para bank/month/orders/production/weekly. A falha de um asset precisa afetar seu módulo com mensagem útil, preservando os demais e o login.
+
+Gráficos de pedidos e ROAS
+As três instâncias de tendência já possuem Resultado/Vendas/Ads/ROAS e janelas 7/14. A aba Pedidos é uma extensão: exige COUNT no modelo, adaptador, renderer, eixo, tooltip, tabela e controles. Alterar só o adaptador faria o renderer atual formatar pedidos como dinheiro. ROAS usa fonte Ads independente e razão de totais.
+
+Produtos e composição financeira
+Ranking/ABC atuais são barras progress sobre o mês completo; filtro/paginação altera a tabela. Clique e ABC por receita são extensões condicionais. Os blocos chamados Waterfall são listas de composição; uma cascata gráfica exige nova apresentação que respeite sinais/cobertura. Nenhuma delas torna contribuição exclusiva em lucro líquido de todo SKU.
+
+Gráficos sem fonte fechada
+finance-payouts, finance-reconciliation, ads-distribution, products-margin, products-ranking, production-hourly e returns-reasons permanecem UNAVAILABLE no adaptador especialista. A V4 exige estados úteis e fontes válidas, não dados fictícios para preencher imagens. Previsão de caixa, capacidade horária, integridade histórica e eficácia autônoma de Hermes também não foram comprovadas como séries existentes.
+
+Saúde dos agentes
+O anel do Registry considera seis especialistas, incluindo Auditor e excluindo Hermes. Os seis cartões iniciais obrigatórios são Hermes, Finance, Ads, Products, Production e Returns. Os conjuntos não têm o mesmo denominador; saúde de acompanhamento não é integridade da empresa.
+
+2. LOGIN ATUAL E CONTA COMERCIAL NOVA
+
+O login publicado observado em /login apresenta Usuário, Senha, Entrar e tema. O código unifica owner/review, usa credenciais da implantação e sessões assinadas de oito horas. O proprietário recebe subject lógico admin. Logout atual limpa cookies do navegador; não existe nesse contrato uma lista revogável de dispositivos do cliente. “Equipe e agentes” é de agentes virtuais; “Plano e versão” é roadmap; billing_mode do Hermes é orçamento de uso, não cobrança da assinatura do cliente.
+
+Não há cadastro SaaS, organizações, convites, recuperação de senha ou perfil individual comprovados nos handlers/contratos lidos. A evidência negativa limita-se ao repositório e ref consultados: não afirma ausência de outros serviços externos, WAF ou branches. Há escopos técnicos existentes — tenant do caixa pelo FINANCE_PROFILE e owner_hash do AI Sales — que não equivalem ao isolamento geral entre empresas.
+
+Novas áreas especificadas ACCT-01..17: entrada profissional compatível; cadastro; verificação; recuperação/redefinição; perfil/troca de e-mail; senha/MFA; sessões/dispositivos; criação/seleção da empresa; onboarding; contexto empresa/loja; configurações; equipe/convites; papéis; transferência de propriedade; conexões por empresa; eventos de segurança; encerramento e parâmetros testáveis. A matriz de papéis separa Proprietário, Administrador, Financeiro, Operação e Consulta.
+
+TEN-01..06 exige isolamento em servidor, bancos, arquivos, cache, IndexedDB, jobs e fronteiras App/Auth/Finance. O cadastro não pode herdar a loja legada; identidade de empresa enviada no body não prova acesso. A migração é local, aditiva, com mapeamento explícito da loja antiga e testes com duas empresas. A moeda/fuso iniciais seguem BRL e America/Sao_Paulo.
+
+COM-01..07 prepara assinatura/entitlements, contrato de cobrança, preferências/avisos, ajuda/suporte, dados/encerramento, recuperação e critérios comerciais. Não inventa preço, assinatura já ativa, envio de e-mail, gateway nem documentos jurídicos aprovados. As dependências precisam ser visíveis antes da futura oferta pública.
+
+3. COBERTURA PRESERVADA POR ÁREA
+
+Navegação e sessão: rotas/aliases/âncoras, busca real, mobile/tema, login/logout owner/review, inicialização resiliente, permissão, CSRF e contratos de resposta.
+Visão geral: seis indicadores com recortes verdadeiros, seis agentes iniciais, prioridades, detalhes e tendências, estados de custo/resultado e fonte.
+Pedidos: períodos, filtros, paginação, leitura salva/sincronização, etapas internas, revisão de itens e tentativas incertas/idempotentes.
+Financeiro: resultado diário/mensal, repasse/Pending/liberações, conciliação, preparação do fechamento, despesas/parcelas/DAS, fontes e diagnósticos.
+Banco: CSV/OFX Nubank, CSV Shopee, mapeamento/prévia/duplicatas, importação, sugestões, vínculos/desvínculos, revisão/hash e totais por período.
+Produtos: catálogo e variações, paginação, vínculos simples/kits, custos/perfis/regras/aprendizado, ABC, contribuição exclusiva, cenários de preço, fontes e limites.
+Produção: registros físicos e custos históricos, anulação/sucessores, propostas, gráficos/detalhe, corte sexta13h, conferência de oito intervalos, original/revisões.
+DTF: fila, biblioteca PNG local, composição de SKU/kit, configuração e motor de montagem, reserva atômica, exportação/revalidação, estados de lote.
+Devoluções: casos e itens originais, recebimento rápido/avançado com semânticas distintas, parcial/quarentena/inspeção, capacidade e vínculos com fabricação, desfazer e auditoria.
+Anúncios: dashboard/calendário/atribuição/ROAS, campanhas Product Ads/GMV Max, oportunidades e bloqueios comerciais.
+Hermes: chat/análises, contextos, jobs, limites/orçamento, memória, coleta e diagnóstico, mantendo modo observador.
+Ferramentas condicionais: Listing Factory e AI Sales, suas áreas/arquivos/mídias/contratos e flags independentes, sem publicar anúncios ou enviar mensagens automaticamente.
+Gestão técnica: conexões, histórico, Auditor, novidades/versão, diagnóstico, build normal/minificado e cinco assets.
+Produto profissional: hierarquia, formulários, tabelas/filtros, conta/empresa separadas, estados completos, ajuda, acessibilidade e responsividade.
+
+4. DIREÇÃO VISUAL DEFINIDA
+
+Manter identidade MLS e cores dos agentes, com fundo/superfícies sólidos e brilho discreto. Dar prioridade a números, títulos, fonte/período, ação principal e próximos passos. Menus em linguagem de negócio; agentes como contexto. Separar pessoas de agentes, conta pessoal de empresa e assinatura de roadmap. Tema claro/escuro, tabela equivalente para gráficos, texto legível, campos rotulados e mobile funcional.
+
+A prévia HTML inclui novas telas de acesso/conta/empresa/equipe e o relatório semanal, mantendo os painéis demonstrativos anteriores. Ela não contém todos os formulários avançados nem conecta serviços. O prompt exige aplicação do mesmo padrão a todos os fluxos reais. Não usar o protótipo como banco de dados ou substituto do sistema.
+
+5. O QUE FOI E O QUE NÃO FOI VERIFICADO
+
+Verificado: comparação remota e SHA fixado; árvore completa; fontes/contratos relevantes; preservação dos 158 IDs da V3; unicidade e aceites dos 227 requisitos; correspondência prompt/matriz; registro das 22 famílias; fontes referenciadas existentes; login público visível. A prévia passou em análise de sintaxe JavaScript e em renderização das 27 áreas com DOM sintético, 24 combinações semana/estado/bloco e handlers simulados de perfil, mudança de e-mail, convite e recuperação. Não houve NaN, undefined ou IDs duplicados nas páginas geradas nesse teste.
+
+Limite da QA visual da prévia V4: não concluída nesta sessão. O navegador compartilhado não conectou ao servidor local; um Chromium isolado também não pôde criar o socket necessário no ambiente. A verificação sintética não prova responsividade, contraste, foco ou execução num navegador real. O prompt exige essa revisão do candidato pelo Codex. A página de login publicada foi observada separadamente; esse fato não valida as novas telas da demonstração.
+
+Não comprovado nesta revisão: uma sessão autenticada do proprietário; disponibilidade/completude atual dos dados da loja; todas as flags de produção; execuções de cron no instante da auditoria; importação/gravação real; testes/build novos do sistema real; isolamento comercial ou cobrança já implementados. Testes e releases antigos são fontes históricas, não resultados novos deste trabalho.
+
+O status correto é: briefing e layout de referência revisados, com implementação real atribuída ao Codex. Não é “tudo já integrado em produção” nem “pronto para vender”. A próxima entrega do Codex precisa apresentar evidências por requisito e distinguir dependência externa de implementação local ainda incompleta.
+
+FONTES DIRETAS
+
+- Login: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/a5bd38a0902b38ecc3e90a747601eba330e7813e/web/cloudflare/src/unified-auth.mjs
+- Navegação: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/a5bd38a0902b38ecc3e90a747601eba330e7813e/web/cloudflare/src/workspace-navigation.mjs
+- Semanal: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/a5bd38a0902b38ecc3e90a747601eba330e7813e/web/cloudflare/src/weekly-operating-view.mjs
+- Uso/contratos do semanal: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/a5bd38a0902b38ecc3e90a747601eba330e7813e/docs/MLS_WEEKLY_OPERATING_REPORT_2026_11_11.md
+- Gráficos: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/a5bd38a0902b38ecc3e90a747601eba330e7813e/web/cloudflare/src/mls-chart-adapters.mjs
+- Renderers: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/a5bd38a0902b38ecc3e90a747601eba330e7813e/web/cloudflare/src/mls-verified-charts.mjs
+- Produtos: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/a5bd38a0902b38ecc3e90a747601eba330e7813e/web/cloudflare/src/mls-product-workbench-view.mjs
+- Acessibilidade: https://www.w3.org/WAI/WCAG22/quickref/
+- Contas: https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html
+- Empresas: https://cheatsheetseries.owasp.org/cheatsheets/Multi_Tenant_Security_Cheat_Sheet.html
+
+As fontes completas por grupo e o catálogo de contratos estão no prompt e na matriz. Referências técnicas orientam a implementação, sem certificação ou garantia automática de conformidade.

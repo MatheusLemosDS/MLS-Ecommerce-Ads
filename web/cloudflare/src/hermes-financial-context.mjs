@@ -1,3 +1,4 @@
+import {TenantInitializationMap} from './tenant-storage.mjs';
 import {readBusinessMonthDisplay,projectBusinessMonth} from './business-month.mjs';
 import {buildMonthlyFinancialSummary} from './business-month-summary.mjs';
 import {buildAccountDiagnosis} from './account-diagnosis.mjs';
@@ -11,7 +12,7 @@ export const HERMES_FINANCIAL_CONTEXT_SCHEMA=[
 ];
 export class HermesFinancialContextError extends Error{constructor(code,status=503){super(code);this.status=status;}}
 const fail=(code,status=503)=>{throw new HermesFinancialContextError(code,status);};
-const ready=new WeakMap();
+const ready=new TenantInitializationMap();
 const encoder=new TextEncoder();
 const jobIdentity=value=>typeof value==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(value);
 const day=value=>typeof value==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(value)&&Number.isFinite(Date.parse(value+'T00:00:00Z'))&&new Date(value+'T00:00:00Z').toISOString().slice(0,10)===value;

@@ -1,3 +1,4 @@
+import {TenantInitializationMap} from './tenant-storage.mjs';
 import {projectVariantCatalog,projectVariantCatalogFailure} from '../../finance/src/variant-catalog-frame.mjs';
 import {projectCatalogMediaFrame} from '../../finance/src/catalog-media-frame.mjs';
 import {CATALOG_MEDIA_SCHEMA,prepareCatalogMediaRows,catalogMediaWriteStatement} from './saved-catalog-media.mjs';
@@ -43,7 +44,7 @@ function sourceFailureReason(failure){
  if(['TRANSPORT_UNAVAILABLE','UPSTREAM_FAILED','APP_UPSTREAM_FAILED'].some(suffix=>code===prefix+suffix))return 'CATALOG_TRANSPORT_UNAVAILABLE';
  return 'CATALOG_SOURCE_UNAVAILABLE';
 }
-const ready=new WeakMap();
+const ready=new TenantInitializationMap();
 function clock(now){let value;try{value=now();}catch{fail('CATALOG_CLASSIFICATION_CLOCK_INVALID');}if(!integer(value,1,9999999999999))fail('CATALOG_CLASSIFICATION_CLOCK_INVALID');return Math.floor(value/1000);}
 function idsInput(values){if(!array(values,3000)||!values.every(value=>id(value)))fail('CATALOG_CLASSIFICATION_REQUEST_INVALID',400);return [...new Set(values)].sort(compare);}
 async function setup(env){const db=env?.ADMIN_DB;if(!db||typeof db.batch!=='function'||typeof db.prepare!=='function')fail('CATALOG_CLASSIFICATION_CONFIGURATION');if(!ready.has(db)){const promise=db.batch(CATALOG_CLASSIFICATION_SCHEMA.map(sql=>db.prepare(sql))).then(async()=>{const state=await db.prepare('SELECT * FROM catalog_classification_state WHERE id=1').first();if(!state||!integer(state.revision,1,2147483646)||state.lease_token!==null&&(typeof state.lease_token!=='string'||!/^[a-f0-9-]{36}$/.test(state.lease_token))||state.lease_until!==null&&!integer(state.lease_until,1,9999999999)||(state.lease_token===null)!==(state.lease_until===null))fail('CATALOG_CLASSIFICATION_STORAGE_INVALID');}).catch(error=>{ready.delete(db);if(error instanceof CatalogClassificationError)throw error;fail('CATALOG_CLASSIFICATION_UNAVAILABLE');});ready.set(db,promise);}await ready.get(db);return db;}

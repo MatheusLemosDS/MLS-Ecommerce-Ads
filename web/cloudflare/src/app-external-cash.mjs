@@ -4,7 +4,7 @@ import {EXTERNAL_CASH_PATH,EXTERNAL_CASH_REQUEST_MAXIMUM,EXTERNAL_CASH_RESPONSE_
 // privately by Finance; no browser-selected provider, account or URL is forwarded.
 export async function getFinanceExternalCash(env,input,options={}){
  const failure=suffix=>({status:externalCashErrorStatus('FINANCE_EXTERNAL_CASH_'+suffix),body:{schema:'external_cash_error_v1',error:'FINANCE_EXTERNAL_CASH_'+suffix}});
- let fetchImpl=request=>fetch(request),timeoutMs=20000;
+ let fetchImpl=env?.COMMERCIAL_FETCH??(request=>fetch(request)),timeoutMs=20000;
  try{
   if(!options||![Object.prototype,null].includes(Object.getPrototypeOf(options)))return failure('CONFIGURATION');
   for(const key of Reflect.ownKeys(options)){

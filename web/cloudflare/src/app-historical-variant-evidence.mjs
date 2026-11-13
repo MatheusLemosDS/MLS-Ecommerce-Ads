@@ -2,7 +2,7 @@ import {projectHistoricalVariantEvidenceRequest,projectHistoricalVariantEvidence
 
 // Fixed private read transport. Neither caller-supplied URLs nor redirects are
 // accepted, and provider bodies never become diagnostics or model context.
-export async function getFinanceHistoricalVariantEvidence(env,input,{fetchImpl=request=>fetch(request),timeoutMs=45000}={}){
+export async function getFinanceHistoricalVariantEvidence(env,input,{fetchImpl=env?.COMMERCIAL_FETCH??(request=>fetch(request)),timeoutMs=45000}={}){
  const selected=projectHistoricalVariantEvidenceRequest(input),failure=(code,http=null)=>({schema:'historical_variant_evidence_v1',status:'UNAVAILABLE',diagnostic:{code,http}});
  if(!selected||typeof env?.APP_INTERNAL_SECRET!=='string'||!env.APP_INTERNAL_SECRET||typeof fetchImpl!=='function'||!Number.isInteger(timeoutMs)||timeoutMs<5||timeoutMs>45000)return failure('FINANCE_HISTORICAL_EVIDENCE_APP_CONFIGURATION');
  const controller=new AbortController();let timer,response,reader;
@@ -22,7 +22,7 @@ export async function getFinanceHistoricalVariantEvidence(env,input,{fetchImpl=r
    if(value&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).length===2&&value.error==='FINANCE_HISTORICAL_EVIDENCE_UNAVAILABLE'&&value.diagnostic&&typeof value.diagnostic==='object'&&!Array.isArray(value.diagnostic)&&Object.keys(value.diagnostic).length===2&&typeof value.diagnostic.code==='string'&&(value.diagnostic.http===null||Number.isInteger(value.diagnostic.http)&&value.diagnostic.http>=100&&value.diagnostic.http<=599)){const diagnostic=historicalVariantEvidenceDiagnostic({code:value.diagnostic.code,upstream_status:value.diagnostic.http});return failure(diagnostic.code,diagnostic.http);}
    return failure('FINANCE_HISTORICAL_EVIDENCE_APP_HTTP_ERROR',response.status);
   }
-  const frame=projectHistoricalVariantEvidenceFrame(value);return frame&&historicalVariantEvidenceRequestMatches(selected,frame)?frame:failure('FINANCE_HISTORICAL_EVIDENCE_APP_RESPONSE_INVALID');
+  const frame=projectHistoricalVariantEvidenceFrame(value,env.COMMERCIAL_CONTEXT?.profile??undefined);return frame&&historicalVariantEvidenceRequestMatches(selected,frame)?frame:failure('FINANCE_HISTORICAL_EVIDENCE_APP_RESPONSE_INVALID');
  };
  try{return await Promise.race([run(),deadline]);}catch{return failure(controller.signal.aborted?'FINANCE_HISTORICAL_EVIDENCE_APP_TIMEOUT':'FINANCE_HISTORICAL_EVIDENCE_APP_UPSTREAM_FAILED');}finally{clearTimeout(timer);controller.abort();cancel();}
 }

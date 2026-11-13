@@ -1,0 +1,77 @@
+{
+  "schema": "mls_v41_input_manifest_v1",
+  "primary_version": "V4.1",
+  "base_commit": "a5bd38a0902b38ecc3e90a747601eba330e7813e",
+  "superseded_v4_manifest": "docs/v4/input-history/v4-manifest.json",
+  "authorization": "Current owner instruction authorizes publication after applicable gates. Deployment evidence remains separate.",
+  "inputs": [
+    {
+      "source_path": "/workspace/mls-v4-work/input-v4.1/MLS_COMMERCE_OS_LAYOUT.html",
+      "copied_path": "docs/v4/input/MLS_COMMERCE_OS_LAYOUT.html",
+      "bytes": 277791,
+      "sha256": "135002e7193409451e78263ee5d45fdcfb53e1061804a3a39af84fdc5edcc5f3",
+      "byte_identical": true
+    },
+    {
+      "source_path": "/workspace/mls-v4-work/input-v4.1/MATRIZ_FUNCIONAL_MLS_CODEX.json",
+      "copied_path": "docs/v4/input/MATRIZ_FUNCIONAL_MLS_CODEX.json",
+      "bytes": 312550,
+      "sha256": "4dcc03ba9ba7b92ef84ef9eec7a74ee84ae01c4bb4b07471211077ff008da0a6",
+      "byte_identical": true
+    },
+    {
+      "source_path": "/workspace/mls-v4-work/input-v4.1/AUDITORIA_COBERTURA_MLS_V4.txt",
+      "copied_path": "docs/v4/input/AUDITORIA_COBERTURA_MLS_V4.txt",
+      "bytes": 14402,
+      "sha256": "62f7d7690ad978d8c283ad110709bde09ee0a8b351b7d284671fa45bc09a7fda",
+      "byte_identical": true
+    },
+    {
+      "source_path": "/workspace/mls-v4-work/input-v4.1/PROMPT_CODEX_MLS_LAYOUT.txt",
+      "copied_path": "docs/v4/input/PROMPT_CODEX_MLS_LAYOUT.txt",
+      "bytes": 219571,
+      "sha256": "fe5125852ea26ca2bc7d44979bce1ced05cefba7f37382b3ba23ad1c57e19f80",
+      "byte_identical": true
+    },
+    {
+      "source_path": "/workspace/mls-v4-work/input-v4.1/LEIA-ME.txt",
+      "copied_path": "docs/v4/input/LEIA-ME.txt",
+      "bytes": 5278,
+      "sha256": "f8d1958cd49620ca72086ae25f945f47457c130f598bcf94b282c6f8e31c5385",
+      "byte_identical": true
+    }
+  ],
+  "history": [
+    {
+      "version": "V4_SUPERSEDED",
+      "archived_path": "docs/v4/input-history/v4/AUDITORIA_COBERTURA_MLS_V4.txt",
+      "bytes": 13030,
+      "sha256": "bd41d3eccfdb82bea162a99cb98f0ee199f5f996cf68ef907942c8233b91083a"
+    },
+    {
+      "version": "V4_SUPERSEDED",
+      "archived_path": "docs/v4/input-history/v4/LEIA-ME.txt",
+      "bytes": 6350,
+      "sha256": "74b2e21bbf1232b63f0cc8b3723779adc757cd1c71fef7525864df9ab9c52d61"
+    },
+    {
+      "version": "V4_SUPERSEDED",
+      "archived_path": "docs/v4/input-history/v4/MATRIZ_FUNCIONAL_MLS_CODEX.json",
+      "bytes": 302193,
+      "sha256": "a701e5539270cb3df55a8843e3998082ed93d9f824a3d0b4db954829fb437884"
+    },
+    {
+      "version": "V4_SUPERSEDED",
+      "archived_path": "docs/v4/input-history/v4/MLS_COMMERCE_OS_LAYOUT.html",
+      "bytes": 277791,
+      "sha256": "135002e7193409451e78263ee5d45fdcfb53e1061804a3a39af84fdc5edcc5f3"
+    },
+    {
+      "version": "V4_SUPERSEDED",
+      "archived_path": "docs/v4/input-history/v4/PROMPT_CODEX_MLS_LAYOUT.txt",
+      "bytes": 210627,
+      "sha256": "19e794a8e3fb13a36a3cfa1688323af966df76cdbc68268b4e7f4af7decc53a1"
+    }
+  ],
+  "history_manifest_note": "input-history/v4-manifest.json preserves the original manifest bytes and historical copied paths; history[].archived_path identifies the current archive locations."
+}

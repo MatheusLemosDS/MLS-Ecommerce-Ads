@@ -1,0 +1,417 @@
+TAP version 13
+# Subtest: legacy pages without account context remain unchanged and never open account media storage
+ok 1 - legacy pages without account context remain unchanged and never open account media storage
+  ---
+  duration_ms: 26.060322
+  type: 'test'
+  ...
+# Subtest: validated context is immutable, deduplicated and uses the canonical account artwork namespace
+ok 2 - validated context is immutable, deduplicated and uses the canonical account artwork namespace
+  ---
+  duration_ms: 1.270315
+  type: 'test'
+  ...
+# Subtest: invalid account context locks private roots and blocks admin transport without legacy fallback
+ok 3 - invalid account context locks private roots and blocks admin transport without legacy fallback
+  ---
+  duration_ms: 5.240839
+  type: 'test'
+  ...
+# Subtest: same-origin admin requests pin per-tab identity and write CSRF despite hostile caller headers
+ok 4 - same-origin admin requests pin per-tab identity and write CSRF despite hostile caller headers
+  ---
+  duration_ms: 12.020603
+  type: 'test'
+  ...
+# Subtest: company A/B tabs pin distinct identities and media databases; switching one tab does not switch the other
+ok 5 - company A/B tabs pin distinct identities and media databases; switching one tab does not switch the other
+  ---
+  duration_ms: 2.964389
+  type: 'test'
+  ...
+# Subtest: explicit company/store anchor changes stop only this tab and navigate before legacy panel handlers
+ok 6 - explicit company/store anchor changes stop only this tab and navigate before legacy panel handlers
+  ---
+  duration_ms: 1.584562
+  type: 'test'
+  ...
+# Subtest: store-only and ambiguous explicit contexts also require a fresh authorized server page
+ok 7 - store-only and ambiguous explicit contexts also require a fresh authorized server page
+  ---
+  duration_ms: 1.43514
+  type: 'test'
+  ...
+# Subtest: stop aborts transport and rejects a late response even when fetch ignores abort
+ok 8 - stop aborts transport and rejects a late response even when fetch ignores abort
+  ---
+  duration_ms: 2.199986
+  type: 'test'
+  ...
+# Subtest: a late json body cannot cross a stopped account generation
+ok 9 - a late json body cannot cross a stopped account generation
+  ---
+  duration_ms: 1.156056
+  type: 'test'
+  ...
+# Subtest: a late text body cannot cross a stopped account generation
+ok 10 - a late text body cannot cross a stopped account generation
+  ---
+  duration_ms: 2.515133
+  type: 'test'
+  ...
+# Subtest: a late arrayBuffer body cannot cross a stopped account generation
+ok 11 - a late arrayBuffer body cannot cross a stopped account generation
+  ---
+  duration_ms: 0.483047
+  type: 'test'
+  ...
+# Subtest: already returned response clones and stream readers remain generation guarded
+ok 12 - already returned response clones and stream readers remain generation guarded
+  ---
+  duration_ms: 1.308332
+  type: 'test'
+  ...
+# Subtest: in-flight stream reader bytes are cancelled and withheld after logout even if cancellation is ignored
+ok 13 - in-flight stream reader bytes are cancelled and withheld after logout even if cancellation is ignored
+  ---
+  duration_ms: 0.979134
+  type: 'test'
+  ...
+# Subtest: stream async iteration cannot bypass the same generation guard
+ok 14 - stream async iteration cannot bypass the same generation guard
+  ---
+  duration_ms: 0.844223
+  type: 'test'
+  ...
+# Subtest: pipeTo cannot deliver pending private stream bytes after the account is stopped
+ok 15 - pipeTo cannot deliver pending private stream bytes after the account is stopped
+  ---
+  duration_ms: 1.303194
+  type: 'test'
+  ...
+# Subtest: tee branches cannot release a buffered private byte after logout through an already acquired reader
+ok 16 - tee branches cannot release a buffered private byte after logout through an already acquired reader
+  ---
+  duration_ms: 1.54272
+  type: 'test'
+  ...
+# Subtest: stop clears timers, frames, tracked blobs, controller caches and private DOM despite cleanup failures
+ok 17 - stop clears timers, frames, tracked blobs, controller caches and private DOM despite cleanup failures
+  ---
+  duration_ms: 1.011832
+  type: 'test'
+  ...
+# Subtest: 401 locks every controller and lifecycle LOGIN/LOCKED invalidates saved account state
+ok 18 - 401 locks every controller and lifecycle LOGIN/LOCKED invalidates saved account state
+  ---
+  duration_ms: 1.11795
+  type: 'test'
+  ...
+# Subtest: confirmed logout posts one real account command and broadcasts only after positive acknowledgement
+ok 19 - confirmed logout posts one real account command and broadcasts only after positive acknowledgement
+  ---
+  duration_ms: 1.250676
+  type: 'test'
+  ...
+# Subtest: failed, malformed or negative logout acknowledgement locks tabs without claiming successful logout or retrying
+ok 20 - failed, malformed or negative logout acknowledgement locks tabs without claiming successful logout or retrying
+  ---
+  duration_ms: 3.408569
+  type: 'test'
+  ...
+# Subtest: logout deadline locks and settles even when its transport ignores abort
+ok 21 - logout deadline locks and settles even when its transport ignores abort
+  ---
+  duration_ms: 1.021195
+  type: 'test'
+  ...
+# Subtest: page lifecycle invalidates private state and late root registrations are cleared immediately
+ok 22 - page lifecycle invalidates private state and late root registrations are cleared immediately
+  ---
+  duration_ms: 0.804764
+  type: 'test'
+  ...
+# Subtest: factory is self-contained in the emitted browser realm and artwork helper injection remains explicit
+ok 23 - factory is self-contained in the emitted browser realm and artwork helper injection remains explicit
+  ---
+  duration_ms: 3.86072
+  type: 'test'
+  ...
+# Subtest: native shared-origin IndexedDB keeps two company artwork libraries separate and logout clears late reads
+ok 24 - native shared-origin IndexedDB keeps two company artwork libraries separate and logout clears late reads
+  ---
+  duration_ms: 868.11856
+  type: 'test'
+  ...
+# Subtest: production starts with a read, loads the confirmed57cm setting and never scans while another panel is active
+ok 25 - production starts with a read, loads the confirmed57cm setting and never scans while another panel is active
+  ---
+  duration_ms: 25.328346
+  type: 'test'
+  ...
+# Subtest: the queue renders private values as text, keeps reservations and cancellations unselectable and paginates20rows
+ok 26 - the queue renders private values as text, keeps reservations and cancellations unselectable and paginates20rows
+  ---
+  duration_ms: 3.526715
+  type: 'test'
+  ...
+# Subtest: opening production syncs once, guards overlap and preserves the last queue when a source fails
+ok 27 - opening production syncs once, guards overlap and preserves the last queue when a source fails
+  ---
+  duration_ms: 4.228237
+  type: 'test'
+  ...
+# Subtest: settings edits remain unsaved until explicit save and serialize dimensions as millimeters with CASrevision
+ok 28 - settings edits remain unsaved until explicit save and serialize dimensions as millimeters with CASrevision
+  ---
+  duration_ms: 2.611576
+  type: 'test'
+  ...
+# Subtest: stopping the workspace ignores a later sync response and prevents another read or scan
+ok 29 - stopping the workspace ignores a later sync response and prevents another read or scan
+  ---
+  duration_ms: 2.131284
+  type: 'test'
+  ...
+# Subtest: a local artwork makes the matching SKU ready without stretching its aspectratio into the rounded packing height
+ok 30 - a local artwork makes the matching SKU ready without stretching its aspectratio into the rounded packing height
+  ---
+  duration_ms: 17.600745
+  type: 'test'
+  ...
+# Subtest: the markup explains local image storage, proportional sizing, fullsize output and recovery through the samebatch
+ok 31 - the markup explains local image storage, proportional sizing, fullsize output and recovery through the samebatch
+  ---
+  duration_ms: 0.289951
+  type: 'test'
+  ...
+# Subtest: selecting a large ready queue builds a bounded printable batch and keeps the remaining orders for later
+ok 32 - selecting a large ready queue builds a bounded printable batch and keeps the remaining orders for later
+  ---
+  duration_ms: 28.759899
+  type: 'test'
+  ...
+# Subtest: exported PNGs retain physical300DPI metadata and every actualdownload rechecks the samebatch before releasing a file
+ok 33 - exported PNGs retain physical300DPI metadata and every actualdownload rechecks the samebatch before releasing a file
+  ---
+  duration_ms: 24.204507
+  type: 'test'
+  ...
+# Subtest: commercial DTF opens only its artwork namespace and a late IndexedDB read cannot restore private art after stop
+ok 34 - commercial DTF opens only its artwork namespace and a late IndexedDB read cannot restore private art after stop
+  ---
+  duration_ms: 2.2501
+  type: 'test'
+  ...
+# Subtest: reads only the exact key and verifies native PNG bytes, SHA and decoded dimensions before a URL
+ok 35 - reads only the exact key and verifies native PNG bytes, SHA and decoded dimensions before a URL
+  ---
+  duration_ms: 9.092467
+  type: 'test'
+  ...
+# Subtest: unknown historical SHA labels a verified current local reference
+ok 36 - unknown historical SHA labels a verified current local reference
+  ---
+  duration_ms: 1.469361
+  type: 'test'
+  ...
+# Subtest: missing library enumeration never opens or creates a database
+ok 37 - missing library enumeration never opens or creates a database
+  ---
+  duration_ms: 0.519952
+  type: 'test'
+  ...
+# Subtest: without enumeration an upgrade is aborted rather than initializing a missing library
+ok 38 - without enumeration an upgrade is aborted rather than initializing a missing library
+  ---
+  duration_ms: 0.463037
+  type: 'test'
+  ...
+# Subtest: a blocked open is unavailable and a late successful connection is closed
+ok 39 - a blocked open is unavailable and a late successful connection is closed
+  ---
+  duration_ms: 0.39745
+  type: 'test'
+  ...
+# Subtest: missing exact artwork never chooses another local key
+ok 40 - missing exact artwork never chooses another local key
+  ---
+  duration_ms: 1.171098
+  type: 'test'
+  ...
+# Subtest: a returned duplicate or different key is rejected without a URL
+ok 41 - a returned duplicate or different key is rejected without a URL
+  ---
+  duration_ms: 0.409958
+  type: 'test'
+  ...
+# Subtest: a conflicting historical SHA does not decode a current replacement
+ok 42 - a conflicting historical SHA does not decode a current replacement
+  ---
+  duration_ms: 0.401576
+  type: 'test'
+  ...
+# Subtest: tampered PNG bytes cannot pass the saved or expected hash
+ok 43 - tampered PNG bytes cannot pass the saved or expected hash
+  ---
+  duration_ms: 1.047835
+  type: 'test'
+  ...
+# Subtest: PNG signature and IHDR length are checked before decoding
+    # Subtest: signature
+    ok 1 - signature
+      ---
+      duration_ms: 0.489516
+      type: 'test'
+      ...
+    # Subtest: ihdr
+    ok 2 - ihdr
+      ---
+      duration_ms: 0.277081
+      type: 'test'
+      ...
+    1..2
+ok 44 - PNG signature and IHDR length are checked before decoding
+  ---
+  duration_ms: 1.171579
+  type: 'test'
+  ...
+# Subtest: native Blob brand, PNG MIME and 32 MiB bound prevent forged or oversized images
+    # Subtest: 0
+    ok 1 - 0
+      ---
+      duration_ms: 0.872605
+      type: 'test'
+      ...
+    # Subtest: 1
+    ok 2 - 1
+      ---
+      duration_ms: 0.34357
+      type: 'test'
+      ...
+    # Subtest: 2
+    ok 3 - 2
+      ---
+      duration_ms: 2.315327
+      type: 'test'
+      ...
+    1..3
+ok 45 - native Blob brand, PNG MIME and 32 MiB bound prevent forged or oversized images
+  ---
+  duration_ms: 80.787595
+  type: 'test'
+  ...
+# Subtest: dimension metadata and the 50 MP limit are checked before bitmap allocation
+    # Subtest: metadata disagreement
+    ok 1 - metadata disagreement
+      ---
+      duration_ms: 0.342208
+      type: 'test'
+      ...
+    # Subtest: oversized PNG
+    ok 2 - oversized PNG
+      ---
+      duration_ms: 0.417821
+      type: 'test'
+      ...
+    1..2
+ok 46 - dimension metadata and the 50 MP limit are checked before bitmap allocation
+  ---
+  duration_ms: 1.048005
+  type: 'test'
+  ...
+# Subtest: decode failure and decoded dimension mismatch never produce an image URL
+    # Subtest: decode rejected
+    ok 1 - decode rejected
+      ---
+      duration_ms: 5.015625
+      type: 'test'
+      ...
+    # Subtest: decoded dimensions disagree
+    ok 2 - decoded dimensions disagree
+      ---
+      duration_ms: 1.05763
+      type: 'test'
+      ...
+    1..2
+ok 47 - decode failure and decoded dimension mismatch never produce an image URL
+  ---
+  duration_ms: 6.442993
+  type: 'test'
+  ...
+# Subtest: abort before opening, while opening and during a transaction leaves no late URL
+    # Subtest: already aborted
+    ok 1 - already aborted
+      ---
+      duration_ms: 0.272725
+      type: 'test'
+      ...
+    # Subtest: opening cancelled
+    ok 2 - opening cancelled
+      ---
+      duration_ms: 1.2869
+      type: 'test'
+      ...
+    # Subtest: transaction cancelled
+    ok 3 - transaction cancelled
+      ---
+      duration_ms: 0.830993
+      type: 'test'
+      ...
+    1..3
+ok 48 - abort before opening, while opening and during a transaction leaves no late URL
+  ---
+  duration_ms: 2.895699
+  type: 'test'
+  ...
+# Subtest: timeout closes an active database and aborts its read-only transaction
+ok 49 - timeout closes an active database and aborts its read-only transaction
+  ---
+  duration_ms: 0.989639
+  type: 'test'
+  ...
+# Subtest: disposal during decoding closes a late bitmap and never creates a late URL
+ok 50 - disposal during decoding closes a late bitmap and never creates a late URL
+  ---
+  duration_ms: 1.445105
+  type: 'test'
+  ...
+# Subtest: aborting a completed load revokes its URL; disposal revokes all remaining URLs once
+ok 51 - aborting a completed load revokes its URL; disposal revokes all remaining URLs once
+  ---
+  duration_ms: 0.96311
+  type: 'test'
+  ...
+# Subtest: keys are not guessed or normalized and getter descriptors are never evaluated
+ok 52 - keys are not guessed or normalized and getter descriptors are never evaluated
+  ---
+  duration_ms: 0.566301
+  type: 'test'
+  ...
+# Subtest: factory survives toString embedding with no closure, network or DTF dependency
+ok 53 - factory survives toString embedding with no closure, network or DTF dependency
+  ---
+  duration_ms: 4.483044
+  type: 'test'
+  ...
+# Subtest: commercial return artwork reads the exact user/company/store namespace and never borrows the legacy library
+ok 54 - commercial return artwork reads the exact user/company/store namespace and never borrows the legacy library
+  ---
+  duration_ms: 6.166373
+  type: 'test'
+  ...
+# Subtest: commercial workspace stop disposes pending artwork reads before a delayed row can create a URL
+ok 55 - commercial workspace stop disposes pending artwork reads before a delayed row can create a URL
+  ---
+  duration_ms: 0.552951
+  type: 'test'
+  ...
+1..55
+# tests 67
+# suites 0
+# pass 67
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 973.280786

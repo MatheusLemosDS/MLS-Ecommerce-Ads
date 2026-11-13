@@ -21,7 +21,7 @@ for(const minify of [false,true])test(`the emitted monthly owner controls recalc
  vm.runInContext(`
  class ClockDate extends Date{constructor(...args){super(...(args.length?args:[clock]));}static now(){return clock;}}globalThis.Date=ClockDate;globalThis.location={search:'?month=2026-10'};
  const timers=new Map();let sequence=0;const setTimeout=(callback,delay)=>{const id=++sequence;timers.set(id,{callback,delay});return id;},clearTimeout=id=>timers.delete(id);
- function element(tag='div'){return {tag,textContent:'',value:'',dataset:{},children:[],hidden:false,disabled:false,open:false,max:'',append(...values){this.children.push(...values);},replaceChildren(...values){this.textContent='';this.children=[...values];},setAttribute(){}};}
+ function element(tag='div'){return {tag,textContent:'',value:'',dataset:{},style:{},children:[],hidden:false,disabled:false,open:false,max:'',append(...values){this.children.push(...values);},replaceChildren(...values){this.textContent='';this.children=[...values];},setAttribute(){}};}
  const controls=new Map(ids.map(id=>[id,element()])),document={hidden:false,getElementById(id){if(!controls.has(id))throw Error('Unknown '+id);return controls.get(id);},createElement:element,addEventListener(){}};
  const api=async(path,body)=>JSON.parse(await send(path,body)),text=n=>n.textContent+n.children.map(text).join(' '),control=name=>controls.get('businessMonth'+name);
  `+script,context);

@@ -1,0 +1,13 @@
+# Papéis e capacidades da conta comercial
+
+Fonte: `web/cloudflare/src/account-policy.mjs`; snapshot em [account-policy.json](account-policy.json). Papéis novos não são owner/review legados. A membership resolve os grants no servidor e pode restringir lojas. O teto de grants é separado do padrão: Consulta recebe apenas empresa/loja por padrão e pode receber leituras de módulos por concessão explícita autorizada. Administrador recebe conexão de loja somente por grant específico; propriedade/encerramento permanecem do proprietário.
+
+| Papel | Capacidades padrão | Capacidades adicionais concedíveis explicitamente |
+| --- | --- | --- |
+| Proprietário (`OWNER`) | `organization.read`, `store.read`, `team.read`, `catalog.read`, `orders.read`, `production.read`, `returns.read`, `dtf.read`, `ads.read`, `reports.read`, `organization.write`, `organization.close`, `organization.transfer`, `team.invite`, `team.manage`, `store.connect`, `finance.read`, `finance.write`, `bank.read`, `bank.write`, `costs.read`, `costs.write`, `catalog.write`, `orders.write`, `production.write`, `returns.write`, `dtf.write`, `audit.read`, `billing.read`, `billing.manage` | Nenhuma além do padrão |
+| Administrador (`ADMIN`) | `organization.read`, `store.read`, `team.read`, `catalog.read`, `orders.read`, `production.read`, `returns.read`, `dtf.read`, `ads.read`, `reports.read`, `organization.write`, `team.invite`, `team.manage`, `finance.read`, `finance.write`, `bank.read`, `bank.write`, `costs.read`, `costs.write`, `catalog.write`, `orders.write`, `production.write`, `returns.write`, `dtf.write`, `audit.read`, `billing.read` | `store.connect` |
+| Financeiro (`FINANCE`) | `organization.read`, `store.read`, `finance.read`, `finance.write`, `bank.read`, `bank.write`, `costs.read`, `costs.write`, `catalog.read`, `orders.read`, `reports.read`, `audit.read` | `billing.read` |
+| Operação (`OPERATIONS`) | `organization.read`, `store.read`, `catalog.read`, `catalog.write`, `orders.read`, `orders.write`, `production.read`, `production.write`, `returns.read`, `returns.write`, `dtf.read`, `dtf.write`, `reports.read` | `ads.read`, `costs.read` |
+| Consulta (`VIEWER`) | `organization.read`, `store.read` | `team.read`, `finance.read`, `bank.read`, `costs.read`, `catalog.read`, `orders.read`, `production.read`, `returns.read`, `dtf.read`, `ads.read`, `reports.read`, `audit.read`, `billing.read` |
+
+Entitlements e quotas são uma camada adicional. Nenhum papel remove os bloqueios Ads/PROMO ou autoriza operação comercial externa. Relatórios compostos omitem campos sem capacidade no servidor. Remover membro ou sessão deve revogar a autorização imediatamente, inclusive em respostas/gravações em trânsito; testes de módulos não substituem a prova do gateway integrado.

@@ -9,7 +9,7 @@ export function projectAdminFinancePreview(value){
 
 // Both actions have fixed destinations. Only the authenticated preview receives
 // values; the existing schema/support result remains free of private values.
-async function getFinanceAction(env,preview,{fetchImpl=request=>fetch(request),timeoutMs=45000}={}){
+async function getFinanceAction(env,preview,{fetchImpl=env?.COMMERCIAL_FETCH??(request=>fetch(request)),timeoutMs=45000}={}){
  const project=preview?projectAdminFinancePreview:projectFinanceSample;
  const failure=(code,http=null)=>project({status:'UNAVAILABLE',diagnostic:financeSampleDiagnostic({code,http})});
  if(typeof env.APP_INTERNAL_SECRET!=='string'||!env.APP_INTERNAL_SECRET||typeof fetchImpl!=='function'||!Number.isInteger(timeoutMs)||timeoutMs<5||timeoutMs>45000)return failure('FINANCE_SAMPLE_APP_CONFIGURATION');
@@ -43,7 +43,7 @@ export async function getFinancePaymentPreview(env,options){return getFinanceAct
 
 // The caller supplies only bounded product identifiers, never a provider path,
 // shop, token or URL. The response is projected again before the admin sees it.
-export async function getFinanceVariantCatalog(env,input,{fetchImpl=request=>fetch(request),timeoutMs=45000,includeMedia=false}={}){
+export async function getFinanceVariantCatalog(env,input,{fetchImpl=env?.COMMERCIAL_FETCH??(request=>fetch(request)),timeoutMs=45000,includeMedia=false}={}){
  const failure=(code,http=null)=>({schema:'variant_catalog_v1',status:'UNAVAILABLE',diagnostic:{stage:'APP',code,http}});
  const body=projectVariantCatalogRequest(input);
  if(!body||typeof includeMedia!=='boolean'||includeMedia&&!body.include_cost_catalog||typeof env?.APP_INTERNAL_SECRET!=='string'||!env.APP_INTERNAL_SECRET||typeof fetchImpl!=='function'||!Number.isInteger(timeoutMs)||timeoutMs<5||timeoutMs>45000)return failure('FINANCE_CATALOG_APP_CONFIGURATION');

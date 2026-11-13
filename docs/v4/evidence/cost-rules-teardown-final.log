@@ -1,0 +1,256 @@
+TAP version 13
+# Subtest: deployable automatic classification works without a browser and keeps private cost controls after compilation (minify=false)
+ok 1 - deployable automatic classification works without a browser and keeps private cost controls after compilation (minify=false)
+  ---
+  duration_ms: 1064.488567
+  type: 'test'
+  ...
+# Subtest: deployable automatic classification works without a browser and keeps private cost controls after compilation (minify=true)
+ok 2 - deployable automatic classification works without a browser and keeps private cost controls after compilation (minify=true)
+  ---
+  duration_ms: 612.767354
+  type: 'test'
+  ...
+# Subtest: child summary uses the saved rule price and sizes without resetting an edited saved value to the original seed
+ok 3 - child summary uses the saved rule price and sizes without resetting an edited saved value to the original seed
+  ---
+  duration_ms: 21.415273
+  type: 'test'
+  ...
+# Subtest: confirmed child size two and its current saved price appear dynamically without requiring an adult binding
+ok 4 - confirmed child size two and its current saved price appear dynamically without requiring an adult binding
+  ---
+  duration_ms: 3.349875
+  type: 'test'
+  ...
+# Subtest: a catalogue mismatch rejects an infantil rule on an adult product with a useful message while preserving the choices and saved cost
+ok 5 - a catalogue mismatch rejects an infantil rule on an adult product with a useful message while preserving the choices and saved cost
+  ---
+  duration_ms: 1.783444
+  type: 'test'
+  ...
+# Subtest: the child rule loads as R$12.50 and seven sizes, while other product types can be added without touching manual profiles
+ok 6 - the child rule loads as R$12.50 and seven sizes, while other product types can be added without touching manual profiles
+  ---
+  duration_ms: 2.034175
+  type: 'test'
+  ...
+# Subtest: one save serializes complete reusable rules in integer cents with the saved revision and preserves newer edits
+ok 7 - one save serializes complete reusable rules in integer cents with the saved revision and preserves newer edits
+  ---
+  duration_ms: 3.910456
+  type: 'test'
+  ...
+# Subtest: zero prices and incomplete type identity never reach the save API
+ok 8 - zero prices and incomplete type identity never reach the save API
+  ---
+  duration_ms: 2.008277
+  type: 'test'
+  ...
+# Subtest: a stale rules edit cannot overwrite a newer saved rule and keeps its unsaved values visible
+ok 9 - a stale rules edit cannot overwrite a newer saved rule and keeps its unsaved values visible
+  ---
+  duration_ms: 2.088747
+  type: 'test'
+  ...
+# Subtest: catalogue synchronization batches all product IDs in threes and cannot mutate costs through order or buyer fields
+ok 10 - catalogue synchronization batches all product IDs in threes and cannot mutate costs through order or buyer fields
+  ---
+  duration_ms: 2.6177
+  type: 'test'
+  ...
+# Subtest: a child variation selects sizes4to16 and saves a rule reference with R$12.50 without creating an adult binding
+ok 11 - a child variation selects sizes4to16 and saves a rule reference with R$12.50 without creating an adult binding
+  ---
+  duration_ms: 3.60318
+  type: 'test'
+  ...
+# Subtest: a product rule is applied once across its catalogue and preserves the classification when metadata is unavailable
+ok 12 - a product rule is applied once across its catalogue and preserves the classification when metadata is unavailable
+  ---
+  duration_ms: 3.473939
+  type: 'test'
+  ...
+# Subtest: saving a manual child identification preserves unrelated rule drafts and subsequent rule save retains the assignment
+ok 13 - saving a manual child identification preserves unrelated rule drafts and subsequent rule save retains the assignment
+  ---
+  duration_ms: 3.427049
+  type: 'test'
+  ...
+# Subtest: a changed rule blocks a stale child assignment, preserves selections and reloads the current price before retry
+ok 14 - a changed rule blocks a stale child assignment, preserves selections and reloads the current price before retry
+  ---
+  duration_ms: 4.605066
+  type: 'test'
+  ...
+# Subtest: a missing size cannot be saved and removing an explicit assignment does not remove another scope
+ok 15 - a missing size cannot be saved and removing an explicit assignment does not remove another scope
+  ---
+  duration_ms: 2.925106
+  type: 'test'
+  ...
+# Subtest: product controls recreated during a saved assignment are enabled after the shared save completes
+ok 16 - product controls recreated during a saved assignment are enabled after the shared save completes
+  ---
+  duration_ms: 3.088488
+  type: 'test'
+  ...
+# Subtest: learning notes distinguish correction-based learning from confirmed child type recognition and return detached metadata
+ok 17 - learning notes distinguish correction-based learning from confirmed child type recognition and return detached metadata
+  ---
+  duration_ms: 2.541967
+  type: 'test'
+  ...
+# Subtest: established learning survives catalogue age, conflicts remain pending and legacy responses clear old notes
+ok 18 - established learning survives catalogue age, conflicts remain pending and legacy responses clear old notes
+  ---
+  duration_ms: 3.591314
+  type: 'test'
+  ...
+# Subtest: learning identity, counts, status, private extras and accessors are rejected before they can create a product note
+ok 19 - learning identity, counts, status, private extras and accessors are rejected before they can create a product note
+  ---
+  duration_ms: 3.155657
+  type: 'test'
+  ...
+# Subtest: a source failure after an individual child correction preserves the saved cost and explains that sibling discovery is pending
+ok 20 - a source failure after an individual child correction preserves the saved cost and explains that sibling discovery is pending
+  ---
+  duration_ms: 2.435861
+  type: 'test'
+  ...
+# Subtest: an unavailable saved rule is repairable in its own scope and never selects the only available child rule automatically
+ok 21 - an unavailable saved rule is repairable in its own scope and never selects the only available child rule automatically
+  ---
+  duration_ms: 1.968468
+  type: 'test'
+  ...
+# Subtest: simple cost values are visible before advanced conditions and product controls link to the real editor
+ok 22 - simple cost values are visible before advanced conditions and product controls link to the real editor
+  ---
+  duration_ms: 1.826227
+  type: 'test'
+  ...
+# Subtest: amount-only save updates R$13.50 with the exact revision and preserves every rule condition and assignment
+ok 23 - amount-only save updates R$13.50 with the exact revision and preserves every rule condition and assignment
+  ---
+  duration_ms: 2.876874
+  type: 'test'
+  ...
+# Subtest: simple prices accept dot or comma decimals and reject invalid amounts before any write
+ok 24 - simple prices accept dot or comma decimals and reject invalid amounts before any write
+  ---
+  duration_ms: 18.855539
+  type: 'test'
+  ...
+# Subtest: a simple-price conflict preserves the draft and requires explicit reload before another save
+ok 25 - a simple-price conflict preserves the draft and requires explicit reload before another save
+  ---
+  duration_ms: 2.030369
+  type: 'test'
+  ...
+# Subtest: advanced drafts block amount-only saving and cannot be overwritten by it
+ok 26 - advanced drafts block amount-only saving and cannot be overwritten by it
+  ---
+  duration_ms: 1.809372
+  type: 'test'
+  ...
+# Subtest: an assignment in flight blocks simple save and its new revision cannot silently rebase the price draft
+ok 27 - an assignment in flight blocks simple save and its new revision cannot silently rebase the price draft
+  ---
+  duration_ms: 2.526665
+  type: 'test'
+  ...
+# Subtest: simple save is single-flight and preserves an advanced draft created while the response is pending
+ok 28 - simple save is single-flight and preserves an advanced draft created while the response is pending
+  ---
+  duration_ms: 2.062818
+  type: 'test'
+  ...
+# Subtest: a recalculation failure after persistence reports a saved value and cannot cause a duplicate cost write
+ok 29 - a recalculation failure after persistence reports a saved value and cannot cause a duplicate cost write
+  ---
+  duration_ms: 2.332557
+  type: 'test'
+  ...
+# Subtest: refreshed price inputs remain disabled until the cached recalculation has finished
+ok 30 - refreshed price inputs remain disabled until the cached recalculation has finished
+  ---
+  duration_ms: 2.707734
+  type: 'test'
+  ...
+# Subtest: a nondiscarding refresh preserves a simple draft and explicit reload clears both editing areas
+ok 31 - a nondiscarding refresh preserves a simple draft and explicit reload clears both editing areas
+  ---
+  duration_ms: 2.255994
+  type: 'test'
+  ...
+# Subtest: a valid response from a later or different writer cannot confirm or rebase a simple-price draft
+ok 32 - a valid response from a later or different writer cannot confirm or rebase a simple-price draft
+  ---
+  duration_ms: 11.059714
+  type: 'test'
+  ...
+# Subtest: semantic confirmation accepts reordered JSON object keys while preserving complete rule and assignment values
+ok 33 - semantic confirmation accepts reordered JSON object keys while preserving complete rule and assignment values
+  ---
+  duration_ms: 2.433677
+  type: 'test'
+  ...
+# Subtest: advanced editing explains the disabled simple inputs and a successful advanced save synchronizes both version captions
+ok 34 - advanced editing explains the disabled simple inputs and a successful advanced save synchronizes both version captions
+  ---
+  duration_ms: 2.167403
+  type: 'test'
+  ...
+# Subtest: assignment saves and assignment reloads synchronize the simple-price caption when there is no price draft
+ok 35 - assignment saves and assignment reloads synchronize the simple-price caption when there is no price draft
+  ---
+  duration_ms: 5.659409
+  type: 'test'
+  ...
+# Subtest: editing advanced rules during cached recalculation keeps the save acknowledgement and explains why simple inputs remain disabled
+ok 36 - editing advanced rules during cached recalculation keeps the save acknowledgement and explains why simple inputs remain disabled
+  ---
+  duration_ms: 1.913916
+  type: 'test'
+  ...
+# Subtest: advanced input cannot erase an uncertain financial-save acknowledgement warning
+ok 37 - advanced input cannot erase an uncertain financial-save acknowledgement warning
+  ---
+  duration_ms: 1.624398
+  type: 'test'
+  ...
+# Subtest: stop invalidates a held rules read and its old finally cannot disturb a new active load
+ok 38 - stop invalidates a held rules read and its old finally cannot disturb a new active load
+  ---
+  duration_ms: 1.653511
+  type: 'test'
+  ...
+# Subtest: stop clears cost drafts, learning, assignments and held widgets before a delayed assignment can publish
+ok 39 - stop clears cost drafts, learning, assignments and held widgets before a delayed assignment can publish
+  ---
+  duration_ms: 2.05742
+  type: 'test'
+  ...
+# Subtest: stop suppresses delayed price confirmations and pending recalculation notices without restoring controls
+ok 40 - stop suppresses delayed price confirmations and pending recalculation notices without restoring controls
+  ---
+  duration_ms: 3.783458
+  type: 'test'
+  ...
+# Subtest: stop prevents an in-flight or queued catalogue task from repopulating maps or starting another batch
+ok 41 - stop prevents an in-flight or queued catalogue task from repopulating maps or starting another batch
+  ---
+  duration_ms: 2.09137
+  type: 'test'
+  ...
+1..41
+# tests 41
+# suites 0
+# pass 41
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1790.249493

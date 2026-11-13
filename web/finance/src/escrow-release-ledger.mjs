@@ -1,17 +1,22 @@
-import {FINANCE_PROFILE,FinanceConnectionError} from './connection-store.mjs';
+import {TenantInitializationSet} from '../../cloudflare/src/tenant-storage.mjs';
+import {getFinanceProfile,FinanceConnectionError} from './connection-store.mjs';
 import {ensureFinanceAccessToken} from './refresh-coordinator.mjs';
 import {requestFinanceAuthJson} from './auth-json-transport.mjs';
 
-// Source observations only. payout_raw deliberately has no implied currency,
-// cent multiplier, transaction identity, bank receipt or profit semantics.
 export const ESCROW_RELEASE_LEDGER_SCHEMA=[
  `CREATE TABLE IF NOT EXISTS finance_escrow_release_scans(scan_id TEXT PRIMARY KEY,partner_id INTEGER NOT NULL,shop_id INTEGER NOT NULL,month TEXT NOT NULL,revision INTEGER NOT NULL,status TEXT NOT NULL,time_from INTEGER NOT NULL,time_to INTEGER NOT NULL,created_at INTEGER NOT NULL,checked_at INTEGER NOT NULL,window_index INTEGER NOT NULL,page_no INTEGER NOT NULL,pages_read INTEGER NOT NULL,rows_read INTEGER NOT NULL,next_attempt_at INTEGER NOT NULL,last_error TEXT,lease_owner TEXT,lease_until INTEGER)`,
  `CREATE TABLE IF NOT EXISTS finance_escrow_release_pages(scan_id TEXT NOT NULL,window_index INTEGER NOT NULL,page_no INTEGER NOT NULL,row_count INTEGER NOT NULL,owned_count INTEGER NOT NULL,body_hash TEXT NOT NULL,owned_hash TEXT NOT NULL,checked_at INTEGER NOT NULL,PRIMARY KEY(scan_id,window_index,page_no))`,
  `CREATE TABLE IF NOT EXISTS finance_escrow_release_rows(scan_id TEXT NOT NULL,window_index INTEGER NOT NULL,page_no INTEGER NOT NULL,row_index INTEGER NOT NULL,order_hash TEXT NOT NULL,order_sn TEXT NOT NULL,payout_raw TEXT,release_time INTEGER NOT NULL,checked_at INTEGER NOT NULL,PRIMARY KEY(scan_id,window_index,page_no,row_index))`,
  `CREATE TABLE IF NOT EXISTS finance_escrow_release_publications(month TEXT PRIMARY KEY,scan_id TEXT NOT NULL,published_at INTEGER NOT NULL)`,
 ];
-const origin='https://partner.shopeemobile.com',path='/api/v2/payment/get_escrow_list',encoder=new TextEncoder(),ready=new WeakSet();
-const identity=[FINANCE_PROFILE.partner_id,FINANCE_PROFILE.shop_id],diagnostics=[null,'PERMISSION_DENIED','RATE_LIMIT','TIMEOUT','UNAVAILABLE','INVALID_RESPONSE','REPEATED_PAGE','LIMIT_REACHED'];
+const ready=new TenantInitializationSet();
+function createTenantEscrowLedger(profile){
+
+// Source observations only. payout_raw deliberately has no implied currency,
+// cent multiplier, transaction identity, bank receipt or profit semantics.
+
+const origin='https://partner.shopeemobile.com',path='/api/v2/payment/get_escrow_list',encoder=new TextEncoder();
+const identity=[profile.partner_id,profile.shop_id],diagnostics=[null,'PERMISSION_DENIED','RATE_LIMIT','TIMEOUT','UNAVAILABLE','INVALID_RESPONSE','REPEATED_PAGE','LIMIT_REACHED'];
 const fail=(suffix,status=503)=>{throw new FinanceConnectionError('FINANCE_ESCROW_RELEASE_'+suffix,status);};
 const plain=value=>value!==null&&typeof value==='object'&&[Object.prototype,null].includes(Object.getPrototypeOf(value));
 const integer=(value,min=0,max=Number.MAX_SAFE_INTEGER)=>Number.isSafeInteger(value)&&!Object.is(value,-0)&&value>=min&&value<=max;
@@ -49,7 +54,7 @@ function providerRaw(value){
 }
 function envelope(value){
  if(!plain(value)||typeof value.error!=='string')fail('INVALID_RESPONSE',502);
- for(const row of [value,...(plain(value.response)?[value.response]:[])])for(const name of ['partner_id','shop_id'])if(Object.hasOwn(row,name)&&row[name]!==FINANCE_PROFILE[name])fail('INVALID_RESPONSE',502);
+ for(const row of [value,...(plain(value.response)?[value.response]:[])])for(const name of ['partner_id','shop_id'])if(Object.hasOwn(row,name)&&row[name]!==profile[name])fail('INVALID_RESPONSE',502);
  if(value.error!=='')fail(['error_api_permission','error_auth','error_sign','error_partner_id','error_ip'].includes(value.error)?'PERMISSION_DENIED':['error_limit','error_rate_limit'].includes(value.error)?'RATE_LIMIT':'UNAVAILABLE',502);
  if(!plain(value.response))fail('INVALID_RESPONSE',502);return value.response;
 }
@@ -95,7 +100,7 @@ async function readState(db,month,stamp){
 }
 const outward=value=>Object.fromEntries(Object.entries(value).filter(([key])=>!key.startsWith('_')));
 
-export async function runEscrowReleaseLedger(env,options={}){
+async function runEscrowReleaseLedger(env,options={}){
  if(!plain(options)||Reflect.ownKeys(options).some(key=>!['operation','month','fetchImpl','now','timeoutMs'].includes(key)||!Object.hasOwn(Object.getOwnPropertyDescriptor(options,key)||{},'value'))||!['read','step'].includes(options.operation))fail('REQUEST_INVALID',400);
  const {now=()=>Date.now(),fetchImpl,timeoutMs=5000}=options,epoch=()=>{let value;try{value=now();}catch{fail('CLOCK_INVALID');}if(!integer(value,1,9999999999999))fail('CLOCK_INVALID');return Math.floor(value/1000);};
  const stamp=epoch(),month=options.month,range=dates(month,stamp),db=env?.FINANCE_DB;
@@ -124,7 +129,7 @@ export async function runEscrowReleaseLedger(env,options={}){
    for(const [name,value] of Object.entries({partner_id:identity[0],shop_id:identity[1],timestamp,access_token:tokens.access_token,sign:signature,release_time_from:slot.low-1,release_time_to:slot.high,page_size:100,page_no:run.page_no}))url.searchParams.set(name,String(value));return new Request(url,{method:'GET',redirect:'manual',headers:{Accept:'application/json'}});
   },normalizeResponse:envelope});
   if(!Array.isArray(response.escrow_list)||response.escrow_list.length>100||typeof response.more!=='boolean'||response.more&&response.escrow_list.length===0)fail('INVALID_RESPONSE',502);
-  const observed=[];for(const row of response.escrow_list){if(!plain(row)||!serial(row.order_sn)||!integer(row.escrow_release_time,slot.low-1,slot.high)||Object.hasOwn(row,'payout_amount')&&row.payout_amount!==null&&providerRaw(row.payout_amount)===null)fail('INVALID_RESPONSE',502);for(const name of ['partner_id','shop_id'])if(Object.hasOwn(row,name)&&row[name]!==FINANCE_PROFILE[name])fail('INVALID_RESPONSE',502);if(Object.hasOwn(row,'currency')&&row.currency!=='BRL')fail('INVALID_RESPONSE',502);observed.push({order_sn:row.order_sn,payout_raw:row.payout_amount===null||!Object.hasOwn(row,'payout_amount')?null:providerRaw(row.payout_amount),release_time:row.escrow_release_time});}
+  const observed=[];for(const row of response.escrow_list){if(!plain(row)||!serial(row.order_sn)||!integer(row.escrow_release_time,slot.low-1,slot.high)||Object.hasOwn(row,'payout_amount')&&row.payout_amount!==null&&providerRaw(row.payout_amount)===null)fail('INVALID_RESPONSE',502);for(const name of ['partner_id','shop_id'])if(Object.hasOwn(row,name)&&row[name]!==profile[name])fail('INVALID_RESPONSE',502);if(Object.hasOwn(row,'currency')&&row.currency!=='BRL')fail('INVALID_RESPONSE',502);observed.push({order_sn:row.order_sn,payout_raw:row.payout_amount===null||!Object.hasOwn(row,'payout_amount')?null:providerRaw(row.payout_amount),release_time:row.escrow_release_time});}
   const bodyHash=await hash(JSON.stringify(observed));if(response.more&&observed.length&&state._pages.some(page=>page.window_index===run.window_index&&page.body_hash===bodyHash))fail('REPEATED_PAGE',502);
   const finished=epoch(),owned=[];for(let index=0;index<observed.length;index++){const row=observed[index];if(row.release_time>=slot.low&&row.release_time<slot.high)owned.push({...row,row_index:index,order_hash:await hash(row.order_sn),checked_at:finished,window_index:run.window_index,page_no:run.page_no});}
   if(run.rows_read+owned.length>10000){await db.prepare("UPDATE finance_escrow_release_scans SET status='LIMIT_REACHED',revision=revision+1,checked_at=?,last_error='LIMIT_REACHED',next_attempt_at=?,lease_owner=NULL,lease_until=NULL WHERE "+guard).bind(finished,finished+1800,...guardArgs(finished)).run();return outward(await readState(db,month,finished));}
@@ -137,3 +142,7 @@ export async function runEscrowReleaseLedger(env,options={}){
  }catch(error){const finished=epoch(),code=classify(error),delay=code==='PERMISSION_DENIED'?3600:code==='RATE_LIMIT'||code==='TIMEOUT'?60:code==='REPEATED_PAGE'?900:300;await db.prepare('UPDATE finance_escrow_release_scans SET revision=revision+1,checked_at=?,next_attempt_at=?,last_error=?,lease_owner=NULL,lease_until=NULL WHERE '+guard).bind(finished,finished+delay,code,...guardArgs(finished)).run();}
  return outward(await readState(db,month,epoch()));
 }
+
+return {runEscrowReleaseLedger};
+}
+export async function runEscrowReleaseLedger(env,...args){return createTenantEscrowLedger(getFinanceProfile(env)).runEscrowReleaseLedger(env,...args);}

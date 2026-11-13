@@ -21,9 +21,10 @@ export function projectProductionOrdersRequest(value){
  }catch{return null;}
 }
 
-export function projectProductionOrdersFrame(value){
+export function projectProductionOrdersFrame(value,expectedProfile=null){
  try{
-  if(!productionExact(value,['schema','shop_id','checked_at','start_date','end_date','complete','orders'])||value.schema!=='production_orders_v1'||value.shop_id!==1178167501||!productionEpoch(value.checked_at)||value.complete!==true||!productionArray(value.orders,1000))return null;
+  const expectedShop=expectedProfile===null?1178167501:expectedProfile?.shop_id;if(!Number.isSafeInteger(expectedShop)||expectedShop<1)return null;
+  if(!productionExact(value,['schema','shop_id','checked_at','start_date','end_date','complete','orders'])||value.schema!=='production_orders_v1'||value.shop_id!==expectedShop||!productionEpoch(value.checked_at)||value.complete!==true||!productionArray(value.orders,1000))return null;
   const ranged=value.start_date!==null||value.end_date!==null;
   if(ranged&&!projectProductionOrdersRequest({operation:'scan',start_date:value.start_date,end_date:value.end_date}))return null;
   const orders=[],seen=new Set();let lineCount=0;
@@ -37,7 +38,7 @@ export function projectProductionOrdersFrame(value){
    }
    orders.push({...row,lines});
   }
-  const projected={schema:'production_orders_v1',shop_id:1178167501,checked_at:value.checked_at,start_date:value.start_date,end_date:value.end_date,complete:true,orders};
+  const projected={schema:'production_orders_v1',shop_id:expectedShop,checked_at:value.checked_at,start_date:value.start_date,end_date:value.end_date,complete:true,orders};
   return new TextEncoder().encode(JSON.stringify(projected)).byteLength<=1048576?projected:null;
  }catch{return null;}
 }

@@ -693,9 +693,9 @@ export const MISSION_TRENDS_CLIENT=String.raw`
  const projectMlsSpecialistChart=${projectMlsSpecialistChart.toString()};
  const ns='http://www.w3.org/2000/svg',byId=id=>document.getElementById(id);
  const safe=value=>Number.isSafeInteger(value)&&!Object.is(value,-0);
- const names={net:'Resultado diário estimado',sales:'Vendas dos pedidos pagos',ads:'Gastos com Ads',roas:'ROAS diário · atribuição ampla'};
- const fields={net:'net_cents',sales:'sales_cents',ads:'ads_spend_cents',roas:'calculated_roas_raw'};
- const colors={net:'#39e8af',sales:'#6caaff',ads:'#ffb365',roas:'#b780ff'};
+ const names={net:'Resultado diário estimado',sales:'Vendas dos pedidos pagos',ads:'Gastos com Ads',roas:'ROAS diário · atribuição ampla',paid:'Pedidos pagos · data de criação'};
+ const fields={net:'net_cents',sales:'sales_cents',ads:'ads_spend_cents',roas:'calculated_roas_raw',paid:'paid_orders'};
+ const colors={net:'#39e8af',sales:'#6caaff',ads:'#ffb365',roas:'#b780ff',paid:'#39d5eb'};
  const choice={overview:'net',finance:'net',ads:'ads'};
  const windows={overview:14,finance:14,ads:14};
  let timeline=null,adsSnapshot=null;
@@ -754,13 +754,13 @@ export const MISSION_TRENDS_CLIENT=String.raw`
   note.textContent=count(model.coverage.observed)+' de '+count(model.coverage.total)+' dia(s) com valores · '+range+'. '+
    (model.status==='PARTIAL'?'Cobertura parcial; lacunas não conectadas. ':'')+
    (model.coverage.partial?'Pontos âmbar = dia parcial; subtotais identificados na observação. ':'')+
-   (key==='roas'?'Fonte: calendário Ads salvo, atribuição ampla. Vendas atribuídas ÷ gasto de cada dia; gasto zero ou valor ausente não gera ROAS. Fuso da fonte não confirmado; este índice não comprova lucro.':'Fonte: resumo diário validado salvo. Resultado estimado, não recebimento bancário.');
+   (key==='roas'?'Fonte: calendário Ads salvo, atribuição ampla. Vendas atribuídas ÷ gasto de cada dia; gasto zero ou valor ausente não gera ROAS. Fuso da fonte não confirmado; este índice não comprova lucro.':key==='paid'?'Fonte: pedidos pagos pela data de criação em Brasília. Contagem de pedidos, sem conversão em peças ou conversões Ads.':'Fonte: resumo diário validado salvo. Resultado estimado, não recebimento bancário.');
   const table=byId('missionTrendValues'+suffix);
   if(table){
    table.replaceChildren();
    for(const point of model.points){
     const row=document.createElement('tr'),date=document.createElement('th'),value=document.createElement('td'),state=document.createElement('td');
-    date.scope='row';date.textContent=briefDate(point.date);value.textContent=point.value===null?'Indisponível':key==='roas'?ratioMicros(point.value):money(point.value);
+    date.scope='row';date.textContent=briefDate(point.date);value.textContent=point.value===null?'Indisponível':key==='roas'?ratioMicros(point.value):key==='paid'?count(point.value):money(point.value);
     state.textContent=point.value===null?'Sem observação':point.basis==='KNOWN_COSTS'?'Subtotal com custos conhecidos':point.partial?'Dia parcial':'Observado';
     row.append(date,value,state);table.append(row);
    }
@@ -921,12 +921,12 @@ export function missionTrendPanelBody(id='overview'){
  if(!['overview','finance','ads'].includes(id))return '';
  const suffix=id[0].toUpperCase()+id.slice(1),defaultSeries=id==='ads'?'ads':'net';
  const control=key=>'<button type="button" data-mission-chart="'+id+'" data-mission-series="'+key+'" aria-pressed="'+String(key===defaultSeries)+'">'+
-  (key==='net'?'Resultado':key==='sales'?'Vendas':key==='roas'?'ROAS':'Ads')+'</button>';
+  (key==='net'?'Resultado':key==='sales'?'Vendas':key==='roas'?'ROAS':key==='paid'?'Pedidos':'Ads')+'</button>';
  const title=id==='ads'?'Evolução dos gastos com anúncios':id==='finance'?'Evolução do resultado financeiro':'Evolução financeira real';
  return '<section class="mission-trend-panel" id="missionTrends'+suffix+'" aria-label="'+title+'">'+
   '<header class="mission-trend-heading"><div><span class="mission-panel-eyebrow">SÉRIE DIÁRIA VALIDADA</span><h3 id="missionTrendTitle'+suffix+'">'+title+'</h3>'+
   '<p id="missionTrendScope'+suffix+'">'+(id==='overview'?'Últimos até 14 dias do período observado':'Histórico diário do período selecionado')+'</p></div>'+
-  '<div class="mission-trend-tools"><div class="mission-trend-controls" role="group" aria-label="Métrica do gráfico">'+['net','sales','ads','roas'].map(control).join('')+'</div>'+
+  '<div class="mission-trend-tools"><div class="mission-trend-controls" role="group" aria-label="Métrica do gráfico">'+['net','sales','ads','paid','roas'].map(control).join('')+'</div>'+
   '<label class="mission-trend-window">Janela <select data-mission-window="'+id+'" aria-label="Janela do gráfico '+id+'"><option value="14">Até 14 dias</option><option value="7">Até 7 dias</option></select></label></div></header>'+
   '<div class="mission-trend-graph" id="missionTrendGraph'+suffix+'"><p class="mission-trend-empty">Aguardando o histórico diário validado.</p></div>'+
   '<p class="mission-trend-note" id="missionTrendNote'+suffix+'">As leituras parciais são sinalizadas. Sem série inventada.</p>'+

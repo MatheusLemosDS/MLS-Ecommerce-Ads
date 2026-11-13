@@ -1,3 +1,4 @@
+import {TenantInitializationSet} from './tenant-storage.mjs';
 // Operator-confirmed manufacture facts. This ledger does not write financial
 // estimates, prove payment, value recovered inventory or authorize stock IO.
 export class IncurredProductionError extends Error{
@@ -107,7 +108,7 @@ export function incurredProductionRange(ledger,selection){
  }catch{return null;}
 }
 
-const ready=new WeakSet(),encoder=new TextEncoder(),tables=['incurred_production_state','incurred_production_records','incurred_production_audit','incurred_production_guard'];
+const ready=new TenantInitializationSet(),encoder=new TextEncoder(),tables=['incurred_production_state','incurred_production_records','incurred_production_audit','incurred_production_guard'];
 const fail=(suffix,status=400)=>{throw new IncurredProductionError('INCURRED_PRODUCTION_'+suffix,status);};
 const plain=v=>v!==null&&typeof v==='object'&&[Object.prototype,null].includes(Object.getPrototypeOf(v));
 const exact=(v,keys)=>plain(v)&&Reflect.ownKeys(v).length===keys.length&&keys.every(key=>Object.hasOwn(Object.getOwnPropertyDescriptor(v,key)||{},'value'));
