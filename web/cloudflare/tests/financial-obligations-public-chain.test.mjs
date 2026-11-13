@@ -24,7 +24,7 @@ async function fixture(t){
   await service.register({name:'Pessoa de teste',email:'obligation-chain@example.test',password},'synthetic-origin');
   const mail=(await readLocalAccountOutbox(env,options)).find(row=>row.purpose==='EMAIL_VERIFICATION');await service.confirmVerification({token:mail.message.token});
   const login=await service.login({email:'obligation-chain@example.test',password},'synthetic-origin'),cookie='__Host-mls_account='+login.token,session=await resolveAccountSession(new Request(appOrigin,{headers:{cookie}}),env,options);
-  const accountCall=async(path,body)=>{const response=await handleAccountRequest(new Request(appOrigin+path,{method:'POST',headers:{cookie,origin:appOrigin,'content-type':'application/json','x-csrf-token':session.csrf},body:JSON.stringify(body)}),env,options);assert.equal(response.status,200,await response.clone().text());return response.json();};
+  const accountCall=async(path,body)=>{const response=await handleAccountRequest(new Request(appOrigin+path,{method:'POST',headers:{cookie,origin:appOrigin,'content-type':'application/json','x-csrf-token':session.csrf},body:JSON.stringify(body)}),env,options);assert.equal(response.status,201,await response.clone().text());return response.json();};
   const company=(await accountCall('/api/companies',{name:'Empresa de teste',confirmed:true,request_id:crypto.randomUUID()})).organization;
   const store=(await accountCall('/api/companies/'+company.id+'/stores',{name:'Loja de teste',platform:'SHOPEE',confirmed:true,request_id:crypto.randomUUID()})).store;
   const principal=await resolveCommercialPrincipal(new Request(appOrigin,{headers:{cookie}}),env,{...options,organizationId:company.id,storeId:store.id,capability:'finance.write'});
@@ -75,17 +75,17 @@ test('actual public App obligations GET/POST traverse fresh commercial Auth and 
 test('public obligations refuse browser fact injection, duplicate filters and CSRF before any private registry call',async t=>{
   const f=await fixture(t);for(const extra of [{snapshot:{}},{scope:{organization_id:'foreign'}},{items:[{amount_cents:1}]},{confirmed:false}])assert.equal((await f.refresh(0,extra)).status,400);
   for(const query of ['?month='+month+'&month='+month,'?month='+month+'&scope=foreign','?month=2026-13'])assert.equal((await f.call('/api/admin/finance/obligations'+query)).status,400);
-  for(const headers of [{origin:'https://foreign.example'},{'x-csrf-token':'wrong'}])assert.equal((await f.refresh(0,{}).then(()=>f.call('/api/admin/finance/obligations',{month,expected_revision:0,request_id:crypto.randomUUID(),confirmed:true},{headers}))).status,403);
-  assert.equal(f.trace.provider,0);
+  for(const headers of [{origin:'https://foreign.example'},{'x-csrf-token':'wrong'}])assert.equal((await f.call('/api/admin/finance/obligations',{month,expected_revision:0,request_id:crypto.randomUUID(),confirmed:true},{headers})).status,403);
+  assert.equal(f.trace.provider,0);assert.equal(f.trace.finance.length,0);assert.equal(f.trace.app.length,0);
 });
 
 test('a revoked commercial session between Auth authorization and Finance dispatch cannot create a snapshot',async t=>{
-  const f=await fixture(t);f.beforeFinance=async()=>{f.beforeFinance=null;await f.revoke();};const result=await f.refresh();assert.equal(result.status,403,JSON.stringify(result.body));
+  const f=await fixture(t);f.beforeFinance=async()=>{f.beforeFinance=null;await f.revoke();};const result=await f.refresh();assert.equal(result.status,401,JSON.stringify(result.body));
   assert.equal(f.env.ACCOUNT_DB.db.prepare("SELECT COUNT(*) n FROM sqlite_master WHERE name LIKE '%finance_financial_obligation_snapshots'").get().n,0);assert.equal(f.trace.provider,0);
 });
 
 test('revocation after a committed capture withholds the receipt and preserves the immutable fact for audit',async t=>{
-  const f=await fixture(t);f.afterFinance=async(request,response)=>{if((await request.clone().json()).operation==='register'&&response.status===200){f.afterFinance=null;await f.revoke();}};const result=await f.refresh();assert.equal(result.status,403,JSON.stringify(result.body));
+  const f=await fixture(t);f.afterFinance=async(request,response)=>{if(f.trace.finance.at(-1).body.operation==='register'&&response.status===200){f.afterFinance=null;await f.revoke();}};const result=await f.refresh();assert.equal(result.status,401,JSON.stringify(result.body));
   const names=f.env.ACCOUNT_DB.db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name LIKE '%finance_financial_obligation_snapshots'").all();assert.equal(names.length,1);assert.equal(f.env.ACCOUNT_DB.db.prepare('SELECT COUNT(*) n FROM "'+names[0].name+'"').get().n,1);assert.doesNotMatch(JSON.stringify(result.body),/snapshot_id|source_hash|13500/);
 });
 

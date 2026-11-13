@@ -1,3 +1,4 @@
+import {alignLegacyCronClock} from './legacy-cron-clock.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
@@ -8,8 +9,9 @@ import {projectReconciliationFrame} from '../../finance/src/reconciliation-frame
 import {historyReturnsReport} from './m2-history-fixture.mjs';
 import {TrackerD1,trackerThrough,trackerTime as sourceTrackerTime,trackerUuid,trackerSourceFrame,publishTrackerMonth,trackerCoverage} from './m2-release-tracker-fixture.mjs';
 
-// Exercise Finance on minute01; minute00 is reserved for manufacturing closure.
-const trackerTime=sourceTrackerTime+60000,trackerStamp=trackerTime/1000;
+// Minute04 keeps the exact five-minute retry boundary and the two-minute
+// auxiliary opportunities on legacy slots, outside dedicated job minutes.
+const trackerTime=sourceTrackerTime+240000,trackerStamp=trackerTime/1000;
 
 async function compiled(minify){
  const source=await readFile(new URL('../../../dist/app-worker.mjs',import.meta.url),'utf8'),seam='return {adminFetch,schedule,scheduledWork,workspaceAuthFetch};';assert.equal(source.split(seam).length,2);
@@ -30,7 +32,7 @@ async function fixture(t,app,{prior=true,priorReturnsDue=false}={}){
  globalThis.Date=class extends SavedDate{constructor(...args){super(...(args.length?args:[clock.time]));}static now(){return clock.time;}};
  const env={ADMIN_DB:db,APP_INTERNAL_SECRET:'PRIVATE_BOOTSTRAP_APP_'+'a'.repeat(40),ADMIN_USERNAME:'bootstrap-owner',ADMIN_PASSWORD:'bootstrap-owner-password-123456',ADMIN_SESSION_SECRET:'PRIVATE_BOOTSTRAP_OWNER_'+'o'.repeat(40)};
  let requests=[];globalThis.fetch=async request=>{requests.push(request);throw Error('SYNTHETIC_UNEXPECTED_SOURCE');};
- const cron=async()=>{const tasks=[];await app.scheduled({cron:'* * * * *',scheduledTime:clock.time},env,{waitUntil:task=>tasks.push(task)});assert.equal(tasks.length,1);return(await Promise.all(tasks))[0];};
+ const cron=async()=>{alignLegacyCronClock(clock);const tasks=[];await app.scheduled({cron:'* * * * *',scheduledTime:clock.time},env,{waitUntil:task=>tasks.push(task)});assert.equal(tasks.length,1);return(await Promise.all(tasks))[0];};
  t.after(()=>{globalThis.Date=SavedDate;globalThis.fetch=savedFetch;db.db.close();});assert.equal((await cron()).lane,'MAINTENANCE');
  const frames=prior?await publishTrackerMonth(env,now):[];
  // Coverage scenarios declare that existing prior Returns are already audited
@@ -87,13 +89,13 @@ for(const minify of [false,true])test(`generated coverage bootstrap is live with
  await t.test('a source failure initializes the marker and does not repeatedly displace the normal auxiliary queue',async child=>{
   const f=await fixture(child,app);f.respond(async request=>{assert.equal(request.headers.get('x-braza-release-contract'),'release-coverage-v1');return Response.json({error:'PRIVATE_SOURCE_UNAVAILABLE'},{status:503});});
   const failed=await f.cron();assert.equal(failed.lane,'HISTORY');assert.equal(failed.release_coverage,'UNAVAILABLE');assert.equal(markerCount(f),1);assert.equal(f.requests().length,1);
-  f.clock.time+=61000;assert.equal((await api.scheduledWork(f.env,{},f.now)).lane,'FINANCE');f.clock.time+=61000;assert.equal((await api.scheduledWork(f.env,{},f.now)).lane,'REGISTRY');assert.equal(f.requests().length,1);assert.equal(f.db.db.prepare('SELECT auxiliary_index FROM background_collection_lane_state').get().auxiliary_index,3);
+  f.clock.time+=59000;assert.equal((await api.scheduledWork(f.env,{},f.now)).lane,'FINANCE');f.clock.time+=61000;assert.equal((await api.scheduledWork(f.env,{},f.now)).lane,'REGISTRY');assert.equal(f.requests().length,1);assert.equal(f.db.db.prepare('SELECT auxiliary_index FROM background_collection_lane_state').get().auxiliary_index,3);
  });
  await t.test('a failed uninitialized bootstrap keeps its own retry clock while ordinary auxiliaries progress every two minutes',async child=>{
   const f=await fixture(child,app);f.db.beforeStatement=sql=>{if(sql.startsWith('INSERT OR IGNORE INTO financial_audit_turns'))throw Error('PRIVATE_SYNTHETIC_LOCAL_STORAGE_FAILURE');};
   const failed=await api.scheduledWork(f.env,{},f.now);assert.equal(failed.lane,'HISTORY');assert.equal(failed.history,'ERROR');assert.equal(markerCount(f),0);assert.equal(f.requests().length,0);
   const first={month:trackerThrough,last_attempt_at:trackerStamp,next_attempt_at:trackerStamp+300};assert.deepEqual(bootstrapAttempt(f),first);
-  for(const [seconds,lane] of [[61,'FINANCE'],[122,'REGISTRY'],[183,'FINANCE'],[244,'PRODUCTION'],[299,'FINANCE']]){
+  for(const [seconds,lane] of [[59,'FINANCE'],[122,'REGISTRY'],[179,'FINANCE'],[244,'PRODUCTION'],[299,'FINANCE']]){
    f.clock.time=trackerTime+seconds*1000;const value=await api.scheduledWork(f.env,{},f.now);assert.equal(value.lane,lane,'ordinary work at '+seconds+'s');assert.equal(markerCount(f),0);assert.deepEqual(bootstrapAttempt(f),first,'ordinary work must not reset the bootstrap retry clock');
   }
   assert.equal(f.db.db.prepare('SELECT last_auxiliary_at FROM background_history_fairness_state').get().last_auxiliary_at,trackerStamp+244);

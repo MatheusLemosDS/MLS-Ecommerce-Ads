@@ -96,3 +96,7 @@ O cliente passou pelos testes focados e perfis nativos normal/minificado, deskto
 **Nenhum recibo de CI/deploy ou observação da nova versão no domínio é afirmado por esta revisão documental.** A integração deve registrar commit, resultado dos gates obrigatórios, migrações/backup/rollback e bytes realmente servidos. Publicação técnica e conferência financeira são duas evidências distintas.
 
 Para aceitar operacionalmente um fechamento, ainda é necessário comparar uma semana encerrada e um mês encerrado usando fontes equivalentes de pedidos/repasses, ajustes/devoluções, Ads, carteira/saques, banco, custo histórico e obrigações. Não há sessão autenticada/extrato real/grant confirmado para essa comparação nesta trilha. Nenhum lucro, saldo ou disponibilidade real foi certificado e nenhum movimento de dinheiro, mensagem ou fato operacional de QA foi criado por estes testes.
+
+## Reversão técnica e alocações já existentes
+
+As novas tabelas são aditivas e preservadas numa reversão. Antes de ativar o novo App, não existe uma interface pública nova criando grupos; uma falha nessa etapa permite reverter as versões anteriores mantendo os fatos. Depois de existirem alocações novas, a reversão preferencial é do App/Auth, conservando o Finance compatível com v1 e sua guarda contra reutilização no matcher antigo. Não rebaixar o Finance que conhece essas reservas para um matcher anterior sem verificar os grupos ativos e bloquear as escritas afetadas. A reversão de código não deve apagar nem ignorar reservas financeiras persistidas.

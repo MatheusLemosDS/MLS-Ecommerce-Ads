@@ -38,9 +38,18 @@ test('commercial financial automation requires its composite reads and writes; a
  assert.deepEqual(await required('finance/allocations'),['bank.read','finance.read']);assert.deepEqual(await required('finance/allocations',{operation:'preview'}),['bank.read','finance.read']);assert.deepEqual(await required('finance/allocations',{operation:'confirm'}),['bank.write','finance.read']);assert.deepEqual(await required('finance/allocations',{operation:'reverse'}),['bank.write','finance.read']);assert.equal(await required('finance/allocations',{operation:'withdraw'}),null);
 });
 test('financial cron reserves only its explicit legacy minute and one bounded local source page',async()=>{
+ for(const minute of ['02','07']){
  const env={ADMIN_DB:new D1()};let reads=0;
  try{
-  const output=await scheduledWork(env,{readFinancialAutomationSources:async({scope})=>{reads++;assert.equal(scope.organization_id,'legacy-brazacommerce');return {events:[],coverage:[],balances:[],obligations:[],reserve:null,capabilities:[],pending:['SYNTHETIC_SOURCE_UNAVAILABLE'],cutoff_at:'2026-11-13T16:02:00.000Z',checkpoint:null,has_more:false};}},()=>Date.parse('2026-11-13T16:02:00Z'));
+  const output=await scheduledWork(env,{readFinancialAutomationSources:async({scope})=>{reads++;assert.equal(scope.organization_id,'legacy-brazacommerce');return {events:[],coverage:[],balances:[],obligations:[],reserve:null,capabilities:[],pending:['SYNTHETIC_SOURCE_UNAVAILABLE'],cutoff_at:'2026-11-13T16:02:00.000Z',checkpoint:null,has_more:false};}},()=>Date.parse('2026-11-13T16:'+minute+':00Z'));
   assert.equal(output.lane,'FINANCIAL_AUTOMATION');assert.equal(reads,1);assert.equal(output.production,'DEFERRED');assert.equal(output.analysis,'DEFERRED');
+ }finally{env.ADMIN_DB.db.close();}
+ }
+});
+test('historical return discovery has a separate bounded local minute and no provider read',async()=>{
+ const env={ADMIN_DB:new D1()};let reads=0;
+ try{
+  const output=await scheduledWork(env,{financialReturnsDiscoveryAdapter:{id:'SYNTHETIC_CACHED_RETURNS',transport:'LOCAL_CACHE',read:async({scope})=>{reads++;return {schema:'financial_return_discovery_page_v1',scope,observations:[],next_cursor:null,complete:false,limited:false};}}},()=>Date.parse('2026-11-13T16:05:00Z'));
+  assert.equal(output.lane,'FINANCIAL_RETURNS');assert.equal(reads,1);assert.equal(output.production,'DEFERRED');assert.equal(output.collection,'DEFERRED');
  }finally{env.ADMIN_DB.db.close();}
 });

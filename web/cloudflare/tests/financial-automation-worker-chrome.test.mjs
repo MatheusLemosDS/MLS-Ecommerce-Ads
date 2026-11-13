@@ -2,7 +2,7 @@
 // are exercised here. Provider reads are synthetic and cannot certify a store.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdir,writeFile} from 'node:fs/promises';
+import {mkdir,writeFile,readFile} from 'node:fs/promises';
 import http from './browser-assets-http-fixture.mjs';
 import {compiledOwnerReportPage} from './owner-report-browser-fixture.mjs';
 import {financialAutomationUiFixture} from './financial-automation-ui-fixture.mjs';
@@ -14,6 +14,7 @@ async function wait(cdp,expression,label){for(let i=0;i<160;i++){if(await cdp.ev
 async function fill(cdp,selector,text){await receiptClick(cdp,selector);await cdp.send('Input.dispatchKeyEvent',{type:'keyDown',key:'a',code:'KeyA',windowsVirtualKeyCode:65,modifiers:2});await cdp.send('Input.dispatchKeyEvent',{type:'keyUp',key:'a',code:'KeyA',windowsVirtualKeyCode:65,modifiers:2});await cdp.send('Input.insertText',{text});}
 for(const minify of [false,true])test('generated Worker financial UI '+(minify?'minified':'normal'),{skip:!receiptChrome,timeout:180000},async()=>{
  const owner=await compiledOwnerReportPage(minify,{localReadSnapshot:true}),month=owner.localReadSnapshot.month,fixture=await financialAutomationUiFixture({month,checked_at:new Date(Date.UTC(Number(month.slice(0,4)),Number(month.slice(5,7)),5,12)).toISOString()}),local=new Map(owner.localReadSnapshot.responses.map(r=>[r.path,r]));
+ const manifest=JSON.parse(await readFile(new URL('../../../dist/browser-assets-manifest.json',import.meta.url),'utf8')),workspaceAsset=manifest.assets.find(r=>r.id==='workspace');assert.ok(workspaceAsset);
  const requests=[];let mode='ready',serverError=null;
  const html=owner.html.replace('<head>','<head><script>globalThis.__financeErrors=[];addEventListener("error",e=>__financeErrors.push(e.message));addEventListener("unhandledrejection",e=>__financeErrors.push(String(e.reason?.message||e.reason)));URL.createObjectURL=(value)=>{globalThis.__financeCsv=value;return "blob:synthetic-finance-export"};URL.revokeObjectURL=()=>{};</script>');
  const host=http.createServer(async(req,res)=>{try{
@@ -45,5 +46,8 @@ for(const minify of [false,true])test('generated Worker financial UI '+(minify?'
   }
   mode='503';await receiptClick(cdp,'#financialAutomationRefresh');await wait(cdp,'brazaFinancialAutomation.getState().stale','generated 503 stale');assert.equal(await cdp.evaluate('brazaFinancialAutomation.getSnapshot().projection.result.amount_cents'),-2500);assert.equal(await cdp.evaluate('document.getElementById("financialAutomationExport").disabled'),true);
   mode='403';await receiptClick(cdp,'#financialAutomationRefresh');await wait(cdp,'brazaFinancialAutomation.getSnapshot()===null','generated 403 clears');assert.equal(await cdp.evaluate('document.getElementById("financialAutomationCards").textContent'),'');assert.deepEqual(await cdp.evaluate('__financeErrors'),[]);assert.equal(serverError,null);assert.ok(requests.every(r=>r.method==='GET'),'QA submits no real mutation');
+  // Actual browser resource failure keeps the explicit server fallback visible.
+  await cdp.send('Network.enable');await cdp.send('Network.setCacheDisabled',{cacheDisabled:true});await cdp.send('Network.setBlockedURLs',{urls:[origin+workspaceAsset.path]});await cdp.send('Page.navigate',{url:origin+'/admin?tab=agent-finance&month='+month});await wait(cdp,'document.readyState==="complete"&&!!document.getElementById("financialAutomationHost")','financial host fallback on asset failure');assert.equal(await cdp.evaluate('document.getElementById("financialAutomation")===null'),true);assert.match(await cdp.evaluate('document.getElementById("financialAutomationHost").textContent'),/recarregue a página/);assert.equal(await cdp.evaluate('!!document.getElementById("businessMonth")'),true,'legacy monthly workspace remains present');await cdp.send('Network.setBlockedURLs',{urls:[]});
+
  }finally{await cdp.close();await new Promise(r=>host.close(r));}
 });
