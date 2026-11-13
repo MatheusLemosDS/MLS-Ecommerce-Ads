@@ -1,0 +1,1429 @@
+{
+  "schema": "mls_layout_reference_final_validation_v1",
+  "status": "LOCAL_EXACT_CI_AND_PUBLIC_LIVE_VERIFIED",
+  "recorded_at": "2026-11-13T19:17:51.979199+00:00",
+  "release": "2026-11-13.1",
+  "base_commit": "0016c4b78d45c47066b259bbaf42578662e11e35",
+  "prepared_source_commit": "7ae377f07735dd7954e1197263ccfca1b40ac0a4",
+  "metadata_head": "7c3b5cc2913f03177d8c2a1288325b78194dd5ad",
+  "reference": {
+    "file": "docs/v4/input/MLS_COMMERCE_OS_LAYOUT.html",
+    "sha256": "135002e7193409451e78263ee5d45fdcfb53e1061804a3a39af84fdc5edcc5f3",
+    "demo_values_are_not_merchant_evidence": true,
+    "prototype_toolbar_offsets_px": {
+      "desktop": 53,
+      "mobile": 101
+    }
+  },
+  "compiled_workers": {
+    "app": {
+      "worker": "brazacommerce-app",
+      "bytes": 3565637,
+      "sha256": "6d7d9dc2d713050e7b724bd31c64abb8901490dc8acae542221db080d7225296"
+    },
+    "auth": {
+      "worker": "brazacommerce-auth",
+      "bytes": 538979,
+      "sha256": "ca7f08ad02993bf7d29d91ce95f689ab845775cbd0fec5c27549aaf261510d74"
+    },
+    "finance": {
+      "worker": "brazacommerce-finance",
+      "bytes": 730516,
+      "sha256": "ffbcea3b7ffe5c0a94b0d4d8c4908738e6da76386040995bba982060a5f9bb71"
+    }
+  },
+  "expected_raw_candidate_not_publication": {
+    "app": {
+      "sha256": "3b33472a7c508f58adfb1062dd3be6b55422be332ebac75667eba0257f9ad091",
+      "bytes": 3965389
+    },
+    "auth": {
+      "sha256": "c3db52c0d0621bfed5c619ad6384aa1541a92070ab58e8ac8880a18e82655919",
+      "bytes": 608411
+    },
+    "finance": {
+      "sha256": "c81f2f28bf4ba16c3a65478e7ca4ab153fff54e00f5ed9c9d73a2698366a6913",
+      "bytes": 764601
+    }
+  },
+  "scope": {
+    "presentation": "Reference shell, panels, account pages, Finance entry/results, manufacturing introduction and chart label/sign rendering.",
+    "rendering_bug_fix": "Ignore exact chart-owned mutations and disconnected targets in the month observer; retain connected real/mixed source batches.",
+    "database_schema_formulas_providers_auth_logic": "No changes in this increment; source diff and final vector are independent checks.",
+    "full_commercial_audit_reopened": false,
+    "public_login_hotfix": "App-only 44px minimum for the real legacy login theme toggle; compiled native regression preserves filled fields, theme cycling and form action."
+  },
+  "connected_capture": {
+    "local_report": "/workspace/mls-layout-reference-qa/candidate-login-control-final/results.json",
+    "report_sha256": "77ef88f05bf7d5666a5ea0dc2d2e6e2cbf6f504c1663eea9bd5d7b3f8a8be02f",
+    "compiled_app_sha256": "6d7d9dc2d713050e7b724bd31c64abb8901490dc8acae542221db080d7225296",
+    "environment": "LOCAL_SYNTHETIC",
+    "real_shop_verified": false,
+    "pages": 48,
+    "details": 24,
+    "widths": [
+      320,
+      390,
+      1440,
+      1920
+    ],
+    "themes": [
+      "dark",
+      "light"
+    ],
+    "source": "ACTUAL_WORKER_BOOTSTRAP_PLUS_EXISTING_COLLECTOR_DAILY_MANUFACTURING_FIXTURE",
+    "fixtures": [
+      "production-daily-browser-fixture.mjs:dailyProductionFixture",
+      "mls-product-workbench-fixture.mjs:m3CatalogState"
+    ],
+    "requests": 108,
+    "unmapped_requests": 0,
+    "blocked_mutation_attempts": 4,
+    "applied_mutations": 0,
+    "javascript_errors": 0,
+    "horizontal_overflow_profiles": 0,
+    "detail_new_api_reads": 0,
+    "native_controls_observed": 1208,
+    "native_target_min_height": 44,
+    "native_target_min_width": 44,
+    "native_controls_width_below44": [],
+    "native_control_acceptance_scope": "All 1,208 observed targets have width AND height >=44px, with the actual associated checkbox/radio label.",
+    "checkbox_radio_controls_observed": 8,
+    "checkbox_radio_associated_target_verified": true,
+    "five_overview_series_verified_each_profile": true,
+    "finance_components": 9,
+    "manufacturing_bars": 6,
+    "negative_monthly_result_cents": -195,
+    "negative_text_color_verified": true,
+    "axis_y_bbox_clipped": 0,
+    "mobile_axis_x_bbox_clipped": 0,
+    "desktop_endpoint_bbox_flags": [],
+    "desktop_bbox_classification": "All final X/Y labels fit inside SVGs and visible X labels do not overlap."
+  },
+  "account_capture": {
+    "local_report": "/workspace/mls-layout-reference-qa/candidate-native-account/results.json",
+    "sha256": "2116852ba42ed83cbd5ed54f8e9871b9ac25839cb79fc48ba5f9ed54d67f5157",
+    "environment": "LOCAL_SYNTHETIC",
+    "source": "PRODUCTION_ACCOUNT_VIEW_AND_FRESH_SYNTHETIC_SQLITE_D1",
+    "pages": 24,
+    "widths": [
+      320,
+      390,
+      1440
+    ],
+    "themes": [
+      "dark",
+      "light"
+    ],
+    "areas": [
+      "login",
+      "account",
+      "company",
+      "team"
+    ],
+    "javascript_errors": 0,
+    "horizontal_overflow_profiles": 0,
+    "real_shop_verified": false,
+    "small_height_target_profiles": 0,
+    "native_probe_limit": "Selected height-only probe uses threshold <43px and excludes raw checkbox/radio glyphs. It does not independently establish 44x44 widths/heights; the separate1208-control touch capture provides exact44x44 proof for its six-panel scope.",
+    "compiled_auth_sha256": "ca7f08ad02993bf7d29d91ce95f689ab845775cbd0fec5c27549aaf261510d74",
+    "current_source_scope": "Auth source unchanged from this account capture; no claim of a real owner Live session."
+  },
+  "parent_reported_gates_pending_artifact_link": [],
+  "screenshots": [
+    {
+      "panel": "overview",
+      "width": 1440,
+      "theme": "dark",
+      "kind": "page",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/connected-daily-overview-1440-dark.png",
+      "bytes": 545580,
+      "sha256": "e621d28a13eb3d4b861afc310021fd3a7997b741e343abca85cde2d55cc3e82a"
+    },
+    {
+      "panel": "agent-finance",
+      "width": 1440,
+      "theme": "dark",
+      "kind": "page",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/connected-daily-agent-finance-1440-dark.png",
+      "bytes": 436061,
+      "sha256": "1925cb54f5d20b33d0ff5941253a0cfdc376fabb42e8f7da0950fcdb025a88ec"
+    },
+    {
+      "panel": "agent-ads",
+      "width": 1440,
+      "theme": "dark",
+      "kind": "page",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/connected-daily-agent-ads-1440-dark.png",
+      "bytes": 411858,
+      "sha256": "07d9a3ae9fe7a281d190f6a62dc580d919a8374aa21242d469c997cc04244d82"
+    },
+    {
+      "panel": "agent-products",
+      "width": 1440,
+      "theme": "dark",
+      "kind": "page",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/connected-daily-agent-products-1440-dark.png",
+      "bytes": 410885,
+      "sha256": "de2bbfc5ee217ccf8c127931a4f097c5e10ba4ab60d60fca8b52fe0bddd90fbd"
+    },
+    {
+      "panel": "agent-production",
+      "width": 1440,
+      "theme": "dark",
+      "kind": "page",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/connected-daily-agent-production-1440-dark.png",
+      "bytes": 408152,
+      "sha256": "c7d5551edba8cbdf08486cd65b0bb841d6e6f9c3f5b3caa4066f73dbf074fe2a"
+    },
+    {
+      "panel": "agent-returns",
+      "width": 1440,
+      "theme": "dark",
+      "kind": "page",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/connected-daily-agent-returns-1440-dark.png",
+      "bytes": 326836,
+      "sha256": "ab6762b92ced5219aa11ccb61759c18f392d9a67cf26d7a0af716f35c9c3af28"
+    },
+    {
+      "panel": "overview",
+      "width": 1440,
+      "theme": "light",
+      "kind": "page",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/connected-daily-overview-1440-light.png",
+      "bytes": 524345,
+      "sha256": "bcd4d2b8059a2c378d2712ffe4d06c0e957ad26c867e91cef3f7f71537937cf8"
+    },
+    {
+      "panel": "agent-finance",
+      "width": 1440,
+      "theme": "light",
+      "kind": "page",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/connected-daily-agent-finance-1440-light.png",
+      "bytes": 343075,
+      "sha256": "89d4f137cdeec20423c8d76f1526aff4171cc3553cb4d30406fe7a8f5bd9773d"
+    },
+    {
+      "panel": "agent-ads",
+      "width": 1440,
+      "theme": "light",
+      "kind": "page",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/connected-daily-agent-ads-1440-light.png",
+      "bytes": 350103,
+      "sha256": "5a440da662d358197054ea6830d148755f17915a20890dccee83a300a9fb8de5"
+    },
+    {
+      "panel": "agent-products",
+      "width": 1440,
+      "theme": "light",
+      "kind": "page",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/connected-daily-agent-products-1440-light.png",
+      "bytes": 298046,
+      "sha256": "caf4ec42c9cc27c182f243584d02eef1eaa58c85d04adc56382950fed947888a"
+    },
+    {
+      "panel": "agent-production",
+      "width": 1440,
+      "theme": "light",
+      "kind": "page",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/connected-daily-agent-production-1440-light.png",
+      "bytes": 294372,
+      "sha256": "17cce4711499ff125a0326daba3f8ae29ebc376cd95a0e71f272d73ec14bcfb1"
+    },
+    {
+      "panel": "agent-returns",
+      "width": 1440,
+      "theme": "light",
+      "kind": "page",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/connected-daily-agent-returns-1440-light.png",
+      "bytes": 274731,
+      "sha256": "6ed95b1eeb095f1385911968cce681e2f78672413b82d38909c9974e8a2f5aa7"
+    },
+    {
+      "panel": "overview",
+      "width": 390,
+      "theme": "dark",
+      "kind": "page",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/connected-daily-overview-390-dark.png",
+      "bytes": 176542,
+      "sha256": "04a8457a660ac9f63e79aa083a020fe59a95584d1343f80b3674d975b7415d5b"
+    },
+    {
+      "panel": "agent-finance",
+      "width": 390,
+      "theme": "dark",
+      "kind": "page",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/connected-daily-agent-finance-390-dark.png",
+      "bytes": 153109,
+      "sha256": "710109aa21bedfcd4d1235413f3ca3ee038493476cadd9db93a2125c4a0cd88d"
+    },
+    {
+      "panel": "agent-ads",
+      "width": 390,
+      "theme": "dark",
+      "kind": "page",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/connected-daily-agent-ads-390-dark.png",
+      "bytes": 158003,
+      "sha256": "d62e6642e81d0808f8d8f2bae2f8e3850816ab01366aa052d0b0f58b079b457c"
+    },
+    {
+      "panel": "agent-products",
+      "width": 390,
+      "theme": "dark",
+      "kind": "page",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/connected-daily-agent-products-390-dark.png",
+      "bytes": 174569,
+      "sha256": "8203ee7202a11b7ad42909053205303f3180df0adcf3cdb60c5fa3b152ef1846"
+    },
+    {
+      "panel": "agent-production",
+      "width": 390,
+      "theme": "dark",
+      "kind": "page",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/connected-daily-agent-production-390-dark.png",
+      "bytes": 142867,
+      "sha256": "8c30784abddb80d7a708b7448f8c00e8287ddb4e8c78404166267918097a45f3"
+    },
+    {
+      "panel": "agent-returns",
+      "width": 390,
+      "theme": "dark",
+      "kind": "page",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/connected-daily-agent-returns-390-dark.png",
+      "bytes": 154136,
+      "sha256": "938981785465897e00722058cc468b3313d92202715af58007e9585088fc7196"
+    },
+    {
+      "panel": "overview",
+      "width": 390,
+      "theme": "light",
+      "kind": "page",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/connected-daily-overview-390-light.png",
+      "bytes": 139151,
+      "sha256": "296acbd836f669e062df251616065a20971b5da4e60c2aaa8f8d50798b8aba83"
+    },
+    {
+      "panel": "agent-finance",
+      "width": 390,
+      "theme": "light",
+      "kind": "page",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/connected-daily-agent-finance-390-light.png",
+      "bytes": 108057,
+      "sha256": "4e6a33d0559bc0876e47d8065b3208a9e910ead35c71c7f4778da3015abe3afa"
+    },
+    {
+      "panel": "agent-ads",
+      "width": 390,
+      "theme": "light",
+      "kind": "page",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/connected-daily-agent-ads-390-light.png",
+      "bytes": 121291,
+      "sha256": "f9f4e111bb3e8e0dc6656405abf24c4cecaf2a4af9f15d69896becc9c0dc1641"
+    },
+    {
+      "panel": "agent-products",
+      "width": 390,
+      "theme": "light",
+      "kind": "page",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/connected-daily-agent-products-390-light.png",
+      "bytes": 109409,
+      "sha256": "e33cd6ed7d8ae4b3c8d3d1b722306e53b2d19d14599604d17dcd6083a6c791a6"
+    },
+    {
+      "panel": "agent-production",
+      "width": 390,
+      "theme": "light",
+      "kind": "page",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/connected-daily-agent-production-390-light.png",
+      "bytes": 78966,
+      "sha256": "79e6648082ab8a28e8e3a4b8c7c0f1c1adaf691b4e787ec7d59f45b654443ead"
+    },
+    {
+      "panel": "agent-returns",
+      "width": 390,
+      "theme": "light",
+      "kind": "page",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/connected-daily-agent-returns-390-light.png",
+      "bytes": 117593,
+      "sha256": "8fd51803a4c8d7326553e301b1d711370790b0cb1427717cfe31111817e0f84b"
+    },
+    {
+      "panel": "overview",
+      "width": 320,
+      "theme": "dark",
+      "kind": "page",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/connected-daily-overview-320-dark.png",
+      "bytes": 154825,
+      "sha256": "191b6773b902869026b35961febe9acdba718488ffa50ed2828c427683309f06"
+    },
+    {
+      "panel": "agent-finance",
+      "width": 320,
+      "theme": "dark",
+      "kind": "page",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/connected-daily-agent-finance-320-dark.png",
+      "bytes": 135677,
+      "sha256": "f0ea3f996cfbf1ec17a73ae41389a6ae34a7c1d46f98655d9e1609743b4d04e3"
+    },
+    {
+      "panel": "agent-ads",
+      "width": 320,
+      "theme": "dark",
+      "kind": "page",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/connected-daily-agent-ads-320-dark.png",
+      "bytes": 142442,
+      "sha256": "ee0a1d06a19b8678c3dae9501ecd3edfefce2e35fbf0d7cb29be1cfd4ef528a7"
+    },
+    {
+      "panel": "agent-products",
+      "width": 320,
+      "theme": "dark",
+      "kind": "page",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/connected-daily-agent-products-320-dark.png",
+      "bytes": 154850,
+      "sha256": "677af0318102573ab7529f71b4cf697304aced0a3879bfea7319bbc13214e852"
+    },
+    {
+      "panel": "agent-production",
+      "width": 320,
+      "theme": "dark",
+      "kind": "page",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/connected-daily-agent-production-320-dark.png",
+      "bytes": 137805,
+      "sha256": "d757234384310e3f0e76b8782dd03b07b180b84536410e0da0cf5b986f06005d"
+    },
+    {
+      "panel": "agent-returns",
+      "width": 320,
+      "theme": "dark",
+      "kind": "page",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/connected-daily-agent-returns-320-dark.png",
+      "bytes": 139322,
+      "sha256": "ef40e225231ea88608d67b815e45c1628e554086547503d3169e41fcd6a8100f"
+    },
+    {
+      "panel": "overview",
+      "width": 320,
+      "theme": "light",
+      "kind": "page",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/connected-daily-overview-320-light.png",
+      "bytes": 120841,
+      "sha256": "9212273a1716b89f7f6d4ceebb0806bfccd5bdc41dc672b6279ff31b1f30e5da"
+    },
+    {
+      "panel": "agent-finance",
+      "width": 320,
+      "theme": "light",
+      "kind": "page",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/connected-daily-agent-finance-320-light.png",
+      "bytes": 93601,
+      "sha256": "da77ba28de2facbfc065a33573dad8b6fcb7c87a28e582e21d478797ab4a554d"
+    },
+    {
+      "panel": "agent-ads",
+      "width": 320,
+      "theme": "light",
+      "kind": "page",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/connected-daily-agent-ads-320-light.png",
+      "bytes": 104494,
+      "sha256": "0a9096997a18ac6366472691e840777477e3708a7fda2579b602264fd03982bb"
+    },
+    {
+      "panel": "agent-products",
+      "width": 320,
+      "theme": "light",
+      "kind": "page",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/connected-daily-agent-products-320-light.png",
+      "bytes": 93004,
+      "sha256": "447da78322380f5092c08f75f8900d8a0e99cd6666ad683616f8d502a5dafa95"
+    },
+    {
+      "panel": "agent-production",
+      "width": 320,
+      "theme": "light",
+      "kind": "page",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/connected-daily-agent-production-320-light.png",
+      "bytes": 74982,
+      "sha256": "da303fd0f12e37510d580da2714b707bccc0c183b62665255514ac4308708c4d"
+    },
+    {
+      "panel": "agent-returns",
+      "width": 320,
+      "theme": "light",
+      "kind": "page",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/connected-daily-agent-returns-320-light.png",
+      "bytes": 102718,
+      "sha256": "ef15ee0c9b41998999338d4b7abd4ee6fb5cc04a9d27312dec0680bb4075d0a6"
+    },
+    {
+      "panel": "overview",
+      "width": 1920,
+      "theme": "dark",
+      "kind": "page",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/connected-daily-overview-1920-dark.png",
+      "bytes": 619847,
+      "sha256": "002be07c81ee5f89a9c4cda60f747544bd0f75a03e327922988a483bc1c3568e"
+    },
+    {
+      "panel": "agent-finance",
+      "width": 1920,
+      "theme": "dark",
+      "kind": "page",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/connected-daily-agent-finance-1920-dark.png",
+      "bytes": 529046,
+      "sha256": "c0ccc5400aa62b055927fa057c0bd7e1aae14eba025ad05ea68de17725a34711"
+    },
+    {
+      "panel": "agent-ads",
+      "width": 1920,
+      "theme": "dark",
+      "kind": "page",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/connected-daily-agent-ads-1920-dark.png",
+      "bytes": 463757,
+      "sha256": "0592805fade59a1ca4a36d66a56b9d4b6d5da85b0900bd53cbc317a72c22ff3b"
+    },
+    {
+      "panel": "agent-products",
+      "width": 1920,
+      "theme": "dark",
+      "kind": "page",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/connected-daily-agent-products-1920-dark.png",
+      "bytes": 481168,
+      "sha256": "6c2e3cfcc9905419801669b1815be861d5ee3d44d6d76494399ba14a85c8281a"
+    },
+    {
+      "panel": "agent-production",
+      "width": 1920,
+      "theme": "dark",
+      "kind": "page",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/connected-daily-agent-production-1920-dark.png",
+      "bytes": 438462,
+      "sha256": "7fc696dc32e7d3804131592135a868febe705baa078722a84b020eb546775d78"
+    },
+    {
+      "panel": "agent-returns",
+      "width": 1920,
+      "theme": "dark",
+      "kind": "page",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/connected-daily-agent-returns-1920-dark.png",
+      "bytes": 367161,
+      "sha256": "8acd129257090e4dadda2b3c2168866ef93afa61063bf742a3e0a1dc982f32ec"
+    },
+    {
+      "panel": "overview",
+      "width": 1920,
+      "theme": "light",
+      "kind": "page",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/connected-daily-overview-1920-light.png",
+      "bytes": 599077,
+      "sha256": "2bf1a234051098da3dd207da047dc6c8058e3203132eccf3f0a02a94eb190e75"
+    },
+    {
+      "panel": "agent-finance",
+      "width": 1920,
+      "theme": "light",
+      "kind": "page",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/connected-daily-agent-finance-1920-light.png",
+      "bytes": 408208,
+      "sha256": "a7cf4a401fc8dbd77e17fc512f7d63ebb2518a670b6e468f1fda18b072433b3b"
+    },
+    {
+      "panel": "agent-ads",
+      "width": 1920,
+      "theme": "light",
+      "kind": "page",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/connected-daily-agent-ads-1920-light.png",
+      "bytes": 384751,
+      "sha256": "f99ddf68e856d8ada82118548d550f207c7c9c76eb6a1d90e866e12d857ed790"
+    },
+    {
+      "panel": "agent-products",
+      "width": 1920,
+      "theme": "light",
+      "kind": "page",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/connected-daily-agent-products-1920-light.png",
+      "bytes": 326357,
+      "sha256": "0aa92dfbc6017a0d186ca66c827f469023d96eadd22335ba2182b44983a75992"
+    },
+    {
+      "panel": "agent-production",
+      "width": 1920,
+      "theme": "light",
+      "kind": "page",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/connected-daily-agent-production-1920-light.png",
+      "bytes": 305457,
+      "sha256": "f4e71c271cdece86fd5a37a2ff47e2854581678a9ad0ce903a6f8809d17c2918"
+    },
+    {
+      "panel": "agent-returns",
+      "width": 1920,
+      "theme": "light",
+      "kind": "page",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/connected-daily-agent-returns-1920-light.png",
+      "bytes": 297497,
+      "sha256": "4f074a27e4291575981413d57133ba594de0ca564af26ffa674b47f32f29c066"
+    },
+    {
+      "panel": "overview",
+      "width": 1440,
+      "theme": "dark",
+      "kind": "detail",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/detail-overview-1440-dark.png",
+      "bytes": 341858,
+      "sha256": "bcd92de25cd16355d5c31082c492a2739cc35cbe1d4a967802b9cbfc87a07e6f"
+    },
+    {
+      "panel": "agent-finance",
+      "width": 1440,
+      "theme": "dark",
+      "kind": "detail",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/detail-agent-finance-1440-dark.png",
+      "bytes": 350613,
+      "sha256": "91276d6dc302630d89305450ab8b10e76008e6142e4b378f1760041eed9816eb"
+    },
+    {
+      "panel": "agent-production",
+      "width": 1440,
+      "theme": "dark",
+      "kind": "detail",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/detail-agent-production-1440-dark.png",
+      "bytes": 220665,
+      "sha256": "08d8ec69ca57356c7576de80723285a78032741d23ac3520d026456fc76bf46a"
+    },
+    {
+      "panel": "overview",
+      "width": 1440,
+      "theme": "light",
+      "kind": "detail",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/detail-overview-1440-light.png",
+      "bytes": 377518,
+      "sha256": "68e138e6fc65bf531ccd55513b890768d99f065fed65efc774173753a45875b9"
+    },
+    {
+      "panel": "agent-finance",
+      "width": 1440,
+      "theme": "light",
+      "kind": "detail",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/detail-agent-finance-1440-light.png",
+      "bytes": 347503,
+      "sha256": "35037c02bf9b9d5dc5fbac10e78aaca16a5cd21d71ae5e6c6b6d56c618d96947"
+    },
+    {
+      "panel": "agent-production",
+      "width": 1440,
+      "theme": "light",
+      "kind": "detail",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/detail-agent-production-1440-light.png",
+      "bytes": 213563,
+      "sha256": "5461303df4e681c2c8411c9ab20c9a857d9c523fd7f27be192313ea21a44581f"
+    },
+    {
+      "panel": "overview",
+      "width": 390,
+      "theme": "dark",
+      "kind": "detail",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/detail-overview-390-dark.png",
+      "bytes": 111030,
+      "sha256": "1bdca076231bb70db71d8c8596facb1119555f400d8c98797e911d3f1ee9f473"
+    },
+    {
+      "panel": "agent-finance",
+      "width": 390,
+      "theme": "dark",
+      "kind": "detail",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/detail-agent-finance-390-dark.png",
+      "bytes": 109569,
+      "sha256": "c196ca10e5269214bf1fd8cc41d976fe7a3fba565f4db05f01209b816001c273"
+    },
+    {
+      "panel": "agent-production",
+      "width": 390,
+      "theme": "dark",
+      "kind": "detail",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/detail-agent-production-390-dark.png",
+      "bytes": 101272,
+      "sha256": "3ff0971881e944e0649ca37a6cb4c16e4d93476fb34f3b4afbd6c3068440f92f"
+    },
+    {
+      "panel": "overview",
+      "width": 390,
+      "theme": "light",
+      "kind": "detail",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/detail-overview-390-light.png",
+      "bytes": 107543,
+      "sha256": "7a390b9f6c4ec66fd07045e67e5149b42caa84821b215b1bbbe6f6ef5d17b4e6"
+    },
+    {
+      "panel": "agent-finance",
+      "width": 390,
+      "theme": "light",
+      "kind": "detail",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/detail-agent-finance-390-light.png",
+      "bytes": 106337,
+      "sha256": "1b9546d3b90d33dc01c3e8522cf2e0c53144e40685cc373ee1302af4d0b6c9ff"
+    },
+    {
+      "panel": "agent-production",
+      "width": 390,
+      "theme": "light",
+      "kind": "detail",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/detail-agent-production-390-light.png",
+      "bytes": 96680,
+      "sha256": "c563c6759f6bc7fd8b15b8b954c5ee0f84bb80af10e98e37ab6703b97cdb3389"
+    },
+    {
+      "panel": "overview",
+      "width": 320,
+      "theme": "dark",
+      "kind": "detail",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/detail-overview-320-dark.png",
+      "bytes": 94684,
+      "sha256": "858d67526b154a2dc854eb0a2bfbae360989c583fc646627a2f224b48b00ac9a"
+    },
+    {
+      "panel": "agent-finance",
+      "width": 320,
+      "theme": "dark",
+      "kind": "detail",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/detail-agent-finance-320-dark.png",
+      "bytes": 99618,
+      "sha256": "708b9b89d4ab66eda029f2832b542536e310eb6eab1b661dde5f1558d9448d6c"
+    },
+    {
+      "panel": "agent-production",
+      "width": 320,
+      "theme": "dark",
+      "kind": "detail",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/detail-agent-production-320-dark.png",
+      "bytes": 87136,
+      "sha256": "453944f74ccaab7deb055f98f207d8db1f51e42941e95074026cdaacf3db92c4"
+    },
+    {
+      "panel": "overview",
+      "width": 320,
+      "theme": "light",
+      "kind": "detail",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/detail-overview-320-light.png",
+      "bytes": 91423,
+      "sha256": "0b1ff24caa22f597d5438a8c1b800a3cb10b5cb7919401c770815304e3ce211f"
+    },
+    {
+      "panel": "agent-finance",
+      "width": 320,
+      "theme": "light",
+      "kind": "detail",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/detail-agent-finance-320-light.png",
+      "bytes": 97391,
+      "sha256": "57be943de06c198674c3061f9f1ee0aaf9a6199890eaeecac990a1b7a3915b25"
+    },
+    {
+      "panel": "agent-production",
+      "width": 320,
+      "theme": "light",
+      "kind": "detail",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/detail-agent-production-320-light.png",
+      "bytes": 83285,
+      "sha256": "8578244fcc450d832fcafb489e5ef833bf707283d33d8f044e1a0b200cc7ddab"
+    },
+    {
+      "panel": "overview",
+      "width": 1920,
+      "theme": "dark",
+      "kind": "detail",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/detail-overview-1920-dark.png",
+      "bytes": 432913,
+      "sha256": "bcf58ac40778ae13d2bd397e6366f7afe400a62ddff19c419b31e3a87cdf6ddc"
+    },
+    {
+      "panel": "agent-finance",
+      "width": 1920,
+      "theme": "dark",
+      "kind": "detail",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/detail-agent-finance-1920-dark.png",
+      "bytes": 418568,
+      "sha256": "8b19c27f6b0065b4abc4089cc7f00fa32564c914410fa4e192796b27d5b2fe80"
+    },
+    {
+      "panel": "agent-production",
+      "width": 1920,
+      "theme": "dark",
+      "kind": "detail",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/detail-agent-production-1920-dark.png",
+      "bytes": 235229,
+      "sha256": "778d236dc60d405ea1c10f4e315e32b1e6309d43d4b1fbc86bd99d60456a19b2"
+    },
+    {
+      "panel": "overview",
+      "width": 1920,
+      "theme": "light",
+      "kind": "detail",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/detail-overview-1920-light.png",
+      "bytes": 486587,
+      "sha256": "372c3a1832927398154473cf6e52320b10322139444e4b087ddac378149aa90b"
+    },
+    {
+      "panel": "agent-finance",
+      "width": 1920,
+      "theme": "light",
+      "kind": "detail",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/detail-agent-finance-1920-light.png",
+      "bytes": 408980,
+      "sha256": "0b5043ee49410654f8163bb10c3a94702a613107537b72ecd24c359a90714c57"
+    },
+    {
+      "panel": "agent-production",
+      "width": 1920,
+      "theme": "light",
+      "kind": "detail",
+      "local_path": "/workspace/mls-layout-reference-qa/candidate-login-control-final/detail-agent-production-1920-light.png",
+      "bytes": 229992,
+      "sha256": "2658b88a5aee286550a1d04e292cedae701c756fe2bdb191dc46d103ad726a93"
+    }
+  ],
+  "full_node_history": {
+    "earlier_completed_run": {
+      "local_log": "/workspace/mls-layout-reference-qa/reference-clean-final-node.log",
+      "tests": 4113,
+      "passed": 4096,
+      "failed": 17,
+      "status": "HISTORICAL_FAILURE_NOT_RETROACTIVELY_PASSED"
+    },
+    "focused_closures": "Parent reports all17 failures closed with focused test evidence; no aggregation waiver for the full suite.",
+    "current_complete_run": "PASS_4115_AGAINST_EXACT_7c3b5cc2913f03177d8c2a1288325b78194dd5ad_SOURCE_NO_AGGREGATION_WAIVER",
+    "previous_complete_source_pass": {
+      "source_commit": "68e18f015d6193eae4e96e87d8aaf97286a6251b",
+      "tests": 4113,
+      "status": "PASS_ON_ORIGINAL_SOURCE"
+    }
+  },
+  "ci": {
+    "run_id": 43486058949,
+    "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43486058949",
+    "head": "7c3b5cc2913f03177d8c2a1288325b78194dd5ad",
+    "state": "SUCCESS",
+    "node_passed": 4115,
+    "python_passed": 67,
+    "skipped": 0,
+    "log_sha256": "37be748913e621dbe5f542b43c0b30f9581e82fa316ae08b50180e7a3675ba9b",
+    "attempt": 2
+  },
+  "publication": {
+    "status": "PUBLISHED_VERIFIED_PUBLIC_TECHNICAL_SCOPE",
+    "receipt": "docs/v4/layout-reference-live-publication.json",
+    "source_commit": "7c3b5cc2913f03177d8c2a1288325b78194dd5ad",
+    "versions": {
+      "app": "e8a2bb41-61e8-45e0-9614-3c6670e5f293",
+      "auth": "9f0c57c9-5712-4b0a-b7af-f8571feebc33",
+      "finance": "d3bf1196-e75b-491b-bc40-f523029db483"
+    },
+    "verified_at": "2026-11-13T19:17:09.007Z"
+  },
+  "live_qa": {
+    "result": "PASS",
+    "transport": "VERIFIED_TLS_NODE_GET_CDP_RENDERING",
+    "tls_verification_disabled": false,
+    "http_routes": 15,
+    "assets": 7,
+    "browser_profiles": 24,
+    "report_sha256": "ba8cec145cb9d729fa40c022739ce27107ae57d76d29088893042f4ddaafda51",
+    "owner_session_available": false,
+    "authenticated_live_qa": "NOT_PERFORMED",
+    "operational_financial_acceptance": false,
+    "remote_mutations_sent": 0,
+    "attempted_mutations_blocked": 0,
+    "status": "PUBLIC_TECHNICAL_PASS",
+    "authorized_owner_session_available": false
+  },
+  "limits": [
+    "All authenticated captures and database facts are synthetic local QA.",
+    "Public Live verification passed; authenticated Live owner acceptance and real financial reconciliation were not performed.",
+    "The separate 24-account capture is scoped height-only evidence, not a universal exact44x44 claim.",
+    "Earlier failed or superseded runs remain historical; the corrected candidate has fresh complete Node/CI/native and public receipts.",
+    "M2/M2.2 and external commercial dependencies remain open."
+  ],
+  "local_visual_approval": {
+    "status": "APPROVED_IN_RECORDED_LOCAL_SCOPE",
+    "pages": 48,
+    "details": 24,
+    "native_controls_observed": 1208,
+    "all_observed_native_target_heights_and_widths_at_least_44px": true,
+    "width_below44_occurrences": 0,
+    "universal_observed_44x44_target_claim": true,
+    "real_operational_acceptance": false,
+    "all_chart_axis_bbox_inside": true,
+    "x_labels_nonoverlapping": true,
+    "compiled_app_sha256": "6d7d9dc2d713050e7b724bd31c64abb8901490dc8acae542221db080d7225296",
+    "result_sha256": "77ef88f05bf7d5666a5ea0dc2d2e6e2cbf6f504c1663eea9bd5d7b3f8a8be02f",
+    "legacy_login_native_profiles": 8
+  },
+  "full_node_final": {
+    "receipt_sha256": "5d23f26429b7a6bfce256dc1d9350d429f4632883b22af2db89a5ae2dc2443c6",
+    "schema": "mls_reference_local_node_exit_receipt_v1",
+    "name": "local-node",
+    "exit_code": 0,
+    "signal": null,
+    "log": "/workspace/mls-layout-reference-publication-20261113/login-control-fix/local-node.log",
+    "log_sha256": "db6bb5695cd5f5707a955beca71dbf01bac60afcd4391003e6ab10d48c2884d3",
+    "head_start": "7c3b5cc2913f03177d8c2a1288325b78194dd5ad",
+    "head_end": "7c3b5cc2913f03177d8c2a1288325b78194dd5ad",
+    "compiled_source_vectors_start": {
+      "app": "6d7d9dc2d713050e7b724bd31c64abb8901490dc8acae542221db080d7225296",
+      "auth": "ca7f08ad02993bf7d29d91ce95f689ab845775cbd0fec5c27549aaf261510d74",
+      "finance": "ffbcea3b7ffe5c0a94b0d4d8c4908738e6da76386040995bba982060a5f9bb71"
+    },
+    "compiled_source_vectors_end": {
+      "app": "6d7d9dc2d713050e7b724bd31c64abb8901490dc8acae542221db080d7225296",
+      "auth": "ca7f08ad02993bf7d29d91ce95f689ab845775cbd0fec5c27549aaf261510d74",
+      "finance": "ffbcea3b7ffe5c0a94b0d4d8c4908738e6da76386040995bba982060a5f9bb71"
+    },
+    "started_at_utc": "2026-11-13T18:47:49.024Z",
+    "completed_at_utc": "2026-11-13T18:56:45.409Z",
+    "tests": 4115,
+    "pass": 4115,
+    "fail": 0,
+    "skipped": 0,
+    "cancelled": 0
+  },
+  "historical_initial_candidate": {
+    "source_commit": "68e18f015d6193eae4e96e87d8aaf97286a6251b",
+    "compiled_app_sha256": "107619ad68b14729f1e84b2e5d0e1d3427d16ee5ca3c6dd834a17f738b36699f",
+    "connected_capture": {
+      "local_report": "/workspace/mls-layout-reference-qa/candidate-touch-final/results.json",
+      "report_sha256": "e6f98e2fb7d8336be2b2cb03c26b72c47e1674fd067fdf1756e84f1dd912d253",
+      "compiled_app_sha256": "107619ad68b14729f1e84b2e5d0e1d3427d16ee5ca3c6dd834a17f738b36699f",
+      "environment": "LOCAL_SYNTHETIC",
+      "real_shop_verified": false,
+      "pages": 48,
+      "details": 24,
+      "widths": [
+        320,
+        390,
+        1440,
+        1920
+      ],
+      "themes": [
+        "dark",
+        "light"
+      ],
+      "source": "ACTUAL_WORKER_BOOTSTRAP_PLUS_EXISTING_COLLECTOR_DAILY_MANUFACTURING_FIXTURE",
+      "fixtures": [
+        "production-daily-browser-fixture.mjs:dailyProductionFixture",
+        "mls-product-workbench-fixture.mjs:m3CatalogState"
+      ],
+      "requests": 108,
+      "unmapped_requests": 0,
+      "blocked_mutation_attempts": 4,
+      "applied_mutations": 0,
+      "javascript_errors": 0,
+      "horizontal_overflow_profiles": 0,
+      "detail_new_api_reads": 0,
+      "native_controls_observed": 1208,
+      "native_target_min_height": 44,
+      "native_target_min_width": 44,
+      "native_controls_width_below44": [],
+      "native_control_acceptance_scope": "All1208 observed targets width AND height>=44, with actual checkbox/radio associated label.",
+      "checkbox_radio_controls_observed": 8,
+      "checkbox_radio_associated_target_verified": true,
+      "five_overview_series_verified_each_profile": true,
+      "finance_components": 9,
+      "manufacturing_bars": 6,
+      "negative_monthly_result_cents": -195,
+      "negative_text_color_verified": true,
+      "axis_y_bbox_clipped": 0,
+      "mobile_axis_x_bbox_clipped": 0,
+      "desktop_endpoint_bbox_flags": [],
+      "desktop_bbox_classification": "ALL_FINAL_X_Y_BBOX_INSIDE_SVG_AND_X_LABELS_NONOVERLAPPING; earlier2051desktop flags resolved before this final source."
+    },
+    "full_node_final": {
+      "environment": "LOCAL_SYNTHETIC",
+      "status": "PASS",
+      "exit_receipt": {
+        "schema": "mls_reference_local_node_exit_receipt_v1",
+        "exit_code": 0,
+        "tests": 4113,
+        "pass": 4113,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0,
+        "log": "/workspace/mls-layout-reference-qa/reference-strict-final-full-node.log",
+        "log_sha256": "6b61032dc6a2affda9444e73f38938be6764cae0e06dd198f07fe06e93eb6f07",
+        "head_start": "68e18f015d6193eae4e96e87d8aaf97286a6251b",
+        "head_end": "68e18f015d6193eae4e96e87d8aaf97286a6251b",
+        "compiled_source_vectors_start": {
+          "app": "107619ad68b14729f1e84b2e5d0e1d3427d16ee5ca3c6dd834a17f738b36699f",
+          "auth": "ca7f08ad02993bf7d29d91ce95f689ab845775cbd0fec5c27549aaf261510d74",
+          "finance": "ffbcea3b7ffe5c0a94b0d4d8c4908738e6da76386040995bba982060a5f9bb71"
+        },
+        "compiled_source_vectors_end": {
+          "app": "107619ad68b14729f1e84b2e5d0e1d3427d16ee5ca3c6dd834a17f738b36699f",
+          "auth": "ca7f08ad02993bf7d29d91ce95f689ab845775cbd0fec5c27549aaf261510d74",
+          "finance": "ffbcea3b7ffe5c0a94b0d4d8c4908738e6da76386040995bba982060a5f9bb71"
+        },
+        "completed_at_utc": "2026-11-13T18:25:18.540358+00:00"
+      },
+      "exit_receipt_sha256": "f83436e228a0d7003e61ac4f06c113a5d3f81df12ea04146a873fb1c03aa2aab",
+      "no_aggregation_waiver": true
+    },
+    "ci": {
+      "status": "PASS",
+      "run_id": 43480886062,
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43480886062",
+      "head_sha": "68e18f015d6193eae4e96e87d8aaf97286a6251b",
+      "node": {
+        "tests": 4113,
+        "passed": 4113,
+        "failed": 0,
+        "skipped": 0,
+        "cancelled": 0
+      },
+      "python": {
+        "passed": 67
+      },
+      "local_receipt": "/workspace/mls-layout-reference-publication-20261113/ci-43480886062-receipt.json",
+      "receipt_sha256": "43a920e40961ae2306fd6d07574b9219a131d0851ff6fe70154c27c0db36dd0b",
+      "log_sha256": "1e3feba1c64ca5f46d47d8bd1a503bae11fe8074728898fb4be21eec498f2daa"
+    },
+    "initial_rollout": {
+      "source_commit": "68e18f015d6193eae4e96e87d8aaf97286a6251b",
+      "ci_run": 43480886062,
+      "active_versions": {
+        "app": "4666fceb-a652-4574-a620-0a3b357d0cfa",
+        "auth": "9f0c57c9-5712-4b0a-b7af-f8571feebc33",
+        "finance": "d3bf1196-e75b-491b-bc40-f523029db483"
+      },
+      "operator_cli_operations": [
+        {
+          "operation": "upload-auth",
+          "head": "68e18f015d6193eae4e96e87d8aaf97286a6251b",
+          "cli_log_sha256": "da3caedfb85d5fb11a2c9be3e8e62c38ef006a71371624ea77493709040deef2",
+          "ended_at": "2026-11-13T18:29:55.650Z",
+          "receipt_sha256": "d1d6c96c54a6ccc5955bb54b935f0d09cdda1c57265b528a99002f035c46715b",
+          "publication_verified_by_cli": false
+        },
+        {
+          "operation": "upload-app",
+          "head": "68e18f015d6193eae4e96e87d8aaf97286a6251b",
+          "cli_log_sha256": "1b0f806968cf98689323ca49031cae3a84e0155cbd0e85228f0f8481715543c6",
+          "ended_at": "2026-11-13T18:31:08.005Z",
+          "receipt_sha256": "0586a7ce61ab5593f1833be7dbc98cf3e7009961f48e8aa1e22e62c5e8f79f49",
+          "publication_verified_by_cli": false
+        },
+        {
+          "operation": "activate-auth",
+          "head": "68e18f015d6193eae4e96e87d8aaf97286a6251b",
+          "cli_log_sha256": "f64918dc9c2928e9ad440b78a73b4a2e33f7dbf9754bb030daa49a4e48be0b27",
+          "ended_at": "2026-11-13T18:32:47.767Z",
+          "receipt_sha256": "64874ebcc321b48743d7aedcca18f297a06946e5862839e5cb71ce73e94c2d8c",
+          "publication_verified_by_cli": false
+        },
+        {
+          "operation": "activate-app",
+          "head": "68e18f015d6193eae4e96e87d8aaf97286a6251b",
+          "cli_log_sha256": "b7a6e02bbe921d608660e1ecec14f2e7f96a2239547365e7a3a98d5ab2a273ed",
+          "ended_at": "2026-11-13T18:33:35.239Z",
+          "receipt_sha256": "f0ae9edf7809bf7d21e85f95329d21cfcdf9deb8501408dba083a5b57b5b151b",
+          "publication_verified_by_cli": false
+        }
+      ],
+      "control_plane": {
+        "checked_at": "2026-11-13T18:34:53.322925+00:00",
+        "all_three_exact": true,
+        "receipt_sha256": "f16e4d32a04a84371ae9c90f64898dac2112207881f964a5dc7626f86b5f7e61",
+        "payload_sha256": "3c5f89a27f8c13cafd089529a661b9d16862f8119bcb1d2da883a2c1cd1d8715"
+      },
+      "public_qa": {
+        "result": "FAILED",
+        "finished_at": "2026-11-13T18:34:52.727Z",
+        "report_sha256": "082a157780d10cef8503f2963cf94efe370d6ad07d6809d7d7d8a08529a08106",
+        "http_routes": 15,
+        "assets": 7,
+        "browser_profiles_completed": 1,
+        "failures": [
+          "FATAL:actions retain44px targets"
+        ],
+        "mutation_counts": "NOT_REPORTED_ON_FATAL_PATH",
+        "cause": "Legacy /login theme toggle inherited a 41.5px height; other observed legacy login fields were 45px."
+      },
+      "acceptance": "Activation was verified; full public acceptance required the corrective rollout below."
+    }
+  },
+  "historical_focused_gates_with_observed_artifacts": [
+    {
+      "title": "12 risky monthly browser scenarios",
+      "environment": "LOCAL_SYNTHETIC",
+      "local_log": "/workspace/mls-layout-reference-qa/reference-isolated-detached-fixed.log",
+      "sha256": "bfa9e86aaedcd59a9785b3706969cc8e1dbf2408b17c97a7bc8d2139939b17a0",
+      "observed_counts": {
+        "tests": 12,
+        "pass": 12,
+        "fail": 0,
+        "skipped": 0
+      },
+      "scope": "Local compiled monthly/DTF/M3 scenarios after detached-observer fix, before the last axis presentation adjustment; final full gate remains separate."
+    },
+    {
+      "title": "4 variant order adapters",
+      "environment": "LOCAL_SYNTHETIC",
+      "local_log": "/workspace/mls-layout-reference-qa/reference-variant-order-adapter.log",
+      "sha256": "795a73c79c1a3fb41486b369592d07d631e09b617d7e5a6b047f8b78c2ed3dcd",
+      "observed_counts": {
+        "tests": 4,
+        "pass": 4,
+        "fail": 0,
+        "skipped": 0
+      },
+      "scope": "Adapter compatibility; final complete Node/CI are separate."
+    },
+    {
+      "title": "13 chart renderer/adapter contracts",
+      "environment": "LOCAL_SYNTHETIC",
+      "local_log": "/workspace/mls-layout-reference-qa/reference-chart-ticks.log",
+      "sha256": "2ae927865c64e916afc0ea6bea36ec0d3eb86a8873c9c952405b3676d824337d",
+      "observed_counts": {
+        "tests": 13,
+        "pass": 13,
+        "fail": 0,
+        "skipped": 0
+      },
+      "scope": "Typed signed values, endpoint tick selection and marks; source revision determined by the stored run, not retroactively the final capture."
+    },
+    {
+      "title": "33 finite source/build pins",
+      "environment": "LOCAL_SYNTHETIC",
+      "local_log": "/workspace/mls-layout-reference-qa/reference-finite-pins.log",
+      "sha256": "13c1f9e1077deb1cc8752e87f8a6f3cad7e517662d9326ec330c04137b76e452",
+      "observed_counts": {
+        "tests": 33,
+        "pass": 33,
+        "fail": 0,
+        "skipped": 0
+      },
+      "scope": "Existing exact-source gates remain finite; unknown future bytes still rejected."
+    },
+    {
+      "title": "14 release preflight unit contracts",
+      "environment": "LOCAL_SYNTHETIC",
+      "local_log": "/workspace/mls-layout-reference-qa/reference-release-preflight-final.log",
+      "sha256": "ebefaef7364824552ab8e237c7dafd2c3b208824d9830ce232da7134c17d5858",
+      "observed_counts": {
+        "tests": 14,
+        "pass": 14,
+        "fail": 0,
+        "skipped": 0
+      },
+      "scope": "Local verifier contract, not authorization inferred for a remote deploy."
+    },
+    {
+      "title": "88 initial focused contracts",
+      "environment": "LOCAL_SYNTHETIC",
+      "local_log": "/workspace/mls-layout-reference-qa/reference-focused-tests.log",
+      "sha256": "43ccbb79f444fc195d2f0017680a9ca8a536c15116fc6b83a897520764de2267",
+      "observed_counts": {
+        "tests": 88,
+        "pass": 88,
+        "fail": 0,
+        "skipped": 0
+      },
+      "scope": "Earlier focused candidate evidence, retained as history; does not alone validate final source."
+    },
+    {
+      "title": "Python bridge/tooling suite",
+      "environment": "LOCAL",
+      "local_log": "/workspace/mls-layout-reference-qa/reference-strict-final-python.log",
+      "sha256": "ef389380f3e9b218599947c4e02f2c3c4740af9c0df6102b8eb0fe11ce1d8972",
+      "passed": 67,
+      "failed": 0,
+      "scope": "Actual logged local run; deployment and bridge execution are not inferred."
+    }
+  ],
+  "ci_attempt_history": [
+    {
+      "run_id": 43486058949,
+      "attempt": 1,
+      "head": "7c3b5cc2913f03177d8c2a1288325b78194dd5ad",
+      "status": "FAILED",
+      "node_tests": 4115,
+      "node_passed": 4114,
+      "node_failed": 1,
+      "skipped": 0,
+      "cancelled": 0,
+      "log_sha256": "333c69763fd59956f1cef1db5068c01b292cac9798dff2590af20cee345024be",
+      "observed_failure": "Compiled minified 320px daily-result-clarity historical release-link native hit assertion.",
+      "interpretation": "Failure retained. Local complete suite passed on the same source; a controlled complete CI rerun was required, without disabling or modifying tests."
+    },
+    {
+      "run_id": 43486058949,
+      "head": "7c3b5cc2913f03177d8c2a1288325b78194dd5ad",
+      "status": "SUCCESS",
+      "node_tests": 4115,
+      "node_passed": 4115,
+      "node_failed": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "log_sha256": "37be748913e621dbe5f542b43c0b30f9581e82fa316ae08b50180e7a3675ba9b"
+    }
+  ],
+  "ci_failure_diagnostic": {
+    "report_sha256": "f29b12b53d47a7b2236f8a00dea570a4b14c5d2c642bd48d549637b1eb36f3c8",
+    "head": "7c3b5cc2913f03177d8c2a1288325b78194dd5ad",
+    "failure_reproduced": false,
+    "runs": [
+      {
+        "kind": "UNCHANGED_ORIGINAL_FILE",
+        "tests": 5,
+        "pass": 5,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0,
+        "log_sha256": "fb5a1a96a40146294a3adc891d182685a67da223de26cac727d860d7e986fc10",
+        "report_sha256": "646313c6ca753f70636657c0b6720fdcc5e38316f58a74c0182f54b7d950e381",
+        "native_viewport_theme_profiles": 8
+      },
+      {
+        "kind": "EXTERNAL_LOADER_GEOMETRY_CPU4",
+        "tests": 5,
+        "pass": 5,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0,
+        "log_sha256": "2f6e94a2dd5fe6abcd31aefcaa18c7e575aa9f372b9acaf4460915ce5f65d3e7",
+        "report_sha256": "646313c6ca753f70636657c0b6720fdcc5e38316f58a74c0182f54b7d950e381",
+        "native_viewport_theme_profiles": 8
+      },
+      {
+        "kind": "EXTERNAL_LOADER_GEOMETRY_CPU4_SIX_RAF_SAMPLES",
+        "tests": 5,
+        "pass": 5,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0,
+        "log_sha256": "c41769a5095f97ce30fe5850e0f6473427be710742345ddf8ea366fbaa729af2",
+        "report_sha256": "646313c6ca753f70636657c0b6720fdcc5e38316f58a74c0182f54b7d950e381",
+        "native_viewport_theme_profiles": 8
+      }
+    ],
+    "trajectory_frames": 96,
+    "all_initial_and_sampled_hit_tests": true,
+    "trajectory_y_motion_pixels": 0,
+    "assessment": "No persistent obstruction or touch-target regression reproduced. Timing/scroll-anchor race remains a hypothesis; exact CI obstruction identity cannot be recovered from its log. No assertion weakened, no retry/skip recovery added.",
+    "repo_edits": 0,
+    "builds": 0,
+    "remote_writes": 0,
+    "replaces_complete_ci": false
+  },
+  "python_final": {
+    "receipt_sha256": "b7ce5933d39aba020a5a3a14a702161fad2da4bc1f49910ac6c51ed0a1ac7960",
+    "schema": "mls_reference_local_python_exit_receipt_v1",
+    "name": "local-python",
+    "exit_code": 0,
+    "signal": null,
+    "log": "/workspace/mls-layout-reference-publication-20261113/login-control-fix/local-python.log",
+    "log_sha256": "f4d30b16ed3f2bfde9d33f424dec3d9d09623c8bbcca7bcd9e2e36cf03845717",
+    "head_start": "7c3b5cc2913f03177d8c2a1288325b78194dd5ad",
+    "head_end": "7c3b5cc2913f03177d8c2a1288325b78194dd5ad",
+    "compiled_source_vectors_start": {
+      "app": "6d7d9dc2d713050e7b724bd31c64abb8901490dc8acae542221db080d7225296",
+      "auth": "ca7f08ad02993bf7d29d91ce95f689ab845775cbd0fec5c27549aaf261510d74",
+      "finance": "ffbcea3b7ffe5c0a94b0d4d8c4908738e6da76386040995bba982060a5f9bb71"
+    },
+    "compiled_source_vectors_end": {
+      "app": "6d7d9dc2d713050e7b724bd31c64abb8901490dc8acae542221db080d7225296",
+      "auth": "ca7f08ad02993bf7d29d91ce95f689ab845775cbd0fec5c27549aaf261510d74",
+      "finance": "ffbcea3b7ffe5c0a94b0d4d8c4908738e6da76386040995bba982060a5f9bb71"
+    },
+    "started_at_utc": "2026-11-13T18:56:45.422Z",
+    "completed_at_utc": "2026-11-13T18:56:45.971Z",
+    "tests": 67,
+    "ok": true
+  },
+  "legacy_login_native_final": {
+    "receipt_sha256": "cdb1e19aa92da4e0bd8db5e85c2731190a6f7fdcf39721b704f3814e558e63b7",
+    "schema": "mls_legacy_login_native_validation_v1",
+    "status": "PASS",
+    "source_head": "7c3b5cc2913f03177d8c2a1288325b78194dd5ad",
+    "compiled_app_sha256": "6d7d9dc2d713050e7b724bd31c64abb8901490dc8acae542221db080d7225296",
+    "tests": 2,
+    "profiles": 8,
+    "environment": "LOCAL_SYNTHETIC",
+    "real_owner_authenticated": false,
+    "production_requests_performed": false,
+    "test_file_sha256": "1516e893daad87515c774e35e6cd0dc9fe1e15077ab1524f5348b23bc63986ed",
+    "standalone_raw_tap_log_retained": false,
+    "standalone_raw_tap_log_sha256": null,
+    "standalone_log_limit": "The terminal TAP result was observed in the execution tool response; no raw log file was retained. No synthetic log or log hash was created.",
+    "full_suite_source_proof": {
+      "node_log_sha256": "db6bb5695cd5f5707a955beca71dbf01bac60afcd4391003e6ab10d48c2884d3",
+      "ci_log_sha256": "37be748913e621dbe5f542b43c0b30f9581e82fa316ae08b50180e7a3675ba9b"
+    },
+    "profile_results": [
+      {
+        "worker_variant": "normal",
+        "width": 320,
+        "height": 900,
+        "initial_theme": "light",
+        "theme_after_native_click": "dark",
+        "preference_after_native_click": "dark",
+        "status": "PASS",
+        "all_four_controls_visible_and_unobscured": true,
+        "all_four_controls_min_width_px": 44,
+        "all_four_controls_min_height_px": 44,
+        "trusted_native_theme_click": true,
+        "original_owner_form_contract_preserved": true,
+        "no_horizontal_overflow": true,
+        "screenshot_phase": "AFTER_NATIVE_THEME_CLICK",
+        "screenshot": {
+          "path": "/workspace/mls-layout-reference-qa/legacy-login-theme/legacy-login-normal-320-light.png",
+          "bytes": 29843,
+          "sha256": "ec6119581894f296bf0fe4b223c5101f8fa0931710d2947a4f68bf957f721a06"
+        }
+      },
+      {
+        "worker_variant": "normal",
+        "width": 320,
+        "height": 900,
+        "initial_theme": "dark",
+        "theme_after_native_click": "light",
+        "preference_after_native_click": "system",
+        "status": "PASS",
+        "all_four_controls_visible_and_unobscured": true,
+        "all_four_controls_min_width_px": 44,
+        "all_four_controls_min_height_px": 44,
+        "trusted_native_theme_click": true,
+        "original_owner_form_contract_preserved": true,
+        "no_horizontal_overflow": true,
+        "screenshot_phase": "AFTER_NATIVE_THEME_CLICK",
+        "screenshot": {
+          "path": "/workspace/mls-layout-reference-qa/legacy-login-theme/legacy-login-normal-320-dark.png",
+          "bytes": 30566,
+          "sha256": "61dd4ac9852f17066b6c1f5587ef498f8a2e92f007d6f1d38596e0cf5b806ac7"
+        }
+      },
+      {
+        "worker_variant": "normal",
+        "width": 1365,
+        "height": 900,
+        "initial_theme": "light",
+        "theme_after_native_click": "dark",
+        "preference_after_native_click": "dark",
+        "status": "PASS",
+        "all_four_controls_visible_and_unobscured": true,
+        "all_four_controls_min_width_px": 44,
+        "all_four_controls_min_height_px": 44,
+        "trusted_native_theme_click": true,
+        "original_owner_form_contract_preserved": true,
+        "no_horizontal_overflow": true,
+        "screenshot_phase": "AFTER_NATIVE_THEME_CLICK",
+        "screenshot": {
+          "path": "/workspace/mls-layout-reference-qa/legacy-login-theme/legacy-login-normal-1365-light.png",
+          "bytes": 35233,
+          "sha256": "38eb6c221d01978352a40bd1a1ed570dcc9578086f6d0f2def541fc3d8c96628"
+        }
+      },
+      {
+        "worker_variant": "normal",
+        "width": 1365,
+        "height": 900,
+        "initial_theme": "dark",
+        "theme_after_native_click": "light",
+        "preference_after_native_click": "system",
+        "status": "PASS",
+        "all_four_controls_visible_and_unobscured": true,
+        "all_four_controls_min_width_px": 44,
+        "all_four_controls_min_height_px": 44,
+        "trusted_native_theme_click": true,
+        "original_owner_form_contract_preserved": true,
+        "no_horizontal_overflow": true,
+        "screenshot_phase": "AFTER_NATIVE_THEME_CLICK",
+        "screenshot": {
+          "path": "/workspace/mls-layout-reference-qa/legacy-login-theme/legacy-login-normal-1365-dark.png",
+          "bytes": 36586,
+          "sha256": "1d0dd5ef9ee65fe2e73da94b80139344175138bf21c0113bf892c058a910723f"
+        }
+      },
+      {
+        "worker_variant": "min",
+        "width": 320,
+        "height": 900,
+        "initial_theme": "light",
+        "theme_after_native_click": "dark",
+        "preference_after_native_click": "dark",
+        "status": "PASS",
+        "all_four_controls_visible_and_unobscured": true,
+        "all_four_controls_min_width_px": 44,
+        "all_four_controls_min_height_px": 44,
+        "trusted_native_theme_click": true,
+        "original_owner_form_contract_preserved": true,
+        "no_horizontal_overflow": true,
+        "screenshot_phase": "AFTER_NATIVE_THEME_CLICK",
+        "screenshot": {
+          "path": "/workspace/mls-layout-reference-qa/legacy-login-theme/legacy-login-min-320-light.png",
+          "bytes": 29843,
+          "sha256": "ec6119581894f296bf0fe4b223c5101f8fa0931710d2947a4f68bf957f721a06"
+        }
+      },
+      {
+        "worker_variant": "min",
+        "width": 320,
+        "height": 900,
+        "initial_theme": "dark",
+        "theme_after_native_click": "light",
+        "preference_after_native_click": "system",
+        "status": "PASS",
+        "all_four_controls_visible_and_unobscured": true,
+        "all_four_controls_min_width_px": 44,
+        "all_four_controls_min_height_px": 44,
+        "trusted_native_theme_click": true,
+        "original_owner_form_contract_preserved": true,
+        "no_horizontal_overflow": true,
+        "screenshot_phase": "AFTER_NATIVE_THEME_CLICK",
+        "screenshot": {
+          "path": "/workspace/mls-layout-reference-qa/legacy-login-theme/legacy-login-min-320-dark.png",
+          "bytes": 30566,
+          "sha256": "61dd4ac9852f17066b6c1f5587ef498f8a2e92f007d6f1d38596e0cf5b806ac7"
+        }
+      },
+      {
+        "worker_variant": "min",
+        "width": 1365,
+        "height": 900,
+        "initial_theme": "light",
+        "theme_after_native_click": "dark",
+        "preference_after_native_click": "dark",
+        "status": "PASS",
+        "all_four_controls_visible_and_unobscured": true,
+        "all_four_controls_min_width_px": 44,
+        "all_four_controls_min_height_px": 44,
+        "trusted_native_theme_click": true,
+        "original_owner_form_contract_preserved": true,
+        "no_horizontal_overflow": true,
+        "screenshot_phase": "AFTER_NATIVE_THEME_CLICK",
+        "screenshot": {
+          "path": "/workspace/mls-layout-reference-qa/legacy-login-theme/legacy-login-min-1365-light.png",
+          "bytes": 35233,
+          "sha256": "38eb6c221d01978352a40bd1a1ed570dcc9578086f6d0f2def541fc3d8c96628"
+        }
+      },
+      {
+        "worker_variant": "min",
+        "width": 1365,
+        "height": 900,
+        "initial_theme": "dark",
+        "theme_after_native_click": "light",
+        "preference_after_native_click": "system",
+        "status": "PASS",
+        "all_four_controls_visible_and_unobscured": true,
+        "all_four_controls_min_width_px": 44,
+        "all_four_controls_min_height_px": 44,
+        "trusted_native_theme_click": true,
+        "original_owner_form_contract_preserved": true,
+        "no_horizontal_overflow": true,
+        "screenshot_phase": "AFTER_NATIVE_THEME_CLICK",
+        "screenshot": {
+          "path": "/workspace/mls-layout-reference-qa/legacy-login-theme/legacy-login-min-1365-dark.png",
+          "bytes": 36586,
+          "sha256": "1d0dd5ef9ee65fe2e73da94b80139344175138bf21c0113bf892c058a910723f"
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,343 @@
+{
+  "schema": "mls_layout_reference_live_publication_v1",
+  "state": "PUBLISHED_VERIFIED_PUBLIC_TECHNICAL_SCOPE",
+  "release": "2026-11-13.1",
+  "live_url": "https://app.brazacommerce.com.br/admin?tab=overview",
+  "published_source_commit": "7c3b5cc2913f03177d8c2a1288325b78194dd5ad",
+  "prepared_source_commit": "7ae377f07735dd7954e1197263ccfca1b40ac0a4",
+  "base_commit": "0016c4b78d45c47066b259bbaf42578662e11e35",
+  "pr": 120,
+  "pr_url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/120",
+  "ci": {
+    "run_id": 43486058949,
+    "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43486058949",
+    "head": "7c3b5cc2913f03177d8c2a1288325b78194dd5ad",
+    "state": "SUCCESS",
+    "node_passed": 4115,
+    "python_passed": 67,
+    "skipped": 0,
+    "log_sha256": "37be748913e621dbe5f542b43c0b30f9581e82fa316ae08b50180e7a3675ba9b",
+    "attempt": 2
+  },
+  "ci_attempt_history": [
+    {
+      "run_id": 43486058949,
+      "attempt": 1,
+      "head": "7c3b5cc2913f03177d8c2a1288325b78194dd5ad",
+      "status": "FAILED",
+      "node_tests": 4115,
+      "node_passed": 4114,
+      "node_failed": 1,
+      "skipped": 0,
+      "cancelled": 0,
+      "log_sha256": "333c69763fd59956f1cef1db5068c01b292cac9798dff2590af20cee345024be",
+      "observed_failure": "Compiled minified 320px daily-result-clarity historical release-link native hit assertion.",
+      "interpretation": "Failure retained. Local complete suite passed on the same source; a controlled complete CI rerun was required, without disabling or modifying tests."
+    },
+    {
+      "run_id": 43486058949,
+      "head": "7c3b5cc2913f03177d8c2a1288325b78194dd5ad",
+      "status": "SUCCESS",
+      "node_tests": 4115,
+      "node_passed": 4115,
+      "node_failed": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "log_sha256": "37be748913e621dbe5f542b43c0b30f9581e82fa316ae08b50180e7a3675ba9b"
+    }
+  ],
+  "ci_failure_diagnostic": {
+    "report_sha256": "f29b12b53d47a7b2236f8a00dea570a4b14c5d2c642bd48d549637b1eb36f3c8",
+    "head": "7c3b5cc2913f03177d8c2a1288325b78194dd5ad",
+    "failure_reproduced": false,
+    "runs": [
+      {
+        "kind": "UNCHANGED_ORIGINAL_FILE",
+        "tests": 5,
+        "pass": 5,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0,
+        "log_sha256": "fb5a1a96a40146294a3adc891d182685a67da223de26cac727d860d7e986fc10",
+        "report_sha256": "646313c6ca753f70636657c0b6720fdcc5e38316f58a74c0182f54b7d950e381",
+        "native_viewport_theme_profiles": 8
+      },
+      {
+        "kind": "EXTERNAL_LOADER_GEOMETRY_CPU4",
+        "tests": 5,
+        "pass": 5,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0,
+        "log_sha256": "2f6e94a2dd5fe6abcd31aefcaa18c7e575aa9f372b9acaf4460915ce5f65d3e7",
+        "report_sha256": "646313c6ca753f70636657c0b6720fdcc5e38316f58a74c0182f54b7d950e381",
+        "native_viewport_theme_profiles": 8
+      },
+      {
+        "kind": "EXTERNAL_LOADER_GEOMETRY_CPU4_SIX_RAF_SAMPLES",
+        "tests": 5,
+        "pass": 5,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0,
+        "log_sha256": "c41769a5095f97ce30fe5850e0f6473427be710742345ddf8ea366fbaa729af2",
+        "report_sha256": "646313c6ca753f70636657c0b6720fdcc5e38316f58a74c0182f54b7d950e381",
+        "native_viewport_theme_profiles": 8
+      }
+    ],
+    "trajectory_frames": 96,
+    "all_initial_and_sampled_hit_tests": true,
+    "trajectory_y_motion_pixels": 0,
+    "assessment": "No persistent obstruction or touch-target regression reproduced. Timing/scroll-anchor race remains a hypothesis; exact CI obstruction identity cannot be recovered from its log. No assertion weakened, no retry/skip recovery added.",
+    "repo_edits": 0,
+    "builds": 0,
+    "remote_writes": 0,
+    "replaces_complete_ci": false
+  },
+  "verified_at": "2026-11-13T19:17:09.007Z",
+  "verified_at_brasilia": "2026-11-13T16:17:09.007000-03:00",
+  "compiled_workers": {
+    "app": {
+      "worker": "brazacommerce-app",
+      "bytes": 3565637,
+      "sha256": "6d7d9dc2d713050e7b724bd31c64abb8901490dc8acae542221db080d7225296"
+    },
+    "auth": {
+      "worker": "brazacommerce-auth",
+      "bytes": 538979,
+      "sha256": "ca7f08ad02993bf7d29d91ce95f689ab845775cbd0fec5c27549aaf261510d74"
+    },
+    "finance": {
+      "worker": "brazacommerce-finance",
+      "bytes": 730516,
+      "sha256": "ffbcea3b7ffe5c0a94b0d4d8c4908738e6da76386040995bba982060a5f9bb71"
+    }
+  },
+  "raw_sources": {
+    "app": {
+      "sha256": "3b33472a7c508f58adfb1062dd3be6b55422be332ebac75667eba0257f9ad091",
+      "bytes": 3965389
+    },
+    "auth": {
+      "sha256": "c3db52c0d0621bfed5c619ad6384aa1541a92070ab58e8ac8880a18e82655919",
+      "bytes": 608411
+    },
+    "finance": {
+      "sha256": "c81f2f28bf4ba16c3a65478e7ca4ab153fff54e00f5ed9c9d73a2698366a6913",
+      "bytes": 764601
+    }
+  },
+  "rollout_history": {
+    "initial_auth_app": {
+      "source_commit": "68e18f015d6193eae4e96e87d8aaf97286a6251b",
+      "ci_run": 43480886062,
+      "active_versions": {
+        "app": "4666fceb-a652-4574-a620-0a3b357d0cfa",
+        "auth": "9f0c57c9-5712-4b0a-b7af-f8571feebc33",
+        "finance": "d3bf1196-e75b-491b-bc40-f523029db483"
+      },
+      "operator_cli_operations": [
+        {
+          "operation": "upload-auth",
+          "head": "68e18f015d6193eae4e96e87d8aaf97286a6251b",
+          "cli_log_sha256": "da3caedfb85d5fb11a2c9be3e8e62c38ef006a71371624ea77493709040deef2",
+          "ended_at": "2026-11-13T18:29:55.650Z",
+          "receipt_sha256": "d1d6c96c54a6ccc5955bb54b935f0d09cdda1c57265b528a99002f035c46715b",
+          "publication_verified_by_cli": false
+        },
+        {
+          "operation": "upload-app",
+          "head": "68e18f015d6193eae4e96e87d8aaf97286a6251b",
+          "cli_log_sha256": "1b0f806968cf98689323ca49031cae3a84e0155cbd0e85228f0f8481715543c6",
+          "ended_at": "2026-11-13T18:31:08.005Z",
+          "receipt_sha256": "0586a7ce61ab5593f1833be7dbc98cf3e7009961f48e8aa1e22e62c5e8f79f49",
+          "publication_verified_by_cli": false
+        },
+        {
+          "operation": "activate-auth",
+          "head": "68e18f015d6193eae4e96e87d8aaf97286a6251b",
+          "cli_log_sha256": "f64918dc9c2928e9ad440b78a73b4a2e33f7dbf9754bb030daa49a4e48be0b27",
+          "ended_at": "2026-11-13T18:32:47.767Z",
+          "receipt_sha256": "64874ebcc321b48743d7aedcca18f297a06946e5862839e5cb71ce73e94c2d8c",
+          "publication_verified_by_cli": false
+        },
+        {
+          "operation": "activate-app",
+          "head": "68e18f015d6193eae4e96e87d8aaf97286a6251b",
+          "cli_log_sha256": "b7a6e02bbe921d608660e1ecec14f2e7f96a2239547365e7a3a98d5ab2a273ed",
+          "ended_at": "2026-11-13T18:33:35.239Z",
+          "receipt_sha256": "f0ae9edf7809bf7d21e85f95329d21cfcdf9deb8501408dba083a5b57b5b151b",
+          "publication_verified_by_cli": false
+        }
+      ],
+      "control_plane": {
+        "checked_at": "2026-11-13T18:34:53.322925+00:00",
+        "all_three_exact": true,
+        "receipt_sha256": "f16e4d32a04a84371ae9c90f64898dac2112207881f964a5dc7626f86b5f7e61",
+        "payload_sha256": "3c5f89a27f8c13cafd089529a661b9d16862f8119bcb1d2da883a2c1cd1d8715"
+      },
+      "public_qa": {
+        "result": "FAILED",
+        "finished_at": "2026-11-13T18:34:52.727Z",
+        "report_sha256": "082a157780d10cef8503f2963cf94efe370d6ad07d6809d7d7d8a08529a08106",
+        "http_routes": 15,
+        "assets": 7,
+        "browser_profiles_completed": 1,
+        "failures": [
+          "FATAL:actions retain44px targets"
+        ],
+        "mutation_counts": "NOT_REPORTED_ON_FATAL_PATH",
+        "cause": "Legacy /login theme toggle inherited a 41.5px height; other observed legacy login fields were 45px."
+      },
+      "acceptance": "Activation was verified; full public acceptance required the corrective rollout below."
+    },
+    "app_only_correction": {
+      "source_commit": "7c3b5cc2913f03177d8c2a1288325b78194dd5ad",
+      "ci_run": 43486058949,
+      "operator_cli_operations": [
+        {
+          "operation": "upload-app",
+          "head": "7c3b5cc2913f03177d8c2a1288325b78194dd5ad",
+          "cli_log_sha256": "643638214a54c16e132efea6b29efe8c8d7a295d1eb2105a77739058f4388291",
+          "ended_at": "2026-11-13T19:10:55.299Z",
+          "receipt_sha256": "efd11ef235f1905afca9cd99f3fe0ebe1846da0089b779a63ab7436fce7e7310",
+          "publication_verified_by_cli": false
+        },
+        {
+          "operation": "activate-existing-app-only",
+          "head": "7c3b5cc2913f03177d8c2a1288325b78194dd5ad",
+          "cli_log_sha256": "b067856a940140026abef6ea5b50f68f66a4d8597976efb433955d31f7da3563",
+          "ended_at": "2026-11-13T19:16:28.779Z",
+          "receipt_sha256": "febd2e7c96e1cb97052abcd166c6c0a7a4549c70678bdf32c5f7b5a6955d589e",
+          "publication_verified_by_cli": false
+        }
+      ],
+      "auth_uploaded": false,
+      "finance_uploaded": false,
+      "upload_count": 1,
+      "registration_stopped_before_activation": true,
+      "packaging_amendment": {
+        "schema": "mls_exact_generated_comment_activation_amendment_v1",
+        "amendment_sha256": "ca0d1bea59d5912b4a6869d49a942c45e01a37be2c9614c589f398010fee609a",
+        "original_plan_sha256": "56fdb2d218ed1f8d3cfdc058119cea5db8a9b6469971bbf41d0d46b6651ab2a0",
+        "planned_raw_sha256": "d681cdd6721b255235b02ddc9e96813ff2476d31e3747c52e15a2edee1605a25",
+        "planned_raw_bytes": 3965386,
+        "actual_raw_sha256": "3b33472a7c508f58adfb1062dd3be6b55422be332ebac75667eba0257f9ad091",
+        "actual_raw_bytes": 3965389,
+        "uploaded_version": "e8a2bb41-61e8-45e0-9614-3c6670e5f293",
+        "comment_transform": {
+          "line": 6,
+          "from": "// ../mls-layout-reference-20261113/dist/app-worker.mjs",
+          "to": "// ../../mls-layout-reference-20261113/dist/app-worker.mjs",
+          "bytes_added": 3,
+          "all_other_bytes_identical": true
+        },
+        "all_other_bytes_independently_compared_equal": true,
+        "nested_config_dry_run_reproduced_exact_uploaded_bytes": true,
+        "reproduction_log_sha256": "3fd95b6a205392181810626f5de663cc20344fc9a9d835f96a477414cb19e4a5",
+        "reupload_performed": false,
+        "original_plan_and_helpers_modified": false
+      }
+    }
+  },
+  "cloudflare": {
+    "active_and_latest_versions_100_percent": {
+      "app": "e8a2bb41-61e8-45e0-9614-3c6670e5f293",
+      "auth": "9f0c57c9-5712-4b0a-b7af-f8571feebc33",
+      "finance": "d3bf1196-e75b-491b-bc40-f523029db483"
+    },
+    "auth_finance_unchanged_from_initial_activation": true,
+    "source_version_settings_bindings_flags_crons_domains_verified": true,
+    "phase_checked_at": "2026-11-13T19:16:41.138783+00:00",
+    "phase_receipt_sha256": "a0702bcb4cf83a72e9010bfcb536b71a9046ca7af0e1c96671792aa56afafd0c",
+    "phase_payload_sha256": "89bf4348616a2a3154dad314fd36cf93d10e27a59dbe400147e2b5350f3f438d",
+    "original_plan_sha256": "56fdb2d218ed1f8d3cfdc058119cea5db8a9b6469971bbf41d0d46b6651ab2a0",
+    "amendment_sha256": "ca0d1bea59d5912b4a6869d49a942c45e01a37be2c9614c589f398010fee609a"
+  },
+  "assets": {
+    "current": 6,
+    "retained": 1,
+    "all_hashes_lengths_types_verified": true,
+    "rows": [
+      {
+        "kind": "current",
+        "id": "bank",
+        "path": "/assets/mls/0d6250f5888258fa29664eac45b2cd821d3872b1c96ac47dda46bd7fd10e6a0c.js",
+        "bytes": 38035,
+        "sha256": "0d6250f5888258fa29664eac45b2cd821d3872b1c96ac47dda46bd7fd10e6a0c"
+      },
+      {
+        "kind": "current",
+        "id": "month",
+        "path": "/assets/mls/347a294216d16151105c5b5074174af01c01a9bc398e713aaf2c9184a48b1db2.js",
+        "bytes": 704759,
+        "sha256": "347a294216d16151105c5b5074174af01c01a9bc398e713aaf2c9184a48b1db2"
+      },
+      {
+        "kind": "current",
+        "id": "orders",
+        "path": "/assets/mls/ec6397070416275d880f293d4abe8d7f531215af369d7e9a275c10f019a8c3c8.js",
+        "bytes": 21282,
+        "sha256": "ec6397070416275d880f293d4abe8d7f531215af369d7e9a275c10f019a8c3c8"
+      },
+      {
+        "kind": "current",
+        "id": "production",
+        "path": "/assets/mls/549c2b0f6ae183249bed2472af894cf5211d4a6853fc33c0ce6c127aa3ebf034.js",
+        "bytes": 165982,
+        "sha256": "549c2b0f6ae183249bed2472af894cf5211d4a6853fc33c0ce6c127aa3ebf034"
+      },
+      {
+        "kind": "current",
+        "id": "weekly",
+        "path": "/assets/mls/04ae3166780be18f31754212640b0887abe9e20830ac4309a6e31109398e4eeb.js",
+        "bytes": 54280,
+        "sha256": "04ae3166780be18f31754212640b0887abe9e20830ac4309a6e31109398e4eeb"
+      },
+      {
+        "kind": "current",
+        "id": "workspace",
+        "path": "/assets/mls/d5961f95cc6649d963f42e28a50e2e12563ce0d0d66833bb28ce5e16d172922c.js",
+        "bytes": 341729,
+        "sha256": "d5961f95cc6649d963f42e28a50e2e12563ce0d0d66833bb28ce5e16d172922c"
+      },
+      {
+        "kind": "retained",
+        "id": "workspace",
+        "path": "/assets/mls/a96fe8cfa2d4fedeb349a5a7109e6b553fbb1bb9b4f0d2d2be326ba6740ed7c1.js",
+        "bytes": 341081,
+        "sha256": "a96fe8cfa2d4fedeb349a5a7109e6b553fbb1bb9b4f0d2d2be326ba6740ed7c1"
+      }
+    ]
+  },
+  "public_live_qa": {
+    "result": "PASS",
+    "transport": "VERIFIED_TLS_NODE_GET_CDP_RENDERING",
+    "tls_verification_disabled": false,
+    "http_routes": 15,
+    "assets": 7,
+    "browser_profiles": 24,
+    "report_sha256": "ba8cec145cb9d729fa40c022739ce27107ae57d76d29088893042f4ddaafda51",
+    "owner_session_available": false,
+    "authenticated_live_qa": "NOT_PERFORMED",
+    "operational_financial_acceptance": false,
+    "remote_mutations_sent": 0,
+    "attempted_mutations_blocked": 0
+  },
+  "scope": {
+    "production_schema_migrations": 0,
+    "production_secret_updates": 0,
+    "qa_business_fact_writes": 0,
+    "provider_business_writes": 0,
+    "real_messages_invitations_charges": 0,
+    "financial_formulas_changed": false,
+    "database_bindings_changed": false,
+    "owner_legacy_access_contracts_changed": false
+  },
+  "git_integration": "Deployment is verified from this candidate; consult PR120 for its current merge status. Merge is not evidence of deployment.",
+  "limitations": [
+    "Authenticated browser acceptance used synthetic local data; no authorized Live owner session was available.",
+    "Public GETs, bytes, response rendering and access guards do not confirm operational financial reconciliation.",
+    "M2/M2.2 and previously recorded commercial dependencies remain open."
+  ]
+}

@@ -5,6 +5,8 @@ import path from 'node:path';
 export const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const TARGETS = Object.freeze({
   app: Object.freeze({name: 'brazacommerce-app', main: '../../dist/app-worker.mjs', baselineHashes: [
+    // Verified Live package: nested configuration adds only the reviewed source-path comment prefix.
+    '3b33472a7c508f58adfb1062dd3be6b55422be332ebac75667eba0257f9ad091',
     // Exact legacy-login touch correction; App-only activation requires full CI and Live checks.
     '6d7d9dc2d713050e7b724bd31c64abb8901490dc8acae542221db080d7225296',
     'd681cdd6721b255235b02ddc9e96813ff2476d31e3747c52e15a2edee1605a25',

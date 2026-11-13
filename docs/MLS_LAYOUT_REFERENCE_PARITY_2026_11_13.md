@@ -1,61 +1,55 @@
-# Layout da referência — incremento de 13/11/2026
+# Layout da referência — 13/11/2026
 
-**Estado: implementação e validação em andamento.** A versão prevista é `2026-11-13.1`, “V4.1 · Layout da referência”. Este documento ainda não declara paridade aprovada, CI verde, publicação ou conferência da nova versão na Live.
+**Publicado e verificado no escopo técnico/público em 13/11/2026 às 16:17:09 Brasília.** Versão `2026-11-13.1` — “V4.1 · Layout da referência”, em https://app.brazacommerce.com.br/admin?tab=overview.
 
-A base é a main `0016c4b78d45c47066b259bbaf42578662e11e35`, que integrou a PR119. A V4.1 anterior, `2026-11-12.1`, já foi publicada com a fonte `7ec3ffa0ed27366eca0792d5d277979bb991f679`; seus [recibos](v4/live-publication.json) e [limites de verificação](v4/public-live-verification.json) permanecem históricos e não comprovam este novo layout. O trabalho atual está na branch `feature/layout-reference-parity-20261113`.
+Fonte publicada: `7c3b5cc2913f03177d8c2a1288325b78194dd5ad`; fonte preparada: `7ae377f07735dd7954e1197263ccfca1b40ac0a4`; base: `0016c4b78d45c47066b259bbaf42578662e11e35`. [PR #120](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/120), [CI do candidato](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43486058949). A integração Git deve ser consultada na PR; o recibo de publicação é independente do merge.
 
-## Referência exata e critério visual
+## Mudanças e uso
 
-A referência é o HTML fornecido pelo proprietário, preservado em [MLS_COMMERCE_OS_LAYOUT.html](v4/input/MLS_COMMERCE_OS_LAYOUT.html), com SHA-256 **`135002e7193409451e78263ee5d45fdcfb53e1061804a3a39af84fdc5edcc5f3`**. Seus números, identidades e capacidades simuladas são demonstrações de design; os painéis do aplicativo continuam usando as fontes, permissões e estados reais existentes.
-
-A auditoria local abriu o HTML original sem modificar a fonte e sem dependências externas. O conjunto `reference-full.json` contém 48 capturas de Visão geral, Finance, Ads, Products, Production, Returns, Auditor, Hermes, semanal, login, conta e empresa, em1440/390px e claro/escuro. `reference-overview-wide-narrow.json` acrescenta a inicial em1920/320px. A barra de ferramentas exclusiva do protótipo ocupa 53px no desktop e101px no mobile; ela deve ser descontada ao comparar posições.
-
-Os parâmetros medidos incluem sidebar228px, topbar64px/60px mobile, workspace máximo1600px, padding27×28px/20×18px mobile, título30px e raio12px. A referência usa as superfícies `#030d1c`, `#071523` e `#0c2035`, texto `#edf6ff`, secundário `#9cb1ca` e linha `#1b3a55`, com tons próprios dos agentes e a órbita wireframe extraída do HTML. Esses números orientam a comparação; não substituem a conferência dos componentes reais e da responsividade.
-
-## Mudanças deste incremento
-
-| Área | Alteração em implementação | O que a validação precisa demonstrar |
-| --- | --- | --- |
-| Shell e inicial | Sidebar, topbar, superfícies, espaçamento, tipografia, hero, loja, órbita e faixa de dia/mês conforme o HTML. | Mesma hierarquia visual, seis agentes preservados na ordem existente, campos de período utilizáveis e ausência de sobreposição/overflow. |
-| Painéis dos agentes | Estilos compartilhados de hero, abas, indicadores, gráficos e seções, mantendo os componentes efetivos. | Finance em quatro colunas e demais especialistas conforme a referência quando houver largura, com redução coerente no mobile. |
-| Finance | Entrada pelo grupo de resultado, com período compacto e acesso mantido à importação e conciliação. | Resultado e gráficos precedem a área de importação; todos os IDs, filtros e ações continuam acessíveis. Composição assinada e valores desconhecidos permanecem corretos. |
-| Produção | Introdução e organização da fabricação real, com diário, semana e ações existentes. | Hero e informações principais aparecem antes de blocos auxiliares; registro/conferência/DTF e seus rascunhos continuam operacionais. |
-| Acesso e conta pessoal | Composição visual e mensagem estática de apresentação alinhadas à referência. | Login, recuperação, conta e empresa preservam os formulários, segurança e estados reais; nenhuma identidade de demonstração é usada como pessoa autenticada. |
-| Navegação contextual | Ajustes necessários ao novo shell, hero e seletores. | Links, foco, teclado, retorno do navegador, mês/dia/corte e menus mantêm os contratos anteriores. |
-
-O incremento é de apresentação e organização dos componentes. Não inclui mudança de schema, banco, fórmulas financeiras, coletores, provedores ou integração da loja. O App e a UI de conta no Auth podem gerar novos bytes; a fonte Finance permanece fora do diff pretendido e seu vetor deve ser conferido no build final. Não há nova migração ou fabricação/receita criada por esta tarefa.
-
-## Comparação conectada e evidência atual
-
-Capturas antigas que retornavam503 em todas as APIs foram produzidas para testar recuperação. Elas não representam o estado conectado habitual e não serão usadas para aprovar a composição normal.
-
-A baseline conectada usa o Worker efetivo compilado e a inicialização real com D1 SQLite local. O teste fresh-D1 existente passou1/1, sem mensagem de falha de startup e com o controle de repetição oculto. A variante `baseline-connected-daily-complete` combina HTML real do owner, respostas GET de D1 local e a fixture existente de coleta/dia/fabricação, passando pelos mesmos projetores usados no aplicativo. O SHA compilado dessa baseline é `82fe3d3ecf19b0f72254dc5778e8a8335505bfc4db4071cc01afce4cfb7cea48`.
-
-Todas essas capturas são **QA LOCAL SINTÉTICA**, sem cookies, sessões ou dados reais da loja. O navegador bloqueia pedidos não GET e URLs não locais. O catálogo vazio pode tentar descoberta automaticamente: a baseline registrou duas tentativas POST bloqueadas antes de chegar ao servidor e **zero mutações aplicadas**. Isso não deve ser descrito como zero requisições tentadas.
-
-O primeiro candidato `c8524924e5f729f31dbdc44057151e1f2c9c93aa4a8476acf45006238e402314` teve 24 capturas conectadas sem falha de startup, exceção JavaScript ou overflow horizontal. **Ele não foi aprovado visualmente:** controles mensais empilhavam o cabeçalho, o bloco de período precedia o hero e Finance abria pela importação antes dos indicadores. Esses achados motivam a correção estrutural atual. Uma captura desse SHA não valida o build posterior.
-
-Artefatos locais de trabalho: `/workspace/mls-layout-reference-qa/READONLY-VISUAL-AUDIT.md`, `reference-full.json`, `reference-overview-wide-narrow.json` e os diretórios de baseline/candidato com seus `results.json`. O relatório final deverá anexar o conjunto do build congelado, seus hashes e os resultados efetivamente observados; esses artefatos ainda não estão registrados como aprovação final.
-
-## Validação e cobertura do escopo
-
-Este incremento não reabre a auditoria comercial completa nem reclassifica os233 requisitos da V4.1. A cobertura visual se relaciona aos requisitos abaixo; as evidências anteriores continuam vinculadas às versões em que foram executadas.
-
-| Requisitos da matriz V4.1 | Conferência neste incremento |
+| Área | Mudança e acesso |
 | --- | --- |
-| UX-01…UX-10, A11Y-01/A11Y-02 | Comparação com o HTML exato, temas, fontes, espaçamento, formulários, estados, foco, teclado e320/390/1440/1920px. |
-| NAV-01…NAV-04, AUTH-01…AUTH-04 | Rotas, menus, histórico, seleção contextual e inicialização/saída preservadas no novo shell. |
-| OVR-01…OVR-06 | Indicadores, seis agentes antes dos gráficos, períodos, fontes e recuperação com os dados conectados locais. |
-| FIN-01…FIN-04, BNK-01…BNK-07 | Reorganização da entrada Finance, grupo de resultado e acesso à importação/conciliador sem perda de controles. |
-| PROD-01/02/03/07/09/11/12, DTF-01…DTF-11 | Hierarquia de fabricação real e preservação de datas, registros, cobertura, fechamento e acesso ao DTF. |
-| GRA-01…GRA-14, WKR-01…WKR-09 | Gráficos e tabelas existentes com suas unidades/períodos, sem copiar números ou disponibilidade fictícia do protótipo. |
-| ACCT-01, ACCT-05…ACCT-11, TEN-05 | Apresentação de acesso, conta e empresa mantendo identidade, contexto e isolamento já implementados. |
-| REL-01/02, TEC-01…TEC-04, WAS-01 | Release visível, build normal/minificado, assets, diagnóstico e recuperação. |
+| Visão geral | Menu, cabeçalho, cores, tipografia, órbita wireframe e proporções seguem o HTML. Indicadores diários e controles de período têm áreas próprias; os seis agentes aparecem antes dos gráficos, na ordem Hermes, Finance, Ads, Products, Production e Returns. Abrir `/admin?tab=overview`. Auditor continua no diretório completo. |
+| Financeiro | O resultado mensal abre primeiro; gráficos de evolução e composição usam as fontes existentes. Importação bancária, repasses, despesas e conciliação continuam disponíveis. Dedução e saldo negativo conservam seus sinais; pendência continua identificada. Abrir `/admin?tab=agent-finance`. |
+| Produção | Calendário, custos e fabricação registrada aparecem antes das explicações auxiliares. Diário, intervalo, semana, registro, cobertura e DTF mantêm seus controles e rascunhos. Abrir `/admin?tab=agent-production`. |
+| Conta | Login e formulários usam a mesma identidade visual; perfil usa duas colunas no computador e uma no celular. Empresa, equipe e permissões existentes foram preservadas. Acesso por `/account/login`, `/account/profile` e `/companies`. O login legado `/login` mantém seu contrato e alternância de tema. |
+| Gráficos e toque | Cinco métricas preservam valores e marcas; eixos cabem no SVG e datas não se sobrepõem nos perfis conferidos. Alvos observados têm largura e altura de pelo menos 44px. |
 
-Antes de declarar conclusão: congelar o build; recapturar as áreas afetadas em1440/390 claro/escuro e a inicial em1920/320; comparar as posições descontando a barra do protótipo; validar contagens/foco/ações e os controles avançados; executar os gates relevantes e a CI; conferir o vetor App/Auth/Finance. Capturas e contagens de testes não aprovam por si só a paridade.
+A referência exata é [MLS_COMMERCE_OS_LAYOUT.html](v4/input/MLS_COMMERCE_OS_LAYOUT.html), SHA-256 `135002e7193409451e78263ee5d45fdcfb53e1061804a3a39af84fdc5edcc5f3`. Seus valores simulados não viram dados da loja. A barra exclusiva do protótipo (53px desktop/101px mobile) foi descontada da comparação. Sidebar de 228px, topbar de 64px no desktop, hero de 98px, indicadores de 193px e agentes de 251px foram medidos nos cenários de referência; conteúdo real pode ampliar cartões para preservar a leitura.
 
-## Publicação e limites
+## Validação
 
-CI, commit candidato, PR, deploy e conferência desta release ainda não foram anexados. O destino continua o aplicativo existente; um eventual rollout usa o processo já adotado e exige a conferência dos bytes efetivamente servidos. A disponibilidade do release anterior não comprova a publicação do candidato atual.
+| Verificação | Resultado e alcance |
+| --- | --- |
+| Node local e CI exata | 4.115 testes aprovados em cada execução, sem falhas, ignorados ou cancelados. HEAD e os três hashes compilados iguais no início/fim do teste local; CI no mesmo candidato publicado. |
+| Python local e CI | 67 aprovados em cada execução. |
+| Aplicativo conectado | 48 páginas e 24 detalhes, nas larguras 320/390/1440/1920px e nos dois temas: 72 capturas vinculadas ao App corrigido. Bootstrap real do Worker com fixtures existentes de coleta/dia/fabricação, sem erro JavaScript ou overflow horizontal. |
+| Séries e toque | 40 perfis das cinco métricas com eixos dentro do SVG e datas sem sobreposição; zero leituras adicionais na interação dos detalhes. 1.208 alvos observados com largura/altura mínimas de 44px; checkboxes usam seu rótulo realmente associado. |
+| Conta pessoal | 24 capturas locais de login/perfil/empresa/equipe, em 320/390/1440px e ambos os temas, sem erro ou overflow. O probe próprio dessas capturas verifica alturas selecionadas com limiar de 43px, sem provar sozinho 44×44 em toda a conta. |
+| Login legado corrigido | Oito perfis nativos do Worker compilado (normal/minificado × 320/1365px × claro/escuro) confirmam alvo de 44px, alternância de tema, campos e ação do formulário preservados. O TAP da execução isolada foi observado no terminal, mas não retido em arquivo; a prova de fonte inclui os hashes dos testes/capturas e as suítes completas. |
+| Público no domínio | 15 rotas/API por GET, sete assets (seis atuais/um retido) com hash/tamanho/tipo corretos e 24 perfis públicos, sem overflow ou erro. Login devolveu `2026-11-13.1`; as rotas protegidas mantiveram seus guardas anônimos. |
 
-A conferência Live autenticada depende de sessão autorizada disponível. Ausência de sessão limita o que poderá ser observado; não se cria sessão fictícia ou fatos reais para QA. Dependências de e-mail/cobrança/conectores e M2/M2.2 continuam como registradas anteriormente; este trabalho visual não concede novas capacidades nem confirma fechamento financeiro.
+Os testes autenticados e os fatos de banco são **sintéticos locais**. Não havia sessão Live autorizada do proprietário; o aceite público não confirma valores reais, recebimento bancário ou conciliação operacional. No cenário conectado, quatro POSTs de descoberta foram bloqueados antes do servidor e nenhuma mutação foi aplicada. O QA público não enviou mutações remotas.
+
+A primeira tentativa da CI `43486058949` registrou 4.114 de 4.115 testes aprovados: o clique nativo no link histórico de versão, em 320px/minificado, falhou na conferência do alvo. Essa falha permanece no histórico, com seu hash de log. Três diagnósticos focados (original, CPU×4 e amostragem por frames) passaram nos mesmos bytes, sem reproduzir a obstrução; a causa exata não foi recuperada, e uma corrida de rolagem/âncora permanece hipótese. A suíte local completa passou no mesmo HEAD; a CI foi repetida integralmente e só seu resultado completo aprovado aceitou o candidato. Nenhum teste foi removido, desativado ou dispensado; execuções focadas não substituem esse gate completo.
+
+O transporte público foi `VERIFIED_TLS_NODE_GET_CDP_RENDERING`, sem desativar verificação TLS. O navegador renderizou os bytes recebidos por GET TLS verificado; essa ponte não equivale a uma conexão HTTPS nativa do Chromium. O [registro de validação](v4/evidence/layout-reference-final-validation.json) vincula fonte, hashes, capturas e limites.
+
+A reorganização do gráfico Finance também corrigiu um ciclo de redesenho: o observador recebia alterações do próprio gráfico e de SVGs desconectados. O filtro conserva alterações conectadas de fonte e lotes mistos; regressões e execução nativa conferem esse comportamento. Os valores e fórmulas permanecem os existentes.
+
+## Publicação e histórico
+
+A ativação inicial de Auth e App, fonte `68e18f015d6193eae4e96e87d8aaf97286a6251b`, foi conferida nos três Workers. A primeira conferência pública encontrou o botão de tema do login legado com 41,5px; foi registrada como **falha**, após 15 rotas, sete assets e apenas um perfil de navegador. Seu SHA-256 é `082a157780d10cef8503f2963cf94efe370d6ad07d6809d7d7d8a08529a08106`. Esse resultado não foi convertido em aprovação retroativa.
+
+A correção mínima acrescentou o tamanho de toque ao seletor de tema e uma regressão nativa do login compilado. O candidato completo passou novamente nos testes locais e na CI. Somente App foi reenviado e ativado; Auth e Finance permaneceram nas versões já conferidas. A conferência pública final começou após a ativação corretiva e terminou em **13/11/2026 às 16:17:09 Brasília**.
+
+Após o upload inativo, a conferência de embalagem interrompeu o registro por três bytes adicionais em um comentário gerado da linha 6: o caminho relativo passou de `../` para `../../` devido à posição do arquivo de configuração. A comparação independente confirmou todos os demais bytes iguais; um novo dry-run no contexto real reproduziu exatamente o arquivo enviado. A emenda imutável `ca0d1bea59d5912b4a6869d49a942c45e01a37be2c9614c589f398010fee609a` preservou o plano original e autorizou somente ativar o mesmo UUID existente, sem novo upload. Os bytes raw efetivamente servidos, abaixo, pertencem a essa cadeia de evidências; o App compilado permanece no hash `6d7d9dc2d713050e7b724bd31c64abb8901490dc8acae542221db080d7225296`.
+
+| Worker | Ativo/latest a 100% | SHA-256 raw conferido |
+| --- | --- | --- |
+| App | `e8a2bb41-61e8-45e0-9614-3c6670e5f293` | `3b33472a7c508f58adfb1062dd3be6b55422be332ebac75667eba0257f9ad091` |
+| Auth preservado após a correção | `9f0c57c9-5712-4b0a-b7af-f8571feebc33` | `c3db52c0d0621bfed5c619ad6384aa1541a92070ab58e8ac8880a18e82655919` |
+| Finance preservado durante toda a entrega | `d3bf1196-e75b-491b-bc40-f523029db483` | `c81f2f28bf4ba16c3a65478e7ca4ab153fff54e00f5ed9c9d73a2698366a6913` |
+
+Os [recibos da publicação](v4/layout-reference-live-publication.json) distinguem os dois estágios e confirmam versões/bytes/configurações/bindings/flags/cron/domínio. A atualização documental do inventário de assets usa os arquivos realmente conferidos; não exige novo deploy sem diferença de bytes.
+
+Não há nova migração, schema, segredo, fórmula financeira, coletor/provedor, contrato legado de acesso ou fato comercial nesta entrega. Produção física, referência de vendas, lucro estimado e caixa permanecem separados. M2/M2.2 e as dependências comerciais previamente registradas continuam abertas; esta entrega não reabre a auditoria dos 233 requisitos por inferência. A recuperação preserva dados/chaves e usa versões/configurações/assets anteriores; execução real de recuperação exige recibo próprio.
