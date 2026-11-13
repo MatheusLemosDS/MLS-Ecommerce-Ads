@@ -1,0 +1,475 @@
+{
+  "schema": "mls_financial_automation_live_publication_v1",
+  "status": "PUBLISHED_VERIFIED",
+  "verification_scope": "TECHNICAL_PUBLIC_ONLY",
+  "release": "2026-11-13.2",
+  "label": "Financeiro · fontes, conciliação e fechamentos",
+  "url": "https://app.brazacommerce.com.br/admin?tab=agent-finance#financialAutomation",
+  "source_commit": "e6bbb189ec2331c0a07136c5b9f720e2e300b5d4",
+  "prepared_source_commit": "bc89ab3c6d26faf26ea6216252f50441aa1a2df5",
+  "base_commit": "6578e21098ff799e59433af92880d249432ceeb4",
+  "branch": "feature/financial-automation-20261113",
+  "pull_request": 121,
+  "git_integration_at_publication": "PR_OPEN_EXACT_HEAD_CI_GREEN; consult PR121 for subsequent merge",
+  "verified_at": "2026-11-13T23:50:26.229Z",
+  "ci": {
+    "schema": "mls_financial_exact_ci_receipt_v1",
+    "checked_at": "2026-11-13T23:45:32.816775+00:00",
+    "run_id": 43527800185,
+    "head": "e6bbb189ec2331c0a07136c5b9f720e2e300b5d4",
+    "status": "completed",
+    "conclusion": "success",
+    "workflow": ".github/workflows/validate.yml",
+    "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43527800185",
+    "node": {
+      "tests": 4430,
+      "pass": 4430,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    "python_tests": 67,
+    "compiled_vectors": {
+      "app": "721b3f369b93000dd5e8a0065cd83fd4bd7f54baae262c4b635e5a118fffde64",
+      "auth": "97659ca7da62cfcfad785dc3ad599ae8526191e721eba6ac9e876d2ccc253a9c",
+      "finance": "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4"
+    },
+    "ci_compiled_vectors_match_local": true,
+    "log_sha256": "9bc8939604d2df7ebcd7cfea09f71b1e35195139c919204f43d729514d482980",
+    "log_bytes": 4192954,
+    "owner_live_authenticated_qa": "NOT_PERFORMED",
+    "financial_account_acceptance": false
+  },
+  "workers": {
+    "app": {
+      "active_version_id": "3cc631da-4a91-4fd0-b030-c41537cc8f43",
+      "latest_version_id": "3cc631da-4a91-4fd0-b030-c41537cc8f43",
+      "active_percentage": 100,
+      "compiled_sha256": "721b3f369b93000dd5e8a0065cd83fd4bd7f54baae262c4b635e5a118fffde64",
+      "retrieved_raw_sha256": "44ce1c8cd1c2d8982560eb9c7685ea7d1638adfbcd4bc0ed0b488c50567e81f4",
+      "raw_bytes": 4180564,
+      "effective_config_sha256": "0e433687adf84cc9f40c1a7c78991ab8cb84d4610dcb86c138dfa84622d0cd9a",
+      "action": "DEPLOYED_VERIFIED"
+    },
+    "auth": {
+      "active_version_id": "c00d5164-f663-4cdf-b137-28f345e181c2",
+      "latest_version_id": "c00d5164-f663-4cdf-b137-28f345e181c2",
+      "active_percentage": 100,
+      "compiled_sha256": "97659ca7da62cfcfad785dc3ad599ae8526191e721eba6ac9e876d2ccc253a9c",
+      "retrieved_raw_sha256": "9105a95c37b75ed124b864575131aebed638bee68804fc780b4d9cb4e8230cd9",
+      "raw_bytes": 654650,
+      "effective_config_sha256": "8920a7f59a1d9c82fc7e9a33f8a8749eaac281a8bcb7b79e58dd0e672917ff58",
+      "action": "DEPLOYED_VERIFIED"
+    },
+    "finance": {
+      "active_version_id": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+      "latest_version_id": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+      "active_percentage": 100,
+      "compiled_sha256": "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4",
+      "retrieved_raw_sha256": "3e3f3d35a3e0037c251f7abda29cc8a64643ee255771d07f2893d32d8ef7d22a",
+      "raw_bytes": 934552,
+      "effective_config_sha256": "564eb6d80d5d16ca3e9124272ad9d548a39090242991af1b6c2787146f39a3c4",
+      "action": "DEPLOYED_VERIFIED"
+    }
+  },
+  "rollout": [
+    "upload-finance",
+    "upload-auth",
+    "upload-app",
+    "activate-finance",
+    "activate-auth",
+    "activate-app"
+  ],
+  "phase_verifications": [
+    {
+      "stage": "BASELINE",
+      "checked_at": "2026-11-13T23:45:52.166917+00:00",
+      "receipt_sha256": "e07d6c0451b0d3a1d31e6aeecdd82d955ecd7162295ea7234758a0b20fcd3dd6",
+      "payload_sha256": "9e8de6d0ad95835bacdc674f7e63e87f0d47ec11689ea192290f585f018bd4b0",
+      "all_three_exact": true,
+      "domains_exact": true
+    },
+    {
+      "stage": "UPLOADED_FINANCE",
+      "checked_at": "2026-11-13T23:46:24.572750+00:00",
+      "receipt_sha256": "adffad33dfa430cbc70681d050244fa04bef054220bec7de5798912da504fbf0",
+      "payload_sha256": "c8d856f51771667f7f164a678fb9f9ad19bb8082e57e3d1d7811c5973f9ca70c",
+      "all_three_exact": true,
+      "domains_exact": true
+    },
+    {
+      "stage": "UPLOADED_AUTH",
+      "checked_at": "2026-11-13T23:46:51.020208+00:00",
+      "receipt_sha256": "0f406e545c3e7563ebcf884198ba6239d89d7a5fdb1aa12da35661d3c95cc672",
+      "payload_sha256": "d82967b81dd6949a37255565997d475d57d43a73df650c0f04a597c56c2d3376",
+      "all_three_exact": true,
+      "domains_exact": true
+    },
+    {
+      "stage": "UPLOADED_APP",
+      "checked_at": "2026-11-13T23:47:22.056480+00:00",
+      "receipt_sha256": "78a8026e3ae014d08e13c559f5713001c55f1ad1fcfc6fa3a6af184c010f16c7",
+      "payload_sha256": "7e01f78e32760c6a147876baa96ccda5ad15f4777cfb8a6691e74d086f13e52c",
+      "all_three_exact": true,
+      "domains_exact": true
+    },
+    {
+      "stage": "ACTIVE_FINANCE",
+      "checked_at": "2026-11-13T23:47:48.552924+00:00",
+      "receipt_sha256": "16ea839740aa3f742b7ea4d73535224f883bd817716a1c900d8cca5c24409143",
+      "payload_sha256": "572af6937fc5bd62c3743f67a070999db18496cede17b40a56d9791455d65fcd",
+      "all_three_exact": true,
+      "domains_exact": true
+    },
+    {
+      "stage": "ACTIVE_AUTH",
+      "checked_at": "2026-11-13T23:48:12.818624+00:00",
+      "receipt_sha256": "341bd09d9320b969f78f6cc37c6fd150f119b13a575a1814aa9a2f77c05de68c",
+      "payload_sha256": "bc0f1cda91a16eceec54415ce435446f0c15d0b344b3f23838a9e57494dad34a",
+      "all_three_exact": true,
+      "domains_exact": true
+    },
+    {
+      "stage": "ACTIVE_APP",
+      "checked_at": "2026-11-13T23:48:25.546685+00:00",
+      "receipt_sha256": "66fea4667ba7a36d1cb9dbe2776043cde5db1aa3d531085537840a41c3bafb0a",
+      "payload_sha256": "f09c03ddbb2c687b66eec6a110c93117de0315d07c797efd0d5babe69160fed0",
+      "all_three_exact": true,
+      "domains_exact": true
+    }
+  ],
+  "configuration_bindings_owner_flags_cron_domains_preserved": true,
+  "frozen_plan_sha256": "f64afcccaed9ccf916b9b71cdb256291123f7f2dc86021c0aafab26af17e93aa",
+  "baseline_backup_files": 9,
+  "d1_recovery": {
+    "receipt_sha256": "1ad775a414459fba9f35498351420daddeae18c7016838cf6c411997cea6a972",
+    "time_travel_bookmarks_observed": [
+      "ADMIN_DB",
+      "ACCOUNT_DB",
+      "FINANCE_DB"
+    ],
+    "remote_mutations": 0
+  },
+  "migrations": {
+    "kind": "ADDITIVE_LAZY_PROVISIONING",
+    "tenant_objects_rehearsed_locally": 59,
+    "manual_production_ddl": 0,
+    "real_tenant_provisioning_and_balance_acceptance": "NOT_CERTIFIED"
+  },
+  "public_checks": {
+    "transport": "VERIFIED_TLS_NODE_GET_CDP_RENDERING",
+    "tls_verification_disabled": false,
+    "result": "PASS",
+    "http": [
+      {
+        "route": "/login",
+        "status": 200,
+        "location": null,
+        "release": "2026-11-13.2",
+        "content_type": "text/html; charset=utf-8",
+        "bytes": 307262,
+        "sha256": "71a75cfdf91a908f9b461c77df0774fbb3a2aedf0403c9857216597933241b0f",
+        "title": "MLS Commerce OS · Gestão da loja",
+        "version_evidence": "APP_RELEASE_HEADER"
+      },
+      {
+        "route": "/register",
+        "status": 200,
+        "location": null,
+        "release": null,
+        "content_type": "text/html; charset=utf-8",
+        "bytes": 81835,
+        "sha256": "11a15e97f62e8dbb23a8747b3d54771ba02a995848bf2fd83c100ea580734b9f",
+        "title": "Conta e empresa · MLS Commerce OS",
+        "version_evidence": "ACCOUNT_STRUCTURE_ONLY_AUTH_SOURCE_REQUIRES_PUBLISHER_RECEIPT",
+        "account_frame_present": true
+      },
+      {
+        "route": "/account/register",
+        "status": 200,
+        "location": null,
+        "release": null,
+        "content_type": "text/html; charset=utf-8",
+        "bytes": 81835,
+        "sha256": "11a15e97f62e8dbb23a8747b3d54771ba02a995848bf2fd83c100ea580734b9f",
+        "title": "Conta e empresa · MLS Commerce OS",
+        "version_evidence": "ACCOUNT_STRUCTURE_ONLY_AUTH_SOURCE_REQUIRES_PUBLISHER_RECEIPT",
+        "account_frame_present": true
+      },
+      {
+        "route": "/account/login",
+        "status": 200,
+        "location": null,
+        "release": null,
+        "content_type": "text/html; charset=utf-8",
+        "bytes": 81832,
+        "sha256": "56ee895902ad0ca3832ea985177edf5c0c50c5da08134397b708df379076478f",
+        "title": "Conta e empresa · MLS Commerce OS",
+        "version_evidence": "ACCOUNT_STRUCTURE_ONLY_AUTH_SOURCE_REQUIRES_PUBLISHER_RECEIPT",
+        "account_frame_present": true
+      },
+      {
+        "route": "/verify-email",
+        "status": 200,
+        "location": null,
+        "release": null,
+        "content_type": "text/html; charset=utf-8",
+        "bytes": 81833,
+        "sha256": "c14a12a2a71cac2d5d3ac56a0e5659ce9591554e049b54b65f848c2aaa84e96e",
+        "title": "Conta e empresa · MLS Commerce OS",
+        "version_evidence": "ACCOUNT_STRUCTURE_ONLY_AUTH_SOURCE_REQUIRES_PUBLISHER_RECEIPT",
+        "account_frame_present": true
+      },
+      {
+        "route": "/forgot-password",
+        "status": 200,
+        "location": null,
+        "release": null,
+        "content_type": "text/html; charset=utf-8",
+        "bytes": 81833,
+        "sha256": "9e40756017f58a50b008888a92f85616c98680325238f39072a45bfd52dc8105",
+        "title": "Conta e empresa · MLS Commerce OS",
+        "version_evidence": "ACCOUNT_STRUCTURE_ONLY_AUTH_SOURCE_REQUIRES_PUBLISHER_RECEIPT",
+        "account_frame_present": true
+      },
+      {
+        "route": "/reset-password",
+        "status": 200,
+        "location": null,
+        "release": null,
+        "content_type": "text/html; charset=utf-8",
+        "bytes": 81832,
+        "sha256": "d63e0ba2c4dff586619b9472a39f5bdfc1b2ba68b154569fc1b997aa6dc4494b",
+        "title": "Conta e empresa · MLS Commerce OS",
+        "version_evidence": "ACCOUNT_STRUCTURE_ONLY_AUTH_SOURCE_REQUIRES_PUBLISHER_RECEIPT",
+        "account_frame_present": true
+      },
+      {
+        "route": "/invitations/accept",
+        "status": 200,
+        "location": null,
+        "release": null,
+        "content_type": "text/html; charset=utf-8",
+        "bytes": 81837,
+        "sha256": "c01540c58438328525760d01836cda795e5cde74cbb550cb35a14f40f63b65c4",
+        "title": "Conta e empresa · MLS Commerce OS",
+        "version_evidence": "ACCOUNT_STRUCTURE_ONLY_AUTH_SOURCE_REQUIRES_PUBLISHER_RECEIPT",
+        "account_frame_present": true
+      },
+      {
+        "route": "/companies",
+        "status": 303,
+        "location": "https://app.brazacommerce.com.br/account/login",
+        "release": null,
+        "content_type": "text/plain;charset=UTF-8",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "title": null,
+        "version_evidence": "PROTECTED_REDIRECT_ONLY"
+      },
+      {
+        "route": "/account/profile",
+        "status": 303,
+        "location": "https://app.brazacommerce.com.br/account/login",
+        "release": null,
+        "content_type": "text/plain;charset=UTF-8",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "title": null,
+        "version_evidence": "PROTECTED_REDIRECT_ONLY"
+      },
+      {
+        "route": "/account/security",
+        "status": 303,
+        "location": "https://app.brazacommerce.com.br/account/login",
+        "release": null,
+        "content_type": "text/plain;charset=UTF-8",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "title": null,
+        "version_evidence": "PROTECTED_REDIRECT_ONLY"
+      },
+      {
+        "route": "/admin?tab=overview",
+        "status": 303,
+        "location": "https://app.brazacommerce.com.br/login",
+        "release": null,
+        "content_type": null,
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "title": null,
+        "version_evidence": "PROTECTED_REDIRECT_ONLY"
+      },
+      {
+        "route": "/api/admin/bootstrap",
+        "status": 401,
+        "release": "2026-11-13.2",
+        "bytes": 24
+      },
+      {
+        "route": "/api/admin/release-info",
+        "status": 401,
+        "release": "2026-11-13.2",
+        "bytes": 24
+      },
+      {
+        "route": "/api/account/session",
+        "status": 401,
+        "release": null,
+        "bytes": 85
+      },
+      {
+        "route": "/api/admin/finance/automation",
+        "status": 401,
+        "release": "2026-11-13.2",
+        "bytes": 24
+      },
+      {
+        "route": "/api/admin/finance/automation/policy",
+        "status": 401,
+        "release": "2026-11-13.2",
+        "bytes": 24
+      }
+    ],
+    "assets": [
+      {
+        "kind": "current",
+        "id": "bank",
+        "path": "/assets/mls/0d6250f5888258fa29664eac45b2cd821d3872b1c96ac47dda46bd7fd10e6a0c.js",
+        "status": 200,
+        "bytes": 38035,
+        "sha256": "0d6250f5888258fa29664eac45b2cd821d3872b1c96ac47dda46bd7fd10e6a0c",
+        "expected_bytes": 38035,
+        "expected_sha256": "0d6250f5888258fa29664eac45b2cd821d3872b1c96ac47dda46bd7fd10e6a0c",
+        "content_type": "text/javascript; charset=utf-8",
+        "pass": true
+      },
+      {
+        "kind": "current",
+        "id": "month",
+        "path": "/assets/mls/5203d255416bacb97cd44ddef29a2fc76b1432f0a1ea731fabacc4bb071fcd07.js",
+        "status": 200,
+        "bytes": 704817,
+        "sha256": "5203d255416bacb97cd44ddef29a2fc76b1432f0a1ea731fabacc4bb071fcd07",
+        "expected_bytes": 704817,
+        "expected_sha256": "5203d255416bacb97cd44ddef29a2fc76b1432f0a1ea731fabacc4bb071fcd07",
+        "content_type": "text/javascript; charset=utf-8",
+        "pass": true
+      },
+      {
+        "kind": "current",
+        "id": "orders",
+        "path": "/assets/mls/ec6397070416275d880f293d4abe8d7f531215af369d7e9a275c10f019a8c3c8.js",
+        "status": 200,
+        "bytes": 21282,
+        "sha256": "ec6397070416275d880f293d4abe8d7f531215af369d7e9a275c10f019a8c3c8",
+        "expected_bytes": 21282,
+        "expected_sha256": "ec6397070416275d880f293d4abe8d7f531215af369d7e9a275c10f019a8c3c8",
+        "content_type": "text/javascript; charset=utf-8",
+        "pass": true
+      },
+      {
+        "kind": "current",
+        "id": "production",
+        "path": "/assets/mls/549c2b0f6ae183249bed2472af894cf5211d4a6853fc33c0ce6c127aa3ebf034.js",
+        "status": 200,
+        "bytes": 165982,
+        "sha256": "549c2b0f6ae183249bed2472af894cf5211d4a6853fc33c0ce6c127aa3ebf034",
+        "expected_bytes": 165982,
+        "expected_sha256": "549c2b0f6ae183249bed2472af894cf5211d4a6853fc33c0ce6c127aa3ebf034",
+        "content_type": "text/javascript; charset=utf-8",
+        "pass": true
+      },
+      {
+        "kind": "current",
+        "id": "weekly",
+        "path": "/assets/mls/04ae3166780be18f31754212640b0887abe9e20830ac4309a6e31109398e4eeb.js",
+        "status": 200,
+        "bytes": 54280,
+        "sha256": "04ae3166780be18f31754212640b0887abe9e20830ac4309a6e31109398e4eeb",
+        "expected_bytes": 54280,
+        "expected_sha256": "04ae3166780be18f31754212640b0887abe9e20830ac4309a6e31109398e4eeb",
+        "content_type": "text/javascript; charset=utf-8",
+        "pass": true
+      },
+      {
+        "kind": "current",
+        "id": "workspace",
+        "path": "/assets/mls/e3b12127a14b70185a25c83dae547facc946a4fe87afe0369a8f47665f6398ca.js",
+        "status": 200,
+        "bytes": 462298,
+        "sha256": "e3b12127a14b70185a25c83dae547facc946a4fe87afe0369a8f47665f6398ca",
+        "expected_bytes": 462298,
+        "expected_sha256": "e3b12127a14b70185a25c83dae547facc946a4fe87afe0369a8f47665f6398ca",
+        "content_type": "text/javascript; charset=utf-8",
+        "pass": true
+      },
+      {
+        "kind": "retained",
+        "id": "month",
+        "path": "/assets/mls/347a294216d16151105c5b5074174af01c01a9bc398e713aaf2c9184a48b1db2.js",
+        "status": 200,
+        "bytes": 704759,
+        "sha256": "347a294216d16151105c5b5074174af01c01a9bc398e713aaf2c9184a48b1db2",
+        "expected_bytes": 704759,
+        "expected_sha256": "347a294216d16151105c5b5074174af01c01a9bc398e713aaf2c9184a48b1db2",
+        "content_type": "text/javascript; charset=utf-8",
+        "pass": true
+      },
+      {
+        "kind": "retained",
+        "id": "workspace",
+        "path": "/assets/mls/d5961f95cc6649d963f42e28a50e2e12563ce0d0d66833bb28ce5e16d172922c.js",
+        "status": 200,
+        "bytes": 341729,
+        "sha256": "d5961f95cc6649d963f42e28a50e2e12563ce0d0d66833bb28ce5e16d172922c",
+        "expected_bytes": 341729,
+        "expected_sha256": "d5961f95cc6649d963f42e28a50e2e12563ce0d0d66833bb28ce5e16d172922c",
+        "content_type": "text/javascript; charset=utf-8",
+        "pass": true
+      }
+    ],
+    "browser_profiles": 24,
+    "display_widths": [
+      320,
+      1365
+    ],
+    "themes": [
+      "light",
+      "dark"
+    ],
+    "visible_controls_measured": 196,
+    "all_measured_controls_at_least_44px": true,
+    "horizontal_page_overflow": false,
+    "javascript_errors": 0,
+    "remote_mutations_sent": 0,
+    "receipt_sha256": "b55bf76a713751ccd3be3e705f5b3f9184b53c9cae826bfae792b5ca51549cf5",
+    "native_browser_attempt": {
+      "result": "BLOCKED_BEFORE_APP_RENDER",
+      "observed_error": "net::ERR_CERT_AUTHORITY_INVALID",
+      "receipt_sha256": "8061e4ce94b9aade714ec6b0f68d8038b4bd054016ee848514d0c2491d5d60fc",
+      "diagnosis_sha256": "ca1959e94bd88a0bd0228553f4a15d75d985722ff2c9485a1a31ce1940dff425",
+      "note": "TLS-verified Node GET responses were rendered by CDP; certificate validation was never disabled."
+    }
+  },
+  "owner_live_authenticated_qa": "NOT_PERFORMED",
+  "financial_account_acceptance": false,
+  "m2_closed": false,
+  "m22_closed": false,
+  "publisher_created_test_facts_in_production": false,
+  "provider_commercial_writes": 0,
+  "real_messages_sent": 0,
+  "dependencies": [
+    "Shopee Wallet/Payout official contract, actual grants and implemented adapter",
+    "Authorized bank connector/consent and full same-account balance evidence",
+    "Ads source timezone",
+    "Complete financial completion cohort and original costs/opening inventory",
+    "Real owner week/month comparison against Seller Centre and bank"
+  ],
+  "known_platform_issue": {
+    "cloudflare_workers_builds": "FAILED_ON_BASELINE_AND_CANDIDATE_NOT_CLAIMED_GREEN",
+    "deployment_path": "EXISTING_MANUAL_WRANGLER",
+    "builds_configuration_permission": "UNAVAILABLE",
+    "force_or_gate_bypass": false
+  }
+}

@@ -1,10 +1,10 @@
 # Complemento financeiro — implementação e limites
 
-O candidato local adiciona ao MLS Finance uma área para **resultado por competência, recebíveis, carteira, saques, banco, conciliação e fechamentos versionados**, preservando a apresentação V4.1 e a estimativa de vendas existente. A contabilização permanece parcial quando as fontes necessárias não estão comprovadas.
+A implementação publicada adiciona ao MLS Finance resultado por competência, recebíveis/carteira, saques, banco, despesas, devoluções, conciliação e fechamentos versionados, preservando a V4.1 e a estimativa de vendas existente. Fontes não comprovadas permanecem parciais.
 
-**Estado deste registro: implementação local e testes focados; publicação ainda depende de recibo próprio da integração.** O destino autorizado é https://app.brazacommerce.com.br. Este documento não comprova commit, CI, deploy, versão servida ou aceitação dos valores da conta real.
+**Publicação técnica verificada:** release2026-11-13.2 em 13/11/2026 às 20:50:26 Brasília, fonte `e6bbb189ec2331c0a07136c5b9f720e2e300b5d4`, [CI43527800185](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43527800185), 4430 Node/67 Python. O [recibo dos Workers/configuração](publication-live-20261113.json) e a [conferência pública](publication-live-20261113.json) registram o vetor realmente servido em https://app.brazacommerce.com.br. **Isso não certifica valores da conta real, não confirma integração Git/merge e não encerra M2/M2.2.**
 
-## Onde usar após a integração
+## Onde usar
 
 Abra **MLS Finance** em `/admin?tab=agent-finance`, escolha o mês no seletor existente e procure **Resultado, carteira e caixa** (`#financialAutomation`). A área contém oito seções: Resultado; Recebíveis e carteira; Saques; Banco; Despesas; Devoluções; Conciliação; Fechamentos. Os seis agentes da Visão geral continuam preservados.
 
@@ -17,7 +17,7 @@ Abra **MLS Finance** em `/admin?tab=agent-finance`, escolha o mês no seletor ex
 
 As ações aparecem somente com as permissões aplicáveis. A API pública é `/api/admin/finance/automation?month=AAAA-MM`, com mutações separadas `/policy`, `/sync` e `/close`; todas dependem de autorização no servidor, e mutações exigem CSRF e identidade idempotente. Rotas privadas entre App/Auth/Finance não são URLs para abrir no navegador.
 
-## O que está implementado
+## Código publicado e alcance funcional
 
 O razão guarda centavos inteiros, origem, datas, evidência, versões e deltas equilibrados. IDs nativos permitem repetir uma observação sem duplicar receita; identidade insuficiente fica em revisão. Grupos de conciliação podem reunir ou dividir movimentos, conservando cada centavo e a capacidade também usada pelo matcher legado 1:1.
 

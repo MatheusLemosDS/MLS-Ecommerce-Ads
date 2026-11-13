@@ -1,6 +1,6 @@
 {
   "schema": "mls_financial_ui_validation_v1",
-  "generated_at": "2026-11-13T23:31:20.700663+00:00",
+  "generated_at": "2026-11-13T23:42:43.919196+00:00",
   "app_worker_sha256": "721b3f369b93000dd5e8a0065cd83fd4bd7f54baae262c4b635e5a118fffde64",
   "synthetic": true,
   "real_owner_authenticated": false,
@@ -75,7 +75,8 @@
   "controlled_markup_hydration": "DOMParser.parseFromString of controlled static markup and replaceChildren; no innerHTML",
   "root_security_and_strict_bootstrap_verified_tests": 60,
   "legacy_regression_triage": {
-    "app_worker_sha256": "17708afc909c858fb518759e7556de99ecf9593999ef77b5cc7b2d9b0c221bb0",
+    "app_worker_sha256": "721b3f369b93000dd5e8a0065cd83fd4bd7f54baae262c4b635e5a118fffde64",
+    "head": "e6bbb189ec2331c0a07136c5b9f720e2e300b5d4",
     "full_files": [
       "bundled-client.test.mjs",
       "mls-approved-all-panels-chrome.test.mjs",
@@ -83,14 +84,28 @@
     ],
     "passed": 13,
     "failed": 0,
-    "isolated_native_repetitions": 2,
-    "reported_native_failures_reproduced": false,
+    "evidence_source": "CURRENT_FULL_SUITE",
+    "full_suite_tests": 4430,
+    "full_suite_log_sha256": "b7bda0c19fa5d97b23afe526f825b0e8b15712ae50f76751b0b5c28179857826",
+    "matched_passed_test_names": [
+      "ok 573 - deployed monthly client validates and renders financial and Ads responses after esbuild (minify=false)",
+      "ok 574 - deployed reconciliation explains the observation and reads only its private monthly history after esbuild (minify=false)",
+      "ok 575 - deployed monthly client renders custom product costs as text without changing financial balances (minify=false)",
+      "ok 576 - deployed monthly client deducts one MEI DAS and keeps product balances before the fixed monthly tax (minify=false)",
+      "ok 577 - deployed monthly client validates and renders financial and Ads responses after esbuild (minify=true)",
+      "ok 578 - deployed reconciliation explains the observation and reads only its private monthly history after esbuild (minify=true)",
+      "ok 579 - deployed monthly client renders custom product costs as text without changing financial balances (minify=true)",
+      "ok 580 - deployed monthly client deducts one MEI DAS and keeps product balances before the fixed monthly tax (minify=true)",
+      "ok 2212 - owner design smoke: fifteen real workspaces, real navigation and light/dark themes at desktop and 390px mobile (minify=false)",
+      "ok 2213 - owner design smoke: fifteen real workspaces, real navigation and light/dark themes at desktop and 390px mobile (minify=true)",
+      "ok 2214 - fresh local D1 owner bootstrap captures six connected workspaces while financial amounts remain unknown",
+      "ok 2237 - synthetic owner visual smoke in desktop and mobile Chrome with zero real-account access",
+      "ok 2238 - disabled release switch keeps legacy Ctrl+K navigation usable in real Chrome"
+    ],
     "production_changes": false,
     "expectations_or_timeouts_relaxed": false,
-    "fixture_changes": [
-      "No-host document stub for pure VM helpers.",
-      "Failure-only browser diagnostics for native startup assertions."
-    ]
+    "isolated_native_repetitions": 0,
+    "note": "Current full suite verifies all 13 regressions on the exact current build; prior isolated triage remains under historical_legacy_regression_triage."
   },
   "shared_fixture_and_navigation_regression": {
     "files": [
@@ -126,5 +141,32 @@
     "production_account_verified": false,
     "production_mutations": 0
   },
-  "root_security_and_strict_bootstrap_verified_app_sha256": "17708afc909c858fb518759e7556de99ecf9593999ef77b5cc7b2d9b0c221bb0"
+  "root_security_and_strict_bootstrap_verified_app_sha256": "17708afc909c858fb518759e7556de99ecf9593999ef77b5cc7b2d9b0c221bb0",
+  "historical_legacy_regression_triage": {
+    "app_worker_sha256": "17708afc909c858fb518759e7556de99ecf9593999ef77b5cc7b2d9b0c221bb0",
+    "full_files": [
+      "bundled-client.test.mjs",
+      "mls-approved-all-panels-chrome.test.mjs",
+      "mls-integrated-owner-visual-chrome.test.mjs"
+    ],
+    "passed": 13,
+    "failed": 0,
+    "isolated_native_repetitions": 2,
+    "reported_native_failures_reproduced": false,
+    "production_changes": false,
+    "expectations_or_timeouts_relaxed": false,
+    "fixture_changes": [
+      "No-host document stub for pure VM helpers.",
+      "Failure-only browser diagnostics for native startup assertions."
+    ]
+  },
+  "current_full_suite": {
+    "head": "e6bbb189ec2331c0a07136c5b9f720e2e300b5d4",
+    "log_sha256": "b7bda0c19fa5d97b23afe526f825b0e8b15712ae50f76751b0b5c28179857826",
+    "tests": 4430,
+    "pass": 4430,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0
+  }
 }

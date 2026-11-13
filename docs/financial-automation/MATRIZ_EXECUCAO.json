@@ -1023,7 +1023,7 @@
       "titulo": "Inventário e compatibilidade",
       "descricao": "Reconferir a HEAD e a release servida. Inventariar rotas, coletores, jobs, schemas, projetores, fontes de custo e estados por empresa/loja. Manter o layout V4.1, gráficos, login, isolamento e fluxos operacionais. Tratar esta auditoria como ponto de partida, sem repetir a implementação visual já integrada. Não confundir documentos históricos com prova atual de dados.",
       "aceite": "Matriz relaciona cada tipo de valor à fonte/handler/armazenamento/consumidor e distingue existente, parcial, novo, validado localmente e validado na conta.",
-      "estado": "PARCIAL",
+      "estado": "VALIDADO_LOCAL",
       "arquivos_e_contratos": [
         "docs/financial-automation/BASELINE.md",
         "docs/financial-automation/BASELINE_INVENTORY.json",
@@ -1092,16 +1092,17 @@
         }
       ],
       "evidencias_na_conta": [],
-      "evidencias_de_publicacao": [],
+      "evidencias_de_publicacao": [
+        "docs/financial-automation/publication-live-20261113.json",
+        "docs/financial-automation/validation/final-local-20261113.json"
+      ],
       "dependencias_externas": [],
       "situacao_base": "EXISTENTE_PARCIAL_OU_NOVO_A_IMPLEMENTAR",
-      "implementacao": "Base auditada e HEAD inicial comparadas; 25 funções legadas, novos handlers/stores/DTOs e 49 objetos tenant catalogados. V4.1 e contratos legados permanecem como trilhas separadas.",
+      "implementacao": "Base auditada e HEAD inicial comparadas; 25 funções legadas, novos handlers/stores/DTOs e 59 objetos tenant catalogados. V4.1 e contratos legados permanecem como trilhas separadas.",
       "validacao_local": "VALIDADO_LOCAL_NO_ESCOPO_DESCRITO",
       "validacao_na_conta": "NAO_REALIZADA",
-      "publicacao": "PENDENTE_RECIBO_DA_INTEGRACAO",
-      "lacunas_de_implementacao": [
-        "Conferência da release realmente servida e regressão completa dependem do recibo final da integração; este documento não as executou."
-      ],
+      "publicacao": "PUBLICADO_VERIFICADO_SOMENTE_ESCOPO_IMPLEMENTADO",
+      "lacunas_de_implementacao": [],
       "arquivos_novos_planejados": [],
       "cobertura_base_funcoes": [
         "Pedidos e vendas",
@@ -1144,7 +1145,8 @@
       "arquivos_de_teste": [
         "web/cloudflare/tests/tenant-migration.test.mjs",
         "web/cloudflare/tests/tenant-sql-isolation.test.mjs"
-      ]
+      ],
+      "validacao_publicada_limite": "Regressão completa, bytes e release pública conferidos nos recibos; isso não certifica fontes ou saldos da conta real."
     },
     {
       "id": "FINAUTO-02",
@@ -1201,7 +1203,10 @@
         }
       ],
       "evidencias_na_conta": [],
-      "evidencias_de_publicacao": [],
+      "evidencias_de_publicacao": [
+        "docs/financial-automation/publication-live-20261113.json",
+        "docs/financial-automation/validation/final-local-20261113.json"
+      ],
       "dependencias_externas": [
         {
           "tipo": "EXTERNAL_DEPENDENCY",
@@ -1213,7 +1218,7 @@
       "implementacao": "Registro fechado de capacidades por escopo/app/região/moeda; candidatos Wallet/Payout/Returns continuam UNKNOWN e não autorizam transporte.",
       "validacao_local": "VALIDADO_LOCAL_NO_ESCOPO_DESCRITO",
       "validacao_na_conta": "NAO_REALIZADA",
-      "publicacao": "PENDENTE_RECIBO_DA_INTEGRACAO",
+      "publicacao": "PUBLICADO_VERIFICADO_SOMENTE_ESCOPO_IMPLEMENTADO",
       "lacunas_de_implementacao": [
         "Integrar observações reais da documentação e do grant às capacidades. O coletor genérico não é um adaptador Wallet operacional."
       ],
@@ -1308,7 +1313,10 @@
         }
       ],
       "evidencias_na_conta": [],
-      "evidencias_de_publicacao": [],
+      "evidencias_de_publicacao": [
+        "docs/financial-automation/publication-live-20261113.json",
+        "docs/financial-automation/validation/final-local-20261113.json"
+      ],
       "dependencias_externas": [
         {
           "tipo": "EXTERNAL_DEPENDENCY",
@@ -1320,7 +1328,7 @@
       "implementacao": "Ingestão paginada de evidência salva; fontes Ads/cash/estoque em turnos limitados, checkpoints CAS e fila RETURN_QUEUE persistida com rodízio. Registro de capacidades não autoriza transporte desconhecido.",
       "validacao_local": "VALIDADO_LOCAL_NO_ESCOPO_DESCRITO",
       "validacao_na_conta": "NAO_REALIZADA",
-      "publicacao": "PENDENTE_RECIBO_DA_INTEGRACAO",
+      "publicacao": "PUBLICADO_VERIFICADO_SOMENTE_ESCOPO_IMPLEMENTADO",
       "lacunas_de_implementacao": [
         "Falta coletor operacional Wallet/Payout com contrato e grant reais.",
         "Runs legados por criação não comprovam toda a coorte de conclusão; fonte equivalente de conclusão ainda precisa de coleta autorizada.",
@@ -1411,7 +1419,10 @@
         }
       ],
       "evidencias_na_conta": [],
-      "evidencias_de_publicacao": [],
+      "evidencias_de_publicacao": [
+        "docs/financial-automation/publication-live-20261113.json",
+        "docs/financial-automation/validation/final-local-20261113.json"
+      ],
       "dependencias_externas": [
         {
           "tipo": "EXTERNAL_DEPENDENCY",
@@ -1423,7 +1434,7 @@
       "implementacao": "Captura minimizada de campos monetários/datas efetivamente recebidos no fluxo escrow/detail existente e exposição V2 compatível com V1.",
       "validacao_local": "VALIDADO_LOCAL_NO_ESCOPO_DESCRITO",
       "validacao_na_conta": "NAO_REALIZADA",
-      "publicacao": "PENDENTE_RECIBO_DA_INTEGRACAO",
+      "publicacao": "PUBLICADO_VERIFICADO_SOMENTE_ESCOPO_IMPLEMENTADO",
       "lacunas_de_implementacao": [
         "Captura vale para novas leituras após ativação; caches históricos sem componentes continuam NOT_CAPTURED/PARTIAL.",
         "Nem todos os cupons/subsídios/refunds/fretes/taxas possuem semântica confirmada ou reconciliação completa por pedido.",
@@ -1502,13 +1513,16 @@
         }
       ],
       "evidencias_na_conta": [],
-      "evidencias_de_publicacao": [],
+      "evidencias_de_publicacao": [
+        "docs/financial-automation/publication-live-20261113.json",
+        "docs/financial-automation/validation/final-local-20261113.json"
+      ],
       "dependencias_externas": [],
       "situacao_base": "EXISTENTE_PARCIAL_OU_NOVO_A_IMPLEMENTAR",
       "implementacao": "Razão durável de partidas equilibradas em centavos seguros, identidade nativa/conservadora, versões imutáveis, evidência, deltas, idempotência e CAS. Lote de 100 fatos usa duas chamadas D1 quentes e 11 statements.",
       "validacao_local": "VALIDADO_LOCAL_NO_ESCOPO_DESCRITO",
       "validacao_na_conta": "NAO_REALIZADA",
-      "publicacao": "PENDENTE_RECIBO_DA_INTEGRACAO",
+      "publicacao": "PUBLICADO_VERIFICADO_SOMENTE_ESCOPO_IMPLEMENTADO",
       "lacunas_de_implementacao": [],
       "arquivos_novos_planejados": [],
       "cobertura_base_funcoes": [
@@ -1596,7 +1610,10 @@
         }
       ],
       "evidencias_na_conta": [],
-      "evidencias_de_publicacao": [],
+      "evidencias_de_publicacao": [
+        "docs/financial-automation/publication-live-20261113.json",
+        "docs/financial-automation/validation/final-local-20261113.json"
+      ],
       "dependencias_externas": [
         {
           "tipo": "EXTERNAL_DEPENDENCY",
@@ -1613,7 +1630,7 @@
       "implementacao": "Contas e posições distintas de recebíveis/carteira/retenções/trânsito/banco; contratos de capacidades e normalização conservadora existem.",
       "validacao_local": "VALIDADO_LOCAL_NO_ESCOPO_DESCRITO",
       "validacao_na_conta": "NAO_REALIZADA",
-      "publicacao": "PENDENTE_RECIBO_DA_INTEGRACAO",
+      "publicacao": "PUBLICADO_VERIFICADO_SOMENTE_ESCOPO_IMPLEMENTADO",
       "lacunas_de_implementacao": [
         "Não existe coleta Wallet/Payout confirmada na conta, saldo inicial comprovado ou adaptador de produção completo.",
         "A rota privada atual lê evidência salva de pedidos; não coleta carteira ou executa saques."
@@ -1693,7 +1710,10 @@
         }
       ],
       "evidencias_na_conta": [],
-      "evidencias_de_publicacao": [],
+      "evidencias_de_publicacao": [
+        "docs/financial-automation/publication-live-20261113.json",
+        "docs/financial-automation/validation/final-local-20261113.json"
+      ],
       "dependencias_externas": [
         {
           "tipo": "EXTERNAL_DEPENDENCY",
@@ -1710,7 +1730,7 @@
       "implementacao": "Importação Nubank CSV/OFX legada preservada; interface de conector somente leitura exige adaptador e consentimento válidos. Projetor confere abertura + movimentos = fechamento da mesma conta.",
       "validacao_local": "VALIDADO_LOCAL_NO_ESCOPO_DESCRITO",
       "validacao_na_conta": "NAO_REALIZADA",
-      "publicacao": "PENDENTE_RECIBO_DA_INTEGRACAO",
+      "publicacao": "PUBLICADO_VERIFICADO_SOMENTE_ESCOPO_IMPLEMENTADO",
       "lacunas_de_implementacao": [
         "Nenhum adaptador bancário/Nubank/Open Finance real foi configurado.",
         "Importações atuais não provam por si só saldos, conta física única ou completude; integração de saldos confirmados à fonte de produção segue pendente."
@@ -1785,7 +1805,10 @@
         }
       ],
       "evidencias_na_conta": [],
-      "evidencias_de_publicacao": [],
+      "evidencias_de_publicacao": [
+        "docs/financial-automation/publication-live-20261113.json",
+        "docs/financial-automation/validation/final-local-20261113.json"
+      ],
       "dependencias_externas": [
         {
           "tipo": "EXTERNAL_DEPENDENCY",
@@ -1797,7 +1820,7 @@
       "implementacao": "Alocações 1:N/N:1/N:N e parcelas com conservação, capacidade por registro, CAS, reversão aditiva e defesa contra reservas do matcher 1:1 legado. Confirmação automática exige regra confiável aprovada e identidade única.",
       "validacao_local": "VALIDADO_LOCAL_NO_ESCOPO_DESCRITO",
       "validacao_na_conta": "NAO_REALIZADA",
-      "publicacao": "PENDENTE_RECIBO_DA_INTEGRACAO",
+      "publicacao": "PUBLICADO_VERIFICADO_SOMENTE_ESCOPO_IMPLEMENTADO",
       "lacunas_de_implementacao": [
         "Aplicação das regras e conciliações à conta real não foi realizada; o resolver padrão usa registros imutáveis já importados."
       ],
@@ -1880,7 +1903,10 @@
         }
       ],
       "evidencias_na_conta": [],
-      "evidencias_de_publicacao": [],
+      "evidencias_de_publicacao": [
+        "docs/financial-automation/publication-live-20261113.json",
+        "docs/financial-automation/validation/final-local-20261113.json"
+      ],
       "dependencias_externas": [
         {
           "tipo": "EXTERNAL_DEPENDENCY",
@@ -1897,7 +1923,7 @@
       "implementacao": "Projetor canônico separa contas patrimoniais e resultado; normalização conserva repasse após ajustes sem inferir comissão ou debitar refund novamente.",
       "validacao_local": "VALIDADO_LOCAL_NO_ESCOPO_DESCRITO",
       "validacao_na_conta": "NAO_REALIZADA",
-      "publicacao": "PENDENTE_RECIBO_DA_INTEGRACAO",
+      "publicacao": "PUBLICADO_VERIFICADO_SOMENTE_ESCOPO_IMPLEMENTADO",
       "lacunas_de_implementacao": [
         "Ponte de todos os tipos de taxas/ajustes/refunds/Ads/carteira para o razão ainda não é completa.",
         "Confronto bruto-componentes vs repasse líquido precisa de fonte completa equivalente; componentes ausentes mantêm pendência.",
@@ -1979,7 +2005,10 @@
         }
       ],
       "evidencias_na_conta": [],
-      "evidencias_de_publicacao": [],
+      "evidencias_de_publicacao": [
+        "docs/financial-automation/publication-live-20261113.json",
+        "docs/financial-automation/validation/final-local-20261113.json"
+      ],
       "dependencias_externas": [
         {
           "tipo": "EXTERNAL_DEPENDENCY",
@@ -1996,7 +2025,7 @@
       "implementacao": "Adaptador de produção lê Ads salvo por calendário e emite evento REVIEW por dia nominal. Modelo de pré-pago separa recarga/consumo; timezone não confirmado impede contabilização definitiva.",
       "validacao_local": "VALIDADO_LOCAL_NO_ESCOPO_DESCRITO",
       "validacao_na_conta": "NAO_REALIZADA",
-      "publicacao": "PENDENTE_RECIBO_DA_INTEGRACAO",
+      "publicacao": "PUBLICADO_VERIFICADO_SOMENTE_ESCOPO_IMPLEMENTADO",
       "lacunas_de_implementacao": [
         "Fuso da fonte Ads permanece UNCONFIRMED. Não há reconciliação nativa de saldo/recarga/bonificação e ajuste do repasse confirmada na conta.",
         "Fonte diária não permite rateio exato sexta13h; guarda do projetor exclui dias civis parcialmente contidos."
@@ -2074,7 +2103,10 @@
         }
       ],
       "evidencias_na_conta": [],
-      "evidencias_de_publicacao": [],
+      "evidencias_de_publicacao": [
+        "docs/financial-automation/publication-live-20261113.json",
+        "docs/financial-automation/validation/final-local-20261113.json"
+      ],
       "dependencias_externas": [
         {
           "tipo": "EXTERNAL_DEPENDENCY",
@@ -2091,7 +2123,7 @@
       "implementacao": "Returns legado preservado; fila RETURN_QUEUE versionada/CAS com lease descobre referências de um report salvo por turno, inclusive competências antigas, e revisita casos vencidos.",
       "validacao_local": "VALIDADO_LOCAL_NO_ESCOPO_DESCRITO",
       "validacao_na_conta": "NAO_REALIZADA",
-      "publicacao": "PENDENTE_RECIBO_DA_INTEGRACAO",
+      "publicacao": "PUBLICADO_VERIFICADO_SOMENTE_ESCOPO_IMPLEMENTADO",
       "lacunas_de_implementacao": [
         "Coleta autorizada para descobrir todos os novos casos antigos continua sem grant/contrato confirmado.",
         "Nem todos os desfechos financeiros de refund, taxa, frete e compensação têm adapter e fonte equivalentes; status remoto resolvido sem evento econômico não liquida o caso."
@@ -2175,7 +2207,10 @@
         }
       ],
       "evidencias_na_conta": [],
-      "evidencias_de_publicacao": [],
+      "evidencias_de_publicacao": [
+        "docs/financial-automation/publication-live-20261113.json",
+        "docs/financial-automation/validation/final-local-20261113.json"
+      ],
       "dependencias_externas": [
         {
           "tipo": "FATOS_OU_POLITICAS_DA_EMPRESA",
@@ -2187,7 +2222,7 @@
       "implementacao": "Ponte persistente INVENTORY registra lotes reais com custo/fingerprint/revisão congelados e aloca peças a item original e venda reconhecida. Produção100/venda80 preserva20; publica CMV balanceado, sem fabricar caixa ou obrigação. Resolver e lista V3 reais de itens originais ligados aos callbacks padrão do App e testados na cadeia Worker→App, com grants orders.read.",
       "validacao_local": "VALIDADO_LOCAL_NO_ESCOPO_DESCRITO",
       "validacao_na_conta": "NAO_REALIZADA",
-      "publicacao": "PENDENTE_RECIBO_DA_INTEGRACAO",
+      "publicacao": "PUBLICADO_VERIFICADO_SOMENTE_ESCOPO_IMPLEMENTADO",
       "lacunas_de_implementacao": [
         "Abertura de estoque e completude da coorte vendida permanecem parciais enquanto não houver fontes equivalentes completas. Associação e composição são confirmadas pelo operador, sem inferir peças do repasse.",
         "Snapshot INVENTORY é limitado: até150lotes/500alocações e190KB; limite gera409CAPACITY_REACHED sem descarte. Arquivamento/particionamento para histórico ilimitado ainda é evolução interna."
@@ -2266,7 +2301,10 @@
         }
       ],
       "evidencias_na_conta": [],
-      "evidencias_de_publicacao": [],
+      "evidencias_de_publicacao": [
+        "docs/financial-automation/publication-live-20261113.json",
+        "docs/financial-automation/validation/final-local-20261113.json"
+      ],
       "dependencias_externas": [
         {
           "tipo": "FATOS_OU_POLITICAS_DA_EMPRESA",
@@ -2278,7 +2316,7 @@
       "implementacao": "Valoração persistente exige SALE original, item/componente, recebimento INSPECTED e vínculo ativo válido com lote histórico. Revenda restaura custo exato; peça consumida danificada não recebe perda duplicada; revisão de inspeção invalida confirmação antiga.",
       "validacao_local": "VALIDADO_LOCAL_NO_ESCOPO_DESCRITO",
       "validacao_na_conta": "NAO_REALIZADA",
-      "publicacao": "PENDENTE_RECIBO_DA_INTEGRACAO",
+      "publicacao": "PUBLICADO_VERIFICADO_SOMENTE_ESCOPO_IMPLEMENTADO",
       "lacunas_de_implementacao": [
         "Operações persistentes deste incremento cobrem revenda e dano; reparo/reembalagem reais ainda exigem despesa incremental comprovada, não novo custo integral.",
         "A completude da coorte física/fonte não é comprovada automaticamente. Os v1 físicos continuam com financial_integration_allowed=false e valoração desconhecida."
@@ -2357,7 +2395,10 @@
         }
       ],
       "evidencias_na_conta": [],
-      "evidencias_de_publicacao": [],
+      "evidencias_de_publicacao": [
+        "docs/financial-automation/publication-live-20261113.json",
+        "docs/financial-automation/validation/final-local-20261113.json"
+      ],
       "dependencias_externas": [
         {
           "tipo": "EXTERNAL_DEPENDENCY",
@@ -2374,7 +2415,7 @@
       "implementacao": "Fonte App ExpenseLedger→registry Finance recente→grupo OBLIGATION_PAYMENT durável está integrada. Snapshot imutável, releitura App, fonte/capacidade na mesma transação, parcelas e reversão preservam competência. Proposta AP→BANK conserva REVIEW sem nova despesa/receita.",
       "validacao_local": "VALIDADO_LOCAL_NO_ESCOPO_DESCRITO",
       "validacao_na_conta": "NAO_REALIZADA",
-      "publicacao": "PENDENTE_RECIBO_DA_INTEGRACAO",
+      "publicacao": "PUBLICADO_VERIFICADO_SOMENTE_ESCOPO_IMPLEMENTADO",
       "lacunas_de_implementacao": [
         "A prova operacional bancária continua desconhecida: identidade nativa, conta física, saldos e completude não são inventados. Classificação conservadora não autoriza saldo conciliado ou lucro realizado."
       ],
@@ -2452,7 +2493,10 @@
         }
       ],
       "evidencias_na_conta": [],
-      "evidencias_de_publicacao": [],
+      "evidencias_de_publicacao": [
+        "docs/financial-automation/publication-live-20261113.json",
+        "docs/financial-automation/validation/final-local-20261113.json"
+      ],
       "dependencias_externas": [
         {
           "tipo": "FATOS_OU_POLITICAS_DA_EMPRESA",
@@ -2464,7 +2508,7 @@
       "implementacao": "Política tributária por escopo, vigência, revisão e aprovação; proposta lê apenas configuração real da empresa; tributo fixo é reconhecido uma vez no fim do mês, pagamento separado.",
       "validacao_local": "VALIDADO_LOCAL_NO_ESCOPO_DESCRITO",
       "validacao_na_conta": "NAO_REALIZADA",
-      "publicacao": "PENDENTE_RECIBO_DA_INTEGRACAO",
+      "publicacao": "PUBLICADO_VERIFICADO_SOMENTE_ESCOPO_IMPLEMENTADO",
       "lacunas_de_implementacao": [
         "Não há motor tributário universal nem fórmula validada para todos os regimes.",
         "Valor/regime/vigência reais e política aprovada são necessários para retirar a pendência; não se presume MEI de novo cliente."
@@ -2539,13 +2583,16 @@
         }
       ],
       "evidencias_na_conta": [],
-      "evidencias_de_publicacao": [],
+      "evidencias_de_publicacao": [
+        "docs/financial-automation/publication-live-20261113.json",
+        "docs/financial-automation/validation/final-local-20261113.json"
+      ],
       "dependencias_externas": [],
       "situacao_base": "EXISTENTE_PARCIAL_OU_NOVO_A_IMPLEMENTAR",
       "implementacao": "Calendários explícitos preservam fabricação sexta13h, semana financeira civil sexta-quinta ou segunda-domingo e mês civil. Datas de competência e liquidação não se confundem.",
       "validacao_local": "VALIDADO_LOCAL_NO_ESCOPO_DESCRITO",
       "validacao_na_conta": "NAO_REALIZADA",
-      "publicacao": "PENDENTE_RECIBO_DA_INTEGRACAO",
+      "publicacao": "PUBLICADO_VERIFICADO_SOMENTE_ESCOPO_IMPLEMENTADO",
       "lacunas_de_implementacao": [],
       "arquivos_novos_planejados": [],
       "cobertura_base_funcoes": [
@@ -2628,7 +2675,10 @@
         }
       ],
       "evidencias_na_conta": [],
-      "evidencias_de_publicacao": [],
+      "evidencias_de_publicacao": [
+        "docs/financial-automation/publication-live-20261113.json",
+        "docs/financial-automation/validation/final-local-20261113.json"
+      ],
       "dependencias_externas": [
         {
           "tipo": "EXTERNAL_DEPENDENCY",
@@ -2640,7 +2690,7 @@
       "implementacao": "Contratos, projetor e interface separam resultado, recebíveis, carteira disponível/retida, trânsito, banco e projeção. DRE pode fechar com recebível legítimo e banco desconhecido; desconhecido não vira zero.",
       "validacao_local": "VALIDADO_LOCAL_NO_ESCOPO_DESCRITO",
       "validacao_na_conta": "NAO_REALIZADA",
-      "publicacao": "PENDENTE_RECIBO_DA_INTEGRACAO",
+      "publicacao": "PUBLICADO_VERIFICADO_SOMENTE_ESCOPO_IMPLEMENTADO",
       "lacunas_de_implementacao": [
         "Os valores reais só estarão disponíveis nas famílias efetivamente alimentadas e reconciliadas; validação local não certifica saldo da conta.",
         "Runs legados por criação não comprovam a coorte completa por conclusão; pedidos antigos concluídos no período precisam de fonte/coleta equivalente."
@@ -2725,13 +2775,16 @@
         }
       ],
       "evidencias_na_conta": [],
-      "evidencias_de_publicacao": [],
+      "evidencias_de_publicacao": [
+        "docs/financial-automation/publication-live-20261113.json",
+        "docs/financial-automation/validation/final-local-20261113.json"
+      ],
       "dependencias_externas": [],
       "situacao_base": "EXISTENTE_PARCIAL_OU_NOVO_A_IMPLEMENTAR",
       "implementacao": "Fechamentos persistidos por escopo/período/base com transições no servidor, snapshots imutáveis e hashes, revisões, autoria, eventos e políticas. CAS inclui razão e versões de configuração/fonte.",
       "validacao_local": "VALIDADO_LOCAL_NO_ESCOPO_DESCRITO",
       "validacao_na_conta": "NAO_REALIZADA",
-      "publicacao": "PENDENTE_RECIBO_DA_INTEGRACAO",
+      "publicacao": "PUBLICADO_VERIFICADO_SOMENTE_ESCOPO_IMPLEMENTADO",
       "lacunas_de_implementacao": [],
       "arquivos_novos_planejados": [],
       "cobertura_base_funcoes": [
@@ -2803,7 +2856,10 @@
         }
       ],
       "evidencias_na_conta": [],
-      "evidencias_de_publicacao": [],
+      "evidencias_de_publicacao": [
+        "docs/financial-automation/publication-live-20261113.json",
+        "docs/financial-automation/validation/final-local-20261113.json"
+      ],
       "dependencias_externas": [
         {
           "tipo": "EXTERNAL_DEPENDENCY",
@@ -2820,7 +2876,7 @@
       "implementacao": "Jobs idempotentes com lease e orçamento, faseados entre coleta e preparo de cada base, com finalização opcional sob política aprovada. O relógio sozinho não finaliza.",
       "validacao_local": "VALIDADO_LOCAL_NO_ESCOPO_DESCRITO",
       "validacao_na_conta": "NAO_REALIZADA",
-      "publicacao": "PENDENTE_RECIBO_DA_INTEGRACAO",
+      "publicacao": "PUBLICADO_VERIFICADO_SOMENTE_ESCOPO_IMPLEMENTADO",
       "lacunas_de_implementacao": [
         "Execução natural após publicação não foi observada nesta revisão. As fontes ausentes continuam impedindo fechamento definitivo da base afetada."
       ],
@@ -2903,7 +2959,10 @@
         }
       ],
       "evidencias_na_conta": [],
-      "evidencias_de_publicacao": [],
+      "evidencias_de_publicacao": [
+        "docs/financial-automation/publication-live-20261113.json",
+        "docs/financial-automation/validation/final-local-20261113.json"
+      ],
       "dependencias_externas": [
         {
           "tipo": "EXTERNAL_DEPENDENCY",
@@ -2915,7 +2974,7 @@
       "implementacao": "Eventos e alocações recebem revisão/retificação explícita; reversão de alocação preserva original e sua competência. RETURN_QUEUE persistida mantém casos antigos dentro de200limite declarado.",
       "validacao_local": "VALIDADO_LOCAL_NO_ESCOPO_DESCRITO",
       "validacao_na_conta": "NAO_REALIZADA",
-      "publicacao": "PENDENTE_RECIBO_DA_INTEGRACAO",
+      "publicacao": "PUBLICADO_VERIFICADO_SOMENTE_ESCOPO_IMPLEMENTADO",
       "lacunas_de_implementacao": [
         "Descoberta de casos ainda não observados requer capacidade real. Ajuste de cada nova fonte depende de seu adapter/evidência; nenhuma API ou grant foi presumido."
       ],
@@ -3006,7 +3065,10 @@
         }
       ],
       "evidencias_na_conta": [],
-      "evidencias_de_publicacao": [],
+      "evidencias_de_publicacao": [
+        "docs/financial-automation/publication-live-20261113.json",
+        "docs/financial-automation/validation/final-local-20261113.json"
+      ],
       "dependencias_externas": [
         {
           "tipo": "EXTERNAL_DEPENDENCY",
@@ -3018,7 +3080,7 @@
       "implementacao": "UI V4.1 com oito áreas, evolução diária, barras/componentes/estágios, cenários e vencimentos, tabela/CSV das mesmas linhas canônicas, drilldown de eventos e UI de estoque/obrigações com escolhas do servidor. A ponte de repasse líquido não inventa bruto.",
       "validacao_local": "VALIDADO_LOCAL_NO_ESCOPO_DESCRITO",
       "validacao_na_conta": "NAO_REALIZADA",
-      "publicacao": "PENDENTE_RECIBO_DA_INTEGRACAO",
+      "publicacao": "PUBLICADO_VERIFICADO_SOMENTE_ESCOPO_IMPLEMENTADO",
       "lacunas_de_implementacao": [
         "QA final do Worker gerado após a última mudança e publicação precisam de recibo próprio. Faltas de fonte aparecem em estado desconhecido, não como gráfico demonstrativo."
       ],
@@ -3107,7 +3169,10 @@
         }
       ],
       "evidencias_na_conta": [],
-      "evidencias_de_publicacao": [],
+      "evidencias_de_publicacao": [
+        "docs/financial-automation/publication-live-20261113.json",
+        "docs/financial-automation/validation/final-local-20261113.json"
+      ],
       "dependencias_externas": [
         {
           "tipo": "EXTERNAL_DEPENDENCY",
@@ -3124,7 +3189,7 @@
       "implementacao": "Projeção separa banco, obrigações e reserva; registry de obrigações fornece snapshots reais do ledger declarado para seleção/associação auditada. Não reconhece aporte/empréstimo como receita. Tabelas e exportação CSV usam cenários/obrigações canônicos do servidor, incluindo data e fonte; valores e vencimentos desconhecidos ficam pendentes.",
       "validacao_local": "VALIDADO_LOCAL_NO_ESCOPO_DESCRITO",
       "validacao_na_conta": "NAO_REALIZADA",
-      "publicacao": "PENDENTE_RECIBO_DA_INTEGRACAO",
+      "publicacao": "PUBLICADO_VERIFICADO_SOMENTE_ESCOPO_IMPLEMENTADO",
       "lacunas_de_implementacao": [
         "Banco/compromissos externos e previsão completa da produção continuam desconhecidos sem fontes específicas.",
         "Valor disponível/caixa livre permanece parcial enquanto saldo e cobertura não forem confirmados."
@@ -3228,7 +3293,10 @@
         }
       ],
       "evidencias_na_conta": [],
-      "evidencias_de_publicacao": [],
+      "evidencias_de_publicacao": [
+        "docs/financial-automation/publication-live-20261113.json",
+        "docs/financial-automation/validation/final-local-20261113.json"
+      ],
       "dependencias_externas": [
         {
           "tipo": "EXTERNAL_DEPENDENCY",
@@ -3240,7 +3308,7 @@
       "implementacao": "Interface mostra capacidades/cobertura/corte, códigos de pendência, valores conhecidos e próxima ação quando fornecidos; erro503 conserva última leitura marcada e403 limpa dados.",
       "validacao_local": "VALIDADO_LOCAL_NO_ESCOPO_DESCRITO",
       "validacao_na_conta": "NAO_REALIZADA",
-      "publicacao": "PENDENTE_RECIBO_DA_INTEGRACAO",
+      "publicacao": "PUBLICADO_VERIFICADO_SOMENTE_ESCOPO_IMPLEMENTADO",
       "lacunas_de_implementacao": [
         "Diagnóstico não contém a telemetria completa de todas as futuras fontes Wallet/Payout/old-cases ainda sem coletor.",
         "Nem todo código de pendência possui quantidade/valor afetado confiável; campos ausentes permanecem desconhecidos."
@@ -3392,7 +3460,10 @@
         }
       ],
       "evidencias_na_conta": [],
-      "evidencias_de_publicacao": [],
+      "evidencias_de_publicacao": [
+        "docs/financial-automation/publication-live-20261113.json",
+        "docs/financial-automation/validation/final-local-20261113.json"
+      ],
       "dependencias_externas": [
         {
           "tipo": "EXTERNAL_DEPENDENCY",
@@ -3404,7 +3475,7 @@
       "implementacao": "Contexto comercial e wrappers conferem namespace/domínio exatos; escopos de razão/fechamentos/fontes/conciliação são guardados. CSRF, permissões por capability, revalidação e minimização testados; 59 novos objetos estão no manifesto.",
       "validacao_local": "VALIDADO_LOCAL_NO_ESCOPO_DESCRITO",
       "validacao_na_conta": "NAO_REALIZADA",
-      "publicacao": "PENDENTE_RECIBO_DA_INTEGRACAO",
+      "publicacao": "PUBLICADO_VERIFICADO_SOMENTE_ESCOPO_IMPLEMENTADO",
       "lacunas_de_implementacao": [
         "QA autenticada com dois usuários/empresas reais não foi realizada; evidências usam identidades sintéticas."
       ],
@@ -3545,7 +3616,10 @@
         }
       ],
       "evidencias_na_conta": [],
-      "evidencias_de_publicacao": [],
+      "evidencias_de_publicacao": [
+        "docs/financial-automation/publication-live-20261113.json",
+        "docs/financial-automation/validation/final-local-20261113.json"
+      ],
       "dependencias_externas": [
         {
           "tipo": "EXTERNAL_DEPENDENCY",
@@ -3567,7 +3641,7 @@
       "implementacao": "DDL aditivo instala separadamente sem alterar SCHEMA legado/workspace_setup v1; migração/backfill/restore legados e ingestão repetida são ensaiados localmente com preservação de histórico. Novo registry de obrigações acrescenta10objetos Finance, mantendo isolamento.",
       "validacao_local": "VALIDADO_LOCAL_NO_ESCOPO_DESCRITO",
       "validacao_na_conta": "NAO_REALIZADA",
-      "publicacao": "PENDENTE_RECIBO_DA_INTEGRACAO",
+      "publicacao": "PUBLICADO_VERIFICADO_SOMENTE_ESCOPO_IMPLEMENTADO",
       "lacunas_de_implementacao": [
         "Base inicial de abertura/carteira/banco e backfill completo do novo razão não foram obtidos.",
         "Componentes históricos não capturados não são reconstruídos por inferência; inventário de alguns meses em cache não comprova histórico completo.",
@@ -3706,13 +3780,16 @@
         }
       ],
       "evidencias_na_conta": [],
-      "evidencias_de_publicacao": [],
+      "evidencias_de_publicacao": [
+        "docs/financial-automation/publication-live-20261113.json",
+        "docs/financial-automation/validation/final-local-20261113.json"
+      ],
       "dependencias_externas": [],
       "situacao_base": "EXISTENTE_PARCIAL_OU_NOVO_A_IMPLEMENTAR",
       "implementacao": "169 testes focados em 20 arquivos passaram nesta conferência: serviços reais locais, SQLite, conservação, fontes, cliente, permissões, revisões e alocações.",
       "validacao_local": "VALIDADO_LOCAL_NO_ESCOPO_DESCRITO",
       "validacao_na_conta": "NAO_REALIZADA",
-      "publicacao": "PENDENTE_RECIBO_DA_INTEGRACAO",
+      "publicacao": "PUBLICADO_VERIFICADO_SOMENTE_ESCOPO_IMPLEMENTADO",
       "lacunas_de_implementacao": [
         "Os 24 cenários são discriminados abaixo; T08/T14/T22 permanecem parciais no escopo ponta a ponta.",
         "Este registro não substitui suite completa obrigatória, Python, Worker normal/minificado, Chromium, CI e release; o responsável da integração registra esses gates separadamente."
@@ -3883,7 +3960,7 @@
       "implementacao": "Não houve conferência operacional de semana/mês reais. Ausência de sessão/extrato/grant permanece explícita.",
       "validacao_local": "NAO_APLICAVEL_SEM_FONTES_REAIS",
       "validacao_na_conta": "NAO_REALIZADA",
-      "publicacao": "PENDENTE_RECIBO_DA_INTEGRACAO",
+      "publicacao": "ACEITE_OPERACIONAL_PENDENTE_NAO_COMPROVADO_POR_DEPLOY",
       "lacunas_de_implementacao": [],
       "arquivos_novos_planejados": [],
       "cobertura_base_funcoes": [
@@ -4036,7 +4113,10 @@
         }
       ],
       "evidencias_na_conta": [],
-      "evidencias_de_publicacao": [],
+      "evidencias_de_publicacao": [
+        "docs/financial-automation/publication-live-20261113.json",
+        "docs/financial-automation/validation/final-local-20261113.json"
+      ],
       "dependencias_externas": [
         {
           "tipo": "EXTERNAL_DEPENDENCY",
@@ -4048,9 +4128,8 @@
       "implementacao": "Novos DTOs e rotas coexistem com null/NOT_COMPARED v1; publicação continua destinada ao domínio oficial e segue os gates reais do projeto.",
       "validacao_local": "VALIDADO_LOCAL_NO_ESCOPO_DESCRITO",
       "validacao_na_conta": "NAO_REALIZADA",
-      "publicacao": "PENDENTE_RECIBO_DA_INTEGRACAO",
+      "publicacao": "PUBLICADO_VERIFICADO_SOMENTE_ESCOPO_IMPLEMENTADO",
       "lacunas_de_implementacao": [
-        "Commit/CI/deploy e bytes efetivamente servidos não são comprovados por este documento; integrar recibo final próprio antes de declarar publicação.",
         "Conferência de código publicado é diferente de conferência financeira real."
       ],
       "arquivos_novos_planejados": [],
@@ -4132,6 +4211,9 @@
         "web/finance/tests/financial-source-events.test.mjs",
         "web/finance/tests/financial-source-original-items-v3.test.mjs",
         "web/finance/tests/financial-source-worker.test.mjs"
+      ],
+      "evidencias_resolvidas_na_integracao": [
+        "Commit, CI, três Workers ativos/latest, configurações e arquivos públicos conferidos em publication-live-20261113.json; aceite financeiro continua separado."
       ]
     }
   ],
@@ -4877,18 +4959,15 @@
     "valores_reais": "Não lidos nem certificados."
   },
   "verificacao_executada": {
-    "estado": "FOCUSED_LOCAL_169_PASS",
-    "evidencia": "docs/financial-automation/validation/local-focused-20261113.json",
-    "node_passed": 169,
+    "estado": "FINAL_CI_AND_TECHNICAL_PUBLIC_PUBLICATION_VERIFIED",
+    "node_passed": 4430,
     "node_failed": 0,
     "node_skipped": 0,
-    "python_passed": null,
-    "generated_worker_qa": null,
-    "ci": null,
-    "publicacao": null,
-    "conta_real": "NAO_VALIDADA",
-    "nota": "A contagem é de uma execução focalizada de 20 arquivos. Não somar com runs anteriores53/42 que contêm testes repetidos. Alterações de integração posteriores (incluindo fases do job) requerem novo gate final; esta execução não certifica o candidato posterior.",
-    "candidate_changed_after_focused_run": true
+    "python_passed": 67,
+    "ci": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43527800185",
+    "evidencia": "docs/financial-automation/validation/final-local-20261113.json",
+    "publicacao": "docs/financial-automation/publication-live-20261113.json",
+    "conta_real": "NAO_VALIDADA"
   },
   "estados_permitidos": {
     "implementacao": [
@@ -4913,10 +4992,47 @@
   "revisao_execucao": {
     "data": "2026-11-13",
     "base_head": "6578e21098ff799e59433af92880d249432ceeb4",
-    "candidate_state": "WORKING_TREE_LOCAL",
+    "candidate_state": "SOURCE_COMMIT_PUBLISHED_TECHNICAL_PUBLIC_SCOPE",
     "evidence": "docs/financial-automation/validation/local-focused-20261113.json",
-    "publication": "PENDING_INTEGRATION_RECEIPT",
+    "publication": "docs/financial-automation/publication-live-20261113.json",
     "financial_account_acceptance": "NOT_PERFORMED",
-    "additional_inventory_validation": "docs/financial-automation/validation/inventory-focused-20261113.json"
+    "additional_inventory_validation": "docs/financial-automation/validation/inventory-focused-20261113.json",
+    "source_commit": "e6bbb189ec2331c0a07136c5b9f720e2e300b5d4"
+  },
+  "publicacao_da_release": {
+    "status": "PUBLICADO_VERIFICADO_ESCOPO_TECNICO_PUBLICO",
+    "source_commit": "e6bbb189ec2331c0a07136c5b9f720e2e300b5d4",
+    "verified_at": "2026-11-13T23:50:26.229Z",
+    "receipt": "docs/financial-automation/publication-live-20261113.json",
+    "public_verification": "docs/financial-automation/publication-live-20261113.json",
+    "financial_account_acceptance": "NAO_REALIZADA",
+    "wallet_payout_capability": "UNKNOWN",
+    "m2": "OPEN",
+    "m22": "OPEN"
+  },
+  "verificacao_local_inicial": {
+    "estado": "FOCUSED_LOCAL_169_PASS",
+    "evidencia": "docs/financial-automation/validation/local-focused-20261113.json",
+    "node_passed": 169,
+    "node_failed": 0,
+    "node_skipped": 0,
+    "python_passed": null,
+    "generated_worker_qa": null,
+    "ci": null,
+    "publicacao": null,
+    "conta_real": "NAO_VALIDADA",
+    "nota": "A contagem é de uma execução focalizada de 20 arquivos. Não somar com runs anteriores53/42 que contêm testes repetidos. Alterações de integração posteriores (incluindo fases do job) requerem novo gate final; esta execução não certifica o candidato posterior.",
+    "candidate_changed_after_focused_run": true
+  },
+  "contagens_apos_publicacao": {
+    "requisitos": {
+      "VALIDADO_LOCAL": 12,
+      "PARCIAL": 15,
+      "EXTERNAL_DEPENDENCY": 1
+    },
+    "cenarios": {
+      "VALIDADO_LOCAL": 21,
+      "PARCIAL": 3
+    }
   }
 }

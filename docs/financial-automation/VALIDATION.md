@@ -1,12 +1,24 @@
 # Validação do complemento financeiro — 13/11/2026
 
+<!-- FINANCIAL_AUTOMATION_PUBLICATION -->
+## Gate final e publicação técnica
+
+Fonte `e6bbb189ec2331c0a07136c5b9f720e2e300b5d4`; CI[43527800185](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43527800185) concluída `success` para `e6bbb189ec2331c0a07136c5b9f720e2e300b5d4`. Resultado da execução completa final: **4430 Node; 0 falhas; 0 ignorados; 0 cancelados; 67 Python**. Proveniência e comandos em docs/financial-automation/validation/final-local-20261113.json. A contagem desta execução é própria; não somar os runs focalizados169/83, os testes de UI ou execuções anteriores.
+
+A release2026-11-13.2 foi conferida em 2026-11-13T23:50:26.229Z: App`3cc631da-4a91-4fd0-b030-c41537cc8f43`, Auth`c00d5164-f663-4cdf-b137-28f345e181c2`, Finance`50b31451-c6cf-4456-bd09-be5d1956e0da`; fontes raw/configuração e assets em [publication-live-20261113.json](publication-live-20261113.json). Escopo público e autenticação em [publication-live-20261113.json](publication-live-20261113.json). A QA local é sintética: normal/minificado,320/1365px,claro/escuro; controles44px, navegação com documento novo comprovado, CSV canônico,403/503 e falha do asset.
+
+**Aceite financeiro da conta real: NOT_PERFORMED.** Não houve comprovação de Wallet/Payout, conta/saldos bancários, coorte completa de conclusão, produção/estoque de abertura ou valores de uma semana/mês da loja. Ads/PROMO, saques e transferências não foram executados. A matriz continua separando validação local, gaps internos, dependências externas e aceitação financeira. O histórico focalizado abaixo descreve cortes anteriores e não define o recibo final.
+<!-- END_FINANCIAL_AUTOMATION_PUBLICATION -->
+
+**Histórico da preparação local (anterior ao recibo final acima):**
+
 Este relatório acompanha o candidato local sobre `6578e21098ff799e59433af92880d249432ceeb4` (main após PR #120). Os 28 requisitos e 24 cenários foram reconciliados com os arquivos atuais na [matriz](MATRIZ_EXECUCAO.json), mantendo os inputs originais intactos. `VALIDADO_LOCAL` descreve o limite do teste indicado; não equivale a conclusão de todas as integrações, publicação ou aceitação financeira da loja.
 
 ## Execução observada nesta revisão
 
 O [recibo JSON](validation/local-focused-20261113.json) contém a lista exata dos 20 arquivos e o comando `node --test --test-reporter=tap`: **169 aprovados; 0 falhas; 0 pulados; 0 cancelados**. Ambiente: Node/SQLite local, fontes e identidades sintéticas. O log bruto desta sessão está em `/tmp/financial-documentation-focused-20261113.tap` e não é dependência de execução do aplicativo.
 
-Não somar esse total aos runs anteriores de 53 ou 42 testes: vários arquivos se repetem. Esta execução não incluiu a suíte completa do projeto, Python, CI, todos os Workers gerados, a verificação do domínio ou a sessão real do proprietário. Os gates finais e o recibo de publicação cabem à integração da release e devem ser acrescentados com evidência própria.
+Não somar esse total aos runs anteriores de 53 ou 42 testes: vários arquivos se repetem. Esta execução não incluiu a suíte completa do projeto, Python, CI, todos os Workers gerados, a verificação do domínio ou a sessão real do proprietário. Os gates finais e o recibo de publicação da integração constam da seção final acima; este recibo focalizado169 continua histórico.
 
 O candidato continuou recebendo alterações de integração depois desse run focalizado, incluindo o faseamento do job entre coleta e mutações de fechamento. Portanto, o recibo de 169 testes é evidência daquele corte local, não uma aprovação automática do candidato final. Os testes afetados devem passar novamente no gate final; não reutilizar essa contagem como resultado da versão publicada.
 
@@ -93,7 +105,7 @@ O cliente passou pelos testes focados e perfis nativos normal/minificado, deskto
 
 ## Publicação e conferência operacional
 
-**Nenhum recibo de CI/deploy ou observação da nova versão no domínio é afirmado por esta revisão documental.** A integração deve registrar commit, resultado dos gates obrigatórios, migrações/backup/rollback e bytes realmente servidos. Publicação técnica e conferência financeira são duas evidências distintas.
+A preparação histórica abaixo não executou a publicação. O recibo final no início deste documento agora comprova CI, versões, bytes e verificações públicas desta entrega. Publicação técnica e conferência financeira continuam sendo duas evidências distintas.
 
 Para aceitar operacionalmente um fechamento, ainda é necessário comparar uma semana encerrada e um mês encerrado usando fontes equivalentes de pedidos/repasses, ajustes/devoluções, Ads, carteira/saques, banco, custo histórico e obrigações. Não há sessão autenticada/extrato real/grant confirmado para essa comparação nesta trilha. Nenhum lucro, saldo ou disponibilidade real foi certificado e nenhum movimento de dinheiro, mensagem ou fato operacional de QA foi criado por estes testes.
 
