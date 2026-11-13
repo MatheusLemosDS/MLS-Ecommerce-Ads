@@ -1,11 +1,11 @@
 {
   "schema": "mls_release_candidate_v1",
   "base_commit": "0016c4b78d45c47066b259bbaf42578662e11e35",
-  "prepared_source_commit": "f1d3d275d502ced190e7eb837b7690f47a965ee2",
+  "prepared_source_commit": "4607942e462cdebb206967656c28b7c80f98eed1",
   "owner_authorization": "OWNER_REQUESTED_V41_LIVE_2026_11_11",
   "commercial_writes_allowed": false,
   "expected_hashes": {
-    "app": "fef52cab7c01a84b4bf3fa05011e64bfabfe0eaef39347c44e77739bfca07bb2",
+    "app": "e6354a2e8cffbafe10aacd19aa976ba99df166a98715b6a6914f17f7fa816367",
     "auth": "ca7f08ad02993bf7d29d91ce95f689ab845775cbd0fec5c27549aaf261510d74",
     "finance": "ffbcea3b7ffe5c0a94b0d4d8c4908738e6da76386040995bba982060a5f9bb71"
   },
@@ -72,6 +72,10 @@
     "web/cloudflare/tests/mls-product-workbench-chrome.test.mjs",
     "web/cloudflare/tests/mls-variant-order-chrome.test.mjs",
     "web/cloudflare/tests/mls-verified-charts.test.mjs",
+    "web/cloudflare/tests/production-closing-workspace-chrome.test.mjs",
+    "web/cloudflare/tests/today-estimated-profit-chrome.test.mjs",
+    "web/cloudflare/tests/today-estimated-profit-client.test.mjs",
+    "web/cloudflare/tests/workspace-navigation-rework-chrome.test.mjs",
     "workers/app/browser-assets-published.json"
   ]
 }
