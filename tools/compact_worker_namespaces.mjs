@@ -7,6 +7,13 @@ const schema='worker_server_namespaces_v1';
 const exact=(value,keys)=>value&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).length===keys.length&&keys.every(key=>Object.hasOwn(value,key));
 const browserSchema='worker_browser_factories_v1';
 const browserFactoryNames=new Set(['createCashStatementImportParser','createExternalCashProtocol','createBankReconciliationController']);
+// These new server-only namespaces have no Function#toString consumers.
+// Preserve their public property names and the outer destructuring boundary;
+// shorten only private implementation names to fit the unchanged Worker cap.
+const financialHostNamespaces=new Set(['mlsFinancialSourceCapabilities','mlsFinancialSourceFrame','mlsFinancialAllocationFrame','mlsFinancialObligationFrame','mlsFinancialPrivateProtocol','mlsAppFinancialAutomation','mlsFinancialEventLedger','mlsFinancialEventStore','mlsFinancialAccountingSchedule','mlsFinancialAccountingPolicy','mlsFinancialAccountingProjection','mlsFinancialCloseStore','mlsFinancialAutomationStore','mlsFinancialAutomationBridge','mlsFinancialReturnsTracker','mlsFinancialInventoryBridge','mlsFinancialAutomationService','mlsFinancialAutomationJobs','mlsFinancialAutomationAdsSources','mlsFinancialAutomationCashSources','mlsFinancialObligationAppSource','mlsFinancialAutomationSources','mlsFinancialAutomationView']);
+// The builders already freeze every browser consumer of these pure host
+// models. Their exported names and frozen browser strings remain unchanged.
+const compactHostModels=new Set(['brazaBusinessMonth','brazaHermesFinancialContext','brazaHistoricalCostEvidence','brazaBusinessCostDiagnostics','brazaCatalogClassification','brazaBusinessReconciliation','brazaBusinessFinancialCloseout','brazaHistoricalCostOrchestration','mlsReturnManufacturingLinksStore','brazaBusinessVariantAttribution']);
 
 // Only these new, self-contained browser factories may shorten local names.
 // Legacy client values and every server namespace retain their existing profile.
@@ -41,7 +48,8 @@ export function compactWorkerNamespaces(input){
   // A generated Worker is an ES module and therefore strict. A fragment has
   // no import/export syntax, so explicitly preserve that parse context rather
   // than letting sloppy-script Annex B rewrite block-scoped functions.
-  const result=transformSync('"use strict";\n'+row.source.slice(0,boundary),{loader:'js',target:'esnext',charset:'utf8',legalComments:'inline',treeShaking:false,minifyWhitespace:true,minifySyntax:false,minifyIdentifiers:false,sourcefile:row.name+'.mjs'});
+  const financial=financialHostNamespaces.has(row.name)||compactHostModels.has(row.name);
+  const result=transformSync('"use strict";\n'+row.source.slice(0,boundary),{loader:'js',target:'esnext',charset:'utf8',legalComments:'inline',treeShaking:false,minifyWhitespace:true,minifySyntax:financial,minifyIdentifiers:financial,keepNames:compactHostModels.has(row.name),sourcefile:row.name+'.mjs'});
   if(result.warnings.length)throw Error('WORKER_NAMESPACE_COMPACTION_WARNING');
   return {name:row.name,source:result.code+tail};
  })};

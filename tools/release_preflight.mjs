@@ -13,7 +13,8 @@ import {execFileSync} from 'node:child_process';
 // reviewable candidate update, never a wildcard or a bypass of this verifier.
 export const RELEASE_ACCEPTED_OWNER_AUTHORIZATIONS=Object.freeze([
  'OWNER_REQUESTED_ALL_PREPARED_IMPROVEMENTS_LIVE_2026_10_30',
- 'OWNER_REQUESTED_V41_LIVE_2026_11_11'
+ 'OWNER_REQUESTED_V41_LIVE_2026_11_11',
+ 'OWNER_REQUESTED_FINANCIAL_AUTOMATION_LIVE_2026_11_13'
 ]);
 function literalReleasePath(value){
  return typeof value==='string'&&value.length>0&&value===value.trim()&&
@@ -88,7 +89,38 @@ export const RELEASE_APPROVED_PROTECTED_FILES=Object.freeze([
  "workers/app/browser-assets-published.json",
  "workers/app/commercial-account.json",
  "workers/auth/commercial-account.json",
- "workers/finance/commercial-account.json"
+ "workers/finance/commercial-account.json",
+ "web/finance/src/financial-allocation-frame.mjs",
+ "web/finance/src/financial-allocation-worker.mjs",
+ "web/finance/src/financial-bank-connector.mjs",
+ "web/finance/src/financial-cash-allocation.mjs",
+ "web/finance/src/financial-obligation-frame.mjs",
+ "web/finance/src/financial-obligation-worker.mjs",
+ "web/finance/src/financial-order-components.mjs",
+ "web/finance/src/financial-private-protocol.mjs",
+ "web/finance/src/financial-source-capabilities.mjs",
+ "web/finance/src/financial-source-collection.mjs",
+ "web/finance/src/financial-source-events.mjs",
+ "web/finance/src/financial-source-frame.mjs",
+ "web/finance/src/financial-source-worker.mjs",
+ "web/finance/tests/external-cash-allocation-guard.test.mjs",
+ "web/finance/tests/financial-allocation-frame.test.mjs",
+ "web/finance/tests/financial-allocation-worker.test.mjs",
+ "web/finance/tests/financial-bank-connector.test.mjs",
+ "web/finance/tests/financial-cash-allocation-store.test.mjs",
+ "web/finance/tests/financial-cash-allocation.test.mjs",
+ "web/finance/tests/financial-obligation-allocation.test.mjs",
+ "web/finance/tests/financial-obligation-frame.test.mjs",
+ "web/finance/tests/financial-obligation-worker.test.mjs",
+ "web/finance/tests/financial-order-components.test.mjs",
+ "web/finance/tests/financial-private-fixture.mjs",
+ "web/finance/tests/financial-private-protocol.test.mjs",
+ "web/finance/tests/financial-production-integration.test.mjs",
+ "web/finance/tests/financial-source-capabilities.test.mjs",
+ "web/finance/tests/financial-source-collection.test.mjs",
+ "web/finance/tests/financial-source-events.test.mjs",
+ "web/finance/tests/financial-source-original-items-v3.test.mjs",
+ "web/finance/tests/financial-source-worker.test.mjs",
 ]);
 
 

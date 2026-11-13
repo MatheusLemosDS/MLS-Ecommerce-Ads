@@ -125,18 +125,64 @@ def compact_server_namespaces(output, manual_namespaces=()):
     for row in rows:
         if output.count(row['source'])!=1:
             raise ValueError('Ambiguous server namespace: '+row['name'])
-    request={'schema':'worker_server_namespaces_v1','namespaces':rows}
-    result=subprocess.run(['node',str(root.parent.parent/'tools'/'compact_worker_namespaces.mjs')],input=json.dumps(request),capture_output=True,text=True,check=True,timeout=30)
-    value=json.loads(result.stdout)
-    if set(value)!={'schema','namespaces'} or value['schema']!=request['schema'] or not isinstance(value['namespaces'],list) or len(value['namespaces'])!=len(rows):
-        raise ValueError('Invalid compacted namespace response')
-    for original,compact in zip(rows,value['namespaces']):
-        if set(compact)!={'name','source'} or compact['name']!=original['name'] or not isinstance(compact['source'],str) or not compact['source']:
-            raise ValueError('Invalid compacted namespace row')
-        output=output.replace(original['source'],compact['source'],1)
+    # Keep each bounded transform request within the established 128-row cap.
+    for offset in range(0,len(rows),128):
+        batch=rows[offset:offset+128]
+        request={'schema':'worker_server_namespaces_v1','namespaces':batch}
+        result=subprocess.run(['node',str(root.parent.parent/'tools'/'compact_worker_namespaces.mjs')],input=json.dumps(request),capture_output=True,text=True,timeout=30)
+        if result.returncode: raise ValueError('Server namespace compaction failed: '+result.stderr.strip())
+        value=json.loads(result.stdout)
+        if set(value)!={'schema','namespaces'} or value['schema']!=request['schema'] or not isinstance(value['namespaces'],list) or len(value['namespaces'])!=len(batch):
+            raise ValueError('Invalid compacted namespace response')
+        for original,compact in zip(batch,value['namespaces']):
+            if set(compact)!={'name','source'} or compact['name']!=original['name'] or not isinstance(compact['source'],str) or not compact['source']:
+                raise ValueError('Invalid compacted namespace row')
+            output=output.replace(original['source'],compact['source'],1)
     return output
+# Versioned financial sidecars preserve the existing v1 contracts and stores.
+def financial_namespace(filename, namespace):
+    if filename=='financial-automation-view.mjs':
+        names='FINANCIAL_AUTOMATION_CSS,financialAutomationBody'
+        output='const '+namespace+'=(()=>{const FINANCIAL_AUTOMATION_CSS="";function financialAutomationBody(){return \'<div id="financialAutomationHost"><p class="notice" role="status">Carregando a área financeira. Se ela não abrir, recarregue a página.</p></div>\';}return {'+names+'};})();\nconst {'+names+'}='+namespace+';\n'
+        server_namespace_sources.append({'name':namespace,'source':output})
+        return output
+    raw=(root/'src'/filename).read_text()
+    names=re.findall(r'^export (?:async )?(?:function|class|const) ([A-Za-z_$][A-Za-z0-9_$]*)',raw,flags=re.M)
+    if not names or len(names)!=len(set(names)): raise ValueError('Invalid financial exports: '+filename)
+    return source_namespace(filename,namespace,','.join(names))
+
+financial_transport='\n'.join([
+    financial_namespace('../../finance/src/financial-source-capabilities.mjs','mlsFinancialSourceCapabilities'),
+    financial_namespace('../../finance/src/financial-source-frame.mjs','mlsFinancialSourceFrame'),
+    financial_namespace('../../finance/src/financial-allocation-frame.mjs','mlsFinancialAllocationFrame'),
+    financial_namespace('../../finance/src/financial-obligation-frame.mjs','mlsFinancialObligationFrame'),
+    financial_namespace('../../finance/src/financial-private-protocol.mjs','mlsFinancialPrivateProtocol'),
+    financial_namespace('app-financial-automation.mjs','mlsAppFinancialAutomation'),
+])
+financial_server='\n'.join(financial_namespace(filename,namespace) for filename,namespace in [
+    ('financial-event-ledger.mjs','mlsFinancialEventLedger'),
+    ('financial-event-store.mjs','mlsFinancialEventStore'),
+    ('financial-accounting-schedule.mjs','mlsFinancialAccountingSchedule'),
+    ('financial-accounting-policy.mjs','mlsFinancialAccountingPolicy'),
+    ('financial-accounting-projection.mjs','mlsFinancialAccountingProjection'),
+    ('financial-close-store.mjs','mlsFinancialCloseStore'),
+    ('financial-automation-store.mjs','mlsFinancialAutomationStore'),
+    ('financial-automation-bridge.mjs','mlsFinancialAutomationBridge'),
+    ('financial-returns-tracker.mjs','mlsFinancialReturnsTracker'),
+    ('financial-inventory-bridge.mjs','mlsFinancialInventoryBridge'),
+    ('financial-automation-service.mjs','mlsFinancialAutomationService'),
+    ('financial-automation-jobs.mjs','mlsFinancialAutomationJobs'),
+    ('financial-automation-ads-sources.mjs','mlsFinancialAutomationAdsSources'),
+    ('financial-automation-cash-sources.mjs','mlsFinancialAutomationCashSources'),
+    ('financial-obligation-app-source.mjs','mlsFinancialObligationAppSource'),
+    ('financial-automation-sources.mjs','mlsFinancialAutomationSources'),
+    ('financial-automation-view.mjs','mlsFinancialAutomationView'),
+])
+# Evaluate the factory snapshots inside the existing workspace asset build,
+# before Worker compaction. No Function#toString crosses a minifier boundary.
+financial_browser='\n'.join(re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src'/name).read_text(),flags=re.M),flags=re.M) for name in ['financial-automation-view.mjs','financial-automation-allocation-client.mjs','financial-inventory-client.mjs','financial-automation-client.mjs'])
 tenant_schema=source_namespace('tenant-schema-manifest.mjs','mlsTenantSchema','TENANT_APP_TABLES,TENANT_FINANCE_TABLES,TENANT_SCHEMA_OBJECTS')
-tenant_storage=source_namespace('tenant-storage.mjs','mlsTenantStorage','TenantIsolationError,tenantStorageIdentity,isTenantDatabase,tenantDatabaseMatchesContext,tenantPrepareTechnicalCreate,TenantInitializationMap,TenantInitializationSet,tenantNamespace,createTenantDatabase,createTenantKeyValue')
+tenant_storage=source_namespace('tenant-storage.mjs','mlsTenantStorage','TenantIsolationError,tenantStorageIdentity,isTenantDatabase,tenantDatabaseHasContext,tenantDatabaseMatchesContext,tenantPrepareTechnicalCreate,TenantInitializationMap,TenantInitializationSet,tenantNamespace,createTenantDatabase,createTenantKeyValue')
 account_policy=source_namespace('account-policy.mjs','mlsAccountPolicy','ACCOUNT_POLICY,ACCOUNT_ROLES,roleCapabilities,roleAllowedCapabilities')
 commercial_context=source_namespace('commercial-context.mjs','mlsCommercialContext','COMMERCIAL_ENVIRONMENT_ALLOWED_KEYS,commercialContextFromPrincipal,isCommercialContext,resolveCommercialContext,assertCommercialCapability,bindCommercialEnvironment,finalizeCommercialResponse,stripUntrustedCommercialHeaders')
 commercial_authorization=source_namespace('commercial-authorization.mjs','mlsCommercialAuthorization','tenantAuthorizationGuard')
@@ -480,7 +526,7 @@ production_source='const PRODUCTION_BROWSER_CLIENT=['+','.join('(()=>{\n'+produc
 browser_asset_sources=[row for row in browser_asset_sources if row.get('group')!='production']
 browser_asset_sources.append({'id':'production','export_name':'PRODUCTION_BROWSER_CLIENT','source':production_source})
 # Preserve the fully frozen Admin controller bytes; distribution only, same last-script order.
-browser_asset_sources.append({'id':'workspace','export_name':'CLIENT','source':client})
+browser_asset_sources.append({'id':'workspace','export_name':'CLIENT','source':financial_browser+'\n'+client})
 client="const CLIENT='';\n"
 asset_build=subprocess.run(['node',str(root.parent.parent/'tools'/'browser_assets.mjs'),str(root.parent.parent)],input=json.dumps({'schema':'mls_browser_assets_build_v1','entries':browser_asset_sources}),capture_output=True,text=True,timeout=30)
 if asset_build.returncode:
@@ -488,7 +534,7 @@ if asset_build.returncode:
 month_client="const BUSINESS_MONTH_CLIENT='';\n"
 browser_assets_manifest=source_namespace('browser-assets-manifest.mjs','mlsBrowserAssetsManifest','MLS_BROWSER_ASSET_MANIFEST')
 browser_assets=source_namespace('browser-assets.mjs','mlsBrowserAssets','browserAssetScript,browserWorkspaceFailureScript,serveMlsBrowserAsset')
-admin=browser_assets_manifest+'\n'+browser_assets+'\n'+order_operations+'\n'+order_operations_view+'\n'+weekly_operating_view+'\n'+app_release+'\n'+bank_reconciliation_view+'\n'+app_release_view+'\n'+agent_period_view+'\n'+monthly_profit_presentation+'\n'+dtf_layout+'\n'+dtf_view+'\n'+production_dtf+'\n'+cost_rule_learning+'\n'+saved_catalog_media+'\n'+catalog_classification+'\n'+historical_cost_evidence+'\n'+historical_cost_orchestration+'\n'+cost_rules+'\n'+cost_rules_view+'\n'+expense_ledger+'\n'+expense_schedule+'\n'+expense_ledger_view+'\n'+business_products+'\n'+business_month_publication+'\n'+business_original_items+'\n'+business_reconciliation+'\n'+incurred_production+'\n'+incurred_production_workspace+'\n'+production_confirmation_proposal+'\n'+production_confirmation_proposal_view+'\n'+production_weekly_close+'\n'+production_weekly_store+'\n'+production_coverage+'\n'+production_coverage_view+'\n'+production_weekly_view+'\n'+incurred_production_view+'\n'+physical_returns+'\n'+physical_returns_workspace+'\n'+returns_receipt_proposal+'\n'+returns_receipt_confirmation+'\n'+returns_original_items_view+'\n'+returns_case_cards_view+'\n'+physical_returns_view+'\n'+return_manufacturing_links+'\n'+return_manufacturing_links_workspace+'\n'+return_manufacturing_links_view+'\n'+business_historical_returns+'\n'+business_escrow_releases+'\n'+business_escrow_release_coverage+'\n'+business_income_overview+'\n'+business_income_detail+'\n'+business_pending_income_scan+'\n'+business_historical_release_calendars+'\n'+financial_audit_orchestration+'\n'+escrow_releases_view+'\n'+business_adjusted_balance+'\n'+business_financial_closeout+'\n'+financial_closeout_view+'\n'+business_reconciliation_view+'\n'+business_month_ads_history+'\n'+business_variant_attribution+'\n'+business_month+'\n'+agent_learning_report+'\n'+agent_learning+'\n'+daily_profit_presentation+'\n'+business_daily_summary+'\n'+weekly_operating_report+'\n'+weekly_operating_store+'\n'+business_month_view_state+'\n'+business_checkpoint+'\n'+business_sync+'\n'+business_history_sync+'\n'+hermes_context+'\n'+recorded_business_balance+'\n'+background_collection_diagnostics+'\n'+business_cost_diagnostics+'\n'+saved_order_items+'\n'+product_registry+'\n'+production_cost_periods+'\n'+production_cost_periods_view+'\n'+saved_catalog_view+'\n'+listing_factory_view+'\n'+ai_sales_view+'\n'+ai_sales_store+'\n'+automation_workspace+'\n'+production_daily_finance_view+'\n'+production_workspace_view+'\n'+business_day_view+'\n'+income_overview_client+'\n'+agent_art+'\n'+agent_learning_view+'\n'+mission_view+'\n'+agent_registry_view+'\n'+month_view+'\n'+month_client+'\n'+client+'\n'+view+'\n'+ads+'\n'+orders+'\n'+daily_shop_orders+'\n'+items+'\n'+variants+'\n'+observations+'\n'+production_costs+'\n'+operator_cost_corrections+'\n'+store_summary+'\n'+store_invoice_tax+'\n'+store_product_summary+'\n'+store_returns_summary+'\n'+store_admin+'\n'+variant_sync+'\n'+re.sub(r'^import .*\n','',admin,flags=re.M)
+admin=financial_server+'\n'+browser_assets_manifest+'\n'+browser_assets+'\n'+order_operations+'\n'+order_operations_view+'\n'+weekly_operating_view+'\n'+app_release+'\n'+bank_reconciliation_view+'\n'+app_release_view+'\n'+agent_period_view+'\n'+monthly_profit_presentation+'\n'+dtf_layout+'\n'+dtf_view+'\n'+production_dtf+'\n'+cost_rule_learning+'\n'+saved_catalog_media+'\n'+catalog_classification+'\n'+historical_cost_evidence+'\n'+historical_cost_orchestration+'\n'+cost_rules+'\n'+cost_rules_view+'\n'+expense_ledger+'\n'+expense_schedule+'\n'+expense_ledger_view+'\n'+business_products+'\n'+business_month_publication+'\n'+business_original_items+'\n'+business_reconciliation+'\n'+incurred_production+'\n'+incurred_production_workspace+'\n'+production_confirmation_proposal+'\n'+production_confirmation_proposal_view+'\n'+production_weekly_close+'\n'+production_weekly_store+'\n'+production_coverage+'\n'+production_coverage_view+'\n'+production_weekly_view+'\n'+incurred_production_view+'\n'+physical_returns+'\n'+physical_returns_workspace+'\n'+returns_receipt_proposal+'\n'+returns_receipt_confirmation+'\n'+returns_original_items_view+'\n'+returns_case_cards_view+'\n'+physical_returns_view+'\n'+return_manufacturing_links+'\n'+return_manufacturing_links_workspace+'\n'+return_manufacturing_links_view+'\n'+business_historical_returns+'\n'+business_escrow_releases+'\n'+business_escrow_release_coverage+'\n'+business_income_overview+'\n'+business_income_detail+'\n'+business_pending_income_scan+'\n'+business_historical_release_calendars+'\n'+financial_audit_orchestration+'\n'+escrow_releases_view+'\n'+business_adjusted_balance+'\n'+business_financial_closeout+'\n'+financial_closeout_view+'\n'+business_reconciliation_view+'\n'+business_month_ads_history+'\n'+business_variant_attribution+'\n'+business_month+'\n'+agent_learning_report+'\n'+agent_learning+'\n'+daily_profit_presentation+'\n'+business_daily_summary+'\n'+weekly_operating_report+'\n'+weekly_operating_store+'\n'+business_month_view_state+'\n'+business_checkpoint+'\n'+business_sync+'\n'+business_history_sync+'\n'+hermes_context+'\n'+recorded_business_balance+'\n'+background_collection_diagnostics+'\n'+business_cost_diagnostics+'\n'+saved_order_items+'\n'+product_registry+'\n'+production_cost_periods+'\n'+production_cost_periods_view+'\n'+saved_catalog_view+'\n'+listing_factory_view+'\n'+ai_sales_view+'\n'+ai_sales_store+'\n'+automation_workspace+'\n'+production_daily_finance_view+'\n'+production_workspace_view+'\n'+business_day_view+'\n'+income_overview_client+'\n'+agent_art+'\n'+agent_learning_view+'\n'+mission_view+'\n'+agent_registry_view+'\n'+month_view+'\n'+month_client+'\n'+client+'\n'+view+'\n'+ads+'\n'+orders+'\n'+daily_shop_orders+'\n'+items+'\n'+variants+'\n'+observations+'\n'+production_costs+'\n'+operator_cost_corrections+'\n'+store_summary+'\n'+store_invoice_tax+'\n'+store_product_summary+'\n'+store_returns_summary+'\n'+store_admin+'\n'+variant_sync+'\n'+re.sub(r'^import .*\n','',admin,flags=re.M)
 admin=admin.replace('export {adminFetch,schedule,scheduledWork,DEFAULTS,SCHEMA,validateSettings,workspaceAuthFetch};','')
 needle='    const url = new URL(request.url);'
 assert original.count(needle)==1
@@ -617,7 +663,7 @@ insertion='''  const view=ads.workspace_view||'product';
   if(workspaceTitles[currentPath])[title,subtitle]=workspaceTitles[currentPath];
 '''
 updated=updated[:point]+insertion+updated[point:]
-output=updated+'\n\n'+tenant_schema+'\n'+tenant_storage+'\n'+account_policy+'\n'+commercial_context+'\n'+commercial_authorization+'\n'+tenant_envelope+'\n'+commercial_account_frame+'\n'+commercial_account_gateway+'\n'+commercial_route_policy+'\n'+commercial_finance_capability+'\n'+commercial_workspace_setup+'\n'+commercial_admin_runtime+'\n'+commercial_workspace_client+'\n'+external_cash_frame+'\n'+app_external_cash+'\n'+external_cash_period_frame+'\n'+app_external_cash_period+'\n'+theme+'\n'+workspace_auth+'\n'+workspace_navigation+'\n'+ads_presentation+'\n'+shell_navigation+'\n'+orders_diagnostic+'\n'+orders_http+'\n'+app_orders+'\n'+app_items+'\n'+finance_sample_frame+'\n'+finance_preview_frame+'\n'+variant_catalog_frame+'\n'+catalog_media_frame+'\n'+historical_variant_frame+'\n'+app_historical_variant+'\n'+app_finance_sample+'\n'+daily_orders_frame+'\n'+store_period_frame+'\n'+business_period_frame+'\n'+finance_business_variants+'\n' +reconciliation_frame+'\n'+original_items_frame+'\n'+escrow_release_frame+'\n'+income_overview_frame+'\n'+income_detail_frame+'\n'+pending_income_frame+'\n'+income_detail_diagnostic+'\n'+production_orders_frame+'\n'+product_index_frame+'\n'+app_product_index+'\n'+app_production_orders+'\n'+app_store_period+'\n'+app_business_period+'\n' +app_reconciliation+'\n'+app_escrow_releases+'\n'+app_income_overview+'\n'+app_income_detail+'\n'+app_pending_income_scan+'\n'+ads_measurement+'\n'+ads_measurement_view+'\n'+ads_period+'\n'+ads_calendar+'\n'+app_ads_summary+'\n'+agent_workspace_layout+'\n'+approved_design+'\n'+ads_workspace+'\n'+scaling_preparation+'\n\nconst brazaAdmin = (() => {\n'+admin+'\nreturn {adminFetch,schedule,scheduledWork,workspaceAuthFetch};\n})();\n'
+output=updated+'\n\n'+tenant_schema+'\n'+tenant_storage+'\n'+account_policy+'\n'+commercial_context+'\n'+commercial_authorization+'\n'+tenant_envelope+'\n'+commercial_account_frame+'\n'+commercial_account_gateway+'\n'+commercial_route_policy+'\n'+commercial_finance_capability+'\n'+commercial_workspace_setup+'\n'+commercial_admin_runtime+'\n'+commercial_workspace_client+'\n'+financial_transport+'\n'+external_cash_frame+'\n'+app_external_cash+'\n'+external_cash_period_frame+'\n'+app_external_cash_period+'\n'+theme+'\n'+workspace_auth+'\n'+workspace_navigation+'\n'+ads_presentation+'\n'+shell_navigation+'\n'+orders_diagnostic+'\n'+orders_http+'\n'+app_orders+'\n'+app_items+'\n'+finance_sample_frame+'\n'+finance_preview_frame+'\n'+variant_catalog_frame+'\n'+catalog_media_frame+'\n'+historical_variant_frame+'\n'+app_historical_variant+'\n'+app_finance_sample+'\n'+daily_orders_frame+'\n'+store_period_frame+'\n'+business_period_frame+'\n'+finance_business_variants+'\n' +reconciliation_frame+'\n'+original_items_frame+'\n'+escrow_release_frame+'\n'+income_overview_frame+'\n'+income_detail_frame+'\n'+pending_income_frame+'\n'+income_detail_diagnostic+'\n'+production_orders_frame+'\n'+product_index_frame+'\n'+app_product_index+'\n'+app_production_orders+'\n'+app_store_period+'\n'+app_business_period+'\n' +app_reconciliation+'\n'+app_escrow_releases+'\n'+app_income_overview+'\n'+app_income_detail+'\n'+app_pending_income_scan+'\n'+ads_measurement+'\n'+ads_measurement_view+'\n'+ads_period+'\n'+ads_calendar+'\n'+app_ads_summary+'\n'+agent_workspace_layout+'\n'+approved_design+'\n'+ads_workspace+'\n'+scaling_preparation+'\n\nconst brazaAdmin = (() => {\n'+admin+'\nreturn {adminFetch,schedule,scheduledWork,workspaceAuthFetch};\n})();\n'
 # These manually assembled host namespaces have no browser Function#toString
 # consumers. Keep the explicit selection separate from the source_namespace
 # registry: DTF, dynamic Mission/BusinessDay, Admin, AI and originals stay out.

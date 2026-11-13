@@ -6870,5 +6870,23 @@
     "production_qa_fact_writes": 0,
     "new_migrations": 0,
     "new_secret_updates": 0
+  },
+  "financial_automation_20261113": {
+    "status": "CANDIDATE_VALIDATION",
+    "release": "2026-11-13.2",
+    "base_commit": "6578e21098ff799e59433af92880d249432ceeb4",
+    "branch": "feature/financial-automation-20261113",
+    "documentation": "docs/financial-automation/README.md",
+    "matrix": "docs/financial-automation/MATRIZ_EXECUCAO.json",
+    "published": false,
+    "account_financial_acceptance": false,
+    "m2_closed": false,
+    "external_dependencies": [
+      "Shopee Wallet/Payout contract and actual grants",
+      "Authorized bank connector and account balance evidence",
+      "Ads source timezone confirmation",
+      "Completion-cohort financial coverage",
+      "Owner account operational week/month comparison"
+    ]
   }
 }

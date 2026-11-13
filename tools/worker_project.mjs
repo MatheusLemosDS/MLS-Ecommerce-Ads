@@ -5,6 +5,10 @@ import path from 'node:path';
 export const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const TARGETS = Object.freeze({
   app: Object.freeze({name: 'brazacommerce-app', main: '../../dist/app-worker.mjs', baselineHashes: [
+    // Financial automation candidate: exact local build and same-path Wrangler dry run; CI/Live gates remain mandatory.
+    'acf791243780f18a98af085529af6b8aab83af1fd3ca5e17203c0d2e765122e1',
+    'ad47db698e8d55b938798601242d19a72c340c128a8ea25b3972592ea18f891b',
+
     // Verified Live package: nested configuration adds only the reviewed source-path comment prefix.
     '3b33472a7c508f58adfb1062dd3be6b55422be332ebac75667eba0257f9ad091',
     // Exact legacy-login touch correction; App-only activation requires full CI and Live checks.
@@ -233,6 +237,10 @@ export const TARGETS = Object.freeze({
     '26612b7ea0edbea55e06f5fc817a18defd6b4fe65381e6d564b7d360b7b80278',
   ]}),
   auth: Object.freeze({name: 'brazacommerce-auth', main: '../../dist/auth-worker.mjs', baselineHashes: [
+    // Financial automation candidate: exact local build and same-path Wrangler dry run; CI/Live gates remain mandatory.
+    '97659ca7da62cfcfad785dc3ad599ae8526191e721eba6ac9e876d2ccc253a9c',
+    '9105a95c37b75ed124b864575131aebed638bee68804fc780b4d9cb4e8230cd9',
+
     // Account-page presentation only, compiled and Wrangler 4.151.1 dry-run identities.
     'ca7f08ad02993bf7d29d91ce95f689ab845775cbd0fec5c27549aaf261510d74',
     'c3db52c0d0621bfed5c619ad6384aa1541a92070ab58e8ac8880a18e82655919',
@@ -287,6 +295,10 @@ export const TARGETS = Object.freeze({
     '47c83f87f191fd0e5ff503d9c4bcf4671cd986b0965e66e84f1a6ed952dac925',
   ]}),
   finance: Object.freeze({name: 'brazacommerce-finance', main: '../../dist/finance-worker.mjs', baselineHashes: [
+    // Financial automation candidate: exact local build and same-path Wrangler dry run; CI/Live gates remain mandatory.
+    'ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4',
+    '3e3f3d35a3e0037c251f7abda29cc8a64643ee255771d07f2893d32d8ef7d22a',
+
     // Reviewed V4.1 layout, scoped commercial storage and real-source charts; Live requires CI and exact deployment checks.
     'ffbcea3b7ffe5c0a94b0d4d8c4908738e6da76386040995bba982060a5f9bb71',
     'c81f2f28bf4ba16c3a65478e7ca4ab153fff54e00f5ed9c9d73a2698366a6913',

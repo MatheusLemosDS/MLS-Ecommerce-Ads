@@ -1,0 +1,216 @@
+COMPLEMENTO FINANCEIRO PARA CODEX — MLS COMMERCE OS
+Data: 13/11/2026, Brasília. Base auditada: 0016c4b78d45c47066b259bbaf42578662e11e35.
+Destino do produto: https://app.brazacommerce.com.br
+
+MISSÃO
+Evolua o sistema existente para contabilizar automaticamente, com fontes comprovadas, os valores da Shopee e as movimentações relacionadas: pedidos, repasses, taxas, descontos, fretes, ajustes, devoluções, carteira, saques, depósitos, Ads, custos, despesas e impostos aplicáveis. Entregue resultado gerencial por competência, recebíveis/carteira, caixa conciliado, projeção de caixa e fechamentos financeiros semanais e mensais versionados. Preserve a V4.1 e todos os fluxos operacionais já integrados.
+
+Este documento é uma especificação de implementação decorrente de auditoria somente leitura. Nada aqui comprova que as melhorias já foram implementadas ou publicadas. Reconferir HEAD, instruções do repositório e estado live antes de trabalhar. A publicação no site live continua sendo o destino solicitado; cumprir o fluxo de release autorizado e os gates reais. Não parar apenas em mockup, mas não declarar completude quando faltar acesso/fonte indispensável.
+
+“Todos os valores” exige inventário de cobertura e capacidade por fonte. Não é permissão para consultar dados de outra loja, ampliar scopes por inferência, fazer saques/transferências, criar campanhas, alterar preços, contratar serviços ou enviar mensagens a terceiros. Este trabalho lê e contabiliza movimentos. Testes que modificam fatos devem usar ambiente isolado e dados sintéticos.
+
+BASE EXISTENTE A PRESERVAR
+Há pedidos/escrow, Income Overview, Pending paginado, liberações, Returns, custos e despesas, fabricação/DTF, caixa importado, matching 1:1 e relatórios. Hoje net_profit_cents/realized_profit_cents permanecem nulos por contratos estritos; fechar financeiramente exige novos contratos e evidências, não renomear o subtotal nem remover a validação. O fechamento semanal existente é de fabricação. A publicação mensal é snapshot de fontes e reaplica parte das regras na leitura. Banco é importado, não conector automático. O módulo fiscal existente é MEI declarado, não tributação universal.
+
+No diagnóstico inicial, confronte esses achados com o código atual e registre qualquer evolução posterior. Matriz financeira anexa é controle de execução; AUDITORIA_FINANCEIRA_MLS_2026-11-13.txt contém a justificativa e fontes. Não faça novo sistema paralelo nem substitua o backend por dados do protótipo.
+
+REQUISITOS E CRITÉRIOS DE ACEITE
+
+[FINAUTO-01] Inventário e compatibilidade — P0
+Reconferir a HEAD e a release servida. Inventariar rotas, coletores, jobs, schemas, projetores, fontes de custo e estados por empresa/loja. Manter o layout V4.1, gráficos, login, isolamento e fluxos operacionais. Tratar esta auditoria como ponto de partida, sem repetir a implementação visual já integrada. Não confundir documentos históricos com prova atual de dados.
+Aceite: Matriz relaciona cada tipo de valor à fonte/handler/armazenamento/consumidor e distingue existente, parcial, novo, validado localmente e validado na conta.
+
+[FINAUTO-02] Capacidades reais da Shopee — P0
+Criar registro de capacidades por aplicativo, empresa, loja, região e moeda. Confirmar documentação oficial, grant, método, parâmetros, limites, paginação, datas e campos de cada API necessária. A presença em SDK ou numa URL de documentação não prova acesso. Priorizar os endpoints existentes e investigar Wallet/Payout/relatórios somente conforme permissões reais; registrar alternativa por extrato oficial quando necessário. Não reconectar OAuth nem ampliar permissões por inferência.
+Aceite: Cada fonte tem estado disponível, sem permissão, sem suporte, parcial ou desconhecido com motivo; a UI não promete coleta completa quando há fonte essencial ausente.
+
+[FINAUTO-03] Coleta automática com cobertura comprovada — P0
+Evoluir os coletores existentes com checkpoints duráveis, cursor, janela, watermark, retomada, sobreposição controlada e revisão de objetos atualizados. Manter rate limit, retry/backoff, refresh seguro, leases e limites explícitos. Acompanhar pendências antigas independentemente do mês corrente. Uma página vazia/erro/limite alcançado não prova fim. Preservar observação completa válida durante coleta nova parcial. Particionar ou adaptar janelas quando os limites forem atingidos e reservar capacidade para manutenção histórica, evitando que a coleta corrente adie indefinidamente os casos antigos.
+Aceite: Falha na página intermediária, token expirado, concorrência, repetição e virada do mês não perdem nem duplicam eventos; o relatório mostra cobertura e atraso de cada fonte.
+
+[FINAUTO-04] Detalhamento de valores por pedido — P0
+Persistir a evidência monetária necessária de itens, descontos de vendedor/plataforma, comissões/taxas, fretes cobrados/ressarcidos, subsídios, retenções, reembolsos e ajustes, somente quando fornecida e com semântica validada. Conservar base e após ajuste, moeda e referências. Não usar um percentual fixo de taxa nem classificar automaticamente vendas menos escrow como comissão. Minimizar dados pessoais no armazenamento de evidências.
+Aceite: Reconciliação por pedido demonstra como chegou ao repasse e explica componentes não disponíveis; ausência não vira zero nem taxa presumida.
+
+[FINAUTO-05] Razão de eventos financeiros — P0
+Criar armazenamento durável de eventos tipados e lançamentos derivados versionados por empresa/loja/conta/moeda, com ID nativo ou identidade conservadora, event_at, competence_at, settlement_at, source_updated_at, observed_at, versão e evidência. A política deve separar receitas/despesas de movimentos entre ativos/passivos. Usar razão de partidas equilibradas ou modelo equivalente com conservação formal e verificável; o cache dos coletores não é esse razão.
+Aceite: Reprocessar o mesmo evento não muda total; revisão gera delta/estorno rastreável, não sobrescrita silenciosa. Somas monetárias usam inteiros seguros/decimal exato, nunca float livre.
+
+[FINAUTO-06] Carteira, saques e valores em trânsito — P0
+Implementar coleta dos movimentos da carteira e dos saques/transferências conforme capacidades confirmadas: saldo, crédito, débito, retenção, liberação, ajuste, saque solicitado/processando/concluído/falhou/estornado e tarifas, quando esses estados existirem na fonte. Vincular recebíveis, eventos e lotes pelos identificadores reais. Ler e contabilizar saques; não executar saques ou transferências de dinheiro.
+Aceite: Pedido, crédito de carteira, saque e depósito correspondente reconhecem a receita uma vez; dinheiro em trânsito permanece separado e com explicação.
+
+[FINAUTO-07] Banco, extratos e saldos — P0
+Adicionar interface de conector bancário autorizado quando disponível e manter CSV/OFX como alternativa real. Modelar conta/moeda, intervalo, origem, transações, saldo inicial/final e evidência de completude quando a fonte fornecer. O consentimento/conector depende de acesso próprio; não usar scraping com senha ou inventar integração. Classificar aporte, empréstimo, transferência interna, retirada, receita, tarifa, fornecedor e pagamento de obrigação com regras explícitas e revisão.
+Aceite: Saldo inicial mais créditos menos débitos coincide com saldo final da mesma conta; diferenças não são zeradas por ajuste fictício. Arquivo parcial ou sem saldo confirmado mantém cobertura não comprovada.
+
+[FINAUTO-08] Conciliação por alocação — P0
+Preservar o matching 1:1 atual e evoluir para grupos 1:N/N:1 com itens, parcelas e valores alocados. A soma dos itens e das diferenças explicadas deve coincidir com o grupo; uma fração monetária não pode ser usada duas vezes. Datas de pedido, liberação e banco permanecem distintas. Confirmação automática exige regras explícitas, identificação confiável, compatibilidade de status e ausência de ambiguidade; coincidência de valor/data sozinha não basta.
+Aceite: Depósito que reúne dois pedidos e saque recebido em duas parcelas conciliam corretamente; candidatos ambíguos seguem para revisão e reversão preserva histórico.
+
+[FINAUTO-09] Composição sem dupla contagem — P0
+Definir uma rota de cálculo canônica por métrica: partir do bruto e de seus componentes completos OU do repasse líquido reconciliado e deduzir apenas o que ele não contém. Componentes embutidos não são novamente debitados. Registrar causalidade do refund/ajuste/tarifa e reconciliação entre ambas as visões quando disponíveis. Conservar os avisos e validadores dos contratos antigos.
+Aceite: Taxa já embutida no escrow, refund já ajustado, liberação, saque e depósito não alteram resultado duas vezes; divergência entre fontes gera pendência.
+
+[FINAUTO-10] Anúncios: recarga versus consumo — P0
+Separar recarga da carteira Ads, consumo por calendário, crédito/bonificação e ajuste do repasse. Preservar a regra existente de recomposição somente quando a recarga é classificada e comprovada. Confirmar o fuso e a granularidade da fonte; Ads por dia não pode ser repartido exatamente às 13h sem evidência horária.
+Aceite: Recarregar R$ 100 e consumir R$ 30 não produz despesa de R$ 130; reconciliação e DRE registram o consumo correto conforme política e fontes, preservando eventual saldo pré-pago.
+
+[FINAUTO-11] Devolução financeira por evento — P0
+Relacionar solicitação, desfecho, valor efetivo de reembolso, ajuste no repasse/carteira, taxa/frete reverso, restituição e compensação, quando disponíveis. Distinguir pedido de reembolso de liquidação. Implementar parcial, integral, disputa, cancelamento, estorno e revisão. Conservar proteção contra refund deduzido novamente do escrow. Não assumir que todo ajuste tem a mesma causa. Validar uma fonte autorizada para descobrir novas devoluções de pedidos antigos, além de acompanhar casos já conhecidos; não depender apenas das referências encontradas nos pedidos do mês corrente/anterior.
+Aceite: Caso resolvido pode ser comprovado e liberar a verificação de devoluções; a simples existência de devolução histórica não bloqueia para sempre nem desaparece da trilha.
+
+[FINAUTO-12] Custos históricos, fabricação e mercadoria vendida — P0
+Definir a política gerencial de reconhecimento de receita/CMV e a data aplicável; preservar o relatório atual por criação como estimativa histórica rotulada. Vincular custo histórico à unidade/SKU/kit e às evidências necessárias. Separar fabricar, comprar estoque, vender, pagar fornecedor, retrabalhar e perder peça. Custos atuais podem recalcular simulações, mas não reprecificar uma versão fechada. Não somar fabricação real e custo de referência da mesma venda.
+Aceite: Fabricar 100 e vender 80 preserva 20 em estoque conforme a política; custo de mês fechado não muda com alteração cadastral atual. Custo desconhecido bloqueia lucro definitivo, sem estimativa disfarçada.
+
+[FINAUTO-13] Recebimento físico e valorização de devoluções — P1
+Integrar os fatos físicos existentes somente após recebimento/inspeção e política explícita: revenda, reparo, perda, quarentena e divergência. Usar custo histórico adequado, não preço de venda. Quantidade de kit parcial deve corresponder ao componente devolvido. Não inferir recebimento físico a partir de status remoto. Evoluir contratos versionados para deixar o valor financeiro conhecido quando comprovado, mantendo UNKNOWN nos demais.
+Aceite: Peça revendável retorna ao estoque sem duplicar a perda/reembolso; peça perdida ou retrabalhada tem lançamento próprio; nenhuma associação física sozinha cria lucro.
+
+[FINAUTO-14] Despesas, obrigações e pagamentos — P0
+Preservar o ledger de despesas, parcelas, vencimentos, categorias, revisões e idempotência. Ligar pagamentos bancários às obrigações já reconhecidas por competência. Entrada de nota/comprovante ou regra de fornecedor pode sugerir classificação; itens ambíguos exigem revisão. Separar custos de estoque, investimento, empréstimo, retirada e despesa. Introduzir proteção de períodos fechados para alterações materiais.
+Aceite: Despesa de outubro paga em novembro afeta o resultado de outubro uma vez e o caixa de novembro uma vez; marcar PAID não desconta novamente a despesa.
+
+[FINAUTO-15] Impostos por empresa e vigência — P0
+Preservar a configuração MEI declarada da loja existente sem assumir que ela serve para toda empresa/ano. Modelar regime, política, valor ou fórmula aprovada, vigência, origem e revisão. A API Shopee não determina todos os tributos da empresa. Não inventar alíquota, enquadramento ou validação legal. Configuração pendente deve impedir chamar o resultado de líquido definitivo.
+Aceite: Um novo cliente não herda o imposto da loja legada; mudar vigência não altera fechamento anterior; imposto reconhecido e pagamento do imposto são eventos distintos.
+
+[FINAUTO-16] Calendários e competências explícitos — P0
+Guardar cada data com origem e fuso. Manter produção sexta às 13h→sexta às 13h e a referência de vendas do relatório atual em sete dias civis como bases distintas. Para fechamento financeiro semanal, escolher e versionar o calendário de competência compatível com as fontes; enquanto Ads/custos só existem por dia, usar semana civil explicitamente ou demonstrar rateio assumido, sem dizer que é corte exato às 13h. Mês é mês civil por competência, não soma de semanas inteiras.
+Aceite: Testes de sexta às 12:59:59/13:00:00 e virada do mês preservam cada base. Venda em outubro e recebimento em novembro não viram duas receitas nem migram silenciosamente de competência.
+
+[FINAUTO-17] Resultado, recebíveis e caixa separados — P0
+Exibir resultado gerencial por competência, recebíveis e carteira, saques em trânsito, caixa bancário conciliado e projeção de caixa como métricas diferentes. Não usar saldo Pending global como receita mensal. Um recebível ainda não vencido pode compor uma competência encerrada se reconhecido e reconciliado na sua conta; fechar DRE não exige receber tudo no banco. Separar DRE fechada de caixa conciliado e de liquidação dos recebíveis.
+Aceite: Cada número tem fórmula, escopo, data/corte, fonte e qualidade. A existência de saldo a receber legítimo não é tratada como erro; diferenças sem explicação continuam pendentes.
+
+[FINAUTO-18] Fechamento financeiro persistente — P0
+Criar fechamento por empresa/loja ou consolidado definido, moeda, tipo de período e base. Usar estados ABERTO, EM_CONCILIACAO, PROVISORIO, PRONTO, FECHADO e RETIFICADO com transições verificadas no servidor. Snapshot final deve guardar eventos/IDs/revisões, valores, saldos de contas, políticas de competência/custo/imposto/rateio, cobertura, pendências aceitas e trilha de autoria. Relatório de fabricação e snapshot de fontes atual permanecem separados.
+Aceite: FECHADO não é apenas status de tela. É uma versão persistente reproduzível; editar custo/despesa/coleta posterior não altera seus bytes nem totais.
+
+[FINAUTO-19] Automação dos fechamentos — P0
+Agendar preparo de fechamento ao fim do período com jobs idempotentes por escopo. A política de auto-fechamento só finaliza quando cobertura, consistência, custos/impostos e verificações aplicáveis passam. Conferir recebíveis em aberto legitimamente transportados e caixa conforme sua base. Fonte faltante, fuso incerto material, página incompleta ou divergência sem explicação geram PROVISORIO e fila de ações. Não criar cron que apenas grava FECHADO quando chega sexta ou vira o mês.
+Aceite: Reexecução, queda no meio do job e concorrência não duplicam fechamentos. Uma semana ou mês parcial não recebe o estado definitivo; motivo e valor afetado aparecem ao operador.
+
+[FINAUTO-20] Eventos tardios e retificação — P0
+Acompanhar casos e recebíveis em aberto de qualquer competência dentro do alcance autorizado das fontes, mesmo após o fim do mês. Ao receber ajuste tardio, aplicar a política aprovada de ajuste em competência posterior ou retificação versionada, preservando versão original, motivo, vínculo causal e diferença. Não reabrir ou apagar histórico silenciosamente.
+Aceite: Reembolso antigo, tarifa tardia e correção de custo produzem ajuste único e rastreável; repetir coleta não duplica o ajuste nem modifica o fechamento original.
+
+[FINAUTO-21] Painéis e gráficos auditáveis — P1
+Reutilizar o design profissional V4.1. Criar visão Financeiro com Resultado, Recebíveis/Carteira, Saques, Banco, Despesas, Devoluções, Conciliação e Fechamentos. Os gráficos devem consumir os mesmos agregados canônicos das tabelas/detalhes: bruto→deduções→líquido, evolução por competência, saldo e fluxo de caixa, recebíveis por estágio, saques em trânsito, pendências e resultado semanal/mensal. Preservar todos os estados e acessibilidade.
+Aceite: Card, gráfico, tabela, exportação e fechamento coincidem para o mesmo recorte; cada ponto abre sua fonte. Não usar séries demonstrativas ou rótulo lucro líquido para subtotal incompleto.
+
+[FINAUTO-22] Caixa para sustentar a produção — P1
+Implementar projeção de caixa com saldo bancário conciliado, compromissos por vencimento, produção já comprometida, recebimentos com previsão comprovada e reserva de giro configurável. Mostrar cenários e risco de atraso. Diferenciar caixa livre operacional estimado, lucro por competência e distribuição ao proprietário; não executar retirada nem oferecer valor garantido sem fontes.
+Aceite: Usuário entende quanto está disponível, comprometido, previsto e reservado. Aportes próprios e empréstimos aumentam caixa sem aumentar lucro; ausência de vencimentos completos mantém projeção parcial.
+
+[FINAUTO-23] Fila de pendências e saúde da coleta — P1
+Mostrar fonte, última coleta bem-sucedida, corte, páginas/cursor, cobertura, limite, quantidade/valor de divergências, responsável e ação permitida. Alertas devem distinguir indisponibilidade do provedor, autorização vencida, fonte incompleta, custo faltante, movimento sem vínculo e caso em disputa. Logs sem segredos ou dados de compradores; exportação de diagnóstico com dados sensíveis ocultados.
+Aceite: Nenhum erro vira zero ou sucesso visual. O operador consegue localizar o evento/arquivo responsável e reprocessar a etapa adequada sem repetir operações comerciais.
+
+[FINAUTO-24] Isolamento, permissões e proteção de dados — P0
+Aplicar o contexto comercial V4.1 em todas as leituras, gravações, fontes, IDs, caches, jobs, conciliações e fechamentos. Empresas/lojas/contas com IDs externos iguais permanecem isoladas. Respeitar papéis financeiros, reautenticação quando aplicável, CSRF, auditoria e criptografia. Dados coletados só no escopo autorizado; fontes brutas devem ter minimização e retenção definida.
+Aceite: Testes A/B e revogação durante tarefa impedem leitura, processamento, exportação ou conciliação cruzada; logs e relatórios não revelam tokens, dados de compradores ou identificadores privados.
+
+[FINAUTO-25] Migração e base inicial confiável — P0
+Mapear a loja e dados legados explicitamente. Migrar de modo aditivo/idempotente com backup, contagens e comparação dos agregados. Backfill respeita limites e permissões reais; base inicial pode precisar de saldo de abertura/importação oficial com proveniência. Não inferir histórico completo pela existência de alguns meses de cache. Nunca atribuir dados legados ao primeiro cliente cadastrado.
+Aceite: Repetir migração não duplica eventos e os totais antigos permanecem explicáveis. Lacuna histórica aparece como cobertura pendente, sem lançamento inventado para fechar saldos.
+
+[FINAUTO-26] Testes financeiros determinísticos — P0
+Executar testes existentes relevantes e adicionar casos que provem invariantes financeiras, integração entre camadas e persistência. Cobrir a lista de cenários deste documento, limites de centavos, sinais, fontes parciais, concorrência e reversões. Testar o Worker gerado normal/minificado e os consumidores reais; não basta testar uma função isolada nem alterar testes para aceitar fórmula errada.
+Aceite: Não há regressões introduzidas nos fluxos afetados; evidências indicam quais testes foram executados agora, sem reaproveitar contagens de CI histórico como validação nova.
+
+[FINAUTO-27] Conferência operacional com fontes equivalentes — P0
+Com acesso autorizado disponível, confrontar uma semana concluída e um mês concluído com fontes oficiais Shopee e extrato da mesma conta/moeda, respeitando competências, cortes e estados. Cobrir bruto, deduções, ajustes, Ads, devoluções, carteira, saques, banco, custos e obrigações. Explicar diferenças de timing; não forçar igualdade entre conceitos distintos. Ler saldos/movimentos não autoriza fazer transferências, enviar mensagens ou criar fatos operacionais de QA.
+Aceite: Cada diferença é zero na comparação equivalente ou tem explicação/evidência pendente. Sem sessão/extrato/grant, registrar exatamente o que não foi validado; nenhum resultado da loja é certificado por fixture.
+
+[FINAUTO-28] Contratos versionados e entrega no site live — P0
+A entrega futura deve continuar no aplicativo existente e no destino live já solicitado pelo proprietário. Evoluir DTOs/projetores/transportes/consumidores por versões compatíveis; os v1 atuais impõem null e NOT_COMPARED intencionalmente, portanto não relaxar seus validadores para aparentar conclusão. Validar local/CI, ensaiar migrações, publicar pelo processo autorizado, conferir a versão e os módulos afetados e preservar rollback compatível. Não assumir custos, contratar conectores ou ampliar acessos sem autorização própria.
+Aceite: Release informa commit, migrações, teste, deploy e conferência real, separando código publicado de aceite financeiro. Se acesso/integração/gate obrigatório faltar, concluir código independente e registrar bloqueio concreto, sem dizer que o objetivo está integralmente concluído.
+
+REGRAS CANÔNICAS DE CÁLCULO
+
+1. Documentar a política de reconhecimento de receita/custo por competência e sua vigência. Preservar a estimativa atual por criação de pedido com seu rótulo; não transformá-la em DRE definitiva por renomeação.
+2. Usar base bruta com deduções demonstráveis OU repasse líquido com deduções externas não embutidas. Confrontar as duas quando disponíveis; não subtrair a mesma taxa/refund novamente.
+3. Saque, depósito e transferência interna movimentam posições de dinheiro; não reconhecem novamente a venda. Aporte, empréstimo e retirada têm natureza própria.
+4. Fabricação/compra, CMV, estoque, obrigação e pagamento são trilhas relacionadas, com efeito próprio. Não deduzir produção real e referência da venda duas vezes. Kit e quantidade física não são confundidos.
+5. Ads consumido é diferente de recarga; despesa reconhecida é diferente do seu pagamento. Impostos têm política e vigência reais, não taxa suposta.
+6. Valor zero requer observação válida de zero. Fonte incompleta, campo ausente, saldo não verificado, fuso/granularidade incertos e custo desconhecido mantêm pendência ou subtotal rotulado.
+7. Encerrar competência não exige liquidar todo recebível ainda não vencido. As evidências de resultado, recebíveis/carteira e caixa são separadas e reconciliadas por pontes verificáveis.
+8. Nenhum resultado de mês fechado pode mudar por simples edição da configuração atual. Ajuste tardio segue política e versão explícitas.
+
+CENÁRIOS MÍNIMOS DE TESTE
+
+T01. A mesma operação recebida pela API e importada em arquivo é identificada ou fica em revisão; não duplica automaticamente.
+T02. Reprocessamento da mesma página, retry e duas execuções simultâneas não duplicam eventos, valores ou fechamentos.
+T03. Uma venda, seu crédito de carteira, saque e depósito reconhecem receita uma única vez; transferência não cria lucro.
+T04. Aporte do proprietário, empréstimo, transferência entre contas e retirada são classificados fora da receita operacional.
+T05. Dois pedidos em um depósito e um saque em duas parcelas conciliam por alocação sem reutilizar uma fração de dinheiro.
+T06. Dois depósitos legítimos de mesmo valor/data continuam distintos; ambiguidade não gera conciliação automática.
+T07. Taxa ou reembolso já incluído no repasse após ajustes não é descontado novamente.
+T08. Reembolso parcial/integral, estorno, disputa cancelada, taxa devolvida, frete reverso e compensação têm efeito único e sinais corretos.
+T09. Recarga Ads de R$ 100 e consumo de R$ 30 não produzem despesa de R$ 130; saldo pré-pago e ajuste no repasse são conciliados.
+T10. Fabricar 100 unidades, vender 80 e manter 20 não reconhece automaticamente 100 como custo das vendas.
+T11. Devolução parcial de kit respeita as peças efetivamente recebidas, seu custo histórico e destino físico.
+T12. Despesa de outubro paga em novembro afeta competência e caixa nos períodos corretos, uma vez cada.
+T13. Mudar custo, vínculo, imposto ou despesa após fechar um mês não altera a versão encerrada sem retificação.
+T14. Caso antigo fora do mês corrente/anterior continua acompanhado até a resolução aplicável.
+T15. Evento tardio gera uma correção rastreável e idempotente, preservando a versão original do fechamento.
+T16. Sexta às 12:59:59 e 13:00:00, virada do mês e fontes com fuso diferente não migram registros silenciosamente.
+T17. Semana que atravessa dois meses não é somada inteira em ambos; o mês deriva de seus eventos de competência.
+T18. Recebível ainda não vencido pode permanecer em aberto num período de resultado encerrado; não é exigido recebimento bancário fictício.
+T19. Saldo inicial + créditos − débitos = saldo final da mesma conta/moeda; discrepância sem causa não vira ajuste automático.
+T20. Fonte sem permissão, paginação incompleta, rate limit, custo ausente ou saldo bancário não confirmado gera estado parcial explícito.
+T21. Valores negativos, zeros verdadeiros, casas decimais e limites de inteiro não criam arredondamento silencioso.
+T22. Card, gráfico, tabela, exportação e snapshot usam o mesmo recorte e total canônico.
+T23. Revogar membership durante um job ou trocar empresa não revela nem processa dados de outra conta.
+T24. Migração, interrupção, retomada, backup e rollback preservam IDs, relações, valores e novas escritas.
+
+SEQUÊNCIA DE ENTREGA
+
+A. Inventariar a base e confirmar capacidades. Registrar rotas reais, schemas, campos monetários, datas, fuso, grants e cobertura. Identificar o que é dado oficial, declarado, estimado ou desconhecido.
+B. Implementar e validar o razão de eventos, ingestão e backfill com preservação do legado e isolamento por empresa. Atualizar transportes internos e validadores de modo compatível.
+C. Integrar conciliação, custos/obrigações, impostos e devoluções com fórmulas e provas de não duplicação. Construir fechamento persistente e retificações.
+D. Integrar painéis/gráficos/exportações aos mesmos agregados e à fila de qualidade. Mostrar origem e pendências em todas as métricas importantes.
+E. Executar os testes focados e gates obrigatórios do projeto. Fazer QA visual/funcional nos fluxos afetados, normal/minificado, desktop/mobile e temas existentes. Não ampliar testes sem finalidade nem relaxar os gates.
+F. Realizar a conferência autorizada da semana/mês reais quando fontes e sessão estiverem disponíveis. Falta de acesso bloqueia a comprovação correspondente, não justifica abandonar implementação independente nem afirmar sucesso.
+G. Publicar a versão validada pelo processo autorizado do projeto, com migrações aditivas ensaiadas, backup e rollback compatível. Conferir o que foi servido no domínio e o funcionamento observado. Identificar qualquer dependência restante e manter incompletude visível.
+
+DEFINIÇÃO DE CONCLUÍDO
+
+- Requisitos FINAUTO-01..28 possuem implementação/evidência ou impedimento externo específico; nenhum item omitido é tratado como concluído.
+- As origens disponíveis são coletadas e contabilizadas sem duplicação, com cobertura demonstrável e recuperação de falhas.
+- Resultado, caixa e recebíveis mantêm bases distintas; valores e períodos coincidem entre UI, API, gráfico, exportação e fechamento.
+- Fechamentos guardam versão e base reproduzíveis; eventos tardios não reescrevem a história silenciosamente.
+- Fonte parcial ou diferença sem explicação impede afirmar resultado definitivo. Não remover UNKNOWN/null/gates para aprovar teste.
+- A conferência real tem evidência própria. Passar em testes sintéticos ou publicar código não certifica todos os valores da conta.
+- A entrega final informa commit, rotas/telas, testes atuais, release/deploy, verificações live, fontes ainda indisponíveis e o impacto financeiro de cada pendência.
+
+Não prometa “zero erros para sempre”. Entregue controles que detectem falhas, impeçam totais falsamente definitivos e tornem cada valor rastreável. Não exponha senhas, tokens, cookies, dados de compradores ou identificadores de pedidos em commits/relatórios; use fixtures sintéticas e evidências privadas mínimas.
+
+FONTES DE PARTIDA
+
+[S1] docs/v4/RELEASE.md
+[S2] web/finance/src/business-period.mjs
+[S3] web/finance/src/payment-sample.mjs
+[S4] web/finance/src/pending-income-scan.mjs
+[S5] web/finance/src/escrow-releases.mjs
+[S6] web/finance/src/external-cash-period.mjs
+[S7] web/finance/src/external-cash-matching.mjs
+[S8] web/finance/src/returns-reconciliation.mjs
+[S9] web/cloudflare/src/business-historical-returns.mjs
+[S10] web/cloudflare/src/business-month.mjs
+[S11] web/cloudflare/src/business-month-publication.mjs
+[S12] web/cloudflare/src/business-financial-closeout.mjs
+[S13] web/cloudflare/src/weekly-operating-report.mjs
+[S14] web/cloudflare/src/production-weekly-store.mjs
+[S15] web/cloudflare/src/incurred-production.mjs
+[S16] web/cloudflare/src/expense-ledger.mjs
+[S17] web/cloudflare/src/business-tax-policy.mjs
+[S18] web/cloudflare/src/business-daily-summary.mjs
+[S19] web/cloudflare/src/physical-returns.mjs
+[S20] web/cloudflare/src/return-manufacturing-links.mjs
+[S21] web/cloudflare/src/business-history-sync.mjs
+[S22] web/cloudflare/src/financial-audit-orchestration.mjs
+[S23] web/finance/src/cash-statement-import.mjs
+[S24] docs/RESUMO_FINANCEIRO_TOTAL.md

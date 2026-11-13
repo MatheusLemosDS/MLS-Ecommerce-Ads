@@ -4,7 +4,7 @@ import {APP_RELEASE,releaseInfo} from '../src/app-release.mjs';
 
 test('the human release identifier is static, frozen and safe for an HTTP header',()=>{
  assert.equal(Object.isFrozen(APP_RELEASE),true);
- assert.deepEqual(APP_RELEASE,{id:'2026-11-13.1',label:'V4.1 · Layout da referência',date:'13/11/2026'});
+ assert.deepEqual(APP_RELEASE,{id:'2026-11-13.2',label:'Financeiro · fontes, conciliação e fechamentos',date:'13/11/2026'});
  assert.match(APP_RELEASE.id,/^[0-9]{4}-[0-9]{2}-[0-9]{2}\.[0-9]+$/);
  assert.doesNotMatch(APP_RELEASE.id,/[\r\n]/);
  assert.throws(()=>{APP_RELEASE.id='another-release';},TypeError);
@@ -12,13 +12,13 @@ test('the human release identifier is static, frozen and safe for an HTTP header
 
 test('the release getter returns a closed serializable DTO without sharing mutable response state',()=>{
  const first=releaseInfo(),second=releaseInfo();
- assert.deepEqual(first,{schema:'app_release_v1',id:'2026-11-13.1',label:'V4.1 · Layout da referência',date:'13/11/2026'});
+ assert.deepEqual(first,{schema:'app_release_v1',id:'2026-11-13.2',label:'Financeiro · fontes, conciliação e fechamentos',date:'13/11/2026'});
  assert.deepEqual(Object.keys(first).sort(),['date','id','label','schema']);
  assert.deepEqual(JSON.parse(JSON.stringify(first)),first);
  assert.notEqual(first,second);
  first.label='Changed by a local consumer';first.private_data='must not propagate';
  assert.deepEqual(releaseInfo(),second);
- assert.equal(APP_RELEASE.label,'V4.1 · Layout da referência');
+ assert.equal(APP_RELEASE.label,'Financeiro · fontes, conciliação e fechamentos');
 });
 
 test('release information remains available without environment, database or provider capabilities',()=>{

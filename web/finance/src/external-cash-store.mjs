@@ -3,6 +3,7 @@ import {TenantInitializationMap} from '../../cloudflare/src/tenant-storage.mjs';
 // Private, owner-declared file evidence. Never reads a bank API or changes profit.
 import {FINANCE_PROFILE, FinanceConnectionError} from './connection-store.mjs';
 import {projectExternalCashRequest, projectExternalCashResponse, isExternalCashCompletedStatus} from './external-cash-frame.mjs';
+import {FINANCIAL_CASH_ALLOCATION_SCHEMA,financialCashLegacyUsageSql} from '../../cloudflare/src/financial-cash-allocation-store.mjs';
 
 const encoder = new TextEncoder();
 const legacyTenant = [FINANCE_PROFILE.partner_id, FINANCE_PROFILE.shop_id, FINANCE_PROFILE.environment,FINANCE_PROFILE.region,'external-cash-v1'].join(':');
@@ -41,6 +42,28 @@ const schemaObjects = new Map(EXTERNAL_CASH_SCHEMA.map(sql => {
   const [, type, name] = /^CREATE (TABLE|INDEX|TRIGGER) IF NOT EXISTS ([a-z_]+)/.exec(sql);
   return [name, {type: type.toLowerCase(), sql: canonicalSchemaSql(sql)}];
 }));
+const allocationReservationObjects = new Map(FINANCIAL_CASH_ALLOCATION_SCHEMA.map(sql => {
+  const [, type, name] = /^CREATE (TABLE|INDEX|TRIGGER) IF NOT EXISTS ([a-z_]+)/.exec(sql);
+  return [name, {type: type.toLowerCase(), sql: canonicalSchemaSql(sql)}];
+}));
+
+async function ensureAllocationReservationSchema(db) {
+  const names = [...allocationReservationObjects.keys()];
+  const result = await db.prepare(`SELECT type,name,sql FROM sqlite_master WHERE name IN(${names.map(() => '?').join(',')})`).bind(...names).all();
+  const rows = result?.results;
+  if (!Array.isArray(rows)) fail('STORAGE_INVALID');
+  if (rows.length === 0) {
+    // A legacy MATCH reserves the full amount, so the shared reservation
+    // fence must exist before either its precheck or atomic write. Creating
+    // technical tables here adds no financial fact; reads stay SELECT-only.
+    await db.batch(FINANCIAL_CASH_ALLOCATION_SCHEMA.map(sql => db.prepare(sql)));
+    return;
+  }
+  if (rows.length !== allocationReservationObjects.size || rows.some(row => {
+    const expected = allocationReservationObjects.get(row.name);
+    return !expected || row.type !== expected.type || typeof row.sql !== 'string' || canonicalSchemaSql(row.sql) !== expected.sql;
+  })) fail('STORAGE_INVALID');
+}
 
 function database(env) {
   const db = env?.FINANCE_DB;
@@ -344,9 +367,10 @@ async function mutateMatch(db, request, requestHash, stamp) {
     revision: current + 1, replayed: false, result: mutationResult()};
   const statements = baseStatements(db, request);
   if (request.operation === 'match') {
+    await ensureAllocationReservationSchema(db);
     const pairs = request.pairs.map(pair => ({...pair, match_id: crypto.randomUUID()}));
     const json = JSON.stringify(pairs);
-    const validPairs = `SELECT COUNT(*) FROM json_each(?) j JOIN finance_external_cash_records b ON b.tenant=? AND b.record_id=json_extract(j.value,'$.bank_record_id') JOIN finance_external_cash_records t ON t.tenant=b.tenant AND t.record_id=json_extract(j.value,'$.transfer_record_id') WHERE b.source='NUBANK' AND b.status='POSTED' AND b.currency='BRL' AND b.amount_cents>0 AND t.source='SHOPEE' AND t.status='COMPLETED' AND t.currency='BRL' AND t.amount_cents=b.amount_cents AND ${unlinked('b')} AND ${unlinked('t')}`;
+    const validPairs = `SELECT COUNT(*) FROM json_each(?) j JOIN finance_external_cash_records b ON b.tenant=? AND b.record_id=json_extract(j.value,'$.bank_record_id') JOIN finance_external_cash_records t ON t.tenant=b.tenant AND t.record_id=json_extract(j.value,'$.transfer_record_id') WHERE b.source='NUBANK' AND b.status='POSTED' AND b.currency='BRL' AND b.amount_cents>0 AND t.source='SHOPEE' AND t.status='COMPLETED' AND t.currency='BRL' AND t.amount_cents=b.amount_cents AND ${unlinked('b')} AND ${unlinked('t')} AND ${financialCashLegacyUsageSql('b.record_id','b.tenant')}=0 AND ${financialCashLegacyUsageSql('t.record_id','t.tenant')}=0`;
     const selected = await db.prepare(validPairs).bind(json, tenant).first();
     if (!selected || Object.values(selected)[0] !== pairs.length) fail('MATCH_CONFLICT', 409);
     statements.push(guard(db, `(${validPairs})=?`, json, tenant, pairs.length));

@@ -35,11 +35,9 @@ test('the monthly browser asset is byte-identical to the unchanged legacy client
 test('the workspace controller joins the closed six-asset public inventory without changing published legacy clients',()=>{
  assert.deepEqual(manifest.assets.map(row=>row.id),['bank','month','orders','production','weekly','workspace']);
  const published=JSON.parse(readFileSync(path.join(root,'workers','app','browser-assets-published.json'),'utf8'));
- const pins={bank:['0d6250f5888258fa29664eac45b2cd821d3872b1c96ac47dda46bd7fd10e6a0c',38035],month:['347a294216d16151105c5b5074174af01c01a9bc398e713aaf2c9184a48b1db2',704759],orders:['ec6397070416275d880f293d4abe8d7f531215af369d7e9a275c10f019a8c3c8',21282],production:['549c2b0f6ae183249bed2472af894cf5211d4a6853fc33c0ce6c127aa3ebf034',165982],weekly:['04ae3166780be18f31754212640b0887abe9e20830ac4309a6e31109398e4eeb',54280],workspace:['a96fe8cfa2d4fedeb349a5a7109e6b553fbb1bb9b4f0d2d2be326ba6740ed7c1',341081]};
- for(const [id,[sha256,bytes]]of Object.entries(pins)){
-  const previous=[...published.assets,...published.retained].find(row=>row.id===id&&row.sha256===sha256);assert.ok(previous);assert.equal(previous.sha256,sha256);assert.equal(previous.bytes,bytes);
-  assert.ok([...manifest.assets,...manifest.retained].some(row=>JSON.stringify(row)===JSON.stringify(previous)),'the exact published predecessor remains addressable for '+id);
-  const old=readFileSync(path.join(root,'web','cloudflare','browser-assets-published',sha256+'.js'));assert.equal(old.length,bytes);assert.equal(createHash('sha256').update(old).digest('hex'),sha256);
+ for(const previous of published.assets){
+  assert.ok([...manifest.assets,...manifest.retained].some(row=>JSON.stringify(row)===JSON.stringify(previous)),'the exact immediately published predecessor remains addressable for '+previous.id);
+  const old=readFileSync(path.join(root,'web','cloudflare','browser-assets-published',previous.sha256+'.js'));assert.equal(old.length,previous.bytes);assert.equal(createHash('sha256').update(old).digest('hex'),previous.sha256);
  }
  const weekly=manifest.assets.find(row=>row.id==='weekly');assert.ok(weekly.bytes>0&&weekly.bytes<=262144);assert.equal(browserAssetScript('weekly'),'<script src="'+weekly.path+'" integrity="'+weekly.integrity+'" crossorigin="anonymous"></script>');
 });
@@ -106,9 +104,10 @@ for(const minify of [false,true])test('compiled Worker serves the exact asset in
 
 
 test('the reviewed current six-asset inventory preserves exact controller bytes and parser-blocking order',()=>{
+ // The financial draft guard changes the month controller by one explicit condition.
  // Month was reviewed again after TEN-05 cleanup (sourceb91ff45049ab42b3a34182c970e066b336a2aa8cf84a66c79e2da9d4bed8083e).
  // Its previous61f017... hash predates private-cache/DOM teardown; this is a functional security change, not distribution drift.
- const reviewed={bank:'0d6250f5888258fa29664eac45b2cd821d3872b1c96ac47dda46bd7fd10e6a0c',month:'347a294216d16151105c5b5074174af01c01a9bc398e713aaf2c9184a48b1db2',orders:'ec6397070416275d880f293d4abe8d7f531215af369d7e9a275c10f019a8c3c8',production:'549c2b0f6ae183249bed2472af894cf5211d4a6853fc33c0ce6c127aa3ebf034',weekly:'04ae3166780be18f31754212640b0887abe9e20830ac4309a6e31109398e4eeb'};
+ const reviewed={bank:'0d6250f5888258fa29664eac45b2cd821d3872b1c96ac47dda46bd7fd10e6a0c',month:'5203d255416bacb97cd44ddef29a2fc76b1432f0a1ea731fabacc4bb071fcd07',orders:'ec6397070416275d880f293d4abe8d7f531215af369d7e9a275c10f019a8c3c8',production:'549c2b0f6ae183249bed2472af894cf5211d4a6853fc33c0ce6c127aa3ebf034',weekly:'04ae3166780be18f31754212640b0887abe9e20830ac4309a6e31109398e4eeb'};
  for(const [id,sha]of Object.entries(reviewed))assert.equal(manifest.assets.find(row=>row.id===id).sha256,sha,'the reviewed exact '+id+' asset must not drift');
  const row=manifest.assets.find(row=>row.id==='workspace');assert.ok(row);assert.ok(row.bytes>262144&&row.bytes<=1048576);
  const emitted=Buffer.from(CLIENT.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g,c=>'\\u'+c.charCodeAt(0).toString(16).padStart(4,'0')));const bytes=readFileSync(path.join(root,'dist','browser-assets',...row.path.slice(1).split('/')));assert.deepEqual(bytes,emitted,'workspace distribution preserves every frozen controller byte');

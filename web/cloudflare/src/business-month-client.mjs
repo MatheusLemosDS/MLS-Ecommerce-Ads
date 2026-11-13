@@ -478,7 +478,7 @@ export const BUSINESS_MONTH_CLIENT=BUSINESS_DAY_CLIENT+String.raw`
  }
  function notifySnapshot(){if(!snapshotListeners.size)return;const value=snapshot();for(const listener of [...snapshotListeners])try{listener(value);}catch{}}
  function subscribe(listener){if(typeof listener!=='function')return ()=>{};snapshotListeners.add(listener);try{listener(snapshot());}catch{}return ()=>snapshotListeners.delete(listener);}
- function monthChangeBlocked(){return dirty||saving;}
+ function monthChangeBlocked(){return dirty||saving||globalThis.brazaFinancialAutomation?.hasDraft?.()===true;}
  function refuseMonthChange(){el('Select').value=month;status('Salve as despesas em edição ou carregue os valores salvos antes de trocar o mês. Seus rascunhos foram preservados.',true);notifySnapshot();return false;}
  function drawCostOverview(summary){
   const target=el('CostOverview');target.replaceChildren();target.hidden=!frame||!summary;if(target.hidden)return;

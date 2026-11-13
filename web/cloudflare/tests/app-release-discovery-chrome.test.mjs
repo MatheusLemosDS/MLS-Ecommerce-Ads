@@ -10,6 +10,7 @@ import {existsSync,mkdtempSync} from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {compiledOwnerReportPage} from './owner-report-browser-fixture.mjs';
+import {financialAutomationUiFixture} from './financial-automation-ui-fixture.mjs';
 import {createChromeProfileCleanup} from './chrome-profile-cleanup.mjs';
 import {waitForChromeDebugPort} from './chrome-debug-port.mjs';
 import {APP_RELEASE} from '../src/app-release.mjs';
@@ -144,6 +145,12 @@ const orderTarget={href:'/admin?tab=order-operations',panel:'order-operations',i
 const bankTarget={href:'/admin?tab=agent-finance#bankReconciliation',panel:'agent-finance',id:'bankReconciliation'};
 const dailyTarget={href:'/admin?tab=agent-production#incurredProductionCalendarTitle',panel:'agent-production',id:'incurredProductionCalendarTitle'};
 const registrationTarget={href:'/admin?tab=agent-production#incurredProductionRecordsPane',panel:'agent-production',id:'incurredProductionRecordsPane'};
+const financialTargets=[
+ {href:'/admin?tab=agent-finance#financialAutomationReconciliation',panel:'agent-finance',id:'financialAutomationReconciliation',financial:true,details:true},
+ {href:'/admin?tab=agent-finance#financialAutomationClosings',panel:'agent-finance',id:'financialAutomationClosings',financial:true,details:true},
+ {href:'/admin?tab=agent-finance#financialAutomation',panel:'agent-finance',id:'financialAutomation',financial:true}
+];
+const referenceTargets=['/admin?tab=overview','/admin?tab=agent-production','/account/login'];
 const currentTargets=[{href:'/admin?tab=agent-production#productionWeeklyClosing',panel:'agent-production',id:'productionWeeklyClosing'},{href:'/admin?tab=agent-production#incurredProductionDetails',...targets[1]},{href:'/admin?tab=agent-hermes',panel:'agent-hermes',id:null,focus_id:'mission-hermes-title'},{href:'/admin?tab=agent-products#businessMonthPricingObserver',panel:'agent-products',id:'businessMonthPricingObserver'},{href:'/admin?tab=overview#commandAgents',panel:'overview',id:'commandAgents'},{href:'/admin?tab=agent-returns#physicalReturnsQueue',panel:'agent-returns',id:'physicalReturnsQueue'},{href:'/admin?tab=products',panel:'products',id:null}];
 const generatedHash=createHash('sha256').update(readFileSync(new URL('../../../dist/app-worker.mjs',import.meta.url))).digest('hex');
 const qa=[];
@@ -158,7 +165,7 @@ for(const minify of [false,true])for(const {width,height,font_profile} of discov
  if(!chrome)return t.skip('Chromium unavailable');
  const owner=await compiledOwnerReportPage(minify,{ownerPreview:true,localReadSnapshot:true});
  assert.equal(getOrderedBrowserScripts(owner.html).length,19,'release discovery preserves existing clients and the reviewed public asset scripts');
- const local=new Map(owner.localReadSnapshot.responses.map(row=>[row.path,row])),requests=[],store=await fixture();let serverFailure=null;
+ const local=new Map(owner.localReadSnapshot.responses.map(row=>[row.path,row])),requests=[],store=await fixture(),financial=await financialAutomationUiFixture({month:owner.localReadSnapshot.month,checked_at:new Date(Date.UTC(Number(owner.localReadSnapshot.month.slice(0,4)),Number(owner.localReadSnapshot.month.slice(5,7)),5,12)).toISOString()});let serverFailure=null;
  const initial=await store.read();await store.mutate({revision:initial.ledger.revision,request_id:crypto.randomUUID(),action:'link',link_id:crypto.randomUUID(),...store.choice(initial,lineId,ids.good,1),evidence:'Associação sintética para conferir navegação',confirmed:true});
  const ledgerBefore=JSON.stringify(await store.read());
  const fontStyle=font_profile==='current-notes-arial13'?'<style>#appReleaseNotes>.app-release-note-grid>article>p{font-family:Arial,sans-serif!important;font-size:13px!important}</style>':'';
@@ -169,7 +176,8 @@ for(const minify of [false,true])for(const {width,height,font_profile} of discov
    requests.push({method:req.method,path:req.url});const u=new URL(req.url,'http://synthetic.invalid'),headers={'content-type':'application/json','cache-control':'no-store'};
    if(req.method!=='GET'){res.writeHead(405,headers);res.end('{"error":"SYNTHETIC_READ_ONLY"}');return;}
    let value=null;
-   if(u.pathname==='/api/admin/returns/manufacturing-links'){assert.equal(u.search,'');value=await store.read();}
+   if(u.pathname==='/api/admin/finance/automation'){assert.equal(u.searchParams.get('month'),financial.month);value=financial;}
+   else if(u.pathname==='/api/admin/returns/manufacturing-links'){assert.equal(u.search,'');value=await store.read();}
    else if(u.pathname==='/api/admin/returns/receipts'){
     const month=u.searchParams.get('month'),physical=await readPhysicalReturns(store.env,{now:()=>clock}),cases=physical.cases.filter(row=>row.source.month===month).map(row=>({case_hash:row.case_hash,order_hash:row.order_hash,status:row.source.status,checked_at:row.source.checked_at,publication_revision:row.source.publication_revision}));
     value={schema:'physical_returns_workspace_v1',month,checked_at:stamp,source:{status:'AVAILABLE',checked_at:stamp,cases_total:cases.length,cases_included:cases.length,truncated:false,reason:null,cases},physical};
@@ -199,26 +207,33 @@ for(const minify of [false,true])for(const {width,height,font_profile} of discov
    assert.equal(overview.release,APP_RELEASE.id);assert.equal(overview.header,null,'the release no longer duplicates its header link');assert.deepEqual(overview.links.map(row=>row.href),['/admin?tab=roadmap#appReleaseNotes']);assert.ok(overview.links.every(row=>row.bypass===false),'native links must retain the precise destination hash');assert.equal(overview.overflow,false);assert.equal(requests.slice(start).filter(physicalRequest).length,0,'Overview must not fetch the three physical-control sources');
    if(process.env.MLS_APP_RELEASE_SCREENSHOT_DIR&&target===targets[0]){mkdirSync(process.env.MLS_APP_RELEASE_SCREENSHOT_DIR,{recursive:true});await cdp.evaluate("document.querySelector('.app-release-overview').scrollIntoView({block:'center',behavior:'instant'})");const capture=await cdp.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});writeFileSync(path.join(process.env.MLS_APP_RELEASE_SCREENSHOT_DIR,`app-release-${minify?'minified':'normal'}-${width}${height===900?'-h900':font_profile!=='default'?'-arial13':''}.png`),Buffer.from(capture.data,'base64'));}
    const notesClick=await click(cdp,'.app-release-overview .app-release-more',{touch});await waitFor(cdp,"document.querySelector('main.workspace>section:not([hidden])')?.id==='roadmap'",'previous deliveries remain available in the release notes',()=>clickDiagnostic(cdp,notesClick,{width,minify}));
-   const notes=await cdp.evaluate("({links:[...document.querySelectorAll('#appReleaseNotes a,#appReleasePreviousV41 a,#appReleasePreviousWeekly a,#appReleasePreviousOrders a')].map(a=>({href:a.getAttribute('href'),bypass:a.hasAttribute('data-mission-open')})),previousV41:[...document.querySelectorAll('#appReleasePreviousV41>.app-release-note-grid>article>a')].map(a=>a.getAttribute('href')),current:[...document.querySelectorAll('#appReleaseNotes>.app-release-note-grid>article>a,#appReleasePreviousWeekly>.app-release-note-grid>article>a,#appReleasePreviousOrders>.app-release-note-grid>article>a')].map(a=>({href:a.getAttribute('href'),bypass:a.hasAttribute('data-mission-open')})),scope:document.getElementById('appReleaseNotes').textContent+document.getElementById('appReleasePreviousWeekly').textContent+document.getElementById('appReleasePreviousOrders').textContent})");
-   assert.deepEqual(notes.current.map(row=>row.href),['/admin?tab=overview','/admin?tab=agent-production','/account/login','/admin?tab=weekly-report','/admin?tab=agent-production#productionWeeklyClosing',orderTarget.href,bankTarget.href,dailyTarget.href,'/admin?tab=margins#costRules','/admin?tab=agent-finance#businessDay',coverageTarget.href,registrationTarget.href,...currentTargets.map(row=>row.href)]);assert.ok(notes.current.every(row=>row.bypass===false),'current release actions preserve native routing');assert.deepEqual(notes.previousV41,['/admin?tab=overview','/account/login','/companies'],'previous V4.1 account and company links remain available');
+   const notes=await cdp.evaluate("({links:[...document.querySelectorAll('#appReleaseNotes a,#appReleasePreviousReference a,#appReleasePreviousV41 a,#appReleasePreviousWeekly a,#appReleasePreviousOrders a')].map(a=>({href:a.getAttribute('href'),bypass:a.hasAttribute('data-mission-open')})),previousV41:[...document.querySelectorAll('#appReleasePreviousV41>.app-release-note-grid>article>a')].map(a=>a.getAttribute('href')),current:[...document.querySelectorAll('#appReleaseNotes>.app-release-note-grid>article>a,#appReleasePreviousReference>.app-release-note-grid>article>a,#appReleasePreviousWeekly>.app-release-note-grid>article>a,#appReleasePreviousOrders>.app-release-note-grid>article>a')].map(a=>({href:a.getAttribute('href'),bypass:a.hasAttribute('data-mission-open')})),scope:document.getElementById('appReleaseNotes').textContent+document.getElementById('appReleasePreviousWeekly').textContent+document.getElementById('appReleasePreviousOrders').textContent})");
+   assert.deepEqual(notes.current.map(row=>row.href),[...financialTargets.map(row=>row.href),...referenceTargets,'/admin?tab=weekly-report','/admin?tab=agent-production#productionWeeklyClosing',orderTarget.href,bankTarget.href,dailyTarget.href,'/admin?tab=margins#costRules','/admin?tab=agent-finance#businessDay',coverageTarget.href,registrationTarget.href,...currentTargets.map(row=>row.href)]);assert.ok(notes.current.every(row=>row.bypass===false),'current release actions preserve native routing');assert.deepEqual(notes.previousV41,['/admin?tab=overview','/account/login','/companies'],'previous V4.1 account and company links remain available');
    for(const href of retainedItemTargets){const link=notes.links.find(row=>row.href===href);assert.ok(link,'the previous item-evidence control remains reachable from notes: '+href);assert.equal(link.bypass,false,'notes retain native links and destination hashes');}
    assert.match(notes.scope,/unidade comercial.*kit.*não vira.*camisetas/);assert.match(notes.scope,/Dados antigos ou ausentes permanecem desconhecidos, nunca quantidade zero/);assert.match(notes.scope,/não atualiza estoque|não publicam estoque/);assert.match(notes.scope,/não altera.*lucro|não alteram o lucro/);
    assert.equal(await cdp.evaluate("document.querySelector('.app-release-previous h3')?.textContent"),'Entregas anteriores · controles físicos');
    start=requests.length;await click(cdp,`.app-release-previous a[href="/admin?tab=${target.legacyPanel||target.panel}#${target.id}"]`,{touch});await assertDestination(target,start,'previous-release-link');assert.equal(await cdp.evaluate('JSON.stringify(brazaMonthDashboard.getSnapshot())'),overview.financial,'navigation must not change the cached financial projection');
    start=requests.length;await navigate('?tab='+(target.legacyPanel||target.panel)+'#'+target.id);await assertDestination(target,start,'initial-deep-link');
   }
-  for(const target of [{href:'/admin?tab=overview',panel:'overview',focus_id:'commandCenterTitle'},{href:'/admin?tab=weekly-report',panel:'weekly-report'},orderTarget,bankTarget,dailyTarget,coverageTarget,registrationTarget,...currentTargets]){
+  for(const target of [...financialTargets,{href:'/admin?tab=overview',panel:'overview',focus_id:'commandCenterTitle'},{href:'/admin?tab=weekly-report',panel:'weekly-report'},orderTarget,bankTarget,dailyTarget,coverageTarget,registrationTarget,...currentTargets]){
    await navigate('?tab=overview');
    const before=await cdp.evaluate('JSON.stringify(brazaMonthDashboard.getSnapshot())');
    const notesClick=await click(cdp,'.app-release-overview .app-release-more',{touch});await waitFor(cdp,"document.documentElement.dataset.activePanel==='roadmap'",'current actions are reached through the compact release banner',()=>clickDiagnostic(cdp,notesClick,{width,minify}));
    const start=requests.length;
-   await click(cdp,`#appReleaseNotes>.app-release-note-grid>article>a[href="${target.href}"],#appReleasePreviousWeekly>.app-release-note-grid>article>a[href="${target.href}"],#appReleasePreviousOrders>.app-release-note-grid>article>a[href="${target.href}"]`,{touch});
+   await click(cdp,`#appReleaseNotes>.app-release-note-grid>article>a[href="${target.href}"],#appReleasePreviousReference>.app-release-note-grid>article>a[href="${target.href}"],#appReleasePreviousWeekly>.app-release-note-grid>article>a[href="${target.href}"],#appReleasePreviousOrders>.app-release-note-grid>article>a[href="${target.href}"]`,{touch});
    if(target.controller)await assertDestination(target,start,'current-release-link');
    else{
     const focusId=target.focus_id||target.id||'pageTitle';
     await waitFor(cdp,`document.documentElement.dataset.activePanel===${JSON.stringify(target.panel)}&&document.activeElement.id===${JSON.stringify(focusId)}`,'current release action opens its real operational destination',()=>cdp.evaluate(`({target:${JSON.stringify(target.href)},panel:document.documentElement.dataset.activePanel,hash:location.hash,focus:document.activeElement?.id,visible:document.activeElement?.checkVisibility({checkVisibilityCSS:true}),errors:__auditErrors})`));
     const result=await cdp.evaluate(`(()=>{const node=document.getElementById(${JSON.stringify(focusId)});return {panel:document.documentElement.dataset.activePanel,hash:location.hash,focus:document.activeElement.id,visible:node.checkVisibility({checkVisibilityCSS:true}),overflow:document.documentElement.scrollWidth>innerWidth+1,errors:__auditErrors};})()`);
     assert.equal(result.panel,target.panel);assert.equal(result.hash,target.id?'#'+target.id:'');assert.equal(result.focus,focusId);assert.equal(result.visible,true);assert.equal(result.overflow,false);assert.deepEqual(result.errors,[]);
+    if(target.financial){
+     await waitFor(cdp,'globalThis.brazaFinancialAutomation?.getSnapshot()!==null','financial release destination reads its canonical saved workspace');
+     assert.equal(await cdp.evaluate('brazaFinancialAutomation.getSnapshot().month'),financial.month);
+     assert.deepEqual(await cdp.evaluate('brazaFinancialAutomation.getSnapshot().projection'),financial.projection,'release discovery cannot modify canonical financial facts');
+     if(target.details)assert.equal(await cdp.evaluate(`document.getElementById(${JSON.stringify(target.id)}).open`),true,'the financial destination opens its details');
+     const reads=requests.slice(start).filter(row=>new URL(row.path,base).pathname==='/api/admin/finance/automation');assert.equal(reads.length,1,'financial release links perform one lazy saved-data GET');assert.equal(reads[0].method,'GET');
+    }
     proofs.push({...result,id:target.id,mode:'current-release-link'});
    }
    assert.equal(await cdp.evaluate('JSON.stringify(brazaMonthDashboard.getSnapshot())'),before,'current release navigation cannot mutate the cached financial result');

@@ -1,0 +1,283 @@
+AUDITORIA FINANCEIRA DO MLS COMMERCE OS — 13/11/2026
+BASE CONSULTADA: 0016c4b78d45c47066b259bbaf42578662e11e35
+REPOSITÓRIO: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads
+ESCOPO: código atual, contratos de integração, cálculos, conciliação, produção/devoluções, fontes e fechamentos. Revisão somente leitura; nenhum deploy, alteração do repositório, coleta forçada ou gravação na conta real.
+
+1. CONCLUSÃO EXECUTIVA
+
+O projeto já possui uma base extensa para consultar pedidos, repasses/escrow, valores pendentes, liberações, anúncios e devoluções, além de custos, despesas, produção e importação bancária. Porém ainda NÃO entrega a contabilização automática completa de todos os movimentos da Shopee e do banco, nem fechamento financeiro definitivo semanal/mensal com lucro líquido comprovado.
+
+Essa conclusão vem dos contratos atuais: business-month mantém net_profit_cents nulo; o fechamento financeiro retorna PREPARING/READY_FOR_COMPARISON, realized_profit_cents nulo e comparações Seller Centre/Banco NOT_COMPARED; o semanal operacional também mantém lucro realizado nulo. São proteções deliberadas contra uma conclusão sem evidência. Não devem ser removidas apenas para apresentar um número positivo. [S10,S12,S13]
+
+A main já inclui a PR119/V4.1. O relatório de release informa publicação técnica/pública e ressalva que não houve conferência financeira autenticada do proprietário. Nesta auditoria, tentar abrir o financeiro live novamente levou à página /login. Assim, o levantamento demonstra o que o código implementa e o que falta; não certifica o saldo atual, o lucro real de Matheus ou a completude dos dados da conta. [S1]
+
+2. COBERTURA POR FUNÇÃO
+
+Pedidos e vendas
+Situação: INTEGRADO_NO_CODIGO
+Existente: Listagem/detalhe, pedidos pagos/cancelados, itens, paginação e recortes.
+Melhoria/validação necessária: Comprovar cobertura da loja; manter estados e datas de cada evento.
+Fonte: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/finance/src/business-period.mjs
+
+Repasse por pedido / escrow
+Situação: INTEGRADO_NO_CODIGO
+Existente: Consulta e valores informados da Shopee; repasse não equivale a crédito bancário.
+Melhoria/validação necessária: Conciliar identidade e revisões com recebíveis, carteira e banco.
+Fonte: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/finance/src/business-period.mjs
+
+Taxas, fretes, cupons e ajustes detalhados
+Situação: PARCIAL
+Existente: Amostra de Payment expõe alguns componentes; o coletor agregado não é um razão completo por tipo.
+Melhoria/validação necessária: Persistir componentes efetivamente disponíveis e sua semântica; não inferir taxa da diferença vendas–repasse.
+Fonte: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/finance/src/payment-sample.mjs
+
+Saldo Pending e Income Overview
+Situação: INTEGRADO_NO_CODIGO
+Existente: Snapshot atual e diagnósticos; não é a receita da competência selecionada.
+Melhoria/validação necessária: Comparar escopo/corte e separar saldo atual de eventos históricos.
+Fonte: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/finance/src/income-overview.mjs
+
+Pending detalhado
+Situação: INTEGRADO_NO_CODIGO
+Existente: Varredura paginada, cursor, persistência e diagnóstico de cobertura.
+Melhoria/validação necessária: Comprovar páginas/cortes/scopes reais e acompanhar itens até resolução.
+Fonte: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/finance/src/pending-income-scan.mjs
+
+Liberações posteriores
+Situação: INTEGRADO_COM_LIMITES
+Existente: Calendário e ledger de liberações via escrow_list.
+Melhoria/validação necessária: Relacionar liberações ao recebível e ao trânsito do dinheiro; liberação não prova depósito.
+Fonte: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/finance/src/escrow-releases.mjs
+
+Carteira e todos os seus movimentos
+Situação: A_IMPLEMENTAR
+Existente: Não foi encontrado coletor Wallet completo nos módulos Finance examinados.
+Melhoria/validação necessária: Confirmar API/grant/região e construir coleta e eventos tipados; extrato oficial como alternativa explícita.
+Fonte: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/finance/src/provider-adapter.mjs
+
+Saques e pagamentos agrupados
+Situação: A_IMPLEMENTAR
+Existente: Existe importação de transferências; não foi encontrado coletor Payout/saques completo.
+Melhoria/validação necessária: Identificar saque, lote, status, valor bruto/líquido, tarifa e referências reais quando disponíveis.
+Fonte: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/finance/src/external-cash-worker.mjs
+
+Depósitos bancários
+Situação: ENTRADA_MANUAL_ASSISTIDA
+Existente: Importação Nubank CSV/OFX, prévia, revisão e deduplicação.
+Melhoria/validação necessária: Conector autorizado ou importação controlada com cobertura/saldos confirmados.
+Fonte: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/finance/src/cash-statement-import.mjs
+
+Conciliação banco–transferência
+Situação: ASSISTIDA_1_PARA_1
+Existente: Sugestões por valor e data, confirmação manual e desfazer auditado.
+Melhoria/validação necessária: Grupos 1:N/N:1, alocações e regras seguras de autoconciliação.
+Fonte: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/finance/src/external-cash-matching.mjs
+
+Totais do caixa por período
+Situação: INTEGRADO_COM_LIMITES
+Existente: Agrega todas as linhas do período, independente da página; cobertura importada não confirmada.
+Melhoria/validação necessária: Saldo inicial/final e completude por conta; não somar saque e depósito como receitas diferentes.
+Fonte: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/finance/src/external-cash-period.mjs
+
+Devoluções financeiras
+Situação: INTEGRADO_COM_LIMITES
+Existente: Detalhes de casos, valores observados e repasse após ajustes com validação.
+Melhoria/validação necessária: Vincular efeito efetivo por evento, inclusive parcial/estorno/compensação; não deduzir duas vezes.
+Fonte: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/finance/src/returns-reconciliation.mjs
+
+Devoluções de competências antigas
+Situação: PARCIAL
+Existente: Turno dedicado acompanha mês atual/anterior.
+Melhoria/validação necessária: Fila durável de casos em aberto, independentemente do mês de criação, e ajustes tardios.
+Fonte: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/cloudflare/src/business-historical-returns.mjs
+
+Devoluções físicas e inspeção
+Situação: INTEGRADO_SEM_VALORIZACAO_FINANCEIRA
+Existente: Recebimento, quarentena, inspeção, quantidades e vínculos de fabricação.
+Melhoria/validação necessária: Custo histórico e efeitos em estoque/CMV/perdas; status remoto não prova recebimento físico.
+Fonte: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/cloudflare/src/physical-returns.mjs
+
+Produtos, kits e custo de referência
+Situação: INTEGRADO_COM_LIMITES
+Existente: Vínculos, custos/regras e cálculo das unidades vendidas.
+Melhoria/validação necessária: Fixar custo/política aplicável por evento e por fechamento; não alterar passado com cadastro atual.
+Fonte: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/cloudflare/src/business-month.mjs
+
+Produção física
+Situação: INTEGRADO_SEM_PONTE_CONTABIL
+Existente: Fatos confirmados e custo histórico por registro.
+Melhoria/validação necessária: Separar fabricar, vender, pagar fornecedor, manter estoque e reconhecer perda.
+Fonte: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/cloudflare/src/incurred-production.mjs
+
+Despesas e parcelas
+Situação: CADASTRO_ASSISTIDO
+Existente: Competência, vencimento, pago/aberto/cancelado, parcelas, revisão e auditoria.
+Melhoria/validação necessária: Ligar pagamento bancário à obrigação; confirmação mensal não é bloqueio de mês fechado.
+Fonte: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/cloudflare/src/expense-ledger.mjs
+
+Impostos
+Situação: DECLARACAO_MEI
+Existente: Política MEI com valor mensal declarado por ano.
+Melhoria/validação necessária: Regime, vigência e origem por empresa; não tratar como cálculo tributário universal.
+Fonte: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/cloudflare/src/business-tax-policy.mjs
+
+Anúncios e recarga
+Situação: INTEGRADO_COM_LIMITES
+Existente: Ads por calendário e tratamento específico de ajuste de recarga classificado.
+Melhoria/validação necessária: Conciliar saldo/recarga/consumo sem duplicidade; confirmar fuso da fonte para cortes diários.
+Fonte: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/cloudflare/src/business-daily-summary.mjs
+
+Resultado diário e mensal
+Situação: ESTIMATIVA
+Existente: Repasse menos referências de custo, imposto, Ads e despesas, com estados parciais.
+Melhoria/validação necessária: Criar resultado gerencial conciliado e manter estimativa/caixa separados.
+Fonte: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/cloudflare/src/business-month.mjs
+
+Fechamento semanal de produção
+Situação: INTEGRADO
+Existente: Corte sexta às 13h, original e retificações versionadas com hash.
+Melhoria/validação necessária: Preservar; não apresentar como fechamento financeiro da empresa.
+Fonte: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/cloudflare/src/production-weekly-store.mjs
+
+Relatório semanal operacional
+Situação: INTEGRADO_COM_BASES_SEPARADAS
+Existente: Fabricação, estimativa de vendas e caixa importado; lucro realizado permanece nulo.
+Melhoria/validação necessária: Criar fechamento financeiro próprio, respeitando cortes e fontes.
+Fonte: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/cloudflare/src/weekly-operating-report.mjs
+
+Preparação mensal de fechamento
+Situação: PREPARACAO_SEM_FECHO_DEFINITIVO
+Existente: PREPARING/READY_FOR_COMPARISON; Seller Centre/Banco NOT_COMPARED.
+Melhoria/validação necessária: Conferência persistente, snapshot final e ciclo de retificação.
+Fonte: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/cloudflare/src/business-financial-closeout.mjs
+
+Histórico mensal
+Situação: SNAPSHOT_DE_FONTES
+Existente: Preserva leitura consistente das fontes; custos/imposto/Ads/despesas reaplicados na leitura.
+Melhoria/validação necessária: Congelar o conjunto de valores e políticas do fechamento final.
+Fonte: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/cloudflare/src/business-month-publication.mjs
+
+Caixa livre e retirada
+Situação: A_IMPLEMENTAR_NOS_MODULOS_EXAMINADOS
+Existente: Não foi encontrado cálculo comprovado após obrigações e reserva de giro.
+Melhoria/validação necessária: Projeção por vencimento e cenários; não confundir caixa livre estimado com lucro distribuível.
+Fonte: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/cloudflare/src/business-financial-closeout.mjs
+
+3. ACHADOS QUE MUDAM A PRIORIDADE DO PROJETO
+
+3.1 Completar o caminho do dinheiro.
+Uma venda, o direito a receber, o crédito na carteira, o saque e o depósito podem ser etapas da mesma operação. Não são cinco receitas. Os coletores existentes não formam um razão completo de Wallet/Payout e de todos os componentes de taxas. A importação bancária atual é útil, mas não comprova sozinha saldo inicial/final e período integral. [S2,S3,S5,S6]
+
+As famílias de API de carteira/saques precisam ser confirmadas para o aplicativo/loja/região reais. A documentação pública da Shopee não pôde ser lida nesta sessão: retornou 403/inacessível. Não foi usado um SDK de terceiros como prova de permissão. Os nomes de endpoints futuros no plano são candidatos a validar, não promessa de disponibilidade para a sua conta.
+
+3.2 Transformar preparação em fechamento financeiro de verdade.
+O mês atual pode ser preparado para comparação, mas o contrato não registra FECHADO com um resultado final reconciliado. O snapshot mensal guarda fontes completas, porém reaplica custos/impostos/Ads/despesas na leitura. Logo, alterar um cadastro hoje pode mudar a apresentação de um mês antigo. Isso é diferente de um fechamento que conserva exatamente os fatos, políticas e valores usados. [S10,S11,S12]
+
+O fechamento de produção já tem original e retificações; deve ser preservado e servir de inspiração técnica. Ele mede fabricação confirmada, não caixa nem resultado integral da empresa. [S14,S15]
+
+3.3 Devolução exige efeito financeiro e destino físico separados.
+O código já evita descontar refund duas vezes quando o repasse incorpora o ajuste. Essa regra deve continuar. Ainda falta completar a causalidade entre caso, ajuste e liquidação, além da valorização histórica do item recebido, perdido ou retrabalhado. O status da Shopee não confirma que a peça voltou em condição de revenda. [S8,S19,S20]
+
+O turno histórico dedicado examinado acompanha mês atual/anterior. Uma disputa mais antiga precisa de uma fila durável por caso, não de um filtro preso ao mês de criação. Mesmo casos resolvidos podem receber revisões, sujeitas à política de retificação. Também não foi encontrado get_return_list nos módulos Finance auditados: descobrir novas devoluções antigas precisa de cobertura própria, além de revisitar os casos já conhecidos. [S8,S9]
+
+3.4 O histórico precisa sobreviver aos caches.
+Os caches brutos do coletor têm retenção e limites. Isso não apaga necessariamente todo histórico: existem publicações e snapshots/ledgers específicos. Mas eles não equivalem a um razão durável de todos os tipos de evento. Novos eventos, reversões e evidências mínimas precisam de armazenamento e retenção próprios. [S2,S5,S11]
+
+3.5 Receita, custo, pagamento e estoque não podem ser misturados.
+O resultado mensal atual usa custo de referência das unidades vendidas. A produção física é uma trilha separada. Integrá-las exige definir custo histórico/CMV, estoque e perdas. Fabricar uma peça, vendê-la e pagar o fornecedor são fatos diferentes; subtrair os três como despesas pode duplicar custos. Despesas já reconhecidas por competência também não podem ser descontadas de novo ao marcar como pagas. [S10,S15,S16]
+
+3.6 O calendário deve estar visível.
+Produção fecha sexta às 13h→sexta às 13h, Brasília. O relatório semanal das vendas usa sete dias civis, de sexta a quinta. O contrato de Ads diário ainda declara o fuso da fonte como não confirmado. Os gráficos podem estar certos em suas próprias bases e não serem somáveis entre si. Não é possível prometer corte exato às 13h para dados disponíveis apenas por dia sem assumir um rateio. [S13,S14,S18]
+
+3.7 Tributos e despesas externos não vêm todos da Shopee.
+O módulo tributário atual é uma política MEI declarada, não apuração universal de impostos. Aluguel, folha, energia, juros, serviços e custos de produção dependem de outras fontes/configuração. O sistema pode automatizar captura e classificação com evidência, mas não descobrir um gasto que não foi registrado em nenhuma fonte acessível. Não aplicar a configuração da loja legada a clientes de outros regimes. [S16,S17]
+
+4. O MODELO DE RESULTADO RECOMENDADO
+
+Exibir separadamente:
+A. Resultado gerencial por competência: receita reconhecida, deduções, CMV/custos aplicáveis, Ads consumido, despesas e impostos da competência.
+B. Recebíveis e carteira: quanto ainda é devido, disponível, retido ou em disputa, conforme estados reais.
+C. Saques em trânsito: dinheiro que saiu de uma origem e ainda não tem entrada correspondente confirmada.
+D. Caixa bancário conciliado: saldo e movimentos efetivamente comprovados por conta/moeda.
+E. Projeção de caixa: saldo atual e recebimentos/pagamentos futuros com grau de certeza.
+F. Caixa livre operacional estimado: disponibilidade após obrigações e reserva de giro configurada; não é garantia de distribuição de lucro.
+
+Um recebível ainda não vencido pode existir em um mês de resultado encerrado. Fechar a competência não exige inventar recebimento bancário. Resultado, conciliação do caixa e liquidação dos recebíveis têm critérios separados. A diferença entre lucro/competência e caixa também é explicada nos materiais do Sebrae listados ao final.
+
+Fórmula gerencial proposta, com política e fontes explícitas:
+receita reconhecida − deduções/reembolsos atribuíveis − custos das mercadorias vendidas − despesas/Ads consumido − tributos aplicáveis ± outros efeitos comprovados = resultado gerencial da competência.
+
+Essa fórmula não autoriza somar deduções brutas sobre um repasse já líquido. Se a base escolhida for o repasse após ajustes, descontar apenas custos ainda não embutidos nele. A ponte bruto→líquido deve reconciliar componentes e evidências. Sem base suficiente, exibir subtotal e pendências, nunca líquido definitivo.
+
+Exemplos didáticos, sem uso de dados reais da loja:
+- Saque de R$ 1.000 e depósito bancário correspondente são uma transferência de R$ 1.000 entre posições de dinheiro, não R$ 2.000 de receita.
+- Aporte pessoal de R$ 500 aumenta caixa; não aumenta lucro operacional.
+- Reembolso de R$ 20 já embutido no repasse ajustado não gera outro desconto de R$ 20.
+- Fabricar 100 e vender 80 unidades não significa que 100 unidades devem virar automaticamente custo das vendas; o destino das 20 restantes importa.
+
+5. COMO DEVEM FUNCIONAR OS FECHAMENTOS
+
+O preparo semanal/mensal deve ser automático. A finalização também pode ser automática, mas condicionada a regras explícitas de cobertura, consistência, custos e conciliação aplicáveis à base. O relógio sozinho não comprova que os dados chegaram completos.
+
+Estados propostos: ABERTO → EM_CONCILIACAO → PROVISORIO ou PRONTO → FECHADO. Retificação posterior gera uma nova versão vinculada à anterior. Uma pendência legítima de recebimento futuro pode ser transportada como recebível; falta de evidência ou diferença sem causa precisa permanecer pendente.
+
+Cada fechamento deve guardar: empresa/loja/conta/moeda, calendário/fuso, fontes e cortes, IDs/revisões dos eventos, totais, saldos, política de reconhecimento, custos e impostos aplicados, cobertura, conciliações, pendências, responsável/processo e versão. Corrigir o passado exige motivo e diferença rastreável. Mês financeiro deriva de seus eventos da competência; não se calcula somando semanas inteiras que atravessam meses.
+
+Critério de qualidade para a exigência “sem erros”: não prometer impossibilidade de falha. Exigir nenhuma divergência silenciosa, nenhum dado ausente tratado como zero, nenhuma duplicação monetária, histórico reproduzível e suspensão do fechamento definitivo quando faltar evidência material. Definir monitoramento e reparo para falhas de API, autorização e coleta.
+
+6. ORDEM DE IMPLEMENTAÇÃO
+
+P0.1 — Confirmar capacidades e fontes; preservar o que já funciona.
+P0.2 — Construir o razão de eventos e o vínculo pedido→recebível→carteira/saque→banco.
+P0.3 — Completar taxas/ajustes, custos históricos, obrigações, impostos e devoluções sem duplicidade.
+P0.4 — Implementar conciliação e fechamento versionado com gates por base.
+P1.1 — Evoluir casos antigos, agrupamentos bancários e revisão de exceções.
+P1.2 — Exibir resultado, caixa, projeção e reserva de giro com gráficos auditáveis.
+P0.5 — Homologar uma semana e um mês concluídos com fontes reais equivalentes antes de afirmar aceite financeiro.
+
+O complemento de implementação para Codex contém 28 requisitos com critérios de aceite e 24 cenários de teste. Ele preserva a V4.1; não é um pedido para refazer o layout ou para reabrir todas as funções já integradas.
+
+7. VALIDAÇÃO REALIZADA E LIMITES
+
+Foram consultados a main atual, sua árvore completa, módulos/handlers/projetores/stores e testes-fonte relacionados a finanças, custos, devoluções, caixa e fechamentos. A árvore não foi lida inteira linha a linha. Foram examinados os 53 módulos web/finance/src para o inventário de chamadas Shopee; ausência no inventário vale para essa base e esse escopo, não prova ausência de todo serviço externo possível.
+
+Foram executados 27 testes puros do parser de extratos e das sugestões de conciliação, em cópia isolada dos arquivos atuais, com dados sintéticos: 27 aprovados, 0 falhas, 0 testes ignorados. Não houve rede, D1 operacional ou alteração live nesses testes. Os demais testes citados foram lidos; não se atribui à presente auditoria o total de testes da release anterior.
+
+O painel financeiro live redirecionou para /login. Não houve sessão do proprietário, comparação Seller Centre/banco, leitura dos saldos atuais, disparo de cron/sync, importação real, envio de mensagens, saque ou pagamento. A documentação oficial Shopee consultada por web retornou 403/inacessível; permissões/campos atuais precisam ser conferidos no ambiente autorizado.
+
+Nenhuma quantia do lucro atual de Matheus foi calculada ou certificada. A cobertura do código está comprovada nos limites descritos; a cobertura operacional da conta continua exigindo fontes reais. Para concluí-la, são necessárias uma sessão autorizada do painel e as evidências Shopee/banco/custos do mesmo período, por conexão apropriada ou exportação oficial, sem compartilhar senhas/tokens em chat.
+
+8. FONTES DIRETAS
+
+[S1] https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/docs/v4/RELEASE.md
+[S2] https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/finance/src/business-period.mjs
+[S3] https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/finance/src/payment-sample.mjs
+[S4] https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/finance/src/pending-income-scan.mjs
+[S5] https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/finance/src/escrow-releases.mjs
+[S6] https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/finance/src/external-cash-period.mjs
+[S7] https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/finance/src/external-cash-matching.mjs
+[S8] https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/finance/src/returns-reconciliation.mjs
+[S9] https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/cloudflare/src/business-historical-returns.mjs
+[S10] https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/cloudflare/src/business-month.mjs
+[S11] https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/cloudflare/src/business-month-publication.mjs
+[S12] https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/cloudflare/src/business-financial-closeout.mjs
+[S13] https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/cloudflare/src/weekly-operating-report.mjs
+[S14] https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/cloudflare/src/production-weekly-store.mjs
+[S15] https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/cloudflare/src/incurred-production.mjs
+[S16] https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/cloudflare/src/expense-ledger.mjs
+[S17] https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/cloudflare/src/business-tax-policy.mjs
+[S18] https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/cloudflare/src/business-daily-summary.mjs
+[S19] https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/cloudflare/src/physical-returns.mjs
+[S20] https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/cloudflare/src/return-manufacturing-links.mjs
+[S21] https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/cloudflare/src/business-history-sync.mjs
+[S22] https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/cloudflare/src/financial-audit-orchestration.mjs
+[S23] https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/finance/src/cash-statement-import.mjs
+[S24] https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/docs/RESUMO_FINANCEIRO_TOTAL.md
+
+Referências de conceitos, sem definição de regime/alíquota para a empresa:
+Sebrae — Como fazer a gestão financeira do pequeno negócio:
+https://meuatendimento.sebrae.com.br/sites/PortalSebrae/artigos/como-fazer-a-gestao-financeira-do-pequeno-negocio,d999a442d2e5a410VgnVCM1000003b74010aRCRD
+Sebrae — O que é o fluxo de caixa e como aplicá-lo no seu negócio:
+https://meuatendimento.sebrae.com.br/sites/PortalSebrae/artigos/fluxo-de-caixa-o-que-e-e-como-implantar,b29e438af1c92410VgnVCM100000b272010aRCRD
+
+Documentação Shopee alvo, não acessível nesta sessão: v2.payment.get_wallet_transaction_list, v2.payment.get_escrow_detail, v2.payment.get_income_overview e v2.payment.get_payout_detail em https://open.shopee.com/documents/v2/ . Referência de pesquisa não comprova grant da loja nem método/contrato atual.
