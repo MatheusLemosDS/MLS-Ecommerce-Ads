@@ -1379,7 +1379,15 @@
         "web/finance/tests/financial-source-collection.test.mjs",
         "web/finance/tests/financial-source-events.test.mjs",
         "web/finance/tests/financial-source-worker.test.mjs"
-      ]
+      ],
+      "observacao_tecnica_na_conta": {
+        "evidence": "docs/financial-automation/publication-live-20261113.json#natural_automation_observation",
+        "observed_at": "2026-11-13T23:54:35.857216+00:00",
+        "state": "FIRST_NATURAL_SAVED_SOURCE_PAGE_RECORDED",
+        "events": 100,
+        "all_event_types": "ORDER_FINANCIAL_REVIEW",
+        "financial_account_acceptance": false
+      }
     },
     {
       "id": "FINAUTO-04",
@@ -1554,7 +1562,15 @@
         "web/cloudflare/tests/financial-event-batch.test.mjs",
         "web/cloudflare/tests/financial-event-ledger.test.mjs",
         "web/cloudflare/tests/financial-event-store.test.mjs"
-      ]
+      ],
+      "observacao_tecnica_na_conta": {
+        "evidence": "docs/financial-automation/publication-live-20261113.json#natural_automation_observation",
+        "observed_at": "2026-11-13T23:54:35.857216+00:00",
+        "state": "FIRST_NATURAL_SAVED_SOURCE_PAGE_RECORDED",
+        "events": 100,
+        "all_event_types": "ORDER_FINANCIAL_REVIEW",
+        "financial_account_acceptance": false
+      }
     },
     {
       "id": "FINAUTO-06",
@@ -3354,7 +3370,15 @@
         "web/finance/tests/financial-source-collection.test.mjs",
         "web/finance/tests/financial-source-events.test.mjs",
         "web/finance/tests/financial-source-worker.test.mjs"
-      ]
+      ],
+      "observacao_tecnica_na_conta": {
+        "evidence": "docs/financial-automation/publication-live-20261113.json#natural_automation_observation",
+        "observed_at": "2026-11-13T23:54:35.857216+00:00",
+        "state": "FIRST_NATURAL_SAVED_SOURCE_PAGE_RECORDED",
+        "events": 100,
+        "all_event_types": "ORDER_FINANCIAL_REVIEW",
+        "financial_account_acceptance": false
+      }
     },
     {
       "id": "FINAUTO-24",

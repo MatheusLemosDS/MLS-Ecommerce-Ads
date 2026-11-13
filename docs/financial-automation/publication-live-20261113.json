@@ -471,5 +471,48 @@
     "deployment_path": "EXISTING_MANUAL_WRANGLER",
     "builds_configuration_permission": "UNAVAILABLE",
     "force_or_gate_bypass": false
+  },
+  "natural_automation_observation": {
+    "observed_at": "2026-11-13T23:54:35.857216+00:00",
+    "proof_sha256": "4c28fe50ac7ed50f3e30f5e070006085a255606069387622242f33837263b980",
+    "source": "READ_ONLY_D1_AGGREGATES",
+    "natural_cron_forced": false,
+    "job_status": "COLLECTING",
+    "phase": "COLLECT",
+    "period_kind": "MONTH",
+    "started_at": "2026-11-13T23:52:51.657Z",
+    "finished_at": "2026-11-13T23:52:54.404Z",
+    "job_revision": 2,
+    "current_events": 100,
+    "event_types": [
+      {
+        "event_type": "ORDER_FINANCIAL_REVIEW",
+        "current_events": 100
+      }
+    ],
+    "pending_codes": [
+      "ADS_SOURCE_NOT_CONFIRMED",
+      "BANK_SOURCE_NOT_CONFIRMED",
+      "COGS_SOURCE_NOT_CONFIRMED",
+      "EXPENSE_COMPETENCE_NOT_YET_REACHED",
+      "FINANCIAL_SOURCE_MORE_PAGES",
+      "INVENTORY_SOURCE_NOT_CONFIRMED",
+      "ORDERS_COMPETENCE_COHORT_COVERAGE_REQUIRED",
+      "ORDER_EVIDENCE_COLLECTION_INCOMPLETE",
+      "ORDER_RECOGNITION_EVIDENCE_REQUIRED",
+      "ORDER_TOPUP_COMPONENT_REQUIRED",
+      "PAYOUTS_SOURCE_NOT_CONFIRMED",
+      "RECEIVABLES_SOURCE_NOT_CONFIRMED",
+      "RETURNS_SOURCE_NOT_CONFIRMED",
+      "TAX_SOURCE_NOT_CONFIRMED",
+      "WALLET_SOURCE_NOT_CONFIRMED"
+    ],
+    "observed_job_exception_or_retry_wait": false,
+    "close_schema_observed": false,
+    "observer_selects": 10,
+    "observer_remote_writes": 0,
+    "owner_session_used": false,
+    "financial_account_acceptance": false,
+    "limit": "First saved-source page only; all events remain in review. This does not certify recognition, complete coverage, a financial close, wallet balance or bank reconciliation."
   }
 }

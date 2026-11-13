@@ -8,6 +8,11 @@ Fonte `e6bbb189ec2331c0a07136c5b9f720e2e300b5d4`; CI[43527800185](https://github
 A release2026-11-13.2 foi conferida em 2026-11-13T23:50:26.229Z: App`3cc631da-4a91-4fd0-b030-c41537cc8f43`, Auth`c00d5164-f663-4cdf-b137-28f345e181c2`, Finance`50b31451-c6cf-4456-bd09-be5d1956e0da`; fontes raw/configuração e assets em [publication-live-20261113.json](publication-live-20261113.json). Escopo público e autenticação em [publication-live-20261113.json](publication-live-20261113.json). A QA local é sintética: normal/minificado,320/1365px,claro/escuro; controles44px, navegação com documento novo comprovado, CSV canônico,403/503 e falha do asset.
 
 **Aceite financeiro da conta real: NOT_PERFORMED.** Não houve comprovação de Wallet/Payout, conta/saldos bancários, coorte completa de conclusão, produção/estoque de abertura ou valores de uma semana/mês da loja. Ads/PROMO, saques e transferências não foram executados. A matriz continua separando validação local, gaps internos, dependências externas e aceitação financeira. O histórico focalizado abaixo descreve cortes anteriores e não define o recibo final.
+
+### Primeira execução natural observada
+
+Em 13/11/2026, o cron natural iniciou a nova coleta às 23:52:51 UTC e salvou a primeira página até 23:52:54 UTC. A observação somente por dez SELECTs às 23:54:35 UTC encontrou o job de novembro em `COLLECTING/COLLECT`, uma fonte salva e **100 eventos, todos `ORDER_FINANCIAL_REVIEW`**. Não apareceu `RETRY_WAIT` ou código de exceção naquela observação. As 15 pendências incluem mais páginas, coorte/recarga não comprovadas e fontes de carteira/banco ainda ausentes. O schema de fechamento ainda não tinha sido observado; não existe aceite de um fechamento ou saldo real por esse recibo. O observador não forçou o cron, não usou sessão do proprietário e não escreveu fatos. Evidência agregada e hash do recibo original em [publication-live-20261113.json](publication-live-20261113.json).
+
 <!-- END_FINANCIAL_AUTOMATION_PUBLICATION -->
 
 **Histórico da preparação local (anterior ao recibo final acima):**
