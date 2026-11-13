@@ -78,7 +78,7 @@ html[data-theme] .mission-workspace[data-mission-page] .mls-workspace-chart-pair
 .mission-workspace[data-mission-page] .mls-workspace-chart-pair :is(.mission-footnote,.mission-trend-note){font-size:11px;line-height:1.6;color:var(--muted);margin:12px 0 0}
 .mission-workspace[data-mission-page] .mls-workspace-chart-pair .mission-return{font-size:12px;min-height:44px;line-height:1.5;color:var(--accent);white-space:normal}
 .mission-workspace[data-mission-page] .mission-trend-controls{gap:3px;padding:3px;border:1px solid var(--line);border-radius:8px;background:var(--surface);box-shadow:none}
-.mission-workspace[data-mission-page] .mission-trend-controls button{min-height:44px;padding:6px 10px;border:0;border-radius:5px;background:none;color:var(--muted);font-size:11px;font-weight:500;box-shadow:none}
+.mission-workspace[data-mission-page] .mission-trend-controls button{min-height:44px;min-width:44px;padding:6px 10px;border:0;border-radius:5px;background:none;color:var(--muted);font-size:11px;font-weight:500;box-shadow:none}
 .mission-workspace[data-mission-page] .mission-trend-controls button[aria-pressed=true]{color:var(--accent);background:var(--accent-soft);font-weight:600;box-shadow:none}
 .mission-workspace[data-mission-page] .mission-trend-window{font-size:11px;line-height:1.5;color:var(--muted)}
 .mission-workspace[data-mission-page] .mission-trend-window select{font-size:12px;min-height:44px;border-radius:7px;background:var(--surface);border:1px solid var(--line)}
