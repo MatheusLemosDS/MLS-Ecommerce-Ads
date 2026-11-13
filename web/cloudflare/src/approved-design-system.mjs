@@ -4,10 +4,14 @@ import {MLS_REFERENCE_PANEL_CSS} from './mls-reference-panel-design.mjs';
 
 const MLS_REFERENCE_FUNCTIONAL_CSS=String.raw`
 /* Keep existing interactive chart/table controls while matching the supplied reference. */
+.workspace :is(button,input,select,textarea),.ads-workspace :is(button,input,select,textarea){min-height:44px}
+.workspace button,.ads-workspace button{white-space:normal}
+.workspace textarea{min-height:100px;resize:vertical}
 .workspace :is(.table-wrap,.preview-table-wrap,.m3-table-wrap,.v2-viz-table-wrap){max-width:100%;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin}
 .workspace :is(.numeric,.money,[data-money]),.ads-workspace .numeric{text-align:right;font-variant-numeric:tabular-nums}
 .workspace input:is([type=checkbox],[type=radio]),.ads-workspace input:is([type=checkbox],[type=radio]){min-height:20px;height:20px;width:20px;flex:0 0 20px;padding:0;margin-top:3px}
 .workspace :is(button,a,summary){scroll-margin-block:100px}
+.workspace summary{min-height:44px}
 .m3-workbench .m3-ranking-pick{display:block;width:100%;text-align:left;padding:12px;border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:8px;min-height:44px}.m3-chart-selection{padding:16px;border:1px solid var(--line);background:var(--surface-raised);border-radius:10px;margin:16px 0}
 .mls-financial-bars{min-width:0}.mls-financial-bar-list{display:grid;gap:8px}.mls-financial-bar-point{display:grid;grid-template-columns:minmax(0,1fr) minmax(80px,1fr) auto;gap:12px;align-items:center;min-height:44px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--text);text-align:left}.mls-financial-bar-track{position:relative;display:block;height:20px;background:var(--surface-raised);border-radius:4px}.mls-financial-bar-track:before{content:"";position:absolute;left:50%;width:1px;height:100%;background:var(--muted)}.mls-financial-bar-track i{position:absolute;height:100%;background:var(--positive)}.mls-financial-bar-point[data-sign=negative] i{background:var(--negative)}.mls-financial-bar-point[data-role=CONTEXT] i{background:var(--muted)}.mls-financial-bar-point strong{font-size:14px;text-align:right;font-variant-numeric:tabular-nums}.mls-financial-bar-point[aria-pressed=true]{outline:2px solid var(--accent);outline-offset:2px}.mls-financial-bar-readout{font-size:14px;line-height:1.6;margin:12px 0}.mls-financial-bar-unknown{color:var(--muted)}@media(max-width:600px){.mls-financial-bar-point{grid-template-columns:minmax(0,1fr) auto;gap:8px}.mls-financial-bar-track{grid-column:1/-1;grid-row:2}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}

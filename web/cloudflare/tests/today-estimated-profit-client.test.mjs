@@ -29,16 +29,20 @@ function mountRegistry(html,{clock='2026-11-01T03:00:00Z',date='2026-11-01'}={})
 
 function verifyDayLabels(browser){
  const label=id=>browser.nodes.get(id).textContent;
+ const selectedDate=expected=>{const caption=expected+' · Brasília';assert.equal(label('mlsOverviewDayLabel'),caption,'the reference day rail displays the selected date');for(const id of ['commandCenterNetLabel','commandCenterSalesLabel','commandCenterAdsLabel'])assert.equal(browser.nodes.get(id).title,caption,'the compact KPI retains its exact selected date: '+id);};
  assert.equal(label('commandCenterNetLabel'),'Lucro estimado hoje');
  assert.equal(label('commandCenterSalesLabel'),'Vendas hoje');
  assert.equal(label('commandCenterAdsLabel'),'Ads hoje');
+ selectedDate('01/11/2026');
  browser.run("testSelectedDay='2026-10-31';mlsAgentRegistry.refresh();");
  assert.equal(label('commandCenterNetLabel'),'Lucro estimado ontem');
+ selectedDate('31/10/2026');
  assert.equal(label('missionDayComparisonTitle'),'Comparativo financeiro de ontem');
  browser.run("testSelectedDay='2026-10-10';mlsAgentRegistry.refresh();");
- assert.equal(label('commandCenterNetLabel'),'Lucro estimado · 10/10/2026');
- assert.equal(label('commandCenterSalesLabel'),'Vendas · 10/10/2026');
- assert.equal(label('commandCenterAdsLabel'),'Ads · 10/10/2026');
+ assert.equal(label('commandCenterNetLabel'),'Lucro estimado do dia');
+ assert.equal(label('commandCenterSalesLabel'),'Vendas do dia');
+ assert.equal(label('commandCenterAdsLabel'),'Ads do dia');
+ selectedDate('10/10/2026');
  assert.equal(label('missionDayComparisonTitle'),'Comparativo financeiro de 10/10/2026');
  assert.equal(browser.calls.length,0,'changing the displayed date labels cannot request any API or provider');
  browser.run('mlsAgentRegistry.stop();');
@@ -56,7 +60,8 @@ test('Home profit explanation stays visible below the metrics and retains cost c
  assert.doesNotMatch(card,/id="commandCenterNetHelp"/,'the full explanation must not increase compact KPI card height');
  const helpIndex=html.indexOf('id="commandCenterNetHelp"'),metricsEnd=html.indexOf('</article>',html.indexOf('data-mission-metric="roas"')),contextIndex=html.indexOf('<details class="mls-kpi-context"'),agentsIndex=html.indexOf('id="commandAgents"');
  assert.ok(metricsEnd>=0&&helpIndex>metricsEnd&&contextIndex>helpIndex&&agentsIndex>helpIndex,'the explanation is after the metric row and before collapsed context and agents');
- const collapsed=html.match(/<details class="mls-kpi-context">([\s\S]*?)<\/details>/)?.[1];assert.ok(collapsed);assert.doesNotMatch(collapsed,/id="commandCenterNetHelp"/);assert.equal([...html.matchAll(/id="commandCenterNetHelp"/g)].length,1,'the explanation is unique and outside collapsed context');
+ const contextTag=html.match(/<details class="mls-kpi-context"[^>]*>/)?.[0];assert.ok(contextTag);assert.match(contextTag,/id="overviewMetricContext"/);assert.doesNotMatch(contextTag,/\sopen(?:=|\s|>)/,'additional metric context starts collapsed');
+ const collapsed=html.match(/<details class="mls-kpi-context"[^>]*>([\s\S]*?)<\/details>/)?.[1];assert.ok(collapsed);assert.doesNotMatch(collapsed,/id="commandCenterNetHelp"/);assert.equal([...html.matchAll(/id="commandCenterNetHelp"/g)].length,1,'the explanation is unique and outside collapsed context');
  assert.match(html,/<p[^>]*class="[^"]*command-profit-note[^"]*"[^>]*><strong>Base do lucro estimado:<\/strong> <span id="commandCenterNetHelp">/);
  const b=mountRegistry(html+businessDayBody()+'<script>'+AGENT_REGISTRY_CLIENT+'</script>'),help=()=>b.nodes.get('commandCenterNetHelp').textContent;
  try{
@@ -142,13 +147,13 @@ for(const minify of [false,true])test(`generated partial daily amount becomes pr
   const expectedMargin=Number(BigInt(expected)*10000n/BigInt(observed.sales_cents));assert.equal(b.run('mlsAgentRegistry.getSnapshot().day.presentation.margin_bps'),expectedMargin);
   assert.equal(b.nodes.get('commandCenterMarginLabel').textContent,'Margem parcial');assert.equal(b.nodes.get('commandCenterMarginScope').hidden,false);assert.equal(b.nodes.get('commandCenterMarginScope').textContent,'Antes das despesas do mês');assert.equal(b.nodes.get('commandCenterMargin').textContent,new Intl.NumberFormat('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:2}).format(expectedMargin/100)+'%');assert.match(b.nodes.get('commandCenterMarginHelp').textContent,/não representa a margem líquida completa/);
   assert.match(b.nodes.get('businessDayNetLabel').textContent,/Saldo parcial antes das despesas mensais/);
-  assert.equal(b.nodes.get('commandCenterNetLabel').textContent,'Saldo parcial · 20/10/2026');assert.match(b.nodes.get('commandCenterNet').textContent,/27,59/);
+  assert.equal(b.nodes.get('commandCenterNetLabel').textContent,'Saldo parcial do dia');assert.equal(b.nodes.get('commandCenterNetLabel').title,'20/10/2026 · Brasília');assert.equal(b.nodes.get('mlsOverviewDayLabel').textContent,'20/10/2026 · Brasília');assert.match(b.nodes.get('commandCenterNet').textContent,/27,59/);
   assert.equal(b.nodes.get('missionSourceState').hidden,false,'known sales and Ads cannot hide the missing expense reason');
   const action=b.nodes.get('commandCenterNetAction');assert.equal(action.hidden,false);assert.equal(action.href,'/admin?tab=agent-finance&month=2026-10&date=2026-10-20#businessMonthExpensesForm');
   assert.equal(calls.filter(call=>call.path==='finance/business-month').length,0,'viewing the subtotal cannot confirm expenses automatically');
   assert.equal(await b.nodes.get('businessMonthExpensesZero').onclick(),true,b.nodes.get('businessMonthExpenseState').textContent);await b.flush();b.run('mlsAgentRegistry.refresh();');
   assert.equal(b.run('brazaDayDashboard.getSnapshot().net_cents'),expected);assert.equal(b.run('mlsAgentRegistry.getSnapshot().day.net_cents'),expected);
-  assert.equal(b.nodes.get('commandCenterNetLabel').textContent,'Lucro estimado · 20/10/2026');assert.match(b.nodes.get('commandCenterNet').textContent,/27,59/);
+  assert.equal(b.nodes.get('commandCenterNetLabel').textContent,'Lucro estimado do dia');assert.equal(b.nodes.get('commandCenterNetLabel').title,'20/10/2026 · Brasília');assert.equal(b.nodes.get('mlsOverviewDayLabel').textContent,'20/10/2026 · Brasília');assert.match(b.nodes.get('commandCenterNet').textContent,/27,59/);
   assert.equal(b.run('mlsAgentRegistry.getSnapshot().day.margin_bps'),expectedMargin);assert.equal(b.nodes.get('commandCenterMarginLabel').textContent,'Margem estimada');assert.equal(b.nodes.get('commandCenterMarginScope').hidden,true);
   assert.equal(action.hidden,true);assert.equal(b.nodes.get('missionSourceState').hidden,true);
   assert.equal(calls.filter(call=>call.path==='finance/business-month').length,1);assert.equal(calls.filter(call=>call.path==='finance/business-month-view?month=2026-10').length,2,'confirmation must refresh the saved daily view immediately rather than wait for the next timer');
