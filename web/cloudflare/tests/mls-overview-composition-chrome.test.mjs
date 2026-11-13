@@ -30,7 +30,7 @@ test('overview keeps six KPI bindings, the original six-agent team, one release 
  assert.doesNotMatch(body,/class="app-release-links"/);
  assert.match(body,/mls-command-globe/);assert.match(body,/id="mlsOverviewPeriod"/);assert.match(body,/id="mlsOverviewDate"/);
  assert.match(body,/mls-overview-performance/);assert.match(body,/mls-overview-activity/);assert.match(body,/mls-overview-priorities/);
- assert.ok(body.indexOf('id="appReleaseOverviewTitle"')<body.indexOf('class="command-center-grid mls-overview-panels"'));
+ assert.ok(body.indexOf('id="appReleaseOverviewTitle"')>body.indexOf('class="command-center-grid mls-overview-panels"'),'release discovery follows the reference performance panels');
  assert.doesNotMatch(MLS_APPROVED_DESIGN_CSS,/repeat\(4,minmax\(0,1fr\)\).*important/);
  assert.doesNotMatch(MISSION_CSS,/V3 density pass 2|grid-template-columns:repeat\(3,minmax\(0,1fr\)\)!important/);
 });
@@ -80,7 +80,9 @@ async function browser(url,{width,height,theme,minify}){
     avatars:document.querySelectorAll('#missionHubGrid .mls-agent-avatar svg').length,releaseGeometry:document.querySelector('.mls-release-strip').getBoundingClientRect().toJSON(),releaseLinks:document.querySelectorAll('.mls-release-strip a').length,
     globe:document.querySelectorAll('.mls-command-globe svg').length,
     sourceCollapsed:document.querySelector('.mls-overview-source').open===false,
-    periodTouchHeight:document.getElementById('mlsOverviewPeriod').getBoundingClientRect().height,
+    shellGeometry:{sidebar:document.querySelector('.sidebar').getBoundingClientRect().toJSON(),topbar:document.querySelector('.mls-shell-topbar').getBoundingClientRect().toJSON()},
+    periodAdapterHidden:document.getElementById('mlsOverviewPeriod').hidden,
+    dayControls:[...document.querySelectorAll('[data-overview-period]')].map(n=>({period:n.dataset.overviewPeriod,rect:n.getBoundingClientRect().toJSON(),visible:n.checkVisibility({checkVisibilityCSS:true})})),
     errors:window.__mlsOverviewErrors||[]};})()`);
   if(output){mkdirSync(output,{recursive:true});writeFileSync(path.join(output,`geometry-${width}-${theme}-${minify?'min':'normal'}.json`),JSON.stringify(proof,null,2)+'\n');}
   const overflowDiagnostic=JSON.stringify({requestedWidth:width,layoutWidth:proof.width,documentWidth:proof.scroll,visualWidth:proof.visualWidth,overflowers:proof.overflowers,agentHeader:proof.agentHeader});
@@ -89,14 +91,23 @@ async function browser(url,{width,height,theme,minify}){
   assert.deepEqual(proof.cardOrder,['finance','ads','products','production','returns','auditor','hermes']);assert.equal(proof.avatars,7);assert.equal(proof.globe,1);assert.equal(proof.sourceCollapsed,true);
   assert.match(proof.activity,/Versão/);assert.match(proof.activity,/Novidades/);assert.equal(proof.detail,true);assert.deepEqual(proof.errors,[]);
   assert.ok(proof.bodyFont>=14,'V4.1 body text remains at least14px');assert.equal(proof.kpiText.length,6);
-  for(const card of proof.kpiText){assert.ok(card.texts.some(n=>n.amount),'each KPI retains its amount');for(const text of card.texts){assert.equal(text.insideCard,true,'essential KPI text stays inside its card: '+JSON.stringify({metric:card.metric,...text}));assert.deepEqual(text.clippedBy,[],'essential KPI text has no clipped scroll/hidden ancestor: '+JSON.stringify({metric:card.metric,...text}));assert.ok(text.font>=(text.amount?(width===1365?22:21):text.chartStatus?12:13),'V4.1 amount and metadata fonts remain readable: '+JSON.stringify({metric:card.metric,...text}));}}
+  // The supplied V4.1 HTML uses compact 10–12px annotations, 24px desktop
+  // amounts and 14px body text. Keep every annotation visible/unclipped while
+  // checking its own role, rather than inflating all paragraphs to 14px.
+  for(const card of proof.kpiText){assert.ok(card.texts.some(n=>n.amount),'each KPI retains its amount');for(const text of card.texts){assert.equal(text.insideCard,true,'essential KPI text stays inside its card: '+JSON.stringify({metric:card.metric,...text}));assert.deepEqual(text.clippedBy,[],'essential KPI text has no clipped scroll/hidden ancestor: '+JSON.stringify({metric:card.metric,...text}));assert.ok(text.font>=(text.amount?(width===1365?22:21):10),'reference amount and metadata fonts remain readable: '+JSON.stringify({metric:card.metric,...text}));}}
+  assert.equal(proof.periodAdapterHidden,true,'the old select remains a controller adapter, not a duplicate visible date control');
+  assert.deepEqual(proof.dayControls.map(n=>n.period),['today','yesterday','custom']);
+  for(const control of proof.dayControls){assert.equal(control.visible,true);assert.ok(control.rect.height>=44&&control.rect.width>=44,'visible day choice keeps a44px target: '+JSON.stringify(control));}
   if(width===1365){
+   assert.equal(proof.shellGeometry.sidebar.width,228,'sidebar follows the supplied HTML');
+   assert.equal(proof.shellGeometry.topbar.height,64,'desktop header follows the supplied HTML');
    for(const [kind,rows] of [['kpi',proof.kpis],['overview agents',proof.overviewAgentRects],['lower panels',proof.panels]])assert.equal(new Set(rows.map(r=>Math.round(r.top))).size,1,kind+' share one row');
-   assert.ok(proof.releaseGeometry.top>proof.kpis[0].top);assert.ok(proof.panels[0].top>proof.releaseGeometry.top);
+   assert.ok(proof.releaseGeometry.top>proof.kpis[0].top);assert.ok(proof.releaseGeometry.top>proof.panels[0].top,'release discovery follows the reference performance panels');
    assert.ok(proof.overviewAgentRects[0].top>proof.kpis[0].top);assert.ok(proof.releaseGeometry.top>proof.overviewAgentRects[0].top);
-   assert.ok(proof.kpis.every(row=>row.height>=165&&row.height<=250),'V4.1 readable six-column cards: '+JSON.stringify(proof.kpis));
+   assert.ok(proof.kpis.every(row=>row.height>=193&&row.height<=220),'reference six-column KPI proportions in the fixed unavailable fixture: '+JSON.stringify(proof.kpis));
+   assert.ok(proof.overviewAgentRects.every(row=>row.height>=251&&row.height<=280),'reference agents stay compact while retaining their unavailable-state text: '+JSON.stringify(proof.overviewAgentRects));
   }
-  if(width<=390){assert.equal(new Set(proof.panels.map(r=>Math.round(r.top))).size,2,'mobile work panels stack in reading order');assert.ok(proof.periodTouchHeight>=44,'mobile date control has a44px touch target');assert.equal(new Set(proof.overviewAgentRects.map(r=>Math.round(r.top))).size,3,'the approved six agent cards form three compact mobile rows');for(const top of new Set(proof.overviewAgentRects.map(r=>Math.round(r.top))))assert.equal(proof.overviewAgentRects.filter(r=>Math.round(r.top)===top).length,2,'mobile rows keep two readable cards');}
+  if(width<=390){assert.equal(new Set(proof.panels.map(r=>Math.round(r.top))).size,2,'mobile work panels stack in reading order');assert.equal(new Set(proof.overviewAgentRects.map(r=>Math.round(r.top))).size,3,'the approved six agent cards form three compact mobile rows');for(const top of new Set(proof.overviewAgentRects.map(r=>Math.round(r.top))))assert.equal(proof.overviewAgentRects.filter(r=>Math.round(r.top)===top).length,2,'mobile rows keep two readable cards');}
   for(const row of [...proof.kpis,...proof.overviewAgentRects,...proof.panels,proof.releaseGeometry])assert.ok(row.left>=-2&&row.right<=width+3,JSON.stringify(row));
   // A slightly wider mode-label font reproduced the CI-only intrinsic-width
   // overflow. The real heading must reflow its controls, including when the
@@ -112,9 +123,10 @@ async function browser(url,{width,height,theme,minify}){
    let monthReads=0;globalThis.brazaMonthDashboard={selectMonth:()=>{monthReads++;return Promise.resolve(true);}};
    globalThis.brazaDayDashboard.bootstrapState({phase:'READY'});globalThis.mlsAgentRegistry.refresh();
    const enabled=!period.disabled&&!original.disabled;
-   period.value='yesterday';period.dispatchEvent(new Event('change'));
+   const choices=[...document.querySelectorAll('[data-overview-period]')];
+   choices.find(n=>n.dataset.overviewPeriod==='yesterday').click();
    const selectedYesterday=globalThis.brazaDayDashboard.getSelection(),originalYesterday=original.value;
-   period.value='custom';period.dispatchEvent(new Event('change'));
+   choices.find(n=>n.dataset.overviewPeriod==='custom').click();
    proxy.value='2026-10-03';proxy.dispatchEvent(new Event('change'));
    const custom=globalThis.brazaDayDashboard.getSelection(),customVisible=!proxy.hidden;
    proxy.value='2099-01-01';proxy.dispatchEvent(new Event('change'));
@@ -138,7 +150,7 @@ async function browser(url,{width,height,theme,minify}){
   assert.equal(hydrated.rows.find(n=>n.id==='finance').metric,hydrated.finance);assert.equal(hydrated.rows.find(n=>n.id==='ads').metric,hydrated.ads);
   await evaluate('scrollTo(0,0)');
   if(output){const shot=await send('Page.captureScreenshot',{format:'png',fromSurface:true,captureBeyondViewport:false});writeFileSync(path.join(output,`overview-agents-hydrated-${width}-${theme}-${minify?'min':'normal'}.png`),Buffer.from(shot.data,'base64'));}
-  const nativeClick=async selector=>{const box=await evaluate(`(()=>{const n=document.querySelector(${JSON.stringify(selector)});if(!n?.checkVisibility({checkVisibilityCSS:true}))throw Error('VISIBLE_CARD_CONTROL_MISSING');n.scrollIntoView({block:'center',behavior:'instant'});const r=n.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2};})()`);await send('Input.dispatchMouseEvent',{type:'mousePressed',button:'left',clickCount:1,...box});await send('Input.dispatchMouseEvent',{type:'mouseReleased',button:'left',clickCount:1,...box});};
+  const nativeClick=async selector=>{const point=await evaluate(`(()=>{const n=document.querySelector(${JSON.stringify(selector)});if(!n?.checkVisibility({checkVisibilityCSS:true}))throw Error('VISIBLE_CARD_CONTROL_MISSING');n.scrollIntoView({block:'center',behavior:'instant'});const r=n.getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2,hit=document.elementFromPoint(x,y);return {x,y,reachable:hit===n||n.contains(hit),hit:hit?.id||hit?.className||hit?.tagName,rect:r.toJSON()};})()`);assert.equal(point.reachable,true,'native navigation target is covered: '+JSON.stringify({selector,...point}));const {x,y}=point;await send('Input.dispatchMouseEvent',{type:'mousePressed',button:'left',clickCount:1,x,y});await send('Input.dispatchMouseEvent',{type:'mouseReleased',button:'left',clickCount:1,x,y});};
   const waitFor=async expression=>{for(let n=0;n<120;n++){if(await evaluate(expression))return;await pause(25);}assert.fail('navigation did not reach '+expression);};
   const selectedMonth=await evaluate("new URL(location.href).searchParams.get('month')");assert.equal(selectedMonth,'2026-10');
   for(const id of overviewAgents){

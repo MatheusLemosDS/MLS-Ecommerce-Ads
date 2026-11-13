@@ -7236,5 +7236,23 @@
       "publisher_owner_requests": 0,
       "publisher_provider_calls": 0
     }
+  },
+  "layout_reference_parity_2026_11_13": {
+    "state": "IMPLEMENTATION_AND_VALIDATION_IN_PROGRESS",
+    "release_planned": "2026-11-13.1",
+    "branch": "feature/layout-reference-parity-20261113",
+    "base_commit": "0016c4b78d45c47066b259bbaf42578662e11e35",
+    "reference_html": "docs/v4/input/MLS_COMMERCE_OS_LAYOUT.html",
+    "reference_sha256": "135002e7193409451e78263ee5d45fdcfb53e1061804a3a39af84fdc5edcc5f3",
+    "report": "docs/MLS_LAYOUT_REFERENCE_PARITY_2026_11_13.md",
+    "scope": "PRESENTATION_AND_LAYOUT_PARITY_ONLY",
+    "visual_acceptance": "NOT_APPROVED_YET",
+    "current_ci": "NOT_RECORDED",
+    "publication": "NOT_DECLARED",
+    "live_verification": "NOT_PERFORMED_FOR_THIS_INCREMENT",
+    "database_schema_math_provider_changes": false,
+    "prior_v41_release": "2026-11-12.1_PUBLISHED_PR119_MERGED",
+    "baseline_connected_evidence": "LOCAL_SYNTHETIC_DAILY_COLLECTOR_MANUFACTURING_FIXTURE",
+    "no_real_operational_acceptance": true
   }
 }

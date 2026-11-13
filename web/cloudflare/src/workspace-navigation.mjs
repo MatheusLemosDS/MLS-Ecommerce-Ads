@@ -44,7 +44,7 @@ export function workspaceSecondaryNavigation(active,{role='owner',mobile=false}=
 
 export function workspaceNavigation(active,{role='owner',mobile=false}={}){
  const owner=role==='owner',current=workspaceActiveKey(active),keys=owner?(mobile?workspaceOwnerMobilePrimary:workspaceOwnerPrimary):workspaceReviewPrimary;
- return `<nav class="workspace-nav${mobile?' workspace-nav-mobile':''}" aria-label="${mobile?'Navegação principal no celular':'Navegação principal'}" data-workspace-role="${owner?'owner':'review'}">${keys.map(key=>(!mobile&&owner&&({overview:'Principal',orders:'Operação',finance:'Gestão',hermes:'Inteligência'})[key]?'<span class="workspace-nav-group-label">'+({overview:'Principal',orders:'Operação',finance:'Gestão',hermes:'Inteligência'})[key]+'</span>':'')+workspaceNavLink(key,current,{mobile})).join('')}${mobile&&owner?workspaceSecondaryNavigation(active,{role,mobile:true}):''}</nav>`+(mobile?'':workspaceSecondaryNavigation(active,{role}));
+ return `<nav class="workspace-nav${mobile?' workspace-nav-mobile':''}" aria-label="${mobile?'Navegação principal no celular':'Navegação principal'}" data-workspace-role="${owner?'owner':'review'}">${keys.map(key=>(!mobile&&owner&&({orders:'Operação',finance:'Gestão',hermes:'Inteligência'})[key]?'<span class="workspace-nav-group-label">'+({orders:'Operação',finance:'Gestão',hermes:'Inteligência'})[key]+'</span>':'')+workspaceNavLink(key,current,{mobile})).join('')}${mobile&&owner?workspaceSecondaryNavigation(active,{role,mobile:true}):''}</nav>`+(mobile?'':workspaceSecondaryNavigation(active,{role}));
 }
 
 export const WORKSPACE_NAVIGATION_CSS=String.raw`

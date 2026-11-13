@@ -448,7 +448,10 @@ ads_calendar=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/ads-ca
 ads_calendar='const brazaAdsCalendar = (() => {\n'+ads_calendar+'\nreturn {projectAdsCalendarRequest,projectAdsCalendar,getAdsCalendar,buildAdsCalendar};\n})();\nconst {projectAdsCalendarRequest,projectAdsCalendar,getAdsCalendar,buildAdsCalendar}=brazaAdsCalendar;\n'
 # Shared approved design is explicitly injected into the legacy paste-ready App bundle.
 # Keep one source in the outer scope before Ads and Admin (imports are stripped).
+reference_shell=re.sub(r'^export ', '', (root/'src/mls-reference-shell-design.mjs').read_text(), flags=re.M)
+reference_panels=re.sub(r'^export ', '', (root/'src/mls-reference-panel-design.mjs').read_text(), flags=re.M)
 approved_design=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/approved-design-system.mjs').read_text(),flags=re.M), flags=re.M)
+approved_design=reference_shell+'\n'+reference_panels+'\n'+approved_design
 ads_workspace=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/ads-workspace-view.mjs').read_text(),flags=re.M), flags=re.M)
 scaling_preparation=re.sub(r'^export ', '', (root/'src/scaling-preparation.mjs').read_text(),flags=re.M)
 app_ads_summary=re.sub(r'^export ', '', re.sub(r'^import .*\n','',(root/'src/app-ads-summary.mjs').read_text(),flags=re.M), flags=re.M)

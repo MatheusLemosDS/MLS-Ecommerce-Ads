@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {missionWorkspacesBody} from '../src/mission-control.mjs';
 import {MLS_AGENT_WORKSPACE_CSS} from '../src/mls-agent-workspace-layout.mjs';
+import {workspaceNavigation} from '../src/workspace-navigation.mjs';
 import {compiledOwnerReportPage} from './owner-report-browser-fixture.mjs';
 
 function workspaces(){
@@ -19,7 +20,9 @@ test('approved specialist components preserve four metric bindings and real navi
   for(const part of ['label','metric','hint'])for(let index=0;index<4;index++)
    assert.equal((html.match(new RegExp('id="mission-'+id+'-'+part+'-'+index+'"','g'))||[]).length,1,id+'/'+part+'/'+index);
   assert.ok(html.indexOf('class="mission-page-tabs mls-module-tabs"')<html.indexOf('id="mission-'+id+'-metrics"'),id+': direct workflows precede supporting metrics');
-  assert.match(html,/href="\/admin\?tab=agents" data-mission-open="agents"/);
+  // The reference uses the shared navigation for the team directory instead
+  // of repeating a second header action in every specialist workspace.
+  assert.match(workspaceNavigation('agent-'+id,{role:'owner'}),/href="\/admin\?tab=agents"[^>]*data-tab="agents"/,'the team directory remains in the actual shared navigation');
   assert.doesNotMatch(html,/class="mls-workspace-period"|Período da fonte/,'a decorative label must not imitate a period selector');
   assert.match(html,/class="mission-orb mission-agent-avatar mls-agent-avatar"[^>]*><svg/);
  }
