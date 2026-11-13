@@ -51,7 +51,7 @@
     "rendering_bug_fix": "Ignore exact chart-owned mutations and disconnected targets in the month observer; retain connected real/mixed source batches.",
     "database_schema_formulas_providers_auth_logic": "No changes in this increment; source diff and final vector are independent checks.",
     "full_commercial_audit_reopened": false,
-    "public_login_hotfix": "App-only 44px minimum for the real legacy login theme toggle; compiled native regression preserves filled fields, theme cycling and form action."
+    "public_login_hotfix": "App-only 44px minimum for the real legacy login theme toggle; compiled native regression preserves credential fields, theme cycling and form action."
   },
   "connected_capture": {
     "local_report": "/workspace/mls-layout-reference-qa/candidate-login-control-final/results.json",
