@@ -16,4 +16,4 @@ function financialAllocationBody(){return `<details id="financialAutomationAlloc
 
 // Controlled static markup travels with the existing same-origin workspace
 // asset. Direct module rendering keeps working without a placeholder host.
-export const FINANCIAL_AUTOMATION_MARKUP_CLIENT=';(()=>{const host=document.getElementById("financialAutomationHost");if(host)host.innerHTML='+JSON.stringify('<style>'+FINANCIAL_AUTOMATION_CSS+'</style>'+financialAutomationBody())+';})();';
+export const FINANCIAL_AUTOMATION_MARKUP_CLIENT=';(()=>{const host=document.getElementById("financialAutomationHost");if(host&&!document.getElementById("financialAutomation")){const parsed=new DOMParser().parseFromString('+JSON.stringify('<style>'+FINANCIAL_AUTOMATION_CSS+'</style>'+financialAutomationBody())+',"text/html");host.replaceChildren(...Array.from(parsed.head.childNodes),...Array.from(parsed.body.childNodes));}})();';

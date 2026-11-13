@@ -185,7 +185,8 @@ test('synthetic owner visual smoke in desktop and mobile Chrome with zero real-a
 
 test('disabled release switch keeps legacy Ctrl+K navigation usable in real Chrome',{timeout:45000},async t=>{
  if(!chrome)return t.skip('Chrome is not installed');
- const {html}=await compiledOwnerReportPage(false,{ownerPreview:false});
+ const page=await compiledOwnerReportPage(false,{ownerPreview:false});
+ const html=page.html.replace('<head>','<head><script>globalThis.__legacyNavigationErrors=[];addEventListener("error",e=>__legacyNavigationErrors.push(String(e.message||"RESOURCE_ERROR")));addEventListener("unhandledrejection",e=>__legacyNavigationErrors.push(String(e.reason?.message||e.reason)));</script>');
  const host=http.createServer((req,res)=>{
   if(req.url?.startsWith('/api/')){res.writeHead(503,{'content-type':'application/json'});res.end('{"error":"SYNTHETIC_NO_REMOTE_API"}');return;}
   res.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store'});res.end(html);
@@ -203,7 +204,7 @@ test('disabled release switch keeps legacy Ctrl+K navigation usable in real Chro
    }
    await sleep(75);
   }
-  assert.equal(ready,true,'legacy owner navigation was not initialized');
+  assert.equal(ready,true,'legacy owner navigation was not initialized'+(ready?'':' '+JSON.stringify(await cdp.evaluate("({errors:globalThis.__legacyNavigationErrors,search:!!globalThis.mlsWorkspaceSearch,month:globalThis.brazaMonthDashboard?.getSnapshot?.(),message:document.getElementById('message')?.textContent,scripts:[...document.scripts].filter(s=>s.src).map(s=>s.src)})"))));
   const result=await cdp.evaluate("(()=>{"+
    "const overlay=document.getElementById('missionGlobalSearch');"+
    "const panel=globalThis.mlsWorkspaceSearch;panel.open();"+

@@ -38,10 +38,10 @@ export const MLS_BROWSER_ASSET_MANIFEST=Object.freeze({
     },
     {
       "id": "workspace",
-      "path": "/assets/mls/770cf914c80043fd048e1713fe518fb8fe8529f98034627f1908d080cf840a05.js",
-      "sha256": "770cf914c80043fd048e1713fe518fb8fe8529f98034627f1908d080cf840a05",
-      "integrity": "sha256-dwz5FMgAQ/0EjhcT/lGPuP6FKfmANGJ/GQjQgM+ECgU=",
-      "bytes": 461905
+      "path": "/assets/mls/4415116e2b1d7f3118501dc009aa5cd2fa3e3ff280e96a82a867da4d9e4e3c33.js",
+      "sha256": "4415116e2b1d7f3118501dc009aa5cd2fa3e3ff280e96a82a867da4d9e4e3c33",
+      "integrity": "sha256-RBURbisdfzEYUB3ACapc0vo+P/KA6WqCqGfaTZ5OPDM=",
+      "bytes": 462097
     }
   ],
   "retained": [
