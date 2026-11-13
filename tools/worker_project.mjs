@@ -6,8 +6,8 @@ export const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.
 export const TARGETS = Object.freeze({
   app: Object.freeze({name: 'brazacommerce-app', main: '../../dist/app-worker.mjs', baselineHashes: [
     // Exact reference-layout candidate and Wrangler 4.151.1 dry-run; activation requires CI and Live checks.
-    'e6354a2e8cffbafe10aacd19aa976ba99df166a98715b6a6914f17f7fa816367',
-    'ae136d845cbdd8f7028b0f0eaf3bee1a7bbbbcc3cb8a75f1b0b03ba87bd06dee',
+    '2483e3bda13238ecc9a6058937005d61f17c7c36c850284117a03d83a13fd1cd',
+    'ad69d7855a6b8f269b4f2d163c1f2099442ab8e47a0c99fcbd423b2c89dc639f',
     // V4.1 final professional layout and scoped account backend; independently checked before Live activation.
     '82fe3d3ecf19b0f72254dc5778e8a8335505bfc4db4071cc01afce4cfb7cea48',
     '4a1d4b279fb1f06fb3717d41ac38b0e3802cf89aa824192f882949d75f17882b',
