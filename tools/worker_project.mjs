@@ -6,6 +6,11 @@ export const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.
 export const TARGETS = Object.freeze({
   app: Object.freeze({name: 'brazacommerce-app', main: '../../dist/app-worker.mjs', baselineHashes: [
     // V4.1 final professional layout and scoped account backend; independently checked before Live activation.
+    '82fe3d3ecf19b0f72254dc5778e8a8335505bfc4db4071cc01afce4cfb7cea48',
+    '4a1d4b279fb1f06fb3717d41ac38b0e3802cf89aa824192f882949d75f17882b',
+    '1a6bc6bd395a69cbb9f8631fd0764640568390ed631ca8e27230d36111fda8a0',
+    // Exact Wrangler 4.151.1 dry-run source for this candidate; activation still requires the release gates.
+    '9fd3ea9d56f4565efebd78ac3893b44bb9e25e4cdf8323e55a256a18d9048bb7',
     'ae11ec6d2fc4c84db96c834fd3d20be67cc9d142ae241aed926a806c8e956ea6',
     'f5b57ed2306bc74379650ada58f092ddc419fb4220cff03b051a96281e6e9f15',
     // Reviewed V4.1 layout, scoped commercial storage and real-source charts; Live requires CI and exact deployment checks.
@@ -222,6 +227,7 @@ export const TARGETS = Object.freeze({
   auth: Object.freeze({name: 'brazacommerce-auth', main: '../../dist/auth-worker.mjs', baselineHashes: [
     // V4.1 final professional layout and scoped account backend; independently checked before Live activation.
     'd5eed8ab9cddaa8d6917f4e4ca668a3f7074bad5603254656414db5a490dc172',
+    'd0e1093e22bcfd8dfb314f25edc7d7e9cd6694a65872e1f1f35e47d916cd83b7',
     // Reviewed four-line optional scoped fetch extension to the retained unwrapped Auth base.
     'aaeced29f8d6c9a4b362bde5f9d8ea130abd8b2c2ad7cdd282725b0f88b4ffc2',
     // Reviewed V4.1 layout, scoped commercial storage and real-source charts; Live requires CI and exact deployment checks.
@@ -272,6 +278,7 @@ export const TARGETS = Object.freeze({
   finance: Object.freeze({name: 'brazacommerce-finance', main: '../../dist/finance-worker.mjs', baselineHashes: [
     // Reviewed V4.1 layout, scoped commercial storage and real-source charts; Live requires CI and exact deployment checks.
     'ffbcea3b7ffe5c0a94b0d4d8c4908738e6da76386040995bba982060a5f9bb71',
+    'c81f2f28bf4ba16c3a65478e7ca4ab153fff54e00f5ed9c9d73a2698366a6913',
     // Reviewed read-only weekly operating summary and exact browser asset extraction.
     '46443ef4d0e98005ada9d516ff6bbee06f0e044861fafb512a2223218b3af7cf',
     // Reviewed owner-confirmed Nubank/Shopee file evidence; private Finance sidecar only.
