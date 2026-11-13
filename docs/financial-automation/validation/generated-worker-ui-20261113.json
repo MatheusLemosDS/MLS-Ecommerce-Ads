@@ -1,7 +1,7 @@
 {
   "schema": "mls_financial_ui_validation_v1",
-  "generated_at": "2026-11-13T23:07:37.754280+00:00",
-  "app_worker_sha256": "17708afc909c858fb518759e7556de99ecf9593999ef77b5cc7b2d9b0c221bb0",
+  "generated_at": "2026-11-13T23:31:20.700663+00:00",
+  "app_worker_sha256": "721b3f369b93000dd5e8a0065cd83fd4bd7f54baae262c4b635e5a118fffde64",
   "synthetic": true,
   "real_owner_authenticated": false,
   "provider_calls": 0,
@@ -12,7 +12,7 @@
         "financial-automation-client.test.mjs",
         "financial-inventory-client.test.mjs"
       ],
-      "passed": 11,
+      "passed": 13,
       "failed": 0
     },
     {
@@ -107,5 +107,24 @@
     "whole_test_retries": false,
     "assertions_or_timeouts_relaxed": false,
     "runtime_changed": false
-  }
+  },
+  "quality_guard_labels": {
+    "codes": [
+      "ORDER_ADJUSTMENT_CLASSIFICATION_REQUIRED",
+      "ORDER_TOPUP_COMPONENT_REQUIRED"
+    ],
+    "normal_and_minified_behavior_tests_passed": 2,
+    "unconfirmed_profit_remains_null": true,
+    "only_one_read_no_writes": true
+  },
+  "latest_build_verification": {
+    "app_worker_sha256": "721b3f369b93000dd5e8a0065cd83fd4bd7f54baae262c4b635e5a118fffde64",
+    "financial_and_inventory_unit_tests_passed": 13,
+    "generated_worker_native_tests_passed": 2,
+    "display_profiles": 8,
+    "normal_and_minified": true,
+    "production_account_verified": false,
+    "production_mutations": 0
+  },
+  "root_security_and_strict_bootstrap_verified_app_sha256": "17708afc909c858fb518759e7556de99ecf9593999ef77b5cc7b2d9b0c221bb0"
 }

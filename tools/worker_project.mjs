@@ -5,6 +5,10 @@ import path from 'node:path';
 export const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const TARGETS = Object.freeze({
   app: Object.freeze({name: 'brazacommerce-app', main: '../../dist/app-worker.mjs', baselineHashes: [
+    // Reviewed NET quality guard: unclassified deductions stay pending; exact compiled/dry artifacts.
+    '721b3f369b93000dd5e8a0065cd83fd4bd7f54baae262c4b635e5a118fffde64',
+    '44ce1c8cd1c2d8982560eb9c7685ea7d1638adfbcd4bc0ed0b488c50567e81f4',
+
     // Controlled DOMParser hydration: exact source and same-path dry package, still subject to all CI/Live gates.
     '17708afc909c858fb518759e7556de99ecf9593999ef77b5cc7b2d9b0c221bb0',
     '6356b2b0bdac42e91cc843c90a418bb914cd70ede50a7a8462d763838e81f33f',

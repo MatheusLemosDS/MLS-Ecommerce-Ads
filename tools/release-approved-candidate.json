@@ -1,11 +1,11 @@
 {
   "schema": "mls_release_candidate_v1",
   "base_commit": "6578e21098ff799e59433af92880d249432ceeb4",
-  "prepared_source_commit": "e2b9be0e1b1391085ecc753b1df1334bbb31d0f3",
+  "prepared_source_commit": "bc89ab3c6d26faf26ea6216252f50441aa1a2df5",
   "owner_authorization": "OWNER_REQUESTED_FINANCIAL_AUTOMATION_LIVE_2026_11_13",
   "commercial_writes_allowed": false,
   "expected_hashes": {
-    "app": "17708afc909c858fb518759e7556de99ecf9593999ef77b5cc7b2d9b0c221bb0",
+    "app": "721b3f369b93000dd5e8a0065cd83fd4bd7f54baae262c4b635e5a118fffde64",
     "auth": "97659ca7da62cfcfad785dc3ad599ae8526191e721eba6ac9e876d2ccc253a9c",
     "finance": "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4"
   },
@@ -51,6 +51,7 @@
     "web/cloudflare/browser-assets-published/770cf914c80043fd048e1713fe518fb8fe8529f98034627f1908d080cf840a05.js",
     "web/cloudflare/browser-assets-published/a96fe8cfa2d4fedeb349a5a7109e6b553fbb1bb9b4f0d2d2be326ba6740ed7c1.js",
     "web/cloudflare/browser-assets-published/d5961f95cc6649d963f42e28a50e2e12563ce0d0d66833bb28ce5e16d172922c.js",
+    "web/cloudflare/browser-assets-published/e3b12127a14b70185a25c83dae547facc946a4fe87afe0369a8f47665f6398ca.js",
     "web/cloudflare/browser-assets-published/ec6397070416275d880f293d4abe8d7f531215af369d7e9a275c10f019a8c3c8.js",
     "web/cloudflare/build.py",
     "web/cloudflare/src/admin-client.mjs",
