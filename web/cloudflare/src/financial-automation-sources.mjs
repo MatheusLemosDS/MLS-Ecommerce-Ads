@@ -31,11 +31,14 @@ async function faSourceOrderEvent(scope,fact,policy,observed){
   if(policy.recognition==='PAID_ORDER_CREATE_ESTIMATE')competence=created;
   else if(policy.recognition==='COMPLETED_ORDER'&&fact.bucket==='completed')competence=completed;
  }
- const known=paid&&policy?.revenue_base==='NET_PAYOUT'&&fact.payment_covered===true&&fact.currency===scope.currency&&valid&&fact.diagnostic===null&&created!==null&&competence!==null&&competence<=observed;
+ const topupField='ads_escrow_top_up_fee_or_technical_support_fee',topup=details?.amounts?.[topupField+'_cents'],topupObserved=Object.hasOwn(details?.amounts??{},topupField+'_cents')&&Number.isSafeInteger(topup)&&!Object.is(topup,-0)&&!(details?.missing_fields??[]).includes(topupField)&&!(details?.invalid_fields??[]).includes(topupField);
+ const pending=paid?[...(!topupObserved?['ORDER_TOPUP_COMPONENT_REQUIRED']:[]),...(valid&&fact.total_adjustment_cents!==0||topupObserved&&topup!==0?['ORDER_ADJUSTMENT_CLASSIFICATION_REQUIRED']:[])]:[];
+ const known=paid&&pending.length===0&&policy?.revenue_base==='NET_PAYOUT'&&fact.payment_covered===true&&fact.currency===scope.currency&&valid&&fact.diagnostic===null&&created!==null&&competence!==null&&competence<=observed;
  const amount=known?fact.after_adjustment_cents:0,semanticDetails=details?Object.fromEntries(Object.entries(details).filter(([key])=>!['checked_at','source_hash'].includes(key))):null;
- // The net source already contains marketplace deductions/refund adjustments.
- // Neither provider COGS nor the ambiguous top-up field is manufacturing/Ads.
- return {missing:paid&&(policy?.recognition!=='COMPLETED_ORDER'||fact.bucket==='completed')&&!known,event:await faSourceEvent(scope,{provider:'SHOPEE',family:'ORDER_NET_PAYOUT',id:fact.event_key,type:known?'ORDER_NET_REVENUE':'ORDER_FINANCIAL_REVIEW',event_at:created??faSourceStamp(fact.checked_at)??observed,competence_at:competence,source_updated_at:updated,observed_at:observed,quality:known&&policy.recognition!=='PAID_ORDER_CREATE_ESTIMATE'?'CONFIRMED':'REVIEW',postings:known?[{account:'RECEIVABLE',account_ref:'shopee-receivables',amount_cents:amount},{account:'REVENUE',account_ref:'shopee-net-payout',amount_cents:amount===0?0:-amount}]:[],evidence:{order_hash:fact.event_key,order_items_hash:fact.order_items_hash??null,bucket:fact.bucket,create_time:fact.create_time,currency:fact.currency,escrow_amount_cents:fact.escrow_amount_cents,after_adjustment_cents:fact.after_adjustment_cents,total_adjustment_cents:fact.total_adjustment_cents,return_count:fact.return_count,diagnostic:fact.diagnostic,components:semanticDetails,policy_id:policy?.policy_id??null,policy_revision:policy?.revision??null}})};
+ // Arithmetic equality alone does not classify an adjustment or Ads funding.
+ // Only observed zero needs no addback/reclassification; ambiguous money stays
+ // in evidence and the legacy estimate, never confirmed revenue or expense.
+ return {pending,missing:paid&&(policy?.recognition!=='COMPLETED_ORDER'||fact.bucket==='completed')&&!known,event:await faSourceEvent(scope,{provider:'SHOPEE',family:'ORDER_NET_PAYOUT',id:fact.event_key,type:known?'ORDER_NET_REVENUE':'ORDER_FINANCIAL_REVIEW',event_at:created??faSourceStamp(fact.checked_at)??observed,competence_at:competence,source_updated_at:updated,observed_at:observed,quality:known&&policy.recognition!=='PAID_ORDER_CREATE_ESTIMATE'?'CONFIRMED':'REVIEW',postings:known?[{account:'RECEIVABLE',account_ref:'shopee-receivables',amount_cents:amount},{account:'REVENUE',account_ref:'shopee-net-payout',amount_cents:amount===0?0:-amount}]:[],evidence:{order_hash:fact.event_key,order_items_hash:fact.order_items_hash??null,bucket:fact.bucket,create_time:fact.create_time,currency:fact.currency,escrow_amount_cents:fact.escrow_amount_cents,after_adjustment_cents:fact.after_adjustment_cents,total_adjustment_cents:fact.total_adjustment_cents,return_count:fact.return_count,diagnostic:fact.diagnostic,components:semanticDetails,policy_id:policy?.policy_id??null,policy_revision:policy?.revision??null}})};
 }
 
 // Saved observations only: no new Shopee order/wallet/bank provider request.
@@ -71,25 +74,25 @@ export function createFinancialAutomationServices(env,services={}){
    faSourceSetCoverage(coverage,'OBLIGATIONS',period,{pending:['EXTERNAL_OBLIGATIONS_COVERAGE_REQUIRED']});
    const signature=await financialDigest([runs.map(r=>[r.run_id,r.source_revision]),policy?.policy_id??null,policy?.revision??null]);
    const prior=checkpoint?.schema==='financial_saved_source_cursor_v2'&&checkpoint.signature===signature?checkpoint:null;
-   let observedCapabilities=null;let progress=prior?{...prior}:{schema:'financial_saved_source_cursor_v2',signature,index:0,cursor:null,expected_revision:null,complete:runs.length>0,missing_required:0,checked_at:null,capabilities:faSourceCapabilities()};
+   let observedCapabilities=null;let progress=prior?{...prior}:{schema:'financial_saved_source_cursor_v2',signature,index:0,cursor:null,expected_revision:null,complete:runs.length>0,missing_required:0,classification_pending:[],checked_at:null,capabilities:faSourceCapabilities()};
    if(mode==='sync'&&runs.length&&progress.index<runs.length){
     const run=runs[progress.index],input={schema:'financial_source_request_v2',operation:'evidence',run_id:run.run_id,cursor:progress.cursor,limit:100,expected_revision:progress.expected_revision??run.source_revision};
     const reply=await privateRead(input);
     if(reply.status===200){const frame=reply.body;if(frame.schema!=='financial_source_evidence_v2'||!sameFinancialScope(frame.scope,scope)||frame.run.run_id!==run.run_id||frame.cursor!==progress.cursor)throw Error('FINANCIAL_AUTOMATION_SOURCE_SCOPE_INVALID');
      const observed=faSourceStamp(frame.run.checked_at);if(observed===null||observed>stamp)throw Error('FINANCIAL_AUTOMATION_SOURCE_DATE_INVALID');
-     let missing=0;for(const fact of frame.facts){const result=await faSourceOrderEvent(scope,fact,policy,observed);events.push(result.event);if(result.missing)missing++;}
+     let missing=0;const classificationPending=[];for(const fact of frame.facts){const result=await faSourceOrderEvent(scope,fact,policy,observed);events.push(result.event);classificationPending.push(...result.pending);if(result.missing)missing++;}
      observedCapabilities=frame.capabilities.sources;const captured=frame.capabilities.sources.map(({source,state,reason,collection_allowed,checked_at})=>({source,state,reason,collection_allowed,checked_at}));
      const sourceComplete=frame.coverage.base_complete===true&&frame.coverage.window_complete===true;
-     progress={...progress,cursor:frame.next_cursor,expected_revision:frame.run.revision,complete:progress.complete&&sourceComplete,missing_required:progress.missing_required+missing,checked_at:progress.checked_at&&progress.checked_at<observed?progress.checked_at:observed,capabilities:captured,last_page:{run_id:frame.run.run_id,revision:frame.run.revision,checked_at:observed,sha256:await financialDigest({run:frame.run,coverage:frame.coverage,facts:frame.facts.map(row=>[row.event_key,row.source_hash,row.checked_at])})}};
+     progress={...progress,cursor:frame.next_cursor,expected_revision:frame.run.revision,complete:progress.complete&&sourceComplete,missing_required:progress.missing_required+missing,classification_pending:[...new Set([...(progress.classification_pending??[]),...classificationPending])],checked_at:progress.checked_at&&progress.checked_at<observed?progress.checked_at:observed,capabilities:captured,last_page:{run_id:frame.run.run_id,revision:frame.run.revision,checked_at:observed,sha256:await financialDigest({run:frame.run,coverage:frame.coverage,facts:frame.facts.map(row=>[row.event_key,row.source_hash,row.checked_at])})}};
      if(frame.has_more===false){progress.index++;progress.cursor=null;progress.expected_revision=null;}
-    }else{pending.push(/^FINANCIAL_[A-Z0-9_]+$/.test(reply.body?.error??'')?reply.body.error:'ORDERS_SOURCE_UNAVAILABLE');if(reply.status===409)progress={...progress,index:0,cursor:null,expected_revision:null,complete:true,missing_required:0,checked_at:null};}
+    }else{pending.push(/^FINANCIAL_[A-Z0-9_]+$/.test(reply.body?.error??'')?reply.body.error:'ORDERS_SOURCE_UNAVAILABLE');if(reply.status===409)progress={...progress,index:0,cursor:null,expected_revision:null,complete:true,missing_required:0,classification_pending:[],checked_at:null};}
    }
    const finished=runs.length>0&&progress.index>=runs.length;
    // These existing runs select creation dates. A completed-date policy needs
    // a separately proven cohort covering older orders completed this period.
    const competenceCohort=policy?.recognition==='PAID_ORDER_CREATE_ESTIMATE';
    const ordersComplete=finished&&progress.complete&&progress.missing_required===0&&competenceCohort;
-   const orderPending=[...(finished&&progress.complete?[]:['ORDER_EVIDENCE_COLLECTION_INCOMPLETE']),...(progress.missing_required?['ORDER_RECOGNITION_EVIDENCE_REQUIRED']:[]),...(!competenceCohort?['ORDERS_COMPETENCE_COHORT_COVERAGE_REQUIRED']:[])];
+   const orderPending=[...(progress.classification_pending??[]),...(finished&&progress.complete?[]:['ORDER_EVIDENCE_COLLECTION_INCOMPLETE']),...(progress.missing_required?['ORDER_RECOGNITION_EVIDENCE_REQUIRED']:[]),...(!competenceCohort?['ORDERS_COMPETENCE_COHORT_COVERAGE_REQUIRED']:[])];
    faSourceSetCoverage(coverage,'ORDERS',period,{complete:ordersComplete,pending:orderPending});
    if(policy?.revenue_base==='GROSS_COMPONENTS')pending.push('GROSS_COMPONENTS_RECONCILIATION_REQUIRED');
    pending.push(...orderPending,...coverage.filter(r=>r.state==='UNKNOWN').flatMap(r=>r.pending));

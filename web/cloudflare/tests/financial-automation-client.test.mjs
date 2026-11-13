@@ -47,3 +47,17 @@ for(const minify of [false,true])test('standalone financial browser module boots
  assert.equal(vm.runInContext('brazaFinancialAutomation.getSnapshot()?.projection.result.amount_cents',context),input.projection.result.amount_cents,'the emitted client literal has no dangling renamed helper reference');
  vm.runInContext('brazaFinancialAutomation.stop()',context);
 });
+
+// The small DOM contains only the real pending-list destination. It supplies no
+// financial facts: amounts and states still come from the canonical fixture.
+function pendingListDocument(){
+ const make=()=>{let own='';return {children:[],dataset:{},style:{},append(...items){this.children.push(...items);},replaceChildren(...items){own='';this.children=[...items];},setAttribute(){},addEventListener(){},querySelectorAll(){return [];},contains(){return false;},get textContent(){return own+this.children.map(n=>n?.textContent??String(n??'')).join(' ');},set textContent(value){own=String(value);this.children=[];}};};
+ const root=make(),pending=make();return {pending,document:{hidden:false,getElementById:id=>id==='financialAutomation'?root:id==='financialAutomationPending'?pending:null,createElement:()=>make()}};
+}
+for(const minify of [false,true])test('pending payout adjustments have clear actions without inventing profit '+(minify?'minified':'normal'),async()=>{
+ const input=await financialAutomationUiFixture({partial:true});input.pending=['ORDER_ADJUSTMENT_CLASSIFICATION_REQUIRED','ORDER_TOPUP_COMPONENT_REQUIRED'];
+ const compiled=await build({entryPoints:[new URL('../src/financial-automation-client.mjs',import.meta.url).pathname],bundle:true,write:false,format:'esm',platform:'browser',target:'es2022',minify}),module=await import('data:text/javascript;base64,'+Buffer.from(compiled.outputFiles[0].text).toString('base64'));
+ const view=pendingListDocument(),context=vm.createContext({crypto:globalThis.crypto,document:view.document});vm.runInContext(module.FINANCIAL_AUTOMATION_CLIENT,context);vm.runInContext('globalThis.fixture=JSON.parse('+JSON.stringify(JSON.stringify(input))+');globalThis.reads=0;brazaFinancialAutomation.start({month:fixture.month,scope:fixture.scope,api:async()=>{reads++;return fixture;}});brazaFinancialAutomation.open();',context);
+ for(let attempt=0;attempt<20;attempt++){if(vm.runInContext('!!brazaFinancialAutomation.getSnapshot()',context))break;await new Promise(r=>setTimeout(r,0));}
+ assert.match(view.pending.textContent,/Classifique os ajustes do repasse antes de reconhecer a receita\./);assert.match(view.pending.textContent,/Confira a recarga ou o suporte técnico abatido no repasse\./);assert.equal(vm.runInContext('brazaFinancialAutomation.getSnapshot().projection.result.amount_cents',context),null);assert.equal(vm.runInContext('brazaFinancialAutomation.getState().stale',context),false);assert.equal(vm.runInContext('reads',context),1);vm.runInContext('brazaFinancialAutomation.stop()',context);
+});

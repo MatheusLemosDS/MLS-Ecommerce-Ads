@@ -100,3 +100,7 @@ Para aceitar operacionalmente um fechamento, ainda é necessário comparar uma s
 ## Reversão técnica e alocações já existentes
 
 As novas tabelas são aditivas e preservadas numa reversão. Antes de ativar o novo App, não existe uma interface pública nova criando grupos; uma falha nessa etapa permite reverter as versões anteriores mantendo os fatos. Depois de existirem alocações novas, a reversão preferencial é do App/Auth, conservando o Finance compatível com v1 e sua guarda contra reutilização no matcher antigo. Não rebaixar o Finance que conhece essas reservas para um matcher anterior sem verificar os grupos ativos e bloquear as escritas afetadas. A reversão de código não deve apagar nem ignorar reservas financeiras persistidas.
+
+## Guarda final de ajustes do repasse
+
+O adaptador NET somente confirma receita quando os ajustes observados são zero e o componente de recarga/suporte técnico também foi observado como zero. Ajuste ou topup sem classificação mantém o evento em revisão, sem lançamentos reconhecidos; campo ausente não é convertido em zero. Os códigos ORDER_ADJUSTMENT_CLASSIFICATION_REQUIRED e ORDER_TOPUP_COMPONENT_REQUIRED indicam a próxima conferência. O cálculo estimado legado permanece preservado. A suíte focada do guard passou 83/83, incluindo persistência do CMV, paginação das pendências, fechamento impedido com fonte ambígua e competência no horário de verão de 2015. Log local: /workspace/financial-net-quality-guard-20261113.tap.
