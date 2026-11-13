@@ -5,6 +5,10 @@ import path from 'node:path';
 export const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const TARGETS = Object.freeze({
   app: Object.freeze({name: 'brazacommerce-app', main: '../../dist/app-worker.mjs', baselineHashes: [
+    // Controlled DOMParser hydration: exact source and same-path dry package, still subject to all CI/Live gates.
+    '17708afc909c858fb518759e7556de99ecf9593999ef77b5cc7b2d9b0c221bb0',
+    '6356b2b0bdac42e91cc843c90a418bb914cd70ede50a7a8462d763838e81f33f',
+
     // Financial automation candidate: exact local build and same-path Wrangler dry run; CI/Live gates remain mandatory.
     'acf791243780f18a98af085529af6b8aab83af1fd3ca5e17203c0d2e765122e1',
     'ad47db698e8d55b938798601242d19a72c340c128a8ea25b3972592ea18f891b',

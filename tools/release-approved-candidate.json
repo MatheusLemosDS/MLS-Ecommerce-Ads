@@ -1,11 +1,11 @@
 {
   "schema": "mls_release_candidate_v1",
   "base_commit": "6578e21098ff799e59433af92880d249432ceeb4",
-  "prepared_source_commit": "45892724bb323f10b1062c329adc156bc39acdc9",
+  "prepared_source_commit": "e2b9be0e1b1391085ecc753b1df1334bbb31d0f3",
   "owner_authorization": "OWNER_REQUESTED_FINANCIAL_AUTOMATION_LIVE_2026_11_13",
   "commercial_writes_allowed": false,
   "expected_hashes": {
-    "app": "acf791243780f18a98af085529af6b8aab83af1fd3ca5e17203c0d2e765122e1",
+    "app": "17708afc909c858fb518759e7556de99ecf9593999ef77b5cc7b2d9b0c221bb0",
     "auth": "97659ca7da62cfcfad785dc3ad599ae8526191e721eba6ac9e876d2ccc253a9c",
     "finance": "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4"
   },
@@ -45,6 +45,7 @@
     "web/cloudflare/browser-assets-published/04ae3166780be18f31754212640b0887abe9e20830ac4309a6e31109398e4eeb.js",
     "web/cloudflare/browser-assets-published/0d6250f5888258fa29664eac45b2cd821d3872b1c96ac47dda46bd7fd10e6a0c.js",
     "web/cloudflare/browser-assets-published/347a294216d16151105c5b5074174af01c01a9bc398e713aaf2c9184a48b1db2.js",
+    "web/cloudflare/browser-assets-published/4415116e2b1d7f3118501dc009aa5cd2fa3e3ff280e96a82a867da4d9e4e3c33.js",
     "web/cloudflare/browser-assets-published/5203d255416bacb97cd44ddef29a2fc76b1432f0a1ea731fabacc4bb071fcd07.js",
     "web/cloudflare/browser-assets-published/549c2b0f6ae183249bed2472af894cf5211d4a6853fc33c0ce6c127aa3ebf034.js",
     "web/cloudflare/browser-assets-published/770cf914c80043fd048e1713fe518fb8fe8529f98034627f1908d080cf840a05.js",
@@ -91,6 +92,7 @@
     "web/cloudflare/tests/app-release-discovery-chrome.test.mjs",
     "web/cloudflare/tests/app-release.test.mjs",
     "web/cloudflare/tests/browser-assets.test.mjs",
+    "web/cloudflare/tests/bundled-client.test.mjs",
     "web/cloudflare/tests/business-escrow-releases-compiled.test.mjs",
     "web/cloudflare/tests/business-review-compiled.test.mjs",
     "web/cloudflare/tests/financial-accounting-policy.test.mjs",
@@ -123,6 +125,8 @@
     "web/cloudflare/tests/m2-history-fairness-compiled.test.mjs",
     "web/cloudflare/tests/m2-history-fairness.test.mjs",
     "web/cloudflare/tests/m2-release-bootstrap-compiled.test.mjs",
+    "web/cloudflare/tests/mls-approved-all-panels-chrome.test.mjs",
+    "web/cloudflare/tests/mls-integrated-owner-visual-chrome.test.mjs",
     "web/cloudflare/tests/tenant-sql-isolation.test.mjs",
     "web/finance/src/business-period.mjs",
     "web/finance/src/external-cash-store.mjs",
