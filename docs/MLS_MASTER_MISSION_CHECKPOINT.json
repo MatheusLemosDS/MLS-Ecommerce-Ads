@@ -6768,19 +6768,17 @@
     "mercado_livre_connected": false
   },
   "v41_layout_commercial_candidate": {
-    "state": "LOCAL_VALIDATED_PUBLICATION_PENDING",
+    "state": "CSS_FIX_FOCUSED_VALIDATED_COMPLETE_CI_PENDING",
     "base_commit": "a5bd38a0902b38ecc3e90a747601eba330e7813e",
     "branch": "feature/v41-layout-commercial-live-20261112",
     "app_release": "2026-11-12.1",
-    "node_tests": 4106,
     "node_failed": 0,
     "node_skipped": 0,
-    "python_tests": 67,
     "worker_build": {
       "app": {
         "worker": "brazacommerce-app",
-        "bytes": 3495460,
-        "sha256": "ae11ec6d2fc4c84db96c834fd3d20be67cc9d142ae241aed926a806c8e956ea6"
+        "bytes": 3495838,
+        "sha256": "82fe3d3ecf19b0f72254dc5778e8a8335505bfc4db4071cc01afce4cfb7cea48"
       },
       "auth": {
         "worker": "brazacommerce-auth",
@@ -6798,6 +6796,14 @@
     "publication": "NOT_YET_VERIFIED",
     "live_owner_qa": "NOT_PERFORMED_NO_SESSION",
     "external_dependencies": "docs/v4/EXTERNAL_DEPENDENCIES.json",
-    "m2_m22": "OPEN"
+    "m2_m22": "OPEN",
+    "source_commit": "bdbc857ac443f58376613225dcbbfd02a108d41c",
+    "historical_node_tests": 4106,
+    "historical_python_tests": 67,
+    "ci_failure_run": 43453964784,
+    "ci_failure_count": 2,
+    "current_focused_tests": 4,
+    "current_complete_ci": "PENDING",
+    "current_evidence": "docs/v4/ci-validation.json"
   }
 }

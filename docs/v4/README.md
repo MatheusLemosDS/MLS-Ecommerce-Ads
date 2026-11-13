@@ -8,6 +8,7 @@ A instrução atual autoriza implementar, validar e publicar no domínio existen
 - [Decisão de arquitetura](ARCHITECTURE.md), [armazenamento](TENANT_STORAGE_INVENTORY.json) e [dependências/licenças](DEPENDENCIES.json).
 - [Contexto comercial e mídia no navegador](BROWSER_CONTEXT_EVIDENCE.md): isolamento por aba, cancelamento/limpeza e IndexedDB nativo com duas pessoas/empresas sintéticas.
 - [Estratégia de validação](VALIDATION.md), [resultados de integridade documental](documentation-validation.json) e [logs focados](evidence/).
+- [CI e candidato corrigido](ci-validation.json): primeira CI falhou em dois perfis de fonte mobile; correção focada4/4 aprovada, nova CI completa pendente. O resultado local4106/67 anterior permanece histórico.
 - [Registro das execuções de integração](integration-evidence.json): cadeia local App/Auth/Finance, Auth gerado, navegador de conta e suíte Finance, com limites próprios.
 - [Dependências externas](EXTERNAL_DEPENDENCIES.json): impacto, trabalho local necessário e evidência real faltante por fluxo.
 

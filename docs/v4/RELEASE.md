@@ -1,6 +1,6 @@
 # V4.1 — release e recuperação
 
-Estado deste registro: **candidato local validado; publicação ainda não comprovada**. Fonte preparada `eeb3c34c324b362c2c56ef46727e6b24485cc3b7`, base `a5bd38a0902b38ecc3e90a747601eba330e7813e`, branch `feature/v41-layout-commercial-live-20261112`. O manifest de release fixa o commit candidato e o vetor autorizado; o recibo final deve identificar o commit efetivamente servido.
+Estado deste registro: **correção CSS focada aprovada; nova CI completa e publicação pendentes**. Fonte inicial histórica `eeb3c34c324b362c2c56ef46727e6b24485cc3b7`, base `a5bd38a0902b38ecc3e90a747601eba330e7813e`, branch `feature/v41-layout-commercial-live-20261112`. O manifest de release fixa o commit candidato e o vetor autorizado; o recibo final deve identificar o commit efetivamente servido.
 
 Destino autorizado: **https://app.brazacommerce.com.br**. A autorização atual substitui a antiga entrega somente local e permite o fluxo normal de commit/push/PR/merge, migrações aditivas ensaiadas, deploy e conferência. Não autoriza força sobre gates, mensagens reais ou ações comerciais de teste.
 
@@ -21,3 +21,7 @@ Os registros finais devem ser anexados em `live-publication.json` e `public-live
 ## Recuperação
 
 Manter versões/fontes/configuração/assets anteriores e o novo ACCOUNT_DB. Em regressão crítica, restaurar coordenadamente a configuração e o vetor compatível dos Workers/asset, verificando cada etapa e o domínio; nunca apagar os dados novos para voltar o código. A versão anterior mantém o acesso legado e ignora o banco novo; contas comerciais ficam indisponíveis durante esse rollback, com dados preservados para reaplicar a V4.1 corrigida. Restauração de banco e ensaios destrutivos são feitos em cópia, não na produção. O relatório final deve registrar qualquer recuperação executada; um plano sozinho não comprova restauração operacional.
+
+## Histórico da CI e candidato corrigido
+
+A primeira CI 43453964784 em c7f5ae8 falhou2/4106 nos perfis mobile de status. O local4106/67 anterior é preservado como histórico. A fonte corrigida `bdbc857ac443f58376613225dcbbfd02a108d41c` gera App `82fe3d3ecf19b0f72254dc5778e8a8335505bfc4db4071cc01afce4cfb7cea48` e possui gate focado4/4 aprovado; Auth/Finance permanecem no vetor registrado. A nova CI completa deve passar antes da ativação. Ver [registro e logs](ci-validation.json). Nenhuma migração/deploy é comprovada por este adendo.

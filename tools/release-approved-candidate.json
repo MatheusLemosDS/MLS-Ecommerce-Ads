@@ -1,11 +1,11 @@
 {
   "schema": "mls_release_candidate_v1",
   "base_commit": "a5bd38a0902b38ecc3e90a747601eba330e7813e",
-  "prepared_source_commit": "eeb3c34c324b362c2c56ef46727e6b24485cc3b7",
+  "prepared_source_commit": "bdbc857ac443f58376613225dcbbfd02a108d41c",
   "owner_authorization": "OWNER_REQUESTED_V41_LIVE_2026_11_11",
   "commercial_writes_allowed": false,
   "expected_hashes": {
-    "app": "ae11ec6d2fc4c84db96c834fd3d20be67cc9d142ae241aed926a806c8e956ea6",
+    "app": "82fe3d3ecf19b0f72254dc5778e8a8335505bfc4db4071cc01afce4cfb7cea48",
     "auth": "d5eed8ab9cddaa8d6917f4e4ca668a3f7074bad5603254656414db5a490dc172",
     "finance": "ffbcea3b7ffe5c0a94b0d4d8c4908738e6da76386040995bba982060a5f9bb71"
   },
@@ -45,6 +45,7 @@
     "docs/v4/baseline-active-inventory.json",
     "docs/v4/baseline-validation.json",
     "docs/v4/browser-context-validation.json",
+    "docs/v4/ci-validation.json",
     "docs/v4/documentation-validation.json",
     "docs/v4/evidence/account-auth-final.log",
     "docs/v4/evidence/account-auth-snapshot-final.log",
@@ -68,6 +69,7 @@
     "docs/v4/evidence/chart-browser-partial.log",
     "docs/v4/evidence/chart-count-compiled.log",
     "docs/v4/evidence/chart-focused.log",
+    "docs/v4/evidence/ci-43453964784-failed.log",
     "docs/v4/evidence/commercial-admin-runtime.log",
     "docs/v4/evidence/commercial-compiled-chain-final.log",
     "docs/v4/evidence/commercial-compiled-chain.log",
@@ -81,6 +83,7 @@
     "docs/v4/evidence/layout-checks.json",
     "docs/v4/evidence/layout-extra-final.log",
     "docs/v4/evidence/m3-browser-report.json",
+    "docs/v4/evidence/mobile-status-font-final.log",
     "docs/v4/evidence/month-commercial-teardown-compiled.log",
     "docs/v4/evidence/month-commercial-teardown.log",
     "docs/v4/evidence/month-release-regressions.log",

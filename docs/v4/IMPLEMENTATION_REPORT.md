@@ -1,6 +1,10 @@
 # V4.1 — implementação e validação do candidato
 
-O candidato `2026-11-12.1` reúne o redesign e a base de contas comerciais no aplicativo existente. O gate local final aprovou **4.106 testes Node, sem falhas ou skips, e67 Python**. Esses resultados demonstram os cenários locais registrados; a publicação e a conferência do domínio exigem recibos próprios em [RELEASE.md](RELEASE.md).
+O candidato `2026-11-12.1` reúne o redesign e a base de contas comerciais no aplicativo existente. O gate local do candidato anterior S1/S2 aprovou **4.106 testes Node, sem falhas ou skips, e67 Python**. Esses resultados demonstram os cenários locais registrados; a publicação e a conferência do domínio exigem recibos próprios em [RELEASE.md](RELEASE.md).
+
+## Atualização após a primeira CI
+
+A CI [43453964784](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43453964784) aprovou4.104/4.106 testes Node e falhou em dois perfis de legibilidade do status mobile. O resultado local completo anterior permanece histórico, sem ser reatribuído ao CSS novo. A correção tem prova focada4/4 aprovada; o candidato atual aguarda nova CI completa antes da publicação. Fonte, hashes, causa e logs estão em [ci-validation.json](ci-validation.json).
 
 ## O que mudou e onde encontrar
 

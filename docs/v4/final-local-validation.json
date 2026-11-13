@@ -1768,5 +1768,7 @@
   "live_authenticated_qa": "NAO_EXECUTADA_SEM_SESSAO_REAL_DISPONIVEL",
   "real_messages": 0,
   "production_test_facts": 0,
-  "meaning": "Source/test hashes and logs establish the local candidate only. The CI and deployment receipts must be recorded independently."
+  "meaning": "Source/test hashes and logs establish the local candidate only. The CI and deployment receipts must be recorded independently.",
+  "scope_notice": "HISTORICO_S1_S2: resultados4106/67 e hashes/testes originais preservados; não é execução completa da correção CSS posterior.",
+  "superseded_current_candidate_record": "docs/v4/ci-validation.json"
 }

@@ -14,5 +14,6 @@
     "sha256": "d9187e2fc48ba450c208c8182b5746874e15fc58db4dc0319bcf393cf7d89b7f",
     "bytes": 3739562,
     "scope": "Last local build used by WKR08 and chart browsers; root may rebuild later."
-  }
+  },
+  "historical_scope_notice": "Source freeze from the earlier local visual gate, retained as historical evidence. The corrected current CSS/Worker source and focused proof are recorded independently in docs/v4/ci-validation.json; this file is not a new full validation."
 }
