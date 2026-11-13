@@ -30,7 +30,7 @@ test('release preflight passes only an exact reviewed local build and leaves rem
  assert.ok(RELEASE_MANUAL_GATES.includes('VERIFY_REMOTE_OWNER_FLAGS_MATCH_APPROVED_VALUES'));
  assert.ok(RELEASE_ALLOWED_FILES.includes('tools/release-approved-candidate.json'));
  assert.ok(RELEASE_ALLOWED_FILES.filter(x=>x.startsWith('workers/')).every(x=>RELEASE_APPROVED_PROTECTED_FILES.includes(x)));
- assert.ok(RELEASE_ALLOWED_FILES.some(value=>value.startsWith('web/finance/')));
+ assert.equal(RELEASE_ALLOWED_FILES.some(value=>value.startsWith('web/finance/')),false,'the reference-layout release does not reopen the previously reviewed Finance delta');
  assert.ok(RELEASE_ALLOWED_FILES.filter(x=>x.startsWith('web/finance/')).every(x=>RELEASE_APPROVED_PROTECTED_FILES.includes(x)));
  assert.ok(RELEASE_MANUAL_GATES.includes('VERIFY_ACCOUNT_DB_BINDINGS_ADDITIVE_MIGRATIONS_AND_LEGACY_BACKUPS'));
  assert.ok(RELEASE_MANUAL_GATES.includes('VERIFY_APP_AUTH_FINANCE_VERSION_HASHES_AND_PRIVATE_FINANCE_PROFILE'));

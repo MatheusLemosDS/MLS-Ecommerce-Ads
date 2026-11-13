@@ -5,6 +5,19 @@ import {
 } from '../src/mls-verified-charts.mjs';
 
 const daily = (points)=>({schema:'mls_mission_daily_trend_v1',points});
+test('daily axis keeps both endpoints without an adjacent crowded final label or dropping observations',()=>{
+ for(const length of [2,7,8,10,14]){
+  const points=Array.from({length},(_,index)=>({date:'2026-10-'+String(index+1).padStart(2,'0'),net_cents:100+index,partial:false}));
+  const model=projectMlsDailyChart(daily(points),'net'),before=JSON.stringify(model);
+  const html=renderMlsVerifiedChart(model),ticks=[...html.matchAll(/<text x="[^"]+" y="214"[^>]*>([0-9]{2})\/10<\/text>/g)].map(match=>Number(match[1])-1);
+  assert.equal(JSON.stringify(model),before,'rendering must not alter the validated financial model');
+  assert.equal((html.match(/data-mls-chart-date=/g)||[]).length,length,'all observed points retain their interactive date and exact value');
+  assert.equal(ticks[0],0);assert.equal(ticks.at(-1),length-1);
+  const stride=Math.max(1,Math.ceil(length/5));
+  for(let index=1;index<ticks.length;index++)assert.ok(ticks[index]-ticks[index-1]>=stride,'endpoint labels need the same minimum gap as regular ticks');
+  if(length===10)assert.deepEqual(ticks,[0,2,4,6,9]);
+ }
+});
 test('daily area retains real values and never interpolates a missing day',()=>{
  const m=projectMlsDailyChart(daily([
   {date:'2026-10-25',net_cents:1500,partial:false},
