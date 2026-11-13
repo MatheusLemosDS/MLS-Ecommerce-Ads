@@ -4,6 +4,7 @@ import {MLS_REFERENCE_PANEL_CSS} from './mls-reference-panel-design.mjs';
 
 const MLS_REFERENCE_FUNCTIONAL_CSS=String.raw`
 /* Keep existing interactive chart/table controls while matching the supplied reference. */
+html[data-theme] [data-braza-theme-toggle]{min-height:44px;min-width:44px}
 .workspace :is(button,input,select,textarea),.ads-workspace :is(button,input,select,textarea){min-height:44px}
 .workspace button,.ads-workspace button{white-space:normal}
 .workspace textarea{min-height:100px;resize:vertical}

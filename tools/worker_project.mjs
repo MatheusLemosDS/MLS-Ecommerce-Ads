@@ -5,6 +5,9 @@ import path from 'node:path';
 export const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const TARGETS = Object.freeze({
   app: Object.freeze({name: 'brazacommerce-app', main: '../../dist/app-worker.mjs', baselineHashes: [
+    // Exact legacy-login touch correction; App-only activation requires full CI and Live checks.
+    '6d7d9dc2d713050e7b724bd31c64abb8901490dc8acae542221db080d7225296',
+    'd681cdd6721b255235b02ddc9e96813ff2476d31e3747c52e15a2edee1605a25',
     // Exact reference-layout candidate and Wrangler 4.151.1 dry-run; activation requires CI and Live checks.
     '107619ad68b14729f1e84b2e5d0e1d3427d16ee5ca3c6dd834a17f738b36699f',
     '9405f9a904664621fbcc00643ac92f78389adcd6d3675b14b90f60aa701e81f2',
