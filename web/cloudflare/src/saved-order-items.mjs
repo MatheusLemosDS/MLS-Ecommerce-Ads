@@ -1,3 +1,4 @@
+import {TenantInitializationMap} from './tenant-storage.mjs';
 import {orderItems} from './order-items.mjs';
 
 // Repricing a saved quantity never needs a provider request. Store only the
@@ -6,7 +7,7 @@ export const SAVED_ORDER_ITEMS_SCHEMA=[
  `CREATE TABLE IF NOT EXISTS saved_order_items(id INTEGER PRIMARY KEY CHECK(id=1),payload TEXT NOT NULL CHECK(length(CAST(payload AS BLOB))<=1048576),through_at TEXT NOT NULL)`,
 ];
 export class SavedOrderItemsError extends Error{constructor(code,status=503){super(code);this.status=status;}}
-const ready=new WeakMap();
+const ready=new TenantInitializationMap();
 async function setup(env){const db=env?.ADMIN_DB;if(!db?.prepare||!db?.batch)throw new SavedOrderItemsError('SAVED_ITEMS_CONFIGURATION');if(!ready.has(db))ready.set(db,db.batch(SAVED_ORDER_ITEMS_SCHEMA.map(sql=>db.prepare(sql))).catch(()=>{ready.delete(db);throw new SavedOrderItemsError('SAVED_ITEMS_STORAGE_UNAVAILABLE');}));await ready.get(db);return db;}
 export async function saveOrderItemsSnapshot(env,value,{now=()=>Date.now()}={}){
  const frame=orderItems(value,new Date(now()));if(frame.status!=='AVAILABLE')return false;

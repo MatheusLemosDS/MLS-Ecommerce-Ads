@@ -4,6 +4,7 @@ import vm from 'node:vm';
 import {webcrypto} from 'node:crypto';
 import {DTF_CLIENT,dtfBody} from '../src/dtf-view.mjs';
 import {DTF_ENGINE_CLIENT,planDtfLayout} from '../src/dtf-layout.mjs';
+import {tenantArtworkDatabaseName} from '../src/tenant-browser-storage.mjs';
 
 const settings={film_width_mm:570,max_length_mm:500,gap_mm:5,margin_mm:5,dpi:300,allow_rotate:false};
 const line=(patch={})=>({unit_key:'pedido:1:0',order_id:'PEDIDO1',line_key:'1:0',item_id:'1',model_id:'0',sku:'vivaosanos80-27',model_name:'P',quantity:1,status:'READY_TO_SHIP',production_state:'PENDING',requires_pair:false,last_seen_at:1792843200,...patch});
@@ -74,4 +75,13 @@ test('exported PNGs retain physical300DPI metadata and every actualdownload rech
  await b.workspace.start({api:b.api});const button=b.el('Batches').children[0].children[3].children[0];await button.onclick();assert.equal(b.calls.filter(row=>row.path.endsWith('/action')).length,1);const link=b.el('Downloads').children[1],bytes=new Uint8Array(await(await fetch(link.href)).arrayBuffer());let dpi=null;for(let offset=8;offset+12<=bytes.length;){const length=new DataView(bytes.buffer).getUint32(offset),type=String.fromCharCode(...bytes.slice(offset+4,offset+8));if(type==='pHYs')dpi={x:new DataView(bytes.buffer).getUint32(offset+8),y:new DataView(bytes.buffer).getUint32(offset+12),unit:bytes[offset+16]};offset+=length+12;}
  assert.deepEqual(dpi,{x:11811,y:11811,unit:1});assert.equal(b.downloads.length,0);await link.onclick({preventDefault(){}});assert.equal(b.calls.filter(row=>row.path.endsWith('/action')).length,2);assert.equal(b.downloads.length,1);assert.match(b.downloads[0].download,/lote-original-folha-1\.png/);
  rejectDownload=true;await link.onclick({preventDefault(){}});assert.equal(b.downloads.length,1);assert.equal(b.el('Downloads').children.length,0);b.workspace.stop();
+});
+
+test('commercial DTF opens only its artwork namespace and a late IndexedDB read cannot restore private art after stop',async()=>{
+ const b=browser(async()=>snapshot([])),context={kind:'account',userId:'person-a',organizationId:'company-a',storeId:'store-a'},name=tenantArtworkDatabaseName(context);let active=true,read,transaction,closes=0,aborts=0;
+ b.context.mlsCommercialWorkspace={isActive:()=>active,ticket:()=>({name}),isCurrent:ticket=>active&&ticket?.name===name,artworkDatabaseName:()=>name};
+ b.context.indexedDB.open=(selected,version)=>{assert.equal(selected,name);assert.equal(version,1);const request={};queueMicrotask(()=>{request.result={objectStoreNames:{contains:()=>true},close(){closes++;},transaction(){transaction={abort(){aborts++;transaction.onabort?.();},objectStore(){return {getAll(){read={};return read;}};}};return transaction;}};request.onsuccess();});return request;};
+ const starting=b.workspace.start({api:b.api});for(let n=0;n<20&&!read;n++)await Promise.resolve();assert.ok(read,'native-shaped library read is pending');b.workspace.stop();active=false;
+ read.result=[{art_key:'private-a-art',sha256:'a'.repeat(64),pixel_width:1,pixel_height:1,blob:new Blob(['private-a'],{type:'image/png'})}];read.onsuccess();await starting;
+ assert.equal(b.el('ArtList').children.length,0);assert.equal(b.workspace.getSnapshot(),null);assert.equal(aborts,1);assert.ok(closes>=1);assert.equal(b.el('ArtFiles').value,'');
 });

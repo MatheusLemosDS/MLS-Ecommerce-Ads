@@ -2,7 +2,7 @@
 const workspaceNavigationItems=Object.freeze({
  overview:{href:'/admin?tab=overview',label:'Visão geral',hint:'Vendas, custos e resultado',icon:'<rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>'},
  orders:{href:'/admin?tab=order-operations',label:'Pedidos',hint:'Separação, produção e envio por pedido',icon:'<rect x="4" y="4" width="16" height="17" rx="2"/><path d="M8 3h8v4H8zM8 12h8M8 16h5"/>'},
- agents:{href:'/admin?tab=agents',label:'Equipe e agentes',hint:'Especialistas, auditoria e prioridades',icon:'<circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2"/><path d="M4 20v-2a5 5 0 0 1 10 0v2M14 20v-1a4 4 0 0 1 6-3"/>'},
+ agents:{href:'/admin?tab=agents',label:'Agentes',hint:'Especialistas, auditoria e prioridades',icon:'<circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2"/><path d="M4 20v-2a5 5 0 0 1 10 0v2M14 20v-1a4 4 0 0 1 6-3"/>'},
  products:{href:'/admin?tab=products',label:'Produtos',hint:'Variações e custos por produto',icon:'<path d="m12 3 9 5-9 5-9-5 9-5ZM3 8v9l9 5 9-5V8M12 13v9"/>'},
  production:{href:'/admin?tab=agent-production',label:'Produção',hint:'Fabricação, custos e montagem DTF',icon:'<path d="M6 8V3h12v5M6 17H4V8h16v9h-2M6 14h12v7H6zM16 11h1"/>'},
  finance:{href:'/admin?tab=agent-finance',label:'Financeiro',hint:'Resultado, repasses e despesas',icon:'<rect x="3" y="5" width="18" height="15" rx="2"/><path d="M3 10h18M7 15h3m5 0h2M7 5V3m10 2V3"/>'},
@@ -15,7 +15,7 @@ const workspaceNavigationItems=Object.freeze({
  hermes:{href:'/admin?tab=agent-hermes',label:'Hermes',hint:'Supervisor, análises e limites de uso',icon:'<path d="M8 3v3m8-3v3M3 10h18M5 6h14v15H5zM9 14h6m-6 4h4"/>'},
  integrations:{href:'/integrations',label:'Conexões',hint:'Integração com a Shopee',icon:'<path d="m8 8 3-3a4 4 0 0 1 6 6l-3 3M16 16l-3 3a4 4 0 0 1-6-6l3-3m-1 5 6-6"/>'},
  history:{href:'/admin?tab=history',label:'Histórico',hint:'Alterações e versões salvas',icon:'<path d="M3 11a9 9 0 1 1 2 7M3 5v6h6M12 7v5l3 2"/>'},
- roadmap:{href:'/admin?tab=roadmap',label:'Plano e versão',hint:'Entregas, limites e próximos passos',icon:'<path d="M5 20V4h12l-2 4 2 4H5M3 20h4"/>'},
+ roadmap:{href:'/admin?tab=roadmap',label:'Novidades e versão',hint:'Entregas, limites e próximos passos',icon:'<path d="M5 20V4h12l-2 4 2 4H5M3 20h4"/>'},
 });
 const workspaceOwnerPrimary=['overview','orders','production','returns','finance','reports','products','ads','hermes'];
 const workspaceOwnerMobilePrimary=['overview','orders','production','finance','products'];
@@ -39,12 +39,12 @@ function workspaceNavLink(key,current,{mobile=false}={}){
 export function workspaceSecondaryNavigation(active,{role='owner',mobile=false}={}){
  const owner=role==='owner',current=workspaceActiveKey(active),keys=owner?(mobile?['reports','returns','ads','hermes',...workspaceOwnerSecondary]:workspaceOwnerSecondary):workspaceReviewSecondary;
  const menuIcon='<span class="workspace-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></span>';
- return `<details class="workspace-more${mobile?' workspace-mobile-menu':''}" data-active="${keys.includes(current)?'true':'false'}"><summary>${mobile?menuIcon+'<span class="workspace-nav-label">Menu</span>':'<span>'+ (owner?'Equipe e mais':'Mais opções') +'</span><span aria-hidden="true">⌄</span>'}</summary><nav aria-label="${mobile?'Menu e outras áreas':'Outras áreas do painel'}">${keys.map(key=>(owner&&key==='agents'?'<span class="workspace-menu-label">Equipe</span>':owner&&key==='margins'?'<span class="workspace-menu-label">Operação e configurações</span>':'')+workspaceNavLink(key,current)).join('')}${owner?'<a class="workspace-nav-link" href="/admin/diagnostics"><span class="workspace-nav-label">Diagnosticar carregamento</span></a>':''}<a class="workspace-nav-link workspace-signout" href="/logout"><span class="workspace-nav-label">Sair da conta</span></a></nav></details>`;
+ return `<details class="workspace-more${mobile?' workspace-mobile-menu':''}" data-active="${keys.includes(current)?'true':'false'}"><summary>${mobile?menuIcon+'<span class="workspace-nav-label">Menu</span>':'<span>'+ (owner?'Mais ferramentas':'Mais opções') +'</span><span aria-hidden="true">⌄</span>'}</summary><nav aria-label="${mobile?'Menu e outras áreas':'Outras áreas do painel'}">${keys.map(key=>(owner&&key==='agents'?'<span class="workspace-menu-label">Especialistas virtuais</span>':owner&&key==='margins'?'<span class="workspace-menu-label">Ferramentas de gestão</span>':owner&&key==='integrations'?'<span class="workspace-menu-label">Conexões</span>':owner&&key==='history'?'<span class="workspace-menu-label">Ajuda e histórico</span>':'')+workspaceNavLink(key,current)).join('')}${owner?'<a class="workspace-nav-link" href="/admin/diagnostics"><span class="workspace-nav-label">Diagnosticar carregamento</span></a>':''}<a class="workspace-nav-link workspace-signout" href="/logout"><span class="workspace-nav-label">Sair da conta</span></a></nav></details>`;
 }
 
 export function workspaceNavigation(active,{role='owner',mobile=false}={}){
  const owner=role==='owner',current=workspaceActiveKey(active),keys=owner?(mobile?workspaceOwnerMobilePrimary:workspaceOwnerPrimary):workspaceReviewPrimary;
- return `<nav class="workspace-nav${mobile?' workspace-nav-mobile':''}" aria-label="${mobile?'Navegação principal no celular':'Navegação principal'}" data-workspace-role="${owner?'owner':'review'}">${keys.map(key=>workspaceNavLink(key,current,{mobile})).join('')}${mobile&&owner?workspaceSecondaryNavigation(active,{role,mobile:true}):''}</nav>`+(mobile?'':workspaceSecondaryNavigation(active,{role}));
+ return `<nav class="workspace-nav${mobile?' workspace-nav-mobile':''}" aria-label="${mobile?'Navegação principal no celular':'Navegação principal'}" data-workspace-role="${owner?'owner':'review'}">${keys.map(key=>(!mobile&&owner&&({overview:'Principal',orders:'Operação',finance:'Gestão',hermes:'Inteligência'})[key]?'<span class="workspace-nav-group-label">'+({overview:'Principal',orders:'Operação',finance:'Gestão',hermes:'Inteligência'})[key]+'</span>':'')+workspaceNavLink(key,current,{mobile})).join('')}${mobile&&owner?workspaceSecondaryNavigation(active,{role,mobile:true}):''}</nav>`+(mobile?'':workspaceSecondaryNavigation(active,{role}));
 }
 
 export const WORKSPACE_NAVIGATION_CSS=String.raw`

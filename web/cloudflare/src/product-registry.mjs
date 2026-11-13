@@ -1,3 +1,4 @@
+import {TenantInitializationMap} from './tenant-storage.mjs';
 import {PRODUCT_INDEX_STATUSES,projectProductIndexFrame,productIndexRequestMatches} from '../../finance/src/product-index-frame.mjs';
 import {CATALOG_CLASSIFICATION_SCHEMA,enqueueCatalogClassifications,refreshKnownCatalogClassifications,catalogClassificationQueries,catalogClassificationsFromSnapshot} from './catalog-classification.mjs';
 import {validateVariantBindings} from './variant-bindings.mjs';
@@ -12,7 +13,7 @@ export const PRODUCT_REGISTRY_SCHEMA=[
 ];
 export class ProductRegistryError extends Error{constructor(code,status=503){super(code);this.status=status;}}
 const fail=(code,status=503)=>{throw new ProductRegistryError(code,status);};
-const ready=new WeakMap(),deleted=new Set(['SELLER_DELETE','SHOPEE_DELETE']);
+const ready=new TenantInitializationMap(),deleted=new Set(['SELLER_DELETE','SHOPEE_DELETE']);
 const plain=value=>value!==null&&typeof value==='object'&&[Object.prototype,null].includes(Object.getPrototypeOf(value));
 const integer=(value,min=0,max=Number.MAX_SAFE_INTEGER)=>Number.isSafeInteger(value)&&!Object.is(value,-0)&&value>=min&&value<=max;
 const id=value=>typeof value==='string'&&/^[1-9][0-9]{0,19}$/.test(value);

@@ -37,6 +37,17 @@ test('actual JSON cost mutation keeps realm validation and CSRF; logout revokes 
  }finally{await s.close();}
 });
 
+test('real preview routes every generated browser asset through Worker inventory and hash validation',async()=>{
+ const s=await startPreviewServer();try{
+  const cookie=await login(s),html=await get(s,'/admin?tab=ai-sales',cookie),scripts=[...html.data.matchAll(/<script src="(\/assets\/mls\/([a-f0-9]{64})\.js)" integrity="([^"]+)"/g)];assert.equal(scripts.length,6);
+  for(const [,route,sha,integrity]of scripts){
+   const response=await fetch(s.origin+route),bytes=Buffer.from(await response.arrayBuffer());assert.equal(response.status,200,route);assert.equal(response.headers.get('content-type'),'text/javascript; charset=utf-8');assert.equal(response.headers.get('x-content-type-options'),'nosniff');assert.equal(createHash('sha256').update(bytes).digest('hex'),sha);assert.equal(integrity,'sha256-'+Buffer.from(sha,'hex').toString('base64'));
+   const head=await fetch(s.origin+route,{method:'HEAD'});assert.equal(head.status,200);assert.equal(head.headers.get('content-length'),String(bytes.length));assert.equal((await head.arrayBuffer()).byteLength,0);
+  }
+  const route=scripts[0][1];assert.equal((await get(s,route+'?unexpected=1')).status,404);assert.equal((await get(s,'/assets/mls/'+'0'.repeat(64)+'.js')).status,404);assert.equal((await fetch(s.origin+route,{method:'POST',headers:{origin:s.origin}})).status,405);assert.equal((await get(s,'/assets/mls/not-a-build-file.js')).status,404);assert.equal((await get(s,'/api/admin/bootstrap')).status,401);assert.equal((await get(s,'/api/admin/bootstrap',cookie)).status,200);assert.equal((await get(s,'/__preview/status')).data.outbound_attempts,0);
+ }finally{await s.close();}
+});
+
 test('loopback Host and Origin are enforced and forwarded headers cannot grant remote access',async()=>{
  await assert.rejects(startPreviewServer({host:'0.0.0.0'}),{code:'PREVIEW_LOOPBACK_REQUIRED'});
  const s=await startPreviewServer();try{

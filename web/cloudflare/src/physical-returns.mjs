@@ -1,3 +1,4 @@
+import {TenantInitializationSet} from './tenant-storage.mjs';
 // Owner-confirmed physical pieces. Provider status never receives or restocks
 // merchandise, and this ledger has no financial or marketplace write authority.
 export class PhysicalReturnsError extends Error{
@@ -49,7 +50,7 @@ export function projectPhysicalReturns(value){
  }catch{return null;}
 }
 
-const ready=new WeakSet(),encoder=new TextEncoder(),tables=['physical_returns_state','physical_returns_cases','physical_returns_audit','physical_returns_guard'];
+const ready=new TenantInitializationSet(),encoder=new TextEncoder(),tables=['physical_returns_state','physical_returns_cases','physical_returns_audit','physical_returns_guard'];
 const fail=(suffix,status=400)=>{throw new PhysicalReturnsError('PHYSICAL_RETURNS_'+suffix,status);};
 const plain=v=>v!==null&&typeof v==='object'&&[Object.prototype,null].includes(Object.getPrototypeOf(v));
 const exact=(v,keys)=>plain(v)&&Reflect.ownKeys(v).length===keys.length&&keys.every(key=>Object.hasOwn(Object.getOwnPropertyDescriptor(v,key)||{},'value'));

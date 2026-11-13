@@ -1,3 +1,4 @@
+import {TenantInitializationSet} from './tenant-storage.mjs';
 import {projectPendingIncomeScanFrame} from '../../finance/src/pending-income-frame.mjs';
 
 // Current account Pending is global. Neither this cache nor its retry clock is
@@ -8,7 +9,7 @@ export const BUSINESS_PENDING_INCOME_SCAN_SCHEMA=[
 ];
 export class BusinessPendingIncomeScanError extends Error{constructor(code,status=503){super(code);this.code=code;this.status=status;}}
 const fail=(suffix,status=503)=>{throw new BusinessPendingIncomeScanError('BUSINESS_PENDING_INCOME_SCAN_'+suffix,status);};
-const ready=new WeakSet(),encoder=new TextEncoder();
+const ready=new TenantInitializationSet(),encoder=new TextEncoder();
 const integer=(value,min=0,max=9999999999)=>Number.isSafeInteger(value)&&!Object.is(value,-0)&&value>=min&&value<=max;
 const codes=['UNAVAILABLE','CONFIGURATION','RESPONSE_INVALID','REDIRECT_REJECTED','HTTP_ERROR','CONTENT_TYPE_INVALID','BODY_LIMIT','JSON_INVALID','FRAME_INVALID','TIMEOUT','NETWORK_ERROR','BODY_READ_ERROR','PERMISSION_DENIED','RATE_LIMIT','INVALID_RESPONSE','REPEATED_CURSOR','REPEATED_PAGE','EMPTY_CONTINUATION','LIMIT_REACHED','SCAN_EXPIRED'].map(suffix=>'FINANCE_PENDING_INCOME_SCAN_'+suffix);
 function clock(now){let value;try{value=now();}catch{fail('CLOCK_INVALID');}if(!integer(value,1,9999999999999))fail('CLOCK_INVALID');return Math.floor(value/1000);}

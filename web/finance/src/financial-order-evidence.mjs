@@ -1,4 +1,4 @@
-import {FINANCE_PROFILE,FinanceConnectionError} from './connection-store.mjs';
+import {getFinanceProfile,FINANCE_PROFILE,FinanceConnectionError} from './connection-store.mjs';
 import {projectBusinessPeriodRequest} from './business-period-frame.mjs';
 
 // Private source evidence only. The old paid-cohort frame and its arithmetic
@@ -61,7 +61,7 @@ export function projectFinancialOrderEvidence(value){
 // Capture is deliberately tolerant of optional provider fields: an invalid
 // adjustment or return list becomes invalid evidence, never a failed paid page.
 // Only a forged source context is rejected before a sidecar can be constructed.
-export async function buildFinancialOrderEvidence(input){
+export async function buildFinancialOrderEvidence(input,profile=FINANCE_PROFILE){
  const dated=plain(input)&&Object.hasOwn(input,'create_time');
  if(!exact(input,['order_sn','order_status','currency','payment','record',...(dated?['create_time']:[])]))fail('CONTEXT_INVALID');
  const {order_sn,order_status:sourceStatus,currency:sourceCurrency,payment,record}=input;
@@ -72,7 +72,7 @@ export async function buildFinancialOrderEvidence(input){
  const observed=plain(payment),income=read(payment,'order_income');
  if(payment!==null&&payment!==undefined&&!observed)invalid=true;
  if(observed){
-  for(const row of [payment,...(plain(income)?[income]:[])])for(const name of ['order_sn','shop_id','partner_id'])if(Object.hasOwn(row,name)&&read(row,name)!==(name==='order_sn'?order_sn:FINANCE_PROFILE[name]))invalid=true;
+  for(const row of [payment,...(plain(income)?[income]:[])])for(const name of ['order_sn','shop_id','partner_id'])if(Object.hasOwn(row,name)&&read(row,name)!==(name==='order_sn'?order_sn:profile[name]))invalid=true;
   if(Object.hasOwn(payment,'return_order_sn_list')){const value=read(payment,'return_order_sn_list');if(list(value,100)&&value.every(serial)&&new Set(value).size===value.length)evidence.return_order_sn_list=[...value];else invalid=true;}
   if(income!==null&&income!==undefined&&!plain(income))invalid=true;
   if(plain(income))for(const field of ['escrow_amount','escrow_amount_after_adjustment','total_adjustment_amount']){
@@ -96,11 +96,12 @@ export async function buildFinancialOrderEvidence(input){
 // Legacy/malformed sidecars stay explicit; they never acquire invented returns
 // or adjustment amounts and no provider access is performed on this path.
 export async function readFinancialOrderEvidence(env,input,{now=()=>Date.now(),includeOriginalItems=false}={}){
+ const profile=getFinanceProfile(env);
  if(typeof includeOriginalItems!=='boolean')fail('REQUEST_INVALID',400);
  if(!exact(input,['run_id'])||!projectBusinessPeriodRequest({operation:'read',run_id:input.run_id}))fail('REQUEST_INVALID',400);
  const db=env?.FINANCE_DB;if(typeof db?.prepare!=='function'||typeof db?.batch!=='function'||db===env.ADMIN_DB)fail('CONFIGURATION');
  let stamp;try{const value=now();if(!integer(value,1,9999999999999))throw Error();stamp=Math.floor(value/1000);}catch{fail('CLOCK_INVALID');}
- const identity=[FINANCE_PROFILE.partner_id,FINANCE_PROFILE.shop_id],select=table=>db.prepare(`SELECT o.order_hash,o.bucket,o.payment_covered,o.sales_raw,o.escrow_raw,o.ads_raw,o.returns_seen,o.items,o.source_hash,o.checked_at,e.source_hash AS evidence_source_hash,e.checked_at AS evidence_checked_at,e.payload AS evidence_payload,e.payload_hash AS evidence_payload_hash FROM ${table} o LEFT JOIN finance_business_order_evidence e ON e.run_id=o.run_id AND e.order_hash=o.order_hash WHERE o.run_id=? AND EXISTS(SELECT 1 FROM finance_business_period_runs r WHERE r.run_id=o.run_id AND r.partner_id=? AND r.shop_id=?) ORDER BY o.order_hash`).bind(input.run_id,...identity);
+ const identity=[profile.partner_id,profile.shop_id],select=table=>db.prepare(`SELECT o.order_hash,o.bucket,o.payment_covered,o.sales_raw,o.escrow_raw,o.ads_raw,o.returns_seen,o.items,o.source_hash,o.checked_at,e.source_hash AS evidence_source_hash,e.checked_at AS evidence_checked_at,e.payload AS evidence_payload,e.payload_hash AS evidence_payload_hash FROM ${table} o LEFT JOIN finance_business_order_evidence e ON e.run_id=o.run_id AND e.order_hash=o.order_hash WHERE o.run_id=? AND EXISTS(SELECT 1 FROM finance_business_period_runs r WHERE r.run_id=o.run_id AND r.partner_id=? AND r.shop_id=?) ORDER BY o.order_hash`).bind(input.run_id,...identity);
  let rows;try{rows=await db.batch([...FINANCIAL_ORDER_EVIDENCE_SCHEMA.map(sql=>db.prepare(sql)),db.prepare('SELECT run_id,revision,status,start_date,end_date,cutoff_at,checked_at,partner_id,shop_id FROM finance_business_period_runs WHERE run_id=? AND partner_id=? AND shop_id=?').bind(input.run_id,...identity),select('finance_business_period_orders'),select('finance_business_period_payment_cache')]);}catch{fail('STORAGE_UNAVAILABLE');}
  const source=rows[1]?.results?.[0],committed=rows[2]?.results,cached=rows[3]?.results;if(!source)fail('RUN_NOT_FOUND',404);
  if(source.run_id!==input.run_id||source.partner_id!==identity[0]||source.shop_id!==identity[1]||!integer(source.revision,1,2147483647)||!['RUNNING','COMPLETE','LIMIT_REACHED'].includes(source.status)||!projectBusinessPeriodRequest({operation:'start',start_date:source.start_date,end_date:source.end_date})||!integer(source.cutoff_at,1,stamp+60)||!integer(source.checked_at,source.cutoff_at,stamp+60)||!Array.isArray(committed)||committed.length>1000||!Array.isArray(cached)||cached.length>20)fail('STORAGE_INVALID');

@@ -7,14 +7,23 @@ import re
 ROOT=Path(__file__).resolve().parents[1]
 FINANCE=ROOT/'web/finance'
 AUTH_SHA='45d0142709c5087e373cc4da146070ed39c472805f6f64c00f00b6555f0e1f56'
+# Independently reviewed V4 delta: both embedded copies of boundedOrdersRead
+# accept optional fetchImpl=fetch and use that transport. Default behavior and
+# all remaining original Auth bytes are unchanged. Never accept arbitrary hashes.
+REVIEWED_AUTH_SHA256=frozenset((AUTH_SHA,'aaeced29f8d6c9a4b362bde5f9d8ea130abd8b2c2ad7cdd282725b0f88b4ffc2'))
 
 def digest(value):
     return hashlib.sha256(value).hexdigest()
 
+def validate_auth_baseline(original):
+    actual=digest(original)
+    if actual not in REVIEWED_AUTH_SHA256:
+        raise SystemExit('Current Auth differs from the reviewed v9 baseline; candidate not built.')
+    return actual
+
 def build():
     original=(ROOT/'web/cloudflare/auth-worker.mjs').read_bytes()
-    if digest(original)!=AUTH_SHA:
-        raise SystemExit('Current Auth differs from the reviewed v9 baseline; candidate not built.')
+    reviewed_baseline=validate_auth_baseline(original)
     # The preview projection is a self-contained, reviewed module shared by all
     # three Workers. Strip only its explicit import; refuse additional imports.
     preview=(FINANCE/'src/payment-preview-frame.mjs').read_text()
@@ -197,7 +206,7 @@ def build():
         'status':'OFFLINE_CANDIDATE_NOT_FOR_PRODUCTION',
         'activation':'BASE_WITHOUT_PROVIDER_ADAPTER_USE_LIVE_DELIVERY',
         'partner_id':2049333,'shop_id':1178167501,
-        'auth_baseline_sha256':AUTH_SHA,
+        'auth_baseline_sha256':reviewed_baseline,
         'auth_candidate_sha256':digest(auth.encode()),
         'finance_candidate_sha256':digest(bundled.encode()),
         'production_deployed':False,'ads_execution':'LOCKED',

@@ -1,3 +1,4 @@
+import {TenantInitializationMap} from './tenant-storage.mjs';
 import {projectBusinessMonth} from './business-month.mjs';
 import {createMlsAgentLearningReport} from './mls-agent-learning-report.mjs';
 
@@ -12,7 +13,7 @@ const plain=v=>v!==null&&typeof v==='object'&&[Object.prototype,null].includes(O
 const exact=(v,keys)=>plain(v)&&Reflect.ownKeys(v).length===keys.length&&keys.every(k=>Object.hasOwn(Object.getOwnPropertyDescriptor(v,k)||{},'value'));
 const stampAt=now=>{let ms;try{ms=now();}catch{fail('MLS_AGENT_LEARNING_CLOCK_INVALID');}if(!integer(ms,1,9999999999999))fail('MLS_AGENT_LEARNING_CLOCK_INVALID');return Math.floor(ms/1000);};
 const dbOf=env=>{const db=env?.ADMIN_DB;if(typeof db?.prepare!=='function'||typeof db?.batch!=='function')fail('MLS_AGENT_LEARNING_CONFIGURATION');return db;};
-const ready=new WeakMap();
+const ready=new TenantInitializationMap();
 async function setup(db){if(!ready.has(db))ready.set(db,db.batch(MLS_AGENT_LEARNING_SCHEMA.map(sql=>db.prepare(sql))).catch(()=>{ready.delete(db);fail('MLS_AGENT_LEARNING_STORAGE_UNAVAILABLE');}));await ready.get(db);}
 const monthAt=stamp=>new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date(stamp*1000)).slice(0,7);
 function snapshot(frame,publication_revision){

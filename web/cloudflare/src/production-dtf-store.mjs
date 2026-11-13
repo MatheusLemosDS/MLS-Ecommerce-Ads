@@ -1,3 +1,4 @@
+import {TenantInitializationMap,isTenantDatabase} from './tenant-storage.mjs';
 import {createDtfEngine} from './dtf-layout.mjs';
 import {projectProductionOrdersFrame,productionOrdersRequestMatches} from '../../finance/src/production-orders-frame.mjs';
 import {validateVariantBindings} from './variant-bindings.mjs';
@@ -37,10 +38,10 @@ export const PRODUCTION_DTF_SCHEMA=[
  `CREATE TABLE IF NOT EXISTS production_dtf_sync_state(id INTEGER PRIMARY KEY CHECK(id=1),lease_token TEXT,lease_expires_at INTEGER,last_sync_at INTEGER,history_next_date TEXT)`,
  `INSERT OR IGNORE INTO production_dtf_sync_state(id) VALUES(1)`,
 ];
-const dtfReady=new WeakMap();
+const dtfReady=new TenantInitializationMap();
 async function dtfSetup(env){
  const db=env?.ADMIN_DB;if(!db?.prepare||!db?.batch)dtfFail('DTF_STORAGE_CONFIGURATION',503);
- if(!dtfReady.has(db))dtfReady.set(db,db.batch([...PRODUCTION_DTF_SCHEMA,...CATALOG_CLASSIFICATION_SCHEMA].map(sql=>db.prepare(sql))).catch(()=>{dtfReady.delete(db);dtfFail('DTF_STORAGE_UNAVAILABLE',503);}));
+ if(!dtfReady.has(db))dtfReady.set(db,db.batch([...PRODUCTION_DTF_SCHEMA,...CATALOG_CLASSIFICATION_SCHEMA].map(sql=>db.prepare(env.COMMERCIAL_CONTEXT||isTenantDatabase(db)?sql.replace("'operator-confirmed-film-57cm'","'commercial-film-default-unconfirmed-v1'"):sql))).catch(()=>{dtfReady.delete(db);dtfFail('DTF_STORAGE_UNAVAILABLE',503);}));
  await dtfReady.get(db);return db;
 }
 function dtfClock(now){let value;try{value=now();}catch{dtfFail('DTF_CLOCK_INVALID',503);}if(!dtfInt(value,1,9999999999999))dtfFail('DTF_CLOCK_INVALID',503);return Math.floor(value/1000);}

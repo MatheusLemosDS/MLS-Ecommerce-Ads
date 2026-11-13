@@ -1,3 +1,4 @@
+import {TenantInitializationSet} from './tenant-storage.mjs';
 import {projectIncomeOverviewFrame} from '../../finance/src/income-overview-frame.mjs';
 
 export const BUSINESS_INCOME_OVERVIEW_SCHEMA=[
@@ -5,7 +6,7 @@ export const BUSINESS_INCOME_OVERVIEW_SCHEMA=[
  `CREATE TABLE IF NOT EXISTS business_income_overview_lease(id INTEGER PRIMARY KEY CHECK(id=1),lease_token TEXT NOT NULL,lease_until INTEGER NOT NULL)`,
 ];
 export class BusinessIncomeOverviewError extends Error{constructor(code,status=503){super(code);this.status=status;}}
-const fail=(code,status=503)=>{throw new BusinessIncomeOverviewError(code,status);},ready=new WeakSet(),encoder=new TextEncoder();
+const fail=(code,status=503)=>{throw new BusinessIncomeOverviewError(code,status);},ready=new TenantInitializationSet(),encoder=new TextEncoder();
 const integer=(v,min=0,max=9999999999)=>Number.isSafeInteger(v)&&!Object.is(v,-0)&&v>=min&&v<=max;
 const codes=['UNAVAILABLE','CONFIGURATION','RESPONSE_INVALID','REDIRECT_REJECTED','HTTP_ERROR','CONTENT_TYPE_INVALID','BODY_LIMIT','JSON_INVALID','FRAME_INVALID','TIMEOUT','NETWORK_ERROR','BODY_READ_ERROR'].map(s=>'FINANCE_INCOME_OVERVIEW_'+s);
 function clock(now){let raw;try{raw=now();}catch{fail('BUSINESS_INCOME_OVERVIEW_CLOCK_INVALID');}if(!integer(raw,1,9999999999999))fail('BUSINESS_INCOME_OVERVIEW_CLOCK_INVALID');return Math.floor(raw/1000);}

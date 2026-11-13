@@ -95,3 +95,16 @@ test('hiding and logout invalidate outstanding responses and remove all private 
 test('self-contained read-only asset and responsive styles retain separate bases and usable report links',()=>{
  assert.doesNotThrow(()=>new Function(WEEKLY_OPERATING_CLIENT));assert.doesNotMatch(WEEKLY_OPERATING_CLIENT,/innerHTML|localStorage|sessionStorage|console\.|fetch\(/);assert.match(WEEKLY_OPERATING_CSS,/min-height:44px/);assert.match(WEEKLY_OPERATING_CSS,/safe-area-inset-bottom/);assert.match(weeklyOperatingBody(),/sete dias civis/);assert.match(weeklyOperatingBody(),/não é descontada novamente/);assert.match(weeklyOperatingBody(),/Não|não/);assert.match(weeklyOperatingBody(),/tab=agent-finance/);
 });
+
+test('weekly source links carry the selected sales date and exact manufacturing cut across month boundaries',async()=>{
+ const b=await ready();b.el('WeekEnd').value='2026-10-02';b.el('WeekEnd').onchange();await b.el('Form').onsubmit();
+ const links=()=>b.el('SalesLinks').children.map(node=>node.href).filter(Boolean);
+ assert.equal(links()[0],'/admin?tab=agent-finance&month=2026-09&date=2026-09-25#businessDay');
+ assert.ok(links().includes('/admin?tab=agent-finance&month=2026-09#businessMonth'));
+ assert.ok(links().includes('/admin?tab=agent-finance&month=2026-10#businessMonth'));
+ b.el('SalesChart').children[6].onclick();
+ assert.equal(links()[0],'/admin?tab=agent-finance&month=2026-10&date=2026-10-01#businessDay');
+ assert.ok(b.el('ManufacturingLinks').children.some(node=>node.href==='/admin?tab=agent-production&month=2026-10&week_end=2026-10-02#productionWeeklyClosing'));
+ assert.match(b.text('CashLinks'),/competência já escolhida.*2026-09 e 2026-10/);
+ assert.equal(b.controller.getSnapshot().week_end,'2026-10-02');assert.ok(b.calls.every(call=>call.body===undefined));
+});

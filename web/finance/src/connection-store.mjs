@@ -1,3 +1,5 @@
+import {isCommercialContext} from '../../cloudflare/src/commercial-context.mjs';
+import {TenantInitializationMap} from '../../cloudflare/src/tenant-storage.mjs';
 // Private finance connection persistence. No provider requests or Ads fallback.
 export const FINANCE_PROFILE = Object.freeze({
   partner_id: 2049333,
@@ -15,12 +17,20 @@ export class FinanceConnectionError extends Error {
   }
 }
 
+export function getFinanceProfile(env,{optional=false}={}){
+ if(!env?.COMMERCIAL_CONTEXT)return FINANCE_PROFILE;
+ const context=env.COMMERCIAL_CONTEXT,profile=context.profile;
+ if(!isCommercialContext(context))throw new FinanceConnectionError('FINANCE_CONTEXT_INVALID',403);
+ if(profile===null){if(optional)return null;throw new FinanceConnectionError('FINANCE_CONNECTION_REQUIRED',409);}
+ if(!profile||!Number.isSafeInteger(profile.partner_id)||profile.partner_id<1||!Number.isSafeInteger(profile.shop_id)||profile.shop_id<1||profile.environment!=='LIVE'||profile.region!=='BRAZIL')throw new FinanceConnectionError('FINANCE_PROFILE_CONFIGURATION',503);
+ return Object.freeze({partner_id:profile.partner_id,shop_id:profile.shop_id,environment:profile.environment,region:profile.region});
+}
+
 const CONTEXT = 'braza-finance-payment-v1';
+const financeConnectionInitialization=new TenantInitializationMap();
 const STATE_TTL = 600;
 const REFRESH_TTL = 60;
 const MAX_TOKEN_TTL = 86400;
-const IDENTITY = [FINANCE_PROFILE.partner_id, FINANCE_PROFILE.shop_id,
-  FINANCE_PROFILE.environment, FINANCE_PROFILE.region, CONTEXT];
 const WHERE = 'partner_id = ? AND shop_id = ? AND environment = ? AND region = ? AND profile_context = ?';
 const encoder = new TextEncoder();
 const decoder = new TextDecoder('utf-8', {fatal: true});
@@ -70,6 +80,9 @@ function leaseFor(lease, allowZero = false) {
 }
 
 export async function createFinanceStore(env, {now = () => Date.now()} = {}) {
+  const profile=getFinanceProfile(env),profileContext=env?.COMMERCIAL_CONTEXT?CONTEXT+':'+env.COMMERCIAL_CONTEXT.namespace:CONTEXT;
+  const IDENTITY=[profile.partner_id,profile.shop_id,profile.environment,profile.region,profileContext];
+  const browserDigest=value=>digest(env?.COMMERCIAL_CONTEXT?JSON.stringify([value,env.COMMERCIAL_CONTEXT.userId,env.COMMERCIAL_CONTEXT.sessionId,env.COMMERCIAL_CONTEXT.membershipId]):value);
   if (!env || !env.FINANCE_DB || typeof env.FINANCE_DB.prepare !== 'function'
     || typeof env.FINANCE_DB.batch !== 'function' || (env.ADMIN_DB && env.ADMIN_DB === env.FINANCE_DB)) {
     throw error('FINANCE_DATABASE_CONFIGURATION');
@@ -127,6 +140,8 @@ export async function createFinanceStore(env, {now = () => Date.now()} = {}) {
     observed.ciphertext, observed.iv, observed.expires_at]);
 
   const setup = async () => {
+    if(financeConnectionInitialization.has(db))return financeConnectionInitialization.get(db);
+    const pending=(async()=>{
     try {
       await db.batch([
         db.prepare(`CREATE TABLE IF NOT EXISTS finance_oauth_states (
@@ -158,7 +173,8 @@ export async function createFinanceStore(env, {now = () => Date.now()} = {}) {
           PRIMARY KEY (partner_id, shop_id, environment, region, profile_context)
         )`),
       ]);
-    } catch { throw error('FINANCE_STORAGE_UNAVAILABLE'); }
+    } catch {financeConnectionInitialization.delete(db);throw error('FINANCE_STORAGE_UNAVAILABLE');}
+    })();financeConnectionInitialization.set(db,pending);return pending;
   };
   const issueState = async () => {
     const state = opaque();
@@ -168,7 +184,7 @@ export async function createFinanceStore(env, {now = () => Date.now()} = {}) {
     await run(`INSERT INTO finance_oauth_states
       (state_hash, browser_hash, partner_id, shop_id, environment, region, profile_context, issued_at, expires_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [await digest(state), await digest(browser_secret), ...IDENTITY, issued, issued + STATE_TTL]);
+    [await digest(state), await browserDigest(browser_secret), ...IDENTITY, issued, issued + STATE_TTL]);
     return {state, browser_secret, expires_at: issued + STATE_TTL};
   };
   const consumeState = async (state, browserSecret) => {
@@ -176,9 +192,9 @@ export async function createFinanceStore(env, {now = () => Date.now()} = {}) {
     const stateHash = await digest(state);
     const found = await first(`DELETE FROM finance_oauth_states WHERE state_hash = ? AND browser_hash = ?
       AND ${WHERE} AND issued_at <= ? AND expires_at > ? RETURNING issued_at, expires_at`,
-    [stateHash, await digest(browserSecret), ...IDENTITY, epoch(), epoch()]);
+    [stateHash, await browserDigest(browserSecret), ...IDENTITY, epoch(), epoch()]);
     if (!found) throw error('FINANCE_INVALID_STATE', 400);
-    return {...FINANCE_PROFILE, nonce_digest: stateHash, issued_at: found.issued_at, expires_at: found.expires_at};
+    return {...profile, nonce_digest: stateHash, issued_at: found.issued_at, expires_at: found.expires_at};
   };
   const status = async () => {
     const connection = await row();
@@ -188,7 +204,7 @@ export async function createFinanceStore(env, {now = () => Date.now()} = {}) {
     }
     return {connected: !!connection && ['CONNECTED', 'REFRESHING'].includes(connection.status),
       status: connection?.status || 'DISCONNECTED', revision: connection?.revision ?? null,
-      expires_at: connection?.expires_at ?? null, partner_id: FINANCE_PROFILE.partner_id, shop_id: FINANCE_PROFILE.shop_id};
+      expires_at: connection?.expires_at ?? null, partner_id: profile.partner_id, shop_id: profile.shop_id};
   };
   const readTokens = async () => {
     const connection = await row();

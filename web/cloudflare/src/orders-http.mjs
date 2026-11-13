@@ -1,6 +1,6 @@
 import {safeOrdersDiagnostic} from './orders-diagnostic.mjs';
 // Used only by the orders path; legacy HTTP helpers remain unchanged.
-export async function boundedOrdersRead(target,headers,timeoutMs,maxBytes=16384){
+export async function boundedOrdersRead(target,headers,timeoutMs,maxBytes=16384,fetchImpl=fetch){
  let status=null;
  const failure=(code,upstream=null)=>({ok:false,status:status??502,http:status,body:null,failure_code:code,upstream_diagnostic:safeOrdersDiagnostic(upstream)});
  let signal;
@@ -9,7 +9,7 @@ export async function boundedOrdersRead(target,headers,timeoutMs,maxBytes=16384)
   signal=AbortSignal.timeout(timeoutMs);
   // workerd supports manual/follow, but rejects redirect:"error" before fetching.
   // Manual mode keeps credentials on this destination; non-200 is refused below.
-  const response=await fetch(target,{method:'GET',headers,redirect:'manual',signal});
+  const response=await fetchImpl(target,{method:'GET',headers,redirect:'manual',signal});
   status=response.status;
   const reader=response.body?.getReader();
   if(!reader)return failure(status===200?'INVALID_JSON':'HTTP_STATUS');

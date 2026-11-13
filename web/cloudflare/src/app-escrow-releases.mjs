@@ -2,7 +2,7 @@ import {projectEscrowReleaseRequest,projectEscrowReleaseFrame,projectEscrowRelea
 
 // Only the fixed financial service can supply this private evidence report. There
 // is no caller-selected shop, provider URL, token, order serial or API path.
-export async function getFinanceEscrowReleases(env,input,{fetchImpl=request=>fetch(request),timeoutMs=45000}={}){
+export async function getFinanceEscrowReleases(env,input,{fetchImpl=env?.COMMERCIAL_FETCH??(request=>fetch(request)),timeoutMs=45000}={}){
  const failure=(suffix='UNAVAILABLE',http=null)=>({schema:'finance_escrow_releases_unavailable_v1',status:'UNAVAILABLE',diagnostic:{code:'FINANCE_ESCROW_RELEASES_'+suffix,http:Number.isInteger(http)&&http>=100&&http<=599?http:null}});
  const body=projectEscrowReleaseRequest(input);
  if(!body||typeof env?.APP_INTERNAL_SECRET!=='string'||!env.APP_INTERNAL_SECRET||typeof fetchImpl!=='function'
@@ -41,7 +41,7 @@ export async function getFinanceEscrowReleases(env,input,{fetchImpl=request=>fet
  finally{clearTimeout(timer);controller.abort();cancel();}
 }
 
-export async function getFinanceEscrowReleaseCoverage(env,input,{fetchImpl=request=>fetch(request),timeoutMs=45000}={}){
+export async function getFinanceEscrowReleaseCoverage(env,input,{fetchImpl=env?.COMMERCIAL_FETCH??(request=>fetch(request)),timeoutMs=45000}={}){
  const failure=(suffix='UNAVAILABLE',http=null)=>({schema:'finance_escrow_release_coverage_unavailable_v1',status:'UNAVAILABLE',diagnostic:{code:'FINANCE_ESCROW_RELEASES_'+suffix,http:Number.isInteger(http)&&http>=100&&http<=599?http:null}});
  const body=projectEscrowReleaseCoverageRequest(input);
  if(!body||typeof env?.APP_INTERNAL_SECRET!=='string'||!env.APP_INTERNAL_SECRET||typeof fetchImpl!=='function'||!Number.isInteger(timeoutMs)||timeoutMs<5||timeoutMs>45000)return failure('CONFIGURATION');

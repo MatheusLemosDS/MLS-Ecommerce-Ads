@@ -50,3 +50,9 @@ test('pages without production hosts do not call operational controllers',()=>{
  let calls=0;const context=vm.createContext({document:{getElementById:()=>null},brazaIncurredProduction:{open:()=>calls++}});vm.runInContext(PRODUCTION_WORKSPACE_CLIENT,context);
  assert.equal(context.brazaProductionWorkspace.open(),false);assert.equal(context.brazaProductionWorkspace.activateFragment('#costPeriods'),false);assert.equal(calls,0);
 });
+
+test('weekly context delegates to the saved-week controller without a competing current-month read',async()=>{
+ const f=fixture(),calls=[];f.context.brazaProductionWeeklyClosing={open:()=>assert.fail('context must not open another month first'),openContext:context=>{calls.push(JSON.parse(JSON.stringify(context)));return Promise.resolve(true);}};
+ assert.equal(await f.workspace.open({fragment:'#productionWeeklyClosing',context:{month:'2026-10',week_end:'2026-10-02'}}),true);
+ assert.deepEqual(calls,[{month:'2026-10',week_end:'2026-10-02'}]);assert.equal(f.workspace.getSnapshot().active_view,'weekly');
+});

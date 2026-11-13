@@ -1,7 +1,21 @@
-import {FINANCE_PROFILE, FinanceConnectionError} from './connection-store.mjs';
+import {getFinanceProfile, FinanceConnectionError} from './connection-store.mjs';
 import {ensureFinanceAccessToken} from './refresh-coordinator.mjs';
 import {requestFinanceAuthJson} from './auth-json-transport.mjs';
 import {FINANCE_PREVIEW_SCHEMA, FINANCE_PREVIEW_AMOUNT_FIELDS, projectFinancePaymentPreview} from './payment-preview-frame.mjs';
+
+export const FINANCE_SAMPLE_FIELDS = Object.freeze([
+  'escrow_amount', 'original_cost_of_goods_sold', 'buyer_total_amount',
+  'commission_fee', 'service_fee', 'seller_transaction_fee', 'actual_shipping_fee',
+  'ads_escrow_top_up_fee_or_technical_support_fee', 'items',
+]);
+export const FINANCE_SAMPLE_ITEM_FIELDS = Object.freeze([
+  'item_id', 'model_id', 'line_item_id', 'quantity_purchased', 'original_price',
+  'selling_price', 'order_discounted_price', 'is_kit', 'kit_items',
+]);
+export const FINANCE_SAMPLE_TYPES = Object.freeze([
+  'number', 'string', 'boolean', 'object', 'array', 'null', 'mixed',
+]);
+function createTenantPaymentSample(profile){
 
 const ORIGIN = 'https://partner.shopeemobile.com';
 const LIST_PATH = '/api/v2/order/get_order_list';
@@ -18,18 +32,9 @@ const privateToken = value => typeof value === 'string' && value.length > 0 && v
 
 // Only these fixed public schema names and type labels may leave the sample.
 // Amounts, order/product identifiers, buyer fields and arbitrary keys are omitted.
-export const FINANCE_SAMPLE_FIELDS = Object.freeze([
-  'escrow_amount', 'original_cost_of_goods_sold', 'buyer_total_amount',
-  'commission_fee', 'service_fee', 'seller_transaction_fee', 'actual_shipping_fee',
-  'ads_escrow_top_up_fee_or_technical_support_fee', 'items',
-]);
-export const FINANCE_SAMPLE_ITEM_FIELDS = Object.freeze([
-  'item_id', 'model_id', 'line_item_id', 'quantity_purchased', 'original_price',
-  'selling_price', 'order_discounted_price', 'is_kit', 'kit_items',
-]);
-export const FINANCE_SAMPLE_TYPES = Object.freeze([
-  'number', 'string', 'boolean', 'object', 'array', 'null', 'mixed',
-]);
+
+
+
 const API_ERRORS = new Map([
   ['error_sign', 'API_SIGNATURE_REJECTED'],
   ['error_param', 'API_PARAMETER_REJECTED'],
@@ -57,7 +62,7 @@ function envelope(payload, stage) {
   // another connection, even when the requested order happens to match.
   for (const container of [payload, payload.response]) {
     for (const field of ['partner_id', 'shop_id']) {
-      if (Object.hasOwn(container, field) && container[field] !== FINANCE_PROFILE[field]) {
+      if (Object.hasOwn(container, field) && container[field] !== profile[field]) {
         throw fail(stage + '_IDENTITY_MISMATCH');
       }
     }
@@ -157,8 +162,8 @@ async function collectFinancePaymentSample(env, options = {}) {
       return await requestFinanceAuthJson({input, options: {fetchImpl, now, timeoutMs},
       prefix: 'FINANCE_SAMPLE_' + stage,
       buildRequest: async () => {
-        const base = String(FINANCE_PROFILE.partner_id) + path + String(timestamp)
-          + tokens.access_token + String(FINANCE_PROFILE.shop_id);
+        const base = String(profile.partner_id) + path + String(timestamp)
+          + tokens.access_token + String(profile.shop_id);
         let signature;
         try {
           const digest = new Uint8Array(await crypto.subtle.sign('HMAC', signingKey, encoder.encode(base)));
@@ -166,10 +171,10 @@ async function collectFinancePaymentSample(env, options = {}) {
           signature = Array.from(digest, byte => byte.toString(16).padStart(2, '0')).join('');
         } catch { throw fail('SIGNATURE_UNAVAILABLE', 503); }
         const url = new URL(path, ORIGIN);
-        url.searchParams.set('partner_id', String(FINANCE_PROFILE.partner_id));
+        url.searchParams.set('partner_id', String(profile.partner_id));
         url.searchParams.set('timestamp', String(timestamp));
         url.searchParams.set('access_token', tokens.access_token);
-        url.searchParams.set('shop_id', String(FINANCE_PROFILE.shop_id));
+        url.searchParams.set('shop_id', String(profile.shop_id));
         url.searchParams.set('sign', signature);
         for (const [name, value] of Object.entries(query)) url.searchParams.set(name, String(value));
         return new Request(url.href, {method: 'GET', redirect: 'manual', headers: {accept: 'application/json'}});
@@ -219,7 +224,7 @@ async function collectFinancePaymentSample(env, options = {}) {
 
 // The schema-only action keeps its original wire contract: no order identifier
 // or financial value may appear in this response.
-export async function runFinancePaymentSample(env, options = {}) {
+async function runFinancePaymentSample(env, options = {}) {
   const sample = await collectFinancePaymentSample(env, options);
   const base = {schema_version: 1, status: 'EMPTY', checked_at: sample.checked_at,
     token_revision: sample.token_revision, fields: [], item_fields: [], item_count: 0};
@@ -229,7 +234,7 @@ export async function runFinancePaymentSample(env, options = {}) {
 
 // A separate private administrator preview retains the original numeric units
 // solely for comparing this one order against Shopee. It does not import data.
-export async function runFinancePaymentPreview(env, options = {}) {
+async function runFinancePaymentPreview(env, options = {}) {
   const sample = await collectFinancePaymentSample(env, options);
   const available = sample.income !== null;
   const frame = {schema: FINANCE_PREVIEW_SCHEMA, status: available ? 'AVAILABLE' : 'EMPTY',
@@ -250,3 +255,8 @@ export async function runFinancePaymentPreview(env, options = {}) {
   if (!projected) throw fail('PREVIEW_RESPONSE_INVALID');
   return projected;
 }
+
+return {runFinancePaymentSample,runFinancePaymentPreview};
+}
+export async function runFinancePaymentSample(env,...args){return createTenantPaymentSample(getFinanceProfile(env)).runFinancePaymentSample(env,...args);}
+export async function runFinancePaymentPreview(env,...args){return createTenantPaymentSample(getFinanceProfile(env)).runFinancePaymentPreview(env,...args);}

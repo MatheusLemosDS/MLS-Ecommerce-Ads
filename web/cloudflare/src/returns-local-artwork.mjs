@@ -5,7 +5,7 @@ export function createReturnLocalArtworkLoader(options={}){
  const decode=options.createImageBitmapImpl??globalThis.createImageBitmap,BlobType=options.BlobImpl??globalThis.Blob;
  const schedule=options.setTimeoutImpl??globalThis.setTimeout,unschedule=options.clearTimeoutImpl??globalThis.clearTimeout;
  const timeout=Number.isInteger(options.timeoutMs)&&options.timeoutMs>=1&&options.timeoutMs<=30000?options.timeoutMs:5000;
- const operations=new Set(),releases=new Set();let disposed=false;
+ const operations=new Set(),releases=new Set();let disposed=false,unregister=null;
  const noop=()=>{},hash=value=>typeof value==='string'&&/^[a-f0-9]{64}$/.test(value);
  const data=(value,key)=>Object.getOwnPropertyDescriptor(value,key)?.value;
  const record=value=>value!==null&&typeof value==='object'&&!Array.isArray(value);
@@ -15,6 +15,8 @@ export function createReturnLocalArtworkLoader(options={}){
  const close=value=>{try{value?.close?.();}catch{}};
  async function load(descriptor,{signal}={}){
   if(disposed)return failure('NOT_AVAILABLE','DISPOSED');
+  const workspace=options.workspaceImpl??globalThis.mlsCommercialWorkspace;let workspaceTicket=null,libraryName='brazacommerce-dtf-artworks-v1';
+  try{if(workspace){workspaceTicket=workspace.ticket();if(!workspace.isCurrent(workspaceTicket))return failure('NOT_AVAILABLE','SESSION_CHANGED');libraryName=workspace.artworkDatabaseName();if(typeof libraryName!=='string'||!libraryName.startsWith('brazacommerce-dtf-artworks-v2:mls-v2:'))return failure('NOT_AVAILABLE','SESSION_CONTEXT_UNAVAILABLE');}else if(globalThis.mlsCommercialContext)return failure('NOT_AVAILABLE','SESSION_CONTEXT_UNAVAILABLE');}catch{return failure('NOT_AVAILABLE','SESSION_CONTEXT_UNAVAILABLE');}
   if(!record(descriptor)||!keyValid(data(descriptor,'art_key'))||!(data(descriptor,'sha256')===null||hash(data(descriptor,'sha256'))))return failure('INVALID','DESCRIPTOR_INVALID');
   if(signal?.aborted)return failure('NOT_AVAILABLE','CANCELLED');
   if(!idb?.open||!crypt?.subtle?.digest||typeof decode!=='function'||!BlobType?.prototype||!urlApi?.createObjectURL||!urlApi?.revokeObjectURL||typeof schedule!=='function'||typeof unschedule!=='function')return failure('NOT_AVAILABLE','BROWSER_CAPABILITY_UNAVAILABLE');
@@ -25,7 +27,7 @@ export function createReturnLocalArtworkLoader(options={}){
   const stop=reason=>{if(interruption)return;interruption=reason;shutdown();release?.();stopResolve({stopped:true});};
   const operation={stop};operations.add(operation);
   const onAbort=()=>stop('CANCELLED');
-  const check=()=>{if(interruption)throw {localArtworkStop:interruption};};
+  const check=()=>{if(workspace&&(!workspace.isCurrent(workspaceTicket)||!options.workspaceImpl&&globalThis.mlsCommercialWorkspace!==workspace))stop('SESSION_CHANGED');if(interruption)throw {localArtworkStop:interruption};};
   const wait=async(promise,lateCleanup=noop)=>{
    const pending=Promise.resolve(promise).then(value=>{if(interruption){lateCleanup(value);return {stopped:true};}return {value};},error=>({error}));
    const result=await Promise.race([pending,stopped]);check();if(Object.hasOwn(result,'error'))throw result.error;return result.value;
@@ -36,10 +38,10 @@ export function createReturnLocalArtworkLoader(options={}){
    timer=schedule(()=>stop('TIMEOUT'),timeout);
    if(typeof idb.databases==='function'){
     const databases=await wait(idb.databases());
-    if(!Array.isArray(databases)||!databases.some(row=>row?.name==='brazacommerce-dtf-artworks-v1'))return failure('NOT_AVAILABLE','LIBRARY_NOT_FOUND');
+    if(!Array.isArray(databases)||!databases.some(row=>row?.name===libraryName))return failure('NOT_AVAILABLE','LIBRARY_NOT_FOUND');
    }
    const opened=await wait(new Promise((resolve,reject)=>{
-    let request,refused=false;try{request=idb.open('brazacommerce-dtf-artworks-v1');}catch{reject({localArtworkReason:'STORAGE_UNAVAILABLE'});return;}
+    let request,refused=false;try{request=idb.open(libraryName);}catch{reject({localArtworkReason:'STORAGE_UNAVAILABLE'});return;}
     request.onupgradeneeded=()=>{refused=true;try{request.transaction?.abort();}catch{}reject({localArtworkReason:'LIBRARY_NOT_FOUND'});};
     request.onerror=event=>{refused=true;event?.preventDefault?.();reject({localArtworkReason:'STORAGE_UNAVAILABLE'});};
     request.onblocked=()=>{refused=true;reject({localArtworkReason:'STORAGE_UNAVAILABLE'});};
@@ -88,6 +90,7 @@ export function createReturnLocalArtworkLoader(options={}){
   }catch(error){release?.();return failure('NOT_AVAILABLE',interruption||error?.localArtworkReason||'STORAGE_UNAVAILABLE');}
   finally{if(timer!==null)unschedule(timer);shutdown();operations.delete(operation);if(!keepSignal)signal?.removeEventListener?.('abort',onAbort);}
  }
- function dispose(){if(disposed)return;disposed=true;for(const operation of [...operations])operation.stop('DISPOSED');for(const release of [...releases])release();}
+ function dispose(){if(disposed)return;disposed=true;for(const operation of [...operations])operation.stop('DISPOSED');for(const release of [...releases])release();unregister?.();unregister=null;}
+ const workspace=options.workspaceImpl??globalThis.mlsCommercialWorkspace;if(workspace?.register)unregister=workspace.register({stop:dispose});
  return {load,dispose};
 }

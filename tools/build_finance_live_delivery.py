@@ -4,6 +4,7 @@ import hashlib
 import json
 import re
 import zipfile
+import subprocess
 from build_finance_connection_candidate import build, ROOT
 
 SRC = ROOT / 'web/finance/src'
@@ -50,11 +51,19 @@ def bundle(entry):
 
 def main():
     build()  # Verifies the original Auth v9 hash and generates its isolated delta.
-    finance, sources = bundle('production-worker.mjs')
-    auth = (ROOT / 'web/finance/candidate/auth-worker.mjs').read_bytes()
     OUT.mkdir(exist_ok=True)
-    (OUT / 'auth-worker.mjs').write_bytes(auth)
-    (OUT / 'finance-worker.mjs').write_bytes(finance)
+    # One ESM graph per runtime preserves the tenant context WeakSet identity;
+    # the historical bundle() API remains available for its existing callers.
+    finance_meta = json.loads(subprocess.run(
+        ['node', 'tools/build_commercial_finance_worker.mjs', str(OUT / 'finance-worker.mjs')],
+        cwd=ROOT, capture_output=True, text=True, check=True).stdout)
+    auth_meta = json.loads(subprocess.run(
+        ['node', 'tools/build_commercial_auth.mjs', 'web/finance/candidate/auth-worker.mjs', str(OUT / 'auth-worker.mjs')],
+        cwd=ROOT, capture_output=True, text=True, check=True).stdout)
+    finance = (OUT / 'finance-worker.mjs').read_bytes()
+    auth = (OUT / 'auth-worker.mjs').read_bytes()
+    sources = dict(finance_meta['sources'])
+    sources.update({name: sha((ROOT / name).read_bytes()) for name in auth_meta['sourceInputs']})
     guide = (ROOT / 'web/finance/DEPLOY.md').read_bytes()
     (OUT / 'README.md').write_bytes(guide)
     manifest = {
@@ -63,6 +72,8 @@ def main():
         'activation_gate': "FINANCE_CONNECTION_ENABLED='true' plus private bindings and secrets",
         'auth_sha256': sha(auth), 'finance_sha256': sha(finance),
         'source_sha256': sources,
+        'commercial_scoping': 'ACCOUNT_DB_ORGANIZATION_STORE_NAMESPACES',
+        'commercial_context': 'SIGNED_V2_FRESH_AUTHORIZATION_EACH_BOUNDARY',
         'production_deployed': False, 'live_authorization_verified': False,
         'redirect_query_preservation_verified_live': False,
         'financial_import_implemented': False, 'ads_execution': 'LOCKED',

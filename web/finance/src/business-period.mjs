@@ -1,9 +1,13 @@
-import {FINANCE_PROFILE,FinanceConnectionError} from './connection-store.mjs';
+import {getFinanceProfile,FinanceConnectionError} from './connection-store.mjs';
 import {ensureFinanceAccessToken} from './refresh-coordinator.mjs';
 import {requestFinanceAuthJson} from './auth-json-transport.mjs';
 import {projectBusinessPeriodRequest,projectBusinessPeriodFrame} from './business-period-frame.mjs';
 import {FINANCIAL_ORDER_EVIDENCE_SCHEMA,buildFinancialOrderEvidence,projectFinancialOrderEvidence} from './financial-order-evidence.mjs';
 import {buildBusinessPeriodVariantsFrame} from './business-variant-attribution.mjs';
+
+
+function createTenantBusinessPeriod(profile){
+const buildFinancialOrderEvidenceScoped=(...args)=>buildFinancialOrderEvidence(...args,profile);
 
 // A creation-time cohort of every order, classified from current detail status.
 // Only the existing read APIs are used; no Ads attribution or settlement is inferred.
@@ -14,7 +18,7 @@ const BUSINESS_PAYMENT='/api/v2/payment/get_escrow_detail';
 const BUSINESS_PAGE_CAPACITY=20;
 const businessSalesStatuses=new Set(['READY_TO_SHIP','PROCESSED','RETRY_SHIP','SHIPPED','TO_CONFIRM_RECEIVE','COMPLETED','INVOICE_PENDING']);
 const businessEncoder=new TextEncoder();
-const businessIdentity=[FINANCE_PROFILE.partner_id,FINANCE_PROFILE.shop_id];
+const businessIdentity=[profile.partner_id,profile.shop_id];
 const businessFailure=(suffix,status=502)=>new FinanceConnectionError('FINANCE_BUSINESS_'+suffix,status);
 const businessPlain=value=>value!==null&&typeof value==='object'&&!Array.isArray(value)&&[Object.prototype,null].includes(Object.getPrototypeOf(value));
 const businessSerial=value=>typeof value==='string'&&value.length>0&&value.length<=128&&!/[^\x21-\x7e]|,/.test(value);
@@ -84,7 +88,7 @@ function businessAmount(income,field,{positive=false}={}){
 }
 function businessEnvelope(payload){
  if(!businessPlain(payload)||typeof payload.error!=='string'||payload.error.length>8192)throw businessFailure('RESPONSE_INVALID');
- for(const row of [payload,businessPlain(payload.response)?payload.response:{}])for(const field of ['partner_id','shop_id'])if(Object.hasOwn(row,field)&&row[field]!==FINANCE_PROFILE[field])throw businessFailure('IDENTITY_MISMATCH');
+ for(const row of [payload,businessPlain(payload.response)?payload.response:{}])for(const field of ['partner_id','shop_id'])if(Object.hasOwn(row,field)&&row[field]!==profile[field])throw businessFailure('IDENTITY_MISMATCH');
  if(payload.error!=='')throw businessFailure(payload.error==='error_token'?'AUTH_REQUIRED':['error_rate_limit','error_limit'].includes(payload.error)?'RATE_LIMIT':['error_server','err_busy'].includes(payload.error)?'PROVIDER_UNAVAILABLE':['error_auth','error_sign','error_api_permission','error_partner_id','error_ip'].includes(payload.error)?'API_REJECTED':['order_not_ready','order_not_found'].includes(payload.error)?'PAYMENT_NOT_READY':'API_UNAVAILABLE');
  if(!businessPlain(payload.response))throw businessFailure('RESPONSE_INVALID');
  return payload.response;
@@ -145,7 +149,7 @@ function businessDailyBreakdown(run,records,evidenceByOrder){
  return {schema:'finance_business_daily_v1',timezone:'America/Sao_Paulo',basis:'CREATE_TIME_PAID_ORDER_ESTIMATE_NOT_SETTLED',days:[...days.values()].map(project),undated:project(undated)};
 }
 function businessFrame(run,records,diagnostic){
- if(!run||run.partner_id!==FINANCE_PROFILE.partner_id||run.shop_id!==FINANCE_PROFILE.shop_id||!Array.isArray(records)||records.length>1000)throw businessFailure('STORAGE_INVALID',503);
+ if(!run||run.partner_id!==profile.partner_id||run.shop_id!==profile.shop_id||!Array.isArray(records)||records.length>1000)throw businessFailure('STORAGE_INVALID',503);
  const coverage={orders:records.length,paid:0,completed:0,ongoing:0,cancelled:0,cancel_pending:0,unpaid:0,other:0,unknown:0,payment_covered:0,payment_missing:0,returns:0,returns_unknown:0},grouped=new Map(),seenOrders=new Set(),products=new Map();
  const mixed={orders:0,covered:0,missing:0,money:[0n,0n,0n,0n]},moneyNames=['sales_base','expected_repass','ads_adjustment','invoice_tax'];
  let sales=0n,escrow=0n,ads=0n,tax=0n;
@@ -200,7 +204,7 @@ function businessFrame(run,records,diagnostic){
  if(!frame)throw businessFailure('STORAGE_INVALID',503);return frame;
 }
 
-export async function runFinanceBusinessPeriod(env,options={}){
+async function runFinanceBusinessPeriod(env,options={}){
  if(!businessPlain(options)||env?.FINANCE_CONNECTION_ENABLED!=='true'||!env?.FINANCE_DB||typeof env.FINANCE_DB.prepare!=='function'||typeof env.FINANCE_DB.batch!=='function'||env.ADMIN_DB===env.FINANCE_DB)throw businessFailure('CONFIGURATION',503);
  const {operation,fetchImpl,now=()=>Date.now(),timeoutMs=5000,includeDaily=false,includeVariants=false}=options;if(typeof includeDaily!=='boolean'||typeof includeVariants!=='boolean')throw businessFailure('REQUEST_INVALID',400);
  const input=projectBusinessPeriodRequest(operation==='start'?{operation,start_date:options.start_date,end_date:options.end_date}:{operation,run_id:options.run_id});if(!input)throw businessFailure('REQUEST_INVALID',400);
@@ -309,8 +313,8 @@ export async function runFinanceBusinessPeriod(env,options={}){
   const get=async(path,query)=>{
    const timestamp=epoch();if(tokens.expires_at<=timestamp)throw businessFailure('AUTHORIZATION_EXPIRED',409);
    return requestFinanceAuthJson({input:{timestamp},options:{fetchImpl,now,timeoutMs:remainingTimeout()},prefix:'FINANCE_BUSINESS',...(path===BUSINESS_DETAIL?{maximumBodyBytes:1024*1024}:{}),buildRequest:async()=>{
-    const base=String(FINANCE_PROFILE.partner_id)+path+timestamp+tokens.access_token+FINANCE_PROFILE.shop_id,sign=Array.from(new Uint8Array(await crypto.subtle.sign('HMAC',key,businessEncoder.encode(base))),byte=>byte.toString(16).padStart(2,'0')).join('');
-    const url=new URL(path,BUSINESS_ORIGIN);for(const [name,value] of Object.entries({partner_id:FINANCE_PROFILE.partner_id,timestamp,access_token:tokens.access_token,shop_id:FINANCE_PROFILE.shop_id,sign,...query}))url.searchParams.set(name,String(value));
+    const base=String(profile.partner_id)+path+timestamp+tokens.access_token+profile.shop_id,sign=Array.from(new Uint8Array(await crypto.subtle.sign('HMAC',key,businessEncoder.encode(base))),byte=>byte.toString(16).padStart(2,'0')).join('');
+    const url=new URL(path,BUSINESS_ORIGIN);for(const [name,value] of Object.entries({partner_id:profile.partner_id,timestamp,access_token:tokens.access_token,shop_id:profile.shop_id,sign,...query}))url.searchParams.set(name,String(value));
     return new Request(url,{method:'GET',redirect:'manual',headers:{Accept:'application/json'}});
    },normalizeResponse:businessEnvelope});
   };
@@ -334,7 +338,7 @@ export async function runFinanceBusinessPeriod(env,options={}){
    const bySerial=new Map();
    for(const row of response.order_list){
     if(!businessPlain(row)||!selected.some(entry=>entry.serial===row.order_sn)||bySerial.has(row.order_sn))throw businessFailure('DETAIL_INVALID');
-    for(const field of ['partner_id','shop_id'])if(Object.hasOwn(row,field)&&row[field]!==FINANCE_PROFILE[field])throw businessFailure('IDENTITY_MISMATCH');
+    for(const field of ['partner_id','shop_id'])if(Object.hasOwn(row,field)&&row[field]!==profile[field])throw businessFailure('IDENTITY_MISMATCH');
     if(Object.hasOwn(row,'create_time')&&(!Number.isSafeInteger(row.create_time)||row.create_time<run.time_from||row.create_time>run.time_to))throw businessFailure('IDENTITY_MISMATCH');
     const bucket=businessBucket(row.order_status),paid=['completed','ongoing'].includes(bucket);
     if(paid&&row.currency!=='BRL')throw businessFailure('DETAIL_INVALID');
@@ -361,7 +365,7 @@ export async function runFinanceBusinessPeriod(env,options={}){
        if(!echoes.length||echoes.some(row=>row.order_sn!==selection.serial))throw businessFailure('IDENTITY_MISMATCH');
        if(income!==undefined&&income!==null&&!businessPlain(income))throw businessFailure('PAYMENT_INVALID');
        if(businessPlain(income)){
-        for(const field of ['partner_id','shop_id'])if(Object.hasOwn(income,field)&&income[field]!==FINANCE_PROFILE[field])throw businessFailure('IDENTITY_MISMATCH');
+        for(const field of ['partner_id','shop_id'])if(Object.hasOwn(income,field)&&income[field]!==profile[field])throw businessFailure('IDENTITY_MISMATCH');
         const items=businessItems(income.items,'quantity_purchased');if(JSON.stringify(items)!==JSON.stringify(selection.items))throw businessFailure('LINE_IDENTITY_MISMATCH');
         const sales=businessAmount(income,'original_cost_of_goods_sold',{positive:true}),escrow=businessAmount(income,'escrow_amount'),ads=businessAmount(income,'ads_escrow_top_up_fee_or_technical_support_fee');
         let returnsSeen=null;
@@ -376,7 +380,7 @@ export async function runFinanceBusinessPeriod(env,options={}){
      if(record.payment_covered===1)newlyCached.push(record);
      // Optional evidence has its own private bounded representation. Missing or
      // invalid optional fields cannot invalidate the established v1 ledger.
-     try{newEvidence.set(record.order_hash,await buildFinancialOrderEvidence({order_sn:selection.serial,order_status:selection.order_status??null,currency:selection.currency??null,payment,record,create_time:selection.create_time}));}catch{}
+     try{newEvidence.set(record.order_hash,await buildFinancialOrderEvidenceScoped({order_sn:selection.serial,order_status:selection.order_status??null,currency:selection.currency??null,payment,record,create_time:selection.create_time}));}catch{}
     }catch(error){
      const priority={BUSINESS_PERIOD_CHECKPOINT:0,BUSINESS_PERIOD_BUSY:0,BUSINESS_PERIOD_UPSTREAM_UNAVAILABLE:1,BUSINESS_PERIOD_TIMEOUT:2,BUSINESS_PERIOD_RATE_LIMIT:3,BUSINESS_PERIOD_AUTH_REQUIRED:4,BUSINESS_PERIOD_INVALID_SOURCE:5};
      if(!failed||priority[businessDiagnostic(error)]>priority[businessDiagnostic(failed)])failed=error;
@@ -414,3 +418,7 @@ export async function runFinanceBusinessPeriod(env,options={}){
   return output(await snapshot(input.run_id));
  }
 }
+
+return {runFinanceBusinessPeriod};
+}
+export async function runFinanceBusinessPeriod(env,...args){return createTenantBusinessPeriod(getFinanceProfile(env)).runFinanceBusinessPeriod(env,...args);}

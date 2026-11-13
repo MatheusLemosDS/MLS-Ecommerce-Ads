@@ -1,3 +1,4 @@
+import {TenantInitializationSet} from './tenant-storage.mjs';
 import {readCompletedBusinessMonth} from './business-month-publication.mjs';
 import {projectEscrowReleaseFrame,projectEscrowReleaseEvidenceFrame} from '../../finance/src/escrow-release-frame.mjs';
 
@@ -8,7 +9,7 @@ export const BUSINESS_ESCROW_RELEASES_SCHEMA=[
 ];
 export class BusinessEscrowReleasesError extends Error{constructor(code,status=503){super(code);this.status=status;}}
 const fail=(code,status=503)=>{throw new BusinessEscrowReleasesError(code,status);};
-const ready=new WeakSet(),encoder=new TextEncoder();
+const ready=new TenantInitializationSet(),encoder=new TextEncoder();
 const plain=value=>value!==null&&typeof value==='object'&&[Object.prototype,null].includes(Object.getPrototypeOf(value));
 const exact=(value,keys)=>plain(value)&&Reflect.ownKeys(value).length===keys.length&&keys.every(key=>Object.hasOwn(Object.getOwnPropertyDescriptor(value,key)||{},'value'));
 const integer=(value,min=0,max=9999999999)=>Number.isSafeInteger(value)&&!Object.is(value,-0)&&value>=min&&value<=max;

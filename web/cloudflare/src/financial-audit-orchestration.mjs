@@ -1,3 +1,4 @@
+import {TenantInitializationSet} from './tenant-storage.mjs';
 import {runBusinessReconciliation} from './business-reconciliation.mjs';
 import {runBusinessHistoricalReturns} from './business-historical-returns.mjs';
 import {runBusinessEscrowReleases} from './business-escrow-releases.mjs';
@@ -18,7 +19,7 @@ export const FINANCIAL_AUDIT_SCHEMA=[
  `CREATE TABLE IF NOT EXISTS financial_audit_historical_calendar_targets(month TEXT PRIMARY KEY NOT NULL,last_selected_month TEXT NOT NULL,selected_at INTEGER NOT NULL)`,
 ];
 export class FinancialAuditOrchestrationError extends Error{constructor(code,status=503){super(code);this.status=status;}}
-const ready=new WeakSet(),fail=(code,status=503)=>{throw new FinancialAuditOrchestrationError(code,status);};
+const ready=new TenantInitializationSet(),fail=(code,status=503)=>{throw new FinancialAuditOrchestrationError(code,status);};
 const integer=value=>Number.isSafeInteger(value)&&!Object.is(value,-0)&&value>=0&&value<=9999999999;
 
 export async function runBusinessFinancialAudits(env,services,input,{now=()=>Date.now(),canRun=async()=>true,runReturns=runBusinessReconciliation,runReleases=runBusinessEscrowReleases,runIncome=runBusinessIncomeOverview,runIncomeDetail=runBusinessIncomeDetail,runPendingIncomeScan=runBusinessPendingIncomeScan,runCoverage=runBusinessEscrowReleaseCoverage,historicalCalendars=false,previousMonthReturns=false,runHistoricalReturns=runBusinessHistoricalReturns,backgroundLease=null}={}){

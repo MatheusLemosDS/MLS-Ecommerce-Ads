@@ -22,10 +22,11 @@ const dailyFrameDay = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$
 
 // Freshness belongs to the authenticated caller. This pure projector can also
 // validate a recorded fixture without silently changing its creation-date day.
-export function projectDailyOrdersFrame(value) {
+export function projectDailyOrdersFrame(value,expectedProfile=null) {
   try {
+  const expectedShop=expectedProfile===null?1178167501:expectedProfile?.shop_id;if(!Number.isSafeInteger(expectedShop)||expectedShop<1)return null;
     if (!dailyFrameExact(value) || value.schema!=='shop_daily_sales_v1'
-      || value.shop_id!==1178167501 || value.timezone!=='America/Sao_Paulo'
+      || value.shop_id!==expectedShop || value.timezone!=='America/Sao_Paulo'
       || value.day_partial!==true || value.pagination_complete!==true
       || value.count_basis!=='UNIQUE_ORDER_SN_CREATE_TIME_CURRENT_STATUS'
       || value.source!=='shopee_get_order_list_and_detail' || !dailyFrameDay(value.date)

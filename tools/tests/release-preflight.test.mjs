@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import {spawnSync} from 'node:child_process';
 import {pathToFileURL} from 'node:url';
-import {evaluateReleasePreflight,RELEASE_EXPECTED_SHA,RELEASE_ALLOWED_FILES,RELEASE_MANUAL_GATES,RELEASE_BASE_COMMIT,RELEASE_EXPECTED_LIVE_FLAGS,RELEASE_APPROVED_PROTECTED_FILES} from '../release_preflight.mjs';
+import {evaluateReleasePreflight,RELEASE_EXPECTED_SHA,RELEASE_ALLOWED_FILES,RELEASE_MANUAL_GATES,RELEASE_BASE_COMMIT,RELEASE_EXPECTED_LIVE_FLAGS,RELEASE_APPROVED_PROTECTED_FILES,RELEASE_ACCEPTED_OWNER_AUTHORIZATIONS} from '../release_preflight.mjs';
 
 function good(){
  return {
@@ -30,35 +30,83 @@ test('release preflight passes only an exact reviewed local build and leaves rem
  assert.ok(RELEASE_MANUAL_GATES.includes('VERIFY_REMOTE_OWNER_FLAGS_MATCH_APPROVED_VALUES'));
  assert.ok(RELEASE_ALLOWED_FILES.includes('tools/release-approved-candidate.json'));
  assert.ok(RELEASE_ALLOWED_FILES.filter(x=>x.startsWith('workers/')).every(x=>RELEASE_APPROVED_PROTECTED_FILES.includes(x)));
- assert.ok(RELEASE_ALLOWED_FILES.includes('web/finance/src/external-cash-period.mjs'));
- assert.ok(!RELEASE_ALLOWED_FILES.includes('web/finance/src/connection-store.mjs'));
+ assert.ok(RELEASE_ALLOWED_FILES.some(value=>value.startsWith('web/finance/')));
  assert.ok(RELEASE_ALLOWED_FILES.filter(x=>x.startsWith('web/finance/')).every(x=>RELEASE_APPROVED_PROTECTED_FILES.includes(x)));
+ assert.ok(RELEASE_MANUAL_GATES.includes('VERIFY_ACCOUNT_DB_BINDINGS_ADDITIVE_MIGRATIONS_AND_LEGACY_BACKUPS'));
+ assert.ok(RELEASE_MANUAL_GATES.includes('VERIFY_APP_AUTH_FINANCE_VERSION_HASHES_AND_PRIVATE_FINANCE_PROFILE'));
+ assert.ok(RELEASE_MANUAL_GATES.includes('OWNER_AUTHENTICATED_DESKTOP_MOBILE_QA'));
 });
 
-test('weekly summary opens only its exact cash delta and verified publication ledger',()=>{
+test('V4.1 opens only the exact tenant Finance delta, account sidecars and previously reviewed weekly paths',()=>{
  assert.deepEqual(RELEASE_APPROVED_PROTECTED_FILES,[
   "web/finance/src/auth-router.mjs",
+  "web/finance/src/business-period.mjs",
+  "web/finance/src/commercial-finance-worker.mjs",
+  "web/finance/src/connection-store.mjs",
+  "web/finance/src/connection-worker.mjs",
+  "web/finance/src/daily-orders-frame.mjs",
+  "web/finance/src/daily-orders.mjs",
+  "web/finance/src/escrow-release-ledger.mjs",
+  "web/finance/src/escrow-releases.mjs",
   "web/finance/src/external-cash-period-frame.mjs",
   "web/finance/src/external-cash-period.mjs",
   "web/finance/src/external-cash-store.mjs",
   "web/finance/src/external-cash-worker.mjs",
+  "web/finance/src/financial-order-evidence.mjs",
+  "web/finance/src/historical-variant-evidence-frame.mjs",
+  "web/finance/src/historical-variant-evidence.mjs",
+  "web/finance/src/income-detail.mjs",
+  "web/finance/src/income-overview.mjs",
+  "web/finance/src/initial-exchange.mjs",
+  "web/finance/src/payment-sample.mjs",
+  "web/finance/src/pending-income-scan.mjs",
+  "web/finance/src/product-index-frame.mjs",
+  "web/finance/src/product-index.mjs",
+  "web/finance/src/production-orders-frame.mjs",
+  "web/finance/src/production-orders.mjs",
   "web/finance/src/production-worker.mjs",
+  "web/finance/src/provider-adapter.mjs",
+  "web/finance/src/refresh-coordinator.mjs",
+  "web/finance/src/refresh-request.mjs",
+  "web/finance/src/refresh-response.mjs",
+  "web/finance/src/refresh-signature.mjs",
+  "web/finance/src/refresh-transport.mjs",
+  "web/finance/src/return-item-evidence.mjs",
+  "web/finance/src/returns-reconciliation.mjs",
+  "web/finance/src/store-period.mjs",
+  "web/finance/src/variant-catalog.mjs",
+  "web/finance/tests/commercial-compiled-chain.test.mjs",
   "web/finance/tests/external-cash-period-frame.test.mjs",
   "web/finance/tests/external-cash-period-routes.test.mjs",
   "web/finance/tests/external-cash-period.test.mjs",
-  "workers/app/browser-assets-published.json"
+  "web/finance/tests/tenant-finance-profile.test.mjs",
+  "workers/app/browser-assets-published.json",
+  "workers/app/commercial-account.json",
+  "workers/auth/commercial-account.json",
+  "workers/finance/commercial-account.json"
 ]);
+ assert.equal(new Set(RELEASE_APPROVED_PROTECTED_FILES).size,RELEASE_APPROVED_PROTECTED_FILES.length);
+ assert.ok(Object.isFrozen(RELEASE_APPROVED_PROTECTED_FILES));
  assert.ok(RELEASE_APPROVED_PROTECTED_FILES.every(x=>!/[?*\\]/.test(x)));
 
  for(const path of [
   "web/finance/src/auth-json-transport.mjs",
-  "web/finance/src/connection-store.mjs",
-  "web/finance/src/income-detail.mjs",
+  "web/finance/src/future-tenant-profile.mjs",
+  "web/finance/src/commercial/future-worker.mjs",
   "web/finance/src/pending-income-frame.mjs",
-  "web/finance/src/pending-income-scan.mjs",
   "web/finance/tests/pending-income-scan.test.mjs",
   "web/auth/src/index.mjs",
-  "workers/app/wrangler.json"
+  "web/cloudflare/original/app-worker.mjs",
+  "web/finance/original/finance-worker.mjs",
+  "workers/app/wrangler.json",
+  "workers/auth/wrangler.json",
+  "workers/finance/wrangler.json",
+  "workers/app/migration.json",
+  "workers/auth/migration.json",
+  "workers/finance/migration.json",
+  "workers/app/commercial-account-extra.json",
+  "workers/auth/automation.json",
+  "workers/finance/profile.json"
 ]){
   const data=good();data.changedPaths.push(path);
   assert.ok(evaluateReleasePreflight(data).failures.includes('RELEASE_PROTECTED_WORKER_PATH'),path);
@@ -81,8 +129,8 @@ test('release preflight blocks undocumented file modifications and any protected
  for(const path of ['workers/app/wrangler.json','workers/auth/wrangler.json',
   'workers/finance/migration.json','web/finance/src/index.mjs',
   'web/cloudflare/original/app-worker.mjs','web/cloudflare/src/new-shop-write.mjs',
-  'web/cloudflare/src/mls-ai-sales-workspace-store.mjs',
-  'package-lock.json']){
+  'web/cloudflare/src/mls-ai-sales-future-store.mjs',
+  'tools/mls-ai-sales/future-provider-write.mjs']){
   const data=good();data.changedPaths.push(path);
   const result=evaluateReleasePreflight(data);
   assert.equal(result.ok,false,path);
@@ -112,6 +160,7 @@ test('release preflight rejects missing App binding or a changed keep_vars polic
 test('owner-only exact flag and bundle inclusion must not be relaxed or accidentally dropped',()=>{
  for(const change of [
   x=>x.adminSource=x.adminSource.replace("ownerSession?.role==='owner'","true"),
+  x=>x.adminSource=x.adminSource.replace("ownerSession?.role==='owner'","ownerSession?.role==='OWNER'"),
   x=>x.adminSource=x.adminSource.replace("==='ENABLED'","==='true'"),
   x=>x.adminSource=x.adminSource.replace('return dashboard(env,current)','return dashboard()'),
   x=>x.buildSource=x.buildSource.replace('approved_design=',''),
@@ -130,6 +179,7 @@ test('release CI cannot deploy and may not omit real tests',()=>{
  for(const workflow of [
   'node --test --test-reporter=tap; npm run deploy:app; python3 -m unittest',
   'node --test --test-reporter=tap; wrangler deploy; python3 -m unittest',
+  'node --test --test-reporter=tap; node tools/worker_deploy.mjs deploy app; python3 -m unittest',
   'node --test --test-reporter=tap',
   'python3 -m unittest']){
   const data=good();data.workflowSource=workflow;
@@ -138,7 +188,7 @@ test('release CI cannot deploy and may not omit real tests',()=>{
 });
 
 test('malformed or missing diff cannot pass',()=>{
- for(const changedPaths of [[],null,['../workers/app/wrangler.json'],['']]){
+ for(const changedPaths of [[],null,['../workers/app/wrangler.json'],[''],['./web/finance/src/future.mjs'],['web//finance/src/future.mjs'],['web\\finance\\future.mjs'],['web/finance/future.mjs\u0000']]){
   const data=good();data.changedPaths=changedPaths;
   assert.ok(evaluateReleasePreflight(data).failures.includes('RELEASE_DIFF_UNAVAILABLE'));
  }
@@ -165,10 +215,14 @@ test('a malformed candidate cannot weaken exact hashes, literal paths or commerc
   value=>delete value.expected_hashes.finance,
   value=>value.expected_hashes.app='arbitrary',
   value=>value.allowed_files.push('web/cloudflare/src/*'),
+  value=>value.allowed_files.push('./web/finance/src/future.mjs'),
+  value=>value.allowed_files.push('web//finance/src/future.mjs'),
+  value=>value.allowed_files.push('web/finance/src/future.mjs\u0000'),
   value=>value.allowed_files.push(value.allowed_files[0]),
   value=>value.commercial_writes_allowed=true,
   value=>value.expected_live_flags.MLS_AI_SALES_OWNER_PREVIEW='true',
   value=>value.base_commit='main',
+  value=>value.owner_authorization='OWNER_REQUESTED_V41_LIVE_2026_11_12',
  ]){
   const changed=structuredClone(candidate);mutate(changed);
   fs.writeFileSync(path.join(directory,'release-approved-candidate.json'),JSON.stringify(changed));
@@ -177,13 +231,52 @@ test('a malformed candidate cannot weaken exact hashes, literal paths or commerc
  }
 });
 
-test('the focused release does not inherit unrelated AI-storage or previous-candidate permissions',()=>{
- assert.equal(RELEASE_BASE_COMMIT,'18fd393e6d5a7fb098e2a71b234f2d9c15846cbb');
+test('only the two explicit owner authorization records are recognized, without granting production approval',t=>{
+ assert.deepEqual(RELEASE_ACCEPTED_OWNER_AUTHORIZATIONS,[
+  'OWNER_REQUESTED_ALL_PREPARED_IMPROVEMENTS_LIVE_2026_10_30',
+  'OWNER_REQUESTED_V41_LIVE_2026_11_11'
+ ]);assert.ok(Object.isFrozen(RELEASE_ACCEPTED_OWNER_AUTHORIZATIONS));
+ const directory=fs.mkdtempSync(path.join(os.tmpdir(),'mls-release-owner-scope-'));
+ t.after(()=>fs.rmSync(directory,{recursive:true,force:true}));
+ const modulePath=path.join(directory,'release_preflight.mjs');fs.writeFileSync(modulePath,fs.readFileSync(new URL('../release_preflight.mjs',import.meta.url)));
+ const candidate=JSON.parse(fs.readFileSync(new URL('../release-approved-candidate.json',import.meta.url),'utf8'));
+ for(const authorization of RELEASE_ACCEPTED_OWNER_AUTHORIZATIONS){
+  fs.writeFileSync(path.join(directory,'release-approved-candidate.json'),JSON.stringify({...candidate,owner_authorization:authorization}));
+  const script='const {evaluateReleasePreflight}=await import('+JSON.stringify(pathToFileURL(modulePath).href)+');console.log(JSON.stringify(evaluateReleasePreflight('+JSON.stringify(good())+')));';
+  const result=spawnSync(process.execPath,['--input-type=module','-e',script],{encoding:'utf8'});assert.equal(result.status,0,result.stderr);
+  const observed=JSON.parse(result.stdout);assert.equal(observed.ok,true);assert.equal(observed.remoteCloudflareVerified,false);assert.equal(observed.productionApproved,false);
+ }
+});
+
+test('a V4.1 manifest can review the finite tenant delta but cannot authorize future protected modules or original profiles',t=>{
+ const directory=fs.mkdtempSync(path.join(os.tmpdir(),'mls-release-finite-scope-'));
+ t.after(()=>fs.rmSync(directory,{recursive:true,force:true}));
+ const modulePath=path.join(directory,'release_preflight.mjs');fs.writeFileSync(modulePath,fs.readFileSync(new URL('../release_preflight.mjs',import.meta.url)));
+ const candidate=JSON.parse(fs.readFileSync(new URL('../release-approved-candidate.json',import.meta.url),'utf8'));
+ const unapproved=['web/finance/src/future-provider-write.mjs','web/finance/src/commercial/future-profile.mjs','web/auth/src/index.mjs','web/cloudflare/original/app-worker.mjs',
+  'web/finance/original/finance-worker.mjs','workers/app/wrangler.json','workers/auth/migration.json','workers/finance/profile.json','workers/app/commercial-account-extra.json'];
+ const aiStore='web/cloudflare/src/mls-ai-sales-workspace-store.mjs';
+ candidate.owner_authorization='OWNER_REQUESTED_V41_LIVE_2026_11_11';
+ candidate.allowed_files=[...new Set([...candidate.allowed_files,...RELEASE_APPROVED_PROTECTED_FILES,aiStore,...unapproved])];
+ fs.writeFileSync(path.join(directory,'release-approved-candidate.json'),JSON.stringify(candidate));
+ const paths=[...RELEASE_APPROVED_PROTECTED_FILES,aiStore,...unapproved],input=good();
+ const script='const {evaluateReleasePreflight}=await import('+JSON.stringify(pathToFileURL(modulePath).href)+');const input='+JSON.stringify(input)+';console.log(JSON.stringify('+JSON.stringify(paths)+'.map(path=>evaluateReleasePreflight({...input,changedPaths:[path]}))));';
+ const result=spawnSync(process.execPath,['--input-type=module','-e',script],{encoding:'utf8'});assert.equal(result.status,0,result.stderr);
+ const outcomes=JSON.parse(result.stdout);
+ for(let index=0;index<paths.length;index++){
+  const observed=outcomes[index],filename=paths[index];
+  if(unapproved.includes(filename)){assert.equal(observed.ok,false,filename);assert.ok(observed.failures.includes('RELEASE_PROTECTED_WORKER_PATH'),filename);assert.equal(observed.failures.includes('RELEASE_UNREVIEWED_PATH'),false,'even an explicit manifest entry cannot broaden the protected scope');}
+  else {assert.equal(observed.ok,true,filename);assert.equal(observed.productionApproved,false);}
+ }
+});
+
+test('the current exact candidate never inherits a different base or unlisted future AI storage and provider writes',()=>{
+ assert.match(RELEASE_BASE_COMMIT,/^[a-f0-9]{40}$/);
  for(const baseCommit of ['eab85a17d7a6c4f213e67ce0b7dea0cf63932bf2','f451c15ec1b96abaa6315457324ccaa31c8d361c','96e16057dc5190917622510ffc1b2130ced47841','673dc8f4d3c6c36eaa41fcf33ae264130fa9ba18','b09026880f9370358f4539b821d18ef8d5982085','d14df57d0b3305ce673a247f925d5dd0d68d191d','2ab4c9d8baa3c25e5816bcca14b4a0973ea73d5a','8d66525bc3b96914412a9538d3ec84048ac78dbb']){
   const oldBase=good();oldBase.baseCommit=baseCommit;
   assert.ok(evaluateReleasePreflight(oldBase).failures.includes('RELEASE_BASE_MISMATCH'));
  }
- for(const filename of ['web/cloudflare/src/mls-ai-sales-workspace-store.mjs','tools/mls-ai-sales/render.mjs']){
+ for(const filename of ['web/cloudflare/src/mls-ai-sales-future-workspace-store.mjs','tools/mls-ai-sales/render.mjs']){
   assert.ok(!RELEASE_ALLOWED_FILES.includes(filename),filename);
   const input=good();input.changedPaths.push(filename);
   assert.ok(evaluateReleasePreflight(input).failures.includes('RELEASE_UNREVIEWED_PATH'),filename);

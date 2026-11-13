@@ -1,8 +1,10 @@
-import {FINANCE_PROFILE, FinanceConnectionError} from './connection-store.mjs';
+import {getFinanceProfile, FinanceConnectionError} from './connection-store.mjs';
 import {ensureFinanceAccessToken} from './refresh-coordinator.mjs';
 import {requestFinanceAuthJson} from './auth-json-transport.mjs';
 import {deriveCatalogProduct,deriveProductCostCatalog, projectVariantCatalog, projectVariantCatalogRequest} from './variant-catalog-frame.mjs';
 import {deriveCatalogMediaImage,projectCatalogMediaFrame} from './catalog-media-frame.mjs';
+
+function createTenantVariantCatalog(profile){
 
 const CATALOG_PATH = '/api/v2/product/get_model_list';
 const catalogEncoder = new TextEncoder();
@@ -14,7 +16,7 @@ const catalogApiFailure=(error,stage)=>catalogFailure(error==='error_token'?'AUT
 
 // An authenticated synchronization reads at most three products. The shop, host,
 // route and credentials are fixed; neither titles nor SKU guesses choose sizes.
-export async function runFinanceVariantCatalog(env, options = {}) {
+async function runFinanceVariantCatalog(env, options = {}) {
   const input = projectVariantCatalogRequest({item_ids: options.item_ids,
     ...(Object.hasOwn(options, 'selling_unit') ? {selling_unit: options.selling_unit} : {}),
     ...(Object.hasOwn(options,'include_cost_catalog')?{include_cost_catalog:options.include_cost_catalog}:{})});
@@ -53,15 +55,15 @@ export async function runFinanceVariantCatalog(env, options = {}) {
     if(tokens.expires_at<=timestamp)throw catalogFailure('AUTHORIZATION_EXPIRED',409);
     await catalogPhase('BASE_INFO',()=>requestFinanceAuthJson({input:{timestamp},prefix:'FINANCE_CATALOG',maximumBodyBytes:1048576,options:{fetchImpl,now,timeoutMs},
       buildRequest:async()=>{
-        const digest=new Uint8Array(await crypto.subtle.sign('HMAC',signingKey,catalogEncoder.encode(String(FINANCE_PROFILE.partner_id)+path+timestamp+tokens.access_token+FINANCE_PROFILE.shop_id)));
+        const digest=new Uint8Array(await crypto.subtle.sign('HMAC',signingKey,catalogEncoder.encode(String(profile.partner_id)+path+timestamp+tokens.access_token+profile.shop_id)));
         const sign=Array.from(digest,byte=>byte.toString(16).padStart(2,'0')).join(''),url=new URL(path,'https://partner.shopeemobile.com');
-        for(const [key,value] of Object.entries({partner_id:FINANCE_PROFILE.partner_id,timestamp,access_token:tokens.access_token,shop_id:FINANCE_PROFILE.shop_id,sign,item_id_list:input.item_ids.join(',')}))url.searchParams.set(key,String(value));
+        for(const [key,value] of Object.entries({partner_id:profile.partner_id,timestamp,access_token:tokens.access_token,shop_id:profile.shop_id,sign,item_id_list:input.item_ids.join(',')}))url.searchParams.set(key,String(value));
         return new Request(url,{method:'GET',redirect:'manual',headers:{Accept:'application/json'}});
       },normalizeResponse:payload=>{
         if(!catalogPlain(payload)||typeof payload.error!=='string')throw catalogFailure('BASE_RESPONSE_INVALID');
         if(payload.error!=='')throw catalogApiFailure(payload.error,'BASE_INFO');
         if(!catalogPlain(payload.response)||!Array.isArray(payload.response.item_list)||payload.response.item_list.length>input.item_ids.length)throw catalogFailure('BASE_RESPONSE_INVALID');
-        for(const container of [payload,payload.response])for(const field of ['shop_id','partner_id'])if(Object.hasOwn(container,field)&&container[field]!==FINANCE_PROFILE[field])throw catalogFailure('IDENTITY_MISMATCH');
+        for(const container of [payload,payload.response])for(const field of ['shop_id','partner_id'])if(Object.hasOwn(container,field)&&container[field]!==profile[field])throw catalogFailure('IDENTITY_MISMATCH');
         for(const row of payload.response.item_list){
           if(!catalogPlain(row))throw catalogFailure('BASE_RESPONSE_INVALID');
           const id=typeof row.item_id==='number'&&Number.isSafeInteger(row.item_id)?String(row.item_id):row.item_id;
@@ -79,13 +81,13 @@ export async function runFinanceVariantCatalog(env, options = {}) {
     const product = await catalogPhase('MODELS',()=>requestFinanceAuthJson({input: {timestamp}, prefix: 'FINANCE_CATALOG',maximumBodyBytes:1048576,
       options: {fetchImpl, now, timeoutMs},
       buildRequest: async () => {
-        const base = String(FINANCE_PROFILE.partner_id) + CATALOG_PATH + timestamp
-          + tokens.access_token + FINANCE_PROFILE.shop_id;
+        const base = String(profile.partner_id) + CATALOG_PATH + timestamp
+          + tokens.access_token + profile.shop_id;
         const digest = new Uint8Array(await crypto.subtle.sign('HMAC', signingKey, catalogEncoder.encode(base)));
         const sign = Array.from(digest, byte => byte.toString(16).padStart(2, '0')).join('');
         const url = new URL(CATALOG_PATH, 'https://partner.shopeemobile.com');
-        for (const [key, value] of Object.entries({partner_id: FINANCE_PROFILE.partner_id, timestamp,
-          access_token: tokens.access_token, shop_id: FINANCE_PROFILE.shop_id, sign, item_id})) {
+        for (const [key, value] of Object.entries({partner_id: profile.partner_id, timestamp,
+          access_token: tokens.access_token, shop_id: profile.shop_id, sign, item_id})) {
           url.searchParams.set(key, String(value));
         }
         return new Request(url, {method: 'GET', redirect: 'manual', headers: {Accept: 'application/json'}});
@@ -96,7 +98,7 @@ export async function runFinanceVariantCatalog(env, options = {}) {
         if (!catalogPlain(payload.response)) throw catalogFailure('MODEL_RESPONSE_INVALID');
         for (const container of [payload, payload.response]) {
           for (const field of ['shop_id', 'partner_id']) {
-            if (Object.hasOwn(container, field) && container[field] !== FINANCE_PROFILE[field]) throw catalogFailure('IDENTITY_MISMATCH');
+            if (Object.hasOwn(container, field) && container[field] !== profile[field]) throw catalogFailure('IDENTITY_MISMATCH');
           }
           if (Object.hasOwn(container, 'item_id') && ((typeof container.item_id !== 'string'
             && !Number.isSafeInteger(container.item_id)) || String(container.item_id) !== item_id)) throw catalogFailure('IDENTITY_MISMATCH');
@@ -122,3 +124,7 @@ export async function runFinanceVariantCatalog(env, options = {}) {
   if(!wrapped)throw catalogFailure('RESPONSE_INVALID',502,'RESULT');
   return wrapped;
 }
+
+return {runFinanceVariantCatalog};
+}
+export async function runFinanceVariantCatalog(env,options={}){return createTenantVariantCatalog(getFinanceProfile(env)).runFinanceVariantCatalog(env,options);}

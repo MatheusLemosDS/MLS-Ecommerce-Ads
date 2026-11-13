@@ -83,6 +83,26 @@ test('M3 chart depicts sold units, not inventory, and invalid local control valu
  input(h,'Search','x'.repeat(500),'oninput');assert.equal(view.getState().query.length,120);assert.equal(rowIds(h).length,0);assert.match(h.el('Rows').textContent,/Nenhum produto corresponde/);
 });
 
+test('ranking opens the exact product while preserving table filters, page and monthly ABC scope',()=>{
+ const h=fakeDocument(),view=createMlsProductWorkbenchView({document:h.document});view.render(workbench());
+ input(h,'Search','303','oninput');const before=view.getState(),ranking=h.el('Chart').textContent;
+ h.el('Chart').children[0].onclick();assert.equal(h.el('SelectedProduct').hidden,false);
+ assert.equal(h.el('SelectedProduct').dataset.selectedItemId,'301');assert.match(h.el('SelectedProduct').textContent,/mês 2026-10/);
+ assert.deepEqual(view.getState(),before);assert.deepEqual(rowIds(h),['303']);assert.equal(h.el('Chart').textContent,ranking);
+ h.descendants(h.el('SelectedProduct')).find(node=>node.textContent==='Voltar ao ranking').onclick();
+ assert.equal(h.el('SelectedProduct').hidden,true);assert.deepEqual(rowIds(h),['303']);
+});
+
+test('revenue ABC uses only the complete exclusive revenue contract and never relabels units',()=>{
+ const h=fakeDocument(),view=createMlsProductWorkbenchView({document:h.document});view.render(workbench());
+ const volume=h.el('Chart').textContent;input(h,'ABCMetric','revenue');
+ assert.match(h.el('ABCState').textContent,/Receita dos pedidos exclusivos cobertos/);assert.match(h.el('ABCBars').textContent,/R\$/);
+ input(h,'Search','303','oninput');assert.equal(h.el('Chart').textContent,volume);assert.match(h.el('ABCBars').textContent,/R\$/);
+ const mixed=buildMlsProductWorkbench(buildMlsProductIntelligence(m3MixedFrame()),m3CatalogLabels());view.render(mixed);
+ input(h,'ABCMetric','revenue');assert.match(h.el('ABCState').textContent,/indisponível/);assert.match(h.el('ABCBars').textContent,/não possui uma base completa/);assert.doesNotMatch(h.el('ABCBars').textContent,/R\$/);
+ input(h,'ABCMetric','units');assert.equal(h.el('ABCBars').children.length,3);assert.doesNotMatch(h.el('ABCBars').textContent,/R\$/);
+});
+
 test('M3 view factory is self-contained when frozen in the compiled browser realm',()=>{
  const report=workbench(),h=fakeDocument(),context=vm.createContext({document:h.document,Intl});
  context.serialized=JSON.stringify(report);vm.runInContext('const create='+createMlsProductWorkbenchView.toString()+';globalThis.view=create({document});globalThis.ok=view.render(JSON.parse(serialized));',context);

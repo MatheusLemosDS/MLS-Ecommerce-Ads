@@ -5,7 +5,8 @@ import {fileURLToPath} from 'node:url';
 import vm from 'node:vm';
 
 export const BROWSER_ASSET_SCHEMA='mls_browser_assets_v1';
-const specs=Object.freeze({bank:'BANK_RECONCILIATION_CLIENT',month:'BUSINESS_MONTH_CLIENT',orders:'ORDER_OPERATIONS_CLIENT',production:'PRODUCTION_BROWSER_CLIENT',weekly:'WEEKLY_OPERATING_CLIENT'});
+const specs=Object.freeze({bank:'BANK_RECONCILIATION_CLIENT',month:'BUSINESS_MONTH_CLIENT',orders:'ORDER_OPERATIONS_CLIENT',production:'PRODUCTION_BROWSER_CLIENT',weekly:'WEEKLY_OPERATING_CLIENT',workspace:'CLIENT'});
+const maximumBytes=id=>id==='month'||id==='workspace'?1048576:262144;
 const prefix='export const MLS_BROWSER_ASSET_MANIFEST=Object.freeze(';
 const suffix=');\n';
 const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
@@ -22,12 +23,12 @@ const publishedFilename=(root,row)=>path.join(publicationRoot(root),row.sha256+'
 export const EMPTY_BROWSER_ASSET_PUBLICATION=Object.freeze({schema:'mls_browser_assets_published_v1',publication:null,assets:[],retained:[]});
 
 export function validateBrowserAssetManifest(value){
- if(!exact(value,['schema','assets','retained'])||value.schema!==BROWSER_ASSET_SCHEMA||!Array.isArray(value.assets)||value.assets.length<1||value.assets.length>5||!Array.isArray(value.retained)||value.retained.length>5)fail('BROWSER_ASSET_MANIFEST_INVALID');
+ if(!exact(value,['schema','assets','retained'])||value.schema!==BROWSER_ASSET_SCHEMA||!Array.isArray(value.assets)||value.assets.length<1||value.assets.length>6||!Array.isArray(value.retained)||value.retained.length>6)fail('BROWSER_ASSET_MANIFEST_INVALID');
  const ids=new Set(),paths=new Set();let total=0;
  for(const rows of [value.assets,value.retained]){
   const local=new Set();
   for(const row of rows){
-   if(!exact(row,['id','path','sha256','integrity','bytes'])||!Object.hasOwn(specs,row.id)||local.has(row.id)||paths.has(row.path)||!Number.isSafeInteger(row.bytes)||row.bytes<1||row.bytes>(row.id==='month'?1048576:262144)||!/^[a-f0-9]{64}$/.test(row.sha256)||row.path!=='/assets/mls/'+row.sha256+'.js'||row.integrity!=='sha256-'+Buffer.from(row.sha256,'hex').toString('base64'))fail('BROWSER_ASSET_MANIFEST_INVALID');
+   if(!exact(row,['id','path','sha256','integrity','bytes'])||!Object.hasOwn(specs,row.id)||local.has(row.id)||paths.has(row.path)||!Number.isSafeInteger(row.bytes)||row.bytes<1||row.bytes>maximumBytes(row.id)||!/^[a-f0-9]{64}$/.test(row.sha256)||row.path!=='/assets/mls/'+row.sha256+'.js'||row.integrity!=='sha256-'+Buffer.from(row.sha256,'hex').toString('base64'))fail('BROWSER_ASSET_MANIFEST_INVALID');
    local.add(row.id);paths.add(row.path);total+=row.bytes;
   }
   if(rows.map(row=>row.id).join(',')!==[...local].sort().join(','))fail('BROWSER_ASSET_MANIFEST_INVALID');
@@ -132,10 +133,10 @@ export function inlineBrowserAssets(html,{root}={}){
 }
 
 export function buildBrowserAssets(request,{root}={}){
- if(typeof root!=='string'||!path.isAbsolute(root)||!exact(request,['schema','entries'])||request.schema!=='mls_browser_assets_build_v1'||!Array.isArray(request.entries)||request.entries.length<1||request.entries.length>5)fail('BROWSER_ASSET_BUILD_INVALID');
+ if(typeof root!=='string'||!path.isAbsolute(root)||!exact(request,['schema','entries'])||request.schema!=='mls_browser_assets_build_v1'||!Array.isArray(request.entries)||request.entries.length<1||request.entries.length>6)fail('BROWSER_ASSET_BUILD_INVALID');
  const ids=new Set(),outputs=[];
  for(const row of request.entries){
-  if(!exact(row,['id','source','export_name'])||!Object.hasOwn(specs,row.id)||row.export_name!==specs[row.id]||ids.has(row.id)||typeof row.source!=='string'||Buffer.byteLength(row.source)>(row.id==='month'?2097152:1048576))fail('BROWSER_ASSET_BUILD_INVALID');
+  if(!exact(row,['id','source','export_name'])||!Object.hasOwn(specs,row.id)||row.export_name!==specs[row.id]||ids.has(row.id)||typeof row.source!=='string'||Buffer.byteLength(row.source)>(row.id==='month'||row.id==='workspace'?2097152:1048576))fail('BROWSER_ASSET_BUILD_INVALID');
   ids.add(row.id);let source;
   try{
    const context=vm.createContext(Object.create(null),{codeGeneration:{strings:false,wasm:false}});

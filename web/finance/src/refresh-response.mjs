@@ -24,7 +24,7 @@ const isToken = value => typeof value === 'string' && value.length > 0
 const isEpoch = value => Number.isSafeInteger(value) && value >= 0 && value <= MAX_UNIX_SECONDS;
 const isPrivateText = value => typeof value === 'string' && value.length <= MAX_TEXT_LENGTH;
 
-export function normalizeFinanceRefreshResponse(payload, options) {
+export function normalizeFinanceRefreshResponse(payload, options,profile=FINANCE_PROFILE) {
   try {
     if (!isPlainObject(options)) throw invalidContext();
     const requestedAt = ownValue(options, 'requestedAt', invalidContext);
@@ -44,8 +44,8 @@ export function normalizeFinanceRefreshResponse(payload, options) {
     }
 
     // Other identity fields never select a scope or compensate for a missing shop.
-    if (ownValue(payload, 'partner_id') !== FINANCE_PROFILE.partner_id
-      || ownValue(payload, 'shop_id') !== FINANCE_PROFILE.shop_id) {
+    if (ownValue(payload, 'partner_id') !== profile.partner_id
+      || ownValue(payload, 'shop_id') !== profile.shop_id) {
       throw fail('FINANCE_REFRESH_IDENTITY_MISMATCH');
     }
     const accessToken = ownValue(payload, 'access_token');

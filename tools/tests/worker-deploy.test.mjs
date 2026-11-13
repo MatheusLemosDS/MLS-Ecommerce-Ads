@@ -11,6 +11,22 @@ import {buildBrowserAssets, EMPTY_BROWSER_ASSET_PUBLICATION} from '../browser_as
 const APP_ID = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const FINANCE_ID = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 
+function assertCheckedInDatabases(target, actual, original) {
+  const file = path.join(PROJECT_ROOT, 'workers', target, 'commercial-account.json');
+  if (!fs.existsSync(file)) {assert.deepEqual(actual, original);return original;}
+  const authorization = JSON.parse(fs.readFileSync(file));
+  assert.deepEqual(Object.keys(authorization).sort(), ['account_database_id', 'captured_config_sha256', 'version']);
+  assert.equal(authorization.version, 1);
+  const captured = JSON.parse(fs.readFileSync(path.join(PROJECT_ROOT, 'workers', target, 'wrangler.json')));
+  assert.equal(authorization.captured_config_sha256, sha256(stableJson(captured)));
+  assert.match(authorization.account_database_id, /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+  const extension = {binding: 'ACCOUNT_DB', database_id: authorization.account_database_id.toLowerCase()};
+  assert.deepEqual(actual.filter(row => row.binding !== 'ACCOUNT_DB'), original);
+  assert.deepEqual(actual.filter(row => row.binding === 'ACCOUNT_DB'), [extension]);
+  assert.deepEqual(actual, [...original, extension], 'the reviewed account binding is the only storage extension');
+  return [...original, extension];
+}
+
 function fixture(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'braza-git-deploy-'));
   t.after(() => fs.rmSync(root, {recursive: true, force: true}));
@@ -205,7 +221,7 @@ test('checked-in App automation validates the effective one-minute trigger witho
   assert.equal(sha256(stableJson(original)), snapshot.config_sha256);
   assert.deepEqual(original, snapshot.captured_config);
   assert.equal(verified.config.keep_vars, true);
-  assert.deepEqual(verified.config.d1_databases, original.d1_databases);
+  assertCheckedInDatabases('app', verified.config.d1_databases, original.d1_databases);
   assert.deepEqual(verified.config.routes, original.routes);
 });
 
@@ -327,7 +343,8 @@ test('checked-in browser asset migration preserves all captured routing, storage
   const verified = validateDeployment('app');
   const original = JSON.parse(fs.readFileSync(path.join(PROJECT_ROOT, 'workers/app/wrangler.json')));
   const expected = {...original, main: path.join(PROJECT_ROOT, 'dist/app-worker.mjs'),
-    triggers: {crons: ['* * * * *']}, assets: {...BROWSER_ASSETS_CONFIG, directory: path.join(PROJECT_ROOT, 'dist/browser-assets')}};
+    triggers: {crons: ['* * * * *']}, assets: {...BROWSER_ASSETS_CONFIG, directory: path.join(PROJECT_ROOT, 'dist/browser-assets')},
+    d1_databases: assertCheckedInDatabases('app', verified.config.d1_databases, original.d1_databases)};
   assert.deepEqual(verified.config, expected);
   assert.equal(verified.config.assets.run_worker_first, true);
   assert.equal(verified.config.assets.html_handling, 'none');

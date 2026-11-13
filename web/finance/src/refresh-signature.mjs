@@ -5,7 +5,7 @@ export const FINANCE_REFRESH_PATH = '/api/v2/auth/access_token/get';
 const encoder = new TextEncoder();
 const invalid = () => new FinanceConnectionError('FINANCE_REFRESH_SIGNING_INPUT_INVALID', 400);
 
-export async function signFinanceRefreshRequest(options) {
+export async function signFinanceRefreshRequest(options,profile=FINANCE_PROFILE) {
   if (!options || typeof options !== 'object' || Array.isArray(options) ||
       Object.keys(options).length !== 2 || !Object.hasOwn(options, 'partnerKey') ||
       !Object.hasOwn(options, 'timestamp')) throw invalid();
@@ -25,7 +25,7 @@ export async function signFinanceRefreshRequest(options) {
     // partnerKey is UTF-8 text. A key that resembles hexadecimal is not decoded.
     const key = await crypto.subtle.importKey('raw', rawKey,
       {name:'HMAC', hash:'SHA-256'}, false, ['sign']);
-    const base = String(FINANCE_PROFILE.partner_id) + FINANCE_REFRESH_PATH + String(timestamp);
+    const base = String(profile.partner_id) + FINANCE_REFRESH_PATH + String(timestamp);
     const digest = new Uint8Array(await crypto.subtle.sign('HMAC', key, encoder.encode(base)));
     if (digest.byteLength !== 32) throw new Error('UNEXPECTED_DIGEST_LENGTH');
     // 32 bytes are 64 hex characters; preserve leading zeroes and never truncate.

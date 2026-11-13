@@ -1,16 +1,21 @@
-import {FINANCE_PROFILE,FinanceConnectionError} from './connection-store.mjs';
+import {TenantInitializationSet} from '../../cloudflare/src/tenant-storage.mjs';
+import {getFinanceProfile,FinanceConnectionError} from './connection-store.mjs';
 import {readFinancialOrderEvidence} from './financial-order-evidence.mjs';
 import {runEscrowReleaseLedger,ESCROW_RELEASE_LEDGER_SCHEMA} from './escrow-release-ledger.mjs';
 import {projectEscrowReleaseRequest,projectEscrowReleaseFrame,projectEscrowReleaseEvidenceFrame,projectEscrowReleaseCoverageRequest,projectEscrowReleaseCoverageFrame} from './escrow-release-frame.mjs';
 
-// Release observations and order-creation cohorts have different clocks. This
-// audit keeps both, and never turns either into bank receipts or realized net.
 export const ESCROW_RELEASES_SCHEMA=[
  ...ESCROW_RELEASE_LEDGER_SCHEMA,
  `CREATE TABLE IF NOT EXISTS finance_escrow_release_cohorts(cohort_key TEXT PRIMARY KEY,partner_id INTEGER NOT NULL,shop_id INTEGER NOT NULL,month TEXT NOT NULL,payload TEXT NOT NULL CHECK(length(CAST(payload AS BLOB))<=8192),payload_hash TEXT NOT NULL,created_at INTEGER NOT NULL)`,
  `CREATE TABLE IF NOT EXISTS finance_escrow_release_cohort_sources(cohort_key TEXT NOT NULL,slot_index INTEGER NOT NULL CHECK(slot_index BETWEEN 0 AND 2),payload TEXT NOT NULL CHECK(length(CAST(payload AS BLOB))<=1048576),payload_hash TEXT NOT NULL,PRIMARY KEY(cohort_key,slot_index))`,
 ];
-const encoder=new TextEncoder(),ready=new WeakSet(),identity=[FINANCE_PROFILE.partner_id,FINANCE_PROFILE.shop_id];
+const ready=new TenantInitializationSet();
+function createTenantEscrowReleases(profile){
+
+// Release observations and order-creation cohorts have different clocks. This
+// audit keeps both, and never turns either into bank receipts or realized net.
+
+const encoder=new TextEncoder(),identity=[profile.partner_id,profile.shop_id];
 const fail=(suffix,status=503)=>{throw new FinanceConnectionError('FINANCE_ESCROW_RELEASE_'+suffix,status);};
 const plain=value=>value!==null&&typeof value==='object'&&[Object.prototype,null].includes(Object.getPrototypeOf(value));
 const exact=(value,keys)=>plain(value)&&Reflect.ownKeys(value).length===keys.length&&keys.every(key=>Object.hasOwn(Object.getOwnPropertyDescriptor(value,key)||{},'value'));
@@ -157,7 +162,7 @@ function construct(month,stamp,source,ledger,{includeOrders=false}={}){
  const evidence=projectEscrowReleaseEvidenceFrame({schema:'finance_escrow_releases_v2',report:frame,orders:releaseOrderSidecar(source,byOrder)},projectEscrowReleaseFrame);if(!evidence)fail('RESULT_INVALID');return evidence;
 }
 
-export async function runFinanceEscrowReleases(env,options={}){
+async function runFinanceEscrowReleases(env,options={}){
  if(!plain(options)||Reflect.ownKeys(options).some(key=>!['operation','month','sources','fetchImpl','now','timeoutMs','includeOrders'].includes(key)||!Object.hasOwn(Object.getOwnPropertyDescriptor(options,key)||{},'value')))fail('REQUEST_INVALID',400);if(Object.hasOwn(options,'includeOrders')&&typeof options.includeOrders!=='boolean')fail('REQUEST_INVALID',400);
  const selection=projectEscrowReleaseRequest({operation:options.operation,month:options.month,sources:options.sources});if(!selection)fail('REQUEST_INVALID',400);
  const {now=()=>Date.now(),fetchImpl,timeoutMs=5000}=options,stamp=epoch(now),db=env?.FINANCE_DB;
@@ -174,7 +179,7 @@ function monthSequence(from,to){
  const result=[];for(let current=from;;){result.push(current);if(current===to)break;const value=new Date(current+'-01T00:00:00Z');value.setUTCMonth(value.getUTCMonth()+1);current=value.toISOString().slice(0,7);if(result.length>6)fail('REQUEST_INVALID',400);}return result;
 }
 
-export async function readFinanceEscrowReleaseCoverage(env,options={}){
+async function readFinanceEscrowReleaseCoverage(env,options={}){
  if(!plain(options)||Reflect.ownKeys(options).some(key=>!['operation','cohort_month','through_month','sources','now'].includes(key)||!Object.hasOwn(Object.getOwnPropertyDescriptor(options,key)||{},'value')))fail('REQUEST_INVALID',400);
  const selection=projectEscrowReleaseCoverageRequest({operation:options.operation,cohort_month:options.cohort_month,through_month:options.through_month,sources:options.sources});if(!selection)fail('REQUEST_INVALID',400);
  const now=options.now??(()=>Date.now()),stamp=epoch(now),today=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date(stamp*1000)).slice(0,7),db=env?.FINANCE_DB;
@@ -198,3 +203,8 @@ export async function readFinanceEscrowReleaseCoverage(env,options={}){
  const value={schema:'finance_escrow_release_coverage_v1',cohort_month:selection.cohort_month,through_month:selection.through_month,checked_at:stamp,status,sources:source.sources,calendars,coverage:{paid_orders:paidOrders,located_orders:located,not_located_orders:notLocated,ambiguous_orders:ambiguous,single_orders:single,calendars_total:calendars.length,calendars_complete:completeCalendars,identity_complete_at_cutoff:identityComplete},pending,basis:'SAVED_RELEASE_CALENDARS_AGAINST_PAID_ORDER_COHORT_NOT_BANK_RECEIPT'};
  const frame=projectEscrowReleaseCoverageFrame(value);if(!frame)fail('RESULT_INVALID');return frame;
 }
+
+return {runFinanceEscrowReleases,readFinanceEscrowReleaseCoverage};
+}
+export async function runFinanceEscrowReleases(env,...args){return createTenantEscrowReleases(getFinanceProfile(env)).runFinanceEscrowReleases(env,...args);}
+export async function readFinanceEscrowReleaseCoverage(env,...args){return createTenantEscrowReleases(getFinanceProfile(env)).readFinanceEscrowReleaseCoverage(env,...args);}

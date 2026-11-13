@@ -1,10 +1,11 @@
+import {TenantInitializationSet} from './tenant-storage.mjs';
 import {projectBusinessPeriodFrame} from '../../finance/src/business-period-frame.mjs';
 import {projectAdsCalendar} from './ads-calendar.mjs';
 import {validateVariantBindings} from './variant-bindings.mjs';
 import {productionCostReference,validateProductionCosts} from './production-costs.mjs';
 import {buildBusinessMonthProducts,projectBusinessMonthProducts} from './business-month-products.mjs';
 import {TAX_POLICY_SCHEMA,businessTaxPolicyFromSnapshot,businessMonthTax} from './business-tax-policy.mjs';
-import {COST_RULE_SCHEMA,costRuleSnapshotQueries,costRuleReferenceFromSnapshot,mergeCatalogCostReference} from './cost-rules.mjs';
+import {COST_RULE_SCHEMA,costRuleSchemaForEnvironment,costRuleSnapshotQueries,costRuleReferenceFromSnapshot,mergeCatalogCostReference} from './cost-rules.mjs';
 import {catalogClassificationQueries,catalogClassificationsFromSnapshot} from './catalog-classification.mjs';
 import {BUSINESS_MONTH_PUBLICATION_SCHEMA,completedBusinessMonthPublicationStatements,saveCompletedBusinessMonth,readCompletedBusinessMonth} from './business-month-publication.mjs';
 import {BUSINESS_MONTH_ADS_HISTORY_SCHEMA,businessMonthAdsHistoryQueries,businessMonthAdsHistoryStatements} from './business-month-ads-history.mjs';
@@ -125,7 +126,7 @@ export function projectBusinessMonth(value){
 }
 
 const businessMonthCoverageKeys=['orders','paid','completed','ongoing','cancelled','cancel_pending','unpaid','other','unknown','payment_covered','payment_missing','returns','returns_unknown'];
-const businessMonthReady=new WeakSet();
+const businessMonthReady=new TenantInitializationSet();
 const businessMonthFail=(code,status=400)=>{throw new BusinessMonthError(code,status);};
 const businessMonthPlain=value=>value!==null&&typeof value==='object'&&[Object.prototype,null].includes(Object.getPrototypeOf(value));
 const businessMonthExact=(value,keys)=>businessMonthPlain(value)&&Reflect.ownKeys(value).length===keys.length&&keys.every(key=>Object.hasOwn(Object.getOwnPropertyDescriptor(value,key)||{},'value'));
@@ -181,7 +182,7 @@ async function businessMonthOperation(env,input,services,{now=()=>Date.now(),act
  if(!businessMonthExact(input,expenseOperation?['operation','month','revision','external_expenses_cents','recharge_treatment']:['operation','month'])||!['start','step','read','ads','expenses'].includes(operation))businessMonthFail('BUSINESS_MONTH_REQUEST_INVALID');
  const range=businessMonthRange(input.month,stamp);if(!range)businessMonthFail('BUSINESS_MONTH_REQUEST_INVALID');
  const db=env.ADMIN_DB;
- if(!businessMonthReady.has(db)){await db.batch(BUSINESS_MONTH_SCHEMA.map(sql=>db.prepare(sql)));businessMonthReady.add(db);}
+ if(!businessMonthReady.has(db)){await db.batch(costRuleSchemaForEnvironment(env,BUSINESS_MONTH_SCHEMA).map(sql=>db.prepare(sql)));businessMonthReady.add(db);}
  if(expenseOperation)await businessMonthSaveExpenses(db,input,actor,stamp);
  let observed=await businessMonthLoadRun(db,input.month,range,stamp,true);
  const legacyProducts=observed?.complete&&observed.payload.slots.some(slot=>!Object.hasOwn(slot.frame,'product_breakdown'));
@@ -254,7 +255,7 @@ async function businessMonthRefreshAds(env,db,month,range,stamp,services,now){
 export async function readBusinessMonthAdsState(env,month,{now=()=>Date.now()}={}){
  const value=now(),stamp=Number.isSafeInteger(value)&&value>0?Math.floor(value/1000):null,range=stamp?businessMonthRange(month,stamp):null;
  if(!range)businessMonthFail('BUSINESS_MONTH_REQUEST_INVALID');const db=env?.ADMIN_DB;if(!db?.batch)businessMonthFail('BUSINESS_MONTH_CONFIGURATION',503);
- if(!businessMonthReady.has(db)){await db.batch(BUSINESS_MONTH_SCHEMA.map(sql=>db.prepare(sql)));businessMonthReady.add(db);}
+ if(!businessMonthReady.has(db)){await db.batch(costRuleSchemaForEnvironment(env,BUSINESS_MONTH_SCHEMA).map(sql=>db.prepare(sql)));businessMonthReady.add(db);}
  const rows=await db.batch([db.prepare('SELECT payload,updated_at FROM business_month_ads WHERE month=?').bind(month),db.prepare('SELECT * FROM business_month_ads_attempts WHERE month=?').bind(month)]),state=businessMonthAdsRead(rows[0].results[0],rows[1].results[0],range,stamp);
  return {schema:'business_month_ads_state_v1',month,start_date:range.start_date,end_date:range.end_date,checked_at:stamp,...state.observation,refresh_due:state.observation.age_seconds===null||state.observation.age_seconds>=60||!state.fresh,unit_confirmation:'OPERATOR_CONFIRMED_BRL_2026_10_20'};
 }

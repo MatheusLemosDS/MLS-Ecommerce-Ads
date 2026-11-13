@@ -42,7 +42,9 @@ test('secondary work stays reachable in one menu and never automatically opens a
  assert.match(secondary,/<details class="workspace-more" data-active="true">/);
  assert.doesNotMatch(secondary,/<details[^>]*\bopen(?:\s|>)/);
  assert.match(secondary,/href="\/admin\?tab=agents" aria-current="page"/);
- assert.match(secondary,/Equipe e agentes/);
+ assert.match(secondary,/>Agentes<\/span>/);
+ assert.doesNotMatch(secondary,/Equipe e agentes|Plano e versão/);
+ assert.match(secondary,/Novidades e versão/);
  assert.match(secondary,/somente leitura/);
 });
 

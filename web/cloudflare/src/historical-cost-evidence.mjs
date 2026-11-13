@@ -1,3 +1,4 @@
+import {TenantInitializationMap} from './tenant-storage.mjs';
 import {projectHistoricalVariantEvidenceFrame,historicalVariantEvidenceRequestMatches} from '../../finance/src/historical-variant-evidence-frame.mjs';
 
 // These are name observations, never sold quantities, prices or catalogue links.
@@ -12,7 +13,7 @@ export const HISTORICAL_COST_EVIDENCE_SCHEMA=[
 ];
 export class HistoricalCostEvidenceError extends Error{constructor(code,status=503){super(code);this.status=status;}}
 const fail=(code,status=503)=>{throw new HistoricalCostEvidenceError(code,status);};
-const ready=new WeakMap(),encoder=new TextEncoder(),MAX_PAGES=600;
+const ready=new TenantInitializationMap(),encoder=new TextEncoder(),MAX_PAGES=600;
 const plain=value=>value!==null&&typeof value==='object'&&[Object.prototype,null].includes(Object.getPrototypeOf(value));
 const exact=(value,keys)=>plain(value)&&Reflect.ownKeys(value).length===keys.length&&keys.every(key=>Object.hasOwn(Object.getOwnPropertyDescriptor(value,key)||{},'value'));
 const array=(value,max)=>Array.isArray(value)&&Object.getPrototypeOf(value)===Array.prototype&&value.length<=max&&Reflect.ownKeys(value).length===value.length+1&&Array.from({length:value.length},(_,index)=>Object.getOwnPropertyDescriptor(value,String(index))).every(field=>field&&Object.hasOwn(field,'value'));

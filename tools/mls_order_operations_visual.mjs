@@ -3,7 +3,7 @@ import {execFileSync} from 'node:child_process';
 import {existsSync,lstatSync,mkdirSync,readFileSync,writeFileSync} from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {receiptBrowser,receiptClick as nativeReceiptClick,receiptPause} from '../web/cloudflare/tests/returns-receipts-chrome-helpers.mjs';
+import {receiptBrowser,receiptClick as nativeReceiptClick,receiptPause,receiptWaitForLogoutNavigation} from '../web/cloudflare/tests/returns-receipts-chrome-helpers.mjs';
 import {compileOrderOperationsQaWorker,startOrderOperationsQaFixture,orderOperationsQaHash,ORDER_OPERATIONS_QA_PATH} from './mls_order_operations_fixture.mjs';
 import {verifyBrowserAssets} from './browser_assets.mjs';
 
@@ -98,7 +98,9 @@ export async function runOrderOperationsQaOutcome(compiled,{width,theme,minify,o
   // The existing hidden owner form invokes the real logout handler via the
   // browser's form submission API. It is a lifecycle check, not a claim that
   // this historical hidden control is a new visible 44px action.
-  const beforeLogoutErrors=await cdp.evaluate('globalThis.__orderQaErrors??[]');const logoutHold=fixture.holdNextRead();await receiptClick(cdp,id('Refresh'));await waitHeld(logoutHold);await cdp.evaluate("document.getElementById('logout').requestSubmit()");await fixture.waitRequest(row=>row.path==='/admin/logout'&&row.status===204);logoutHold.release();await wait(cdp,"location.pathname==='/login'",'logout must leave the workspace');checks.logout_clears_late_response=true;
+  const beforeLogoutErrors=await cdp.evaluate('globalThis.__orderQaErrors??[]');const logoutHold=fixture.holdNextRead();await receiptClick(cdp,id('Refresh'));await waitHeld(logoutHold);
+  await Promise.all([receiptWaitForLogoutNavigation(cdp,{origin:fixture.origin,action:()=>cdp.evaluate("document.getElementById('logout').requestSubmit()")}),
+   (async()=>{await fixture.waitRequest(row=>row.path==='/admin/logout'&&row.status===204);logoutHold.release();})()]);checks.logout_clears_late_response=true;
   const errors=[...beforeLogoutErrors,...await cdp.evaluate('globalThis.__orderQaErrors??[]')];assert.deepEqual(errors,[]);assert.deepEqual(consoleErrors,[]);assert.deepEqual(fixture.failures,[]);assert.deepEqual(externalRequests,[]);assert.ok(network.every(url=>url.startsWith(fixture.origin)||/^(data:|blob:|about:)/.test(url)),'QA_BROWSER_EXTERNAL_REQUEST');checks.page_errors_absent=true;checks.no_real_provider_requests=true;
   assert.ok(Object.values(checks).every(Boolean));return {minify,width,theme,pass:true,backend:'COMPILED_APP_WITH_EXACT_ASSETS_AND_EPHEMERAL_SQLITE',synthetic_only:true,...checks,overview_agents:overview.order,cold_get:fixture.coldGet,counts:fixture.databaseCounts(),private_synthetic_calls:fixture.privateCalls,blocked_other_outbound_attempts:fixture.blockedOutbound.length,asset_paths:assetPaths,requests:fixture.requests,screenshots:screenshots.filter(Boolean)};
  }finally{await cdp?.close();await fixture.close();}

@@ -1,5 +1,6 @@
 import {readCostRules,validateCostRules} from './cost-rules.mjs';
 import {validateProductionCosts} from './production-costs.mjs';
+import {isTenantDatabase} from './tenant-storage.mjs';
 
 // These three corrections record explicit confirmations for this single shop.
 // They are not defaults for other shops or later operator configurations.
@@ -34,6 +35,7 @@ async function apply(db,id,kind,before,values,stamp,guardRules=null){
 }
 
 export async function applyConfirmedOperatorCostCorrections(env,{now=()=>Date.now()}={}){
+ if(env?.COMMERCIAL_CONTEXT||isTenantDatabase(env?.ADMIN_DB))throw new OperatorCostCorrectionError('OPERATOR_COST_CORRECTIONS_LEGACY_ONLY',409);
  const db=env?.ADMIN_DB;if(!db||typeof db.prepare!=='function'||typeof db.batch!=='function')fail('OPERATOR_COST_CORRECTION_CONFIGURATION');let millis;try{millis=now();}catch{fail('OPERATOR_COST_CORRECTION_CLOCK_INVALID');}if(!Number.isSafeInteger(millis)||millis<1||millis>9999999999999)fail('OPERATOR_COST_CORRECTION_CLOCK_INVALID');const stamp=Math.floor(millis/1000);
  try{
   const initial=await db.batch([...OPERATOR_COST_CORRECTIONS_SCHEMA.map(sql=>db.prepare(sql)),db.prepare('SELECT * FROM operator_cost_corrections WHERE shop_id=? AND correction_id IN (?,?,?)').bind(shopId,...corrections)]),known=new Map(initial.at(-1).results.map(row=>[row.correction_id,project(row)]));

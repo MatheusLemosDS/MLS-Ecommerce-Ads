@@ -37,7 +37,7 @@ function browser(value,{search='?date=2026-10-10&tab=overview',now='2026-10-26T1
  const context=vm.createContext({URL,URLSearchParams,serialized:JSON.stringify(value)}),ids=[...businessDayBody().matchAll(/\bid="([^"]+)"/g)].map(match=>match[1]);
  vm.runInContext(`
  let clock=Date.parse(${JSON.stringify(now)});class ClockDate extends Date{constructor(...args){super(...(args.length?args:[clock]));}static now(){return clock;}}globalThis.Date=ClockDate;
- function node(tag='div'){return {tag,textContent:'',dataset:{},attrs:{},children:[],disabled:false,value:'',max:'',open:false,append(...values){this.children.push(...values);},replaceChildren(...values){this.textContent='';this.children=[...values];},setAttribute(name,value){this.attrs[name]=String(value);}};}
+ function node(tag='div'){return {tag,textContent:'',dataset:{},style:{},attrs:{},children:[],disabled:false,value:'',max:'',open:false,append(...values){this.children.push(...values);},replaceChildren(...values){this.textContent='';this.children=[...values];},setAttribute(name,value){this.attrs[name]=String(value);}};}
  const controls=new Map(${JSON.stringify(ids)}.map(id=>[id,node()])),control=name=>controls.get('businessDay'+name),text=element=>element.textContent+element.children.map(text).join(' ');
  const document={getElementById:id=>controls.get(id)||null,createElement:tag=>node(tag)};
  globalThis.location=new URL('https://app.example.test/admin'+${JSON.stringify(search)});const historyCalls=[];globalThis.history={state:{keep:'owner'},replaceState(state,title,path){historyCalls.push({state,path});location=new URL(path,location);}};
@@ -57,6 +57,19 @@ test('daily overview has accessible day controls, a closed calculation and a res
  assert.match(html,/for="businessDayDate"/);assert.match(html,/id="businessDayDate"[^>]*type="date"[^>]*disabled/);assert.match(html,/role="status" aria-live="polite"/);
  assert.doesNotMatch(html,/<details[^>]*\bopen\b/);assert.match(html,/não são descontadas novamente/);
  assert.match(BUSINESS_DAY_CSS,/@media\(max-width:640px\)/);assert.match(BUSINESS_DAY_CSS,/@media\(max-width:360px\)/);assert.match(BUSINESS_DAY_CSS,/minmax\(0,1fr\)/);
+});
+
+test('daily signed composition uses the same canonical payout, deductions and result as the equivalent list',async()=>{
+ const value=await evidence(),b=browser(value);b.activate();
+ const graph=b.json('control("CompositionChart").children[2].children.map(node=>({role:node.dataset.role,value:node.children[2].textContent,sign:node.dataset.sign}))');
+ const normalize=value=>value.replace(/\s/g,'').replaceAll('−','-');
+ assert.equal(b.run('control("CompositionChart").dataset.chartUnit'),'BRL_CENTS');
+ assert.equal(normalize(graph.find(row=>row.role==='RESULT').value),normalize(b.text('Net')));
+ const legacy=b.json('control("Waterfall").children.map(row=>row.children[1].textContent)');
+ assert.equal(normalize(graph.find(row=>row.role==='START').value),normalize(legacy[1]));
+ for(const [index,row] of graph.filter(row=>row.role==='DEDUCTION').entries())assert.equal(normalize(row.value),normalize(legacy[index+2]));
+ assert.match(b.text('CompositionChart'),/Fabricação física separada/);assert.match(b.text('CompositionChart'),/vendas são contexto/);
+ b.run('brazaDayDashboard.stop()');assert.equal(b.run('control("CompositionChart").children.length'),0);
 });
 
 test('daily return notice separates known returns from unread orders and explains payout without changing the financial snapshot',async()=>{

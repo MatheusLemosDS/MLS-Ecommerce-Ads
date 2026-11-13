@@ -16,16 +16,16 @@ async function digest(v){return Array.from(new Uint8Array(await crypto.subtle.di
 // D1 has a per-invocation query budget. This adapter also makes a write from any
 // reused reader impossible. Reserving one statement leaves room for the final
 // reference fence, even when a very large catalogue needs too many partitions.
-function readOnlyDatabase(db){
+function readOnlyDatabase(db,maximumQueries=50){
  if(typeof db?.prepare!=='function'||typeof db?.batch!=='function')fail('UNAVAILABLE');
  let used=0;const statements=new WeakMap();
- function reserve(n){if(used+n>49)fail('QUERY_BUDGET_EXCEEDED');used+=n;}
+ function reserve(n){if(used+n>maximumQueries-1)fail('QUERY_BUDGET_EXCEEDED');used+=n;}
  function prepare(sql){
   if(typeof sql!=='string'||!/^\s*SELECT\b/i.test(sql))fail('WRITE_FORBIDDEN');
   let args=[];const statement={bind(...values){args=values;return statement;},async all(){reserve(1);return db.prepare(sql).bind(...args).all();},async first(){reserve(1);return db.prepare(sql).bind(...args).first();},async run(){reserve(1);return db.prepare(sql).bind(...args).all();}};
   statements.set(statement,()=>db.prepare(sql).bind(...args));return statement;
  }
- return {prepare,async batch(rows){if(!Array.isArray(rows)||rows.some(r=>!statements.has(r)))fail('UNAVAILABLE');reserve(rows.length);return db.batch(rows.map(r=>statements.get(r)()));},async fence(sql,args){if(used>=50)fail('QUERY_BUDGET_EXCEEDED');used++;return db.prepare(sql).bind(...args).first();},get queries(){return used;}};
+ return {prepare,async batch(rows){if(!Array.isArray(rows)||rows.some(r=>!statements.has(r)))fail('UNAVAILABLE');reserve(rows.length);return db.batch(rows.map(r=>statements.get(r)()));},async fence(sql,args){if(used>=maximumQueries)fail('QUERY_BUDGET_EXCEEDED');used++;return db.prepare(sql).bind(...args).first();},get queries(){return used;}};
 }
 
 // Freeze shared financial reference rows for the two monthly calculations.
@@ -35,7 +35,13 @@ function referenceSnapshot(db){
  const plans=new WeakMap(),cache=new Map();
  return {cache,prepare(sql){let args=[];const row={bind(...values){args=values;return row;}};plans.set(row,()=>({sql,args,key:JSON.stringify([sql,args])}));return row;},async batch(rows){
   const requested=rows.map(row=>{if(!plans.has(row))fail('UNAVAILABLE');return plans.get(row)();}),missing=[...new Map(requested.filter(p=>!cache.has(p.key)).map(p=>[p.key,p])).values()];
-  if(missing.length){const results=await db.batch(missing.map(p=>db.prepare(p.sql).bind(...p.args)));if(!Array.isArray(results)||results.length!==missing.length||results.some(r=>r?.success===false||!Array.isArray(r?.results)))fail('UNAVAILABLE');missing.forEach((p,i)=>cache.set(p.key,results[i]));}
+  if(missing.length){
+   const pair=['variant_bindings_state','production_costs_state'].map(table=>missing.find(p=>p.sql==='SELECT revision,payload,updated_at FROM '+table+' WHERE id=1'&&p.args.length===0)),merged=pair.every(Boolean);
+   const plans=missing.filter(p=>!merged||!pair.includes(p));
+   if(merged)plans.push({sql:"SELECT 'variant_bindings_state' AS reference_source,revision,payload,updated_at FROM variant_bindings_state WHERE id=1 UNION ALL SELECT 'production_costs_state' AS reference_source,revision,payload,updated_at FROM production_costs_state WHERE id=1",args:[],pair});
+   const results=await db.batch(plans.map(p=>db.prepare(p.sql).bind(...p.args)));if(!Array.isArray(results)||results.length!==plans.length||results.some(r=>r?.success===false||!Array.isArray(r?.results)))fail('UNAVAILABLE');
+   plans.forEach((p,i)=>{if(!p.pair){cache.set(p.key,results[i]);return;}const result=results[i];if(result.results.length>2||result.results.some(row=>!['variant_bindings_state','production_costs_state'].includes(row.reference_source)))fail('UNAVAILABLE');for(let j=0;j<2;j++){const source=['variant_bindings_state','production_costs_state'][j],rows=result.results.filter(row=>row.reference_source===source).map(({reference_source,...row})=>row);if(rows.length>1)fail('UNAVAILABLE');cache.set(p.pair[j].key,{...result,results:rows});}});
+  }
   return requested.map(p=>structuredClone(cache.get(p.key)));
  }};
 }
@@ -76,7 +82,8 @@ export async function readWeeklyOperatingReport(env,input,services={}, {now=()=>
  try{
  let stamp;try{stamp=now();}catch{}if(!integer(stamp,1,9999999999999))fail('UNAVAILABLE');stamp=Math.floor(stamp/1000);
  const protocol=createWeeklyOperatingReportProtocol({projectCashPeriod:projectExternalCashPeriodSummary}),selection=protocol.projectWeeklyOperatingSelection(input,stamp);if(!selection)fail('REQUEST_INVALID',400);
- const db=readOnlyDatabase(env?.ADMIN_DB),tables=await sourceTables(db),period=protocol.weeklyOperatingPeriod(selection.week_end,stamp),references=referenceSnapshot(db),daily_summaries=[],source_failures={months:[]};
+ // Commercial dispatch reserves two Auth checks and one cash service fetch.
+ const db=readOnlyDatabase(env?.ADMIN_DB,env?.COMMERCIAL_CONTEXT?47:50),tables=await sourceTables(db),period=protocol.weeklyOperatingPeriod(selection.week_end,stamp),references=referenceSnapshot(db),daily_summaries=[],source_failures={months:[]};
  let coverage=null,saved_report=null,cash=null;
  if(tables.has('incurred_production_state')||tables.has('production_coverage_state'))try{coverage=await readProductionCoverageWorkspace({ADMIN_DB:db},selection,{now:()=>stamp*1000});}catch(error){if(error?.status===409)fail('SOURCE_CHANGED',409);}
  if(tables.has('production_weekly_reports'))try{saved_report=await savedReferences(db,selection.week_end,period.manufacturing_period,stamp,coverage);}catch{source_failures.report='MANUFACTURING_REPORT_INVALID';}

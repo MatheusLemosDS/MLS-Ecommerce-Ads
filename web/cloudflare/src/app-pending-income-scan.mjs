@@ -1,7 +1,7 @@
 import {projectPendingIncomeScanFrame} from '../../finance/src/pending-income-frame.mjs';
 import {projectIncomeDetailDiagnostic} from '../../finance/src/income-detail-diagnostic.mjs';
 
-export async function getFinancePendingIncomeScan(env,{fetchImpl=request=>fetch(request),timeoutMs=45000}={}){
+export async function getFinancePendingIncomeScan(env,{fetchImpl=env?.COMMERCIAL_FETCH??(request=>fetch(request)),timeoutMs=45000}={}){
  const failure=(suffix='UNAVAILABLE',http=null,cause=null)=>({schema:'finance_pending_income_scan_unavailable_v1',status:'UNAVAILABLE',diagnostic:{code:'FINANCE_PENDING_INCOME_SCAN_'+suffix,http:Number.isInteger(http)&&http>=100&&http<=599?http:null,...(cause?{cause}: {})}});
  if(typeof env?.APP_INTERNAL_SECRET!=='string'||!env.APP_INTERNAL_SECRET||typeof fetchImpl!=='function'||!Number.isInteger(timeoutMs)||timeoutMs<5||timeoutMs>45000)return failure('CONFIGURATION');
  const controller=new AbortController();let timer,reader,response,stage='FETCH';const cancel=()=>{try{(reader?reader.cancel():response?.body?.cancel())?.catch(()=>{});}catch{}};const check=()=>{if(controller.signal.aborted){cancel();throw Error('deadline');}};

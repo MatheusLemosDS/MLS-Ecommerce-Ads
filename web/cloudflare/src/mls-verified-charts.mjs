@@ -18,9 +18,10 @@ export function createMlsVerifiedCharts(){
   return localAmount(value);
  };
  const localRatio=value=>{const n=BigInt(value),absolute=n<0n?-n:n,rounded=(absolute+5000n)/10000n;return (n<0n?'-':'')+new Intl.NumberFormat('pt-BR').format(rounded/100n)+','+String(rounded%100n).padStart(2,'0')+'x';};
+ const localCount=value=>new Intl.NumberFormat('pt-BR',{maximumFractionDigits:0}).format(value);
  const COLORS = Object.freeze({
    net:'#35e6ae',sales:'#4b9fff',ads:'#ef5ab1',finance:'#44e8ad',
-   production:'#39d5eb',returns:'#ff688e',products:'#ffaa4b',roas:'#b780ff'
+   production:'#39d5eb',returns:'#ff688e',products:'#ffaa4b',roas:'#b780ff',paid:'#39d5eb'
  });
  const esc = value => String(value).replace(/[&<>"']/g,c=>({
    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
@@ -31,7 +32,7 @@ export function createMlsVerifiedCharts(){
   ' data-mls-chart-basis="'+esc(basis)+'"';
 
  function projectMlsDailyChart(trend,metric='net'){
-  const fields={net:'net_cents',sales:'sales_cents',ads:'ads_spend_cents'};
+  const fields={net:'net_cents',sales:'sales_cents',ads:'ads_spend_cents',paid:'paid_orders'};
   if(!Object.hasOwn(fields,metric))return fail('Métrica não reconhecida');
   if(trend?.schema!=='mls_mission_daily_trend_v1'||!Array.isArray(trend.points))
    return fail('Histórico diário validado ainda indisponível');
@@ -44,6 +45,7 @@ export function createMlsVerifiedCharts(){
     return fail('Datas inválidas ou duplicadas');
    seen.add(date);
    const value=row?.[fields[metric]];
+   if(metric==='paid'&&value!==null&&(!SAFE(value)||value<0))return fail('Contagem de pedidos inválida');
    rows.push({date,value:SAFE(value)?value:null,partial:row?.partial===true,
     basis:metric==='net'&&['KNOWN_COSTS','ESTIMATE'].includes(row?.net_basis)?row.net_basis:null});
   }
@@ -52,7 +54,7 @@ export function createMlsVerifiedCharts(){
   if(rows.filter(x=>x.value!==null).length<2)return fail('Necessárias duas observações reais');
   return Object.freeze({
    status:'READY',type:'area',source:'mls_mission_daily_trend_v1',metric,
-   unit:'BRL_CENTS',points:rows.map(x=>Object.freeze(x)),
+   unit:metric==='paid'?'COUNT':'BRL_CENTS',points:rows.map(x=>Object.freeze(x)),
    missing:rows.filter(x=>x.value===null).length
   });
  }
@@ -126,8 +128,9 @@ export function createMlsVerifiedCharts(){
    const known=rows.map(x=>x.value).filter(SAFE);
    if(known.length<2)return '<div class="mls-chart-unavailable" role="status">Histórico insuficiente</div>';
    const w=620,h=222,left=78,right=610,top=16,bottom=187;
-   const ratio=model.unit==='RATIO_MICROS',format=ratio?localRatio:localAmount,axis=ratio?localRatio:axisAmount;
-   if(ratio&&known.some(value=>value<0))return '<div class="mls-chart-unavailable" role="status">ROAS inválido</div>';
+   if(!['BRL_CENTS','RATIO_MICROS','COUNT'].includes(model.unit))return '<div class="mls-chart-unavailable" role="status">Unidade inválida</div>';
+   const ratio=model.unit==='RATIO_MICROS',count=model.unit==='COUNT',format=ratio?localRatio:count?localCount:localAmount,axis=ratio?localRatio:count?localCount:axisAmount;
+   if((ratio||count)&&known.some(value=>value<0))return '<div class="mls-chart-unavailable" role="status">Valor não negativo obrigatório</div>';
    const max=Math.max(0,...known),min=Math.min(0,...known),span=max-min||1;
    const x=i=>left+(right-left)*i/Math.max(1,rows.length-1);
    const y=v=>top+(max-v)*(bottom-top)/span;
@@ -167,7 +170,7 @@ export function createMlsVerifiedCharts(){
     if(point.value!==null){
      const label=point.date+': '+format(point.value)+(point.partial?' (parcial)':'')+
        (point.basis==='KNOWN_COSTS'?' (subtotal com custos conhecidos)':'');
-     const context=(ratio?'ROAS de atribuição ampla · calendário Ads · não é lucro':point.basis==='KNOWN_COSTS'?'Subtotal com custos conhecidos':model.metric==='net'?'Resultado estimado':'Valor observado')+(point.partial?' · Dia parcial':'');
+     const context=(ratio?'ROAS de atribuição ampla · calendário Ads · não é lucro':count?'Pedidos pagos pela data de criação · não são peças nem conversões Ads':point.basis==='KNOWN_COSTS'?'Subtotal com custos conhecidos':model.metric==='net'?'Resultado estimado':'Valor observado')+(point.partial?' · Dia parcial':'');
      const displayDate=point.date.slice(8)+'/'+point.date.slice(5,7)+'/'+point.date.slice(0,4);
      graphics+='<circle'+markAttributes(k,displayDate,format(point.value),context,point.basis||'')+' data-mls-chart-date="'+esc(point.date)+'"'+
        ' data-mls-chart-x="'+x(k)+'" data-mls-chart-left="'+left+'" data-mls-chart-right="'+right+'" data-mls-chart-top="'+top+'" data-mls-chart-bottom="'+bottom+'" aria-label="'+esc(label)+'" cx="'+x(k)+'" cy="'+y(point.value)+'" r="3.5" fill="'+

@@ -14,7 +14,7 @@ export function projectHistoricalVariantEvidenceRequest(value){
 
 // Standalone so each private boundary and compiled client can re-project it.
 // evidence_complete covers THIS page only; has_more controls the window scan.
-export function projectHistoricalVariantEvidenceFrame(value){
+export function projectHistoricalVariantEvidenceFrame(value,expectedProfile=null){
  const plain=row=>row!==null&&typeof row==='object'&&[Object.prototype,null].includes(Object.getPrototypeOf(row));
  const exact=(row,keys)=>plain(row)&&Reflect.ownKeys(row).length===keys.length&&keys.every(key=>Object.hasOwn(Object.getOwnPropertyDescriptor(row,key)||{},'value'));
  const array=(rows,max)=>Array.isArray(rows)&&Object.getPrototypeOf(rows)===Array.prototype&&rows.length<=max&&Reflect.ownKeys(rows).length===rows.length+1&&Array.from({length:rows.length},(_,i)=>Object.getOwnPropertyDescriptor(rows,String(i))).every(field=>field&&Object.hasOwn(field,'value'));
@@ -25,7 +25,8 @@ export function projectHistoricalVariantEvidenceFrame(value){
  const day=row=>typeof row==='string'&&/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$/.test(row)&&Number.isFinite(Date.parse(row+'T00:00:00Z'))&&new Date(row+'T00:00:00Z').toISOString().slice(0,10)===row;
  const statuses=['UNPAID','READY_TO_SHIP','PROCESSED','RETRY_SHIP','SHIPPED','TO_CONFIRM_RECEIVE','COMPLETED','IN_CANCEL','CANCELLED','INVOICE_PENDING','TO_RETURN','UNKNOWN'];
  try{
-  if(!exact(value,['schema','shop_id','checked_at','start_date','end_date','item_ids','cursor','has_more','next_cursor','coverage','evidence_complete','products','omitted'])||value.schema!=='historical_variant_evidence_v1'||value.shop_id!==1178167501||!int(value.checked_at,1,9999999999)||!day(value.start_date)||!day(value.end_date)||Date.parse(value.end_date)<Date.parse(value.start_date)||Date.parse(value.end_date)-Date.parse(value.start_date)>=15*86400000||!array(value.item_ids,5)||!value.item_ids.length||!value.item_ids.every(row=>id(row))||new Set(value.item_ids).size!==value.item_ids.length||!cursor(value.cursor)||typeof value.has_more!=='boolean'||!cursor(value.next_cursor))return null;
+  const expectedShop=expectedProfile===null?1178167501:expectedProfile?.shop_id;if(!Number.isSafeInteger(expectedShop)||expectedShop<1)return null;
+  if(!exact(value,['schema','shop_id','checked_at','start_date','end_date','item_ids','cursor','has_more','next_cursor','coverage','evidence_complete','products','omitted'])||value.schema!=='historical_variant_evidence_v1'||value.shop_id!==expectedShop||!int(value.checked_at,1,9999999999)||!day(value.start_date)||!day(value.end_date)||Date.parse(value.end_date)<Date.parse(value.start_date)||Date.parse(value.end_date)-Date.parse(value.start_date)>=15*86400000||!array(value.item_ids,5)||!value.item_ids.length||!value.item_ids.every(row=>id(row))||new Set(value.item_ids).size!==value.item_ids.length||!cursor(value.cursor)||typeof value.has_more!=='boolean'||!cursor(value.next_cursor))return null;
   if(value.end_date>new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date(value.checked_at*1000)))return null;
   // Keep this condition separate: cursor completion must not depend on boolean
   // operator precedence or a truthy opaque string from the upstream API.

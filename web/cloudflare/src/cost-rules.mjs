@@ -1,3 +1,4 @@
+import {TenantInitializationMap,isTenantDatabase} from './tenant-storage.mjs';
 import {projectVariantCatalog,projectProductCostCatalog} from '../../finance/src/variant-catalog-frame.mjs';
 import {costRuleProductLearning} from './cost-rule-learning.mjs';
 import {CATALOG_CLASSIFICATION_SCHEMA,catalogClassificationQueries,catalogClassificationsFromSnapshot,storeCatalogClassificationFrame,readCatalogClassificationFence} from './catalog-classification.mjs';
@@ -25,9 +26,14 @@ export const COST_RULE_SCHEMA=[
  `INSERT OR IGNORE INTO production_cost_rules_state(id,revision,payload,updated_at) SELECT 1,1,'${ruleSeed}',strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE NOT EXISTS(SELECT 1 FROM production_cost_rules_audit)`,
  `INSERT INTO production_cost_rules_audit(revision,payload,actor,created_at) SELECT revision,payload,'operator-confirmed-children-1250',updated_at FROM production_cost_rules_state WHERE changes()=1 AND id=1 AND revision=1`,
 ];
-const ruleReady=new WeakMap();
+const ruleReady=new TenantInitializationMap();
+export function costRuleSchemaForEnvironment(env,schema=COST_RULE_SCHEMA){
+ if(!env?.COMMERCIAL_CONTEXT&&!isTenantDatabase(env?.ADMIN_DB))return schema;
+ const ddl=schema.filter(sql=>!/^\s*INSERT (?:OR IGNORE )?INTO (?:production_cost_rules|business_tax_policy)_(?:state|audit)\b/i.test(sql)).map(sql=>sql.replace("'operator-confirmed-film-57cm'","'commercial-film-default-unconfirmed-v1'"));
+ return [...ddl,"INSERT OR IGNORE INTO production_cost_rules_state(id,revision,payload,updated_at) SELECT 1,1,'{\"rules\":[]}',strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE NOT EXISTS(SELECT 1 FROM production_cost_rules_audit)","INSERT INTO production_cost_rules_audit(revision,payload,actor,created_at) SELECT revision,payload,'commercial-empty-rules-v1',updated_at FROM production_cost_rules_state WHERE changes()=1 AND id=1 AND revision=1"];
+}
 function ruleClock(now){let value;try{value=now();}catch{ruleFail('COST_RULE_CLOCK_INVALID',503);}if(!Number.isSafeInteger(value)||value<1||value>9999999999999)ruleFail('COST_RULE_CLOCK_INVALID',503);return Math.floor(value/1000);}
-async function ruleSetup(env){if(!env?.ADMIN_DB?.batch)ruleFail('COST_RULES_CONFIGURATION',503);const db=env.ADMIN_DB;if(!ruleReady.has(db))ruleReady.set(db,db.batch(COST_RULE_SCHEMA.map(sql=>db.prepare(sql))).catch(()=>{ruleReady.delete(db);ruleFail('COST_RULES_STORAGE_INVALID',503);}));await ruleReady.get(db);return db;}
+async function ruleSetup(env){if(!env?.ADMIN_DB?.batch)ruleFail('COST_RULES_CONFIGURATION',503);const db=env.ADMIN_DB;if(!ruleReady.has(db))ruleReady.set(db,db.batch(costRuleSchemaForEnvironment(env).map(sql=>db.prepare(sql))).catch(()=>{ruleReady.delete(db);ruleFail('COST_RULES_STORAGE_INVALID',503);}));await ruleReady.get(db);return db;}
 const ruleNormalize=value=>value.normalize('NFKD').replace(/\p{M}/gu,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim().split(/\s+/).map(word=>({camisetas:'camiseta',camisas:'camisa',blusas:'blusa',infantis:'infantil',criancas:'crianca',calcas:'calca',shorts:'short',bermudas:'bermuda',kits:'kit',combos:'combo',conjuntos:'conjunto',casais:'casal',moletons:'moletom',vestidos:'vestido',saias:'saia',leggings:'legging',adultos:'adulto',adultas:'adulta',bonecas:'boneca',pets:'pet'})[word]||word).join(' ');
 const ruleOption=value=>ruleNormalize(value).replace(/^(\d+) (anos?|years?)$/,'$1');
 const ruleContains=(text,pattern)=>ruleNormalize(pattern).split(' ').every(word=>text.has(word));

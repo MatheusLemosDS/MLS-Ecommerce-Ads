@@ -182,9 +182,11 @@ test('real Chromium hydrates owner agent cards even when finance API is unavaila
   assert.equal(trace.fallback_count,0,'static placeholders must be replaced after script hydration');
   assert.equal(trace.net_value,'—','no financial number may be fabricated');
   assert.equal(trace.visual.theme,'dark','approved Mission Control theme must be inspected in dark mode');
-  assert.equal(trace.visual.hero_bg,'none','approved composition keeps a flat header behind the vector globe');
-  assert.deepEqual(trace.visual.hero_art,{count:1,decorative:true,visible:true,collision_ids:0,externals:0},'approved globe must be visible editable vector art without colliding IDs or external assets');
-  assert.match(trace.visual.agent_bg,/gradient/i,'real agent cards need colored gradient surfaces');
+  assert.equal(trace.visual.hero_bg,'none','V4.1 UX-01 keeps the header surface flat so text and financial state take priority');
+  // V4.1 line37 / UX-01: keep vector artwork, with restrained decoration.
+  // The approved product CSS hides only the decorative globe below850px.
+  assert.deepEqual(trace.visual.hero_art,{count:1,decorative:true,visible:false,collision_ids:0,externals:0},'the mobile layout retains the exact decorative SVG in the DOM without competing with the header');
+  assert.equal(trace.visual.agent_bg,'none','V4.1 UX-01 uses solid agent card surfaces; specialty colors remain in their SVG avatars and accent borders');
   assert.deepEqual(trace.visual.agent_avatar,{count:6,decorative:true,collision_ids:0,externals:0,visible:true},'the six decorative overview avatars are visible without colliding IDs or external assets');assert.equal(trace.directory_avatar_count,7);assert.equal(trace.directory_avatars_visible,false);
   assert.equal(trace.visual.visual_panels,2,'verified day + agent status analytics must exist on home');
   assert.equal(trace.visual.metric_columns.trim().split(/\s+/).length,2,'narrow real Chromium viewport must show two KPI columns');
@@ -283,7 +285,7 @@ test('real Chromium hydrates owner agent cards even when finance API is unavaila
     const encodedHub=routed.match(/data-mls-hydration-trace="([^"]+)"/);assert.ok(encodedHub,'the visible hub must retain the hydration trace');
     const hub=JSON.parse(encodedHub[1].replaceAll('&quot;','"').replaceAll('&amp;','&').replaceAll('&#39;',"'"));
     assert.equal(hub.agent_count,6);assert.deepEqual(hub.agent_ids,['hermes','finance','ads','products','production','returns']);assert.equal(hub.overview_agent_count,6);assert.equal(hub.overview_visible,false);assert.equal(hub.directory_count,7);assert.equal(hub.directory_visible,true,'opening Agents exposes the complete team directory');assert.equal(hub.directory_avatar_count,7);assert.equal(hub.directory_avatars_visible,true);
-    assert.deepEqual(hub.visual.agent_avatar,{count:6,decorative:true,collision_ids:0,externals:0,visible:false},'overview avatars remain mounted while their workspace is hidden');assert.match(hub.visual.agent_bg,/gradient/i);assert.deepEqual(hub.errors,[]);
+    assert.deepEqual(hub.visual.agent_avatar,{count:6,decorative:true,collision_ids:0,externals:0,visible:false},'overview avatars remain mounted while their workspace is hidden');assert.equal(hub.visual.agent_bg,'none','the dedicated directory keeps the reviewed solid overview card surfaces');assert.deepEqual(hub.errors,[]);
    }
 
    const escaped=tab.replace(/[-]/g,'\\-');

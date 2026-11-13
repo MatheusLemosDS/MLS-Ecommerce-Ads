@@ -1,7 +1,10 @@
-import {FINANCE_PROFILE,FinanceConnectionError} from './connection-store.mjs';
+import {getFinanceProfile,FinanceConnectionError} from './connection-store.mjs';
 import {ensureFinanceAccessToken} from './refresh-coordinator.mjs';
 import {requestFinanceAuthJson} from './auth-json-transport.mjs';
 import {projectStorePeriodRequest,projectStorePeriodFrame,normalizeStoreDecimal,addStoreDecimals} from './store-period-frame.mjs';
+
+
+function createTenantStorePeriod(profile){
 
 const STORE_ORIGIN='https://partner.shopeemobile.com';
 const STORE_LIST='/api/v2/order/get_order_list';
@@ -13,7 +16,7 @@ const storeObject=value=>value!==null&&typeof value==='object'&&!Array.isArray(v
 const storeSerial=value=>typeof value==='string'&&value.length>0&&value.length<=128&&!/[^\x21-\x7e]|,/.test(value);
 const storeCursor=value=>typeof value==='string'&&value.length>0&&value.length<=1024&&!/[^\x21-\x7e]/.test(value);
 const storeHash=async value=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',storeEncoder.encode(value))),byte=>byte.toString(16).padStart(2,'0')).join('');
-const storeIdentity=[FINANCE_PROFILE.partner_id,FINANCE_PROFILE.shop_id];
+const storeIdentity=[profile.partner_id,profile.shop_id];
 const STORE_SCHEMA=[
  `CREATE TABLE IF NOT EXISTS finance_store_period_runs (run_id TEXT PRIMARY KEY,partner_id INTEGER NOT NULL,shop_id INTEGER NOT NULL,revision INTEGER NOT NULL,status TEXT NOT NULL,start_date TEXT NOT NULL,end_date TEXT NOT NULL,time_from INTEGER NOT NULL,time_to INTEGER NOT NULL,cutoff_at INTEGER NOT NULL,checked_at INTEGER NOT NULL,created_at INTEGER NOT NULL,cursor TEXT NOT NULL,pages_read INTEGER NOT NULL,duplicate_orders INTEGER NOT NULL,lease_owner TEXT,lease_until INTEGER,last_error TEXT)`,
  `CREATE TABLE IF NOT EXISTS finance_store_period_orders (run_id TEXT NOT NULL,order_hash TEXT NOT NULL,escrow_raw TEXT,ads_raw TEXT,returns_seen INTEGER,items TEXT NOT NULL,source_hash TEXT NOT NULL,checked_at INTEGER NOT NULL,PRIMARY KEY(run_id,order_hash))`,
@@ -65,7 +68,7 @@ function storeInvoiceMoney(cents){
 const storeInvoiceCanonical=(run_id,row)=>({run_id,order_hash:row.order_hash,base_raw:row.base_raw,parent_source_hash:row.parent_source_hash,checked_at:row.checked_at});
 function storeEnvelope(payload){
  if(!storeObject(payload)||typeof payload.error!=='string'||payload.error!==''||!storeObject(payload.response))throw storeFailure('RESPONSE_INVALID');
- for(const row of [payload,payload.response])for(const field of ['partner_id','shop_id'])if(Object.hasOwn(row,field)&&row[field]!==FINANCE_PROFILE[field])throw storeFailure('IDENTITY_MISMATCH');
+ for(const row of [payload,payload.response])for(const field of ['partner_id','shop_id'])if(Object.hasOwn(row,field)&&row[field]!==profile[field])throw storeFailure('IDENTITY_MISMATCH');
  return payload.response;
 }
 function storeMidnight(day){
@@ -79,7 +82,7 @@ function storeMidnight(day){
  return Math.floor(candidate/1000);
 }
 function storeFrame(run,records,diagnostic,invoiceBases=new Map()){
- if(!run||run.partner_id!==FINANCE_PROFILE.partner_id||run.shop_id!==FINANCE_PROFILE.shop_id||!Array.isArray(records)||records.length>1000)throw storeFailure('STORAGE_INVALID',503);
+ if(!run||run.partner_id!==profile.partner_id||run.shop_id!==profile.shop_id||!Array.isArray(records)||records.length>1000)throw storeFailure('STORAGE_INVALID',503);
  const grouped=new Map(),productGroups=new Map();let returnsOrders=0,returnsKnown=true;
  const returnGroups=Object.fromEntries(['with_return','without_reported_return','unknown'].map(kind=>[kind,{order_count:0,payouts:[],known:true}]));
  const escrows=[],ads=[];let escrowKnown=true,adsKnown=true;
@@ -164,7 +167,7 @@ function storeFrame(run,records,diagnostic,invoiceBases=new Map()){
 
 // A job has a fixed creation-date cohort/cutoff and one bounded provider page per
 // explicit step. Neither order numbers nor provider cursors reach the browser.
-export async function runFinanceStorePeriod(env,options={}){
+async function runFinanceStorePeriod(env,options={}){
  if(!storeObject(options)||env?.FINANCE_CONNECTION_ENABLED!=='true'||!env?.FINANCE_DB||typeof env.FINANCE_DB.prepare!=='function'||typeof env.FINANCE_DB.batch!=='function'||env.ADMIN_DB===env.FINANCE_DB)throw storeFailure('CONFIGURATION',503);
  const {operation,fetchImpl,now=()=>Date.now(),timeoutMs=5000}=options;
  const input=projectStorePeriodRequest(operation==='start'?{operation,start_date:options.start_date,end_date:options.end_date}:{operation,run_id:options.run_id});
@@ -263,10 +266,10 @@ export async function runFinanceStorePeriod(env,options={}){
    const timestamp=epoch();if(tokens.expires_at<=timestamp)throw storeFailure('AUTHORIZATION_EXPIRED',409);
    return requestFinanceAuthJson({input:{timestamp},options:{fetchImpl,now,timeoutMs},prefix:'FINANCE_STORE',
     buildRequest:async()=>{
-     const base=String(FINANCE_PROFILE.partner_id)+path+timestamp+tokens.access_token+FINANCE_PROFILE.shop_id;
+     const base=String(profile.partner_id)+path+timestamp+tokens.access_token+profile.shop_id;
      const sign=Array.from(new Uint8Array(await crypto.subtle.sign('HMAC',key,storeEncoder.encode(base))),byte=>byte.toString(16).padStart(2,'0')).join('');
      const url=new URL(path,STORE_ORIGIN);
-     for(const [name,value] of Object.entries({partner_id:FINANCE_PROFILE.partner_id,timestamp,access_token:tokens.access_token,shop_id:FINANCE_PROFILE.shop_id,sign,...query}))url.searchParams.set(name,String(value));
+     for(const [name,value] of Object.entries({partner_id:profile.partner_id,timestamp,access_token:tokens.access_token,shop_id:profile.shop_id,sign,...query}))url.searchParams.set(name,String(value));
      return new Request(url,{method:'GET',redirect:'manual',headers:{Accept:'application/json'}});
     },normalizeResponse:storeEnvelope});
   };
@@ -340,3 +343,7 @@ export async function runFinanceStorePeriod(env,options={}){
   return (await snapshot(input.run_id)).frame;
  }
 }
+
+return {runFinanceStorePeriod};
+}
+export async function runFinanceStorePeriod(env,...args){return createTenantStorePeriod(getFinanceProfile(env)).runFinanceStorePeriod(env,...args);}

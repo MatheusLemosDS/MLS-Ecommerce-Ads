@@ -20,6 +20,17 @@ async function calendar(options={},range=selection,clock=now){
 const clean=html=>html.replace(/<style>[\s\S]*?<\/style>/g,'');
 const full=await calendar();
 
+test('dashboard charts use the exact daily calendar with currency and separate ROAS inspection',async()=>{
+ const html=clean(renderAdsWorkspace('/dashboard',{ads:{calendar:full},now}));
+ assert.equal((html.match(/data-ads-chart="money"/g)||[]).length,1);assert.equal((html.match(/data-ads-chart="roas"/g)||[]).length,1);
+ assert.equal((html.match(/class="ads-daily-point"/g)||[]).length,62);assert.match(html,/Investimento: R\$ 1,00 · vendas atribuídas amplas: R\$ 10,00/);
+ assert.match(html,/ROAS calculado: 10,00x · informado: 19,28x/);assert.match(html,/Ver dados do gráfico e origem/);
+ const missing=clean(renderAdsWorkspace('/dashboard',{ads:{calendar:await calendar({missing:true})},now}));
+ assert.match(missing,/17\/10\/2026 · Investimento: — · vendas atribuídas amplas: —/);assert.match(missing,/class="ads-daily-bars"><span aria-hidden="true">—<\/span>/);
+ const zero=clean(renderAdsWorkspace('/dashboard',{ads:{calendar:await calendar({expense:0})},now}));
+ assert.match(zero,/Sem gasto; índice indisponível/);assert.match(zero,/Investimento: R\$ 0,00/);assert.doesNotMatch(zero,/ROAS calculado: 0,00x/);
+});
+
 test('monthly dashboard displays one set of account metrics for all 31 days and places daily evidence in one disclosure',()=>{
  const html=clean(renderAdsWorkspace('/dashboard',{role:'owner',ads:{calendar:full},content:'DUPLICATE_OLD_CARDS',now}));
  assert.equal((html.match(/data-ads-metric=/g)||[]).length,4);assert.ok(!html.includes('DUPLICATE_OLD_CARDS'));

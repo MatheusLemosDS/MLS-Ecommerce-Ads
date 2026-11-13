@@ -2,7 +2,7 @@ import {projectStorePeriodRequest,projectStorePeriodFrame} from '../../finance/s
 
 // Only the fixed financial service can supply this private period frame. There
 // is no caller-selected shop, provider URL, token, order serial or API path.
-export async function getFinanceStorePeriod(env,input,{fetchImpl=request=>fetch(request),timeoutMs=45000}={}){
+export async function getFinanceStorePeriod(env,input,{fetchImpl=env?.COMMERCIAL_FETCH??(request=>fetch(request)),timeoutMs=45000}={}){
  const failure=()=>({schema:'finance_store_period_v1',status:'UNAVAILABLE',diagnostic:{code:'FINANCE_STORE_UNAVAILABLE',http:null}});
  const body=projectStorePeriodRequest(input);
  if(!body||typeof env?.APP_INTERNAL_SECRET!=='string'||!env.APP_INTERNAL_SECRET||typeof fetchImpl!=='function'

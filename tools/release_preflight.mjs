@@ -1,5 +1,5 @@
 /**
- * Local-only release preflight for MLS Commerce OS v3.6 + approved visual.
+ * Local-only release preflight for the exact reviewed MLS Commerce OS candidate.
  * No external calls, Cloudflare writes, deployments, secrets or runtime changes.
  * CI success does not approve a production release.
  */
@@ -11,39 +11,84 @@ import {execFileSync} from 'node:child_process';
 
 // Explicitly frozen release inputs. Adding a path or changing a digest is a
 // reviewable candidate update, never a wildcard or a bypass of this verifier.
+export const RELEASE_ACCEPTED_OWNER_AUTHORIZATIONS=Object.freeze([
+ 'OWNER_REQUESTED_ALL_PREPARED_IMPROVEMENTS_LIVE_2026_10_30',
+ 'OWNER_REQUESTED_V41_LIVE_2026_11_11'
+]);
+function literalReleasePath(value){
+ return typeof value==='string'&&value.length>0&&value===value.trim()&&
+  !value.startsWith('/')&&!value.includes('..')&&!/[?*\\:\u0000-\u001f\u007f]/.test(value)&&
+  value.split('/').every(part=>part.length>0&&part!=='.');
+}
 const approvedCandidate=JSON.parse(fs.readFileSync(new URL('./release-approved-candidate.json',import.meta.url),'utf8'));
 const validFlags=approvedCandidate?.expected_live_flags;
 if(approvedCandidate?.schema!=='mls_release_candidate_v1'||
  !/^[a-f0-9]{40}$/.test(approvedCandidate.base_commit||'')||
  !/^[a-f0-9]{40}$/.test(approvedCandidate.prepared_source_commit||'')||
  approvedCandidate.commercial_writes_allowed!==false||
- approvedCandidate.owner_authorization!=='OWNER_REQUESTED_ALL_PREPARED_IMPROVEMENTS_LIVE_2026_10_30'||
+ !RELEASE_ACCEPTED_OWNER_AUTHORIZATIONS.includes(approvedCandidate.owner_authorization)||
  !approvedCandidate.expected_hashes||Object.keys(approvedCandidate.expected_hashes).sort().join(',')!=='app,auth,finance'||
  !Object.values(approvedCandidate.expected_hashes).every(value=>/^[a-f0-9]{64}$/.test(value))||
  !validFlags||Object.keys(validFlags).sort().join(',')!=='MLS_AI_SALES_OWNER_PREVIEW,MLS_V36_OWNER_PREVIEW'||
  !Object.values(validFlags).every(value=>value==='ENABLED')||
  !Array.isArray(approvedCandidate.allowed_files)||approvedCandidate.allowed_files.length===0||
  new Set(approvedCandidate.allowed_files).size!==approvedCandidate.allowed_files.length||
- approvedCandidate.allowed_files.some(value=>typeof value!=='string'||!value.trim()||value.startsWith('/')||value.includes('..')||/[?*\\]/.test(value)))
+ approvedCandidate.allowed_files.some(value=>!literalReleasePath(value)))
  throw Error('RELEASE_CANDIDATE_MANIFEST_INVALID');
 export const RELEASE_BASE_COMMIT=approvedCandidate.base_commit;
 export const RELEASE_EXPECTED_SHA=Object.freeze({...approvedCandidate.expected_hashes});
 export const RELEASE_EXPECTED_LIVE_FLAGS=Object.freeze({...validFlags});
 export const RELEASE_ALLOWED_FILES=Object.freeze([...approvedCandidate.allowed_files]);
-// Explicit read-only weekly cash summary and verified asset ledger update.
-// Original Workers/configurations, provider transport and all other protected
-// paths remain closed; this is not a general Finance/Auth authorization.
+// Explicit reviewed V4.1 tenant isolation and additive account authorization,
+// plus the previously reviewed weekly delta. This is a finite source list,
+// never authority to alter original Workers, captured configs, future Finance
+// modules, provider business actions or any deployment profile.
 export const RELEASE_APPROVED_PROTECTED_FILES=Object.freeze([
  "web/finance/src/auth-router.mjs",
+ "web/finance/src/business-period.mjs",
+ "web/finance/src/commercial-finance-worker.mjs",
+ "web/finance/src/connection-store.mjs",
+ "web/finance/src/connection-worker.mjs",
+ "web/finance/src/daily-orders-frame.mjs",
+ "web/finance/src/daily-orders.mjs",
+ "web/finance/src/escrow-release-ledger.mjs",
+ "web/finance/src/escrow-releases.mjs",
  "web/finance/src/external-cash-period-frame.mjs",
  "web/finance/src/external-cash-period.mjs",
  "web/finance/src/external-cash-store.mjs",
  "web/finance/src/external-cash-worker.mjs",
+ "web/finance/src/financial-order-evidence.mjs",
+ "web/finance/src/historical-variant-evidence-frame.mjs",
+ "web/finance/src/historical-variant-evidence.mjs",
+ "web/finance/src/income-detail.mjs",
+ "web/finance/src/income-overview.mjs",
+ "web/finance/src/initial-exchange.mjs",
+ "web/finance/src/payment-sample.mjs",
+ "web/finance/src/pending-income-scan.mjs",
+ "web/finance/src/product-index-frame.mjs",
+ "web/finance/src/product-index.mjs",
+ "web/finance/src/production-orders-frame.mjs",
+ "web/finance/src/production-orders.mjs",
  "web/finance/src/production-worker.mjs",
+ "web/finance/src/provider-adapter.mjs",
+ "web/finance/src/refresh-coordinator.mjs",
+ "web/finance/src/refresh-request.mjs",
+ "web/finance/src/refresh-response.mjs",
+ "web/finance/src/refresh-signature.mjs",
+ "web/finance/src/refresh-transport.mjs",
+ "web/finance/src/return-item-evidence.mjs",
+ "web/finance/src/returns-reconciliation.mjs",
+ "web/finance/src/store-period.mjs",
+ "web/finance/src/variant-catalog.mjs",
+ "web/finance/tests/commercial-compiled-chain.test.mjs",
  "web/finance/tests/external-cash-period-frame.test.mjs",
  "web/finance/tests/external-cash-period-routes.test.mjs",
  "web/finance/tests/external-cash-period.test.mjs",
- "workers/app/browser-assets-published.json"
+ "web/finance/tests/tenant-finance-profile.test.mjs",
+ "workers/app/browser-assets-published.json",
+ "workers/app/commercial-account.json",
+ "workers/auth/commercial-account.json",
+ "workers/finance/commercial-account.json"
 ]);
 
 
@@ -51,12 +96,14 @@ export const RELEASE_MANUAL_GATES=Object.freeze([
  'CHECK_CLOUDFLARE_LIVE_APP_VERSION_AND_BUILD_TRIGGERS',
  'VERIFY_REMOTE_OWNER_FLAGS_MATCH_APPROVED_VALUES',
  'VERIFY_ADMIN_DB_BINDING_AND_BACKUP_ROLLBACK_PLAN',
+ 'VERIFY_ACCOUNT_DB_BINDINGS_ADDITIVE_MIGRATIONS_AND_LEGACY_BACKUPS',
+ 'VERIFY_APP_AUTH_FINANCE_VERSION_HASHES_AND_PRIVATE_FINANCE_PROFILE',
  'OWNER_AUTHENTICATED_DESKTOP_MOBILE_QA',
- 'EXPLICIT_APPROVAL_BEFORE_MERGE_AND_DEPLOY'
+ 'VERIFY_OWNER_AUTHORIZATION_MATCHES_REVIEWED_RELEASE_SCOPE'
 ]);
 
 function cleanPaths(files){
- if(!Array.isArray(files)||files.some(p=>typeof p!=='string'||p.startsWith('/')||p.includes('..')||!p.trim()))return null;
+ if(!Array.isArray(files)||files.some(p=>!literalReleasePath(p)))return null;
  return [...new Set(files)];
 }
 function exactSha(value){return typeof value==='string'&&/^[a-f0-9]{64}$/.test(value);}

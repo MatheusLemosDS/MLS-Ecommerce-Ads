@@ -1,7 +1,10 @@
-import {FINANCE_PROFILE,FinanceConnectionError} from './connection-store.mjs';
+import {getFinanceProfile,FinanceConnectionError} from './connection-store.mjs';
 import {ensureFinanceAccessToken} from './refresh-coordinator.mjs';
 import {requestFinanceAuthJson} from './auth-json-transport.mjs';
 import {projectHistoricalVariantEvidenceRequest,projectHistoricalVariantEvidenceFrame} from './historical-variant-evidence-frame.mjs';
+
+function createTenantHistoricalEvidence(profile){
+const projectHistoricalVariantEvidenceFrameScoped=value=>projectHistoricalVariantEvidenceFrame(value,profile);
 
 const encoder=new TextEncoder(),ORIGIN='https://partner.shopeemobile.com',LIST='/api/v2/order/get_order_list',DETAIL='/api/v2/order/get_order_detail';
 const failure=(suffix,status=502)=>new FinanceConnectionError('FINANCE_HISTORICAL_EVIDENCE_'+suffix,status);
@@ -19,7 +22,7 @@ function midnight(day){
 // Each invocation reads one order-list page and its exact detail set. The
 // caller checkpoints only the opaque cursor; historical names never establish
 // a cost or composition by themselves. No Payment or product-write API runs.
-export async function runFinanceHistoricalVariantEvidence(env,options={}){
+async function runFinanceHistoricalVariantEvidence(env,options={}){
  if(!plain(options)||Reflect.ownKeys(options).some(key=>!['start_date','end_date','item_ids','cursor','fetchImpl','now','timeoutMs'].includes(key)||!Object.hasOwn(Object.getOwnPropertyDescriptor(options,key)||{},'value')))throw failure('REQUEST_INVALID',400);
  const input=projectHistoricalVariantEvidenceRequest({start_date:options.start_date,end_date:options.end_date,item_ids:options.item_ids,cursor:options.cursor});if(!input)throw failure('REQUEST_INVALID',400);
  const {fetchImpl,now=()=>Date.now(),timeoutMs=10000}=options;
@@ -37,12 +40,12 @@ export async function runFinanceHistoricalVariantEvidence(env,options={}){
  const get=async(path,query,phase)=>{
   const timestamp=Math.floor(clock()/1000);if(tokens.expires_at<=timestamp)throw failure('AUTHORIZATION_EXPIRED',409);
   return requestFinanceAuthJson({input:{timestamp},prefix:'FINANCE_HISTORICAL_EVIDENCE_'+phase,maximumBodyBytes:path===DETAIL?1048576:65536,options:{fetchImpl,now,timeoutMs:remaining()},buildRequest:async()=>{
-   remaining();const digest=new Uint8Array(await crypto.subtle.sign('HMAC',signingKey,encoder.encode(String(FINANCE_PROFILE.partner_id)+path+timestamp+tokens.access_token+FINANCE_PROFILE.shop_id))),sign=Array.from(digest,byte=>byte.toString(16).padStart(2,'0')).join(''),url=new URL(path,ORIGIN);
-   for(const [name,value]of Object.entries({partner_id:FINANCE_PROFILE.partner_id,timestamp,access_token:tokens.access_token,shop_id:FINANCE_PROFILE.shop_id,sign,...query}))url.searchParams.set(name,String(value));
+   remaining();const digest=new Uint8Array(await crypto.subtle.sign('HMAC',signingKey,encoder.encode(String(profile.partner_id)+path+timestamp+tokens.access_token+profile.shop_id))),sign=Array.from(digest,byte=>byte.toString(16).padStart(2,'0')).join(''),url=new URL(path,ORIGIN);
+   for(const [name,value]of Object.entries({partner_id:profile.partner_id,timestamp,access_token:tokens.access_token,shop_id:profile.shop_id,sign,...query}))url.searchParams.set(name,String(value));
    return new Request(url,{method:'GET',redirect:'manual',headers:{Accept:'application/json'}});
   },normalizeResponse:payload=>{
    remaining();if(!plain(payload)||typeof payload.error!=='string')throw failure(phase+'_RESPONSE_INVALID');
-   for(const row of [payload,plain(payload.response)?payload.response:{}])for(const field of ['partner_id','shop_id'])if(Object.hasOwn(row,field)&&row[field]!==FINANCE_PROFILE[field])throw failure('IDENTITY_MISMATCH');
+   for(const row of [payload,plain(payload.response)?payload.response:{}])for(const field of ['partner_id','shop_id'])if(Object.hasOwn(row,field)&&row[field]!==profile[field])throw failure('IDENTITY_MISMATCH');
    if(payload.error!=='')throw failure(phase+'_'+(payload.error==='error_token'?'AUTH_REQUIRED':payload.error==='error_api_permission'?'PERMISSION_REQUIRED':['error_rate_limit','error_limit'].includes(payload.error)?'RATE_LIMIT':'API_REJECTED'),['error_rate_limit','error_limit'].includes(payload.error)?429:502);
    if(!plain(payload.response))throw failure(phase+'_RESPONSE_INVALID');return payload.response;
   }});
@@ -63,7 +66,7 @@ export async function runFinanceHistoricalVariantEvidence(env,options={}){
   const metadata=(line,key,max)=>{const value=line[key];if(value===undefined||value===null||value==='')return null;if(typeof value!=='string'||!value.trim().length||encoder.encode(value).byteLength>max||/[\u0000-\u001f\u007f-\u009f]/.test(value))throw failure('METADATA_INVALID');return value;};
   for(const row of detail.order_list){
    if(!plain(row)||!selected.includes(row.order_sn)||found.has(row.order_sn)||!Number.isSafeInteger(row.create_time)||row.create_time<from||row.create_time>to||!Array.isArray(row.item_list)||row.item_list.length>200)throw failure('DETAIL_INVALID');found.add(row.order_sn);
-   for(const field of ['shop_id','partner_id'])if(Object.hasOwn(row,field)&&row[field]!==FINANCE_PROFILE[field])throw failure('IDENTITY_MISMATCH');
+   for(const field of ['shop_id','partner_id'])if(Object.hasOwn(row,field)&&row[field]!==profile[field])throw failure('IDENTITY_MISMATCH');
    const status=statuses.includes(row.order_status)?row.order_status:'UNKNOWN';let target=false;
    for(const line of row.item_list){
     if(!plain(line))throw failure('DETAIL_INVALID');const itemId=id(line.item_id);if(!itemId)throw failure('DETAIL_INVALID');if(!products.has(itemId))continue;
@@ -79,7 +82,11 @@ export async function runFinanceHistoricalVariantEvidence(env,options={}){
    if(target)coverage.target_orders++;
   }
  }
- remaining();const result={schema:'historical_variant_evidence_v1',shop_id:FINANCE_PROFILE.shop_id,checked_at:Math.floor(clock()/1000),start_date:input.start_date,end_date:input.end_date,item_ids:[...input.item_ids],cursor:input.cursor,has_more:listing.more,next_cursor:nextCursor,coverage,evidence_complete:true,products:[...products].map(([item_id,variants])=>({item_id,variants:[...variants.values()].sort((a,b)=>order(a.model_id,b.model_id)).map(variant=>({...variant,item_names:[...variant.item_names].sort(),model_names:[...variant.model_names].sort(),status_counts:[...variant.status_counts.values()].sort((a,b)=>statuses.indexOf(a.status)-statuses.indexOf(b.status)),conflict:variant.item_names.size>1||variant.model_names.size>1}))})),omitted:{target_lines:0,target_units:0}};
+ remaining();const result={schema:'historical_variant_evidence_v1',shop_id:profile.shop_id,checked_at:Math.floor(clock()/1000),start_date:input.start_date,end_date:input.end_date,item_ids:[...input.item_ids],cursor:input.cursor,has_more:listing.more,next_cursor:nextCursor,coverage,evidence_complete:true,products:[...products].map(([item_id,variants])=>({item_id,variants:[...variants.values()].sort((a,b)=>order(a.model_id,b.model_id)).map(variant=>({...variant,item_names:[...variant.item_names].sort(),model_names:[...variant.model_names].sort(),status_counts:[...variant.status_counts.values()].sort((a,b)=>statuses.indexOf(a.status)-statuses.indexOf(b.status)),conflict:variant.item_names.size>1||variant.model_names.size>1}))})),omitted:{target_lines:0,target_units:0}};
  if(encoder.encode(JSON.stringify(result)).byteLength>65536)throw failure('EVIDENCE_LIMIT',409);
- const frame=projectHistoricalVariantEvidenceFrame(result);if(!frame)throw failure('RESPONSE_INVALID');return frame;
+ const frame=projectHistoricalVariantEvidenceFrameScoped(result);if(!frame)throw failure('RESPONSE_INVALID');return frame;
 }
+
+return {runFinanceHistoricalVariantEvidence};
+}
+export async function runFinanceHistoricalVariantEvidence(env,options={}){return createTenantHistoricalEvidence(getFinanceProfile(env)).runFinanceHistoricalVariantEvidence(env,options);}

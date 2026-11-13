@@ -5,7 +5,7 @@ import {projectBusinessPeriodVariantsFrame} from '../../finance/src/business-var
 // is no caller-selected shop, provider URL, token, order serial or API path.
 export async function getFinanceBusinessPeriod(env,input,options={}){
  const failure=(suffix='UNAVAILABLE',http=null)=>({schema:'finance_business_period_v1',status:'UNAVAILABLE',diagnostic:{code:'FINANCE_BUSINESS_'+suffix,http:Number.isInteger(http)&&http>=100&&http<=599?http:null}});
- let fetchImpl=request=>fetch(request),timeoutMs=45000,includeVariants=false;
+ let fetchImpl=env?.COMMERCIAL_FETCH??(request=>fetch(request)),timeoutMs=45000,includeVariants=false;
  try{
   if(options===null||typeof options!=='object'||![Object.prototype,null].includes(Object.getPrototypeOf(options)))return failure('CONFIGURATION');
   const keys=Reflect.ownKeys(options);if(!keys.every(key=>['fetchImpl','timeoutMs','includeVariants'].includes(key)))return failure('CONFIGURATION');

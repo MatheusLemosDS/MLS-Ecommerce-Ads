@@ -210,6 +210,8 @@ test('the explicit manual host selection preserves APIs, schema strings and froz
  // this newly exposed helper; every prior export stays in the exact profile.
  assert.equal(typeof raw.brazaBusinessMonth.businessMonthBundle,'function');
  assert.equal(raw.brazaBusinessMonth.businessMonthBundle.length,5);
- assert.equal(functions,135);assert.equal(values,17);assert.equal(strings,121);
+ assert.equal(typeof raw.brazaCostRulesStore.costRuleSchemaForEnvironment,'function');
+ assert.equal(raw.brazaCostRulesStore.costRuleSchemaForEnvironment.length,1);
+ assert.equal(functions,136);assert.equal(values,17);assert.equal(strings,121);
  assert.ok(profiles.manual_saved>=48394,'additional manual formatting must save at least48394 bytes; actual '+profiles.manual_saved);
 });

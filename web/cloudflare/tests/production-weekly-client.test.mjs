@@ -138,3 +138,23 @@ test('automatic refresh cannot overtake an ambiguous split command or discard it
  ui.fill(f.pending,{before13_quantity:'2',at_or_after13_quantity:'1',reason:'Confirmação pendente de resposta',confirmed:true});assert.equal(await ui.submit(f.pending),false);const first=clone(ui.calls.find(row=>row.body).body),calls=ui.calls.length;ui.setClock(weeklyProductionClock+601000);await ui.event('focus');await ui.event('visibilitychange');assert.equal(ui.calls.length,calls);assert.equal(ui.b.timers.size,0);assert.equal(ui.field(f.pending,'reason').value,'Confirmação pendente de resposta');assert.equal(ui.b.nodes.get('productionWeeklyClosingRetry').hidden,false);
  assert.equal(await ui.b.nodes.get('productionWeeklyClosingRetry').onclick(),true);assert.deepEqual(ui.calls.filter(row=>row.body).at(-1).body,first);assert.equal(ui.b.timers.size,1,'a confirmed retry can resume bounded revalidation');
 });
+
+test('explicit weekly context selects only a validated loaded Friday and preserves split drafts across months',async t=>{
+ const {f,ui}=await fixture(t);await ui.open();
+ ui.fill(f.pending,{before13_quantity:'1',at_or_after13_quantity:'2',reason:'Rascunho físico preservado ao conferir outro mês',confirmed:true});
+ assert.equal(await ui.b.run('brazaProductionWeeklyClosing.openContext({month:"2026-09",week_end:"2026-09-25"})'),true);await ui.b.flush();
+ assert.equal(ui.b.nodes.get('productionWeeklyClosingMonth').value,'2026-09');assert.equal(ui.b.nodes.get('productionWeeklyClosingWeek').value,'2026-09-25');
+ assert.equal(await ui.b.run('brazaProductionWeeklyClosing.openContext({month:"2026-10",week_end:"2026-10-02"})'),true);await ui.b.flush();
+ assert.equal(ui.b.nodes.get('productionWeeklyClosingWeek').value,'2026-10-02');assert.equal(ui.field(f.pending,'reason').value,'Rascunho físico preservado ao conferir outro mês');
+ const calls=ui.calls.length;assert.equal(ui.b.run('brazaProductionWeeklyClosing.openContext({month:"2026-10",week_end:"2026-09-25"})'),false);assert.equal(ui.b.run('brazaProductionWeeklyClosing.openContext({month:"2026-10",week_end:"2026-10-01"})'),false);assert.equal(ui.calls.length,calls);assert.equal(ui.b.nodes.get('productionWeeklyClosingWeek').value,'2026-10-02');assert.ok(ui.calls.every(call=>call.body===null));
+});
+
+test('a deferred older weekly context cannot select its Friday after a newer context or logout',async t=>{
+ const {f,ui}=await fixture(t);await ui.open();const pending=new Map();
+ ui.setTransport(path=>new Promise(resolve=>pending.set(new URL('https://local.test/'+path).searchParams.get('month'),resolve)));
+ const older=ui.b.run('brazaProductionWeeklyClosing.openContext({month:"2026-09",week_end:"2026-09-25"})');
+ const newer=ui.b.run('brazaProductionWeeklyClosing.openContext({month:"2026-10",week_end:"2026-10-02"})');
+ pending.get('2026-10')(await f.read('2026-10'));assert.equal(await newer,true);pending.get('2026-09')(await f.read('2026-09'));assert.equal(await older,false);await ui.b.flush();
+ assert.equal(ui.b.nodes.get('productionWeeklyClosingWeek').value,'2026-10-02');
+ const late=ui.b.run('brazaProductionWeeklyClosing.openContext({month:"2026-09",week_end:"2026-09-18"})');ui.stop();pending.get('2026-09')(await f.read('2026-09'));assert.equal(await late,false);assert.equal(ui.snapshot(),null);
+});

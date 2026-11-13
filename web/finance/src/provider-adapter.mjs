@@ -1,4 +1,4 @@
-import {FINANCE_PROFILE, FinanceConnectionError} from './connection-store.mjs';
+import {getFinanceProfile, FinanceConnectionError} from './connection-store.mjs';
 import {requestFinanceInitialExchange} from './initial-exchange.mjs';
 
 export const FINANCE_AUTHORIZATION_PATH = '/auth';
@@ -24,14 +24,15 @@ export function createFinanceProviderAdapter({fetchImpl, now = () => Date.now()}
   return Object.freeze({
     isReady,
     async authorizationUrl(params, env) {
+      const profile=getFinanceProfile(env);
       if (!isReady(env) || !fields(params, ['state', 'redirect_uri', 'partner_id', 'shop_id'])
-        || params.partner_id !== FINANCE_PROFILE.partner_id || params.shop_id !== FINANCE_PROFILE.shop_id
+        || params.partner_id !== profile.partner_id || params.shop_id !== profile.shop_id
         || params.redirect_uri !== FINANCE_CALLBACK || typeof params.state !== 'string'
         || !/^[A-Za-z0-9_-]{43}$/.test(params.state)) throw fail();
       // Global browser authorization uses an outer OAuth state. The API
       // Partner Key remains private and is used only for the token exchange.
       const url = new URL(FINANCE_AUTHORIZATION_PATH, ORIGIN);
-      url.searchParams.set('partner_id', String(FINANCE_PROFILE.partner_id));
+      url.searchParams.set('partner_id', String(profile.partner_id));
       url.searchParams.set('auth_type', 'seller');
       url.searchParams.set('redirect_uri', FINANCE_CALLBACK);
       url.searchParams.set('response_type', 'code');
@@ -39,10 +40,11 @@ export function createFinanceProviderAdapter({fetchImpl, now = () => Date.now()}
       return url.href;
     },
     async exchange(params, env) {
+      const profile=getFinanceProfile(env);
       if (!isReady(env) || !fields(params, ['code', 'shop_id', 'partner_id'])
-        || params.partner_id !== FINANCE_PROFILE.partner_id || params.shop_id !== FINANCE_PROFILE.shop_id) throw fail();
+        || params.partner_id !== profile.partner_id || params.shop_id !== profile.shop_id) throw fail();
       return requestFinanceInitialExchange({partnerKey: env.SHOPEE_FINANCE_PARTNER_KEY,
-        code: params.code, timestamp: epoch()}, {fetchImpl, now});
+        code: params.code, timestamp: epoch()}, {fetchImpl, now},profile);
     },
   });
 }

@@ -87,10 +87,16 @@ function costStoredValues(payload){
 }
 export async function readProductionCosts(env){
  const row=await env.ADMIN_DB.prepare('SELECT revision,payload,updated_at FROM production_costs_state WHERE id=1').first();
+ if(!row&&env.COMMERCIAL_CONTEXT)costFail('PRODUCTION_COSTS_CONFIGURATION_REQUIRED',409);
  if(!row||!costRevisionValid(row.revision)||typeof row.updated_at!=='string'||!Number.isFinite(Date.parse(row.updated_at)))costFail('PRODUCTION_COST_STATE_INVALID',503);
  return {revision:row.revision,values:costStoredValues(row.payload),updated_at:row.updated_at};
 }
 export async function saveProductionCosts(env,body,actor){
+ if(env.COMMERCIAL_CONTEXT&&costExact(body,['revision','values'])&&body.revision===0){
+  const values=validateProductionCosts(body.values),raw=JSON.stringify(values),stamp=new Date().toISOString();
+  const result=await env.ADMIN_DB.batch([env.ADMIN_DB.prepare('INSERT OR IGNORE INTO production_costs_state(id,revision,payload,updated_at) SELECT 1,1,?,? WHERE NOT EXISTS(SELECT 1 FROM production_costs_audit)').bind(raw,stamp),env.ADMIN_DB.prepare('INSERT INTO production_costs_audit(revision,payload,actor,created_at) SELECT revision,payload,?,updated_at FROM production_costs_state WHERE changes()=1 AND id=1 AND revision=1 AND payload=?').bind(env.COMMERCIAL_CONTEXT.userId,raw)]);
+  if(result[0].meta.changes!==1||result[1].meta.changes!==1)costFail('PRODUCTION_COSTS_CHANGED_RELOAD',409);return readProductionCosts(env);
+ }
  if(!costExact(body,['revision','values'])||!costRevisionValid(body.revision)||body.revision>=2147483647)costFail('PRODUCTION_COSTS_REVISION_REQUIRED');
  const values=validateProductionCosts(body.values),current=await env.ADMIN_DB.prepare('SELECT revision,payload,updated_at FROM production_costs_state WHERE id=1').first();
  if(!current||!costRevisionValid(current.revision)||typeof current.updated_at!=='string'||!Number.isFinite(Date.parse(current.updated_at)))costFail('PRODUCTION_COST_STATE_INVALID',503);

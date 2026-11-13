@@ -5,6 +5,11 @@ import path from 'node:path';
 export const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const TARGETS = Object.freeze({
   app: Object.freeze({name: 'brazacommerce-app', main: '../../dist/app-worker.mjs', baselineHashes: [
+    // V4.1 final professional layout and scoped account backend; independently checked before Live activation.
+    'ae11ec6d2fc4c84db96c834fd3d20be67cc9d142ae241aed926a806c8e956ea6',
+    'f5b57ed2306bc74379650ada58f092ddc419fb4220cff03b051a96281e6e9f15',
+    // Reviewed V4.1 layout, scoped commercial storage and real-source charts; Live requires CI and exact deployment checks.
+    '7c419396c041af00a69cc46eb8d23805464a4f8a78e05d465b9404b0012e9be7',
     // Reviewed read-only weekly operating summary and exact browser asset extraction.
     '378d3e24a853d441ebd06249282f77d060f8d01f0cc27e01209487d0f68737a1',
     // Reviewed order stages and same-origin browser assets; exact CI and Live verification required.
@@ -215,6 +220,12 @@ export const TARGETS = Object.freeze({
     '26612b7ea0edbea55e06f5fc817a18defd6b4fe65381e6d564b7d360b7b80278',
   ]}),
   auth: Object.freeze({name: 'brazacommerce-auth', main: '../../dist/auth-worker.mjs', baselineHashes: [
+    // V4.1 final professional layout and scoped account backend; independently checked before Live activation.
+    'd5eed8ab9cddaa8d6917f4e4ca668a3f7074bad5603254656414db5a490dc172',
+    // Reviewed four-line optional scoped fetch extension to the retained unwrapped Auth base.
+    'aaeced29f8d6c9a4b362bde5f9d8ea130abd8b2c2ad7cdd282725b0f88b4ffc2',
+    // Reviewed V4.1 layout, scoped commercial storage and real-source charts; Live requires CI and exact deployment checks.
+    '60884f05902e81229f5d4e092101cef4fd0f972f31be059329f22f35498cabe1',
     // Reviewed read-only weekly operating summary and exact browser asset extraction.
     'ecce0b8ee8ee2b02147498ad336effaf9a8fef0a33e5281fa0805abbb9accb11',
     // Reviewed owner-confirmed Nubank/Shopee file evidence; private Finance sidecar only.
@@ -259,6 +270,8 @@ export const TARGETS = Object.freeze({
     '47c83f87f191fd0e5ff503d9c4bcf4671cd986b0965e66e84f1a6ed952dac925',
   ]}),
   finance: Object.freeze({name: 'brazacommerce-finance', main: '../../dist/finance-worker.mjs', baselineHashes: [
+    // Reviewed V4.1 layout, scoped commercial storage and real-source charts; Live requires CI and exact deployment checks.
+    'ffbcea3b7ffe5c0a94b0d4d8c4908738e6da76386040995bba982060a5f9bb71',
     // Reviewed read-only weekly operating summary and exact browser asset extraction.
     '46443ef4d0e98005ada9d516ff6bbee06f0e044861fafb512a2223218b3af7cf',
     // Reviewed owner-confirmed Nubank/Shopee file evidence; private Finance sidecar only.

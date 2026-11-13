@@ -1,8 +1,11 @@
-import {FINANCE_PROFILE,FinanceConnectionError} from './connection-store.mjs';
+import {getFinanceProfile,FinanceConnectionError} from './connection-store.mjs';
 import {ensureFinanceAccessToken} from './refresh-coordinator.mjs';
 import {requestFinanceAuthJson} from './auth-json-transport.mjs';
 import {projectIncomeDetailFrame} from './income-detail-frame.mjs';
 import {incomeDetailFailureDiagnostic} from './income-detail-diagnostic.mjs';
+
+
+function createTenantIncomeDetail(profile){
 
 const origin='https://partner.shopeemobile.com',path='/api/v2/payment/get_income_detail',encoder=new TextEncoder();
 const fail=(suffix,status=503,kind=null)=>{const error=new FinanceConnectionError('FINANCE_INCOME_DETAIL_'+suffix,status);if(kind!==null)Object.defineProperty(error,'upstream_diagnostic',{value:kind});throw error;};
@@ -42,7 +45,7 @@ async function saveIncomeDetailStructure(env,checkedAt,probe){
  }catch{/* Diagnostic storage must never replace the original result or error. */}
 }
 async function envelope(value,checkedAt,flexiblePageSize=false){
- if(!plain(value)||typeof value.error!=='string')fail('INVALID_RESPONSE',502,'ROOT_INVALID');for(const row of [value,...(plain(value.response)?[value.response]:[])])for(const name of ['partner_id','shop_id'])if(Object.hasOwn(row,name)&&row[name]!==FINANCE_PROFILE[name])fail('INVALID_RESPONSE',502,'IDENTITY_MISMATCH');
+ if(!plain(value)||typeof value.error!=='string')fail('INVALID_RESPONSE',502,'ROOT_INVALID');for(const row of [value,...(plain(value.response)?[value.response]:[])])for(const name of ['partner_id','shop_id'])if(Object.hasOwn(row,name)&&row[name]!==profile[name])fail('INVALID_RESPONSE',502,'IDENTITY_MISMATCH');
  if(value.error!==''){
   const suffix=['error_api_permission','error_auth','error_sign','error_partner_id','error_ip'].includes(value.error)?'PERMISSION_DENIED':['error_limit','error_rate_limit'].includes(value.error)?'RATE_LIMIT':'UNAVAILABLE',error=new FinanceConnectionError('FINANCE_INCOME_DETAIL_'+suffix,502),safe=incomeDetailFailureDiagnostic({code:error.code,provider_code:value.error,upstream_status:200});
   Object.defineProperties(error,{provider_code:{value:safe.provider_code},upstream_status:{value:200},upstream_diagnostic:{value:'PROVIDER_ERROR'}});throw error;
@@ -50,7 +53,7 @@ async function envelope(value,checkedAt,flexiblePageSize=false){
  // Select exactly one documented wrapped or direct canonical response box.
  // Never merge origins, aliases or pages: ambiguity cannot prove coverage.
  const candidates=[];for(const origin of [value,...(plain(value.response)?[value.response]:[])]){if(Object.hasOwn(origin,'income_detail_list')){const container=origin.income_detail_list;candidates.push(Array.isArray(container)&&container.length===1?container[0]:container);}if(Object.hasOwn(origin,'list')||Object.hasOwn(origin,'income_detail_list_item')||Object.hasOwn(origin,'next_page'))candidates.push(origin);}if(candidates.length!==1||!plain(candidates[0]))fail('INVALID_RESPONSE',502,'INCOME_CONTAINER_MISSING');const box=candidates[0];
- for(const name of ['partner_id','shop_id'])if(Object.hasOwn(box,name)&&box[name]!==FINANCE_PROFILE[name])fail('INVALID_RESPONSE',502,'IDENTITY_MISMATCH');const aliases=['list','income_detail_list_item'].filter(name=>Object.hasOwn(box,name));if(aliases.length!==1)fail('INVALID_RESPONSE',502,'INCOME_LIST_INVALID');const list=box[aliases[0]];if(!Array.isArray(list)||list.length>100)fail('INVALID_RESPONSE',502,'INCOME_LIST_INVALID');const shortWithoutNext=flexiblePageSize&&!Object.hasOwn(box,'next_page')&&list.length<100,next=shortWithoutNext?{cursor:''}:box.next_page;
+ for(const name of ['partner_id','shop_id'])if(Object.hasOwn(box,name)&&box[name]!==profile[name])fail('INVALID_RESPONSE',502,'IDENTITY_MISMATCH');const aliases=['list','income_detail_list_item'].filter(name=>Object.hasOwn(box,name));if(aliases.length!==1)fail('INVALID_RESPONSE',502,'INCOME_LIST_INVALID');const list=box[aliases[0]];if(!Array.isArray(list)||list.length>100)fail('INVALID_RESPONSE',502,'INCOME_LIST_INVALID');const shortWithoutNext=flexiblePageSize&&!Object.hasOwn(box,'next_page')&&list.length<100,next=shortWithoutNext?{cursor:''}:box.next_page;
  if(!plain(next)||!Object.hasOwn(next,'cursor')||typeof next.cursor!=='string'||next.cursor.length>512)fail('INVALID_RESPONSE',502,'PAGE_CURSOR_INVALID');const cursor=next.cursor;if(Object.hasOwn(next,'page_size')&&(flexiblePageSize?(!integer(next.page_size,0,100)||list.length>next.page_size||next.page_size===0&&(list.length!==0||cursor!=='')):next.page_size!==100))fail('INVALID_RESPONSE',502,'PAGE_SIZE_INVALID');
  const rows=[];
  for(const item of list){
@@ -70,8 +73,8 @@ async function readIncomeDetailPageCore(env,{fetchImpl=request=>fetch(request),n
  const today=localDay(timestamp);if(page!==null){const validDay=value=>typeof value==='string'&&/^\d{4}-(0[1-9]|1[0-2])-([0-2][0-9]|3[01])$/.test(value)&&new Date(value+'T12:00:00Z').toISOString().slice(0,10)===value;if(!plain(page)||Reflect.ownKeys(page).length!==3||!['cursor','date_from','date_to'].every(name=>Object.hasOwn(Object.getOwnPropertyDescriptor(page,name)||{},'value'))||typeof page.cursor!=='string'||page.cursor.length>512||!validDay(page.date_from)||!validDay(page.date_to)||page.date_to>today||Date.parse(page.date_to+'T12:00:00Z')-Date.parse(page.date_from+'T12:00:00Z')!==86400000)fail('CONFIGURATION');}
  const parameters={cursor:page?.cursor??'',date_from:page?.date_from??previousDay(today),date_to:page?.date_to??today,income_status:2,page_size:100};let probe=null,probeCheckedAt=started;
  try{const observed=await requestFinanceAuthJson({input:{timestamp},options:{fetchImpl:bounded,now,timeoutMs},prefix:'FINANCE_INCOME_DETAIL',maximumBodyBytes:262144,buildRequest:async()=>{
-  const signature=[...new Uint8Array(await crypto.subtle.sign('HMAC',key,encoder.encode(String(FINANCE_PROFILE.partner_id)+path+timestamp+tokens.access_token+FINANCE_PROFILE.shop_id)))].map(byte=>byte.toString(16).padStart(2,'0')).join(''),url=new URL(path,origin);
-  for(const [name,value] of Object.entries({partner_id:FINANCE_PROFILE.partner_id,shop_id:FINANCE_PROFILE.shop_id,timestamp,access_token:tokens.access_token,sign:signature}))url.searchParams.set(name,String(value));
+  const signature=[...new Uint8Array(await crypto.subtle.sign('HMAC',key,encoder.encode(String(profile.partner_id)+path+timestamp+tokens.access_token+profile.shop_id)))].map(byte=>byte.toString(16).padStart(2,'0')).join(''),url=new URL(path,origin);
+  for(const [name,value] of Object.entries({partner_id:profile.partner_id,shop_id:profile.shop_id,timestamp,access_token:tokens.access_token,sign:signature}))url.searchParams.set(name,String(value));
   for(const [name,value] of Object.entries(parameters))url.searchParams.set(name,String(value));
   return new Request(url,{method:'GET',redirect:'manual',headers:{Accept:'application/json'}});
  },normalizeResponse:value=>{probe=incomeDetailStructure(value);probeCheckedAt=Math.max(started,Math.floor(now()/1000));return envelope(value,probeCheckedAt,page!==null);}});
@@ -80,11 +83,16 @@ async function readIncomeDetailPageCore(env,{fetchImpl=request=>fetch(request),n
 }
 
 // Legacy callers retain their exact first-page DTO and strict page-size contract.
-export async function readFinanceIncomeDetail(env,options={}){
+async function readFinanceIncomeDetail(env,options={}){
  const {page:ignored,...rest}=options??{};return (await readIncomeDetailPageCore(env,{...rest,page:null})).frame;
 }
 // Private Finance-only page seam. The raw provider cursor must never be routed
 // through Auth, App, owner APIs or public diagnostics.
-export async function readFinancePendingIncomePage(env,page,options={}){
+async function readFinancePendingIncomePage(env,page,options={}){
  return readIncomeDetailPageCore(env,{...options,page});
 }
+
+return {readFinanceIncomeDetail,readFinancePendingIncomePage};
+}
+export async function readFinanceIncomeDetail(env,...args){return createTenantIncomeDetail(getFinanceProfile(env)).readFinanceIncomeDetail(env,...args);}
+export async function readFinancePendingIncomePage(env,...args){return createTenantIncomeDetail(getFinanceProfile(env)).readFinancePendingIncomePage(env,...args);}

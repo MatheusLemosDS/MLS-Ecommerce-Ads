@@ -5,12 +5,13 @@ import {CLIENT} from '../src/admin-client.mjs';
 
 const now='2026-10-21T15:00:00.000Z';
 const snapshot=changes=>({status:'AVAILABLE',schema:'shop_daily_sales_v1',shop_id:1178167501,date:'2026-10-21',timezone:'America/Sao_Paulo',through_at:'2026-10-21T12:00:00-03:00',fetched_at:now,day_partial:true,pagination_complete:true,pages_read:1,duplicate_rows:0,orders_in_api_window:8,orders_with_details:8,sales_orders:4,cancelled_orders:1,cancellation_pending_orders:1,unpaid_orders:1,other_orders:1,unknown_status_orders:0,count_basis:'UNIQUE_ORDER_SN_CREATE_TIME_CURRENT_STATUS',source:'shopee_get_order_list_and_detail',...changes});
-function browser(){
- const context=vm.createContext({});
+function browser(capabilities=null){
+ const context=vm.createContext(capabilities===null?{}:{mlsCommercialContext:{kind:'account',capabilities}});
  const projectBegin=CLIENT.indexOf('function projectDailySalesSnapshot('),projectEnd=CLIENT.indexOf('function safeOrderDiagnostic(',projectBegin);
  const loadBegin=CLIENT.indexOf('async function loadShopOrders('),loadEnd=CLIENT.indexOf('let financeSampleBusy=',loadBegin);
  assert.ok(projectBegin>=0&&projectEnd>projectBegin&&loadBegin>=0&&loadEnd>loadBegin);
  new vm.Script(`
+  ${CLIENT.slice(CLIENT.indexOf('const commercialWorkspace='),CLIENT.indexOf('let renderedReportKey='))}
   let clockNow=Date.parse(${JSON.stringify(now)});
   class ClockDate extends Date {constructor(...args){super(...(args.length?args:[clockNow]));}static now(){return clockNow;}}
   globalThis.Date=ClockDate;
@@ -99,3 +100,5 @@ test('unknown statuses keep their pending coverage visible instead of silently c
  assert.equal(b.run("el('shopOrdersCount').textContent"),'3');assert.match(b.run("contents(el('shopOrders'))"),/Contagem parcial/);assert.match(b.run("contents(el('shopOrders'))"),/sem situação reconhecida/);
  b.load(snapshot({through_at:'2026-10-21T11:57:59-03:00'}));assert.equal(b.run('projectDailySalesSnapshot(current)'),null);
 });
+
+test('an operations-only tab cannot start the monetary daily sales source while a granted tab keeps the same source',async()=>{const blocked=browser(['orders.read']);await blocked.run('loadShopOrders()');assert.equal(blocked.run('apiCalls'),0);const granted=browser(['orders.read','finance.read']);await granted.run('loadShopOrders()');assert.equal(granted.run('apiCalls'),1);assert.equal(granted.run("el('shopOrdersCount').textContent"),'4');});

@@ -6,7 +6,7 @@ import {FINANCE_REFRESH_PATH, signFinanceRefreshRequest} from './refresh-signatu
 export const FINANCE_REFRESH_ORIGIN = 'https://partner.shopeemobile.com';
 
 // Private request construction only. No fetch, response parser, retry or rotation.
-export async function buildFinanceRefreshRequest(options) {
+export async function buildFinanceRefreshRequest(options,profile=FINANCE_PROFILE) {
   if (!options || typeof options !== 'object' || Array.isArray(options) ||
       Object.keys(options).length !== 3 || !Object.hasOwn(options, 'partnerKey') ||
       !Object.hasOwn(options, 'refreshToken') || !Object.hasOwn(options, 'timestamp')) {
@@ -17,9 +17,9 @@ export async function buildFinanceRefreshRequest(options) {
       /[\u0000-\u001f\u007f]/.test(refreshToken)) {
     throw new FinanceConnectionError('FINANCE_REFRESH_TOKEN_INVALID', 400);
   }
-  const signature = await signFinanceRefreshRequest({partnerKey, timestamp});
+  const signature = await signFinanceRefreshRequest({partnerKey, timestamp},profile);
   const url = new URL(FINANCE_REFRESH_PATH, FINANCE_REFRESH_ORIGIN);
-  url.searchParams.set('partner_id', String(FINANCE_PROFILE.partner_id));
+  url.searchParams.set('partner_id', String(profile.partner_id));
   url.searchParams.set('timestamp', String(timestamp));
   url.searchParams.set('sign', signature);
   return new Request(url.href, {
@@ -28,9 +28,9 @@ export async function buildFinanceRefreshRequest(options) {
     redirect: 'manual',
     body: JSON.stringify({
       refresh_token: refreshToken,
-      partner_id: FINANCE_PROFILE.partner_id,
+      partner_id: profile.partner_id,
       // The documented choice is shop_id OR merchant_id, never both.
-      shop_id: FINANCE_PROFILE.shop_id,
+      shop_id: profile.shop_id,
     }),
   });
 }

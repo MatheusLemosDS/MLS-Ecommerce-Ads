@@ -1,3 +1,4 @@
+import {TenantInitializationMap} from './tenant-storage.mjs';
 import {BusinessMonthError,projectBusinessMonth} from './business-month.mjs';
 import {businessMonthWithCheckpoint} from './business-checkpoint.mjs';
 
@@ -13,7 +14,7 @@ export class BusinessSyncError extends Error {
  constructor(code,status=400){super(code);this.status=status;}
 }
 const syncFail=(code,status=503)=>{throw new BusinessSyncError(code,status);};
-const syncReady=new WeakMap();
+const syncReady=new TenantInitializationMap();
 const syncStatuses=['IDLE','RUNNING','COMPLETE','PARTIAL','LIMIT_REACHED','ERROR','PAUSED'];
 const syncErrors=['BUSINESS_SYNC_COLLECTION_UNAVAILABLE','BUSINESS_SYNC_RESULT_INVALID','BUSINESS_SYNC_ADS_INCOMPLETE','BUSINESS_SYNC_PERIOD_LIMIT_REACHED','BUSINESS_SYNC_SOURCE_RATE_LIMIT','BUSINESS_SYNC_SOURCE_TIMEOUT','BUSINESS_SYNC_SOURCE_AUTH_REQUIRED','BUSINESS_SYNC_SOURCE_INVALID','BUSINESS_SYNC_SOURCE_PERMISSION_DENIED'];
 const syncPlain=value=>value!==null&&typeof value==='object'&&[Object.prototype,null].includes(Object.getPrototypeOf(value));

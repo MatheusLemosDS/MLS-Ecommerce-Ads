@@ -1,3 +1,4 @@
+import {TenantInitializationSet} from './tenant-storage.mjs';
 import {readCompletedBusinessMonth} from './business-month-publication.mjs';
 import {runBusinessReconciliation} from './business-reconciliation.mjs';
 
@@ -7,7 +8,7 @@ export const BUSINESS_HISTORICAL_RETURNS_SCHEMA=[
  `CREATE TABLE IF NOT EXISTS business_historical_returns_turns(calendar_month TEXT PRIMARY KEY,revision INTEGER NOT NULL,next_target TEXT NOT NULL CHECK(next_target IN('CURRENT','PREVIOUS')),lease_token TEXT,lease_until INTEGER)`,
 ];
 export class BusinessHistoricalReturnsError extends Error{constructor(code,status=503){super(code);this.status=status;}}
-const ready=new WeakSet(),fail=(suffix,status=503)=>{throw new BusinessHistoricalReturnsError('BUSINESS_HISTORICAL_RETURNS_'+suffix,status);};
+const ready=new TenantInitializationSet(),fail=(suffix,status=503)=>{throw new BusinessHistoricalReturnsError('BUSINESS_HISTORICAL_RETURNS_'+suffix,status);};
 const integer=(value,min=0,max=9999999999)=>Number.isSafeInteger(value)&&!Object.is(value,-0)&&value>=min&&value<=max;
 const uuid=value=>typeof value==='string'&&/^[a-f0-9-]{36}$/.test(value);
 const localMonth=stamp=>new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date(stamp*1000)).slice(0,7);
