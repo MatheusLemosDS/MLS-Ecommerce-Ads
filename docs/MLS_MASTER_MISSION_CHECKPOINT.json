@@ -6814,5 +6814,61 @@
     "public_receipt": "docs/v4/public-live-verification.json",
     "pr": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/119",
     "git_merge_status": "CHECK_LINKED_PR_CURRENT_STATE"
+  },
+  "layout_reference_parity_2026_11_13": {
+    "state": "PUBLISHED_VERIFIED_PUBLIC_TECHNICAL_SCOPE",
+    "branch": "feature/layout-reference-parity-20261113",
+    "base_commit": "0016c4b78d45c47066b259bbaf42578662e11e35",
+    "reference_html": "docs/v4/input/MLS_COMMERCE_OS_LAYOUT.html",
+    "reference_sha256": "135002e7193409451e78263ee5d45fdcfb53e1061804a3a39af84fdc5edcc5f3",
+    "report": "docs/MLS_LAYOUT_REFERENCE_PARITY_2026_11_13.md",
+    "scope": "PRESENTATION_AND_LAYOUT_PARITY_ONLY",
+    "visual_acceptance": "LOCAL_SYNTHETIC_PASS_72_CAPTURES_1208_TARGETS_44X44_PLUS_COMPILED_LOGIN_8_PROFILES",
+    "current_ci": "SUCCESS",
+    "publication": "PUBLISHED_VERIFIED_PUBLIC_TECHNICAL_SCOPE",
+    "live_verification": "PUBLIC_GET_BYTES_GUARDS_AND_RENDERING_PASS_AFTER_APP_ONLY_CORRECTION",
+    "database_schema_math_provider_changes": false,
+    "prior_v41_release": "2026-11-12.1_PUBLISHED_PR119_MERGED",
+    "baseline_connected_evidence": "LOCAL_SYNTHETIC_DAILY_COLLECTOR_MANUFACTURING_FIXTURE",
+    "no_real_operational_acceptance": true,
+    "release": "2026-11-13.1",
+    "published_source_commit": "7c3b5cc2913f03177d8c2a1288325b78194dd5ad",
+    "prepared_source_commit": "7ae377f07735dd7954e1197263ccfca1b40ac0a4",
+    "pr": 120,
+    "pr_url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/120",
+    "ci": {
+      "run_id": 43486058949,
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43486058949",
+      "head": "7c3b5cc2913f03177d8c2a1288325b78194dd5ad",
+      "state": "SUCCESS",
+      "node_passed": 4115,
+      "python_passed": 67,
+      "skipped": 0,
+      "log_sha256": "37be748913e621dbe5f542b43c0b30f9581e82fa316ae08b50180e7a3675ba9b",
+      "attempt": 2
+    },
+    "local_node_passed": 4115,
+    "local_python_passed": 67,
+    "publication_receipt": "docs/v4/layout-reference-live-publication.json",
+    "verified_at": "2026-11-13T19:17:09.007Z",
+    "active_latest_versions_100_percent": {
+      "app": "e8a2bb41-61e8-45e0-9614-3c6670e5f293",
+      "auth": "9f0c57c9-5712-4b0a-b7af-f8571feebc33",
+      "finance": "d3bf1196-e75b-491b-bc40-f523029db483"
+    },
+    "compiled_hashes": {
+      "app": "6d7d9dc2d713050e7b724bd31c64abb8901490dc8acae542221db080d7225296",
+      "auth": "ca7f08ad02993bf7d29d91ce95f689ab845775cbd0fec5c27549aaf261510d74",
+      "finance": "ffbcea3b7ffe5c0a94b0d4d8c4908738e6da76386040995bba982060a5f9bb71"
+    },
+    "raw_hashes": {
+      "app": "3b33472a7c508f58adfb1062dd3be6b55422be332ebac75667eba0257f9ad091",
+      "auth": "c3db52c0d0621bfed5c619ad6384aa1541a92070ab58e8ac8880a18e82655919",
+      "finance": "c81f2f28bf4ba16c3a65478e7ca4ab153fff54e00f5ed9c9d73a2698366a6913"
+    },
+    "real_owner_live_session_available": false,
+    "production_qa_fact_writes": 0,
+    "new_migrations": 0,
+    "new_secret_updates": 0
   }
 }

@@ -177,7 +177,10 @@ export function createMlsVerifiedCharts(){
        (point.partial?'#ffcf84':model.metric==='net'&&point.value<0?'#ff7899':color)+'">'+
        '<title>'+esc(label)+'</title></circle>';
     }
-    if(k===0||k===rows.length-1||k%Math.max(1,Math.ceil(rows.length/5))===0)
+    // Keep both period endpoints without crowding the last regular tick.
+    // Sampling labels never removes the observed marks or their values.
+    const tickStride=Math.max(1,Math.ceil(rows.length/5));
+    if(k===0||k===rows.length-1||(k%tickStride===0&&rows.length-1-k>=tickStride))
      graphics+='<text x="'+x(k)+'" y="214" text-anchor="middle" font-size="10" fill="var(--muted,#96b5d9)">'+esc(point.date.slice(8)+'/'+point.date.slice(5,7))+'</text>';
    }
    return svgFrame(graphics,title+'; '+known.length+' observações reais, '+model.missing+' lacunas',w,h);

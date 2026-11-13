@@ -4,7 +4,7 @@ export const PRODUCTION_WORKSPACE_CSS=String.raw`
 `;
 
 export function productionWorkspaceBody({daily,weekly,coverage,reference}){
- return '<div id="missionProductionFabricationPane" class="production-workspace-pane"><div class="production-workspace-context"><p id="productionWorkspaceContext"><strong>Diário e mês</strong> · Custo das peças registradas na data de fabricação.</p><a href="/admin?tab=agent-production#incurredProductionRecordsPane">Registrar produção →</a></div>'+daily+'<div id="missionProductionWeeklyPane" hidden>'+weekly+coverage+'</div></div><div id="missionProductionReferencePane" class="production-workspace-pane" hidden>'+reference+'</div>';
+ return '<div id="missionProductionFabricationPane" class="production-workspace-pane">'+daily+'<details class="production-workspace-context"><summary>Base do registro de fabricação</summary><p id="productionWorkspaceContext"><strong>Diário e mês</strong> · Custo das peças registradas na data de fabricação.</p><a href="/admin?tab=agent-production#incurredProductionRecordsPane">Registrar produção →</a></details><div id="missionProductionWeeklyPane" hidden>'+weekly+coverage+'</div></div><div id="missionProductionReferencePane" class="production-workspace-pane" hidden>'+reference+'</div>';
 }
 
 // These panes change the visible source, never the source facts. Opening the

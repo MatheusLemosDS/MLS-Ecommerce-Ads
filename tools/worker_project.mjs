@@ -5,6 +5,14 @@ import path from 'node:path';
 export const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const TARGETS = Object.freeze({
   app: Object.freeze({name: 'brazacommerce-app', main: '../../dist/app-worker.mjs', baselineHashes: [
+    // Verified Live package: nested configuration adds only the reviewed source-path comment prefix.
+    '3b33472a7c508f58adfb1062dd3be6b55422be332ebac75667eba0257f9ad091',
+    // Exact legacy-login touch correction; App-only activation requires full CI and Live checks.
+    '6d7d9dc2d713050e7b724bd31c64abb8901490dc8acae542221db080d7225296',
+    'd681cdd6721b255235b02ddc9e96813ff2476d31e3747c52e15a2edee1605a25',
+    // Exact reference-layout candidate and Wrangler 4.151.1 dry-run; activation requires CI and Live checks.
+    '107619ad68b14729f1e84b2e5d0e1d3427d16ee5ca3c6dd834a17f738b36699f',
+    '9405f9a904664621fbcc00643ac92f78389adcd6d3675b14b90f60aa701e81f2',
     // V4.1 final professional layout and scoped account backend; independently checked before Live activation.
     '82fe3d3ecf19b0f72254dc5778e8a8335505bfc4db4071cc01afce4cfb7cea48',
     '4a1d4b279fb1f06fb3717d41ac38b0e3802cf89aa824192f882949d75f17882b',
@@ -225,6 +233,9 @@ export const TARGETS = Object.freeze({
     '26612b7ea0edbea55e06f5fc817a18defd6b4fe65381e6d564b7d360b7b80278',
   ]}),
   auth: Object.freeze({name: 'brazacommerce-auth', main: '../../dist/auth-worker.mjs', baselineHashes: [
+    // Account-page presentation only, compiled and Wrangler 4.151.1 dry-run identities.
+    'ca7f08ad02993bf7d29d91ce95f689ab845775cbd0fec5c27549aaf261510d74',
+    'c3db52c0d0621bfed5c619ad6384aa1541a92070ab58e8ac8880a18e82655919',
     // V4.1 final professional layout and scoped account backend; independently checked before Live activation.
     'd5eed8ab9cddaa8d6917f4e4ca668a3f7074bad5603254656414db5a490dc172',
     'd0e1093e22bcfd8dfb314f25edc7d7e9cd6694a65872e1f1f35e47d916cd83b7',

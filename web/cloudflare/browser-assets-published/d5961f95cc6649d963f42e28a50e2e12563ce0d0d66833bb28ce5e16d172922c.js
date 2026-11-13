@@ -1,0 +1,1720 @@
+
+function createAdminApiClient(options={}){
+ const monthlyContract='business-month-v2',monthlyViewContract='business-month-view-v4';
+ const messages={ADMIN_API_NETWORK_ERROR:'Não foi possível conectar ao painel. Verifique sua conexão e tente novamente.',ADMIN_API_TIMEOUT:'A consulta demorou mais que o esperado. Tente novamente.',ADMIN_API_RESPONSE_INVALID:'Não foi possível conferir a resposta do painel. Tente novamente.',ADMIN_API_HTTP_ERROR:'Não foi possível concluir a consulta ao painel. Tente novamente.'};
+ const error=(code,status=null,apiCode=null)=>Object.assign(new Error(messages[code]),{code,status,apiCode});
+ const plain=value=>value!==null&&typeof value==='object'&&[Object.prototype,null].includes(Object.getPrototypeOf(value));
+ const dataKeys=(value,allowed)=>plain(value)&&Reflect.ownKeys(value).every(key=>typeof key==='string'&&allowed.includes(key)&&Object.hasOwn(Object.getOwnPropertyDescriptor(value,key)||{},'value'));
+ if(!dataKeys(options,['fetchImpl','getCsrf','setTimeoutImpl','clearTimeoutImpl','AbortControllerImpl']))throw error('ADMIN_API_RESPONSE_INVALID');
+ const fetchImpl=options.fetchImpl??((...args)=>fetch(...args)),getCsrf=options.getCsrf??(()=>''),setTimer=options.setTimeoutImpl??((...args)=>setTimeout(...args)),clearTimer=options.clearTimeoutImpl??(id=>clearTimeout(id)),Controller=options.AbortControllerImpl??AbortController;
+ if([fetchImpl,getCsrf,setTimer,clearTimer,Controller].some(value=>typeof value!=='function'))throw error('ADMIN_API_RESPONSE_INVALID');
+ return async function request(path,body,requestOptions={}){
+  if(typeof path!=='string'||path.length>4096||!/^([a-z][a-z0-9-]*)(\/[a-z0-9-]+)*(\?[^\s#]*)?$/.test(path)||path.includes('..')||path.includes('://')||/[\u0000-\u001f\u007f]/.test(path)||!dataKeys(requestOptions,['timeoutMs','monthlyViewContract']))throw error('ADMIN_API_RESPONSE_INVALID');
+  const post=body!==undefined,timeoutMs=requestOptions.timeoutMs??(post?90000:45000);
+  const viewPath=path==='finance/business-month-view'||path.startsWith('finance/business-month-view?');
+  if(Object.hasOwn(requestOptions,'monthlyViewContract')&&(!viewPath||post||!['business-month-view-v4','business-month-view-v5'].includes(requestOptions.monthlyViewContract)))throw error('ADMIN_API_RESPONSE_INVALID');
+  if(!Number.isInteger(timeoutMs)||timeoutMs<5||timeoutMs>120000)throw error('ADMIN_API_RESPONSE_INVALID');
+  let serialized,csrf;
+  try{
+   if(post){serialized=JSON.stringify(body);csrf=getCsrf();if(serialized===undefined||typeof csrf!=='string'||csrf.length>4096||/[\u0000-\u001f\u007f]/.test(csrf))throw Error();}
+  }catch{throw error('ADMIN_API_RESPONSE_INVALID');}
+  const headers=post?{'Accept':'application/json','Content-Type':'application/json','X-CSRF-Token':csrf}:{'Accept':'application/json'};
+  if(path==='finance/business-month'||path.startsWith('finance/business-month?'))headers['X-Braza-Client-Contract']=monthlyContract;
+  if(path==='finance/business-month-view'||path.startsWith('finance/business-month-view?'))headers['X-Braza-Client-Contract']=requestOptions.monthlyViewContract??monthlyViewContract;
+  let controller;try{controller=new Controller();if(!controller.signal||typeof controller.abort!=='function')throw Error();}catch{throw error('ADMIN_API_RESPONSE_INVALID');}
+  let timer=null,expired=false,response=null,responseStatus=null;
+  const deadline=new Promise((resolve,reject)=>{
+   timer=setTimer(()=>{
+    expired=true;
+    try{controller.abort();}catch{}
+    // Native fetch aborts a pending body read. Some clients ignore the signal;
+    // the deadline still settles this call and no request is replayed.
+    try{const cancellation=response?.body?.cancel?.();if(cancellation&&typeof cancellation.catch==='function')cancellation.catch(()=>{});}catch{}
+    reject(error('ADMIN_API_TIMEOUT',responseStatus));
+   },timeoutMs);
+  });
+  const work=async()=>{
+   if(expired)throw error('ADMIN_API_TIMEOUT',responseStatus);
+   try{response=await fetchImpl('/api/admin/'+path,{method:post?'POST':'GET',headers,credentials:'same-origin',redirect:'error',cache:'no-store',signal:controller.signal,...(post?{body:serialized}:{})});}
+   catch{throw error(expired?'ADMIN_API_TIMEOUT':'ADMIN_API_NETWORK_ERROR',responseStatus);}
+   if(expired)throw error('ADMIN_API_TIMEOUT',responseStatus);
+   if(!response||typeof response.json!=='function'||typeof response.ok!=='boolean'||!Number.isInteger(response.status)||response.status<100||response.status>599)throw error('ADMIN_API_RESPONSE_INVALID');
+   responseStatus=response.status;
+   let value;
+   try{value=await response.json();}
+   catch(failure){
+    if(expired)throw error('ADMIN_API_TIMEOUT',responseStatus);
+    if(!response.ok)throw error('ADMIN_API_HTTP_ERROR',responseStatus);
+    throw error(failure instanceof TypeError?'ADMIN_API_NETWORK_ERROR':'ADMIN_API_RESPONSE_INVALID',failure instanceof TypeError?null:responseStatus);
+   }
+   if(expired)throw error('ADMIN_API_TIMEOUT',responseStatus);
+   if(!response.ok){
+    const descriptor=plain(value)?Object.getOwnPropertyDescriptor(value,'error'):null,code=descriptor&&Object.hasOwn(descriptor,'value')?descriptor.value:null;
+    throw error('ADMIN_API_HTTP_ERROR',responseStatus,typeof code==='string'&&/^[A-Z][A-Z0-9_]{0,79}$/.test(code)?code:null);
+   }
+   if(value===null||typeof value!=='object')throw error('ADMIN_API_RESPONSE_INVALID',responseStatus);
+   return value;
+  };
+  try{return await Promise.race([work(),deadline]);}
+  finally{if(timer!==null)clearTimer(timer);}
+ };
+}
+function createAdminStartup(options){
+ const required=['loadSession','acceptSession','startPrimary','startSecondary','onState','onPrimaryFailure'];
+ const optional=['onSecondaryFailure','canRetry','wait'];
+ const plain=value=>value!==null&&typeof value==='object'&&[Object.prototype,null].includes(Object.getPrototypeOf(value));
+ if(!plain(options)||Reflect.ownKeys(options).some(key=>!required.includes(key)&&!optional.includes(key))||required.some(key=>!Object.hasOwn(options,key))||Reflect.ownKeys(options).some(key=>typeof Object.getOwnPropertyDescriptor(options,key)?.value!=='function'))throw TypeError('ADMIN_STARTUP_CONFIGURATION');
+ const {loadSession,acceptSession,startPrimary,startSecondary,onState,onPrimaryFailure}=options;
+ const onSecondaryFailure=options.onSecondaryFailure||(()=>{});
+ const canRetry=options.canRetry||(()=>typeof document==='undefined'||document.hidden!==true);
+ const wait=options.wait||(ms=>new Promise(resolve=>setTimeout(resolve,ms)));
+ let phase='LOADING',attempt=0,pending=null,sessionReady=false,primaryStarted=false,secondaryStarted=false,stopped=false,generation=0,current=null;
+ const getState=()=>({phase,attempt,pending:pending!==null,ready:phase==='READY',sessionReady,primaryStarted,secondaryStarted});
+ const active=token=>!stopped&&current===token&&generation===token.generation;
+ const emit=(callback,...args)=>{try{Promise.resolve(callback(...args)).catch(()=>{});}catch{}};
+ const notify=error=>emit(onState,{...getState(),...(error===undefined?{}:{error})});
+ const retryAllowed=()=>{try{return canRetry()===true;}catch{return false;}};
+ const retryable=error=>{
+  if(error===null||typeof error!=='object')return false;
+  const code=Object.getOwnPropertyDescriptor(error,'code')?.value,status=Object.getOwnPropertyDescriptor(error,'status')?.value;
+  const safeStatus=status===undefined||status===null||Number.isInteger(status)&&status>=200&&status<300;
+  return ['ADMIN_API_NETWORK_ERROR','ADMIN_API_TIMEOUT'].includes(code)&&safeStatus;
+ };
+ const cancelled=Object.freeze({cancelled:true});
+ // Cancellation only disconnects a read or the short retry delay. It never
+ // repeats a write and never accepts a late session response after stop().
+ const read=async(token,invoke)=>new Promise(resolve=>{
+  if(!active(token)){resolve(cancelled);return;}
+  let settled=false;
+  const finish=result=>{if(settled)return;settled=true;token.cancel.delete(cancel);resolve(result);};
+  const cancel=()=>finish(cancelled);token.cancel.add(cancel);
+  Promise.resolve().then(()=>active(token)?invoke():cancelled).then(value=>finish(value===cancelled?cancelled:{value}),error=>finish({error}));
+ });
+ function failed(token,error){
+  if(!active(token))return getState();
+  phase='FAILED';pending=null;notify(error);return getState();
+ }
+ function launch(token,callback,failure){
+  try{const result=callback();Promise.resolve(result).catch(error=>{if(active(token))emit(failure,error);});return null;}
+  catch(error){return {error};}
+ }
+ async function run(token){
+  let result=await read(token,loadSession);if(!active(token)||result===cancelled)return getState();
+  if(Object.hasOwn(result,'error')){
+   if(!retryable(result.error)||!retryAllowed())return failed(token,result.error);
+   const firstError=result.error;attempt=2;phase='RETRYING';notify(firstError);
+   const delayed=await read(token,()=>wait(750));if(!active(token)||delayed===cancelled)return getState();
+   if(Object.hasOwn(delayed,'error'))return failed(token,delayed.error);
+   if(!retryAllowed())return failed(token,firstError);
+   result=await read(token,loadSession);if(!active(token)||result===cancelled)return getState();
+   if(Object.hasOwn(result,'error'))return failed(token,result.error);
+  }
+  // Accepting the session is a separate critical validation step. Its failure
+  // must never be mistaken for a retryable fetch failure.
+  try{
+   const accepted=acceptSession(result.value);
+   if(accepted&&typeof accepted.then==='function'){
+    const validation=await read(token,()=>accepted);if(!active(token)||validation===cancelled)return getState();
+    if(Object.hasOwn(validation,'error'))return failed(token,validation.error);
+   }
+  }catch(error){return failed(token,error);}
+  if(!active(token))return getState();
+  sessionReady=true;primaryStarted=true;
+  const primaryFailure=launch(token,startPrimary,onPrimaryFailure);
+  if(!active(token))return getState();
+  secondaryStarted=true;const secondaryFailure=launch(token,startSecondary,onSecondaryFailure);
+  if(!active(token))return getState();
+  phase='READY';pending=null;notify();
+  if(primaryFailure)emit(onPrimaryFailure,primaryFailure.error);
+  if(secondaryFailure&&active(token))emit(onSecondaryFailure,secondaryFailure.error);
+  return getState();
+ }
+ function start(){
+  if(stopped||phase==='READY')return Promise.resolve(getState());
+  if(pending)return pending;
+  const token={generation:++generation,cancel:new Set()};current=token;
+  phase='LOADING';attempt=1;
+  const work=Promise.resolve().then(()=>run(token)).catch(error=>failed(token,error));
+  pending=work;notify();return work;
+ }
+ function stop(){
+  if(stopped)return getState();
+  stopped=true;generation++;phase='STOPPED';pending=null;
+  if(current)for(const cancel of [...current.cancel])cancel();
+  notify();return getState();
+ }
+ return Object.freeze({start,stop,getState});
+}
+function parseReport(text){
+ const clean=String(text||'').replace(/\r/g,'');
+ const scalar=pattern=>{const matches=[...clean.matchAll(pattern)];return matches.length===1?matches[0][1]:null;};
+ const investment=scalar(/^\s*(?:Investimento(?:\s+(?:raw|informado))?|Gasto(?:\s+(?:raw|informado))?)\s*:\s*["']?([0-9]+(?:[.,][0-9]+)?)\s*["']?\s*$/gim);
+ const clicks=scalar(/^\s*Cliques\s*:\s*([0-9]+)\s*$/gim);
+ const impressions=scalar(/^\s*Impressões\s*:\s*([0-9]+)\s*$/gim);
+ const paired=pattern=>{const matches=[...clean.matchAll(pattern)];return matches.length===1?[matches[0][1],matches[0][2]]:null;};
+ const roas=paired(/^\s*ROAS(?:\s+(?:raw|bruto|informado))?\s+([0-9]+(?:[.,][0-9]+)?)\s+([0-9]+(?:[.,][0-9]+)?)\s*$/gim);
+ const orders=paired(/^\s*(?:Pedidos(?:\/conversões)?(?:\s+(?:reportados|informados))?)\s+([0-9]+)\s+([0-9]+)\s*$/gim);
+ const economic=scalar(/^\s*(?:Status econômico|Resultado:\s*situação econômica)\s*:?\s*(UNKNOWN|UNVERIFIED|PROFITABLE|UNPROFITABLE)\s*[.;]?\s*$/gim);
+ const recommendation=scalar(/^\s*Recomendação(?:\s+retornada)?\s*:\s*([A-Z_]+)\s*\.?\s*$/gim);
+ const headings=/^(Métricas recebidas|Métricas do dia|Qualidade e limitações|Diagnóstico e recomendação|Referências de kits(?: para esta análise)?|Referências consultadas|Política H2 preservada|Política da API preservada|Qualidade dos dados)$/i;
+ const sections=[];let current=null;
+ for(const line of clean.split('\n')){const title=line.trim().replace(/^#{1,6}\s*/, '');if(headings.test(title)){current={title,body:[]};sections.push(current);}else if(current)current.body.push(line);}
+ const date=scalar(/^Análise de (\d{4}-\d{2}-\d{2})[^\n]*$/gim);
+ return {date,investment,clicks,impressions,roas,orders,economic,recommendation,sections:sections.map(s=>({...s,body:s.body.join('\n').trim()})).filter(s=>s.body),original:clean};
+}
+function projectAdsMeasurement(value) {
+  // Keep helpers local: the client embeds this function via .toString().
+  const keys = ['schema', 'status', 'start_date', 'end_date', 'fetched_at', 'covered_days', 'total_days', 'missing_dates', 'expense_cents', 'known_expense_cents', 'balance_cents', 'days', 'day_partial', 'unit_confirmation', 'source_timezone', 'basis', 'diagnostic', 'totals'];
+  const metrics = ['gmv_cents', 'orders', 'reported_roas_raw', 'calculated_roas_raw'];
+  const isPlain = item => item !== null && typeof item === 'object' && [Object.prototype, null].includes(Object.getPrototypeOf(item));
+  const isExact = (item, names) => isPlain(item) && Reflect.ownKeys(item).length === names.length && names.every(name => Object.hasOwn(Object.getOwnPropertyDescriptor(item, name) || {}, 'value'));
+  const isArray = (item, max) => Array.isArray(item) && Object.getPrototypeOf(item) === Array.prototype && item.length <= max && Reflect.ownKeys(item).length === item.length + 1 && Array.from({length: item.length}, (_, index) => Object.getOwnPropertyDescriptor(item, String(index))).every(descriptor => descriptor && Object.hasOwn(descriptor, 'value'));
+  const isInteger = (item, max = Number.MAX_SAFE_INTEGER) => Number.isSafeInteger(item) && item >= 0 && item <= max && !Object.is(item, -0);
+  const isDay = item => typeof item === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(item) && Number.isFinite(Date.parse(item + 'T00:00:00Z')) && new Date(item + 'T00:00:00Z').toISOString().slice(0, 10) === item;
+  const currentDay = stamp => new Intl.DateTimeFormat('sv-SE', {timeZone: 'America/Sao_Paulo'}).format(new Date(stamp * 1000));
+  const validReported = item => item === null || typeof item === 'number' && Number.isFinite(item) && item >= 0 && item <= 1000000000000 && !Object.is(item, -0) || typeof item === 'string' && item.length <= 96 && /^(0|[1-9][0-9]*)(?:\.[0-9]+)?$/.test(item) && Number(item) <= 1000000000000;
+  const calculated = (gmv, expense) => {
+    if (gmv === null || expense === null || expense === 0) return null;
+    const numerator = BigInt(gmv) * 1000000n, denominator = BigInt(expense);
+    let rounded = numerator / denominator;
+    if (numerator % denominator * 2n >= denominator) rounded++;
+    return (rounded / 1000000n).toString() + '.' + (rounded % 1000000n).toString().padStart(6, '0');
+  };
+  const metricValid = (item, expense) => isExact(item, metrics) && (item.gmv_cents === null || isInteger(item.gmv_cents)) && (item.orders === null || isInteger(item.orders)) && validReported(item.reported_roas_raw) && item.calculated_roas_raw === calculated(item.gmv_cents, expense);
+  const metricEmpty = item => metrics.every(key => item[key] === null);
+  const equalDates = (left, right) => left.length === right.length && left.every((date, index) => date === right[index]);
+  const diagnostics = ['ADS_MEASUREMENT_CONFIGURATION', 'ADS_MEASUREMENT_UNAVAILABLE', 'ADS_MEASUREMENT_DATE_COVERAGE_PARTIAL', 'ADS_MEASUREMENT_EXPENSE_INVALID', 'ADS_MEASUREMENT_ARITHMETIC_UNSAFE'];
+  try {
+    if (!isExact(value, keys) || value.schema !== 'ads_measurement_v1' || !['AVAILABLE', 'PARTIAL', 'UNAVAILABLE'].includes(value.status) || !isInteger(value.fetched_at, 9999999999) || !isInteger(value.covered_days, 15) || !isInteger(value.total_days, 15) || !isArray(value.missing_dates, 15) || !value.missing_dates.every(isDay) || !isArray(value.days, 15) || typeof value.day_partial !== 'boolean' || value.unit_confirmation !== 'OPERATOR_CONFIRMED_BRL_2026_10_20' || value.source_timezone !== 'UNCONFIRMED' || value.basis !== 'CALENDAR_PERIOD_NOT_ORDER_ATTRIBUTION' || value.diagnostic !== null && !diagnostics.includes(value.diagnostic) || !isInteger(value.known_expense_cents) || value.expense_cents !== null && !isInteger(value.expense_cents) || value.balance_cents !== null && !isInteger(value.balance_cents) || !isExact(value.totals, ['direct', 'broad'])) return null;
+    let dates = [];
+    if (isDay(value.start_date) && isDay(value.end_date)) {
+      const length = (Date.parse(value.end_date + 'T00:00:00Z') - Date.parse(value.start_date + 'T00:00:00Z')) / 86400000 + 1;
+      if (length < 1 || length > 15 || value.fetched_at === 0 || value.end_date > currentDay(value.fetched_at)) return null;
+      dates = Array.from({length}, (_, index) => new Date(Date.parse(value.start_date + 'T00:00:00Z') + index * 86400000).toISOString().slice(0, 10));
+    } else if (value.start_date !== null || value.end_date !== null || value.diagnostic !== 'ADS_MEASUREMENT_CONFIGURATION') return null;
+    if (value.total_days !== dates.length || value.day_partial !== (dates.length > 0 && value.end_date === currentDay(value.fetched_at))) return null;
+    if (value.status === 'UNAVAILABLE') {
+      if (value.covered_days !== 0 || value.days.length || value.expense_cents !== null || value.known_expense_cents !== 0 || value.balance_cents !== null || !equalDates(value.missing_dates, dates) || !['ADS_MEASUREMENT_CONFIGURATION', 'ADS_MEASUREMENT_UNAVAILABLE', 'ADS_MEASUREMENT_ARITHMETIC_UNSAFE'].includes(value.diagnostic)) return null;
+      for (const attribution of ['direct', 'broad']) if (!metricValid(value.totals[attribution], null) || !metricEmpty(value.totals[attribution])) return null;
+    } else {
+      if (!dates.length || value.days.length !== dates.length) return null;
+      let total = 0n;
+      const missing = [];
+      for (let index = 0; index < dates.length; index++) {
+        const day = value.days[index];
+        if (!isExact(day, ['date', 'expense_cents', 'direct', 'broad']) || day.date !== dates[index] || day.expense_cents !== null && !isInteger(day.expense_cents) || !metricValid(day.direct, day.expense_cents) || !metricValid(day.broad, day.expense_cents)) return null;
+        if (day.expense_cents === null) missing.push(day.date); else total += BigInt(day.expense_cents);
+      }
+      if (total > BigInt(Number.MAX_SAFE_INTEGER) || value.covered_days !== dates.length - missing.length || !equalDates(value.missing_dates, missing) || value.known_expense_cents !== Number(total)) return null;
+      if (value.status === 'AVAILABLE' ? missing.length !== 0 || value.expense_cents !== Number(total) || value.diagnostic !== null : missing.length === 0 || value.expense_cents !== null || !['ADS_MEASUREMENT_DATE_COVERAGE_PARTIAL', 'ADS_MEASUREMENT_EXPENSE_INVALID'].includes(value.diagnostic)) return null;
+      for (const attribution of ['direct', 'broad']) {
+        const aggregate = value.totals[attribution];
+        if (!metricValid(aggregate, value.expense_cents)) return null;
+        for (const field of ['gmv_cents', 'orders']) {
+          const amounts = value.days.map(day => day[attribution][field]);
+          const sum = amounts.some(amount => amount === null) ? null : amounts.reduce((sum, amount) => sum + BigInt(amount), 0n);
+          if (sum !== null && sum > BigInt(Number.MAX_SAFE_INTEGER) || aggregate[field] !== (sum === null ? null : Number(sum))) return null;
+        }
+        if (aggregate.reported_roas_raw !== (dates.length === 1 ? value.days[0][attribution].reported_roas_raw : null)) return null;
+      }
+    }
+    return Object.fromEntries(keys.map(key => [key, key === 'days' ? value.days.map(day => ({date: day.date, expense_cents: day.expense_cents, direct: {...day.direct}, broad: {...day.broad}})) : key === 'missing_dates' ? [...value.missing_dates] : key === 'totals' ? {direct: {...value.totals.direct}, broad: {...value.totals.broad}} : value[key]]));
+  } catch { return null; }
+}
+function projectHermesFinancialContext(value){
+ const plain=row=>row!==null&&typeof row==='object'&&[Object.prototype,null].includes(Object.getPrototypeOf(row));
+ const exact=(row,keys)=>plain(row)&&Reflect.ownKeys(row).length===keys.length&&keys.every(key=>Object.hasOwn(Object.getOwnPropertyDescriptor(row,key)||{},'value'));
+ const array=(rows,max)=>Array.isArray(rows)&&Object.getPrototypeOf(rows)===Array.prototype&&rows.length<=max&&Reflect.ownKeys(rows).length===rows.length+1&&Array.from({length:rows.length},(_,i)=>Object.getOwnPropertyDescriptor(rows,String(i))).every(field=>field&&Object.hasOwn(field,'value'));
+ const integer=(row,min=0,max=Number.MAX_SAFE_INTEGER)=>Number.isSafeInteger(row)&&!Object.is(row,-0)&&row>=min&&row<=max;
+ const money=(row,signed=false)=>row===null||integer(row,signed?Number.MIN_SAFE_INTEGER:0);
+ const date=row=>typeof row==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(row)&&Number.isFinite(Date.parse(row+'T00:00:00Z'))&&new Date(row+'T00:00:00Z').toISOString().slice(0,10)===row;
+ const text=(row,max)=>typeof row==='string'&&row.trim()===row&&row.length>0&&row.length<=max&&!/[\u0000-\u001f\u007f-\u009f]/.test(row);
+ const utf8Length=raw=>{let size=0;for(let i=0;i<raw.length;i++){const c=raw.charCodeAt(i);if(c<128)size++;else if(c<2048)size+=2;else if(c>=55296&&c<=56319&&i+1<raw.length&&raw.charCodeAt(i+1)>=56320&&raw.charCodeAt(i+1)<=57343){size+=4;i++;}else size+=3;}return size;};
+ const pendingCodes=['COLLECTING','PERIOD_LIMIT_REACHED','SOURCE_UNAVAILABLE','STATUS_REVIEW_REQUIRED','PAYMENT_INCOMPLETE','RETURNS_NOT_RECONCILED','PRODUCTION_COST_INCOMPLETE','INVOICE_TAX_UNAVAILABLE','ADS_UNAVAILABLE','EXTERNAL_EXPENSES_REQUIRED','RECHARGE_TREATMENT_REQUIRED','ADJUSTMENT_UNAVAILABLE','ARITHMETIC_UNSAFE','TAX_POLICY_REQUIRED','FINANCIAL_SOURCE_STALE'];
+ const totalKeys=['sales_cents','known_sales_cents','expected_repass_cents','production_cost_cents','known_production_cost_cents','invoice_tax_cents','ads_spend_cents','external_expenses_cents','recharge_addback_cents','net_estimate_cents','net_profit_cents','ads_attributed_gmv_cents','ads_calculated_roas_raw','tacos_bps'];
+ const actions=['COMPLETE_PRODUCTION_COSTS','RECONCILE_RETURNS','COMPLETE_PAYMENT_COVERAGE','REFRESH_FINANCIAL_SOURCE','RESTORE_FINANCIAL_SOURCE','DECLARE_MONTHLY_DAS','DECLARE_EXTERNAL_EXPENSES','CONFIRM_RECHARGE_TREATMENT','RECONCILE_PAYMENT_ADJUSTMENTS','RECONCILE_ORDER_STATUS','COMPLETE_MONTH_COLLECTION','REVIEW_PERIOD_COVERAGE','REFRESH_CALENDAR_ADS','REVIEW_ARITHMETIC','REVIEW_MONTHLY_LOSS','REVIEW_BREAK_EVEN','CHECK_STOCK_AND_CAMPAIGN'];
+ try{
+  if(!exact(value,['schema','analysis_date','captured_at','available','unavailable_code','monthly'])||value.schema!=='hermes_financial_context_v1'||!date(value.analysis_date)||!integer(value.captured_at,1,9999999999)||typeof value.available!=='boolean')return null;
+  const captureDay=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date(value.captured_at*1000));if(value.analysis_date>captureDay)return null;
+  if(!value.available){if(value.monthly!==null||!['MONTHLY_SOURCE_UNAVAILABLE','MONTHLY_FRAME_INVALID','LEGACY_CONTEXT_MISSING'].includes(value.unavailable_code))return null;}
+  else{
+   const month=value.monthly;
+   if(value.unavailable_code!==null||!exact(month,['month','start_date','end_date','checked_at','status','summary','totals','order_coverage','pending','source_checked_at','versions','top_actions','product_references','actual_profit_cents','execution'])||month.month!==value.analysis_date.slice(0,7)||month.start_date!==month.month+'-01'||!date(month.end_date)||month.end_date.slice(0,7)!==month.month||!integer(month.checked_at,1,value.captured_at+60)||month.end_date>captureDay||!['RUNNING','COMPLETE','LIMIT_REACHED'].includes(month.status)||month.actual_profit_cents!==null||month.execution!=='READ_ONLY')return null;
+   if(!array(month.pending,pendingCodes.length)||new Set(month.pending).size!==month.pending.length||!month.pending.every(code=>pendingCodes.includes(code)))return null;
+   const c=month.order_coverage,coverageKeys=['orders','paid','completed','ongoing','cancelled','cancel_pending','unpaid','other','unknown','payment_covered','payment_missing','returns','returns_unknown'];
+   if(!exact(c,coverageKeys)||!coverageKeys.every(key=>integer(c[key],0,3000))||c.orders!==c.paid+c.cancelled+c.cancel_pending+c.unpaid+c.other+c.unknown||c.paid!==c.completed+c.ongoing||c.payment_covered+c.payment_missing!==c.paid||c.returns+c.returns_unknown>c.paid)return null;
+   const t=month.totals;if(!exact(t,totalKeys)||!totalKeys.filter(key=>!['ads_calculated_roas_raw','tacos_bps'].includes(key)).every(key=>money(t[key],['expected_repass_cents','net_estimate_cents'].includes(key)))||t.net_profit_cents!==null||t.ads_calculated_roas_raw!==null&&(typeof t.ads_calculated_roas_raw!=='string'||t.ads_calculated_roas_raw.length>64||!/^(0|[1-9][0-9]*)\.[0-9]{6}$/.test(t.ads_calculated_roas_raw))||t.tacos_bps!==null&&!integer(t.tacos_bps))return null;
+   if(t.sales_cents!==null&&t.sales_cents!==t.known_sales_cents||t.production_cost_cents!==null&&t.production_cost_cents!==t.known_production_cost_cents)return null;
+   const tacos=t.sales_cents===null||t.sales_cents===0||t.ads_spend_cents===null?null:BigInt(t.ads_spend_cents)*10000n/BigInt(t.sales_cents);if(tacos===null?t.tacos_bps!==null:t.tacos_bps===null||BigInt(t.tacos_bps)!==tacos)return null;
+   let roas=null;if(t.ads_attributed_gmv_cents!==null&&t.ads_spend_cents!==null&&t.ads_spend_cents>0){const numerator=BigInt(t.ads_attributed_gmv_cents)*1000000n,denominator=BigInt(t.ads_spend_cents);let rounded=numerator/denominator;if(numerator%denominator*2n>=denominator)rounded++;roas=(rounded/1000000n).toString()+'.'+(rounded%1000000n).toString().padStart(6,'0');}if(t.ads_calculated_roas_raw!==roas)return null;
+   if(t.net_estimate_cents!==null&&(month.status!=='COMPLETE'||month.pending.length))return null;
+   if(month.status!=='COMPLETE'&&['sales_cents','expected_repass_cents','production_cost_cents','invoice_tax_cents'].some(key=>t[key]!==null))return null;
+   const sources=month.source_checked_at;if(!exact(sources,['finance_oldest_at','finance_latest_at','ads_at'])||!Object.values(sources).every(at=>at===null||integer(at,1,month.checked_at))||(sources.finance_oldest_at===null)!==(sources.finance_latest_at===null)||sources.finance_oldest_at!==null&&sources.finance_oldest_at>sources.finance_latest_at)return null;
+   const versions=month.versions;if(!exact(versions,['bindings','costs','cost_rules','tax_policy','expenses','classifications'])||!integer(versions.bindings,1,2147483647)||!integer(versions.costs,1,2147483647)||!integer(versions.expenses,0,2147483646)||!['cost_rules','tax_policy','classifications'].every(key=>versions[key]===null||integer(versions[key],key==='tax_policy'?0:1,2147483647)))return null;
+   const has=code=>month.pending.includes(code);
+   if(month.status==='RUNNING'&&!has('COLLECTING')||month.status==='LIMIT_REACHED'&&!has('PERIOD_LIMIT_REACHED')||c.cancel_pending+c.other+c.unknown>0&&!has('STATUS_REVIEW_REQUIRED')||c.payment_missing>0&&!has('PAYMENT_INCOMPLETE')||c.returns+c.returns_unknown>0&&!has('RETURNS_NOT_RECONCILED')||t.production_cost_cents===null&&!has('PRODUCTION_COST_INCOMPLETE')||t.invoice_tax_cents===null&&!has('INVOICE_TAX_UNAVAILABLE')||t.ads_spend_cents===null&&!has('ADS_UNAVAILABLE')||t.external_expenses_cents===null&&!has('EXTERNAL_EXPENSES_REQUIRED')||t.recharge_addback_cents===null&&!has('ADJUSTMENT_UNAVAILABLE')&&!has('RECHARGE_TREATMENT_REQUIRED')||versions.tax_policy===0&&!has('TAX_POLICY_REQUIRED'))return null;
+   if(c.payment_missing>0&&(t.sales_cents!==null||t.expected_repass_cents!==null)||[t.known_sales_cents,t.known_production_cost_cents].some(amount=>amount===null)&&!has('ARITHMETIC_UNSAFE'))return null;
+   if((month.status==='COMPLETE'||c.orders>0)&&sources.finance_oldest_at===null||[t.ads_spend_cents,t.ads_attributed_gmv_cents,t.ads_calculated_roas_raw].some(amount=>amount!==null)&&sources.ads_at===null)return null;
+   const checkedDay=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date(month.checked_at*1000)),stale=month.month===checkedDay.slice(0,7)&&sources.finance_oldest_at!==null&&month.checked_at-sources.finance_oldest_at>900;
+   if(stale!==has('FINANCIAL_SOURCE_STALE'))return null;
+   const summary=month.summary;if(!exact(summary,['schema','state','balance_cents','before_production_cents','known_production_cents','production_complete','costs_after_payout_cents','production_coverage','pending','basis'])||summary.schema!=='monthly_financial_summary_v1'||!['WAITING','READY','PROVISIONAL','PARTIAL_COSTS'].includes(summary.state)||typeof summary.production_complete!=='boolean'||!money(summary.balance_cents,true)||!money(summary.before_production_cents,true)||!money(summary.known_production_cents)||!money(summary.costs_after_payout_cents)||summary.known_production_cents!==t.known_production_cost_cents||summary.basis!=='PAID_MONTH_CURRENT_COSTS_AFTER_ADS_TAX_EXPENSES'||!array(summary.pending,pendingCodes.length)||summary.pending.length!==month.pending.length||!summary.pending.every((code,index)=>code===month.pending[index]))return null;
+   const pc=summary.production_coverage;if(!exact(pc,['total_units','known_units','pending_units','pending_variants','pending_products'])||!money(pc.total_units)||!money(pc.known_units)||!integer(pc.pending_units)||!integer(pc.pending_variants,0,Math.min(3000,pc.pending_units))||!integer(pc.pending_products,0,pc.pending_variants)||(pc.total_units===null)!==(pc.known_units===null)||pc.total_units!==null&&BigInt(pc.known_units)+BigInt(pc.pending_units)!==BigInt(pc.total_units)||summary.production_complete&&(pc.pending_units!==0||t.production_cost_cents===null))return null;
+   if(summary.state==='WAITING'?[summary.balance_cents,summary.before_production_cents,summary.costs_after_payout_cents].some(amount=>amount!==null):[summary.balance_cents,summary.before_production_cents,summary.costs_after_payout_cents].some(amount=>amount===null))return null;
+   if(summary.state==='READY'&&(t.net_estimate_cents===null||summary.balance_cents!==t.net_estimate_cents)||summary.state!=='READY'&&t.net_estimate_cents!==null)return null;
+   if(summary.production_complete!==(month.status==='COMPLETE'&&t.production_cost_cents!==null&&pc.pending_units===0)||summary.state==='PROVISIONAL'&&!summary.production_complete||summary.state==='PARTIAL_COSTS'&&summary.production_complete)return null;
+   if(summary.state!=='WAITING'){
+    if(['COLLECTING','PERIOD_LIMIT_REACHED','SOURCE_UNAVAILABLE','STATUS_REVIEW_REQUIRED','PAYMENT_INCOMPLETE','INVOICE_TAX_UNAVAILABLE','ADS_UNAVAILABLE','EXTERNAL_EXPENSES_REQUIRED','RECHARGE_TREATMENT_REQUIRED','ADJUSTMENT_UNAVAILABLE','ARITHMETIC_UNSAFE','TAX_POLICY_REQUIRED'].some(has))return null;
+    if(['expected_repass_cents','known_production_cost_cents','invoice_tax_cents','ads_spend_cents','external_expenses_cents','recharge_addback_cents'].some(key=>t[key]===null))return null;
+    const before=BigInt(t.expected_repass_cents)+BigInt(t.recharge_addback_cents)-BigInt(t.invoice_tax_cents)-BigInt(t.ads_spend_cents)-BigInt(t.external_expenses_cents),costs=BigInt(t.known_production_cost_cents)+BigInt(t.invoice_tax_cents)+BigInt(t.ads_spend_cents)+BigInt(t.external_expenses_cents);
+    if(BigInt(summary.before_production_cents)!==before||BigInt(summary.balance_cents)!==before-BigInt(t.known_production_cost_cents)||BigInt(summary.costs_after_payout_cents)!==costs)return null;
+   }
+   if(!array(month.top_actions,3)||new Set(month.top_actions.map(row=>Object.getOwnPropertyDescriptor(row||{},'code')?.value)).size!==month.top_actions.length)return null;
+   for(const action of month.top_actions)if(!exact(action,['code','priority','label','detail','metric_refs'])||!actions.includes(action.code)||!['HIGH','MEDIUM','LOW'].includes(action.priority)||!text(action.label,120)||!text(action.detail,700)||!array(action.metric_refs,4)||new Set(action.metric_refs).size!==action.metric_refs.length||!action.metric_refs.every(key=>totalKeys.includes(key)))return null;
+   if(!array(month.product_references,3))return null;const seen=new Set();
+   for(const product of month.product_references){if(!exact(product,['item_id','units','exclusive_repass_cents','exclusive_production_cents','exclusive_contribution_cents','mixed_orders','basis'])||typeof product.item_id!=='string'||!/^[1-9][0-9]{0,19}$/.test(product.item_id)||seen.has(product.item_id)||!integer(product.units,1)||!money(product.exclusive_repass_cents,true)||!money(product.exclusive_production_cents)||!money(product.exclusive_contribution_cents,true)||!integer(product.mixed_orders,0,c.paid)||product.basis!=='EXCLUSIVE_BEFORE_ADS_DAS')return null;
+    if(product.exclusive_contribution_cents!==null&&(versions.tax_policy===null||product.exclusive_repass_cents===null||product.exclusive_production_cents===null||BigInt(product.exclusive_contribution_cents)!==BigInt(product.exclusive_repass_cents)-BigInt(product.exclusive_production_cents)))return null;
+    seen.add(product.item_id);
+   }
+  }
+  const raw=JSON.stringify(value);if(utf8Length(raw)>12288)return null;return JSON.parse(raw);
+ }catch{return null;}
+}
+function createAgentPeriodController(options={}){
+ const doc=options.documentImpl??globalThis.document,getDashboard=options.getDashboard??(()=>globalThis.brazaMonthDashboard),getLocation=options.getLocation??(()=>globalThis.location),history=options.historyImpl??globalThis.history,now=options.now??(()=>new Date());
+ const el=suffix=>doc?.getElementById?.('mlsAgentPeriod'+suffix),root=el('');
+ if(!root)return Object.freeze({setPanel(){return false;},sync(){return false;},syncLocation(){return Promise.resolve(false);},selectMonth(){return Promise.resolve(false);},stop(){}});
+ const scopes={
+  agents:'Indicadores financeiros, prioridades e conciliação usam o mês escolhido. Catálogo, fila DTF e conexão dos agentes mostram fontes atuais, sem reconstruir o passado.',
+  'agent-finance':'Resultado, despesas, repasses e conciliação usam o mês escolhido e as fontes salvas disponíveis. Ausência de histórico mantém os valores indisponíveis, sem presumir zero.',
+  'agent-ads':'Investimento, vendas atribuídas e ROAS usam os anúncios salvos do mês escolhido. Atribuição de anúncios é diferente do total de vendas da loja.',
+  'agent-products':'Vendas e referência de custo usam o mês escolhido. Catálogo, variações e regras de custo são as fontes atuais; não representam o catálogo ou estoque daquele mês.',
+  'agent-production':'A referência de custo das vendas usa o mês escolhido. A fila DTF é atual. A produção realizada mantém seu próprio mês e semana no registro histórico, sem alterar rascunhos.',
+  'agent-returns':'Devoluções e conciliação financeira usam o mês escolhido. O controle de recebimento físico tem seu próprio mês quando fixado; associações com fabricação mostram o histórico salvo.',
+  'agent-auditor':'Confiabilidade, divergências e conciliação financeira usam as evidências salvas do mês escolhido. Dados ausentes permanecem indisponíveis e não confirmam ausência de problemas.',
+  'agent-hermes':'O contexto financeiro dos agentes usa o mês escolhido. Conexão, fila de tarefas e limites operacionais são atuais; relatórios anteriores preservam suas próprias datas e evidências.'
+ };
+ let stopped=false,panel='',selected='',snapshot=null,pending=false,sequence=0,subscribed=null,unsubscribe=null,inputDirty=false,message='',error=false;
+ const currentMonth=()=>new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(now()).slice(0,7);
+ const validMonth=value=>typeof value==='string'&&/^\d{4}-(0[1-9]|1[0-2])$/.test(value)&&value>='2000-01'&&value<=currentMonth();
+ const label=value=>{try{return new Intl.DateTimeFormat('pt-BR',{month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(value+'-01T12:00:00Z'));}catch{return value;}};
+ function locationMonth(location=getLocation()){
+  try{const values=new URL(location.href).searchParams.getAll('month');return values.length===1&&validMonth(values[0])?values[0]:null;}catch{return null;}
+ }
+ function updateUrl(month,{push=false,before=null}={}){
+  if(!validMonth(month))return;
+  try{
+   const location=getLocation(),current=new URL(location.href),target=new URL(location.href);target.searchParams.set('month',month);
+   // The daily controller may replace month/date before this saved read
+   // resolves. Keep the original entry so the owner's month choice remains
+   // navigable with browser back and forward, while retaining the new date.
+   if(push&&before&&typeof history?.pushState==='function'&&typeof history?.replaceState==='function'){
+    const previous=new URL(before.href),nextState=history.state??{};
+    if(previous.href===target.href)return;
+    if(current.href!==previous.href)history.replaceState(before.state,'',previous.pathname+previous.search+previous.hash);
+    history.pushState(nextState,'',target.pathname+target.search+target.hash);return;
+   }
+   if(current.searchParams.getAll('month').length===1&&current.searchParams.get('month')===month)return;
+   const method=push?'pushState':'replaceState';history?.[method]?.(history.state??{},'',target.pathname+target.search+target.hash);
+  }catch{}
+ }
+ function status(text,invalid=false){message=text;error=invalid;paint();}
+ function readSnapshot(){try{return getDashboard()?.getSnapshot?.()??null;}catch{return null;}}
+ function paint(){
+  if(stopped)return;
+  const month=validMonth(selected)?selected:currentMonth(),blocked=pending||snapshot?.period_loading===true;
+  root.hidden=!Object.hasOwn(scopes,panel);root.setAttribute?.('aria-busy',String(blocked));
+  const input=el('Month');if(input){input.max=currentMonth();if(!inputDirty)input.value=month;input.disabled=blocked;}
+  for(const suffix of ['Apply','Previous','Next','Current'])if(el(suffix))el(suffix).disabled=blocked;
+  if(el('Previous'))el('Previous').disabled=blocked||month==='2000-01';
+  if(el('Next'))el('Next').disabled=blocked||month===currentMonth();
+  if(el('Current'))el('Current').disabled=blocked||month===currentMonth();
+  if(el('Selected'))el('Selected').textContent=label(month)+' · Brasília';
+  if(el('Scope'))el('Scope').textContent=scopes[panel]??scopes.agents;
+  const target=el('Status');if(target){target.hidden=!error&&!blocked&&!message&&snapshot?.month===month&&!!snapshot.status;target.dataset.error=String(error);target.textContent=message||(blocked?'Conferindo o mês selecionado nas fontes salvas…':snapshot?.month===month&&snapshot.status?'Mês compartilhado entre os agentes. Confira a cobertura e as pendências em cada painel.':'Sem resumo validado para este mês. Os valores permanecem indisponíveis; não representam zero.');}
+ }
+ function accept(value){
+  if(stopped)return false;snapshot=value;
+  if(validMonth(value?.month)){const changed=selected!==value.month;selected=value.month;if(changed){inputDirty=false;message='';error=false;}if(!pending)updateUrl(selected);}
+  paint();return true;
+ }
+ function sync(){
+  if(stopped)return false;
+  const dashboard=getDashboard();
+  if(dashboard!==subscribed&&typeof dashboard?.subscribe==='function'){
+   try{unsubscribe?.();}catch{}subscribed=dashboard;unsubscribe=null;
+   try{const cleanup=dashboard.subscribe(accept);if(typeof cleanup==='function')unsubscribe=cleanup;}catch{}
+  }
+  return accept(readSnapshot());
+ }
+ async function selectMonth(month,{push=true}={}){
+  // Buttons cannot overlap reads. Browser back/forward may replace a pending
+  // selection; its newer generation owns the result and never replays a write.
+  if(stopped||pending&&push)return false;
+  if(!validMonth(month)){inputDirty=false;status('Escolha um mês válido entre janeiro de 2000 e o mês atual em Brasília.',true);return false;}
+  sync();
+  if(snapshot?.period_change_blocked===true&&month!==selected){inputDirty=false;status('Salve ou recarregue os rascunhos financeiros antes de trocar o mês. Seus dados não foram alterados.',true);return false;}
+  const dashboard=getDashboard();if(typeof dashboard?.selectMonth!=='function'){inputDirty=false;status('Aguarde o carregamento da sessão e tente escolher o mês novamente.',true);return false;}
+  if(month===selected&&snapshot?.status){inputDirty=false;message='';error=false;updateUrl(month,{push});paint();return true;}
+  let before=null;if(push)try{before={href:getLocation().href,state:history?.state??{}};}catch{}
+  const token=++sequence;pending=true;message='Conferindo o mês selecionado nas fontes salvas…';error=false;paint();
+  try{
+   const result=await dashboard.selectMonth(month);if(stopped||token!==sequence)return false;
+   const value=readSnapshot();snapshot=value;
+   if(validMonth(value?.month)&&value.month===month){selected=month;inputDirty=false;message='';error=false;updateUrl(month,{push,before});return result!==false;}
+   inputDirty=false;status(value?.period_change_blocked===true?'Salve ou recarregue os rascunhos financeiros antes de trocar o mês. Seus dados não foram alterados.':'Não foi possível selecionar este mês agora. O período anterior foi preservado.',true);return false;
+  }catch{if(!stopped&&token===sequence){inputDirty=false;status('Não foi possível abrir este mês agora. Tente novamente; seus rascunhos foram preservados.',true);}return false;}
+  finally{if(!stopped&&token===sequence){pending=false;paint();}}
+ }
+ function shift(delta){const date=new Date((validMonth(selected)?selected:currentMonth())+'-01T12:00:00Z');date.setUTCMonth(date.getUTCMonth()+delta);return selectMonth(date.toISOString().slice(0,7));}
+ function setPanel(next){panel=typeof next==='string'?next:'';paint();return !root.hidden;}
+ function syncLocation(location=getLocation()){
+  const month=locationMonth(location)??currentMonth();if(month===selected){updateUrl(selected);return Promise.resolve(true);}return selectMonth(month,{push:false});
+ }
+ function stop(){stopped=true;sequence++;pending=false;try{unsubscribe?.();}catch{}unsubscribe=null;}
+ selected=locationMonth()??currentMonth();
+ if(el('Form'))el('Form').onsubmit=event=>{event?.preventDefault?.();return selectMonth(el('Month')?.value);};
+ if(el('Month')){el('Month').oninput=()=>{inputDirty=true;};el('Month').onchange=()=>selectMonth(el('Month')?.value);}
+ if(el('Previous'))el('Previous').onclick=()=>shift(-1);
+ if(el('Next'))el('Next').onclick=()=>shift(1);
+ if(el('Current'))el('Current').onclick=()=>selectMonth(currentMonth());
+ paint();sync();
+ return Object.freeze({setPanel,sync,syncLocation,selectMonth,stop});
+}
+const commercialWorkspace=globalThis.mlsCommercialContext??null;
+const commercialHas=cap=>!commercialWorkspace||commercialWorkspace.capabilities.includes(cap);
+let renderedReportKey=null,todayAdsPromise=null,shopOrdersPromise=null,shopOrdersSnapshot=null,shopOrdersRefreshTimer=null;
+let state=null,csrf='',rows=[],selectedJobId=null,pollTimer=null,pollPromise=null,submitting=false,activeBilling='unverified',settingsPromise=null,settingsLoadGeneration=0;
+let itemsPromise=null,itemsData=null,variantGroups=new Map(),bindingState=null,bindingConflict=null,bindingStale=false,bindingLoadFailed=false,bindingSaving=false,bindingDrafts=new Map(),bindingDraftSequence=0,catalogAutomatingItemId=null,productUnitSelections=new Map();
+const variantCatalogReviews=new Map();
+let customCostSettingsEnabled=false,customCostAssignmentsDraft=[];
+let productionCostsState=null,productionCostsPromise=null,productionCostsSaving=false,productionCostsDirty=false,productionCostsBlocked=false,productionCostsConflict=null,productionCostsEditSequence=0;
+let observationsPromise=null,observationRows=[],observationsCursor=null,observationsLoaded=false,selectedObservationId=null,observationSelectionSequence=0,observationSaving=false;
+const el=id=>document.getElementById(id);
+const money=(c,currency='BRL')=>new Intl.NumberFormat('pt-BR',{style:'currency',currency}).format(c/100);
+const labels={queued:'Na fila',running:'Em processamento',completed:'Concluída',failed:'Falhou',cancelled:'Cancelada'};
+function amount(id){const raw=el(id).value.trim().replace(',','.');if(!/^[0-9]{1,5}(\.[0-9]{1,2})?$/.test(raw))throw Error('Use valores com até duas casas decimais.');const [a,b='']=raw.split('.');return Number(a)*100+Number(b.padEnd(2,'0'));}
+const adminRequest=createAdminApiClient({getCsrf:()=>csrf});
+async function api(path,body,options={}){try{return await adminRequest(path,body,options);}catch(error){if(error?.code==='ADMIN_API_HTTP_ERROR'){const failure=Error(({UNAUTHORIZED:'Sua sessão expirou. Entre novamente.',STORE_PERIOD_REQUEST_INVALID:'Escolha um período válido de até 15 dias.',STORE_PERIOD_UNAVAILABLE:'Não foi possível consultar os pedidos do período. Tente continuar a coleta.',STORE_PERIOD_FRAME_INVALID:'A consulta financeira retornou dados que não puderam ser validados.',STORE_ADJUSTMENTS_INVALID:'Confira os valores de anúncios e despesas do período.',STORE_ADJUSTMENTS_CHANGED_RELOAD:'As despesas mudaram em outra sessão. Recalcule com os valores salvos antes de tentar novamente.',STORE_PERIOD_NOT_FOUND:'A consulta do período não foi encontrada. Inicie uma nova consulta.',VARIANT_BINDING_COMPOSITION_CONFLICT:'Este produto já tem uma composição confirmada manualmente. Preserve esse tipo ou remova e salve os vínculos manuais antes de escolher outro.',VARIANT_CATALOG_UNAVAILABLE:'Não foi possível consultar as variações do catálogo. Atualize os produtos e tente novamente.',VARIANT_CATALOG_REQUEST_INVALID:'O produto selecionado não pôde ser consultado. Atualize os produtos e tente novamente.',PRODUCTION_COSTS_CHANGED_RELOAD:'Os custos mudaram em outra sessão. Carregue e revise a versão atual antes de salvar.',PRODUCTION_COSTS_INVALID:'Confira os valores e componentes dos custos de produção.',PRODUCTION_COST_AMOUNT_INVALID:'Informe custos válidos, com até duas casas decimais e no máximo R$ 10.000,00.',PRODUCTION_COST_ITEMIZED_BASE_REQUIRED:'Informe as duas bases da camiseta sem os componentes separados.',PRODUCTION_COST_COMPONENT_INVALID:'Confira o nome, a aplicação e o valor de cada componente.',PRODUCTION_COST_STATE_INVALID:'Os custos salvos não puderam ser validados. Carregue novamente antes de editar.',INVALID_PRODUCTION_COSTS:'Confira os valores e componentes dos custos de produção.',SETTINGS_CHANGED_RELOAD:'A configuração mudou. Recarregue a página antes de salvar.',BINDINGS_CHANGED_RELOAD:'Os vínculos mudaram. Revise a versão atual antes de salvar.',VARIANT_BINDINGS_CHANGED_RELOAD:'Os vínculos mudaram. Revise a versão atual antes de salvar.',HERMES_DISCONNECTED:'Hermes ainda não está conectado.',HERMES_FINANCE_UPGRADE_REQUIRED:'Atualização do assistente pendente. Aguarde a atualização antes de solicitar uma análise financeira.',HERMES_CONTEXT_STORAGE_INVALID:'O registro financeiro desta análise não pôde ser conferido. O relatório original foi preservado.',HERMES_CONTEXT_STORAGE_UNAVAILABLE:'Não foi possível acessar o registro financeiro agora. Tente novamente.',HERMES_CONTEXT_NOT_FOUND:'O registro financeiro desta análise não foi encontrado.',RUN_BLOCKED_CHECK_BUDGET_COST_OR_ACTIVE_JOB:'Verifique o orçamento, custos não confirmados ou uma execução já ativa.',ADMIN_DB_SETUP_REQUIRED:'Conecte o banco ADMIN_DB antes de usar o painel.',HERMES_PAUSED:'O Hermes está pausado.',OBSERVATION_CUSTOM_COST_MARGIN_UNAVAILABLE:'As margens de kit não se aplicam aos custos personalizados. Confira o resultado destes produtos na Visão geral.',COSTS_CUSTOM_FIELDS_REQUIRED:'Existem custos personalizados salvos. Carregue e revise a versão atual para preservá-los.',COSTS_COMPOSITION_FIELDS_REQUIRED:'Existem composições salvas. Atualize a página e carregue os custos atuais para preservá-las.',COST_RULE_ASSIGNMENT_CATALOG_CONFLICT:'Os tamanhos deste produto não correspondem à regra escolhida. Escolha um tipo de custo compatível com o catálogo; a associação anterior foi preservada.',OBSERVATION_SOURCE_UNAVAILABLE:'A fonte dos itens não está disponível para guardar o recorte. Atualize os produtos e tente novamente.',OBSERVATION_UNAVAILABLE:'Não foi possível consultar os recortes salvos. Atualize a lista para tentar novamente.',OBSERVATION_INVALID_SNAPSHOT:'Este recorte não passou na validação. Atualize os produtos ou a lista para tentar novamente.',OBSERVATION_NOT_FOUND:'Este recorte salvo não foi encontrado. Atualize a lista.'})[error.apiCode]||error.message);failure.status=error.status;failure.apiCode=error.apiCode;failure.code=error.apiCode==='VARIANT_BINDING_COMPOSITION_CONFLICT'?error.apiCode:error.code;throw failure;}throw error;}}
+// Owner-only diagnostic projection. This is a READ on user click; the existing
+// same-origin API client supplies the browser's current signed owner session.
+// No automatic polling, cookies exposed to JavaScript, provider calls or secrets.
+globalThis.mlsFinanceSyncInspector=Object.freeze({read:async()=>{
+ const value=await adminRequest('finance/sync-state',undefined,{timeoutMs:15000});
+ if(value?.schema!=='business_sync_state_v1'||typeof value.enabled!=='boolean'||!['IDLE','RUNNING','COMPLETE','PARTIAL','LIMIT_REACHED','ERROR','PAUSED'].includes(value.status))
+  throw Object.assign(new Error('Diagnóstico administrativo indisponível.'),{code:'FINANCE_SYNC_INVALID'});
+ const stamp=x=>Number.isSafeInteger(x)&&x>=0&&x<=9999999999?x:null;
+ const counter=x=>Number.isSafeInteger(x)&&x>=0&&x<=1000000?x:null;
+ const diagnostic=x=>typeof x==='string'&&/^BUSINESS_SYNC_[A-Z_]{1,64}$/.test(x)?x:null;
+ const sourceCode=x=>typeof x==='string'&&/^BUSINESS_PERIOD_[A-Z_]{1,64}$/.test(x)?x:null;
+ const month=x=>typeof x==='string'&&/^\d{4}-(0[1-9]|1[0-2])$/.test(x)?x:null;
+ const phase=x=>['READY','RETRY_WAIT','BLOCKED'].includes(x)?x:null;
+ const progress=value.summary?.progress;
+ return Object.freeze({
+  schema:'mls_owner_finance_sync_diagnostic_v1',
+  enabled:value.enabled,status:value.status,
+  month:month(value.month),failure_count:counter(value.failure_count),
+  last_error:diagnostic(value.last_error),
+  last_attempt_at:stamp(value.last_attempt_at),last_success_at:stamp(value.last_success_at),
+  next_run_at:stamp(value.next_run_at),lease_expires_at:stamp(value.lease_expires_at),
+  summary_status:['RUNNING','COMPLETE','LIMIT_REACHED'].includes(value.summary?.status)?value.summary.status:null,
+  source_phase:phase(value.summary?.collection?.state),
+  source_code:sourceCode(value.summary?.collection?.code),
+  windows_complete:counter(progress?.windows_complete),windows_total:counter(progress?.windows_total),pages_read:counter(progress?.pages_read)
+ });
+}});
+
+function notice(text){el('message').textContent=text;}
+function elapsed(job){const start=Date.parse(job.started_at||job.created_at),end=job.completed_at?Date.parse(job.completed_at):Date.now();const seconds=Math.max(0,Math.floor((end-start)/1000));return Math.floor(seconds/60)+'min '+String(seconds%60).padStart(2,'0')+'s';}
+function duration(ms){if(!Number.isFinite(ms))return '—';const seconds=Math.max(0,Math.floor(ms/1000));return Math.floor(seconds/60)+'min '+String(seconds%60).padStart(2,'0')+'s';}
+function timing(job){const created=Date.parse(job.created_at),started=job.started_at?Date.parse(job.started_at):null,ended=job.completed_at?Date.parse(job.completed_at):Date.now();const queue=duration((started===null?ended:started)-created),processing=started===null?'ainda não iniciou':duration(ended-started);return 'Fila: '+queue+' · Processamento: '+processing+' · Total: '+duration(ended-created);}
+function unconfirmed(job){return job.cost_cents===null||(job.cost_cents===0&&job.cost_source!=='operator_confirmed');}
+function jobLabel(job){let cost;if(activeBilling==='subscription')cost='uso da assinatura';else if(['queued','running'].includes(job.status))cost=activeBilling==='subscription'?'uso da assinatura':'reserva '+money(job.reserve_cents,'USD');else if(unconfirmed(job))cost=job.cost_cents===0?'custo não confirmado (agente informou US$ 0,00)':'custo não confirmado';else cost=money(job.cost_cents,'USD')+' · '+(job.cost_source==='operator_confirmed'?'confirmado':'estimado');return (labels[job.status]||job.status)+(job.start_date?' · dados '+job.start_date.split('-').reverse().join('/'):'')+' · executada '+new Date(job.created_at).toLocaleDateString('pt-BR',{timeZone:'America/Sao_Paulo'})+' · '+elapsed(job)+' · '+cost;}
+function node(tag,text,cls){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;}
+const jobFinancialContexts=new Map(),jobFinancialOpen=new Set();
+function checkedJobFinancialContext(value,job){
+ const own=(row,key)=>Object.getOwnPropertyDescriptor(row||{},key)?.value,plain=row=>row!==null&&typeof row==='object'&&[Object.prototype,null].includes(Object.getPrototypeOf(row));
+ if(!plain(value)||Reflect.ownKeys(value).length!==3||!['job_id','fingerprint','context'].every(key=>Object.hasOwn(Object.getOwnPropertyDescriptor(value,key)||{},'value'))||own(value,'job_id')!==job.id||typeof own(value,'fingerprint')!=='string'||!/^[a-f0-9]{64}$/.test(own(value,'fingerprint')))throw Error('HERMES_FINANCIAL_CONTEXT_INVALID');
+ const context=projectHermesFinancialContext(own(value,'context'));if(!context||job.start_date&&context.analysis_date!==job.start_date)throw Error('HERMES_FINANCIAL_CONTEXT_INVALID');
+ return {job_id:job.id,fingerprint:own(value,'fingerprint'),context};
+}
+function financialContextEntry(id){
+ if(!jobFinancialContexts.has(id))jobFinancialContexts.set(id,{value:null,error:false,notFound:false,pending:null});
+ if(jobFinancialContexts.size>60)for(const [key,value] of jobFinancialContexts){if(key!==selectedJobId&&!value.pending){jobFinancialContexts.delete(key);jobFinancialOpen.delete(key);if(jobFinancialContexts.size<=60)break;}}
+ return jobFinancialContexts.get(id);
+}
+async function loadJobFinancialContext(job,{retry=false}={}){
+ const entry=financialContextEntry(job.id);if(entry.pending)return entry.pending;if(!retry&&(entry.value||entry.notFound||entry.error))return entry.value;
+ const work=(async()=>{try{entry.error=false;entry.notFound=false;entry.value=checkedJobFinancialContext(await api('jobs/'+encodeURIComponent(job.id)+'/financial-context'),job);return entry.value;}
+  catch(error){entry.error=true;entry.notFound=error?.status===404;entry.value=null;return null;}
+  finally{if(entry.pending===work)entry.pending=null;}})();entry.pending=work;return work;
+}
+const contextTime=value=>Number.isSafeInteger(value)&&value>0?new Date(value*1000).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'})+' · Brasília':'Não informado';
+function paintJobFinancialContext(job,body){
+ const entry=financialContextEntry(job.id);body.replaceChildren();
+ if(entry.pending){body.append(node('p','Consultando os dados registrados nesta análise…','field-help'));return;}
+ if(entry.error){
+  body.append(node('p',entry.notFound?'Não há um registro financeiro disponível para esta análise.':'Não foi possível conferir o registro financeiro. O relatório foi preservado; tente novamente.','field-help'));
+  const retry=node('button','Tentar novamente','button-secondary');retry.type='button';retry.onclick=async()=>{const request=loadJobFinancialContext(job,{retry:true});paintJobFinancialContext(job,body);await request;if(selectedJobId===job.id&&el('analysisView').contains(body))paintJobFinancialContext(job,body);};body.append(retry);return;
+ }
+ if(!entry.value){body.append(node('p','Abra esta seção para conferir o financeiro usado nesta análise.','field-help'));return;}
+ const {context,fingerprint}=entry.value;
+ body.append(node('p','Registro de '+contextTime(context.captured_at)+'. Atualizações posteriores do painel não alteram esta referência.','field-help'));
+ if(!context.available||!context.monthly){
+  body.append(node('p',context.unavailable_code==='LEGACY_CONTEXT_MISSING'?'Esta análise é anterior ao registro financeiro integrado. Não há valores mensais salvos para ela.':'O financeiro da loja não estava disponível quando esta análise foi preparada. Nenhum saldo foi presumido.','job-financial-notice'));
+  const overview=node('a','Abrir a Visão geral','button-link');overview.href='/admin?tab=overview&month='+encodeURIComponent(context.analysis_date.slice(0,7));body.append(overview);return;
+ }
+ const monthly=context.monthly,summary=monthly.summary,totals=monthly.totals,date=value=>value.split('-').reverse().join('/'),status=({READY:'Estimativa mensal',PROVISIONAL:'Saldo mensal provisório',PARTIAL_COSTS:'Custos pendentes',WAITING:'Dados incompletos'})[summary.state],period=date(monthly.start_date)+' a '+date(monthly.end_date);
+ const heading=node('div',undefined,'job-financial-heading');heading.append(node('h3','Financeiro da loja · '+monthly.month.split('-').reverse().join('/')),node('span',status,'badge'));
+ const scope=node('p',undefined,'scope-note');scope.dataset.hermesFinancialScope='MONTHLY_RECORDED';scope.append(node('strong','Acumulado mensal registrado: '+period+'.'),node('span',' Dia analisado dos anúncios: '+date(context.analysis_date)+'. Os dados desse dia aparecem separadamente abaixo.'));body.append(heading,scope);
+ const help=summary.state==='PARTIAL_COSTS'?'Saldo após os custos já identificados. Ainda faltam custos de '+summary.production_coverage.pending_units+' unidade(s); este valor não é lucro líquido.':summary.state==='PROVISIONAL'?'Conta feita com os valores registrados. Devoluções e atualização das fontes ainda podem alterar o saldo.':summary.state==='READY'?'Produção, imposto, anúncios e despesas cadastradas descontados. É uma estimativa; recebimentos ainda não estão conciliados.':'Faltam dados para totalizar o saldo. Os valores conhecidos continuam indicados abaixo.';
+ body.append(node('p',help,'job-financial-notice'));
+ const coverage=summary.production_coverage,orders=monthly.order_coverage;
+ body.append(node('p',orders.paid+' pedido(s) pagos · '+orders.completed+' concluído(s) · '+orders.ongoing+' em andamento · '+orders.cancelled+' cancelado(s) excluído(s).','field-help'),node('p',Number.isSafeInteger(coverage.total_units)&&Number.isSafeInteger(coverage.known_units)?'Unidades vendidas com custo: '+coverage.known_units+' de '+coverage.total_units+'.':'Cobertura das unidades com custo ainda não disponível.','field-help'));
+ if(orders.returns+orders.returns_unknown)body.append(node('p',(orders.returns+orders.returns_unknown)+' pedido(s) com devolução ou informação de devolução ainda em conferência. O saldo pode mudar após a conciliação.','job-financial-notice'));
+ if(monthly.pending.includes('FINANCIAL_SOURCE_STALE'))body.append(node('p','A leitura financeira estava desatualizada neste registro. Confira os horários das fontes antes de tomar uma decisão.','job-financial-notice'));
+ const metrics=node('div',undefined,'report-metrics job-financial-metrics'),metric=(label,amount,note)=>{const row=node('div',undefined,'report-metric');row.append(node('small',label),node('strong',Number.isSafeInteger(amount)?money(amount):'Pendente'),node('span',note));metrics.append(row);};
+ metric('Vendas da loja no mês',totals.sales_cents,totals.sales_cents===null?'Já identificado: '+(Number.isSafeInteger(totals.known_sales_cents)?money(totals.known_sales_cents):'pendente'):'Pedidos pagos de '+period+'.');
+ metric('Investimento em anúncios no mês',totals.ads_spend_cents,'Consumo dos anúncios de '+period+'.');
+ metric(summary.state==='PARTIAL_COSTS'?'Saldo mensal com custos identificados':summary.state==='PROVISIONAL'?'Saldo mensal provisório':'Saldo mensal estimado',summary.balance_cents,help);
+ body.append(metrics);
+ const monthlyRoas=typeof totals.ads_calculated_roas_raw==='string'?new Intl.NumberFormat('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(totals.ads_calculated_roas_raw))+'x':'Pendente',tacos=Number.isSafeInteger(totals.tacos_bps)?new Intl.NumberFormat('pt-BR',{maximumFractionDigits:2}).format(totals.tacos_bps/100)+'%':'Pendente';
+ body.append(node('p','ROAS dos anúncios no mês: '+monthlyRoas+' · Gasto de Ads sobre vendas da loja (TACOS): '+tacos+'.','field-help'),node('p','ROAS usa vendas atribuídas aos anúncios. TACOS compara o investimento em anúncios com as vendas pagas da loja.','field-help'));
+ body.append(node('h3','Como chegamos ao saldo mensal'),node('p','O repasse já inclui as deduções informadas pela Shopee. A conta abaixo aplica os custos adicionais registrados nesta análise.','field-help'));
+ const deductions=node('dl',undefined,'job-financial-deductions');deductions.setAttribute('aria-label','Composição do saldo mensal registrado');
+ for(const [key,label,amount,sign] of [['expected_repass_cents','Repasse previsto da Shopee',totals.expected_repass_cents,''],['known_production_cost_cents','Custo de referência das unidades vendidas identificadas',totals.known_production_cost_cents,'− '],['invoice_tax_cents','Imposto mensal registrado',totals.invoice_tax_cents,'− '],['ads_spend_cents','Anúncios no acumulado mensal',totals.ads_spend_cents,'− '],['external_expenses_cents','Outras despesas cadastradas',totals.external_expenses_cents,'− '],['recharge_addback_cents','Recarga de anúncios reposta',totals.recharge_addback_cents,'+ ']]){const row=node('div');row.dataset.hermesFinancialTerm=key;row.append(node('dt',label),node('dd',Number.isSafeInteger(amount)?sign+money(amount):'Pendente'));deductions.append(row);}
+ const total=node('div');total.dataset.hermesFinancialTerm='balance_cents';const totalLabel=node('dt'),totalAmount=node('dd');totalLabel.append(node('strong','Saldo mensal registrado'));totalAmount.append(node('strong',Number.isSafeInteger(summary.balance_cents)?money(summary.balance_cents):'Pendente'));total.append(totalLabel,totalAmount);deductions.append(total);body.append(deductions,node('p','O custo de referência das vendas foi salvo com esta análise. Os gastos por data de fabricação têm histórico próprio em Produção.','field-help'));
+ const currentMonth=node('a','Ver a leitura atual deste mês no Financeiro','button-link');currentMonth.href='/admin?tab=agent-finance&month='+encodeURIComponent(monthly.month);body.append(currentMonth,node('p','Esse acesso consulta a leitura atual. O registro financeiro desta análise continua preservado.','field-help'));
+ const actions=node('ol',undefined,'job-financial-actions');body.append(node('h3','Próximas ações da loja'));
+ for(const action of monthly.top_actions){const row=node('li');row.append(node('strong',action.label),node('p',action.detail),node('span',({HIGH:'Prioridade alta',MEDIUM:'Prioridade média',LOW:'Acompanhar'})[action.priority],'field-help'));actions.append(row);}if(!monthly.top_actions.length)actions.append(node('li','Nenhuma ação adicional registrada nesta leitura.'));body.append(actions);
+ if(monthly.product_references.length){const products=node('details',undefined,'job-financial-products');products.append(node('summary','Produtos considerados nesta leitura'),node('p','Referências de pedidos exclusivos. Os saldos por produto ainda não descontam anúncios e o imposto mensal.','field-help'));for(const product of monthly.product_references)products.append(node('p','Produto #'+product.item_id+' · '+product.units+' unidade(s) · saldo antes de anúncios e imposto: '+(Number.isSafeInteger(product.exclusive_contribution_cents)?money(product.exclusive_contribution_cents):'pendente')+(product.mixed_orders?' · '+product.mixed_orders+' pedido(s) com outros produtos, sem rateio.':'.'),'field-help'));body.append(products);}
+ const evidence=node('details',undefined,'job-financial-evidence'),versions=monthly.versions;evidence.append(node('summary','Conferir fontes e versões'));
+ for(const [label,at] of [['Primeira leitura financeira usada',monthly.source_checked_at.finance_oldest_at],['Última leitura financeira usada',monthly.source_checked_at.finance_latest_at],['Anúncios consultados em',monthly.source_checked_at.ads_at]])evidence.append(node('p',label+': '+contextTime(at),'field-help'));
+ evidence.append(node('p','Versões: vínculos '+versions.bindings+' · custos '+versions.costs+' · regras '+(versions.cost_rules??'não informadas')+' · imposto '+(versions.tax_policy??'não informado')+' · despesas '+versions.expenses+' · catálogo '+(versions.classifications??'não informado')+'.','field-help'),node('p','Registro salvo: '+fingerprint,'field-help job-financial-fingerprint'));body.append(evidence,node('p','Somente análise. Este registro não altera campanhas ou orçamentos e não confirma lucro realizado.','field-help'));
+}
+function appendJobFinancialContext(job,target){
+ const details=node('details',undefined,'job-financial-context'),body=node('div',undefined,'job-financial-body');details.dataset.jobId=job.id;details.open=jobFinancialOpen.has(job.id);details.append(node('summary','Dados financeiros usados nesta análise'),body);target.append(details);paintJobFinancialContext(job,body);
+ const read=async()=>{if(!details.open){jobFinancialOpen.delete(job.id);return;}jobFinancialOpen.add(job.id);const request=loadJobFinancialContext(job);paintJobFinancialContext(job,body);await request;if(selectedJobId===job.id&&target.contains(details))paintJobFinancialContext(job,body);};details.ontoggle=read;if(details.open)read();
+}
+function reportView(job){const target=el('analysisView'),key=JSON.stringify([job.id,job.status,job.result,job.failure,job.start_date,job.end_date]);if(renderedReportKey===key)return;renderedReportKey=key;target.replaceChildren();
+ const date=job.start_date||(job.result?parseReport(job.result).date:null);const head=node('div',undefined,'report-head');const heading=node('div');heading.append(node('div','RELATÓRIO DA LOJA','eyebrow'),node('h2',date?'Análise de '+date.split('-').reverse().join('/'):'Sua análise'));head.append(heading,node('span',labels[job.status]||job.status,'badge'));target.append(head,node('p','Dados dos anúncios: '+(date?date.split('-').reverse().join('/'):'consulte o original')+' · Análise registrada em '+new Date(job.created_at).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'})+' · Brasília','field-help'));appendJobFinancialContext(job,target);
+ if(!job.result){target.append(node('div',job.failure||(['queued','running'].includes(job.status)?'Estamos preparando seu relatório. O resultado aparece aqui assim que o Hermes concluir.':'Esta execução não retornou um relatório.'),'report-empty'));return;}
+ target.append(node('h3',date?'Anúncios do dia '+date.split('-').reverse().join('/'):'Anúncios do período','job-report-daily-heading'),node('div','Conversões atribuídas aos anúncios do dia. Não são o total de vendas da loja nem o resultado financeiro mensal.','scope-note'));
+ const data=parseReport(job.result),summary=node('div',undefined,'decision-card');summary.append(node('span','DIAGNÓSTICO','eyebrow'),node('h3',data.economic==='UNKNOWN'||data.economic==='UNVERIFIED'?'Rentabilidade ainda não confirmada':'Confira o diagnóstico do Hermes'),node('p',data.recommendation==='OBSERVE'?'Recomendação: observar. Confira os dados e a composição dos pedidos antes de decidir.':data.recommendation?'Recomendação recebida: '+data.recommendation:'O relatório completo contém a avaliação e as limitações desta análise.'),node('span','Anúncios sem alterações','badge'));target.append(summary);
+ const metrics=node('div',undefined,'report-metrics');for(const [label,value,help] of [['Investimento · raw',data.investment,'Moeda e unidade não validadas aqui'],['Cliques',data.clicks,'Reportados na análise'],['Impressões',data.impressions,'Reportadas na análise']])if(value!==null){const metric=node('div',undefined,'report-metric');metric.append(node('small',label),node('strong',value),node('span',help));metrics.append(metric);}if(metrics.childNodes.length)target.append(metrics);
+ if(data.orders||data.roas){const comparison=node('div',undefined,'attribution');comparison.append(node('h3','Resultados por atribuição'),node('p','Diretas e amplas são leituras separadas. Não some os valores.','muted'));const grid=node('div',undefined,'attribution-grid');['Diretas','Amplas'].forEach((label,i)=>{const card=node('div');card.append(node('h3',label));if(data.orders)card.append(node('p',data.orders[i]+' pedidos/conversões reportados'));if(data.roas)card.append(node('p','ROAS raw: '+data.roas[i]));grid.append(card);});comparison.append(grid,node('p','ROAS não confirma lucro. Pedidos reportados não comprovam quantidade de kits.','field-help'));target.append(comparison);}
+ const readable=data.sections.filter(s=>!/^Métricas|^Referências consultadas/i.test(s.title));for(const section of readable){const details=node('details',undefined,'report-section');details.append(node('summary',section.title),node('div',section.body,'report-text'));target.append(details);}
+ const original=node('details',undefined,'report-original');original.append(node('summary','Ver relatório original completo'));const copy=node('button','Copiar relatório','button-secondary');copy.type='button';copy.onclick=async()=>{try{await navigator.clipboard.writeText(job.result);notice('Relatório copiado.');}catch{notice('Não foi possível copiar. Selecione o texto do relatório original.');}};original.append(copy);const raw=node('pre');raw.id='result';raw.textContent=job.result;original.append(raw);target.append(original);
+}
+function selectedResult(){const job=rows.find(row=>row.id===selectedJobId);if(!job)return;el('timing').textContent=timing(job);el('timing').hidden=false;reportView(job);const pending=el('analysisView').querySelector('.report-empty');if(pending&&['queued','running'].includes(job.status))pending.textContent=job.status==='running'?'O Hermes está analisando. Tempo decorrido: '+elapsed(job)+'. A resposta aparecerá automaticamente.':'Aguardando a ponte retirar a tarefa da fila. Tempo: '+elapsed(job)+'.';}
+function renderJobs(){if(!selectedJobId||!rows.some(job=>job.id===selectedJobId))selectedJobId=rows[0]?.id||null;const editing=el('jobs').contains(document.activeElement)&&document.activeElement.tagName==='INPUT';if(!editing){const openCosts=new Set([...el('jobs').querySelectorAll('.job-entry')].filter(row=>row.querySelector('details')?.open).map(row=>row.querySelector('[data-job-id]').dataset.jobId));const drafts=new Map([...el('jobs').querySelectorAll('input')].map(input=>[input.id,input.value]));el('jobs').replaceChildren();for(const job of rows){const row=document.createElement('div');row.className='job-entry';const button=document.createElement('button');button.dataset.jobId=job.id;button.textContent=jobLabel(job);button.setAttribute('aria-pressed',String(job.id===selectedJobId));button.onclick=()=>{selectedJobId=job.id;for(const other of el('jobs').querySelectorAll('[data-job-id]'))other.setAttribute('aria-pressed',String(other.dataset.jobId===job.id));selectedResult();};row.append(button);if(['completed','failed'].includes(job.status)){const cost=document.createElement('input');cost.id='cost-'+job.id;cost.value=drafts.get(cost.id)||'';cost.placeholder='Custo confirmado em US$';cost.setAttribute('aria-label','Custo confirmado desta execução em dólares');cost.inputMode='decimal';const save=document.createElement('button');save.textContent='Registrar custo';save.onclick=async()=>{try{await api('jobs/cost',{id:job.id,cost_cents:amount(cost.id)});notice('Custo registrado no histórico.');await pollLive();}catch(error){notice(error.message);}};const costs=node('details',undefined,'job-cost');costs.open=openCosts.has(job.id);costs.append(node('summary','Conferir custo desta execução'),cost,save);row.append(costs);}el('jobs').append(row);}}if(!selectedJobId||!rows.some(job=>job.id===selectedJobId))selectedJobId=rows[0]?.id||null;selectedResult();}
+function simulate(){if(!state)return;const plus=['G1','G2','G3'];const count=Number(plus.includes(el('male').value))+Number(plus.includes(el('female').value));const margin=[state.values.regular_cents,state.values.mixed_cents,state.values.plus_cents][count],benchmark=Math.floor((margin*state.values.ad_share_percent+50)/100);el('simulation').textContent='Margem '+money(margin)+' · referência '+money(benchmark)+' · equilíbrio '+money(margin);}
+function billingHelp(){const mode=el('billing').value,subscription=mode==='subscription';el('budgetField').hidden=subscription;el('reserveField').hidden=subscription;el('billingHelp').textContent=subscription?'Login da assinatura: o painel controla a quantidade de análises. Confira limites e possíveis créditos adicionais na sua conta. Esta opção não altera o login do servidor.':mode==='api'?'Cobrança por API: estimativas e custos desconhecidos participam do controle do orçamento. Confira a fatura no provedor.':'Confirme a autenticação usada no servidor. Não escolha assinatura apenas para contornar um bloqueio de custos.';}
+function applySettings(margins=true,controls=true){const v=state.values;if(margins){el('regular').value=Number.isSafeInteger(v.regular_cents)?(v.regular_cents/100).toFixed(2):'';el('mixed').value=Number.isSafeInteger(v.mixed_cents)?(v.mixed_cents/100).toFixed(2):'';el('plus').value=Number.isSafeInteger(v.plus_cents)?(v.plus_cents/100).toFixed(2):'';el('share').value=v.ad_share_percent;}if(controls){el('operation').value=v.hermes_mode;el('hour').value=v.daily_hour;el('budget').value=Number.isSafeInteger(v.monthly_budget_cents)?(v.monthly_budget_cents/100).toFixed(2):'';el('reserve').value=Number.isSafeInteger(v.run_reserve_cents)?(v.run_reserve_cents/100).toFixed(2):'';el('billing').value=v.billing_mode;el('runLimit').value=v.monthly_run_limit;billingHelp();}simulate();}
+async function loadAudit(){const audit=await api('audit');el('audit').replaceChildren();for(const row of audit.rows){const line=document.createElement('p'),v=JSON.parse(row.payload);line.textContent='Versão '+row.revision+' · '+new Date(row.created_at).toLocaleString('pt-BR')+' · margens '+[v.regular_cents,v.mixed_cents,v.plus_cents].map(c=>money(c)).join(' / ');el('audit').append(line);}}
+function schedulePoll(){clearTimeout(pollTimer);if(!document.hidden)pollTimer=setTimeout(()=>pollLive(),rows.some(job=>['queued','running'].includes(job.status))?5000:15000);}
+function paintHermesReadiness(value){
+ const connected=value.hermes_connected===true,upgrade=connected&&(value.hermes_finance_ready===false||value.execution_access?.reason==='bridge_upgrade_required');
+ el('connection').textContent=upgrade?'Assistente: atualização pendente':connected?'Hermes: conectado':'Hermes: desconectado';el('connection').dataset.status=upgrade?'pending':connected?'connected':'disconnected';
+ el('setup').textContent=upgrade?'Atualização do assistente pendente. As novas análises aguardam a integração com o financeiro da loja.':connected?'O assistente está disponível para receber análises.':'O painel da loja continua disponível. As análises aguardam a conexão do assistente.';
+ if(upgrade){el('run').disabled=true;el('runReason').hidden=false;el('runReason').textContent='Atualização do assistente pendente. As análises financeiras ficam disponíveis após essa atualização.';}
+ return upgrade;
+}
+async function pollLive(){if(!commercialHas('finance.read'))return false;if(pollPromise)return pollPromise;clearTimeout(pollTimer);pollPromise=(async()=>{try{const live=await api('live'),previous=new Map(rows.map(job=>[job.id,job.status]));rows=live.rows;activeBilling=live.billing_mode;el('runsMonth').textContent=live.budget.total_runs||0;el('billingSummary').textContent=({subscription:'Assinatura',api:'API',unverified:'A confirmar'})[live.billing_mode];const upgradePending=paintHermesReadiness(live);el('mode').textContent=({manual:'Manual',scheduled:'Agendado',paused:'Pausado'})[live.mode];el('run').disabled=submitting||!live.execution_access.allowed||upgradePending;
+const reasons={bridge_upgrade_required:'Atualização do assistente pendente. As análises financeiras ficam disponíveis após essa atualização.',disconnected:'A ponte está desconectada. A solicitação ficará disponível quando a conexão voltar.',paused:'O Hermes está pausado. Selecione Manual e salve a operação para analisar.',active:'Uma análise já está na fila ou em processamento. Aguarde a conclusão.',run_limit:'Você atingiu o limite mensal de análises definido no painel.',cost_unconfirmed:'Há custos não confirmados. Se você usa login da assinatura, selecione essa forma de uso e salve a operação. Se usa API, confira e registre os custos antes de continuar.',budget:'O orçamento de referência da API não comporta outra reserva.'};
+el('runReason').hidden=live.execution_access.allowed&&!upgradePending;el('runReason').textContent=upgradePending?reasons.bridge_upgrade_required:reasons[live.execution_access.reason]||'';
+el('budgetStatus').textContent=live.billing_mode==='subscription'?'Uso do painel: '+(live.budget.total_runs||0)+' de '+live.monthly_run_limit+' análises neste mês (UTC). Consulte limites e créditos na conta do provedor.':'Comprometido no mês (UTC): '+money(live.budget.committed_cents,'USD')+' · custo não confirmado: '+(live.budget.unknown_cost_runs||0)+' execução(ões).';
+renderJobs();const selected=rows.find(job=>job.id===selectedJobId);if(selected&&['queued','running'].includes(previous.get(selected.id))&&['completed','failed'].includes(selected.status))notice(selected.status==='completed'?'Análise concluída. A resposta foi atualizada automaticamente.':'A análise falhou. Consulte a execução antes de tentar novamente.');el('autoStatus').textContent='Atualização automática ativa · última consulta '+new Date().toLocaleTimeString('pt-BR',{timeZone:'America/Sao_Paulo'})+'.';}catch(error){el('connection').textContent='Hermes: sem leitura';el('connection').dataset.status='pending';el('autoStatus').textContent='Não foi possível atualizar agora. Tentaremos novamente automaticamente. '+error.message;}finally{pollPromise=null;schedulePoll();}})();return pollPromise;}
+async function loadTodayAds(){
+ if(todayAdsPromise)return todayAdsPromise;
+ todayAdsPromise=(async()=>{
+  try{
+   const data=await api('ads-today'),target=el('todayAds');el('todayAdsTime').textContent='';target.replaceChildren();
+   if(Object.hasOwn(data,'measurement')){
+    const measurement=projectAdsMeasurement(data.measurement);
+    if(!measurement||measurement.total_days!==1||measurement.start_date!==data.date||measurement.end_date!==data.date||measurement.status==='UNAVAILABLE')throw Error('ADS_MEASUREMENT_INVALID');
+    target.append(node('p','Dados de '+measurement.start_date.split('-').reverse().join('/')),node('p',measurement.expense_cents===null?'Investimento pendente':'Investimento: '+money(measurement.expense_cents)));
+    const grid=node('div',undefined,'attribution-grid');
+    for(const [label,values] of [['Diretas',measurement.totals.direct],['Amplas',measurement.totals.broad]]){const card=node('div');card.append(node('h3',label),node('p',values.gmv_cents===null?'Vendas atribuídas não informadas':'Vendas atribuídas: '+money(values.gmv_cents)),node('p',values.orders===null?'Pedidos atribuídos não informados':values.orders+' pedidos atribuídos'),node('p','ROAS informado: '+adsUiRoas(values.reported_roas_raw)),node('p','ROAS calculado: '+adsUiRoas(values.calculated_roas_raw)));grid.append(card);}
+    target.append(grid,node('p','Atribuições diretas e amplas são separadas. Não somar nem tratar como vendas totais da loja. O saldo disponível não é gasto.','field-help'));
+    el('todayAdsTime').textContent='Consulta em '+new Date(measurement.fetched_at*1000).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'})+' · Brasília. Este é o horário da leitura, não o de atualização na Shopee. Fuso e corte da fonte não confirmados.';
+    return;
+   }
+   if(data.status!=='AVAILABLE'){target.append(node('p',({SHOP_NOT_CONFIRMED:'A loja desta fonte ainda não foi confirmada.',NO_CURRENT_DAY:'O dashboard ainda não retornou uma linha para hoje.',AMBIGUOUS_DATE:'A fonte retornou mais de uma linha para hoje.'})[data.status]||'Não foi possível consultar os anúncios de hoje. Use Atualizar status para tentar novamente.'));return;}
+   target.append(node('p','Dados de '+data.date.split('-').reverse().join('/')));const grid=node('div',undefined,'attribution-grid');
+   for(const [label,values] of [['Diretas',data.direct],['Amplas',data.broad]]){const card=node('div');card.append(node('h3',label),node('p',values.conversions===null?'Conversões não informadas':values.conversions+' conversões reportadas'));if(values.roas_raw!==null)card.append(node('p','ROAS informado: '+adsUiRoas(values.roas_raw)));grid.append(card);}
+   target.append(grid);if(data.expense_raw!==null)target.append(node('p','Investimento recebido: '+data.expense_raw));target.append(node('p','Leitura anterior sem validação canônica de moeda e unidade. Atualize para conferir os valores. Diretas e amplas não são somadas nem representam pedidos totais.','field-help'));
+   el('todayAdsTime').textContent='Consulta às '+new Date(data.fetched_at).toLocaleTimeString('pt-BR',{timeZone:'America/Sao_Paulo'})+' · Brasília. Não é o horário de atualização na Shopee.';
+  }catch{el('todayAdsTime').textContent='';el('todayAds').replaceChildren(node('p','Não foi possível validar os anúncios de hoje. Atualize para tentar novamente.'));}
+  finally{todayAdsPromise=null;}
+ })();return todayAdsPromise;
+}
+function projectDailySalesSnapshot(value,now=new Date()){
+ try{
+  if(!value||typeof value!=='object'||Array.isArray(value)||value.status!=='AVAILABLE')return null;
+  const day=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(now),integer=(n,min=0,max=2000)=>Number.isSafeInteger(n)&&n>=min&&n<=max;
+  if(value.date!==day||value.timezone!=='America/Sao_Paulo'||value.day_partial!==true||value.pagination_complete!==true||!integer(value.orders_in_api_window)||!integer(value.pages_read,1,20)||!integer(value.duplicate_rows)||value.orders_in_api_window+value.duplicate_rows>value.pages_read*100)return null;
+  if(Object.hasOwn(value,'shop_id')&&value.shop_id!==1178167501)return null;
+  const cutoff=value.through_at;
+  if(typeof cutoff!=='string'||!/^\d{4}-\d{2}-\d{2}T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d{1,6})?-03:00$/.test(cutoff)||cutoff.slice(0,10)!==day||!Number.isFinite(Date.parse(cutoff))||Date.parse(cutoff)>now.getTime()+60000||now.getTime()-Date.parse(cutoff)>120000)return null;
+  const legacy=value.schema==='shop_orders_v1';
+  if(legacy){if(value.count_basis!=='UNIQUE_ORDER_SN_CREATE_TIME_NO_STATUS_FILTER'||value.order_status_filter!=='NONE'||value.source!=='shopee_get_order_list')return null;}
+  else if(value.schema!=='shop_daily_sales_v1'||value.count_basis!=='UNIQUE_ORDER_SN_CREATE_TIME_CURRENT_STATUS'||value.source!=='shopee_get_order_list_and_detail'||value.orders_with_details!==value.orders_in_api_window)return null;
+  const counts=['sales_orders','cancelled_orders','cancellation_pending_orders','unpaid_orders','other_orders','unknown_status_orders'];
+  if(!legacy&&(!counts.every(key=>integer(value[key]))||counts.reduce((sum,key)=>sum+value[key],0)!==value.orders_in_api_window))return null;
+  const fetched=typeof value.fetched_at==='string'&&Number.isFinite(Date.parse(value.fetched_at))?value.fetched_at:null;
+  if(fetched&&Date.parse(fetched)>now.getTime()+60000)return null;
+  return {schema:value.schema,date:day,timezone:'America/Sao_Paulo',through_at:cutoff,fetched_at:fetched,orders_in_api_window:value.orders_in_api_window,pages_read:value.pages_read,duplicate_rows:value.duplicate_rows,sales_classified:!legacy,...Object.fromEntries(counts.map(key=>[key,legacy?null:value[key]]))};
+ }catch{return null;}
+}
+function scheduleShopOrdersRefresh(){
+ clearTimeout(shopOrdersRefreshTimer);shopOrdersRefreshTimer=null;
+ if(document.hidden||!csrf)return;
+ shopOrdersRefreshTimer=setTimeout(()=>{shopOrdersRefreshTimer=null;if(!document.hidden&&csrf)loadShopOrders();},60000);
+}
+function updateShopSnapshotAge(){
+ if(!shopOrdersSnapshot)return;
+ const day=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date());
+ if(day!==shopOrdersSnapshot.date){
+  shopOrdersSnapshot=null;el('shopOrdersCount').textContent='—';el('shopOrdersCutoff').textContent='';el('shopOrders').replaceChildren(node('p','O dia mudou. Consultando as vendas da nova data…'));el('shopOrdersAge').textContent='A contagem da data anterior foi retirada.';
+  if(csrf&&!document.hidden)loadShopOrders();return;
+ }
+ const seconds=Math.max(0,Math.floor((Date.now()-Date.parse(shopOrdersSnapshot.through_at))/1000));
+ el('shopOrdersAge').textContent='Idade do recorte: '+(seconds<60?'menos de 1 minuto':Math.floor(seconds/60)+' minuto(s)')+'. Atualização automática a cada 1 minuto enquanto o painel estiver visível.';
+}
+function safeOrderDiagnostic(value){if(!value||typeof value!=='object'||Array.isArray(value)||!['APP_TO_AUTH','AUTH_TO_GATEWAY','AUTH_VALIDATION','APP_VALIDATION','APP_CONFIG','AUTH_CONFIG'].includes(value.stage)||!['HTTP_STATUS','TIMEOUT','NETWORK_ERROR','INVALID_JSON','BODY_LIMIT','RUNTIME_UNSUPPORTED','INVALID_RESPONSE','STALE_DATE','MISSING_BINDING','INTERNAL_ERROR'].includes(value.code)||(value.http!==null&&(!Number.isSafeInteger(value.http)||value.http<100||value.http>599)))return null;const result={stage:value.stage,code:value.code,http:value.http};if(['INVALID_RESPONSE','STALE_DATE'].includes(value.validation))result.validation=value.validation;return result;}
+function orderDiagnosticMessage(diagnostic){if(diagnostic.code==='TIMEOUT')return 'A consulta de pedidos demorou além do limite. Atualize o status para tentar novamente.';if(diagnostic.code==='STALE_DATE'||diagnostic.validation==='STALE_DATE')return 'A integração retornou pedidos de outra data. Atualize o status para consultar hoje.';if(diagnostic.code==='MISSING_BINDING')return 'A configuração da integração de pedidos está incompleta. Copie o diagnóstico para suporte.';if(diagnostic.code==='RUNTIME_UNSUPPORTED')return 'A integração de pedidos precisa de um ajuste de compatibilidade. Copie o diagnóstico para suporte.';if(diagnostic.code==='HTTP_STATUS'&&[401,403].includes(diagnostic.http))return 'O acesso à consulta de pedidos foi recusado. Copie o diagnóstico para suporte.';if(diagnostic.code==='HTTP_STATUS'&&diagnostic.http===404)return 'A rota de pedidos não foi encontrada. Copie o diagnóstico para suporte.';if(['AUTH_VALIDATION','APP_VALIDATION'].includes(diagnostic.stage))return 'A resposta dos pedidos não passou na validação. A contagem permanece indisponível.';return diagnostic.stage==='AUTH_TO_GATEWAY'?'A integração não conseguiu ler os pedidos pelo gateway. Atualize o status para tentar novamente.':'O painel não conseguiu receber os pedidos da integração. Atualize o status para tentar novamente.';}
+function orderDiagnosticDetails(diagnostic){const details=node('details',undefined,'report-original order-diagnostic');details.append(node('summary','Detalhes para suporte'));const text=JSON.stringify(diagnostic,null,2);details.append(node('pre',text));const copy=node('button','Copiar diagnóstico','button-secondary');copy.type='button';copy.onclick=async()=>{try{await navigator.clipboard.writeText(text);notice('Diagnóstico copiado.');}catch{notice('Não foi possível copiar. Selecione o diagnóstico em Detalhes para suporte.');}};details.append(copy);return details;}
+function variantId(value,zero=false){const text=typeof value==='string'?value:Number.isSafeInteger(value)?String(value):'';return (zero?/^(0|[1-9][0-9]{0,19})$/:/^[1-9][0-9]{0,19}$/).test(text)?text:null;}
+function variantKey(value){return variantId(value.item_id)+':'+variantId(value.model_id,true);}
+function catalogDiagnosticKeys(value,keys){return !!value&&typeof value==='object'&&!Array.isArray(value)&&[Object.prototype,null].includes(Object.getPrototypeOf(value))&&Reflect.ownKeys(value).length===keys.length&&keys.every(key=>Object.hasOwn(value,key)&&Object.hasOwn(Object.getOwnPropertyDescriptor(value,key),'value'));}
+function catalogDiagnosticArray(value,max){return Array.isArray(value)&&Object.getPrototypeOf(value)===Array.prototype&&value.length<=max&&Reflect.ownKeys(value).length===value.length+1&&Array.from({length:value.length},(_,index)=>Object.getOwnPropertyDescriptor(value,String(index))).every(descriptor=>descriptor&&Object.hasOwn(descriptor,'value'));}
+function projectVariantCatalogDiagnostic(value,itemId){try{const count=value=>Number.isSafeInteger(value)&&value>=0&&value<=1000,text=value=>typeof value==='string'&&value.length<=128&&!/[\u0000-\u001f\u007f]/.test(value),id=(value,zero=false)=>typeof value==='string'&&variantId(value,zero)===value;if(!id(itemId)||!catalogDiagnosticKeys(value,['schema','checked_at','products'])||value.schema!=='variant_catalog_v1'||!Number.isSafeInteger(value.checked_at)||value.checked_at<1||value.checked_at>9999999999||!catalogDiagnosticArray(value.products,3)||!value.products.length)return null;const seenProducts=new Set(),reasonCodes=['AXES_NOT_RECOGNIZED','OPTION_NOT_RECOGNIZED','INDEX_NOT_VALID','NO_MODELS'],sizes=['P','M','G','GG','G1','G2','G3'];let selected=null,total=0;for(const product of value.products){const hasDiagnostic=!!product&&typeof product==='object'&&Object.hasOwn(product,'diagnostic'),hasUnit=!!product&&typeof product==='object'&&Object.hasOwn(product,'selling_unit'),single=hasUnit&&product.selling_unit==='SINGLE_GARMENT';if((hasUnit&&!single)||!catalogDiagnosticKeys(product,['item_id','catalog_fingerprint','bindings','unresolved_count',...(hasUnit?['selling_unit']:[]),...(hasDiagnostic?['diagnostic']:[])])||!id(product.item_id)||seenProducts.has(product.item_id)||typeof product.catalog_fingerprint!=='string'||!/^[a-f0-9]{64}$/.test(product.catalog_fingerprint)||!catalogDiagnosticArray(product.bindings,1000)||!count(product.unresolved_count))return null;seenProducts.add(product.item_id);const models=new Set();for(const row of product.bindings){if(!catalogDiagnosticKeys(row,['item_id','model_id',...(single?['size']:['male_size','female_size'])])||row.item_id!==product.item_id||!id(row.model_id,true)||models.has(row.model_id)||(single?!sizes.includes(row.size):!sizes.includes(row.male_size)||!sizes.includes(row.female_size)))return null;models.add(row.model_id);}const modelCount=product.bindings.length+product.unresolved_count;total+=modelCount;if(total>1000)return null;if(!hasDiagnostic)continue;const diagnostic=product.diagnostic;if(!catalogDiagnosticKeys(diagnostic,['axes','model_count','reasons'])||!catalogDiagnosticArray(diagnostic.axes,10)||!count(diagnostic.model_count)||diagnostic.model_count!==modelCount||!catalogDiagnosticArray(diagnostic.reasons,4))return null;const axes=[],reasons=[],seenReasons=new Set();let unresolved=0;for(const axis of diagnostic.axes){if(!catalogDiagnosticKeys(axis,['name','options','option_count'])||!text(axis.name)||!catalogDiagnosticArray(axis.options,7)||!axis.options.every(text)||!count(axis.option_count)||axis.options.length>axis.option_count)return null;axes.push({name:axis.name,options:[...axis.options],option_count:axis.option_count});}for(const reason of diagnostic.reasons){if(!catalogDiagnosticKeys(reason,['code','count'])||!reasonCodes.includes(reason.code)||seenReasons.has(reason.code)||!count(reason.count)||(reason.code==='NO_MODELS'?modelCount!==0||reason.count!==0:reason.count===0||modelCount===0))return null;seenReasons.add(reason.code);unresolved+=reason.count;reasons.push({code:reason.code,count:reason.count});}if(unresolved!==product.unresolved_count||(modelCount===0&&!seenReasons.has('NO_MODELS')))return null;if(product.item_id===itemId)selected={schema:'variant_catalog_diagnostic_v1',item_id:itemId,checked_at:value.checked_at,...(single?{selling_unit:'SINGLE_GARMENT'}:{}),axes,model_count:modelCount,reasons};}return selected;}catch{return null;}}
+function variantCatalogReasonMessage(code,diagnostic){
+ const messages={AXES_NOT_RECOGNIZED:diagnostic.selling_unit==='SINGLE_GARMENT'?'Os eixos não identificam um único tamanho de camiseta.':'Os eixos não correspondem aos formatos de camiseta avulsa ou kit que o painel reconhece.',OPTION_NOT_RECOGNIZED:'Uma ou mais opções não correspondem aos tamanhos cadastrados no painel.',INDEX_NOT_VALID:'Uma ou mais variações não correspondem às opções dos eixos.',NO_MODELS:'O catálogo não retornou variações para este produto.'};
+ return messages[code]||'A variação precisa de revisão no catálogo.';
+}
+function variantCatalogDiagnosticDetails(diagnostic){const details=node('details',undefined,'report-original variant-catalog-diagnostic');details.dataset.catalogDiagnostic='true';details.append(node('summary','Dados do catálogo'),node('p','Confira os nomes e as opções que o catálogo usa neste produto. Copie este diagnóstico para ajustar a identificação dos tamanhos.','field-help'),node('p','Produto #'+diagnostic.item_id+' · '+diagnostic.model_count+' variação(ões).'));const axes=node('div',undefined,'catalog-diagnostic-axes');for(const axis of diagnostic.axes){const line=node('p');line.append(node('strong',axis.name||'Eixo sem nome'),node('span',': '+(axis.options.length?axis.options.join(' · '):'Nenhuma opção retornada')+' ('+axis.options.length+' de '+axis.option_count+' opções).'));axes.append(line);}if(!diagnostic.axes.length)axes.append(node('p','Nenhum eixo de variação retornado.'));details.append(axes);for(const reason of diagnostic.reasons)details.append(node('p',variantCatalogReasonMessage(reason.code,diagnostic)+(reason.code==='NO_MODELS'?'':' '+reason.count+' variação(ões).')));const text=JSON.stringify(diagnostic,null,2);details.append(node('pre',text));const copy=node('button','Copiar diagnóstico das variações','button-secondary');copy.type='button';copy.dataset.copyCatalogDiagnostic='true';copy.onclick=async()=>{try{await navigator.clipboard.writeText(text);notice('Diagnóstico das variações copiado.');}catch{notice('Não foi possível copiar. Selecione o diagnóstico em Dados do catálogo.');}};details.append(copy);return details;}
+// Operator confirmed on 2026-10-19: this product is one single garment, not a two-shirt kit.
+const confirmedProductUnits={'22199878767':'SINGLE_GARMENT','58269212782':'ONE_MALE_ONE_FEMALE_KIT'};
+function productSellingUnit(itemId){const rows=[...currentBindingMap().values()].filter(row=>row.item_id===itemId),manual=rows.find(row=>row.operator_confirmed===true);if(manual)return manual.selling_unit;const selected=typeof productUnitSelections==='undefined'?null:productUnitSelections.get(itemId);if(selected)return selected;const units=new Set(rows.map(row=>row.selling_unit));return units.size===1?[...units][0]:knownStoreProductUnit(itemId)||'';}
+function automaticBinding(row){return row?.source==='CATALOG_VARIATION_AXES'||row?.source==='CATALOG_SIZE_AXIS';}
+function currentBindingMap(){const result=new Map((bindingState?.bindings||[]).map(binding=>[variantKey(binding),binding]));for(const reference of (typeof itemsData==='undefined'?null:itemsData?.production_cost_reference?.variants)||[]){const binding=reference.catalog_binding;if(!binding||binding.operator_confirmed!==false||binding.item_id!==reference.item_id||binding.model_id!==reference.model_id||typeof binding.catalog_fingerprint!=='string'||!/^[a-f0-9]{64}$/.test(binding.catalog_fingerprint))continue;const sizes=binding.selling_unit==='SINGLE_GARMENT'?[binding.size]:binding.selling_unit==='ONE_MALE_ONE_FEMALE_KIT'?[binding.male_size,binding.female_size]:[];if(!sizes.length||!sizes.every(size=>['P','M','G','GG','G1','G2','G3'].includes(size))||binding.source!==(binding.selling_unit==='SINGLE_GARMENT'?'CATALOG_SIZE_AXIS':'CATALOG_VARIATION_AXES'))continue;const key=variantKey(binding);if(!result.has(key)||result.get(key).operator_confirmed===false)result.set(key,binding);}return result;}
+function validBindingState(value){if(!value||!Number.isSafeInteger(value.revision)||value.revision<1||!Array.isArray(value.bindings)||value.bindings.length>1000)return null;const bindings=[],seen=new Set(),sizes=['P','M','G','GG','G1','G2','G3'];for(const row of value.bindings){if(!row||typeof row!=='object'||Array.isArray(row))return null;const single=row.selling_unit==='SINGLE_GARMENT',source=single?'CATALOG_SIZE_AXIS':'CATALOG_VARIATION_AXES',automatic=row.operator_confirmed===false&&row.source===source&&typeof row.catalog_fingerprint==='string'&&/^[a-f0-9]{64}$/.test(row.catalog_fingerprint),fields=single?['size']:['male_size','female_size'],keys=['item_id','model_id',...fields,'selling_unit','operator_confirmed',...(automatic?['source','catalog_fingerprint']:[])];if(Object.keys(row).length!==keys.length||!Object.keys(row).every(key=>keys.includes(key))||(!automatic&&row.operator_confirmed!==true))return null;const item=variantId(row.item_id),model=variantId(row.model_id,true);if(item===null||model===null||fields.some(field=>!sizes.includes(row[field]))||!['ONE_MALE_ONE_FEMALE_KIT','SINGLE_GARMENT'].includes(row.selling_unit)||seen.has(item+':'+model))return null;seen.add(item+':'+model);bindings.push({item_id:item,model_id:model,...Object.fromEntries(fields.map(field=>[field,row[field]])),selling_unit:row.selling_unit,operator_confirmed:!automatic,...(automatic?{source,catalog_fingerprint:row.catalog_fingerprint}:{})});}return {revision:value.revision,bindings,updated_at:value.updated_at};}
+function groupVariantRows(value){if(!Array.isArray(value))return null;const groups=new Map();for(const row of value){if(!row||typeof row!=='object'||Array.isArray(row))return null;const item=variantId(row.item_id),model=variantId(row.model_id,true);if(item===null||model===null||typeof row.order_status!=='string'||!Number.isSafeInteger(row.quantity)||row.quantity<1||!Number.isSafeInteger(row.line_count)||row.line_count<1)return null;const key=item+':'+model,group=groups.get(key)||{item_id:item,model_id:model,quantity:0,line_count:0,statuses:new Map()};group.quantity+=row.quantity;group.line_count+=row.line_count;const status=group.statuses.get(row.order_status)||{quantity:0,lines:0};status.quantity+=row.quantity;status.lines+=row.line_count;group.statuses.set(row.order_status,status);if(!Number.isSafeInteger(group.quantity)||!Number.isSafeInteger(group.line_count))return null;groups.set(key,group);}return groups;}
+function bindingDraftActionable(key,draft){return draft.confirmed||draft.remove===true;}
+function updateBindingSaveState(){updateObservationCaptureState();const pending=[...bindingDrafts].filter(([key,draft])=>bindingDraftActionable(key,draft)),invalid=pending.some(([,draft])=>draft.confirmed&&(draft.selling_unit==='SINGLE_GARMENT'?!draft.size:!draft.male_size||!draft.female_size));el('saveBindings').disabled=bindingSaving||!!itemsPromise||!bindingState||bindingLoadFailed||bindingStale||!!bindingConflict||pending.length===0||invalid;el('saveBindings').textContent=bindingSaving?'Salvando vínculos…':'Salvar vínculos confirmados';el('discardBindingDrafts').disabled=bindingSaving||!!itemsPromise||bindingDrafts.size===0;el('reviewBindingVersion').hidden=!bindingConflict;el('bindingsVersion').textContent=bindingState?'Vínculos salvos · versão '+bindingState.revision+(bindingDrafts.size?' · rascunhos preservados':''):'Não foi possível carregar os vínculos salvos. A edição aguarda essa consulta.';for(const button of el('variantCards').querySelectorAll('[data-catalog-item-id]')){const unit=productSellingUnit(button.dataset.catalogItemId),single=unit==='SINGLE_GARMENT';button.disabled=!unit||bindingSaving||!!itemsPromise||!bindingState||bindingLoadFailed||bindingStale||!!bindingConflict||bindingDrafts.size>0;button.textContent=catalogAutomatingItemId===button.dataset.catalogItemId?'Identificando tamanhos…':!unit?'Escolha a composição acima':single?'Identificar tamanhos da camiseta':'Identificar tamanhos do kit';const help=button.parentElement.querySelector('[data-catalog-help]');if(help)help.textContent=bindingDrafts.size?'Salve ou descarte os rascunhos dos vínculos antes de identificar os tamanhos pelo catálogo.':!unit?'Escolha uma vez se cada unidade é uma camiseta avulsa ou um kit. O catálogo identificará os tamanhos das variações.':single?'Cada unidade deste produto contém uma camiseta. O catálogo identifica o tamanho; margens de kit não são aplicadas.':'Aplica a composição deste produto às variações com tamanhos masculino e feminino identificados no catálogo.';}for(const select of el('variantCards').querySelectorAll('[data-selling-unit-item-id]'))select.disabled=bindingSaving||!!itemsPromise||bindingDrafts.size>0||(bindingState?.bindings||[]).some(row=>row.item_id===select.dataset.sellingUnitItemId&&row.operator_confirmed===true);updateVariantSyncControls();updateStoreControls();}
+function variantReference(group,key){if(!productionCostFrameCurrent())return 'Referência em atualização: confira a versão atual dos custos salvos.';if(savedCustomCost(group.item_id,group.model_id))return 'Custo personalizado por unidade vendida. Confira receita, impostos e resultado na Visão geral.';const draft=bindingDrafts.get(key);if(draft)return 'Rascunho ainda não salvo. A referência será recalculada depois da confirmação e do salvamento.';const binding=currentBindingMap().get(key);if(binding?.selling_unit==='SINGLE_GARMENT')return 'Camiseta avulsa: margem ainda não cadastrada. As margens de kit não se aplicam a esta unidade.';const references=itemsData?.margin_reference?.variants;const reference=Array.isArray(references)?references.find(row=>variantKey(row)===key):null;return reference&&Number.isSafeInteger(reference.unit_margin_cents)&&reference.unit_margin_cents>=0?'Referência do recorte por unidade: '+money(reference.unit_margin_cents)+' antes dos anúncios.':'Sem referência de margem: a composição desta variação ainda não foi confirmada.';}
+function allProductGroups(){const groups=new Map(variantGroups);for(const binding of bindingState?.bindings||[]){const key=variantKey(binding);if(!groups.has(key))groups.set(key,{item_id:binding.item_id,model_id:binding.model_id,quantity:null,line_count:null,statuses:new Map()});}for(const [key,draft] of bindingDrafts)if(!groups.has(key))groups.set(key,{item_id:draft.item_id,model_id:draft.model_id,quantity:null,line_count:null,statuses:new Map()});const products=new Map();for(const entry of groups){const id=entry[1].item_id;if(!products.has(id))products.set(id,[]);products.get(id).push(entry);}return products;}
+function productSearchText(value){return String(value||'').normalize('NFD').replace(/\p{M}/gu,'').toLowerCase().trim();}
+function productionCostFrameCurrent(){const revision=typeof itemsData==='undefined'?null:itemsData?.production_cost_reference?.costs_revision;return !Number.isSafeInteger(revision)||revision<1||revision===(typeof productionCostsState==='undefined'?null:productionCostsState?.revision);}
+function savedCustomCost(itemId,modelId){if(!productionCostFrameCurrent())return null;const values=typeof productionCostsState==='undefined'?null:productionCostsState?.values,assignments=values?.custom_assignments||[],assignment=assignments.find(row=>row.item_id===itemId&&row.model_id===modelId)||assignments.find(row=>row.item_id===itemId&&row.model_id===null),profile=assignment?values.custom_profiles.find(row=>row.id===assignment.profile_id):null;if(profile)return {...profile,model_id:assignment.model_id};const composition=values?.composition_assignments?.find(row=>row.item_id===itemId&&row.model_id===modelId),recipe=composition?productionCostRecipeValues(values).find(row=>row.id===composition.recipe_id):null;if(recipe)return {id:recipe.id,label:recipe.label,unit_cost_cents:recipe.unit_cost_cents,model_id:modelId,composition:true,piece_count:recipe.piece_count};const reference=(typeof itemsData==='undefined'?null:itemsData?.production_cost_reference?.variants)?.find(row=>row.item_id===itemId&&row.model_id===modelId);return reference?.cost_source==='CUSTOM_PROFILE'&&typeof reference.cost_profile_id==='string'&&reference.cost_profile_id.startsWith('auto-')&&Number.isSafeInteger(reference.unit_cost_cents)&&reference.unit_cost_cents>0?{id:reference.cost_profile_id,label:reference.cost_profile_label,unit_cost_cents:reference.unit_cost_cents,model_id:modelId,automatic:true}:null;}
+function productIdOrder(a,b){return a.length-b.length||(a<b?-1:a>b?1:0);}
+function productBrowserRows(products){const saved=currentBindingMap();return [...products].map(([itemId,models])=>{const bindings=models.map(([key])=>saved.get(key)),mapped=bindings.filter(Boolean),custom=models.map(([,group])=>savedCustomCost(itemId,group.model_id)),customLabels=[...new Set(custom.filter(Boolean).map(row=>row.label))],costs=models.map(([,group],index)=>savedVariantUnitCost(bindings[index],group)),knownCosts=costs.filter(value=>value!==null),units=models.map(([,group])=>group.quantity).filter(value=>value!==null),unit=productSellingUnit(itemId),hasDraft=models.some(([key])=>bindingDrafts.has(key)),sizeSet=new Set(mapped.flatMap(row=>row.selling_unit==='SINGLE_GARMENT'?[row.size]:[row.male_size,row.female_size]));return {itemId,models,unit,hasDraft,mapped:mapped.length,ready:knownCosts.length===models.length,customLabels,customComplete:custom.length>0&&custom.every(Boolean),quantity:units.length?units.reduce((sum,value)=>sum+value,0):null,minCost:knownCosts.length?Math.min(...knownCosts):null,maxCost:knownCosts.length?Math.max(...knownCosts):null,costComplete:knownCosts.length===models.length,manual:mapped.some(row=>row.operator_confirmed===true),sizes:sizeSet,search:productSearchText([itemId,...models.map(([,group])=>group.model_id),...customLabels,unit==='SINGLE_GARMENT'?'camiseta avulsa individual uma peça single':unit==='ONE_MALE_ONE_FEMALE_KIT'?'kit casal masculino feminina duas peças':'composição revisão pendente',...sizeSet].join(' '))};});}
+function filteredProductBrowserRows(rows){const terms=productSearchText(el('productSearch').value).split(/\s+/).filter(Boolean),status=el('productStatusFilter').value,type=el('productTypeFilter').value,sort=el('productSort').value;const result=rows.filter(row=>terms.every(term=>/^(p|m|g|gg|g1|g2|g3)$/.test(term)?row.sizes.has(term.toUpperCase()):row.search.includes(term))&&(status==='draft'?row.hasDraft:status==='ready'?row.ready:status==='pending'?!row.ready:true)&&(type==='kit'?row.unit==='ONE_MALE_ONE_FEMALE_KIT':type==='single'?row.unit==='SINGLE_GARMENT':type==='custom'?row.customLabels.length>0:type==='unknown'?!row.unit&&!row.customComplete:true));const costOrder=(a,b,direction)=>{const x=direction>0?a.minCost:a.maxCost,y=direction>0?b.minCost:b.maxCost;return x===null?(y===null?0:1):y===null?-1:(x-y)*direction;};result.sort((a,b)=>(sort==='quantity_desc'?(b.quantity??-1)-(a.quantity??-1):sort==='cost_desc'?costOrder(a,b,-1):sort==='cost_asc'?costOrder(a,b,1):sort==='pending_first'?Number(a.ready)-Number(b.ready):0)||productIdOrder(a.itemId,b.itemId));return result;}
+function updateProductBrowserSummary(rows,filtered){const pending=rows.filter(row=>!row.ready).length,drafts=rows.filter(row=>row.hasDraft).length;el('productBrowserSummary').textContent=rows.length+' produto(s) · '+pending+' pendente(s)'+(drafts?' · '+drafts+' com rascunhos':'')+(itemsData?'':' · recorte indisponível');const size=Number(el('productPageSize').value)||20,totalPages=Math.max(1,Math.ceil(filtered.length/size));productBrowserPage=Math.max(1,Math.min(productBrowserPage,totalPages));const begin=filtered.length?(productBrowserPage-1)*size+1:0,end=Math.min(productBrowserPage*size,filtered.length);el('productPageInfo').textContent='Exibindo '+begin+'–'+end+' de '+filtered.length+' produto(s)'+(filtered.length!==rows.length?' filtrados entre '+rows.length:'')+' · página '+productBrowserPage+' de '+totalPages;el('productPrevious').disabled=productBrowserPage<=1;el('productNext').disabled=productBrowserPage>=totalPages;return {size,begin,end};}
+function updateProductDraftIndicators(itemId){const rows=productBrowserRows(allProductGroups()),row=rows.find(value=>value.itemId===itemId),wrapper=[...el('variantCards').querySelectorAll('[data-product-id]')].find(element=>element.dataset.productId===itemId);if(row&&wrapper){const badge=wrapper.querySelector('[data-product-summary-status]');if(badge){badge.textContent=row.hasDraft?'Rascunhos não salvos':row.ready?'Identificado':'Revisão necessária';badge.dataset.status=row.hasDraft?'draft':row.ready?'ready':'pending';}}updateProductBrowserSummary(rows,filteredProductBrowserRows(rows));}
+function renderProductAutomation(itemId){const automation=node('div',undefined,'variant-automation'),select=node('select'),label=node('label','O que contém cada unidade deste produto?');select.id='selling-unit-'+itemId;select.dataset.sellingUnitItemId=itemId;label.htmlFor=select.id;for(const [value,text] of [['','Escolha a composição'],['ONE_MALE_ONE_FEMALE_KIT','Kit · 1 masculina + 1 feminina'],['SINGLE_GARMENT','Camiseta avulsa · 1 peça']]){const option=node('option',text);option.value=value;select.append(option);}select.value=productSellingUnit(itemId);select.onchange=()=>{if(select.value)productUnitSelections.set(itemId,select.value);else productUnitSelections.delete(itemId);renderVariantCards();};const button=node('button',undefined,'button-secondary');button.type='button';button.dataset.catalogItemId=itemId;button.onclick=()=>automateVariantBindings(itemId);const help=node('p',undefined,'field-help');help.dataset.catalogHelp='true';automation.append(label,select,button,help);if((bindingState?.bindings||[]).some(row=>row.item_id===itemId&&row.operator_confirmed===true))automation.append(node('p','Tipo preservado pelos vínculos manuais salvos. Para corrigir o tipo, primeiro remova e salve esses vínculos.','field-help'));return automation;}
+async function costRuleAssignmentSaved({item_id,model_id}){for(const [key,draft] of bindingDrafts)if(draft.item_id===item_id&&(model_id===null||draft.model_id===model_id))bindingDrafts.delete(key);await loadVariants({localOnly:true});await Promise.allSettled([globalThis.brazaSavedCatalog?.refresh(),globalThis.brazaProductionCostPeriods?.refresh(),globalThis.brazaMonthDashboard?.refreshCosts()]);if(storePeriodBundle)await refreshStoreResult();notice('Regra de custo salva. O produto usa o valor atual da regra cadastrada.');}
+function costRuleAssignmentControl(item_id,model_id=null){return globalThis.brazaCostRules?.assignmentControl?.({item_id,model_id,onSaved:costRuleAssignmentSaved})||null;}
+function renderProductVariantCard(key,group,saved){const savedBinding=saved.get(key),draft=bindingDrafts.get(key),unit=draft?.selling_unit||productSellingUnit(group.item_id),single=unit==='SINGLE_GARMENT',binding=savedBinding?.selling_unit===unit?savedBinding:null,card=node('article',undefined,'card variant-card');card.dataset.variantKey=key;card.dataset.sellingUnit=unit;const heading=node('div',undefined,'card-head'),title=node('div');const catalogue=globalThis.brazaMonthDashboard?.catalogMetadata?.(group.item_id),catalogueVariant=catalogue?.variants.find(row=>row.model_id===group.model_id);title.append(node('h3',catalogueVariant?.model_name||'Variação #'+group.model_id));heading.append(title,node('span',draft?'Rascunho':automaticBinding(binding)?'Identificado pelo catálogo':binding?'Vínculo confirmado':'Sem vínculo','badge'));card.append(heading);card.append(node('p',group.quantity===null?(draft?'Rascunho de variação · não retornada nesta consulta.':'Variação do catálogo · sem unidades neste recorte.'):new Intl.NumberFormat('pt-BR').format(group.quantity)+' unidade(s) de catálogo · '+group.line_count+' linha(s) no recorte.','field-help'));const statusNames={UNPAID:'Não pago',READY_TO_SHIP:'Pronto para envio',PROCESSED:'Processado',SHIPPED:'Enviado',COMPLETED:'Concluído',IN_CANCEL:'Cancelamento em andamento',CANCELLED:'Cancelado',INVOICE_PENDING:'Nota fiscal pendente',UNKNOWN:'Status desconhecido'};const statuses=node('div',undefined,'variant-statuses');for(const [status,totals] of group.statuses)statuses.append(node('span',(statusNames[status]||'Outro status')+': '+totals.lines+' linha(s) · '+totals.quantity+' unidade(s)'));card.append(statuses);const custom=savedCustomCost(group.item_id,group.model_id),assignedRule=globalThis.brazaCostRules?.assignmentFor?.(group.item_id,group.model_id),hasRule=globalThis.brazaCostRules?.hasAssignment?.(group.item_id,group.model_id);if(hasRule&&!custom){const ruleControl=costRuleAssignmentControl(group.item_id,assignedRule?assignedRule.model_id:group.model_id);if(ruleControl)card.append(ruleControl);}if(custom){heading.lastChild.textContent=custom.automatic?'Custo identificado pela regra':'Custo personalizado';card.append(node('h4',custom.label),node('p',money(custom.unit_cost_cents)+' por unidade vendida','variant-cost-reference'),node('p',custom.automatic?'Custo associado automaticamente pelo tipo de produto e pelo tamanho da variação.':custom.model_id===null?'Custo do produto aplicado automaticamente a esta variação.':'Custo específico desta variação.','field-help'));const configure=node('button','Configurar custo desta variação','button-secondary');configure.type='button';configure.onclick=()=>configureCustomCost(group.item_id,group.model_id);card.append(configure);return card;}if(hasRule){card.append(node('p','Este produto usa uma regra de custo. Confira o tamanho acima para concluir a identificação; o padrão adulto não será aplicado.','field-help'));return card;}if(!unit){card.append(node('p','A identificação automática não encontrou uma composição segura. Confira os dados do catálogo ou ajuste esta exceção.','field-help'));return card;}let editor=card;if(binding&&!draft){card.append(node('h4',single?'Camiseta avulsa · tamanho '+binding.size:'Kit · masculino '+binding.male_size+' / feminino '+binding.female_size),node('p',variantCostReference(key),'variant-cost-reference'),node('p',automaticBinding(binding)?'Composição e tamanho identificados pelo catálogo. O custo acompanha a referência cadastrada.':'Composição confirmada. O custo acompanha a referência cadastrada.','field-help'));editor=node('details',undefined,'variant-manual-adjustment');editor.append(node('summary','Ajustar identificação desta variação'));card.append(editor);}const sizes=node('div',undefined,'variant-sizes'+(single?' variant-single-size':'')),selections={},fields=single?[['size','Tamanho adulto · P a G3']]:[['male_size','Tamanho masculino'],['female_size','Tamanho feminino']];for(const [field,label] of fields){const wrap=node('div',undefined,'field'),select=node('select');select.dataset.sizeField=field;select.id='variant-'+group.item_id+'-'+group.model_id+'-'+field;const caption=node('label',label);caption.htmlFor=select.id;const blank=node('option','Selecione');blank.value='';select.append(blank);for(const size of ['P','M','G','GG','G1','G2','G3']){const option=node('option',size);option.value=size;select.append(option);}select.value=draft?draft[field]||'':binding?.[field]||'';wrap.append(caption,select);sizes.append(wrap);selections[field]=select;}editor.append(sizes);const confirmation=node('label',undefined,'variant-confirm'),checkbox=node('input'),manualText=single?'Confirmo que 1 unidade desta variação é 1 camiseta avulsa.':'Confirmo que 1 unidade desta variação é 1 kit com uma camiseta masculina e uma feminina.';checkbox.type='checkbox';if(single)checkbox.dataset.garmentConfirm='true';else checkbox.dataset.kitConfirm='true';checkbox.checked=draft?draft.confirmed:!!binding;const confirmationText=node('span',automaticBinding(binding)&&!draft?'Usar vínculo identificado pelo catálogo.':manualText);confirmation.append(checkbox,confirmationText);editor.append(confirmation);if(binding)editor.append(node('p',single?'Vínculo salvo: camiseta avulsa · tamanho '+binding.size+'.':'Vínculo salvo: masculino '+binding.male_size+' / feminino '+binding.female_size+'.','field-help'));editor.append(node('p','GG é regular; G1, G2 e G3 são plus. Desmarcar um vínculo salvo e salvar deixa esta variação sem composição associada.','field-help'));const preview=node('p',variantReference(group,key),'variant-preview');editor.append(preview);const costPreview=node('p',variantCostReference(key),'variant-cost-reference');editor.append(costPreview);const changed=event=>{const previous=bindingDrafts.get(key),remove=event?.target===checkbox?!checkbox.checked&&saved.has(key):previous?.remove===true;bindingDrafts.set(key,{item_id:group.item_id,model_id:group.model_id,selling_unit:unit,...Object.fromEntries(Object.entries(selections).map(([field,select])=>[field,select.value])),confirmed:checkbox.checked,remove,sequence:++bindingDraftSequence});for(const field of Object.keys(selections))selections[field].required=checkbox.checked;heading.lastChild.textContent='Rascunho';confirmationText.textContent=manualText;preview.textContent=variantReference(group,key);costPreview.textContent=variantCostReference(key);updateProductDraftIndicators(group.item_id);updateBindingSaveState();};for(const select of Object.values(selections)){select.required=checkbox.checked;select.onchange=changed;}checkbox.onchange=changed;return card;}
+function renderProductBrowserRow(row){const wrapper=node('article',undefined,'card product-summary-card product-browser-row');wrapper.dataset.productId=row.itemId;const heading=node('div',undefined,'card-head product-row-heading'),title=node('div');const catalogue=globalThis.brazaMonthDashboard?.catalogMetadata?.(row.itemId);title.append(node('h3',catalogue?.product_name||'Produto #'+row.itemId),node('p',row.customComplete?'Custo personalizado · '+row.customLabels.join(' / '):row.unit==='SINGLE_GARMENT'?'Camiseta avulsa · 1 peça':row.unit==='ONE_MALE_ONE_FEMALE_KIT'?'Kit · 1 masculina + 1 feminina':'Composição em revisão','muted'));heading.append(title);const stats=node('div',undefined,'product-summary-stats product-row-stats');for(const [className,label,value] of [['product-units','Unidades no recorte',row.quantity===null?'—':new Intl.NumberFormat('pt-BR').format(row.quantity)],['product-variation-count','Variações',row.customComplete?row.models.length+' com custo personalizado':row.mapped+' de '+row.models.length+' identificadas'],['product-cost','Custo unitário cadastrado',row.minCost===null?'Pendente':(row.minCost===row.maxCost?money(row.minCost):money(row.minCost)+' a '+money(row.maxCost))+(row.costComplete?'':' · parcial')]]){const stat=node('div',undefined,'product-row-stat '+className);stat.append(node('small',label),node('strong',value));stats.append(stat);}const actions=node('div',undefined,'product-row-actions'),badge=node('span',row.hasDraft?'Rascunhos não salvos':row.ready?(row.manual?'Cadastro preservado':'Identificado'):'Revisão necessária','badge');badge.dataset.productSummaryStatus='true';badge.dataset.status=row.hasDraft?'draft':row.ready?'ready':'pending';const link=node('a','Ver na Shopee','product-link');link.href='https://shopee.com.br/product/1178167501/'+row.itemId;link.target='_blank';link.rel='noopener noreferrer';const configure=node('button','Configurar custo','button-link');configure.type='button';configure.onclick=()=>configureCustomCost(row.itemId);actions.append(badge,configure,link);wrapper.append(heading,stats,actions);const learningNote=globalThis.brazaCostRules?.learningNote?.(row.itemId);if(learningNote)wrapper.append(learningNote);const detailGroup=node('div',undefined,'product-row-details'),costDetails=node('details',undefined,'product-rule-costs'),models=node('details',undefined,'product-models');costDetails.append(node('summary','Usar uma regra de custo personalizada'));let costControlLoaded=false;const populateRuleCost=()=>{if(costControlLoaded)return;const control=costRuleAssignmentControl(row.itemId);if(control){costDetails.append(control);costControlLoaded=true;}};costDetails.ontoggle=()=>{if(costDetails.open)populateRuleCost();};const ruleButton=node('button',row.ready?'Conferir identificação':'Rever identificação','button-link');ruleButton.type='button';ruleButton.onclick=()=>{models.open=true;productDetailsOpen.add(row.itemId);populateModels();models.scrollIntoView?.({block:'nearest'});};actions.insertBefore(ruleButton,configure);detailGroup.append(costDetails);models.dataset.productModels=row.itemId;models.append(node('summary','Variações ('+row.models.length+')'));const list=node('div',undefined,'product-model-list');models.append(list);const populateModels=()=>{if(list.dataset.loaded)return;const saved=currentBindingMap();for(const [key,group] of row.models)list.append(renderProductVariantCard(key,group,saved));list.dataset.loaded='true';updateBindingSaveState();};models.ontoggle=()=>{if(!models.isConnected)return;if(models.open){productDetailsOpen.add(row.itemId);populateModels();}else productDetailsOpen.delete(row.itemId);};models.open=productDetailsOpen.has(row.itemId);detailGroup.append(models);const adjustments=node('details',undefined,'product-adjustments');adjustments.dataset.productAdjustments=row.itemId;adjustments.append(node('summary','Ajustar composição'));const populateAdjustments=()=>{if(adjustments.querySelector('.variant-automation'))return;adjustments.append(renderProductAutomation(row.itemId));updateBindingSaveState();};adjustments.ontoggle=()=>{if(!adjustments.isConnected)return;if(adjustments.open){productAdjustmentsOpen.add(row.itemId);populateAdjustments();}else productAdjustmentsOpen.delete(row.itemId);};adjustments.open=productAdjustmentsOpen.has(row.itemId);if(!row.customComplete)detailGroup.append(adjustments);wrapper.append(detailGroup);el('variantCards').append(wrapper);if(models.open)populateModels();if(adjustments.open)populateAdjustments();return wrapper;}
+function renderVariantCards(){rememberProductDetails();const target=el('variantCards'),rows=productBrowserRows(allProductGroups()),filtered=filteredProductBrowserRows(rows),page=updateProductBrowserSummary(rows,filtered);target.classList.add('product-browser-list');target.replaceChildren();for(const row of filtered.slice((productBrowserPage-1)*page.size,productBrowserPage*page.size))renderProductBrowserRow(row);if(!filtered.length){const empty=node('div',undefined,'card product-browser-empty');empty.append(node('h3',rows.length?'Nenhum produto corresponde aos filtros.':'Nenhum produto disponível nesta leitura.'),node('p',rows.length?'Tente outro código, tamanho ou composição, ou limpe os filtros.':'Os produtos dos pedidos e as associações salvas aparecerão aqui quando a leitura estiver disponível.','muted'));if(rows.length){const clear=node('button','Limpar filtros','button-secondary');clear.type='button';clear.onclick=resetProductBrowserFilters;empty.append(clear);}target.append(empty);}updateBindingSaveState();}
+function resetProductBrowserFilters(){el('productSearch').value='';el('productStatusFilter').value='all';el('productTypeFilter').value='all';el('productSort').value='quantity_desc';productBrowserPage=1;renderVariantCards();}
+
+function renderItemsReference(){const target=el('itemsReference'),reference=itemsData?.margin_reference;target.replaceChildren();target.hidden=!reference;if(!reference)return;const validAmount=value=>Number.isSafeInteger(value)&&value>=0;target.append(node('h3','Referência dos kits antes dos anúncios'));if(validAmount(reference.known_subset_cents))target.append(node('p','Parte com vínculo salvo: '+money(reference.known_subset_cents)+'.'));target.append(node('p',validAmount(reference.total_cents)?'Referência completa do recorte: '+money(reference.total_cents)+'.':'Referência completa pendente: há unidades sem composição ou margem cadastrada.'));if(Number.isSafeInteger(reference.mapped_quantity)&&reference.mapped_quantity>=0&&Number.isSafeInteger(reference.unmapped_quantity)&&reference.unmapped_quantity>=0)target.append(node('p',reference.mapped_quantity+' unidade(s) com margem · '+reference.unmapped_quantity+' sem referência de margem.'));if(Number.isSafeInteger(reference.unpriced_quantity)&&reference.unpriced_quantity>0&&reference.unpriced_quantity<=reference.unmapped_quantity)target.append(node('p',reference.unpriced_quantity+' camiseta(s) avulsa(s) com composição identificada e margem ainda não cadastrada. As margens de kit não se aplicam a elas.'));target.append(node('p','Inclui todos os status retornados. É uma referência de margem antes dos anúncios, sem confirmar lucro, recebimento ou atribuição a Ads.'));if(Number.isSafeInteger(reference.settings_revision)&&Number.isSafeInteger(reference.bindings_revision))target.append(node('p','Margens · versão '+reference.settings_revision+' / vínculos · versão '+reference.bindings_revision,'field-help'));}
+function renderItemsMetrics(){const target=el('itemsMetrics');target.replaceChildren();if(!itemsData)return;const quantity=[...variantGroups.values()].reduce((sum,row)=>sum+row.quantity,0),lines=[...variantGroups.values()].reduce((sum,row)=>sum+row.line_count,0);for(const [label,value,help] of [['Unidades de catálogo',quantity,'Não equivalem a camisetas físicas'],['Variações no recorte',variantGroups.size,'Identificadas pelos IDs da API'],['Linhas de itens',lines,'Incluem todos os status retornados']]){const card=node('div',undefined,'report-metric');card.append(node('small',label),node('strong',new Intl.NumberFormat('pt-BR').format(value)),node('span',help));target.append(card);}}
+
+function rememberProductDetails(){for(const [selector,saved] of [['[data-product-models]',productDetailsOpen],['[data-product-adjustments]',productAdjustmentsOpen]])for(const details of el('variantCards').querySelectorAll(selector)){const id=details.dataset.productModels||details.dataset.productAdjustments;if(details.open)saved.add(id);else saved.delete(id);}}
+function savedVariantUnitCost(binding,identity=binding){if(!productionCostFrameCurrent())return null;const values=productionCostsState?.values,custom=identity?savedCustomCost(identity.item_id,identity.model_id):null;if(custom)return custom.unit_cost_cents;const reference=identity?(typeof itemsData==='undefined'?null:itemsData?.production_cost_reference?.variants)?.find(row=>row.item_id===identity.item_id&&row.model_id===identity.model_id):null;if(reference)return Number.isSafeInteger(reference.unit_cost_cents)&&reference.unit_cost_cents>0?reference.unit_cost_cents:null;if(!binding||!values)return null;const sizes=binding.selling_unit==='SINGLE_GARMENT'?[binding.size]:[binding.male_size,binding.female_size],single=sizes.length===1;let total=0;for(const size of sizes){if(!['P','M','G','GG','G1','G2','G3'].includes(size))return null;const plus=['G1','G2','G3'].includes(size),value=values.mode==='all_inclusive'?(plus?values.inclusive_plus_cents:values.inclusive_regular_cents):(plus?values.base_plus_cents:values.base_regular_cents);if(!Number.isSafeInteger(value)||value<=0)return null;total+=value;}if(values.mode==='itemized')for(const component of values.components)total+=component.amount_cents*(component.basis==='per_piece'?sizes.length:single?0:1);return Number.isSafeInteger(total)&&total>=0?total:null;}
+function costAmount(value){const raw=value.trim().replace(',','.');if(!/^[0-9]{1,5}(\.[0-9]{1,2})?$/.test(raw))throw Error('Informe os custos com até duas casas decimais.');const [whole,fraction='']=raw.split('.');const cents=Number(whole)*100+Number(fraction.padEnd(2,'0'));if(cents>1000000)throw Error('Cada custo pode ter no máximo R$ 10.000,00.');return cents;}
+function validProductionCostsState(value){try{if(!value||!Number.isSafeInteger(value.revision)||value.revision<1||!value.values)return null;const v=value.values,custom=Object.hasOwn(v,'custom_profiles')||Object.hasOwn(v,'custom_assignments'),composition=Object.hasOwn(v,'composition_recipes')||Object.hasOwn(v,'composition_assignments'),keys=['mode','inclusive_regular_cents','inclusive_plus_cents','base_regular_cents','base_plus_cents','components',...(custom?['custom_profiles','custom_assignments']:[]),...(composition?['composition_recipes','composition_assignments']:[])],cent=value=>Number.isSafeInteger(value)&&value>=0&&value<=1000000,label=value=>typeof value==='string'&&value===value.trim()&&value.length>0&&value.length<=60&&!/[\u0000-\u001f\u007f-\u009f]/.test(value),id=value=>typeof value==='string'&&/^[a-z0-9-]{1,64}$/.test(value);if(!catalogDiagnosticKeys(v,keys)||!['all_inclusive','itemized'].includes(v.mode)||!cent(v.inclusive_regular_cents)||v.inclusive_regular_cents===0||!cent(v.inclusive_plus_cents)||v.inclusive_plus_cents===0||!['base_regular_cents','base_plus_cents'].every(key=>v[key]===null||(cent(v[key])&&v[key]>0))||!catalogDiagnosticArray(v.components,20))return null;const ids=new Set();for(const row of v.components){if(!catalogDiagnosticKeys(row,['id','label','basis','amount_cents'])||!id(row.id)||ids.has(row.id)||!label(row.label)||!['per_piece','per_kit'].includes(row.basis)||!cent(row.amount_cents))return null;ids.add(row.id);}if(v.mode==='itemized'&&(v.base_regular_cents===null||v.base_plus_cents===null))return null;if(custom){if(!catalogDiagnosticArray(v.custom_profiles,100)||!catalogDiagnosticArray(v.custom_assignments,1000))return null;const profiles=new Set(),scopes=new Set();for(const row of v.custom_profiles){if(!catalogDiagnosticKeys(row,['id','label','unit_cost_cents'])||!id(row.id)||profiles.has(row.id)||!label(row.label)||!cent(row.unit_cost_cents)||row.unit_cost_cents===0)return null;profiles.add(row.id);}for(const row of v.custom_assignments){if(!catalogDiagnosticKeys(row,['item_id','model_id','profile_id'])||typeof row.item_id!=='string'||variantId(row.item_id)!==row.item_id||row.model_id!==null&&(typeof row.model_id!=='string'||variantId(row.model_id,true)!==row.model_id)||!profiles.has(row.profile_id))return null;const scope=row.item_id+':'+(row.model_id===null?'*':row.model_id);if(scopes.has(scope))return null;scopes.add(scope);}}if(composition){if(!catalogDiagnosticArray(v.composition_recipes,100)||!catalogDiagnosticArray(v.composition_assignments,1000))return null;const recipes=new Set(),scopes=new Set();for(const recipe of v.composition_recipes){if(!catalogDiagnosticKeys(recipe,['id','label','components'])||!id(recipe.id)||recipes.has(recipe.id)||!label(recipe.label)||!catalogDiagnosticArray(recipe.components,20)||!recipe.components.length)return null;let count=0;for(const component of recipe.components){if(!catalogDiagnosticKeys(component,['kind','size','quantity'])||component.kind!=='ADULT_GARMENT'||!['P','M','G','GG','G1','G2','G3'].includes(component.size)||!Number.isSafeInteger(component.quantity)||component.quantity<1||component.quantity>20)return null;count+=component.quantity;}if(count>20)return null;recipes.add(recipe.id);}for(const assignment of v.composition_assignments){if(!catalogDiagnosticKeys(assignment,['item_id','model_id','recipe_id'])||typeof assignment.item_id!=='string'||variantId(assignment.item_id)!==assignment.item_id||typeof assignment.model_id!=='string'||variantId(assignment.model_id,true)!==assignment.model_id||!recipes.has(assignment.recipe_id))return null;const key=assignment.item_id+':'+assignment.model_id;if(scopes.has(key))return null;scopes.add(key);}}return {revision:value.revision,values:structuredClone(v),updated_at:value.updated_at};}catch{return null;}}
+function productionCostsValues(){const active=el('costMode').value;const optional=id=>el(id).value.trim()===''?null:costAmount(el(id).value);const components=[...el('costComponents').children].map(row=>({id:row.dataset.componentId,label:row.querySelector('[data-cost-label]').value.trim(),basis:row.querySelector('[data-cost-basis]').value,amount_cents:costAmount(row.querySelector('[data-cost-amount]').value)}));for(const row of components)if(!row.label||row.label.length>60||/[\u0000-\u001f\u007f-\u009f]/.test(row.label))throw Error('Dê um nome de até 60 caracteres a cada componente.');const v={mode:active,inclusive_regular_cents:costAmount(el('costInclusiveRegular').value),inclusive_plus_cents:costAmount(el('costInclusivePlus').value),base_regular_cents:optional('costBaseRegular'),base_plus_cents:optional('costBasePlus'),components};if(v.inclusive_regular_cents===0||v.inclusive_plus_cents===0)throw Error('O custo completo por peça deve ser maior que zero.');if((v.base_regular_cents!==null&&v.base_regular_cents===0)||(v.base_plus_cents!==null&&v.base_plus_cents===0))throw Error('A base da camiseta deve ser maior que zero.');if(active==='itemized'&&(v.base_regular_cents===null||v.base_plus_cents===null))throw Error('Informe as duas bases da camiseta, sem os componentes separados.');if(Object.hasOwn(productionCostsState?.values||{},'composition_recipes')){v.composition_recipes=structuredClone(productionCostsState.values.composition_recipes);v.composition_assignments=structuredClone(productionCostsState.values.composition_assignments);}if(customCostSettingsEnabled){v.custom_profiles=customCostProfilesValues();v.custom_assignments=structuredClone(customCostAssignmentsDraft);if(!validProductionCostsState({revision:1,values:v}))throw Error('Confira os custos personalizados e suas associações aos produtos.');}if(!validProductionCostsState({revision:1,values:v}))throw Error('Confira os custos e as composições salvas antes de continuar.');return v;}
+function customCostProfilesValues(){return [...el('customCostProfiles').children].map(row=>{const label=row.querySelector('[data-custom-label]').value.trim(),unit_cost_cents=costAmount(row.querySelector('[data-custom-amount]').value);if(!label||label.length>60||/[\u0000-\u001f\u007f-\u009f]/.test(label))throw Error('Dê um nome de até 60 caracteres a cada custo personalizado.');if(unit_cost_cents<=0)throw Error('O custo personalizado por unidade vendida deve ser maior que zero.');return {id:row.dataset.profileId,label,unit_cost_cents};});}
+function customCostDraftRows(){return [...el('customCostProfiles').children].map(row=>({id:row.dataset.profileId,label:row.querySelector('[data-custom-label]').value.trim(),amount:row.querySelector('[data-custom-amount]').value}));}
+function appendCustomCostProfile(value){const row=node('div',undefined,'custom-cost-profile');row.dataset.profileId=value?.id||crypto.randomUUID();for(const [kind,captionText] of [['label','Nome do custo'],['amount','Custo completo por unidade vendida · R$']]){const wrap=node('div',undefined,'field'),caption=node('label',captionText),input=node('input');input.id='custom-cost-'+row.dataset.profileId+'-'+kind;caption.htmlFor=input.id;if(kind==='label'){input.dataset.customLabel='true';input.maxLength=60;input.placeholder='Ex.: Calça, moletom ou kit casal';input.value=value?.label||'';}else{input.dataset.customAmount='true';input.inputMode='decimal';input.placeholder='Ex.: 35,90';input.value=value?(value.unit_cost_cents/100).toFixed(2):'';}input.addEventListener('input',productionCostsChanged);wrap.append(caption,input);row.append(wrap);}const remove=node('button','Remover custo','button-secondary');remove.type='button';remove.dataset.customRemove='true';remove.onclick=()=>{if(customCostAssignmentsDraft.some(value=>value.profile_id===row.dataset.profileId)){el('customCostMessage').textContent='Este custo está em uso. Remova ou altere as associações abaixo antes de removê-lo.';return;}row.remove();customCostSettingsEnabled=true;productionCostsChanged();};row.append(remove);el('customCostProfiles').append(row);}
+function refreshCustomCostsEditor(){const profiles=customCostDraftRows(),selected=el('customCostProfile').value,select=el('customCostProfile');select.replaceChildren();const blank=node('option',profiles.length?'Escolha um custo':'Cadastre um custo acima');blank.value='';select.append(blank);for(const profile of profiles){const option=node('option',profile.label||'Custo sem nome');option.value=profile.id;select.append(option);}select.value=profiles.some(row=>row.id===selected)?selected:'';el('addCustomCostProfile').disabled=profiles.length>=100||productionCostsSaving;el('assignCustomCost').disabled=!profiles.length||productionCostsSaving;for(const row of el('customCostProfiles').children){const count=customCostAssignmentsDraft.filter(value=>value.profile_id===row.dataset.profileId).length,remove=row.querySelector('[data-custom-remove]');remove.disabled=count>0||productionCostsSaving;remove.title=count?'Em uso em '+count+' associação(ões). Remova ou altere as associações primeiro.':'Remover este custo';remove.textContent=count?'Em uso · '+count:'Remover custo';}const target=el('customCostAssignments');target.replaceChildren();if(!customCostAssignmentsDraft.length)target.append(node('p','Nenhum produto com custo personalizado. As camisetas identificadas continuam usando o padrão abaixo.','field-help'));for(const assignment of customCostAssignmentsDraft){const profile=profiles.find(row=>row.id===assignment.profile_id),row=node('div',undefined,'custom-cost-assignment'),description=node('div');description.append(node('strong','Produto #'+assignment.item_id),node('p',(assignment.model_id===null?'Todas as variações, inclusive as novas':'Somente variação #'+assignment.model_id)+' · '+(profile?.label||'Custo não encontrado'),'field-help'));const actions=node('div',undefined,'actions'),edit=node('button','Editar','button-link'),remove=node('button','Remover associação','button-link');edit.type=remove.type='button';edit.disabled=remove.disabled=productionCostsSaving;edit.onclick=()=>{el('customCostItems').value=assignment.item_id;el('customCostModel').value=assignment.model_id||'';el('customCostProfile').value=assignment.profile_id;el('customCostItems').focus();el('customCostMessage').textContent='Altere o custo escolhido e use Aplicar custo. Para mudar o produto ou a variação, remova a associação anterior.';};remove.onclick=()=>{customCostAssignmentsDraft=customCostAssignmentsDraft.filter(value=>value!==assignment);customCostSettingsEnabled=true;productionCostsChanged();el('customCostMessage').textContent='Associação removida do rascunho. Salve para aplicar.';};actions.append(edit,remove);row.append(description,actions);target.append(row);}}
+function assignCustomCost(){try{const profiles=customCostProfilesValues(),profileId=el('customCostProfile').value,raw=el('customCostItems').value.trim(),modelRaw=el('customCostModel').value.trim(),itemIds=[...new Set(raw.split(/[\s,;]+/).filter(Boolean))];if(!profiles.some(row=>row.id===profileId))throw Error('Escolha um custo cadastrado.');if(!itemIds.length||itemIds.some(id=>variantId(id)!==id))throw Error('Informe códigos válidos dos produtos, separados por vírgula ou espaço.');const model=modelRaw===''?null:variantId(modelRaw,true);if(modelRaw!==''&&(model===null||model!==modelRaw))throw Error('Informe um código válido de variação ou deixe vazio para todas.');if(model!==null&&itemIds.length!==1)throw Error('Para uma variação específica, informe somente um produto. Para vários produtos, deixe a variação vazia.');const assignments=customCostAssignmentsDraft.filter(row=>!itemIds.includes(row.item_id)||row.model_id!==model);for(const item_id of itemIds)assignments.push({item_id,model_id:model,profile_id:profileId});if(assignments.length>1000)throw Error('O limite é de 1.000 associações de custos.');customCostAssignmentsDraft=assignments;customCostSettingsEnabled=true;productionCostsChanged();el('customCostMessage').textContent=itemIds.length+' produto(s) no rascunho · '+(model===null?'todas as variações receberão este custo automaticamente.':'custo específico desta variação.')+' Salve os custos para aplicar.';}catch(error){el('customCostMessage').textContent=error.message;}}
+function configureCustomCost(itemId,modelId=null){openTab('margins');el('customCostItems').value=itemId;el('customCostModel').value=modelId===null?'':modelId;const saved=savedCustomCost(itemId,modelId);el('customCostProfile').value=saved?.id||'';el('customCostMessage').textContent=modelId===null?'Escolha o custo deste produto. Ele será aplicado a todas as variações, inclusive as novas.':'Um custo desta variação tem prioridade sobre o custo geral do produto.';el('customCostsSection').scrollIntoView?.({behavior:'smooth',block:'start'});el('customCostItems').focus();}
+function applyCustomCostSettings(values){customCostSettingsEnabled=Object.hasOwn(values,'custom_profiles');el('customCostProfiles').replaceChildren();for(const profile of values.custom_profiles||[])appendCustomCostProfile(profile);customCostAssignmentsDraft=structuredClone(values.custom_assignments||[]);el('customCostMessage').textContent='';refreshCustomCostsEditor();}
+function preserveLatestCustomCosts(values){if(!customCostSettingsEnabled){applyCustomCostSettings(values);return;}const before=productionCostsState?.values||{},key=row=>row.item_id+':'+(row.model_id===null?'*':row.model_id),equal=(a,b)=>JSON.stringify(a)===JSON.stringify(b),oldProfiles=new Map((before.custom_profiles||[]).map(row=>[row.id,row])),latestProfiles=new Map((values.custom_profiles||[]).map(row=>[row.id,row]));for(const row of [...el('customCostProfiles').children]){const id=row.dataset.profileId,old=oldProfiles.get(id),latest=latestProfiles.get(id),label=row.querySelector('[data-custom-label]'),amount=row.querySelector('[data-custom-amount]');if(old&&label.value===old.label&&amount.value===(old.unit_cost_cents/100).toFixed(2)){if(latest){label.value=latest.label;amount.value=(latest.unit_cost_cents/100).toFixed(2);}else row.remove();}}const localProfiles=new Set(customCostDraftRows().map(row=>row.id));for(const profile of values.custom_profiles||[])if(!oldProfiles.has(profile.id)&&!localProfiles.has(profile.id))appendCustomCostProfile(profile);const oldAssignments=new Map((before.custom_assignments||[]).map(row=>[key(row),row])),latestAssignments=new Map((values.custom_assignments||[]).map(row=>[key(row),row])),merged=[];for(const row of customCostAssignmentsDraft){const old=oldAssignments.get(key(row)),latest=latestAssignments.get(key(row));if(old&&equal(old,row)){if(latest)merged.push(structuredClone(latest));}else merged.push(row);}const localScopes=new Set(merged.map(key));for(const row of values.custom_assignments||[])if(!oldAssignments.has(key(row))&&!localScopes.has(key(row)))merged.push(structuredClone(row));customCostAssignmentsDraft=merged;refreshCustomCostsEditor();}
+let confirmedCostReferencesState=null,confirmedCostReferencesPromise=null;
+function validConfirmedCostReferences(value){try{if(!catalogDiagnosticKeys(value,['schema','shop_id','corrections'])||value.schema!=='operator_cost_corrections_v1'||!Number.isSafeInteger(value.shop_id)||value.shop_id<1||!catalogDiagnosticArray(value.corrections,3))return null;const ids=new Set(),revision=row=>row===null||Number.isSafeInteger(row)&&row>=1&&row<=2147483647;for(const row of value.corrections){if(!catalogDiagnosticKeys(row,['id','status','reason','previous_revision','revision','checked_at'])||typeof row.id!=='string'||!/^[a-z0-9-]{1,128}$/.test(row.id)||ids.has(row.id)||!['APPLIED','SKIPPED','CONFLICT'].includes(row.status)||typeof row.reason!=='string'||!/^[A-Z][A-Z0-9_]{0,95}$/.test(row.reason)||!revision(row.previous_revision)||!revision(row.revision)||!Number.isSafeInteger(row.checked_at)||row.checked_at<1||row.checked_at>9999999999)return null;ids.add(row.id);}return structuredClone(value);}catch{return null;}}
+function renderConfirmedCostReferences(){const target=el('confirmedCostReferences');if(!target)return;const value=confirmedCostReferencesState;target.hidden=!value?.corrections.length;if(target.hidden)return;const conflict=value.corrections.some(row=>row.status==='CONFLICT'),title=el('confirmedCostReferencesTitle'),labels={'adult-22199878767-remove-child-rule-v1':'Tipo da camiseta avulsa','child-size-2-1250-v1':'Tamanho infantil adicional','adult-triple-58271140523-149796059126-v1':'Composição do combo adulto'};title.textContent=conflict?'Referências confirmadas em conferência':'Referências confirmadas aplicadas';const rows=value.corrections.map(row=>node('p',(labels[row.id]||'Referência de custo')+' · '+(row.status==='APPLIED'?'aplicada':row.status==='SKIPPED'?'já estava ajustada':'alteração recente preservada')+(row.revision===null?'':' · versão '+row.revision)+' · '+new Date(row.checked_at*1000).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'})+'.','field-help'));if(conflict)rows.push(node('p','Uma configuração recente foi preservada. Confira os custos e as regras atuais antes de concluir essa referência.','field-help'));if(productionCostsState)rows.push(node('p','Custos em uso: versão '+productionCostsState.revision+'.','field-help'));el('confirmedCostReferencesRows').replaceChildren(...rows);}
+async function loadConfirmedCostReferences(){if(confirmedCostReferencesPromise)return confirmedCostReferencesPromise;confirmedCostReferencesPromise=(async()=>{try{const value=validConfirmedCostReferences(await api('production-costs/confirmed-references'));if(!value)throw Error();confirmedCostReferencesState=value;renderConfirmedCostReferences();return true;}catch{return false;}finally{confirmedCostReferencesPromise=null;}})();return confirmedCostReferencesPromise;}
+function productionCostSingleValues(values){const extra=values.mode==='itemized'?values.components.filter(row=>row.basis==='per_piece').reduce((sum,row)=>sum+row.amount_cents,0):0;const regular=values.mode==='all_inclusive'?values.inclusive_regular_cents:values.base_regular_cents,plus=values.mode==='all_inclusive'?values.inclusive_plus_cents:values.base_plus_cents;return [regular+extra,plus+extra];}
+function productionCostRecipeValues(values){const pieces=productionCostSingleValues(values),kitExtra=values.mode==='itemized'?values.components.filter(row=>row.basis==='per_kit').reduce((sum,row)=>sum+row.amount_cents,0):0;return (values.composition_recipes||[]).map(recipe=>{const piece_count=recipe.components.reduce((sum,row)=>sum+row.quantity,0),unit_cost_cents=recipe.components.reduce((sum,row)=>sum+pieces[['G1','G2','G3'].includes(row.size)?1:0]*row.quantity,0)+(piece_count>1?kitExtra:0);if(!Number.isSafeInteger(unit_cost_cents)||unit_cost_cents<1)throw Error('A composição não pôde ser calculada com segurança.');return {...recipe,piece_count,unit_cost_cents};});}
+function productionCostKitValues(values){const extra=values.mode==='itemized'?values.components.reduce((sum,row)=>sum+row.amount_cents*(row.basis==='per_piece'?2:1),0):0;const regular=values.mode==='all_inclusive'?values.inclusive_regular_cents:values.base_regular_cents,plus=values.mode==='all_inclusive'?values.inclusive_plus_cents:values.base_plus_cents;return [regular*2+extra,regular+plus+extra,plus*2+extra];}
+function updateProductionCostsPreview(){refreshCustomCostsEditor();const mode=el('costMode').value;el('costInclusive').hidden=mode!=='all_inclusive';el('costItemized').hidden=mode!=='itemized';el('addCostComponent').disabled=el('costComponents').children.length>=20||productionCostsSaving;const target=el('costsPreview');target.replaceChildren();let valid=false;try{const values=productionCostsValues(),singles=productionCostSingleValues(values),kits=productionCostKitValues(values),heading=node('h3','Camisetas adultas avulsas');target.append(heading);for(const [index,label] of ['Adulto P, M, G e GG','Adulto G1, G2 e G3'].entries()){const card=node('div',undefined,'cost-reference-card');card.append(node('small',label),node('strong',money(singles[index])),node('span','Uma camiseta por unidade vendida.'));target.append(card);}target.append(node('h3','Kits com duas camisetas'));for(const [index,label] of ['Duas P–GG','Uma P–GG + uma G1–G3','Duas G1–G3'].entries()){const card=node('div',undefined,'cost-reference-card');card.append(node('small',label),node('strong',money(kits[index])),node('span','Custo do kit inteiro · duas peças.'));target.append(card);}const recipes=productionCostRecipeValues(values);if(recipes.length){target.append(node('h3','Combos e composições cadastradas'));for(const recipe of recipes){const card=node('div',undefined,'cost-reference-card');card.append(node('small',recipe.label),node('strong',money(recipe.unit_cost_cents)),node('span',recipe.components.map(row=>row.quantity+' camiseta(s) '+row.size).join(' + ')+' · custo do combo inteiro.'));target.append(card);}}valid=true;}catch(error){target.append(node('p',productionCostsState?error.message:'Os valores aparecerão depois da consulta dos custos salvos.','field-help'));}el('costsDraftNote').textContent=productionCostsState?.revision===0?'Nenhum custo salvo nesta empresa. A prévia usa apenas os valores que você preencher.':productionCostsDirty?'Prévia do rascunho. Salve para aplicar os custos aos produtos.':'Custos da versão salva. O padrão acompanha o tamanho; uma cor só muda o custo quando há uma exceção cadastrada.';el('saveProductionCosts').disabled=!productionCostsState||!!productionCostsPromise||productionCostsSaving||productionCostsBlocked||!!productionCostsConflict||!productionCostsDirty||!valid;el('saveProductionCosts').textContent=productionCostsSaving?'Salvando custos…':'Salvar custos de produção';el('loadProductionCosts').disabled=!!productionCostsPromise||productionCostsSaving;el('reviewProductionCosts').hidden=!productionCostsConflict;el('costsVersion').textContent=productionCostsState?.revision===0?'Primeira configuração':productionCostsState?'Custos · versão '+productionCostsState.revision:'Custos indisponíveis';renderConfirmedCostReferences();}
+function productionCostsChanged(){productionCostsDirty=true;++productionCostsEditSequence;updateProductionCostsPreview();}
+function appendCostComponent(value){const row=node('div',undefined,'cost-component');row.dataset.componentId=value?.id||crypto.randomUUID();for(const [kind,label] of [['label','Componente'],['basis','Aplicar'],['amount','Custo · R$']]){const wrap=node('div',undefined,'field'),caption=node('label',label),input=node(kind==='basis'?'select':'input');input.id='cost-component-'+row.dataset.componentId+'-'+kind;caption.htmlFor=input.id;if(kind==='basis'){input.dataset.costBasis='true';for(const [optionValue,text] of [['per_piece','Por peça'],['per_kit','Por kit']]){const option=node('option',text);option.value=optionValue;input.append(option);}input.value=value?.basis||'per_piece';}else if(kind==='label'){input.dataset.costLabel='true';input.maxLength=60;input.placeholder='Ex.: estampa';input.value=value?.label||'';}else{input.dataset.costAmount='true';input.inputMode='decimal';input.placeholder='0,00';input.value=value?String((value.amount_cents/100).toFixed(2)):'';}input.addEventListener(kind==='basis'?'change':'input',productionCostsChanged);wrap.append(caption,input);row.append(wrap);}const remove=node('button','Remover','button-secondary');remove.type='button';remove.setAttribute('aria-label','Remover componente');remove.onclick=()=>{row.remove();productionCostsChanged();};row.append(remove);el('costComponents').append(row);}
+function applyProductionCosts(value){if(productionCostsState?.revision!==value.revision)invalidateProductionCostsAudit();productionCostsState=value;const v=value.values;el('costMode').value=v.mode;for(const [id,key] of [['costInclusiveRegular','inclusive_regular_cents'],['costInclusivePlus','inclusive_plus_cents'],['costBaseRegular','base_regular_cents'],['costBasePlus','base_plus_cents']])el(id).value=v[key]===null?'':(v[key]/100).toFixed(2);el('costComponents').replaceChildren();for(const component of v.components)appendCostComponent(component);applyCustomCostSettings(v);productionCostsDirty=false;productionCostsBlocked=false;productionCostsConflict=null;el('costsNotice').hidden=true;el('costsStatus').textContent='Custos cadastrados · versões anteriores preservadas.';updateProductionCostsPreview();if(bindingState)renderVariantCards();}
+let productionCostsAuditLoadedRevision=null,productionCostsAuditPromise=null,productionCostsAuditGeneration=0;
+function invalidateProductionCostsAudit(){productionCostsAuditLoadedRevision=null;productionCostsAuditGeneration++;}
+async function loadProductionCostsAudit(){if(productionCostsAuditPromise)return productionCostsAuditPromise;const revision=productionCostsState?.revision;if(revision&&productionCostsAuditLoadedRevision===revision)return true;const generation=productionCostsAuditGeneration;productionCostsAuditPromise=(async()=>{try{const value=await api('production-costs/audit');if(generation!==productionCostsAuditGeneration)return false;const target=el('productionCostsAudit');if(!value||!Array.isArray(value.rows))throw Error();target.replaceChildren();for(const row of value.rows.slice(0,30)){const entry=validProductionCostsState({revision:row.revision,values:JSON.parse(row.payload),updated_at:row.created_at});if(!entry)throw Error();const kits=productionCostKitValues(entry.values),singles=productionCostSingleValues(entry.values);target.append(node('p','Versão '+entry.revision+' · '+new Date(row.created_at).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'})+' · avulsas '+singles.map(value=>money(value)).join(' / ')+' · kits '+kits.map(value=>money(value)).join(' / ')+(entry.values.custom_profiles?' · '+entry.values.custom_profiles.length+' custo(s) personalizado(s) · '+entry.values.custom_assignments.length+' associação(ões)':'')));}if(!value.rows.length)target.append(node('p','Nenhuma versão anterior disponível.','muted'));productionCostsAuditLoadedRevision=revision;return true;}catch{el('productionCostsAudit').replaceChildren(node('p','Não foi possível consultar o histórico. Feche e abra esta seção para tentar novamente.','muted'));return false;}finally{productionCostsAuditPromise=null;}})();return productionCostsAuditPromise;}
+
+function beginProductionCostsConfiguration(){
+ // A revision-zero draft is an explicit first configuration, never a saved cost frame.
+ if(productionCostsState?.revision>0){for(const id of ['costInclusiveRegular','costInclusivePlus','costBaseRegular','costBasePlus'])el(id).value='';el('costComponents').replaceChildren();applyCustomCostSettings({});productionCostsDirty=false;}
+ productionCostsState={revision:0,values:{},updated_at:null};productionCostsBlocked=false;productionCostsConflict=null;invalidateProductionCostsAudit();el('costsNotice').hidden=false;el('costsNotice').textContent='Esta empresa ainda não cadastrou custos de produção. Informe seus próprios valores; nenhum custo de outra empresa será usado.';el('costsStatus').textContent='Primeira configuração. Preencha e revise os custos antes de salvar.';
+}
+async function loadProductionCosts(){if(productionCostsPromise)return productionCostsPromise;el('costsStatus').textContent='Consultando os custos salvos…';productionCostsPromise=(async()=>{try{const value=validProductionCostsState(await api('production-costs'));if(!value)throw Error('A resposta dos custos não pôde ser validada.');if(productionCostsDirty){productionCostsConflict=value;productionCostsBlocked=true;el('costsNotice').hidden=false;el('costsNotice').replaceChildren(node('p','Custos atuais carregados. Seus rascunhos foram preservados; revise a versão atual antes de salvar.'),node('p','Versão '+value.revision+' salva: '+(value.values.mode==='all_inclusive'?'custo completo':'custos separados')+' · custo completo P–GG '+money(value.values.inclusive_regular_cents)+' / G1–G3 '+money(value.values.inclusive_plus_cents)+'.'),node('p','Kits da versão salva: '+productionCostKitValues(value.values).map(amount=>money(amount)).join(' / ')+'. '+(value.values.custom_profiles?value.values.custom_profiles.length+' custo(s) personalizado(s) e '+value.values.custom_assignments.length+' associação(ões) na versão atual. ':'')+'Seu rascunho completo substituirá esses valores ao salvar.'));el('costsStatus').textContent='Versão salva '+value.revision+' disponível para revisão.';}else applyProductionCosts(value);}catch(error){if(error.status===409&&error.apiCode==='PRODUCTION_COSTS_CONFIGURATION_REQUIRED')beginProductionCostsConfiguration();else{productionCostsBlocked=true;el('costsNotice').hidden=false;el('costsNotice').textContent=error.message;el('costsStatus').textContent='Não foi possível carregar os custos. Os rascunhos foram preservados.';}}finally{productionCostsPromise=null;updateProductionCostsPreview();}})();updateProductionCostsPreview();return productionCostsPromise;}
+async function saveProductionCosts(){if(el('saveProductionCosts').disabled||productionCostsSaving||!productionCostsState||productionCostsBlocked)return;let values;try{values=productionCostsValues();}catch(error){notice(error.message);return;}const submittedSequence=productionCostsEditSequence;productionCostsSaving=true;updateProductionCostsPreview();try{const value=validProductionCostsState(await api('production-costs',{revision:productionCostsState.revision,values}));if(!value)throw Error('Não foi possível validar os custos salvos. Carregue os custos atuais antes de continuar.');if(submittedSequence===productionCostsEditSequence)applyProductionCosts(value);else{productionCostsState=value;el('costsStatus').textContent='Custos salvos. Os novos rascunhos continuam no formulário.';}notice('Custos de produção salvos. Recalculando os dados já salvos, sem consultar as vendas novamente.');invalidateProductionCostsAudit();await loadVariants({localOnly:true});await globalThis.brazaProductionCostPeriods?.refresh();await globalThis.brazaSavedCatalog?.refresh();if(storePeriodBundle)await refreshStoreResult();if(globalThis.brazaMonthDashboard)await globalThis.brazaMonthDashboard.refreshCosts().catch(()=>{});}catch(error){productionCostsBlocked=true;el('costsNotice').hidden=false;el('costsNotice').textContent=error.status===409?'Os custos foram alterados em outra sessão. Seus rascunhos foram preservados. Use Carregar custos salvos e revise a versão atual antes de salvar.':error.message;el('costsStatus').textContent='A edição aguarda a consulta e a revisão dos custos salvos.';}finally{productionCostsSaving=false;updateProductionCostsPreview();}}
+function renderItemsProductionCosts(){const target=el('itemsProductionCosts'),reference=itemsData?.production_cost_reference;target.replaceChildren();target.hidden=!reference;if(!reference)return;const cent=value=>Number.isSafeInteger(value)&&value>=0;if(reference.currency!=='BRL'||reference.cost_stage!=='PRODUCTION_COST_REFERENCE'||reference.status_scope!=='ALL_RETURNED_STATUSES_REFERENCE_ONLY'||!cent(reference.known_subset_cents)||(reference.total_cents!==null&&!cent(reference.total_cents))||!cent(reference.mapped_quantity)||!cent(reference.unmapped_quantity)){target.append(node('p','A referência dos custos de produção não pôde ser validada.'));return;}target.append(node('h3','Custo de produção das peças e dos kits · referência'),node('p','Parte com vínculo salvo: '+money(reference.known_subset_cents)+'.'),node('p',reference.total_cents===null?'Custo completo pendente: há unidades sem composição confirmada.':'Custo de produção do recorte: '+money(reference.total_cents)+'.'),node('p',reference.mapped_quantity+' unidade(s) com custo identificado · '+reference.unmapped_quantity+' sem referência de custo.'),node('p','Inclui todos os status retornados. É uma referência de produção para as quantidades do catálogo; não confirma custo realizado, recebimento ou venda paga.'),node('p','Lucro bruto aguarda receita e dados financeiros da venda.'),node('p','Os custos não são descontados novamente das margens já cadastradas.','field-help'),node('p','O perfil atual é aplicado a esta leitura. Os recortes salvos preservam as margens anteriores e ainda não incluem estes custos de produção.','field-help'));if(Number.isSafeInteger(reference.costs_revision)&&Number.isSafeInteger(reference.bindings_revision))target.append(node('p','Custos · versão '+reference.costs_revision+' / vínculos · versão '+reference.bindings_revision,'field-help'));}
+function variantCostReference(key){if(!productionCostFrameCurrent())return 'Os custos salvos mudaram. Carregue e revise os custos atuais antes de conferir esta variação.';const [item_id,model_id]=key.split(':'),custom=savedCustomCost(item_id,model_id);if(custom)return 'Custo personalizado · '+custom.label+': '+money(custom.unit_cost_cents)+' por unidade vendida.';if(bindingDrafts.has(key))return 'Custo de produção será recalculado após salvar o ajuste.';const binding=currentBindingMap().get(key),amount=savedVariantUnitCost(binding);return amount!==null?'Custo de produção por '+(binding.selling_unit==='SINGLE_GARMENT'?'camiseta':'kit')+': '+money(amount)+' · perfil cadastrado.':'Custo de produção pendente: configure um custo personalizado ou identifique a composição.';}
+
+let storePeriodBundle=null,storePeriodBusy=false,storePeriodStopRequested=false,storeAdjustmentsDirty=false,storeAdjustmentsEditSequence=0,storeAdjustmentRunId=null,storeResultMessage='',storeProductBusy=null,storeAdsBusy=false,storeAdsMessage='',storeManualAdsDraft='',storeProductPage=1;
+const storeAdsAttempted=new Map();
+let storeAdsRefreshTimer=null;
+let variantSyncPromise=null,variantSyncOpened=false,variantSyncRequested=false,storeAutomaticStarted=false;
+const productDetailsOpen=new Set(),productAdjustmentsOpen=new Set();
+let productBrowserPage=1;
+const storePendingMessages={COLLECTING:'A consulta ainda está em andamento. Os valores já consultados não representam o total do período.',PERIOD_LIMIT_REACHED:'O limite desta consulta foi atingido. Escolha um período menor para obter o total completo.',PERIOD_DIAGNOSTIC:'A Shopee interrompeu a leitura. Use Continuar coleta para tentar retomar.',MONEY_UNAVAILABLE:'Parte dos valores financeiros está indisponível ou não pôde ser conferida.',PRODUCTION_COST_INCOMPLETE:'Há variações sem custo de produção. Identifique a composição dos produtos pendentes abaixo.',RETURNS_NOT_RECONCILED:'As ocorrências de devolução e os casos sem informação ainda precisam de conciliação. O resultado líquido previsto permanece pendente.',ADJUSTMENTS_REQUIRED:'Informe as despesas fora da Shopee para manter o registro do período completo.',RECHARGE_TREATMENT_REQUIRED:'Confirme se o ajuste financeiro corresponde a recarga de anúncios ou suporte técnico.',RECHARGE_COMPONENT_UNAVAILABLE:'O ajuste de anúncios ou suporte não pôde ser conferido. O líquido previsto permanece pendente.',SETTLEMENT_NOT_RECONCILED:'O repasse é previsto. Recebimentos e liquidação bancária ainda não estão conciliados.',ADJUSTMENTS_INVALID:'Confira os valores de anúncios e despesas do período.',INVOICE_TAX_UNAVAILABLE:'A estimativa do imposto de 2% está pendente em parte dos pedidos. Atualize o período para conferir a base dos produtos.',EXTERNAL_EXPENSES_REVIEW_REQUIRED:'Revise as outras despesas e retire o imposto de 2% se ele já estiver incluído no valor antes de salvar.',ADS_PERIOD_UNAVAILABLE:'O gasto automático de anúncios está pendente. Atualize os anúncios ou informe um valor conferido no modo manual.',ADS_COHORT_NOT_RECONCILED:'O saldo acima cobre os pedidos já concluídos. Os anúncios cobrem todas as vendas nas datas selecionadas; ainda falta conciliar os pedidos em andamento e a atribuição para apurar o líquido da loja.',ARITHMETIC_UNSAFE:'O resultado excede o limite de cálculo seguro e não será exibido.'};
+function storeUiDay(value){if(typeof value!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(value))return false;const parsed=new Date(value+'T00:00:00Z');return Number.isFinite(parsed.getTime())&&parsed.toISOString().slice(0,10)===value;}
+function storeUiRange(start,end){return storeUiDay(start)&&storeUiDay(end)&&(Date.parse(end+'T00:00:00Z')-Date.parse(start+'T00:00:00Z'))/86400000>=0&&(Date.parse(end+'T00:00:00Z')-Date.parse(start+'T00:00:00Z'))/86400000<15;}
+function storeUiDate(value){return value.split('-').reverse().join('/');}
+function defaultStorePeriodDates(){const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()),day=Object.fromEntries(parts.filter(part=>part.type!=='literal').map(part=>[part.type,part.value])),end=day.year+'-'+day.month+'-'+day.day,start=new Date(end+'T00:00:00Z');start.setUTCDate(start.getUTCDate()-6);el('storePeriodStart').value=start.toISOString().slice(0,10);el('storePeriodEnd').value=end;el('storePeriodStart').max=end;el('storePeriodEnd').max=end;}
+const adsPeriodKeys=['schema','status','start_date','end_date','fetched_at','covered_days','total_days','missing_dates','expense_cents','days','day_partial','unit_confirmation','source_timezone','basis','diagnostic'];
+const adsPeriodUnits='OPERATOR_CONFIRMED_BRL_2026_10_20';
+const adsPeriodBasis='CALENDAR_PERIOD_NOT_ORDER_ATTRIBUTION';
+const adsPeriodDiagnostics=new Set(['ADS_PERIOD_CONFIGURATION','ADS_PERIOD_UNAVAILABLE','ADS_PERIOD_DATE_COVERAGE_PARTIAL','ADS_PERIOD_EXPENSE_INVALID','ADS_PERIOD_ARITHMETIC_UNSAFE']);
+const adsPeriodPlain=value=>value!==null&&typeof value==='object'&&[Object.prototype,null].includes(Object.getPrototypeOf(value));
+const adsPeriodExact=(value,keys)=>adsPeriodPlain(value)&&Reflect.ownKeys(value).length===keys.length&&keys.every(key=>Object.hasOwn(Object.getOwnPropertyDescriptor(value,key)||{},'value'));
+const adsPeriodArray=(value,max)=>Array.isArray(value)&&Object.getPrototypeOf(value)===Array.prototype&&value.length<=max&&Reflect.ownKeys(value).length===value.length+1&&Array.from({length:value.length},(_,index)=>Object.getOwnPropertyDescriptor(value,String(index))).every(descriptor=>descriptor&&Object.hasOwn(descriptor,'value'));
+const adsPeriodInteger=(value,max=Number.MAX_SAFE_INTEGER)=>Number.isSafeInteger(value)&&value>=0&&value<=max;
+const adsPeriodDay=value=>typeof value==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(value)&&Number.isFinite(Date.parse(value+'T00:00:00Z'))&&new Date(value+'T00:00:00Z').toISOString().slice(0,10)===value;
+const adsPeriodToday=stamp=>new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date(stamp*1000));
+function adsPeriodDates(start,end){
+ if(!adsPeriodDay(start)||!adsPeriodDay(end))return null;
+ const length=(Date.parse(end+'T00:00:00Z')-Date.parse(start+'T00:00:00Z'))/86400000+1;
+ if(length<1||length>15)return null;
+ return Array.from({length},(_,index)=>new Date(Date.parse(start+'T00:00:00Z')+index*86400000).toISOString().slice(0,10));
+}
+function projectAdsPeriod(value){
+ try{
+  const hasMeasurement=adsPeriodPlain(value)&&Object.hasOwn(value,'measurement'),measurement=hasMeasurement?projectAdsMeasurement(value.measurement):null;
+  if(!adsPeriodExact(value,[...adsPeriodKeys,...(hasMeasurement?['measurement']:[])])||hasMeasurement&&(!measurement||['status','start_date','end_date','fetched_at','covered_days','total_days','expense_cents','day_partial'].some(key=>measurement[key]!==value[key])||JSON.stringify(measurement.missing_dates)!==JSON.stringify(value.missing_dates)||JSON.stringify(measurement.days.map(day=>({date:day.date,expense_cents:day.expense_cents})))!==JSON.stringify(value.days))||value.schema!=='ads_period_v1'||!['AVAILABLE','PARTIAL','UNAVAILABLE'].includes(value.status)||!adsPeriodInteger(value.fetched_at,9999999999)||!adsPeriodInteger(value.covered_days,15)||!adsPeriodInteger(value.total_days,15)||!adsPeriodArray(value.missing_dates,15)||!adsPeriodArray(value.days,15)||typeof value.day_partial!=='boolean'||value.unit_confirmation!==adsPeriodUnits||value.source_timezone!=='UNCONFIRMED'||value.basis!==adsPeriodBasis||value.diagnostic!==null&&!adsPeriodDiagnostics.has(value.diagnostic))return null;
+  const dates=adsPeriodDates(value.start_date,value.end_date);
+  if(!dates){if(value.status!=='UNAVAILABLE'||value.start_date!==null||value.end_date!==null||value.total_days!==0||value.covered_days!==0||value.missing_dates.length||value.days.length||value.expense_cents!==null||value.day_partial||value.diagnostic!=='ADS_PERIOD_CONFIGURATION')return null;return {...value,missing_dates:[],days:[]};}
+  if(value.fetched_at===0||value.end_date>adsPeriodToday(value.fetched_at)||value.total_days!==dates.length||value.day_partial!==(value.end_date===adsPeriodToday(value.fetched_at)))return null;
+  if(value.status==='UNAVAILABLE'){
+   if(value.covered_days!==0||value.days.length||value.expense_cents!==null||JSON.stringify(value.missing_dates)!==JSON.stringify(dates)||!['ADS_PERIOD_CONFIGURATION','ADS_PERIOD_UNAVAILABLE','ADS_PERIOD_ARITHMETIC_UNSAFE'].includes(value.diagnostic))return null;
+  }else{
+   if(value.days.length!==dates.length)return null;
+   let total=0n,covered=0;const missing=[];
+   for(let index=0;index<dates.length;index++){
+    const day=value.days[index];if(!adsPeriodExact(day,['date','expense_cents'])||day.date!==dates[index]||day.expense_cents!==null&&!adsPeriodInteger(day.expense_cents))return null;
+    if(day.expense_cents===null)missing.push(day.date);else{covered++;total+=BigInt(day.expense_cents);}
+   }
+   if(value.covered_days!==covered||JSON.stringify(value.missing_dates)!==JSON.stringify(missing))return null;
+   if(value.status==='AVAILABLE'?(covered!==dates.length||total>BigInt(Number.MAX_SAFE_INTEGER)||value.expense_cents!==Number(total)||value.diagnostic!==null):(covered===dates.length||value.expense_cents!==null||!['ADS_PERIOD_DATE_COVERAGE_PARTIAL','ADS_PERIOD_EXPENSE_INVALID'].includes(value.diagnostic)))return null;
+  }
+  return {...Object.fromEntries(adsPeriodKeys.map(key=>[key,key==='days'?value.days.map(day=>({...day})):key==='missing_dates'?[...value.missing_dates]:value[key]])),...(hasMeasurement?{measurement}:{})};
+ }catch{return null;}
+}
+
+const storeProductPendingMessages={COLLECTING:'Consulta em andamento',PERIOD_LIMIT_REACHED:'Período parcial',PERIOD_DIAGNOSTIC:'Leitura interrompida',MIXED_PRODUCT_ORDERS:'Há pedidos com outros produtos; o repasse e o imposto desses pedidos não foram rateados.',MONEY_UNAVAILABLE:'Repasse indisponível',PRODUCTION_COST_INCOMPLETE:'Há tamanhos sem custo associado.',INVOICE_TAX_UNAVAILABLE:'O imposto completo deste produto ainda não pôde ser associado.',RETURNS_NOT_RECONCILED:'Informações de devolução dos pedidos ainda não conciliadas.',SETTLEMENT_NOT_RECONCILED:'Repasse previsto, ainda sem conciliação dos recebimentos.'};
+function validStoreProductSidecar(value,frame,quantities){
+ const count=value=>Number.isSafeInteger(value)&&value>=0,raw=value=>value===null||typeof value==='string'&&value.length<=96&&/^\-?\d+(\.\d+)?$/.test(value);
+ if(!catalogDiagnosticKeys(value,['schema','exclusive_order_count','mixed_order_count','exclusive_payout_raw','mixed_payout_raw','products'])||value.schema!=='store_product_breakdown_v1'||!count(value.exclusive_order_count)||!count(value.mixed_order_count)||value.exclusive_order_count+value.mixed_order_count!==frame.order_count||!raw(value.exclusive_payout_raw)||!raw(value.mixed_payout_raw)||!catalogDiagnosticArray(value.products,1000)||value.products.length!==quantities.size)return false;
+ const seen=new Set();let exclusive=0,mixed=0;
+ for(const row of value.products){if(!catalogDiagnosticKeys(row,['item_id','order_count','exclusive_order_count','mixed_order_count','exclusive_payout_raw','returns_orders'])||!quantities.has(row.item_id)||seen.has(row.item_id)||!count(row.order_count)||row.order_count<1||row.order_count>frame.order_count||BigInt(row.order_count)>quantities.get(row.item_id)||!count(row.exclusive_order_count)||row.exclusive_order_count>value.exclusive_order_count||!count(row.mixed_order_count)||row.mixed_order_count>value.mixed_order_count||row.order_count!==row.exclusive_order_count+row.mixed_order_count||!raw(row.exclusive_payout_raw)||row.returns_orders!==null&&(!count(row.returns_orders)||row.returns_orders>row.order_count))return false;seen.add(row.item_id);exclusive+=row.exclusive_order_count;mixed+=row.mixed_order_count;}
+ return exclusive===value.exclusive_order_count&&mixed>=value.mixed_order_count*2&&mixed<=value.mixed_order_count*value.products.length;
+}
+function projectStoreProductResult(value,frame,result,quantities){
+ try{
+  const hasTax=Object.hasOwn(value,'invoice_tax_allocation'),keys=['schema','run_id','revision','start_date','end_date','complete','currency','bindings_revision','costs_revision','exclusive_order_count','mixed_order_count','exclusive_payout_cents','mixed_payout_cents','products',...(hasTax?['invoice_tax_allocation']:[])],rowKeys=['item_id','quantity','order_count','exclusive_order_count','mixed_order_count','known_exclusive_payout_cents','expected_repass_cents','known_production_cost_cents','production_cost_cents','expected_after_production_cents','returns_orders','net_profit_cents','pending',...(hasTax?['exclusive_tax_covered_orders','known_exclusive_tax_cents','invoice_tax_cents','expected_after_production_and_tax_cents']:[])],count=value=>Number.isSafeInteger(value)&&value>=0,cent=value=>value===null||Number.isSafeInteger(value),safe=value=>value>=BigInt(Number.MIN_SAFE_INTEGER)&&value<=BigInt(Number.MAX_SAFE_INTEGER)?Number(value):null;
+  if(!catalogDiagnosticKeys(value,keys)||value.schema!=='store_product_result_v1'||!catalogDiagnosticArray(value.products,1000)||value.products.length!==quantities.size||value.complete!==result.complete||value.currency!=='BRL')return null;
+  if(hasTax!==Object.hasOwn(frame,'product_invoice_tax')||hasTax&&!validStoreProductTaxAllocation(value.invoice_tax_allocation,frame,value.complete))return null;
+  for(const key of ['run_id','revision','start_date','end_date'])if(value[key]!==frame[key])return null;
+  for(const key of ['bindings_revision','costs_revision'])if(value[key]!==result[key])return null;
+  if(!count(value.exclusive_order_count)||!count(value.mixed_order_count)||value.exclusive_order_count+value.mixed_order_count!==frame.order_count||!cent(value.exclusive_payout_cents)||!cent(value.mixed_payout_cents)||!value.complete&&(value.exclusive_payout_cents!==null||value.mixed_payout_cents!==null))return null;
+  const sidecar=frame.product_breakdown;if(sidecar&&(sidecar.exclusive_order_count!==value.exclusive_order_count||sidecar.mixed_order_count!==value.mixed_order_count))return null;
+  const sourceProducts=sidecar?new Map(sidecar.products.map(row=>[row.item_id,row])):null,taxProducts=hasTax?new Map(frame.product_invoice_tax.products.map(row=>[row.item_id,row])):null,seen=new Set(),products=[];let exclusive=0,mixed=0;
+  for(const row of value.products){
+   if(!catalogDiagnosticKeys(row,rowKeys)||!quantities.has(row.item_id)||seen.has(row.item_id)||!count(row.quantity)||BigInt(row.quantity)!==quantities.get(row.item_id)||!count(row.order_count)||row.order_count<1||row.order_count>frame.order_count||row.order_count>row.quantity||!count(row.exclusive_order_count)||row.exclusive_order_count>value.exclusive_order_count||!count(row.mixed_order_count)||row.mixed_order_count>value.mixed_order_count||row.order_count!==row.exclusive_order_count+row.mixed_order_count||row.returns_orders!==null&&(!count(row.returns_orders)||row.returns_orders>row.order_count)||row.net_profit_cents!==null||!catalogDiagnosticArray(row.pending,10)||new Set(row.pending).size!==row.pending.length||!row.pending.every(code=>typeof code==='string'&&Object.hasOwn(storeProductPendingMessages,code)))return null;
+   for(const key of ['known_exclusive_payout_cents','expected_repass_cents','known_production_cost_cents','production_cost_cents','expected_after_production_cents'])if(!cent(row[key]))return null;
+   if(!count(row.known_production_cost_cents)||row.production_cost_cents!==null&&(!count(row.production_cost_cents)||row.production_cost_cents!==row.known_production_cost_cents)||row.expected_repass_cents!==(value.complete&&row.mixed_order_count===0?row.known_exclusive_payout_cents:null)||!value.complete&&(row.production_cost_cents!==null||row.expected_after_production_cents!==null)||row.production_cost_cents!==null&&row.pending.includes('PRODUCTION_COST_INCOMPLETE')||row.mixed_order_count>0&&!row.pending.includes('MIXED_PRODUCT_ORDERS'))return null;
+   if(row.expected_after_production_cents!==null&&(row.expected_repass_cents===null||row.production_cost_cents===null||BigInt(row.expected_after_production_cents)!==BigInt(row.expected_repass_cents)-BigInt(row.production_cost_cents)))return null;
+   if(sourceProducts){const source=sourceProducts.get(row.item_id);for(const key of ['order_count','exclusive_order_count','mixed_order_count','returns_orders'])if(row[key]!==source?.[key])return null;}
+   if(hasTax){
+    const source=taxProducts.get(row.item_id),known=source?storeReturnsCents(source.known_exclusive_tax_raw):null;
+    if(!source||row.exclusive_tax_covered_orders!==source.exclusive_covered_orders||row.known_exclusive_tax_cents!==known||!cent(row.invoice_tax_cents)||!cent(row.expected_after_production_and_tax_cents))return null;
+    const amount=value.complete&&row.mixed_order_count===0&&row.exclusive_tax_covered_orders===row.exclusive_order_count?known:null,after=row.expected_after_production_cents!==null&&amount!==null?safe(BigInt(row.expected_after_production_cents)-BigInt(amount)):null;
+    if(row.invoice_tax_cents!==amount||row.expected_after_production_and_tax_cents!==after||amount===null&&!row.pending.includes('INVOICE_TAX_UNAVAILABLE'))return null;
+   }
+   seen.add(row.item_id);exclusive+=row.exclusive_order_count;mixed+=row.mixed_order_count;products.push(Object.fromEntries(rowKeys.map(key=>[key,key==='pending'?[...row.pending]:row[key]])));
+  }
+  if(exclusive!==value.exclusive_order_count||mixed<value.mixed_order_count*2||mixed>value.mixed_order_count*value.products.length)return null;
+  return Object.fromEntries(keys.map(key=>[key,key==='products'?products:key==='invoice_tax_allocation'?{...value[key]}:value[key]]));
+ }catch{return null;}
+}
+function validStoreProductTaxSource(value,frame,quantities){
+ const keys=['schema','exclusive_covered_orders','mixed_covered_orders','known_exclusive_tax_raw','known_mixed_tax_raw','products'],count=value=>Number.isSafeInteger(value)&&value>=0,invoice=frame.invoice_tax,breakdown=frame.product_breakdown;
+ if(!invoice||!breakdown||!catalogDiagnosticKeys(value,keys)||value.schema!=='store_product_invoice_tax_v1'||!count(value.exclusive_covered_orders)||!count(value.mixed_covered_orders)||value.exclusive_covered_orders>breakdown.exclusive_order_count||value.mixed_covered_orders>breakdown.mixed_order_count||value.exclusive_covered_orders+value.mixed_covered_orders!==invoice.covered_orders||!catalogDiagnosticArray(value.products,1000)||value.products.length!==quantities.size)return false;
+ const cents=(raw,covered)=>{const scaled=storeReturnsRaw(raw);if(scaled===null||scaled<0n||scaled%10000000000n!==0n||covered===0&&raw!=='0')return null;const amount=scaled/10000000000n;return amount<=BigInt(covered)*2000000000000n?amount:null;},exclusive=cents(value.known_exclusive_tax_raw,value.exclusive_covered_orders),mixed=cents(value.known_mixed_tax_raw,value.mixed_covered_orders),total=storeReturnsRaw(invoice.known_tax_raw);
+ if(exclusive===null||mixed===null||total===null||(exclusive+mixed)*10000000000n!==total)return false;
+ const originals=new Map(breakdown.products.map(row=>[row.item_id,row])),seen=new Set();let covered=0,amount=0n;
+ for(const row of value.products){const original=originals.get(row.item_id);if(!catalogDiagnosticKeys(row,['item_id','exclusive_covered_orders','known_exclusive_tax_raw'])||!quantities.has(row.item_id)||!original||seen.has(row.item_id)||!count(row.exclusive_covered_orders)||row.exclusive_covered_orders>original.exclusive_order_count)return false;const tax=cents(row.known_exclusive_tax_raw,row.exclusive_covered_orders);if(tax===null)return false;seen.add(row.item_id);covered+=row.exclusive_covered_orders;amount+=tax;}
+ return covered===value.exclusive_covered_orders&&amount===exclusive;
+}
+function validStoreProductTaxAllocation(value,frame,complete){
+ const keys=['schema','exclusive_covered_orders','exclusive_unavailable_orders','mixed_covered_orders','mixed_unavailable_orders','known_exclusive_tax_cents','exclusive_tax_cents','known_mixed_tax_cents','mixed_tax_cents'],source=frame.product_invoice_tax,orders=frame.product_breakdown;
+ if(!source||!orders||!catalogDiagnosticKeys(value,keys)||value.schema!=='store_product_invoice_tax_result_v1')return false;
+ for(const kind of ['exclusive','mixed']){const covered=source[kind+'_covered_orders'],known=storeReturnsCents(source['known_'+kind+'_tax_raw']);if(value[kind+'_covered_orders']!==covered||value[kind+'_unavailable_orders']!==orders[kind+'_order_count']-covered||value['known_'+kind+'_tax_cents']!==known||value[kind+'_tax_cents']!==(complete&&covered===orders[kind+'_order_count']?known:null))return false;}
+ return true;
+}
+const storeReturnsKinds=['with_return','without_reported_return','unknown'];
+const storeReturnsProductKeys=['item_id','order_count','with_return_orders','without_reported_return_orders','unknown_orders'];
+function storeReturnsRaw(value){
+ if(typeof value!=='string'||value.length>96)return null;
+ const match=/^(-?)(0|[1-9][0-9]*)(?:\.([0-9]{1,12}))?$/.exec(value);if(!match||match[3]?.endsWith('0'))return null;
+ let amount=BigInt(match[2])*1000000000000n+BigInt((match[3]||'').padEnd(12,'0'));
+ if(match[1]){if(amount===0n)return null;amount=-amount;}
+ return amount< -1000000000000000000000000000n||amount>1000000000000000000000000000n?null:amount;
+}
+function storeReturnsCents(value){
+ if(typeof value!=='string'||value.length>32)return null;
+ const match=/^(-?)(0|[1-9][0-9]*)(?:\.([0-9]{1,2}))?$/.exec(value);if(!match)return null;
+ let amount=BigInt(match[2])*100n+BigInt((match[3]||'').padEnd(2,'0'));
+ if(match[1]){if(amount===0n)return null;amount=-amount;}
+ return amount< -100000000000000n||amount>100000000000000n?null:Number(amount);
+}
+function validStoreReturnsProducts(rows,groups,frame,quantities,sourceProducts=null){
+ if(!catalogDiagnosticArray(rows,1000)||rows.length!==quantities.size)return false;
+ const count=value=>Number.isSafeInteger(value)&&value>=0,seen=new Set(),memberships={with_return:0,without_reported_return:0,unknown:0};
+ for(const row of rows){
+  if(!catalogDiagnosticKeys(row,storeReturnsProductKeys)||!quantities.has(row.item_id)||seen.has(row.item_id)||!count(row.order_count)||row.order_count<1||row.order_count>frame.order_count||BigInt(row.order_count)>quantities.get(row.item_id))return false;
+  let total=0;
+  for(const kind of storeReturnsKinds){const number=row[kind+'_orders'];if(!count(number)||number>groups[kind].order_count)return false;total+=number;memberships[kind]+=number;}
+  if(total!==row.order_count)return false;
+  if(sourceProducts){const source=sourceProducts.get(row.item_id);if(!source||source.order_count!==row.order_count||source.returns_orders!==(row.unknown_orders>0?null:row.with_return_orders))return false;}
+  seen.add(row.item_id);
+ }
+ return storeReturnsKinds.every(kind=>memberships[kind]>=groups[kind].order_count&&memberships[kind]<=groups[kind].order_count*rows.length);
+}
+function validStoreReturnsSidecar(value,frame,quantities){
+ const count=value=>Number.isSafeInteger(value)&&value>=0;
+ if(!catalogDiagnosticKeys(value,['schema',...storeReturnsKinds,'products'])||value.schema!=='store_returns_breakdown_v1')return false;
+ let orders=0,payout=0n,unknownMoney=false;
+ for(const kind of storeReturnsKinds){const group=value[kind];if(!catalogDiagnosticKeys(group,['order_count','payout_raw'])||!count(group.order_count)||group.order_count>frame.order_count||group.order_count===0&&group.payout_raw!=='0')return false;orders+=group.order_count;if(group.payout_raw===null)unknownMoney=true;else{const amount=storeReturnsRaw(group.payout_raw);if(amount===null)return false;payout+=amount;}}
+ if(orders!==frame.order_count||frame.returns_orders!==(value.unknown.order_count>0?null:value.with_return.order_count)||(frame.escrow_amount_raw===null)!==unknownMoney||!unknownMoney&&storeReturnsRaw(frame.escrow_amount_raw)!==payout)return false;
+ const source=frame.product_breakdown?new Map(frame.product_breakdown.products.map(row=>[row.item_id,row])):null;
+ return validStoreReturnsProducts(value.products,value,frame,quantities,source);
+}
+function projectStoreReturnsResult(value,frame,result,quantities,productResult){
+ try{
+  const keys=['schema','run_id','revision','start_date','end_date','complete','currency',...storeReturnsKinds,'products','refund_amount_cents','net_profit_cents','basis'],count=value=>Number.isSafeInteger(value)&&value>=0,cent=value=>value===null||Number.isSafeInteger(value);
+  if(!catalogDiagnosticKeys(value,keys)||value.schema!=='store_returns_result_v1'||value.complete!==result.complete||value.currency!=='BRL'||value.refund_amount_cents!==null||value.net_profit_cents!==null||value.basis!=='ORDER_RETURN_OCCURRENCE_NOT_REFUND_OR_SETTLEMENT')return null;
+  for(const key of ['run_id','revision','start_date','end_date'])if(value[key]!==frame[key])return null;
+  const sidecar=frame.returns_breakdown;let orders=0,total=0n,known=true;
+  for(const kind of storeReturnsKinds){
+   const group=value[kind];if(!catalogDiagnosticKeys(group,['order_count','known_expected_repass_cents','expected_repass_cents'])||!count(group.order_count)||group.order_count>frame.order_count||!cent(group.known_expected_repass_cents)||!cent(group.expected_repass_cents)||group.expected_repass_cents!==(value.complete?group.known_expected_repass_cents:null)||group.order_count===0&&group.known_expected_repass_cents!==0)return null;
+   if(sidecar&&(group.order_count!==sidecar[kind].order_count||group.known_expected_repass_cents!==storeReturnsCents(sidecar[kind].payout_raw)))return null;
+   orders+=group.order_count;if(group.known_expected_repass_cents===null)known=false;else total+=BigInt(group.known_expected_repass_cents);
+  }
+  if(orders!==frame.order_count||frame.returns_orders!==(value.unknown.order_count>0?null:value.with_return.order_count)||known&&result.known_expected_repass_cents!==null&&total!==BigInt(result.known_expected_repass_cents))return null;
+  const sourceRows=productResult?.products||frame.product_breakdown?.products,source=sourceRows?new Map(sourceRows.map(row=>[row.item_id,row])):null;
+  if(!validStoreReturnsProducts(value.products,value,frame,quantities,source))return null;
+  if(sidecar){const original=new Map(sidecar.products.map(row=>[row.item_id,row]));for(const row of value.products){const source=original.get(row.item_id);if(!source||!storeReturnsProductKeys.every(key=>row[key]===source[key]))return null;}}
+  return Object.fromEntries(keys.map(key=>[key,key==='products'?value.products.map(row=>Object.fromEntries(storeReturnsProductKeys.map(name=>[name,row[name]]))):storeReturnsKinds.includes(key)?{...value[key]}:value[key]]));
+ }catch{return null;}
+}
+function validStoreInvoiceTaxSource(value,frame){
+ const keys=['schema','rate_bps','basis','rounding','covered_orders','unavailable_orders','known_base_raw','known_tax_raw'],count=value=>Number.isSafeInteger(value)&&value>=0;
+ if(!catalogDiagnosticKeys(value,keys)||value.schema!=='store_invoice_tax_v1'||value.rate_bps!==200||value.basis!=='PAYMENT_GOODS_VALUE_PER_ORDER_ESTIMATE'||value.rounding!=='HALF_UP_PER_ORDER'||!count(value.covered_orders)||!count(value.unavailable_orders)||value.covered_orders+value.unavailable_orders!==frame.order_count)return false;
+ const scaledBase=storeReturnsRaw(value.known_base_raw),scaledTax=storeReturnsRaw(value.known_tax_raw);
+ if(scaledBase===null||scaledTax===null||scaledBase<0n||scaledTax<0n||scaledBase%10000000000n!==0n||scaledTax%10000000000n!==0n)return false;
+ const base=scaledBase/10000000000n,tax=scaledTax/10000000000n,covered=BigInt(value.covered_orders),difference=tax*10000n-base*200n;
+ return base<=covered*100000000000000n&&(covered!==0n||value.known_base_raw==='0'&&value.known_tax_raw==='0')&&(base!==0n||tax===0n)&&tax<=base/25n&&difference>= -4999n*covered&&difference<=5000n*covered;
+}
+function validStoreInvoiceTaxResult(frame,result,adjustments,ads){
+ const source=frame.invoice_tax,tax=result.invoice_tax,keys=['schema','rate_bps','basis','rounding','covered_orders','unavailable_orders','known_base_cents','base_cents','known_tax_cents','tax_cents'],cent=value=>value===null||Number.isSafeInteger(value),safe=value=>value>=BigInt(Number.MIN_SAFE_INTEGER)&&value<=BigInt(Number.MAX_SAFE_INTEGER)?Number(value):null;
+ if(!source||!catalogDiagnosticKeys(tax,keys)||tax.schema!=='store_invoice_tax_result_v1')return false;
+ for(const key of ['rate_bps','basis','rounding','covered_orders','unavailable_orders'])if(tax[key]!==source[key])return false;
+ const complete=result.complete&&source.unavailable_orders===0,base=storeReturnsCents(source.known_base_raw),amount=storeReturnsCents(source.known_tax_raw);
+ if(tax.known_base_cents!==base||tax.known_tax_cents!==amount||tax.base_cents!==(complete?base:null)||tax.tax_cents!==(complete?amount:null)||!cent(result.expected_after_tax_cents)||!cent(result.known_cost_result_cents))return false;
+ const afterTax=result.expected_after_production_cents!==null&&tax.tax_cents!==null?safe(BigInt(result.expected_after_production_cents)-BigInt(tax.tax_cents)):null;
+ if(result.expected_after_tax_cents!==afterTax||tax.tax_cents===null&&!result.pending.includes('INVOICE_TAX_UNAVAILABLE'))return false;
+ // Calendar dates do not reconcile the completed-order cohort against all Ads consumption.
+ return result.known_cost_result_cents===null&&result.net_estimate_cents===null&&result.pending.includes('ADS_COHORT_NOT_RECONCILED');
+}
+function projectStoreUiBundle(value){try{const count=value=>Number.isSafeInteger(value)&&value>=0,cent=value=>value===null||Number.isSafeInteger(value),id=(value,zero=false)=>typeof value==='string'&&variantId(value,zero)===value,run=value=>typeof value==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(value),plain=value=>!!value&&typeof value==='object'&&!Array.isArray(value)&&[Object.prototype,null].includes(Object.getPrototypeOf(value));if(!plain(value)||!catalogDiagnosticKeys(value,['finance','result','adjustments',...(Object.hasOwn(value,'product_result')?['product_result']:[]),...(Object.hasOwn(value,'ads_period')?['ads_period']:[]),...(Object.hasOwn(value,'returns_result')?['returns_result']:[])]))return null;const f=value.finance,r=value.result,a=value.adjustments,frameKeys=['schema','run_id','revision','status','start_date','end_date','cutoff_at','checked_at','currency','monetary_unit','order_count','pages_read','duplicate_orders','returns_orders','escrow_amount_raw','ads_recharge_or_support_raw','items','diagnostic'],summaryKeys=['schema','run_id','revision','status','start_date','end_date','cutoff_at','checked_at','currency','unit_confirmation','order_count','pages_read','returns_orders','complete','bindings_revision','costs_revision','known_expected_repass_cents','expected_repass_cents','known_production_cost_cents','production_cost_cents','expected_after_production_cents','ads_recharge_or_support_cents','net_estimate_cents','net_profit_cents','pending','unmapped_variants','net_basis',...(plain(f)&&Object.hasOwn(f,'invoice_tax')?['invoice_tax','expected_after_tax_cents','known_cost_result_cents']:[])];if(!catalogDiagnosticKeys(f,[...frameKeys,...(plain(f)&&Object.hasOwn(f,'product_breakdown')?['product_breakdown']:[]),...(plain(f)&&Object.hasOwn(f,'returns_breakdown')?['returns_breakdown']:[]),...(plain(f)&&Object.hasOwn(f,'invoice_tax')?['invoice_tax']:[]),...(plain(f)&&Object.hasOwn(f,'product_invoice_tax')?['product_invoice_tax']:[])])||!catalogDiagnosticKeys(r,summaryKeys)||f.schema!=='finance_store_period_v1'||r.schema!=='store_result_v1'||!run(f.run_id)||!count(f.revision)||f.revision<1||!['RUNNING','COMPLETE','LIMIT_REACHED'].includes(f.status)||!storeUiRange(f.start_date,f.end_date)||f.currency!=='BRL'||f.monetary_unit!=='UNCONFIRMED'||!count(f.cutoff_at)||!count(f.checked_at)||f.checked_at<f.cutoff_at||!count(f.order_count)||f.order_count>1000||!count(f.pages_read)||f.pages_read>200||!count(f.duplicate_orders)||f.returns_orders!==null&&(!count(f.returns_orders)||f.returns_orders>f.order_count)||![null,'STORE_PERIOD_UPSTREAM_UNAVAILABLE','STORE_PERIOD_CONFLICT'].includes(f.diagnostic)||!catalogDiagnosticArray(f.items,1000))return null;for(const name of ['escrow_amount_raw','ads_recharge_or_support_raw'])if(f[name]!==null&&(typeof f[name]!=='string'||f[name].length>96||!/^\-?\d+(\.\d+)?$/.test(f[name])))return null;const identities=new Map(),quantities=new Map();for(const row of f.items){if(!catalogDiagnosticKeys(row,['item_id','model_id','quantity'])||!id(row.item_id)||!id(row.model_id,true)||!count(row.quantity)||row.quantity<1||identities.has(variantKey(row)))return null;identities.set(variantKey(row),row.quantity);quantities.set(row.item_id,(quantities.get(row.item_id)||0n)+BigInt(row.quantity));}if(Object.hasOwn(f,'invoice_tax')&&!validStoreInvoiceTaxSource(f.invoice_tax,f))return null;if(Object.hasOwn(f,'product_breakdown')&&!validStoreProductSidecar(f.product_breakdown,f,quantities)||Object.hasOwn(f,'returns_breakdown')&&!validStoreReturnsSidecar(f.returns_breakdown,f,quantities)||Object.hasOwn(f,'product_invoice_tax')&&!validStoreProductTaxSource(f.product_invoice_tax,f,quantities))return null;for(const key of ['run_id','revision','status','start_date','end_date','cutoff_at','checked_at','currency','order_count','pages_read','returns_orders'])if(r[key]!==f[key])return null;if(r.unit_confirmation!=='OPERATOR_CONFIRMED_BRL_2026_10_20'||r.net_basis!=='EXPECTED_REPASS_CURRENT_STANDARD_COSTS_NOT_SETTLED'||r.complete!==(f.status==='COMPLETE'&&f.diagnostic===null)||!count(r.bindings_revision)||!count(r.costs_revision)||r.net_profit_cents!==null||r.net_estimate_cents!==null||!catalogDiagnosticArray(r.pending,16)||new Set(r.pending).size!==r.pending.length||!r.pending.every(code=>typeof code==='string'&&Object.hasOwn(storePendingMessages,code))||!r.pending.includes('ADS_COHORT_NOT_RECONCILED')||!catalogDiagnosticArray(r.unmapped_variants,1000))return null;for(const key of ['known_expected_repass_cents','expected_repass_cents','known_production_cost_cents','production_cost_cents','expected_after_production_cents','ads_recharge_or_support_cents','net_estimate_cents'])if(!cent(r[key]))return null;if(r.known_production_cost_cents===null||r.known_production_cost_cents<0||r.production_cost_cents!==null&&r.production_cost_cents<0||!r.complete&&['expected_repass_cents','production_cost_cents','expected_after_production_cents','net_estimate_cents'].some(key=>r[key]!==null))return null;const unmapped=new Set();for(const row of r.unmapped_variants){if(!catalogDiagnosticKeys(row,['item_id','model_id','quantity'])||!id(row.item_id)||!id(row.model_id,true)||!count(row.quantity)||row.quantity<1||unmapped.has(variantKey(row))||identities.get(variantKey(row))!==row.quantity)return null;unmapped.add(variantKey(row));}if(!catalogDiagnosticKeys(a,['revision','values','updated_at'])||!count(a.revision)||!(a.updated_at===null||typeof a.updated_at==='string'&&Number.isFinite(Date.parse(a.updated_at))))return null;if(a.values!==null&&(!catalogDiagnosticKeys(a.values,['ads_spend_cents','external_expenses_cents','recharge_treatment',...(plain(a.values)&&Object.hasOwn(a.values,'ads_source')?['ads_source']:[]),...(plain(a.values)&&Object.hasOwn(a.values,'external_expenses_basis')?['external_expenses_basis']:[])])||Object.hasOwn(a.values,'ads_source')&&!['MANUAL','SHOPEE_PERIOD'].includes(a.values.ads_source)||Object.hasOwn(a.values,'external_expenses_basis')&&a.values.external_expenses_basis!=='EXCLUDES_INVOICE_TAX'||!count(a.values.ads_spend_cents)||!count(a.values.external_expenses_cents)||!['UNCONFIRMED','ADS_RECHARGE','TECH_SUPPORT'].includes(a.values.recharge_treatment)))return null;const products=value.product_result===null||!Object.hasOwn(value,'product_result')?null:projectStoreProductResult(value.product_result,f,r,quantities),ads=value.ads_period===null||!Object.hasOwn(value,'ads_period')?null:projectAdsPeriod(value.ads_period),returns=value.returns_result===null||!Object.hasOwn(value,'returns_result')?null:projectStoreReturnsResult(value.returns_result,f,r,quantities,products);if(value.product_result!==null&&Object.hasOwn(value,'product_result')&&!products||value.ads_period!==null&&Object.hasOwn(value,'ads_period')&&(!ads||ads.start_date!==f.start_date||ads.end_date!==f.end_date)||value.returns_result!==null&&Object.hasOwn(value,'returns_result')&&!returns||Object.hasOwn(f,'invoice_tax')&&!validStoreInvoiceTaxResult(f,r,a,ads))return null;return {finance:Object.fromEntries([...frameKeys,...(Object.hasOwn(f,'invoice_tax')?['invoice_tax']:[]),...(Object.hasOwn(f,'product_invoice_tax')?['product_breakdown','product_invoice_tax']:[])].map(key=>[key,key==='items'?f.items.map(row=>({...row})):['product_breakdown','product_invoice_tax'].includes(key)?{...f[key],products:f[key].products.map(row=>({...row}))}:key==='invoice_tax'?{...f.invoice_tax}:f[key]])),result:Object.fromEntries(summaryKeys.map(key=>[key,key==='pending'?[...r.pending]:key==='unmapped_variants'?r.unmapped_variants.map(row=>({...row})):key==='invoice_tax'?{...r.invoice_tax}:r[key]])),adjustments:{revision:a.revision,values:a.values?{...a.values}:null,updated_at:a.updated_at},product_result:products,ads_period:ads,returns_result:returns};}catch{return null;}}
+function storeMetric(label,value,help,key='',pendingLabel='Em apuração'){const card=node('div',undefined,'report-metric'+(key==='net'?' metric-result':''));card.dataset.metric=key;card.dataset.status=value===null?'pending':'available';if(value!==null&&['net','balance'].includes(key))card.dataset.trend=value<0?'negative':'positive';card.append(node('small',label),node('strong',value===null?pendingLabel:money(value)),node('span',help));return card;}
+function knownStoreProductUnit(itemId){const saved=(bindingState?.bindings||[]).filter(row=>row.item_id===itemId),manual=saved.find(row=>row.operator_confirmed===true);if(manual)return manual.selling_unit;const units=new Set(saved.map(row=>row.selling_unit));return productUnitSelections.get(itemId)||(units.size===1?saved[0].selling_unit:null)||confirmedProductUnits[itemId]||'';}
+function renderStorePendingProducts(){const target=el('storePeriodProducts');target.replaceChildren();const rows=storePeriodBundle?.result.unmapped_variants||[];target.hidden=!rows.length;if(!rows.length)return;const groups=new Map();for(const row of rows){const group=groups.get(row.item_id)||{quantity:0,models:0};group.quantity+=row.quantity;group.models++;groups.set(row.item_id,group);}target.append(node('h3','Produtos com custo pendente'),node('p','Os produtos reconhecidos recebem seus custos automaticamente. Confira abaixo o motivo dos que ainda precisam de revisão.','field-help'));const retry=node('button','Atualizar identificação automática','button-secondary');retry.type='button';retry.dataset.storeVariantsSync='true';retry.onclick=()=>syncKnownVariants(storePeriodBundle?.result.unmapped_variants||[]);target.append(retry);if(bindingDrafts.size)target.append(node('p','Há rascunhos de vínculos em Produtos e variações. Salve ou descarte esses rascunhos para continuar a identificação automática.','alert'));else if(!bindingState||bindingLoadFailed||bindingStale||bindingConflict)target.append(node('p','Abra Produtos e variações para atualizar e revisar os vínculos antes de identificar os tamanhos.','alert'));for(const [itemId,group] of groups){const entry=node('div',undefined,'store-product-row'),head=node('div');head.append(node('strong','Produto #'+itemId),node('p',group.models+' variação(ões) · '+group.quantity+' unidade(s) neste período.','field-help'));const link=node('a','Ver produto na Shopee');link.href='https://shopee.com.br/product/1178167501/'+itemId;link.target='_blank';link.rel='noopener noreferrer';head.append(link);const field=node('div',undefined,'field'),label=node('label','O que contém cada unidade?'),select=node('select');select.id='store-product-unit-'+itemId;select.dataset.storeProductUnit=itemId;label.htmlFor=select.id;for(const [value,text] of [['','Escolha a composição'],['SINGLE_GARMENT','Uma camiseta avulsa'],['ONE_MALE_ONE_FEMALE_KIT','Kit: uma masculina + uma feminina']]){const option=node('option',text);option.value=value;select.append(option);}select.value=knownStoreProductUnit(itemId);select.onchange=()=>{if(select.value)productUnitSelections.set(itemId,select.value);else productUnitSelections.delete(itemId);updateStoreControls();};field.append(label,select);const button=node('button','Identificar tamanhos','button-secondary');button.type='button';button.dataset.storeProductIdentify=itemId;button.onclick=()=>resolveStoreProduct(itemId);entry.append(head,field,button);const diagnostic=variantCatalogReviews.get(itemId);if(diagnostic){const reason=diagnostic.reasons.length?diagnostic.reasons.map(row=>variantCatalogReasonMessage(row.code,diagnostic)).join(' '):'A variação vendida não foi identificada no catálogo atual.';const review=node('div',undefined,'store-product-review');review.append(node('p',reason,'field-help'),node('p','Variações pendentes: '+rows.filter(row=>row.item_id===itemId).map(row=>row.model_id).join(' · '),'field-help'),variantCatalogDiagnosticDetails(diagnostic));entry.append(review);}target.append(entry);}}
+function adsUiRoas(value){return value===null||value===undefined?'—':new Intl.NumberFormat('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(value))+'x';}
+function adsUiMetric(label,value,help,key){const card=node('div',undefined,'report-metric');card.dataset.metric=key;card.dataset.status=value===null?'pending':'available';card.append(node('small',label),node('strong',value===null?'Pendente':value),node('span',help));return card;}
+function renderStoreAdsMeasurement(){
+ const target=el('storeAdsMetrics'),bundle=storePeriodBundle,report=bundle?.ads_period,measurement=report?.measurement;target.replaceChildren();
+ if(!bundle){target.hidden=true;return;}target.hidden=false;
+ const saved=bundle.adjustments.values,broad=measurement?.totals.broad,period=storeUiDate(bundle.finance.start_date)+' a '+storeUiDate(bundle.finance.end_date);
+ const metrics=node('div',undefined,'report-metrics');
+ metrics.append(storeMetric('Investimento em anúncios · período',report?.status==='AVAILABLE'?report.expense_cents:null,'Consumo de anúncios de '+period+'. Separado do saldo dos pedidos concluídos.','ads_spend','Gasto pendente'));
+ metrics.append(adsUiMetric('Vendas atribuídas · amplas',broad?.gmv_cents===null||broad?.gmv_cents===undefined?null:money(broad.gmv_cents),'Vendas atribuídas pela fonte de Ads; não são as vendas totais da loja.','ads_gmv'));
+ metrics.append(adsUiMetric('ROAS informado · amplo',broad?.reported_roas_raw===null||broad?.reported_roas_raw===undefined?null:adsUiRoas(broad.reported_roas_raw),measurement?.total_days===1?'Valor informado pela Shopee. Pode diferir da divisão dos valores exibidos.':'O relatório informa ROAS por dia. Confira o detalhamento abaixo.','ads_reported_roas'));
+ metrics.append(adsUiMetric('ROAS calculado · amplo',broad?.calculated_roas_raw===null||broad?.calculated_roas_raw===undefined?null:adsUiRoas(broad.calculated_roas_raw),'Soma das vendas amplas ÷ soma do gasto do período. ROAS diário não é somado nem usado em uma média.','ads_calculated_roas'));
+ metrics.append(storeMetric('Outras despesas registradas',saved?.external_expenses_basis==='EXCLUDES_INVOICE_TAX'?saved.external_expenses_cents:null,'Valor salvo para estas datas, sem o imposto de 2%. Separado até a conciliação.','external_expenses','Não informadas'));
+ target.append(node('h3','Anúncios no mesmo período'),node('p',period+' · fonte da API Shopee Ads. Compare as mesmas datas e a mesma atribuição na Shopee.','field-help'),metrics);
+ const links=node('p',undefined,'field-help'),link=node('a','Abrir dashboard de anúncios com estas datas');link.href='/dashboard?'+new URLSearchParams({start_date:bundle.finance.start_date,end_date:bundle.finance.end_date}).toString();links.append(link);target.append(links);
+ if(!measurement){target.append(node('p','Atualize os anúncios para consultar vendas atribuídas e ROAS junto do gasto.','field-help'));return;}
+ if(measurement.days.length){
+  const details=node('details',undefined,'ads-measurement-days'),summary=node('summary','Conferir gasto e ROAS por dia'),wrap=node('div',undefined,'table-wrap'),table=node('table'),head=node('thead'),header=node('tr'),body=node('tbody');
+  for(const label of ['Data','Investimento','Vendas amplas','Pedidos atribuídos','ROAS informado','ROAS calculado'])header.append(node('th',label));head.append(header);
+  for(const day of measurement.days){const row=node('tr');for(const value of [storeUiDate(day.date),day.expense_cents===null?'Pendente':money(day.expense_cents),day.broad.gmv_cents===null?'Pendente':money(day.broad.gmv_cents),day.broad.orders===null?'—':String(day.broad.orders),adsUiRoas(day.broad.reported_roas_raw),adsUiRoas(day.broad.calculated_roas_raw)])row.append(node('td',value));body.append(row);}
+  table.append(head,body);wrap.append(table);details.append(summary,wrap,node('p','Atribuição ampla em todas as linhas. Diretas e amplas não são somadas. Ausências continuam pendentes.','field-help'));target.append(details);
+ }
+}
+function scheduleStoreAdsRefresh(){
+ clearTimeout(storeAdsRefreshTimer);storeAdsRefreshTimer=null;
+ if(document.hidden||!csrf||!storePeriodBundle?.result.complete||storePeriodBundle.finance.end_date!==adsPeriodToday(Math.floor(Date.now()/1000))||el('storeAdsSource').value!=='SHOPEE_PERIOD')return;
+ storeAdsRefreshTimer=setTimeout(()=>{storeAdsRefreshTimer=null;if(!document.hidden)refreshStoreAds({automatic:true}).finally(scheduleStoreAdsRefresh);},60000);
+}
+
+function renderStoreAdsState(){
+ const bundle=storePeriodBundle,report=bundle?.ads_period,source=el('storeAdsSource').value,automatic=source==='SHOPEE_PERIOD',available=report?.status==='AVAILABLE',input=el('storeAdjustmentsAds'),status=el('storeAdsStatus');
+ input.readOnly=automatic;input.setAttribute('aria-readonly',String(automatic));
+ if(automatic){input.value=available?(report.expense_cents/100).toFixed(2):'';input.placeholder='Pendente: aguardando todos os dias';}
+ else input.placeholder='Informe o gasto conferido, inclusive zero';
+ const parts=[];
+ if(storeAdsBusy)parts.push('Consultando os anúncios deste período…');
+ else if(storeAdsMessage)parts.push(storeAdsMessage);
+ if(report){
+  if(available)parts.push('Shopee Ads: '+money(report.expense_cents)+' · '+report.covered_days+'/'+report.total_days+' dias consultados.');
+  else parts.push('Shopee Ads pendente: '+report.covered_days+'/'+report.total_days+' dias com gasto confirmado. Dias ausentes não são tratados como zero.');
+  if(report.day_partial)parts.push('Inclui hoje: o gasto ainda pode mudar.');
+  parts.push('Consulta em '+new Date(report.fetched_at*1000).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'})+' (Brasília). Este é o horário da leitura, não o de atualização na Shopee. O fuso e o corte do relatório da fonte ainda não foram confirmados.');
+ }else if(!storeAdsBusy)parts.push('O gasto será consultado automaticamente após a leitura financeira.');
+ const saved=bundle?.adjustments.values,savedSource=saved?(saved.ads_source||'MANUAL'):null;
+ if(savedSource==='MANUAL')parts.push('Registro salvo: anúncios informados manualmente ('+money(saved.ads_spend_cents)+').');
+ else if(savedSource==='SHOPEE_PERIOD')parts.push('Registro salvo: gasto da Shopee Ads no período.');
+ else parts.push('Despesas fora da Shopee ainda precisam ser informadas e salvas.');
+ if(storeAdjustmentsDirty)parts.push('Há uma seleção ou gastos em edição ainda não salvos.');
+ status.textContent=parts.join(' ');status.dataset.status=storeAdsBusy?'loading':report?.status||'pending';
+ el('storeAdsRefresh').textContent=storeAdsBusy?'Consultando anúncios…':'Atualizar anúncios';
+ renderStoreAdsMeasurement();scheduleStoreAdsRefresh();
+}
+function storeProductMoneyCell(label,value,note){
+ const cell=node('td'),content=node('div',undefined,'store-product-amount');content.append(node('span',label,'store-product-mobile-label'),node('strong',value===null?'Pendente':money(value)));
+ if(note)content.append(node('small',note));cell.append(content);return cell;
+}
+function storeReturnsPendingMessage(){
+ const report=storePeriodBundle?.returns_result;if(!report)return storePendingMessages.RETURNS_NOT_RECONCILED;
+ const parts=[];if(report.with_return.order_count>0)parts.push(report.with_return.order_count+' pedido(s) com ocorrência de devolução');if(report.unknown.order_count>0)parts.push(report.unknown.order_count+' pedido(s) sem informação de devolução');
+ return parts.length?parts.join(' e ')+'. Valores reembolsados e recebimentos ainda aguardam conciliação; o líquido previsto permanece pendente.':storePendingMessages.RETURNS_NOT_RECONCILED;
+}
+function renderStoreReturnsReport(){
+ const bundle=storePeriodBundle,report=bundle?.returns_result,card=el('storeReturnsReport'),target=el('storeReturnsGroups'),scope=el('storeReturnsScope');card.hidden=!bundle;target.replaceChildren();
+ if(!bundle)return;
+ const frame=bundle.finance;
+ scope.textContent=(!report?'Cobertura pendente':report.complete?'Leitura completa':'Leitura parcial')+' · pedidos concluídos criados de '+storeUiDate(frame.start_date)+' a '+storeUiDate(frame.end_date)+'. '+(report?.complete?'Ocorrências informadas na consulta da Shopee.':'Os grupos abaixo cobrem somente os pedidos já importados.');
+ if(!report){target.append(node('p','A cobertura de devoluções estará disponível após uma nova leitura do período. Não há informação suficiente para separar os grupos.','field-help'));return;}
+ for(const [key,label] of [['with_return','Com ocorrência de devolução'],['without_reported_return','Sem indicação de devolução na consulta'],['unknown','Sem informação de devolução']]){
+  const group=report[key],entry=node('div',undefined,'store-return-group'),value=report.complete?group.expected_repass_cents:group.known_expected_repass_cents;entry.dataset.returnGroup=key;
+  entry.append(node('small',label),node('strong',group.order_count+' pedido(s)'),node('span',report.complete?'Repasse previsto dos pedidos':'Repasse já consultado · parcial','store-return-payout-label'),node('b',value===null?'Pendente':money(value),'store-return-payout'));
+  if(!report.complete)entry.append(node('span','Contagem parcial do período.','store-return-partial'));
+  target.append(entry);
+ }
+}
+function storeProductReturnsNote(product,coverage){
+ if(coverage){
+  const parts=[];
+  if(coverage.with_return_orders>0)parts.push('Participa de '+coverage.with_return_orders+' pedido(s) com ocorrência de devolução; itens afetados não identificados.');
+  if(coverage.unknown_orders>0)parts.push(coverage.unknown_orders+' pedido(s) sem informação de devolução.');
+  return parts.join(' ');
+ }
+ if(product.returns_orders===null)return 'Informação de devolução dos pedidos pendente.';
+ if(product.returns_orders>0)return 'Participa de '+product.returns_orders+' pedido(s) com ocorrência de devolução; itens afetados não identificados.';
+ return '';
+}
+const storeProductSortLabels={quantity_desc:'mais unidades primeiro',balance_desc:'maior saldo previsto primeiro',balance_asc:'menor saldo previsto primeiro',id_asc:'código do produto'};
+function storeProductIdCompare(a,b){return a.item_id.length-b.item_id.length||(a.item_id<b.item_id?-1:a.item_id>b.item_id?1:0);}
+function storeProductCompare(a,b,sort){
+ if(sort==='id_asc')return storeProductIdCompare(a,b);
+ if(sort==='balance_desc'||sort==='balance_asc'){
+  const left=a.expected_after_production_and_tax_cents,right=b.expected_after_production_and_tax_cents,leftKnown=Number.isSafeInteger(left),rightKnown=Number.isSafeInteger(right);
+  if(leftKnown!==rightKnown)return leftKnown?-1:1;
+  if(leftKnown&&left!==right)return sort==='balance_desc'?(left>right?-1:1):(left<right?-1:1);
+  return storeProductIdCompare(a,b);
+ }
+ return a.quantity!==b.quantity?(a.quantity>b.quantity?-1:1):storeProductIdCompare(a,b);
+}
+function renderStoreProductReport(){
+ const bundle=storePeriodBundle,report=bundle?.product_result,card=el('storeProductReport'),target=el('storeProductRows'),allocation=el('storeProductAllocation'),previous=el('storeProductPrevious'),next=el('storeProductNext'),search=el('storeProductSearch'),returnsFilter=el('storeProductReturnsFilter'),sortControl=el('storeProductSort'),sizeControl=el('storeProductPageSize'),coverage=bundle?.returns_result,returnsRows=coverage?new Map(coverage.products.map(row=>[row.item_id,row])):null;
+ card.hidden=!bundle;target.replaceChildren();allocation.replaceChildren();search.disabled=!report;returnsFilter.disabled=!report||!coverage;sortControl.disabled=!report;sizeControl.disabled=!report;if(!coverage)returnsFilter.value='all';
+ if(!bundle){previous.disabled=true;next.disabled=true;return;}
+ const frame=bundle.finance;
+ el('storeProductScope').textContent=(report?.complete?'Leitura completa':'Leitura parcial')+' · pedidos concluídos criados de '+storeUiDate(frame.start_date)+' a '+storeUiDate(frame.end_date)+'. Custos padrão atuais. O saldo inclui produção e imposto associado; ainda não é lucro líquido.';
+ if(!report){const row=node('tr'),cell=node('td','O detalhamento por produto estará disponível após uma nova leitura do período.');cell.colSpan=5;row.append(cell);target.append(row);el('storeProductPageInfo').textContent='Detalhamento pendente';previous.disabled=true;next.disabled=true;return;}
+ for(const [kind,label,amount,count] of [['exclusive','Repasse de pedidos com um só produto',report.exclusive_payout_cents,report.exclusive_order_count],['mixed','Repasse de pedidos com vários produtos, sem rateio',report.mixed_payout_cents,report.mixed_order_count]]){
+  const entry=node('div',undefined,'store-product-allocation-entry');entry.append(node('small',label),node('strong',amount===null?'Pendente':money(amount)),node('span',count+' pedido(s)'));
+  const tax=report.invoice_tax_allocation;
+  if(tax){const full=tax[kind+'_tax_cents'],known=tax['known_'+kind+'_tax_cents'],covered=tax[kind+'_covered_orders'],note=full!==null?'Imposto previsto: '+money(full):covered>0&&known!==null?'Imposto já identificado · parcial: '+money(known):count===0&&!report.complete?'Sem pedidos importados neste grupo.':'Imposto pendente';entry.append(node('span',note+(count||report.complete?' · '+covered+'/'+count+' pedido(s) com base.':''),'store-product-tax-allocation'));if(kind==='mixed')entry.append(node('span','Imposto deste grupo permanece sem rateio por produto.','store-product-tax-allocation'));}
+  else entry.append(node('span','Imposto por produto ainda não disponível.','store-product-tax-allocation'));
+  allocation.append(entry);
+ }
+ const query=search.value.trim().replace(/^#/,''),filter=returnsFilter.disabled?'all':returnsFilter.value,sort=Object.hasOwn(storeProductSortLabels,sortControl.value)?sortControl.value:'quantity_desc',pageSize=[20,50,100].includes(Number(sizeControl.value))?Number(sizeControl.value):20,rows=report.products.filter(row=>(!query||row.item_id.includes(query))&&(filter==='all'||(returnsRows?.get(row.item_id)?.[filter+'_orders']||0)>0)).sort((a,b)=>storeProductCompare(a,b,sort)),pages=Math.max(1,Math.ceil(rows.length/pageSize));storeProductPage=Math.max(1,Math.min(storeProductPage,pages));const start=(storeProductPage-1)*pageSize;
+ for(const product of rows.slice(start,start+pageSize)){
+  const row=node('tr'),identity=node('td'),link=node('a','Produto #'+product.item_id);link.href='https://shopee.com.br/product/1178167501/'+product.item_id;link.target='_blank';link.rel='noopener noreferrer';identity.append(link,node('small',product.quantity+' unidade(s) · '+product.order_count+' pedido(s)','store-product-quantity'));
+  const returnsNote=storeProductReturnsNote(product,returnsRows?.get(product.item_id));if(returnsNote)identity.append(node('p',returnsNote,'store-product-return-note'));
+  const warnings=product.pending.filter(code=>code!=='SETTLEMENT_NOT_RECONCILED'&&code!=='MIXED_PRODUCT_ORDERS'&&code!=='RETURNS_NOT_RECONCILED'&&code!=='INVOICE_TAX_UNAVAILABLE');
+  if(warnings.length){const details=node('details',undefined,'store-product-row-notes');details.append(node('summary',warnings.length+' pendência(s)'));for(const code of warnings)details.append(node('p',storeProductPendingMessages[code]));identity.append(details);}
+  const subset=product.expected_repass_cents===null&&product.exclusive_order_count>0&&product.known_exclusive_payout_cents!==null,payout=product.expected_repass_cents??(subset?product.known_exclusive_payout_cents:null),payoutNote=subset?'Parcial: '+product.exclusive_order_count+' pedido(s) só deste produto.'+(product.mixed_order_count?' Outros '+product.mixed_order_count+' pedido(s) ficam sem rateio.':''):product.mixed_order_count>0?'Há '+product.mixed_order_count+' pedido(s) com outros produtos, sem rateio.':product.expected_repass_cents===null?'Aguardando leitura financeira.':'Somente pedidos deste produto.',knownCost=product.production_cost_cents===null&&product.known_production_cost_cents>0,cost=product.production_cost_cents??(knownCost?product.known_production_cost_cents:null),costNote=knownCost?'Parcial: faltam pedidos ou custos.':product.production_cost_cents===null?'Aguardando custos completos.':'Custo de todas as unidades.',hasTax=Object.hasOwn(product,'invoice_tax_cents'),taxSubset=hasTax&&product.invoice_tax_cents===null&&product.exclusive_tax_covered_orders>0&&product.known_exclusive_tax_cents!==null,taxAmount=hasTax?(product.invoice_tax_cents??(taxSubset?product.known_exclusive_tax_cents:null)):null,taxNote=!hasTax?'Atualize o período para identificar o imposto.':taxSubset?'Parcial: imposto de '+product.exclusive_tax_covered_orders+' pedido(s) só deste produto.'+(product.mixed_order_count?' Pedidos mistos ficam sem rateio.':''):product.mixed_order_count>0?'Imposto dos pedidos com outros produtos sem rateio.':product.invoice_tax_cents===null?'Aguardando a base completa do imposto.':'2% sobre os produtos, somados por pedido.',balance=hasTax?product.expected_after_production_and_tax_cents:null,balanceNote=balance===null?(product.mixed_order_count>0?'Depende do rateio do repasse e do imposto.':!hasTax||product.invoice_tax_cents===null?'Imposto completo ainda não associado.':'Aguardando repasse e custo completos.'):'Sem atribuição de anúncios, outras despesas ou conciliação dos recebimentos.';
+  row.append(identity,storeProductMoneyCell('Repasse previsto',payout,payoutNote),storeProductMoneyCell('Custo de produção',cost,costNote),storeProductMoneyCell('Imposto previsto · 2%',taxAmount,taxNote),storeProductMoneyCell('Saldo após produção e imposto',balance,balanceNote));target.append(row);
+ }
+ if(!rows.length){const row=node('tr'),cell=node('td',query||filter!=='all'?'Nenhum produto encontrado com essa busca e esse filtro.':'Nenhum produto em pedidos concluídos neste período.');cell.colSpan=5;row.append(cell);target.append(row);}
+ el('storeProductPageInfo').textContent=rows.length?(start+1)+'–'+Math.min(start+pageSize,rows.length)+' de '+rows.length+' produto(s) · página '+storeProductPage+'/'+pages+' · '+pageSize+' por página · '+storeProductSortLabels[sort]+(query?' · busca ativa':'')+(filter!=='all'?' · filtro de devoluções ativo':''):'0 produtos';previous.disabled=storeProductPage===1;next.disabled=storeProductPage===pages;
+}
+function storeOtherExpensesReviewRequired(){const values=storePeriodBundle?.adjustments.values;return !!values&&values.external_expenses_basis!=='EXCLUDES_INVOICE_TAX';}
+function storeNetPendingLabel(result){
+ if(result.pending.includes('ADS_COHORT_NOT_RECONCILED'))return 'Em conciliação';
+ if(!result.complete)return result.status==='LIMIT_REACHED'?'Período parcial':result.pending.includes('PERIOD_DIAGNOSTIC')?'Leitura interrompida':'Coleta em andamento';
+ if(!result.invoice_tax||result.pending.includes('INVOICE_TAX_UNAVAILABLE'))return 'Imposto pendente';
+ if(result.pending.includes('PRODUCTION_COST_INCOMPLETE'))return 'Custos pendentes';
+ if(result.pending.includes('MONEY_UNAVAILABLE'))return 'Repasse pendente';
+ if(result.pending.includes('RETURNS_NOT_RECONCILED'))return 'Conciliação pendente';
+ if(result.pending.includes('RECHARGE_TREATMENT_REQUIRED'))return 'Confira o ajuste';
+ if(result.pending.includes('RECHARGE_COMPONENT_UNAVAILABLE'))return 'Ajuste pendente';
+ const declared=storePeriodBundle?.adjustments.values;if(result.pending.includes('ADS_PERIOD_UNAVAILABLE')||(!declared||declared.ads_source==='SHOPEE_PERIOD')&&storePeriodBundle?.ads_period?.status!=='AVAILABLE')return 'Anúncios pendentes';
+ if(result.pending.includes('ADJUSTMENTS_REQUIRED')||result.pending.includes('EXTERNAL_EXPENSES_REVIEW_REQUIRED'))return 'Informe despesas';
+ return 'Conciliação pendente';
+}
+function renderStoreInvoiceTax(){
+ const bundle=storePeriodBundle,box=el('storeInvoiceTaxReport'),status=el('storeInvoiceTaxStatus'),metrics=el('storeInvoiceTaxMetrics');box.hidden=!bundle;metrics.replaceChildren();if(!bundle)return;
+ const tax=bundle.result.invoice_tax;
+ if(!tax){status.textContent='Imposto de 2% pendente: atualize o período para consultar a base dos produtos antes das taxas da Shopee.';return;}
+ const complete=bundle.result.complete&&tax.unavailable_orders===0,base=complete?tax.base_cents:tax.known_base_cents;
+ status.textContent='Estimativa de 2% por pedido sobre o valor dos produtos antes das taxas da Shopee. O valor da nota fiscal ainda não foi importado.';
+ metrics.append(node('span',(complete?'Base dos produtos: ':'Base já identificada · parcial: ')+(base===null?'Pendente':money(base))),node('span',tax.covered_orders+' de '+bundle.finance.order_count+' pedido(s) com base identificada'+(tax.unavailable_orders?' · '+tax.unavailable_orders+' pendente(s)':'')));
+}
+function focusStoreOtherExpenses(){if(!storePeriodBundle?.result.complete)return;const form=el('storeAdjustmentsForm');form.scrollIntoView({behavior:'smooth',block:'start'});el('storeAdjustmentsExpenses').focus({preventScroll:true});}
+async function saveStoreNoOtherExpenses(){if(!storePeriodBundle?.result.complete||storePeriodBusy||storeProductBusy||storeAdsBusy)return;el('storeAdjustmentsExpenses').value='0';storeAdjustmentsChanged();await saveStoreAdjustments();}
+function renderStoreResult(){
+ const bundle=storePeriodBundle,target=el('storePeriodMetrics'),pending=el('storePeriodPending');target.replaceChildren();pending.replaceChildren();
+ if(!bundle){
+  el('storePeriodStatus').textContent=storeResultMessage||'Preparando a atualização automática dos últimos 7 dias…';el('storeAdjustmentsForm').hidden=true;el('storePeriodProducts').hidden=true;el('storeNetAction').hidden=true;el('storeExternalExpensesReview').hidden=true;
+  for(const [label,key] of [['Repasse previsto','repass'],['Custo de produção','production'],['Imposto previsto · 2%','tax'],['Saldo dos pedidos concluídos','balance'],['Líquido da loja','net']])target.append(storeMetric(label,null,'Os valores aparecerão após a leitura da Shopee.',key,'Preparando consulta'));
+  renderStoreInvoiceTax();renderStoreAdsState();renderStoreReturnsReport();renderStoreProductReport();updateStoreControls();return;
+ }
+ const f=bundle.finance,r=bundle.result,tax=r.invoice_tax,progress=r.order_count+' pedido(s) concluído(s) · '+r.pages_read+' página(s)',quantities=f.items.reduce((sum,row)=>sum+row.quantity,0),unmapped=r.unmapped_variants.reduce((sum,row)=>sum+row.quantity,0),coverage=quantities?Math.round((quantities-unmapped)/quantities*100):100;
+ el('storePeriodStatus').textContent=(storeResultMessage?storeResultMessage+' ':'')+(r.complete?'Dados atualizados. ':f.status==='LIMIT_REACHED'?'Período parcial: reduza o intervalo. ':f.diagnostic?'Atualização interrompida. ':'Atualizando automaticamente… ')+progress+'.';
+ el('storePeriodScope').textContent='Pedidos concluídos criados de '+storeUiDate(r.start_date)+' a '+storeUiDate(r.end_date)+' · '+coverage+'% das unidades com custo associado · consultado em '+new Date(r.checked_at*1000).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'})+' (Brasília).';
+ if(r.complete){
+  const lastHelp='O saldo dos concluídos não cobre todas as vendas do período. Ainda faltam pedidos em andamento e conciliação dos anúncios para apurar o líquido da loja.';
+  target.append(storeMetric('Repasse previsto',r.expected_repass_cents,'Valor informado pela Shopee, já com suas deduções.','repass','Repasse pendente'),storeMetric('Custo de produção',r.production_cost_cents,r.production_cost_cents===null?'Já identificado: '+money(r.known_production_cost_cents)+'. Faltam produtos em revisão.':'Custos cadastrados aplicados às peças e aos kits vendidos.','production','Custos pendentes'),storeMetric('Imposto previsto · 2%',tax?.tax_cents??null,tax?(tax.tax_cents===null?'Já identificado: '+(tax.known_tax_cents===null?'Pendente':money(tax.known_tax_cents))+' · '+tax.unavailable_orders+' pedido(s) sem base confirmada.':'Estimativa sobre os produtos antes das taxas da Shopee.'):'Atualize o período para consultar a base dos produtos.','tax','Imposto pendente'),storeMetric('Saldo dos pedidos concluídos',tax?r.expected_after_tax_cents:r.expected_after_production_cents,tax?'Repasse dos concluídos menos produção e imposto. Anúncios do período e outras despesas aparecem separadamente.':'Saldo dos concluídos após produção. O imposto ainda está pendente.','balance',tax?'Saldo pendente':'Imposto pendente'),storeMetric('Líquido da loja',null,lastHelp,'net','Em conciliação'));
+ }else{
+  target.append(storeMetric('Repasse já consultado',r.known_expected_repass_cents,'Parcial: a consulta ainda não representa todo o período.','repass','Repasse pendente'),storeMetric('Produção já identificada',r.known_production_cost_cents,'Parcial: podem faltar pedidos e custos.','production','Custos pendentes'),storeMetric('Imposto já identificado · 2%',tax?.known_tax_cents??null,'Parcial: a estimativa completa depende da leitura de todos os pedidos.','tax','Imposto pendente'),storeMetric('Saldo dos pedidos concluídos',null,'Disponível após concluir a leitura e associar os custos e a base do imposto.','balance','Coleta pendente'),storeMetric('Líquido da loja',null,'Aguardando a leitura completa e a conciliação com anúncios e pedidos em andamento.','net',storeNetPendingLabel(r)));
+ }
+ for(const code of r.pending){if(code==='COLLECTING')continue;const item=node('li',code==='RETURNS_NOT_RECONCILED'?storeReturnsPendingMessage():storePendingMessages[code]);if(code==='SETTLEMENT_NOT_RECONCILED')item.className='settlement-note';pending.append(item);}
+ pending.hidden=!pending.childNodes.length;
+ const needsOther=r.complete&&(!bundle.adjustments.values||storeOtherExpensesReviewRequired());el('storeNetAction').hidden=!needsOther;el('storeNetActionInfo').textContent=storeOtherExpensesReviewRequired()?'Revise o valor salvo para excluir o imposto de 2%, que já será estimado automaticamente.':'Registre as outras despesas do período. Elas serão mantidas separadas até a conciliação dos pedidos e anúncios.';
+ el('storeAdjustmentsForm').hidden=!r.complete;el('storeExternalExpensesReview').hidden=!r.complete||!storeOtherExpensesReviewRequired();el('storeAdjustmentsRechargeInfo').textContent=r.ads_recharge_or_support_cents===null?'A natureza e o valor do ajuste precisam ser conferidos antes de fechar a estimativa.':'Ajuste de anúncios ou suporte já incluído no repasse: '+money(r.ads_recharge_or_support_cents)+'.';
+ el('storeAdjustmentsVersion').textContent=storeAdjustmentsDirty?'Você tem despesas ainda não salvas. Os totais usam os valores salvos.':storeOtherExpensesReviewRequired()?'Valor anterior preservado. Revise as outras despesas antes de salvar, retirando o imposto de 2% se ele estiver incluído.':bundle.adjustments.values?'Outras despesas salvas sem o imposto de 2%. Custos versão '+r.costs_revision+' · catálogo versão '+r.bindings_revision+'.':'Informe apenas outras despesas fora da Shopee; o imposto de 2% é estimado automaticamente.';
+ renderStoreInvoiceTax();renderStorePendingProducts();renderStoreAdsState();renderStoreReturnsReport();renderStoreProductReport();updateStoreControls();
+}
+
+function applyStoreBundle(value,{newRun=false,forceAdjustments=false}={}){
+ const bundle=projectStoreUiBundle(value);if(!bundle)throw Error('O resultado da loja não pôde ser validado. Atualize ou retome a consulta antes de usar os totais.');
+ const changed=storeAdjustmentRunId!==bundle.finance.run_id;storePeriodBundle=bundle;
+ if(changed||forceAdjustments||!storeAdjustmentsDirty){const v=bundle.adjustments.values,source=v?(v.ads_source||'MANUAL'):'SHOPEE_PERIOD';el('storeAdsSource').value=source;storeManualAdsDraft=v&&source==='MANUAL'?(v.ads_spend_cents/100).toFixed(2):'';el('storeAdjustmentsAds').value=storeManualAdsDraft;el('storeAdjustmentsExpenses').value=v?(v.external_expenses_cents/100).toFixed(2):'';el('storeAdjustmentsRecharge').value=v?.recharge_treatment||'UNCONFIRMED';storeAdjustmentRunId=bundle.finance.run_id;storeAdjustmentsDirty=false;}
+ if(changed){storeProductPage=1;el('storeProductSearch').value='';el('storeProductReturnsFilter').value='all';storeAdsMessage='';}
+ renderStoreResult();return bundle;
+}
+function updateStoreControls(){const has=!!storePeriodBundle,busy=storePeriodBusy||!!storeProductBusy||storeAdsBusy;el('storePeriodStartButton').disabled=!csrf||busy||!!variantSyncPromise;el('storePeriodStart').disabled=busy;el('storePeriodEnd').disabled=busy;el('storePeriodContinue').hidden=!has||storePeriodBundle.finance.status!=='RUNNING';el('storePeriodContinue').disabled=busy||!!variantSyncPromise;el('storePeriodStop').hidden=!storePeriodBusy||storePeriodBundle?.finance.status!=='RUNNING';el('storePeriodStop').disabled=storePeriodStopRequested;el('storePeriodRecalculate').hidden=!has;el('storePeriodRecalculate').disabled=busy||!!variantSyncPromise;el('storeAdjustmentsSave').disabled=!has||!storePeriodBundle.result.complete||busy||!storeAdjustmentsDirty&&!storeOtherExpensesReviewRequired();el('storeNoOtherExpenses').disabled=!has||!storePeriodBundle.result.complete||busy;el('storeOtherExpensesAction').disabled=!has||!storePeriodBundle.result.complete;el('storeAdsRefresh').disabled=!has||!storePeriodBundle.result.complete||busy;for(const button of el('storePeriodProducts').querySelectorAll('[data-store-variants-sync]')){button.disabled=busy||bindingSaving||!!itemsPromise||!!variantSyncPromise||!bindingState||bindingLoadFailed||bindingStale||!!bindingConflict||bindingDrafts.size>0;button.textContent=variantSyncPromise?'Identificando variações…':'Atualizar identificação automática';}for(const select of el('storePeriodProducts').querySelectorAll('[data-store-product-unit]'))select.disabled=busy||bindingSaving||!!itemsPromise||!!variantSyncPromise||bindingDrafts.size>0||(bindingState?.bindings||[]).some(row=>row.item_id===select.dataset.storeProductUnit&&row.operator_confirmed===true);for(const button of el('storePeriodProducts').querySelectorAll('[data-store-product-identify]')){button.disabled=busy||bindingSaving||!!itemsPromise||!!variantSyncPromise||!bindingState||bindingLoadFailed||bindingStale||!!bindingConflict||bindingDrafts.size>0||!knownStoreProductUnit(button.dataset.storeProductIdentify);button.textContent=storeProductBusy===button.dataset.storeProductIdentify?'Identificando tamanhos…':'Identificar tamanhos';}}
+function updateVariantSyncControls(){const target=el('variantsSync');if(!target)return;target.disabled=!!variantSyncPromise||bindingSaving||!!itemsPromise||!bindingState||bindingLoadFailed||bindingStale||!!bindingConflict||bindingDrafts.size>0||storePeriodBusy||!!storeProductBusy;target.textContent=variantSyncPromise?'Identificando variações…':'Identificar variações pendentes';if(bindingDrafts.size&&!variantSyncPromise)el('variantsSyncStatus').textContent='Salve ou descarte os rascunhos dos vínculos para continuar a identificação automática.';}
+function variantSyncCandidates(rows){if(!Array.isArray(rows)||rows.length>1000)return null;const unique=new Map();for(const row of rows){const item=variantId(row?.item_id),model=variantId(row?.model_id,true);if(item===null||model===null)return null;unique.set(item+':'+model,{item_id:item,model_id:model});}return [...unique.values()];}
+function projectVariantSync(value,candidates){
+ try{
+  const hasReview=!!value&&typeof value==='object'&&Object.hasOwn(value,'catalog_review');
+  if(!catalogDiagnosticKeys(value,['state','remaining_known','pending_type','processed',...(hasReview?['catalog_review']:[])]))return null;
+  const saved=validBindingState(value.state),requested=new Set(candidates.map(row=>row.item_id));
+  if(!saved||!Number.isSafeInteger(value.remaining_known)||value.remaining_known<0||value.remaining_known>1000||!catalogDiagnosticArray(value.pending_type,1000)||!catalogDiagnosticArray(value.processed,3))return null;
+  for(const rows of [value.pending_type,value.processed])if(new Set(rows).size!==rows.length||!rows.every(item=>typeof item==='string'&&variantId(item)===item&&requested.has(item)))return null;
+  const diagnostics=[];
+  if(hasReview){
+   const review=value.catalog_review;
+   if(!catalogDiagnosticKeys(review,['schema','checked_at','products'])||!catalogDiagnosticArray(review.products,3)||!review.products.length)return null;
+   for(const product of review.products){
+    const descriptor=product&&typeof product==='object'?Object.getOwnPropertyDescriptor(product,'item_id'):null;
+    if(!descriptor||!Object.hasOwn(descriptor,'value'))return null;
+    const id=descriptor.value;
+    if(!value.processed.includes(id)||!value.pending_type.includes(id))return null;
+    const diagnostic=projectVariantCatalogDiagnostic(review,id);
+    if(!diagnostic)return null;
+    diagnostics.push(diagnostic);
+   }
+  }
+  return {state:saved,remaining_known:value.remaining_known,pending_type:[...value.pending_type],processed:[...value.processed],catalog_diagnostics:diagnostics};
+ }catch{return null;}
+}
+function rememberVariantSyncReview(result){
+ for(const id of result.processed)variantCatalogReviews.delete(id);
+ for(const diagnostic of result.catalog_diagnostics)variantCatalogReviews.set(diagnostic.item_id,diagnostic);
+ while(variantCatalogReviews.size>1000)variantCatalogReviews.delete(variantCatalogReviews.keys().next().value);
+}
+async function rereadStoreAfterVariantSync(){
+ if(!storePeriodBundle?.result.complete||storePeriodBusy||storeProductBusy||storeAdsBusy)return;
+ const runId=storePeriodBundle.finance.run_id;
+ try{
+  const response=await api('finance/store-period',{operation:'read',run_id:runId});
+  if(storePeriodBundle?.finance.run_id!==runId)return;
+  applyStoreBundle(response);
+ }catch(error){
+  if(storePeriodBundle?.finance.run_id===runId)storeResultMessage='Os vínculos foram salvos, mas o resumo ainda precisa ser recalculado. Use Recalcular com custos salvos.';
+ }
+}
+async function syncKnownVariants(source=null){if(globalThis.brazaMonthDashboard?.supportsCatalogQueue?.()){
+ if(variantSyncPromise)return variantSyncPromise;
+ const candidates=source===null?[...variantGroups.values()]:source;
+ variantSyncPromise=(async()=>{try{el('variantsSyncStatus').textContent='Os produtos estão na fila automática de tipos e tamanhos. Seus ajustes manuais foram preservados.';const result=await globalThis.brazaMonthDashboard.syncCatalogCandidates(candidates);if(result===false)el('variantsSyncStatus').textContent='A fila será conferida novamente pela coleta automática. Os custos salvos e seus rascunhos foram preservados.';return result!==false;}finally{variantSyncPromise=null;updateBindingSaveState();}})();return variantSyncPromise;
+}if(variantSyncPromise){const previous=await variantSyncPromise;if(source===null||previous===false)return previous;return syncKnownVariants(source);}await globalThis.brazaCostRules?.syncCandidates(source===null?[...variantGroups.values()]:source);if(source===null&&globalThis.brazaCostRules)await loadVariants({localOnly:true});if(!bindingState||bindingLoadFailed||bindingStale||bindingConflict||bindingSaving||bindingDrafts.size){el('variantsSyncStatus').textContent=bindingDrafts.size?'Os custos por regra foram conferidos. Os rascunhos da composição adulta foram preservados; só essa composição aguarda salvar ou descartar.':'Os custos por regra foram conferidos. Atualize os produtos e revise os vínculos antes de identificar a composição adulta.';return false;}let queue=variantSyncCandidates(source===null?[...variantGroups.values()]:source);if(queue)queue=queue.filter(row=>!globalThis.brazaCostRules?.isMapped(row.item_id,row.model_id));if(!queue){el('variantsSyncStatus').textContent='A lista de variações não pôde ser validada. Atualize os produtos.';return false;}if(!queue.length){el('variantsSyncStatus').textContent='Nenhuma variação pendente neste recorte.';return true;}bindingSaving=true;const initialRevision=bindingState.revision;variantSyncPromise=(async()=>{const pendingTypes=new Set();let remaining=0;try{el('variantsSyncStatus').textContent='Identificando automaticamente composições, tamanhos e custos…';for(let step=0;step<20&&queue.length;step++){if(bindingDrafts.size||bindingConflict||bindingStale)break;const result=projectVariantSync(await api('variant-bindings/sync',{revision:bindingState.revision,candidates:queue}),queue);if(!result||result.state.revision<bindingState.revision)throw Error('A identificação das variações retornou uma resposta inválida. Atualize os produtos antes de continuar.');bindingState=result.state;bindingLoadFailed=false;rememberVariantSyncReview(result);const processed=new Set(result.processed);for(const id of result.pending_type)pendingTypes.add(id);queue=queue.filter(row=>!processed.has(row.item_id));remaining=result.remaining_known;renderVariantCards();el('variantsSyncStatus').textContent='Variações salvas · versão '+bindingState.revision+'. '+(remaining?remaining+' produto(s) aguardando consulta.':'');if(bindingDrafts.size||!remaining||!processed.size)break;}el('variantsSyncStatus').textContent=bindingDrafts.size?'Identificação pausada: os novos rascunhos foram preservados.':remaining?'Alguns produtos ainda aguardam consulta. Use Identificar variações pendentes para continuar.':pendingTypes.size?pendingTypes.size+' produto(s) têm dados ambíguos e ficaram em revisão. Os demais foram identificados automaticamente.':bindingState.revision!==initialRevision?'Composições e tamanhos identificados automaticamente. Custos associados; ajustes manuais preservados.':'Catálogo atualizado. Variações identificadas e custos cadastrados associados; exceções ficam em revisão.';if(source===null)await loadVariants({localOnly:true});await rereadStoreAfterVariantSync();return true;}catch(error){bindingLoadFailed=true;el('variantsSyncStatus').textContent=error.message+' A identificação foi interrompida; atualize os produtos antes de tentar novamente.';if(error.status===409){bindingStale=true;try{const latest=validBindingState(await api('variant-bindings'));if(latest){bindingConflict=latest;bindingLoadFailed=false;}}catch{}}renderVariantCards();return false;}finally{bindingSaving=false;variantSyncPromise=null;updateBindingSaveState();if(storePeriodBundle)renderStoreResult();}})();updateBindingSaveState();return variantSyncPromise;}
+async function syncOnProductsOpen(){variantSyncRequested=true;if(variantSyncOpened||!csrf||storePeriodBusy)return;if(itemsPromise)await itemsPromise;if(variantSyncOpened||!bindingState)return;variantSyncOpened=true;await syncKnownVariants();}
+async function refreshStoreResult(){if(!storePeriodBundle||storePeriodBusy||storeProductBusy||storeAdsBusy)return;storePeriodBusy=true;storeResultMessage='Atualizando os custos e despesas salvos.';renderStoreResult();try{applyStoreBundle(await api('finance/store-period',{operation:'read',run_id:storePeriodBundle.finance.run_id}));storeResultMessage='';await refreshStoreAds({automatic:true,allowBusy:true});renderStoreResult();}catch(error){storeResultMessage=error.message;renderStoreResult();}finally{storePeriodBusy=false;updateStoreControls();updateVariantSyncControls();}}
+async function runStorePeriod(operation){if(!csrf||storePeriodBusy||storeProductBusy||storeAdsBusy||variantSyncPromise)return;let request;if(operation==='start'){const start=el('storePeriodStart').value,end=el('storePeriodEnd').value;if(!storeUiRange(start,end)){storeResultMessage='Selecione um período válido com até 15 dias, incluindo início e fim.';renderStoreResult();return;}request={operation:'start',start_date:start,end_date:end};}else{if(!storePeriodBundle||storePeriodBundle.finance.status!=='RUNNING')return;request={operation:'step',run_id:storePeriodBundle.finance.run_id};}storePeriodBusy=true;storePeriodStopRequested=false;storeResultMessage='Consultando os pedidos e valores financeiros…';renderStoreResult();updateVariantSyncControls();try{let bundle=applyStoreBundle(await api('finance/store-period',request),{newRun:operation==='start'});let steps=0;while(bundle.finance.status==='RUNNING'&&bundle.finance.diagnostic===null&&!storePeriodStopRequested&&steps<200){steps++;const previous=bundle.finance.revision;bundle=applyStoreBundle(await api('finance/store-period',{operation:'step',run_id:bundle.finance.run_id}));if(bundle.finance.status==='RUNNING'&&bundle.finance.revision<=previous){storeResultMessage='A consulta não avançou. Use Continuar coleta para retomar.';break;}}if(bundle.result.complete){storeResultMessage='Conferindo os tamanhos para associar os custos de produção…';renderStoreResult();if(itemsPromise)await itemsPromise;const synced=bundle.result.unmapped_variants.length?await syncKnownVariants(bundle.result.unmapped_variants):true;bundle=applyStoreBundle(await api('finance/store-period',{operation:'read',run_id:bundle.finance.run_id}));await refreshStoreAds({automatic:true,allowBusy:true});storeResultMessage=synced===false?'Valores financeiros atualizados. Há uma pendência na identificação do catálogo; os custos incompletos continuam sinalizados.':'';}else if(storePeriodStopRequested)storeResultMessage='Consulta pausada após a última resposta. Use Continuar coleta para retomar.';else if(steps>=200)storeResultMessage='A consulta foi pausada para continuar em segurança. Use Continuar coleta.';else if(bundle.finance.diagnostic)storeResultMessage='A leitura foi interrompida. Use Continuar coleta para tentar novamente.';else if(bundle.finance.status==='LIMIT_REACHED')storeResultMessage='Use um período menor para consultar todos os pedidos.';renderStoreResult();}catch(error){storeResultMessage=error.message+' A consulta foi interrompida; não houve nova tentativa automática.';renderStoreResult();}finally{storePeriodBusy=false;updateStoreControls();updateVariantSyncControls();}}
+function storeAdjustmentsChanged(){storeAdjustmentsDirty=true;storeAdjustmentsEditSequence++;if(storePeriodBundle)el('storeAdjustmentsVersion').textContent='Há despesas com rascunhos não salvos. Os totais usam somente os valores salvos.';updateStoreControls();}
+function storeAdjustmentAmount(id){const raw=el(id).value.trim().replace(',','.');if(!/^(0|[1-9][0-9]{0,12})(\.[0-9]{1,2})?$/.test(raw))throw Error('Informe anúncios e despesas em reais, com até duas casas decimais. Use 0 somente se não houve gasto no período.');const [whole,fraction='']=raw.split('.'),cent=BigInt(whole)*100n+BigInt(fraction.padEnd(2,'0'));if(cent>BigInt(Number.MAX_SAFE_INTEGER))throw Error('O valor informado excede o limite seguro.');return Number(cent);}
+async function refreshStoreAds({automatic=false,allowBusy=false}={}){
+ if(!csrf||!storePeriodBundle?.result.complete||storeAdsBusy||storeProductBusy||storePeriodBusy&&!allowBusy)return;
+ const runId=storePeriodBundle.finance.run_id,report=storePeriodBundle.ads_period,clock=Date.now();
+ if(automatic&&(document.hidden||storeAdjustmentsDirty||variantSyncPromise||bindingSaving||el('storeAdsSource').value!=='SHOPEE_PERIOD'||report&&clock-report.fetched_at*1000<(report.day_partial?60000:900000)||clock-(storeAdsAttempted.get(runId)||0)<60000))return;
+ storeAdsAttempted.set(runId,clock);while(storeAdsAttempted.size>100)storeAdsAttempted.delete(storeAdsAttempted.keys().next().value); storeAdsBusy=true;storeAdsMessage='';renderStoreAdsState();updateStoreControls();
+ try{const value=await api('finance/ads-period',{run_id:runId});if(storePeriodBundle?.finance.run_id!==runId)return;applyStoreBundle(value);storeAdsMessage=storePeriodBundle.ads_period?.status==='AVAILABLE'?'Gasto de anúncios atualizado.':'A consulta não confirmou o gasto de todos os dias. Atualize novamente ou escolha o modo manual.';renderStoreAdsState();}
+ catch(error){if(storePeriodBundle?.finance.run_id===runId){storeAdsMessage='Não foi possível atualizar os anúncios. Seus rascunhos foram preservados. Use Atualizar anúncios para tentar novamente.';renderStoreAdsState();}}
+ finally{storeAdsBusy=false;renderStoreAdsState();updateStoreControls();}
+}
+function storeAdsSourceChanged(){
+ const input=el('storeAdjustmentsAds');if(el('storeAdsSource').value==='SHOPEE_PERIOD')storeManualAdsDraft=input.value;else input.value=storeManualAdsDraft;
+ storeAdjustmentsChanged();renderStoreAdsState();
+}
+async function saveStoreAdjustments(){
+ if(!storePeriodBundle?.result.complete||storePeriodBusy||storeProductBusy||storeAdsBusy||!storeAdjustmentsDirty&&!storeOtherExpensesReviewRequired())return;let values;
+ try{const source=el('storeAdsSource').value,report=storePeriodBundle.ads_period;if(source==='SHOPEE_PERIOD'&&report?.status!=='AVAILABLE')throw Error('O gasto automático de anúncios está pendente. Atualize os anúncios ou selecione Informar manualmente e confira o valor.');values={ads_spend_cents:source==='SHOPEE_PERIOD'?report.expense_cents:storeAdjustmentAmount('storeAdjustmentsAds'),external_expenses_cents:storeAdjustmentAmount('storeAdjustmentsExpenses'),recharge_treatment:el('storeAdjustmentsRecharge').value,ads_source:source,external_expenses_basis:'EXCLUDES_INVOICE_TAX'};}
+ catch(error){storeResultMessage=error.message;renderStoreResult();return;}
+ const submittedSequence=storeAdjustmentsEditSequence,submittedRun=storePeriodBundle.finance.run_id;storePeriodBusy=true;storeResultMessage='Salvando as despesas deste período…';renderStoreResult();updateVariantSyncControls();
+ try{const response=await api('finance/store-adjustments',{run_id:submittedRun,revision:storePeriodBundle.adjustments.revision,values});if(storePeriodBundle?.finance.run_id!==submittedRun)return;applyStoreBundle(response,{forceAdjustments:submittedSequence===storeAdjustmentsEditSequence});storeResultMessage='Outras despesas salvas sem o imposto de 2%. O resultado usa os custos de produção atualmente cadastrados.';renderStoreResult();}
+ catch(error){storeResultMessage=error.message+' Seus rascunhos de despesas foram preservados.';renderStoreResult();}
+ finally{storePeriodBusy=false;updateStoreControls();updateVariantSyncControls();}
+}
+async function resolveStoreProduct(itemId){if(storePeriodBusy||storeProductBusy||variantSyncPromise||bindingSaving||itemsPromise||!bindingState||bindingLoadFailed||bindingStale||bindingConflict||bindingDrafts.size)return;const unit=knownStoreProductUnit(itemId);if(!['SINGLE_GARMENT','ONE_MALE_ONE_FEMALE_KIT'].includes(unit))return;storeProductBusy=itemId;bindingSaving=true;storeResultMessage='Identificando os tamanhos do produto #'+itemId+'…';renderStoreResult();updateBindingSaveState();try{const response=await api('variant-bindings/automate',{revision:bindingState.revision,item_ids:[itemId],...(unit==='SINGLE_GARMENT'?{selling_unit:'SINGLE_GARMENT'}:{})}),value=validBindingState(response);if(!value||value.revision<bindingState.revision)throw Error('Os vínculos retornados não puderam ser validados. Atualize os produtos.');bindingState=value;bindingLoadFailed=false;bindingConflict=null;bindingStale=false;renderVariantCards();applyStoreBundle(await api('finance/store-period',{operation:'read',run_id:storePeriodBundle.finance.run_id}));const remaining=storePeriodBundle.result.unmapped_variants.some(row=>row.item_id===itemId),diagnostic=response.catalog_review?projectVariantCatalogDiagnostic(response.catalog_review,itemId):null;storeResultMessage=remaining?'O catálogo ainda não identificou todas as variações deste produto. Confira os dados do catálogo e os vínculos em Produtos e variações.':'Tamanhos identificados. O custo de produção foi atualizado no resultado da loja.';renderStoreResult();if(remaining&&diagnostic)variantCatalogReviews.set(itemId,diagnostic);else variantCatalogReviews.delete(itemId);renderStorePendingProducts();updateStoreControls();}catch(error){bindingLoadFailed=true;storeResultMessage=error.message+' Seus vínculos manuais e rascunhos foram preservados.';if(error.status===409){bindingStale=true;try{const latest=validBindingState(await api('variant-bindings'));if(latest){bindingConflict=latest;bindingLoadFailed=false;}}catch{}}renderStoreResult();renderVariantCards();}finally{storeProductBusy=null;bindingSaving=false;updateBindingSaveState();}}
+
+function observationDate(value){const date=new Date(value);return Number.isFinite(date.getTime())?date.toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'}):'Horário não informado';}
+function observationAmount(value){return Number.isSafeInteger(value)&&value>=0;}
+function validObservationRow(row){return row&&typeof row==='object'&&!Array.isArray(row)&&typeof row.id==='string'&&/^[a-f0-9]{64}$/.test(row.id)&&typeof row.date==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(row.date)&&Number.isFinite(Date.parse(row.through_at))&&Number.isFinite(Date.parse(row.saved_at))&&['catalog_units','orders_in_api_window','mapped_quantity','unmapped_quantity','known_subset_cents'].every(key=>observationAmount(row[key]))&&(row.total_cents===null||observationAmount(row.total_cents))&&['settings_revision','bindings_revision'].every(key=>Number.isSafeInteger(row[key])&&row[key]>0);}
+function validObservationDetail(value){if(!value||typeof value!=='object'||value.schema!=='order_observation_v1'||value.coverage!=='PARTIAL_DAY_SNAPSHOT'||value.ads_execution!=='LOCKED'||value.economic_status!=='UNKNOWN'||value.hermes_context!=='NOT_ATTACHED'||typeof value.id!=='string'||!/^[a-f0-9]{64}$/.test(value.id)||!Number.isFinite(Date.parse(value.saved_at)))return null;const source=value.source_snapshot,settings=value.settings_snapshot,bindings=validBindingState(value.bindings_snapshot),reference=value.margin_reference;if(!source||!/^\d{4}-\d{2}-\d{2}$/.test(source.date)||!Number.isFinite(Date.parse(source.through_at))||!observationAmount(source.catalog_units)||!observationAmount(source.orders_in_api_window)||!groupVariantRows(source.rows)||!settings||!Number.isSafeInteger(settings.revision)||settings.revision<1||!settings.values||!['regular_cents','mixed_cents','plus_cents','ad_share_percent'].every(key=>observationAmount(settings.values[key]))||!bindings||!reference||!Array.isArray(reference.variants)||!['mapped_quantity','unmapped_quantity','known_subset_cents'].every(key=>observationAmount(reference[key]))||(reference.total_cents!==null&&!observationAmount(reference.total_cents)))return null;return value;}
+function updateObservationCaptureState(){const today=new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo'}).format(new Date());el('saveObservation').disabled=observationSaving||!!itemsPromise||bindingSaving||!itemsData||itemsData.date!==today;el('saveObservation').textContent=observationSaving?'Guardando recorte…':'Guardar recorte atual';}
+function renderObservations(){const target=el('observationsList');target.replaceChildren();for(const row of observationRows){const button=node('button',undefined,'observation-entry');button.type='button';button.dataset.observationId=row.id;button.setAttribute('aria-pressed',String(row.id===selectedObservationId));button.append(node('strong',row.date.split('-').reverse().join('/')+' · parcial'),node('span','Até '+observationDate(row.through_at)+' · Brasília'),node('span',row.catalog_units+' unidade(s) · '+row.orders_in_api_window+' pedido(s) na janela'),node('span','Guardado em '+observationDate(row.saved_at)+' · Brasília'),node('span','Margens v'+row.settings_revision+' / vínculos v'+row.bindings_revision));button.onclick=()=>selectObservation(row.id);target.append(button);}if(!observationRows.length)target.append(node('p','Nenhum recorte salvo nesta lista. Guarde uma leitura para começar.','muted'));el('observationsMore').hidden=!observationsCursor;el('observationsMore').disabled=!!observationsPromise;}
+function renderObservationDetail(value){const target=el('observationDetail');target.replaceChildren();const source=value.source_snapshot,reference=value.margin_reference,settings=value.settings_snapshot,bindings=new Map(value.bindings_snapshot.bindings.map(row=>[variantKey(row),row])),groups=groupVariantRows(source.rows),references=new Map(reference.variants.map(row=>[variantKey(row),row]));target.append(node('span','RECORTE PARCIAL SALVO','eyebrow'),node('h3',source.date.split('-').reverse().join('/')+' · até '+observationDate(source.through_at)),node('p','Guardado em '+observationDate(value.saved_at)+' · Brasília.','field-help'),node('p','Margens · versão '+settings.revision+' / vínculos · versão '+value.bindings_snapshot.revision,'variant-version'));const metrics=node('div',undefined,'report-metrics');for(const [label,amount,help] of [['Unidades de catálogo',source.catalog_units,'Inclui todos os status retornados'],['Pedidos na janela da API',source.orders_in_api_window,'Sem filtro de status; contador não reconciliado']]){const card=node('div',undefined,'report-metric');card.append(node('small',label),node('strong',new Intl.NumberFormat('pt-BR').format(amount)),node('span',help));metrics.append(card);}target.append(metrics);const economic=node('div',undefined,'help-box');economic.append(node('h3','Referências salvas antes dos anúncios'),node('p','Parte com vínculo salvo: '+money(reference.known_subset_cents)+'.'),node('p',reference.total_cents===null?'Referência completa pendente: há unidades sem composição ou sem margem cadastrada.':'Referência completa do recorte: '+money(reference.total_cents)+'.'),node('p',reference.mapped_quantity+' unidade(s) com margem · '+reference.unmapped_quantity+' sem referência de margem.'),node('p','Margens configuradas: regular '+money(settings.values.regular_cents)+' · mista '+money(settings.values.mixed_cents)+' · plus '+money(settings.values.plus_cents)+'. Referência Ads: '+settings.values.ad_share_percent+'%.'),node('p','Taxas e custos das peças já estão descontados dessas margens. Anúncios não foram descontados. O registro não confirma recebimento, lucro ou vendas atribuídas a anúncios.'));if(observationAmount(reference.unpriced_quantity)&&reference.unpriced_quantity>0&&reference.unpriced_quantity<=reference.unmapped_quantity)economic.append(node('p',reference.unpriced_quantity+' camiseta(s) avulsa(s) com composição identificada e margem ainda não cadastrada. Margens de kit não se aplicam.'));target.append(economic);const variants=node('div',undefined,'observation-variants');for(const [key,group] of groups){const card=node('div',undefined,'observation-variant'),binding=bindings.get(key),ref=references.get(key);card.append(node('h4','Produto #'+group.item_id+' · variação #'+group.model_id),node('p',group.quantity+' unidade(s) de catálogo · '+group.line_count+' linha(s) de itens.'));for(const [status,totals] of group.statuses)card.append(node('p',status+': '+totals.quantity+' unidade(s) · '+totals.lines+' linha(s).'));if(binding)card.append(node('p',binding.selling_unit==='SINGLE_GARMENT'?(binding.source==='CATALOG_SIZE_AXIS'?'Camiseta avulsa identificada pelo catálogo · tamanho ':'Camiseta avulsa confirmada · tamanho ')+binding.size+'.':(binding.source==='CATALOG_VARIATION_AXES'?'Kit identificado pelo catálogo: masculino ':'Kit confirmado: masculino ')+binding.male_size+' / feminino '+binding.female_size+'.'));else card.append(node('p','Composição sem vínculo salvo neste registro.'));if(ref&&observationAmount(ref.unit_margin_cents)&&observationAmount(ref.contribution_cents))card.append(node('p','Referência por unidade: '+money(ref.unit_margin_cents)+' · subtotal: '+money(ref.contribution_cents)+' antes dos anúncios.'));else card.append(node('p','Referência de margem indisponível para esta variação.'));variants.append(card);}if(!groups.size)variants.append(node('p','A fonte não retornou itens neste recorte.','muted'));target.append(node('h3','Itens observados'),variants,node('p','Recorte parcial preservado. Não representa o fechamento do dia e ainda não foi anexado às análises do Hermes. Anúncios seguem protegidos.','field-help'));}
+async function selectObservation(id){const sequence=++observationSelectionSequence;selectedObservationId=id;renderObservations();el('observationDetail').replaceChildren(node('p','Carregando o recorte salvo…','muted'));try{const detail=validObservationDetail(await api('order-observations/'+id));if(!detail)throw Error('Não foi possível validar o recorte salvo.');if(sequence!==observationSelectionSequence)return;renderObservationDetail(detail);el('observationDetail').scrollIntoView({block:'start'});}catch(error){if(sequence===observationSelectionSequence)el('observationDetail').replaceChildren(node('p',error.message,'muted'));}}
+async function loadObservations(more=false,force=false){if(observationsPromise){if(force){await observationsPromise;return loadObservations(more,true);}return observationsPromise;}if(!more&&observationsLoaded&&!force)return;if(more&&!observationsCursor)return;el('observationsRefresh').disabled=true;el('observationsMore').disabled=true;el('observationsStatus').textContent='Consultando os recortes salvos…';const cursor=more?observationsCursor:null;observationsPromise=(async()=>{try{const query=cursor?'?'+new URLSearchParams({cursor}).toString():'',data=await api('order-observations'+query);if(!data||!Array.isArray(data.rows)||!data.rows.every(validObservationRow)||(data.next_cursor!==null&&(typeof data.next_cursor!=='string'||data.next_cursor.length>1000)))throw Error('Não foi possível validar a lista de recortes.');const combined=more?[...observationRows,...data.rows]:data.rows;observationRows=[...new Map(combined.map(row=>[row.id,row])).values()];observationsCursor=data.next_cursor;observationsLoaded=true;el('observationsStatus').textContent=observationRows.length+' recorte(s) nesta lista. Selecione para conferir as versões e os detalhes.';renderObservations();}catch(error){el('observationsStatus').textContent=error.message;}finally{observationsPromise=null;el('observationsRefresh').disabled=false;el('observationsMore').disabled=false;}})();return observationsPromise;}
+async function saveObservation(){if(el('saveObservation').disabled||observationSaving)return;observationSaving=true;updateObservationCaptureState();el('observationCaptureStatus').textContent='Consultando a fonte e guardando o recorte com as versões já salvas…';try{const response=await api('order-observations',{}),detail=validObservationDetail(response?.observation);if(!detail||typeof response.deduplicated!=='boolean')throw Error('Não foi possível validar a confirmação do recorte. Atualize a lista antes de tentar novamente.');++observationSelectionSequence;selectedObservationId=detail.id;renderObservationDetail(detail);el('observationCaptureStatus').textContent=response.deduplicated?'Este recorte e suas versões já estavam guardados. O registro existente foi selecionado.':'Recorte guardado com os vínculos e as margens salvos. Seus rascunhos foram preservados.';await loadObservations(false,true);renderObservations();}catch(error){el('observationCaptureStatus').textContent=error.message;}finally{observationSaving=false;updateObservationCaptureState();}}
+async function automateVariantBindings(itemId){if(bindingSaving||itemsPromise||!bindingState||bindingLoadFailed||bindingStale||bindingConflict)return;if(bindingDrafts.size){notice('Salve ou descarte os rascunhos dos vínculos antes de identificar os tamanhos pelo catálogo.');return;}const sellingUnit=productSellingUnit(itemId);if(!['SINGLE_GARMENT','ONE_MALE_ONE_FEMALE_KIT'].includes(sellingUnit)){notice('Escolha a composição deste produto antes de identificar os tamanhos.');return;}const single=sellingUnit==='SINGLE_GARMENT',previous=new Map(bindingState.bindings.filter(row=>row.item_id===itemId).map(row=>[variantKey(row),JSON.stringify(row)]));bindingSaving=true;catalogAutomatingItemId=itemId;el('itemsRefresh').disabled=true;el('bindingsNotice').hidden=true;updateBindingSaveState();try{const response=await api('variant-bindings/automate',{revision:bindingState.revision,item_ids:[itemId],...(single?{selling_unit:sellingUnit}:{})}),value=validBindingState(response),diagnostic=projectVariantCatalogDiagnostic(response.catalog_review,itemId);if(!value)throw Error('Não foi possível validar os vínculos identificados. Atualize os produtos antes de continuar.');if(diagnostic)variantCatalogReviews.set(itemId,diagnostic);else variantCatalogReviews.delete(itemId);bindingState=value;bindingConflict=null;bindingStale=false;bindingLoadFailed=false;const changed=value.bindings.filter(row=>row.item_id===itemId&&automaticBinding(row)&&previous.get(variantKey(row))!==JSON.stringify(row)).length,identified=value.bindings.filter(row=>row.item_id===itemId&&automaticBinding(row)).length;el('bindingsNotice').hidden=false;el('bindingsNotice').textContent=changed?changed+' variação(ões) identificada(s) pelo catálogo. Vínculos manuais e rascunhos foram preservados.':identified?'Os tamanhos identificados pelo catálogo já estão salvos. Vínculos manuais foram preservados.':(single?'O catálogo não identificou o tamanho da camiseta com segurança.':'O catálogo não identificou os dois tamanhos com segurança.')+' Os vínculos manuais foram preservados.'+(diagnostic?' Confira Dados do catálogo para ajustar a identificação.':'');if(diagnostic)el('bindingsNotice').append(variantCatalogDiagnosticDetails(diagnostic));notice(changed?(single?'Tamanhos das camisetas identificados e salvos.':'Tamanhos do kit identificados e salvos.'):'Consulta do catálogo concluída. Confira o resultado em Produtos e variações.');await loadVariants({localOnly:true});if(storePeriodBundle)await refreshStoreResult();if(globalThis.brazaMonthDashboard)await globalThis.brazaMonthDashboard.refreshCosts().catch(()=>{});}catch(error){bindingLoadFailed=true;el('bindingsNotice').hidden=false;el('bindingsNotice').textContent=error.message+' Atualize os produtos antes de continuar.';notice('Não foi possível identificar os tamanhos. Seus rascunhos foram preservados; atualize os produtos para conferir os vínculos salvos.');if(error.status===409){bindingStale=true;try{const latest=validBindingState(await api('variant-bindings'));if(latest){bindingConflict=latest;bindingLoadFailed=false;el('bindingsNotice').textContent=error.code==='VARIANT_BINDING_COMPOSITION_CONFLICT'?error.message+' Revise os vínculos salvos antes de continuar.':'Os vínculos mudaram em outra sessão. Revise a versão atual antes de identificar os tamanhos. Seus rascunhos foram preservados.';}else bindingLoadFailed=true;}catch{bindingLoadFailed=true;}}renderVariantCards();}finally{catalogAutomatingItemId=null;bindingSaving=false;el('itemsRefresh').disabled=!!itemsPromise;updateBindingSaveState();}}
+async function loadVariants({localOnly=false}={}){if(itemsPromise)return itemsPromise;el('itemsRefresh').disabled=true;el('itemsStatus').replaceChildren(node('p',localOnly?'Recalculando os itens já salvos com os custos atuais…':'Consultando os pedidos de hoje na Shopee…'));updateObservationCaptureState();itemsPromise=(async()=>{try{const [itemResult,bindingResult]=await Promise.allSettled([api(localOnly?'order-items?source=saved':'order-items'),api('variant-bindings')]);if(bindingResult.status==='fulfilled'){const latest=validBindingState(bindingResult.value);if(latest){bindingLoadFailed=false;if(bindingDrafts.size&&bindingState&&(bindingStale||latest.revision!==bindingState.revision)){bindingStale=true;bindingConflict=latest;el('bindingsNotice').hidden=false;el('bindingsNotice').textContent='Os vínculos salvos mudaram. Seus rascunhos foram preservados. Revise a versão atual antes de salvar.';}else{bindingState=latest;bindingConflict=null;bindingStale=false;}}else{bindingLoadFailed=true;el('bindingsNotice').hidden=false;el('bindingsNotice').textContent='A resposta dos vínculos não pôde ser validada. Atualize os produtos antes de salvar.';}}else{bindingLoadFailed=true;el('bindingsNotice').hidden=false;el('bindingsNotice').textContent='Não foi possível carregar os vínculos. Seus rascunhos serão preservados.';}const target=el('itemsStatus');target.replaceChildren();const data=itemResult.status==='fulfilled'?itemResult.value:null,groups=data?.status==='AVAILABLE'?groupVariantRows(data.rows):null;if(data?.status==='AVAILABLE'&&groups){itemsData=data;variantGroups=groups;if(!productionCostFrameCurrent())await loadProductionCosts();target.append(node('p',localOnly?'Custos recalculados com os itens salvos. Nenhuma venda foi consultada novamente.':'Leitura completa dos itens retornados pela Shopee.','muted'));el('itemsInfo').textContent=(localOnly?'Leitura salva de ':'Dados de ')+data.date.split('-').reverse().join('/')+' até '+new Date(data.through_at).toLocaleTimeString('pt-BR',{timeZone:'America/Sao_Paulo'})+' · Brasília · '+(data.previous_day?'dia anterior, preservado. ':'parcial do dia. ')+data.orders_with_details+' pedido(s) com detalhes na janela da API.';}else{const diagnostic=safeOrderDiagnostic(data?.diagnostic);target.append(node('p',diagnostic?orderDiagnosticMessage(diagnostic):localOnly?'Ainda não há uma leitura de itens salva. O catálogo de produtos permanece disponível acima.':'Os itens dos pedidos não estão disponíveis. Tente uma nova consulta quando desejar.'));if(diagnostic)target.append(orderDiagnosticDetails(diagnostic));}renderItemsMetrics();renderItemsReference();renderItemsProductionCosts();renderVariantCards();}catch{el('itemsStatus').replaceChildren(node('p','Não foi possível atualizar os itens. A leitura anterior e os rascunhos foram preservados.'));renderVariantCards();}finally{itemsPromise=null;el('itemsRefresh').disabled=false;updateBindingSaveState();}})();updateBindingSaveState();return itemsPromise;}
+async function saveVariantBindings(){if(bindingSaving||itemsPromise||!bindingState||bindingLoadFailed||bindingStale||bindingConflict)return;const submitted=new Map([...bindingDrafts].filter(([key,draft])=>bindingDraftActionable(key,draft))),combined=currentBindingMap();if(!submitted.size){notice('Confirme a composição de pelo menos uma variação antes de salvar.');return;}for(const [key,draft] of submitted){if(draft.confirmed){const single=draft.selling_unit==='SINGLE_GARMENT';if(single?!draft.size:!draft.male_size||!draft.female_size){notice(single?'Selecione o tamanho para confirmar a camiseta avulsa.':'Selecione os dois tamanhos para confirmar o kit.');return;}combined.set(key,{item_id:draft.item_id,model_id:draft.model_id,...(single?{size:draft.size}:{male_size:draft.male_size,female_size:draft.female_size}),selling_unit:single?'SINGLE_GARMENT':'ONE_MALE_ONE_FEMALE_KIT',operator_confirmed:true});}else combined.delete(key);}if(combined.size>1000){notice('O limite de vínculos foi atingido.');return;}bindingSaving=true;updateBindingSaveState();try{const response=validBindingState(await api('variant-bindings',{revision:bindingState.revision,bindings:[...combined.values()]}));if(!response)throw Error('Resposta dos vínculos inválida. Atualize antes de salvar novamente.');bindingState=response;bindingConflict=null;bindingStale=false;bindingLoadFailed=false;for(const [key,draft] of submitted)if(bindingDrafts.get(key)?.sequence===draft.sequence)bindingDrafts.delete(key);el('bindingsNotice').hidden=true;notice('Vínculos salvos. As referências do recorte serão atualizadas.');await loadVariants({localOnly:true});if(storePeriodBundle)await refreshStoreResult();if(globalThis.brazaMonthDashboard)await globalThis.brazaMonthDashboard.refreshCosts().catch(()=>{});}catch(error){bindingLoadFailed=true;el('bindingsNotice').hidden=false;el('bindingsNotice').textContent=error.message;if(error.status===409){bindingStale=true;try{const latest=validBindingState(await api('variant-bindings'));if(latest){bindingLoadFailed=false;bindingConflict=latest;el('bindingsNotice').textContent=error.message+' Seus rascunhos estão preservados; revise a versão atual antes de salvar.';}else el('bindingsNotice').textContent='Não foi possível validar a versão atual. Atualize os produtos; seus rascunhos estão preservados.';}catch{el('bindingsNotice').textContent='Não foi possível carregar a versão atual. Atualize os produtos; seus rascunhos estão preservados.';}}renderVariantCards();}finally{bindingSaving=false;updateBindingSaveState();}}
+async function loadShopOrders(){if(!commercialHas('finance.read')||!commercialHas('orders.read'))return false;
+ if(shopOrdersPromise)return shopOrdersPromise;
+ shopOrdersPromise=(async()=>{
+  const target=el('shopOrders');shopOrdersSnapshot=null;el('shopOrdersCount').textContent='—';el('shopOrdersCutoff').textContent='';el('shopOrdersAge').textContent='';target.replaceChildren(node('p','Conferindo a situação atual dos pedidos de hoje…'));
+  try{
+   const data=await api('shop-orders'),snapshot=projectDailySalesSnapshot(data);
+   el('storeDay').textContent=snapshot?snapshot.date.split('-').reverse().join('/'):'HOJE';target.replaceChildren();
+   if(!snapshot){
+    const diagnostic=safeOrderDiagnostic(data?.diagnostic);
+    target.append(node('p',diagnostic?orderDiagnosticMessage(diagnostic):data?.status==='STALE_DATE'?'A fonte retornou dados de outra data. A contagem anterior foi retirada.':'As vendas confirmadas não estão disponíveis. A próxima atualização tentará novamente.'));
+    if(diagnostic)target.append(orderDiagnosticDetails(diagnostic));return;
+   }
+   shopOrdersSnapshot=snapshot;
+   if(snapshot.sales_classified){
+    el('shopOrdersCount').textContent=new Intl.NumberFormat('pt-BR').format(snapshot.sales_orders);
+    const breakdown=node('dl',undefined,'daily-sales-breakdown');
+    for(const [key,label] of [['orders_in_api_window','Pedidos criados hoje'],['cancelled_orders','Cancelados'],['cancellation_pending_orders','Em cancelamento'],['unpaid_orders','Aguardando pagamento'],['other_orders','Outras situações'],['unknown_status_orders','Situação não identificada']]){
+     const row=node('div');row.append(node('dt',label),node('dd',new Intl.NumberFormat('pt-BR').format(snapshot[key])));breakdown.append(row);
+    }
+    target.append(breakdown);
+    if(snapshot.unknown_status_orders)target.append(node('p','Contagem parcial: '+snapshot.unknown_status_orders+' pedido(s) ainda sem situação reconhecida. As vendas confirmadas podem aumentar após a conferência.','field-help'));
+   }else target.append(node('p','Vendas confirmadas pendentes de classificação por situação. A fonte anterior informa '+new Intl.NumberFormat('pt-BR').format(snapshot.orders_in_api_window)+' pedido(s) criado(s) hoje, incluindo cancelados e não pagos. Esse total não é usado como vendas.'));
+   target.append(node('p','Contagem por pedido único · '+snapshot.pages_read+' página(s) · '+snapshot.duplicate_rows+' registro(s) duplicado(s) removido(s).','field-help'));
+   el('shopOrdersCutoff').textContent='Pedidos criados de 00h até '+new Date(snapshot.through_at).toLocaleTimeString('pt-BR',{timeZone:'America/Sao_Paulo'})+' · Brasília.'+(snapshot.fetched_at?' Recorte consultado em '+new Date(snapshot.fetched_at).toLocaleTimeString('pt-BR',{timeZone:'America/Sao_Paulo'})+'.':'');
+   updateShopSnapshotAge();
+  }catch{target.replaceChildren(node('p','Não foi possível atualizar as vendas de hoje. A contagem permanece indisponível até uma nova consulta.'));}
+  finally{shopOrdersPromise=null;scheduleShopOrdersRefresh();}
+ })();return shopOrdersPromise;
+}
+let financeSampleBusy=false,financePreviewBusy=false;
+function updateFinanceButtons(){const busy=financeSampleBusy||financePreviewBusy;el('financeSampleCheck').disabled=busy;el('financePreviewCheck').disabled=busy;}
+function financeReconnectAction(target){
+ const link=node('a','Autorizar financeiro na Shopee','button-secondary');link.href='https://auth.brazacommerce.com.br/shopee/finance/connect';link.target='_blank';link.rel='noopener noreferrer';
+ target.append(link,node('p','Conclua a autorização na nova aba e depois atualize a Visão geral. Essa autorização libera os dados financeiros da Shopee.','field-help'));
+}
+async function validateFinanceSample(){
+ if(financeSampleBusy||financePreviewBusy||!csrf)return;
+ financeSampleBusy=true;updateFinanceButtons();
+ const target=el('financeSampleStatus');target.replaceChildren(node('p','Consultando a Shopee e conferindo o retorno financeiro…','muted'));
+ el('financeSampleDetails').hidden=true;el('financeSampleCopyStatus').textContent='';
+ try{
+  const data=await api('finance/payment-sample',{});
+  if(!data||data.schema_version!==1||!['VALIDATED','EMPTY','UNAVAILABLE'].includes(data.status))throw Error('O resultado da validação não está disponível.');
+  target.replaceChildren();
+  if(data.status==='VALIDATED'){
+   target.append(node('p','Leitura financeira validada para um pedido concluído.'));
+   const names={escrow_amount:'Repasse previsto',original_cost_of_goods_sold:'Valor da mercadoria',buyer_total_amount:'Total do comprador',commission_fee:'Comissão',service_fee:'Taxa de serviço',seller_transaction_fee:'Taxa de transação',actual_shipping_fee:'Frete',ads_escrow_top_up_fee_or_technical_support_fee:'Ajuste financeiro de anúncios',items:'Itens'};
+   for(const field of data.fields||[])if(Object.hasOwn(names,field.name))target.append(node('p',names[field.name]+': campo retornado.','field-help'));
+   target.append(node('p','Próxima etapa: conferir os valores e as regras de conciliação antes de calcular resultados.','muted'));
+  }else if(data.status==='EMPTY')target.append(node('p','Não foi encontrado um pedido concluído criado nos últimos sete dias. A consulta financeira da amostra permanece pendente.'));
+  else{
+   const code=data.diagnostic?.code;
+   const message=code==='FINANCE_AUTHORIZATION_REQUIRED'?'A conexão financeira precisa de uma nova autorização.':code==='FINANCE_REFRESH_IN_PROGRESS'||code==='FINANCE_AUTHORIZATION_IN_PROGRESS'?'A conexão está sendo atualizada. Aguarde a conclusão antes de validar novamente.':'Não foi possível validar a leitura financeira. O resultado abaixo ajuda a identificar a etapa.';
+   target.append(node('p',message));
+   if(code==='FINANCE_AUTHORIZATION_REQUIRED')financeReconnectAction(target);
+  }
+  el('financeSampleResult').textContent=JSON.stringify(data,null,2);el('financeSampleDetails').hidden=false;
+ }catch(error){target.replaceChildren(node('p',error.message));}
+ finally{financeSampleBusy=false;updateFinanceButtons();}
+}
+const financeAmountLabels={escrow_amount:'Repasse esperado informado',original_cost_of_goods_sold:'Valor dos itens pago pelo comprador',buyer_total_amount:'Total do checkout informado',commission_fee:'Comissão informada',service_fee:'Taxa de serviço informada',seller_transaction_fee:'Taxa de transação informada',actual_shipping_fee:'Frete efetivo informado',ads_escrow_top_up_fee_or_technical_support_fee:'Recarga de Ads ou suporte técnico'};
+const originalFinanceValue=value=>value===null?'Não informado':String(value).replace('.',',');
+function financePreviewTable(headings,rows){const wrapper=node('div',undefined,'preview-table-wrap'),table=node('table'),head=node('thead'),headRow=node('tr'),body=node('tbody');for(const label of headings){const cell=node('th',label);cell.scope='col';headRow.append(cell);}head.append(headRow);for(const row of rows){const tr=node('tr');for(const value of row)tr.append(node('td',value,'preview-value'));body.append(tr);}table.append(head,body);wrapper.append(table);return wrapper;}
+function validFinancePreviewForDisplay(data){
+ const amount=value=>value===null||(typeof value==='number'&&Number.isFinite(value)&&Math.abs(value)<=1e12);
+ return data?.schema==='finance_payment_preview_v1'&&data.status==='AVAILABLE'&&data.currency==='BRL'&&data.monetary_unit==='UNCONFIRMED'&&data.identity_match===true&&typeof data.order_sn==='string'&&data.order_sn.length>0&&data.order_sn.length<=128&&!/[^\x21-\x7e]|,/.test(data.order_sn)&&Array.isArray(data.amounts)&&data.amounts.length===8&&data.amounts.every((row,index)=>row?.name===Object.keys(financeAmountLabels)[index]&&amount(row.value))&&Array.isArray(data.items)&&data.items.length===data.item_count&&data.item_count<=100&&data.items.every(row=>row&&amount(row.original_price)&&amount(row.selling_price)&&(row.quantity_purchased===null||(Number.isSafeInteger(row.quantity_purchased)&&row.quantity_purchased>0&&row.quantity_purchased<=1e9))&&(row.is_kit===null||typeof row.is_kit==='boolean'));
+}
+async function loadFinancePreview(){
+ if(financeSampleBusy||financePreviewBusy||!csrf)return;
+ financePreviewBusy=true;updateFinanceButtons();
+ const status=el('financePreviewStatus'),content=el('financePreviewContent');content.hidden=true;content.replaceChildren();status.replaceChildren(node('p','Consultando um pedido concluído e seus valores financeiros…','muted'));
+ try{
+  const data=await api('finance/payment-preview',{});
+  if(data?.schema!=='finance_payment_preview_v1')throw Error('Não foi possível validar a conferência dos valores.');
+  status.replaceChildren();
+  if(data.status==='EMPTY'){status.append(node('p','A seleção da amostra não retornou um pedido concluído. A conferência dos valores permanece pendente.'));return;}
+  if(data.status==='UNAVAILABLE'){const code=data.diagnostic?.code;status.append(node('p',code==='FINANCE_AUTHORIZATION_REQUIRED'?'A conexão financeira precisa de uma nova autorização.':code==='FINANCE_REFRESH_IN_PROGRESS'||code==='FINANCE_AUTHORIZATION_IN_PROGRESS'?'A conexão está sendo atualizada. Aguarde a conclusão antes de conferir novamente.':'A consulta dos valores não está disponível. O diagnóstico pode ser conferido pela validação financeira.'));if(code==='FINANCE_AUTHORIZATION_REQUIRED')financeReconnectAction(status);return;}
+  if(!validFinancePreviewForDisplay(data))throw Error('Não foi possível validar a conferência dos valores.');
+  status.append(node('p','Amostra disponível para conferência na Shopee.'));
+  content.append(node('p','Pedido da amostra: '+data.order_sn,'preview-order'),node('p','Moeda do pedido: BRL · valores em reais, conforme conferência com a Shopee.','help-box preview-units'),node('p','Os números originais são apresentados sem conversão, arredondamento ou cálculo de lucro. O resultado do período está em Resultado da loja.','muted'));
+  content.append(financePreviewTable(['Campo financeiro','Valor original'],data.amounts.map(row=>[financeAmountLabels[row.name],originalFinanceValue(row.value)])));
+  content.append(node('h3','Linhas do pedido'),node('p','Os preços são subtotais da linha informados pela Shopee. Não são multiplicados novamente pela quantidade.','field-help'));
+  if(data.items.length)content.append(financePreviewTable(['Quantidade do catálogo','Subtotal original da linha','Subtotal de venda da linha','Kit na Shopee'],data.items.map(row=>[originalFinanceValue(row.quantity_purchased),originalFinanceValue(row.original_price),originalFinanceValue(row.selling_price),row.is_kit===null?'Não informado':row.is_kit?'Sim':'Não'])));
+  else content.append(node('p','A amostra não trouxe linhas para conferir.','muted'));
+  content.append(node('p','O campo de kit da Shopee não confirma a composição física nem os tamanhos. Os vínculos de produtos continuam separados.','field-help'),node('p','Repasse esperado não comprova liquidação. A recarga de Ads ou suporte técnico não representa, por si só, o gasto consumido em anúncios.','field-help'));
+  content.hidden=false;
+ }catch(error){status.replaceChildren(node('p',error.message));}
+ finally{financePreviewBusy=false;updateFinanceButtons();}
+}
+el('financePreviewCheck').onclick=loadFinancePreview;
+el('financeSampleCheck').onclick=validateFinanceSample;
+el('financeSampleCopy').onclick=async()=>{try{await navigator.clipboard.writeText(el('financeSampleResult').textContent);el('financeSampleCopyStatus').textContent='Resultado copiado.';}catch{el('financeSampleCopyStatus').textContent='Selecione e copie o texto do resultado acima.';}};
+let startupController=null,logoutPromise=null;
+function startupFeedback(value){
+ const failed=value.phase==='FAILED',unauthorized=failed&&value.error?.status===401;
+ const quota=failed&&value.error?.status===503&&value.error?.apiCode==='ADMIN_DB_DAILY_LIMIT_EXCEEDED';
+ const failureKind=unauthorized?'SESSION':quota?'QUOTA':value.error?.status===503?'UNAVAILABLE':value.error?.code==='ADMIN_API_NETWORK_ERROR'?'NETWORK':value.error?.code==='ADMIN_API_TIMEOUT'?'TIMEOUT':'INVALID';
+ const failureMessage={SESSION:'Sua sessão expirou. Entre novamente.',QUOTA:'O painel está indisponível porque o limite diário do banco de dados foi atingido. A cota é renovada todos os dias às 21h (horário de Brasília).',UNAVAILABLE:'O painel está temporariamente indisponível. Tente novamente em alguns instantes.',NETWORK:'Não foi possível conectar ao painel. Verifique sua conexão e tente novamente.',TIMEOUT:'A consulta demorou mais que o esperado. Tente novamente.',INVALID:'Não foi possível abrir o painel. Tente novamente.'}[failureKind];
+ const message=value.phase==='LOADING'?'Conectando ao painel…':value.phase==='RETRYING'?'A conexão foi interrompida. Tentando novamente…':failed?failureMessage:'';
+ const target=el('message');if(message){target.dataset.startup='true';notice(message);}else if(target.dataset.startup==='true'){notice('');delete target.dataset.startup;}
+ const retry=el('startupRetry'),login=el('startupLogin');if(retry){retry.hidden=!failed||unauthorized;retry.disabled=!failed;}if(login)login.hidden=!unauthorized;const recovery=retry?.closest?.('.startup-recovery');if(recovery)recovery.hidden=!failed;
+ globalThis.brazaMonthDashboard?.bootstrapState?.({phase:value.phase,failureKind:failed?failureKind:null});
+ globalThis.brazaDayDashboard?.bootstrapState?.({phase:value.phase,failureKind:failed?failureKind:null});
+ globalThis.brazaPhysicalReturns?.bootstrapState?.({phase:value.phase,failureKind:failed?failureKind:null});
+ globalThis.brazaReturnManufacturingLinks?.bootstrapState?.({phase:value.phase,failureKind:failed?failureKind:null});
+ globalThis.brazaIncurredProduction?.bootstrapState?.({phase:value.phase,failureKind:failed?failureKind:null});
+ globalThis.brazaProductionWeeklyClosing?.bootstrapState?.({phase:value.phase,failureKind:failed?failureKind:null});
+ globalThis.brazaProductionCoverage?.bootstrapState?.({phase:value.phase,failureKind:failed?failureKind:null});
+}
+function secondaryFailure(key){
+ if(key==='audit'){const target=el('audit');if(target)target.replaceChildren(node('p','O histórico está indisponível no momento. O resumo da loja continua disponível.','field-help'));}
+ if(key==='settings'){settingsControls(false);const target=el('simulation');if(target)target.textContent='As configurações não puderam ser carregadas. Reabra Custos de produção ou use Atualizar status em Hermes para tentar novamente. O resumo da loja continua disponível.';}
+}
+function settingsControls(ready){for(const name of ['settings','controls'])for(const control of el(name)?.querySelectorAll('input,select,button')||[])control.disabled=!ready;}
+function loadSettings(){
+ if(state!==null)return Promise.resolve(true);
+ if(settingsPromise)return settingsPromise;
+ if(!csrf||startupController?.getState().phase==='STOPPED')return Promise.resolve(false);
+ const token=++settingsLoadGeneration,current=()=>token===settingsLoadGeneration&&!!csrf&&startupController?.getState().phase!=='STOPPED';
+ settingsControls(false);const target=el('simulation');if(target)target.textContent='Consultando as configurações salvas…';
+ const task=(async()=>{
+  try{
+   const data=await api('state');if(!current())return false;
+   if(!data?.settings||!Number.isSafeInteger(data.settings.revision)||data.settings.revision<(commercialWorkspace?0:1)||!data.settings.values||typeof data.settings.values!=='object'||Array.isArray(data.settings.values))throw Error('ADMIN_SETTINGS_RESPONSE_INVALID');
+   state=data.settings;try{applySettings();}catch(error){state=null;throw error;}settingsControls(true);return true;
+  }catch{if(current())secondaryFailure('settings');return false;}
+  finally{if(settingsPromise===task)settingsPromise=null;}
+ })();settingsPromise=task;return task;
+}
+let bankPeriodUnsubscribe=null;
+function startBankReconciliation(){const control=globalThis.brazaBankReconciliation;if(!control){const status=el('bankReconciliationStatus');if(status)status.textContent='Não foi possível carregar banco e transferências. Recarregue a página para tentar novamente.';return false;}const ready=control.start({api,month:globalThis.brazaMonthDashboard?.getSnapshot?.()?.month});if(!bankPeriodUnsubscribe)bankPeriodUnsubscribe=globalThis.brazaMonthDashboard?.subscribe?.(snapshot=>control?.observe?.(snapshot?.month))??null;return ready;}
+function productionClientAvailability(){
+ const productionHost=el('missionProductionLedgerHost');
+ if(productionHost&&!globalThis.brazaProductionWorkspace&&!el('productionClientUnavailable')){
+  const warning=document.createElement('p');warning.id='productionClientUnavailable';warning.className='notice';warning.setAttribute('role','status');warning.textContent='Não foi possível carregar os recursos de Produção. Recarregue a página para tentar novamente.';
+  productionHost.prepend(warning);for(const control of productionHost.querySelectorAll('button,input,select,textarea'))control.disabled=true;
+ }
+}
+function startSecondaryPanels(){
+ const work=[['productionClient',productionClientAvailability],['weeklyOperating',()=>{const control=globalThis.brazaWeeklyOperating;if(control)return control.start({api});const status=el('weeklyOperatingStatus');if(status)status.textContent='Não foi possível carregar o relatório semanal. Recarregue a página para tentar novamente.';return false;}],['orderOperations',()=>{const control=globalThis.brazaOrderOperations;if(control)return control.start({api});const status=el('orderOperationsStatus');if(status)status.textContent='Não foi possível carregar Pedidos. Recarregue a página para tentar novamente.';return false;}],['bankReconciliation',startBankReconciliation],['productionCoverage',()=>globalThis.brazaProductionCoverage?.start({api})],['weeklyProduction',()=>globalThis.brazaProductionWeeklyClosing?.start({api})],['returnManufacturingLinks',()=>globalThis.brazaReturnManufacturingLinks?.start({api})],['incurredProduction',()=>globalThis.brazaIncurredProduction?.start({api})],['physicalReturns',()=>globalThis.brazaPhysicalReturns?.start({api})],['agentLearning',()=>globalThis.mlsAgentLearning?.start({api})],['settings',()=>loadSettings()],['audit',()=>loadAudit()],['live',()=>pollLive()],['ads',()=>loadTodayAds()],['orders',()=>loadShopOrders()],['products',()=>loadVariants({localOnly:true})],['catalog',()=>globalThis.brazaSavedCatalog?.start({api,onConfigureCost:configureCustomCost,onAssignRule:costRuleAssignmentControl})],['costPeriods',()=>globalThis.brazaProductionCostPeriods?.start({api})],['observations',()=>loadObservations()],['costs',()=>loadProductionCosts()],['confirmedCosts',()=>loadConfirmedCostReferences()],['automation',()=>globalThis.brazaAutomationWorkspace?.start({api})],['aiSales',()=>globalThis.mlsAiSalesWorkspace?.start({api})],['production',()=>globalThis.brazaDtfWorkspace?.start({api})],['costRules',()=>globalThis.brazaCostRules?.start({api,onChanged:async()=>{await loadVariants({localOnly:true});await globalThis.brazaSavedCatalog?.refresh();await globalThis.brazaProductionCostPeriods?.refresh();await globalThis.brazaMonthDashboard?.refreshCosts();}})]];
+ const required={weeklyOperating:['reports.read','finance.read','bank.read','costs.read'],orderOperations:['orders.read'],bankReconciliation:['bank.read'],productionCoverage:['production.read','costs.read'],weeklyProduction:['production.read','costs.read'],returnManufacturingLinks:['returns.read','production.read','costs.read'],incurredProduction:['production.read','costs.read'],physicalReturns:['returns.read'],agentLearning:['finance.read'],settings:['finance.read'],audit:['audit.read'],live:['finance.read'],ads:['ads.read'],orders:['finance.read','orders.read'],products:['costs.read'],catalog:['catalog.read','costs.read'],costPeriods:['costs.read'],observations:['orders.read','costs.read'],costs:['costs.read'],confirmedCosts:[],automation:['finance.read'],aiSales:[],production:['dtf.read'],costRules:['costs.read']};
+ return Promise.allSettled(work.filter(([key])=>!commercialWorkspace||(required[key]?.length&&required[key].every(commercialHas))).map(([key,run])=>Promise.resolve().then(run).catch(()=>{secondaryFailure(key);}))).then(async()=>{renderVariantCards();if(!variantSyncOpened)variantSyncOpened=true;if(variantSyncRequested)await syncOnProductsOpen();updateStoreControls();});
+}
+function startOverview(){
+ if(!commercialHas('finance.read')){notice('Seu acesso mostra a operação autorizada. Indicadores financeiros exigem permissão da empresa.');return Promise.resolve(true);}
+ if(!globalThis.brazaMonthDashboard)throw Error('ADMIN_MONTH_COMPONENT_UNAVAILABLE');
+ globalThis.mlsAgentPeriod?.sync?.();
+ if(storeAutomaticStarted)return globalThis.brazaMonthDashboard?.refresh();
+ storeAutomaticStarted=true;
+ return globalThis.brazaMonthDashboard?globalThis.brazaMonthDashboard.start({api,syncVariants:source=>syncKnownVariants(source),onCatalogChanged:async()=>{await loadVariants({localOnly:true});if(storePeriodBundle)await refreshStoreResult();}}):runStorePeriod('start');
+}
+async function prepareCommercialWorkspaceUi(){
+ if(!commercialWorkspace)return;
+ let cursor=0;
+ for(let step=0;step<90;step++){
+  notice('Preparando os dados desta empresa…');
+  const value=await api('workspace/prepare',{cursor},{timeoutMs:20000});
+  if(!value||value.schema!=='commercial_workspace_setup_v1'||value.version!==1||!['PREPARING','READY'].includes(value.state)||!Number.isSafeInteger(value.completed)||!Number.isSafeInteger(value.total)||value.total<1||value.total>1000||value.completed<cursor||value.completed>value.total||value.remaining!==value.total-value.completed)throw Error('COMMERCIAL_WORKSPACE_RESPONSE_INVALID');
+  if(value.state==='READY'&&value.remaining===0)return;
+  if(value.completed<=cursor)throw Error('COMMERCIAL_WORKSPACE_PROGRESS_REQUIRED');
+  cursor=value.completed;
+ }
+ throw Error('COMMERCIAL_WORKSPACE_SETUP_INCOMPLETE');
+}
+function initialize(){
+ if(!startupController)startupController=createAdminStartup({
+  loadSession:()=>api('bootstrap',undefined,{timeoutMs:12000}),
+  acceptSession:async data=>{if(!data||Object.keys(data).length!==2||data.schema!=='admin_bootstrap_v1'||typeof data.csrf!=='string'||!(commercialWorkspace?/^[A-Za-z0-9_-]{43}$/.test(data.csrf):/^[a-f0-9]{64}$/.test(data.csrf)))throw Error('ADMIN_SESSION_RESPONSE_INVALID');csrf=data.csrf;if(commercialWorkspace)await prepareCommercialWorkspaceUi();},
+  startPrimary:startOverview,startSecondary:startSecondaryPanels,onState:startupFeedback,canRetry:()=>!document.hidden,
+  onPrimaryFailure:()=>{notice(globalThis.brazaMonthDashboard?'Não foi possível abrir o resumo. Use Atualizar mês para tentar novamente.':'Não foi possível carregar os recursos do painel. Use Tentar novamente para recarregar a página.');const retry=el('startupRetry'),recovery=retry?.closest?.('.startup-recovery');if(recovery)recovery.hidden=false;if(retry){retry.hidden=false;retry.disabled=false;}},
+  onSecondaryFailure:()=>{}
+ });
+ if(startupController.getState().ready)return startOverview();
+ return startupController.start();
+}
+async function save(values,margins){try{state=await api('settings',{revision:state.revision,values});applySettings(margins,!margins);notice('Configuração salva.');await loadAudit();await pollLive();}catch(error){notice(error.message);}}
+el('productionCostsForm').onsubmit=event=>{event.preventDefault();saveProductionCosts();};el('costMode').onchange=productionCostsChanged;for(const id of ['costInclusiveRegular','costInclusivePlus','costBaseRegular','costBasePlus'])el(id).oninput=productionCostsChanged;el('addCostComponent').onclick=()=>{if(el('costComponents').children.length>=20)return;appendCostComponent();productionCostsChanged();};el('addCustomCostProfile').onclick=()=>{if(el('customCostProfiles').children.length>=100)return;customCostSettingsEnabled=true;appendCustomCostProfile();productionCostsChanged();};el('assignCustomCost').onclick=assignCustomCost;el('loadProductionCosts').onclick=loadProductionCosts;el('reviewProductionCosts').onclick=()=>{if(!productionCostsConflict)return;preserveLatestCustomCosts(productionCostsConflict.values);productionCostsState=productionCostsConflict;productionCostsConflict=null;productionCostsBlocked=false;el('costsNotice').hidden=false;el('costsNotice').textContent='Versão atual revisada. Confira os rascunhos preservados antes de salvar.';el('costsStatus').textContent='Seus rascunhos serão salvos sobre a versão '+productionCostsState.revision+'. Custos e associações adicionados em outra sessão foram preservados; confira a lista.';updateProductionCostsPreview();if(bindingState)renderVariantCards();};
+el('settings').onsubmit=event=>{event.preventDefault();try{if(!state)throw Error('Recarregue a página primeiro.');save({...state.values,regular_cents:amount('regular'),mixed_cents:amount('mixed'),plus_cents:amount('plus'),ad_share_percent:Number(el('share').value)},true);}catch(error){notice(error.message);}};
+el('controls').onsubmit=event=>{event.preventDefault();try{if(!state)throw Error('Recarregue a página primeiro.');save({...state.values,hermes_mode:el('operation').value,daily_hour:Number(el('hour').value),monthly_budget_cents:el('billing').value==='subscription'?state.values.monthly_budget_cents:amount('budget'),run_reserve_cents:el('billing').value==='subscription'?state.values.run_reserve_cents:amount('reserve'),billing_mode:el('billing').value,monthly_run_limit:Number(el('runLimit').value)},false);}catch(error){notice(error.message);}};
+el('run').onclick=async()=>{submitting=true;el('run').disabled=true;try{const job=await api('jobs',{});selectedJobId=job.id;notice('Análise adicionada à fila. Acompanhe o progresso abaixo.');}catch(error){notice(error.message);}finally{submitting=false;await pollLive();}};
+el('storePeriodStartButton').onclick=()=>runStorePeriod('start');el('storePeriodContinue').onclick=()=>runStorePeriod('step');el('storePeriodStop').onclick=()=>{storePeriodStopRequested=true;storeResultMessage='A coleta será pausada após a resposta em andamento.';renderStoreResult();};el('storePeriodRecalculate').onclick=refreshStoreResult;el('storeAdjustmentsForm').onsubmit=event=>{event.preventDefault();saveStoreAdjustments();};for(const id of ['storeAdjustmentsAds','storeAdjustmentsExpenses'])el(id).oninput=storeAdjustmentsChanged;el('storeAdjustmentsRecharge').onchange=storeAdjustmentsChanged;el('storeOtherExpensesAction').onclick=focusStoreOtherExpenses;el('storeNoOtherExpenses').onclick=saveStoreNoOtherExpenses;el('storeAdsSource').onchange=storeAdsSourceChanged;el('storeAdsRefresh').onclick=()=>refreshStoreAds();el('storeAdjustmentsAds').oninput=()=>{if(el('storeAdsSource').value==='MANUAL')storeManualAdsDraft=el('storeAdjustmentsAds').value;storeAdjustmentsChanged();};el('storeProductSearch').oninput=()=>{storeProductPage=1;renderStoreProductReport();};el('storeProductReturnsFilter').onchange=()=>{storeProductPage=1;renderStoreProductReport();};for(const id of ['storeProductSort','storeProductPageSize'])el(id).onchange=()=>{storeProductPage=1;renderStoreProductReport();};el('storeProductPrevious').onclick=()=>{storeProductPage--;renderStoreProductReport();};el('storeProductNext').onclick=()=>{storeProductPage++;renderStoreProductReport();};el('variantsSync').onclick=()=>syncKnownVariants();defaultStorePeriodDates();renderStoreResult();
+el('refresh').onclick=()=>Promise.all([loadSettings(),pollLive(),loadTodayAds(),loadShopOrders()]);el('itemsRefresh').onclick=()=>loadVariants({localOnly:true});const liveItems=el('itemsRefreshSource');if(liveItems)liveItems.onclick=()=>loadVariants({localOnly:false});const costHistory=el('productionCostsHistory');if(costHistory)costHistory.ontoggle=()=>{if(costHistory.open)loadProductionCostsAudit();};el('discardBindingDrafts').onclick=()=>{if(bindingSaving||itemsPromise)return;bindingDrafts.clear();notice('Rascunhos dos vínculos descartados. Os vínculos salvos foram preservados.');renderVariantCards();};el('saveObservation').onclick=saveObservation;el('observationsRefresh').onclick=()=>loadObservations(false,true);el('observationsMore').onclick=()=>loadObservations(true);el('bindingsForm').onsubmit=event=>{event.preventDefault();saveVariantBindings();};el('reviewBindingVersion').onclick=()=>{if(!bindingConflict)return;bindingState=bindingConflict;bindingConflict=null;bindingStale=false;bindingLoadFailed=false;el('bindingsNotice').hidden=false;el('bindingsNotice').textContent='Versão atual carregada. Confira os rascunhos preservados antes de salvar.';renderVariantCards();};el('billing').onchange=billingHelp;el('male').onchange=simulate;el('female').onchange=simulate;
+const productFilters=el('productFilters');if(productFilters)productFilters.open=!!(window.matchMedia&&window.matchMedia('(min-width: 760px)').matches);
+const storeProductFilters=el('storeProductReportFilters');if(storeProductFilters)storeProductFilters.open=!!(window.matchMedia&&window.matchMedia('(min-width: 760px)').matches);
+el('productSearch').oninput=()=>{productBrowserPage=1;renderVariantCards();};el('productSearch').onkeydown=event=>{if(event.key==='Enter')event.preventDefault();};for(const id of ['productStatusFilter','productTypeFilter','productSort','productPageSize'])el(id).onchange=()=>{productBrowserPage=1;renderVariantCards();};el('productPrevious').onclick=()=>{if(productBrowserPage>1){productBrowserPage--;renderVariantCards();el('variantCards').scrollIntoView({block:'start'});}};el('productNext').onclick=()=>{if(!el('productNext').disabled){productBrowserPage++;renderVariantCards();el('variantCards').scrollIntoView({block:'start'});}};el('productClearFilters').onclick=resetProductBrowserFilters;
+function logoutWorkspace(event){
+ event.preventDefault();if(logoutPromise)return logoutPromise;
+ if(commercialWorkspace){logoutPromise=(async()=>{const confirmed=await globalThis.mlsCommercialWorkspace?.logout?.();if(confirmed)location.href='/account/login';return confirmed===true;})();return logoutPromise.finally(()=>{logoutPromise=null;});}
+ logoutPromise=(async()=>{
+  const controller=new AbortController();let timer=null;
+  try{
+   const deadline=new Promise((resolve,reject)=>{timer=setTimeout(()=>{controller.abort();reject(Error('LOGOUT_TIMEOUT'));},15000);});
+   const response=await Promise.race([fetch(commercialWorkspace?'/api/account/logout':'/admin/logout',{method:'POST',headers:{'X-CSRF-Token':csrf,...(commercialWorkspace?{'Content-Type':'application/json'}:{})},...(commercialWorkspace?{body:'{}'}:{}),credentials:'same-origin',redirect:'error',signal:controller.signal}),deadline]);
+   if(!response.ok){notice('Não foi possível sair. Atualize a página e tente novamente.');return false;}
+   try{startupController?.stop();globalThis.mlsAgentPeriod?.stop?.();settingsLoadGeneration++;csrf='';state=null;settingsControls(false);globalThis.brazaMonthDashboard?.stop();globalThis.brazaBankReconciliation?.stop();globalThis.brazaOrderOperations?.stop();globalThis.brazaWeeklyOperating?.stop();bankPeriodUnsubscribe?.();bankPeriodUnsubscribe=null;globalThis.brazaDayDashboard?.stop();globalThis.brazaPhysicalReturns?.stop();globalThis.brazaReturnManufacturingLinks?.stop();globalThis.brazaIncurredProduction?.stop();globalThis.brazaProductionWeeklyClosing?.stop();globalThis.brazaProductionCoverage?.stop();globalThis.brazaSavedCatalog?.stop();globalThis.brazaProductionCostPeriods?.stop();globalThis.brazaAutomationWorkspace?.stop();globalThis.brazaDtfWorkspace?.stop();globalThis.mlsAiSalesWorkspace?.stop();globalThis.mlsAgentLearning?.stop();clearTimeout(pollTimer);clearTimeout(storeAdsRefreshTimer);clearTimeout(shopOrdersRefreshTimer);}finally{if(commercialWorkspace)globalThis.mlsCommercialLifecycle?.logout?.();location.href=commercialWorkspace?'/account/login':'/login';}
+   return true;
+  }catch{notice('Não foi possível confirmar a saída. Verifique sua conexão e tente novamente.');return false;}
+  finally{if(timer!==null)clearTimeout(timer);logoutPromise=null;}
+ })();return logoutPromise;
+}
+el('logout').onsubmit=logoutWorkspace;
+function workspaceTabFromLocation(){try{const values=new URLSearchParams(globalThis.location?.search||'').getAll('tab');return values.length===1?values[0]:'overview';}catch{return 'overview';}}
+let workspaceNavigationEpoch=0,workspaceAnchorCleanup=null;
+function workspaceClearAnchor(){workspaceAnchorCleanup?.();workspaceAnchorCleanup=null;}
+function workspaceRouteContext(route){
+ try{const source=new URL(route||globalThis.location.href,globalThis.location.href),current=new URL(globalThis.location.href);if(source.origin!==current.origin||source.pathname!=='/admin')return {};const result={};for(const key of ['month','date','week_end']){const values=source.searchParams.getAll(key);if(values.length>1)return {};if(values.length===1)result[key]=values[0];}if(result.month&&!/^\d{4}-(0[1-9]|1[0-2])$/.test(result.month))return {};for(const key of ['date','week_end'])if(result[key]&&(!/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(result[key])||new Date(result[key]+'T12:00:00Z').toISOString().slice(0,10)!==result[key]))return {};if(result.date&&result.month&&result.date.slice(0,7)!==result.month)return {};return result;}catch{return {};}
+}
+function workspaceSelectLinkedDay(value,epoch,ready){
+ if(!value)return;let attempts=0;const apply=()=>{if(epoch!==workspaceNavigationEpoch||document.documentElement.dataset.activePanel!=='agent-finance')return;if(el('businessDayDate')&&!el('businessDayDate').disabled){void globalThis.brazaDayDashboard?.selectDate?.(value);return;}if(++attempts<160)setTimeout(apply,100);};Promise.resolve(ready).then(apply,()=>{});
+}
+function openTab(tab,{updateUrl=true,replaceUrl=false,hash='',focus=false,route=null}={}){
+ if(commercialWorkspace&&!commercialWorkspace.allowedTabs.includes(tab)){notice('Esta área exige outra permissão da empresa.');tab='overview';hash='';}
+ const navigationEpoch=++workspaceNavigationEpoch;workspaceClearAnchor();
+ const titles={'weekly-report':['Relatório semanal','Fabricação, resultado estimado e movimentação importada, com seus períodos e fontes.'],'order-operations':['Pedidos e operação','Acompanhe os pedidos, confirme as etapas internas e confira o status da plataforma.'],production:['Produção e DTF','Organize os pedidos, encontre as artes pelo SKU e monte seus lotes de impressão.'],overview:['Visão geral','Resultado, vendas e prioridades nas leituras salvas da loja.'],margins:['Custos e regras','Cadastre referências por tipo, tamanho e composição. Fabricação realizada fica em Produção.'],hermes:['Análises do Hermes','Peça uma análise e acompanhe o andamento, os limites e o histórico.'],products:['Produtos e variações','Consulte os produtos e seus custos. Revise somente as identificações pendentes.'],history:['Histórico e auditoria','Confira o que foi alterado e as versões salvas dos seus dados.'],roadmap:['Novidades e versão','Veja as entregas do sistema e os próximos passos.'],agents:['Central de agentes','Sua equipe digital, cada especialista com seu painel e dados validados.'],'agent-finance':['MLS Finance','Conciliação, Pending, repasses e despesas em um painel exclusivo.'],'agent-ads':['MLS Ads','Leitura de anúncios e oportunidades sem alterações comerciais.'],'agent-products':['MLS Products','Análise ABC, custos por variação e cenários de preço no mês selecionado.'],'agent-production':['Produção','Fabricação por data, referência das vendas e montagem DTF.'],'agent-returns':['Devoluções','Fila de casos, itens de origem, recebimento e inspeção.'],'agent-auditor':['MLS Auditor','Confiabilidade e divergências de evidência da operação.'],'agent-hermes':['MLS Hermes','Supervisão, prioridades e controles operacionais.']};
+ if(globalThis.mlsAiSalesWorkspace)titles['ai-sales']=['MLS AI Sales','Prepare campanhas, vídeos e propostas locais. Confira o desempenho antes de ampliar.'];
+ if(tab==='hermes')tab='agent-hermes';
+ if(!Object.hasOwn(titles,tab))tab='overview';
+ const routeContext=workspaceRouteContext(route);
+ if(updateUrl&&globalThis.location?.href){try{const target=new URL(globalThis.location.href),method=replaceUrl?'replaceState':'pushState';target.pathname='/admin';target.searchParams.set('tab',tab);if(route){for(const key of ['month','date','week_end']){if(routeContext[key])target.searchParams.set(key,routeContext[key]);else if(key!=='month'&&routeContext.month)target.searchParams.delete(key);}}target.hash=hash;if(target.href!==globalThis.location.href)globalThis.history?.[method]?.({tab},'',target.pathname+target.search+target.hash);}catch{}}
+ const periodReady=routeContext.month&&(route||!updateUrl)?globalThis.mlsAgentPeriod?.syncLocation?.(new URL(globalThis.location.href)):null;
+ if(['margins','hermes','agent-hermes'].includes(tab)&&csrf&&!state)void loadSettings();
+ if(tab==='products'){if(csrf)loadObservations();if(globalThis.brazaSavedCatalog)globalThis.brazaSavedCatalog.refresh();else syncOnProductsOpen();}
+ document.querySelectorAll('.workspace > section').forEach(section=>section.hidden=section.id!==tab);
+ const activeNavigation=({'weekly-report':'reports','order-operations':'orders',production:'production','agent-production':'production','agent-returns':'returns','agent-finance':'finance',margins:'products','agent-products':'products','agent-ads':'ads','agent-auditor':'agents','agent-hermes':'hermes'})[tab]||tab;
+ document.querySelectorAll('[data-tab],[data-workspace-key]').forEach(link=>{const selected=link.dataset.workspaceKey?link.dataset.workspaceKey===activeNavigation:link.dataset.tab===tab;link.classList.toggle('active',selected);if(selected)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');});
+ workspaceSyncContextNavigation(hash);
+ document.querySelectorAll('.workspace-more').forEach(menu=>{menu.dataset.active=String(!!menu.querySelector('[aria-current="page"]'));menu.open=false;});
+ el('pageTitle').textContent=titles[tab][0];el('pageSubtitle').textContent=titles[tab][1];if(el('workspaceBreadcrumbCurrent'))el('workspaceBreadcrumbCurrent').textContent=({'agent-finance':'Financeiro','agent-ads':'Anúncios','agent-products':'Produtos','agent-production':'Produção','agent-returns':'Devoluções','agent-auditor':'Auditoria','agent-hermes':'Hermes'})[tab]||titles[tab][0];document.documentElement.dataset.activePanel=tab;globalThis.mlsAgentPeriod?.setPanel?.(tab);const sharedPeriod=el('mlsAgentPeriod'),periodHeader=el(tab)?.querySelector?.('.mission-hero');if(sharedPeriod&&periodHeader&&sharedPeriod.parentElement!==periodHeader)periodHeader.append(sharedPeriod);if(tab==='weekly-report')globalThis.brazaWeeklyOperating?.open?.();else globalThis.brazaWeeklyOperating?.setVisible?.(false);if(tab==='order-operations')globalThis.brazaOrderOperations?.open?.();else globalThis.brazaOrderOperations?.hide?.();if(tab==='production')globalThis.brazaDtfWorkspace?.open?.();if(tab==='agent-production')globalThis.brazaProductionWorkspace?.open?.({fragment:hash||(!updateUrl?globalThis.location?.hash:'')||'',...(routeContext.week_end?{context:{month:routeContext.month||routeContext.week_end.slice(0,7),week_end:routeContext.week_end}}:{})});if(tab==='ai-sales')globalThis.mlsAiSalesWorkspace?.open?.();if(tab==='agent-finance')globalThis.brazaBankReconciliation?.open?.();
+ if(tab==='agent-finance'&&routeContext.date)workspaceSelectLinkedDay(routeContext.date,navigationEpoch,periodReady);
+ if(focus&&!hash){let heading=el('pageTitle');if(typeof heading?.checkVisibility==='function'&&!heading.checkVisibility({checkVisibilityCSS:true}))heading=el(tab)?.querySelector?.('h1,h2')||el(tab)||heading;heading?.setAttribute?.('tabindex','-1');heading?.focus?.({preventScroll:true});globalThis.scrollTo?.({top:0,left:0,behavior:'instant'});globalThis.requestAnimationFrame?.(()=>{if(navigationEpoch===workspaceNavigationEpoch)globalThis.scrollTo?.({top:0,left:0,behavior:'instant'});});}
+}
+function workspaceSyncContextNavigation(hash=''){
+ for(const nav of document.querySelectorAll('.mission-page-tabs')){const links=[...nav.querySelectorAll('a')];const selected=hash?links.find(link=>link.getAttribute('href')===hash):links[0];for(const link of links){if(link===selected)link.setAttribute('aria-current','location');else link.removeAttribute('aria-current');}}
+}
+// Keep a freshly opened hash attached while cached panels mount above it.
+// The first user gesture or another navigation cancels this bounded alignment.
+function workspaceStabilizeAnchor(target){
+ workspaceClearAnchor();
+ if(typeof globalThis.ResizeObserver!=='function'||typeof globalThis.requestAnimationFrame!=='function')return;
+ const root=target.closest?.('.workspace');if(!root)return;
+ const hash='#'+target.id,inputs=['wheel','touchstart','pointerdown','keydown'];let frame=null,timer=null,stopped=false,observer;
+ const stop=()=>{if(stopped)return;stopped=true;observer?.disconnect();if(frame!==null)globalThis.cancelAnimationFrame?.(frame);if(timer!==null)clearTimeout(timer);for(const type of inputs)globalThis.removeEventListener?.(type,stop,true);};
+ const align=()=>{frame=null;if(stopped)return;if(globalThis.location?.hash!==hash||target.isConnected===false){stop();return;}const offset=parseFloat(globalThis.getComputedStyle?.(target)?.scrollMarginTop)||160;if(Math.abs(target.getBoundingClientRect().top-offset)>1)target.scrollIntoView?.({block:'start',behavior:'instant'});};
+ observer=new globalThis.ResizeObserver(()=>{if(!stopped&&frame===null)frame=globalThis.requestAnimationFrame(align);});
+ observer.observe(root);observer.observe(target);timer=setTimeout(stop,5000);for(const type of inputs)globalThis.addEventListener?.(type,stop,{capture:true,passive:true});workspaceAnchorCleanup=stop;
+}
+// Resolve fragment links across workspaces before scrolling. Hidden sections and
+// collapsed details must not make an apparently valid link appear unresponsive.
+function workspaceOpenFragment(hash,{focus=false,updateUrl=false,activate=true}={}){
+ if(typeof hash!=='string'||!/^#[a-zA-Z][a-zA-Z0-9_-]{0,90}$/.test(hash))return false;
+ const target=document.getElementById?.(hash.slice(1));if(!target)return false;
+ const panel=target.closest?.('.workspace > section');
+ if(panel?.id&&activate){
+  let canonical=false;try{const current=new URLSearchParams(globalThis.location?.search||'').get('tab');canonical=current!==panel.id;}catch{}
+  openTab(panel.id,{updateUrl:updateUrl||canonical,replaceUrl:canonical&&!updateUrl,hash,focus:false});
+ }
+ else if(updateUrl&&globalThis.history?.pushState&&globalThis.location?.href){try{const next=new URL(globalThis.location.href);next.hash=hash;if(next.href!==globalThis.location.href)globalThis.history.pushState({tab:document.documentElement.dataset.activePanel},'',next.pathname+next.search+next.hash);}catch{}}
+ for(let parent=target;parent;parent=parent.parentElement){if(parent.tagName==='DETAILS'&&!parent.hidden)parent.open=true;}
+ workspaceSyncContextNavigation(hash);
+ // Empty optional data blocks stay hidden; their visible parent explains the
+ // unavailable source instead of leaving the user focused on invisible content.
+ let destination=target;while(destination.parentElement&&typeof destination.checkVisibility==='function'&&!destination.checkVisibility({checkVisibilityCSS:true}))destination=destination.parentElement;
+ if(focus){destination.setAttribute?.('tabindex','-1');destination.focus?.({preventScroll:true});}
+ destination.scrollIntoView?.({block:'start',behavior:'instant'});workspaceStabilizeAnchor(destination);return true;
+}
+
+
+// Mission Control V3.5: navigation-only command search. It never queries live
+// products or orders, never opens unauthorized workspaces, and never calls APIs.
+const missionSearchRoutes=Object.freeze([
+ ...(globalThis.mlsAiSalesWorkspace?[{key:'ai-sales',title:'MLS AI Sales',group:'Ferramentas',description:'Campanhas, vídeos locais, afiliados e desempenho',terms:'studio video criador afiliado tiktok campanha ia',panel:'ai-sales'}]:[]),
+ {key:'overview',title:'Visão Geral',group:'Painéis',description:'Resultados e prioridades da loja',terms:'central comando lucro vendas hoje indicadores',panel:'overview'},
+ {key:'agents',title:'Central de Agentes',group:'Painéis',description:'Sete especialidades e Hermes',terms:'equipe especialistas status',panel:'agents'},
+ {key:'agent-finance',title:'MLS Finance',group:'Agentes',description:'Conciliação, Pending e repasses',terms:'financeiro lucro pagamentos recebimentos receita',panel:'agent-finance'},
+ {key:'agent-ads',title:'MLS Ads',group:'Agentes',description:'Investimento e histórico de anúncios',terms:'publicidade roas gastos campanhas',panel:'agent-ads'},
+ {key:'agent-products',title:'MLS Products',group:'Agentes',description:'Catálogo e cobertura de custos',terms:'produtos ativos cadastrados indexados',panel:'agent-products'},
+ {key:'weekly-report',title:'Relatório semanal',group:'Financeiro',description:'Fabricação, resultado estimado e movimentação importada por semana',terms:'semana relatório fechamento lucro fabricação gasto sexta feira',panel:'weekly-report'},
+ {key:'order-operations',title:'Pedidos e operação',group:'Operação',description:'Separação, produção, acabamento e status de envio',terms:'pedidos plataformas shopee separação produção embalagem enviado',panel:'order-operations'},
+ {key:'agent-production',title:'MLS Production',group:'Agentes',description:'Fila DTF e produção',terms:'pedidos impressao ordens arte fabrica',panel:'agent-production'},
+ {key:'agent-returns',title:'MLS Returns',group:'Agentes',description:'Devoluções, status e reembolsos',terms:'devolucao retorno reembolso disputa pos venda',panel:'agent-returns'},
+ {key:'agent-auditor',title:'MLS Auditor',group:'Agentes',description:'Auditorias e conflitos de evidência',terms:'logs seguranca alertas compliance',panel:'agent-auditor'},
+ {key:'agent-hermes',title:'MLS Hermes · Supervisor',group:'Agentes',description:'Prioridades e supervisão dos agentes',terms:'assistente inteligência artificial automacao supervisor',panel:'agent-hermes'},
+ {key:'products',title:'Catálogo de produtos',group:'Ferramentas',description:'Produtos cadastrados e variações',terms:'consultar sku pesquisar nome variacao shopee',panel:'products'},
+ {key:'production',title:'Montador e fila DTF',group:'Ferramentas',description:'Pedidos, artes e lotes de impressão',terms:'produção impressão dtf ordem trabalho',panel:'production'},
+ {key:'margins',title:'Custos de produção',group:'Ferramentas',description:'Custos, composições e precificação',terms:'margem regras lucro calculo custo',panel:'margins'},
+ {key:'hermes',title:'Análises do Hermes',group:'Ferramentas',description:'Análises e histórico de solicitações',terms:'supervisor comando ai',panel:'agent-hermes',hash:'missionHermesConsole'},
+ {key:'history',title:'Histórico e auditoria',group:'Ferramentas',description:'Alterações e versões salvas',terms:'registros auditor versoes',panel:'history'},
+ {key:'roadmap',title:'Plano de evolução',group:'Ferramentas',description:'Próximas fases do projeto',terms:'roadmap etapas recursos',panel:'roadmap'},
+ {key:'pending',title:'Pending financeiro',group:'Financeiro',description:'Saldo pendente e análise por pedido',terms:'a receber escrow saldo repasse',panel:'agent-finance',hash:'commandPendingIncomeDetails'},
+ {key:'original-return-items',title:'Itens e quantidades das devoluções',group:'Operação física',description:'Itens salvos do pedido e da solicitação, separados das peças recebidas',terms:'itens originais quantidades origem unidades pedido devolucao kit solicitação',panel:'agent-returns',hash:'physicalReturnsOriginalItems'},
+ {key:'physical-receiving',title:'Receber e inspecionar devoluções',group:'Operação física',description:'Chegadas, quantidades declaradas e condição das peças',terms:'recebimento receber inspeção inspecionar retorno pacote quarentena reparo avaria',panel:'agent-returns',hash:'physicalReturnsDetails'},
+ {key:'m3-product-intelligence',title:'Análise de produtos e preços',group:'Produtos · M3',description:'Curva ABC, custos por variação e cenários matemáticos de preço',terms:'m3 pricing preco preço minimo alvo abc ranking margem produto variacao simular',panel:'agent-products',hash:'businessMonthPricingObserver'},
+ {key:'production-coverage',title:'Conferir fabricação do período',group:'Operação física',description:'Confirmar lotes completos ou ausência de fabricação nos intervalos da semana',terms:'conferir fabricação cobertura fechar dia semana sexta 13h sem produção completo',panel:'agent-production',hash:'productionCoverageDetails'},
+ {key:'incurred-production',title:'Produção realizada',group:'Operação física',description:'Fabricação declarada e custo histórico por semana e mês',terms:'produção realizada fabricacao lote historico semanal mensal custo incorrido',panel:'agent-production',hash:'incurredProductionDetails'},
+ {key:'return-manufacturing-link',title:'Vínculo da devolução com a produção',group:'Operação física',description:'Associar origem e quantidade à fabricação compatível',terms:'associar vinculo origem fabricação devolucao desvincular',panel:'agent-returns',hash:'returnManufacturingLinksDetails'},
+ {key:'app-release',title:'Novidades desta versão',group:'Ferramentas',description:'Recursos disponíveis e próximos passos',terms:'novidades atualização atualizacoes versao release mudanças changelog',panel:'roadmap',hash:'appReleaseNotes'},
+ {key:'bank-reconciliation',title:'Banco e transferências',group:'Financeiro',description:'Importar arquivos, revisar sugestões e confirmar vínculos',terms:'extrato nubank csv ofx transferência banco importar conciliar recebimento',panel:'agent-finance',hash:'bankReconciliation'},
+ {key:'reconciliation',title:'Conciliação de devoluções',group:'Financeiro',description:'Revisar ajustes, reembolsos e diferenças',terms:'pedido retorno estorno refunds',panel:'agent-finance',hash:'businessReconciliation'},
+ {key:'escrow',title:'Liberações da Shopee',group:'Financeiro',description:'Calendário e conferência de repasses',terms:'escrow liberacoes payout status',panel:'agent-finance',hash:'businessEscrowReleases'},
+ {key:'ads-main',title:'Painel de Anúncios',group:'Ferramentas',description:'Resultados de Ads e ROAS',terms:'performance advertising product ads',href:'/dashboard'},
+ {key:'campaigns',title:'Campanhas',group:'Ferramentas',description:'Campanhas e GMV Max',terms:'shopee anuncios ads criativos',href:'/campaigns'},
+ {key:'automation',title:'Oportunidades e Automação',group:'Ferramentas',description:'Recomendações e metas',terms:'optimization oportunidades campanha',href:'/optimization'},
+ {key:'integrations',title:'Conexões Shopee',group:'Ferramentas',description:'Status e integrações',terms:'autorizacao oauth conectar finance',href:'/integrations'},
+ {key:'diagnostics',title:'Diagnóstico do sistema',group:'Ferramentas',description:'Verificações administrativas',terms:'erro carregamento diagnosticar fonte',href:'/admin/diagnostics'}
+].map(item=>Object.freeze(item)));
+(function installMissionSearch(){
+ const overlay=el('missionGlobalSearch'),openButton=el('missionSearchOpen'),
+  closeButton=el('missionSearchClose'),input=el('missionSearchInput'),results=el('missionSearchResults');
+ const v36Preview=overlay?.dataset?.mlsV36Preview==='enabled';
+ const normalize=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-BR');
+ const byKey=new Map(missionSearchRoutes.map(item=>[item.key,item]));
+ const scopeButtons=typeof overlay?.querySelectorAll==='function'?[...overlay.querySelectorAll('[data-mission-scope]')]:[],execute=el('missionSearchExecute'),
+  more=el('missionSearchMore'),pageInfo=el('missionSearchPageInfo'),scopeLabel=el('missionSearchScope');
+ let selected=[],active=0,restoreFocus=null,mode='navigation',lookupEpoch=0,busy=false,
+  currentQuery='',currentOffset=0,moreAvailable=false;
+ if(!overlay||!openButton||!closeButton||!input||!results||!execute||!more||!pageInfo||!scopeLabel||typeof overlay.addEventListener!=='function'||typeof results.addEventListener!=='function'||typeof input.addEventListener!=='function'||typeof document.addEventListener!=='function')return;
+ function hide({focus=true}={}){
+  if(overlay.hidden)return;
+  ++lookupEpoch;overlay.hidden=true;
+  document.documentElement.dataset.missionSearch='closed';
+  if(focus&&restoreFocus?.focus)restoreFocus.focus();
+ }
+ function render(){
+  if(mode!=='navigation'){
+   selected=[];active=0;results.replaceChildren();pageInfo.textContent='';
+   more.hidden=true;moreAvailable=false;execute.disabled=busy||input.value.trim().length<2;
+   const empty=document.createElement('p');empty.className='mission-search-empty';
+   empty.textContent=input.value.trim().length<2?'Digite pelo menos 2 caracteres.':'Pressione Enter ou Pesquisar para consultar este escopo.';
+   results.append(empty);
+   scopeLabel.textContent=mode==='products'?'Busca no catálogo persistido e paginado, não consulta diretamente a Shopee.':
+    'Somente pedidos já presentes na fila DTF salva; não inclui o histórico completo da Shopee.';
+   return;
+  }
+  const query=normalize(input.value.trim());
+  const rawQuery=input.value.trim();
+  const terms=query.split(/\s+/).filter(Boolean);
+  selected=missionSearchRoutes.filter(item=>{
+   if(!terms.length)return true;
+   const hay=normalize(item.title+' '+item.description+' '+item.terms+' '+item.group);
+   return terms.every(term=>hay.includes(term));
+  }).sort((a,b)=>{
+   const score=item=>normalize(item.title).startsWith(query)?0:normalize(item.title).includes(query)?1:2;
+   return score(a)-score(b);
+  }).slice(0,10);
+  if(v36Preview&&rawQuery.length>=2&&rawQuery.length<=90){
+   selected.unshift({key:'product-query',title:'Buscar "'+rawQuery+'" no catálogo',group:'Pesquisa real',description:'Consultar produtos salvos e suas variações · até 20 por página',panel:'products',catalogQuery:rawQuery});
+   selected=selected.slice(0,10);
+  }
+  active=0;results.replaceChildren();
+  for(const [index,item] of selected.entries()){
+   const link=document.createElement('a');
+   link.className='mission-search-result';
+   link.href=item.href||'/admin?tab='+item.panel+(item.hash?'#'+item.hash:'');
+   link.dataset.searchRoute=item.key;
+   link.dataset.active=String(index===active);
+   const copy=document.createElement('span'),name=document.createElement('strong'),description=document.createElement('small'),kind=document.createElement('em');
+   name.textContent=item.title;description.textContent=item.description;kind.textContent=item.group;
+   copy.append(name,description);link.append(copy,kind);results.append(link);
+  }
+  if(!selected.length){
+   const empty=document.createElement('p');empty.className='mission-search-empty';
+   empty.textContent='Nenhum painel ou ferramenta corresponde a essa busca. Produtos e pedidos individuais são pesquisados em seus próprios módulos.';
+   results.append(empty);
+  }
+  const scope=el('missionSearchScope');
+  if(scope)scope.textContent=!v36Preview?'Pesquise painéis, agentes e ferramentas.':rawQuery.length>=2?'Busque no catálogo salvo após confirmação, ou escolha um painel. Pedidos não são consultados automaticamente.':'Selecione um escopo: Painéis, Produtos salvos ou Pedidos na fila DTF.';
+ }
+
+ function showRecords(items,total,offset,hasMore,source){
+  selected=items;active=0;currentOffset=offset;moreAvailable=hasMore;
+  results.replaceChildren();
+  for(const [index,item] of selected.entries()){
+   const link=document.createElement('a');link.className='mission-search-result';
+   link.dataset.searchRoute=item.key;link.dataset.active=String(index===active);
+   link.dataset.type=item.type;
+   link.href='/admin?tab='+item.panel;
+   const copy=document.createElement('span'),title=document.createElement('strong'),
+    description=document.createElement('small'),kind=document.createElement('em');
+   title.textContent=item.title;description.textContent=item.description;kind.textContent=item.group;
+   copy.append(title,description);link.append(copy,kind);results.append(link);
+  }
+  if(!items.length){
+   const empty=document.createElement('p');empty.className='mission-search-empty';
+   empty.textContent='Nenhum registro corresponde à consulta neste escopo.';
+   results.append(empty);
+  }
+  const first=total?offset+1:0,through=Math.min(total,offset+items.length);
+  pageInfo.textContent=first+'–'+through+' de '+total+' resultado(s) disponíveis';
+  more.hidden=!hasMore;more.disabled=false;
+  scopeLabel.textContent=source;
+ }
+ async function searchRecords(offset=0){
+  if(!v36Preview||mode==='navigation'||busy)return;
+  const query=input.value.trim(),sourceMode=mode;
+  if(query.length<2||query.length>90||/[\u0000-\u001f\u007f]/.test(query))return;
+  const requestId=++lookupEpoch;
+  selected=[];active=0;currentQuery='';moreAvailable=false;more.hidden=true;
+  busy=true;execute.disabled=true;more.disabled=true;
+  results.replaceChildren();
+  const loading=document.createElement('p');loading.className='mission-search-empty';
+  loading.textContent=sourceMode==='products'?'Pesquisando no catálogo salvo…':'Conferindo pedidos presentes na fila DTF…';
+  results.append(loading);
+  try{
+   let items=[],total=0,hasMore=false,source='';
+   if(sourceMode==='products'){
+    if(!csrf)throw Error('SESSION_NOT_READY');
+    const queryString=new URLSearchParams({limit:'8',offset:String(offset),search:query,item_status:'ACTIVE'}).toString();
+    const raw=await api('product-registry?'+queryString,undefined,{timeoutMs:15000});
+    const page=raw?.pagination,products=raw?.products;
+    const validId=value=>typeof value==='string'&&/^[1-9]\d{0,19}$/.test(value);
+    const validName=value=>value===null||typeof value==='string'&&value.length<=1024&&!/[\u0000-\u001f\u007f-\u009f]/.test(value);
+    if(raw?.schema!=='product_registry_v1'||!page||page.limit!==8||page.offset!==offset||
+      !Number.isSafeInteger(page.total)||page.total<0||page.total>10000000||
+      typeof page.more!=='boolean'||page.more!==(offset+8<page.total)||
+      !Array.isArray(products)||products.length>8||products.length!==Math.max(0,Math.min(8,page.total-offset))||
+      !products.every(row=>row&&validId(row.item_id)&&validName(row.product_name)&&
+       ['NORMAL','UNLIST','BANNED','REVIEWING','UNKNOWN'].includes(row.item_status)))
+      throw Error('INVALID_RESPONSE');
+    const frame=raw;
+    total=frame.pagination.total;hasMore=frame.pagination.more;
+    const labels={NORMAL:'Normal',UNLIST:'Não listado',BANNED:'Suspenso',REVIEWING:'Em revisão',UNKNOWN:'A conferir'};
+    items=frame.products.map(row=>({key:'product:'+row.item_id,type:'product',productId:row.item_id,
+     panel:'products',title:row.product_name||'Produto #'+row.item_id,
+     description:'Produto #'+row.item_id+' · '+(labels[row.item_status]||'Cadastro salvo'),group:'Produto salvo'}));
+    source=frame.discovery.complete?'Catálogo indexado · fonte salva, não estoque disponível.':
+     'Indexação do catálogo ainda em andamento; produtos não identificados podem estar ausentes.';
+   }else{
+    const frame=globalThis.brazaDtfWorkspace?.searchLines?.(query,offset);
+    if(!frame){
+     if(requestId===lookupEpoch){results.replaceChildren();const empty=document.createElement('p');empty.className='mission-search-empty';
+      empty.textContent='Fila DTF ainda não carregada. Abra Produção para consultar os pedidos registrados no módulo.';
+      results.append(empty);scopeLabel.textContent='Ausência de fila carregada não significa que o pedido não existe.';}
+     return;
+    }
+    if(frame.schema!=='mls_saved_dtf_search_v1'||frame.offset!==offset||frame.limit!==8||
+      !Number.isSafeInteger(frame.total)||frame.total<0||!Array.isArray(frame.rows)||frame.rows.length>8||
+      typeof frame.more!=='boolean')throw Error('INVALID_QUEUE');
+    total=frame.total;hasMore=frame.more;
+    const labels={PENDING:'Pendente',RESERVED:'Reservada',PRODUCED:'Produzida',BLOCKED:'Bloqueada'};
+    items=frame.rows.map((row,index)=>({key:'dtf:'+offset+':'+index,type:'dtf',
+     orderId:row.order_id,panel:'production',title:'Pedido '+row.order_id,
+     description:'SKU '+(row.sku||'não informado')+' · '+(labels[row.production_state]||'Em conferência')+
+      ' · '+String(row.quantity)+' unidade(s)',group:'Fila DTF'}));
+    source='Apenas linhas da fila DTF salva, não o histórico completo de pedidos da Shopee.';
+   }
+   if(requestId!==lookupEpoch||overlay.hidden||mode!==sourceMode||input.value.trim()!==query)return;
+   currentQuery=query;
+   showRecords(items,total,offset,hasMore,source);
+  }catch(error){
+   if(requestId!==lookupEpoch||overlay.hidden||mode!==sourceMode)return;
+   results.replaceChildren();const empty=document.createElement('p');empty.className='mission-search-empty';
+   const kind=error?.status===401||error?.code==='UNAUTHORIZED'?'SESSION':error?.message==='INVALID_RESPONSE'?'INVALID_PAGE':
+    error?.code==='ADMIN_API_NETWORK_ERROR'?'NETWORK':error?.code==='ADMIN_API_TIMEOUT'?'TIMEOUT':
+    error?.code==='ADMIN_API_RESPONSE_INVALID'?'CLIENT_CONTRACT':error?.code==='ADMIN_API_HTTP_ERROR'?'SERVER':
+    error instanceof ReferenceError?'RUNTIME':'UNAVAILABLE';
+   empty.dataset.searchFailure=kind;
+   empty.textContent=error?.status===401||error?.code==='UNAUTHORIZED'?'Sessão administrativa expirada. Entre novamente neste navegador.':
+    error?.message==='INVALID_RESPONSE'?'A página retornada pelo catálogo não passou na validação. O cadastro foi preservado.':
+    error?.code==='ADMIN_API_NETWORK_ERROR'?'A conexão com o catálogo salvo falhou. Confira sua rede e tente novamente.':
+    error?.code==='ADMIN_API_TIMEOUT'?'O catálogo salvo demorou demais para responder. Tente novamente.':
+    'Consulta indisponível. O cadastro salvo foi preservado; tente novamente ou abra o módulo especializado.';
+   results.append(empty);pageInfo.textContent='';more.hidden=true;
+  }finally{
+   if(requestId===lookupEpoch){busy=false;execute.disabled=input.value.trim().length<2;more.disabled=false;}
+  }
+ }
+ function setScope(next){
+  if(!['navigation','products','dtf'].includes(next)||!v36Preview&&next!=='navigation')return;
+  ++lookupEpoch;busy=false;mode=next;currentQuery='';currentOffset=0;
+  input.value='';execute.hidden=next==='navigation';
+  input.placeholder=next==='navigation'?'Buscar painéis, agentes e ferramentas…':
+   next==='products'?'Pesquisar produto por nome ou código…':'Pesquisar pedido, SKU ou item na fila DTF…';
+  for(const button of scopeButtons)button.setAttribute('aria-pressed',String(button.dataset.missionScope===next));
+  render();input.focus();
+ }
+
+ function move(amount){
+  if(!selected.length)return;
+  active=(active+amount+selected.length)%selected.length;
+  for(const [index,link] of [...results.querySelectorAll('[data-search-route]')].entries())link.dataset.active=String(index===active);
+  results.querySelectorAll('[data-search-route]')[active]?.scrollIntoView?.({block:'nearest'});
+ }
+ function choose(item){
+  if(!item)return;
+  hide();
+  if(item.type==='product'){
+   openTab('products');
+   Promise.resolve().then(()=>globalThis.brazaSavedCatalog?.find?.(item.productId));
+   document.getElementById('savedCatalog')?.scrollIntoView?.({block:'start'});
+   return;
+  }
+  if(item.type==='dtf'){
+   openTab('production');
+   globalThis.brazaDtfWorkspace?.findLine?.(item.orderId);
+   document.getElementById('dtfSearch')?.scrollIntoView?.({block:'start'});
+   return;
+  }
+  if(item.panel){
+   if(typeof item.catalogQuery==='string'&&item.catalogQuery.length>=2&&item.catalogQuery.length<=90){
+    const search=document.getElementById('savedCatalogSearch');
+    if(search)search.value=item.catalogQuery;
+   }
+   openTab(item.panel,{updateUrl:!item.hash});
+   if(item.hash)workspaceOpenFragment('#'+item.hash,{focus:true,updateUrl:true});
+   else{globalThis.scrollTo?.(0,0);if(typeof item.catalogQuery==='string')document.getElementById('savedCatalogSearch')?.scrollIntoView?.({block:'center'});}
+   return;
+  }
+  if(typeof item.href==='string')globalThis.location.assign(item.href);
+ }
+ function show(){
+  if(!overlay.hidden)return;
+  restoreFocus=document.activeElement;
+  overlay.hidden=false;
+  document.documentElement.dataset.missionSearch='open';
+  setScope('navigation');
+ }
+ openButton.onclick=show;
+ closeButton.onclick=()=>hide();
+ overlay.addEventListener('click',event=>{if(event.target===overlay)hide();});
+ results.addEventListener('click',event=>{
+  const link=event.target?.closest?.('[data-search-route]');
+  if(!link||event.button>0||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;
+  const item=selected.find(value=>value.key===link.dataset.searchRoute);
+  if(!item)return;
+  if(item.panel){event.preventDefault();choose(item);}
+  else hide({focus:false});
+ });
+ for(const button of scopeButtons)button.onclick=()=>setScope(button.dataset.missionScope);
+ execute.onclick=()=>searchRecords(0);
+ more.onclick=()=>{if(moreAvailable&&input.value.trim()===currentQuery)searchRecords(currentOffset+8);};
+ input.addEventListener('input',()=>{++lookupEpoch;busy=false;render();});
+ input.addEventListener('keydown',event=>{
+  if(event.key==='ArrowDown'){event.preventDefault();move(1);}
+  else if(event.key==='ArrowUp'){event.preventDefault();move(-1);}
+  else if(event.key==='Enter'){event.preventDefault();mode==='navigation'?choose(selected[active]):searchRecords(0);}
+ });
+ overlay.addEventListener('keydown',event=>{
+  if(event.key==='Escape'){event.preventDefault();hide();return;}
+  if(event.key!=='Tab')return;
+  const controls=[...overlay.querySelectorAll('button:not([disabled]),input:not([disabled]),a[href]')].filter(node=>!node.hidden);
+  if(!controls.length)return;
+  if(event.shiftKey&&document.activeElement===controls[0]){event.preventDefault();controls.at(-1).focus();}
+  else if(!event.shiftKey&&document.activeElement===controls.at(-1)){event.preventDefault();controls[0].focus();}
+ });
+ document.addEventListener('keydown',event=>{
+  if(event.defaultPrevented)return;
+  const key=event.key.toLowerCase();
+  if(key==='k'&&(event.ctrlKey||event.metaKey)){event.preventDefault();overlay.hidden?show():hide();return;}
+  if(event.key==='Escape'&&!overlay.hidden){event.preventDefault();hide();return;}
+  if(key!=='/'||!overlay.hidden||event.ctrlKey||event.altKey||event.metaKey)return;
+  const target=event.target,tag=target?.tagName?.toLowerCase?.();
+  if(target?.isContentEditable||['input','select','textarea'].includes(tag))return;
+  event.preventDefault();show();
+ });
+ globalThis.mlsWorkspaceSearch=Object.freeze({open:show,close:()=>hide(),scope:setScope});
+})();
+
+document.querySelectorAll('[data-tab]').forEach(link=>link.onclick=event=>{if(event?.button>0||event?.metaKey||event?.ctrlKey||event?.shiftKey||event?.altKey)return;event?.preventDefault();openTab(link.dataset.tab,{focus:true});});
+const missionPanels=new Set(['weekly-report','order-operations','overview','agents','agent-finance','agent-ads','agent-products','agent-production','agent-returns','agent-auditor','agent-hermes','products','production','margins','hermes','history','roadmap','ai-sales']);
+if(typeof document.addEventListener==='function'){
+ document.addEventListener('click',event=>{
+  for(const menu of document.querySelectorAll('.workspace-more'))if(menu.open&&!menu.contains?.(event.target))menu.open=false;
+  if(event?.defaultPrevented||event?.button>0||event?.metaKey||event?.ctrlKey||event?.shiftKey||event?.altKey)return;
+  const link=event?.target?.closest?.('[data-mission-open],a[href]');
+  if(!link||link.target==='_blank'||link.hasAttribute?.('download'))return;
+  const href=link.getAttribute?.('href'),tab=link.dataset?.missionOpen;
+  if(missionPanels.has(tab)){event.preventDefault();openTab(tab,{focus:true});return;}
+  if(typeof href!=='string'||!globalThis.location?.href)return;
+  let target;try{target=new URL(href,globalThis.location.href);}catch{return;}
+  const current=new URL(globalThis.location.href);
+  if(target.origin!==current.origin||target.pathname!=='/admin')return;
+  const tabs=target.searchParams.getAll('tab'),destination=tabs.length===1?tabs[0]:document.documentElement.dataset.activePanel;
+  if(!missionPanels.has(destination)||destination==='ai-sales'&&!globalThis.mlsAiSalesWorkspace)return;
+  if(!target.hash){event.preventDefault();openTab(destination,{focus:true,route:target.href});return;}
+  if(!/^#[a-zA-Z][a-zA-Z0-9_-]{0,90}$/.test(target.hash))return;
+  const fragmentTarget=document.getElementById?.(target.hash.slice(1));if(!fragmentTarget)return;
+  const fragmentPanel=fragmentTarget.closest?.('.workspace > section')?.id;
+  const canonicalDestination=missionPanels.has(fragmentPanel)?fragmentPanel:destination;
+  event.preventDefault();openTab(canonicalDestination,{hash:target.hash,route:target.href});
+  if(document.documentElement.dataset.activePanel===canonicalDestination)workspaceOpenFragment(target.hash,{focus:true,activate:false});
+ });
+ document.addEventListener('keydown',event=>{if(event.key!=='Escape')return;for(const menu of document.querySelectorAll('.workspace-more'))if(menu.open){menu.open=false;menu.querySelector?.('summary')?.focus?.();event.preventDefault();}});
+}
+document.querySelectorAll('[data-open]').forEach(button=>button.onclick=()=>openTab(button.dataset.open,{focus:true}));
+if(globalThis.addEventListener){
+ globalThis.addEventListener('popstate',()=>{openTab(workspaceTabFromLocation(),{updateUrl:false});workspaceOpenFragment(globalThis.location?.hash,{activate:false});});
+ globalThis.addEventListener('hashchange',()=>workspaceOpenFragment(globalThis.location?.hash));
+}
+if(typeof createAgentPeriodController==='function'&&el('mlsAgentPeriod'))globalThis.mlsAgentPeriod=createAgentPeriodController();
+openTab(workspaceTabFromLocation(),{updateUrl:false});
+if(globalThis.location?.hash)Promise.resolve().then(()=>workspaceOpenFragment(globalThis.location.hash,{focus:true}));
+
+
+document.addEventListener('visibilitychange',()=>{if(document.hidden){clearTimeout(pollTimer);clearTimeout(shopOrdersRefreshTimer);shopOrdersRefreshTimer=null;clearTimeout(storeAdsRefreshTimer);storeAdsRefreshTimer=null;}else if(csrf){pollLive();loadShopOrders();refreshStoreAds({automatic:true});scheduleStoreAdsRefresh();}});
+setInterval(()=>{if(document.hidden)return;updateShopSnapshotAge();updateObservationCaptureState();for(const button of el('jobs').querySelectorAll('[data-job-id]')){const job=rows.find(row=>row.id===button.dataset.jobId);if(job)button.textContent=jobLabel(job);}const selected=rows.find(job=>job.id===selectedJobId);if(selected&&['queued','running'].includes(selected.status))selectedResult();},1000);
+if(commercialWorkspace)globalThis.mlsCommercialWorkspace?.register?.({
+ stop:()=>{startupController?.stop();settingsLoadGeneration++;productionCostsAuditGeneration++;observationSelectionSequence++;workspaceNavigationEpoch++;workspaceClearAnchor();bankPeriodUnsubscribe?.();bankPeriodUnsubscribe=null;clearTimeout(pollTimer);clearTimeout(storeAdsRefreshTimer);clearTimeout(shopOrdersRefreshTimer);},
+ clear:()=>{
+  csrf='';state=null;rows=[];selectedJobId=null;renderedReportKey=null;shopOrdersSnapshot=null;itemsData=null;todayAdsPromise=null;shopOrdersPromise=null;pollPromise=null;settingsPromise=null;itemsPromise=null;productionCostsPromise=null;observationsPromise=null;confirmedCostReferencesPromise=null;productionCostsAuditPromise=null;variantSyncPromise=null;productionCostsAuditLoadedRevision=null;storeAdjustmentRunId=null;activeBilling='unverified';bindingState=null;bindingConflict=null;productionCostsState=null;productionCostsConflict=null;confirmedCostReferencesState=null;storePeriodBundle=null;observationRows=[];observationsCursor=null;selectedObservationId=null;customCostAssignmentsDraft=[];storeManualAdsDraft='';storeResultMessage='';
+  for(const collection of [variantGroups,bindingDrafts,productUnitSelections,variantCatalogReviews,jobFinancialContexts,jobFinancialOpen,storeAdsAttempted,productDetailsOpen,productAdjustmentsOpen])collection.clear();
+  for(const control of document.querySelectorAll('input,textarea,select')){try{control.value='';if(control.type==='checkbox'||control.type==='radio')control.checked=false;}catch{}}
+ }
+});
+settingsControls(false);
+globalThis.brazaBankReconciliation?.prepare?.();globalThis.brazaOrderOperations?.prepare?.();globalThis.brazaWeeklyOperating?.prepare?.();
+globalThis.brazaDayDashboard?.prepare?.();
+globalThis.brazaMonthDashboard?.prepare?.({retry:initialize});
+const startupRetry=el('startupRetry');if(startupRetry)startupRetry.onclick=()=>globalThis.brazaMonthDashboard?initialize():globalThis.location?.reload?.();
+initialize();

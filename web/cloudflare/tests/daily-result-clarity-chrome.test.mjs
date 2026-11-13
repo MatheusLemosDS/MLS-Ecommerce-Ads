@@ -19,8 +19,10 @@ import {projectBusinessMonthVariantContributions} from '../src/business-variant-
 
 test('daily clarity preserves the exact KPI markup of the published baseline',()=>{
  const source='web/cloudflare/src/agent-registry-view.mjs',baseline=execFileSync('git',['show','96e16057dc5190917622510ffc1b2130ced47841:'+source],{cwd:new URL('../../../',import.meta.url),encoding:'utf8'}),current=readFileSync(new URL('../src/agent-registry-view.mjs',import.meta.url),'utf8');
- const metrics=(text,end)=>{const start=text.indexOf('<div class="command-center-metrics"'),finish=text.indexOf(end,start);assert.ok(start>=0&&finish>start);return text.slice(start,finish+6);};
- assert.equal(metrics(current,'</div><p class="command-center-note command-profit-note"'),metrics(baseline,'</div><details class="mls-kpi-context"'),'moving the explanatory notice cannot change the original KPI markup');
+ // The reference now places the explanatory notice in an inline source row.
+ // Compare the same complete metric container, independent of its next sibling.
+ const metrics=text=>{const start=text.indexOf('<div class="command-center-metrics"');assert.ok(start>=0);let depth=0;for(const tag of text.slice(start).matchAll(/<div\b[^>]*>|<\/div>/g)){depth+=tag[0].startsWith('</')?-1:1;if(depth===0)return text.slice(start,start+tag.index+tag[0].length);}assert.fail('the KPI container must have a matching closing div');};
+ assert.equal(metrics(current),metrics(baseline),'moving the explanatory notice cannot change the original KPI markup');
 });
 
 // All financial evidence below passes through the real Finance collector and
