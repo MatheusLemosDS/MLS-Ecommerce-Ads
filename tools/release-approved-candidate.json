@@ -1,11 +1,11 @@
 {
   "schema": "mls_release_candidate_v1",
   "base_commit": "0016c4b78d45c47066b259bbaf42578662e11e35",
-  "prepared_source_commit": "2bcd04f133f269e6a74741e662f7dbb1c7971e56",
+  "prepared_source_commit": "6eb2e621369826c9df5dc40b3a06fbf653c1840b",
   "owner_authorization": "OWNER_REQUESTED_V41_LIVE_2026_11_11",
   "commercial_writes_allowed": false,
   "expected_hashes": {
-    "app": "d6bf5928065cdb45ca82218e454f8ff2de0bd8a0f9a8d418cec896fc8f89858d",
+    "app": "2051c9bd83489bdfe542bc1bde3a57e5f8c636fffb985856c18d56b47e0f01fc",
     "auth": "ca7f08ad02993bf7d29d91ce95f689ab845775cbd0fec5c27549aaf261510d74",
     "finance": "ffbcea3b7ffe5c0a94b0d4d8c4908738e6da76386040995bba982060a5f9bb71"
   },
@@ -24,6 +24,7 @@
     "docs/v4/evidence/layout-reference-final-validation.json",
     "docs/v4/layout-reference-live-publication.json",
     "tools/release-approved-candidate.json",
+    "tools/tests/release-preflight.test.mjs",
     "tools/worker_project.mjs",
     "web/cloudflare/browser-assets-published/04ae3166780be18f31754212640b0887abe9e20830ac4309a6e31109398e4eeb.js",
     "web/cloudflare/browser-assets-published/0d6250f5888258fa29664eac45b2cd821d3872b1c96ac47dda46bd7fd10e6a0c.js",
@@ -52,6 +53,7 @@
     "web/cloudflare/src/mission-control.mjs",
     "web/cloudflare/src/mls-reference-panel-design.mjs",
     "web/cloudflare/src/mls-reference-shell-design.mjs",
+    "web/cloudflare/src/mls-verified-charts.mjs",
     "web/cloudflare/src/production-workspace-view.mjs",
     "web/cloudflare/src/workspace-navigation.mjs",
     "web/cloudflare/tests/agent-registry-observer.test.mjs",
@@ -62,11 +64,14 @@
     "web/cloudflare/tests/daily-result-clarity-chrome.test.mjs",
     "web/cloudflare/tests/fixtures/published-production-extraction-v1.js",
     "web/cloudflare/tests/mls-agent-workspace-layout.test.mjs",
+    "web/cloudflare/tests/mls-approved-all-panels-chrome.test.mjs",
     "web/cloudflare/tests/mls-approved-design-system.test.mjs",
     "web/cloudflare/tests/mls-layout-reference-parity.test.mjs",
     "web/cloudflare/tests/mls-overview-composition-chrome.test.mjs",
     "web/cloudflare/tests/mls-product-contribution-chrome.test.mjs",
     "web/cloudflare/tests/mls-product-workbench-chrome.test.mjs",
+    "web/cloudflare/tests/mls-variant-order-chrome.test.mjs",
+    "web/cloudflare/tests/mls-verified-charts.test.mjs",
     "workers/app/browser-assets-published.json"
   ]
 }
