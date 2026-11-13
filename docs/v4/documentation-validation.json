@@ -1,27 +1,30 @@
 {
   "schema": "mls_v41_documentation_validation_v1",
-  "checked_at": "2026-11-13T15:50:34.781Z",
+  "checked_at": "2026-11-13T16:19:33.842Z",
   "result": "PASSOU",
   "meaning": "Input bytes, exact requirement/chart preservation, independent evidence dimensions and cited artifact consistency. This does not run functional tests or validate the site.",
   "requirements": 233,
   "additional_requirements": 2,
   "chart_families": 22,
   "requirement_states": {
-    "IMPLEMENTADO_GATE_ANTERIOR_APROVADO_CI_ATUAL_PENDENTE": 210,
+    "CODIGO_PUBLICADO_VALIDADO_NA_CI": 211,
     "PARCIAL_DEPENDENCIA_EXTERNA": 16,
-    "PENDENTE_PUBLICACAO_E_CONFERENCIA": 6,
-    "VALIDADO_LOCALMENTE_PUBLICACAO_PENDENTE": 1
+    "PUBLICADO_COM_EVIDENCIAS_E_LIMITES": 6
   },
   "local_validation_states": {
-    "GATE_LOCAL_ANTERIOR_PASSOU_CANDIDATO_CSS_ATUAL_COM_CI_PENDENTE": 227,
-    "PREPARACAO_LOCAL_APROVADA": 6
+    "GATES_LOCAIS_E_CI_ATUAL_APROVADOS": 6,
+    "GATE_LOCAL_HISTORICO_APROVADO_CI_COMPLETA_ATUAL_APROVADA": 227
   },
   "publication_states": {
-    "NAO_PUBLICADO_POR_ESTA_TAREFA": 233
+    "PUBLICADO": 233
   },
   "live_states": {
-    "NAO_EXECUTADA": 233
+    "CI_E_PUBLICACAO_VERIFICADOS_MERGE_CONFERIDO_SEPARADAMENTE": 1,
+    "METADATA_BACKUPS_E_SCHEMA_VERIFICADOS_SEM_USO_OWNER": 1,
+    "NAO_EXECUTADA_SEM_SESSAO_AUTORIZADA": 217,
+    "PARCIAL_ESCOPO_PUBLICO_SEM_SESSAO": 12,
+    "VERIFICADO": 2
   },
-  "coverage_sha256": "7e80cdf8e2894083a3e7888326ca03faceb5d2d742a46de832bdde5a686ab3f9",
+  "coverage_sha256": "92fb1ea09222bb1f6d43197ad67eca82777c4617261bae9ce288f6063bc6bb25",
   "input_manifest_sha256": "49685ab2ee839c88515eaa18e373dd70245c5c07fc9a3bb6e2c3d47da08a746c"
 }

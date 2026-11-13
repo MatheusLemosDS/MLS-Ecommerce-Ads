@@ -4,7 +4,15 @@
   "dependencies": [
     {
       "id": "EXT-EMAIL",
-      "requirements": ["ACCT-02", "ACCT-03", "ACCT-04", "ACCT-05", "ACCT-11", "COM-03", "QA-07"],
+      "requirements": [
+        "ACCT-02",
+        "ACCT-03",
+        "ACCT-04",
+        "ACCT-05",
+        "ACCT-11",
+        "COM-03",
+        "QA-07"
+      ],
       "state": "REAL_DELIVERY_NOT_VERIFIED",
       "impact": "Verification, reset, email change and invitation delivery cannot be claimed from a local outbox.",
       "minimum_configuration": "Existing authorized transactional email adapter, sender/domain configuration, private credentials and delivery/error policy.",
@@ -13,7 +21,11 @@
     },
     {
       "id": "EXT-BILLING",
-      "requirements": ["COM-01", "COM-02", "COM-07"],
+      "requirements": [
+        "COM-01",
+        "COM-02",
+        "COM-07"
+      ],
       "state": "PROVIDER_AND_COMMERCIAL_CONTRACT_NOT_CONFIRMED",
       "impact": "No real subscription payment, checkout, invoice or customer portal can be advertised as operational.",
       "minimum_configuration": "Approved existing provider/contract, real plan/entitlement configuration and private webhook signing key.",
@@ -22,7 +34,11 @@
     },
     {
       "id": "EXT-CONNECTORS",
-      "requirements": ["ACCT-14", "TEN-03", "COM-07"],
+      "requirements": [
+        "ACCT-14",
+        "TEN-03",
+        "COM-07"
+      ],
       "state": "PER_COMPANY_PROVIDER_CONFIGURATION_NOT_VERIFIED",
       "impact": "A new company must remain disconnected rather than inherit FINANCE_PROFILE or the legacy store credentials.",
       "minimum_configuration": "Authorized provider app/scopes, per-company/store connection registration, protected credentials and bound one-use OAuth state.",
@@ -31,7 +47,12 @@
     },
     {
       "id": "EXT-LEGAL-RETENTION",
-      "requirements": ["ACCT-02", "ACCT-16", "COM-05", "COM-07"],
+      "requirements": [
+        "ACCT-02",
+        "ACCT-16",
+        "COM-05",
+        "COM-07"
+      ],
       "state": "APPROVED_DOCUMENTS_AND_RETENTION_POLICY_NOT_CONFIRMED",
       "impact": "Do not claim legal compliance or enable irreversible purge without an applicable retention policy.",
       "minimum_configuration": "Approved document versions, retention/deletion policy and responsibility for public commercial offering.",
@@ -40,7 +61,12 @@
     },
     {
       "id": "EXT-REAL-ACCEPTANCE",
-      "requirements": ["FIN-08", "WKR-09", "COM-07", "LIVE-05"],
+      "requirements": [
+        "FIN-08",
+        "WKR-09",
+        "COM-07",
+        "LIVE-05"
+      ],
       "state": "OWNER_OPERATIONAL_ACCEPTANCE_NOT_EXECUTED_BY_INVENTORY",
       "impact": "Synthetic QA and Live availability cannot close M2/M2.2 or prove completeness of bank/Seller Centre data, actual manufacturing or realized profit.",
       "minimum_configuration": "Authorized owner session and the appropriate real operational evidence when a later acceptance exercise is requested.",
@@ -53,6 +79,7 @@
     "Hermes remains an observer; agent memory grants no authority or model training.",
     "Seven specialist chart slots without canonical sources remain unavailable.",
     "TikTok/Mercado Livre and unsupported import formats are not activated by the redesign.",
-    "New multi-company access is not enabled until local isolation, migrations, recovery and runtime configuration are verified."
-  ]
+    "Multi-company code is published on a dedicated migrated ACCOUNT_DB. New companies remain disconnected and do not inherit the legacy store; real email/provider setup and owner operational acceptance remain pending."
+  ],
+  "publication_notice": "Technical publication and public checks verified; real transactional delivery, billing, per-company connectors, policies and authenticated operational acceptance remain unverified as listed."
 }

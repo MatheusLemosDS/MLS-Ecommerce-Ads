@@ -76,4 +76,10 @@ E-mail transacional, cobrança, conexão por cliente e política comercial/reten
 
 ## Candidato corrigido após a primeira CI
 
-A CI 43453964784 falhou em dois perfis de status mobile (4.104/4.106 Node). O CSS corrigido em `bdbc857ac443f58376613225dcbbfd02a108d41c` tem gate focado **4/4 aprovado**, com tamanhos mobile/tablet e três fontes adicionais; o resultado local completo anterior não é reatribuído a essa fonte nova. A nova CI completa continua pendente. O [registro atual](ci-validation.json) inclui o log da falha, o fechamento focado e o vetor do candidato, sem declarar publicação.
+A CI 43453964784 falhou em dois perfis de status mobile (4.104/4.106 Node). O CSS corrigido em `bdbc857ac443f58376613225dcbbfd02a108d41c` tem gate focado **4/4 aprovado**, com tamanhos mobile/tablet e três fontes adicionais; o resultado local completo anterior não é reatribuído a essa fonte nova. Naquele corte, a nova CI completa ainda estava pendente; o resultado posterior está abaixo. O [registro atual](ci-validation.json) inclui o log da falha, o fechamento focado e o vetor do candidato, sem declarar publicação.
+
+## CI e publicação finais
+
+A CI [43456719793](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43456719793) aprovou **4.106 Node e67 Python**, incluindo os perfis corrigidos e o preflight. O código do commit `7ec3ffa0ed27366eca0792d5d277979bb991f679` foi publicado em Finance → Auth → App e o vetor ativo/latest100%, fontes raw, configuração e domínio foram conferidos. Os recibos atuais estão em [live-publication.json](live-publication.json) e [public-live-verification.json](public-live-verification.json).
+
+A verificação pública executou15GETs,10assets e24perfis320/1365 claro/escuro. Respostas do domínio foram obtidas com TLS verificado pelo Node e renderizadas no Chromium/CDP, porque o Chromium nativo deste ambiente não confiou na CA do proxy; não foi desativado TLS. Isso não comprova transporte HTTPS nativo do navegador nem fluxos autenticados: nenhuma sessão real do proprietário estava disponível. Publicação técnica e CI não fecham M2/M2.2 ou dependências externas.

@@ -1,0 +1,612 @@
+{
+  "schema": "mls_v41_public_live_verification_v1",
+  "result": "PASS",
+  "started_at": "2026-11-13T16:14:26.045Z",
+  "finished_at": "2026-11-13T16:14:50.063Z",
+  "origin": "https://app.brazacommerce.com.br",
+  "transport": "VERIFIED_TLS_NODE_GET_CDP_RENDERING",
+  "tls_verification_disabled": false,
+  "owner_session_available": false,
+  "authenticated_qa": "NOT_PERFORMED",
+  "http": [
+    {
+      "route": "/login",
+      "status": 200,
+      "location": null,
+      "release": "2026-11-12.1",
+      "content_type": "text/html; charset=utf-8",
+      "bytes": 247351,
+      "sha256": "fc026e7a16bddf3bff47b6974302e89498a4b75ab9434d324afc25dd3303017c",
+      "title": "MLS Commerce OS · Gestão da loja",
+      "version_evidence": "APP_RELEASE_HEADER"
+    },
+    {
+      "route": "/register",
+      "status": 200,
+      "location": null,
+      "release": null,
+      "content_type": "text/html; charset=utf-8",
+      "bytes": 66900,
+      "sha256": "d3d9068cf92200a09e7ff05942810afc6c9a1b856f047bfcdba0530e3f7081a6",
+      "title": "Conta e empresa · MLS Commerce OS",
+      "version_evidence": "ACCOUNT_PAGE_LABEL_REQUIRES_AUTH_SOURCE_HASH_RECEIPT",
+      "account_v41_label": true
+    },
+    {
+      "route": "/account/register",
+      "status": 200,
+      "location": null,
+      "release": null,
+      "content_type": "text/html; charset=utf-8",
+      "bytes": 66900,
+      "sha256": "d3d9068cf92200a09e7ff05942810afc6c9a1b856f047bfcdba0530e3f7081a6",
+      "title": "Conta e empresa · MLS Commerce OS",
+      "version_evidence": "ACCOUNT_PAGE_LABEL_REQUIRES_AUTH_SOURCE_HASH_RECEIPT",
+      "account_v41_label": true
+    },
+    {
+      "route": "/account/login",
+      "status": 200,
+      "location": null,
+      "release": null,
+      "content_type": "text/html; charset=utf-8",
+      "bytes": 66897,
+      "sha256": "2b6fd79c4695505d64d7b92ae7d75290dfcca500eeb6c5572507424b49b6d040",
+      "title": "Conta e empresa · MLS Commerce OS",
+      "version_evidence": "ACCOUNT_PAGE_LABEL_REQUIRES_AUTH_SOURCE_HASH_RECEIPT",
+      "account_v41_label": true
+    },
+    {
+      "route": "/verify-email",
+      "status": 200,
+      "location": null,
+      "release": null,
+      "content_type": "text/html; charset=utf-8",
+      "bytes": 66898,
+      "sha256": "c6ec3ecf3b7413e9bd0df90690c0583243e515ee7456983ca4222f2bf3366ef7",
+      "title": "Conta e empresa · MLS Commerce OS",
+      "version_evidence": "ACCOUNT_PAGE_LABEL_REQUIRES_AUTH_SOURCE_HASH_RECEIPT",
+      "account_v41_label": true
+    },
+    {
+      "route": "/forgot-password",
+      "status": 200,
+      "location": null,
+      "release": null,
+      "content_type": "text/html; charset=utf-8",
+      "bytes": 66898,
+      "sha256": "d42a0a4e6ad29e32a3ef4ac0d9a3bd391fa2a05059147d821338b0aaeb0107c8",
+      "title": "Conta e empresa · MLS Commerce OS",
+      "version_evidence": "ACCOUNT_PAGE_LABEL_REQUIRES_AUTH_SOURCE_HASH_RECEIPT",
+      "account_v41_label": true
+    },
+    {
+      "route": "/reset-password",
+      "status": 200,
+      "location": null,
+      "release": null,
+      "content_type": "text/html; charset=utf-8",
+      "bytes": 66897,
+      "sha256": "453f6555cdd6542e366f2e9266e48e1be80da76e84c4cfb022103ae43d6d737a",
+      "title": "Conta e empresa · MLS Commerce OS",
+      "version_evidence": "ACCOUNT_PAGE_LABEL_REQUIRES_AUTH_SOURCE_HASH_RECEIPT",
+      "account_v41_label": true
+    },
+    {
+      "route": "/invitations/accept",
+      "status": 200,
+      "location": null,
+      "release": null,
+      "content_type": "text/html; charset=utf-8",
+      "bytes": 66902,
+      "sha256": "b45ffc0af0074672d943baa5482847040f1cf8cb5803fc3af256632fcf07c25e",
+      "title": "Conta e empresa · MLS Commerce OS",
+      "version_evidence": "ACCOUNT_PAGE_LABEL_REQUIRES_AUTH_SOURCE_HASH_RECEIPT",
+      "account_v41_label": true
+    },
+    {
+      "route": "/companies",
+      "status": 303,
+      "location": "/account/login",
+      "release": null,
+      "content_type": "text/plain;charset=UTF-8",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "title": null,
+      "version_evidence": "PROTECTED_REDIRECT_ONLY"
+    },
+    {
+      "route": "/account/profile",
+      "status": 303,
+      "location": "/account/login",
+      "release": null,
+      "content_type": "text/plain;charset=UTF-8",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "title": null,
+      "version_evidence": "PROTECTED_REDIRECT_ONLY"
+    },
+    {
+      "route": "/account/security",
+      "status": 303,
+      "location": "/account/login",
+      "release": null,
+      "content_type": "text/plain;charset=UTF-8",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "title": null,
+      "version_evidence": "PROTECTED_REDIRECT_ONLY"
+    },
+    {
+      "route": "/admin?tab=overview",
+      "status": 303,
+      "location": "https://app.brazacommerce.com.br/login",
+      "release": null,
+      "content_type": null,
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "title": null,
+      "version_evidence": "PROTECTED_REDIRECT_ONLY"
+    },
+    {
+      "route": "/api/admin/bootstrap",
+      "status": 401,
+      "release": "2026-11-12.1",
+      "error": "UNAUTHORIZED",
+      "bytes": 24
+    },
+    {
+      "route": "/api/admin/release-info",
+      "status": 401,
+      "release": "2026-11-12.1",
+      "error": "UNAUTHORIZED",
+      "bytes": 24
+    },
+    {
+      "route": "/api/account/session",
+      "status": 401,
+      "release": null,
+      "error": "ACCOUNT_UNAUTHORIZED",
+      "bytes": 85
+    }
+  ],
+  "assets": [
+    {
+      "kind": "current",
+      "id": "bank",
+      "path": "/assets/mls/0d6250f5888258fa29664eac45b2cd821d3872b1c96ac47dda46bd7fd10e6a0c.js",
+      "status": 200,
+      "bytes": 38035,
+      "sha256": "0d6250f5888258fa29664eac45b2cd821d3872b1c96ac47dda46bd7fd10e6a0c",
+      "expected_bytes": 38035,
+      "expected_sha256": "0d6250f5888258fa29664eac45b2cd821d3872b1c96ac47dda46bd7fd10e6a0c",
+      "content_type": "text/javascript; charset=utf-8",
+      "pass": true
+    },
+    {
+      "kind": "current",
+      "id": "month",
+      "path": "/assets/mls/347a294216d16151105c5b5074174af01c01a9bc398e713aaf2c9184a48b1db2.js",
+      "status": 200,
+      "bytes": 704759,
+      "sha256": "347a294216d16151105c5b5074174af01c01a9bc398e713aaf2c9184a48b1db2",
+      "expected_bytes": 704759,
+      "expected_sha256": "347a294216d16151105c5b5074174af01c01a9bc398e713aaf2c9184a48b1db2",
+      "content_type": "text/javascript; charset=utf-8",
+      "pass": true
+    },
+    {
+      "kind": "current",
+      "id": "orders",
+      "path": "/assets/mls/ec6397070416275d880f293d4abe8d7f531215af369d7e9a275c10f019a8c3c8.js",
+      "status": 200,
+      "bytes": 21282,
+      "sha256": "ec6397070416275d880f293d4abe8d7f531215af369d7e9a275c10f019a8c3c8",
+      "expected_bytes": 21282,
+      "expected_sha256": "ec6397070416275d880f293d4abe8d7f531215af369d7e9a275c10f019a8c3c8",
+      "content_type": "text/javascript; charset=utf-8",
+      "pass": true
+    },
+    {
+      "kind": "current",
+      "id": "production",
+      "path": "/assets/mls/549c2b0f6ae183249bed2472af894cf5211d4a6853fc33c0ce6c127aa3ebf034.js",
+      "status": 200,
+      "bytes": 165982,
+      "sha256": "549c2b0f6ae183249bed2472af894cf5211d4a6853fc33c0ce6c127aa3ebf034",
+      "expected_bytes": 165982,
+      "expected_sha256": "549c2b0f6ae183249bed2472af894cf5211d4a6853fc33c0ce6c127aa3ebf034",
+      "content_type": "text/javascript; charset=utf-8",
+      "pass": true
+    },
+    {
+      "kind": "current",
+      "id": "weekly",
+      "path": "/assets/mls/04ae3166780be18f31754212640b0887abe9e20830ac4309a6e31109398e4eeb.js",
+      "status": 200,
+      "bytes": 54280,
+      "sha256": "04ae3166780be18f31754212640b0887abe9e20830ac4309a6e31109398e4eeb",
+      "expected_bytes": 54280,
+      "expected_sha256": "04ae3166780be18f31754212640b0887abe9e20830ac4309a6e31109398e4eeb",
+      "content_type": "text/javascript; charset=utf-8",
+      "pass": true
+    },
+    {
+      "kind": "current",
+      "id": "workspace",
+      "path": "/assets/mls/a96fe8cfa2d4fedeb349a5a7109e6b553fbb1bb9b4f0d2d2be326ba6740ed7c1.js",
+      "status": 200,
+      "bytes": 341081,
+      "sha256": "a96fe8cfa2d4fedeb349a5a7109e6b553fbb1bb9b4f0d2d2be326ba6740ed7c1",
+      "expected_bytes": 341081,
+      "expected_sha256": "a96fe8cfa2d4fedeb349a5a7109e6b553fbb1bb9b4f0d2d2be326ba6740ed7c1",
+      "content_type": "text/javascript; charset=utf-8",
+      "pass": true
+    },
+    {
+      "kind": "retained",
+      "id": "month",
+      "path": "/assets/mls/b2ec847af07b46e9a4c54295a782ccf7d1a67315edcbeb16053e034a021be4e5.js",
+      "status": 200,
+      "bytes": 687069,
+      "sha256": "b2ec847af07b46e9a4c54295a782ccf7d1a67315edcbeb16053e034a021be4e5",
+      "expected_bytes": 687069,
+      "expected_sha256": "b2ec847af07b46e9a4c54295a782ccf7d1a67315edcbeb16053e034a021be4e5",
+      "content_type": "text/javascript; charset=utf-8",
+      "pass": true
+    },
+    {
+      "kind": "retained",
+      "id": "orders",
+      "path": "/assets/mls/99c6086144a7e099920670eecaf485aba9e4f8c49d91b07f626809c7eb81208d.js",
+      "status": 200,
+      "bytes": 20935,
+      "sha256": "99c6086144a7e099920670eecaf485aba9e4f8c49d91b07f626809c7eb81208d",
+      "expected_bytes": 20935,
+      "expected_sha256": "99c6086144a7e099920670eecaf485aba9e4f8c49d91b07f626809c7eb81208d",
+      "content_type": "text/javascript; charset=utf-8",
+      "pass": true
+    },
+    {
+      "kind": "retained",
+      "id": "production",
+      "path": "/assets/mls/eaa685867dc256e2a48a01e77bff198aa845c8811fb5a5329c6121fb7f89acd2.js",
+      "status": 200,
+      "bytes": 163799,
+      "sha256": "eaa685867dc256e2a48a01e77bff198aa845c8811fb5a5329c6121fb7f89acd2",
+      "expected_bytes": 163799,
+      "expected_sha256": "eaa685867dc256e2a48a01e77bff198aa845c8811fb5a5329c6121fb7f89acd2",
+      "content_type": "text/javascript; charset=utf-8",
+      "pass": true
+    },
+    {
+      "kind": "retained",
+      "id": "weekly",
+      "path": "/assets/mls/91beb108a1bbe139adc87ac54db6abdad58e9dd1ecc8b7a0ead0d9188ccbfc9f.js",
+      "status": 200,
+      "bytes": 53495,
+      "sha256": "91beb108a1bbe139adc87ac54db6abdad58e9dd1ecc8b7a0ead0d9188ccbfc9f",
+      "expected_bytes": 53495,
+      "expected_sha256": "91beb108a1bbe139adc87ac54db6abdad58e9dd1ecc8b7a0ead0d9188ccbfc9f",
+      "content_type": "text/javascript; charset=utf-8",
+      "pass": true
+    }
+  ],
+  "browser": [
+    {
+      "route": "/login",
+      "width": 320,
+      "theme": "light",
+      "url": "https://app.brazacommerce.com.br/login",
+      "heading": "Entre para acompanhar sua loja",
+      "viewport": {
+        "width": 320,
+        "scroll_width": 320,
+        "height": 950
+      },
+      "javascript_errors": []
+    },
+    {
+      "route": "/login",
+      "width": 320,
+      "theme": "dark",
+      "url": "https://app.brazacommerce.com.br/login",
+      "heading": "Entre para acompanhar sua loja",
+      "viewport": {
+        "width": 320,
+        "scroll_width": 320,
+        "height": 950
+      },
+      "javascript_errors": []
+    },
+    {
+      "route": "/register",
+      "width": 320,
+      "theme": "light",
+      "url": "https://app.brazacommerce.com.br/register",
+      "heading": "Crie sua conta",
+      "viewport": {
+        "width": 320,
+        "scroll_width": 320,
+        "height": 950
+      },
+      "javascript_errors": []
+    },
+    {
+      "route": "/register",
+      "width": 320,
+      "theme": "dark",
+      "url": "https://app.brazacommerce.com.br/register",
+      "heading": "Crie sua conta",
+      "viewport": {
+        "width": 320,
+        "scroll_width": 320,
+        "height": 950
+      },
+      "javascript_errors": []
+    },
+    {
+      "route": "/account/login",
+      "width": 320,
+      "theme": "light",
+      "url": "https://app.brazacommerce.com.br/account/login",
+      "heading": "Entre na sua conta",
+      "viewport": {
+        "width": 320,
+        "scroll_width": 320,
+        "height": 950
+      },
+      "javascript_errors": []
+    },
+    {
+      "route": "/account/login",
+      "width": 320,
+      "theme": "dark",
+      "url": "https://app.brazacommerce.com.br/account/login",
+      "heading": "Entre na sua conta",
+      "viewport": {
+        "width": 320,
+        "scroll_width": 320,
+        "height": 950
+      },
+      "javascript_errors": []
+    },
+    {
+      "route": "/forgot-password",
+      "width": 320,
+      "theme": "light",
+      "url": "https://app.brazacommerce.com.br/forgot-password",
+      "heading": "Recupere seu acesso",
+      "viewport": {
+        "width": 320,
+        "scroll_width": 320,
+        "height": 950
+      },
+      "javascript_errors": []
+    },
+    {
+      "route": "/forgot-password",
+      "width": 320,
+      "theme": "dark",
+      "url": "https://app.brazacommerce.com.br/forgot-password",
+      "heading": "Recupere seu acesso",
+      "viewport": {
+        "width": 320,
+        "scroll_width": 320,
+        "height": 950
+      },
+      "javascript_errors": []
+    },
+    {
+      "route": "/companies",
+      "width": 320,
+      "theme": "light",
+      "url": "https://app.brazacommerce.com.br/account/login",
+      "heading": "Entre na sua conta",
+      "viewport": {
+        "width": 320,
+        "scroll_width": 320,
+        "height": 950
+      },
+      "javascript_errors": []
+    },
+    {
+      "route": "/companies",
+      "width": 320,
+      "theme": "dark",
+      "url": "https://app.brazacommerce.com.br/account/login",
+      "heading": "Entre na sua conta",
+      "viewport": {
+        "width": 320,
+        "scroll_width": 320,
+        "height": 950
+      },
+      "javascript_errors": []
+    },
+    {
+      "route": "/account/profile",
+      "width": 320,
+      "theme": "light",
+      "url": "https://app.brazacommerce.com.br/account/login",
+      "heading": "Entre na sua conta",
+      "viewport": {
+        "width": 320,
+        "scroll_width": 320,
+        "height": 950
+      },
+      "javascript_errors": []
+    },
+    {
+      "route": "/account/profile",
+      "width": 320,
+      "theme": "dark",
+      "url": "https://app.brazacommerce.com.br/account/login",
+      "heading": "Entre na sua conta",
+      "viewport": {
+        "width": 320,
+        "scroll_width": 320,
+        "height": 950
+      },
+      "javascript_errors": []
+    },
+    {
+      "route": "/login",
+      "width": 1365,
+      "theme": "light",
+      "url": "https://app.brazacommerce.com.br/login",
+      "heading": "Entre para acompanhar sua loja",
+      "viewport": {
+        "width": 1365,
+        "scroll_width": 1365,
+        "height": 950
+      },
+      "javascript_errors": []
+    },
+    {
+      "route": "/login",
+      "width": 1365,
+      "theme": "dark",
+      "url": "https://app.brazacommerce.com.br/login",
+      "heading": "Entre para acompanhar sua loja",
+      "viewport": {
+        "width": 1365,
+        "scroll_width": 1365,
+        "height": 950
+      },
+      "javascript_errors": []
+    },
+    {
+      "route": "/register",
+      "width": 1365,
+      "theme": "light",
+      "url": "https://app.brazacommerce.com.br/register",
+      "heading": "Crie sua conta",
+      "viewport": {
+        "width": 1365,
+        "scroll_width": 1365,
+        "height": 950
+      },
+      "javascript_errors": []
+    },
+    {
+      "route": "/register",
+      "width": 1365,
+      "theme": "dark",
+      "url": "https://app.brazacommerce.com.br/register",
+      "heading": "Crie sua conta",
+      "viewport": {
+        "width": 1365,
+        "scroll_width": 1365,
+        "height": 950
+      },
+      "javascript_errors": []
+    },
+    {
+      "route": "/account/login",
+      "width": 1365,
+      "theme": "light",
+      "url": "https://app.brazacommerce.com.br/account/login",
+      "heading": "Entre na sua conta",
+      "viewport": {
+        "width": 1365,
+        "scroll_width": 1365,
+        "height": 950
+      },
+      "javascript_errors": []
+    },
+    {
+      "route": "/account/login",
+      "width": 1365,
+      "theme": "dark",
+      "url": "https://app.brazacommerce.com.br/account/login",
+      "heading": "Entre na sua conta",
+      "viewport": {
+        "width": 1365,
+        "scroll_width": 1365,
+        "height": 950
+      },
+      "javascript_errors": []
+    },
+    {
+      "route": "/forgot-password",
+      "width": 1365,
+      "theme": "light",
+      "url": "https://app.brazacommerce.com.br/forgot-password",
+      "heading": "Recupere seu acesso",
+      "viewport": {
+        "width": 1365,
+        "scroll_width": 1365,
+        "height": 950
+      },
+      "javascript_errors": []
+    },
+    {
+      "route": "/forgot-password",
+      "width": 1365,
+      "theme": "dark",
+      "url": "https://app.brazacommerce.com.br/forgot-password",
+      "heading": "Recupere seu acesso",
+      "viewport": {
+        "width": 1365,
+        "scroll_width": 1365,
+        "height": 950
+      },
+      "javascript_errors": []
+    },
+    {
+      "route": "/companies",
+      "width": 1365,
+      "theme": "light",
+      "url": "https://app.brazacommerce.com.br/account/login",
+      "heading": "Entre na sua conta",
+      "viewport": {
+        "width": 1365,
+        "scroll_width": 1365,
+        "height": 950
+      },
+      "javascript_errors": []
+    },
+    {
+      "route": "/companies",
+      "width": 1365,
+      "theme": "dark",
+      "url": "https://app.brazacommerce.com.br/account/login",
+      "heading": "Entre na sua conta",
+      "viewport": {
+        "width": 1365,
+        "scroll_width": 1365,
+        "height": 950
+      },
+      "javascript_errors": []
+    },
+    {
+      "route": "/account/profile",
+      "width": 1365,
+      "theme": "light",
+      "url": "https://app.brazacommerce.com.br/account/login",
+      "heading": "Entre na sua conta",
+      "viewport": {
+        "width": 1365,
+        "scroll_width": 1365,
+        "height": 950
+      },
+      "javascript_errors": []
+    },
+    {
+      "route": "/account/profile",
+      "width": 1365,
+      "theme": "dark",
+      "url": "https://app.brazacommerce.com.br/account/login",
+      "heading": "Entre na sua conta",
+      "viewport": {
+        "width": 1365,
+        "scroll_width": 1365,
+        "height": 950
+      },
+      "javascript_errors": []
+    }
+  ],
+  "failures": [],
+  "remote_mutations_sent": 0,
+  "harness_history": "Initialcapture detected account loading beforeasyncsessioncompleted; readiness now waits for account heading/form within the same boundeddeadline. Originalfailedreport retained privately; no application source change."
+}

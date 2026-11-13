@@ -1,3 +1,9 @@
+# V4.1 — implementação e publicação técnica
+
+A versão `2026-11-12.1` está publicada em **https://app.brazacommerce.com.br**, com conferência em13/11/2026 às13:14:50Brasília. O commit servido é `7ec3ffa0ed27366eca0792d5d277979bb991f679`; a [CI43456719793](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43456719793) aprovou4.106Node e67Python. O [recibo da release](live-publication.json) separa versões/hash/configuração realmente observados de aceite operacional.
+
+A primeira CI falhou em dois perfis de status mobile; a correção passou no gate focado e na CI completa atual. O gate local inicial permanece histórico. A conferência Live cobriu somente controle e acesso público, sem sessão real do proprietário; as dependências comerciais continuam listadas abaixo. Uso e recuperação estão em [RELEASE.md](RELEASE.md).
+
 # V4.1 — implementação e validação do candidato
 
 O candidato `2026-11-12.1` reúne o redesign e a base de contas comerciais no aplicativo existente. O gate local do candidato anterior S1/S2 aprovou **4.106 testes Node, sem falhas ou skips, e67 Python**. Esses resultados demonstram os cenários locais registrados; a publicação e a conferência do domínio exigem recibos próprios em [RELEASE.md](RELEASE.md).

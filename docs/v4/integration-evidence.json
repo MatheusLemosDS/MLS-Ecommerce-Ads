@@ -1,6 +1,6 @@
 {
   "schema": "mls_v41_integration_evidence_register_v1",
-  "updated_at": "2026-11-13T15:50:16.282190+00:00",
+  "updated_at": "2026-11-13T16:18:31.197185+00:00",
   "evidence": [
     {
       "id": "ACCOUNT-AUTH-41",
@@ -471,16 +471,82 @@
       ],
       "escopo": "Status legíveis no cartão real, normal/minificado e perfis/fontes/viewports descritos pelo teste focado; mesmos controles/valores/fluxos preservados.",
       "limite": "Este gate é focado. Não equivale à suíte completa atual, CI verde, deploy ou QA autenticado Live."
+    },
+    {
+      "id": "GITHUB-CI-43456719793",
+      "ambiente": "GITHUB_ACTIONS_SINTETICO",
+      "tipo": "GATE_COMPLETO_DO_CODIGO_PUBLICADO",
+      "comando": "npm run build; node --test --test-reporter=tap --test-concurrency=3 web/cloudflare/tests/*.test.mjs web/finance/tests/*.test.mjs tools/tests/*.test.mjs; python3 -m unittest web/bridge/test_hermes_bridge.py tools/test_install_hermes_web_bridge.py tools/test_build_hermes_web_bridge_install.py tools/test_activate_hermes_web_bridge.py tools/test_build_hermes_web_bridge_activation.py -q; node tools/release_preflight.mjs --base=origin/main",
+      "arquivo": "docs/v4/evidence/ci-43456719793-green.log",
+      "sha256": "f7d1db022bcc6e4f92a97e90308e96854e0e4f2214dbfdf8c592693162881418",
+      "resultado": "PASSOU",
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43456719793",
+      "run_id": 43456719793,
+      "commit": "7ec3ffa0ed27366eca0792d5d277979bb991f679",
+      "node": {
+        "tests": 4106,
+        "passou": 4106,
+        "falhou": 0,
+        "ignorados": 0
+      },
+      "python": {
+        "passou": 67,
+        "falhou": 0
+      },
+      "build": {
+        "app": {
+          "worker": "brazacommerce-app",
+          "bytes": 3495838,
+          "sha256": "82fe3d3ecf19b0f72254dc5778e8a8335505bfc4db4071cc01afce4cfb7cea48"
+        },
+        "auth": {
+          "worker": "brazacommerce-auth",
+          "bytes": 524070,
+          "sha256": "d5eed8ab9cddaa8d6917f4e4ca668a3f7074bad5603254656414db5a490dc172"
+        },
+        "finance": {
+          "worker": "brazacommerce-finance",
+          "bytes": 730516,
+          "sha256": "ffbcea3b7ffe5c0a94b0d4d8c4908738e6da76386040995bba982060a5f9bb71"
+        }
+      },
+      "limite": "CI usa fontes e dados sintéticos; não representa operação real ou QA autenticado Live. Cloudflare Workers Builds possui três checks preexistentes com falha, distintos deste gate GitHub validate aprovado."
+    },
+    {
+      "id": "V41-LIVE-CODE-PUBLICATION",
+      "ambiente": "LIVE_CONTROLE_E_DOMINIO",
+      "resultado": "PUBLICADO",
+      "commit": "7ec3ffa0ed27366eca0792d5d277979bb991f679",
+      "recibo": "docs/v4/live-publication.json",
+      "url": "https://app.brazacommerce.com.br",
+      "horario": "2026-11-13T16:13:44.142628+00:00",
+      "escopo": "PUBLICACAO_DO_CODIGO_NAO_ACEITE_COMPLETO_DO_REQUISITO",
+      "versao": "2026-11-12.1",
+      "control_plane_receipt_sha256": "3e16b05c2341d29f45f718b27c96f31d3f8f4bfa828d36e0e44fee547971f72d",
+      "limite": "A publicação técnica do código não comprova funcionalidade externa configurada, painel autenticado exercitado ou aceite operacional do requisito."
+    },
+    {
+      "id": "V41-LIVE-PUBLIC-SCOPE",
+      "ambiente": "LIVE_PUBLICO_SEM_SESSAO",
+      "resultado": "VERIFICADO_NO_ESCOPO_PUBLICO",
+      "url": "https://app.brazacommerce.com.br",
+      "horario": "2026-11-13T16:14:50.063Z",
+      "recibo": "docs/v4/public-live-verification.json",
+      "commit": "7ec3ffa0ed27366eca0792d5d277979bb991f679",
+      "escopo": "15GETs HTTP,10assets exatos e24perfis públicos320/1365 claro/escuro. Conta/empresa protegidas redirecionam e APIs sem sessão recusam acesso.",
+      "transporte": "GET Node com TLS verificado, respostas reais renderizadas por Chromium/CDP; CA do proxy deste ambiente não é confiada pelo transporte HTTPS nativo do Chromium. TLS não foi desativado.",
+      "limite": "Sem sessão autorizada do proprietário; nenhum login/logout autenticado, painel interno, salvamento real ou conciliação foi validado na Live."
     }
   ],
   "open_gates": [
-    "Nova CI completa verde para o candidato CSS corrigido",
-    "Migrações0001+0002 somente no ACCOUNT_DB novo",
-    "Publicação e conferência do vetor/configuração/assets/domínio",
-    "QA autenticado Live não executado sem sessão real disponível; M2/M2.2 seguem abertos"
+    "Integração Git/mergePR119 conferida separadamente da publicação",
+    "QA autenticado Live do proprietário não executado: nenhuma sessão real disponível",
+    "Dependências reais de e-mail, cobrança, conectores por cliente e políticas comerciais",
+    "M2/M2.2 e comparação operacional Seller Centre/banco continuam abertos",
+    "Diagnóstico de três checks Cloudflare Workers Builds preexistentes: API de configuração/log403"
   ],
-  "publication": "NAO_DECLARADA",
-  "live": "NAO_DECLARADO",
+  "publication": "PUBLICADO_VERIFICADO_NO_ESCOPO_REGISTRADO",
+  "live": "PUBLICO_E_CONTROLE_VERIFICADOS_SEM_QA_AUTENTICADO",
   "local_runtime_findings": [
     {
       "id": "LOCAL-AUTH-MFA-COLD-QUERY-BUDGET",
@@ -604,7 +670,8 @@
     }
   },
   "current_candidate": {
-    "source_commit": "bdbc857ac443f58376613225dcbbfd02a108d41c",
+    "source_commit": "7ec3ffa0ed27366eca0792d5d277979bb991f679",
+    "implementation_source_commit": "bdbc857ac443f58376613225dcbbfd02a108d41c",
     "worker_build": {
       "app": {
         "worker": "brazacommerce-app",
@@ -622,8 +689,10 @@
         "sha256": "ffbcea3b7ffe5c0a94b0d4d8c4908738e6da76386040995bba982060a5f9bb71"
       }
     },
-    "local_scope": "CORRECAO_CSS_FOCADA_4_PASSARAM",
-    "complete_ci": "PENDENTE",
-    "historical_whole_node": "4106/4106 aprovado para eeb3c34/c7f5ae8, não reatribuído à fonte CSS atual."
+    "local_scope": "Correção CSS focada4/4; gate local4106/67 inicial preservado como histórico.",
+    "complete_ci": "PASSOU_4106_NODE_67_PYTHON",
+    "publication_receipt": "docs/v4/live-publication.json",
+    "live_public_scope": "PASSOU_15_HTTP_10_ASSETS_24_PERFIS",
+    "live_authenticated_scope": "NAO_EXECUTADO_SEM_SESSAO"
   }
 }

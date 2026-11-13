@@ -22,9 +22,49 @@
       "python": "NAO_EXECUTADO_APOS_FALHA_NODE",
       "causa": "Status Em acompanhamento em390px/Inter13.65px: palavra137.546875px para133px disponíveis. Dois perfis M2 normal/minificado falharam; é regressão visual do candidato, não falha preexistente.",
       "tratamento": "Correção CSS focada e expansão da prova de fonte/viewport. Exige nova CI completa verde antes da publicação."
+    },
+    {
+      "id": "GITHUB-CI-43456719793",
+      "ambiente": "GITHUB_ACTIONS_SINTETICO",
+      "tipo": "GATE_COMPLETO_DO_CODIGO_PUBLICADO",
+      "comando": "npm run build; node --test --test-reporter=tap --test-concurrency=3 web/cloudflare/tests/*.test.mjs web/finance/tests/*.test.mjs tools/tests/*.test.mjs; python3 -m unittest web/bridge/test_hermes_bridge.py tools/test_install_hermes_web_bridge.py tools/test_build_hermes_web_bridge_install.py tools/test_activate_hermes_web_bridge.py tools/test_build_hermes_web_bridge_activation.py -q; node tools/release_preflight.mjs --base=origin/main",
+      "arquivo": "docs/v4/evidence/ci-43456719793-green.log",
+      "sha256": "f7d1db022bcc6e4f92a97e90308e96854e0e4f2214dbfdf8c592693162881418",
+      "resultado": "PASSOU",
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43456719793",
+      "run_id": 43456719793,
+      "commit": "7ec3ffa0ed27366eca0792d5d277979bb991f679",
+      "node": {
+        "tests": 4106,
+        "passou": 4106,
+        "falhou": 0,
+        "ignorados": 0
+      },
+      "python": {
+        "passou": 67,
+        "falhou": 0
+      },
+      "build": {
+        "app": {
+          "worker": "brazacommerce-app",
+          "bytes": 3495838,
+          "sha256": "82fe3d3ecf19b0f72254dc5778e8a8335505bfc4db4071cc01afce4cfb7cea48"
+        },
+        "auth": {
+          "worker": "brazacommerce-auth",
+          "bytes": 524070,
+          "sha256": "d5eed8ab9cddaa8d6917f4e4ca668a3f7074bad5603254656414db5a490dc172"
+        },
+        "finance": {
+          "worker": "brazacommerce-finance",
+          "bytes": 730516,
+          "sha256": "ffbcea3b7ffe5c0a94b0d4d8c4908738e6da76386040995bba982060a5f9bb71"
+        }
+      },
+      "limite": "CI usa fontes e dados sintéticos; não representa operação real ou QA autenticado Live. Cloudflare Workers Builds possui três checks preexistentes com falha, distintos deste gate GitHub validate aprovado."
     }
   ],
-  "current_source_commit": "bdbc857ac443f58376613225dcbbfd02a108d41c",
+  "current_source_commit": "7ec3ffa0ed27366eca0792d5d277979bb991f679",
   "current_worker_build": {
     "app": {
       "worker": "brazacommerce-app",
@@ -90,6 +130,9 @@
     "escopo": "Status legíveis no cartão real, normal/minificado e perfis/fontes/viewports descritos pelo teste focado; mesmos controles/valores/fluxos preservados.",
     "limite": "Este gate é focado. Não equivale à suíte completa atual, CI verde, deploy ou QA autenticado Live."
   },
-  "current_complete_ci": "AGUARDANDO_NOVA_EXECUCAO",
-  "publication": "NAO_PUBLICADO_POR_ESTA_TAREFA"
+  "current_complete_ci": "PASSOU",
+  "publication": "PUBLICADO_VERIFICADO_NO_ESCOPO_REGISTRADO",
+  "implementation_source_commit": "bdbc857ac443f58376613225dcbbfd02a108d41c",
+  "publication_receipt": "docs/v4/live-publication.json",
+  "public_verification_receipt": "docs/v4/public-live-verification.json"
 }

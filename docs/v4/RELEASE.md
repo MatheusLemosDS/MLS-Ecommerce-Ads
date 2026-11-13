@@ -1,27 +1,60 @@
-# V4.1 — release e recuperação
+# V4.1 — publicação, uso e recuperação
 
-Estado deste registro: **correção CSS focada aprovada; nova CI completa e publicação pendentes**. Fonte inicial histórica `eeb3c34c324b362c2c56ef46727e6b24485cc3b7`, base `a5bd38a0902b38ecc3e90a747601eba330e7813e`, branch `feature/v41-layout-commercial-live-20261112`. O manifest de release fixa o commit candidato e o vetor autorizado; o recibo final deve identificar o commit efetivamente servido.
+**Publicada e conferida no escopo técnico/público** em **13/11/2026 às 13:14:50 de Brasília**, em **https://app.brazacommerce.com.br**. Versão visível `2026-11-12.1`; commit publicado **`7ec3ffa0ed27366eca0792d5d277979bb991f679`**, implementação corrigida `bdbc857ac443f58376613225dcbbfd02a108d41c`.
 
-Destino autorizado: **https://app.brazacommerce.com.br**. A autorização atual substitui a antiga entrega somente local e permite o fluxo normal de commit/push/PR/merge, migrações aditivas ensaiadas, deploy e conferência. Não autoriza força sobre gates, mensagens reais ou ações comerciais de teste.
+A [PR #119](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/119) registra a integração Git; seu estado atual deve ser consultado separadamente. A publicação foi realizada com a PR aberta. A [CI 43456719793](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43456719793) aprovou **4.106 testes Node, sem falhas/skips, e67 Python**, além do build e preflight. O [recibo técnico](live-publication.json) e a [verificação pública](public-live-verification.json) demonstram o que foi observado no destino; merge não é usado como prova de deploy.
 
-## Antes da ativação
+## O que está disponível
 
-1. Conferir CI e regras reais de integração; não usar force push/admin bypass.
-2. Confirmar os backups exportados das versões/fontes/configurações dos três Workers e os pontos de restauração dos bancos legados. Conferir novamente o vetor ativo para detectar alteração concorrente.
-3. Aplicar as migrações ensaiadas `account-0001.sql` e `account-0002.sql` somente no ACCOUNT_DB novo. Confirmar schema, journal e ausência de identidades/fatos inventados. Não executar backfill ou mapeamento real da loja sem identidade/condições verificadas.
-4. Conferir o único delta de bindings: o mesmo ACCOUNT_DB nas três configurações, separado de todos os bancos legados; no Auth, chave privada de criptografia. Configurações capturadas, segredos existentes, flags owner, domínio, cron e conexão da loja permanecem preservados.
-5. Upload de versões inativas e assets, com gates de tamanho/hash/configuração; ativar na ordem compatível **Finance → Auth → App**, verificando após cada etapa o vetor ativo completo.
+- **Visão geral:** mantém os seis agentes após os indicadores, com navegação e hierarquia visual reorganizadas. Séries de pedidos, dinheiro e ROAS preservam unidades, fontes e períodos; valores ausentes continuam identificados.
+- **Financeiro e Relatórios:** composição do resultado, custos e pendências legíveis. O semanal mantém as três bases separadas: fabricação física, estimativa das vendas e caixa importado. Links transportam mês, data ou corte, preservando rascunhos.
+- **Produtos, Produção e Pedidos:** continuam com os formulários e ações existentes. Ranking/ABC, custos, distribuição das etapas e gráficos físicos usam as fontes validadas. Links antigos de fabricação agora resolvem o painel correto.
+- **Conta e empresa:** `/account/login`, cadastro e recuperação, perfil, segurança, sessões e `/companies` possuem backend persistente, empresa/loja/equipe/papéis e isolamento entre App → Auth → Finance. O login existente da loja continua em `/login` e o painel em `/admin?tab=overview`. Não é necessário reconectar a loja para usar o layout.
 
-## Depois da ativação
+A [matriz funcional](functional-coverage.json) conserva os233 requisitos e22 famílias de gráficos, além de dois achados adicionais. Ela distingue código publicado, testes locais/CI, verificação pública e aceite operacional. Os sete slots sem fonte gráfica fechada continuam indisponíveis com motivo. Ads/PROMO permanecem bloqueados e Hermes observador.
 
-Registrar commit/PR/CI, horários e IDs de deploy, hashes das fontes realmente servidas e os seis assets atuais/retidos. Conferir o domínio, páginas públicas de acesso, respostas sem sessão, console/rede e responsividade. Fluxos autenticados usam somente sessão autorizada disponível; ausência de sessão é registrada como `NOT_PERFORMED`, sem fabricar acesso ou considerar login público prova de todos os painéis.
+## Deploy observado
 
-Os registros finais devem ser anexados em `live-publication.json` e `public-live-verification.json`, com resultado e limites próprios. Esses arquivos não são presumidos por este documento inicial. Atualizar matriz, checkpoint e resumo após receber os recibos reais, mantendo dependências externas separadas.
+As migrações aditivas0001/0002 foram aplicadas **somente no ACCOUNT_DB dedicado**, distinto dos bancos legados. O banco novo foi conferido com seis tabelas, um índice explícito, dois registros do journal e **zero identidades/fatos operacionais**. Não houve consulta SQL ou migração nos D1 legados por esta release. A loja atual não foi copiada nem atribuída ao primeiro cadastro.
+
+As versões foram enviadas inativas e ativadas em **Finance → Auth → App**. Após cada etapa foram conferidos vetor ativo/latest, fontes raw, configuração e domínio. O delta autorizado foi o ACCOUNT_DB nas três configurações e a chave privada de criptografia no Auth. Bindings/segredos existentes, flags, cron, serviços e domínios foram preservados; Finance continua privado.
+
+| Worker | Versão ativa e latest,100% | Ativação em13/11, Brasília |
+| --- | --- | --- |
+| Finance | `d3bf1196-e75b-491b-bc40-f523029db483` | 13:10:56 |
+| Auth | `59f4e183-ea0a-45d3-8291-c56ce737047a` | 13:11:46 |
+| App | `68bb7328-b635-49bb-a64a-b8dff7f0c417` | 13:12:49 |
+
+O vetor foi conferido às13:13:44 e o domínio às13:14:50 de Brasília. Os hashes completos compilados e raw estão no recibo; são artefatos distintos. Os **seis assets atuais e quatro retidos** foram obtidos do domínio com SHA-256 e comprimento exatos, preservando recuperação e rollback.
+
+## Verificações após a publicação
+
+Foram executadas **15 verificações HTTP,10 assets e24 perfis públicos** em320/1365px e claro/escuro, sem erros JavaScript nos perfis registrados. `/login` serviu a release `2026-11-12.1`; páginas públicas de conta foram comparadas à fonte Auth efetivamente publicada. Áreas protegidas redirecionaram ao login e APIs sem sessão retornaram401.
+
+As respostas reais do domínio foram obtidas por GET Node com **TLS verificado** e renderizadas no Chromium por CDP. O Chromium nativo deste ambiente não confiou na CA do proxy; TLS não foi desativado. A evidência comprova as respostas do site e a renderização registrada, não transporte HTTPS nativo desse navegador.
+
+**Nenhuma sessão real autorizada do proprietário estava disponível.** Login/logout autenticados, painéis internos e dados financeiros reais não foram exercitados na Live. A conferência pública não substitui esses fluxos nem o confronto Seller Centre/banco. Nenhum pedido, despesa, devolução, campanha, cobrança, convite, mensagem ou conta sintética real foi criado para QA.
+
+## CI e controles existentes
+
+A primeira CI43453964784 falhou em dois perfis mobile: o texto de status não cabia com a fonte real do runner. A correção CSS e os perfis de fontes/tamanhos adicionais passaram no gate focado4/4 e na CI completa atual. A falha permanece no [histórico](ci-validation.json); o gate local4106/67 inicial não foi reatribuído ao código posterior.
+
+Os três checks **Cloudflare Workers Builds** já apresentavam falha na fonte publicada da PR118 e permaneceram separados do gate GitHub `validate` aprovado. As APIs de configuração/log retornaram403; o diagnóstico exige a permissão `Workers Builds Configuration: Edit` no token autorizado. O fluxo manual Wrangler existente concluiu o deploy e a verificação independente; isso não transforma aqueles checks em aprovados. Não houve force push, uso de admin ou alteração de controle para ocultar falha.
+
+## Dependências para comercialização e aceite
+
+| Dependência ainda ausente | Consequência |
+| --- | --- |
+| E-mail transacional real | Verificação, reset, troca de e-mail e convites não têm entrega real comprovada. Backend/outbox de teste não são serviço de envio Live. |
+| Provedor de cobrança e planos aprovados | Checkout, portal e cobrança real ficam indisponíveis. Nenhum preço/trial foi inventado. |
+| Credenciais e scopes por empresa | Novas empresas permanecem desconectadas; não herdam a conexão da loja atual. TikTok Order API e Mercado Livre seguem com suas dependências próprias. |
+| Documentos legais e retenção | Não há alegação de conformidade legal ou apagamento irreversível liberado por inferência. |
+| Sessão e evidências operacionais autorizadas | M2/M2.2, fabricação completa, comparação Seller Centre/banco e lucro realizado continuam abertos. |
+
+O código publicado não equivale a SaaS pronto para clientes ou resultado financeiro conciliado. O [registro de dependências](EXTERNAL_DEPENDENCIES.json) identifica o impacto por requisito.
 
 ## Recuperação
 
-Manter versões/fontes/configuração/assets anteriores e o novo ACCOUNT_DB. Em regressão crítica, restaurar coordenadamente a configuração e o vetor compatível dos Workers/asset, verificando cada etapa e o domínio; nunca apagar os dados novos para voltar o código. A versão anterior mantém o acesso legado e ignora o banco novo; contas comerciais ficam indisponíveis durante esse rollback, com dados preservados para reaplicar a V4.1 corrigida. Restauração de banco e ensaios destrutivos são feitos em cópia, não na produção. O relatório final deve registrar qualquer recuperação executada; um plano sozinho não comprova restauração operacional.
+Os códigos/configurações/fontes anteriores e os pontos de restauração dos bancos legados foram registrados antes da mudança. Em regressão crítica, restaurar coordenadamente o vetor compatível dos três Workers e assets, conferindo novamente o domínio. **Manter ACCOUNT_DB, schema, escritas novas e a chave de criptografia**; não apagar tabelas nem sobrepor fatos novos com backup antigo para voltar o código.
 
-## Histórico da CI e candidato corrigido
-
-A primeira CI 43453964784 em c7f5ae8 falhou2/4106 nos perfis mobile de status. O local4106/67 anterior é preservado como histórico. A fonte corrigida `bdbc857ac443f58376613225dcbbfd02a108d41c` gera App `82fe3d3ecf19b0f72254dc5778e8a8335505bfc4db4071cc01afce4cfb7cea48` e possui gate focado4/4 aprovado; Auth/Finance permanecem no vetor registrado. A nova CI completa deve passar antes da ativação. Ver [registro e logs](ci-validation.json). Nenhuma migração/deploy é comprovada por este adendo.
+A versão anterior mantém o caminho legado e ignora o banco novo. Contas comerciais ficam indisponíveis durante esse rollback, com os dados preservados para reaplicar a versão compatível e a mesma chave. Ensaios de restauração/migração foram locais e sintéticos; nenhum rollback destrutivo ou restauração operacional de banco foi executado nesta publicação. Uma recuperação futura deve receber seu próprio recibo.
