@@ -1,0 +1,111 @@
+{
+  "schema": "mls_financial_ui_validation_v1",
+  "generated_at": "2026-11-13T23:07:37.754280+00:00",
+  "app_worker_sha256": "17708afc909c858fb518759e7556de99ecf9593999ef77b5cc7b2d9b0c221bb0",
+  "synthetic": true,
+  "real_owner_authenticated": false,
+  "provider_calls": 0,
+  "production_mutations": 0,
+  "suites": [
+    {
+      "files": [
+        "financial-automation-client.test.mjs",
+        "financial-inventory-client.test.mjs"
+      ],
+      "passed": 11,
+      "failed": 0
+    },
+    {
+      "files": [
+        "admin-bootstrap-compiled.test.mjs",
+        "admin-startup-compiled.test.mjs"
+      ],
+      "passed": 29,
+      "failed": 0
+    },
+    {
+      "files": [
+        "financial-automation-client-chrome.test.mjs"
+      ],
+      "passed": 2,
+      "failed": 0,
+      "profiles": 8,
+      "normal_and_minified": true
+    },
+    {
+      "files": [
+        "financial-automation-worker-chrome.test.mjs"
+      ],
+      "passed": 2,
+      "failed": 0,
+      "profiles": 8,
+      "normal_and_minified": true,
+      "actual_public_asset_graph": true,
+      "controlled_hydration": true,
+      "asset_blocked_fallback": true
+    }
+  ],
+  "checks": [
+    "All eight financial sections navigate to real targets.",
+    "Canonical daily, component, position and forecast amounts match table and CSV.",
+    "Negative and missing values remain distinct; future dates do not become zero.",
+    "320px/1365px dark/light geometry has no horizontal page overflow and keeps 44px controls.",
+    "Policy tax and reserve changes require explicit review; close version CAS is preserved.",
+    "Transfer and expense allocation use server previews and explicit confirmation/reversal.",
+    "Historical inventory choices use stored source selections and server-proof fields.",
+    "Unauthorized responses clear values; transient failures preserve a visibly stale snapshot.",
+    "Hidden successful mutations invalidate cached projections before reopening.",
+    "Server fallback stays visible if the workspace asset cannot load.",
+    "Strict startup fake DOM tests retain UNKNOWN_CONTROL errors and original ordered scripts."
+  ],
+  "screenshots": [
+    "finance-worker-minified-1365-dark.png",
+    "finance-worker-minified-1365-light.png",
+    "finance-worker-minified-320-dark.png",
+    "finance-worker-minified-320-light.png",
+    "finance-worker-normal-1365-dark.png",
+    "finance-worker-normal-1365-light.png",
+    "finance-worker-normal-320-dark.png",
+    "finance-worker-normal-320-light.png"
+  ],
+  "limits": [
+    "Local synthetic UI validation does not certify the real store, source permissions, bank account reconciliation or closed financial periods.",
+    "Runtime publication and production-domain verification are performed by the root agent."
+  ],
+  "controlled_markup_hydration": "DOMParser.parseFromString of controlled static markup and replaceChildren; no innerHTML",
+  "root_security_and_strict_bootstrap_verified_tests": 60,
+  "legacy_regression_triage": {
+    "app_worker_sha256": "17708afc909c858fb518759e7556de99ecf9593999ef77b5cc7b2d9b0c221bb0",
+    "full_files": [
+      "bundled-client.test.mjs",
+      "mls-approved-all-panels-chrome.test.mjs",
+      "mls-integrated-owner-visual-chrome.test.mjs"
+    ],
+    "passed": 13,
+    "failed": 0,
+    "isolated_native_repetitions": 2,
+    "reported_native_failures_reproduced": false,
+    "production_changes": false,
+    "expectations_or_timeouts_relaxed": false,
+    "fixture_changes": [
+      "No-host document stub for pure VM helpers.",
+      "Failure-only browser diagnostics for native startup assertions."
+    ]
+  },
+  "shared_fixture_and_navigation_regression": {
+    "files": [
+      "owner-report-browser-fixture.mjs",
+      "composition-cost-ui-compiled.test.mjs",
+      "hermes-financial-context-ui.test.mjs",
+      "financial-automation-worker-chrome.test.mjs"
+    ],
+    "passed": 21,
+    "failed": 0,
+    "test_concurrency": 3,
+    "unique_navigation_url_and_dom_token": true,
+    "only_expected_runtime_context_resets_caught_during_bounded_navigation_wait": true,
+    "whole_test_retries": false,
+    "assertions_or_timeouts_relaxed": false,
+    "runtime_changed": false
+  }
+}

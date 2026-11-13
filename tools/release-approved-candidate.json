@@ -127,6 +127,7 @@
     "web/cloudflare/tests/m2-release-bootstrap-compiled.test.mjs",
     "web/cloudflare/tests/mls-approved-all-panels-chrome.test.mjs",
     "web/cloudflare/tests/mls-integrated-owner-visual-chrome.test.mjs",
+    "web/cloudflare/tests/owner-report-browser-fixture.mjs",
     "web/cloudflare/tests/tenant-sql-isolation.test.mjs",
     "web/finance/src/business-period.mjs",
     "web/finance/src/external-cash-store.mjs",

@@ -1,3 +1,4 @@
+import {hydrateFinancialFixtureHtml} from './financial-fixture-hydration.mjs';
 import {getOrderedBrowserScripts} from './browser-assets-http-fixture.mjs';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
@@ -39,7 +40,8 @@ export async function compiledOwnerReportPage(minify,{ownerPreview=true,flagValu
 // A small DOM is sufficient for the actual owner script. Network responses are
 // parsed in the page's realm, as browser Response.json() would parse them.
 export function ownerReportBrowser(html,{respond=async()=>new Promise(()=>{}),scriptIncludes='let renderedReportKey='}={}){
- const ids=[...html.matchAll(/\bid="([^"]*)"/g)].map(match=>match[1]),calls=[],timers=new Map();let nextTimer=0,context;
+ const controlsHtml=hydrateFinancialFixtureHtml(html);
+ const ids=[...controlsHtml.matchAll(/\bid="([^"]*)"/g)].map(match=>match[1]),calls=[],timers=new Map();let nextTimer=0,context;
  const matches=(element,selector)=>{
   if(selector.startsWith('.'))return selector.slice(1).split('.').every(name=>element.className.split(/\s+/).includes(name));
   const attr=/^\[([^=\]]+)(?:=["']?([^"'\]]+)["']?)?\]$/.exec(selector);
