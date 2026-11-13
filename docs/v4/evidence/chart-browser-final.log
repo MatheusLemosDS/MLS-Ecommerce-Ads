@@ -1,0 +1,13 @@
+✔ compiled M3 workbench normal 320px: local observer, explicit scenarios and navigation (15333.860507ms)
+✔ compiled M3 workbench normal 1365px: local observer, explicit scenarios and navigation (15166.340373ms)
+✔ compiled M3 workbench minified 320px: local observer, explicit scenarios and navigation (17260.192112ms)
+✔ compiled M3 workbench minified 1365px: local observer, explicit scenarios and navigation (13854.956497ms)
+✔ generated normal/minified Ads charts reconcile source, touch, keyboard, themes and mobile reflow (10715.713759ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 61759.792044

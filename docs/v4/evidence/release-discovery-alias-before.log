@@ -1,0 +1,154 @@
+TAP version 13
+# Subtest: generated release discovery opens saved controls without financial mutations (320px, minify=false)
+not ok 1 - generated release discovery opens saved controls without financial mutations (320px, minify=false)
+  ---
+  duration_ms: 13105.033451
+  type: 'test'
+  location: '/workspace/mls-commerce-os-v4/web/cloudflare/tests/app-release-discovery-chrome.test.mjs:157:93'
+  failureType: 'testCodeFailure'
+  error: 'a real destination must open its saved control and receive focus'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  operator: 'fail'
+  stack: |-
+    waitFor (file:///workspace/mls-commerce-os-v4/web/cloudflare/tests/app-release-discovery-chrome.test.mjs:41:9)
+    async assertDestination (file:///workspace/mls-commerce-os-v4/web/cloudflare/tests/app-release-discovery-chrome.test.mjs:189:4)
+    async TestContext.<anonymous> (file:///workspace/mls-commerce-os-v4/web/cloudflare/tests/app-release-discovery-chrome.test.mjs:207:145)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+  ...
+# Subtest: generated release discovery opens saved controls without financial mutations (1365px, minify=false)
+not ok 2 - generated release discovery opens saved controls without financial mutations (1365px, minify=false)
+  ---
+  duration_ms: 13467.577824
+  type: 'test'
+  location: '/workspace/mls-commerce-os-v4/web/cloudflare/tests/app-release-discovery-chrome.test.mjs:157:93'
+  failureType: 'testCodeFailure'
+  error: 'a real destination must open its saved control and receive focus'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  operator: 'fail'
+  stack: |-
+    waitFor (file:///workspace/mls-commerce-os-v4/web/cloudflare/tests/app-release-discovery-chrome.test.mjs:41:9)
+    async assertDestination (file:///workspace/mls-commerce-os-v4/web/cloudflare/tests/app-release-discovery-chrome.test.mjs:189:4)
+    async TestContext.<anonymous> (file:///workspace/mls-commerce-os-v4/web/cloudflare/tests/app-release-discovery-chrome.test.mjs:207:145)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: generated release discovery opens saved controls without financial mutations (320px, minify=false, height=900)
+not ok 3 - generated release discovery opens saved controls without financial mutations (320px, minify=false, height=900)
+  ---
+  duration_ms: 12454.753105
+  type: 'test'
+  location: '/workspace/mls-commerce-os-v4/web/cloudflare/tests/app-release-discovery-chrome.test.mjs:157:93'
+  failureType: 'testCodeFailure'
+  error: 'a real destination must open its saved control and receive focus'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  operator: 'fail'
+  stack: |-
+    waitFor (file:///workspace/mls-commerce-os-v4/web/cloudflare/tests/app-release-discovery-chrome.test.mjs:41:9)
+    async assertDestination (file:///workspace/mls-commerce-os-v4/web/cloudflare/tests/app-release-discovery-chrome.test.mjs:189:4)
+    async TestContext.<anonymous> (file:///workspace/mls-commerce-os-v4/web/cloudflare/tests/app-release-discovery-chrome.test.mjs:207:145)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: generated release discovery opens saved controls without financial mutations (320px, minify=false, font=Arial13)
+not ok 4 - generated release discovery opens saved controls without financial mutations (320px, minify=false, font=Arial13)
+  ---
+  duration_ms: 12772.709647
+  type: 'test'
+  location: '/workspace/mls-commerce-os-v4/web/cloudflare/tests/app-release-discovery-chrome.test.mjs:157:93'
+  failureType: 'testCodeFailure'
+  error: 'a real destination must open its saved control and receive focus'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  operator: 'fail'
+  stack: |-
+    waitFor (file:///workspace/mls-commerce-os-v4/web/cloudflare/tests/app-release-discovery-chrome.test.mjs:41:9)
+    async assertDestination (file:///workspace/mls-commerce-os-v4/web/cloudflare/tests/app-release-discovery-chrome.test.mjs:189:4)
+    async TestContext.<anonymous> (file:///workspace/mls-commerce-os-v4/web/cloudflare/tests/app-release-discovery-chrome.test.mjs:207:145)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: generated release discovery opens saved controls without financial mutations (320px, minify=true)
+not ok 5 - generated release discovery opens saved controls without financial mutations (320px, minify=true)
+  ---
+  duration_ms: 12582.538903
+  type: 'test'
+  location: '/workspace/mls-commerce-os-v4/web/cloudflare/tests/app-release-discovery-chrome.test.mjs:157:93'
+  failureType: 'testCodeFailure'
+  error: 'a real destination must open its saved control and receive focus'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  operator: 'fail'
+  stack: |-
+    waitFor (file:///workspace/mls-commerce-os-v4/web/cloudflare/tests/app-release-discovery-chrome.test.mjs:41:9)
+    async assertDestination (file:///workspace/mls-commerce-os-v4/web/cloudflare/tests/app-release-discovery-chrome.test.mjs:189:4)
+    async TestContext.<anonymous> (file:///workspace/mls-commerce-os-v4/web/cloudflare/tests/app-release-discovery-chrome.test.mjs:207:145)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: generated release discovery opens saved controls without financial mutations (1365px, minify=true)
+not ok 6 - generated release discovery opens saved controls without financial mutations (1365px, minify=true)
+  ---
+  duration_ms: 13119.805607
+  type: 'test'
+  location: '/workspace/mls-commerce-os-v4/web/cloudflare/tests/app-release-discovery-chrome.test.mjs:157:93'
+  failureType: 'testCodeFailure'
+  error: 'a real destination must open its saved control and receive focus'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  operator: 'fail'
+  stack: |-
+    waitFor (file:///workspace/mls-commerce-os-v4/web/cloudflare/tests/app-release-discovery-chrome.test.mjs:41:9)
+    async assertDestination (file:///workspace/mls-commerce-os-v4/web/cloudflare/tests/app-release-discovery-chrome.test.mjs:189:4)
+    async TestContext.<anonymous> (file:///workspace/mls-commerce-os-v4/web/cloudflare/tests/app-release-discovery-chrome.test.mjs:207:145)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: generated release discovery opens saved controls without financial mutations (320px, minify=true, height=900)
+not ok 7 - generated release discovery opens saved controls without financial mutations (320px, minify=true, height=900)
+  ---
+  duration_ms: 12749.397754
+  type: 'test'
+  location: '/workspace/mls-commerce-os-v4/web/cloudflare/tests/app-release-discovery-chrome.test.mjs:157:93'
+  failureType: 'testCodeFailure'
+  error: 'a real destination must open its saved control and receive focus'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  operator: 'fail'
+  stack: |-
+    waitFor (file:///workspace/mls-commerce-os-v4/web/cloudflare/tests/app-release-discovery-chrome.test.mjs:41:9)
+    async assertDestination (file:///workspace/mls-commerce-os-v4/web/cloudflare/tests/app-release-discovery-chrome.test.mjs:189:4)
+    async TestContext.<anonymous> (file:///workspace/mls-commerce-os-v4/web/cloudflare/tests/app-release-discovery-chrome.test.mjs:207:145)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: generated release discovery opens saved controls without financial mutations (320px, minify=true, font=Arial13)
+not ok 8 - generated release discovery opens saved controls without financial mutations (320px, minify=true, font=Arial13)
+  ---
+  duration_ms: 13095.0776
+  type: 'test'
+  location: '/workspace/mls-commerce-os-v4/web/cloudflare/tests/app-release-discovery-chrome.test.mjs:157:93'
+  failureType: 'testCodeFailure'
+  error: 'a real destination must open its saved control and receive focus'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  operator: 'fail'
+  stack: |-
+    waitFor (file:///workspace/mls-commerce-os-v4/web/cloudflare/tests/app-release-discovery-chrome.test.mjs:41:9)
+    async assertDestination (file:///workspace/mls-commerce-os-v4/web/cloudflare/tests/app-release-discovery-chrome.test.mjs:189:4)
+    async TestContext.<anonymous> (file:///workspace/mls-commerce-os-v4/web/cloudflare/tests/app-release-discovery-chrome.test.mjs:207:145)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 0
+# fail 8
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 103463.127483

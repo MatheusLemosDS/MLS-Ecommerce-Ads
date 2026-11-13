@@ -1,0 +1,16 @@
+✔ account APIs require dedicated D1, strict origin/schema/CSRF; pending account never reaches a company (37.669316ms)
+✔ verification purpose/expiry/one-use and reset revoke sessions while preserving normal login (25.617446ms)
+✔ durable SQLite restart, migration replay, backup restoration and legacy table bytes remain intact (8.582472ms)
+✔ two companies are isolated; invite requires exact verified email and membership revocation fences cached principal (22.668589ms)
+✔ company and store idempotency, scoped test connector, billing adapter, and export authorization (25.716879ms)
+✔ MFA enrollment requires proof, recovery appears once and replay fails, reset preserves factor (25.083217ms)
+✔ email change is verified before replacement, sessions idle/absolute boundaries and shared abuse limits (26.948747ms)
+✔ ownership transfer is accepted atomically and last owner/foreign user cannot offboard company (21.686311ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 334.78704

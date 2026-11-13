@@ -1,0 +1,14 @@
+✔ editing the persisted child price to1350 preserves every other rule field and assignment with audited CAS (28.794267ms)
+✔ 1350 reprices current and historical infant sales from saved evidence while adults kits and manual exceptions stay intact (392.171951ms)
+✔ saving an infant sales rule never silently rewrites actual manufacture snapshots or deducts their ledger twice (124.927531ms)
+✔ reviewed commercial adapters preserve the complete original financial source and direct formula sections (59.804403ms)
+✔ the exact previous source variant remains recognized without broadening the legacy baseline (43.533273ms)
+✔ unreviewed formula and initialization changes are rejected by exact source fingerprints (89.423845ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 775.844789

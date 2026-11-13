@@ -1,0 +1,33 @@
+{
+  "schema": "mls_v41_baseline_execution_v1",
+  "base_commit": "a5bd38a0902b38ecc3e90a747601eba330e7813e",
+  "environment": "LOCAL_SYNTHETIC_ORIGINAL_BASE",
+  "node": {
+    "command": "npm test",
+    "working_directory": "/workspace/mls-commerce-os",
+    "tests": 3905,
+    "passed": 3904,
+    "failed": 1,
+    "skipped": 0,
+    "duration_ms": 513483.379934,
+    "full_log": "/workspace/mls-owner-preview/attachments/v41-implementation-20261111/baseline-node-full.tap.log",
+    "full_log_sha256": "31da1db8e9d0c4579a94088de2da88ac251511295c1bdad6206f375766c70bea",
+    "excerpt": "docs/v4/evidence/baseline-node-excerpt.log",
+    "failure": {
+      "test": "compiled order operations with real assets, SQLite, CAS and lifecycle minified 320",
+      "source": "web/cloudflare/tests/order-operations-chrome.test.mjs:10:64",
+      "message": "Inspected target navigated or closed",
+      "classification": "OBSERVED_ON_UNMODIFIED_BASE_CAUSE_PENDING",
+      "note": "A CDP target closure is observed. Cause is not attributed to candidate code or declared infrastructure-only without follow-up evidence."
+    }
+  },
+  "python": {
+    "command": "python3 -m unittest web/bridge/test_hermes_bridge.py tools/test_install_hermes_web_bridge.py tools/test_build_hermes_web_bridge_install.py tools/test_activate_hermes_web_bridge.py tools/test_build_hermes_web_bridge_activation.py -q",
+    "passed": 67,
+    "failed": 0,
+    "result": "PASSOU",
+    "log": "docs/v4/evidence/baseline-python.log",
+    "sha256": "205b83fbbf11482de2f3a059b1d80e9dc3a5487b7d29f195cf920b7ca3ff3f5f"
+  },
+  "meaning": "Baseline regression evidence only. It does not establish candidate UI, new accounts, remote CI, publication or Live verification."
+}

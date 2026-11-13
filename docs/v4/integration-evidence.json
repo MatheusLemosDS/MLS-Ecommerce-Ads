@@ -1,0 +1,538 @@
+{
+  "schema": "mls_v41_integration_evidence_register_v1",
+  "updated_at": "2026-11-13T15:31:46.220533+00:00",
+  "evidence": [
+    {
+      "id": "ACCOUNT-AUTH-41",
+      "ambiente": "LOCAL_SINTETICO",
+      "tipo": "ACCOUNT_AUTH_SOURCE_AND_GENERATED_AUTH",
+      "arquivo": "docs/v4/evidence/account-auth-final.log",
+      "sha256": "c2f9ac64a7bd587e67921e3b46e2acb00b70527ceb96158ee313eb2066885b80",
+      "resultado": "PASSOU",
+      "contagem": {
+        "passou": 41,
+        "falhou": 0,
+        "ignorados": 0
+      },
+      "proveniencia": "Account/Auth owner reported execution; full TAP inspected. Command below is the reproducible selected suite, not a shell-history record.",
+      "limite": "Somente escopo do comando/artefatos testados. Não representa todos os caminhos do candidato, publicação ou Live."
+    },
+    {
+      "id": "COMMERCIAL-APP-AUTH-FINANCE-RUNTIME-5",
+      "ambiente": "LOCAL_SINTETICO",
+      "tipo": "SOURCE_RUNTIME_AND_COMPILED_APP_AUTH_FINANCE",
+      "arquivo": "docs/v4/evidence/commercial-admin-runtime.log",
+      "sha256": "7ae94d4004e847bdad32553772a112af48ee5b8883cd9df19b4e63432515ac1a",
+      "resultado": "PASSOU",
+      "contagem": {
+        "passou": 5,
+        "falhou": 0,
+        "ignorados": 0
+      },
+      "proveniencia": "Account/Auth owner reported execution; full TAP and test source inspected. Includes actual generated App→Auth→Finance bootstrap/bank read/logout with SQLite and production KDF.",
+      "limite": "Somente escopo do comando/artefatos testados. Não representa todos os caminhos do candidato, publicação ou Live.",
+      "comando": "node --test --test-reporter=tap web/cloudflare/tests/commercial-admin-runtime.test.mjs"
+    },
+    {
+      "id": "ACCOUNT-UI-SECURITY-9",
+      "ambiente": "LOCAL_SINTETICO",
+      "tipo": "REAL_ACCOUNT_WORKER_SQLITE_NATIVE_CHROMIUM",
+      "arquivo": "docs/v4/evidence/account-ui-security.log",
+      "sha256": "20c47cbf1547eef7399ef0f6d648abf61243d4abbfdb1b99fb6203da7c5323c9",
+      "resultado": "PASSOU",
+      "contagem": {
+        "passou": 9,
+        "falhou": 0,
+        "ignorados": 0
+      },
+      "proveniencia": "Browser owner reported exact latest frozen client; log inspected. Four normal/min 320/1365 journeys plus two teardown profiles and three rendering tests.",
+      "limite": "Somente escopo do comando/artefatos testados. Não representa todos os caminhos do candidato, publicação ou Live.",
+      "comando": "MLS_V4_ACCOUNT_SCREENSHOT_DIR=/workspace/mls-v4-work/account-qa node --test web/cloudflare/tests/commercial-account-view.test.mjs web/cloudflare/tests/commercial-account-view-chrome.test.mjs"
+    },
+    {
+      "id": "FINANCE-FULL-SERIAL-776",
+      "ambiente": "LOCAL_SINTETICO",
+      "tipo": "FINANCE_FULL_LOCAL_SUITE_SERIAL",
+      "arquivo": "docs/v4/evidence/finance-full-serial.log",
+      "sha256": "bc60749dcec321d2aeedf6557160361e11fb7ad969d0bc7ccf2be61c3dc771a2",
+      "resultado": "PASSOU",
+      "contagem": {
+        "passou": 776,
+        "falhou": 0,
+        "ignorados": 0
+      },
+      "proveniencia": "Isolation owner reported exact final command; full TAP inspected. Prior concurrent run had process SIGKILL without assertion; full bounded serial run completed.",
+      "limite": "Somente escopo do comando/artefatos testados. Não representa todos os caminhos do candidato, publicação ou Live.",
+      "comando": "node --test --test-reporter=tap --test-concurrency=1 web/finance/tests/*.test.mjs"
+    },
+    {
+      "id": "COMPILED-APP-AUTH-FINANCE-SQLITE-3",
+      "ambiente": "LOCAL_SINTETICO",
+      "tipo": "APP_ADAPTER_COMPILED_AUTH_FINANCE_SQLITE",
+      "arquivo": "docs/v4/evidence/commercial-compiled-chain.log",
+      "sha256": "14069ff649758484e39e3b8dc5111d430d0cb08d9ac5ae44cd6210ee3496f898",
+      "resultado": "PASSOU",
+      "contagem": {
+        "passou": 3,
+        "falhou": 0,
+        "ignorados": 0
+      },
+      "proveniencia": "Isolation owner reported exact command and log. Browser/full App presentation is outside this suite.",
+      "limite": "Somente escopo do comando/artefatos testados. Não representa todos os caminhos do candidato, publicação ou Live.",
+      "comando": "node --test web/finance/tests/commercial-compiled-chain.test.mjs"
+    },
+    {
+      "id": "MONTH-RELEASE-REGRESSIONS-6",
+      "ambiente": "LOCAL_SINTETICO",
+      "tipo": "SOURCE_RELEASE_AND_COMPILED_MONTH_REGRESSION",
+      "arquivo": "docs/v4/evidence/month-release-regressions.log",
+      "sha256": "cf8a7becacbe5f5697c89a1555a6562cbb094bce47843b810858d3d7ca7da618",
+      "resultado": "PASSOU",
+      "contagem": {
+        "passou": 6,
+        "falhou": 0,
+        "ignorados": 0
+      },
+      "proveniencia": "Coverage agent executed exact command after adding missing DOM style fixture and exact new release assertions. No functional assertions removed.",
+      "limite": "Somente escopo do comando/artefatos testados. Não representa todos os caminhos do candidato, publicação ou Live.",
+      "comando": "node --test --test-reporter=tap web/cloudflare/tests/business-month-cost-performance-compiled.test.mjs web/cloudflare/tests/app-release.test.mjs"
+    },
+    {
+      "id": "CATALOG-COMPILED-REGRESSION-2",
+      "ambiente": "LOCAL_SINTETICO",
+      "tipo": "COMPILED_CATALOG_NORMAL_MINIFIED",
+      "comando": "node --test --test-reporter=tap web/cloudflare/tests/catalog-classification-compiled.test.mjs",
+      "arquivo": "docs/v4/evidence/catalog-compiled-regression.log",
+      "sha256": "e083612645444d8c6bebd81557ee00663af37c3f732c8dee3e726a3e0e7b14e2",
+      "resultado": "PASSOU",
+      "contagem": {
+        "passou": 2,
+        "falhou": 0,
+        "ignorados": 0
+      },
+      "proveniencia": "Coverage agent executed current compiled test after shared helper fix; no catalogue source/test changes required.",
+      "limite": "Only targeted compiled catalogue regression; final whole application gates remain separate."
+    },
+    {
+      "id": "ACCOUNT-AUTH-SNAPSHOT-55",
+      "ambiente": "LOCAL_SINTETICO",
+      "tipo": "FOCUSED_LOCAL_INTEGRATION",
+      "arquivo": "docs/v4/evidence/account-auth-snapshot-final.log",
+      "sha256": "941ff1d811ea21b6338272aa41dd7b339a1b2400c8afc7f42f9b1cc13a9d1e3d",
+      "resultado": "PASSOU",
+      "contagem": {
+        "passou": 55,
+        "falhou": 0,
+        "ignorados": 0
+      },
+      "escopo": "Source, generated Auth, real SQLite and compiled chain; owner exact command/log inspected. Does not assert complete Auth request SQL budget.",
+      "limite": "This command scope only; final whole-app gates, runtime limits, publication and Live remain independent.",
+      "comando": "node --test --test-reporter=tap web/cloudflare/tests/account-principal-snapshot.test.mjs web/cloudflare/tests/account-backend.test.mjs web/cloudflare/tests/account-crypto.test.mjs web/cloudflare/tests/account-auth-worker.test.mjs web/cloudflare/tests/account-bridge.test.mjs web/cloudflare/tests/commercial-admin-runtime.test.mjs web/cloudflare/tests/commercial-account-gateway.test.mjs web/finance/tests/commercial-compiled-chain.test.mjs tools/tests/commercial-auth-baseline.test.mjs"
+    },
+    {
+      "id": "FINANCE-FULL-SERIAL-777",
+      "ambiente": "LOCAL_SINTETICO",
+      "tipo": "FOCUSED_LOCAL_INTEGRATION",
+      "arquivo": "docs/v4/evidence/finance-full-serial-777.log",
+      "sha256": "4ec41675531826e3ae52bbb56b51431a51bb3ac9948478f107b5cea988c8ff35",
+      "resultado": "PASSOU",
+      "contagem": {
+        "passou": 777,
+        "falhou": 0,
+        "ignorados": 0
+      },
+      "escopo": "Latest full serial Finance run after atomic principal snapshot registry; previous 776 evidence retained as history.",
+      "limite": "This command scope only; final whole-app gates, runtime limits, publication and Live remain independent.",
+      "comando": "node --test --test-reporter=tap --test-concurrency=1 web/finance/tests/*.test.mjs"
+    },
+    {
+      "id": "COMPILED-APP-AUTH-FINANCE-SQLITE-FINAL-3",
+      "ambiente": "LOCAL_SINTETICO",
+      "tipo": "FOCUSED_LOCAL_INTEGRATION",
+      "arquivo": "docs/v4/evidence/commercial-compiled-chain-final.log",
+      "sha256": "693c48d68d9158a79c176f647a666b7d12640f885003dcd636a9a05339956151",
+      "resultado": "PASSOU",
+      "contagem": {
+        "passou": 3,
+        "falhou": 0,
+        "ignorados": 0
+      },
+      "escopo": "Source App adapters plus actual compiled Auth/Finance, SQLite, actual distinct provider IDs/tokens, independent signatures, revocation. Finance complete calls assert <=50; not whole App UI.",
+      "limite": "This command scope only; final whole-app gates, runtime limits, publication and Live remain independent.",
+      "comando": "node --test web/finance/tests/commercial-compiled-chain.test.mjs",
+      "bundles": {
+        "finance": {
+          "bytes": 729822,
+          "sha256": "ebca9bc11a1d2aecf8bc8085360ecffdc16e7c96d59a7171088f59515f9d9f3e"
+        },
+        "auth": {
+          "bytes": 518870,
+          "sha256": "348e7485c9e53e1bb1dbe7e0729167e5b2ec468abec9f6a48050dfc3004dbe1e"
+        }
+      }
+    },
+    {
+      "id": "COST-RULES-TEARDOWN-COMPILED-41",
+      "ambiente": "LOCAL_SINTETICO",
+      "tipo": "FOCUSED_LOCAL_INTEGRATION",
+      "arquivo": "docs/v4/evidence/cost-rules-teardown-final.log",
+      "sha256": "a822a3b7703bc1d8cda75102a5f080868113dc5a925fc8ac269f1ada73107562",
+      "resultado": "PASSOU",
+      "contagem": {
+        "passou": 41,
+        "falhou": 0,
+        "ignorados": 0
+      },
+      "escopo": "Coverage agent exact execution, 35 existing rules UI cases +4 lifecycle races +2 normal/min compiled catalogue; no financial arithmetic changed.",
+      "limite": "This command scope only; final whole-app gates, runtime limits, publication and Live remain independent.",
+      "comando": "node --test --test-reporter=tap web/cloudflare/tests/cost-rules-ui.test.mjs web/cloudflare/tests/catalog-classification-compiled.test.mjs",
+      "source": {
+        "path": "web/cloudflare/src/cost-rules-view.mjs",
+        "sha256": "46ed4146082a6f7f538c38cb38e46be3d8de670c737ce39a1cbd01e1858e69fe"
+      }
+    },
+    {
+      "id": "ACCOUNT-REVEALED-SECRET-WIPE-3",
+      "ambiente": "LOCAL_SINTETICO",
+      "tipo": "FOCUSED_LOCAL_INTEGRATION",
+      "arquivo": "docs/v4/evidence/account-revealed-secret-final.log",
+      "sha256": "16be723f4f368a0fcaa81670414541952bf24c144c2d9af1d0c6c96b88cb361d",
+      "resultado": "PASSOU",
+      "contagem": {
+        "passou": 3,
+        "falhou": 0,
+        "ignorados": 0
+      },
+      "escopo": "Browser owner final focused run: normal320 deep journey plus normal/min teardown. Held revealed password input and recovery-code pre wiped before detach; broader9 test suite was the preceding source freeze.",
+      "limite": "This command scope only; final whole-app gates, runtime limits, publication and Live remain independent.",
+      "comando": "MLS_V4_ACCOUNT_SCREENSHOT_DIR=/workspace/mls-v4-work/account-qa node --test --test-name-pattern='real account security teardown|real account worker UI normal 320px' web/cloudflare/tests/commercial-account-view-chrome.test.mjs",
+      "source_sha256": "5d4f02fbe4b205910e70e582120116e1dbec6eab44e6d09c8344159ff15e9639"
+    },
+    {
+      "id": "MONTH-COMMERCIAL-TEARDOWN-96",
+      "ambiente": "LOCAL_SINTETICO",
+      "tipo": "COMMERCIAL_MONTH_TEARDOWN_AND_LEGACY_REGRESSION",
+      "comando": "node --test web/cloudflare/tests/business-month-ui.test.mjs",
+      "arquivo": "docs/v4/evidence/month-commercial-teardown.log",
+      "sha256": "aa86f88bcd86d82b4064e39e91551c58827c2b0a0b60fb3bb9880739e4e8d3f3",
+      "resultado": "PASSOU",
+      "contagem": {
+        "passou": 96,
+        "falhou": 0,
+        "ignorados": 0
+      },
+      "source": {
+        "path": "web/cloudflare/src/business-month-client.mjs",
+        "sha256": "b91ff45049ab42b3a34182c970e066b336a2aa8cf84a66c79e2da9d4bed8083e"
+      },
+      "escopo": "Commercial stop clears cached money/Ads/catalogue/checkpoint/M3/drafts/callbacks/listeners/DOM and rejects held late read/enqueue; legacy stop and normal month-switch drafts remain covered.",
+      "limite": "Source/controller plus normal/min compiled month scope only; final whole App rebuild and suite remain separate."
+    },
+    {
+      "id": "MONTH-COMMERCIAL-TEARDOWN-COMPILED-2",
+      "ambiente": "LOCAL_SINTETICO",
+      "tipo": "COMMERCIAL_MONTH_TEARDOWN_AND_LEGACY_REGRESSION",
+      "comando": "node --test web/cloudflare/tests/business-month-cost-performance-compiled.test.mjs",
+      "arquivo": "docs/v4/evidence/month-commercial-teardown-compiled.log",
+      "sha256": "90abc9cc0f567b8b2cf96435f494b77d02ddced948f88901ab1ede7c6b4d24fc",
+      "resultado": "PASSOU",
+      "contagem": {
+        "passou": 2,
+        "falhou": 0,
+        "ignorados": 0
+      },
+      "source": {
+        "path": "web/cloudflare/src/business-month-client.mjs",
+        "sha256": "b91ff45049ab42b3a34182c970e066b336a2aa8cf84a66c79e2da9d4bed8083e"
+      },
+      "escopo": "Commercial stop clears cached money/Ads/catalogue/checkpoint/M3/drafts/callbacks/listeners/DOM and rejects held late read/enqueue; legacy stop and normal month-switch drafts remain covered.",
+      "limite": "Source/controller plus normal/min compiled month scope only; final whole App rebuild and suite remain separate."
+    },
+    {
+      "id": "ACCOUNT-BOUNDED-COLD-AUTH-51",
+      "ambiente": "LOCAL_SINTETICO",
+      "tipo": "BOUNDED_LOCAL_COMPILED_REGRESSION",
+      "comando": "node --test --test-reporter=tap web/cloudflare/tests/account-bounded-security.test.mjs web/cloudflare/tests/account-principal-snapshot.test.mjs web/cloudflare/tests/account-backend.test.mjs web/cloudflare/tests/account-crypto.test.mjs web/cloudflare/tests/account-auth-worker.test.mjs web/cloudflare/tests/account-bridge.test.mjs web/cloudflare/tests/commercial-account-gateway.test.mjs tools/tests/commercial-auth-baseline.test.mjs",
+      "arquivo": "docs/v4/evidence/account-bounded-final.log",
+      "sha256": "47016524ca6faaa76cdb1d2d07deef9a66ae4d990c1004340cbcd945713faff7",
+      "resultado": "PASSOU",
+      "contagem": {
+        "passou": 51,
+        "falhou": 0,
+        "ignorados": 0
+      },
+      "escopo": "Actual cold compiled Auth MFA38SQL with1000 own+1000 foreign sessions and hard50 quota; scoped atomic revoke9SQL/reset16SQL and foreign preserved. Real migrations0001+0002 applied/replayed twice, no invented0003.",
+      "limite": "Only command scope and tested bundle; final whole-suite/CI, publication and Live remain independent."
+    },
+    {
+      "id": "BUNDLED-MONTH-REAL-DOM-FIXTURE-8",
+      "ambiente": "LOCAL_SINTETICO",
+      "tipo": "BOUNDED_LOCAL_COMPILED_REGRESSION",
+      "comando": "node --test --test-reporter=tap web/cloudflare/tests/bundled-client.test.mjs",
+      "arquivo": "docs/v4/evidence/bundled-dom-fixture-final.log",
+      "sha256": "6d345857067289eeb4267fe5f1db202a5d218a80f6d9e8dc2d057278f66943fb",
+      "resultado": "PASSOU",
+      "contagem": {
+        "passou": 8,
+        "falhou": 0,
+        "ignorados": 0
+      },
+      "escopo": "Actual generated App/esbuild normal/min monthly/Ads/reconciliation/customcost/MEI; fake element gains standard style object, existing money/source assertions unchanged.",
+      "limite": "Only command scope and tested bundle; final whole-suite/CI, publication and Live remain independent."
+    },
+    {
+      "id": "ORGANIZED-WORKSPACE-SOURCE-8",
+      "ambiente": "LOCAL_SINTETICO",
+      "tipo": "FOCUSED_KNOWN_REGRESSION_FIX",
+      "arquivo": "docs/v4/evidence/organized-workspace-final.log",
+      "sha256": "70fb81daa3b1dbc0f874170f537adc90157ff4461733932f753eff906f3d175c",
+      "resultado": "PASSOU",
+      "contagem": {
+        "passou": 8,
+        "falhou": 0,
+        "ignorados": 0
+      },
+      "escopo": "Source-fragment test now loads exact commercial declarations from CLIENT. Existing tab URLs/back/draft/modified-click assertions unchanged.",
+      "limite": "Selected test gate only; final complete Node/CI and publication/Live remain independent.",
+      "comando": "node --test --test-reporter=tap web/cloudflare/tests/organized-workspace.test.mjs"
+    },
+    {
+      "id": "DAILY-HERMES-NATIVE-CONTROLS-4",
+      "ambiente": "LOCAL_SINTETICO",
+      "tipo": "FOCUSED_KNOWN_REGRESSION_FIX",
+      "arquivo": "docs/v4/evidence/production-daily-hermes-native-final.log",
+      "sha256": "9847e698dece4dc6118a0adb74d96597c3c1f55f93026243498d79499181fe6f",
+      "resultado": "PASSOU",
+      "contagem": {
+        "passou": 4,
+        "falhou": 0,
+        "ignorados": 0
+      },
+      "escopo": "Native Chromium normal/minified×320/1365: actual daily manufacturing, independent financial period, immutable Hermes seven-term equation; helper resolves same semantic control per task, no transient DOM IDs. All44px/hit/native click/money/draft/GET-only assertions retained.",
+      "limite": "Selected test gate only; final complete Node/CI and publication/Live remain independent.",
+      "comando": "node --test --test-reporter=tap web/cloudflare/tests/production-daily-hermes-chrome.test.mjs"
+    },
+    {
+      "id": "EDITABLE-COSTS-CHROME-4",
+      "ambiente": "LOCAL_SINTETICO",
+      "tipo": "FOCUSED_KNOWN_REGRESSION_FIX",
+      "arquivo": "docs/v4/evidence/editable-costs-final.log",
+      "sha256": "9468342c9e0119cd278f112f7ef6459b22be9889c024d6684a5ee0948215609d",
+      "resultado": "PASSOU",
+      "contagem": {
+        "passou": 4,
+        "falhou": 0,
+        "ignorados": 0
+      },
+      "escopo": "Isolation owner reported4/4 actual browser cost editing, original flows unchanged. Tests-only source-gate adaptation.",
+      "limite": "Selected test gate only; final complete Node/CI and publication/Live remain independent."
+    },
+    {
+      "id": "PRODUCTION-CLOSING-CHROME-4",
+      "ambiente": "LOCAL_SINTETICO",
+      "tipo": "FOCUSED_KNOWN_REGRESSION_FIX",
+      "arquivo": "docs/v4/evidence/production-closing-gates-final.log",
+      "sha256": "04e065b5996ce7e006436016066e1ca084260c2a75290aebae494aabc900071d",
+      "resultado": "PASSOU",
+      "contagem": {
+        "passou": 4,
+        "falhou": 0,
+        "ignorados": 0
+      },
+      "escopo": "Isolation owner reported4/4 actual production-closing browser profiles, original flow assertions retained; tests-only pins adaptation.",
+      "limite": "Selected test gate only; final complete Node/CI and publication/Live remain independent."
+    },
+    {
+      "id": "REVIEWED-COST-SOURCE-AND-GOLDENS-6",
+      "ambiente": "LOCAL_SINTETICO",
+      "tipo": "FOCUSED_KNOWN_REGRESSION_FIX",
+      "arquivo": "docs/v4/evidence/reviewed-cost-gates.log",
+      "sha256": "513769adfc066d7462377ff50c071149d9c46a6b50d321aa8dfb871c32e3f86d",
+      "resultado": "PASSOU",
+      "contagem": {
+        "passou": 6,
+        "falhou": 0,
+        "ignorados": 0
+      },
+      "escopo": "Reviewed original/current SHA gates, exact approved normalization only, full baseline comparison and historical pricing goldens. No financial source or generated artifact changed.",
+      "limite": "Selected test gate only; final complete Node/CI and publication/Live remain independent."
+    },
+    {
+      "id": "WHOLE-NODE-FINAL-4106",
+      "ambiente": "LOCAL_SINTETICO",
+      "tipo": "SUITE_COMPLETA_COM_MAPEAMENTO_POR_REQUISITO",
+      "comando": "npm test",
+      "arquivo": "docs/v4/evidence/whole-node-final-4106.log",
+      "sha256": "dfb54277ac28402d040f78ff701c9b13c2929089d7244f29587d231491aa961c",
+      "resultado": "PASSOU",
+      "contagem": {
+        "tests": 4106,
+        "passou": 4106,
+        "falhou": 0,
+        "ignorados": 0
+      },
+      "duracao_ms": 519799.020926,
+      "limite": "Testes locais e Chromium com fixtures. Não comprova operação real, serviço externo, CI, publicação ou QA autenticado Live. O conjunto de testes de cada linha delimita o alcance da evidência."
+    },
+    {
+      "id": "WHOLE-PYTHON-FINAL-67",
+      "ambiente": "LOCAL_SINTETICO",
+      "tipo": "PONTE_E_INSTALACAO",
+      "comando": "python3 -m unittest web/bridge/test_hermes_bridge.py tools/test_install_hermes_web_bridge.py tools/test_build_hermes_web_bridge_install.py tools/test_activate_hermes_web_bridge.py tools/test_build_hermes_web_bridge_activation.py -q",
+      "arquivo": "docs/v4/evidence/whole-python-final-67.log",
+      "sha256": "284180517cb0d2817a56da3e6ad08a45f148c9fbdad084f37bc325935b53888a",
+      "resultado": "PASSOU",
+      "contagem": {
+        "passou": 67,
+        "falhou": 0,
+        "ignorados": 0
+      },
+      "limite": "Contratos e ferramentas de ponte locais; nenhuma instalação ou execução remota é comprovada."
+    },
+    {
+      "id": "CANONICAL-NAVIGATION-FINAL-20",
+      "ambiente": "LOCAL_SINTETICO",
+      "tipo": "CHROMIUM_E_CONTROLADORES_GERADOS",
+      "comando": "node --test --test-reporter=tap --test-concurrency=1 web/cloudflare/tests/app-release-discovery-chrome.test.mjs web/cloudflare/tests/organized-workspace.test.mjs web/cloudflare/tests/weekly-context-navigation-chrome.test.mjs",
+      "arquivo": "docs/v4/evidence/canonical-navigation-final-20.log",
+      "sha256": "ea0c7f741ca4d342b95546dc5693a578dfba73c1eeb02a4940517ba06833af47",
+      "resultado": "PASSOU",
+      "contagem": {
+        "passou": 20,
+        "falhou": 0,
+        "ignorados": 0
+      },
+      "escopo": "Oito perfis das novidades, oito contratos de navegação e quatro jornadas semanais. Alias antigo resolve painel pelo destino confiável antes de focar; mantém mês/data/corte, capability e rascunhos. Sem escrita financeira/física."
+    }
+  ],
+  "open_gates": [
+    "CI remota e integração pelo fluxo permitido",
+    "Aplicar0001+0002 somente no ACCOUNT_DB novo e conferir configuração/segredo",
+    "Publicar e verificar versões/hash/configuração/assets no domínio",
+    "QA autenticada Live limitada pela ausência de sessão; não equivale a aceite operacional"
+  ],
+  "publication": "NAO_DECLARADA",
+  "live": "NAO_DECLARADO",
+  "local_runtime_findings": [
+    {
+      "id": "LOCAL-AUTH-MFA-COLD-QUERY-BUDGET",
+      "estado": "RESOLVIDO_LOCALMENTE",
+      "requisitos": [
+        "ACCT-06",
+        "ACCT-17",
+        "COM-06"
+      ],
+      "origem": "Account/Auth implementation owner measured actual compiled Auth with4 valid sessions at2026-11-12; local adapter does not enforce provider quota.",
+      "observado": "Cold MFA confirmation52SQL exceeds Free50. Two sessions48. Finance cold import50 separately asserted and not the same defect.",
+      "evidencia_privada": "/workspace/mls-v4-work/auth-mfa-query-count.json",
+      "natureza": "LOCAL_IMPLEMENTATION_RUNTIME_GATE_NOT_EXTERNAL_DEPENDENCY",
+      "fechamento": "Bounded set-based scoped revocation and v2 cold migration probe implemented; exact compiled quota regression passed51/51. Publication/Live separate.",
+      "arquivo": "docs/v4/evidence/auth-mfa-query-budget-before.json",
+      "sha256": "65a21c7e186e6345364023eae2d65a324ec78b7e175d64216747b090d79712a8",
+      "resultado_apos_correcao": "Cold compiled Auth MFA38SQL,1000 own+1000 foreign sessions, hard50 enforced; revoke9/reset16SQL; noDDL.",
+      "evidencia_de_fechamento": {
+        "id": "ACCOUNT-BOUNDED-COLD-AUTH-51",
+        "arquivo": "docs/v4/evidence/account-bounded-final.log",
+        "sha256": "47016524ca6faaa76cdb1d2d07deef9a66ae4d990c1004340cbcd945713faff7"
+      }
+    },
+    {
+      "id": "LOCAL-LEGACY-PRODUCTION-HASH-ALIAS-CLICK",
+      "estado": "RESOLVIDO_LOCALMENTE",
+      "requisitos": [
+        "QA-01",
+        "QA-05",
+        "QA-12"
+      ],
+      "observado": "Retained in-page /admin?tab=margins#incurredProductionDetails native link keeps margins visible; production controller snapshot exists but production target is hidden and receives no focus. Initial deep-link alias was separately covered.",
+      "causa": "Current anchor handler opens query tab then disables cross-panel fragment activation. Exact existing flow assertions retained.",
+      "arquivo": "docs/v4/evidence/release-discovery-alias-before.log",
+      "sha256": "aa02b55e9fec57756a80e9b013739eec1a566a7a12a4d137c88e80d70c73507c",
+      "contagem": {
+        "passou": 0,
+        "falhou": 8,
+        "ignorados": 0
+      },
+      "natureza": "LOCAL_ROUTING_REGRESSION_NOT_EXTERNAL_DEPENDENCY",
+      "fechamento": "Root source handler correction with capability check, rebuilt App and all8 actual profiles without skippedflows.",
+      "evidencia_de_fechamento": {
+        "id": "CANONICAL-NAVIGATION-FINAL-20",
+        "ambiente": "LOCAL_SINTETICO",
+        "tipo": "CHROMIUM_E_CONTROLADORES_GERADOS",
+        "comando": "node --test --test-reporter=tap --test-concurrency=1 web/cloudflare/tests/app-release-discovery-chrome.test.mjs web/cloudflare/tests/organized-workspace.test.mjs web/cloudflare/tests/weekly-context-navigation-chrome.test.mjs",
+        "arquivo": "docs/v4/evidence/canonical-navigation-final-20.log",
+        "sha256": "ea0c7f741ca4d342b95546dc5693a578dfba73c1eeb02a4940517ba06833af47",
+        "resultado": "PASSOU",
+        "contagem": {
+          "passou": 20,
+          "falhou": 0,
+          "ignorados": 0
+        },
+        "escopo": "Oito perfis das novidades, oito contratos de navegação e quatro jornadas semanais. Alias antigo resolve painel pelo destino confiável antes de focar; mantém mês/data/corte, capability e rascunhos. Sem escrita financeira/física."
+      },
+      "resultado_apos_correcao": "Gate20/20 e suíte completa4106/4106 aprovados com Appae11ec6d; fonte do handler corrige destino antes de focar."
+    }
+  ],
+  "whole_node_trial": {
+    "estado": "FALHA_HISTORICA_SUPERADA_POR_EXECUCAO_COMPLETA_FINAL",
+    "arquivo_original_privado": "/workspace/mls-v4-work/v41-node-full-final.tap",
+    "sha256": "7bca7cd47599de53d36bbaa91a624148d8feb4f1ffa558edeb70042478a458e6",
+    "contagem": {
+      "tests": 4102,
+      "passou": 4035,
+      "falhou": 67,
+      "ignorados": 0
+    },
+    "duracao_ms": 433096.063093,
+    "observacao": "Root full trial; known defects/mocks/source gates addressed by focused owner runs. These runs do not retroactively turn the trial into a pass."
+  },
+  "cdp_daily_before": {
+    "arquivo": "docs/v4/evidence/production-daily-hermes-before.log",
+    "sha256": "7c65034ed1f639d0c5f658e714097f617b25f5214529792f229263f02e3e9fc6",
+    "passou": 3,
+    "falhou": 1,
+    "causa": "Transient DOM node ID during native click; moved from prior min320 to normal1365 in standalone reproduction. No generic retry/timeout/skip; semantic target re-resolution fix then4/4."
+  },
+  "whole_node_trial_after_focused_repairs": {
+    "estado": "FALHA_HISTORICA_SUPERADA_POR_EXECUCAO_COMPLETA_FINAL",
+    "arquivo_original_privado": "/workspace/mls-v4-work/v41-complete-validation.tap",
+    "sha256": "c126f98e1d3129c91be9134f6a1643afecf2eea81eff4ce9db7be8f3c3172166",
+    "contagem": {
+      "tests": 4106,
+      "passou": 4098,
+      "falhou": 8,
+      "ignorados": 0
+    },
+    "duracao_ms": 452253.855546,
+    "observacao": "Retained legacy alias native route defect surfaced after correcting the obsolete19-link list. Root canonical source handler fix built App ae11ec6d; full navigation20 and subsequent whole gate remain separate."
+  },
+  "whole_node_final": {
+    "estado": "PASSOU",
+    "arquivo": "docs/v4/evidence/whole-node-final-4106.log",
+    "sha256": "dfb54277ac28402d040f78ff701c9b13c2929089d7244f29587d231491aa961c",
+    "contagem": {
+      "tests": 4106,
+      "passou": 4106,
+      "falhou": 0,
+      "ignorados": 0
+    },
+    "duracao_ms": 519799.020926,
+    "build": {
+      "app": {
+        "worker": "brazacommerce-app",
+        "bytes": 3495460,
+        "sha256": "ae11ec6d2fc4c84db96c834fd3d20be67cc9d142ae241aed926a806c8e956ea6"
+      },
+      "auth": {
+        "worker": "brazacommerce-auth",
+        "bytes": 524070,
+        "sha256": "d5eed8ab9cddaa8d6917f4e4ca668a3f7074bad5603254656414db5a490dc172"
+      },
+      "finance": {
+        "worker": "brazacommerce-finance",
+        "bytes": 730516,
+        "sha256": "ffbcea3b7ffe5c0a94b0d4d8c4908738e6da76386040995bba982060a5f9bb71"
+      }
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "schema": "mls_v4_layout_source_freeze_v1",
+  "files": {
+    "approved-design-system.mjs": "cbef0ff4bc5d11a76e0c8cf2ec1bc117a4131b8f96c0229f5d8f7adeac95ba89",
+    "theme.mjs": "6d9f3b544c39c7a14faed01d4c6756affd31d2e545b64ad83caadc732a9c3687",
+    "workspace-navigation.mjs": "2b42a1b5fa2e8c3c894a82afedc2b6eda99fb2de5dab4431dd34e11a27d40b1c",
+    "production-weekly-view.mjs": "da919647ec1a090dc5c5d75a093e07055954dcfdb20f6eea3165ca162a8dd3a0",
+    "production-workspace-view.mjs": "3ad8963d1f7d7bb4e14134634823fb60da5d3110a1a7b695f156023965a9ed06",
+    "weekly-operating-view.mjs": "1c4a945b7f0ad190e95680ddd3418d3f328d88be32309c57f2f30d0780306fe0",
+    "commercial-account-view.mjs": "bb75bcb39262a328ccd00b649fde75a63a530288485cb836b6a4c24d6fdbec36",
+    "commercial-account-client.mjs": "05632a708237848fc308b383de589c64442a060f07e583876db17bdaa8da5282"
+  },
+  "generated_app_evidence": {
+    "sha256": "d9187e2fc48ba450c208c8182b5746874e15fc58db4dc0319bcf393cf7d89b7f",
+    "bytes": 3739562,
+    "scope": "Last local build used by WKR08 and chart browsers; root may rebuild later."
+  }
+}

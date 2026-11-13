@@ -1,0 +1,40 @@
+TAP version 13
+# Subtest: actual account RPC resolves two stores into independent namespaces, ID collisions and atomic revocation fences
+ok 1 - actual account RPC resolves two stores into independent namespaces, ID collisions and atomic revocation fences
+  ---
+  duration_ms: 61.082975
+  type: 'test'
+  ...
+# Subtest: forged role/context headers and malformed personal cookies cannot select a global owner or another organization
+ok 2 - forged role/context headers and malformed personal cookies cannot select a global owner or another organization
+  ---
+  duration_ms: 16.421472
+  type: 'test'
+  ...
+# Subtest: outgoing private calls sign their actual target capability and reject unconfigured provider hosts
+ok 3 - outgoing private calls sign their actual target capability and reject unconfigured provider hosts
+  ---
+  duration_ms: 18.001525
+  type: 'test'
+  ...
+# Subtest: canonical account logout and compatibility aliases clear both legacy cookies and revoke the personal session
+ok 4 - canonical account logout and compatibility aliases clear both legacy cookies and revoke the personal session
+  ---
+  duration_ms: 38.391309
+  type: 'test'
+  ...
+# Subtest: compiled App uses private compiled Auth and Finance for a real account bootstrap, isolation and logout
+ok 5 - compiled App uses private compiled Auth and Finance for a real account bootstrap, isolation and logout
+  ---
+  duration_ms: 595.903455
+  type: 'test'
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 815.348866

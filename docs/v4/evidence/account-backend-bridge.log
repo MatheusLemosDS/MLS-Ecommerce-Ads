@@ -1,0 +1,232 @@
+TAP version 13
+# Subtest: account APIs require dedicated D1, strict origin/schema/CSRF; pending account never reaches a company
+ok 1 - account APIs require dedicated D1, strict origin/schema/CSRF; pending account never reaches a company
+  ---
+  duration_ms: 97.733271
+  type: 'test'
+  ...
+# Subtest: verification purpose/expiry/one-use and reset revoke sessions while preserving normal login
+ok 2 - verification purpose/expiry/one-use and reset revoke sessions while preserving normal login
+  ---
+  duration_ms: 53.42252
+  type: 'test'
+  ...
+# Subtest: durable SQLite restart, migration replay, backup restoration and legacy table bytes remain intact
+ok 3 - durable SQLite restart, migration replay, backup restoration and legacy table bytes remain intact
+  ---
+  duration_ms: 36.607884
+  type: 'test'
+  ...
+# Subtest: two companies are isolated; invite requires exact verified email and membership revocation fences cached principal
+ok 4 - two companies are isolated; invite requires exact verified email and membership revocation fences cached principal
+  ---
+  duration_ms: 41.731471
+  type: 'test'
+  ...
+# Subtest: company and store idempotency, scoped test connector, billing adapter, and export authorization
+ok 5 - company and store idempotency, scoped test connector, billing adapter, and export authorization
+  ---
+  duration_ms: 35.337087
+  type: 'test'
+  ...
+# Subtest: MFA enrollment requires proof, recovery appears once and replay fails, reset preserves factor
+ok 6 - MFA enrollment requires proof, recovery appears once and replay fails, reset preserves factor
+  ---
+  duration_ms: 57.833338
+  type: 'test'
+  ...
+# Subtest: email change is verified before replacement, sessions idle/absolute boundaries and shared abuse limits
+ok 7 - email change is verified before replacement, sessions idle/absolute boundaries and shared abuse limits
+  ---
+  duration_ms: 37.977578
+  type: 'test'
+  ...
+# Subtest: ownership transfer is accepted atomically and last owner/foreign user cannot offboard company
+ok 8 - ownership transfer is accepted atomically and last owner/foreign user cannot offboard company
+  ---
+  duration_ms: 48.758645
+  type: 'test'
+  ...
+# Subtest: explicit grants enable selected viewer reads and admin connection powers without ownership elevation
+ok 9 - explicit grants enable selected viewer reads and admin connection powers without ownership elevation
+  ---
+  duration_ms: 40.268759
+  type: 'test'
+  ...
+# Subtest: OAuth states bind actor/session/company/store/provider/environment/purpose and consume exactly once
+ok 10 - OAuth states bind actor/session/company/store/provider/environment/purpose and consume exactly once
+  ---
+  duration_ms: 23.891102
+  type: 'test'
+  ...
+# Subtest: configured password corpus reaches every password writer and missing mail never claims delivery
+ok 11 - configured password corpus reaches every password writer and missing mail never claims delivery
+  ---
+  duration_ms: 9.629317
+  type: 'test'
+  ...
+# Subtest: session revocation rejects other owners and absolute expiry survives activity refreshes
+ok 12 - session revocation rejects other owners and absolute expiry survives activity refreshes
+  ---
+  duration_ms: 35.020487
+  type: 'test'
+  ...
+# Subtest: origin abuse limits ignore forged browser origin-key headers and no sender configuration leaks identity
+ok 13 - origin abuse limits ignore forged browser origin-key headers and no sender configuration leaks identity
+  ---
+  duration_ms: 3.716818
+  type: 'test'
+  ...
+# Subtest: delegation cannot broaden an administrator store scope or grant capabilities the actor lacks
+ok 14 - delegation cannot broaden an administrator store scope or grant capabilities the actor lacks
+  ---
+  duration_ms: 23.443187
+  type: 'test'
+  ...
+# Subtest: revocation in flight and failed security audit roll back account writes atomically
+ok 15 - revocation in flight and failed security audit roll back account writes atomically
+  ---
+  duration_ms: 21.644296
+  type: 'test'
+  ...
+# Subtest: structured request logging excludes passwords, cookies, tokens and personal inputs
+ok 16 - structured request logging excludes passwords, cookies, tokens and personal inputs
+  ---
+  duration_ms: 7.012422
+  type: 'test'
+  ...
+# Subtest: simultaneous owner departures or account deletions cannot orphan a company
+ok 17 - simultaneous owner departures or account deletions cannot orphan a company
+  ---
+  duration_ms: 31.78338
+  type: 'test'
+  ...
+# Subtest: disabling and enrolling MFA invalidates every old recovery code
+ok 18 - disabling and enrolling MFA invalidates every old recovery code
+  ---
+  duration_ms: 18.91885
+  type: 'test'
+  ...
+# Subtest: Auth bridge authenticates the App before reading request bytes and frames every reviewed failure
+ok 19 - Auth bridge authenticates the App before reading request bytes and frames every reviewed failure
+  ---
+  duration_ms: 55.371554
+  type: 'test'
+  ...
+# Subtest: actual App gateway → private Auth bridge → SQLite account journey preserves cookies, capabilities and private boundaries
+ok 20 - actual App gateway → private Auth bridge → SQLite account journey preserves cookies, capabilities and private boundaries
+  ---
+  duration_ms: 65.72127
+  type: 'test'
+  ...
+# Subtest: MFA preauthentication cannot resolve business capabilities through either service boundary
+ok 21 - MFA preauthentication cannot resolve business capabilities through either service boundary
+  ---
+  duration_ms: 30.868653
+  type: 'test'
+  ...
+# Subtest: password policy permits passphrases, Unicode and exact spaces without truncating
+ok 22 - password policy permits passphrases, Unicode and exact spaces without truncating
+  ---
+  duration_ms: 20.670661
+  type: 'test'
+  ...
+# Subtest: password records use independent salts, production cost and constant-size outputs
+ok 23 - password records use independent salts, production cost and constant-size outputs
+  ---
+  duration_ms: 388.760535
+  type: 'test'
+  ...
+# Subtest: password bytes stay exact and Unicode equivalence does not silently change credentials
+ok 24 - password bytes stay exact and Unicode equivalence does not silently change credentials
+  ---
+  duration_ms: 3.420058
+  type: 'test'
+  ...
+# Subtest: random tokens and digests use canonical formats and never retain plaintext
+ok 25 - random tokens and digests use canonical formats and never retain plaintext
+  ---
+  duration_ms: 5.650509
+  type: 'test'
+  ...
+# Subtest: AES-GCM binds encrypted secrets to the account and purpose, with fresh IVs
+ok 26 - AES-GCM binds encrypted secrets to the account and purpose, with fresh IVs
+  ---
+  duration_ms: 5.789867
+  type: 'test'
+  ...
+# Subtest: maintained TOTP library matches RFC6238 and rejects replay counters and invalid challenges
+ok 27 - maintained TOTP library matches RFC6238 and rejects replay counters and invalid challenges
+  ---
+  duration_ms: 2.881839
+  type: 'test'
+  ...
+# Subtest: roles preserve ownership separation and do not grant operational users banking or global owner
+ok 28 - roles preserve ownership separation and do not grant operational users banking or global owner
+  ---
+  duration_ms: 0.291162
+  type: 'test'
+  ...
+# Subtest: account bridge closed frame rejects authority fields, destination injection and mismatched origins
+ok 29 - account bridge closed frame rejects authority fields, destination injection and mismatched origins
+  ---
+  duration_ms: 1.861214
+  type: 'test'
+  ...
+# Subtest: resolve transport keeps selection untrusted and never accepts a client role
+ok 30 - resolve transport keeps selection untrusted and never accepts a client role
+  ---
+  duration_ms: 0.466273
+  type: 'test'
+  ...
+# Subtest: account response cannot set arbitrary headers, send token to another host or inject cookies
+ok 31 - account response cannot set arbitrary headers, send token to another host or inject cookies
+  ---
+  duration_ms: 0.29605
+  type: 'test'
+  ...
+# Subtest: public account mutation rejects cross-origin before reading body or contacting Auth
+ok 32 - public account mutation rejects cross-origin before reading body or contacting Auth
+  ---
+  duration_ms: 26.490802
+  type: 'test'
+  ...
+# Subtest: App forwards only reviewed metadata to one fixed Auth destination and preserves server session cookie
+ok 33 - App forwards only reviewed metadata to one fixed Auth destination and preserves server session cookie
+  ---
+  duration_ms: 5.450252
+  type: 'test'
+  ...
+# Subtest: resolving authorization does not consume or truncate a valid larger operational request
+ok 34 - resolving authorization does not consume or truncate a valid larger operational request
+  ---
+  duration_ms: 3.345708
+  type: 'test'
+  ...
+# Subtest: unavailable or redirected Auth is a failure, not an account session or replay
+ok 35 - unavailable or redirected Auth is a failure, not an account session or replay
+  ---
+  duration_ms: 2.342318
+  type: 'test'
+  ...
+# Subtest: timeout performs one account POST and does not announce success or retry
+ok 36 - timeout performs one account POST and does not announce success or retry
+  ---
+  duration_ms: 14.703472
+  type: 'test'
+  ...
+# Subtest: malformed account cookie selects account boundary instead of falling through to legacy owner
+ok 37 - malformed account cookie selects account boundary instead of falling through to legacy owner
+  ---
+  duration_ms: 0.540793
+  type: 'test'
+  ...
+1..37
+# tests 37
+# suites 0
+# pass 37
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 718.506767

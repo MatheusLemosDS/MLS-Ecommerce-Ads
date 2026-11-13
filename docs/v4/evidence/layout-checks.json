@@ -1,0 +1,1452 @@
+{
+  "schema": "mls_v4_layout_qa_v1",
+  "checks": [
+    {
+      "panel": "overview",
+      "width": 320,
+      "theme": "light",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "margins",
+      "width": 320,
+      "theme": "light",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "products",
+      "width": 320,
+      "theme": "light",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "agent-finance",
+      "width": 320,
+      "theme": "light",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "agent-production",
+      "width": 320,
+      "theme": "light",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "agent-returns",
+      "width": 320,
+      "theme": "light",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "production",
+      "width": 320,
+      "theme": "light",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "weekly-report",
+      "width": 320,
+      "theme": "light",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "ai-sales",
+      "width": 320,
+      "theme": "light",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "overview",
+      "width": 320,
+      "theme": "dark",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "margins",
+      "width": 320,
+      "theme": "dark",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "products",
+      "width": 320,
+      "theme": "dark",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "agent-finance",
+      "width": 320,
+      "theme": "dark",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "agent-production",
+      "width": 320,
+      "theme": "dark",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "agent-returns",
+      "width": 320,
+      "theme": "dark",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "production",
+      "width": 320,
+      "theme": "dark",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "weekly-report",
+      "width": 320,
+      "theme": "dark",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "ai-sales",
+      "width": 320,
+      "theme": "dark",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "overview",
+      "width": 390,
+      "theme": "light",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "margins",
+      "width": 390,
+      "theme": "light",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "products",
+      "width": 390,
+      "theme": "light",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "agent-finance",
+      "width": 390,
+      "theme": "light",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "agent-production",
+      "width": 390,
+      "theme": "light",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "agent-returns",
+      "width": 390,
+      "theme": "light",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "production",
+      "width": 390,
+      "theme": "light",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "weekly-report",
+      "width": 390,
+      "theme": "light",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "ai-sales",
+      "width": 390,
+      "theme": "light",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "overview",
+      "width": 390,
+      "theme": "dark",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "margins",
+      "width": 390,
+      "theme": "dark",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "products",
+      "width": 390,
+      "theme": "dark",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "agent-finance",
+      "width": 390,
+      "theme": "dark",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "agent-production",
+      "width": 390,
+      "theme": "dark",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "agent-returns",
+      "width": 390,
+      "theme": "dark",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "production",
+      "width": 390,
+      "theme": "dark",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "weekly-report",
+      "width": 390,
+      "theme": "dark",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "ai-sales",
+      "width": 390,
+      "theme": "dark",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "overview",
+      "width": 1365,
+      "theme": "light",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "margins",
+      "width": 1365,
+      "theme": "light",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "products",
+      "width": 1365,
+      "theme": "light",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "agent-finance",
+      "width": 1365,
+      "theme": "light",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "agent-production",
+      "width": 1365,
+      "theme": "light",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "agent-returns",
+      "width": 1365,
+      "theme": "light",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "production",
+      "width": 1365,
+      "theme": "light",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "weekly-report",
+      "width": 1365,
+      "theme": "light",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "ai-sales",
+      "width": 1365,
+      "theme": "light",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "overview",
+      "width": 1365,
+      "theme": "dark",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "margins",
+      "width": 1365,
+      "theme": "dark",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "products",
+      "width": 1365,
+      "theme": "dark",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "agent-finance",
+      "width": 1365,
+      "theme": "dark",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "agent-production",
+      "width": 1365,
+      "theme": "dark",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "agent-returns",
+      "width": 1365,
+      "theme": "dark",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "production",
+      "width": 1365,
+      "theme": "dark",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "weekly-report",
+      "width": 1365,
+      "theme": "dark",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "ai-sales",
+      "width": 1365,
+      "theme": "dark",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "overview",
+      "width": 1440,
+      "theme": "light",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "margins",
+      "width": 1440,
+      "theme": "light",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "products",
+      "width": 1440,
+      "theme": "light",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "agent-finance",
+      "width": 1440,
+      "theme": "light",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "agent-production",
+      "width": 1440,
+      "theme": "light",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "agent-returns",
+      "width": 1440,
+      "theme": "light",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "production",
+      "width": 1440,
+      "theme": "light",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "weekly-report",
+      "width": 1440,
+      "theme": "light",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "ai-sales",
+      "width": 1440,
+      "theme": "light",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "overview",
+      "width": 1440,
+      "theme": "dark",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "margins",
+      "width": 1440,
+      "theme": "dark",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "products",
+      "width": 1440,
+      "theme": "dark",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "agent-finance",
+      "width": 1440,
+      "theme": "dark",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "agent-production",
+      "width": 1440,
+      "theme": "dark",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "agent-returns",
+      "width": 1440,
+      "theme": "dark",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "production",
+      "width": 1440,
+      "theme": "dark",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "weekly-report",
+      "width": 1440,
+      "theme": "dark",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "ai-sales",
+      "width": 1440,
+      "theme": "dark",
+      "minify": false,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "overview",
+      "width": 320,
+      "theme": "light",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "margins",
+      "width": 320,
+      "theme": "light",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "products",
+      "width": 320,
+      "theme": "light",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "agent-finance",
+      "width": 320,
+      "theme": "light",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "agent-production",
+      "width": 320,
+      "theme": "light",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "agent-returns",
+      "width": 320,
+      "theme": "light",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "production",
+      "width": 320,
+      "theme": "light",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "weekly-report",
+      "width": 320,
+      "theme": "light",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "ai-sales",
+      "width": 320,
+      "theme": "light",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "overview",
+      "width": 320,
+      "theme": "dark",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "margins",
+      "width": 320,
+      "theme": "dark",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "products",
+      "width": 320,
+      "theme": "dark",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "agent-finance",
+      "width": 320,
+      "theme": "dark",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "agent-production",
+      "width": 320,
+      "theme": "dark",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "agent-returns",
+      "width": 320,
+      "theme": "dark",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "production",
+      "width": 320,
+      "theme": "dark",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "weekly-report",
+      "width": 320,
+      "theme": "dark",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "ai-sales",
+      "width": 320,
+      "theme": "dark",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "overview",
+      "width": 390,
+      "theme": "light",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "margins",
+      "width": 390,
+      "theme": "light",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "products",
+      "width": 390,
+      "theme": "light",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "agent-finance",
+      "width": 390,
+      "theme": "light",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "agent-production",
+      "width": 390,
+      "theme": "light",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "agent-returns",
+      "width": 390,
+      "theme": "light",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "production",
+      "width": 390,
+      "theme": "light",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "weekly-report",
+      "width": 390,
+      "theme": "light",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "ai-sales",
+      "width": 390,
+      "theme": "light",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "overview",
+      "width": 390,
+      "theme": "dark",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "margins",
+      "width": 390,
+      "theme": "dark",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "products",
+      "width": 390,
+      "theme": "dark",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "agent-finance",
+      "width": 390,
+      "theme": "dark",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "agent-production",
+      "width": 390,
+      "theme": "dark",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "agent-returns",
+      "width": 390,
+      "theme": "dark",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "production",
+      "width": 390,
+      "theme": "dark",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "weekly-report",
+      "width": 390,
+      "theme": "dark",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "ai-sales",
+      "width": 390,
+      "theme": "dark",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "overview",
+      "width": 1365,
+      "theme": "light",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "margins",
+      "width": 1365,
+      "theme": "light",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "products",
+      "width": 1365,
+      "theme": "light",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "agent-finance",
+      "width": 1365,
+      "theme": "light",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "agent-production",
+      "width": 1365,
+      "theme": "light",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "agent-returns",
+      "width": 1365,
+      "theme": "light",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "production",
+      "width": 1365,
+      "theme": "light",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "weekly-report",
+      "width": 1365,
+      "theme": "light",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "ai-sales",
+      "width": 1365,
+      "theme": "light",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "overview",
+      "width": 1365,
+      "theme": "dark",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "margins",
+      "width": 1365,
+      "theme": "dark",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "products",
+      "width": 1365,
+      "theme": "dark",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "agent-finance",
+      "width": 1365,
+      "theme": "dark",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "agent-production",
+      "width": 1365,
+      "theme": "dark",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "agent-returns",
+      "width": 1365,
+      "theme": "dark",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "production",
+      "width": 1365,
+      "theme": "dark",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "weekly-report",
+      "width": 1365,
+      "theme": "dark",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "ai-sales",
+      "width": 1365,
+      "theme": "dark",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "overview",
+      "width": 1440,
+      "theme": "light",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "margins",
+      "width": 1440,
+      "theme": "light",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "products",
+      "width": 1440,
+      "theme": "light",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "agent-finance",
+      "width": 1440,
+      "theme": "light",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "agent-production",
+      "width": 1440,
+      "theme": "light",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "agent-returns",
+      "width": 1440,
+      "theme": "light",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "production",
+      "width": 1440,
+      "theme": "light",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "weekly-report",
+      "width": 1440,
+      "theme": "light",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "ai-sales",
+      "width": 1440,
+      "theme": "light",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "overview",
+      "width": 1440,
+      "theme": "dark",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "margins",
+      "width": 1440,
+      "theme": "dark",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "products",
+      "width": 1440,
+      "theme": "dark",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "agent-finance",
+      "width": 1440,
+      "theme": "dark",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "agent-production",
+      "width": 1440,
+      "theme": "dark",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "agent-returns",
+      "width": 1440,
+      "theme": "dark",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "production",
+      "width": 1440,
+      "theme": "dark",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "weekly-report",
+      "width": 1440,
+      "theme": "dark",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    },
+    {
+      "panel": "ai-sales",
+      "width": 1440,
+      "theme": "dark",
+      "minify": true,
+      "overflow": false,
+      "visibleTextMin": 13,
+      "source": "COMPILED_WORKER_SYNTHETIC_OWNER_503_SOURCES",
+      "sixInitialAgents": true
+    }
+  ],
+  "writes": [],
+  "external": [],
+  "production": false,
+  "notes": [
+    "Synthetic owner with both preview flags. Sources return503, so no financial data or write success is asserted.",
+    "Actual controller markup, existing navigation/search/theme. Expanded operational forms reviewed at320/390/1365/1440, two themes and normal/minified builds."
+  ]
+}

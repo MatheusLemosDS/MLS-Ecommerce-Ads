@@ -1,0 +1,27 @@
+{
+  "schema": "mls_v41_documentation_validation_v1",
+  "checked_at": "2026-11-13T15:33:07.124Z",
+  "result": "PASSOU",
+  "meaning": "Input bytes, exact requirement/chart preservation, independent evidence dimensions and cited artifact consistency. This does not run functional tests or validate the site.",
+  "requirements": 233,
+  "additional_requirements": 2,
+  "chart_families": 22,
+  "requirement_states": {
+    "PARCIAL_DEPENDENCIA_EXTERNA": 16,
+    "PENDENTE_PUBLICACAO_E_CONFERENCIA": 6,
+    "VALIDADO_LOCALMENTE_NO_ESCOPO_MAPEADO": 210,
+    "VALIDADO_LOCALMENTE_PUBLICACAO_PENDENTE": 1
+  },
+  "local_validation_states": {
+    "PASSOU_NO_ESCOPO_DOS_TESTES_MAPEADOS": 227,
+    "PREPARACAO_LOCAL_APROVADA": 6
+  },
+  "publication_states": {
+    "NAO_PUBLICADO_POR_ESTA_TAREFA": 233
+  },
+  "live_states": {
+    "NAO_EXECUTADA": 233
+  },
+  "coverage_sha256": "8860477c7a865230741821299360032efe7b61005afb356c530ca8a7493c4278",
+  "input_manifest_sha256": "49685ab2ee839c88515eaa18e373dd70245c5c07fc9a3bb6e2c3d47da08a746c"
+}

@@ -6766,5 +6766,38 @@
     "tiktok_connected": false,
     "mercado_livre_app_owner_confirmed": false,
     "mercado_livre_connected": false
+  },
+  "v41_layout_commercial_candidate": {
+    "state": "LOCAL_VALIDATED_PUBLICATION_PENDING",
+    "base_commit": "a5bd38a0902b38ecc3e90a747601eba330e7813e",
+    "branch": "feature/v41-layout-commercial-live-20261112",
+    "app_release": "2026-11-12.1",
+    "node_tests": 4106,
+    "node_failed": 0,
+    "node_skipped": 0,
+    "python_tests": 67,
+    "worker_build": {
+      "app": {
+        "worker": "brazacommerce-app",
+        "bytes": 3495460,
+        "sha256": "ae11ec6d2fc4c84db96c834fd3d20be67cc9d142ae241aed926a806c8e956ea6"
+      },
+      "auth": {
+        "worker": "brazacommerce-auth",
+        "bytes": 524070,
+        "sha256": "d5eed8ab9cddaa8d6917f4e4ca668a3f7074bad5603254656414db5a490dc172"
+      },
+      "finance": {
+        "worker": "brazacommerce-finance",
+        "bytes": 730516,
+        "sha256": "ffbcea3b7ffe5c0a94b0d4d8c4908738e6da76386040995bba982060a5f9bb71"
+      }
+    },
+    "evidence": "docs/v4/final-local-validation.json",
+    "coverage": "docs/v4/functional-coverage.json",
+    "publication": "NOT_YET_VERIFIED",
+    "live_owner_qa": "NOT_PERFORMED_NO_SESSION",
+    "external_dependencies": "docs/v4/EXTERNAL_DEPENDENCIES.json",
+    "m2_m22": "OPEN"
   }
 }

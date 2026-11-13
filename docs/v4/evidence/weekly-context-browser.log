@@ -1,0 +1,12 @@
+✔ weekly source navigation applies exact day/month/cut and preserves drafts (320px,minify=false) (5836.844792ms)
+✔ weekly source navigation applies exact day/month/cut and preserves drafts (1365px,minify=false) (5724.177827ms)
+✔ weekly source navigation applies exact day/month/cut and preserves drafts (320px,minify=true) (4820.445547ms)
+✔ weekly source navigation applies exact day/month/cut and preserves drafts (1365px,minify=true) (6505.699818ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 23115.972354

@@ -1,0 +1,71 @@
+{
+  "schema": "mls_v41_browser_context_validation_v1",
+  "checked_at": "2026-11-12T00:34:24.133776+00:00",
+  "evidence": {
+    "id": "BROWSER-CONTEXT-SOURCE-NATIVE-IDB-67",
+    "ambiente": "LOCAL_SINTETICO",
+    "tipo": "CLIENTES_REAIS_FONTES_COM_CHROMIUM_IDB_NATIVO",
+    "comando": "node --test --test-reporter=tap web/cloudflare/tests/commercial-workspace-client.test.mjs web/cloudflare/tests/dtf-ui.test.mjs web/cloudflare/tests/returns-local-artwork.test.mjs web/cloudflare/tests/commercial-workspace-idb-chrome.test.mjs",
+    "arquivo": "docs/v4/evidence/commercial-workspace-final.log",
+    "sha256": "22376817b9fd2cf843837c0ac431af24e3b0cebe4cdf3970eb457fa203870d08",
+    "resultado": "PASSOU",
+    "contagem": {
+      "passou": 67,
+      "falhou": 0,
+      "ignorados": 0
+    },
+    "escopo": "Cliente de contexto, DTF, arte de devoluções; Chromium normal/minificado com duas pessoas/empresas/lojas em realms separados, biblioteca legada preservada; backend HTTP loopback contratual. Buffered tee branch and acquired reader deny post-stop bytes.",
+    "limite": "Não é prova do App completo gerado, backend de produção ou Live."
+  },
+  "sources": [
+    {
+      "path": "web/cloudflare/src/commercial-workspace-client.mjs",
+      "sha256": "d47620b50765f45db4a1f5c42bba8197e0926f57117996c893fab080589d72f2"
+    },
+    {
+      "path": "web/cloudflare/src/dtf-view.mjs",
+      "sha256": "3d1d40eb9ec94aad65e39afd7a7b068229945e43e999b98ee59b102a4d8bba4f"
+    },
+    {
+      "path": "web/cloudflare/src/returns-local-artwork.mjs",
+      "sha256": "6bde781473f2bdb387487949a3c24f89f15a643dec90a1c4574cebd5d1bd22c8"
+    }
+  ],
+  "tests": [
+    {
+      "path": "web/cloudflare/tests/commercial-workspace-client.test.mjs",
+      "sha256": "35e28d6c994698ac15b30605b8a51f02896d17e2f6ede45177fe04db36584f16"
+    },
+    {
+      "path": "web/cloudflare/tests/dtf-ui.test.mjs",
+      "sha256": "1e2ed284bfc465872296947e73a2774e59118d195c8f76d94e2b33ef6bbec58d"
+    },
+    {
+      "path": "web/cloudflare/tests/returns-local-artwork.test.mjs",
+      "sha256": "8ed47bacdac9c343c76f4133fceb068df9239e367fa5ac567d536f386fa51426"
+    },
+    {
+      "path": "web/cloudflare/tests/commercial-workspace-idb-chrome.test.mjs",
+      "sha256": "252bd83dc0004a4d70c6f585fee67cb98cc4dee705bbc20c3eb0cfc5f5ba7f2a"
+    }
+  ],
+  "browser_contracts": [
+    "same_origin_admin_headers_and_write_csrf_pinned_per_tab",
+    "strict_generation_guard_fetch_body_clone_getReader_asyncIterator_pipeTo",
+    "scoped_native_indexeddb_distinct_users_companies_stores_same_art_key_different_valid_png",
+    "no_legacy_library_autoimport_or_delete",
+    "stop_aborts_pending_reads_clears_private_roots_releases_urls",
+    "account_logout_confirmed_vs_uncertain_no_false_success",
+    "context_change_full_navigation_capture_before_legacy_router",
+    "pre_markup_initialization_DOM_ready_access_state",
+    "tee_branches_acquired_reader_and_pipeThrough_remain_generation_guarded"
+  ],
+  "unverified_by_this_command": [
+    "final_generated_App_mount",
+    "real_service_session_authorization",
+    "production_D1_migration",
+    "provider_or_customer_data",
+    "publication",
+    "Live"
+  ]
+}

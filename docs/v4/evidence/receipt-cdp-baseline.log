@@ -1,0 +1,52 @@
+TAP version 13
+# Subtest: a5 compiled order operations with strict logout normal 320
+ok 1 - a5 compiled order operations with strict logout normal 320
+  ---
+  duration_ms: 32150.818994
+  type: 'test'
+  ...
+# Subtest: a5 compiled order operations with strict logout normal 1365
+ok 2 - a5 compiled order operations with strict logout normal 1365
+  ---
+  duration_ms: 35531.24042
+  type: 'test'
+  ...
+# Subtest: a5 compiled order operations with strict logout minified 320
+ok 3 - a5 compiled order operations with strict logout minified 320
+  ---
+  duration_ms: 30265.844231
+  type: 'test'
+  ...
+# Subtest: a5 compiled order operations with strict logout minified 1365
+ok 4 - a5 compiled order operations with strict logout minified 1365
+  ---
+  duration_ms: 38050.328853
+  type: 'test'
+  ...
+# Subtest: a5 compiled order startup explains unavailable bank asset
+ok 5 - a5 compiled order startup explains unavailable bank asset
+  ---
+  duration_ms: 1801.423383
+  type: 'test'
+  ...
+# Subtest: a5 compiled order startup explains unavailable orders asset
+ok 6 - a5 compiled order startup explains unavailable orders asset
+  ---
+  duration_ms: 1696.458333
+  type: 'test'
+  ...
+# Subtest: a5 compiled order startup explains unavailable month asset
+ok 7 - a5 compiled order startup explains unavailable month asset
+  ---
+  duration_ms: 1175.858389
+  type: 'test'
+  ...
+1..7
+# tests 7
+# suites 0
+# pass 7
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 140799.922103

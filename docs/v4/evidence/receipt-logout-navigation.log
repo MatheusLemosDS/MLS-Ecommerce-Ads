@@ -1,0 +1,64 @@
+TAP version 13
+# Subtest: protocol errors add only the method, keeping parameters and expressions out of diagnostics
+ok 1 - protocol errors add only the method, keeping parameters and expressions out of diagnostics
+  ---
+  duration_ms: 1.671478
+  type: 'test'
+  ...
+# Subtest: intentional logout subscribes before activation and requires the exact new frame, main context and load
+ok 2 - intentional logout subscribes before activation and requires the exact new frame, main context and load
+  ---
+  duration_ms: 0.968245
+  type: 'test'
+  ...
+# Subtest: a known Runtime context-reset response succeeds only with complete navigation evidence
+ok 3 - a known Runtime context-reset response succeeds only with complete navigation evidence
+  ---
+  duration_ms: 0.416337
+  type: 'test'
+  ...
+# Subtest: context-reset error alone, missing new context or missing load cannot pass logout
+ok 4 - context-reset error alone, missing new context or missing load cannot pass logout
+  ---
+  duration_ms: 61.874846
+  type: 'test'
+  ...
+# Subtest: unexpected destination, origin, frame or unchanged document cannot pass even alongside reset
+ok 5 - unexpected destination, origin, frame or unchanged document cannot pass even alongside reset
+  ---
+  duration_ms: 0.867046
+  type: 'test'
+  ...
+# Subtest: isolated-world and subframe contexts never substitute for the new default main context
+ok 6 - isolated-world and subframe contexts never substitute for the new default main context
+  ---
+  duration_ms: 40.379041
+  type: 'test'
+  ...
+# Subtest: target crash, detach and connection closure remain failures before and after document evidence
+ok 7 - target crash, detach and connection closure remain failures before and after document evidence
+  ---
+  duration_ms: 1.063317
+  type: 'test'
+  ...
+# Subtest: JavaScript exceptions and unrelated protocol failures are not swallowed by intentional logout
+ok 8 - JavaScript exceptions and unrelated protocol failures are not swallowed by intentional logout
+  ---
+  duration_ms: 0.632618
+  type: 'test'
+  ...
+# Subtest: a second navigation is rejected and stale load before the expected frame is insufficient
+ok 9 - a second navigation is rejected and stale load before the expected frame is insufficient
+  ---
+  duration_ms: 20.178408
+  type: 'test'
+  ...
+1..9
+# tests 9
+# suites 0
+# pass 9
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 198.929376

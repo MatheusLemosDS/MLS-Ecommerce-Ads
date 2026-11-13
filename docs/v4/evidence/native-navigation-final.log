@@ -1,0 +1,11 @@
+✔ compiled owner navigation opens cross-panel details, preserves history and remains reachable at 320–1365px (minify=false) (6034.478043ms)
+✔ compiled owner navigation opens cross-panel details, preserves history and remains reachable at 320–1365px (minify=true) (5729.495124ms)
+✔ native shell menu keeps six owner cells, reachable utilities and restricted review links without client JavaScript (875.788056ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 12735.338709

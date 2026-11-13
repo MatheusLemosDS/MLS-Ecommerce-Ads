@@ -1,0 +1,58 @@
+{
+  "schema": "mls_v41_external_dependency_register_v1",
+  "rule": "An external dependency is not a substitute for unfinished local code. No dependency is reported as configured or tested live without observed evidence.",
+  "dependencies": [
+    {
+      "id": "EXT-EMAIL",
+      "requirements": ["ACCT-02", "ACCT-03", "ACCT-04", "ACCT-05", "ACCT-11", "COM-03", "QA-07"],
+      "state": "REAL_DELIVERY_NOT_VERIFIED",
+      "impact": "Verification, reset, email change and invitation delivery cannot be claimed from a local outbox.",
+      "minimum_configuration": "Existing authorized transactional email adapter, sender/domain configuration, private credentials and delivery/error policy.",
+      "local_work_required": "Persistent purpose-bound single-use hashed tokens, TTL/rate limiting, revocation, server authorization, test-only outbox and honest unavailable states.",
+      "missing_evidence": "Authorized configured adapter and delivery/operational evidence. This task does not send real messages to third parties."
+    },
+    {
+      "id": "EXT-BILLING",
+      "requirements": ["COM-01", "COM-02", "COM-07"],
+      "state": "PROVIDER_AND_COMMERCIAL_CONTRACT_NOT_CONFIRMED",
+      "impact": "No real subscription payment, checkout, invoice or customer portal can be advertised as operational.",
+      "minimum_configuration": "Approved existing provider/contract, real plan/entitlement configuration and private webhook signing key.",
+      "local_work_required": "Organization entitlements distinct from membership/Hermes usage budget; signed, deduplicated, ordered event contract with deterministic tests; disabled checkout without provider.",
+      "missing_evidence": "Approved provider contract/configuration and authorized integration evidence; no charge or invented price/trial."
+    },
+    {
+      "id": "EXT-CONNECTORS",
+      "requirements": ["ACCT-14", "TEN-03", "COM-07"],
+      "state": "PER_COMPANY_PROVIDER_CONFIGURATION_NOT_VERIFIED",
+      "impact": "A new company must remain disconnected rather than inherit FINANCE_PROFILE or the legacy store credentials.",
+      "minimum_configuration": "Authorized provider app/scopes, per-company/store connection registration, protected credentials and bound one-use OAuth state.",
+      "local_work_required": "Server membership/store/capability checks, scoped repositories, trusted service envelope, strict routing and cross-company state/reconnection tests.",
+      "missing_evidence": "Authorized real connector configuration by company and verified scopes. Existing legacy connection is not evidence of generalized tenancy."
+    },
+    {
+      "id": "EXT-LEGAL-RETENTION",
+      "requirements": ["ACCT-02", "ACCT-16", "COM-05", "COM-07"],
+      "state": "APPROVED_DOCUMENTS_AND_RETENTION_POLICY_NOT_CONFIRMED",
+      "impact": "Do not claim legal compliance or enable irreversible purge without an applicable retention policy.",
+      "minimum_configuration": "Approved document versions, retention/deletion policy and responsibility for public commercial offering.",
+      "local_work_required": "Authenticated export/request/offboarding contracts, reauth, explicit consequences, preservation of business audit and isolation tests.",
+      "missing_evidence": "Approved applicable policy/documents; implementation must not invent legal text."
+    },
+    {
+      "id": "EXT-REAL-ACCEPTANCE",
+      "requirements": ["FIN-08", "WKR-09", "COM-07", "LIVE-05"],
+      "state": "OWNER_OPERATIONAL_ACCEPTANCE_NOT_EXECUTED_BY_INVENTORY",
+      "impact": "Synthetic QA and Live availability cannot close M2/M2.2 or prove completeness of bank/Seller Centre data, actual manufacturing or realized profit.",
+      "minimum_configuration": "Authorized owner session and the appropriate real operational evidence when a later acceptance exercise is requested.",
+      "local_work_required": "Preserve pending/unknown states, source periods/revisions, comparison contracts and honest release documentation.",
+      "missing_evidence": "Requirement-specific authorized operational comparison. No real facts are created for QA."
+    }
+  ],
+  "intentional_domain_gates": [
+    "Ads/PROMO and external commercial writes remain locked for every role.",
+    "Hermes remains an observer; agent memory grants no authority or model training.",
+    "Seven specialist chart slots without canonical sources remain unavailable.",
+    "TikTok/Mercado Livre and unsupported import formats are not activated by the redesign.",
+    "New multi-company access is not enabled until local isolation, migrations, recovery and runtime configuration are verified."
+  ]
+}

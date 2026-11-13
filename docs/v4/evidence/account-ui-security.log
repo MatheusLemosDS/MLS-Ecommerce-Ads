@@ -1,0 +1,17 @@
+✔ real account worker UI normal 320px: access, persistence, company and honest unavailable states (16810.981316ms)
+✔ real account worker UI normal 1365px: access, persistence, company and honest unavailable states (8454.768397ms)
+✔ real account worker UI minified 320px: access, persistence, company and honest unavailable states (5589.587396ms)
+✔ real account worker UI minified 1365px: access, persistence, company and honest unavailable states (5783.944305ms)
+✔ real account security teardown normal: expiry, 401, LOCKED and uncertain logout clear private state (3540.457432ms)
+✔ real account security teardown minified: expiry, 401, LOCKED and uncertain logout clear private state (3511.45782ms)
+✔ every public, personal and company route renders one accessible real account controller (71.677967ms)
+✔ account pages reject unsupported methods and paths without confusing legacy login or protected app (0.495716ms)
+✔ release text is escaped and link tokens are absent from server-rendered account configuration (0.751876ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 43829.954474
