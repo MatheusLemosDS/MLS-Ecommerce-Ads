@@ -1,0 +1,91 @@
+{
+  "reviewed_at": "2026-11-14T15:05:11.846056+00:00",
+  "source_commit": "1906de4918462aabdbffe66f32071abdcfe4957e",
+  "remote_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+  "method": "GET_ONLY_EXISTING_CREDENTIAL_NO_PERMISSION_EXPANSION",
+  "builds_reads": [
+    {
+      "worker": "brazacommerce-app",
+      "endpoint_suffix": "",
+      "http_status": 403,
+      "errors": [
+        {
+          "code": 10000,
+          "message": "Authentication error",
+          "documentation_url": "https://developers.cloudflare.com/api/resources/workers_builds"
+        }
+      ]
+    },
+    {
+      "worker": "brazacommerce-app",
+      "endpoint_suffix": "/triggers",
+      "http_status": 403,
+      "errors": [
+        {
+          "code": 10000,
+          "message": "Authentication error",
+          "documentation_url": "https://developers.cloudflare.com/api/resources/workers_builds"
+        }
+      ]
+    },
+    {
+      "worker": "brazacommerce-auth",
+      "endpoint_suffix": "",
+      "http_status": 403,
+      "errors": [
+        {
+          "code": 10000,
+          "message": "Authentication error",
+          "documentation_url": "https://developers.cloudflare.com/api/resources/workers_builds"
+        }
+      ]
+    },
+    {
+      "worker": "brazacommerce-auth",
+      "endpoint_suffix": "/triggers",
+      "http_status": 403,
+      "errors": [
+        {
+          "code": 10000,
+          "message": "Authentication error",
+          "documentation_url": "https://developers.cloudflare.com/api/resources/workers_builds"
+        }
+      ]
+    },
+    {
+      "worker": "brazacommerce-finance",
+      "endpoint_suffix": "",
+      "http_status": 403,
+      "errors": [
+        {
+          "code": 10000,
+          "message": "Authentication error",
+          "documentation_url": "https://developers.cloudflare.com/api/resources/workers_builds"
+        }
+      ]
+    },
+    {
+      "worker": "brazacommerce-finance",
+      "endpoint_suffix": "/triggers",
+      "http_status": 403,
+      "errors": [
+        {
+          "code": 10000,
+          "message": "Authentication error",
+          "documentation_url": "https://developers.cloudflare.com/api/resources/workers_builds"
+        }
+      ]
+    }
+  ],
+  "environment_observation": "Credential binding ready; no Cloudflare connector or callable desktop inspection tool found. Browser capability declaration alone does not establish an authenticated dashboard session.",
+  "hermes_recovery_reference": "docs/HERMES_FINANCEIRO.md describes backup/atomic replacement; not current remote installation/restore proof.",
+  "evidence_request": "docs/saas/p00/EXTERNAL_EVIDENCE_REQUEST.md",
+  "decision": "BLOCKERS_UNCHANGED_NO_PUSH_PR_DEPLOY_NO_P01",
+  "functional_suites_rerun": false,
+  "validation": {
+    "documentary_check": "PASS;21 local links; histories and runtime preserved",
+    "scope_tests": "node --test tools/tests/release-preflight.test.mjs:14 pass,0 fail,0 skipped",
+    "scope_test_log_sha256": "1d47b6b9b9a8315662c500008e4c5f9c6b1afb7f3e23088110de8cab87f7f583",
+    "change": "Two explicit documentation paths added to frozen candidate list; hashes, flags, owner authorization, protections and workflow unchanged."
+  }
+}

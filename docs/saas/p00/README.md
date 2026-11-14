@@ -24,3 +24,7 @@ O manifesto de preflight foi repinado na main atual, conservando os três hashes
 ## Uso para próxima entrega
 
 Ler o checkpoint e a tarefa atual na matriz, depois somente o catálogo/artefato relevante. O catálogo não altera planos nem ativa funções no produto. Conta e empresa continuam com entitlements do servidor e billing NOT_CONFIGURED; não incluir funções parciais como promessa de automação pronta. Validar direitos/operação e obter evidência dos Builds antes de promover Git. M2/M2.2 e banco automático continuam abertos.
+
+## Retomada dos bloqueios
+
+A [reconferência somente leitura](blocker-review-20261114.json) manteve os bloqueios. O [pedido de evidências mínimas](EXTERNAL_EVIDENCE_REQUEST.md) especifica os metadados que faltam, sem solicitar segredos ou alterações de configuração. Nenhuma suíte funcional foi repetida por esta continuação documental.
