@@ -28,3 +28,7 @@ Ler o checkpoint e a tarefa atual na matriz, depois somente o catálogo/artefato
 ## Retomada dos bloqueios
 
 A [reconferência somente leitura](blocker-review-20261114.json) manteve os bloqueios. O [pedido de evidências mínimas](EXTERNAL_EVIDENCE_REQUEST.md) especifica os metadados que faltam, sem solicitar segredos ou alterações de configuração. Nenhuma suíte funcional foi repetida por esta continuação documental.
+
+## Evidência posterior dos três Workers
+
+As capturas identificadas de App/Auth/Finance e a inspeção do Wrangler4.151.1 completam a decisão delimitada de enviar esta branch e abrir uma PR rascunho, sem produção. Produção mostra main com builds desativados; preview está ativo e pode executar/falhar. O comando de preview é distinto de deploy de produção; a ausência de configuração adequada falha no CI. A leitura API de Builds continua403, preservada como histórico. Ver [análise e proveniência](blocker-review-20261114.json). Nenhum check será cancelado, contornado ou reconfigurado. A CI do candidato e os demais bloqueios P00 continuam exigidos.

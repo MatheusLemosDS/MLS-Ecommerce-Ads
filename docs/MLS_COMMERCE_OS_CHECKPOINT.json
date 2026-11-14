@@ -7497,6 +7497,7 @@
   "current_task": "SAAS-002 / SAAS-004: external evidence blockers only",
   "saas_p00": {
     "last_commits": [
+      "a1bf89a3bb7ebe553e6d76c9ea2a47097131f725",
       "1906de4918462aabdbffe66f32071abdcfe4957e",
       "84487108fa9c1292e90a62296ea8a597ffaad619",
       "0a5a22897d3cf56f97b7b995eb78a743fc0a246e",
@@ -7546,6 +7547,7 @@
     "next_external_action": "Read effective App/Auth/Finance Builds triggers/config using existing supported authorized access; blocked until evidence available",
     "next_implementation_item": "SAAS-005 / P01, next delivery only",
     "blocker_review": "docs/saas/p00/blocker-review-20261114.json",
-    "external_evidence_request": "docs/saas/p00/EXTERNAL_EVIDENCE_REQUEST.md"
+    "external_evidence_request": "docs/saas/p00/EXTERNAL_EVIDENCE_REQUEST.md",
+    "git_review_status": "Dashboard evidence and pinned command inspection permit branch push and one draft PR; exact candidate CI pending. No merge/auto-merge/deploy."
   }
 }

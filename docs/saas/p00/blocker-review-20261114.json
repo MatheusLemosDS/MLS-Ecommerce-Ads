@@ -80,7 +80,7 @@
   "environment_observation": "Credential binding ready; no Cloudflare connector or callable desktop inspection tool found. Browser capability declaration alone does not establish an authenticated dashboard session.",
   "hermes_recovery_reference": "docs/HERMES_FINANCEIRO.md describes backup/atomic replacement; not current remote installation/restore proof.",
   "evidence_request": "docs/saas/p00/EXTERNAL_EVIDENCE_REQUEST.md",
-  "decision": "BLOCKERS_UNCHANGED_NO_PUSH_PR_DEPLOY_NO_P01",
+  "decision": "SCREENSHOT_AND_PINNED_CODE_EVIDENCE_ALLOW_BRANCH_PUSH_AND_ONE_DRAFT_PR_NO_MERGE_NO_DEPLOY",
   "functional_suites_rerun": false,
   "validation": {
     "documentary_check": "PASS;21 local links; histories and runtime preserved",
@@ -147,6 +147,44 @@
       },
       "interpretation": "Documentation paths are not shown excluded. No conclusion from preview URL availability. No settings changed.",
       "remaining": "Equivalent worker-identified App settings remain needed; effective command analysis and pre-push main/branch/PR reconciliation still required."
+    },
+    "brazacommerce-app": {
+      "provenance": "Latest conversation screenshots explicitly labelled App and General shows brazacommerce-app; clock13:25–13:26 only.",
+      "production": {
+        "branch_display": "main",
+        "disable_builds_toggle_display": "ON",
+        "deployment_hooks_display": "None configured"
+      },
+      "preview": {
+        "branch_builds_toggle_display": "ON",
+        "preview_urls_display": "DISABLED; builds still execute per UI notice",
+        "build_command": "npm run build",
+        "preview_command": "npx wrangler preview",
+        "root_directory": "/",
+        "include_paths_display": "*",
+        "exclude_paths_display": "node_modules/**, .git/",
+        "build_variables_or_secrets_display": "None configured",
+        "build_cache_display": "OFF"
+      },
+      "interpretation": "Documentation paths are not shown excluded. No conclusion from preview URL availability. No settings changed.",
+      "remaining": "No additional App screenshots required for the observed build settings.",
+      "other_triggers": {
+        "cron_display": "Present; exact schedule clipped, unchanged",
+        "queue_consumers_display": "None configured",
+        "email_routes_display": "None configured",
+        "note": "Runtime triggers do not establish Git deployment behavior."
+      }
     }
+  },
+  "command_analysis": {
+    "repository_scope": "Main346f30f plus local P00 candidate; no app/Workers/workflow/package delta.",
+    "wrangler_version": "4.151.1",
+    "build_commands": "npm run build and build:finance invoke local build_workers.mjs and build scripts. Reviewed builders generate local files/bundles only; no deploy call.",
+    "preview_command": "npx wrangler preview resolves pinned Wrangler. runPreview uses getPreview/createPreview/updatePreview, distinct from production deploy. ensurePreviewsConfig rejects missing configuration in CI; no silent production-deploy fallback. Existing parent Workers confirmed, so missing-parent provisioning is not applicable.",
+    "cli_sha256": "a1b3cf7023a53d0d7f7ca4a183f2f904573cdb00737cd1a034890207431f1d8e",
+    "preview_limits": "May run/fail or create isolated preview resources; disabled URLs alone are not evidence of skipped builds. Do not repair or disable those checks in this delivery.",
+    "production": "All three worker-identified dashboard sequences show production main with Disable builds ON and no deploy hooks. No change to this configuration.",
+    "decision": "Branch push and draft PR permitted for this reviewed candidate without a production deployment. Merge/auto-merge/production deploy remain prohibited. GitHub CI must run normally.",
+    "provenance_note": "UI evidence supersedes the lack of API trigger-read permission for this bounded decision, not a grant expansion."
   }
 }
