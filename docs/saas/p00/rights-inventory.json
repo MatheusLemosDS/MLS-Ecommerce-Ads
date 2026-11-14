@@ -1,0 +1,503 @@
+{
+  "code": {
+    "root_license_present": false,
+    "state": "OWNER_CHAIN_OF_TITLE_AND_CONTRIBUTOR_RIGHTS_NOT_PROVED_BY_REPOSITORY_ACCESS",
+    "decision": "No new license or commercial rights invented; owner evidence required for sale."
+  },
+  "embedded_runtime_libraries": {
+    "state": "VERSIONED_MIT_TEXTS_VERIFIED",
+    "source": "THIRD_PARTY_NOTICES.txt"
+  },
+  "agent_avatars": {
+    "source": "web/cloudflare/src/agent-registry.mjs; inline SVG renderers and reference image manifests",
+    "state": "EXISTING_VISUALS_PRESERVED_RIGHTS_CHAIN_REQUIRES_OWNER_PROOF"
+  },
+  "fonts": {
+    "source": "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf local QA; browser system font stacks",
+    "decision": "QA_ONLY_NOT_NEW_WEBFONT_DISTRIBUTION",
+    "license": "DejaVu/Bitstream Vera license; retain distro notices if shipping font file",
+    "state": "NO_NEW_SHIPPED_FONT"
+  },
+  "audio": {
+    "source": "ESPEAK_NG_OFFLINE_PT_BR or OPERATOR_LICENSED_PT_BR_WAV",
+    "decision": "QA synthetic offline; operator WAV needs its own authorization",
+    "license": "eSpeak NG external tool GPL-3.0-or-later; voice data/component licenses must be checked before redistribution",
+    "state": "NO_CUSTOMER_AUDIO_OR_TOOL_REDISTRIBUTED"
+  },
+  "brand": {
+    "name": "MLS Commerce OS",
+    "state": "TRADEMARK_OR_IMAGE_AUTHORIZATION_NOT_PROVED",
+    "owner": "project owner",
+    "action": "Provide rights/authorization records for commercial offering; no third-party contact by executor"
+  },
+  "assets": [
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/minified-dark-1365-affiliates.png",
+      "sha256": "feb5e68dd16f61ef67feae02d5d6cbd99aad20672dad13ed1e388a7c5022fa37",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/minified-dark-1365-campaigns.png",
+      "sha256": "7027a1ef06cbf4f45baef4381fbccd8a1b06755d54363d8d638da0551f2f96a5",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/minified-dark-1365-integrations.png",
+      "sha256": "cbf9bc77f4536aaec307ce8b6e89a3e25bf479258d35df0e180d36327e843211",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/minified-dark-1365-performance.png",
+      "sha256": "8dce8632abd73ba43edc5d1be7c281b0a55ea926a4043fb476ce5f0d2569a8eb",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/minified-dark-1365-studio.png",
+      "sha256": "18fd8fd9044c0dcb705c6db635b112c2ef3cb8269e8f14fef1fa0feab74ac062",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/minified-dark-390-affiliates.png",
+      "sha256": "78dc65bae9cec51b9dc6cfcb29b4ab7078c0835c448d4557396ce0f8970fc682",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/minified-dark-390-campaigns.png",
+      "sha256": "035d66ab28496a0eedded352eb33a27c38f8c4198242f8b34bf3e11cdaae7dbf",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/minified-dark-390-integrations.png",
+      "sha256": "335972ac226ca9b7528488882f1d16a6f97f71c0cc71331a50b2c4defe493966",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/minified-dark-390-performance.png",
+      "sha256": "1b295fcc332ba4b2da05f54391dc95f3afe9725bab566938502f047ca86bb196",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/minified-dark-390-studio.png",
+      "sha256": "e26f4292512689addf9e1385c872ddfb3f300b3018b2556c15a50d99b8eb4fce",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/minified-light-1365-affiliates.png",
+      "sha256": "c1789f5b03bc4295d12e53d5e68f0956cf0b8d53d013d98f1d4d31a306941aff",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/minified-light-1365-campaigns.png",
+      "sha256": "a6ede144b2a3fc13dba944a5bff37e4cb3a523009a38c28d86db748774374137",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/minified-light-1365-integrations.png",
+      "sha256": "f0d340206ce8a8d4196ae36e2349d3bc48296ca4c2f809fc9a6be3f9fe31a016",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/minified-light-1365-performance.png",
+      "sha256": "93b8f77e206e724c8d68d59e540b888f7ac1657b3900429eb71099b89bdfa392",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/minified-light-1365-studio.png",
+      "sha256": "48aa3628bcfda26d91defe9e6aa701ae4a9342c457b47b83324c4d4b5cca42aa",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/minified-light-390-affiliates.png",
+      "sha256": "cb8afac5a050691d26563d8c2bc5c36a982a9c1a60eee9b9e4b1552c82dabf1d",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/minified-light-390-campaigns.png",
+      "sha256": "52c2bea90c7f5300d338ac37a999a19734d26917f40a796743110a54c234ff8e",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/minified-light-390-integrations.png",
+      "sha256": "9adb695a8d88c52650e89aa50cd0ad78550700cbd0f29fd2dbd7cd325aa784a0",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/minified-light-390-performance.png",
+      "sha256": "c1154d8cb85964aca67f48b4b91903e4995c188083a08533dc87df2bec18b217",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/minified-light-390-studio.png",
+      "sha256": "e49ecc2913a254dc731fecfce3378dfc41ecf5b1b7d86232c537385e9acf1aa3",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/normal-dark-1365-affiliates.png",
+      "sha256": "feb5e68dd16f61ef67feae02d5d6cbd99aad20672dad13ed1e388a7c5022fa37",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/normal-dark-1365-campaigns.png",
+      "sha256": "c47ff1effc4c06c735f3b97d678f1be4ec8f004a1dce9c5ce9b7acfd4e436b1d",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/normal-dark-1365-integrations.png",
+      "sha256": "1b1d67419f9b8e8c1a6f8d9de8967d4eb5f43967503c79be7e195b0633e1ab57",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/normal-dark-1365-performance.png",
+      "sha256": "d33e1e860b91a64d5b655d449a5a3895628c4e4eb281d71a16075d67284b54e6",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/normal-dark-1365-studio.png",
+      "sha256": "531bb05f5b91c8d90d3ff4240497f0cfd0252abfda78ea115973ba8e81550980",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/normal-dark-390-affiliates.png",
+      "sha256": "245637dd2564393788d83ff2a81e6c304f7fde2563905f0cc1e8e7797b771cc7",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/normal-dark-390-campaigns.png",
+      "sha256": "ef34be4df9e3212afdc48d784dc4df8d2917b299bd980b6b170036469f745b32",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/normal-dark-390-integrations.png",
+      "sha256": "741f85bcd99b06ecdd0400d2f256210ae27624ec8432a5465f1e94d566d8a5ac",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/normal-dark-390-performance.png",
+      "sha256": "1b295fcc332ba4b2da05f54391dc95f3afe9725bab566938502f047ca86bb196",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/normal-dark-390-studio.png",
+      "sha256": "aeb808a4f91d927624eddfbfae6dd04fc35356bcbbba110ba3c6f71289829d5e",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/normal-light-1365-affiliates.png",
+      "sha256": "fae8b83665b4fc1139711df052bba30f765946bbb7e8b54e01e37f19b013e1d0",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/normal-light-1365-campaigns.png",
+      "sha256": "a6ede144b2a3fc13dba944a5bff37e4cb3a523009a38c28d86db748774374137",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/normal-light-1365-integrations.png",
+      "sha256": "d380c896e80c320b9230515e70b0679c4662720d861779c9c0167c7f125291e8",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/normal-light-1365-performance.png",
+      "sha256": "93b8f77e206e724c8d68d59e540b888f7ac1657b3900429eb71099b89bdfa392",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/normal-light-1365-studio.png",
+      "sha256": "a47fa1170c329ec9fe7e4e35c18040fee17a35f59557ef5e3588f11848ccf1ed",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/normal-light-390-affiliates.png",
+      "sha256": "67625953c0cebcea598bbc049fb1ab08c94a63872528335d2dc848c27a9a8305",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/normal-light-390-campaigns.png",
+      "sha256": "52c2bea90c7f5300d338ac37a999a19734d26917f40a796743110a54c234ff8e",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/normal-light-390-integrations.png",
+      "sha256": "7cd3dcccfbb898a7af8bef5385ccb63db643764067d27fa8bf0032e51d0d90ac",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/normal-light-390-performance.png",
+      "sha256": "62a0db0650eb90c3cce58f66ff67ff942072bc4b0d9256043ab7694113534dd5",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-ai-sales-2026-10-30/normal-light-390-studio.png",
+      "sha256": "e0a8fbc7cbdc9dfc3e110bd5e37905fccac719d0aea7b889d89b0c2bfd987a88",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-owner-preview-2026-10-30/offline-1365-native-catalog.png",
+      "sha256": "f651ca61751a0d18597354999ed66f81fecd5425cdf70b9e25ef02046298ccba",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-owner-preview-2026-10-30/offline-390-native-catalog.png",
+      "sha256": "f95f92bf75dd57425eea1eb0bb1c5967f57ef1901a3d046f1dcf186d449e1c59",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-owner-preview-2026-10-30/preview-1365-actual-costs-saved.png",
+      "sha256": "db84894628261249de801187ac7943a1e6aa5600a4708f6cedf2e2759fb17558",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-owner-preview-2026-10-30/preview-1365-dark-overview.png",
+      "sha256": "149c0352eecf27a182cf861d291c725cb2e63d296a975248602927b793897fce",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-owner-preview-2026-10-30/preview-1365-native-current-campaign-mp4.png",
+      "sha256": "378bb2baaac7a62a2e218a7ace761fc4cfcd70f28a1213ce92702da2cdf04b2e",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-owner-preview-2026-10-30/preview-390-actual-costs-saved.png",
+      "sha256": "3e79499c1690b3cc50ef07a1ac5bd5a8fdbce67142c693b2486e5b0e2157e073",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-owner-preview-2026-10-30/preview-390-actual-studio-mp4.png",
+      "sha256": "5c32d97be41c8b4d30ae2a8eba7b7346aea1ecdb75b2445053b35502f65db374",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-owner-preview-2026-10-30/preview-390-light-overview.png",
+      "sha256": "3f7ff6ee05ea5482588b20e041c8dcf3895dfc810cb86d222a835505cd9f73e0",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-visual-2026-10-30/approved-dark-desktop-agent-ads.png",
+      "sha256": "ef0df5b71bd1e455ce78a7e0148f787005868c31652064af537a55abc84ef57c",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-visual-2026-10-30/approved-dark-desktop-agent-finance.png",
+      "sha256": "5d06613139257181f2a14a55f5eef6f97137b00a12ae26b91215dd07f9dd3302",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-visual-2026-10-30/approved-dark-desktop-agent-production.png",
+      "sha256": "4c69ed0ebaffa67e806a33e38d8dc501c087b20cb4b7c188dfefd7882c3fae79",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-visual-2026-10-30/approved-dark-desktop-agent-products.png",
+      "sha256": "3bdb26d0c2470e3b226d9dc84d7f4c9d9bb69672554285ea983b3e12e40b1cbe",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-visual-2026-10-30/approved-dark-desktop-agent-returns.png",
+      "sha256": "6b613ca7e63d375cd96114ab7b488cd09dca5bd711cde4a6cd78eed96e389bd4",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-visual-2026-10-30/approved-dark-desktop-overview.png",
+      "sha256": "2d02995fbcb44b7ea1680dbb6edde9c0167a3a56d424afa182e0942c5f445bab",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-visual-2026-10-30/approved-dark-mobile-agent-ads.png",
+      "sha256": "807a054d7127e510d3b339bdec900bea5e7f1d6c7f824b07063b16c9e6987729",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-visual-2026-10-30/approved-dark-mobile-agent-finance.png",
+      "sha256": "81401e779911fd8a357d41696ba022d03d07a44c6e867cff86116f9061758b37",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-visual-2026-10-30/approved-dark-mobile-agent-production.png",
+      "sha256": "1c03f5924136d6d8fbd7870206021afe6e6991318b2ab84517e1b8ceab0cf7a1",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-visual-2026-10-30/approved-dark-mobile-agent-products.png",
+      "sha256": "b38e60af58d3792ca5ef6ca767440ce2166bfb25147115c7b336a58e0587e3a3",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-visual-2026-10-30/approved-dark-mobile-agent-returns.png",
+      "sha256": "ab0c3ddc34c63e91938534287d85e5aece7384bac9344c4bbc90c3c8d26114ce",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-visual-2026-10-30/approved-dark-mobile-overview.png",
+      "sha256": "3c8998b854dc56c095e24e4f40aec6c1ef6394481f28b374d250570ee7fab22c",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-visual-2026-10-30/approved-light-desktop-agent-ads.png",
+      "sha256": "cd1745964a148a564c3282c29c44b46b2d601430430f4ab29b5503a976a9ccfa",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-visual-2026-10-30/approved-light-desktop-agent-finance.png",
+      "sha256": "d042399c9cd72ce0bfa826a4ef5eb0630f9945ab75dc52f01e5e388f373fc6f6",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-visual-2026-10-30/approved-light-desktop-agent-production.png",
+      "sha256": "9a6e6e346764dc4a2c28941f07e68b424cb835cdb83be07fb246520d4b1f75a3",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-visual-2026-10-30/approved-light-desktop-agent-products.png",
+      "sha256": "5ccac19de0fa0cd3e906aacea5355e8323aebf86fe985a01fd1086fba4324d30",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-visual-2026-10-30/approved-light-desktop-agent-returns.png",
+      "sha256": "b8b637922dc8006188e05d7ddffd07d943dcd5ce3135d5ef8594907fdb2ddd95",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-visual-2026-10-30/approved-light-desktop-overview.png",
+      "sha256": "a4125979b5375a12908d3613c4c31a7cdc4b7e67015ca17f9a134f7d2dd0bee1",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-visual-2026-10-30/approved-light-mobile-agent-ads.png",
+      "sha256": "196d059fda0ce9e378356de926673626f0bda11d3a02197a43af65be6875111e",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-visual-2026-10-30/approved-light-mobile-agent-finance.png",
+      "sha256": "f545079763c040837a3304d06875b0b97b30b29ec14422cd24c1cfbb23c75dc8",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-visual-2026-10-30/approved-light-mobile-agent-production.png",
+      "sha256": "ad5857ae73c5da285bb8b053e03272492cbde8f01c7ba33f1c7681eac6ab7f9e",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-visual-2026-10-30/approved-light-mobile-agent-products.png",
+      "sha256": "67d998e5e0c41ba28039878a9cf1949a523d9be71f6ef84fde049982d6974e46",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-visual-2026-10-30/approved-light-mobile-agent-returns.png",
+      "sha256": "ca0ee425cf1fdd9bc400f85bac65c24fc05933ace4dff2579b46257eb2bb7bb1",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/qa/mls-visual-2026-10-30/approved-light-mobile-overview.png",
+      "sha256": "466771abcdbd10b93ba901becb85592ca640409ddfc5a07d1b725937a89c3464",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/visual-references/mls-2026-10-29/01_overview_aprovado.png",
+      "sha256": "9c77291ef81462d0c0eaec878e2aa990b2b02d61cea2703b97e73d7938b2fb8a",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/visual-references/mls-2026-10-29/02_finance_aprovado.png",
+      "sha256": "783def2e9075eb3e3fc82fc8b3f4d184c5c4aaa2c939bf3d401e5ece1d8bd5d8",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/visual-references/mls-2026-10-29/03_ads_aprovado.png",
+      "sha256": "a0adaab4282cbe3a3ae13848d820687b744e082b4ccb45f9b2fc715abc4c3af9",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/visual-references/mls-2026-10-29/04_production_aprovado.png",
+      "sha256": "5d98efb77e568228d36216fcd800d4d3eda692cbdffa0fee616b845e020cc364",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/visual-references/mls-2026-10-29/05_returns_aprovado.png",
+      "sha256": "cfe0e2e30a501ecbe5918f6a81cb05074c084e7a1aa835a15201702f23ffc3ab",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    },
+    {
+      "path": "docs/visual-references/mls-2026-10-29/06_products_aprovado.png",
+      "sha256": "b2273b0a8ea3812e9e374685b63f3ccf52970ae5c4b84255ba3c50fcfd284f9a",
+      "rights_state": "REFERENCE_OR_SYNTHETIC_EVIDENCE_NOT_RESOLVED_INTO_COMMERCIAL_RIGHTS",
+      "decision": "PRESERVE_EXISTING_NO_NEW_DISTRIBUTION_OR_MARKETPLACE_PUBLICATION"
+    }
+  ]
+}

@@ -1,0 +1,483 @@
+{
+  "schema": "mls_finance_graph_master_roadmap_mapping_v1",
+  "date": "2026-11-13",
+  "escopo": "Complemento somente de artefatos de auditoria; sem consulta ao site/repositório, implementação ou execução de testes nesta etapa. Não cria ordem concorrente ao roadmap mestre.",
+  "calendarios": {
+    "fuso_operacao": "America/Sao_Paulo",
+    "fabricacao": "sexta 13:00 inclusiva até sexta seguinte 13:00 exclusiva; oito intervalos, cortes confirmados",
+    "vendas_semanal_existente": "sete dias civis sexta 00:00 inclusiva até sexta seguinte 00:00 exclusiva",
+    "financeiro_semanal_novo": "política versionada compatível com fontes; preservar dias civis enquanto não houver granularidade/fuso para outro corte exato; eventual rateio assumido é declarado",
+    "mensal": "competência do mês civil, nunca soma integral de semanas que cruzam o mês",
+    "banco": "data do movimento por conta/moeda, não criação do pedido",
+    "ads": "calendário da fonte; fuso UNCONFIRMED na base auditada exige validação e não permite inventar corte horário",
+    "recebiveis": "liquidação posterior não muda silenciosamente a competência; aberto legítimo não impede resultado fechado"
+  },
+  "catalogo_visual": [
+    {
+      "id": "VIS-01",
+      "modulo": "Visão geral / Finance / Ads",
+      "familias_CH_preservadas": [
+        "CH-OVR-01",
+        "CH-OVR-02",
+        "CH-OVR-03"
+      ],
+      "fonte": "brazaDayDashboard.getTrend() e projectMlsMissionChart; ROAS usa getAdsSnapshot()/projectMissionRoasChart independente.",
+      "metrica": "Resultado estimado/subtotal, vendas, gasto Ads e ROAS; preservar Pedidos se o percurso COUNT já estiver integrado na HEAD. Sparklines reutilizam a mesma fonte.",
+      "periodo": "7/14 dias no mês/data selecionados; KPI mensal Ads conserva seu período próprio.",
+      "visual_e_tabela": "Linhas/áreas com eixo e unidade corretos; tabela equivalente por data. BRL em centavos, pedidos inteiros e ROAS em x.",
+      "drilldown": "Inspeção por toque/teclado; abrir detalhe da data só por navegação explícita existente ou extensão validada; controles independentes por host.",
+      "vazio_parcial": "0/1 observação: texto/tabela sem curva inventada. Gaps null não são conectados; negativo e dia parcial preservados; gasto zero não produz ROAS zero.",
+      "fase_apresentacao": "P07",
+      "dependencia": "Dados canônicos existentes, reconferidos na HEAD",
+      "efeito_da_interacao": "LEITURA_OU_FILTRO_SEM_ESCRITA"
+    },
+    {
+      "id": "VIS-02",
+      "modulo": "Visão geral / Equipe",
+      "familias_CH_preservadas": [
+        "CH-OVR-04"
+      ],
+      "fonte": "Registro de agentes e inteligência da data validada.",
+      "metrica": "Valores da mesma data e contagens por estado dos especialistas. Denominador de saúde é o conjunto do registro, distinto dos seis cartões da inicial.",
+      "periodo": "Data/contexto observado e horário da leitura.",
+      "visual_e_tabela": "Comparativo assinado e contagens HEALTHY/WORKING/ATTENTION/BLOCKED; tabela por agente com fonte e próxima ação.",
+      "drilldown": "Abrir painel do agente ou Auditor; nenhuma categoria altera modo de execução.",
+      "vazio_parcial": "Sem fonte: estado desconhecido. Não chamar saúde de integridade/conformidade nem largura relativa de margem.",
+      "fase_apresentacao": "P07",
+      "dependencia": "Dados canônicos existentes, reconferidos na HEAD",
+      "efeito_da_interacao": "LEITURA_OU_FILTRO_SEM_ESCRITA"
+    },
+    {
+      "id": "VIS-03",
+      "modulo": "Financeiro — resultado",
+      "familias_CH_preservadas": [
+        "CH-FIN-01"
+      ],
+      "fonte": "Composição canônica diária/mensal existente; novo resultado por competência e fechamento versionado de P04.",
+      "metrica": "Base de receita/repasse, ajustes, CMV/custos, consumo Ads, despesas, tributos e resultado, com rota de cálculo identificada.",
+      "periodo": "Dia/mês da fonte existente rotulado; novo período de competência conforme política P04.",
+      "visual_e_tabela": "Cascata com sinais quando a composição fecha; tabela semântica dos mesmos componentes e cobertura.",
+      "drilldown": "Componente abre pedidos, ajustes, custo, imposto ou despesa que o compõem, preservando empresa/loja/período.",
+      "vazio_parcial": "Componentes de coberturas distintas não formam igualdade visual; subtotal conhecido fica rotulado e líquido definitivo indisponível.",
+      "fase_apresentacao": "P07",
+      "dependencia": "P04 para DRE/fechamento novos; preservar estimativa atual até o novo contrato estar comprovado.",
+      "efeito_da_interacao": "LEITURA_OU_FILTRO_SEM_ESCRITA"
+    },
+    {
+      "id": "VIS-04",
+      "modulo": "Financeiro — recebíveis/carteira/saques",
+      "familias_CH_preservadas": [
+        "CH-FIN-02"
+      ],
+      "fonte": "Liberações existentes; razão e eventos de carteira/saques reconciliados a criar em P04.",
+      "metrica": "Valores por estado exclusivo e data real do evento; saldos, em trânsito e divergência conhecidos.",
+      "periodo": "Data de liberação/movimento e instante do saldo; nunca substituir por criação do pedido.",
+      "visual_e_tabela": "Série temporal apenas com eventos datados completos; barras por estado com partição demonstrada; tabela de eventos/lotes.",
+      "drilldown": "Abrir pedido, ajuste, liberação, transferência e prova bancária relacionados.",
+      "vazio_parcial": "Sem adaptador: tabela disponível e explicação útil; não fabricar série do saldo agregado nem usar contadores sobrepostos como rosca.",
+      "fase_apresentacao": "P07",
+      "dependencia": "P02 capacidades/coleta e P04 razão/conciliação; receita não é reconhecida novamente na transferência.",
+      "efeito_da_interacao": "LEITURA_OU_FILTRO_SEM_ESCRITA"
+    },
+    {
+      "id": "VIS-05",
+      "modulo": "Banco e transferências",
+      "familias_CH_preservadas": [
+        "CH-BNK-01"
+      ],
+      "fonte": "external_cash_period_summary_v1 e registros/importações/vínculos; saldos e alocações novos de P04.",
+      "metrica": "Créditos, débitos, valor vinculado e não vinculado por conta/origem; saldo inicial/final somente quando comprovados.",
+      "periodo": "Calendário do movimento bancário/transferência, independente da data da venda e da paginação da tabela.",
+      "visual_e_tabela": "Tabela de extrato e conciliação; barras assinadas por origem. Série diária exige agregação diária de backend, não existe por inferência do total.",
+      "drilldown": "Abrir lançamento, arquivo e grupo de alocação. Confirmar/desfazer vínculo permanece ação explícita separada.",
+      "vazio_parcial": "Origem sem registros não é saldo zero; IMPORTED_FILES_ONLY continua parcial. NEW/DUPLICATE/REVIEW não são três fatias exclusivas: review é subconjunto de new.",
+      "fase_apresentacao": "P07",
+      "dependencia": "P04 para saldo confiável e agrupamentos; conector Open Finance P10 é opcional/elegível e identificado.",
+      "efeito_da_interacao": "LEITURA_OU_FILTRO_SEM_ESCRITA"
+    },
+    {
+      "id": "VIS-06",
+      "modulo": "Despesas e impostos",
+      "familias_CH_preservadas": [],
+      "fonte": "expense-ledger/expense-schedule e política tributária vigente; pagamentos reconciliados de P04.",
+      "metrica": "Obrigações por competência/vencimento, aberto/pago/atrasado, valores e categorias mutuamente exclusivas quando agrupados.",
+      "periodo": "Competência para resultado; vencimento para agenda; liquidação para caixa.",
+      "visual_e_tabela": "Calendário/lista de vencimentos e barras por categoria quando cobertura for válida; tabela com obrigação e pagamento ligados.",
+      "drilldown": "Abrir lançamento/parcelas, revisão e prova de pagamento.",
+      "vazio_parcial": "Não usar marcação PAID como segunda despesa; imposto pendente não é zero; campos declarados identificados.",
+      "fase_apresentacao": "P07",
+      "dependencia": "P04 fórmulas e vínculos; configuração isolada de P01/P03.",
+      "efeito_da_interacao": "LEITURA_OU_FILTRO_SEM_ESCRITA"
+    },
+    {
+      "id": "VIS-07",
+      "modulo": "Fechamentos e capital de giro",
+      "familias_CH_preservadas": [],
+      "fonte": "Fechamentos financeiros persistentes, recebíveis, saldos e compromissos de P04.",
+      "metrica": "Resultado por versão, caixa conciliado, recebimentos/pagamentos previstos e reserva de giro configurada.",
+      "periodo": "Semana/mês por política explícita; projeção futura com data-base e horizonte selecionado.",
+      "visual_e_tabela": "Tabela de períodos/versões/pendências e barras de resultado; curva de caixa realizada separada da projeção e dos cenários.",
+      "drilldown": "Abrir versão, eventos, políticas e diferenças de retificação; projeção abre compromissos e premissas.",
+      "vazio_parcial": "Recebível legítimo em aberto não bloqueia DRE por si só; fonte material incompleta mantém provisório. Caixa livre estimado não é promessa de retirada.",
+      "fase_apresentacao": "P07",
+      "dependencia": "P03 compromissos/custos e P04 cálculo/fechamentos; não criar previsão apenas por extrapolar vendas.",
+      "efeito_da_interacao": "LEITURA_OU_FILTRO_SEM_ESCRITA"
+    },
+    {
+      "id": "VIS-08",
+      "modulo": "Anúncios e campanhas",
+      "familias_CH_preservadas": [
+        "CH-ADS-01"
+      ],
+      "fonte": "ads-workspace daily table e calendário/projetores de Ads; campanhas/GMV Max em contratos próprios.",
+      "metrica": "Gasto, GMV atribuído, conversões atribuídas e ROAS calculado. ROAS agregado = receita atribuída total / gasto total.",
+      "periodo": "Período do calendário Ads até 31 dias no dashboard atual; fonte/fuso próprio explicitado.",
+      "visual_e_tabela": "Barras/linhas de gasto e GMV; ROAS em painel separado; tabela por dia e campanha quando o recorte é válido.",
+      "drilldown": "Abrir dia/campanha por identificação estável; não altera orçamento nem status.",
+      "vazio_parcial": "Sem gasto: ROAS indefinido; fonte parcial/atrasada visível. Não somar atribuição direta e ampla nem média de ROAS diários; distribuição de investimento só com partição completa.",
+      "fase_apresentacao": "P07",
+      "dependencia": "Dados canônicos existentes, reconferidos na HEAD",
+      "efeito_da_interacao": "LEITURA_OU_FILTRO_SEM_ESCRITA"
+    },
+    {
+      "id": "VIS-09",
+      "modulo": "Produtos — líderes e ABC",
+      "familias_CH_preservadas": [
+        "CH-PRD-01",
+        "CH-PRD-02"
+      ],
+      "fonte": "mls_product_workbench_v1 e mls_product_intelligence_shadow_v1.",
+      "metrica": "Unidades comerciais vendidas, participação no total mensal e classes canônicas. ABC receita só com revenue_abc_status AVAILABLE.",
+      "periodo": "Mês/publicação completos, independente do filtro/página da tabela; recorte filtrado só se explicitamente selecionado.",
+      "visual_e_tabela": "Barras dos líderes e A/B/C; tabela de produtos/variantes com custos/cobertura. Top 8 não representa a distribuição inteira.",
+      "drilldown": "Selecionar produto/classe abre ou filtra a tabela preservando mês e classe original.",
+      "vazio_parcial": "Sem produto confirmado: sem gráfico; receita bloqueada não é inferida. Unidade de kit não é peça, estoque nem lucro líquido.",
+      "fase_apresentacao": "P07",
+      "dependencia": "Dados canônicos existentes, reconferidos na HEAD",
+      "efeito_da_interacao": "LEITURA_OU_FILTRO_SEM_ESCRITA"
+    },
+    {
+      "id": "VIS-10",
+      "modulo": "Produtos — contribuição",
+      "familias_CH_preservadas": [
+        "CH-PRD-03"
+      ],
+      "fonte": "mls_product_financial_evidence_v1 e business_month_variant_contributions_v1, mesma publicação/revisão.",
+      "metrica": "Contribuição exclusiva coberta e componentes; casos mistos/sem atribuição separados; Ads/DAS/despesas fora quando o contrato assim define.",
+      "periodo": "Mês da publicação e variação/pedido selecionados.",
+      "visual_e_tabela": "Composição assinada e tabela de pedidos/evidências. Ranking só de base estrita válida e com cobertura indicada.",
+      "drilldown": "Produto→variação→pedido/ajuste/custo; não somar provas alternativas do mesmo recorte.",
+      "vazio_parcial": "Parcial não vira zero nem margem líquida; não ratear pedido misto só para preencher gráfico.",
+      "fase_apresentacao": "P07",
+      "dependencia": "Dados canônicos existentes, reconferidos na HEAD",
+      "efeito_da_interacao": "LEITURA_OU_FILTRO_SEM_ESCRITA"
+    },
+    {
+      "id": "VIS-11",
+      "modulo": "Produção diária",
+      "familias_CH_preservadas": [
+        "CH-PROD-01",
+        "CH-PROD-02"
+      ],
+      "fonte": "incurred_production_analytics_v1 para fabricação e production_daily_finance_v1 para referência de vendas, apresentados separadamente.",
+      "metrica": "Custo histórico/quantidade fabricada; estimativa das vendas e custo de referência das vendas em outra série/bloco.",
+      "periodo": "produced_date Brasília para fabricação; data civil de pedidos/Ads para estimativa.",
+      "visual_e_tabela": "Barras de fabricação por dia e tabela de lotes; bloco separado da estimativa diária com sinais e cobertura.",
+      "drilldown": "Barra/tabela seleciona a mesma data pelos handlers existentes; formulário Registrar neste dia é ação separada.",
+      "vazio_parcial": "NO_RECORDS não é zero; PARTIAL_COSTS mostra conhecido e pendente. Maior custo exige custos completos, preserva empates; gráfico não confirma fabricação.",
+      "fase_apresentacao": "P07",
+      "dependencia": "Dados canônicos existentes, reconferidos na HEAD",
+      "efeito_da_interacao": "LEITURA_OU_FILTRO_SEM_ESCRITA"
+    },
+    {
+      "id": "VIS-12",
+      "modulo": "Fechamento fabril",
+      "familias_CH_preservadas": [
+        "CH-PROD-03"
+      ],
+      "fonte": "GET production/weekly-closing?month e versões current/original/latest.",
+      "metrica": "Custo histórico total ou subtotal conhecido e quantidade com cobertura por intervalo.",
+      "periodo": "Sexta anterior 13h inclusiva → sexta 13h exclusiva, America/Sao_Paulo.",
+      "visual_e_tabela": "Barras por semana e tabela de versões, oito intervalos e confirmações.",
+      "drilldown": "Seleciona semana/corte e detalhes salvos; leitura não captura fechamento.",
+      "vazio_parcial": "Prévia, aberto, corte pendente, original e retificação permanecem distintos; falta de custo não é zero.",
+      "fase_apresentacao": "P07",
+      "dependencia": "Dados canônicos existentes, reconferidos na HEAD",
+      "efeito_da_interacao": "LEITURA_OU_FILTRO_SEM_ESCRITA"
+    },
+    {
+      "id": "VIS-13",
+      "modulo": "DTF e biblioteca de artes",
+      "familias_CH_preservadas": [
+        "CH-DTF-01"
+      ],
+      "fonte": "mls_agent_dtf_queue_v1 e plano/manifestações do motor DTF; metadados de biblioteca/backup.",
+      "metrica": "Linhas pending/reserved/produced/blocked, soma exata line_count; folhas/impressões e uso de biblioteca são outras grandezas.",
+      "periodo": "Snapshot atual da fila e lote selecionado; arte é por versão/hash.",
+      "visual_e_tabela": "Rosca/barras apenas se a partição fechar; tabela de fila/lotes; prévia física de PNG é layout, não gráfico estatístico.",
+      "drilldown": "Abrir fila/lote/arte; inspeção não reserva, exporta, marca produzido nem envia mídia à nuvem.",
+      "vazio_parcial": "Zero total/inconsistência: mensagem sem rosca inventada. Falta de pixels locais orienta restaurar/reanexar; ocupação de filme não é capacidade/hora.",
+      "fase_apresentacao": "P07",
+      "dependencia": "Motor atual preservado; P03 acrescenta backup e nuvem opt-in/cotas sem modificar semântica de contagens.",
+      "efeito_da_interacao": "LEITURA_OU_FILTRO_SEM_ESCRITA"
+    },
+    {
+      "id": "VIS-14",
+      "modulo": "Devoluções",
+      "familias_CH_preservadas": [
+        "CH-RET-01"
+      ],
+      "fonte": "mls_returns_insights_v1 e fatos de recebimento/inspeção; efeitos financeiros novos de P04.",
+      "metrica": "Solicitações identificadas por situação; valores conhecidos/pedentes; peças físicas por destino em tabela independente.",
+      "periodo": "Coorte/fonte da solicitação, data de ajuste financeiro e data de recebimento físico explicitadas.",
+      "visual_e_tabela": "Barras por status e tabela de casos; tabela física de peças/destino/custo. Motivos só com taxonomia/fonte canônica nova.",
+      "drilldown": "Caso→pedido→ajuste e recebimento/inspeção associados; inspeção de gráfico não confirma item recebido.",
+      "vazio_parcial": "Quantidade de casos não é pedidos/peças; REFUND_PAID não comprova banco. Agregado não é reconstruído da lista truncada; valor ausente mantém pendência.",
+      "fase_apresentacao": "P07",
+      "dependencia": "Dados canônicos existentes, reconferidos na HEAD",
+      "efeito_da_interacao": "LEITURA_OU_FILTRO_SEM_ESCRITA"
+    },
+    {
+      "id": "VIS-15",
+      "modulo": "Auditor e qualidade das fontes",
+      "familias_CH_preservadas": [
+        "CH-EVD-01"
+      ],
+      "fonte": "Registro de agentes, liberações/returns/custos, diagnóstico e cobertura dos coletores.",
+      "metrica": "Contagens/valores afetados e idade por tipo de pendência; denominador apenas quando definido.",
+      "periodo": "Última observação por fonte, período afetado e corte da revisão.",
+      "visual_e_tabela": "Tabela de pendências com causa/ação e barras de cobertura; evitar rosca de contadores sobrepostos.",
+      "drilldown": "Abrir fonte/evento/arquivo e ação permitida; reprocessar exige fluxo próprio.",
+      "vazio_parcial": "Sem base: desconhecido; categorias sobrepostas não somam total de problemas; saudável não equivale a auditoria independente ou conformidade certificada.",
+      "fase_apresentacao": "P07",
+      "dependencia": "Dados canônicos existentes, reconferidos na HEAD",
+      "efeito_da_interacao": "LEITURA_OU_FILTRO_SEM_ESCRITA"
+    },
+    {
+      "id": "VIS-16",
+      "modulo": "Pedidos e operação",
+      "familias_CH_preservadas": [
+        "CH-ORD-01"
+      ],
+      "fonte": "order_operations_workspace_v1: agregados por pedido do recorte inteiro.",
+      "metrica": "Pedidos por etapa exclusiva, situação da plataforma separada; ALL/ACTIVE são filtros agregados, não fatias adicionais.",
+      "periodo": "Até 31 datas do recorte da fonte salva, independente da página de 50.",
+      "visual_e_tabela": "Chips/barras de distribuição e tabela de pedidos/linhas/etapas.",
+      "drilldown": "Filtrar etapa/abrir pedido; gravar etapa pede formulário/motivo/confirmação próprios.",
+      "vazio_parcial": "Cache parcial e period_complete:false visíveis; linha desconhecida entra em revisão; ausência de pedido antigo não comprova inexistência.",
+      "fase_apresentacao": "P07",
+      "dependencia": "Dados canônicos existentes, reconferidos na HEAD",
+      "efeito_da_interacao": "LEITURA_OU_FILTRO_SEM_ESCRITA"
+    },
+    {
+      "id": "VIS-17",
+      "modulo": "Relatório semanal da operação",
+      "familias_CH_preservadas": [
+        "CH-WEEK-01",
+        "CH-WEEK-02",
+        "CH-WEEK-03",
+        "CH-WEEK-04"
+      ],
+      "fonte": "weekly_operating_report_v1: fabricação, estimativa de vendas e external_cash_period_summary_v1 independentes.",
+      "metrica": "Fabricação: custo/quantidade; vendas: estimativa/vendas/referência; caixa: créditos/débitos e vínculos por origem.",
+      "periodo": "Fabricação: oito intervalos de sexta 13h; vendas: sete dias civis sexta–quinta; caixa: calendário do movimento. Preservar três bases.",
+      "visual_e_tabela": "Três gráficos e três tabelas/detalhes próprios. Caixa atual é categoria por origem, não série diária.",
+      "drilldown": "Seleção de intervalo/data/categoria e métrica por bloco; rascunho de week_end só aplica por ação explícita; links preservam contexto possível.",
+      "vazio_parcial": "Conhecido não é total; fonte ausente não zera outras. Pernas de transferência podem cair em semanas distintas, sem exigir igualdade semanal. Resposta velha não muda o novo período.",
+      "fase_apresentacao": "P07",
+      "dependencia": "Dados canônicos existentes, reconferidos na HEAD",
+      "efeito_da_interacao": "LEITURA_OU_FILTRO_SEM_ESCRITA"
+    },
+    {
+      "id": "VIS-18",
+      "modulo": "Hermes, memória e automações",
+      "familias_CH_preservadas": [],
+      "fonte": "Jobs/análises, orçamento/uso registrado, fingerprint de contexto, observações agregadas e estados do scheduler.",
+      "metrica": "Estado de execução, quantidade de análises observadas, custo conhecido, limite disponível e pendências; duração apenas quando timestamps válidos existirem.",
+      "periodo": "Período da análise e data das fontes identificados separadamente; orçamento por competência configurada.",
+      "visual_e_tabela": "Tabela de análises e origem dos números; lista de ações; série de uso/custo somente sobre eventos observados.",
+      "drilldown": "Abrir análise, contexto financeiro congelado e consumo; nunca executar ação comercial ao clicar.",
+      "vazio_parcial": "Ponte desconectada, custo não informado e modelo indisponível são estados explícitos. Não criar atividade/ganho autônomo sintético.",
+      "fase_apresentacao": "P07",
+      "dependencia": "Dados canônicos existentes, reconferidos na HEAD",
+      "efeito_da_interacao": "LEITURA_OU_FILTRO_SEM_ESCRITA"
+    },
+    {
+      "id": "VIS-19",
+      "modulo": "Listing Factory / AI Sales / Afiliados",
+      "familias_CH_preservadas": [],
+      "fonte": "Rascunhos, planos, jobs/manifestos locais, revisão e ledger de performance importado/observado.",
+      "metrica": "Rascunhos por etapa exclusiva, jobs concluídos/falhos, custo registrado e métricas de performance com origem; publicação real só após retorno oficial.",
+      "periodo": "Data de criação/execução/revisão; performance pelo período e atribuição da própria fonte.",
+      "visual_e_tabela": "Tabelas de revisão/lotes/criadores e funil interno claramente nomeado; vídeos são prévias, não gráficos de venda.",
+      "drilldown": "Abrir rascunho, evidência de mídia/direito, job, manifesto e registro de performance.",
+      "vazio_parcial": "READY_FOR_OWNER não é publicado. CSV/manual não vira oficial; zero custo do provedor não significa custo total zero; não classificar vencedores com dados insuficientes.",
+      "fase_apresentacao": "P09",
+      "dependencia": "Dados existentes assistidos; novas conexões/escritas só com capacidades, orçamento e políticas específicos.",
+      "efeito_da_interacao": "LEITURA_OU_FILTRO_SEM_ESCRITA"
+    },
+    {
+      "id": "VIS-20",
+      "modulo": "Conta, assinatura e onboarding",
+      "familias_CH_preservadas": [],
+      "fonte": "Conta/empresa/membership e evidência real das etapas; assinatura/cobrança verificadas em P05.",
+      "metrica": "Etapa concluída, plano, situação da assinatura, uso/cota e histórico de cobranças do próprio cliente.",
+      "periodo": "Ciclo de assinatura e data de atualização do provedor; distinto do financeiro da loja.",
+      "visual_e_tabela": "Checklist de onboarding e tabela de faturas/uso; gráfico de uso somente se houver medição canônica.",
+      "drilldown": "Abrir tarefa de configuração, comprovante/fatura ou portal autorizado; clique em gráfico não contrata nem muda plano.",
+      "vazio_parcial": "Criar conta não implica loja conectada; redirect de pagamento não prova pagamento. Campos não configurados explicam a ação; não usar porcentagem de progresso inventada.",
+      "fase_apresentacao": "P07",
+      "dependencia": "P01 conta, P02 conexão e P05 cobrança; UX P07, aceite comercial P08.",
+      "efeito_da_interacao": "LEITURA_OU_FILTRO_SEM_ESCRITA"
+    },
+    {
+      "id": "VIS-21",
+      "modulo": "Estoque e compromissos de produção",
+      "familias_CH_preservadas": [],
+      "fonte": "Movimentos, reservas, composição e custo histórico implementados em P03.",
+      "metrica": "Saldo físico/disponível/reservado por item e local; entradas, saídas, perdas e estoque valorizado quando custo for comprovado.",
+      "periodo": "Data efetiva do movimento e snapshot do saldo; referências históricas versionadas.",
+      "visual_e_tabela": "Tabela de estoque/movimentos primeiro; barras por SKU/categoria apenas com cobertura válida e unidade consistente.",
+      "drilldown": "Saldo→movimentos→pedido/lote/devolução/origem do ajuste.",
+      "vazio_parcial": "Sem inventário inicial ou custo: quantidade/valor pendentes separados; não inferir estoque de vendas ou gráfico DTF.",
+      "fase_apresentacao": "P07",
+      "dependencia": "P03 ledger físico; P04 efeitos financeiros posteriores. Não criar dependência de P03 em fechamento P04.",
+      "efeito_da_interacao": "LEITURA_OU_FILTRO_SEM_ESCRITA"
+    }
+  ],
+  "familias_legadas_22_preservadas": [
+    {
+      "id": "CH-OVR-01",
+      "titulo_historico": "Histórico diário financeiro — EXISTENTE",
+      "estado_historico_nao_recertificado": true
+    },
+    {
+      "id": "CH-OVR-02",
+      "titulo_historico": "ROAS diário e indicador de ROAS do período — EXISTENTE",
+      "estado_historico_nao_recertificado": true
+    },
+    {
+      "id": "CH-OVR-03",
+      "titulo_historico": "Sparklines dos KPIs — EXISTENTE",
+      "estado_historico_nao_recertificado": true
+    },
+    {
+      "id": "CH-OVR-04",
+      "titulo_historico": "Comparativo da data e anel de saúde — EXISTENTES",
+      "estado_historico_nao_recertificado": true
+    },
+    {
+      "id": "CH-FIN-01",
+      "titulo_historico": "Composição diária e mensal do resultado — APRESENTAÇÃO EXISTENTE, CASCATA GRÁFICA É EXTENSÃO",
+      "estado_historico_nao_recertificado": true
+    },
+    {
+      "id": "CH-FIN-02",
+      "titulo_historico": "Repasses e conciliação do especialista — SEM FONTE GRÁFICA FECHADA ATUAL",
+      "estado_historico_nao_recertificado": true
+    },
+    {
+      "id": "CH-BNK-01",
+      "titulo_historico": "Banco e transferências — TABELAS/WIZARD EXISTENTES; GRÁFICO NOVO NO SEMANAL",
+      "estado_historico_nao_recertificado": true
+    },
+    {
+      "id": "CH-ADS-01",
+      "titulo_historico": "Dashboard /dashboard e campanhas — DADOS/TABELAS EXISTENTES; GRÁFICOS ADICIONAIS SÃO EXTENSÃO",
+      "estado_historico_nao_recertificado": true
+    },
+    {
+      "id": "CH-PRD-01",
+      "titulo_historico": "Produtos líderes por unidades — EXISTENTE",
+      "estado_historico_nao_recertificado": true
+    },
+    {
+      "id": "CH-PRD-02",
+      "titulo_historico": "ABC por unidades — EXISTENTE; ABC por receita — EXTENSÃO CONDICIONAL",
+      "estado_historico_nao_recertificado": true
+    },
+    {
+      "id": "CH-PRD-03",
+      "titulo_historico": "Composição/contribuição por produto e variação — DETALHE EXISTENTE, VISUAL GRÁFICO É EXTENSÃO",
+      "estado_historico_nao_recertificado": true
+    },
+    {
+      "id": "CH-PROD-01",
+      "titulo_historico": "Custo histórico por dia de fabricação — EXISTENTE, SVG COM SELEÇÃO",
+      "estado_historico_nao_recertificado": true
+    },
+    {
+      "id": "CH-PROD-02",
+      "titulo_historico": "Resultado estimado das vendas por dia dentro de Produção — EXISTENTE, BARRAS CSS",
+      "estado_historico_nao_recertificado": true
+    },
+    {
+      "id": "CH-PROD-03",
+      "titulo_historico": "Fechamento semanal da fabricação — EXISTENTE, DISTINTO DO NOVO RELATÓRIO",
+      "estado_historico_nao_recertificado": true
+    },
+    {
+      "id": "CH-DTF-01",
+      "titulo_historico": "Estados da fila — EXISTENTE COM GATE ESTRITO",
+      "estado_historico_nao_recertificado": true
+    },
+    {
+      "id": "CH-RET-01",
+      "titulo_historico": "Situações de solicitações identificadas — EXISTENTE, BARRAS HORIZONTAIS",
+      "estado_historico_nao_recertificado": true
+    },
+    {
+      "id": "CH-EVD-01",
+      "titulo_historico": "Barras de evidência e cobertura — EXISTENTES, NÃO SÉRIES HISTÓRICAS",
+      "estado_historico_nao_recertificado": true
+    },
+    {
+      "id": "CH-ORD-01",
+      "titulo_historico": "Distribuição de Pedidos e Operação — CONTROLES EXISTENTES, GRÁFICO É EXTENSÃO",
+      "estado_historico_nao_recertificado": true
+    },
+    {
+      "id": "CH-WEEK-01",
+      "titulo_historico": "Resumo semanal: fabricação registrada — EXISTENTE NOVO",
+      "estado_historico_nao_recertificado": true
+    },
+    {
+      "id": "CH-WEEK-02",
+      "titulo_historico": "Resumo semanal: estimativa das vendas — EXISTENTE NOVO",
+      "estado_historico_nao_recertificado": true
+    },
+    {
+      "id": "CH-WEEK-03",
+      "titulo_historico": "Resumo semanal: caixa importado por origem — EXISTENTE NOVO",
+      "estado_historico_nao_recertificado": true
+    },
+    {
+      "id": "CH-WEEK-04",
+      "titulo_historico": "Filtros, leitura e acessibilidade dos três gráficos semanais — CONTRATO COMUM",
+      "estado_historico_nao_recertificado": true
+    }
+  ],
+  "invariantes_visuais": [
+    "Mesmos valores/revisões/escopo entre card, gráfico, tabela, exportação e fechamento.",
+    "Sinal, unidade e denominador explícitos; BRL_CENTS, COUNT, peças e linhas nunca intercambiáveis.",
+    "Null, zero comprovado, parcial, atrasado, indisponível e não configurado têm estados diferentes.",
+    "Sem dados fictícios, interpolação de valores monetários, rosca de categorias sobrepostas ou série temporal derivada de total agregado.",
+    "Fonte inteira sustenta totais; página truncada e filtro de lista não alteram silenciosamente denominador.",
+    "Toda leitura essencial tem texto/tabela, teclado/toque, foco e reduced motion; preservar seleção/rascunho e limpar listeners na troca de contexto.",
+    "Sem dado financeiro privado na URL/log/telemetria; escopo de empresa/loja é aplicado antes de agregar."
+  ],
+  "riscos_de_sequenciamento": [
+    "P03 deve entregar fatos/políticas/custos e eventos físicos antes do fechamento P04; P04 consome esses fatos. Exigir fechamento financeiro para concluir estoque criaria ciclo e não é necessário.",
+    "P02 pode entregar envelope genérico de eventos sem concluir o razão financeiro. FINAUTO-05 só é aceito com semântica, conservação e lançamentos de P04.",
+    "Testes, migrações, privacidade, isolamento e controles de release são invariantes de cada fase; P06/P08 consolidam, não autorizam adiar os fundamentos.",
+    "P04 necessita tela numérica mínima utilizável e explicação das bases; P07 melhora gráficos/fluxo sem substituir as fórmulas ou adiar a verificação do motor.",
+    "P10 Open Finance é elegível/condicionado. Arquivo oficial pode permitir conciliação comprovada em P04, mas não equivale a coleta bancária automática.",
+    "FINAUTO-12/13 se iniciam e possuem entrega física em P03; a prova dos efeitos financeiros e de mês fechado é conjunta com P04. Não marcar o requisito integralmente pronto na primeira metade.",
+    "Os 22 CH são famílias/contratos de uma auditoria anterior. Não significam 22 gráficos novos nem prova de disponibilidade atual da conta. A V4.1 já avançou o visual; o executor deve preservar o que existe e reconferir adaptadores.",
+    "Nenhum gráfico autoriza sync de provedor, fabricação, conciliação, alteração de campanha, assinatura ou pagamento. Inspeção/filtro e mutação são fluxos distintos.",
+    "Health ring do registro e seis cartões da inicial têm conjuntos diferentes; não trocar denominadores nem rotular saúde como conformidade.",
+    "Uma semana com recebíveis legítimos não vencidos pode ter resultado encerrado; pendência bancária não deve virar recebimento fictício. Saldos e competências seguem bases próprias."
+  ],
+  "ordem_mestre": "Consultar MATRIZ_EXECUCAO_MLS_SAAS.json; este catálogo especifica visualizações e não possui estado de implantação independente.",
+  "baseline_atual": "6578e21098ff799e59433af92880d249432ceeb4"
+}

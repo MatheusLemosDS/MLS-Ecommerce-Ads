@@ -1,0 +1,468 @@
+{
+  "base_sha": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+  "documentation_parent": "0a5a22897d3cf56f97b7b995eb78a743fc0a246e",
+  "files": [
+    {
+      "path": ".github/workflows/validate.yml",
+      "bytes": 3376,
+      "sha256": "14a2aaa2dafedac93310bb6208831991ceb5437b5f00190360f14a0559bbb7ad"
+    },
+    {
+      "path": "AGENTS.md",
+      "bytes": 9207,
+      "sha256": "240f24ccd7fbfef6da6c3399d9e996f5c816fbeb71e2408f2f2a631af54c97eb"
+    },
+    {
+      "path": "README.md",
+      "bytes": 31462,
+      "sha256": "0831cd14a020cc36432a506d1d593aa8e479673dabd5c3f013ea60ab1d14eec5"
+    },
+    {
+      "path": "docs/HERMES_FINANCEIRO.md",
+      "bytes": 3564,
+      "sha256": "56ef490ac4275e28a831f95314ed54191d26ad4f0284d965a10a97e5049d25c4"
+    },
+    {
+      "path": "docs/MLS_AI_SALES_INTEGRATION_2026_10_30.md",
+      "bytes": 7459,
+      "sha256": "84321a741fbd5777be211174f7a6d094f68318735f63211efcea02e1781ea3f6"
+    },
+    {
+      "path": "docs/MLS_AI_SALES_LOCAL_RENDER.md",
+      "bytes": 5094,
+      "sha256": "75af29d54b6727956f104f5b87766ea93b034d3cbebe85a6d5e6304aad4a4bb1"
+    },
+    {
+      "path": "docs/MLS_LAYOUT_REFERENCE_PARITY_2026_11_13.md",
+      "bytes": 9181,
+      "sha256": "67d61b6b9cf8ee658dfdd89e45ec15c0ef30d0dad5a46112a257ecb6eaabbba0"
+    },
+    {
+      "path": "docs/MLS_LISTING_FACTORY_V1.md",
+      "bytes": 8481,
+      "sha256": "791ea276042d6c8e22b63e8d8c2ca679ad4c4ee0424951a92b79d9ba787d2ee9"
+    },
+    {
+      "path": "docs/PRODUCAO_DTF.md",
+      "bytes": 7692,
+      "sha256": "38f102992337456f9c399acc438ed32990d022351b20577d010574412a9ad7fa"
+    },
+    {
+      "path": "package-lock.json",
+      "bytes": 50779,
+      "sha256": "de73cee8850002151b00179dbac6d72bad2c857e3c2603aec5e071386a000c10"
+    },
+    {
+      "path": "package.json",
+      "bytes": 1370,
+      "sha256": "a91843abbe7c9aa02d3725e99b69524239cca4296c141a42db3b46d1549af5d0"
+    },
+    {
+      "path": "tools/release-approved-candidate.json",
+      "bytes": 11128,
+      "sha256": "63c246fa290a4dfca71dd61309e4f3bab9f88c90bfdc1e02852bef000d89dcff"
+    },
+    {
+      "path": "tools/release_preflight.mjs",
+      "bytes": 12453,
+      "sha256": "eb4fe4d6756ca767986ab3035e994a12a615afc84a9da4d89a1078adc0826f22"
+    },
+    {
+      "path": "tools/tests/release-preflight.test.mjs",
+      "bytes": 19321,
+      "sha256": "25f7ee4fcaaf2c21552fff3d8c3999091a077ea986b469e86f64412ce6f71442"
+    },
+    {
+      "path": "web/bridge/hermes_bridge.py",
+      "bytes": 27184,
+      "sha256": "ed0408b611516ff76a711aaac98253b1b3ceabade6bbe635913f8432ab30f9ff"
+    },
+    {
+      "path": "web/cloudflare/original/app-worker.mjs",
+      "bytes": 84166,
+      "sha256": "f022a27d4b4c8ac327381fd5318ee04d47ec67c4d0950c63e61ea1623b3cdd81"
+    },
+    {
+      "path": "web/cloudflare/original/auth-worker.mjs",
+      "bytes": 57640,
+      "sha256": "32e1af172a4143c3f91ae927422e0846aee520605c64d0500f06c74c1462f4df"
+    },
+    {
+      "path": "web/cloudflare/src/account-policy.mjs",
+      "bytes": 3080,
+      "sha256": "f8eaaa6b66cae22c03949bb4e9745b979fa610279d6dd99ff947450428136953"
+    },
+    {
+      "path": "web/cloudflare/src/admin.mjs",
+      "bytes": 113049,
+      "sha256": "13085154ad06a7f10e1a028251ac8fd5533eeea3a7998886d03b48ecd25f988f"
+    },
+    {
+      "path": "web/cloudflare/src/agent-registry.mjs",
+      "bytes": 36263,
+      "sha256": "efa13b45819155b774f256ff7f06ca34fee7cf789320c2b8de38239cf0d13be7"
+    },
+    {
+      "path": "web/cloudflare/src/app-financial-automation.mjs",
+      "bytes": 1314,
+      "sha256": "9a3759810c56b47105031c7d930e2788553e62e7027b75ec81e915b38f8f9e93"
+    },
+    {
+      "path": "web/cloudflare/src/automation-workspace.mjs",
+      "bytes": 12811,
+      "sha256": "55181e144925c90b81daf49be58321d8fd5c69b097733185d64843fc62b3a04e"
+    },
+    {
+      "path": "web/cloudflare/src/business-financial-closeout.mjs",
+      "bytes": 33914,
+      "sha256": "501e50a2a02cd67ccddfdddb8fcee9746830b8f37159e5825a7829afcbfcebce"
+    },
+    {
+      "path": "web/cloudflare/src/business-historical-returns.mjs",
+      "bytes": 14492,
+      "sha256": "f5ca587063e8bd7eabd42807e558154c022d9b8a04f00a28d9ce880a6c721f64"
+    },
+    {
+      "path": "web/cloudflare/src/business-month-publication.mjs",
+      "bytes": 11457,
+      "sha256": "019596f56814a70f46d1275a68ba5b107b570ec309d3a47e86ad889d440a5d34"
+    },
+    {
+      "path": "web/cloudflare/src/business-month.mjs",
+      "bytes": 55498,
+      "sha256": "fe688b43dc3d848004477ace9de1b7a70a47951f488b3c06e51d8e50aa96ff63"
+    },
+    {
+      "path": "web/cloudflare/src/business-sync.mjs",
+      "bytes": 22014,
+      "sha256": "0ecd1885dc97b8efe902e4ee1d904ed546550f6ba58d2e3b21966c8687fe95eb"
+    },
+    {
+      "path": "web/cloudflare/src/business-tax-policy.mjs",
+      "bytes": 8069,
+      "sha256": "6b27f010e084ee0d29051456d7df859414b5891247c5daeaf4b29e6dea687d4a"
+    },
+    {
+      "path": "web/cloudflare/src/dtf-layout.mjs",
+      "bytes": 9325,
+      "sha256": "6fd9775b0aaff13fc4fea5f3cd7b2a7ce7b469be9e015ed3b2da2e87f3e2a7f7"
+    },
+    {
+      "path": "web/cloudflare/src/dtf-view.mjs",
+      "bytes": 49349,
+      "sha256": "3d1d40eb9ec94aad65e39afd7a7b068229945e43e999b98ee59b102a4d8bba4f"
+    },
+    {
+      "path": "web/cloudflare/src/expense-ledger.mjs",
+      "bytes": 20788,
+      "sha256": "cb7acb565e1e28777b65ed46833d9ff56ab7d5393d70d9418548cc658d4d6a80"
+    },
+    {
+      "path": "web/cloudflare/src/financial-accounting-policy.mjs",
+      "bytes": 7189,
+      "sha256": "c056370050d592ab36a86c56191b2a1a021623e2c65ecb6107c3c14e7536153b"
+    },
+    {
+      "path": "web/cloudflare/src/financial-accounting-projection.mjs",
+      "bytes": 27747,
+      "sha256": "5eebc313ddc21539cd81292ce530630d7bd05c9c06eacc4f532dbddf66ad2155"
+    },
+    {
+      "path": "web/cloudflare/src/financial-accounting-schedule.mjs",
+      "bytes": 4593,
+      "sha256": "1f294091bce6daad04dd8666bdc167070adea4791e8849a6e12d99d337f56c3f"
+    },
+    {
+      "path": "web/cloudflare/src/financial-auth-router.mjs",
+      "bytes": 2121,
+      "sha256": "8667d58e0b394969a8801fe55c2838b5e4ab863e9e0d21ca185fd70787590f79"
+    },
+    {
+      "path": "web/cloudflare/src/financial-automation-ads-sources.mjs",
+      "bytes": 9561,
+      "sha256": "ab0eb218aa951ade088bd36e9b0fb6d9b43ac28e4f2cfc6d27d6c4fc7c37044c"
+    },
+    {
+      "path": "web/cloudflare/src/financial-automation-allocation-client.mjs",
+      "bytes": 20664,
+      "sha256": "43e6d2b4ec57db4dc9639fab9053697972c782d8b0af1fd7267286aaa47c8d4c"
+    },
+    {
+      "path": "web/cloudflare/src/financial-automation-bridge.mjs",
+      "bytes": 13559,
+      "sha256": "176baa668b77524cee74876eec63af6b76e01e3d04124e59933b618856fdfedd"
+    },
+    {
+      "path": "web/cloudflare/src/financial-automation-cash-sources.mjs",
+      "bytes": 14781,
+      "sha256": "ed7f83be1fe92bf0a53d0541cf415a585bb8bf8367e8d2f39027718b85a127ca"
+    },
+    {
+      "path": "web/cloudflare/src/financial-automation-client.mjs",
+      "bytes": 53809,
+      "sha256": "568ceddf6460bdc577cb8c34e4fde22812b69baa292120a7b4740282c70ee3b8"
+    },
+    {
+      "path": "web/cloudflare/src/financial-automation-jobs.mjs",
+      "bytes": 9992,
+      "sha256": "2e288ae538792e051e89ce2150ba2453c5677b930e634b08c087e18454eeb62c"
+    },
+    {
+      "path": "web/cloudflare/src/financial-automation-service.mjs",
+      "bytes": 25719,
+      "sha256": "f0860856495eca1173b235e972a37fe5cd140f7e520e771d3f80d7d519eef6ec"
+    },
+    {
+      "path": "web/cloudflare/src/financial-automation-sources.mjs",
+      "bytes": 23862,
+      "sha256": "312ddf2909826fe91858df27bf0f9fc1e4b4adbe269f0bf9f41c72ccfab186a9"
+    },
+    {
+      "path": "web/cloudflare/src/financial-automation-store.mjs",
+      "bytes": 9028,
+      "sha256": "95ff304e8e1ddcd8309441ee0ad04cf5f2dde15ffff4fe37837ffead8aeb8e01"
+    },
+    {
+      "path": "web/cloudflare/src/financial-automation-view.mjs",
+      "bytes": 32390,
+      "sha256": "63695a9e4512a67f63292abc816cd52b1b5ac3cdb7aa7cc490922a40e3cc0fe7"
+    },
+    {
+      "path": "web/cloudflare/src/financial-cash-allocation-store.mjs",
+      "bytes": 20001,
+      "sha256": "8d9611def3635902842f966569c04346f8266bfa46118e9ca263c50c6aa2a05b"
+    },
+    {
+      "path": "web/cloudflare/src/financial-close-store.mjs",
+      "bytes": 20546,
+      "sha256": "68e176ffc26125cf35e529b7aa9fc294773b0506c375ac692035162e4fe39ced"
+    },
+    {
+      "path": "web/cloudflare/src/financial-event-ledger.mjs",
+      "bytes": 9199,
+      "sha256": "c9ec0e3dd0447a8e165cdc0fcfe7ef526432dd5bf1256a6bf1845c140cebd4ae"
+    },
+    {
+      "path": "web/cloudflare/src/financial-event-store.mjs",
+      "bytes": 25565,
+      "sha256": "673931942f39a06ac56776c8c56b1ea86f02ff3718afcf1a65d7ba9ccfc4a76e"
+    },
+    {
+      "path": "web/cloudflare/src/financial-inventory-bridge.mjs",
+      "bytes": 28582,
+      "sha256": "39fc77d84c5c91ab247a6c78ea1b60db89425ee87c33238db91ef5226ea295d5"
+    },
+    {
+      "path": "web/cloudflare/src/financial-obligation-app-source.mjs",
+      "bytes": 6218,
+      "sha256": "4bc0ec6c3d879e64be3262e5ab863130d74b22e477c57c8f595a6c4cc9fc0116"
+    },
+    {
+      "path": "web/cloudflare/src/financial-returns-tracker.mjs",
+      "bytes": 17351,
+      "sha256": "8581a914ae05c58773c7a6fcd78c488706c22ed1948a4d1b99c7320557f880c2"
+    },
+    {
+      "path": "web/cloudflare/src/hermes-financial-context.mjs",
+      "bytes": 35641,
+      "sha256": "58a01ab49d9071a91e89dbc62bfd909057fbdb7cb5b947a8a6751f7a892d03f4"
+    },
+    {
+      "path": "web/cloudflare/src/incurred-production.mjs",
+      "bytes": 28406,
+      "sha256": "3958d0babcaa370cf6f1bcf8d7201cb00e7fc7a015ceddc4c32c1189ea5d3e4d"
+    },
+    {
+      "path": "web/cloudflare/src/mls-ads-performance.mjs",
+      "bytes": 10451,
+      "sha256": "b85b479782b867d9b4adbcbdd08109d6483a86cae21c5dd2e62dfae9f6bb9a23"
+    },
+    {
+      "path": "web/cloudflare/src/mls-agent-learning.mjs",
+      "bytes": 10036,
+      "sha256": "b93e08731afc0f27add9cffafb50de945be5291086fd26b62dec70c5e6278788"
+    },
+    {
+      "path": "web/cloudflare/src/mls-ai-sales-affiliates.mjs",
+      "bytes": 18149,
+      "sha256": "53321a65855b4fe5f93573e66281946afa302a32a532d6b751c9270bd2464d96"
+    },
+    {
+      "path": "web/cloudflare/src/mls-ai-sales-capability-audit.mjs",
+      "bytes": 2912,
+      "sha256": "33f865b1c2eed0cb164bfa3befe6cbbfa9776ae7a357c581a6fb375e644a5ea3"
+    },
+    {
+      "path": "web/cloudflare/src/mls-ai-sales-performance.mjs",
+      "bytes": 19516,
+      "sha256": "7f7390238cb4dc53f8efb37471a19f504d193e3f952fa6e0c5aaaeedd8f796c9"
+    },
+    {
+      "path": "web/cloudflare/src/mls-ai-sales-script-adapter.mjs",
+      "bytes": 7780,
+      "sha256": "a3b2e3a77c07aa3e4b18f8a728bce9d04ce1b96962ea29b6e5e1f50d81bc55c2"
+    },
+    {
+      "path": "web/cloudflare/src/mls-ai-sales-workspace-store.mjs",
+      "bytes": 19251,
+      "sha256": "fd5ea0913224709da186237a882292d337a2ce9b88f4732b638e38eedbbb4072"
+    },
+    {
+      "path": "web/cloudflare/src/mls-listing-factory-planner.mjs",
+      "bytes": 10258,
+      "sha256": "b5e83dcc7bbd759f1d0ed1ddd98107e4f2fdd4d8508b2ff875476c100b528778"
+    },
+    {
+      "path": "web/cloudflare/src/mls-lost-push-recovery.mjs",
+      "bytes": 2114,
+      "sha256": "644f305e5f37fc721c3b5d107a0ab1b13c6b4c9d7ce5505a3f61b8b9e9a96757"
+    },
+    {
+      "path": "web/cloudflare/src/mls-product-intelligence.mjs",
+      "bytes": 8404,
+      "sha256": "dae3099abe85ff852261f321f1535bf9a4557e3cd9e66cf892bd584538b8cb10"
+    },
+    {
+      "path": "web/cloudflare/src/mls-product-workbench.mjs",
+      "bytes": 16484,
+      "sha256": "1f55b306b880c771ecd897646fd9c667d18d49e47ac79063e3352b3787ebbc63"
+    },
+    {
+      "path": "web/cloudflare/src/mls-shopee-capability-audit.mjs",
+      "bytes": 2835,
+      "sha256": "93bdfb84eca046158d30d7c1f73f8591a20b4f5bcfe47c3637400f0658267847"
+    },
+    {
+      "path": "web/cloudflare/src/order-operations.mjs",
+      "bytes": 23763,
+      "sha256": "8047984f352c90732ab1cd50e8288a8393c7c8a15a77e4713a30ee9900288e99"
+    },
+    {
+      "path": "web/cloudflare/src/physical-returns.mjs",
+      "bytes": 25343,
+      "sha256": "33cbfc605f74ac78f4fc8bf97cc48c123a602350c6333b2f1b51fd4374627107"
+    },
+    {
+      "path": "web/cloudflare/src/product-registry.mjs",
+      "bytes": 27624,
+      "sha256": "67f9ed6181b41c0158bf92558250581724830b61f9425443ad34fedcceb0abca"
+    },
+    {
+      "path": "web/cloudflare/src/production-dtf-store.mjs",
+      "bytes": 28967,
+      "sha256": "b5a5f7881774e0b177ab705952655d97147ed27e433ab6685576a9e4ebdfe149"
+    },
+    {
+      "path": "web/cloudflare/src/production-weekly-store.mjs",
+      "bytes": 26251,
+      "sha256": "6774503f20b3aa1a7861d8fc92b54220d809625f36228ffe701dd6a9379d1229"
+    },
+    {
+      "path": "web/cloudflare/src/scaling-preparation.mjs",
+      "bytes": 2619,
+      "sha256": "722c31bcbf9e66f7c3f528823195a99fabf0e0b8c5d95840851bb36fc4a3a8c4"
+    },
+    {
+      "path": "web/cloudflare/src/workspace-navigation.mjs",
+      "bytes": 13955,
+      "sha256": "c7225b03b354c608fb0c0e1e3bafa821852f737de7a5f704c84d2134bbd1950e"
+    },
+    {
+      "path": "web/cloudflare/tests/workspace-navigation-rework-chrome.test.mjs",
+      "bytes": 24897,
+      "sha256": "67d42c98c679b00e4837f6bc0d75d365191a499ea58feab5c1874f95481ef5c5"
+    },
+    {
+      "path": "web/finance/src/business-period.mjs",
+      "bytes": 48445,
+      "sha256": "ba81e0a9b375cf8c508aaa22b08806de74971a370053f04fc54c09769daabdfa"
+    },
+    {
+      "path": "web/finance/src/external-cash-matching.mjs",
+      "bytes": 5005,
+      "sha256": "1338f3e5137b720fe3893c15ae5f45d049ffe7f8ab1d17f1f2bb4fb65bd1bfe3"
+    },
+    {
+      "path": "web/finance/src/external-cash-period.mjs",
+      "bytes": 7668,
+      "sha256": "5ba08c51608fa43d776fd9fe5d11b39b8d50803a30498bd2a289993faff13bc7"
+    },
+    {
+      "path": "web/finance/src/financial-allocation-frame.mjs",
+      "bytes": 9983,
+      "sha256": "3bbb36dc2868c055119999860b467b43e2c9cb70860d8e9ff9a4a8e38b5db380"
+    },
+    {
+      "path": "web/finance/src/financial-allocation-worker.mjs",
+      "bytes": 9045,
+      "sha256": "373cc7f0a9dfb2076ca8313bfc25aeddc1aa6b31415661c37ac000337cb08149"
+    },
+    {
+      "path": "web/finance/src/financial-bank-connector.mjs",
+      "bytes": 7491,
+      "sha256": "539dafd650ce0d2a2b1b24e9c22e015df2481717341e3c28c899166bd30822b4"
+    },
+    {
+      "path": "web/finance/src/financial-cash-allocation.mjs",
+      "bytes": 9301,
+      "sha256": "1c722fa0c5f0b93d0217736f3813be8bd3d5e44ddaec1429f27b102100fd2dc5"
+    },
+    {
+      "path": "web/finance/src/financial-obligation-frame.mjs",
+      "bytes": 10303,
+      "sha256": "b519b8eb6e70ab7407d3e423de36889a0c5bdcc3f5e5595d3fe48401fefdad6e"
+    },
+    {
+      "path": "web/finance/src/financial-obligation-worker.mjs",
+      "bytes": 21336,
+      "sha256": "2292ba5f0573ab4c489a1a8bc1ca514a10380cb3de2d60421a83041ba6d094e1"
+    },
+    {
+      "path": "web/finance/src/financial-order-components.mjs",
+      "bytes": 13799,
+      "sha256": "ada1b183d556dd0d5b43e2774d6ec22f5e0f5dcbc7dd58d3a1db2ff34e39d1b8"
+    },
+    {
+      "path": "web/finance/src/financial-private-protocol.mjs",
+      "bytes": 5684,
+      "sha256": "4c797148440b91b2ceeca232bfcb5b2c66c100c7dc4078bf176b439e5d8969e3"
+    },
+    {
+      "path": "web/finance/src/financial-source-capabilities.mjs",
+      "bytes": 8728,
+      "sha256": "c0729e3c25e70c644fdb7d2fab14a871b8af54b02d59bb1c90a1498deb57b14b"
+    },
+    {
+      "path": "web/finance/src/financial-source-collection.mjs",
+      "bytes": 13896,
+      "sha256": "3316ef328e129cf77b9a57ff00e2d0d963c065cd4dd62dab5f0a2ff5890bc061"
+    },
+    {
+      "path": "web/finance/src/financial-source-events.mjs",
+      "bytes": 10740,
+      "sha256": "4d60821ee5159919dc5a6fa3238239d9bd00bd1edefa098856986ddd2890f0ee"
+    },
+    {
+      "path": "web/finance/src/financial-source-frame.mjs",
+      "bytes": 17392,
+      "sha256": "3ba9a45409709d2a283b41eb4edb23f94c18ffb73f1ea5e9bdf4830e48d8212b"
+    },
+    {
+      "path": "web/finance/src/financial-source-worker.mjs",
+      "bytes": 15435,
+      "sha256": "0a74567b2fd38be667411d5cc200fb4cebf5d87178f56e4f00c17a08ec3f0abd"
+    },
+    {
+      "path": "web/finance/src/returns-reconciliation.mjs",
+      "bytes": 37465,
+      "sha256": "13b8a00e473fb77cad61d18e90013bf98b511ef7ca27a7c3329ae85671e39855"
+    }
+  ],
+  "functional_diff": "NO_CHANGE_IN_WEB_WORKERS_WORKFLOW_PACKAGE_MANIFESTS",
+  "validation_delta": [
+    "tools/release_preflight.mjs",
+    "tools/release-approved-candidate.json",
+    "tools/tests/release-preflight.test.mjs"
+  ],
+  "purpose": "Hashes identify current code inspected, not operational acceptance or code ownership."
+}
