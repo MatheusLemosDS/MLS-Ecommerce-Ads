@@ -121,5 +121,32 @@
       "scope_note": "Compatible prefix with the previously checked receipt; this screen alone does not describe build commands."
     },
     "remaining": "App and Auth need worker-identified production and preview settings, commands and path/branch filters; no push/PR/deploy yet."
+  },
+  "additional_user_dashboard_evidence": {
+    "brazacommerce-auth": {
+      "provenance": "Latest conversation screenshots: General explicitly shows brazacommerce-auth; production/preview settings supplied together. Clock13:23–13:24 alone does not prove date or timezone.",
+      "production": {
+        "branch_display": "main",
+        "disable_builds_toggle_display": "ON",
+        "deployment_hooks_display": "None configured"
+      },
+      "preview": {
+        "branch_builds_toggle_display": "ON",
+        "preview_urls_display": "DISABLED; builds still execute per UI notice",
+        "build_command": "npm run build",
+        "preview_command": "npx wrangler preview",
+        "root_directory": "/",
+        "include_paths_display": "*",
+        "exclude_paths_display": "node_modules/**, .git/",
+        "build_variables_or_secrets_display": "None configured",
+        "build_cache_display": "OFF"
+      },
+      "deployment_display": {
+        "version_prefix": "dfd2fc99",
+        "scope_note": "Compatible prefix with existing Auth receipt, not independent build/deploy trigger evidence."
+      },
+      "interpretation": "Documentation paths are not shown excluded. No conclusion from preview URL availability. No settings changed.",
+      "remaining": "Equivalent worker-identified App settings remain needed; effective command analysis and pre-push main/branch/PR reconciliation still required."
+    }
   }
 }
