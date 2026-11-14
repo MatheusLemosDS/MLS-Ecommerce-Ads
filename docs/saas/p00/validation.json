@@ -1,0 +1,184 @@
+{
+  "schema": "mls_p00_validation_v1",
+  "recorded_at": "2026-11-14T13:55:40.038300+00:00",
+  "source_commit": "84487108fa9c1292e90a62296ea8a597ffaad619",
+  "base_sha": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+  "preserved_documentation_parent": "0a5a22897d3cf56f97b7b995eb78a743fc0a246e",
+  "environment": {
+    "scope": "managed /workspace, isolated local synthetic fixtures; no real store mutations",
+    "node": "v24.19.0",
+    "npm": "11.9.0",
+    "python": "3.12.14",
+    "chromium": "Chromium 151.0.7922.173 built on Debian GNU/Linux 13 (trixie)",
+    "ffmpeg": "ffmpeg version 7.1.5-0+deb13u1 Copyright (c) 2000-2026 the FFmpeg developers"
+  },
+  "dependency_install": {
+    "command": "npm ci --cache /workspace/work/npm-cache",
+    "exit_code": 0,
+    "lockfile_sha256": "de73cee8850002151b00179dbac6d72bad2c857e3c2603aec5e071386a000c10",
+    "log_sha256": "4838f975204f59c6bf58b9047d4ed83ac477331b11d624de5ea6966ca1fbf296",
+    "initial_setup_failure": "Default cache /home/agent/.npm/_cacache unavailable (ENOENT); switched only npm cache to writable work directory, lockfile unchanged."
+  },
+  "superseded_runs": [
+    {
+      "result": {
+        "private_work_log": "/workspace/work/p00-npm-test.log",
+        "sha256": "1618885bc1bee76ab8730d196c51f8e89588a0fe0bb0d502410e322bd4be0844",
+        "summary": {
+          "tests": 4432,
+          "pass": 4425,
+          "fail": 7,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0
+        },
+        "stdout_tail": "1..4194\n# tests 4432\n# suites 0\n# pass 4425\n# fail 7\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 538264.18113",
+        "failing_tests": [
+          "not ok 83 - default dry-run fully decodes images and never generates MP4 or creates output directory",
+          "not ok 89 - actual render deadline cancels media work and clears staging and lease",
+          "not ok 90 - tampered campaign text and altered original bytes cannot render or reuse a job",
+          "not ok 91 - a valid-looking PNG header with corrupt pixels fails complete image validation",
+          "not ok 92 - CLI is dry-run by default, rejects publication flags, and prints only safe codes",
+          "not ok 94 - three real templates render PT-BR MP4s, preserve asymmetry, validate, export and reuse atomically",
+          "not ok 102 - real local Worker preview authenticates, persists costs and plans media at 1365px"
+        ]
+      },
+      "reason": "Seven TOOL_UNAVAILABLE failures from missing espeak-ng in PATH. Existing supported per-command tool selectors corrected; no assertions changed for these errors."
+    },
+    {
+      "result": {
+        "private_work_log": "/workspace/work/p00-npm-test-configured.log",
+        "sha256": "bf1e606669637dca7b8e841c2cf2ce2984dd4f2058d4ab1bfc3abd1cfd3db087",
+        "summary": {
+          "tests": 4432,
+          "pass": 4431,
+          "fail": 1,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0
+        },
+        "stdout_tail": "1..4194\n# tests 4432\n# suites 0\n# pass 4431\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 556319.270943",
+        "failing_tests": [
+          "not ok 132 - only the three explicit owner authorization records are recognized, without granting production approval"
+        ]
+      },
+      "reason": "One old literal three-authorization fixture failed after adding the explicit P00 authorization; corrected exact expected list to four, kept all negative assertions. Not a product/CDP failure."
+    }
+  ],
+  "focused_gate_tests": {
+    "command": "node --test tools/tests/release-preflight.test.mjs",
+    "tests": 14,
+    "pass": 14,
+    "fail": 0,
+    "role": "Validation during correction; not added to full suite count."
+  },
+  "final_full_suite": {
+    "private_work_log": "/workspace/work/p00-final-npm-test.log",
+    "sha256": "70ca5c3cd7333eda7ff63f5f22f8dbe22f30e984c51907337129d543573635f1",
+    "summary": {
+      "tests": 4432,
+      "pass": 4432,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    "stdout_tail": "1..4194\n# tests 4432\n# suites 0\n# pass 4432\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 553827.757213",
+    "failing_tests": [],
+    "command": "npm test",
+    "source_commit": "84487108fa9c1292e90a62296ea8a597ffaad619",
+    "exit_code": 0,
+    "environment_overrides": {
+      "MLS_AI_SALES_ESPEAK_BIN": "/workspace/mls-test-tools/espeak/usr/bin/espeak-ng",
+      "MLS_AI_SALES_ESPEAK_DATA": "/workspace/mls-test-tools/espeak/usr/lib/x86_64-linux-gnu",
+      "MLS_AI_SALES_ESPEAK_LIB": "/workspace/mls-test-tools/espeak/usr/lib/x86_64-linux-gnu"
+    },
+    "scope": "Full unchanged Node suite including normal/minified Chromium, synthetic local media, financial/DTF/tenant contracts and exact release preflight checks. Docs-only evidence follow-up does not change these code inputs."
+  },
+  "python_gate": {
+    "command": "python3 -m unittest web/bridge/test_hermes_bridge.py tools/test_install_hermes_web_bridge.py tools/test_build_hermes_web_bridge_install.py tools/test_activate_hermes_web_bridge.py tools/test_build_hermes_web_bridge_activation.py -q",
+    "exit_code": 0,
+    "stdout": "----------------------------------------------------------------------\nRan 67 tests in 0.699s\n\nOK",
+    "source_commit": "84487108fa9c1292e90a62296ea8a597ffaad619"
+  },
+  "final_build": {
+    "command": "npm run build",
+    "exit_code": 0,
+    "workers": {
+      "app": {
+        "worker": "brazacommerce-app",
+        "bytes": 3741964,
+        "sha256": "3a5f01ae09ede502e4707f001976fc2a6094075ba26574e5e5d97b2e827687a9"
+      },
+      "auth": {
+        "worker": "brazacommerce-auth",
+        "bytes": 576198,
+        "sha256": "20a301c45ddb6097a3b458ec6ef7d39686286cc43601f6211d3b865b250ea125"
+      },
+      "finance": {
+        "worker": "brazacommerce-finance",
+        "bytes": 892237,
+        "sha256": "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4"
+      }
+    },
+    "matches_all_three_published_compiled_hashes": true
+  },
+  "local_preflight": {
+    "command": "node tools/release_preflight.mjs --base=346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+    "exit_code": 0,
+    "stdout": "RELEASE_LOCAL_PREFLIGHT_OK\nPENDING_MANUAL: CHECK_CLOUDFLARE_LIVE_APP_VERSION_AND_BUILD_TRIGGERS\nPENDING_MANUAL: VERIFY_REMOTE_OWNER_FLAGS_MATCH_APPROVED_VALUES\nPENDING_MANUAL: VERIFY_ADMIN_DB_BINDING_AND_BACKUP_ROLLBACK_PLAN\nPENDING_MANUAL: VERIFY_ACCOUNT_DB_BINDINGS_ADDITIVE_MIGRATIONS_AND_LEGACY_BACKUPS\nPENDING_MANUAL: VERIFY_APP_AUTH_FINANCE_VERSION_HASHES_AND_PRIVATE_FINANCE_PROFILE\nPENDING_MANUAL: OWNER_AUTHENTICATED_DESKTOP_MOBILE_QA\nPENDING_MANUAL: VERIFY_OWNER_AUTHORIZATION_MATCHES_REVIEWED_RELEASE_SCOPE\nRELEASE_NOT_APPROVED_FOR_PRODUCTION",
+    "production_approved": false,
+    "note": "Candidate source 8448710 validated; final committed documentary delta is checked again after evidence commit. No wildcard or release bypass."
+  },
+  "historical_ci_reconciliation": {
+    "historical_run": 43493228854,
+    "historical_sha": "6578e21098ff799e59433af92880d249432ceeb4",
+    "historical_error": "Inspected target navigated or closed in minify=true navigation",
+    "current_main_run": 43536468273,
+    "current_main_sha": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+    "current_main_result": "success,4432 Node/67 Python/build; push event did not execute PR preflight",
+    "navigation_test_source_changed_since_audit": false,
+    "conclusion": "Historical protocol error alone does not prove product defect or root cause. Same navigation test passes on current main and in local gates; no speculative CDP/product patch.",
+    "candidate_github_ci": "Run43615841211 success at exact source f760048; 4432 Node,67 Python,build,PR preflight. This is not an assertion of success for later metadata-only commits."
+  },
+  "documentation_validation": {
+    "command": "python3 docs/saas/p00/validate-documentation.py",
+    "scope": "Hashes, lineage, requirements count, local links, unique matrix/checkpoint pointers, preserved archives and no functional/workflow delta; result recorded in final delivery",
+    "result": {
+      "result": "PASS",
+      "modules": 22,
+      "financial_value_types": 25,
+      "npm_components": 94,
+      "asset_hashes": 78,
+      "local_links_checked": 19,
+      "requirements": 74,
+      "history_and_runtime_preserved": true
+    }
+  },
+  "publication": {
+    "pushed": false,
+    "pr_created": false,
+    "deployed": false,
+    "real_account_acceptance": false,
+    "blocker": "docs/saas/p00/builds-read.json: six 403/10000 errors; production branch/filter/effective commands unproved"
+  },
+  "migrations": "NONE",
+  "commercial_operations": "NONE",
+  "github_pr122_ci": {
+    "run": 43615841211,
+    "job": 132510595733,
+    "source_sha": "f7600485fd717d2836f005e06fa3c02634661457",
+    "conclusion": "success",
+    "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43615841211",
+    "stdout_excerpt": [
+      "2026-11-14T16:43:23.5147631Z # tests 4432",
+      "2026-11-14T16:43:23.5148015Z # pass 4432",
+      "2026-11-14T16:43:23.5148202Z # fail 0",
+      "2026-11-14T16:43:23.5148391Z # cancelled 0",
+      "2026-11-14T16:43:23.5148594Z # skipped 0",
+      "2026-11-14T16:43:28.5956763Z Ran 67 tests in 0.550s",
+      "2026-11-14T16:43:30.8920543Z RELEASE_LOCAL_PREFLIGHT_OK",
+      "2026-11-14T16:43:30.8930839Z RELEASE_NOT_APPROVED_FOR_PRODUCTION"
+    ]
+  }
+}

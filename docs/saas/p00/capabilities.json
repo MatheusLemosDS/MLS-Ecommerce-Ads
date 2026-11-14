@@ -1,0 +1,1325 @@
+{
+  "schema": "mls_saas_capability_catalog_v1",
+  "base_sha": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+  "audit_sha": "6578e21098ff799e59433af92880d249432ceeb4",
+  "rule": "22 audit modules reconciled; states are code/publication evidence, never real-account certification or plan entitlements. No missing offline probe marks existing Finance/Ads absent.",
+  "modules": [
+    {
+      "id": "SYS-01",
+      "module": "Visão geral, navegação e gráficos",
+      "implementation": "INTEGRADO_NO_CODIGO",
+      "route_or_entry": "/admin?tab=overview",
+      "data_and_limits": {
+        "existing": "Painéis, indicadores, temas, menus, prioridades e projeções de agentes com fontes e estados explícitos; V4.1 e layout de referência constam da base atual.",
+        "audit_limit": "O registro da release é evidência documental de QA/publicação técnica; não substitui observação autenticada de todas as telas na conta do cliente. Estados de saúde dos agentes são projeções das fontes, não prova de execução autônoma.",
+        "delta_reference": []
+      },
+      "roles_and_permissions": {
+        "source": "web/cloudflare/src/commercial-route-policy.mjs",
+        "roles_source": "web/cloudflare/src/account-policy.mjs",
+        "effective_route_rules": "route-policy.json",
+        "rule": "Server resolves organization/store/membership and all route capabilities; UI visibility is insufficient.",
+        "roles_in_catalog": [
+          "OWNER",
+          "ADMIN",
+          "FINANCE",
+          "OPERATIONS",
+          "VIEWER"
+        ]
+      },
+      "capability_support": "EXISTING_CODE_IS_DISTINCT_FROM_PROVIDER_GRANT",
+      "provider_grant": "NOT_APPLICABLE_OR_NOT_CONFIGURED",
+      "connection": "Existing legacy Shopee/Ads observations preserved; no generalized company connection inferred.",
+      "coverage": "PARTIAL_OR_NOT_OBSERVED_BY_P00",
+      "external_write_permission": "LOCKED_REQUIRES_SPECIFIC_CAPABILITY_AND_OPERATOR_AUTHORIZATION",
+      "validation": {
+        "local": "see validation.json; no inherited audit test counts",
+        "published": "live-reconciliation.json confirms worker bytes, not every feature",
+        "operational": "NOT_VALIDATED_IN_REAL_ACCOUNT_BY_P00"
+      },
+      "commercial_promise": "NOT_INCLUDED_AS_READY_PAID_AUTOMATION; factual capability plus pending states only",
+      "next_action": "Conferir dados/escopo na conta autorizada",
+      "evidence": [
+        {
+          "path": "web/cloudflare/src/agent-registry.mjs",
+          "sha256_current": "efa13b45819155b774f256ff7f06ca34fee7cf789320c2b8de38239cf0d13be7",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        },
+        {
+          "path": "web/cloudflare/src/workspace-navigation.mjs",
+          "sha256_current": "c7225b03b354c608fb0c0e1e3bafa821852f737de7a5f704c84d2134bbd1950e",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        },
+        {
+          "path": "docs/MLS_LAYOUT_REFERENCE_PARITY_2026_11_13.md",
+          "sha256_current": "67d61b6b9cf8ee658dfdd89e45ec15c0ef30d0dad5a46112a257ecb6eaabbba0",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        }
+      ],
+      "current_extension_refs": []
+    },
+    {
+      "id": "SYS-02",
+      "module": "Pedidos e etapas operacionais",
+      "implementation": "OPERACIONAL_LOCAL_COM_FONTE_SHOPEE",
+      "route_or_entry": "/admin?tab=order-operations",
+      "data_and_limits": {
+        "existing": "Quadro por pedido, datas, filtros, paginação e etapas internas SEPARATION/PRODUCTION/FINISHING/READY_TO_SHIP; mudanças de itens/quantidades invalidam declarações anteriores. Eventos locais possuem revisão e auditoria.",
+        "audit_limit": "Fonte é o cache Shopee do DTF, period_complete:false. As etapas locais não alteram status do marketplace. Mercado Livre e TikTok são NOT_CONNECTED. O módulo contém identidade literal da loja legada no código, CHECK e filtros; isolamento de tabelas não remove esses literais.",
+        "delta_reference": []
+      },
+      "roles_and_permissions": {
+        "source": "web/cloudflare/src/commercial-route-policy.mjs",
+        "roles_source": "web/cloudflare/src/account-policy.mjs",
+        "effective_route_rules": "route-policy.json",
+        "rule": "Server resolves organization/store/membership and all route capabilities; UI visibility is insufficient.",
+        "roles_in_catalog": [
+          "OWNER",
+          "ADMIN",
+          "FINANCE",
+          "OPERATIONS",
+          "VIEWER"
+        ]
+      },
+      "capability_support": "EXISTING_CODE_IS_DISTINCT_FROM_PROVIDER_GRANT",
+      "provider_grant": "NOT_APPLICABLE_OR_NOT_CONFIGURED",
+      "connection": "Existing legacy Shopee/Ads observations preserved; no generalized company connection inferred.",
+      "coverage": "PARTIAL_OR_NOT_OBSERVED_BY_P00",
+      "external_write_permission": "LOCKED_REQUIRES_SPECIFIC_CAPABILITY_AND_OPERATOR_AUTHORIZATION",
+      "validation": {
+        "local": "see validation.json; no inherited audit test counts",
+        "published": "live-reconciliation.json confirms worker bytes, not every feature",
+        "operational": "NOT_VALIDATED_IN_REAL_ACCOUNT_BY_P00"
+      },
+      "commercial_promise": "NOT_INCLUDED_AS_READY_PAID_AUTOMATION; factual capability plus pending states only",
+      "next_action": "Conferir fluxo operacional sem confundir status interno com envio",
+      "evidence": [
+        {
+          "path": "web/cloudflare/src/order-operations.mjs",
+          "sha256_current": "8047984f352c90732ab1cd50e8288a8393c7c8a15a77e4713a30ee9900288e99",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        },
+        {
+          "path": "web/cloudflare/src/admin.mjs",
+          "sha256_current": "13085154ad06a7f10e1a028251ac8fd5533eeea3a7998886d03b48ecd25f988f",
+          "same_as_audited_sha": false,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        }
+      ],
+      "current_extension_refs": []
+    },
+    {
+      "id": "SYS-03",
+      "module": "Catálogo, variações, SKUs e composição",
+      "implementation": "INTEGRADO_COM_REFERENCIAS_DE_CUSTO",
+      "route_or_entry": "/admin?tab=products",
+      "data_and_limits": {
+        "existing": "Descoberta paginada de produtos, estados do catálogo, variantes, classificação e vínculos com custos/regras; preserva mudança de metadados e custo desconhecido.",
+        "audit_limit": "O catálogo salvo não demonstra estoque disponível ou preço comercial validado. Regras de roupa, tamanhos e kits refletem o domínio da operação atual e não devem virar padrão universal de toda empresa.",
+        "delta_reference": []
+      },
+      "roles_and_permissions": {
+        "source": "web/cloudflare/src/commercial-route-policy.mjs",
+        "roles_source": "web/cloudflare/src/account-policy.mjs",
+        "effective_route_rules": "route-policy.json",
+        "rule": "Server resolves organization/store/membership and all route capabilities; UI visibility is insufficient.",
+        "roles_in_catalog": [
+          "OWNER",
+          "ADMIN",
+          "FINANCE",
+          "OPERATIONS",
+          "VIEWER"
+        ]
+      },
+      "capability_support": "EXISTING_CODE_IS_DISTINCT_FROM_PROVIDER_GRANT",
+      "provider_grant": "NOT_APPLICABLE_OR_NOT_CONFIGURED",
+      "connection": "Existing legacy Shopee/Ads observations preserved; no generalized company connection inferred.",
+      "coverage": "PARTIAL_OR_NOT_OBSERVED_BY_P00",
+      "external_write_permission": "LOCKED_REQUIRES_SPECIFIC_CAPABILITY_AND_OPERATOR_AUTHORIZATION",
+      "validation": {
+        "local": "see validation.json; no inherited audit test counts",
+        "published": "live-reconciliation.json confirms worker bytes, not every feature",
+        "operational": "NOT_VALIDATED_IN_REAL_ACCOUNT_BY_P00"
+      },
+      "commercial_promise": "NOT_INCLUDED_AS_READY_PAID_AUTOMATION; factual capability plus pending states only",
+      "next_action": "Confirmar composição e custo por produto",
+      "evidence": [
+        {
+          "path": "web/cloudflare/src/product-registry.mjs",
+          "sha256_current": "67f9ed6181b41c0158bf92558250581724830b61f9425443ad34fedcceb0abca",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        },
+        {
+          "path": "web/cloudflare/src/production-dtf-store.mjs",
+          "sha256_current": "b5a5f7881774e0b177ab705952655d97147ed27e433ab6685576a9e4ebdfe149",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        },
+        {
+          "path": "docs/PRODUCAO_DTF.md",
+          "sha256_current": "38f102992337456f9c399acc438ed32990d022351b20577d010574412a9ad7fa",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        }
+      ],
+      "current_extension_refs": []
+    },
+    {
+      "id": "SYS-04",
+      "module": "Análise de produtos e precificação",
+      "implementation": "OBSERVADOR_E_SIMULACAO",
+      "route_or_entry": "/admin?tab=agent-products",
+      "data_and_limits": {
+        "existing": "Curva ABC por unidades; contribuição de pedidos com atribuição comprovada; simulação matemática com premissas declaradas.",
+        "audit_limit": "safe_sku_net_profit_cents e safe_price_cents são null; inventory_verified e execution_allowed são false. A contribuição exclui Ads, outras despesas e possível DAS. Pedidos mistos não autorizam rateio arbitrário.",
+        "delta_reference": []
+      },
+      "roles_and_permissions": {
+        "source": "web/cloudflare/src/commercial-route-policy.mjs",
+        "roles_source": "web/cloudflare/src/account-policy.mjs",
+        "effective_route_rules": "route-policy.json",
+        "rule": "Server resolves organization/store/membership and all route capabilities; UI visibility is insufficient.",
+        "roles_in_catalog": [
+          "OWNER",
+          "ADMIN",
+          "FINANCE",
+          "OPERATIONS",
+          "VIEWER"
+        ]
+      },
+      "capability_support": "EXISTING_CODE_IS_DISTINCT_FROM_PROVIDER_GRANT",
+      "provider_grant": "NOT_APPLICABLE_OR_NOT_CONFIGURED",
+      "connection": "Existing legacy Shopee/Ads observations preserved; no generalized company connection inferred.",
+      "coverage": "PARTIAL_OR_NOT_OBSERVED_BY_P00",
+      "external_write_permission": "LOCKED_REQUIRES_SPECIFIC_CAPABILITY_AND_OPERATOR_AUTHORIZATION",
+      "validation": {
+        "local": "see validation.json; no inherited audit test counts",
+        "published": "live-reconciliation.json confirms worker bytes, not every feature",
+        "operational": "NOT_VALIDATED_IN_REAL_ACCOUNT_BY_P00"
+      },
+      "commercial_promise": "NOT_INCLUDED_AS_READY_PAID_AUTOMATION; factual capability plus pending states only",
+      "next_action": "Manter sugestões como simulações",
+      "evidence": [
+        {
+          "path": "web/cloudflare/src/mls-product-intelligence.mjs",
+          "sha256_current": "dae3099abe85ff852261f321f1535bf9a4557e3cd9e66cf892bd584538b8cb10",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        },
+        {
+          "path": "web/cloudflare/src/mls-product-workbench.mjs",
+          "sha256_current": "1f55b306b880c771ecd897646fd9c667d18d49e47ac79063e3352b3787ebbc63",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        }
+      ],
+      "current_extension_refs": []
+    },
+    {
+      "id": "SYS-05",
+      "module": "Montagem e fila DTF",
+      "implementation": "OPERACIONAL_COM_MIDIA_LOCAL",
+      "route_or_entry": "/admin?tab=production",
+      "data_and_limits": {
+        "existing": "Parser de SKU, kits/partes, layout determinístico proporcional, reservas, exportação PNG transparente com tamanho físico, manifestos e marcação de produzido; revalida fonte antes de reservar/exportar.",
+        "audit_limit": "Pixels das artes estão em IndexedDB do navegador/dispositivo; D1 guarda referências/hashes/histórico. Não há biblioteca central de mídia. Existem limites de linhas/pedidos/impressões/folhas; não divide parcialmente uma linha. Não inclui RIP, perfil de cor, espelhamento nem tinta branca.",
+        "delta_reference": []
+      },
+      "roles_and_permissions": {
+        "source": "web/cloudflare/src/commercial-route-policy.mjs",
+        "roles_source": "web/cloudflare/src/account-policy.mjs",
+        "effective_route_rules": "route-policy.json",
+        "rule": "Server resolves organization/store/membership and all route capabilities; UI visibility is insufficient.",
+        "roles_in_catalog": [
+          "OWNER",
+          "ADMIN",
+          "FINANCE",
+          "OPERATIONS",
+          "VIEWER"
+        ]
+      },
+      "capability_support": "EXISTING_CODE_IS_DISTINCT_FROM_PROVIDER_GRANT",
+      "provider_grant": "NOT_APPLICABLE_OR_NOT_CONFIGURED",
+      "connection": "Existing legacy Shopee/Ads observations preserved; no generalized company connection inferred.",
+      "coverage": "PARTIAL_OR_NOT_OBSERVED_BY_P00",
+      "external_write_permission": "LOCKED_REQUIRES_SPECIFIC_CAPABILITY_AND_OPERATOR_AUTHORIZATION",
+      "validation": {
+        "local": "see validation.json; no inherited audit test counts",
+        "published": "live-reconciliation.json confirms worker bytes, not every feature",
+        "operational": "NOT_VALIDATED_IN_REAL_ACCOUNT_BY_P00"
+      },
+      "commercial_promise": "NOT_INCLUDED_AS_READY_PAID_AUTOMATION; factual capability plus pending states only",
+      "next_action": "Validar mídia autorizada e fluxo DTF",
+      "evidence": [
+        {
+          "path": "web/cloudflare/src/dtf-layout.mjs",
+          "sha256_current": "6fd9775b0aaff13fc4fea5f3cd7b2a7ce7b469be9e015ed3b2da2e87f3e2a7f7",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        },
+        {
+          "path": "web/cloudflare/src/production-dtf-store.mjs",
+          "sha256_current": "b5a5f7881774e0b177ab705952655d97147ed27e433ab6685576a9e4ebdfe149",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        },
+        {
+          "path": "web/cloudflare/src/dtf-view.mjs",
+          "sha256_current": "3d1d40eb9ec94aad65e39afd7a7b068229945e43e999b98ee59b102a4d8bba4f",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        },
+        {
+          "path": "docs/PRODUCAO_DTF.md",
+          "sha256_current": "38f102992337456f9c399acc438ed32990d022351b20577d010574412a9ad7fa",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        }
+      ],
+      "current_extension_refs": []
+    },
+    {
+      "id": "SYS-06",
+      "module": "Produção física, custo e fechamento fabril",
+      "implementation": "OPERACIONAL_DECLARADO_E_VERSIONADO",
+      "route_or_entry": "/admin?tab=agent-production",
+      "data_and_limits": {
+        "existing": "Registro de fabricação e custos históricos por lote, confirmação de completude e fechamento de sexta 13h a sexta 13h com original e retificações.",
+        "audit_limit": "Pedido pago, impressão e fabricação são fatos diferentes. Integração financeira/valorização de estoque não é liberada automaticamente; fechamento fabril não é o resultado financeiro da empresa.",
+        "delta_reference": []
+      },
+      "roles_and_permissions": {
+        "source": "web/cloudflare/src/commercial-route-policy.mjs",
+        "roles_source": "web/cloudflare/src/account-policy.mjs",
+        "effective_route_rules": "route-policy.json",
+        "rule": "Server resolves organization/store/membership and all route capabilities; UI visibility is insufficient.",
+        "roles_in_catalog": [
+          "OWNER",
+          "ADMIN",
+          "FINANCE",
+          "OPERATIONS",
+          "VIEWER"
+        ]
+      },
+      "capability_support": "EXISTING_CODE_IS_DISTINCT_FROM_PROVIDER_GRANT",
+      "provider_grant": "NOT_APPLICABLE_OR_NOT_CONFIGURED",
+      "connection": "Existing legacy Shopee/Ads observations preserved; no generalized company connection inferred.",
+      "coverage": "PARTIAL_OR_NOT_OBSERVED_BY_P00",
+      "external_write_permission": "LOCKED_REQUIRES_SPECIFIC_CAPABILITY_AND_OPERATOR_AUTHORIZATION",
+      "validation": {
+        "local": "see validation.json; no inherited audit test counts",
+        "published": "live-reconciliation.json confirms worker bytes, not every feature",
+        "operational": "NOT_VALIDATED_IN_REAL_ACCOUNT_BY_P00"
+      },
+      "commercial_promise": "NOT_INCLUDED_AS_READY_PAID_AUTOMATION; factual capability plus pending states only",
+      "next_action": "Confirmar lotes reais e os oito intervalos",
+      "evidence": [
+        {
+          "path": "web/cloudflare/src/incurred-production.mjs",
+          "sha256_current": "3958d0babcaa370cf6f1bcf8d7201cb00e7fc7a015ceddc4c32c1189ea5d3e4d",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        },
+        {
+          "path": "web/cloudflare/src/production-weekly-store.mjs",
+          "sha256_current": "6774503f20b3aa1a7861d8fc92b54220d809625f36228ffe701dd6a9379d1229",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        },
+        {
+          "path": "web/cloudflare/src/admin.mjs",
+          "sha256_current": "13085154ad06a7f10e1a028251ac8fd5533eeea3a7998886d03b48ecd25f988f",
+          "same_as_audited_sha": false,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        }
+      ],
+      "current_extension_refs": []
+    },
+    {
+      "id": "SYS-07",
+      "module": "Financeiro Shopee e resultado",
+      "implementation": "IMPLEMENTADO_PARCIAL_RAZAO_E_FECHAMENTOS_TECNICAMENTE_PUBLICADOS_SEM_ACEITE_REAL",
+      "route_or_entry": "/admin?tab=agent-finance",
+      "data_and_limits": {
+        "existing": "Pedidos, escrow, Income Overview, Pending paginado, liberações, Returns, Ads, custos e despesas; publicação de fontes, centavos, revisões e estados de cobertura.",
+        "audit_limit": "Não é ainda razão completo de carteira/saques/componentes nem lucro final. net_profit_cents/realized_profit_cents permanecem null. Preparação mensal mantém Seller Centre/Banco NOT_COMPARED. A publicação mensal reaplica referências ao ler.",
+        "delta_reference": [
+          "docs/financial-automation/README.md",
+          "docs/financial-automation/VALIDATION.md",
+          "docs/financial-automation/MATRIZ_EXECUCAO.json"
+        ]
+      },
+      "roles_and_permissions": {
+        "source": "web/cloudflare/src/commercial-route-policy.mjs",
+        "roles_source": "web/cloudflare/src/account-policy.mjs",
+        "effective_route_rules": "route-policy.json",
+        "rule": "Server resolves organization/store/membership and all route capabilities; UI visibility is insufficient.",
+        "roles_in_catalog": [
+          "OWNER",
+          "ADMIN",
+          "FINANCE",
+          "OPERATIONS",
+          "VIEWER"
+        ]
+      },
+      "capability_support": "EXISTING_CODE_IS_DISTINCT_FROM_PROVIDER_GRANT",
+      "provider_grant": "NOT_PROBED_IN_P00",
+      "connection": "Existing legacy Shopee/Ads observations preserved; no generalized company connection inferred.",
+      "coverage": "PARTIAL_OR_NOT_OBSERVED_BY_P00",
+      "external_write_permission": "LOCKED_REQUIRES_SPECIFIC_CAPABILITY_AND_OPERATOR_AUTHORIZATION",
+      "validation": {
+        "local": "see validation.json; no inherited audit test counts",
+        "published": "live-reconciliation.json confirms worker bytes, not every feature",
+        "operational": "NOT_VALIDATED_IN_REAL_ACCOUNT_BY_P00"
+      },
+      "commercial_promise": "NOT_INCLUDED_AS_READY_PAID_AUTOMATION; factual capability plus pending states only",
+      "next_action": "Confrontar fontes equivalentes e concluir gaps internos",
+      "evidence": [
+        {
+          "path": "web/cloudflare/src/business-month.mjs",
+          "sha256_current": "fe688b43dc3d848004477ace9de1b7a70a47951f488b3c06e51d8e50aa96ff63",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        },
+        {
+          "path": "web/cloudflare/src/business-month-publication.mjs",
+          "sha256_current": "019596f56814a70f46d1275a68ba5b107b570ec309d3a47e86ad889d440a5d34",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        },
+        {
+          "path": "web/cloudflare/src/business-financial-closeout.mjs",
+          "sha256_current": "501e50a2a02cd67ccddfdddb8fcee9746830b8f37159e5825a7829afcbfcebce",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        }
+      ],
+      "current_extension_refs": [
+        "docs/financial-automation/README.md",
+        "docs/financial-automation/VALIDATION.md",
+        "docs/financial-automation/MATRIZ_EXECUCAO.json"
+      ]
+    },
+    {
+      "id": "SYS-08",
+      "module": "Banco e conciliação",
+      "implementation": "CSV_OFX_E_ALOCACAO_GRUPOS_IMPLEMENTADOS_BANCO_AUTOMATICO_SEM_ADAPTADOR_CONSENTIMENTO",
+      "route_or_entry": "/admin?tab=agent-finance",
+      "data_and_limits": {
+        "existing": "Nubank CSV/OFX e Shopee CSV, prévia, deduplicação, sugestões e confirmação/desfazer 1:1.",
+        "audit_limit": "Cobertura IMPORTED_FILES_ONLY/IMPORTED_COVERAGE_NOT_CONFIRMED; não há conector bancário automático comprovado nem alocação geral 1:N/N:1.",
+        "delta_reference": [
+          "docs/financial-automation/README.md",
+          "docs/financial-automation/VALIDATION.md",
+          "docs/financial-automation/MATRIZ_EXECUCAO.json"
+        ]
+      },
+      "roles_and_permissions": {
+        "source": "web/cloudflare/src/commercial-route-policy.mjs",
+        "roles_source": "web/cloudflare/src/account-policy.mjs",
+        "effective_route_rules": "route-policy.json",
+        "rule": "Server resolves organization/store/membership and all route capabilities; UI visibility is insufficient.",
+        "roles_in_catalog": [
+          "OWNER",
+          "ADMIN",
+          "FINANCE",
+          "OPERATIONS",
+          "VIEWER"
+        ]
+      },
+      "capability_support": "EXISTING_CODE_IS_DISTINCT_FROM_PROVIDER_GRANT",
+      "provider_grant": "NOT_APPLICABLE_OR_NOT_CONFIGURED",
+      "connection": "Existing legacy Shopee/Ads observations preserved; no generalized company connection inferred.",
+      "coverage": "PARTIAL_OR_NOT_OBSERVED_BY_P00",
+      "external_write_permission": "LOCKED_REQUIRES_SPECIFIC_CAPABILITY_AND_OPERATOR_AUTHORIZATION",
+      "validation": {
+        "local": "see validation.json; no inherited audit test counts",
+        "published": "live-reconciliation.json confirms worker bytes, not every feature",
+        "operational": "NOT_VALIDATED_IN_REAL_ACCOUNT_BY_P00"
+      },
+      "commercial_promise": "NOT_INCLUDED_AS_READY_PAID_AUTOMATION; factual capability plus pending states only",
+      "next_action": "Configurar conector consentido; CSV/OFX permanece assistido",
+      "evidence": [
+        {
+          "path": "web/finance/src/external-cash-period.mjs",
+          "sha256_current": "5ba08c51608fa43d776fd9fe5d11b39b8d50803a30498bd2a289993faff13bc7",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        },
+        {
+          "path": "web/finance/src/external-cash-matching.mjs",
+          "sha256_current": "1338f3e5137b720fe3893c15ae5f45d049ffe7f8ab1d17f1f2bb4fb65bd1bfe3",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        },
+        {
+          "path": "web/cloudflare/src/admin.mjs",
+          "sha256_current": "13085154ad06a7f10e1a028251ac8fd5533eeea3a7998886d03b48ecd25f988f",
+          "same_as_audited_sha": false,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        }
+      ],
+      "current_extension_refs": [
+        "docs/financial-automation/README.md",
+        "docs/financial-automation/VALIDATION.md",
+        "docs/financial-automation/MATRIZ_EXECUCAO.json"
+      ]
+    },
+    {
+      "id": "SYS-09",
+      "module": "Despesas, obrigações e impostos",
+      "implementation": "DECLARACOES_GERENCIAIS",
+      "route_or_entry": "/admin?tab=agent-finance",
+      "data_and_limits": {
+        "existing": "Ledger de despesas com competência/vencimento, parcelas, revisões e estado de pagamento; política MEI declarada.",
+        "audit_limit": "Fontes externas não são automaticamente descobertas na Shopee. Política tributária da loja legada não representa todos os regimes/clientes.",
+        "delta_reference": [
+          "docs/financial-automation/README.md",
+          "docs/financial-automation/VALIDATION.md",
+          "docs/financial-automation/MATRIZ_EXECUCAO.json"
+        ]
+      },
+      "roles_and_permissions": {
+        "source": "web/cloudflare/src/commercial-route-policy.mjs",
+        "roles_source": "web/cloudflare/src/account-policy.mjs",
+        "effective_route_rules": "route-policy.json",
+        "rule": "Server resolves organization/store/membership and all route capabilities; UI visibility is insufficient.",
+        "roles_in_catalog": [
+          "OWNER",
+          "ADMIN",
+          "FINANCE",
+          "OPERATIONS",
+          "VIEWER"
+        ]
+      },
+      "capability_support": "EXISTING_CODE_IS_DISTINCT_FROM_PROVIDER_GRANT",
+      "provider_grant": "NOT_APPLICABLE_OR_NOT_CONFIGURED",
+      "connection": "Existing legacy Shopee/Ads observations preserved; no generalized company connection inferred.",
+      "coverage": "PARTIAL_OR_NOT_OBSERVED_BY_P00",
+      "external_write_permission": "LOCKED_REQUIRES_SPECIFIC_CAPABILITY_AND_OPERATOR_AUTHORIZATION",
+      "validation": {
+        "local": "see validation.json; no inherited audit test counts",
+        "published": "live-reconciliation.json confirms worker bytes, not every feature",
+        "operational": "NOT_VALIDATED_IN_REAL_ACCOUNT_BY_P00"
+      },
+      "commercial_promise": "NOT_INCLUDED_AS_READY_PAID_AUTOMATION; factual capability plus pending states only",
+      "next_action": "Confirmar política/tributo; pagamento é evidência separada",
+      "evidence": [
+        {
+          "path": "web/cloudflare/src/expense-ledger.mjs",
+          "sha256_current": "cb7acb565e1e28777b65ed46833d9ff56ab7d5393d70d9418548cc658d4d6a80",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        },
+        {
+          "path": "web/cloudflare/src/business-tax-policy.mjs",
+          "sha256_current": "6b27f010e084ee0d29051456d7df859414b5891247c5daeaf4b29e6dea687d4a",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        },
+        {
+          "path": "web/cloudflare/src/admin.mjs",
+          "sha256_current": "13085154ad06a7f10e1a028251ac8fd5533eeea3a7998886d03b48ecd25f988f",
+          "same_as_audited_sha": false,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        }
+      ],
+      "current_extension_refs": [
+        "docs/financial-automation/README.md",
+        "docs/financial-automation/VALIDATION.md",
+        "docs/financial-automation/MATRIZ_EXECUCAO.json"
+      ]
+    },
+    {
+      "id": "SYS-10",
+      "module": "Devoluções financeiras e físicas",
+      "implementation": "INTEGRADO_COM_FRONTEIRAS_CORRETAS",
+      "route_or_entry": "/admin?tab=agent-returns",
+      "data_and_limits": {
+        "existing": "Casos financeiros, repasse ajustado, recebimento físico, quarentena/inspeção e vínculos à fabricação; proteção contra descontar refund duas vezes.",
+        "audit_limit": "Valor físico/carrying cost permanece desconhecido; integração financeira não é automática. Acompanhamento histórico dedicado atual/anterior não demonstra descoberta universal de novos casos antigos.",
+        "delta_reference": [
+          "docs/financial-automation/README.md",
+          "docs/financial-automation/VALIDATION.md",
+          "docs/financial-automation/MATRIZ_EXECUCAO.json"
+        ]
+      },
+      "roles_and_permissions": {
+        "source": "web/cloudflare/src/commercial-route-policy.mjs",
+        "roles_source": "web/cloudflare/src/account-policy.mjs",
+        "effective_route_rules": "route-policy.json",
+        "rule": "Server resolves organization/store/membership and all route capabilities; UI visibility is insufficient.",
+        "roles_in_catalog": [
+          "OWNER",
+          "ADMIN",
+          "FINANCE",
+          "OPERATIONS",
+          "VIEWER"
+        ]
+      },
+      "capability_support": "EXISTING_CODE_IS_DISTINCT_FROM_PROVIDER_GRANT",
+      "provider_grant": "NOT_APPLICABLE_OR_NOT_CONFIGURED",
+      "connection": "Existing legacy Shopee/Ads observations preserved; no generalized company connection inferred.",
+      "coverage": "PARTIAL_OR_NOT_OBSERVED_BY_P00",
+      "external_write_permission": "LOCKED_REQUIRES_SPECIFIC_CAPABILITY_AND_OPERATOR_AUTHORIZATION",
+      "validation": {
+        "local": "see validation.json; no inherited audit test counts",
+        "published": "live-reconciliation.json confirms worker bytes, not every feature",
+        "operational": "NOT_VALIDATED_IN_REAL_ACCOUNT_BY_P00"
+      },
+      "commercial_promise": "NOT_INCLUDED_AS_READY_PAID_AUTOMATION; factual capability plus pending states only",
+      "next_action": "Inspecionar fisicamente e confirmar vínculo de origem",
+      "evidence": [
+        {
+          "path": "web/finance/src/returns-reconciliation.mjs",
+          "sha256_current": "13b8a00e473fb77cad61d18e90013bf98b511ef7ca27a7c3329ae85671e39855",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        },
+        {
+          "path": "web/cloudflare/src/business-historical-returns.mjs",
+          "sha256_current": "f5ca587063e8bd7eabd42807e558154c022d9b8a04f00a28d9ce880a6c721f64",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        },
+        {
+          "path": "web/cloudflare/src/physical-returns.mjs",
+          "sha256_current": "33cbfc605f74ac78f4fc8bf97cc48c123a602350c6333b2f1b51fd4374627107",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        },
+        {
+          "path": "web/cloudflare/src/admin.mjs",
+          "sha256_current": "13085154ad06a7f10e1a028251ac8fd5533eeea3a7998886d03b48ecd25f988f",
+          "same_as_audited_sha": false,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        }
+      ],
+      "current_extension_refs": [
+        "docs/financial-automation/README.md",
+        "docs/financial-automation/VALIDATION.md",
+        "docs/financial-automation/MATRIZ_EXECUCAO.json"
+      ]
+    },
+    {
+      "id": "SYS-11",
+      "module": "Ads, campanhas e indicadores",
+      "implementation": "LEITURA_E_ANALISE",
+      "route_or_entry": "/dashboard",
+      "data_and_limits": {
+        "existing": "Leitura de gastos, vendas atribuídas, ROAS, calendários e séries; rotas de resumo de campanhas e GMV Max no gateway existente.",
+        "audit_limit": "Ads/PROMO e execução permanecem LOCKED. ROAS de conta não comprova lucro do produto, estoque ou autorização para alterar campanha. Fuso da fonte permanece UNCONFIRMED no contrato auditado.",
+        "delta_reference": []
+      },
+      "roles_and_permissions": {
+        "source": "web/cloudflare/src/commercial-route-policy.mjs",
+        "roles_source": "web/cloudflare/src/account-policy.mjs",
+        "effective_route_rules": "route-policy.json",
+        "rule": "Server resolves organization/store/membership and all route capabilities; UI visibility is insufficient.",
+        "roles_in_catalog": [
+          "OWNER",
+          "ADMIN",
+          "FINANCE",
+          "OPERATIONS",
+          "VIEWER"
+        ]
+      },
+      "capability_support": "EXISTING_CODE_IS_DISTINCT_FROM_PROVIDER_GRANT",
+      "provider_grant": "NOT_PROBED_IN_P00",
+      "connection": "Existing legacy Shopee/Ads observations preserved; no generalized company connection inferred.",
+      "coverage": "PARTIAL_OR_NOT_OBSERVED_BY_P00",
+      "external_write_permission": "LOCKED_REQUIRES_SPECIFIC_CAPABILITY_AND_OPERATOR_AUTHORIZATION",
+      "validation": {
+        "local": "see validation.json; no inherited audit test counts",
+        "published": "live-reconciliation.json confirms worker bytes, not every feature",
+        "operational": "NOT_VALIDATED_IN_REAL_ACCOUNT_BY_P00"
+      },
+      "commercial_promise": "NOT_INCLUDED_AS_READY_PAID_AUTOMATION; factual capability plus pending states only",
+      "next_action": "Confirmar grants/fuso por loja; manter escrita LOCKED",
+      "evidence": [
+        {
+          "path": "web/cloudflare/src/mls-ads-performance.mjs",
+          "sha256_current": "b85b479782b867d9b4adbcbdd08109d6483a86cae21c5dd2e62dfae9f6bb9a23",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        },
+        {
+          "path": "web/cloudflare/src/scaling-preparation.mjs",
+          "sha256_current": "722c31bcbf9e66f7c3f528823195a99fabf0e0b8c5d95840851bb36fc4a3a8c4",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        },
+        {
+          "path": "web/cloudflare/src/admin.mjs",
+          "sha256_current": "13085154ad06a7f10e1a028251ac8fd5533eeea3a7998886d03b48ecd25f988f",
+          "same_as_audited_sha": false,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        },
+        {
+          "path": "web/cloudflare/original/auth-worker.mjs",
+          "sha256_current": "32e1af172a4143c3f91ae927422e0846aee520605c64d0500f06c74c1462f4df",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        }
+      ],
+      "current_extension_refs": []
+    },
+    {
+      "id": "SYS-12",
+      "module": "Hermes supervisor",
+      "implementation": "OBSERVADOR_COM_PONTE_EXTERNA",
+      "route_or_entry": "/admin?tab=agent-hermes",
+      "data_and_limits": {
+        "existing": "Fila, heartbeat, protocolo, orçamento/limite de análises, contexto financeiro congelado por tarefa e interpretação por CLI externo restrito; resultado do modelo separado dos números determinísticos.",
+        "audit_limit": "A ponte depende de runtime externo e ainda carrega identidade da loja legada. Disponibilidade no painel depende de conexão/protocolo recentes; não é execução autônoma de campanhas. Não foi inspecionado o estado real do Droplet.",
+        "delta_reference": []
+      },
+      "roles_and_permissions": {
+        "source": "web/cloudflare/src/commercial-route-policy.mjs",
+        "roles_source": "web/cloudflare/src/account-policy.mjs",
+        "effective_route_rules": "route-policy.json",
+        "rule": "Server resolves organization/store/membership and all route capabilities; UI visibility is insufficient.",
+        "roles_in_catalog": [
+          "OWNER",
+          "ADMIN",
+          "FINANCE",
+          "OPERATIONS",
+          "VIEWER"
+        ]
+      },
+      "capability_support": "EXISTING_CODE_IS_DISTINCT_FROM_PROVIDER_GRANT",
+      "provider_grant": "NOT_PROBED_IN_P00",
+      "connection": "Existing legacy Shopee/Ads observations preserved; no generalized company connection inferred.",
+      "coverage": "PARTIAL_OR_NOT_OBSERVED_BY_P00",
+      "external_write_permission": "LOCKED_REQUIRES_SPECIFIC_CAPABILITY_AND_OPERATOR_AUTHORIZATION",
+      "validation": {
+        "local": "see validation.json; no inherited audit test counts",
+        "published": "live-reconciliation.json confirms worker bytes, not every feature",
+        "operational": "NOT_VALIDATED_IN_REAL_ACCOUNT_BY_P00"
+      },
+      "commercial_promise": "NOT_INCLUDED_AS_READY_PAID_AUTOMATION; factual capability plus pending states only",
+      "next_action": "Comprovar runtime/versão e saúde da ponte externa",
+      "evidence": [
+        {
+          "path": "web/cloudflare/src/admin.mjs",
+          "sha256_current": "13085154ad06a7f10e1a028251ac8fd5533eeea3a7998886d03b48ecd25f988f",
+          "same_as_audited_sha": false,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        },
+        {
+          "path": "web/cloudflare/src/hermes-financial-context.mjs",
+          "sha256_current": "58a01ab49d9071a91e89dbc62bfd909057fbdb7cb5b947a8a6751f7a892d03f4",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        },
+        {
+          "path": "web/bridge/hermes_bridge.py",
+          "sha256_current": "ed0408b611516ff76a711aaac98253b1b3ceabade6bbe635913f8432ab30f9ff",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        },
+        {
+          "path": "docs/HERMES_FINANCEIRO.md",
+          "sha256_current": "56ef490ac4275e28a831f95314ed54191d26ad4f0284d965a10a97e5049d25c4",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        }
+      ],
+      "current_extension_refs": []
+    },
+    {
+      "id": "SYS-13",
+      "module": "Memória dos agentes e Auditor",
+      "implementation": "OBSERVACAO_DETERMINISTICA",
+      "route_or_entry": "/admin?tab=agents",
+      "data_and_limits": {
+        "existing": "Memória agregada de fontes mensais, recorrências e diagnósticos; Auditor indica conflitos, cobertura e atualidade das fontes.",
+        "audit_limit": "Memória não é treinamento de pesos nem autorização. O registro retém até 400 observações; não equivale a arquivo financeiro integral. Indicador saudável não é certificado externo de conformidade.",
+        "delta_reference": []
+      },
+      "roles_and_permissions": {
+        "source": "web/cloudflare/src/commercial-route-policy.mjs",
+        "roles_source": "web/cloudflare/src/account-policy.mjs",
+        "effective_route_rules": "route-policy.json",
+        "rule": "Server resolves organization/store/membership and all route capabilities; UI visibility is insufficient.",
+        "roles_in_catalog": [
+          "OWNER",
+          "ADMIN",
+          "FINANCE",
+          "OPERATIONS",
+          "VIEWER"
+        ]
+      },
+      "capability_support": "EXISTING_CODE_IS_DISTINCT_FROM_PROVIDER_GRANT",
+      "provider_grant": "NOT_APPLICABLE_OR_NOT_CONFIGURED",
+      "connection": "Existing legacy Shopee/Ads observations preserved; no generalized company connection inferred.",
+      "coverage": "PARTIAL_OR_NOT_OBSERVED_BY_P00",
+      "external_write_permission": "LOCKED_REQUIRES_SPECIFIC_CAPABILITY_AND_OPERATOR_AUTHORIZATION",
+      "validation": {
+        "local": "see validation.json; no inherited audit test counts",
+        "published": "live-reconciliation.json confirms worker bytes, not every feature",
+        "operational": "NOT_VALIDATED_IN_REAL_ACCOUNT_BY_P00"
+      },
+      "commercial_promise": "NOT_INCLUDED_AS_READY_PAID_AUTOMATION; factual capability plus pending states only",
+      "next_action": "Avaliar eficácia real; memória não treina modelo",
+      "evidence": [
+        {
+          "path": "web/cloudflare/src/mls-agent-learning.mjs",
+          "sha256_current": "b93e08731afc0f27add9cffafb50de945be5291086fd26b62dec70c5e6278788",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        },
+        {
+          "path": "web/cloudflare/src/agent-registry.mjs",
+          "sha256_current": "efa13b45819155b774f256ff7f06ca34fee7cf789320c2b8de38239cf0d13be7",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        }
+      ],
+      "current_extension_refs": []
+    },
+    {
+      "id": "SYS-14",
+      "module": "Listing Factory",
+      "implementation": "RASCUNHO_LOCAL_E_EXPORTACAO",
+      "route_or_entry": "/admin?tab=products#mlsListingFactory",
+      "data_and_limits": {
+        "existing": "Planejamento de anúncios, SKUs/variações, imagens, revisão, associação por nome/hash e exportação/retomada.",
+        "audit_limit": "DRAFT_ONLY, published:false, execution_allowed:false, api_permission_verified:false. Inspeção básica de mídia e regras internas não provam regras oficiais nem direitos. Sem upload ou publicação Shopee.",
+        "delta_reference": []
+      },
+      "roles_and_permissions": {
+        "source": "web/cloudflare/src/commercial-route-policy.mjs",
+        "roles_source": "web/cloudflare/src/account-policy.mjs",
+        "effective_route_rules": "route-policy.json",
+        "rule": "Server resolves organization/store/membership and all route capabilities; UI visibility is insufficient.",
+        "roles_in_catalog": [
+          "OWNER",
+          "ADMIN",
+          "FINANCE",
+          "OPERATIONS",
+          "VIEWER"
+        ]
+      },
+      "capability_support": "EXISTING_CODE_IS_DISTINCT_FROM_PROVIDER_GRANT",
+      "provider_grant": "NOT_APPLICABLE_OR_NOT_CONFIGURED",
+      "connection": "Existing legacy Shopee/Ads observations preserved; no generalized company connection inferred.",
+      "coverage": "PARTIAL_OR_NOT_OBSERVED_BY_P00",
+      "external_write_permission": "LOCKED_REQUIRES_SPECIFIC_CAPABILITY_AND_OPERATOR_AUTHORIZATION",
+      "validation": {
+        "local": "see validation.json; no inherited audit test counts",
+        "published": "live-reconciliation.json confirms worker bytes, not every feature",
+        "operational": "NOT_VALIDATED_IN_REAL_ACCOUNT_BY_P00"
+      },
+      "commercial_promise": "NOT_INCLUDED_AS_READY_PAID_AUTOMATION; factual capability plus pending states only",
+      "next_action": "Manter DRAFT_ONLY; publicação exige gate de escrita",
+      "evidence": [
+        {
+          "path": "web/cloudflare/src/mls-listing-factory-planner.mjs",
+          "sha256_current": "b5e83dcc7bbd759f1d0ed1ddd98107e4f2fdd4d8508b2ff875476c100b528778",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        },
+        {
+          "path": "docs/MLS_LISTING_FACTORY_V1.md",
+          "sha256_current": "791ea276042d6c8e22b63e8d8c2ca679ad4c4ee0424951a92b79d9ba787d2ee9",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        }
+      ],
+      "current_extension_refs": [],
+      "route_precondition": "Owner + MLS_V36_OWNER_PREVIEW=ENABLED; DRAFT_ONLY."
+    },
+    {
+      "id": "SYS-15",
+      "module": "AI Sales: estúdio de conteúdo",
+      "implementation": "RENDER_LOCAL_E_METADADOS",
+      "route_or_entry": "/admin?tab=ai-sales",
+      "data_and_limits": {
+        "existing": "Planos, templates e jobs; renderer local Node/FFmpeg para MP4 vertical 1080×1920, voz offline ou WAV autorizado; revisão de manifesto/mídia e persistência de rascunhos.",
+        "audit_limit": "Worker não renderiza vídeo; bytes permanecem locais. Script por modelo tem transport NOT_IMPLEMENTED; padrão LOCAL_TEMPLATE. Provider conectado/publicação/âncora não estão comprovados.",
+        "delta_reference": []
+      },
+      "roles_and_permissions": {
+        "source": "web/cloudflare/src/commercial-route-policy.mjs",
+        "roles_source": "web/cloudflare/src/account-policy.mjs",
+        "effective_route_rules": "route-policy.json",
+        "rule": "Server resolves organization/store/membership and all route capabilities; UI visibility is insufficient.",
+        "roles_in_catalog": [
+          "OWNER",
+          "ADMIN",
+          "FINANCE",
+          "OPERATIONS",
+          "VIEWER"
+        ]
+      },
+      "capability_support": "EXISTING_CODE_IS_DISTINCT_FROM_PROVIDER_GRANT",
+      "provider_grant": "NOT_APPLICABLE_OR_NOT_CONFIGURED",
+      "connection": "Existing legacy Shopee/Ads observations preserved; no generalized company connection inferred.",
+      "coverage": "PARTIAL_OR_NOT_OBSERVED_BY_P00",
+      "external_write_permission": "LOCKED_REQUIRES_SPECIFIC_CAPABILITY_AND_OPERATOR_AUTHORIZATION",
+      "validation": {
+        "local": "see validation.json; no inherited audit test counts",
+        "published": "live-reconciliation.json confirms worker bytes, not every feature",
+        "operational": "NOT_VALIDATED_IN_REAL_ACCOUNT_BY_P00"
+      },
+      "commercial_promise": "NOT_INCLUDED_AS_READY_PAID_AUTOMATION; factual capability plus pending states only",
+      "next_action": "Conferir direitos de mídia/voz e revisar render local",
+      "evidence": [
+        {
+          "path": "web/cloudflare/src/mls-ai-sales-workspace-store.mjs",
+          "sha256_current": "fd5ea0913224709da186237a882292d337a2ce9b88f4732b638e38eedbbb4072",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        },
+        {
+          "path": "web/cloudflare/src/mls-ai-sales-script-adapter.mjs",
+          "sha256_current": "a3b2e3a77c07aa3e4b18f8a728bce9d04ce1b96962ea29b6e5e1f50d81bc55c2",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        },
+        {
+          "path": "docs/MLS_AI_SALES_LOCAL_RENDER.md",
+          "sha256_current": "75af29d54b6727956f104f5b87766ea93b034d3cbebe85a6d5e6304aad4a4bb1",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        },
+        {
+          "path": "docs/MLS_AI_SALES_INTEGRATION_2026_10_30.md",
+          "sha256_current": "84321a741fbd5777be211174f7a6d094f68318735f63211efcea02e1781ea3f6",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        }
+      ],
+      "current_extension_refs": [],
+      "route_precondition": "Owner + MLS_AI_SALES_OWNER_PREVIEW=ENABLED; no external publication."
+    },
+    {
+      "id": "SYS-16",
+      "module": "Afiliados e desempenho AI Sales",
+      "implementation": "CRM_E_LEDGER_ASSISTIDOS",
+      "route_or_entry": "/admin?tab=ai-sales",
+      "data_and_limits": {
+        "existing": "Cadastro/importação de criadores, propostas, revisão local e ledger de desempenho com revisões e cancelamentos.",
+        "audit_limit": "Não comprova convites enviados, comissão alterada, Affiliate/Creator grants ou performance bancária. Aprovação local não autoriza ação no provedor.",
+        "delta_reference": []
+      },
+      "roles_and_permissions": {
+        "source": "web/cloudflare/src/commercial-route-policy.mjs",
+        "roles_source": "web/cloudflare/src/account-policy.mjs",
+        "effective_route_rules": "route-policy.json",
+        "rule": "Server resolves organization/store/membership and all route capabilities; UI visibility is insufficient.",
+        "roles_in_catalog": [
+          "OWNER",
+          "ADMIN",
+          "FINANCE",
+          "OPERATIONS",
+          "VIEWER"
+        ]
+      },
+      "capability_support": "EXISTING_CODE_IS_DISTINCT_FROM_PROVIDER_GRANT",
+      "provider_grant": "NOT_APPLICABLE_OR_NOT_CONFIGURED",
+      "connection": "Existing legacy Shopee/Ads observations preserved; no generalized company connection inferred.",
+      "coverage": "PARTIAL_OR_NOT_OBSERVED_BY_P00",
+      "external_write_permission": "LOCKED_REQUIRES_SPECIFIC_CAPABILITY_AND_OPERATOR_AUTHORIZATION",
+      "validation": {
+        "local": "see validation.json; no inherited audit test counts",
+        "published": "live-reconciliation.json confirms worker bytes, not every feature",
+        "operational": "NOT_VALIDATED_IN_REAL_ACCOUNT_BY_P00"
+      },
+      "commercial_promise": "NOT_INCLUDED_AS_READY_PAID_AUTOMATION; factual capability plus pending states only",
+      "next_action": "Conferir contrato/consentimento antes de qualquer ação externa",
+      "evidence": [
+        {
+          "path": "web/cloudflare/src/mls-ai-sales-affiliates.mjs",
+          "sha256_current": "53321a65855b4fe5f93573e66281946afa302a32a532d6b751c9270bd2464d96",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        },
+        {
+          "path": "web/cloudflare/src/mls-ai-sales-performance.mjs",
+          "sha256_current": "7f7390238cb4dc53f8efb37471a19f504d193e3f952fa6e0c5aaaeedd8f796c9",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        },
+        {
+          "path": "web/cloudflare/src/mls-ai-sales-capability-audit.mjs",
+          "sha256_current": "33f865b1c2eed0cb164bfa3befe6cbbfa9776ae7a357c581a6fb375e644a5ea3",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        }
+      ],
+      "current_extension_refs": [],
+      "route_precondition": "Owner + MLS_AI_SALES_OWNER_PREVIEW=ENABLED; no external publication."
+    },
+    {
+      "id": "SYS-17",
+      "module": "Integrações Shopee e outras plataformas",
+      "implementation": "SHOPEE_REAL_PARCIAL_OUTRAS_PENDENTES",
+      "route_or_entry": "/integrations",
+      "data_and_limits": {
+        "existing": "Coletores Finance e Ads existentes. Matriz adicional de capacidades para operações candidatas e planejamento de recuperação de push.",
+        "audit_limit": "A matriz offline EVIDENCE_ONLY_NO_LIVE_PROBE não valida conexão/grants novos. Ela NÃO invalida coletores existentes. Mercado Livre e TikTok não estão conectados no contrato de Pedidos; aplicativo cadastrado não prova Orders API operacional. Lost push é planner sem request/ack.",
+        "delta_reference": []
+      },
+      "roles_and_permissions": {
+        "source": "web/cloudflare/src/commercial-route-policy.mjs",
+        "roles_source": "web/cloudflare/src/account-policy.mjs",
+        "effective_route_rules": "route-policy.json",
+        "rule": "Server resolves organization/store/membership and all route capabilities; UI visibility is insufficient.",
+        "roles_in_catalog": [
+          "OWNER",
+          "ADMIN",
+          "FINANCE",
+          "OPERATIONS",
+          "VIEWER"
+        ]
+      },
+      "capability_support": "EXISTING_CODE_IS_DISTINCT_FROM_PROVIDER_GRANT",
+      "provider_grant": "NOT_PROBED_IN_P00",
+      "connection": "Existing legacy Shopee/Ads observations preserved; no generalized company connection inferred.",
+      "coverage": "PARTIAL_OR_NOT_OBSERVED_BY_P00",
+      "external_write_permission": "LOCKED_REQUIRES_SPECIFIC_CAPABILITY_AND_OPERATOR_AUTHORIZATION",
+      "validation": {
+        "local": "see validation.json; no inherited audit test counts",
+        "published": "live-reconciliation.json confirms worker bytes, not every feature",
+        "operational": "NOT_VALIDATED_IN_REAL_ACCOUNT_BY_P00"
+      },
+      "commercial_promise": "NOT_INCLUDED_AS_READY_PAID_AUTOMATION; factual capability plus pending states only",
+      "next_action": "Comprovar apps/grants por região e loja",
+      "evidence": [
+        {
+          "path": "web/cloudflare/src/mls-shopee-capability-audit.mjs",
+          "sha256_current": "93bdfb84eca046158d30d7c1f73f8591a20b4f5bcfe47c3637400f0658267847",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        },
+        {
+          "path": "web/cloudflare/src/mls-ai-sales-capability-audit.mjs",
+          "sha256_current": "33f865b1c2eed0cb164bfa3befe6cbbfa9776ae7a357c581a6fb375e644a5ea3",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        },
+        {
+          "path": "web/cloudflare/src/mls-lost-push-recovery.mjs",
+          "sha256_current": "644f305e5f37fc721c3b5d107a0ab1b13c6b4c9d7ce5505a3f61b8b9e9a96757",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        },
+        {
+          "path": "web/cloudflare/src/order-operations.mjs",
+          "sha256_current": "8047984f352c90732ab1cd50e8288a8393c7c8a15a77e4713a30ee9900288e99",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        }
+      ],
+      "current_extension_refs": []
+    },
+    {
+      "id": "SYS-18",
+      "module": "Estoque, compras e insumos",
+      "implementation": "PONTE_CMV_ESTOQUE_PERSISTENTE_PARCIAL_NAO_ERP_COMPLETO",
+      "route_or_entry": "/admin?tab=agent-production",
+      "data_and_limits": {
+        "existing": "Existem referências de produtos, produção e recebimentos físicos que podem alimentar uma evolução.",
+        "audit_limit": "Contratos auditados dizem inventory_verified:false ou valuation UNKNOWN. Não foi demonstrado ledger de estoque e CMV completo, reposição/compras, depósito/localização e inventário físico.",
+        "delta_reference": [
+          "docs/financial-automation/README.md",
+          "docs/financial-automation/VALIDATION.md",
+          "docs/financial-automation/MATRIZ_EXECUCAO.json"
+        ]
+      },
+      "roles_and_permissions": {
+        "source": "web/cloudflare/src/commercial-route-policy.mjs",
+        "roles_source": "web/cloudflare/src/account-policy.mjs",
+        "effective_route_rules": "route-policy.json",
+        "rule": "Server resolves organization/store/membership and all route capabilities; UI visibility is insufficient.",
+        "roles_in_catalog": [
+          "OWNER",
+          "ADMIN",
+          "FINANCE",
+          "OPERATIONS",
+          "VIEWER"
+        ]
+      },
+      "capability_support": "EXISTING_CODE_IS_DISTINCT_FROM_PROVIDER_GRANT",
+      "provider_grant": "NOT_APPLICABLE_OR_NOT_CONFIGURED",
+      "connection": "Existing legacy Shopee/Ads observations preserved; no generalized company connection inferred.",
+      "coverage": "PARTIAL_OR_NOT_OBSERVED_BY_P00",
+      "external_write_permission": "LOCKED_REQUIRES_SPECIFIC_CAPABILITY_AND_OPERATOR_AUTHORIZATION",
+      "validation": {
+        "local": "see validation.json; no inherited audit test counts",
+        "published": "live-reconciliation.json confirms worker bytes, not every feature",
+        "operational": "NOT_VALIDATED_IN_REAL_ACCOUNT_BY_P00"
+      },
+      "commercial_promise": "NOT_INCLUDED_AS_READY_PAID_AUTOMATION; factual capability plus pending states only",
+      "next_action": "Completar cobertura/abertura; não prometer ERP de estoque",
+      "evidence": [
+        {
+          "path": "web/cloudflare/src/mls-product-intelligence.mjs",
+          "sha256_current": "dae3099abe85ff852261f321f1535bf9a4557e3cd9e66cf892bd584538b8cb10",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        },
+        {
+          "path": "web/cloudflare/src/incurred-production.mjs",
+          "sha256_current": "3958d0babcaa370cf6f1bcf8d7201cb00e7fc7a015ceddc4c32c1189ea5d3e4d",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        },
+        {
+          "path": "web/cloudflare/src/physical-returns.mjs",
+          "sha256_current": "33cbfc605f74ac78f4fc8bf97cc48c123a602350c6333b2f1b51fd4374627107",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        }
+      ],
+      "current_extension_refs": [
+        "docs/financial-automation/README.md",
+        "docs/financial-automation/VALIDATION.md",
+        "docs/financial-automation/MATRIZ_EXECUCAO.json"
+      ]
+    },
+    {
+      "id": "SYS-19",
+      "module": "Fiscal, etiquetas e logística",
+      "implementation": "NAO_ENCONTRADO_NOS_FLUXOS_AUDITADOS",
+      "route_or_entry": "/admin?tab=order-operations",
+      "data_and_limits": {
+        "existing": "Pedido contém status de origem e preparação interna; não se demonstrou emissão fiscal ou compra de etiqueta.",
+        "audit_limit": "Não foram encontrados handlers de emissão NF-e/NFS-e, transportadora, etiqueta ou confirmação logística na varredura de admin e Workers originais. Isso é limite do escopo examinado, não afirmação sobre serviço externo não disponibilizado.",
+        "delta_reference": []
+      },
+      "roles_and_permissions": {
+        "source": "web/cloudflare/src/commercial-route-policy.mjs",
+        "roles_source": "web/cloudflare/src/account-policy.mjs",
+        "effective_route_rules": "route-policy.json",
+        "rule": "Server resolves organization/store/membership and all route capabilities; UI visibility is insufficient.",
+        "roles_in_catalog": [
+          "OWNER",
+          "ADMIN",
+          "FINANCE",
+          "OPERATIONS",
+          "VIEWER"
+        ]
+      },
+      "capability_support": "EXISTING_CODE_IS_DISTINCT_FROM_PROVIDER_GRANT",
+      "provider_grant": "NOT_APPLICABLE_OR_NOT_CONFIGURED",
+      "connection": "Existing legacy Shopee/Ads observations preserved; no generalized company connection inferred.",
+      "coverage": "PARTIAL_OR_NOT_OBSERVED_BY_P00",
+      "external_write_permission": "LOCKED_REQUIRES_SPECIFIC_CAPABILITY_AND_OPERATOR_AUTHORIZATION",
+      "validation": {
+        "local": "see validation.json; no inherited audit test counts",
+        "published": "live-reconciliation.json confirms worker bytes, not every feature",
+        "operational": "NOT_VALIDATED_IN_REAL_ACCOUNT_BY_P00"
+      },
+      "commercial_promise": "NOT_INCLUDED_AS_READY_PAID_AUTOMATION; factual capability plus pending states only",
+      "next_action": "Identificar emissor/transportadora antes de ativar",
+      "evidence": [
+        {
+          "path": "web/cloudflare/src/admin.mjs",
+          "sha256_current": "13085154ad06a7f10e1a028251ac8fd5533eeea3a7998886d03b48ecd25f988f",
+          "same_as_audited_sha": false,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        },
+        {
+          "path": "web/cloudflare/original/app-worker.mjs",
+          "sha256_current": "f022a27d4b4c8ac327381fd5318ee04d47ec67c4d0950c63e61ea1623b3cdd81",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        },
+        {
+          "path": "web/cloudflare/original/auth-worker.mjs",
+          "sha256_current": "32e1af172a4143c3f91ae927422e0846aee520605c64d0500f06c74c1462f4df",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        }
+      ],
+      "current_extension_refs": []
+    },
+    {
+      "id": "SYS-20",
+      "module": "Automação de coleta e diagnóstico",
+      "implementation": "INTEGRADO_COM_LIMITES",
+      "route_or_entry": "/admin?tab=agent-hermes",
+      "data_and_limits": {
+        "existing": "Scheduler, leases, orçamento, prioridade/rodízio e fontes salvas; UI de pausa/estado e diagnóstico seguro.",
+        "audit_limit": "Coleta agendada não significa sincronização atômica ou atualização garantida a cada intervalo. Limites, fonte atrasada e manutenção histórica precisam ser visíveis; nenhum ciclo autoriza escrita comercial.",
+        "delta_reference": [
+          "docs/financial-automation/README.md",
+          "docs/financial-automation/VALIDATION.md",
+          "docs/financial-automation/MATRIZ_EXECUCAO.json"
+        ]
+      },
+      "roles_and_permissions": {
+        "source": "web/cloudflare/src/commercial-route-policy.mjs",
+        "roles_source": "web/cloudflare/src/account-policy.mjs",
+        "effective_route_rules": "route-policy.json",
+        "rule": "Server resolves organization/store/membership and all route capabilities; UI visibility is insufficient.",
+        "roles_in_catalog": [
+          "OWNER",
+          "ADMIN",
+          "FINANCE",
+          "OPERATIONS",
+          "VIEWER"
+        ]
+      },
+      "capability_support": "EXISTING_CODE_IS_DISTINCT_FROM_PROVIDER_GRANT",
+      "provider_grant": "NOT_PROBED_IN_P00",
+      "connection": "Existing legacy Shopee/Ads observations preserved; no generalized company connection inferred.",
+      "coverage": "PARTIAL_OR_NOT_OBSERVED_BY_P00",
+      "external_write_permission": "LOCKED_REQUIRES_SPECIFIC_CAPABILITY_AND_OPERATOR_AUTHORIZATION",
+      "validation": {
+        "local": "see validation.json; no inherited audit test counts",
+        "published": "live-reconciliation.json confirms worker bytes, not every feature",
+        "operational": "NOT_VALIDATED_IN_REAL_ACCOUNT_BY_P00"
+      },
+      "commercial_promise": "NOT_INCLUDED_AS_READY_PAID_AUTOMATION; factual capability plus pending states only",
+      "next_action": "Medir atraso/cobertura sem prometer sincronismo",
+      "evidence": [
+        {
+          "path": "web/cloudflare/src/admin.mjs",
+          "sha256_current": "13085154ad06a7f10e1a028251ac8fd5533eeea3a7998886d03b48ecd25f988f",
+          "same_as_audited_sha": false,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        },
+        {
+          "path": "web/cloudflare/src/automation-workspace.mjs",
+          "sha256_current": "55181e144925c90b81daf49be58321d8fd5c69b097733185d64843fc62b3a04e",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        },
+        {
+          "path": "web/cloudflare/src/business-sync.mjs",
+          "sha256_current": "0ecd1885dc97b8efe902e4ee1d904ed546550f6ba58d2e3b21966c8687fe95eb",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        }
+      ],
+      "current_extension_refs": [
+        "docs/financial-automation/README.md",
+        "docs/financial-automation/VALIDATION.md",
+        "docs/financial-automation/MATRIZ_EXECUCAO.json"
+      ]
+    },
+    {
+      "id": "SYS-21",
+      "module": "Arquitetura externa e nomenclatura gateway",
+      "implementation": "DEPENDENCIAS_A_INVENTARIAR",
+      "route_or_entry": "/admin?tab=agents",
+      "data_and_limits": {
+        "existing": "Três Workers App/Auth/Finance. Auth original usa GATEWAY_URL para integração Shopee/Ads; Hermes usa ponte/CLI em runtime externo.",
+        "audit_limit": "Gateway de integração marketplace não é processador de pagamento da assinatura SaaS. Código dos Workers, por si só, não comprova capacidade/backup/operação dos serviços externos.",
+        "delta_reference": []
+      },
+      "roles_and_permissions": {
+        "source": "web/cloudflare/src/commercial-route-policy.mjs",
+        "roles_source": "web/cloudflare/src/account-policy.mjs",
+        "effective_route_rules": "route-policy.json",
+        "rule": "Server resolves organization/store/membership and all route capabilities; UI visibility is insufficient.",
+        "roles_in_catalog": [
+          "OWNER",
+          "ADMIN",
+          "FINANCE",
+          "OPERATIONS",
+          "VIEWER"
+        ]
+      },
+      "capability_support": "EXISTING_CODE_IS_DISTINCT_FROM_PROVIDER_GRANT",
+      "provider_grant": "NOT_APPLICABLE_OR_NOT_CONFIGURED",
+      "connection": "Existing legacy Shopee/Ads observations preserved; no generalized company connection inferred.",
+      "coverage": "PARTIAL_OR_NOT_OBSERVED_BY_P00",
+      "external_write_permission": "LOCKED_REQUIRES_SPECIFIC_CAPABILITY_AND_OPERATOR_AUTHORIZATION",
+      "validation": {
+        "local": "see validation.json; no inherited audit test counts",
+        "published": "live-reconciliation.json confirms worker bytes, not every feature",
+        "operational": "NOT_VALIDATED_IN_REAL_ACCOUNT_BY_P00"
+      },
+      "commercial_promise": "NOT_INCLUDED_AS_READY_PAID_AUTOMATION; factual capability plus pending states only",
+      "next_action": "Comprovar operação externa e separar PSP",
+      "evidence": [
+        {
+          "path": "web/cloudflare/original/auth-worker.mjs",
+          "sha256_current": "32e1af172a4143c3f91ae927422e0846aee520605c64d0500f06c74c1462f4df",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        },
+        {
+          "path": "web/bridge/hermes_bridge.py",
+          "sha256_current": "ed0408b611516ff76a711aaac98253b1b3ceabade6bbe635913f8432ab30f9ff",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        },
+        {
+          "path": "package.json",
+          "sha256_current": "a91843abbe7c9aa02d3725e99b69524239cca4296c141a42db3b46d1549af5d0",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        }
+      ],
+      "current_extension_refs": []
+    },
+    {
+      "id": "SYS-22",
+      "module": "Documentação e continuidade Codex",
+      "implementation": "EXISTENTE_COM_HISTORICO_EXTENSO",
+      "route_or_entry": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
+      "data_and_limits": {
+        "existing": "Roadmap, checkpoints, handoff, registros de QA e publicação; controles explícitos contra confundir merge, deploy e aceite real.",
+        "audit_limit": "Documentos acumulam estados históricos e ordens antigas. Um executor pode repetir branches antigas ou considerar uma nota histórica como estado atual se não fixar o commit.",
+        "delta_reference": []
+      },
+      "roles_and_permissions": {
+        "source": "web/cloudflare/src/commercial-route-policy.mjs",
+        "roles_source": "web/cloudflare/src/account-policy.mjs",
+        "effective_route_rules": "route-policy.json",
+        "rule": "Server resolves organization/store/membership and all route capabilities; UI visibility is insufficient.",
+        "roles_in_catalog": [
+          "OWNER",
+          "ADMIN",
+          "FINANCE",
+          "OPERATIONS",
+          "VIEWER"
+        ]
+      },
+      "capability_support": "EXISTING_CODE_IS_DISTINCT_FROM_PROVIDER_GRANT",
+      "provider_grant": "NOT_APPLICABLE_OR_NOT_CONFIGURED",
+      "connection": "Existing legacy Shopee/Ads observations preserved; no generalized company connection inferred.",
+      "coverage": "PARTIAL_OR_NOT_OBSERVED_BY_P00",
+      "external_write_permission": "LOCKED_REQUIRES_SPECIFIC_CAPABILITY_AND_OPERATOR_AUTHORIZATION",
+      "validation": {
+        "local": "see validation.json; no inherited audit test counts",
+        "published": "live-reconciliation.json confirms worker bytes, not every feature",
+        "operational": "NOT_VALIDATED_IN_REAL_ACCOUNT_BY_P00"
+      },
+      "commercial_promise": "NOT_INCLUDED_AS_READY_PAID_AUTOMATION; factual capability plus pending states only",
+      "next_action": "Retomar pelo checkpoint único e matriz operacional",
+      "evidence": [
+        {
+          "path": "AGENTS.md",
+          "sha256_current": "240f24ccd7fbfef6da6c3399d9e996f5c816fbeb71e2408f2f2a631af54c97eb",
+          "same_as_audited_sha": false,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        },
+        {
+          "path": "README.md",
+          "sha256_current": "0831cd14a020cc36432a506d1d593aa8e479673dabd5c3f013ea60ab1d14eec5",
+          "same_as_audited_sha": false,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        },
+        {
+          "path": "docs/MLS_LAYOUT_REFERENCE_PARITY_2026_11_13.md",
+          "sha256_current": "67d61b6b9cf8ee658dfdd89e45ec15c0ef30d0dad5a46112a257ecb6eaabbba0",
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
+        }
+      ],
+      "current_extension_refs": []
+    }
+  ]
+}

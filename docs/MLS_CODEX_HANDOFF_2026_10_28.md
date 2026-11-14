@@ -1,3 +1,9 @@
+<!-- SAAS_P00_CURRENT -->
+## Retomada P00 SaaS
+
+Ler o [checkpoint](MLS_COMMERCE_OS_CHECKPOINT.json) e consultar a tarefa na [matriz operacional](MLS_SAAS_EXECUTION.json). Base main346f30f, ancestral documental0a5a228 e fonte local validada8448710. [Índice P00](saas/p00/README.md). Trabalho independente concluído, sem push/deploy: leitura Builds403 impede confirmar branch/filtros/comandos; faltam metadados operacionais externos e direitos do proprietário. Não repetir testes sem delta; executar P01 somente na próxima entrega. Histórico integral abaixo preservado.
+<!-- END_SAAS_P00_CURRENT -->
+
 FINANCIAL_AUTOMATION_20261113 — PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY — release 2026-11-13.3
 Fonte f68525ea1d136350ece9942433352accdf97d992; preparado 3cf489e33071b32bc73e2efaf2aecfc62618d46a; CI 43531882471 success (4432 Node/67 Python), publicação conferida em 2026-11-14T00:22:15.598Z. URL https://app.brazacommerce.com.br/admin?tab=agent-finance#financialAutomation. App 9bfc21d6-dec9-4fa6-89d8-7ea1dec50993, Auth dfd2fc99-728f-4f29-96ee-a4b256c5640a, Finance 50b31451-c6cf-4456-bd09-be5d1956e0da retido. Recibos em docs/financial-automation/publication-live-20261113.json; consultar PR #121 para integração Git.
 

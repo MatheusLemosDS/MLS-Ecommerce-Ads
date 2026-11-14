@@ -1,0 +1,173 @@
+{
+  "method": "GITHUB_CONNECTOR_GET_ONLY",
+  "main": {
+    "sha": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+    "tree": "abd1b72ab99da8f5146f969a019f2f1abdc6fb69"
+  },
+  "pr121": {
+    "merged": true,
+    "merged_at": "2026-11-14T00:47:06Z",
+    "merge_commit_sha": "346f30f200e5cbd3d9efd26663a483c625d9c6e7"
+  },
+  "current_runs": [
+    {
+      "id": 43536468273,
+      "head_sha": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+      "event": "push",
+      "conclusion": "success",
+      "html_url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43536468273"
+    }
+  ],
+  "historical_failure": {
+    "id": 43493228854,
+    "head_sha": "6578e21098ff799e59433af92880d249432ceeb4",
+    "conclusion": "failure",
+    "html_url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43493228854"
+  },
+  "jobs": [
+    {
+      "run_id": 43536468273,
+      "jobs": [
+        {
+          "id": 132266587954,
+          "name": "validate",
+          "conclusion": "success",
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success"
+            },
+            {
+              "name": "Obter código",
+              "conclusion": "success"
+            },
+            {
+              "name": "Preparar Node",
+              "conclusion": "success"
+            },
+            {
+              "name": "Instalar versões fixadas",
+              "conclusion": "success"
+            },
+            {
+              "name": "Preparar renderização local de vídeo e voz PT-BR",
+              "conclusion": "success"
+            },
+            {
+              "name": "Preparar exemplos sintéticos para homologação local",
+              "conclusion": "success"
+            },
+            {
+              "name": "Executar suíte Node completa com concorrência limitada para Chrome",
+              "conclusion": "success"
+            },
+            {
+              "name": "Gerar comparação visual sem aprovação automática",
+              "conclusion": "success"
+            },
+            {
+              "name": "Guardar capturas sintéticas dos painéis",
+              "conclusion": "success"
+            },
+            {
+              "name": "Validar ponte financeira e atualização do Hermes",
+              "conclusion": "success"
+            },
+            {
+              "name": "Gerar os três Workers",
+              "conclusion": "success"
+            },
+            {
+              "name": "Pré-release local e não destrutivo",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "Post Preparar Node",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Obter código",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": 43493228854,
+      "jobs": [
+        {
+          "id": 132119537849,
+          "name": "validate",
+          "conclusion": "failure",
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success"
+            },
+            {
+              "name": "Obter código",
+              "conclusion": "success"
+            },
+            {
+              "name": "Preparar Node",
+              "conclusion": "success"
+            },
+            {
+              "name": "Instalar versões fixadas",
+              "conclusion": "success"
+            },
+            {
+              "name": "Preparar renderização local de vídeo e voz PT-BR",
+              "conclusion": "success"
+            },
+            {
+              "name": "Preparar exemplos sintéticos para homologação local",
+              "conclusion": "success"
+            },
+            {
+              "name": "Executar suíte Node completa com concorrência limitada para Chrome",
+              "conclusion": "failure"
+            },
+            {
+              "name": "Gerar comparação visual sem aprovação automática",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "Guardar capturas sintéticas dos painéis",
+              "conclusion": "success"
+            },
+            {
+              "name": "Validar ponte financeira e atualização do Hermes",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "Gerar os três Workers",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "Pré-release local e não destrutivo",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "Post Preparar Node",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "Post Obter código",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

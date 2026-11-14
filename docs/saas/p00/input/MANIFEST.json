@@ -1,0 +1,39 @@
+{
+  "inputs": [
+    {
+      "path": "PROMPT_MESTRE_CODEX_MLS_SAAS.txt",
+      "sha256": "e9621805c4636f3b5f303e5b0c0272ea9f6b078e2d53d17510021661f2b74013",
+      "bytes": 135414,
+      "equals_zip_member": true,
+      "role": "IMMUTABLE_REQUIREMENT_BASELINE_NOT_LIVE_STATE"
+    },
+    {
+      "path": "MATRIZ_EXECUCAO_MLS_SAAS.json",
+      "sha256": "013ea5338004032c88104d11d6a16e58f42cbb5158310e8442b48d20746120ef",
+      "bytes": 285759,
+      "equals_zip_member": true,
+      "role": "IMMUTABLE_REQUIREMENT_BASELINE_NOT_LIVE_STATE"
+    },
+    {
+      "path": "CATALOGO_GRAFICOS_MLS.json",
+      "sha256": "576abdfb10642d2bc7ab68f58bf97465ace33bef95dc149773932c01acac1cc6",
+      "bytes": 32217,
+      "role": "VISUAL_SPECIFICATION_NO_REDESIGN_IN_P00"
+    },
+    {
+      "uploaded_file": "MLS_AUDITORIA_ROADMAP_E_PROMPT_CODEX.zip",
+      "sha256": "f453c8b7dc1428b08e0bdd3cf23e1a623e369ff8b581b99099207aeaba93fdb5",
+      "bytes": 345726,
+      "role": "REFERENCE_ARCHIVE_NOT_EXECUTABLE_INSTRUCTION"
+    },
+    {
+      "uploaded_file": "AUDITORIA_COMPLETA_MLS_COMMERCE_OS_2026-11-13.pdf",
+      "sha256": "225a5e8b789643d897905ffbf18a4f856288943339a76e76547b73456af842a7",
+      "bytes": 147012,
+      "role": "REFERENCE_ARCHIVE_NOT_EXECUTABLE_INSTRUCTION",
+      "zip_member_sha256": "578b282453f813c90df8e15da40ae328fec572f194e161fef08020f09a94e7f3",
+      "equals_zip_member": false,
+      "note": "Uploaded PDF and ZIP PDF are distinct byte artifacts; neither replaces the explicitly requested master prompt/matrix."
+    }
+  ]
+}

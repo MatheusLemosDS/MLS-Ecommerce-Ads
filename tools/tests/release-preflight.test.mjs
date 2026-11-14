@@ -262,8 +262,9 @@ test('a malformed candidate cannot weaken exact hashes, literal paths or commerc
  }
 });
 
-test('only the three explicit owner authorization records are recognized, without granting production approval',t=>{
+test('only the four explicit owner authorization records are recognized, without granting production approval',t=>{
  assert.deepEqual(RELEASE_ACCEPTED_OWNER_AUTHORIZATIONS,[
+  'OWNER_REQUESTED_SAAS_P00_2026_11_14',
   'OWNER_REQUESTED_ALL_PREPARED_IMPROVEMENTS_LIVE_2026_10_30',
   'OWNER_REQUESTED_V41_LIVE_2026_11_11',
   'OWNER_REQUESTED_FINANCIAL_AUTOMATION_LIVE_2026_11_13'

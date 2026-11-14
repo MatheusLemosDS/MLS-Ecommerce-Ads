@@ -1,0 +1,3972 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "version": 1,
+  "metadata": {
+    "component": {
+      "type": "application",
+      "name": "MLS Commerce OS",
+      "version": "346f30f200e5cbd3d9efd26663a483c625d9c6e7"
+    },
+    "properties": [
+      {
+        "name": "mls:lockfile_sha256",
+        "value": "de73cee8850002151b00179dbac6d72bad2c857e3c2603aec5e071386a000c10"
+      },
+      {
+        "name": "mls:scope",
+        "value": "All 94 npm lock entries, including optional non-installed platforms. No toolchain redistribution authorized."
+      }
+    ]
+  },
+  "components": [
+    {
+      "type": "library",
+      "name": "@cloudflare/kv-asset-handler",
+      "version": "0.5.0",
+      "bom-ref": "npm:@cloudflare/kv-asset-handler@0.5.0",
+      "purl": "pkg:npm/%40cloudflare/kv-asset-handler@0.5.0",
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "true"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "false"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@cloudflare/unenv-preset",
+      "version": "2.16.2",
+      "bom-ref": "npm:@cloudflare/unenv-preset@2.16.2",
+      "purl": "pkg:npm/%40cloudflare/unenv-preset@2.16.2",
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "true"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "false"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@cloudflare/workerd-darwin-64",
+      "version": "1.20261012.1",
+      "bom-ref": "npm:@cloudflare/workerd-darwin-64@1.20261012.1",
+      "purl": "pkg:npm/%40cloudflare/workerd-darwin-64@1.20261012.1",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "false"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@cloudflare/workerd-darwin-arm64",
+      "version": "1.20261012.1",
+      "bom-ref": "npm:@cloudflare/workerd-darwin-arm64@1.20261012.1",
+      "purl": "pkg:npm/%40cloudflare/workerd-darwin-arm64@1.20261012.1",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "false"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@cloudflare/workerd-linux-64",
+      "version": "1.20261012.1",
+      "bom-ref": "npm:@cloudflare/workerd-linux-64@1.20261012.1",
+      "purl": "pkg:npm/%40cloudflare/workerd-linux-64@1.20261012.1",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "true"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@cloudflare/workerd-linux-arm64",
+      "version": "1.20261012.1",
+      "bom-ref": "npm:@cloudflare/workerd-linux-arm64@1.20261012.1",
+      "purl": "pkg:npm/%40cloudflare/workerd-linux-arm64@1.20261012.1",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "false"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@cloudflare/workerd-windows-64",
+      "version": "1.20261012.1",
+      "bom-ref": "npm:@cloudflare/workerd-windows-64@1.20261012.1",
+      "purl": "pkg:npm/%40cloudflare/workerd-windows-64@1.20261012.1",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "false"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@cspotcode/source-map-support",
+      "version": "0.8.1",
+      "bom-ref": "npm:@cspotcode/source-map-support@0.8.1",
+      "purl": "pkg:npm/%40cspotcode/source-map-support@0.8.1",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "true"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "false"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[{\"file\": \"node_modules/@cspotcode/source-map-support/LICENSE.md\", \"sha256\": \"3a7d3bb198e909ed642bd68bd29a7d7c09a636d27a51ec663d35f00c4760ec42\"}]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "EXACT_INSTALLED_LICENSE_TEXT"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "RETAIN_LICENSE_NOTICES_AND_RESPECT_COMPONENT_OBLIGATIONS"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@emnapi/runtime",
+      "version": "1.11.3",
+      "bom-ref": "npm:@emnapi/runtime@1.11.3",
+      "purl": "pkg:npm/%40emnapi/runtime@1.11.3",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "true"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[{\"file\": \"node_modules/@emnapi/runtime/LICENSE\", \"sha256\": \"2088f55c6731498410b20c95ebd345ed4a4a800bf74c0fba4d282fd2a021daaa\"}]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "EXACT_INSTALLED_LICENSE_TEXT"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "RETAIN_LICENSE_NOTICES_AND_RESPECT_COMPONENT_OBLIGATIONS"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/aix-ppc64",
+      "version": "0.28.2",
+      "bom-ref": "npm:@esbuild/aix-ppc64@0.28.2",
+      "purl": "pkg:npm/%40esbuild/aix-ppc64@0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "false"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/android-arm",
+      "version": "0.28.2",
+      "bom-ref": "npm:@esbuild/android-arm@0.28.2",
+      "purl": "pkg:npm/%40esbuild/android-arm@0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "false"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/android-arm64",
+      "version": "0.28.2",
+      "bom-ref": "npm:@esbuild/android-arm64@0.28.2",
+      "purl": "pkg:npm/%40esbuild/android-arm64@0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "false"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/android-x64",
+      "version": "0.28.2",
+      "bom-ref": "npm:@esbuild/android-x64@0.28.2",
+      "purl": "pkg:npm/%40esbuild/android-x64@0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "false"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/darwin-arm64",
+      "version": "0.28.2",
+      "bom-ref": "npm:@esbuild/darwin-arm64@0.28.2",
+      "purl": "pkg:npm/%40esbuild/darwin-arm64@0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "false"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/darwin-x64",
+      "version": "0.28.2",
+      "bom-ref": "npm:@esbuild/darwin-x64@0.28.2",
+      "purl": "pkg:npm/%40esbuild/darwin-x64@0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "false"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/freebsd-arm64",
+      "version": "0.28.2",
+      "bom-ref": "npm:@esbuild/freebsd-arm64@0.28.2",
+      "purl": "pkg:npm/%40esbuild/freebsd-arm64@0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "false"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/freebsd-x64",
+      "version": "0.28.2",
+      "bom-ref": "npm:@esbuild/freebsd-x64@0.28.2",
+      "purl": "pkg:npm/%40esbuild/freebsd-x64@0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "false"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/linux-arm",
+      "version": "0.28.2",
+      "bom-ref": "npm:@esbuild/linux-arm@0.28.2",
+      "purl": "pkg:npm/%40esbuild/linux-arm@0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "false"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/linux-arm64",
+      "version": "0.28.2",
+      "bom-ref": "npm:@esbuild/linux-arm64@0.28.2",
+      "purl": "pkg:npm/%40esbuild/linux-arm64@0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "false"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/linux-ia32",
+      "version": "0.28.2",
+      "bom-ref": "npm:@esbuild/linux-ia32@0.28.2",
+      "purl": "pkg:npm/%40esbuild/linux-ia32@0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "false"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/linux-loong64",
+      "version": "0.28.2",
+      "bom-ref": "npm:@esbuild/linux-loong64@0.28.2",
+      "purl": "pkg:npm/%40esbuild/linux-loong64@0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "false"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/linux-mips64el",
+      "version": "0.28.2",
+      "bom-ref": "npm:@esbuild/linux-mips64el@0.28.2",
+      "purl": "pkg:npm/%40esbuild/linux-mips64el@0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "false"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/linux-ppc64",
+      "version": "0.28.2",
+      "bom-ref": "npm:@esbuild/linux-ppc64@0.28.2",
+      "purl": "pkg:npm/%40esbuild/linux-ppc64@0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "false"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/linux-riscv64",
+      "version": "0.28.2",
+      "bom-ref": "npm:@esbuild/linux-riscv64@0.28.2",
+      "purl": "pkg:npm/%40esbuild/linux-riscv64@0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "false"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/linux-s390x",
+      "version": "0.28.2",
+      "bom-ref": "npm:@esbuild/linux-s390x@0.28.2",
+      "purl": "pkg:npm/%40esbuild/linux-s390x@0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "false"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/linux-x64",
+      "version": "0.28.2",
+      "bom-ref": "npm:@esbuild/linux-x64@0.28.2",
+      "purl": "pkg:npm/%40esbuild/linux-x64@0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "true"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/netbsd-arm64",
+      "version": "0.28.2",
+      "bom-ref": "npm:@esbuild/netbsd-arm64@0.28.2",
+      "purl": "pkg:npm/%40esbuild/netbsd-arm64@0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "false"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/netbsd-x64",
+      "version": "0.28.2",
+      "bom-ref": "npm:@esbuild/netbsd-x64@0.28.2",
+      "purl": "pkg:npm/%40esbuild/netbsd-x64@0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "false"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/openbsd-arm64",
+      "version": "0.28.2",
+      "bom-ref": "npm:@esbuild/openbsd-arm64@0.28.2",
+      "purl": "pkg:npm/%40esbuild/openbsd-arm64@0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "false"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/openbsd-x64",
+      "version": "0.28.2",
+      "bom-ref": "npm:@esbuild/openbsd-x64@0.28.2",
+      "purl": "pkg:npm/%40esbuild/openbsd-x64@0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "false"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/openharmony-arm64",
+      "version": "0.28.2",
+      "bom-ref": "npm:@esbuild/openharmony-arm64@0.28.2",
+      "purl": "pkg:npm/%40esbuild/openharmony-arm64@0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "false"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/sunos-x64",
+      "version": "0.28.2",
+      "bom-ref": "npm:@esbuild/sunos-x64@0.28.2",
+      "purl": "pkg:npm/%40esbuild/sunos-x64@0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "false"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/win32-arm64",
+      "version": "0.28.2",
+      "bom-ref": "npm:@esbuild/win32-arm64@0.28.2",
+      "purl": "pkg:npm/%40esbuild/win32-arm64@0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "false"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/win32-ia32",
+      "version": "0.28.2",
+      "bom-ref": "npm:@esbuild/win32-ia32@0.28.2",
+      "purl": "pkg:npm/%40esbuild/win32-ia32@0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "false"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/win32-x64",
+      "version": "0.28.2",
+      "bom-ref": "npm:@esbuild/win32-x64@0.28.2",
+      "purl": "pkg:npm/%40esbuild/win32-x64@0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "false"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@img/colour",
+      "version": "1.1.0",
+      "bom-ref": "npm:@img/colour@1.1.0",
+      "purl": "pkg:npm/%40img/colour@1.1.0",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "true"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "false"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[{\"file\": \"node_modules/@img/colour/LICENSE.md\", \"sha256\": \"e2eaa4603c14cb26f301e88648c12a853fa3f0f5da6d4b0972958c666e7f2ab8\"}]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "EXACT_INSTALLED_LICENSE_TEXT"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "RETAIN_LICENSE_NOTICES_AND_RESPECT_COMPONENT_OBLIGATIONS"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@img/sharp-darwin-arm64",
+      "version": "0.35.5",
+      "bom-ref": "npm:@img/sharp-darwin-arm64@0.35.5",
+      "purl": "pkg:npm/%40img/sharp-darwin-arm64@0.35.5",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "false"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@img/sharp-darwin-x64",
+      "version": "0.35.5",
+      "bom-ref": "npm:@img/sharp-darwin-x64@0.35.5",
+      "purl": "pkg:npm/%40img/sharp-darwin-x64@0.35.5",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "false"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@img/sharp-freebsd-wasm32",
+      "version": "0.35.5",
+      "bom-ref": "npm:@img/sharp-freebsd-wasm32@0.35.5",
+      "purl": "pkg:npm/%40img/sharp-freebsd-wasm32@0.35.5",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "false"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@img/sharp-libvips-darwin-arm64",
+      "version": "1.3.4",
+      "bom-ref": "npm:@img/sharp-libvips-darwin-arm64@1.3.4",
+      "purl": "pkg:npm/%40img/sharp-libvips-darwin-arm64@1.3.4",
+      "licenses": [
+        {
+          "expression": "LGPL-3.0-or-later"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "false"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@img/sharp-libvips-darwin-x64",
+      "version": "1.3.4",
+      "bom-ref": "npm:@img/sharp-libvips-darwin-x64@1.3.4",
+      "purl": "pkg:npm/%40img/sharp-libvips-darwin-x64@1.3.4",
+      "licenses": [
+        {
+          "expression": "LGPL-3.0-or-later"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "false"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@img/sharp-libvips-linux-arm",
+      "version": "1.3.4",
+      "bom-ref": "npm:@img/sharp-libvips-linux-arm@1.3.4",
+      "purl": "pkg:npm/%40img/sharp-libvips-linux-arm@1.3.4",
+      "licenses": [
+        {
+          "expression": "LGPL-3.0-or-later"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "false"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@img/sharp-libvips-linux-arm64",
+      "version": "1.3.4",
+      "bom-ref": "npm:@img/sharp-libvips-linux-arm64@1.3.4",
+      "purl": "pkg:npm/%40img/sharp-libvips-linux-arm64@1.3.4",
+      "licenses": [
+        {
+          "expression": "LGPL-3.0-or-later"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "false"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@img/sharp-libvips-linux-ppc64",
+      "version": "1.3.4",
+      "bom-ref": "npm:@img/sharp-libvips-linux-ppc64@1.3.4",
+      "purl": "pkg:npm/%40img/sharp-libvips-linux-ppc64@1.3.4",
+      "licenses": [
+        {
+          "expression": "LGPL-3.0-or-later"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "false"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@img/sharp-libvips-linux-riscv64",
+      "version": "1.3.4",
+      "bom-ref": "npm:@img/sharp-libvips-linux-riscv64@1.3.4",
+      "purl": "pkg:npm/%40img/sharp-libvips-linux-riscv64@1.3.4",
+      "licenses": [
+        {
+          "expression": "LGPL-3.0-or-later"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "false"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@img/sharp-libvips-linux-s390x",
+      "version": "1.3.4",
+      "bom-ref": "npm:@img/sharp-libvips-linux-s390x@1.3.4",
+      "purl": "pkg:npm/%40img/sharp-libvips-linux-s390x@1.3.4",
+      "licenses": [
+        {
+          "expression": "LGPL-3.0-or-later"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "false"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@img/sharp-libvips-linux-x64",
+      "version": "1.3.4",
+      "bom-ref": "npm:@img/sharp-libvips-linux-x64@1.3.4",
+      "purl": "pkg:npm/%40img/sharp-libvips-linux-x64@1.3.4",
+      "licenses": [
+        {
+          "expression": "LGPL-3.0-or-later"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "true"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@img/sharp-libvips-linuxmusl-arm64",
+      "version": "1.3.4",
+      "bom-ref": "npm:@img/sharp-libvips-linuxmusl-arm64@1.3.4",
+      "purl": "pkg:npm/%40img/sharp-libvips-linuxmusl-arm64@1.3.4",
+      "licenses": [
+        {
+          "expression": "LGPL-3.0-or-later"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "false"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@img/sharp-libvips-linuxmusl-x64",
+      "version": "1.3.4",
+      "bom-ref": "npm:@img/sharp-libvips-linuxmusl-x64@1.3.4",
+      "purl": "pkg:npm/%40img/sharp-libvips-linuxmusl-x64@1.3.4",
+      "licenses": [
+        {
+          "expression": "LGPL-3.0-or-later"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "true"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@img/sharp-linux-arm",
+      "version": "0.35.5",
+      "bom-ref": "npm:@img/sharp-linux-arm@0.35.5",
+      "purl": "pkg:npm/%40img/sharp-linux-arm@0.35.5",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "false"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@img/sharp-linux-arm64",
+      "version": "0.35.5",
+      "bom-ref": "npm:@img/sharp-linux-arm64@0.35.5",
+      "purl": "pkg:npm/%40img/sharp-linux-arm64@0.35.5",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "false"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@img/sharp-linux-ppc64",
+      "version": "0.35.5",
+      "bom-ref": "npm:@img/sharp-linux-ppc64@0.35.5",
+      "purl": "pkg:npm/%40img/sharp-linux-ppc64@0.35.5",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "false"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@img/sharp-linux-riscv64",
+      "version": "0.35.5",
+      "bom-ref": "npm:@img/sharp-linux-riscv64@0.35.5",
+      "purl": "pkg:npm/%40img/sharp-linux-riscv64@0.35.5",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "false"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@img/sharp-linux-s390x",
+      "version": "0.35.5",
+      "bom-ref": "npm:@img/sharp-linux-s390x@0.35.5",
+      "purl": "pkg:npm/%40img/sharp-linux-s390x@0.35.5",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "false"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@img/sharp-linux-x64",
+      "version": "0.35.5",
+      "bom-ref": "npm:@img/sharp-linux-x64@0.35.5",
+      "purl": "pkg:npm/%40img/sharp-linux-x64@0.35.5",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "true"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[{\"file\": \"node_modules/@img/sharp-linux-x64/LICENSE\", \"sha256\": \"73ba74dfaa520b49a401b5d21459a8523a146f3b7518a833eea5efa85130bf68\"}]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "EXACT_INSTALLED_LICENSE_TEXT"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "RETAIN_LICENSE_NOTICES_AND_RESPECT_COMPONENT_OBLIGATIONS"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@img/sharp-linuxmusl-arm64",
+      "version": "0.35.5",
+      "bom-ref": "npm:@img/sharp-linuxmusl-arm64@0.35.5",
+      "purl": "pkg:npm/%40img/sharp-linuxmusl-arm64@0.35.5",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "false"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@img/sharp-linuxmusl-x64",
+      "version": "0.35.5",
+      "bom-ref": "npm:@img/sharp-linuxmusl-x64@0.35.5",
+      "purl": "pkg:npm/%40img/sharp-linuxmusl-x64@0.35.5",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "true"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[{\"file\": \"node_modules/@img/sharp-linuxmusl-x64/LICENSE\", \"sha256\": \"73ba74dfaa520b49a401b5d21459a8523a146f3b7518a833eea5efa85130bf68\"}]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "EXACT_INSTALLED_LICENSE_TEXT"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "RETAIN_LICENSE_NOTICES_AND_RESPECT_COMPONENT_OBLIGATIONS"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@img/sharp-wasm32",
+      "version": "0.35.5",
+      "bom-ref": "npm:@img/sharp-wasm32@0.35.5",
+      "purl": "pkg:npm/%40img/sharp-wasm32@0.35.5",
+      "licenses": [
+        {
+          "expression": "Apache-2.0 AND LGPL-3.0-or-later AND MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "true"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[{\"file\": \"node_modules/@img/sharp-wasm32/LICENSE\", \"sha256\": \"73ba74dfaa520b49a401b5d21459a8523a146f3b7518a833eea5efa85130bf68\"}]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "EXACT_INSTALLED_LICENSE_TEXT"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "RETAIN_LICENSE_NOTICES_AND_RESPECT_COMPONENT_OBLIGATIONS"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@img/sharp-webcontainers-wasm32",
+      "version": "0.35.5",
+      "bom-ref": "npm:@img/sharp-webcontainers-wasm32@0.35.5",
+      "purl": "pkg:npm/%40img/sharp-webcontainers-wasm32@0.35.5",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "false"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@img/sharp-win32-arm64",
+      "version": "0.35.5",
+      "bom-ref": "npm:@img/sharp-win32-arm64@0.35.5",
+      "purl": "pkg:npm/%40img/sharp-win32-arm64@0.35.5",
+      "licenses": [
+        {
+          "expression": "Apache-2.0 AND LGPL-3.0-or-later"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "false"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@img/sharp-win32-ia32",
+      "version": "0.35.5",
+      "bom-ref": "npm:@img/sharp-win32-ia32@0.35.5",
+      "purl": "pkg:npm/%40img/sharp-win32-ia32@0.35.5",
+      "licenses": [
+        {
+          "expression": "Apache-2.0 AND LGPL-3.0-or-later"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "false"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@img/sharp-win32-x64",
+      "version": "0.35.5",
+      "bom-ref": "npm:@img/sharp-win32-x64@0.35.5",
+      "purl": "pkg:npm/%40img/sharp-win32-x64@0.35.5",
+      "licenses": [
+        {
+          "expression": "Apache-2.0 AND LGPL-3.0-or-later"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "false"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@jridgewell/resolve-uri",
+      "version": "3.1.2",
+      "bom-ref": "npm:@jridgewell/resolve-uri@3.1.2",
+      "purl": "pkg:npm/%40jridgewell/resolve-uri@3.1.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "true"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "false"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[{\"file\": \"node_modules/@jridgewell/resolve-uri/LICENSE\", \"sha256\": \"b8778b155bfde5a28b023a558753c0fa058a52bb9de35c343c250be1bbcdedab\"}]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "EXACT_INSTALLED_LICENSE_TEXT"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "RETAIN_LICENSE_NOTICES_AND_RESPECT_COMPONENT_OBLIGATIONS"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@jridgewell/sourcemap-codec",
+      "version": "1.6.0",
+      "bom-ref": "npm:@jridgewell/sourcemap-codec@1.6.0",
+      "purl": "pkg:npm/%40jridgewell/sourcemap-codec@1.6.0",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "true"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "false"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[{\"file\": \"node_modules/@jridgewell/sourcemap-codec/LICENSE\", \"sha256\": \"769d154fbde32a915af110b1123650bc79f4cbe675acc66e005265bf069c6c6c\"}]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "EXACT_INSTALLED_LICENSE_TEXT"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "RETAIN_LICENSE_NOTICES_AND_RESPECT_COMPONENT_OBLIGATIONS"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@jridgewell/trace-mapping",
+      "version": "0.3.9",
+      "bom-ref": "npm:@jridgewell/trace-mapping@0.3.9",
+      "purl": "pkg:npm/%40jridgewell/trace-mapping@0.3.9",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "true"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "false"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[{\"file\": \"node_modules/@jridgewell/trace-mapping/LICENSE\", \"sha256\": \"0daa3c2445c4bfaaa7e8c69ec2742a8841bc920b75818ef2c7a510242de2b04a\"}]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "EXACT_INSTALLED_LICENSE_TEXT"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "RETAIN_LICENSE_NOTICES_AND_RESPECT_COMPONENT_OBLIGATIONS"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@noble/hashes",
+      "version": "2.4.0",
+      "bom-ref": "npm:@noble/hashes@2.4.0",
+      "purl": "pkg:npm/%40noble/hashes@2.4.0",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "true"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "true"
+        },
+        {
+          "name": "mls:optional",
+          "value": "false"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[{\"file\": \"node_modules/@noble/hashes/LICENSE\", \"sha256\": \"4f221aee6e072336700c408c68ab3b96a3fc09f6aebe6f48f1bd99e5ef13faec\"}]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "USE_EMBEDDED_WITH_MIT_NOTICE"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "EXACT_INSTALLED_LICENSE_TEXT"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "RETAIN_LICENSE_NOTICES_AND_RESPECT_COMPONENT_OBLIGATIONS"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@poppinss/colors",
+      "version": "4.1.6",
+      "bom-ref": "npm:@poppinss/colors@4.1.6",
+      "purl": "pkg:npm/%40poppinss/colors@4.1.6",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "true"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "false"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[{\"file\": \"node_modules/@poppinss/colors/LICENSE.md\", \"sha256\": \"c21feb678df81fa8336bfb4d7e8e3f928273992cc6743af6178f8979cb8c8d9d\"}]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "EXACT_INSTALLED_LICENSE_TEXT"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "RETAIN_LICENSE_NOTICES_AND_RESPECT_COMPONENT_OBLIGATIONS"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@poppinss/dumper",
+      "version": "0.6.5",
+      "bom-ref": "npm:@poppinss/dumper@0.6.5",
+      "purl": "pkg:npm/%40poppinss/dumper@0.6.5",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "true"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "false"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[{\"file\": \"node_modules/@poppinss/dumper/LICENSE.md\", \"sha256\": \"bba2399e2c617b0577fc3f4e22299367625824959945318b17b39ac3c910ce5f\"}]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "EXACT_INSTALLED_LICENSE_TEXT"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "RETAIN_LICENSE_NOTICES_AND_RESPECT_COMPONENT_OBLIGATIONS"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@poppinss/exception",
+      "version": "1.2.3",
+      "bom-ref": "npm:@poppinss/exception@1.2.3",
+      "purl": "pkg:npm/%40poppinss/exception@1.2.3",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "true"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "false"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[{\"file\": \"node_modules/@poppinss/exception/LICENSE.md\", \"sha256\": \"bba2399e2c617b0577fc3f4e22299367625824959945318b17b39ac3c910ce5f\"}]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "EXACT_INSTALLED_LICENSE_TEXT"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "RETAIN_LICENSE_NOTICES_AND_RESPECT_COMPONENT_OBLIGATIONS"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@sindresorhus/is",
+      "version": "7.2.0",
+      "bom-ref": "npm:@sindresorhus/is@7.2.0",
+      "purl": "pkg:npm/%40sindresorhus/is@7.2.0",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "true"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "false"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[{\"file\": \"node_modules/@sindresorhus/is/license\", \"sha256\": \"5c932d88256b4ab958f64a856fa48e8bd1f55bc1d96b8149c65689e0c61789d3\"}]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "EXACT_INSTALLED_LICENSE_TEXT"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "RETAIN_LICENSE_NOTICES_AND_RESPECT_COMPONENT_OBLIGATIONS"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "@speed-highlight/core",
+      "version": "1.2.24",
+      "bom-ref": "npm:@speed-highlight/core@1.2.24",
+      "purl": "pkg:npm/%40speed-highlight/core@1.2.24",
+      "licenses": [
+        {
+          "expression": "CC0-1.0"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "true"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "false"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[{\"file\": \"node_modules/@speed-highlight/core/LICENSE\", \"sha256\": \"a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499\"}]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "EXACT_INSTALLED_LICENSE_TEXT"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "RETAIN_LICENSE_NOTICES_AND_RESPECT_COMPONENT_OBLIGATIONS"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "blake3-wasm",
+      "version": "2.1.5",
+      "bom-ref": "npm:blake3-wasm@2.1.5",
+      "purl": "pkg:npm/blake3-wasm@2.1.5",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "true"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "false"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[{\"file\": \"node_modules/blake3-wasm/LICENSE\", \"sha256\": \"6ae51be712bd278ca37cd2204a6e836d71aacea5b7b8210d5a95c0e02a15dc35\"}]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "EXACT_INSTALLED_LICENSE_TEXT"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "RETAIN_LICENSE_NOTICES_AND_RESPECT_COMPONENT_OBLIGATIONS"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "cookie",
+      "version": "1.1.1",
+      "bom-ref": "npm:cookie@1.1.1",
+      "purl": "pkg:npm/cookie@1.1.1",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "true"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "false"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[{\"file\": \"node_modules/cookie/LICENSE\", \"sha256\": \"c02110eedc16c7114f1a9bdc026c65626ce1d9c7e27fd51a8e0feee8a48a6858\"}]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "EXACT_INSTALLED_LICENSE_TEXT"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "RETAIN_LICENSE_NOTICES_AND_RESPECT_COMPONENT_OBLIGATIONS"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "detect-libc",
+      "version": "2.1.2",
+      "bom-ref": "npm:detect-libc@2.1.2",
+      "purl": "pkg:npm/detect-libc@2.1.2",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "true"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "false"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[{\"file\": \"node_modules/detect-libc/LICENSE\", \"sha256\": \"b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1\"}]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "EXACT_INSTALLED_LICENSE_TEXT"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "RETAIN_LICENSE_NOTICES_AND_RESPECT_COMPONENT_OBLIGATIONS"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "error-stack-parser-es",
+      "version": "1.0.5",
+      "bom-ref": "npm:error-stack-parser-es@1.0.5",
+      "purl": "pkg:npm/error-stack-parser-es@1.0.5",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "true"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "false"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[{\"file\": \"node_modules/error-stack-parser-es/LICENSE\", \"sha256\": \"fe99ed9e409014494a8147a5276cd079eae73f6998179af39ba596e7de75e8a9\"}]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "EXACT_INSTALLED_LICENSE_TEXT"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "RETAIN_LICENSE_NOTICES_AND_RESPECT_COMPONENT_OBLIGATIONS"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "esbuild",
+      "version": "0.28.2",
+      "bom-ref": "npm:esbuild@0.28.2",
+      "purl": "pkg:npm/esbuild@0.28.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "true"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "false"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[{\"file\": \"node_modules/esbuild/LICENSE.md\", \"sha256\": \"b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681\"}]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "EXACT_INSTALLED_LICENSE_TEXT"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "RETAIN_LICENSE_NOTICES_AND_RESPECT_COMPONENT_OBLIGATIONS"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "fsevents",
+      "version": "2.3.3",
+      "bom-ref": "npm:fsevents@2.3.3",
+      "purl": "pkg:npm/fsevents@2.3.3",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "false"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "jsonc-parser",
+      "version": "3.3.1",
+      "bom-ref": "npm:jsonc-parser@3.3.1",
+      "purl": "pkg:npm/jsonc-parser@3.3.1",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "true"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "false"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[{\"file\": \"node_modules/jsonc-parser/LICENSE.md\", \"sha256\": \"c3a24c02d678e5f0711623dcf3ab3f243b273c2633f638a1fa8e35fb7c7f8e4d\"}]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "EXACT_INSTALLED_LICENSE_TEXT"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "RETAIN_LICENSE_NOTICES_AND_RESPECT_COMPONENT_OBLIGATIONS"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "kleur",
+      "version": "4.1.5",
+      "bom-ref": "npm:kleur@4.1.5",
+      "purl": "pkg:npm/kleur@4.1.5",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "true"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "false"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[{\"file\": \"node_modules/kleur/license\", \"sha256\": \"306fa513e39b23a6e8747520de761809d206b99800ef41907b530226574c59ae\"}]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "EXACT_INSTALLED_LICENSE_TEXT"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "RETAIN_LICENSE_NOTICES_AND_RESPECT_COMPONENT_OBLIGATIONS"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "miniflare",
+      "version": "5.20261012.1-beta",
+      "bom-ref": "npm:miniflare@5.20261012.1-beta",
+      "purl": "pkg:npm/miniflare@5.20261012.1-beta",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "true"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "false"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "otpauth",
+      "version": "9.6.0",
+      "bom-ref": "npm:otpauth@9.6.0",
+      "purl": "pkg:npm/otpauth@9.6.0",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "true"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "true"
+        },
+        {
+          "name": "mls:optional",
+          "value": "false"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[{\"file\": \"node_modules/otpauth/LICENSE.md\", \"sha256\": \"8f515aab304a561416f03b32a3448bb0e6657a662b024f17fc31a5faf5dfdb7a\"}]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "USE_EMBEDDED_WITH_MIT_NOTICE"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "EXACT_INSTALLED_LICENSE_TEXT"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "RETAIN_LICENSE_NOTICES_AND_RESPECT_COMPONENT_OBLIGATIONS"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "path-to-regexp",
+      "version": "6.3.0",
+      "bom-ref": "npm:path-to-regexp@6.3.0",
+      "purl": "pkg:npm/path-to-regexp@6.3.0",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "true"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "false"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[{\"file\": \"node_modules/path-to-regexp/LICENSE\", \"sha256\": \"4eeb3271453a891df609e5a9f4ee79a68307f730c13417a3bfeffa604ac8cf25\"}]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "EXACT_INSTALLED_LICENSE_TEXT"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "RETAIN_LICENSE_NOTICES_AND_RESPECT_COMPONENT_OBLIGATIONS"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "pathe",
+      "version": "2.0.3",
+      "bom-ref": "npm:pathe@2.0.3",
+      "purl": "pkg:npm/pathe@2.0.3",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "true"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "false"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[{\"file\": \"node_modules/pathe/LICENSE\", \"sha256\": \"52e92576851154bad7737e90cc72818936f43665cb0e3f7428ed8edc8cc5709b\"}]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "EXACT_INSTALLED_LICENSE_TEXT"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "RETAIN_LICENSE_NOTICES_AND_RESPECT_COMPONENT_OBLIGATIONS"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "semver",
+      "version": "7.8.5",
+      "bom-ref": "npm:semver@7.8.5",
+      "purl": "pkg:npm/semver@7.8.5",
+      "licenses": [
+        {
+          "expression": "ISC"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "true"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "false"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[{\"file\": \"node_modules/semver/LICENSE\", \"sha256\": \"4ec3d4c66cd87f5c8d8ad911b10f99bf27cb00cdfcff82621956e379186b016b\"}]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "EXACT_INSTALLED_LICENSE_TEXT"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "RETAIN_LICENSE_NOTICES_AND_RESPECT_COMPONENT_OBLIGATIONS"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "sharp",
+      "version": "0.35.5",
+      "bom-ref": "npm:sharp@0.35.5",
+      "purl": "pkg:npm/sharp@0.35.5",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "true"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "false"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[{\"file\": \"node_modules/sharp/LICENSE\", \"sha256\": \"73ba74dfaa520b49a401b5d21459a8523a146f3b7518a833eea5efa85130bf68\"}]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "EXACT_INSTALLED_LICENSE_TEXT"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "RETAIN_LICENSE_NOTICES_AND_RESPECT_COMPONENT_OBLIGATIONS"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "supports-color",
+      "version": "10.2.2",
+      "bom-ref": "npm:supports-color@10.2.2",
+      "purl": "pkg:npm/supports-color@10.2.2",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "true"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "false"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[{\"file\": \"node_modules/supports-color/license\", \"sha256\": \"5c932d88256b4ab958f64a856fa48e8bd1f55bc1d96b8149c65689e0c61789d3\"}]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "EXACT_INSTALLED_LICENSE_TEXT"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "RETAIN_LICENSE_NOTICES_AND_RESPECT_COMPONENT_OBLIGATIONS"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "tslib",
+      "version": "2.8.1",
+      "bom-ref": "npm:tslib@2.8.1",
+      "purl": "pkg:npm/tslib@2.8.1",
+      "licenses": [
+        {
+          "expression": "0BSD"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "true"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "true"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[{\"file\": \"node_modules/tslib/CopyrightNotice.txt\", \"sha256\": \"da16ddb65f8ca390998fb99223d0112498b56b45784d00afd77ff8ce1ac4de8b\"}, {\"file\": \"node_modules/tslib/LICENSE.txt\", \"sha256\": \"210b19e543130388c68654b7497e967119ce17145f66ab7d85688fbd70f08751\"}]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "EXACT_INSTALLED_LICENSE_TEXT"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "RETAIN_LICENSE_NOTICES_AND_RESPECT_COMPONENT_OBLIGATIONS"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "undici",
+      "version": "7.29.1",
+      "bom-ref": "npm:undici@7.29.1",
+      "purl": "pkg:npm/undici@7.29.1",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "true"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "false"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[{\"file\": \"node_modules/undici/LICENSE\", \"sha256\": \"a6db8096b2707bc0102d256917d4d33f298ba36d8c3f25de067a2b5bb379db27\"}]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "EXACT_INSTALLED_LICENSE_TEXT"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "RETAIN_LICENSE_NOTICES_AND_RESPECT_COMPONENT_OBLIGATIONS"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "unenv",
+      "version": "2.0.0-rc.24",
+      "bom-ref": "npm:unenv@2.0.0-rc.24",
+      "purl": "pkg:npm/unenv@2.0.0-rc.24",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "true"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "false"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[{\"file\": \"node_modules/unenv/LICENSE\", \"sha256\": \"46231df5a7733c3f52f11b71f3df61813007745b62b09031acfb45fb42d75082\"}]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "EXACT_INSTALLED_LICENSE_TEXT"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "RETAIN_LICENSE_NOTICES_AND_RESPECT_COMPONENT_OBLIGATIONS"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "workerd",
+      "version": "1.20261012.1",
+      "bom-ref": "npm:workerd@1.20261012.1",
+      "purl": "pkg:npm/workerd@1.20261012.1",
+      "licenses": [
+        {
+          "expression": "Apache-2.0"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "true"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "false"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "wrangler",
+      "version": "4.151.1",
+      "bom-ref": "npm:wrangler@4.151.1",
+      "purl": "pkg:npm/wrangler@4.151.1",
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "true"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "false"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "LOCKFILE_DECLARATION_ONLY_NOT_RIGHTS_CERTIFICATION"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "PENDING_VERIFY_LICENSE_BEFORE_DISTRIBUTING_TOOLCHAIN"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "ws",
+      "version": "8.21.0",
+      "bom-ref": "npm:ws@8.21.0",
+      "purl": "pkg:npm/ws@8.21.0",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "true"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "false"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[{\"file\": \"node_modules/ws/LICENSE\", \"sha256\": \"2b29dcfe0d6471f7e8c92c5fb38c9f93edee10330937055440192f1832b1ecef\"}]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "EXACT_INSTALLED_LICENSE_TEXT"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "RETAIN_LICENSE_NOTICES_AND_RESPECT_COMPONENT_OBLIGATIONS"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "youch",
+      "version": "4.1.0-beta.10",
+      "bom-ref": "npm:youch@4.1.0-beta.10",
+      "purl": "pkg:npm/youch@4.1.0-beta.10",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "true"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "false"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[{\"file\": \"node_modules/youch/LICENSE.md\", \"sha256\": \"bba2399e2c617b0577fc3f4e22299367625824959945318b17b39ac3c910ce5f\"}]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "EXACT_INSTALLED_LICENSE_TEXT"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "RETAIN_LICENSE_NOTICES_AND_RESPECT_COMPONENT_OBLIGATIONS"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "youch-core",
+      "version": "0.3.3",
+      "bom-ref": "npm:youch-core@0.3.3",
+      "purl": "pkg:npm/youch-core@0.3.3",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "mls:installed",
+          "value": "true"
+        },
+        {
+          "name": "mls:embedded_runtime",
+          "value": "false"
+        },
+        {
+          "name": "mls:optional",
+          "value": "false"
+        },
+        {
+          "name": "mls:license_texts_observed",
+          "value": "[{\"file\": \"node_modules/youch-core/LICENSE.md\", \"sha256\": \"26e09f87efc06dfbe7a0ea183dd0fcc1bd2811c889d183d23df92af15625dfa1\"}]"
+        },
+        {
+          "name": "mls:decision",
+          "value": "BUILD_DEV_ONLY_NOT_DISTRIBUTED_IN_WORKERS"
+        },
+        {
+          "name": "mls:license_evidence",
+          "value": "EXACT_INSTALLED_LICENSE_TEXT"
+        },
+        {
+          "name": "mls:distribution_review",
+          "value": "RETAIN_LICENSE_NOTICES_AND_RESPECT_COMPONENT_OBLIGATIONS"
+        }
+      ]
+    }
+  ]
+}
