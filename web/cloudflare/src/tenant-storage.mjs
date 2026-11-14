@@ -11,6 +11,7 @@ const encoder=new TextEncoder(),wrappers=new WeakMap(),ownedStatements=new WeakM
 // fences. It contains no database handle, principal or mutable authorization.
 export function tenantStorageIdentity(database){return storageIdentities.get(database)??database;}
 export function isTenantDatabase(database){return storageIdentities.has(database);}
+export function tenantDatabaseHasContext(database,context,{domain='app'}={}){const details=storageDetails.get(database);return !!details&&details.namespace===context?.namespace&&details.domain===domain;}
 export function tenantDatabaseMatchesContext(database,context,rawDatabase){const details=storageDetails.get(database);return !!details&&details.namespace===context?.namespace&&details.rawDb===rawDatabase&&details.domain==='app';}
 // Private technical provisioner bridge. Only validated, namespaced CREATE
 // statements can join the account-record CAS and authorization transaction.

@@ -10,10 +10,10 @@ export const MLS_BROWSER_ASSET_MANIFEST=Object.freeze({
     },
     {
       "id": "month",
-      "path": "/assets/mls/347a294216d16151105c5b5074174af01c01a9bc398e713aaf2c9184a48b1db2.js",
-      "sha256": "347a294216d16151105c5b5074174af01c01a9bc398e713aaf2c9184a48b1db2",
-      "integrity": "sha256-NHopQhbRYVEQXFtQdBdK8BwBqbw5jnE6ryyRhKSLHbI=",
-      "bytes": 704759
+      "path": "/assets/mls/5203d255416bacb97cd44ddef29a2fc76b1432f0a1ea731fabacc4bb071fcd07.js",
+      "sha256": "5203d255416bacb97cd44ddef29a2fc76b1432f0a1ea731fabacc4bb071fcd07",
+      "integrity": "sha256-UgPSVUFrrLl81E3e8povx2sUMvCh6nMfq6zEuwcfzQc=",
+      "bytes": 704817
     },
     {
       "id": "orders",
@@ -38,19 +38,26 @@ export const MLS_BROWSER_ASSET_MANIFEST=Object.freeze({
     },
     {
       "id": "workspace",
-      "path": "/assets/mls/d5961f95cc6649d963f42e28a50e2e12563ce0d0d66833bb28ce5e16d172922c.js",
-      "sha256": "d5961f95cc6649d963f42e28a50e2e12563ce0d0d66833bb28ce5e16d172922c",
-      "integrity": "sha256-1ZYflcxmSdlj9C4opQ4uElY84NDWaDO7KM5eFtFykiw=",
-      "bytes": 341729
+      "path": "/assets/mls/e3b12127a14b70185a25c83dae547facc946a4fe87afe0369a8f47665f6398ca.js",
+      "sha256": "e3b12127a14b70185a25c83dae547facc946a4fe87afe0369a8f47665f6398ca",
+      "integrity": "sha256-47EhJ6FLcBhaJcg9rlR/rMlGpP6Hr+A2mo9HZl9jmMo=",
+      "bytes": 462298
     }
   ],
   "retained": [
     {
+      "id": "month",
+      "path": "/assets/mls/347a294216d16151105c5b5074174af01c01a9bc398e713aaf2c9184a48b1db2.js",
+      "sha256": "347a294216d16151105c5b5074174af01c01a9bc398e713aaf2c9184a48b1db2",
+      "integrity": "sha256-NHopQhbRYVEQXFtQdBdK8BwBqbw5jnE6ryyRhKSLHbI=",
+      "bytes": 704759
+    },
+    {
       "id": "workspace",
-      "path": "/assets/mls/a96fe8cfa2d4fedeb349a5a7109e6b553fbb1bb9b4f0d2d2be326ba6740ed7c1.js",
-      "sha256": "a96fe8cfa2d4fedeb349a5a7109e6b553fbb1bb9b4f0d2d2be326ba6740ed7c1",
-      "integrity": "sha256-qW/oz6LU/t6zSaWnEJ5rVT+7G7m08NLSvjJrpnQO18E=",
-      "bytes": 341081
+      "path": "/assets/mls/d5961f95cc6649d963f42e28a50e2e12563ce0d0d66833bb28ce5e16d172922c.js",
+      "sha256": "d5961f95cc6649d963f42e28a50e2e12563ce0d0d66833bb28ce5e16d172922c",
+      "integrity": "sha256-1ZYflcxmSdlj9C4opQ4uElY84NDWaDO7KM5eFtFykiw=",
+      "bytes": 341729
     }
   ]
 });

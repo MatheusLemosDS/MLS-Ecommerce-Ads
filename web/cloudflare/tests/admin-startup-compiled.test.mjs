@@ -1,3 +1,4 @@
+import {hydrateFinancialFixtureHtml} from './financial-fixture-hydration.mjs';
 import {getOrderedBrowserScripts} from './browser-assets-http-fixture.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -18,8 +19,9 @@ async function ownerHtml(minify){
 }
 
 function browser(html,session,{sessionFails=false,sessionQuota=false,auditFails=false,unauthorized=false,settingsMode='success',invalidBootstrap=false,sessionPending=false}={}){
- const ids=[...html.matchAll(/\bid="([^"]*)"/g)].map(match=>match[1]),nodes=new Map(),timers=new Map(),calls=[];let nextTimer=0,failed=sessionFails,quota=sessionQuota,logoutMode='network';const waitingSettings=[];
- const element=(tag='div')=>({tag,value:'',textContent:'',children:[],dataset:{},hidden:false,disabled:false,open:false,style:{},classList:{toggle(){},add(){},remove(){}},append(...children){this.children.push(...children);},replaceChildren(...children){this.children=[...children];this.textContent='';},setAttribute(){},removeAttribute(){},querySelectorAll(){return [];},querySelector(){return null;},contains(){return false;},scrollIntoView(){},get childNodes(){return this.children;}});
+ const controlsHtml=hydrateFinancialFixtureHtml(html);
+ const ids=[...controlsHtml.matchAll(/\bid="([^"]*)"/g)].map(match=>match[1]),nodes=new Map(),timers=new Map(),calls=[];let nextTimer=0,failed=sessionFails,quota=sessionQuota,logoutMode='network';const waitingSettings=[];
+ const element=(tag='div')=>({tag,value:'',textContent:'',children:[],dataset:{},hidden:false,disabled:false,open:false,style:{},classList:{toggle(){},add(){},remove(){}},append(...children){this.children.push(...children);},replaceChildren(...children){this.children=[...children];this.textContent='';},setAttribute(){},removeAttribute(){},querySelectorAll(){return [];},querySelector(){return null;},contains(){return false;},scrollIntoView(){},addEventListener(){},get childNodes(){return this.children;}});
  for(const id of ids)nodes.set(id,element());
  const formControls={settings:['regular','mixed','plus','share'],controls:['operation','hour','billing','budget','reserve','runLimit']};
  for(const [form,controls] of Object.entries(formControls))nodes.get(form).querySelectorAll=selector=>selector==='input,select,button'?controls.map(id=>nodes.get(id)).filter(Boolean):[];

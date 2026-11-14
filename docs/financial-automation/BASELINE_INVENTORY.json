@@ -1,0 +1,1631 @@
+{
+  "schema": "mls_financial_automation_baseline_inventory_v1",
+  "recorded_at": "2026-11-13T17:52:47.033207-03:00",
+  "timezone": "America/Sao_Paulo",
+  "audit_base": "0016c4b78d45c47066b259bbaf42578662e11e35",
+  "initial_head": "6578e21098ff799e59433af92880d249432ceeb4",
+  "scope": "Immutable committed tree only; concurrent uncommitted implementation is excluded.",
+  "state": "CODE_INVENTORY_NOT_ACCOUNT_ACCEPTANCE",
+  "input_manifest": "input/MANIFEST.json",
+  "coverage_count": 25,
+  "coverage": [
+    {
+      "funcao": "Pedidos e vendas",
+      "situacao": "INTEGRADO_NO_CODIGO",
+      "evidencia": "Listagem/detalhe, pedidos pagos/cancelados, itens, paginação e recortes.",
+      "melhoria": "Comprovar cobertura da loja; manter estados e datas de cada evento.",
+      "fonte": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/finance/src/business-period.mjs",
+      "validacao_na_conta": "NAO_REALIZADA_NESTA_EXECUCAO",
+      "fonte_arquivo": "web/finance/src/business-period.mjs",
+      "sha256_base_auditada": "fb796de0df36c2f5e77d011a46d12d3c15907e750ff929934a61b91c0b0eb491",
+      "sha256_head_inicial": "fb796de0df36c2f5e77d011a46d12d3c15907e750ff929934a61b91c0b0eb491",
+      "fonte_identica_ao_sha_auditado": true,
+      "rotas_existentes": [
+        "/api/admin/shop-orders",
+        "/api/admin/finance/business-month-view"
+      ],
+      "handlers_e_stores": [
+        "web/finance/src/business-period.mjs",
+        "web/cloudflare/src/business-month.mjs"
+      ],
+      "armazenamento_tabelas_observadas": [
+        "business_expense_ledger_months",
+        "business_month_ads",
+        "business_month_ads_attempts",
+        "business_month_expenses",
+        "business_month_expenses_audit",
+        "business_month_frames",
+        "business_month_runs",
+        "business_tax_policy_audit",
+        "business_tax_policy_state",
+        "finance_business_order_evidence",
+        "finance_business_period_cursors",
+        "finance_business_period_orders",
+        "finance_business_period_payment_cache",
+        "finance_business_period_runs",
+        "production_costs_state"
+      ],
+      "schemas_observados": [
+        "business_month_ads_state_v1",
+        "business_month_collection_v1",
+        "business_month_frame_ref_v1",
+        "business_month_tax_v1",
+        "business_month_v1",
+        "business_product_breakdown_v1",
+        "finance_business_daily_v1",
+        "finance_business_period_v1",
+        "financial_order_evidence_v2",
+        "store_invoice_tax_v1"
+      ],
+      "consumidores": [
+        "web/cloudflare/src/business-month-view.mjs",
+        "web/cloudflare/src/order-operations-view.mjs"
+      ],
+      "base_e_limite": "Paid-order creation month / order status; runtime coverage must be checked.",
+      "reconferencia_codigo": "INVENTARIADO_NO_SHA_INICIAL",
+      "validacao_nova_implementacao": "PENDENTE",
+      "observacao_de_escopo": "Route/source presence is code evidence, not grant, collection coverage, balance certification or successful financial close."
+    },
+    {
+      "funcao": "Repasse por pedido / escrow",
+      "situacao": "INTEGRADO_NO_CODIGO",
+      "evidencia": "Consulta e valores informados da Shopee; repasse não equivale a crédito bancário.",
+      "melhoria": "Conciliar identidade e revisões com recebíveis, carteira e banco.",
+      "fonte": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/finance/src/business-period.mjs",
+      "validacao_na_conta": "NAO_REALIZADA_NESTA_EXECUCAO",
+      "fonte_arquivo": "web/finance/src/business-period.mjs",
+      "sha256_base_auditada": "fb796de0df36c2f5e77d011a46d12d3c15907e750ff929934a61b91c0b0eb491",
+      "sha256_head_inicial": "fb796de0df36c2f5e77d011a46d12d3c15907e750ff929934a61b91c0b0eb491",
+      "fonte_identica_ao_sha_auditado": true,
+      "rotas_existentes": [
+        "/api/admin/finance/business-month-view",
+        "/api/admin/finance/payment-sample"
+      ],
+      "handlers_e_stores": [
+        "web/finance/src/business-period.mjs",
+        "web/finance/src/payment-sample.mjs"
+      ],
+      "armazenamento_tabelas_observadas": [
+        "finance_business_order_evidence",
+        "finance_business_period_cursors",
+        "finance_business_period_orders",
+        "finance_business_period_payment_cache",
+        "finance_business_period_runs"
+      ],
+      "schemas_observados": [
+        "business_product_breakdown_v1",
+        "finance_business_daily_v1",
+        "finance_business_period_v1",
+        "financial_order_evidence_v2",
+        "store_invoice_tax_v1"
+      ],
+      "consumidores": [
+        "web/cloudflare/src/business-month-view.mjs"
+      ],
+      "base_e_limite": "Expected order payout; not a bank deposit.",
+      "reconferencia_codigo": "INVENTARIADO_NO_SHA_INICIAL",
+      "validacao_nova_implementacao": "PENDENTE",
+      "observacao_de_escopo": "Route/source presence is code evidence, not grant, collection coverage, balance certification or successful financial close."
+    },
+    {
+      "funcao": "Taxas, fretes, cupons e ajustes detalhados",
+      "situacao": "PARCIAL",
+      "evidencia": "Amostra de Payment expõe alguns componentes; o coletor agregado não é um razão completo por tipo.",
+      "melhoria": "Persistir componentes efetivamente disponíveis e sua semântica; não inferir taxa da diferença vendas–repasse.",
+      "fonte": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/finance/src/payment-sample.mjs",
+      "validacao_na_conta": "NAO_REALIZADA_NESTA_EXECUCAO",
+      "fonte_arquivo": "web/finance/src/payment-sample.mjs",
+      "sha256_base_auditada": "526232ae3390ddc5f58de37fdaf8ab05f0a36607158ee8a011fd8a52b10b0c17",
+      "sha256_head_inicial": "526232ae3390ddc5f58de37fdaf8ab05f0a36607158ee8a011fd8a52b10b0c17",
+      "fonte_identica_ao_sha_auditado": true,
+      "rotas_existentes": [
+        "/api/admin/finance/payment-sample",
+        "/api/admin/finance/closeout"
+      ],
+      "handlers_e_stores": [
+        "web/finance/src/payment-sample.mjs",
+        "web/cloudflare/src/business-financial-closeout.mjs"
+      ],
+      "armazenamento_tabelas_observadas": [],
+      "schemas_observados": [
+        "business_financial_closeout_v1",
+        "business_income_detail_diagnostic_v1"
+      ],
+      "consumidores": [
+        "web/cloudflare/src/business-month-view.mjs"
+      ],
+      "base_e_limite": "Only observed monetary fields; the sales/payout difference is not an inferred commission.",
+      "reconferencia_codigo": "INVENTARIADO_NO_SHA_INICIAL",
+      "validacao_nova_implementacao": "PENDENTE",
+      "observacao_de_escopo": "Route/source presence is code evidence, not grant, collection coverage, balance certification or successful financial close."
+    },
+    {
+      "funcao": "Saldo Pending e Income Overview",
+      "situacao": "INTEGRADO_NO_CODIGO",
+      "evidencia": "Snapshot atual e diagnósticos; não é a receita da competência selecionada.",
+      "melhoria": "Comparar escopo/corte e separar saldo atual de eventos históricos.",
+      "fonte": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/finance/src/income-overview.mjs",
+      "validacao_na_conta": "NAO_REALIZADA_NESTA_EXECUCAO",
+      "fonte_arquivo": "web/finance/src/income-overview.mjs",
+      "sha256_base_auditada": "ef9a8054f675d0bdb77dba39e54d42e80f0af0d5e08a8981790d4281c3c9e274",
+      "sha256_head_inicial": "ef9a8054f675d0bdb77dba39e54d42e80f0af0d5e08a8981790d4281c3c9e274",
+      "fonte_identica_ao_sha_auditado": true,
+      "rotas_existentes": [
+        "/api/admin/finance/income-overview"
+      ],
+      "handlers_e_stores": [
+        "web/finance/src/income-overview.mjs",
+        "web/cloudflare/src/business-income-overview.mjs"
+      ],
+      "armazenamento_tabelas_observadas": [
+        "business_income_overview",
+        "business_income_overview_lease"
+      ],
+      "schemas_observados": [
+        "business_income_overview_v1",
+        "business_income_overview_work_v1",
+        "finance_income_overview_v1"
+      ],
+      "consumidores": [
+        "web/cloudflare/src/escrow-releases-view.mjs"
+      ],
+      "base_e_limite": "Global snapshot and source date; not selected-month revenue.",
+      "reconferencia_codigo": "INVENTARIADO_NO_SHA_INICIAL",
+      "validacao_nova_implementacao": "PENDENTE",
+      "observacao_de_escopo": "Route/source presence is code evidence, not grant, collection coverage, balance certification or successful financial close."
+    },
+    {
+      "funcao": "Pending detalhado",
+      "situacao": "INTEGRADO_NO_CODIGO",
+      "evidencia": "Varredura paginada, cursor, persistência e diagnóstico de cobertura.",
+      "melhoria": "Comprovar páginas/cortes/scopes reais e acompanhar itens até resolução.",
+      "fonte": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/finance/src/pending-income-scan.mjs",
+      "validacao_na_conta": "NAO_REALIZADA_NESTA_EXECUCAO",
+      "fonte_arquivo": "web/finance/src/pending-income-scan.mjs",
+      "sha256_base_auditada": "c5a30fb2880fb8cc72d9ef87e420bc67d23fab009b16180b429d3b60ffde00bd",
+      "sha256_head_inicial": "c5a30fb2880fb8cc72d9ef87e420bc67d23fab009b16180b429d3b60ffde00bd",
+      "fonte_identica_ao_sha_auditado": true,
+      "rotas_existentes": [
+        "/api/admin/finance/income-detail"
+      ],
+      "handlers_e_stores": [
+        "web/finance/src/pending-income-scan.mjs",
+        "web/cloudflare/src/business-pending-income-scan.mjs"
+      ],
+      "armazenamento_tabelas_observadas": [
+        "business_pending_income_scan",
+        "business_pending_income_scan_lease",
+        "finance_pending_income_control",
+        "finance_pending_income_pages",
+        "finance_pending_income_publication",
+        "finance_pending_income_rows",
+        "finance_pending_income_scans",
+        "finance_pending_income_terminal_evidence"
+      ],
+      "schemas_observados": [
+        "business_pending_income_scan_v1",
+        "business_pending_income_scan_work_v1",
+        "finance_income_detail_v1",
+        "finance_pending_income_scan_v1"
+      ],
+      "consumidores": [
+        "web/cloudflare/src/escrow-releases-view.mjs"
+      ],
+      "base_e_limite": "Durable scan/publication with pagination; current observed cut is not a complete universal history.",
+      "reconferencia_codigo": "INVENTARIADO_NO_SHA_INICIAL",
+      "validacao_nova_implementacao": "PENDENTE",
+      "observacao_de_escopo": "Route/source presence is code evidence, not grant, collection coverage, balance certification or successful financial close."
+    },
+    {
+      "funcao": "Liberações posteriores",
+      "situacao": "INTEGRADO_COM_LIMITES",
+      "evidencia": "Calendário e ledger de liberações via escrow_list.",
+      "melhoria": "Relacionar liberações ao recebível e ao trânsito do dinheiro; liberação não prova depósito.",
+      "fonte": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/finance/src/escrow-releases.mjs",
+      "validacao_na_conta": "NAO_REALIZADA_NESTA_EXECUCAO",
+      "fonte_arquivo": "web/finance/src/escrow-releases.mjs",
+      "sha256_base_auditada": "2c2a651805dc2708885ee73f075d111db332d786ef7dfb628160f7b89653694c",
+      "sha256_head_inicial": "2c2a651805dc2708885ee73f075d111db332d786ef7dfb628160f7b89653694c",
+      "fonte_identica_ao_sha_auditado": true,
+      "rotas_existentes": [
+        "/api/admin/finance/escrow-releases",
+        "/api/admin/finance/escrow-release-coverage"
+      ],
+      "handlers_e_stores": [
+        "web/finance/src/escrow-release-ledger.mjs",
+        "web/cloudflare/src/business-escrow-releases.mjs",
+        "web/cloudflare/src/business-escrow-release-coverage.mjs"
+      ],
+      "armazenamento_tabelas_observadas": [
+        "business_escrow_release_attempts",
+        "business_escrow_release_coverage",
+        "business_escrow_release_coverage_attempt_scopes",
+        "business_escrow_release_coverage_leases",
+        "business_escrow_release_leases",
+        "business_escrow_release_reports",
+        "business_month_publications",
+        "business_sync_state",
+        "finance_escrow_release_pages",
+        "finance_escrow_release_publications",
+        "finance_escrow_release_rows",
+        "finance_escrow_release_scans"
+      ],
+      "schemas_observados": [
+        "business_escrow_release_coverage_v1",
+        "business_escrow_release_coverage_work_v1",
+        "business_escrow_releases_v1",
+        "business_escrow_releases_v2",
+        "business_escrow_releases_work_v1",
+        "escrow_release_ledger_v1",
+        "finance_escrow_releases_v2"
+      ],
+      "consumidores": [
+        "web/cloudflare/src/escrow-releases-view.mjs"
+      ],
+      "base_e_limite": "Release date is separate from order creation and bank settlement.",
+      "reconferencia_codigo": "INVENTARIADO_NO_SHA_INICIAL",
+      "validacao_nova_implementacao": "PENDENTE",
+      "observacao_de_escopo": "Route/source presence is code evidence, not grant, collection coverage, balance certification or successful financial close."
+    },
+    {
+      "funcao": "Carteira e todos os seus movimentos",
+      "situacao": "A_IMPLEMENTAR",
+      "evidencia": "Não foi encontrado coletor Wallet completo nos módulos Finance examinados.",
+      "melhoria": "Confirmar API/grant/região e construir coleta e eventos tipados; extrato oficial como alternativa explícita.",
+      "fonte": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/finance/src/provider-adapter.mjs",
+      "validacao_na_conta": "NAO_REALIZADA_NESTA_EXECUCAO",
+      "fonte_arquivo": "web/finance/src/provider-adapter.mjs",
+      "sha256_base_auditada": "e47fe645412a2755e0a9c7d2d3c45c1f1a8d628d38ea184662cc59ec3c0c1db1",
+      "sha256_head_inicial": "e47fe645412a2755e0a9c7d2d3c45c1f1a8d628d38ea184662cc59ec3c0c1db1",
+      "fonte_identica_ao_sha_auditado": true,
+      "rotas_existentes": [],
+      "handlers_e_stores": [
+        "web/finance/src/provider-adapter.mjs"
+      ],
+      "armazenamento_tabelas_observadas": [],
+      "schemas_observados": [],
+      "consumidores": [],
+      "base_e_limite": "No Wallet collector/route in immutable baseline; API contract and shop grant still need evidence.",
+      "reconferencia_codigo": "INVENTARIADO_NO_SHA_INICIAL",
+      "validacao_nova_implementacao": "PENDENTE",
+      "observacao_de_escopo": "Route/source presence is code evidence, not grant, collection coverage, balance certification or successful financial close."
+    },
+    {
+      "funcao": "Saques e pagamentos agrupados",
+      "situacao": "A_IMPLEMENTAR",
+      "evidencia": "Existe importação de transferências; não foi encontrado coletor Payout/saques completo.",
+      "melhoria": "Identificar saque, lote, status, valor bruto/líquido, tarifa e referências reais quando disponíveis.",
+      "fonte": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/finance/src/external-cash-worker.mjs",
+      "validacao_na_conta": "NAO_REALIZADA_NESTA_EXECUCAO",
+      "fonte_arquivo": "web/finance/src/external-cash-worker.mjs",
+      "sha256_base_auditada": "83fdc9578fffbbd96e088f63c355a507632091d450d3a7487b86e1c0d7175fe6",
+      "sha256_head_inicial": "83fdc9578fffbbd96e088f63c355a507632091d450d3a7487b86e1c0d7175fe6",
+      "fonte_identica_ao_sha_auditado": true,
+      "rotas_existentes": [
+        "/api/admin/finance/external-cash"
+      ],
+      "handlers_e_stores": [
+        "web/finance/src/external-cash-worker.mjs",
+        "web/finance/src/external-cash-store.mjs"
+      ],
+      "armazenamento_tabelas_observadas": [
+        "finance_external_cash_audit",
+        "finance_external_cash_documents",
+        "finance_external_cash_guard",
+        "finance_external_cash_imports",
+        "finance_external_cash_matches",
+        "finance_external_cash_origins",
+        "finance_external_cash_records",
+        "finance_external_cash_requests",
+        "finance_external_cash_state",
+        "finance_external_cash_unlinks"
+      ],
+      "schemas_observados": [
+        "commercial_actor_event_v1",
+        "external_cash_error_v1",
+        "external_cash_mutation_v1",
+        "external_cash_preview_v1",
+        "external_cash_workspace_v1"
+      ],
+      "consumidores": [
+        "web/cloudflare/src/bank-reconciliation-view.mjs"
+      ],
+      "base_e_limite": "Imported transfers exist; no Payout collector in immutable baseline.",
+      "reconferencia_codigo": "INVENTARIADO_NO_SHA_INICIAL",
+      "validacao_nova_implementacao": "PENDENTE",
+      "observacao_de_escopo": "Route/source presence is code evidence, not grant, collection coverage, balance certification or successful financial close."
+    },
+    {
+      "funcao": "Depósitos bancários",
+      "situacao": "ENTRADA_MANUAL_ASSISTIDA",
+      "evidencia": "Importação Nubank CSV/OFX, prévia, revisão e deduplicação.",
+      "melhoria": "Conector autorizado ou importação controlada com cobertura/saldos confirmados.",
+      "fonte": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/finance/src/cash-statement-import.mjs",
+      "validacao_na_conta": "NAO_REALIZADA_NESTA_EXECUCAO",
+      "fonte_arquivo": "web/finance/src/cash-statement-import.mjs",
+      "sha256_base_auditada": "86ac7a3a4a4f5bcee7a1de707dc43eb30532976b99b8ce93ae8b015a300dd73c",
+      "sha256_head_inicial": "86ac7a3a4a4f5bcee7a1de707dc43eb30532976b99b8ce93ae8b015a300dd73c",
+      "fonte_identica_ao_sha_auditado": true,
+      "rotas_existentes": [
+        "/api/admin/finance/external-cash"
+      ],
+      "handlers_e_stores": [
+        "web/finance/src/cash-statement-import.mjs",
+        "web/finance/src/external-cash-store.mjs"
+      ],
+      "armazenamento_tabelas_observadas": [
+        "finance_external_cash_audit",
+        "finance_external_cash_documents",
+        "finance_external_cash_guard",
+        "finance_external_cash_imports",
+        "finance_external_cash_matches",
+        "finance_external_cash_origins",
+        "finance_external_cash_records",
+        "finance_external_cash_requests",
+        "finance_external_cash_state",
+        "finance_external_cash_unlinks"
+      ],
+      "schemas_observados": [
+        "commercial_actor_event_v1",
+        "external_cash_mutation_v1",
+        "external_cash_preview_v1",
+        "external_cash_workspace_v1"
+      ],
+      "consumidores": [
+        "web/cloudflare/src/bank-reconciliation-view.mjs"
+      ],
+      "base_e_limite": "Nubank CSV/OFX is assisted import; no bank API connector proven.",
+      "reconferencia_codigo": "INVENTARIADO_NO_SHA_INICIAL",
+      "validacao_nova_implementacao": "PENDENTE",
+      "observacao_de_escopo": "Route/source presence is code evidence, not grant, collection coverage, balance certification or successful financial close."
+    },
+    {
+      "funcao": "Conciliação banco–transferência",
+      "situacao": "ASSISTIDA_1_PARA_1",
+      "evidencia": "Sugestões por valor e data, confirmação manual e desfazer auditado.",
+      "melhoria": "Grupos 1:N/N:1, alocações e regras seguras de autoconciliação.",
+      "fonte": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/finance/src/external-cash-matching.mjs",
+      "validacao_na_conta": "NAO_REALIZADA_NESTA_EXECUCAO",
+      "fonte_arquivo": "web/finance/src/external-cash-matching.mjs",
+      "sha256_base_auditada": "1338f3e5137b720fe3893c15ae5f45d049ffe7f8ab1d17f1f2bb4fb65bd1bfe3",
+      "sha256_head_inicial": "1338f3e5137b720fe3893c15ae5f45d049ffe7f8ab1d17f1f2bb4fb65bd1bfe3",
+      "fonte_identica_ao_sha_auditado": true,
+      "rotas_existentes": [
+        "/api/admin/finance/external-cash"
+      ],
+      "handlers_e_stores": [
+        "web/finance/src/external-cash-matching.mjs",
+        "web/finance/src/external-cash-store.mjs"
+      ],
+      "armazenamento_tabelas_observadas": [
+        "finance_external_cash_audit",
+        "finance_external_cash_documents",
+        "finance_external_cash_guard",
+        "finance_external_cash_imports",
+        "finance_external_cash_matches",
+        "finance_external_cash_origins",
+        "finance_external_cash_records",
+        "finance_external_cash_requests",
+        "finance_external_cash_state",
+        "finance_external_cash_unlinks"
+      ],
+      "schemas_observados": [
+        "commercial_actor_event_v1",
+        "external_cash_mutation_v1",
+        "external_cash_preview_v1",
+        "external_cash_workspace_v1"
+      ],
+      "consumidores": [
+        "web/cloudflare/src/bank-reconciliation-view.mjs"
+      ],
+      "base_e_limite": "Existing explicit 1:1 match and unlink; new allocation groups required.",
+      "reconferencia_codigo": "INVENTARIADO_NO_SHA_INICIAL",
+      "validacao_nova_implementacao": "PENDENTE",
+      "observacao_de_escopo": "Route/source presence is code evidence, not grant, collection coverage, balance certification or successful financial close."
+    },
+    {
+      "funcao": "Totais do caixa por período",
+      "situacao": "INTEGRADO_COM_LIMITES",
+      "evidencia": "Agrega todas as linhas do período, independente da página; cobertura importada não confirmada.",
+      "melhoria": "Saldo inicial/final e completude por conta; não somar saque e depósito como receitas diferentes.",
+      "fonte": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/finance/src/external-cash-period.mjs",
+      "validacao_na_conta": "NAO_REALIZADA_NESTA_EXECUCAO",
+      "fonte_arquivo": "web/finance/src/external-cash-period.mjs",
+      "sha256_base_auditada": "5ba08c51608fa43d776fd9fe5d11b39b8d50803a30498bd2a289993faff13bc7",
+      "sha256_head_inicial": "5ba08c51608fa43d776fd9fe5d11b39b8d50803a30498bd2a289993faff13bc7",
+      "fonte_identica_ao_sha_auditado": true,
+      "rotas_existentes": [
+        "/api/admin/finance/external-cash",
+        "/api/admin/reports/weekly"
+      ],
+      "handlers_e_stores": [
+        "web/finance/src/external-cash-period.mjs",
+        "web/cloudflare/src/app-external-cash-period.mjs"
+      ],
+      "armazenamento_tabelas_observadas": [
+        "finance_external_cash_matches",
+        "finance_external_cash_records",
+        "finance_external_cash_state",
+        "finance_external_cash_unlinks"
+      ],
+      "schemas_observados": [
+        "external_cash_error_v1",
+        "external_cash_period_summary_v1"
+      ],
+      "consumidores": [
+        "web/cloudflare/src/weekly-operating-view.mjs"
+      ],
+      "base_e_limite": "Imported coverage is not confirmed opening/closing balance evidence.",
+      "reconferencia_codigo": "INVENTARIADO_NO_SHA_INICIAL",
+      "validacao_nova_implementacao": "PENDENTE",
+      "observacao_de_escopo": "Route/source presence is code evidence, not grant, collection coverage, balance certification or successful financial close."
+    },
+    {
+      "funcao": "Devoluções financeiras",
+      "situacao": "INTEGRADO_COM_LIMITES",
+      "evidencia": "Detalhes de casos, valores observados e repasse após ajustes com validação.",
+      "melhoria": "Vincular efeito efetivo por evento, inclusive parcial/estorno/compensação; não deduzir duas vezes.",
+      "fonte": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/finance/src/returns-reconciliation.mjs",
+      "validacao_na_conta": "NAO_REALIZADA_NESTA_EXECUCAO",
+      "fonte_arquivo": "web/finance/src/returns-reconciliation.mjs",
+      "sha256_base_auditada": "13b8a00e473fb77cad61d18e90013bf98b511ef7ca27a7c3329ae85671e39855",
+      "sha256_head_inicial": "13b8a00e473fb77cad61d18e90013bf98b511ef7ca27a7c3329ae85671e39855",
+      "fonte_identica_ao_sha_auditado": true,
+      "rotas_existentes": [
+        "/api/admin/finance/reconciliation"
+      ],
+      "handlers_e_stores": [
+        "web/finance/src/returns-reconciliation.mjs",
+        "web/cloudflare/src/business-reconciliation.mjs"
+      ],
+      "armazenamento_tabelas_observadas": [
+        "business_month_publications",
+        "business_reconciliation_attempts",
+        "business_reconciliation_leases",
+        "business_reconciliation_original_items",
+        "business_reconciliation_reports",
+        "business_sync_state",
+        "finance_business_period_runs",
+        "finance_return_item_evidence",
+        "finance_returns_reconciliation_cases",
+        "finance_returns_reconciliation_probes",
+        "finance_returns_reconciliation_runs"
+      ],
+      "schemas_observados": [
+        "business_original_items_v1",
+        "business_reconciliation_v1",
+        "business_reconciliation_v2",
+        "business_reconciliation_v3",
+        "business_reconciliation_work_v1",
+        "finance_reconciliation_money_v1",
+        "finance_reconciliation_v1",
+        "finance_reconciliation_v2",
+        "finance_reconciliation_v3",
+        "finance_reconciliation_v4",
+        "finance_review_orders_v1"
+      ],
+      "consumidores": [
+        "web/cloudflare/src/physical-returns-view.mjs"
+      ],
+      "base_e_limite": "Observed return details and after-adjustment payout; preserve no-double-refund protection.",
+      "reconferencia_codigo": "INVENTARIADO_NO_SHA_INICIAL",
+      "validacao_nova_implementacao": "PENDENTE",
+      "observacao_de_escopo": "Route/source presence is code evidence, not grant, collection coverage, balance certification or successful financial close."
+    },
+    {
+      "funcao": "Devoluções de competências antigas",
+      "situacao": "PARCIAL",
+      "evidencia": "Turno dedicado acompanha mês atual/anterior.",
+      "melhoria": "Fila durável de casos em aberto, independentemente do mês de criação, e ajustes tardios.",
+      "fonte": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/cloudflare/src/business-historical-returns.mjs",
+      "validacao_na_conta": "NAO_REALIZADA_NESTA_EXECUCAO",
+      "fonte_arquivo": "web/cloudflare/src/business-historical-returns.mjs",
+      "sha256_base_auditada": "f5ca587063e8bd7eabd42807e558154c022d9b8a04f00a28d9ce880a6c721f64",
+      "sha256_head_inicial": "f5ca587063e8bd7eabd42807e558154c022d9b8a04f00a28d9ce880a6c721f64",
+      "fonte_identica_ao_sha_auditado": true,
+      "rotas_existentes": [
+        "/api/admin/finance/reconciliation"
+      ],
+      "handlers_e_stores": [
+        "web/cloudflare/src/business-historical-returns.mjs",
+        "web/cloudflare/src/business-history-sync.mjs"
+      ],
+      "armazenamento_tabelas_observadas": [
+        "business_escrow_release_coverage",
+        "business_historical_returns_turns",
+        "business_history_sync_state",
+        "business_month_publication_frames",
+        "business_month_publications",
+        "business_month_runs",
+        "business_reconciliation_attempts",
+        "business_reconciliation_leases",
+        "business_sync_state"
+      ],
+      "schemas_observados": [
+        "business_historical_returns_eligibility_v1",
+        "business_reconciliation_work_v1"
+      ],
+      "consumidores": [
+        "web/cloudflare/src/physical-returns-view.mjs"
+      ],
+      "base_e_limite": "Current/previous-month turns do not prove independent discovery of all old cases.",
+      "reconferencia_codigo": "INVENTARIADO_NO_SHA_INICIAL",
+      "validacao_nova_implementacao": "PENDENTE",
+      "observacao_de_escopo": "Route/source presence is code evidence, not grant, collection coverage, balance certification or successful financial close."
+    },
+    {
+      "funcao": "Devoluções físicas e inspeção",
+      "situacao": "INTEGRADO_SEM_VALORIZACAO_FINANCEIRA",
+      "evidencia": "Recebimento, quarentena, inspeção, quantidades e vínculos de fabricação.",
+      "melhoria": "Custo histórico e efeitos em estoque/CMV/perdas; status remoto não prova recebimento físico.",
+      "fonte": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/cloudflare/src/physical-returns.mjs",
+      "validacao_na_conta": "NAO_REALIZADA_NESTA_EXECUCAO",
+      "fonte_arquivo": "web/cloudflare/src/physical-returns.mjs",
+      "sha256_base_auditada": "33cbfc605f74ac78f4fc8bf97cc48c123a602350c6333b2f1b51fd4374627107",
+      "sha256_head_inicial": "33cbfc605f74ac78f4fc8bf97cc48c123a602350c6333b2f1b51fd4374627107",
+      "fonte_identica_ao_sha_auditado": true,
+      "rotas_existentes": [
+        "/api/admin/returns/physical",
+        "/api/admin/returns/receipts",
+        "/api/admin/returns/manufacturing-links"
+      ],
+      "handlers_e_stores": [
+        "web/cloudflare/src/physical-returns.mjs",
+        "web/cloudflare/src/return-manufacturing-links.mjs"
+      ],
+      "armazenamento_tabelas_observadas": [
+        "incurred_production_records",
+        "physical_returns_audit",
+        "physical_returns_cases",
+        "physical_returns_guard",
+        "physical_returns_state",
+        "return_manufacturing_links_audit",
+        "return_manufacturing_links_guard",
+        "return_manufacturing_links_records",
+        "return_manufacturing_links_state"
+      ],
+      "schemas_observados": [
+        "physical_returns_v1",
+        "return_manufacturing_links_v1"
+      ],
+      "consumidores": [
+        "web/cloudflare/src/physical-returns-view.mjs",
+        "web/cloudflare/src/return-manufacturing-links-view.mjs"
+      ],
+      "base_e_limite": "Operator-confirmed physical facts; inventory financial valuation remains UNKNOWN in v1.",
+      "reconferencia_codigo": "INVENTARIADO_NO_SHA_INICIAL",
+      "validacao_nova_implementacao": "PENDENTE",
+      "observacao_de_escopo": "Route/source presence is code evidence, not grant, collection coverage, balance certification or successful financial close."
+    },
+    {
+      "funcao": "Produtos, kits e custo de referência",
+      "situacao": "INTEGRADO_COM_LIMITES",
+      "evidencia": "Vínculos, custos/regras e cálculo das unidades vendidas.",
+      "melhoria": "Fixar custo/política aplicável por evento e por fechamento; não alterar passado com cadastro atual.",
+      "fonte": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/cloudflare/src/business-month.mjs",
+      "validacao_na_conta": "NAO_REALIZADA_NESTA_EXECUCAO",
+      "fonte_arquivo": "web/cloudflare/src/business-month.mjs",
+      "sha256_base_auditada": "fe688b43dc3d848004477ace9de1b7a70a47951f488b3c06e51d8e50aa96ff63",
+      "sha256_head_inicial": "fe688b43dc3d848004477ace9de1b7a70a47951f488b3c06e51d8e50aa96ff63",
+      "fonte_identica_ao_sha_auditado": true,
+      "rotas_existentes": [
+        "/api/admin/production-costs",
+        "/api/admin/cost-rules",
+        "/api/admin/variant-bindings"
+      ],
+      "handlers_e_stores": [
+        "web/cloudflare/src/business-month.mjs",
+        "web/cloudflare/src/cost-rules.mjs",
+        "web/cloudflare/src/production-costs.mjs",
+        "web/cloudflare/src/variant-bindings.mjs"
+      ],
+      "armazenamento_tabelas_observadas": [
+        "business_expense_ledger_months",
+        "business_month_ads",
+        "business_month_ads_attempts",
+        "business_month_expenses",
+        "business_month_expenses_audit",
+        "business_month_frames",
+        "business_month_runs",
+        "business_tax_policy_audit",
+        "business_tax_policy_state",
+        "production_costs_audit",
+        "production_costs_state"
+      ],
+      "schemas_observados": [
+        "business_month_ads_state_v1",
+        "business_month_collection_v1",
+        "business_month_frame_ref_v1",
+        "business_month_tax_v1",
+        "business_month_v1",
+        "finance_business_period_v1"
+      ],
+      "consumidores": [
+        "web/cloudflare/src/business-month-view.mjs"
+      ],
+      "base_e_limite": "Current reference rules can reproject estimates; closed-event cost capture needs a new contract.",
+      "reconferencia_codigo": "INVENTARIADO_NO_SHA_INICIAL",
+      "validacao_nova_implementacao": "PENDENTE",
+      "observacao_de_escopo": "Route/source presence is code evidence, not grant, collection coverage, balance certification or successful financial close."
+    },
+    {
+      "funcao": "Produção física",
+      "situacao": "INTEGRADO_SEM_PONTE_CONTABIL",
+      "evidencia": "Fatos confirmados e custo histórico por registro.",
+      "melhoria": "Separar fabricar, vender, pagar fornecedor, manter estoque e reconhecer perda.",
+      "fonte": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/cloudflare/src/incurred-production.mjs",
+      "validacao_na_conta": "NAO_REALIZADA_NESTA_EXECUCAO",
+      "fonte_arquivo": "web/cloudflare/src/incurred-production.mjs",
+      "sha256_base_auditada": "3958d0babcaa370cf6f1bcf8d7201cb00e7fc7a015ceddc4c32c1189ea5d3e4d",
+      "sha256_head_inicial": "3958d0babcaa370cf6f1bcf8d7201cb00e7fc7a015ceddc4c32c1189ea5d3e4d",
+      "fonte_identica_ao_sha_auditado": true,
+      "rotas_existentes": [
+        "/api/admin/production/incurred"
+      ],
+      "handlers_e_stores": [
+        "web/cloudflare/src/incurred-production.mjs"
+      ],
+      "armazenamento_tabelas_observadas": [
+        "incurred_production_audit",
+        "incurred_production_guard",
+        "incurred_production_records",
+        "incurred_production_state"
+      ],
+      "schemas_observados": [
+        "incurred_production_range_v1",
+        "incurred_production_v1"
+      ],
+      "consumidores": [
+        "web/cloudflare/src/incurred-production-view.mjs"
+      ],
+      "base_e_limite": "Actual manufacturing records are not order quantities, paid cash or automatically recognized COGS.",
+      "reconferencia_codigo": "INVENTARIADO_NO_SHA_INICIAL",
+      "validacao_nova_implementacao": "PENDENTE",
+      "observacao_de_escopo": "Route/source presence is code evidence, not grant, collection coverage, balance certification or successful financial close."
+    },
+    {
+      "funcao": "Despesas e parcelas",
+      "situacao": "CADASTRO_ASSISTIDO",
+      "evidencia": "Competência, vencimento, pago/aberto/cancelado, parcelas, revisão e auditoria.",
+      "melhoria": "Ligar pagamento bancário à obrigação; confirmação mensal não é bloqueio de mês fechado.",
+      "fonte": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/cloudflare/src/expense-ledger.mjs",
+      "validacao_na_conta": "NAO_REALIZADA_NESTA_EXECUCAO",
+      "fonte_arquivo": "web/cloudflare/src/expense-ledger.mjs",
+      "sha256_base_auditada": "cb7acb565e1e28777b65ed46833d9ff56ab7d5393d70d9418548cc658d4d6a80",
+      "sha256_head_inicial": "cb7acb565e1e28777b65ed46833d9ff56ab7d5393d70d9418548cc658d4d6a80",
+      "fonte_identica_ao_sha_auditado": true,
+      "rotas_existentes": [
+        "/api/admin/finance/expense-ledger"
+      ],
+      "handlers_e_stores": [
+        "web/cloudflare/src/expense-ledger.mjs"
+      ],
+      "armazenamento_tabelas_observadas": [
+        "business_expense_ledger_audit",
+        "business_expense_ledger_months",
+        "business_expense_ledger_state",
+        "business_month_expenses",
+        "business_month_expenses_audit"
+      ],
+      "schemas_observados": [
+        "expense_ledger_v1"
+      ],
+      "consumidores": [
+        "web/cloudflare/src/expense-ledger-view.mjs"
+      ],
+      "base_e_limite": "Recognition month, due date and payment are separate; no existing final-close lock.",
+      "reconferencia_codigo": "INVENTARIADO_NO_SHA_INICIAL",
+      "validacao_nova_implementacao": "PENDENTE",
+      "observacao_de_escopo": "Route/source presence is code evidence, not grant, collection coverage, balance certification or successful financial close."
+    },
+    {
+      "funcao": "Impostos",
+      "situacao": "DECLARACAO_MEI",
+      "evidencia": "Política MEI com valor mensal declarado por ano.",
+      "melhoria": "Regime, vigência e origem por empresa; não tratar como cálculo tributário universal.",
+      "fonte": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/cloudflare/src/business-tax-policy.mjs",
+      "validacao_na_conta": "NAO_REALIZADA_NESTA_EXECUCAO",
+      "fonte_arquivo": "web/cloudflare/src/business-tax-policy.mjs",
+      "sha256_base_auditada": "6b27f010e084ee0d29051456d7df859414b5891247c5daeaf4b29e6dea687d4a",
+      "sha256_head_inicial": "6b27f010e084ee0d29051456d7df859414b5891247c5daeaf4b29e6dea687d4a",
+      "fonte_identica_ao_sha_auditado": true,
+      "rotas_existentes": [
+        "/api/admin/tax-policy",
+        "/api/admin/tax-policy/audit"
+      ],
+      "handlers_e_stores": [
+        "web/cloudflare/src/business-tax-policy.mjs"
+      ],
+      "armazenamento_tabelas_observadas": [
+        "business_tax_policy_audit",
+        "business_tax_policy_state"
+      ],
+      "schemas_observados": [
+        "business_month_tax_v1"
+      ],
+      "consumidores": [
+        "web/cloudflare/src/business-month-view.mjs"
+      ],
+      "base_e_limite": "Declared MEI policy; do not inherit to new organizations or infer a universal tax regime.",
+      "reconferencia_codigo": "INVENTARIADO_NO_SHA_INICIAL",
+      "validacao_nova_implementacao": "PENDENTE",
+      "observacao_de_escopo": "Route/source presence is code evidence, not grant, collection coverage, balance certification or successful financial close."
+    },
+    {
+      "funcao": "Anúncios e recarga",
+      "situacao": "INTEGRADO_COM_LIMITES",
+      "evidencia": "Ads por calendário e tratamento específico de ajuste de recarga classificado.",
+      "melhoria": "Conciliar saldo/recarga/consumo sem duplicidade; confirmar fuso da fonte para cortes diários.",
+      "fonte": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/cloudflare/src/business-daily-summary.mjs",
+      "validacao_na_conta": "NAO_REALIZADA_NESTA_EXECUCAO",
+      "fonte_arquivo": "web/cloudflare/src/business-daily-summary.mjs",
+      "sha256_base_auditada": "4cb6e70bc6339d5beb9f42a617dd373bb539ebaf63e6127bc776608578527967",
+      "sha256_head_inicial": "4cb6e70bc6339d5beb9f42a617dd373bb539ebaf63e6127bc776608578527967",
+      "fonte_identica_ao_sha_auditado": true,
+      "rotas_existentes": [
+        "/api/admin/finance/ads-period",
+        "/api/admin/finance/store-adjustments"
+      ],
+      "handlers_e_stores": [
+        "web/cloudflare/src/admin.mjs",
+        "web/cloudflare/src/business-adjusted-balance.mjs",
+        "web/cloudflare/src/business-daily-summary.mjs",
+        "web/cloudflare/src/business-month-ads-history.mjs"
+      ],
+      "armazenamento_tabelas_observadas": [
+        "business_month_ads",
+        "business_month_ads_history"
+      ],
+      "schemas_observados": [
+        "ads_calendar_v1",
+        "business_daily_summary_v1",
+        "business_month_v1"
+      ],
+      "consumidores": [
+        "web/cloudflare/src/business-month-view.mjs"
+      ],
+      "base_e_limite": "Consumption differs from recharge; daily source timezone/granularity limits exact 13h splits.",
+      "reconferencia_codigo": "INVENTARIADO_NO_SHA_INICIAL",
+      "validacao_nova_implementacao": "PENDENTE",
+      "observacao_de_escopo": "Route/source presence is code evidence, not grant, collection coverage, balance certification or successful financial close."
+    },
+    {
+      "funcao": "Resultado diário e mensal",
+      "situacao": "ESTIMATIVA",
+      "evidencia": "Repasse menos referências de custo, imposto, Ads e despesas, com estados parciais.",
+      "melhoria": "Criar resultado gerencial conciliado e manter estimativa/caixa separados.",
+      "fonte": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/cloudflare/src/business-month.mjs",
+      "validacao_na_conta": "NAO_REALIZADA_NESTA_EXECUCAO",
+      "fonte_arquivo": "web/cloudflare/src/business-month.mjs",
+      "sha256_base_auditada": "fe688b43dc3d848004477ace9de1b7a70a47951f488b3c06e51d8e50aa96ff63",
+      "sha256_head_inicial": "fe688b43dc3d848004477ace9de1b7a70a47951f488b3c06e51d8e50aa96ff63",
+      "fonte_identica_ao_sha_auditado": true,
+      "rotas_existentes": [
+        "/api/admin/finance/business-month-view"
+      ],
+      "handlers_e_stores": [
+        "web/cloudflare/src/business-month.mjs",
+        "web/cloudflare/src/business-daily-summary.mjs"
+      ],
+      "armazenamento_tabelas_observadas": [
+        "business_expense_ledger_months",
+        "business_month_ads",
+        "business_month_ads_attempts",
+        "business_month_expenses",
+        "business_month_expenses_audit",
+        "business_month_frames",
+        "business_month_runs",
+        "business_tax_policy_audit",
+        "business_tax_policy_state",
+        "production_costs_state"
+      ],
+      "schemas_observados": [
+        "business_daily_summary_v1",
+        "business_month_ads_state_v1",
+        "business_month_collection_v1",
+        "business_month_frame_ref_v1",
+        "business_month_tax_v1",
+        "business_month_v1",
+        "finance_business_period_v1"
+      ],
+      "consumidores": [
+        "web/cloudflare/src/business-month-view.mjs",
+        "web/cloudflare/src/mission-control.mjs"
+      ],
+      "base_e_limite": "Existing paid-create-date estimate; net_profit_cents stays null by v1 design.",
+      "reconferencia_codigo": "INVENTARIADO_NO_SHA_INICIAL",
+      "validacao_nova_implementacao": "PENDENTE",
+      "observacao_de_escopo": "Route/source presence is code evidence, not grant, collection coverage, balance certification or successful financial close."
+    },
+    {
+      "funcao": "Fechamento semanal de produção",
+      "situacao": "INTEGRADO",
+      "evidencia": "Corte sexta às 13h, original e retificações versionadas com hash.",
+      "melhoria": "Preservar; não apresentar como fechamento financeiro da empresa.",
+      "fonte": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/cloudflare/src/production-weekly-store.mjs",
+      "validacao_na_conta": "NAO_REALIZADA_NESTA_EXECUCAO",
+      "fonte_arquivo": "web/cloudflare/src/production-weekly-store.mjs",
+      "sha256_base_auditada": "6774503f20b3aa1a7861d8fc92b54220d809625f36228ffe701dd6a9379d1229",
+      "sha256_head_inicial": "6774503f20b3aa1a7861d8fc92b54220d809625f36228ffe701dd6a9379d1229",
+      "fonte_identica_ao_sha_auditado": true,
+      "rotas_existentes": [
+        "/api/admin/production/weekly-closing"
+      ],
+      "handlers_e_stores": [
+        "web/cloudflare/src/production-weekly-store.mjs"
+      ],
+      "armazenamento_tabelas_observadas": [
+        "incurred_production_records",
+        "incurred_production_state",
+        "production_weekly_assignments",
+        "production_weekly_audit",
+        "production_weekly_guard",
+        "production_weekly_reports",
+        "production_weekly_state"
+      ],
+      "schemas_observados": [
+        "production_weekly_closing_workspace_v1",
+        "production_weekly_report_v1"
+      ],
+      "consumidores": [
+        "web/cloudflare/src/incurred-production-view.mjs"
+      ],
+      "base_e_limite": "Manufacturing Friday13h→Friday13h in America/Sao_Paulo; not the company financial close.",
+      "reconferencia_codigo": "INVENTARIADO_NO_SHA_INICIAL",
+      "validacao_nova_implementacao": "PENDENTE",
+      "observacao_de_escopo": "Route/source presence is code evidence, not grant, collection coverage, balance certification or successful financial close."
+    },
+    {
+      "funcao": "Relatório semanal operacional",
+      "situacao": "INTEGRADO_COM_BASES_SEPARADAS",
+      "evidencia": "Fabricação, estimativa de vendas e caixa importado; lucro realizado permanece nulo.",
+      "melhoria": "Criar fechamento financeiro próprio, respeitando cortes e fontes.",
+      "fonte": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/cloudflare/src/weekly-operating-report.mjs",
+      "validacao_na_conta": "NAO_REALIZADA_NESTA_EXECUCAO",
+      "fonte_arquivo": "web/cloudflare/src/weekly-operating-report.mjs",
+      "sha256_base_auditada": "2e9128c7873884529bbea94ff97aa9c3753d6a1f08b6ecd43bd2c7cddeb22524",
+      "sha256_head_inicial": "2e9128c7873884529bbea94ff97aa9c3753d6a1f08b6ecd43bd2c7cddeb22524",
+      "fonte_identica_ao_sha_auditado": true,
+      "rotas_existentes": [
+        "/api/admin/reports/weekly"
+      ],
+      "handlers_e_stores": [
+        "web/cloudflare/src/weekly-operating-report.mjs",
+        "web/cloudflare/src/weekly-operating-store.mjs"
+      ],
+      "armazenamento_tabelas_observadas": [
+        "business_tax_policy_state",
+        "production_costs_state",
+        "production_weekly_reports"
+      ],
+      "schemas_observados": [
+        "external_cash_error_v1",
+        "production_weekly_report_v1",
+        "weekly_operating_report_v1"
+      ],
+      "consumidores": [
+        "web/cloudflare/src/weekly-operating-view.mjs"
+      ],
+      "base_e_limite": "Manufacturing cut and seven civil sales/cash days are separate; realized profit remains null.",
+      "reconferencia_codigo": "INVENTARIADO_NO_SHA_INICIAL",
+      "validacao_nova_implementacao": "PENDENTE",
+      "observacao_de_escopo": "Route/source presence is code evidence, not grant, collection coverage, balance certification or successful financial close."
+    },
+    {
+      "funcao": "Preparação mensal de fechamento",
+      "situacao": "PREPARACAO_SEM_FECHO_DEFINITIVO",
+      "evidencia": "PREPARING/READY_FOR_COMPARISON; Seller Centre/Banco NOT_COMPARED.",
+      "melhoria": "Conferência persistente, snapshot final e ciclo de retificação.",
+      "fonte": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/cloudflare/src/business-financial-closeout.mjs",
+      "validacao_na_conta": "NAO_REALIZADA_NESTA_EXECUCAO",
+      "fonte_arquivo": "web/cloudflare/src/business-financial-closeout.mjs",
+      "sha256_base_auditada": "501e50a2a02cd67ccddfdddb8fcee9746830b8f37159e5825a7829afcbfcebce",
+      "sha256_head_inicial": "501e50a2a02cd67ccddfdddb8fcee9746830b8f37159e5825a7829afcbfcebce",
+      "fonte_identica_ao_sha_auditado": true,
+      "rotas_existentes": [
+        "/api/admin/finance/closeout"
+      ],
+      "handlers_e_stores": [
+        "web/cloudflare/src/business-financial-closeout.mjs"
+      ],
+      "armazenamento_tabelas_observadas": [],
+      "schemas_observados": [
+        "business_financial_closeout_v1",
+        "business_income_detail_diagnostic_v1"
+      ],
+      "consumidores": [
+        "web/cloudflare/src/business-month-view.mjs"
+      ],
+      "base_e_limite": "PREPARING/READY_FOR_COMPARISON; Seller Centre and bank NOT_COMPARED by strict contract.",
+      "reconferencia_codigo": "INVENTARIADO_NO_SHA_INICIAL",
+      "validacao_nova_implementacao": "PENDENTE",
+      "observacao_de_escopo": "Route/source presence is code evidence, not grant, collection coverage, balance certification or successful financial close."
+    },
+    {
+      "funcao": "Histórico mensal",
+      "situacao": "SNAPSHOT_DE_FONTES",
+      "evidencia": "Preserva leitura consistente das fontes; custos/imposto/Ads/despesas reaplicados na leitura.",
+      "melhoria": "Congelar o conjunto de valores e políticas do fechamento final.",
+      "fonte": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/cloudflare/src/business-month-publication.mjs",
+      "validacao_na_conta": "NAO_REALIZADA_NESTA_EXECUCAO",
+      "fonte_arquivo": "web/cloudflare/src/business-month-publication.mjs",
+      "sha256_base_auditada": "019596f56814a70f46d1275a68ba5b107b570ec309d3a47e86ad889d440a5d34",
+      "sha256_head_inicial": "019596f56814a70f46d1275a68ba5b107b570ec309d3a47e86ad889d440a5d34",
+      "fonte_identica_ao_sha_auditado": true,
+      "rotas_existentes": [
+        "/api/admin/finance/business-month-view"
+      ],
+      "handlers_e_stores": [
+        "web/cloudflare/src/business-month-publication.mjs",
+        "web/cloudflare/src/business-month.mjs"
+      ],
+      "armazenamento_tabelas_observadas": [
+        "business_expense_ledger_months",
+        "business_month_ads",
+        "business_month_ads_attempts",
+        "business_month_expenses",
+        "business_month_expenses_audit",
+        "business_month_frames",
+        "business_month_publication_frames",
+        "business_month_publications",
+        "business_month_runs",
+        "business_tax_policy_audit",
+        "business_tax_policy_state",
+        "production_costs_state"
+      ],
+      "schemas_observados": [
+        "business_month_ads_state_v1",
+        "business_month_collection_v1",
+        "business_month_frame_ref_v1",
+        "business_month_publication_frame_ref_v1",
+        "business_month_tax_v1",
+        "business_month_v1",
+        "finance_business_period_v1"
+      ],
+      "consumidores": [
+        "web/cloudflare/src/business-month-view.mjs"
+      ],
+      "base_e_limite": "Source publication freezes source frames but later presentation can use current costs/tax/expenses.",
+      "reconferencia_codigo": "INVENTARIADO_NO_SHA_INICIAL",
+      "validacao_nova_implementacao": "PENDENTE",
+      "observacao_de_escopo": "Route/source presence is code evidence, not grant, collection coverage, balance certification or successful financial close."
+    },
+    {
+      "funcao": "Caixa livre e retirada",
+      "situacao": "A_IMPLEMENTAR_NOS_MODULOS_EXAMINADOS",
+      "evidencia": "Não foi encontrado cálculo comprovado após obrigações e reserva de giro.",
+      "melhoria": "Projeção por vencimento e cenários; não confundir caixa livre estimado com lucro distribuível.",
+      "fonte": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/0016c4b78d45c47066b259bbaf42578662e11e35/web/cloudflare/src/business-financial-closeout.mjs",
+      "validacao_na_conta": "NAO_REALIZADA_NESTA_EXECUCAO",
+      "fonte_arquivo": "web/cloudflare/src/business-financial-closeout.mjs",
+      "sha256_base_auditada": "501e50a2a02cd67ccddfdddb8fcee9746830b8f37159e5825a7829afcbfcebce",
+      "sha256_head_inicial": "501e50a2a02cd67ccddfdddb8fcee9746830b8f37159e5825a7829afcbfcebce",
+      "fonte_identica_ao_sha_auditado": true,
+      "rotas_existentes": [],
+      "handlers_e_stores": [
+        "web/cloudflare/src/business-financial-closeout.mjs"
+      ],
+      "armazenamento_tabelas_observadas": [],
+      "schemas_observados": [
+        "business_financial_closeout_v1",
+        "business_income_detail_diagnostic_v1"
+      ],
+      "consumidores": [],
+      "base_e_limite": "No verified free-cash/reserve forecast in baseline; needs balanced cash/obligations/source completeness.",
+      "reconferencia_codigo": "INVENTARIADO_NO_SHA_INICIAL",
+      "validacao_nova_implementacao": "PENDENTE",
+      "observacao_de_escopo": "Route/source presence is code evidence, not grant, collection coverage, balance certification or successful financial close."
+    }
+  ],
+  "finance_module_count": 53,
+  "finance_source_files": [
+    "web/finance/src/auth-json-transport.mjs",
+    "web/finance/src/auth-router.mjs",
+    "web/finance/src/business-period-frame.mjs",
+    "web/finance/src/business-period.mjs",
+    "web/finance/src/business-variant-attribution.mjs",
+    "web/finance/src/cash-statement-import.mjs",
+    "web/finance/src/catalog-media-frame.mjs",
+    "web/finance/src/commercial-finance-worker.mjs",
+    "web/finance/src/connection-store.mjs",
+    "web/finance/src/connection-worker.mjs",
+    "web/finance/src/daily-orders-frame.mjs",
+    "web/finance/src/daily-orders.mjs",
+    "web/finance/src/escrow-release-frame.mjs",
+    "web/finance/src/escrow-release-ledger.mjs",
+    "web/finance/src/escrow-releases.mjs",
+    "web/finance/src/external-cash-frame.mjs",
+    "web/finance/src/external-cash-matching.mjs",
+    "web/finance/src/external-cash-period-frame.mjs",
+    "web/finance/src/external-cash-period.mjs",
+    "web/finance/src/external-cash-store.mjs",
+    "web/finance/src/external-cash-worker.mjs",
+    "web/finance/src/financial-order-evidence.mjs",
+    "web/finance/src/historical-variant-evidence-frame.mjs",
+    "web/finance/src/historical-variant-evidence.mjs",
+    "web/finance/src/income-detail-diagnostic.mjs",
+    "web/finance/src/income-detail-frame.mjs",
+    "web/finance/src/income-detail.mjs",
+    "web/finance/src/income-overview-frame.mjs",
+    "web/finance/src/income-overview.mjs",
+    "web/finance/src/initial-exchange.mjs",
+    "web/finance/src/original-items-frame.mjs",
+    "web/finance/src/payment-preview-frame.mjs",
+    "web/finance/src/payment-sample.mjs",
+    "web/finance/src/pending-income-frame.mjs",
+    "web/finance/src/pending-income-scan.mjs",
+    "web/finance/src/product-index-frame.mjs",
+    "web/finance/src/product-index.mjs",
+    "web/finance/src/production-orders-frame.mjs",
+    "web/finance/src/production-orders.mjs",
+    "web/finance/src/production-worker.mjs",
+    "web/finance/src/provider-adapter.mjs",
+    "web/finance/src/reconciliation-frame.mjs",
+    "web/finance/src/refresh-coordinator.mjs",
+    "web/finance/src/refresh-request.mjs",
+    "web/finance/src/refresh-response.mjs",
+    "web/finance/src/refresh-signature.mjs",
+    "web/finance/src/refresh-transport.mjs",
+    "web/finance/src/return-item-evidence.mjs",
+    "web/finance/src/returns-reconciliation.mjs",
+    "web/finance/src/store-period-frame.mjs",
+    "web/finance/src/store-period.mjs",
+    "web/finance/src/variant-catalog-frame.mjs",
+    "web/finance/src/variant-catalog.mjs"
+  ],
+  "provider_path_literals": [
+    {
+      "module": "web/finance/src/business-period.mjs",
+      "path": "/api/v2/order/get_order_detail",
+      "access_confirmed_in_this_run": false
+    },
+    {
+      "module": "web/finance/src/business-period.mjs",
+      "path": "/api/v2/order/get_order_list",
+      "access_confirmed_in_this_run": false
+    },
+    {
+      "module": "web/finance/src/business-period.mjs",
+      "path": "/api/v2/payment/get_escrow_detail",
+      "access_confirmed_in_this_run": false
+    },
+    {
+      "module": "web/finance/src/daily-orders.mjs",
+      "path": "/api/v2/order/get_order_detail",
+      "access_confirmed_in_this_run": false
+    },
+    {
+      "module": "web/finance/src/daily-orders.mjs",
+      "path": "/api/v2/order/get_order_list",
+      "access_confirmed_in_this_run": false
+    },
+    {
+      "module": "web/finance/src/escrow-release-ledger.mjs",
+      "path": "/api/v2/payment/get_escrow_list",
+      "access_confirmed_in_this_run": false
+    },
+    {
+      "module": "web/finance/src/historical-variant-evidence.mjs",
+      "path": "/api/v2/order/get_order_detail",
+      "access_confirmed_in_this_run": false
+    },
+    {
+      "module": "web/finance/src/historical-variant-evidence.mjs",
+      "path": "/api/v2/order/get_order_list",
+      "access_confirmed_in_this_run": false
+    },
+    {
+      "module": "web/finance/src/income-detail.mjs",
+      "path": "/api/v2/payment/get_income_detail",
+      "access_confirmed_in_this_run": false
+    },
+    {
+      "module": "web/finance/src/income-overview.mjs",
+      "path": "/api/v2/payment/get_income_overview",
+      "access_confirmed_in_this_run": false
+    },
+    {
+      "module": "web/finance/src/initial-exchange.mjs",
+      "path": "/api/v2/auth/token/get",
+      "access_confirmed_in_this_run": false
+    },
+    {
+      "module": "web/finance/src/payment-sample.mjs",
+      "path": "/api/v2/order/get_order_detail",
+      "access_confirmed_in_this_run": false
+    },
+    {
+      "module": "web/finance/src/payment-sample.mjs",
+      "path": "/api/v2/order/get_order_list",
+      "access_confirmed_in_this_run": false
+    },
+    {
+      "module": "web/finance/src/payment-sample.mjs",
+      "path": "/api/v2/payment/get_escrow_detail",
+      "access_confirmed_in_this_run": false
+    },
+    {
+      "module": "web/finance/src/product-index.mjs",
+      "path": "/api/v2/product/get_item_list",
+      "access_confirmed_in_this_run": false
+    },
+    {
+      "module": "web/finance/src/production-orders.mjs",
+      "path": "/api/v2/order/get_order_detail",
+      "access_confirmed_in_this_run": false
+    },
+    {
+      "module": "web/finance/src/production-orders.mjs",
+      "path": "/api/v2/order/get_order_list",
+      "access_confirmed_in_this_run": false
+    },
+    {
+      "module": "web/finance/src/refresh-signature.mjs",
+      "path": "/api/v2/auth/access_token/get",
+      "access_confirmed_in_this_run": false
+    },
+    {
+      "module": "web/finance/src/returns-reconciliation.mjs",
+      "path": "/api/v2/payment/get_escrow_detail",
+      "access_confirmed_in_this_run": false
+    },
+    {
+      "module": "web/finance/src/returns-reconciliation.mjs",
+      "path": "/api/v2/returns/get_return_detail",
+      "access_confirmed_in_this_run": false
+    },
+    {
+      "module": "web/finance/src/store-period.mjs",
+      "path": "/api/v2/order/get_order_detail",
+      "access_confirmed_in_this_run": false
+    },
+    {
+      "module": "web/finance/src/store-period.mjs",
+      "path": "/api/v2/order/get_order_list",
+      "access_confirmed_in_this_run": false
+    },
+    {
+      "module": "web/finance/src/store-period.mjs",
+      "path": "/api/v2/payment/get_escrow_detail",
+      "access_confirmed_in_this_run": false
+    },
+    {
+      "module": "web/finance/src/variant-catalog.mjs",
+      "path": "/api/v2/product/get_item_base_info",
+      "access_confirmed_in_this_run": false
+    },
+    {
+      "module": "web/finance/src/variant-catalog.mjs",
+      "path": "/api/v2/product/get_model_list",
+      "access_confirmed_in_this_run": false
+    }
+  ],
+  "all_admin_route_literals": [
+    "/api/admin/ads-today",
+    "/api/admin/agents/learning",
+    "/api/admin/ai-sales/workspace",
+    "/api/admin/audit",
+    "/api/admin/bootstrap",
+    "/api/admin/catalog-classification",
+    "/api/admin/catalog-classification/enqueue",
+    "/api/admin/catalog-classification/sync",
+    "/api/admin/cost-rules",
+    "/api/admin/cost-rules/assignments",
+    "/api/admin/cost-rules/sync",
+    "/api/admin/diagnostics",
+    "/api/admin/finance/ads-period",
+    "/api/admin/finance/business-month",
+    "/api/admin/finance/business-month-ads-state",
+    "/api/admin/finance/business-month-request",
+    "/api/admin/finance/business-month-view",
+    "/api/admin/finance/checkpoints",
+    "/api/admin/finance/closeout",
+    "/api/admin/finance/cost-diagnostics",
+    "/api/admin/finance/cost-recovery",
+    "/api/admin/finance/escrow-release-coverage",
+    "/api/admin/finance/escrow-releases",
+    "/api/admin/finance/expense-ledger",
+    "/api/admin/finance/external-cash",
+    "/api/admin/finance/income-detail",
+    "/api/admin/finance/income-overview",
+    "/api/admin/finance/payment-preview",
+    "/api/admin/finance/payment-sample",
+    "/api/admin/finance/reconciliation",
+    "/api/admin/finance/store-adjustments",
+    "/api/admin/finance/store-period",
+    "/api/admin/finance/sync-policy",
+    "/api/admin/finance/sync-state",
+    "/api/admin/jobs",
+    "/api/admin/jobs/cost",
+    "/api/admin/live",
+    "/api/admin/order-items",
+    "/api/admin/order-observations",
+    "/api/admin/order-observations/",
+    "/api/admin/order-operations",
+    "/api/admin/product-registry",
+    "/api/admin/product-registry/sync",
+    "/api/admin/production",
+    "/api/admin/production-costs",
+    "/api/admin/production-costs/audit",
+    "/api/admin/production-costs/confirmed-references",
+    "/api/admin/production-costs/periods",
+    "/api/admin/production/",
+    "/api/admin/production/coverage",
+    "/api/admin/production/incurred",
+    "/api/admin/production/proposal",
+    "/api/admin/production/weekly-closing",
+    "/api/admin/release-info",
+    "/api/admin/reports/weekly",
+    "/api/admin/returns/manufacturing-links",
+    "/api/admin/returns/physical",
+    "/api/admin/returns/receipts",
+    "/api/admin/settings",
+    "/api/admin/shop-orders",
+    "/api/admin/state",
+    "/api/admin/tax-policy",
+    "/api/admin/tax-policy/audit",
+    "/api/admin/variant-bindings",
+    "/api/admin/variant-bindings/audit",
+    "/api/admin/variant-bindings/automate",
+    "/api/admin/variant-bindings/sync",
+    "/api/admin/workspace/prepare"
+  ],
+  "compatibility_guards": [
+    {
+      "path": "web/cloudflare/src/business-month.mjs",
+      "line": 97,
+      "snippet": "  if(!exact(result,['net_estimate_cents','net_profit_cents','net_margin_bps','pending','basis'])||!cent(result.net_estimate_cents,true)||result.net_profit_cents!==null||!cent(result.net_margin_bps,true)||result.basis!=='PAID_ORDER_CREATE_MONTH_AND_CALENDAR_ADS_ESTIMATE'||!array(result.pending,codes.length)||new Set(result.pending).size!==result.pending.length||!result.pending.every(code=>codes.includes(code)))return null;"
+    },
+    {
+      "path": "web/cloudflare/src/business-financial-closeout.mjs",
+      "line": 179,
+      "snippet": "  if(!exact(value.totals,['expected_repass_cents','after_adjustment_repass_cents','known_production_cents','invoice_tax_cents','ads_spend_cents','external_expenses_cents','provisional_balance_cents','reported_refund_information_cents','realized_profit_cents'])||!Object.values(value.totals).every(money)||value.totals.realized_profit_cents!==null||['known_production_cents','invoice_tax_cents','ads_spend_cents','external_expenses_cents','reported_refund_information_cents'].some(key=>value.totals[ke"
+    },
+    {
+      "path": "web/cloudflare/src/business-financial-closeout.mjs",
+      "line": 192,
+      "snippet": "  for(let i=0;i<2;i++){const row=value.comparisons[i];if(!exact(row,['id','state','expected_cents','basis'])||row.id!==['SELLER_CENTRE','BANK'][i]||row.state!=='NOT_COMPARED'||!money(row.expected_cents)||row.basis!==['SAME_PAID_COHORT_REPORTED_REPASS','BANK_STATEMENT_REQUIRED_SEPARATE_SETTLEMENT_CALENDAR'][i]||i===1&&row.expected_cents!==null)return null;}"
+    },
+    {
+      "path": "web/cloudflare/src/weekly-operating-report.mjs",
+      "line": 57,
+      "snippet": "   if(!exact(value,['schema','checked_at','week_end','timezone','currency','state','manufacturing_period','calendar_period','manufacturing','sales_estimate','imported_cash','realized_profit_cents'])||value.schema!=='weekly_operating_report_v1'||!int(value.checked_at,1,9999999999)||value.timezone!==zone||value.currency!==currency||!['AVAILABLE','PARTIAL','UNAVAILABLE'].includes(value.state)||value.realized_profit_cents!==null)return null;"
+    },
+    {
+      "path": "web/cloudflare/src/incurred-production.mjs",
+      "line": 134,
+      "snippet": "function view(revision,records,stamp){return {schema:'incurred_production_v1',checked_at:stamp,revision,records,summary:summary(records),inventory_valuation:{state:'UNKNOWN',amount_cents:null},financial_integration_allowed:false,external_stock_write_allowed:false,basis:'OPERATOR_CONFIRMED_INCURRED_PRODUCTION_NOT_PAID_CASH_OR_SALES_REFERENCE'};}"
+    },
+    {
+      "path": "web/cloudflare/src/commercial-context.mjs",
+      "line": 21,
+      "snippet": "export function isCommercialContext(context){return contexts.has(context);}"
+    },
+    {
+      "path": "web/cloudflare/src/commercial-context.mjs",
+      "line": 48,
+      "snippet": " if(current?.userId!==context.userId||current?.organizationId!==context.organizationId||current?.storeId!==context.storeId||current?.sessionId!==context.sessionId||current?.membershipId!==context.membershipId||current?.active===false||!current?.capabilities?.includes(context.requiredCapability)||current.authorizationRevision!==context.authorizationRevision)fail('AUTHORIZATION_REVOKED');"
+    }
+  ],
+  "commercial_scope": {
+    "source": "web/cloudflare/src/commercial-context.mjs",
+    "trusted_context_only": true,
+    "identity": [
+      "organizationId",
+      "storeId",
+      "userId",
+      "sessionId",
+      "membershipId",
+      "authorizationRevision"
+    ],
+    "database": "ACCOUNT_DB is bound to tenant-scoped ADMIN_DB/FINANCE_DB wrappers; legacy mapping is explicit, not first signup.",
+    "table_inventory": "web/cloudflare/src/tenant-schema-manifest.mjs",
+    "revocation": "Final response resolves current principal again; jobs/stores must retain corresponding guards."
+  },
+  "evolution_since_audit": {
+    "changed_paths": [
+      "NEXT_CHAT_HANDOFF.txt",
+      "README.md",
+      "docs/MLS_CODEX_HANDOFF_2026_10_28.md",
+      "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
+      "docs/MLS_LAYOUT_REFERENCE_PARITY_2026_11_13.md",
+      "docs/MLS_MASTER_MISSION_CHECKPOINT.json",
+      "docs/ROADMAP_MLS_COMMERCE_OS.md",
+      "docs/v4/evidence/layout-reference-final-validation.json",
+      "docs/v4/layout-reference-live-publication.json",
+      "tools/release-approved-candidate.json",
+      "tools/tests/release-preflight.test.mjs",
+      "tools/worker_project.mjs",
+      "web/cloudflare/browser-assets-published/91beb108a1bbe139adc87ac54db6abdad58e9dd1ecc8b7a0ead0d9188ccbfc9f.js",
+      "web/cloudflare/browser-assets-published/99c6086144a7e099920670eecaf485aba9e4f8c49d91b07f626809c7eb81208d.js",
+      "web/cloudflare/browser-assets-published/b2ec847af07b46e9a4c54295a782ccf7d1a67315edcbeb16053e034a021be4e5.js",
+      "web/cloudflare/browser-assets-published/d5961f95cc6649d963f42e28a50e2e12563ce0d0d66833bb28ce5e16d172922c.js",
+      "web/cloudflare/build.py",
+      "web/cloudflare/src/admin-client.mjs",
+      "web/cloudflare/src/admin-view.mjs",
+      "web/cloudflare/src/agent-period-view.mjs",
+      "web/cloudflare/src/agent-registry-view.mjs",
+      "web/cloudflare/src/app-release-view.mjs",
+      "web/cloudflare/src/app-release.mjs",
+      "web/cloudflare/src/approved-design-system.mjs",
+      "web/cloudflare/src/browser-assets-manifest.mjs",
+      "web/cloudflare/src/business-month-view.mjs",
+      "web/cloudflare/src/commercial-account-client.mjs",
+      "web/cloudflare/src/commercial-account-view.mjs",
+      "web/cloudflare/src/incurred-production-view.mjs",
+      "web/cloudflare/src/mission-control.mjs",
+      "web/cloudflare/src/mls-reference-panel-design.mjs",
+      "web/cloudflare/src/mls-reference-shell-design.mjs",
+      "web/cloudflare/src/mls-verified-charts.mjs",
+      "web/cloudflare/src/production-workspace-view.mjs",
+      "web/cloudflare/src/workspace-navigation.mjs",
+      "web/cloudflare/tests/agent-registry-observer.test.mjs",
+      "web/cloudflare/tests/app-release-discovery-chrome.test.mjs",
+      "web/cloudflare/tests/app-release.test.mjs",
+      "web/cloudflare/tests/browser-assets.test.mjs",
+      "web/cloudflare/tests/browser-owner-chrome.test.mjs",
+      "web/cloudflare/tests/daily-result-clarity-chrome.test.mjs",
+      "web/cloudflare/tests/fixtures/published-production-extraction-v1.js",
+      "web/cloudflare/tests/legacy-login-theme-chrome.test.mjs",
+      "web/cloudflare/tests/mls-agent-workspace-layout.test.mjs",
+      "web/cloudflare/tests/mls-approved-all-panels-chrome.test.mjs",
+      "web/cloudflare/tests/mls-approved-design-system.test.mjs",
+      "web/cloudflare/tests/mls-layout-reference-parity.test.mjs",
+      "web/cloudflare/tests/mls-overview-composition-chrome.test.mjs",
+      "web/cloudflare/tests/mls-product-contribution-chrome.test.mjs",
+      "web/cloudflare/tests/mls-product-workbench-chrome.test.mjs",
+      "web/cloudflare/tests/mls-variant-order-chrome.test.mjs",
+      "web/cloudflare/tests/mls-verified-charts.test.mjs",
+      "web/cloudflare/tests/production-closing-workspace-chrome.test.mjs",
+      "web/cloudflare/tests/today-estimated-profit-chrome.test.mjs",
+      "web/cloudflare/tests/today-estimated-profit-client.test.mjs",
+      "web/cloudflare/tests/workspace-navigation-rework-chrome.test.mjs",
+      "workers/app/browser-assets-published.json"
+    ],
+    "finance_src_changed": false,
+    "audited_sources_unchanged": true,
+    "summary": "PR120 changes layout, native UI checks, release metadata and bounded browser asset inventory; the audited monetary core is unchanged.",
+    "all_24_reference_sources_unchanged": true
+  },
+  "current_execution": {
+    "tests_run_by_this_inventory": 0,
+    "provider_calls": 0,
+    "production_database_queries": 0,
+    "financial_account_acceptance": false,
+    "live_observation": "NOT_PERFORMED_BY_THIS_DOCUMENTATION_INVENTORY"
+  },
+  "historical_reference_only": {
+    "last_committed_publication_receipt": "docs/v4/layout-reference-live-publication.json",
+    "is_fresh_live_evidence": false
+  },
+  "audited_reference_files": [
+    {
+      "id": "S1",
+      "path": "docs/v4/RELEASE.md",
+      "audit_sha256": "d25aa271e5a83b4e0fe3ce6b8f74710f282dcf01d98a8ec5b70c94a89e3a48d6",
+      "initial_head_sha256": "d25aa271e5a83b4e0fe3ce6b8f74710f282dcf01d98a8ec5b70c94a89e3a48d6",
+      "identical": true
+    },
+    {
+      "id": "S2",
+      "path": "web/finance/src/business-period.mjs",
+      "audit_sha256": "fb796de0df36c2f5e77d011a46d12d3c15907e750ff929934a61b91c0b0eb491",
+      "initial_head_sha256": "fb796de0df36c2f5e77d011a46d12d3c15907e750ff929934a61b91c0b0eb491",
+      "identical": true
+    },
+    {
+      "id": "S3",
+      "path": "web/finance/src/payment-sample.mjs",
+      "audit_sha256": "526232ae3390ddc5f58de37fdaf8ab05f0a36607158ee8a011fd8a52b10b0c17",
+      "initial_head_sha256": "526232ae3390ddc5f58de37fdaf8ab05f0a36607158ee8a011fd8a52b10b0c17",
+      "identical": true
+    },
+    {
+      "id": "S4",
+      "path": "web/finance/src/pending-income-scan.mjs",
+      "audit_sha256": "c5a30fb2880fb8cc72d9ef87e420bc67d23fab009b16180b429d3b60ffde00bd",
+      "initial_head_sha256": "c5a30fb2880fb8cc72d9ef87e420bc67d23fab009b16180b429d3b60ffde00bd",
+      "identical": true
+    },
+    {
+      "id": "S5",
+      "path": "web/finance/src/escrow-releases.mjs",
+      "audit_sha256": "2c2a651805dc2708885ee73f075d111db332d786ef7dfb628160f7b89653694c",
+      "initial_head_sha256": "2c2a651805dc2708885ee73f075d111db332d786ef7dfb628160f7b89653694c",
+      "identical": true
+    },
+    {
+      "id": "S6",
+      "path": "web/finance/src/external-cash-period.mjs",
+      "audit_sha256": "5ba08c51608fa43d776fd9fe5d11b39b8d50803a30498bd2a289993faff13bc7",
+      "initial_head_sha256": "5ba08c51608fa43d776fd9fe5d11b39b8d50803a30498bd2a289993faff13bc7",
+      "identical": true
+    },
+    {
+      "id": "S7",
+      "path": "web/finance/src/external-cash-matching.mjs",
+      "audit_sha256": "1338f3e5137b720fe3893c15ae5f45d049ffe7f8ab1d17f1f2bb4fb65bd1bfe3",
+      "initial_head_sha256": "1338f3e5137b720fe3893c15ae5f45d049ffe7f8ab1d17f1f2bb4fb65bd1bfe3",
+      "identical": true
+    },
+    {
+      "id": "S8",
+      "path": "web/finance/src/returns-reconciliation.mjs",
+      "audit_sha256": "13b8a00e473fb77cad61d18e90013bf98b511ef7ca27a7c3329ae85671e39855",
+      "initial_head_sha256": "13b8a00e473fb77cad61d18e90013bf98b511ef7ca27a7c3329ae85671e39855",
+      "identical": true
+    },
+    {
+      "id": "S9",
+      "path": "web/cloudflare/src/business-historical-returns.mjs",
+      "audit_sha256": "f5ca587063e8bd7eabd42807e558154c022d9b8a04f00a28d9ce880a6c721f64",
+      "initial_head_sha256": "f5ca587063e8bd7eabd42807e558154c022d9b8a04f00a28d9ce880a6c721f64",
+      "identical": true
+    },
+    {
+      "id": "S10",
+      "path": "web/cloudflare/src/business-month.mjs",
+      "audit_sha256": "fe688b43dc3d848004477ace9de1b7a70a47951f488b3c06e51d8e50aa96ff63",
+      "initial_head_sha256": "fe688b43dc3d848004477ace9de1b7a70a47951f488b3c06e51d8e50aa96ff63",
+      "identical": true
+    },
+    {
+      "id": "S11",
+      "path": "web/cloudflare/src/business-month-publication.mjs",
+      "audit_sha256": "019596f56814a70f46d1275a68ba5b107b570ec309d3a47e86ad889d440a5d34",
+      "initial_head_sha256": "019596f56814a70f46d1275a68ba5b107b570ec309d3a47e86ad889d440a5d34",
+      "identical": true
+    },
+    {
+      "id": "S12",
+      "path": "web/cloudflare/src/business-financial-closeout.mjs",
+      "audit_sha256": "501e50a2a02cd67ccddfdddb8fcee9746830b8f37159e5825a7829afcbfcebce",
+      "initial_head_sha256": "501e50a2a02cd67ccddfdddb8fcee9746830b8f37159e5825a7829afcbfcebce",
+      "identical": true
+    },
+    {
+      "id": "S13",
+      "path": "web/cloudflare/src/weekly-operating-report.mjs",
+      "audit_sha256": "2e9128c7873884529bbea94ff97aa9c3753d6a1f08b6ecd43bd2c7cddeb22524",
+      "initial_head_sha256": "2e9128c7873884529bbea94ff97aa9c3753d6a1f08b6ecd43bd2c7cddeb22524",
+      "identical": true
+    },
+    {
+      "id": "S14",
+      "path": "web/cloudflare/src/production-weekly-store.mjs",
+      "audit_sha256": "6774503f20b3aa1a7861d8fc92b54220d809625f36228ffe701dd6a9379d1229",
+      "initial_head_sha256": "6774503f20b3aa1a7861d8fc92b54220d809625f36228ffe701dd6a9379d1229",
+      "identical": true
+    },
+    {
+      "id": "S15",
+      "path": "web/cloudflare/src/incurred-production.mjs",
+      "audit_sha256": "3958d0babcaa370cf6f1bcf8d7201cb00e7fc7a015ceddc4c32c1189ea5d3e4d",
+      "initial_head_sha256": "3958d0babcaa370cf6f1bcf8d7201cb00e7fc7a015ceddc4c32c1189ea5d3e4d",
+      "identical": true
+    },
+    {
+      "id": "S16",
+      "path": "web/cloudflare/src/expense-ledger.mjs",
+      "audit_sha256": "cb7acb565e1e28777b65ed46833d9ff56ab7d5393d70d9418548cc658d4d6a80",
+      "initial_head_sha256": "cb7acb565e1e28777b65ed46833d9ff56ab7d5393d70d9418548cc658d4d6a80",
+      "identical": true
+    },
+    {
+      "id": "S17",
+      "path": "web/cloudflare/src/business-tax-policy.mjs",
+      "audit_sha256": "6b27f010e084ee0d29051456d7df859414b5891247c5daeaf4b29e6dea687d4a",
+      "initial_head_sha256": "6b27f010e084ee0d29051456d7df859414b5891247c5daeaf4b29e6dea687d4a",
+      "identical": true
+    },
+    {
+      "id": "S18",
+      "path": "web/cloudflare/src/business-daily-summary.mjs",
+      "audit_sha256": "4cb6e70bc6339d5beb9f42a617dd373bb539ebaf63e6127bc776608578527967",
+      "initial_head_sha256": "4cb6e70bc6339d5beb9f42a617dd373bb539ebaf63e6127bc776608578527967",
+      "identical": true
+    },
+    {
+      "id": "S19",
+      "path": "web/cloudflare/src/physical-returns.mjs",
+      "audit_sha256": "33cbfc605f74ac78f4fc8bf97cc48c123a602350c6333b2f1b51fd4374627107",
+      "initial_head_sha256": "33cbfc605f74ac78f4fc8bf97cc48c123a602350c6333b2f1b51fd4374627107",
+      "identical": true
+    },
+    {
+      "id": "S20",
+      "path": "web/cloudflare/src/return-manufacturing-links.mjs",
+      "audit_sha256": "29de496b9c9de04fe5de5459d60706f54cfe684e5539706cb09d5deff966a68d",
+      "initial_head_sha256": "29de496b9c9de04fe5de5459d60706f54cfe684e5539706cb09d5deff966a68d",
+      "identical": true
+    },
+    {
+      "id": "S21",
+      "path": "web/cloudflare/src/business-history-sync.mjs",
+      "audit_sha256": "b933870adf419767624f40aaadb2b6f053c4d1326eb0d7d6c8d87ee35aad95ca",
+      "initial_head_sha256": "b933870adf419767624f40aaadb2b6f053c4d1326eb0d7d6c8d87ee35aad95ca",
+      "identical": true
+    },
+    {
+      "id": "S22",
+      "path": "web/cloudflare/src/financial-audit-orchestration.mjs",
+      "audit_sha256": "3b08afcb1e8c46fecb72c320be84e7b80d370bc925dc8e79c4e74ca356c0e776",
+      "initial_head_sha256": "3b08afcb1e8c46fecb72c320be84e7b80d370bc925dc8e79c4e74ca356c0e776",
+      "identical": true
+    },
+    {
+      "id": "S23",
+      "path": "web/finance/src/cash-statement-import.mjs",
+      "audit_sha256": "86ac7a3a4a4f5bcee7a1de707dc43eb30532976b99b8ce93ae8b015a300dd73c",
+      "initial_head_sha256": "86ac7a3a4a4f5bcee7a1de707dc43eb30532976b99b8ce93ae8b015a300dd73c",
+      "identical": true
+    },
+    {
+      "id": "S24",
+      "path": "docs/RESUMO_FINANCEIRO_TOTAL.md",
+      "audit_sha256": "0b9d2e6b25266b11f0167bad06fc644d538a14ed7daeab919037fe7a22f7efd2",
+      "initial_head_sha256": "0b9d2e6b25266b11f0167bad06fc644d538a14ed7daeab919037fe7a22f7efd2",
+      "identical": true
+    }
+  ],
+  "audited_reference_file_count": 24,
+  "current_extension": {
+    "state": "WORKING_TREE_LOCAL_NOT_RELEASE_EVIDENCE",
+    "date": "2026-11-13",
+    "modules_added": [
+      "web/cloudflare/src/app-financial-automation.mjs",
+      "web/cloudflare/src/financial-accounting-policy.mjs",
+      "web/cloudflare/src/financial-accounting-projection.mjs",
+      "web/cloudflare/src/financial-accounting-schedule.mjs",
+      "web/cloudflare/src/financial-auth-router.mjs",
+      "web/cloudflare/src/financial-automation-ads-sources.mjs",
+      "web/cloudflare/src/financial-automation-allocation-client.mjs",
+      "web/cloudflare/src/financial-automation-bridge.mjs",
+      "web/cloudflare/src/financial-automation-cash-sources.mjs",
+      "web/cloudflare/src/financial-automation-client.mjs",
+      "web/cloudflare/src/financial-automation-jobs.mjs",
+      "web/cloudflare/src/financial-automation-service.mjs",
+      "web/cloudflare/src/financial-automation-sources.mjs",
+      "web/cloudflare/src/financial-automation-store.mjs",
+      "web/cloudflare/src/financial-automation-view.mjs",
+      "web/cloudflare/src/financial-cash-allocation-store.mjs",
+      "web/cloudflare/src/financial-close-store.mjs",
+      "web/cloudflare/src/financial-event-ledger.mjs",
+      "web/cloudflare/src/financial-event-store.mjs",
+      "web/cloudflare/src/financial-inventory-bridge.mjs",
+      "web/cloudflare/src/financial-obligation-app-source.mjs",
+      "web/cloudflare/src/financial-returns-tracker.mjs",
+      "web/finance/src/business-period.mjs",
+      "web/finance/src/financial-allocation-frame.mjs",
+      "web/finance/src/financial-allocation-worker.mjs",
+      "web/finance/src/financial-bank-connector.mjs",
+      "web/finance/src/financial-cash-allocation.mjs",
+      "web/finance/src/financial-obligation-frame.mjs",
+      "web/finance/src/financial-obligation-worker.mjs",
+      "web/finance/src/financial-order-components.mjs",
+      "web/finance/src/financial-private-protocol.mjs",
+      "web/finance/src/financial-source-capabilities.mjs",
+      "web/finance/src/financial-source-collection.mjs",
+      "web/finance/src/financial-source-events.mjs",
+      "web/finance/src/financial-source-frame.mjs",
+      "web/finance/src/financial-source-worker.mjs"
+    ],
+    "source_capture": "New escrow/detail reads only; historical absent captures remain PARTIAL/NOT_CAPTURED.",
+    "new_schema_objects": 59,
+    "tenant_schema_domains": "App:14tables+14triggers; Finance:13tables+4indexes+14triggers",
+    "legacy_schema_hash_policy": "Legacy Admin SCHEMA unchanged; new DDL provisioned additively outside workspace_setup v1 hash.",
+    "validation": "docs/financial-automation/validation/local-focused-20261113.json",
+    "unimplemented_source_bridges": [
+      "Wallet/Payout native production adapter and actual grants",
+      "Authorized bank connector adapter, consent, physical account opening/closing proof",
+      "Completion-date cohort collection beyond legacy creation-date runs",
+      "Full old Returns discovery outside already saved reports",
+      "Native Ads timezone/balance/recharge proof beyond conservative daily REVIEW",
+      "Complete obligation/payment classification and external production commitments"
+    ],
+    "financial_account_acceptance": false,
+    "publication_receipt": null,
+    "inventory_bridge": "Durable INVENTORY state: frozen source lot costs, original-item recognized-sale proof, inspected matching return valuation, explicit reversal; partial cohort coverage retained.",
+    "additional_validation": "docs/financial-automation/validation/inventory-focused-20261113.json"
+  }
+}

@@ -3,11 +3,13 @@ import {ensureFinanceAccessToken} from './refresh-coordinator.mjs';
 import {requestFinanceAuthJson} from './auth-json-transport.mjs';
 import {projectBusinessPeriodRequest,projectBusinessPeriodFrame} from './business-period-frame.mjs';
 import {FINANCIAL_ORDER_EVIDENCE_SCHEMA,buildFinancialOrderEvidence,projectFinancialOrderEvidence} from './financial-order-evidence.mjs';
+import {FINANCIAL_ORDER_COMPONENTS_SCHEMA,buildFinancialOrderComponents} from './financial-order-components.mjs';
 import {buildBusinessPeriodVariantsFrame} from './business-variant-attribution.mjs';
 
 
 function createTenantBusinessPeriod(profile){
 const buildFinancialOrderEvidenceScoped=(...args)=>buildFinancialOrderEvidence(...args,profile);
+const buildFinancialOrderComponentsScoped=input=>buildFinancialOrderComponents(input,profile);
 
 // A creation-time cohort of every order, classified from current detail status.
 // Only the existing read APIs are used; no Ads attribution or settlement is inferred.
@@ -27,6 +29,7 @@ const businessHash=async value=>Array.from(new Uint8Array(await crypto.subtle.di
 const businessBuckets=['completed','ongoing','cancelled','cancel_pending','unpaid','other','unknown'];
 const BUSINESS_SCHEMA=[
  ...FINANCIAL_ORDER_EVIDENCE_SCHEMA,
+ ...FINANCIAL_ORDER_COMPONENTS_SCHEMA,
  `CREATE TABLE IF NOT EXISTS finance_business_period_runs (run_id TEXT PRIMARY KEY,partner_id INTEGER NOT NULL,shop_id INTEGER NOT NULL,revision INTEGER NOT NULL,status TEXT NOT NULL,start_date TEXT NOT NULL,end_date TEXT NOT NULL,time_from INTEGER NOT NULL,time_to INTEGER NOT NULL,cutoff_at INTEGER NOT NULL,checked_at INTEGER NOT NULL,created_at INTEGER NOT NULL,cursor TEXT NOT NULL,pages_read INTEGER NOT NULL,duplicate_orders INTEGER NOT NULL,lease_owner TEXT,lease_until INTEGER,last_error TEXT)`,
  `CREATE TABLE IF NOT EXISTS finance_business_period_orders (run_id TEXT NOT NULL,order_hash TEXT NOT NULL,bucket TEXT NOT NULL,payment_covered INTEGER NOT NULL,sales_raw TEXT,escrow_raw TEXT,ads_raw TEXT,returns_seen INTEGER,items TEXT NOT NULL,source_hash TEXT NOT NULL,checked_at INTEGER NOT NULL,PRIMARY KEY(run_id,order_hash))`,
  `CREATE TABLE IF NOT EXISTS finance_business_period_cursors (run_id TEXT NOT NULL,cursor_hash TEXT NOT NULL,PRIMARY KEY(run_id,cursor_hash))`,
@@ -262,6 +265,7 @@ async function runFinanceBusinessPeriod(env,options={}){
   const recent=await storage(()=>prepare(recentSql,recentArgs).first());if(recent)return output(await snapshot(recent.run_id));
   const cutoff=initialTime-30*86400;
   await storage(()=>db.batch([
+   prepare('DELETE FROM finance_financial_order_components WHERE run_id IN (SELECT run_id FROM finance_business_period_runs WHERE created_at<? AND partner_id=? AND shop_id=?)',[cutoff,...businessIdentity]),
    prepare('DELETE FROM finance_business_order_evidence WHERE run_id IN (SELECT run_id FROM finance_business_period_runs WHERE created_at<? AND partner_id=? AND shop_id=?)',[cutoff,...businessIdentity]),
    prepare('DELETE FROM finance_business_period_orders WHERE run_id IN (SELECT run_id FROM finance_business_period_runs WHERE created_at<? AND partner_id=? AND shop_id=?)',[cutoff,...businessIdentity]),
    prepare('DELETE FROM finance_business_period_cursors WHERE run_id IN (SELECT run_id FROM finance_business_period_runs WHERE created_at<? AND partner_id=? AND shop_id=?)',[cutoff,...businessIdentity]),
@@ -270,6 +274,7 @@ async function runFinanceBusinessPeriod(env,options={}){
   ]));
   const evict="SELECT run_id FROM finance_business_period_runs WHERE partner_id=? AND shop_id=? AND cutoff_at<? AND (lease_owner IS NULL OR lease_until<=?) AND (SELECT COUNT(*) FROM finance_business_period_runs WHERE partner_id=? AND shop_id=?)>=60 ORDER BY created_at,run_id LIMIT 1",evictArgs=[...businessIdentity,initialTime-900,initialTime,...businessIdentity];
   await storage(()=>db.batch([
+   prepare('DELETE FROM finance_financial_order_components WHERE run_id IN ('+evict+')',evictArgs),
    prepare('DELETE FROM finance_business_order_evidence WHERE run_id IN ('+evict+')',evictArgs),
    prepare('DELETE FROM finance_business_period_orders WHERE run_id IN ('+evict+')',evictArgs),
    prepare('DELETE FROM finance_business_period_cursors WHERE run_id IN ('+evict+')',evictArgs),
@@ -298,10 +303,11 @@ async function runFinanceBusinessPeriod(env,options={}){
   const limited=await storage(()=>prepare("UPDATE finance_business_period_runs SET status='LIMIT_REACHED',revision=revision+1,checked_at=?,lease_owner=NULL,lease_until=NULL,last_error=NULL WHERE "+guard,[stamp,...guardArgs(stamp)]).run());
   return output(await snapshot(input.run_id,limited.meta.changes===1?undefined:'BUSINESS_PERIOD_CONFLICT'));
  };
- const newlyCached=[],newEvidence=new Map();let retainedCache=observed.cache;
+ const newlyCached=[],newEvidence=new Map(),newComponents=new Map();let retainedCache=observed.cache;
  const evidenceStatements=(records,stamp)=>records.flatMap(record=>{
   const evidence=newEvidence.get(record.order_hash);if(!evidence||evidence.source_hash!==record.source_hash||evidence.checked_at!==record.checked_at)return [];
-  return [prepare('INSERT INTO finance_business_order_evidence(run_id,order_hash,source_hash,checked_at,payload,payload_hash) SELECT ?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM finance_business_period_runs WHERE '+guard+') ON CONFLICT(run_id,order_hash) DO UPDATE SET source_hash=excluded.source_hash,checked_at=excluded.checked_at,payload=excluded.payload,payload_hash=excluded.payload_hash',[input.run_id,record.order_hash,record.source_hash,record.checked_at,evidence.payload,evidence.payload_hash,...guardArgs(stamp)])];
+  const component=newComponents.get(record.order_hash),componentWrites=component&&component.source_hash===record.source_hash&&component.checked_at===record.checked_at?[prepare('INSERT INTO finance_financial_order_components(run_id,order_hash,source_hash,checked_at,payload,payload_hash) SELECT ?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM finance_business_period_runs WHERE '+guard+') ON CONFLICT(run_id,order_hash) DO UPDATE SET source_hash=excluded.source_hash,checked_at=excluded.checked_at,payload=excluded.payload,payload_hash=excluded.payload_hash',[input.run_id,record.order_hash,record.source_hash,record.checked_at,component.payload,component.payload_hash,...guardArgs(stamp)])]:[];
+  return [prepare('INSERT INTO finance_business_order_evidence(run_id,order_hash,source_hash,checked_at,payload,payload_hash) SELECT ?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM finance_business_period_runs WHERE '+guard+') ON CONFLICT(run_id,order_hash) DO UPDATE SET source_hash=excluded.source_hash,checked_at=excluded.checked_at,payload=excluded.payload,payload_hash=excluded.payload_hash',[input.run_id,record.order_hash,record.source_hash,record.checked_at,evidence.payload,evidence.payload_hash,...guardArgs(stamp)]),...componentWrites];
  });
  try{
   remainingTimeout();
@@ -342,7 +348,7 @@ async function runFinanceBusinessPeriod(env,options={}){
     if(Object.hasOwn(row,'create_time')&&(!Number.isSafeInteger(row.create_time)||row.create_time<run.time_from||row.create_time>run.time_to))throw businessFailure('IDENTITY_MISMATCH');
     const bucket=businessBucket(row.order_status),paid=['completed','ongoing'].includes(bucket);
     if(paid&&row.currency!=='BRL')throw businessFailure('DETAIL_INVALID');
-    bySerial.set(row.order_sn,{bucket,order_status:row.order_status,currency:row.currency,create_time:row.create_time??null,items:paid?businessItems(row.item_list,'model_quantity_purchased'):[]});
+    bySerial.set(row.order_sn,{bucket,order_status:row.order_status,currency:row.currency,create_time:row.create_time??null,components_order:row,items:paid?businessItems(row.item_list,'model_quantity_purchased'):[]});
    }
    details=selected.map(row=>({...row,...bySerial.get(row.serial)}));
   }
@@ -381,6 +387,7 @@ async function runFinanceBusinessPeriod(env,options={}){
      // Optional evidence has its own private bounded representation. Missing or
      // invalid optional fields cannot invalidate the established v1 ledger.
      try{newEvidence.set(record.order_hash,await buildFinancialOrderEvidenceScoped({order_sn:selection.serial,order_status:selection.order_status??null,currency:selection.currency??null,payment,record,create_time:selection.create_time}));}catch{}
+     try{newComponents.set(record.order_hash,await buildFinancialOrderComponentsScoped({order_sn:selection.serial,order_status:selection.order_status??null,currency:selection.currency??null,payment,record,order:selection.components_order}));}catch{}
     }catch(error){
      const priority={BUSINESS_PERIOD_CHECKPOINT:0,BUSINESS_PERIOD_BUSY:0,BUSINESS_PERIOD_UPSTREAM_UNAVAILABLE:1,BUSINESS_PERIOD_TIMEOUT:2,BUSINESS_PERIOD_RATE_LIMIT:3,BUSINESS_PERIOD_AUTH_REQUIRED:4,BUSINESS_PERIOD_INVALID_SOURCE:5};
      if(!failed||priority[businessDiagnostic(error)]>priority[businessDiagnostic(failed)])failed=error;

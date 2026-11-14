@@ -215,3 +215,12 @@ test('the explicit manual host selection preserves APIs, schema strings and froz
  assert.equal(functions,136);assert.equal(values,17);assert.equal(strings,121);
  assert.ok(profiles.manual_saved>=48394,'additional manual formatting must save at least48394 bytes; actual '+profiles.manual_saved);
 });
+
+test('reviewed financial and pure-host compaction preserves exports and frozen browser bytes',()=>{
+ for(const name of ['mlsFinancialEventLedger','mlsFinancialInventoryBridge','brazaBusinessMonth','mlsReturnManufacturingLinksStore','brazaBusinessVariantAttribution']){
+  const row=fixture(name),result=compactWorkerNamespaces({schema,namespaces:[row]}).namespaces[0];
+  const execute=source=>new vm.Script(source+'\nJSON.stringify({value:retainedName(41),browser})').runInNewContext();
+  assert.equal(execute(result.source),execute(row.source));assert.ok(result.source.endsWith('\nconst {retainedName,browser}='+name+';\n'));
+  assert.equal(result.name,name);
+ }
+});

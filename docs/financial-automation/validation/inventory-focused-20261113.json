@@ -1,0 +1,42 @@
+{
+  "schema": "mls_financial_local_validation_v1",
+  "date": "2026-11-13",
+  "environment": "LOCAL_SYNTHETIC_NODE_SQLITE",
+  "command": [
+    "node",
+    "--test",
+    "web/cloudflare/tests/financial-inventory-bridge.test.mjs"
+  ],
+  "tests": 9,
+  "passed": 9,
+  "failed": 0,
+  "skipped": 0,
+  "cancelled": 0,
+  "scope": "Actual local manufacture/physical receipt/link services + durable automation-state + recognized journal sale. No production data, provider grant or live acceptance.",
+  "additional_projection_check": {
+    "command": [
+      "node",
+      "--test",
+      "web/cloudflare/tests/financial-accounting-projection.test.mjs"
+    ],
+    "passed": 14,
+    "failed": 0,
+    "scope": "Whole nominal Ads civil-day containment; manufacture Friday edge cannot absorb a complete daily expense."
+  },
+  "not_aggregate_with_prior_runs": true,
+  "final_combined_run": {
+    "command": [
+      "node",
+      "--test",
+      "--test-reporter=tap",
+      "web/cloudflare/tests/financial-inventory-bridge.test.mjs",
+      "web/cloudflare/tests/financial-accounting-projection.test.mjs"
+    ],
+    "tests": 23,
+    "passed": 23,
+    "failed": 0,
+    "skipped": 0,
+    "cancelled": 0,
+    "raw_log_local_only": "/tmp/financial-inventory-final-20261113.tap"
+  }
+}

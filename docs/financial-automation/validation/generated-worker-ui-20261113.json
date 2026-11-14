@@ -1,0 +1,361 @@
+{
+  "schema": "mls_financial_ui_validation_v1",
+  "generated_at": "2026-11-14T00:16:17.942473+00:00",
+  "app_worker_sha256": "3a5f01ae09ede502e4707f001976fc2a6094075ba26574e5e5d97b2e827687a9",
+  "synthetic": true,
+  "real_owner_authenticated": false,
+  "provider_calls": 0,
+  "production_mutations": 0,
+  "suites": [
+    {
+      "files": [
+        "financial-automation-client.test.mjs",
+        "financial-inventory-client.test.mjs"
+      ],
+      "passed": 13,
+      "failed": 0
+    },
+    {
+      "files": [
+        "admin-bootstrap-compiled.test.mjs",
+        "admin-startup-compiled.test.mjs"
+      ],
+      "passed": 29,
+      "failed": 0
+    },
+    {
+      "files": [
+        "financial-automation-client-chrome.test.mjs"
+      ],
+      "passed": 2,
+      "failed": 0,
+      "profiles": 8,
+      "normal_and_minified": true
+    },
+    {
+      "files": [
+        "financial-automation-worker-chrome.test.mjs"
+      ],
+      "passed": 2,
+      "failed": 0,
+      "profiles": 8,
+      "normal_and_minified": true,
+      "actual_public_asset_graph": true,
+      "controlled_hydration": true,
+      "asset_blocked_fallback": true
+    }
+  ],
+  "checks": [
+    "All eight financial sections navigate to real targets.",
+    "Canonical daily, component, position and forecast amounts match table and CSV.",
+    "Negative and missing values remain distinct; future dates do not become zero.",
+    "320px/1365px dark/light geometry has no horizontal page overflow and keeps 44px controls.",
+    "Policy tax and reserve changes require explicit review; close version CAS is preserved.",
+    "Transfer and expense allocation use server previews and explicit confirmation/reversal.",
+    "Historical inventory choices use stored source selections and server-proof fields.",
+    "Unauthorized responses clear values; transient failures preserve a visibly stale snapshot.",
+    "Hidden successful mutations invalidate cached projections before reopening.",
+    "Server fallback stays visible if the workspace asset cannot load.",
+    "Strict startup fake DOM tests retain UNKNOWN_CONTROL errors and original ordered scripts."
+  ],
+  "screenshots": [
+    "finance-worker-normal-320-dark.png",
+    "finance-worker-normal-320-light.png",
+    "finance-worker-normal-1365-dark.png",
+    "finance-worker-normal-1365-light.png",
+    "finance-worker-minified-320-dark.png",
+    "finance-worker-minified-320-light.png",
+    "finance-worker-minified-1365-dark.png",
+    "finance-worker-minified-1365-light.png"
+  ],
+  "limits": [
+    "Local synthetic UI validation does not certify the real store, source permissions, bank account reconciliation or closed financial periods.",
+    "Runtime publication and production-domain verification are performed by the root agent."
+  ],
+  "controlled_markup_hydration": "DOMParser.parseFromString of controlled static markup and replaceChildren; no innerHTML",
+  "root_security_and_strict_bootstrap_verified_tests": 60,
+  "legacy_regression_triage": {
+    "app_worker_sha256": "3a5f01ae09ede502e4707f001976fc2a6094075ba26574e5e5d97b2e827687a9",
+    "head": "f68525ea1d136350ece9942433352accdf97d992",
+    "full_files": [
+      "bundled-client.test.mjs",
+      "mls-approved-all-panels-chrome.test.mjs",
+      "mls-integrated-owner-visual-chrome.test.mjs"
+    ],
+    "passed": 13,
+    "failed": 0,
+    "evidence_source": "CURRENT_FULL_SUITE",
+    "full_suite_tests": 4432,
+    "full_suite_log_sha256": "fa74602da077af73bfcd3acb38c52ba16b3c8c6729f84cc7e506a095d9f66279",
+    "matched_passed_test_names": [
+      "ok 573 - deployed monthly client validates and renders financial and Ads responses after esbuild (minify=false)",
+      "ok 574 - deployed reconciliation explains the observation and reads only its private monthly history after esbuild (minify=false)",
+      "ok 575 - deployed monthly client renders custom product costs as text without changing financial balances (minify=false)",
+      "ok 576 - deployed monthly client deducts one MEI DAS and keeps product balances before the fixed monthly tax (minify=false)",
+      "ok 577 - deployed monthly client validates and renders financial and Ads responses after esbuild (minify=true)",
+      "ok 578 - deployed reconciliation explains the observation and reads only its private monthly history after esbuild (minify=true)",
+      "ok 579 - deployed monthly client renders custom product costs as text without changing financial balances (minify=true)",
+      "ok 580 - deployed monthly client deducts one MEI DAS and keeps product balances before the fixed monthly tax (minify=true)",
+      "ok 2214 - owner design smoke: fifteen real workspaces, real navigation and light/dark themes at desktop and 390px mobile (minify=false)",
+      "ok 2215 - owner design smoke: fifteen real workspaces, real navigation and light/dark themes at desktop and 390px mobile (minify=true)",
+      "ok 2216 - fresh local D1 owner bootstrap captures six connected workspaces while financial amounts remain unknown",
+      "ok 2239 - synthetic owner visual smoke in desktop and mobile Chrome with zero real-account access",
+      "ok 2240 - disabled release switch keeps legacy Ctrl+K navigation usable in real Chrome"
+    ],
+    "production_changes": false,
+    "expectations_or_timeouts_relaxed": false,
+    "isolated_native_repetitions": 0,
+    "note": "All 13 regressions passed in the current exact full suite; previous source evidence remains under previous_release_validation."
+  },
+  "shared_fixture_and_navigation_regression": {
+    "files": [
+      "owner-report-browser-fixture.mjs",
+      "composition-cost-ui-compiled.test.mjs",
+      "hermes-financial-context-ui.test.mjs",
+      "financial-automation-worker-chrome.test.mjs"
+    ],
+    "passed": 21,
+    "failed": 0,
+    "test_concurrency": 3,
+    "unique_navigation_url_and_dom_token": true,
+    "only_expected_runtime_context_resets_caught_during_bounded_navigation_wait": true,
+    "whole_test_retries": false,
+    "assertions_or_timeouts_relaxed": false,
+    "runtime_changed": false
+  },
+  "quality_guard_labels": {
+    "codes": [
+      "ORDER_ADJUSTMENT_CLASSIFICATION_REQUIRED",
+      "ORDER_TOPUP_COMPONENT_REQUIRED"
+    ],
+    "normal_and_minified_behavior_tests_passed": 2,
+    "unconfirmed_profit_remains_null": true,
+    "only_one_read_no_writes": true
+  },
+  "latest_build_verification": {
+    "app_worker_sha256": "3a5f01ae09ede502e4707f001976fc2a6094075ba26574e5e5d97b2e827687a9",
+    "financial_and_inventory_unit_tests_passed": 13,
+    "generated_worker_native_tests_passed": 2,
+    "display_profiles": 8,
+    "normal_and_minified": true,
+    "production_account_verified": false,
+    "production_mutations": 0,
+    "current_full_suite_tests_passed": 4432
+  },
+  "root_security_and_strict_bootstrap_verified_app_sha256": "17708afc909c858fb518759e7556de99ecf9593999ef77b5cc7b2d9b0c221bb0",
+  "historical_legacy_regression_triage": {
+    "app_worker_sha256": "17708afc909c858fb518759e7556de99ecf9593999ef77b5cc7b2d9b0c221bb0",
+    "full_files": [
+      "bundled-client.test.mjs",
+      "mls-approved-all-panels-chrome.test.mjs",
+      "mls-integrated-owner-visual-chrome.test.mjs"
+    ],
+    "passed": 13,
+    "failed": 0,
+    "isolated_native_repetitions": 2,
+    "reported_native_failures_reproduced": false,
+    "production_changes": false,
+    "expectations_or_timeouts_relaxed": false,
+    "fixture_changes": [
+      "No-host document stub for pure VM helpers.",
+      "Failure-only browser diagnostics for native startup assertions."
+    ]
+  },
+  "current_full_suite": {
+    "head": "f68525ea1d136350ece9942433352accdf97d992",
+    "log_sha256": "fa74602da077af73bfcd3acb38c52ba16b3c8c6729f84cc7e506a095d9f66279",
+    "tests": 4432,
+    "pass": 4432,
+    "fail": 0,
+    "skipped": 0,
+    "cancelled": 0
+  },
+  "head": "f68525ea1d136350ece9942433352accdf97d992",
+  "previous_release_validation": {
+    "schema": "mls_financial_ui_validation_v1",
+    "generated_at": "2026-11-13T23:42:43.919196+00:00",
+    "app_worker_sha256": "721b3f369b93000dd5e8a0065cd83fd4bd7f54baae262c4b635e5a118fffde64",
+    "synthetic": true,
+    "real_owner_authenticated": false,
+    "provider_calls": 0,
+    "production_mutations": 0,
+    "suites": [
+      {
+        "files": [
+          "financial-automation-client.test.mjs",
+          "financial-inventory-client.test.mjs"
+        ],
+        "passed": 13,
+        "failed": 0
+      },
+      {
+        "files": [
+          "admin-bootstrap-compiled.test.mjs",
+          "admin-startup-compiled.test.mjs"
+        ],
+        "passed": 29,
+        "failed": 0
+      },
+      {
+        "files": [
+          "financial-automation-client-chrome.test.mjs"
+        ],
+        "passed": 2,
+        "failed": 0,
+        "profiles": 8,
+        "normal_and_minified": true
+      },
+      {
+        "files": [
+          "financial-automation-worker-chrome.test.mjs"
+        ],
+        "passed": 2,
+        "failed": 0,
+        "profiles": 8,
+        "normal_and_minified": true,
+        "actual_public_asset_graph": true,
+        "controlled_hydration": true,
+        "asset_blocked_fallback": true
+      }
+    ],
+    "checks": [
+      "All eight financial sections navigate to real targets.",
+      "Canonical daily, component, position and forecast amounts match table and CSV.",
+      "Negative and missing values remain distinct; future dates do not become zero.",
+      "320px/1365px dark/light geometry has no horizontal page overflow and keeps 44px controls.",
+      "Policy tax and reserve changes require explicit review; close version CAS is preserved.",
+      "Transfer and expense allocation use server previews and explicit confirmation/reversal.",
+      "Historical inventory choices use stored source selections and server-proof fields.",
+      "Unauthorized responses clear values; transient failures preserve a visibly stale snapshot.",
+      "Hidden successful mutations invalidate cached projections before reopening.",
+      "Server fallback stays visible if the workspace asset cannot load.",
+      "Strict startup fake DOM tests retain UNKNOWN_CONTROL errors and original ordered scripts."
+    ],
+    "screenshots": [
+      "finance-worker-minified-1365-dark.png",
+      "finance-worker-minified-1365-light.png",
+      "finance-worker-minified-320-dark.png",
+      "finance-worker-minified-320-light.png",
+      "finance-worker-normal-1365-dark.png",
+      "finance-worker-normal-1365-light.png",
+      "finance-worker-normal-320-dark.png",
+      "finance-worker-normal-320-light.png"
+    ],
+    "limits": [
+      "Local synthetic UI validation does not certify the real store, source permissions, bank account reconciliation or closed financial periods.",
+      "Runtime publication and production-domain verification are performed by the root agent."
+    ],
+    "controlled_markup_hydration": "DOMParser.parseFromString of controlled static markup and replaceChildren; no innerHTML",
+    "root_security_and_strict_bootstrap_verified_tests": 60,
+    "legacy_regression_triage": {
+      "app_worker_sha256": "721b3f369b93000dd5e8a0065cd83fd4bd7f54baae262c4b635e5a118fffde64",
+      "head": "e6bbb189ec2331c0a07136c5b9f720e2e300b5d4",
+      "full_files": [
+        "bundled-client.test.mjs",
+        "mls-approved-all-panels-chrome.test.mjs",
+        "mls-integrated-owner-visual-chrome.test.mjs"
+      ],
+      "passed": 13,
+      "failed": 0,
+      "evidence_source": "CURRENT_FULL_SUITE",
+      "full_suite_tests": 4430,
+      "full_suite_log_sha256": "b7bda0c19fa5d97b23afe526f825b0e8b15712ae50f76751b0b5c28179857826",
+      "matched_passed_test_names": [
+        "ok 573 - deployed monthly client validates and renders financial and Ads responses after esbuild (minify=false)",
+        "ok 574 - deployed reconciliation explains the observation and reads only its private monthly history after esbuild (minify=false)",
+        "ok 575 - deployed monthly client renders custom product costs as text without changing financial balances (minify=false)",
+        "ok 576 - deployed monthly client deducts one MEI DAS and keeps product balances before the fixed monthly tax (minify=false)",
+        "ok 577 - deployed monthly client validates and renders financial and Ads responses after esbuild (minify=true)",
+        "ok 578 - deployed reconciliation explains the observation and reads only its private monthly history after esbuild (minify=true)",
+        "ok 579 - deployed monthly client renders custom product costs as text without changing financial balances (minify=true)",
+        "ok 580 - deployed monthly client deducts one MEI DAS and keeps product balances before the fixed monthly tax (minify=true)",
+        "ok 2212 - owner design smoke: fifteen real workspaces, real navigation and light/dark themes at desktop and 390px mobile (minify=false)",
+        "ok 2213 - owner design smoke: fifteen real workspaces, real navigation and light/dark themes at desktop and 390px mobile (minify=true)",
+        "ok 2214 - fresh local D1 owner bootstrap captures six connected workspaces while financial amounts remain unknown",
+        "ok 2237 - synthetic owner visual smoke in desktop and mobile Chrome with zero real-account access",
+        "ok 2238 - disabled release switch keeps legacy Ctrl+K navigation usable in real Chrome"
+      ],
+      "production_changes": false,
+      "expectations_or_timeouts_relaxed": false,
+      "isolated_native_repetitions": 0,
+      "note": "Current full suite verifies all 13 regressions on the exact current build; prior isolated triage remains under historical_legacy_regression_triage."
+    },
+    "shared_fixture_and_navigation_regression": {
+      "files": [
+        "owner-report-browser-fixture.mjs",
+        "composition-cost-ui-compiled.test.mjs",
+        "hermes-financial-context-ui.test.mjs",
+        "financial-automation-worker-chrome.test.mjs"
+      ],
+      "passed": 21,
+      "failed": 0,
+      "test_concurrency": 3,
+      "unique_navigation_url_and_dom_token": true,
+      "only_expected_runtime_context_resets_caught_during_bounded_navigation_wait": true,
+      "whole_test_retries": false,
+      "assertions_or_timeouts_relaxed": false,
+      "runtime_changed": false
+    },
+    "quality_guard_labels": {
+      "codes": [
+        "ORDER_ADJUSTMENT_CLASSIFICATION_REQUIRED",
+        "ORDER_TOPUP_COMPONENT_REQUIRED"
+      ],
+      "normal_and_minified_behavior_tests_passed": 2,
+      "unconfirmed_profit_remains_null": true,
+      "only_one_read_no_writes": true
+    },
+    "latest_build_verification": {
+      "app_worker_sha256": "721b3f369b93000dd5e8a0065cd83fd4bd7f54baae262c4b635e5a118fffde64",
+      "financial_and_inventory_unit_tests_passed": 13,
+      "generated_worker_native_tests_passed": 2,
+      "display_profiles": 8,
+      "normal_and_minified": true,
+      "production_account_verified": false,
+      "production_mutations": 0
+    },
+    "root_security_and_strict_bootstrap_verified_app_sha256": "17708afc909c858fb518759e7556de99ecf9593999ef77b5cc7b2d9b0c221bb0",
+    "historical_legacy_regression_triage": {
+      "app_worker_sha256": "17708afc909c858fb518759e7556de99ecf9593999ef77b5cc7b2d9b0c221bb0",
+      "full_files": [
+        "bundled-client.test.mjs",
+        "mls-approved-all-panels-chrome.test.mjs",
+        "mls-integrated-owner-visual-chrome.test.mjs"
+      ],
+      "passed": 13,
+      "failed": 0,
+      "isolated_native_repetitions": 2,
+      "reported_native_failures_reproduced": false,
+      "production_changes": false,
+      "expectations_or_timeouts_relaxed": false,
+      "fixture_changes": [
+        "No-host document stub for pure VM helpers.",
+        "Failure-only browser diagnostics for native startup assertions."
+      ]
+    },
+    "current_full_suite": {
+      "head": "e6bbb189ec2331c0a07136c5b9f720e2e300b5d4",
+      "log_sha256": "b7bda0c19fa5d97b23afe526f825b0e8b15712ae50f76751b0b5c28179857826",
+      "tests": 4430,
+      "pass": 4430,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0
+    }
+  },
+  "source_clock_regressions": {
+    "valid_advancing_observation": true,
+    "future_event_and_cutoff_rejected": true,
+    "no_ledger_or_checkpoint_change_on_rejection": true
+  },
+  "current_screenshot_sha256": {
+    "finance-worker-normal-320-dark.png": "6fc470c3fe01eae57427e7debd58daf7c0168bfba839dfda982729198e1050eb",
+    "finance-worker-normal-320-light.png": "182a84701b48b5cfe8e696d8a405dff0c2e4506a8660e9b63352a702703bc542",
+    "finance-worker-normal-1365-dark.png": "3a072f8f54986f00a9cf0b0d01b7b307af8ccb3b646e17fa598a1ebedae8323a",
+    "finance-worker-normal-1365-light.png": "3645ed950fb4646012399aec5154adaa49a04f2c338bec7a66dd9e1c0cef7a66",
+    "finance-worker-minified-320-dark.png": "6fc470c3fe01eae57427e7debd58daf7c0168bfba839dfda982729198e1050eb",
+    "finance-worker-minified-320-light.png": "182a84701b48b5cfe8e696d8a405dff0c2e4506a8660e9b63352a702703bc542",
+    "finance-worker-minified-1365-dark.png": "3a072f8f54986f00a9cf0b0d01b7b307af8ccb3b646e17fa598a1ebedae8323a",
+    "finance-worker-minified-1365-light.png": "3645ed950fb4646012399aec5154adaa49a04f2c338bec7a66dd9e1c0cef7a66"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "schema": "mls_financial_automation_input_manifest_v1",
+  "received_date": "2026-11-13",
+  "timezone": "America/Sao_Paulo",
+  "files": [
+    {
+      "file": "MATRIZ_AUTOMACAO_FINANCEIRA_MLS.json",
+      "bytes": 52127,
+      "sha256": "1358f627c28fefa82393b3a5df7461387685ae1f0056e0911c2ac9b8845fa0a3",
+      "zip_entry_exact": true
+    },
+    {
+      "file": "PROMPT_CODEX_FINANCEIRO_AUTOMATICO_MLS.txt",
+      "bytes": 30702,
+      "sha256": "e6ba97ee53215c83ecbacb46a80500166786fecb443a219239193a3708bb5d56",
+      "zip_entry_exact": true
+    },
+    {
+      "file": "AUDITORIA_FINANCEIRA_MLS_2026-11-13.txt",
+      "bytes": 26932,
+      "sha256": "4f81217388151bfcf355958079bab4eb32834d14b792bb14086a85567325be8e",
+      "zip_entry_exact": true
+    }
+  ],
+  "archive": {
+    "file": "MLS_AUDITORIA_E_AUTOMACAO_FINANCEIRA.zip",
+    "sha256": "a0e3d6008f1a9b9f3f1755b790732ec17d8042b06e1a8bc99604b38879eb1d50",
+    "bytes": 33067,
+    "members": 3,
+    "extracted_or_executed": false
+  },
+  "instructions_scope": "User-requested financial specification; original bytes are preserved. These files are requirements/audit, not evidence of implementation or account validation."
+}

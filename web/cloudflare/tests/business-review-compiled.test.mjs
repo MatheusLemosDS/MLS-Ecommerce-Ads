@@ -1,3 +1,4 @@
+import {alignLegacyCronClock} from './legacy-cron-clock.mjs';
 import {getOrderedBrowserScripts} from './browser-assets-http-fixture.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -41,6 +42,9 @@ for(const minify of [false,true])test(`three shipped Workers distinguish two TO_
  assert.equal((await app.fetch(new Request(origin+path+'&evidence=review-v1'),env)).status,401);
  let extended=await get('&evidence=review-v1');assert.equal(extended.schema,'business_reconciliation_v2');assert.deepEqual(extended.reviews,[]);assert.deepEqual(calls,{private:0,payment:0,returns:0});
  for(let tick=0;tick<12;tick++){
+  // Exercise only legacy reconciliation turns; dedicated financial/return
+  // jobs and the ten-minute production cutoff have separate cron coverage.
+  alignLegacyCronClock(f.clock);
   env.ADMIN_DB.db.prepare("UPDATE background_collection_lane_state SET next_lane='AUXILIARY',auxiliary_index=0,lease_token=NULL,lease_until=NULL WHERE id=1").run();
   env.ADMIN_DB.db.prepare("INSERT INTO financial_audit_turns(month,revision,next_work,lease_token,lease_until) VALUES('2026-10',1,'RETURNS',NULL,NULL) ON CONFLICT(month) DO UPDATE SET next_work='RETURNS',lease_token=NULL,lease_until=NULL").run();
   const providerBefore=calls.payment+calls.returns,work=[];await app.scheduled({cron:'* * * * *',scheduledTime:Date.now()},env,{waitUntil:task=>work.push(task)});await Promise.all(work);assert.ok(calls.payment+calls.returns-providerBefore<=2,'the review sidecar must retain the existing provider budget');

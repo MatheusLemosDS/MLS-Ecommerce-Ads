@@ -1,3 +1,4 @@
+import {hydrateFinancialFixtureHtml} from './financial-fixture-hydration.mjs';
 import {getOrderedBrowserScripts} from './browser-assets-http-fixture.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -19,9 +20,10 @@ async function login(worker,env){
 const request=(path,cookie,options={})=>new Request(origin+path,{...options,headers:{...(cookie?{cookie}:{}),...options.headers}});
 
 function fullBrowser(html,fetchImpl){
+ const controlsHtml=hydrateFinancialFixtureHtml(html);
  const nodes=new Map(),timers=new Map(),calls=[];let timerId=0;
  const element=(tag='div')=>({tag,value:'',textContent:'',children:[],dataset:{},hidden:false,disabled:false,open:false,style:{},classList:{toggle(){},add(){},remove(){}},append(...children){this.children.push(...children);},replaceChildren(...children){this.children=[...children];this.textContent='';},setAttribute(){},removeAttribute(){},querySelectorAll(){return [];},querySelector(){return null;},contains(){return false;},scrollIntoView(){},addEventListener(){},get childNodes(){return this.children;}});
- for(const match of html.matchAll(/\bid="([^"]*)"/g))nodes.set(match[1],element());
+ for(const match of controlsHtml.matchAll(/\bid="([^"]*)"/g))nodes.set(match[1],element());
  const context=vm.createContext({AbortController,URLSearchParams,Intl,Date,Response,TextEncoder,location:{search:'',href:origin+'/admin'},history:{replaceState(){}},setTimeout(callback,delay){const id=++timerId;timers.set(id,{callback,delay});return id;},clearTimeout(id){timers.delete(id);},setInterval(){return 1;},clearInterval(){},document:{hidden:false,visibilityState:'visible',activeElement:null,documentElement:{dataset:{},style:{}},getElementById(id){if(!nodes.has(id))throw Error('UNKNOWN_CONTROL:'+id);return nodes.get(id);},createElement:element,querySelectorAll(){return [];},addEventListener(){}},fetch:async(url,options)=>{
   calls.push({url,options});const response=await fetchImpl(url,options);
   // Native browser response JSON is constructed in the browser realm.

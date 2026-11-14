@@ -1,3 +1,4 @@
+import {alignLegacyCronClock} from './legacy-cron-clock.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {scheduledWork} from '../src/admin.mjs';
@@ -25,7 +26,7 @@ test('two missing published Returns reports outrank permanently ready historical
  assert.equal((await readHistoricalCostCandidates(f.env,month,{now:f.now})).ready,true);
  const forbidden=[];
  for(let tick=0;tick<2;tick++){
-  f.db.rpc=0;const work=await scheduledWork(f.env,{getFinanceReconciliation:f.source,getFinanceHistoricalVariantEvidence:async()=>{forbidden.push('cost');throw Error('COST_MUST_YIELD');},getFinanceBusinessPeriod:async()=>{forbidden.push('finance');throw Error('NO_MIXED_FINANCE');}},f.now);
+  alignLegacyCronClock(f.clock);f.db.rpc=0;const work=await scheduledWork(f.env,{getFinanceReconciliation:f.source,getFinanceHistoricalVariantEvidence:async()=>{forbidden.push('cost');throw Error('COST_MUST_YIELD');},getFinanceBusinessPeriod:async()=>{forbidden.push('finance');throw Error('NO_MIXED_FINANCE');}},f.now);
   assert.equal(work.lane,'HISTORY');assert.equal(work.reconciliation,'CHECKED');assert.equal(f.calls.length,tick+1);assert.ok(f.db.rpc+1<=50,`Returns HISTORY binding budget: ${f.db.rpc}+1`);f.clock.time+=60000;
   // A new active partial import between audits cannot replace the frozen
   // source identity selected by the second reservation.

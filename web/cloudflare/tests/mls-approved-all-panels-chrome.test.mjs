@@ -268,7 +268,7 @@ test('fresh local D1 owner bootstrap captures six connected workspaces while fin
     if(await cdp.evaluate("document.readyState==='complete'&&globalThis.brazaMonthDashboard?.getSnapshot?.().checked_at>0&&globalThis.brazaMonthDashboard?.getSourceStatus?.().month==="+JSON.stringify(local.month))){ready=true;break;}
     await delay(75);
    }
-   assert.equal(ready,true,viewport.name+': genuine local monthly response was not accepted');
+   assert.equal(ready,true,viewport.name+': genuine local monthly response was not accepted'+(ready?'':' '+JSON.stringify(await cdp.evaluate("({errors:window.__mlsPanelQaErrors,month:globalThis.brazaMonthDashboard?.getSnapshot?.(),source:globalThis.brazaMonthDashboard?.getSourceStatus?.(),search:!!globalThis.mlsWorkspaceSearch,message:document.getElementById('message')?.textContent,scripts:[...document.scripts].filter(s=>s.src).map(s=>s.src)})"))));
    for(const theme of ['dark','light']){
     const selected=await cdp.evaluate("(()=>{const desired="+JSON.stringify(theme)+",button=[...document.querySelectorAll('[data-braza-theme-toggle]')].find(node=>node.checkVisibility());if(!button)return null;for(let i=0;document.documentElement.dataset.themePreference!==desired&&i<3;i++)button.click();return {theme:document.documentElement.dataset.theme,preference:localStorage.getItem('braza-theme')};})()");
     assert.deepEqual(selected,{theme,preference:theme});

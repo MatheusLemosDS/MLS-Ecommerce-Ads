@@ -47,6 +47,15 @@ const entries=[
  ['finance/payment-preview','POST','finance.read'],['finance/payment-sample','POST','finance.read'],
  ['finance/store-adjustments','POST','finance.write'],['finance/ads-period','POST','finance.write'],
  ['finance/external-cash','GET','bank.read'],
+ ['finance/automation','GET','finance.read','bank.read','costs.read'],
+ ['finance/automation/policy','POST','finance.write','finance.read','bank.read','costs.read'],
+ ['finance/automation/close','POST','finance.write','finance.read','bank.read','costs.read'],
+ ['finance/automation/sync','POST','finance.write','finance.read','bank.read','costs.read'],
+ ['finance/automation/inventory','GET','finance.read','bank.read','costs.read','production.read','orders.read'],
+ ['finance/automation/inventory','POST','finance.write','finance.read','bank.read','costs.read','costs.write','production.read','orders.read'],
+ ['finance/allocations','GET','bank.read','finance.read'],
+ ['finance/obligations','GET','finance.read','bank.read'],
+ ['finance/obligations','POST','finance.write','bank.write','finance.read','bank.read'],
 ];
 const routes=new Map(entries.map(([suffix,method,...capabilities])=>[method+' /api/admin/'+suffix,Object.freeze(capabilities)]));
 const operationRoutes=Object.freeze({
@@ -54,6 +63,7 @@ const operationRoutes=Object.freeze({
  '/api/admin/finance/store-period':{field:'operation',read:['read'],write:['start','step'],readCapability:'finance.read',writeCapability:'finance.write',maximum:16384},
  '/api/admin/production-costs/periods':{field:'operation',read:['read'],write:['start','step'],readCapability:'costs.read',writeCapability:'costs.write',maximum:256},
  '/api/admin/finance/external-cash':{field:'operation',read:['preview'],write:['import','match','unlink'],readCapability:'bank.read',writeCapability:'bank.write',maximum:1048576},
+ '/api/admin/finance/allocations':{field:'operation',read:['preview'],write:['confirm','reverse'],readCapability:'bank.read',writeCapability:'bank.write',additionalCapabilities:['finance.read'],maximum:32768},
 });
 export const COMMERCIAL_OPERATIONAL_ROUTES=Object.freeze([...new Set([...entries.map(([path])=>'/api/admin/'+path),...Object.keys(operationRoutes),'/api/admin/production-costs/periods'])].sort());
 const uuid='[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}';
@@ -80,7 +90,7 @@ export async function commercialRoutePolicy(request,path){
   if(!(request instanceof Request))return null;const url=new URL(request.url);if(path===undefined)path=url.pathname;
   if(typeof path!=='string'||path!==url.pathname||!path.startsWith('/api/admin/')||!['GET','POST'].includes(request.method))return null;
   let required=routes.get(request.method+' '+path),mutating=request.method==='POST';
-  if(request.method==='POST'&&Object.hasOwn(operationRoutes,path)){const selected=await selector(request,operationRoutes[path]);if(!selected)return null;required=[selected.capability];mutating=selected.mutating;}
+  if(request.method==='POST'&&Object.hasOwn(operationRoutes,path)){const selected=await selector(request,operationRoutes[path]);if(!selected)return null;required=[selected.capability,...(operationRoutes[path].additionalCapabilities??[])];mutating=selected.mutating;}
   if(path==='/api/admin/production-costs/periods'&&request.method==='GET')required=['costs.read'];
   if(request.method==='GET'&&/^\/api\/admin\/order-observations\/[a-f0-9]{64}$/.test(path))required=['orders.read','costs.read'];
   if(request.method==='GET'&&new RegExp('^/api/admin/jobs/'+uuid+'/financial-context$').test(path))required=['finance.read'];

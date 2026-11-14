@@ -1,3 +1,4 @@
+import {alignLegacyCronClock} from './legacy-cron-clock.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {build} from 'esbuild';
@@ -14,7 +15,7 @@ for(const minify of [false,true])test(`the generated App prioritizes both exact 
  globalThis.Date=class extends SavedDate{constructor(...args){super(...(args.length?args:[clock.time]));}static now(){return clock.time;}};
  const env={ADMIN_DB:db,APP_INTERNAL_SECRET:'PRIVATE_M2_HISTORY_APP_'+'a'.repeat(40),ADMIN_USERNAME:'m2-history-owner',ADMIN_PASSWORD:'m2-history-password-123456',ADMIN_SESSION_SECRET:'PRIVATE_M2_HISTORY_SESSION_'+'s'.repeat(40)},calls=[];
  t.after(()=>{globalThis.Date=SavedDate;globalThis.fetch=savedFetch;db.db.close();});
- const cron=async()=>{const tasks=[];await app.scheduled({cron:'* * * * *',scheduledTime:clock.time},env,{waitUntil:task=>tasks.push(task)});assert.equal(tasks.length,1);return(await Promise.all(tasks))[0];};
+ const cron=async()=>{alignLegacyCronClock(clock);const tasks=[];await app.scheduled({cron:'* * * * *',scheduledTime:clock.time},env,{waitUntil:task=>tasks.push(task)});assert.equal(tasks.length,1);return(await Promise.all(tasks))[0];};
  assert.equal((await cron()).lane,'MAINTENANCE');
  const frames=await publishHistoryMonth(env,now),publication=db.db.prepare('SELECT * FROM business_month_publications').get();
  db.db.prepare('UPDATE business_sync_state SET next_run_at=?,summary=?').run(stamp+3600,JSON.stringify({month,status:'COMPLETE'}));

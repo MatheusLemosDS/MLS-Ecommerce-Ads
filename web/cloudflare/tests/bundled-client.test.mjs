@@ -76,7 +76,7 @@ function verifyReportAndDailyAds(html){
  // These are the real helper declarations emitted before the admin UI starts;
  // evaluating them separately needs no DOM, HTTP listener or browser process.
  const helpers=legacy.slice(0,legacy.indexOf('let renderedReportKey='));
- const context=vm.createContext({TextEncoder,TextDecoder});
+ const context=vm.createContext({TextEncoder,TextDecoder,document:{getElementById:()=>null}});
  new vm.Script(helpers).runInContext(context);
  const report='Investimento raw: 10.00\nROAS raw 20.00 20.00\nStatus econômico: UNKNOWN.';
  const parsed=new vm.Script('parseReport('+JSON.stringify(report)+')').runInContext(context);

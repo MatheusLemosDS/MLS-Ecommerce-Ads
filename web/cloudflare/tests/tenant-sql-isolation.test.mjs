@@ -4,6 +4,12 @@ import {readFile} from 'node:fs/promises';
 import {D1} from './sqlite-d1.mjs';
 import {createTenantDatabase,tenantNamespace,TenantIsolationError,tenantStorageIdentity,TenantInitializationMap,TenantInitializationSet} from '../src/tenant-storage.mjs';
 import {TENANT_APP_TABLES,TENANT_FINANCE_TABLES,TENANT_SCHEMA_OBJECTS} from '../src/tenant-schema-manifest.mjs';
+import {FINANCIAL_EVENT_SCHEMA} from '../src/financial-event-store.mjs';
+import {FINANCIAL_CLOSE_SCHEMA} from '../src/financial-close-store.mjs';
+import {FINANCIAL_AUTOMATION_SCHEMA} from '../src/financial-automation-store.mjs';
+import {FINANCIAL_CASH_ALLOCATION_SCHEMA} from '../src/financial-cash-allocation-store.mjs';
+import {FINANCIAL_ORDER_COMPONENTS_SCHEMA} from '../../finance/src/financial-order-components.mjs';
+import {FINANCIAL_OBLIGATION_SCHEMA} from '../../finance/src/financial-obligation-worker.mjs';
 import {readIncurredProduction,mutateIncurredProduction} from '../src/incurred-production.mjs';
 import {readPhysicalReturns,mutatePhysicalReturns} from '../src/physical-returns.mjs';
 import {readReturnManufacturingLinksWorkspace,mutateReturnManufacturingLinksWorkspace} from '../src/return-manufacturing-links-workspace.mjs';
@@ -27,7 +33,7 @@ const objectName=sql=>/^CREATE\s+(?:UNIQUE\s+)?(?:TABLE|INDEX|TRIGGER)\s+(?:IF\s
 async function schemaStatements(domain){
  const inventory=JSON.parse(await readFile(new URL('../../../docs/v4/TENANT_STORAGE_INVENTORY.json',import.meta.url),'utf8'));
  const paths=Object.keys(inventory.sources).filter(path=>path.startsWith(domain==='app'?'web/cloudflare/':'web/finance/'));
- const statements=[];
+ const statements=domain==='app'?[...FINANCIAL_EVENT_SCHEMA,...FINANCIAL_CLOSE_SCHEMA,...FINANCIAL_AUTOMATION_SCHEMA]:[...FINANCIAL_CASH_ALLOCATION_SCHEMA,...FINANCIAL_ORDER_COMPONENTS_SCHEMA,...FINANCIAL_OBLIGATION_SCHEMA];
  for(const path of paths){
   const file=new URL('../../../'+path,import.meta.url),module=await import(file);
   for(const value of Object.values(module))if(Array.isArray(value))for(const sql of value)if(typeof sql==='string'&&/^CREATE\s+(?:TABLE|INDEX|UNIQUE INDEX|TRIGGER)\b/i.test(sql))statements.push(sql);
@@ -55,6 +61,45 @@ test('every inventoried App/Finance table, index and trigger installs independen
   assert.ok(raw.db.prepare('SELECT name FROM sqlite_master WHERE name NOT LIKE ? AND name NOT LIKE ? AND name NOT LIKE ?').all(a.namespace+'%',b.namespace+'%','sqlite_%').length===0);
  }
  assert.deepEqual([...covered].sort(),[...TENANT_SCHEMA_OBJECTS].sort());
+});
+
+test('new financial journals, frozen close snapshots, cash allocations and provider captures stay in their own namespace',async t=>{
+ const {raw,A,B,a,b}=await fixture(t),FA=createTenantDatabase(raw,a,{domain:'finance'}),FB=createTenantDatabase(raw,b,{domain:'finance'});
+ for(const db of [A,B])await db.batch([...FINANCIAL_EVENT_SCHEMA,...FINANCIAL_CLOSE_SCHEMA,...FINANCIAL_AUTOMATION_SCHEMA].map(sql=>db.prepare(sql)));
+ for(const db of [FA,FB])await db.batch([...FINANCIAL_CASH_ALLOCATION_SCHEMA,...FINANCIAL_ORDER_COMPONENTS_SCHEMA,...FINANCIAL_OBLIGATION_SCHEMA].map(sql=>db.prepare(sql)));
+ const stamp='2026-11-13T15:00:00.000Z';
+ for(const [app,finance,amount] of [[A,FA,12345],[B,FB,54321]]){
+  const payload=JSON.stringify({known_amount_cents:amount});
+  await app.batch([
+   app.prepare('INSERT INTO financial_event_revisions(scope_key,event_id,version,ledger_revision,payload,payload_hash,content_hash,previous_hash,delta_payload,actor,recorded_at) VALUES(?,?,1,1,?,?,?,NULL,?,?,?)').bind('same-book','same-event',payload,'synthetic-hash','synthetic-content','[]','synthetic-owner',stamp),
+   app.prepare('INSERT INTO financial_close_revisions(scope_key,close_id,version,status,payload,payload_hash,snapshot_hash,previous_hash,ledger_revision,actor,created_at) VALUES(?,?,1,?,?,?,?,NULL,1,?,?)').bind('same-book','same-close','FECHADO',payload,'synthetic-hash','synthetic-snapshot','synthetic-owner',stamp),
+   app.prepare('INSERT INTO financial_automation_revisions(scope_key,kind,version,scope_payload,payload,payload_hash,previous_hash,actor,created_at) VALUES(?,?,1,?,?,?,NULL,?,?)').bind('same-book','CONFIG','{}',payload,'synthetic-hash','synthetic-owner',stamp),
+  ]);
+  await finance.batch([
+   finance.prepare('INSERT INTO finance_financial_cash_groups(tenant,group_id,revision,relation,payload_json,actor_id,confirmed_at) VALUES(?,?,1,?,?,?,1)').bind('same-book','same-group','TRANSFER_DEPOSIT',payload,'synthetic-owner'),
+   finance.prepare('INSERT INTO finance_financial_order_components(run_id,order_hash,source_hash,checked_at,payload,payload_hash) VALUES(?,?,?,1,?,?)').bind('same-run','same-order','synthetic-source',payload,'synthetic-hash'),
+   finance.prepare('INSERT INTO finance_financial_obligation_snapshots(tenant,snapshot_id,month,source_revision,source_hash,captured_at,registered_at,payload_json,actor_id) VALUES(?,?,?,1,?,?,?,?,?)').bind('same-book','same-snapshot','2026-11','synthetic-source',stamp,stamp,payload,'synthetic-owner'),
+  ]);
+ }
+ for(const [app,finance,amount] of [[A,FA,12345],[B,FB,54321]]){
+  for(const table of ['financial_event_revisions','financial_close_revisions','financial_automation_revisions']){
+   assert.equal(JSON.parse((await app.prepare('SELECT payload FROM '+table).first()).payload).known_amount_cents,amount);
+   for(const operation of ['DELETE FROM '+table,'UPDATE '+table+' SET payload=payload'])await assert.rejects(app.prepare(operation).run(),/financial_history_immutable/);
+  }
+  assert.equal(JSON.parse((await finance.prepare('SELECT payload_json FROM finance_financial_cash_groups').first()).payload_json).known_amount_cents,amount);
+  assert.equal(JSON.parse((await finance.prepare('SELECT payload FROM finance_financial_order_components').first()).payload).known_amount_cents,amount);
+  assert.equal(JSON.parse((await finance.prepare('SELECT payload_json FROM finance_financial_obligation_snapshots').first()).payload_json).known_amount_cents,amount);
+  for(const operation of ['DELETE FROM finance_financial_obligation_snapshots','UPDATE finance_financial_obligation_snapshots SET payload_json=payload_json'])await assert.rejects(finance.prepare(operation).run(),/financial_obligation_immutable/);
+  await assert.rejects(finance.prepare('DELETE FROM finance_financial_cash_groups').run(),/financial_cash_immutable/);
+  await assert.rejects(async()=>app.prepare('SELECT * FROM finance_financial_cash_groups').all(),isolation);
+  await assert.rejects(async()=>app.prepare('SELECT * FROM finance_financial_order_components').all(),isolation);
+  await assert.rejects(async()=>app.prepare('SELECT * FROM finance_financial_obligation_snapshots').all(),isolation);
+  await assert.rejects(async()=>finance.prepare('SELECT * FROM financial_close_revisions').all(),isolation);
+ }
+ const objects=[...FINANCIAL_EVENT_SCHEMA,...FINANCIAL_CLOSE_SCHEMA,...FINANCIAL_AUTOMATION_SCHEMA,...FINANCIAL_CASH_ALLOCATION_SCHEMA,...FINANCIAL_ORDER_COMPONENTS_SCHEMA,...FINANCIAL_OBLIGATION_SCHEMA].map(objectName);
+ assert.equal(objects.length,59);
+ assert.ok(objects.every(name=>TENANT_SCHEMA_OBJECTS.includes(name)));
+ assert.equal(new Set(TENANT_SCHEMA_OBJECTS).size,TENANT_SCHEMA_OBJECTS.length);
 });
 
 test('same month, singleton, revision and request IDs persist independently, including joins and immutable schema metadata',async t=>{

@@ -2,7 +2,7 @@
   "schema": "mls_commerce_os_checkpoint_v1",
   "canonical_roadmap": "docs/ROADMAP_MLS_COMMERCE_OS.md",
   "legacy_roadmap": "docs/ROADMAP_BRAZACOMMERCE.md",
-  "updated_at": "2026-11-13",
+  "updated_at": "2026-11-14",
   "product": {
     "name": "MLS Commerce OS",
     "supervisor": "MLS Hermes",
@@ -143,13 +143,33 @@
     "Mission Control M1.1 (opção 3) integrado com 7 painéis independentes; conferir visual autenticado desktop/celular e retorno às telas antigas"
   ],
   "latest_increment": {
-    "release": "2026-11-12.1",
-    "source_commit": "7ec3ffa0ed27366eca0792d5d277979bb991f679",
-    "state": "PUBLISHED_VERIFIED_IN_TECHNICAL_PUBLIC_SCOPE",
-    "receipt": "docs/v4/live-publication.json",
-    "public_verification": "docs/v4/public-live-verification.json",
+    "status": "PUBLISHED_VERIFIED",
+    "verification_scope": "TECHNICAL_PUBLIC_ONLY",
+    "release_id": "2026-11-13.3",
+    "release": "2026-11-13.3",
+    "source_commit": "f68525ea1d136350ece9942433352accdf97d992",
+    "prepared_source_commit": "3cf489e33071b32bc73e2efaf2aecfc62618d46a",
+    "ci_run": 43531882471,
+    "node_tests_pass": 4432,
+    "python_tests_pass": 67,
+    "receipt": "docs/financial-automation/publication-live-20261113.json",
+    "public_verification": "docs/financial-automation/publication-live-20261113.json",
+    "verified_at": "2026-11-14T00:22:15.598Z",
+    "published": true,
+    "pull_request": 121,
     "owner_live_qa": "NOT_PERFORMED",
-    "git_integration": "CHECK_PR119_CURRENT_STATE"
+    "account_financial_acceptance": false,
+    "m2_closed": false,
+    "m22_closed": false,
+    "git_integration": "CHECK_PR121_CURRENT_STATE",
+    "workers": {
+      "finance": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+      "auth": "dfd2fc99-728f-4f29-96ee-a4b256c5640a",
+      "app": "9bfc21d6-dec9-4fa6-89d8-7ea1dec50993"
+    },
+    "owner_live_authenticated_qa": "NOT_PERFORMED",
+    "natural_resume_observed_at": "2026-11-14T00:33:17.899767+00:00",
+    "natural_resume_scope": "ORIGINAL_NOVEMBER_ADS_LANE_ONLY"
   },
   "incident": {
     "id": "INCIDENT_2026_10_27_PANEL_AGENT_REGRESSION",
@@ -3511,172 +3531,32 @@
   },
   "last_verified_live_release": {
     "status": "PUBLISHED_VERIFIED",
-    "release_id": "2026-11-11.2",
-    "label": "Relatório semanal da operação",
-    "branch": "feature/weekly-operating-report-20261111",
-    "base_commit": "18fd393e6d5a7fb098e2a71b234f2d9c15846cbb",
-    "guide": "docs/MLS_WEEKLY_OPERATING_REPORT_2026_11_11.md",
-    "source_commit": "4a9fce1dbaf8df80142fedf627a3d06325b3579e",
-    "ci_run": 43104305899,
+    "verification_scope": "TECHNICAL_PUBLIC_ONLY",
+    "release_id": "2026-11-13.3",
+    "release": "2026-11-13.3",
+    "source_commit": "f68525ea1d136350ece9942433352accdf97d992",
+    "prepared_source_commit": "3cf489e33071b32bc73e2efaf2aecfc62618d46a",
+    "ci_run": 43531882471,
+    "node_tests_pass": 4432,
+    "python_tests_pass": 67,
+    "receipt": "docs/financial-automation/publication-live-20261113.json",
+    "public_verification": "docs/financial-automation/publication-live-20261113.json",
+    "verified_at": "2026-11-14T00:22:15.598Z",
     "published": true,
-    "commercial_writes": false,
-    "physical_or_financial_fact_writes_by_publisher": false,
-    "phase_closed": false,
-    "prepared_source_commit": "325f8cd687afa958d8adb1cabacaa71a04a9b012",
-    "pull_request": 118,
-    "validation": {
-      "source_head": "4a9fce1dbaf8df80142fedf627a3d06325b3579e",
-      "source_ci": 43104305899,
-      "source_ci_url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43104305899",
-      "node_tests_pass": 3905,
-      "node_suite_source": "COMPLETE_GITHUB_ACTIONS_LOG_WITH_RAW_PROVENANCE",
-      "node_provenance_sha256": "c2b383fd0d1cd0891942a6acf0d2b5f5cba540d76b3d1eeabe5f4a5ad0c55c27",
-      "python_tests_pass": 67,
-      "chromium_outcomes_pass": 8,
-      "asset_failure_outcomes_pass": 2,
-      "synthetic_screenshots": 42,
-      "qa_source_head": "fdc7ec7fe99bac13d8cef7d5b1292e26e1e6f26a",
-      "qa_report_sha256": "2f699a9d6fe37056212c56a5621b18f743fe3c6de321f727dbc9df435d7ed665",
-      "qa_equivalence_to_source_verified": true,
-      "qa_equivalence_sha256": "7230e4c40453a2e2b7f0b592af61d5eb4bfea447c7a36b2c36e517dae4b8fd16",
-      "legacy_files_byte_identical": 112,
-      "legacy_literal_sections_unchanged": 5,
-      "legacy_invariance_sha256": "683b41164b271f20dea196f720df3848ad70bb15617d76054123c160a7f06ef9",
-      "owner_real_workflow": "NOT_EXECUTED"
-    },
-    "deployment": {
-      "published_at": "2026-11-11T18:49:55.661444-03:00",
-      "versions": {
-        "finance": "4c59460c-c6d7-4ad2-86ee-64c12a7d68a9",
-        "auth": "6bf0605e-18a0-4ddc-a84a-a4472adbaf6c",
-        "app": "021af5ca-fa95-49f7-ab69-bcee9dabd2ba"
-      },
-      "all_three_exact": true,
-      "configuration_domains_subdomains_flags_cron_preserved": true,
-      "receipt_sha256": "c7db854bc480c8b142ba6535e2d7131515b4db076484817eb8195773adaebd33",
-      "public_assets": [
-        {
-          "id": "bank",
-          "path": "/assets/mls/0d6250f5888258fa29664eac45b2cd821d3872b1c96ac47dda46bd7fd10e6a0c.js",
-          "sha256": "0d6250f5888258fa29664eac45b2cd821d3872b1c96ac47dda46bd7fd10e6a0c",
-          "bytes": 38035,
-          "status": 200,
-          "exact": true,
-          "headers": {
-            "content-type": "text/javascript; charset=utf-8",
-            "content-length": "38035",
-            "cache-control": "public, max-age=31536000, immutable",
-            "x-content-type-options": "nosniff",
-            "etag": "\"sha256-0d6250f5888258fa29664eac45b2cd821d3872b1c96ac47dda46bd7fd10e6a0c\""
-          }
-        },
-        {
-          "id": "month",
-          "path": "/assets/mls/b2ec847af07b46e9a4c54295a782ccf7d1a67315edcbeb16053e034a021be4e5.js",
-          "sha256": "b2ec847af07b46e9a4c54295a782ccf7d1a67315edcbeb16053e034a021be4e5",
-          "bytes": 687069,
-          "status": 200,
-          "exact": true,
-          "headers": {
-            "content-type": "text/javascript; charset=utf-8",
-            "content-length": "687069",
-            "cache-control": "public, max-age=31536000, immutable",
-            "x-content-type-options": "nosniff",
-            "etag": "\"sha256-b2ec847af07b46e9a4c54295a782ccf7d1a67315edcbeb16053e034a021be4e5\""
-          }
-        },
-        {
-          "id": "orders",
-          "path": "/assets/mls/99c6086144a7e099920670eecaf485aba9e4f8c49d91b07f626809c7eb81208d.js",
-          "sha256": "99c6086144a7e099920670eecaf485aba9e4f8c49d91b07f626809c7eb81208d",
-          "bytes": 20935,
-          "status": 200,
-          "exact": true,
-          "headers": {
-            "content-type": "text/javascript; charset=utf-8",
-            "content-length": "20935",
-            "cache-control": "public, max-age=31536000, immutable",
-            "x-content-type-options": "nosniff",
-            "etag": "\"sha256-99c6086144a7e099920670eecaf485aba9e4f8c49d91b07f626809c7eb81208d\""
-          }
-        },
-        {
-          "id": "production",
-          "path": "/assets/mls/eaa685867dc256e2a48a01e77bff198aa845c8811fb5a5329c6121fb7f89acd2.js",
-          "sha256": "eaa685867dc256e2a48a01e77bff198aa845c8811fb5a5329c6121fb7f89acd2",
-          "bytes": 163799,
-          "status": 200,
-          "exact": true,
-          "headers": {
-            "content-type": "text/javascript; charset=utf-8",
-            "content-length": "163799",
-            "cache-control": "public, max-age=31536000, immutable",
-            "x-content-type-options": "nosniff",
-            "etag": "\"sha256-eaa685867dc256e2a48a01e77bff198aa845c8811fb5a5329c6121fb7f89acd2\""
-          }
-        },
-        {
-          "id": "weekly",
-          "path": "/assets/mls/91beb108a1bbe139adc87ac54db6abdad58e9dd1ecc8b7a0ead0d9188ccbfc9f.js",
-          "sha256": "91beb108a1bbe139adc87ac54db6abdad58e9dd1ecc8b7a0ead0d9188ccbfc9f",
-          "bytes": 53495,
-          "status": 200,
-          "exact": true,
-          "headers": {
-            "content-type": "text/javascript; charset=utf-8",
-            "content-length": "53495",
-            "cache-control": "public, max-age=31536000, immutable",
-            "x-content-type-options": "nosniff",
-            "etag": "\"sha256-91beb108a1bbe139adc87ac54db6abdad58e9dd1ecc8b7a0ead0d9188ccbfc9f\""
-          }
-        }
-      ],
-      "public_smoke_sha256": "a53045cf7b8d1eff694e6b8e322b2177ed685157070030bb7c61c1cdba0230ab",
-      "public_login_release_header": "2026-11-11.2",
-      "anonymous_owner_endpoint_denied": true,
-      "publisher_d1_queries": 0,
-      "publisher_owner_requests": 0,
-      "publisher_provider_calls": 0
-    },
-    "id": "WEEKLY_OPERATING_REPORT_2026_11_11",
-    "human_code_release_id": "2026-11-11.2",
-    "human_date": "11/11/2026",
-    "docs": "docs/MLS_WEEKLY_OPERATING_REPORT_2026_11_11.md",
+    "pull_request": 121,
+    "owner_live_qa": "NOT_PERFORMED",
+    "account_financial_acceptance": false,
+    "m2_closed": false,
+    "m22_closed": false,
+    "git_integration": "CHECK_PR121_CURRENT_STATE",
     "workers": {
-      "app": {
-        "version": "021af5ca-fa95-49f7-ab69-bcee9dabd2ba",
-        "generated_sha256": "378d3e24a853d441ebd06249282f77d060f8d01f0cc27e01209487d0f68737a1",
-        "published_sha256": "e812eea37e3f44c2490b0ded88c3bfdba6026be89ea00c81725b223478400a5d"
-      },
-      "auth": {
-        "version": "6bf0605e-18a0-4ddc-a84a-a4472adbaf6c",
-        "generated_sha256": "ecce0b8ee8ee2b02147498ad336effaf9a8fef0a33e5281fa0805abbb9accb11",
-        "published_sha256": "bcfca10ebe94d67b698a6ba318f67b349b408fed94a5739c4cb52fa51c9d9f47"
-      },
-      "finance": {
-        "version": "4c59460c-c6d7-4ad2-86ee-64c12a7d68a9",
-        "generated_sha256": "46443ef4d0e98005ada9d516ff6bbee06f0e044861fafb512a2223218b3af7cf",
-        "published_sha256": "8ad6016ee073eea6df6fc723f262624b647840ad230b12b48f807594e50faba2"
-      }
+      "finance": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+      "auth": "dfd2fc99-728f-4f29-96ee-a4b256c5640a",
+      "app": "9bfc21d6-dec9-4fa6-89d8-7ea1dec50993"
     },
-    "unchanged_workers": [],
-    "deploy_order": [
-      "finance",
-      "auth",
-      "app"
-    ],
-    "finance_m2": "OPEN_REAL_SELLER_CENTRE_BANK_RECONCILIATION_REQUIRED",
-    "m22": "OPEN",
-    "hermes": "OBSERVER",
-    "ads_promo": "LOCKED",
-    "realized_net": "UNKNOWN",
-    "owner_real_workflow": "NOT_EXECUTED",
-    "integration": {
-      "pull_request": 118,
-      "current_status_source": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/118",
-      "publication_does_not_prove_merge": true,
-      "normal_merge_after_documentation_ci_required": true
-    }
+    "owner_live_authenticated_qa": "NOT_PERFORMED",
+    "natural_resume_observed_at": "2026-11-14T00:33:17.899767+00:00",
+    "natural_resume_scope": "ORIGINAL_NOVEMBER_ADS_LANE_ONLY"
   },
   "previous_next_actions_before_simplified_operations": [
     "Conferir os itens salvos do pedido e da solicitação em MLS Returns; manter unidades comerciais separadas das peças físicas, preservar UNKNOWN e validar a origem antes de integrar reaproveitamento ao lucro.",
@@ -7292,5 +7172,299 @@
     "production_qa_fact_writes": 0,
     "new_migrations": 0,
     "new_secret_updates": 0
+  },
+  "financial_automation_20261113": {
+    "status": "PUBLISHED_VERIFIED",
+    "release": "2026-11-13.3",
+    "base_commit": "6578e21098ff799e59433af92880d249432ceeb4",
+    "branch": "feature/financial-automation-20261113",
+    "documentation": "docs/financial-automation/README.md",
+    "matrix": "docs/financial-automation/MATRIZ_EXECUCAO.json",
+    "published": true,
+    "account_financial_acceptance": false,
+    "m2_closed": false,
+    "external_dependencies": [
+      "Shopee Wallet/Payout contract and actual grants",
+      "Authorized bank connector and account balance evidence",
+      "Ads source timezone confirmation",
+      "Completion-cohort financial coverage",
+      "Owner account operational week/month comparison"
+    ],
+    "verification_scope": "TECHNICAL_PUBLIC_ONLY",
+    "source_commit": "f68525ea1d136350ece9942433352accdf97d992",
+    "ci_run": 43531882471,
+    "verified_at": "2026-11-14T00:22:15.598Z",
+    "receipt": "docs/financial-automation/publication-live-20261113.json",
+    "public_verification": "docs/financial-automation/publication-live-20261113.json",
+    "owner_live_authenticated_qa": "NOT_PERFORMED",
+    "m22_closed": false,
+    "limits_unchanged": true,
+    "pull_request": 121,
+    "workers": {
+      "finance": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+      "auth": "dfd2fc99-728f-4f29-96ee-a4b256c5640a",
+      "app": "9bfc21d6-dec9-4fa6-89d8-7ea1dec50993"
+    },
+    "release_id": "2026-11-13.3",
+    "prepared_source_commit": "3cf489e33071b32bc73e2efaf2aecfc62618d46a",
+    "node_tests_pass": 4432,
+    "python_tests_pass": 67,
+    "owner_live_qa": "NOT_PERFORMED",
+    "natural_resume_observed_at": "2026-11-14T00:33:17.899767+00:00",
+    "natural_resume_scope": "ORIGINAL_NOVEMBER_ADS_LANE_ONLY",
+    "git_integration": "CHECK_PR121_CURRENT_STATE"
+  },
+  "previous_latest_increment_before_financial_automation": {
+    "release": "2026-11-12.1",
+    "source_commit": "7ec3ffa0ed27366eca0792d5d277979bb991f679",
+    "state": "PUBLISHED_VERIFIED_IN_TECHNICAL_PUBLIC_SCOPE",
+    "receipt": "docs/v4/live-publication.json",
+    "public_verification": "docs/v4/public-live-verification.json",
+    "owner_live_qa": "NOT_PERFORMED",
+    "git_integration": "CHECK_PR119_CURRENT_STATE"
+  },
+  "previous_last_verified_live_release_before_financial_automation": {
+    "status": "PUBLISHED_VERIFIED",
+    "release_id": "2026-11-11.2",
+    "label": "Relatório semanal da operação",
+    "branch": "feature/weekly-operating-report-20261111",
+    "base_commit": "18fd393e6d5a7fb098e2a71b234f2d9c15846cbb",
+    "guide": "docs/MLS_WEEKLY_OPERATING_REPORT_2026_11_11.md",
+    "source_commit": "4a9fce1dbaf8df80142fedf627a3d06325b3579e",
+    "ci_run": 43104305899,
+    "published": true,
+    "commercial_writes": false,
+    "physical_or_financial_fact_writes_by_publisher": false,
+    "phase_closed": false,
+    "prepared_source_commit": "325f8cd687afa958d8adb1cabacaa71a04a9b012",
+    "pull_request": 118,
+    "validation": {
+      "source_head": "4a9fce1dbaf8df80142fedf627a3d06325b3579e",
+      "source_ci": 43104305899,
+      "source_ci_url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43104305899",
+      "node_tests_pass": 3905,
+      "node_suite_source": "COMPLETE_GITHUB_ACTIONS_LOG_WITH_RAW_PROVENANCE",
+      "node_provenance_sha256": "c2b383fd0d1cd0891942a6acf0d2b5f5cba540d76b3d1eeabe5f4a5ad0c55c27",
+      "python_tests_pass": 67,
+      "chromium_outcomes_pass": 8,
+      "asset_failure_outcomes_pass": 2,
+      "synthetic_screenshots": 42,
+      "qa_source_head": "fdc7ec7fe99bac13d8cef7d5b1292e26e1e6f26a",
+      "qa_report_sha256": "2f699a9d6fe37056212c56a5621b18f743fe3c6de321f727dbc9df435d7ed665",
+      "qa_equivalence_to_source_verified": true,
+      "qa_equivalence_sha256": "7230e4c40453a2e2b7f0b592af61d5eb4bfea447c7a36b2c36e517dae4b8fd16",
+      "legacy_files_byte_identical": 112,
+      "legacy_literal_sections_unchanged": 5,
+      "legacy_invariance_sha256": "683b41164b271f20dea196f720df3848ad70bb15617d76054123c160a7f06ef9",
+      "owner_real_workflow": "NOT_EXECUTED"
+    },
+    "deployment": {
+      "published_at": "2026-11-11T18:49:55.661444-03:00",
+      "versions": {
+        "finance": "4c59460c-c6d7-4ad2-86ee-64c12a7d68a9",
+        "auth": "6bf0605e-18a0-4ddc-a84a-a4472adbaf6c",
+        "app": "021af5ca-fa95-49f7-ab69-bcee9dabd2ba"
+      },
+      "all_three_exact": true,
+      "configuration_domains_subdomains_flags_cron_preserved": true,
+      "receipt_sha256": "c7db854bc480c8b142ba6535e2d7131515b4db076484817eb8195773adaebd33",
+      "public_assets": [
+        {
+          "id": "bank",
+          "path": "/assets/mls/0d6250f5888258fa29664eac45b2cd821d3872b1c96ac47dda46bd7fd10e6a0c.js",
+          "sha256": "0d6250f5888258fa29664eac45b2cd821d3872b1c96ac47dda46bd7fd10e6a0c",
+          "bytes": 38035,
+          "status": 200,
+          "exact": true,
+          "headers": {
+            "content-type": "text/javascript; charset=utf-8",
+            "content-length": "38035",
+            "cache-control": "public, max-age=31536000, immutable",
+            "x-content-type-options": "nosniff",
+            "etag": "\"sha256-0d6250f5888258fa29664eac45b2cd821d3872b1c96ac47dda46bd7fd10e6a0c\""
+          }
+        },
+        {
+          "id": "month",
+          "path": "/assets/mls/b2ec847af07b46e9a4c54295a782ccf7d1a67315edcbeb16053e034a021be4e5.js",
+          "sha256": "b2ec847af07b46e9a4c54295a782ccf7d1a67315edcbeb16053e034a021be4e5",
+          "bytes": 687069,
+          "status": 200,
+          "exact": true,
+          "headers": {
+            "content-type": "text/javascript; charset=utf-8",
+            "content-length": "687069",
+            "cache-control": "public, max-age=31536000, immutable",
+            "x-content-type-options": "nosniff",
+            "etag": "\"sha256-b2ec847af07b46e9a4c54295a782ccf7d1a67315edcbeb16053e034a021be4e5\""
+          }
+        },
+        {
+          "id": "orders",
+          "path": "/assets/mls/99c6086144a7e099920670eecaf485aba9e4f8c49d91b07f626809c7eb81208d.js",
+          "sha256": "99c6086144a7e099920670eecaf485aba9e4f8c49d91b07f626809c7eb81208d",
+          "bytes": 20935,
+          "status": 200,
+          "exact": true,
+          "headers": {
+            "content-type": "text/javascript; charset=utf-8",
+            "content-length": "20935",
+            "cache-control": "public, max-age=31536000, immutable",
+            "x-content-type-options": "nosniff",
+            "etag": "\"sha256-99c6086144a7e099920670eecaf485aba9e4f8c49d91b07f626809c7eb81208d\""
+          }
+        },
+        {
+          "id": "production",
+          "path": "/assets/mls/eaa685867dc256e2a48a01e77bff198aa845c8811fb5a5329c6121fb7f89acd2.js",
+          "sha256": "eaa685867dc256e2a48a01e77bff198aa845c8811fb5a5329c6121fb7f89acd2",
+          "bytes": 163799,
+          "status": 200,
+          "exact": true,
+          "headers": {
+            "content-type": "text/javascript; charset=utf-8",
+            "content-length": "163799",
+            "cache-control": "public, max-age=31536000, immutable",
+            "x-content-type-options": "nosniff",
+            "etag": "\"sha256-eaa685867dc256e2a48a01e77bff198aa845c8811fb5a5329c6121fb7f89acd2\""
+          }
+        },
+        {
+          "id": "weekly",
+          "path": "/assets/mls/91beb108a1bbe139adc87ac54db6abdad58e9dd1ecc8b7a0ead0d9188ccbfc9f.js",
+          "sha256": "91beb108a1bbe139adc87ac54db6abdad58e9dd1ecc8b7a0ead0d9188ccbfc9f",
+          "bytes": 53495,
+          "status": 200,
+          "exact": true,
+          "headers": {
+            "content-type": "text/javascript; charset=utf-8",
+            "content-length": "53495",
+            "cache-control": "public, max-age=31536000, immutable",
+            "x-content-type-options": "nosniff",
+            "etag": "\"sha256-91beb108a1bbe139adc87ac54db6abdad58e9dd1ecc8b7a0ead0d9188ccbfc9f\""
+          }
+        }
+      ],
+      "public_smoke_sha256": "a53045cf7b8d1eff694e6b8e322b2177ed685157070030bb7c61c1cdba0230ab",
+      "public_login_release_header": "2026-11-11.2",
+      "anonymous_owner_endpoint_denied": true,
+      "publisher_d1_queries": 0,
+      "publisher_owner_requests": 0,
+      "publisher_provider_calls": 0
+    },
+    "id": "WEEKLY_OPERATING_REPORT_2026_11_11",
+    "human_code_release_id": "2026-11-11.2",
+    "human_date": "11/11/2026",
+    "docs": "docs/MLS_WEEKLY_OPERATING_REPORT_2026_11_11.md",
+    "workers": {
+      "app": {
+        "version": "021af5ca-fa95-49f7-ab69-bcee9dabd2ba",
+        "generated_sha256": "378d3e24a853d441ebd06249282f77d060f8d01f0cc27e01209487d0f68737a1",
+        "published_sha256": "e812eea37e3f44c2490b0ded88c3bfdba6026be89ea00c81725b223478400a5d"
+      },
+      "auth": {
+        "version": "6bf0605e-18a0-4ddc-a84a-a4472adbaf6c",
+        "generated_sha256": "ecce0b8ee8ee2b02147498ad336effaf9a8fef0a33e5281fa0805abbb9accb11",
+        "published_sha256": "bcfca10ebe94d67b698a6ba318f67b349b408fed94a5739c4cb52fa51c9d9f47"
+      },
+      "finance": {
+        "version": "4c59460c-c6d7-4ad2-86ee-64c12a7d68a9",
+        "generated_sha256": "46443ef4d0e98005ada9d516ff6bbee06f0e044861fafb512a2223218b3af7cf",
+        "published_sha256": "8ad6016ee073eea6df6fc723f262624b647840ad230b12b48f807594e50faba2"
+      }
+    },
+    "unchanged_workers": [],
+    "deploy_order": [
+      "finance",
+      "auth",
+      "app"
+    ],
+    "finance_m2": "OPEN_REAL_SELLER_CENTRE_BANK_RECONCILIATION_REQUIRED",
+    "m22": "OPEN",
+    "hermes": "OBSERVER",
+    "ads_promo": "LOCKED",
+    "realized_net": "UNKNOWN",
+    "owner_real_workflow": "NOT_EXECUTED",
+    "integration": {
+      "pull_request": 118,
+      "current_status_source": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/118",
+      "publication_does_not_prove_merge": true,
+      "normal_merge_after_documentation_ci_required": true
+    }
+  },
+  "previous_financial_automation_20261113_before_source_clock_hotfix": {
+    "status": "PUBLISHED_VERIFIED",
+    "release": "2026-11-13.2",
+    "base_commit": "6578e21098ff799e59433af92880d249432ceeb4",
+    "branch": "feature/financial-automation-20261113",
+    "documentation": "docs/financial-automation/README.md",
+    "matrix": "docs/financial-automation/MATRIZ_EXECUCAO.json",
+    "published": true,
+    "account_financial_acceptance": false,
+    "m2_closed": false,
+    "external_dependencies": [
+      "Shopee Wallet/Payout contract and actual grants",
+      "Authorized bank connector and account balance evidence",
+      "Ads source timezone confirmation",
+      "Completion-cohort financial coverage",
+      "Owner account operational week/month comparison"
+    ],
+    "verification_scope": "TECHNICAL_PUBLIC_ONLY",
+    "source_commit": "e6bbb189ec2331c0a07136c5b9f720e2e300b5d4",
+    "ci_run": 43527800185,
+    "verified_at": "2026-11-13T23:50:26.229Z",
+    "receipt": "docs/financial-automation/publication-live-20261113.json",
+    "public_verification": "docs/financial-automation/publication-live-20261113.json",
+    "owner_live_authenticated_qa": "NOT_PERFORMED",
+    "m22_closed": false,
+    "limits_unchanged": true,
+    "pull_request": 121,
+    "workers": {
+      "app": "3cc631da-4a91-4fd0-b030-c41537cc8f43",
+      "auth": "c00d5164-f663-4cdf-b137-28f345e181c2",
+      "finance": "50b31451-c6cf-4456-bd09-be5d1956e0da"
+    }
+  },
+  "previous_latest_increment_before_source_clock_hotfix": {
+    "status": "PUBLISHED_VERIFIED",
+    "verification_scope": "TECHNICAL_PUBLIC_ONLY",
+    "release_id": "2026-11-13.2",
+    "release": "2026-11-13.2",
+    "source_commit": "e6bbb189ec2331c0a07136c5b9f720e2e300b5d4",
+    "prepared_source_commit": "bc89ab3c6d26faf26ea6216252f50441aa1a2df5",
+    "ci_run": 43527800185,
+    "node_tests_pass": 4430,
+    "python_tests_pass": 67,
+    "receipt": "docs/financial-automation/publication-live-20261113.json",
+    "public_verification": "docs/financial-automation/publication-live-20261113.json",
+    "verified_at": "2026-11-13T23:50:26.229Z",
+    "published": true,
+    "pull_request": 121,
+    "owner_live_qa": "NOT_PERFORMED",
+    "account_financial_acceptance": false,
+    "m2_closed": false,
+    "m22_closed": false,
+    "git_integration": "CHECK_PR121_CURRENT_STATE"
+  },
+  "previous_last_verified_live_release_before_source_clock_hotfix": {
+    "status": "PUBLISHED_VERIFIED",
+    "verification_scope": "TECHNICAL_PUBLIC_ONLY",
+    "release_id": "2026-11-13.2",
+    "release": "2026-11-13.2",
+    "source_commit": "e6bbb189ec2331c0a07136c5b9f720e2e300b5d4",
+    "prepared_source_commit": "bc89ab3c6d26faf26ea6216252f50441aa1a2df5",
+    "ci_run": 43527800185,
+    "node_tests_pass": 4430,
+    "python_tests_pass": 67,
+    "receipt": "docs/financial-automation/publication-live-20261113.json",
+    "public_verification": "docs/financial-automation/publication-live-20261113.json",
+    "verified_at": "2026-11-13T23:50:26.229Z",
+    "published": true,
+    "pull_request": 121,
+    "owner_live_qa": "NOT_PERFORMED",
+    "account_financial_acceptance": false,
+    "m2_closed": false,
+    "m22_closed": false,
+    "git_integration": "CHECK_PR121_CURRENT_STATE"
   }
 }

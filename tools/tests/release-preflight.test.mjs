@@ -30,14 +30,14 @@ test('release preflight passes only an exact reviewed local build and leaves rem
  assert.ok(RELEASE_MANUAL_GATES.includes('VERIFY_REMOTE_OWNER_FLAGS_MATCH_APPROVED_VALUES'));
  assert.ok(RELEASE_ALLOWED_FILES.includes('tools/release-approved-candidate.json'));
  assert.ok(RELEASE_ALLOWED_FILES.filter(x=>x.startsWith('workers/')).every(x=>RELEASE_APPROVED_PROTECTED_FILES.includes(x)));
- assert.equal(RELEASE_ALLOWED_FILES.some(value=>value.startsWith('web/finance/')),false,'the reference-layout release does not reopen the previously reviewed Finance delta');
+ assert.equal(RELEASE_ALLOWED_FILES.some(value=>value.startsWith('web/finance/')),true,'the explicitly reviewed financial source and allocation delta is included');
  assert.ok(RELEASE_ALLOWED_FILES.filter(x=>x.startsWith('web/finance/')).every(x=>RELEASE_APPROVED_PROTECTED_FILES.includes(x)));
  assert.ok(RELEASE_MANUAL_GATES.includes('VERIFY_ACCOUNT_DB_BINDINGS_ADDITIVE_MIGRATIONS_AND_LEGACY_BACKUPS'));
  assert.ok(RELEASE_MANUAL_GATES.includes('VERIFY_APP_AUTH_FINANCE_VERSION_HASHES_AND_PRIVATE_FINANCE_PROFILE'));
  assert.ok(RELEASE_MANUAL_GATES.includes('OWNER_AUTHENTICATED_DESKTOP_MOBILE_QA'));
 });
 
-test('V4.1 opens only the exact tenant Finance delta, account sidecars and previously reviewed weekly paths',()=>{
+test('financial automation opens only the exact reviewed Finance delta and retains the existing account paths',()=>{
  assert.deepEqual(RELEASE_APPROVED_PROTECTED_FILES,[
   "web/finance/src/auth-router.mjs",
   "web/finance/src/business-period.mjs",
@@ -83,7 +83,38 @@ test('V4.1 opens only the exact tenant Finance delta, account sidecars and previ
   "workers/app/browser-assets-published.json",
   "workers/app/commercial-account.json",
   "workers/auth/commercial-account.json",
-  "workers/finance/commercial-account.json"
+  "workers/finance/commercial-account.json",
+  "web/finance/src/financial-allocation-frame.mjs",
+  "web/finance/src/financial-allocation-worker.mjs",
+  "web/finance/src/financial-bank-connector.mjs",
+  "web/finance/src/financial-cash-allocation.mjs",
+  "web/finance/src/financial-obligation-frame.mjs",
+  "web/finance/src/financial-obligation-worker.mjs",
+  "web/finance/src/financial-order-components.mjs",
+  "web/finance/src/financial-private-protocol.mjs",
+  "web/finance/src/financial-source-capabilities.mjs",
+  "web/finance/src/financial-source-collection.mjs",
+  "web/finance/src/financial-source-events.mjs",
+  "web/finance/src/financial-source-frame.mjs",
+  "web/finance/src/financial-source-worker.mjs",
+  "web/finance/tests/external-cash-allocation-guard.test.mjs",
+  "web/finance/tests/financial-allocation-frame.test.mjs",
+  "web/finance/tests/financial-allocation-worker.test.mjs",
+  "web/finance/tests/financial-bank-connector.test.mjs",
+  "web/finance/tests/financial-cash-allocation-store.test.mjs",
+  "web/finance/tests/financial-cash-allocation.test.mjs",
+  "web/finance/tests/financial-obligation-allocation.test.mjs",
+  "web/finance/tests/financial-obligation-frame.test.mjs",
+  "web/finance/tests/financial-obligation-worker.test.mjs",
+  "web/finance/tests/financial-order-components.test.mjs",
+  "web/finance/tests/financial-private-fixture.mjs",
+  "web/finance/tests/financial-private-protocol.test.mjs",
+  "web/finance/tests/financial-production-integration.test.mjs",
+  "web/finance/tests/financial-source-capabilities.test.mjs",
+  "web/finance/tests/financial-source-collection.test.mjs",
+  "web/finance/tests/financial-source-events.test.mjs",
+  "web/finance/tests/financial-source-original-items-v3.test.mjs",
+  "web/finance/tests/financial-source-worker.test.mjs"
 ]);
  assert.equal(new Set(RELEASE_APPROVED_PROTECTED_FILES).size,RELEASE_APPROVED_PROTECTED_FILES.length);
  assert.ok(Object.isFrozen(RELEASE_APPROVED_PROTECTED_FILES));
@@ -231,10 +262,11 @@ test('a malformed candidate cannot weaken exact hashes, literal paths or commerc
  }
 });
 
-test('only the two explicit owner authorization records are recognized, without granting production approval',t=>{
+test('only the three explicit owner authorization records are recognized, without granting production approval',t=>{
  assert.deepEqual(RELEASE_ACCEPTED_OWNER_AUTHORIZATIONS,[
   'OWNER_REQUESTED_ALL_PREPARED_IMPROVEMENTS_LIVE_2026_10_30',
-  'OWNER_REQUESTED_V41_LIVE_2026_11_11'
+  'OWNER_REQUESTED_V41_LIVE_2026_11_11',
+  'OWNER_REQUESTED_FINANCIAL_AUTOMATION_LIVE_2026_11_13'
  ]);assert.ok(Object.isFrozen(RELEASE_ACCEPTED_OWNER_AUTHORIZATIONS));
  const directory=fs.mkdtempSync(path.join(os.tmpdir(),'mls-release-owner-scope-'));
  t.after(()=>fs.rmSync(directory,{recursive:true,force:true}));
