@@ -60,9 +60,12 @@ async function addApprovedTax(sources,scope,period,policy,stamp){
 export async function ingestFinancialAutomationSources(env,{scope,period,maximum_events=100},options={}){
  scope=normalizeFinancialScope(scope);await assertFinancialAccess(env,scope,options,'write');
  if(!Number.isSafeInteger(maximum_events)||maximum_events<1||maximum_events>100)fail('INGESTION_BUDGET_INVALID');
- const stamp=financialClock(options),kind=financialAutomationSourceKind(period),previous=await readFinancialAutomationState(env,{scope,kind},options);
+ const kind=financialAutomationSourceKind(period),previous=await readFinancialAutomationState(env,{scope,kind},options);
  if(typeof options.services?.readFinancialAutomationSources!=='function')return {schema:'financial_automation_sync_v1',scope,ingested:0,replayed:0,complete:false,pending:['FINANCIAL_SOURCE_ADAPTER_NOT_CONFIGURED'],source_revision:previous.revision};
  const raw=await options.services.readFinancialAutomationSources({scope,period,policy:options.policy??null,now:options.now??Date.now,assertAuthorized:options.assertAuthorized,actor:options.actor,mode:'sync',checkpoint:previous.payload?.checkpoint??null});await assertFinancialAccess(env,scope,options,'write');
+ // Sources can observe the clock after asynchronous cache reads. Validate them
+ // against collection completion while retaining strict rejection of the future.
+ const stamp=financialClock(options);
  const sources=normalizeSources(raw,scope,period,stamp,previous.payload);await addApprovedTax(sources,scope,period,options.policy??null,stamp);
  const fingerprints=[];for(const event of sources.events)fingerprints.push([event.event_id,await financialEventContentHash(event)]);
  const pageFingerprint=await financialDigest(fingerprints),oldIngestion=previous.payload?.ingestion,offset=oldIngestion?.page_fingerprint===pageFingerprint&&Number.isSafeInteger(oldIngestion.pending_offset)?oldIngestion.pending_offset:0;

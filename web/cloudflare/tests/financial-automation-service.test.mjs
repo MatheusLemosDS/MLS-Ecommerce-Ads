@@ -8,6 +8,11 @@ import {financialAccountingPeriod} from '../src/financial-accounting-schedule.mj
 import {ingestFinancialAutomationSources} from '../src/financial-automation-bridge.mjs';
 import {readFinancialAutomationState,writeFinancialAutomationState} from '../src/financial-automation-store.mjs';
 import {runFinancialAutomationJobs} from '../src/financial-automation-jobs.mjs';
+import {readFinancialEvents} from '../src/financial-event-store.mjs';
+import {readFinancialAutomationSavedAds} from '../src/financial-automation-ads-sources.mjs';
+import {buildAdsMeasurement} from '../src/ads-measurement.mjs';
+import {buildAdsCalendar} from '../src/ads-calendar.mjs';
+import {FINANCE_PROFILE} from '../../finance/src/connection-store.mjs';
 
 const origin='https://synthetic.invalid',current={role:'owner',csrf:'synthetic-csrf'},fixed=Date.parse('2026-11-13T18:00:00Z'),now=()=>fixed;
 function fixture(){let permitted=true;const env={ADMIN_DB:new D1()},scope=financialAutomationScope(env,current),options={current,now,actor:'synthetic-owner',assertAuthorized:async()=>{assert.equal(permitted,true,'authorization remains current');return true;},services:{}};return {env,scope,options,revoke(){permitted=false;},close(){env.ADMIN_DB.db.close();}};}
@@ -97,5 +102,46 @@ test('persisted inventory source fences reject changed state atomically',async()
 test('dropping a generic audit statement rolls back configuration and inventory heads',async()=>{
  const f=fixture();try{const db=f.env.ADMIN_DB,prepare=db.prepare.bind(db),batch=db.batch.bind(db);db.prepare=sql=>{const statement=prepare(sql);statement.taskSQL=sql;return statement;};db.batch=statements=>batch(statements.filter(row=>!row.taskSQL.startsWith('INSERT INTO financial_automation_requests')));
   const response=await request(f,'/policy',approve());assert.equal(response.status,503);const saved=await readFinancialAutomationState(f.env,{scope:f.scope,kind:'CONFIG',history:true},f.options);assert.equal(saved.revision,0);assert.equal(saved.history.length,0);
+ }finally{f.close();}
+});
+
+test('an advancing clock accepts real saved Ads observations and advances the durable source cursor',async()=>{
+ const f=fixture();try{
+  let clock=fixed;f.options.now=()=>clock+=10;
+  const period=financialAccountingPeriod({kind:'MONTH',anchor:'2026-10'}),selection={start_date:'2026-10-01',end_date:'2026-10-01'},fetched_at=fixed/1000-60;
+  const report=buildAdsCalendar([buildAdsMeasurement({status:'ok',connected:true,shop:{id:FINANCE_PROFILE.shop_id},period:selection,balance:'1.00',daily:[{date:'2026-10-01',expense:'1.23',broad_gmv:'0',broad_order:0,broad_roas:'0',direct_gmv:'0',direct_order:0,direct_roas:'0'}]},selection,fetched_at)],selection,fetched_at);
+  const order=await observedEvent(f.scope,'clock-initial-order',100);let adsObservation=null;
+  f.options.services.readFinancialAutomationSources=async({scope,period,now,checkpoint})=>{
+   if(checkpoint===null)return {events:[order],coverage:[],capabilities:[],pending:[],cutoff_at:order.observed_at,checkpoint:{next_lane:1},has_more:true};
+   assert.deepEqual(checkpoint,{next_lane:1});
+   const ads=await readFinancialAutomationSavedAds(f.env,{scope,period,now,readMonth:async()=>({display:{month:'2026-10',ads:report},active:null})});
+   assert.equal(ads.events.length,1);adsObservation=ads.events[0].observed_at;
+   return {...ads,cutoff_at:adsObservation,checkpoint:{next_lane:2},has_more:true};
+  };
+  const first=await ingestFinancialAutomationSources(f.env,{scope:f.scope,period},f.options);assert.equal(first.ingested,1);assert.equal(first.source_revision,1);
+  const second=await ingestFinancialAutomationSources(f.env,{scope:f.scope,period},f.options);assert.equal(second.ingested,1);assert.equal(second.source_revision,2);
+  const saved=await readFinancialAutomationState(f.env,{scope:f.scope,kind:'SOURCES:MONTH:2026-10-01:CIVIL_MONTH'},f.options);
+  assert.deepEqual(saved.payload.checkpoint,{next_lane:2});assert.ok(saved.payload.checked_at>=adsObservation);assert.ok(adsObservation>order.observed_at);
+  const ledger=await readFinancialEvents(f.env,{scope:f.scope,limit:100},f.options);assert.equal(ledger.events.length,2);
+  const ads=ledger.events.find(event=>event.source.family==='ADS_DAILY_CONSUMPTION');assert.equal(ads.quality,'REVIEW');assert.equal(ads.postings[0].amount_cents,123);
+ }finally{f.close();}
+});
+
+test('future source observations and cutoffs still reject atomically with an advancing clock',async()=>{
+ const f=fixture();try{
+  let clock=fixed;f.options.now=()=>clock+=10;
+  const period=financialAccountingPeriod({kind:'MONTH',anchor:'2026-10'}),event=await observedEvent(f.scope,'clock-stable-order',100);
+  f.options.services.readFinancialAutomationSources=async()=>({events:[event],coverage:[],capabilities:[],pending:[],cutoff_at:event.observed_at,checkpoint:{next_lane:1},has_more:true});
+  await ingestFinancialAutomationSources(f.env,{scope:f.scope,period},f.options);
+  const stateInput={scope:f.scope,kind:'SOURCES:MONTH:2026-10-01:CIVIL_MONTH',history:true},before=await readFinancialAutomationState(f.env,stateInput,f.options),ledgerBefore=await readFinancialEvents(f.env,{scope:f.scope,limit:100},f.options);
+  for(const mode of ['observation','cutoff']){
+   f.options.services.readFinancialAutomationSources=async({now,checkpoint})=>{
+    assert.deepEqual(checkpoint,{next_lane:1});const future=new Date(now()+60000).toISOString();
+    return {events:[mode==='observation'?{...event,observed_at:future}:event],coverage:[],capabilities:[],pending:[],cutoff_at:mode==='cutoff'?future:event.observed_at,checkpoint:{next_lane:2},has_more:false};
+   };
+   await assert.rejects(ingestFinancialAutomationSources(f.env,{scope:f.scope,period},f.options),error=>error.code===(mode==='observation'?'FINANCIAL_AUTOMATION_SOURCE_INVALID':'FINANCIAL_AUTOMATION_SOURCE_CUTOFF_INVALID'));
+   assert.deepEqual(await readFinancialAutomationState(f.env,stateInput,f.options),before);
+   assert.deepEqual(await readFinancialEvents(f.env,{scope:f.scope,limit:100},f.options),ledgerBefore);
+  }
  }finally{f.close();}
 });

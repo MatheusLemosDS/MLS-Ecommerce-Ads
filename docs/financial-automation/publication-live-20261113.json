@@ -514,5 +514,17 @@
     "owner_session_used": false,
     "financial_account_acceptance": false,
     "limit": "First saved-source page only; all events remain in review. This does not certify recognition, complete coverage, a financial close, wallet balance or bank reconciliation."
+  },
+  "subsequent_runtime_failure": {
+    "observed_at": "2026-11-14T00:00:07.198406+00:00",
+    "proof_sha256": "7c1715ebbffc5189e3cb60e64b225b3784df6a97f68a5b64924afcf29abb2aa2",
+    "job_status": "RETRY_WAIT",
+    "phase": "COLLECT",
+    "code": "FINANCIAL_AUTOMATION_SOURCE_INVALID",
+    "events_preserved": 100,
+    "source_snapshot_revision_preserved": 1,
+    "cause": "The bridge sampled its validation clock before asynchronous source reads; valid Ads observations were later than that stale start time.",
+    "correction_candidate_release": "2026-11-13.3",
+    "correction_published": false
   }
 }
