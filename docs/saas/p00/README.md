@@ -1,3 +1,7 @@
+## Revisão GitHub — PR122
+
+[PR122](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/122) permanece rascunho. [Validate43615841211](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43615841211) passou no SHA `f760048`:4432 Node,67 Python,build e preflight. O recibo documental posterior terá checks próprios; não se transfere aprovação a outro SHA. Os três checks Cloudflare falharam e seus detalhes/logs oficiais retornam403/12004; causa não comprovada. P00 continua bloqueada por esses checks e evidências externas de operação/direitos. Sem merge/auto-merge/deploy.
+
 # P00 — base e promessa verificável
 
 O estado de execução está em [MLS_SAAS_EXECUTION.json](../../MLS_SAAS_EXECUTION.json), apontado pelo [checkpoint único](../../MLS_COMMERCE_OS_CHECKPOINT.json). Os inputs em [input](input/MANIFEST.json) são requisitos históricos imutáveis, não um segundo estado operacional. P01–P11 continuam no objetivo geral e não são executadas nesta entrega.

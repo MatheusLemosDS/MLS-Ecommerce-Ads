@@ -646,7 +646,7 @@
       ],
       "dependencias_externas": [],
       "condicional_ao_escopo_vendido": false,
-      "estado": "BLOQUEADO",
+      "estado": "TESTADO",
       "commit_implementacao": "84487108fa9c1292e90a62296ea8a597ffaad619",
       "evidencias_testes": [
         "docs/saas/p00/github-reconciliation.json",
@@ -655,25 +655,17 @@
       ],
       "evidencias_publicacao": [],
       "evidencias_operacionais": [],
-      "bloqueios": [
-        {
-          "id": "EXT-CLOUDFLARE-CHECKS",
-          "owner": "Cloudflare administrator/operator",
-          "resource": "Three external Workers Builds checks on PR122",
-          "cause": "All three checks report failure; their output supplies IDs/links but no error details. API Builds read remains403. Dashboard evidence permits branch review without production deployment; it does not turn these checks green.",
-          "impact": "External checks are not approved; diagnosis and applicable release gates remain pending.",
-          "minimum_to_resume": "Read supported build logs for App/Auth/Finance, record actual errors, diagnose before proposing any change; no bypass, cancellation, workflow or Cloudflare configuration change."
-        }
-      ],
+      "bloqueios": [],
       "gate_anterior": null,
       "published_this_delivery": false,
       "validated_operationally": false,
       "acceptance_scope": "DOCUMENTARY_AND_LOCAL_TECHNICAL_ONLY",
       "last_stage_reached": "TESTADO",
-      "acceptance_satisfied": false,
+      "acceptance_satisfied": true,
       "local_acceptance": true,
-      "reason": "Local tests passed; GitHub validate is running at f760048. Three external Cloudflare checks failed with cause not available. Do not mark completed or infer production deployment.",
-      "candidate_ci_run": 43615841211
+      "reason": "Acceptance proved at f760048 by run43615841211:4432 Node,67 Python,build,PR preflight; no assertions removed. Subsequent metadata-only changes require their own configured checks. Cloudflare failures remain external phase/release blockers, not ignored.",
+      "candidate_ci_run": 43615841211,
+      "candidate_ci_source_sha": "f7600485fd717d2836f005e06fa3c02634661457"
     },
     {
       "id": "SAAS-003",
@@ -5491,14 +5483,17 @@
     "operational_acceptance": false,
     "review_head_sha": "f7600485fd717d2836f005e06fa3c02634661457",
     "pull_request": 122,
-    "github_ci_run": 43615841211
+    "github_ci_run": 43615841211,
+    "approved_github_source_commit": "f7600485fd717d2836f005e06fa3c02634661457",
+    "approved_github_ci_run": 43615841211,
+    "receipt_successor_checks": "Pending for any doc-only receipt successor; no approval inferred from another SHA."
   },
   "external_blockers_p00": [
     {
       "id": "EXT-CLOUDFLARE-CHECKS",
       "owner": "Cloudflare administrator/operator",
       "resource": "Three external Workers Builds checks on PR122",
-      "cause": "All three checks report failure; their output supplies IDs/links but no error details. API Builds read remains403. Dashboard evidence permits branch review without production deployment; it does not turn these checks green.",
+      "cause": "External checks failed; official details/logs403/12004; actual cause unproved. GitHub validate passed at f760048.",
       "impact": "External checks are not approved; diagnosis and applicable release gates remain pending.",
       "minimum_to_resume": "Read supported build logs for App/Auth/Finance, record actual errors, diagnose before proposing any change; no bypass, cancellation, workflow or Cloudflare configuration change."
     },

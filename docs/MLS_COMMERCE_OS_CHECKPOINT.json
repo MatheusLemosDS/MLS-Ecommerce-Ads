@@ -40,7 +40,6 @@
     "Local validation evidence recorded in docs/saas/p00/validation.json"
   ],
   "remaining_this_phase": [
-    "SAAS-002_GITHUB_CI_PENDING",
     "EXT-CLOUDFLARE-CHECKS",
     "EXT-OPERATIONS",
     "EXT-RIGHTS"
@@ -48,10 +47,10 @@
   "next_phase": "P01_DEFERRED_UNTIL_NEXT_DELIVERY_AND_APPLICABLE_GATES",
   "previous_phase": "DOCUMENTATION_ORGANIZATION_LOCAL_0a5a228",
   "next_actions": [
-    "Wait for run43615841211; inspect result before any next push to avoid configured cancellation",
-    "Diagnose the three failed Cloudflare checks through supported read-only logs; no changes or bypass",
-    "Complete external gateway/Hermes metadata and rights references",
-    "P01 remains for a future delivery; P00 not complete"
+    "Read actual failure details for App/Auth/Finance Builds through supported authorized access; official build/log reads403/12004",
+    "Monitor normal checks on the doc-only receipt successor without treating the earlier success as approval of that new SHA",
+    "Complete gateway/Hermes operational metadata and rights references",
+    "Keep PR122 draft; no merge/auto-merge/deploy; P01 only in a future delivery"
   ],
   "m0_followup": [
     "Conferir visual autenticado em desktop e celular durante M1; corrigir apenas branding/layout sem renomear infraestrutura"
@@ -7495,7 +7494,7 @@
   },
   "operational_execution_matrix": "docs/MLS_SAAS_EXECUTION.json",
   "phase_index": "docs/saas/p00/README.md",
-  "current_task": "SAAS-002 / SAAS-004: external evidence blockers only",
+  "current_task": "SAAS-004 / external Cloudflare check diagnostics",
   "saas_p00": {
     "last_commits": [
       "a1bf89a3bb7ebe553e6d76c9ea2a47097131f725",
@@ -7520,7 +7519,7 @@
         "id": "EXT-CLOUDFLARE-CHECKS",
         "owner": "Cloudflare administrator/operator",
         "resource": "Three external Workers Builds checks on PR122",
-        "cause": "All three checks report failure; their output supplies IDs/links but no error details. API Builds read remains403. Dashboard evidence permits branch review without production deployment; it does not turn these checks green.",
+        "cause": "Three external checks failed at f760048; official GET build and GET logs all return403/code12004. Cause unavailable; GitHub validate succeeded independently.",
         "impact": "External checks are not approved; diagnosis and applicable release gates remain pending.",
         "minimum_to_resume": "Read supported build logs for App/Auth/Finance, record actual errors, diagnose before proposing any change; no bypass, cancellation, workflow or Cloudflare configuration change."
       },
@@ -7548,7 +7547,7 @@
     "next_implementation_item": "SAAS-005 / P01, next delivery only",
     "blocker_review": "docs/saas/p00/blocker-review-20261114.json",
     "external_evidence_request": "docs/saas/p00/EXTERNAL_EVIDENCE_REQUEST.md",
-    "git_review_status": "PR122 draft open at f760048; validate in progress; three Cloudflare checks failed; no merge/auto-merge/deploy.",
+    "git_review_status": "PR122 remains draft. Validate succeeded at f760048; next receipt-only commit gets its own checks. Three Cloudflare checks failed, details/logs403/12004. No merge/auto-merge/deploy.",
     "github_review": {
       "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/122",
       "draft": true,
@@ -7556,8 +7555,8 @@
       "base_sha": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
       "github_ci_run": 43615841211,
       "github_ci_url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43615841211",
-      "github_ci_status": "in_progress",
-      "github_ci_conclusion": null,
+      "github_ci_status": "completed",
+      "github_ci_conclusion": "success",
       "cloudflare_checks": {
         "app": "failure",
         "auth": "failure",
@@ -7569,7 +7568,25 @@
       "auto_merge_enabled": false,
       "deployed_by_delivery": false,
       "recorded_at": "2026-11-14T16:42:09.792793+00:00",
-      "receipt_publication": "Local follow-up only while validate is running; no push to avoid configured concurrency cancellation."
-    }
+      "receipt_publication": "Pending local receipt can now be pushed because run43615841211 completed. Its doc-only successor will have separate normal checks."
+    },
+    "approved_github_ci": {
+      "run": 43615841211,
+      "job": 132510595733,
+      "source_sha": "f7600485fd717d2836f005e06fa3c02634661457",
+      "conclusion": "success",
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43615841211",
+      "stdout_excerpt": [
+        "2026-11-14T16:43:23.5147631Z # tests 4432",
+        "2026-11-14T16:43:23.5148015Z # pass 4432",
+        "2026-11-14T16:43:23.5148202Z # fail 0",
+        "2026-11-14T16:43:23.5148391Z # cancelled 0",
+        "2026-11-14T16:43:23.5148594Z # skipped 0",
+        "2026-11-14T16:43:28.5956763Z Ran 67 tests in 0.550s",
+        "2026-11-14T16:43:30.8920543Z RELEASE_LOCAL_PREFLIGHT_OK",
+        "2026-11-14T16:43:30.8930839Z RELEASE_NOT_APPROVED_FOR_PRODUCTION"
+      ]
+    },
+    "validated_github_source_commit": "f7600485fd717d2836f005e06fa3c02634661457"
   }
 }

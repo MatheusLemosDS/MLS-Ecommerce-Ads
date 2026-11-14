@@ -194,8 +194,8 @@
     "base_sha": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
     "github_ci_run": 43615841211,
     "github_ci_url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43615841211",
-    "github_ci_status": "in_progress",
-    "github_ci_conclusion": null,
+    "github_ci_status": "completed",
+    "github_ci_conclusion": "success",
     "cloudflare_checks": {
       "app": "failure",
       "auth": "failure",
@@ -207,6 +207,104 @@
     "auto_merge_enabled": false,
     "deployed_by_delivery": false,
     "recorded_at": "2026-11-14T16:42:09.792793+00:00",
-    "receipt_publication": "Local follow-up only while validate is running; no push to avoid configured concurrency cancellation."
-  }
+    "receipt_publication": "Pending local receipt can now be pushed because run43615841211 completed. Its doc-only successor will have separate normal checks."
+  },
+  "approved_github_ci": {
+    "run": 43615841211,
+    "job": 132510595733,
+    "source_sha": "f7600485fd717d2836f005e06fa3c02634661457",
+    "conclusion": "success",
+    "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43615841211",
+    "stdout_excerpt": [
+      "2026-11-14T16:43:23.5147631Z # tests 4432",
+      "2026-11-14T16:43:23.5148015Z # pass 4432",
+      "2026-11-14T16:43:23.5148202Z # fail 0",
+      "2026-11-14T16:43:23.5148391Z # cancelled 0",
+      "2026-11-14T16:43:23.5148594Z # skipped 0",
+      "2026-11-14T16:43:28.5956763Z Ran 67 tests in 0.550s",
+      "2026-11-14T16:43:30.8920543Z RELEASE_LOCAL_PREFLIGHT_OK",
+      "2026-11-14T16:43:30.8930839Z RELEASE_NOT_APPROVED_FOR_PRODUCTION"
+    ]
+  },
+  "cloudflare_failed_build_diagnostics": [
+    {
+      "worker": "app",
+      "build_uuid": "dd72c0e3-8ec9-4e71-9365-7d4f713a84b2",
+      "resource": "build",
+      "http_status": 403,
+      "success": false,
+      "errors": [
+        {
+          "code": 12004,
+          "message": "Forbidden"
+        }
+      ]
+    },
+    {
+      "worker": "app",
+      "build_uuid": "dd72c0e3-8ec9-4e71-9365-7d4f713a84b2",
+      "resource": "logs",
+      "http_status": 403,
+      "success": false,
+      "errors": [
+        {
+          "code": 12004,
+          "message": "Forbidden"
+        }
+      ]
+    },
+    {
+      "worker": "auth",
+      "build_uuid": "b458b20d-4a12-41d6-abdc-482521cea626",
+      "resource": "build",
+      "http_status": 403,
+      "success": false,
+      "errors": [
+        {
+          "code": 12004,
+          "message": "Forbidden"
+        }
+      ]
+    },
+    {
+      "worker": "auth",
+      "build_uuid": "b458b20d-4a12-41d6-abdc-482521cea626",
+      "resource": "logs",
+      "http_status": 403,
+      "success": false,
+      "errors": [
+        {
+          "code": 12004,
+          "message": "Forbidden"
+        }
+      ]
+    },
+    {
+      "worker": "finance",
+      "build_uuid": "6fe55711-0e17-44ff-a609-13bd7636c6c1",
+      "resource": "build",
+      "http_status": 403,
+      "success": false,
+      "errors": [
+        {
+          "code": 12004,
+          "message": "Forbidden"
+        }
+      ]
+    },
+    {
+      "worker": "finance",
+      "build_uuid": "6fe55711-0e17-44ff-a609-13bd7636c6c1",
+      "resource": "logs",
+      "http_status": 403,
+      "success": false,
+      "errors": [
+        {
+          "code": 12004,
+          "message": "Forbidden"
+        }
+      ]
+    }
+  ],
+  "cloudflare_logs_access": "Official GET build and GET logs endpoints return403/code12004 on all three builds. Actual failure cause unproved; no configuration change or speculative fix."
 }

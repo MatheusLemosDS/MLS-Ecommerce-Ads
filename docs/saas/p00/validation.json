@@ -139,7 +139,7 @@
     "current_main_result": "success,4432 Node/67 Python/build; push event did not execute PR preflight",
     "navigation_test_source_changed_since_audit": false,
     "conclusion": "Historical protocol error alone does not prove product defect or root cause. Same navigation test passes on current main and in local gates; no speculative CDP/product patch.",
-    "candidate_github_ci": "NOT_RUN_NO_SAFE_PUSH_PROVEN"
+    "candidate_github_ci": "Run43615841211 success at exact source f760048; 4432 Node,67 Python,build,PR preflight. This is not an assertion of success for later metadata-only commits."
   },
   "documentation_validation": {
     "command": "python3 docs/saas/p00/validate-documentation.py",
@@ -163,5 +163,22 @@
     "blocker": "docs/saas/p00/builds-read.json: six 403/10000 errors; production branch/filter/effective commands unproved"
   },
   "migrations": "NONE",
-  "commercial_operations": "NONE"
+  "commercial_operations": "NONE",
+  "github_pr122_ci": {
+    "run": 43615841211,
+    "job": 132510595733,
+    "source_sha": "f7600485fd717d2836f005e06fa3c02634661457",
+    "conclusion": "success",
+    "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43615841211",
+    "stdout_excerpt": [
+      "2026-11-14T16:43:23.5147631Z # tests 4432",
+      "2026-11-14T16:43:23.5148015Z # pass 4432",
+      "2026-11-14T16:43:23.5148202Z # fail 0",
+      "2026-11-14T16:43:23.5148391Z # cancelled 0",
+      "2026-11-14T16:43:23.5148594Z # skipped 0",
+      "2026-11-14T16:43:28.5956763Z Ran 67 tests in 0.550s",
+      "2026-11-14T16:43:30.8920543Z RELEASE_LOCAL_PREFLIGHT_OK",
+      "2026-11-14T16:43:30.8930839Z RELEASE_NOT_APPROVED_FOR_PRODUCTION"
+    ]
+  }
 }
