@@ -2,7 +2,9 @@
 
 A implementação publicada adiciona ao MLS Finance resultado por competência, recebíveis/carteira, saques, banco, despesas, devoluções, conciliação e fechamentos versionados, preservando a V4.1 e a estimativa de vendas existente. Fontes não comprovadas permanecem parciais.
 
-**Publicação técnica verificada:** release2026-11-13.2 em 13/11/2026 às 20:50:26 Brasília, fonte `e6bbb189ec2331c0a07136c5b9f720e2e300b5d4`, [CI43527800185](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43527800185), 4430 Node/67 Python. O [recibo dos Workers/configuração](publication-live-20261113.json) e a [conferência pública](publication-live-20261113.json) registram o vetor realmente servido em https://app.brazacommerce.com.br. **Isso não certifica valores da conta real, não confirma integração Git/merge e não encerra M2/M2.2.**
+**Publicação técnica verificada:** release 2026-11-13.3 em 13/11/2026 às 21:22:15 Brasília, fonte `f68525ea1d136350ece9942433352accdf97d992`, [CI 43531882471](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43531882471), 4432 Node/67 Python. O [recibo dos Workers/configuração e da conferência pública](publication-live-20261113.json) registra os três serviços no domínio. App/Auth foram atualizados; Finance foi retido. **Isso não certifica valores da conta real, integração Git/merge ou encerramento de M2/M2.2.**
+
+**Continuidade da coleta:** a .2 preservou os 100 primeiros eventos, mas interrompeu a etapa Ads por validar observações contra o horário anterior à leitura. A .3 reconfere o horário ao concluir a leitura e mantém a rejeição de futuros reais. Na execução natural de 14/11 às 00:32:51 UTC, novembro avançou à fonte v2: 100 eventos de pedidos preservados e 13 eventos diários de Ads, sem novo SOURCE_INVALID ou reinício do cursor. A coleta continua parcial. O recibo conserva integralmente a .2 e sua falha em `previous_release_evidence`.
 
 ## Onde usar
 

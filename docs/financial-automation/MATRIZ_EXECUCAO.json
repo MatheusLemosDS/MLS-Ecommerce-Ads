@@ -1387,6 +1387,15 @@
         "events": 100,
         "all_event_types": "ORDER_FINANCIAL_REVIEW",
         "financial_account_acceptance": false
+      },
+      "observacao_hotfix_3": {
+        "reference": "docs/financial-automation/publication-live-20261113.json#natural_hotfix_resume_observation",
+        "source_commit": "f68525ea1d136350ece9942433352accdf97d992",
+        "observed_at": "2026-11-14T00:33:17.899767+00:00",
+        "state": "ORIGINAL_NOVEMBER_ADS_LANE_RESUMED",
+        "source_revision_after": 2,
+        "events_after": 113,
+        "financial_account_acceptance": false
       }
     },
     {
@@ -1569,6 +1578,15 @@
         "state": "FIRST_NATURAL_SAVED_SOURCE_PAGE_RECORDED",
         "events": 100,
         "all_event_types": "ORDER_FINANCIAL_REVIEW",
+        "financial_account_acceptance": false
+      },
+      "observacao_hotfix_3": {
+        "reference": "docs/financial-automation/publication-live-20261113.json#natural_hotfix_resume_observation",
+        "source_commit": "f68525ea1d136350ece9942433352accdf97d992",
+        "observed_at": "2026-11-14T00:33:17.899767+00:00",
+        "state": "ORIGINAL_NOVEMBER_ADS_LANE_RESUMED",
+        "source_revision_after": 2,
+        "events_after": 113,
         "financial_account_acceptance": false
       }
     },
@@ -3378,6 +3396,15 @@
         "events": 100,
         "all_event_types": "ORDER_FINANCIAL_REVIEW",
         "financial_account_acceptance": false
+      },
+      "observacao_hotfix_3": {
+        "reference": "docs/financial-automation/publication-live-20261113.json#natural_hotfix_resume_observation",
+        "source_commit": "f68525ea1d136350ece9942433352accdf97d992",
+        "observed_at": "2026-11-14T00:33:17.899767+00:00",
+        "state": "ORIGINAL_NOVEMBER_ADS_LANE_RESUMED",
+        "source_revision_after": 2,
+        "events_after": 113,
+        "financial_account_acceptance": false
       }
     },
     {
@@ -3897,7 +3924,16 @@
         "web/finance/tests/financial-source-collection.test.mjs",
         "web/finance/tests/financial-source-events.test.mjs",
         "web/finance/tests/financial-source-worker.test.mjs"
-      ]
+      ],
+      "observacao_hotfix_3": {
+        "reference": "docs/financial-automation/publication-live-20261113.json#natural_hotfix_resume_observation",
+        "source_commit": "f68525ea1d136350ece9942433352accdf97d992",
+        "observed_at": "2026-11-14T00:33:17.899767+00:00",
+        "state": "ORIGINAL_NOVEMBER_ADS_LANE_RESUMED",
+        "source_revision_after": 2,
+        "events_after": 113,
+        "financial_account_acceptance": false
+      }
     },
     {
       "id": "FINAUTO-27",
@@ -4238,7 +4274,16 @@
       ],
       "evidencias_resolvidas_na_integracao": [
         "Commit, CI, três Workers ativos/latest, configurações e arquivos públicos conferidos em publication-live-20261113.json; aceite financeiro continua separado."
-      ]
+      ],
+      "observacao_hotfix_3": {
+        "reference": "docs/financial-automation/publication-live-20261113.json#natural_hotfix_resume_observation",
+        "source_commit": "f68525ea1d136350ece9942433352accdf97d992",
+        "observed_at": "2026-11-14T00:33:17.899767+00:00",
+        "state": "ORIGINAL_NOVEMBER_ADS_LANE_RESUMED",
+        "source_revision_after": 2,
+        "events_after": 113,
+        "financial_account_acceptance": false
+      }
     }
   ],
   "cenarios": [
@@ -4984,11 +5029,13 @@
   },
   "verificacao_executada": {
     "estado": "FINAL_CI_AND_TECHNICAL_PUBLIC_PUBLICATION_VERIFIED",
-    "node_passed": 4430,
+    "source_commit": "f68525ea1d136350ece9942433352accdf97d992",
+    "node_passed": 4432,
     "node_failed": 0,
     "node_skipped": 0,
+    "node_cancelled": 0,
     "python_passed": 67,
-    "ci": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43527800185",
+    "ci": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43531882471",
     "evidencia": "docs/financial-automation/validation/final-local-20261113.json",
     "publicacao": "docs/financial-automation/publication-live-20261113.json",
     "conta_real": "NAO_VALIDADA"
@@ -5021,18 +5068,20 @@
     "publication": "docs/financial-automation/publication-live-20261113.json",
     "financial_account_acceptance": "NOT_PERFORMED",
     "additional_inventory_validation": "docs/financial-automation/validation/inventory-focused-20261113.json",
-    "source_commit": "e6bbb189ec2331c0a07136c5b9f720e2e300b5d4"
+    "source_commit": "f68525ea1d136350ece9942433352accdf97d992"
   },
   "publicacao_da_release": {
     "status": "PUBLICADO_VERIFICADO_ESCOPO_TECNICO_PUBLICO",
-    "source_commit": "e6bbb189ec2331c0a07136c5b9f720e2e300b5d4",
-    "verified_at": "2026-11-13T23:50:26.229Z",
+    "source_commit": "f68525ea1d136350ece9942433352accdf97d992",
+    "verified_at": "2026-11-14T00:22:15.598Z",
     "receipt": "docs/financial-automation/publication-live-20261113.json",
     "public_verification": "docs/financial-automation/publication-live-20261113.json",
     "financial_account_acceptance": "NAO_REALIZADA",
     "wallet_payout_capability": "UNKNOWN",
     "m2": "OPEN",
-    "m22": "OPEN"
+    "m22": "OPEN",
+    "release": "2026-11-13.3",
+    "natural_resume_reference": "docs/financial-automation/publication-live-20261113.json#natural_hotfix_resume_observation"
   },
   "verificacao_local_inicial": {
     "estado": "FOCUSED_LOCAL_169_PASS",
@@ -5058,5 +5107,16 @@
       "VALIDADO_LOCAL": 21,
       "PARCIAL": 3
     }
+  },
+  "verificacao_publicacao_2_historica": {
+    "estado": "FINAL_CI_AND_TECHNICAL_PUBLIC_PUBLICATION_VERIFIED",
+    "node_passed": 4430,
+    "node_failed": 0,
+    "node_skipped": 0,
+    "python_passed": 67,
+    "ci": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43527800185",
+    "evidencia": "docs/financial-automation/validation/final-local-20261113.json",
+    "publicacao": "docs/financial-automation/publication-live-20261113.json",
+    "conta_real": "NAO_VALIDADA"
   }
 }

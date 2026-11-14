@@ -1,7 +1,16 @@
 # Validação do complemento financeiro — 13/11/2026
 
+## Gate atual .3 — continuidade da fonte
+
+Release **2026-11-13.3**, fonte `f68525ea1d136350ece9942433352accdf97d992`, preparado `3cf489e33071b32bc73e2efaf2aecfc62618d46a`; [CI 43531882471](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43531882471) aprovada: **4432 Node, zero falhas/ignorados/cancelados; 67 Python**. A execução local completa passou nos mesmos hashes. Os oito perfis sintéticos do Worker foram regenerados. Publicação técnica às 2026-11-14T00:22:15.598Z: App `9bfc21d6-dec9-4fa6-89d8-7ea1dec50993`, Auth `dfd2fc99-728f-4f29-96ee-a4b256c5640a`, Finance `50b31451-c6cf-4456-bd09-be5d1956e0da` retido. Os 17 GETs/redirecionamentos, oito assets e 24 perfis públicos passaram com respostas TLS verificadas e renderização CDP. Sem sessão Live do proprietário.
+
+Na execução natural de 14/11 às 00:32:51 UTC, novembro avançou à fonte v2: 100 eventos de pedidos preservados e 13 eventos diários de Ads, sem novo SOURCE_INVALID ou reinício do cursor. A coleta continua parcial. A observação de 2026-11-14T00:33:17.899767+00:00 usou três SELECTs, zero escritas e nenhum cron forçado. Fonte v1→v2; ledger 100→113, exatamente 13 eventos `ADS_DAILY_CONSUMPTION_REVIEW`. As assinaturas de fonte/pedidos e o cursor foram preservados. O job permanece COLLECTING e os eventos REVIEW; isso não comprova lucro, saldo bancário ou fechamento. O alvo histórico de outubro tem `FINANCIAL_SOURCE_RUN_NOT_FOUND`, uma lacuna de fonte distinta do erro corrigido.
+
+A correção move somente a amostragem do horário de validação para depois do callback e da revalidação de acesso. O teste de avanço do relógio falha no código anterior e passa na correção. O teste de observação/cutoff futuro passa nos dois cortes e mantém a rejeição sem alterar razão/checkpoint. Suites focadas: 35/35; pós-publicação de assets/gates: 64/64, execuções separadas da suíte4432. [Recibos técnicos, histórico .2 e retomada](publication-live-20261113.json); [proveniência final local/CI](validation/final-local-20261113.json). **Aceite financeiro real: NOT_PERFORMED; M2/M2.2 abertas.**
+
+
 <!-- FINANCIAL_AUTOMATION_PUBLICATION -->
-## Gate final e publicação técnica
+## Histórico da .2 — publicação inicial e primeira observação
 
 Fonte `e6bbb189ec2331c0a07136c5b9f720e2e300b5d4`; CI[43527800185](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43527800185) concluída `success` para `e6bbb189ec2331c0a07136c5b9f720e2e300b5d4`. Resultado da execução completa final: **4430 Node; 0 falhas; 0 ignorados; 0 cancelados; 67 Python**. Proveniência e comandos em docs/financial-automation/validation/final-local-20261113.json. A contagem desta execução é própria; não somar os runs focalizados169/83, os testes de UI ou execuções anteriores.
 
@@ -122,6 +131,6 @@ As novas tabelas são aditivas e preservadas numa reversão. Antes de ativar o n
 
 O adaptador NET somente confirma receita quando os ajustes observados são zero e o componente de recarga/suporte técnico também foi observado como zero. Ajuste ou topup sem classificação mantém o evento em revisão, sem lançamentos reconhecidos; campo ausente não é convertido em zero. Os códigos ORDER_ADJUSTMENT_CLASSIFICATION_REQUIRED e ORDER_TOPUP_COMPONENT_REQUIRED indicam a próxima conferência. O cálculo estimado legado permanece preservado. A suíte focada do guard passou 83/83, incluindo persistência do CMV, paginação das pendências, fechamento impedido com fonte ambígua e competência no horário de verão de 2015. Log local: /workspace/financial-net-quality-guard-20261113.tap.
 
-## Correção de continuidade — candidato 2026-11-13.3
+## Correção de continuidade — .3 publicada e retomada observada
 
-A segunda execução natural, observada em 14/11/2026 às 00:00:07 UTC, encontrou `FINANCIAL_AUTOMATION_SOURCE_INVALID` na lane Ads. Os primeiros100 eventos e o checkpoint anterior foram preservados. A causa foi reproduzida com o leitor real de Ads: a ingestão validava `observed_at` contra o horário anterior aos awaits. A correção amostra o relógio somente depois da leitura e da revalidação de acesso, sem remover os limites de futuro. O teste de regressão falha no código anterior e passa após a correção; observação/cutoff realmente futuros continuam rejeitados sem alterar o razão ou checkpoint. Cinco suites focadas passaram35/35. **Publicação desta correção ainda exige a suíte completa, CI e recibos próprios; a release .2 continua sendo o estado publicado descrito acima até esses gates.**
+A segunda execução natural, observada em 14/11/2026 às 00:00:07 UTC, encontrou `FINANCIAL_AUTOMATION_SOURCE_INVALID` na lane Ads. Os primeiros100 eventos e o checkpoint anterior foram preservados. A causa foi reproduzida com o leitor real de Ads: a ingestão validava `observed_at` contra o horário anterior aos awaits. A correção amostra o relógio somente depois da leitura e da revalidação de acesso, sem remover os limites de futuro. O teste de regressão falha no código anterior e passa após a correção; observação/cutoff realmente futuros continuam rejeitados sem alterar o razão ou checkpoint. Cinco suites focadas passaram35/35. **A correção passou nos gates completos e foi publicada; a retomada natural de novembro foi observada conforme o gate atual acima. Os cortes anteriores e suas falhas permanecem no histórico.**

@@ -1,6 +1,6 @@
 {
   "schema": "mls_master_mission_checkpoint_v1",
-  "updated_at": "2026-11-13",
+  "updated_at": "2026-11-14",
   "base_visual_sha": "8d860b2c4f26531c53c4cdba0e06a14f51a7eef4",
   "visual_branch": "feature/mls-mockup-parity-real-charts-20261029",
   "visual_pr": 79,
@@ -182,23 +182,31 @@
   "current_release": {
     "status": "PUBLISHED_VERIFIED",
     "verification_scope": "TECHNICAL_PUBLIC_ONLY",
-    "release_id": "2026-11-13.2",
-    "release": "2026-11-13.2",
-    "source_commit": "e6bbb189ec2331c0a07136c5b9f720e2e300b5d4",
-    "prepared_source_commit": "bc89ab3c6d26faf26ea6216252f50441aa1a2df5",
-    "ci_run": 43527800185,
-    "node_tests_pass": 4430,
+    "release_id": "2026-11-13.3",
+    "release": "2026-11-13.3",
+    "source_commit": "f68525ea1d136350ece9942433352accdf97d992",
+    "prepared_source_commit": "3cf489e33071b32bc73e2efaf2aecfc62618d46a",
+    "ci_run": 43531882471,
+    "node_tests_pass": 4432,
     "python_tests_pass": 67,
     "receipt": "docs/financial-automation/publication-live-20261113.json",
     "public_verification": "docs/financial-automation/publication-live-20261113.json",
-    "verified_at": "2026-11-13T23:50:26.229Z",
+    "verified_at": "2026-11-14T00:22:15.598Z",
     "published": true,
     "pull_request": 121,
     "owner_live_qa": "NOT_PERFORMED",
     "account_financial_acceptance": false,
     "m2_closed": false,
     "m22_closed": false,
-    "git_integration": "CHECK_PR121_CURRENT_STATE"
+    "git_integration": "CHECK_PR121_CURRENT_STATE",
+    "workers": {
+      "finance": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+      "auth": "dfd2fc99-728f-4f29-96ee-a4b256c5640a",
+      "app": "9bfc21d6-dec9-4fa6-89d8-7ea1dec50993"
+    },
+    "owner_live_authenticated_qa": "NOT_PERFORMED",
+    "natural_resume_observed_at": "2026-11-14T00:33:17.899767+00:00",
+    "natural_resume_scope": "ORIGINAL_NOVEMBER_ADS_LANE_ONLY"
   },
   "validation_history": [
     {
@@ -235,23 +243,31 @@
   "live_release": {
     "status": "PUBLISHED_VERIFIED",
     "verification_scope": "TECHNICAL_PUBLIC_ONLY",
-    "release_id": "2026-11-13.2",
-    "release": "2026-11-13.2",
-    "source_commit": "e6bbb189ec2331c0a07136c5b9f720e2e300b5d4",
-    "prepared_source_commit": "bc89ab3c6d26faf26ea6216252f50441aa1a2df5",
-    "ci_run": 43527800185,
-    "node_tests_pass": 4430,
+    "release_id": "2026-11-13.3",
+    "release": "2026-11-13.3",
+    "source_commit": "f68525ea1d136350ece9942433352accdf97d992",
+    "prepared_source_commit": "3cf489e33071b32bc73e2efaf2aecfc62618d46a",
+    "ci_run": 43531882471,
+    "node_tests_pass": 4432,
     "python_tests_pass": 67,
     "receipt": "docs/financial-automation/publication-live-20261113.json",
     "public_verification": "docs/financial-automation/publication-live-20261113.json",
-    "verified_at": "2026-11-13T23:50:26.229Z",
+    "verified_at": "2026-11-14T00:22:15.598Z",
     "published": true,
     "pull_request": 121,
     "owner_live_qa": "NOT_PERFORMED",
     "account_financial_acceptance": false,
     "m2_closed": false,
     "m22_closed": false,
-    "git_integration": "CHECK_PR121_CURRENT_STATE"
+    "git_integration": "CHECK_PR121_CURRENT_STATE",
+    "workers": {
+      "finance": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+      "auth": "dfd2fc99-728f-4f29-96ee-a4b256c5640a",
+      "app": "9bfc21d6-dec9-4fa6-89d8-7ea1dec50993"
+    },
+    "owner_live_authenticated_qa": "NOT_PERFORMED",
+    "natural_resume_observed_at": "2026-11-14T00:33:17.899767+00:00",
+    "natural_resume_scope": "ORIGINAL_NOVEMBER_ADS_LANE_ONLY"
   },
   "visual_chart_refinement_20261031": {
     "id": "LIVE_VISUAL_CHART_INSPECTION_AND_COST_RULE_SCOPE",
@@ -6616,7 +6632,7 @@
   },
   "financial_automation_20261113": {
     "status": "PUBLISHED_VERIFIED",
-    "release": "2026-11-13.2",
+    "release": "2026-11-13.3",
     "base_commit": "6578e21098ff799e59433af92880d249432ceeb4",
     "branch": "feature/financial-automation-20261113",
     "documentation": "docs/financial-automation/README.md",
@@ -6632,9 +6648,9 @@
       "Owner account operational week/month comparison"
     ],
     "verification_scope": "TECHNICAL_PUBLIC_ONLY",
-    "source_commit": "e6bbb189ec2331c0a07136c5b9f720e2e300b5d4",
-    "ci_run": 43527800185,
-    "verified_at": "2026-11-13T23:50:26.229Z",
+    "source_commit": "f68525ea1d136350ece9942433352accdf97d992",
+    "ci_run": 43531882471,
+    "verified_at": "2026-11-14T00:22:15.598Z",
     "receipt": "docs/financial-automation/publication-live-20261113.json",
     "public_verification": "docs/financial-automation/publication-live-20261113.json",
     "owner_live_authenticated_qa": "NOT_PERFORMED",
@@ -6642,10 +6658,18 @@
     "limits_unchanged": true,
     "pull_request": 121,
     "workers": {
-      "app": "3cc631da-4a91-4fd0-b030-c41537cc8f43",
-      "auth": "c00d5164-f663-4cdf-b137-28f345e181c2",
-      "finance": "50b31451-c6cf-4456-bd09-be5d1956e0da"
-    }
+      "finance": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+      "auth": "dfd2fc99-728f-4f29-96ee-a4b256c5640a",
+      "app": "9bfc21d6-dec9-4fa6-89d8-7ea1dec50993"
+    },
+    "release_id": "2026-11-13.3",
+    "prepared_source_commit": "3cf489e33071b32bc73e2efaf2aecfc62618d46a",
+    "node_tests_pass": 4432,
+    "python_tests_pass": 67,
+    "owner_live_qa": "NOT_PERFORMED",
+    "natural_resume_observed_at": "2026-11-14T00:33:17.899767+00:00",
+    "natural_resume_scope": "ORIGINAL_NOVEMBER_ADS_LANE_ONLY",
+    "git_integration": "CHECK_PR121_CURRENT_STATE"
   },
   "previous_current_release_before_financial_automation": {
     "status": "PUBLISHED_VERIFIED",
@@ -6945,5 +6969,80 @@
       "publication_does_not_prove_merge": true,
       "normal_merge_after_documentation_ci_required": true
     }
+  },
+  "previous_financial_automation_20261113_before_source_clock_hotfix": {
+    "status": "PUBLISHED_VERIFIED",
+    "release": "2026-11-13.2",
+    "base_commit": "6578e21098ff799e59433af92880d249432ceeb4",
+    "branch": "feature/financial-automation-20261113",
+    "documentation": "docs/financial-automation/README.md",
+    "matrix": "docs/financial-automation/MATRIZ_EXECUCAO.json",
+    "published": true,
+    "account_financial_acceptance": false,
+    "m2_closed": false,
+    "external_dependencies": [
+      "Shopee Wallet/Payout contract and actual grants",
+      "Authorized bank connector and account balance evidence",
+      "Ads source timezone confirmation",
+      "Completion-cohort financial coverage",
+      "Owner account operational week/month comparison"
+    ],
+    "verification_scope": "TECHNICAL_PUBLIC_ONLY",
+    "source_commit": "e6bbb189ec2331c0a07136c5b9f720e2e300b5d4",
+    "ci_run": 43527800185,
+    "verified_at": "2026-11-13T23:50:26.229Z",
+    "receipt": "docs/financial-automation/publication-live-20261113.json",
+    "public_verification": "docs/financial-automation/publication-live-20261113.json",
+    "owner_live_authenticated_qa": "NOT_PERFORMED",
+    "m22_closed": false,
+    "limits_unchanged": true,
+    "pull_request": 121,
+    "workers": {
+      "app": "3cc631da-4a91-4fd0-b030-c41537cc8f43",
+      "auth": "c00d5164-f663-4cdf-b137-28f345e181c2",
+      "finance": "50b31451-c6cf-4456-bd09-be5d1956e0da"
+    }
+  },
+  "previous_current_release_before_source_clock_hotfix": {
+    "status": "PUBLISHED_VERIFIED",
+    "verification_scope": "TECHNICAL_PUBLIC_ONLY",
+    "release_id": "2026-11-13.2",
+    "release": "2026-11-13.2",
+    "source_commit": "e6bbb189ec2331c0a07136c5b9f720e2e300b5d4",
+    "prepared_source_commit": "bc89ab3c6d26faf26ea6216252f50441aa1a2df5",
+    "ci_run": 43527800185,
+    "node_tests_pass": 4430,
+    "python_tests_pass": 67,
+    "receipt": "docs/financial-automation/publication-live-20261113.json",
+    "public_verification": "docs/financial-automation/publication-live-20261113.json",
+    "verified_at": "2026-11-13T23:50:26.229Z",
+    "published": true,
+    "pull_request": 121,
+    "owner_live_qa": "NOT_PERFORMED",
+    "account_financial_acceptance": false,
+    "m2_closed": false,
+    "m22_closed": false,
+    "git_integration": "CHECK_PR121_CURRENT_STATE"
+  },
+  "previous_live_release_before_source_clock_hotfix": {
+    "status": "PUBLISHED_VERIFIED",
+    "verification_scope": "TECHNICAL_PUBLIC_ONLY",
+    "release_id": "2026-11-13.2",
+    "release": "2026-11-13.2",
+    "source_commit": "e6bbb189ec2331c0a07136c5b9f720e2e300b5d4",
+    "prepared_source_commit": "bc89ab3c6d26faf26ea6216252f50441aa1a2df5",
+    "ci_run": 43527800185,
+    "node_tests_pass": 4430,
+    "python_tests_pass": 67,
+    "receipt": "docs/financial-automation/publication-live-20261113.json",
+    "public_verification": "docs/financial-automation/publication-live-20261113.json",
+    "verified_at": "2026-11-13T23:50:26.229Z",
+    "published": true,
+    "pull_request": 121,
+    "owner_live_qa": "NOT_PERFORMED",
+    "account_financial_acceptance": false,
+    "m2_closed": false,
+    "m22_closed": false,
+    "git_integration": "CHECK_PR121_CURRENT_STATE"
   }
 }

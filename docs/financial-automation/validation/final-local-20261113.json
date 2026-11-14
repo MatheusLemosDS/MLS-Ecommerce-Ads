@@ -1,56 +1,120 @@
 {
   "schema": "mls_financial_final_local_validation_v1",
-  "source_commit": "e6bbb189ec2331c0a07136c5b9f720e2e300b5d4",
+  "source_commit": "f68525ea1d136350ece9942433352accdf97d992",
   "compiled_vectors": {
-    "app": "721b3f369b93000dd5e8a0065cd83fd4bd7f54baae262c4b635e5a118fffde64",
-    "auth": "97659ca7da62cfcfad785dc3ad599ae8526191e721eba6ac9e876d2ccc253a9c",
+    "app": "3a5f01ae09ede502e4707f001976fc2a6094075ba26574e5e5d97b2e827687a9",
+    "auth": "20a301c45ddb6097a3b458ec6ef7d39686286cc43601f6211d3b865b250ea125",
     "finance": "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4"
   },
   "local_node": {
     "exit_code": 0,
-    "tests": 4430,
-    "pass": 4430,
+    "tests": 4432,
+    "pass": 4432,
     "fail": 0,
     "cancelled": 0,
     "skipped": 0,
-    "log_sha256": "b7bda0c19fa5d97b23afe526f825b0e8b15712ae50f76751b0b5c28179857826"
+    "log_sha256": "fa74602da077af73bfcd3acb38c52ba16b3c8c6729f84cc7e506a095d9f66279"
   },
   "python_tests": 67,
   "ci": {
     "schema": "mls_financial_exact_ci_receipt_v1",
-    "checked_at": "2026-11-13T23:45:32.816775+00:00",
-    "run_id": 43527800185,
-    "head": "e6bbb189ec2331c0a07136c5b9f720e2e300b5d4",
+    "checked_at": "2026-11-14T00:18:55.240655+00:00",
+    "run_id": 43531882471,
+    "head": "f68525ea1d136350ece9942433352accdf97d992",
     "status": "completed",
     "conclusion": "success",
     "workflow": ".github/workflows/validate.yml",
-    "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43527800185",
+    "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43531882471",
     "node": {
-      "tests": 4430,
-      "pass": 4430,
+      "tests": 4432,
+      "pass": 4432,
       "fail": 0,
       "cancelled": 0,
       "skipped": 0
     },
     "python_tests": 67,
     "compiled_vectors": {
-      "app": "721b3f369b93000dd5e8a0065cd83fd4bd7f54baae262c4b635e5a118fffde64",
-      "auth": "97659ca7da62cfcfad785dc3ad599ae8526191e721eba6ac9e876d2ccc253a9c",
+      "app": "3a5f01ae09ede502e4707f001976fc2a6094075ba26574e5e5d97b2e827687a9",
+      "auth": "20a301c45ddb6097a3b458ec6ef7d39686286cc43601f6211d3b865b250ea125",
       "finance": "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4"
     },
     "ci_compiled_vectors_match_local": true,
-    "log_sha256": "9bc8939604d2df7ebcd7cfea09f71b1e35195139c919204f43d729514d482980",
-    "log_bytes": 4192954,
+    "log_sha256": "baaa055595a9010e9e0e7769350930ebdce470573b6cf5ca01e34de66259bf2e",
     "owner_live_authenticated_qa": "NOT_PERFORMED",
     "financial_account_acceptance": false
   },
   "synthetic_ui": {
     "receipt": "generated-worker-ui-20261113.json",
-    "receipt_sha256": "2754b9a5d735f5180c1080200ec34d87f2ac335915c2306e741d736a8308a213",
     "actual_worker_display_profiles": 8,
     "normal_and_minified": true,
     "authenticated_local_accounts": true,
     "real_owner_live_authenticated": false
   },
-  "production_account_acceptance": false
+  "source_clock_regressions": {
+    "count": 2,
+    "old_code_regression_failed": true,
+    "old_log_sha256": "fd676332fbc2cf6abc5420d7739e981000ccc6b68d5f05ef7c2371e649333594",
+    "new_log_sha256": "85264a52877dafb2b806969635477cc6fa83321f9c6c26c9623c2226416a6489",
+    "focused_log_sha256": "cc5a9f0ba0b8d484bab3c79f4d26066d841146f37bcd1232865b474323ae9327",
+    "focused_tests_passed": 35,
+    "future_timestamp_guards_preserved": true
+  },
+  "post_publication_focused_tests": 64,
+  "production_account_acceptance": false,
+  "previous_release_validation": {
+    "schema": "mls_financial_final_local_validation_v1",
+    "source_commit": "e6bbb189ec2331c0a07136c5b9f720e2e300b5d4",
+    "compiled_vectors": {
+      "app": "721b3f369b93000dd5e8a0065cd83fd4bd7f54baae262c4b635e5a118fffde64",
+      "auth": "97659ca7da62cfcfad785dc3ad599ae8526191e721eba6ac9e876d2ccc253a9c",
+      "finance": "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4"
+    },
+    "local_node": {
+      "exit_code": 0,
+      "tests": 4430,
+      "pass": 4430,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "log_sha256": "b7bda0c19fa5d97b23afe526f825b0e8b15712ae50f76751b0b5c28179857826"
+    },
+    "python_tests": 67,
+    "ci": {
+      "schema": "mls_financial_exact_ci_receipt_v1",
+      "checked_at": "2026-11-13T23:45:32.816775+00:00",
+      "run_id": 43527800185,
+      "head": "e6bbb189ec2331c0a07136c5b9f720e2e300b5d4",
+      "status": "completed",
+      "conclusion": "success",
+      "workflow": ".github/workflows/validate.yml",
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43527800185",
+      "node": {
+        "tests": 4430,
+        "pass": 4430,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "python_tests": 67,
+      "compiled_vectors": {
+        "app": "721b3f369b93000dd5e8a0065cd83fd4bd7f54baae262c4b635e5a118fffde64",
+        "auth": "97659ca7da62cfcfad785dc3ad599ae8526191e721eba6ac9e876d2ccc253a9c",
+        "finance": "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4"
+      },
+      "ci_compiled_vectors_match_local": true,
+      "log_sha256": "9bc8939604d2df7ebcd7cfea09f71b1e35195139c919204f43d729514d482980",
+      "log_bytes": 4192954,
+      "owner_live_authenticated_qa": "NOT_PERFORMED",
+      "financial_account_acceptance": false
+    },
+    "synthetic_ui": {
+      "receipt": "generated-worker-ui-20261113.json",
+      "receipt_sha256": "2754b9a5d735f5180c1080200ec34d87f2ac335915c2306e741d736a8308a213",
+      "actual_worker_display_profiles": 8,
+      "normal_and_minified": true,
+      "authenticated_local_accounts": true,
+      "real_owner_live_authenticated": false
+    },
+    "production_account_acceptance": false
+  }
 }

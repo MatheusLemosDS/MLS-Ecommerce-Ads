@@ -2,65 +2,44 @@
   "schema": "mls_financial_automation_live_publication_v1",
   "status": "PUBLISHED_VERIFIED",
   "verification_scope": "TECHNICAL_PUBLIC_ONLY",
-  "release": "2026-11-13.2",
-  "label": "Financeiro · fontes, conciliação e fechamentos",
+  "release": "2026-11-13.3",
+  "label": "Financeiro · continuidade da coleta",
   "url": "https://app.brazacommerce.com.br/admin?tab=agent-finance#financialAutomation",
-  "source_commit": "e6bbb189ec2331c0a07136c5b9f720e2e300b5d4",
-  "prepared_source_commit": "bc89ab3c6d26faf26ea6216252f50441aa1a2df5",
+  "source_commit": "f68525ea1d136350ece9942433352accdf97d992",
+  "prepared_source_commit": "3cf489e33071b32bc73e2efaf2aecfc62618d46a",
   "base_commit": "6578e21098ff799e59433af92880d249432ceeb4",
   "branch": "feature/financial-automation-20261113",
   "pull_request": 121,
-  "git_integration_at_publication": "PR_OPEN_EXACT_HEAD_CI_GREEN; consult PR121 for subsequent merge",
-  "verified_at": "2026-11-13T23:50:26.229Z",
+  "git_integration_at_publication": "PR121_OPEN_EXACT_HEAD_CI_GREEN; consult PR121 for subsequent merge",
+  "verified_at": "2026-11-14T00:22:15.598Z",
   "ci": {
     "schema": "mls_financial_exact_ci_receipt_v1",
-    "checked_at": "2026-11-13T23:45:32.816775+00:00",
-    "run_id": 43527800185,
-    "head": "e6bbb189ec2331c0a07136c5b9f720e2e300b5d4",
+    "checked_at": "2026-11-14T00:18:55.240655+00:00",
+    "run_id": 43531882471,
+    "head": "f68525ea1d136350ece9942433352accdf97d992",
     "status": "completed",
     "conclusion": "success",
     "workflow": ".github/workflows/validate.yml",
-    "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43527800185",
+    "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43531882471",
     "node": {
-      "tests": 4430,
-      "pass": 4430,
+      "tests": 4432,
+      "pass": 4432,
       "fail": 0,
       "cancelled": 0,
       "skipped": 0
     },
     "python_tests": 67,
     "compiled_vectors": {
-      "app": "721b3f369b93000dd5e8a0065cd83fd4bd7f54baae262c4b635e5a118fffde64",
-      "auth": "97659ca7da62cfcfad785dc3ad599ae8526191e721eba6ac9e876d2ccc253a9c",
+      "app": "3a5f01ae09ede502e4707f001976fc2a6094075ba26574e5e5d97b2e827687a9",
+      "auth": "20a301c45ddb6097a3b458ec6ef7d39686286cc43601f6211d3b865b250ea125",
       "finance": "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4"
     },
     "ci_compiled_vectors_match_local": true,
-    "log_sha256": "9bc8939604d2df7ebcd7cfea09f71b1e35195139c919204f43d729514d482980",
-    "log_bytes": 4192954,
+    "log_sha256": "baaa055595a9010e9e0e7769350930ebdce470573b6cf5ca01e34de66259bf2e",
     "owner_live_authenticated_qa": "NOT_PERFORMED",
     "financial_account_acceptance": false
   },
   "workers": {
-    "app": {
-      "active_version_id": "3cc631da-4a91-4fd0-b030-c41537cc8f43",
-      "latest_version_id": "3cc631da-4a91-4fd0-b030-c41537cc8f43",
-      "active_percentage": 100,
-      "compiled_sha256": "721b3f369b93000dd5e8a0065cd83fd4bd7f54baae262c4b635e5a118fffde64",
-      "retrieved_raw_sha256": "44ce1c8cd1c2d8982560eb9c7685ea7d1638adfbcd4bc0ed0b488c50567e81f4",
-      "raw_bytes": 4180564,
-      "effective_config_sha256": "0e433687adf84cc9f40c1a7c78991ab8cb84d4610dcb86c138dfa84622d0cd9a",
-      "action": "DEPLOYED_VERIFIED"
-    },
-    "auth": {
-      "active_version_id": "c00d5164-f663-4cdf-b137-28f345e181c2",
-      "latest_version_id": "c00d5164-f663-4cdf-b137-28f345e181c2",
-      "active_percentage": 100,
-      "compiled_sha256": "97659ca7da62cfcfad785dc3ad599ae8526191e721eba6ac9e876d2ccc253a9c",
-      "retrieved_raw_sha256": "9105a95c37b75ed124b864575131aebed638bee68804fc780b4d9cb4e8230cd9",
-      "raw_bytes": 654650,
-      "effective_config_sha256": "8920a7f59a1d9c82fc7e9a33f8a8749eaac281a8bcb7b79e58dd0e672917ff58",
-      "action": "DEPLOYED_VERIFIED"
-    },
     "finance": {
       "active_version_id": "50b31451-c6cf-4456-bd09-be5d1956e0da",
       "latest_version_id": "50b31451-c6cf-4456-bd09-be5d1956e0da",
@@ -69,77 +48,79 @@
       "retrieved_raw_sha256": "3e3f3d35a3e0037c251f7abda29cc8a64643ee255771d07f2893d32d8ef7d22a",
       "raw_bytes": 934552,
       "effective_config_sha256": "564eb6d80d5d16ca3e9124272ad9d548a39090242991af1b6c2787146f39a3c4",
+      "action": "RETAINED_VERIFIED"
+    },
+    "auth": {
+      "active_version_id": "dfd2fc99-728f-4f29-96ee-a4b256c5640a",
+      "latest_version_id": "dfd2fc99-728f-4f29-96ee-a4b256c5640a",
+      "active_percentage": 100,
+      "compiled_sha256": "20a301c45ddb6097a3b458ec6ef7d39686286cc43601f6211d3b865b250ea125",
+      "retrieved_raw_sha256": "076c925b67041aada25f8252db34c1464543976f3bfa532a98caa0124dd8f138",
+      "raw_bytes": 654636,
+      "effective_config_sha256": "8920a7f59a1d9c82fc7e9a33f8a8749eaac281a8bcb7b79e58dd0e672917ff58",
+      "action": "DEPLOYED_VERIFIED"
+    },
+    "app": {
+      "active_version_id": "9bfc21d6-dec9-4fa6-89d8-7ea1dec50993",
+      "latest_version_id": "9bfc21d6-dec9-4fa6-89d8-7ea1dec50993",
+      "active_percentage": 100,
+      "compiled_sha256": "3a5f01ae09ede502e4707f001976fc2a6094075ba26574e5e5d97b2e827687a9",
+      "retrieved_raw_sha256": "19d1ef1dc49d07da644a67372b9291f54b6443f0d72e9d0e3dfa7168661f2a05",
+      "raw_bytes": 4180640,
+      "effective_config_sha256": "0e433687adf84cc9f40c1a7c78991ab8cb84d4610dcb86c138dfa84622d0cd9a",
       "action": "DEPLOYED_VERIFIED"
     }
   },
   "rollout": [
-    "upload-finance",
     "upload-auth",
     "upload-app",
-    "activate-finance",
     "activate-auth",
     "activate-app"
   ],
   "phase_verifications": [
     {
       "stage": "BASELINE",
-      "checked_at": "2026-11-13T23:45:52.166917+00:00",
-      "receipt_sha256": "e07d6c0451b0d3a1d31e6aeecdd82d955ecd7162295ea7234758a0b20fcd3dd6",
-      "payload_sha256": "9e8de6d0ad95835bacdc674f7e63e87f0d47ec11689ea192290f585f018bd4b0",
-      "all_three_exact": true,
-      "domains_exact": true
-    },
-    {
-      "stage": "UPLOADED_FINANCE",
-      "checked_at": "2026-11-13T23:46:24.572750+00:00",
-      "receipt_sha256": "adffad33dfa430cbc70681d050244fa04bef054220bec7de5798912da504fbf0",
-      "payload_sha256": "c8d856f51771667f7f164a678fb9f9ad19bb8082e57e3d1d7811c5973f9ca70c",
+      "checked_at": "2026-11-14T00:19:12.856927+00:00",
+      "receipt_sha256": "9f0646e3ded50c9edde73d9bf8049a3c22553b0951384fbfa13947a96c9ebb5e",
+      "payload_sha256": "422faf22a94da6e734968d97eebb4432b898938d99e9674e6f3576713d60c58f",
       "all_three_exact": true,
       "domains_exact": true
     },
     {
       "stage": "UPLOADED_AUTH",
-      "checked_at": "2026-11-13T23:46:51.020208+00:00",
-      "receipt_sha256": "0f406e545c3e7563ebcf884198ba6239d89d7a5fdb1aa12da35661d3c95cc672",
-      "payload_sha256": "d82967b81dd6949a37255565997d475d57d43a73df650c0f04a597c56c2d3376",
+      "checked_at": "2026-11-14T00:19:41.342213+00:00",
+      "receipt_sha256": "62ba3377862b005b777580c578aa88584586078d6fb8f66bdc327a4156bc946c",
+      "payload_sha256": "74a42bc6856483ad5ec735b5c29df819d4ff5088e9ebffcd5768a1a58236f210",
       "all_three_exact": true,
       "domains_exact": true
     },
     {
       "stage": "UPLOADED_APP",
-      "checked_at": "2026-11-13T23:47:22.056480+00:00",
-      "receipt_sha256": "78a8026e3ae014d08e13c559f5713001c55f1ad1fcfc6fa3a6af184c010f16c7",
-      "payload_sha256": "7e01f78e32760c6a147876baa96ccda5ad15f4777cfb8a6691e74d086f13e52c",
-      "all_three_exact": true,
-      "domains_exact": true
-    },
-    {
-      "stage": "ACTIVE_FINANCE",
-      "checked_at": "2026-11-13T23:47:48.552924+00:00",
-      "receipt_sha256": "16ea839740aa3f742b7ea4d73535224f883bd817716a1c900d8cca5c24409143",
-      "payload_sha256": "572af6937fc5bd62c3743f67a070999db18496cede17b40a56d9791455d65fcd",
+      "checked_at": "2026-11-14T00:20:42.967232+00:00",
+      "receipt_sha256": "d725ca649f18f5d123ea42201da982b316d8b7918aa49badc021a848d6164f2d",
+      "payload_sha256": "a64ae35cd730684d15978dabd6d917cb32165b0b5283911282f85da647a08d86",
       "all_three_exact": true,
       "domains_exact": true
     },
     {
       "stage": "ACTIVE_AUTH",
-      "checked_at": "2026-11-13T23:48:12.818624+00:00",
-      "receipt_sha256": "341bd09d9320b969f78f6cc37c6fd150f119b13a575a1814aa9a2f77c05de68c",
-      "payload_sha256": "bc0f1cda91a16eceec54415ce435446f0c15d0b344b3f23838a9e57494dad34a",
+      "checked_at": "2026-11-14T00:21:31.671235+00:00",
+      "receipt_sha256": "56dfad49f44335802d4b915777c4391cc116b756cddbc991c2859c9ed5ce663c",
+      "payload_sha256": "6d0e7db6f90681fb449b430d0061a716b6f74e58f8ccc220591545f51620797f",
       "all_three_exact": true,
       "domains_exact": true
     },
     {
       "stage": "ACTIVE_APP",
-      "checked_at": "2026-11-13T23:48:25.546685+00:00",
-      "receipt_sha256": "66fea4667ba7a36d1cb9dbe2776043cde5db1aa3d531085537840a41c3bafb0a",
-      "payload_sha256": "f09c03ddbb2c687b66eec6a110c93117de0315d07c797efd0d5babe69160fed0",
+      "checked_at": "2026-11-14T00:21:48.015072+00:00",
+      "receipt_sha256": "9ba93db8aa71e6e484a54a27d3b4dc66ebe95cedc1acd19e4fc4a28d4d400a2e",
+      "payload_sha256": "b5e3613f40379c11635415670eefc635c001d95bd4f108e5d962df75f3140120",
       "all_three_exact": true,
       "domains_exact": true
     }
   ],
   "configuration_bindings_owner_flags_cron_domains_preserved": true,
-  "frozen_plan_sha256": "f64afcccaed9ccf916b9b71cdb256291123f7f2dc86021c0aafab26af17e93aa",
+  "frozen_plan_sha256": "8b2000bc4e77dd18f6935d2284bd196bd388015c0c69c6b86e88c39a8db456a4",
   "baseline_backup_files": 9,
   "d1_recovery": {
     "receipt_sha256": "1ad775a414459fba9f35498351420daddeae18c7016838cf6c411997cea6a972",
@@ -165,10 +146,10 @@
         "route": "/login",
         "status": 200,
         "location": null,
-        "release": "2026-11-13.2",
+        "release": "2026-11-13.3",
         "content_type": "text/html; charset=utf-8",
         "bytes": 307262,
-        "sha256": "71a75cfdf91a908f9b461c77df0774fbb3a2aedf0403c9857216597933241b0f",
+        "sha256": "3dacaf42804011ceecea6a21f34c65583462b90c053241b46d916d15dbc6cca4",
         "title": "MLS Commerce OS · Gestão da loja",
         "version_evidence": "APP_RELEASE_HEADER"
       },
@@ -178,8 +159,8 @@
         "location": null,
         "release": null,
         "content_type": "text/html; charset=utf-8",
-        "bytes": 81835,
-        "sha256": "11a15e97f62e8dbb23a8747b3d54771ba02a995848bf2fd83c100ea580734b9f",
+        "bytes": 81822,
+        "sha256": "a29140014b70488c32065809245f51e26788363124999be16644d38b950d9621",
         "title": "Conta e empresa · MLS Commerce OS",
         "version_evidence": "ACCOUNT_STRUCTURE_ONLY_AUTH_SOURCE_REQUIRES_PUBLISHER_RECEIPT",
         "account_frame_present": true
@@ -190,8 +171,8 @@
         "location": null,
         "release": null,
         "content_type": "text/html; charset=utf-8",
-        "bytes": 81835,
-        "sha256": "11a15e97f62e8dbb23a8747b3d54771ba02a995848bf2fd83c100ea580734b9f",
+        "bytes": 81822,
+        "sha256": "a29140014b70488c32065809245f51e26788363124999be16644d38b950d9621",
         "title": "Conta e empresa · MLS Commerce OS",
         "version_evidence": "ACCOUNT_STRUCTURE_ONLY_AUTH_SOURCE_REQUIRES_PUBLISHER_RECEIPT",
         "account_frame_present": true
@@ -202,8 +183,8 @@
         "location": null,
         "release": null,
         "content_type": "text/html; charset=utf-8",
-        "bytes": 81832,
-        "sha256": "56ee895902ad0ca3832ea985177edf5c0c50c5da08134397b708df379076478f",
+        "bytes": 81819,
+        "sha256": "47793ae9a7989b0789245f9b51100e80af00500cf1eae4acbb962f85b48224c5",
         "title": "Conta e empresa · MLS Commerce OS",
         "version_evidence": "ACCOUNT_STRUCTURE_ONLY_AUTH_SOURCE_REQUIRES_PUBLISHER_RECEIPT",
         "account_frame_present": true
@@ -214,8 +195,8 @@
         "location": null,
         "release": null,
         "content_type": "text/html; charset=utf-8",
-        "bytes": 81833,
-        "sha256": "c14a12a2a71cac2d5d3ac56a0e5659ce9591554e049b54b65f848c2aaa84e96e",
+        "bytes": 81820,
+        "sha256": "cf2d8c7719ffb0d98c6bbf017a0e622f2a696cf29c374ce945403d614c1b061e",
         "title": "Conta e empresa · MLS Commerce OS",
         "version_evidence": "ACCOUNT_STRUCTURE_ONLY_AUTH_SOURCE_REQUIRES_PUBLISHER_RECEIPT",
         "account_frame_present": true
@@ -226,8 +207,8 @@
         "location": null,
         "release": null,
         "content_type": "text/html; charset=utf-8",
-        "bytes": 81833,
-        "sha256": "9e40756017f58a50b008888a92f85616c98680325238f39072a45bfd52dc8105",
+        "bytes": 81820,
+        "sha256": "d326fa06b68ea84db769248b39b60269b032a90ff48d0f97d51031de7470cca0",
         "title": "Conta e empresa · MLS Commerce OS",
         "version_evidence": "ACCOUNT_STRUCTURE_ONLY_AUTH_SOURCE_REQUIRES_PUBLISHER_RECEIPT",
         "account_frame_present": true
@@ -238,8 +219,8 @@
         "location": null,
         "release": null,
         "content_type": "text/html; charset=utf-8",
-        "bytes": 81832,
-        "sha256": "d63e0ba2c4dff586619b9472a39f5bdfc1b2ba68b154569fc1b997aa6dc4494b",
+        "bytes": 81819,
+        "sha256": "f8baa893bdf45b87854517598150cc549844479e9092c31dd23b48f9d5c09b33",
         "title": "Conta e empresa · MLS Commerce OS",
         "version_evidence": "ACCOUNT_STRUCTURE_ONLY_AUTH_SOURCE_REQUIRES_PUBLISHER_RECEIPT",
         "account_frame_present": true
@@ -250,8 +231,8 @@
         "location": null,
         "release": null,
         "content_type": "text/html; charset=utf-8",
-        "bytes": 81837,
-        "sha256": "c01540c58438328525760d01836cda795e5cde74cbb550cb35a14f40f63b65c4",
+        "bytes": 81824,
+        "sha256": "d52e250740db79ae1cc8cc99462cb39b096f664b831df4569b97c01035395f44",
         "title": "Conta e empresa · MLS Commerce OS",
         "version_evidence": "ACCOUNT_STRUCTURE_ONLY_AUTH_SOURCE_REQUIRES_PUBLISHER_RECEIPT",
         "account_frame_present": true
@@ -303,13 +284,13 @@
       {
         "route": "/api/admin/bootstrap",
         "status": 401,
-        "release": "2026-11-13.2",
+        "release": "2026-11-13.3",
         "bytes": 24
       },
       {
         "route": "/api/admin/release-info",
         "status": 401,
-        "release": "2026-11-13.2",
+        "release": "2026-11-13.3",
         "bytes": 24
       },
       {
@@ -321,13 +302,13 @@
       {
         "route": "/api/admin/finance/automation",
         "status": 401,
-        "release": "2026-11-13.2",
+        "release": "2026-11-13.3",
         "bytes": 24
       },
       {
         "route": "/api/admin/finance/automation/policy",
         "status": 401,
-        "release": "2026-11-13.2",
+        "release": "2026-11-13.3",
         "bytes": 24
       }
     ],
@@ -443,8 +424,8 @@
     "horizontal_page_overflow": false,
     "javascript_errors": 0,
     "remote_mutations_sent": 0,
-    "receipt_sha256": "b55bf76a713751ccd3be3e705f5b3f9184b53c9cae826bfae792b5ca51549cf5",
-    "native_browser_attempt": {
+    "receipt_sha256": "6bb2759aa83539cd22fe64048232b779c95ab725e024a2577c446141eb984931",
+    "native_browser_transport_limit": {
       "result": "BLOCKED_BEFORE_APP_RENDER",
       "observed_error": "net::ERR_CERT_AUTHORITY_INVALID",
       "receipt_sha256": "8061e4ce94b9aade714ec6b0f68d8038b4bd054016ee848514d0c2491d5d60fc",
@@ -464,7 +445,8 @@
     "Authorized bank connector/consent and full same-account balance evidence",
     "Ads source timezone",
     "Complete financial completion cohort and original costs/opening inventory",
-    "Real owner week/month comparison against Seller Centre and bank"
+    "Real owner week/month comparison against Seller Centre and bank",
+    "Historical October saved private order run is unavailable (FINANCIAL_SOURCE_RUN_NOT_FOUND); existing aggregate/reference and new financial events remain separate."
   ],
   "known_platform_issue": {
     "cloudflare_workers_builds": "FAILED_ON_BASELINE_AND_CANDIDATE_NOT_CLAIMED_GREEN",
@@ -472,26 +454,47 @@
     "builds_configuration_permission": "UNAVAILABLE",
     "force_or_gate_bypass": false
   },
-  "natural_automation_observation": {
-    "observed_at": "2026-11-13T23:54:35.857216+00:00",
-    "proof_sha256": "4c28fe50ac7ed50f3e30f5e070006085a255606069387622242f33837263b980",
+  "hotfix": {
+    "cause": "Validation clock captured before asynchronous source reads rejected valid later Ads observations.",
+    "change": "Sample completion time after source callback and access revalidation; preserve strict future guards and existing facts.",
+    "focused_tests": 35,
+    "full_node_tests": 4432,
+    "python_tests": 67,
+    "code_regressions": 2,
+    "new_migrations": 0,
+    "finance_redeployed": false,
+    "financial_values_or_policies_changed_by_hotfix": false,
+    "observed_runtime_resume": "NATURAL_ORIGINAL_NOVEMBER_ADS_LANE_PROGRESS_OBSERVED"
+  },
+  "natural_hotfix_resume_observation": {
+    "observed_at": "2026-11-14T00:33:17.899767+00:00",
+    "proof_sha256": "cbef7c1eedd1c2d4a2ea5a230836ed6ee63030932be67a9cd76f6e62410a41cb",
     "source": "READ_ONLY_D1_AGGREGATES",
-    "natural_cron_forced": false,
+    "period_start_date": "2026-11-01",
+    "period_end_date": "2026-11-30",
     "job_status": "COLLECTING",
     "phase": "COLLECT",
-    "period_kind": "MONTH",
-    "started_at": "2026-11-13T23:52:51.657Z",
-    "finished_at": "2026-11-13T23:52:54.404Z",
-    "job_revision": 2,
-    "current_events": 100,
-    "event_types": [
-      {
-        "event_type": "ORDER_FINANCIAL_REVIEW",
-        "current_events": 100
-      }
-    ],
+    "last_attempt_at": "2026-11-14T00:32:51.735Z",
+    "finished_at": "2026-11-14T00:32:53.940Z",
+    "job_revision": 10,
+    "source_revision_before": 1,
+    "source_revision_after": 2,
+    "events_before": 100,
+    "events_after": 113,
+    "event_types": {
+      "ORDER_FINANCIAL_REVIEW": 100,
+      "ADS_DAILY_CONSUMPTION_REVIEW": 13
+    },
+    "ads_done": true,
+    "next_lane": 2,
+    "order_cursor_preserved": true,
+    "source_and_order_signatures_preserved": true,
+    "source_invalid_in_new_attempt": false,
     "pending_codes": [
+      "ADS_CURRENT_DAY_PARTIAL",
+      "ADS_SAVED_DATES_INCOMPLETE",
       "ADS_SOURCE_NOT_CONFIRMED",
+      "ADS_SOURCE_TIMEZONE_UNCONFIRMED",
       "BANK_SOURCE_NOT_CONFIRMED",
       "COGS_SOURCE_NOT_CONFIRMED",
       "EXPENSE_COMPETENCE_NOT_YET_REACHED",
@@ -507,24 +510,542 @@
       "TAX_SOURCE_NOT_CONFIRMED",
       "WALLET_SOURCE_NOT_CONFIRMED"
     ],
-    "observed_job_exception_or_retry_wait": false,
-    "close_schema_observed": false,
-    "observer_selects": 10,
-    "observer_remote_writes": 0,
+    "bootstrap_completed": false,
+    "forced_cron": false,
     "owner_session_used": false,
+    "observer_selects": 3,
+    "observer_writes": 0,
     "financial_account_acceptance": false,
-    "limit": "First saved-source page only; all events remain in review. This does not certify recognition, complete coverage, a financial close, wallet balance or bank reconciliation."
+    "limit": "Ads source resumed; collection is still partial and no real result, bank balance or financial close was certified."
   },
-  "subsequent_runtime_failure": {
-    "observed_at": "2026-11-14T00:00:07.198406+00:00",
-    "proof_sha256": "7c1715ebbffc5189e3cb60e64b225b3784df6a97f68a5b64924afcf29abb2aa2",
-    "job_status": "RETRY_WAIT",
-    "phase": "COLLECT",
-    "code": "FINANCIAL_AUTOMATION_SOURCE_INVALID",
-    "events_preserved": 100,
-    "source_snapshot_revision_preserved": 1,
-    "cause": "The bridge sampled its validation clock before asynchronous source reads; valid Ads observations were later than that stale start time.",
-    "correction_candidate_release": "2026-11-13.3",
-    "correction_published": false
+  "previous_release_evidence": {
+    "schema": "mls_financial_automation_live_publication_v1",
+    "status": "PUBLISHED_VERIFIED",
+    "verification_scope": "TECHNICAL_PUBLIC_ONLY",
+    "release": "2026-11-13.2",
+    "label": "Financeiro · fontes, conciliação e fechamentos",
+    "url": "https://app.brazacommerce.com.br/admin?tab=agent-finance#financialAutomation",
+    "source_commit": "e6bbb189ec2331c0a07136c5b9f720e2e300b5d4",
+    "prepared_source_commit": "bc89ab3c6d26faf26ea6216252f50441aa1a2df5",
+    "base_commit": "6578e21098ff799e59433af92880d249432ceeb4",
+    "branch": "feature/financial-automation-20261113",
+    "pull_request": 121,
+    "git_integration_at_publication": "PR_OPEN_EXACT_HEAD_CI_GREEN; consult PR121 for subsequent merge",
+    "verified_at": "2026-11-13T23:50:26.229Z",
+    "ci": {
+      "schema": "mls_financial_exact_ci_receipt_v1",
+      "checked_at": "2026-11-13T23:45:32.816775+00:00",
+      "run_id": 43527800185,
+      "head": "e6bbb189ec2331c0a07136c5b9f720e2e300b5d4",
+      "status": "completed",
+      "conclusion": "success",
+      "workflow": ".github/workflows/validate.yml",
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43527800185",
+      "node": {
+        "tests": 4430,
+        "pass": 4430,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "python_tests": 67,
+      "compiled_vectors": {
+        "app": "721b3f369b93000dd5e8a0065cd83fd4bd7f54baae262c4b635e5a118fffde64",
+        "auth": "97659ca7da62cfcfad785dc3ad599ae8526191e721eba6ac9e876d2ccc253a9c",
+        "finance": "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4"
+      },
+      "ci_compiled_vectors_match_local": true,
+      "log_sha256": "9bc8939604d2df7ebcd7cfea09f71b1e35195139c919204f43d729514d482980",
+      "log_bytes": 4192954,
+      "owner_live_authenticated_qa": "NOT_PERFORMED",
+      "financial_account_acceptance": false
+    },
+    "workers": {
+      "app": {
+        "active_version_id": "3cc631da-4a91-4fd0-b030-c41537cc8f43",
+        "latest_version_id": "3cc631da-4a91-4fd0-b030-c41537cc8f43",
+        "active_percentage": 100,
+        "compiled_sha256": "721b3f369b93000dd5e8a0065cd83fd4bd7f54baae262c4b635e5a118fffde64",
+        "retrieved_raw_sha256": "44ce1c8cd1c2d8982560eb9c7685ea7d1638adfbcd4bc0ed0b488c50567e81f4",
+        "raw_bytes": 4180564,
+        "effective_config_sha256": "0e433687adf84cc9f40c1a7c78991ab8cb84d4610dcb86c138dfa84622d0cd9a",
+        "action": "DEPLOYED_VERIFIED"
+      },
+      "auth": {
+        "active_version_id": "c00d5164-f663-4cdf-b137-28f345e181c2",
+        "latest_version_id": "c00d5164-f663-4cdf-b137-28f345e181c2",
+        "active_percentage": 100,
+        "compiled_sha256": "97659ca7da62cfcfad785dc3ad599ae8526191e721eba6ac9e876d2ccc253a9c",
+        "retrieved_raw_sha256": "9105a95c37b75ed124b864575131aebed638bee68804fc780b4d9cb4e8230cd9",
+        "raw_bytes": 654650,
+        "effective_config_sha256": "8920a7f59a1d9c82fc7e9a33f8a8749eaac281a8bcb7b79e58dd0e672917ff58",
+        "action": "DEPLOYED_VERIFIED"
+      },
+      "finance": {
+        "active_version_id": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+        "latest_version_id": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+        "active_percentage": 100,
+        "compiled_sha256": "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4",
+        "retrieved_raw_sha256": "3e3f3d35a3e0037c251f7abda29cc8a64643ee255771d07f2893d32d8ef7d22a",
+        "raw_bytes": 934552,
+        "effective_config_sha256": "564eb6d80d5d16ca3e9124272ad9d548a39090242991af1b6c2787146f39a3c4",
+        "action": "DEPLOYED_VERIFIED"
+      }
+    },
+    "rollout": [
+      "upload-finance",
+      "upload-auth",
+      "upload-app",
+      "activate-finance",
+      "activate-auth",
+      "activate-app"
+    ],
+    "phase_verifications": [
+      {
+        "stage": "BASELINE",
+        "checked_at": "2026-11-13T23:45:52.166917+00:00",
+        "receipt_sha256": "e07d6c0451b0d3a1d31e6aeecdd82d955ecd7162295ea7234758a0b20fcd3dd6",
+        "payload_sha256": "9e8de6d0ad95835bacdc674f7e63e87f0d47ec11689ea192290f585f018bd4b0",
+        "all_three_exact": true,
+        "domains_exact": true
+      },
+      {
+        "stage": "UPLOADED_FINANCE",
+        "checked_at": "2026-11-13T23:46:24.572750+00:00",
+        "receipt_sha256": "adffad33dfa430cbc70681d050244fa04bef054220bec7de5798912da504fbf0",
+        "payload_sha256": "c8d856f51771667f7f164a678fb9f9ad19bb8082e57e3d1d7811c5973f9ca70c",
+        "all_three_exact": true,
+        "domains_exact": true
+      },
+      {
+        "stage": "UPLOADED_AUTH",
+        "checked_at": "2026-11-13T23:46:51.020208+00:00",
+        "receipt_sha256": "0f406e545c3e7563ebcf884198ba6239d89d7a5fdb1aa12da35661d3c95cc672",
+        "payload_sha256": "d82967b81dd6949a37255565997d475d57d43a73df650c0f04a597c56c2d3376",
+        "all_three_exact": true,
+        "domains_exact": true
+      },
+      {
+        "stage": "UPLOADED_APP",
+        "checked_at": "2026-11-13T23:47:22.056480+00:00",
+        "receipt_sha256": "78a8026e3ae014d08e13c559f5713001c55f1ad1fcfc6fa3a6af184c010f16c7",
+        "payload_sha256": "7e01f78e32760c6a147876baa96ccda5ad15f4777cfb8a6691e74d086f13e52c",
+        "all_three_exact": true,
+        "domains_exact": true
+      },
+      {
+        "stage": "ACTIVE_FINANCE",
+        "checked_at": "2026-11-13T23:47:48.552924+00:00",
+        "receipt_sha256": "16ea839740aa3f742b7ea4d73535224f883bd817716a1c900d8cca5c24409143",
+        "payload_sha256": "572af6937fc5bd62c3743f67a070999db18496cede17b40a56d9791455d65fcd",
+        "all_three_exact": true,
+        "domains_exact": true
+      },
+      {
+        "stage": "ACTIVE_AUTH",
+        "checked_at": "2026-11-13T23:48:12.818624+00:00",
+        "receipt_sha256": "341bd09d9320b969f78f6cc37c6fd150f119b13a575a1814aa9a2f77c05de68c",
+        "payload_sha256": "bc0f1cda91a16eceec54415ce435446f0c15d0b344b3f23838a9e57494dad34a",
+        "all_three_exact": true,
+        "domains_exact": true
+      },
+      {
+        "stage": "ACTIVE_APP",
+        "checked_at": "2026-11-13T23:48:25.546685+00:00",
+        "receipt_sha256": "66fea4667ba7a36d1cb9dbe2776043cde5db1aa3d531085537840a41c3bafb0a",
+        "payload_sha256": "f09c03ddbb2c687b66eec6a110c93117de0315d07c797efd0d5babe69160fed0",
+        "all_three_exact": true,
+        "domains_exact": true
+      }
+    ],
+    "configuration_bindings_owner_flags_cron_domains_preserved": true,
+    "frozen_plan_sha256": "f64afcccaed9ccf916b9b71cdb256291123f7f2dc86021c0aafab26af17e93aa",
+    "baseline_backup_files": 9,
+    "d1_recovery": {
+      "receipt_sha256": "1ad775a414459fba9f35498351420daddeae18c7016838cf6c411997cea6a972",
+      "time_travel_bookmarks_observed": [
+        "ADMIN_DB",
+        "ACCOUNT_DB",
+        "FINANCE_DB"
+      ],
+      "remote_mutations": 0
+    },
+    "migrations": {
+      "kind": "ADDITIVE_LAZY_PROVISIONING",
+      "tenant_objects_rehearsed_locally": 59,
+      "manual_production_ddl": 0,
+      "real_tenant_provisioning_and_balance_acceptance": "NOT_CERTIFIED"
+    },
+    "public_checks": {
+      "transport": "VERIFIED_TLS_NODE_GET_CDP_RENDERING",
+      "tls_verification_disabled": false,
+      "result": "PASS",
+      "http": [
+        {
+          "route": "/login",
+          "status": 200,
+          "location": null,
+          "release": "2026-11-13.2",
+          "content_type": "text/html; charset=utf-8",
+          "bytes": 307262,
+          "sha256": "71a75cfdf91a908f9b461c77df0774fbb3a2aedf0403c9857216597933241b0f",
+          "title": "MLS Commerce OS · Gestão da loja",
+          "version_evidence": "APP_RELEASE_HEADER"
+        },
+        {
+          "route": "/register",
+          "status": 200,
+          "location": null,
+          "release": null,
+          "content_type": "text/html; charset=utf-8",
+          "bytes": 81835,
+          "sha256": "11a15e97f62e8dbb23a8747b3d54771ba02a995848bf2fd83c100ea580734b9f",
+          "title": "Conta e empresa · MLS Commerce OS",
+          "version_evidence": "ACCOUNT_STRUCTURE_ONLY_AUTH_SOURCE_REQUIRES_PUBLISHER_RECEIPT",
+          "account_frame_present": true
+        },
+        {
+          "route": "/account/register",
+          "status": 200,
+          "location": null,
+          "release": null,
+          "content_type": "text/html; charset=utf-8",
+          "bytes": 81835,
+          "sha256": "11a15e97f62e8dbb23a8747b3d54771ba02a995848bf2fd83c100ea580734b9f",
+          "title": "Conta e empresa · MLS Commerce OS",
+          "version_evidence": "ACCOUNT_STRUCTURE_ONLY_AUTH_SOURCE_REQUIRES_PUBLISHER_RECEIPT",
+          "account_frame_present": true
+        },
+        {
+          "route": "/account/login",
+          "status": 200,
+          "location": null,
+          "release": null,
+          "content_type": "text/html; charset=utf-8",
+          "bytes": 81832,
+          "sha256": "56ee895902ad0ca3832ea985177edf5c0c50c5da08134397b708df379076478f",
+          "title": "Conta e empresa · MLS Commerce OS",
+          "version_evidence": "ACCOUNT_STRUCTURE_ONLY_AUTH_SOURCE_REQUIRES_PUBLISHER_RECEIPT",
+          "account_frame_present": true
+        },
+        {
+          "route": "/verify-email",
+          "status": 200,
+          "location": null,
+          "release": null,
+          "content_type": "text/html; charset=utf-8",
+          "bytes": 81833,
+          "sha256": "c14a12a2a71cac2d5d3ac56a0e5659ce9591554e049b54b65f848c2aaa84e96e",
+          "title": "Conta e empresa · MLS Commerce OS",
+          "version_evidence": "ACCOUNT_STRUCTURE_ONLY_AUTH_SOURCE_REQUIRES_PUBLISHER_RECEIPT",
+          "account_frame_present": true
+        },
+        {
+          "route": "/forgot-password",
+          "status": 200,
+          "location": null,
+          "release": null,
+          "content_type": "text/html; charset=utf-8",
+          "bytes": 81833,
+          "sha256": "9e40756017f58a50b008888a92f85616c98680325238f39072a45bfd52dc8105",
+          "title": "Conta e empresa · MLS Commerce OS",
+          "version_evidence": "ACCOUNT_STRUCTURE_ONLY_AUTH_SOURCE_REQUIRES_PUBLISHER_RECEIPT",
+          "account_frame_present": true
+        },
+        {
+          "route": "/reset-password",
+          "status": 200,
+          "location": null,
+          "release": null,
+          "content_type": "text/html; charset=utf-8",
+          "bytes": 81832,
+          "sha256": "d63e0ba2c4dff586619b9472a39f5bdfc1b2ba68b154569fc1b997aa6dc4494b",
+          "title": "Conta e empresa · MLS Commerce OS",
+          "version_evidence": "ACCOUNT_STRUCTURE_ONLY_AUTH_SOURCE_REQUIRES_PUBLISHER_RECEIPT",
+          "account_frame_present": true
+        },
+        {
+          "route": "/invitations/accept",
+          "status": 200,
+          "location": null,
+          "release": null,
+          "content_type": "text/html; charset=utf-8",
+          "bytes": 81837,
+          "sha256": "c01540c58438328525760d01836cda795e5cde74cbb550cb35a14f40f63b65c4",
+          "title": "Conta e empresa · MLS Commerce OS",
+          "version_evidence": "ACCOUNT_STRUCTURE_ONLY_AUTH_SOURCE_REQUIRES_PUBLISHER_RECEIPT",
+          "account_frame_present": true
+        },
+        {
+          "route": "/companies",
+          "status": 303,
+          "location": "https://app.brazacommerce.com.br/account/login",
+          "release": null,
+          "content_type": "text/plain;charset=UTF-8",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "title": null,
+          "version_evidence": "PROTECTED_REDIRECT_ONLY"
+        },
+        {
+          "route": "/account/profile",
+          "status": 303,
+          "location": "https://app.brazacommerce.com.br/account/login",
+          "release": null,
+          "content_type": "text/plain;charset=UTF-8",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "title": null,
+          "version_evidence": "PROTECTED_REDIRECT_ONLY"
+        },
+        {
+          "route": "/account/security",
+          "status": 303,
+          "location": "https://app.brazacommerce.com.br/account/login",
+          "release": null,
+          "content_type": "text/plain;charset=UTF-8",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "title": null,
+          "version_evidence": "PROTECTED_REDIRECT_ONLY"
+        },
+        {
+          "route": "/admin?tab=overview",
+          "status": 303,
+          "location": "https://app.brazacommerce.com.br/login",
+          "release": null,
+          "content_type": null,
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "title": null,
+          "version_evidence": "PROTECTED_REDIRECT_ONLY"
+        },
+        {
+          "route": "/api/admin/bootstrap",
+          "status": 401,
+          "release": "2026-11-13.2",
+          "bytes": 24
+        },
+        {
+          "route": "/api/admin/release-info",
+          "status": 401,
+          "release": "2026-11-13.2",
+          "bytes": 24
+        },
+        {
+          "route": "/api/account/session",
+          "status": 401,
+          "release": null,
+          "bytes": 85
+        },
+        {
+          "route": "/api/admin/finance/automation",
+          "status": 401,
+          "release": "2026-11-13.2",
+          "bytes": 24
+        },
+        {
+          "route": "/api/admin/finance/automation/policy",
+          "status": 401,
+          "release": "2026-11-13.2",
+          "bytes": 24
+        }
+      ],
+      "assets": [
+        {
+          "kind": "current",
+          "id": "bank",
+          "path": "/assets/mls/0d6250f5888258fa29664eac45b2cd821d3872b1c96ac47dda46bd7fd10e6a0c.js",
+          "status": 200,
+          "bytes": 38035,
+          "sha256": "0d6250f5888258fa29664eac45b2cd821d3872b1c96ac47dda46bd7fd10e6a0c",
+          "expected_bytes": 38035,
+          "expected_sha256": "0d6250f5888258fa29664eac45b2cd821d3872b1c96ac47dda46bd7fd10e6a0c",
+          "content_type": "text/javascript; charset=utf-8",
+          "pass": true
+        },
+        {
+          "kind": "current",
+          "id": "month",
+          "path": "/assets/mls/5203d255416bacb97cd44ddef29a2fc76b1432f0a1ea731fabacc4bb071fcd07.js",
+          "status": 200,
+          "bytes": 704817,
+          "sha256": "5203d255416bacb97cd44ddef29a2fc76b1432f0a1ea731fabacc4bb071fcd07",
+          "expected_bytes": 704817,
+          "expected_sha256": "5203d255416bacb97cd44ddef29a2fc76b1432f0a1ea731fabacc4bb071fcd07",
+          "content_type": "text/javascript; charset=utf-8",
+          "pass": true
+        },
+        {
+          "kind": "current",
+          "id": "orders",
+          "path": "/assets/mls/ec6397070416275d880f293d4abe8d7f531215af369d7e9a275c10f019a8c3c8.js",
+          "status": 200,
+          "bytes": 21282,
+          "sha256": "ec6397070416275d880f293d4abe8d7f531215af369d7e9a275c10f019a8c3c8",
+          "expected_bytes": 21282,
+          "expected_sha256": "ec6397070416275d880f293d4abe8d7f531215af369d7e9a275c10f019a8c3c8",
+          "content_type": "text/javascript; charset=utf-8",
+          "pass": true
+        },
+        {
+          "kind": "current",
+          "id": "production",
+          "path": "/assets/mls/549c2b0f6ae183249bed2472af894cf5211d4a6853fc33c0ce6c127aa3ebf034.js",
+          "status": 200,
+          "bytes": 165982,
+          "sha256": "549c2b0f6ae183249bed2472af894cf5211d4a6853fc33c0ce6c127aa3ebf034",
+          "expected_bytes": 165982,
+          "expected_sha256": "549c2b0f6ae183249bed2472af894cf5211d4a6853fc33c0ce6c127aa3ebf034",
+          "content_type": "text/javascript; charset=utf-8",
+          "pass": true
+        },
+        {
+          "kind": "current",
+          "id": "weekly",
+          "path": "/assets/mls/04ae3166780be18f31754212640b0887abe9e20830ac4309a6e31109398e4eeb.js",
+          "status": 200,
+          "bytes": 54280,
+          "sha256": "04ae3166780be18f31754212640b0887abe9e20830ac4309a6e31109398e4eeb",
+          "expected_bytes": 54280,
+          "expected_sha256": "04ae3166780be18f31754212640b0887abe9e20830ac4309a6e31109398e4eeb",
+          "content_type": "text/javascript; charset=utf-8",
+          "pass": true
+        },
+        {
+          "kind": "current",
+          "id": "workspace",
+          "path": "/assets/mls/e3b12127a14b70185a25c83dae547facc946a4fe87afe0369a8f47665f6398ca.js",
+          "status": 200,
+          "bytes": 462298,
+          "sha256": "e3b12127a14b70185a25c83dae547facc946a4fe87afe0369a8f47665f6398ca",
+          "expected_bytes": 462298,
+          "expected_sha256": "e3b12127a14b70185a25c83dae547facc946a4fe87afe0369a8f47665f6398ca",
+          "content_type": "text/javascript; charset=utf-8",
+          "pass": true
+        },
+        {
+          "kind": "retained",
+          "id": "month",
+          "path": "/assets/mls/347a294216d16151105c5b5074174af01c01a9bc398e713aaf2c9184a48b1db2.js",
+          "status": 200,
+          "bytes": 704759,
+          "sha256": "347a294216d16151105c5b5074174af01c01a9bc398e713aaf2c9184a48b1db2",
+          "expected_bytes": 704759,
+          "expected_sha256": "347a294216d16151105c5b5074174af01c01a9bc398e713aaf2c9184a48b1db2",
+          "content_type": "text/javascript; charset=utf-8",
+          "pass": true
+        },
+        {
+          "kind": "retained",
+          "id": "workspace",
+          "path": "/assets/mls/d5961f95cc6649d963f42e28a50e2e12563ce0d0d66833bb28ce5e16d172922c.js",
+          "status": 200,
+          "bytes": 341729,
+          "sha256": "d5961f95cc6649d963f42e28a50e2e12563ce0d0d66833bb28ce5e16d172922c",
+          "expected_bytes": 341729,
+          "expected_sha256": "d5961f95cc6649d963f42e28a50e2e12563ce0d0d66833bb28ce5e16d172922c",
+          "content_type": "text/javascript; charset=utf-8",
+          "pass": true
+        }
+      ],
+      "browser_profiles": 24,
+      "display_widths": [
+        320,
+        1365
+      ],
+      "themes": [
+        "light",
+        "dark"
+      ],
+      "visible_controls_measured": 196,
+      "all_measured_controls_at_least_44px": true,
+      "horizontal_page_overflow": false,
+      "javascript_errors": 0,
+      "remote_mutations_sent": 0,
+      "receipt_sha256": "b55bf76a713751ccd3be3e705f5b3f9184b53c9cae826bfae792b5ca51549cf5",
+      "native_browser_attempt": {
+        "result": "BLOCKED_BEFORE_APP_RENDER",
+        "observed_error": "net::ERR_CERT_AUTHORITY_INVALID",
+        "receipt_sha256": "8061e4ce94b9aade714ec6b0f68d8038b4bd054016ee848514d0c2491d5d60fc",
+        "diagnosis_sha256": "ca1959e94bd88a0bd0228553f4a15d75d985722ff2c9485a1a31ce1940dff425",
+        "note": "TLS-verified Node GET responses were rendered by CDP; certificate validation was never disabled."
+      }
+    },
+    "owner_live_authenticated_qa": "NOT_PERFORMED",
+    "financial_account_acceptance": false,
+    "m2_closed": false,
+    "m22_closed": false,
+    "publisher_created_test_facts_in_production": false,
+    "provider_commercial_writes": 0,
+    "real_messages_sent": 0,
+    "dependencies": [
+      "Shopee Wallet/Payout official contract, actual grants and implemented adapter",
+      "Authorized bank connector/consent and full same-account balance evidence",
+      "Ads source timezone",
+      "Complete financial completion cohort and original costs/opening inventory",
+      "Real owner week/month comparison against Seller Centre and bank"
+    ],
+    "known_platform_issue": {
+      "cloudflare_workers_builds": "FAILED_ON_BASELINE_AND_CANDIDATE_NOT_CLAIMED_GREEN",
+      "deployment_path": "EXISTING_MANUAL_WRANGLER",
+      "builds_configuration_permission": "UNAVAILABLE",
+      "force_or_gate_bypass": false
+    },
+    "natural_automation_observation": {
+      "observed_at": "2026-11-13T23:54:35.857216+00:00",
+      "proof_sha256": "4c28fe50ac7ed50f3e30f5e070006085a255606069387622242f33837263b980",
+      "source": "READ_ONLY_D1_AGGREGATES",
+      "natural_cron_forced": false,
+      "job_status": "COLLECTING",
+      "phase": "COLLECT",
+      "period_kind": "MONTH",
+      "started_at": "2026-11-13T23:52:51.657Z",
+      "finished_at": "2026-11-13T23:52:54.404Z",
+      "job_revision": 2,
+      "current_events": 100,
+      "event_types": [
+        {
+          "event_type": "ORDER_FINANCIAL_REVIEW",
+          "current_events": 100
+        }
+      ],
+      "pending_codes": [
+        "ADS_SOURCE_NOT_CONFIRMED",
+        "BANK_SOURCE_NOT_CONFIRMED",
+        "COGS_SOURCE_NOT_CONFIRMED",
+        "EXPENSE_COMPETENCE_NOT_YET_REACHED",
+        "FINANCIAL_SOURCE_MORE_PAGES",
+        "INVENTORY_SOURCE_NOT_CONFIRMED",
+        "ORDERS_COMPETENCE_COHORT_COVERAGE_REQUIRED",
+        "ORDER_EVIDENCE_COLLECTION_INCOMPLETE",
+        "ORDER_RECOGNITION_EVIDENCE_REQUIRED",
+        "ORDER_TOPUP_COMPONENT_REQUIRED",
+        "PAYOUTS_SOURCE_NOT_CONFIRMED",
+        "RECEIVABLES_SOURCE_NOT_CONFIRMED",
+        "RETURNS_SOURCE_NOT_CONFIRMED",
+        "TAX_SOURCE_NOT_CONFIRMED",
+        "WALLET_SOURCE_NOT_CONFIRMED"
+      ],
+      "observed_job_exception_or_retry_wait": false,
+      "close_schema_observed": false,
+      "observer_selects": 10,
+      "observer_remote_writes": 0,
+      "owner_session_used": false,
+      "financial_account_acceptance": false,
+      "limit": "First saved-source page only; all events remain in review. This does not certify recognition, complete coverage, a financial close, wallet balance or bank reconciliation."
+    },
+    "subsequent_runtime_failure": {
+      "observed_at": "2026-11-14T00:00:07.198406+00:00",
+      "proof_sha256": "7c1715ebbffc5189e3cb60e64b225b3784df6a97f68a5b64924afcf29abb2aa2",
+      "job_status": "RETRY_WAIT",
+      "phase": "COLLECT",
+      "code": "FINANCIAL_AUTOMATION_SOURCE_INVALID",
+      "events_preserved": 100,
+      "source_snapshot_revision_preserved": 1,
+      "cause": "The bridge sampled its validation clock before asynchronous source reads; valid Ads observations were later than that stale start time.",
+      "correction_candidate_release": "2026-11-13.3",
+      "correction_published": false
+    }
   }
 }
