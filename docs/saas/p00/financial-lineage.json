@@ -1362,5 +1362,78 @@
       "consumer": "web/cloudflare/src/financial-accounting-projection.mjs",
       "state": "INTERFACES_EXISTEM_ADAPTADORES_GRANTS_CONSENTIMENTOS_BLOQUEADOS"
     }
-  ]
+  ],
+  "collectors_jobs_and_scopes": [
+    {
+      "source": "web/cloudflare/src/business-sync.mjs",
+      "work": "Saved legacy order/month collection, cursor/leases and bounded turns",
+      "storage": "business_month_* and Finance business period caches from existing inventory",
+      "coverage": "Creation-date cohort is not full completion-date coverage; old complete observations are distinct from fresh partial work"
+    },
+    {
+      "source": "web/finance/src/financial-source-collection.mjs",
+      "work": "createFinancialSourceCheckpoint / collectFinancialSourceStep / selectFinancialSourceWork",
+      "storage": "financial_source_checkpoint_v1, cursor, watermark, lease, last_complete",
+      "scope": "organization/store/account/currency; authorization before and after IO",
+      "coverage": "A generic collector is implemented; no native Wallet/Payout adapter or real bank consent inferred"
+    },
+    {
+      "source": "web/cloudflare/src/financial-automation-jobs.mjs",
+      "work": "runFinancialAutomationJobs: one bounded source page OR one close mutation per turn; CAS and revalidation",
+      "storage": "financial_automation_job_v1 / automation state, CONFIG revision and immutable close versions",
+      "coverage": "Accrual and bank-cash gates separate; auto-close approval withdrawal blocks mutation"
+    },
+    {
+      "source": "web/cloudflare/src/financial-automation-sources.mjs",
+      "work": "Read existing saved orders, cost/inspection origins and declared expense source; map to conservative ledger evidence",
+      "storage": "financial_event_v1 with source references and revisions",
+      "coverage": "Missing historic capture and weak identity stay PARTIAL/REVIEW"
+    },
+    {
+      "source": "web/cloudflare/src/financial-automation-ads-sources.mjs",
+      "work": "Daily calendar Ads evidence",
+      "storage": "confirmed/review event ledger and nominal calendar",
+      "coverage": "Unconfirmed source timezone is not exact Friday-hour coverage; recharge is not consumption"
+    },
+    {
+      "source": "web/cloudflare/src/financial-automation-cash-sources.mjs",
+      "work": "Read already imported bank/transfer evidence; allocation capacity shared with legacy matching",
+      "storage": "App ledger / Finance immutable imported statements and allocation registry",
+      "coverage": "CSV/OFX is assisted import, not automatic bank collection or payment"
+    },
+    {
+      "source": "web/cloudflare/src/financial-returns-tracker.mjs",
+      "work": "Durable revisit of already-saved old return cases",
+      "storage": "durable tracker revisions",
+      "coverage": "Bounded saved backlog, not complete discovery of unobserved cases"
+    },
+    {
+      "source": "web/cloudflare/src/production-weekly-store.mjs",
+      "work": "Existing minute scheduler and real Friday13h manufacturing cut with eight intervals",
+      "storage": "immutable originals, revisions and explicit coverage declarations",
+      "coverage": "No rows means unknown; do not derive fabrication from sales or DTF"
+    },
+    {
+      "source": "web/cloudflare/src/tenant-jobs.mjs",
+      "work": "validateTenantJob / runTenantJob revalidate principal, organization/store and capability",
+      "storage": "tenant namespace and revision fences",
+      "coverage": "No inherited legacy identity; revoked membership blocks work"
+    }
+  ],
+  "contract_families": {
+    "new": [
+      "financial_event_v1",
+      "financial_source_checkpoint_v1",
+      "financial_close_version_v1",
+      "financial_accounting_projection_v1",
+      "financial_automation_job_v1"
+    ],
+    "legacy_guards": [
+      "business_month_v1: net_profit_cents remains null",
+      "business_financial_closeout_v1: realized_profit_cents remains null / NOT_COMPARED",
+      "weekly_operating_report_v1: realized profit remains unknown"
+    ],
+    "schema_manifest": "web/cloudflare/src/tenant-schema-manifest.mjs",
+    "new_schema_objects": 59
+  }
 }

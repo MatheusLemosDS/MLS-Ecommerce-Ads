@@ -1,3 +1,9 @@
+<!-- SAAS_P00_CURRENT -->
+## Retomada atual — P00 SaaS
+
+O pedido atual autoriza P00; a restrição documental registrada abaixo pertence à entrega anterior. Comece pelo [checkpoint único](MLS_COMMERCE_OS_CHECKPOINT.json), pela [matriz operacional](MLS_SAAS_EXECUTION.json) e pelo [índice P00](saas/p00/README.md). Candidato local8448710 preserva0a5a228; nenhuma alteração de runtime ou deploy. P00 com trabalho independente validado localmente e bloqueios externos explícitos; P01–P11 ficam para próximas entregas.
+<!-- END_SAAS_P00_CURRENT -->
+
 # Retomada curta — MLS Commerce OS
 
 - Base: main `346f30f200e5cbd3d9efd26663a483c625d9c6e7`, reconfirmada pelo conector GitHub; [PR #121](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/121) `merged=true` em `2026-11-14T00:47:06Z` (13/11 às 21:47:06 Brasília). O checkout anterior e seu `origin/main` estavam em `eab85a17d7a6c4f213e67ce0b7dea0cf63932bf2`/PR116; não representavam a main atual.

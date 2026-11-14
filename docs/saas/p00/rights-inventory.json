@@ -16,13 +16,25 @@
     "source": "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf local QA; browser system font stacks",
     "decision": "QA_ONLY_NOT_NEW_WEBFONT_DISTRIBUTION",
     "license": "DejaVu/Bitstream Vera license; retain distro notices if shipping font file",
-    "state": "NO_NEW_SHIPPED_FONT"
+    "state": "NO_NEW_SHIPPED_FONT",
+    "local_tool_license_evidence": {
+      "reference_path": "/usr/share/doc/fonts-dejavu-core/copyright",
+      "sha256": "63d3ba759d12804c5b31a9d5940d855c1820d1f5999e6b0872eb1c7ff045fbc9",
+      "bytes": 3859,
+      "scope": "Local QA tool/font package copyright, not license for operator-provided media"
+    }
   },
   "audio": {
     "source": "ESPEAK_NG_OFFLINE_PT_BR or OPERATOR_LICENSED_PT_BR_WAV",
     "decision": "QA synthetic offline; operator WAV needs its own authorization",
     "license": "eSpeak NG external tool GPL-3.0-or-later; voice data/component licenses must be checked before redistribution",
-    "state": "NO_CUSTOMER_AUDIO_OR_TOOL_REDISTRIBUTED"
+    "state": "NO_CUSTOMER_AUDIO_OR_TOOL_REDISTRIBUTED",
+    "local_tool_license_evidence": {
+      "reference_path": "/workspace/mls-test-tools/espeak/usr/share/doc/espeak-ng/copyright",
+      "sha256": "bf721eede49d50f84bd2c50f96888629ced572b66ad4087c7a224c4a5e1193bb",
+      "bytes": 3877,
+      "scope": "Local QA tool/font package copyright, not license for operator-provided media"
+    }
   },
   "brand": {
     "name": "MLS Commerce OS",

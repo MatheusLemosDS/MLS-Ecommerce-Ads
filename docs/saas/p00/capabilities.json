@@ -43,17 +43,20 @@
         {
           "path": "web/cloudflare/src/agent-registry.mjs",
           "sha256_current": "efa13b45819155b774f256ff7f06ca34fee7cf789320c2b8de38239cf0d13be7",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         },
         {
           "path": "web/cloudflare/src/workspace-navigation.mjs",
           "sha256_current": "c7225b03b354c608fb0c0e1e3bafa821852f737de7a5f704c84d2134bbd1950e",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         },
         {
           "path": "docs/MLS_LAYOUT_REFERENCE_PARITY_2026_11_13.md",
           "sha256_current": "67d61b6b9cf8ee658dfdd89e45ec15c0ef30d0dad5a46112a257ecb6eaabbba0",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         }
       ],
       "current_extension_refs": []
@@ -97,12 +100,14 @@
         {
           "path": "web/cloudflare/src/order-operations.mjs",
           "sha256_current": "8047984f352c90732ab1cd50e8288a8393c7c8a15a77e4713a30ee9900288e99",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         },
         {
           "path": "web/cloudflare/src/admin.mjs",
           "sha256_current": "13085154ad06a7f10e1a028251ac8fd5533eeea3a7998886d03b48ecd25f988f",
-          "same_as_audited_sha": false
+          "same_as_audited_sha": false,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         }
       ],
       "current_extension_refs": []
@@ -146,17 +151,20 @@
         {
           "path": "web/cloudflare/src/product-registry.mjs",
           "sha256_current": "67f9ed6181b41c0158bf92558250581724830b61f9425443ad34fedcceb0abca",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         },
         {
           "path": "web/cloudflare/src/production-dtf-store.mjs",
           "sha256_current": "b5a5f7881774e0b177ab705952655d97147ed27e433ab6685576a9e4ebdfe149",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         },
         {
           "path": "docs/PRODUCAO_DTF.md",
           "sha256_current": "38f102992337456f9c399acc438ed32990d022351b20577d010574412a9ad7fa",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         }
       ],
       "current_extension_refs": []
@@ -200,12 +208,14 @@
         {
           "path": "web/cloudflare/src/mls-product-intelligence.mjs",
           "sha256_current": "dae3099abe85ff852261f321f1535bf9a4557e3cd9e66cf892bd584538b8cb10",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         },
         {
           "path": "web/cloudflare/src/mls-product-workbench.mjs",
           "sha256_current": "1f55b306b880c771ecd897646fd9c667d18d49e47ac79063e3352b3787ebbc63",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         }
       ],
       "current_extension_refs": []
@@ -249,22 +259,26 @@
         {
           "path": "web/cloudflare/src/dtf-layout.mjs",
           "sha256_current": "6fd9775b0aaff13fc4fea5f3cd7b2a7ce7b469be9e015ed3b2da2e87f3e2a7f7",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         },
         {
           "path": "web/cloudflare/src/production-dtf-store.mjs",
           "sha256_current": "b5a5f7881774e0b177ab705952655d97147ed27e433ab6685576a9e4ebdfe149",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         },
         {
           "path": "web/cloudflare/src/dtf-view.mjs",
           "sha256_current": "3d1d40eb9ec94aad65e39afd7a7b068229945e43e999b98ee59b102a4d8bba4f",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         },
         {
           "path": "docs/PRODUCAO_DTF.md",
           "sha256_current": "38f102992337456f9c399acc438ed32990d022351b20577d010574412a9ad7fa",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         }
       ],
       "current_extension_refs": []
@@ -308,17 +322,20 @@
         {
           "path": "web/cloudflare/src/incurred-production.mjs",
           "sha256_current": "3958d0babcaa370cf6f1bcf8d7201cb00e7fc7a015ceddc4c32c1189ea5d3e4d",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         },
         {
           "path": "web/cloudflare/src/production-weekly-store.mjs",
           "sha256_current": "6774503f20b3aa1a7861d8fc92b54220d809625f36228ffe701dd6a9379d1229",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         },
         {
           "path": "web/cloudflare/src/admin.mjs",
           "sha256_current": "13085154ad06a7f10e1a028251ac8fd5533eeea3a7998886d03b48ecd25f988f",
-          "same_as_audited_sha": false
+          "same_as_audited_sha": false,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         }
       ],
       "current_extension_refs": []
@@ -366,17 +383,20 @@
         {
           "path": "web/cloudflare/src/business-month.mjs",
           "sha256_current": "fe688b43dc3d848004477ace9de1b7a70a47951f488b3c06e51d8e50aa96ff63",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         },
         {
           "path": "web/cloudflare/src/business-month-publication.mjs",
           "sha256_current": "019596f56814a70f46d1275a68ba5b107b570ec309d3a47e86ad889d440a5d34",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         },
         {
           "path": "web/cloudflare/src/business-financial-closeout.mjs",
           "sha256_current": "501e50a2a02cd67ccddfdddb8fcee9746830b8f37159e5825a7829afcbfcebce",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         }
       ],
       "current_extension_refs": [
@@ -428,17 +448,20 @@
         {
           "path": "web/finance/src/external-cash-period.mjs",
           "sha256_current": "5ba08c51608fa43d776fd9fe5d11b39b8d50803a30498bd2a289993faff13bc7",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         },
         {
           "path": "web/finance/src/external-cash-matching.mjs",
           "sha256_current": "1338f3e5137b720fe3893c15ae5f45d049ffe7f8ab1d17f1f2bb4fb65bd1bfe3",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         },
         {
           "path": "web/cloudflare/src/admin.mjs",
           "sha256_current": "13085154ad06a7f10e1a028251ac8fd5533eeea3a7998886d03b48ecd25f988f",
-          "same_as_audited_sha": false
+          "same_as_audited_sha": false,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         }
       ],
       "current_extension_refs": [
@@ -490,17 +513,20 @@
         {
           "path": "web/cloudflare/src/expense-ledger.mjs",
           "sha256_current": "cb7acb565e1e28777b65ed46833d9ff56ab7d5393d70d9418548cc658d4d6a80",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         },
         {
           "path": "web/cloudflare/src/business-tax-policy.mjs",
           "sha256_current": "6b27f010e084ee0d29051456d7df859414b5891247c5daeaf4b29e6dea687d4a",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         },
         {
           "path": "web/cloudflare/src/admin.mjs",
           "sha256_current": "13085154ad06a7f10e1a028251ac8fd5533eeea3a7998886d03b48ecd25f988f",
-          "same_as_audited_sha": false
+          "same_as_audited_sha": false,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         }
       ],
       "current_extension_refs": [
@@ -552,22 +578,26 @@
         {
           "path": "web/finance/src/returns-reconciliation.mjs",
           "sha256_current": "13b8a00e473fb77cad61d18e90013bf98b511ef7ca27a7c3329ae85671e39855",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         },
         {
           "path": "web/cloudflare/src/business-historical-returns.mjs",
           "sha256_current": "f5ca587063e8bd7eabd42807e558154c022d9b8a04f00a28d9ce880a6c721f64",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         },
         {
           "path": "web/cloudflare/src/physical-returns.mjs",
           "sha256_current": "33cbfc605f74ac78f4fc8bf97cc48c123a602350c6333b2f1b51fd4374627107",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         },
         {
           "path": "web/cloudflare/src/admin.mjs",
           "sha256_current": "13085154ad06a7f10e1a028251ac8fd5533eeea3a7998886d03b48ecd25f988f",
-          "same_as_audited_sha": false
+          "same_as_audited_sha": false,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         }
       ],
       "current_extension_refs": [
@@ -615,22 +645,26 @@
         {
           "path": "web/cloudflare/src/mls-ads-performance.mjs",
           "sha256_current": "b85b479782b867d9b4adbcbdd08109d6483a86cae21c5dd2e62dfae9f6bb9a23",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         },
         {
           "path": "web/cloudflare/src/scaling-preparation.mjs",
           "sha256_current": "722c31bcbf9e66f7c3f528823195a99fabf0e0b8c5d95840851bb36fc4a3a8c4",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         },
         {
           "path": "web/cloudflare/src/admin.mjs",
           "sha256_current": "13085154ad06a7f10e1a028251ac8fd5533eeea3a7998886d03b48ecd25f988f",
-          "same_as_audited_sha": false
+          "same_as_audited_sha": false,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         },
         {
           "path": "web/cloudflare/original/auth-worker.mjs",
           "sha256_current": "32e1af172a4143c3f91ae927422e0846aee520605c64d0500f06c74c1462f4df",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         }
       ],
       "current_extension_refs": []
@@ -674,22 +708,26 @@
         {
           "path": "web/cloudflare/src/admin.mjs",
           "sha256_current": "13085154ad06a7f10e1a028251ac8fd5533eeea3a7998886d03b48ecd25f988f",
-          "same_as_audited_sha": false
+          "same_as_audited_sha": false,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         },
         {
           "path": "web/cloudflare/src/hermes-financial-context.mjs",
           "sha256_current": "58a01ab49d9071a91e89dbc62bfd909057fbdb7cb5b947a8a6751f7a892d03f4",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         },
         {
           "path": "web/bridge/hermes_bridge.py",
           "sha256_current": "ed0408b611516ff76a711aaac98253b1b3ceabade6bbe635913f8432ab30f9ff",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         },
         {
           "path": "docs/HERMES_FINANCEIRO.md",
           "sha256_current": "56ef490ac4275e28a831f95314ed54191d26ad4f0284d965a10a97e5049d25c4",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         }
       ],
       "current_extension_refs": []
@@ -733,12 +771,14 @@
         {
           "path": "web/cloudflare/src/mls-agent-learning.mjs",
           "sha256_current": "b93e08731afc0f27add9cffafb50de945be5291086fd26b62dec70c5e6278788",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         },
         {
           "path": "web/cloudflare/src/agent-registry.mjs",
           "sha256_current": "efa13b45819155b774f256ff7f06ca34fee7cf789320c2b8de38239cf0d13be7",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         }
       ],
       "current_extension_refs": []
@@ -782,12 +822,14 @@
         {
           "path": "web/cloudflare/src/mls-listing-factory-planner.mjs",
           "sha256_current": "b5e83dcc7bbd759f1d0ed1ddd98107e4f2fdd4d8508b2ff875476c100b528778",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         },
         {
           "path": "docs/MLS_LISTING_FACTORY_V1.md",
           "sha256_current": "791ea276042d6c8e22b63e8d8c2ca679ad4c4ee0424951a92b79d9ba787d2ee9",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         }
       ],
       "current_extension_refs": [],
@@ -832,22 +874,26 @@
         {
           "path": "web/cloudflare/src/mls-ai-sales-workspace-store.mjs",
           "sha256_current": "fd5ea0913224709da186237a882292d337a2ce9b88f4732b638e38eedbbb4072",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         },
         {
           "path": "web/cloudflare/src/mls-ai-sales-script-adapter.mjs",
           "sha256_current": "a3b2e3a77c07aa3e4b18f8a728bce9d04ce1b96962ea29b6e5e1f50d81bc55c2",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         },
         {
           "path": "docs/MLS_AI_SALES_LOCAL_RENDER.md",
           "sha256_current": "75af29d54b6727956f104f5b87766ea93b034d3cbebe85a6d5e6304aad4a4bb1",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         },
         {
           "path": "docs/MLS_AI_SALES_INTEGRATION_2026_10_30.md",
           "sha256_current": "84321a741fbd5777be211174f7a6d094f68318735f63211efcea02e1781ea3f6",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         }
       ],
       "current_extension_refs": [],
@@ -892,17 +938,20 @@
         {
           "path": "web/cloudflare/src/mls-ai-sales-affiliates.mjs",
           "sha256_current": "53321a65855b4fe5f93573e66281946afa302a32a532d6b751c9270bd2464d96",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         },
         {
           "path": "web/cloudflare/src/mls-ai-sales-performance.mjs",
           "sha256_current": "7f7390238cb4dc53f8efb37471a19f504d193e3f952fa6e0c5aaaeedd8f796c9",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         },
         {
           "path": "web/cloudflare/src/mls-ai-sales-capability-audit.mjs",
           "sha256_current": "33f865b1c2eed0cb164bfa3befe6cbbfa9776ae7a357c581a6fb375e644a5ea3",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         }
       ],
       "current_extension_refs": [],
@@ -947,22 +996,26 @@
         {
           "path": "web/cloudflare/src/mls-shopee-capability-audit.mjs",
           "sha256_current": "93bdfb84eca046158d30d7c1f73f8591a20b4f5bcfe47c3637400f0658267847",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         },
         {
           "path": "web/cloudflare/src/mls-ai-sales-capability-audit.mjs",
           "sha256_current": "33f865b1c2eed0cb164bfa3befe6cbbfa9776ae7a357c581a6fb375e644a5ea3",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         },
         {
           "path": "web/cloudflare/src/mls-lost-push-recovery.mjs",
           "sha256_current": "644f305e5f37fc721c3b5d107a0ab1b13c6b4c9d7ce5505a3f61b8b9e9a96757",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         },
         {
           "path": "web/cloudflare/src/order-operations.mjs",
           "sha256_current": "8047984f352c90732ab1cd50e8288a8393c7c8a15a77e4713a30ee9900288e99",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         }
       ],
       "current_extension_refs": []
@@ -1010,17 +1063,20 @@
         {
           "path": "web/cloudflare/src/mls-product-intelligence.mjs",
           "sha256_current": "dae3099abe85ff852261f321f1535bf9a4557e3cd9e66cf892bd584538b8cb10",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         },
         {
           "path": "web/cloudflare/src/incurred-production.mjs",
           "sha256_current": "3958d0babcaa370cf6f1bcf8d7201cb00e7fc7a015ceddc4c32c1189ea5d3e4d",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         },
         {
           "path": "web/cloudflare/src/physical-returns.mjs",
           "sha256_current": "33cbfc605f74ac78f4fc8bf97cc48c123a602350c6333b2f1b51fd4374627107",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         }
       ],
       "current_extension_refs": [
@@ -1068,17 +1124,20 @@
         {
           "path": "web/cloudflare/src/admin.mjs",
           "sha256_current": "13085154ad06a7f10e1a028251ac8fd5533eeea3a7998886d03b48ecd25f988f",
-          "same_as_audited_sha": false
+          "same_as_audited_sha": false,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         },
         {
           "path": "web/cloudflare/original/app-worker.mjs",
           "sha256_current": "f022a27d4b4c8ac327381fd5318ee04d47ec67c4d0950c63e61ea1623b3cdd81",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         },
         {
           "path": "web/cloudflare/original/auth-worker.mjs",
           "sha256_current": "32e1af172a4143c3f91ae927422e0846aee520605c64d0500f06c74c1462f4df",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         }
       ],
       "current_extension_refs": []
@@ -1126,17 +1185,20 @@
         {
           "path": "web/cloudflare/src/admin.mjs",
           "sha256_current": "13085154ad06a7f10e1a028251ac8fd5533eeea3a7998886d03b48ecd25f988f",
-          "same_as_audited_sha": false
+          "same_as_audited_sha": false,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         },
         {
           "path": "web/cloudflare/src/automation-workspace.mjs",
           "sha256_current": "55181e144925c90b81daf49be58321d8fd5c69b097733185d64843fc62b3a04e",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         },
         {
           "path": "web/cloudflare/src/business-sync.mjs",
           "sha256_current": "0ecd1885dc97b8efe902e4ee1d904ed546550f6ba58d2e3b21966c8687fe95eb",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         }
       ],
       "current_extension_refs": [
@@ -1184,17 +1246,20 @@
         {
           "path": "web/cloudflare/original/auth-worker.mjs",
           "sha256_current": "32e1af172a4143c3f91ae927422e0846aee520605c64d0500f06c74c1462f4df",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         },
         {
           "path": "web/bridge/hermes_bridge.py",
           "sha256_current": "ed0408b611516ff76a711aaac98253b1b3ceabade6bbe635913f8432ab30f9ff",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         },
         {
           "path": "package.json",
           "sha256_current": "a91843abbe7c9aa02d3725e99b69524239cca4296c141a42db3b46d1549af5d0",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         }
       ],
       "current_extension_refs": []
@@ -1238,17 +1303,20 @@
         {
           "path": "AGENTS.md",
           "sha256_current": "240f24ccd7fbfef6da6c3399d9e996f5c816fbeb71e2408f2f2a631af54c97eb",
-          "same_as_audited_sha": false
+          "same_as_audited_sha": false,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         },
         {
           "path": "README.md",
           "sha256_current": "0831cd14a020cc36432a506d1d593aa8e479673dabd5c3f013ea60ab1d14eec5",
-          "same_as_audited_sha": false
+          "same_as_audited_sha": false,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         },
         {
           "path": "docs/MLS_LAYOUT_REFERENCE_PARITY_2026_11_13.md",
           "sha256_current": "67d61b6b9cf8ee658dfdd89e45ec15c0ef30d0dad5a46112a257ecb6eaabbba0",
-          "same_as_audited_sha": true
+          "same_as_audited_sha": true,
+          "snapshot_ref": "84487108fa9c1292e90a62296ea8a597ffaad619"
         }
       ],
       "current_extension_refs": []

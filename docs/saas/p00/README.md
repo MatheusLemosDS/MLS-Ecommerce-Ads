@@ -17,6 +17,10 @@ O run histórico 43493228854 falhou em navegação Chromium na base auditada e p
 
 A Live continua `2026-11-13.3`; fonte publicada `f68525ea…`, distinta do merge main e dos commits documentais. A comparação dos módulos recuperados usa os hashes raw do recibo; os hashes dos Workers compilados são outra camada, comparada com o build local. Boundary multipart ou sourcemap não substitui comparação do módulo. Sem deploy novo, migração, escrita comercial, dados reais de teste ou autorização ampliada.
 
+## Ajuste do gate local
+
+O manifesto de preflight foi repinado na main atual, conservando os três hashes e as flags esperadas. A lista de arquivos permanece finita e literal; foram adicionados os artefatos P00, sem wildcard ou novo caminho protegido de aplicação. O registro explícito da autorização P00 foi acrescentado ao verificador e à lista exata do teste. Permanecem as negativas de base/hash/escopo, escrita comercial bloqueada, verificações remotas obrigatórias e `productionApproved:false`. O manifesto anterior está preservado em [release-candidate-before-p00.json](release-candidate-before-p00.json). Isso prepara uma revisão futura, sem autorizar push/deploy enquanto Builds não for comprovado.
+
 ## Uso para próxima entrega
 
 Ler o checkpoint e a tarefa atual na matriz, depois somente o catálogo/artefato relevante. O catálogo não altera planos nem ativa funções no produto. Conta e empresa continuam com entitlements do servidor e billing NOT_CONFIGURED; não incluir funções parciais como promessa de automação pronta. Validar direitos/operação e obter evidência dos Builds antes de promover Git. M2/M2.2 e banco automático continuam abertos.

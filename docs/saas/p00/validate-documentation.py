@@ -13,10 +13,17 @@ for e in read('input/MANIFEST.json')['inputs']:
 assert len(read('capabilities.json')['modules'])==22
 for m in read('capabilities.json')['modules']:
  for field in ['implementation','roles_and_permissions','capability_support','provider_grant','connection','coverage','external_write_permission','validation','commercial_promise','next_action']:assert m.get(field), (m['id'],field)
- for e in m['evidence']:assert hashlib.sha256((root/e['path']).read_bytes()).hexdigest()==e['sha256_current']
+ for e in m['evidence']:assert hashlib.sha256(git('show',e['snapshot_ref']+':'+e['path'])).hexdigest()==e['sha256_current']
 assert len(read('financial-lineage.json')['values'])==25
 assert len(read('sbom.cdx.json')['components'])==len(json.loads((root/'package-lock.json').read_text())['packages'])-1
 for e in read('rights-inventory.json')['assets']:assert hashlib.sha256((root/e['path']).read_bytes()).hexdigest()==e['sha256']
+old=read('release-candidate-before-p00.json')
+new=json.loads((root/'tools/release-approved-candidate.json').read_text())
+assert old['expected_hashes']==new['expected_hashes']
+assert old['expected_live_flags']==new['expected_live_flags']
+assert new['commercial_writes_allowed'] is False
+assert new['base_commit']=='346f30f200e5cbd3d9efd26663a483c625d9c6e7'
+assert all('*' not in path for path in new['allowed_files'])
 links=0
 for p in [p00/'README.md',p00/'OPERATIONS.md']:
  for target in re.findall(r'\]\(([^)]+)\)',p.read_text()):
