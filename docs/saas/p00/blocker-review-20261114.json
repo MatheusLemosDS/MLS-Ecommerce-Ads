@@ -87,5 +87,39 @@
     "scope_tests": "node --test tools/tests/release-preflight.test.mjs:14 pass,0 fail,0 skipped",
     "scope_test_log_sha256": "1d47b6b9b9a8315662c500008e4c5f9c6b1afb7f3e23088110de8cab87f7f583",
     "change": "Two explicit documentation paths added to frozen candidate list; hashes, flags, owner authorization, protections and workflow unchanged."
+  },
+  "user_dashboard_evidence": {
+    "provenance": "Screenshots supplied in this conversation, explicitly identified by user as Finance. Screen clock alone has no date/timezone proof. No API token values supplied or stored.",
+    "worker": "brazacommerce-finance",
+    "production": {
+      "branch_display": "main",
+      "disable_builds_toggle_display": "ON",
+      "deployment_hooks_display": "None configured",
+      "scope_note": "Visible Production section only; not assumed to disable previews."
+    },
+    "preview": {
+      "branch_builds_toggle_display": "ON",
+      "preview_urls_display": "DISABLED; UI explicitly states preview builds still run",
+      "build_command": "npm run build:finance",
+      "preview_command": "npx wrangler preview",
+      "root_directory": "/",
+      "include_paths_display": "*",
+      "exclude_paths_display": "node_modules/**, .git/",
+      "build_cache_display": "ON",
+      "build_variables_or_secrets_display": "None configured",
+      "scope_note": "Docs cannot be assumed excluded; commands must be assessed at the pinned repository/toolchain. No production deploy inferred from a preview URL."
+    },
+    "other_triggers": {
+      "cron_display": "None configured",
+      "queue_consumers_display": "None configured",
+      "service_caller_display": "brazacommerce-auth (production), fetch()",
+      "scope_note": "Runtime service binding/caller, not a Git build/deploy trigger."
+    },
+    "deployment_display": {
+      "version_prefix": "50b31451",
+      "traffic_percentage": 100,
+      "scope_note": "Compatible prefix with the previously checked receipt; this screen alone does not describe build commands."
+    },
+    "remaining": "App and Auth need worker-identified production and preview settings, commands and path/branch filters; no push/PR/deploy yet."
   }
 }
