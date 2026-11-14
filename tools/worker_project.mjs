@@ -7,6 +7,7 @@ export const TARGETS = Object.freeze({
   app: Object.freeze({name: 'brazacommerce-app', main: '../../dist/app-worker.mjs', baselineHashes: [
     // Source completion-clock correction and matching shared release identity; exact reviewed compiled artifact.
     '3a5f01ae09ede502e4707f001976fc2a6094075ba26574e5e5d97b2e827687a9',
+    '19d1ef1dc49d07da644a67372b9291f54b6443f0d72e9d0e3dfa7168661f2a05',
     // Reviewed NET quality guard: unclassified deductions stay pending; exact compiled/dry artifacts.
     '721b3f369b93000dd5e8a0065cd83fd4bd7f54baae262c4b635e5a118fffde64',
     '44ce1c8cd1c2d8982560eb9c7685ea7d1638adfbcd4bc0ed0b488c50567e81f4',
@@ -249,6 +250,7 @@ export const TARGETS = Object.freeze({
   auth: Object.freeze({name: 'brazacommerce-auth', main: '../../dist/auth-worker.mjs', baselineHashes: [
     // Source completion-clock correction and matching shared release identity; exact reviewed compiled artifact.
     '20a301c45ddb6097a3b458ec6ef7d39686286cc43601f6211d3b865b250ea125',
+    '076c925b67041aada25f8252db34c1464543976f3bfa532a98caa0124dd8f138',
     // Financial automation candidate: exact local build and same-path Wrangler dry run; CI/Live gates remain mandatory.
     '97659ca7da62cfcfad785dc3ad599ae8526191e721eba6ac9e876d2ccc253a9c',
     '9105a95c37b75ed124b864575131aebed638bee68804fc780b4d9cb4e8230cd9',
