@@ -120,7 +120,7 @@
       "traffic_percentage": 100,
       "scope_note": "Compatible prefix with the previously checked receipt; this screen alone does not describe build commands."
     },
-    "remaining": "App and Auth need worker-identified production and preview settings, commands and path/branch filters; no push/PR/deploy yet."
+    "remaining": "Worker-identified App/Auth/Finance configuration sequences supplied; API read limitation remains but no longer blocks this bounded branch-review decision."
   },
   "additional_user_dashboard_evidence": {
     "brazacommerce-auth": {
@@ -186,5 +186,27 @@
     "production": "All three worker-identified dashboard sequences show production main with Disable builds ON and no deploy hooks. No change to this configuration.",
     "decision": "Branch push and draft PR permitted for this reviewed candidate without a production deployment. Merge/auto-merge/production deploy remain prohibited. GitHub CI must run normally.",
     "provenance_note": "UI evidence supersedes the lack of API trigger-read permission for this bounded decision, not a grant expansion."
+  },
+  "github_review": {
+    "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/122",
+    "draft": true,
+    "head_sha": "f7600485fd717d2836f005e06fa3c02634661457",
+    "base_sha": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+    "github_ci_run": 43615841211,
+    "github_ci_url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43615841211",
+    "github_ci_status": "in_progress",
+    "github_ci_conclusion": null,
+    "cloudflare_checks": {
+      "app": "failure",
+      "auth": "failure",
+      "finance": "failure"
+    },
+    "cloudflare_failure_cause": "Not exposed in check output; do not infer cause or deploy from /production/builds/ URL.",
+    "live_versions_unchanged_after_push": true,
+    "merged": false,
+    "auto_merge_enabled": false,
+    "deployed_by_delivery": false,
+    "recorded_at": "2026-11-14T16:42:09.792793+00:00",
+    "receipt_publication": "Local follow-up only while validate is running; no push to avoid configured concurrency cancellation."
   }
 }

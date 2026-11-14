@@ -40,17 +40,18 @@
     "Local validation evidence recorded in docs/saas/p00/validation.json"
   ],
   "remaining_this_phase": [
-    "EXT-BUILDS-READ",
+    "SAAS-002_GITHUB_CI_PENDING",
+    "EXT-CLOUDFLARE-CHECKS",
     "EXT-OPERATIONS",
     "EXT-RIGHTS"
   ],
   "next_phase": "P01_DEFERRED_UNTIL_NEXT_DELIVERY_AND_APPLICABLE_GATES",
   "previous_phase": "DOCUMENTATION_ORGANIZATION_LOCAL_0a5a228",
   "next_actions": [
-    "Obtain supported read evidence of effective Cloudflare Builds branch/filter/commands before any push",
-    "Complete external gateway/Hermes metadata and owner rights evidence",
-    "Then reassess safe push, draft PR and exact candidate CI; do not repeat unchanged local suites",
-    "P01 SAAS-005 is the next implementation item in a future authorized delivery; do not execute P01 in this round"
+    "Wait for run43615841211; inspect result before any next push to avoid configured cancellation",
+    "Diagnose the three failed Cloudflare checks through supported read-only logs; no changes or bypass",
+    "Complete external gateway/Hermes metadata and rights references",
+    "P01 remains for a future delivery; P00 not complete"
   ],
   "m0_followup": [
     "Conferir visual autenticado em desktop e celular durante M1; corrigir apenas branding/layout sem renomear infraestrutura"
@@ -7516,13 +7517,12 @@
     "matrix": "docs/MLS_SAAS_EXECUTION.json",
     "blockers": [
       {
-        "id": "EXT-BUILDS-READ",
-        "owner": "Cloudflare account administrator",
-        "resource": "Workers Builds triggers/config for App/Auth/Finance",
-        "evidence": "docs/saas/p00/builds-read.json",
-        "cause": "Existing credential returns HTTP403/code10000 for all six reads; branch, filters and effective commands unproved.",
-        "impact": "No safe push/PR and no CI of new candidate; no Live release.",
-        "minimum_to_resume": "Existing authorized supported read access or sanitized export proving production branch, filters and commands; do not broaden credentials automatically."
+        "id": "EXT-CLOUDFLARE-CHECKS",
+        "owner": "Cloudflare administrator/operator",
+        "resource": "Three external Workers Builds checks on PR122",
+        "cause": "All three checks report failure; their output supplies IDs/links but no error details. API Builds read remains403. Dashboard evidence permits branch review without production deployment; it does not turn these checks green.",
+        "impact": "External checks are not approved; diagnosis and applicable release gates remain pending.",
+        "minimum_to_resume": "Read supported build logs for App/Auth/Finance, record actual errors, diagnose before proposing any change; no bypass, cancellation, workflow or Cloudflare configuration change."
       },
       {
         "id": "EXT-OPERATIONS",
@@ -7548,6 +7548,28 @@
     "next_implementation_item": "SAAS-005 / P01, next delivery only",
     "blocker_review": "docs/saas/p00/blocker-review-20261114.json",
     "external_evidence_request": "docs/saas/p00/EXTERNAL_EVIDENCE_REQUEST.md",
-    "git_review_status": "Dashboard evidence and pinned command inspection permit branch push and one draft PR; exact candidate CI pending. No merge/auto-merge/deploy."
+    "git_review_status": "PR122 draft open at f760048; validate in progress; three Cloudflare checks failed; no merge/auto-merge/deploy.",
+    "github_review": {
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/122",
+      "draft": true,
+      "head_sha": "f7600485fd717d2836f005e06fa3c02634661457",
+      "base_sha": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+      "github_ci_run": 43615841211,
+      "github_ci_url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43615841211",
+      "github_ci_status": "in_progress",
+      "github_ci_conclusion": null,
+      "cloudflare_checks": {
+        "app": "failure",
+        "auth": "failure",
+        "finance": "failure"
+      },
+      "cloudflare_failure_cause": "Not exposed in check output; do not infer cause or deploy from /production/builds/ URL.",
+      "live_versions_unchanged_after_push": true,
+      "merged": false,
+      "auto_merge_enabled": false,
+      "deployed_by_delivery": false,
+      "recorded_at": "2026-11-14T16:42:09.792793+00:00",
+      "receipt_publication": "Local follow-up only while validate is running; no push to avoid configured concurrency cancellation."
+    }
   }
 }

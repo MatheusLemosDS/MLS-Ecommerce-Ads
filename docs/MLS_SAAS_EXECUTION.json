@@ -657,13 +657,12 @@
       "evidencias_operacionais": [],
       "bloqueios": [
         {
-          "id": "EXT-BUILDS-READ",
-          "owner": "Cloudflare account administrator",
-          "resource": "Workers Builds triggers/config for App/Auth/Finance",
-          "evidence": "docs/saas/p00/builds-read.json",
-          "cause": "Existing credential returns HTTP403/code10000 for all six reads; branch, filters and effective commands unproved.",
-          "impact": "No safe push/PR and no CI of new candidate; no Live release.",
-          "minimum_to_resume": "Existing authorized supported read access or sanitized export proving production branch, filters and commands; do not broaden credentials automatically."
+          "id": "EXT-CLOUDFLARE-CHECKS",
+          "owner": "Cloudflare administrator/operator",
+          "resource": "Three external Workers Builds checks on PR122",
+          "cause": "All three checks report failure; their output supplies IDs/links but no error details. API Builds read remains403. Dashboard evidence permits branch review without production deployment; it does not turn these checks green.",
+          "impact": "External checks are not approved; diagnosis and applicable release gates remain pending.",
+          "minimum_to_resume": "Read supported build logs for App/Auth/Finance, record actual errors, diagnose before proposing any change; no bypass, cancellation, workflow or Cloudflare configuration change."
         }
       ],
       "gate_anterior": null,
@@ -673,7 +672,8 @@
       "last_stage_reached": "TESTADO",
       "acceptance_satisfied": false,
       "local_acceptance": true,
-      "reason": "Historical CI reconciled; local candidate tests/build pass. The old CDP failure does not reproduce now; no speculative browser runtime patch. New-candidate GitHub CI unavailable without safe push."
+      "reason": "Local tests passed; GitHub validate is running at f760048. Three external Cloudflare checks failed with cause not available. Do not mark completed or infer production deployment.",
+      "candidate_ci_run": 43615841211
     },
     {
       "id": "SAAS-003",
@@ -5487,18 +5487,20 @@
       "tools/release-approved-candidate.json",
       "tools/tests/release-preflight.test.mjs"
     ],
-    "publication": "NOT_PUSHED_NOT_DEPLOYED",
-    "operational_acceptance": false
+    "publication": "DRAFT_PR122_NO_MERGE_NO_DEPLOY",
+    "operational_acceptance": false,
+    "review_head_sha": "f7600485fd717d2836f005e06fa3c02634661457",
+    "pull_request": 122,
+    "github_ci_run": 43615841211
   },
   "external_blockers_p00": [
     {
-      "id": "EXT-BUILDS-READ",
-      "owner": "Cloudflare account administrator",
-      "resource": "Workers Builds triggers/config for App/Auth/Finance",
-      "evidence": "docs/saas/p00/builds-read.json",
-      "cause": "Existing credential returns HTTP403/code10000 for all six reads; branch, filters and effective commands unproved.",
-      "impact": "No safe push/PR and no CI of new candidate; no Live release.",
-      "minimum_to_resume": "Existing authorized supported read access or sanitized export proving production branch, filters and commands; do not broaden credentials automatically."
+      "id": "EXT-CLOUDFLARE-CHECKS",
+      "owner": "Cloudflare administrator/operator",
+      "resource": "Three external Workers Builds checks on PR122",
+      "cause": "All three checks report failure; their output supplies IDs/links but no error details. API Builds read remains403. Dashboard evidence permits branch review without production deployment; it does not turn these checks green.",
+      "impact": "External checks are not approved; diagnosis and applicable release gates remain pending.",
+      "minimum_to_resume": "Read supported build logs for App/Auth/Finance, record actual errors, diagnose before proposing any change; no bypass, cancellation, workflow or Cloudflare configuration change."
     },
     {
       "id": "EXT-OPERATIONS",
