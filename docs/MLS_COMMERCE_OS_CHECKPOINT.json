@@ -47,10 +47,10 @@
   "next_phase": "P01_DEFERRED_UNTIL_NEXT_DELIVERY_AND_APPLICABLE_GATES",
   "previous_phase": "DOCUMENTATION_ORGANIZATION_LOCAL_0a5a228",
   "next_actions": [
-    "Read actual failure details for App/Auth/Finance Builds through supported authorized access; official build/log reads403/12004",
-    "Monitor normal checks on the doc-only receipt successor without treating the earlier success as approval of that new SHA",
-    "Complete gateway/Hermes operational metadata and rights references",
-    "Keep PR122 draft; no merge/auto-merge/deploy; P01 only in a future delivery"
+    "Review isolated preview repair in docs/saas/p00/OPERATIONS.md; existing instruction prohibits changing Cloudflare configuration, no production D1 in previews",
+    "Read Auth/Finance failed build logs before assigning root causes",
+    "Assess controlled toolchain dependency upgrade separately; no audit fix --force",
+    "Complete operational metadata/rights; keep PR122 draft and P01 deferred"
   ],
   "m0_followup": [
     "Conferir visual autenticado em desktop e celular durante M1; corrigir apenas branding/layout sem renomear infraestrutura"
@@ -7587,6 +7587,12 @@
         "2026-11-14T16:43:30.8930839Z RELEASE_NOT_APPROVED_FOR_PRODUCTION"
       ]
     },
-    "validated_github_source_commit": "f7600485fd717d2836f005e06fa3c02634661457"
+    "validated_github_source_commit": "f7600485fd717d2836f005e06fa3c02634661457",
+    "app_preview_diagnosis": "User log: build succeeds with matching hashes, preview fails for missing previews block. Suggested ADMIN_DB is the production binding; no config applied.",
+    "latest_reviewed_candidate": {
+      "sha": "f5973b0e9b48df927e7c19954805d622839cb389",
+      "github_ci_run": 43617930680,
+      "github_ci": "success"
+    }
   }
 }

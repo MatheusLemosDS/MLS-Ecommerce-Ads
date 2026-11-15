@@ -1,3 +1,5 @@
+> Atualização mais recente: o log App recebido confirma falta do bloco `previews`, com build e hashes corretos. Ver o diagnóstico e o reparo proposto ao final. Os estados de acesso/PR na tabela inicial são históricos; checkpoint e matriz operacional registram o estado atual.
+
 # Serviços, dependências e direitos — P00
 
 Base de código `346f30f200e5cbd3d9efd26663a483c625d9c6e7`, sobre o commit documental local `0a5a22897d3cf56f97b7b995eb78a743fc0a246e`. Inventário não é auditoria de titularidade nem certificação da operação externa. Os 22 módulos estão em [capabilities.json](capabilities.json); fontes, armazenamento, handlers e consumidores financeiros em [financial-lineage.json](financial-lineage.json).
@@ -33,3 +35,28 @@ O [inventário de direitos](rights-inventory.json) registra código, avatares, m
 | EXT-FINANCIAL-SOURCES | Grants Wallet/Payout, adaptador e consentimento bancário, fuso/cobertura Ads, fontes equivalentes reais | Não bloqueia catálogos de P00; bloqueia promessa de automação/aceite financeiro e fases correspondentes | Proprietário/provedores: contratos/grants e fontes autorizadas; concluir código independente no escopo futuro. CSV/OFX não encerra banco automático. |
 
 Nenhum segredo, callback, cookie, identificador de comprador ou extrato real é necessário neste registro. Implementado, testado localmente, publicado tecnicamente e validado operacionalmente permanecem estados distintos.
+
+
+## Diagnóstico posterior: preview App sem configuração
+
+O log App enviado pelo proprietário em conversa mostra `npm run build` concluído e os mesmos três hashes compilados do recibo. A falha ocorre depois, em `npx wrangler preview`4.151.1: falta um bloco `previews`. Os três avisos de vulnerabilidade do npm são um achado separado; não explicam essa falha de configuração. O log não contém SHA completo/UUID; a proveniência por navegação da conversa está registrada em `blocker-review-20261114.json`. Não atribuir automaticamente o erro às execuções Auth/Finance ou a outra tentativa App.
+
+O exemplo sugerido pelo Wrangler contém o mesmo ADMIN_DB de produção de `workers/app/wrangler.json`. Copiá-lo não comprova isolamento. Nenhum banco, serviço ou segredo de produção deve ser usado como atalho para fazer preview passar.
+
+### Reparo proposto para revisão, ainda não aplicado
+
+| Alvo | Configuração atual a preservar | Preparação de preview necessária |
+| --- | --- | --- |
+| App | `workers/app/wrangler.json`, ADMIN_DB, domínio e configuração comercial existentes | Perfil separado com ADMIN_DB e ACCOUNT_DB de preview, artefato App e assets correspondentes; dados exclusivamente sintéticos; sem domínio ou cron de produção. |
+| Auth | `workers/auth/wrangler.json`, serviço Finance de produção e configuração comercial existentes | Perfil separado; binding Finance aponta somente para Finance de preview, conta e autenticação isoladas; sem OAuth real, envio de mensagem ou segredo de produção. |
+| Finance | `workers/finance/wrangler.json`, FINANCE_DB e configuração comercial existentes | Perfil separado com FINANCE_DB/ACCOUNT_DB isolados, sem grants/provedor comercial real e sem operações bancárias/marketplace. |
+
+A configuração comercial efetiva deve ser levantada pelos geradores existentes; esta tabela não substitui o inventário de bindings. Identificadores de novos recursos não serão inventados. Antes da ativação: definir recursos e limites/custos, gerar perfis completos por Worker, validar resolução do comando/configuração no CI, isolamento entre perfis e preservação dos três hashes/contratos existentes. Os comandos externos precisam selecionar explicitamente o perfil correto por Worker; não adicionar um arquivo raiz que faça os três projetos publicarem o mesmo alvo.
+
+Aplicar isso exige autorização específica para configuração de preview e seus recursos. A instrução anterior do proprietário para a inspeção foi **“Não altere essa configuração”**. Por isso, a entrega registra a correção revisável sem criar recursos, mudar comandos, desativar checks ou adicionar um bloco ligado ao banco real. Não substituir preview por comando vazio/de sucesso, não ignorar checks e não executar `wrangler deploy` para corrigir este erro.
+
+Auth/Finance ainda precisam de logs correspondentes antes de uma correção específica. A configuração de preview é um bloqueio externo distinto da CI GitHub já aprovada. Os metadados operacionais e direitos também continuam pendentes; a fase P00 não é declarada concluída.
+
+### Achado separado de dependências
+
+A leitura `npm audit --json` reproduziu 3 achados: `undici`alto, `miniflare`moderado e `wrangler`moderado, no toolchain. O advisory sugere Wrangler4.162.0 como atualização disponível; isso é candidato de upgrade, não uma versão já homologada nesta entrega. Não executar `npm audit fix --force`. A atualização controlada deve preservar lockfile revisável, licenças, compilação, hashes/release conforme aplicável e testes dos caminhos afetados. Exposição em produção precisa de avaliação própria; o audit não a comprova.

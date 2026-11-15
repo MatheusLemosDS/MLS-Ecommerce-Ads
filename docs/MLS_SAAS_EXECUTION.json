@@ -5486,14 +5486,16 @@
     "github_ci_run": 43615841211,
     "approved_github_source_commit": "f7600485fd717d2836f005e06fa3c02634661457",
     "approved_github_ci_run": 43615841211,
-    "receipt_successor_checks": "Pending for any doc-only receipt successor; no approval inferred from another SHA."
+    "receipt_successor_checks": "Pending for any doc-only receipt successor; no approval inferred from another SHA.",
+    "latest_reviewed_ci_sha": "f5973b0e9b48df927e7c19954805d622839cb389",
+    "latest_reviewed_ci_run": 43617930680
   },
   "external_blockers_p00": [
     {
       "id": "EXT-CLOUDFLARE-CHECKS",
       "owner": "Cloudflare administrator/operator",
       "resource": "Three external Workers Builds checks on PR122",
-      "cause": "External checks failed; official details/logs403/12004; actual cause unproved. GitHub validate passed at f760048.",
+      "cause": "Supplied App log proves build success then missing previews block; suggested ADMIN_DB is production. Auth/Finance error causes still unproved. API logs403/12004. Isolated preview configuration requires separate authorization; no config changes applied.",
       "impact": "External checks are not approved; diagnosis and applicable release gates remain pending.",
       "minimum_to_resume": "Read supported build logs for App/Auth/Finance, record actual errors, diagnose before proposing any change; no bypass, cancellation, workflow or Cloudflare configuration change."
     },

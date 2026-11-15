@@ -306,5 +306,83 @@
       ]
     }
   ],
-  "cloudflare_logs_access": "Official GET build and GET logs endpoints return403/code12004 on all three builds. Actual failure cause unproved; no configuration change or speculative fix."
+  "cloudflare_logs_access": "Official GET build and GET logs endpoints return403/code12004 on all three builds. Actual failure cause unproved; no configuration change or speculative fix.",
+  "app_user_log_diagnosis": {
+    "source": "App build log pasted by user in conversation",
+    "log_window_utc": [
+      "2026-11-14T16:51:56.371Z",
+      "2026-11-14T16:52:28.566Z"
+    ],
+    "association_limit": "Log text does not include full commit/build UUID. Conversation navigated from App check for f5973b0; retain this provenance rather than claiming UUID proof from the log. Latest App check may refer to another attempt.",
+    "toolchain": {
+      "node": "24.19.0",
+      "npm": "11.9.0",
+      "wrangler": "4.151.1"
+    },
+    "build_command": "npm run build",
+    "build_result": "SUCCESS",
+    "preview_command": "npx wrangler preview",
+    "failure": "Your Wrangler configuration is missing a previews block",
+    "failure_stage": "PREVIEW_CONFIGURATION",
+    "emitted_hashes": {
+      "app": "3a5f01ae09ede502e4707f001976fc2a6094075ba26574e5e5d97b2e827687a9",
+      "auth": "20a301c45ddb6097a3b458ec6ef7d39686286cc43601f6211d3b865b250ea125",
+      "finance": "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4"
+    },
+    "production_binding_risk": "The suggested ADMIN_DB identifier equals workers/app/wrangler.json production ADMIN_DB. Identifier omitted here; do not copy it into previews.",
+    "scope": "Confirms App supplied log only. Auth/Finance root causes are still unproved; no automatic assumption from a shared command.",
+    "changes_applied": "Documentation only. No previews block, resource, binding, command or Cloudflare setting changed."
+  },
+  "read_only_dependency_audit": {
+    "command": "npm audit --json --cache /workspace/work/npm-cache",
+    "counts": {
+      "info": 0,
+      "low": 0,
+      "moderate": 2,
+      "high": 1,
+      "critical": 0,
+      "total": 3
+    },
+    "findings": [
+      {
+        "package": "miniflare",
+        "severity": "moderate",
+        "range": "4.20250906.1 - 5.20261019.2-beta",
+        "fixAvailable": {
+          "name": "wrangler",
+          "version": "4.162.0",
+          "isSemVerMajor": false
+        }
+      },
+      {
+        "package": "undici",
+        "severity": "high",
+        "range": "7.0.0 - 7.30.0",
+        "fixAvailable": {
+          "name": "wrangler",
+          "version": "4.162.0",
+          "isSemVerMajor": false
+        }
+      },
+      {
+        "package": "wrangler",
+        "severity": "moderate",
+        "range": "<=0.0.0-31bfd374c || 4.36.0 - 4.152.0",
+        "fixAvailable": {
+          "name": "wrangler",
+          "version": "4.162.0",
+          "isSemVerMajor": false
+        }
+      }
+    ],
+    "log_sha256": "0e9f81c65f152ac0ed807af173fc0d55b3891b0ac3c2ad615c80c6a333b58ca2",
+    "impact_limit": "Development/build toolchain findings; production reachability is not established by npm audit. Separate from missing preview configuration.",
+    "action": "No audit fix --force, lockfile or dependency mutation. Controlled upgrade and compatible build/security validation required as a separate reviewed delta."
+  },
+  "latest_reviewed_candidate": {
+    "sha": "f5973b0e9b48df927e7c19954805d622839cb389",
+    "github_validate": "success",
+    "run": 43617930680,
+    "cloudflare": "app/auth/finance checks failure; only supplied App error diagnosed"
+  }
 }
