@@ -2,7 +2,7 @@
   "schema": "mls_commerce_os_checkpoint_v1",
   "canonical_roadmap": "docs/ROADMAP_MLS_COMMERCE_OS.md",
   "legacy_roadmap": "docs/ROADMAP_BRAZACOMMERCE.md",
-  "updated_at": "2026-11-15T21:18:51.341691+00:00",
+  "updated_at": "2026-11-15T21:35:42.381137+00:00",
   "product": {
     "name": "MLS Commerce OS",
     "supervisor": "MLS Hermes",
@@ -7684,6 +7684,51 @@
         "recorded_at": "2026-11-14T16:42:09.792793+00:00",
         "receipt_publication": "Pending local receipt can now be pushed because run43615841211 completed. Its doc-only successor will have separate normal checks."
       }
-    ]
+    ],
+    "owner_provider_update": {
+      "recorded_at": "2026-11-15T21:35:42.381137+00:00",
+      "source": "Owner reply in this conversation on2026-11-15",
+      "reported_providers": [
+        "Cloudflare",
+        "DigitalOcean"
+      ],
+      "service_to_provider_mapping": "NOT_CONFIRMED",
+      "change_policy": "Notify owner before any proven necessary gateway, plan or limit change; no such change proposed or performed for this CI repair. Commercial changes require applicable authorization.",
+      "access_observed": {
+        "digitalocean_connector": "NOT_AVAILABLE_IN_ACTIVE_TOOLS",
+        "digitalocean_standard_token_bindings": "NOT_PRESENT",
+        "doctl_command_and_standard_config": "NOT_AVAILABLE",
+        "ssh_agent_and_standard_config": "NOT_AVAILABLE; no Droplet target/access supplied"
+      },
+      "still_missing": [
+        "Gateway/Hermes actual installed versions and responsible operator",
+        "Current DigitalOcean service/plan/limits and verified service mapping",
+        "Operational health/backup/restoration evidence",
+        "Origin/license/authorization of code, brand, avatars and images"
+      ],
+      "no_upgrade_required_for_current_build_fix": true
+    },
+    "final_documentary_head_verified": {
+      "source_sha": "b2ecd2a344069b9297511957e750264489de788e",
+      "github": {
+        "source_sha": "b2ecd2a344069b9297511957e750264489de788e",
+        "run": 43763121083,
+        "job": 132962129940,
+        "conclusion": "success",
+        "stdout_excerpt": [
+          "2026-11-15T21:30:33.5118784Z # tests 4441",
+          "2026-11-15T21:30:33.5119140Z # pass 4441",
+          "2026-11-15T21:30:33.5119318Z # fail 0",
+          "2026-11-15T21:30:33.5119504Z # cancelled 0",
+          "2026-11-15T21:30:33.5119691Z # skipped 0",
+          "2026-11-15T21:30:37.1664625Z Ran 67 tests in 0.393s",
+          "2026-11-15T21:30:39.5762742Z RELEASE_LOCAL_PREFLIGHT_OK",
+          "2026-11-15T21:30:39.5767806Z RELEASE_NOT_APPROVED_FOR_PRODUCTION"
+        ]
+      },
+      "cloudflare_checks": "APP_AUTH_FINANCE_SUCCESS",
+      "native_preview_tags_resolved_to_same_full_sha": true,
+      "production_preserved": true
+    }
   }
 }

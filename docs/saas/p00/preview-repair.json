@@ -1942,5 +1942,104 @@
       "evidence": "api_verified_target_selection.automatic_cloudflare_success",
       "result": "All four configured checks success, same source; native API tags/bindings verified."
     }
-  ]
+  ],
+  "owner_provider_update": {
+    "recorded_at": "2026-11-15T21:35:42.381137+00:00",
+    "source": "Owner reply in this conversation on2026-11-15",
+    "reported_providers": [
+      "Cloudflare",
+      "DigitalOcean"
+    ],
+    "service_to_provider_mapping": "NOT_CONFIRMED",
+    "change_policy": "Notify owner before any proven necessary gateway, plan or limit change; no such change proposed or performed for this CI repair. Commercial changes require applicable authorization.",
+    "access_observed": {
+      "digitalocean_connector": "NOT_AVAILABLE_IN_ACTIVE_TOOLS",
+      "digitalocean_standard_token_bindings": "NOT_PRESENT",
+      "doctl_command_and_standard_config": "NOT_AVAILABLE",
+      "ssh_agent_and_standard_config": "NOT_AVAILABLE; no Droplet target/access supplied"
+    },
+    "still_missing": [
+      "Gateway/Hermes actual installed versions and responsible operator",
+      "Current DigitalOcean service/plan/limits and verified service mapping",
+      "Operational health/backup/restoration evidence",
+      "Origin/license/authorization of code, brand, avatars and images"
+    ],
+    "no_upgrade_required_for_current_build_fix": true
+  },
+  "verified_documentary_head": {
+    "github": {
+      "source_sha": "b2ecd2a344069b9297511957e750264489de788e",
+      "run": 43763121083,
+      "job": 132962129940,
+      "conclusion": "success",
+      "stdout_excerpt": [
+        "2026-11-15T21:30:33.5118784Z # tests 4441",
+        "2026-11-15T21:30:33.5119140Z # pass 4441",
+        "2026-11-15T21:30:33.5119318Z # fail 0",
+        "2026-11-15T21:30:33.5119504Z # cancelled 0",
+        "2026-11-15T21:30:33.5119691Z # skipped 0",
+        "2026-11-15T21:30:37.1664625Z Ran 67 tests in 0.393s",
+        "2026-11-15T21:30:39.5762742Z RELEASE_LOCAL_PREFLIGHT_OK",
+        "2026-11-15T21:30:39.5767806Z RELEASE_NOT_APPROVED_FOR_PRODUCTION"
+      ]
+    },
+    "cloudflare_checks": "APP_AUTH_FINANCE_SUCCESS",
+    "native_api": {
+      "recorded_at": "2026-11-15T21:27:12.508958+00:00",
+      "source_sha": "b2ecd2a344069b9297511957e750264489de788e",
+      "workers": {
+        "finance": {
+          "deployment_id": "5bd6a6ed-f19a-48ed-a6da-832ead86dbd9",
+          "source_tag": "b2ecd2a",
+          "resolved_source_sha": "b2ecd2a344069b9297511957e750264489de788e",
+          "isolated_bindings_verified": true
+        },
+        "auth": {
+          "deployment_id": "a1074024-199b-4f54-981a-023c36e6a018",
+          "source_tag": "b2ecd2a",
+          "resolved_source_sha": "b2ecd2a344069b9297511957e750264489de788e",
+          "isolated_bindings_verified": true
+        },
+        "app": {
+          "deployment_id": "fb90b488-3a95-4042-bba3-f3d2342dfd7a",
+          "source_tag": "b2ecd2a",
+          "resolved_source_sha": "b2ecd2a344069b9297511957e750264489de788e",
+          "isolated_bindings_verified": true
+        }
+      }
+    },
+    "production_control": {
+      "recorded_at": "2026-11-15T21:25:46.896537+00:00",
+      "workers": {
+        "app": {
+          "effective_settings_sha256": "72c1ffdf88e61e4d2b1b7d78545c3d8d9a5b903cc32cf4ed83ee87d5c19a32b9",
+          "versions": [
+            {
+              "version_id": "9bfc21d6-dec9-4fa6-89d8-7ea1dec50993",
+              "percentage": 100
+            }
+          ]
+        },
+        "auth": {
+          "effective_settings_sha256": "304c9c4615acdfc3a8222e00449e5bceabcf2dd9bd574587538183a935003361",
+          "versions": [
+            {
+              "version_id": "dfd2fc99-728f-4f29-96ee-a4b256c5640a",
+              "percentage": 100
+            }
+          ]
+        },
+        "finance": {
+          "effective_settings_sha256": "1e5de4eba866ec7c8ca85fc37c7969d61dc513a26336879e2753e506c6711ab2",
+          "versions": [
+            {
+              "version_id": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+              "percentage": 100
+            }
+          ]
+        }
+      },
+      "matches_before": true
+    }
+  }
 }
