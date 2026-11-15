@@ -5,7 +5,7 @@ import {tmpdir} from 'node:os';
 import path from 'node:path';
 import vm from 'node:vm';
 import {spawnSync} from 'node:child_process';
-import {validateIsolation,selectPreviewRole,previewBindings,makePreviewSource,prepareBuildPreview} from '../isolated_preview.mjs';
+import {validateIsolation,selectPreviewRole,verifyBuildPreviewIdentity,previewBindings,makePreviewSource,prepareBuildPreview} from '../isolated_preview.mjs';
 const root=path.resolve(import.meta.dirname,'../..');
 const manifest=()=>JSON.parse(readFileSync(path.join(root,'previews/p00-isolation.json')));
 const clone=v=>JSON.parse(JSON.stringify(v));
@@ -37,7 +37,7 @@ test('native CI override accepts the verified ID of the same Worker and rejects 
   }
   for(const other of ['app','auth','finance'].filter(r=>r!==role)){
    for(const identifier of [m.parents[other].name,m.parents[other].tag]){
-    assert.throws(()=>selectPreviewRole(m,{WORKERS_CI_BRANCH:m.branch,WRANGLER_CI_MATCH_TAG:m.parents[role].tag,WRANGLER_CI_OVERRIDE_NAME:identifier}),/PREVIEW_CI_TARGET_MISMATCH_NAME/);
+    assert.throws(()=>selectPreviewRole(m,{WORKERS_CI_BRANCH:m.branch,WRANGLER_CI_MATCH_TAG:m.parents[role].tag,WRANGLER_CI_OVERRIDE_NAME:identifier}),/PREVIEW_CI_TARGET_CONFLICT/);
    }
   }
   for(const identifier of [m.isolated_workers[role],'unknown-worker',m.parents[role].tag.replace(/^(.{8})(.{4})(.{4})(.{4})(.{12})$/,'$1-$2-$3-$4-$5')]){
@@ -45,6 +45,36 @@ test('native CI override accepts the verified ID of the same Worker and rejects 
   }
  }
  assert.throws(()=>selectPreviewRole(m,{WORKERS_CI_BRANCH:m.branch,WRANGLER_CI_MATCH_TAG:'0'.repeat(32),WRANGLER_CI_OVERRIDE_NAME:m.parents.app.name}),/PREVIEW_CI_TARGET_MISMATCH_TAG/);
+});
+test('native CI target is confirmed by GET identity when its tag metadata is not a known legacy tag',()=>{
+ const m=manifest();
+ for(const role of ['app','auth','finance']){
+  for(const identifier of [m.parents[role].name,m.parents[role].tag]){
+   const env={WORKERS_CI_BRANCH:m.branch,WRANGLER_CI_MATCH_TAG:'opaque-preview-metadata',WRANGLER_CI_OVERRIDE_NAME:identifier};let calls=0;
+   const identity=verifyBuildPreviewIdentity(root,env,{lookup:(account,name)=>{
+    calls++;assert.equal(account,m.account_id);assert.equal(name,m.parents[role].name);
+    return {id:m.parents[role].tag,name:m.parents[role].name};
+   }});
+   assert.equal(calls,1);assert.equal(selectPreviewRole(m,env,{verifiedWorker:identity}),role);
+   assert.throws(()=>selectPreviewRole(m,env),/PREVIEW_CI_TARGET_MISMATCH_TAG/);
+  }
+ }
+});
+test('API identity verification refuses another account or Worker, and does no lookup for forbidden branches/identities',()=>{
+ const m=manifest(),env={WORKERS_CI_BRANCH:m.branch,WRANGLER_CI_MATCH_TAG:'opaque-preview-metadata',WRANGLER_CI_OVERRIDE_NAME:m.parents.app.name};let calls=0;
+ const lookup=()=>{calls++;return {id:m.parents.auth.tag,name:m.parents.auth.name};};
+ assert.throws(()=>verifyBuildPreviewIdentity(root,env,{lookup}),/PREVIEW_API_IDENTITY_MISMATCH/);assert.equal(calls,1);calls=0;
+ for(const patch of [{WORKERS_CI_BRANCH:'other'},{CLOUDFLARE_ACCOUNT_ID:'0'.repeat(32)},{WRANGLER_CI_OVERRIDE_NAME:'unknown-worker'},{WRANGLER_CI_MATCH_TAG:m.parents.auth.tag}])assert.throws(()=>verifyBuildPreviewIdentity(root,{...env,...patch},{lookup}));
+ assert.equal(calls,0);
+ assert.equal(verifyBuildPreviewIdentity(root,{...env,WORKERS_CI_BRANCH:'main'},{lookup}),null);
+ assert.equal(verifyBuildPreviewIdentity(root,{}, {lookup}),null);assert.equal(calls,0);
+});
+test('target diagnostics expose only resource-shaped CI identifiers and redact values equal to credentials',()=>{
+ const m=manifest(),env={WORKERS_CI_BRANCH:m.branch,WRANGLER_CI_MATCH_TAG:m.parents.app.tag,WRANGLER_CI_OVERRIDE_NAME:'other-resource'};
+ assert.throws(()=>selectPreviewRole(m,env),error=>error.message.includes('ci_override_name=other-resource'));
+ for(const secret of ['secret-looking-resource','SECRET_with_unexpected_characters']){
+  assert.throws(()=>selectPreviewRole(m,{...env,WRANGLER_CI_OVERRIDE_NAME:secret,CLOUDFLARE_API_TOKEN:secret}),error=>!error.message.includes(secret)&&error.message.includes('REDACTED_OR_INVALID'));
+ }
 });
 test('preview derivative denies production/provider fetch, does not follow redirects and exposes no scheduler',async()=>{
  const m=manifest(),calls=[];
@@ -73,10 +103,11 @@ test('the pinned Wrangler resolves the generated config redirect to the correct 
   writeFileSync(path.join(dir,'workers',role,'wrangler.json'),JSON.stringify({compatibility_date:'2026-10-06'}));
   writeFileSync(path.join(dir,'dist',role+'-worker.mjs'),role==='finance'?`const commercial_finance_worker_default={fetch(){return new Response('ok')}};export { commercial_finance_worker_default as default, };`:`export default {fetch(){return new Response('ok')}};`);
   const result=prepareBuildPreview(dir,{WRANGLER_CI_MATCH_TAG:m.parents[role].tag,WORKERS_CI_BRANCH:m.branch});
-  const script=`const {experimental_readRawConfig}=require(${JSON.stringify(path.join(root,'node_modules/wrangler'))}); const r=experimental_readRawConfig({}, {useRedirectIfAvailable:true}); console.log(JSON.stringify({path:r.configPath,name:r.rawConfig.name,noBundle:r.rawConfig.no_bundle,preview:r.rawConfig.previews}));`;
+  const script=`const {experimental_readRawConfig}=require(${JSON.stringify(path.join(root,'node_modules/wrangler'))}); const r=experimental_readRawConfig({}, {useRedirectIfAvailable:true}); console.log(JSON.stringify({path:r.configPath,name:r.rawConfig.name,account:r.rawConfig.account_id,noBundle:r.rawConfig.no_bundle,preview:r.rawConfig.previews}));`;
   const child=spawnSync(process.execPath,['-e',script],{cwd:dir,encoding:'utf8'});assert.equal(child.status,0,child.stderr);const out=JSON.parse(child.stdout.trim());
   assert.equal(out.path,result.configPath);assert.equal(out.name,m.parents[role].name);assert.ok(out.preview.d1_databases.every(v=>!m.production_database_ids.includes(v.database_id)));
   assert.equal(out.noBundle,true);
+  assert.equal(out.account,m.account_id);
  }
  const redirect=path.join(dir,'.wrangler/deploy/config.json');
  assert.equal(prepareBuildPreview(dir,{WRANGLER_CI_MATCH_TAG:m.parents.app.tag,WORKERS_CI_BRANCH:'main'}),null);

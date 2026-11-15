@@ -5506,14 +5506,15 @@
     "preview_repair_receipt": "docs/saas/p00/preview-repair.json",
     "local_gates_receipt": "docs/saas/p00/preview-repair.json",
     "target_identity_correction_receipt": "docs/saas/p00/preview-repair.json",
-    "corrected_candidate_checks": "Pending: no CI approval inferred from c88f4fa"
+    "corrected_candidate_checks": "Pending: no CI approval inferred from c88f4fa",
+    "api_verified_target_selection_receipt": "docs/saas/p00/preview-repair.json"
   },
   "external_blockers_p00": [
     {
       "id": "EXT-CLOUDFLARE-CHECKS",
       "owner": "Cloudflare administrator/operator",
       "resource": "App/Auth/Finance Workers Builds on PR122 at ad7e0fbe3968029a75e373d972f4bfc307056cba",
-      "cause": "Supplied App log proves target selector rejection; confirmed same-Worker ID alias was missing. Corrected selector and20 focused tests/three same-environment pipelines passed. Await real automatic checks; raw CI env not supplied.",
+      "cause": "Provided log proves selector rejection; alias-only attempt46ed873 still failed externally. Current correction requires pinned account/name/ID verified through native GET;23 focused tests and3 direct real-API pipelines passed. Actual automatic checks pending.",
       "impact": "External checks not approved; P00 CI acceptance/release remains blocked. Production untouched.",
       "minimum_to_resume": "Observe all three configured Builds and GitHub CI on corrected candidate; keep strict branch/tag/Worker identity gates."
     },

@@ -2,7 +2,7 @@
   "schema": "mls_commerce_os_checkpoint_v1",
   "canonical_roadmap": "docs/ROADMAP_MLS_COMMERCE_OS.md",
   "legacy_roadmap": "docs/ROADMAP_BRAZACOMMERCE.md",
-  "updated_at": "2026-11-15T20:51:53.997123+00:00",
+  "updated_at": "2026-11-15T21:01:32.900466+00:00",
   "product": {
     "name": "MLS Commerce OS",
     "supervisor": "MLS Hermes",
@@ -31,7 +31,7 @@
   },
   "current_phase": "P00",
   "working_branch": "feature/saas-p00-baseline-20261114",
-  "current_status": "P00_BLOQUEADO_CORRECAO_IDENTIDADE_CI_TESTADA_LOCAL_AGUARDANDO_CHECKS",
+  "current_status": "P00_BLOQUEADO_VERIFICACAO_API_IDENTIDADE_TESTADA_AGUARDANDO_CHECKS",
   "completed_this_phase": [
     "Main/PR121/current CI/live versions and bytes reconciled",
     "Documentary ancestor 0a5a228 and complete histories preserved",
@@ -48,7 +48,7 @@
   "next_phase": "P01_DEFERRED_UNTIL_NEXT_DELIVERY_AND_APPLICABLE_GATES",
   "previous_phase": "DOCUMENTATION_ORGANIZATION_LOCAL_0a5a228",
   "next_actions": [
-    "Inspect automatic App/Auth/Finance Builds and GitHub validation on corrected candidate",
+    "Inspect automatic checks of API-verified target candidate; do not infer acceptance from direct CLI or previous SHA",
     "If a mismatch remains, use distinct TAG/NAME diagnostic; never bypass target guards or infer success",
     "Complete external operation metadata and rights evidence; P01 next delivery only"
   ],
@@ -7494,7 +7494,7 @@
   },
   "operational_execution_matrix": "docs/MLS_SAAS_EXECUTION.json",
   "phase_index": "docs/saas/p00/README.md",
-  "current_task": "SAAS-002 / validate same-Worker name-or-ID CI target correction",
+  "current_task": "SAAS-002 / native API-verified CI target",
   "saas_p00": {
     "last_commits": [
       "ad7e0fbe3968029a75e373d972f4bfc307056cba",
@@ -7521,9 +7521,9 @@
         "id": "EXT-CLOUDFLARE-CHECKS",
         "owner": "Cloudflare administrator/operator",
         "resource": "App/Auth/Finance Workers Builds on PR122 at ad7e0fbe3968029a75e373d972f4bfc307056cba",
-        "cause": "All three automatic Builds failed on repaired source ad7e0fb. Check outputs have no error text; official GET build logs returns403/code12004. Direct native previews and isolated QA passed, which does not prove automatic CI.",
+        "cause": "Provided log proves selector rejection; alias-only attempt46ed873 still failed externally. Current correction requires pinned account/name/ID verified through native GET;23 focused tests and3 direct real-API pipelines passed. Actual automatic checks pending.",
         "impact": "External checks not approved; P00 CI acceptance/release remains blocked. Production untouched.",
-        "minimum_to_resume": "Owner supplies final error text from App build be2e4da4-5899-466b-83c1-4f03a1b27268 and corresponding Auth/Finance logs, or existing supported Workers CI Read secret access. Do not paste credentials, change permissions automatically, bypass or cancel checks."
+        "minimum_to_resume": "Observe all three configured Builds and GitHub CI on corrected candidate; keep strict branch/tag/Worker identity gates."
       },
       {
         "id": "EXT-OPERATIONS",
@@ -7631,6 +7631,7 @@
       "node": 4437,
       "python": 67,
       "build_and_preflight": "success"
-    }
+    },
+    "api_verified_target_selection_receipt": "docs/saas/p00/preview-repair.json#api_verified_target_selection"
   }
 }

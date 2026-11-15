@@ -1,5 +1,6 @@
 {
   "schema": "mls_p00_preview_isolation_v1",
+  "account_id": "29570924b8dbe5d0b22d5830990bc27f",
   "branch": "feature/saas-p00-baseline-20261114",
   "account_subdomain": "matheusgem1310",
   "databases": {

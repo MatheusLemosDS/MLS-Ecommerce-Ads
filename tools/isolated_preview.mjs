@@ -1,27 +1,69 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {createHash} from 'node:crypto';
+import {execFileSync} from 'node:child_process';
 const roles=['app','auth','finance'];
 const fail=code=>{throw Object.assign(Error(code),{code});};
+function failTarget(code,env){
+ const safe=value=>{
+  if(!value)return 'ABSENT';
+  if(typeof value!=='string'||!/^[a-z0-9][a-z0-9-]{0,62}$/.test(value))return 'REDACTED_OR_INVALID';
+  if(Object.entries(env).some(([key,secret])=>/(?:TOKEN|SECRET|PASSWORD|KEY)/i.test(key)&&secret===value))return 'REDACTED_OR_INVALID';
+  return value;
+ };
+ throw Object.assign(Error(code+'; ci_match_tag='+safe(env.WRANGLER_CI_MATCH_TAG)+'; ci_override_name='+safe(env.WRANGLER_CI_OVERRIDE_NAME)),{code});
+}
 export function validateIsolation(m){
- if(m?.schema!=='mls_p00_preview_isolation_v1'||m.branch!=='feature/saas-p00-baseline-20261114'||!/^[a-z0-9-]+$/.test(m.account_subdomain||''))fail('PREVIEW_MANIFEST_INVALID');
+ if(m?.schema!=='mls_p00_preview_isolation_v1'||m.branch!=='feature/saas-p00-baseline-20261114'||!/^[a-f0-9]{32}$/.test(m.account_id||'')||!/^[a-z0-9-]+$/.test(m.account_subdomain||''))fail('PREVIEW_MANIFEST_INVALID');
  const ids=['admin','account','finance'].map(k=>m.databases?.[k]?.id);
  if(new Set(ids).size!==3||ids.some(id=>!/^[a-f0-9-]{36}$/.test(id||'')||m.production_database_ids.includes(id)))fail('PREVIEW_DATABASE_NOT_ISOLATED');
  for(const r of roles)if(m.parents?.[r]?.name!=='brazacommerce-'+r||!/^[a-f0-9]{32}$/.test(m.parents[r].tag)||m.isolated_workers?.[r]!=='brazacommerce-'+r+'-p00-isolated')fail('PREVIEW_TARGET_INVALID');
  return m;
 }
-export function selectPreviewRole(m,env){
+function requestedRole(m,env){
+ const tagRole=roles.find(r=>m.parents[r].tag===env.WRANGLER_CI_MATCH_TAG);
+ const nameRole=roles.find(r=>[m.parents[r].name,m.parents[r].tag].includes(env.WRANGLER_CI_OVERRIDE_NAME));
+ if(env.WRANGLER_CI_OVERRIDE_NAME&&!nameRole)failTarget('PREVIEW_CI_TARGET_MISMATCH_NAME',env);
+ if(tagRole&&nameRole&&tagRole!==nameRole)failTarget('PREVIEW_CI_TARGET_CONFLICT',env);
+ const role=nameRole||tagRole;
+ if(!role)failTarget('PREVIEW_CI_TARGET_MISMATCH_TAG',env);
+ return {role,tagRole};
+}
+export function selectPreviewRole(m,env,{verifiedWorker}={}){
  validateIsolation(m);
  if(!env.WRANGLER_CI_MATCH_TAG)return null;
  if(env.WORKERS_CI_BRANCH==='main')return null;
  if(env.WORKERS_CI_BRANCH!==m.branch)fail('PREVIEW_BRANCH_NOT_AUTHORIZED');
- const role=roles.find(r=>m.parents[r].tag===env.WRANGLER_CI_MATCH_TAG);
- if(!role)fail('PREVIEW_CI_TARGET_MISMATCH_TAG');
- // Wrangler's native Preview API accepts a Worker identifier: its confirmed
- // name OR its 32-character ID. Both identify the same parent; other Workers,
- // arbitrary aliases and dashed UUID paths remain forbidden.
- if(env.WRANGLER_CI_OVERRIDE_NAME&&![m.parents[role].name,m.parents[role].tag].includes(env.WRANGLER_CI_OVERRIDE_NAME))fail('PREVIEW_CI_TARGET_MISMATCH_NAME');
+ const {role,tagRole}=requestedRole(m,env);
+ if(verifiedWorker){
+  if(verifiedWorker.account_id!==m.account_id||verifiedWorker.id!==m.parents[role].tag||verifiedWorker.name!==m.parents[role].name)fail('PREVIEW_API_IDENTITY_MISMATCH');
+ }else if(!tagRole)failTarget('PREVIEW_CI_TARGET_MISMATCH_TAG',env);
  return role;
+}
+
+// GET only. Python is already required by the builder and respects the managed
+// environment's HTTPS proxy without adding dependencies. Credentials stay in
+// the child environment and Authorization header, never arguments or output.
+function lookupWorkerIdentity(accountId,workerName,env){
+ if(!env.CLOUDFLARE_API_TOKEN)fail('PREVIEW_IDENTITY_TOKEN_MISSING');
+ const script=`import os,json,urllib.request,urllib.error\ntry:\n r=urllib.request.urlopen(urllib.request.Request('https://api.cloudflare.com/client/v4/accounts/'+os.environ['MLS_PREVIEW_LOOKUP_ACCOUNT']+'/workers/workers/'+os.environ['MLS_PREVIEW_LOOKUP_NAME'],headers={'Authorization':'Bearer '+os.environ['CLOUDFLARE_API_TOKEN']}),timeout=15)\n d=json.load(r)['result']\n print(json.dumps({'id':d.get('id'),'name':d.get('name')}))\nexcept urllib.error.HTTPError as e: print(json.dumps({'http_error':e.code}))\nexcept Exception: print(json.dumps({'lookup_unavailable':True}))\n`;
+ let result;
+ try{result=JSON.parse(execFileSync('python3',['-c',script],{env:{...env,MLS_PREVIEW_LOOKUP_ACCOUNT:accountId,MLS_PREVIEW_LOOKUP_NAME:workerName},stdio:['ignore','pipe','pipe'],encoding:'utf8',timeout:20000}));}
+ catch{fail('PREVIEW_IDENTITY_LOOKUP_UNAVAILABLE');}
+ if(result.http_error)fail('PREVIEW_IDENTITY_LOOKUP_HTTP_'+result.http_error);
+ if(result.lookup_unavailable)fail('PREVIEW_IDENTITY_LOOKUP_UNAVAILABLE');
+ return result;
+}
+export function verifyBuildPreviewIdentity(root,env=process.env,{lookup=lookupWorkerIdentity}={}){
+ const m=validateIsolation(JSON.parse(fs.readFileSync(path.join(root,'previews/p00-isolation.json'),'utf8')));
+ if(!env.WRANGLER_CI_MATCH_TAG||env.WORKERS_CI_BRANCH==='main')return null;
+ if(env.WORKERS_CI_BRANCH!==m.branch)fail('PREVIEW_BRANCH_NOT_AUTHORIZED');
+ if(env.CLOUDFLARE_ACCOUNT_ID&&env.CLOUDFLARE_ACCOUNT_ID!==m.account_id)fail('PREVIEW_ACCOUNT_MISMATCH');
+ const {role}=requestedRole(m,env);
+ const actual=lookup(m.account_id,m.parents[role].name,env);
+ const verifiedWorker={account_id:m.account_id,id:actual.id,name:actual.name};
+ selectPreviewRole(m,env,{verifiedWorker});
+ return verifiedWorker;
 }
 export function isolatedHosts(m){return Object.fromEntries(roles.map(r=>[r,m.isolated_workers[r]+'.'+m.account_subdomain+'.workers.dev']));}
 export function previewBindings(m,role){
@@ -55,14 +97,14 @@ export function prepareIsolatedPreview(root,role,{parent=false}={}){
  const bindings=previewBindings(m,role);
  // These are complete generated modules. Rebundling adds esbuild helpers inside
  // functions serialized into browser scripts and breaks the frozen client code.
- const config={name:parent?m.isolated_workers[role]:m.parents[role].name,main:'./'+role+'-worker.mjs',no_bundle:true,compatibility_date:JSON.parse(fs.readFileSync(path.join(root,'workers',role,'wrangler.json'))).compatibility_date,
+ const config={account_id:m.account_id,name:parent?m.isolated_workers[role]:m.parents[role].name,main:'./'+role+'-worker.mjs',no_bundle:true,compatibility_date:JSON.parse(fs.readFileSync(path.join(root,'workers',role,'wrangler.json'))).compatibility_date,
  workers_dev:parent,preview_urls:false,...(parent?bindings:{}),previews:bindings,...(role==='app'?{assets:{directory:'../browser-assets',binding:'ASSETS',run_worker_first:true,html_handling:'none',not_found_handling:'none'}}:{})};
  // Both environments contain only the approved isolated resource set. No routes, cron, source vars or secret values are copied.
  const configPath=path.join(dir,role+(parent?'-isolated':'-native')+'.json');fs.writeFileSync(configPath,JSON.stringify(config,null,2)+'\n');
  return {role,configPath,source_sha256:createHash('sha256').update(source).digest('hex'),source_bytes:Buffer.byteLength(source),parent};
 }
-export function prepareBuildPreview(root,env=process.env){
- const m=JSON.parse(fs.readFileSync(path.join(root,'previews/p00-isolation.json'),'utf8'));const role=selectPreviewRole(m,env);
+export function prepareBuildPreview(root,env=process.env,{verifiedWorker}={}){
+ const m=JSON.parse(fs.readFileSync(path.join(root,'previews/p00-isolation.json'),'utf8'));const role=selectPreviewRole(m,env,{verifiedWorker});
  const redirect=path.join(root,'.wrangler','deploy','config.json');
  if(!role){
   // A reused build directory must not redirect a later production build.

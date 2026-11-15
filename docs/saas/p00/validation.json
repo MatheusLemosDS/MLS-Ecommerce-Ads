@@ -207,5 +207,6 @@
       "2026-11-15T06:06:41.1025173Z RELEASE_NOT_APPROVED_FOR_PRODUCTION"
     ]
   },
-  "current_target_identity_correction": "docs/saas/p00/preview-repair.json#target_identity_correction"
+  "current_target_identity_correction": "docs/saas/p00/preview-repair.json#target_identity_correction",
+  "current_api_verified_target_selection": "docs/saas/p00/preview-repair.json#api_verified_target_selection"
 }
