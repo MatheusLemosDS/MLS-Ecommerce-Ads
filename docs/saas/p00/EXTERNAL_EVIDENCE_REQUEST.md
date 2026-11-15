@@ -1,3 +1,5 @@
+> **Escopo destas pendências:** P00 concluiu a baseline e os inventários, conforme [aceite](CLOSEOUT.md). As evidências abaixo continuam necessárias para comprovar a operação externa ou autorizar a ativação/venda correspondente. Nenhum campo UNKNOWN foi declarado verificado e nenhuma dependência foi encerrada. Não é necessário repetir os registros já comprovados.
+
 > **Pedido atual após o reparo técnico:** App/Auth/Finance passaram nos Builds automáticos do código `13bd449`; os previews publicados apontam para os recursos isolados e para esse mesmo commit. A CI GitHub passou no mesmo SHA:4441 Node/67 Python, build e preflight. O estado canônico está no checkpoint e no [recibo](preview-repair.json). O pedido antigo de gatilhos/logs abaixo é histórico; não é necessário repetir capturas nem conceder novas permissões para aceitar a evidência técnica já obtida.
 
 Para completar as pendências externas de P00, responda por texto ou links existentes, sem segredos:

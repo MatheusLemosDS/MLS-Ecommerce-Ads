@@ -1,7 +1,7 @@
 <!-- SAAS_P00_CURRENT -->
-## P00 SaaS — estado atual
+## P00 — concluída no escopo técnico/documental
 
-SAAS-002 resolvida no código13bd449: GitHub4441 Node/67 Python/build/preflight e três Builds Cloudflare aprovados no mesmo SHA; previews isolados confirmados na API, produção preservada. [Checkpoint único](MLS_COMMERCE_OS_CHECKPOINT.json), [matriz](MLS_SAAS_EXECUTION.json) e [recibo](saas/p00/preview-repair.json). P00 ainda BLOQUEADA apenas por evidências externas de operação/direitos. Recibo documental tem checks próprios; PR122 continua rascunho. P01–P11 ficam para próximas entregas; banco automático e M2/M2.2 permanecem abertos. Históricos abaixo preservados.
+Código827774e aprovado no GitHub (4447 Node/67 Python/build/preflight) e nos três Builds Cloudflare. Inventários/catálogos completos com estados e lacunas explícitos;2 dependências runtime MIT verificadas. [Aceites](saas/p00/CLOSEOUT.md), [checkpoint](MLS_COMMERCE_OS_CHECKPOINT.json), [matriz](MLS_SAAS_EXECUTION.json). Dependências externas de operação/direitos/grants continuam bloqueadas e não são contadas como cumpridas. Live preservada; PR122 rascunho e recibo final com checks próprios. P01–P11 ficam para próximas entregas; próxima tarefa SAAS-005. M2/M2.2 e banco automático continuam abertos. Históricos abaixo preservados.
 <!-- END_SAAS_P00_CURRENT -->
 
 <!-- FINANCIAL_AUTOMATION_CURRENT -->

@@ -283,7 +283,7 @@
       "web/cloudflare/tests/workspace-navigation-rework-chrome.test.mjs": "5cba75a98e0b0efe4d48eefe58385bedf53b783d875ad8058cbea7bea6b48d30",
       "web/cloudflare/tests/receipt-transport-lifecycle.test.mjs": "684e77ce8c74b9fa6252bf13841cfb404e4ea069d84daac971f6ae53f4e0104d"
     },
-    "candidate_ci": "PENDING",
+    "candidate_ci": "ALL_SUCCESS",
     "production_runtime_changes": false,
     "workflow_changes": false,
     "original_workspace_assertion_lines_preserved": 34,
@@ -292,5 +292,56 @@
       "final_build": "skipped",
       "preflight": "skipped"
     }
+  },
+  "p00_final_technical_acceptance": {
+    "source_sha": "827774ec0bd438a6f193d4795dfec396d7e4ee6f",
+    "run": 43767620486,
+    "job": 132976173424,
+    "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43767620486",
+    "conclusion": "success",
+    "stdout_excerpt": [
+      "2026-11-15T22:23:01.2035696Z # tests 4447",
+      "2026-11-15T22:23:01.2036258Z # pass 4447",
+      "2026-11-15T22:23:01.2036549Z # fail 0",
+      "2026-11-15T22:23:01.2036730Z # cancelled 0",
+      "2026-11-15T22:23:01.2036926Z # skipped 0",
+      "2026-11-15T22:23:05.8828425Z Ran 67 tests in 0.537s",
+      "2026-11-15T22:23:08.3638894Z RELEASE_LOCAL_PREFLIGHT_OK",
+      "2026-11-15T22:23:08.3648189Z RELEASE_NOT_APPROVED_FOR_PRODUCTION"
+    ],
+    "checks": [
+      {
+        "name": "Workers Builds: brazacommerce-finance",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-finance/production/previews/feature-saas-p00-baseline-20261114/builds/aaa66fc4-40b6-49db-9bd5-f99bf2c01e0b"
+      },
+      {
+        "name": "Workers Builds: brazacommerce-app",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-app/production/previews/feature-saas-p00-baseline-20261114/builds/701dfdd6-7b6f-4d61-b03f-7c4aeec93dc6"
+      },
+      {
+        "name": "Workers Builds: brazacommerce-auth",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-auth/production/previews/feature-saas-p00-baseline-20261114/builds/4273820c-12ba-4902-9fbb-5fcd71ff5ecc"
+      },
+      {
+        "name": "validate",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43767620486/job/132976173424"
+      }
+    ]
+  },
+  "p00_documentary_acceptance": {
+    "scope": "BASELINE_AND_INVENTORIES",
+    "result": "TESTADO",
+    "service_records": 12,
+    "unknown_fields_explicitly_open": 35,
+    "embedded_runtime_licenses_verified": 2,
+    "commercial_or_operational_certification": false
   }
 }

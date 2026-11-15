@@ -1,5 +1,7 @@
 # Aceite de P00 — escopo e evidências
 
+**P00 concluída com aceite técnico/documental.** Código827774e: GitHub4447 Node/67 Python/build/preflight e três Builds Cloudflare aprovados no mesmo SHA. Recibo documental posterior tem checks próprios.
+
 Este é um recibo de critérios. O estado canônico permanece no checkpoint/matriz. O gate original é preservado: “HEAD e estado servido conferidos; falha atual de CI investigada; catálogo de capacidades e índice canônico criados.”
 
 O protocolo do [prompt mestre](input/PROMPT_MESTRE_CODEX_MLS_SAAS.txt), item8, determina: “Uma tarefa documental pode ter aceite documental; para recurso de produção exija prova do fluxo correspondente.” SAAS-004 pede um inventário, SBOM/notices e registro de direitos. Seus três aceites são: separar gateway/PSP, excluir segredos/dados privados e verificar versão/licença/decisão das dependências incorporadas, preservando a distinção de titularidade.
@@ -10,7 +12,7 @@ A avaliação anterior misturava a conclusão desse registro com a certificaçã
 | --- | --- | --- |
 | SAAS-001 | [GitHub](github-reconciliation.json), [Live](live-reconciliation.json), checkpoint e arquivos históricos | Base/servido/delta identificados; ancestral documental e históricos preservados; uma matriz operacional. |
 | FINAUTO-01 | [Linhagem](financial-lineage.json), [rotas](route-policy.json) |25 tipos relacionados a fonte/handler/store/consumidor; existentes/parciais/grants/cobertura distintos. |
-| SAAS-002 | [Recibo](preview-repair.json), validação e CI do candidato final | Suíte normal/minificada, Python, build e preflight realmente aprovados; três Builds de preview aprovados; nenhuma assertiva ou gate removido. A CI300efbd falhou por ciclo de vida CDP e a correção está em validação; P00 aguarda o novo candidato. |
+| SAAS-002 | [Recibo](preview-repair.json), validação e CI do candidato final | Suíte normal/minificada, Python, build e preflight realmente aprovados; três Builds de preview aprovados; nenhuma assertiva ou gate removido. A CI300efbd falhou por ciclo de vida CDP; o código827774e corrigiu as observações de DOM e a sincronização de documentos.4447 Node/67 Python/build/preflight e três Builds Cloudflare passaram no mesmo SHA, incluindo todos os cenários normal/minificado, sem remoção de assertivas. |
 | SAAS-003 | [Catálogo](capabilities.json) |22 módulos com estado, fontes, papéis, grants/conexão/cobertura/escrita e próxima ação; sem promessa de automação ausente. |
 | SAAS-004 | [Inventário](operations-inventory.json), [SBOM](sbom.cdx.json), [notices](THIRD_PARTY_NOTICES.txt), [direitos](rights-inventory.json) | Registro completo de campos/estados; gateway/PSP separados; nenhuma credencial;2 dependências runtime com licença MIT exata/decisão; titularidade não presumida. |
 

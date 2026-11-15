@@ -1,7 +1,7 @@
 <!-- SAAS_P00_CURRENT -->
-## Retomada atual — P00 SaaS
+## Retomada atual — P00 concluída
 
-Base main346f30f e documental0a5a228 preservados. Código13bd449 aprovado no GitHub (4441 Node/67 Python/build/preflight) e nos três Builds Cloudflare, com previews isolados confirmados por tag e bindings na API; Live preservada. [PR122 rascunho](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/122), sem merge/auto-merge. P00 ainda bloqueada somente por metadados de operação/recuperação e direitos; [informações necessárias](saas/p00/EXTERNAL_EVIDENCE_REQUEST.md). Ler [checkpoint único](MLS_COMMERCE_OS_CHECKPOINT.json), [matriz](MLS_SAAS_EXECUTION.json) e [recibo](saas/p00/preview-repair.json). O recibo documental final tem checks próprios. P01–P11 ficam para próximas entregas; a restrição documental abaixo pertence à entrega anterior.
+P00 tem aceite técnico/documental: código827774e aprovado no GitHub (4447 Node/67 Python/build/preflight) e nos três Builds Cloudflare. [Aceites e limites](saas/p00/CLOSEOUT.md), [checkpoint único](MLS_COMMERCE_OS_CHECKPOINT.json), [matriz](MLS_SAAS_EXECUTION.json) e [inventário12 serviços](saas/p00/operations-inventory.json).35 campos externos continuam UNKNOWN/BLOQUEADO; operação real, direitos comerciais, M2/M2.2 e banco automático não foram certificados. Live preservada; [PR122 rascunho](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/122), sem merge/auto-merge. Recibo final tem checks próprios. Próxima entrega: SAAS-005/P01, sem execução nesta rodada. Base346f30f e documental0a5a228 preservados. A restrição documental abaixo pertence à entrega anterior.
 <!-- END_SAAS_P00_CURRENT -->
 
 # Retomada curta — MLS Commerce OS

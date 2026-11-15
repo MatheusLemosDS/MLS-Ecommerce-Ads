@@ -1,10 +1,11 @@
 <!-- SAAS_P00_CURRENT -->
-P00_SAAS_CURRENT — SAAS-002 resolvida; P00 bloqueada somente por operação/direitos externos.
-Base346f30f, documental0a5a228 preservada; código13bd449 aprovado no GitHub4441 Node/67 Python/build/preflight e nos três Builds Cloudflare.
-Previews isolados publicados com tags/bindings confirmados na API. Produção preservada; PR122 rascunho, sem merge/auto-merge.
-Checkpoint único docs/MLS_COMMERCE_OS_CHECKPOINT.json; matriz docs/MLS_SAAS_EXECUTION.json; recibo docs/saas/p00/preview-repair.json.
-Próximo: evidências em docs/saas/p00/EXTERNAL_EVIDENCE_REQUEST.md; validar somente delta documental ao recebê-las. Recibo final tem checks próprios. P01 só próxima entrega.
-Históricos integrais preservados abaixo.
+P00_CURRENT — CONCLUÍDA COM ACEITE TÉCNICO/DOCUMENTAL.
+Código827774e: GitHub4447 Node/67 Python/build/preflight e3 Builds Cloudflare aprovados no mesmo SHA.15 testes protocolo/7 cenários browser locais passaram; assertivas de produto preservadas.
+Checkpoint único docs/MLS_COMMERCE_OS_CHECKPOINT.json; matriz docs/MLS_SAAS_EXECUTION.json; recibo docs/saas/p00/CLOSEOUT.md.
+Inventário12 serviços,35 UNKNOWN explícitos e2 licenças runtime verificadas; dependências externas continuam BLOQUEADAS para operação/venda, sem certificação de direitos/recuperação.
+Live preservada; PR122 rascunho, sem merge/auto-merge. Base346f30f/documental0a5a228 e históricos preservados. Recibo final tem checks próprios.
+Próximo item SAAS-005/P01 só próxima entrega; não repetir merges ou suites sem delta relevante.
+Históricos anteriores preservados abaixo.
 <!-- END_SAAS_P00_CURRENT -->
 
 RETOMADA — MLS Commerce OS

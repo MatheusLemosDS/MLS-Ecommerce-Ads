@@ -2,7 +2,7 @@
   "schema": "mls_commerce_os_checkpoint_v1",
   "canonical_roadmap": "docs/ROADMAP_MLS_COMMERCE_OS.md",
   "legacy_roadmap": "docs/ROADMAP_BRAZACOMMERCE.md",
-  "updated_at": "2026-11-15T22:02:53.628350+00:00",
+  "updated_at": "2026-11-15T22:26:45.216921+00:00",
   "product": {
     "name": "MLS Commerce OS",
     "supervisor": "MLS Hermes",
@@ -31,7 +31,7 @@
   },
   "current_phase": "P00",
   "working_branch": "feature/saas-p00-baseline-20261114",
-  "current_status": "P00_ACEITE_DOCUMENTAL_COMPLETO_AGUARDANDO_CI_FINAL_CDP",
+  "current_status": "P00_CONCLUIDO_ACEITE_TECNICO_DOCUMENTAL_DEPENDENCIAS_EXTERNAS_ABERTAS",
   "completed_this_phase": [
     "Main/PR121/current CI/live versions and bytes reconciled",
     "Documentary ancestor 0a5a228 and complete histories preserved",
@@ -39,17 +39,16 @@
     "Exact preflight base/path/authorization refreshed without changing Worker hashes or gates",
     "Local validation evidence recorded in docs/saas/p00/validation.json",
     "Authorized isolated preview repair: separate D1/Workers/secrets; local4437 Node/67 Python, focused tests, native previews and desktop/mobile Chromium passed; production versions/settings preserved",
-    "SAAS-002 exact-source13bd449: GitHub4441 Node/67 Python/build/preflight and three automatic Cloudflare Builds all success; API native preview tags/bindings and production controls verified"
+    "SAAS-002 exact-source13bd449: GitHub4441 Node/67 Python/build/preflight and three automatic Cloudflare Builds all success; API native preview tags/bindings and production controls verified",
+    "P00 documentary acceptance:12 field-level service records,35 explicit UNKNOWN fields,2 embedded runtime MIT licenses, complete archives; CDP lifecycle corrected with4447 Node/67 Python and all three Cloudflare checks on827774e"
   ],
-  "remaining_this_phase": [
-    "EXACT_CANDIDATE_FULL_CI"
-  ],
+  "remaining_this_phase": [],
   "next_phase": "P01_DEFERRED_UNTIL_NEXT_DELIVERY_AND_APPLICABLE_GATES",
   "previous_phase": "DOCUMENTATION_ORGANIZATION_LOCAL_0a5a228",
   "next_actions": [
-    "Complete full configured GitHub/Cloudflare CI on CDP-corrected candidate",
-    "Close P00 technical/documentary gate only after exact candidate passes; preserve external UNKNOWN/BLOQUEADO fields and commercial/operational restrictions",
-    "P01 remains for next delivery; owner supplies external metadata/rights before corresponding operation/commercial activation"
+    "Next delivery: SAAS-005/P01, starting from reconciled current HEAD and existing implementation; P01 not executed now",
+    "Obtain operational/rights evidence before corresponding real operation or commercial activation; UNKNOWN/BLOQUEADO fields remain open",
+    "No further manual functional rerun for documentary receipt; preserve automatic configured checks"
   ],
   "m0_followup": [
     "Conferir visual autenticado em desktop e celular durante M1; corrigir apenas branding/layout sem renomear infraestrutura"
@@ -7493,9 +7492,10 @@
   },
   "operational_execution_matrix": "docs/MLS_SAAS_EXECUTION.json",
   "phase_index": "docs/saas/p00/README.md",
-  "current_task": "SAAS-002 / final CDP lifecycle correction; SAAS-004 documentary acceptance proved",
+  "current_task": "P00 concluída; SAAS-005/P01 somente na próxima entrega",
   "saas_p00": {
     "last_commits": [
+      "827774ec0bd438a6f193d4795dfec396d7e4ee6f",
       "13bd4493d570c9f1b337f570a09c485a23bdf64f",
       "46ed87362037baf707f10048cc4a8ea7bda39346",
       "ad7e0fbe3968029a75e373d972f4bfc307056cba",
@@ -7508,48 +7508,30 @@
     ],
     "base_sha": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
     "preserved_documentary_commit": "0a5a22897d3cf56f97b7b995eb78a743fc0a246e",
-    "validated_source_commit": "13bd4493d570c9f1b337f570a09c485a23bdf64f",
-    "final_evidence_commit": "Resolve with git log on working_branch; evidence-only follow-up preserves validated code hashes",
-    "phase_state": "BLOQUEADO",
+    "validated_source_commit": "827774ec0bd438a6f193d4795dfec396d7e4ee6f",
+    "final_evidence_commit": "Resolve current branch HEAD after final documentary receipt; functional/test evidence refers exactly to827774e",
+    "phase_state": "TESTADO",
     "implementation": "INDEPENDENT_P00_WORK_IMPLEMENTED",
     "local_tests": "docs/saas/p00/validation.json",
     "published": false,
     "validated_operationally": false,
     "reconciliation": "docs/saas/p00/live-reconciliation.json",
     "matrix": "docs/MLS_SAAS_EXECUTION.json",
-    "blockers": [
-      {
-        "id": "EXT-OPERATIONS",
-        "owner": "Gateway/Hermes operators and project owner",
-        "resource": "Gateway and CLI external operation metadata",
-        "cause": "Runtime version, contract, responsible operator, costs/limits, health and recovery evidence not confirmed from repository.",
-        "impact": "SAAS-004 full external inventory/operational acceptance incomplete.",
-        "minimum_to_resume": "Version/config metadata, sanitized contract/cost/limits and backup/restore runbook evidence; no secrets."
-      },
-      {
-        "id": "EXT-RIGHTS",
-        "owner": "Project owner / rights holder",
-        "resource": "Code, contributors, trademark, avatars/reference image rights",
-        "cause": "No root license proves title; commercial rights chain not demonstrated.",
-        "impact": "No claim of commercial rights or unrestricted sale. Runtime incorporated npm MIT versions/notices verified locally.",
-        "minimum_to_resume": "Origin/license/authorization records for incorporated assets and contributor rights; no third-party contact authorized."
-      }
-    ],
+    "blockers": [],
     "migrations": "Three preview-only empty D1s created; synthetic schema initialization only, no production migrations",
     "rollback": "Revert isolated preview hook/profiles; remove only new isolated resources when appropriate. Never restore production ADMIN_DB in preview base.",
-    "next_executable_command": "Review owner-supplied metadata against docs/saas/p00/EXTERNAL_EVIDENCE_REQUEST.md; python3 docs/saas/p00/validate-documentation.py",
-    "next_external_action": "Owner/operator provides operation/recovery metadata and origin/license evidence. No further Builds log/token required for already proved technical acceptance.",
+    "next_executable_command": "Read SAAS-005 in docs/MLS_SAAS_EXECUTION.json on next authorized delivery; current delivery ends at P00",
+    "next_external_action": "Provide remaining operation/rights records before associated operation/commercial activation; dependencies are not closed by documentary acceptance",
     "next_implementation_item": "SAAS-005 / P01, next delivery only",
     "blocker_review": "docs/saas/p00/blocker-review-20261114.json",
     "external_evidence_request": "docs/saas/p00/EXTERNAL_EVIDENCE_REQUEST.md",
-    "git_review_status": "PR122 remains draft/unmerged/no auto-merge. Technical source13bd449 has all four checks approved. Final documentary receipt receives its own checks. Only preview published, production preserved.",
+    "git_review_status": "PR122 remains draft/unmerged/no auto-merge. Exact source827774e passed all four checks. Final receipt has its own normal checks; no approval inferred across SHAs.",
     "github_review": {
       "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/122",
       "draft": true,
-      "head_source_sha": "13bd4493d570c9f1b337f570a09c485a23bdf64f",
+      "source_sha": "827774ec0bd438a6f193d4795dfec396d7e4ee6f",
       "base_sha": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
-      "github_ci_run": 43761633551,
-      "github_ci_status": "completed",
+      "github_ci_run": 43767620486,
       "github_ci_conclusion": "success",
       "cloudflare_checks": {
         "app": "success",
@@ -7557,12 +7539,9 @@
         "finance": "success"
       },
       "production_preserved": true,
-      "isolated_preview_published": true,
       "merged": false,
       "auto_merge_enabled": false,
-      "production_deployed_by_delivery": false,
-      "recorded_at": "2026-11-15T21:18:51.341691+00:00",
-      "receipt_successor": "Has its own normal checks; exact source evidence refers to13bd449."
+      "recorded_at": "2026-11-15T22:26:45.216921+00:00"
     },
     "approved_github_ci": {
       "run": 43615841211,
@@ -7581,7 +7560,7 @@
         "2026-11-14T16:43:30.8930839Z RELEASE_NOT_APPROVED_FOR_PRODUCTION"
       ]
     },
-    "validated_github_source_commit": "13bd4493d570c9f1b337f570a09c485a23bdf64f",
+    "validated_github_source_commit": "827774ec0bd438a6f193d4795dfec396d7e4ee6f",
     "app_preview_diagnosis": "User log: build succeeds with matching hashes, preview fails for missing previews block. Suggested ADMIN_DB is the production binding; no config applied.",
     "latest_reviewed_candidate": {
       "sha": "f5973b0e9b48df927e7c19954805d622839cb389",
@@ -7595,48 +7574,48 @@
       "source": "Owner explicit authorization after App missing-previews log, followed by Continue",
       "scope": "Repair isolated previews and required build selection; preserve production, commercial gates, databases, domains, secrets and workflows; no real provider operations"
     },
-    "current_source_commit": "13bd4493d570c9f1b337f570a09c485a23bdf64f",
+    "current_source_commit": "827774ec0bd438a6f193d4795dfec396d7e4ee6f",
     "latest_local_validation": "docs/saas/p00/preview-repair.json",
     "current_github_validation": {
-      "source_sha": "13bd4493d570c9f1b337f570a09c485a23bdf64f",
-      "run": 43761633551,
-      "job": 132957503304,
-      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43761633551",
+      "source_sha": "827774ec0bd438a6f193d4795dfec396d7e4ee6f",
+      "run": 43767620486,
+      "job": 132976173424,
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43767620486",
       "conclusion": "success",
       "stdout_excerpt": [
-        "2026-11-15T21:14:34.5028406Z # tests 4441",
-        "2026-11-15T21:14:34.5028634Z # pass 4441",
-        "2026-11-15T21:14:34.5028755Z # fail 0",
-        "2026-11-15T21:14:34.5028867Z # cancelled 0",
-        "2026-11-15T21:14:34.5028983Z # skipped 0",
-        "2026-11-15T21:14:38.0442124Z Ran 67 tests in 0.382s",
-        "2026-11-15T21:14:39.7611239Z RELEASE_LOCAL_PREFLIGHT_OK",
-        "2026-11-15T21:14:39.7615752Z RELEASE_NOT_APPROVED_FOR_PRODUCTION"
+        "2026-11-15T22:23:01.2035696Z # tests 4447",
+        "2026-11-15T22:23:01.2036258Z # pass 4447",
+        "2026-11-15T22:23:01.2036549Z # fail 0",
+        "2026-11-15T22:23:01.2036730Z # cancelled 0",
+        "2026-11-15T22:23:01.2036926Z # skipped 0",
+        "2026-11-15T22:23:05.8828425Z Ran 67 tests in 0.537s",
+        "2026-11-15T22:23:08.3638894Z RELEASE_LOCAL_PREFLIGHT_OK",
+        "2026-11-15T22:23:08.3648189Z RELEASE_NOT_APPROVED_FOR_PRODUCTION"
       ],
       "checks": [
-        {
-          "name": "Workers Builds: brazacommerce-app",
-          "status": "completed",
-          "conclusion": "success",
-          "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-app/production/previews/feature-saas-p00-baseline-20261114/builds/b9707212-6166-4a93-b256-b1e1b733ada6"
-        },
         {
           "name": "Workers Builds: brazacommerce-finance",
           "status": "completed",
           "conclusion": "success",
-          "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-finance/production/previews/feature-saas-p00-baseline-20261114/builds/a7751437-d47b-4ab4-9557-e4f0022e9167"
+          "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-finance/production/previews/feature-saas-p00-baseline-20261114/builds/aaa66fc4-40b6-49db-9bd5-f99bf2c01e0b"
+        },
+        {
+          "name": "Workers Builds: brazacommerce-app",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-app/production/previews/feature-saas-p00-baseline-20261114/builds/701dfdd6-7b6f-4d61-b03f-7c4aeec93dc6"
         },
         {
           "name": "Workers Builds: brazacommerce-auth",
           "status": "completed",
           "conclusion": "success",
-          "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-auth/production/previews/feature-saas-p00-baseline-20261114/builds/0b6883d9-bac9-4725-b24f-8602851aab53"
+          "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-auth/production/previews/feature-saas-p00-baseline-20261114/builds/4273820c-12ba-4902-9fbb-5fcd71ff5ecc"
         },
         {
           "name": "validate",
           "status": "completed",
           "conclusion": "success",
-          "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43761633551/job/132957503304"
+          "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43767620486/job/132976173424"
         }
       ]
     },
@@ -7659,7 +7638,7 @@
         "result": "All four configured checks success, same source; native API tags/bindings verified."
       }
     ],
-    "validated_github_ci_run": 43761633551,
+    "validated_github_ci_run": 43767620486,
     "github_review_history": [
       {
         "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/122",
@@ -7682,6 +7661,27 @@
         "deployed_by_delivery": false,
         "recorded_at": "2026-11-14T16:42:09.792793+00:00",
         "receipt_publication": "Pending local receipt can now be pushed because run43615841211 completed. Its doc-only successor will have separate normal checks."
+      },
+      {
+        "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/122",
+        "draft": true,
+        "head_source_sha": "13bd4493d570c9f1b337f570a09c485a23bdf64f",
+        "base_sha": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+        "github_ci_run": 43761633551,
+        "github_ci_status": "completed",
+        "github_ci_conclusion": "success",
+        "cloudflare_checks": {
+          "app": "success",
+          "auth": "success",
+          "finance": "success"
+        },
+        "production_preserved": true,
+        "isolated_preview_published": true,
+        "merged": false,
+        "auto_merge_enabled": false,
+        "production_deployed_by_delivery": false,
+        "recorded_at": "2026-11-15T21:18:51.341691+00:00",
+        "receipt_successor": "Has its own normal checks; exact source evidence refers to13bd449."
       }
     ],
     "owner_provider_update": {
@@ -7757,6 +7757,12 @@
       }
     ],
     "current_failed_ci_run": 43764608663,
-    "current_cdp_fix_receipt": "docs/saas/p00/validation.json#current_cdp_transport_correction"
-  }
+    "current_cdp_fix_receipt": "docs/saas/p00/validation.json#current_cdp_transport_correction",
+    "p00_exit_gate_met": true,
+    "completion_scope": "P00_TECHNICAL_BASELINE_AND_DOCUMENTARY_INVENTORIES",
+    "operational_validation": false,
+    "commercial_release_approved": false,
+    "closeout": "docs/saas/p00/CLOSEOUT.md"
+  },
+  "last_completed_phase": "P00"
 }

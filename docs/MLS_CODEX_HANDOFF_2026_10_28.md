@@ -1,7 +1,7 @@
 <!-- SAAS_P00_CURRENT -->
-## Retomada P00 SaaS
+## Retomada — P00 concluída
 
-[Checkpoint](MLS_COMMERCE_OS_CHECKPOINT.json), [matriz](MLS_SAAS_EXECUTION.json), [recibo](saas/p00/preview-repair.json). Código13bd449 aprovado no GitHub4441 Node/67 Python/build/preflight e nos três Builds Cloudflare; API confirmou tags e bindings isolados, produção preservada. Base346f30f e documental0a5a228 preservados; PR122 rascunho. P00 depende agora somente de [evidências externas de operação/direitos](saas/p00/EXTERNAL_EVIDENCE_REQUEST.md). Recibo documental final recebe seus checks normais; não repetir suites manuais sem delta funcional. P01 só próxima entrega. Histórico integral abaixo preservado.
+[Checkpoint](MLS_COMMERCE_OS_CHECKPOINT.json), [matriz](MLS_SAAS_EXECUTION.json), [aceite](saas/p00/CLOSEOUT.md). Código827774e aprovado no GitHub4447 Node/67 Python/build/preflight e nos três Builds Cloudflare;15 testes protocolo/7 cenários browser locais passaram. Inventário12 serviços com35 UNKNOWN e licenças runtime verificadas; aceite documental não comprova operação remota nem direitos para venda. Esses bloqueios permanecem abertos. Live preservada, base346f30f/documental0a5a228 e históricos intactos; PR122 rascunho. Recibo final tem checks próprios. Próxima entrega: SAAS-005/P01; não executar agora. Histórico integral abaixo preservado.
 <!-- END_SAAS_P00_CURRENT -->
 
 FINANCIAL_AUTOMATION_20261113 — PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY — release 2026-11-13.3

@@ -32,8 +32,18 @@ for p in [p00/'README.md',p00/'OPERATIONS.md',p00/'CLOSEOUT.md']:
 matrix=json.loads((root/'docs/MLS_SAAS_EXECUTION.json').read_text())
 assert len(matrix['tarefas'])==74
 assert len({t['id'] for t in matrix['tarefas']})==74
+baseline=read('input/MATRIZ_EXECUCAO_MLS_SAAS.json')
+source_tasks={t['id']:t for t in baseline['tarefas']}
 for task in matrix['tarefas']:
  if task['fase']!='P00':assert task['estado']=='ESPECIFICADO',task['id']
+ else:
+  for field in ['entrega','aceites','dependencias']:assert task[field]==source_tasks[task['id']][field],(task['id'],field)
+phase=next(f for f in matrix['fases'] if f['id']=='P00')
+original_phase=next(f for f in baseline['fases'] if f['id']=='P00')
+for field in ['gate_de_saida','regra_do_gate','tarefas_em_ordem']:assert phase[field]==original_phase[field],field
+if phase['gate_met']:
+ assert all(t['estado']=='TESTADO' and t['acceptance_satisfied'] for t in matrix['tarefas'] if t['fase']=='P00')
+ assert phase['operational_validation'] is False and phase['commercial_release_approved'] is False
 checkpoint=json.loads((root/'docs/MLS_COMMERCE_OS_CHECKPOINT.json').read_text())
 assert checkpoint['operational_execution_matrix']=='docs/MLS_SAAS_EXECUTION.json'
 assert checkpoint['current_phase']=='P00'

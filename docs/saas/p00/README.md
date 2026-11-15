@@ -1,6 +1,6 @@
 # P00 — retomada curta
 
-Estado e próxima ação: [checkpoint único](../../MLS_COMMERCE_OS_CHECKPOINT.json) e [matriz operacional](../../MLS_SAAS_EXECUTION.json). P00 fecha a base/inventários com aceite técnico e documental; a CI do candidato corrigido precisa ser aprovada antes do encerramento. P01–P11 continuam para próximas entregas.
+Estado e próxima ação: [checkpoint único](../../MLS_COMMERCE_OS_CHECKPOINT.json) e [matriz operacional](../../MLS_SAAS_EXECUTION.json). **P00 concluída no escopo técnico/documental:** código827774e aprovado no GitHub (4447 Node/67 Python/build/preflight) e nos três Builds Cloudflare. O recibo documental final recebe seus próprios checks normais. P01–P11 continuam para próximas entregas.
 
 - [Aceites e limites](CLOSEOUT.md): cada requisito de P00, prova e conclusão exigida.
 - [Operação](OPERATIONS.md) e [registro de12 serviços](operations-inventory.json): fontes confirmadas, campos desconhecidos e dependências abertas.
