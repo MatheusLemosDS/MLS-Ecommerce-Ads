@@ -241,5 +241,56 @@
     "native_source_tags_match": true,
     "receipt": "docs/saas/p00/preview-repair.json",
     "production_preserved": true
+  },
+  "current_cdp_transport_correction": {
+    "recorded_at": "2026-11-15T22:02:53.628350+00:00",
+    "failed_source_sha": "300efbd9d4094f7a73a9430a9db94d53c6648632",
+    "failed_run": 43764608663,
+    "failed_job": 132966776677,
+    "summary": {
+      "tests": 4441,
+      "pass": 4439,
+      "fail": 2,
+      "skip": 0,
+      "cancelled": 0
+    },
+    "failures": [
+      {
+        "test": "weekly-context-navigation 320px/minify=true",
+        "error": "Could not find node with given id [CDP DOM.scrollIntoViewIfNeeded]"
+      },
+      {
+        "test": "workspace-navigation-rework minify=true",
+        "error": "Inspected target navigated or closed"
+      }
+    ],
+    "correction": "Resolve fresh DOM node for each scroll/quad observation; retry only stale-node observations, at most3, in same frame/loader. Await new main document/default Runtime context and matching load, or explicit BFCache ready-state evidence, before reads. Actions are never replayed; crashes/JS errors/unrelated protocol errors still fail. Shared CDP client replaces duplicated transport.",
+    "local_unit": {
+      "command": "node --test web/cloudflare/tests/receipt-transport-lifecycle.test.mjs web/cloudflare/tests/receipt-logout-navigation.test.mjs",
+      "tests": 15,
+      "pass": 15,
+      "fail": 0
+    },
+    "local_browser": {
+      "command": "node --test --test-concurrency=3 web/cloudflare/tests/workspace-navigation-rework-chrome.test.mjs web/cloudflare/tests/weekly-context-navigation-chrome.test.mjs",
+      "tests": 7,
+      "pass": 7,
+      "fail": 0,
+      "scope": "Both normal/minified;320/390/768/1365 navigation,320/1365 weekly context; all original product assertions retained."
+    },
+    "code_sha256": {
+      "web/cloudflare/tests/returns-receipts-chrome-helpers.mjs": "1ecfce04ca1ce99618addc29b78840907228bfc12250715e42c511b7b2c25d24",
+      "web/cloudflare/tests/workspace-navigation-rework-chrome.test.mjs": "5cba75a98e0b0efe4d48eefe58385bedf53b783d875ad8058cbea7bea6b48d30",
+      "web/cloudflare/tests/receipt-transport-lifecycle.test.mjs": "684e77ce8c74b9fa6252bf13841cfb404e4ea069d84daac971f6ae53f4e0104d"
+    },
+    "candidate_ci": "PENDING",
+    "production_runtime_changes": false,
+    "workflow_changes": false,
+    "original_workspace_assertion_lines_preserved": 34,
+    "failed_run_later_gates": {
+      "python": "skipped",
+      "final_build": "skipped",
+      "preflight": "skipped"
+    }
   }
 }

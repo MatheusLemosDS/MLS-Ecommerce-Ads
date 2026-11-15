@@ -214,7 +214,7 @@
       "grupo": "BASE",
       "gate_de_saida": "HEAD e estado servido conferidos; falha atual de CI investigada; catálogo de capacidades e índice canônico criados.",
       "ordem": 0,
-      "estado": "BLOQUEADO",
+      "estado": "EM_IMPLEMENTACAO",
       "dependencia_padrao": null,
       "tarefas_em_ordem": [
         "SAAS-001",
@@ -226,7 +226,7 @@
       "tarefas_condicionais": [],
       "regra_do_gate": "Concluir aceites materiais do escopo desta fase. Item condicional não ativado pode continuar BLOQUEADO/ADIADO com motivo e sem promessa comercial; não conta como concluído. A preparação independente pode avançar, mas ativação/venda dependente espera sua evidência. Opção excluída usa FORA_DA_OFERTA_ATUAL com ADR. P09 não é pré-requisito de P10; requisitos explícitos da tarefa prevalecem sobre a ordem sugerida.",
       "gate_met": false,
-      "reason": "Independent implementation and exact-source13bd449 GitHub/three Cloudflare checks proved. Only actual external operation/recovery and rights evidence remain incomplete; P00 exit gate not declared met."
+      "reason": "Documentary inventory and embedded licenses meet P00 scope; current CDP transport correction still requires complete candidate CI. External operational/commercial facts remain explicitly blocked."
     },
     {
       "id": "P01",
@@ -646,7 +646,7 @@
       ],
       "dependencias_externas": [],
       "condicional_ao_escopo_vendido": false,
-      "estado": "TESTADO",
+      "estado": "EM_IMPLEMENTACAO",
       "commit_implementacao": "13bd4493d570c9f1b337f570a09c485a23bdf64f",
       "evidencias_testes": [
         "docs/saas/p00/github-reconciliation.json",
@@ -662,14 +662,16 @@
       "validated_operationally": false,
       "acceptance_scope": "EXACT_SOURCE_GITHUB_AND_THREE_CLOUDFLARE_NATIVE_PREVIEW_CHECKS",
       "last_stage_reached": "TESTADO",
-      "acceptance_satisfied": true,
+      "acceptance_satisfied": false,
       "local_acceptance": true,
-      "reason": "Same source13bd449 passed GitHub run43761633551:4441 Node/67 Python,build,preflight, plus all three Cloudflare Builds. Native preview tags equal same SHA and bindings are isolated. No assertions removed, no bypass/cancellation; production preserved.",
+      "reason": "Latest source300efbd failed two CDP lifecycle tests. Focused fix passed15 unit/7 original browser cases; full configured CI of current candidate pending. Prior green evidence is historical, not approval of new source.",
       "candidate_ci_run": 43761633551,
       "candidate_ci_source_sha": "13bd4493d570c9f1b337f570a09c485a23bdf64f",
       "isolated_preview_published": true,
       "current_candidate_sha": "13bd4493d570c9f1b337f570a09c485a23bdf64f",
-      "current_candidate_github_run": 43761633551
+      "current_candidate_github_run": 43761633551,
+      "current_failed_ci_run": 43764608663,
+      "current_fix_receipt": "docs/saas/p00/validation.json#current_cdp_transport_correction"
     },
     {
       "id": "SAAS-003",
@@ -769,13 +771,15 @@
       ],
       "dependencias_externas": [],
       "condicional_ao_escopo_vendido": false,
-      "estado": "BLOQUEADO",
+      "estado": "TESTADO",
       "commit_implementacao": "84487108fa9c1292e90a62296ea8a597ffaad619",
       "evidencias_testes": [
         "docs/saas/p00/OPERATIONS.md",
         "docs/saas/p00/sbom.cdx.json",
         "docs/saas/p00/THIRD_PARTY_NOTICES.txt",
-        "docs/saas/p00/rights-inventory.json"
+        "docs/saas/p00/rights-inventory.json",
+        "docs/saas/p00/operations-inventory.json",
+        "docs/saas/p00/CLOSEOUT.md"
       ],
       "evidencias_publicacao": [],
       "evidencias_operacionais": [],
@@ -786,7 +790,11 @@
           "resource": "Gateway and CLI external operation metadata",
           "cause": "Runtime version, contract, responsible operator, costs/limits, health and recovery evidence not confirmed from repository.",
           "impact": "SAAS-004 full external inventory/operational acceptance incomplete.",
-          "minimum_to_resume": "Version/config metadata, sanitized contract/cost/limits and backup/restore runbook evidence; no secrets."
+          "minimum_to_resume": "Version/config metadata, sanitized contract/cost/limits and backup/restore runbook evidence; no secrets.",
+          "state": "BLOQUEADO",
+          "blocks_p00_documentary_inventory": false,
+          "scope": "EXTERNAL_OPERATIONAL_OR_COMMERCIAL_ACCEPTANCE",
+          "closed": false
         },
         {
           "id": "EXT-RIGHTS",
@@ -794,16 +802,25 @@
           "resource": "Code, contributors, trademark, avatars/reference image rights",
           "cause": "No root license proves title; commercial rights chain not demonstrated.",
           "impact": "No claim of commercial rights or unrestricted sale. Runtime incorporated npm MIT versions/notices verified locally.",
-          "minimum_to_resume": "Origin/license/authorization records for incorporated assets and contributor rights; no third-party contact authorized."
+          "minimum_to_resume": "Origin/license/authorization records for incorporated assets and contributor rights; no third-party contact authorized.",
+          "state": "BLOQUEADO",
+          "blocks_p00_documentary_inventory": false,
+          "scope": "EXTERNAL_OPERATIONAL_OR_COMMERCIAL_ACCEPTANCE",
+          "closed": false
         }
       ],
       "gate_anterior": null,
       "published_this_delivery": false,
       "validated_operationally": false,
-      "acceptance_scope": "DOCUMENTARY_AND_LOCAL_TECHNICAL_ONLY",
+      "acceptance_scope": "P00_DOCUMENTARY_INVENTORY_AND_EMBEDDED_RUNTIME_LICENSES",
       "last_stage_reached": "TESTADO",
-      "acceptance_satisfied": false,
-      "local_inventory_acceptance": true
+      "acceptance_satisfied": true,
+      "local_inventory_acceptance": true,
+      "local_acceptance": true,
+      "reason": "12 service/platform records contain all required fields with evidenced states. Unknown values remain null and linked to open blockers. Gateway and PSP are separate;2 embedded runtime MIT licenses/version/use decisions verified. No secrets/customer data, invented root license, external restore or title certification.",
+      "external_operational_state": "BLOQUEADO",
+      "commercial_readiness": "BLOQUEADO",
+      "operational_acceptance": false
     },
     {
       "id": "SAAS-005",
@@ -5507,7 +5524,11 @@
       "resource": "Gateway and CLI external operation metadata",
       "cause": "Runtime version, contract, responsible operator, costs/limits, health and recovery evidence not confirmed from repository.",
       "impact": "SAAS-004 full external inventory/operational acceptance incomplete.",
-      "minimum_to_resume": "Version/config metadata, sanitized contract/cost/limits and backup/restore runbook evidence; no secrets."
+      "minimum_to_resume": "Version/config metadata, sanitized contract/cost/limits and backup/restore runbook evidence; no secrets.",
+      "state": "BLOQUEADO",
+      "blocks_p00_documentary_inventory": false,
+      "scope": "EXTERNAL_OPERATIONAL_OR_COMMERCIAL_ACCEPTANCE",
+      "closed": false
     },
     {
       "id": "EXT-RIGHTS",
@@ -5515,7 +5536,11 @@
       "resource": "Code, contributors, trademark, avatars/reference image rights",
       "cause": "No root license proves title; commercial rights chain not demonstrated.",
       "impact": "No claim of commercial rights or unrestricted sale. Runtime incorporated npm MIT versions/notices verified locally.",
-      "minimum_to_resume": "Origin/license/authorization records for incorporated assets and contributor rights; no third-party contact authorized."
+      "minimum_to_resume": "Origin/license/authorization records for incorporated assets and contributor rights; no third-party contact authorized.",
+      "state": "BLOQUEADO",
+      "blocks_p00_documentary_inventory": false,
+      "scope": "EXTERNAL_OPERATIONAL_OR_COMMERCIAL_ACCEPTANCE",
+      "closed": false
     }
   ],
   "resolved_external_blockers_p00": [
@@ -5532,5 +5557,13 @@
       "evidence": "docs/saas/p00/preview-repair.json",
       "resolution": "GitHub and all three Cloudflare checks success on exact same source"
     }
-  ]
+  ],
+  "p00_scope_interpretation": {
+    "source": "docs/saas/p00/input/PROMPT_MESTRE_CODEX_MLS_SAAS.txt protocol8 and SAAS-004 exact acceptances",
+    "receipt": "docs/saas/p00/CLOSEOUT.md",
+    "documentary_inventory_acceptance": true,
+    "operational_external_dependencies_closed": false,
+    "commercial_release_approved": false,
+    "prior_classification_corrected": "Inventory completeness and runtime-license review are P00 documentary acceptance; unknown external operation/title facts remain blocked and are not certified."
+  }
 }

@@ -2,7 +2,7 @@
   "schema": "mls_commerce_os_checkpoint_v1",
   "canonical_roadmap": "docs/ROADMAP_MLS_COMMERCE_OS.md",
   "legacy_roadmap": "docs/ROADMAP_BRAZACOMMERCE.md",
-  "updated_at": "2026-11-15T21:35:42.381137+00:00",
+  "updated_at": "2026-11-15T22:02:53.628350+00:00",
   "product": {
     "name": "MLS Commerce OS",
     "supervisor": "MLS Hermes",
@@ -31,7 +31,7 @@
   },
   "current_phase": "P00",
   "working_branch": "feature/saas-p00-baseline-20261114",
-  "current_status": "P00_TECNICO_APROVADO_BLOQUEADO_SOMENTE_OPERACAO_DIREITOS_EXTERNOS",
+  "current_status": "P00_ACEITE_DOCUMENTAL_COMPLETO_AGUARDANDO_CI_FINAL_CDP",
   "completed_this_phase": [
     "Main/PR121/current CI/live versions and bytes reconciled",
     "Documentary ancestor 0a5a228 and complete histories preserved",
@@ -42,15 +42,14 @@
     "SAAS-002 exact-source13bd449: GitHub4441 Node/67 Python/build/preflight and three automatic Cloudflare Builds all success; API native preview tags/bindings and production controls verified"
   ],
   "remaining_this_phase": [
-    "EXT-OPERATIONS",
-    "EXT-RIGHTS"
+    "EXACT_CANDIDATE_FULL_CI"
   ],
   "next_phase": "P01_DEFERRED_UNTIL_NEXT_DELIVERY_AND_APPLICABLE_GATES",
   "previous_phase": "DOCUMENTATION_ORGANIZATION_LOCAL_0a5a228",
   "next_actions": [
-    "Supply actual gateway/Hermes operation/recovery metadata using docs/saas/p00/EXTERNAL_EVIDENCE_REQUEST.md",
-    "Supply code/brand/avatar/image origin/license/authorization evidence; keep unknowns blocked",
-    "Observe normal checks of final documentary receipt without rerunning unchanged functional suites manually; P01 remains next delivery only"
+    "Complete full configured GitHub/Cloudflare CI on CDP-corrected candidate",
+    "Close P00 technical/documentary gate only after exact candidate passes; preserve external UNKNOWN/BLOQUEADO fields and commercial/operational restrictions",
+    "P01 remains for next delivery; owner supplies external metadata/rights before corresponding operation/commercial activation"
   ],
   "m0_followup": [
     "Conferir visual autenticado em desktop e celular durante M1; corrigir apenas branding/layout sem renomear infraestrutura"
@@ -7494,7 +7493,7 @@
   },
   "operational_execution_matrix": "docs/MLS_SAAS_EXECUTION.json",
   "phase_index": "docs/saas/p00/README.md",
-  "current_task": "SAAS-004 / external operation and rights evidence",
+  "current_task": "SAAS-002 / final CDP lifecycle correction; SAAS-004 documentary acceptance proved",
   "saas_p00": {
     "last_commits": [
       "13bd4493d570c9f1b337f570a09c485a23bdf64f",
@@ -7729,6 +7728,35 @@
       "cloudflare_checks": "APP_AUTH_FINANCE_SUCCESS",
       "native_preview_tags_resolved_to_same_full_sha": true,
       "production_preserved": true
-    }
+    },
+    "documentary_inventory_receipt": "docs/saas/p00/CLOSEOUT.md",
+    "external_operational_dependencies": [
+      {
+        "id": "EXT-OPERATIONS",
+        "owner": "Gateway/Hermes operators and project owner",
+        "resource": "Gateway and CLI external operation metadata",
+        "cause": "Runtime version, contract, responsible operator, costs/limits, health and recovery evidence not confirmed from repository.",
+        "impact": "SAAS-004 full external inventory/operational acceptance incomplete.",
+        "minimum_to_resume": "Version/config metadata, sanitized contract/cost/limits and backup/restore runbook evidence; no secrets.",
+        "state": "BLOQUEADO",
+        "blocks_p00_documentary_inventory": false,
+        "scope": "EXTERNAL_OPERATIONAL_OR_COMMERCIAL_ACCEPTANCE",
+        "closed": false
+      },
+      {
+        "id": "EXT-RIGHTS",
+        "owner": "Project owner / rights holder",
+        "resource": "Code, contributors, trademark, avatars/reference image rights",
+        "cause": "No root license proves title; commercial rights chain not demonstrated.",
+        "impact": "No claim of commercial rights or unrestricted sale. Runtime incorporated npm MIT versions/notices verified locally.",
+        "minimum_to_resume": "Origin/license/authorization records for incorporated assets and contributor rights; no third-party contact authorized.",
+        "state": "BLOQUEADO",
+        "blocks_p00_documentary_inventory": false,
+        "scope": "EXTERNAL_OPERATIONAL_OR_COMMERCIAL_ACCEPTANCE",
+        "closed": false
+      }
+    ],
+    "current_failed_ci_run": 43764608663,
+    "current_cdp_fix_receipt": "docs/saas/p00/validation.json#current_cdp_transport_correction"
   }
 }

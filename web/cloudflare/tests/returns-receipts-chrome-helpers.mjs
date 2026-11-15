@@ -23,9 +23,54 @@ export async function receiptBrowser(){
   socket.addEventListener('message',event=>{const row=JSON.parse(event.data);emit(row.method,row.params);const call=pending.get(row.id);if(!call)return;pending.delete(row.id);clearTimeout(call.timer);row.error?call.reject(receiptProtocolError(call.method,row.error)):call.resolve(row.result);});
   const disconnected=()=>{emit('Receipt.disconnected');for(const call of pending.values()){clearTimeout(call.timer);call.reject(Error('RECEIPT_CDP_CLOSED:'+call.method));}pending.clear();};
   socket.addEventListener('close',disconnected);socket.addEventListener('error',disconnected);
-  const send=(method,params={})=>new Promise((resolve,reject)=>{const id=++sequence,timer=setTimeout(()=>{pending.delete(id);reject(Error('RECEIPT_CDP_TIMEOUT:'+method));},15000);pending.set(id,{method,resolve,reject,timer});socket.send(JSON.stringify({id,method,params}));});await send('Page.enable');await send('Runtime.enable');await send('Inspector.enable');
+  const send=(method,params={})=>new Promise((resolve,reject)=>{const id=++sequence,timer=setTimeout(()=>{pending.delete(id);reject(Error('RECEIPT_CDP_TIMEOUT:'+method));},15000);pending.set(id,{method,resolve,reject,timer});socket.send(JSON.stringify({id,method,params}));});await send('Page.enable');await send('Page.setLifecycleEventsEnabled',{enabled:true});await send('Runtime.enable');await send('Inspector.enable');
   return {send,on(method,callback){const callbacks=listeners.get(method)||new Set();callbacks.add(callback);listeners.set(method,callbacks);return ()=>{callbacks.delete(callback);if(!callbacks.size)listeners.delete(method);};},async evaluate(expression){const row=await send('Runtime.evaluate',{expression,awaitPromise:true,returnByValue:true});if(row.exceptionDetails)throw Error(row.exceptionDetails.exception?.description||row.exceptionDetails.text);return row.result.value;},close:()=>cleanup(socket)};
  }catch(error){await cleanup(socket);throw error;}
+}
+// Observe a known full-document boundary before evaluating the next page.
+// The action is issued once; crashes, JS errors and unrelated CDP errors fail.
+export async function receiptDocumentNavigation(cdp,{url,action,timeoutMs=9000}={}){
+ const expected=new URL(url);assert.equal(typeof action,'function');assert.ok(timeoutMs>0&&timeoutMs<=9000);
+ const previous=(await cdp.send('Page.getFrameTree')).frameTree?.frame;assert.ok(previous?.id&&previous.loaderId);
+ let armed=false,frame,context,loaded=false,failure,timer,resolve,reject,settled=false,cached=false,cacheProbe=false;
+ const done=new Promise((yes,no)=>{resolve=yes;reject=no;});
+ const stop=error=>{failure=error;if(!settled){settled=true;clearTimeout(timer);reject(error);}};
+ const complete=()=>{
+  if(!settled&&frame&&context&&cached&&!loaded&&!cacheProbe){cacheProbe=true;cdp.send('Runtime.evaluate',{expression:'document.readyState',contextId:context.id,returnByValue:true}).then(row=>{if(row.exceptionDetails||row.result?.value!=='complete'){stop(Error('RECEIPT_DOCUMENT_CACHE_NOT_READY'));return;}loaded=true;complete();},stop);}
+  if(!settled&&frame&&context&&loaded){settled=true;clearTimeout(timer);resolve({frameId:frame.id,loaderId:frame.loaderId,contextId:context.id});}
+ };
+ const off=[];const watch=(event,callback)=>off.push(cdp.on(event,callback));
+ watch('Page.frameNavigated',event=>{
+  if(!armed||event?.frame?.parentId)return;const next=event.frame;let destination;try{destination=new URL(next.url);}catch{stop(Error('RECEIPT_DOCUMENT_DESTINATION_INVALID'));return;}
+  if(next.id!==previous.id||!next.loaderId||next.loaderId===previous.loaderId||destination.origin!==expected.origin||destination.pathname!==expected.pathname||frame){stop(Error('RECEIPT_DOCUMENT_UNEXPECTED_NAVIGATION'));return;}
+  frame=next;cached=event.type==='BackForwardCacheRestore';complete();
+ });
+ watch('Runtime.executionContextCreated',event=>{const next=event?.context;if(armed&&next?.auxData?.isDefault===true&&next.auxData.frameId===previous.id){if(next.origin!==expected.origin||!Number.isInteger(next.id)||next.id<=0){stop(Error('RECEIPT_DOCUMENT_CONTEXT_INVALID'));return;}context=next;complete();}});
+ watch('Runtime.executionContextsCleared',()=>{if(armed)context=null;});
+ watch('Runtime.executionContextDestroyed',event=>{if(armed&&context?.id===event.executionContextId)context=null;});
+ watch('Page.lifecycleEvent',event=>{if(armed&&frame&&event.frameId===frame.id&&event.loaderId===frame.loaderId&&event.name==='load'){loaded=true;complete();}});
+ watch('Runtime.exceptionThrown',()=>{if(armed)stop(Error('RECEIPT_DOCUMENT_JAVASCRIPT_EXCEPTION'));});
+ for(const event of ['Inspector.targetCrashed','Inspector.detached','Receipt.disconnected'])watch(event,()=>{if(armed)stop(Error('RECEIPT_DOCUMENT_TARGET_UNAVAILABLE'));});
+ timer=setTimeout(()=>stop(Error('RECEIPT_DOCUMENT_NAVIGATION_INCOMPLETE')),timeoutMs);
+ const resets=new Set(['Execution context was destroyed.','Execution context was destroyed, most likely because of a navigation.','Cannot find context with specified id','Cannot find default execution context','Inspected target navigated or closed']);
+ const trigger=Promise.resolve().then(()=>{armed=true;return action();}).then(result=>{if(result?.errorText)throw Error('RECEIPT_DOCUMENT_NAVIGATE_FAILED');return result;}).catch(error=>{if(error?.cdpMethod==='Runtime.evaluate'&&[-32000,-32001].includes(error.cdpProtocolCode)&&resets.has(error.cdpProtocolMessage))return;throw error;});
+ try{const [result]=await Promise.all([done,trigger]);if(failure)throw failure;return result;}
+ finally{clearTimeout(timer);for(const remove of off)remove();}
+}
+export const receiptNavigate=(cdp,url)=>receiptDocumentNavigation(cdp,{url,action:()=>cdp.send('Page.navigate',{url})});
+
+// Re-resolve only idempotent DOM observations when rendering replaces a node.
+// Never replay input or retry across a different document/target.
+export async function receiptNodeObservation(cdp,selector,method){
+ assert.ok(['DOM.scrollIntoViewIfNeeded','DOM.getContentQuads'].includes(method),'only idempotent node observations may retry');
+ const before=(await cdp.send('Page.getFrameTree')).frameTree?.frame;assert.ok(before?.id&&before.loaderId);
+ for(let attempt=0;attempt<3;attempt++){
+  try{const doc=await cdp.send('DOM.getDocument'),target=await cdp.send('DOM.querySelector',{nodeId:doc.root.nodeId,selector});assert.ok(target.nodeId,'native action target exists: '+selector);return await cdp.send(method,{nodeId:target.nodeId});}
+  catch(error){
+   if(error?.cdpProtocolCode!==-32000||!['DOM.querySelector','DOM.scrollIntoViewIfNeeded','DOM.getContentQuads'].includes(error.cdpMethod)||error.cdpProtocolMessage!=='Could not find node with given id'||attempt===2)throw error;
+   const after=(await cdp.send('Page.getFrameTree')).frameTree?.frame;if(after?.id!==before.id||after.loaderId!==before.loaderId)throw error;
+  }
+ }
 }
 // Logout destroys the old Runtime context. Observe the actual new document
 // instead of evaluating location repeatedly across that intentional boundary.
@@ -73,14 +118,14 @@ export async function receiptWait(cdp,expression,label,diagnostic=()=>null){for(
 // No DOM .click(), form submission bypass, or synthetic activation is used.
 export async function receiptClick(cdp,selector){
  await cdp.send('Input.dispatchKeyEvent',{type:'keyDown',key:'Escape',code:'Escape',windowsVirtualKeyCode:27,modifiers:0});await cdp.send('Input.dispatchKeyEvent',{type:'keyUp',key:'Escape',code:'Escape',windowsVirtualKeyCode:27,modifiers:0});
- const doc=await cdp.send('DOM.getDocument'),target=await cdp.send('DOM.querySelector',{nodeId:doc.root.nodeId,selector});assert.ok(target.nodeId,'native action target exists: '+selector);
+ await receiptNodeObservation(cdp,selector,'DOM.scrollIntoViewIfNeeded');
  await cdp.evaluate(`(()=>{globalThis.__receiptHover=null;globalThis.__receiptTarget=${JSON.stringify(selector)};if(!globalThis.__receiptHoverListener){globalThis.__receiptActivations=[];globalThis.__receiptHoverListener=true;addEventListener('pointermove',event=>{const target=document.querySelector(__receiptTarget);__receiptHover={trusted:event.isTrusted,matches:!!target&&(target===event.target||target.contains(event.target))};},true);for(const type of ['mousedown','click'])addEventListener(type,event=>{const target=document.querySelector(__receiptTarget);__receiptActivations.push({selector:__receiptTarget,type,trusted:event.isTrusted,matches:!!target&&(target===event.target||target.contains(event.target)),target:event.target.id||event.target.className});if(__receiptActivations.length>30)__receiptActivations.shift();},true);}})()`);
  let point;
  for(let attempt=0;attempt<8;attempt++){
   await cdp.evaluate(`document.querySelector(${JSON.stringify(selector)}).scrollIntoView({block:'center',behavior:'instant'})`);
-  await cdp.send('DOM.scrollIntoViewIfNeeded',{nodeId:target.nodeId});
+  await receiptNodeObservation(cdp,selector,'DOM.scrollIntoViewIfNeeded');
   const rect=await cdp.evaluate(`(async()=>{await document.fonts.ready;let prior=null,stable=0,last;for(let i=0;i<120;i++){await new Promise(requestAnimationFrame);const node=document.querySelector(${JSON.stringify(selector)}),r=node.getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);last={x:r.x,y:r.y,width:r.width,height:r.height,visible:node.checkVisibility({checkVisibilityCSS:true}),unobscured:hit===node||node.contains(hit)};stable=last.visible&&last.unobscured&&prior&&['x','y','width','height'].every(key=>Math.abs(last[key]-prior[key])<.25)?stable+1:0;if(stable>=5)return {...last,stable};prior=last;}return {...last,stable};})()`);assert.equal(rect.visible,true,selector);assert.equal(rect.unobscured,true,'action is clear of sticky navigation');assert.ok(rect.height>=44,'actions retain44px targets');assert.ok(rect.stable>=5,'action settles before native activation');
-  await cdp.send('Page.captureScreenshot',{format:'png',fromSurface:true,captureBeyondViewport:false});const quads=await cdp.send('DOM.getContentQuads',{nodeId:target.nodeId}),q=quads.quads?.[0];assert.equal(q?.length,8);point={x:(q[0]+q[2]+q[4]+q[6])/4,y:(q[1]+q[3]+q[5]+q[7])/4};const metrics=await cdp.send('Page.getLayoutMetrics'),visual=metrics.cssVisualViewport;
+  await cdp.send('Page.captureScreenshot',{format:'png',fromSurface:true,captureBeyondViewport:false});const quads=await receiptNodeObservation(cdp,selector,'DOM.getContentQuads'),q=quads.quads?.[0];assert.equal(q?.length,8);point={x:(q[0]+q[2]+q[4]+q[6])/4,y:(q[1]+q[3]+q[5]+q[7])/4};const metrics=await cdp.send('Page.getLayoutMetrics'),visual=metrics.cssVisualViewport;
   assert.equal(await cdp.evaluate(`(()=>{const node=document.querySelector(${JSON.stringify(selector)}),hit=document.elementFromPoint(${point.x+visual.offsetX},${point.y+visual.offsetY});return hit===node||node.contains(hit);})()`),true,'measured native point belongs to action');
   await cdp.send('Input.dispatchMouseEvent',{type:'mouseMoved',x:1,y:1,modifiers:0});await cdp.send('Input.dispatchMouseEvent',{type:'mouseMoved',...point,modifiers:0});await receiptPause(30);const hover=await cdp.evaluate('globalThis.__receiptHover');if(hover?.trusted&&hover.matches)break;if(attempt===7)assert.fail('trusted native hover did not reach '+selector);
  }

@@ -1,0 +1,1032 @@
+{
+  "schema": "mls_p00_operations_register_v1",
+  "recorded_at": "2026-11-15T21:59:30.946943+00:00",
+  "scope": "Complete documentary register; external facts marked UNKNOWN remain unproved, never zero or operational approval.",
+  "canonical_checkpoint": "../../MLS_COMMERCE_OS_CHECKPOINT.json",
+  "owner_reported_providers": [
+    "Cloudflare",
+    "DigitalOcean"
+  ],
+  "services": [
+    {
+      "id": "cloudflare_app",
+      "label": "Cloudflare App",
+      "kind": "external_service",
+      "purpose": {
+        "state": "VERIFIED",
+        "value": "UI, application authorization, operational/financial views",
+        "evidence": [
+          "../../../workers/app/wrangler.json",
+          "preview-repair.json",
+          "live-reconciliation.json"
+        ]
+      },
+      "data_categories": {
+        "state": "SPECIFIED",
+        "value": [
+          "Company/store scoped application records",
+          "Operational and financial records",
+          "Session/token references as applicable"
+        ],
+        "evidence": [
+          "../../../workers/app/wrangler.json",
+          "preview-repair.json",
+          "live-reconciliation.json"
+        ]
+      },
+      "environment": {
+        "state": "VERIFIED",
+        "value": "PRODUCTION; existing version retained",
+        "evidence": [
+          "preview-repair.json"
+        ]
+      },
+      "version": {
+        "state": "VERIFIED",
+        "value": "9bfc21d6-dec9-4fa6-89d8-7ea1dec50993",
+        "evidence": [
+          "preview-repair.json",
+          "live-reconciliation.json"
+        ]
+      },
+      "responsible": {
+        "state": "SPECIFIED",
+        "value": "Cloudflare account administrator / project owner",
+        "evidence": [
+          "OPERATIONS_HISTORY_300efbd.md"
+        ]
+      },
+      "cost_plan": {
+        "state": "UNKNOWN",
+        "value": null,
+        "blocker": "EXT-OPERATIONS",
+        "reason": "Current contracted cost/plan not supplied or read; no zero/free assumption.",
+        "evidence": []
+      },
+      "limits": {
+        "state": "UNKNOWN",
+        "value": null,
+        "blocker": "EXT-OPERATIONS",
+        "reason": "Current contractual/runtime limits not supplied or read.",
+        "evidence": []
+      },
+      "secret_references": {
+        "state": "SPECIFIED",
+        "value": [
+          "Binding names only; see existing config and captured metadata, never secret values"
+        ],
+        "evidence": [
+          "../../../workers/app/wrangler.json",
+          "preview-repair.json",
+          "live-reconciliation.json"
+        ]
+      },
+      "recovery": {
+        "state": "SPECIFIED",
+        "value": "Existing release rollback/backup runbook; an actual recovery drill is not certified",
+        "evidence": [
+          "../../financial-automation/VALIDATION.md"
+        ]
+      },
+      "operational_validation": "NOT_PERFORMED_OR_PARTIAL",
+      "new_real_operations_authorized": false
+    },
+    {
+      "id": "cloudflare_auth",
+      "label": "Cloudflare Auth",
+      "kind": "external_service",
+      "purpose": {
+        "state": "VERIFIED",
+        "value": "Authentication, sessions, scoped routing",
+        "evidence": [
+          "../../../workers/auth/wrangler.json",
+          "preview-repair.json",
+          "live-reconciliation.json"
+        ]
+      },
+      "data_categories": {
+        "state": "SPECIFIED",
+        "value": [
+          "Company/store scoped application records",
+          "Operational and financial records",
+          "Session/token references as applicable"
+        ],
+        "evidence": [
+          "../../../workers/auth/wrangler.json",
+          "preview-repair.json",
+          "live-reconciliation.json"
+        ]
+      },
+      "environment": {
+        "state": "VERIFIED",
+        "value": "PRODUCTION; existing version retained",
+        "evidence": [
+          "preview-repair.json"
+        ]
+      },
+      "version": {
+        "state": "VERIFIED",
+        "value": "dfd2fc99-728f-4f29-96ee-a4b256c5640a",
+        "evidence": [
+          "preview-repair.json",
+          "live-reconciliation.json"
+        ]
+      },
+      "responsible": {
+        "state": "SPECIFIED",
+        "value": "Cloudflare account administrator / project owner",
+        "evidence": [
+          "OPERATIONS_HISTORY_300efbd.md"
+        ]
+      },
+      "cost_plan": {
+        "state": "UNKNOWN",
+        "value": null,
+        "blocker": "EXT-OPERATIONS",
+        "reason": "Current contracted cost/plan not supplied or read; no zero/free assumption.",
+        "evidence": []
+      },
+      "limits": {
+        "state": "UNKNOWN",
+        "value": null,
+        "blocker": "EXT-OPERATIONS",
+        "reason": "Current contractual/runtime limits not supplied or read.",
+        "evidence": []
+      },
+      "secret_references": {
+        "state": "SPECIFIED",
+        "value": [
+          "Binding names only; see existing config and captured metadata, never secret values"
+        ],
+        "evidence": [
+          "../../../workers/auth/wrangler.json",
+          "preview-repair.json",
+          "live-reconciliation.json"
+        ]
+      },
+      "recovery": {
+        "state": "SPECIFIED",
+        "value": "Existing release rollback/backup runbook; an actual recovery drill is not certified",
+        "evidence": [
+          "../../financial-automation/VALIDATION.md"
+        ]
+      },
+      "operational_validation": "NOT_PERFORMED_OR_PARTIAL",
+      "new_real_operations_authorized": false
+    },
+    {
+      "id": "cloudflare_finance",
+      "label": "Cloudflare Finance",
+      "kind": "external_service",
+      "purpose": {
+        "state": "VERIFIED",
+        "value": "Saved financial sources and connector implementation",
+        "evidence": [
+          "../../../workers/finance/wrangler.json",
+          "preview-repair.json",
+          "live-reconciliation.json"
+        ]
+      },
+      "data_categories": {
+        "state": "SPECIFIED",
+        "value": [
+          "Company/store scoped application records",
+          "Operational and financial records",
+          "Session/token references as applicable"
+        ],
+        "evidence": [
+          "../../../workers/finance/wrangler.json",
+          "preview-repair.json",
+          "live-reconciliation.json"
+        ]
+      },
+      "environment": {
+        "state": "VERIFIED",
+        "value": "PRODUCTION; existing version retained",
+        "evidence": [
+          "preview-repair.json"
+        ]
+      },
+      "version": {
+        "state": "VERIFIED",
+        "value": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+        "evidence": [
+          "preview-repair.json",
+          "live-reconciliation.json"
+        ]
+      },
+      "responsible": {
+        "state": "SPECIFIED",
+        "value": "Cloudflare account administrator / project owner",
+        "evidence": [
+          "OPERATIONS_HISTORY_300efbd.md"
+        ]
+      },
+      "cost_plan": {
+        "state": "UNKNOWN",
+        "value": null,
+        "blocker": "EXT-OPERATIONS",
+        "reason": "Current contracted cost/plan not supplied or read; no zero/free assumption.",
+        "evidence": []
+      },
+      "limits": {
+        "state": "UNKNOWN",
+        "value": null,
+        "blocker": "EXT-OPERATIONS",
+        "reason": "Current contractual/runtime limits not supplied or read.",
+        "evidence": []
+      },
+      "secret_references": {
+        "state": "SPECIFIED",
+        "value": [
+          "Binding names only; see existing config and captured metadata, never secret values"
+        ],
+        "evidence": [
+          "../../../workers/finance/wrangler.json",
+          "preview-repair.json",
+          "live-reconciliation.json"
+        ]
+      },
+      "recovery": {
+        "state": "SPECIFIED",
+        "value": "Existing release rollback/backup runbook; an actual recovery drill is not certified",
+        "evidence": [
+          "../../financial-automation/VALIDATION.md"
+        ]
+      },
+      "operational_validation": "NOT_PERFORMED_OR_PARTIAL",
+      "new_real_operations_authorized": false
+    },
+    {
+      "id": "cloudflare_storage",
+      "label": "Cloudflare D1/assets/cron",
+      "kind": "external_service",
+      "purpose": {
+        "state": "VERIFIED",
+        "value": "Persistence, snapshots, event ledgers, browser assets and existing jobs",
+        "evidence": [
+          "../../../web/cloudflare/src/tenant-schema-manifest.mjs",
+          "../../financial-automation/VALIDATION.md"
+        ]
+      },
+      "data_categories": {
+        "state": "SPECIFIED",
+        "value": [
+          "Company/store records",
+          "Source coverage and financial snapshots"
+        ],
+        "evidence": [
+          "../../../web/cloudflare/src/tenant-schema-manifest.mjs",
+          "../../financial-automation/VALIDATION.md"
+        ]
+      },
+      "environment": {
+        "state": "VERIFIED",
+        "value": "Existing production resources preserved; distinct P00 preview D1s",
+        "evidence": [
+          "preview-repair.json"
+        ]
+      },
+      "version": {
+        "state": "SPECIFIED",
+        "value": "Versioned repository schema; remote recovery status separately unverified",
+        "evidence": [
+          "../../../web/cloudflare/src/tenant-schema-manifest.mjs"
+        ]
+      },
+      "responsible": {
+        "state": "SPECIFIED",
+        "value": "Project owner / service operator; named remote operator not confirmed",
+        "evidence": [
+          "OPERATIONS_HISTORY_300efbd.md"
+        ]
+      },
+      "cost_plan": {
+        "state": "UNKNOWN",
+        "value": null,
+        "blocker": "EXT-OPERATIONS",
+        "reason": "Current contracted cost/plan not supplied or read; no zero/free assumption.",
+        "evidence": []
+      },
+      "limits": {
+        "state": "UNKNOWN",
+        "value": null,
+        "blocker": "EXT-OPERATIONS",
+        "reason": "Current contractual/runtime limits not supplied or read.",
+        "evidence": []
+      },
+      "secret_references": {
+        "state": "SPECIFIED",
+        "value": [
+          "ADMIN_DB",
+          "ACCOUNT_DB",
+          "FINANCE_DB"
+        ],
+        "evidence": [
+          "../../../web/cloudflare/src/tenant-schema-manifest.mjs",
+          "../../financial-automation/VALIDATION.md"
+        ]
+      },
+      "recovery": {
+        "state": "SPECIFIED",
+        "value": "Versioned additive schema and existing rollback/backup procedures; restore proof unknown",
+        "evidence": [
+          "../../financial-automation/VALIDATION.md"
+        ]
+      },
+      "operational_validation": "NOT_PERFORMED_OR_PARTIAL",
+      "new_real_operations_authorized": false
+    },
+    {
+      "id": "builds_ci",
+      "label": "Workers Builds and GitHub CI",
+      "kind": "external_service",
+      "purpose": {
+        "state": "VERIFIED",
+        "value": "Build, test and isolated preview publication",
+        "evidence": [
+          "preview-repair.json",
+          "../../../.github/workflows/validate.yml"
+        ]
+      },
+      "data_categories": {
+        "state": "SPECIFIED",
+        "value": [
+          "Public source/commit metadata",
+          "Synthetic test data; no real customer QA"
+        ],
+        "evidence": [
+          "preview-repair.json",
+          "../../../.github/workflows/validate.yml"
+        ]
+      },
+      "environment": {
+        "state": "VERIFIED",
+        "value": "GitHub CI and Cloudflare native isolated preview",
+        "evidence": [
+          "preview-repair.json"
+        ]
+      },
+      "version": {
+        "state": "VERIFIED",
+        "value": "Node24.19.0/npm11.9.0/Wrangler4.151.1 pinned; exact-source CI receipts",
+        "evidence": [
+          "validation.json",
+          "preview-repair.json"
+        ]
+      },
+      "responsible": {
+        "state": "SPECIFIED",
+        "value": "Project owner / service operator; named remote operator not confirmed",
+        "evidence": [
+          "OPERATIONS_HISTORY_300efbd.md"
+        ]
+      },
+      "cost_plan": {
+        "state": "UNKNOWN",
+        "value": null,
+        "blocker": "EXT-OPERATIONS",
+        "reason": "Current contracted cost/plan not supplied or read; no zero/free assumption.",
+        "evidence": []
+      },
+      "limits": {
+        "state": "UNKNOWN",
+        "value": null,
+        "blocker": "EXT-OPERATIONS",
+        "reason": "Current contractual/runtime limits not supplied or read.",
+        "evidence": []
+      },
+      "secret_references": {
+        "state": "SPECIFIED",
+        "value": [
+          "CLOUDFLARE_API_TOKEN by environment/header reference only"
+        ],
+        "evidence": [
+          "preview-repair.json",
+          "../../../.github/workflows/validate.yml"
+        ]
+      },
+      "recovery": {
+        "state": "SPECIFIED",
+        "value": "Revert isolated build helper/profile; never restore production D1 into previews",
+        "evidence": [
+          "preview-repair.json"
+        ]
+      },
+      "operational_validation": "NOT_PERFORMED_OR_PARTIAL",
+      "new_real_operations_authorized": false
+    },
+    {
+      "id": "integration_gateway",
+      "label": "Shopee/Ads integration gateway",
+      "kind": "external_service",
+      "purpose": {
+        "state": "VERIFIED",
+        "value": "Legacy integration transport, separate from SaaS subscription billing",
+        "evidence": [
+          "../../../web/cloudflare/original/auth-worker.mjs",
+          "OPERATIONS_HISTORY_300efbd.md"
+        ]
+      },
+      "data_categories": {
+        "state": "SPECIFIED",
+        "value": [
+          "Integration payloads and authentication references"
+        ],
+        "evidence": [
+          "../../../web/cloudflare/original/auth-worker.mjs",
+          "OPERATIONS_HISTORY_300efbd.md"
+        ]
+      },
+      "environment": {
+        "state": "UNKNOWN",
+        "value": null,
+        "blocker": "EXT-OPERATIONS",
+        "reason": "Actual external environment is not available through current access.",
+        "evidence": []
+      },
+      "version": {
+        "state": "UNKNOWN",
+        "value": null,
+        "blocker": "EXT-OPERATIONS",
+        "reason": "Actual running gateway version, installation and service mapping are unknown.",
+        "evidence": []
+      },
+      "responsible": {
+        "state": "SPECIFIED",
+        "value": "Project owner / service operator; named remote operator not confirmed",
+        "evidence": [
+          "OPERATIONS_HISTORY_300efbd.md"
+        ]
+      },
+      "cost_plan": {
+        "state": "UNKNOWN",
+        "value": null,
+        "blocker": "EXT-OPERATIONS",
+        "reason": "Current contracted cost/plan not supplied or read; no zero/free assumption.",
+        "evidence": []
+      },
+      "limits": {
+        "state": "UNKNOWN",
+        "value": null,
+        "blocker": "EXT-OPERATIONS",
+        "reason": "Current contractual/runtime limits not supplied or read.",
+        "evidence": []
+      },
+      "secret_references": {
+        "state": "SPECIFIED",
+        "value": [
+          "GATEWAY_URL",
+          "GATEWAY_SHARED_SECRET"
+        ],
+        "evidence": [
+          "../../../web/cloudflare/original/auth-worker.mjs",
+          "OPERATIONS_HISTORY_300efbd.md"
+        ]
+      },
+      "recovery": {
+        "state": "UNKNOWN",
+        "value": null,
+        "blocker": "EXT-OPERATIONS",
+        "reason": "Actual backup/restoration procedure and result not proved.",
+        "evidence": []
+      },
+      "operational_validation": "NOT_PERFORMED_OR_PARTIAL",
+      "new_real_operations_authorized": false
+    },
+    {
+      "id": "hermes_bridge",
+      "label": "Hermes bridge/CLI",
+      "kind": "external_service",
+      "purpose": {
+        "state": "VERIFIED",
+        "value": "OBSERVER supervisor and minimized financial interpretation",
+        "evidence": [
+          "../../../web/bridge/hermes_bridge.py",
+          "../../HERMES_FINANCEIRO.md"
+        ]
+      },
+      "data_categories": {
+        "state": "SPECIFIED",
+        "value": [
+          "Minimized financial context",
+          "Model prompts/responses and job references"
+        ],
+        "evidence": [
+          "../../../web/bridge/hermes_bridge.py",
+          "../../HERMES_FINANCEIRO.md"
+        ]
+      },
+      "environment": {
+        "state": "SPECIFIED",
+        "value": "Repository runbook describes a Droplet; installed environment/provider mapping still needs proof",
+        "evidence": [
+          "../../HERMES_FINANCEIRO.md"
+        ]
+      },
+      "version": {
+        "state": "UNKNOWN",
+        "value": null,
+        "blocker": "EXT-OPERATIONS",
+        "reason": "Repository protocol/hermes-finance-v1 is known; installed bridge/CLI/model version is not proved.",
+        "evidence": []
+      },
+      "responsible": {
+        "state": "SPECIFIED",
+        "value": "Project owner / service operator; named remote operator not confirmed",
+        "evidence": [
+          "OPERATIONS_HISTORY_300efbd.md"
+        ]
+      },
+      "cost_plan": {
+        "state": "UNKNOWN",
+        "value": null,
+        "blocker": "EXT-OPERATIONS",
+        "reason": "Current contracted cost/plan not supplied or read; no zero/free assumption.",
+        "evidence": []
+      },
+      "limits": {
+        "state": "UNKNOWN",
+        "value": null,
+        "blocker": "EXT-OPERATIONS",
+        "reason": "Current contractual/runtime limits not supplied or read.",
+        "evidence": []
+      },
+      "secret_references": {
+        "state": "SPECIFIED",
+        "value": [
+          "HERMES_BRIDGE_SECRET"
+        ],
+        "evidence": [
+          "../../../web/bridge/hermes_bridge.py",
+          "../../HERMES_FINANCEIRO.md"
+        ]
+      },
+      "recovery": {
+        "state": "SPECIFIED",
+        "value": "Runbook: check old version, backup, atomic replacement and idle-only restart; no actual restoration demonstrated",
+        "evidence": [
+          "../../HERMES_FINANCEIRO.md"
+        ]
+      },
+      "operational_validation": "NOT_PERFORMED_OR_PARTIAL",
+      "new_real_operations_authorized": false
+    },
+    {
+      "id": "digitalocean_platform",
+      "label": "DigitalOcean",
+      "kind": "reported_platform",
+      "purpose": {
+        "state": "VERIFIED",
+        "value": "Infrastructure provider reported by owner; service-level mapping unconfirmed",
+        "evidence": [
+          "OPERATIONS_HISTORY_300efbd.md"
+        ]
+      },
+      "data_categories": {
+        "state": "SPECIFIED",
+        "value": [
+          "Actual hosted categories not read"
+        ],
+        "evidence": [
+          "OPERATIONS_HISTORY_300efbd.md"
+        ]
+      },
+      "environment": {
+        "state": "OWNER_REPORTED",
+        "value": "DigitalOcean is used",
+        "evidence": [
+          "preview-repair.json#owner_provider_update"
+        ]
+      },
+      "version": {
+        "state": "UNKNOWN",
+        "value": null,
+        "blocker": "EXT-OPERATIONS",
+        "reason": "No active DigitalOcean connector/token/doctl/target access in current environment.",
+        "evidence": []
+      },
+      "responsible": {
+        "state": "SPECIFIED",
+        "value": "Project owner / service operator; named remote operator not confirmed",
+        "evidence": [
+          "OPERATIONS_HISTORY_300efbd.md"
+        ]
+      },
+      "cost_plan": {
+        "state": "UNKNOWN",
+        "value": null,
+        "blocker": "EXT-OPERATIONS",
+        "reason": "Current contracted cost/plan not supplied or read; no zero/free assumption.",
+        "evidence": []
+      },
+      "limits": {
+        "state": "UNKNOWN",
+        "value": null,
+        "blocker": "EXT-OPERATIONS",
+        "reason": "Current contractual/runtime limits not supplied or read.",
+        "evidence": []
+      },
+      "secret_references": {
+        "state": "SPECIFIED",
+        "value": [],
+        "evidence": [
+          "OPERATIONS_HISTORY_300efbd.md"
+        ]
+      },
+      "recovery": {
+        "state": "UNKNOWN",
+        "value": null,
+        "blocker": "EXT-OPERATIONS",
+        "reason": "Actual backup/restoration procedure and result not proved.",
+        "evidence": []
+      },
+      "operational_validation": "NOT_PERFORMED_OR_PARTIAL",
+      "new_real_operations_authorized": false
+    },
+    {
+      "id": "saas_psp",
+      "label": "SaaS subscription PSP",
+      "kind": "external_service",
+      "purpose": {
+        "state": "VERIFIED",
+        "value": "Subscription payment adapter, separate from integration gateway",
+        "evidence": [
+          "../../v4/EXTERNAL_DEPENDENCIES.json",
+          "OPERATIONS_HISTORY_300efbd.md"
+        ]
+      },
+      "data_categories": {
+        "state": "SPECIFIED",
+        "value": [
+          "Subscription and webhook metadata if configured"
+        ],
+        "evidence": [
+          "../../v4/EXTERNAL_DEPENDENCIES.json",
+          "OPERATIONS_HISTORY_300efbd.md"
+        ]
+      },
+      "environment": {
+        "state": "SPECIFIED",
+        "value": "Provider contract/configuration not confirmed; UI remains NOT_CONFIGURED",
+        "evidence": [
+          "OPERATIONS_HISTORY_300efbd.md"
+        ]
+      },
+      "version": {
+        "state": "UNKNOWN",
+        "value": null,
+        "blocker": "EXT-BILLING",
+        "reason": "PSP adapter/contract version not confirmed.",
+        "evidence": []
+      },
+      "responsible": {
+        "state": "SPECIFIED",
+        "value": "Project owner / service operator; named remote operator not confirmed",
+        "evidence": [
+          "OPERATIONS_HISTORY_300efbd.md"
+        ]
+      },
+      "cost_plan": {
+        "state": "UNKNOWN",
+        "value": null,
+        "blocker": "EXT-BILLING",
+        "reason": "No price/trial/fee invented.",
+        "evidence": []
+      },
+      "limits": {
+        "state": "UNKNOWN",
+        "value": null,
+        "blocker": "EXT-BILLING",
+        "reason": "No contractual quota confirmed.",
+        "evidence": []
+      },
+      "secret_references": {
+        "state": "SPECIFIED",
+        "value": [
+          "Future PSP/webhook secrets by reference only"
+        ],
+        "evidence": [
+          "../../v4/EXTERNAL_DEPENDENCIES.json",
+          "OPERATIONS_HISTORY_300efbd.md"
+        ]
+      },
+      "recovery": {
+        "state": "UNKNOWN",
+        "value": null,
+        "blocker": "EXT-OPERATIONS",
+        "reason": "Actual backup/restoration procedure and result not proved.",
+        "evidence": []
+      },
+      "operational_validation": "NOT_PERFORMED_OR_PARTIAL",
+      "new_real_operations_authorized": false
+    },
+    {
+      "id": "email_delivery",
+      "label": "Transactional email",
+      "kind": "external_service",
+      "purpose": {
+        "state": "VERIFIED",
+        "value": "Interface/outbox, separate from confirmed actual delivery",
+        "evidence": [
+          "../../v4/EXTERNAL_DEPENDENCIES.json",
+          "OPERATIONS_HISTORY_300efbd.md"
+        ]
+      },
+      "data_categories": {
+        "state": "SPECIFIED",
+        "value": [
+          "Account notices and delivery metadata if activated"
+        ],
+        "evidence": [
+          "../../v4/EXTERNAL_DEPENDENCIES.json",
+          "OPERATIONS_HISTORY_300efbd.md"
+        ]
+      },
+      "environment": {
+        "state": "SPECIFIED",
+        "value": "Interface exists; actual provider/delivery not confirmed",
+        "evidence": [
+          "OPERATIONS_HISTORY_300efbd.md"
+        ]
+      },
+      "version": {
+        "state": "UNKNOWN",
+        "value": null,
+        "blocker": "EXT-EMAIL",
+        "reason": "Delivery provider/version unknown.",
+        "evidence": []
+      },
+      "responsible": {
+        "state": "SPECIFIED",
+        "value": "Project owner / service operator; named remote operator not confirmed",
+        "evidence": [
+          "OPERATIONS_HISTORY_300efbd.md"
+        ]
+      },
+      "cost_plan": {
+        "state": "UNKNOWN",
+        "value": null,
+        "blocker": "EXT-OPERATIONS",
+        "reason": "Current contracted cost/plan not supplied or read; no zero/free assumption.",
+        "evidence": []
+      },
+      "limits": {
+        "state": "UNKNOWN",
+        "value": null,
+        "blocker": "EXT-OPERATIONS",
+        "reason": "Current contractual/runtime limits not supplied or read.",
+        "evidence": []
+      },
+      "secret_references": {
+        "state": "SPECIFIED",
+        "value": [
+          "Provider credentials not supplied"
+        ],
+        "evidence": [
+          "../../v4/EXTERNAL_DEPENDENCIES.json",
+          "OPERATIONS_HISTORY_300efbd.md"
+        ]
+      },
+      "recovery": {
+        "state": "UNKNOWN",
+        "value": null,
+        "blocker": "EXT-OPERATIONS",
+        "reason": "Actual backup/restoration procedure and result not proved.",
+        "evidence": []
+      },
+      "operational_validation": "NOT_PERFORMED_OR_PARTIAL",
+      "new_real_operations_authorized": false
+    },
+    {
+      "id": "wallet_bank_sources",
+      "label": "Wallet/payout and automatic bank sources",
+      "kind": "external_service",
+      "purpose": {
+        "state": "VERIFIED",
+        "value": "Interfaces/capabilities and assisted CSV/OFX; native automation requires adapter/grants/consent",
+        "evidence": [
+          "../../financial-automation/MATRIZ_EXECUCAO.json",
+          "../../financial-automation/README.md"
+        ]
+      },
+      "data_categories": {
+        "state": "SPECIFIED",
+        "value": [
+          "Authorized financial source records only"
+        ],
+        "evidence": [
+          "../../financial-automation/MATRIZ_EXECUCAO.json",
+          "../../financial-automation/README.md"
+        ]
+      },
+      "environment": {
+        "state": "SPECIFIED",
+        "value": "Capability/adapter/access/coverage states are distinct; bank automation not complete",
+        "evidence": [
+          "../../financial-automation/MATRIZ_EXECUCAO.json"
+        ]
+      },
+      "version": {
+        "state": "SPECIFIED",
+        "value": "Versioned application interfaces; no provider operational certification",
+        "evidence": [
+          "financial-lineage.json"
+        ]
+      },
+      "responsible": {
+        "state": "SPECIFIED",
+        "value": "Project owner / service operator; named remote operator not confirmed",
+        "evidence": [
+          "OPERATIONS_HISTORY_300efbd.md"
+        ]
+      },
+      "cost_plan": {
+        "state": "UNKNOWN",
+        "value": null,
+        "blocker": "EXT-FINANCIAL-SOURCES",
+        "reason": "Provider contract not confirmed.",
+        "evidence": []
+      },
+      "limits": {
+        "state": "UNKNOWN",
+        "value": null,
+        "blocker": "EXT-FINANCIAL-SOURCES",
+        "reason": "Actual source grants/coverage/quotas not confirmed.",
+        "evidence": []
+      },
+      "secret_references": {
+        "state": "SPECIFIED",
+        "value": [
+          "Per-store/provider grants by reference only; no bank password"
+        ],
+        "evidence": [
+          "../../financial-automation/MATRIZ_EXECUCAO.json",
+          "../../financial-automation/README.md"
+        ]
+      },
+      "recovery": {
+        "state": "UNKNOWN",
+        "value": null,
+        "blocker": "EXT-OPERATIONS",
+        "reason": "Actual backup/restoration procedure and result not proved.",
+        "evidence": []
+      },
+      "operational_validation": "NOT_PERFORMED_OR_PARTIAL",
+      "new_real_operations_authorized": false
+    },
+    {
+      "id": "local_qa",
+      "label": "Local synthetic QA toolchain",
+      "kind": "local_qa",
+      "purpose": {
+        "state": "VERIFIED",
+        "value": "Local Chromium/media render and synthetic validation",
+        "evidence": [
+          "validation.json",
+          "rights-inventory.json",
+          "sbom.cdx.json"
+        ]
+      },
+      "data_categories": {
+        "state": "SPECIFIED",
+        "value": [
+          "Synthetic fixtures only"
+        ],
+        "evidence": [
+          "validation.json",
+          "rights-inventory.json",
+          "sbom.cdx.json"
+        ]
+      },
+      "environment": {
+        "state": "VERIFIED",
+        "value": "Managed /workspace and GitHub Actions synthetic QA",
+        "evidence": [
+          "validation.json",
+          "preview-repair.json"
+        ]
+      },
+      "version": {
+        "state": "VERIFIED",
+        "value": "Pinned package lock and versioned QA environment receipts",
+        "evidence": [
+          "sbom.cdx.json",
+          "validation.json"
+        ]
+      },
+      "responsible": {
+        "state": "SPECIFIED",
+        "value": "Project owner / service operator; named remote operator not confirmed",
+        "evidence": [
+          "OPERATIONS_HISTORY_300efbd.md"
+        ]
+      },
+      "cost_plan": {
+        "state": "UNKNOWN",
+        "value": null,
+        "blocker": "EXT-OPERATIONS",
+        "reason": "Current contracted cost/plan not supplied or read; no zero/free assumption.",
+        "evidence": []
+      },
+      "limits": {
+        "state": "UNKNOWN",
+        "value": null,
+        "blocker": "EXT-OPERATIONS",
+        "reason": "Current contractual/runtime limits not supplied or read.",
+        "evidence": []
+      },
+      "secret_references": {
+        "state": "SPECIFIED",
+        "value": [],
+        "evidence": [
+          "validation.json",
+          "rights-inventory.json",
+          "sbom.cdx.json"
+        ]
+      },
+      "recovery": {
+        "state": "SPECIFIED",
+        "value": "Rebuild local disposable fixtures/toolchain; tool/font redistribution requires its own notices",
+        "evidence": [
+          "rights-inventory.json"
+        ]
+      },
+      "operational_validation": "NOT_PERFORMED_OR_PARTIAL",
+      "new_real_operations_authorized": false
+    }
+  ],
+  "dependencies": {
+    "EXT-OPERATIONS": {
+      "state": "BLOQUEADO",
+      "owner": "Project owner / gateway-Hermes operators",
+      "impact": "Actual remote operation/change/recovery acceptance; no installed-version/cost/restore claim",
+      "minimum_evidence": "Actual operator/environment/version/plan/limits and backup/restore record or supported read access"
+    },
+    "EXT-RIGHTS": {
+      "state": "BLOQUEADO",
+      "owner": "Project owner / rights holder",
+      "impact": "Commercial redistribution/use that relies on unproved origin/authorization",
+      "minimum_evidence": "Origin/license/authorization references by code/media/brand family"
+    },
+    "EXT-BILLING": {
+      "state": "BLOQUEADO",
+      "owner": "Project owner / PSP",
+      "impact": "Real subscriptions/billing activation",
+      "minimum_evidence": "Provider contract/sandbox/configuration and applicable consent"
+    },
+    "EXT-EMAIL": {
+      "state": "BLOQUEADO",
+      "owner": "Project owner / mail operator",
+      "impact": "Actual external delivery",
+      "minimum_evidence": "Provider/domain/contract and authorized delivery proof"
+    },
+    "EXT-FINANCIAL-SOURCES": {
+      "state": "BLOQUEADO",
+      "owner": "Project owner / account holders and providers",
+      "impact": "Full financial source/automatic bank acceptance; M2/M2.2 remain open",
+      "minimum_evidence": "Provider grants/adapters/consents and equivalent real sources"
+    }
+  },
+  "embedded_runtime_license_scope": {
+    "components": [
+      {
+        "name": "otpauth",
+        "version": "9.6.0",
+        "license": "MIT",
+        "decision": "USE_WITH_RETAINED_NOTICE"
+      },
+      {
+        "name": "@noble/hashes",
+        "version": "2.4.0",
+        "license": "MIT",
+        "decision": "USE_WITH_RETAINED_NOTICE"
+      }
+    ],
+    "evidence": [
+      "sbom.cdx.json",
+      "THIRD_PARTY_NOTICES.txt"
+    ],
+    "runtime_license_texts_verified": true,
+    "root_title_or_media_commercial_authorization_proved": false
+  },
+  "history_archives": [
+    {
+      "source_sha": "300efbd9d4094f7a73a9430a9db94d53c6648632",
+      "source_path": "docs/saas/p00/README.md",
+      "archive": "README_HISTORY_300efbd.md",
+      "sha256": "12f2283ec69be330c537a70876ec098cee93fb651e70d1fe6d23a583f446c583"
+    },
+    {
+      "source_sha": "300efbd9d4094f7a73a9430a9db94d53c6648632",
+      "source_path": "docs/saas/p00/OPERATIONS.md",
+      "archive": "OPERATIONS_HISTORY_300efbd.md",
+      "sha256": "7d006bda5da5350521b8321d489960b6f0341812a4392e2f950b21f3f615635e"
+    }
+  ],
+  "documentary_acceptance": true,
+  "operational_acceptance": false,
+  "commercial_release_approved": false,
+  "production_change_authorized_by_register": false,
+  "plan_gateway_limit_change_policy": "No change needed/performed for CI repair; notify owner before any proven necessary future change and obtain applicable authorization."
+}
