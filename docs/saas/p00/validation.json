@@ -182,5 +182,29 @@
     ]
   },
   "current_preview_repair": "docs/saas/p00/preview-repair.json",
-  "historical_receipt_note": "Original fields retained as dated evidence; current repair has its own receipt and code input hashes, actual automatic checks must be read on PR122."
+  "historical_receipt_note": "Original fields retained as dated evidence; current repair has its own receipt and code input hashes, actual automatic checks must be read on PR122.",
+  "latest_local_preview_validation": {
+    "source_sha": "ad7e0fbe3968029a75e373d972f4bfc307056cba",
+    "receipt": "docs/saas/p00/preview-repair.json",
+    "node": 4437,
+    "python": 67,
+    "production_hashes_unchanged": true
+  },
+  "latest_candidate_github_validation": {
+    "source_sha": "ad7e0fbe3968029a75e373d972f4bfc307056cba",
+    "run": 43683071100,
+    "job": 132717673268,
+    "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43683071100",
+    "conclusion": "success",
+    "stdout_excerpt": [
+      "2026-11-15T06:06:34.0351093Z # tests 4437",
+      "2026-11-15T06:06:34.0351551Z # pass 4437",
+      "2026-11-15T06:06:34.0351758Z # fail 0",
+      "2026-11-15T06:06:34.0351958Z # cancelled 0",
+      "2026-11-15T06:06:34.0352168Z # skipped 0",
+      "2026-11-15T06:06:38.7526194Z Ran 67 tests in 0.509s",
+      "2026-11-15T06:06:41.1017176Z RELEASE_LOCAL_PREFLIGHT_OK",
+      "2026-11-15T06:06:41.1025173Z RELEASE_NOT_APPROVED_FOR_PRODUCTION"
+    ]
+  }
 }

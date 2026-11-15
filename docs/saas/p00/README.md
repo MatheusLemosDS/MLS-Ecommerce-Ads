@@ -1,4 +1,4 @@
-> **Retomada atual:** PR122 rascunho; reparo autorizado de previews aplicado e testado isoladamente. Live preservada. Ver [recibo do preview](preview-repair.json), [operação atual](OPERATIONS.md#reparo-autorizado-de-preview--resultado-atual), checkpoint e matriz. As afirmações anteriores de “sem push/PR/deploy” abaixo pertencem ao histórico anterior à autorização; houve publicação somente isolada. P00 ainda depende dos checks atuais e evidências de operação/direitos.
+> **Estado atual:** preview isolado autorizado, implementado, publicado e testado tecnicamente; Live preservada. Gates locais:4437 Node/67 Python, build com os mesmos três hashes,5 testes focados e14 de preflight, Chromium desktop/celular. Os três Builds automáticos falharam no candidato `ad7e0fb`; logs oficiais403/12004. A causa atual depende do texto do novo erro, não é inferida do smoke local. P00 permanece BLOQUEADA também por operação/direitos. [Recibo e retomada](preview-repair.json). O restante abaixo conserva o histórico datado.
 
 ## Revisão GitHub — PR122
 

@@ -646,8 +646,8 @@
       ],
       "dependencias_externas": [],
       "condicional_ao_escopo_vendido": false,
-      "estado": "EM_IMPLEMENTACAO",
-      "commit_implementacao": "84487108fa9c1292e90a62296ea8a597ffaad619",
+      "estado": "BLOQUEADO",
+      "commit_implementacao": "ad7e0fbe3968029a75e373d972f4bfc307056cba",
       "evidencias_testes": [
         "docs/saas/p00/github-reconciliation.json",
         "docs/saas/p00/ci-excerpts.json",
@@ -656,17 +656,29 @@
       ],
       "evidencias_publicacao": [],
       "evidencias_operacionais": [],
-      "bloqueios": [],
+      "bloqueios": [
+        {
+          "id": "EXT-CLOUDFLARE-CHECKS",
+          "owner": "Cloudflare administrator/operator",
+          "resource": "App/Auth/Finance Workers Builds on PR122 at ad7e0fbe3968029a75e373d972f4bfc307056cba",
+          "cause": "All three automatic Builds failed on repaired source ad7e0fb. Check outputs have no error text; official GET build logs returns403/code12004. Direct native previews and isolated QA passed, which does not prove automatic CI.",
+          "impact": "External checks not approved; P00 CI acceptance/release remains blocked. Production untouched.",
+          "minimum_to_resume": "Owner supplies final error text from App build be2e4da4-5899-466b-83c1-4f03a1b27268 and corresponding Auth/Finance logs, or existing supported Workers CI Read secret access. Do not paste credentials, change permissions automatically, bypass or cancel checks."
+        }
+      ],
       "gate_anterior": null,
       "published_this_delivery": false,
       "validated_operationally": false,
       "acceptance_scope": "DOCUMENTARY_AND_LOCAL_TECHNICAL_ONLY",
       "last_stage_reached": "TESTADO",
       "acceptance_satisfied": false,
-      "local_acceptance": false,
-      "reason": "New build/preview correction requires its own focused/full local gates and automatic checks; previous CI evidence retained as historical, not current approval.",
-      "candidate_ci_run": 43615841211,
-      "candidate_ci_source_sha": "f7600485fd717d2836f005e06fa3c02634661457"
+      "local_acceptance": true,
+      "reason": "Exact source ad7e0fb passed GitHub run43683071100:4437 Node/67 Python,build,PR preflight, plus local/isolated QA. Three external Builds failed on same source; official logs403/12004. Full configured CI acceptance remains blocked.",
+      "candidate_ci_run": 43683071100,
+      "candidate_ci_source_sha": "ad7e0fbe3968029a75e373d972f4bfc307056cba",
+      "isolated_preview_published": true,
+      "current_candidate_sha": "ad7e0fbe3968029a75e373d972f4bfc307056cba",
+      "current_candidate_github_run": 43683071100
     },
     {
       "id": "SAAS-003",
@@ -5470,7 +5482,7 @@
   "updated_at": "2026-11-15T05:49:41.470230+00:00",
   "scope_of_this_delivery": "P00 only; P01–P11 remain future deliveries. Existing financial matrix is a scoped historical implementation receipt, not a second active SaaS execution state.",
   "current_candidate": {
-    "source_commit": "84487108fa9c1292e90a62296ea8a597ffaad619",
+    "source_commit": "ad7e0fbe3968029a75e373d972f4bfc307056cba",
     "remote_base": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
     "documentation_parent": "0a5a22897d3cf56f97b7b995eb78a743fc0a246e",
     "branch": "feature/saas-p00-baseline-20261114",
@@ -5480,27 +5492,28 @@
       "tools/release-approved-candidate.json",
       "tools/tests/release-preflight.test.mjs"
     ],
-    "publication": "DRAFT_PR122_ISOLATED_PREVIEW_PUBLISHED_NO_PRODUCTION",
+    "publication": "DRAFT_PR122_ISOLATED_PREVIEW_PUBLISHED_PRODUCTION_UNCHANGED",
     "operational_acceptance": false,
-    "review_head_sha": "f7600485fd717d2836f005e06fa3c02634661457",
+    "review_head_sha": "ad7e0fbe3968029a75e373d972f4bfc307056cba",
     "pull_request": 122,
-    "github_ci_run": 43615841211,
-    "approved_github_source_commit": "f7600485fd717d2836f005e06fa3c02634661457",
-    "approved_github_ci_run": 43615841211,
-    "receipt_successor_checks": "Current repaired candidate must pass all configured checks; see PR122 current head; no approval inferred from historical SHA.",
-    "latest_reviewed_ci_sha": "f5973b0e9b48df927e7c19954805d622839cb389",
-    "latest_reviewed_ci_run": 43617930680,
+    "github_ci_run": 43683071100,
+    "approved_github_source_commit": "ad7e0fbe3968029a75e373d972f4bfc307056cba",
+    "approved_github_ci_run": 43683071100,
+    "receipt_successor_checks": "Evidence-only successor gets its own normal checks. Exact-source evidence listed in receipt; never transfer full CI approval across SHAs.",
+    "latest_reviewed_ci_sha": "ad7e0fbe3968029a75e373d972f4bfc307056cba",
+    "latest_reviewed_ci_run": 43683071100,
     "candidate_parent_sha": "2b06a16abd9e551126033016d9fd9706ad926e1c",
-    "preview_repair_receipt": "docs/saas/p00/preview-repair.json"
+    "preview_repair_receipt": "docs/saas/p00/preview-repair.json",
+    "local_gates_receipt": "docs/saas/p00/preview-repair.json"
   },
   "external_blockers_p00": [
     {
       "id": "EXT-CLOUDFLARE-CHECKS",
       "owner": "Cloudflare administrator/operator",
-      "resource": "Three external Workers Builds checks on PR122",
-      "cause": "Historical App log proves missing previews block; authorized isolated profiles/base now applied and native preview smoke succeeded. Repaired automatic checks not yet observed. Builds/logs API read still403 with existing token.",
-      "impact": "External checks are not approved; diagnosis and applicable release gates remain pending.",
-      "minimum_to_resume": "Inspect all normal checks on repaired PR122 head; diagnose failures with supported logs if any. No bypass/cancellation or production deploy."
+      "resource": "App/Auth/Finance Workers Builds on PR122 at ad7e0fbe3968029a75e373d972f4bfc307056cba",
+      "cause": "All three automatic Builds failed on repaired source ad7e0fb. Check outputs have no error text; official GET build logs returns403/code12004. Direct native previews and isolated QA passed, which does not prove automatic CI.",
+      "impact": "External checks not approved; P00 CI acceptance/release remains blocked. Production untouched.",
+      "minimum_to_resume": "Owner supplies final error text from App build be2e4da4-5899-466b-83c1-4f03a1b27268 and corresponding Auth/Finance logs, or existing supported Workers CI Read secret access. Do not paste credentials, change permissions automatically, bypass or cancel checks."
     },
     {
       "id": "EXT-OPERATIONS",

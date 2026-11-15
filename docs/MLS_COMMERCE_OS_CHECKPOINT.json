@@ -31,13 +31,14 @@
   },
   "current_phase": "P00",
   "working_branch": "feature/saas-p00-baseline-20261114",
-  "current_status": "P00_BLOQUEADO_PREVIEW_ISOLADO_REPARADO_GATES_EM_VALIDACAO",
+  "current_status": "P00_BLOQUEADO_LOCAL_TESTADO_PREVIEW_ISOLADO_PUBLICADO_BUILDS_AUTOMATICOS_FALHARAM",
   "completed_this_phase": [
     "Main/PR121/current CI/live versions and bytes reconciled",
     "Documentary ancestor 0a5a228 and complete histories preserved",
     "22 modules, 25 financial value types, 93 route rules, 94 lock components and 78 asset hashes inventoried",
     "Exact preflight base/path/authorization refreshed without changing Worker hashes or gates",
-    "Local validation evidence recorded in docs/saas/p00/validation.json"
+    "Local validation evidence recorded in docs/saas/p00/validation.json",
+    "Authorized isolated preview repair: separate D1/Workers/secrets; local4437 Node/67 Python, focused tests, native previews and desktop/mobile Chromium passed; production versions/settings preserved"
   ],
   "remaining_this_phase": [
     "EXT-CLOUDFLARE-CHECKS",
@@ -47,9 +48,9 @@
   "next_phase": "P01_DEFERRED_UNTIL_NEXT_DELIVERY_AND_APPLICABLE_GATES",
   "previous_phase": "DOCUMENTATION_ORGANIZATION_LOCAL_0a5a228",
   "next_actions": [
-    "Finish required local gates and inspect normal automatic checks on exact PR122 candidate",
-    "Complete EXT-OPERATIONS gateway/Hermes version/operator/cost/limits/recovery metadata",
-    "Complete EXT-RIGHTS ownership/license provenance; P01 only next delivery"
+    "Obtain final error text for App build be2e4da4-5899-466b-83c1-4f03a1b27268 and matching Auth/Finance logs; official log reads403/12004",
+    "Preserve all automatic checks for evidence-only successor; exact-source run43683071100 passed at ad7e0fb",
+    "Complete EXT-OPERATIONS gateway/Hermes version/operator/cost/limits/recovery and EXT-RIGHTS provenance; P01 next delivery only"
   ],
   "m0_followup": [
     "Conferir visual autenticado em desktop e celular durante M1; corrigir apenas branding/layout sem renomear infraestrutura"
@@ -7493,9 +7494,10 @@
   },
   "operational_execution_matrix": "docs/MLS_SAAS_EXECUTION.json",
   "phase_index": "docs/saas/p00/README.md",
-  "current_task": "SAAS-002 / authorized isolated preview build repair",
+  "current_task": "SAAS-002 / obtain actual error from repaired automatic Builds; SAAS-004 external evidence",
   "saas_p00": {
     "last_commits": [
+      "ad7e0fbe3968029a75e373d972f4bfc307056cba",
       "2b06a16abd9e551126033016d9fd9706ad926e1c",
       "a1bf89a3bb7ebe553e6d76c9ea2a47097131f725",
       "1906de4918462aabdbffe66f32071abdcfe4957e",
@@ -7518,10 +7520,10 @@
       {
         "id": "EXT-CLOUDFLARE-CHECKS",
         "owner": "Cloudflare administrator/operator",
-        "resource": "Three external Workers Builds checks on PR122",
-        "cause": "Historical App log proves missing previews block; authorized isolated profiles/base now applied and native preview smoke succeeded. Repaired automatic checks not yet observed. Builds/logs API read still403 with existing token.",
-        "impact": "External checks are not approved; diagnosis and applicable release gates remain pending.",
-        "minimum_to_resume": "Inspect all normal checks on repaired PR122 head; diagnose failures with supported logs if any. No bypass/cancellation or production deploy."
+        "resource": "App/Auth/Finance Workers Builds on PR122 at ad7e0fbe3968029a75e373d972f4bfc307056cba",
+        "cause": "All three automatic Builds failed on repaired source ad7e0fb. Check outputs have no error text; official GET build logs returns403/code12004. Direct native previews and isolated QA passed, which does not prove automatic CI.",
+        "impact": "External checks not approved; P00 CI acceptance/release remains blocked. Production untouched.",
+        "minimum_to_resume": "Owner supplies final error text from App build be2e4da4-5899-466b-83c1-4f03a1b27268 and corresponding Auth/Finance logs, or existing supported Workers CI Read secret access. Do not paste credentials, change permissions automatically, bypass or cancel checks."
       },
       {
         "id": "EXT-OPERATIONS",
@@ -7542,12 +7544,12 @@
     ],
     "migrations": "Three preview-only empty D1s created; synthetic schema initialization only, no production migrations",
     "rollback": "Revert isolated preview hook/profiles; remove only new isolated resources when appropriate. Never restore production ADMIN_DB in preview base.",
-    "next_executable_command": "python3 docs/saas/p00/validate-documentation.py",
-    "next_external_action": "Inspect exact repaired PR122 automatic checks; supply external operational/rights evidence, no secrets.",
+    "next_executable_command": "Connected GitHub GET /repos/MatheusLemosDS/MLS-Ecommerce-Ads/commits/{PR122_current_head}/check-runs; then diagnose supplied Build error text",
+    "next_external_action": "Owner supplies final error text from App build be2e4da4-5899-466b-83c1-4f03a1b27268 and corresponding Auth/Finance logs, or existing supported Workers CI Read secret access. Do not paste credentials, change permissions automatically, bypass or cancel checks.",
     "next_implementation_item": "SAAS-005 / P01, next delivery only",
     "blocker_review": "docs/saas/p00/blocker-review-20261114.json",
     "external_evidence_request": "docs/saas/p00/EXTERNAL_EVIDENCE_REQUEST.md",
-    "git_review_status": "Existing PR122 remains draft/unmerged/no auto-merge. New preview repair awaiting normal candidate checks; production preserved.",
+    "git_review_status": "PR122 draft/unmerged/no auto-merge. Source ad7e0fb passed local and GitHub gates; three external Builds failed and logs403. Evidence-only successor receives its own checks. Production preserved.",
     "github_review": {
       "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/122",
       "draft": true,
@@ -7600,6 +7602,25 @@
     "authorization_update": {
       "source": "Owner explicit authorization after App missing-previews log, followed by Continue",
       "scope": "Repair isolated previews and required build selection; preserve production, commercial gates, databases, domains, secrets and workflows; no real provider operations"
+    },
+    "current_source_commit": "ad7e0fbe3968029a75e373d972f4bfc307056cba",
+    "latest_local_validation": "docs/saas/p00/preview-repair.json",
+    "current_github_validation": {
+      "source_sha": "ad7e0fbe3968029a75e373d972f4bfc307056cba",
+      "run": 43683071100,
+      "job": 132717673268,
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43683071100",
+      "conclusion": "success",
+      "stdout_excerpt": [
+        "2026-11-15T06:06:34.0351093Z # tests 4437",
+        "2026-11-15T06:06:34.0351551Z # pass 4437",
+        "2026-11-15T06:06:34.0351758Z # fail 0",
+        "2026-11-15T06:06:34.0351958Z # cancelled 0",
+        "2026-11-15T06:06:34.0352168Z # skipped 0",
+        "2026-11-15T06:06:38.7526194Z Ran 67 tests in 0.509s",
+        "2026-11-15T06:06:41.1017176Z RELEASE_LOCAL_PREFLIGHT_OK",
+        "2026-11-15T06:06:41.1025173Z RELEASE_NOT_APPROVED_FOR_PRODUCTION"
+      ]
     }
   }
 }

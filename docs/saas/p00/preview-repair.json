@@ -1,6 +1,6 @@
 {
   "schema": "mls_p00_isolated_preview_receipt_v1",
-  "recorded_at": "2026-11-15T05:49:41.470230+00:00",
+  "recorded_at": "2026-11-15T06:03:10.294543+00:00",
   "base_sha": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
   "candidate_parent_sha": "2b06a16abd9e551126033016d9fd9706ad926e1c",
   "branch": "feature/saas-p00-baseline-20261114",
@@ -805,16 +805,84 @@
         }
       ],
       "runtime_errors": [],
-      "external_request_hosts": []
+      "external_request_hosts": [],
+      "visual_review": "Generated desktop/mobile screenshots inspected; isolation banner and responsive UI visible. Six ordered agent cards also confirmed by DOM in both viewports."
     },
-    "node_suite": "RUNNING",
-    "final_build": "PENDING",
+    "node_suite": {
+      "command": "npm test",
+      "exit_code": 0,
+      "summary": {
+        "tests": 4437,
+        "pass": 4437,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "duration_ms": 1008536.794415,
+      "log_sha256": "c948bae9a24765e0420e1860f842d05ceee1abb125870d6a8546cbe380b93a30",
+      "scope": "Full existing suite plus five new tests. Final preview-only no_bundle/redirect assertions were also rerun separately after profile refinement; exact-source automatic CI is a separate record, not inferred from this run."
+    },
+    "final_build": {
+      "command": "npm run build",
+      "exit_code": 0,
+      "workers": {
+        "app": {
+          "worker": "brazacommerce-app",
+          "bytes": 3741964,
+          "sha256": "3a5f01ae09ede502e4707f001976fc2a6094075ba26574e5e5d97b2e827687a9"
+        },
+        "auth": {
+          "worker": "brazacommerce-auth",
+          "bytes": 576198,
+          "sha256": "20a301c45ddb6097a3b458ec6ef7d39686286cc43601f6211d3b865b250ea125"
+        },
+        "finance": {
+          "worker": "brazacommerce-finance",
+          "bytes": 892237,
+          "sha256": "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4"
+        }
+      },
+      "matches_expected_production_hashes": true
+    },
     "documentary_validation": {
       "result": "PASS",
-      "local_links": 26,
+      "local_links": 25,
       "history_and_runtime_preserved": true
     },
-    "release_preflight": "PENDING"
+    "release_preflight": {
+      "command": "node tools/release_preflight.mjs --base=346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+      "exit_code": 0,
+      "source_sha": "ad7e0fbe3968029a75e373d972f4bfc307056cba",
+      "result": "RELEASE_LOCAL_PREFLIGHT_OK",
+      "production_approved": false,
+      "manual_gates_preserved": true
+    },
+    "actual_build_selection": {
+      "finance": {
+        "command": "npm run build:finance",
+        "profile": "brazacommerce-finance",
+        "no_bundle": true,
+        "production_hashes_unchanged": true
+      },
+      "app": {
+        "command": "npm run build",
+        "profile": "brazacommerce-app",
+        "no_bundle": true,
+        "production_hashes_unchanged": true
+      },
+      "auth": {
+        "command": "npm run build",
+        "profile": "brazacommerce-auth",
+        "no_bundle": true,
+        "production_hashes_unchanged": true
+      }
+    },
+    "focused_release_gate": {
+      "tests": 14,
+      "pass": 14,
+      "fail": 0
+    }
   },
   "observed_failures_and_repairs": [
     {
@@ -832,14 +900,111 @@
     "previous_reviewed_sha": "2b06a16abd9e551126033016d9fd9706ad926e1c",
     "github_validate": "success:43679831297/job132707830905",
     "cloudflare": "All three failed before this repair; this is historical evidence, not proof of repaired CI",
-    "new_candidate": "PENDING_PUSH_AND_NORMAL_CHECKS; inspect PR122 current checks; no bypass/cancellation"
+    "new_candidate": "GitHub validate passed at exact source ad7e0fb (4437 Node,67 Python,build,PR preflight). Three external Builds failed at same source; official logs403. Evidence-only receipt successor must get its own normal checks; no approval inferred for its SHA.",
+    "repaired_candidate": {
+      "sha": "ad7e0fbe3968029a75e373d972f4bfc307056cba",
+      "github_run": 43683071100,
+      "github_job": 132717673268,
+      "github_status": "completed",
+      "cloudflare": {
+        "app": {
+          "conclusion": "failure",
+          "build_id": "be2e4da4-5899-466b-83c1-4f03a1b27268",
+          "logs_endpoint": "GET /accounts/{account_id}/builds/builds/{build_uuid}/logs",
+          "logs_http_status": 403,
+          "logs_error_code": 12004,
+          "logs_error": "Forbidden"
+        },
+        "auth": {
+          "conclusion": "failure",
+          "build_id": "27b605e3-4a85-47cc-a506-1f027d3fd6c8",
+          "logs_endpoint": "GET /accounts/{account_id}/builds/builds/{build_uuid}/logs",
+          "logs_http_status": 403,
+          "logs_error_code": 12004,
+          "logs_error": "Forbidden"
+        },
+        "finance": {
+          "conclusion": "failure",
+          "build_id": "c9434dd8-3e95-4eae-bf9f-1dd9061c926d",
+          "logs_endpoint": "GET /accounts/{account_id}/builds/builds/{build_uuid}/logs",
+          "logs_http_status": 403,
+          "logs_error_code": 12004,
+          "logs_error": "Forbidden"
+        }
+      },
+      "failure_cause": "Unknown: check outputs contain links only; supported log read denied. Do not infer that local preview success proves external CI.",
+      "github_conclusion": "success",
+      "github_evidence": {
+        "source_sha": "ad7e0fbe3968029a75e373d972f4bfc307056cba",
+        "run": 43683071100,
+        "job": 132717673268,
+        "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43683071100",
+        "conclusion": "success",
+        "stdout_excerpt": [
+          "2026-11-15T06:06:34.0351093Z # tests 4437",
+          "2026-11-15T06:06:34.0351551Z # pass 4437",
+          "2026-11-15T06:06:34.0351758Z # fail 0",
+          "2026-11-15T06:06:34.0351958Z # cancelled 0",
+          "2026-11-15T06:06:34.0352168Z # skipped 0",
+          "2026-11-15T06:06:38.7526194Z Ran 67 tests in 0.509s",
+          "2026-11-15T06:06:41.1017176Z RELEASE_LOCAL_PREFLIGHT_OK",
+          "2026-11-15T06:06:41.1025173Z RELEASE_NOT_APPROVED_FOR_PRODUCTION"
+        ]
+      }
+    },
+    "native_after_automatic_checks": {
+      "finance": {
+        "latest_deployment_id": "fd60c309-1ada-40bd-bb66-266a68b40850",
+        "is_last_successful_local_upload": true,
+        "created_on": "2026-11-15T05:48:07.579945Z",
+        "annotations_keys": [
+          "workers/triggered_by"
+        ]
+      },
+      "auth": {
+        "latest_deployment_id": "3f96c055-76df-4a86-a018-7506cbe22b4f",
+        "is_last_successful_local_upload": true,
+        "created_on": "2026-11-15T05:48:12.572017Z",
+        "annotations_keys": [
+          "workers/triggered_by"
+        ]
+      },
+      "app": {
+        "latest_deployment_id": "38724b09-373f-4062-a9df-b23f6fa78e9b",
+        "is_last_successful_local_upload": true,
+        "created_on": "2026-11-15T05:48:18.293084Z",
+        "annotations_keys": [
+          "workers/triggered_by"
+        ]
+      }
+    }
   },
   "published": {
     "isolated_preview": true,
     "production": false,
     "real_account_validated": false,
     "merge": false,
-    "auto_merge": false
+    "auto_merge": false,
+    "isolated_module_byte_verification": {
+      "app": {
+        "name": "brazacommerce-app-p00-isolated",
+        "module_sha256": "310136be01e4d52d2a0d38544c023bae9f429224068d202dfe23afb112a7b193",
+        "bytes": 3746902,
+        "equals_generated_preview_derivative": true
+      },
+      "auth": {
+        "name": "brazacommerce-auth-p00-isolated",
+        "module_sha256": "02532ef4f538cff96059837bb8a88e133bb2d5d667787e4fe558a4161852ab9c",
+        "bytes": 580377,
+        "equals_generated_preview_derivative": true
+      },
+      "finance": {
+        "name": "brazacommerce-finance-p00-isolated",
+        "module_sha256": "89cc496b42807143d78782f2deb202ebc917f0ab9832650af7b0985e7bea373c",
+        "bytes": 896455,
+        "equals_generated_preview_derivative": true
+      }
+    }
   },
   "remaining_p00_blockers": [
     "Configured automatic checks of repaired candidate must pass",
@@ -1039,7 +1204,7 @@
     }
   },
   "production_after": {
-    "recorded_at": "2026-11-15T05:51:11.750372+00:00",
+    "recorded_at": "2026-11-15T06:01:56.628452+00:00",
     "workers": {
       "app": {
         "effective_settings_sha256": "72c1ffdf88e61e4d2b1b7d78545c3d8d9a5b903cc32cf4ed83ee87d5c19a32b9",
@@ -1070,5 +1235,6 @@
       }
     },
     "matches_before": true
-  }
+  },
+  "source_sha": "ad7e0fbe3968029a75e373d972f4bfc307056cba"
 }
