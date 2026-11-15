@@ -1,3 +1,5 @@
+> Estado atual: reparo de **preview isolado autorizado e aplicado**, com três D1s e três Workers separados. Configuração, versões e segredos de produção preservados. Login sintético e Chromium desktop/celular passaram; os checks automáticos do novo candidato ainda precisam ser conferidos. [Recibo e limites](preview-repair.json). As tabelas e decisões anteriores abaixo são histórico datado.
+
 > Atualização mais recente: o log App recebido confirma falta do bloco `previews`, com build e hashes corretos. Ver o diagnóstico e o reparo proposto ao final. Os estados de acesso/PR na tabela inicial são históricos; checkpoint e matriz operacional registram o estado atual.
 
 # Serviços, dependências e direitos — P00
@@ -60,3 +62,17 @@ Auth/Finance ainda precisam de logs correspondentes antes de uma correção espe
 ### Achado separado de dependências
 
 A leitura `npm audit --json` reproduziu 3 achados: `undici`alto, `miniflare`moderado e `wrangler`moderado, no toolchain. O advisory sugere Wrangler4.162.0 como atualização disponível; isso é candidato de upgrade, não uma versão já homologada nesta entrega. Não executar `npm audit fix --force`. A atualização controlada deve preservar lockfile revisável, licenças, compilação, hashes/release conforme aplicável e testes dos caminhos afetados. Exposição em produção precisa de avaliação própria; o audit não a comprova.
+
+## Reparo autorizado de preview — resultado atual
+
+A autorização posterior substitui, somente para este reparo, a restrição anterior a mudar configuração de preview. Foram criados `mls-p00-preview-admin`, `mls-p00-preview-account`, `mls-p00-preview-finance` e os três Workers `brazacommerce-{app,auth,finance}-p00-isolated`. Nenhum banco real foi copiado. A base de preview App antes apontava para ADMIN_DB de produção; agora os três ambientes de preview usam somente os IDs isolados e credenciais sintéticas próprias. O PATCH afetou exclusivamente `previews_base_config`; os vetores e hashes da configuração efetiva de produção foram comparados a cada alteração. Plano/assinatura não foram alterados; uso continua sujeito aos limites/custos da conta.
+
+`previews/p00-isolation.json` fixa a branch e os alvos. `tools/isolated_preview.mjs` gera perfis por Worker e o redirecionamento oficial de configuração consumido pelo comando existente `npx wrangler preview`. O hook de build seleciona o perfil por branch/tag exatos; main mantém o build normal. Os perfis não contêm rotas reais, cron ou segredos de produção. `no_bundle:true` preserva as funções já compiladas que alimentam scripts de DTF/Visão geral. Configs de produção, fontes funcionais, package/lock e workflow permanecem sem delta.
+
+Previews nativos não herdam automaticamente todas as definições de produção. Seus secrets-base foram configurados com valores novos exclusivos do preview. Binding de serviço chama a implantação principal do Worker vinculado: por isso Auth aponta para o **Finance dedicado isolado**, nunca para Finance de produção nem pressupõe chamar uma prévia de outra branch. A derivação bloqueia saída para provedores/Live e conexão OAuth; CSP/formulários e navegação limitam o navegador aos hosts isolados. Bancos vazios podem receber schemas/dados exclusivamente sintéticos. Não inserir pedidos, grants ou fontes reais neste ambiente.
+
+Conferência: cinco testes focados cobrem isolamento, seleção, redirecionamento do Wrangler, bloqueio de saída e ausência de scheduler; 67 Python passaram. QA HTTP confirmou login sintético e overview200; Chromium1440×1000/390×844 confirmou os seis cartões na ordem Hermes/Finance/Ads/Products/Production/Returns, aviso de isolamento, nenhum erro JavaScript e nenhuma requisição observada fora dos hosts isolados. Isso comprova este smoke técnico, não toda a operação financeira ou direitos comerciais. Resultados dos gates e IDs estão no [recibo](preview-repair.json).
+
+Para usar: abrir a URL App isolada constante do recibo, com a credencial sintética disponibilizada pelo mecanismo seguro do ambiente. Os valores de secrets não aparecem no repositório. A interface mantém a release existente com aviso explícito de preview; não representa nova release Live. Os Builds continuam com os mesmos comandos/filtros e todos os checks permanecem ativos. O novo candidato deve obter seus próprios checks na PR122; execução CLI local não substitui CI externa.
+
+Reversão: reverter o hook/perfis nesta branch e remover somente os novos recursos isolados mediante necessidade/autorização; não restaurar o vínculo antigo de preview ao ADMIN_DB real. Nenhuma reversão de banco de produção se aplica. Metadados operacionais externos e titularidade/licenças pendentes continuam impedindo declarar P00 integralmente concluída.

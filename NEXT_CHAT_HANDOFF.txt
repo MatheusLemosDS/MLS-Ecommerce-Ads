@@ -1,11 +1,11 @@
 <!-- SAAS_P00_CURRENT -->
-P00_SAAS_CURRENT — trabalho independente validado localmente; fase BLOQUEADA.
-Checkpoint único: docs/MLS_COMMERCE_OS_CHECKPOINT.json.
-Matriz operacional única: docs/MLS_SAAS_EXECUTION.json. Índice: docs/saas/p00/README.md.
-Base346f30f; ancestral documental0a5a228; fonte validada8448710; branch feature/saas-p00-baseline-20261114.
-Sem push/PR/deploy; Builds403 sem branch/filtros/comandos comprovados, metadados externos/direitos pendentes.
-Próximo: obter evidência suportada de leitura dos gatilhos e complementar o inventário externo; P01 só na próxima entrega.
-Registros anteriores preservados abaixo.
+P00_SAAS_CURRENT — reparo autorizado de preview isolado aplicado; fase BLOQUEADA.
+Checkpoint único: docs/MLS_COMMERCE_OS_CHECKPOINT.json. Matriz: docs/MLS_SAAS_EXECUTION.json.
+Base346f30f; documental0a5a228; branch feature/saas-p00-baseline-20261114; PR122 rascunho.
+Recibo: docs/saas/p00/preview-repair.json; hook por branch/tag; produção sem alteração.
+Login/Chromium sintéticos e isolamento testados. Conferir checks exatos do candidato na PR122.
+Próximo: completar metadados operacionais e direitos; P01 somente na próxima entrega.
+Históricos integrais preservados abaixo.
 <!-- END_SAAS_P00_CURRENT -->
 
 RETOMADA — MLS Commerce OS

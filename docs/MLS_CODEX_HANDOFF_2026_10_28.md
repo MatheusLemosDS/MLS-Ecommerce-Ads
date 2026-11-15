@@ -1,7 +1,7 @@
 <!-- SAAS_P00_CURRENT -->
 ## Retomada P00 SaaS
 
-Ler o [checkpoint](MLS_COMMERCE_OS_CHECKPOINT.json) e consultar a tarefa na [matriz operacional](MLS_SAAS_EXECUTION.json). Base main346f30f, ancestral documental0a5a228 e fonte local validada8448710. [Índice P00](saas/p00/README.md). Trabalho independente concluído, sem push/deploy: leitura Builds403 impede confirmar branch/filtros/comandos; faltam metadados operacionais externos e direitos do proprietário. Não repetir testes sem delta; executar P01 somente na próxima entrega. Histórico integral abaixo preservado.
+Ler [checkpoint](MLS_COMMERCE_OS_CHECKPOINT.json), [matriz](MLS_SAAS_EXECUTION.json) e [recibo do reparo](saas/p00/preview-repair.json). Base346f30f, documental0a5a228 preservada; branch feature/saas-p00-baseline-20261114, PR122 rascunho. Preview autorizado agora usa bancos/Workers/segredos separados; Live preservada. Conferir CI/checks do candidato exato e complementar metadados operacionais/direitos. Reutilizar provas compatíveis; P01 só na próxima entrega. Histórico integral abaixo preservado.
 <!-- END_SAAS_P00_CURRENT -->
 
 FINANCIAL_AUTOMATION_20261113 — PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY — release 2026-11-13.3

@@ -5,7 +5,7 @@
   "projeto": "MLS Commerce OS",
   "repositorio": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads",
   "baseline_sha": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
-  "escopo": "Auditoria de código/fonte pública e especificação para implementação futura; nenhuma modificação no sistema executada nesta entrega.",
+  "escopo": "P00 executada no projeto existente: inventários, reconciliação, gates e reparo autorizado de previews isolados; P01–P11 permanecem para próximas entregas.",
   "inventario": {
     "itens_na_arvore": 1200,
     "arvore_truncada": false,
@@ -646,12 +646,13 @@
       ],
       "dependencias_externas": [],
       "condicional_ao_escopo_vendido": false,
-      "estado": "TESTADO",
+      "estado": "EM_IMPLEMENTACAO",
       "commit_implementacao": "84487108fa9c1292e90a62296ea8a597ffaad619",
       "evidencias_testes": [
         "docs/saas/p00/github-reconciliation.json",
         "docs/saas/p00/ci-excerpts.json",
-        "docs/saas/p00/validation.json"
+        "docs/saas/p00/validation.json",
+        "docs/saas/p00/preview-repair.json"
       ],
       "evidencias_publicacao": [],
       "evidencias_operacionais": [],
@@ -661,9 +662,9 @@
       "validated_operationally": false,
       "acceptance_scope": "DOCUMENTARY_AND_LOCAL_TECHNICAL_ONLY",
       "last_stage_reached": "TESTADO",
-      "acceptance_satisfied": true,
-      "local_acceptance": true,
-      "reason": "Acceptance proved at f760048 by run43615841211:4432 Node,67 Python,build,PR preflight; no assertions removed. Subsequent metadata-only changes require their own configured checks. Cloudflare failures remain external phase/release blockers, not ignored.",
+      "acceptance_satisfied": false,
+      "local_acceptance": false,
+      "reason": "New build/preview correction requires its own focused/full local gates and automatic checks; previous CI evidence retained as historical, not current approval.",
       "candidate_ci_run": 43615841211,
       "candidate_ci_source_sha": "f7600485fd717d2836f005e06fa3c02634661457"
     },
@@ -5466,38 +5467,40 @@
     "executada_pelo_auditor": false
   },
   "audit_recorded_at": "2026-11-13",
-  "updated_at": "2026-11-14",
+  "updated_at": "2026-11-15T05:49:41.470230+00:00",
   "scope_of_this_delivery": "P00 only; P01–P11 remain future deliveries. Existing financial matrix is a scoped historical implementation receipt, not a second active SaaS execution state.",
   "current_candidate": {
     "source_commit": "84487108fa9c1292e90a62296ea8a597ffaad619",
     "remote_base": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
     "documentation_parent": "0a5a22897d3cf56f97b7b995eb78a743fc0a246e",
     "branch": "feature/saas-p00-baseline-20261114",
-    "runtime_delta": "NONE",
+    "runtime_delta": "No production source/config/runtime delta; guarded preview derivatives and build selection only",
     "validation_delta": [
       "tools/release_preflight.mjs",
       "tools/release-approved-candidate.json",
       "tools/tests/release-preflight.test.mjs"
     ],
-    "publication": "DRAFT_PR122_NO_MERGE_NO_DEPLOY",
+    "publication": "DRAFT_PR122_ISOLATED_PREVIEW_PUBLISHED_NO_PRODUCTION",
     "operational_acceptance": false,
     "review_head_sha": "f7600485fd717d2836f005e06fa3c02634661457",
     "pull_request": 122,
     "github_ci_run": 43615841211,
     "approved_github_source_commit": "f7600485fd717d2836f005e06fa3c02634661457",
     "approved_github_ci_run": 43615841211,
-    "receipt_successor_checks": "Pending for any doc-only receipt successor; no approval inferred from another SHA.",
+    "receipt_successor_checks": "Current repaired candidate must pass all configured checks; see PR122 current head; no approval inferred from historical SHA.",
     "latest_reviewed_ci_sha": "f5973b0e9b48df927e7c19954805d622839cb389",
-    "latest_reviewed_ci_run": 43617930680
+    "latest_reviewed_ci_run": 43617930680,
+    "candidate_parent_sha": "2b06a16abd9e551126033016d9fd9706ad926e1c",
+    "preview_repair_receipt": "docs/saas/p00/preview-repair.json"
   },
   "external_blockers_p00": [
     {
       "id": "EXT-CLOUDFLARE-CHECKS",
       "owner": "Cloudflare administrator/operator",
       "resource": "Three external Workers Builds checks on PR122",
-      "cause": "Supplied App log proves build success then missing previews block; suggested ADMIN_DB is production. Auth/Finance error causes still unproved. API logs403/12004. Isolated preview configuration requires separate authorization; no config changes applied.",
+      "cause": "Historical App log proves missing previews block; authorized isolated profiles/base now applied and native preview smoke succeeded. Repaired automatic checks not yet observed. Builds/logs API read still403 with existing token.",
       "impact": "External checks are not approved; diagnosis and applicable release gates remain pending.",
-      "minimum_to_resume": "Read supported build logs for App/Auth/Finance, record actual errors, diagnose before proposing any change; no bypass, cancellation, workflow or Cloudflare configuration change."
+      "minimum_to_resume": "Inspect all normal checks on repaired PR122 head; diagnose failures with supported logs if any. No bypass/cancellation or production deploy."
     },
     {
       "id": "EXT-OPERATIONS",

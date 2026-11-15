@@ -1,3 +1,5 @@
+> **Retomada atual:** PR122 rascunho; reparo autorizado de previews aplicado e testado isoladamente. Live preservada. Ver [recibo do preview](preview-repair.json), [operação atual](OPERATIONS.md#reparo-autorizado-de-preview--resultado-atual), checkpoint e matriz. As afirmações anteriores de “sem push/PR/deploy” abaixo pertencem ao histórico anterior à autorização; houve publicação somente isolada. P00 ainda depende dos checks atuais e evidências de operação/direitos.
+
 ## Revisão GitHub — PR122
 
 [PR122](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/122) permanece rascunho. [Validate43615841211](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43615841211) passou no SHA `f760048`:4432 Node,67 Python,build e preflight. O recibo documental posterior terá checks próprios; não se transfere aprovação a outro SHA. Os três checks Cloudflare falharam e seus detalhes/logs oficiais retornam403/12004; causa não comprovada. P00 continua bloqueada por esses checks e evidências externas de operação/direitos. Sem merge/auto-merge/deploy.

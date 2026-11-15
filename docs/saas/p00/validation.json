@@ -180,5 +180,7 @@
       "2026-11-14T16:43:30.8920543Z RELEASE_LOCAL_PREFLIGHT_OK",
       "2026-11-14T16:43:30.8930839Z RELEASE_NOT_APPROVED_FOR_PRODUCTION"
     ]
-  }
+  },
+  "current_preview_repair": "docs/saas/p00/preview-repair.json",
+  "historical_receipt_note": "Original fields retained as dated evidence; current repair has its own receipt and code input hashes, actual automatic checks must be read on PR122."
 }

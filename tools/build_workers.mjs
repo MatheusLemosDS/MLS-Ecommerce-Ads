@@ -3,6 +3,7 @@ import path from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {PROJECT_ROOT, TARGETS, sha256, stableJson, error} from './worker_project.mjs';
 import {verifyBrowserAssets} from './browser_assets.mjs';
+import {prepareBuildPreview} from './isolated_preview.mjs';
 
 export function buildWorkers(target = 'all', {root = PROJECT_ROOT, run = execFileSync} = {}) {
   if (target !== 'all' && !Object.hasOwn(TARGETS, target)) throw error('WORKER_TARGET_INVALID');
@@ -24,6 +25,7 @@ export function buildWorkers(target = 'all', {root = PROJECT_ROOT, run = execFil
     manifest[name] = {worker: TARGETS[name].name, bytes: source.length, sha256: sha256(source)};
   }
   fs.writeFileSync(path.join(root, 'dist', 'build-manifest.json'), stableJson(manifest));
+  if (process.env.WRANGLER_CI_MATCH_TAG) prepareBuildPreview(root);
   return manifest;
 }
 

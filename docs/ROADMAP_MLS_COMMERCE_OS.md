@@ -1,7 +1,7 @@
 <!-- SAAS_P00_CURRENT -->
 ## P00 SaaS — estado atual
 
-Execução limitada a P00, reconciliada com main PR121. Consulte o [checkpoint único](MLS_COMMERCE_OS_CHECKPOINT.json), a [matriz operacional](MLS_SAAS_EXECUTION.json) e o [índice de evidências](saas/p00/README.md). Inventários e gates locais preparados; fase BLOQUEADA por Builds/CI e metadados/direitos externos. P01–P11 continuam no objetivo e ficam para próximas entregas. Banco automático, M2/M2.2 e aceite real permanecem abertos. As matrizes financeiras e registros abaixo preservam evidências de entregas anteriores, não um estado SaaS concorrente.
+Execução limitada a P00, base main PR121 e histórico documental preservados. [Checkpoint único](MLS_COMMERCE_OS_CHECKPOINT.json), [matriz](MLS_SAAS_EXECUTION.json) e [recibo do preview](saas/p00/preview-repair.json). Reparo autorizado de build/previews em recursos isolados, sem mudar Live ou seus contratos; login e Chromium desktop/celular sintéticos passaram. Conferir checks atuais da PR122 rascunho. P00 continua BLOQUEADA por evidências externas de operação/direitos; P01–P11 ficam para próximas entregas. Banco automático e M2/M2.2 continuam abertos. Históricos abaixo preservados.
 <!-- END_SAAS_P00_CURRENT -->
 
 <!-- FINANCIAL_AUTOMATION_CURRENT -->
