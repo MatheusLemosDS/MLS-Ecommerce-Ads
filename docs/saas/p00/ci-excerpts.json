@@ -1,0 +1,42 @@
+{
+  "132119537849": {
+    "source": "GitHub connector workflow job logs",
+    "lines": [
+      "2026-11-13T19:42:27.9746387Z # Subtest: compiled owner navigation opens cross-panel details, preserves history and remains reachable at 320–1365px (minify=true)",
+      "2026-11-13T19:42:27.9747667Z not ok 3089 - compiled owner navigation opens cross-panel details, preserves history and remains reachable at 320–1365px (minify=true)",
+      "2026-11-13T19:42:27.9748370Z   ---",
+      "2026-11-13T19:42:27.9748661Z   duration_ms: 6610.375789",
+      "2026-11-13T19:42:27.9750539Z   failureType: 'testCodeFailure'",
+      "2026-11-13T19:42:27.9750993Z   error: 'Inspected target navigated or closed'",
+      "2026-11-13T19:42:27.9751425Z   code: 'ERR_TEST_FAILURE'",
+      "2026-11-13T19:42:27.9751781Z   stack: |-",
+      "2026-11-13T19:42:34.0859908Z 1..3877",
+      "2026-11-13T19:42:34.0860053Z # tests 4115",
+      "2026-11-13T19:42:34.0860201Z # suites 0",
+      "2026-11-13T19:42:34.0860353Z # pass 4114",
+      "2026-11-13T19:42:34.0860499Z # fail 1",
+      "2026-11-13T19:42:34.0860645Z # cancelled 0",
+      "2026-11-13T19:42:34.0860803Z # skipped 0",
+      "2026-11-13T19:42:34.0860942Z # todo 0",
+      "2026-11-13T19:42:34.0861101Z # duration_ms 490536.51614"
+    ]
+  },
+  "132266587954": {
+    "source": "GitHub connector workflow job logs",
+    "lines": [
+      "2026-11-14T00:56:49.1456140Z 1..4194",
+      "2026-11-14T00:56:49.1456252Z # tests 4432",
+      "2026-11-14T00:56:49.1456370Z # suites 0",
+      "2026-11-14T00:56:49.1456489Z # pass 4432",
+      "2026-11-14T00:56:49.1456603Z # fail 0",
+      "2026-11-14T00:56:49.1456717Z # cancelled 0",
+      "2026-11-14T00:56:49.1456843Z # skipped 0",
+      "2026-11-14T00:56:49.1456959Z # todo 0",
+      "2026-11-14T00:56:49.1457085Z # duration_ms 527846.121502",
+      "2026-11-14T00:56:52.8584393Z ----------------------------------------------------------------------",
+      "2026-11-14T00:56:52.8584818Z Ran 67 tests in 0.411s",
+      "2026-11-14T00:56:52.8584954Z ",
+      "2026-11-14T00:56:52.8585039Z OK"
+    ]
+  }
+}

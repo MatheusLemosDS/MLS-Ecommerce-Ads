@@ -1,0 +1,79 @@
+{
+  "method": "GET_ONLY",
+  "credential_scope": "existing deployment credential, no permission expansion",
+  "reads": [
+    {
+      "worker": "brazacommerce-app",
+      "endpoint_suffix": "",
+      "http_status": 403,
+      "errors": [
+        {
+          "code": 10000,
+          "message": "Authentication error",
+          "documentation_url": "https://developers.cloudflare.com/api/resources/workers_builds"
+        }
+      ]
+    },
+    {
+      "worker": "brazacommerce-app",
+      "endpoint_suffix": "/triggers",
+      "http_status": 403,
+      "errors": [
+        {
+          "code": 10000,
+          "message": "Authentication error",
+          "documentation_url": "https://developers.cloudflare.com/api/resources/workers_builds"
+        }
+      ]
+    },
+    {
+      "worker": "brazacommerce-auth",
+      "endpoint_suffix": "",
+      "http_status": 403,
+      "errors": [
+        {
+          "code": 10000,
+          "message": "Authentication error",
+          "documentation_url": "https://developers.cloudflare.com/api/resources/workers_builds"
+        }
+      ]
+    },
+    {
+      "worker": "brazacommerce-auth",
+      "endpoint_suffix": "/triggers",
+      "http_status": 403,
+      "errors": [
+        {
+          "code": 10000,
+          "message": "Authentication error",
+          "documentation_url": "https://developers.cloudflare.com/api/resources/workers_builds"
+        }
+      ]
+    },
+    {
+      "worker": "brazacommerce-finance",
+      "endpoint_suffix": "",
+      "http_status": 403,
+      "errors": [
+        {
+          "code": 10000,
+          "message": "Authentication error",
+          "documentation_url": "https://developers.cloudflare.com/api/resources/workers_builds"
+        }
+      ]
+    },
+    {
+      "worker": "brazacommerce-finance",
+      "endpoint_suffix": "/triggers",
+      "http_status": 403,
+      "errors": [
+        {
+          "code": 10000,
+          "message": "Authentication error",
+          "documentation_url": "https://developers.cloudflare.com/api/resources/workers_builds"
+        }
+      ]
+    }
+  ],
+  "decision": "PUSH_PR_DEPLOY_BLOCKED_TRIGGER_BRANCH_FILTER_COMMAND_NOT_PROVED"
+}

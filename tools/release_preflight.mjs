@@ -12,6 +12,7 @@ import {execFileSync} from 'node:child_process';
 // Explicitly frozen release inputs. Adding a path or changing a digest is a
 // reviewable candidate update, never a wildcard or a bypass of this verifier.
 export const RELEASE_ACCEPTED_OWNER_AUTHORIZATIONS=Object.freeze([
+ 'OWNER_REQUESTED_SAAS_P00_2026_11_14',
  'OWNER_REQUESTED_ALL_PREPARED_IMPROVEMENTS_LIVE_2026_10_30',
  'OWNER_REQUESTED_V41_LIVE_2026_11_11',
  'OWNER_REQUESTED_FINANCIAL_AUTOMATION_LIVE_2026_11_13'

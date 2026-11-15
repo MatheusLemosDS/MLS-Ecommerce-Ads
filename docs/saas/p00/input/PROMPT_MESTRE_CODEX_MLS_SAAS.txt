@@ -1,0 +1,2276 @@
+PROMPT MESTRE PARA CODEX — MLS COMMERCE OS SAAS
+
+Versão de especificação: 13/11/2026. Baseline auditada: 6578e21098ff799e59433af92880d249432ceeb4
+
+MISSÃO: evoluir o sistema existente até o produto vendável descrito, com implantação futura no site live já solicitado, preservando funcionalidades aprovadas. Execute implementação e validação por fases; não responda somente com outro plano. Esta auditoria não implementou as melhorias.
+
+PACOTE: leia esta instrução, a MATRIZ_EXECUCAO_MLS_SAAS.json e o CATALOGO_GRAFICOS_MLS.json. Use os anexos como evidência/histórico. A ordem válida é a matriz mestre; não executar prompts antigos como ordens concorrentes.
+
+PROTOCOLO DE EXECUÇÃO E RETOMADA
+
+1. Este pacote é uma especificação auditada em 13/11/2026, não evidência de implementação. Ao iniciar, confira novamente main/HEAD, PRs, AGENTS.md, configuração e release servida. Trabalhe no projeto existente. Não reinicie o sistema nem repita merges de branches históricas.
+2. Leia primeiro docs/ROADMAP_MLS_COMMERCE_OS.md, docs/MLS_COMMERCE_OS_CHECKPOINT.json, docs/MLS_CODEX_HANDOFF_2026_10_28.md e as instruções locais vigentes. Incorpore a matriz deste pacote ao fluxo canônico. Pode criar docs/MLS_SAAS_EXECUTION.json como única matriz operacional se o checkpoint passar a apontar para ela; evite dois arquivos independentes disputando estado. A lista de tarefas deste pacote é o baseline de requisitos, não um segundo estado live.
+3. Reconcile cada requisito com o código atual. Se já foi implementado depois desta auditoria, registre commit e provas e execute somente a validação faltante. Não faça trabalho duplicado para satisfazer uma lista antiga.
+4. Execute P00→P11. Dentro da fase, siga dependências e a ordem topológica fornecida. Segurança, testes, UX mínima, backups e contratos acompanham cada incremento; P06/P07/P08 consolidam e não autorizam adiamento dos fundamentos. P03 prepara estoque/custos; P04 encerra seus efeitos financeiros. Fases condicionais de expansão não devem bloquear melhorias independentes do núcleo, mas o objetivo condicionado permanece aberto.
+5. Em cada item: inspecione o caminho atual; fixe contratos/invariantes; implemente a menor alteração coerente; migre de forma aditiva/idempotente com backup quando necessário; teste risco real; registre evidência; atualize o checkpoint e o próximo item. Use branch pequena e preserve alterações alheias. Não reduza suítes nem relaxe validadores de null/UNKNOWN/NOT_COMPARED para aparentar prontidão. Se contrato antigo proíbe valor, evolua versão e consumidores.
+6. A autorização anterior de entregar incrementos validados no site live continua sendo o destino. Não solicitar de novo uma autorização genérica a cada fase. Respeitar o processo existente de CI, deploy, hashes/versões e QA. Este pedido de auditoria não efetuou alterações. Implantação futura é distinta de fazer cobrança real, saque, depósito, transferência, reembolso, compra/contratação de serviço, publicação em marketplace ou envio de mensagens a terceiros; essas ações precisam da autorização correspondente e não podem surgir como efeito de teste.
+7. Credenciais e grants ausentes são BLOQUEIOS EXTERNOS, nunca um motivo para inventar sucesso. Conclua o código, testes, configuração revisável e trabalho independente; registre provedor/recurso, causa, impacto, responsável, dado/ação estritamente necessários e como retomar. Não contorne autenticação, licença ou revisão de aplicativo. Não peça acesso que já está disponível ou já autorizado.
+8. Separe estados: ESPECIFICADO → EM_IMPLEMENTACAO → IMPLEMENTADO → TESTADO → PUBLICADO → VALIDADO_OPERACIONALMENTE. Use BLOQUEADO com a última etapa realmente atingida. Uma tarefa documental pode ter aceite documental; para recurso de produção exija prova do fluxo correspondente. Defina a conclusão exigida por item e por promessa. Código testado com fixture não comprova conta real.
+9. Checkpoint mínimo: fase atual; HEAD/base e delta; tarefa atual; últimos commits; implementado/testado/publicado/validado; provas com ambiente, data e comando/URL; migrações e reversão; blockers com owner; decisões/ADR vigentes; próximos itens liberados; próximo comando concreto. Sem segredos ou dados privados. Atualize roadmap/checkpoint/handoff e NEXT_CHAT_HANDOFF.txt conforme AGENTS.md.
+10. Ao retomar depois de interrupção, leia o checkpoint e a árvore real antes de editar; confirme que o código servido corresponde ao candidato. Nunca reinicie toda a auditoria, refaça o redesign ou redefina decisões sem nova evidência. Se arquivo/módulo mudou, faça delta explícito.
+11. Não encerre a missão só com um plano, percentual ou 'tudo pronto'. Ao concluir uma fase, relate função entregue, onde encontrá-la, como usar, testes executados agora, commit, deploy, prova operacional e limitação concreta. Ao encerrar a missão, liste os critérios atendidos e os que ainda dependem de acesso/tempo/piloto, sem chamar estes de concluídos.
+12. O objetivo de coleta automática de todos os valores não é satisfeito por importação manual: carteira/saques dependem das capacidades Shopee confirmadas; banco automático depende de SAAS-042. Se qualquer fonte essencial não estiver disponível, preserve resultado parcial e explicação. Fechamento preciso significa regra reproduzível e diferença explicada; não promessa de inexistência absoluta de erro.
+13. O gate de fase considera os requisitos obrigatórios e opcionais efetivamente incluídos na oferta. Opção não escolhida fica FORA_DA_OFERTA_ATUAL com motivo/ADR, nunca concluída. P10 pode avançar depois de P08 sem esperar por IA opcional de P09. TikTok é prioridade de pesquisa/ordem, não dependência técnica para Mercado Livre. O lançamento inicial com importação assistida não encerra o objetivo de automação bancária.
+14. Uma evidência válida do mesmo SHA, ambiente, escopo e critérios pode atender pares sobrepostos: SAAS-034/FINAUTO-26, SAAS-035/FINAUTO-27 e SAAS-036/FINAUTO-28. Vincule a mesma prova aos dois e execute apenas validação adicional necessária. Não repetir suíte, confronto ou publicação apenas para contar tarefas.
+15. A fase de publicação comercial P08 não proíbe publicar incrementos técnicos anteriores já autorizados e validados. Cada incremento respeita seus gates, preserva compatibilidade e documenta capacidade ainda incompleta. Cobrança/publicidade do recurso espera o aceite correspondente.
+
+
+INVARIANTES A PRESERVAR
+
+1. Marca MLS Commerce OS; preservar nomes técnicos/URLs legados até migração específica.
+2. Preservar V4.1, seis cartões na ordem Hermes/Finance/Ads/Products/Production/Returns após indicadores e antes de gráficos, e Auditor no diretório.
+3. Preservar três Workers App/Auth/Finance, bindings, D1, rotas, cookies, headers e fluxo de build até migração compatível explícita.
+4. Nenhum dado desconhecido vira zero, saudável, conciliado ou líquido definitivo. Origem, corte e cobertura acompanham valores.
+5. Centavos/decimal exato; uma receita não é reconhecida novamente em carteira, saque ou depósito. Recarga Ads não é consumo. Refund embutido não é novamente descontado.
+6. Produção física é distinta de pedido pago, impressão e exportação DTF. Custos atuais não reprecificam fechamento final. Não deduzir fabricação e CMV da mesma unidade duas vezes.
+7. Preservar fabricação sexta 13h inclusiva→sexta 13h exclusiva Brasília (oito intervalos) e referência semanal de vendas em sete dias civis. Mês por competência civil; Ads diário não permite precisão horária inventada.
+8. DRE/recebíveis/carteira/saques em trânsito/banco/projeção são métricas diferentes. Recebível legítimo não vencido não impede por si só fechar DRE.
+9. Sem dados de teste em loja real; demo sintética segregada. Sem tokens, cookies, buyer data, order_sn privados ou credenciais em commits, logs, prompts, relatórios ou fixtures.
+10. Ads/PROMO, alterações de preço/estoque/campanha, publicação e afiliados dependem de capacidade e autorização específicas; assinatura paga não dá à IA autoridade de agir.
+11. Importação, leitura bancária e contabilização não executam saque, pagamento, transferência ou estorno.
+12. Bibliotecas externas exigem licença por versão/componente e compatibilidade com o runtime. Não clonar um ERP inteiro como atalho.
+13. Não retirar testes/assertivas nem adulterar evidência para ficar verde; validar o artefato gerado, normal e minificado, quando afetado.
+
+DECISÕES ARQUITETURAIS E DE PRODUTO
+
+
+ADR-01 — Nicho inicial
+
+Priorizar operação brasileira de camisetas/personalizados com produção DTF e vendas Shopee.
+
+Por quê: Conecta os módulos existentes e permite demonstrar valor em pedido, arte, custo, devolução e giro. É hipótese de produto, não demanda comprovada.
+
+Revisão: Validar com pilotos antes de expandir a promessa a qualquer segmento.
+
+
+ADR-02 — Preservar o produto
+
+Evoluir MLS Commerce OS, os três Workers e a V4.1; manter nomes técnicos brazacommerce até migração própria.
+
+Por quê: Uma reescrita em ERPNext, Odoo ou comércio headless não resolve os grants, o histórico e o custo da operação.
+
+Revisão: Reavaliar se a evidência ou a necessidade do cliente mudar.
+
+
+ADR-03 — Oferta verificável
+
+Manter catálogo por função/loja/ambiente: disponível, parcial, observador, rascunho, não configurado, sem permissão e não suportado.
+
+Por quê: Cartão de agente, documento de API e fixture não provam execução real. A oferta deve acompanhar esse catálogo.
+
+Revisão: Reavaliar se a evidência ou a necessidade do cliente mudar.
+
+
+ADR-04 — Quatro domínios de integração
+
+Separar cobrança da assinatura MLS, fatos financeiros da loja, extratos bancários e execução de IA/mídia.
+
+Por quê: Receber mensalidade do SaaS não dá acesso à carteira Shopee nem ao banco do cliente.
+
+Revisão: Reavaliar se a evidência ou a necessidade do cliente mudar.
+
+
+ADR-05 — Gateway inicial
+
+Implementar Asaas primeiro, por adapter, com checkout hospedado e métodos confirmados na conta.
+
+Por quê: Foco brasileiro, cartão e cobranças Pix, além de recursos de assinatura e NFS-e documentados. Evita operar quatro gateways no primeiro lançamento.
+
+Revisão: Contrato, elegibilidade, preço e sandbox/produção precisam ser conferidos. Stripe, Mercado Pago e Pagar.me ficam como alternativas justificadas, não tarefas simultâneas.
+
+
+ADR-06 — Pix recorrente
+
+Distinguir cobrança Pix gerada a cada ciclo de Pix Automático com autorização de débito.
+
+Por quê: No Asaas são fluxos diferentes. A documentação Stripe consultada limita empresas domiciliadas no Brasil a Pix avulso; não anunciar Pix Automático dessa conta.
+
+Revisão: Revalidar documentação e elegibilidade antes de ativar ou trocar provedor.
+
+
+ADR-07 — E-mail
+
+Usar Resend como primeiro adapter proposto, com outbox durável e observabilidade.
+
+Por quê: Já existe base de tokens; falta transporte de produção. Um serviço transacional evita operar SMTP próprio.
+
+Revisão: Conta/domínio/contrato e entrega real devem ser validados; SES é alternativa futura se custo/escala justificar.
+
+
+ADR-08 — Conexão de marketplaces
+
+OAuth oficial por cliente e registro de capacidades por recurso, região, aplicação, ambiente e loja.
+
+Por quê: Não copiar a conexão legada nem inferir permissão por SDK. Uma loja conectada não prova todas as APIs.
+
+Revisão: Reavaliar se a evidência ou a necessidade do cliente mudar.
+
+
+ADR-09 — Jobs contínuos
+
+Identidade de serviço vinculada à organização/conexão, com revogação, leases, cotas e filas.
+
+Por quê: A coleta não pode depender da sessão de oito horas do usuário nem continuar após revogação.
+
+Revisão: Reavaliar se a evidência ou a necessidade do cliente mudar.
+
+
+ADR-10 — Financeiro confiável
+
+Incorporar integralmente FINAUTO-01..28, preservando os 24 cenários financeiros.
+
+Por quê: O core financeiro não mudou entre as bases comparadas e ainda não prova carteira/saques/banco e fechamento líquido definitivo.
+
+Revisão: Reavaliar se a evidência ou a necessidade do cliente mudar.
+
+
+ADR-11 — Custos antes do fechamento
+
+Preparar SKU, kit, estoque, fabricação e custo histórico em P03; concluir o resultado financeiro em P04.
+
+Por quê: Evita dependência circular e dupla dedução de fabricação e CMV. Recebimento físico permanece um fato distinto do reembolso.
+
+Revisão: Reavaliar se a evidência ou a necessidade do cliente mudar.
+
+
+ADR-12 — Artes DTF
+
+Priorizar backup/restauração da biblioteca local; nuvem privada opcional com cotas e direitos de mídia.
+
+Por quê: As artes estão no IndexedDB do dispositivo. Continuidade comercial exige recuperação; preservar o motor e proporção já aprovados.
+
+Revisão: Prometer acesso entre dispositivos apenas depois de comprovar sincronização e restauração.
+
+
+ADR-13 — Banco
+
+Manter CSV/OFX e homologar um adapter Open Finance, inicialmente Pluggy em prova de conceito; Belvo é alternativa.
+
+Por quê: Importação é útil e verificável. Automação bancária requer cobertura, consentimento, contrato e estado de transação próprios.
+
+Revisão: Sem cobertura/contrato, marcar a automação como bloqueada; não usar senha bancária ou scraping.
+
+
+ADR-14 — Fiscal
+
+Separar NFS-e da assinatura MLS das notas das vendas do cliente; integrar ERP/provedor para o segundo domínio.
+
+Por quê: Municipalidade, serviço, regime e documento fiscal não são dedutíveis de taxas da Shopee. Evitar construir um ERP fiscal completo agora.
+
+Revisão: Reavaliar se a evidência ou a necessidade do cliente mudar.
+
+
+ADR-15 — Planos
+
+Começar com oferta simples por empresa/lojas e limites claros de operação, armazenamento e IA.
+
+Por quê: Preço final depende de custo e disposição de pagamento. Não prometer ilimitado nem gravar preço hipotético em cobrança real.
+
+Revisão: Planos e preços ficam DRAFT até decisão comercial explícita; planos ativos são versionados.
+
+
+ADR-16 — Experiência profissional
+
+Navegação por tarefas com identidade MLS; seis cartões de agentes preservados e Auditor no diretório.
+
+Por quê: O usuário precisa localizar pedidos, produção, dinheiro e pendências rapidamente. Brilho/animação não substitui hierarquia e legibilidade.
+
+Revisão: Reavaliar se a evidência ou a necessidade do cliente mudar.
+
+
+ADR-17 — IA e automação
+
+Hermes explica dados com fonte; Listing prepara rascunhos; AI Sales é opcional até fluxo utilizável e custo comprovado.
+
+Por quê: Os contratos atuais são de observação/rascunho. Não vender autonomia de campanha, preço, postagem ou afiliados como pronta.
+
+Revisão: Reavaliar se a evidência ou a necessidade do cliente mudar.
+
+
+ADR-18 — Operação e suporte
+
+Segurança, retenção, backups e métricas começam na base; P06 exercita recuperação e prepara suporte.
+
+Por quê: SaaS precisa de atendimento, portabilidade e restauração, não apenas autenticação. Chatwoot é candidato para suporte, sem obrigação de hospedá-lo no lançamento.
+
+Revisão: Reavaliar se a evidência ou a necessidade do cliente mudar.
+
+
+ADR-19 — Código de terceiros
+
+Usar projetos como referência e integrar componentes somente após revisar licença, manutenção e contrato técnico.
+
+Por quê: GPL/AGPL permitem uso comercial com obrigações; MIT/BSD/Apache também têm condições. n8n e materiais Enterprise têm termos próprios.
+
+Revisão: Licença precisa ser verificada por versão e componente; não copiar repositórios inteiros para o Worker.
+
+
+ADR-20 — Entrega contínua e lançamento
+
+Seguir um checkpoint canônico, critérios de saída por fase e piloto antes de oferta ampla.
+
+Por quê: Implementado, testado, publicado e validado na conta são evidências diferentes. Notas antigas não encerram tarefas atuais.
+
+Revisão: Destino live já solicitado permanece; nova permissão só para ação fora do escopo autorizado, custo/contrato novo ou acesso material ausente.
+
+
+ROTEIRO INTEGRAL DE IMPLEMENTAÇÃO
+
+Todos os itens iniciam ESPECIFICADO. Revalidar o que já mudou na HEAD antes de implementar. Critérios sobrepostos compartilham prova válida do mesmo SHA/ambiente.
+
+
+==============================================================================
+
+P00 — Fixar a base e o que o produto promete
+
+Gate: HEAD e estado servido conferidos; falha atual de CI investigada; catálogo de capacidades e índice canônico criados.
+
+Regra: Concluir aceites materiais do escopo desta fase. Item condicional não ativado pode continuar BLOQUEADO/ADIADO com motivo e sem promessa comercial; não conta como concluído. A preparação independente pode avançar, mas ativação/venda dependente espera sua evidência. Opção excluída usa FORA_DA_OFERTA_ATUAL com ADR. P09 não é pré-requisito de P10; requisitos explícitos da tarefa prevalecem sobre a ordem sugerida.
+
+
+SAAS-001 | P0 | Baseline, inventário e checkpoint único
+
+Motivo: Há muitos documentos históricos; a base nova tem 19 commits após a auditoria financeira.
+
+Implementar: Conferir HEAD remoto, estado de PRs, release/bytes live acessíveis e delta. Ler AGENTS.md e documentos canônicos. Incorporar esta matriz ao roadmap existente; registrar decisão mais recente e próximo passo sem duplicar estados.
+
+Dependências: baseline atual
+
+Aceites:
+
+- SHA, commit servido e diferenças identificados sem presumir igualdade.
+
+- Nenhum merge histórico é repetido; mudanças alheias preservadas.
+
+- Checklist atual aponta para uma única matriz de tarefas e evidências.
+
+Caminhos existentes a inspecionar: AGENTS.md, README.md, docs/MLS_LAYOUT_REFERENCE_PARITY_2026_11_13.md
+
+
+FINAUTO-01 | P0 | Inventário e compatibilidade
+
+Motivo: Requisito financeiro original preservado e integrado à ordem mestre.
+
+Implementar: Reconferir a HEAD e a release servida. Inventariar rotas, coletores, jobs, schemas, projetores, fontes de custo e estados por empresa/loja. Manter o layout V4.1, gráficos, login, isolamento e fluxos operacionais. Tratar esta auditoria como ponto de partida, sem repetir a implementação visual já integrada. Não confundir documentos históricos com prova atual de dados.
+
+Dependências: SAAS-001
+
+Aceites:
+
+- Matriz relaciona cada tipo de valor à fonte/handler/armazenamento/consumidor e distingue existente, parcial, novo, validado localmente e validado na conta.
+
+
+SAAS-002 | P0 | Investigar e corrigir a CI do candidato
+
+Motivo: A execução 43493228854 falhou em um teste de navegação Chromium minificado.
+
+Implementar: Reproduzir a falha Inspected target navigated or closed; distinguir ciclo de vida CDP de defeito de produto. Corrigir causa e executar os gates existentes no candidato exato.
+
+Dependências: SAAS-001
+
+Aceites:
+
+- Teste normal/minificado e suíte obrigatória passam sem remover assertivas ou reduzir cobertura.
+
+- Não usar aprovação de SHA antigo como aprovação atual.
+
+- Registrar comandos, versão, saída e CI; etapas Python/build efetivamente executadas.
+
+Caminhos existentes a inspecionar: .github/workflows/validate.yml, web/cloudflare/tests/workspace-navigation-rework-chrome.test.mjs
+
+
+SAAS-003 | P1 | Catálogo de funcionalidades e promessa comercial
+
+Motivo: Os cartões contêm funções operacionais, observadoras e rascunhos distintos.
+
+Implementar: Relacionar 22 módulos, rotas, dados, papéis, capacidades externas e estado de cada função. Mostrar suporte no produto separado de grant, conexão, cobertura e permissão de escrita.
+
+Dependências: SAAS-001
+
+Aceites:
+
+- Todas as funções auditadas possuem estado e próxima ação.
+
+- Finance/Ads já existentes não são marcados ausentes só porque matriz offline não fez probe.
+
+- Funções indisponíveis não aparecem como incluídas e prontas nos planos.
+
+Caminhos existentes a inspecionar: docs/HERMES_FINANCEIRO.md, docs/MLS_AI_SALES_INTEGRATION_2026_10_30.md, docs/MLS_AI_SALES_LOCAL_RENDER.md, docs/MLS_LAYOUT_REFERENCE_PARITY_2026_11_13.md, docs/MLS_LISTING_FACTORY_V1.md, web/bridge/hermes_bridge.py, web/cloudflare/original/auth-worker.mjs, web/cloudflare/src/admin.mjs, web/cloudflare/src/agent-registry.mjs, web/cloudflare/src/hermes-financial-context.mjs, web/cloudflare/src/mls-ads-performance.mjs, web/cloudflare/src/mls-ai-sales-affiliates.mjs, web/cloudflare/src/mls-ai-sales-capability-audit.mjs, web/cloudflare/src/mls-ai-sales-performance.mjs, web/cloudflare/src/mls-ai-sales-script-adapter.mjs, web/cloudflare/src/mls-ai-sales-workspace-store.mjs, web/cloudflare/src/mls-listing-factory-planner.mjs, web/cloudflare/src/mls-lost-push-recovery.mjs, web/cloudflare/src/mls-product-intelligence.mjs, web/cloudflare/src/mls-product-workbench.mjs, web/cloudflare/src/mls-shopee-capability-audit.mjs, web/cloudflare/src/order-operations.mjs, web/cloudflare/src/scaling-preparation.mjs, web/cloudflare/src/workspace-navigation.mjs
+
+
+SAAS-004 | P1 | Inventário operacional, dependências e direitos
+
+Motivo: Workers não descrevem toda a operação; há gateway Shopee e ponte Hermes externos.
+
+Implementar: Registrar serviços, responsáveis, ambiente, versão, finalidade, custo, secrets por referência, dados processados, limites e recuperação. Criar SBOM/notices e inventário de direitos de código, fontes, avatares, imagens, áudio e marca.
+
+Dependências: SAAS-001
+
+Aceites:
+
+- Gateway de integração e PSP de pagamento são claramente separados.
+
+- Nenhum segredo ou dado de comprador entra em docs/logs/fixtures.
+
+- Cada dependência incorporada tem licença da versão e decisão de uso; ausência de LICENSE raiz não é tratada como prova de titularidade.
+
+Caminhos existentes a inspecionar: docs/v4/licenses/noble-hashes-MIT.txt, docs/v4/licenses/otpauth-MIT.txt, package.json, web/bridge/hermes_bridge.py, web/cloudflare/original/auth-worker.mjs
+
+
+==============================================================================
+
+P01 — Concluir contas, empresas e isolamento
+
+Gate: Jornada de conta real e duas empresas independentes; contexto de loja corrigido; proteção mínima, backup e retenção definidos antes de coletar novos clientes.
+
+Regra: Concluir aceites materiais do escopo desta fase. Item condicional não ativado pode continuar BLOQUEADO/ADIADO com motivo e sem promessa comercial; não conta como concluído. A preparação independente pode avançar, mas ativação/venda dependente espera sua evidência. Opção excluída usa FORA_DA_OFERTA_ATUAL com ADR. P09 não é pré-requisito de P10; requisitos explícitos da tarefa prevalecem sobre a ordem sugerida.
+
+
+SAAS-005 | P0 | E-mail transacional real
+
+Motivo: A outbox atual só é criada no modo local de teste.
+
+Implementar: Implementar adapter Resend, outbox persistente, idempotência, retry/backoff, dead letter, estados de entrega/falha/bounce, templates e URLs confiáveis. Configurar verificação de domínio SPF/DKIM e proteção dos tokens sem expô-los.
+
+Dependências: SAAS-002, SAAS-004
+
+Aceites:
+
+- Cadastro, recuperação, troca de e-mail e convite geram uma mensagem por intenção válida.
+
+- Retry não duplica efeito nem cria link reutilizável; token expira e só é usado uma vez.
+
+- Um destinatário de teste autorizado recebe o e-mail; accepted pelo provedor não é declarado como entrega final.
+
+Caminhos existentes a inspecionar: web/cloudflare/src/account-service.mjs, web/cloudflare/src/account-worker.mjs
+
+Dependência externa: Conta/remetente/domínio de e-mail autorizados; credenciais no secret store.
+
+
+SAAS-006 | P0 | Jornadas de conta, ajuda e documentos públicos
+
+Motivo: Formulários existem, mas a ajuda redireciona ao login e há textos de edição no login pessoal.
+
+Implementar: Concluir cadastrar/verificar/entrar/sair/recuperar/MFA/sessões, convites e troca de organização. Corrigir textos. Expor ajuda e políticas públicas. Registrar aceite de termos versionado e aviso de privacidade; marketing separado e opcional. Definir retenção mínima, papéis de tratamento e canal do titular antes de dados de novos clientes.
+
+Dependências: SAAS-005
+
+Aceites:
+
+- Conta nova alcança ACTIVE pelo fluxo suportado, sem edição manual do banco.
+
+- Login mostra Entrar e orientação de acesso; ajuda pública funciona sem sessão.
+
+- Reautenticação sensível, rate limit e revogação permanecem; MFA não depende de bypass de teste.
+
+- Fluxo e textos são verificáveis em desktop/mobile e possuem revisão contratual aplicável.
+
+Caminhos existentes a inspecionar: docs/v4/EXTERNAL_DEPENDENCIES.json, web/cloudflare/src/account-service.mjs, web/cloudflare/src/account-worker.mjs
+
+Dependência externa: Dados jurídicos/comerciais do responsável e revisão dos textos aplicáveis.
+
+
+SAAS-007 | P0 | Identidade e configuração por empresa/loja
+
+Motivo: IDs e regras da loja legada permanecem em Pedidos e Hermes.
+
+Implementar: Substituir acoplamento de domínio por contexto autenticado no servidor; migrar CHECKs/joins e contratos de modo aditivo/idempotente. Parametrizar região, moeda, fuso, calendário, regime e regras de produtos. Preservar explicitamente a associação dos dados legados.
+
+Dependências: SAAS-001, SAAS-004
+
+Aceites:
+
+- Duas lojas com IDs externos distintos operam Pedidos e contexto Hermes próprios.
+
+- IDs externos iguais em contas/ambientes distintos não colidem.
+
+- Nenhum cliente novo herda imposto, custo, credencial ou dados do proprietário.
+
+- Backup e comparação antes/depois da migração; sem global replace ou reassociação ao primeiro cadastro.
+
+Caminhos existentes a inspecionar: docs/HERMES_FINANCEIRO.md, docs/PRODUCAO_DTF.md, web/bridge/hermes_bridge.py, web/cloudflare/src/admin.mjs, web/cloudflare/src/business-tax-policy.mjs, web/cloudflare/src/expense-ledger.mjs, web/cloudflare/src/hermes-financial-context.mjs, web/cloudflare/src/order-operations.mjs, web/cloudflare/src/product-registry.mjs, web/cloudflare/src/production-dtf-store.mjs, web/cloudflare/src/tenant-storage.mjs
+
+
+SAAS-008 | P1 | Consultas paginadas e índices por membro
+
+Motivo: Listagem percorre organizações globais e pode atingir limite de 1.000 registros.
+
+Implementar: Consultar organizações a partir das memberships autorizadas, paginar por cursor e indexar chaves. Aplicar paginação semelhante a auditoria, sessões e histórico, sem elevar limites cegamente.
+
+Dependências: SAAS-007
+
+Aceites:
+
+- Usuário com uma empresa continua funcionando com mais de 1.000 organizações globais sintéticas.
+
+- Não há N+1 global proporcional a todas as empresas.
+
+- Cursores são estáveis, autorizados e não revelam dados de outros clientes.
+
+Caminhos existentes a inspecionar: web/cloudflare/src/account-organizations.mjs, web/cloudflare/src/account-store.mjs
+
+
+SAAS-009 | P0 | Isolamento A/B e base de proteção
+
+Motivo: A base de isolamento existe e precisa cobrir jornadas completas, inclusive tarefas e mídia.
+
+Implementar: Preservar ACCOUNT_DB, contexto comercial, RBAC, envelopes internos e IndexedDB por empresa. Aplicar retenção, logs minimizados, backup inicial e tratamento de segredos desde a primeira coleta. Exercitar rotas compostas, exports e revogação.
+
+Dependências: SAAS-007, SAAS-008
+
+Aceites:
+
+- Empresas A/B não acessam dados alheios por ID, cache, URL, exportação, mídia, job ou DTO agregado.
+
+- Operador de produção não recebe valores financeiros sem papel apropriado.
+
+- Revogar membro/conexão interrompe acesso em curso e tarefas futuras conforme contrato.
+
+- Nenhum dado real novo é coletado sem política mínima de retenção, backup e responsabilidade.
+
+Caminhos existentes a inspecionar: docs/v4/RELEASE.md, docs/v4/TENANT_MIGRATION_RUNBOOK.md, web/cloudflare/src/account-crypto.mjs, web/cloudflare/src/account-policy.mjs, web/cloudflare/src/account-service.mjs, web/cloudflare/src/commercial-context.mjs, web/cloudflare/src/commercial-route-policy.mjs, web/cloudflare/src/mls-ai-sales-capability-audit.mjs, web/cloudflare/src/mls-lost-push-recovery.mjs, web/cloudflare/src/mls-shopee-capability-audit.mjs, web/cloudflare/src/order-operations.mjs, web/cloudflare/src/tenant-browser-storage.mjs, web/cloudflare/src/tenant-migration.mjs, web/cloudflare/src/tenant-storage.mjs
+
+
+FINAUTO-24 | P0 | Isolamento, permissões e proteção de dados
+
+Motivo: Requisito financeiro original preservado e integrado à ordem mestre.
+
+Implementar: Aplicar o contexto comercial V4.1 em todas as leituras, gravações, fontes, IDs, caches, jobs, conciliações e fechamentos. Empresas/lojas/contas com IDs externos iguais permanecem isoladas. Respeitar papéis financeiros, reautenticação quando aplicável, CSRF, auditoria e criptografia. Dados coletados só no escopo autorizado; fontes brutas devem ter minimização e retenção definida.
+
+Dependências: SAAS-009
+
+Aceites:
+
+- Testes A/B e revogação durante tarefa impedem leitura, processamento, exportação ou conciliação cruzada; logs e relatórios não revelam tokens, dados de compradores ou identificadores privados.
+
+
+==============================================================================
+
+P02 — Conectar lojas e coletar com rastreabilidade
+
+Gate: OAuth e coletores por loja; jobs independentes de sessão; eventos duráveis, cobertura e revogação comprovados.
+
+Regra: Concluir aceites materiais do escopo desta fase. Item condicional não ativado pode continuar BLOQUEADO/ADIADO com motivo e sem promessa comercial; não conta como concluído. A preparação independente pode avançar, mas ativação/venda dependente espera sua evidência. Opção excluída usa FORA_DA_OFERTA_ATUAL com ADR. P09 não é pré-requisito de P10; requisitos explícitos da tarefa prevalecem sobre a ordem sugerida.
+
+
+SAAS-010 | P0 | OAuth real e saúde por loja
+
+Motivo: A criação comercial atual deixa lojas desconectadas; adapter local não é onboarding real.
+
+Implementar: Implementar redirects/callbacks/code exchange/refresh/revoke da integração oficial por empresa e loja; state de uso único e expiração, credenciais cifradas com escopo e ambiente. Conservar conexão legada. Documentar grants efetivos por recurso, método e região.
+
+Dependências: SAAS-006, SAAS-009
+
+Aceites:
+
+- Loja de cliente autorizado conecta e coleta pelo seu escopo sem copiar token legado.
+
+- Replay de state, callback de outra empresa e ambiente trocado falham.
+
+- Refresh concorrente é seguro; revogação para o scheduler e aparece na UI.
+
+- Escopo ausente gera estado específico; documentação/SDK não viram permissão.
+
+Caminhos existentes a inspecionar: web/cloudflare/src/account-organizations.mjs, web/cloudflare/src/mls-ai-sales-capability-audit.mjs, web/cloudflare/src/mls-lost-push-recovery.mjs, web/cloudflare/src/mls-shopee-capability-audit.mjs, web/cloudflare/src/order-operations.mjs, web/finance/src/commercial-finance-worker.mjs
+
+Dependência externa: Aplicação Shopee elegível, callbacks e grants aprovados; conta de teste autorizada.
+
+
+FINAUTO-02 | P0 | Capacidades reais da Shopee
+
+Motivo: Requisito financeiro original preservado e integrado à ordem mestre.
+
+Implementar: Criar registro de capacidades por aplicativo, empresa, loja, região e moeda. Confirmar documentação oficial, grant, método, parâmetros, limites, paginação, datas e campos de cada API necessária. A presença em SDK ou numa URL de documentação não prova acesso. Priorizar os endpoints existentes e investigar Wallet/Payout/relatórios somente conforme permissões reais; registrar alternativa por extrato oficial quando necessário. Não reconectar OAuth nem ampliar permissões por inferência.
+
+Dependências: SAAS-010
+
+Aceites:
+
+- Cada fonte tem estado disponível, sem permissão, sem suporte, parcial ou desconhecido com motivo; a UI não promete coleta completa quando há fonte essencial ausente.
+
+
+SAAS-011 | P0 | Scheduler comercial independente do navegador
+
+Motivo: Contratos de jobs atuais se vinculam a sessão/ator; autonomia multiempresa não está comprovada.
+
+Implementar: Criar autorização de serviço por organização/conexão, agendador justo, leases, retries, limites por provedor/tenant e dead letter. Registrar causalidade, versão, tentativas e custo. Manter controle de pausa/revogação.
+
+Dependências: SAAS-009, SAAS-010
+
+Aceites:
+
+- Fechar navegador e expirar sessão não param coleta previamente autorizada.
+
+- Revogar conexão ou suspender recurso conforme política impede novas tarefas.
+
+- Cliente volumoso não bloqueia os demais; retries são limitados e observáveis.
+
+Caminhos existentes a inspecionar: docs/v4/TENANT_MIGRATION_RUNBOOK.md, web/cloudflare/src/account-policy.mjs, web/cloudflare/src/admin.mjs, web/cloudflare/src/automation-workspace.mjs, web/cloudflare/src/business-sync.mjs, web/cloudflare/src/tenant-jobs.mjs
+
+
+SAAS-012 | P0 | Ingressão durável e contratos de eventos
+
+Motivo: Cache e planner de lost push não substituem inbox durável e reconciliação.
+
+Implementar: Persistir eventos recebidos antes de processar; autenticar pelo contrato oficial de cada provedor, separar ambientes, versionar payload/schema, deduplicar e recuperar eventos perdidos com fonte canônica. Conservar apenas evidência pessoal mínima e retenção definida.
+
+Dependências: SAAS-010, SAAS-011
+
+Aceites:
+
+- Duplicação, reordenação, mesmo timestamp, replay e queda intermediária não criam efeitos financeiros/operacionais duplicados.
+
+- Eventos desconhecidos entram em análise; não viram sucesso silencioso.
+
+- Webhook não permite escolher a empresa arbitrariamente pelo payload do navegador.
+
+Caminhos existentes a inspecionar: web/cloudflare/src/admin.mjs, web/cloudflare/src/automation-workspace.mjs, web/cloudflare/src/business-sync.mjs, web/cloudflare/src/commercial-context.mjs, web/cloudflare/src/commercial-route-policy.mjs, web/cloudflare/src/mls-ai-sales-capability-audit.mjs, web/cloudflare/src/mls-lost-push-recovery.mjs, web/cloudflare/src/mls-shopee-capability-audit.mjs, web/cloudflare/src/order-operations.mjs, web/cloudflare/src/tenant-browser-storage.mjs, web/cloudflare/src/tenant-storage.mjs
+
+
+FINAUTO-03 | P0 | Coleta automática com cobertura comprovada
+
+Motivo: Requisito financeiro original preservado e integrado à ordem mestre.
+
+Implementar: Evoluir os coletores existentes com checkpoints duráveis, cursor, janela, watermark, retomada, sobreposição controlada e revisão de objetos atualizados. Manter rate limit, retry/backoff, refresh seguro, leases e limites explícitos. Acompanhar pendências antigas independentemente do mês corrente. Uma página vazia/erro/limite alcançado não prova fim. Preservar observação completa válida durante coleta nova parcial. Particionar ou adaptar janelas quando os limites forem atingidos e reservar capacidade para manutenção histórica, evitando que a coleta corrente adie indefinidamente os casos antigos.
+
+Dependências: FINAUTO-02, SAAS-011, SAAS-012
+
+Aceites:
+
+- Falha na página intermediária, token expirado, concorrência, repetição e virada do mês não perdem nem duplicam eventos; o relatório mostra cobertura e atraso de cada fonte.
+
+
+FINAUTO-04 | P0 | Detalhamento de valores por pedido
+
+Motivo: Requisito financeiro original preservado e integrado à ordem mestre.
+
+Implementar: Persistir a evidência monetária necessária de itens, descontos de vendedor/plataforma, comissões/taxas, fretes cobrados/ressarcidos, subsídios, retenções, reembolsos e ajustes, somente quando fornecida e com semântica validada. Conservar base e após ajuste, moeda e referências. Não usar um percentual fixo de taxa nem classificar automaticamente vendas menos escrow como comissão. Minimizar dados pessoais no armazenamento de evidências.
+
+Dependências: FINAUTO-03
+
+Aceites:
+
+- Reconciliação por pedido demonstra como chegou ao repasse e explica componentes não disponíveis; ausência não vira zero nem taxa presumida.
+
+
+FINAUTO-25 | P0 | Migração e base inicial confiável
+
+Motivo: Requisito financeiro original preservado e integrado à ordem mestre.
+
+Implementar: Mapear a loja e dados legados explicitamente. Migrar de modo aditivo/idempotente com backup, contagens e comparação dos agregados. Backfill respeita limites e permissões reais; base inicial pode precisar de saldo de abertura/importação oficial com proveniência. Não inferir histórico completo pela existência de alguns meses de cache. Nunca atribuir dados legados ao primeiro cliente cadastrado.
+
+Dependências: FINAUTO-04, SAAS-007, SAAS-009
+
+Aceites:
+
+- Repetir migração não duplica eventos e os totais antigos permanecem explicáveis. Lacuna histórica aparece como cobertura pendente, sem lançamento inventado para fechar saldos.
+
+
+SAAS-013 | P1 | Visibilidade da coleta e manutenção de APIs
+
+Motivo: Uma coleta disparada não prova cobertura completa nem atualidade.
+
+Implementar: Mostrar última coleta válida, cursor/janela/cobertura, falha, fonte atrasada e próxima ação. Registrar versões/depreciações, orçamento e prioridade histórica. Observabilidade mínima nasce aqui; P06 consolida SLOs.
+
+Dependências: SAAS-011, SAAS-012
+
+Aceites:
+
+- Fonte parcial não substitui última observação completa sem marcar corte.
+
+- Página vazia/limite/erro não prova fim; histórico não fica indefinidamente sem processamento.
+
+- Operador identifica grant vencido, limite ou fonte ausente sem ler logs técnicos.
+
+Caminhos existentes a inspecionar: web/cloudflare/src/account-store.mjs, web/cloudflare/src/account-worker.mjs, web/cloudflare/src/admin.mjs, web/cloudflare/src/automation-workspace.mjs, web/cloudflare/src/business-sync.mjs, web/cloudflare/src/mls-ai-sales-capability-audit.mjs, web/cloudflare/src/mls-lost-push-recovery.mjs, web/cloudflare/src/mls-shopee-capability-audit.mjs, web/cloudflare/src/order-operations.mjs, web/cloudflare/src/tenant-jobs.mjs
+
+
+==============================================================================
+
+P03 — Consolidar produção, estoque e custos
+
+Gate: SKU/kit, arte, fabricação, custo histórico, estoque e destino físico têm origem; backup DTF restaurável.
+
+Regra: Concluir aceites materiais do escopo desta fase. Item condicional não ativado pode continuar BLOQUEADO/ADIADO com motivo e sem promessa comercial; não conta como concluído. A preparação independente pode avançar, mas ativação/venda dependente espera sua evidência. Opção excluída usa FORA_DA_OFERTA_ATUAL com ADR. P09 não é pré-requisito de P10; requisitos explícitos da tarefa prevalecem sobre a ordem sugerida.
+
+
+SAAS-014 | P1 | SKU, kit, variante e composição física
+
+Motivo: Produtos e nomes de artes precisam identificar corretamente peças, componentes e impressões.
+
+Implementar: Definir SKU/variante canônicos por empresa, alias legado, composição/quantidades e versões. Migrar vínculos com prévia de conflitos; frente/costas, kits e peça lisa são casos próprios.
+
+Dependências: SAAS-007, SAAS-012
+
+Aceites:
+
+- Kit de duas peças e duas artes não vira uma peça ou quatro vendas.
+
+- Nome parecido não substitui SKU/arte automaticamente; conflito exige correção explícita.
+
+- Alteração de composição preserva ordens/lotes históricos.
+
+Caminhos existentes a inspecionar: docs/PRODUCAO_DTF.md, web/cloudflare/src/dtf-layout.mjs, web/cloudflare/src/dtf-view.mjs, web/cloudflare/src/incurred-production.mjs, web/cloudflare/src/mls-product-intelligence.mjs, web/cloudflare/src/physical-returns.mjs, web/cloudflare/src/product-registry.mjs, web/cloudflare/src/production-dtf-store.mjs
+
+
+SAAS-015 | P0 | Estoque simples, reservas e custo histórico
+
+Motivo: inventory_verified:false e valuation UNKNOWN não permitem prometer estoque/CMV completos.
+
+Implementar: Criar movimentos imutáveis de entrada, reserva, consumo, fabricação, saída, perda, ajuste e devolução inspecionada. Separar matérias-primas, trabalho em processo e produto acabado se aplicável. Parametrizar política de custo com histórico e vincular ordem/lote/peça. Compras simples podem ser importadas/registradas; não criar ERP fiscal completo.
+
+Dependências: SAAS-014
+
+Aceites:
+
+- Saldo decorre de movimentos e revisão autorizada, sem estoque inferido de vendas.
+
+- Fabricar 100 e expedir 80 deixa 20 no destino físico correto, com custos históricos e eventos de saída sem duplicação. Reconhecimento monetário do CMV é validado em FINAUTO-12/P04.
+
+- Reserva não reduz físico duas vezes; concorrência não vende unidade inexistente.
+
+- Retorno parcial de kit vai para quarentena/reparo/revenda/perda e usa custo histórico, nunca preço de venda.
+
+Caminhos existentes a inspecionar: web/cloudflare/src/admin.mjs, web/cloudflare/src/business-historical-returns.mjs, web/cloudflare/src/incurred-production.mjs, web/cloudflare/src/mls-product-intelligence.mjs, web/cloudflare/src/physical-returns.mjs, web/cloudflare/src/production-weekly-store.mjs, web/finance/src/returns-reconciliation.mjs
+
+
+SAAS-016 | P0 | Backup e restauração de artes DTF
+
+Motivo: Pixels das artes ficam no navegador/dispositivo.
+
+Implementar: Exportar biblioteca/manifestos com hashes, versões, metadados, associações e prévia de conflitos; restaurar em dispositivo limpo. Preservar layout proporcional, PNG transparente, dimensões físicas, reservas e motor aprovado.
+
+Dependências: SAAS-014
+
+Aceites:
+
+- Arte exportada/restaurada mantém bytes, identidade e proporção.
+
+- Perda de cache/dispositivo tem caminho de recuperação documentado e ensaiado.
+
+- Arquivo inválido, mídia ausente e conflito não são ignorados; operações em andamento preservadas.
+
+Caminhos existentes a inspecionar: docs/PRODUCAO_DTF.md, web/cloudflare/src/dtf-layout.mjs, web/cloudflare/src/dtf-view.mjs, web/cloudflare/src/production-dtf-store.mjs
+
+
+SAAS-017 | P1 | Biblioteca privada em nuvem opcional
+
+Motivo: Continuidade entre dispositivos exige transporte e custo próprios.
+
+Implementar: Preparar armazenamento privado por empresa, versionamento e metadados de direitos, limites de arquivo/quantidade/bytes, URL temporária autorizada, cancelamento, deduplicação por tenant, retenção/exportação/exclusão. Ativar por opção explícita; manter fluxo local.
+
+Dependências: SAAS-009, SAAS-016
+
+Aceites:
+
+- A não acessa mídia de B nem por URL/hash conhecido.
+
+- Nenhuma migração silenciosa das artes; upload e uso de quota idempotentes.
+
+- Sincronização/restore comprovados antes de anunciar múltiplos dispositivos.
+
+Caminhos existentes a inspecionar: docs/PRODUCAO_DTF.md, web/cloudflare/src/account-organizations.mjs, web/cloudflare/src/account-worker.mjs, web/cloudflare/src/commercial-context.mjs, web/cloudflare/src/commercial-route-policy.mjs, web/cloudflare/src/dtf-layout.mjs, web/cloudflare/src/dtf-view.mjs, web/cloudflare/src/production-dtf-store.mjs, web/cloudflare/src/tenant-browser-storage.mjs, web/cloudflare/src/tenant-storage.mjs
+
+Dependência externa: Storage privado e orçamento autorizados; política de mídia e retenção.
+
+Escopo condicional: ativar/vender apenas após comprovação; fora da oferta atual não significa concluído.
+
+
+SAAS-018 | P1 | Ficha de trabalho, arte e execução física
+
+Motivo: Etapa interna, impressão, fabricação e envio são fatos diferentes.
+
+Implementar: Oferecer ficha por pedido/lote com arte/revisão, peças, quantidade, prazo, responsável e histórico. Aprovação interna da arte versionada; opcional QR/barcode só para usuário autenticado. Mudança material invalida aprovação anterior. Separar reimpressão/retrabalho/perda.
+
+Dependências: SAAS-015, SAAS-016
+
+Aceites:
+
+- Pedido pago ou arquivo exportado não confirma fabricação.
+
+- Concluir etapa não altera status do marketplace.
+
+- Pronto para envio não equivale a etiqueta comprada, nota emitida ou coleta real.
+
+- Relatório fabril mantém sexta 13h a sexta 13h em Brasília e versões originais.
+
+Caminhos existentes a inspecionar: docs/PRODUCAO_DTF.md, web/cloudflare/original/app-worker.mjs, web/cloudflare/original/auth-worker.mjs, web/cloudflare/src/admin.mjs, web/cloudflare/src/business-historical-returns.mjs, web/cloudflare/src/dtf-layout.mjs, web/cloudflare/src/dtf-view.mjs, web/cloudflare/src/incurred-production.mjs, web/cloudflare/src/order-operations.mjs, web/cloudflare/src/physical-returns.mjs, web/cloudflare/src/production-dtf-store.mjs, web/cloudflare/src/production-weekly-store.mjs, web/finance/src/returns-reconciliation.mjs
+
+
+==============================================================================
+
+P04 — Concluir resultado, conciliação e fechamentos
+
+Gate: FINAUTO financeiro integrado; resultado, recebíveis e caixa separados; versões de semana/mês reproduzíveis e pendências explícitas.
+
+Regra: Concluir aceites materiais do escopo desta fase. Item condicional não ativado pode continuar BLOQUEADO/ADIADO com motivo e sem promessa comercial; não conta como concluído. A preparação independente pode avançar, mas ativação/venda dependente espera sua evidência. Opção excluída usa FORA_DA_OFERTA_ATUAL com ADR. P09 não é pré-requisito de P10; requisitos explícitos da tarefa prevalecem sobre a ordem sugerida.
+
+
+FINAUTO-05 | P0 | Razão de eventos financeiros
+
+Motivo: Requisito financeiro original preservado e integrado à ordem mestre.
+
+Implementar: Criar armazenamento durável de eventos tipados e lançamentos derivados versionados por empresa/loja/conta/moeda, com ID nativo ou identidade conservadora, event_at, competence_at, settlement_at, source_updated_at, observed_at, versão e evidência. A política deve separar receitas/despesas de movimentos entre ativos/passivos. Usar razão de partidas equilibradas ou modelo equivalente com conservação formal e verificável; o cache dos coletores não é esse razão.
+
+Dependências: FINAUTO-04, FINAUTO-25
+
+Aceites:
+
+- Reprocessar o mesmo evento não muda total; revisão gera delta/estorno rastreável, não sobrescrita silenciosa. Somas monetárias usam inteiros seguros/decimal exato, nunca float livre.
+
+
+FINAUTO-06 | P0 | Carteira, saques e valores em trânsito
+
+Motivo: Requisito financeiro original preservado e integrado à ordem mestre.
+
+Implementar: Implementar coleta dos movimentos da carteira e dos saques/transferências conforme capacidades confirmadas: saldo, crédito, débito, retenção, liberação, ajuste, saque solicitado/processando/concluído/falhou/estornado e tarifas, quando esses estados existirem na fonte. Vincular recebíveis, eventos e lotes pelos identificadores reais. Ler e contabilizar saques; não executar saques ou transferências de dinheiro.
+
+Dependências: FINAUTO-02, FINAUTO-05
+
+Aceites:
+
+- Pedido, crédito de carteira, saque e depósito correspondente reconhecem a receita uma vez; dinheiro em trânsito permanece separado e com explicação.
+
+
+FINAUTO-07 | P0 | Banco, extratos e saldos
+
+Motivo: Requisito financeiro original preservado e integrado à ordem mestre.
+
+Implementar: Adicionar interface de conector bancário autorizado quando disponível e manter CSV/OFX como alternativa real. Modelar conta/moeda, intervalo, origem, transações, saldo inicial/final e evidência de completude quando a fonte fornecer. O consentimento/conector depende de acesso próprio; não usar scraping com senha ou inventar integração. Classificar aporte, empréstimo, transferência interna, retirada, receita, tarifa, fornecedor e pagamento de obrigação com regras explícitas e revisão.
+
+Dependências: FINAUTO-05, SAAS-009
+
+Aceites:
+
+- Saldo inicial mais créditos menos débitos coincide com saldo final da mesma conta; diferenças não são zeradas por ajuste fictício. Arquivo parcial ou sem saldo confirmado mantém cobertura não comprovada.
+
+Sequência: P04 pode validar extrato oficial completo via CSV/OFX. Automação bancária por conector é SAAS-042/P10 e só é anunciada após homologação; a importação não conclui essa automação.
+
+
+FINAUTO-08 | P0 | Conciliação por alocação
+
+Motivo: Requisito financeiro original preservado e integrado à ordem mestre.
+
+Implementar: Preservar o matching 1:1 atual e evoluir para grupos 1:N/N:1 com itens, parcelas e valores alocados. A soma dos itens e das diferenças explicadas deve coincidir com o grupo; uma fração monetária não pode ser usada duas vezes. Datas de pedido, liberação e banco permanecem distintas. Confirmação automática exige regras explícitas, identificação confiável, compatibilidade de status e ausência de ambiguidade; coincidência de valor/data sozinha não basta.
+
+Dependências: FINAUTO-06, FINAUTO-07
+
+Aceites:
+
+- Depósito que reúne dois pedidos e saque recebido em duas parcelas conciliam corretamente; candidatos ambíguos seguem para revisão e reversão preserva histórico.
+
+
+FINAUTO-10 | P0 | Anúncios: recarga versus consumo
+
+Motivo: Requisito financeiro original preservado e integrado à ordem mestre.
+
+Implementar: Separar recarga da carteira Ads, consumo por calendário, crédito/bonificação e ajuste do repasse. Preservar a regra existente de recomposição somente quando a recarga é classificada e comprovada. Confirmar o fuso e a granularidade da fonte; Ads por dia não pode ser repartido exatamente às 13h sem evidência horária.
+
+Dependências: FINAUTO-05
+
+Aceites:
+
+- Recarregar R$ 100 e consumir R$ 30 não produz despesa de R$ 130; reconciliação e DRE registram o consumo correto conforme política e fontes, preservando eventual saldo pré-pago.
+
+
+FINAUTO-11 | P0 | Devolução financeira por evento
+
+Motivo: Requisito financeiro original preservado e integrado à ordem mestre.
+
+Implementar: Relacionar solicitação, desfecho, valor efetivo de reembolso, ajuste no repasse/carteira, taxa/frete reverso, restituição e compensação, quando disponíveis. Distinguir pedido de reembolso de liquidação. Implementar parcial, integral, disputa, cancelamento, estorno e revisão. Conservar proteção contra refund deduzido novamente do escrow. Não assumir que todo ajuste tem a mesma causa. Validar uma fonte autorizada para descobrir novas devoluções de pedidos antigos, além de acompanhar casos já conhecidos; não depender apenas das referências encontradas nos pedidos do mês corrente/anterior.
+
+Dependências: FINAUTO-03, FINAUTO-05
+
+Aceites:
+
+- Caso resolvido pode ser comprovado e liberar a verificação de devoluções; a simples existência de devolução histórica não bloqueia para sempre nem desaparece da trilha.
+
+
+FINAUTO-09 | P0 | Composição sem dupla contagem
+
+Motivo: Requisito financeiro original preservado e integrado à ordem mestre.
+
+Implementar: Definir uma rota de cálculo canônica por métrica: partir do bruto e de seus componentes completos OU do repasse líquido reconciliado e deduzir apenas o que ele não contém. Componentes embutidos não são novamente debitados. Registrar causalidade do refund/ajuste/tarifa e reconciliação entre ambas as visões quando disponíveis. Conservar os avisos e validadores dos contratos antigos.
+
+Dependências: FINAUTO-04, FINAUTO-08, FINAUTO-10, FINAUTO-11
+
+Aceites:
+
+- Taxa já embutida no escrow, refund já ajustado, liberação, saque e depósito não alteram resultado duas vezes; divergência entre fontes gera pendência.
+
+
+FINAUTO-14 | P0 | Despesas, obrigações e pagamentos
+
+Motivo: Requisito financeiro original preservado e integrado à ordem mestre.
+
+Implementar: Preservar o ledger de despesas, parcelas, vencimentos, categorias, revisões e idempotência. Ligar pagamentos bancários às obrigações já reconhecidas por competência. Entrada de nota/comprovante ou regra de fornecedor pode sugerir classificação; itens ambíguos exigem revisão. Separar custos de estoque, investimento, empréstimo, retirada e despesa. Introduzir proteção de períodos fechados para alterações materiais.
+
+Dependências: FINAUTO-05
+
+Aceites:
+
+- Despesa de outubro paga em novembro afeta o resultado de outubro uma vez e o caixa de novembro uma vez; marcar PAID não desconta novamente a despesa.
+
+
+FINAUTO-15 | P0 | Impostos por empresa e vigência
+
+Motivo: Requisito financeiro original preservado e integrado à ordem mestre.
+
+Implementar: Preservar a configuração MEI declarada da loja existente sem assumir que ela serve para toda empresa/ano. Modelar regime, política, valor ou fórmula aprovada, vigência, origem e revisão. A API Shopee não determina todos os tributos da empresa. Não inventar alíquota, enquadramento ou validação legal. Configuração pendente deve impedir chamar o resultado de líquido definitivo.
+
+Dependências: SAAS-007, FINAUTO-05
+
+Aceites:
+
+- Um novo cliente não herda o imposto da loja legada; mudar vigência não altera fechamento anterior; imposto reconhecido e pagamento do imposto são eventos distintos.
+
+
+FINAUTO-16 | P0 | Calendários e competências explícitos
+
+Motivo: Requisito financeiro original preservado e integrado à ordem mestre.
+
+Implementar: Guardar cada data com origem e fuso. Manter produção sexta às 13h→sexta às 13h e a referência de vendas do relatório atual em sete dias civis como bases distintas. Para fechamento financeiro semanal, escolher e versionar o calendário de competência compatível com as fontes; enquanto Ads/custos só existem por dia, usar semana civil explicitamente ou demonstrar rateio assumido, sem dizer que é corte exato às 13h. Mês é mês civil por competência, não soma de semanas inteiras.
+
+Dependências: FINAUTO-05
+
+Aceites:
+
+- Testes de sexta às 12:59:59/13:00:00 e virada do mês preservam cada base. Venda em outubro e recebimento em novembro não viram duas receitas nem migram silenciosamente de competência.
+
+
+FINAUTO-12 | P0 | Custos históricos, fabricação e mercadoria vendida
+
+Motivo: Requisito financeiro original preservado e integrado à ordem mestre.
+
+Implementar: Definir a política gerencial de reconhecimento de receita/CMV e a data aplicável; preservar o relatório atual por criação como estimativa histórica rotulada. Vincular custo histórico à unidade/SKU/kit e às evidências necessárias. Separar fabricar, comprar estoque, vender, pagar fornecedor, retrabalhar e perder peça. Custos atuais podem recalcular simulações, mas não reprecificar uma versão fechada. Não somar fabricação real e custo de referência da mesma venda.
+
+Dependências: SAAS-015, SAAS-018, FINAUTO-05, FINAUTO-16
+
+Aceites:
+
+- Fabricar 100 e vender 80 preserva 20 em estoque conforme a política; custo de mês fechado não muda com alteração cadastral atual. Custo desconhecido bloqueia lucro definitivo, sem estimativa disfarçada.
+
+Sequência: P03 prepara fatos físicos, estoque e custos. Aceite monetário completo e fechamento do requisito ocorrem em P04, sem bloquear o gate físico de P03 por uma fase posterior.
+
+
+FINAUTO-13 | P1 | Recebimento físico e valorização de devoluções
+
+Motivo: Requisito financeiro original preservado e integrado à ordem mestre.
+
+Implementar: Integrar os fatos físicos existentes somente após recebimento/inspeção e política explícita: revenda, reparo, perda, quarentena e divergência. Usar custo histórico adequado, não preço de venda. Quantidade de kit parcial deve corresponder ao componente devolvido. Não inferir recebimento físico a partir de status remoto. Evoluir contratos versionados para deixar o valor financeiro conhecido quando comprovado, mantendo UNKNOWN nos demais.
+
+Dependências: SAAS-015, FINAUTO-11, FINAUTO-12
+
+Aceites:
+
+- Peça revendável retorna ao estoque sem duplicar a perda/reembolso; peça perdida ou retrabalhada tem lançamento próprio; nenhuma associação física sozinha cria lucro.
+
+Sequência: P03 prepara fatos físicos, estoque e custos. Aceite monetário completo e fechamento do requisito ocorrem em P04, sem bloquear o gate físico de P03 por uma fase posterior.
+
+
+FINAUTO-17 | P0 | Resultado, recebíveis e caixa separados
+
+Motivo: Requisito financeiro original preservado e integrado à ordem mestre.
+
+Implementar: Exibir resultado gerencial por competência, recebíveis e carteira, saques em trânsito, caixa bancário conciliado e projeção de caixa como métricas diferentes. Não usar saldo Pending global como receita mensal. Um recebível ainda não vencido pode compor uma competência encerrada se reconhecido e reconciliado na sua conta; fechar DRE não exige receber tudo no banco. Separar DRE fechada de caixa conciliado e de liquidação dos recebíveis.
+
+Dependências: FINAUTO-09, FINAUTO-12, FINAUTO-13, FINAUTO-14, FINAUTO-15, FINAUTO-16
+
+Aceites:
+
+- Cada número tem fórmula, escopo, data/corte, fonte e qualidade. A existência de saldo a receber legítimo não é tratada como erro; diferenças sem explicação continuam pendentes.
+
+
+FINAUTO-18 | P0 | Fechamento financeiro persistente
+
+Motivo: Requisito financeiro original preservado e integrado à ordem mestre.
+
+Implementar: Criar fechamento por empresa/loja ou consolidado definido, moeda, tipo de período e base. Usar estados ABERTO, EM_CONCILIACAO, PROVISORIO, PRONTO, FECHADO e RETIFICADO com transições verificadas no servidor. Snapshot final deve guardar eventos/IDs/revisões, valores, saldos de contas, políticas de competência/custo/imposto/rateio, cobertura, pendências aceitas e trilha de autoria. Relatório de fabricação e snapshot de fontes atual permanecem separados.
+
+Dependências: FINAUTO-17
+
+Aceites:
+
+- FECHADO não é apenas status de tela. É uma versão persistente reproduzível; editar custo/despesa/coleta posterior não altera seus bytes nem totais.
+
+
+FINAUTO-19 | P0 | Automação dos fechamentos
+
+Motivo: Requisito financeiro original preservado e integrado à ordem mestre.
+
+Implementar: Agendar preparo de fechamento ao fim do período com jobs idempotentes por escopo. A política de auto-fechamento só finaliza quando cobertura, consistência, custos/impostos e verificações aplicáveis passam. Conferir recebíveis em aberto legitimamente transportados e caixa conforme sua base. Fonte faltante, fuso incerto material, página incompleta ou divergência sem explicação geram PROVISORIO e fila de ações. Não criar cron que apenas grava FECHADO quando chega sexta ou vira o mês.
+
+Dependências: FINAUTO-18, SAAS-011
+
+Aceites:
+
+- Reexecução, queda no meio do job e concorrência não duplicam fechamentos. Uma semana ou mês parcial não recebe o estado definitivo; motivo e valor afetado aparecem ao operador.
+
+
+FINAUTO-20 | P0 | Eventos tardios e retificação
+
+Motivo: Requisito financeiro original preservado e integrado à ordem mestre.
+
+Implementar: Acompanhar casos e recebíveis em aberto de qualquer competência dentro do alcance autorizado das fontes, mesmo após o fim do mês. Ao receber ajuste tardio, aplicar a política aprovada de ajuste em competência posterior ou retificação versionada, preservando versão original, motivo, vínculo causal e diferença. Não reabrir ou apagar histórico silenciosamente.
+
+Dependências: FINAUTO-18
+
+Aceites:
+
+- Reembolso antigo, tarifa tardia e correção de custo produzem ajuste único e rastreável; repetir coleta não duplica o ajuste nem modifica o fechamento original.
+
+
+FINAUTO-22 | P1 | Caixa para sustentar a produção
+
+Motivo: Requisito financeiro original preservado e integrado à ordem mestre.
+
+Implementar: Implementar projeção de caixa com saldo bancário conciliado, compromissos por vencimento, produção já comprometida, recebimentos com previsão comprovada e reserva de giro configurável. Mostrar cenários e risco de atraso. Diferenciar caixa livre operacional estimado, lucro por competência e distribuição ao proprietário; não executar retirada nem oferecer valor garantido sem fontes.
+
+Dependências: FINAUTO-17, FINAUTO-19
+
+Aceites:
+
+- Usuário entende quanto está disponível, comprometido, previsto e reservado. Aportes próprios e empréstimos aumentam caixa sem aumentar lucro; ausência de vencimentos completos mantém projeção parcial.
+
+
+==============================================================================
+
+P05 — Implementar assinatura e direitos de uso
+
+Gate: Asaas homologado nos métodos efetivamente disponíveis; ciclo completo de cobrança, cotas no servidor e atendimento de cobrança.
+
+Regra: Concluir aceites materiais do escopo desta fase. Item condicional não ativado pode continuar BLOQUEADO/ADIADO com motivo e sem promessa comercial; não conta como concluído. A preparação independente pode avançar, mas ativação/venda dependente espera sua evidência. Opção excluída usa FORA_DA_OFERTA_ATUAL com ADR. P09 não é pré-requisito de P10; requisitos explícitos da tarefa prevalecem sobre a ordem sugerida.
+
+
+SAAS-019 | P0 | Catálogo versionado de planos e política comercial
+
+Motivo: A empresa hoje nasce sem plano, cotas e direitos comerciais.
+
+Implementar: Criar catálogo DRAFT de planos, limites e recursos com vigência; separar preço, contrato, entitlement e RBAC. Registrar trial, carência, cancelamento e política de mudança de plano. Primeiro lançamento sem proration automático: mudança comercial no próximo ciclo, com prévia.
+
+Dependências: SAAS-003, SAAS-009, FINAUTO-19, FINAUTO-20
+
+Aceites:
+
+- Nenhum preço sugerido nesta auditoria vira cobrança ativa.
+
+- Preço novo não altera contrato/fatura antigos silenciosamente.
+
+- Plano só promete funções homologadas e mostra limites de lojas, uso e armazenamento.
+
+Caminhos existentes a inspecionar: AGENTS.md, README.md, docs/MLS_LAYOUT_REFERENCE_PARITY_2026_11_13.md, web/cloudflare/src/account-organizations.mjs, web/cloudflare/src/commercial-admin-runtime.mjs, web/cloudflare/src/commercial-route-policy.mjs
+
+Dependência externa: Preço, limites, termos e política de inadimplência definidos pelo responsável.
+
+
+SAAS-020 | P0 | Adapter Asaas, checkout e área de assinatura
+
+Motivo: billing retorna checkout/portal indisponíveis.
+
+Implementar: Implementar customer, subscription, ciclo/fatura e hosted checkout com correlação server-side. Área Minha assinatura mostra plano, renovação, status, faturas/recibos e cancelamento ao fim do período. Cartão e cobranças Pix só nos fluxos aprovados; Pix Automático separado e condicionado a mandato ativo.
+
+Dependências: SAAS-019
+
+Aceites:
+
+- Redirect do checkout não libera acesso pago.
+
+- Sandbox e live têm IDs/chaves/objetos separados.
+
+- Assinar, falhar, pagar atrasado e cancelar preservam período contratado e histórico.
+
+- PAN/CVV não são armazenados nem passam pelo backend MLS se o checkout hospedado os tratar.
+
+Caminhos existentes a inspecionar: web/cloudflare/src/account-organizations.mjs, web/cloudflare/src/commercial-admin-runtime.mjs, web/cloudflare/src/commercial-route-policy.mjs
+
+Dependência externa: Conta/contrato Asaas, credenciais e callbacks; método e elegibilidade homologados.
+
+
+SAAS-021 | P0 | Webhooks e reconciliação de billing
+
+Motivo: Um estado ACTIVE/PAST_DUE/CANCELLED é insuficiente para todo o ciclo.
+
+Implementar: Autenticar Asaas conforme contrato oficial, inclusive asaas-access-token quando aplicável; não inventar HMAC. Persistir inbox, processar idempotentemente e reconciliar objeto canônico. Separar assinatura, fatura, tentativa, pagamento, estorno parcial/integral, disputa e mandato. Definir efeitos sobre período/entitlement e transições monotônicas quando cabíveis.
+
+Dependências: SAAS-012, SAAS-020
+
+Aceites:
+
+- Evento duplicado, fora de ordem, com timestamp igual ou de outra conta não duplica pagamento nem regride estado indevidamente.
+
+- Refund parcial não cancela toda assinatura automaticamente; chargeback tem fluxo próprio.
+
+- Pagamento após suspensão/cancelamento segue política explícita; não cria nova cobrança/reembolso sem autorização.
+
+- Recebimento de pagamento inicial não prova autorização ativa de Pix Automático.
+
+Caminhos existentes a inspecionar: web/cloudflare/src/account-organizations.mjs, web/cloudflare/src/commercial-admin-runtime.mjs, web/cloudflare/src/commercial-route-policy.mjs
+
+
+SAAS-022 | P0 | Entitlements e quotas no servidor
+
+Motivo: Leitor de entitlement existe, mas enforcement comercial não foi encontrado nos caminhos examinados.
+
+Implementar: Aplicar permissões de plano em API, jobs, exportação e mídia; usar reserva/consumo idempotentes por operação. Definir comportamento de trial, limite atingido, carência e suspensão sem confundir com revogação de consentimento. Exportação/retirada de dados segue contrato próprio.
+
+Dependências: SAAS-019, SAAS-021
+
+Aceites:
+
+- Chamada direta à API não contorna plano ou quota.
+
+- Retry não consome crédito duas vezes; corrida não estoura limite.
+
+- Mudança de papel financeiro e mudança de plano têm efeitos independentes.
+
+- Usuário vê motivo, consumo e próxima ação; suporte consegue rastrear cálculo.
+
+Caminhos existentes a inspecionar: docs/v4/TENANT_MIGRATION_RUNBOOK.md, web/cloudflare/src/account-organizations.mjs, web/cloudflare/src/account-policy.mjs, web/cloudflare/src/commercial-admin-runtime.mjs, web/cloudflare/src/commercial-route-policy.mjs, web/cloudflare/src/tenant-jobs.mjs
+
+
+SAAS-023 | P0 | Fiscal da assinatura MLS
+
+Motivo: Documento da mensalidade do software é diferente da nota da mercadoria vendida pelo cliente.
+
+Implementar: Integrar NFS-e da assinatura quando obrigação e suporte forem confirmados, com município/serviço/regime parametrizados e revisão contábil. No Asaas, tratar solicitação, autorização, falha e cancelamento como estados distintos; guardar documento/IDs e trilha.
+
+Dependências: SAAS-020, SAAS-021
+
+Aceites:
+
+- Serviço/tributos não são inferidos da Shopee ou de outra empresa.
+
+- Criar cobrança ou solicitar nota não significa nota autorizada.
+
+- Falha fiscal é visível e recuperável sem emitir duas vezes.
+
+- Alternativa operacional documentada cobre obrigação quando integração municipal não estiver disponível.
+
+Caminhos existentes a inspecionar: docs/v4/EXTERNAL_DEPENDENCIES.json, web/cloudflare/original/app-worker.mjs, web/cloudflare/original/auth-worker.mjs, web/cloudflare/src/account-service.mjs, web/cloudflare/src/account-worker.mjs, web/cloudflare/src/admin.mjs, web/cloudflare/src/business-tax-policy.mjs, web/cloudflare/src/expense-ledger.mjs
+
+Dependência externa: Dados fiscais do MLS, definição contábil e elegibilidade municipal/provedor.
+
+
+==============================================================================
+
+P06 — Comprovar operação, suporte e recuperação
+
+Gate: Exportação/encerramento, restauração isolada, rotação de chave, monitoramento, suporte e capacidade/custo demonstrados.
+
+Regra: Concluir aceites materiais do escopo desta fase. Item condicional não ativado pode continuar BLOQUEADO/ADIADO com motivo e sem promessa comercial; não conta como concluído. A preparação independente pode avançar, mas ativação/venda dependente espera sua evidência. Opção excluída usa FORA_DA_OFERTA_ATUAL com ADR. P09 não é pré-requisito de P10; requisitos explícitos da tarefa prevalecem sobre a ordem sugerida.
+
+
+FINAUTO-23 | P1 | Fila de pendências e saúde da coleta
+
+Motivo: Requisito financeiro original preservado e integrado à ordem mestre.
+
+Implementar: Mostrar fonte, última coleta bem-sucedida, corte, páginas/cursor, cobertura, limite, quantidade/valor de divergências, responsável e ação permitida. Alertas devem distinguir indisponibilidade do provedor, autorização vencida, fonte incompleta, custo faltante, movimento sem vínculo e caso em disputa. Logs sem segredos ou dados de compradores; exportação de diagnóstico com dados sensíveis ocultados.
+
+Dependências: SAAS-013, FINAUTO-19, FINAUTO-20
+
+Aceites:
+
+- Nenhum erro vira zero ou sucesso visual. O operador consegue localizar o evento/arquivo responsável e reprocessar a etapa adequada sem repetir operações comerciais.
+
+
+SAAS-024 | P0 | Exportação completa, encerramento e retenção
+
+Motivo: Exports atuais dependem de hook operacional; purged:false não comprova exclusão.
+
+Implementar: Incluir conta, organização, pedidos, custos, ledger, fechamentos, auditoria permitida, arte/manifestos e vínculos em exportação privada com manifesto/hashes. Implementar encerramento, revogação, prazo, retenção, anonimização/exclusão e legal hold conforme base aplicável.
+
+Dependências: SAAS-009, SAAS-015, SAAS-021, FINAUTO-18
+
+Aceites:
+
+- Usuário autorizado obtém pacote utilizável e íntegro; A não exporta B.
+
+- Retirada de acesso não é anunciada como purge concluído.
+
+- Fila de exclusão é retomável, comprovável e não apaga retenção obrigatória nem dados de outra empresa.
+
+- Expiração de download/reautenticação e exclusão de temporários verificadas.
+
+Caminhos existentes a inspecionar: docs/v4/EXTERNAL_DEPENDENCIES.json, web/cloudflare/src/account-organizations.mjs, web/cloudflare/src/account-service.mjs, web/cloudflare/src/account-worker.mjs
+
+
+SAAS-025 | P0 | Chaves, backup e recuperação demonstrada
+
+Motivo: Há criptografia e restore local, mas operação de recuperação completa não foi comprovada.
+
+Implementar: Adicionar identificador de versão de chave e estratégia de rotação/recuperação. Automatizar backups privados, retenção e inventário de D1/mídia/configuração. Exercitar restore isolado de uma empresa, sem sobrescrever gravações posteriores de outras; medir RPO/RTO e documentar rollback de schema/artefatos.
+
+Dependências: SAAS-004, SAAS-009, SAAS-016, SAAS-024
+
+Aceites:
+
+- Dados cifrados continuam legíveis durante rotação e retomada após falha.
+
+- Restaurar banco sem a chave não é declarado recuperação bem-sucedida.
+
+- Backup restaurado tem contagens/hashes e fluxo real de leitura comprovados.
+
+- RPO/RTO divulgados vêm do ensaio; Time Travel do provedor não é assumido como backup eterno.
+
+Caminhos existentes a inspecionar: docs/PRODUCAO_DTF.md, docs/v4/RELEASE.md, docs/v4/TENANT_MIGRATION_RUNBOOK.md, web/cloudflare/src/account-crypto.mjs, web/cloudflare/src/account-policy.mjs, web/cloudflare/src/account-service.mjs, web/cloudflare/src/dtf-layout.mjs, web/cloudflare/src/dtf-view.mjs, web/cloudflare/src/production-dtf-store.mjs, web/cloudflare/src/tenant-migration.mjs
+
+
+SAAS-026 | P1 | Monitoramento e resposta a incidentes
+
+Motivo: Auditoria local não prova alertas, SLO e diagnóstico da operação total.
+
+Implementar: Consolidar métricas por tenant/fonte: atraso, cobertura, erros, fila, retry, custo, entrega de e-mail e webhook. Criar alertas acionáveis e runbooks, status público sem dados sensíveis e procedimento de incidente/contato conforme regime aplicável.
+
+Dependências: SAAS-013, SAAS-021, SAAS-025
+
+Aceites:
+
+- Falha simulada de provedor, atraso de fila e perda de e-mail geram sinal e ação rastreáveis.
+
+- Alertas não expõem tokens, compradores ou valores privados.
+
+- SLA divulgado distingue disponibilidade do app, atraso de fonte e horário real de suporte.
+
+Caminhos existentes a inspecionar: package.json, web/bridge/hermes_bridge.py, web/cloudflare/original/auth-worker.mjs, web/cloudflare/src/account-store.mjs, web/cloudflare/src/account-worker.mjs, web/cloudflare/src/admin.mjs, web/cloudflare/src/automation-workspace.mjs, web/cloudflare/src/business-sync.mjs, web/cloudflare/src/tenant-jobs.mjs
+
+
+SAAS-027 | P1 | Suporte e documentação de uso
+
+Motivo: Ajuda pública e suporte operacional incompletos dificultam aquisição e retenção.
+
+Implementar: Criar central de ajuda pública, onboarding por tarefa, recuperação, importação, fechamento, cobrança e cancelamento. Integrar ticket/helpdesk existente (Chatwoot é candidato) e diagnóstico redigido. Acesso de suporte deve ser temporário, mínimo, autorizado e auditado.
+
+Dependências: SAAS-006, SAAS-024, SAAS-026
+
+Aceites:
+
+- Cliente sem login consegue pedir ajuda de acesso.
+
+- Ticket tem identificação e acompanhamento; agente não pede senha/token.
+
+- Documentação explica estimativa, dado parcial e próxima ação, com telas atuais.
+
+- Suporte não possui bypass permanente para entrar em toda empresa.
+
+Caminhos existentes a inspecionar: AGENTS.md, README.md, docs/MLS_LAYOUT_REFERENCE_PARITY_2026_11_13.md, web/cloudflare/src/account-service.mjs, web/cloudflare/src/account-store.mjs, web/cloudflare/src/account-worker.mjs, web/cloudflare/src/tenant-jobs.mjs
+
+Dependência externa: Canal, responsáveis e horário de suporte definidos; contratar ferramenta somente se autorizado.
+
+
+SAAS-028 | P0 | Revisão de segurança, dependências e direitos
+
+Motivo: MFA/criptografia presentes não equivalem a certificação de segurança.
+
+Implementar: Executar revisão focal com ASVS como referência: autorização por objeto/campo, CSRF, XSS/CSP, upload, SSRF em conectores, rate limit, recuperação e logs. Revisar dependências, licenças, SBOM e direitos de mídia; corrigir achados materiais. Segurança já acompanha as fases anteriores.
+
+Dependências: SAAS-004, SAAS-009, SAAS-025
+
+Aceites:
+
+- Nenhum achado crítico relevante permanece sem tratamento/mitigação comprovada para o escopo lançado.
+
+- Fixtures não contêm dados reais; testes de abuso respeitam escopo autorizado.
+
+- Avisos/licenças necessários estão no pacote; material Enterprise não é copiado como livre.
+
+- Relatório registra escopo e limitações; não usa selo de certificação inexistente.
+
+Caminhos existentes a inspecionar: docs/v4/licenses/noble-hashes-MIT.txt, docs/v4/licenses/otpauth-MIT.txt, package.json, web/cloudflare/src/account-crypto.mjs, web/cloudflare/src/account-policy.mjs, web/cloudflare/src/account-service.mjs, web/cloudflare/src/commercial-context.mjs, web/cloudflare/src/commercial-route-policy.mjs, web/cloudflare/src/tenant-browser-storage.mjs, web/cloudflare/src/tenant-storage.mjs
+
+
+SAAS-029 | P1 | Capacidade e custo por cliente
+
+Motivo: Modelo atual cria muitos objetos SQL por empresa/loja; uso ilimitado não tem base.
+
+Implementar: Medir onboarding, queries, armazenamento, filas, uploads, e-mail, banco, IA e suporte em cargas sintéticas representativas. Registrar limites D1/Workers reais da conta e custo por tenant. Planejar evolução de armazenamento apenas se resultados exigirem.
+
+Dependências: SAAS-008, SAAS-011, SAAS-022, SAAS-026
+
+Aceites:
+
+- Onboarding frio e operação concorrente não ultrapassam limites silenciosamente.
+
+- p95/p99, filas, falhas, custo e tamanho medidos com volume e ambiente descritos.
+
+- Cotas dos planos refletem custo e capacidade; isolamento/financeiro não são relaxados para ganhar desempenho.
+
+Caminhos existentes a inspecionar: docs/v4/TENANT_MIGRATION_RUNBOOK.md, package.json, web/bridge/hermes_bridge.py, web/cloudflare/original/auth-worker.mjs, web/cloudflare/src/account-organizations.mjs, web/cloudflare/src/account-store.mjs, web/cloudflare/src/commercial-workspace-setup.mjs, web/cloudflare/src/tenant-schema-manifest.mjs
+
+
+==============================================================================
+
+P07 — Concluir experiência e gráficos profissionais
+
+Gate: Jornadas desktop/mobile acessíveis; 22 famílias de gráficos mapeadas; número, detalhe e exportação usam o mesmo agregado.
+
+Regra: Concluir aceites materiais do escopo desta fase. Item condicional não ativado pode continuar BLOQUEADO/ADIADO com motivo e sem promessa comercial; não conta como concluído. A preparação independente pode avançar, mas ativação/venda dependente espera sua evidência. Opção excluída usa FORA_DA_OFERTA_ATUAL com ADR. P09 não é pré-requisito de P10; requisitos explícitos da tarefa prevalecem sobre a ordem sugerida.
+
+
+SAAS-030 | P1 | Navegação profissional e linguagem de tarefa
+
+Motivo: Layout tem valor, mas o cliente precisa compreender função e qualidade da informação.
+
+Implementar: Preservar seis cartões Hermes/Finance/Ads/Products/Production/Returns após KPIs e antes dos gráficos; Auditor no diretório. Menu principal por tarefas: Visão geral, Pedidos, Produtos/estoque, Produção/DTF, Financeiro, Devoluções, Anúncios, Relatórios, Integrações. Conta/empresa/equipe/assinatura/ajuda ficam claros. Manter claro/escuro, tipografia e cores moderadas.
+
+Dependências: SAAS-006, SAAS-003
+
+Aceites:
+
+- Nenhum fluxo aprovado desaparece; nomes técnicos ficam em diagnóstico.
+
+- Tema, foco, contraste, hierarquia, tabelas e estados são coerentes.
+
+- Login/conta usa linguagem apropriada e contexto de empresa/loja é sempre identificável.
+
+Caminhos existentes a inspecionar: docs/MLS_LAYOUT_REFERENCE_PARITY_2026_11_13.md, web/cloudflare/src/account-service.mjs, web/cloudflare/src/account-worker.mjs, web/cloudflare/src/agent-registry.mjs, web/cloudflare/src/workspace-navigation.mjs
+
+
+SAAS-031 | P0 | Integrar o catálogo de gráficos à fonte canônica
+
+Motivo: Gráfico independente do cálculo principal pode apresentar totais divergentes.
+
+Implementar: Implementar/revalidar 22 famílias CH do catálogo anexo e 21 especificações de visualização. Reusar renderers existentes; gráfico, card, tabela e exportação consomem o mesmo DTO versionado. Incluir resultado, caixa, recebíveis, saques, custos/estoque, produção, devoluções, Ads, catálogo, Hermes, integrações e assinatura conforme fonte disponível.
+
+Dependências: SAAS-030, SAAS-018, SAAS-022, FINAUTO-17, FINAUTO-18, FINAUTO-22
+
+Aceites:
+
+- Cada ponto abre detalhe filtrado com fonte, período, unidade e corte.
+
+- Null/zero observado/parcial/desatualizado/sem permissão são diferentes.
+
+- Datas, idioma pt-BR, BRL, intervalo e denominador consistentes; margem/ROAS não viram média simples indevida.
+
+- Nenhuma série fictícia em conta real e nenhum gráfico dispara escrita operacional.
+
+Caminhos existentes a inspecionar: docs/MLS_LAYOUT_REFERENCE_PARITY_2026_11_13.md, web/cloudflare/original/auth-worker.mjs, web/cloudflare/src/admin.mjs, web/cloudflare/src/agent-registry.mjs, web/cloudflare/src/business-financial-closeout.mjs, web/cloudflare/src/business-historical-returns.mjs, web/cloudflare/src/business-month-publication.mjs, web/cloudflare/src/business-month.mjs, web/cloudflare/src/incurred-production.mjs, web/cloudflare/src/mls-ads-performance.mjs, web/cloudflare/src/mls-product-intelligence.mjs, web/cloudflare/src/mls-product-workbench.mjs, web/cloudflare/src/physical-returns.mjs, web/cloudflare/src/production-weekly-store.mjs, web/cloudflare/src/scaling-preparation.mjs, web/cloudflare/src/workspace-navigation.mjs, web/finance/src/external-cash-matching.mjs, web/finance/src/external-cash-period.mjs, web/finance/src/returns-reconciliation.mjs
+
+
+FINAUTO-21 | P1 | Painéis e gráficos auditáveis
+
+Motivo: Requisito financeiro original preservado e integrado à ordem mestre.
+
+Implementar: Reutilizar o design profissional V4.1. Criar visão Financeiro com Resultado, Recebíveis/Carteira, Saques, Banco, Despesas, Devoluções, Conciliação e Fechamentos. Os gráficos devem consumir os mesmos agregados canônicos das tabelas/detalhes: bruto→deduções→líquido, evolução por competência, saldo e fluxo de caixa, recebíveis por estágio, saques em trânsito, pendências e resultado semanal/mensal. Preservar todos os estados e acessibilidade.
+
+Dependências: SAAS-031, FINAUTO-17, FINAUTO-18, FINAUTO-22, FINAUTO-23
+
+Aceites:
+
+- Card, gráfico, tabela, exportação e fechamento coincidem para o mesmo recorte; cada ponto abre sua fonte. Não usar séries demonstrativas ou rótulo lucro líquido para subtotal incompleto.
+
+
+SAAS-032 | P1 | Onboarding até primeiro valor útil
+
+Motivo: Cadastro e conexão sozinhos não entregam custo, resultado ou produção confiável.
+
+Implementar: Guiar conta→empresa→loja→fontes→SKUs/kits→custos→saldo/obrigações→primeira conferência. Importadores com prévia, mapeamento, duplicatas, rollback lógico e retomada. Mostrar o que falta e aproveitar valores existentes sem inventar histórico. Trial pode começar no primeiro acesso útil segundo política comercial definida.
+
+Dependências: SAAS-010, SAAS-015, SAAS-031
+
+Aceites:
+
+- Usuário retoma onboarding sem perder trabalho.
+
+- Dados de demonstração só existem em ambiente/tenant claramente segregado e rotulado.
+
+- Primeiro painel e fechamento indicam cobertura real; custo ausente não vira zero.
+
+Caminhos existentes a inspecionar: AGENTS.md, README.md, docs/MLS_LAYOUT_REFERENCE_PARITY_2026_11_13.md, docs/PRODUCAO_DTF.md, web/cloudflare/src/account-organizations.mjs, web/cloudflare/src/admin.mjs, web/cloudflare/src/business-financial-closeout.mjs, web/cloudflare/src/business-month-publication.mjs, web/cloudflare/src/business-month.mjs, web/cloudflare/src/product-registry.mjs, web/cloudflare/src/production-dtf-store.mjs, web/finance/src/commercial-finance-worker.mjs, web/finance/src/external-cash-matching.mjs, web/finance/src/external-cash-period.mjs
+
+
+SAAS-033 | P1 | QA de UX e acessibilidade
+
+Motivo: O produto precisa funcionar para proprietário, financeiro e produção em diferentes telas.
+
+Implementar: Verificar jornadas com teclado e leitor de tela quando disponível, WCAG 2.2 AA como objetivo, labels/erros/foco, alternativa tabular aos gráficos, zoom e movimento reduzido. Testar 320/390/768/1365px, tema claro/escuro, normal/minificado, estados vazios e falhas relevantes.
+
+Dependências: SAAS-030, SAAS-031, SAAS-032
+
+Aceites:
+
+- Sem overflow impeditivo, controles inacessíveis ou informação dada somente por cor.
+
+- Formulário mostra erro associado ao campo e preserva rascunho.
+
+- Filtros/voltar/navegação por papel mantêm o contexto sem vazar dados.
+
+- Registrar capturas e limitações reais; não declarar certificação automática.
+
+Caminhos existentes a inspecionar: .github/workflows/validate.yml, docs/MLS_LAYOUT_REFERENCE_PARITY_2026_11_13.md, web/cloudflare/src/agent-registry.mjs, web/cloudflare/src/workspace-navigation.mjs, web/cloudflare/tests/workspace-navigation-rework-chrome.test.mjs
+
+
+==============================================================================
+
+P08 — Validar, publicar e realizar o piloto
+
+Gate: QA do candidato, confronto financeiro autorizado, release rastreável, piloto real e oferta compatível com evidências.
+
+Regra: Concluir aceites materiais do escopo desta fase. Item condicional não ativado pode continuar BLOQUEADO/ADIADO com motivo e sem promessa comercial; não conta como concluído. A preparação independente pode avançar, mas ativação/venda dependente espera sua evidência. Opção excluída usa FORA_DA_OFERTA_ATUAL com ADR. P09 não é pré-requisito de P10; requisitos explícitos da tarefa prevalecem sobre a ordem sugerida.
+
+
+SAAS-034 | P0 | QA integrada do candidato de lançamento
+
+Motivo: Muitos testes isolados não demonstram a jornada comercial inteira.
+
+Implementar: Executar suíte obrigatória e cenários financeiros/SaaS aplicáveis ao escopo candidato do pacote (cenários de expansão são exigidos na fase do respectivo recurso) no SHA candidato. Validar conta→loja→produção→resultado→assinatura→suporte/exportação com duas empresas sintéticas e contas sandbox autorizadas. Testar migração, rollbacks, falhas e revogação.
+
+Dependências: SAAS-028, SAAS-029, SAAS-033, FINAUTO-21, FINAUTO-23
+
+Aceites:
+
+- Todas as invariantes materiais passam e falhas têm diagnóstico, sem enfraquecer validadores.
+
+- CI do candidato é verde; logs distinguem testes novos dos históricos.
+
+- Testes sintéticos não contaminam conta real nem fecham sua contabilidade.
+
+Caminhos existentes a inspecionar: .github/workflows/validate.yml, AGENTS.md, README.md, docs/MLS_LAYOUT_REFERENCE_PARITY_2026_11_13.md, web/cloudflare/src/commercial-context.mjs, web/cloudflare/src/commercial-route-policy.mjs, web/cloudflare/src/tenant-browser-storage.mjs, web/cloudflare/src/tenant-storage.mjs, web/cloudflare/tests/workspace-navigation-rework-chrome.test.mjs
+
+
+FINAUTO-26 | P0 | Testes financeiros determinísticos
+
+Motivo: Requisito financeiro original preservado e integrado à ordem mestre.
+
+Implementar: Executar testes existentes relevantes e adicionar casos que provem invariantes financeiras, integração entre camadas e persistência. Cobrir a lista de cenários deste documento, limites de centavos, sinais, fontes parciais, concorrência e reversões. Testar o Worker gerado normal/minificado e os consumidores reais; não basta testar uma função isolada nem alterar testes para aceitar fórmula errada.
+
+Dependências: SAAS-034, FINAUTO-21
+
+Aceites:
+
+- Não há regressões introduzidas nos fluxos afetados; evidências indicam quais testes foram executados agora, sem reaproveitar contagens de CI histórico como validação nova.
+
+
+SAAS-035 | P0 | Conferência autorizada de semana e mês
+
+Motivo: O lucro da conta não foi comprovado nesta auditoria.
+
+Implementar: Aplicar FINAUTO-27: comparar fontes equivalentes de uma semana e um mês encerrados, com acesso/extratos autorizados. Documentar origem, períodos, moeda, custo, impostos, ajustes e diferenças. Separar aceite da DRE, caixa e liquidação.
+
+Dependências: SAAS-034, FINAUTO-26
+
+Aceites:
+
+- Diferença sem explicação fica pendente e afeta a classificação do resultado.
+
+- Não inventar ajuste para bater; não exigir recebimento de recebível futuro para fechar DRE.
+
+- Sem acesso, concluir código/testes independentes e registrar exatamente a prova operacional faltante.
+
+Caminhos existentes a inspecionar: web/cloudflare/src/admin.mjs, web/cloudflare/src/business-financial-closeout.mjs, web/cloudflare/src/business-historical-returns.mjs, web/cloudflare/src/business-month-publication.mjs, web/cloudflare/src/business-month.mjs, web/cloudflare/src/business-tax-policy.mjs, web/cloudflare/src/expense-ledger.mjs, web/cloudflare/src/physical-returns.mjs, web/finance/src/external-cash-matching.mjs, web/finance/src/external-cash-period.mjs, web/finance/src/returns-reconciliation.mjs
+
+Dependência externa: Sessão/fontes oficiais e extrato completo autorizado; políticas de custo/imposto confirmadas.
+
+
+FINAUTO-27 | P0 | Conferência operacional com fontes equivalentes
+
+Motivo: Requisito financeiro original preservado e integrado à ordem mestre.
+
+Implementar: Com acesso autorizado disponível, confrontar uma semana concluída e um mês concluído com fontes oficiais Shopee e extrato da mesma conta/moeda, respeitando competências, cortes e estados. Cobrir bruto, deduções, ajustes, Ads, devoluções, carteira, saques, banco, custos e obrigações. Explicar diferenças de timing; não forçar igualdade entre conceitos distintos. Ler saldos/movimentos não autoriza fazer transferências, enviar mensagens ou criar fatos operacionais de QA.
+
+Dependências: SAAS-035, FINAUTO-26
+
+Aceites:
+
+- Cada diferença é zero na comparação equivalente ou tem explicação/evidência pendente. Sem sessão/extrato/grant, registrar exatamente o que não foi validado; nenhum resultado da loja é certificado por fixture.
+
+
+SAAS-036 | P0 | Publicação verificada e piloto técnico controlado
+
+Motivo: Merge e número de versão não comprovam bytes servidos nem aceitação comercial.
+
+Implementar: Publicar incrementos pelo processo live já autorizado, com CI, backup/migração compatível, rollback e verificação dos Workers/artefatos. Atualizar APP_RELEASE/notas. Ativar oferta piloto somente no escopo pronto; separar readiness de lançamento de feature flags.
+
+Dependências: SAAS-034, SAAS-035, FINAUTO-27
+
+Aceites:
+
+- Commit, versão de cada Worker/asset, migração e configuração conferidos.
+
+- Smoke autenticado dos fluxos afetados e monitoramento pós-publicação executados.
+
+- Release informa pendências; não declara resultado líquido validado por simples deploy.
+
+- Não faz cobrança real, transferência ou ação em marketplace como efeito de teste.
+
+Caminhos existentes a inspecionar: .github/workflows/validate.yml, AGENTS.md, README.md, docs/MLS_LAYOUT_REFERENCE_PARITY_2026_11_13.md, docs/v4/RELEASE.md, docs/v4/TENANT_MIGRATION_RUNBOOK.md, web/cloudflare/src/tenant-migration.mjs, web/cloudflare/tests/workspace-navigation-rework-chrome.test.mjs
+
+Dependência externa: Acesso de deploy e QA autorizado já existentes; bloqueios concretos se indisponíveis.
+
+
+FINAUTO-28 | P0 | Contratos versionados e entrega no site live
+
+Motivo: Requisito financeiro original preservado e integrado à ordem mestre.
+
+Implementar: A entrega futura deve continuar no aplicativo existente e no destino live já solicitado pelo proprietário. Evoluir DTOs/projetores/transportes/consumidores por versões compatíveis; os v1 atuais impõem null e NOT_COMPARED intencionalmente, portanto não relaxar seus validadores para aparentar conclusão. Validar local/CI, ensaiar migrações, publicar pelo processo autorizado, conferir a versão e os módulos afetados e preservar rollback compatível. Não assumir custos, contratar conectores ou ampliar acessos sem autorização própria.
+
+Dependências: SAAS-036, FINAUTO-27
+
+Aceites:
+
+- Release informa commit, migrações, teste, deploy e conferência real, separando código publicado de aceite financeiro. Se acesso/integração/gate obrigatório faltar, concluir código independente e registrar bloqueio concreto, sem dizer que o objetivo está integralmente concluído.
+
+
+SAAS-037 | P0 | Piloto de uso e atendimento
+
+Motivo: Hipótese de nicho, preço e economia do produto precisa de evidência de usuários.
+
+Implementar: Propor piloto com cerca de cinco operações por 30 dias, cobrindo um fechamento mensal completo e ao menos um semanal. Se calendário/integridade exigir, estender. Convite/contrato/contato só pelo responsável ou com autorização. Medir ativação, tempo até valor, tarefas, divergências, incidentes, tickets e custo.
+
+Dependências: SAAS-036, FINAUTO-28
+
+Aceites:
+
+- Dados do piloto mostram uso das jornadas e capacidade de suporte.
+
+- Nenhum incidente de isolamento/dinheiro permanece sem resolução para lançamento amplo.
+
+- Critérios quantitativos escolhidos antes do piloto são registrados como metas internas, não benchmark de mercado.
+
+- Proposta de preço é testada com decisão comercial real; elogios não equivalem a intenção de compra.
+
+Caminhos existentes a inspecionar: AGENTS.md, README.md, docs/MLS_LAYOUT_REFERENCE_PARITY_2026_11_13.md, web/cloudflare/src/account-store.mjs, web/cloudflare/src/account-worker.mjs, web/cloudflare/src/tenant-jobs.mjs
+
+Dependência externa: Empresas participantes, consentimentos, contratos e acesso autorizados.
+
+
+SAAS-038 | P0 | Material de venda e lançamento comercial
+
+Motivo: Uma oferta confiável precisa corresponder à capacidade demonstrada.
+
+Implementar: Criar ficha de capacidades por plano/canal, página/vídeo de demo segregada, FAQ, implantação/importação, termos/privacidade, suporte/SLA, cancelamento/exportação e guia de incidentes. Usar complemento comercial do pacote. Definir preço após custos/piloto; lançamento público deve refletir recursos efetivamente homologados.
+
+Dependências: SAAS-023, SAAS-027, SAAS-037
+
+Aceites:
+
+- Cada promessa tem evidência ou rótulo experimental/condicional.
+
+- Não anunciar lucro sem erros, todas as APIs, IA autônoma ou multicanal pronto sem prova.
+
+- Métodos de pagamento, limites, carência e suporte são claros antes da contratação.
+
+- Se banco é importação, a oferta diz importação; objetivo de coleta automática permanece aberto até P10.
+
+Caminhos existentes a inspecionar: AGENTS.md, README.md, docs/MLS_LAYOUT_REFERENCE_PARITY_2026_11_13.md, docs/v4/EXTERNAL_DEPENDENCIES.json, web/cloudflare/src/account-organizations.mjs, web/cloudflare/src/account-service.mjs, web/cloudflare/src/account-worker.mjs, web/cloudflare/src/commercial-admin-runtime.mjs, web/cloudflare/src/commercial-route-policy.mjs, web/cloudflare/src/mls-ai-sales-capability-audit.mjs, web/cloudflare/src/mls-lost-push-recovery.mjs, web/cloudflare/src/mls-shopee-capability-audit.mjs, web/cloudflare/src/order-operations.mjs
+
+
+==============================================================================
+
+P09 — Evoluir IA e publicações assistidas
+
+Gate: Hermes por empresa e módulos opcionais utilizáveis; ações externas só com capacidade e autorização próprias.
+
+Regra: Concluir aceites materiais do escopo desta fase. Item condicional não ativado pode continuar BLOQUEADO/ADIADO com motivo e sem promessa comercial; não conta como concluído. A preparação independente pode avançar, mas ativação/venda dependente espera sua evidência. Opção excluída usa FORA_DA_OFERTA_ATUAL com ADR. P09 não é pré-requisito de P10; requisitos explícitos da tarefa prevalecem sobre a ordem sugerida.
+
+
+SAAS-039 | P1 | Hermes por empresa e economia de IA
+
+Motivo: Há ponte externa observadora, com contexto e identidade legados.
+
+Implementar: Operar Hermes por organização/loja, contexto minimizado, fila/timeout/cancelamento/retry e orçamento de uso. Respostas mostram fonte/período; números continuam determinísticos. Inventariar runtime/versão/health/backup e avaliar utilidade do assistente.
+
+Dependências: SAAS-007, SAAS-011, SAAS-022, SAAS-026, SAAS-038
+
+Aceites:
+
+- Empresa A nunca usa contexto de B; análise não expõe dados pessoais desnecessários.
+
+- Falha de IA preserva relatórios determinísticos e mostra indisponibilidade.
+
+- Cada execução tem custo/limite e prova de resultado; memória não é anunciada como treinamento de modelo.
+
+Caminhos existentes a inspecionar: docs/HERMES_FINANCEIRO.md, package.json, web/bridge/hermes_bridge.py, web/cloudflare/original/auth-worker.mjs, web/cloudflare/src/admin.mjs, web/cloudflare/src/agent-registry.mjs, web/cloudflare/src/hermes-financial-context.mjs, web/cloudflare/src/mls-agent-learning.mjs
+
+Escopo condicional: ativar/vender apenas após comprovação; fora da oferta atual não significa concluído.
+
+
+SAAS-040 | P1 | Listing Factory e ações assistidas
+
+Motivo: O módulo atual prepara rascunhos, sem publicação comprovada.
+
+Implementar: Melhorar preparação em lote, revisão por item, mídia/variante/preço/estoque e exportação. Só adicionar publicar/alterar com grants oficiais, prévia, autorização operacional, idempotência, orçamento e rollback/compensação possível. Ads/PROMO permanecem bloqueados até gate próprio.
+
+Dependências: SAAS-003, SAAS-015, SAAS-038
+
+Aceites:
+
+- Rascunho pronto não aparece como publicado.
+
+- Erro/retry por item não cria anúncio duplicado.
+
+- Qualquer ação externa possui autor, escopo, diferença prevista, resposta do provedor e IDs reais.
+
+- Ausência de grant mantém ação indisponível; não contornar por scraping.
+
+Caminhos existentes a inspecionar: docs/MLS_LISTING_FACTORY_V1.md, web/cloudflare/original/auth-worker.mjs, web/cloudflare/src/admin.mjs, web/cloudflare/src/mls-ads-performance.mjs, web/cloudflare/src/mls-ai-sales-capability-audit.mjs, web/cloudflare/src/mls-listing-factory-planner.mjs, web/cloudflare/src/mls-lost-push-recovery.mjs, web/cloudflare/src/mls-shopee-capability-audit.mjs, web/cloudflare/src/order-operations.mjs, web/cloudflare/src/scaling-preparation.mjs
+
+Dependência externa: Grants e autorização específica para cada escrita comercial.
+
+Escopo condicional: ativar/vender apenas após comprovação; fora da oferta atual não significa concluído.
+
+
+SAAS-041 | P1 | AI Sales opcional e mídia/afiliados
+
+Motivo: Render é local e provider/publicação/âncora não foram comprovados.
+
+Implementar: Entregar pacote local suportado ou, se justificado, executor de mídia assíncrono separado dos Workers HTTP. Preservar direitos de arte/voz, quotas/custo, revisão e cancelamento. Manter afiliados como CRM/importação assistida até grants e consentimento próprios.
+
+Dependências: SAAS-016, SAAS-022, SAAS-028, SAAS-038
+
+Aceites:
+
+- Job retoma sem efeito/cobrança duplicados; bytes não são confundidos com metadados.
+
+- Vídeo/arte não são deformados; mídia tem origem/direitos declarados.
+
+- Não enviar convite, comissão, mensagem ou postagem por consequência de gerar rascunho.
+
+- Render pronto não comprova capacidade de publicação no canal.
+
+Dependência opcional: {"modo_nuvem": ["SAAS-017"]}
+
+Caminhos existentes a inspecionar: docs/MLS_AI_SALES_INTEGRATION_2026_10_30.md, docs/MLS_AI_SALES_LOCAL_RENDER.md, web/cloudflare/src/mls-ai-sales-affiliates.mjs, web/cloudflare/src/mls-ai-sales-capability-audit.mjs, web/cloudflare/src/mls-ai-sales-performance.mjs, web/cloudflare/src/mls-ai-sales-script-adapter.mjs, web/cloudflare/src/mls-ai-sales-workspace-store.mjs
+
+Dependência externa: Runtime/mídia/IA pagos e grants externos somente se contratados/autorizados.
+
+Escopo condicional: ativar/vender apenas após comprovação; fora da oferta atual não significa concluído.
+
+
+==============================================================================
+
+P10 — Adicionar bancos, canais e parceiros
+
+Gate: Open Finance, TikTok, Mercado Livre e ERP são entregas separadas, homologadas por conta/região; importação não é anunciada como coleta automática.
+
+Regra: Concluir aceites materiais do escopo desta fase. Item condicional não ativado pode continuar BLOQUEADO/ADIADO com motivo e sem promessa comercial; não conta como concluído. A preparação independente pode avançar, mas ativação/venda dependente espera sua evidência. Opção excluída usa FORA_DA_OFERTA_ATUAL com ADR. P09 não é pré-requisito de P10; requisitos explícitos da tarefa prevalecem sobre a ordem sugerida.
+
+
+SAAS-042 | P1 | Open Finance para automatizar banco
+
+Motivo: CSV/OFX não entrega coleta bancária automática.
+
+Implementar: Homologar Pluggy como primeiro candidato e comparar Belvo somente se cobertura/custo exigir. Integrar consentimento, contas/moeda, transações lançadas vs pendentes, saldos, atualizações/revisões e revogação. Deduplicar com arquivos importados e reconciliar sem iniciar pagamentos.
+
+Dependências: SAAS-009, SAAS-012, SAAS-035, SAAS-038, FINAUTO-07, FINAUTO-08, FINAUTO-27
+
+Aceites:
+
+- Banco usado pelo cliente e campos necessários são cobertos por contrato e prova real autorizada.
+
+- Saldo e período comprovados, consentimento expirado/revogado interrompe atualização e aparece na UI.
+
+- Transação pendente não é tratada como liquidação definitiva.
+
+- Automação integral financeira só é anunciada para fontes efetivamente disponíveis; sem conector, permanece importação assistida.
+
+Caminhos existentes a inspecionar: web/cloudflare/src/admin.mjs, web/cloudflare/src/commercial-context.mjs, web/cloudflare/src/commercial-route-policy.mjs, web/cloudflare/src/tenant-browser-storage.mjs, web/cloudflare/src/tenant-storage.mjs, web/finance/src/external-cash-matching.mjs, web/finance/src/external-cash-period.mjs
+
+Dependência externa: Contrato/preço do provedor, cobertura bancária e consentimento específico.
+
+Escopo condicional: ativar/vender apenas após comprovação; fora da oferta atual não significa concluído.
+
+Este item continua obrigatório para encerrar o objetivo de banco automático.
+
+
+SAAS-043 | P1 | TikTok Shop por capacidade
+
+Motivo: O aplicativo existente não prova Order API nem operação financeira conectada.
+
+Implementar: Priorizar Orders autorizado, depois catálogo/financeiro conforme escopos. Confirmar tipo de app público/custom, revisão aplicável, região e grants de seller. Implementar adapter e testes de paginação/replay/refresh. Não misturar grants Seller e Creator/Affiliate.
+
+Dependências: SAAS-010, SAAS-012, SAAS-038
+
+Aceites:
+
+- Uma loja autorizada fornece pedidos reais com cobertura/atualidade.
+
+- Ausência de API financeira limita o relatório explicitamente.
+
+- Sem aprovação/grant, código local pode concluir mas conexão permanece bloqueada e não vendida como pronta.
+
+Caminhos existentes a inspecionar: web/cloudflare/src/admin.mjs, web/cloudflare/src/mls-ai-sales-affiliates.mjs, web/cloudflare/src/mls-ai-sales-capability-audit.mjs, web/cloudflare/src/mls-ai-sales-performance.mjs, web/cloudflare/src/mls-lost-push-recovery.mjs, web/cloudflare/src/mls-shopee-capability-audit.mjs, web/cloudflare/src/order-operations.mjs
+
+Dependência externa: Liberação do aplicativo/API/mercado e autorização do lojista.
+
+Escopo condicional: ativar/vender apenas após comprovação; fora da oferta atual não significa concluído.
+
+
+SAAS-044 | P1 | Mercado Livre por adapter
+
+Motivo: A integração não está conectada no contrato atual de Pedidos.
+
+Implementar: Adicionar OAuth oficial, pedidos, catálogo e eventos financeiros suportados com IDs/semânticas próprios. Compatibilizar produtos e fontes sem assumir que taxonomia Shopee serve para outro canal. Manter estoque em observação até definir mestre e testes de reservas.
+
+Dependências: SAAS-010, SAAS-012, SAAS-014, SAAS-015, SAAS-038
+
+Aceites:
+
+- Conexão, refresh/revogação e cobertura por loja demonstrados.
+
+- Mesmo SKU em canais diferentes aponta composição correta; marketplace nunca é inferido de ID sozinho.
+
+- Receitas e repasses de canais distintos não colidem nem duplicam resultado consolidado.
+
+Caminhos existentes a inspecionar: docs/PRODUCAO_DTF.md, web/cloudflare/src/admin.mjs, web/cloudflare/src/mls-ai-sales-capability-audit.mjs, web/cloudflare/src/mls-lost-push-recovery.mjs, web/cloudflare/src/mls-shopee-capability-audit.mjs, web/cloudflare/src/order-operations.mjs, web/cloudflare/src/product-registry.mjs, web/cloudflare/src/production-dtf-store.mjs
+
+Dependência externa: Aplicação, escopos e lojista autorizados.
+
+Escopo condicional: ativar/vender apenas após comprovação; fora da oferta atual não significa concluído.
+
+
+SAAS-045 | P1 | ERP, fiscal e logística por parceiro
+
+Motivo: Não foi demonstrado motor fiscal/logístico completo nos fluxos auditados.
+
+Implementar: Escolher um parceiro inicial (Bling ou ERP da Olist conforme uso do piloto) para exportar/importar dados com mapeamento canônico. Definir quem manda em estoque, custo e documento fiscal. Etiqueta, nota autorizada, expedição e recebimento têm estados próprios. Não implementar dois ERPs por padrão.
+
+Dependências: SAAS-015, SAAS-023, SAAS-038
+
+Aceites:
+
+- Um evento tem uma origem financeira; integração não duplica lançamento no MLS e ERP.
+
+- Sincronização em observação até política de mestre aprovada.
+
+- Documento fiscal/etiqueta possuem ID, retorno e estado real do emissor/transportador.
+
+- Falha/retry não emite nota/etiqueta duplicada nem confirma expedição inexistente.
+
+Caminhos existentes a inspecionar: web/cloudflare/original/app-worker.mjs, web/cloudflare/original/auth-worker.mjs, web/cloudflare/src/admin.mjs, web/cloudflare/src/business-tax-policy.mjs, web/cloudflare/src/expense-ledger.mjs, web/cloudflare/src/incurred-production.mjs, web/cloudflare/src/mls-product-intelligence.mjs, web/cloudflare/src/physical-returns.mjs
+
+Dependência externa: Contrato/API do parceiro e escopo do cliente; emissão/compra só com autorização.
+
+Escopo condicional: ativar/vender apenas após comprovação; fora da oferta atual não significa concluído.
+
+
+==============================================================================
+
+P11 — Revisar economia e ampliar com evidência
+
+Gate: Preço, limites e próxima expansão baseados no piloto; objetivo de automação integral só é encerrado com fontes bancárias e marketplace realmente cobertas.
+
+Regra: Concluir aceites materiais do escopo desta fase. Item condicional não ativado pode continuar BLOQUEADO/ADIADO com motivo e sem promessa comercial; não conta como concluído. A preparação independente pode avançar, mas ativação/venda dependente espera sua evidência. Opção excluída usa FORA_DA_OFERTA_ATUAL com ADR. P09 não é pré-requisito de P10; requisitos explícitos da tarefa prevalecem sobre a ordem sugerida.
+
+
+SAAS-046 | P1 | Decidir expansão com economia e evidência
+
+Motivo: Catálogo de funcionalidades por si só não demonstra um negócio viável.
+
+Implementar: Revisar uso, retenção por coorte, cancelamentos, suporte, custo por tenant, margem de contribuição do SaaS e disposição a pagar. Priorizar backlog pelo impacto observado. Lago/Kill Bill, loja própria Medusa/Saleor, mais canais e white label ficam fora da primeira oferta até caso econômico. Atualizar matriz e oferta sem apagar decisões anteriores.
+
+Dependências: SAAS-037, SAAS-038
+
+Aceites:
+
+- Metas e resultados do piloto têm data, denominador e limite de amostra.
+
+- Preço cobre custos e política de serviço sob cenários registrados; não há receita/market share inventados.
+
+- Objetivo de automação total é fechado apenas quando as fontes essenciais estão integradas e confrontadas; parcial permanece explícito.
+
+- Plano seguinte tem responsável, dependências, gate e critério de interrupção.
+
+Caminhos existentes a inspecionar: AGENTS.md, README.md, docs/MLS_LAYOUT_REFERENCE_PARITY_2026_11_13.md, docs/v4/TENANT_MIGRATION_RUNBOOK.md, web/cloudflare/src/account-store.mjs, web/cloudflare/src/account-worker.mjs, web/cloudflare/src/commercial-workspace-setup.mjs, web/cloudflare/src/tenant-jobs.mjs, web/cloudflare/src/tenant-schema-manifest.mjs
+
+Escopo condicional: ativar/vender apenas após comprovação; fora da oferta atual não significa concluído.
+
+
+CATÁLOGO INTEGRADO DE GRÁFICOS E TABELAS
+
+As 22 famílias CH são referências preservadas, não prova de capacidade atual. As 21 especificações abaixo se ligam ao DTO canônico.
+
+
+VIS-01 — Visão geral / Finance / Ads
+
+Famílias: ["CH-OVR-01", "CH-OVR-02", "CH-OVR-03"]
+
+Fonte: brazaDayDashboard.getTrend() e projectMlsMissionChart; ROAS usa getAdsSnapshot()/projectMissionRoasChart independente.
+
+Métrica: Resultado estimado/subtotal, vendas, gasto Ads e ROAS; preservar Pedidos se o percurso COUNT já estiver integrado na HEAD. Sparklines reutilizam a mesma fonte.
+
+Período: 7/14 dias no mês/data selecionados; KPI mensal Ads conserva seu período próprio.
+
+Visual/tabela: Linhas/áreas com eixo e unidade corretos; tabela equivalente por data. BRL em centavos, pedidos inteiros e ROAS em x.
+
+Detalhamento: Inspeção por toque/teclado; abrir detalhe da data só por navegação explícita existente ou extensão validada; controles independentes por host.
+
+Vazio/parcial: 0/1 observação: texto/tabela sem curva inventada. Gaps null não são conectados; negativo e dia parcial preservados; gasto zero não produz ROAS zero.
+
+Dependência: Dados canônicos existentes, reconferidos na HEAD
+
+Interação: LEITURA_OU_FILTRO_SEM_ESCRITA
+
+
+VIS-02 — Visão geral / Equipe
+
+Famílias: ["CH-OVR-04"]
+
+Fonte: Registro de agentes e inteligência da data validada.
+
+Métrica: Valores da mesma data e contagens por estado dos especialistas. Denominador de saúde é o conjunto do registro, distinto dos seis cartões da inicial.
+
+Período: Data/contexto observado e horário da leitura.
+
+Visual/tabela: Comparativo assinado e contagens HEALTHY/WORKING/ATTENTION/BLOCKED; tabela por agente com fonte e próxima ação.
+
+Detalhamento: Abrir painel do agente ou Auditor; nenhuma categoria altera modo de execução.
+
+Vazio/parcial: Sem fonte: estado desconhecido. Não chamar saúde de integridade/conformidade nem largura relativa de margem.
+
+Dependência: Dados canônicos existentes, reconferidos na HEAD
+
+Interação: LEITURA_OU_FILTRO_SEM_ESCRITA
+
+
+VIS-03 — Financeiro — resultado
+
+Famílias: ["CH-FIN-01"]
+
+Fonte: Composição canônica diária/mensal existente; novo resultado por competência e fechamento versionado de P04.
+
+Métrica: Base de receita/repasse, ajustes, CMV/custos, consumo Ads, despesas, tributos e resultado, com rota de cálculo identificada.
+
+Período: Dia/mês da fonte existente rotulado; novo período de competência conforme política P04.
+
+Visual/tabela: Cascata com sinais quando a composição fecha; tabela semântica dos mesmos componentes e cobertura.
+
+Detalhamento: Componente abre pedidos, ajustes, custo, imposto ou despesa que o compõem, preservando empresa/loja/período.
+
+Vazio/parcial: Componentes de coberturas distintas não formam igualdade visual; subtotal conhecido fica rotulado e líquido definitivo indisponível.
+
+Dependência: P04 para DRE/fechamento novos; preservar estimativa atual até o novo contrato estar comprovado.
+
+Interação: LEITURA_OU_FILTRO_SEM_ESCRITA
+
+
+VIS-04 — Financeiro — recebíveis/carteira/saques
+
+Famílias: ["CH-FIN-02"]
+
+Fonte: Liberações existentes; razão e eventos de carteira/saques reconciliados a criar em P04.
+
+Métrica: Valores por estado exclusivo e data real do evento; saldos, em trânsito e divergência conhecidos.
+
+Período: Data de liberação/movimento e instante do saldo; nunca substituir por criação do pedido.
+
+Visual/tabela: Série temporal apenas com eventos datados completos; barras por estado com partição demonstrada; tabela de eventos/lotes.
+
+Detalhamento: Abrir pedido, ajuste, liberação, transferência e prova bancária relacionados.
+
+Vazio/parcial: Sem adaptador: tabela disponível e explicação útil; não fabricar série do saldo agregado nem usar contadores sobrepostos como rosca.
+
+Dependência: P02 capacidades/coleta e P04 razão/conciliação; receita não é reconhecida novamente na transferência.
+
+Interação: LEITURA_OU_FILTRO_SEM_ESCRITA
+
+
+VIS-05 — Banco e transferências
+
+Famílias: ["CH-BNK-01"]
+
+Fonte: external_cash_period_summary_v1 e registros/importações/vínculos; saldos e alocações novos de P04.
+
+Métrica: Créditos, débitos, valor vinculado e não vinculado por conta/origem; saldo inicial/final somente quando comprovados.
+
+Período: Calendário do movimento bancário/transferência, independente da data da venda e da paginação da tabela.
+
+Visual/tabela: Tabela de extrato e conciliação; barras assinadas por origem. Série diária exige agregação diária de backend, não existe por inferência do total.
+
+Detalhamento: Abrir lançamento, arquivo e grupo de alocação. Confirmar/desfazer vínculo permanece ação explícita separada.
+
+Vazio/parcial: Origem sem registros não é saldo zero; IMPORTED_FILES_ONLY continua parcial. NEW/DUPLICATE/REVIEW não são três fatias exclusivas: review é subconjunto de new.
+
+Dependência: P04 para saldo confiável e agrupamentos; conector Open Finance P10 é opcional/elegível e identificado.
+
+Interação: LEITURA_OU_FILTRO_SEM_ESCRITA
+
+
+VIS-06 — Despesas e impostos
+
+Famílias: []
+
+Fonte: expense-ledger/expense-schedule e política tributária vigente; pagamentos reconciliados de P04.
+
+Métrica: Obrigações por competência/vencimento, aberto/pago/atrasado, valores e categorias mutuamente exclusivas quando agrupados.
+
+Período: Competência para resultado; vencimento para agenda; liquidação para caixa.
+
+Visual/tabela: Calendário/lista de vencimentos e barras por categoria quando cobertura for válida; tabela com obrigação e pagamento ligados.
+
+Detalhamento: Abrir lançamento/parcelas, revisão e prova de pagamento.
+
+Vazio/parcial: Não usar marcação PAID como segunda despesa; imposto pendente não é zero; campos declarados identificados.
+
+Dependência: P04 fórmulas e vínculos; configuração isolada de P01/P03.
+
+Interação: LEITURA_OU_FILTRO_SEM_ESCRITA
+
+
+VIS-07 — Fechamentos e capital de giro
+
+Famílias: []
+
+Fonte: Fechamentos financeiros persistentes, recebíveis, saldos e compromissos de P04.
+
+Métrica: Resultado por versão, caixa conciliado, recebimentos/pagamentos previstos e reserva de giro configurada.
+
+Período: Semana/mês por política explícita; projeção futura com data-base e horizonte selecionado.
+
+Visual/tabela: Tabela de períodos/versões/pendências e barras de resultado; curva de caixa realizada separada da projeção e dos cenários.
+
+Detalhamento: Abrir versão, eventos, políticas e diferenças de retificação; projeção abre compromissos e premissas.
+
+Vazio/parcial: Recebível legítimo em aberto não bloqueia DRE por si só; fonte material incompleta mantém provisório. Caixa livre estimado não é promessa de retirada.
+
+Dependência: P03 compromissos/custos e P04 cálculo/fechamentos; não criar previsão apenas por extrapolar vendas.
+
+Interação: LEITURA_OU_FILTRO_SEM_ESCRITA
+
+
+VIS-08 — Anúncios e campanhas
+
+Famílias: ["CH-ADS-01"]
+
+Fonte: ads-workspace daily table e calendário/projetores de Ads; campanhas/GMV Max em contratos próprios.
+
+Métrica: Gasto, GMV atribuído, conversões atribuídas e ROAS calculado. ROAS agregado = receita atribuída total / gasto total.
+
+Período: Período do calendário Ads até 31 dias no dashboard atual; fonte/fuso próprio explicitado.
+
+Visual/tabela: Barras/linhas de gasto e GMV; ROAS em painel separado; tabela por dia e campanha quando o recorte é válido.
+
+Detalhamento: Abrir dia/campanha por identificação estável; não altera orçamento nem status.
+
+Vazio/parcial: Sem gasto: ROAS indefinido; fonte parcial/atrasada visível. Não somar atribuição direta e ampla nem média de ROAS diários; distribuição de investimento só com partição completa.
+
+Dependência: Dados canônicos existentes, reconferidos na HEAD
+
+Interação: LEITURA_OU_FILTRO_SEM_ESCRITA
+
+
+VIS-09 — Produtos — líderes e ABC
+
+Famílias: ["CH-PRD-01", "CH-PRD-02"]
+
+Fonte: mls_product_workbench_v1 e mls_product_intelligence_shadow_v1.
+
+Métrica: Unidades comerciais vendidas, participação no total mensal e classes canônicas. ABC receita só com revenue_abc_status AVAILABLE.
+
+Período: Mês/publicação completos, independente do filtro/página da tabela; recorte filtrado só se explicitamente selecionado.
+
+Visual/tabela: Barras dos líderes e A/B/C; tabela de produtos/variantes com custos/cobertura. Top 8 não representa a distribuição inteira.
+
+Detalhamento: Selecionar produto/classe abre ou filtra a tabela preservando mês e classe original.
+
+Vazio/parcial: Sem produto confirmado: sem gráfico; receita bloqueada não é inferida. Unidade de kit não é peça, estoque nem lucro líquido.
+
+Dependência: Dados canônicos existentes, reconferidos na HEAD
+
+Interação: LEITURA_OU_FILTRO_SEM_ESCRITA
+
+
+VIS-10 — Produtos — contribuição
+
+Famílias: ["CH-PRD-03"]
+
+Fonte: mls_product_financial_evidence_v1 e business_month_variant_contributions_v1, mesma publicação/revisão.
+
+Métrica: Contribuição exclusiva coberta e componentes; casos mistos/sem atribuição separados; Ads/DAS/despesas fora quando o contrato assim define.
+
+Período: Mês da publicação e variação/pedido selecionados.
+
+Visual/tabela: Composição assinada e tabela de pedidos/evidências. Ranking só de base estrita válida e com cobertura indicada.
+
+Detalhamento: Produto→variação→pedido/ajuste/custo; não somar provas alternativas do mesmo recorte.
+
+Vazio/parcial: Parcial não vira zero nem margem líquida; não ratear pedido misto só para preencher gráfico.
+
+Dependência: Dados canônicos existentes, reconferidos na HEAD
+
+Interação: LEITURA_OU_FILTRO_SEM_ESCRITA
+
+
+VIS-11 — Produção diária
+
+Famílias: ["CH-PROD-01", "CH-PROD-02"]
+
+Fonte: incurred_production_analytics_v1 para fabricação e production_daily_finance_v1 para referência de vendas, apresentados separadamente.
+
+Métrica: Custo histórico/quantidade fabricada; estimativa das vendas e custo de referência das vendas em outra série/bloco.
+
+Período: produced_date Brasília para fabricação; data civil de pedidos/Ads para estimativa.
+
+Visual/tabela: Barras de fabricação por dia e tabela de lotes; bloco separado da estimativa diária com sinais e cobertura.
+
+Detalhamento: Barra/tabela seleciona a mesma data pelos handlers existentes; formulário Registrar neste dia é ação separada.
+
+Vazio/parcial: NO_RECORDS não é zero; PARTIAL_COSTS mostra conhecido e pendente. Maior custo exige custos completos, preserva empates; gráfico não confirma fabricação.
+
+Dependência: Dados canônicos existentes, reconferidos na HEAD
+
+Interação: LEITURA_OU_FILTRO_SEM_ESCRITA
+
+
+VIS-12 — Fechamento fabril
+
+Famílias: ["CH-PROD-03"]
+
+Fonte: GET production/weekly-closing?month e versões current/original/latest.
+
+Métrica: Custo histórico total ou subtotal conhecido e quantidade com cobertura por intervalo.
+
+Período: Sexta anterior 13h inclusiva → sexta 13h exclusiva, America/Sao_Paulo.
+
+Visual/tabela: Barras por semana e tabela de versões, oito intervalos e confirmações.
+
+Detalhamento: Seleciona semana/corte e detalhes salvos; leitura não captura fechamento.
+
+Vazio/parcial: Prévia, aberto, corte pendente, original e retificação permanecem distintos; falta de custo não é zero.
+
+Dependência: Dados canônicos existentes, reconferidos na HEAD
+
+Interação: LEITURA_OU_FILTRO_SEM_ESCRITA
+
+
+VIS-13 — DTF e biblioteca de artes
+
+Famílias: ["CH-DTF-01"]
+
+Fonte: mls_agent_dtf_queue_v1 e plano/manifestações do motor DTF; metadados de biblioteca/backup.
+
+Métrica: Linhas pending/reserved/produced/blocked, soma exata line_count; folhas/impressões e uso de biblioteca são outras grandezas.
+
+Período: Snapshot atual da fila e lote selecionado; arte é por versão/hash.
+
+Visual/tabela: Rosca/barras apenas se a partição fechar; tabela de fila/lotes; prévia física de PNG é layout, não gráfico estatístico.
+
+Detalhamento: Abrir fila/lote/arte; inspeção não reserva, exporta, marca produzido nem envia mídia à nuvem.
+
+Vazio/parcial: Zero total/inconsistência: mensagem sem rosca inventada. Falta de pixels locais orienta restaurar/reanexar; ocupação de filme não é capacidade/hora.
+
+Dependência: Motor atual preservado; P03 acrescenta backup e nuvem opt-in/cotas sem modificar semântica de contagens.
+
+Interação: LEITURA_OU_FILTRO_SEM_ESCRITA
+
+
+VIS-14 — Devoluções
+
+Famílias: ["CH-RET-01"]
+
+Fonte: mls_returns_insights_v1 e fatos de recebimento/inspeção; efeitos financeiros novos de P04.
+
+Métrica: Solicitações identificadas por situação; valores conhecidos/pedentes; peças físicas por destino em tabela independente.
+
+Período: Coorte/fonte da solicitação, data de ajuste financeiro e data de recebimento físico explicitadas.
+
+Visual/tabela: Barras por status e tabela de casos; tabela física de peças/destino/custo. Motivos só com taxonomia/fonte canônica nova.
+
+Detalhamento: Caso→pedido→ajuste e recebimento/inspeção associados; inspeção de gráfico não confirma item recebido.
+
+Vazio/parcial: Quantidade de casos não é pedidos/peças; REFUND_PAID não comprova banco. Agregado não é reconstruído da lista truncada; valor ausente mantém pendência.
+
+Dependência: Dados canônicos existentes, reconferidos na HEAD
+
+Interação: LEITURA_OU_FILTRO_SEM_ESCRITA
+
+
+VIS-15 — Auditor e qualidade das fontes
+
+Famílias: ["CH-EVD-01"]
+
+Fonte: Registro de agentes, liberações/returns/custos, diagnóstico e cobertura dos coletores.
+
+Métrica: Contagens/valores afetados e idade por tipo de pendência; denominador apenas quando definido.
+
+Período: Última observação por fonte, período afetado e corte da revisão.
+
+Visual/tabela: Tabela de pendências com causa/ação e barras de cobertura; evitar rosca de contadores sobrepostos.
+
+Detalhamento: Abrir fonte/evento/arquivo e ação permitida; reprocessar exige fluxo próprio.
+
+Vazio/parcial: Sem base: desconhecido; categorias sobrepostas não somam total de problemas; saudável não equivale a auditoria independente ou conformidade certificada.
+
+Dependência: Dados canônicos existentes, reconferidos na HEAD
+
+Interação: LEITURA_OU_FILTRO_SEM_ESCRITA
+
+
+VIS-16 — Pedidos e operação
+
+Famílias: ["CH-ORD-01"]
+
+Fonte: order_operations_workspace_v1: agregados por pedido do recorte inteiro.
+
+Métrica: Pedidos por etapa exclusiva, situação da plataforma separada; ALL/ACTIVE são filtros agregados, não fatias adicionais.
+
+Período: Até 31 datas do recorte da fonte salva, independente da página de 50.
+
+Visual/tabela: Chips/barras de distribuição e tabela de pedidos/linhas/etapas.
+
+Detalhamento: Filtrar etapa/abrir pedido; gravar etapa pede formulário/motivo/confirmação próprios.
+
+Vazio/parcial: Cache parcial e period_complete:false visíveis; linha desconhecida entra em revisão; ausência de pedido antigo não comprova inexistência.
+
+Dependência: Dados canônicos existentes, reconferidos na HEAD
+
+Interação: LEITURA_OU_FILTRO_SEM_ESCRITA
+
+
+VIS-17 — Relatório semanal da operação
+
+Famílias: ["CH-WEEK-01", "CH-WEEK-02", "CH-WEEK-03", "CH-WEEK-04"]
+
+Fonte: weekly_operating_report_v1: fabricação, estimativa de vendas e external_cash_period_summary_v1 independentes.
+
+Métrica: Fabricação: custo/quantidade; vendas: estimativa/vendas/referência; caixa: créditos/débitos e vínculos por origem.
+
+Período: Fabricação: oito intervalos de sexta 13h; vendas: sete dias civis sexta–quinta; caixa: calendário do movimento. Preservar três bases.
+
+Visual/tabela: Três gráficos e três tabelas/detalhes próprios. Caixa atual é categoria por origem, não série diária.
+
+Detalhamento: Seleção de intervalo/data/categoria e métrica por bloco; rascunho de week_end só aplica por ação explícita; links preservam contexto possível.
+
+Vazio/parcial: Conhecido não é total; fonte ausente não zera outras. Pernas de transferência podem cair em semanas distintas, sem exigir igualdade semanal. Resposta velha não muda o novo período.
+
+Dependência: Dados canônicos existentes, reconferidos na HEAD
+
+Interação: LEITURA_OU_FILTRO_SEM_ESCRITA
+
+
+VIS-18 — Hermes, memória e automações
+
+Famílias: []
+
+Fonte: Jobs/análises, orçamento/uso registrado, fingerprint de contexto, observações agregadas e estados do scheduler.
+
+Métrica: Estado de execução, quantidade de análises observadas, custo conhecido, limite disponível e pendências; duração apenas quando timestamps válidos existirem.
+
+Período: Período da análise e data das fontes identificados separadamente; orçamento por competência configurada.
+
+Visual/tabela: Tabela de análises e origem dos números; lista de ações; série de uso/custo somente sobre eventos observados.
+
+Detalhamento: Abrir análise, contexto financeiro congelado e consumo; nunca executar ação comercial ao clicar.
+
+Vazio/parcial: Ponte desconectada, custo não informado e modelo indisponível são estados explícitos. Não criar atividade/ganho autônomo sintético.
+
+Dependência: Dados canônicos existentes, reconferidos na HEAD
+
+Interação: LEITURA_OU_FILTRO_SEM_ESCRITA
+
+
+VIS-19 — Listing Factory / AI Sales / Afiliados
+
+Famílias: []
+
+Fonte: Rascunhos, planos, jobs/manifestos locais, revisão e ledger de performance importado/observado.
+
+Métrica: Rascunhos por etapa exclusiva, jobs concluídos/falhos, custo registrado e métricas de performance com origem; publicação real só após retorno oficial.
+
+Período: Data de criação/execução/revisão; performance pelo período e atribuição da própria fonte.
+
+Visual/tabela: Tabelas de revisão/lotes/criadores e funil interno claramente nomeado; vídeos são prévias, não gráficos de venda.
+
+Detalhamento: Abrir rascunho, evidência de mídia/direito, job, manifesto e registro de performance.
+
+Vazio/parcial: READY_FOR_OWNER não é publicado. CSV/manual não vira oficial; zero custo do provedor não significa custo total zero; não classificar vencedores com dados insuficientes.
+
+Dependência: Dados existentes assistidos; novas conexões/escritas só com capacidades, orçamento e políticas específicos.
+
+Interação: LEITURA_OU_FILTRO_SEM_ESCRITA
+
+
+VIS-20 — Conta, assinatura e onboarding
+
+Famílias: []
+
+Fonte: Conta/empresa/membership e evidência real das etapas; assinatura/cobrança verificadas em P05.
+
+Métrica: Etapa concluída, plano, situação da assinatura, uso/cota e histórico de cobranças do próprio cliente.
+
+Período: Ciclo de assinatura e data de atualização do provedor; distinto do financeiro da loja.
+
+Visual/tabela: Checklist de onboarding e tabela de faturas/uso; gráfico de uso somente se houver medição canônica.
+
+Detalhamento: Abrir tarefa de configuração, comprovante/fatura ou portal autorizado; clique em gráfico não contrata nem muda plano.
+
+Vazio/parcial: Criar conta não implica loja conectada; redirect de pagamento não prova pagamento. Campos não configurados explicam a ação; não usar porcentagem de progresso inventada.
+
+Dependência: P01 conta, P02 conexão e P05 cobrança; UX P07, aceite comercial P08.
+
+Interação: LEITURA_OU_FILTRO_SEM_ESCRITA
+
+
+VIS-21 — Estoque e compromissos de produção
+
+Famílias: []
+
+Fonte: Movimentos, reservas, composição e custo histórico implementados em P03.
+
+Métrica: Saldo físico/disponível/reservado por item e local; entradas, saídas, perdas e estoque valorizado quando custo for comprovado.
+
+Período: Data efetiva do movimento e snapshot do saldo; referências históricas versionadas.
+
+Visual/tabela: Tabela de estoque/movimentos primeiro; barras por SKU/categoria apenas com cobertura válida e unidade consistente.
+
+Detalhamento: Saldo→movimentos→pedido/lote/devolução/origem do ajuste.
+
+Vazio/parcial: Sem inventário inicial ou custo: quantidade/valor pendentes separados; não inferir estoque de vendas ou gráfico DTF.
+
+Dependência: P03 ledger físico; P04 efeitos financeiros posteriores. Não criar dependência de P03 em fechamento P04.
+
+Interação: LEITURA_OU_FILTRO_SEM_ESCRITA
+
+
+CENÁRIOS FINANCEIROS ORIGINAIS — 24; A EXECUTAR
+
+T01 — A mesma operação recebida pela API e importada em arquivo é identificada ou fica em revisão; não duplica automaticamente.
+
+T02 — Reprocessamento da mesma página, retry e duas execuções simultâneas não duplicam eventos, valores ou fechamentos.
+
+T03 — Uma venda, seu crédito de carteira, saque e depósito reconhecem receita uma única vez; transferência não cria lucro.
+
+T04 — Aporte do proprietário, empréstimo, transferência entre contas e retirada são classificados fora da receita operacional.
+
+T05 — Dois pedidos em um depósito e um saque em duas parcelas conciliam por alocação sem reutilizar uma fração de dinheiro.
+
+T06 — Dois depósitos legítimos de mesmo valor/data continuam distintos; ambiguidade não gera conciliação automática.
+
+T07 — Taxa ou reembolso já incluído no repasse após ajustes não é descontado novamente.
+
+T08 — Reembolso parcial/integral, estorno, disputa cancelada, taxa devolvida, frete reverso e compensação têm efeito único e sinais corretos.
+
+T09 — Recarga Ads de R$ 100 e consumo de R$ 30 não produzem despesa de R$ 130; saldo pré-pago e ajuste no repasse são conciliados.
+
+T10 — Fabricar 100 unidades, vender 80 e manter 20 não reconhece automaticamente 100 como custo das vendas.
+
+T11 — Devolução parcial de kit respeita as peças efetivamente recebidas, seu custo histórico e destino físico.
+
+T12 — Despesa de outubro paga em novembro afeta competência e caixa nos períodos corretos, uma vez cada.
+
+T13 — Mudar custo, vínculo, imposto ou despesa após fechar um mês não altera a versão encerrada sem retificação.
+
+T14 — Caso antigo fora do mês corrente/anterior continua acompanhado até a resolução aplicável.
+
+T15 — Evento tardio gera uma correção rastreável e idempotente, preservando a versão original do fechamento.
+
+T16 — Sexta às 12:59:59 e 13:00:00, virada do mês e fontes com fuso diferente não migram registros silenciosamente.
+
+T17 — Semana que atravessa dois meses não é somada inteira em ambos; o mês deriva de seus eventos de competência.
+
+T18 — Recebível ainda não vencido pode permanecer em aberto num período de resultado encerrado; não é exigido recebimento bancário fictício.
+
+T19 — Saldo inicial + créditos − débitos = saldo final da mesma conta/moeda; discrepância sem causa não vira ajuste automático.
+
+T20 — Fonte sem permissão, paginação incompleta, rate limit, custo ausente ou saldo bancário não confirmado gera estado parcial explícito.
+
+T21 — Valores negativos, zeros verdadeiros, casas decimais e limites de inteiro não criam arredondamento silencioso.
+
+T22 — Card, gráfico, tabela, exportação e snapshot usam o mesmo recorte e total canônico.
+
+T23 — Revogar membership durante um job ou trocar empresa não revela nem processa dados de outra conta.
+
+T24 — Migração, interrupção, retomada, backup e rollback preservam IDs, relações, valores e novas escritas.
+
+
+CENÁRIOS SAAS — 26; A EXECUTAR
+
+Executar na fase/recurso correspondente. Expansões ainda não integradas não recebem PASS nem são certificadas por teste do núcleo.
+
+SQA-01 — E-mail e token — Duplicar envio/retry, expirar/verificar token, queda do provedor e bounce; link não reaproveitado; prova autorizada de entrega. [fase P01]
+
+SQA-02 — Acesso e recuperação — Reset de senha, troca de e-mail, MFA, sessão revogada e tentativa limitada; usuário consegue suporte sem login. [fase P01]
+
+SQA-03 — Isolamento em toda a jornada — Empresas A/B com IDs iguais e diferentes: UI/API/cache/jobs/exportação/mídia e DTO financeiro composto. [fase P01]
+
+SQA-04 — Identidade legada — Nova loja não herda IDs/credenciais/regras/impostos da operação original; migração repetida é idempotente. [fase P02]
+
+SQA-05 — OAuth — State repetido/expirado/trocado, refresh concorrente, credencial de outro ambiente e revogação. [fase P02]
+
+SQA-06 — Job sem sessão — Expirar sessão do usuário com coleta autorizada ativa; depois revogar conexão; verificar continuidade e parada respectivas. [fase P02]
+
+SQA-07 — Inbox e reordenação — Eventos repetidos, fora de ordem, mesmo timestamp, schema desconhecido e queda após persistir/antes de aplicar. [fase P05]
+
+SQA-08 — Checkout falso — Redirect sem pagamento, webhook inválido e payload com empresa alterada não concedem entitlement. [fase P05]
+
+SQA-09 — Ciclo de assinatura — Trial, vencimento, falha, carência, suspensão, cancelamento ao fim do período e pagamento posterior com política explícita. [fase P05]
+
+SQA-10 — Estornos e disputa — Reembolso parcial/integral, chargeback e evento atrasado não duplicam valor nem cancelam recursos sem política. [fase P05]
+
+SQA-11 — Quotas atômicas — Concorrência, retries e falha/cancelamento de job respeitam reserva e consumo por empresa, sem dupla cobrança. [fase P05]
+
+SQA-12 — Escala de listagem — Mais de 1.000 organizações globais com usuário membro de uma; cursores, índices e limites funcionam. [fase P06]
+
+SQA-13 — Artes e recuperação — Backup/restore em dispositivo limpo, hashes, proporções, arquivo inválido e conflito de versão; nuvem A/B se ativada. [fase P03]
+
+SQA-14 — Estoque e kit — Reservas concorrentes, cancelamento parcial, frente/costas, kit com devolução parcial e perda/retrabalho. [fase P03]
+
+SQA-15 — Papéis e dados financeiros — Operador de produção recebe somente campos autorizados; APIs compostas e export não vazam margem/custo restrito. [fase P01]
+
+SQA-16 — Portabilidade e encerramento — Export completo íntegro, URL expirada, legal hold e purge retomável sem afetar dados de outra organização. [fase P06]
+
+SQA-17 — Rotação e desastre — Rotacionar chave interrompendo/reiniciando migração; restaurar empresa em destino isolado preservando dados novos das demais. [fase P06]
+
+SQA-18 — Incidente e capacidade — Provedor lento/indisponível, backlog crescente, rate limit e limite de armazenamento geram alerta e recuperação sem derrubar outros clientes. [fase P06]
+
+SQA-19 — Gráficos e totais — Mesmo filtro/empresa/período: card, gráfico, detalhe, CSV e fechamento iguais; null/zero/parcial distintos e acessíveis. [fase P07]
+
+SQA-20 — Worker real e interface — Gerado normal/minificado, assets indisponíveis, 320/390/768/1365px, claro/escuro, teclado e roles com CI do SHA exato. [fase P08]
+
+SQA-21 — Capacidade versus marketing — Método sem grant ou provider desligado mostra estado correto; catálogo/plano não anuncia integração habilitada. [fase P08]
+
+SQA-22 — Banco autorizado — Consentimento expirado/revogado, transação pendente/postada/revisada e duplicação com CSV; sem iniciar pagamento. [fase P10]
+
+SQA-23 — Histórico e revisão — Alterar custo/composição/arte agora preserva lote e fechamento antigos e invalida aprovação atual quando material. [fase P04]
+
+SQA-24 — Fiscal da assinatura — Solicitação de NFS-e, autorização, erro, retry e cancelamento; uma cobrança não gera notas duplicadas. [fase P05]
+
+SQA-25 — IA e ações externas — Prompt/mídia não dá autoridade de escrever; quotas, contexto A/B, timeout e custo medidos; publicação exige grant e ação autorizada. [fase P09]
+
+SQA-26 — Canal/ERP — IDs de outro canal, SKU compartilhado, retry de pedido/nota/etiqueta e mestre de estoque; mesma receita reconhecida uma vez. [fase P10]
+
+
+GATES E COMANDOS DO PROJETO
+
+Reconferir scripts e instruções atuais; comandos abaixo constam de AGENTS no SHA auditado. Executar no checkout correto, com runtime correspondente e sem enviar segredos:
+
+npm ci
+
+npm test
+
+python3 -m unittest web/bridge/test_hermes_bridge.py tools/test_install_hermes_web_bridge.py tools/test_build_hermes_web_bridge_install.py tools/test_activate_hermes_web_bridge.py tools/test_build_hermes_web_bridge_activation.py -q
+
+npm run build
+
+Exigir CI GitHub verde, artefatos gerados/normal/minificado coerentes e hashes/versões dos Workers/ASSETS conforme processo atual. Para UI, QA Chromium e jornadas autenticadas desktop/mobile pertinentes. Não remover gates para acelerar. Repetir testes apenas quando alteração/risco exigir ou gate do projeto determinar.
+
+
+BLOQUEIOS EXTERNOS: COMO CONTINUAR
+
+EXT-01 — Shopee: Aplicação/região, callbacks e grants por função/loja; método e esquema oficiais; fontes de carteira/saques quando disponíveis. Responsável: Responsável pela aplicação e lojista. Não conclui: Uma URL ou SDK não comprova acesso.
+
+EXT-02 — E-mail: Domínio/remetente e conta transacional autorizados, credenciais seguras, destinatário QA autorizado. Responsável: Responsável MLS. Não conclui: Chave configurada sem adapter/outbox/entrega.
+
+EXT-03 — Cobrança e fiscal MLS: Conta PSP, preço/limites/termos, elegibilidade Pix Automático se desejado, dados fiscais e município/serviço. Responsável: Responsável MLS e contabilidade. Não conclui: Checkout demo, pagamento sandbox ou nota solicitada sem autorização.
+
+EXT-04 — Conferência financeira: Semana/mês encerrados, fontes oficiais comparáveis, extrato da mesma conta e políticas de custo/impostos. Responsável: Lojista e responsável financeiro. Não conclui: CI/fixture como certificado do saldo real.
+
+EXT-05 — Open Finance: Cobertura bancária, contrato/custo e consentimento válido; dados lançados e saldos completos. Responsável: Responsável MLS, provedor e titular. Não conclui: Importação CSV/OFX anunciada como conector automático.
+
+EXT-06 — TikTok/ML/ERP: Aprovação/escopos/conta e contrato de cada parceiro no mercado alvo. Responsável: Responsável aplicação e lojista. Não conclui: App cadastrado ou cartão de canal sem API homologada.
+
+EXT-07 — Operação e piloto: Responsáveis/canais, política jurídica, capacidade/backup e participantes autorizados; um período completo observado. Responsável: Responsável MLS. Não conclui: Prazo estimado como resultado já medido.
+
+
+CRITÉRIO FINAL DE ENTREGA
+
+Relatar o que mudou, onde usar, teste do candidato, commit, migração, deploy/versão e prova operacional. Não confundir oferta inicial com objetivo completo de automação financeira. Se grants, extratos, consentimento, contrato ou tempo de piloto faltarem, apresentar o resultado concreto já pronto e o bloqueio específico; continuar etapas independentes. Não finalizar com promessa de zero erros ou com recurso marcado concluído sem prova.

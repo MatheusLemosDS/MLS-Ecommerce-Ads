@@ -2,7 +2,7 @@
   "schema": "mls_commerce_os_checkpoint_v1",
   "canonical_roadmap": "docs/ROADMAP_MLS_COMMERCE_OS.md",
   "legacy_roadmap": "docs/ROADMAP_BRAZACOMMERCE.md",
-  "updated_at": "2026-11-14",
+  "updated_at": "2026-11-15T22:26:45.216921+00:00",
   "product": {
     "name": "MLS Commerce OS",
     "supervisor": "MLS Hermes",
@@ -29,112 +29,26 @@
     "pr": 10,
     "merge_commit": "9c418fd3010f46957d1ce52345baacd76041c788"
   },
-  "current_phase": "M2_FINANCE_RETURNS_RECONCILIATION",
-  "working_branch": "feature/v41-layout-commercial-live-20261112",
-  "current_status": "V41_PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_SCOPE",
+  "current_phase": "P00",
+  "working_branch": "feature/saas-p00-baseline-20261114",
+  "current_status": "P00_CONCLUIDO_ACEITE_TECNICO_DOCUMENTAL_DEPENDENCIAS_EXTERNAS_ABERTAS",
   "completed_this_phase": [
-    "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
-    "Repasse-base, ajuste, repasse após ajuste e liberação exibidos sem dupla dedução",
-    "Cruzamento local com devoluções/reembolsos já salvos pelo mesmo order_hash",
-    "MLS Finance e MLS Auditor recebem tarefas de divergência, ambiguidade e ausência de correspondência",
-    "Conflito entre evidências de repasse após ajuste bloqueia MLS Auditor e MLS Hermes",
-    "Contrato v2 negociado preserva v1 e implantação mista",
-    "Cache de negócio reutiliza a tabela existente e owner reads permanecem sem writes",
-    "Acompanhamento temporal de coortes antigas em calendários posteriores sem nova coleta Shopee",
-    "Contrato release-coverage-v1 usa somente coorte financeira e ledgers de liberações já salvos",
-    "Round-robin acompanha uma coorte anterior por cron, com 15 minutos enquanto incompleta e 6 horas após identidade completa no corte",
-    "UI de cobertura temporal mostra calendários posteriores para meses passados sem chamar a Shopee pela tela",
-    "identity_complete_at_cutoff comprova somente cobertura de identidade e não habilita remaining_receivable",
-    "Income Overview atual da Shopee separado do resultado mensal e de recebimento bancário",
-    "MLS Finance mostra Pendente atual na Shopee como métrica secundária, sem alterar o saldo do mês",
-    "Round-robin financeiro RELEASES -> RETURNS -> INCOME mantém uma leitura privada por oportunidade",
-    "Snapshot current income preserva missing, zero e valores com unidade monetária não convertível sem arredondar",
-    "Agenda de despesas por vencimento no MLS Finance via business-month-view-v4, derivada do mesmo join mensal D1 sem query extra",
-    "Income Detail Pending atual integrado em background para loja local com income_status=2",
-    "Provider só é consultado quando Income Overview confirma pending_cents > 0",
-    "Primeira página de até 100 registros expõe apenas hashes internos, moeda, status, escrow estimado e previsão",
-    "has_more preserva cobertura parcial e bloqueia interpretação como saldo completo",
-    "Central de Comando carrega Pending por pedido somente sob demanda a partir do D1 local",
-    "Round-robin RELEASES -> RETURNS -> INCOME -> INCOME_DETAIL mantém uma leitura privada por oportunidade",
-    "Auditoria local do Pending atual classifica cobertura e sincronia sem criar chamadas Shopee ou polling",
-    "Pending Detail fechado não cria prioridade nem leitura D1 adicional só para alimentar agentes",
-    "has_more, detalhe anterior, valores não convertíveis e diferença descritiva viram estados explícitos do MLS Finance",
-    "OBSERVED_MATCH não vira prova de competência mensal, saldo a receber ou depósito bancário",
-    "OBSERVED_DIFFERENT vira trabalho de validação no Seller Centre, não erro contábil",
-    "Overflow na soma visível bloqueia MLS Auditor e Hermes em vez de fabricar valor",
-    "Diagnostico Pending atual copiavel com whitelist sem hashes/identificadores de pedidos, sem provider ou D1 extra",
-    "Graficos de ate 14 dias usando somente snapshot diario validado existente (lucro estimado, vendas e Ads)",
-    "Indicativos lucro/prejuizo e diferencas reais com setas verde/vermelho, sem comparar datas parciais",
-    "PR93: paginação durável do Pending validada no corte observado, duas páginas e 182 registros/pedidos",
-    "PR94: três relatórios Returns da publicação de outubro consultados, sem comprovar recebimento físico ou banco",
-    "PR95/96: motivo das despesas mensais pendentes, saldo/margem parciais e ROAS independente de falhas de gráficos",
-    "PR98: controle físico global de recebimento parcial, quarentena, inspeção, identidade declarada, CAS/idempotência e anulação auditada; avaliação desconhecida e sem efeitos financeiros",
-    "PR99: registro de produção incorrida declarada, custo histórico imutável ou UNKNOWN, semana/mês pela data de produção, contexto DTF opcional, CAS/idempotência e anulação/substituição auditadas; cálculo financeiro separado",
-    "PR100: associação declarada entre recebimento e fabricação, com limites globais, fingerprints, par ativo único e auditoria; qualidade permanece editável, origem/anulação exigem desvinculação; quantidades originais e valores continuam desconhecidos",
-    "Novidades e identificação da versão visíveis na entrada, navegação física de devoluções organizada, busca abre os controles e roadmap da interface corrigido; cálculos financeiros preservados",
-    "Saldo mensal separado para deduções ainda não declaradas e leituras Ads salvas, mantendo líquido e gates estritos",
-    "Período compartilhado nos sete agentes, com histórico salvo, rascunhos protegidos e navegação Voltar/Avançar/reload",
-    "Declaração explícita do proprietário para outras despesas de novembro registrada pelo mutador canônico com auditoria e repetição idempotente; sem copiar outubro",
-    "Evidência opt-in dos itens pagos e captura de quantidades comerciais de Returns na coleta existente, separada dos ledgers físicos e financeiros",
-    "PR104: fila de devoluções com proposta salva e comando físico explícito atômico, sem inferir composição ou valorar estoque",
-    "PR104: custo histórico de fabricação por período inclusivo em Brasília, sem interpretar ausência de registros como gasto zero",
-    "PR104: sete destinos operacionais e ledger em Produção, com busca, aliases e histórico preservados"
+    "Main/PR121/current CI/live versions and bytes reconciled",
+    "Documentary ancestor 0a5a228 and complete histories preserved",
+    "22 modules, 25 financial value types, 93 route rules, 94 lock components and 78 asset hashes inventoried",
+    "Exact preflight base/path/authorization refreshed without changing Worker hashes or gates",
+    "Local validation evidence recorded in docs/saas/p00/validation.json",
+    "Authorized isolated preview repair: separate D1/Workers/secrets; local4437 Node/67 Python, focused tests, native previews and desktop/mobile Chromium passed; production versions/settings preserved",
+    "SAAS-002 exact-source13bd449: GitHub4441 Node/67 Python/build/preflight and three automatic Cloudflare Builds all success; API native preview tags/bindings and production controls verified",
+    "P00 documentary acceptance:12 field-level service records,35 explicit UNKNOWN fields,2 embedded runtime MIT licenses, complete archives; CDP lifecycle corrected with4447 Node/67 Python and all three Cloudflare checks on827774e"
   ],
-  "remaining_this_phase": [
-    "Observar o estado real da nova auditoria Pending na conta autenticada e comparar quantidade/valores/horários com o Seller Centre",
-    "Se retornar OBSERVED_DIFFERENT, determinar se a diferença vem de timing ou de bases diferentes antes de tratá-la como divergência material",
-    "Observar a evidência real pós-deploy da conta autenticada, incluindo a evolução de coortes para calendários de liberação posteriores",
-    "Manter liquidação bancária, remaining_receivable e lucro realizado separados de Pending e liberação na Shopee",
-    "Resolver qualquer pedido ambíguo, valor não verificado ou conflito de evidência antes do fechamento estrito",
-    "Reavaliar o horizonte limitado do tracker somente com evidência real; horizonte esgotado nunca prova ausência de liberação posterior",
-    "Concluir M2.2: capturar e validar quantidades/itens originais, comprovar origem quando possível e integrar decomposição, valoração, reserva/consumo e contabilidade sem dupla contagem; controles internos PR98/99/100 entregues",
-    "Confirmar custos históricos e embalagem/etiqueta incrementais antes de valorar peças recuperadas ou integrar a revenda ao lucro",
-    "Conferir continuamente cobertura da paginação Pending já entregue, sem confundir o corte validado com cobertura permanente",
-    "Confrontar Seller Centre e banco no mesmo recorte; a declaração de outras despesas de novembro já foi registrada a partir da confirmação explícita do proprietário"
-  ],
-  "next_phase": {
-    "id": "M3_PRODUCTS_PRICING_INTELLIGENCE",
-    "gate": "M2 só libera M3 como fase principal depois da conciliação financeira atingir seu critério de saída",
-    "rules": [
-      "Contribuição e curva ABC somente com atribuição/custos compatíveis",
-      "Preço mínimo/ideal e ROAS mínimo precisam de base de margem verificável",
-      "Estoque desconhecido bloqueia recomendações de escala"
-    ],
-    "parallel_observer_authorized": true
-  },
-  "previous_phase": {
-    "id": "M1_COMMAND_CENTER_AGENT_REGISTRY",
-    "status": "PUBLISHED",
-    "pull_request": 12,
-    "merge_commit": "91fc0cf169f67a9440a8e58a033c925b9ce98eed",
-    "validation": {
-      "pr_run": 40442142269,
-      "main_run": 40442459393,
-      "node_tests": 2008,
-      "python_tests": 67
-    },
-    "production": {
-      "app": {
-        "build_id": "e91939af-665d-442e-a80a-d95d27463211",
-        "version_id": "48f8a3bf-019d-498a-9f5e-a2b9f356e999"
-      },
-      "auth": {
-        "build_id": "4be3e426-a014-4a67-bda9-158838d99a68",
-        "version_id": "d2ee194f-fc43-481e-b09b-209c7b849b87"
-      },
-      "finance": {
-        "build_id": "33c07ae8-e172-4771-b096-972af256e5dc",
-        "version_id": "e6aec23b-5e05-450b-8cb0-64ee7e7cdca5"
-      }
-    }
-  },
+  "remaining_this_phase": [],
+  "next_phase": "P01_DEFERRED_UNTIL_NEXT_DELIVERY_AND_APPLICABLE_GATES",
+  "previous_phase": "DOCUMENTATION_ORGANIZATION_LOCAL_0a5a228",
   "next_actions": [
-    "Concluir a CI documental e a integração normal da PR118; publicação não comprova merge.",
-    "Conferir o relatório semanal com fabricação real, fontes financeiras e arquivos bancários do proprietário, mantendo as bases separadas.",
-    "Solicitar/liberar Order API no aplicativo TikTok Shop existente e preparar piloto oficial de leitura; acesso ainda não concedido.",
-    "Adaptar XLSX do relatório Shopee real, distinguindo renda por pedido de transferência agrupada.",
-    "Cadastrar aplicativo Mercado Livre e preparar piloto oficial de leitura.",
-    "Concluir M2/M2.2 com devoluções e fabricação reais, Seller Centre e Nubank no mesmo recorte, sem dupla contagem."
+    "Next delivery: SAAS-005/P01, starting from reconciled current HEAD and existing implementation; P01 not executed now",
+    "Obtain operational/rights evidence before corresponding real operation or commercial activation; UNKNOWN/BLOQUEADO fields remain open",
+    "No further manual functional rerun for documentary receipt; preserve automatic configured checks"
   ],
   "m0_followup": [
     "Conferir visual autenticado em desktop e celular durante M1; corrigir apenas branding/layout sem renomear infraestrutura"
@@ -7466,5 +7380,389 @@
     "m2_closed": false,
     "m22_closed": false,
     "git_integration": "CHECK_PR121_CURRENT_STATE"
-  }
+  },
+  "phase_state_before_saas_p00": {
+    "current_phase": "M2_FINANCE_RETURNS_RECONCILIATION",
+    "working_branch": "feature/v41-layout-commercial-live-20261112",
+    "current_status": "V41_PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_SCOPE",
+    "completed_this_phase": [
+      "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
+      "Repasse-base, ajuste, repasse após ajuste e liberação exibidos sem dupla dedução",
+      "Cruzamento local com devoluções/reembolsos já salvos pelo mesmo order_hash",
+      "MLS Finance e MLS Auditor recebem tarefas de divergência, ambiguidade e ausência de correspondência",
+      "Conflito entre evidências de repasse após ajuste bloqueia MLS Auditor e MLS Hermes",
+      "Contrato v2 negociado preserva v1 e implantação mista",
+      "Cache de negócio reutiliza a tabela existente e owner reads permanecem sem writes",
+      "Acompanhamento temporal de coortes antigas em calendários posteriores sem nova coleta Shopee",
+      "Contrato release-coverage-v1 usa somente coorte financeira e ledgers de liberações já salvos",
+      "Round-robin acompanha uma coorte anterior por cron, com 15 minutos enquanto incompleta e 6 horas após identidade completa no corte",
+      "UI de cobertura temporal mostra calendários posteriores para meses passados sem chamar a Shopee pela tela",
+      "identity_complete_at_cutoff comprova somente cobertura de identidade e não habilita remaining_receivable",
+      "Income Overview atual da Shopee separado do resultado mensal e de recebimento bancário",
+      "MLS Finance mostra Pendente atual na Shopee como métrica secundária, sem alterar o saldo do mês",
+      "Round-robin financeiro RELEASES -> RETURNS -> INCOME mantém uma leitura privada por oportunidade",
+      "Snapshot current income preserva missing, zero e valores com unidade monetária não convertível sem arredondar",
+      "Agenda de despesas por vencimento no MLS Finance via business-month-view-v4, derivada do mesmo join mensal D1 sem query extra",
+      "Income Detail Pending atual integrado em background para loja local com income_status=2",
+      "Provider só é consultado quando Income Overview confirma pending_cents > 0",
+      "Primeira página de até 100 registros expõe apenas hashes internos, moeda, status, escrow estimado e previsão",
+      "has_more preserva cobertura parcial e bloqueia interpretação como saldo completo",
+      "Central de Comando carrega Pending por pedido somente sob demanda a partir do D1 local",
+      "Round-robin RELEASES -> RETURNS -> INCOME -> INCOME_DETAIL mantém uma leitura privada por oportunidade",
+      "Auditoria local do Pending atual classifica cobertura e sincronia sem criar chamadas Shopee ou polling",
+      "Pending Detail fechado não cria prioridade nem leitura D1 adicional só para alimentar agentes",
+      "has_more, detalhe anterior, valores não convertíveis e diferença descritiva viram estados explícitos do MLS Finance",
+      "OBSERVED_MATCH não vira prova de competência mensal, saldo a receber ou depósito bancário",
+      "OBSERVED_DIFFERENT vira trabalho de validação no Seller Centre, não erro contábil",
+      "Overflow na soma visível bloqueia MLS Auditor e Hermes em vez de fabricar valor",
+      "Diagnostico Pending atual copiavel com whitelist sem hashes/identificadores de pedidos, sem provider ou D1 extra",
+      "Graficos de ate 14 dias usando somente snapshot diario validado existente (lucro estimado, vendas e Ads)",
+      "Indicativos lucro/prejuizo e diferencas reais com setas verde/vermelho, sem comparar datas parciais",
+      "PR93: paginação durável do Pending validada no corte observado, duas páginas e 182 registros/pedidos",
+      "PR94: três relatórios Returns da publicação de outubro consultados, sem comprovar recebimento físico ou banco",
+      "PR95/96: motivo das despesas mensais pendentes, saldo/margem parciais e ROAS independente de falhas de gráficos",
+      "PR98: controle físico global de recebimento parcial, quarentena, inspeção, identidade declarada, CAS/idempotência e anulação auditada; avaliação desconhecida e sem efeitos financeiros",
+      "PR99: registro de produção incorrida declarada, custo histórico imutável ou UNKNOWN, semana/mês pela data de produção, contexto DTF opcional, CAS/idempotência e anulação/substituição auditadas; cálculo financeiro separado",
+      "PR100: associação declarada entre recebimento e fabricação, com limites globais, fingerprints, par ativo único e auditoria; qualidade permanece editável, origem/anulação exigem desvinculação; quantidades originais e valores continuam desconhecidos",
+      "Novidades e identificação da versão visíveis na entrada, navegação física de devoluções organizada, busca abre os controles e roadmap da interface corrigido; cálculos financeiros preservados",
+      "Saldo mensal separado para deduções ainda não declaradas e leituras Ads salvas, mantendo líquido e gates estritos",
+      "Período compartilhado nos sete agentes, com histórico salvo, rascunhos protegidos e navegação Voltar/Avançar/reload",
+      "Declaração explícita do proprietário para outras despesas de novembro registrada pelo mutador canônico com auditoria e repetição idempotente; sem copiar outubro",
+      "Evidência opt-in dos itens pagos e captura de quantidades comerciais de Returns na coleta existente, separada dos ledgers físicos e financeiros",
+      "PR104: fila de devoluções com proposta salva e comando físico explícito atômico, sem inferir composição ou valorar estoque",
+      "PR104: custo histórico de fabricação por período inclusivo em Brasília, sem interpretar ausência de registros como gasto zero",
+      "PR104: sete destinos operacionais e ledger em Produção, com busca, aliases e histórico preservados"
+    ],
+    "remaining_this_phase": [
+      "Observar o estado real da nova auditoria Pending na conta autenticada e comparar quantidade/valores/horários com o Seller Centre",
+      "Se retornar OBSERVED_DIFFERENT, determinar se a diferença vem de timing ou de bases diferentes antes de tratá-la como divergência material",
+      "Observar a evidência real pós-deploy da conta autenticada, incluindo a evolução de coortes para calendários de liberação posteriores",
+      "Manter liquidação bancária, remaining_receivable e lucro realizado separados de Pending e liberação na Shopee",
+      "Resolver qualquer pedido ambíguo, valor não verificado ou conflito de evidência antes do fechamento estrito",
+      "Reavaliar o horizonte limitado do tracker somente com evidência real; horizonte esgotado nunca prova ausência de liberação posterior",
+      "Concluir M2.2: capturar e validar quantidades/itens originais, comprovar origem quando possível e integrar decomposição, valoração, reserva/consumo e contabilidade sem dupla contagem; controles internos PR98/99/100 entregues",
+      "Confirmar custos históricos e embalagem/etiqueta incrementais antes de valorar peças recuperadas ou integrar a revenda ao lucro",
+      "Conferir continuamente cobertura da paginação Pending já entregue, sem confundir o corte validado com cobertura permanente",
+      "Confrontar Seller Centre e banco no mesmo recorte; a declaração de outras despesas de novembro já foi registrada a partir da confirmação explícita do proprietário"
+    ],
+    "next_phase": {
+      "id": "M3_PRODUCTS_PRICING_INTELLIGENCE",
+      "gate": "M2 só libera M3 como fase principal depois da conciliação financeira atingir seu critério de saída",
+      "rules": [
+        "Contribuição e curva ABC somente com atribuição/custos compatíveis",
+        "Preço mínimo/ideal e ROAS mínimo precisam de base de margem verificável",
+        "Estoque desconhecido bloqueia recomendações de escala"
+      ],
+      "parallel_observer_authorized": true
+    },
+    "previous_phase": {
+      "id": "M1_COMMAND_CENTER_AGENT_REGISTRY",
+      "status": "PUBLISHED",
+      "pull_request": 12,
+      "merge_commit": "91fc0cf169f67a9440a8e58a033c925b9ce98eed",
+      "validation": {
+        "pr_run": 40442142269,
+        "main_run": 40442459393,
+        "node_tests": 2008,
+        "python_tests": 67
+      },
+      "production": {
+        "app": {
+          "build_id": "e91939af-665d-442e-a80a-d95d27463211",
+          "version_id": "48f8a3bf-019d-498a-9f5e-a2b9f356e999"
+        },
+        "auth": {
+          "build_id": "4be3e426-a014-4a67-bda9-158838d99a68",
+          "version_id": "d2ee194f-fc43-481e-b09b-209c7b849b87"
+        },
+        "finance": {
+          "build_id": "33c07ae8-e172-4771-b096-972af256e5dc",
+          "version_id": "e6aec23b-5e05-450b-8cb0-64ee7e7cdca5"
+        }
+      }
+    },
+    "next_actions": [
+      "Concluir a CI documental e a integração normal da PR118; publicação não comprova merge.",
+      "Conferir o relatório semanal com fabricação real, fontes financeiras e arquivos bancários do proprietário, mantendo as bases separadas.",
+      "Solicitar/liberar Order API no aplicativo TikTok Shop existente e preparar piloto oficial de leitura; acesso ainda não concedido.",
+      "Adaptar XLSX do relatório Shopee real, distinguindo renda por pedido de transferência agrupada.",
+      "Cadastrar aplicativo Mercado Livre e preparar piloto oficial de leitura.",
+      "Concluir M2/M2.2 com devoluções e fabricação reais, Seller Centre e Nubank no mesmo recorte, sem dupla contagem."
+    ]
+  },
+  "operational_execution_matrix": "docs/MLS_SAAS_EXECUTION.json",
+  "phase_index": "docs/saas/p00/README.md",
+  "current_task": "P00 concluída; SAAS-005/P01 somente na próxima entrega",
+  "saas_p00": {
+    "last_commits": [
+      "827774ec0bd438a6f193d4795dfec396d7e4ee6f",
+      "13bd4493d570c9f1b337f570a09c485a23bdf64f",
+      "46ed87362037baf707f10048cc4a8ea7bda39346",
+      "ad7e0fbe3968029a75e373d972f4bfc307056cba",
+      "2b06a16abd9e551126033016d9fd9706ad926e1c",
+      "a1bf89a3bb7ebe553e6d76c9ea2a47097131f725",
+      "1906de4918462aabdbffe66f32071abdcfe4957e",
+      "84487108fa9c1292e90a62296ea8a597ffaad619",
+      "0a5a22897d3cf56f97b7b995eb78a743fc0a246e",
+      "346f30f200e5cbd3d9efd26663a483c625d9c6e7"
+    ],
+    "base_sha": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+    "preserved_documentary_commit": "0a5a22897d3cf56f97b7b995eb78a743fc0a246e",
+    "validated_source_commit": "827774ec0bd438a6f193d4795dfec396d7e4ee6f",
+    "final_evidence_commit": "Resolve current branch HEAD after final documentary receipt; functional/test evidence refers exactly to827774e",
+    "phase_state": "TESTADO",
+    "implementation": "INDEPENDENT_P00_WORK_IMPLEMENTED",
+    "local_tests": "docs/saas/p00/validation.json",
+    "published": false,
+    "validated_operationally": false,
+    "reconciliation": "docs/saas/p00/live-reconciliation.json",
+    "matrix": "docs/MLS_SAAS_EXECUTION.json",
+    "blockers": [],
+    "migrations": "Three preview-only empty D1s created; synthetic schema initialization only, no production migrations",
+    "rollback": "Revert isolated preview hook/profiles; remove only new isolated resources when appropriate. Never restore production ADMIN_DB in preview base.",
+    "next_executable_command": "Read SAAS-005 in docs/MLS_SAAS_EXECUTION.json on next authorized delivery; current delivery ends at P00",
+    "next_external_action": "Provide remaining operation/rights records before associated operation/commercial activation; dependencies are not closed by documentary acceptance",
+    "next_implementation_item": "SAAS-005 / P01, next delivery only",
+    "blocker_review": "docs/saas/p00/blocker-review-20261114.json",
+    "external_evidence_request": "docs/saas/p00/EXTERNAL_EVIDENCE_REQUEST.md",
+    "git_review_status": "PR122 remains draft/unmerged/no auto-merge. Exact source827774e passed all four checks. Final receipt has its own normal checks; no approval inferred across SHAs.",
+    "github_review": {
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/122",
+      "draft": true,
+      "source_sha": "827774ec0bd438a6f193d4795dfec396d7e4ee6f",
+      "base_sha": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+      "github_ci_run": 43767620486,
+      "github_ci_conclusion": "success",
+      "cloudflare_checks": {
+        "app": "success",
+        "auth": "success",
+        "finance": "success"
+      },
+      "production_preserved": true,
+      "merged": false,
+      "auto_merge_enabled": false,
+      "recorded_at": "2026-11-15T22:26:45.216921+00:00"
+    },
+    "approved_github_ci": {
+      "run": 43615841211,
+      "job": 132510595733,
+      "source_sha": "f7600485fd717d2836f005e06fa3c02634661457",
+      "conclusion": "success",
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43615841211",
+      "stdout_excerpt": [
+        "2026-11-14T16:43:23.5147631Z # tests 4432",
+        "2026-11-14T16:43:23.5148015Z # pass 4432",
+        "2026-11-14T16:43:23.5148202Z # fail 0",
+        "2026-11-14T16:43:23.5148391Z # cancelled 0",
+        "2026-11-14T16:43:23.5148594Z # skipped 0",
+        "2026-11-14T16:43:28.5956763Z Ran 67 tests in 0.550s",
+        "2026-11-14T16:43:30.8920543Z RELEASE_LOCAL_PREFLIGHT_OK",
+        "2026-11-14T16:43:30.8930839Z RELEASE_NOT_APPROVED_FOR_PRODUCTION"
+      ]
+    },
+    "validated_github_source_commit": "827774ec0bd438a6f193d4795dfec396d7e4ee6f",
+    "app_preview_diagnosis": "User log: build succeeds with matching hashes, preview fails for missing previews block. Suggested ADMIN_DB is the production binding; no config applied.",
+    "latest_reviewed_candidate": {
+      "sha": "f5973b0e9b48df927e7c19954805d622839cb389",
+      "github_ci_run": 43617930680,
+      "github_ci": "success"
+    },
+    "preview_repair_receipt": "docs/saas/p00/preview-repair.json",
+    "isolated_preview_published": true,
+    "production_published_by_this_delivery": false,
+    "authorization_update": {
+      "source": "Owner explicit authorization after App missing-previews log, followed by Continue",
+      "scope": "Repair isolated previews and required build selection; preserve production, commercial gates, databases, domains, secrets and workflows; no real provider operations"
+    },
+    "current_source_commit": "827774ec0bd438a6f193d4795dfec396d7e4ee6f",
+    "latest_local_validation": "docs/saas/p00/preview-repair.json",
+    "current_github_validation": {
+      "source_sha": "827774ec0bd438a6f193d4795dfec396d7e4ee6f",
+      "run": 43767620486,
+      "job": 132976173424,
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43767620486",
+      "conclusion": "success",
+      "stdout_excerpt": [
+        "2026-11-15T22:23:01.2035696Z # tests 4447",
+        "2026-11-15T22:23:01.2036258Z # pass 4447",
+        "2026-11-15T22:23:01.2036549Z # fail 0",
+        "2026-11-15T22:23:01.2036730Z # cancelled 0",
+        "2026-11-15T22:23:01.2036926Z # skipped 0",
+        "2026-11-15T22:23:05.8828425Z Ran 67 tests in 0.537s",
+        "2026-11-15T22:23:08.3638894Z RELEASE_LOCAL_PREFLIGHT_OK",
+        "2026-11-15T22:23:08.3648189Z RELEASE_NOT_APPROVED_FOR_PRODUCTION"
+      ],
+      "checks": [
+        {
+          "name": "Workers Builds: brazacommerce-finance",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-finance/production/previews/feature-saas-p00-baseline-20261114/builds/aaa66fc4-40b6-49db-9bd5-f99bf2c01e0b"
+        },
+        {
+          "name": "Workers Builds: brazacommerce-app",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-app/production/previews/feature-saas-p00-baseline-20261114/builds/701dfdd6-7b6f-4d61-b03f-7c4aeec93dc6"
+        },
+        {
+          "name": "Workers Builds: brazacommerce-auth",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-auth/production/previews/feature-saas-p00-baseline-20261114/builds/4273820c-12ba-4902-9fbb-5fcd71ff5ecc"
+        },
+        {
+          "name": "validate",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43767620486/job/132976173424"
+        }
+      ]
+    },
+    "target_identity_correction_receipt": "docs/saas/p00/preview-repair.json#target_identity_correction",
+    "latest_github_validation_before_identity_fix": {
+      "source_sha": "c88f4faeecaa3aaa06580a85683fa26bd86857fd",
+      "run": 43684238943,
+      "job": 132721216913,
+      "conclusion": "success",
+      "node": 4437,
+      "python": 67,
+      "build_and_preflight": "success"
+    },
+    "api_verified_target_selection_receipt": "docs/saas/p00/preview-repair.json#api_verified_target_selection",
+    "resolved_blockers": [
+      {
+        "id": "EXT-CLOUDFLARE-CHECKS",
+        "source_sha": "13bd4493d570c9f1b337f570a09c485a23bdf64f",
+        "evidence": "api_verified_target_selection.automatic_cloudflare_success",
+        "result": "All four configured checks success, same source; native API tags/bindings verified."
+      }
+    ],
+    "validated_github_ci_run": 43767620486,
+    "github_review_history": [
+      {
+        "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/122",
+        "draft": true,
+        "head_sha": "f7600485fd717d2836f005e06fa3c02634661457",
+        "base_sha": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+        "github_ci_run": 43615841211,
+        "github_ci_url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43615841211",
+        "github_ci_status": "completed",
+        "github_ci_conclusion": "success",
+        "cloudflare_checks": {
+          "app": "failure",
+          "auth": "failure",
+          "finance": "failure"
+        },
+        "cloudflare_failure_cause": "Not exposed in check output; do not infer cause or deploy from /production/builds/ URL.",
+        "live_versions_unchanged_after_push": true,
+        "merged": false,
+        "auto_merge_enabled": false,
+        "deployed_by_delivery": false,
+        "recorded_at": "2026-11-14T16:42:09.792793+00:00",
+        "receipt_publication": "Pending local receipt can now be pushed because run43615841211 completed. Its doc-only successor will have separate normal checks."
+      },
+      {
+        "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/122",
+        "draft": true,
+        "head_source_sha": "13bd4493d570c9f1b337f570a09c485a23bdf64f",
+        "base_sha": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+        "github_ci_run": 43761633551,
+        "github_ci_status": "completed",
+        "github_ci_conclusion": "success",
+        "cloudflare_checks": {
+          "app": "success",
+          "auth": "success",
+          "finance": "success"
+        },
+        "production_preserved": true,
+        "isolated_preview_published": true,
+        "merged": false,
+        "auto_merge_enabled": false,
+        "production_deployed_by_delivery": false,
+        "recorded_at": "2026-11-15T21:18:51.341691+00:00",
+        "receipt_successor": "Has its own normal checks; exact source evidence refers to13bd449."
+      }
+    ],
+    "owner_provider_update": {
+      "recorded_at": "2026-11-15T21:35:42.381137+00:00",
+      "source": "Owner reply in this conversation on2026-11-15",
+      "reported_providers": [
+        "Cloudflare",
+        "DigitalOcean"
+      ],
+      "service_to_provider_mapping": "NOT_CONFIRMED",
+      "change_policy": "Notify owner before any proven necessary gateway, plan or limit change; no such change proposed or performed for this CI repair. Commercial changes require applicable authorization.",
+      "access_observed": {
+        "digitalocean_connector": "NOT_AVAILABLE_IN_ACTIVE_TOOLS",
+        "digitalocean_standard_token_bindings": "NOT_PRESENT",
+        "doctl_command_and_standard_config": "NOT_AVAILABLE",
+        "ssh_agent_and_standard_config": "NOT_AVAILABLE; no Droplet target/access supplied"
+      },
+      "still_missing": [
+        "Gateway/Hermes actual installed versions and responsible operator",
+        "Current DigitalOcean service/plan/limits and verified service mapping",
+        "Operational health/backup/restoration evidence",
+        "Origin/license/authorization of code, brand, avatars and images"
+      ],
+      "no_upgrade_required_for_current_build_fix": true
+    },
+    "final_documentary_head_verified": {
+      "source_sha": "b2ecd2a344069b9297511957e750264489de788e",
+      "github": {
+        "source_sha": "b2ecd2a344069b9297511957e750264489de788e",
+        "run": 43763121083,
+        "job": 132962129940,
+        "conclusion": "success",
+        "stdout_excerpt": [
+          "2026-11-15T21:30:33.5118784Z # tests 4441",
+          "2026-11-15T21:30:33.5119140Z # pass 4441",
+          "2026-11-15T21:30:33.5119318Z # fail 0",
+          "2026-11-15T21:30:33.5119504Z # cancelled 0",
+          "2026-11-15T21:30:33.5119691Z # skipped 0",
+          "2026-11-15T21:30:37.1664625Z Ran 67 tests in 0.393s",
+          "2026-11-15T21:30:39.5762742Z RELEASE_LOCAL_PREFLIGHT_OK",
+          "2026-11-15T21:30:39.5767806Z RELEASE_NOT_APPROVED_FOR_PRODUCTION"
+        ]
+      },
+      "cloudflare_checks": "APP_AUTH_FINANCE_SUCCESS",
+      "native_preview_tags_resolved_to_same_full_sha": true,
+      "production_preserved": true
+    },
+    "documentary_inventory_receipt": "docs/saas/p00/CLOSEOUT.md",
+    "external_operational_dependencies": [
+      {
+        "id": "EXT-OPERATIONS",
+        "owner": "Gateway/Hermes operators and project owner",
+        "resource": "Gateway and CLI external operation metadata",
+        "cause": "Runtime version, contract, responsible operator, costs/limits, health and recovery evidence not confirmed from repository.",
+        "impact": "SAAS-004 full external inventory/operational acceptance incomplete.",
+        "minimum_to_resume": "Version/config metadata, sanitized contract/cost/limits and backup/restore runbook evidence; no secrets.",
+        "state": "BLOQUEADO",
+        "blocks_p00_documentary_inventory": false,
+        "scope": "EXTERNAL_OPERATIONAL_OR_COMMERCIAL_ACCEPTANCE",
+        "closed": false
+      },
+      {
+        "id": "EXT-RIGHTS",
+        "owner": "Project owner / rights holder",
+        "resource": "Code, contributors, trademark, avatars/reference image rights",
+        "cause": "No root license proves title; commercial rights chain not demonstrated.",
+        "impact": "No claim of commercial rights or unrestricted sale. Runtime incorporated npm MIT versions/notices verified locally.",
+        "minimum_to_resume": "Origin/license/authorization records for incorporated assets and contributor rights; no third-party contact authorized.",
+        "state": "BLOQUEADO",
+        "blocks_p00_documentary_inventory": false,
+        "scope": "EXTERNAL_OPERATIONAL_OR_COMMERCIAL_ACCEPTANCE",
+        "closed": false
+      }
+    ],
+    "current_failed_ci_run": 43764608663,
+    "current_cdp_fix_receipt": "docs/saas/p00/validation.json#current_cdp_transport_correction",
+    "p00_exit_gate_met": true,
+    "completion_scope": "P00_TECHNICAL_BASELINE_AND_DOCUMENTARY_INVENTORIES",
+    "operational_validation": false,
+    "commercial_release_approved": false,
+    "closeout": "docs/saas/p00/CLOSEOUT.md"
+  },
+  "last_completed_phase": "P00"
 }

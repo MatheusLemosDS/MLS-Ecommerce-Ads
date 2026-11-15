@@ -1,33 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import http from './browser-assets-http-fixture.mjs';
-import {spawn} from 'node:child_process';
-import {existsSync,mkdtempSync,readFileSync,mkdirSync,writeFileSync} from 'node:fs';
-import os from 'node:os';
+import {mkdirSync,writeFileSync} from 'node:fs';
 import path from 'node:path';
 import {compiledOwnerReportPage} from './owner-report-browser-fixture.mjs';
-import {createChromeProfileCleanup} from './chrome-profile-cleanup.mjs';
-import {waitForChromeDebugPort} from './chrome-debug-port.mjs';
+import {receiptBrowser,receiptNavigate,receiptDocumentNavigation,receiptChrome} from './returns-receipts-chrome-helpers.mjs';
 import {workspaceNavigation} from '../src/workspace-navigation.mjs';
 import {shellMobileNavigation,SHELL_NAVIGATION_CSS} from '../src/shell-navigation.mjs';
-const chrome=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium','/usr/bin/chromium-browser'].find(existsSync);
+const chrome=receiptChrome;
 const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 const output=process.env.MLS_NAVIGATION_SCREENSHOT_DIR||null;
-async function browser(){
- const profile=mkdtempSync(path.join(os.tmpdir(),'mls-navigation-'));
- const child=spawn(chrome,['--headless=new','--no-sandbox','--disable-dev-shm-usage','--disable-gpu','--disable-background-networking','--disable-extensions','--remote-allow-origins=*','--remote-debugging-port=0','--user-data-dir='+profile,'about:blank'],{stdio:'ignore'});
- const cleanup=createChromeProfileCleanup(child,profile);let socket;
- try{
-  const port=await waitForChromeDebugPort(child,profile);let page;
-  for(let index=0;index<120;index++){try{page=(await(await fetch('http://127.0.0.1:'+port+'/json/list')).json()).find(item=>item.type==='page'&&item.webSocketDebuggerUrl);}catch{}if(page)break;await pause(75);}
-  assert.ok(page,'Chromium target must initialize');socket=new WebSocket(page.webSocketDebuggerUrl);
-  await new Promise((resolve,reject)=>{socket.addEventListener('open',resolve,{once:true});socket.addEventListener('error',reject,{once:true});});
-  let next=0;const pending=new Map();socket.addEventListener('message',event=>{const item=JSON.parse(event.data),call=pending.get(item.id);if(!call)return;pending.delete(item.id);item.error?call.reject(Error(item.error.message)):call.resolve(item.result);});
-  const send=(method,params={})=>new Promise((resolve,reject)=>{const id=++next;pending.set(id,{resolve,reject});socket.send(JSON.stringify({id,method,params}));});
-  await send('Page.enable');await send('Runtime.enable');
-  return {send,async evaluate(expression){const value=await send('Runtime.evaluate',{expression,awaitPromise:true,returnByValue:true});if(value.exceptionDetails)throw Error(value.exceptionDetails.exception?.description||value.exceptionDetails.text);return value.result.value;},async close(){await cleanup(socket);}};
- }catch(error){await cleanup(socket);throw error;}
-}
+const browser=receiptBrowser;
 async function activateWithKeyboard(cdp,selector){
  await cdp.evaluate(`(()=>{const target=document.querySelector(${JSON.stringify(selector)});if(!target?.checkVisibility({checkVisibilityCSS:true}))throw Error('VISIBLE_NAVIGATION_TARGET_REQUIRED');target.scrollIntoView({block:'nearest',behavior:'instant'});target.focus({preventScroll:true});})()`);
  await cdp.send('Input.dispatchKeyEvent',{type:'keyDown',text:'\r',unmodifiedText:'\r',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13,modifiers:0});
@@ -44,7 +27,7 @@ for(const minify of [false,true])test('compiled owner navigation opens cross-pan
   cdp=await browser();
   for(const width of [320,390,768,1365]){
    await cdp.send('Emulation.setDeviceMetricsOverride',{width,height:900,deviceScaleFactor:1,mobile:width<=850});
-   await cdp.send('Page.navigate',{url:'http://127.0.0.1:'+host.address().port+'/admin?tab=agent-returns&month=2026-09'});
+   await receiptNavigate(cdp,'http://127.0.0.1:'+host.address().port+'/admin?tab=agent-returns&month=2026-09');
    let ready=false;for(let i=0;i<120;i++){if(await cdp.evaluate("document.readyState==='complete'&&document.documentElement.dataset.activePanel==='agent-returns'")){ready=true;break;}await pause(75);}assert.ok(ready,'owner navigation initialized');
    const before=await cdp.evaluate(`(()=>{
     const visible=n=>n&&n.checkVisibility({checkVisibilityCSS:true});
@@ -96,14 +79,14 @@ for(const minify of [false,true])test('compiled owner navigation opens cross-pan
   // A historical fabrication bookmark must replace its alias, so Back leaves
   // the bookmark instead of repeatedly pushing the canonical destination.
   const alias='/admin?tab=margins&month=2026-09#incurredProductionDetails';
-  await cdp.send('Page.navigate',{url:'http://127.0.0.1:'+host.address().port+'/admin?tab=overview&month=2026-09'});
+  await receiptNavigate(cdp,'http://127.0.0.1:'+host.address().port+'/admin?tab=overview&month=2026-09');
   let settled=false;for(let i=0;i<120;i++){if(await cdp.evaluate("document.readyState==='complete'&&document.documentElement.dataset.activePanel==='overview'")){settled=true;break;}await pause(25);}assert.ok(settled,'the prior page must settle before a historical bookmark');
-  await cdp.send('Page.navigate',{url:'http://127.0.0.1:'+host.address().port+alias});
+  await receiptNavigate(cdp,'http://127.0.0.1:'+host.address().port+alias);
   let canonical=false;for(let i=0;i<120;i++){if(await cdp.evaluate("document.readyState==='complete'&&document.documentElement.dataset.activePanel==='agent-production'&&new URL(location.href).searchParams.get('tab')==='agent-production'&&location.hash==='#incurredProductionDetails'")){canonical=true;break;}await pause(25);}assert.ok(canonical,'the historical bookmark must open the fabrication ledger');
   assert.equal((await cdp.send('Page.getNavigationHistory')).entries.some(row=>row.url==='http://127.0.0.1:'+host.address().port+alias),false,'canonicalization must replace the alias entry');
-  await cdp.evaluate('history.back()');
+  await receiptDocumentNavigation(cdp,{url:'http://127.0.0.1:'+host.address().port+'/admin',action:()=>cdp.evaluate('history.back()')});
   let escaped=false;for(let i=0;i<120;i++){if(await cdp.evaluate("document.readyState==='complete'&&document.documentElement.dataset.activePanel==='overview'&&new URL(location.href).searchParams.get('tab')==='overview'")){escaped=true;break;}await pause(25);}assert.ok(escaped,'Back must leave the canonicalized historical bookmark');
-  await cdp.evaluate('history.forward()');
+  await receiptDocumentNavigation(cdp,{url:'http://127.0.0.1:'+host.address().port+'/admin',action:()=>cdp.evaluate('history.forward()')});
   let returned=false;for(let i=0;i<120;i++){if(await cdp.evaluate("document.readyState==='complete'&&document.documentElement.dataset.activePanel==='agent-production'&&new URL(location.href).searchParams.get('tab')==='agent-production'")){returned=true;break;}await pause(25);}assert.ok(returned,'Forward must reopen the canonical fabrication ledger');
   assert.equal(requests.filter(item=>item.url.startsWith('/api/')&&item.method!=='GET').length,0,'navigation must never perform business writes');
   if(output)writeFileSync(path.join(output,'navigation-'+(minify?'minified':'normal')+'.json'),JSON.stringify({schema:'mls_navigation_rework_qa_v1',synthetic:true,owner_authenticated:false,provider_requests:0,checks},null,2)+'\n');
@@ -125,7 +108,7 @@ test('native shell menu keeps six owner cells, reachable utilities and restricte
   const base='http://127.0.0.1:'+host.address().port;
   for(const role of ['owner','review'])for(const width of [320,390,768,1365]){
    await cdp.send('Emulation.setDeviceMetricsOverride',{width,height:900,deviceScaleFactor:1,mobile:width<=850});
-   await cdp.send('Page.navigate',{url:base+'/dashboard?role='+role});
+   await receiptNavigate(cdp,base+'/dashboard?role='+role);
    for(let index=0;index<80;index++){if(await cdp.evaluate("document.readyState==='complete'&&document.querySelector('h1')?.textContent==='Operação da loja'"))break;await pause(25);}
    const proof=await cdp.evaluate(`(()=>{const visible=n=>n.checkVisibility({checkVisibilityCSS:true}),nav=document.querySelector(innerWidth<=850?'.workspace-nav-mobile':'.sidebar>.workspace-nav'),menu=document.querySelector(innerWidth<=850?${JSON.stringify(role==='owner'?'.workspace-mobile-menu':'.workspace-header-menu .workspace-more')}:'.sidebar>.workspace-more');window.__nativeMenu=menu;return {width:innerWidth,scroll:document.documentElement.scrollWidth,cells:[...nav.children].filter(n=>n.tagName==='A'||n.tagName==='DETAILS').length,children:nav.children.length,groups:[...nav.children].filter(n=>n.classList.contains('workspace-nav-group-label')).map(n=>n.textContent),links:[...nav.children].filter(n=>n.tagName==='A').map(n=>n.getAttribute('href')),visible:visible(nav),menus:[...document.querySelectorAll('.workspace-more>summary')].filter(visible).length,summaryHeight:menu.querySelector('summary').getBoundingClientRect().height,open:menu.open,ownerTop:document.querySelector('.shell-mobile-navigation .workspace-header-menu')!==null};})()`);
    assert.equal(proof.width,width);assert.ok(proof.scroll<=width+1);assert.equal(proof.visible,true);assert.equal(proof.menus,1);assert.equal(proof.open,false);assert.ok(proof.summaryHeight>=44);
@@ -146,8 +129,10 @@ test('native shell menu keeps six owner cells, reachable utilities and restricte
    if(role==='review')assert.deepEqual(opened.all.map(n=>n.href),['/integrations','/logout']);
    // Enter follows a real utility href through the browser's native activation.
    await cdp.evaluate(`window.__nativeMenu.querySelector('a[href="/integrations"]').focus()`);
+   await receiptDocumentNavigation(cdp,{url:base+'/integrations',action:async()=>{
    await cdp.send('Input.dispatchKeyEvent',{type:'keyDown',text:'\r',unmodifiedText:'\r',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13,modifiers:0});
    await cdp.send('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13,modifiers:0});
+   }});
    let navigated=false;for(let index=0;index<80;index++){if(await cdp.evaluate("location.pathname==='/integrations'&&document.readyState==='complete'")){navigated=true;break;}await pause(25);}assert.equal(navigated,true,'native menu link opens its real route');
   }
  }finally{if(cdp)await cdp.close();host.closeAllConnections?.();await new Promise(resolve=>host.close(resolve));}

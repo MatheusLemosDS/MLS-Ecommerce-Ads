@@ -1,0 +1,118 @@
+{
+  "recorded_at": "2026-11-14T13:27:57.976237+00:00",
+  "method": "GET_ONLY",
+  "runtime_source_ref": "f68525ea1d136350ece9942433352accdf97d992",
+  "local_base": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+  "workers": [
+    {
+      "worker": "brazacommerce-app",
+      "deployments_http": 200,
+      "active_deployment": {
+        "id": "04830c37-2bdc-4ef6-ba8e-ab78fa6299a6",
+        "source": "wrangler",
+        "strategy": "percentage",
+        "versions": [
+          {
+            "version_id": "9bfc21d6-dec9-4fa6-89d8-7ea1dec50993",
+            "percentage": 100
+          }
+        ],
+        "created_on": "2026-11-14T00:21:33.810128Z"
+      },
+      "content_http": 200,
+      "retrieved_raw_sha256": "2b7b3e2d689df86acff3da81d8fab86f236e4972318abc942aad095e1682504c",
+      "content_parts": [
+        {
+          "filename": null,
+          "bytes": 4180640,
+          "sha256": "19d1ef1dc49d07da644a67372b9291f54b6443f0d72e9d0e3dfa7168661f2a05"
+        },
+        {
+          "filename": "app-worker.js.map",
+          "bytes": 5574854,
+          "sha256": "2a888be66a4e297e97ecb8c910aabe46da3109af61dc36a4b1589e843f8c2bdc"
+        }
+      ],
+      "expected_compiled_sha256": "3a5f01ae09ede502e4707f001976fc2a6094075ba26574e5e5d97b2e827687a9",
+      "receipt_version": "9bfc21d6-dec9-4fa6-89d8-7ea1dec50993",
+      "deployed_module_matches_receipt": true,
+      "transport_note": "Multipart transport boundary is not the module bytes; compare each decoded part with retrieved_raw_sha256."
+    },
+    {
+      "worker": "brazacommerce-auth",
+      "deployments_http": 200,
+      "active_deployment": {
+        "id": "3cf8ce88-59d1-46f8-a635-bed942e6445b",
+        "source": "wrangler",
+        "strategy": "percentage",
+        "versions": [
+          {
+            "version_id": "dfd2fc99-728f-4f29-96ee-a4b256c5640a",
+            "percentage": 100
+          }
+        ],
+        "created_on": "2026-11-14T00:20:44.936449Z"
+      },
+      "content_http": 200,
+      "retrieved_raw_sha256": "746a67cf3d5185b6f571a4f10ef9141dec546d1b0608930b0dac7ea7e751c9da",
+      "content_parts": [
+        {
+          "filename": null,
+          "bytes": 654636,
+          "sha256": "076c925b67041aada25f8252db34c1464543976f3bfa532a98caa0124dd8f138"
+        },
+        {
+          "filename": "auth-worker.js.map",
+          "bytes": 1003152,
+          "sha256": "67a5cb7211681b47e134ca72e0a929f31109865472c5e45abaa1260e073ca89e"
+        }
+      ],
+      "expected_compiled_sha256": "20a301c45ddb6097a3b458ec6ef7d39686286cc43601f6211d3b865b250ea125",
+      "receipt_version": "dfd2fc99-728f-4f29-96ee-a4b256c5640a",
+      "deployed_module_matches_receipt": true,
+      "transport_note": "Multipart transport boundary is not the module bytes; compare each decoded part with retrieved_raw_sha256."
+    },
+    {
+      "worker": "brazacommerce-finance",
+      "deployments_http": 200,
+      "active_deployment": {
+        "id": "75837e54-99cf-4bf7-a575-c56dfa7e018f",
+        "source": "wrangler",
+        "strategy": "percentage",
+        "versions": [
+          {
+            "version_id": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+            "percentage": 100
+          }
+        ],
+        "created_on": "2026-11-13T23:47:24.137147Z"
+      },
+      "content_http": 200,
+      "retrieved_raw_sha256": "c31ca71fb02896170ace7f8026cf2c53370c927fec33da89a33f8583b392768e",
+      "content_parts": [
+        {
+          "filename": null,
+          "bytes": 934552,
+          "sha256": "3e3f3d35a3e0037c251f7abda29cc8a64643ee255771d07f2893d32d8ef7d22a"
+        },
+        {
+          "filename": "finance-worker.js.map",
+          "bytes": 1505409,
+          "sha256": "de8cbbe13a67820a22073bcb22162dbfd031eb672531c867ea43bed186356809"
+        }
+      ],
+      "expected_compiled_sha256": "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4",
+      "receipt_version": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+      "deployed_module_matches_receipt": true,
+      "transport_note": "Multipart transport boundary is not the module bytes; compare each decoded part with retrieved_raw_sha256."
+    }
+  ],
+  "public_login": {
+    "http": 200,
+    "client": "curl with inherited proxy and verified TLS",
+    "sha256": "3dacaf42804011ceecea6a21f34c65583462b90c053241b46d916d15dbc6cca4",
+    "matches_receipt": true,
+    "release": "2026-11-13.3",
+    "urllib_attempt_http": 403
+  }
+}

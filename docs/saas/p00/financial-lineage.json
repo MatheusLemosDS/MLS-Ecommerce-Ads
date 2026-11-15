@@ -1,0 +1,1439 @@
+{
+  "schema": "mls_p00_financial_lineage_v1",
+  "base_sha": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+  "source_inventory": "../../financial-automation/BASELINE_INVENTORY.json",
+  "values": [
+    {
+      "funcao": "Pedidos e vendas",
+      "fonte_arquivo": "web/finance/src/business-period.mjs",
+      "rotas_existentes": [
+        "/api/admin/shop-orders",
+        "/api/admin/finance/business-month-view"
+      ],
+      "handlers_e_stores": [
+        "web/finance/src/business-period.mjs",
+        "web/cloudflare/src/business-month.mjs"
+      ],
+      "armazenamento_tabelas_observadas": [
+        "business_expense_ledger_months",
+        "business_month_ads",
+        "business_month_ads_attempts",
+        "business_month_expenses",
+        "business_month_expenses_audit",
+        "business_month_frames",
+        "business_month_runs",
+        "business_tax_policy_audit",
+        "business_tax_policy_state",
+        "finance_business_order_evidence",
+        "finance_business_period_cursors",
+        "finance_business_period_orders",
+        "finance_business_period_payment_cache",
+        "finance_business_period_runs",
+        "production_costs_state"
+      ],
+      "schemas_observados": [
+        "business_month_ads_state_v1",
+        "business_month_collection_v1",
+        "business_month_frame_ref_v1",
+        "business_month_tax_v1",
+        "business_month_v1",
+        "business_product_breakdown_v1",
+        "finance_business_daily_v1",
+        "finance_business_period_v1",
+        "financial_order_evidence_v2",
+        "store_invoice_tax_v1"
+      ],
+      "consumidores": [
+        "web/cloudflare/src/business-month-view.mjs",
+        "web/cloudflare/src/order-operations-view.mjs"
+      ],
+      "base_e_limite": "Paid-order creation month / order status; runtime coverage must be checked.",
+      "audit_state_historical": "INTEGRADO_NO_CODIGO",
+      "current_state": "EXISTENTE_COM_LIMITES",
+      "local_validation": "validation.json",
+      "real_account_validation": "NOT_VALIDATED_BY_P00",
+      "scope": "Server-resolved organization/store, account/domain wrappers and immutable revisions; never inherit a legacy store into a new company.",
+      "extension_handler_storage_consumer": {
+        "handlers": [
+          "web/cloudflare/src/financial-automation-service.mjs",
+          "web/cloudflare/src/financial-accounting-projection.mjs"
+        ],
+        "stores": [
+          "web/cloudflare/src/financial-event-store.mjs",
+          "web/cloudflare/src/financial-automation-store.mjs",
+          "web/cloudflare/src/financial-close-store.mjs"
+        ],
+        "consumer": [
+          "web/cloudflare/src/financial-automation-view.mjs",
+          "web/cloudflare/src/financial-automation-client.mjs"
+        ],
+        "route": "/api/admin/finance/automation",
+        "note": "New contracts coexist with legacy DTO guards. Applied when a confirmed event/source exists; not an assertion all old values feed the new ledger."
+      }
+    },
+    {
+      "funcao": "Repasse por pedido / escrow",
+      "fonte_arquivo": "web/finance/src/business-period.mjs",
+      "rotas_existentes": [
+        "/api/admin/finance/business-month-view",
+        "/api/admin/finance/payment-sample"
+      ],
+      "handlers_e_stores": [
+        "web/finance/src/business-period.mjs",
+        "web/finance/src/payment-sample.mjs"
+      ],
+      "armazenamento_tabelas_observadas": [
+        "finance_business_order_evidence",
+        "finance_business_period_cursors",
+        "finance_business_period_orders",
+        "finance_business_period_payment_cache",
+        "finance_business_period_runs"
+      ],
+      "schemas_observados": [
+        "business_product_breakdown_v1",
+        "finance_business_daily_v1",
+        "finance_business_period_v1",
+        "financial_order_evidence_v2",
+        "store_invoice_tax_v1"
+      ],
+      "consumidores": [
+        "web/cloudflare/src/business-month-view.mjs"
+      ],
+      "base_e_limite": "Expected order payout; not a bank deposit.",
+      "audit_state_historical": "INTEGRADO_NO_CODIGO",
+      "current_state": "EXISTENTE_COM_LIMITES",
+      "local_validation": "validation.json",
+      "real_account_validation": "NOT_VALIDATED_BY_P00",
+      "scope": "Server-resolved organization/store, account/domain wrappers and immutable revisions; never inherit a legacy store into a new company.",
+      "extension_handler_storage_consumer": {
+        "handlers": [
+          "web/cloudflare/src/financial-automation-service.mjs",
+          "web/cloudflare/src/financial-accounting-projection.mjs"
+        ],
+        "stores": [
+          "web/cloudflare/src/financial-event-store.mjs",
+          "web/cloudflare/src/financial-automation-store.mjs",
+          "web/cloudflare/src/financial-close-store.mjs"
+        ],
+        "consumer": [
+          "web/cloudflare/src/financial-automation-view.mjs",
+          "web/cloudflare/src/financial-automation-client.mjs"
+        ],
+        "route": "/api/admin/finance/automation",
+        "note": "New contracts coexist with legacy DTO guards. Applied when a confirmed event/source exists; not an assertion all old values feed the new ledger."
+      }
+    },
+    {
+      "funcao": "Taxas, fretes, cupons e ajustes detalhados",
+      "fonte_arquivo": "web/finance/src/payment-sample.mjs",
+      "rotas_existentes": [
+        "/api/admin/finance/payment-sample",
+        "/api/admin/finance/closeout"
+      ],
+      "handlers_e_stores": [
+        "web/finance/src/payment-sample.mjs",
+        "web/cloudflare/src/business-financial-closeout.mjs"
+      ],
+      "armazenamento_tabelas_observadas": [],
+      "schemas_observados": [
+        "business_financial_closeout_v1",
+        "business_income_detail_diagnostic_v1"
+      ],
+      "consumidores": [
+        "web/cloudflare/src/business-month-view.mjs"
+      ],
+      "base_e_limite": "Only observed monetary fields; the sales/payout difference is not an inferred commission.",
+      "audit_state_historical": "PARCIAL",
+      "current_state": "PARCIAL_IMPLEMENTADO_CONTRATOS_NOVOS_FONTES_REAIS_INCOMPLETAS",
+      "local_validation": "validation.json",
+      "real_account_validation": "NOT_VALIDATED_BY_P00",
+      "scope": "Server-resolved organization/store, account/domain wrappers and immutable revisions; never inherit a legacy store into a new company.",
+      "extension_handler_storage_consumer": {
+        "handlers": [
+          "web/cloudflare/src/financial-automation-service.mjs",
+          "web/cloudflare/src/financial-accounting-projection.mjs"
+        ],
+        "stores": [
+          "web/cloudflare/src/financial-event-store.mjs",
+          "web/cloudflare/src/financial-automation-store.mjs",
+          "web/cloudflare/src/financial-close-store.mjs"
+        ],
+        "consumer": [
+          "web/cloudflare/src/financial-automation-view.mjs",
+          "web/cloudflare/src/financial-automation-client.mjs"
+        ],
+        "route": "/api/admin/finance/automation",
+        "note": "New contracts coexist with legacy DTO guards. Applied when a confirmed event/source exists; not an assertion all old values feed the new ledger."
+      }
+    },
+    {
+      "funcao": "Saldo Pending e Income Overview",
+      "fonte_arquivo": "web/finance/src/income-overview.mjs",
+      "rotas_existentes": [
+        "/api/admin/finance/income-overview"
+      ],
+      "handlers_e_stores": [
+        "web/finance/src/income-overview.mjs",
+        "web/cloudflare/src/business-income-overview.mjs"
+      ],
+      "armazenamento_tabelas_observadas": [
+        "business_income_overview",
+        "business_income_overview_lease"
+      ],
+      "schemas_observados": [
+        "business_income_overview_v1",
+        "business_income_overview_work_v1",
+        "finance_income_overview_v1"
+      ],
+      "consumidores": [
+        "web/cloudflare/src/escrow-releases-view.mjs"
+      ],
+      "base_e_limite": "Global snapshot and source date; not selected-month revenue.",
+      "audit_state_historical": "INTEGRADO_NO_CODIGO",
+      "current_state": "EXISTENTE_COM_LIMITES",
+      "local_validation": "validation.json",
+      "real_account_validation": "NOT_VALIDATED_BY_P00",
+      "scope": "Server-resolved organization/store, account/domain wrappers and immutable revisions; never inherit a legacy store into a new company.",
+      "extension_handler_storage_consumer": {
+        "handlers": [
+          "web/cloudflare/src/financial-automation-service.mjs",
+          "web/cloudflare/src/financial-accounting-projection.mjs"
+        ],
+        "stores": [
+          "web/cloudflare/src/financial-event-store.mjs",
+          "web/cloudflare/src/financial-automation-store.mjs",
+          "web/cloudflare/src/financial-close-store.mjs"
+        ],
+        "consumer": [
+          "web/cloudflare/src/financial-automation-view.mjs",
+          "web/cloudflare/src/financial-automation-client.mjs"
+        ],
+        "route": "/api/admin/finance/automation",
+        "note": "New contracts coexist with legacy DTO guards. Applied when a confirmed event/source exists; not an assertion all old values feed the new ledger."
+      }
+    },
+    {
+      "funcao": "Pending detalhado",
+      "fonte_arquivo": "web/finance/src/pending-income-scan.mjs",
+      "rotas_existentes": [
+        "/api/admin/finance/income-detail"
+      ],
+      "handlers_e_stores": [
+        "web/finance/src/pending-income-scan.mjs",
+        "web/cloudflare/src/business-pending-income-scan.mjs"
+      ],
+      "armazenamento_tabelas_observadas": [
+        "business_pending_income_scan",
+        "business_pending_income_scan_lease",
+        "finance_pending_income_control",
+        "finance_pending_income_pages",
+        "finance_pending_income_publication",
+        "finance_pending_income_rows",
+        "finance_pending_income_scans",
+        "finance_pending_income_terminal_evidence"
+      ],
+      "schemas_observados": [
+        "business_pending_income_scan_v1",
+        "business_pending_income_scan_work_v1",
+        "finance_income_detail_v1",
+        "finance_pending_income_scan_v1"
+      ],
+      "consumidores": [
+        "web/cloudflare/src/escrow-releases-view.mjs"
+      ],
+      "base_e_limite": "Durable scan/publication with pagination; current observed cut is not a complete universal history.",
+      "audit_state_historical": "INTEGRADO_NO_CODIGO",
+      "current_state": "EXISTENTE_COM_LIMITES",
+      "local_validation": "validation.json",
+      "real_account_validation": "NOT_VALIDATED_BY_P00",
+      "scope": "Server-resolved organization/store, account/domain wrappers and immutable revisions; never inherit a legacy store into a new company.",
+      "extension_handler_storage_consumer": {
+        "handlers": [
+          "web/cloudflare/src/financial-automation-service.mjs",
+          "web/cloudflare/src/financial-accounting-projection.mjs"
+        ],
+        "stores": [
+          "web/cloudflare/src/financial-event-store.mjs",
+          "web/cloudflare/src/financial-automation-store.mjs",
+          "web/cloudflare/src/financial-close-store.mjs"
+        ],
+        "consumer": [
+          "web/cloudflare/src/financial-automation-view.mjs",
+          "web/cloudflare/src/financial-automation-client.mjs"
+        ],
+        "route": "/api/admin/finance/automation",
+        "note": "New contracts coexist with legacy DTO guards. Applied when a confirmed event/source exists; not an assertion all old values feed the new ledger."
+      }
+    },
+    {
+      "funcao": "Liberações posteriores",
+      "fonte_arquivo": "web/finance/src/escrow-releases.mjs",
+      "rotas_existentes": [
+        "/api/admin/finance/escrow-releases",
+        "/api/admin/finance/escrow-release-coverage"
+      ],
+      "handlers_e_stores": [
+        "web/finance/src/escrow-release-ledger.mjs",
+        "web/cloudflare/src/business-escrow-releases.mjs",
+        "web/cloudflare/src/business-escrow-release-coverage.mjs"
+      ],
+      "armazenamento_tabelas_observadas": [
+        "business_escrow_release_attempts",
+        "business_escrow_release_coverage",
+        "business_escrow_release_coverage_attempt_scopes",
+        "business_escrow_release_coverage_leases",
+        "business_escrow_release_leases",
+        "business_escrow_release_reports",
+        "business_month_publications",
+        "business_sync_state",
+        "finance_escrow_release_pages",
+        "finance_escrow_release_publications",
+        "finance_escrow_release_rows",
+        "finance_escrow_release_scans"
+      ],
+      "schemas_observados": [
+        "business_escrow_release_coverage_v1",
+        "business_escrow_release_coverage_work_v1",
+        "business_escrow_releases_v1",
+        "business_escrow_releases_v2",
+        "business_escrow_releases_work_v1",
+        "escrow_release_ledger_v1",
+        "finance_escrow_releases_v2"
+      ],
+      "consumidores": [
+        "web/cloudflare/src/escrow-releases-view.mjs"
+      ],
+      "base_e_limite": "Release date is separate from order creation and bank settlement.",
+      "audit_state_historical": "INTEGRADO_COM_LIMITES",
+      "current_state": "EXISTENTE_COM_LIMITES",
+      "local_validation": "validation.json",
+      "real_account_validation": "NOT_VALIDATED_BY_P00",
+      "scope": "Server-resolved organization/store, account/domain wrappers and immutable revisions; never inherit a legacy store into a new company.",
+      "extension_handler_storage_consumer": {
+        "handlers": [
+          "web/cloudflare/src/financial-automation-service.mjs",
+          "web/cloudflare/src/financial-accounting-projection.mjs"
+        ],
+        "stores": [
+          "web/cloudflare/src/financial-event-store.mjs",
+          "web/cloudflare/src/financial-automation-store.mjs",
+          "web/cloudflare/src/financial-close-store.mjs"
+        ],
+        "consumer": [
+          "web/cloudflare/src/financial-automation-view.mjs",
+          "web/cloudflare/src/financial-automation-client.mjs"
+        ],
+        "route": "/api/admin/finance/automation",
+        "note": "New contracts coexist with legacy DTO guards. Applied when a confirmed event/source exists; not an assertion all old values feed the new ledger."
+      }
+    },
+    {
+      "funcao": "Carteira e todos os seus movimentos",
+      "fonte_arquivo": "web/finance/src/provider-adapter.mjs",
+      "rotas_existentes": [],
+      "handlers_e_stores": [
+        "web/finance/src/provider-adapter.mjs"
+      ],
+      "armazenamento_tabelas_observadas": [],
+      "schemas_observados": [],
+      "consumidores": [],
+      "base_e_limite": "No Wallet collector/route in immutable baseline; API contract and shop grant still need evidence.",
+      "audit_state_historical": "A_IMPLEMENTAR",
+      "current_state": "PARCIAL_IMPLEMENTADO_CONTRATOS_NOVOS_FONTES_REAIS_INCOMPLETAS",
+      "local_validation": "validation.json",
+      "real_account_validation": "NOT_VALIDATED_BY_P00",
+      "scope": "Server-resolved organization/store, account/domain wrappers and immutable revisions; never inherit a legacy store into a new company.",
+      "extension_handler_storage_consumer": {
+        "handlers": [
+          "web/cloudflare/src/financial-automation-service.mjs",
+          "web/cloudflare/src/financial-accounting-projection.mjs"
+        ],
+        "stores": [
+          "web/cloudflare/src/financial-event-store.mjs",
+          "web/cloudflare/src/financial-automation-store.mjs",
+          "web/cloudflare/src/financial-close-store.mjs"
+        ],
+        "consumer": [
+          "web/cloudflare/src/financial-automation-view.mjs",
+          "web/cloudflare/src/financial-automation-client.mjs"
+        ],
+        "route": "/api/admin/finance/automation",
+        "note": "New contracts coexist with legacy DTO guards. Applied when a confirmed event/source exists; not an assertion all old values feed the new ledger."
+      }
+    },
+    {
+      "funcao": "Saques e pagamentos agrupados",
+      "fonte_arquivo": "web/finance/src/external-cash-worker.mjs",
+      "rotas_existentes": [
+        "/api/admin/finance/external-cash"
+      ],
+      "handlers_e_stores": [
+        "web/finance/src/external-cash-worker.mjs",
+        "web/finance/src/external-cash-store.mjs"
+      ],
+      "armazenamento_tabelas_observadas": [
+        "finance_external_cash_audit",
+        "finance_external_cash_documents",
+        "finance_external_cash_guard",
+        "finance_external_cash_imports",
+        "finance_external_cash_matches",
+        "finance_external_cash_origins",
+        "finance_external_cash_records",
+        "finance_external_cash_requests",
+        "finance_external_cash_state",
+        "finance_external_cash_unlinks"
+      ],
+      "schemas_observados": [
+        "commercial_actor_event_v1",
+        "external_cash_error_v1",
+        "external_cash_mutation_v1",
+        "external_cash_preview_v1",
+        "external_cash_workspace_v1"
+      ],
+      "consumidores": [
+        "web/cloudflare/src/bank-reconciliation-view.mjs"
+      ],
+      "base_e_limite": "Imported transfers exist; no Payout collector in immutable baseline.",
+      "audit_state_historical": "A_IMPLEMENTAR",
+      "current_state": "PARCIAL_IMPLEMENTADO_CONTRATOS_NOVOS_FONTES_REAIS_INCOMPLETAS",
+      "local_validation": "validation.json",
+      "real_account_validation": "NOT_VALIDATED_BY_P00",
+      "scope": "Server-resolved organization/store, account/domain wrappers and immutable revisions; never inherit a legacy store into a new company.",
+      "extension_handler_storage_consumer": {
+        "handlers": [
+          "web/cloudflare/src/financial-automation-service.mjs",
+          "web/cloudflare/src/financial-accounting-projection.mjs"
+        ],
+        "stores": [
+          "web/cloudflare/src/financial-event-store.mjs",
+          "web/cloudflare/src/financial-automation-store.mjs",
+          "web/cloudflare/src/financial-close-store.mjs"
+        ],
+        "consumer": [
+          "web/cloudflare/src/financial-automation-view.mjs",
+          "web/cloudflare/src/financial-automation-client.mjs"
+        ],
+        "route": "/api/admin/finance/automation",
+        "note": "New contracts coexist with legacy DTO guards. Applied when a confirmed event/source exists; not an assertion all old values feed the new ledger."
+      }
+    },
+    {
+      "funcao": "Depósitos bancários",
+      "fonte_arquivo": "web/finance/src/cash-statement-import.mjs",
+      "rotas_existentes": [
+        "/api/admin/finance/external-cash"
+      ],
+      "handlers_e_stores": [
+        "web/finance/src/cash-statement-import.mjs",
+        "web/finance/src/external-cash-store.mjs"
+      ],
+      "armazenamento_tabelas_observadas": [
+        "finance_external_cash_audit",
+        "finance_external_cash_documents",
+        "finance_external_cash_guard",
+        "finance_external_cash_imports",
+        "finance_external_cash_matches",
+        "finance_external_cash_origins",
+        "finance_external_cash_records",
+        "finance_external_cash_requests",
+        "finance_external_cash_state",
+        "finance_external_cash_unlinks"
+      ],
+      "schemas_observados": [
+        "commercial_actor_event_v1",
+        "external_cash_mutation_v1",
+        "external_cash_preview_v1",
+        "external_cash_workspace_v1"
+      ],
+      "consumidores": [
+        "web/cloudflare/src/bank-reconciliation-view.mjs"
+      ],
+      "base_e_limite": "Nubank CSV/OFX is assisted import; no bank API connector proven.",
+      "audit_state_historical": "ENTRADA_MANUAL_ASSISTIDA",
+      "current_state": "PARCIAL_IMPLEMENTADO_CONTRATOS_NOVOS_FONTES_REAIS_INCOMPLETAS",
+      "local_validation": "validation.json",
+      "real_account_validation": "NOT_VALIDATED_BY_P00",
+      "scope": "Server-resolved organization/store, account/domain wrappers and immutable revisions; never inherit a legacy store into a new company.",
+      "extension_handler_storage_consumer": {
+        "handlers": [
+          "web/cloudflare/src/financial-automation-service.mjs",
+          "web/cloudflare/src/financial-accounting-projection.mjs"
+        ],
+        "stores": [
+          "web/cloudflare/src/financial-event-store.mjs",
+          "web/cloudflare/src/financial-automation-store.mjs",
+          "web/cloudflare/src/financial-close-store.mjs"
+        ],
+        "consumer": [
+          "web/cloudflare/src/financial-automation-view.mjs",
+          "web/cloudflare/src/financial-automation-client.mjs"
+        ],
+        "route": "/api/admin/finance/automation",
+        "note": "New contracts coexist with legacy DTO guards. Applied when a confirmed event/source exists; not an assertion all old values feed the new ledger."
+      }
+    },
+    {
+      "funcao": "Conciliação banco–transferência",
+      "fonte_arquivo": "web/finance/src/external-cash-matching.mjs",
+      "rotas_existentes": [
+        "/api/admin/finance/external-cash"
+      ],
+      "handlers_e_stores": [
+        "web/finance/src/external-cash-matching.mjs",
+        "web/finance/src/external-cash-store.mjs"
+      ],
+      "armazenamento_tabelas_observadas": [
+        "finance_external_cash_audit",
+        "finance_external_cash_documents",
+        "finance_external_cash_guard",
+        "finance_external_cash_imports",
+        "finance_external_cash_matches",
+        "finance_external_cash_origins",
+        "finance_external_cash_records",
+        "finance_external_cash_requests",
+        "finance_external_cash_state",
+        "finance_external_cash_unlinks"
+      ],
+      "schemas_observados": [
+        "commercial_actor_event_v1",
+        "external_cash_mutation_v1",
+        "external_cash_preview_v1",
+        "external_cash_workspace_v1"
+      ],
+      "consumidores": [
+        "web/cloudflare/src/bank-reconciliation-view.mjs"
+      ],
+      "base_e_limite": "Existing explicit 1:1 match and unlink; new allocation groups required.",
+      "audit_state_historical": "ASSISTIDA_1_PARA_1",
+      "current_state": "PARCIAL_IMPLEMENTADO_CONTRATOS_NOVOS_FONTES_REAIS_INCOMPLETAS",
+      "local_validation": "validation.json",
+      "real_account_validation": "NOT_VALIDATED_BY_P00",
+      "scope": "Server-resolved organization/store, account/domain wrappers and immutable revisions; never inherit a legacy store into a new company.",
+      "extension_handler_storage_consumer": {
+        "handlers": [
+          "web/cloudflare/src/financial-automation-service.mjs",
+          "web/cloudflare/src/financial-accounting-projection.mjs"
+        ],
+        "stores": [
+          "web/cloudflare/src/financial-event-store.mjs",
+          "web/cloudflare/src/financial-automation-store.mjs",
+          "web/cloudflare/src/financial-close-store.mjs"
+        ],
+        "consumer": [
+          "web/cloudflare/src/financial-automation-view.mjs",
+          "web/cloudflare/src/financial-automation-client.mjs"
+        ],
+        "route": "/api/admin/finance/automation",
+        "note": "New contracts coexist with legacy DTO guards. Applied when a confirmed event/source exists; not an assertion all old values feed the new ledger."
+      }
+    },
+    {
+      "funcao": "Totais do caixa por período",
+      "fonte_arquivo": "web/finance/src/external-cash-period.mjs",
+      "rotas_existentes": [
+        "/api/admin/finance/external-cash",
+        "/api/admin/reports/weekly"
+      ],
+      "handlers_e_stores": [
+        "web/finance/src/external-cash-period.mjs",
+        "web/cloudflare/src/app-external-cash-period.mjs"
+      ],
+      "armazenamento_tabelas_observadas": [
+        "finance_external_cash_matches",
+        "finance_external_cash_records",
+        "finance_external_cash_state",
+        "finance_external_cash_unlinks"
+      ],
+      "schemas_observados": [
+        "external_cash_error_v1",
+        "external_cash_period_summary_v1"
+      ],
+      "consumidores": [
+        "web/cloudflare/src/weekly-operating-view.mjs"
+      ],
+      "base_e_limite": "Imported coverage is not confirmed opening/closing balance evidence.",
+      "audit_state_historical": "INTEGRADO_COM_LIMITES",
+      "current_state": "EXISTENTE_COM_LIMITES",
+      "local_validation": "validation.json",
+      "real_account_validation": "NOT_VALIDATED_BY_P00",
+      "scope": "Server-resolved organization/store, account/domain wrappers and immutable revisions; never inherit a legacy store into a new company.",
+      "extension_handler_storage_consumer": {
+        "handlers": [
+          "web/cloudflare/src/financial-automation-service.mjs",
+          "web/cloudflare/src/financial-accounting-projection.mjs"
+        ],
+        "stores": [
+          "web/cloudflare/src/financial-event-store.mjs",
+          "web/cloudflare/src/financial-automation-store.mjs",
+          "web/cloudflare/src/financial-close-store.mjs"
+        ],
+        "consumer": [
+          "web/cloudflare/src/financial-automation-view.mjs",
+          "web/cloudflare/src/financial-automation-client.mjs"
+        ],
+        "route": "/api/admin/finance/automation",
+        "note": "New contracts coexist with legacy DTO guards. Applied when a confirmed event/source exists; not an assertion all old values feed the new ledger."
+      }
+    },
+    {
+      "funcao": "Devoluções financeiras",
+      "fonte_arquivo": "web/finance/src/returns-reconciliation.mjs",
+      "rotas_existentes": [
+        "/api/admin/finance/reconciliation"
+      ],
+      "handlers_e_stores": [
+        "web/finance/src/returns-reconciliation.mjs",
+        "web/cloudflare/src/business-reconciliation.mjs"
+      ],
+      "armazenamento_tabelas_observadas": [
+        "business_month_publications",
+        "business_reconciliation_attempts",
+        "business_reconciliation_leases",
+        "business_reconciliation_original_items",
+        "business_reconciliation_reports",
+        "business_sync_state",
+        "finance_business_period_runs",
+        "finance_return_item_evidence",
+        "finance_returns_reconciliation_cases",
+        "finance_returns_reconciliation_probes",
+        "finance_returns_reconciliation_runs"
+      ],
+      "schemas_observados": [
+        "business_original_items_v1",
+        "business_reconciliation_v1",
+        "business_reconciliation_v2",
+        "business_reconciliation_v3",
+        "business_reconciliation_work_v1",
+        "finance_reconciliation_money_v1",
+        "finance_reconciliation_v1",
+        "finance_reconciliation_v2",
+        "finance_reconciliation_v3",
+        "finance_reconciliation_v4",
+        "finance_review_orders_v1"
+      ],
+      "consumidores": [
+        "web/cloudflare/src/physical-returns-view.mjs"
+      ],
+      "base_e_limite": "Observed return details and after-adjustment payout; preserve no-double-refund protection.",
+      "audit_state_historical": "INTEGRADO_COM_LIMITES",
+      "current_state": "PARCIAL_IMPLEMENTADO_CONTRATOS_NOVOS_FONTES_REAIS_INCOMPLETAS",
+      "local_validation": "validation.json",
+      "real_account_validation": "NOT_VALIDATED_BY_P00",
+      "scope": "Server-resolved organization/store, account/domain wrappers and immutable revisions; never inherit a legacy store into a new company.",
+      "extension_handler_storage_consumer": {
+        "handlers": [
+          "web/cloudflare/src/financial-automation-service.mjs",
+          "web/cloudflare/src/financial-accounting-projection.mjs"
+        ],
+        "stores": [
+          "web/cloudflare/src/financial-event-store.mjs",
+          "web/cloudflare/src/financial-automation-store.mjs",
+          "web/cloudflare/src/financial-close-store.mjs"
+        ],
+        "consumer": [
+          "web/cloudflare/src/financial-automation-view.mjs",
+          "web/cloudflare/src/financial-automation-client.mjs"
+        ],
+        "route": "/api/admin/finance/automation",
+        "note": "New contracts coexist with legacy DTO guards. Applied when a confirmed event/source exists; not an assertion all old values feed the new ledger."
+      }
+    },
+    {
+      "funcao": "Devoluções de competências antigas",
+      "fonte_arquivo": "web/cloudflare/src/business-historical-returns.mjs",
+      "rotas_existentes": [
+        "/api/admin/finance/reconciliation"
+      ],
+      "handlers_e_stores": [
+        "web/cloudflare/src/business-historical-returns.mjs",
+        "web/cloudflare/src/business-history-sync.mjs"
+      ],
+      "armazenamento_tabelas_observadas": [
+        "business_escrow_release_coverage",
+        "business_historical_returns_turns",
+        "business_history_sync_state",
+        "business_month_publication_frames",
+        "business_month_publications",
+        "business_month_runs",
+        "business_reconciliation_attempts",
+        "business_reconciliation_leases",
+        "business_sync_state"
+      ],
+      "schemas_observados": [
+        "business_historical_returns_eligibility_v1",
+        "business_reconciliation_work_v1"
+      ],
+      "consumidores": [
+        "web/cloudflare/src/physical-returns-view.mjs"
+      ],
+      "base_e_limite": "Current/previous-month turns do not prove independent discovery of all old cases.",
+      "audit_state_historical": "PARCIAL",
+      "current_state": "PARCIAL_IMPLEMENTADO_CONTRATOS_NOVOS_FONTES_REAIS_INCOMPLETAS",
+      "local_validation": "validation.json",
+      "real_account_validation": "NOT_VALIDATED_BY_P00",
+      "scope": "Server-resolved organization/store, account/domain wrappers and immutable revisions; never inherit a legacy store into a new company.",
+      "extension_handler_storage_consumer": {
+        "handlers": [
+          "web/cloudflare/src/financial-automation-service.mjs",
+          "web/cloudflare/src/financial-accounting-projection.mjs"
+        ],
+        "stores": [
+          "web/cloudflare/src/financial-event-store.mjs",
+          "web/cloudflare/src/financial-automation-store.mjs",
+          "web/cloudflare/src/financial-close-store.mjs"
+        ],
+        "consumer": [
+          "web/cloudflare/src/financial-automation-view.mjs",
+          "web/cloudflare/src/financial-automation-client.mjs"
+        ],
+        "route": "/api/admin/finance/automation",
+        "note": "New contracts coexist with legacy DTO guards. Applied when a confirmed event/source exists; not an assertion all old values feed the new ledger."
+      }
+    },
+    {
+      "funcao": "Devoluções físicas e inspeção",
+      "fonte_arquivo": "web/cloudflare/src/physical-returns.mjs",
+      "rotas_existentes": [
+        "/api/admin/returns/physical",
+        "/api/admin/returns/receipts",
+        "/api/admin/returns/manufacturing-links"
+      ],
+      "handlers_e_stores": [
+        "web/cloudflare/src/physical-returns.mjs",
+        "web/cloudflare/src/return-manufacturing-links.mjs"
+      ],
+      "armazenamento_tabelas_observadas": [
+        "incurred_production_records",
+        "physical_returns_audit",
+        "physical_returns_cases",
+        "physical_returns_guard",
+        "physical_returns_state",
+        "return_manufacturing_links_audit",
+        "return_manufacturing_links_guard",
+        "return_manufacturing_links_records",
+        "return_manufacturing_links_state"
+      ],
+      "schemas_observados": [
+        "physical_returns_v1",
+        "return_manufacturing_links_v1"
+      ],
+      "consumidores": [
+        "web/cloudflare/src/physical-returns-view.mjs",
+        "web/cloudflare/src/return-manufacturing-links-view.mjs"
+      ],
+      "base_e_limite": "Operator-confirmed physical facts; inventory financial valuation remains UNKNOWN in v1.",
+      "audit_state_historical": "INTEGRADO_SEM_VALORIZACAO_FINANCEIRA",
+      "current_state": "PARCIAL_IMPLEMENTADO_CONTRATOS_NOVOS_FONTES_REAIS_INCOMPLETAS",
+      "local_validation": "validation.json",
+      "real_account_validation": "NOT_VALIDATED_BY_P00",
+      "scope": "Server-resolved organization/store, account/domain wrappers and immutable revisions; never inherit a legacy store into a new company.",
+      "extension_handler_storage_consumer": {
+        "handlers": [
+          "web/cloudflare/src/financial-automation-service.mjs",
+          "web/cloudflare/src/financial-accounting-projection.mjs"
+        ],
+        "stores": [
+          "web/cloudflare/src/financial-event-store.mjs",
+          "web/cloudflare/src/financial-automation-store.mjs",
+          "web/cloudflare/src/financial-close-store.mjs"
+        ],
+        "consumer": [
+          "web/cloudflare/src/financial-automation-view.mjs",
+          "web/cloudflare/src/financial-automation-client.mjs"
+        ],
+        "route": "/api/admin/finance/automation",
+        "note": "New contracts coexist with legacy DTO guards. Applied when a confirmed event/source exists; not an assertion all old values feed the new ledger."
+      }
+    },
+    {
+      "funcao": "Produtos, kits e custo de referência",
+      "fonte_arquivo": "web/cloudflare/src/business-month.mjs",
+      "rotas_existentes": [
+        "/api/admin/production-costs",
+        "/api/admin/cost-rules",
+        "/api/admin/variant-bindings"
+      ],
+      "handlers_e_stores": [
+        "web/cloudflare/src/business-month.mjs",
+        "web/cloudflare/src/cost-rules.mjs",
+        "web/cloudflare/src/production-costs.mjs",
+        "web/cloudflare/src/variant-bindings.mjs"
+      ],
+      "armazenamento_tabelas_observadas": [
+        "business_expense_ledger_months",
+        "business_month_ads",
+        "business_month_ads_attempts",
+        "business_month_expenses",
+        "business_month_expenses_audit",
+        "business_month_frames",
+        "business_month_runs",
+        "business_tax_policy_audit",
+        "business_tax_policy_state",
+        "production_costs_audit",
+        "production_costs_state"
+      ],
+      "schemas_observados": [
+        "business_month_ads_state_v1",
+        "business_month_collection_v1",
+        "business_month_frame_ref_v1",
+        "business_month_tax_v1",
+        "business_month_v1",
+        "finance_business_period_v1"
+      ],
+      "consumidores": [
+        "web/cloudflare/src/business-month-view.mjs"
+      ],
+      "base_e_limite": "Current reference rules can reproject estimates; closed-event cost capture needs a new contract.",
+      "audit_state_historical": "INTEGRADO_COM_LIMITES",
+      "current_state": "EXISTENTE_COM_LIMITES",
+      "local_validation": "validation.json",
+      "real_account_validation": "NOT_VALIDATED_BY_P00",
+      "scope": "Server-resolved organization/store, account/domain wrappers and immutable revisions; never inherit a legacy store into a new company.",
+      "extension_handler_storage_consumer": {
+        "handlers": [
+          "web/cloudflare/src/financial-automation-service.mjs",
+          "web/cloudflare/src/financial-accounting-projection.mjs"
+        ],
+        "stores": [
+          "web/cloudflare/src/financial-event-store.mjs",
+          "web/cloudflare/src/financial-automation-store.mjs",
+          "web/cloudflare/src/financial-close-store.mjs"
+        ],
+        "consumer": [
+          "web/cloudflare/src/financial-automation-view.mjs",
+          "web/cloudflare/src/financial-automation-client.mjs"
+        ],
+        "route": "/api/admin/finance/automation",
+        "note": "New contracts coexist with legacy DTO guards. Applied when a confirmed event/source exists; not an assertion all old values feed the new ledger."
+      }
+    },
+    {
+      "funcao": "Produção física",
+      "fonte_arquivo": "web/cloudflare/src/incurred-production.mjs",
+      "rotas_existentes": [
+        "/api/admin/production/incurred"
+      ],
+      "handlers_e_stores": [
+        "web/cloudflare/src/incurred-production.mjs"
+      ],
+      "armazenamento_tabelas_observadas": [
+        "incurred_production_audit",
+        "incurred_production_guard",
+        "incurred_production_records",
+        "incurred_production_state"
+      ],
+      "schemas_observados": [
+        "incurred_production_range_v1",
+        "incurred_production_v1"
+      ],
+      "consumidores": [
+        "web/cloudflare/src/incurred-production-view.mjs"
+      ],
+      "base_e_limite": "Actual manufacturing records are not order quantities, paid cash or automatically recognized COGS.",
+      "audit_state_historical": "INTEGRADO_SEM_PONTE_CONTABIL",
+      "current_state": "EXISTENTE_COM_LIMITES",
+      "local_validation": "validation.json",
+      "real_account_validation": "NOT_VALIDATED_BY_P00",
+      "scope": "Server-resolved organization/store, account/domain wrappers and immutable revisions; never inherit a legacy store into a new company.",
+      "extension_handler_storage_consumer": {
+        "handlers": [
+          "web/cloudflare/src/financial-automation-service.mjs",
+          "web/cloudflare/src/financial-accounting-projection.mjs"
+        ],
+        "stores": [
+          "web/cloudflare/src/financial-event-store.mjs",
+          "web/cloudflare/src/financial-automation-store.mjs",
+          "web/cloudflare/src/financial-close-store.mjs"
+        ],
+        "consumer": [
+          "web/cloudflare/src/financial-automation-view.mjs",
+          "web/cloudflare/src/financial-automation-client.mjs"
+        ],
+        "route": "/api/admin/finance/automation",
+        "note": "New contracts coexist with legacy DTO guards. Applied when a confirmed event/source exists; not an assertion all old values feed the new ledger."
+      }
+    },
+    {
+      "funcao": "Despesas e parcelas",
+      "fonte_arquivo": "web/cloudflare/src/expense-ledger.mjs",
+      "rotas_existentes": [
+        "/api/admin/finance/expense-ledger"
+      ],
+      "handlers_e_stores": [
+        "web/cloudflare/src/expense-ledger.mjs"
+      ],
+      "armazenamento_tabelas_observadas": [
+        "business_expense_ledger_audit",
+        "business_expense_ledger_months",
+        "business_expense_ledger_state",
+        "business_month_expenses",
+        "business_month_expenses_audit"
+      ],
+      "schemas_observados": [
+        "expense_ledger_v1"
+      ],
+      "consumidores": [
+        "web/cloudflare/src/expense-ledger-view.mjs"
+      ],
+      "base_e_limite": "Recognition month, due date and payment are separate; no existing final-close lock.",
+      "audit_state_historical": "CADASTRO_ASSISTIDO",
+      "current_state": "EXISTENTE_COM_LIMITES",
+      "local_validation": "validation.json",
+      "real_account_validation": "NOT_VALIDATED_BY_P00",
+      "scope": "Server-resolved organization/store, account/domain wrappers and immutable revisions; never inherit a legacy store into a new company.",
+      "extension_handler_storage_consumer": {
+        "handlers": [
+          "web/cloudflare/src/financial-automation-service.mjs",
+          "web/cloudflare/src/financial-accounting-projection.mjs"
+        ],
+        "stores": [
+          "web/cloudflare/src/financial-event-store.mjs",
+          "web/cloudflare/src/financial-automation-store.mjs",
+          "web/cloudflare/src/financial-close-store.mjs"
+        ],
+        "consumer": [
+          "web/cloudflare/src/financial-automation-view.mjs",
+          "web/cloudflare/src/financial-automation-client.mjs"
+        ],
+        "route": "/api/admin/finance/automation",
+        "note": "New contracts coexist with legacy DTO guards. Applied when a confirmed event/source exists; not an assertion all old values feed the new ledger."
+      }
+    },
+    {
+      "funcao": "Impostos",
+      "fonte_arquivo": "web/cloudflare/src/business-tax-policy.mjs",
+      "rotas_existentes": [
+        "/api/admin/tax-policy",
+        "/api/admin/tax-policy/audit"
+      ],
+      "handlers_e_stores": [
+        "web/cloudflare/src/business-tax-policy.mjs"
+      ],
+      "armazenamento_tabelas_observadas": [
+        "business_tax_policy_audit",
+        "business_tax_policy_state"
+      ],
+      "schemas_observados": [
+        "business_month_tax_v1"
+      ],
+      "consumidores": [
+        "web/cloudflare/src/business-month-view.mjs"
+      ],
+      "base_e_limite": "Declared MEI policy; do not inherit to new organizations or infer a universal tax regime.",
+      "audit_state_historical": "DECLARACAO_MEI",
+      "current_state": "EXISTENTE_COM_LIMITES",
+      "local_validation": "validation.json",
+      "real_account_validation": "NOT_VALIDATED_BY_P00",
+      "scope": "Server-resolved organization/store, account/domain wrappers and immutable revisions; never inherit a legacy store into a new company.",
+      "extension_handler_storage_consumer": {
+        "handlers": [
+          "web/cloudflare/src/financial-automation-service.mjs",
+          "web/cloudflare/src/financial-accounting-projection.mjs"
+        ],
+        "stores": [
+          "web/cloudflare/src/financial-event-store.mjs",
+          "web/cloudflare/src/financial-automation-store.mjs",
+          "web/cloudflare/src/financial-close-store.mjs"
+        ],
+        "consumer": [
+          "web/cloudflare/src/financial-automation-view.mjs",
+          "web/cloudflare/src/financial-automation-client.mjs"
+        ],
+        "route": "/api/admin/finance/automation",
+        "note": "New contracts coexist with legacy DTO guards. Applied when a confirmed event/source exists; not an assertion all old values feed the new ledger."
+      }
+    },
+    {
+      "funcao": "Anúncios e recarga",
+      "fonte_arquivo": "web/cloudflare/src/business-daily-summary.mjs",
+      "rotas_existentes": [
+        "/api/admin/finance/ads-period",
+        "/api/admin/finance/store-adjustments"
+      ],
+      "handlers_e_stores": [
+        "web/cloudflare/src/admin.mjs",
+        "web/cloudflare/src/business-adjusted-balance.mjs",
+        "web/cloudflare/src/business-daily-summary.mjs",
+        "web/cloudflare/src/business-month-ads-history.mjs"
+      ],
+      "armazenamento_tabelas_observadas": [
+        "business_month_ads",
+        "business_month_ads_history"
+      ],
+      "schemas_observados": [
+        "ads_calendar_v1",
+        "business_daily_summary_v1",
+        "business_month_v1"
+      ],
+      "consumidores": [
+        "web/cloudflare/src/business-month-view.mjs"
+      ],
+      "base_e_limite": "Consumption differs from recharge; daily source timezone/granularity limits exact 13h splits.",
+      "audit_state_historical": "INTEGRADO_COM_LIMITES",
+      "current_state": "EXISTENTE_COM_LIMITES",
+      "local_validation": "validation.json",
+      "real_account_validation": "NOT_VALIDATED_BY_P00",
+      "scope": "Server-resolved organization/store, account/domain wrappers and immutable revisions; never inherit a legacy store into a new company.",
+      "extension_handler_storage_consumer": {
+        "handlers": [
+          "web/cloudflare/src/financial-automation-service.mjs",
+          "web/cloudflare/src/financial-accounting-projection.mjs"
+        ],
+        "stores": [
+          "web/cloudflare/src/financial-event-store.mjs",
+          "web/cloudflare/src/financial-automation-store.mjs",
+          "web/cloudflare/src/financial-close-store.mjs"
+        ],
+        "consumer": [
+          "web/cloudflare/src/financial-automation-view.mjs",
+          "web/cloudflare/src/financial-automation-client.mjs"
+        ],
+        "route": "/api/admin/finance/automation",
+        "note": "New contracts coexist with legacy DTO guards. Applied when a confirmed event/source exists; not an assertion all old values feed the new ledger."
+      }
+    },
+    {
+      "funcao": "Resultado diário e mensal",
+      "fonte_arquivo": "web/cloudflare/src/business-month.mjs",
+      "rotas_existentes": [
+        "/api/admin/finance/business-month-view"
+      ],
+      "handlers_e_stores": [
+        "web/cloudflare/src/business-month.mjs",
+        "web/cloudflare/src/business-daily-summary.mjs"
+      ],
+      "armazenamento_tabelas_observadas": [
+        "business_expense_ledger_months",
+        "business_month_ads",
+        "business_month_ads_attempts",
+        "business_month_expenses",
+        "business_month_expenses_audit",
+        "business_month_frames",
+        "business_month_runs",
+        "business_tax_policy_audit",
+        "business_tax_policy_state",
+        "production_costs_state"
+      ],
+      "schemas_observados": [
+        "business_daily_summary_v1",
+        "business_month_ads_state_v1",
+        "business_month_collection_v1",
+        "business_month_frame_ref_v1",
+        "business_month_tax_v1",
+        "business_month_v1",
+        "finance_business_period_v1"
+      ],
+      "consumidores": [
+        "web/cloudflare/src/business-month-view.mjs",
+        "web/cloudflare/src/mission-control.mjs"
+      ],
+      "base_e_limite": "Existing paid-create-date estimate; net_profit_cents stays null by v1 design.",
+      "audit_state_historical": "ESTIMATIVA",
+      "current_state": "EXISTENTE_COM_LIMITES",
+      "local_validation": "validation.json",
+      "real_account_validation": "NOT_VALIDATED_BY_P00",
+      "scope": "Server-resolved organization/store, account/domain wrappers and immutable revisions; never inherit a legacy store into a new company.",
+      "extension_handler_storage_consumer": {
+        "handlers": [
+          "web/cloudflare/src/financial-automation-service.mjs",
+          "web/cloudflare/src/financial-accounting-projection.mjs"
+        ],
+        "stores": [
+          "web/cloudflare/src/financial-event-store.mjs",
+          "web/cloudflare/src/financial-automation-store.mjs",
+          "web/cloudflare/src/financial-close-store.mjs"
+        ],
+        "consumer": [
+          "web/cloudflare/src/financial-automation-view.mjs",
+          "web/cloudflare/src/financial-automation-client.mjs"
+        ],
+        "route": "/api/admin/finance/automation",
+        "note": "New contracts coexist with legacy DTO guards. Applied when a confirmed event/source exists; not an assertion all old values feed the new ledger."
+      }
+    },
+    {
+      "funcao": "Fechamento semanal de produção",
+      "fonte_arquivo": "web/cloudflare/src/production-weekly-store.mjs",
+      "rotas_existentes": [
+        "/api/admin/production/weekly-closing"
+      ],
+      "handlers_e_stores": [
+        "web/cloudflare/src/production-weekly-store.mjs"
+      ],
+      "armazenamento_tabelas_observadas": [
+        "incurred_production_records",
+        "incurred_production_state",
+        "production_weekly_assignments",
+        "production_weekly_audit",
+        "production_weekly_guard",
+        "production_weekly_reports",
+        "production_weekly_state"
+      ],
+      "schemas_observados": [
+        "production_weekly_closing_workspace_v1",
+        "production_weekly_report_v1"
+      ],
+      "consumidores": [
+        "web/cloudflare/src/incurred-production-view.mjs"
+      ],
+      "base_e_limite": "Manufacturing Friday13h→Friday13h in America/Sao_Paulo; not the company financial close.",
+      "audit_state_historical": "INTEGRADO",
+      "current_state": "PARCIAL_IMPLEMENTADO_CONTRATOS_NOVOS_FONTES_REAIS_INCOMPLETAS",
+      "local_validation": "validation.json",
+      "real_account_validation": "NOT_VALIDATED_BY_P00",
+      "scope": "Server-resolved organization/store, account/domain wrappers and immutable revisions; never inherit a legacy store into a new company.",
+      "extension_handler_storage_consumer": {
+        "handlers": [
+          "web/cloudflare/src/financial-automation-service.mjs",
+          "web/cloudflare/src/financial-accounting-projection.mjs"
+        ],
+        "stores": [
+          "web/cloudflare/src/financial-event-store.mjs",
+          "web/cloudflare/src/financial-automation-store.mjs",
+          "web/cloudflare/src/financial-close-store.mjs"
+        ],
+        "consumer": [
+          "web/cloudflare/src/financial-automation-view.mjs",
+          "web/cloudflare/src/financial-automation-client.mjs"
+        ],
+        "route": "/api/admin/finance/automation",
+        "note": "New contracts coexist with legacy DTO guards. Applied when a confirmed event/source exists; not an assertion all old values feed the new ledger."
+      }
+    },
+    {
+      "funcao": "Relatório semanal operacional",
+      "fonte_arquivo": "web/cloudflare/src/weekly-operating-report.mjs",
+      "rotas_existentes": [
+        "/api/admin/reports/weekly"
+      ],
+      "handlers_e_stores": [
+        "web/cloudflare/src/weekly-operating-report.mjs",
+        "web/cloudflare/src/weekly-operating-store.mjs"
+      ],
+      "armazenamento_tabelas_observadas": [
+        "business_tax_policy_state",
+        "production_costs_state",
+        "production_weekly_reports"
+      ],
+      "schemas_observados": [
+        "external_cash_error_v1",
+        "production_weekly_report_v1",
+        "weekly_operating_report_v1"
+      ],
+      "consumidores": [
+        "web/cloudflare/src/weekly-operating-view.mjs"
+      ],
+      "base_e_limite": "Manufacturing cut and seven civil sales/cash days are separate; realized profit remains null.",
+      "audit_state_historical": "INTEGRADO_COM_BASES_SEPARADAS",
+      "current_state": "EXISTENTE_COM_LIMITES",
+      "local_validation": "validation.json",
+      "real_account_validation": "NOT_VALIDATED_BY_P00",
+      "scope": "Server-resolved organization/store, account/domain wrappers and immutable revisions; never inherit a legacy store into a new company.",
+      "extension_handler_storage_consumer": {
+        "handlers": [
+          "web/cloudflare/src/financial-automation-service.mjs",
+          "web/cloudflare/src/financial-accounting-projection.mjs"
+        ],
+        "stores": [
+          "web/cloudflare/src/financial-event-store.mjs",
+          "web/cloudflare/src/financial-automation-store.mjs",
+          "web/cloudflare/src/financial-close-store.mjs"
+        ],
+        "consumer": [
+          "web/cloudflare/src/financial-automation-view.mjs",
+          "web/cloudflare/src/financial-automation-client.mjs"
+        ],
+        "route": "/api/admin/finance/automation",
+        "note": "New contracts coexist with legacy DTO guards. Applied when a confirmed event/source exists; not an assertion all old values feed the new ledger."
+      }
+    },
+    {
+      "funcao": "Preparação mensal de fechamento",
+      "fonte_arquivo": "web/cloudflare/src/business-financial-closeout.mjs",
+      "rotas_existentes": [
+        "/api/admin/finance/closeout"
+      ],
+      "handlers_e_stores": [
+        "web/cloudflare/src/business-financial-closeout.mjs"
+      ],
+      "armazenamento_tabelas_observadas": [],
+      "schemas_observados": [
+        "business_financial_closeout_v1",
+        "business_income_detail_diagnostic_v1"
+      ],
+      "consumidores": [
+        "web/cloudflare/src/business-month-view.mjs"
+      ],
+      "base_e_limite": "PREPARING/READY_FOR_COMPARISON; Seller Centre and bank NOT_COMPARED by strict contract.",
+      "audit_state_historical": "PREPARACAO_SEM_FECHO_DEFINITIVO",
+      "current_state": "PARCIAL_IMPLEMENTADO_CONTRATOS_NOVOS_FONTES_REAIS_INCOMPLETAS",
+      "local_validation": "validation.json",
+      "real_account_validation": "NOT_VALIDATED_BY_P00",
+      "scope": "Server-resolved organization/store, account/domain wrappers and immutable revisions; never inherit a legacy store into a new company.",
+      "extension_handler_storage_consumer": {
+        "handlers": [
+          "web/cloudflare/src/financial-automation-service.mjs",
+          "web/cloudflare/src/financial-accounting-projection.mjs"
+        ],
+        "stores": [
+          "web/cloudflare/src/financial-event-store.mjs",
+          "web/cloudflare/src/financial-automation-store.mjs",
+          "web/cloudflare/src/financial-close-store.mjs"
+        ],
+        "consumer": [
+          "web/cloudflare/src/financial-automation-view.mjs",
+          "web/cloudflare/src/financial-automation-client.mjs"
+        ],
+        "route": "/api/admin/finance/automation",
+        "note": "New contracts coexist with legacy DTO guards. Applied when a confirmed event/source exists; not an assertion all old values feed the new ledger."
+      }
+    },
+    {
+      "funcao": "Histórico mensal",
+      "fonte_arquivo": "web/cloudflare/src/business-month-publication.mjs",
+      "rotas_existentes": [
+        "/api/admin/finance/business-month-view"
+      ],
+      "handlers_e_stores": [
+        "web/cloudflare/src/business-month-publication.mjs",
+        "web/cloudflare/src/business-month.mjs"
+      ],
+      "armazenamento_tabelas_observadas": [
+        "business_expense_ledger_months",
+        "business_month_ads",
+        "business_month_ads_attempts",
+        "business_month_expenses",
+        "business_month_expenses_audit",
+        "business_month_frames",
+        "business_month_publication_frames",
+        "business_month_publications",
+        "business_month_runs",
+        "business_tax_policy_audit",
+        "business_tax_policy_state",
+        "production_costs_state"
+      ],
+      "schemas_observados": [
+        "business_month_ads_state_v1",
+        "business_month_collection_v1",
+        "business_month_frame_ref_v1",
+        "business_month_publication_frame_ref_v1",
+        "business_month_tax_v1",
+        "business_month_v1",
+        "finance_business_period_v1"
+      ],
+      "consumidores": [
+        "web/cloudflare/src/business-month-view.mjs"
+      ],
+      "base_e_limite": "Source publication freezes source frames but later presentation can use current costs/tax/expenses.",
+      "audit_state_historical": "SNAPSHOT_DE_FONTES",
+      "current_state": "EXISTENTE_COM_LIMITES",
+      "local_validation": "validation.json",
+      "real_account_validation": "NOT_VALIDATED_BY_P00",
+      "scope": "Server-resolved organization/store, account/domain wrappers and immutable revisions; never inherit a legacy store into a new company.",
+      "extension_handler_storage_consumer": {
+        "handlers": [
+          "web/cloudflare/src/financial-automation-service.mjs",
+          "web/cloudflare/src/financial-accounting-projection.mjs"
+        ],
+        "stores": [
+          "web/cloudflare/src/financial-event-store.mjs",
+          "web/cloudflare/src/financial-automation-store.mjs",
+          "web/cloudflare/src/financial-close-store.mjs"
+        ],
+        "consumer": [
+          "web/cloudflare/src/financial-automation-view.mjs",
+          "web/cloudflare/src/financial-automation-client.mjs"
+        ],
+        "route": "/api/admin/finance/automation",
+        "note": "New contracts coexist with legacy DTO guards. Applied when a confirmed event/source exists; not an assertion all old values feed the new ledger."
+      }
+    },
+    {
+      "funcao": "Caixa livre e retirada",
+      "fonte_arquivo": "web/cloudflare/src/business-financial-closeout.mjs",
+      "rotas_existentes": [],
+      "handlers_e_stores": [
+        "web/cloudflare/src/business-financial-closeout.mjs"
+      ],
+      "armazenamento_tabelas_observadas": [],
+      "schemas_observados": [
+        "business_financial_closeout_v1",
+        "business_income_detail_diagnostic_v1"
+      ],
+      "consumidores": [],
+      "base_e_limite": "No verified free-cash/reserve forecast in baseline; needs balanced cash/obligations/source completeness.",
+      "audit_state_historical": "A_IMPLEMENTAR_NOS_MODULOS_EXAMINADOS",
+      "current_state": "PARCIAL_IMPLEMENTADO_CONTRATOS_NOVOS_FONTES_REAIS_INCOMPLETAS",
+      "local_validation": "validation.json",
+      "real_account_validation": "NOT_VALIDATED_BY_P00",
+      "scope": "Server-resolved organization/store, account/domain wrappers and immutable revisions; never inherit a legacy store into a new company.",
+      "extension_handler_storage_consumer": {
+        "handlers": [
+          "web/cloudflare/src/financial-automation-service.mjs",
+          "web/cloudflare/src/financial-accounting-projection.mjs"
+        ],
+        "stores": [
+          "web/cloudflare/src/financial-event-store.mjs",
+          "web/cloudflare/src/financial-automation-store.mjs",
+          "web/cloudflare/src/financial-close-store.mjs"
+        ],
+        "consumer": [
+          "web/cloudflare/src/financial-automation-view.mjs",
+          "web/cloudflare/src/financial-automation-client.mjs"
+        ],
+        "route": "/api/admin/finance/automation",
+        "note": "New contracts coexist with legacy DTO guards. Applied when a confirmed event/source exists; not an assertion all old values feed the new ledger."
+      }
+    }
+  ],
+  "current_extension": {
+    "modules": [
+      "web/cloudflare/src/app-financial-automation.mjs",
+      "web/cloudflare/src/financial-accounting-policy.mjs",
+      "web/cloudflare/src/financial-accounting-projection.mjs",
+      "web/cloudflare/src/financial-accounting-schedule.mjs",
+      "web/cloudflare/src/financial-auth-router.mjs",
+      "web/cloudflare/src/financial-automation-ads-sources.mjs",
+      "web/cloudflare/src/financial-automation-allocation-client.mjs",
+      "web/cloudflare/src/financial-automation-bridge.mjs",
+      "web/cloudflare/src/financial-automation-cash-sources.mjs",
+      "web/cloudflare/src/financial-automation-client.mjs",
+      "web/cloudflare/src/financial-automation-jobs.mjs",
+      "web/cloudflare/src/financial-automation-service.mjs",
+      "web/cloudflare/src/financial-automation-sources.mjs",
+      "web/cloudflare/src/financial-automation-store.mjs",
+      "web/cloudflare/src/financial-automation-view.mjs",
+      "web/cloudflare/src/financial-cash-allocation-store.mjs",
+      "web/cloudflare/src/financial-close-store.mjs",
+      "web/cloudflare/src/financial-event-ledger.mjs",
+      "web/cloudflare/src/financial-event-store.mjs",
+      "web/cloudflare/src/financial-inventory-bridge.mjs",
+      "web/cloudflare/src/financial-obligation-app-source.mjs",
+      "web/cloudflare/src/financial-returns-tracker.mjs",
+      "web/finance/src/business-period.mjs",
+      "web/finance/src/financial-allocation-frame.mjs",
+      "web/finance/src/financial-allocation-worker.mjs",
+      "web/finance/src/financial-bank-connector.mjs",
+      "web/finance/src/financial-cash-allocation.mjs",
+      "web/finance/src/financial-obligation-frame.mjs",
+      "web/finance/src/financial-obligation-worker.mjs",
+      "web/finance/src/financial-order-components.mjs",
+      "web/finance/src/financial-private-protocol.mjs",
+      "web/finance/src/financial-source-capabilities.mjs",
+      "web/finance/src/financial-source-collection.mjs",
+      "web/finance/src/financial-source-events.mjs",
+      "web/finance/src/financial-source-frame.mjs",
+      "web/finance/src/financial-source-worker.mjs"
+    ],
+    "schema_objects": 59,
+    "tenant_schema_domains": "App:14tables+14triggers; Finance:13tables+4indexes+14triggers",
+    "actual_source_limits": [
+      "Wallet/Payout native production adapter and actual grants",
+      "Authorized bank connector adapter, consent, physical account opening/closing proof",
+      "Completion-date cohort collection beyond legacy creation-date runs",
+      "Full old Returns discovery outside already saved reports",
+      "Native Ads timezone/balance/recharge proof beyond conservative daily REVIEW",
+      "Complete obligation/payment classification and external production commitments"
+    ],
+    "source_readme": "../../financial-automation/README.md"
+  },
+  "new_value_types": [
+    {
+      "value": "Recognized revenue / accrual result",
+      "source": "confirmed ledger events and approved tax/recognition policy",
+      "handler": "web/cloudflare/src/financial-accounting-projection.mjs",
+      "storage": "web/cloudflare/src/financial-event-store.mjs",
+      "consumer": "web/cloudflare/src/financial-automation-client.mjs",
+      "state": "IMPLEMENTADO_TESTES_LOCAIS_SEM_ACEITE_REAL"
+    },
+    {
+      "value": "Historical unit cost / CMV / reusable pieces",
+      "source": "declared real lot and recognized sale original item, physical inspection and active original allocation",
+      "handler": "web/cloudflare/src/financial-inventory-bridge.mjs",
+      "storage": "INVENTORY state / financial-automation-store.mjs",
+      "consumer": "web/cloudflare/src/financial-automation-client.mjs",
+      "state": "IMPLEMENTADO_PARCIAL_COBERTURA_ABERTURA_DESCONHECIDA"
+    },
+    {
+      "value": "Wallet / payout / automatic bank",
+      "source": "no effective native Wallet/Payout or consented bank adapter proved",
+      "handler": "web/finance/src/financial-source-collection.mjs",
+      "storage": "web/finance/src/financial-source-worker.mjs",
+      "consumer": "web/cloudflare/src/financial-accounting-projection.mjs",
+      "state": "INTERFACES_EXISTEM_ADAPTADORES_GRANTS_CONSENTIMENTOS_BLOQUEADOS"
+    }
+  ],
+  "collectors_jobs_and_scopes": [
+    {
+      "source": "web/cloudflare/src/business-sync.mjs",
+      "work": "Saved legacy order/month collection, cursor/leases and bounded turns",
+      "storage": "business_month_* and Finance business period caches from existing inventory",
+      "coverage": "Creation-date cohort is not full completion-date coverage; old complete observations are distinct from fresh partial work"
+    },
+    {
+      "source": "web/finance/src/financial-source-collection.mjs",
+      "work": "createFinancialSourceCheckpoint / collectFinancialSourceStep / selectFinancialSourceWork",
+      "storage": "financial_source_checkpoint_v1, cursor, watermark, lease, last_complete",
+      "scope": "organization/store/account/currency; authorization before and after IO",
+      "coverage": "A generic collector is implemented; no native Wallet/Payout adapter or real bank consent inferred"
+    },
+    {
+      "source": "web/cloudflare/src/financial-automation-jobs.mjs",
+      "work": "runFinancialAutomationJobs: one bounded source page OR one close mutation per turn; CAS and revalidation",
+      "storage": "financial_automation_job_v1 / automation state, CONFIG revision and immutable close versions",
+      "coverage": "Accrual and bank-cash gates separate; auto-close approval withdrawal blocks mutation"
+    },
+    {
+      "source": "web/cloudflare/src/financial-automation-sources.mjs",
+      "work": "Read existing saved orders, cost/inspection origins and declared expense source; map to conservative ledger evidence",
+      "storage": "financial_event_v1 with source references and revisions",
+      "coverage": "Missing historic capture and weak identity stay PARTIAL/REVIEW"
+    },
+    {
+      "source": "web/cloudflare/src/financial-automation-ads-sources.mjs",
+      "work": "Daily calendar Ads evidence",
+      "storage": "confirmed/review event ledger and nominal calendar",
+      "coverage": "Unconfirmed source timezone is not exact Friday-hour coverage; recharge is not consumption"
+    },
+    {
+      "source": "web/cloudflare/src/financial-automation-cash-sources.mjs",
+      "work": "Read already imported bank/transfer evidence; allocation capacity shared with legacy matching",
+      "storage": "App ledger / Finance immutable imported statements and allocation registry",
+      "coverage": "CSV/OFX is assisted import, not automatic bank collection or payment"
+    },
+    {
+      "source": "web/cloudflare/src/financial-returns-tracker.mjs",
+      "work": "Durable revisit of already-saved old return cases",
+      "storage": "durable tracker revisions",
+      "coverage": "Bounded saved backlog, not complete discovery of unobserved cases"
+    },
+    {
+      "source": "web/cloudflare/src/production-weekly-store.mjs",
+      "work": "Existing minute scheduler and real Friday13h manufacturing cut with eight intervals",
+      "storage": "immutable originals, revisions and explicit coverage declarations",
+      "coverage": "No rows means unknown; do not derive fabrication from sales or DTF"
+    },
+    {
+      "source": "web/cloudflare/src/tenant-jobs.mjs",
+      "work": "validateTenantJob / runTenantJob revalidate principal, organization/store and capability",
+      "storage": "tenant namespace and revision fences",
+      "coverage": "No inherited legacy identity; revoked membership blocks work"
+    }
+  ],
+  "contract_families": {
+    "new": [
+      "financial_event_v1",
+      "financial_source_checkpoint_v1",
+      "financial_close_version_v1",
+      "financial_accounting_projection_v1",
+      "financial_automation_job_v1"
+    ],
+    "legacy_guards": [
+      "business_month_v1: net_profit_cents remains null",
+      "business_financial_closeout_v1: realized_profit_cents remains null / NOT_COMPARED",
+      "weekly_operating_report_v1: realized profit remains unknown"
+    ],
+    "schema_manifest": "web/cloudflare/src/tenant-schema-manifest.mjs",
+    "new_schema_objects": 59
+  }
+}

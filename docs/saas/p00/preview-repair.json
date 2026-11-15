@@ -1,0 +1,2128 @@
+{
+  "schema": "mls_p00_isolated_preview_receipt_v1",
+  "recorded_at": "2026-11-15T21:18:51.341691+00:00",
+  "base_sha": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+  "candidate_parent_sha": "2b06a16abd9e551126033016d9fd9706ad926e1c",
+  "branch": "feature/saas-p00-baseline-20261114",
+  "pull_request": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/122",
+  "authorization": {
+    "source": "Owner explicit authorization after App missing-previews log, followed by Continue",
+    "scope": "Repair isolated previews and required build selection; preserve production, commercial gates, databases, domains, secrets and workflows; no real provider operations"
+  },
+  "manifest": "previews/p00-isolation.json",
+  "code_inputs_sha256": {
+    "tools/build_workers.mjs": "7a50cf9707f0cd5cbcbcf2220b035662fdc15fd32b4ddee8cc7175fc36a082da",
+    "tools/isolated_preview.mjs": "d7abfc398f586745df43802720ccd8e8c47f55bfa0649e5233f61b699f4b8a08",
+    "tools/tests/isolated-preview.test.mjs": "a868853fd6afc76a29cebf50aa972254f16e25b90196706eeb657c13ace4399e",
+    "previews/p00-isolation.json": "e0c151595a6d457615b919339ccbd28a2754ceadc7b0005be03def52cc7d8e88"
+  },
+  "resources": {
+    "databases": {
+      "admin": {
+        "name": "mls-p00-preview-admin",
+        "id": "a2ebfc6c-8c0f-4e3e-aeb4-943c5e3808a9",
+        "action": "CREATED_EMPTY_PREVIEW"
+      },
+      "account": {
+        "name": "mls-p00-preview-account",
+        "id": "63b0dc86-d230-4805-9cf5-b6cc32c16ef7",
+        "action": "CREATED_EMPTY_PREVIEW"
+      },
+      "finance": {
+        "name": "mls-p00-preview-finance",
+        "id": "ce27e86c-5129-42c3-840a-5c5e4698622c",
+        "action": "CREATED_EMPTY_PREVIEW"
+      }
+    },
+    "dedicated_workers": {
+      "finance": {
+        "name": "brazacommerce-finance-p00-isolated",
+        "versions": [
+          {
+            "version_id": "af50cf55-f1e9-4f02-ae83-0186a1e94f8e",
+            "percentage": 100
+          }
+        ],
+        "bindings": [
+          {
+            "name": "ACCOUNT_DB",
+            "type": "d1",
+            "database_id": "63b0dc86-d230-4805-9cf5-b6cc32c16ef7",
+            "service": null
+          },
+          {
+            "name": "ACCOUNT_ENCRYPTION_KEY",
+            "type": "secret_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "ADMIN_PASSWORD",
+            "type": "secret_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "ADMIN_SESSION_SECRET",
+            "type": "secret_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "ADMIN_USERNAME",
+            "type": "plain_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "APP_INTERNAL_SECRET",
+            "type": "secret_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "FINANCE_CONNECTION_ENABLED",
+            "type": "plain_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "FINANCE_DB",
+            "type": "d1",
+            "database_id": "ce27e86c-5129-42c3-840a-5c5e4698622c",
+            "service": null
+          },
+          {
+            "name": "FINANCE_ROUTER_SECRET",
+            "type": "secret_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "FINANCE_TOKEN_ENCRYPTION_KEY",
+            "type": "secret_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "MLS_AI_SALES_OWNER_PREVIEW",
+            "type": "plain_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "MLS_ENVIRONMENT",
+            "type": "plain_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "MLS_V36_OWNER_PREVIEW",
+            "type": "plain_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "REVIEW_PASSWORD",
+            "type": "secret_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "REVIEW_USERNAME",
+            "type": "plain_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "SESSION_SECRET",
+            "type": "secret_text",
+            "database_id": null,
+            "service": null
+          }
+        ]
+      },
+      "auth": {
+        "name": "brazacommerce-auth-p00-isolated",
+        "versions": [
+          {
+            "version_id": "62abb34e-889b-4b0b-adc6-65d838185753",
+            "percentage": 100
+          }
+        ],
+        "bindings": [
+          {
+            "name": "ACCOUNT_DB",
+            "type": "d1",
+            "database_id": "63b0dc86-d230-4805-9cf5-b6cc32c16ef7",
+            "service": null
+          },
+          {
+            "name": "ACCOUNT_ENCRYPTION_KEY",
+            "type": "secret_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "ADMIN_PASSWORD",
+            "type": "secret_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "ADMIN_SESSION_SECRET",
+            "type": "secret_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "ADMIN_USERNAME",
+            "type": "plain_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "APP_INTERNAL_SECRET",
+            "type": "secret_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "FINANCE_CONNECTION_ENABLED",
+            "type": "plain_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "FINANCE_ROUTER_SECRET",
+            "type": "secret_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "FINANCE_TOKEN_ENCRYPTION_KEY",
+            "type": "secret_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "MLS_AI_SALES_OWNER_PREVIEW",
+            "type": "plain_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "MLS_ENVIRONMENT",
+            "type": "plain_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "MLS_V36_OWNER_PREVIEW",
+            "type": "plain_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "REVIEW_PASSWORD",
+            "type": "secret_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "REVIEW_USERNAME",
+            "type": "plain_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "SESSION_SECRET",
+            "type": "secret_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "SHOPEE_FINANCE_SERVICE",
+            "type": "service",
+            "database_id": null,
+            "service": "brazacommerce-finance-p00-isolated"
+          }
+        ]
+      },
+      "app": {
+        "name": "brazacommerce-app-p00-isolated",
+        "versions": [
+          {
+            "version_id": "cbe3018c-a6e3-47ab-9f52-0a5c786d205a",
+            "percentage": 100
+          }
+        ],
+        "bindings": [
+          {
+            "name": "ACCOUNT_DB",
+            "type": "d1",
+            "database_id": "63b0dc86-d230-4805-9cf5-b6cc32c16ef7",
+            "service": null
+          },
+          {
+            "name": "ACCOUNT_ENCRYPTION_KEY",
+            "type": "secret_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "ADMIN_DB",
+            "type": "d1",
+            "database_id": "a2ebfc6c-8c0f-4e3e-aeb4-943c5e3808a9",
+            "service": null
+          },
+          {
+            "name": "ADMIN_PASSWORD",
+            "type": "secret_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "ADMIN_SESSION_SECRET",
+            "type": "secret_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "ADMIN_USERNAME",
+            "type": "plain_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "APP_INTERNAL_SECRET",
+            "type": "secret_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "ASSETS",
+            "type": "assets",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "FINANCE_CONNECTION_ENABLED",
+            "type": "plain_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "FINANCE_ROUTER_SECRET",
+            "type": "secret_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "FINANCE_TOKEN_ENCRYPTION_KEY",
+            "type": "secret_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "MLS_AI_SALES_OWNER_PREVIEW",
+            "type": "plain_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "MLS_ENVIRONMENT",
+            "type": "plain_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "MLS_V36_OWNER_PREVIEW",
+            "type": "plain_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "REVIEW_PASSWORD",
+            "type": "secret_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "REVIEW_USERNAME",
+            "type": "plain_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "SESSION_SECRET",
+            "type": "secret_text",
+            "database_id": null,
+            "service": null
+          }
+        ]
+      }
+    },
+    "native_preview_base": {
+      "finance": {
+        "worker": "brazacommerce-finance",
+        "endpoint": "PATCH /accounts/{account_id}/workers/workers/{worker_name}",
+        "scope": "previews_base_config only",
+        "bindings": [
+          {
+            "name": "ACCOUNT_DB",
+            "type": "d1",
+            "database_id": "63b0dc86-d230-4805-9cf5-b6cc32c16ef7",
+            "service": null
+          },
+          {
+            "name": "ACCOUNT_ENCRYPTION_KEY",
+            "type": "secret_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "ADMIN_PASSWORD",
+            "type": "secret_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "ADMIN_SESSION_SECRET",
+            "type": "secret_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "ADMIN_USERNAME",
+            "type": "plain_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "APP_INTERNAL_SECRET",
+            "type": "secret_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "FINANCE_CONNECTION_ENABLED",
+            "type": "plain_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "FINANCE_DB",
+            "type": "d1",
+            "database_id": "ce27e86c-5129-42c3-840a-5c5e4698622c",
+            "service": null
+          },
+          {
+            "name": "FINANCE_ROUTER_SECRET",
+            "type": "secret_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "FINANCE_TOKEN_ENCRYPTION_KEY",
+            "type": "secret_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "MLS_AI_SALES_OWNER_PREVIEW",
+            "type": "plain_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "MLS_ENVIRONMENT",
+            "type": "plain_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "MLS_V36_OWNER_PREVIEW",
+            "type": "plain_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "REVIEW_PASSWORD",
+            "type": "secret_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "REVIEW_USERNAME",
+            "type": "plain_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "SESSION_SECRET",
+            "type": "secret_text",
+            "database_id": null,
+            "service": null
+          }
+        ],
+        "production_control_unchanged": true
+      },
+      "auth": {
+        "worker": "brazacommerce-auth",
+        "endpoint": "PATCH /accounts/{account_id}/workers/workers/{worker_name}",
+        "scope": "previews_base_config only",
+        "bindings": [
+          {
+            "name": "ACCOUNT_DB",
+            "type": "d1",
+            "database_id": "63b0dc86-d230-4805-9cf5-b6cc32c16ef7",
+            "service": null
+          },
+          {
+            "name": "ACCOUNT_ENCRYPTION_KEY",
+            "type": "secret_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "ADMIN_PASSWORD",
+            "type": "secret_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "ADMIN_SESSION_SECRET",
+            "type": "secret_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "ADMIN_USERNAME",
+            "type": "plain_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "APP_INTERNAL_SECRET",
+            "type": "secret_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "FINANCE_CONNECTION_ENABLED",
+            "type": "plain_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "FINANCE_ROUTER_SECRET",
+            "type": "secret_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "FINANCE_TOKEN_ENCRYPTION_KEY",
+            "type": "secret_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "MLS_AI_SALES_OWNER_PREVIEW",
+            "type": "plain_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "MLS_ENVIRONMENT",
+            "type": "plain_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "MLS_V36_OWNER_PREVIEW",
+            "type": "plain_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "REVIEW_PASSWORD",
+            "type": "secret_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "REVIEW_USERNAME",
+            "type": "plain_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "SESSION_SECRET",
+            "type": "secret_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "SHOPEE_FINANCE_SERVICE",
+            "type": "service",
+            "database_id": null,
+            "service": "brazacommerce-finance-p00-isolated"
+          }
+        ],
+        "production_control_unchanged": true
+      },
+      "app": {
+        "worker": "brazacommerce-app",
+        "endpoint": "PATCH /accounts/{account_id}/workers/workers/{worker_name}",
+        "scope": "previews_base_config only",
+        "bindings": [
+          {
+            "name": "ACCOUNT_DB",
+            "type": "d1",
+            "database_id": "63b0dc86-d230-4805-9cf5-b6cc32c16ef7",
+            "service": null
+          },
+          {
+            "name": "ACCOUNT_ENCRYPTION_KEY",
+            "type": "secret_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "ADMIN_DB",
+            "type": "d1",
+            "database_id": "a2ebfc6c-8c0f-4e3e-aeb4-943c5e3808a9",
+            "service": null
+          },
+          {
+            "name": "ADMIN_PASSWORD",
+            "type": "secret_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "ADMIN_SESSION_SECRET",
+            "type": "secret_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "ADMIN_USERNAME",
+            "type": "plain_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "APP_INTERNAL_SECRET",
+            "type": "secret_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "FINANCE_CONNECTION_ENABLED",
+            "type": "plain_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "FINANCE_ROUTER_SECRET",
+            "type": "secret_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "FINANCE_TOKEN_ENCRYPTION_KEY",
+            "type": "secret_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "MLS_AI_SALES_OWNER_PREVIEW",
+            "type": "plain_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "MLS_ENVIRONMENT",
+            "type": "plain_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "MLS_V36_OWNER_PREVIEW",
+            "type": "plain_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "REVIEW_PASSWORD",
+            "type": "secret_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "REVIEW_USERNAME",
+            "type": "plain_text",
+            "database_id": null,
+            "service": null
+          },
+          {
+            "name": "SESSION_SECRET",
+            "type": "secret_text",
+            "database_id": null,
+            "service": null
+          }
+        ],
+        "production_control_unchanged": true
+      }
+    },
+    "billing": "No plan/subscription purchase or change; resource usage is subject to existing account limits/pricing, not certified free. D1s created empty; synthetic QA may initialize schemas only."
+  },
+  "production_before": {
+    "app": {
+      "effective_settings_sha256": "72c1ffdf88e61e4d2b1b7d78545c3d8d9a5b903cc32cf4ed83ee87d5c19a32b9",
+      "versions": [
+        {
+          "version_id": "9bfc21d6-dec9-4fa6-89d8-7ea1dec50993",
+          "percentage": 100
+        }
+      ]
+    },
+    "auth": {
+      "effective_settings_sha256": "304c9c4615acdfc3a8222e00449e5bceabcf2dd9bd574587538183a935003361",
+      "versions": [
+        {
+          "version_id": "dfd2fc99-728f-4f29-96ee-a4b256c5640a",
+          "percentage": 100
+        }
+      ]
+    },
+    "finance": {
+      "effective_settings_sha256": "1e5de4eba866ec7c8ca85fc37c7969d61dc513a26336879e2753e506c6711ab2",
+      "versions": [
+        {
+          "version_id": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+          "percentage": 100
+        }
+      ]
+    }
+  },
+  "production_preservation": {
+    "checked_after_each_dedicated_deployment_and_preview_base_change": true,
+    "scope": "Exact 100% version vectors and canonical effective settings hashes, excluding preview base and timestamps, sorting binding names",
+    "final_readback": "PASS after all dedicated deployments, preview base updates and native preview uploads"
+  },
+  "configuration": {
+    "production_configs_workflows_package_lock": "UNCHANGED",
+    "production_compiled_hashes": "UNCHANGED; see validation.json and release manifest",
+    "commands_unchanged": {
+      "app": "npm run build; npx wrangler preview",
+      "auth": "npm run build; npx wrangler preview",
+      "finance": "npm run build:finance; npx wrangler preview"
+    },
+    "selection": "Exact branch and pinned account/Worker names/IDs, plus mandatory native API identity proof in CLI build; legacy tag used only when recognizable and conflicts refused. Unknown CI tag metadata cannot select a target alone.",
+    "bundling": "no_bundle:true for complete generated preview modules; avoids __name helpers breaking serialized DTF/overview browser code",
+    "native_preview_urls": "Existing disabled URLs preserved; dedicated isolated workers.dev hosts used for QA",
+    "secrets": "Fresh preview-only shared synthetic secrets, minimum credential lengths preserved. Values never committed or printed. No production secrets copied.",
+    "egress": "Server fetch allowlist for isolated hosts, manual redirects, browser CSP/form/navigation controls, provider connect routes blocked, no scheduled export or cron. Auth service binding targets dedicated isolated Finance primary deployment.",
+    "data_scope": "One explicitly authorized P00 branch shares three preview-only D1s with its dedicated QA services; this is not tenant/branch-per-branch production acceptance.",
+    "selection_before_api_verification": "Exact WORKERS_CI_BRANCH + WRANGLER_CI_MATCH_TAG and optional name match; generated .wrangler/deploy/config.json selects role profile. main preserves normal build and removes only an owned stale redirect. Other branches fail closed until separately configured."
+  },
+  "tests": {
+    "focused": {
+      "command": "node --test tools/tests/isolated-preview.test.mjs",
+      "pass": 5,
+      "fail": 0,
+      "skip": 0
+    },
+    "python": {
+      "command": "python3 -m unittest web/bridge/test_hermes_bridge.py tools/test_install_hermes_web_bridge.py tools/test_build_hermes_web_bridge_install.py tools/test_activate_hermes_web_bridge.py tools/test_build_hermes_web_bridge_activation.py -q",
+      "pass": 67,
+      "fail": 0
+    },
+    "http": {
+      "app": {
+        "public_status": 200,
+        "environment": "p00-isolated",
+        "location_isolated": true,
+        "public_body_bytes": 308760,
+        "synthetic_login": true,
+        "overview_status": 200,
+        "preview_banner": true,
+        "csp": "default-src 'self' data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://brazacommerce-app-p00-isolated.matheusgem1310.workers.dev https://brazacommerce-auth-p00-isolated.matheusgem1310.workers.dev https://brazacommerce-finance-p00-isolated.matheusgem1310.workers.dev; form-action 'self' https://brazacommerce-app-p00-isolated.matheusgem1310.workers.dev https://brazacommerce-auth-p00-isolated.matheusgem1310.workers.dev https://brazacommerce-finance-p00-isolated.matheusgem1310.workers.dev; frame-src 'none'; object-src 'none'",
+        "provider_connection_blocked": true
+      },
+      "auth": {
+        "public_status": 200,
+        "environment": "p00-isolated",
+        "location_isolated": true,
+        "public_body_bytes": 3917,
+        "provider_connection_blocked": true
+      },
+      "finance": {
+        "public_status": 404,
+        "environment": "p00-isolated",
+        "location_isolated": true,
+        "public_body_bytes": 21,
+        "provider_connection_blocked": true
+      }
+    },
+    "chromium": {
+      "results": [
+        {
+          "viewport": "desktop",
+          "url": "https://brazacommerce-app-p00-isolated.matheusgem1310.workers.dev/admin?tab=overview&month=2026-11",
+          "title": "MLS Commerce OS · Gestão da loja",
+          "ready": "complete",
+          "banner": true,
+          "overview": true,
+          "cards": [
+            "hermes",
+            "finance",
+            "ads",
+            "products",
+            "production",
+            "returns"
+          ],
+          "errorPage": false
+        },
+        {
+          "viewport": "mobile",
+          "url": "https://brazacommerce-app-p00-isolated.matheusgem1310.workers.dev/admin?tab=overview&month=2026-11",
+          "title": "MLS Commerce OS · Gestão da loja",
+          "ready": "complete",
+          "banner": true,
+          "overview": true,
+          "cards": [
+            "hermes",
+            "finance",
+            "ads",
+            "products",
+            "production",
+            "returns"
+          ],
+          "errorPage": false
+        }
+      ],
+      "runtime_errors": [],
+      "external_request_hosts": [],
+      "visual_review": "Generated desktop/mobile screenshots inspected; isolation banner and responsive UI visible. Six ordered agent cards also confirmed by DOM in both viewports."
+    },
+    "node_suite": {
+      "command": "npm test",
+      "exit_code": 0,
+      "summary": {
+        "tests": 4437,
+        "pass": 4437,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "duration_ms": 1008536.794415,
+      "log_sha256": "c948bae9a24765e0420e1860f842d05ceee1abb125870d6a8546cbe380b93a30",
+      "scope": "Full existing suite plus five new tests. Final preview-only no_bundle/redirect assertions were also rerun separately after profile refinement; exact-source automatic CI is a separate record, not inferred from this run."
+    },
+    "final_build": {
+      "command": "npm run build",
+      "exit_code": 0,
+      "workers": {
+        "app": {
+          "worker": "brazacommerce-app",
+          "bytes": 3741964,
+          "sha256": "3a5f01ae09ede502e4707f001976fc2a6094075ba26574e5e5d97b2e827687a9"
+        },
+        "auth": {
+          "worker": "brazacommerce-auth",
+          "bytes": 576198,
+          "sha256": "20a301c45ddb6097a3b458ec6ef7d39686286cc43601f6211d3b865b250ea125"
+        },
+        "finance": {
+          "worker": "brazacommerce-finance",
+          "bytes": 892237,
+          "sha256": "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4"
+        }
+      },
+      "matches_expected_production_hashes": true
+    },
+    "documentary_validation": {
+      "result": "PASS",
+      "local_links": 25,
+      "history_and_runtime_preserved": true
+    },
+    "release_preflight": {
+      "command": "node tools/release_preflight.mjs --base=346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+      "exit_code": 0,
+      "source_sha": "ad7e0fbe3968029a75e373d972f4bfc307056cba",
+      "result": "RELEASE_LOCAL_PREFLIGHT_OK",
+      "production_approved": false,
+      "manual_gates_preserved": true
+    },
+    "actual_build_selection": {
+      "finance": {
+        "command": "npm run build:finance",
+        "profile": "brazacommerce-finance",
+        "no_bundle": true,
+        "production_hashes_unchanged": true
+      },
+      "app": {
+        "command": "npm run build",
+        "profile": "brazacommerce-app",
+        "no_bundle": true,
+        "production_hashes_unchanged": true
+      },
+      "auth": {
+        "command": "npm run build",
+        "profile": "brazacommerce-auth",
+        "no_bundle": true,
+        "production_hashes_unchanged": true
+      }
+    },
+    "focused_release_gate": {
+      "tests": 14,
+      "pass": 14,
+      "fail": 0
+    }
+  },
+  "observed_failures_and_repairs": [
+    {
+      "scope": "initial isolated QA only",
+      "failure": "401 synthetic owner login: available synthetic password shorter than existing 16-char minimum",
+      "repair": "Generate a new strong preview-only password; no change to authentication contract"
+    },
+    {
+      "scope": "initial isolated Chromium QA only",
+      "failure": "Wrangler default rebundle added __name inside functions serialized into browser scripts; DTF/overview ReferenceError",
+      "repair": "Set no_bundle:true in generated preview profiles; repeat desktop/mobile QA with six cards and no runtime errors"
+    }
+  ],
+  "github_checks": {
+    "previous_reviewed_sha": "2b06a16abd9e551126033016d9fd9706ad926e1c",
+    "github_validate": "success:43679831297/job132707830905",
+    "cloudflare": "All three failed before this repair; this is historical evidence, not proof of repaired CI",
+    "new_candidate": "All configured checks passed on13bd449. Earlier failures retained below as historical evidence. Receipt-only successor must run its own configured checks.",
+    "repaired_candidate": {
+      "sha": "ad7e0fbe3968029a75e373d972f4bfc307056cba",
+      "github_run": 43683071100,
+      "github_job": 132717673268,
+      "github_status": "completed",
+      "cloudflare": {
+        "app": {
+          "conclusion": "failure",
+          "build_id": "be2e4da4-5899-466b-83c1-4f03a1b27268",
+          "logs_endpoint": "GET /accounts/{account_id}/builds/builds/{build_uuid}/logs",
+          "logs_http_status": 403,
+          "logs_error_code": 12004,
+          "logs_error": "Forbidden"
+        },
+        "auth": {
+          "conclusion": "failure",
+          "build_id": "27b605e3-4a85-47cc-a506-1f027d3fd6c8",
+          "logs_endpoint": "GET /accounts/{account_id}/builds/builds/{build_uuid}/logs",
+          "logs_http_status": 403,
+          "logs_error_code": 12004,
+          "logs_error": "Forbidden"
+        },
+        "finance": {
+          "conclusion": "failure",
+          "build_id": "c9434dd8-3e95-4eae-bf9f-1dd9061c926d",
+          "logs_endpoint": "GET /accounts/{account_id}/builds/builds/{build_uuid}/logs",
+          "logs_http_status": 403,
+          "logs_error_code": 12004,
+          "logs_error": "Forbidden"
+        }
+      },
+      "failure_cause": "Unknown: check outputs contain links only; supported log read denied. Do not infer that local preview success proves external CI.",
+      "github_conclusion": "success",
+      "github_evidence": {
+        "source_sha": "ad7e0fbe3968029a75e373d972f4bfc307056cba",
+        "run": 43683071100,
+        "job": 132717673268,
+        "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43683071100",
+        "conclusion": "success",
+        "stdout_excerpt": [
+          "2026-11-15T06:06:34.0351093Z # tests 4437",
+          "2026-11-15T06:06:34.0351551Z # pass 4437",
+          "2026-11-15T06:06:34.0351758Z # fail 0",
+          "2026-11-15T06:06:34.0351958Z # cancelled 0",
+          "2026-11-15T06:06:34.0352168Z # skipped 0",
+          "2026-11-15T06:06:38.7526194Z Ran 67 tests in 0.509s",
+          "2026-11-15T06:06:41.1017176Z RELEASE_LOCAL_PREFLIGHT_OK",
+          "2026-11-15T06:06:41.1025173Z RELEASE_NOT_APPROVED_FOR_PRODUCTION"
+        ]
+      }
+    },
+    "native_after_automatic_checks": {
+      "finance": {
+        "latest_deployment_id": "fd60c309-1ada-40bd-bb66-266a68b40850",
+        "is_last_successful_local_upload": true,
+        "created_on": "2026-11-15T05:48:07.579945Z",
+        "annotations_keys": [
+          "workers/triggered_by"
+        ]
+      },
+      "auth": {
+        "latest_deployment_id": "3f96c055-76df-4a86-a018-7506cbe22b4f",
+        "is_last_successful_local_upload": true,
+        "created_on": "2026-11-15T05:48:12.572017Z",
+        "annotations_keys": [
+          "workers/triggered_by"
+        ]
+      },
+      "app": {
+        "latest_deployment_id": "38724b09-373f-4062-a9df-b23f6fa78e9b",
+        "is_last_successful_local_upload": true,
+        "created_on": "2026-11-15T05:48:18.293084Z",
+        "annotations_keys": [
+          "workers/triggered_by"
+        ]
+      }
+    },
+    "latest_code_candidate": {
+      "source_sha": "13bd4493d570c9f1b337f570a09c485a23bdf64f",
+      "run": 43761633551,
+      "job": 132957503304,
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43761633551",
+      "conclusion": "success",
+      "stdout_excerpt": [
+        "2026-11-15T21:14:34.5028406Z # tests 4441",
+        "2026-11-15T21:14:34.5028634Z # pass 4441",
+        "2026-11-15T21:14:34.5028755Z # fail 0",
+        "2026-11-15T21:14:34.5028867Z # cancelled 0",
+        "2026-11-15T21:14:34.5028983Z # skipped 0",
+        "2026-11-15T21:14:38.0442124Z Ran 67 tests in 0.382s",
+        "2026-11-15T21:14:39.7611239Z RELEASE_LOCAL_PREFLIGHT_OK",
+        "2026-11-15T21:14:39.7615752Z RELEASE_NOT_APPROVED_FOR_PRODUCTION"
+      ],
+      "checks": [
+        {
+          "name": "Workers Builds: brazacommerce-app",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-app/production/previews/feature-saas-p00-baseline-20261114/builds/b9707212-6166-4a93-b256-b1e1b733ada6"
+        },
+        {
+          "name": "Workers Builds: brazacommerce-finance",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-finance/production/previews/feature-saas-p00-baseline-20261114/builds/a7751437-d47b-4ab4-9557-e4f0022e9167"
+        },
+        {
+          "name": "Workers Builds: brazacommerce-auth",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-auth/production/previews/feature-saas-p00-baseline-20261114/builds/0b6883d9-bac9-4725-b24f-8602851aab53"
+        },
+        {
+          "name": "validate",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43761633551/job/132957503304"
+        }
+      ]
+    }
+  },
+  "published": {
+    "isolated_preview": true,
+    "production": false,
+    "real_account_validated": false,
+    "merge": false,
+    "auto_merge": false,
+    "isolated_module_byte_verification": {
+      "app": {
+        "name": "brazacommerce-app-p00-isolated",
+        "module_sha256": "310136be01e4d52d2a0d38544c023bae9f429224068d202dfe23afb112a7b193",
+        "bytes": 3746902,
+        "equals_generated_preview_derivative": true
+      },
+      "auth": {
+        "name": "brazacommerce-auth-p00-isolated",
+        "module_sha256": "02532ef4f538cff96059837bb8a88e133bb2d5d667787e4fe558a4161852ab9c",
+        "bytes": 580377,
+        "equals_generated_preview_derivative": true
+      },
+      "finance": {
+        "name": "brazacommerce-finance-p00-isolated",
+        "module_sha256": "89cc496b42807143d78782f2deb202ebc917f0ab9832650af7b0985e7bea373c",
+        "bytes": 896455,
+        "equals_generated_preview_derivative": true
+      }
+    }
+  },
+  "remaining_p00_blockers": [
+    "EXT-OPERATIONS: actual gateway/Hermes operation/recovery metadata",
+    "EXT-RIGHTS: origin/license/authorization evidence"
+  ],
+  "official_references": [
+    "https://developers.cloudflare.com/workers/previews/configuration/",
+    "https://developers.cloudflare.com/workers/previews/resources/"
+  ],
+  "native_previews": {
+    "finance": {
+      "worker_name": "brazacommerce-finance",
+      "preview_id": "c8567ba666374264aa3ef14dc2b76a26",
+      "preview_name": "feature/saas-p00-baseline-20261114",
+      "deployment_id": "fd60c309-1ada-40bd-bb66-266a68b40850",
+      "source_sha256": "89cc496b42807143d78782f2deb202ebc917f0ab9832650af7b0985e7bea373c",
+      "cli_exit": 0,
+      "no_bundle": true,
+      "effective_binding_metadata": [
+        {
+          "name": "ACCOUNT_DB",
+          "type": "d1",
+          "database_id": "63b0dc86-d230-4805-9cf5-b6cc32c16ef7",
+          "service": null
+        },
+        {
+          "name": "ADMIN_USERNAME",
+          "type": "plain_text",
+          "database_id": null,
+          "service": null
+        },
+        {
+          "name": "FINANCE_CONNECTION_ENABLED",
+          "type": "plain_text",
+          "database_id": null,
+          "service": null
+        },
+        {
+          "name": "FINANCE_DB",
+          "type": "d1",
+          "database_id": "ce27e86c-5129-42c3-840a-5c5e4698622c",
+          "service": null
+        },
+        {
+          "name": "MLS_AI_SALES_OWNER_PREVIEW",
+          "type": "plain_text",
+          "database_id": null,
+          "service": null
+        },
+        {
+          "name": "MLS_ENVIRONMENT",
+          "type": "plain_text",
+          "database_id": null,
+          "service": null
+        },
+        {
+          "name": "MLS_V36_OWNER_PREVIEW",
+          "type": "plain_text",
+          "database_id": null,
+          "service": null
+        },
+        {
+          "name": "REVIEW_USERNAME",
+          "type": "plain_text",
+          "database_id": null,
+          "service": null
+        }
+      ],
+      "urls": []
+    },
+    "auth": {
+      "worker_name": "brazacommerce-auth",
+      "preview_id": "6194e49726e644fa9b7aa800b8e68f09",
+      "preview_name": "feature/saas-p00-baseline-20261114",
+      "deployment_id": "3f96c055-76df-4a86-a018-7506cbe22b4f",
+      "source_sha256": "02532ef4f538cff96059837bb8a88e133bb2d5d667787e4fe558a4161852ab9c",
+      "cli_exit": 0,
+      "no_bundle": true,
+      "effective_binding_metadata": [
+        {
+          "name": "ACCOUNT_DB",
+          "type": "d1",
+          "database_id": "63b0dc86-d230-4805-9cf5-b6cc32c16ef7",
+          "service": null
+        },
+        {
+          "name": "ADMIN_USERNAME",
+          "type": "plain_text",
+          "database_id": null,
+          "service": null
+        },
+        {
+          "name": "FINANCE_CONNECTION_ENABLED",
+          "type": "plain_text",
+          "database_id": null,
+          "service": null
+        },
+        {
+          "name": "MLS_AI_SALES_OWNER_PREVIEW",
+          "type": "plain_text",
+          "database_id": null,
+          "service": null
+        },
+        {
+          "name": "MLS_ENVIRONMENT",
+          "type": "plain_text",
+          "database_id": null,
+          "service": null
+        },
+        {
+          "name": "MLS_V36_OWNER_PREVIEW",
+          "type": "plain_text",
+          "database_id": null,
+          "service": null
+        },
+        {
+          "name": "REVIEW_USERNAME",
+          "type": "plain_text",
+          "database_id": null,
+          "service": null
+        },
+        {
+          "name": "SHOPEE_FINANCE_SERVICE",
+          "type": "service",
+          "database_id": null,
+          "service": "brazacommerce-finance-p00-isolated"
+        }
+      ],
+      "urls": []
+    },
+    "app": {
+      "worker_name": "brazacommerce-app",
+      "preview_id": "74f0f07a7b394b6b83866b492245a271",
+      "preview_name": "feature/saas-p00-baseline-20261114",
+      "deployment_id": "38724b09-373f-4062-a9df-b23f6fa78e9b",
+      "source_sha256": "310136be01e4d52d2a0d38544c023bae9f429224068d202dfe23afb112a7b193",
+      "cli_exit": 0,
+      "no_bundle": true,
+      "effective_binding_metadata": [
+        {
+          "name": "ACCOUNT_DB",
+          "type": "d1",
+          "database_id": "63b0dc86-d230-4805-9cf5-b6cc32c16ef7",
+          "service": null
+        },
+        {
+          "name": "ADMIN_DB",
+          "type": "d1",
+          "database_id": "a2ebfc6c-8c0f-4e3e-aeb4-943c5e3808a9",
+          "service": null
+        },
+        {
+          "name": "ADMIN_USERNAME",
+          "type": "plain_text",
+          "database_id": null,
+          "service": null
+        },
+        {
+          "name": "ASSETS",
+          "type": "assets",
+          "database_id": null,
+          "service": null
+        },
+        {
+          "name": "FINANCE_CONNECTION_ENABLED",
+          "type": "plain_text",
+          "database_id": null,
+          "service": null
+        },
+        {
+          "name": "MLS_AI_SALES_OWNER_PREVIEW",
+          "type": "plain_text",
+          "database_id": null,
+          "service": null
+        },
+        {
+          "name": "MLS_ENVIRONMENT",
+          "type": "plain_text",
+          "database_id": null,
+          "service": null
+        },
+        {
+          "name": "MLS_V36_OWNER_PREVIEW",
+          "type": "plain_text",
+          "database_id": null,
+          "service": null
+        },
+        {
+          "name": "REVIEW_USERNAME",
+          "type": "plain_text",
+          "database_id": null,
+          "service": null
+        }
+      ],
+      "urls": []
+    }
+  },
+  "production_after": {
+    "recorded_at": "2026-11-15T20:50:39.695891+00:00",
+    "workers": {
+      "app": {
+        "effective_settings_sha256": "72c1ffdf88e61e4d2b1b7d78545c3d8d9a5b903cc32cf4ed83ee87d5c19a32b9",
+        "versions": [
+          {
+            "version_id": "9bfc21d6-dec9-4fa6-89d8-7ea1dec50993",
+            "percentage": 100
+          }
+        ]
+      },
+      "auth": {
+        "effective_settings_sha256": "304c9c4615acdfc3a8222e00449e5bceabcf2dd9bd574587538183a935003361",
+        "versions": [
+          {
+            "version_id": "dfd2fc99-728f-4f29-96ee-a4b256c5640a",
+            "percentage": 100
+          }
+        ]
+      },
+      "finance": {
+        "effective_settings_sha256": "1e5de4eba866ec7c8ca85fc37c7969d61dc513a26336879e2753e506c6711ab2",
+        "versions": [
+          {
+            "version_id": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+            "percentage": 100
+          }
+        ]
+      }
+    },
+    "matches_before": true
+  },
+  "source_sha": "ad7e0fbe3968029a75e373d972f4bfc307056cba",
+  "target_identity_correction": {
+    "recorded_at": "2026-11-15T20:51:53.997123+00:00",
+    "source_parent_sha": "c88f4faeecaa3aaa06580a85683fa26bd86857fd",
+    "supplied_log": {
+      "source": "Owner text copied after current App Build link38953877-1460-4fbf-99cc-d72440a9beb9; text itself has no SHA/UUID",
+      "started_at": "2026-11-15T06:10:31.909Z",
+      "failure_at": "2026-11-15T06:11:09.874Z",
+      "build_command": "npm run build",
+      "error": "PREVIEW_CI_TARGET_MISMATCH at selectPreviewRole",
+      "phase": "Build target selection; preview command not reached",
+      "raw_ci_values_in_log": false
+    },
+    "confirmed_api_identifiers": {
+      "app": [
+        {
+          "identifier": "brazacommerce-app",
+          "resolved_name": "brazacommerce-app",
+          "resolved_id": "bfc420b51f764aea84356873ac3ffce6",
+          "matches_expected": true
+        },
+        {
+          "identifier": "bfc420b51f764aea84356873ac3ffce6",
+          "resolved_name": "brazacommerce-app",
+          "resolved_id": "bfc420b51f764aea84356873ac3ffce6",
+          "matches_expected": true
+        },
+        {
+          "identifier": "bfc420b5-1f76-4aea-8435-6873ac3ffce6",
+          "error_type": "HTTPError",
+          "http": 404
+        }
+      ],
+      "auth": [
+        {
+          "identifier": "brazacommerce-auth",
+          "resolved_name": "brazacommerce-auth",
+          "resolved_id": "cae7eeac91fc4d74b118db11aaeb2360",
+          "matches_expected": true
+        },
+        {
+          "identifier": "cae7eeac91fc4d74b118db11aaeb2360",
+          "resolved_name": "brazacommerce-auth",
+          "resolved_id": "cae7eeac91fc4d74b118db11aaeb2360",
+          "matches_expected": true
+        },
+        {
+          "identifier": "cae7eeac-91fc-4d74-b118-db11aaeb2360",
+          "error_type": "HTTPError",
+          "http": 404
+        }
+      ],
+      "finance": [
+        {
+          "identifier": "brazacommerce-finance",
+          "resolved_name": "brazacommerce-finance",
+          "resolved_id": "cd6d2dd5834743e8b3bf80d7bc09ca08",
+          "matches_expected": true
+        },
+        {
+          "identifier": "cd6d2dd5834743e8b3bf80d7bc09ca08",
+          "resolved_name": "brazacommerce-finance",
+          "resolved_id": "cd6d2dd5834743e8b3bf80d7bc09ca08",
+          "matches_expected": true
+        },
+        {
+          "identifier": "cd6d2dd5-8347-43e8-b3bf-80d7bc09ca08",
+          "error_type": "HTTPError",
+          "http": 404
+        }
+      ]
+    },
+    "diagnosis": "Old selector rejected confirmed Worker ID when Wrangler CI override carries that identifier; native GET /workers/workers/{name_or_id} resolves name and32hex ID to same Worker. The supplied generic error does not expose actual env values; automatic checks will confirm repair outcome. Dashed UUID identifiers returned404 and remain rejected.",
+    "correction": "CI match tag must still equal one exact pinned parent tag, and branch must match exactly. Override must be either the same parent name OR same parent32hex ID. Foreign IDs/names, isolated service names and unknown aliases are refused. Distinct TAG/NAME errors diagnose subsequent mismatches without dumping environment/secrets.",
+    "tests": {
+      "focused_command": "node --test tools/tests/isolated-preview.test.mjs tools/tests/release-preflight.test.mjs",
+      "tests": 20,
+      "pass": 20,
+      "fail": 0,
+      "preview_tests": 6,
+      "release_tests": 14,
+      "same_environment_pipelines": {
+        "finance": {
+          "build_command": "npm run build:finance",
+          "preview_command": "npx wrangler preview",
+          "same_ci_environment_for_build_and_preview": true,
+          "override_identifier": "cd6d2dd5834743e8b3bf80d7bc09ca08",
+          "expected_worker": "brazacommerce-finance",
+          "preview_id": "c8567ba666374264aa3ef14dc2b76a26",
+          "deployment_id": "325daec8-d207-48df-b4ca-c0d710cec4c2",
+          "source_sha256": "89cc496b42807143d78782f2deb202ebc917f0ab9832650af7b0985e7bea373c",
+          "preview_runtime_equals_previously_tested": true
+        },
+        "auth": {
+          "build_command": "npm run build",
+          "preview_command": "npx wrangler preview",
+          "same_ci_environment_for_build_and_preview": true,
+          "override_identifier": "cae7eeac91fc4d74b118db11aaeb2360",
+          "expected_worker": "brazacommerce-auth",
+          "preview_id": "6194e49726e644fa9b7aa800b8e68f09",
+          "deployment_id": "8f677595-8465-49df-9614-25aa575db80a",
+          "source_sha256": "02532ef4f538cff96059837bb8a88e133bb2d5d667787e4fe558a4161852ab9c",
+          "preview_runtime_equals_previously_tested": true
+        },
+        "app": {
+          "build_command": "npm run build",
+          "preview_command": "npx wrangler preview",
+          "same_ci_environment_for_build_and_preview": true,
+          "override_identifier": "bfc420b51f764aea84356873ac3ffce6",
+          "expected_worker": "brazacommerce-app",
+          "preview_id": "74f0f07a7b394b6b83866b492245a271",
+          "deployment_id": "78b3206a-b745-4f35-b8ba-1675b4e446bc",
+          "source_sha256": "310136be01e4d52d2a0d38544c023bae9f429224068d202dfe23afb112a7b193",
+          "preview_runtime_equals_previously_tested": true
+        }
+      },
+      "build_manifest": {
+        "app": {
+          "worker": "brazacommerce-app",
+          "bytes": 3741964,
+          "sha256": "3a5f01ae09ede502e4707f001976fc2a6094075ba26574e5e5d97b2e827687a9"
+        },
+        "auth": {
+          "worker": "brazacommerce-auth",
+          "bytes": 576198,
+          "sha256": "20a301c45ddb6097a3b458ec6ef7d39686286cc43601f6211d3b865b250ea125"
+        },
+        "finance": {
+          "worker": "brazacommerce-finance",
+          "bytes": 892237,
+          "sha256": "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4"
+        }
+      },
+      "production_after": {
+        "recorded_at": "2026-11-15T20:50:39.695891+00:00",
+        "workers": {
+          "app": {
+            "effective_settings_sha256": "72c1ffdf88e61e4d2b1b7d78545c3d8d9a5b903cc32cf4ed83ee87d5c19a32b9",
+            "versions": [
+              {
+                "version_id": "9bfc21d6-dec9-4fa6-89d8-7ea1dec50993",
+                "percentage": 100
+              }
+            ]
+          },
+          "auth": {
+            "effective_settings_sha256": "304c9c4615acdfc3a8222e00449e5bceabcf2dd9bd574587538183a935003361",
+            "versions": [
+              {
+                "version_id": "dfd2fc99-728f-4f29-96ee-a4b256c5640a",
+                "percentage": 100
+              }
+            ]
+          },
+          "finance": {
+            "effective_settings_sha256": "1e5de4eba866ec7c8ca85fc37c7969d61dc513a26336879e2753e506c6711ab2",
+            "versions": [
+              {
+                "version_id": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+                "percentage": 100
+              }
+            ]
+          }
+        },
+        "matches_before": true
+      },
+      "unchanged_runtime_evidence": "Each generated preview source hash equals prior tested/published derivative. Reuse prior Chromium/byte proof for identical runtime artifacts; current automatic suites run normally.",
+      "manual_full_suite_repeated": false
+    },
+    "changed_code_sha256": {
+      "tools/isolated_preview.mjs": "cacf61639504e0fff46054599eb21bd7e2a64f65f3a860eab5a4a76eb3cd4dd9",
+      "tools/tests/isolated-preview.test.mjs": "9da2ab3d284306ea11f4099f80d3c36959828747000e7b9ab5a3b0caced78f9b"
+    },
+    "previous_head_github_validation": {
+      "source_sha": "c88f4faeecaa3aaa06580a85683fa26bd86857fd",
+      "run": 43684238943,
+      "job": 132721216913,
+      "conclusion": "success",
+      "node": 4437,
+      "python": 67,
+      "build_and_preflight": "success"
+    },
+    "current_automatic_checks": "PENDING_NEW_CANDIDATE",
+    "production_publication": false,
+    "workflow_or_permission_changes": false
+  },
+  "api_verified_target_selection": {
+    "recorded_at": "2026-11-15T21:01:32.900466+00:00",
+    "source_parent_sha": "46ed87362037baf707f10048cc4a8ea7bda39346",
+    "reason": "Alias acceptance alone did not resolve automatic Builds at46ed873. Build target now requires authoritative native API identity, independently of ambiguous CI tag metadata. Actual raw automatic env values are not asserted.",
+    "selection_contract": [
+      "Exact authorized branch only; main normal build preserved",
+      "Override name/ID must identify one pinned parent, or a known legacy tag selects it when no override",
+      "Known tag/name conflict is refused",
+      "GET native Worker identity in pinned account must match exact pinned name AND32hex ID",
+      "Opaque CI tag alone never identifies a Worker; it can be accepted only alongside a known override and successful GET identity proof",
+      "Unknown names, foreign accounts, API errors and wrong/deleted/recreated Worker identities fail closed",
+      "Generated profiles pin account_id and contain only isolated resources; no CI env values are overwritten"
+    ],
+    "lookup": {
+      "method": "GET",
+      "path": "/accounts/{pinned_account_id}/workers/workers/{pinned_worker_name}",
+      "output": "Only id/name, never credentials, env or secret bindings",
+      "credentials": "Existing CLOUDFLARE_API_TOKEN in environment/header only; no permission expansion",
+      "implementation": "Standard Python urllib already required by builder; no new package"
+    },
+    "focused": {
+      "command": "node --test tools/tests/isolated-preview.test.mjs tools/tests/release-preflight.test.mjs",
+      "tests": 23,
+      "pass": 23,
+      "fail": 0,
+      "preview_tests": 9,
+      "release_tests": 14
+    },
+    "pipelines": {
+      "finance": {
+        "build_command": "npm run build:finance",
+        "preview_command": "npx wrangler preview",
+        "same_ci_environment_for_build_and_preview": true,
+        "worker_identity_verified_by_api": true,
+        "synthetic_opaque_ci_tag_for_contract_test": true,
+        "override_identifier": "cd6d2dd5834743e8b3bf80d7bc09ca08",
+        "expected_worker": "brazacommerce-finance",
+        "preview_id": "c8567ba666374264aa3ef14dc2b76a26",
+        "deployment_id": "e3f560a4-38ab-4801-878a-94b6062811bd",
+        "source_sha256": "89cc496b42807143d78782f2deb202ebc917f0ab9832650af7b0985e7bea373c",
+        "preview_runtime_equals_previously_tested": true
+      },
+      "auth": {
+        "build_command": "npm run build",
+        "preview_command": "npx wrangler preview",
+        "same_ci_environment_for_build_and_preview": true,
+        "worker_identity_verified_by_api": true,
+        "synthetic_opaque_ci_tag_for_contract_test": true,
+        "override_identifier": "cae7eeac91fc4d74b118db11aaeb2360",
+        "expected_worker": "brazacommerce-auth",
+        "preview_id": "6194e49726e644fa9b7aa800b8e68f09",
+        "deployment_id": "c8efc937-32a5-446b-a81e-e314fe91d34c",
+        "source_sha256": "02532ef4f538cff96059837bb8a88e133bb2d5d667787e4fe558a4161852ab9c",
+        "preview_runtime_equals_previously_tested": true
+      },
+      "app": {
+        "build_command": "npm run build",
+        "preview_command": "npx wrangler preview",
+        "same_ci_environment_for_build_and_preview": true,
+        "worker_identity_verified_by_api": true,
+        "synthetic_opaque_ci_tag_for_contract_test": true,
+        "override_identifier": "bfc420b51f764aea84356873ac3ffce6",
+        "expected_worker": "brazacommerce-app",
+        "preview_id": "74f0f07a7b394b6b83866b492245a271",
+        "deployment_id": "92e85166-b0d4-4ba4-bd7c-464fe321a08f",
+        "source_sha256": "310136be01e4d52d2a0d38544c023bae9f429224068d202dfe23afb112a7b193",
+        "preview_runtime_equals_previously_tested": true
+      }
+    },
+    "production_after": {
+      "recorded_at": "2026-11-15T20:59:16.167737+00:00",
+      "workers": {
+        "app": {
+          "effective_settings_sha256": "72c1ffdf88e61e4d2b1b7d78545c3d8d9a5b903cc32cf4ed83ee87d5c19a32b9",
+          "versions": [
+            {
+              "version_id": "9bfc21d6-dec9-4fa6-89d8-7ea1dec50993",
+              "percentage": 100
+            }
+          ]
+        },
+        "auth": {
+          "effective_settings_sha256": "304c9c4615acdfc3a8222e00449e5bceabcf2dd9bd574587538183a935003361",
+          "versions": [
+            {
+              "version_id": "dfd2fc99-728f-4f29-96ee-a4b256c5640a",
+              "percentage": 100
+            }
+          ]
+        },
+        "finance": {
+          "effective_settings_sha256": "1e5de4eba866ec7c8ca85fc37c7969d61dc513a26336879e2753e506c6711ab2",
+          "versions": [
+            {
+              "version_id": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+              "percentage": 100
+            }
+          ]
+        }
+      },
+      "matches_before": true
+    },
+    "code_sha256": {
+      "tools/isolated_preview.mjs": "8abdebb3995e900eb32953202ad5901bf289f3de1c717a0e27d90db851526f81",
+      "tools/build_workers.mjs": "3166cd29e46e302f3cbf562e518311679f1f6ad3af38b5815827a586b6b6a494",
+      "tools/tests/isolated-preview.test.mjs": "390eb0a7981a5472eeabec076ab30dd7e2a3424e85bc37198f22978b8f10ddce",
+      "previews/p00-isolation.json": "024f43f62186588899344565134715f076bbb96544ce2971cac12567e97ad397"
+    },
+    "automatic_validation": "PENDING_NEXT_CANDIDATE; no bypass/cancellation",
+    "old_candidate": {
+      "source_sha": "46ed87362037baf707f10048cc4a8ea7bda39346",
+      "cloudflare_checks": "failure",
+      "github_run": 43760513007,
+      "github_status": "completed",
+      "github_conclusion": "success"
+    },
+    "diagnostic_contract": "Failure messages distinguish tag/name/conflict and expose only resource-shaped CI identifiers; values equal to environment credentials and invalid shapes are redacted. No environment dump.",
+    "automatic_cloudflare_success": {
+      "source_sha": "13bd4493d570c9f1b337f570a09c485a23bdf64f",
+      "checks": {
+        "app": {
+          "conclusion": "success",
+          "build_id": "b9707212-6166-4a93-b256-b1e1b733ada6"
+        },
+        "auth": {
+          "conclusion": "success",
+          "build_id": "0b6883d9-bac9-4725-b24f-8602851aab53"
+        },
+        "finance": {
+          "conclusion": "success",
+          "build_id": "a7751437-d47b-4ab4-9557-e4f0022e9167"
+        }
+      },
+      "native_preview_deployments": {
+        "recorded_at": "2026-11-15T21:06:44.013746+00:00",
+        "source_sha": "13bd4493d570c9f1b337f570a09c485a23bdf64f",
+        "workers": {
+          "finance": {
+            "deployment_id": "4ae2e38f-6e0b-45ae-b761-51faa7ee5f4c",
+            "preview_id": "c8567ba666374264aa3ef14dc2b76a26",
+            "created_on": "2026-11-15T21:05:10.036726Z",
+            "bindings": [
+              {
+                "binding": "ACCOUNT_DB",
+                "type": "d1",
+                "database_id": "63b0dc86-d230-4805-9cf5-b6cc32c16ef7",
+                "service": null
+              },
+              {
+                "binding": "ADMIN_USERNAME",
+                "type": "plain_text",
+                "database_id": null,
+                "service": null
+              },
+              {
+                "binding": "FINANCE_CONNECTION_ENABLED",
+                "type": "plain_text",
+                "database_id": null,
+                "service": null
+              },
+              {
+                "binding": "FINANCE_DB",
+                "type": "d1",
+                "database_id": "ce27e86c-5129-42c3-840a-5c5e4698622c",
+                "service": null
+              },
+              {
+                "binding": "MLS_AI_SALES_OWNER_PREVIEW",
+                "type": "plain_text",
+                "database_id": null,
+                "service": null
+              },
+              {
+                "binding": "MLS_ENVIRONMENT",
+                "type": "plain_text",
+                "database_id": null,
+                "service": null
+              },
+              {
+                "binding": "MLS_V36_OWNER_PREVIEW",
+                "type": "plain_text",
+                "database_id": null,
+                "service": null
+              },
+              {
+                "binding": "REVIEW_USERNAME",
+                "type": "plain_text",
+                "database_id": null,
+                "service": null
+              }
+            ],
+            "annotations": {
+              "workers/triggered_by": "create_preview_deployment_api",
+              "workers/tag": "13bd449"
+            },
+            "tag_is_source_commit": true
+          },
+          "auth": {
+            "deployment_id": "3ed319d0-dceb-4113-aab7-40e67c90fa33",
+            "preview_id": "6194e49726e644fa9b7aa800b8e68f09",
+            "created_on": "2026-11-15T21:05:10.609083Z",
+            "bindings": [
+              {
+                "binding": "ACCOUNT_DB",
+                "type": "d1",
+                "database_id": "63b0dc86-d230-4805-9cf5-b6cc32c16ef7",
+                "service": null
+              },
+              {
+                "binding": "ADMIN_USERNAME",
+                "type": "plain_text",
+                "database_id": null,
+                "service": null
+              },
+              {
+                "binding": "FINANCE_CONNECTION_ENABLED",
+                "type": "plain_text",
+                "database_id": null,
+                "service": null
+              },
+              {
+                "binding": "MLS_AI_SALES_OWNER_PREVIEW",
+                "type": "plain_text",
+                "database_id": null,
+                "service": null
+              },
+              {
+                "binding": "MLS_ENVIRONMENT",
+                "type": "plain_text",
+                "database_id": null,
+                "service": null
+              },
+              {
+                "binding": "MLS_V36_OWNER_PREVIEW",
+                "type": "plain_text",
+                "database_id": null,
+                "service": null
+              },
+              {
+                "binding": "REVIEW_USERNAME",
+                "type": "plain_text",
+                "database_id": null,
+                "service": null
+              },
+              {
+                "binding": "SHOPEE_FINANCE_SERVICE",
+                "type": "service",
+                "database_id": null,
+                "service": "brazacommerce-finance-p00-isolated"
+              }
+            ],
+            "annotations": {
+              "workers/triggered_by": "create_preview_deployment_api",
+              "workers/tag": "13bd449"
+            },
+            "tag_is_source_commit": true
+          },
+          "app": {
+            "deployment_id": "2a17823a-cc73-4790-b33b-90bc4a99f497",
+            "preview_id": "74f0f07a7b394b6b83866b492245a271",
+            "created_on": "2026-11-15T21:05:12.907881Z",
+            "bindings": [
+              {
+                "binding": "ACCOUNT_DB",
+                "type": "d1",
+                "database_id": "63b0dc86-d230-4805-9cf5-b6cc32c16ef7",
+                "service": null
+              },
+              {
+                "binding": "ADMIN_DB",
+                "type": "d1",
+                "database_id": "a2ebfc6c-8c0f-4e3e-aeb4-943c5e3808a9",
+                "service": null
+              },
+              {
+                "binding": "ADMIN_USERNAME",
+                "type": "plain_text",
+                "database_id": null,
+                "service": null
+              },
+              {
+                "binding": "ASSETS",
+                "type": "assets",
+                "database_id": null,
+                "service": null
+              },
+              {
+                "binding": "FINANCE_CONNECTION_ENABLED",
+                "type": "plain_text",
+                "database_id": null,
+                "service": null
+              },
+              {
+                "binding": "MLS_AI_SALES_OWNER_PREVIEW",
+                "type": "plain_text",
+                "database_id": null,
+                "service": null
+              },
+              {
+                "binding": "MLS_ENVIRONMENT",
+                "type": "plain_text",
+                "database_id": null,
+                "service": null
+              },
+              {
+                "binding": "MLS_V36_OWNER_PREVIEW",
+                "type": "plain_text",
+                "database_id": null,
+                "service": null
+              },
+              {
+                "binding": "REVIEW_USERNAME",
+                "type": "plain_text",
+                "database_id": null,
+                "service": null
+              }
+            ],
+            "annotations": {
+              "workers/triggered_by": "create_preview_deployment_api",
+              "workers/tag": "13bd449"
+            },
+            "tag_is_source_commit": true
+          }
+        }
+      },
+      "production_control": {
+        "recorded_at": "2026-11-15T21:06:45.112337+00:00",
+        "workers": {
+          "app": {
+            "effective_settings_sha256": "72c1ffdf88e61e4d2b1b7d78545c3d8d9a5b903cc32cf4ed83ee87d5c19a32b9",
+            "versions": [
+              {
+                "version_id": "9bfc21d6-dec9-4fa6-89d8-7ea1dec50993",
+                "percentage": 100
+              }
+            ]
+          },
+          "auth": {
+            "effective_settings_sha256": "304c9c4615acdfc3a8222e00449e5bceabcf2dd9bd574587538183a935003361",
+            "versions": [
+              {
+                "version_id": "dfd2fc99-728f-4f29-96ee-a4b256c5640a",
+                "percentage": 100
+              }
+            ]
+          },
+          "finance": {
+            "effective_settings_sha256": "1e5de4eba866ec7c8ca85fc37c7969d61dc513a26336879e2753e506c6711ab2",
+            "versions": [
+              {
+                "version_id": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+                "percentage": 100
+              }
+            ]
+          }
+        },
+        "matches_before": true
+      },
+      "github_run": 43761633551,
+      "github_job": 132957503304,
+      "github_status": "completed",
+      "github_conclusion": "success",
+      "github_evidence": {
+        "source_sha": "13bd4493d570c9f1b337f570a09c485a23bdf64f",
+        "run": 43761633551,
+        "job": 132957503304,
+        "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43761633551",
+        "conclusion": "success",
+        "stdout_excerpt": [
+          "2026-11-15T21:14:34.5028406Z # tests 4441",
+          "2026-11-15T21:14:34.5028634Z # pass 4441",
+          "2026-11-15T21:14:34.5028755Z # fail 0",
+          "2026-11-15T21:14:34.5028867Z # cancelled 0",
+          "2026-11-15T21:14:34.5028983Z # skipped 0",
+          "2026-11-15T21:14:38.0442124Z Ran 67 tests in 0.382s",
+          "2026-11-15T21:14:39.7611239Z RELEASE_LOCAL_PREFLIGHT_OK",
+          "2026-11-15T21:14:39.7615752Z RELEASE_NOT_APPROVED_FOR_PRODUCTION"
+        ],
+        "checks": [
+          {
+            "name": "Workers Builds: brazacommerce-app",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-app/production/previews/feature-saas-p00-baseline-20261114/builds/b9707212-6166-4a93-b256-b1e1b733ada6"
+          },
+          {
+            "name": "Workers Builds: brazacommerce-finance",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-finance/production/previews/feature-saas-p00-baseline-20261114/builds/a7751437-d47b-4ab4-9557-e4f0022e9167"
+          },
+          {
+            "name": "Workers Builds: brazacommerce-auth",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-auth/production/previews/feature-saas-p00-baseline-20261114/builds/0b6883d9-bac9-4725-b24f-8602851aab53"
+          },
+          {
+            "name": "validate",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43761633551/job/132957503304"
+          }
+        ]
+      }
+    }
+  },
+  "latest_technical_outcome": {
+    "source_sha": "13bd4493d570c9f1b337f570a09c485a23bdf64f",
+    "state": "TESTADO_E_PUBLICADO_SOMENTE_PREVIEW",
+    "github": {
+      "source_sha": "13bd4493d570c9f1b337f570a09c485a23bdf64f",
+      "run": 43761633551,
+      "job": 132957503304,
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43761633551",
+      "conclusion": "success",
+      "stdout_excerpt": [
+        "2026-11-15T21:14:34.5028406Z # tests 4441",
+        "2026-11-15T21:14:34.5028634Z # pass 4441",
+        "2026-11-15T21:14:34.5028755Z # fail 0",
+        "2026-11-15T21:14:34.5028867Z # cancelled 0",
+        "2026-11-15T21:14:34.5028983Z # skipped 0",
+        "2026-11-15T21:14:38.0442124Z Ran 67 tests in 0.382s",
+        "2026-11-15T21:14:39.7611239Z RELEASE_LOCAL_PREFLIGHT_OK",
+        "2026-11-15T21:14:39.7615752Z RELEASE_NOT_APPROVED_FOR_PRODUCTION"
+      ],
+      "checks": [
+        {
+          "name": "Workers Builds: brazacommerce-app",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-app/production/previews/feature-saas-p00-baseline-20261114/builds/b9707212-6166-4a93-b256-b1e1b733ada6"
+        },
+        {
+          "name": "Workers Builds: brazacommerce-finance",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-finance/production/previews/feature-saas-p00-baseline-20261114/builds/a7751437-d47b-4ab4-9557-e4f0022e9167"
+        },
+        {
+          "name": "Workers Builds: brazacommerce-auth",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-auth/production/previews/feature-saas-p00-baseline-20261114/builds/0b6883d9-bac9-4725-b24f-8602851aab53"
+        },
+        {
+          "name": "validate",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43761633551/job/132957503304"
+        }
+      ]
+    },
+    "cloudflare_checks": "APP_AUTH_FINANCE_SUCCESS_SAME_SHA",
+    "native_preview_source_tags_match": true,
+    "production_preserved": true,
+    "production_publication": false,
+    "real_account_acceptance": false,
+    "documentation_successor": "Resolve final receipt commit by branch git log; receipt-only successor has its own normal checks. No automatic approval inferred for another SHA.",
+    "final_receipt_documentation_validation": {
+      "result": "PASS",
+      "local_links_checked": 33,
+      "modules": 22,
+      "financial_value_types": 25,
+      "asset_hashes": 78,
+      "requirements": 74,
+      "histories_preserved": true,
+      "production_runtime_workflows_package_lock_unchanged": true
+    }
+  },
+  "resolved_p00_blockers": [
+    {
+      "id": "EXT-CLOUDFLARE-CHECKS",
+      "source_sha": "13bd4493d570c9f1b337f570a09c485a23bdf64f",
+      "evidence": "api_verified_target_selection.automatic_cloudflare_success",
+      "result": "All four configured checks success, same source; native API tags/bindings verified."
+    }
+  ],
+  "owner_provider_update": {
+    "recorded_at": "2026-11-15T21:35:42.381137+00:00",
+    "source": "Owner reply in this conversation on2026-11-15",
+    "reported_providers": [
+      "Cloudflare",
+      "DigitalOcean"
+    ],
+    "service_to_provider_mapping": "NOT_CONFIRMED",
+    "change_policy": "Notify owner before any proven necessary gateway, plan or limit change; no such change proposed or performed for this CI repair. Commercial changes require applicable authorization.",
+    "access_observed": {
+      "digitalocean_connector": "NOT_AVAILABLE_IN_ACTIVE_TOOLS",
+      "digitalocean_standard_token_bindings": "NOT_PRESENT",
+      "doctl_command_and_standard_config": "NOT_AVAILABLE",
+      "ssh_agent_and_standard_config": "NOT_AVAILABLE; no Droplet target/access supplied"
+    },
+    "still_missing": [
+      "Gateway/Hermes actual installed versions and responsible operator",
+      "Current DigitalOcean service/plan/limits and verified service mapping",
+      "Operational health/backup/restoration evidence",
+      "Origin/license/authorization of code, brand, avatars and images"
+    ],
+    "no_upgrade_required_for_current_build_fix": true
+  },
+  "verified_documentary_head": {
+    "github": {
+      "source_sha": "b2ecd2a344069b9297511957e750264489de788e",
+      "run": 43763121083,
+      "job": 132962129940,
+      "conclusion": "success",
+      "stdout_excerpt": [
+        "2026-11-15T21:30:33.5118784Z # tests 4441",
+        "2026-11-15T21:30:33.5119140Z # pass 4441",
+        "2026-11-15T21:30:33.5119318Z # fail 0",
+        "2026-11-15T21:30:33.5119504Z # cancelled 0",
+        "2026-11-15T21:30:33.5119691Z # skipped 0",
+        "2026-11-15T21:30:37.1664625Z Ran 67 tests in 0.393s",
+        "2026-11-15T21:30:39.5762742Z RELEASE_LOCAL_PREFLIGHT_OK",
+        "2026-11-15T21:30:39.5767806Z RELEASE_NOT_APPROVED_FOR_PRODUCTION"
+      ]
+    },
+    "cloudflare_checks": "APP_AUTH_FINANCE_SUCCESS",
+    "native_api": {
+      "recorded_at": "2026-11-15T21:27:12.508958+00:00",
+      "source_sha": "b2ecd2a344069b9297511957e750264489de788e",
+      "workers": {
+        "finance": {
+          "deployment_id": "5bd6a6ed-f19a-48ed-a6da-832ead86dbd9",
+          "source_tag": "b2ecd2a",
+          "resolved_source_sha": "b2ecd2a344069b9297511957e750264489de788e",
+          "isolated_bindings_verified": true
+        },
+        "auth": {
+          "deployment_id": "a1074024-199b-4f54-981a-023c36e6a018",
+          "source_tag": "b2ecd2a",
+          "resolved_source_sha": "b2ecd2a344069b9297511957e750264489de788e",
+          "isolated_bindings_verified": true
+        },
+        "app": {
+          "deployment_id": "fb90b488-3a95-4042-bba3-f3d2342dfd7a",
+          "source_tag": "b2ecd2a",
+          "resolved_source_sha": "b2ecd2a344069b9297511957e750264489de788e",
+          "isolated_bindings_verified": true
+        }
+      }
+    },
+    "production_control": {
+      "recorded_at": "2026-11-15T21:25:46.896537+00:00",
+      "workers": {
+        "app": {
+          "effective_settings_sha256": "72c1ffdf88e61e4d2b1b7d78545c3d8d9a5b903cc32cf4ed83ee87d5c19a32b9",
+          "versions": [
+            {
+              "version_id": "9bfc21d6-dec9-4fa6-89d8-7ea1dec50993",
+              "percentage": 100
+            }
+          ]
+        },
+        "auth": {
+          "effective_settings_sha256": "304c9c4615acdfc3a8222e00449e5bceabcf2dd9bd574587538183a935003361",
+          "versions": [
+            {
+              "version_id": "dfd2fc99-728f-4f29-96ee-a4b256c5640a",
+              "percentage": 100
+            }
+          ]
+        },
+        "finance": {
+          "effective_settings_sha256": "1e5de4eba866ec7c8ca85fc37c7969d61dc513a26336879e2753e506c6711ab2",
+          "versions": [
+            {
+              "version_id": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+              "percentage": 100
+            }
+          ]
+        }
+      },
+      "matches_before": true
+    }
+  },
+  "p00_final_acceptance": {
+    "source_sha": "827774ec0bd438a6f193d4795dfec396d7e4ee6f",
+    "github_and_cloudflare": {
+      "source_sha": "827774ec0bd438a6f193d4795dfec396d7e4ee6f",
+      "run": 43767620486,
+      "job": 132976173424,
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43767620486",
+      "conclusion": "success",
+      "stdout_excerpt": [
+        "2026-11-15T22:23:01.2035696Z # tests 4447",
+        "2026-11-15T22:23:01.2036258Z # pass 4447",
+        "2026-11-15T22:23:01.2036549Z # fail 0",
+        "2026-11-15T22:23:01.2036730Z # cancelled 0",
+        "2026-11-15T22:23:01.2036926Z # skipped 0",
+        "2026-11-15T22:23:05.8828425Z Ran 67 tests in 0.537s",
+        "2026-11-15T22:23:08.3638894Z RELEASE_LOCAL_PREFLIGHT_OK",
+        "2026-11-15T22:23:08.3648189Z RELEASE_NOT_APPROVED_FOR_PRODUCTION"
+      ],
+      "checks": [
+        {
+          "name": "Workers Builds: brazacommerce-finance",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-finance/production/previews/feature-saas-p00-baseline-20261114/builds/aaa66fc4-40b6-49db-9bd5-f99bf2c01e0b"
+        },
+        {
+          "name": "Workers Builds: brazacommerce-app",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-app/production/previews/feature-saas-p00-baseline-20261114/builds/701dfdd6-7b6f-4d61-b03f-7c4aeec93dc6"
+        },
+        {
+          "name": "Workers Builds: brazacommerce-auth",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-auth/production/previews/feature-saas-p00-baseline-20261114/builds/4273820c-12ba-4902-9fbb-5fcd71ff5ecc"
+        },
+        {
+          "name": "validate",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43767620486/job/132976173424"
+        }
+      ]
+    },
+    "production_control": {
+      "recorded_at": "2026-11-15T22:24:40.166793+00:00",
+      "workers": {
+        "app": {
+          "effective_settings_sha256": "72c1ffdf88e61e4d2b1b7d78545c3d8d9a5b903cc32cf4ed83ee87d5c19a32b9",
+          "versions": [
+            {
+              "version_id": "9bfc21d6-dec9-4fa6-89d8-7ea1dec50993",
+              "percentage": 100
+            }
+          ]
+        },
+        "auth": {
+          "effective_settings_sha256": "304c9c4615acdfc3a8222e00449e5bceabcf2dd9bd574587538183a935003361",
+          "versions": [
+            {
+              "version_id": "dfd2fc99-728f-4f29-96ee-a4b256c5640a",
+              "percentage": 100
+            }
+          ]
+        },
+        "finance": {
+          "effective_settings_sha256": "1e5de4eba866ec7c8ca85fc37c7969d61dc513a26336879e2753e506c6711ab2",
+          "versions": [
+            {
+              "version_id": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+              "percentage": 100
+            }
+          ]
+        }
+      },
+      "matches_before": true
+    },
+    "documentary_closeout": "CLOSEOUT.md",
+    "operational_acceptance": false,
+    "commercial_release_approved": false,
+    "external_dependencies_closed": false
+  }
+}
