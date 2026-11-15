@@ -226,7 +226,7 @@
       "tarefas_condicionais": [],
       "regra_do_gate": "Concluir aceites materiais do escopo desta fase. Item condicional não ativado pode continuar BLOQUEADO/ADIADO com motivo e sem promessa comercial; não conta como concluído. A preparação independente pode avançar, mas ativação/venda dependente espera sua evidência. Opção excluída usa FORA_DA_OFERTA_ATUAL com ADR. P09 não é pré-requisito de P10; requisitos explícitos da tarefa prevalecem sobre a ordem sugerida.",
       "gate_met": false,
-      "reason": "Independent implementation and local validation complete; candidate CI and external operation/rights evidence remain unproved."
+      "reason": "Independent implementation and exact-source13bd449 GitHub/three Cloudflare checks proved. Only actual external operation/recovery and rights evidence remain incomplete; P00 exit gate not declared met."
     },
     {
       "id": "P01",
