@@ -2,7 +2,7 @@
   "schema": "mls_commerce_os_checkpoint_v1",
   "canonical_roadmap": "docs/ROADMAP_MLS_COMMERCE_OS.md",
   "legacy_roadmap": "docs/ROADMAP_BRAZACOMMERCE.md",
-  "updated_at": "2026-11-15T05:49:41.470230+00:00",
+  "updated_at": "2026-11-15T20:51:53.997123+00:00",
   "product": {
     "name": "MLS Commerce OS",
     "supervisor": "MLS Hermes",
@@ -31,7 +31,7 @@
   },
   "current_phase": "P00",
   "working_branch": "feature/saas-p00-baseline-20261114",
-  "current_status": "P00_BLOQUEADO_LOCAL_TESTADO_PREVIEW_ISOLADO_PUBLICADO_BUILDS_AUTOMATICOS_FALHARAM",
+  "current_status": "P00_BLOQUEADO_CORRECAO_IDENTIDADE_CI_TESTADA_LOCAL_AGUARDANDO_CHECKS",
   "completed_this_phase": [
     "Main/PR121/current CI/live versions and bytes reconciled",
     "Documentary ancestor 0a5a228 and complete histories preserved",
@@ -48,9 +48,9 @@
   "next_phase": "P01_DEFERRED_UNTIL_NEXT_DELIVERY_AND_APPLICABLE_GATES",
   "previous_phase": "DOCUMENTATION_ORGANIZATION_LOCAL_0a5a228",
   "next_actions": [
-    "Obtain final error text for App build be2e4da4-5899-466b-83c1-4f03a1b27268 and matching Auth/Finance logs; official log reads403/12004",
-    "Preserve all automatic checks for evidence-only successor; exact-source run43683071100 passed at ad7e0fb",
-    "Complete EXT-OPERATIONS gateway/Hermes version/operator/cost/limits/recovery and EXT-RIGHTS provenance; P01 next delivery only"
+    "Inspect automatic App/Auth/Finance Builds and GitHub validation on corrected candidate",
+    "If a mismatch remains, use distinct TAG/NAME diagnostic; never bypass target guards or infer success",
+    "Complete external operation metadata and rights evidence; P01 next delivery only"
   ],
   "m0_followup": [
     "Conferir visual autenticado em desktop e celular durante M1; corrigir apenas branding/layout sem renomear infraestrutura"
@@ -7494,7 +7494,7 @@
   },
   "operational_execution_matrix": "docs/MLS_SAAS_EXECUTION.json",
   "phase_index": "docs/saas/p00/README.md",
-  "current_task": "SAAS-002 / obtain actual error from repaired automatic Builds; SAAS-004 external evidence",
+  "current_task": "SAAS-002 / validate same-Worker name-or-ID CI target correction",
   "saas_p00": {
     "last_commits": [
       "ad7e0fbe3968029a75e373d972f4bfc307056cba",
@@ -7545,7 +7545,7 @@
     "migrations": "Three preview-only empty D1s created; synthetic schema initialization only, no production migrations",
     "rollback": "Revert isolated preview hook/profiles; remove only new isolated resources when appropriate. Never restore production ADMIN_DB in preview base.",
     "next_executable_command": "Connected GitHub GET /repos/MatheusLemosDS/MLS-Ecommerce-Ads/commits/{PR122_current_head}/check-runs; then diagnose supplied Build error text",
-    "next_external_action": "Owner supplies final error text from App build be2e4da4-5899-466b-83c1-4f03a1b27268 and corresponding Auth/Finance logs, or existing supported Workers CI Read secret access. Do not paste credentials, change permissions automatically, bypass or cancel checks.",
+    "next_external_action": "Observe automatic checks of name-or-ID correction; old generic App error now supplied and preserved in receipt",
     "next_implementation_item": "SAAS-005 / P01, next delivery only",
     "blocker_review": "docs/saas/p00/blocker-review-20261114.json",
     "external_evidence_request": "docs/saas/p00/EXTERNAL_EVIDENCE_REQUEST.md",
@@ -7621,6 +7621,16 @@
         "2026-11-15T06:06:41.1017176Z RELEASE_LOCAL_PREFLIGHT_OK",
         "2026-11-15T06:06:41.1025173Z RELEASE_NOT_APPROVED_FOR_PRODUCTION"
       ]
+    },
+    "target_identity_correction_receipt": "docs/saas/p00/preview-repair.json#target_identity_correction",
+    "latest_github_validation_before_identity_fix": {
+      "source_sha": "c88f4faeecaa3aaa06580a85683fa26bd86857fd",
+      "run": 43684238943,
+      "job": 132721216913,
+      "conclusion": "success",
+      "node": 4437,
+      "python": 67,
+      "build_and_preflight": "success"
     }
   }
 }

@@ -29,6 +29,23 @@ test('Workers Builds targets are selected by exact tag and branch, never a gener
  assert.throws(()=>selectPreviewRole(m,{WRANGLER_CI_MATCH_TAG:'0'.repeat(32),WORKERS_CI_BRANCH:m.branch}));
  assert.throws(()=>selectPreviewRole(m,{WRANGLER_CI_MATCH_TAG:m.parents.app.tag,WORKERS_CI_BRANCH:m.branch,WRANGLER_CI_OVERRIDE_NAME:'brazacommerce-auth'}));
 });
+test('native CI override accepts the verified ID of the same Worker and rejects cross-Worker identities',()=>{
+ const m=manifest();
+ for(const role of ['app','auth','finance']){
+  for(const identifier of [m.parents[role].name,m.parents[role].tag]){
+   assert.equal(selectPreviewRole(m,{WORKERS_CI_BRANCH:m.branch,WRANGLER_CI_MATCH_TAG:m.parents[role].tag,WRANGLER_CI_OVERRIDE_NAME:identifier}),role);
+  }
+  for(const other of ['app','auth','finance'].filter(r=>r!==role)){
+   for(const identifier of [m.parents[other].name,m.parents[other].tag]){
+    assert.throws(()=>selectPreviewRole(m,{WORKERS_CI_BRANCH:m.branch,WRANGLER_CI_MATCH_TAG:m.parents[role].tag,WRANGLER_CI_OVERRIDE_NAME:identifier}),/PREVIEW_CI_TARGET_MISMATCH_NAME/);
+   }
+  }
+  for(const identifier of [m.isolated_workers[role],'unknown-worker',m.parents[role].tag.replace(/^(.{8})(.{4})(.{4})(.{4})(.{12})$/,'$1-$2-$3-$4-$5')]){
+   assert.throws(()=>selectPreviewRole(m,{WORKERS_CI_BRANCH:m.branch,WRANGLER_CI_MATCH_TAG:m.parents[role].tag,WRANGLER_CI_OVERRIDE_NAME:identifier}),/PREVIEW_CI_TARGET_MISMATCH_NAME/);
+  }
+ }
+ assert.throws(()=>selectPreviewRole(m,{WORKERS_CI_BRANCH:m.branch,WRANGLER_CI_MATCH_TAG:'0'.repeat(32),WRANGLER_CI_OVERRIDE_NAME:m.parents.app.name}),/PREVIEW_CI_TARGET_MISMATCH_TAG/);
+});
 test('preview derivative denies production/provider fetch, does not follow redirects and exposes no scheduler',async()=>{
  const m=manifest(),calls=[];
  const original=`export default {async fetch(){const a=await fetch('https://app.brazacommerce.com.br/api');const b=await fetch('https://partner.shopeemobile.com/api');return Response.json({a:a.status,b:b.status});},scheduled(){throw Error('PRODUCTION_CRON_MUST_NOT_RUN');}};`;

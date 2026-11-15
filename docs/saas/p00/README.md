@@ -1,3 +1,5 @@
+> **Atualização atual:** o log App recebido localiza `PREVIEW_CI_TARGET_MISMATCH` no seletor de build. A correção aceita somente nome ou ID32hex confirmados do mesmo Worker, mantendo tag e branch exatos e recusando outros alvos.20 testes focados e os três fluxos build→preview com o mesmo ambiente CI passaram; artefatos e produção preservados. Aguardar os checks automáticos deste candidato antes de declarar correção externa aprovada. [Evidência](preview-repair.json).
+
 > **Estado atual:** preview isolado autorizado, implementado, publicado e testado tecnicamente; Live preservada. Gates locais:4437 Node/67 Python, build com os mesmos três hashes,5 testes focados e14 de preflight, Chromium desktop/celular. Os três Builds automáticos falharam no candidato `ad7e0fb`; logs oficiais403/12004. A causa atual depende do texto do novo erro, não é inferida do smoke local. P00 permanece BLOQUEADA também por operação/direitos. [Recibo e retomada](preview-repair.json). O restante abaixo conserva o histórico datado.
 
 ## Revisão GitHub — PR122

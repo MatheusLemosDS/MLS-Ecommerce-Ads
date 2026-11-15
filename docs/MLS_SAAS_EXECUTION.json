@@ -673,7 +673,7 @@
       "last_stage_reached": "TESTADO",
       "acceptance_satisfied": false,
       "local_acceptance": true,
-      "reason": "Exact source ad7e0fb passed GitHub run43683071100:4437 Node/67 Python,build,PR preflight, plus local/isolated QA. Three external Builds failed on same source; official logs403/12004. Full configured CI acceptance remains blocked.",
+      "reason": "Name-or-ID target correction locally tested after supplied error; full automatic gates of new candidate pending. Previous c88f4fa CI remains historical proof only.",
       "candidate_ci_run": 43683071100,
       "candidate_ci_source_sha": "ad7e0fbe3968029a75e373d972f4bfc307056cba",
       "isolated_preview_published": true,
@@ -5479,7 +5479,7 @@
     "executada_pelo_auditor": false
   },
   "audit_recorded_at": "2026-11-13",
-  "updated_at": "2026-11-15T05:49:41.470230+00:00",
+  "updated_at": "2026-11-15T20:51:53.997123+00:00",
   "scope_of_this_delivery": "P00 only; P01–P11 remain future deliveries. Existing financial matrix is a scoped historical implementation receipt, not a second active SaaS execution state.",
   "current_candidate": {
     "source_commit": "ad7e0fbe3968029a75e373d972f4bfc307056cba",
@@ -5504,16 +5504,18 @@
     "latest_reviewed_ci_run": 43683071100,
     "candidate_parent_sha": "2b06a16abd9e551126033016d9fd9706ad926e1c",
     "preview_repair_receipt": "docs/saas/p00/preview-repair.json",
-    "local_gates_receipt": "docs/saas/p00/preview-repair.json"
+    "local_gates_receipt": "docs/saas/p00/preview-repair.json",
+    "target_identity_correction_receipt": "docs/saas/p00/preview-repair.json",
+    "corrected_candidate_checks": "Pending: no CI approval inferred from c88f4fa"
   },
   "external_blockers_p00": [
     {
       "id": "EXT-CLOUDFLARE-CHECKS",
       "owner": "Cloudflare administrator/operator",
       "resource": "App/Auth/Finance Workers Builds on PR122 at ad7e0fbe3968029a75e373d972f4bfc307056cba",
-      "cause": "All three automatic Builds failed on repaired source ad7e0fb. Check outputs have no error text; official GET build logs returns403/code12004. Direct native previews and isolated QA passed, which does not prove automatic CI.",
+      "cause": "Supplied App log proves target selector rejection; confirmed same-Worker ID alias was missing. Corrected selector and20 focused tests/three same-environment pipelines passed. Await real automatic checks; raw CI env not supplied.",
       "impact": "External checks not approved; P00 CI acceptance/release remains blocked. Production untouched.",
-      "minimum_to_resume": "Owner supplies final error text from App build be2e4da4-5899-466b-83c1-4f03a1b27268 and corresponding Auth/Finance logs, or existing supported Workers CI Read secret access. Do not paste credentials, change permissions automatically, bypass or cancel checks."
+      "minimum_to_resume": "Observe all three configured Builds and GitHub CI on corrected candidate; keep strict branch/tag/Worker identity gates."
     },
     {
       "id": "EXT-OPERATIONS",

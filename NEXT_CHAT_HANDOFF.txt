@@ -6,6 +6,7 @@ Recibo: docs/saas/p00/preview-repair.json; hook por branch/tag; produção sem a
 Login/Chromium sintéticos e isolamento testados. Conferir checks exatos do candidato na PR122.
 Próximo: completar metadados operacionais e direitos; P01 somente na próxima entrega.
 Históricos integrais preservados abaixo.
+Correção atual: seletor CI aceita somente nome/ID32hex confirmados do mesmo Worker;20 testes focados e três pipelines diretos passaram. Conferir novos checks automáticos.
 <!-- END_SAAS_P00_CURRENT -->
 
 RETOMADA — MLS Commerce OS

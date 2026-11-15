@@ -2,6 +2,7 @@
 ## Retomada atual — P00 SaaS
 
 P00 autorizada; P01–P11 ficam para próximas entregas. Base main346f30f e ancestral documental0a5a228 preservados. Branch `feature/saas-p00-baseline-20261114`, [PR122 rascunho](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/122). Correção do build/preview com três bancos e Workers isolados; produção permanece nas versões do recibo .3. Login e Chromium desktop/celular sintéticos passaram; conferir checks do novo candidato. P00 ainda bloqueada por metadados operacionais/direitos externos. Ler [checkpoint único](MLS_COMMERCE_OS_CHECKPOINT.json), [matriz](MLS_SAAS_EXECUTION.json) e [recibo](saas/p00/preview-repair.json). A restrição documental abaixo pertence à entrega anterior.
+Correção atual: seletor CI aceita somente nome/ID32hex confirmados do mesmo Worker;20 testes focados e três pipelines diretos passaram. Conferir novos checks automáticos.
 <!-- END_SAAS_P00_CURRENT -->
 
 # Retomada curta — MLS Commerce OS

@@ -16,7 +16,11 @@ export function selectPreviewRole(m,env){
  if(env.WORKERS_CI_BRANCH==='main')return null;
  if(env.WORKERS_CI_BRANCH!==m.branch)fail('PREVIEW_BRANCH_NOT_AUTHORIZED');
  const role=roles.find(r=>m.parents[r].tag===env.WRANGLER_CI_MATCH_TAG);
- if(!role||env.WRANGLER_CI_OVERRIDE_NAME&&env.WRANGLER_CI_OVERRIDE_NAME!==m.parents[role].name)fail('PREVIEW_CI_TARGET_MISMATCH');
+ if(!role)fail('PREVIEW_CI_TARGET_MISMATCH_TAG');
+ // Wrangler's native Preview API accepts a Worker identifier: its confirmed
+ // name OR its 32-character ID. Both identify the same parent; other Workers,
+ // arbitrary aliases and dashed UUID paths remain forbidden.
+ if(env.WRANGLER_CI_OVERRIDE_NAME&&![m.parents[role].name,m.parents[role].tag].includes(env.WRANGLER_CI_OVERRIDE_NAME))fail('PREVIEW_CI_TARGET_MISMATCH_NAME');
  return role;
 }
 export function isolatedHosts(m){return Object.fromEntries(roles.map(r=>[r,m.isolated_workers[r]+'.'+m.account_subdomain+'.workers.dev']));}
