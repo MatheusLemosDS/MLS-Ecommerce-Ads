@@ -1,3 +1,20 @@
+> **Pedido atual após o reparo técnico:** App/Auth/Finance passaram nos Builds automáticos do código `13bd449`; os previews publicados apontam para os recursos isolados e para esse mesmo commit. A CI GitHub passou no mesmo SHA:4441 Node/67 Python, build e preflight. O estado canônico está no checkpoint e no [recibo](preview-repair.json). O pedido antigo de gatilhos/logs abaixo é histórico; não é necessário repetir capturas nem conceder novas permissões para aceitar a evidência técnica já obtida.
+
+Para completar as pendências externas de P00, responda por texto ou links existentes, sem segredos:
+
+| Item | Informação/evidência mínima do responsável |
+| --- | --- |
+| Gateway Shopee | Se está em uso; onde roda (plataforma/ambiente), responsável, versão instalada, plano/custo/limites, saúde/monitoramento e registro de backup/restauração com data e resultado. |
+| Hermes | Mesmos campos, separadamente. Código/runbook no Git não comprova a instalação/recuperação remota. |
+| Código e contribuições | Origem/autoria e autorização/licença aplicável, com referência ao registro. |
+| Marca, avatares e imagens | Origem/autor/gerador, licença/autorização aplicável e restrições por família de ativos, com referência. |
+
+Marque como desconhecido cada campo ainda sem prova; isso preserva o bloqueio correspondente. Os notices das bibliotecas MIT já foram comprovados e não precisam ser enviados outra vez. Este pedido de evidência não autoriza operações comerciais, contato com terceiros ou mudança de Live.
+
+---
+
+**Pedido original preservado abaixo — contexto histórico anterior às autorizações e aos reparos posteriores:**
+
 # Evidências mínimas para destravar P00
 
 Este pedido não autoriza alteração de configuração, ampliação de permissões, push, deploy ou contato com terceiros. O commit local `1906de4` permanece preservado. Enviar somente metadados sanitizados obtidos por leitura autorizada; não enviar tokens, cookies, variáveis secretas, extratos ou dados de compradores. Um campo desconhecido deve continuar desconhecido.

@@ -1,8 +1,7 @@
 <!-- SAAS_P00_CURRENT -->
 ## Retomada atual — P00 SaaS
 
-P00 autorizada; P01–P11 ficam para próximas entregas. Base main346f30f e ancestral documental0a5a228 preservados. Branch `feature/saas-p00-baseline-20261114`, [PR122 rascunho](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/122). Correção do build/preview com três bancos e Workers isolados; produção permanece nas versões do recibo .3. Login e Chromium desktop/celular sintéticos passaram; conferir checks do novo candidato. P00 ainda bloqueada por metadados operacionais/direitos externos. Ler [checkpoint único](MLS_COMMERCE_OS_CHECKPOINT.json), [matriz](MLS_SAAS_EXECUTION.json) e [recibo](saas/p00/preview-repair.json). A restrição documental abaixo pertence à entrega anterior.
-Correção atual: alvo CI exige branch/conta/nome/ID fixados e GET de identidade confirmado;23 testes focados e três pipelines diretos passaram. Conferir checks automáticos.
+Base main346f30f e documental0a5a228 preservados. Código13bd449 aprovado no GitHub (4441 Node/67 Python/build/preflight) e nos três Builds Cloudflare, com previews isolados confirmados por tag e bindings na API; Live preservada. [PR122 rascunho](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/122), sem merge/auto-merge. P00 ainda bloqueada somente por metadados de operação/recuperação e direitos; [informações necessárias](saas/p00/EXTERNAL_EVIDENCE_REQUEST.md). Ler [checkpoint único](MLS_COMMERCE_OS_CHECKPOINT.json), [matriz](MLS_SAAS_EXECUTION.json) e [recibo](saas/p00/preview-repair.json). O recibo documental final tem checks próprios. P01–P11 ficam para próximas entregas; a restrição documental abaixo pertence à entrega anterior.
 <!-- END_SAAS_P00_CURRENT -->
 
 # Retomada curta — MLS Commerce OS

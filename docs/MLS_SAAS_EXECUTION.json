@@ -646,8 +646,8 @@
       ],
       "dependencias_externas": [],
       "condicional_ao_escopo_vendido": false,
-      "estado": "BLOQUEADO",
-      "commit_implementacao": "ad7e0fbe3968029a75e373d972f4bfc307056cba",
+      "estado": "TESTADO",
+      "commit_implementacao": "13bd4493d570c9f1b337f570a09c485a23bdf64f",
       "evidencias_testes": [
         "docs/saas/p00/github-reconciliation.json",
         "docs/saas/p00/ci-excerpts.json",
@@ -656,29 +656,20 @@
       ],
       "evidencias_publicacao": [],
       "evidencias_operacionais": [],
-      "bloqueios": [
-        {
-          "id": "EXT-CLOUDFLARE-CHECKS",
-          "owner": "Cloudflare administrator/operator",
-          "resource": "App/Auth/Finance Workers Builds on PR122 at ad7e0fbe3968029a75e373d972f4bfc307056cba",
-          "cause": "All three automatic Builds failed on repaired source ad7e0fb. Check outputs have no error text; official GET build logs returns403/code12004. Direct native previews and isolated QA passed, which does not prove automatic CI.",
-          "impact": "External checks not approved; P00 CI acceptance/release remains blocked. Production untouched.",
-          "minimum_to_resume": "Owner supplies final error text from App build be2e4da4-5899-466b-83c1-4f03a1b27268 and corresponding Auth/Finance logs, or existing supported Workers CI Read secret access. Do not paste credentials, change permissions automatically, bypass or cancel checks."
-        }
-      ],
+      "bloqueios": [],
       "gate_anterior": null,
       "published_this_delivery": false,
       "validated_operationally": false,
-      "acceptance_scope": "DOCUMENTARY_AND_LOCAL_TECHNICAL_ONLY",
+      "acceptance_scope": "EXACT_SOURCE_GITHUB_AND_THREE_CLOUDFLARE_NATIVE_PREVIEW_CHECKS",
       "last_stage_reached": "TESTADO",
-      "acceptance_satisfied": false,
+      "acceptance_satisfied": true,
       "local_acceptance": true,
-      "reason": "Name-or-ID target correction locally tested after supplied error; full automatic gates of new candidate pending. Previous c88f4fa CI remains historical proof only.",
-      "candidate_ci_run": 43683071100,
-      "candidate_ci_source_sha": "ad7e0fbe3968029a75e373d972f4bfc307056cba",
+      "reason": "Same source13bd449 passed GitHub run43761633551:4441 Node/67 Python,build,preflight, plus all three Cloudflare Builds. Native preview tags equal same SHA and bindings are isolated. No assertions removed, no bypass/cancellation; production preserved.",
+      "candidate_ci_run": 43761633551,
+      "candidate_ci_source_sha": "13bd4493d570c9f1b337f570a09c485a23bdf64f",
       "isolated_preview_published": true,
-      "current_candidate_sha": "ad7e0fbe3968029a75e373d972f4bfc307056cba",
-      "current_candidate_github_run": 43683071100
+      "current_candidate_sha": "13bd4493d570c9f1b337f570a09c485a23bdf64f",
+      "current_candidate_github_run": 43761633551
     },
     {
       "id": "SAAS-003",
@@ -5479,10 +5470,10 @@
     "executada_pelo_auditor": false
   },
   "audit_recorded_at": "2026-11-13",
-  "updated_at": "2026-11-15T20:51:53.997123+00:00",
+  "updated_at": "2026-11-15T21:18:51.341691+00:00",
   "scope_of_this_delivery": "P00 only; P01–P11 remain future deliveries. Existing financial matrix is a scoped historical implementation receipt, not a second active SaaS execution state.",
   "current_candidate": {
-    "source_commit": "ad7e0fbe3968029a75e373d972f4bfc307056cba",
+    "source_commit": "13bd4493d570c9f1b337f570a09c485a23bdf64f",
     "remote_base": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
     "documentation_parent": "0a5a22897d3cf56f97b7b995eb78a743fc0a246e",
     "branch": "feature/saas-p00-baseline-20261114",
@@ -5492,32 +5483,24 @@
       "tools/release-approved-candidate.json",
       "tools/tests/release-preflight.test.mjs"
     ],
-    "publication": "DRAFT_PR122_ISOLATED_PREVIEW_PUBLISHED_PRODUCTION_UNCHANGED",
+    "publication": "ISOLATED_NATIVE_PREVIEW_PUBLISHED_NO_PRODUCTION",
     "operational_acceptance": false,
-    "review_head_sha": "ad7e0fbe3968029a75e373d972f4bfc307056cba",
+    "review_head_sha": "13bd4493d570c9f1b337f570a09c485a23bdf64f",
     "pull_request": 122,
-    "github_ci_run": 43683071100,
-    "approved_github_source_commit": "ad7e0fbe3968029a75e373d972f4bfc307056cba",
-    "approved_github_ci_run": 43683071100,
-    "receipt_successor_checks": "Evidence-only successor gets its own normal checks. Exact-source evidence listed in receipt; never transfer full CI approval across SHAs.",
-    "latest_reviewed_ci_sha": "ad7e0fbe3968029a75e373d972f4bfc307056cba",
-    "latest_reviewed_ci_run": 43683071100,
+    "github_ci_run": 43761633551,
+    "approved_github_source_commit": "13bd4493d570c9f1b337f570a09c485a23bdf64f",
+    "approved_github_ci_run": 43761633551,
+    "receipt_successor_checks": "Evidence-only successor receives normal configured checks; consult PR122 current head before approval.",
+    "latest_reviewed_ci_sha": "13bd4493d570c9f1b337f570a09c485a23bdf64f",
+    "latest_reviewed_ci_run": 43761633551,
     "candidate_parent_sha": "2b06a16abd9e551126033016d9fd9706ad926e1c",
     "preview_repair_receipt": "docs/saas/p00/preview-repair.json",
     "local_gates_receipt": "docs/saas/p00/preview-repair.json",
     "target_identity_correction_receipt": "docs/saas/p00/preview-repair.json",
-    "corrected_candidate_checks": "Pending: no CI approval inferred from c88f4fa",
+    "corrected_candidate_checks": "ALL_SUCCESS_SOURCE13bd449",
     "api_verified_target_selection_receipt": "docs/saas/p00/preview-repair.json"
   },
   "external_blockers_p00": [
-    {
-      "id": "EXT-CLOUDFLARE-CHECKS",
-      "owner": "Cloudflare administrator/operator",
-      "resource": "App/Auth/Finance Workers Builds on PR122 at ad7e0fbe3968029a75e373d972f4bfc307056cba",
-      "cause": "Provided log proves selector rejection; alias-only attempt46ed873 still failed externally. Current correction requires pinned account/name/ID verified through native GET;23 focused tests and3 direct real-API pipelines passed. Actual automatic checks pending.",
-      "impact": "External checks not approved; P00 CI acceptance/release remains blocked. Production untouched.",
-      "minimum_to_resume": "Observe all three configured Builds and GitHub CI on corrected candidate; keep strict branch/tag/Worker identity gates."
-    },
     {
       "id": "EXT-OPERATIONS",
       "owner": "Gateway/Hermes operators and project owner",
@@ -5533,6 +5516,21 @@
       "cause": "No root license proves title; commercial rights chain not demonstrated.",
       "impact": "No claim of commercial rights or unrestricted sale. Runtime incorporated npm MIT versions/notices verified locally.",
       "minimum_to_resume": "Origin/license/authorization records for incorporated assets and contributor rights; no third-party contact authorized."
+    }
+  ],
+  "resolved_external_blockers_p00": [
+    {
+      "original": {
+        "id": "EXT-CLOUDFLARE-CHECKS",
+        "owner": "Cloudflare administrator/operator",
+        "resource": "App/Auth/Finance Workers Builds on PR122 at ad7e0fbe3968029a75e373d972f4bfc307056cba",
+        "cause": "Provided log proves selector rejection; alias-only attempt46ed873 still failed externally. Current correction requires pinned account/name/ID verified through native GET;23 focused tests and3 direct real-API pipelines passed. Actual automatic checks pending.",
+        "impact": "External checks not approved; P00 CI acceptance/release remains blocked. Production untouched.",
+        "minimum_to_resume": "Observe all three configured Builds and GitHub CI on corrected candidate; keep strict branch/tag/Worker identity gates."
+      },
+      "resolved_source_sha": "13bd4493d570c9f1b337f570a09c485a23bdf64f",
+      "evidence": "docs/saas/p00/preview-repair.json",
+      "resolution": "GitHub and all three Cloudflare checks success on exact same source"
     }
   ]
 }

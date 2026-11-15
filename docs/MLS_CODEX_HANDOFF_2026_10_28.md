@@ -1,7 +1,7 @@
 <!-- SAAS_P00_CURRENT -->
 ## Retomada P00 SaaS
 
-Ler [checkpoint](MLS_COMMERCE_OS_CHECKPOINT.json), [matriz](MLS_SAAS_EXECUTION.json) e [recibo do reparo](saas/p00/preview-repair.json). Base346f30f, documental0a5a228 preservada; branch feature/saas-p00-baseline-20261114, PR122 rascunho. Preview autorizado agora usa bancos/Workers/segredos separados; Live preservada. Conferir CI/checks do candidato exato e complementar metadados operacionais/direitos. Reutilizar provas compatíveis; P01 só na próxima entrega. Histórico integral abaixo preservado.
+[Checkpoint](MLS_COMMERCE_OS_CHECKPOINT.json), [matriz](MLS_SAAS_EXECUTION.json), [recibo](saas/p00/preview-repair.json). Código13bd449 aprovado no GitHub4441 Node/67 Python/build/preflight e nos três Builds Cloudflare; API confirmou tags e bindings isolados, produção preservada. Base346f30f e documental0a5a228 preservados; PR122 rascunho. P00 depende agora somente de [evidências externas de operação/direitos](saas/p00/EXTERNAL_EVIDENCE_REQUEST.md). Recibo documental final recebe seus checks normais; não repetir suites manuais sem delta funcional. P01 só próxima entrega. Histórico integral abaixo preservado.
 <!-- END_SAAS_P00_CURRENT -->
 
 FINANCIAL_AUTOMATION_20261113 — PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY — release 2026-11-13.3

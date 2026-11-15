@@ -1,12 +1,10 @@
 <!-- SAAS_P00_CURRENT -->
-P00_SAAS_CURRENT — reparo autorizado de preview isolado aplicado; fase BLOQUEADA.
-Checkpoint único: docs/MLS_COMMERCE_OS_CHECKPOINT.json. Matriz: docs/MLS_SAAS_EXECUTION.json.
-Base346f30f; documental0a5a228; branch feature/saas-p00-baseline-20261114; PR122 rascunho.
-Recibo: docs/saas/p00/preview-repair.json; hook por branch/tag; produção sem alteração.
-Login/Chromium sintéticos e isolamento testados. Conferir checks exatos do candidato na PR122.
-Próximo: completar metadados operacionais e direitos; P01 somente na próxima entrega.
+P00_SAAS_CURRENT — SAAS-002 resolvida; P00 bloqueada somente por operação/direitos externos.
+Base346f30f, documental0a5a228 preservada; código13bd449 aprovado no GitHub4441 Node/67 Python/build/preflight e nos três Builds Cloudflare.
+Previews isolados publicados com tags/bindings confirmados na API. Produção preservada; PR122 rascunho, sem merge/auto-merge.
+Checkpoint único docs/MLS_COMMERCE_OS_CHECKPOINT.json; matriz docs/MLS_SAAS_EXECUTION.json; recibo docs/saas/p00/preview-repair.json.
+Próximo: evidências em docs/saas/p00/EXTERNAL_EVIDENCE_REQUEST.md; validar somente delta documental ao recebê-las. Recibo final tem checks próprios. P01 só próxima entrega.
 Históricos integrais preservados abaixo.
-Correção atual: alvo CI exige branch/conta/nome/ID fixados e GET de identidade confirmado;23 testes focados e três pipelines diretos passaram. Conferir checks automáticos.
 <!-- END_SAAS_P00_CURRENT -->
 
 RETOMADA — MLS Commerce OS
