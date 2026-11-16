@@ -5,6 +5,8 @@ import path from 'node:path';
 export const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const TARGETS = Object.freeze({
   app: Object.freeze({name: 'brazacommerce-app', main: '../../dist/app-worker.mjs', baselineHashes: [
+    // OP013 exact dry package; this digest alone does not establish publication.
+    '9c865f155b5fdf972668950e22b3486d3ebab3efdfa10114a0676c8c419aeed3',
     // Exact OP013 private artwork backup candidate; previous source hashes and gates retained.
     'b57c5626fa320354ec0c3ad5d1dc4ba39b2326d2a1f51986e795f36edd16132b',
     // Actual source retrieved and verified after controlled owner DTF publication (CI0650874).
@@ -254,6 +256,8 @@ export const TARGETS = Object.freeze({
     '26612b7ea0edbea55e06f5fc817a18defd6b4fe65381e6d564b7d360b7b80278',
   ]}),
   auth: Object.freeze({name: 'brazacommerce-auth', main: '../../dist/auth-worker.mjs', baselineHashes: [
+    // OP013 exact dry package; this digest alone does not establish publication.
+    '9ee5d41ae9db301c745e1bfa8d2ae369828426a7524c7c0f7ab1639459c63710',
     // Exact OP013 private artwork backup candidate; previous source hashes and gates retained.
     '309b5af88b3b2d99872dc987c11912e5ba85889b6dcfad4399f4c459becd6cc3',
     // Actual source retrieved and verified after controlled owner DTF publication (CI0650874).
