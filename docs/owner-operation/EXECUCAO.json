@@ -500,7 +500,7 @@
       ],
       "estado_desta_especificacao": "ESPECIFICADO_PARA_CODEX",
       "codigo": "IMPLEMENTADO_BACKUP_ZIP_LOCAL_PNG_MANIFESTO_HASHES_E_RESTORE_ATOMICO",
-      "testes_novo_incremento": "UNITARIOS_E_CHROMIUM_NORMAL_MINIFICADO_320_1365_PASSARAM_GATES_COMPLETOS_PENDENTES",
+      "testes_novo_incremento": "SUITE_LOCAL4452_COM3_EXPECTATIVAS_ANTIGAS_CORRIGIDAS_REVALIDACAO_DIRECIONADA_PASSOU_PYTHON67_BUILD_DEPLOY_OK_CI_PENDENTE",
       "publicacao_novo_incremento": "NAO_REALIZADA",
       "aceite_operacional_novo_incremento": "PENDENTE_ARTES_REAIS_DO_PROPRIETARIO",
       "evidencias": [
@@ -511,7 +511,7 @@
       ],
       "regra_especial": null,
       "codigo_da_especificacao": "RECONFERIR_REUTILIZAR_EXISTENTE_E_COMPLETAR_LACUNAS",
-      "estado_execucao": "IMPLEMENTADO_TESTES_DIRECIONADOS_PASSARAM_GATES_COMPLETOS_PENDENTES",
+      "estado_execucao": "IMPLEMENTADO_VALIDACAO_LOCAL_REVALIDADA_CI_EXATA_PENDENTE",
       "bloqueia_tarefas_independentes": false
     },
     {
@@ -5664,7 +5664,7 @@
     "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/docs/financial-automation/publication-live-20261113.json"
   ],
   "source_specification": "input/ROADMAP_EXECUTAVEL_USO_PROPRIO_MLS.json",
-  "updated_at": "2026-11-16T17:18:30.349179+00:00",
+  "updated_at": "2026-11-16T17:34:31.074018+00:00",
   "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
   "specification_initial_checkpoint_historical": {
     "fase_corrente": "U0",
@@ -5686,10 +5686,11 @@
     "next_independent_task": "OP-012",
     "receipt": "validation/owner-dtf-artwork-backup.json",
     "code": true,
-    "tested_locally": "TARGETED_PASS_FULL_GATES_PENDING",
+    "tested_locally": "FULL_LOCAL_RUN_WITH_THREE_TEST_LITERAL_FIXES_TARGETED_REVALIDATED",
     "published": false,
     "operationally_accepted": false,
-    "previous_publication_receipt": "validation/publication-live-20261116.json"
+    "previous_publication_receipt": "validation/publication-live-20261116.json",
+    "pull_request": 124
   },
   "latest_owner_constraints": {
     "production_friday_13_brasilia": true,

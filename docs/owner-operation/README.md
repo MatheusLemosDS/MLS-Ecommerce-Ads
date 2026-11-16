@@ -6,7 +6,7 @@ A trilha ativa é **owner_operation**. Cadastro de outros clientes, e-mail comer
 
 ## Incremento atual OP-013 — backup das artes DTF
 
-Implementado no código; validação completa, CI e publicação **pendentes**. A Live continua2026-11-15.4 até o recibo deste incremento confirmar novos Workers. [Evidência atual](validation/owner-dtf-artwork-backup.json). O histórico abaixo registra OP011; a próxima tarefa independente atual é OP012.
+Implementado e validado localmente, com as expectativas antigas de texto/versão corrigidas e revalidadas; CI do head exato e publicação **pendentes**. A Live continua2026-11-15.4 até o recibo deste incremento confirmar novos Workers. [Evidência atual](validation/owner-dtf-artwork-backup.json). O histórico abaixo registra OP011; a próxima tarefa independente atual é OP012.
 
 1. Abra **Produção → Artes salvas neste dispositivo → Baixar backup das artes**. Salve o ZIP em uma pasta privada fora do navegador. Ele contém os PNGs originais e `manifest.json`, com nomes de arte, dimensões, SHA-256 e caminhos dos pixels.
 2. No navegador de destino, entre na mesma origem, conta e loja. Use **Conferir backup para restaurar**, selecione o ZIP e revise quantas artes são novas ou já idênticas.

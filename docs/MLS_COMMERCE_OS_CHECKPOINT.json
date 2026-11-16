@@ -2,7 +2,7 @@
   "schema": "mls_commerce_os_checkpoint_v1",
   "canonical_roadmap": "docs/ROADMAP_MLS_COMMERCE_OS.md",
   "legacy_roadmap": "docs/ROADMAP_BRAZACOMMERCE.md",
-  "updated_at": "2026-11-16T17:18:30.349179+00:00",
+  "updated_at": "2026-11-16T17:34:31.074018+00:00",
   "product": {
     "name": "MLS Commerce OS",
     "supervisor": "MLS Hermes",
@@ -31,7 +31,7 @@
   },
   "current_phase": "OWNER_OPERATION_U2_DTF_ARTWORK_BACKUP",
   "working_branch": "feature/owner-dtf-artwork-backup-20261116",
-  "current_status": "OP013_IMPLEMENTED_TARGETED_TESTED_FULL_GATES_PENDING",
+  "current_status": "OP013_LOCAL_GATES_REVALIDATED_EXACT_HEAD_CI_AND_PUBLICATION_PENDING",
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
     "Repasse-base, ajuste, repasse após ajuste e liberação exibidos sem dupla dedução",
@@ -137,13 +137,15 @@
     "source_commit": "219dd974f23bf13bb58f45fc457eeb3d2876ca21",
     "release_candidate": "2026-11-16.1",
     "implementation": true,
-    "local_validation": "TARGETED_PASSED_FULL_GATES_PENDING",
+    "local_validation": "FULL_LOCAL_RUN_WITH_THREE_TEST_LITERAL_FIXES_TARGETED_REVALIDATED",
     "published": false,
     "validated_operationally": false,
     "receipt": "docs/owner-operation/validation/owner-dtf-artwork-backup.json",
     "actual_financial_acceptance": false,
     "previous_published_receipt": "docs/owner-operation/validation/publication-live-20261116.json",
-    "source_parent": "754d20fe3d60b93417eab7ea14a50cb228451c13"
+    "source_parent": "754d20fe3d60b93417eab7ea14a50cb228451c13",
+    "pull_request": 124,
+    "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE"
   },
   "incident": {
     "id": "INCIDENT_2026_10_27_PANEL_AGENT_REGRESSION",
