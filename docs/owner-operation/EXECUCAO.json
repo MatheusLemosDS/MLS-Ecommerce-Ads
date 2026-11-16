@@ -409,15 +409,19 @@
         "Cores/tamanhos/modelagens, aliases e exceções são explícitos e versionados."
       ],
       "estado_desta_especificacao": "ESPECIFICADO_PARA_CODEX",
-      "codigo": "NAO_ALTERADO_NESTE_INCREMENTO",
-      "testes_novo_incremento": "NAO_EXECUTADOS_PARA_ACEITE_DESTA_TAREFA",
+      "codigo": "COMPOSICAO_DTF_EXPLICITA_VERSIONADA_POR_VARIACAO_SKU_ORIGINAL_PRESERVADO",
+      "testes_novo_incremento": "5_BACKEND_4_CHROMIUM_KIT_CANDIDATO_FINAL_GATES_COMPLETOS_PENDENTES",
       "publicacao_novo_incremento": "NAO_REALIZADA",
-      "aceite_operacional_novo_incremento": "NAO_REALIZADO",
-      "evidencias": [],
-      "bloqueios": [],
+      "aceite_operacional_novo_incremento": "PENDENTE_CONFERENCIA_REAL_DAS_ARTES_E_DEMAIS_ACEITES_OP010",
+      "evidencias": [
+        "validation/dtf-cycle.json"
+      ],
+      "bloqueios": [
+        "Proprietário precisa conferir artes/larguras por variação; cores/tamanhos/lista física e demais aceites OP010 não são comprovados pela composição de estampas."
+      ],
       "regra_especial": null,
       "codigo_da_especificacao": "RECONFERIR_REUTILIZAR_EXISTENTE_E_COMPLETAR_LACUNAS",
-      "estado_execucao": "ABERTO",
+      "estado_execucao": "PARCIAL_IMPLEMENTADO_SUBESCOPO_COMPOSICAO_DTF",
       "bloqueia_tarefas_independentes": false
     },
     {
@@ -472,7 +476,7 @@
       ],
       "estado_desta_especificacao": "ESPECIFICADO_PARA_CODEX",
       "codigo": "CICLO_PARCIAL_SALDO_REIMPRESSAO_PERDA_CORRECAO_AUDITADA",
-      "testes_novo_incremento": "BACKEND_CHROMIUM_NORMAL_MINIFICADO_320_1365_63PASS_HISTORICO1006_EVENTOS_RESTORE_IDEMPOTENTE_GATES_COMPLETOS_PENDENTES",
+      "testes_novo_incremento": "CICLO_E_KITS_BACKEND_CHROMIUM_COM_PNGS_SINTETICOS_PYTHON67PASS_GATES_COMPLETOS_PENDENTES",
       "publicacao_novo_incremento": "NAO_REALIZADA",
       "aceite_operacional_novo_incremento": "PENDENTE_ARTES_IMPRESSORA_E_FATOS_REAIS",
       "evidencias": [
@@ -5671,7 +5675,7 @@
     "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/docs/financial-automation/publication-live-20261113.json"
   ],
   "source_specification": "input/ROADMAP_EXECUTAVEL_USO_PROPRIO_MLS.json",
-  "updated_at": "2026-11-16T23:04:09.444172+00:00",
+  "updated_at": "2026-11-16T23:33:08.337717+00:00",
   "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
   "specification_initial_checkpoint_historical": {
     "fase_corrente": "U0",

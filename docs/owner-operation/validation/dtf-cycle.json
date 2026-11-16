@@ -1,21 +1,21 @@
 {
   "schema": "dtf_lifecycle_increment_v1",
   "task": "OP-012",
-  "source_commit": "bb5d14d78813692950435441333e842aa6759325",
+  "source_commit": "457ddad95953f5b3b8b8c31e71499697ad39cac8",
   "source_parent": "d27f85a67906002c9ac8be4bef101eb793f87358",
   "base_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
   "branch": "feature/owner-dtf-cycle-20261116",
-  "recorded_at_utc": "2026-11-16T23:04:09.444172+00:00",
-  "recorded_at_brasilia": "2026-11-16T20:04:09.444172-03:00",
+  "recorded_at_utc": "2026-11-16T23:33:08.337717+00:00",
+  "recorded_at_brasilia": "2026-11-16T20:33:08.337717-03:00",
   "release_candidate": "2026-11-16.2",
   "implemented": true,
   "tested": {
     "targeted": {
-      "total": 63,
-      "pass": 63,
-      "fail": 0,
-      "skipped": 0,
-      "cancelled": 0
+      "status": "BACKEND_AND_COMPILED_NATIVE_CASES_PASS_BEFORE_COMPLETE_RUN",
+      "new_kit_backend_cases": 5,
+      "new_kit_authenticated_chromium_cases": 4,
+      "exact_final_runtime_native_kit_cases_pass": 4,
+      "full_suite_required": true
     },
     "backend_cases": 13,
     "authenticated_chromium": {
@@ -34,9 +34,13 @@
       "all_pages_and_totals_verified": true
     },
     "sqlite_backup_restore_including_idempotent_retry": true,
-    "full_node": "PENDING",
-    "github_ci": "PENDING",
-    "python": "PENDING"
+    "full_node": "RUNNING_FINAL_CANDIDATE",
+    "github_ci": "PENDING_FINAL_HEAD",
+    "python": {
+      "total": 67,
+      "pass": 67,
+      "fail": 0
+    }
   },
   "published": false,
   "operational_acceptance": false,
@@ -51,7 +55,10 @@
     "actual reprint and loss are separate append-only facts; unknown cost is null; no automatic finance write",
     "correction reverses only a referenced confirmation, with remaining reversible quantity and atomic CAS; original record/cost retained",
     "all historical event pages and complete totals; bounded20 rows per page",
-    "restore request retry is idempotent and property order is normalized"
+    "restore request retry is idempotent and property order is normalized",
+    "Explicit audited kit composition by exact native item/model/source SKU, never auto-copying the sole art; convenience duplication requires owner action, reason and confirmation.",
+    "Apply only to eligible unprinted unreserved rows in bounded300 chunks with exact remaining_count, stable recipes on refresh and immutable reserved/printed snapshots. Native SKU and financial bindings unchanged.",
+    "Re-enable newly created reservation actions after busy state; compiled native QA covers actual six-print PNG export for three kits."
   ],
   "private_operational_backup_evidence": {
     "schema": "dtf_private_d1_recovery_evidence_v1",
@@ -224,7 +231,7 @@
   "d1_schema_migration": false,
   "d1_tables_indexes_triggers_changed": false,
   "audit_storage": "Existing production_dtf_audit; immutable DTFH batch headers and DTFU unit confirmations/reversals; indexed identity prefix ranges; no lifetime array cap.",
-  "legacy_compatibility": "Old full export is blocked once a partial fact exists; old completion cannot overwrite a balance with earlier prints. Marker held to fail closed on legacy code. Parent server does not understand partial facts: after first lifecycle use, keep the compatible server reader/writer on UI rollback; never blindly deploy the old server or restore a pre-event database over real facts.",
+  "legacy_compatibility": "Old full export is blocked once a partial fact exists; old completion cannot overwrite a balance with earlier prints. Marker held to fail closed on legacy code. Parent server does not understand partial facts: after first lifecycle use, keep the compatible server reader/writer on UI rollback; never blindly deploy the old server or restore a pre-event database over real facts. The previous server also does not understand mapped kit snapshots; retain a compatible reader/writer after recipe use.",
   "public_assets": {
     "exact_new_id": "dtf",
     "active_ceiling": 7,
@@ -236,22 +243,148 @@
     "loss_of_dtf_or_workspace_script_offers_reload_without_starting_actions": true
   },
   "compiled_hashes": {
-    "app": "bc36c2d29dadb432faf99f58b8dba2afbb9a0e45097a093b66794d2a16277b84",
+    "app": "af6b26b6a1fa1237f80d73fe3057ee74d0d2d005dfbc4eb10e92047895a119cf",
     "auth": "aaafc3a6c16684949d8714f309ce1cf0525d71ac7223fed20d948347ff943182",
     "finance": "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4"
   },
   "dry_packages": {
+    "app": {
+      "raw_sha256": "f1166d81a885f3f425d8fd95813b77e81b14b0cd3ee02250e9f8c40878d9c037",
+      "raw_bytes": 4193226
+    },
     "auth": {
       "raw_sha256": "1a927c072c69b45670c83e8327e93b9eb68f001bfab748273063fd90244a6095",
       "raw_bytes": 654596
-    },
-    "app": {
-      "raw_sha256": "52be141d6ee2423c523eb46ffe8801a3d63690ac0b26c44bdb10707679889e0b",
-      "raw_bytes": 4181484
     }
   },
   "commercial_money_or_marketplace_writes": false,
   "workflow_permissions_or_deployment_profile_changes": false,
   "real_artwork_and_printer_acceptance": "PENDING_OWNER_IMPORT_AND_PHYSICAL_CONFERENCE",
-  "next_independent_task": "OP-014 manufacturing/cost/payment foundations by existing technical dependencies; current printing facts never certify garment manufacture."
+  "next_independent_task": "OP-014 manufacturing/cost/payment foundations by existing technical dependencies; current printing facts never certify garment manufacture.",
+  "superseded_attempts": [
+    {
+      "head": "970f2eff5b194d89a90e041939e4b671be85ca92",
+      "source_commit": "bb5d14d78813692950435441333e842aa6759325",
+      "targeted": {
+        "total": 63,
+        "pass": 63,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0
+      },
+      "compiled_hashes": {
+        "app": "bc36c2d29dadb432faf99f58b8dba2afbb9a0e45097a093b66794d2a16277b84",
+        "auth": "aaafc3a6c16684949d8714f309ce1cf0525d71ac7223fed20d948347ff943182",
+        "finance": "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4"
+      },
+      "dry_packages": {
+        "auth": {
+          "raw_sha256": "1a927c072c69b45670c83e8327e93b9eb68f001bfab748273063fd90244a6095",
+          "raw_bytes": 654596
+        },
+        "app": {
+          "raw_sha256": "52be141d6ee2423c523eb46ffe8801a3d63690ac0b26c44bdb10707679889e0b",
+          "raw_bytes": 4181484
+        }
+      },
+      "full_node": {
+        "total": 4471,
+        "pass": 4469,
+        "fail": 2,
+        "cause": "Rigid workspace-browser-asset inventory tests still expected six after the explicit seventh DTF asset."
+      },
+      "github_ci": {
+        "id": 43976343445,
+        "conclusion": "failure",
+        "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43976343445"
+      },
+      "published": false
+    }
+  ],
+  "related_task": "OP-010_DTF_COMPOSITION_SUBSET",
+  "private_queue_quality": {
+    "source": "PRIVATE_READ_ONLY_SNAPSHOT_AGGREGATES_ONLY",
+    "eligible_saved_lines": 125,
+    "parseable_sku_lines": 125,
+    "kit_lines_missing_explicit_second_art": 78,
+    "distinct_art_keys": 9,
+    "owner_actual_pixels_available_to_agent": false,
+    "live_recipes_changed_by_agent": 0,
+    "not_inference_of_manufacture": true
+  },
+  "code_backup_before_promotion": {
+    "pass": true,
+    "workers": {
+      "app": {
+        "active_version_id": "75da11bb-3bee-4396-918b-79bf5846cb04",
+        "raw_source_sha256": "9c865f155b5fdf972668950e22b3486d3ebab3efdfa10114a0676c8c419aeed3",
+        "raw_bytes": 4194261,
+        "matches_publication_receipt": true
+      },
+      "auth": {
+        "active_version_id": "5b08f876-68ce-4d6d-ba7a-5dbedadf2f16",
+        "raw_source_sha256": "9ee5d41ae9db301c745e1bfa8d2ae369828426a7524c7c0f7ab1639459c63710",
+        "raw_bytes": 654592,
+        "matches_publication_receipt": true
+      },
+      "finance": {
+        "active_version_id": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+        "raw_source_sha256": "3e3f3d35a3e0037c251f7abda29cc8a64643ee255771d07f2893d32d8ef7d22a",
+        "raw_bytes": 934552,
+        "matches_publication_receipt": true
+      }
+    },
+    "not_a_d1_or_artwork_backup": true
+  },
+  "native_baseline_recheck": {
+    "schema": "owner_artwork_controlled_stage_verification_v1",
+    "recorded_at": "2026-11-16T23:27:22.828187+00:00",
+    "updated_workers": [],
+    "workers": {
+      "finance": {
+        "active_version_id": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+        "latest_version_id": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+        "active_percentage": 100,
+        "retrieved_raw_sha256": "3e3f3d35a3e0037c251f7abda29cc8a64643ee255771d07f2893d32d8ef7d22a",
+        "raw_bytes": 934552,
+        "effective_config_sha256": "1e5de4eba866ec7c8ca85fc37c7969d61dc513a26336879e2753e506c6711ab2",
+        "action": "RETAINED",
+        "source_matches_expected": true
+      },
+      "auth": {
+        "active_version_id": "5b08f876-68ce-4d6d-ba7a-5dbedadf2f16",
+        "latest_version_id": "5b08f876-68ce-4d6d-ba7a-5dbedadf2f16",
+        "active_percentage": 100,
+        "retrieved_raw_sha256": "9ee5d41ae9db301c745e1bfa8d2ae369828426a7524c7c0f7ab1639459c63710",
+        "raw_bytes": 654592,
+        "effective_config_sha256": "304c9c4615acdfc3a8222e00449e5bceabcf2dd9bd574587538183a935003361",
+        "action": "RETAINED",
+        "source_matches_expected": true
+      },
+      "app": {
+        "active_version_id": "75da11bb-3bee-4396-918b-79bf5846cb04",
+        "latest_version_id": "75da11bb-3bee-4396-918b-79bf5846cb04",
+        "active_percentage": 100,
+        "retrieved_raw_sha256": "9c865f155b5fdf972668950e22b3486d3ebab3efdfa10114a0676c8c419aeed3",
+        "raw_bytes": 4194261,
+        "effective_config_sha256": "72c1ffdf88e61e4d2b1b7d78545c3d8d9a5b903cc32cf4ed83ee87d5c19a32b9",
+        "action": "RETAINED",
+        "source_matches_expected": true
+      }
+    },
+    "all_configs_preserved": true,
+    "owner_flags_preserved": true,
+    "all_source_bytes_exact": true,
+    "all_active_latest_100": true
+  },
+  "kit_recipe_storage": "Existing append-only audit DTFC recipe revisions + DTFA applications; indexed scope, exact source/CAS, no schema migration. Mapped line snapshots retain source_sku and recipe_request_id.",
+  "git_review": {
+    "pull_request": 125,
+    "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/125",
+    "draft": true,
+    "merge": false,
+    "auto_merge": false,
+    "remote_main_verified": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+    "supported_transport": "GitHub connector Git Data API; git native transport503; identical tree verified; local predecessor retained."
+  }
 }

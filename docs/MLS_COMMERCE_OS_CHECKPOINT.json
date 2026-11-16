@@ -2,7 +2,7 @@
   "schema": "mls_commerce_os_checkpoint_v1",
   "canonical_roadmap": "docs/ROADMAP_MLS_COMMERCE_OS.md",
   "legacy_roadmap": "docs/ROADMAP_BRAZACOMMERCE.md",
-  "updated_at": "2026-11-16T23:04:09.444172+00:00",
+  "updated_at": "2026-11-16T23:33:08.337717+00:00",
   "product": {
     "name": "MLS Commerce OS",
     "supervisor": "MLS Hermes",
@@ -31,7 +31,7 @@
   },
   "current_phase": "OWNER_OPERATION_U2_DTF_COMPLETE_PRINT_CYCLE",
   "working_branch": "feature/owner-dtf-cycle-20261116",
-  "current_status": "DTF_LIFECYCLE_IMPLEMENTED_TARGETED_PASS_FULL_GATES_PENDING",
+  "current_status": "DTF_KIT_COMPOSITION_AND_PRINT_CYCLE_IMPLEMENTED_FULL_GATES_RUNNING",
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
     "Repasse-base, ajuste, repasse após ajuste e liberação exibidos sem dupla dedução",
@@ -120,7 +120,7 @@
     }
   },
   "next_actions": [
-    "Complete full Node/Python/build/deploy gates and exact-head GitHub CI for this DTF lifecycle candidate, then controlled publication with exact source/config/public asset checks.",
+    "Complete final-candidate full Node and exact-head GitHub CI, then controlled Auth/App promotion; Finance remains exact and unchanged. Record native source/config/traffic and public assets before claiming publication.",
     "Owner actual acceptance: import original PNGs, verify dimensions/DPI in preview and print at100%; use physical confirmation only after checking complete DTF units.",
     "Never blind-rollback the old DTF server over partial/reversed physical facts; preserve compatible reader and complete append-only audit and use verified backups.",
     "Manufacture, actual costs, partial payments and returns continue by matrix dependencies. Printing/export is not garment manufacture; absent cost/source is unknown, never zero.",
@@ -134,16 +134,19 @@
   ],
   "latest_increment": {
     "task": "OP-012",
-    "source_commit": "bb5d14d78813692950435441333e842aa6759325",
+    "source_commit": "457ddad95953f5b3b8b8c31e71499697ad39cac8",
     "release_candidate": "2026-11-16.2",
     "implementation": true,
-    "local_validation": "63_TARGETED_PASS_FULL_NODE_PYTHON_CI_PENDING",
+    "local_validation": "KIT_NATIVE_4PASS_BACKEND5PASS_PYTHON67PASS_FULL_NODE_AND_CI_PENDING",
     "published": false,
     "validated_operationally": false,
     "actual_financial_acceptance": false,
     "receipt": "docs/owner-operation/validation/dtf-cycle.json",
     "source_parent": "d27f85a67906002c9ac8be4bef101eb793f87358",
-    "previous_published_receipt": "docs/owner-operation/validation/publication-artwork-live-20261116.json"
+    "previous_published_receipt": "docs/owner-operation/validation/publication-artwork-live-20261116.json",
+    "related_task": "OP-010_DTF_COMPOSITION_SUBSET",
+    "pull_request": 125,
+    "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE"
   },
   "incident": {
     "id": "INCIDENT_2026_10_27_PANEL_AGENT_REGRESSION",
