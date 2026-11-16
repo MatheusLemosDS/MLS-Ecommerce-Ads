@@ -1,7 +1,7 @@
 {
   "schema": "owner_artwork_controlled_publication_v1",
-  "status": "PUBLISHED_NATIVE_SOURCE_CONFIG_VERIFIED_PUBLIC_HTTP_ASSETS_BLOCKED",
-  "verification_scope": "NATIVE_CF_SOURCE_CONFIG_TRAFFIC_ROUTES_SUBDOMAINS_CRON; FULL_PUBLIC_READ_BLOCKED_BY_ENVIRONMENT_ENVOY",
+  "status": "PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY",
+  "verification_scope": "NATIVE_CF_AND_PUBLIC_HTTP_ASSETS; OWNER_REAL_OPERATIONAL_ACCEPTANCE_PENDING",
   "release": "2026-11-16.1",
   "label": "DTF · backup das artes",
   "url": "https://app.brazacommerce.com.br",
@@ -430,10 +430,10 @@
     "no_permission_expansion_or_network_bypass": true
   },
   "browser_asset_publication_ledger": {
-    "status": "HELD_PREVIOUS_APPROVED_PUBLICATION",
-    "reason": "recordBrowserAssetPublication requires independent byte verification of every public asset. All7 reads returned the Envoy transport error; no false approved-publication record written.",
-    "old_ledger_unchanged": true,
-    "required_before_next_deployment": "Read all7 paths from current manifest, verify SHA-256/length, then archive/update approved publication ledger using existing tool before publishing another asset generation."
+    "status": "APPROVED_FROM_INDEPENDENT_PUBLIC_BYTES",
+    "verified_at": "2026-11-16T22:16:34.970986+00:00",
+    "assets": 7,
+    "previous_ledger_archive": "docs/owner-operation/history/browser-assets-before-op013-20261116.json"
   },
   "owner_live_authenticated_qa": "NOT_PERFORMED_NO_AUTHORIZED_LIVE_SESSION_AVAILABLE",
   "operational_acceptance": false,
@@ -587,5 +587,257 @@
     "historical_root_readme_and_domain_rules_preserved": true,
     "approved_asset_ledger_unchanged_until_read_gate": true,
     "additional_functional_suite_manually_repeated": false
+  },
+  "status_history": [
+    {
+      "status": "PUBLISHED_NATIVE_SOURCE_CONFIG_VERIFIED_PUBLIC_HTTP_ASSETS_BLOCKED",
+      "recorded_at": "2026-11-16T17:58:53.316351+00:00",
+      "public_verification": {
+        "status": "BLOCKED_ENVIRONMENT_TRANSPORT",
+        "all_assets_verified": false,
+        "public_asset_attempts": {
+          "schema": "owner_artwork_public_asset_read_v1",
+          "recorded_at": "2026-11-16T17:56:54.835809+00:00",
+          "all_exact": false,
+          "assets": [
+            {
+              "path": "/assets/mls/0d6250f5888258fa29664eac45b2cd821d3872b1c96ac47dda46bd7fd10e6a0c.js",
+              "status": 503,
+              "bytes": 98,
+              "response_sha256": "33fbc61ad080ef68dd7a6479f8c53f1bf864dba2930567dbbc4ceb47490a1909",
+              "expected_sha256": "0d6250f5888258fa29664eac45b2cd821d3872b1c96ac47dda46bd7fd10e6a0c",
+              "exact": false,
+              "known_envoy_transport_failure": true
+            },
+            {
+              "path": "/assets/mls/5203d255416bacb97cd44ddef29a2fc76b1432f0a1ea731fabacc4bb071fcd07.js",
+              "status": 503,
+              "bytes": 98,
+              "response_sha256": "33fbc61ad080ef68dd7a6479f8c53f1bf864dba2930567dbbc4ceb47490a1909",
+              "expected_sha256": "5203d255416bacb97cd44ddef29a2fc76b1432f0a1ea731fabacc4bb071fcd07",
+              "exact": false,
+              "known_envoy_transport_failure": true
+            },
+            {
+              "path": "/assets/mls/ec6397070416275d880f293d4abe8d7f531215af369d7e9a275c10f019a8c3c8.js",
+              "status": 503,
+              "bytes": 98,
+              "response_sha256": "33fbc61ad080ef68dd7a6479f8c53f1bf864dba2930567dbbc4ceb47490a1909",
+              "expected_sha256": "ec6397070416275d880f293d4abe8d7f531215af369d7e9a275c10f019a8c3c8",
+              "exact": false,
+              "known_envoy_transport_failure": true
+            },
+            {
+              "path": "/assets/mls/549c2b0f6ae183249bed2472af894cf5211d4a6853fc33c0ce6c127aa3ebf034.js",
+              "status": 503,
+              "bytes": 98,
+              "response_sha256": "33fbc61ad080ef68dd7a6479f8c53f1bf864dba2930567dbbc4ceb47490a1909",
+              "expected_sha256": "549c2b0f6ae183249bed2472af894cf5211d4a6853fc33c0ce6c127aa3ebf034",
+              "exact": false,
+              "known_envoy_transport_failure": true
+            },
+            {
+              "path": "/assets/mls/04ae3166780be18f31754212640b0887abe9e20830ac4309a6e31109398e4eeb.js",
+              "status": 503,
+              "bytes": 98,
+              "response_sha256": "33fbc61ad080ef68dd7a6479f8c53f1bf864dba2930567dbbc4ceb47490a1909",
+              "expected_sha256": "04ae3166780be18f31754212640b0887abe9e20830ac4309a6e31109398e4eeb",
+              "exact": false,
+              "known_envoy_transport_failure": true
+            },
+            {
+              "path": "/assets/mls/647a03c700a64eff24111bdeb6b5135c49e2482da227e9fbf72686bf87d88af7.js",
+              "status": 503,
+              "bytes": 98,
+              "response_sha256": "33fbc61ad080ef68dd7a6479f8c53f1bf864dba2930567dbbc4ceb47490a1909",
+              "expected_sha256": "647a03c700a64eff24111bdeb6b5135c49e2482da227e9fbf72686bf87d88af7",
+              "exact": false,
+              "known_envoy_transport_failure": true
+            },
+            {
+              "path": "/assets/mls/e3b12127a14b70185a25c83dae547facc946a4fe87afe0369a8f47665f6398ca.js",
+              "status": 503,
+              "bytes": 98,
+              "response_sha256": "33fbc61ad080ef68dd7a6479f8c53f1bf864dba2930567dbbc4ceb47490a1909",
+              "expected_sha256": "e3b12127a14b70185a25c83dae547facc946a4fe87afe0369a8f47665f6398ca",
+              "exact": false,
+              "known_envoy_transport_failure": true
+            }
+          ],
+          "configuration_credentials_proxy_ca_unchanged": true
+        },
+        "initial_positive_observations": [
+          {
+            "path": "/login",
+            "status": 200,
+            "release_header": "2026-11-16.1",
+            "response_sha256": "59ba4ecc5f085fa7e24359a13a2085aafe8e58ea3f5607f777c22bc685352c55"
+          },
+          {
+            "path": "/account/help",
+            "status": 200,
+            "response_sha256": "30a3520cf12a5e90ccc9f565bc54e6d9d43bc57e895ae28102e2fe09d8b3cdc6"
+          }
+        ],
+        "positive_observation_scope": "Single post-deploy responses observed before subsequent egress failures; not a completed smoke or availability guarantee.",
+        "exact_error": "upstream connect error or disconnect/reset before headers. reset reason: remote connection failure",
+        "error_body_bytes": 98,
+        "error_body_sha256": "33fbc61ad080ef68dd7a6479f8c53f1bf864dba2930567dbbc4ceb47490a1909",
+        "same_error_from_github_cli": true,
+        "policy_observed": "UNRESTRICTED_ENFORCED_CONNECTED_CURRENT",
+        "tls_proxy_credentials_unchanged": true,
+        "bounded_read_revalidation": "Three attempts only for exact Envoy error; curl with inherited proxy/CA confirmed same transport error.",
+        "no_permission_expansion_or_network_bypass": true
+      },
+      "browser_asset_publication_ledger": {
+        "status": "HELD_PREVIOUS_APPROVED_PUBLICATION",
+        "reason": "recordBrowserAssetPublication requires independent byte verification of every public asset. All7 reads returned the Envoy transport error; no false approved-publication record written.",
+        "old_ledger_unchanged": true,
+        "required_before_next_deployment": "Read all7 paths from current manifest, verify SHA-256/length, then archive/update approved publication ledger using existing tool before publishing another asset generation."
+      }
+    }
+  ],
+  "public_verification_followup": {
+    "schema": "owner_public_routing_verification_v1",
+    "recorded_at": "2026-11-16T22:16:34.970986+00:00",
+    "release": "2026-11-16.1",
+    "routes_subdomains_schedules": {
+      "app": {
+        "workers_dev": true,
+        "previews_enabled": false,
+        "crons": [
+          "* * * * *"
+        ],
+        "domains": [
+          "app.brazacommerce.com.br"
+        ],
+        "matches_reviewed_config": true
+      },
+      "auth": {
+        "workers_dev": true,
+        "previews_enabled": false,
+        "crons": [],
+        "domains": [
+          "auth.brazacommerce.com.br"
+        ],
+        "matches_reviewed_config": true
+      },
+      "finance": {
+        "workers_dev": false,
+        "previews_enabled": false,
+        "crons": [],
+        "domains": [],
+        "matches_reviewed_config": true
+      }
+    },
+    "public_http": [
+      {
+        "path": "/login",
+        "status": 200,
+        "release_header": "2026-11-16.1",
+        "final_path": "/login",
+        "response_sha256": "59ba4ecc5f085fa7e24359a13a2085aafe8e58ea3f5607f777c22bc685352c55"
+      },
+      {
+        "path": "/account/login",
+        "status": 200,
+        "release_header": null,
+        "final_path": "/account/login",
+        "response_sha256": "30a3520cf12a5e90ccc9f565bc54e6d9d43bc57e895ae28102e2fe09d8b3cdc6"
+      },
+      {
+        "path": "/account/help",
+        "status": 200,
+        "release_header": null,
+        "final_path": "/account/login",
+        "response_sha256": "30a3520cf12a5e90ccc9f565bc54e6d9d43bc57e895ae28102e2fe09d8b3cdc6"
+      },
+      {
+        "path": "/admin?tab=production",
+        "status": 200,
+        "release_header": "2026-11-16.1",
+        "final_path": "/login",
+        "response_sha256": "59ba4ecc5f085fa7e24359a13a2085aafe8e58ea3f5607f777c22bc685352c55"
+      },
+      {
+        "path": "/health",
+        "status": 200,
+        "release_header": null,
+        "final_path": "/health",
+        "response_sha256": "7cb8471af656cf3d62d5942ac9ea92be09c9f3951fb3fd057ea44b7d761af6c2"
+      },
+      {
+        "path": "/api/admin/bootstrap",
+        "status": 401,
+        "release_header": "2026-11-16.1",
+        "final_path": "/api/admin/bootstrap",
+        "response_sha256": "a1d55d2c2c14a6a8d1c08977059aa62ea671af14dbb076c3ecb00d1f31e74389"
+      },
+      {
+        "path": "/api/admin/production/batches?status=OPEN",
+        "status": 401,
+        "release_header": "2026-11-16.1",
+        "final_path": "/api/admin/production/batches",
+        "response_sha256": "a1d55d2c2c14a6a8d1c08977059aa62ea671af14dbb076c3ecb00d1f31e74389"
+      },
+      {
+        "path": "/api/admin/production/batch?id=00000000-0000-4000-8000-000000000001",
+        "status": 401,
+        "release_header": "2026-11-16.1",
+        "final_path": "/api/admin/production/batch",
+        "response_sha256": "a1d55d2c2c14a6a8d1c08977059aa62ea671af14dbb076c3ecb00d1f31e74389"
+      }
+    ],
+    "assets": [
+      {
+        "path": "/assets/mls/0d6250f5888258fa29664eac45b2cd821d3872b1c96ac47dda46bd7fd10e6a0c.js",
+        "sha256": "0d6250f5888258fa29664eac45b2cd821d3872b1c96ac47dda46bd7fd10e6a0c",
+        "bytes": 38035,
+        "status": 200
+      },
+      {
+        "path": "/assets/mls/5203d255416bacb97cd44ddef29a2fc76b1432f0a1ea731fabacc4bb071fcd07.js",
+        "sha256": "5203d255416bacb97cd44ddef29a2fc76b1432f0a1ea731fabacc4bb071fcd07",
+        "bytes": 704817,
+        "status": 200
+      },
+      {
+        "path": "/assets/mls/ec6397070416275d880f293d4abe8d7f531215af369d7e9a275c10f019a8c3c8.js",
+        "sha256": "ec6397070416275d880f293d4abe8d7f531215af369d7e9a275c10f019a8c3c8",
+        "bytes": 21282,
+        "status": 200
+      },
+      {
+        "path": "/assets/mls/549c2b0f6ae183249bed2472af894cf5211d4a6853fc33c0ce6c127aa3ebf034.js",
+        "sha256": "549c2b0f6ae183249bed2472af894cf5211d4a6853fc33c0ce6c127aa3ebf034",
+        "bytes": 165982,
+        "status": 200
+      },
+      {
+        "path": "/assets/mls/04ae3166780be18f31754212640b0887abe9e20830ac4309a6e31109398e4eeb.js",
+        "sha256": "04ae3166780be18f31754212640b0887abe9e20830ac4309a6e31109398e4eeb",
+        "bytes": 54280,
+        "status": 200
+      },
+      {
+        "path": "/assets/mls/647a03c700a64eff24111bdeb6b5135c49e2482da227e9fbf72686bf87d88af7.js",
+        "sha256": "647a03c700a64eff24111bdeb6b5135c49e2482da227e9fbf72686bf87d88af7",
+        "bytes": 475458,
+        "status": 200
+      },
+      {
+        "path": "/assets/mls/e3b12127a14b70185a25c83dae547facc946a4fe87afe0369a8f47665f6398ca.js",
+        "sha256": "e3b12127a14b70185a25c83dae547facc946a4fe87afe0369a8f47665f6398ca",
+        "bytes": 462298,
+        "status": 200
+      }
+    ],
+    "all_exact": true,
+    "release_header_contract": "Version checked where the original response provides it; account-page HTML has no release header in the baseline or candidate. No application header was changed to satisfy this probe.",
+    "authenticated_owner_live_qa": "NOT_PERFORMED",
+    "scope": "PUBLIC_TLS_HTTP_ROUTING_ASSETS_AND_ANONYMOUS_AUTHORIZATION_ONLY",
+    "remote_data_mutations": 0,
+    "transport_warnings": [],
+    "transport_revalidation": "Same canonical URL, credentials/CA/proxy unchanged; bounded retries only for exact known98-byte Envoy reset error; no application503 ignored."
   }
 }
