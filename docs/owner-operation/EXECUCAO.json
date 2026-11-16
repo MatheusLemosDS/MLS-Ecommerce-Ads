@@ -7,30 +7,6 @@
   "baseline_sha": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
   "natureza": "EXECUCAO_NO_PROJETO_EXISTENTE_COM_ACEITES_SEPARADOS",
   "precedencia": "Instrução mais recente do proprietário: concluir uso próprio; substituir ordem e gates comerciais do plano anterior. Preservar requisitos válidos, evidências e segurança.",
-  "ci_observada": {
-    "sha": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
-    "run_id": 43536468273,
-    "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43536468273",
-    "conclusion": "success",
-    "node": 4432,
-    "python": 67,
-    "node_failed": 0,
-    "node_skipped": 0,
-    "execucao": "CI_REMOTA_EXISTENTE_CONSULTADA_NAO_REEXECUTADA_NESTA_AUDITORIA"
-  },
-  "publicacao_documentada": {
-    "release": "2026-11-13.3",
-    "source_commit": "f68525ea1d136350ece9942433352accdf97d992",
-    "verificacao": "RECIBO_DO_REPOSITORIO_ESCOPO_TECNICO_PUBLICO",
-    "owner_live_authenticated_qa": "NOT_PERFORMED",
-    "nao_recertifica_bytes_live_agora": true
-  },
-  "observacao_live_desta_auditoria": {
-    "publico": "Login respondeu; admin sem sessão redirecionou/login. Account login com textos inadequados; ajuda retornou/account/login.",
-    "autenticado": "NAO_REALIZADO",
-    "mutacoes": 0,
-    "pane_atual_comprovada": false
-  },
   "protocolo": {
     "regra_global": "Fases são prioridades; dependências técnicas por tarefa. Nenhuma dependência de venda pode bloquear operação. Tarefa bloqueada não bloqueia independentes.",
     "dependencias": "Os IDs OP são dependências de implementação. Aceite real é avaliado separadamente por função/família; programação e testes podem avançar sem acesso externo, sem fingir aceite.",
@@ -225,7 +201,7 @@
       "estado_desta_especificacao": "ESPECIFICADO_PARA_CODEX",
       "codigo": "OWNER_OPERATION_E_DEPENDENCIAS_REORDENADOS",
       "testes_novo_incremento": "VALIDADO_DOCUMENTAL_36_OP_46_SAAS_28_FINAUTO_24_CENARIOS_21_VIS_22_FAMILIAS_PRESERVADOS",
-      "publicacao_novo_incremento": "NAO_REALIZADA",
+      "publicacao_novo_incremento": "DOCUMENTACAO_NA_PR123_RASCUNHO_SEM_MERGE",
       "aceite_operacional_novo_incremento": "NAO_REALIZADO",
       "evidencias": [
         "README.md",
@@ -462,18 +438,19 @@
       ],
       "estado_desta_especificacao": "ESPECIFICADO_PARA_CODEX",
       "codigo": "IMPLEMENTADO_PAGINACAO_CHAVESET_FILTROS_E_DETALHE_POR_ID",
-      "testes_novo_incremento": "VALIDADO_LOCAL_125_LOTES_4_PERFIS_CHROMIUM_COMPILED_AUTH_FULL_RUN_PLUS_TARGETED_REVALIDATION",
-      "publicacao_novo_incremento": "NAO_REALIZADA",
-      "aceite_operacional_novo_incremento": "NAO_REALIZADO",
+      "testes_novo_incremento": "CI_EXATA4441_NODE_67_PYTHON_COMPILED_AUTH_DESKTOP_MOBILE_PASS",
+      "publicacao_novo_incremento": "PUBLICADO_VERIFICADO_TECNICO_FONTE_CONFIG_HTTP_ASSETS",
+      "aceite_operacional_novo_incremento": "NAO_REALIZADO_NA_CONTA",
       "evidencias": [
-        "validation/owner-dtf-batches.json"
+        "validation/owner-dtf-batches.json",
+        "validation/publication-live-20261116.json"
       ],
       "bloqueios": [
         "Actual owner use after publication not accepted yet. No existing Live batch beyond30 was asserted: SELECT found zero stored DTF batches, not zero physical manufacturing."
       ],
       "regra_especial": null,
       "codigo_da_especificacao": "RECONFERIR_REUTILIZAR_EXISTENTE_E_COMPLETAR_LACUNAS",
-      "estado_execucao": "IMPLEMENTADO_VALIDADO_LOCAL",
+      "estado_execucao": "PUBLICADO_TECNICO_ACEITE_REAL_PENDENTE",
       "bloqueia_tarefas_independentes": false,
       "source_commit": "e168e9a04d7b6feaaf885bd645d9394533dadeee"
     },
@@ -1186,19 +1163,20 @@
       ],
       "estado_desta_especificacao": "ESPECIFICADO_PARA_CODEX",
       "codigo": "EXISTING_CONTROLLED_DEPLOY_PATH_CONFIGURATION_VALIDATED",
-      "testes_novo_incremento": "LOCAL_VALIDATION_COMPLETED_EXACT_GITHUB_CI_PENDING",
-      "publicacao_novo_incremento": "NAO_REALIZADA",
+      "testes_novo_incremento": "CI_EXATA_APROVADA4441_NODE_67_PYTHON",
+      "publicacao_novo_incremento": "AUTH_APP_PUBLICADOS_FINANCE_RETIDO_VETORES_BYTES_CONFIG100_EXATOS",
       "aceite_operacional_novo_incremento": "NAO_REALIZADO",
       "evidencias": [
         "validation/owner-dtf-batches.json",
-        "validation/build-triggers.json"
+        "validation/build-triggers.json",
+        "validation/publication-live-20261116.json"
       ],
       "bloqueios": [
         "Effective automatic Workers Builds metadata/triggers GET403/code10000. No cause inferred and no configuration/grants changed. Controlled publication still requires exact-candidate CI, config, source/version and function checks."
       ],
       "regra_especial": "Executar e verificar em cada incremento; não esperar U6 para publicar. OP-005 obrigatório antes de migrações/mudanças de dados, não como nova barreira global para correção de UI sem alteração de dados.",
       "codigo_da_especificacao": "RECONFERIR_REUTILIZAR_EXISTENTE_E_COMPLETAR_LACUNAS",
-      "estado_execucao": "PREPARADO_AGUARDANDO_CI_E_PUBLICACAO_CONTROLADA",
+      "estado_execucao": "PUBLICACAO_CONTROLADA_VERIFICADA_TECNICAMENTE",
       "bloqueia_tarefas_independentes": false
     },
     {
@@ -1221,7 +1199,7 @@
       "estado_desta_especificacao": "ESPECIFICADO_PARA_CODEX",
       "codigo": "README_AND_HANDOFF_UPDATED",
       "testes_novo_incremento": "NAO_EXECUTADOS_PARA_ACEITE_DESTA_TAREFA",
-      "publicacao_novo_incremento": "NAO_REALIZADA",
+      "publicacao_novo_incremento": "DOCUMENTACAO_NA_PR123_RASCUNHO_SEM_MERGE",
       "aceite_operacional_novo_incremento": "NAO_REALIZADO",
       "evidencias": [
         "README.md"
@@ -1250,7 +1228,7 @@
       "estado_desta_especificacao": "ESPECIFICADO_PARA_CODEX",
       "codigo": "LOCAL_SAAS_BRANCHES_UNCHANGED_SHARED_SECURITY_ACTIVE",
       "testes_novo_incremento": "NAO_EXECUTADOS_PARA_ACEITE_DESTA_TAREFA",
-      "publicacao_novo_incremento": "NAO_REALIZADA",
+      "publicacao_novo_incremento": "DOCUMENTACAO_NA_PR123_RASCUNHO_SEM_MERGE",
       "aceite_operacional_novo_incremento": "NAO_REALIZADO",
       "evidencias": [
         "README.md"
@@ -5682,7 +5660,7 @@
     "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/docs/financial-automation/publication-live-20261113.json"
   ],
   "source_specification": "input/ROADMAP_EXECUTAVEL_USO_PROPRIO_MLS.json",
-  "updated_at": "2026-11-16T02:41:18.483385+00:00",
+  "updated_at": "2026-11-16T03:35:30.119737+00:00",
   "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
   "specification_initial_checkpoint_historical": {
     "fase_corrente": "U0",
@@ -5703,9 +5681,12 @@
     "next_independent_task": "OP-013",
     "receipt": "validation/owner-dtf-batches.json",
     "code": true,
-    "tested_locally": "FULL_RUN_COMPLETED_WITH_TARGETED_REVALIDATIONS_ALL_CURRENT_CASES_COVERED_CI_PENDING",
-    "published": false,
-    "operationally_accepted": false
+    "tested_locally": "FULL_LOCAL_RUN_AND_TARGETED_REVALIDATIONS_PLUS_EXACT_CANDIDATE_GITHUB_CI4441_67_PASS",
+    "published": true,
+    "operationally_accepted": false,
+    "publication_source_commit": "0650874e08e1c6cce3023c8a8d2968c96b34177c",
+    "publication_receipt": "validation/publication-live-20261116.json",
+    "pull_request": 123
   },
   "latest_owner_constraints": {
     "production_friday_13_brasilia": true,
@@ -5716,5 +5697,31 @@
     "external_financial_or_marketplace_writes_authorized": false,
     "sale_only_dependencies_block_owner": false,
     "security_backup_authorization_integrity_active": true
+  },
+  "baseline_evidence_of_input": {
+    "ci_observada": {
+      "sha": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+      "run_id": 43536468273,
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43536468273",
+      "conclusion": "success",
+      "node": 4432,
+      "python": 67,
+      "node_failed": 0,
+      "node_skipped": 0,
+      "execucao": "CI_REMOTA_EXISTENTE_CONSULTADA_NAO_REEXECUTADA_NESTA_AUDITORIA"
+    },
+    "publicacao_documentada": {
+      "release": "2026-11-13.3",
+      "source_commit": "f68525ea1d136350ece9942433352accdf97d992",
+      "verificacao": "RECIBO_DO_REPOSITORIO_ESCOPO_TECNICO_PUBLICO",
+      "owner_live_authenticated_qa": "NOT_PERFORMED",
+      "nao_recertifica_bytes_live_agora": true
+    },
+    "observacao_live_desta_auditoria": {
+      "publico": "Login respondeu; admin sem sessão redirecionou/login. Account login com textos inadequados; ajuda retornou/account/login.",
+      "autenticado": "NAO_REALIZADO",
+      "mutacoes": 0,
+      "pane_atual_comprovada": false
+    }
   }
 }

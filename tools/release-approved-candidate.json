@@ -1,7 +1,7 @@
 {
   "schema": "mls_release_candidate_v1",
   "base_commit": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
-  "prepared_source_commit": "0a5a22897d3cf56f97b7b995eb78a743fc0a246e",
+  "prepared_source_commit": "0650874e08e1c6cce3023c8a8d2968c96b34177c",
   "owner_authorization": "OWNER_REQUESTED_OWN_OPERATION_FIRST_LIVE_2026_11_16",
   "commercial_writes_allowed": false,
   "expected_hashes": {
@@ -197,7 +197,13 @@
     "docs/owner-operation/README.md",
     "docs/owner-operation/validation/owner-dtf-batches.json",
     "docs/owner-operation/validation/reconciliation.json",
-    "docs/owner-operation/validation/build-triggers.json"
+    "docs/owner-operation/validation/build-triggers.json",
+    "docs/owner-operation/history/browser-assets-published-before-dtf.json",
+    "docs/owner-operation/validation/dtf-after-app.json",
+    "docs/owner-operation/validation/dtf-after-auth.json",
+    "docs/owner-operation/validation/dtf-github-ci.json",
+    "docs/owner-operation/validation/dtf-public-after.json",
+    "docs/owner-operation/validation/publication-live-20261116.json"
   ],
   "previous_candidate_manifest": "docs/owner-operation/history/release-candidate-before-owner-first.json",
   "candidate_scope": "OWNER_OPERATION_OP_001_003_004_011_034_NOT_SAAS_LAUNCH",

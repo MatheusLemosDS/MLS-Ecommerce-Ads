@@ -1,0 +1,24 @@
+{
+  "schema": "owner_dtf_github_ci_v1",
+  "run": 43795161304,
+  "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43795161304",
+  "head_sha": "0650874e08e1c6cce3023c8a8d2968c96b34177c",
+  "conclusion": "success",
+  "node": {
+    "tests": 4441,
+    "pass": 4441,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "python": {
+    "tests": 67,
+    "pass": 67
+  },
+  "compiled_hashes": {
+    "app": "c1b9b8c4a230c09f17a05c5aca4a5e2ba2b272ff3313972f53275b1d1d439dbd",
+    "auth": "d252e476527a35d378b93632e22633cd86e8531e7f066487233f5672f78beab9",
+    "finance": "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4"
+  },
+  "log_sha256": "756998de264fefcdd1169769bcce00a65e27111bd8189a2da2f1fee3cf8da964"
+}

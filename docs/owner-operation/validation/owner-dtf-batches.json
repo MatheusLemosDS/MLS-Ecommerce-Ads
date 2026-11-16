@@ -16,12 +16,41 @@
   ],
   "implementation": true,
   "local_validation_complete": true,
-  "published": false,
+  "published": true,
   "operationally_accepted": false,
   "actual_financial_acceptance": false,
   "release_candidate": "2026-11-15.4",
-  "pull_request": null,
-  "github_ci_candidate": null,
+  "pull_request": {
+    "number": 123,
+    "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/123",
+    "draft": true,
+    "merged": false,
+    "auto_merge": null
+  },
+  "github_ci_candidate": {
+    "schema": "owner_dtf_github_ci_v1",
+    "run": 43795161304,
+    "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43795161304",
+    "head_sha": "0650874e08e1c6cce3023c8a8d2968c96b34177c",
+    "conclusion": "success",
+    "node": {
+      "tests": 4441,
+      "pass": 4441,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    "python": {
+      "tests": 67,
+      "pass": 67
+    },
+    "compiled_hashes": {
+      "app": "c1b9b8c4a230c09f17a05c5aca4a5e2ba2b272ff3313972f53275b1d1d439dbd",
+      "auth": "d252e476527a35d378b93632e22633cd86e8531e7f066487233f5672f78beab9",
+      "finance": "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4"
+    },
+    "log_sha256": "756998de264fefcdd1169769bcce00a65e27111bd8189a2da2f1fee3cf8da964"
+  },
   "worker_artifacts": {
     "app": {
       "worker": "brazacommerce-app",
@@ -121,6 +150,46 @@
       "historical_hashes_retained": true,
       "old_worktrees_clean": true,
       "exact_artifact_hashes": true
+    },
+    "github_ci_exact_candidate": {
+      "node": {
+        "tests": 4441,
+        "pass": 4441,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "python": {
+        "tests": 67,
+        "pass": 67
+      },
+      "run": 43795161304,
+      "head_sha": "0650874e08e1c6cce3023c8a8d2968c96b34177c",
+      "conclusion": "success"
+    },
+    "documentation_final": {
+      "pass": true,
+      "json_documents": 22,
+      "local_links": 172,
+      "owner_tasks": 36,
+      "saas_requirements_preserved": 46,
+      "fin_auto_preserved": 28,
+      "financial_scenarios_preserved": 24,
+      "owner_scenarios_preserved": 21,
+      "visual_contracts_preserved": 21,
+      "chart_families_preserved": 22,
+      "old_documents_preserved": true,
+      "original_dtf_mutations_byte_identical": true,
+      "original_physical_financial_formulas_byte_identical": true,
+      "no_workflow_or_deployment_config_change": true,
+      "historical_hashes_retained": true,
+      "old_worktrees_clean": true,
+      "exact_artifact_hashes": true
+    },
+    "post_publication_metadata_tests": {
+      "tests": 26,
+      "pass": 26,
+      "fail": 0
     }
   },
   "preservation": {
@@ -196,5 +265,8 @@
       "workspace_path": "/workspace/work/owner-first-input/preflight-source.log",
       "sha256": "9d7603e2dafb7fb463c83fdbd41f9b85202423646aa79968467f2884bb71dfc0"
     }
-  }
+  },
+  "publication_receipt": "validation/publication-live-20261116.json",
+  "publication_source_commit": "0650874e08e1c6cce3023c8a8d2968c96b34177c",
+  "verified_at": "2026-11-16T03:29:23.839982+00:00"
 }

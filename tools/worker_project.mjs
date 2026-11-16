@@ -5,6 +5,8 @@ import path from 'node:path';
 export const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const TARGETS = Object.freeze({
   app: Object.freeze({name: 'brazacommerce-app', main: '../../dist/app-worker.mjs', baselineHashes: [
+    // Actual source retrieved and verified after controlled owner DTF publication (CI0650874).
+    'eeeb61de8779de2bb1cecca38859f1b6af77227b7a160d93d13839aa0825b7e0',
     // Exact owner-operation DTF history candidate; historical hashes and deployment gates retained.
     'c1b9b8c4a230c09f17a05c5aca4a5e2ba2b272ff3313972f53275b1d1d439dbd',
     // Source completion-clock correction and matching shared release identity; exact reviewed compiled artifact.
@@ -250,6 +252,8 @@ export const TARGETS = Object.freeze({
     '26612b7ea0edbea55e06f5fc817a18defd6b4fe65381e6d564b7d360b7b80278',
   ]}),
   auth: Object.freeze({name: 'brazacommerce-auth', main: '../../dist/auth-worker.mjs', baselineHashes: [
+    // Actual source retrieved and verified after controlled owner DTF publication (CI0650874).
+    'def3859b14e3829b205cc44981dcddb043f153ea5e4a9754d2df0cf94a42e994',
     // Exact owner-operation DTF history candidate; historical hashes and deployment gates retained.
     'd252e476527a35d378b93632e22633cd86e8531e7f066487233f5672f78beab9',
     // Source completion-clock correction and matching shared release identity; exact reviewed compiled artifact.

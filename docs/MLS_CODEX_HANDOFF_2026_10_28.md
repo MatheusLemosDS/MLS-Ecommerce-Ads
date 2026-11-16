@@ -1,7 +1,7 @@
 <!-- OWNER_OPERATION_CURRENT -->
 Prioridade vigente: operação própria primeiro. Matriz ativa: [owner-operation/EXECUCAO.json](owner-operation/EXECUCAO.json); [uso e status](owner-operation/README.md); [gráficos preservados](owner-operation/CATALOGO_GRAFICOS.json).
 
-Base main `346f30f`/PR121 reconfirmada; código OP011 `e168e9a` na branch `feature/owner-operation-first-20261116`: lotes DTF com paginação, filtro e acesso por ID, sem mudar reservas ou schema. Validação local concluída com revalidações documentadas; CI do candidato, publicação e aceite real ainda pendentes. Não usar a CI histórica da main como CI do candidato.
+Base main `346f30f`/PR121 reconfirmada; código OP011 `e168e9a` na branch `feature/owner-operation-first-20261116`: lotes DTF com paginação, filtro e acesso por ID, sem mudar reservas ou schema. CI43795161304 aprovada no head0650874 (4441 Node/67 Python). Versão2026-11-15.4 publicada e verificada tecnicamente: Auth/App novos, Finance retido; fontes/configurações/rotas/cron e8 assets conferidos. PR123 rascunho, sem merge/auto-merge; aceite real ainda pendente. Não usar a CI histórica da main como CI do candidato.
 
 owner_operation governa a próxima entrega; sale_preparation fica ADIADO_VENDA. Resend para novos clientes, planos, checkout, marketing e documentos de onboarding comercial não bloqueiam o owner legítimo. Autenticação, permissões, isolamento, backups, auditoria e integridade seguem obrigatórios. Próximo independente: OP013 (backup/restauração real dos pixels e vínculos de artes). Histórico abaixo preservado; PR118/121 já integradas, não repetir merges. M2/M2.2, lucro/fechamento real e coleta bancária automática não foram encerrados.
 <!-- END_OWNER_OPERATION_CURRENT -->

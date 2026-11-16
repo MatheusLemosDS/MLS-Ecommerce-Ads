@@ -6,11 +6,13 @@ A trilha ativa é **owner_operation**. Cadastro de outros clientes, e-mail comer
 
 ## Incremento OP-011 — encontrar todos os lotes DTF
 
-Candidato `2026-11-15.4`, código `e168e9a`, branch `feature/owner-operation-first-20261116`, sobre main `346f30f200e5cbd3d9efd26663a483c625d9c6e7`/PR121 integrada. **Implementado e validado em cenários locais; CI e publicação ainda pendentes neste registro inicial. A execução integral local teve4425 aprovações e3 falhas; os arquivos afetados passaram nas revalidações completas de14 e6 testes, sem reduzir assertivas. Não se declara aquela execução inicial verde. Aceite operacional real não realizado.** O recibo registra o estado atualizado e seus SHAs separadamente.
+Candidato `2026-11-15.4`, código `e168e9a`, branch `feature/owner-operation-first-20261116`, sobre main `346f30f200e5cbd3d9efd26663a483c625d9c6e7`/PR121 integrada. **Publicado e verificado tecnicamente:** versão `2026-11-15.4`, CI[43795161304](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43795161304) aprovada no head `0650874` com4441 Node/67 Python. Auth/App novos e Finance retido, todos ativos/latest100%, fontes/configuração e8 assets exatos. [Recibo de publicação](validation/publication-live-20261116.json). [PR123](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/123) rascunho, sem merge/auto-merge. Aceite autenticado real, físico e financeiro não realizado.
+
+A execução local inicial e suas revalidações continuam integralmente no recibo; a CI posterior aprovou o candidato exato sem remover assertivas ou cancelar checks. O caminho controlado existente foi usado após CI verde; os três Builds automáticos falharam e seus detalhes continuam sem acesso, sem alteração de sua configuração. A publicação verificada não dependeu de billing, Resend ou cadastro de outro cliente.
 
 O limite anterior era concreto no código: o servidor retornava até100 lotes e a interface mostrava apenas30. Não havia navegação de lotes. A inspeção atual encontrou zero lotes DTF registrados na base; isso não comprova fabricação física zero nem uma pane autenticada atual por esse limite. A correção prepara o uso contínuo, sem inventar lotes na conta real.
 
-Após a publicação, entre pelo **acesso atual da loja** e abra **Produção → DTF → Lotes de produção**:
+Entre pelo **acesso atual da loja** e abra **Produção → DTF → Lotes de produção**:
 
 1. Use **Consultar lotes**. O filtro inicial é **Em andamento**; escolha **Todos**, Reservados, Exportados, Produzidos ou Reservas desfeitas conforme o trabalho.
 2. Navegue com **Próximos lotes** e **Lotes anteriores**. Cada página tem até20 itens. O total do filtro, o total histórico e os lotes em andamento vêm do servidor, com a mesma leitura; a amostra inicial não é apresentada como histórico completo.

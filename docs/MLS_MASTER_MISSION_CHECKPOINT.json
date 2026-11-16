@@ -1,6 +1,6 @@
 {
   "schema": "mls_master_mission_checkpoint_v1",
-  "updated_at": "2026-11-16T02:41:18.483385+00:00",
+  "updated_at": "2026-11-16T03:35:30.119737+00:00",
   "base_visual_sha": "8d860b2c4f26531c53c4cdba0e06a14f51a7eef4",
   "visual_branch": "feature/mls-mockup-parity-real-charts-20261029",
   "visual_pr": 79,
@@ -3976,7 +3976,7 @@
     }
   },
   "next_actions": [
-    "Finish exact-candidate validation/CI and use the existing controlled publication path; record actual Live hashes/config/function checks separately.",
+    "OP011 published and verified technically from CI head0650874; PR123 remains draft. Actual owner DTF use/physical acceptance still pending; never equate publication with operational or financial acceptance.",
     "Next independent OP013: preserve and restore DTF artwork pixels, hashes and associations in a clean browser profile; no cloud-storage purchase prerequisite.",
     "OP005/OP006/OP007/OP008: backup/restore and sustainable storage/pagination before applicable migration; never delete history to open capacity.",
     "Continue owner orders/production/cost/payment/return/financial tasks per docs/owner-operation/EXECUCAO.json; external missing source blocks only its dependent assertion.",
@@ -7057,7 +7057,7 @@
   },
   "current_phase": "OWNER_OPERATION_U2_DTF_BATCH_HISTORY",
   "working_branch": "feature/owner-operation-first-20261116",
-  "current_status": "OWNER_FIRST_OP011_VALIDATED_LOCAL_GITHUB_CI_AND_PUBLICATION_PENDING",
+  "current_status": "OWNER_OP011_PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY",
   "next_phase": "OWNER_OPERATION_BY_TECHNICAL_DEPENDENCY_NOT_SAAS_PHASE_GATES",
   "active_execution_matrix": "docs/owner-operation/EXECUCAO.json",
   "active_charts_catalog": "docs/owner-operation/CATALOGO_GRAFICOS.json",
@@ -7101,10 +7101,25 @@
     "release_candidate": "2026-11-15.4",
     "implementation": true,
     "local_validation": "COMPLETE_WITH_DOCUMENTED_TARGETED_REVALIDATIONS",
-    "published": false,
+    "published": true,
     "validated_operationally": false,
     "receipt": "docs/owner-operation/validation/owner-dtf-batches.json",
-    "actual_financial_acceptance": false
+    "actual_financial_acceptance": false,
+    "status": "PUBLISHED_VERIFIED",
+    "verification_scope": "TECHNICAL_PUBLIC_ONLY",
+    "publication_source_commit": "0650874e08e1c6cce3023c8a8d2968c96b34177c",
+    "ci_run": 43795161304,
+    "node_tests_pass": 4441,
+    "python_tests_pass": 67,
+    "release_id": "2026-11-15.4",
+    "publication_receipt": "docs/owner-operation/validation/publication-live-20261116.json",
+    "workers": {
+      "finance": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+      "auth": "3b0f494a-40c6-4608-af3a-8b57d2bbf9e3",
+      "app": "18e1585b-e5fc-4b1f-b002-234d18ac7d43"
+    },
+    "pull_request": 123,
+    "git_integration": "PR123_DRAFT_OPEN_NOT_MERGED"
   },
   "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
   "current_fields_role": "POINTER_TO_CANONICAL_CHECKPOINT_NOT_A_SECOND_EXECUTION_STATE"
