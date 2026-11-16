@@ -1,0 +1,64 @@
+{
+  "schema": "owner_first_input_import_v1",
+  "specification_not_runtime_evidence": true,
+  "zip_file_id": "file_0000000027f4820e924254ffc30cf3a3",
+  "standalone_prompt_id": "file_0000000038f4820e9ff8dc5b8aaaafa6",
+  "standalone_matches_zip": true,
+  "files": [
+    {
+      "path": "AUDITORIA_ATUAL_E_DECISOES_MLS.txt",
+      "bytes": 17959,
+      "sha256": "2a83f655aa968c1f12a510c6a149af4238a2c61f7385828ca4f09e48bc995929"
+    },
+    {
+      "path": "CATALOGO_GRAFICOS_USO_PROPRIO_MLS.json",
+      "bytes": 38959,
+      "sha256": "fa373f7846f20429292f3719d323ee2088c4bc63cb181af460f1a811e420fb0b"
+    },
+    {
+      "path": "LEIA_PRIMEIRO_USO_PROPRIO_MLS.txt",
+      "bytes": 3415,
+      "sha256": "bd1f625fd1215ba1b060302d4fe1215c82187a0919f4a43f90c1db087c5a8cea"
+    },
+    {
+      "path": "MANIFESTO_ENTREGA.json",
+      "bytes": 1930,
+      "sha256": "244fdb2216282266aec8858c500736cf1847af19b8c4c6d3e70e50431c34d77e"
+    },
+    {
+      "path": "PROMPT_CODEX_USO_PROPRIO_PRIMEIRO_MLS.txt",
+      "bytes": 52698,
+      "sha256": "91a0bc0c926bab966b373b0257963a63d87810f1bf31770579c3fedeb02e5836"
+    },
+    {
+      "path": "ROADMAP_EXECUTAVEL_USO_PROPRIO_MLS.json",
+      "bytes": 315297,
+      "sha256": "459aace257834a13c28c56157cac0aa639293104fb2bc0d240788d6f805d5f61"
+    },
+    {
+      "path": "VALIDACAO_DOCUMENTAL_MLS.json",
+      "bytes": 624,
+      "sha256": "1c84b02f9985aa546b9134ae294e85f1bf5cb978c7bfef5a5ecbca9fe561b83f"
+    },
+    {
+      "path": "anexos/AUDITORIA_FINANCEIRO_USO_PROPRIO.txt",
+      "bytes": 16892,
+      "sha256": "d45dc8e6b7196bd56de388fd3e79310ab25ec7c853e6e5f9222c742fa31d3913"
+    },
+    {
+      "path": "anexos/AUDITORIA_PRODUCAO_OWNER.txt",
+      "bytes": 14692,
+      "sha256": "908737aaed86de5978164abc14fc75f92d63c60355b060e0a24f6899aaf80f59"
+    },
+    {
+      "path": "anexos/AUDITORIA_RUNTIME_OWNER.txt",
+      "bytes": 13887,
+      "sha256": "50f3003994bd9bfec1514f0ef3773f1a77abf3e2dac740582ee97c18c6aef467"
+    },
+    {
+      "path": "anexos/REPRODUCAO_TEMPORAL_SINTETICA.json",
+      "bytes": 647,
+      "sha256": "400aee434be26250af5ce4225e8d4ec909992a9f896af898ad3e304ac750bdcd"
+    }
+  ]
+}

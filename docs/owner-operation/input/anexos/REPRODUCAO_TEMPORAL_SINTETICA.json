@@ -1,0 +1,15 @@
+{
+  "source_commit": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+  "scope": "synthetic only; current-state helper + actual pure projector; no DB or Live",
+  "as_of": "2026-11-15T12:00:00.000Z",
+  "reversal_at": "2026-12-01T12:00:00.000Z",
+  "before": {
+    "remaining": 80,
+    "known_value_cents": 80000
+  },
+  "after": {
+    "remaining": 100,
+    "known_value_cents": 100000
+  },
+  "observation": "A later reversal changes a newly calculated earlier-period projection. Immutable persisted closures were not exercised. This can be intentional retroactive correction; temporal contract must define as-of effective truth versus knowledge-as-of."
+}

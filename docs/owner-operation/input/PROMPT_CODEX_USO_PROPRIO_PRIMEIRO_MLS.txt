@@ -1,0 +1,283 @@
+PROMPT MESTRE PARA O CODEX — MLS COMMERCE OS
+PRIORIDADE: CONCLUIR MINHA OPERAÇÃO REAL ANTES DE COMERCIALIZAR
+Revisão: 15/11/2026, Brasília — consulta realizada em 16/11/2026 UTC.
+Repositório: MatheusLemosDS/MLS-Ecommerce-Ads
+Destino operacional: https://app.brazacommerce.com.br
+
+1. MISSÃO E PRECEDÊNCIA
+
+Quero que você conclua o MLS Commerce OS para EU usar diariamente na minha operação de camisetas e produção DTF. O sistema deve continuar preparado para ser vendido no futuro, mas terminar minha operação vem primeiro. Trabalhe no projeto existente, resolva os problemas reais, complete as funções, teste, publique incrementos validados na Live já autorizada e confira o funcionamento. Não encerre a missão entregando apenas outro diagnóstico ou uma lista de recomendações quando ainda houver implementação possível.
+
+Esta instrução substitui a ordem do roteiro comercial anterior, incluindo a exigência de terminar cadastro de novos clientes, e-mail transacional comercial, planos, assinatura, checkout, gateway de cobrança, emissão fiscal do SaaS, marketing ou piloto com outras empresas antes da minha produção. Preserve os requisitos financeiros, operacionais, de qualidade e os módulos existentes. Reordene as dependências efetivas; não basta acrescentar uma frase “uso próprio primeiro” mantendo os antigos bloqueios na matriz.
+
+Uma pendência exclusivamente comercial deve ficar ADIADO_VENDA, com motivo e próxima ação, sem bloquear meu login atual, pedidos, DTF, fabricação, custos, pagamentos, devoluções, relatórios, financeiro ou deploy de uma melhoria independente. Não marque o item adiado como concluído. Não apague sua implementação ou documentação.
+
+Segurança, acesso correto, isolamento, integridade dos dados, backups, idempotência, cálculos confiáveis e publicação verificável continuam obrigatórios. “Deixar comercial de lado” não autoriza desativar autenticação, inventar uma assinatura paga, criar usuário administrador falso, remover CSRF, trocar tenant/loja, aceitar dados financeiros incompletos como definitivos ou contornar permissão de fornecedor.
+
+Não recomece em outra stack. Preserve App, Auth e Finance, os bancos/bindings, rotas, dados, contratos e a identidade MLS Commerce OS. GATEWAY_URL de Shopee/Ads é infraestrutura operacional; não confunda com gateway de cobrança do futuro SaaS. Hermes/IA deve ajudar, mas sua indisponibilidade não pode impedir as funções determinísticas da operação.
+
+A solicitação atual ao ChatGPT gerou esta especificação, sem alterar o projeto. Ao executar este prompt no Codex, o trabalho é implementação e entrega operacional, dentro das autorizações já existentes. Não solicite uma confirmação genérica para cada etapa já autorizada. Solicite somente a intervenção específica realmente necessária, por exemplo consentimento bancário, credencial via mecanismo seguro, confirmação de um fato físico desconhecido ou ação externa ainda não autorizada. Enquanto isso, continue todas as tarefas independentes.
+
+2. BASE ATUAL QUE VOCÊ DEVE RECONFERIR
+
+HEAD examinada: 346f30f200e5cbd3d9efd26663a483c625d9c6e7, main, merge da PR #121. São 14 commits e 143 arquivos alterados desde a auditoria em 6578e21098ff799e59433af92880d249432ceeb4. Não trate nenhum destes SHAs como HEAD permanente: busque a main atual e reconcilie o delta antes de editar.
+
+O workflow GitHub Validar Workers do commit examinado terminou aprovado: run 43536468273, job 132266587954, em 14/11/2026 às 00:56:56 UTC. Os logs mostram 4.432 testes Node aprovados, zero falhas/pulados/cancelados e 67 testes Python aprovados, além do build. A falha antiga “Inspected target navigated or closed” não está sendo tratada como incidente atual; os testes de navegação normal/minificada passaram nessa execução. Isso não dispensa testar seu novo candidato.
+
+A PR #121 já implementou razão financeiro persistente, centavos inteiros, versões, conciliação por alocação, políticas de competência, snapshots imutáveis de fechamento, retificação, retomada de coleta, ponte de custo histórico/CMV e oito áreas do financeiro. Não reimplemente tudo. Complete os adaptadores, a cobertura, os caminhos de confirmação e os limites identificados.
+
+O recibo do projeto registra release 2026-11-13.3 publicada e verificada tecnicamente, fonte f68525ea1d136350ece9942433352accdf97d992, CI 43531882471. A main examinada conserva o mesmo código runtime compilado desse candidato. Conferência documental/CI não substitui uma nova conferência dos bytes e funções servidos na Live.
+
+O checkpoint registra account_financial_acceptance=false; o recibo usa financial_account_acceptance=false. Ambos mantêm owner_live_authenticated_qa=NOT_PERFORMED. Os valores da minha conta, uma semana e um mês reais ainda não foram certificados por esses registros. A matriz financeira atual contém 28 FINAUTO, com 12 VALIDADO_LOCAL, 15 PARCIAL e 1 EXTERNAL_DEPENDENCY. Preserve as evidências existentes; não confunda VALIDADO_LOCAL com uso real aprovado.
+
+Na inspeção pública desta auditoria, /admin redirecionou para /login sem sessão. A tela pública respondeu; não foi comprovada pane autenticada. /account/login mostrou “Confirme sua senha atual” e “Cancelar edição” no formulário de entrada, e Ajuda voltou ao login. São problemas de clareza/acesso à ajuda a corrigir conforme o impacto, não prova de que o login legado do proprietário esteja quebrado. Nenhum formulário foi submetido e nenhum dado real foi lançado nesta auditoria.
+
+O acesso legado do owner já é preservado em commercial-route-policy.mjs e financial-automation-service.mjs. Não foi encontrada exigência de assinatura paga nessas rotas examinadas. Mantenha esse caminho e comprove seu uso; não crie outro bypass nem obrigue a migração para cadastro comercial incompleto.
+
+O erro SOURCE_INVALID da release .2, causado por relógio capturado antes de leitura assíncrona, já tem correção na .3. O código confere o relógio após a leitura e preserva a rejeição de datas realmente futuras. O recibo registra retomada natural com 100 eventos de pedidos preservados e 13 eventos de Ads adicionados. Não reabra esse bug sem reproduzir no estado atual. Coleta parcial continua diferente de saldo/fechamento aprovado.
+
+Os checkpoints ainda têm campos next_actions que mencionam integração/CI da PR #118 e expansão TikTok/Mercado Livre. Reconcilie esses campos com a main e com esta prioridade. Não repita merges históricos ou faça expansão antes de terminar minha operação principal.
+
+3. LEITURA OBRIGATÓRIA E CONTROLE DE CONTINUIDADE
+
+Leia o AGENTS.md atual e, na ordem determinada pelo repositório:
+1) docs/ROADMAP_MLS_COMMERCE_OS.md;
+2) docs/MLS_COMMERCE_OS_CHECKPOINT.json;
+3) docs/MLS_CODEX_HANDOFF_2026_10_28.md;
+4) docs/SHOPEE_RESEARCH_TO_MLS_2026_10_28.md.
+
+Depois leia NEXT_CHAT_HANDOFF.txt, docs/MLS_MASTER_MISSION_CHECKPOINT.json, docs/financial-automation/README.md, VALIDATION.md, MATRIZ_EXECUCAO.json e publication-live-20261113.json. Consulte os inputs V4.1 e as referências de layout já existentes apenas para preservar os fluxos e o visual aprovado. Leia os módulos reais e seus testes antes de concluir que algo falta.
+
+Se este pacote estiver anexado, use ROADMAP_EXECUTAVEL_USO_PROPRIO_MLS.json como especificação de reordenação. Integre-o à fonte canônica do projeto, sem criar dois checkpoints concorrentes. A matriz financeira já implementada continua sendo o registro detalhado dos FINAUTO; a matriz de uso próprio aponta para os mesmos IDs e evidências.
+
+Registre: SHA base, branch, arquivos alterados, tarefa OP, FINAUTO relacionado, estado do código, teste, publicação e aceite operacional. Use campos distintos para estes estados. Ao concluir cada incremento, atualize a próxima tarefa executável e um handoff curto com causa dos bloqueios, workaround, responsável e ação necessária. Não mantenha como “próximo” um PR já integrado.
+
+Trabalhe em branches pequenas, sem sobrescrever mudanças alheias. Use o código existente e migrações compatíveis. Preserve documentos históricos identificados como históricos. As regras recentes do proprietário prevalecem sobre ordenações comerciais antigas, mas não permitem inventar permissões ou enfraquecer a proteção do sistema.
+
+4. COMO CLASSIFICAR UM BLOQUEIO
+
+A) INCIDENTE_OPERACIONAL: impede login próprio, tela, captura necessária, pedido, arte, fabricação, salvamento, cálculo correto, fechamento específico ou recuperação de dados. Corrigir primeiro o que estiver ocorrendo agora. Um limite quase atingido pode ser prioridade operacional mesmo sem pane.
+
+B) LACUNA_IMPLEMENTACAO: existe acesso/fonte suficiente, mas falta código, paginação, persistência, UI, confirmação, integração ou teste. Implemente. Não registre como dependência externa para encerrar a tarefa.
+
+C) DEPENDENCIA_EXTERNA_OPERACIONAL: grant real, fonte oficial, consentimento bancário, credencial, contrato ou fato físico indispensável não disponível. Descreva exatamente o que falta e a evidência. Entregue o fluxo independente completo e uma alternativa legítima quando possível. Importação oficial revisada pode permitir operação e fechamento; não equivale a integração automática concluída.
+
+D) ADIADO_VENDA: cadastro de outros clientes, SMTP comercial quando não afeta meu acesso, cobrança recorrente, PSP de assinatura, precificação dos planos, onboarding de novos tenants, fiscal da assinatura, landing page, marketing, piloto e aquisição. Não é dependência de fabricação ou financeiro próprio.
+
+E) FUNDAMENTO_COMPARTILHADO: autenticação, autorização, scope, isolamento, backups, auditoria, concorrência, integridade e compatibilidade de deploy. Continua obrigatório no escopo afetado, mesmo se o arquivo se chamar commercial/account. Não pule teste só pelo nome comercial.
+
+Aplicação prática: financeiro sem extrato não pode declarar caixa conciliado, mas pedidos e DTF continuam disponíveis. IA desconectada não bloqueia registro de produção. Billing NOT_CONFIGURED não bloqueia o owner autorizado. Falta de custo bloqueia somente a afirmação dependente desse custo e aponta a correção. Uma tarefa externa bloqueada não paralisa o roadmap inteiro.
+
+5. ROADMAP DE EXECUÇÃO — ORDEM POR DEPENDÊNCIA REAL
+
+As fases abaixo são prioridades de trabalho, não portas globais que obriguem todas as tarefas anteriores a estarem concluídas. Execute a próxima tarefa independente de maior impacto. Validação e publicação acompanham cada incremento; não deixe todas as melhorias prontas esperando a última fase.
+
+FASE U0 — ESTADO REAL, INCIDENTES E RETOMADA
+
+OP-001 — Fixar baseline atual e inventário. Confira Git, PRs, CI, release, arquivos servidos, Workers, configurações não secretas, rotas, fontes, bancos e coletores. Mapeie tela → ação → handler → persistência → efeito. Não declare ausência de uma função com base apenas no título de um menu.
+
+OP-002 — Resolver qualquer incidente atual que impeça o uso. Reproduza com evidência segura; corrija a menor causa. Diferencie erro de UI, autenticação, serviço, dados, quota e integração. Use o procedimento da seção 8. Se não houver pane comprovada, registre isso e siga para as lacunas concretas; não invente um incidente para justificar alterações.
+
+OP-003 — Atualizar a prioridade canônica. Estabeleça owner_operation como trilha principal e sale_preparation como trilha separada. Retire dependências de billing/marketing da operação própria. Reconcilie next_actions, current_phase, próxima tarefa, PRs integrados e versões. Preserve histórico e requisitos que continuam válidos.
+
+FASE U1 — ACESSO, RECUPERAÇÃO E CONTINUIDADE DE VOLUME
+
+OP-004 — Garantir meu acesso real. Teste a rota de login já existente, sessão válida/expirada, logout, retorno ao contexto e permissões corretas. Não me obrigue a criar outra empresa ou outra loja para acessar meus dados. Se houver acoplamento a plano comercial, remova apenas essa dependência de negócio no caminho autorizado. Não altere owner/RBAC/tenant no navegador. Mantenha possibilidade de recuperação segura do acesso; uma falha que bloqueie meu próprio acesso é operacional, ainda que use código de contas.
+
+OP-005 — Preparar backup e restauração antes das migrações. Identifique tabelas, versões, dependências de triggers, artes locais e referências. Demonstre restauração em ambiente isolado e compatibilidade de rollback/rollforward. Não apague histórico, bancos ou recursos para liberar capacidade. Dados e credenciais não entram em fixtures, commits ou relatórios públicos.
+
+OP-006 — Remover o teto de vida útil do registro de fabricação. incurred-production.mjs valida até 1.000 registros, incluindo VOID, e aproximadamente 1 MiB de snapshot; return-manufacturing-links.mjs também limita 1.000 vínculos e 1 MiB. Ao chegar ao limite, novas gravações podem ser recusadas. Meça o uso real sem expor dados privados e implemente armazenamento/paginação/particionamento durável com histórico completo, revisão e idempotência. Não resolva apenas aumentando a constante ou eliminando anulados. Aceite: registrar e consultar além dos limites antigos, corrigir um registro antigo e manter totais/relatórios/vínculos exatos.
+
+OP-007 — Escalar a ponte de estoque e CMV. financial-inventory-bridge.mjs limita o snapshot a 150 lotes, 500 alocações/reversões e 190.000 bytes, com CAPACITY_REACHED/409. Evolua o contrato com migração, índices por escopo, leitura paginada e consultas completas por período. Preserve disponibilidade, vínculos, custo e auditoria. Aceite com volume acima de cada limite, concorrência e restauração. Não prometa capacidade ilimitada: documente capacidade testada e alarmes operacionais.
+
+OP-008 — Completar paginação financeira e filas. A leitura do razão tem teto de 2.000 eventos por período; a fila de devoluções limita 200 casos; a seleção de itens originais lê a primeira página de 100 de cada run. Estenda os percursos com cursor persistente, orçamento por invocação, progresso e backpressure. Nenhum item deve sumir ou deixar o fechamento permanentemente parcial apenas porque a UI/ponte lê uma página. Teste mais de 2.000 eventos, mais de 200 casos e item original depois da posição 100. Não afrouxe os limites de segurança por invocação nem trunque totais.
+
+FASE U2 — PEDIDO → ARTE → PRODUÇÃO → CUSTO → PAGAMENTO
+
+OP-009 — Pedidos completos e rastreáveis. Aproveite o quadro existente, filtros e atualização periódica. Garanta captura, paginação, detalhe, variações, quantidade, pagamento/cancelamento e alteração posterior. Mostre fonte e última atualização. Separe estado Shopee, estado interno da operação e estado físico. Pedido pago não significa fabricado; envio não prova recebimento de repasse. Uma mudança de itens/quantidades após reserva/exportação deve gerar revisão segura e impedir duplicidade.
+
+OP-010 — SKU, kits, cor e tamanho sem ambiguidades. Mantenha identidade nativa e composição versionada. Distinga unidade comercial, peça física e estampa; duas estampas não significam duas camisetas. Kits/casal devem decompor corretamente as peças, inclusive dois SKUs iguais, SKUs diferentes e várias unidades do kit. Conte por cor, tamanho, modelagem e adulto/infantil; forneça lista de separação conferível. Falta de segunda arte ou composição não pode ser preenchida por suposição. Preserve nomes/SKUs originais e aliases aprovados; não renomeie todo o catálogo por sufixo. Regras específicas da minha loja, incluindo eventual padrão de cor do combo, devem ter origem e configuração explícitas, sem virar padrão de todos os clientes. Não substitua meus custos atuais por números antigos de documentos.
+
+OP-011 — Tornar todos os lotes DTF acessíveis. A UI atual usa state.batches.slice(0,30) e a leitura de lotes tem limite de 100. Implemente navegação/filtros/cursor no servidor e no cliente, com acesso por ID e prioridade dos lotes ainda abertos. Aceite: o 31º lote e um lote além da primeira página continuam acessíveis, exportáveis/conferíveis conforme seu estado, sem perder reserva. Histórico não pode esconder trabalho pendente.
+
+OP-012 — Concluir o ciclo DTF, inclusive exceções. Preserve proporção das artes, medidas, DPI, transparência, limites de folha, espaçamento, prévia, composição, quantidade e exportação PNG/manifesto. Arte conhecida por hash não significa que seus pixels estejam recuperáveis. Preserve reserva e idempotência de exportação. Hoje o desfazimento só existe para PREPARED; um EXPORTED não impresso precisa de caminho de cancelamento da reserva com confirmação explícita, motivo, revisão e auditoria. O arquivo já baixado não pode ser revogado: o operador deve confirmar que não será usado. Não reutilize automaticamente peças produzidas nem apague fatos. Defina produção parcial, sobra, reimpressão e perda: reimprimir é evento de impressão com motivo/custo real, não nova venda ou peça fictícia. Desfazer o saldo não produzido deve respeitar o que já foi confirmado fisicamente.
+
+OP-013 — Proteger e restaurar artes. Preserve o armazenamento local existente e entregue backup/exportação que inclua os pixels necessários, manifesto, identidades/hashes e associações, além de restauração verificável em outro perfil/navegador. Manifesto sozinho não recupera imagem perdida. Biblioteca privada em nuvem pode ser preparada como interface opcional; contratar storage comercial não deve impedir o backup local funcional. Não torne artes privadas públicas.
+
+OP-014 — Registrar produção real com menos retrabalho. Reutilize diário/mês, formulário, proposta a partir do DTF, declarações de completude e fechamento semanal. Pré-preencha somente dados comprovados, preserve rascunhos e permita correção explícita. Uma ação do operador pode confirmar o fato físico e gerar registros relacionados de forma atômica/idempotente, desde que quantidade, identidade, custo e data sejam conferidos. Não derive fabricação automaticamente de venda, reserva ou download. Trate produção parcial, anulação/substituição e vínculos protegidos. Ausência de lote não significa zero fabricado.
+
+OP-015 — Custo histórico e referência atual separados. Preserve o editor de custos existente, custos personalizados, vigência, revisão e associação por variação/tipo. A fabricação registra o custo histórico comprovado ou desconhecido. Uma edição hoje pode mudar referências futuras, mas não reescreve lote, CMV ou fechamento antigo. Custos compostos não devem ser divididos entre peça/estampa/embalagem sem evidência. Mostre claramente custo de referência das vendas, custo fabricado, custo vendido e pagamento.
+
+OP-016 — Pagamentos da produção e saldo por semana. Reutilize obrigações existentes, completando o que faltar. Quero saber quanto foi produzido, quanto devo, quanto paguei e quanto resta por semana e por fornecedor/beneficiário. Suporte pagamento parcial, vários pagamentos, adiantamento/crédito identificado, correção e reversão auditada. A regra de aplicação deve quitar as semanas abertas mais antigas primeiro, deixando o saldo recente em aberto, com prévia e confirmação da alocação. Não confunda FIFO de dívida com política de valoração do estoque. Uma transferência pode pagar várias semanas e uma semana pode receber vários pagamentos; o mesmo centavo não pode ser usado duas vezes. Aceite sintético: dívidas de R$ 1.000 na semana antiga e R$ 800 na seguinte, com pagamento de R$ 1.200, deixam a primeira quitada e R$ 600 abertos na segunda; repetir a requisição não paga novamente. Se o pagamento superar a dívida, o excedente fica como adiantamento explícito, nunca dívida negativa escondida. Pagamento não gera nova despesa/CMV e fabricação não prova pagamento. Concilie com extrato quando houver evidência; enquanto não houver, diferencie pagamento declarado de liquidado/conciliado. A operação é registro contábil/gerencial; não enviar PIX ou transferência.
+
+OP-017 — Devoluções físicas e reaproveitamento. Preserve recebimentos parciais, quarentena, inspeção, anulação e associação com fabricação. Confirme as peças originais e a composição de kits, sem presumir que um status Shopee significa mercadoria recebida. Classifique peça reaproveitável, reparo, perda e descarte. Reserve/consuma a peça correta na revenda, mantendo custo histórico e custo incremental comprovado de reparo/reembalagem. Não fabrique novamente a mesma peça nem reduza o custo global do SKU para uma revenda. Corrigir inspeção/vínculo deve invalidar a avaliação dependente e gerar o tratamento financeiro correspondente. Diferencie devolução física de reembolso econômico.
+
+FASE U3 — FONTES FINANCEIRAS REAIS E CONCILIAÇÃO
+
+OP-018 — Coleta durável e visível. Complete as rotinas existentes com progresso por escopo/período/família, cursor/lease, revisão, retry, rate limit e última leitura boa. Retome após expiração/redeploy sem duplicar eventos. Não dependa da aba aberta ou da sessão humana para jobs de fundo já autorizados. Abertura de painel/Atualizar leitura não deve disparar consultas caras ou prometer coleta que só relê cache. Uma fonte antiga ausente não pode impedir coleta e operação independentes do período atual.
+
+OP-019 — Coorte completa da competência. Hoje os runs de pedidos são selecionados por criação; isso não prova todos os pedidos criados antes e concluídos no mês. Implemente descoberta/captura autorizada por conclusão/atualização com recuperação histórica e identidade estável. Quando necessário, use relatório oficial equivalente importado e revisado, com intervalo, fuso e datas reais. Unifique API/relatório/cache pelo identificador nativo sem duplicar. Não reconheça receita definitiva por conclusão a partir de uma lista incompleta por criação. Preserve a estimativa antiga identificada como estimativa.
+
+OP-020 — Valores Shopee detalhados. Complete adaptadores de valor bruto, comissão, tarifa, serviço, frete/subsídio, cupom, desconto, ajuste, reembolso, compensação e retenção conforme os campos e contratos reais. Não adote tabela de tarifa inventada. Escolha base coerente: componentes brutos reconciliados ou repasse líquido com tratamento documentado do que já foi deduzido. Demonstre a ponte entre bruto, ajustes e líquido. Uma taxa já no líquido não é descontada de novo. Recarga Ads debitada no repasse precisa ser classificada como transferência/ativo quando apropriado, com consumo separado. Histórico sem captura permanece desconhecido até backfill/documento legítimo. GROSS_COMPONENTS só fica disponível quando a ponte estiver implementada e validada.
+
+OP-021 — Recebíveis, carteira, saques e trânsito. Confirme documentação oficial, versão, método, paginação, limites e grants reais por loja/região. A abstração de coletor existente não equivale a uma integração Wallet/Payout pronta. Implemente os adaptadores efetivos de leitura e a persistência com origem, IDs nativos, abertura/fechamento e cobertura. Se a API não disponibilizar dados ou acesso, complete importação oficial revisada para os períodos necessários, com a limitação visível. Contabilize direito a receber, valor retido, liberação, saldo disponível, débito de saque, trânsito, crédito no banco, falha/estorno/retorno, sempre sem receita duplicada. Saque/transação é fato a consultar/registrar; este prompt não autoriza movimentar fundos.
+
+OP-022 — Banco utilizável sem esperar Open Finance. Complete primeiro a importação CSV/OFX e demais layouts oficiais realmente necessários. O adaptador atual conserva REVIEW, saldos vazios e cobertura parcial: não basta confirmar um vínculo para certificar o caixa. Implemente conta bancária física identificada, moeda, arquivo original/hash, intervalo, semântica da data/fuso, saldo inicial/final documentados, transações liquidadas, deduplicação de arquivos sobrepostos, classificação e reconciliação. IDs fracos ficam em revisão; duas transações iguais legítimas não podem ser fundidas. Comprove saldo inicial + entradas − saídas = saldo final e nenhuma diferença inexplicada. Persista confirmações, fonte, ator e revisões no servidor. Um intervalo sem movimentos exige prova de extrato/cobertura, não ausência de linhas. Data civil sem hora serve para períodos civis compatíveis, não prova um instante sexta13h. O conector automático consentido continua uma tarefa própria; sua indisponibilidade não bloqueia importação auditável e uso manual assistido.
+
+OP-023 — Conciliação N:M completa. Aproveite a alocação existente entre um ou vários repasses, movimentos bancários e obrigações. Mostre saldo disponível de cada evidência, prévia, diferença, vínculo, revisão e desfazimento. Preserve capacidade compartilhada com o matcher antigo para impedir dupla utilização de centavos. Sugestão por valor/data não é confirmação. Automatize somente correspondências com identidade forte, regra determinística, limites e rastreabilidade; ambiguidade vai para revisão. Pagamento parcial e valores em trânsito não são erro por si só.
+
+OP-024 — Ads com calendário e consumo comprovados. Confirme o fuso/semântica de dia nominal da conta e a origem dos gastos. O adaptador atual mantém timezone_confirmed=false; implemente a evidência e normalização necessárias para sair de REVIEW. Separe recarga, saldo, bonificação e consumo; ROAS usa receita atribuída compatível. Não invente rateio horário de um total diário para o corte de produção sexta13h. Mantenha o calendário financeiro civil e a produção física separados. Adote zero de gasto somente com cobertura comprovada. Ads/PROMO continuam sem escrita externa.
+
+OP-025 — Despesas, obrigações e tributos da minha empresa. Aproveite despesas/parcelas existentes e acrescente o fluxo faltante de vencimento, saldo e pagamento. Uma despesa por competência e seu pagamento são dois fatos ligados, não duas despesas. Complete compromissos externos necessários ao giro, incluindo produção, salários/serviços/aluguéis conforme dados reais. Preserve regime, vigência e política tributária comprovados; não adivinhe alíquota, enquadramento ou DAS. Não construa um motor tributário universal como condição para eu usar o regime que efetivamente tenho. Reconcilie o tratamento do relatório semanal com a política mensal aprovada, rotulando estimativas e provisões.
+
+OP-026 — Cobertura de estoque, custo vendido e recebíveis. Complete abertura comprovada, lotes históricos disponíveis, composição física de cada item vendido, alocação com custo histórico e saldo final. Reconcilie quantidade inicial + entradas − saídas + retornos = final. A ponte atual publica COGS/INVENTORY sempre PARTIAL; implemente os fatos, verificações e contratos que permitem cobertura integral do intervalo. Não troque false por true globalmente. Estoque confirmado não é dinheiro e CMV não é toda a fabricação do mês. Recebíveis devem reconciliar abertura + direitos − liquidações ± ajustes = encerramento, mesmo com valores ainda a vencer.
+
+OP-027 — Descobrir e liquidar economicamente devoluções. A fila existente revisita casos salvos; isso não descobre todos os casos antigos que surgem agora. Implemente fonte autorizada por atualização/retorno, marca d'água, sobreposição deduplicada, fila justa independente do mês do pedido e importação oficial equivalente quando necessária. Reembolso solicitado, aprovado, pago e compensado são estados distintos. Resolva o caso com evento financeiro, causalidade, valor e data reais. Não marque tudo completo porque todos os casos conhecidos foram visitados. Preserve efeitos tardios entre semanas/meses e a relação com inspeção física.
+
+FASE U4 — CONFERÊNCIA, FECHAMENTO E GIRO
+
+OP-028 — Criar caminho verificável para sair de PARTIAL. Para ORDERS, COGS, ADS, EXPENSES, TAX, RETURNS, RECEIVABLES, WALLET, PAYOUTS, BANK, INVENTORY e OBLIGATIONS, explicite: fonte, identidade/escopo, intervalo, fuso, corte, fim da paginação ou integridade do relatório, totais/saldos/quantidades, revisões, comparação e pendências. Implemente UI e persistência das conferências necessárias. O navegador não pode enviar um simples COMPLETE que o servidor aceite sem prova. Alterar fonte/custo/política/alocação invalida somente o aceite correspondente. Zero comprovado é diferente de desconhecido. Comparisons_complete exige confronto das famílias aplicáveis, além de coverage_complete.
+
+OP-029 — Fechamentos separados, persistentes e automáticos quando aptos. Preserve o mecanismo existente. Produção: sexta-feira 13h inclusiva até a próxima sexta 13h exclusiva, America/Sao_Paulo, incluindo fim de semana e oito intervalos; sextas exigem distribuição confirmada. Relatório de vendas semanal existente: sete dias civis sexta00→sexta00. Financeiro por competência: calendário civil da política aprovada, padrão existente sexta→quinta; não mude silenciosamente para segunda→domingo. Mensal: mês civil do mesmo fuso. Datas e nomes dos recortes devem estar visíveis.
+
+Resultado por competência, recebíveis, carteira, caixa bancário e fabricação têm critérios próprios. O código já separa ACCRUAL e BANK_CASH: preserve isso. Um recebível confirmado ainda a vencer pode permanecer aberto com resultado fechado; não exija todos os repasses no banco. A falta de Open Finance não bloqueia uma DRE comprovada por suas fontes ou um caixa comprovado por extrato importado. Falta de receita, CMV, tributo ou devolução relevante continua bloqueando o resultado definitivo correspondente.
+
+Ao encerrar um período, gere prévia/pendências automaticamente. Finalize apenas com política autorizada e evidência suficiente. Persista totais, eventos/versões, fontes, custos, regras, hashes e autor. Faça retomada após falha e catch-up de período perdido com idempotência. Evento tardio gera retificação vinculada, mantendo original e diferença. Não reescreva um fechamento antigo ao editar custo ou refazer gráfico.
+
+Defina explicitamente visão “corrigida com o conhecimento atual” e visão “conhecida no corte”. Uma reprodução sintética desta auditoria mostrou que uma reversão posterior altera a projeção recalculada de estoque de um corte anterior; isso pode ser correção retroativa intencional. Não está demonstrado que snapshots imutáveis sejam reescritos. Especifique/teste o contrato temporal antes de mudar effectiveAllocations/as_of: recorded_at/observed_at, data efetiva, revisão e política de retificação devem explicar o resultado.
+
+OP-030 — Caixa para continuar produzindo. Mostre saldo bancário confirmado no corte, dinheiro em trânsito, recebíveis previstos, obrigações abertas/vencidas, produção comprometida, parcelas, reserva configurada e cenário de necessidade de caixa. Separe o que existe hoje do que pode chegar. Não subtraia duas vezes uma obrigação já paga do saldo bancário nem trate lucro/recebível como dinheiro livre. Se algum componente for desconhecido, mostre o subtotal e a pendência; não anuncie “livre para sacar”. Nenhum botão desta tarefa deve realizar saque ou transferência bancária.
+
+FASE U5 — INTERFACE E TODAS AS FUNÇÕES EXISTENTES
+
+OP-031 — Conectar a interface ao trabalho diário. Preserve a V4.1 e os seis cartões de agentes logo após os KPIs, antes dos gráficos: Hermes, Finance, Ads, Products, Production, Returns. Auditor fica no diretório completo. Use nomes compreensíveis, fonte/período claros, próxima ação e pendência acionável. Evite telas novas que repitam a mesma verdade e números que mudem conforme o painel. Mantenha modo claro/escuro, contraste, navegação por teclado, foco, mobile, filtros, mês e rascunhos. Erro de um gráfico não deve derrubar todos os painéis. Corrija os textos de login e disponibilize ajuda apropriada sem exigir login para explicar como acessar, sem divulgar dados internos.
+
+OP-032 — Integrar gráficos, tabelas e controles de todos os módulos. Inventarie e preserve Visão geral, Pedidos, Produtos/variações/custos, DTF, Produção, Finance, Ads, Returns, Relatórios, Hermes, Auditor, configurações, buscas, histórico, conta/perfil/equipe existentes, Listing Factory e AI Sales locais. Cada ação visível precisa de implementação real, estado e tratamento de erro; não deixe um botão aparentar execução remota quando só produz rascunho. Módulo opcional incompleto permanece claramente identificado e não bloqueia a operação central.
+
+Os gráficos usam a mesma projeção/revisão do card, tabela, CSV e fechamento. Preserve as 22 famílias de gráficos do catálogo anterior e seus 21 contratos visuais como referências, reconciliando-os com a implementação atual e sem impor a fase comercial antiga. A classificação vigente está em CATALOGO_GRAFICOS_USO_PROPRIO_MLS.json deste pacote. VIS-20, no que trata de assinatura/onboarding de novos clientes, e qualquer visual exclusivamente comercial ficam ADIADO_VENDA e fora dos aceites A/B/C; acesso e ajuda necessários ao proprietário continuam operacionais. VIS-19 preserva as funções locais já disponíveis, enquanto expansão IA/afiliados fica adiada. Se o catálogo não estiver disponível na sessão, execute os requisitos explícitos deste prompt e registre a referência faltante sem paralisar a operação. Priorize: resultado diário/competência; vendas; consumo Ads/ROAS; produção por dia/semana e cor/tamanho; custo e pagamentos da produção; vencimentos; recebíveis/carteira/saques/trânsito; fluxo/saldo bancário; conciliação; composição de despesas/taxas; devoluções; estoque/custo histórico; posição de giro; cobertura/saúde das fontes. Gráfico de saúde não pode alegar 100% sem denominador/cobertura definidos.
+
+Cada gráfico deve ter unidade, período, fonte, data da atualização, estados vazio/parcial/erro, acessibilidade, tabela equivalente, filtro consistente e detalhe rastreável. BRL vem de centavos; quantidade é inteira; ROAS usa denominador compatível e zero gasto não vira ROAS zero fictício. Lacunas null não viram pontos zero ou curvas suavizadas inventadas. Um único ponto não inventa tendência. Toque/clique/teclado apenas consulta/filtra; mutação financeira exige ação própria. Nenhum dado demonstrativo é mostrado como se fosse da minha loja.
+
+FASE U6 — ENTREGA INCREMENTAL E ACEITE DA MINHA OPERAÇÃO
+
+OP-033 — Conferir um ciclo real completo. Faça homologação contínua por função e marco: aceite da produção não precisa esperar banco/carteira ou automação financeira completa. Primeiro valide com fixtures sintéticas em ambiente isolado. Depois use uma sessão owner autorizada e registros reais já disponíveis; fatos físicos novos só quando efetivamente ocorridos e confirmados pelo operador. Acompanhe pedido → kit/arte → DTF → fabricação → custo/obrigação → pagamento/estoque → venda/reembolso → repasse → banco. Para concluir o aceite financeiro, confronte uma semana encerrada e um mês encerrado com fontes equivalentes da Shopee, produção, despesas e banco. Documente diferenças por causa e centavos; não zere resíduos sem origem. Para cada função, registrar o caminho, evidência, resultado e limitação. Importação manual aprovada pode comprovar o período; não certifica automaticamente o conector futuro.
+
+OP-034 — Publicar e verificar cada incremento. A Live é o destino já autorizado. Use os scripts e gates atuais, migrações compatíveis e candidato exato. Atualize APP_RELEASE e notas visíveis quando houver mudança. Para alteração de contrato entre serviços, respeite a ordem compatível Finance→Auth→App; preserve serviços não alterados e confira o vetor completo após cada etapa. Verifique domínio, rotas, binding, versão/bytes, assets e função afetada. Git merge, publicação e aceite operacional são registros separados. Não mantenha uma melhoria testada indefinidamente fora da Live por pendência de venda independente.
+
+OP-035 — Entregar manual curto e status honesto. Faça isso em cada incremento, sem esperar a automação completa para orientar o uso das funções já entregues. Informe o que mudou, onde clicar, como usar, fontes, teste, publicação, aceite e pendências exatas. Entregue rotina diária, fechamento da produção, pagamentos parciais, importação/conciliação, fechamento semanal/mensal, correções e recuperação. Registre a próxima tarefa executável para outra sessão continuar. Não declare “100% concluído” se funções necessárias ainda estiverem parcialmente implementadas ou sem conferência real.
+
+FASE U7 — PREPARAÇÃO PARA VENDA SEM ATRASAR O USO
+
+OP-036 — Preservar fundamentos e manter backlog comercial separado. Mantenha organização/loja, RBAC, isolamento, configurações por tenant, APIs versionadas, adapters, auditoria e feature flags existentes. Não espalhe IDs pessoais ou regras fixas por telas novas. Parametrize o necessário para a operação do dono sem construir uma plataforma comercial inteira agora. Prepare catálogo de capacidades, limites comprovados, documentação de configuração/migração e interfaces de billing/conectores desacopladas. Novos clientes, e-mail comercial, checkout, recorrência, planos, quotas de venda, NFSe do SaaS, contrato, marketing e pilotos ficam ADIADO_VENDA até a operação própria aprovada. Preserve a área de conta que já existe; não venda uma jornada incompleta como pronta. IA avançada, vídeo, afiliados e marketplaces adicionais ficam em backlog de expansão se não forem necessários à produção atual.
+
+6. ACEITE: O QUE SIGNIFICA FINALIZAR PARA MIM
+
+Marco A — Operação de produção funcional: entro pelo acesso correto, consulto pedidos completos, interpreto kits, separo cor/tamanho, encontro todos os lotes, recupero artes, exporto DTF, registro produção real, corrijo exceções, vejo custo histórico, dívida e pagamentos por semana e trato devoluções físicas. Isso funciona sem assinatura SaaS, marketing, e-mail de novos clientes ou IA. Não há pane P0/P1 conhecida nesses percursos e os limites de volume previstos estão tratados/testados.
+
+Marco B — Financeiro próprio conferido: fontes necessárias ao período estão comprovadas; tenho resultado por competência, recebíveis, carteira/trânsito e caixa separados, conciliação auditável, obrigações/giro e uma semana/mês reais conferidos. Quando uso arquivo oficial, a importação é funcional e rastreável. Não é permitido concluir este marco com lucro fictício, custos ausentes aceitos como zero ou diferenças sem origem.
+
+Marco C — Automação financeira completa no escopo disponível: coletores/adapters reais, autorização, cobertura, monitoramento, recuperação e fechamentos aptos operam sem depender de arquivos rotineiros/aba aberta, conforme fontes disponíveis. Se uma API ou consentimento indispensável não estiver disponível, mantenha esse marco ABERTO_DEPENDENCIA_EXTERNA, descreva exatamente a limitação e preserve A/B quando seus próprios critérios estiverem satisfeitos. Fallback manual é continuidade operacional, não falsa conclusão da automação desejada.
+
+Marco D — Preparado estruturalmente para venda: operação não depende de billing, mas mantém isolamento/configuração/contratos/documentação para retomada comercial. Pronto para vender é um aceite futuro separado, não consequência automática de A/B/C.
+
+Todos os marcos devem ter evidência própria. Não derive “funcional” de existência de tela, nomes de arquivos, CI verde ou declaração do próprio relatório.
+
+7. CENÁRIOS DE TESTE E REGRESSÃO
+
+Preserve os 28 requisitos FINAUTO e T01–T24 existentes, suas evidências e limites. Reexecute o necessário para as mudanças e os gates do repositório. Acrescente cenários reais de risco para:
+- login owner sem billing, sessão expirada, perfil sem capacidade e outro tenant negado;
+- pedido alterado/cancelado depois de reserva e depois de impressão;
+- kit com dois SKUs iguais/diferentes, várias unidades, arte/cor/tamanho ausentes, estampa frente/verso sem duplicar peça;
+- 31º lote e lotes além da página100, exportação repetida, EXPORTED não impresso cancelado, produção parcial e reimpressão;
+- restauração dos pixels DTF e associações em perfil limpo;
+- mais de 1.000 registros de fabricação incluindo VOID, mais de 150 lotes/500 alocações, mais de 2.000 eventos mensais, mais de 200 devoluções e item original após a posição 100;
+- pagamento parcial da produção, quitação de semanas antigas primeiro, adiantamento, dois pagamentos simultâneos e reversão;
+- atualização de custo que não reescreve lote/CMV/fechamento antigos;
+- venda concluída agora criada em mês anterior, API/arquivo sobrepostos e retorno tardio;
+- taxas/frete/cupom/ajuste/recarga já embutidos no repasse sem dupla dedução;
+- banco com duas transações iguais legítimas, extrato incompleto, conta errada, sobreposição e diferença de saldo;
+- conciliação 1:N/N:1/N:M, centavo indisponível, reversão e convivência com matcher legado;
+- recebível a vencer com DRE apta e caixa ainda separado;
+- fonte Ads nominal, fuso comprovado/desconhecido, zero real e incompatibilidade com sexta13h;
+- sexta 12:59:59/13:00:00, virada de mês/ano, meses com comprimentos diferentes e oito intervalos de fabricação;
+- fechamento concorrente, retry após falha, retirada da aprovação, evento tardio e retificação sem alterar original;
+- projeção histórica conhecida no corte versus corrigida posteriormente, conforme contrato aprovado;
+- zero comprovado versus ausência, dado desatualizado, perda de acesso e limpeza do contexto anterior;
+- igualdade entre card, gráfico, tabela, CSV e fechamento no mesmo filtro/revisão;
+- falha da IA, gráfico ou coleta de mês antigo sem derrubar pedidos/produção independentes;
+- migração/rollback compatíveis, restauração e verificação da release publicada.
+
+Não escreva testes que apenas repitam a implementação e chamem qualquer saída de correta. Use invariantes de quantidade/centavos, resultados esperados independentes, autorização negativa e recuperação de falhas. Não reduza suites nem remova hash allowlists. Não use fatos ou dados privados reais em fixtures.
+
+Comandos obrigatórios observados na base; reconfirme package/AGENTS atuais:
+  npm ci
+  npm test
+  python3 -m unittest web/bridge/test_hermes_bridge.py tools/test_install_hermes_web_bridge.py tools/test_build_hermes_web_bridge_install.py tools/test_activate_hermes_web_bridge.py tools/test_build_hermes_web_bridge_activation.py -q
+  npm run build
+  npm run validate:deploy -- all
+
+Use a versão Node indicada pelo projeto, atualmente >=24 e <25, e o gerenciador declarado. Exija CI do SHA candidato exato e QA de UI normal/minificada em desktop/mobile. Atualize freeze_client_helpers em web/cloudflare/build.py quando aplicável ao código inline. Não conte o CI histórico como teste do código novo. Separe testes sintéticos, inspeção pública e aceite autenticado real.
+
+8. PROCEDIMENTO PARA CORRIGIR ERRO QUE ESTEJA PARANDO A PRODUÇÃO
+
+8.1 Antes de mexer
+Registre sintoma, rota, horário/fuso, etapa, SHA/release/bytes, status HTTP, código sanitizado e último funcionamento conhecido. Preserve rascunho e dados. Leia o erro real; não presuma quota D1, falta de permissão Shopee ou falha de login só por uma resposta anônima. Use /admin/diagnostics com sessão autorizada quando disponível. Diferencie ambiente de produção do site e produção física de peças; trate ambos no módulo correto.
+
+8.2 Tela branca, gráficos/abas quebrados
+Confira console, parsing, carregamento dos assets, hash/release, MIME/CSP, hidratação e normal/minificado. Reproduza no Worker gerado. Corrija o menor trecho; isole erro de painel e mantenha funções independentes. Não retire gráficos, validações, fontes ou testes para fazer a tela parecer saudável. Se houver regressão atribuída à release, compare com última versão compatível e faça rollback/rollforward planejado, sem apagar D1.
+
+8.3 Login, 401/403 e comunicação App/Auth/Finance
+Confira sessão/principal/capacidade/loja, revogação, expiração, CSRF e rota correta. Conferir nomes e bindings não expõe valores secretos. Compare configuração/contrato assinado dos três Workers por mecanismo seguro. Não rotacione chaves, não reconecte OAuth, não force ACTIVE/OWNER nem remova validações como tentativa genérica. repair:finance-router é mutação, não diagnóstico rotineiro. Se um segredo ou grant realmente precisar de intervenção, apresente apenas a necessidade e use o canal seguro autorizado.
+
+8.4 Coleta parada, RETRY_WAIT ou SOURCE_INVALID
+Confira período/tenant, fase, lease, next_run_at, cursor, revisão, erro e contagem de progresso. Preserve a última fonte válida. Para timestamp, compare observed_at com horário após IO, fuso e duração; a correção da .3 já existe. Reproduza o caso atual e não aceite datas futuras indiscriminadamente. Para FINANCIAL_SOURCE_RUN_NOT_FOUND, obtenha ou importe a fonte legítima faltante e faça bootstrap correto; não preencha eventos com um total mensal agregado. Retome a etapa com idempotência e backoff; não reinicie todo o mês a cada falha. Rate limit exige orçamento e retry, não loop. Registre dependência externa exata e continue produção atual/meses independentes.
+
+8.5 CAPACITY_REACHED, INCURRED_PRODUCTION_LIMIT, QUEUE_CAPACITY ou resultado truncado
+Meça contagem e bytes, localize a limitação e identifique se é de resposta, snapshot, tabela ou invocação. Use as correções OP-006/007/008/011, com migração e paginação completas. Não apague lotes antigos, VOID ou casos de devolução; não force um fechamento com a primeira página. Faça leitura/recontagem antes/depois e prova de recuperação.
+
+8.6 Lote preso, arte ausente ou quantidade incorreta
+Confira estado, revisão, composição, reserva, pedido atual, pixels/hash e o que de fato foi impresso/produzido. Não apague reserva nem marque produzido sem confirmação. Se EXPORTED ainda não impresso, use a nova transição explícita e auditada; se parcial, preserve a parte produzida e trate só o restante. Se pedido mudou, peça conferência da diferença com prévia. Identidade ausente bloqueia a peça afetada e a explica, sem impedir lotes independentes corretos.
+
+Para DTF_ART_MISSING, restaure o PNG de mesmo hash/versão. Para DTF_KIT_PARTS_REQUIRED, confirme a composição e a segunda parte real. Para DTF_ART_RESOLUTION_LOW ou DTF_CANVAS_LIMIT, confira pixels, tamanho físico, margem/DPI e divisão de folhas; mudar somente metadata não melhora a resolução. Para DTF_SOURCE_UNAVAILABLE ou DTF_ORDER_CHANGED_REFRESH, recupere a fonte/revisão autorizada e revalide antes de exportar, sem apagar o cache identificado. Para DTF_BATCH_STATE_CONFLICT, recarregue estado e resolva concorrência pelo fluxo auditado.
+
+8.7 D1, schema, trigger e migração
+Leia métricas/erros atuais e schema real com acesso autorizado. Não declare quota esgotada por inferência. Migre de forma aditiva, tenant-aware, com backup, CAS/transações e compatibilidade. Triggers de associação podem impedir código antigo após rollback; restaure código compatível e realize desvinculação/correção pelo fluxo auditado, não removendo constraints para passar a gravação.
+
+8.8 Deploy automático/Cloudflare Builds
+O recibo histórico relata falha de Workers Builds em baseline e candidato e uso do caminho controlado de publicação existente. Isso não prova Live fora do ar. Confira logs autorizados, branch, raiz, Node, build/deploy commands, caminhos compartilhados e permissões. Se logs/configuração retornarem403, identifique o acesso faltante sem inventar a causa. O mecanismo automático falho não precisa bloquear melhoria se o fluxo controlado existente estiver disponível e validado. Use os scripts do projeto; não chame Wrangler diretamente para pular preflight, configuração, allowlists ou CI. Confira bytes/configuração/rotas e registre o recibo próprio.
+
+8.9 Hermes/Gateway indisponível
+Confira heartbeat, versão, contrato, último job e estado do serviço autorizado. Não reinicie uma ponte no meio de tarefa sem preservar o trabalho. A recuperação segue o procedimento existente. Mantenha pedidos, DTF, registro físico, exportação e cálculos determinísticos funcionando; mostre a indisponibilidade específica da IA/fonte. Não transforme a IA em autorizador de fatos financeiros ou físicos.
+
+Depois de qualquer correção: acrescente teste do risco concreto, execute os gates aplicáveis, publique incremento validado quando autorizado e confirme a reprodução resolvida na função afetada. Se não houver acesso para a última conferência, marque PUBLICADO_TECNICO ou VALIDADO_LOCAL, nunca ACEITO_NA_OPERACAO por suposição. Continue as outras tarefas úteis e entregue o passo exato para destravar a evidência restante.
+
+9. LIMITES QUE NÃO PODEM SER RELAXADOS
+
+Não inventar lucro, estoque, taxa, imposto, peça, pagamento, saldo, permissão ou cobertura. UNKNOWN não é zero. Não transformar saldo parcial em lucro líquido definitivo, nem repasse ou saque em nova receita. Não descontar CMV/fabricação/compra/pagamento da mesma peça várias vezes.
+
+Não executar saques, transferências, PIX, cobranças ou reembolsos reais por este prompt. Não publicar anúncios, alterar preços/budgets/campanhas/estoque/pedidos externos, confirmar push ou reautorizar OAuth sem a permissão real e aprovação específica já exigidas para essas ações. Ads/PROMO permanecem LOCKED; Hermes permanece OBSERVER para ações externas não autorizadas. O uso próprio autoriza concluir o software, não agir comercialmente em meu nome sem os respectivos controles.
+
+Não incluir tokens, cookies, valores de secrets, dados de compradores, pedidos privados ou arquivos bancários reais em commits, logs públicos e entregas. Use evidência sanitizada e os mecanismos privados existentes. Não misture o repositório MLS-DTF ou outros projetos separados com este sistema por semelhança de nome.
+
+10. FORMATO DE TRABALHO E CONCLUSÃO
+
+Comece imediatamente pela reconferência da HEAD, leitura canônica e acesso/runtime. Apresente uma tabela curta: existente e preservado; problema atual comprovado; lacuna interna; dependência externa; adiado para venda. Em seguida implemente a próxima tarefa executável. Não pare para me perguntar qual fase seguir quando este roteiro já estabelece a prioridade.
+
+Ao final de cada incremento informe:
+1) função corrigida/completada e motivo;
+2) onde está e como usar;
+3) testes e alcance da evidência;
+4) SHA/PR, release e comprovação Live separadas;
+5) aceite operacional real ou pendência exata;
+6) próximo item independente da trilha de uso próprio.
+
+Se algum bloqueio comercial surgir, mova-o para ADIADO_VENDA e continue. Se surgir bloqueio operacional externo, entregue todo o trabalho interno e o fallback confiável possível, registrando o que continua faltando sem encerrar falsamente a automação. Faça o sistema útil para minha operação em cada incremento, preservando a preparação para venda. Só depois dos aceites da minha operação retome o lançamento comercial como prioridade principal.
+
+REFERÊNCIAS PRIMÁRIAS DA AUDITORIA
+https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/commit/346f30f200e5cbd3d9efd26663a483c625d9c6e7
+https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/121
+https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43536468273
+https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/AGENTS.md
+https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/docs/financial-automation/README.md
+https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/docs/financial-automation/MATRIZ_EXECUCAO.json
+https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/docs/financial-automation/publication-live-20261113.json

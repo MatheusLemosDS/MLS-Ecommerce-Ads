@@ -1,3 +1,7 @@
+## Prioridade atual — operação própria
+
+A solicitação mais recente do proprietário substitui a ordem comercial anterior: seguir `docs/owner-operation/EXECUCAO.json`, com estado canônico em `docs/MLS_COMMERCE_OS_CHECKPOINT.json`. Reutilizar PR121 integrada. Venda, billing, marketing e onboarding de outros clientes ficam ADIADO_VENDA; não bloqueiam o acesso owner existente nem produção/financeiro independentes. Segurança, permissões, isolamento, integridade, backups, auditoria, regras de domínio e gates de publicação abaixo permanecem ativos. `docs/owner-operation/CATALOGO_GRAFICOS.json` governa a preservação dos gráficos. Registros datados abaixo e restrições de escopos anteriores devem ser lidos com sua data e entrega, sem convertê-los em proibições permanentes.
+
 # MLS Commerce OS — instruções do repositório
 
 Comece pela [retomada curta](docs/RETOMADA.md) e pelas regras de domínio abaixo.

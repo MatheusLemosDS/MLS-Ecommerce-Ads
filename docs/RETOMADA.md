@@ -1,3 +1,11 @@
+<!-- OWNER_OPERATION_CURRENT -->
+Prioridade vigente: operação própria primeiro. Matriz ativa: [owner-operation/EXECUCAO.json](owner-operation/EXECUCAO.json); [uso e status](owner-operation/README.md); [gráficos preservados](owner-operation/CATALOGO_GRAFICOS.json).
+
+Base main `346f30f`/PR121 reconfirmada; código OP011 `e168e9a` na branch `feature/owner-operation-first-20261116`: lotes DTF com paginação, filtro e acesso por ID, sem mudar reservas ou schema. Validação local concluída com revalidações documentadas; CI do candidato, publicação e aceite real ainda pendentes. Não usar a CI histórica da main como CI do candidato.
+
+owner_operation governa a próxima entrega; sale_preparation fica ADIADO_VENDA. Resend para novos clientes, planos, checkout, marketing e documentos de onboarding comercial não bloqueiam o owner legítimo. Autenticação, permissões, isolamento, backups, auditoria e integridade seguem obrigatórios. Próximo independente: OP013 (backup/restauração real dos pixels e vínculos de artes). Histórico abaixo preservado; PR118/121 já integradas, não repetir merges. M2/M2.2, lucro/fechamento real e coleta bancária automática não foram encerrados.
+<!-- END_OWNER_OPERATION_CURRENT -->
+
 # Retomada curta — MLS Commerce OS
 
 - Base: main `346f30f200e5cbd3d9efd26663a483c625d9c6e7`, reconfirmada pelo conector GitHub; [PR #121](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/121) `merged=true` em `2026-11-14T00:47:06Z` (13/11 às 21:47:06 Brasília). O checkout anterior e seu `origin/main` estavam em `eab85a17d7a6c4f213e67ce0b7dea0cf63932bf2`/PR116; não representavam a main atual.

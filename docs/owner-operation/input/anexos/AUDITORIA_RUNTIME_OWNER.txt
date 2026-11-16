@@ -1,0 +1,112 @@
+AUDITORIA ATUAL — CI, PUBLICAÇÃO, ACESSO DO PROPRIETÁRIO E RECUPERAÇÃO
+Projeto: MLS Commerce OS / MatheusLemosDS/MLS-Ecommerce-Ads
+HEAD observado: 346f30f200e5cbd3d9efd26663a483c625d9c6e7
+Consulta: noite de 15/11/2026, Brasília.
+Escopo: somente leitura de GitHub/código/CI/documentação. Não executei testes locais, D1 ou APIs de produção, não entrei na sessão do proprietário, não fiz deploy ou escrita no repositório.
+
+1. RESULTADO VERIFICADO
+A main avançou 14 commits em relação a 6578e21098ff799e59433af92880d249432ceeb4. A PR121 foi integrada com razão financeiro, conciliação, fechamentos e correção posterior da coleta Ads.
+O workflow Validar Workers atual está verde no commit exato: run43536468273, job132266587954, concluído14/11/2026 00:56:56UTC. Os logs consultados confirmam 4.432 testes Node aprovados, zero falhas, cancelados ou pulados, e67 testes Python OK. O build final dos três Workers passou. Os dois testes de navegação de workspace normal/minificado passaram (testes3255 e3256). Portanto, a antiga falha Inspected target navigated or closed não pode ser apresentada como atual.
+O passo Pré-release local e não destrutivo é condicionado a pull_request base main. Sua ausência no run push não é uma falha.
+Fonte: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43536468273
+
+2. PUBLICAÇÃO É EVIDÊNCIA SEPARADA
+O recibo da PR121 informa release2026-11-13.3, verificada14/11 às00:22:15UTC, fontef68525ea1d136350ece9942433352accdf97d992, CI43531882471 aprovada. App eAuth atualizados; Finance retido. Escopo TECHNICAL_PUBLIC_ONLY. Aceite financeiro real false; owner_live_authenticated_qa NOT_PERFORMED.
+Essas informações são evidências documentais do repositório. Não revalidei os Workers Live nesta subauditoria.
+O recibo preserva problema Workers Builds: FAILED_ON_BASELINE_AND_CANDIDATE_NOT_CLAIMED_GREEN, publicação EXISTING_MANUAL_WRANGLER, permissão de configuração Builds UNAVAILABLE. O guia histórico explica que logs Builds retornaram403/código12004 e a causa não foi confirmada.
+Não confundir: GitHub CI verde / Cloudflare Builds falho / publicação controlada verificada podem coexistir. Não declarar Live indisponível apenas pelo check de Builds. Não afirmar automação de deploy reparada.
+
+3. ERRO REAL DE COLETA JÁ CORRIGIDO
+A release.2 rejeitava observações válidas da lane Ads porque o horário de validação era capturado antes dos awaits. A.3 amostra o relógio após callback de leitura e revalidação de acesso (financial-automation-bridge.mjs63–69), conservando rejeição a datas realmente futuras.
+O recibo relata retomada natural em14/11 00:32:51UTC: fonte1→2, eventos100→113, pedidos100 preservados, Ads13 adicionados, sem novo SOURCE_INVALID. Estado continua COLLECTING e os eventos em REVIEW; isso não certifica lucro ou fechamento.
+O outubro histórico estava com FINANCIAL_SOURCE_RUN_NOT_FOUND. É lacuna de fonte distinta da correção Ads; deve ser revalidada agora antes de se alegar pendência atual.
+
+4. ACESSO OWNER E COMERCIALIZAÇÃO
+O código mantém /login e /admin/login legados, inclusive na presença de cookie pessoal; o cookie pessoal só é removido após autenticação legada bem-sucedida conforme contrato. commercialTabAllowed preserva roteador owner/review. As rotas operacionais consultadas verificam capacidades, escopo, sessão e autorização; não localizei uma exigência de assinatura paga para esse acesso legado.
+Em paralelo, o cadastro comercial cria PENDING_VERIFICATION e email produção NOT_CONFIGURED (mail somente LOCAL_TEST_ONLY); billing da nova empresa inicia NOT_CONFIGURED e checkout/portal unavailable; conexão de loja nova só tem adaptador de teste LOCAL_TEST_ONLY.
+DECISÃO: não redirecionar o proprietário para cadastro/assinatura incompletos nem inventar novo bypass. Preservar caminho owner já autorizado. Adiar e-mail para novos clientes, checkout, planos, onboarding multiloja e NFSe SaaS. Manter segurança, login próprio, recuperação necessária, CSRF, RBAC, tenant scope e isolamento em qualquer caminho.
+Se o próprio acesso do dono realmente falhar, isso vira P0 operacional, mesmo que o arquivo tenha nome commercial/account. Classificar pelo efeito real, não pelo nome.
+
+5. CHECKPOINT DESATUALIZADO PODE DESVIAR O CODEX
+Os campos top-level next_actions dos dois checkpoints ainda pedem concluir CI/integração PR118 e priorizam TikTok/ML. A main já contém PR121.
+Atualizar campos atuais de fase, status, tarefas seguintes, dependências e handoffs para owner-first, preservando as entradas históricas. Não refazer merges antigos nem buscar novos marketplaces antes da operação Shopee principal.
+O incidente de painel de27/10 está marcado UI_RECOVERY_CONFIRMED_BY_OPERATOR. Usá-lo como playbook histórico, não como prova de erro presente.
+
+6. PLAYBOOK PARA CODEX — SE A PRODUÇÃO LIVE FALHAR
+A. Fixar evidência antes de alterar:
+- SHA do Git, vetor de bytes/versões dos três Workers, APP_RELEASE, assets publicados, bindings, domínio/rotas, cron e último sucesso.
+- Sintoma/reprodução atual, data/hora Brasília, request/correlation ID seguro, status HTTP e código sanitizado. Nunca tokens, cookies, pedidos privados, buyerdata, valores secrets.
+- Separar HTTP anônimo esperado401/303 de falha autenticada real. Abrir /admin/diagnostics com sessão autorizada: diagnóstico seguro independente do painel completo e probe SELECT1. Não atribuir tudo à quota D1 sem métrica atual.
+
+B. UI não carrega / gráficos somem:
+- Console/erros de parsing, request dos assets e hashes, renderização normal/minificada, CSP e bundle/hidratação.
+- Corrigir menor causa e testar Worker gerado; novas funções inline exigem freeze_client_helpers em build.py.
+- Preservar seis agentes e dados/rascunhos. Não retirar gráficos, dados ou testes para a tela parecer saudável.
+- Rollback só do candidato causador com evidência e compatibilidade de schema; rollback de código não desfaz D1.
+
+C. Auth/Finance401/403/503:
+- Resolver identidade da sessão e rota apropriada, validade/revogação, organização/loja/capacidade, signed envelopes e CSRF; nunca conceder ACTIVE/OWNER manualmente para contornar.
+- Conferir configuração e nomes dos bindings App→Auth→Finance e chave compartilhada apenas por mecanismo privado. Preservar dados e chaves de cifragem. Não rotacionar segredo/reautorizar OAuth sem causa demonstrada.
+- Se secret mismatch comprovado, usar procedimento versionado e autorizado, com plano de recuperação; repair:finance-router é mutação e não comando diagnóstico de rotina.
+- Commercial billing/email ausentes não justificam interromper o caminho owner legado.
+
+D. Coletor parado/RETRY_WAIT:
+- Inspecionar scope/período/phase/lease/next_run_at/source_revision/checkpoint, último erro sanitizado e progresso real. O código usa lease120s e retry300s, com orçamento e fases distintas.
+- Reproduzir falha com fixture determinística equivalente; preservar ids idempotentes, cursor, revisão e eventos confirmados.
+- SOURCE_INVALID: confirmar timestamps, fuso, schema, tipos/identidades e relógio pós-await. Não aceitar futuro indiscriminadamente.
+- FINANCIAL_SOURCE_RUN_NOT_FOUND: verificar a fonte salva por competência/escopo e bootstrap autorizado; coletar/importar fonte legítima faltante. Não copiar agregados para simular eventos.
+- Rate limit/429/timeout: backoff, orçamento, checkpoints duráveis; retomar sem duplicar. Permissão revogada precisa resposta do operador/provedor e nenhuma simulação de grant.
+- Um mês antigo sem fonte deve ficar pendente explícito; não travar pedidos/produção atual.
+
+E. D1/config/deploy:
+- Ler métricas/erros/schema/capacidade atuais; migrations aditivas, prova de backup/recuperação, transações e revisão.
+- Usar npm run validate:deploy -- all e scripts existentes. Não chamar Wrangler direto para pular validação, remover hash allowlist, criar novos bancos, apagar históricos ou mudar bindings silenciosamente.
+- Workers Builds automático: conferir branch, raiz, Node do arquivo, npmci, comandos de build/deploy, filtros caminhos compartilhados, instalação GitHub/permissão e logs autorizados. Se403 atual, registrar acesso faltante, sem declarar causa confirmada.
+- A indisponibilidade do mecanismo automático não precisa bloquear a entrega se o mecanismo controlado já existente estiver autorizado, validado e disponível. Registrar esse desvio e seu recibo.
+- Para nova incompatibilidade de contrato, publicar em ordem Finance→Auth→App; se só App/Auth mudaram, verificar Finance retido. Conferir sempre o vetor completo após cada etapa.
+- Nenhuma publicação é declarada concluída sem versão/bytes/config e check Live da função afetada.
+
+F. Hermes/Gateway:
+- Não confundir GATEWAY_URL Shopee/Ads com PSP de cobrança SaaS.
+- Ponte Hermes depende de runtime externo e protocolo hermes-finance-v1; checar heartbeat/versão/último job e contexto financeiro imutável.
+- Indisponibilidade da IA não pode impedir pedidos, DTF, registro de produção, exportação nem cálculo determinístico. Manter estado desconectado e ações operacionais disponíveis.
+- Nunca reiniciar no meio de tarefa ou copiar secrets; procedimento existente faz backup/troca atômica quando não há análise.
+
+7. GATES NOVO CANDIDATO
+Node deve seguir .node-version/packageengines>=24<25; npm11.9.0 conformepackage.
+Executar:
+npm ci
+npm test
+python3 -m unittest web/bridge/test_hermes_bridge.py tools/test_install_hermes_web_bridge.py tools/test_build_hermes_web_bridge_install.py tools/test_activate_hermes_web_bridge.py tools/test_build_hermes_web_bridge_activation.py -q
+npm run build
+npm run validate:deploy -- all
+Revalidar CI do commit candidato exato. Para UI, QA normal/minificado desktop/mobile em dados sintéticos, seguida de uso owner real autorizado sem fatos de teste em produção.
+O deploy valida configuração real/snapshot; faltas nisso são riscos operacionais, não burocracia comercial a ignorar.
+Rodar suites adicionais somente para risco concreto ou gate vigente. Não excluir testes porque nomecommercial; detectar se o erro revela regressão compartilhada.
+Atualizar APP_RELEASE quando visível e roadmap/checkpoint/handoffs ao final, com blocos: implementado, testado, publicado, aceito na operação, pendências externas.
+
+8. FONTES PRIMÁRIAS
+Todos os links de arquivos estão no commit atual:
+https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/AGENTS.md
+https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/docs/financial-automation/README.md
+https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/docs/financial-automation/VALIDATION.md
+https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/docs/financial-automation/publication-live-20261113.json
+https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/web/cloudflare/src/financial-automation-bridge.mjs
+https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/web/cloudflare/src/financial-automation-jobs.mjs
+https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/web/cloudflare/src/commercial-admin-runtime.mjs
+https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/web/cloudflare/src/commercial-route-policy.mjs
+https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/web/cloudflare/src/account-service.mjs
+https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/web/cloudflare/src/account-organizations.mjs
+https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/docs/PUBLICACAO_PELO_GIT.md
+https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/tools/worker_deploy.mjs
+https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/docs/HERMES_FINANCEIRO.md
+
+LIMITES
+Não há evidência nesta subauditoria de outage atual autenticado, quota atual D1, status atual Gateway/Droplet nem dados reais suficientes para certificar saldo/lucro/fechamento. Não converter documentação histórica ou testes sintéticos em aceitação operacional.
+
+
+COMPLEMENTO — PARIDADE MAIN COM CANDIDATO PUBLICADO
+O compare GitHub f68525ea1d136350ece9942433352accdf97d992→346f30f200e5cbd3d9efd26663a483c625d9c6e7 tem2commits e14arquivos: documentação/recibos/checkpoints e somente metadados publication de workers/app/browser-assets-published.json (versão/source_sha256/verified_at). Nenhum arquivo de código runtime mudou. Os hashes compilados do CI atual são idênticos aos hashes compilados do candidato no recibo: App3a5f01ae09ede502e4707f001976fc2a6094075ba26574e5e5d97b2e827687a9; Auth20a301c45ddb6097a3b458ec6ef7d39686286cc43601f6211d3b865b250ea125; Financeccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4. Isso confirma a continuidade do código compilado entre candidato e main; não substitui conferência de bytes realmente servidos agora em produção.
+
+COMPLEMENTO — NAVEGADOR DO AGENTE PRINCIPAL
+O agente principal relatou nesta auditoria: /admin?tab=overview&month=2026-11 redireciona/login sem sessão; /account/login carrega release Financeiro · continuidade da coleta, mas texto Confirme sua senha atual e botão Cancelar edição estão inadequados; Ajuda/account/help redireciona/account/login. Nenhum formulário submetido ou login realizado. Isso não comprova outage autenticado; correção de clareza de login é pequena melhoria de UX, enquanto signup/billing comercial completo continua adiado.

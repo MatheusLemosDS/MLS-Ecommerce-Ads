@@ -1,0 +1,20 @@
+{
+  "schema": "mls.owner-first.delivery-validation.v1",
+  "scope": "VALIDACAO_DOCUMENTAL_DO_PACOTE_NAO_TESTE_DO_PRODUTO",
+  "tarefas": 36,
+  "grafo_dependencias": "SEM_CICLOS",
+  "dependencias_comerciais_da_operacao": 0,
+  "fin_auto_preservados": 28,
+  "cenarios_financeiros_preservados": 24,
+  "cenarios_owner_especificados": 21,
+  "saas_reclassificados": 46,
+  "cenarios_saas_reclassificados": 26,
+  "contratos_visuais": 21,
+  "familias_CH_preservadas": 22,
+  "novos_complementos_visuais": 4,
+  "contagem_estados_financeiros_documentados": {
+    "VALIDADO_LOCAL": 12,
+    "PARCIAL": 15,
+    "EXTERNAL_DEPENDENCY": 1
+  }
+}

@@ -1,0 +1,83 @@
+AUDITORIA FINANCEIRA — USO DO PROPRIETÁRIO PRIMEIRO
+Data da leitura: 15/11/2026 Brasília (16/11 UTC). Somente leitura.
+Repositório: MatheusLemosDS/MLS-Ecommerce-Ads
+HEAD fixada: 346f30f200e5cbd3d9efd26663a483c625d9c6e7, PR #121, 14 commits/143 arquivos desde 6578e21098ff799e59433af92880d249432ceeb4.
+Base desta auditoria: código efetivo, AGENTS, roadmap/handoff/checkpoint atuais e docs/financial-automation. Não executei testes, chamadas de provedores, mutações, deploy ou validação de valores reais nesta revisão. Os testes/publicações citados nos documentos são evidência histórica atribuída ao projeto, não execução própria. Não afirmo indisponibilidade atual da Live.
+
+1. O QUE JÁ EXISTE E DEVE SER APROVEITADO
+
+A PR121 criou uma base financeira substancial: razão persistente com centavos inteiros e revisões; alocações de conciliação com capacidade compartilhada com o matcher legado; políticas de competência; snapshots imutáveis de fechamento; retificação; coletor incremental com leases/retry/CAS; ponte de lotes reais/custo histórico/CMV/devolução inspecionada; oito seções em Finance e gráficos/tabelas/CSV provenientes da mesma projeção.
+Não ordenar ao Codex recomeçar esses módulos. Mapear as lacunas abaixo e completar seus adaptadores/contratos. A matriz existente registra 12 FINAUTO VALIDADO_LOCAL, 15 PARCIAL e 1 EXTERNAL_DEPENDENCY — validação local não comprova uso real.
+
+Evidências principais: financial-event-ledger.mjs e financial-event-store.mjs; financial-cash-allocation-store.mjs; financial-close-store.mjs:5–12/90–124; financial-automation-jobs.mjs:23–71; financial-inventory-bridge.mjs; financial-automation-client.mjs:98–131/144.
+Todos os caminhos sem prefixo neste relatório pertencem a web/cloudflare/src/, salvo menção explícita a web/finance/src/.
+
+2. PERMISSÕES DO DONO NÃO DEPENDEM DE ASSINATURA
+
+financial-automation-service.mjs:20–29 preserva o proprietário legado autorizado, com scope fixo legacy-brazacommerce/legacy-shopee, permissões de leitura, configuração, conciliação e fechamento. O contexto comercial usa RBAC/tenant, mas não vi exigência de billing nessas funções.
+Portanto: preservar o caminho owner atual. E-mail para novos clientes, checkout, planos e assinatura não são pré-requisitos para finalizar sua produção/Finance. Não criar fake subscription, fake admin nem remover autenticação. Não migrar o dono ao cadastro comercial incompleto como condição para trabalhar. Identificar e corrigir eventual acoplamento em outros módulos, sem assumir que já existe.
+
+3. FINANCEIRO DEFINITIVO AINDA TEM BLOQUEIOS INTERNOS REAIS
+
+OF-01 — Coorte de competência incompleta. financial-automation-sources.mjs:75–99 lê runs legados selecionados por criação. A cobertura de ORDERS só pode ficar COMPLETE para PAID_ORDER_CREATE_ESTIMATE; a política proposta é COMPLETED_ORDER. Pedidos criados antes e concluídos agora não estão comprovadamente todos incluídos. Não basta terminar a paginação do cache.
+Correção: estender a coleta existente com coorte persistente por eventos de conclusão/atualização autorizados e recuperação histórica. Quando a API não fornecer consulta equivalente, importar relatório oficial com intervalo, fuso, status/data de competência e identificação fortes, conferência e trilha de origem. Unificar por identidade nativa para não duplicar um pedido visto em creation/update/report. Critério de saída: todos os pedidos relevantes da competência, inclusive criados em meses anteriores, cobertos e os totais/componentes reconciliados; evento tardio gera retificação.
+
+OF-02 — Componentes financeiros/ajustes ainda não todos classificados. financial-automation-sources.mjs:26–41 exige componente de Ads/topup observado e zero para o caso simples; ajustes não zero ou recarga geram ORDER_ADJUSTMENT_CLASSIFICATION_REQUIRED/REVIEW. GROSS_COMPONENTS não está implementado como ponte completa (:97). Histórico sem captura continua sem evidência.
+Correção: enriquecer captura e adaptador por tipo real de taxa, frete, cupom, subsídio, reembolso, compensação e topup; equivalência explícita bruto menos deduções mais ajustes versus líquido. Separar recarga Ads (ativo/transferência) de consumo (despesa); não descontar novamente taxa já embutida no líquido. Backfill somente com fontes reais. Testar composição zero, positiva/negativa, cancelamento, reembolso parcial e evento duplicado.
+
+OF-03 — Carteira/saques ainda não coletados. web/finance/src/financial-source-worker.mjs:72 atende capabilities/evidence/original-items de dados salvos; a abstração de coletor em financial-source-collection.mjs não é adaptador Wallet/Payout operacional. Não há prova atual de grants/contrato/região. A indisponibilidade de documentação por túnel/403 histórica não prova falta de permissão Shopee.
+Correção: validar contrato oficial no ambiente habilitado e grant da loja; implementar readPage e persistCheckpoint autorizados com dados nativos e cobertura. Fallback oficial revisado quando indisponível: saldo inicial/final, créditos, bloqueios/liberações, débito de saque, trânsito, estorno/falha e crédito no banco vinculados, sem chamar transferência/saque. Separar bloqueio externo preciso de programação interna restante e prosseguir nas outras funções.
+
+OF-04 — Banco importado sempre REVIEW no adaptador atual. financial-automation-cash-sources.mjs:60–79/134–142 mantém identidade conservadora, conta física não confirmada, fuso não confirmado, saldos vazios e cobertura parcial. Mesmo vínculo manual de conciliação não promove para caixa comprovado. web/finance/src/financial-bank-connector.mjs:39–57 tem interface autorizada e saldo matemático, mas não um conector real configurado.
+Correção prioritária para uso próprio: completar importação oficial auditável antes de esperar Open Finance. Fluxo de cadastro/seleção de conta bancária real, moeda, extrato original com hash, período e fuso/data civil confirmados pelo contrato, saldo inicial e final documentados, transações POSTED com IDs fortes (ou identidade conservadora auditada que não una transações iguais indevidamente), dedupe entre importações sobrepostas, classificação e matching, cobertura declarada/verificada para o intervalo e diferença exata saldo inicial + entradas − saídas − saldo final = 0. Registrar a origem de cada confirmação, responsável e evidência; importação não se autopromove por ter linhas.
+Datas sem hora são suficientes apenas para períodos civis compatíveis; não inventar 00h como instante real nem usar extrato de data civil para corte sexta13h. Persistir as confirmações/saldos/coverage numa nova versão de contrato e alimentá-las ao adaptador, em vez de retirar flags defensivas. Detectar linha fora do intervalo, omissão, arquivos parciais, conta errada e saldo incompatível. Importação comprovada pode liberar fechamento bancário mesmo sem provedor automático; sua automação permanece pendente separadamente.
+
+OF-05 — CMV e estoque ficam sempre parciais. financial-inventory-bridge.mjs:29/49/128 define coverage_complete:false e COGS/INVENTORY PARTIAL. Associação manual já funciona para fontes válidas, porém não há caminho completo para inventário inicial/cobertura integral da coorte. Não tornar COMPLETE ao registrar um único lote.
+Correção: abertura documentada de estoque, lotes históricos quando comprovados, composição por peça de kits, alocação determinística de cada item vendido a lote e custo vigente histórico, reconciliação quantidade inicial + entradas − saídas + retornos = final. Interface de pendências por SKU/peça e declaração revisável de completude com hashes/revisões. Zero legítimo exige confirmação/fonte. Alterar custo comercial atual não reescreve custo histórico nem fechamento. Não registrar fabricação pelo simples fato de haver venda/DTF.
+
+OF-06 — Limites de volume podem bloquear uso pessoal. Inventário atinge CAPACITY_REACHED/409 em 150 lotes, 500 alocações/reversões ou 190.000 bytes (financial-inventory-bridge.mjs:21/104). readFinancialAutomationLedger possui limite de 2.000 eventos por período e apenas sinaliza incomplete sem continuar a paginação naquele chamado (financial-automation-bridge.mjs:14–29). Fila de devoluções limita 200 casos e rejeita novos com QUEUE_CAPACITY (financial-returns-tracker.mjs:8/37). A lista de itens originais para associação lê somente a primeira página de 100 de cada run (financial-automation-sources.mjs:53), embora haja contrato paginado.
+Não há prova de que a loja já atingiu os limites; são riscos concretos verificáveis no código. Priorizar leitura de contagem/volume real sanitizada. Corrigir agora se próximos/atingidos: tabelas normalizadas e paginação persistente/índices por tenant, períodos e entidade, arquivamento consultável sem apagar história, UI que navega todas as páginas, cursor consistente, orçamento por invocação e backpressure. Não apenas elevar constantes nem truncar relatórios. Testes >150 lotes, >500 alocações, >2.000 eventos mensais, >200 devoluções e item após posição100 sem duplicação, perda ou falso fechamento.
+
+OF-07 — Devoluções antigas são revisitadas a partir do cache, não descobertas plenamente. financial-returns-tracker.mjs:56–68 transforma relatório salvo em observation com resolution_event:null. O adaptador padrão relê esse cache; não atualiza economicamente na Shopee. financial-automation-sources.mjs:135–137 força cobertura financeira parcial.
+Correção: usar descoberta autorizada por atualização/retorno, fallback oficial revisado quando necessário; manter fila por ID independente do mês de criação, marca d’água, sobreposição segura, revisita justa e atualização de caso antigo. Refund solicitado ≠ liquidado. Para resolver economicamente, exigir evento de pagamento/estorno/sem passivo documentado com causalidade e componentes. Recebimento físico, inspeção, revenda, perda e reparo/reembalagem permanecem separados: reparar cobra custo incremental real, não nova fabricação integral. Não remover pendência de cobertura só porque todos os casos já conhecidos estão fechados.
+
+OF-08 — Datas Ads ainda não comprovadas. financial-automation-ads-sources.mjs:7–10/17/24–46 mantém sempre timezone_confirmed:false, eventos REVIEW e rótulo nominal. Sexta13h é explicitamente incompatível com rateio da fonte diária.
+Correção: fixar/documentar semântica do calendário/conta/fuso com fonte oficial e conferência de valores/dias; normalizar o dia nominal para o dia civil correto sem deslocamento UTC→dia anterior. Provar consumo e, quando necessário, saldo/recarga/bonificação separadamente. Ads diário entra no calendário financeiro civil; fabricação sexta13h não exige dividir artificialmente Ads. Confirmar dia sem gasto por cobertura, não ausência de evento. Caso dependência real permaneça, exibir estimativa separada e terminar os demais módulos.
+
+OF-09 — Obrigações e giro incompletos. financial-automation-sources.mjs:62–74 captura despesas declaradas, mas EXTERNAL_OBLIGATIONS_COVERAGE_REQUIRED permanece; cash_projection requer banco, compromissos e reserva. Pagamento não deve criar nova despesa/CMV. Completar agenda a pagar, parcelas/pagamento parcial, saldo aberto por semana, regra do usuário de quitar semanas antigas primeiro com vínculo auditado e tratamento explícito de reversão, reserva de giro e vencimentos. Separar fluxo financeiro da fabricação. Não marcar livre para saque enquanto faltar dinheiro/compromisso comprovado.
+
+4. O FECHAMENTO DE RESULTADO JÁ É SEPARADO DO BANCO: PRESERVAR
+
+financial-close-store.mjs:30–34 exige cash_verified somente para BANK_CASH; ACCRUAL exige custos, tributos, política, cobertura/comparação e recebíveis verificados. financial-accounting-projection.mjs:99–103 separa pendências por base.
+Recebível confirmado ainda a vencer NÃO precisa ser depositado nem saldo de recebíveis zero para DRE fechada. Implementar reconciliação de recebíveis por saldo inicial + novos direitos − liquidações − ajustes = saldo final, origem e vencimento. Aprovação/completude desse subledger é distinta de BANK_CASH e WALLET.
+Manter estas saídas independentes: produção registrada/conferida; resultado por competência fechado; caixa bancário conciliado; carteira/saques completos; automação completa. Uma lacuna de Open Finance não deve bloquear fabricação, DTF ou DRE cuja evidência esteja completa. Uma lacuna de CMV/receita não pode ser removida para afirmar lucro líquido.
+
+5. SAIR DE PARTIAL COM TRABALHO CONCRETO
+
+Para cada família criar contrato de prova de cobertura por scope/período/fonte: origem/hash/versão, intervalo exato/fuso, completude com final da paginação ou relatório oficial íntegro, reconciliação de totais/saldos/quantidades, revisão/confirmação auditada quando necessária e invalidation ao mudar qualquer fonte. Não aceitar um booleano COMPLETE enviado pelo navegador.
+Comparisons_complete no código atual inclui ORDERS/COGS/ADS/EXPENSES/TAX/RETURNS. Portanto falta também implementar onde registrar e verificar confrontos de cada família; não basta mudar state da cobertura. Fonte sem eventos pode ser zero comprovado somente com intervalo completo declarado/verificado, não ausência de dados.
+Manter todos os FINAUTO-01…28 e T01…T24, mas reordenar como tarefas de uso próprio. Estar bloqueado em uma integração não bloqueia tarefas independentes. Deixar uma pendência com causa, evidência, workaround real, próxima ação, dependência e responsável. Não esconder pendência ou parar em 'aguardando integração' quando ainda há programação interna possível.
+
+6. ERRO DE COLETA HISTÓRICO: CORRIGIDO, VERIFICAR ANTES DE REABRIR
+
+Docs atuais registram SOURCE_INVALID na release .2 porque horário capturado antes dos awaits tornava observação posterior aparentemente futura. financial-automation-bridge.mjs:65–69 na HEAD .3 captura financialClock DEPOIS da leitura e da revalidação de acesso; a rejeição de futuro real permanece. Docs registram retomada natural com 100 pedidos preservados +13 Ads. Isso não é prova de saúde atual (a revisar em logs autorizados), mas não mandar 'corrigir de novo' sem reproduzir.
+Se reaparecer: localizar job/phase/cursor/revision e próximo retry, verificar último receipt e bytes App/Auth/Finance, comparar observed_at com relógio depois da IO, duração e consistência da fonte. Corrigir origem/normalização/ordem temporal; preservar eventos, cursor e idempotência. Reprocessar etapa com backoff e confirmar progresso real sem reiniciar o mês inteiro nem remover guarda de futuro.
+
+7. ORDEM FINANCEIRA RECOMENDADA AO PROMPT
+
+F1: confirmar owner autenticado e saúde live/coleta, preservar estimativa existente com rótulo; resolver falhas atuais e capacidade atingida.
+F2: finalizar produção/custo histórico/composição e pagamentos operacionais necessários ao dono; completar paginação e limites de uso.
+F3: coorte de competência + componentes/reembolsos/Ads com origem; fallback oficial revisado e reconciliável.
+F4: banco importado completo com abertura/fechamento/conta, conciliação e obrigações/reserva. Conector automático posterior se depender de contrato externo, sem bloquear fallback funcional.
+F5: carteira/saques com adaptador autorizado ou documentos oficiais, sem executar movimentação de fundos.
+F6: fechamento semanal civil/mensal de resultado e bancário independentes, automático somente com política e gates reais; produção conserva sexta13h e oito intervalos.
+F7: confrontar UMA semana encerrada e UM mês encerrado reais de mesma competência, fonte, fuso e corte; reconciliar centavos/quantidades ou explicar diferença identificada, sem saldo residual escondido. Depois acompanhar ciclos naturais e eventos tardios.
+Cobrança SaaS/planos/clientes novos/marketing não integram essas dependências. Estrutura de contas/RBAC/isolamento e segurança existentes é mantida.
+
+8. LINKS PRIMÁRIOS FIXADOS
+
+Prefixo de código: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/
+PR: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/121
+README novo: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/docs/financial-automation/README.md
+Matriz: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/docs/financial-automation/MATRIZ_EXECUCAO.json
+Recibo histórico .3: https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/docs/financial-automation/publication-live-20261113.json

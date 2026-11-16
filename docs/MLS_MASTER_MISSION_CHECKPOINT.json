@@ -1,6 +1,6 @@
 {
   "schema": "mls_master_mission_checkpoint_v1",
-  "updated_at": "2026-11-14",
+  "updated_at": "2026-11-16T02:41:18.483385+00:00",
   "base_visual_sha": "8d860b2c4f26531c53c4cdba0e06a14f51a7eef4",
   "visual_branch": "feature/mls-mockup-parity-real-charts-20261029",
   "visual_pr": 79,
@@ -3976,12 +3976,11 @@
     }
   },
   "next_actions": [
-    "Concluir a CI documental e a integração normal da PR118; publicação não comprova merge.",
-    "Conferir o relatório semanal com fabricação real, fontes financeiras e arquivos bancários do proprietário, mantendo as bases separadas.",
-    "Solicitar/liberar Order API no aplicativo TikTok Shop existente e preparar piloto oficial de leitura; acesso ainda não concedido.",
-    "Adaptar XLSX do relatório Shopee real, distinguindo renda por pedido de transferência agrupada.",
-    "Cadastrar aplicativo Mercado Livre e preparar piloto oficial de leitura.",
-    "Concluir M2/M2.2 com devoluções e fabricação reais, Seller Centre e Nubank no mesmo recorte, sem dupla contagem."
+    "Finish exact-candidate validation/CI and use the existing controlled publication path; record actual Live hashes/config/function checks separately.",
+    "Next independent OP013: preserve and restore DTF artwork pixels, hashes and associations in a clean browser profile; no cloud-storage purchase prerequisite.",
+    "OP005/OP006/OP007/OP008: backup/restore and sustainable storage/pagination before applicable migration; never delete history to open capacity.",
+    "Continue owner orders/production/cost/payment/return/financial tasks per docs/owner-operation/EXECUCAO.json; external missing source blocks only its dependent assertion.",
+    "SaaS signup for other customers, Resend commercial delivery, billing, marketing and legal onboarding remain ADIADO_VENDA; shared security/retention/recovery obligations remain active."
   ],
   "production_weekly_closing_2026_11_03": {
     "id": "PRODUCTION_WEEKLY_FRIDAY_13_CLOSING",
@@ -7044,5 +7043,69 @@
     "m2_closed": false,
     "m22_closed": false,
     "git_integration": "CHECK_PR121_CURRENT_STATE"
-  }
+  },
+  "history_before_owner_first_20261116": {
+    "updated_at": "2026-11-14",
+    "next_actions": [
+      "Concluir a CI documental e a integração normal da PR118; publicação não comprova merge.",
+      "Conferir o relatório semanal com fabricação real, fontes financeiras e arquivos bancários do proprietário, mantendo as bases separadas.",
+      "Solicitar/liberar Order API no aplicativo TikTok Shop existente e preparar piloto oficial de leitura; acesso ainda não concedido.",
+      "Adaptar XLSX do relatório Shopee real, distinguindo renda por pedido de transferência agrupada.",
+      "Cadastrar aplicativo Mercado Livre e preparar piloto oficial de leitura.",
+      "Concluir M2/M2.2 com devoluções e fabricação reais, Seller Centre e Nubank no mesmo recorte, sem dupla contagem."
+    ]
+  },
+  "current_phase": "OWNER_OPERATION_U2_DTF_BATCH_HISTORY",
+  "working_branch": "feature/owner-operation-first-20261116",
+  "current_status": "OWNER_FIRST_OP011_VALIDATED_LOCAL_GITHUB_CI_AND_PUBLICATION_PENDING",
+  "next_phase": "OWNER_OPERATION_BY_TECHNICAL_DEPENDENCY_NOT_SAAS_PHASE_GATES",
+  "active_execution_matrix": "docs/owner-operation/EXECUCAO.json",
+  "active_charts_catalog": "docs/owner-operation/CATALOGO_GRAFICOS.json",
+  "active_track": "owner_operation",
+  "sale_preparation": {
+    "state": "ADIADO_VENDA",
+    "blocks_owner_operation": false,
+    "preserved_local_preparations": [
+      {
+        "branch": "feature/saas-p01-store-context-20261116",
+        "head": "7c01fad3324c0bf051e83f5f7ffae00b97d83cef"
+      },
+      {
+        "branch": "feature/saas-p01-accounts-20261115",
+        "head": "9f3dbdb0e2be2601b37ce6593390c6032675fd4e"
+      },
+      {
+        "branch": "feature/saas-p01-email-20261115",
+        "head": "de0b1c47f0fdeab97109f302852272f95424975c"
+      },
+      {
+        "branch": "feature/saas-p00-baseline-20261114",
+        "head": "fa00e8b8af638926bd142344e8c7e9351793250b"
+      }
+    ],
+    "shared_foundations_not_deferred": [
+      "authentication",
+      "RBAC",
+      "tenant scope/isolation",
+      "CSRF",
+      "integrity",
+      "backups/recovery",
+      "idempotency",
+      "audit",
+      "applicable data retention"
+    ]
+  },
+  "latest_increment": {
+    "task": "OP-011",
+    "source_commit": "e168e9a04d7b6feaaf885bd645d9394533dadeee",
+    "release_candidate": "2026-11-15.4",
+    "implementation": true,
+    "local_validation": "COMPLETE_WITH_DOCUMENTED_TARGETED_REVALIDATIONS",
+    "published": false,
+    "validated_operationally": false,
+    "receipt": "docs/owner-operation/validation/owner-dtf-batches.json",
+    "actual_financial_acceptance": false
+  },
+  "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
+  "current_fields_role": "POINTER_TO_CANONICAL_CHECKPOINT_NOT_A_SECOND_EXECUTION_STATE"
 }

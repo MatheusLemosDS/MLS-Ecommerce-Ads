@@ -1,0 +1,200 @@
+{
+  "schema": "owner_dtf_batch_increment_v1",
+  "recorded_at": "2026-11-16T02:50:26.108399+00:00",
+  "base_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+  "documentary_parent": "0a5a22897d3cf56f97b7b995eb78a743fc0a246e",
+  "source_commit": "e168e9a04d7b6feaaf885bd645d9394533dadeee",
+  "branch": "feature/owner-operation-first-20261116",
+  "tasks": [
+    "OP-001",
+    "OP-003",
+    "OP-004",
+    "OP-011",
+    "OP-034",
+    "OP-035",
+    "OP-036"
+  ],
+  "implementation": true,
+  "local_validation_complete": true,
+  "published": false,
+  "operationally_accepted": false,
+  "actual_financial_acceptance": false,
+  "release_candidate": "2026-11-15.4",
+  "pull_request": null,
+  "github_ci_candidate": null,
+  "worker_artifacts": {
+    "app": {
+      "worker": "brazacommerce-app",
+      "bytes": 3752725,
+      "sha256": "c1b9b8c4a230c09f17a05c5aca4a5e2ba2b272ff3313972f53275b1d1d439dbd"
+    },
+    "auth": {
+      "worker": "brazacommerce-auth",
+      "bytes": 576190,
+      "sha256": "d252e476527a35d378b93632e22633cd86e8531e7f066487233f5672f78beab9"
+    },
+    "finance": {
+      "worker": "brazacommerce-finance",
+      "bytes": 892237,
+      "sha256": "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4"
+    }
+  },
+  "local_validation": {
+    "full_initial_run": {
+      "tests": 4428,
+      "pass": 4425,
+      "fail": 3,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "green": false,
+      "failures": [
+        "tools/tests/release-preflight.test.mjs",
+        "compiled overview restores original agent cards, native routes and directory filters in both themes",
+        "weekly source navigation applies exact day/month/cut and preserves drafts (1365px,minify=false)"
+      ]
+    },
+    "preflight_file_revalidation": {
+      "tests": 14,
+      "pass": 14,
+      "fail": 0,
+      "cause": "The full run loaded release preflight before the new explicit owner authorization record was completed. Current finite authorization list and its exact test were updated; all previous authorizations/gates retained."
+    },
+    "navigation_file_revalidation": {
+      "tests": 6,
+      "pass": 6,
+      "fail": 0,
+      "source_or_assertions_changed": false,
+      "scope": "Complete overview/weekly navigation files, compiled browser paths. Failures in initial full run were one missed native navigation and one stale CDP node; targeted files pass unchanged. CI for exact candidate still required."
+    },
+    "unique_current_node_test_cases_covered": 4441,
+    "single_full_run_green": false,
+    "remaining_known_local_test_failures_after_revalidation": 0,
+    "python": {
+      "tests": 67,
+      "pass": 67,
+      "fail": 0
+    },
+    "new_backend": {
+      "tests": 3,
+      "pass": 3,
+      "synthetic_reserved_batches": 125,
+      "provider_reads_for_pagination": 0,
+      "reservations_duplicated": 0
+    },
+    "new_chromium": {
+      "tests": 4,
+      "pass": 4,
+      "profiles": [
+        "normal320",
+        "normal1365",
+        "minified320",
+        "minified1365"
+      ],
+      "compiled_authentication": true,
+      "seventh_page_and_old_batch_action": true,
+      "horizontal_overflow": false,
+      "real_live_facts_created": 0
+    },
+    "security_targeted": {
+      "tests": 30,
+      "pass": 30,
+      "fail": 0
+    },
+    "deploy_configuration": "APP_AUTH_FINANCE_CONFIG_VALIDATED_EXISTING_PROFILES",
+    "preflight": "RELEASE_LOCAL_PREFLIGHT_OK_WITH_EXISTING_MANUAL_GATES_PRODUCTION_NOT_AUTOMATICALLY_APPROVED",
+    "documentation": {
+      "pass": true,
+      "json_documents": 15,
+      "local_links": 171,
+      "owner_tasks": 36,
+      "saas_requirements_preserved": 46,
+      "fin_auto_preserved": 28,
+      "financial_scenarios_preserved": 24,
+      "owner_scenarios_preserved": 21,
+      "visual_contracts_preserved": 21,
+      "chart_families_preserved": 22,
+      "old_documents_preserved": true,
+      "original_dtf_mutations_byte_identical": true,
+      "original_physical_financial_formulas_byte_identical": true,
+      "no_workflow_or_deployment_config_change": true,
+      "historical_hashes_retained": true,
+      "old_worktrees_clean": true,
+      "exact_artifact_hashes": true
+    }
+  },
+  "preservation": {
+    "ddl_changed": false,
+    "remote_migration": false,
+    "bindings_or_domains_or_cron_changed": false,
+    "workflows_changed": false,
+    "grants_changed": false,
+    "billing_required_for_owner": false,
+    "six_agents_v41": true,
+    "production_friday13_brasilia": true,
+    "historical_worker_hashes_retained": true,
+    "financial_formula_or_coverage_promoted": false,
+    "saas_preparation_branches_retained": true
+  },
+  "public_read_receipt": "validation/reconciliation.json",
+  "automatic_build_evidence": "validation/build-triggers.json",
+  "publication_path": "EXISTING_CONTROLLED_DEPLOY_ONLY_AFTER_EXACT_GITHUB_CI_AND_APPLICABLE_GATES",
+  "prior_documentary_no_push_scope": "Original documentary-delivery restriction is historical; latest owner request explicitly authorizes functional Live increments. Automatic trigger read remains unknown, not asserted safe or complete. No auto-build configuration is changed/bypassed.",
+  "current_blockers": [
+    {
+      "kind": "DEPENDENCIA_EXTERNA_OPERACIONAL",
+      "item": "Actual owner authenticated Live session/acceptance not available; no monetary or physical facts manufactured"
+    },
+    {
+      "kind": "DEPENDENCIA_EXTERNA_OPERACIONAL",
+      "item": "Effective Workers Builds triggers/metadata six GET403/code10000; exact automatic filters/commands unknown; use only authorized controlled path with CI/config/vector checks"
+    },
+    {
+      "kind": "ADIADO_VENDA",
+      "item": "Resend/new-customer legal onboarding/billing/marketing; no owner-operation dependency"
+    }
+  ],
+  "next_independent_task": "OP-013",
+  "evidence_logs": {
+    "full-node.log": {
+      "workspace_path": "/workspace/work/owner-first-input/full-node.log",
+      "sha256": "3b09d1471d752d436e522070d79f80a3f55f6cc7bf505254317a1cbe5ba82d35"
+    },
+    "preflight-corrected.log": {
+      "workspace_path": "/workspace/work/owner-first-input/preflight-corrected.log",
+      "sha256": "a9449977f27d48fb7adacfeed3b5dad1bba54760997cf6f0002daf12312961b4"
+    },
+    "navigation-revalidation.log": {
+      "workspace_path": "/workspace/work/owner-first-input/navigation-revalidation.log",
+      "sha256": "5ef457bd26ee284eaabde421a2dce1059084887de74721fb51d182dcae31d785"
+    },
+    "dtf-pagination.log": {
+      "workspace_path": "/workspace/work/owner-first-input/dtf-pagination.log",
+      "sha256": "55237eb844a5410eb87cdb068d80b9bde2631a7422937ad1e807877daf6f0a70"
+    },
+    "dtf-chrome-final.log": {
+      "workspace_path": "/workspace/work/owner-first-input/dtf-chrome-final.log",
+      "sha256": "a9dd14924dbdff9b61535a2bdefc48209aefa70c30ec1cb3f3e15d68276ecd99"
+    },
+    "dtf-security.log": {
+      "workspace_path": "/workspace/work/owner-first-input/dtf-security.log",
+      "sha256": "fbc96ca6e3a1a43bf7dab7840b06adf5bde568d9c0f3cc276d46dfc4d2735782"
+    },
+    "python.log": {
+      "workspace_path": "/workspace/work/owner-first-input/python.log",
+      "sha256": "51dec55492dc14fce2f6d642a97ffca65496b649a01d95e1b15278cc43f2118f"
+    },
+    "deploy-config.log": {
+      "workspace_path": "/workspace/work/owner-first-input/deploy-config.log",
+      "sha256": "7c80f54d4360632f314006d73a32d45ba93433b5d66d214bff9348b4c6586e65"
+    },
+    "build.log": {
+      "workspace_path": "/workspace/work/owner-first-input/build.log",
+      "sha256": "5648e601cf51939c91a65ffbd4157447dd14114dd34473436eb949585f56159f"
+    },
+    "preflight-source.log": {
+      "workspace_path": "/workspace/work/owner-first-input/preflight-source.log",
+      "sha256": "9d7603e2dafb7fb463c83fdbd41f9b85202423646aa79968467f2884bb71dfc0"
+    }
+  }
+}
