@@ -10,10 +10,10 @@ export const MLS_BROWSER_ASSET_MANIFEST=Object.freeze({
     },
     {
       "id": "dtf",
-      "path": "/assets/mls/49a5a03b3149fdab19e75e61509dea75a350d71b0e4aaa75c798eafc9662f59e.js",
-      "sha256": "49a5a03b3149fdab19e75e61509dea75a350d71b0e4aaa75c798eafc9662f59e",
-      "integrity": "sha256-SaWgOzFJ/asZ515hUJ3qdaNQ1xsOSqp1x5jq/JZi9Z4=",
-      "bytes": 39802
+      "path": "/assets/mls/63e4da3d9e8e272f882026d3d500180b98988792133e4b66c77788192ebdcc63.js",
+      "sha256": "63e4da3d9e8e272f882026d3d500180b98988792133e4b66c77788192ebdcc63",
+      "integrity": "sha256-Y+TaPZ6OJy+IICbT1QAYC5iYh5ITPktmx3eIGS69zGM=",
+      "bytes": 49778
     },
     {
       "id": "month",
@@ -45,10 +45,10 @@ export const MLS_BROWSER_ASSET_MANIFEST=Object.freeze({
     },
     {
       "id": "workspace",
-      "path": "/assets/mls/33922f2dc0e2aeba1720e667071eb1a701b1043425e5978193a761818570eb28.js",
-      "sha256": "33922f2dc0e2aeba1720e667071eb1a701b1043425e5978193a761818570eb28",
-      "integrity": "sha256-M5IvLcDirroXIOZnBx6xpwGxBDQl5ZeBk6dhgYVw6yg=",
-      "bytes": 487249
+      "path": "/assets/mls/ecce6528e87fe80bda1198235b2b76010e83293361afcd0d4a50a46919be97e1.js",
+      "sha256": "ecce6528e87fe80bda1198235b2b76010e83293361afcd0d4a50a46919be97e1",
+      "integrity": "sha256-7M5lKOh/6AvaEZgjWyt2AQ6DKTNhr80NSlCkaRm+l+E=",
+      "bytes": 492279
     }
   ],
   "retained": [

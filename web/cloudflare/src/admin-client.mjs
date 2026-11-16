@@ -1,3 +1,4 @@
+import {createDtfRecipeController} from './dtf-recipe-client.mjs';
 import {createDtfLifecycleController} from './dtf-lifecycle-client.mjs';
 import {createDtfArtworkBackupCodec,createDtfArtworkBackupController} from './dtf-artwork-backup.mjs';
 import {parseReport} from './admin-report.mjs';
@@ -9,6 +10,8 @@ import {createAgentPeriodController} from './agent-period-view.mjs';
 import {FINANCIAL_AUTOMATION_CLIENT} from './financial-automation-client.mjs';
 import {FINANCIAL_AUTOMATION_MARKUP_CLIENT} from './financial-automation-view.mjs';
 export const CLIENT=String.raw`
+globalThis.mlsDtfRecipeController=${createDtfRecipeController.toString()};
+/* MLS_DTF_RECIPE_END */
 globalThis.mlsDtfLifecycleController=${createDtfLifecycleController.toString()};
 /* MLS_DTF_LIFECYCLE_END */
 globalThis.mlsDtfArtworkBackupCodec=${createDtfArtworkBackupCodec.toString()};

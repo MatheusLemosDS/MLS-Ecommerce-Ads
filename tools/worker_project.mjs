@@ -5,6 +5,12 @@ import path from 'node:path';
 export const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const TARGETS = Object.freeze({
   app: Object.freeze({name: 'brazacommerce-app', main: '../../dist/app-worker.mjs', baselineHashes: [
+    // Exact same-path dry package for the final owner kit composition candidate.
+    'f1166d81a885f3f425d8fd95813b77e81b14b0cd3ee02250e9f8c40878d9c037',
+    // Final kit composition candidate, including enabled newly reserved-lot export actions.
+    'af6b26b6a1fa1237f80d73fe3057ee74d0d2d005dfbc4eb10e92047895a119cf',
+    // Explicit owner-confirmed kit composition and shared signed DTF engine; all gates retained.
+    '19054912978b4c4f27f739f83b6661de18357eb73a3d8efab7e390637d55f509',
     // Same-path DTF lifecycle dry package; publication still requires CI and independent verification.
     '52be141d6ee2423c523eb46ffe8801a3d63690ac0b26c44bdb10707679889e0b',
     // Frozen DTF lifecycle candidate with audited correction; all predecessor hashes remain recognized.
