@@ -5,6 +5,8 @@ import path from 'node:path';
 export const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const TARGETS = Object.freeze({
   app: Object.freeze({name: 'brazacommerce-app', main: '../../dist/app-worker.mjs', baselineHashes: [
+    // Exact OP013 private artwork backup candidate; previous source hashes and gates retained.
+    'b57c5626fa320354ec0c3ad5d1dc4ba39b2326d2a1f51986e795f36edd16132b',
     // Actual source retrieved and verified after controlled owner DTF publication (CI0650874).
     'eeeb61de8779de2bb1cecca38859f1b6af77227b7a160d93d13839aa0825b7e0',
     // Exact owner-operation DTF history candidate; historical hashes and deployment gates retained.
@@ -252,6 +254,8 @@ export const TARGETS = Object.freeze({
     '26612b7ea0edbea55e06f5fc817a18defd6b4fe65381e6d564b7d360b7b80278',
   ]}),
   auth: Object.freeze({name: 'brazacommerce-auth', main: '../../dist/auth-worker.mjs', baselineHashes: [
+    // Exact OP013 private artwork backup candidate; previous source hashes and gates retained.
+    '309b5af88b3b2d99872dc987c11912e5ba85889b6dcfad4399f4c459becd6cc3',
     // Actual source retrieved and verified after controlled owner DTF publication (CI0650874).
     'def3859b14e3829b205cc44981dcddb043f153ea5e4a9754d2df0cf94a42e994',
     // Exact owner-operation DTF history candidate; historical hashes and deployment gates retained.
