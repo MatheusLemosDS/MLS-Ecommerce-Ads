@@ -4,7 +4,25 @@ A trilha ativa é **owner_operation**. Cadastro de outros clientes, e-mail comer
 
 [Checkpoint canônico](../MLS_COMMERCE_OS_CHECKPOINT.json) · [36 tarefas e dependências técnicas](EXECUCAO.json) · [21 contratos visuais e famílias preservadas](CATALOGO_GRAFICOS.json) · [inspeção atual](validation/reconciliation.json) · [validação do incremento](validation/owner-dtf-batches.json).
 
-## Incremento atual OP-013 — backup das artes DTF
+## Incremento atual OP-012 — montagem e ciclo de impressão
+
+**Implementado e testado com PNGs sintéticos reais em desktop/celular; CI completa e publicação pendentes.** A Live continua2026-11-16.1 até o recibo da próxima versão confirmar a publicação. [Evidências](validation/dtf-cycle.json).
+
+1. Abra **Produção**, importe os PNGs com o nome da arte usado no SKU (por exemplo `frente.png` para `frente-27`). Confira largura útil57cm, margens, espaçamento e DPI. Selecione as linhas aptas, monte a prévia e reserve. Exporte PNG/manifesto e imprima no tamanho real, sem ajustar à página; o arquivo preserva proporção e transparência. Backup das artes continua disponível.
+2. No lote, abra **Conferir impressão e saldo**. Informe quantas unidades DTF completas foram realmente impressas, incluindo todas as artes de cada SKU. Informe motivo, marque a conferência e registre. Isso não confirma camisetas fabricadas, despesa ou pagamento.
+3. Para continuar o mesmo lote, escolha **Baixar saldo não impresso**. O arquivo inclui apenas o saldo e traz revisão no nome. Cada download revalida pedido e revisão; depois de outra confirmação, os arquivos preparados anteriormente são recusados e precisam ser gerados novamente.
+4. Para encerrar um lote exportado sem imprimir o saldo, informe motivo, marque a conferência física e a confirmação de que os arquivos baixados do saldo não serão usados; escolha **Liberar saldo não impresso**. Arquivo já baixado não pode ser revogado. O que já foi confirmado permanece no histórico; só o saldo volta à fila para um novo lote.
+5. Para reimprimir uma arte específica, preencha a quantidade da parte desejada e o motivo e prepare os arquivos de reimpressão. Baixar não registra impressão. Depois de realizá-la, use **Registrar reimpressão realizada**. Perda ocorrida tem registro próprio. Essas estampas não criam novas vendas ou unidades fabricadas.
+6. Se declarou uma quantidade incorreta, escolha a confirmação original, informe apenas a quantidade a corrigir, motivo e confirmações e use **Corrigir quantidade confirmada**. A reversão é auditada; não apaga o registro anterior nem estorna custos/pagamentos. Lote já encerrado mantém o encerramento e libera o saldo correto para nova reserva. Correção não serve para desfazer impressão que realmente ocorreu.
+7. Custo em branco é desconhecido. Valor explicitamente informado fica como referência do evento, sem lançamento automático no Financeiro. Confira custos/pagamentos nas fontes e módulos próprios; não repita despesas ou CMV. Use **Carregar registros anteriores** para todo o histórico; os totais não se limitam à página exibida.
+
+Não há migração de schema ou novas tabelas: registros append-only usam a auditoria DTF existente, com revisão, request_id e consultas indexadas. A fila atual teve backup privado e restauração isolada conferida, sem dados privados em fixtures/commits. Quantidades antigas, alterações de pedido após impressão, falhas de auditoria, concorrência e tentativas repetidas são tratadas sem inventar fabricação. Uma alteração de fonte após impressão continua exigindo revisão física; não se atribui uma arte antiga a um pedido diferente.
+
+**Retorno de versão:** após começar a usar fatos parciais/correções, preserve o leitor/gravador compatível em qualquer reversão da interface. O servidor anterior não compreende esses fatos; não faça rollback cego nem restaure um banco anterior por cima de impressões reais. O teste de recuperação conserva journal, reservas e idempotência. Marcos reais de operação e fechamento continuam abertos.
+
+As seções abaixo preservam entregas anteriores. A pendência de transporte do OP013 foi resolvida por leitura: oito verificações HTTP e sete assets exatos, com ledger aprovado e histórico do bloqueio preservado.
+
+## Registro OP-013 — backup das artes DTF
 
 **Publicado2026-11-16.1:** App/Auth novos e Finance retido. CI[43919859561](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43919859561) aprovada no head98a5808:4452 Node/67 Python, sem falhas, skips ou cancelamentos. Fontes/configurações, tráfego100%, domínios e cron conferidos pela API nativa. **Smoke HTTP completo e bytes públicos dos7 assets bloqueados pelo proxy Envoy do ambiente**, com503/98 bytes também observado no GitHub CLI; não declarar disponibilidade completa nem erro da aplicação por essa resposta. [Recibo próprio](validation/publication-artwork-live-20261116.json). O ledger de assets mantém a publicação aprovada anterior até conferir todos os bytes públicos; esse gate antecede a próxima publicação de assets. PR124 rascunho sobre PR123, sem merge/auto-merge. Aceite com artes reais ainda pendente. [Evidência atual](validation/owner-dtf-artwork-backup.json). O histórico abaixo registra OP011; a próxima implementação independente é OP012, enquanto se resolve a leitura pública.
 

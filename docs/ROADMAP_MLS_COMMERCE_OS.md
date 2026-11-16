@@ -1,11 +1,9 @@
 <!-- OWNER_OPERATION_CURRENT -->
-Prioridade: operação própria. [Uso e estado](owner-operation/README.md), [matriz](owner-operation/EXECUCAO.json), [checkpoint canônico](MLS_COMMERCE_OS_CHECKPOINT.json).
+Prioridade: montador DTF e operação própria. [Como usar](owner-operation/README.md), [matriz](owner-operation/EXECUCAO.json), [checkpoint canônico](MLS_COMMERCE_OS_CHECKPOINT.json).
 
-OP013 publicado:2026-11-16.1, ZIP privado das artes com PNGs/manifesto/hashes e restauração confirmada sem sobrescrever imagens diferentes. Fonte98a5808, CI43919859561 aprovada:4452 Node/67 Python, zero falhas/skips/cancelamentos. App/Auth novos; Finance retido. Bytes/configuração/tráfego100%/domínios/cron conferidos nativamente. [Recibo](owner-operation/validation/publication-artwork-live-20261116.json).
+OP012 implementado: impressão parcial, PNG do saldo, cancelamento de EXPORTED não impresso com motivo/ack dos arquivos, reimpressão por parte, perda e correção auditada. Códigobb5d14d, branchfeature/owner-dtf-cycle-20261116, versão candidata2026-11-16.2.63 testes direcionados passaram; backend/Chromium normal+minificado320/1365, histórico1006 eventos e recuperação com retry idempotente. Gates completos/CI/publicação ainda pendentes. Live continua2026-11-16.1, agora com8 HTTP/7 assets conferidos e ledger aprovado. Main346f30f/PR121 e pai d27f85a/PR124 preservados.
 
-Pendência concreta: smoke HTTP e7 assets públicos devolvem503/98 bytes Envoy no proxy do ambiente, também visto no GitHub CLI. Não inferir falha da aplicação nem concluir a conferência pública. Ledger de assets anterior preservado até ler/verificar todos os bytes; resolver antes de outra publicação. PR124 rascunho sobre PR123, sem merge/auto-merge; main346f30f/PR121 e pai754d20f preservados. Aceite real das artes/impressão e M2/M2.2 não encerrados.
-
-Próxima leitura: completar HTTP/assets e registrar a publicação aprovada. Próxima implementação independente: OP012, ciclo do lote/cancelamento não impresso/produção parcial com confirmação e auditoria. Venda ADIADO_VENDA; segurança, sexta13h/Brasília e não duplicar custos/receitas continuam ativos. [Histórico](owner-operation/history/continuity-before-op013-20261116.json).
+[Recibo do incremento](owner-operation/validation/dtf-cycle.json). PNGs reais/impressora e aceite físico/financeiro ainda pendentes. Impressão/exportação não confirma fabricação; custos desconhecidos não são zero. Após fatos parciais, manter backend compatível em retorno da interface; não aplicar servidor antigo cegamente nem apagar o journal. Gráficos, seis agentes, CSRF/tenant/permissões, sexta13h e não duplicar custos/receitas seguem ativos. Venda ADIADO_VENDA. [Histórico](owner-operation/history/continuity-before-op012-20261116.json).
 <!-- END_OWNER_OPERATION_CURRENT -->
 
 <!-- FINANCIAL_AUTOMATION_CURRENT -->

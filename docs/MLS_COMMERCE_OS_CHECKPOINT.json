@@ -2,7 +2,7 @@
   "schema": "mls_commerce_os_checkpoint_v1",
   "canonical_roadmap": "docs/ROADMAP_MLS_COMMERCE_OS.md",
   "legacy_roadmap": "docs/ROADMAP_BRAZACOMMERCE.md",
-  "updated_at": "2026-11-16T17:58:53.316351+00:00",
+  "updated_at": "2026-11-16T23:04:09.444172+00:00",
   "product": {
     "name": "MLS Commerce OS",
     "supervisor": "MLS Hermes",
@@ -29,9 +29,9 @@
     "pr": 10,
     "merge_commit": "9c418fd3010f46957d1ce52345baacd76041c788"
   },
-  "current_phase": "OWNER_OPERATION_U2_DTF_ARTWORK_BACKUP",
-  "working_branch": "feature/owner-dtf-artwork-backup-20261116",
-  "current_status": "OP013_PUBLISHED_NATIVE_VERIFIED_PUBLIC_SMOKE_BLOCKED_BY_ENVIRONMENT_TRANSPORT",
+  "current_phase": "OWNER_OPERATION_U2_DTF_COMPLETE_PRINT_CYCLE",
+  "working_branch": "feature/owner-dtf-cycle-20261116",
+  "current_status": "DTF_LIFECYCLE_IMPLEMENTED_TARGETED_PASS_FULL_GATES_PENDING",
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
     "Repasse-base, ajuste, repasse após ajuste e liberação exibidos sem dupla dedução",
@@ -120,12 +120,11 @@
     }
   },
   "next_actions": [
-    "Read-only: finish public HTTP and all7 asset SHA-256/length checks when environment egress works. Current failures are the exact98-byte Envoy reset body, also seen from GitHub CLI; do not treat as app503, grant denial or completed smoke.",
-    "Before another asset deployment, record the verified current publication using existing tool; prior approved asset ledger deliberately remains unchanged while public bytes cannot be read.",
-    "Independent implementation OP012: unprinted EXPORTED cancellation with reason/revision/audit and explicit acknowledgement that downloaded files cannot be revoked; partial production, remainder and reprint preserving physical facts.",
-    "Owner actual acceptance: privately save ZIP and restore in another browser of the same origin/account/store; verify actual art and print before deleting originals or marking produced.",
-    "OP005/006/007/008 remain applicable to database recovery/scale/migrations. No D1/artwork-schema migration or real manufacturing/finance acceptance in OP013; no missing value inferred as zero.",
-    "Sales-only work remains ADIADO_VENDA. Continue independent costs/payments/returns/banking tasks by technical dependency."
+    "Complete full Node/Python/build/deploy gates and exact-head GitHub CI for this DTF lifecycle candidate, then controlled publication with exact source/config/public asset checks.",
+    "Owner actual acceptance: import original PNGs, verify dimensions/DPI in preview and print at100%; use physical confirmation only after checking complete DTF units.",
+    "Never blind-rollback the old DTF server over partial/reversed physical facts; preserve compatible reader and complete append-only audit and use verified backups.",
+    "Manufacture, actual costs, partial payments and returns continue by matrix dependencies. Printing/export is not garment manufacture; absent cost/source is unknown, never zero.",
+    "Sale preparation remains ADIADO_VENDA; security, CSRF, tenant/permissions, six agent cards, charts, Friday13h and no duplicate cost/revenue remain active."
   ],
   "m0_followup": [
     "Conferir visual autenticado em desktop e celular durante M1; corrigir apenas branding/layout sem renomear infraestrutura"
@@ -134,32 +133,17 @@
     "Mission Control M1.1 (opção 3) integrado com 7 painéis independentes; conferir visual autenticado desktop/celular e retorno às telas antigas"
   ],
   "latest_increment": {
-    "task": "OP-013",
-    "source_commit": "219dd974f23bf13bb58f45fc457eeb3d2876ca21",
-    "release_candidate": "2026-11-16.1",
+    "task": "OP-012",
+    "source_commit": "bb5d14d78813692950435441333e842aa6759325",
+    "release_candidate": "2026-11-16.2",
     "implementation": true,
-    "local_validation": "FULL_RUN_AND_TARGETED_TEST_LITERAL_REVALIDATIONS",
-    "published": true,
+    "local_validation": "63_TARGETED_PASS_FULL_NODE_PYTHON_CI_PENDING",
+    "published": false,
     "validated_operationally": false,
-    "receipt": "docs/owner-operation/validation/owner-dtf-artwork-backup.json",
     "actual_financial_acceptance": false,
-    "previous_published_receipt": "docs/owner-operation/validation/publication-live-20261116.json",
-    "source_parent": "754d20fe3d60b93417eab7ea14a50cb228451c13",
-    "pull_request": 124,
-    "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE",
-    "status": "PUBLISHED_NATIVE_VERIFIED_PUBLIC_HTTP_ASSETS_BLOCKED",
-    "publication_source_commit": "98a58087f4435acb4e4c166047f5e1e3168c110d",
-    "ci_run": 43919859561,
-    "node_tests_pass": 4452,
-    "python_tests_pass": 67,
-    "release_id": "2026-11-16.1",
-    "publication_receipt": "docs/owner-operation/validation/publication-artwork-live-20261116.json",
-    "workers": {
-      "finance": "50b31451-c6cf-4456-bd09-be5d1956e0da",
-      "auth": "5b08f876-68ce-4d6d-ba7a-5dbedadf2f16",
-      "app": "75da11bb-3bee-4396-918b-79bf5846cb04"
-    },
-    "public_verification": "BLOCKED_ENVIRONMENT_ENVOY_TRANSPORT"
+    "receipt": "docs/owner-operation/validation/dtf-cycle.json",
+    "source_parent": "d27f85a67906002c9ac8be4bef101eb793f87358",
+    "previous_published_receipt": "docs/owner-operation/validation/publication-artwork-live-20261116.json"
   },
   "incident": {
     "id": "INCIDENT_2026_10_27_PANEL_AGENT_REGRESSION",
@@ -7572,6 +7556,34 @@
       },
       "pull_request": 123,
       "git_integration": "PR123_DRAFT_OPEN_NOT_MERGED"
+    },
+    {
+      "task": "OP-013",
+      "source_commit": "219dd974f23bf13bb58f45fc457eeb3d2876ca21",
+      "release_candidate": "2026-11-16.1",
+      "implementation": true,
+      "local_validation": "FULL_RUN_AND_TARGETED_TEST_LITERAL_REVALIDATIONS",
+      "published": true,
+      "validated_operationally": false,
+      "receipt": "docs/owner-operation/validation/owner-dtf-artwork-backup.json",
+      "actual_financial_acceptance": false,
+      "previous_published_receipt": "docs/owner-operation/validation/publication-live-20261116.json",
+      "source_parent": "754d20fe3d60b93417eab7ea14a50cb228451c13",
+      "pull_request": 124,
+      "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE",
+      "status": "PUBLISHED_NATIVE_VERIFIED_PUBLIC_HTTP_ASSETS_BLOCKED",
+      "publication_source_commit": "98a58087f4435acb4e4c166047f5e1e3168c110d",
+      "ci_run": 43919859561,
+      "node_tests_pass": 4452,
+      "python_tests_pass": 67,
+      "release_id": "2026-11-16.1",
+      "publication_receipt": "docs/owner-operation/validation/publication-artwork-live-20261116.json",
+      "workers": {
+        "finance": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+        "auth": "5b08f876-68ce-4d6d-ba7a-5dbedadf2f16",
+        "app": "75da11bb-3bee-4396-918b-79bf5846cb04"
+      },
+      "public_verification": "BLOCKED_ENVIRONMENT_ENVOY_TRANSPORT"
     }
   ]
 }

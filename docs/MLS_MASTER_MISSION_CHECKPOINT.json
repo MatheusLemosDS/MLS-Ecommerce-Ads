@@ -1,6 +1,6 @@
 {
   "schema": "mls_master_mission_checkpoint_v1",
-  "updated_at": "2026-11-16T17:58:53.316351+00:00",
+  "updated_at": "2026-11-16T23:04:09.444172+00:00",
   "base_visual_sha": "8d860b2c4f26531c53c4cdba0e06a14f51a7eef4",
   "visual_branch": "feature/mls-mockup-parity-real-charts-20261029",
   "visual_pr": 79,
@@ -7055,9 +7055,9 @@
       "Concluir M2/M2.2 com devoluções e fabricação reais, Seller Centre e Nubank no mesmo recorte, sem dupla contagem."
     ]
   },
-  "current_phase": "OWNER_OPERATION_U2_DTF_ARTWORK_BACKUP",
-  "working_branch": "feature/owner-dtf-artwork-backup-20261116",
-  "current_status": "OP013_PUBLISHED_NATIVE_VERIFIED_PUBLIC_SMOKE_BLOCKED_BY_ENVIRONMENT_TRANSPORT",
+  "current_phase": "OWNER_OPERATION_U2_DTF_COMPLETE_PRINT_CYCLE",
+  "working_branch": "feature/owner-dtf-cycle-20261116",
+  "current_status": "DTF_LIFECYCLE_IMPLEMENTED_TARGETED_PASS_FULL_GATES_PENDING",
   "next_phase": "OWNER_OPERATION_BY_TECHNICAL_DEPENDENCY_NOT_SAAS_PHASE_GATES",
   "active_execution_matrix": "docs/owner-operation/EXECUCAO.json",
   "active_charts_catalog": "docs/owner-operation/CATALOGO_GRAFICOS.json",

@@ -1,0 +1,257 @@
+{
+  "schema": "dtf_lifecycle_increment_v1",
+  "task": "OP-012",
+  "source_commit": "bb5d14d78813692950435441333e842aa6759325",
+  "source_parent": "d27f85a67906002c9ac8be4bef101eb793f87358",
+  "base_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+  "branch": "feature/owner-dtf-cycle-20261116",
+  "recorded_at_utc": "2026-11-16T23:04:09.444172+00:00",
+  "recorded_at_brasilia": "2026-11-16T20:04:09.444172-03:00",
+  "release_candidate": "2026-11-16.2",
+  "implemented": true,
+  "tested": {
+    "targeted": {
+      "total": 63,
+      "pass": 63,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0
+    },
+    "backend_cases": 13,
+    "authenticated_chromium": {
+      "cases": 4,
+      "widths": [
+        320,
+        1365
+      ],
+      "normal_and_minified": true,
+      "real_decoded_synthetic_pngs": true,
+      "partial_confirmation_remainder_png_stale_download_cancel_rebatch_reprint_cost": true,
+      "audited_correction_native_desktop": true
+    },
+    "history_volume": {
+      "events": 1006,
+      "all_pages_and_totals_verified": true
+    },
+    "sqlite_backup_restore_including_idempotent_retry": true,
+    "full_node": "PENDING",
+    "github_ci": "PENDING",
+    "python": "PENDING"
+  },
+  "published": false,
+  "operational_acceptance": false,
+  "financial_acceptance": false,
+  "physical_manufacturing_acceptance": false,
+  "implemented_behavior": [
+    "partial good-unit confirmations include every artwork part",
+    "download only the remaining complete units with immutable original layout retained",
+    "every actual download rechecks source/status/revision",
+    "explicit cancellation after export requires reason and acknowledgement downloaded unprinted files will not be used",
+    "reprint export can select one artwork part, without creating a sale or manufactured unit",
+    "actual reprint and loss are separate append-only facts; unknown cost is null; no automatic finance write",
+    "correction reverses only a referenced confirmation, with remaining reversible quantity and atomic CAS; original record/cost retained",
+    "all historical event pages and complete totals; bounded20 rows per page",
+    "restore request retry is idempotent and property order is normalized"
+  ],
+  "private_operational_backup_evidence": {
+    "schema": "dtf_private_d1_recovery_evidence_v1",
+    "recorded_at": "2026-11-16T22:59:14.999375+00:00",
+    "source": "SUPPORTED_D1_QUERY_API_SELECT_AND_PRAGMA_ONLY",
+    "scope": "LEGACY_OWNER_DTF_ONLY",
+    "atomic_snapshot": "ONE_SELECT_JSON_ROWSET_ALL_NINE_DTF_TABLES",
+    "private_backup_sha256": "98a655d0bbd33d992a474b2207c038a734d3fb1bb21baaaadefdf31987cc5747",
+    "row_counts": {
+      "production_dtf_audit": 0,
+      "production_dtf_batches": 0,
+      "production_dtf_guard": 1,
+      "production_dtf_lines": 1282,
+      "production_dtf_orders": 1201,
+      "production_dtf_reservations": 0,
+      "production_dtf_settings": 1,
+      "production_dtf_settings_audit": 1,
+      "production_dtf_sync_state": 1
+    },
+    "restore": "ISOLATED_SQLITE_ALL_ROWS_COLUMNS_HIDDEN_ROWIDS_EQUAL_INTEGRITY_OK",
+    "indexes_and_triggers_preserved": true,
+    "live_data_mutations": 0,
+    "rows_or_order_ids_in_public_evidence": false,
+    "not_a_local_artwork_pixel_backup": true
+  },
+  "previous_release_public_read": {
+    "schema": "owner_public_routing_verification_v1",
+    "recorded_at": "2026-11-16T22:16:34.970986+00:00",
+    "release": "2026-11-16.1",
+    "routes_subdomains_schedules": {
+      "app": {
+        "workers_dev": true,
+        "previews_enabled": false,
+        "crons": [
+          "* * * * *"
+        ],
+        "domains": [
+          "app.brazacommerce.com.br"
+        ],
+        "matches_reviewed_config": true
+      },
+      "auth": {
+        "workers_dev": true,
+        "previews_enabled": false,
+        "crons": [],
+        "domains": [
+          "auth.brazacommerce.com.br"
+        ],
+        "matches_reviewed_config": true
+      },
+      "finance": {
+        "workers_dev": false,
+        "previews_enabled": false,
+        "crons": [],
+        "domains": [],
+        "matches_reviewed_config": true
+      }
+    },
+    "public_http": [
+      {
+        "path": "/login",
+        "status": 200,
+        "release_header": "2026-11-16.1",
+        "final_path": "/login",
+        "response_sha256": "59ba4ecc5f085fa7e24359a13a2085aafe8e58ea3f5607f777c22bc685352c55"
+      },
+      {
+        "path": "/account/login",
+        "status": 200,
+        "release_header": null,
+        "final_path": "/account/login",
+        "response_sha256": "30a3520cf12a5e90ccc9f565bc54e6d9d43bc57e895ae28102e2fe09d8b3cdc6"
+      },
+      {
+        "path": "/account/help",
+        "status": 200,
+        "release_header": null,
+        "final_path": "/account/login",
+        "response_sha256": "30a3520cf12a5e90ccc9f565bc54e6d9d43bc57e895ae28102e2fe09d8b3cdc6"
+      },
+      {
+        "path": "/admin?tab=production",
+        "status": 200,
+        "release_header": "2026-11-16.1",
+        "final_path": "/login",
+        "response_sha256": "59ba4ecc5f085fa7e24359a13a2085aafe8e58ea3f5607f777c22bc685352c55"
+      },
+      {
+        "path": "/health",
+        "status": 200,
+        "release_header": null,
+        "final_path": "/health",
+        "response_sha256": "7cb8471af656cf3d62d5942ac9ea92be09c9f3951fb3fd057ea44b7d761af6c2"
+      },
+      {
+        "path": "/api/admin/bootstrap",
+        "status": 401,
+        "release_header": "2026-11-16.1",
+        "final_path": "/api/admin/bootstrap",
+        "response_sha256": "a1d55d2c2c14a6a8d1c08977059aa62ea671af14dbb076c3ecb00d1f31e74389"
+      },
+      {
+        "path": "/api/admin/production/batches?status=OPEN",
+        "status": 401,
+        "release_header": "2026-11-16.1",
+        "final_path": "/api/admin/production/batches",
+        "response_sha256": "a1d55d2c2c14a6a8d1c08977059aa62ea671af14dbb076c3ecb00d1f31e74389"
+      },
+      {
+        "path": "/api/admin/production/batch?id=00000000-0000-4000-8000-000000000001",
+        "status": 401,
+        "release_header": "2026-11-16.1",
+        "final_path": "/api/admin/production/batch",
+        "response_sha256": "a1d55d2c2c14a6a8d1c08977059aa62ea671af14dbb076c3ecb00d1f31e74389"
+      }
+    ],
+    "assets": [
+      {
+        "path": "/assets/mls/0d6250f5888258fa29664eac45b2cd821d3872b1c96ac47dda46bd7fd10e6a0c.js",
+        "sha256": "0d6250f5888258fa29664eac45b2cd821d3872b1c96ac47dda46bd7fd10e6a0c",
+        "bytes": 38035,
+        "status": 200
+      },
+      {
+        "path": "/assets/mls/5203d255416bacb97cd44ddef29a2fc76b1432f0a1ea731fabacc4bb071fcd07.js",
+        "sha256": "5203d255416bacb97cd44ddef29a2fc76b1432f0a1ea731fabacc4bb071fcd07",
+        "bytes": 704817,
+        "status": 200
+      },
+      {
+        "path": "/assets/mls/ec6397070416275d880f293d4abe8d7f531215af369d7e9a275c10f019a8c3c8.js",
+        "sha256": "ec6397070416275d880f293d4abe8d7f531215af369d7e9a275c10f019a8c3c8",
+        "bytes": 21282,
+        "status": 200
+      },
+      {
+        "path": "/assets/mls/549c2b0f6ae183249bed2472af894cf5211d4a6853fc33c0ce6c127aa3ebf034.js",
+        "sha256": "549c2b0f6ae183249bed2472af894cf5211d4a6853fc33c0ce6c127aa3ebf034",
+        "bytes": 165982,
+        "status": 200
+      },
+      {
+        "path": "/assets/mls/04ae3166780be18f31754212640b0887abe9e20830ac4309a6e31109398e4eeb.js",
+        "sha256": "04ae3166780be18f31754212640b0887abe9e20830ac4309a6e31109398e4eeb",
+        "bytes": 54280,
+        "status": 200
+      },
+      {
+        "path": "/assets/mls/647a03c700a64eff24111bdeb6b5135c49e2482da227e9fbf72686bf87d88af7.js",
+        "sha256": "647a03c700a64eff24111bdeb6b5135c49e2482da227e9fbf72686bf87d88af7",
+        "bytes": 475458,
+        "status": 200
+      },
+      {
+        "path": "/assets/mls/e3b12127a14b70185a25c83dae547facc946a4fe87afe0369a8f47665f6398ca.js",
+        "sha256": "e3b12127a14b70185a25c83dae547facc946a4fe87afe0369a8f47665f6398ca",
+        "bytes": 462298,
+        "status": 200
+      }
+    ],
+    "all_exact": true,
+    "release_header_contract": "Version checked where the original response provides it; account-page HTML has no release header in the baseline or candidate. No application header was changed to satisfy this probe.",
+    "authenticated_owner_live_qa": "NOT_PERFORMED",
+    "scope": "PUBLIC_TLS_HTTP_ROUTING_ASSETS_AND_ANONYMOUS_AUTHORIZATION_ONLY",
+    "remote_data_mutations": 0,
+    "transport_warnings": [],
+    "transport_revalidation": "Same canonical URL, credentials/CA/proxy unchanged; bounded retries only for exact known98-byte Envoy reset error; no application503 ignored."
+  },
+  "previous_publication_ledger_approved": true,
+  "d1_schema_migration": false,
+  "d1_tables_indexes_triggers_changed": false,
+  "audit_storage": "Existing production_dtf_audit; immutable DTFH batch headers and DTFU unit confirmations/reversals; indexed identity prefix ranges; no lifetime array cap.",
+  "legacy_compatibility": "Old full export is blocked once a partial fact exists; old completion cannot overwrite a balance with earlier prints. Marker held to fail closed on legacy code. Parent server does not understand partial facts: after first lifecycle use, keep the compatible server reader/writer on UI rollback; never blindly deploy the old server or restore a pre-event database over real facts.",
+  "public_assets": {
+    "exact_new_id": "dtf",
+    "active_ceiling": 7,
+    "dtf_bytes_ceiling": 262144,
+    "prior_client_budgets_unchanged": true,
+    "combined_bytes_ceiling_unchanged": 3145728,
+    "worker_import_ceiling_unchanged": 4194304,
+    "same_original_dtf_script_position": true,
+    "loss_of_dtf_or_workspace_script_offers_reload_without_starting_actions": true
+  },
+  "compiled_hashes": {
+    "app": "bc36c2d29dadb432faf99f58b8dba2afbb9a0e45097a093b66794d2a16277b84",
+    "auth": "aaafc3a6c16684949d8714f309ce1cf0525d71ac7223fed20d948347ff943182",
+    "finance": "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4"
+  },
+  "dry_packages": {
+    "auth": {
+      "raw_sha256": "1a927c072c69b45670c83e8327e93b9eb68f001bfab748273063fd90244a6095",
+      "raw_bytes": 654596
+    },
+    "app": {
+      "raw_sha256": "52be141d6ee2423c523eb46ffe8801a3d63690ac0b26c44bdb10707679889e0b",
+      "raw_bytes": 4181484
+    }
+  },
+  "commercial_money_or_marketplace_writes": false,
+  "workflow_permissions_or_deployment_profile_changes": false,
+  "real_artwork_and_printer_acceptance": "PENDING_OWNER_IMPORT_AND_PHYSICAL_CONFERENCE",
+  "next_independent_task": "OP-014 manufacturing/cost/payment foundations by existing technical dependencies; current printing facts never certify garment manufacture."
+}

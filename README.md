@@ -1,5 +1,9 @@
 <!-- OWNER_OPERATION_CURRENT -->
-Operação própria: **DTF2026-11-16.1 publicado**, CI4452 Node/67 Python aprovada. Fontes/configuração/rotas conferidas; smoke HTTP/assets públicos bloqueados pelo proxy Envoy do ambiente. Aceite com artes reais pendente. [Uso, limites e próximo passo](docs/owner-operation/README.md) · [Recibo](docs/owner-operation/validation/publication-artwork-live-20261116.json). Os registros datados abaixo preservam entregas anteriores.
+Prioridade: montador DTF e operação própria. [Como usar](docs/owner-operation/README.md), [matriz](docs/owner-operation/EXECUCAO.json), [checkpoint canônico](docs/MLS_COMMERCE_OS_CHECKPOINT.json).
+
+OP012 implementado: impressão parcial, PNG do saldo, cancelamento de EXPORTED não impresso com motivo/ack dos arquivos, reimpressão por parte, perda e correção auditada. Códigobb5d14d, branchfeature/owner-dtf-cycle-20261116, versão candidata2026-11-16.2.63 testes direcionados passaram; backend/Chromium normal+minificado320/1365, histórico1006 eventos e recuperação com retry idempotente. Gates completos/CI/publicação ainda pendentes. Live continua2026-11-16.1, agora com8 HTTP/7 assets conferidos e ledger aprovado. Main346f30f/PR121 e pai d27f85a/PR124 preservados.
+
+[Recibo do incremento](docs/owner-operation/validation/dtf-cycle.json). PNGs reais/impressora e aceite físico/financeiro ainda pendentes. Impressão/exportação não confirma fabricação; custos desconhecidos não são zero. Após fatos parciais, manter backend compatível em retorno da interface; não aplicar servidor antigo cegamente nem apagar o journal. Gráficos, seis agentes, CSRF/tenant/permissões, sexta13h e não duplicar custos/receitas seguem ativos. Venda ADIADO_VENDA. [Histórico](docs/owner-operation/history/continuity-before-op012-20261116.json).
 <!-- END_OWNER_OPERATION_CURRENT -->
 
 <!-- FINANCIAL_AUTOMATION_CURRENT -->
