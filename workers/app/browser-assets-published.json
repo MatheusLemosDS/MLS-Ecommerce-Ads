@@ -1,9 +1,9 @@
 {
   "schema": "mls_browser_assets_published_v1",
   "publication": {
-    "worker_version": "9bfc21d6-dec9-4fa6-89d8-7ea1dec50993",
-    "source_sha256": "19d1ef1dc49d07da644a67372b9291f54b6443f0d72e9d0e3dfa7168661f2a05",
-    "verified_at": "2026-11-14T00:22:15.598Z"
+    "worker_version": "18e1585b-e5fc-4b1f-b002-234d18ac7d43",
+    "source_sha256": "eeeb61de8779de2bb1cecca38859f1b6af77227b7a160d93d13839aa0825b7e0",
+    "verified_at": "2026-11-16T03:29:23.839Z"
   },
   "assets": [
     {

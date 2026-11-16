@@ -1,0 +1,64 @@
+{
+  "schema": "owner_build_trigger_read_v1",
+  "recorded_at": "2026-11-16T02:20:29.609192+00:00",
+  "requests": [
+    {
+      "worker": "app",
+      "endpoint": "GET /accounts/{account_id}/builds/workers/bfc420b51f764aea84356873ac3ffce6",
+      "status": 403,
+      "error_codes": [
+        10000
+      ],
+      "effective_rules_obtained": false
+    },
+    {
+      "worker": "app",
+      "endpoint": "GET /accounts/{account_id}/builds/workers/bfc420b51f764aea84356873ac3ffce6/triggers",
+      "status": 403,
+      "error_codes": [
+        10000
+      ],
+      "effective_rules_obtained": false
+    },
+    {
+      "worker": "auth",
+      "endpoint": "GET /accounts/{account_id}/builds/workers/cae7eeac91fc4d74b118db11aaeb2360",
+      "status": 403,
+      "error_codes": [
+        10000
+      ],
+      "effective_rules_obtained": false
+    },
+    {
+      "worker": "auth",
+      "endpoint": "GET /accounts/{account_id}/builds/workers/cae7eeac91fc4d74b118db11aaeb2360/triggers",
+      "status": 403,
+      "error_codes": [
+        10000
+      ],
+      "effective_rules_obtained": false
+    },
+    {
+      "worker": "finance",
+      "endpoint": "GET /accounts/{account_id}/builds/workers/cd6d2dd5834743e8b3bf80d7bc09ca08",
+      "status": 403,
+      "error_codes": [
+        10000
+      ],
+      "effective_rules_obtained": false
+    },
+    {
+      "worker": "finance",
+      "endpoint": "GET /accounts/{account_id}/builds/workers/cd6d2dd5834743e8b3bf80d7bc09ca08/triggers",
+      "status": 403,
+      "error_codes": [
+        10000
+      ],
+      "effective_rules_obtained": false
+    }
+  ],
+  "read_only": true,
+  "configuration_modified": false,
+  "effective_rules_proven": false,
+  "not_a_commercial_blocker": true
+}

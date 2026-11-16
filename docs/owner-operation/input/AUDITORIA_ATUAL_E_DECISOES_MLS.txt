@@ -1,0 +1,168 @@
+MLS COMMERCE OS — AUDITORIA ATUAL E DECISÃO DE PRIORIDADE
+Uso próprio e produção antes da comercialização
+Leitura: noite de 15/11/2026, Brasília; 16/11/2026 UTC.
+Repositório: MatheusLemosDS/MLS-Ecommerce-Ads
+HEAD examinada: 346f30f200e5cbd3d9efd26663a483c625d9c6e7 — PR #121.
+
+1. DECISÃO PRINCIPAL
+
+O caminho recomendado é concluir a operação real de Matheus no projeto que já existe e manter a preparação para venda separada. Cadastro de clientes, assinatura, checkout, gateway de cobrança, marketing e piloto comercial não devem ser pré-requisitos para fabricar, pagar produção, consultar pedidos ou fechar um período financeiro.
+
+Isso exige mudar a ordem e as dependências do plano anterior. O novo prompt não pede outra reescrita do sistema: reconhece a implementação financeira da PR #121, preserva a V4.1, os seis agentes e os controles operacionais, e manda completar as lacunas que ainda afetam o dono.
+
+O pacote contém 36 tarefas de execução, reclassifica os 46 itens do plano SaaS, preserva os 28 FINAUTO e 24 cenários financeiros e acrescenta 21 cenários de uso próprio. O catálogo conserva 21 contratos visuais e 22 famílias de gráficos como referência, com quatro complementos operacionais. Telas e gráficos exclusivos de assinatura/onboarding comercial ficam fora do aceite operacional.
+
+2. O QUE FOI VERIFICADO AGORA
+
+Foram consultados a main remota, a comparação com a auditoria anterior, instruções do repositório, checkpoints, módulos de pedidos/DTF/produção/custos/devoluções, autenticação e acesso comercial, o novo financeiro, os recibos de publicação e a CI. A árvore atual contém 1.299 entradas; isso é inventário, não uma afirmação de revisão individual de todas as linhas.
+
+A main avançou 14 commits e 143 arquivos desde 6578e21098ff799e59433af92880d249432ceeb4. O workflow Validar Workers do SHA atual, run 43536468273, passou com 4.432 testes Node, zero falhas/pulados/cancelados e 67 Python; build final aprovado. Os logs foram consultados, não reexecutados nesta auditoria. A falha antiga “Inspected target navigated or closed” não representa o estado desta execução. [F01–F03]
+
+O recibo do projeto informa release 2026-11-13.3, fonte f68525ea1d136350ece9942433352accdf97d992, verificada tecnicamente em 14/11 às 00:22:15 UTC. A comparação dessa fonte com a main mostrou somente documentos/recibos/checkpoints e metadados de publicação; os hashes compilados de App/Auth/Finance são iguais. Isso confirma continuidade do código testado, mas não substitui verificar os bytes atualmente servidos. [F03–F05]
+
+No navegador desta auditoria, /admin sem sessão redirecionou para /login. O login público respondeu. A tela /account/login apresentou “Confirme sua senha atual” e botão “Cancelar edição” inadequados ao contexto de entrada. Ajuda voltou à mesma tela de login. Não houve autenticação, submissão de formulário ou inspeção dos dados privados da conta. Não foi comprovada uma pane atual no painel autenticado.
+
+Nenhum código, configuração, pedido, lote, saldo, conta ou deploy foi alterado nesta tarefa. Houve uma reprodução sintética isolada de comportamento temporal de estoque, descrita abaixo. O pacote é especificação para implementação pelo Codex, não atestado de conclusão do produto.
+
+3. O QUE JÁ EXISTE E DEVE SER APROVEITADO
+
+A PR #121 acrescentou uma base financeira concreta: razão persistente, valores em centavos, eventos com identidade e revisão, conciliação por alocação, políticas de competência, snapshots de fechamento, retificações, retomada de coleta e ponte de custos históricos/CMV. O Finance apresenta oito áreas: Resultado; Recebíveis e carteira; Saques; Banco; Despesas; Devoluções; Conciliação; Fechamentos. Gráficos, detalhes e exportação usam a mesma projeção. [F04, F06]
+
+Pedidos, DTF, fabricação diária, custos configuráveis, histórico, fechamento de produção, recebimentos/inspeções e associações de devolução também têm implementação. O trabalho é preservar esses percursos, completar o que falta e demonstrar o ciclo real. A matriz financeira da base registra 12 requisitos VALIDADO_LOCAL, 15 PARCIAL e um EXTERNAL_DEPENDENCY. Evidência local é útil, mas não comprova o lucro e os saldos da conta real. [F06]
+
+O caminho legado do proprietário já é preservado nas políticas de rota e serviço financeiro. Não foi encontrada uma assinatura paga obrigatória nesses caminhos examinados. Billing novo aparece como NOT_CONFIGURED, e cadastro comercial depende de verificação/e-mail ainda sem envio de produção configurado. A decisão correta é manter o acesso owner existente e evitar forçá-lo para a jornada comercial incompleta. Não há motivo para criar assinatura fictícia ou bypass de autenticação. [F07–F09]
+
+4. LIMITAÇÕES CONCRETAS QUE O CODEX DEVE TRATAR
+
+4.1. Lotes DTF e recuperação de trabalho
+
+A tela renderiza apenas state.batches.slice(0,30). O servidor lê até 100 lotes. Um lote além dos 30 primeiros pode estar presente no retorno e não ter botões visíveis. O prompt manda implementar paginação, busca e filtros, testando 31 e 101 lotes sem perder reservas. [F10–F11]
+
+Hoje “Desfazer reserva” só existe em PREPARED. Um lote EXPORTED, baixado e ainda não impresso, não tem esse caminho de cancelamento. Deve existir uma transição explícita, com motivo, revisão e confirmação física, além de produção parcial e reimpressão. Um PNG já baixado não pode ser recolhido remotamente; o controle deve deixar a versão cancelada identificada e prevenir uso duplicado dentro do sistema. [F10–F11]
+
+As artes dependem do IndexedDB do navegador e do hash correspondente ao lote. O manifesto não contém, por si só, os pixels necessários à restauração. Backup com PNGs e vínculos, seguido de restauração em perfil limpo, é requisito do uso próprio. Nuvem privada pode ser opcional; contratação de storage não precisa bloquear essa recuperação. [F11]
+
+4.2. Limites acumulativos e paginação
+
+Limites observados no código:
+
+• Fabricação: 1.000 registros, incluindo VOID, e aproximadamente 1 MiB.
+• Associação devolução–fabricação: 1.000 vínculos e 1 MiB.
+• Estoque financeiro: 150 lotes, 500 alocações, 500 reversões ou 190.000 bytes.
+• Leitura do razão por período: até 2.000 eventos; acima disso a leitura fica incompleta.
+• Fila de devoluções: 200 casos.
+• Seleção de itens originais para associação: primeira página de 100 de cada run.
+
+Não foi medido se a conta já atingiu esses limites. São riscos concretos de continuidade, não prova de parada hoje. O Codex deve medir o volume real com leitura restrita, implementar paginação/particionamento e preservar histórico, centavos, quantidades, IDs e vínculos. Elevar constantes, esconder erros ou apagar dados antigos não resolve a causa. [F12–F16]
+
+4.3. Pagamentos da fabricação
+
+Os módulos examinados separam fabricação de pagamento. A ponte de obrigações nova usa o registro mensal de despesas; não foi comprovado um fluxo completo de pagamentos parciais da fabricação por semana, com quitação das semanas mais antigas primeiro.
+
+O prompt exige inventário global para reutilizar qualquer função já existente e completar obrigação, pagamento, alocação, saldo, adiantamento e reversão. Exemplo sintético de aceite: dívidas de R$ 1.000 e R$ 800, pagamento de R$ 1.200 → primeira semana quitada e R$ 600 abertos na segunda. Repetir a requisição não pode pagar novamente. A associação ao débito bancário não cria uma segunda despesa nem um segundo CMV. [F17]
+
+4.4. O financeiro ainda não tem todas as provas para encerrar definitivamente
+
+Há lacunas internas de programação além das permissões externas:
+
+• Pedidos por data de criação não comprovam todos os pedidos criados antes e concluídos na competência.
+• Componentes de taxas, ajustes, recargas e reembolsos ainda não têm classificação completa em todos os casos.
+• Wallet/Payout tem abstração de coleta, mas não adaptador operacional/grant real comprovados.
+• Banco importado permanece conservadoramente em REVIEW, sem saldos inicial/final, identidade física da conta e cobertura completos no adaptador.
+• COGS/INVENTORY permanece PARTIAL; falta caminho completo de abertura e conferência da coorte de peças vendidas.
+• Revisitar devoluções salvas não descobre todos os casos antigos ainda não capturados nem comprova seu desfecho econômico.
+• Ads usa dia nominal com fuso ainda não confirmado no novo adaptador.
+• Obrigações externas e compromissos necessários ao giro não estão integralmente comprovados.
+
+O novo roteiro manda implementar os fatos, adapters, importações, UI de conferência e persistência que permitem sair de PARTIAL. Não manda simplesmente substituir flags por COMPLETE ou tratar ausência como zero. [F04, F06, F13, F16, F18–F19]
+
+4.5. Banco e lucro não devem ficar acoplados de maneira errada
+
+O fechamento de resultado por competência já é separado do fechamento bancário no código: ACCRUAL não exige cash_verified; BANK_CASH exige. Recebíveis confirmados ainda a vencer podem continuar abertos com DRE fechada, desde que o subledger correspondente esteja reconciliado. Deve-se preservar esse comportamento. [F20–F21]
+
+A alternativa prática para o dono é completar agora a importação oficial auditável: conta, moeda, intervalo, origem/hash, saldos inicial/final, identidade das transações, deduplicação e reconciliação. Quando suas provas estiverem completas, isso pode permitir caixa/fechamento assistido sem esperar Open Finance. A conexão automática continua pendente separadamente até haver adapter, consentimento e funcionamento comprovados. Não é uma renúncia à automação desejada. [F18]
+
+4.6. Calendários e fatos físicos
+
+A produção conserva sexta13h inclusiva → próxima sexta13h exclusiva, Brasília, incluindo fim de semana e oito intervalos. O relatório semanal de vendas usa sete dias civis; o financeiro segue sua política civil aprovada, e o mensal usa mês civil. Fonte Ads diária não deve ser artificialmente dividida no corte fabril de 13h. Pedidos, estampas e peças são contagens diferentes. [F21–F22]
+
+A reprodução temporal isolada mostrou que registrar uma reversão posterior altera uma projeção recalculada de estoque de um corte anterior. Isso pode representar correção retroativa intencional, pois a reversão usa a competência original. Não foi demonstrada reescrita de fechamento imutável. O prompt exige esclarecer visão corrigida versus conhecida no corte, datas e retificação antes de alterar a regra.
+
+5. ERROS HISTÓRICOS: O QUE NÃO DEVE SER REABERTO SEM PROVA
+
+O SOURCE_INVALID da release .2 tem correção na .3: o relógio é capturado depois da leitura assíncrona. O recibo relata retomada natural com 100 eventos preservados e 13 Ads adicionados. Isso não certifica saúde atual ou lucro, mas também não justifica mandar corrigir de novo sem reproduzir. [F04–F05, F14]
+
+O recibo também registra falha de Cloudflare Workers Builds e publicação pelo mecanismo controlado existente. CI GitHub aprovada, Builds automático com falha e Live publicada podem coexistir. A causa do Builds não foi confirmada com logs acessíveis; não afirmar que o site está fora do ar por isso. O prompt manda verificar o mecanismo atual e permite usar a publicação já existente quando validada, sem pular preflight, hashes, configuração ou CI. [F05]
+
+O incidente de painel de outubro aparece no checkpoint como recuperado pelo operador. Os campos de próximos passos, porém, ainda podem remeter a PRs antigas e expansão. Reconciliar os campos atuais evita o Codex seguir uma instrução obsoleta. [F23]
+
+6. O QUE FICA PARA DEPOIS E O QUE CONTINUA OBRIGATÓRIO
+
+Adiar para venda: cadastro de terceiros, e-mail para novos clientes quando não afeta o dono, checkout/recorrência, planos, quotas comerciais, NFSe da assinatura, marketing, piloto comercial e novos canais sem necessidade atual.
+
+Manter agora: login e recuperação próprios, autorização, isolamento, configurações corretas, backup/restauração, proteção das artes, integridade financeira/física, idempotência, testes relevantes, logs seguros e deploy conferido. Acesso bancário e grants Shopee necessários à automação são dependências operacionais externas, não itens comerciais a fingir concluídos.
+
+Adiar venda do SaaS não libera escrita em Ads/PROMO, preço, pedidos externos, transferências bancárias, saque, reembolso real ou novo consentimento OAuth. Essas ações têm permissões próprias e continuam controladas. O prompt trata consulta, contabilização e implementação do software.
+
+7. COMO SABER QUE TERMINOU
+
+Marco A: operação de produção real utilizável, com pedido, composição, DTF, fabricação, custo, obrigação/pagamento e devolução funcionando, sem depender de billing ou IA.
+
+Marco B: financeiro próprio conferido com uma semana e um mês reais, fontes equivalentes, valores rastreáveis e resultado/recebíveis/caixa separados. Importação oficial pode ser o meio assistido.
+
+Marco C: automação efetiva, com conectores autorizados, cobertura, recuperação e execução natural comprovados. Fallback manual não fecha este marco.
+
+Marco D: fundamentos de venda preservados e backlog comercial separado. Não significa lançamento comercial aprovado.
+
+O Codex deve publicar incrementos validados durante o caminho, usando a autorização Live já existente, e entregar mudanças, instruções de uso, testes, SHA/PR, release, aceite e próximo passo. Uma pendência externa deve conter causa, evidência, workaround e intervenção necessária; não deve paralisar tarefas independentes.
+
+FONTES PRIMÁRIAS
+
+F01 — Commit atual
+https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/commit/346f30f200e5cbd3d9efd26663a483c625d9c6e7
+F02 — Integração PR121
+https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/121
+F03 — CI do SHA atual
+https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43536468273
+F04 — Funcionalidade e limites financeiros atuais
+https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/docs/financial-automation/README.md
+F05 — Recibo de publicação e retomada
+https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/docs/financial-automation/publication-live-20261113.json
+F06 — Matriz implementada de 28 requisitos/24 cenários
+https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/docs/financial-automation/MATRIZ_EXECUCAO.json
+F07 — Política de rotas
+https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/web/cloudflare/src/commercial-route-policy.mjs
+F08 — Serviço financeiro e owner
+https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/web/cloudflare/src/financial-automation-service.mjs
+F09 — Contas e billing
+https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/web/cloudflare/src/account-organizations.mjs
+F10 — Persistência dos lotes DTF
+https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/web/cloudflare/src/production-dtf-store.mjs
+F11 — Interface DTF e artes
+https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/web/cloudflare/src/dtf-view.mjs
+F12 — Fabricação
+https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/web/cloudflare/src/incurred-production.mjs
+F13 — Estoque e custo histórico
+https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/web/cloudflare/src/financial-inventory-bridge.mjs
+F14 — Leitura do razão, retomada e relógio
+https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/web/cloudflare/src/financial-automation-bridge.mjs
+F15 — Fila de devoluções
+https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/web/cloudflare/src/financial-returns-tracker.mjs
+F16 — Fontes e coortes
+https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/web/cloudflare/src/financial-automation-sources.mjs
+F17 — Obrigações do App
+https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/web/cloudflare/src/financial-obligation-app-source.mjs
+F18 — Banco/carteira importados
+https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/web/cloudflare/src/financial-automation-cash-sources.mjs
+F19 — Ads
+https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/web/cloudflare/src/financial-automation-ads-sources.mjs
+F20 — Fechamentos
+https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/web/cloudflare/src/financial-close-store.mjs
+F21 — Projeções e gates separados
+https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/web/cloudflare/src/financial-accounting-projection.mjs
+F22 — Calendários
+https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/web/cloudflare/src/financial-accounting-schedule.mjs
+F23 — Checkpoint atual e históricos
+https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/docs/MLS_COMMERCE_OS_CHECKPOINT.json
+
+Os anexos do pacote detalham produção, financeiro, CI/runtime e a reprodução sintética temporal. Estes materiais não substituem a conferência autenticada dos dados e da produção real.

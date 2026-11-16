@@ -1,0 +1,162 @@
+{
+  "schema": "owner_dtf_publication_live_v1",
+  "status": "PUBLISHED_VERIFIED",
+  "verification_scope": "TECHNICAL_PUBLIC_AND_SOURCE_CONFIGURATION_ONLY",
+  "release": "2026-11-15.4",
+  "release_date_semantics": "Human code identifier/date authored on15/11 Brasilia; actual publication/verification timestamps below are independent. Not a build-time or deployment-date identifier.",
+  "label": "DTF · histórico de lotes",
+  "url": "https://app.brazacommerce.com.br/admin?tab=production#dtfBatchStage",
+  "source_commit": "0650874e08e1c6cce3023c8a8d2968c96b34177c",
+  "implementation_commit": "e168e9a",
+  "base_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+  "branch": "feature/owner-operation-first-20261116",
+  "pull_request": 123,
+  "pull_request_url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/123",
+  "git_integration": "OPEN_DRAFT_NOT_MERGED_AUTO_MERGE_NOT_ENABLED",
+  "verified_at": "2026-11-16T03:29:23.839982+00:00",
+  "ci": {
+    "schema": "owner_dtf_github_ci_v1",
+    "run": 43795161304,
+    "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43795161304",
+    "head_sha": "0650874e08e1c6cce3023c8a8d2968c96b34177c",
+    "conclusion": "success",
+    "node": {
+      "tests": 4441,
+      "pass": 4441,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    "python": {
+      "tests": 67,
+      "pass": 67
+    },
+    "compiled_hashes": {
+      "app": "c1b9b8c4a230c09f17a05c5aca4a5e2ba2b272ff3313972f53275b1d1d439dbd",
+      "auth": "d252e476527a35d378b93632e22633cd86e8531e7f066487233f5672f78beab9",
+      "finance": "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4"
+    },
+    "log_sha256": "756998de264fefcdd1169769bcce00a65e27111bd8189a2da2f1fee3cf8da964"
+  },
+  "rollout_order": [
+    "AUTH",
+    "APP"
+  ],
+  "finance": "RETAINED_NO_CODE_CHANGE",
+  "workers": {
+    "finance": {
+      "active_version_id": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+      "latest_version_id": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+      "active_percentage": 100,
+      "retrieved_raw_sha256": "3e3f3d35a3e0037c251f7abda29cc8a64643ee255771d07f2893d32d8ef7d22a",
+      "raw_bytes": 934552,
+      "effective_config_sha256": "1e5de4eba866ec7c8ca85fc37c7969d61dc513a26336879e2753e506c6711ab2",
+      "action": "RETAINED",
+      "source_matches_expected": true
+    },
+    "auth": {
+      "active_version_id": "3b0f494a-40c6-4608-af3a-8b57d2bbf9e3",
+      "latest_version_id": "3b0f494a-40c6-4608-af3a-8b57d2bbf9e3",
+      "active_percentage": 100,
+      "retrieved_raw_sha256": "def3859b14e3829b205cc44981dcddb043f153ea5e4a9754d2df0cf94a42e994",
+      "raw_bytes": 654597,
+      "effective_config_sha256": "304c9c4615acdfc3a8222e00449e5bceabcf2dd9bd574587538183a935003361",
+      "action": "UPDATED",
+      "source_matches_expected": true
+    },
+    "app": {
+      "active_version_id": "18e1585b-e5fc-4b1f-b002-234d18ac7d43",
+      "latest_version_id": "18e1585b-e5fc-4b1f-b002-234d18ac7d43",
+      "active_percentage": 100,
+      "retrieved_raw_sha256": "eeeb61de8779de2bb1cecca38859f1b6af77227b7a160d93d13839aa0825b7e0",
+      "raw_bytes": 4192346,
+      "effective_config_sha256": "72c1ffdf88e61e4d2b1b7d78545c3d8d9a5b903cc32cf4ed83ee87d5c19a32b9",
+      "action": "UPDATED",
+      "source_matches_expected": true
+    }
+  },
+  "stage_verifications": [
+    "dtf-after-auth.json",
+    "dtf-after-app.json"
+  ],
+  "public_verification": "dtf-public-after.json",
+  "source_and_config_exact": true,
+  "custom_domains_subdomains_cron_preserved": true,
+  "all_active_latest_100": true,
+  "public_checks": 8,
+  "assets_checked": 8,
+  "owner_live_authenticated_qa": "NOT_PERFORMED",
+  "operational_acceptance": false,
+  "financial_account_acceptance": false,
+  "physical_manufacturing_acceptance": false,
+  "marco_A": false,
+  "marco_B": false,
+  "marco_C": false,
+  "new_d1_schema_or_migration": false,
+  "configuration_or_permission_or_workflow_change": false,
+  "real_fact_or_money_mutations_by_this_delivery": 0,
+  "automatic_builds": {
+    "checks": "APP_AUTH_FINANCE_FAILURE_ON_HEAD0650874",
+    "effective_rules_read": "GET403_CODE10000",
+    "failure_cause": "NOT_CONFIRMED_NO_LOG_ACCESS",
+    "production_before_controlled_deploy": "VERSION_CONFIG_SOURCE_VECTOR_RECHECKED_UNCHANGED_AFTER_EXTERNAL_CHECKS",
+    "path": "AUTHORIZED_EXISTING_CONTROLLED_DEPLOY_AFTER_GREEN_GITHUB_CI",
+    "configuration_changed": false,
+    "no_check_cancel_bypass_or_workflow_change": true
+  },
+  "code_rollback_backup": {
+    "verified": true,
+    "private_backup_index": "/workspace/private/owner-operation-20261116/baseline.json",
+    "baseline_sources": {
+      "app": {
+        "active_version_id": "9bfc21d6-dec9-4fa6-89d8-7ea1dec50993",
+        "raw_source_sha256": "19d1ef1dc49d07da644a67372b9291f54b6443f0d72e9d0e3dfa7168661f2a05",
+        "raw_bytes": 4180640,
+        "matches_publication_receipt": true
+      },
+      "auth": {
+        "active_version_id": "dfd2fc99-728f-4f29-96ee-a4b256c5640a",
+        "raw_source_sha256": "076c925b67041aada25f8252db34c1464543976f3bfa532a98caa0124dd8f138",
+        "raw_bytes": 654636,
+        "matches_publication_receipt": true
+      },
+      "finance": {
+        "active_version_id": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+        "raw_source_sha256": "3e3f3d35a3e0037c251f7abda29cc8a64643ee255771d07f2893d32d8ef7d22a",
+        "raw_bytes": 934552,
+        "matches_publication_receipt": true
+      }
+    },
+    "not_a_d1_or_artwork_backup": true,
+    "rollback_policy": "Use recorded previous versions/source and unchanged reviewed config only for a demonstrated release incident; preserve D1 facts/arts/reservations. No rollback executed."
+  },
+  "probe_contract_note": "Account page supplied no release header in the baseline or candidate; initial probe assumption was corrected to that existing contract. Known release-bearing responses and exact retrieved Worker source bytes were checked. No application header/security change made.",
+  "next_independent_task": "OP-013",
+  "post_publication_metadata_validation": {
+    "tests": 26,
+    "pass": 26,
+    "fail": 0,
+    "scope": "Release authorization/hash metadata and unchanged browser-asset ledger contracts only; no repeated functional suites without runtime changes."
+  },
+  "documentation_validation": {
+    "pass": true,
+    "json_documents": 22,
+    "local_links": 172,
+    "owner_tasks": 36,
+    "saas_requirements_preserved": 46,
+    "fin_auto_preserved": 28,
+    "financial_scenarios_preserved": 24,
+    "owner_scenarios_preserved": 21,
+    "visual_contracts_preserved": 21,
+    "chart_families_preserved": 22,
+    "old_documents_preserved": true,
+    "original_dtf_mutations_byte_identical": true,
+    "original_physical_financial_formulas_byte_identical": true,
+    "no_workflow_or_deployment_config_change": true,
+    "historical_hashes_retained": true,
+    "old_worktrees_clean": true,
+    "exact_artifact_hashes": true
+  },
+  "input_whitespace_exception": "Original uploaded AUDITORIA_PRODUCAO_OWNER.txt retains its exact trailing blank line and manifest hash. All edited files outside immutable inputs pass whitespace check.",
+  "publication_ci_vs_current_pr_head": "CI43795161304 approved exact published candidate0650874. Following receipt/hash-registration commits change documentation and verified-source metadata only; their configured CI is separate and must not be represented as already green."
+}

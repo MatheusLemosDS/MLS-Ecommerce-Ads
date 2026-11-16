@@ -124,3 +124,8 @@ test('tabs and aliases have explicit domain policy while old owner/review naviga
  assert.equal(commercialTabAllowed({role:'owner'},'overview'),true);assert.equal(commercialTabAllowed({role:'review'},'agent-ads'),true);assert.equal(commercialTabAllowed({kind:'account',role:'owner',capabilities:['finance.read']},'overview'),false);
  assert.equal(commercialTabAllowed(null,'overview'),false);assert.equal(commercialTabAllowed({role:'guest'},'overview'),false);
 });
+
+test('DTF batch page and detail reuse only the existing read capability and never grant a write',async()=>{
+ for(const path of ['/api/admin/production/batches?status=OPEN','/api/admin/production/batch?id=11111111-1111-4111-8111-111111111111']){const caps=await read(path);assert.deepEqual(caps,['dtf.read']);assert.equal(commercialCapabilitiesAllowed(principal('OPERATIONS',['dtf.read']),caps),true);assert.equal(commercialCapabilitiesAllowed(principal('VIEWER',[]),caps),false);assert.equal(commercialCapabilitiesAllowed(principal('OWNER',[]),caps),false);}
+ const writes=await read('/api/admin/production/batches',{method:'POST',body:{}});assert.deepEqual(writes,['dtf.write']);
+});

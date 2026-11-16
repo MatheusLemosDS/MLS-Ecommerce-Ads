@@ -262,11 +262,12 @@ test('a malformed candidate cannot weaken exact hashes, literal paths or commerc
  }
 });
 
-test('only the three explicit owner authorization records are recognized, without granting production approval',t=>{
+test('only the four explicit owner authorization records are recognized, without granting production approval',t=>{
  assert.deepEqual(RELEASE_ACCEPTED_OWNER_AUTHORIZATIONS,[
   'OWNER_REQUESTED_ALL_PREPARED_IMPROVEMENTS_LIVE_2026_10_30',
   'OWNER_REQUESTED_V41_LIVE_2026_11_11',
-  'OWNER_REQUESTED_FINANCIAL_AUTOMATION_LIVE_2026_11_13'
+  'OWNER_REQUESTED_FINANCIAL_AUTOMATION_LIVE_2026_11_13',
+  'OWNER_REQUESTED_OWN_OPERATION_FIRST_LIVE_2026_11_16'
  ]);assert.ok(Object.isFrozen(RELEASE_ACCEPTED_OWNER_AUTHORIZATIONS));
  const directory=fs.mkdtempSync(path.join(os.tmpdir(),'mls-release-owner-scope-'));
  t.after(()=>fs.rmSync(directory,{recursive:true,force:true}));

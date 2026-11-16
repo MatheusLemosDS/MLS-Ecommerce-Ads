@@ -1,0 +1,144 @@
+AUDITORIA DE PRODUÇÃO — PRIORIDADE AO USO DO PROPRIETÁRIO
+MLS Commerce OS
+Base: main 346f30f200e5cbd3d9efd26663a483c625d9c6e7, PR #121.
+Comparação: 6578e21098ff799e59433af92880d249432ceeb4 → HEAD atual: 14 commits.
+
+ALCANCE E LIMITES
+
+Inspeção somente de leitura do código remoto, instruções e checkpoints atuais. Nenhuma alteração no repositório, conta, banco, pedidos ou produção publicada. Um comportamento temporal foi reproduzido com dados sintéticos em cópias locais de funções puras. Não houve sessão real do proprietário, inspeção atual do D1 nem validação física dos pedidos. Portanto, os itens abaixo são funções presentes, limitações concretas do código e tarefas de homologação; não afirmam que a conta esteja hoje parada por cada situação.
+
+A PR #121 adicionou financeiro, estoque histórico e conciliação. Os módulos centrais de Pedidos, DTF, fabricação e fechamento semanal não mudaram nessa comparação. Deve-se reaproveitar tudo que existe e completar os pontos restantes, sem reiniciar o produto.
+
+1. ACESSO DO PROPRIETÁRIO: NÃO CRIAR UM NOVO BLOQUEIO COMERCIAL
+
+O roteamento atual já separa o principal legado owner/review da política de contas comerciais. commercialTabAllowed, em commercial-route-policy.mjs, linhas 134–140, preserva a autorização do roteador legado. Contas comerciais usam capacidades por função e escopo. Billing aparece em account-organizations.mjs como NOT_CONFIGURED, com checkout indisponível.
+
+Não encontrei nesses caminhos uma assinatura que hoje impeça o proprietário de fabricar. O prompt deve mandar preservar o acesso legítimo existente, sem forçar a migração para um cadastro novo, sem simular pagamento e sem conceder privilégios globais. E-mail de cadastro de terceiros, PSP e planos não devem ser pré-requisitos para os módulos do proprietário. Autenticação, CSRF, autorização e isolamento continuam sendo requisitos operacionais.
+
+2. PEDIDOS: QUADRO EXISTENTE, COBERTURA AINDA PARCIAL
+
+order-operations.mjs, linhas 98 e 119, identifica a fonte SAVED_SHOPEE_DTF_CACHE e mantém period_complete:false. production-dtf-store.mjs, linhas 136–146, consulta hoje, mais um dia anterior em rodízio dentro dos últimos 15 dias, e revisa até 50 pedidos antigos já conhecidos.
+
+Isso é útil para priorizar a produção corrente, mas não prova uma listagem integral de todo o histórico. Um pedido antigo nunca capturado não é encontrado pela revisão dos conhecidos. Completar coleta por janelas/cursor e cobertura comprovada, sem sacrificar o trabalho de hoje. Falha na Shopee deve preservar a última leitura identificada como antiga e permitir registros manuais verdadeiros de fabricação, sem inventar estado de pedido nem retirar a verificação exigida antes de exportar DTF.
+
+3. DTF: HÁ DOIS GARGALOS DE OPERAÇÃO QUE MERECEM CORREÇÃO
+
+3.1. Lotes não alcançáveis pela interface
+A API retorna até 100 lotes e sinaliza limite acima disso, mas dtf-view.mjs, linha 131, renderiza somente state.batches.slice(0,30). Não há navegação de lotes nesse componente. Com 31 lotes ativos, o 31º pode estar no retorno do servidor e não ter seus botões visíveis.
+
+Corrigir com paginação/cursor e busca de lotes, filtros de situação e totais corretos. Testar 31 e 101 lotes. Não resolver apagando histórico nem apenas aumentando o slice. A navegação não deve consultar novamente a Shopee ou criar reservas duplicadas.
+
+3.2. Lote exportado, mas não impresso
+A transição void aceita somente PREPARED; produce exige EXPORTED. A interface também omite “Desfazer reserva” em EXPORTED. Ver production-dtf-store.mjs, linhas 184–207, e dtf-view.mjs, linha 131.
+
+Se o arquivo foi exportado e a impressão não ocorreu, falta um caminho auditado para cancelamento/replanejamento. Implementar uma ação explícita com motivo e confirmação de que as peças não foram produzidas. Identificar o artefato anterior como cancelado e impedir sua reutilização no sistema. Um PNG já baixado não pode ser recolhido remotamente, por isso o fluxo deve orientar conferência de versão e evitar dupla impressão. Produção parcial precisa liberar apenas a quantidade não produzida. Não marcar “produzido” artificialmente para destravar.
+
+4. CONTINUIDADE: LIMITES QUE AFETAM UMA LOJA PRÓPRIA
+
+Há limites acumulativos concretos:
+
+• incurred-production.mjs: 1.000 registros, incluindo anulados, e 1 MiB para o ledger. Consulta integral; novo registro pode retornar INCURRED_PRODUCTION_LIMIT/409.
+• financial-inventory-bridge.mjs: 150 lotes, 500 alocações, 500 reversões ou 190.000 bytes; o primeiro limite atingido retorna FINANCIAL_INVENTORY_CAPACITY_REACHED/409.
+• return-manufacturing-links.mjs: 1.000 vínculos e 1 MiB.
+
+Não foi medido se a conta já atingiu algum deles. Medir contagens e crescimento com leitura restrita. Tratar paginação/particionamento e armazenamento normalizado como requisito do uso contínuo, não como tarefa exclusivamente SaaS. Fazer migração aditiva com backup, IDs estáveis, auditoria e comparação de contagens e centavos. Não apagar fatos antigos para abrir espaço e não elevar limites sem testar consumo e consistência.
+
+5. ARTES: DEPENDÊNCIA DO NAVEGADOR PODE PARAR A EXPORTAÇÃO
+
+dtf-view.mjs, linhas 71, 104–108 e 114, guarda PNGs no IndexedDB do dispositivo. A conta conserva fila, reservas e manifestos; outro navegador precisa importar as mesmas artes. bitmapFor exige o SHA-256 correspondente ao lote.
+
+Recuperação atual: reimportar os arquivos originais com nomes e bytes corretos. Não limpar o banco do navegador durante uma tentativa de correção. Entrega recomendada: backup/restauração da biblioteca, ou armazenamento autenticado opcional, com escopo da conta, hash e versão. Alterar uma arte não pode mudar silenciosamente um lote reservado.
+
+6. CORES, TAMANHOS, PEÇAS E ESTAMPAS
+
+Há base implementada: production-confirmation-proposal.mjs reconhece binding manual, catálogo, kit masculino/feminino, receita explícita e regra infantil. A cor é sugerida quando existe um eixo inequívoco no catálogo; ambiguidade permanece pendente. O registro de fabricação contém estampa, cor, tamanho, modelagem, tipo e quantidade.
+
+O motor DTF interpreta partes com “+”, como frente-27+costas-10, preserva a proporção e exige pelo menos duas partes para um kit. Partes iguais declaradas duas vezes podem representar duas cópias. A quantidade de estampas não é a quantidade de camisetas.
+
+Finalizar a experiência operacional com contagem por cor, tamanho, modelagem e tipo, detalhamento do kit, lista imprimível/CSV e acesso às exceções. Exemplo de aceite: três kits com duas peças resultam em seis peças; frente e costas podem produzir doze estampas sem alterar a contagem de peças. A regra do proprietário para kit casal sem cor ser preto deve ser uma política explícita desta loja, não uma inferência universal. Não converter todo SKU -25 para -27 sem regra aprovada e auditada.
+
+7. PAGAMENTOS DE FABRICAÇÃO: NECESSIDADE NÃO COMPROVADA NOS FLUXOS EXAMINADOS
+
+O registro de fabricação declara expressamente que não comprova pagamento. O fechamento semanal soma fabricação/custo, mas não apresenta livro de pagamentos por semana/fornecedor. A ponte nova financial-obligation-app-source.mjs captura o expense-ledger mensal; financial-obligation-worker.mjs identifica as obrigações por expense_id. Outro agente financeiro confirmou que não encontrou pagamento parcial por semana com compensação das mais antigas primeiro.
+
+Antes de criar algo paralelo, o Codex deve fazer inventário global e reutilizar o que existir. Se a função realmente não existir, implementar:
+
+• Obrigação vinculada à semana/lote/fornecedor e ao custo histórico.
+• Pagamento com data, método, valor e evidência, separado da competência.
+• Prévia de alocação da dívida mais antiga para a mais recente, com confirmação.
+• Saldo parcial por semana, histórico de pagamentos e reversão auditada.
+• Idempotência; um pagamento reapresentado não pode liquidar duas vezes.
+• Associação ao débito bancário existente sem criar nova despesa ou novo CMV.
+
+Aceite numérico: dívidas de R$ 1.000 e R$ 800 em duas semanas; pagar R$ 1.200 deve liquidar a primeira e abater R$ 200 da segunda, deixando R$ 600 abertos. Pagamento maior que a dívida exige crédito explicitamente classificado, nunca saldo negativo inventado. O lançamento deve funcionar com comprovação manual quando o banco automático não estiver disponível.
+
+8. ESTOQUE E CMV: PONTE NOVA EXISTE, MAS COBERTURA AINDA NÃO FECHA
+
+financial-inventory-bridge.mjs registra lote real, aloca peças ao item original/venda reconhecida e valora devolução inspecionada. Deve ser reaproveitado. Porém coverage_complete permanece false e COGS/INVENTORY permanecem PARTIAL com INVENTORY_ORIGINAL_COHORT_COVERAGE_REQUIRED (linhas 29, 49, 128–130).
+
+Completar abertura comprovada, conjunto integral de itens vendidos na competência, composição de kits e reconciliação por componente. Automatizar a ligação apenas quando identidade, quantidade e origem forem inequívocas; criar exceções explicáveis para o restante. Não mudar a flag para true sem prova.
+
+Aceite: saldo inicial + produção + devoluções aptas − venda − perdas = saldo final, por componente. O CMV usa custo histórico. Não deduzir a fabricação e depois o mesmo CMV como duas despesas. Uma devolução danificada de peça cujo custo já foi consumido não cria uma segunda baixa do mesmo custo.
+
+9. CORREÇÃO DE LOTE VINCULADO A DEVOLUÇÃO
+
+return-manufacturing-links.mjs, linhas 18–22, instala triggers que impedem mudar/apagar a origem enquanto há vínculo ativo. incurred-production.mjs traduz a proteção para erro 409 INCURRED_PRODUCTION_RETURN_LINK_ACTIVE. O roadmap documenta que esses triggers continuam após rollback e código antigo pode retornar 503.
+
+Isso é proteção de integridade, não bloqueio comercial. O Codex deve oferecer caminho de recuperação: listar dependências, reverter explicitamente as alocações e vínculos afetados na ordem correta, corrigir a origem, revalidar e refazer vínculos quando verdadeiros. Não apagar triggers nem editar SQL por fora para “destravar”. Verificar também se a ponte de estoque recém-criada participa de todas as proteções de alteração da origem.
+
+10. SEMANA DE PRODUÇÃO: PRESERVAR O CALENDÁRIO CONFIRMADO
+
+O fechamento existente usa sexta 13h inclusiva até a sexta seguinte 13h exclusiva, em Brasília, com oito intervalos de conferência. A sexta precisa de divisão antes/a partir de 13h. Ausência de registro não comprova produção zero; custo desconhecido não é zero.
+
+O prompt deve exigir ações diretas para resolver BOUNDARY_REQUIRED, UNKNOWN_UNIT_COST e declaração de completude. Não converter esses estados em “saudável” para liberar números. Um gráfico da semana pode mostrar valores conhecidos e pendências sem impedir o registro da produção corrente. Semana financeira civil e mês civil permanecem conceitos diferentes.
+
+11. COMPORTAMENTO TEMPORAL REPRODUZIDO: NÃO É INCIDENTE LIVE CONFIRMADO
+
+effectiveAllocations(value, as_of), em financial-inventory-bridge.mjs, ignora o argumento as_of e exclui todas as reversões já registradas. O projetor puro filtra fabricação e venda por data, mas recebe a lista já filtrada.
+
+Reprodução sintética com a função extraída literalmente e projectFinancialInventory real: lote de 100 peças, venda de 20 em 02/11, consulta até 15/11. Ao acrescentar uma reversão em 01/12, uma nova projeção de 15/11 muda de 80 para 100 peças, e de R$ 800 para R$ 1.000.
+
+Isso pode representar uma correção retroativa intencional, pois os eventos de reversão usam a competência original. Não houve prova de reescrita de fechamento imutável. Classificar como contrato temporal a definir/testar: “visão corrigida da competência” versus “o que era conhecido no corte”. Original encerrado deve permanecer intacto, com retificação identificada e datas visíveis. Não chamar esse comportamento automaticamente de bug financeiro.
+
+Arquivos da reprodução:
+reproduce_inventory_reversal.mjs
+inventory-reversal-reproduction.json
+Somente dados sintéticos; nenhum D1 ou fluxo Live foi exercitado.
+
+PLAYBOOK RESUMIDO PARA O CODEX
+
+DTF_ART_MISSING:
+Conferir nome/hash/escopo e restaurar o PNG original; não eliminar reserva nem biblioteca.
+
+DTF_KIT_PARTS_REQUIRED:
+Conferir composição e duas partes reais do kit; corrigir vínculo local autorizado e replanejar. Não presumir a segunda arte.
+
+DTF_ART_RESOLUTION_LOW / DTF_CANVAS_LIMIT:
+Conferir resolução real, largura física, margens, DPI e área do canvas. Obter arte adequada ou dividir folhas mantendo escala. Não transformar resolução baixa em alta apenas pela metadata.
+
+DTF_SOURCE_UNAVAILABLE / DTF_ORDER_CHANGED_REFRESH:
+Conferir App → Auth → Finance → gateway, fonte, grants, tempos e revisão. Atualizar o escopo e revalidar o pedido; preservar cache qualificado e reservas.
+
+DTF_BATCH_STATE_CONFLICT:
+Recarregar estado, conferir concorrência e idempotência. Oferecer cancelamento/replanejamento auditado; não alterar status à força.
+
+INCURRED_PRODUCTION_LIMIT / FINANCIAL_INVENTORY_CAPACITY_REACHED:
+Medir volume e migrar armazenamento com paginação e preservação de provas. Não apagar histórico.
+
+BOUNDARY_REQUIRED / UNKNOWN_UNIT_COST:
+Levar o operador diretamente ao fato faltante de sexta/custo histórico; não preencher zero ou confirmação automaticamente.
+
+RETURN_LINK_ACTIVE / 503 após rollback:
+Inventariar dependências e DDL; usar código compatível e recuperação auditada; não retirar proteções.
+
+ACEITE DO USO PRÓPRIO
+
+O sistema estará pronto para a operação quando o proprietário conseguir realizar o ciclo verdadeiro de pedido → composição/DTF → fabricação → custo/obrigação → pagamento parcial → devolução/reuso → conciliação → fechamento semanal/mensal, com valores rastreáveis, reservas corretas e acesso autorizado. As funções independentes continuam disponíveis mesmo quando uma fonte financeira externa está pendente. A cobertura ausente permanece explícita. Cadastro de terceiros, cobrança do SaaS, landing page e canais não usados podem aguardar.
+
+FONTE PRIMÁRIA
+
+Todos os caminhos citados se referem ao commit:
+https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/tree/346f30f200e5cbd3d9efd26663a483c625d9c6e7
+
+Não há atestado de “100% funcional” nesta auditoria; ela fornece o roteiro e as provas necessárias para o Codex concluir e demonstrar o funcionamento real.
+

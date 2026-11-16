@@ -2,7 +2,7 @@
   "schema": "mls_commerce_os_checkpoint_v1",
   "canonical_roadmap": "docs/ROADMAP_MLS_COMMERCE_OS.md",
   "legacy_roadmap": "docs/ROADMAP_BRAZACOMMERCE.md",
-  "updated_at": "2026-11-14",
+  "updated_at": "2026-11-16T03:35:30.119737+00:00",
   "product": {
     "name": "MLS Commerce OS",
     "supervisor": "MLS Hermes",
@@ -29,9 +29,9 @@
     "pr": 10,
     "merge_commit": "9c418fd3010f46957d1ce52345baacd76041c788"
   },
-  "current_phase": "M2_FINANCE_RETURNS_RECONCILIATION",
-  "working_branch": "feature/v41-layout-commercial-live-20261112",
-  "current_status": "V41_PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_SCOPE",
+  "current_phase": "OWNER_OPERATION_U2_DTF_BATCH_HISTORY",
+  "working_branch": "feature/owner-operation-first-20261116",
+  "current_status": "OWNER_OP011_PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY",
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
     "Repasse-base, ajuste, repasse após ajuste e liberação exibidos sem dupla dedução",
@@ -92,16 +92,7 @@
     "Conferir continuamente cobertura da paginação Pending já entregue, sem confundir o corte validado com cobertura permanente",
     "Confrontar Seller Centre e banco no mesmo recorte; a declaração de outras despesas de novembro já foi registrada a partir da confirmação explícita do proprietário"
   ],
-  "next_phase": {
-    "id": "M3_PRODUCTS_PRICING_INTELLIGENCE",
-    "gate": "M2 só libera M3 como fase principal depois da conciliação financeira atingir seu critério de saída",
-    "rules": [
-      "Contribuição e curva ABC somente com atribuição/custos compatíveis",
-      "Preço mínimo/ideal e ROAS mínimo precisam de base de margem verificável",
-      "Estoque desconhecido bloqueia recomendações de escala"
-    ],
-    "parallel_observer_authorized": true
-  },
+  "next_phase": "OWNER_OPERATION_BY_TECHNICAL_DEPENDENCY_NOT_SAAS_PHASE_GATES",
   "previous_phase": {
     "id": "M1_COMMAND_CENTER_AGENT_REGISTRY",
     "status": "PUBLISHED",
@@ -129,12 +120,11 @@
     }
   },
   "next_actions": [
-    "Concluir a CI documental e a integração normal da PR118; publicação não comprova merge.",
-    "Conferir o relatório semanal com fabricação real, fontes financeiras e arquivos bancários do proprietário, mantendo as bases separadas.",
-    "Solicitar/liberar Order API no aplicativo TikTok Shop existente e preparar piloto oficial de leitura; acesso ainda não concedido.",
-    "Adaptar XLSX do relatório Shopee real, distinguindo renda por pedido de transferência agrupada.",
-    "Cadastrar aplicativo Mercado Livre e preparar piloto oficial de leitura.",
-    "Concluir M2/M2.2 com devoluções e fabricação reais, Seller Centre e Nubank no mesmo recorte, sem dupla contagem."
+    "OP011 published and verified technically from CI head0650874; PR123 remains draft. Actual owner DTF use/physical acceptance still pending; never equate publication with operational or financial acceptance.",
+    "Next independent OP013: preserve and restore DTF artwork pixels, hashes and associations in a clean browser profile; no cloud-storage purchase prerequisite.",
+    "OP005/OP006/OP007/OP008: backup/restore and sustainable storage/pagination before applicable migration; never delete history to open capacity.",
+    "Continue owner orders/production/cost/payment/return/financial tasks per docs/owner-operation/EXECUCAO.json; external missing source blocks only its dependent assertion.",
+    "SaaS signup for other customers, Resend commercial delivery, billing, marketing and legal onboarding remain ADIADO_VENDA; shared security/retention/recovery obligations remain active."
   ],
   "m0_followup": [
     "Conferir visual autenticado em desktop e celular durante M1; corrigir apenas branding/layout sem renomear infraestrutura"
@@ -143,33 +133,30 @@
     "Mission Control M1.1 (opção 3) integrado com 7 painéis independentes; conferir visual autenticado desktop/celular e retorno às telas antigas"
   ],
   "latest_increment": {
+    "task": "OP-011",
+    "source_commit": "e168e9a04d7b6feaaf885bd645d9394533dadeee",
+    "release_candidate": "2026-11-15.4",
+    "implementation": true,
+    "local_validation": "COMPLETE_WITH_DOCUMENTED_TARGETED_REVALIDATIONS",
+    "published": true,
+    "validated_operationally": false,
+    "receipt": "docs/owner-operation/validation/owner-dtf-batches.json",
+    "actual_financial_acceptance": false,
     "status": "PUBLISHED_VERIFIED",
     "verification_scope": "TECHNICAL_PUBLIC_ONLY",
-    "release_id": "2026-11-13.3",
-    "release": "2026-11-13.3",
-    "source_commit": "f68525ea1d136350ece9942433352accdf97d992",
-    "prepared_source_commit": "3cf489e33071b32bc73e2efaf2aecfc62618d46a",
-    "ci_run": 43531882471,
-    "node_tests_pass": 4432,
+    "publication_source_commit": "0650874e08e1c6cce3023c8a8d2968c96b34177c",
+    "ci_run": 43795161304,
+    "node_tests_pass": 4441,
     "python_tests_pass": 67,
-    "receipt": "docs/financial-automation/publication-live-20261113.json",
-    "public_verification": "docs/financial-automation/publication-live-20261113.json",
-    "verified_at": "2026-11-14T00:22:15.598Z",
-    "published": true,
-    "pull_request": 121,
-    "owner_live_qa": "NOT_PERFORMED",
-    "account_financial_acceptance": false,
-    "m2_closed": false,
-    "m22_closed": false,
-    "git_integration": "CHECK_PR121_CURRENT_STATE",
+    "release_id": "2026-11-15.4",
+    "publication_receipt": "docs/owner-operation/validation/publication-live-20261116.json",
     "workers": {
       "finance": "50b31451-c6cf-4456-bd09-be5d1956e0da",
-      "auth": "dfd2fc99-728f-4f29-96ee-a4b256c5640a",
-      "app": "9bfc21d6-dec9-4fa6-89d8-7ea1dec50993"
+      "auth": "3b0f494a-40c6-4608-af3a-8b57d2bbf9e3",
+      "app": "18e1585b-e5fc-4b1f-b002-234d18ac7d43"
     },
-    "owner_live_authenticated_qa": "NOT_PERFORMED",
-    "natural_resume_observed_at": "2026-11-14T00:33:17.899767+00:00",
-    "natural_resume_scope": "ORIGINAL_NOVEMBER_ADS_LANE_ONLY"
+    "pull_request": 123,
+    "git_integration": "PR123_DRAFT_OPEN_NOT_MERGED"
   },
   "incident": {
     "id": "INCIDENT_2026_10_27_PANEL_AGENT_REGRESSION",
@@ -7466,5 +7453,94 @@
     "m2_closed": false,
     "m22_closed": false,
     "git_integration": "CHECK_PR121_CURRENT_STATE"
+  },
+  "history_before_owner_first_20261116": {
+    "updated_at": "2026-11-14",
+    "current_phase": "M2_FINANCE_RETURNS_RECONCILIATION",
+    "working_branch": "feature/v41-layout-commercial-live-20261112",
+    "current_status": "V41_PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_SCOPE",
+    "next_actions": [
+      "Concluir a CI documental e a integração normal da PR118; publicação não comprova merge.",
+      "Conferir o relatório semanal com fabricação real, fontes financeiras e arquivos bancários do proprietário, mantendo as bases separadas.",
+      "Solicitar/liberar Order API no aplicativo TikTok Shop existente e preparar piloto oficial de leitura; acesso ainda não concedido.",
+      "Adaptar XLSX do relatório Shopee real, distinguindo renda por pedido de transferência agrupada.",
+      "Cadastrar aplicativo Mercado Livre e preparar piloto oficial de leitura.",
+      "Concluir M2/M2.2 com devoluções e fabricação reais, Seller Centre e Nubank no mesmo recorte, sem dupla contagem."
+    ],
+    "next_phase": {
+      "id": "M3_PRODUCTS_PRICING_INTELLIGENCE",
+      "gate": "M2 só libera M3 como fase principal depois da conciliação financeira atingir seu critério de saída",
+      "rules": [
+        "Contribuição e curva ABC somente com atribuição/custos compatíveis",
+        "Preço mínimo/ideal e ROAS mínimo precisam de base de margem verificável",
+        "Estoque desconhecido bloqueia recomendações de escala"
+      ],
+      "parallel_observer_authorized": true
+    },
+    "latest_increment": {
+      "status": "PUBLISHED_VERIFIED",
+      "verification_scope": "TECHNICAL_PUBLIC_ONLY",
+      "release_id": "2026-11-13.3",
+      "release": "2026-11-13.3",
+      "source_commit": "f68525ea1d136350ece9942433352accdf97d992",
+      "prepared_source_commit": "3cf489e33071b32bc73e2efaf2aecfc62618d46a",
+      "ci_run": 43531882471,
+      "node_tests_pass": 4432,
+      "python_tests_pass": 67,
+      "receipt": "docs/financial-automation/publication-live-20261113.json",
+      "public_verification": "docs/financial-automation/publication-live-20261113.json",
+      "verified_at": "2026-11-14T00:22:15.598Z",
+      "published": true,
+      "pull_request": 121,
+      "owner_live_qa": "NOT_PERFORMED",
+      "account_financial_acceptance": false,
+      "m2_closed": false,
+      "m22_closed": false,
+      "git_integration": "CHECK_PR121_CURRENT_STATE",
+      "workers": {
+        "finance": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+        "auth": "dfd2fc99-728f-4f29-96ee-a4b256c5640a",
+        "app": "9bfc21d6-dec9-4fa6-89d8-7ea1dec50993"
+      },
+      "owner_live_authenticated_qa": "NOT_PERFORMED",
+      "natural_resume_observed_at": "2026-11-14T00:33:17.899767+00:00",
+      "natural_resume_scope": "ORIGINAL_NOVEMBER_ADS_LANE_ONLY"
+    }
+  },
+  "active_execution_matrix": "docs/owner-operation/EXECUCAO.json",
+  "active_charts_catalog": "docs/owner-operation/CATALOGO_GRAFICOS.json",
+  "active_track": "owner_operation",
+  "sale_preparation": {
+    "state": "ADIADO_VENDA",
+    "blocks_owner_operation": false,
+    "preserved_local_preparations": [
+      {
+        "branch": "feature/saas-p01-store-context-20261116",
+        "head": "7c01fad3324c0bf051e83f5f7ffae00b97d83cef"
+      },
+      {
+        "branch": "feature/saas-p01-accounts-20261115",
+        "head": "9f3dbdb0e2be2601b37ce6593390c6032675fd4e"
+      },
+      {
+        "branch": "feature/saas-p01-email-20261115",
+        "head": "de0b1c47f0fdeab97109f302852272f95424975c"
+      },
+      {
+        "branch": "feature/saas-p00-baseline-20261114",
+        "head": "fa00e8b8af638926bd142344e8c7e9351793250b"
+      }
+    ],
+    "shared_foundations_not_deferred": [
+      "authentication",
+      "RBAC",
+      "tenant scope/isolation",
+      "CSRF",
+      "integrity",
+      "backups/recovery",
+      "idempotency",
+      "audit",
+      "applicable data retention"
+    ]
   }
 }

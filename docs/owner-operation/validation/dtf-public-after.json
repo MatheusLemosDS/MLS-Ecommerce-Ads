@@ -1,0 +1,147 @@
+{
+  "schema": "owner_public_routing_verification_v1",
+  "recorded_at": "2026-11-16T03:29:23.839982+00:00",
+  "release": "2026-11-15.4",
+  "routes_subdomains_schedules": {
+    "app": {
+      "workers_dev": true,
+      "previews_enabled": false,
+      "crons": [
+        "* * * * *"
+      ],
+      "domains": [
+        "app.brazacommerce.com.br"
+      ],
+      "matches_reviewed_config": true
+    },
+    "auth": {
+      "workers_dev": true,
+      "previews_enabled": false,
+      "crons": [],
+      "domains": [
+        "auth.brazacommerce.com.br"
+      ],
+      "matches_reviewed_config": true
+    },
+    "finance": {
+      "workers_dev": false,
+      "previews_enabled": false,
+      "crons": [],
+      "domains": [],
+      "matches_reviewed_config": true
+    }
+  },
+  "public_http": [
+    {
+      "path": "/login",
+      "status": 200,
+      "release_header": "2026-11-15.4",
+      "final_path": "/login",
+      "response_sha256": "072fadf69ef3a7d2503c105b4661bc785086f9bd985aacbf796bf3d097a8c7c3"
+    },
+    {
+      "path": "/account/login",
+      "status": 200,
+      "release_header": null,
+      "final_path": "/account/login",
+      "response_sha256": "9aecf05a66d17d8678f7eb5ef1763406f3f0505a979925c3abaa7127703a8393"
+    },
+    {
+      "path": "/account/help",
+      "status": 200,
+      "release_header": null,
+      "final_path": "/account/login",
+      "response_sha256": "9aecf05a66d17d8678f7eb5ef1763406f3f0505a979925c3abaa7127703a8393"
+    },
+    {
+      "path": "/admin?tab=production",
+      "status": 200,
+      "release_header": "2026-11-15.4",
+      "final_path": "/login",
+      "response_sha256": "072fadf69ef3a7d2503c105b4661bc785086f9bd985aacbf796bf3d097a8c7c3"
+    },
+    {
+      "path": "/health",
+      "status": 200,
+      "release_header": null,
+      "final_path": "/health",
+      "response_sha256": "7cb8471af656cf3d62d5942ac9ea92be09c9f3951fb3fd057ea44b7d761af6c2"
+    },
+    {
+      "path": "/api/admin/bootstrap",
+      "status": 401,
+      "release_header": "2026-11-15.4",
+      "final_path": "/api/admin/bootstrap",
+      "response_sha256": "a1d55d2c2c14a6a8d1c08977059aa62ea671af14dbb076c3ecb00d1f31e74389"
+    },
+    {
+      "path": "/api/admin/production/batches?status=OPEN",
+      "status": 401,
+      "release_header": "2026-11-15.4",
+      "final_path": "/api/admin/production/batches",
+      "response_sha256": "a1d55d2c2c14a6a8d1c08977059aa62ea671af14dbb076c3ecb00d1f31e74389"
+    },
+    {
+      "path": "/api/admin/production/batch?id=00000000-0000-4000-8000-000000000001",
+      "status": 401,
+      "release_header": "2026-11-15.4",
+      "final_path": "/api/admin/production/batch",
+      "response_sha256": "a1d55d2c2c14a6a8d1c08977059aa62ea671af14dbb076c3ecb00d1f31e74389"
+    }
+  ],
+  "assets": [
+    {
+      "path": "/assets/mls/0d6250f5888258fa29664eac45b2cd821d3872b1c96ac47dda46bd7fd10e6a0c.js",
+      "sha256": "0d6250f5888258fa29664eac45b2cd821d3872b1c96ac47dda46bd7fd10e6a0c",
+      "bytes": 38035,
+      "status": 200
+    },
+    {
+      "path": "/assets/mls/5203d255416bacb97cd44ddef29a2fc76b1432f0a1ea731fabacc4bb071fcd07.js",
+      "sha256": "5203d255416bacb97cd44ddef29a2fc76b1432f0a1ea731fabacc4bb071fcd07",
+      "bytes": 704817,
+      "status": 200
+    },
+    {
+      "path": "/assets/mls/ec6397070416275d880f293d4abe8d7f531215af369d7e9a275c10f019a8c3c8.js",
+      "sha256": "ec6397070416275d880f293d4abe8d7f531215af369d7e9a275c10f019a8c3c8",
+      "bytes": 21282,
+      "status": 200
+    },
+    {
+      "path": "/assets/mls/549c2b0f6ae183249bed2472af894cf5211d4a6853fc33c0ce6c127aa3ebf034.js",
+      "sha256": "549c2b0f6ae183249bed2472af894cf5211d4a6853fc33c0ce6c127aa3ebf034",
+      "bytes": 165982,
+      "status": 200
+    },
+    {
+      "path": "/assets/mls/04ae3166780be18f31754212640b0887abe9e20830ac4309a6e31109398e4eeb.js",
+      "sha256": "04ae3166780be18f31754212640b0887abe9e20830ac4309a6e31109398e4eeb",
+      "bytes": 54280,
+      "status": 200
+    },
+    {
+      "path": "/assets/mls/e3b12127a14b70185a25c83dae547facc946a4fe87afe0369a8f47665f6398ca.js",
+      "sha256": "e3b12127a14b70185a25c83dae547facc946a4fe87afe0369a8f47665f6398ca",
+      "bytes": 462298,
+      "status": 200
+    },
+    {
+      "path": "/assets/mls/347a294216d16151105c5b5074174af01c01a9bc398e713aaf2c9184a48b1db2.js",
+      "sha256": "347a294216d16151105c5b5074174af01c01a9bc398e713aaf2c9184a48b1db2",
+      "bytes": 704759,
+      "status": 200
+    },
+    {
+      "path": "/assets/mls/d5961f95cc6649d963f42e28a50e2e12563ce0d0d66833bb28ce5e16d172922c.js",
+      "sha256": "d5961f95cc6649d963f42e28a50e2e12563ce0d0d66833bb28ce5e16d172922c",
+      "bytes": 341729,
+      "status": 200
+    }
+  ],
+  "all_exact": true,
+  "release_header_contract": "Version checked where the original response provides it; account-page HTML has no release header in the baseline or candidate. No application header was changed to satisfy this probe.",
+  "authenticated_owner_live_qa": "NOT_PERFORMED",
+  "scope": "PUBLIC_TLS_HTTP_ROUTING_ASSETS_AND_ANONYMOUS_AUTHORIZATION_ONLY",
+  "remote_data_mutations": 0
+}

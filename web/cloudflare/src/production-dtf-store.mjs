@@ -75,6 +75,29 @@ export async function readProductionDtf(env){
  // Explicit counters disclose a bounded read instead of silently losing work.
  return {settings:dtfSettings(context[0].results[0]),lines:lines.slice(0,1000).map(dtfLine),batches:allBatches.slice(0,100).map(dtfBatch),last_sync_at:state.last_sync_at,history_next_date:state.history_next_date,sync_status:state.lease_token?'RUNNING':'IDLE',queue_total:context[4].results[0].total,queue_limited:lines.length>1000,batches_limited:allBatches.length>100};
 }
+// Bounded keyset navigation of the existing ledger; pagination never scans the
+// provider or changes reservations. Audit growth invalidates an older cursor.
+export async function readProductionDtfBatches(env,input={}){
+ if(!dtfPlain(input)||Object.keys(input).some(k=>!['status','search','cursor'].includes(k)))dtfFail('DTF_BATCH_PAGE_INVALID');
+ const status=input.status??'OPEN',search=input.search??'',cursor=input.cursor??null,scope=env.COMMERCIAL_CONTEXT?.namespace??'legacy-owner';
+ if(!['OPEN','ALL','PREPARED','EXPORTED','PRODUCED','VOID'].includes(status)||typeof search!=='string'||search!==search.trim().toLowerCase()||search!==''&&!/^[a-f0-9-]{4,36}$/.test(search)||cursor!==null&&(typeof cursor!=='string'||cursor.length>1200||!/^[-_A-Za-z0-9]+$/.test(cursor)))dtfFail('DTF_BATCH_PAGE_INVALID');
+ let anchor=null;if(cursor!==null)try{const value=JSON.parse(atob(cursor.replace(/-/g,'+').replace(/_/g,'/')));if(!dtfExact(value,['v','scope','status','search','generation','last'])||value.v!==1||value.scope!==scope||value.status!==status||value.search!==search||!/^\d+:\d+$/.test(value.generation)||!dtfExact(value.last,['closed','created_at','id'])||![0,1].includes(value.last.closed)||!dtfInt(value.last.created_at,1,9999999999)||!dtfUuid(value.last.id))throw Error();anchor=value;}catch{dtfFail('DTF_BATCH_PAGE_INVALID');}
+ const db=await dtfSetup(env),conditions=[],bindings=[];
+ if(status==='OPEN')conditions.push("status IN('PREPARED','EXPORTED')");else if(status!=='ALL'){conditions.push('status=?');bindings.push(status);}
+ if(search){conditions.push('id LIKE ?');bindings.push(search+'%');}
+ const where=conditions.length?' WHERE '+conditions.join(' AND '):'',closed="CASE WHEN status IN('PRODUCED','VOID') THEN 1 ELSE 0 END",pageWhere=anchor?(where?' AND ':' WHERE ')+`(${closed}>? OR (${closed}=? AND (created_at<? OR (created_at=? AND id<?))))`:'';
+ const query=db.prepare(`SELECT id,status,created_at,${closed} AS closed,json_extract(payload,'$.layout.print_count') AS print_count,json_array_length(json_extract(payload,'$.layout.sheets')) AS sheet_count FROM production_dtf_batches`+where+pageWhere+` ORDER BY ${closed},created_at DESC,id DESC LIMIT 21`).bind(...bindings,...(anchor?[anchor.last.closed,anchor.last.closed,anchor.last.created_at,anchor.last.created_at,anchor.last.id]:[]));
+ const result=await db.batch([db.prepare("SELECT COUNT(*) AS total,COALESCE(SUM(status='PREPARED'),0) AS prepared,COALESCE(SUM(status='EXPORTED'),0) AS exported,COALESCE(SUM(status='PRODUCED'),0) AS produced,COALESCE(SUM(status='VOID'),0) AS void,(SELECT COALESCE(MAX(rowid),0) FROM production_dtf_audit) AS audit_cursor FROM production_dtf_batches"),db.prepare('SELECT COUNT(*) AS total FROM production_dtf_batches'+where).bind(...bindings),query]);
+ const counts=result[0].results[0],matched=result[1].results[0].total,generation=counts.total+':'+counts.audit_cursor;
+ if(anchor&&anchor.generation!==generation)dtfFail('DTF_BATCH_PAGE_CHANGED',409);
+ const rows=result[2].results,items=rows.slice(0,20).map(({closed,...row})=>{if(!dtfUuid(row.id)||!['PREPARED','EXPORTED','PRODUCED','VOID'].includes(row.status)||!dtfInt(row.created_at,1,9999999999)||!dtfInt(row.print_count,1,300)||!dtfInt(row.sheet_count,1,20))dtfFail('DTF_BATCH_STORAGE_INVALID',503);return row;}),last=rows[Math.min(rows.length,20)-1];
+ const next=rows.length>20?btoa(JSON.stringify({v:1,scope,status,search,generation,last:{closed:last.closed,created_at:last.created_at,id:last.id}})).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''):null;
+ return {schema:'production_dtf_batches_page_v1',selection:{status,search},generation,totals:{all:counts.total,open:counts.prepared+counts.exported,by_status:{PREPARED:counts.prepared,EXPORTED:counts.exported,PRODUCED:counts.produced,VOID:counts.void}},pagination:{page_size:20,matched_total:matched,has_more:next!==null,next_cursor:next},items};
+}
+export async function readProductionDtfBatch(env,id){
+ if(!dtfUuid(id))dtfFail('DTF_BATCH_ID_INVALID');const db=await dtfSetup(env),row=await db.prepare('SELECT * FROM production_dtf_batches WHERE id=?').bind(id).first();if(!row)dtfFail('DTF_BATCH_NOT_FOUND',404);return {schema:'production_dtf_batch_v1',batch:dtfBatch(row)};
+}
+
 export async function saveProductionDtfSettings(env,body,actor,{now=()=>Date.now()}={}){
  if(!dtfExact(body,['revision','values'])||!dtfInt(body.revision,1,2147483645))dtfFail('DTF_SETTINGS_REVISION_REQUIRED');dtfActor(actor);
  const values=dtfEngineCall('validateSettings',body.values),db=await dtfSetup(env),stamp=dtfClock(now),raw=JSON.stringify(values);

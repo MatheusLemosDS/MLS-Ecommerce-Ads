@@ -14,7 +14,8 @@ import {execFileSync} from 'node:child_process';
 export const RELEASE_ACCEPTED_OWNER_AUTHORIZATIONS=Object.freeze([
  'OWNER_REQUESTED_ALL_PREPARED_IMPROVEMENTS_LIVE_2026_10_30',
  'OWNER_REQUESTED_V41_LIVE_2026_11_11',
- 'OWNER_REQUESTED_FINANCIAL_AUTOMATION_LIVE_2026_11_13'
+ 'OWNER_REQUESTED_FINANCIAL_AUTOMATION_LIVE_2026_11_13',
+ 'OWNER_REQUESTED_OWN_OPERATION_FIRST_LIVE_2026_11_16'
 ]);
 function literalReleasePath(value){
  return typeof value==='string'&&value.length>0&&value===value.trim()&&

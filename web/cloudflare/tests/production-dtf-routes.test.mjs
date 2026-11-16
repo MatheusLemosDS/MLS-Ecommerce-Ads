@@ -23,11 +23,13 @@ function source(){
 
 test('production routes protect owner data, actions and exact scope before reading Shopee',async()=>{
  const auth=await fixture(),s=source();try{
+ for(const path of ['/batches?status=OPEN','/batch?id=11111111-1111-4111-8111-111111111111'])assert.equal((await adminFetch(request(auth,path,undefined,{cookie:''}),auth.env,s.services)).status,401);
+ for(const path of ['/batches?status=OPEN&status=ALL','/batches?limit=999','/batch?id=bad'])assert.equal((await adminFetch(request(auth,path),auth.env,s.services)).status,400);
  for(const cookie of ['', 'mls_session=review'])assert.equal((await adminFetch(request(auth,'',undefined,{cookie}),auth.env,s.services)).status,401);
  for(const path of ['/settings','/sync','/batches','/batches/action']){
   assert.equal((await adminFetch(request(auth,path,{}, {origin:'https://foreign.test'}),auth.env,s.services)).status,403);
   assert.equal((await adminFetch(request(auth,path,{}, {csrf:''}),auth.env,s.services)).status,403);
-  assert.equal((await adminFetch(request(auth,path,undefined),auth.env,s.services)).status,405);
+  assert.equal((await adminFetch(request(auth,path,undefined),auth.env,s.services)).status,path==='/batches'?200:405);
  }
  assert.equal((await adminFetch(request(auth,'/sync?shop_id=123',{}),auth.env,s.services)).status,400);
  assert.equal((await adminFetch(request(auth,'/sync',{path:'PRIVATE'}),auth.env,s.services)).status,400);

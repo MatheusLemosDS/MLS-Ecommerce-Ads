@@ -1,0 +1,42 @@
+{
+  "schema": "owner_controlled_stage_verification_v1",
+  "recorded_at": "2026-11-16T03:16:13.372914+00:00",
+  "updated_workers": [
+    "auth"
+  ],
+  "workers": {
+    "finance": {
+      "active_version_id": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+      "latest_version_id": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+      "active_percentage": 100,
+      "retrieved_raw_sha256": "3e3f3d35a3e0037c251f7abda29cc8a64643ee255771d07f2893d32d8ef7d22a",
+      "raw_bytes": 934552,
+      "effective_config_sha256": "1e5de4eba866ec7c8ca85fc37c7969d61dc513a26336879e2753e506c6711ab2",
+      "action": "RETAINED",
+      "source_matches_expected": true
+    },
+    "auth": {
+      "active_version_id": "3b0f494a-40c6-4608-af3a-8b57d2bbf9e3",
+      "latest_version_id": "3b0f494a-40c6-4608-af3a-8b57d2bbf9e3",
+      "active_percentage": 100,
+      "retrieved_raw_sha256": "def3859b14e3829b205cc44981dcddb043f153ea5e4a9754d2df0cf94a42e994",
+      "raw_bytes": 654597,
+      "effective_config_sha256": "304c9c4615acdfc3a8222e00449e5bceabcf2dd9bd574587538183a935003361",
+      "action": "UPDATED",
+      "source_matches_expected": true
+    },
+    "app": {
+      "active_version_id": "9bfc21d6-dec9-4fa6-89d8-7ea1dec50993",
+      "latest_version_id": "9bfc21d6-dec9-4fa6-89d8-7ea1dec50993",
+      "active_percentage": 100,
+      "retrieved_raw_sha256": "19d1ef1dc49d07da644a67372b9291f54b6443f0d72e9d0e3dfa7168661f2a05",
+      "raw_bytes": 4180640,
+      "effective_config_sha256": "72c1ffdf88e61e4d2b1b7d78545c3d8d9a5b903cc32cf4ed83ee87d5c19a32b9",
+      "action": "RETAINED",
+      "source_matches_expected": true
+    }
+  },
+  "all_configs_preserved": true,
+  "all_source_bytes_exact": true,
+  "all_active_latest_100": true
+}

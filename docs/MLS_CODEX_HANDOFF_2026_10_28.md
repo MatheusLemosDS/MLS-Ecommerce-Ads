@@ -1,3 +1,11 @@
+<!-- OWNER_OPERATION_CURRENT -->
+Prioridade vigente: operação própria primeiro. Matriz ativa: [owner-operation/EXECUCAO.json](owner-operation/EXECUCAO.json); [uso e status](owner-operation/README.md); [gráficos preservados](owner-operation/CATALOGO_GRAFICOS.json).
+
+Base main `346f30f`/PR121 reconfirmada; código OP011 `e168e9a` na branch `feature/owner-operation-first-20261116`: lotes DTF com paginação, filtro e acesso por ID, sem mudar reservas ou schema. CI43795161304 aprovada no head0650874 (4441 Node/67 Python). Versão2026-11-15.4 publicada e verificada tecnicamente: Auth/App novos, Finance retido; fontes/configurações/rotas/cron e8 assets conferidos. PR123 rascunho, sem merge/auto-merge; aceite real ainda pendente. Não usar a CI histórica da main como CI do candidato.
+
+owner_operation governa a próxima entrega; sale_preparation fica ADIADO_VENDA. Resend para novos clientes, planos, checkout, marketing e documentos de onboarding comercial não bloqueiam o owner legítimo. Autenticação, permissões, isolamento, backups, auditoria e integridade seguem obrigatórios. Próximo independente: OP013 (backup/restauração real dos pixels e vínculos de artes). Histórico abaixo preservado; PR118/121 já integradas, não repetir merges. M2/M2.2, lucro/fechamento real e coleta bancária automática não foram encerrados.
+<!-- END_OWNER_OPERATION_CURRENT -->
+
 FINANCIAL_AUTOMATION_20261113 — PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY — release 2026-11-13.3
 Fonte f68525ea1d136350ece9942433352accdf97d992; preparado 3cf489e33071b32bc73e2efaf2aecfc62618d46a; CI 43531882471 success (4432 Node/67 Python), publicação conferida em 2026-11-14T00:22:15.598Z. URL https://app.brazacommerce.com.br/admin?tab=agent-finance#financialAutomation. App 9bfc21d6-dec9-4fa6-89d8-7ea1dec50993, Auth dfd2fc99-728f-4f29-96ee-a4b256c5640a, Finance 50b31451-c6cf-4456-bd09-be5d1956e0da retido. Recibos em docs/financial-automation/publication-live-20261113.json; consultar PR #121 para integração Git.
 

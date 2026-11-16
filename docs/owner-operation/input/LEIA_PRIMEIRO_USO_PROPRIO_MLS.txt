@@ -1,0 +1,43 @@
+MLS COMMERCE OS — COMO USAR ESTE PACOTE NO CODEX
+
+Objetivo: concluir primeiro a operação de Matheus, preservando a preparação para venda sem deixá-la bloquear produção e financeiro.
+
+1. Abra no Codex o projeto MatheusLemosDS/MLS-Ecommerce-Ads.
+2. Anexe o ZIP deste pacote ou disponibilize os arquivos da pasta extraída.
+3. Cole a mensagem abaixo. O prompt completo é autossuficiente para iniciar; a matriz e o catálogo ajudam a acompanhar a execução sem perder requisitos.
+
+MENSAGEM PARA INICIAR
+
+Leia LEIA_PRIMEIRO_USO_PROPRIO_MLS.txt, PROMPT_CODEX_USO_PROPRIO_PRIMEIRO_MLS.txt e ROADMAP_EXECUTAVEL_USO_PROPRIO_MLS.json. Aplique a prioridade mais recente: finalizar minha operação própria antes da venda. Reconfira a main atual e o AGENTS.md, aproveite a PR #121 e siga as tarefas operacionais, corrigindo falhas reais e publicando incrementos validados na Live já autorizada. Classifique bloqueios exclusivamente comerciais como ADIADO_VENDA e continue os itens independentes. Não enfraqueça autenticação, integridade ou permissões. Complete as fontes e os caminhos de conferência para lucro/fechamentos reais, sem transformar PARTIAL em COMPLETE artificialmente. Preserve os gráficos operacionais conforme CATALOGO_GRAFICOS_USO_PROPRIO_MLS.json. Atualize os checkpoints atuais, registre testes/publicação/aceite separadamente e não pare apenas na análise quando houver implementação executável.
+
+CONTEÚDO
+
+PROMPT_CODEX_USO_PROPRIO_PRIMEIRO_MLS.txt
+Prompt mestre: missão, prioridade,36 tarefas, aceites, testes, runbook de incidentes e entrega.
+
+ROADMAP_EXECUTAVEL_USO_PROPRIO_MLS.json
+Matriz de36 tarefas com dependências sem ciclos, aceites, mapeamento dos28 FINAUTO,24 cenários financeiros existentes,21 cenários owner e reclassificação dos46 itens SaaS.
+
+CATALOGO_GRAFICOS_USO_PROPRIO_MLS.json
+21 contratos visuais e22 famílias preservados como referência, com dependências reordenadas e4 complementos operacionais. Assinatura/onboarding comercial não bloqueia o uso próprio.
+
+AUDITORIA_ATUAL_E_DECISOES_MLS.txt
+Achados atuais, limites do exame, decisões e links fixados nas fontes do projeto.
+
+VALIDACAO_DOCUMENTAL_MLS.json
+Verificação de integridade e cobertura deste pacote. Não é teste da implementação do sistema.
+
+anexos/
+Relatórios detalhados de produção, financeiro e runtime; resultado da reprodução temporal sintética. Leituras/evidências, não novo comando para retomar o roteiro comercial antigo.
+
+COMO INTERPRETAR OS ESTADOS
+
+Esta entrega é especificação, não implementação. Nenhum OP foi concluído por gerar estes arquivos. VALIDADO_LOCAL nos FINAUTO/T01–T24 é um registro existente no repositório, com seu escopo; não é certificado de valores reais ou nova execução nesta auditoria.
+
+O caminho owner legítimo existente deve ser preservado. Preparação para venda não significa desativar segurança. Fallback por arquivo oficial pode permitir operação/fechamento assistido, mas conexão automática permanece pendente até ser comprovada.
+
+Gates de venda SaaS e gates de escrita na Shopee/Ads/banco são coisas distintas. Adiar o primeiro não remove os controles do segundo.
+
+BASE DA AUDITORIA
+
+main 346f30f200e5cbd3d9efd26663a483c625d9c6e7, PR #121; CI 43536468273 aprovada. Reconfira a HEAD antes de editar. Leitura em 15/11/2026 Brasília, 16/11 UTC. Não houve mudanças no site/repositório por esta auditoria.

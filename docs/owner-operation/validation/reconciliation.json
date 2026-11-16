@@ -1,0 +1,241 @@
+{
+  "schema": "owner_baseline_reconciliation_v1",
+  "recorded_at": "2026-11-16T02:34:05.726135+00:00",
+  "base_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+  "github_main_ci": {
+    "run": 43536468273,
+    "conclusion": "success",
+    "head_sha": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+    "read_via": "GitHub connector"
+  },
+  "pr121": {
+    "merged": true,
+    "merged_at": "2026-11-14T00:47:06Z",
+    "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/121"
+  },
+  "production_settings_and_versions": {
+    "recorded_at": "2026-11-16T02:06:29.728220+00:00",
+    "workers": {
+      "app": {
+        "effective_settings_sha256": "72c1ffdf88e61e4d2b1b7d78545c3d8d9a5b903cc32cf4ed83ee87d5c19a32b9",
+        "versions": [
+          {
+            "version_id": "9bfc21d6-dec9-4fa6-89d8-7ea1dec50993",
+            "percentage": 100
+          }
+        ]
+      },
+      "auth": {
+        "effective_settings_sha256": "304c9c4615acdfc3a8222e00449e5bceabcf2dd9bd574587538183a935003361",
+        "versions": [
+          {
+            "version_id": "dfd2fc99-728f-4f29-96ee-a4b256c5640a",
+            "percentage": 100
+          }
+        ]
+      },
+      "finance": {
+        "effective_settings_sha256": "1e5de4eba866ec7c8ca85fc37c7969d61dc513a26336879e2753e506c6711ab2",
+        "versions": [
+          {
+            "version_id": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+            "percentage": 100
+          }
+        ]
+      }
+    },
+    "matches_before": true
+  },
+  "public_http": [
+    {
+      "path": "/login",
+      "status": 200,
+      "final_path": "/login",
+      "release_header": "2026-11-13.3",
+      "content_type": "text/html; charset=utf-8",
+      "body_sha256": "c33f9fcdf4cd6c9ae6d7410d6c4bc80f5e5ebf869b41aa9746f863df7a9a3658"
+    },
+    {
+      "path": "/account/login",
+      "status": 200,
+      "final_path": "/account/login",
+      "release_header": null,
+      "content_type": "text/html; charset=utf-8",
+      "body_sha256": "c241b467518903b40a61f88b60bebe99ff4f100aa9691dc51f44c71f4d27a9d3"
+    },
+    {
+      "path": "/account/help",
+      "status": 200,
+      "final_path": "/account/login",
+      "release_header": null,
+      "content_type": "text/html; charset=utf-8",
+      "body_sha256": "c241b467518903b40a61f88b60bebe99ff4f100aa9691dc51f44c71f4d27a9d3"
+    },
+    {
+      "path": "/admin",
+      "status": 200,
+      "final_path": "/login",
+      "release_header": "2026-11-13.3",
+      "content_type": "text/html; charset=utf-8",
+      "body_sha256": "c33f9fcdf4cd6c9ae6d7410d6c4bc80f5e5ebf869b41aa9746f863df7a9a3658"
+    },
+    {
+      "path": "/health",
+      "status": 200,
+      "final_path": "/health",
+      "release_header": null,
+      "content_type": "application/json; charset=UTF-8",
+      "body_sha256": "7cb8471af656cf3d62d5942ac9ea92be09c9f3951fb3fd057ea44b7d761af6c2"
+    },
+    {
+      "path": "/api/admin/bootstrap",
+      "status": 401,
+      "final_path": "/api/admin/bootstrap",
+      "release_header": "2026-11-13.3",
+      "content_type": "application/json; charset=utf-8",
+      "body_sha256": "a1d55d2c2c14a6a8d1c08977059aa62ea671af14dbb076c3ecb00d1f31e74389"
+    }
+  ],
+  "public_client": "Browser-compatible User-Agent; same inherited proxy and TLS verification",
+  "initial_default_client_read": {
+    "public_http": [
+      {
+        "path": "/login",
+        "status": 403,
+        "final_path": "/login",
+        "release_header": null,
+        "content_type": "text/plain; charset=UTF-8",
+        "body_sha256": "2938e9f1284180959e33ab1718d0793a72ff6e4cdb8108c34dcd14e69446de5c"
+      },
+      {
+        "path": "/account/login",
+        "status": 403,
+        "final_path": "/account/login",
+        "release_header": null,
+        "content_type": "text/plain; charset=UTF-8",
+        "body_sha256": "2938e9f1284180959e33ab1718d0793a72ff6e4cdb8108c34dcd14e69446de5c"
+      },
+      {
+        "path": "/account/help",
+        "status": 403,
+        "final_path": "/account/help",
+        "release_header": null,
+        "content_type": "text/plain; charset=UTF-8",
+        "body_sha256": "2938e9f1284180959e33ab1718d0793a72ff6e4cdb8108c34dcd14e69446de5c"
+      },
+      {
+        "path": "/admin",
+        "status": 403,
+        "final_path": "/admin",
+        "release_header": null,
+        "content_type": "text/plain; charset=UTF-8",
+        "body_sha256": "2938e9f1284180959e33ab1718d0793a72ff6e4cdb8108c34dcd14e69446de5c"
+      },
+      {
+        "path": "/health",
+        "status": 403,
+        "final_path": "/health",
+        "release_header": null,
+        "content_type": "text/plain; charset=UTF-8",
+        "body_sha256": "2938e9f1284180959e33ab1718d0793a72ff6e4cdb8108c34dcd14e69446de5c"
+      },
+      {
+        "path": "/api/admin/bootstrap",
+        "status": 403,
+        "final_path": "/api/admin/bootstrap",
+        "release_header": null,
+        "content_type": "text/plain; charset=UTF-8",
+        "body_sha256": "2938e9f1284180959e33ab1718d0793a72ff6e4cdb8108c34dcd14e69446de5c"
+      }
+    ],
+    "error": "Cloudflare1010 for default Python client; no application outage or authorization failure inferred"
+  },
+  "aggregate_d1_metadata_reused_from": "2026-11-16T02:22:29.637401+00:00",
+  "served_assets": [
+    {
+      "path": "/assets/mls/0d6250f5888258fa29664eac45b2cd821d3872b1c96ac47dda46bd7fd10e6a0c.js",
+      "status": 200,
+      "sha256": "0d6250f5888258fa29664eac45b2cd821d3872b1c96ac47dda46bd7fd10e6a0c",
+      "matches_published_ledger": true
+    },
+    {
+      "path": "/assets/mls/5203d255416bacb97cd44ddef29a2fc76b1432f0a1ea731fabacc4bb071fcd07.js",
+      "status": 200,
+      "sha256": "5203d255416bacb97cd44ddef29a2fc76b1432f0a1ea731fabacc4bb071fcd07",
+      "matches_published_ledger": true
+    },
+    {
+      "path": "/assets/mls/ec6397070416275d880f293d4abe8d7f531215af369d7e9a275c10f019a8c3c8.js",
+      "status": 200,
+      "sha256": "ec6397070416275d880f293d4abe8d7f531215af369d7e9a275c10f019a8c3c8",
+      "matches_published_ledger": true
+    },
+    {
+      "path": "/assets/mls/549c2b0f6ae183249bed2472af894cf5211d4a6853fc33c0ce6c127aa3ebf034.js",
+      "status": 200,
+      "sha256": "549c2b0f6ae183249bed2472af894cf5211d4a6853fc33c0ce6c127aa3ebf034",
+      "matches_published_ledger": true
+    },
+    {
+      "path": "/assets/mls/04ae3166780be18f31754212640b0887abe9e20830ac4309a6e31109398e4eeb.js",
+      "status": 200,
+      "sha256": "04ae3166780be18f31754212640b0887abe9e20830ac4309a6e31109398e4eeb",
+      "matches_published_ledger": true
+    },
+    {
+      "path": "/assets/mls/e3b12127a14b70185a25c83dae547facc946a4fe87afe0369a8f47665f6398ca.js",
+      "status": 200,
+      "sha256": "e3b12127a14b70185a25c83dae547facc946a4fe87afe0369a8f47665f6398ca",
+      "matches_published_ledger": true
+    },
+    {
+      "path": "/assets/mls/347a294216d16151105c5b5074174af01c01a9bc398e713aaf2c9184a48b1db2.js",
+      "status": 200,
+      "sha256": "347a294216d16151105c5b5074174af01c01a9bc398e713aaf2c9184a48b1db2",
+      "matches_published_ledger": true
+    },
+    {
+      "path": "/assets/mls/d5961f95cc6649d963f42e28a50e2e12563ce0d0d66833bb28ce5e16d172922c.js",
+      "status": 200,
+      "sha256": "d5961f95cc6649d963f42e28a50e2e12563ce0d0d66833bb28ce5e16d172922c",
+      "matches_published_ledger": true
+    }
+  ],
+  "aggregate_d1_metadata": {
+    "transport": "Cloudflare supported D1 query API, SELECT only",
+    "metadata_status": 200,
+    "error_codes": [],
+    "tables": [
+      {
+        "name": "production_dtf_orders",
+        "status": 200,
+        "records": 1172
+      },
+      {
+        "name": "production_dtf_lines",
+        "status": 200,
+        "records": 1249
+      },
+      {
+        "name": "production_dtf_batches",
+        "status": 200,
+        "records": 0
+      },
+      {
+        "name": "production_dtf_reservations",
+        "status": 200,
+        "records": 0
+      },
+      {
+        "name": "financial_automation_revisions",
+        "status": 200,
+        "records": 3014
+      }
+    ]
+  },
+  "authenticated_owner_live_qa": "NOT_PERFORMED_NO_OWNER_SESSION_OR_CREDENTIAL_AVAILABLE",
+  "actual_financial_acceptance": false,
+  "real_data_mutations": 0,
+  "shopee_or_bank_provider_calls": 0,
+  "external_build_trigger_rules": "NOT_OBTAINED_SEPARATE_RECEIPT"
+}
