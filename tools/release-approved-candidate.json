@@ -171,6 +171,7 @@
     "web/cloudflare/tests/m2-release-bootstrap-compiled.test.mjs",
     "web/cloudflare/tests/mls-approved-all-panels-chrome.test.mjs",
     "web/cloudflare/tests/mls-integrated-owner-visual-chrome.test.mjs",
+    "web/cloudflare/tests/mls-production-rework.test.mjs",
     "web/cloudflare/tests/owner-dtf-batches-chrome.test.mjs",
     "web/cloudflare/tests/owner-dtf-batches-fixture.mjs",
     "web/cloudflare/tests/owner-dtf-batches.test.mjs",
