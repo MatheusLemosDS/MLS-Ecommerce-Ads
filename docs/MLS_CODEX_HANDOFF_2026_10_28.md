@@ -1,9 +1,9 @@
 <!-- OWNER_OPERATION_CURRENT -->
-Prioridade vigente: operação própria primeiro. Matriz ativa: [owner-operation/EXECUCAO.json](owner-operation/EXECUCAO.json); [uso e status](owner-operation/README.md); [gráficos preservados](owner-operation/CATALOGO_GRAFICOS.json).
+Prioridade vigente: operação própria. [Matriz](owner-operation/EXECUCAO.json), [uso e status](owner-operation/README.md) e [checkpoint canônico](MLS_COMMERCE_OS_CHECKPOINT.json).
 
-Base main `346f30f`/PR121 reconfirmada; código OP011 `e168e9a` na branch `feature/owner-operation-first-20261116`: lotes DTF com paginação, filtro e acesso por ID, sem mudar reservas ou schema. CI43795161304 aprovada no head0650874 (4441 Node/67 Python). Versão2026-11-15.4 publicada e verificada tecnicamente: Auth/App novos, Finance retido; fontes/configurações/rotas/cron e8 assets conferidos. PR123 rascunho, sem merge/auto-merge; aceite real ainda pendente. Não usar a CI histórica da main como CI do candidato.
+OP013 preparado em `feature/owner-dtf-artwork-backup-20261116`, código `219dd97`: ZIP local com PNGs originais, manifesto, chaves e hashes; prévia e confirmação para restaurar sem sobrescrever artes diferentes. Testes direcionados e Chromium autenticado normal/minificado em320/1365 passaram. Gates completos/CI/publicação deste incremento ainda pendentes. Live continua na2026-11-15.4, recibo OP011 preservado. Base main346f30f/PR121 reconfirmada; pai754d20f/PR123 rascunho preservado.
 
-owner_operation governa a próxima entrega; sale_preparation fica ADIADO_VENDA. Resend para novos clientes, planos, checkout, marketing e documentos de onboarding comercial não bloqueiam o owner legítimo. Autenticação, permissões, isolamento, backups, auditoria e integridade seguem obrigatórios. Próximo independente: OP013 (backup/restauração real dos pixels e vínculos de artes). Histórico abaixo preservado; PR118/121 já integradas, não repetir merges. M2/M2.2, lucro/fechamento real e coleta bancária automática não foram encerrados.
+Aceite com artes/pedidos físicos/valores reais continua separado. Próximo independente após os gates: OP012, ciclo do lote e produção parcial. Venda fica ADIADO_VENDA; autenticação, permissões, isolamento, backups, auditoria, sexta13h/Brasília e não duplicar custos/receitas continuam ativos. [Histórico do registro anterior](owner-operation/history/continuity-before-op013-20261116.json). M2/M2.2 e coleta bancária automática não encerrados.
 <!-- END_OWNER_OPERATION_CURRENT -->
 
 FINANCIAL_AUTOMATION_20261113 — PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY — release 2026-11-13.3

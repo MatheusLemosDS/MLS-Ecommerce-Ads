@@ -1,0 +1,62 @@
+{
+  "schema": "owner_dtf_artwork_backup_increment_v1",
+  "recorded_at": "2026-11-16T17:18:30.349179+00:00",
+  "source_commit": "219dd974f23bf13bb58f45fc457eeb3d2876ca21",
+  "source_parent": "754d20fe3d60b93417eab7ea14a50cb228451c13",
+  "base_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+  "branch": "feature/owner-dtf-artwork-backup-20261116",
+  "release": "2026-11-16.1",
+  "implementation": true,
+  "validation": {
+    "unit_and_controller": {
+      "pass": 7,
+      "file": "web/cloudflare/tests/dtf-artwork-backup.test.mjs"
+    },
+    "chromium": {
+      "pass": 4,
+      "file": "web/cloudflare/tests/dtf-artwork-backup-chrome.test.mjs",
+      "widths": [
+        320,
+        1365
+      ],
+      "minified_and_normal": true,
+      "two_separate_clean_profiles": true,
+      "real_png_decoding_hashes_and_reserved_batch_export": true,
+      "synthetic_storage_failure_blocks_restore": true
+    },
+    "full_node": "PENDING",
+    "python": "PENDING",
+    "github_ci": "PENDING"
+  },
+  "published": false,
+  "operational_acceptance": false,
+  "financial_acceptance": false,
+  "physical_acceptance": false,
+  "no_d1_migration": true,
+  "no_remote_artwork_storage": true,
+  "production_mutations_in_qa": false,
+  "previous_publication_receipt": "docs/owner-operation/validation/publication-live-20261116.json",
+  "baseline_native_read": "2026-11-16T17:02:20.173744+00:00",
+  "baseline_versions": {
+    "app": "18e1585b-e5fc-4b1f-b002-234d18ac7d43",
+    "auth": "3b0f494a-40c6-4608-af3a-8b57d2bbf9e3",
+    "finance": "50b31451-c6cf-4456-bd09-be5d1956e0da"
+  },
+  "next_independent_task": "OP-012",
+  "live_owner_session": "NOT_AVAILABLE",
+  "automatic_build_settings": "READ_ACCESS_NOT_AVAILABLE_EXISTING_CONTROLLED_PATH_AUTHORIZED",
+  "limits": {
+    "png_bytes": 33554432,
+    "pixel_bytes_total": 536870912,
+    "artworks": 5000
+  },
+  "preserved_contracts": [
+    "D1 batch manifests and reserved SHA-256",
+    "IndexedDB v1 store",
+    "RBAC/CSRF/authentication/tenant",
+    "six agent cards and operational charts",
+    "Friday 13:00 America/Sao_Paulo",
+    "no missing source as zero",
+    "no duplicate cost or revenue"
+  ]
+}

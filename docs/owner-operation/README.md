@@ -4,6 +4,19 @@ A trilha ativa é **owner_operation**. Cadastro de outros clientes, e-mail comer
 
 [Checkpoint canônico](../MLS_COMMERCE_OS_CHECKPOINT.json) · [36 tarefas e dependências técnicas](EXECUCAO.json) · [21 contratos visuais e famílias preservadas](CATALOGO_GRAFICOS.json) · [inspeção atual](validation/reconciliation.json) · [validação do incremento](validation/owner-dtf-batches.json).
 
+## Incremento atual OP-013 — backup das artes DTF
+
+Implementado no código; validação completa, CI e publicação **pendentes**. A Live continua2026-11-15.4 até o recibo deste incremento confirmar novos Workers. [Evidência atual](validation/owner-dtf-artwork-backup.json). O histórico abaixo registra OP011; a próxima tarefa independente atual é OP012.
+
+1. Abra **Produção → Artes salvas neste dispositivo → Baixar backup das artes**. Salve o ZIP em uma pasta privada fora do navegador. Ele contém os PNGs originais e `manifest.json`, com nomes de arte, dimensões, SHA-256 e caminhos dos pixels.
+2. No navegador de destino, entre na mesma origem, conta e loja. Use **Conferir backup para restaurar**, selecione o ZIP e revise quantas artes são novas ou já idênticas.
+3. Marque a confirmação e escolha **Restaurar artes conferidas**. O sistema verifica os pixels e reabre a biblioteca após a transação. Um conflito de nome/hash ou falha de armazenamento impede a restauração; nenhuma imagem diferente é substituída. Cancelar a prévia não grava nada.
+4. Faça a prévia e confira a impressão antes de produzir. Só apague originais depois de verificar seu próprio backup. Gerar um download não prova que o operador guardou o arquivo em outro dispositivo.
+
+O ZIP é privado e local, sem upload ou compra de storage. Limites explícitos:5.000 artes,32MiB por PNG,512MiB somados; exceder interrompe o backup inteiro, sem truncar a biblioteca. Arquivos devem ser do exportador MLS v1 (ZIP sem compressão); um ZIP genérico não substitui o manifesto. SHA-256 preserva identidade de bytes, sem comprovar autoria/licença. O vínculo é a chave normalizada da arte usada pelo SKU. Lotes, reservas, auditoria e configurações continuam no D1; o ZIP não é backup desse banco. Exportar lote continua conferindo o hash original reservado e a fonte do pedido.
+
+O código de recuperação usa a mesma base IndexedDB e uma única transação de adição, sem migração ou sobrescrita. PNGs corrompidos, ZIP alterado/comprimido/criptografado ou de outra origem/conta/loja são recusados. Os testes usam perfis Chromium separados e PNG sintético real, incluindo decodificação, igualdade de pixels, erro de gravação e exportação do lote previamente reservado. Não certificam as artes reais do proprietário nem fabricação financeira.
+
 ## Incremento OP-011 — encontrar todos os lotes DTF
 
 Candidato `2026-11-15.4`, código `e168e9a`, branch `feature/owner-operation-first-20261116`, sobre main `346f30f200e5cbd3d9efd26663a483c625d9c6e7`/PR121 integrada. **Publicado e verificado tecnicamente:** versão `2026-11-15.4`, CI[43795161304](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43795161304) aprovada no head `0650874` com4441 Node/67 Python. Auth/App novos e Finance retido, todos ativos/latest100%, fontes/configuração e8 assets exatos. [Recibo de publicação](validation/publication-live-20261116.json). [PR123](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/123) rascunho, sem merge/auto-merge. Aceite autenticado real, físico e financeiro não realizado.
