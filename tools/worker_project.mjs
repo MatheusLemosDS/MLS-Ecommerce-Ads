@@ -5,6 +5,12 @@ import path from 'node:path';
 export const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const TARGETS = Object.freeze({
   app: Object.freeze({name: 'brazacommerce-app', main: '../../dist/app-worker.mjs', baselineHashes: [
+    // Same-path DTF lifecycle dry package; publication still requires CI and independent verification.
+    '52be141d6ee2423c523eb46ffe8801a3d63690ac0b26c44bdb10707679889e0b',
+    // Frozen DTF lifecycle candidate with audited correction; all predecessor hashes remain recognized.
+    'bc36c2d29dadb432faf99f58b8dba2afbb9a0e45097a093b66794d2a16277b84',
+    // Exact DTF lifecycle candidate: physical confirmation, safe remainder and selected-part exports.
+    '6da569e675c40bee0e65e5ab08570bed4224ef6d000d9c5c13de2a1dc56e6296',
     // OP013 exact dry package; this digest alone does not establish publication.
     '9c865f155b5fdf972668950e22b3486d3ebab3efdfa10114a0676c8c419aeed3',
     // Exact OP013 private artwork backup candidate; previous source hashes and gates retained.
@@ -256,6 +262,12 @@ export const TARGETS = Object.freeze({
     '26612b7ea0edbea55e06f5fc817a18defd6b4fe65381e6d564b7d360b7b80278',
   ]}),
   auth: Object.freeze({name: 'brazacommerce-auth', main: '../../dist/auth-worker.mjs', baselineHashes: [
+    // Same-path DTF lifecycle dry package; publication still requires CI and independent verification.
+    '1a927c072c69b45670c83e8327e93b9eb68f001bfab748273063fd90244a6095',
+    // Frozen DTF lifecycle candidate with audited correction; all predecessor hashes remain recognized.
+    'aaafc3a6c16684949d8714f309ce1cf0525d71ac7223fed20d948347ff943182',
+    // Exact DTF lifecycle candidate: physical confirmation, safe remainder and selected-part exports.
+    'aaafc3a6c16684949d8714f309ce1cf0525d71ac7223fed20d948347ff943182',
     // OP013 exact dry package; this digest alone does not establish publication.
     '9ee5d41ae9db301c745e1bfa8d2ae369828426a7524c7c0f7ab1639459c63710',
     // Exact OP013 private artwork backup candidate; previous source hashes and gates retained.

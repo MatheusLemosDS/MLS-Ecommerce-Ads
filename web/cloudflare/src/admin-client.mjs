@@ -1,3 +1,4 @@
+import {createDtfLifecycleController} from './dtf-lifecycle-client.mjs';
 import {createDtfArtworkBackupCodec,createDtfArtworkBackupController} from './dtf-artwork-backup.mjs';
 import {parseReport} from './admin-report.mjs';
 import {projectAdsMeasurement} from './ads-measurement.mjs';
@@ -8,6 +9,8 @@ import {createAgentPeriodController} from './agent-period-view.mjs';
 import {FINANCIAL_AUTOMATION_CLIENT} from './financial-automation-client.mjs';
 import {FINANCIAL_AUTOMATION_MARKUP_CLIENT} from './financial-automation-view.mjs';
 export const CLIENT=String.raw`
+globalThis.mlsDtfLifecycleController=${createDtfLifecycleController.toString()};
+/* MLS_DTF_LIFECYCLE_END */
 globalThis.mlsDtfArtworkBackupCodec=${createDtfArtworkBackupCodec.toString()};
 globalThis.mlsDtfArtworkBackupController=${createDtfArtworkBackupController.toString()};
 /* MLS_DTF_ARTWORK_BACKUP_END */
@@ -882,6 +885,7 @@ let financialPeriodUnsubscribe=null;
 function startFinancialAutomation(){const control=globalThis.brazaFinancialAutomation;if(!control)return false;const ready=control.start({api,month:globalThis.brazaMonthDashboard?.getSnapshot?.()?.month});if(!financialPeriodUnsubscribe)financialPeriodUnsubscribe=globalThis.brazaMonthDashboard?.subscribe?.(snapshot=>control.observe?.(snapshot?.month))??null;if(document.documentElement.dataset.activePanel==='agent-finance')control.open?.();return ready;}
 function startBankReconciliation(){const control=globalThis.brazaBankReconciliation;if(!control){const status=el('bankReconciliationStatus');if(status)status.textContent='Não foi possível carregar banco e transferências. Recarregue a página para tentar novamente.';return false;}const ready=control.start({api,month:globalThis.brazaMonthDashboard?.getSnapshot?.()?.month});if(!bankPeriodUnsubscribe)bankPeriodUnsubscribe=globalThis.brazaMonthDashboard?.subscribe?.(snapshot=>control?.observe?.(snapshot?.month))??null;return ready;}
 function productionClientAvailability(){
+ const dtfHost=el('production');if(dtfHost&&!globalThis.brazaDtfWorkspace){const status=el('dtfStatus');if(status){status.textContent='Não foi possível carregar o montador DTF. Recarregue a página.';status.setAttribute('role','alert');}for(const control of dtfHost.querySelectorAll('button,input,select,textarea'))control.disabled=true;}
  const productionHost=el('missionProductionLedgerHost');
  if(productionHost&&!globalThis.brazaProductionWorkspace&&!el('productionClientUnavailable')){
   const warning=document.createElement('p');warning.id='productionClientUnavailable';warning.className='notice';warning.setAttribute('role','status');warning.textContent='Não foi possível carregar os recursos de Produção. Recarregue a página para tentar novamente.';
