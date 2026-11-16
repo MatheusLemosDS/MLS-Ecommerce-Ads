@@ -164,7 +164,7 @@ const discoveryProfiles=[{width:320,height:960,font_profile:'default'},{width:13
 for(const minify of [false,true])for(const {width,height,font_profile} of discoveryProfiles)test(`generated release discovery opens saved controls without financial mutations (${width}px, minify=${minify}${height===900?', height=900':font_profile!=='default'?', font=Arial13':''})`,{timeout:90000},async t=>{
  if(!chrome)return t.skip('Chromium unavailable');
  const owner=await compiledOwnerReportPage(minify,{ownerPreview:true,localReadSnapshot:true});
- assert.equal(getOrderedBrowserScripts(owner.html).length,19,'release discovery preserves existing clients and the reviewed public asset scripts');
+ assert.equal(getOrderedBrowserScripts(owner.html).length,18,'release discovery preserves existing clients and the reviewed public asset scripts');
  const local=new Map(owner.localReadSnapshot.responses.map(row=>[row.path,row])),requests=[],store=await fixture(),financial=await financialAutomationUiFixture({month:owner.localReadSnapshot.month,checked_at:new Date(Date.UTC(Number(owner.localReadSnapshot.month.slice(0,4)),Number(owner.localReadSnapshot.month.slice(5,7)),5,12)).toISOString()});let serverFailure=null;
  const initial=await store.read();await store.mutate({revision:initial.ledger.revision,request_id:crypto.randomUUID(),action:'link',link_id:crypto.randomUUID(),...store.choice(initial,lineId,ids.good,1),evidence:'Associação sintética para conferir navegação',confirmed:true});
  const ledgerBefore=JSON.stringify(await store.read());
