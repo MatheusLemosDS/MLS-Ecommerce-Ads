@@ -1,6 +1,6 @@
 {
   "schema": "mls.owner-first.execution-roadmap.v1",
-  "data_local": "2026-11-15",
+  "data_local": "2026-11-16",
   "data_utc": "2026-11-16",
   "timezone": "America/Sao_Paulo",
   "repositorio": "MatheusLemosDS/MLS-Ecommerce-Ads",
@@ -499,15 +499,22 @@
         "Troca de arte não altera lote reservado silenciosamente."
       ],
       "estado_desta_especificacao": "ESPECIFICADO_PARA_CODEX",
-      "codigo": "NAO_ALTERADO_NESTE_INCREMENTO",
-      "testes_novo_incremento": "NAO_EXECUTADOS_PARA_ACEITE_DESTA_TAREFA",
-      "publicacao_novo_incremento": "NAO_REALIZADA",
-      "aceite_operacional_novo_incremento": "NAO_REALIZADO",
-      "evidencias": [],
-      "bloqueios": [],
+      "codigo": "IMPLEMENTADO_BACKUP_ZIP_LOCAL_PNG_MANIFESTO_HASHES_E_RESTORE_ATOMICO",
+      "testes_novo_incremento": "CI43919859561_NO_HEAD98a5808_4452_NODE_67_PYTHON_PASS_SEM_SKIP_CANCEL",
+      "publicacao_novo_incremento": "APP_AUTH_PUBLICADOS_FINANCE_RETIDO_FONTE_CONFIG_ROTAS_CRON_EXATOS_HTTP_ASSETS_NAO_CONFERIDOS_POR_503_ENVOY",
+      "aceite_operacional_novo_incremento": "PENDENTE_ARTES_E_IMPRESSAO_REAIS_DO_PROPRIETARIO",
+      "evidencias": [
+        "validation/owner-dtf-artwork-backup.json",
+        "validation/publication-artwork-live-20261116.json"
+      ],
+      "bloqueios": [
+        "Leitura pública das7 URLs de assets e smoke completa: proxy do ambiente devolve503 com98 bytes Envoy remote connection failure. Mesma falha no GitHub CLI; não é prova de falha da aplicação. Não ampliar permissões nem alterar Live para contornar.",
+        "Ledger de publicação dos assets mantém geração aprovada anterior até leitura independente dos bytes; concluir esse gate antes de outra publicação de assets.",
+        "Aceite real requer backup privado e restauração das artes reais pelo proprietário."
+      ],
       "regra_especial": null,
       "codigo_da_especificacao": "RECONFERIR_REUTILIZAR_EXISTENTE_E_COMPLETAR_LACUNAS",
-      "estado_execucao": "ABERTO",
+      "estado_execucao": "PUBLICADO_FONTE_CONFIG_EXATAS_HTTP_ASSETS_BLOQUEADOS_TRANSPORTE_ACEITE_REAL_PENDENTE",
       "bloqueia_tarefas_independentes": false
     },
     {
@@ -5660,7 +5667,7 @@
     "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/docs/financial-automation/publication-live-20261113.json"
   ],
   "source_specification": "input/ROADMAP_EXECUTAVEL_USO_PROPRIO_MLS.json",
-  "updated_at": "2026-11-16T03:35:30.119737+00:00",
+  "updated_at": "2026-11-16T17:58:53.316351+00:00",
   "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
   "specification_initial_checkpoint_historical": {
     "fase_corrente": "U0",
@@ -5672,21 +5679,25 @@
     "aceites_reais_nesta_entrega": []
   },
   "operational_delivery": {
-    "branch": "feature/owner-operation-first-20261116",
-    "source_commit": "e168e9a04d7b6feaaf885bd645d9394533dadeee",
+    "branch": "feature/owner-dtf-artwork-backup-20261116",
+    "source_commit": "219dd974f23bf13bb58f45fc457eeb3d2876ca21",
     "base_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
-    "release_candidate": "2026-11-15.4",
+    "source_parent": "754d20fe3d60b93417eab7ea14a50cb228451c13",
+    "release_candidate": "2026-11-16.1",
     "current_track": "owner_operation",
     "sale_track": "ADIADO_VENDA",
-    "next_independent_task": "OP-013",
-    "receipt": "validation/owner-dtf-batches.json",
+    "next_independent_task": "OP-012",
+    "receipt": "validation/owner-dtf-artwork-backup.json",
     "code": true,
-    "tested_locally": "FULL_LOCAL_RUN_AND_TARGETED_REVALIDATIONS_PLUS_EXACT_CANDIDATE_GITHUB_CI4441_67_PASS",
+    "tested_locally": "EXACT_HEAD_CI4452_NODE_67_PYTHON_PASS_PLUS_DOCUMENTED_LOCAL_REVALIDATIONS",
     "published": true,
     "operationally_accepted": false,
-    "publication_source_commit": "0650874e08e1c6cce3023c8a8d2968c96b34177c",
-    "publication_receipt": "validation/publication-live-20261116.json",
-    "pull_request": 123
+    "previous_publication_receipt": "validation/publication-live-20261116.json",
+    "pull_request": 124,
+    "publication_source_commit": "98a58087f4435acb4e4c166047f5e1e3168c110d",
+    "publication_receipt": "validation/publication-artwork-live-20261116.json",
+    "public_verification": "BLOCKED_ENVIRONMENT_ENVOY_TRANSPORT",
+    "next_read_only_item": "Finish public smoke/assets and approve current asset ledger before another asset deployment; no need to rerun unchanged functional suites."
   },
   "latest_owner_constraints": {
     "production_friday_13_brasilia": true,

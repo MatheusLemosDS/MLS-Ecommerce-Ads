@@ -2,7 +2,7 @@
   "schema": "mls_commerce_os_checkpoint_v1",
   "canonical_roadmap": "docs/ROADMAP_MLS_COMMERCE_OS.md",
   "legacy_roadmap": "docs/ROADMAP_BRAZACOMMERCE.md",
-  "updated_at": "2026-11-16T03:35:30.119737+00:00",
+  "updated_at": "2026-11-16T17:58:53.316351+00:00",
   "product": {
     "name": "MLS Commerce OS",
     "supervisor": "MLS Hermes",
@@ -29,9 +29,9 @@
     "pr": 10,
     "merge_commit": "9c418fd3010f46957d1ce52345baacd76041c788"
   },
-  "current_phase": "OWNER_OPERATION_U2_DTF_BATCH_HISTORY",
-  "working_branch": "feature/owner-operation-first-20261116",
-  "current_status": "OWNER_OP011_PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY",
+  "current_phase": "OWNER_OPERATION_U2_DTF_ARTWORK_BACKUP",
+  "working_branch": "feature/owner-dtf-artwork-backup-20261116",
+  "current_status": "OP013_PUBLISHED_NATIVE_VERIFIED_PUBLIC_SMOKE_BLOCKED_BY_ENVIRONMENT_TRANSPORT",
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
     "Repasse-base, ajuste, repasse após ajuste e liberação exibidos sem dupla dedução",
@@ -120,11 +120,12 @@
     }
   },
   "next_actions": [
-    "OP011 published and verified technically from CI head0650874; PR123 remains draft. Actual owner DTF use/physical acceptance still pending; never equate publication with operational or financial acceptance.",
-    "Next independent OP013: preserve and restore DTF artwork pixels, hashes and associations in a clean browser profile; no cloud-storage purchase prerequisite.",
-    "OP005/OP006/OP007/OP008: backup/restore and sustainable storage/pagination before applicable migration; never delete history to open capacity.",
-    "Continue owner orders/production/cost/payment/return/financial tasks per docs/owner-operation/EXECUCAO.json; external missing source blocks only its dependent assertion.",
-    "SaaS signup for other customers, Resend commercial delivery, billing, marketing and legal onboarding remain ADIADO_VENDA; shared security/retention/recovery obligations remain active."
+    "Read-only: finish public HTTP and all7 asset SHA-256/length checks when environment egress works. Current failures are the exact98-byte Envoy reset body, also seen from GitHub CLI; do not treat as app503, grant denial or completed smoke.",
+    "Before another asset deployment, record the verified current publication using existing tool; prior approved asset ledger deliberately remains unchanged while public bytes cannot be read.",
+    "Independent implementation OP012: unprinted EXPORTED cancellation with reason/revision/audit and explicit acknowledgement that downloaded files cannot be revoked; partial production, remainder and reprint preserving physical facts.",
+    "Owner actual acceptance: privately save ZIP and restore in another browser of the same origin/account/store; verify actual art and print before deleting originals or marking produced.",
+    "OP005/006/007/008 remain applicable to database recovery/scale/migrations. No D1/artwork-schema migration or real manufacturing/finance acceptance in OP013; no missing value inferred as zero.",
+    "Sales-only work remains ADIADO_VENDA. Continue independent costs/payments/returns/banking tasks by technical dependency."
   ],
   "m0_followup": [
     "Conferir visual autenticado em desktop e celular durante M1; corrigir apenas branding/layout sem renomear infraestrutura"
@@ -133,30 +134,32 @@
     "Mission Control M1.1 (opção 3) integrado com 7 painéis independentes; conferir visual autenticado desktop/celular e retorno às telas antigas"
   ],
   "latest_increment": {
-    "task": "OP-011",
-    "source_commit": "e168e9a04d7b6feaaf885bd645d9394533dadeee",
-    "release_candidate": "2026-11-15.4",
+    "task": "OP-013",
+    "source_commit": "219dd974f23bf13bb58f45fc457eeb3d2876ca21",
+    "release_candidate": "2026-11-16.1",
     "implementation": true,
-    "local_validation": "COMPLETE_WITH_DOCUMENTED_TARGETED_REVALIDATIONS",
+    "local_validation": "FULL_RUN_AND_TARGETED_TEST_LITERAL_REVALIDATIONS",
     "published": true,
     "validated_operationally": false,
-    "receipt": "docs/owner-operation/validation/owner-dtf-batches.json",
+    "receipt": "docs/owner-operation/validation/owner-dtf-artwork-backup.json",
     "actual_financial_acceptance": false,
-    "status": "PUBLISHED_VERIFIED",
-    "verification_scope": "TECHNICAL_PUBLIC_ONLY",
-    "publication_source_commit": "0650874e08e1c6cce3023c8a8d2968c96b34177c",
-    "ci_run": 43795161304,
-    "node_tests_pass": 4441,
+    "previous_published_receipt": "docs/owner-operation/validation/publication-live-20261116.json",
+    "source_parent": "754d20fe3d60b93417eab7ea14a50cb228451c13",
+    "pull_request": 124,
+    "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE",
+    "status": "PUBLISHED_NATIVE_VERIFIED_PUBLIC_HTTP_ASSETS_BLOCKED",
+    "publication_source_commit": "98a58087f4435acb4e4c166047f5e1e3168c110d",
+    "ci_run": 43919859561,
+    "node_tests_pass": 4452,
     "python_tests_pass": 67,
-    "release_id": "2026-11-15.4",
-    "publication_receipt": "docs/owner-operation/validation/publication-live-20261116.json",
+    "release_id": "2026-11-16.1",
+    "publication_receipt": "docs/owner-operation/validation/publication-artwork-live-20261116.json",
     "workers": {
       "finance": "50b31451-c6cf-4456-bd09-be5d1956e0da",
-      "auth": "3b0f494a-40c6-4608-af3a-8b57d2bbf9e3",
-      "app": "18e1585b-e5fc-4b1f-b002-234d18ac7d43"
+      "auth": "5b08f876-68ce-4d6d-ba7a-5dbedadf2f16",
+      "app": "75da11bb-3bee-4396-918b-79bf5846cb04"
     },
-    "pull_request": 123,
-    "git_integration": "PR123_DRAFT_OPEN_NOT_MERGED"
+    "public_verification": "BLOCKED_ENVIRONMENT_ENVOY_TRANSPORT"
   },
   "incident": {
     "id": "INCIDENT_2026_10_27_PANEL_AGENT_REGRESSION",
@@ -7542,5 +7545,33 @@
       "audit",
       "applicable data retention"
     ]
-  }
+  },
+  "owner_increment_history": [
+    {
+      "task": "OP-011",
+      "source_commit": "e168e9a04d7b6feaaf885bd645d9394533dadeee",
+      "release_candidate": "2026-11-15.4",
+      "implementation": true,
+      "local_validation": "COMPLETE_WITH_DOCUMENTED_TARGETED_REVALIDATIONS",
+      "published": true,
+      "validated_operationally": false,
+      "receipt": "docs/owner-operation/validation/owner-dtf-batches.json",
+      "actual_financial_acceptance": false,
+      "status": "PUBLISHED_VERIFIED",
+      "verification_scope": "TECHNICAL_PUBLIC_ONLY",
+      "publication_source_commit": "0650874e08e1c6cce3023c8a8d2968c96b34177c",
+      "ci_run": 43795161304,
+      "node_tests_pass": 4441,
+      "python_tests_pass": 67,
+      "release_id": "2026-11-15.4",
+      "publication_receipt": "docs/owner-operation/validation/publication-live-20261116.json",
+      "workers": {
+        "finance": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+        "auth": "3b0f494a-40c6-4608-af3a-8b57d2bbf9e3",
+        "app": "18e1585b-e5fc-4b1f-b002-234d18ac7d43"
+      },
+      "pull_request": 123,
+      "git_integration": "PR123_DRAFT_OPEN_NOT_MERGED"
+    }
+  ]
 }

@@ -1,3 +1,4 @@
+import {createDtfArtworkBackupCodec,createDtfArtworkBackupController} from './dtf-artwork-backup.mjs';
 import {parseReport} from './admin-report.mjs';
 import {projectAdsMeasurement} from './ads-measurement.mjs';
 import {createAdminApiClient} from './admin-api-client.mjs';
@@ -7,6 +8,9 @@ import {createAgentPeriodController} from './agent-period-view.mjs';
 import {FINANCIAL_AUTOMATION_CLIENT} from './financial-automation-client.mjs';
 import {FINANCIAL_AUTOMATION_MARKUP_CLIENT} from './financial-automation-view.mjs';
 export const CLIENT=String.raw`
+globalThis.mlsDtfArtworkBackupCodec=${createDtfArtworkBackupCodec.toString()};
+globalThis.mlsDtfArtworkBackupController=${createDtfArtworkBackupController.toString()};
+/* MLS_DTF_ARTWORK_BACKUP_END */
 ${FINANCIAL_AUTOMATION_MARKUP_CLIENT}
 ${FINANCIAL_AUTOMATION_CLIENT}
 ${createAdminApiClient.toString()}

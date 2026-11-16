@@ -1,0 +1,423 @@
+{
+  "schema": "owner_dtf_artwork_backup_increment_v1",
+  "recorded_at": "2026-11-16T17:58:53.316351+00:00",
+  "source_commit": "219dd974f23bf13bb58f45fc457eeb3d2876ca21",
+  "source_parent": "754d20fe3d60b93417eab7ea14a50cb228451c13",
+  "base_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+  "branch": "feature/owner-dtf-artwork-backup-20261116",
+  "release": "2026-11-16.1",
+  "implementation": true,
+  "validation": {
+    "unit_and_controller": {
+      "pass": 7,
+      "file": "web/cloudflare/tests/dtf-artwork-backup.test.mjs"
+    },
+    "chromium": {
+      "pass": 4,
+      "file": "web/cloudflare/tests/dtf-artwork-backup-chrome.test.mjs",
+      "widths": [
+        320,
+        1365
+      ],
+      "minified_and_normal": true,
+      "two_separate_clean_profiles": true,
+      "real_png_decoding_hashes_and_reserved_batch_export": true,
+      "synthetic_storage_failure_blocks_restore": true,
+      "atomic_rollback": "SECOND_PNG_ADD_THROWS_AND_INDEXEDDB_COUNT_REMAINS_ZERO"
+    },
+    "full_node": {
+      "initial": {
+        "total": 4452,
+        "pass": 4449,
+        "fail": 3,
+        "cancelled": 0,
+        "skipped": 0,
+        "duration_ms": 823921.259561
+      },
+      "failure_scope": "Two prior-release literals plus one prior artwork-description literal in tests. All runtime artifacts remain identical to the implementation commit.",
+      "resolved_test_files": {
+        "web/cloudflare/tests/app-release.test.mjs": {
+          "pass": 4,
+          "fail": 0
+        },
+        "web/cloudflare/tests/mls-production-rework.test.mjs": {
+          "pass": 3,
+          "fail": 0
+        }
+      },
+      "current": "EXACT_HEAD_CI4452_PASS_NO_FAILURE_SKIP_CANCEL",
+      "no_assertion_removed_or_cancelled": true
+    },
+    "python": {
+      "pass": 67,
+      "fail": 0
+    },
+    "github_ci": {
+      "id": 43919859561,
+      "head_sha": "98a58087f4435acb4e4c166047f5e1e3168c110d",
+      "conclusion": "success",
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43919859561",
+      "node": {
+        "total": 4452,
+        "pass": 4452,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0
+      },
+      "python": {
+        "total": 67,
+        "pass": 67
+      },
+      "compiled_hashes": {
+        "app": "b57c5626fa320354ec0c3ad5d1dc4ba39b2326d2a1f51986e795f36edd16132b",
+        "auth": "309b5af88b3b2d99872dc987c11912e5ba85889b6dcfad4399f4c459becd6cc3",
+        "finance": "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4"
+      },
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Obter código",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Preparar Node",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Instalar versões fixadas",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Preparar renderização local de vídeo e voz PT-BR",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5
+        },
+        {
+          "name": "Preparar exemplos sintéticos para homologação local",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6
+        },
+        {
+          "name": "Executar suíte Node completa com concorrência limitada para Chrome",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7
+        },
+        {
+          "name": "Gerar comparação visual sem aprovação automática",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8
+        },
+        {
+          "name": "Guardar capturas sintéticas dos painéis",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9
+        },
+        {
+          "name": "Validar ponte financeira e atualização do Hermes",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10
+        },
+        {
+          "name": "Gerar os três Workers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11
+        },
+        {
+          "name": "Pré-release local e não destrutivo",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 12
+        },
+        {
+          "name": "Post Preparar Node",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 23
+        },
+        {
+          "name": "Post Obter código",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 24
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 25
+        }
+      ]
+    },
+    "deploy_metadata_tests": {
+      "pass": 34,
+      "fail": 0
+    },
+    "build": "ALL_THREE_EXPECTED_ARTIFACTS_EXACT",
+    "deploy_check": "APP_AUTH_FINANCE_CONFIG_VALIDATED",
+    "release_preflight": "LOCAL_PASS_SEVEN_MANUAL_GATES_PRESERVED",
+    "source_hashes": {
+      "app": "b57c5626fa320354ec0c3ad5d1dc4ba39b2326d2a1f51986e795f36edd16132b",
+      "auth": "309b5af88b3b2d99872dc987c11912e5ba85889b6dcfad4399f4c459becd6cc3",
+      "finance": "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4"
+    },
+    "dry_package": {
+      "auth": {
+        "raw_bytes": 654592,
+        "raw_sha256": "9ee5d41ae9db301c745e1bfa8d2ae369828426a7524c7c0f7ab1639459c63710",
+        "below_4MiB_existing_import_ceiling": true
+      },
+      "app": {
+        "raw_bytes": 4194261,
+        "raw_sha256": "9c865f155b5fdf972668950e22b3486d3ebab3efdfa10114a0676c8c419aeed3",
+        "below_4MiB_existing_import_ceiling": true
+      }
+    },
+    "preservation": {
+      "schema": "owner_artwork_document_and_preservation_checks_v1",
+      "pass": true,
+      "unchanged_financial_runtime_and_contracts": true,
+      "unchanged_server_dtf_mutations_and_schema": true,
+      "unchanged_auth_permissions_workflows_and_deployment_configs": true,
+      "unchanged_21_chart_contracts_and_six_agent_markup": true,
+      "all_36_task_specs_and_financial_sale_registers_preserved": true,
+      "historical_hashes_retained": true,
+      "prior_continuity_preserved": true,
+      "relative_links_checked": 174,
+      "changed_paths": [
+        "NEXT_CHAT_HANDOFF.txt",
+        "README.md",
+        "docs/MLS_CODEX_HANDOFF_2026_10_28.md",
+        "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
+        "docs/MLS_MASTER_MISSION_CHECKPOINT.json",
+        "docs/RETOMADA.md",
+        "docs/ROADMAP_MLS_COMMERCE_OS.md",
+        "docs/owner-operation/EXECUCAO.json",
+        "docs/owner-operation/README.md",
+        "docs/owner-operation/history/continuity-before-op013-20261116.json",
+        "docs/owner-operation/history/release-candidate-before-op013-20261116.json",
+        "docs/owner-operation/validation/owner-dtf-artwork-backup.json",
+        "tools/release-approved-candidate.json",
+        "tools/worker_project.mjs",
+        "web/cloudflare/build.py",
+        "web/cloudflare/src/admin-client.mjs",
+        "web/cloudflare/src/app-release-view.mjs",
+        "web/cloudflare/src/app-release.mjs",
+        "web/cloudflare/src/browser-assets-manifest.mjs",
+        "web/cloudflare/src/dtf-artwork-backup.mjs",
+        "web/cloudflare/src/dtf-view.mjs",
+        "web/cloudflare/tests/app-release.test.mjs",
+        "web/cloudflare/tests/dtf-artwork-backup-chrome.test.mjs",
+        "web/cloudflare/tests/dtf-artwork-backup.test.mjs",
+        "web/cloudflare/tests/mls-production-rework.test.mjs",
+        "web/cloudflare/tests/owner-dtf-batches-fixture.mjs"
+      ]
+    },
+    "automatic_build_read": {
+      "recorded_at": "2026-11-16T17:19:38.742660+00:00",
+      "read_only": true,
+      "requests": [
+        {
+          "role": "app",
+          "endpoint": "GET /accounts/{account_id}/builds/workers/{confirmed_worker_tag}",
+          "status": 403,
+          "codes": [
+            10000
+          ],
+          "configuration_known": false
+        },
+        {
+          "role": "app",
+          "endpoint": "GET /accounts/{account_id}/builds/workers/{confirmed_worker_tag}/triggers",
+          "status": 403,
+          "codes": [
+            10000
+          ],
+          "configuration_known": false
+        },
+        {
+          "role": "auth",
+          "endpoint": "GET /accounts/{account_id}/builds/workers/{confirmed_worker_tag}",
+          "status": 403,
+          "codes": [
+            10000
+          ],
+          "configuration_known": false
+        },
+        {
+          "role": "auth",
+          "endpoint": "GET /accounts/{account_id}/builds/workers/{confirmed_worker_tag}/triggers",
+          "status": 403,
+          "codes": [
+            10000
+          ],
+          "configuration_known": false
+        },
+        {
+          "role": "finance",
+          "endpoint": "GET /accounts/{account_id}/builds/workers/{confirmed_worker_tag}",
+          "status": 403,
+          "codes": [
+            10000
+          ],
+          "configuration_known": false
+        },
+        {
+          "role": "finance",
+          "endpoint": "GET /accounts/{account_id}/builds/workers/{confirmed_worker_tag}/triggers",
+          "status": 403,
+          "codes": [
+            10000
+          ],
+          "configuration_known": false
+        }
+      ],
+      "permission_expansion": false,
+      "inference_from_check_url": false
+    },
+    "post_automatic_checks_live_unchanged": {
+      "schema": "owner_artwork_controlled_stage_verification_v1",
+      "recorded_at": "2026-11-16T17:24:54.276370+00:00",
+      "updated_workers": [],
+      "workers": {
+        "finance": {
+          "active_version_id": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+          "latest_version_id": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+          "active_percentage": 100,
+          "retrieved_raw_sha256": "3e3f3d35a3e0037c251f7abda29cc8a64643ee255771d07f2893d32d8ef7d22a",
+          "raw_bytes": 934552,
+          "effective_config_sha256": "1e5de4eba866ec7c8ca85fc37c7969d61dc513a26336879e2753e506c6711ab2",
+          "action": "RETAINED",
+          "source_matches_expected": true
+        },
+        "auth": {
+          "active_version_id": "3b0f494a-40c6-4608-af3a-8b57d2bbf9e3",
+          "latest_version_id": "3b0f494a-40c6-4608-af3a-8b57d2bbf9e3",
+          "active_percentage": 100,
+          "retrieved_raw_sha256": "def3859b14e3829b205cc44981dcddb043f153ea5e4a9754d2df0cf94a42e994",
+          "raw_bytes": 654597,
+          "effective_config_sha256": "304c9c4615acdfc3a8222e00449e5bceabcf2dd9bd574587538183a935003361",
+          "action": "RETAINED",
+          "source_matches_expected": true
+        },
+        "app": {
+          "active_version_id": "18e1585b-e5fc-4b1f-b002-234d18ac7d43",
+          "latest_version_id": "18e1585b-e5fc-4b1f-b002-234d18ac7d43",
+          "active_percentage": 100,
+          "retrieved_raw_sha256": "eeeb61de8779de2bb1cecca38859f1b6af77227b7a160d93d13839aa0825b7e0",
+          "raw_bytes": 4192346,
+          "effective_config_sha256": "72c1ffdf88e61e4d2b1b7d78545c3d8d9a5b903cc32cf4ed83ee87d5c19a32b9",
+          "action": "RETAINED",
+          "source_matches_expected": true
+        }
+      },
+      "all_configs_preserved": true,
+      "owner_flags_preserved": true,
+      "all_source_bytes_exact": true,
+      "all_active_latest_100": true
+    },
+    "initial_ci": {
+      "id": 43917210623,
+      "head_sha": "af19c028a33bc4c809238394a5ce32ac3c2f8396",
+      "conclusion": "failure",
+      "compiled_hashes": [
+        "b57c5626fa320354ec0c3ad5d1dc4ba39b2326d2a1f51986e795f36edd16132b",
+        "309b5af88b3b2d99872dc987c11912e5ba85889b6dcfad4399f4c459becd6cc3",
+        "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4"
+      ],
+      "counts": {
+        "tests": 4452,
+        "pass": 4449,
+        "fail": 3
+      },
+      "failure_names": [
+        "the human release identifier is static, frozen and safe for an HTTP header",
+        "the release getter returns a closed serializable DTO without sharing mutable response state",
+        "DTF redesign separates five real steps while retaining queue, artwork, settings, preview and existing batches"
+      ],
+      "resolution": "TEST_EXPECTATIONS_UPDATED_AND_TARGETED_REVALIDATED; SUPERSEDED_BY_EXACT_HEAD_CI_43919859561"
+    }
+  },
+  "published": true,
+  "operational_acceptance": false,
+  "financial_acceptance": false,
+  "physical_acceptance": false,
+  "no_d1_migration": true,
+  "no_remote_artwork_storage": true,
+  "production_mutations_in_qa": false,
+  "previous_publication_receipt": "docs/owner-operation/validation/publication-live-20261116.json",
+  "baseline_native_read": "2026-11-16T17:02:20.173744+00:00",
+  "baseline_versions": {
+    "app": "18e1585b-e5fc-4b1f-b002-234d18ac7d43",
+    "auth": "3b0f494a-40c6-4608-af3a-8b57d2bbf9e3",
+    "finance": "50b31451-c6cf-4456-bd09-be5d1956e0da"
+  },
+  "next_independent_task": "OP-012",
+  "live_owner_session": "NOT_AVAILABLE",
+  "automatic_build_settings": "READ_ACCESS_NOT_AVAILABLE_EXISTING_CONTROLLED_PATH_AUTHORIZED",
+  "limits": {
+    "png_bytes": 33554432,
+    "pixel_bytes_total": 536870912,
+    "artworks": 5000
+  },
+  "preserved_contracts": [
+    "D1 batch manifests and reserved SHA-256",
+    "IndexedDB v1 store",
+    "RBAC/CSRF/authentication/tenant",
+    "six agent cards and operational charts",
+    "Friday 13:00 America/Sao_Paulo",
+    "no missing source as zero",
+    "no duplicate cost or revenue"
+  ],
+  "pull_request": 124,
+  "pull_request_url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/124",
+  "pull_request_base": "feature/owner-operation-first-20261116",
+  "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE",
+  "code_rollback_backup": {
+    "pass": true,
+    "workers": {
+      "app": {
+        "active_version_id": "18e1585b-e5fc-4b1f-b002-234d18ac7d43",
+        "raw_source_sha256": "eeeb61de8779de2bb1cecca38859f1b6af77227b7a160d93d13839aa0825b7e0",
+        "raw_bytes": 4192346,
+        "matches_publication_receipt": true
+      },
+      "auth": {
+        "active_version_id": "3b0f494a-40c6-4608-af3a-8b57d2bbf9e3",
+        "raw_source_sha256": "def3859b14e3829b205cc44981dcddb043f153ea5e4a9754d2df0cf94a42e994",
+        "raw_bytes": 654597,
+        "matches_publication_receipt": true
+      },
+      "finance": {
+        "active_version_id": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+        "raw_source_sha256": "3e3f3d35a3e0037c251f7abda29cc8a64643ee255771d07f2893d32d8ef7d22a",
+        "raw_bytes": 934552,
+        "matches_publication_receipt": true
+      }
+    },
+    "not_a_d1_or_artwork_backup": true,
+    "d1_or_actual_artwork_backup": false
+  },
+  "current_remote_tracking_note": "Initial origin/main was eab85a1 because its fetch refspec only tracks HEAD; explicit supported fetch updated only refs/remotes/origin/main to confirmed remote346f30f. No local/main or remote main was overwritten.",
+  "publication_receipt": "docs/owner-operation/validation/publication-artwork-live-20261116.json",
+  "publication_source_commit": "98a58087f4435acb4e4c166047f5e1e3168c110d",
+  "public_verification": "BLOCKED_ENVIRONMENT_ENVOY_TRANSPORT",
+  "publication_ledger_gate": "HOLD_PREVIOUS_APPROVED_LEDGER_UNTIL_ALL_PUBLIC_ASSET_BYTES_VERIFIED"
+}

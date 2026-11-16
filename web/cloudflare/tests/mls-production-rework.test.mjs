@@ -27,13 +27,15 @@ test('DTF redesign separates five real steps while retaining queue, artwork, set
  assert.equal((html.match(/class="dtf-flow-step"/g)||[]).length,5);
  for(const name of ['dtfPendingCount','dtfSelectedCount','dtfBatchCount','dtfStatus','dtfSearch',
   'dtfSync','dtfSelectReady','dtfClearSelection','dtfQueue','dtfPrevious','dtfNext',
-  'dtfArtFiles','dtfArtStatus','dtfArtList','dtfSettingsForm','dtfFilmWidth','dtfMaxLength',
+  'dtfArtFiles','dtfArtStatus','dtfArtList','dtfBackupDownload','dtfBackupFile','dtfBackupStatus','dtfBackupReview','dtfBackupSummary','dtfBackupConfirm','dtfBackupRestore','dtfBackupCancel','dtfSettingsForm','dtfFilmWidth','dtfMaxLength',
   'dtfGap','dtfMargin','dtfDpi','dtfRotate','dtfSaveSettings','dtfReloadSettings',
   'dtfPreviewButton','dtfPrepare','dtfPreview','dtfBatches','dtfDownloads']){
   assert.equal((html.match(new RegExp('id="'+name+'"','g'))||[]).length,1,name+' must exist once');
  }
  assert.match(html,/Conta \+ dispositivo/);
- assert.match(html,/os PNGs da biblioteca ficam neste navegador/);
+ assert.match(html,/PNGs ficam neste navegador/);
+ assert.match(html,/restaure o backup na mesma conta e loja/);
+ assert.match(html,/exceder interrompe o backup sem omitir arquivos/);
  assert.match(html,/Conf(erir|erência) antes da exportação/i);
  assert.match(html,/SEM PUBLICAÇÃO COMERCIAL/);
  assert.match(html,/Pedidos cancelados e peças já reservadas não podem ser incluídos novamente/);
