@@ -1,6 +1,6 @@
 {
   "schema": "mls.owner-first.execution-roadmap.v1",
-  "data_local": "2026-11-15",
+  "data_local": "2026-11-16",
   "data_utc": "2026-11-16",
   "timezone": "America/Sao_Paulo",
   "repositorio": "MatheusLemosDS/MLS-Ecommerce-Ads",
@@ -500,18 +500,21 @@
       ],
       "estado_desta_especificacao": "ESPECIFICADO_PARA_CODEX",
       "codigo": "IMPLEMENTADO_BACKUP_ZIP_LOCAL_PNG_MANIFESTO_HASHES_E_RESTORE_ATOMICO",
-      "testes_novo_incremento": "SUITE_LOCAL4452_COM3_EXPECTATIVAS_ANTIGAS_CORRIGIDAS_REVALIDACAO_DIRECIONADA_PASSOU_PYTHON67_BUILD_DEPLOY_OK_CI_PENDENTE",
-      "publicacao_novo_incremento": "NAO_REALIZADA",
-      "aceite_operacional_novo_incremento": "PENDENTE_ARTES_REAIS_DO_PROPRIETARIO",
+      "testes_novo_incremento": "CI43919859561_NO_HEAD98a5808_4452_NODE_67_PYTHON_PASS_SEM_SKIP_CANCEL",
+      "publicacao_novo_incremento": "APP_AUTH_PUBLICADOS_FINANCE_RETIDO_FONTE_CONFIG_ROTAS_CRON_EXATOS_HTTP_ASSETS_NAO_CONFERIDOS_POR_503_ENVOY",
+      "aceite_operacional_novo_incremento": "PENDENTE_ARTES_E_IMPRESSAO_REAIS_DO_PROPRIETARIO",
       "evidencias": [
-        "validation/owner-dtf-artwork-backup.json"
+        "validation/owner-dtf-artwork-backup.json",
+        "validation/publication-artwork-live-20261116.json"
       ],
       "bloqueios": [
-        "Aceite real depende de salvar e restaurar um backup das artes do proprietário. QA usa somente PNGs sintéticos."
+        "Leitura pública das7 URLs de assets e smoke completa: proxy do ambiente devolve503 com98 bytes Envoy remote connection failure. Mesma falha no GitHub CLI; não é prova de falha da aplicação. Não ampliar permissões nem alterar Live para contornar.",
+        "Ledger de publicação dos assets mantém geração aprovada anterior até leitura independente dos bytes; concluir esse gate antes de outra publicação de assets.",
+        "Aceite real requer backup privado e restauração das artes reais pelo proprietário."
       ],
       "regra_especial": null,
       "codigo_da_especificacao": "RECONFERIR_REUTILIZAR_EXISTENTE_E_COMPLETAR_LACUNAS",
-      "estado_execucao": "IMPLEMENTADO_VALIDACAO_LOCAL_REVALIDADA_CI_EXATA_PENDENTE",
+      "estado_execucao": "PUBLICADO_FONTE_CONFIG_EXATAS_HTTP_ASSETS_BLOQUEADOS_TRANSPORTE_ACEITE_REAL_PENDENTE",
       "bloqueia_tarefas_independentes": false
     },
     {
@@ -5664,7 +5667,7 @@
     "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/docs/financial-automation/publication-live-20261113.json"
   ],
   "source_specification": "input/ROADMAP_EXECUTAVEL_USO_PROPRIO_MLS.json",
-  "updated_at": "2026-11-16T17:34:31.074018+00:00",
+  "updated_at": "2026-11-16T17:58:53.316351+00:00",
   "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
   "specification_initial_checkpoint_historical": {
     "fase_corrente": "U0",
@@ -5686,11 +5689,15 @@
     "next_independent_task": "OP-012",
     "receipt": "validation/owner-dtf-artwork-backup.json",
     "code": true,
-    "tested_locally": "FULL_LOCAL_RUN_WITH_THREE_TEST_LITERAL_FIXES_TARGETED_REVALIDATED",
-    "published": false,
+    "tested_locally": "EXACT_HEAD_CI4452_NODE_67_PYTHON_PASS_PLUS_DOCUMENTED_LOCAL_REVALIDATIONS",
+    "published": true,
     "operationally_accepted": false,
     "previous_publication_receipt": "validation/publication-live-20261116.json",
-    "pull_request": 124
+    "pull_request": 124,
+    "publication_source_commit": "98a58087f4435acb4e4c166047f5e1e3168c110d",
+    "publication_receipt": "validation/publication-artwork-live-20261116.json",
+    "public_verification": "BLOCKED_ENVIRONMENT_ENVOY_TRANSPORT",
+    "next_read_only_item": "Finish public smoke/assets and approve current asset ledger before another asset deployment; no need to rerun unchanged functional suites."
   },
   "latest_owner_constraints": {
     "production_friday_13_brasilia": true,

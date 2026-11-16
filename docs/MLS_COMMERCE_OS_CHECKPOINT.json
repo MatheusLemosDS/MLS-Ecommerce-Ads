@@ -2,7 +2,7 @@
   "schema": "mls_commerce_os_checkpoint_v1",
   "canonical_roadmap": "docs/ROADMAP_MLS_COMMERCE_OS.md",
   "legacy_roadmap": "docs/ROADMAP_BRAZACOMMERCE.md",
-  "updated_at": "2026-11-16T17:34:31.074018+00:00",
+  "updated_at": "2026-11-16T17:58:53.316351+00:00",
   "product": {
     "name": "MLS Commerce OS",
     "supervisor": "MLS Hermes",
@@ -31,7 +31,7 @@
   },
   "current_phase": "OWNER_OPERATION_U2_DTF_ARTWORK_BACKUP",
   "working_branch": "feature/owner-dtf-artwork-backup-20261116",
-  "current_status": "OP013_LOCAL_GATES_REVALIDATED_EXACT_HEAD_CI_AND_PUBLICATION_PENDING",
+  "current_status": "OP013_PUBLISHED_NATIVE_VERIFIED_PUBLIC_SMOKE_BLOCKED_BY_ENVIRONMENT_TRANSPORT",
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
     "Repasse-base, ajuste, repasse após ajuste e liberação exibidos sem dupla dedução",
@@ -120,11 +120,12 @@
     }
   },
   "next_actions": [
-    "Complete exact-candidate full Node/Python/build/deploy validation and GitHub CI; then use the existing controlled publication path and verify App/Auth/Finance bytes/configuration/routes/assets.",
-    "OP013: actual owner must save the ZIP privately and verify restoration before deleting originals. Synthetic clean-profile QA does not prove backup of actual art.",
-    "Next independent OP012: lifecycle of exported batches, partial production and safe remainder; preserve existing idempotency, source review and explicit confirmations.",
-    "OP005/006/007/008 remain applicable to database backup/restore, scale and migrations; no D1 migration or artwork-schema change in OP013.",
-    "Continue financial source coverage without inferring missing values; sales-only work remains ADIADO_VENDA."
+    "Read-only: finish public HTTP and all7 asset SHA-256/length checks when environment egress works. Current failures are the exact98-byte Envoy reset body, also seen from GitHub CLI; do not treat as app503, grant denial or completed smoke.",
+    "Before another asset deployment, record the verified current publication using existing tool; prior approved asset ledger deliberately remains unchanged while public bytes cannot be read.",
+    "Independent implementation OP012: unprinted EXPORTED cancellation with reason/revision/audit and explicit acknowledgement that downloaded files cannot be revoked; partial production, remainder and reprint preserving physical facts.",
+    "Owner actual acceptance: privately save ZIP and restore in another browser of the same origin/account/store; verify actual art and print before deleting originals or marking produced.",
+    "OP005/006/007/008 remain applicable to database recovery/scale/migrations. No D1/artwork-schema migration or real manufacturing/finance acceptance in OP013; no missing value inferred as zero.",
+    "Sales-only work remains ADIADO_VENDA. Continue independent costs/payments/returns/banking tasks by technical dependency."
   ],
   "m0_followup": [
     "Conferir visual autenticado em desktop e celular durante M1; corrigir apenas branding/layout sem renomear infraestrutura"
@@ -137,15 +138,28 @@
     "source_commit": "219dd974f23bf13bb58f45fc457eeb3d2876ca21",
     "release_candidate": "2026-11-16.1",
     "implementation": true,
-    "local_validation": "FULL_LOCAL_RUN_WITH_THREE_TEST_LITERAL_FIXES_TARGETED_REVALIDATED",
-    "published": false,
+    "local_validation": "FULL_RUN_AND_TARGETED_TEST_LITERAL_REVALIDATIONS",
+    "published": true,
     "validated_operationally": false,
     "receipt": "docs/owner-operation/validation/owner-dtf-artwork-backup.json",
     "actual_financial_acceptance": false,
     "previous_published_receipt": "docs/owner-operation/validation/publication-live-20261116.json",
     "source_parent": "754d20fe3d60b93417eab7ea14a50cb228451c13",
     "pull_request": 124,
-    "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE"
+    "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE",
+    "status": "PUBLISHED_NATIVE_VERIFIED_PUBLIC_HTTP_ASSETS_BLOCKED",
+    "publication_source_commit": "98a58087f4435acb4e4c166047f5e1e3168c110d",
+    "ci_run": 43919859561,
+    "node_tests_pass": 4452,
+    "python_tests_pass": 67,
+    "release_id": "2026-11-16.1",
+    "publication_receipt": "docs/owner-operation/validation/publication-artwork-live-20261116.json",
+    "workers": {
+      "finance": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+      "auth": "5b08f876-68ce-4d6d-ba7a-5dbedadf2f16",
+      "app": "75da11bb-3bee-4396-918b-79bf5846cb04"
+    },
+    "public_verification": "BLOCKED_ENVIRONMENT_ENVOY_TRANSPORT"
   },
   "incident": {
     "id": "INCIDENT_2026_10_27_PANEL_AGENT_REGRESSION",

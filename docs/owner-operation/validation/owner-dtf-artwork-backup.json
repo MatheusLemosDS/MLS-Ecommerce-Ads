@@ -1,6 +1,6 @@
 {
   "schema": "owner_dtf_artwork_backup_increment_v1",
-  "recorded_at": "2026-11-16T17:34:31.074018+00:00",
+  "recorded_at": "2026-11-16T17:58:53.316351+00:00",
   "source_commit": "219dd974f23bf13bb58f45fc457eeb3d2876ca21",
   "source_parent": "754d20fe3d60b93417eab7ea14a50cb228451c13",
   "base_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
@@ -45,14 +45,127 @@
           "fail": 0
         }
       },
-      "current": "INITIAL_FAILURES_FIXED_AND_TARGETED_REVALIDATED_EXACT_HEAD_CI_PENDING",
+      "current": "EXACT_HEAD_CI4452_PASS_NO_FAILURE_SKIP_CANCEL",
       "no_assertion_removed_or_cancelled": true
     },
     "python": {
       "pass": 67,
       "fail": 0
     },
-    "github_ci": "PENDING",
+    "github_ci": {
+      "id": 43919859561,
+      "head_sha": "98a58087f4435acb4e4c166047f5e1e3168c110d",
+      "conclusion": "success",
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43919859561",
+      "node": {
+        "total": 4452,
+        "pass": 4452,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0
+      },
+      "python": {
+        "total": 67,
+        "pass": 67
+      },
+      "compiled_hashes": {
+        "app": "b57c5626fa320354ec0c3ad5d1dc4ba39b2326d2a1f51986e795f36edd16132b",
+        "auth": "309b5af88b3b2d99872dc987c11912e5ba85889b6dcfad4399f4c459becd6cc3",
+        "finance": "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4"
+      },
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Obter código",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Preparar Node",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Instalar versões fixadas",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Preparar renderização local de vídeo e voz PT-BR",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5
+        },
+        {
+          "name": "Preparar exemplos sintéticos para homologação local",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6
+        },
+        {
+          "name": "Executar suíte Node completa com concorrência limitada para Chrome",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7
+        },
+        {
+          "name": "Gerar comparação visual sem aprovação automática",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8
+        },
+        {
+          "name": "Guardar capturas sintéticas dos painéis",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9
+        },
+        {
+          "name": "Validar ponte financeira e atualização do Hermes",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10
+        },
+        {
+          "name": "Gerar os três Workers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11
+        },
+        {
+          "name": "Pré-release local e não destrutivo",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 12
+        },
+        {
+          "name": "Post Preparar Node",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 23
+        },
+        {
+          "name": "Post Obter código",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 24
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 25
+        }
+      ]
+    },
     "deploy_metadata_tests": {
       "pass": 34,
       "fail": 0
@@ -87,9 +200,10 @@
       "all_36_task_specs_and_financial_sale_registers_preserved": true,
       "historical_hashes_retained": true,
       "prior_continuity_preserved": true,
-      "relative_links_checked": 140,
+      "relative_links_checked": 174,
       "changed_paths": [
         "NEXT_CHAT_HANDOFF.txt",
+        "README.md",
         "docs/MLS_CODEX_HANDOFF_2026_10_28.md",
         "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
         "docs/MLS_MASTER_MISSION_CHECKPOINT.json",
@@ -218,9 +332,30 @@
       "owner_flags_preserved": true,
       "all_source_bytes_exact": true,
       "all_active_latest_100": true
+    },
+    "initial_ci": {
+      "id": 43917210623,
+      "head_sha": "af19c028a33bc4c809238394a5ce32ac3c2f8396",
+      "conclusion": "failure",
+      "compiled_hashes": [
+        "b57c5626fa320354ec0c3ad5d1dc4ba39b2326d2a1f51986e795f36edd16132b",
+        "309b5af88b3b2d99872dc987c11912e5ba85889b6dcfad4399f4c459becd6cc3",
+        "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4"
+      ],
+      "counts": {
+        "tests": 4452,
+        "pass": 4449,
+        "fail": 3
+      },
+      "failure_names": [
+        "the human release identifier is static, frozen and safe for an HTTP header",
+        "the release getter returns a closed serializable DTO without sharing mutable response state",
+        "DTF redesign separates five real steps while retaining queue, artwork, settings, preview and existing batches"
+      ],
+      "resolution": "TEST_EXPECTATIONS_UPDATED_AND_TARGETED_REVALIDATED; SUPERSEDED_BY_EXACT_HEAD_CI_43919859561"
     }
   },
-  "published": false,
+  "published": true,
   "operational_acceptance": false,
   "financial_acceptance": false,
   "physical_acceptance": false,
@@ -280,5 +415,9 @@
     "not_a_d1_or_artwork_backup": true,
     "d1_or_actual_artwork_backup": false
   },
-  "current_remote_tracking_note": "Initial origin/main was eab85a1 because its fetch refspec only tracks HEAD; explicit supported fetch updated only refs/remotes/origin/main to confirmed remote346f30f. No local/main or remote main was overwritten."
+  "current_remote_tracking_note": "Initial origin/main was eab85a1 because its fetch refspec only tracks HEAD; explicit supported fetch updated only refs/remotes/origin/main to confirmed remote346f30f. No local/main or remote main was overwritten.",
+  "publication_receipt": "docs/owner-operation/validation/publication-artwork-live-20261116.json",
+  "publication_source_commit": "98a58087f4435acb4e4c166047f5e1e3168c110d",
+  "public_verification": "BLOCKED_ENVIRONMENT_ENVOY_TRANSPORT",
+  "publication_ledger_gate": "HOLD_PREVIOUS_APPROVED_LEDGER_UNTIL_ALL_PUBLIC_ASSET_BYTES_VERIFIED"
 }

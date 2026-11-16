@@ -1,9 +1,11 @@
 <!-- OWNER_OPERATION_CURRENT -->
-Prioridade vigente: operação própria. [Matriz](owner-operation/EXECUCAO.json), [uso e status](owner-operation/README.md) e [checkpoint canônico](MLS_COMMERCE_OS_CHECKPOINT.json).
+Prioridade: operação própria. [Uso e estado](owner-operation/README.md), [matriz](owner-operation/EXECUCAO.json), [checkpoint canônico](MLS_COMMERCE_OS_CHECKPOINT.json).
 
-OP013 preparado em `feature/owner-dtf-artwork-backup-20261116`, código `219dd97`: ZIP local com PNGs originais, manifesto, chaves e hashes; prévia e confirmação para restaurar sem sobrescrever artes diferentes. Testes direcionados e Chromium autenticado normal/minificado em320/1365 passaram. Validação local4452 executada; três expectativas antigas de testes corrigidas e revalidadas. Python67/build/configuração/preflight passaram; CI exata e publicação pendentes. PR124 rascunho sobre PR123, sem merge/auto-merge. Live continua na2026-11-15.4, recibo OP011 preservado. Base main346f30f/PR121 reconfirmada; pai754d20f/PR123 rascunho preservado.
+OP013 publicado:2026-11-16.1, ZIP privado das artes com PNGs/manifesto/hashes e restauração confirmada sem sobrescrever imagens diferentes. Fonte98a5808, CI43919859561 aprovada:4452 Node/67 Python, zero falhas/skips/cancelamentos. App/Auth novos; Finance retido. Bytes/configuração/tráfego100%/domínios/cron conferidos nativamente. [Recibo](owner-operation/validation/publication-artwork-live-20261116.json).
 
-Aceite com artes/pedidos físicos/valores reais continua separado. Próximo independente após os gates: OP012, ciclo do lote e produção parcial. Venda fica ADIADO_VENDA; autenticação, permissões, isolamento, backups, auditoria, sexta13h/Brasília e não duplicar custos/receitas continuam ativos. [Histórico do registro anterior](owner-operation/history/continuity-before-op013-20261116.json). M2/M2.2 e coleta bancária automática não encerrados.
+Pendência concreta: smoke HTTP e7 assets públicos devolvem503/98 bytes Envoy no proxy do ambiente, também visto no GitHub CLI. Não inferir falha da aplicação nem concluir a conferência pública. Ledger de assets anterior preservado até ler/verificar todos os bytes; resolver antes de outra publicação. PR124 rascunho sobre PR123, sem merge/auto-merge; main346f30f/PR121 e pai754d20f preservados. Aceite real das artes/impressão e M2/M2.2 não encerrados.
+
+Próxima leitura: completar HTTP/assets e registrar a publicação aprovada. Próxima implementação independente: OP012, ciclo do lote/cancelamento não impresso/produção parcial com confirmação e auditoria. Venda ADIADO_VENDA; segurança, sexta13h/Brasília e não duplicar custos/receitas continuam ativos. [Histórico](owner-operation/history/continuity-before-op013-20261116.json).
 <!-- END_OWNER_OPERATION_CURRENT -->
 
 FINANCIAL_AUTOMATION_20261113 — PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY — release 2026-11-13.3
