@@ -88,7 +88,7 @@ import {BRAZA_THEME_HEAD,BRAZA_THEME_CSS} from './theme.mjs';
 import {readOwnerSession,handleWorkspaceAuth} from './unified-auth.mjs';
 import {costRuleSchemaForEnvironment,readCostRules,saveCostRules,assignCostRules,readCostRuleReference,syncCostRuleCatalog,costRuleSnapshotQueries,costRuleReferenceFromSnapshot,mergeCatalogCostReference,CostRuleError} from './cost-rules.mjs';
 import {COST_RULE_CSS,costRulesBody,COST_RULE_CLIENT} from './cost-rules-view.mjs';
-import {PRODUCTION_DTF_SCHEMA,ProductionDtfError,readProductionDtf,saveProductionDtfSettings,syncProductionDtf,prepareProductionDtfBatch,actProductionDtfBatch} from './production-dtf-store.mjs';
+import {PRODUCTION_DTF_SCHEMA,ProductionDtfError,readProductionDtf,readProductionDtfBatches,readProductionDtfBatch,saveProductionDtfSettings,syncProductionDtf,prepareProductionDtfBatch,actProductionDtfBatch} from './production-dtf-store.mjs';
 import {DTF_CSS,dtfBody,DTF_CLIENT} from './dtf-view.mjs';
 import {DTF_ENGINE_CLIENT} from './dtf-layout.mjs';
 import {HERMES_FINANCIAL_CONTEXT_SCHEMA,HermesFinancialContextError,prepareHermesFinancialContext,readHermesFinancialContext} from './hermes-financial-context.mjs';
@@ -714,6 +714,12 @@ async function adminFetchLegacy(request,env,services={}){const url=new URL(reque
   const body=await input(request,131072);assert(Object.keys(body).length===1&&Object.hasOwn(body,'item_ids'),'CATALOG_CLASSIFICATION_REQUEST_INVALID');
   const state=await enqueueCatalogClassifications(env,body.item_ids);
   return json(await catalogStateForOwner(env,state));
+ }
+ if(path==='/api/admin/production/batches'&&request.method==='GET'){
+  const keys=[...url.searchParams.keys()];assert(new Set(keys).size===keys.length&&keys.every(k=>['status','search','cursor'].includes(k)),'DTF_BATCH_PAGE_INVALID');return json(await readProductionDtfBatches(env,Object.fromEntries(url.searchParams)));
+ }
+ if(path==='/api/admin/production/batch'){
+  assert(request.method==='GET','METHOD_NOT_ALLOWED',405);assert([...url.searchParams.keys()].join(',')==='id','DTF_BATCH_ID_INVALID');return json(await readProductionDtfBatch(env,url.searchParams.get('id')));
  }
  if(path==='/api/admin/production'||path.startsWith('/api/admin/production/')){
   assert(!url.search,'PRODUCTION_REQUEST_INVALID');

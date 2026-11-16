@@ -13,7 +13,7 @@ const entries=[
  // affiliate contribution and imported sales/ad performance are retained in it.
  ['ai-sales/workspace','GET','catalog.read','finance.read','costs.read','ads.read'],['ai-sales/workspace','POST','catalog.write','finance.read','costs.read','ads.read'],
  ['order-operations','GET','orders.read'],['order-operations','POST','orders.write'],
- ['production','GET','dtf.read'],
+ ['production','GET','dtf.read'],['production/batches','GET','dtf.read'],['production/batch','GET','dtf.read'],
  ['production/settings','POST','dtf.write'],['production/sync','POST','dtf.write'],['production/batches','POST','dtf.write'],['production/batches/action','POST','dtf.write'],
  ['production/coverage','GET','production.read','costs.read'],['production/coverage','POST','production.write','costs.read'],
  ['production/weekly-closing','GET','production.read','costs.read'],['production/weekly-closing','POST','production.write','costs.read'],
