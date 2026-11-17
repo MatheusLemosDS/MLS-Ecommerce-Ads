@@ -4,6 +4,16 @@ A trilha ativa é **owner_operation**. Cadastro de outros clientes, e-mail comer
 
 [Checkpoint canônico](../MLS_COMMERCE_OS_CHECKPOINT.json) · [36 tarefas e dependências técnicas](EXECUCAO.json) · [21 contratos visuais e famílias preservadas](CATALOGO_GRAFICOS.json) · [inspeção atual](validation/reconciliation.json) · [validação do incremento](validation/owner-dtf-batches.json).
 
+## Catálogo 17.3 — correção preparada, gates pendentes
+
+[Contrato e validação da candidata](../system-audit/catalog-empty-20261117.json) · [Live nativa 17.2 preservada](../system-audit/publication-monthly-continuation-live.json). A 17.3 ainda não foi publicada; a conferência pública completa da 17.2 continua pendente de transporte.
+
+O erro real do primeiro offset BANNED foi identificado como `FINANCE_PRODUCT_INDEX_RESPONSE_EMPTY_ITEM_MISSING`. A compatibilidade preparada exige total próprio explícito +0, indicador próprio de página final falso, item omitido, offset inicial 0 e cursor terminal validado separadamente. Item nulo ou ausência genérica não vira sucesso; filtros, projectors, retenção, identidade, permissões, CAS e backoff são preservados.
+
+Os 104 testes direcionados reaproveitados são compatíveis com a implementação isolada na base 17.2; não substituem os novos gates completos da release 17.3 e de seu SHA remoto real. Depois da publicação validada, acompanhe a atualização local normal do catálogo respeitando cooldown e permissões. Nenhuma requisição forçada, reset, escrita comercial ou aceite real foi produzido por esta preparação.
+
+Catálogo operacional, avanço das páginas históricas, cobertura financeira e aceite owner continuam pendentes. OP-013 mantém o aceite das artes reais; demais tarefas independentes seguem seus gates.
+
 ## Continuação mensal 17.2 — nativa publicada, HTTP/assets pendentes
 
 Diagnóstico real do catálogo observado: `FINANCE_PRODUCT_INDEX_RESPONSE_EMPTY_ITEM_MISSING`, na tentativa de 21:44:48 UTC. A compatibilidade estrita está em revisão isolada para 17.3, ainda sem integração ou publicação; o catálogo permanece não resolvido.

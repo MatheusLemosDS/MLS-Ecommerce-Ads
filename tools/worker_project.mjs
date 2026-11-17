@@ -6,6 +6,7 @@ export const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.
 export const TARGETS = Object.freeze({
   app: Object.freeze({name: 'brazacommerce-app', main: '../../dist/app-worker.mjs', baselineHashes: [
     // Exact bounded monthly continuation candidate; all source/configuration/CI gates remain required.
+    'b0aa9cc1009d9d7ea276d406d0d87ecb90feda73ae3db77fe85ff64173e456e4',
     '10c324f14d0203f1453d36ec60b3d11d0250d40c446b0bc81c5578332ddac0f1',
     // Exact closed catalog-response diagnostic module; strict source/CI/publication gates retained.
     'db0c20e75d6237de140cbacd3e256104336cc348e1af93cf6ce192b7e81d4239',
@@ -282,6 +283,7 @@ export const TARGETS = Object.freeze({
   ]}),
   auth: Object.freeze({name: 'brazacommerce-auth', main: '../../dist/auth-worker.mjs', baselineHashes: [
     // Exact bounded monthly continuation candidate; all source/configuration/CI gates remain required.
+    'e3b7aecfeda1109fbe98d9fa6f8ee1ab55dcc5a70ae32fc4a5bc70c48b286a5c',
     '002bc90da88de19b968eda850dd668b4811c04506d2be9811f08140828eda6c4',
     // Exact closed catalog-response diagnostic module; strict source/CI/publication gates retained.
     'e48e0dee32ee2d68c1523a716cd752e1df189f59d54e5f16c7899e45ae08b8a0',
@@ -370,6 +372,7 @@ export const TARGETS = Object.freeze({
   ]}),
   finance: Object.freeze({name: 'brazacommerce-finance', main: '../../dist/finance-worker.mjs', baselineHashes: [
     // Exact closed catalog-response diagnostic module; strict source/CI/publication gates retained.
+    'f6c8a5daa307cdecb60c0c722c89aa2de02d3afe12940f315973446070561f33',
     '522cd735b73157eee92f1859d87959f5e66a7b8070afb4b2c26cb92006a44bf0',
     // Exact reviewed stability module, emitted without rebundling; all CI/Live gates remain mandatory.
     '9b21fdf180e37a0bd0f4bb13929bafdcdad158c8de0ba0c66acd0f437bf6d83e',

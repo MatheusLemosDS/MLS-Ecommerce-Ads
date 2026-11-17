@@ -1,13 +1,13 @@
 {
   "schema": "mls_release_candidate_v1",
   "base_commit": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
-  "prepared_source_commit": "c7bd3215edef97f8fc5109024aca65ab0b9f8b37",
+  "prepared_source_commit": "21eae88262e9e5872e1c2ad40fede2d5d7561de0",
   "owner_authorization": "OWNER_REQUESTED_OWN_OPERATION_FIRST_LIVE_2026_11_16",
   "commercial_writes_allowed": false,
   "expected_hashes": {
-    "app": "10c324f14d0203f1453d36ec60b3d11d0250d40c446b0bc81c5578332ddac0f1",
-    "auth": "002bc90da88de19b968eda850dd668b4811c04506d2be9811f08140828eda6c4",
-    "finance": "522cd735b73157eee92f1859d87959f5e66a7b8070afb4b2c26cb92006a44bf0"
+    "app": "b0aa9cc1009d9d7ea276d406d0d87ecb90feda73ae3db77fe85ff64173e456e4",
+    "auth": "e3b7aecfeda1109fbe98d9fa6f8ee1ab55dcc5a70ae32fc4a5bc70c48b286a5c",
+    "finance": "f6c8a5daa307cdecb60c0c722c89aa2de02d3afe12940f315973446070561f33"
   },
   "expected_live_flags": {
     "MLS_V36_OWNER_PREVIEW": "ENABLED",
@@ -323,10 +323,13 @@
     "web/finance/tests/monthly-source-throughput-fixture.mjs",
     "web/finance/tests/monthly-source-throughput.test.mjs",
     "web/finance/tests/product-index.test.mjs",
-    "workers/app/browser-assets-published.json"
+    "workers/app/browser-assets-published.json",
+    "docs/system-audit/history/release-candidate-before-catalog-empty.json",
+    "docs/system-audit/catalog-empty-20261117.json",
+    "docs/system-audit/publication-catalog-empty-live.json"
   ],
   "previous_candidate_manifest": "docs/owner-operation/history/release-candidate-before-owner-first.json",
-  "candidate_scope": "BOUNDED_MONTHLY_CONTINUATION_ACTIVE_COHORT_CAS_FAIR_BOOTSTRAP_NO_NEW_DDL_RETENTION_MATH_PERMISSIONS",
+  "candidate_scope": "CATALOG_EXPLICIT_OWN_ZERO_FINAL_OMITTED_FIRST_PAGE_ONLY_STRICT_CURSOR_NULL_IDENTITY_GUARDS_NO_SCHEMA_MATH_PERMISSION_CHANGE",
   "production_approved": false,
-  "previous_manifest": "docs/system-audit/history/release-candidate-before-monthly-continuation.json"
+  "previous_manifest": "docs/system-audit/history/release-candidate-before-catalog-empty.json"
 }

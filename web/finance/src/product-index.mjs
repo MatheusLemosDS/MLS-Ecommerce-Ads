@@ -36,15 +36,18 @@ async function runFinanceProductIndex(env,options={}){
   for(const row of [payload,plain(payload.response)?payload.response:{}])for(const field of ['partner_id','shop_id'])if(Object.hasOwn(row,field)&&row[field]!==profile[field])throw failure('IDENTITY_MISMATCH');
   if(payload.error!=='')throw failure(payload.error==='error_token'?'AUTH_REQUIRED':payload.error==='error_api_permission'?'PERMISSION_REQUIRED':['error_rate_limit','error_limit'].includes(payload.error)?'RATE_LIMIT':'API_ERROR',['error_rate_limit','error_limit'].includes(payload.error)?429:502);
   const raw=payload.response;if(!plain(raw))throw failure('RESPONSE_OBJECT');
-  // Missing/null items remain errors. These two codes record only explicit
-  // zero-total, final-page shapes; they never normalize absence into success.
+  // Only an omitted first-page list may use an explicit zero/final-page
+  // declaration. Missing metadata, null lists and continuation never imply zero.
   const emptyShape=Object.hasOwn(raw,'total_count')&&raw.total_count===0&&!Object.is(raw.total_count,-0)&&Object.hasOwn(raw,'has_next_page')&&raw.has_next_page===false;
-  if(!Array.isArray(raw.item))throw failure(emptyShape&&!Object.hasOwn(raw,'item')?'RESPONSE_EMPTY_ITEM_MISSING':emptyShape&&raw.item===null?'RESPONSE_EMPTY_ITEM_NULL':'RESPONSE_ITEM_TYPE');
-  if(raw.item.length>input.page_size)throw failure('RESPONSE_PAGE_SIZE');
-  if(!Number.isSafeInteger(raw.total_count)||Object.is(raw.total_count,-0)||raw.total_count<0||raw.total_count>1000000||raw.item.length>raw.total_count)throw failure('RESPONSE_TOTAL');
+  const omittedZero=emptyShape&&!Object.hasOwn(raw,'item');
+  if(omittedZero&&Object.hasOwn(raw,'next_offset')&&raw.next_offset!==null&&(raw.next_offset!==0||Object.is(raw.next_offset,-0)))throw failure('RESPONSE_PAGINATION');
+  const page=omittedZero&&input.offset===0?[]:raw.item;
+  if(!Array.isArray(page))throw failure(emptyShape&&!Object.hasOwn(raw,'item')?'RESPONSE_EMPTY_ITEM_MISSING':emptyShape&&raw.item===null?'RESPONSE_EMPTY_ITEM_NULL':'RESPONSE_ITEM_TYPE');
+  if(page.length>input.page_size)throw failure('RESPONSE_PAGE_SIZE');
+  if(!Number.isSafeInteger(raw.total_count)||Object.is(raw.total_count,-0)||raw.total_count<0||raw.total_count>1000000||page.length>raw.total_count)throw failure('RESPONSE_TOTAL');
   if(typeof raw.has_next_page!=='boolean'||Object.hasOwn(raw,'next_offset')&&raw.next_offset!==null&&(!Number.isSafeInteger(raw.next_offset)||raw.next_offset<0||raw.next_offset>1000000))throw failure('RESPONSE_PAGINATION');
-  if(raw.has_next_page&&(raw.item.length===0||!Number.isSafeInteger(raw.next_offset)||Object.is(raw.next_offset,-0)||raw.next_offset<=input.offset||raw.next_offset>Math.min(1000000,input.offset+input.page_size)))throw failure('RESPONSE_PAGINATION');
-  const seen=new Set(),items=raw.item.map(row=>{
+  if(raw.has_next_page&&(page.length===0||!Number.isSafeInteger(raw.next_offset)||Object.is(raw.next_offset,-0)||raw.next_offset<=input.offset||raw.next_offset>Math.min(1000000,input.offset+input.page_size)))throw failure('RESPONSE_PAGINATION');
+  const seen=new Set(),items=page.map(row=>{
    if(!plain(row))throw failure('RESPONSE_ROW_OBJECT');const item_id=typeof row.item_id==='number'&&Number.isSafeInteger(row.item_id)?String(row.item_id):row.item_id;
    if(typeof item_id!=='string'||!/^[1-9][0-9]{0,19}$/.test(item_id))throw failure('RESPONSE_ROW_ID');
    if(seen.has(item_id))throw failure('RESPONSE_ROW_DUPLICATE');seen.add(item_id);

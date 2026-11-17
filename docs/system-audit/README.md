@@ -1,5 +1,15 @@
 # Varredura de estabilidade — operação própria
 
+## Catálogo 17.3 — candidata com compatibilidade estrita
+
+[Validação/contrato](catalog-empty-20261117.json). O diagnóstico real `FINANCE_PRODUCT_INDEX_RESPONSE_EMPTY_ITEM_MISSING` foi observado na 17.2. A candidata implementa somente a página inicial declarada vazia por metadados explícitos e cursor terminal validado; item nulo/ausente sem prova, continuação ou cursor inválido continuam erro. Não enfraquece projectors, identidade, status BANNED, backoff, CAS, permissões ou contratos financeiros.
+
+104 testes direcionados da implementação isolada foram reaproveitados em escopo compatível. A release 17.3, sua árvore final local e o SHA remoto da CI ainda exigem os gates completos; SHAs diferentes só podem reutilizar a execução mediante prova da mesma árvore, sem alegar identidade de SHA. Nenhuma publicação ou aceite operacional 17.3 é declarado.
+
+A Live nativa permanece 17.2, com gate HTTP/assets pendente de transporte, e a última conferência pública completa permanece 17.1. [Recibo 17.2](publication-monthly-continuation-live.json) preservado integralmente; completar seu gate público antes de outro deploy. A recuperação histórica real não comprova avanço de páginas ou cobertura financeira.
+
+## Histórico integral da 17.2 e publicações anteriores
+
 ## Continuação mensal 17.2 — fonte/configuração verificadas, público pendente
 
 Diagnóstico real do catálogo observado: `FINANCE_PRODUCT_INDEX_RESPONSE_EMPTY_ITEM_MISSING`, na tentativa de 21:44:48 UTC. A compatibilidade estrita está em revisão isolada para 17.3, ainda sem integração ou publicação; o catálogo permanece não resolvido.

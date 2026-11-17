@@ -1,0 +1,538 @@
+{
+  "schema": "catalog_explicit_zero_omitted_first_page_candidate_v1",
+  "status": "IMPLEMENTED_COMPATIBLE_TARGETED_REUSED_FULL_EXACT_CANDIDATE_GATES_PENDING",
+  "recorded_at": "2026-11-17T21:55:46.487594+00:00",
+  "release_candidate": "2026-11-17.3",
+  "implemented": true,
+  "published": false,
+  "native_verified": false,
+  "public_smoke_complete": false,
+  "operationally_accepted": false,
+  "actual_catalog_problem_resolved": false,
+  "actual_financial_acceptance": false,
+  "actual_monthly_recovery_validated_on_prior17_2": true,
+  "source_page_progress": false,
+  "base_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+  "branch": "fix/system-stability-20261116",
+  "pull_request": 128,
+  "pull_request_base": "fix/owner-shirt-cost-editing-20261116",
+  "source_reconciliation": {
+    "prepared_source_commit": "21eae88262e9e5872e1c2ad40fede2d5d7561de0",
+    "prepared_source_tree": "ca1e54184766feb06b899f8d8e54b41d19ca7c65",
+    "local_head_at_document_preparation": "a4993a3fb7e4832c1536b004a7eb097b2ecbca83",
+    "local_implementation_commit": "25ef620f58a39a132250ca746a2808d2d19b19bd",
+    "remote_candidate_commit": null,
+    "local_full_validation_commit": null,
+    "local_full_validation_tree": null,
+    "remote_ci_validation_commit": null,
+    "local_and_remote_sha_same": false,
+    "tree_equivalence_for_future_full_validation": "REQUIRED_NOT_YET_RECORDED; SAME_TREE_IS_NOT_SAME_SHA",
+    "previous_documentary_reconciliation": {
+      "local_docs_commit": "f7fb319745b8f7acd03356902fb0aa91407aac5e",
+      "local_archive_branch": "archive/monthly-docs-native-before-17-3-20261117",
+      "remote_docs_commit": "81e3ed0f5563a3921da868f3d4a6dba391ed467e",
+      "same_full_tree": "357c4f23f5c5314c1a5a4d30a888810906e8acef",
+      "same_sha": false,
+      "remote_tree_proof_origin": "ROOT_CONFIRMED_GITHUB_GITDATA_RESULT",
+      "native_fetch_status": "503_NATIVE_FETCH_HTTP2_AND_HTTP1_1; API_METADATA_FOUR_CANONICAL_FORMS_DID_NOT_MATCH; NO_OBJECT_IMPORTED; LOCAL_COMMIT_PRESERVED; MAIN_UNTOUCHED"
+    }
+  },
+  "prepared_source_commit": "21eae88262e9e5872e1c2ad40fede2d5d7561de0",
+  "local_implementation_commit": "25ef620f58a39a132250ca746a2808d2d19b19bd",
+  "compatible_targeted_evidence": {
+    "historical_original_candidate_commit": "1a7f0f1cf9bbe826ab42af158fc287c8ce7b7e1f",
+    "historical_original_candidate_base": "48fcad7df9a10f3adf227f93bb28af96363cde20",
+    "ported_candidate_reference": "28394c8a6a6012d161a886dadbd8b4503caa1f2a",
+    "root_local_port_commit": "25ef620f58a39a132250ca746a2808d2d19b19bd",
+    "compatible_tests_pass": 104,
+    "source_tests": 38,
+    "generated_three_worker_chain_tests": 66,
+    "profiles": [
+      "normal",
+      "minified"
+    ],
+    "fail": 0,
+    "evidence_scope": "COMPATIBLE_ISOLATED_PORT_ON17_2_BASE_REUSED; NOT_EXACT17_3_METADATA_OR_FINAL_TREE_FULL_GATE",
+    "source_evidence_sha256": "19a479299aa229a0057f035cad120ee84c68e938ff16faae03840e0c27a0ce20",
+    "full_current_gate": "PENDING_EXACT_FINAL17_3_CANDIDATE",
+    "claim_same_sha": false,
+    "isolated_port_base": "eac37aab4c2a776843f560e294dfdb742238207b",
+    "isolated_port_source_tree": "5f97162294b35e602cf7e9005881131f05ecbede",
+    "source_evidence_file": "catalog-explicit-empty-evidence/validation.json",
+    "scope_verification": "Read and independently checked actual38+66 pass proof, exact real diagnostic digest, unchanged eight protected runtime/test files, and current Finance source bytes identical to isolated port. Root manifest metadata was intentionally frozen separately; not claimed unchanged."
+  },
+  "required_gates": {
+    "full_local_node": "PENDING_EXACT_FINAL_CANDIDATE",
+    "local_python": "PENDING_EXACT_FINAL_CANDIDATE",
+    "exact_remote_ci": "PENDING_REMOTE_CANDIDATE_SHA",
+    "three_external_cloudflare_checks": "PENDING_REMOTE_CANDIDATE_SHA",
+    "exact_wire_dry_run": "PENDING_FINAL_CANDIDATE",
+    "authenticated_generated_ui": "PENDING_EXACT_RELEASE_FULL_SUITE",
+    "fresh_backup_and_local_restore": "PENDING_BEFORE_ANY_NEXT_PUBLICATION",
+    "public17_2_transport_gate": "BLOCKED_EXACT98BYTE_ENVOY503; MUST_COMPLETE_BEFORE_NEXT_DEPLOY",
+    "publication17_3": false,
+    "native_verification17_3": false,
+    "public_verification17_3": false,
+    "previous_documentary_ci666_before_push17_3": "WAIT_EXISTING_RUN_TO_COMPLETE_BEFORE_NEW_PUSH; PRESERVE_CANCEL_IN_PROGRESS_WORKFLOW_UNCHANGED"
+  },
+  "expected_hashes": {
+    "app": "b0aa9cc1009d9d7ea276d406d0d87ecb90feda73ae3db77fe85ff64173e456e4",
+    "auth": "e3b7aecfeda1109fbe98d9fa6f8ee1ab55dcc5a70ae32fc4a5bc70c48b286a5c",
+    "finance": "f6c8a5daa307cdecb60c0c722c89aa2de02d3afe12940f315973446070561f33"
+  },
+  "bytes": {
+    "app": 3763421,
+    "auth": 579497,
+    "finance": 895531
+  },
+  "actual_catalog_diagnostic": {
+    "file_name": "catalog-real-empty-item-missing-live17-2-proof.json",
+    "sha256": "ca701c903a61812e62a0a445c487d62221d764916a02987c8065de5c9b5d1892",
+    "source_scope": "ACTUAL17_2_READ_ONLY_DIAGNOSTIC; NO_PROVIDER_PROBE",
+    "evidence": {
+      "schema": "mls_real_catalogue_source_shape_diagnostic_v1",
+      "at": "2026-11-17T21:45:41.446805+00:00",
+      "release_confirmed_by_root": "2026-11-17.2",
+      "source_commit": "eac37aab4c2a776843f560e294dfdb742238207b",
+      "native_confirmed_at": "2026-11-17T21:32:27.409194+00:00",
+      "finance_retained_version": "60259fca-980a-4255-8157-fb74b43023cf",
+      "finance_retained_sha256": "522cd735b73157eee92f1859d87959f5e66a7b8070afb4b2c26cb92006a44bf0",
+      "producer_source_sha256": "c5408476215a179a57bd48894beb054352dc14e62817a10aeb3bb4dc239fe6fe",
+      "scope": "ONE_READ_ONLY_STRUCTURAL_DIAGNOSTIC_NO_PROVIDER_PROBE_NO_RAW_PAYLOAD_OR_IDENTITIES",
+      "rows": [
+        {
+          "revision": 756,
+          "status": "RETRY_WAIT",
+          "status_index": 1,
+          "offset": 0,
+          "pages_read": 1,
+          "last_attempt_at": 1794951888,
+          "next_run_at": 1794953690,
+          "failure_count": 753,
+          "last_error": "PRODUCT_REGISTRY_SOURCE_UNAVAILABLE",
+          "diagnostic_item_status": "BANNED",
+          "diagnostic_offset": 0,
+          "diagnostic_code": "FINANCE_PRODUCT_INDEX_RESPONSE_EMPTY_ITEM_MISSING",
+          "diagnostic_http": null,
+          "diagnostic_checked_at": 1794951890
+        }
+      ],
+      "interpretation_from_exact_deployed_finite_error_branch": {
+        "successful_provider_envelope": true,
+        "response_plain_object": true,
+        "own_total_count_positive_zero": true,
+        "own_has_next_page_boolean_false": true,
+        "own_item_property_absent": true,
+        "null_item_proven": false,
+        "next_offset_shape_proven": false,
+        "empty_financial_value_or_manufacturing_proven": false
+      },
+      "conditional_candidate_commit": "1a7f0f1cf9bbe826ab42af158fc287c8ce7b7e1f",
+      "candidate_runtime_diagnostic_gate_met": true,
+      "candidate_integrated_or_published": false,
+      "root_source_contract_review_required": true,
+      "catalogue_problem_resolved": false,
+      "attempt_origin": "UNKNOWN_BACKGROUND_OR_OWNER_ACTION",
+      "agent_provider_calls": 0,
+      "agent_remote_writes": 0,
+      "agent_query_calls": 1,
+      "raw_payload_or_run_ids_in_artifact": false,
+      "known_catalogue_retention_guards_unchanged": true
+    }
+  },
+  "bounded_compatibility_contract": {
+    "admitted": "Only an omitted own item field on requested first page offset0 after existing provider-envelope/signature/profile/identity checks, with own explicit total_count numeric+0 excluding negative zero, own has_next_page boolean false, and independently terminal next_offset absent/null/numeric+0. Empty normalization is scoped only to that declared product-page shape.",
+    "rejected": [
+      "own item:null",
+      "missing totals or page flag",
+      "coerced strings",
+      "nonzero totals",
+      "has_next_page:true",
+      "negative zero",
+      "positive/invalid terminal cursor",
+      "input continuation offset>0",
+      "wrong shop/partner identity",
+      "malformed rows or envelope"
+    ],
+    "preserved": [
+      "public request/frame projectors unchanged",
+      "forensic finite whitelist unchanged",
+      "existing HTTP502 fallback codes",
+      "bounded one-page read per invocation",
+      "all six provider statuses without skipping BANNED",
+      "checked_at after item mapping",
+      "registry CAS/lease/backoff/cursor guards",
+      "known product retention and public DTO",
+      "tokens and financial contracts/pins"
+    ],
+    "terminal_cursor_from_real_diagnostic": "UNKNOWN; actual finite diagnostic does not prove next_offset. Candidate independently rejects all nonterminal/invalid present cursors as existing RESPONSE_PAGINATION.",
+    "no_inference": "No absent financial amount, fabrication, permission, real catalog completeness or owner acceptance is inferred. No skipped BANNED status, auth/CSRF/tenant weakening, reset or forced-source request."
+  },
+  "historical_contract_source": {
+    "file_name": "empty-compat-contract.md",
+    "sha256": "6064b2f6d1b01314c28c73574fa3bef0e3333202b7a084387ddad4e562b2d731",
+    "scope": "Historical pre-approval isolated contract; its original status is preserved as history, actual runtime gate is now met by separately embedded17.2proof."
+  },
+  "prior_actual_publication_receipt": "docs/system-audit/publication-monthly-continuation-live.json",
+  "prior_native17_2_and_monthly_recovery": "Preserved unchanged in17.2receipt; source replacement proof is not page progression or financial acceptance.",
+  "last_fully_native_public_verified_release": "2026-11-17.1",
+  "planned_publication_receipt": "docs/system-audit/publication-catalog-empty-live.json",
+  "publication_receipt_exists": false,
+  "sale_track": "ADIADO_VENDA",
+  "all_errors_resolved": false,
+  "preserved_previous_candidate_current": {
+    "canonical_latest_increment": {
+      "task": "BOUNDED_MONTHLY_CONTINUATION_17_2",
+      "source_commit": "eac37aab4c2a776843f560e294dfdb742238207b",
+      "release_candidate": "2026-11-17.2",
+      "implemented": true,
+      "local_validation": "4648_NODE_67_PYTHON_AND_21_TARGETED_PASS_EXACT_SOURCE",
+      "exact_head_github_ci": {
+        "id": 44175286949,
+        "run_number": 665,
+        "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44175286949",
+        "head_sha": "eac37aab4c2a776843f560e294dfdb742238207b",
+        "status": "completed",
+        "conclusion": "success",
+        "node": {
+          "tests": 4648,
+          "pass": 4648,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0
+        },
+        "python": {
+          "pass": 67,
+          "fail": 0
+        },
+        "compiled_hashes": {
+          "app": "10c324f14d0203f1453d36ec60b3d11d0250d40c446b0bc81c5578332ddac0f1",
+          "auth": "002bc90da88de19b968eda850dd668b4811c04506d2be9811f08140828eda6c4",
+          "finance": "522cd735b73157eee92f1859d87959f5e66a7b8070afb4b2c26cb92006a44bf0"
+        },
+        "workflow_preflight_step": "SKIPPED_BY_EXISTING_STACKED_PR_CONDITION; LOCAL_PREFLIGHT_PASS",
+        "cloudflare_checks": [
+          {
+            "name": "Workers Builds: brazacommerce-app",
+            "status": "completed",
+            "conclusion": "success",
+            "id": 134365725970,
+            "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-app/production/previews/fix-system-stability-20261116/builds/f135743c-32ff-42d4-a98e-3cd556e5c5c1"
+          },
+          {
+            "name": "Workers Builds: brazacommerce-finance",
+            "status": "completed",
+            "conclusion": "success",
+            "id": 134365521662,
+            "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-finance/production/previews/fix-system-stability-20261116/builds/b860cf70-3173-4b65-9ef7-10d6faadc0f0"
+          },
+          {
+            "name": "Workers Builds: brazacommerce-auth",
+            "status": "completed",
+            "conclusion": "success",
+            "id": 134365423384,
+            "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-auth/production/previews/fix-system-stability-20261116/builds/a59a46f5-951c-455b-8831-0553a2fead13"
+          }
+        ]
+      },
+      "published": true,
+      "validated_operationally": false,
+      "actual_financial_acceptance": false,
+      "actual_catalog_problem_resolved": false,
+      "receipt": "docs/system-audit/monthly-continuation-20261117.json",
+      "previous_published_receipt": "docs/system-audit/publication-catalog-diagnostics-live.json",
+      "pull_request": 128,
+      "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE",
+      "compiled_hashes": {
+        "app": "10c324f14d0203f1453d36ec60b3d11d0250d40c446b0bc81c5578332ddac0f1",
+        "auth": "002bc90da88de19b968eda850dd668b4811c04506d2be9811f08140828eda6c4",
+        "finance": "522cd735b73157eee92f1859d87959f5e66a7b8070afb4b2c26cb92006a44bf0"
+      },
+      "validation_head": "eac37aab4c2a776843f560e294dfdb742238207b",
+      "publication_source_commit": "eac37aab4c2a776843f560e294dfdb742238207b",
+      "local_validated_commit": "eac37aab4c2a776843f560e294dfdb742238207b",
+      "archived_pre_reconciliation_commit": "44d9f8057efb78c78852e796ab093a731b50587c",
+      "source_tree": "16d8404399f06e816ef144d669008bc9211c5947",
+      "native_verified": true,
+      "public_smoke_complete": false,
+      "actual_monthly_source_progress_validated": false,
+      "status": "NATIVE_PUBLISHED_PUBLIC_TRANSPORT_PENDING",
+      "publication_receipt": "docs/system-audit/publication-monthly-continuation-live.json",
+      "workers": {
+        "finance": "60259fca-980a-4255-8157-fb74b43023cf",
+        "auth": "afb0a5aa-b442-4137-b27a-8dbc35152774",
+        "app": "36fa53b2-7917-4df4-80c2-14116046bfaa"
+      },
+      "actual_monthly_recovery_validated": true,
+      "source_page_progress": false,
+      "monthly_recovery_evidence": {
+        "receipt": "docs/system-audit/publication-monthly-continuation-live.json",
+        "evidence_file": "history-real-replacement-live17-2-proof-v2.json",
+        "evidence_sha256": "338396199dd264e4e14e2a9889e7eeb44624c54a70d5d7e491312b06b6d35359",
+        "evidence_canonical_sha256": "bd0b328c1e4ddbd35daeed555033b4ab02a6a566c980746de137f645ea4093b8",
+        "source_commit": "eac37aab4c2a776843f560e294dfdb742238207b",
+        "scope": "ONE_REAL_SAME_PERIOD_SOURCE_REPLACEMENT; ORIGINAL_AUDIT_FRAME_AND_OLD_PUBLICATION_PRESERVED; PAGE_PROGRESS_NOT_OBSERVED"
+      },
+      "actual_catalog_diagnostic_validated": true,
+      "catalog_diagnostic_evidence": {
+        "receipt": "docs/system-audit/publication-monthly-continuation-live.json",
+        "evidence_file": "observed-work-live17-2-pass4.json",
+        "evidence_sha256": "d64e6def4d2c6eeca04e65b263a8383a46c68a435879b1226e5d6ebe71220803",
+        "evidence_canonical_sha256": "e1d281f9597a15748ec5a66e03aee5b584845625fa2e412075ae2434bee0b139",
+        "source_commit": "eac37aab4c2a776843f560e294dfdb742238207b",
+        "diagnostic_code": "FINANCE_PRODUCT_INDEX_RESPONSE_EMPTY_ITEM_MISSING",
+        "scope": "REAL_FINITE_STRUCTURAL_CLASSIFIER_DIAGNOSTIC; CATALOG_RECOVERY_NOT_YET_PROVEN"
+      }
+    },
+    "mirror_latest_increment": {
+      "task": "BOUNDED_MONTHLY_CONTINUATION_17_2",
+      "source_commit": "eac37aab4c2a776843f560e294dfdb742238207b",
+      "published": true,
+      "native_verified": true,
+      "public_smoke_complete": false,
+      "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
+      "receipt": "docs/system-audit/publication-monthly-continuation-live.json",
+      "operationally_accepted": false,
+      "actual_catalog_problem_resolved": false,
+      "status": "NATIVE_PUBLISHED_PUBLIC_TRANSPORT_PENDING",
+      "actual_monthly_recovery_validated": true,
+      "source_page_progress": false,
+      "actual_monthly_source_progress_validated": false,
+      "monthly_recovery_evidence": {
+        "receipt": "docs/system-audit/publication-monthly-continuation-live.json",
+        "evidence_file": "history-real-replacement-live17-2-proof-v2.json",
+        "evidence_sha256": "338396199dd264e4e14e2a9889e7eeb44624c54a70d5d7e491312b06b6d35359",
+        "evidence_canonical_sha256": "bd0b328c1e4ddbd35daeed555033b4ab02a6a566c980746de137f645ea4093b8",
+        "source_commit": "eac37aab4c2a776843f560e294dfdb742238207b",
+        "scope": "ONE_REAL_SAME_PERIOD_SOURCE_REPLACEMENT; ORIGINAL_AUDIT_FRAME_AND_OLD_PUBLICATION_PRESERVED; PAGE_PROGRESS_NOT_OBSERVED"
+      },
+      "actual_catalog_diagnostic_validated": true,
+      "catalog_diagnostic_evidence": {
+        "receipt": "docs/system-audit/publication-monthly-continuation-live.json",
+        "evidence_file": "observed-work-live17-2-pass4.json",
+        "evidence_sha256": "d64e6def4d2c6eeca04e65b263a8383a46c68a435879b1226e5d6ebe71220803",
+        "evidence_canonical_sha256": "e1d281f9597a15748ec5a66e03aee5b584845625fa2e412075ae2434bee0b139",
+        "source_commit": "eac37aab4c2a776843f560e294dfdb742238207b",
+        "diagnostic_code": "FINANCE_PRODUCT_INDEX_RESPONSE_EMPTY_ITEM_MISSING",
+        "scope": "REAL_FINITE_STRUCTURAL_CLASSIFIER_DIAGNOSTIC; CATALOG_RECOVERY_NOT_YET_PROVEN"
+      }
+    },
+    "operational_delivery": {
+      "task": "BOUNDED_MONTHLY_CONTINUATION_17_2",
+      "branch": "fix/system-stability-20261116",
+      "source_commit": "eac37aab4c2a776843f560e294dfdb742238207b",
+      "release_candidate": "2026-11-17.2",
+      "base_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+      "code": true,
+      "tested_locally": "4648_NODE_67_PYTHON_21_TARGETED_PASS_EXACT_SOURCE",
+      "exact_head_github_ci": {
+        "id": 44175286949,
+        "run_number": 665,
+        "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44175286949",
+        "head_sha": "eac37aab4c2a776843f560e294dfdb742238207b",
+        "status": "completed",
+        "conclusion": "success",
+        "node": {
+          "tests": 4648,
+          "pass": 4648,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0
+        },
+        "python": {
+          "pass": 67,
+          "fail": 0
+        },
+        "compiled_hashes": {
+          "app": "10c324f14d0203f1453d36ec60b3d11d0250d40c446b0bc81c5578332ddac0f1",
+          "auth": "002bc90da88de19b968eda850dd668b4811c04506d2be9811f08140828eda6c4",
+          "finance": "522cd735b73157eee92f1859d87959f5e66a7b8070afb4b2c26cb92006a44bf0"
+        },
+        "workflow_preflight_step": "SKIPPED_BY_EXISTING_STACKED_PR_CONDITION; LOCAL_PREFLIGHT_PASS",
+        "cloudflare_checks": [
+          {
+            "name": "Workers Builds: brazacommerce-app",
+            "status": "completed",
+            "conclusion": "success",
+            "id": 134365725970,
+            "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-app/production/previews/fix-system-stability-20261116/builds/f135743c-32ff-42d4-a98e-3cd556e5c5c1"
+          },
+          {
+            "name": "Workers Builds: brazacommerce-finance",
+            "status": "completed",
+            "conclusion": "success",
+            "id": 134365521662,
+            "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-finance/production/previews/fix-system-stability-20261116/builds/b860cf70-3173-4b65-9ef7-10d6faadc0f0"
+          },
+          {
+            "name": "Workers Builds: brazacommerce-auth",
+            "status": "completed",
+            "conclusion": "success",
+            "id": 134365423384,
+            "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-auth/production/previews/fix-system-stability-20261116/builds/a59a46f5-951c-455b-8831-0553a2fead13"
+          }
+        ]
+      },
+      "published": true,
+      "operationally_accepted": false,
+      "actual_catalog_problem_resolved": false,
+      "receipt": "../system-audit/monthly-continuation-20261117.json",
+      "previous_published_receipt": "../system-audit/publication-catalog-diagnostics-live.json",
+      "pull_request": 128,
+      "sale_track": "ADIADO_VENDA",
+      "next_independent_task": "OP-014",
+      "validation_head": "eac37aab4c2a776843f560e294dfdb742238207b",
+      "local_validated_commit": "eac37aab4c2a776843f560e294dfdb742238207b",
+      "archived_pre_reconciliation_commit": "44d9f8057efb78c78852e796ab093a731b50587c",
+      "source_tree": "16d8404399f06e816ef144d669008bc9211c5947",
+      "release_id": "2026-11-17.2",
+      "native_verified": true,
+      "public_smoke_complete": false,
+      "publication_receipt": "../system-audit/publication-monthly-continuation-live.json",
+      "actual_monthly_source_progress_validated": false,
+      "actual_financial_acceptance": false,
+      "status": "NATIVE_PUBLISHED_PUBLIC_TRANSPORT_PENDING",
+      "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE",
+      "workers": {
+        "finance": "60259fca-980a-4255-8157-fb74b43023cf",
+        "auth": "afb0a5aa-b442-4137-b27a-8dbc35152774",
+        "app": "36fa53b2-7917-4df4-80c2-14116046bfaa"
+      },
+      "actual_monthly_recovery_validated": true,
+      "source_page_progress": false,
+      "monthly_recovery_evidence": {
+        "receipt": "../system-audit/publication-monthly-continuation-live.json",
+        "evidence_file": "history-real-replacement-live17-2-proof-v2.json",
+        "evidence_sha256": "338396199dd264e4e14e2a9889e7eeb44624c54a70d5d7e491312b06b6d35359",
+        "evidence_canonical_sha256": "bd0b328c1e4ddbd35daeed555033b4ab02a6a566c980746de137f645ea4093b8",
+        "source_commit": "eac37aab4c2a776843f560e294dfdb742238207b",
+        "scope": "ONE_REAL_SAME_PERIOD_SOURCE_REPLACEMENT; ORIGINAL_AUDIT_FRAME_AND_OLD_PUBLICATION_PRESERVED; PAGE_PROGRESS_NOT_OBSERVED"
+      },
+      "actual_catalog_diagnostic_validated": true,
+      "catalog_diagnostic_evidence": {
+        "receipt": "../system-audit/publication-monthly-continuation-live.json",
+        "evidence_file": "observed-work-live17-2-pass4.json",
+        "evidence_sha256": "d64e6def4d2c6eeca04e65b263a8383a46c68a435879b1226e5d6ebe71220803",
+        "evidence_canonical_sha256": "e1d281f9597a15748ec5a66e03aee5b584845625fa2e412075ae2434bee0b139",
+        "source_commit": "eac37aab4c2a776843f560e294dfdb742238207b",
+        "diagnostic_code": "FINANCE_PRODUCT_INDEX_RESPONSE_EMPTY_ITEM_MISSING",
+        "scope": "REAL_FINITE_STRUCTURAL_CLASSIFIER_DIAGNOSTIC; CATALOG_RECOVERY_NOT_YET_PROVEN"
+      }
+    },
+    "handoff_current_prefixes": {
+      "README.md": "<!-- OWNER_OPERATION_CURRENT -->\n**17.2 publicada e conferida nativamente; verificação pública pendente de transporte.** [Recibo](docs/system-audit/publication-monthly-continuation-live.json) · [validação](docs/system-audit/monthly-continuation-20261117.json) · [checkpoint](docs/MLS_COMMERCE_OS_CHECKPOINT.json) · [uso](docs/owner-operation/README.md).\n\nDiagnóstico real do catálogo observado: `FINANCE_PRODUCT_INDEX_RESPONSE_EMPTY_ITEM_MISSING`, na tentativa de 21:44:48 UTC. A compatibilidade estrita está em revisão isolada para 17.3, ainda sem integração ou publicação; o catálogo permanece não resolvido.\n\nRetomada real observada: uma fonte histórica foi substituída por uma nova fonte do mesmo período, preservando o frame original e a publicação anterior; páginas, cobertura financeira e aceite operacional permanecem pendentes.\n\nFonte `eac37aa`; CI [44175286949](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44175286949), 4648 Node e 67 Python aprovados, além dos três Builds Cloudflare. A execução local completa da sessão 66328 terminou no SHA remoto exato; a interrupção anterior da sessão 75073 e o commit local `44d9f80` de árvore idêntica `16d8404` foram preservados. Auth→App publicados; Finance manteve versão e bytes da 17.1. Os três Workers foram lidos pela API nativa: fontes exatas, configurações preservadas e tráfego de 100%.\n\n**O gate público HTTP/assets da 17.2 ainda não passou:** `/login` devolveu 503 com 98 bytes Envoy, SHA256 `33fbc61ad080ef68dd7a6479f8c53f1bf864dba2930567dbbc4ceb47490a1909`, em três séries limitadas de três tentativas e no curl da mesma URL. Isso não comprova falha da aplicação nem sucesso do smoke. Não houve cancelamento manual, mudança de credenciais, CA, proxy, permissões ou segurança. Repetir a leitura limitada quando o transporte permitir, preservando esta evidência. A 17.1 permanece a **última versão plenamente conferida em fonte/configuração e HTTP/assets**, como registro histórico; a versão nativa atual é 17.2. [Recibo 17.1](docs/system-audit/publication-catalog-diagnostics-live.json) · [16.5](docs/system-audit/publication-live.json).\n\n17.2 limita a continuação do mês anterior válido: intervalo mínimo de 900 s somente para ofertas reservadas, yield obrigatório à AUX não mensal e uma fonte por turno, sob leases/CAS existentes. HISTORY ordinário conserva seu backoff. A prova sintética de 421 pedidos, 26 turnos e 518 minutos não garante prazo, retenção, cobertura ou aceite reais. **Catálogo ainda não resolvido**; a compatibilidade estrita para 17.3 permanece em revisão isolada, sem integração ou publicação. O botão **Atualizar catálogo local** mantém handler e permissões.\n\nAceite operacional/financeiro e avanço de páginas do histórico pendentes; nenhum PARTIAL virou COMPLETE. Sexta às 13h/Brasília, UNKNOWN, não duplicação, custos históricos, confirmações/auditoria, autenticação/CSRF/tenant, seis agentes e gráficos permanecem ativos. [Regras financeiras](docs/financial-automation/README.md) · [matriz](docs/owner-operation/EXECUCAO.json). PR #128 rascunho, main `346f30f` preservada, sem merge/auto-merge. Venda ADIADO_VENDA; OP-014 independente.\n<!-- END_OWNER_OPERATION_CURRENT -->",
+      "NEXT_CHAT_HANDOFF.txt": "<!-- OWNER_OPERATION_CURRENT -->\n**17.2 publicada e conferida nativamente; verificação pública pendente de transporte.** [Recibo](docs/system-audit/publication-monthly-continuation-live.json) · [validação](docs/system-audit/monthly-continuation-20261117.json) · [checkpoint](docs/MLS_COMMERCE_OS_CHECKPOINT.json) · [uso](docs/owner-operation/README.md).\n\nDiagnóstico real do catálogo observado: `FINANCE_PRODUCT_INDEX_RESPONSE_EMPTY_ITEM_MISSING`, na tentativa de 21:44:48 UTC. A compatibilidade estrita está em revisão isolada para 17.3, ainda sem integração ou publicação; o catálogo permanece não resolvido.\n\nRetomada real observada: uma fonte histórica foi substituída por uma nova fonte do mesmo período, preservando o frame original e a publicação anterior; páginas, cobertura financeira e aceite operacional permanecem pendentes.\n\nFonte `eac37aa`; CI [44175286949](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44175286949), 4648 Node e 67 Python aprovados, além dos três Builds Cloudflare. A execução local completa da sessão 66328 terminou no SHA remoto exato; a interrupção anterior da sessão 75073 e o commit local `44d9f80` de árvore idêntica `16d8404` foram preservados. Auth→App publicados; Finance manteve versão e bytes da 17.1. Os três Workers foram lidos pela API nativa: fontes exatas, configurações preservadas e tráfego de 100%.\n\n**O gate público HTTP/assets da 17.2 ainda não passou:** `/login` devolveu 503 com 98 bytes Envoy, SHA256 `33fbc61ad080ef68dd7a6479f8c53f1bf864dba2930567dbbc4ceb47490a1909`, em três séries limitadas de três tentativas e no curl da mesma URL. Isso não comprova falha da aplicação nem sucesso do smoke. Não houve cancelamento manual, mudança de credenciais, CA, proxy, permissões ou segurança. Repetir a leitura limitada quando o transporte permitir, preservando esta evidência. A 17.1 permanece a **última versão plenamente conferida em fonte/configuração e HTTP/assets**, como registro histórico; a versão nativa atual é 17.2. [Recibo 17.1](docs/system-audit/publication-catalog-diagnostics-live.json) · [16.5](docs/system-audit/publication-live.json).\n\n17.2 limita a continuação do mês anterior válido: intervalo mínimo de 900 s somente para ofertas reservadas, yield obrigatório à AUX não mensal e uma fonte por turno, sob leases/CAS existentes. HISTORY ordinário conserva seu backoff. A prova sintética de 421 pedidos, 26 turnos e 518 minutos não garante prazo, retenção, cobertura ou aceite reais. **Catálogo ainda não resolvido**; a compatibilidade estrita para 17.3 permanece em revisão isolada, sem integração ou publicação. O botão **Atualizar catálogo local** mantém handler e permissões.\n\nAceite operacional/financeiro e avanço de páginas do histórico pendentes; nenhum PARTIAL virou COMPLETE. Sexta às 13h/Brasília, UNKNOWN, não duplicação, custos históricos, confirmações/auditoria, autenticação/CSRF/tenant, seis agentes e gráficos permanecem ativos. [Regras financeiras](docs/financial-automation/README.md) · [matriz](docs/owner-operation/EXECUCAO.json). PR #128 rascunho, main `346f30f` preservada, sem merge/auto-merge. Venda ADIADO_VENDA; OP-014 independente.\n<!-- END_OWNER_OPERATION_CURRENT -->",
+      "docs/RETOMADA.md": "<!-- OWNER_OPERATION_CURRENT -->\n**17.2 publicada e conferida nativamente; verificação pública pendente de transporte.** [Recibo](system-audit/publication-monthly-continuation-live.json) · [validação](system-audit/monthly-continuation-20261117.json) · [checkpoint](MLS_COMMERCE_OS_CHECKPOINT.json) · [uso](owner-operation/README.md).\n\nDiagnóstico real do catálogo observado: `FINANCE_PRODUCT_INDEX_RESPONSE_EMPTY_ITEM_MISSING`, na tentativa de 21:44:48 UTC. A compatibilidade estrita está em revisão isolada para 17.3, ainda sem integração ou publicação; o catálogo permanece não resolvido.\n\nRetomada real observada: uma fonte histórica foi substituída por uma nova fonte do mesmo período, preservando o frame original e a publicação anterior; páginas, cobertura financeira e aceite operacional permanecem pendentes.\n\nFonte `eac37aa`; CI [44175286949](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44175286949), 4648 Node e 67 Python aprovados, além dos três Builds Cloudflare. A execução local completa da sessão 66328 terminou no SHA remoto exato; a interrupção anterior da sessão 75073 e o commit local `44d9f80` de árvore idêntica `16d8404` foram preservados. Auth→App publicados; Finance manteve versão e bytes da 17.1. Os três Workers foram lidos pela API nativa: fontes exatas, configurações preservadas e tráfego de 100%.\n\n**O gate público HTTP/assets da 17.2 ainda não passou:** `/login` devolveu 503 com 98 bytes Envoy, SHA256 `33fbc61ad080ef68dd7a6479f8c53f1bf864dba2930567dbbc4ceb47490a1909`, em três séries limitadas de três tentativas e no curl da mesma URL. Isso não comprova falha da aplicação nem sucesso do smoke. Não houve cancelamento manual, mudança de credenciais, CA, proxy, permissões ou segurança. Repetir a leitura limitada quando o transporte permitir, preservando esta evidência. A 17.1 permanece a **última versão plenamente conferida em fonte/configuração e HTTP/assets**, como registro histórico; a versão nativa atual é 17.2. [Recibo 17.1](system-audit/publication-catalog-diagnostics-live.json) · [16.5](system-audit/publication-live.json).\n\n17.2 limita a continuação do mês anterior válido: intervalo mínimo de 900 s somente para ofertas reservadas, yield obrigatório à AUX não mensal e uma fonte por turno, sob leases/CAS existentes. HISTORY ordinário conserva seu backoff. A prova sintética de 421 pedidos, 26 turnos e 518 minutos não garante prazo, retenção, cobertura ou aceite reais. **Catálogo ainda não resolvido**; a compatibilidade estrita para 17.3 permanece em revisão isolada, sem integração ou publicação. O botão **Atualizar catálogo local** mantém handler e permissões.\n\nAceite operacional/financeiro e avanço de páginas do histórico pendentes; nenhum PARTIAL virou COMPLETE. Sexta às 13h/Brasília, UNKNOWN, não duplicação, custos históricos, confirmações/auditoria, autenticação/CSRF/tenant, seis agentes e gráficos permanecem ativos. [Regras financeiras](financial-automation/README.md) · [matriz](owner-operation/EXECUCAO.json). PR #128 rascunho, main `346f30f` preservada, sem merge/auto-merge. Venda ADIADO_VENDA; OP-014 independente.\n<!-- END_OWNER_OPERATION_CURRENT -->",
+      "docs/ROADMAP_MLS_COMMERCE_OS.md": "<!-- OWNER_OPERATION_CURRENT -->\n**17.2 publicada e conferida nativamente; verificação pública pendente de transporte.** [Recibo](system-audit/publication-monthly-continuation-live.json) · [validação](system-audit/monthly-continuation-20261117.json) · [checkpoint](MLS_COMMERCE_OS_CHECKPOINT.json) · [uso](owner-operation/README.md).\n\nDiagnóstico real do catálogo observado: `FINANCE_PRODUCT_INDEX_RESPONSE_EMPTY_ITEM_MISSING`, na tentativa de 21:44:48 UTC. A compatibilidade estrita está em revisão isolada para 17.3, ainda sem integração ou publicação; o catálogo permanece não resolvido.\n\nRetomada real observada: uma fonte histórica foi substituída por uma nova fonte do mesmo período, preservando o frame original e a publicação anterior; páginas, cobertura financeira e aceite operacional permanecem pendentes.\n\nFonte `eac37aa`; CI [44175286949](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44175286949), 4648 Node e 67 Python aprovados, além dos três Builds Cloudflare. A execução local completa da sessão 66328 terminou no SHA remoto exato; a interrupção anterior da sessão 75073 e o commit local `44d9f80` de árvore idêntica `16d8404` foram preservados. Auth→App publicados; Finance manteve versão e bytes da 17.1. Os três Workers foram lidos pela API nativa: fontes exatas, configurações preservadas e tráfego de 100%.\n\n**O gate público HTTP/assets da 17.2 ainda não passou:** `/login` devolveu 503 com 98 bytes Envoy, SHA256 `33fbc61ad080ef68dd7a6479f8c53f1bf864dba2930567dbbc4ceb47490a1909`, em três séries limitadas de três tentativas e no curl da mesma URL. Isso não comprova falha da aplicação nem sucesso do smoke. Não houve cancelamento manual, mudança de credenciais, CA, proxy, permissões ou segurança. Repetir a leitura limitada quando o transporte permitir, preservando esta evidência. A 17.1 permanece a **última versão plenamente conferida em fonte/configuração e HTTP/assets**, como registro histórico; a versão nativa atual é 17.2. [Recibo 17.1](system-audit/publication-catalog-diagnostics-live.json) · [16.5](system-audit/publication-live.json).\n\n17.2 limita a continuação do mês anterior válido: intervalo mínimo de 900 s somente para ofertas reservadas, yield obrigatório à AUX não mensal e uma fonte por turno, sob leases/CAS existentes. HISTORY ordinário conserva seu backoff. A prova sintética de 421 pedidos, 26 turnos e 518 minutos não garante prazo, retenção, cobertura ou aceite reais. **Catálogo ainda não resolvido**; a compatibilidade estrita para 17.3 permanece em revisão isolada, sem integração ou publicação. O botão **Atualizar catálogo local** mantém handler e permissões.\n\nAceite operacional/financeiro e avanço de páginas do histórico pendentes; nenhum PARTIAL virou COMPLETE. Sexta às 13h/Brasília, UNKNOWN, não duplicação, custos históricos, confirmações/auditoria, autenticação/CSRF/tenant, seis agentes e gráficos permanecem ativos. [Regras financeiras](financial-automation/README.md) · [matriz](owner-operation/EXECUCAO.json). PR #128 rascunho, main `346f30f` preservada, sem merge/auto-merge. Venda ADIADO_VENDA; OP-014 independente.\n<!-- END_OWNER_OPERATION_CURRENT -->",
+      "docs/MLS_CODEX_HANDOFF_2026_10_28.md": "<!-- OWNER_OPERATION_CURRENT -->\n**17.2 publicada e conferida nativamente; verificação pública pendente de transporte.** [Recibo](system-audit/publication-monthly-continuation-live.json) · [validação](system-audit/monthly-continuation-20261117.json) · [checkpoint](MLS_COMMERCE_OS_CHECKPOINT.json) · [uso](owner-operation/README.md).\n\nDiagnóstico real do catálogo observado: `FINANCE_PRODUCT_INDEX_RESPONSE_EMPTY_ITEM_MISSING`, na tentativa de 21:44:48 UTC. A compatibilidade estrita está em revisão isolada para 17.3, ainda sem integração ou publicação; o catálogo permanece não resolvido.\n\nRetomada real observada: uma fonte histórica foi substituída por uma nova fonte do mesmo período, preservando o frame original e a publicação anterior; páginas, cobertura financeira e aceite operacional permanecem pendentes.\n\nFonte `eac37aa`; CI [44175286949](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44175286949), 4648 Node e 67 Python aprovados, além dos três Builds Cloudflare. A execução local completa da sessão 66328 terminou no SHA remoto exato; a interrupção anterior da sessão 75073 e o commit local `44d9f80` de árvore idêntica `16d8404` foram preservados. Auth→App publicados; Finance manteve versão e bytes da 17.1. Os três Workers foram lidos pela API nativa: fontes exatas, configurações preservadas e tráfego de 100%.\n\n**O gate público HTTP/assets da 17.2 ainda não passou:** `/login` devolveu 503 com 98 bytes Envoy, SHA256 `33fbc61ad080ef68dd7a6479f8c53f1bf864dba2930567dbbc4ceb47490a1909`, em três séries limitadas de três tentativas e no curl da mesma URL. Isso não comprova falha da aplicação nem sucesso do smoke. Não houve cancelamento manual, mudança de credenciais, CA, proxy, permissões ou segurança. Repetir a leitura limitada quando o transporte permitir, preservando esta evidência. A 17.1 permanece a **última versão plenamente conferida em fonte/configuração e HTTP/assets**, como registro histórico; a versão nativa atual é 17.2. [Recibo 17.1](system-audit/publication-catalog-diagnostics-live.json) · [16.5](system-audit/publication-live.json).\n\n17.2 limita a continuação do mês anterior válido: intervalo mínimo de 900 s somente para ofertas reservadas, yield obrigatório à AUX não mensal e uma fonte por turno, sob leases/CAS existentes. HISTORY ordinário conserva seu backoff. A prova sintética de 421 pedidos, 26 turnos e 518 minutos não garante prazo, retenção, cobertura ou aceite reais. **Catálogo ainda não resolvido**; a compatibilidade estrita para 17.3 permanece em revisão isolada, sem integração ou publicação. O botão **Atualizar catálogo local** mantém handler e permissões.\n\nAceite operacional/financeiro e avanço de páginas do histórico pendentes; nenhum PARTIAL virou COMPLETE. Sexta às 13h/Brasília, UNKNOWN, não duplicação, custos históricos, confirmações/auditoria, autenticação/CSRF/tenant, seis agentes e gráficos permanecem ativos. [Regras financeiras](financial-automation/README.md) · [matriz](owner-operation/EXECUCAO.json). PR #128 rascunho, main `346f30f` preservada, sem merge/auto-merge. Venda ADIADO_VENDA; OP-014 independente.\n<!-- END_OWNER_OPERATION_CURRENT -->"
+    }
+  },
+  "preserved_historical_suffix_sha256": {
+    "README.md": "cf3401db77d461b1d847ca0c69ead56c11ddbf8e9c5492729313a37c9f567e59",
+    "NEXT_CHAT_HANDOFF.txt": "38e48f0bf5413598aa79b508e2fc477b083a0f0932428a703cbe31d8462772cc",
+    "docs/RETOMADA.md": "987d51f5df5817b313e37a9094fa46df241653936f6bab9e24b716b64d89759b",
+    "docs/ROADMAP_MLS_COMMERCE_OS.md": "2342fe3eccbf20a718ec716cee2958032b58371583bb8202c65a423b6de91f99",
+    "docs/MLS_CODEX_HANDOFF_2026_10_28.md": "62d6a0ac7275ae6124190c0278a665613752113a1892b446b8b63d0887da6c80",
+    "docs/owner-operation/README.md": "3caf756970632628ae1f4014522eb8b11afbc45d66b36c1ee08f9d767348ca24",
+    "docs/system-audit/README.md": "bdbcbeb64d7a779d8f1b0b2ca0b88c53e10759943469a9c0de370aef138181c0"
+  },
+  "compatible_targeted_port_proof": {
+    "source_file": "catalog-explicit-empty-evidence/validation.json",
+    "sha256": "19a479299aa229a0057f035cad120ee84c68e938ff16faae03840e0c27a0ce20",
+    "evidence": {
+      "schema": "mls_catalogue_explicit_empty_actual_shape_candidate_validation_v1",
+      "recorded_at": "2026-11-17T21:48:04.175993+00:00",
+      "worktree": "/workspace/work/mls-catalog-explicit-empty",
+      "branch": "fix/catalog-explicit-empty-20261117",
+      "base": "eac37aab4c2a776843f560e294dfdb742238207b",
+      "commit": "28394c8a6a6012d161a886dadbd8b4503caa1f2a",
+      "source_tree": "5f97162294b35e602cf7e9005881131f05ecbede",
+      "cherry_picked_original_conditional_commit": "1a7f0f1cf9bbe826ab42af158fc287c8ce7b7e1f",
+      "runtime_gate": {
+        "status": "MET_FOR_MISSING_OWN_ITEM_EXPLICIT_ZERO_FINAL_FIRST_PAGE",
+        "evidence_file": "/workspace/work/integration-audit-evidence/catalog-real-empty-item-missing-live17-2-proof.json",
+        "evidence_sha256": "ca701c903a61812e62a0a445c487d62221d764916a02987c8065de5c9b5d1892",
+        "source_commit": "eac37aab4c2a776843f560e294dfdb742238207b",
+        "finance_version": "60259fca-980a-4255-8157-fb74b43023cf",
+        "finance_sha256": "522cd735b73157eee92f1859d87959f5e66a7b8070afb4b2c26cb92006a44bf0",
+        "original_producer_sha256": "c5408476215a179a57bd48894beb054352dc14e62817a10aeb3bb4dc239fe6fe",
+        "actual_source_attempt_at": "2026-11-17T21:44:48+00:00",
+        "actual_diagnostic_at": "2026-11-17T21:44:50+00:00",
+        "status_filter": "BANNED",
+        "offset": 0,
+        "finite_code": "FINANCE_PRODUCT_INDEX_RESPONSE_EMPTY_ITEM_MISSING",
+        "actual_terminal_next_offset_shape_proven": false,
+        "actual_catalogue_resolved": false
+      },
+      "scope": {
+        "files": [
+          "web/cloudflare/tests/product-index-shape-chain.test.mjs",
+          "web/finance/src/product-index.mjs",
+          "web/finance/tests/product-index.test.mjs"
+        ],
+        "only_runtime_change": "Finance source normalizes an omitted own item list only with own explicit +0 total_count, own boolean false has_next_page, first offset0, and absent/null/+0 terminal next_offset. null item or uncertain/contradictory metadata stays502.",
+        "one_bounded_page_read_preserved": true,
+        "all_six_filters_preserved": true,
+        "no_invented_empty_financial_value_or_manufacturing": true,
+        "no_provider_or_live_calls_by_this_task": true,
+        "root_worktree_modified": false,
+        "schema_configuration_permissions_workflows_changed": false,
+        "release_metadata_changed": false,
+        "human_release_to_be_prepared_by_root": "2026-11-17.3"
+      },
+      "targeted_38": {
+        "tests": 38,
+        "pass": 38,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "chain_66_real_generated_normal_minified": {
+        "tests": 66,
+        "pass": 66,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "build": "PASS",
+      "workers": {
+        "app": {
+          "bytes": 3763106,
+          "sha256": "10c324f14d0203f1453d36ec60b3d11d0250d40c446b0bc81c5578332ddac0f1"
+        },
+        "auth": {
+          "bytes": 579491,
+          "sha256": "002bc90da88de19b968eda850dd668b4811c04506d2be9811f08140828eda6c4"
+        },
+        "finance": {
+          "bytes": 895531,
+          "sha256": "f6c8a5daa307cdecb60c0c722c89aa2de02d3afe12940f315973446070561f33"
+        }
+      },
+      "all_protected_files_byte_identical_to_base": true,
+      "protected_sha256": {
+        "web/finance/src/product-index-frame.mjs": "97ec64fbabc4cf306bde09b1e8618ce34e997666b4bd222ea65a3b6578c15b14",
+        "web/cloudflare/src/product-registry.mjs": "e4bbba3d659a605188507798bb1fdd12393fc82b14bc56b83a548936b872d80f",
+        "web/cloudflare/src/app-product-index.mjs": "486f337c3699204f94596ad21b095c2d3cdefcc867adad45369fcdad159aafe0",
+        "web/cloudflare/src/cost-rules.mjs": "bddd06c0c7f9b97c809240082137297b7d6b43b0a95ed61ddef7fead571643dd",
+        "web/cloudflare/src/production-costs.mjs": "04d8a0cc79f95fae403ce09f3d4137a4eb5b71489a98aea8161abdc2bb53d7a8",
+        "web/cloudflare/src/business-month.mjs": "822bbcc382572e96e321e47e7a5a1f67d99c9faacdc9ef156293f96633897eb6",
+        "web/cloudflare/src/incurred-production.mjs": "3958d0babcaa370cf6f1bcf8d7201cb00e7fc7a015ceddc4c32c1189ea5d3e4d",
+        "tools/release-approved-candidate.json": "9229d00f6ee0384ecd7a3bfcd5c372a71bfe4eb319bcdd894643716e3f2c2b50",
+        "web/cloudflare/tests/reviewed-cost-source-invariants.mjs": "ad19ec39a4ce8ba2f40e6fd5b719afa5c394a185a68523563eb61554aa1c24c2"
+      },
+      "peer_review": {
+        "agent": "/root/remaining_defects/contract_peer",
+        "status": "NO_CODE_BLOCKER_FOUND_READ_ONLY",
+        "conclusion": "Exact deployed finite code proves explicit zero/final metadata and missing own item; terminal next_offset remains unknown and guarded. Continuation/null/identity failures remain rejected; no publicprojector, registry, CAS/lease, filter or cursor weakening."
+      },
+      "dependencies": "Copied existing root node_modules only after exact package.json and package-lock.json comparison. No install/dependency change.",
+      "full_suite": "NOT_RUN_BY_SUBTASK; ROOT_OWNS_EXACT_RELEASE_FULL_GATES",
+      "ci": "NOT_STARTED_BY_SUBTASK",
+      "push": false,
+      "deployment": false,
+      "operational_acceptance": false,
+      "remaining": "Root reviews/integrates, prepares17.3metadata and fullgates, only publishes after17.2publicgate completes. New real eligible catalogue result must be observed before claiming resolution; invalid terminalcursor remains502."
+    }
+  }
+}
