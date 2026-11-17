@@ -2,7 +2,7 @@
   "schema": "mls_commerce_os_checkpoint_v1",
   "canonical_roadmap": "docs/ROADMAP_MLS_COMMERCE_OS.md",
   "legacy_roadmap": "docs/ROADMAP_BRAZACOMMERCE.md",
-  "updated_at": "2026-11-17T02:04:12.419697+00:00",
+  "updated_at": "2026-11-17T14:51:11.231633+00:00",
   "product": {
     "name": "MLS Commerce OS",
     "supervisor": "MLS Hermes",
@@ -29,9 +29,9 @@
     "pr": 10,
     "merge_commit": "9c418fd3010f46957d1ce52345baacd76041c788"
   },
-  "current_phase": "OWNER_OPERATION_U2_DTF_AUTOMATIC_PREVIEW",
-  "working_branch": "feature/owner-dtf-auto-layout-20261116",
-  "current_status": "DTF_AUTO_PREVIEW_PUBLISHED_VERIFIED_TECHNICAL_OWNER_ACCEPTANCE_PENDING",
+  "current_phase": "OWNER_OPERATION_U2_SHIRT_COST_EDITOR",
+  "working_branch": "fix/owner-shirt-cost-editing-20261116",
+  "current_status": "SHIRT_COST_EDITOR_IMPLEMENTED_TARGETED_PASS_FULL_GATES_PENDING",
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
     "Repasse-base, ajuste, repasse após ajuste e liberação exibidos sem dupla dedução",
@@ -120,6 +120,8 @@
     }
   },
   "next_actions": [
+    "Finish full Node/Python/build, exact-head GitHub CI and native Cloudflare/public verification before publishing shirt-cost editor.",
+    "Owner: edit adult regular/plus costs and explicitly save; the example14.27 from a separate rule was not copied into actual configuration.",
     "Reload the same browser/origin with original PNGs and confirmed kit recipes, verify automatic preview, explicitly reserve/export and physically inspect print size before confirming real quantities.",
     "Owner actual acceptance: import original PNGs, verify dimensions/DPI in preview and print at100%; use physical confirmation only after checking complete DTF units.",
     "Never blind-rollback the old DTF server over partial/reversed physical facts; preserve compatible reader and complete append-only audit and use verified backups.",
@@ -133,34 +135,18 @@
     "Mission Control M1.1 (opção 3) integrado com 7 painéis independentes; conferir visual autenticado desktop/celular e retorno às telas antigas"
   ],
   "latest_increment": {
-    "task": "OP-012_AUTOMATIC_LAYOUT",
-    "source_commit": "2c225f0b341c57b956baa1519f4b63344a4337a6",
-    "source_parent": "ab4ad7ff3fc92922633e096bd26653d12796ff1b",
-    "release_candidate": "2026-11-16.3",
+    "task": "OP-015_SHIRT_COST_EDITOR",
+    "source_commit": "ae9190cd25a466635f24b315bb65d689b2e3a359",
+    "source_parent": "308179135c90bc5688567ff085084c4944da5465",
+    "release_candidate": "2026-11-16.4",
     "implementation": true,
-    "local_validation": "LOCAL4491_NODE_67_PYTHON_38_TARGETED_11_HELPER_PASS; CI4494_NODE_67_PYTHON_PASS",
-    "published": true,
+    "local_validation": "88_TARGETED_PASS_FULL_SUITE_PENDING",
+    "published": false,
     "validated_operationally": false,
     "actual_financial_acceptance": false,
-    "receipt": "docs/owner-operation/validation/dtf-auto-layout.json",
-    "previous_published_receipt": "docs/owner-operation/validation/publication-dtf-cycle-live-20261116.json",
-    "prior_ci_attempt": {
-      "id": 43995760978,
-      "conclusion": "failure",
-      "cause": "ONE_STALE_CDP_NODE_IN_WEEKLY_NAVIGATION_FIXTURE"
-    },
-    "status": "PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY",
-    "validation_head": "723bb3a67070c1604579de28f5992a7dc20c5e78",
-    "publication_source_commit": "723bb3a67070c1604579de28f5992a7dc20c5e78",
-    "ci_run": 43998220684,
-    "publication_receipt": "docs/owner-operation/validation/publication-dtf-auto-live-20261116.json",
-    "pull_request": 126,
-    "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE",
-    "workers": {
-      "finance": "50b31451-c6cf-4456-bd09-be5d1956e0da",
-      "auth": "7cac31a0-ac48-49b2-9c60-0bf94ad6744f",
-      "app": "8652d67d-6ad8-4262-bdc7-e3f8775eb2fc"
-    }
+    "receipt": "docs/owner-operation/validation/shirt-cost-editing.json",
+    "previous_published_receipt": "docs/owner-operation/validation/publication-dtf-auto-live-20261116.json",
+    "status": "IMPLEMENTED_FULL_GATES_PENDING"
   },
   "incident": {
     "id": "INCIDENT_2026_10_27_PANEL_AGENT_REGRESSION",
@@ -7704,6 +7690,36 @@
         "id": 43995760978,
         "conclusion": "failure",
         "cause": "ONE_STALE_CDP_NODE_IN_WEEKLY_NAVIGATION_FIXTURE"
+      }
+    },
+    {
+      "task": "OP-012_AUTOMATIC_LAYOUT",
+      "source_commit": "2c225f0b341c57b956baa1519f4b63344a4337a6",
+      "source_parent": "ab4ad7ff3fc92922633e096bd26653d12796ff1b",
+      "release_candidate": "2026-11-16.3",
+      "implementation": true,
+      "local_validation": "LOCAL4491_NODE_67_PYTHON_38_TARGETED_11_HELPER_PASS; CI4494_NODE_67_PYTHON_PASS",
+      "published": true,
+      "validated_operationally": false,
+      "actual_financial_acceptance": false,
+      "receipt": "docs/owner-operation/validation/dtf-auto-layout.json",
+      "previous_published_receipt": "docs/owner-operation/validation/publication-dtf-cycle-live-20261116.json",
+      "prior_ci_attempt": {
+        "id": 43995760978,
+        "conclusion": "failure",
+        "cause": "ONE_STALE_CDP_NODE_IN_WEEKLY_NAVIGATION_FIXTURE"
+      },
+      "status": "PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY",
+      "validation_head": "723bb3a67070c1604579de28f5992a7dc20c5e78",
+      "publication_source_commit": "723bb3a67070c1604579de28f5992a7dc20c5e78",
+      "ci_run": 43998220684,
+      "publication_receipt": "docs/owner-operation/validation/publication-dtf-auto-live-20261116.json",
+      "pull_request": 126,
+      "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE",
+      "workers": {
+        "finance": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+        "auth": "7cac31a0-ac48-49b2-9c60-0bf94ad6744f",
+        "app": "8652d67d-6ad8-4262-bdc7-e3f8775eb2fc"
       }
     }
   ],

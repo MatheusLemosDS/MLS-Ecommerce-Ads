@@ -1,0 +1,86 @@
+{
+  "source_parent": "308179135c90bc5688567ff085084c4944da5465",
+  "current_prefixes": {
+    "README.md": "<!-- OWNER_OPERATION_CURRENT -->\n**DTF 2026-11-16.3 publicado e verificado tecnicamente: seleção e prévia automáticas.** [Uso](docs/owner-operation/README.md) · [checkpoint canônico](docs/MLS_COMMERCE_OS_CHECKPOINT.json) · [recibo](docs/owner-operation/validation/publication-dtf-auto-live-20261116.json).\n\nCom PNGs salvos neste navegador/origem e kits confirmados, as linhas aptas são selecionadas e a prévia é montada sem clicar em Selecionar aptos ou Montar prévia. A mesma entrada preserva o canvas; alteração da fonte o invalida. Seleção manual desativa a automação; a opção explícita a retoma. Reserva, download e impressão continuam exigindo ação do operador. Não há fatos físicos nem lançamentos financeiros por conta da prévia.\n\nFonte 723bb3a, CI 43998220684: 4494 Node e 67 Python aprovados, mais 38 testes direcionados. App/Auth ativos com 100% do tráfego e hashes/configurações conferidos; Finance preservado. 8 verificações HTTP e 8 assets públicos exatos; backup privado/restore isolado conferidos. PR #126 rascunho sobre PR #125, sem merge/auto-merge; main 346f30f preservada.\n\nPróximo passo: recarregue Produção → Montador e fila DTF e confira a prévia com os PNGs reais. Não infira fabricação, custos ausentes ou aceite financeiro de um arquivo. [Regras ativas e gates](AGENTS.md#regras-de-domínio-ativas) preservam sexta às 13h/Brasília, confirmações/auditoria, seis agentes, gráficos e contratos. OP-014 segue como próximo desenvolvimento independente; venda ADIADO_VENDA. Históricos integrais seguem abaixo e nas evidências.\n<!-- END_OWNER_OPERATION_CURRENT -->",
+    "NEXT_CHAT_HANDOFF.txt": "<!-- OWNER_OPERATION_CURRENT -->\n**DTF 2026-11-16.3 publicado e verificado tecnicamente: seleção e prévia automáticas.** [Uso](docs/owner-operation/README.md) · [checkpoint canônico](docs/MLS_COMMERCE_OS_CHECKPOINT.json) · [recibo](docs/owner-operation/validation/publication-dtf-auto-live-20261116.json).\n\nCom PNGs salvos neste navegador/origem e kits confirmados, as linhas aptas são selecionadas e a prévia é montada sem clicar em Selecionar aptos ou Montar prévia. A mesma entrada preserva o canvas; alteração da fonte o invalida. Seleção manual desativa a automação; a opção explícita a retoma. Reserva, download e impressão continuam exigindo ação do operador. Não há fatos físicos nem lançamentos financeiros por conta da prévia.\n\nFonte 723bb3a, CI 43998220684: 4494 Node e 67 Python aprovados, mais 38 testes direcionados. App/Auth ativos com 100% do tráfego e hashes/configurações conferidos; Finance preservado. 8 verificações HTTP e 8 assets públicos exatos; backup privado/restore isolado conferidos. PR #126 rascunho sobre PR #125, sem merge/auto-merge; main 346f30f preservada.\n\nPróximo passo: recarregue Produção → Montador e fila DTF e confira a prévia com os PNGs reais. Não infira fabricação, custos ausentes ou aceite financeiro de um arquivo. [Regras ativas e gates](AGENTS.md#regras-de-domínio-ativas) preservam sexta às 13h/Brasília, confirmações/auditoria, seis agentes, gráficos e contratos. OP-014 segue como próximo desenvolvimento independente; venda ADIADO_VENDA. Históricos integrais seguem abaixo e nas evidências.\n<!-- END_OWNER_OPERATION_CURRENT -->",
+    "docs/RETOMADA.md": "<!-- OWNER_OPERATION_CURRENT -->\n**DTF 2026-11-16.3 publicado e verificado tecnicamente: seleção e prévia automáticas.** [Uso](owner-operation/README.md) · [checkpoint canônico](MLS_COMMERCE_OS_CHECKPOINT.json) · [recibo](owner-operation/validation/publication-dtf-auto-live-20261116.json).\n\nCom PNGs salvos neste navegador/origem e kits confirmados, as linhas aptas são selecionadas e a prévia é montada sem clicar em Selecionar aptos ou Montar prévia. A mesma entrada preserva o canvas; alteração da fonte o invalida. Seleção manual desativa a automação; a opção explícita a retoma. Reserva, download e impressão continuam exigindo ação do operador. Não há fatos físicos nem lançamentos financeiros por conta da prévia.\n\nFonte 723bb3a, CI 43998220684: 4494 Node e 67 Python aprovados, mais 38 testes direcionados. App/Auth ativos com 100% do tráfego e hashes/configurações conferidos; Finance preservado. 8 verificações HTTP e 8 assets públicos exatos; backup privado/restore isolado conferidos. PR #126 rascunho sobre PR #125, sem merge/auto-merge; main 346f30f preservada.\n\nPróximo passo: recarregue Produção → Montador e fila DTF e confira a prévia com os PNGs reais. Não infira fabricação, custos ausentes ou aceite financeiro de um arquivo. [Regras ativas e gates](../AGENTS.md#regras-de-domínio-ativas) preservam sexta às 13h/Brasília, confirmações/auditoria, seis agentes, gráficos e contratos. OP-014 segue como próximo desenvolvimento independente; venda ADIADO_VENDA. Históricos integrais seguem abaixo e nas evidências.\n<!-- END_OWNER_OPERATION_CURRENT -->",
+    "docs/ROADMAP_MLS_COMMERCE_OS.md": "<!-- OWNER_OPERATION_CURRENT -->\n**DTF 2026-11-16.3 publicado e verificado tecnicamente: seleção e prévia automáticas.** [Uso](owner-operation/README.md) · [checkpoint canônico](MLS_COMMERCE_OS_CHECKPOINT.json) · [recibo](owner-operation/validation/publication-dtf-auto-live-20261116.json).\n\nCom PNGs salvos neste navegador/origem e kits confirmados, as linhas aptas são selecionadas e a prévia é montada sem clicar em Selecionar aptos ou Montar prévia. A mesma entrada preserva o canvas; alteração da fonte o invalida. Seleção manual desativa a automação; a opção explícita a retoma. Reserva, download e impressão continuam exigindo ação do operador. Não há fatos físicos nem lançamentos financeiros por conta da prévia.\n\nFonte 723bb3a, CI 43998220684: 4494 Node e 67 Python aprovados, mais 38 testes direcionados. App/Auth ativos com 100% do tráfego e hashes/configurações conferidos; Finance preservado. 8 verificações HTTP e 8 assets públicos exatos; backup privado/restore isolado conferidos. PR #126 rascunho sobre PR #125, sem merge/auto-merge; main 346f30f preservada.\n\nPróximo passo: recarregue Produção → Montador e fila DTF e confira a prévia com os PNGs reais. Não infira fabricação, custos ausentes ou aceite financeiro de um arquivo. [Regras ativas e gates](../AGENTS.md#regras-de-domínio-ativas) preservam sexta às 13h/Brasília, confirmações/auditoria, seis agentes, gráficos e contratos. OP-014 segue como próximo desenvolvimento independente; venda ADIADO_VENDA. Históricos integrais seguem abaixo e nas evidências.\n<!-- END_OWNER_OPERATION_CURRENT -->",
+    "docs/MLS_CODEX_HANDOFF_2026_10_28.md": "<!-- OWNER_OPERATION_CURRENT -->\n**DTF 2026-11-16.3 publicado e verificado tecnicamente: seleção e prévia automáticas.** [Uso](owner-operation/README.md) · [checkpoint canônico](MLS_COMMERCE_OS_CHECKPOINT.json) · [recibo](owner-operation/validation/publication-dtf-auto-live-20261116.json).\n\nCom PNGs salvos neste navegador/origem e kits confirmados, as linhas aptas são selecionadas e a prévia é montada sem clicar em Selecionar aptos ou Montar prévia. A mesma entrada preserva o canvas; alteração da fonte o invalida. Seleção manual desativa a automação; a opção explícita a retoma. Reserva, download e impressão continuam exigindo ação do operador. Não há fatos físicos nem lançamentos financeiros por conta da prévia.\n\nFonte 723bb3a, CI 43998220684: 4494 Node e 67 Python aprovados, mais 38 testes direcionados. App/Auth ativos com 100% do tráfego e hashes/configurações conferidos; Finance preservado. 8 verificações HTTP e 8 assets públicos exatos; backup privado/restore isolado conferidos. PR #126 rascunho sobre PR #125, sem merge/auto-merge; main 346f30f preservada.\n\nPróximo passo: recarregue Produção → Montador e fila DTF e confira a prévia com os PNGs reais. Não infira fabricação, custos ausentes ou aceite financeiro de um arquivo. [Regras ativas e gates](../AGENTS.md#regras-de-domínio-ativas) preservam sexta às 13h/Brasília, confirmações/auditoria, seis agentes, gráficos e contratos. OP-014 segue como próximo desenvolvimento independente; venda ADIADO_VENDA. Históricos integrais seguem abaixo e nas evidências.\n<!-- END_OWNER_OPERATION_CURRENT -->"
+  },
+  "previous_latest_increment": {
+    "task": "OP-012_AUTOMATIC_LAYOUT",
+    "source_commit": "2c225f0b341c57b956baa1519f4b63344a4337a6",
+    "source_parent": "ab4ad7ff3fc92922633e096bd26653d12796ff1b",
+    "release_candidate": "2026-11-16.3",
+    "implementation": true,
+    "local_validation": "LOCAL4491_NODE_67_PYTHON_38_TARGETED_11_HELPER_PASS; CI4494_NODE_67_PYTHON_PASS",
+    "published": true,
+    "validated_operationally": false,
+    "actual_financial_acceptance": false,
+    "receipt": "docs/owner-operation/validation/dtf-auto-layout.json",
+    "previous_published_receipt": "docs/owner-operation/validation/publication-dtf-cycle-live-20261116.json",
+    "prior_ci_attempt": {
+      "id": 43995760978,
+      "conclusion": "failure",
+      "cause": "ONE_STALE_CDP_NODE_IN_WEEKLY_NAVIGATION_FIXTURE"
+    },
+    "status": "PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY",
+    "validation_head": "723bb3a67070c1604579de28f5992a7dc20c5e78",
+    "publication_source_commit": "723bb3a67070c1604579de28f5992a7dc20c5e78",
+    "ci_run": 43998220684,
+    "publication_receipt": "docs/owner-operation/validation/publication-dtf-auto-live-20261116.json",
+    "pull_request": 126,
+    "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE",
+    "workers": {
+      "finance": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+      "auth": "7cac31a0-ac48-49b2-9c60-0bf94ad6744f",
+      "app": "8652d67d-6ad8-4262-bdc7-e3f8775eb2fc"
+    }
+  },
+  "previous_master_pointer": {
+    "current_status": "SEE_CANONICAL_CHECKPOINT_DTF_AUTO_PUBLISHED_TECHNICAL_ACCEPTANCE_PENDING",
+    "latest_increment": {
+      "task": "OP-012_AUTOMATIC_LAYOUT",
+      "published": true,
+      "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
+      "receipt": "docs/owner-operation/validation/publication-dtf-auto-live-20261116.json",
+      "operationally_accepted": false
+    },
+    "current_checkpoint_pointer": {
+      "path": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
+      "receipt": "docs/owner-operation/validation/publication-dtf-auto-live-20261116.json",
+      "validation_head": "723bb3a67070c1604579de28f5992a7dc20c5e78",
+      "published": true
+    }
+  },
+  "previous_op015": {
+    "id": "OP-015",
+    "fase": "U2",
+    "titulo": "Custo histórico e referência atual separados",
+    "prioridade": "P1_OPERACIONAL",
+    "instrucoes": "OP-015 — Custo histórico e referência atual separados. Preserve o editor de custos existente, custos personalizados, vigência, revisão e associação por variação/tipo. A fabricação registra o custo histórico comprovado ou desconhecido. Uma edição hoje pode mudar referências futuras, mas não reescreve lote, CMV ou fechamento antigo. Custos compostos não devem ser divididos entre peça/estampa/embalagem sem evidência. Mostre claramente custo de referência das vendas, custo fabricado, custo vendido e pagamento.",
+    "dependencias_tecnicas": [
+      "OP-004",
+      "OP-005"
+    ],
+    "dependencias_comerciais": [],
+    "fin_auto": [
+      "FINAUTO-12"
+    ],
+    "aceites": [
+      "Alterar custo atual não reescreve lote, CMV ou fechamento antigo.",
+      "Custos personalizados, vigência e UNKNOWN permanecem distintos."
+    ],
+    "estado_desta_especificacao": "ESPECIFICADO_PARA_CODEX",
+    "codigo": "NAO_ALTERADO_NESTE_INCREMENTO",
+    "testes_novo_incremento": "NAO_EXECUTADOS_PARA_ACEITE_DESTA_TAREFA",
+    "publicacao_novo_incremento": "NAO_REALIZADA",
+    "aceite_operacional_novo_incremento": "NAO_REALIZADO",
+    "evidencias": [],
+    "bloqueios": [],
+    "regra_especial": null,
+    "codigo_da_especificacao": "RECONFERIR_REUTILIZAR_EXISTENTE_E_COMPLETAR_LACUNAS",
+    "estado_execucao": "ABERTO",
+    "bloqueia_tarefas_independentes": false
+  }
+}

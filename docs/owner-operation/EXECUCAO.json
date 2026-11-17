@@ -616,15 +616,17 @@
         "Custos personalizados, vigência e UNKNOWN permanecem distintos."
       ],
       "estado_desta_especificacao": "ESPECIFICADO_PARA_CODEX",
-      "codigo": "NAO_ALTERADO_NESTE_INCREMENTO",
-      "testes_novo_incremento": "NAO_EXECUTADOS_PARA_ACEITE_DESTA_TAREFA",
+      "codigo": "EDITOR_EXISTENTE_REUTILIZADO_ACESSO_ADULTO_EM_PRIMEIRO_LUGAR",
+      "testes_novo_incremento": "88_DIRECIONADOS_PASS_GATES_COMPLETOS_PENDENTES",
       "publicacao_novo_incremento": "NAO_REALIZADA",
       "aceite_operacional_novo_incremento": "NAO_REALIZADO",
-      "evidencias": [],
+      "evidencias": [
+        "validation/shirt-cost-editing.json"
+      ],
       "bloqueios": [],
       "regra_especial": null,
       "codigo_da_especificacao": "RECONFERIR_REUTILIZAR_EXISTENTE_E_COMPLETAR_LACUNAS",
-      "estado_execucao": "ABERTO",
+      "estado_execucao": "PARCIAL_EDITOR_HISTORICO_VIGENCIA_ACEITE_SEGUEM_SEPARADOS",
       "bloqueia_tarefas_independentes": false
     },
     {
@@ -5716,7 +5718,7 @@
     "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/docs/financial-automation/publication-live-20261113.json"
   ],
   "source_specification": "input/ROADMAP_EXECUTAVEL_USO_PROPRIO_MLS.json",
-  "updated_at": "2026-11-17T02:04:12.419697+00:00",
+  "updated_at": "2026-11-17T14:51:11.231633+00:00",
   "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
   "specification_initial_checkpoint_historical": {
     "fase_corrente": "U0",

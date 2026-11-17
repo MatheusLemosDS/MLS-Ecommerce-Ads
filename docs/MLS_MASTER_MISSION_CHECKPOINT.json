@@ -1,6 +1,6 @@
 {
   "schema": "mls_master_mission_checkpoint_v1",
-  "updated_at": "2026-11-17T02:04:12.419697+00:00",
+  "updated_at": "2026-11-17T14:51:11.231633+00:00",
   "base_visual_sha": "8d860b2c4f26531c53c4cdba0e06a14f51a7eef4",
   "visual_branch": "feature/mls-mockup-parity-real-charts-20261029",
   "visual_pr": 79,
@@ -7051,7 +7051,7 @@
   },
   "current_phase": "OWNER_OPERATION_U2_DTF_AUTOMATIC_PREVIEW",
   "working_branch": "feature/owner-dtf-cycle-20261116",
-  "current_status": "SEE_CANONICAL_CHECKPOINT_DTF_AUTO_PUBLISHED_TECHNICAL_ACCEPTANCE_PENDING",
+  "current_status": "SEE_CANONICAL_CHECKPOINT_SHIRT_COST_EDITOR_CANDIDATE",
   "next_phase": "OWNER_OPERATION_BY_TECHNICAL_DEPENDENCY_NOT_SAAS_PHASE_GATES",
   "active_execution_matrix": "docs/owner-operation/EXECUCAO.json",
   "active_charts_catalog": "docs/owner-operation/CATALOGO_GRAFICOS.json",
@@ -7090,11 +7090,9 @@
     ]
   },
   "latest_increment": {
-    "task": "OP-012_AUTOMATIC_LAYOUT",
-    "published": true,
+    "task": "OP-015_SHIRT_COST_EDITOR",
     "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
-    "receipt": "docs/owner-operation/validation/publication-dtf-auto-live-20261116.json",
-    "operationally_accepted": false
+    "published": false
   },
   "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
   "current_fields_role": "Current owner-release fields mirror docs/MLS_COMMERCE_OS_CHECKPOINT.json; dated historical mission evidence remains preserved.",
@@ -7110,9 +7108,8 @@
   },
   "current_checkpoint_pointer": {
     "path": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
-    "receipt": "docs/owner-operation/validation/publication-dtf-auto-live-20261116.json",
-    "validation_head": "723bb3a67070c1604579de28f5992a7dc20c5e78",
-    "published": true
+    "receipt": "docs/owner-operation/validation/shirt-cost-editing.json",
+    "published": false
   },
   "previous_current_release_before_owner_dtf_cycle": {
     "status": "PUBLISHED_VERIFIED",
