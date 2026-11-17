@@ -4,6 +4,16 @@ A trilha ativa é **owner_operation**. Cadastro de outros clientes, e-mail comer
 
 [Checkpoint canônico](../MLS_COMMERCE_OS_CHECKPOINT.json) · [36 tarefas e dependências técnicas](EXECUCAO.json) · [21 contratos visuais e famílias preservadas](CATALOGO_GRAFICOS.json) · [inspeção atual](validation/reconciliation.json) · [validação do incremento](validation/owner-dtf-batches.json).
 
+## Catálogo 17.3 — descoberta concluída e editor de camisetas confirmado
+
+[Recibo com confirmação real](../system-audit/publication-catalog-empty-live.json) · [validação](../system-audit/catalog-empty-20261117.json). A coleta concluiu seis status em seis páginas, limpou falhas/diagnóstico e chegou a IDLE em 17/11 às 20:12:45 (Brasília). São 78 identidades registradas entre os status, incluindo todas as 59 anteriores preservadas. Esse aceite funcional resolve a falha BANNED/offset0 e comprova o ciclo de descoberta, mantendo classificação, anúncios ativos, vendas e completude financeira em seus próprios escopos.
+
+O proprietário confirmou os campos P–GG/G1–G3 editáveis em **Produtos → Custos e regras → Editar custos das camisetas adultas**. Para aplicar valores futuros, use o editor e o salvamento auditado existentes; nenhum novo valor ou salvamento real foi observado nesta conferência. Fabricação, CMV e fechamentos históricos mantêm seus registros e confirmações.
+
+A coleta segue a programação normal, sem repetir clique, resetar, forçar fonte ou pular status. O observador fez somente leituras; a aplicação consultou o fornecedor e atualizou o cache real. Aceite owner/financeiro geral e backup/restauração dos PNGs reais permanecem pendentes. O fetch Git suportado recuperado foi registrado sem apagar as falhas anteriores.
+
+## Histórico da publicação e observações anteriores
+
 ## Catálogo 17.3 — publicação técnica conferida
 
 [Recibo](../system-audit/publication-catalog-empty-live.json) · [validação](../system-audit/catalog-empty-20261117.json). Três Workers publicados com fontes/configurações/tráfego de 100% e HTTP/assets conferidos. A compatibilidade mantém filtros, cursor terminal, backoff, identidade, permissões e CAS; item nulo ou ausência incerta continuam erro.

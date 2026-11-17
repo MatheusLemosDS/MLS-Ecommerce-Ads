@@ -1,6 +1,6 @@
 {
   "schema": "mls_master_mission_checkpoint_v1",
-  "updated_at": "2026-11-17T22:36:06.277660+00:00",
+  "updated_at": "2026-11-17T23:23:08.071280+00:00",
   "base_visual_sha": "8d860b2c4f26531c53c4cdba0e06a14f51a7eef4",
   "visual_branch": "feature/mls-mockup-parity-real-charts-20261029",
   "visual_pr": 79,
@@ -202,12 +202,16 @@
     "ci_run": 44185929362,
     "node_tests_pass": 4679,
     "python_tests_pass": 67,
-    "actual_catalog_problem_resolved": false,
+    "actual_catalog_problem_resolved": true,
     "account_financial_acceptance": false,
     "operationally_accepted": false,
     "owner_live_qa": "NOT_PERFORMED",
     "m2_closed": false,
-    "m22_closed": false
+    "m22_closed": false,
+    "actual_catalog_problem_resolved_scope": "OBSERVED_PRIOR_EMPTY_ITEM_MISSING_BANNED_OFFSET0_FIXED_AND_SIX_STATUS_DISCOVERY_CYCLE_COMPLETE; NOT_CLASSIFICATION_FINANCIAL_OWNER_OR_ALL_SYSTEM_ERRORS",
+    "catalog_scan_complete": true,
+    "catalog_scan_complete_scope": "ONE_BOUNDED_SIX_STATUS_DISCOVERY_CYCLE_ONLY; NOT_CLASSIFICATION_FINANCIAL_OR_GLOBAL_ACCEPTANCE",
+    "catalog_six_status_scan_complete": true
   },
   "validation_history": [
     {
@@ -264,12 +268,16 @@
     "ci_run": 44185929362,
     "node_tests_pass": 4679,
     "python_tests_pass": 67,
-    "actual_catalog_problem_resolved": false,
+    "actual_catalog_problem_resolved": true,
     "account_financial_acceptance": false,
     "operationally_accepted": false,
     "owner_live_qa": "NOT_PERFORMED",
     "m2_closed": false,
-    "m22_closed": false
+    "m22_closed": false,
+    "actual_catalog_problem_resolved_scope": "OBSERVED_PRIOR_EMPTY_ITEM_MISSING_BANNED_OFFSET0_FIXED_AND_SIX_STATUS_DISCOVERY_CYCLE_COMPLETE; NOT_CLASSIFICATION_FINANCIAL_OWNER_OR_ALL_SYSTEM_ERRORS",
+    "catalog_scan_complete": true,
+    "catalog_scan_complete_scope": "ONE_BOUNDED_SIX_STATUS_DISCOVERY_CYCLE_ONLY; NOT_CLASSIFICATION_FINANCIAL_OR_GLOBAL_ACCEPTANCE",
+    "catalog_six_status_scan_complete": true
   },
   "visual_chart_refinement_20261031": {
     "id": "LIVE_VISUAL_CHART_INSPECTION_AND_COST_RULE_SCOPE",
@@ -3978,9 +3986,9 @@
     }
   },
   "next_actions": [
-    "The retained catalog error is from 2026-11-17T22:25:50Z / diagnosis 2026-11-17T22:25:53Z, before Finance 2026-11-17T22:30:54.509614Z.59 known items remain. Observe a fresh result at/after eligibility 2026-11-17T22:55:53Z under the existing queue, lease/CAS, filters and backoff; that is not an execution deadline. No repeated owner click, force/reset, status skip or catalog recovery claim.",
-    "Continue real monthly source progression after the previously observed17.2 recovered-source step; no full cohort, financial completeness, empty-day or owner acceptance inference.",
-    "Owner operational/financial acceptance, OP-013 real PNG restore and OP-014 remain separate; preserve Friday13h Brasília, UNKNOWN, no duplicate cost/revenue, immutable costs/closings, confirmations/audit, auth/CSRF/tenant, six agents and charts. Sale ADIADO_VENDA."
+    "The BANNED offset0 blocker is resolved and one six-status discovery cycle completed afterFinanceF6.78 registry identities across statuses are recorded, including all59 prior identities; this is not an active-listing/sales count or proof of classification/financial completeness. Continue normal scheduled collection without repeated owner click, force/reset or skipped filters.",
+    "Native supported Git fetch recovered; prior503/four-form metadata attempts remain preserved history, not the current blocker. Source local760/remotead7 are different SHAs with exactly the same full tree; current docs descend from the actually verified available source.",
+    "Owner/physical/financial acceptance, real PNG restore, bank/API consent/access and independent OP-014 remain governed by their own evidence/gates. Preserve Friday13h Brasília, UNKNOWN, no duplicate costs/revenue, immutable historical costs/closings, confirmations/audit, auth/CSRF/tenant, six agents and charts. Sale ADIADO_VENDA."
   ],
   "production_weekly_closing_2026_11_03": {
     "id": "PRODUCTION_WEEKLY_FRIDAY_13_CLOSING",
@@ -7057,7 +7065,7 @@
   },
   "current_phase": "OWNER_OPERATION_SYSTEM_STABILITY_16_5",
   "working_branch": "fix/system-stability-20261116",
-  "current_status": "SEE_CANONICAL_CHECKPOINT_CATALOG17_3_PUBLISHED_ACTUAL_RECOVERY_PENDING",
+  "current_status": "SEE_CANONICAL_CHECKPOINT_KNOWN_CATALOG_FAILURE_FIXED_LIVE17_3_DISCOVERY_CYCLE_COMPLETE_ACCEPTANCE_PENDING",
   "next_phase": "OWNER_OPERATION_BY_TECHNICAL_DEPENDENCY_NOT_SAAS_PHASE_GATES",
   "active_execution_matrix": "docs/owner-operation/EXECUCAO.json",
   "active_charts_catalog": "docs/owner-operation/CATALOGO_GRAFICOS.json",
@@ -7102,12 +7110,25 @@
     "local_validated_commit": "760d1b7440186919071e131048921bd83458f0e6",
     "source_tree": "f7671e24963b58394b476cf4a618caaa61322bbb",
     "local_remote_same_sha": false,
-    "status": "PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY",
+    "status": "KNOWN_CATALOG_FAILURE_FIXED_LIVE17_3_DISCOVERY_CYCLE_COMPLETE_ACCEPTANCE_PENDING",
     "published": true,
     "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
     "receipt": "docs/system-audit/publication-catalog-empty-live.json",
-    "actual_catalog_problem_resolved": false,
-    "operationally_accepted": false
+    "actual_catalog_problem_resolved": true,
+    "operationally_accepted": false,
+    "actual_catalog_problem_resolved_scope": "OBSERVED_PRIOR_EMPTY_ITEM_MISSING_BANNED_OFFSET0_FIXED_AND_SIX_STATUS_DISCOVERY_CYCLE_COMPLETE; NOT_CLASSIFICATION_FINANCIAL_OWNER_OR_ALL_SYSTEM_ERRORS",
+    "catalog_scan_complete": true,
+    "catalog_scan_complete_scope": "ONE_BOUNDED_SIX_STATUS_DISCOVERY_CYCLE_ONLY; NOT_CLASSIFICATION_FINANCIAL_OR_GLOBAL_ACCEPTANCE",
+    "catalog_six_status_scan_complete": true,
+    "limited_owner_ui_confirmation": {
+      "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
+      "receipt": "docs/system-audit/publication-catalog-empty-live.json",
+      "file_name": "owner-ui-confirmation.json",
+      "sha256": "cbd40a04232d52283c64ade79d8f3d796537c15fd58bbda1bcb0a9a62db3c628",
+      "shirt_fields_reported_editable": true,
+      "actual_cost_save_or_value_change_observed": false,
+      "global_operational_or_financial_acceptance": false
+    }
   },
   "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
   "current_fields_role": "Current owner-release fields mirror docs/MLS_COMMERCE_OS_CHECKPOINT.json; dated historical mission evidence remains preserved.",
@@ -7121,7 +7142,25 @@
     "public_smoke": "VERIFIED_HTTP_AND_EXACT_ASSETS",
     "operationally_accepted": false,
     "actual_financial_acceptance": false,
-    "actual_catalog_problem_resolved": false
+    "actual_catalog_problem_resolved": true,
+    "actual_catalog_problem_resolved_scope": "OBSERVED_PRIOR_EMPTY_ITEM_MISSING_BANNED_OFFSET0_FIXED_AND_SIX_STATUS_DISCOVERY_CYCLE_COMPLETE; NOT_CLASSIFICATION_FINANCIAL_OWNER_OR_ALL_SYSTEM_ERRORS",
+    "catalog_scan_complete": true,
+    "catalog_scan_complete_scope": "ONE_BOUNDED_SIX_STATUS_DISCOVERY_CYCLE_ONLY; NOT_CLASSIFICATION_FINANCIAL_OR_GLOBAL_ACCEPTANCE",
+    "catalog_six_status_scan_complete": true,
+    "catalog_runtime_followup": {
+      "receipt": "docs/system-audit/publication-catalog-empty-live.json",
+      "validation": "docs/system-audit/catalog-empty-20261117.json",
+      "observation_file": "catalog-post173-recovery-proof.json",
+      "observation_sha256": "e3b980129d4751864b1bfa1bea19647a4265dde06d1fe31e5b999fa19b24aa92",
+      "actual_catalog_problem_resolved": true,
+      "actual_catalog_problem_resolved_scope": "OBSERVED_PRIOR_EMPTY_ITEM_MISSING_BANNED_OFFSET0_FIXED_AND_SIX_STATUS_DISCOVERY_CYCLE_COMPLETE; NOT_CLASSIFICATION_FINANCIAL_OWNER_OR_ALL_SYSTEM_ERRORS",
+      "catalog_scan_complete": true,
+      "catalog_scan_complete_scope": "ONE_BOUNDED_SIX_STATUS_DISCOVERY_CYCLE_ONLY; NOT_CLASSIFICATION_FINANCIAL_OR_GLOBAL_ACCEPTANCE",
+      "catalog_six_status_scan_complete": true,
+      "catalog_coverage": "SIX_STATUS_TRAVERSAL_COMPLETE",
+      "owner_operational_acceptance": false,
+      "all_system_errors_resolved": false
+    }
   },
   "current_checkpoint_pointer": {
     "path": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
@@ -7912,12 +7951,16 @@
     "ci_run": 44185929362,
     "node_tests_pass": 4679,
     "python_tests_pass": 67,
-    "actual_catalog_problem_resolved": false,
+    "actual_catalog_problem_resolved": true,
     "account_financial_acceptance": false,
     "operationally_accepted": false,
     "owner_live_qa": "NOT_PERFORMED",
     "m2_closed": false,
-    "m22_closed": false
+    "m22_closed": false,
+    "actual_catalog_problem_resolved_scope": "OBSERVED_PRIOR_EMPTY_ITEM_MISSING_BANNED_OFFSET0_FIXED_AND_SIX_STATUS_DISCOVERY_CYCLE_COMPLETE; NOT_CLASSIFICATION_FINANCIAL_OWNER_OR_ALL_SYSTEM_ERRORS",
+    "catalog_scan_complete": true,
+    "catalog_scan_complete_scope": "ONE_BOUNDED_SIX_STATUS_DISCOVERY_CYCLE_ONLY; NOT_CLASSIFICATION_FINANCIAL_OR_GLOBAL_ACCEPTANCE",
+    "catalog_six_status_scan_complete": true
   },
   "last_native_published_release": {
     "status": "PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY",
@@ -7942,12 +7985,16 @@
     "ci_run": 44185929362,
     "node_tests_pass": 4679,
     "python_tests_pass": 67,
-    "actual_catalog_problem_resolved": false,
+    "actual_catalog_problem_resolved": true,
     "account_financial_acceptance": false,
     "operationally_accepted": false,
     "owner_live_qa": "NOT_PERFORMED",
     "m2_closed": false,
-    "m22_closed": false
+    "m22_closed": false,
+    "actual_catalog_problem_resolved_scope": "OBSERVED_PRIOR_EMPTY_ITEM_MISSING_BANNED_OFFSET0_FIXED_AND_SIX_STATUS_DISCOVERY_CYCLE_COMPLETE; NOT_CLASSIFICATION_FINANCIAL_OWNER_OR_ALL_SYSTEM_ERRORS",
+    "catalog_scan_complete": true,
+    "catalog_scan_complete_scope": "ONE_BOUNDED_SIX_STATUS_DISCOVERY_CYCLE_ONLY; NOT_CLASSIFICATION_FINANCIAL_OR_GLOBAL_ACCEPTANCE",
+    "catalog_six_status_scan_complete": true
   },
   "previous_latest_increment_before_catalog_empty17_3_candidate": {
     "task": "BOUNDED_MONTHLY_CONTINUATION_17_2",
@@ -8216,12 +8263,72 @@
     "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
     "receipt": "docs/system-audit/publication-catalog-empty-live.json",
     "validation": "docs/system-audit/catalog-empty-20261117.json",
-    "observation_file": "catalog-after-finance-173-observation-1.json",
-    "observation_sha256": "920bdf334d66e82d07721345956e6a5e6ceeaad88a2c9ee250320dc836f40af3",
-    "scope": "CURRENT_RETAINED_ERROR_IS_PRE_FIX; POST_FIX_RESULT_PENDING_BACKOFF",
-    "next_eligible_at_utc": "2026-11-17T22:55:53Z",
-    "display_timezone": "America/Sao_Paulo",
+    "observation_file": "catalog-post173-recovery-proof.json",
+    "observation_sha256": "e3b980129d4751864b1bfa1bea19647a4265dde06d1fe31e5b999fa19b24aa92",
+    "actual_catalog_problem_resolved": true,
+    "actual_catalog_problem_resolved_scope": "OBSERVED_PRIOR_EMPTY_ITEM_MISSING_BANNED_OFFSET0_FIXED_AND_SIX_STATUS_DISCOVERY_CYCLE_COMPLETE; NOT_CLASSIFICATION_FINANCIAL_OWNER_OR_ALL_SYSTEM_ERRORS",
+    "catalog_scan_complete": true,
+    "catalog_scan_complete_scope": "ONE_BOUNDED_SIX_STATUS_DISCOVERY_CYCLE_ONLY; NOT_CLASSIFICATION_FINANCIAL_OR_GLOBAL_ACCEPTANCE",
+    "catalog_six_status_scan_complete": true,
+    "catalog_coverage": "SIX_STATUS_TRAVERSAL_COMPLETE",
+    "owner_operational_acceptance": false,
+    "all_system_errors_resolved": false
+  },
+  "latest_before_known_catalog_functional_followup": {
+    "task": "CATALOG_EXPLICIT_ZERO_OMITTED_FIRST_PAGE_COMPATIBILITY_17_3",
+    "release": "2026-11-17.3",
+    "source_commit": "ad7f991295ca7b326f0428b5eeb744a88572cdd9",
+    "local_validated_commit": "760d1b7440186919071e131048921bd83458f0e6",
+    "source_tree": "f7671e24963b58394b476cf4a618caaa61322bbb",
+    "local_remote_same_sha": false,
+    "status": "PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY",
+    "published": true,
+    "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
+    "receipt": "docs/system-audit/publication-catalog-empty-live.json",
     "actual_catalog_problem_resolved": false,
-    "owner_repeat_click_required": false
+    "operationally_accepted": false
+  },
+  "native_git_read_recovery_followup": {
+    "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
+    "actual_base": "a4fbd8b21d78a95ad22526e9856dc5acb4480461",
+    "source_local": "760d1b7440186919071e131048921bd83458f0e6",
+    "source_remote": "ad7f991295ca7b326f0428b5eeb744a88572cdd9",
+    "source_tree": "f7671e24963b58394b476cf4a618caaa61322bbb",
+    "same_sha": false,
+    "actual_ancestor_sources": [
+      "ad7f991295ca7b326f0428b5eeb744a88572cdd9"
+    ],
+    "native_recovery_file": "native-git-recovery-followup.json",
+    "native_recovery_sha256": "8f96b488d811122347d4ae99cf6224eb97571de1ab48f01ce87f8dc4a856304f",
+    "native_recovery_evidence": {
+      "schema": "mls_native_git_read_recovery_reconciliation_v1",
+      "at": "2026-11-17T22:42:57.741983+00:00",
+      "method": "SUPPORTED_NATIVE_READ_FETCH_AFTER_OBSERVED_NETWORK_RECOVERY",
+      "previous_native_fetch_503_preserved": true,
+      "local_publication_commit_preserved": "87611a1e63f078e55830514095396ee62e9459c8",
+      "local_archive": "archive/catalog-publication-native-before-connector-20261117",
+      "remote_publication_commit": "a4fbd8b21d78a95ad22526e9856dc5acb4480461",
+      "exact_documentation_tree": "3d6bf6361901bd66f0baf4bf2f92020f313cf2a9",
+      "local_full_validation_commit": "760d1b7440186919071e131048921bd83458f0e6",
+      "remote_exact_ci_source": "ad7f991295ca7b326f0428b5eeb744a88572cdd9",
+      "exact_source_tree": "f7671e24963b58394b476cf4a618caaa61322bbb",
+      "validation_commit_shas_differ": true,
+      "native_source_and_documentary_trees_exact": true,
+      "checkout_now_matches_remote_branch": true,
+      "source_files_modified_during_reconciliation": false,
+      "force_push": false,
+      "main_modified": false
+    },
+    "old503_records_preserved_as_history": true,
+    "native_fetch503_is_current_blocker": false
+  },
+  "native_runtime_reverification_followup": {
+    "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
+    "receipt": "docs/system-audit/publication-catalog-empty-live.json",
+    "validation": "docs/system-audit/catalog-empty-20261117.json",
+    "file_name": "runtime-stage-app-auth-finance.json",
+    "sha256": "ec4a89f01ea4c232509bad78e8b23c828f926120cde7fa621a4bae4a9d41af66",
+    "verified_at": "2026-11-17T23:19:59.105815+00:00",
+    "three_sources_config_routing_active_latest100_unchanged": true
   }
 }

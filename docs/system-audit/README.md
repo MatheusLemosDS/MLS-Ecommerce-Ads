@@ -1,5 +1,15 @@
 # Varredura de estabilidade — operação própria
 
+## Confirmação funcional — ciclo de descoberta completo
+
+[Prova e recibo integral anterior](publication-catalog-empty-live.json) · [validação](catalog-empty-20261117.json). A coleta real pós-Finance F6 concluiu os seis status em seis páginas: IDLE, cursor reiniciado para o próximo ciclo, falhas 0 e diagnósticos explicitamente nulos. As 78 identidades registradas entre os status incluem todas as 59 anteriores. O ciclo de descoberta e a falha conhecida estão confirmados; classificação, fabricação, financeiro e aceite operacional geral não foram declarados completos.
+
+Finance foi relido nativamente com a mesma versão/F6/configuração e tráfego de 100%. O proprietário confirmou os campos de custos de camisetas editáveis, sem comprovar novo valor salvo. O clique relatado não foi atribuído causalmente a um horário/ator de servidor sem timestamp.
+
+O recibo 17.3 completo anterior e seu SHA256 foram preservados antes da atualização. Os zero provider_calls/remote_writes do observador são somente seu escopo de leitura; a aplicação leu o fornecedor e atualizou o cache real. Nenhum código, permissão, workflow, gate ou fato real de custos/fabricação foi alterado para validar. CI 668 documental passou automaticamente, sem nova suite manual. Git fetch suportado recuperado registrado, com 503 anteriores preservados.
+
+## Histórico da publicação técnica e observações anteriores
+
 ## Catálogo 17.3 — publicação técnica e pública concluída
 
 O erro atual do catálogo é anterior ao novo Finance; os 59 itens conhecidos foram preservados. Ainda não houve tentativa pós-correção comprovada. Próxima janela elegível: 17/11 às 19h56 (Brasília), sujeita à fila normal; sem novo clique, reset ou força.
