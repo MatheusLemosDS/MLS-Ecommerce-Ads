@@ -5807,7 +5807,7 @@
     "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/docs/financial-automation/publication-live-20261113.json"
   ],
   "source_specification": "input/ROADMAP_EXECUTAVEL_USO_PROPRIO_MLS.json",
-  "updated_at": "2026-11-17T21:55:46.487594+00:00",
+  "updated_at": "2026-11-17T22:36:06.277660+00:00",
   "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
   "specification_initial_checkpoint_historical": {
     "fase_corrente": "U0",
@@ -5823,56 +5823,106 @@
     "release_candidate": "2026-11-17.3",
     "release_id": "2026-11-17.3",
     "branch": "fix/system-stability-20261116",
-    "source_commit": "21eae88262e9e5872e1c2ad40fede2d5d7561de0",
-    "source_commit_scope": "LOCAL_PREPARED_SOURCE; NOT_FINAL_REMOTE_CI_SHA",
+    "source_commit": "ad7f991295ca7b326f0428b5eeb744a88572cdd9",
+    "source_commit_scope": "REMOTE_R_PUBLISHED_EXACT_BYTES; LOCAL_L_SAME_FULL_TREE_DIFFERENT_SHA",
     "source_reconciliation": {
-      "prepared_source_commit": "21eae88262e9e5872e1c2ad40fede2d5d7561de0",
-      "prepared_source_tree": "ca1e54184766feb06b899f8d8e54b41d19ca7c65",
-      "local_head_at_document_preparation": "a4993a3fb7e4832c1536b004a7eb097b2ecbca83",
-      "local_implementation_commit": "25ef620f58a39a132250ca746a2808d2d19b19bd",
-      "remote_candidate_commit": null,
-      "local_full_validation_commit": null,
-      "local_full_validation_tree": null,
-      "remote_ci_validation_commit": null,
-      "local_and_remote_sha_same": false,
-      "tree_equivalence_for_future_full_validation": "REQUIRED_NOT_YET_RECORDED; SAME_TREE_IS_NOT_SAME_SHA",
-      "previous_documentary_reconciliation": {
-        "local_docs_commit": "f7fb319745b8f7acd03356902fb0aa91407aac5e",
-        "local_archive_branch": "archive/monthly-docs-native-before-17-3-20261117",
-        "remote_docs_commit": "81e3ed0f5563a3921da868f3d4a6dba391ed467e",
-        "same_full_tree": "357c4f23f5c5314c1a5a4d30a888810906e8acef",
-        "same_sha": false,
-        "remote_tree_proof_origin": "ROOT_CONFIRMED_GITHUB_GITDATA_RESULT",
-        "native_fetch_status": "503_NATIVE_FETCH_HTTP2_AND_HTTP1_1; API_METADATA_FOUR_CANONICAL_FORMS_DID_NOT_MATCH; NO_OBJECT_IMPORTED; LOCAL_COMMIT_PRESERVED; MAIN_UNTOUCHED"
-      }
+      "schema": "mls_supported_gitdata_full_tree_equivalence_v1",
+      "local_head": "760d1b7440186919071e131048921bd83458f0e6",
+      "local_archive_branch": "archive/catalog-empty-native-before-connector-20261117",
+      "remote_head": "ad7f991295ca7b326f0428b5eeb744a88572cdd9",
+      "tree": "f7671e24963b58394b476cf4a618caaa61322bbb",
+      "local_remote_same_sha": false,
+      "full_tree_identical_confirmed_by_github_create_tree": true,
+      "remote_parent": "81e3ed0f5563a3921da868f3d4a6dba391ed467e",
+      "local_base": "f7fb319745b8f7acd03356902fb0aa91407aac5e",
+      "base_tree_identical": "357c4f23f5c5314c1a5a4d30a888810906e8acef",
+      "native_fetch_blocked_503": true,
+      "native_remote_object_not_imported": true,
+      "local_source_preserved": true,
+      "force_push": false,
+      "main_modified": false,
+      "branch_updated_yet": true,
+      "expected_remote_parent_lease": "81e3ed0f5563a3921da868f3d4a6dba391ed467e",
+      "prior_ci666_completed_before_branch_update": true
     },
     "base_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
     "code": true,
-    "tested_locally": "104_COMPATIBLE_ISOLATED_TARGETED_REUSED; EXACT17_3_FULL_PENDING",
-    "exact_head_github_ci": "PENDING_REMOTE17_3_CANDIDATE_SHA",
-    "published": false,
+    "tested_locally": "4679_NODE_FULL_LOCAL_L;67_PYTHON_REUSED_IDENTICAL_FILES;CI_EXACT_REMOTE_R_SAME_TREE_DIFFERENT_SHA",
+    "exact_head_github_ci": {
+      "id": 44185929362,
+      "run_number": 667,
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44185929362",
+      "head_sha": "ad7f991295ca7b326f0428b5eeb744a88572cdd9",
+      "status": "completed",
+      "conclusion": "success",
+      "node": {
+        "tests": 4679,
+        "pass": 4679,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "python": {
+        "pass": 67,
+        "fail": 0
+      },
+      "compiled_hashes": {
+        "app": "b0aa9cc1009d9d7ea276d406d0d87ecb90feda73ae3db77fe85ff64173e456e4",
+        "auth": "e3b7aecfeda1109fbe98d9fa6f8ee1ab55dcc5a70ae32fc4a5bc70c48b286a5c",
+        "finance": "f6c8a5daa307cdecb60c0c722c89aa2de02d3afe12940f315973446070561f33"
+      },
+      "cloudflare_checks": [
+        {
+          "name": "Workers Builds: brazacommerce-auth",
+          "head_sha": "ad7f991295ca7b326f0428b5eeb744a88572cdd9",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 134402687155,
+          "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-auth/production/previews/fix-system-stability-20261116/builds/4ff86218-cbfd-4e00-8389-8b050cc2e891"
+        },
+        {
+          "name": "Workers Builds: brazacommerce-app",
+          "head_sha": "ad7f991295ca7b326f0428b5eeb744a88572cdd9",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 134402647019,
+          "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-app/production/previews/fix-system-stability-20261116/builds/72f9d144-324c-4879-86e8-8c2618b0b323"
+        },
+        {
+          "name": "Workers Builds: brazacommerce-finance",
+          "head_sha": "ad7f991295ca7b326f0428b5eeb744a88572cdd9",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 134402554516,
+          "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-finance/production/previews/fix-system-stability-20261116/builds/b9caf5ed-1b01-4cd8-a188-7cac1a184bf5"
+        }
+      ],
+      "workflow_preflight_step": "SKIPPED_BY_EXISTING_STACKED_PR_CONDITION; LOCAL_PREFLIGHT_PASS"
+    },
+    "published": true,
     "operationally_accepted": false,
     "actual_catalog_problem_resolved": false,
     "actual_catalog_diagnostic_validated": true,
     "actual_financial_acceptance": false,
-    "status": "IMPLEMENTED_COMPATIBLE_TARGETED_REUSED_FULL_EXACT_CANDIDATE_GATES_PENDING",
+    "status": "PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY",
     "receipt": "../system-audit/catalog-empty-20261117.json",
     "previous_published_receipt": "../system-audit/publication-monthly-continuation-live.json",
     "pull_request": 128,
     "sale_track": "ADIADO_VENDA",
     "next_independent_task": "OP-014",
     "required_gates": {
-      "full_local_node": "PENDING_EXACT_FINAL_CANDIDATE",
-      "local_python": "PENDING_EXACT_FINAL_CANDIDATE",
-      "exact_remote_ci": "PENDING_REMOTE_CANDIDATE_SHA",
-      "three_external_cloudflare_checks": "PENDING_REMOTE_CANDIDATE_SHA",
-      "exact_wire_dry_run": "PENDING_FINAL_CANDIDATE",
-      "authenticated_generated_ui": "PENDING_EXACT_RELEASE_FULL_SUITE",
-      "fresh_backup_and_local_restore": "PENDING_BEFORE_ANY_NEXT_PUBLICATION",
-      "public17_2_transport_gate": "BLOCKED_EXACT98BYTE_ENVOY503; MUST_COMPLETE_BEFORE_NEXT_DEPLOY",
-      "publication17_3": false,
-      "native_verification17_3": false,
-      "public_verification17_3": false
+      "full_local_node": "PASS_LOCAL_L_SAME_FULL_TREE_AS_REMOTE_R_DIFFERENT_SHA",
+      "local_python": "PASS67_REUSED_BYTE_IDENTICAL_PYTHON_FILES_FROM_RECORDED_SOURCE",
+      "exact_remote_ci": "PASS_EXACT_REMOTE_R",
+      "three_external_cloudflare_checks": "PASS_EXACT_REMOTE_R",
+      "exact_wire_dry_run": "PASS_EXACT_WIRE_MODULES",
+      "authenticated_generated_ui": "FULL_LOCAL_SUITE_PASS_SYNTHETIC_GENERATED_UI; NOT_OWNER_LIVE_BOOTSTRAP_OR_FINANCIAL_ACCEPTANCE",
+      "fresh_backup_and_local_restore": "PASS_SCOPED_SNAPSHOT_AND_LOCAL_RESTORE",
+      "public17_2_transport_gate": "COMPLETED_ACTUAL_PUBLIC_FOLLOWUP_BEFORE17_3_PUBLICATION",
+      "publication17_3": true,
+      "native_verification17_3": true,
+      "public_verification17_3": true,
+      "previous_documentary_ci666_before_push17_3": "COMPLETED_SUCCESS_BEFORE17_3_BRANCH_UPDATE; NO_CANCEL_OR_WORKFLOW_CHANGE"
     },
     "compatible_targeted_evidence": {
       "validation": "../system-audit/catalog-empty-20261117.json",
@@ -5880,7 +5930,79 @@
       "isolated_port_base": "eac37aab4c2a776843f560e294dfdb742238207b",
       "source_evidence_sha256": "19a479299aa229a0057f035cad120ee84c68e938ff16faae03840e0c27a0ce20",
       "pass": 104,
-      "scope": "COMPATIBLE_ISOLATED_PORT; NOT_FINAL17_3_EXACT_TREE_FULL_GATE"
+      "scope": "COMPATIBLE_ISOLATED_PORT; NOT_FINAL17_3_EXACT_TREE_FULL_GATE",
+      "full_current_gate": "COMPLETED_SEPARATE_FULL_LOCAL_L_AND_REMOTE_CI_R_ON_PROVED_IDENTICAL_FULL_TREE; HISTORICAL104_SCOPE_PRESERVED"
+    },
+    "local_validated_commit": "760d1b7440186919071e131048921bd83458f0e6",
+    "source_tree": "f7671e24963b58394b476cf4a618caaa61322bbb",
+    "local_remote_same_sha": false,
+    "full_local_node": {
+      "tests": 4679,
+      "pass": 4679,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "duration_ms": 756797.754309,
+      "log_sha256": "562b848314a357cb55961693bdb389602b187ceb3430a79f393e814ca98c5a47",
+      "local_source_commit": "760d1b7440186919071e131048921bd83458f0e6",
+      "source_tree": "f7671e24963b58394b476cf4a618caaa61322bbb",
+      "remote_ci_commit": "ad7f991295ca7b326f0428b5eeb744a88572cdd9",
+      "local_remote_same_sha": false,
+      "scope": "FULL_LOCAL_L_AND_REMOTE_CI_R_SHARE_EXACT_FULL_TREE; DIFFERENT_COMMIT_SHAS"
+    },
+    "local_python": {
+      "pass": 67,
+      "fail": 0,
+      "log_sha256": "50c4b8785a85801d84762330e8d879687be87c8a900599a536df0487222719f3",
+      "execution_source_commit": "a4993a3fb7e4832c1536b004a7eb097b2ecbca83",
+      "same_sha_as_final_candidate": false,
+      "scope": "REUSED_REAL67_TEST_RUN; ALL_TRACKED_PYTHON_FILES_BYTE_IDENTICAL_BETWEEN_RECORDED_SOURCE_AND_LOCAL_FINAL_CANDIDATE",
+      "verified_local_final_commit": "760d1b7440186919071e131048921bd83458f0e6",
+      "entrypoint_sha256": {
+        "web/bridge/test_hermes_bridge.py": "3f3a034907f5ddc581de552307f6831d9f5773fc0a35072eb2ad1c54d8a328b8",
+        "tools/test_install_hermes_web_bridge.py": "fdea82761431adc54faea6c110002320acc143118632b04af0bc35ce5b8c52f4",
+        "tools/test_build_hermes_web_bridge_install.py": "f13fe1e2d73350446083e3149b5bbb6f92db178d1b1397609cc5619f33d9f9ab",
+        "tools/test_activate_hermes_web_bridge.py": "3d1005148743469b9f0104586f4c33b67dc8184ef433b5dde8fa8227ae5529da",
+        "tools/test_build_hermes_web_bridge_activation.py": "32dacd366091c9936cefd8bcf8125864213ee4e4453fa5aa4c6e9e550b7b27e9"
+      }
+    },
+    "native_verified": true,
+    "public_smoke_complete": true,
+    "publication_receipt": "../system-audit/publication-catalog-empty-live.json",
+    "workers": {
+      "finance": "d41571a9-0089-4b12-b774-e540fbd27f5c",
+      "auth": "fb3925e2-ed08-4b92-8c77-7fa5e2af5b00",
+      "app": "b09080a7-b93d-4c97-96e0-be14b1676084"
+    },
+    "publication_blocker": {
+      "status": "RESOLVED_BY_ACTUAL_CANONICAL17_2_PUBLIC_FOLLOWUP_BEFORE17_3_PUBLICATION",
+      "followup_recorded_at": "2026-11-17T22:27:52.785370+00:00",
+      "followup_receipt": "docs/system-audit/publication-catalog-empty-live.json",
+      "prior17_2_receipt_preserved_unchanged": true,
+      "scope": "Old98-byte transport failures remain historical; actual8HTTP8assets followup passed without credentials/CA/proxy/security/grant modifications."
+    },
+    "prior_native17_2_pagination_followup": {
+      "source_release": "2026-11-17.2",
+      "source_commit": "eac37aab4c2a776843f560e294dfdb742238207b",
+      "scope": "PRIOR_ACTUAL_NATIVE17_2_REAL_SOURCE_PAGE_STEP; NOT_CANDIDATE17_3_OR_FULL_FINANCIAL_ACCEPTANCE",
+      "file_name": "history-real-replacement-step-live17-2-proof.json",
+      "sha256": "4c93fbd6d397ebf0c1134a7eb617370713397df5a5d091abb01b1281eb423c5e",
+      "actual_source_pagination_progress_validated": true,
+      "source_pagination_complete": false,
+      "financial_coverage_complete": false,
+      "owner_operational_acceptance": false,
+      "validation": "../system-audit/catalog-empty-20261117.json"
+    },
+    "catalog_runtime_followup": {
+      "receipt": "../system-audit/publication-catalog-empty-live.json",
+      "validation": "../system-audit/catalog-empty-20261117.json",
+      "observation_file": "catalog-after-finance-173-observation-1.json",
+      "observation_sha256": "920bdf334d66e82d07721345956e6a5e6ceeaad88a2c9ee250320dc836f40af3",
+      "scope": "CURRENT_RETAINED_ERROR_IS_PRE_FIX; POST_FIX_RESULT_PENDING_BACKOFF",
+      "next_eligible_at_utc": "2026-11-17T22:55:53Z",
+      "display_timezone": "America/Sao_Paulo",
+      "actual_catalog_problem_resolved": false,
+      "owner_repeat_click_required": false
     }
   },
   "latest_owner_constraints": {
@@ -6706,6 +6828,71 @@
         "source_commit": "eac37aab4c2a776843f560e294dfdb742238207b",
         "diagnostic_code": "FINANCE_PRODUCT_INDEX_RESPONSE_EMPTY_ITEM_MISSING",
         "scope": "REAL_FINITE_STRUCTURAL_CLASSIFIER_DIAGNOSTIC; CATALOG_RECOVERY_NOT_YET_PROVEN"
+      }
+    },
+    {
+      "task": "CATALOG_EXPLICIT_ZERO_OMITTED_FIRST_PAGE_COMPATIBILITY_17_3",
+      "release_candidate": "2026-11-17.3",
+      "release_id": "2026-11-17.3",
+      "branch": "fix/system-stability-20261116",
+      "source_commit": "21eae88262e9e5872e1c2ad40fede2d5d7561de0",
+      "source_commit_scope": "LOCAL_PREPARED_SOURCE; NOT_FINAL_REMOTE_CI_SHA",
+      "source_reconciliation": {
+        "prepared_source_commit": "21eae88262e9e5872e1c2ad40fede2d5d7561de0",
+        "prepared_source_tree": "ca1e54184766feb06b899f8d8e54b41d19ca7c65",
+        "local_head_at_document_preparation": "a4993a3fb7e4832c1536b004a7eb097b2ecbca83",
+        "local_implementation_commit": "25ef620f58a39a132250ca746a2808d2d19b19bd",
+        "remote_candidate_commit": null,
+        "local_full_validation_commit": null,
+        "local_full_validation_tree": null,
+        "remote_ci_validation_commit": null,
+        "local_and_remote_sha_same": false,
+        "tree_equivalence_for_future_full_validation": "REQUIRED_NOT_YET_RECORDED; SAME_TREE_IS_NOT_SAME_SHA",
+        "previous_documentary_reconciliation": {
+          "local_docs_commit": "f7fb319745b8f7acd03356902fb0aa91407aac5e",
+          "local_archive_branch": "archive/monthly-docs-native-before-17-3-20261117",
+          "remote_docs_commit": "81e3ed0f5563a3921da868f3d4a6dba391ed467e",
+          "same_full_tree": "357c4f23f5c5314c1a5a4d30a888810906e8acef",
+          "same_sha": false,
+          "remote_tree_proof_origin": "ROOT_CONFIRMED_GITHUB_GITDATA_RESULT",
+          "native_fetch_status": "503_NATIVE_FETCH_HTTP2_AND_HTTP1_1; API_METADATA_FOUR_CANONICAL_FORMS_DID_NOT_MATCH; NO_OBJECT_IMPORTED; LOCAL_COMMIT_PRESERVED; MAIN_UNTOUCHED"
+        }
+      },
+      "base_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+      "code": true,
+      "tested_locally": "104_COMPATIBLE_ISOLATED_TARGETED_REUSED; EXACT17_3_FULL_PENDING",
+      "exact_head_github_ci": "PENDING_REMOTE17_3_CANDIDATE_SHA",
+      "published": false,
+      "operationally_accepted": false,
+      "actual_catalog_problem_resolved": false,
+      "actual_catalog_diagnostic_validated": true,
+      "actual_financial_acceptance": false,
+      "status": "IMPLEMENTED_COMPATIBLE_TARGETED_REUSED_FULL_EXACT_CANDIDATE_GATES_PENDING",
+      "receipt": "../system-audit/catalog-empty-20261117.json",
+      "previous_published_receipt": "../system-audit/publication-monthly-continuation-live.json",
+      "pull_request": 128,
+      "sale_track": "ADIADO_VENDA",
+      "next_independent_task": "OP-014",
+      "required_gates": {
+        "full_local_node": "PENDING_EXACT_FINAL_CANDIDATE",
+        "local_python": "PENDING_EXACT_FINAL_CANDIDATE",
+        "exact_remote_ci": "PENDING_REMOTE_CANDIDATE_SHA",
+        "three_external_cloudflare_checks": "PENDING_REMOTE_CANDIDATE_SHA",
+        "exact_wire_dry_run": "PENDING_FINAL_CANDIDATE",
+        "authenticated_generated_ui": "PENDING_EXACT_RELEASE_FULL_SUITE",
+        "fresh_backup_and_local_restore": "PENDING_BEFORE_ANY_NEXT_PUBLICATION",
+        "public17_2_transport_gate": "BLOCKED_EXACT98BYTE_ENVOY503; MUST_COMPLETE_BEFORE_NEXT_DEPLOY",
+        "publication17_3": false,
+        "native_verification17_3": false,
+        "public_verification17_3": false
+      },
+      "compatible_targeted_evidence": {
+        "validation": "../system-audit/catalog-empty-20261117.json",
+        "isolated_port_commit": "28394c8a6a6012d161a886dadbd8b4503caa1f2a",
+        "isolated_port_base": "eac37aab4c2a776843f560e294dfdb742238207b",
+        "source_evidence_sha256": "19a479299aa229a0057f035cad120ee84c68e938ff16faae03840e0c27a0ce20",
+        "pass": 104,
+        "scope": "COMPATIBLE_ISOLATED_PORT; NOT_FINAL17_3_EXACT_TREE_FULL_GATE"
       }
     }
   ]

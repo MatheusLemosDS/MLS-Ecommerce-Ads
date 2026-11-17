@@ -1,5 +1,15 @@
 # Varredura de estabilidade — operação própria
 
+## Catálogo 17.3 — publicação técnica e pública concluída
+
+O erro atual do catálogo é anterior ao novo Finance; os 59 itens conhecidos foram preservados. Ainda não houve tentativa pós-correção comprovada. Próxima janela elegível: 17/11 às 19h56 (Brasília), sujeita à fila normal; sem novo clique, reset ou força.
+
+[Recibo](publication-catalog-empty-live.json) · [validação](catalog-empty-20261117.json). 4679 Node locais e CI do remoto `ad7f991` aprovados, mesma árvore `f7671e2` e SHAs locais/remotos distintos. Três fontes/configurações/tráfego de 100%, rotas/cron e HTTP/assets conferidos; 67 Python reaproveitados com fontes idênticas. O gate público da 17.2 foi comprovadamente concluído antes da publicação; recibos e falhas anteriores preservados.
+
+A correção limita-se à página inicial declarada vazia com cursor terminal válido. Recuperação do catálogo exige resultado real posterior; aceite operacional, fabricação e completude financeira continuam separados.
+
+## Histórico da preparação e validação da 17.3
+
 ## Catálogo 17.3 — candidata com compatibilidade estrita
 
 [Validação/contrato](catalog-empty-20261117.json). O diagnóstico real `FINANCE_PRODUCT_INDEX_RESPONSE_EMPTY_ITEM_MISSING` foi observado na 17.2. A candidata implementa somente a página inicial declarada vazia por metadados explícitos e cursor terminal validado; item nulo/ausente sem prova, continuação ou cursor inválido continuam erro. Não enfraquece projectors, identidade, status BANNED, backoff, CAS, permissões ou contratos financeiros.

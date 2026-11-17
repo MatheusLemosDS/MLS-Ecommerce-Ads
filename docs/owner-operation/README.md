@@ -4,6 +4,18 @@ A trilha ativa é **owner_operation**. Cadastro de outros clientes, e-mail comer
 
 [Checkpoint canônico](../MLS_COMMERCE_OS_CHECKPOINT.json) · [36 tarefas e dependências técnicas](EXECUCAO.json) · [21 contratos visuais e famílias preservadas](CATALOGO_GRAFICOS.json) · [inspeção atual](validation/reconciliation.json) · [validação do incremento](validation/owner-dtf-batches.json).
 
+## Catálogo 17.3 — publicação técnica conferida
+
+[Recibo](../system-audit/publication-catalog-empty-live.json) · [validação](../system-audit/catalog-empty-20261117.json). Três Workers publicados com fontes/configurações/tráfego de 100% e HTTP/assets conferidos. A compatibilidade mantém filtros, cursor terminal, backoff, identidade, permissões e CAS; item nulo ou ausência incerta continuam erro.
+
+1. Em **Produtos**, acompanhe a atualização normal do catálogo. O proprietário já clicou uma vez; não é necessário repetir. O erro retido pertence à tentativa anterior à correção, e a próxima janela elegível começa por volta de 17/11 às 19h56 (Brasília), sujeita à fila e ao backoff. Não resete/force fonte nem pule BANNED.
+2. Confira o resultado real da próxima tentativa; a publicação técnica não comprova recuperação do catálogo ou completude financeira.
+3. Continue pedidos, DTF, produção, custos e pagamentos independentes pelos seus gates. Backup/restauração dos PNGs reais, fatos físicos e aceite owner permanecem separados.
+
+A leitura pública pendente da 17.2 foi concluída antes deste deploy. Seu recibo histórico permanece íntegro; nenhum erro de transporte foi tratado como sucesso. Venda ADIADO_VENDA; OP-014 independente.
+
+## Histórico da preparação da 17.3 e entregas anteriores
+
 ## Catálogo 17.3 — correção preparada, gates pendentes
 
 [Contrato e validação da candidata](../system-audit/catalog-empty-20261117.json) · [Live nativa 17.2 preservada](../system-audit/publication-monthly-continuation-live.json). A 17.3 ainda não foi publicada; a conferência pública completa da 17.2 continua pendente de transporte.
