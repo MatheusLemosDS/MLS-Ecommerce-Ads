@@ -2,7 +2,7 @@
   "schema": "mls_commerce_os_checkpoint_v1",
   "canonical_roadmap": "docs/ROADMAP_MLS_COMMERCE_OS.md",
   "legacy_roadmap": "docs/ROADMAP_BRAZACOMMERCE.md",
-  "updated_at": "2026-11-17T14:51:11.231633+00:00",
+  "updated_at": "2026-11-17T15:22:35.648886+00:00",
   "product": {
     "name": "MLS Commerce OS",
     "supervisor": "MLS Hermes",
@@ -31,7 +31,7 @@
   },
   "current_phase": "OWNER_OPERATION_U2_SHIRT_COST_EDITOR",
   "working_branch": "fix/owner-shirt-cost-editing-20261116",
-  "current_status": "SHIRT_COST_EDITOR_IMPLEMENTED_TARGETED_PASS_FULL_GATES_PENDING",
+  "current_status": "SHIRT_COST_EDITOR_PUBLISHED_TECHNICAL_OWNER_ACCEPTANCE_PENDING",
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
     "Repasse-base, ajuste, repasse após ajuste e liberação exibidos sem dupla dedução",
@@ -120,8 +120,7 @@
     }
   },
   "next_actions": [
-    "Finish full Node/Python/build, exact-head GitHub CI and native Cloudflare/public verification before publishing shirt-cost editor.",
-    "Owner: edit adult regular/plus costs and explicitly save; the example14.27 from a separate rule was not copied into actual configuration.",
+    "Reload Costs and rules, edit adult P–GG/G1–G3 before summaries and explicitly save. Separate rules and manual costs have their existing precedence. No example price was copied into actual settings.",
     "Reload the same browser/origin with original PNGs and confirmed kit recipes, verify automatic preview, explicitly reserve/export and physically inspect print size before confirming real quantities.",
     "Owner actual acceptance: import original PNGs, verify dimensions/DPI in preview and print at100%; use physical confirmation only after checking complete DTF units.",
     "Never blind-rollback the old DTF server over partial/reversed physical facts; preserve compatible reader and complete append-only audit and use verified backups.",
@@ -140,13 +139,24 @@
     "source_parent": "308179135c90bc5688567ff085084c4944da5465",
     "release_candidate": "2026-11-16.4",
     "implementation": true,
-    "local_validation": "88_TARGETED_PASS_FULL_SUITE_PENDING",
-    "published": false,
+    "local_validation": "88_TARGETED_4_DARK_10_RELEASE_CLOCK_19_ENVIRONMENT_RECOVERY_AND_67_PYTHON_PASS; FULL_EXACT_HEAD_CI_PASS",
+    "published": true,
     "validated_operationally": false,
     "actual_financial_acceptance": false,
     "receipt": "docs/owner-operation/validation/shirt-cost-editing.json",
     "previous_published_receipt": "docs/owner-operation/validation/publication-dtf-auto-live-20261116.json",
-    "status": "IMPLEMENTED_FULL_GATES_PENDING"
+    "status": "PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY",
+    "validation_head": "c39c57217f059f2aed62cd694cd556d06a12617a",
+    "publication_source_commit": "c39c57217f059f2aed62cd694cd556d06a12617a",
+    "ci_run": 44110296190,
+    "publication_receipt": "docs/owner-operation/validation/publication-shirt-cost-live-20261116.json",
+    "pull_request": 127,
+    "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE",
+    "workers": {
+      "finance": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+      "auth": "17ccc9d6-df7d-45e8-b3f1-75e065fa19bc",
+      "app": "5931a32e-5726-445f-9bae-11a194f5049a"
+    }
   },
   "incident": {
     "id": "INCIDENT_2026_10_27_PANEL_AGENT_REGRESSION",
@@ -3509,25 +3519,25 @@
   "last_verified_live_release": {
     "status": "PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY",
     "verification_scope": "TECHNICAL_PUBLIC_ONLY",
-    "release_id": "2026-11-16.3",
-    "release": "2026-11-16.3",
-    "source_commit": "723bb3a67070c1604579de28f5992a7dc20c5e78",
-    "prepared_source_commit": "2c225f0b341c57b956baa1519f4b63344a4337a6",
-    "ci_run": 43998220684,
-    "node_tests_pass": 4494,
+    "release_id": "2026-11-16.4",
+    "release": "2026-11-16.4",
+    "source_commit": "c39c57217f059f2aed62cd694cd556d06a12617a",
+    "prepared_source_commit": "ae9190cd25a466635f24b315bb65d689b2e3a359",
+    "ci_run": 44110296190,
+    "node_tests_pass": 4500,
     "python_tests_pass": 67,
-    "receipt": "docs/owner-operation/validation/publication-dtf-auto-live-20261116.json",
-    "verified_at": "2026-11-17T02:04:12.419697+00:00",
+    "receipt": "docs/owner-operation/validation/publication-shirt-cost-live-20261116.json",
+    "verified_at": "2026-11-17T15:22:35.648886+00:00",
     "published": true,
-    "pull_request": 126,
+    "pull_request": 127,
     "owner_live_qa": "NOT_PERFORMED",
     "account_financial_acceptance": false,
     "m2_closed": false,
     "m22_closed": false,
     "workers": {
       "finance": "50b31451-c6cf-4456-bd09-be5d1956e0da",
-      "auth": "7cac31a0-ac48-49b2-9c60-0bf94ad6744f",
-      "app": "8652d67d-6ad8-4262-bdc7-e3f8775eb2fc"
+      "auth": "17ccc9d6-df7d-45e8-b3f1-75e065fa19bc",
+      "app": "5931a32e-5726-445f-9bae-11a194f5049a"
     },
     "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE"
   },
@@ -7786,6 +7796,31 @@
       "finance": "50b31451-c6cf-4456-bd09-be5d1956e0da",
       "auth": "13669515-04e6-41e6-a821-f6b2d9b52d1d",
       "app": "f4223bd8-ffe6-4a31-b36b-9063fba5fbc5"
+    },
+    "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE"
+  },
+  "previous_last_verified_live_release_before_shirt_cost_editor": {
+    "status": "PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY",
+    "verification_scope": "TECHNICAL_PUBLIC_ONLY",
+    "release_id": "2026-11-16.3",
+    "release": "2026-11-16.3",
+    "source_commit": "723bb3a67070c1604579de28f5992a7dc20c5e78",
+    "prepared_source_commit": "2c225f0b341c57b956baa1519f4b63344a4337a6",
+    "ci_run": 43998220684,
+    "node_tests_pass": 4494,
+    "python_tests_pass": 67,
+    "receipt": "docs/owner-operation/validation/publication-dtf-auto-live-20261116.json",
+    "verified_at": "2026-11-17T02:04:12.419697+00:00",
+    "published": true,
+    "pull_request": 126,
+    "owner_live_qa": "NOT_PERFORMED",
+    "account_financial_acceptance": false,
+    "m2_closed": false,
+    "m22_closed": false,
+    "workers": {
+      "finance": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+      "auth": "7cac31a0-ac48-49b2-9c60-0bf94ad6744f",
+      "app": "8652d67d-6ad8-4262-bdc7-e3f8775eb2fc"
     },
     "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE"
   }

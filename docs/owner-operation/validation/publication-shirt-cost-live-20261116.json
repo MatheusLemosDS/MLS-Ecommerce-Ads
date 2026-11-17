@@ -1,0 +1,555 @@
+{
+  "schema": "owner_shirt_cost_controlled_publication_v1",
+  "status": "PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY",
+  "verification_scope": "EXACT_NATIVE_SOURCE_CONFIGURATION_TRAFFIC_AND_PUBLIC_HTTP_ASSETS",
+  "release": "2026-11-16.4",
+  "label": "Custos das camisetas · edição direta",
+  "url": "https://app.brazacommerce.com.br/admin?tab=margins",
+  "source_commit": "c39c57217f059f2aed62cd694cd556d06a12617a",
+  "implementation_commit": "ae9190cd25a466635f24b315bb65d689b2e3a359",
+  "base_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+  "source_parent": "308179135c90bc5688567ff085084c4944da5465",
+  "branch": "fix/owner-shirt-cost-editing-20261116",
+  "pull_request": 127,
+  "pull_request_base": "feature/owner-dtf-auto-layout-20261116",
+  "pull_request_url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/pull/127",
+  "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE",
+  "recorded_at_utc": "2026-11-17T15:22:35.648886+00:00",
+  "recorded_at_brasilia": "2026-11-17T12:22:35.648886-03:00",
+  "ci": {
+    "id": 44110296190,
+    "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44110296190",
+    "head_sha": "c39c57217f059f2aed62cd694cd556d06a12617a",
+    "conclusion": "success",
+    "node": {
+      "total": 4500,
+      "pass": 4500,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0
+    },
+    "python": {
+      "total": 67,
+      "pass": 67
+    },
+    "compiled_hashes": {
+      "app": "f86536f9f50606b2cf20a66b00ae16d25febe474cf4030f0abf791ec69a45f61",
+      "auth": "22540b94a52d0c8ad00959c100bb1319231dac8df17deb1d56c4399e9780dc48",
+      "finance": "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4"
+    },
+    "workflow_preflight_step": "SKIPPED_BY_EXISTING_STACKED_PR_CONDITION",
+    "local_preflight": "FRESH_RELEASE_LOCAL_PREFLIGHT_OK_REQUIRED_BEFORE_PROMOTION"
+  },
+  "local_full_initial": {
+    "tests": 4498,
+    "pass": 4485,
+    "fail": 13,
+    "cancelled": 0,
+    "skipped": 0,
+    "status": "INITIAL_FAILURES_RECORDED_AND_AFFECTED_FILES_RETESTED",
+    "findings": [
+      "default dry-run fully decodes images and never generates MP4 or creates output directory",
+      "actual render deadline cancels media work and clears staging and lease",
+      "tampered campaign text and altered original bytes cannot render or reuse a job",
+      "a valid-looking PNG header with corrupt pixels fails complete image validation",
+      "CLI is dry-run by default, rejects publication flags, and prints only safe codes",
+      "three real templates render PT-BR MP4s, preserve asymmetry, validate, export and reuse atomically",
+      "real local Worker preview authenticates, persists costs and plans media at 1365px",
+      "the human release identifier is static, frozen and safe for an HTTP header",
+      "the release getter returns a closed serializable DTO without sharing mutable response state",
+      "automatic DTF selects and previews without manual buttons, resumes stored PNGs, excludes cancelled/reserved and preserves explicit reserve normal 320",
+      "automatic DTF selects and previews without manual buttons, resumes stored PNGs, excludes cancelled/reserved and preserves explicit reserve normal 1365",
+      "automatic DTF selects and previews without manual buttons, resumes stored PNGs, excludes cancelled/reserved and preserves explicit reserve minified 320",
+      "automatic DTF selects and previews without manual buttons, resumes stored PNGs, excludes cancelled/reserved and preserves explicit reserve minified 1365"
+    ]
+  },
+  "prior_ci_attempt": {
+    "id": 44107962093,
+    "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44107962093",
+    "head_sha": "d10b531fb62dca79055d4ad3e89256644004c451",
+    "conclusion": "failure",
+    "node": {
+      "tests": 4498,
+      "pass": 4491,
+      "fail": 7,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    "failures": [
+      "not ok 527 - the human release identifier is static, frozen and safe for an HTTP header",
+      "not ok 528 - the release getter returns a closed serializable DTO without sharing mutable response state",
+      "not ok 1487 - automatic DTF selects and previews without manual buttons, resumes stored PNGs, excludes cancelled/reserved and preserves explicit reserve normal 320",
+      "not ok 1488 - automatic DTF selects and previews without manual buttons, resumes stored PNGs, excludes cancelled/reserved and preserves explicit reserve normal 1365",
+      "not ok 1489 - automatic DTF selects and previews without manual buttons, resumes stored PNGs, excludes cancelled/reserved and preserves explicit reserve minified 320",
+      "not ok 1490 - automatic DTF selects and previews without manual buttons, resumes stored PNGs, excludes cancelled/reserved and preserves explicit reserve minified 1365",
+      "not ok 3321 - compiled owner navigation opens cross-panel details, preserves history and remains reachable at 320–1365px (minify=false)"
+    ],
+    "remediation": "Exact release expectations and current-Brasilia-date DTF fixtures corrected; isolated native navigation revalidation and new exact-head full CI remain required. No runtime, gate or workflow weakened."
+  },
+  "local_followup": {
+    "targeted": 88,
+    "dark_browser_profiles": 4,
+    "release_and_clock_regressions": 10,
+    "environment_media_recovery": 19,
+    "native_navigation_revalidation": 3,
+    "failures": 0,
+    "python": 67
+  },
+  "workers": {
+    "finance": {
+      "active_version_id": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+      "latest_version_id": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+      "active_percentage": 100,
+      "retrieved_raw_sha256": "3e3f3d35a3e0037c251f7abda29cc8a64643ee255771d07f2893d32d8ef7d22a",
+      "raw_bytes": 934552,
+      "effective_config_sha256": "1e5de4eba866ec7c8ca85fc37c7969d61dc513a26336879e2753e506c6711ab2",
+      "action": "RETAINED",
+      "source_matches_expected": true
+    },
+    "auth": {
+      "active_version_id": "17ccc9d6-df7d-45e8-b3f1-75e065fa19bc",
+      "latest_version_id": "17ccc9d6-df7d-45e8-b3f1-75e065fa19bc",
+      "active_percentage": 100,
+      "retrieved_raw_sha256": "b80e249991e4be8c2d34f7a1fcad7991132fd154e0818e076c37ab8bb9cf9feb",
+      "raw_bytes": 654612,
+      "effective_config_sha256": "304c9c4615acdfc3a8222e00449e5bceabcf2dd9bd574587538183a935003361",
+      "action": "UPDATED",
+      "source_matches_expected": true
+    },
+    "app": {
+      "active_version_id": "5931a32e-5726-445f-9bae-11a194f5049a",
+      "latest_version_id": "5931a32e-5726-445f-9bae-11a194f5049a",
+      "active_percentage": 100,
+      "retrieved_raw_sha256": "533d8c83a60d656f5854918a8de3e789a93d68f3ac47fdf27edde465c82913af",
+      "raw_bytes": 4194199,
+      "effective_config_sha256": "72c1ffdf88e61e4d2b1b7d78545c3d8d9a5b903cc32cf4ed83ee87d5c19a32b9",
+      "action": "UPDATED",
+      "source_matches_expected": true
+    }
+  },
+  "before_workers": {
+    "finance": {
+      "active_version_id": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+      "latest_version_id": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+      "active_percentage": 100,
+      "retrieved_raw_sha256": "3e3f3d35a3e0037c251f7abda29cc8a64643ee255771d07f2893d32d8ef7d22a",
+      "raw_bytes": 934552,
+      "effective_config_sha256": "1e5de4eba866ec7c8ca85fc37c7969d61dc513a26336879e2753e506c6711ab2",
+      "action": "RETAINED",
+      "source_matches_expected": true
+    },
+    "auth": {
+      "active_version_id": "7cac31a0-ac48-49b2-9c60-0bf94ad6744f",
+      "latest_version_id": "7cac31a0-ac48-49b2-9c60-0bf94ad6744f",
+      "active_percentage": 100,
+      "retrieved_raw_sha256": "5989c016d79b8eff799fda18d3eafe3c0ba457c728c5fb7fb31d67b18aa22181",
+      "raw_bytes": 654598,
+      "effective_config_sha256": "304c9c4615acdfc3a8222e00449e5bceabcf2dd9bd574587538183a935003361",
+      "action": "RETAINED",
+      "source_matches_expected": true
+    },
+    "app": {
+      "active_version_id": "8652d67d-6ad8-4262-bdc7-e3f8775eb2fc",
+      "latest_version_id": "8652d67d-6ad8-4262-bdc7-e3f8775eb2fc",
+      "active_percentage": 100,
+      "retrieved_raw_sha256": "d53172c56b430bf425db2c70debf919e0823e9a3bdcd6f38500b248f5d311e61",
+      "raw_bytes": 4193726,
+      "effective_config_sha256": "72c1ffdf88e61e4d2b1b7d78545c3d8d9a5b903cc32cf4ed83ee87d5c19a32b9",
+      "action": "RETAINED",
+      "source_matches_expected": true
+    }
+  },
+  "native_verification": {
+    "schema": "owner_artwork_controlled_stage_verification_v1",
+    "recorded_at": "2026-11-17T15:21:06.264510+00:00",
+    "updated_workers": [
+      "app",
+      "auth"
+    ],
+    "workers": {
+      "finance": {
+        "active_version_id": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+        "latest_version_id": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+        "active_percentage": 100,
+        "retrieved_raw_sha256": "3e3f3d35a3e0037c251f7abda29cc8a64643ee255771d07f2893d32d8ef7d22a",
+        "raw_bytes": 934552,
+        "effective_config_sha256": "1e5de4eba866ec7c8ca85fc37c7969d61dc513a26336879e2753e506c6711ab2",
+        "action": "RETAINED",
+        "source_matches_expected": true
+      },
+      "auth": {
+        "active_version_id": "17ccc9d6-df7d-45e8-b3f1-75e065fa19bc",
+        "latest_version_id": "17ccc9d6-df7d-45e8-b3f1-75e065fa19bc",
+        "active_percentage": 100,
+        "retrieved_raw_sha256": "b80e249991e4be8c2d34f7a1fcad7991132fd154e0818e076c37ab8bb9cf9feb",
+        "raw_bytes": 654612,
+        "effective_config_sha256": "304c9c4615acdfc3a8222e00449e5bceabcf2dd9bd574587538183a935003361",
+        "action": "UPDATED",
+        "source_matches_expected": true
+      },
+      "app": {
+        "active_version_id": "5931a32e-5726-445f-9bae-11a194f5049a",
+        "latest_version_id": "5931a32e-5726-445f-9bae-11a194f5049a",
+        "active_percentage": 100,
+        "retrieved_raw_sha256": "533d8c83a60d656f5854918a8de3e789a93d68f3ac47fdf27edde465c82913af",
+        "raw_bytes": 4194199,
+        "effective_config_sha256": "72c1ffdf88e61e4d2b1b7d78545c3d8d9a5b903cc32cf4ed83ee87d5c19a32b9",
+        "action": "UPDATED",
+        "source_matches_expected": true
+      }
+    },
+    "all_configs_preserved": true,
+    "owner_flags_preserved": true,
+    "all_source_bytes_exact": true,
+    "all_active_latest_100": true
+  },
+  "public_verification": {
+    "schema": "owner_public_routing_verification_v1",
+    "recorded_at": "2026-11-17T15:21:13.911857+00:00",
+    "release": "2026-11-16.4",
+    "routes_subdomains_schedules": {
+      "app": {
+        "workers_dev": true,
+        "previews_enabled": false,
+        "crons": [
+          "* * * * *"
+        ],
+        "domains": [
+          "app.brazacommerce.com.br"
+        ],
+        "matches_reviewed_config": true
+      },
+      "auth": {
+        "workers_dev": true,
+        "previews_enabled": false,
+        "crons": [],
+        "domains": [
+          "auth.brazacommerce.com.br"
+        ],
+        "matches_reviewed_config": true
+      },
+      "finance": {
+        "workers_dev": false,
+        "previews_enabled": false,
+        "crons": [],
+        "domains": [],
+        "matches_reviewed_config": true
+      }
+    },
+    "public_http": [
+      {
+        "path": "/login",
+        "status": 200,
+        "release_header": "2026-11-16.4",
+        "final_path": "/login",
+        "response_sha256": "aa6df4592a7672f6ab04aef94be40c0a12d2d14781eb1e5c21c3c9377f132c25"
+      },
+      {
+        "path": "/account/login",
+        "status": 200,
+        "release_header": null,
+        "final_path": "/account/login",
+        "response_sha256": "e365a14234080ab03d4c97f9492f3e64a185b66c7915ebb59fb834f448c0b23b"
+      },
+      {
+        "path": "/account/help",
+        "status": 200,
+        "release_header": null,
+        "final_path": "/account/login",
+        "response_sha256": "e365a14234080ab03d4c97f9492f3e64a185b66c7915ebb59fb834f448c0b23b"
+      },
+      {
+        "path": "/admin?tab=production",
+        "status": 200,
+        "release_header": "2026-11-16.4",
+        "final_path": "/login",
+        "response_sha256": "aa6df4592a7672f6ab04aef94be40c0a12d2d14781eb1e5c21c3c9377f132c25"
+      },
+      {
+        "path": "/health",
+        "status": 200,
+        "release_header": null,
+        "final_path": "/health",
+        "response_sha256": "7cb8471af656cf3d62d5942ac9ea92be09c9f3951fb3fd057ea44b7d761af6c2"
+      },
+      {
+        "path": "/api/admin/bootstrap",
+        "status": 401,
+        "release_header": "2026-11-16.4",
+        "final_path": "/api/admin/bootstrap",
+        "response_sha256": "a1d55d2c2c14a6a8d1c08977059aa62ea671af14dbb076c3ecb00d1f31e74389"
+      },
+      {
+        "path": "/api/admin/production/batches?status=OPEN",
+        "status": 401,
+        "release_header": "2026-11-16.4",
+        "final_path": "/api/admin/production/batches",
+        "response_sha256": "a1d55d2c2c14a6a8d1c08977059aa62ea671af14dbb076c3ecb00d1f31e74389"
+      },
+      {
+        "path": "/api/admin/production/batch?id=00000000-0000-4000-8000-000000000001",
+        "status": 401,
+        "release_header": "2026-11-16.4",
+        "final_path": "/api/admin/production/batch",
+        "response_sha256": "a1d55d2c2c14a6a8d1c08977059aa62ea671af14dbb076c3ecb00d1f31e74389"
+      }
+    ],
+    "assets": [
+      {
+        "path": "/assets/mls/0d6250f5888258fa29664eac45b2cd821d3872b1c96ac47dda46bd7fd10e6a0c.js",
+        "sha256": "0d6250f5888258fa29664eac45b2cd821d3872b1c96ac47dda46bd7fd10e6a0c",
+        "bytes": 38035,
+        "status": 200
+      },
+      {
+        "path": "/assets/mls/1f0ca4ce395126c895b9e79afff57f1ca0ed74c3df31c6b7b0a1ac6dd0673026.js",
+        "sha256": "1f0ca4ce395126c895b9e79afff57f1ca0ed74c3df31c6b7b0a1ac6dd0673026",
+        "bytes": 53814,
+        "status": 200
+      },
+      {
+        "path": "/assets/mls/5203d255416bacb97cd44ddef29a2fc76b1432f0a1ea731fabacc4bb071fcd07.js",
+        "sha256": "5203d255416bacb97cd44ddef29a2fc76b1432f0a1ea731fabacc4bb071fcd07",
+        "bytes": 704817,
+        "status": 200
+      },
+      {
+        "path": "/assets/mls/ec6397070416275d880f293d4abe8d7f531215af369d7e9a275c10f019a8c3c8.js",
+        "sha256": "ec6397070416275d880f293d4abe8d7f531215af369d7e9a275c10f019a8c3c8",
+        "bytes": 21282,
+        "status": 200
+      },
+      {
+        "path": "/assets/mls/549c2b0f6ae183249bed2472af894cf5211d4a6853fc33c0ce6c127aa3ebf034.js",
+        "sha256": "549c2b0f6ae183249bed2472af894cf5211d4a6853fc33c0ce6c127aa3ebf034",
+        "bytes": 165982,
+        "status": 200
+      },
+      {
+        "path": "/assets/mls/04ae3166780be18f31754212640b0887abe9e20830ac4309a6e31109398e4eeb.js",
+        "sha256": "04ae3166780be18f31754212640b0887abe9e20830ac4309a6e31109398e4eeb",
+        "bytes": 54280,
+        "status": 200
+      },
+      {
+        "path": "/assets/mls/ecce6528e87fe80bda1198235b2b76010e83293361afcd0d4a50a46919be97e1.js",
+        "sha256": "ecce6528e87fe80bda1198235b2b76010e83293361afcd0d4a50a46919be97e1",
+        "bytes": 492279,
+        "status": 200
+      },
+      {
+        "path": "/assets/mls/63e4da3d9e8e272f882026d3d500180b98988792133e4b66c77788192ebdcc63.js",
+        "sha256": "63e4da3d9e8e272f882026d3d500180b98988792133e4b66c77788192ebdcc63",
+        "bytes": 49778,
+        "status": 200
+      }
+    ],
+    "all_exact": true,
+    "release_header_contract": "Version checked where the original response provides it; account-page HTML has no release header in the baseline or candidate. No application header was changed to satisfy this probe.",
+    "authenticated_owner_live_qa": "NOT_PERFORMED",
+    "scope": "PUBLIC_TLS_HTTP_ROUTING_ASSETS_AND_ANONYMOUS_AUTHORIZATION_ONLY",
+    "remote_data_mutations": 0,
+    "transport_warnings": [],
+    "transport_revalidation": "Same canonical URL, credentials/CA/proxy unchanged; bounded retries only for exact known98-byte Envoy reset error; no application503 ignored."
+  },
+  "raw_code_backup": {
+    "pass": true,
+    "workers": {
+      "app": {
+        "active_version_id": "8652d67d-6ad8-4262-bdc7-e3f8775eb2fc",
+        "raw_source_sha256": "d53172c56b430bf425db2c70debf919e0823e9a3bdcd6f38500b248f5d311e61",
+        "raw_bytes": 4193726,
+        "matches_publication_receipt": true
+      },
+      "auth": {
+        "active_version_id": "7cac31a0-ac48-49b2-9c60-0bf94ad6744f",
+        "raw_source_sha256": "5989c016d79b8eff799fda18d3eafe3c0ba457c728c5fb7fb31d67b18aa22181",
+        "raw_bytes": 654598,
+        "matches_publication_receipt": true
+      },
+      "finance": {
+        "active_version_id": "50b31451-c6cf-4456-bd09-be5d1956e0da",
+        "raw_source_sha256": "3e3f3d35a3e0037c251f7abda29cc8a64643ee255771d07f2893d32d8ef7d22a",
+        "raw_bytes": 934552,
+        "matches_publication_receipt": true
+      }
+    },
+    "not_a_d1_or_artwork_backup": true
+  },
+  "private_cost_backup_and_restore": {
+    "schema": "cost_configuration_private_d1_recovery_evidence_v1",
+    "recorded_at": "2026-11-17T15:20:07.682479+00:00",
+    "source": "SUPPORTED_D1_QUERY_API_SELECT_AND_PRAGMA_ONLY",
+    "scope": "LEGACY_OWNER_CURRENT_COSTS_RULES_AND_AUDIT_ONLY",
+    "atomic_snapshot": "ONE_SELECT_JSON_ROWSET_ALL_FIVE_COST_CONFIGURATION_TABLES",
+    "private_backup_sha256": "83d0101a263262f04f325e166273b4b87b7468c7f1d0d228204c7482bda4b510",
+    "row_counts": {
+      "operator_cost_corrections": 3,
+      "production_cost_rules_audit": 9,
+      "production_cost_rules_state": 1,
+      "production_costs_audit": 5,
+      "production_costs_state": 1
+    },
+    "restore": "ISOLATED_SQLITE_ALL_ROWS_COLUMNS_HIDDEN_ROWIDS_EQUAL_INTEGRITY_OK",
+    "indexes_and_triggers_preserved": true,
+    "live_data_mutations": 0,
+    "rows_or_order_ids_in_public_evidence": false,
+    "not_a_local_artwork_pixel_backup": true
+  },
+  "cost_config_unchanged_by_publication": {
+    "schema": "cost_configuration_before_after_publication_v1",
+    "recorded_at": "2026-11-17T15:21:14.342076+00:00",
+    "same_rows_columns_hidden_rowids_revisions_and_audit": true,
+    "table_count": 5,
+    "real_cost_values_modified_by_delivery": false,
+    "developer_d1_data_mutations": 0,
+    "source": "SUPPORTED_D1_QUERY_API_ONE_SELECT_ONLY",
+    "private_backup_sha256": "83d0101a263262f04f325e166273b4b87b7468c7f1d0d228204c7482bda4b510",
+    "private_rows_or_ids_disclosed": false
+  },
+  "external_build_configuration_access": {
+    "recorded_at": "2026-11-17T14:52:34.813898+00:00",
+    "read_only": true,
+    "identifier_source": "EXISTING_CONFIRMED_TAGS_IN_BUILD_TRIGGERS_RECEIPT",
+    "requests": [
+      {
+        "role": "app",
+        "endpoint": "GET /accounts/{account_id}/builds/workers/{confirmed_worker_tag}",
+        "status": 403,
+        "codes": [
+          10000
+        ],
+        "configuration_known": false
+      },
+      {
+        "role": "app",
+        "endpoint": "GET /accounts/{account_id}/builds/workers/{confirmed_worker_tag}/triggers",
+        "status": 403,
+        "codes": [
+          10000
+        ],
+        "configuration_known": false
+      },
+      {
+        "role": "auth",
+        "endpoint": "GET /accounts/{account_id}/builds/workers/{confirmed_worker_tag}",
+        "status": 403,
+        "codes": [
+          10000
+        ],
+        "configuration_known": false
+      },
+      {
+        "role": "auth",
+        "endpoint": "GET /accounts/{account_id}/builds/workers/{confirmed_worker_tag}/triggers",
+        "status": 403,
+        "codes": [
+          10000
+        ],
+        "configuration_known": false
+      },
+      {
+        "role": "finance",
+        "endpoint": "GET /accounts/{account_id}/builds/workers/{confirmed_worker_tag}",
+        "status": 403,
+        "codes": [
+          10000
+        ],
+        "configuration_known": false
+      },
+      {
+        "role": "finance",
+        "endpoint": "GET /accounts/{account_id}/builds/workers/{confirmed_worker_tag}/triggers",
+        "status": 403,
+        "codes": [
+          10000
+        ],
+        "configuration_known": false
+      }
+    ],
+    "permission_expansion": false,
+    "inference_from_check_url": false,
+    "production_branch_filters_and_commands": "NOT_OBTAINED",
+    "controlled_path_authorization": "Owner-invoked PROMPT_CODEX_USO_PROPRIO_PRIMEIRO_MLS.txt section8.8; project scripts and all independent release gates remain required.",
+    "candidate_external_checks": [
+      {
+        "worker": "brazacommerce-app",
+        "conclusion": "failure",
+        "build_id": "bf42a4ab-9db6-42d5-9c5f-0f944e22a299",
+        "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-app/production/builds/bf42a4ab-9db6-42d5-9c5f-0f944e22a299",
+        "head_sha": "c39c57217f059f2aed62cd694cd556d06a12617a"
+      },
+      {
+        "worker": "brazacommerce-auth",
+        "conclusion": "failure",
+        "build_id": "7cae5b03-c605-45b0-b355-1cc8a703caa3",
+        "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-auth/production/builds/7cae5b03-c605-45b0-b355-1cc8a703caa3",
+        "head_sha": "c39c57217f059f2aed62cd694cd556d06a12617a"
+      },
+      {
+        "worker": "brazacommerce-finance",
+        "conclusion": "failure",
+        "build_id": "53d010d4-cbd9-4959-9394-b9cc944eb043",
+        "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-finance/production/builds/53d010d4-cbd9-4959-9394-b9cc944eb043",
+        "head_sha": "c39c57217f059f2aed62cd694cd556d06a12617a"
+      }
+    ],
+    "candidate_log_reads": [
+      {
+        "worker": "brazacommerce-app",
+        "build_id": "bf42a4ab-9db6-42d5-9c5f-0f944e22a299",
+        "http_status": 403,
+        "error_codes": [
+          12004
+        ],
+        "read_only": true,
+        "cause_known": false
+      },
+      {
+        "worker": "brazacommerce-auth",
+        "build_id": "7cae5b03-c605-45b0-b355-1cc8a703caa3",
+        "http_status": 403,
+        "error_codes": [
+          12004
+        ],
+        "read_only": true,
+        "cause_known": false
+      },
+      {
+        "worker": "brazacommerce-finance",
+        "build_id": "53d010d4-cbd9-4959-9394-b9cc944eb043",
+        "http_status": 403,
+        "error_codes": [
+          12004
+        ],
+        "read_only": true,
+        "cause_known": false
+      }
+    ],
+    "production_path": "EXISTING_CONTROLLED_PROJECT_SCRIPTS_AUTHORIZED_BY_OWNER_PROMPT8_8_AFTER_EXACT_HEAD_VALIDAR_WORKERS_SUCCESS"
+  },
+  "previous_live_receipt": "docs/owner-operation/validation/publication-dtf-auto-live-20261116.json",
+  "finance_held_exact": true,
+  "financial_math_schema_permissions_workflow_changed": false,
+  "browser_asset_inventory_changed": false,
+  "publication_method": "PROJECT_DEPLOY_AUTH_THEN_APP_WITH_PER_STAGE_COMPLETE_NATIVE_VECTOR_CHECK",
+  "authorization": "EXISTING_OWNER_OWN_OPERATION_FIRST_PROMPT_OP034_SECTION8_8_AND_EXPLICIT_SHIRT_COST_EDITOR_REQUEST",
+  "real_cost_values_modified": false,
+  "live_owner_authenticated_qa": "NOT_PERFORMED_NO_OWNER_SESSION_AVAILABLE",
+  "operational_acceptance": false,
+  "financial_acceptance": false,
+  "owner_action": "Reload Costs and rules, edit adult P–GG/G1–G3 before summaries and explicitly save. Separate rules and manual costs have their existing precedence. No example price was copied into actual settings.",
+  "rollback": "UI-only increment with unchanged cost/DTF contracts. Verified16.3 code backups available privately; preserve all current configuration revisions and physical/financial records. Never restore the backup over newer operator edits.",
+  "post_publication_document_validation": {
+    "scope": "CHANGED_DOCUMENTS_PRESERVATION_LINKS_AND_FINANCIAL_SOURCE_INVARIANTS",
+    "current_prefix_links_missing": [],
+    "historical_suffixes_preserved": true,
+    "previous_owner_instructions_preserved": true,
+    "matrix_domain_acceptance_dependencies_unchanged": true,
+    "financial_cost_sources_admin_client_permissions_and_workflow_byte_identical": true,
+    "published_asset_inventory_unchanged": true,
+    "literal_path_allowlist_satisfied": true,
+    "manual_functional_suite_repeated": false,
+    "json_documents": 8
+  }
+}

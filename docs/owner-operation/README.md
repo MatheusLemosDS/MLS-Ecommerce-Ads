@@ -4,16 +4,16 @@ A trilha ativa é **owner_operation**. Cadastro de outros clientes, e-mail comer
 
 [Checkpoint canônico](../MLS_COMMERCE_OS_CHECKPOINT.json) · [36 tarefas e dependências técnicas](EXECUCAO.json) · [21 contratos visuais e famílias preservadas](CATALOGO_GRAFICOS.json) · [inspeção atual](validation/reconciliation.json) · [validação do incremento](validation/owner-dtf-batches.json).
 
-## Editar camisetas — candidata 2026-11-16.4
+## Editar camisetas — publicada 2026-11-16.4
 
-**Implementado e testado de forma direcionada; publicação ainda pendente.** A mudança coloca os campos das camisetas antes dos cartões de resumo. Os cálculos e o salvamento auditado existentes foram reutilizados.
+**Publicado e verificado tecnicamente.** A mudança coloca os campos das camisetas antes dos cartões de resumo. Os cálculos e o salvamento auditado existentes foram reutilizados.
 
 1. Abra **Produtos → Custos e regras**. No início, procure **Editar custos das camisetas adultas**.
 2. Edite **P–GG** e/ou **G1–G3**. Em Custos separados, altere as bases e componentes comprovados.
 3. Use **Salvar custos de produção** e confira a nova versão. Peças, kits e combos derivados seguem o padrão salvo.
 4. “Camiseta básica” e outras regras são independentes do padrão adulto. Produtos com regra ou custo personalizado podem usar outro valor; confira o valor aplicado em Produtos. O atalho da seção de regras retorna ao editor adulto.
 
-Valores digitados são rascunhos até salvar. Conflitos de revisão continuam exigindo recarga/revisão. Novos cálculos e recálculos de estimativas antigas usam as referências atuais; fabricação, CMV e fechamentos históricos mantêm seus próprios registros. Nenhum valor real foi alterado pelo desenvolvimento, nem o14,27 da imagem foi presumido como novo padrão aprovado. [Evidência](validation/shirt-cost-editing.json).
+Valores digitados são rascunhos até salvar. Conflitos de revisão continuam exigindo recarga/revisão. Novos cálculos e recálculos de estimativas antigas usam as referências atuais; fabricação, CMV e fechamentos históricos mantêm seus próprios registros. Nenhum valor real foi alterado pelo desenvolvimento, nem o 14,27 da imagem foi presumido como novo padrão aprovado. [Evidência](validation/shirt-cost-editing.json) · [recibo de publicação](validation/publication-shirt-cost-live-20261116.json).
 
 ## Montagem automática publicada — versão 2026-11-16.3
 

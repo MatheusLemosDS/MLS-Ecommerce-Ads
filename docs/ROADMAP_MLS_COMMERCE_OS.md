@@ -1,11 +1,11 @@
 <!-- OWNER_OPERATION_CURRENT -->
-**Custos das camisetas — candidata 2026-11-16.4 implementada; publicação pendente dos gates.** [Uso](owner-operation/README.md) · [checkpoint canônico](MLS_COMMERCE_OS_CHECKPOINT.json) · [evidência](owner-operation/validation/shirt-cost-editing.json).
+**Custos das camisetas 2026-11-16.4 publicados e verificados tecnicamente.** [Uso](owner-operation/README.md) · [checkpoint canônico](MLS_COMMERCE_OS_CHECKPOINT.json) · [recibo](owner-operation/validation/publication-shirt-cost-live-20261116.json).
 
-Em Custos e regras, P–GG/G1–G3 ficam antes dos resumos. Regras por tipo e exceções permanecem distintas; o atalho das regras abre o editor adulto. Salvar é explícito e auditado. Novas referências usam os custos salvos; recálculos de estimativas antigas também podem usar o custo atual. Lotes, CMV e fechamentos históricos não são reescritos.
+Em Custos e regras, edite P–GG/G1–G3 antes dos resumos e use Salvar custos de produção. Kits e combos seguem o padrão. Regras por tipo e exceções permanecem distintas; confira o custo aplicado em Produtos. Novas referências e recálculos de estimativas antigas usam o custo salvo atual; lotes, CMV e fechamentos históricos não são reescritos. Nenhum valor real foi alterado por esta entrega.
 
-Base da entrega 3081791/PR #126; main 346f30f reconfirmada pelo conector. Live conferida ainda 2026-11-16.3. 88 testes direcionados aprovados, incluindo Chromium normal/minificado em320/1365 com redução do custo, kits/combos, regra independente e revisão anterior preservados. Gates completos/CI/publicação pendentes. DTF automático publicado permanece preservado.
+Fonte c39c572, [CI 44110296190](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44110296190): 4500 Node e 67 Python aprovados. 88 testes direcionados, quatro perfis escuros, dez regressões de versão/data DTF e 19 recuperações de mídia passaram localmente. A execução local inicial e suas falhas foram preservadas. App/Auth ativos com 100% e bytes/configurações conferidos; Finance e inventário de assets preservados. PR #127 rascunho sobre PR #126; main 346f30f preservada.
 
-Aceite owner com valores reais ainda pendente; nenhum valor real foi alterado por esta entrega. OP-015 parcial, OP-014 próximo desenvolvimento independente. Sexta13h/Brasília, fontes ausentes UNKNOWN, não duplicação, auditoria, seis agentes, gráficos e permissões preservados. Venda ADIADO_VENDA. Históricos integrais e recibos anteriores continuam acessíveis.
+Aceite owner com valores reais ainda pendente. OP-015 parcial; OP-014 segue como próximo desenvolvimento independente. DTF automático, sexta13h/Brasília, UNKNOWN, não duplicação, auditoria, seis agentes, gráficos e permissões preservados. Venda ADIADO_VENDA. Históricos integrais e recibos anteriores continuam acessíveis.
 <!-- END_OWNER_OPERATION_CURRENT -->
 
 <!-- FINANCIAL_AUTOMATION_CURRENT -->
