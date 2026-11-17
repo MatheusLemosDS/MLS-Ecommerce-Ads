@@ -1,4 +1,5 @@
 import {projectBusinessPeriodRequest,projectBusinessPeriodFrame} from '../../finance/src/business-period-frame.mjs';
+import {BUSINESS_PERIOD_MISSING_RUN_MAXIMUM,projectBusinessPeriodMissingRun} from '../../finance/src/business-period-missing-run.mjs';
 import {projectBusinessPeriodVariantsFrame} from '../../finance/src/business-variant-attribution.mjs';
 
 // Only the fixed financial service can supply this private period frame. There
@@ -26,19 +27,22 @@ export async function getFinanceBusinessPeriod(env,input,options={}){
   checkDeadline();
   if(!(response instanceof Response))return failure('RESPONSE_INVALID');
   if(response.redirected||response.status>=300&&response.status<400)return failure('REDIRECT_REJECTED',response.status);
-  if(response.status!==200)return failure('HTTP_ERROR',response.status);
+  const missingRun=response.status===404&&body.operation!=='start';
+  if(response.status!==200&&!missingRun)return failure('HTTP_ERROR',response.status);
+  const readMaximum=missingRun?BUSINESS_PERIOD_MISSING_RUN_MAXIMUM:maximum;
   if(!/^application\/json(?:\s*;\s*charset\s*=\s*(?:utf-8|"utf-8"))?\s*$/i.test(response.headers.get('content-type')||''))return failure('CONTENT_TYPE_INVALID',response.status);
   const declared=response.headers.get('content-length');
   if(declared!==null&&(!/^\d+$/.test(declared)||!Number.isSafeInteger(Number(declared))))return failure('RESPONSE_INVALID',response.status);
-  if(declared!==null&&Number(declared)>maximum)return failure('BODY_LIMIT',response.status);
+  if(declared!==null&&Number(declared)>readMaximum)return failure('BODY_LIMIT',response.status);
   if(!response.body)return failure('RESPONSE_INVALID',response.status);
   stage='BODY';
   reader=response.body.getReader();const chunks=[];let length=0;
   try{while(true){checkDeadline();const chunk=await reader.read();checkDeadline();if(chunk.done)break;
-   if(!(chunk.value instanceof Uint8Array))return failure('RESPONSE_INVALID',response.status);length+=chunk.value.byteLength;if(length>maximum)return failure('BODY_LIMIT',response.status);chunks.push(chunk.value);}}
+   if(!(chunk.value instanceof Uint8Array))return failure('RESPONSE_INVALID',response.status);length+=chunk.value.byteLength;if(length>readMaximum)return failure('BODY_LIMIT',response.status);chunks.push(chunk.value);}}
   finally{cancel();try{reader.releaseLock();}catch{}reader=undefined;}
   const bytes=new Uint8Array(length);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.length;}
   let raw;try{raw=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes));}catch{return failure('JSON_INVALID',response.status);}
+  if(missingRun)return projectBusinessPeriodMissingRun(raw,body)?failure('RUN_NOT_FOUND',404):failure('HTTP_ERROR',404);
   const variants=includeVariants?await projectBusinessPeriodVariantsFrame(raw):null;
   checkDeadline();
   const frame=variants?.report??projectBusinessPeriodFrame(raw);

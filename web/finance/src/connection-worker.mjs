@@ -4,6 +4,7 @@ import {projectFinancePaymentPreview} from './payment-preview-frame.mjs';
 import {projectVariantCatalog,projectVariantCatalogRequest,financeCatalogDiagnostic,projectVariantCatalogFailure} from './variant-catalog-frame.mjs';
 import {projectStorePeriodRequest,projectStorePeriodFrame} from './store-period-frame.mjs';
 import {projectBusinessPeriodRequest,projectBusinessPeriodFrame} from './business-period-frame.mjs';
+import {projectBusinessPeriodMissingRun} from './business-period-missing-run.mjs';
 import {projectBusinessPeriodVariantsFrame} from './business-variant-attribution.mjs';
 import {projectProductionOrdersRequest,projectProductionOrdersFrame,productionOrdersRequestMatches} from './production-orders-frame.mjs';
 import {projectProductIndexRequest,projectProductIndexFrame,productIndexRequestMatches,financeProductIndexDiagnostic} from './product-index-frame.mjs';
@@ -412,7 +413,13 @@ export function createFinanceWorker({adapter, paymentSample, paymentPreview, var
           if(variants&&dailyContract===null&&Object.hasOwn(frame,'daily_breakdown'))return response({error:'FINANCE_STORE_UNAVAILABLE',diagnostic:{code:'FINANCE_STORE_UNAVAILABLE',http:null}},502,{json:true});
           const output=variants??(catalogMediaContract==='catalog-media-v1'&&catalogMedia?catalogMedia:business&&dailyContract===null&&Object.hasOwn(frame,'daily_breakdown')?Object.fromEntries(Object.entries(frame).filter(([key])=>key!=='daily_breakdown')):frame);
           return response(output, 200, {json: true});
-        } catch (error) { return production ? response({error:'FINANCE_PRODUCTION_UNAVAILABLE'},502,{json:true}) : period ? response({error:'FINANCE_STORE_UNAVAILABLE',diagnostic:{code:'FINANCE_STORE_UNAVAILABLE',http:null}},502,{json:true}) : catalog ? response({schema:'variant_catalog_v1',status:'UNAVAILABLE',diagnostic:financeCatalogDiagnostic(error)},error instanceof FinanceConnectionError&&[400,401,403,409,429,502,503,504].includes(error.status)?error.status:502,{json:true}) : paymentFailure(error); }
+        } catch (error) {
+          if(business&&error instanceof FinanceConnectionError&&error.code==='FINANCE_BUSINESS_RUN_NOT_FOUND'&&error.status===404){
+            const missing=projectBusinessPeriodMissingRun({schema:'finance_business_period_missing_run_v1',code:error.code,run_id:input.run_id},input);
+            if(missing)return response(missing,404,{json:true});
+          }
+          return production ? response({error:'FINANCE_PRODUCTION_UNAVAILABLE'},502,{json:true}) : period ? response({error:'FINANCE_STORE_UNAVAILABLE',diagnostic:{code:'FINANCE_STORE_UNAVAILABLE',http:null}},502,{json:true}) : catalog ? response({schema:'variant_catalog_v1',status:'UNAVAILABLE',diagnostic:financeCatalogDiagnostic(error)},error instanceof FinanceConnectionError&&[400,401,403,409,429,502,503,504].includes(error.status)?error.status:502,{json:true}) : paymentFailure(error);
+        }
       }
       if (![PREFIX + '/connect', PREFIX + '/callback', PREFIX + '/status'].includes(url.pathname)) return failure('NOT_FOUND', 404);
       if (request.method !== 'GET') return failure('METHOD_NOT_ALLOWED', 405, callback);

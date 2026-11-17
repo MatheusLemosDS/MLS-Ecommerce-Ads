@@ -4,6 +4,7 @@ import {projectFinancePaymentPreview} from './payment-preview-frame.mjs';
 import {projectVariantCatalog,projectVariantCatalogRequest,financeCatalogDiagnostic,projectVariantCatalogFailure} from './variant-catalog-frame.mjs';
 import {projectStorePeriodRequest,projectStorePeriodFrame} from './store-period-frame.mjs';
 import {projectBusinessPeriodRequest,projectBusinessPeriodFrame} from './business-period-frame.mjs';
+import {BUSINESS_PERIOD_MISSING_RUN_MAXIMUM,projectBusinessPeriodMissingRun} from './business-period-missing-run.mjs';
 import {projectBusinessPeriodVariantsFrame} from './business-variant-attribution.mjs';
 import {projectProductionOrdersRequest,projectProductionOrdersFrame,productionOrdersRequestMatches} from './production-orders-frame.mjs';
 import {projectProductIndexRequest,projectProductIndexFrame,productIndexRequestMatches,financeProductIndexDiagnostic,projectProductIndexDiagnostic} from './product-index-frame.mjs';
@@ -228,11 +229,13 @@ export async function forwardFinancePaymentSample(request,env,{validateInternalA
   // Its late response must be canceled before acquiring a stalled body reader.
   if(controller.signal.aborted){try{upstream?.body?.cancel().catch(()=>{});}catch{}return unavailable();}
   if(!(upstream instanceof Response)||upstream.redirected||upstream.status>=300&&upstream.status<400){try{upstream?.body?.cancel().catch(()=>{});}catch{}return unavailable();}
+  const readMaximum=business&&upstream.status===404&&input.operation!=='start'?BUSINESS_PERIOD_MISSING_RUN_MAXIMUM:responseMaximum;
   const media=upstream.headers.get('content-type')||'',size=upstream.headers.get('content-length');
-  if(!/^application\/json(?:\s*;\s*charset\s*=\s*(?:utf-8|"utf-8"))?\s*$/i.test(media)||(size!==null&&(!/^\d+$/.test(size)||Number(size)>responseMaximum))){try{upstream.body?.cancel().catch(()=>{});}catch{}return unavailable();}
-  const value=await readSampleBody(upstream.body,responseMaximum,controller,current=>{reader=current;});
+  if(!/^application\/json(?:\s*;\s*charset\s*=\s*(?:utf-8|"utf-8"))?\s*$/i.test(media)||(size!==null&&(!/^\d+$/.test(size)||Number(size)>readMaximum))){try{upstream.body?.cancel().catch(()=>{});}catch{}return unavailable();}
+  const value=await readSampleBody(upstream.body,readMaximum,controller,current=>{reader=current;});
   if(controller.signal.aborted)return unavailable();
   if(upstream.status!==200){
+   if(business&&upstream.status===404){const missing=projectBusinessPeriodMissingRun(value,input);if(missing)return new Response(JSON.stringify(missing),{status:404,headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}});}
    if(incomeDetail)return incomeDetailFailure([400,401,403,409,429,502,503,504].includes(upstream.status)?upstream.status:502,value);
    if(escrowReleases)return routerFailure('FINANCE_ESCROW_RELEASES_UNAVAILABLE',[400,401,403,409,429,502,503,504].includes(upstream.status)?upstream.status:502);
    if(reconciliation)return routerFailure('FINANCE_RECONCILIATION_UNAVAILABLE',[400,401,403,409,429,502,503,504].includes(upstream.status)?upstream.status:502);
