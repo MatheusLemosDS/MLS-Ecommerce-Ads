@@ -72,6 +72,8 @@ export const RELEASE_APPROVED_PROTECTED_FILES=Object.freeze([
  "web/finance/src/product-index-frame.mjs",
  "web/finance/src/product-index.mjs",
  "web/finance/tests/product-index.test.mjs",
+ "web/finance/tests/monthly-source-throughput-fixture.mjs",
+ "web/finance/tests/monthly-source-throughput.test.mjs",
  "web/finance/src/production-orders-frame.mjs",
  "web/finance/src/production-orders.mjs",
  "web/finance/src/production-worker.mjs",

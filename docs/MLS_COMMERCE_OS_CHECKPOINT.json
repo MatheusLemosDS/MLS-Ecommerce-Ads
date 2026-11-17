@@ -2,7 +2,7 @@
   "schema": "mls_commerce_os_checkpoint_v1",
   "canonical_roadmap": "docs/ROADMAP_MLS_COMMERCE_OS.md",
   "legacy_roadmap": "docs/ROADMAP_BRAZACOMMERCE.md",
-  "updated_at": "2026-11-17T20:20:27.302813+00:00",
+  "updated_at": "2026-11-17T20:59:28.760149+00:00",
   "product": {
     "name": "MLS Commerce OS",
     "supervisor": "MLS Hermes",
@@ -29,9 +29,9 @@
     "pr": 10,
     "merge_commit": "9c418fd3010f46957d1ce52345baacd76041c788"
   },
-  "current_phase": "OWNER_OPERATION_SYSTEM_STABILITY_CATALOG_RESPONSE_17_1",
+  "current_phase": "OWNER_OPERATION_BOUNDED_MONTHLY_CONTINUATION_17_2",
   "working_branch": "fix/system-stability-20261116",
-  "current_status": "CATALOG_STRUCTURAL_DIAGNOSTICS_17_1_PUBLISHED_ACTUAL_CAUSE_STILL_PENDING",
+  "current_status": "MONTHLY_CONTINUATION_17_2_IMPLEMENTED_FULL_GATES_PENDING",
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
     "Repasse-base, ajuste, repasse após ajuste e liberação exibidos sem dupla dedução",
@@ -120,8 +120,9 @@
     }
   },
   "next_actions": [
-    "Observe the next eligible catalog attempt under the existing cron/backoff and record its finite structural diagnostic; 17.1 publication does not prove catalog recovery. Do not force start/step/reset or bypass BANNED/offset/permissions.",
-    "Use the actual structural code and equivalent provider documentation to correct a reproduced upstream shape; absent arrays remain unknown/error, never empty success.",
+    "Concluir gates17.2 e CI do head exato; publicar somenteAuth→App apósbackups/verificação, Financepreservado.",
+    "Observar no runtime a continuação mensal/intenção/CAS; não afirmar cobertura financeira completa pelo cenário sintético.",
+    "Catálogo: aguardar tentativa elegível17.1; candidato de compatibilidade permanece não integrado até diagnóstico real.",
     "Owner operational acceptance and independent OP-014 remain open; preserve physical confirmations, historical cost/CMV/closings, Friday13h Brasília, audit, UNKNOWN and no duplicate cost/revenue.",
     "Sale ADIADO_VENDA; permissions/CSRF/isolation, six agents and charts remain required."
   ],
@@ -132,82 +133,24 @@
     "Mission Control M1.1 (opção 3) integrado com 7 painéis independentes; conferir visual autenticado desktop/celular e retorno às telas antigas"
   ],
   "latest_increment": {
-    "task": "CATALOG_RESPONSE_DIAGNOSTICS_17_1",
-    "source_commit": "e26357dd23b7c488b803481099b2da0af66eb6b6",
-    "release_candidate": "2026-11-17.1",
+    "task": "BOUNDED_MONTHLY_CONTINUATION_17_2",
+    "source_commit": "65283aad930bae2159fff6e579025a37097eaa87",
+    "release_candidate": "2026-11-17.2",
     "implemented": true,
-    "local_validation": "4631_NODE_67_PYTHON_AND_75_TARGETED_PASS_IDENTICAL_TREE",
-    "exact_head_github_ci": {
-      "id": 44164656045,
-      "run_number": 663,
-      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44164656045",
-      "status": "completed",
-      "conclusion": "success",
-      "head_sha": "e26357dd23b7c488b803481099b2da0af66eb6b6",
-      "node": {
-        "tests": 4631,
-        "pass": 4631,
-        "fail": 0,
-        "cancelled": 0,
-        "skipped": 0
-      },
-      "python": {
-        "pass": 67,
-        "fail": 0
-      },
-      "compiled_hashes": {
-        "app": "db0c20e75d6237de140cbacd3e256104336cc348e1af93cf6ce192b7e81d4239",
-        "auth": "e48e0dee32ee2d68c1523a716cd752e1df189f59d54e5f16c7899e45ae08b8a0",
-        "finance": "522cd735b73157eee92f1859d87959f5e66a7b8070afb4b2c26cb92006a44bf0"
-      },
-      "workflow_preflight_step": "SKIPPED_BY_EXISTING_STACKED_PR_CONDITION; LOCAL_PREFLIGHT_PASS",
-      "cloudflare_checks": [
-        {
-          "name": "Workers Builds: brazacommerce-app",
-          "status": "completed",
-          "conclusion": "success",
-          "id": 134328116832,
-          "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-app/production/previews/fix-system-stability-20261116/builds/2c406e8b-1f2e-479f-9cf0-ec69409d409a"
-        },
-        {
-          "name": "Workers Builds: brazacommerce-finance",
-          "status": "completed",
-          "conclusion": "success",
-          "id": 134328038598,
-          "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-finance/production/previews/fix-system-stability-20261116/builds/36ccef33-22d8-4914-8238-a74db2579c32"
-        },
-        {
-          "name": "Workers Builds: brazacommerce-auth",
-          "status": "completed",
-          "conclusion": "success",
-          "id": 134328001622,
-          "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-auth/production/previews/fix-system-stability-20261116/builds/084cc3bf-8482-42c8-ac6a-24964e329e24"
-        }
-      ]
-    },
-    "published": true,
+    "local_validation": "21_TARGETED_PASS_FULL_GATES_PENDING",
+    "exact_head_github_ci": "PENDING",
+    "published": false,
     "validated_operationally": false,
-    "actual_catalog_problem_resolved": false,
-    "receipt": "docs/system-audit/catalog-diagnostics-20261117.json",
-    "previous_published_receipt": "docs/system-audit/publication-live.json",
-    "pull_request": 128,
-    "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE",
-    "compiled_hashes": {
-      "app": "db0c20e75d6237de140cbacd3e256104336cc348e1af93cf6ce192b7e81d4239",
-      "auth": "e48e0dee32ee2d68c1523a716cd752e1df189f59d54e5f16c7899e45ae08b8a0",
-      "finance": "522cd735b73157eee92f1859d87959f5e66a7b8070afb4b2c26cb92006a44bf0"
-    },
-    "validation_head": "e26357dd23b7c488b803481099b2da0af66eb6b6",
-    "publication_source_commit": "e26357dd23b7c488b803481099b2da0af66eb6b6",
-    "local_validated_commit": "f1b01f02bb8daf538d8c481c200d38d91e2cf8c9",
-    "source_tree": "fc7be331680f6724281c49110d9ade9b96a8b986",
     "actual_financial_acceptance": false,
-    "status": "PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY",
-    "publication_receipt": "docs/system-audit/publication-catalog-diagnostics-live.json",
-    "workers": {
-      "finance": "60259fca-980a-4255-8157-fb74b43023cf",
-      "auth": "5848d2d1-944f-4633-84ce-78886a701dc2",
-      "app": "078e9f9e-d6b3-4dee-8d4c-33a821d43288"
+    "actual_catalog_problem_resolved": false,
+    "receipt": "docs/system-audit/monthly-continuation-20261117.json",
+    "previous_published_receipt": "docs/system-audit/publication-catalog-diagnostics-live.json",
+    "pull_request": 128,
+    "git_integration": "LOCAL_CANDIDATE_SAME_DRAFT_PR_NO_MERGE_NO_AUTO_MERGE",
+    "compiled_hashes": {
+      "app": "10c324f14d0203f1453d36ec60b3d11d0250d40c446b0bc81c5578332ddac0f1",
+      "auth": "002bc90da88de19b968eda850dd668b4811c04506d2be9811f08140828eda6c4",
+      "finance": "522cd735b73157eee92f1859d87959f5e66a7b8070afb4b2c26cb92006a44bf0"
     }
   },
   "incident": {
@@ -8225,6 +8168,85 @@
         "app": "db0c20e75d6237de140cbacd3e256104336cc348e1af93cf6ce192b7e81d4239",
         "auth": "e48e0dee32ee2d68c1523a716cd752e1df189f59d54e5f16c7899e45ae08b8a0",
         "finance": "522cd735b73157eee92f1859d87959f5e66a7b8070afb4b2c26cb92006a44bf0"
+      }
+    },
+    {
+      "task": "CATALOG_RESPONSE_DIAGNOSTICS_17_1",
+      "source_commit": "e26357dd23b7c488b803481099b2da0af66eb6b6",
+      "release_candidate": "2026-11-17.1",
+      "implemented": true,
+      "local_validation": "4631_NODE_67_PYTHON_AND_75_TARGETED_PASS_IDENTICAL_TREE",
+      "exact_head_github_ci": {
+        "id": 44164656045,
+        "run_number": 663,
+        "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44164656045",
+        "status": "completed",
+        "conclusion": "success",
+        "head_sha": "e26357dd23b7c488b803481099b2da0af66eb6b6",
+        "node": {
+          "tests": 4631,
+          "pass": 4631,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0
+        },
+        "python": {
+          "pass": 67,
+          "fail": 0
+        },
+        "compiled_hashes": {
+          "app": "db0c20e75d6237de140cbacd3e256104336cc348e1af93cf6ce192b7e81d4239",
+          "auth": "e48e0dee32ee2d68c1523a716cd752e1df189f59d54e5f16c7899e45ae08b8a0",
+          "finance": "522cd735b73157eee92f1859d87959f5e66a7b8070afb4b2c26cb92006a44bf0"
+        },
+        "workflow_preflight_step": "SKIPPED_BY_EXISTING_STACKED_PR_CONDITION; LOCAL_PREFLIGHT_PASS",
+        "cloudflare_checks": [
+          {
+            "name": "Workers Builds: brazacommerce-app",
+            "status": "completed",
+            "conclusion": "success",
+            "id": 134328116832,
+            "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-app/production/previews/fix-system-stability-20261116/builds/2c406e8b-1f2e-479f-9cf0-ec69409d409a"
+          },
+          {
+            "name": "Workers Builds: brazacommerce-finance",
+            "status": "completed",
+            "conclusion": "success",
+            "id": 134328038598,
+            "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-finance/production/previews/fix-system-stability-20261116/builds/36ccef33-22d8-4914-8238-a74db2579c32"
+          },
+          {
+            "name": "Workers Builds: brazacommerce-auth",
+            "status": "completed",
+            "conclusion": "success",
+            "id": 134328001622,
+            "url": "https://dash.cloudflare.com/29570924b8dbe5d0b22d5830990bc27f/workers/services/view/brazacommerce-auth/production/previews/fix-system-stability-20261116/builds/084cc3bf-8482-42c8-ac6a-24964e329e24"
+          }
+        ]
+      },
+      "published": true,
+      "validated_operationally": false,
+      "actual_catalog_problem_resolved": false,
+      "receipt": "docs/system-audit/catalog-diagnostics-20261117.json",
+      "previous_published_receipt": "docs/system-audit/publication-live.json",
+      "pull_request": 128,
+      "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE",
+      "compiled_hashes": {
+        "app": "db0c20e75d6237de140cbacd3e256104336cc348e1af93cf6ce192b7e81d4239",
+        "auth": "e48e0dee32ee2d68c1523a716cd752e1df189f59d54e5f16c7899e45ae08b8a0",
+        "finance": "522cd735b73157eee92f1859d87959f5e66a7b8070afb4b2c26cb92006a44bf0"
+      },
+      "validation_head": "e26357dd23b7c488b803481099b2da0af66eb6b6",
+      "publication_source_commit": "e26357dd23b7c488b803481099b2da0af66eb6b6",
+      "local_validated_commit": "f1b01f02bb8daf538d8c481c200d38d91e2cf8c9",
+      "source_tree": "fc7be331680f6724281c49110d9ade9b96a8b986",
+      "actual_financial_acceptance": false,
+      "status": "PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY",
+      "publication_receipt": "docs/system-audit/publication-catalog-diagnostics-live.json",
+      "workers": {
+        "finance": "60259fca-980a-4255-8157-fb74b43023cf",
+        "auth": "5848d2d1-944f-4633-84ce-78886a701dc2",
+        "app": "078e9f9e-d6b3-4dee-8d4c-33a821d43288"
       }
     }
   ],

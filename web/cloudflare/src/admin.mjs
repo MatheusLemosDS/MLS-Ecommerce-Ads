@@ -311,7 +311,7 @@ async function scheduledWork(env,services,now=()=>Date.now()){
  // First-time corrections can themselves consume the invocation budget. The
  // marker is consumed once even if an owner request initialized this isolate.
  if(MAINTENANCE_PENDING.delete(env.ADMIN_DB)){output.collection='MAINTENANCE';return output;}
- const month=localDay(new Date(now())).slice(0,7),lease=await acquireBackgroundLane(env,{month},{now,bootstrapCoverage:true,pendingIncomeRecovery:true,pendingIncomeScan:typeof services?.getFinancePendingIncomeScan==='function',previousMonthReturns:typeof services?.getFinanceReconciliation==='function'});output.lane=lease.lane;
+ const month=localDay(new Date(now())).slice(0,7),lease=await acquireBackgroundLane(env,{month},{now,bootstrapCoverage:true,pendingIncomeRecovery:true,pendingIncomeScan:typeof services?.getFinancePendingIncomeScan==='function',previousMonthReturns:typeof services?.getFinanceReconciliation==='function',monthlyContinuation:true});output.lane=lease.lane;
  if(lease.lane==='LEASED')return {...output,collection:'LEASED'};
  let repeatHistory=false,auditSourceReads=0,historyNextWork=null;const canRun=async()=>(await readBusinessSyncState(env)).enabled;
  const productionSource=async(...args)=>{if(!await canRun())throw Error('BACKGROUND_COLLECTION_PAUSED');return services.getFinanceProductionOrders(...args);};
@@ -329,8 +329,8 @@ async function scheduledWork(env,services,now=()=>Date.now()){
     if(output.collection==='NOT_DUE')output.history_collection=(await runBusinessHistorySync(env,services,{now,currentStatus:output.collection})).status;
    }catch{if(output.collection==='NOT_DUE')output.history_collection='ERROR';else output.collection='ERROR';}
   }else if(lease.lane==='HISTORY'){
-   if(!lease.reserved_returns&&!lease.coverage_bootstrap&&!lease.pending_income_recovery&&!lease.pending_income_scan){
-    try{const monthly=await runBusinessHistorySync(env,services,{now,backgroundLease:{token:lease.token,revision:lease.revision}});output.history_collection=monthly.status;
+   if(lease.monthly_history_continuation||!lease.reserved_returns&&!lease.coverage_bootstrap&&!lease.pending_income_recovery&&!lease.pending_income_scan){
+    try{const monthly=await runBusinessHistorySync(env,services,{now,backgroundLease:{token:lease.token,revision:lease.revision,...(lease.monthly_history_continuation?{auxiliary_index:lease.auxiliary_index}:{})},monthlyContinuation:lease.monthly_history_continuation===true});output.history_collection=monthly.status;
      if(monthly.finance_steps||['LEASED','PAUSED','ERROR'].includes(monthly.status))return output;
     }catch{output.history_collection='ERROR';return output;}
    }

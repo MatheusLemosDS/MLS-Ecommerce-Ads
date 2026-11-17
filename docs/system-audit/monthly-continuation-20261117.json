@@ -1,0 +1,137 @@
+{
+  "schema": "bounded_monthly_continuation_candidate_v1",
+  "status": "IMPLEMENTED_TARGETED_PASS_FULL_GATES_PENDING",
+  "recorded_at": "2026-11-17T20:59:28.760149+00:00",
+  "prepared_source_commit": "65283aad930bae2159fff6e579025a37097eaa87",
+  "local_implementation_commit": "c7bd321",
+  "base_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+  "branch": "fix/system-stability-20261116",
+  "pull_request": 128,
+  "release_candidate": "2026-11-17.2",
+  "implemented": true,
+  "local_targeted": {
+    "pass": 21,
+    "fail": 0,
+    "skipped": 0
+  },
+  "full_local_node": "PENDING",
+  "exact_head_ci": "PENDING",
+  "published": false,
+  "operational_acceptance": false,
+  "actual_financial_acceptance": false,
+  "actual_catalog_problem_resolved": false,
+  "scope": [
+    "bounded priority for valid active previous-month cohort under existing leases and4Finance/300s budget",
+    "mandatory non-monthly auxiliary yield; reserved offer cooldown900s, ordinary HISTORY keeps existing backoff",
+    "ERROR continuation only valid pending cohort newer than preserved publication with retry due",
+    "first Returns protected slot preserved; eligible bootstrap gets shared second slot",
+    "catalog refresh button explicitly names local destination; handler and permissions unchanged"
+  ],
+  "unchanged": [
+    "Financial formulas/DTOs/pins",
+    "Finance retention60/maxorders1000/maxpages200",
+    "schema/tenant inventory",
+    "permissions/grants and external financial writes",
+    "existing source/backoff/lease/CAS gates"
+  ],
+  "synthetic_proof": {
+    "schema": "monthly_continuation_cadence_local_proof_v1",
+    "test_commit": "0106b91 (same test content as7751dee)",
+    "runtime_base": "ddf1630da2e5c25a042ffc2f462cf8a1daceaa8d",
+    "environment": "LOCAL_SYNTHETIC_SQLITE_AND_GENERATED_APP",
+    "external_queries": 0,
+    "remote_writes": 0,
+    "external_provider_calls": 0,
+    "tests_passed": 7,
+    "test_command": "node --test web/cloudflare/tests/monthly-continuation-cadence.test.mjs web/finance/tests/monthly-source-throughput.test.mjs",
+    "generated_profiles": [
+      {
+        "minify": false,
+        "pass": true
+      },
+      {
+        "minify": true,
+        "pass": true
+      }
+    ],
+    "scenario": {
+      "orders": 421,
+      "statuses": "all synthetic CANCELLED to isolate scheduler/retention throughput; no payment calls",
+      "final_day": "explicitly empty synthetic day, not a claim about Live",
+      "november_turnover_interval_minutes": 13,
+      "control_windows": "alternating two November windows outside unchanged900s same-window RUNNING reuse",
+      "current_month": "real saved RUNNING Finance source read only; no current provider step",
+      "cron_reserved_minutes_modulo10": [
+        0,
+        2,
+        5,
+        7
+      ],
+      "protected_scan_returns_bootstrap": "controlled always-due cues; count work-budget opportunities, not verified operational financial results"
+    },
+    "observed_local_result": {
+      "finished_after_minutes": 518,
+      "monthly_turns_after_initial_start": 25,
+      "total_monthly_source_turns": 26,
+      "maximum_monthly_gap_minutes": 22,
+      "eligible_aux_after_cooldown_at_most": 2,
+      "at_least_one_other_aux_between_monthly_turns": true,
+      "all_three_sources_present_at_publication": true,
+      "maximum_source_count": 45,
+      "source_cap_unchanged": 60,
+      "lane_opportunities": {
+        "FINANCE": 228,
+        "RESERVED_MINUTE": 200,
+        "SCAN_BUDGET": 20,
+        "MONTHLY": 25,
+        "RETURNS_BUDGET": 10,
+        "BOOTSTRAP_BUDGET": 10,
+        "PRODUCTION": 2,
+        "COSTS": 2,
+        "CATALOG": 2,
+        "REGISTRY": 1,
+        "ORDINARY_HISTORY": 1
+      }
+    },
+    "limits": [
+      "No real-world retention lifetime or completion deadline is guaranteed by this synthetic run.",
+      "Payment latency, provider errors, D1 latency and long competing leases can add work and delays.",
+      "The model records protected budget opportunities; it does not fabricate Pending/Returns/coverage acceptance."
+    ],
+    "post_fix_regression_command": "node --test web/cloudflare/tests/business-history-continuation.test.mjs",
+    "post_fix_regressions_passed": 10,
+    "initial_evidence_preserved_at": "/workspace/work/integration-audit-evidence/monthly-continuation-cadence-proof-initial.json",
+    "mandatory_yield_fix": {
+      "commit": "ddf1630da2e5c25a042ffc2f462cf8a1daceaa8d",
+      "condition": "same-revision monthly work retains AUXILIARY; only a later non-monthly auxiliary revision resets MONTHLY",
+      "regression_passed": true
+    }
+  },
+  "rpc_budget": {
+    "acquire": "same UPDATE RETURNING/one RPC; adds one bounded active-cohort metadata scalar and current health fields; financial frame bodies are not aggregated",
+    "run_history": "one additional validation SELECT only for eligible/active continuation; one private source maximum",
+    "finish": "same batch/one RPC; monthly lost-offer cooldown prepended under active lease+parent CAS, release restores original changes() chain, monthly fairness statement last",
+    "finance_scheduled_combined_rpc_max": 49,
+    "cold_finance_combined_rpc_max": 48,
+    "new_monthly_phase_combined_rpc": 26,
+    "combined_rpc_cap_unchanged": 50
+  },
+  "known_limits": "Synthetic cadence is not an unconditional wall-clock/retention guarantee. Actual financial facts/coverage and source failures remain distinct. Catalog normalization candidate is NOT integrated without real source proof.",
+  "expected_hashes": {
+    "app": "10c324f14d0203f1453d36ec60b3d11d0250d40c446b0bc81c5578332ddac0f1",
+    "auth": "002bc90da88de19b968eda850dd668b4811c04506d2be9811f08140828eda6c4",
+    "finance": "522cd735b73157eee92f1859d87959f5e66a7b8070afb4b2c26cb92006a44bf0"
+  },
+  "bytes": {
+    "app": 3763106,
+    "auth": 579491,
+    "finance": 895222
+  },
+  "workers_to_publish": [
+    "auth",
+    "app"
+  ],
+  "finance_retained": true,
+  "previous_live_receipt": "publication-catalog-diagnostics-live.json",
+  "publication_receipt": "publication-monthly-continuation-live.json"
+}

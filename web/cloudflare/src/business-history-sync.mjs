@@ -4,6 +4,7 @@ import {businessMonthWithCheckpoint} from './business-checkpoint.mjs';
 import {projectBusinessMonth} from './business-month.mjs';
 import {readCompletedBusinessMonth} from './business-month-publication.mjs';
 import {projectEscrowReleaseCoverageFrame} from '../../finance/src/escrow-release-frame.mjs';
+import {businessHistoryContinuationQuery,projectBusinessHistoryContinuation} from './business-history-continuation.mjs';
 
 // A bounded status refresh, not a new accounting source. Only the immediately
 // previous creation month is revisited, and only while it has open statuses or
@@ -56,12 +57,12 @@ async function hasHistoricalSourceGap(db,published,currentMonth,stamp){
  }catch{return false;}
 }
 
-export async function runBusinessHistorySync(env,services,{now=()=>Date.now(),currentStatus,backgroundLease}={}){
+export async function runBusinessHistorySync(env,services,{now=()=>Date.now(),currentStatus,backgroundLease,monthlyContinuation=false}={}){
  const result=(status,month=null,finance_steps=0)=>({status,month,finance_steps});
  // The scheduled caller must have given this invocation to current Finance
  // first. Neither a failed current run nor a newly completed run adds work.
  const reserved=backgroundLease!==undefined;
- if(reserved?(!backgroundLease||Object.keys(backgroundLease).sort().join(',')!=='revision,token'||!integer(backgroundLease.revision,1,2147483646)||typeof backgroundLease.token!=='string'||!(/^[a-f0-9-]{36}$/).test(backgroundLease.token)||typeof services?.getFinanceBusinessPeriod!=='function'):currentStatus!=='NOT_DUE')return result('DEFERRED');
+ if(typeof monthlyContinuation!=='boolean'||monthlyContinuation&&!reserved||(reserved?(!backgroundLease||Object.keys(backgroundLease).sort().join(',')!==(monthlyContinuation?'auxiliary_index,revision,token':'revision,token')||monthlyContinuation&&!integer(backgroundLease.auxiliary_index,0,4)||!integer(backgroundLease.revision,1,2147483646)||typeof backgroundLease.token!=='string'||!(/^[a-f0-9-]{36}$/).test(backgroundLease.token)||typeof services?.getFinanceBusinessPeriod!=='function'):currentStatus!=='NOT_DUE'))return result('DEFERRED');
  const startedMs=clock(now),started=Math.floor(startedMs/1000),currentMonth=localMonth(startedMs),state=await readBusinessSyncState(env);
  if(!state.enabled)return result('PAUSED');
  if(state.lease_expires_at!==null&&state.lease_expires_at>started)return result('LEASED');
@@ -72,7 +73,7 @@ export async function runBusinessHistorySync(env,services,{now=()=>Date.now(),cu
  const backgroundCurrent=async()=>{
   if(!reserved)return true;
   const row=await db.prepare('SELECT revision,lease_token,lease_until,next_lane,auxiliary_index FROM background_collection_lane_state WHERE id=1').first(),stamp=Math.floor(clock(now)/1000);
-  return row?.revision===backgroundLease.revision&&row.lease_token===backgroundLease.token&&row.lease_until>stamp&&row.next_lane==='AUXILIARY'&&row.auxiliary_index===0;
+  return row?.revision===backgroundLease.revision&&row.lease_token===backgroundLease.token&&row.lease_until>stamp&&row.next_lane==='AUXILIARY'&&row.auxiliary_index===(monthlyContinuation?backgroundLease.auxiliary_index:0);
  };
  if(!await backgroundCurrent())return result('LEASED',month);
  if(reserved){
@@ -92,6 +93,11 @@ export async function runBusinessHistorySync(env,services,{now=()=>Date.now(),cu
  }catch(error){if(error instanceof BusinessHistorySyncError)throw error;fail('BUSINESS_HISTORY_STORAGE_UNAVAILABLE');}
  if(previous&&previous.next_run_at>started)return result('NOT_DUE',month);
  const published=await readCompletedBusinessMonth(env,month,{now});
+ let activeContinuation=null;
+ if(monthlyContinuation||previous&&['RUNNING','ERROR'].includes(previous.status)&&published&&exists.revision>published.publication.source_revision){
+  const cue=businessHistoryContinuationQuery(currentMonth),row=await db.prepare('SELECT '+cue.sql+' AS context').bind(...cue.args).first();activeContinuation=projectBusinessHistoryContinuation(row?.context,{month:currentMonth,stamp:started,admission:monthlyContinuation,backgroundRevision:backgroundLease?.revision??null});
+ }
+ if(monthlyContinuation&&!activeContinuation)return result('DEFERRED',month);
  // A COMPLETE source can have been captured before the end of its final day.
  // Dates and zero open statuses alone cannot prove the closed calendar: late
  // orders after that cutoff may not exist in the saved cohort at all. Resolve
@@ -105,7 +111,7 @@ export async function runBusinessHistorySync(env,services,{now=()=>Date.now(),cu
   // Once legitimately started, a partial repair may finish even if a later
   // coverage attempt is unavailable. A newer complete publication stops that
   // continuation and invalidates the old sidecar instead of resetting again.
-  const continuing=previous?.status==='RUNNING'&&integer(exists.revision,1,2147483647)&&exists.revision>published.publication.source_revision&&integer(exists.created_at,published.publication.published_at,started);
+  const continuing=!!activeContinuation;
   if(!continuing&&!await hasHistoricalSourceGap(db,published,currentMonth,started))return result('IDLE',month);
  }
  const token=crypto.randomUUID();let acquired;
