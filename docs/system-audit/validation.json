@@ -1,0 +1,61 @@
+{
+  "schema": "mls_system_stability_validation_v1",
+  "updated_at": "2026-11-17T19:02:36.578919+00:00",
+  "status": "GATES_PENDING",
+  "base_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+  "source_parent": "f78b503f5580f5545b4edc19447da63a78925b5f",
+  "prepared_source_commit": "1ac7b79c7ac38b6bd09ac8ed38d593ec40bad080",
+  "working_branch": "fix/system-stability-20261116",
+  "release_candidate": "2026-11-16.5",
+  "implemented": true,
+  "targeted_recovery_and_compaction": {
+    "total": 36,
+    "passed": 36,
+    "evidence_scope": "Reported by root for candidate1ac7b79; full consolidated suite pending"
+  },
+  "python": {
+    "total": 67,
+    "passed": 67,
+    "evidence_scope": "Local candidate reported by root; GitHub exact-head result pending"
+  },
+  "normal_worker_hashes": {
+    "app": "3633dfb963aca8e5f10d90b9427cc482adedf0070eed631929886160b9e7631b",
+    "auth": "f37c53b904ab5d083abb11d84298970b0b62315f54ac12da560d29e145c48347",
+    "finance": "9b21fdf180e37a0bd0f4bb13929bafdcdad158c8de0ba0c66acd0f437bf6d83e"
+  },
+  "normal_worker_bytes": {
+    "app": 3752627,
+    "auth": 579213,
+    "finance": 893579
+  },
+  "local_full_suite": "RUNNING_RESULT_PENDING",
+  "exact_head_github_ci": null,
+  "external_cloudflare_builds": {
+    "current_candidate": "PENDING",
+    "configuration_and_logs_access": "HTTP403 previously observed; cause unknown without read permission",
+    "ci_checks_are_distinct_from_local_validation": true
+  },
+  "publication": {
+    "published": false,
+    "receipt": null,
+    "last_verified_live_release": "2026-11-16.4",
+    "previous_receipt": "../owner-operation/validation/publication-shirt-cost-live-20261116.json"
+  },
+  "operational_acceptance": false,
+  "actual_financial_acceptance": false,
+  "real_data_mutations": 0,
+  "pull_request": null,
+  "local_evidence": [
+    "../owner-operation/validation/builds-recovery.json",
+    "../owner-operation/validation/complete-module-packaging.json"
+  ],
+  "preservation": {
+    "previous_current_fields": "history/continuity-before-16-5.json",
+    "previous_release_manifest": "history/release-candidate-before-16-5.json",
+    "handoff_historical_suffixes_unchanged": true,
+    "owner_matrix_task_contracts_unchanged": true,
+    "last_verified_live_record_unchanged": true,
+    "existing_gates_preserved": true
+  },
+  "next_executable": "Concluir gates locais/CI exatos e preflight; somente então publicação controlada já autorizada; em paralelo OP-014 sem inventar fatos financeiros."
+}

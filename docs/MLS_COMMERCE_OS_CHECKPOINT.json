@@ -2,7 +2,7 @@
   "schema": "mls_commerce_os_checkpoint_v1",
   "canonical_roadmap": "docs/ROADMAP_MLS_COMMERCE_OS.md",
   "legacy_roadmap": "docs/ROADMAP_BRAZACOMMERCE.md",
-  "updated_at": "2026-11-17T15:22:35.648886+00:00",
+  "updated_at": "2026-11-17T19:02:36.578919+00:00",
   "product": {
     "name": "MLS Commerce OS",
     "supervisor": "MLS Hermes",
@@ -29,9 +29,9 @@
     "pr": 10,
     "merge_commit": "9c418fd3010f46957d1ce52345baacd76041c788"
   },
-  "current_phase": "OWNER_OPERATION_U2_SHIRT_COST_EDITOR",
-  "working_branch": "fix/owner-shirt-cost-editing-20261116",
-  "current_status": "SHIRT_COST_EDITOR_PUBLISHED_TECHNICAL_OWNER_ACCEPTANCE_PENDING",
+  "current_phase": "OWNER_OPERATION_SYSTEM_STABILITY_16_5",
+  "working_branch": "fix/system-stability-20261116",
+  "current_status": "SYSTEM_STABILITY_16_5_IMPLEMENTED_GATES_PENDING_NOT_PUBLISHED",
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
     "Repasse-base, ajuste, repasse após ajuste e liberação exibidos sem dupla dedução",
@@ -120,12 +120,11 @@
     }
   },
   "next_actions": [
-    "Reload Costs and rules, edit adult P–GG/G1–G3 before summaries and explicitly save. Separate rules and manual costs have their existing precedence. No example price was copied into actual settings.",
-    "Reload the same browser/origin with original PNGs and confirmed kit recipes, verify automatic preview, explicitly reserve/export and physically inspect print size before confirming real quantities.",
-    "Owner actual acceptance: import original PNGs, verify dimensions/DPI in preview and print at100%; use physical confirmation only after checking complete DTF units.",
-    "Never blind-rollback the old DTF server over partial/reversed physical facts; preserve compatible reader and complete append-only audit and use verified backups.",
-    "Manufacture, actual costs, partial payments and returns continue by matrix dependencies. Printing/export is not garment manufacture; absent cost/source is unknown, never zero.",
-    "Sale preparation remains ADIADO_VENDA; security, CSRF, tenant/permissions, six agent cards, charts, Friday13h and no duplicate cost/revenue remain active."
+    "Concluir os gates locais e a CI do SHA candidato exato; conferir Builds externos separadamente e registrar qualquer403 de configuração/logs sem inferir sucesso.",
+    "Antes da publicação autorizada, executar preflight, snapshots/backup e conferência nativa do candidato. Publicar somente pelos scripts controlados e registrar versões, tráfego e hashes; nenhum deploy desta16.5 está comprovado neste checkpoint.",
+    "Após publicação técnica, conferir Pedidos com receitas DTF confirmadas e os diagnósticos de catálogo/histórico. Aceite físico, custos reais, fechamento e M2/M2.2 exigem fontes e confirmação próprias.",
+    "Continuar OP-014 e demais dependências de produção/custos/pagamentos/devoluções; fontes ausentes são UNKNOWN, nunca zero. Sexta13h/Brasília, não duplicação, auditoria, RBAC/CSRF, seis cartões e gráficos permanecem ativos.",
+    "Venda permanece ADIADO_VENDA. Bloqueios exclusivamente comerciais não impedem tarefas independentes da operação própria."
   ],
   "m0_followup": [
     "Conferir visual autenticado em desktop e celular durante M1; corrigir apenas branding/layout sem renomear infraestrutura"
@@ -134,28 +133,29 @@
     "Mission Control M1.1 (opção 3) integrado com 7 painéis independentes; conferir visual autenticado desktop/celular e retorno às telas antigas"
   ],
   "latest_increment": {
-    "task": "OP-015_SHIRT_COST_EDITOR",
-    "source_commit": "ae9190cd25a466635f24b315bb65d689b2e3a359",
-    "source_parent": "308179135c90bc5688567ff085084c4944da5465",
-    "release_candidate": "2026-11-16.4",
+    "task": "SYSTEM_STABILITY_16_5",
+    "source_commit": "1ac7b79c7ac38b6bd09ac8ed38d593ec40bad080",
+    "source_parent": "f78b503f5580f5545b4edc19447da63a78925b5f",
+    "base_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+    "release_candidate": "2026-11-16.5",
     "implementation": true,
-    "local_validation": "88_TARGETED_4_DARK_10_RELEASE_CLOCK_19_ENVIRONMENT_RECOVERY_AND_67_PYTHON_PASS; FULL_EXACT_HEAD_CI_PASS",
-    "published": true,
+    "local_validation": "36_RECOVERY_COMPACTION_PASS; 67_PYTHON_PASS; FULL_LOCAL_GATES_RUNNING",
+    "full_local_gates": "PENDING_FINAL_RESULT",
+    "exact_head_github_ci": "PENDING",
+    "external_cloudflare_builds": "PENDING_CURRENT_CANDIDATE",
+    "published": false,
     "validated_operationally": false,
     "actual_financial_acceptance": false,
-    "receipt": "docs/owner-operation/validation/shirt-cost-editing.json",
-    "previous_published_receipt": "docs/owner-operation/validation/publication-dtf-auto-live-20261116.json",
-    "status": "PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY",
-    "validation_head": "c39c57217f059f2aed62cd694cd556d06a12617a",
-    "publication_source_commit": "c39c57217f059f2aed62cd694cd556d06a12617a",
-    "ci_run": 44110296190,
-    "publication_receipt": "docs/owner-operation/validation/publication-shirt-cost-live-20261116.json",
-    "pull_request": 127,
-    "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE",
-    "workers": {
-      "finance": "50b31451-c6cf-4456-bd09-be5d1956e0da",
-      "auth": "17ccc9d6-df7d-45e8-b3f1-75e065fa19bc",
-      "app": "5931a32e-5726-445f-9bae-11a194f5049a"
+    "real_data_mutations": 0,
+    "receipt": "docs/system-audit/validation.json",
+    "previous_published_receipt": "docs/owner-operation/validation/publication-shirt-cost-live-20261116.json",
+    "status": "GATES_PENDING",
+    "pull_request": null,
+    "git_integration": "LOCAL_BRANCH_NO_PR_NO_MERGE_NO_AUTO_MERGE",
+    "compiled_hashes": {
+      "app": "3633dfb963aca8e5f10d90b9427cc482adedf0070eed631929886160b9e7631b",
+      "auth": "f37c53b904ab5d083abb11d84298970b0b62315f54ac12da560d29e145c48347",
+      "finance": "9b21fdf180e37a0bd0f4bb13929bafdcdad158c8de0ba0c66acd0f437bf6d83e"
     }
   },
   "incident": {
@@ -7823,5 +7823,13 @@
       "app": "8652d67d-6ad8-4262-bdc7-e3f8775eb2fc"
     },
     "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE"
+  },
+  "system_audit_20261117": {
+    "task": "SYSTEM_STABILITY_16_5",
+    "receipt": "docs/system-audit/validation.json",
+    "source_commit": "1ac7b79c7ac38b6bd09ac8ed38d593ec40bad080",
+    "phase_status": "IMPLEMENTED_GATES_PENDING",
+    "prior_delivery_archive": "docs/system-audit/history/continuity-before-16-5.json",
+    "roadmap_scope": "Only reproduced defects in this increment; incomplete owner-operation tasks remain partial/open."
   }
 }

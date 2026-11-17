@@ -4,6 +4,14 @@ A trilha ativa é **owner_operation**. Cadastro de outros clientes, e-mail comer
 
 [Checkpoint canônico](../MLS_COMMERCE_OS_CHECKPOINT.json) · [36 tarefas e dependências técnicas](EXECUCAO.json) · [21 contratos visuais e famílias preservadas](CATALOGO_GRAFICOS.json) · [inspeção atual](validation/reconciliation.json) · [validação do incremento](validation/owner-dtf-batches.json).
 
+## Estabilidade16.5 — candidato em validação
+
+Implementado localmente, com gates finais pendentes e sem publicação desta versão. A Live verificada segue16.4. [Validação e hashes](../system-audit/validation.json) · [falhas reproduzidas e limites](../system-audit/README.md).
+
+Após publicação técnica comprovada, abra Pedidos com receitas DTF já confirmadas e confira os diagnósticos de catálogo/histórico antes de repetir uma operação. Erros de autenticação ou permissão continuam bloqueantes; ausência de fonte não vira zero nem fechamento completo. Prévia/exportação DTF não confirma fabricação física. Preserve as confirmações e auditoria aplicáveis.
+
+Custos futuros seguem a versão de custos salva explicitamente; fatos, CMV e fechamentos históricos não são reescritos por esta correção. Aceite com PNGs, medidas e custos reais permanece separado dos testes de código. Próximo desenvolvimento independente: OP-014.
+
 ## Editar camisetas — publicada 2026-11-16.4
 
 **Publicado e verificado tecnicamente.** A mudança coloca os campos das camisetas antes dos cartões de resumo. Os cálculos e o salvamento auditado existentes foram reutilizados.

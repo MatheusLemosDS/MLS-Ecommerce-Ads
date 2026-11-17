@@ -1,0 +1,30 @@
+{
+  "base_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+  "source_parent": "f78b503f5580f5545b4edc19447da63a78925b5f",
+  "base_ci": {
+    "id": 44113727609,
+    "status": "success"
+  },
+  "branch": "fix/system-stability-20261116",
+  "commercial_actions_allowed": false,
+  "live_code_publication_authorized": true,
+  "workflows_and_gates_must_remain_active": true,
+  "audit_tracks": [
+    "Cloudflare builds and isolated previews",
+    "dependencies and Node security",
+    "DTF source compatibility with Orders and manufacturing proposals",
+    "account bridge stream deadlines",
+    "history synchronization fairness and catalog diagnostics",
+    "canonical checkpoint consistency"
+  ],
+  "scope_note": "Audit of code, toolchain, configured integrations and current failures; incomplete roadmap capabilities and external grants stay explicitly separate.",
+  "previous_live_receipt": "../owner-operation/validation/publication-shirt-cost-live-20261116.json",
+  "preserved_previous_delivery": "f78b503f5580f5545b4edc19447da63a78925b5f",
+  "real_data_mutations_by_audit": 0,
+  "manual_financial_physical_or_commercial_test_mutations_allowed": false,
+  "authorized_natural_source_collection_progress": true,
+  "prepared_source_commit": "1ac7b79c7ac38b6bd09ac8ed38d593ec40bad080",
+  "candidate_release": "2026-11-16.5",
+  "candidate_status": "GATES_PENDING_NOT_PUBLISHED",
+  "validation_receipt": "validation.json"
+}

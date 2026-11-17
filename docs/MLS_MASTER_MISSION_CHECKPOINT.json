@@ -1,6 +1,6 @@
 {
   "schema": "mls_master_mission_checkpoint_v1",
-  "updated_at": "2026-11-17T15:22:35.648886+00:00",
+  "updated_at": "2026-11-17T19:02:36.578919+00:00",
   "base_visual_sha": "8d860b2c4f26531c53c4cdba0e06a14f51a7eef4",
   "visual_branch": "feature/mls-mockup-parity-real-charts-20261029",
   "visual_pr": 79,
@@ -3970,11 +3970,11 @@
     }
   },
   "next_actions": [
-    "OP011 published and verified technically from CI head0650874; PR123 remains draft. Actual owner DTF use/physical acceptance still pending; never equate publication with operational or financial acceptance.",
-    "Next independent OP013: preserve and restore DTF artwork pixels, hashes and associations in a clean browser profile; no cloud-storage purchase prerequisite.",
-    "OP005/OP006/OP007/OP008: backup/restore and sustainable storage/pagination before applicable migration; never delete history to open capacity.",
-    "Continue owner orders/production/cost/payment/return/financial tasks per docs/owner-operation/EXECUCAO.json; external missing source blocks only its dependent assertion.",
-    "SaaS signup for other customers, Resend commercial delivery, billing, marketing and legal onboarding remain ADIADO_VENDA; shared security/retention/recovery obligations remain active."
+    "Concluir os gates locais e a CI do SHA candidato exato; conferir Builds externos separadamente e registrar qualquer403 de configuração/logs sem inferir sucesso.",
+    "Antes da publicação autorizada, executar preflight, snapshots/backup e conferência nativa do candidato. Publicar somente pelos scripts controlados e registrar versões, tráfego e hashes; nenhum deploy desta16.5 está comprovado neste checkpoint.",
+    "Após publicação técnica, conferir Pedidos com receitas DTF confirmadas e os diagnósticos de catálogo/histórico. Aceite físico, custos reais, fechamento e M2/M2.2 exigem fontes e confirmação próprias.",
+    "Continuar OP-014 e demais dependências de produção/custos/pagamentos/devoluções; fontes ausentes são UNKNOWN, nunca zero. Sexta13h/Brasília, não duplicação, auditoria, RBAC/CSRF, seis cartões e gráficos permanecem ativos.",
+    "Venda permanece ADIADO_VENDA. Bloqueios exclusivamente comerciais não impedem tarefas independentes da operação própria."
   ],
   "production_weekly_closing_2026_11_03": {
     "id": "PRODUCTION_WEEKLY_FRIDAY_13_CLOSING",
@@ -7049,9 +7049,9 @@
       "Concluir M2/M2.2 com devoluções e fabricação reais, Seller Centre e Nubank no mesmo recorte, sem dupla contagem."
     ]
   },
-  "current_phase": "OWNER_OPERATION_U2_DTF_AUTOMATIC_PREVIEW",
-  "working_branch": "feature/owner-dtf-cycle-20261116",
-  "current_status": "SEE_CANONICAL_CHECKPOINT_SHIRT_EDITOR_PUBLISHED_TECHNICAL_ACCEPTANCE_PENDING",
+  "current_phase": "OWNER_OPERATION_SYSTEM_STABILITY_16_5",
+  "working_branch": "fix/system-stability-20261116",
+  "current_status": "SEE_CANONICAL_CHECKPOINT_SYSTEM_STABILITY_16_5_GATES_PENDING",
   "next_phase": "OWNER_OPERATION_BY_TECHNICAL_DEPENDENCY_NOT_SAAS_PHASE_GATES",
   "active_execution_matrix": "docs/owner-operation/EXECUCAO.json",
   "active_charts_catalog": "docs/owner-operation/CATALOGO_GRAFICOS.json",
@@ -7090,11 +7090,13 @@
     ]
   },
   "latest_increment": {
-    "task": "OP-015_SHIRT_COST_EDITOR_PARTIAL",
-    "published": true,
+    "task": "SYSTEM_STABILITY_16_5",
+    "source_commit": "1ac7b79c7ac38b6bd09ac8ed38d593ec40bad080",
+    "published": false,
     "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
-    "receipt": "docs/owner-operation/validation/publication-shirt-cost-live-20261116.json",
-    "operationally_accepted": false
+    "receipt": "docs/system-audit/validation.json",
+    "operationally_accepted": false,
+    "status": "GATES_PENDING"
   },
   "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
   "current_fields_role": "Current owner-release fields mirror docs/MLS_COMMERCE_OS_CHECKPOINT.json; dated historical mission evidence remains preserved.",
@@ -7110,9 +7112,10 @@
   },
   "current_checkpoint_pointer": {
     "path": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
-    "receipt": "docs/owner-operation/validation/publication-shirt-cost-live-20261116.json",
-    "validation_head": "c39c57217f059f2aed62cd694cd556d06a12617a",
-    "published": true
+    "receipt": "docs/system-audit/validation.json",
+    "prepared_source_commit": "1ac7b79c7ac38b6bd09ac8ed38d593ec40bad080",
+    "published": false,
+    "status": "GATES_PENDING"
   },
   "previous_current_release_before_owner_dtf_cycle": {
     "status": "PUBLISHED_VERIFIED",
