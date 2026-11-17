@@ -1,0 +1,53 @@
+{
+  "schema": "mls_build_preview_isolation_v2",
+  "account_id": "29570924b8dbe5d0b22d5830990bc27f",
+  "account_subdomain": "matheusgem1310",
+  "databases": {
+    "admin": {
+      "name": "mls-p00-preview-admin",
+      "id": "a2ebfc6c-8c0f-4e3e-aeb4-943c5e3808a9",
+      "action": "CREATED_EMPTY_PREVIEW"
+    },
+    "account": {
+      "name": "mls-p00-preview-account",
+      "id": "63b0dc86-d230-4805-9cf5-b6cc32c16ef7",
+      "action": "CREATED_EMPTY_PREVIEW"
+    },
+    "finance": {
+      "name": "mls-p00-preview-finance",
+      "id": "ce27e86c-5129-42c3-840a-5c5e4698622c",
+      "action": "CREATED_EMPTY_PREVIEW"
+    }
+  },
+  "production_database_ids": [
+    "ac3ca878-f28b-4feb-9da8-47028e63050d",
+    "d1d43874-5eb9-4600-9e47-be026433142e",
+    "fb3a5b06-5877-4d7e-ae08-1be4701f6437"
+  ],
+  "parents": {
+    "app": {
+      "name": "brazacommerce-app",
+      "tag": "bfc420b51f764aea84356873ac3ffce6"
+    },
+    "auth": {
+      "name": "brazacommerce-auth",
+      "tag": "cae7eeac91fc4d74b118db11aaeb2360"
+    },
+    "finance": {
+      "name": "brazacommerce-finance",
+      "tag": "cd6d2dd5834743e8b3bf80d7bc09ca08"
+    }
+  },
+  "isolated_workers": {
+    "app": "brazacommerce-app-p00-isolated",
+    "auth": "brazacommerce-auth-p00-isolated",
+    "finance": "brazacommerce-finance-p00-isolated"
+  },
+  "rule": "Only exact reviewed branches; existing shared synthetic QA data/resources. No production databases, credentials, routes, cron or external operations. Not per-branch/tenant data isolation.",
+  "production_branch": "main",
+  "authorized_branches": [
+    "feature/saas-p00-baseline-20261114",
+    "fix/system-stability-20261116",
+    "fix/builds-recovery-20261116"
+  ]
+}

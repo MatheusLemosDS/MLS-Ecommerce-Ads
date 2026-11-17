@@ -1,0 +1,13 @@
+# Previews de desenvolvimento
+
+O build normal conserva os três artefatos de produção. Em Workers Builds, a branch deve estar explicitamente em `authorized_branches` de [isolated-builds.json](isolated-builds.json). Não há wildcard ou fallback para App. Para autorizar uma próxima branch, revise e acrescente seu nome exato nesse JSON; não é necessário editar o helper.
+
+O helper recupera a solução comprovada no P00, ausente na cadeia da operação própria. Confere o Worker por GET na API nativa e gera a configuração/redirect consumidos pelo `npx wrangler preview` já configurado. Recusa conta, tag, nome, target parcial, recursos ou branch divergentes. Um build normal ou de produção remove somente um redirect anteriormente criado pelo helper; redirects alheios são preservados. O comando explícito de deploy de produção também recusa contexto Workers CI não produtivo ou ambíguo, mesmo se um comando remoto estiver incorreto. O fluxo local controlado permanece igual.
+
+Os D1s e serviços são os recursos QA existentes do P00, compartilhados entre as branches autorizadas. São dados sintéticos: este perfil não oferece isolamento de dados entre branches ou clientes e não deve receber dados reais. Os módulos derivados bloqueiam chamadas externas, conexões de fornecedor, redirects externos e cron; não sobrescrevem as fontes normais.
+
+Previews não herdam as configurações de produção. Seus secrets vêm do **Previews Base**, separado. O helper não lê nem copia valores secretos: confere somente tipos/nome dos secrets internos, vars sintéticas esperadas, D1s QA e serviço Finance QA. Qualquer nova credencial de fornecedor, secret convertido em plaintext, recurso de produção ou flag de conexão diferente é recusado antes do redirect. O P00 registrou criação de secrets novos exclusivos de QA; a API atual mascara seus valores, portanto não permite compará-los com os valores Live. Mudanças de secrets devem usar o canal seguro aprovado, nunca arquivos versionados.
+
+Testes locais e build não comprovam sucesso externo nem publicação. Os logs/configuração de Builds continuam dependentes do acesso de leitura adequado. Nunca deduza deploy por uma URL que contém `/production/builds/`.
+
+[Diagnóstico e evidências](../docs/owner-operation/validation/builds-recovery.json) · [Configuração oficial de Builds](https://developers.cloudflare.com/workers/ci-cd/builds/configuration/) · [Configuração e secrets de Previews](https://developers.cloudflare.com/workers/previews/configuration/) · [Recursos e isolamento](https://developers.cloudflare.com/workers/previews/resources/) · [Relato primário de falha semelhante](https://github.com/cloudflare/developer-platform/issues/75).
