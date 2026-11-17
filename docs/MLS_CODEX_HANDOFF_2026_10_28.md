@@ -1,9 +1,11 @@
 <!-- OWNER_OPERATION_CURRENT -->
-Prioridade: corrigir a montagem manual apontada pelo proprietário. [Uso e estado](owner-operation/README.md) · [checkpoint](MLS_COMMERCE_OS_CHECKPOINT.json) · [evidência da prévia automática](owner-operation/validation/dtf-auto-layout.json).
+**DTF 2026-11-16.3 publicado e verificado tecnicamente: seleção e prévia automáticas.** [Uso](owner-operation/README.md) · [checkpoint canônico](MLS_COMMERCE_OS_CHECKPOINT.json) · [recibo](owner-operation/validation/publication-dtf-auto-live-20261116.json).
 
-Candidata2026-11-16.3 implementa seleção e prévia automáticas das linhas aptas com PNGs salvos e kits confirmados. Fonte2c225f0, branch feature/owner-dtf-auto-layout-20261116, pai ab4ad7f/PR125.38 testes direcionados passaram, incluindo12 casos Chromium autenticados normais/minificados em320/1365; gates completos/CI/publicação pendentes. A Live verificada continua2026-11-16.2.
+Com PNGs salvos neste navegador/origem e kits confirmados, as linhas aptas são selecionadas e a prévia é montada sem clicar em Selecionar aptos ou Montar prévia. A mesma entrada preserva o canvas; alteração da fonte o invalida. Seleção manual desativa a automação; a opção explícita a retoma. Reserva, download e impressão continuam exigindo ação do operador. Não há fatos físicos nem lançamentos financeiros por conta da prévia.
 
-Automação somente da prévia local; reserva, download e confirmação física continuam explícitos. Sem arte/composição não há suposição. Limites, sessão/tenant, proporção/DPI, seis agentes, gráficos, sexta13h/Brasília e contratos financeiros preservados. Históricos integrais seguem abaixo e na evidência do incremento. Venda ADIADO_VENDA.
+Fonte 723bb3a, CI 43998220684: 4494 Node e 67 Python aprovados, mais 38 testes direcionados. App/Auth ativos com 100% do tráfego e hashes/configurações conferidos; Finance preservado. 8 verificações HTTP e 8 assets públicos exatos; backup privado/restore isolado conferidos. PR #126 rascunho sobre PR #125, sem merge/auto-merge; main 346f30f preservada.
+
+Próximo passo: recarregue Produção → Montador e fila DTF e confira a prévia com os PNGs reais. Não infira fabricação, custos ausentes ou aceite financeiro de um arquivo. [Regras ativas e gates](../AGENTS.md#regras-de-domínio-ativas) preservam sexta às 13h/Brasília, confirmações/auditoria, seis agentes, gráficos e contratos. OP-014 segue como próximo desenvolvimento independente; venda ADIADO_VENDA. Históricos integrais seguem abaixo e nas evidências.
 <!-- END_OWNER_OPERATION_CURRENT -->
 
 FINANCIAL_AUTOMATION_20261113 — PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY — release 2026-11-13.3

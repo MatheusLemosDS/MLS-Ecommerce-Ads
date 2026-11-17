@@ -4,11 +4,16 @@ A trilha ativa é **owner_operation**. Cadastro de outros clientes, e-mail comer
 
 [Checkpoint canônico](../MLS_COMMERCE_OS_CHECKPOINT.json) · [36 tarefas e dependências técnicas](EXECUCAO.json) · [21 contratos visuais e famílias preservadas](CATALOGO_GRAFICOS.json) · [inspeção atual](validation/reconciliation.json) · [validação do incremento](validation/owner-dtf-batches.json).
 
-## Correção atual — prévia DTF automática (candidata2026-11-16.3)
+## Montagem automática publicada — versão 2026-11-16.3
 
-O proprietário confirmou que os PNGs existem, mas a versão publicada ainda exige selecionar linhas e montar a prévia manualmente. A correção deixa **Montar automaticamente os pedidos aptos** ativado por padrão. Com a fila carregada, PNGs locais disponíveis e composição dos kits confirmada, a seleção e a prévia são atualizadas sem esses dois cliques. Reserva e impressão não são registradas automaticamente. [Evidência](validation/dtf-auto-layout.json):38 testes direcionados passaram; gates completos, CI e publicação pendentes. Live atual2026-11-16.2.
+**Publicado e verificado tecnicamente.** A opção **Montar automaticamente os pedidos aptos** vem ativada. A seleção e a prévia são geradas ao abrir Produção, importar/restaurar PNGs, atualizar a fila ou confirmar a composição de um kit. O proprietário não precisa mais clicar em Selecionar aptos e Montar prévia. [4494 Node / 67 Python aprovados na CI](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43998220684) e 38 testes direcionados. [Recibo de publicação](validation/publication-dtf-auto-live-20261116.json).
 
-Importe/restaure os PNGs uma vez neste navegador. A próxima abertura reutiliza as artes salvas. Confirme a composição de kits pendentes para que entrem no próximo lote. Confira a prévia e clique em **Reservar lote** para seguir com a exportação. Cancelados/reservados/impressos e pendências continuam separados. Se alterar o formato, salve-o antes de uma nova montagem. Selecione/desmarque linhas ou use **Limpar seleção** para entrar no modo manual; reative a opção para retomar a automação. Não haverá downloads, reserva, fabricação, custo ou confirmação física por conta da prévia.
+1. Recarregue **Produção → Montador e fila DTF**, na mesma origem e navegador em que guardou os PNGs. Se necessário, importe/restaure as artes uma vez. Reabrir a página reutiliza os arquivos salvos.
+2. Confirme as artes/larguras dos kits que ainda têm composição pendente. A prévia é montada automaticamente quando houver linhas aptas. Arte ausente, resolução insuficiente, pedido cancelado ou lote reservado continuam explicados e separados.
+3. Confira a prévia, clique em **Reservar lote** e exporte. Essas duas ações continuam explícitas. A prévia sozinha não reserva, baixa, imprime nem gera despesa.
+4. Para escolher outro conjunto, selecione/desmarque linhas ou use **Limpar seleção**; isso entra no modo manual. Reative a opção automática para retomar. Alterações do formato precisam ser salvas/carregadas antes de outra montagem.
+
+Uma atualização sem mudanças preserva o canvas existente. Fonte alterada limpa a prévia antiga antes de montar outra; troca de conta/sessão ou cancelamento descarta o render pendente. Os limites existentes por lote são mantidos. O ciclo de impressão, saldo, reimpressão e custos abaixo continua válido. Aceite com as artes e impressora reais permanece separado da publicação técnica.
 
 ## Registro OP-012 — montagem e ciclo de impressão publicada em16.2
 

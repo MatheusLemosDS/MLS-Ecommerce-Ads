@@ -488,20 +488,21 @@
       ],
       "estado_desta_especificacao": "ESPECIFICADO_PARA_CODEX",
       "codigo": "CICLO_DTF_E_PREVIA_AUTOMATICA_SEM_RESERVA_IMPLICITA",
-      "testes_novo_incremento": "38_TARGETED_PASS_FULL_GATES_PENDING",
-      "publicacao_novo_incremento": "CANDIDATA16_3_NAO_PUBLICADA",
+      "testes_novo_incremento": "4491_NODE_67_PYTHON_LOCAL_AND_CI_38_TARGETED_PASS",
+      "publicacao_novo_incremento": "PUBLICADO_VERIFICADO_TECNICAMENTE_2026_11_16_3",
       "aceite_operacional_novo_incremento": "PENDENTE_ARTES_IMPRESSORA_E_FATOS_REAIS",
       "evidencias": [
         "validation/dtf-cycle.json",
         "validation/publication-dtf-cycle-live-20261116.json",
-        "validation/dtf-auto-layout.json"
+        "validation/dtf-auto-layout.json",
+        "validation/publication-dtf-auto-live-20261116.json"
       ],
       "bloqueios": [
         "Aceite operacional precisa dos PNGs reais e da conferência de impressão do proprietário; não é substituído por QA sintética."
       ],
       "regra_especial": null,
       "codigo_da_especificacao": "RECONFERIR_REUTILIZAR_EXISTENTE_E_COMPLETAR_LACUNAS",
-      "estado_execucao": "PREVIA_AUTOMATICA_IMPLEMENTADA_GATES_PENDENTES",
+      "estado_execucao": "CICLO_E_PREVIA_AUTOMATICA_PUBLICADOS_ACEITE_REAL_PENDENTE",
       "bloqueia_tarefas_independentes": false,
       "publication_state_history": [
         {
@@ -522,6 +523,11 @@
             "validation/dtf-cycle.json",
             "validation/publication-dtf-cycle-live-20261116.json"
           ]
+        },
+        {
+          "testes_novo_incremento": "38_TARGETED_PASS_FULL_GATES_PENDING",
+          "publicacao_novo_incremento": "CANDIDATA16_3_NAO_PUBLICADA",
+          "estado_execucao": "PREVIA_AUTOMATICA_IMPLEMENTADA_GATES_PENDENTES"
         }
       ]
     },
@@ -5710,7 +5716,7 @@
     "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/docs/financial-automation/publication-live-20261113.json"
   ],
   "source_specification": "input/ROADMAP_EXECUTAVEL_USO_PROPRIO_MLS.json",
-  "updated_at": "2026-11-17T01:27:01.692818+00:00",
+  "updated_at": "2026-11-17T02:04:12.419697+00:00",
   "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
   "specification_initial_checkpoint_historical": {
     "fase_corrente": "U0",
@@ -5730,11 +5736,39 @@
     "current_track": "owner_operation",
     "sale_track": "ADIADO_VENDA",
     "code": true,
-    "tested_locally": "38_TARGETED_PASS_FULL_GATES_PENDING",
-    "published": false,
+    "tested_locally": "4491_NODE_67_PYTHON_38_TARGETED_11_HELPER_PASS",
+    "published": true,
     "operationally_accepted": false,
     "receipt": "validation/dtf-auto-layout.json",
-    "next_independent_task": "Complete exact-candidate local and GitHub gates, then controlled Auth/App promotion and source/config/traffic/public verification. Owner real PNG/print acceptance remains separate."
+    "next_independent_task": "OP-014",
+    "publication_source_commit": "723bb3a67070c1604579de28f5992a7dc20c5e78",
+    "validation_head": "723bb3a67070c1604579de28f5992a7dc20c5e78",
+    "github_ci": {
+      "id": 43998220684,
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43998220684",
+      "head_sha": "723bb3a67070c1604579de28f5992a7dc20c5e78",
+      "conclusion": "success",
+      "node": {
+        "total": 4494,
+        "pass": 4494,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0
+      },
+      "python": {
+        "total": 67,
+        "pass": 67
+      },
+      "compiled_hashes": {
+        "app": "787d0435e9b6f4df169239687f501de7db402f1a2ab2b3a8a8fccc3879a13b0b",
+        "auth": "0e4547e61441131c5ad8c5f955a64ac691c0d89ada8eb52bbfe0cad2fe485a45",
+        "finance": "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4"
+      },
+      "workflow_preflight_step": "SKIPPED_BY_EXISTING_STACKED_PR_CONDITION",
+      "local_preflight": "FRESH_RELEASE_LOCAL_PREFLIGHT_OK_BEFORE_ACTUAL_PROMOTION"
+    },
+    "publication_receipt": "validation/publication-dtf-auto-live-20261116.json",
+    "release_id": "2026-11-16.3"
   },
   "latest_owner_constraints": {
     "production_friday_13_brasilia": true,
@@ -5866,6 +5900,21 @@
       "publication_source_commit": "9c94210cbecb50c7d6a32f2937852b623c529032",
       "publication_receipt": "validation/publication-dtf-cycle-live-20261116.json",
       "release_id": "2026-11-16.2"
+    },
+    {
+      "branch": "feature/owner-dtf-auto-layout-20261116",
+      "source_commit": "2c225f0b341c57b956baa1519f4b63344a4337a6",
+      "source_parent": "ab4ad7ff3fc92922633e096bd26653d12796ff1b",
+      "base_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+      "release_candidate": "2026-11-16.3",
+      "current_track": "owner_operation",
+      "sale_track": "ADIADO_VENDA",
+      "code": true,
+      "tested_locally": "38_TARGETED_PASS_FULL_GATES_PENDING",
+      "published": false,
+      "operationally_accepted": false,
+      "receipt": "validation/dtf-auto-layout.json",
+      "next_independent_task": "Complete exact-candidate local and GitHub gates, then controlled Auth/App promotion and source/config/traffic/public verification. Owner real PNG/print acceptance remains separate."
     }
   ]
 }
