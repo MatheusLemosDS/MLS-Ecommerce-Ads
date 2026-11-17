@@ -29,6 +29,8 @@ jobs:
         with:
           node-version-file: .node-version
           cache: npm
+      - name: Preparar npm declarado
+        run: npm install --global npm@11.9.0 --ignore-scripts --no-audit --no-fund
       - name: Instalar versões fixadas
         run: npm ci
       - name: Preparar renderização local de vídeo e voz PT-BR
