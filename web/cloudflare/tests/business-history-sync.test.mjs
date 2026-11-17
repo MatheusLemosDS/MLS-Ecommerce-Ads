@@ -233,7 +233,7 @@ test('reserved historical turns progress while current Finance stays RUNNING, al
  assert.equal((await reservedHistory(f,lease)).status,'LEASED','a completed background token cannot perform a second provider step');
  f.clock.time+=61000;lease=historyLease(f);value=await reservedHistory(f,lease);assert.equal(value.status,'DEFERRED');assert.equal(value.finance_steps,0);assert.equal(counts(f).finance,called.finance+1,'the following HISTORY slot is left to its existing cost/audit ring');
  f.clock.time+=61000;lease=historyLease(f);value=await reservedHistory(f,lease);assert.equal(value.status,'RUNNING');assert.equal(value.finance_steps,1);
- const next=f.env.ADMIN_DB.db.prepare('SELECT revision,payload FROM business_month_runs WHERE month=?').get(previousMonth);assert.ok(next.revision>firstRevision);const after=JSON.parse(next.payload);assert.deepEqual(after.slots.map(s=>s.start_date),source.slots.map(s=>s.start_date));assert.deepEqual(currentRow(f),before);
+ const next=f.env.ADMIN_DB.db.prepare('SELECT revision,payload FROM business_month_runs WHERE month=?').get(previousMonth);assert.ok(next.revision>firstRevision);const after=JSON.parse(next.payload);assert.deepEqual(after.slots.map(s=>s.start_date),source.slots.map(s=>s.start_date));for(let i=0;i<source.slots.length;i++)if(source.slots[i].frame?.run_id)assert.equal(after.slots[i].frame?.run_id,source.slots[i].frame.run_id,'active historical Finance sources retain their exact run identities');assert.deepEqual(currentRow(f),before);
  assert.equal((await readBusinessSyncState(f.env)).status,'RUNNING');assert.equal(f.env.ADMIN_DB.db.prepare('SELECT next_work FROM business_history_sync_fairness').get().next_work,'AUXILIARY');
 });
 
