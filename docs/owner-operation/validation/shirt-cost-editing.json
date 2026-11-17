@@ -1,0 +1,273 @@
+{
+  "schema": "owner_shirt_cost_editor_v1",
+  "task": "OP-015_SHIRT_COST_EDITOR_PARTIAL",
+  "release": "2026-11-16.4",
+  "recorded_at": "2026-11-17T15:22:35.648886+00:00",
+  "base_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+  "source_parent": "308179135c90bc5688567ff085084c4944da5465",
+  "source_commit": "ae9190cd25a466635f24b315bb65d689b2e3a359",
+  "branch": "fix/owner-shirt-cost-editing-20261116",
+  "status": "PUBLISHED_VERIFIED_TECHNICAL_PUBLIC_ONLY",
+  "implementation": true,
+  "tested": {
+    "targeted": {
+      "pass": 88,
+      "fail": 0,
+      "skipped": 0
+    },
+    "native_browser": {
+      "schema": "owner_shirt_cost_native_qa_v1",
+      "profiles": [
+        {
+          "minify": false,
+          "width": 320,
+          "passed": true,
+          "synthetic_only": true,
+          "explicit_saves": 1,
+          "source_hashes": {
+            "app": "f86536f9f50606b2cf20a66b00ae16d25febe474cf4030f0abf791ec69a45f61",
+            "auth": "22540b94a52d0c8ad00959c100bb1319231dac8df17deb1d56c4399e9780dc48",
+            "finance": "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4"
+          }
+        },
+        {
+          "minify": false,
+          "width": 1365,
+          "passed": true,
+          "synthetic_only": true,
+          "explicit_saves": 1,
+          "source_hashes": {
+            "app": "f86536f9f50606b2cf20a66b00ae16d25febe474cf4030f0abf791ec69a45f61",
+            "auth": "22540b94a52d0c8ad00959c100bb1319231dac8df17deb1d56c4399e9780dc48",
+            "finance": "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4"
+          }
+        },
+        {
+          "minify": true,
+          "width": 320,
+          "passed": true,
+          "synthetic_only": true,
+          "explicit_saves": 1,
+          "source_hashes": {
+            "app": "f86536f9f50606b2cf20a66b00ae16d25febe474cf4030f0abf791ec69a45f61",
+            "auth": "22540b94a52d0c8ad00959c100bb1319231dac8df17deb1d56c4399e9780dc48",
+            "finance": "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4"
+          }
+        },
+        {
+          "minify": true,
+          "width": 1365,
+          "passed": true,
+          "synthetic_only": true,
+          "explicit_saves": 1,
+          "source_hashes": {
+            "app": "f86536f9f50606b2cf20a66b00ae16d25febe474cf4030f0abf791ec69a45f61",
+            "auth": "22540b94a52d0c8ad00959c100bb1319231dac8df17deb1d56c4399e9780dc48",
+            "finance": "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4"
+          }
+        }
+      ],
+      "all_passed": true
+    },
+    "dark_native_browser": {
+      "schema": "owner_shirt_cost_native_qa_v1",
+      "profiles": [
+        {
+          "theme": "dark",
+          "minify": false,
+          "width": 320,
+          "passed": true,
+          "synthetic_only": true,
+          "explicit_saves": 1,
+          "source_hashes": {
+            "app": "f86536f9f50606b2cf20a66b00ae16d25febe474cf4030f0abf791ec69a45f61",
+            "auth": "22540b94a52d0c8ad00959c100bb1319231dac8df17deb1d56c4399e9780dc48",
+            "finance": "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4"
+          }
+        },
+        {
+          "theme": "dark",
+          "minify": false,
+          "width": 1365,
+          "passed": true,
+          "synthetic_only": true,
+          "explicit_saves": 1,
+          "source_hashes": {
+            "app": "f86536f9f50606b2cf20a66b00ae16d25febe474cf4030f0abf791ec69a45f61",
+            "auth": "22540b94a52d0c8ad00959c100bb1319231dac8df17deb1d56c4399e9780dc48",
+            "finance": "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4"
+          }
+        },
+        {
+          "theme": "dark",
+          "minify": true,
+          "width": 320,
+          "passed": true,
+          "synthetic_only": true,
+          "explicit_saves": 1,
+          "source_hashes": {
+            "app": "f86536f9f50606b2cf20a66b00ae16d25febe474cf4030f0abf791ec69a45f61",
+            "auth": "22540b94a52d0c8ad00959c100bb1319231dac8df17deb1d56c4399e9780dc48",
+            "finance": "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4"
+          }
+        },
+        {
+          "theme": "dark",
+          "minify": true,
+          "width": 1365,
+          "passed": true,
+          "synthetic_only": true,
+          "explicit_saves": 1,
+          "source_hashes": {
+            "app": "f86536f9f50606b2cf20a66b00ae16d25febe474cf4030f0abf791ec69a45f61",
+            "auth": "22540b94a52d0c8ad00959c100bb1319231dac8df17deb1d56c4399e9780dc48",
+            "finance": "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4"
+          }
+        }
+      ],
+      "all_passed": true
+    },
+    "release_and_dynamic_dtf_clock_regression": {
+      "pass": 10,
+      "fail": 0,
+      "skipped": 0,
+      "runtime_changed": false
+    },
+    "local_render_environment_recovery": {
+      "pass": 19,
+      "fail": 0,
+      "skipped": 0,
+      "method": "EXISTING_USER_OWNED_ESPEAK_PACKAGE_WITH_PROJECT_SUPPORTED_TOOL_PATH_ENVIRONMENT_VARIABLES",
+      "application_dependency_or_permission_changes": false
+    },
+    "initial_local_full_node": {
+      "tests": 4498,
+      "pass": 4485,
+      "fail": 13,
+      "cancelled": 0,
+      "skipped": 0,
+      "status": "INITIAL_FAILURES_RECORDED_AND_AFFECTED_FILES_RETESTED",
+      "findings": [
+        "default dry-run fully decodes images and never generates MP4 or creates output directory",
+        "actual render deadline cancels media work and clears staging and lease",
+        "tampered campaign text and altered original bytes cannot render or reuse a job",
+        "a valid-looking PNG header with corrupt pixels fails complete image validation",
+        "CLI is dry-run by default, rejects publication flags, and prints only safe codes",
+        "three real templates render PT-BR MP4s, preserve asymmetry, validate, export and reuse atomically",
+        "real local Worker preview authenticates, persists costs and plans media at 1365px",
+        "the human release identifier is static, frozen and safe for an HTTP header",
+        "the release getter returns a closed serializable DTO without sharing mutable response state",
+        "automatic DTF selects and previews without manual buttons, resumes stored PNGs, excludes cancelled/reserved and preserves explicit reserve normal 320",
+        "automatic DTF selects and previews without manual buttons, resumes stored PNGs, excludes cancelled/reserved and preserves explicit reserve normal 1365",
+        "automatic DTF selects and previews without manual buttons, resumes stored PNGs, excludes cancelled/reserved and preserves explicit reserve minified 320",
+        "automatic DTF selects and previews without manual buttons, resumes stored PNGs, excludes cancelled/reserved and preserves explicit reserve minified 1365"
+      ]
+    },
+    "python": {
+      "pass": 67,
+      "fail": 0
+    },
+    "exact_head_full_ci": {
+      "id": 44110296190,
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44110296190",
+      "head_sha": "c39c57217f059f2aed62cd694cd556d06a12617a",
+      "conclusion": "success",
+      "node": {
+        "total": 4500,
+        "pass": 4500,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0
+      },
+      "python": {
+        "total": 67,
+        "pass": 67
+      },
+      "compiled_hashes": {
+        "app": "f86536f9f50606b2cf20a66b00ae16d25febe474cf4030f0abf791ec69a45f61",
+        "auth": "22540b94a52d0c8ad00959c100bb1319231dac8df17deb1d56c4399e9780dc48",
+        "finance": "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4"
+      },
+      "workflow_preflight_step": "SKIPPED_BY_EXISTING_STACKED_PR_CONDITION",
+      "local_preflight": "FRESH_RELEASE_LOCAL_PREFLIGHT_OK_REQUIRED_BEFORE_PROMOTION"
+    },
+    "native_navigation_revalidation": {
+      "pass": 3,
+      "fail": 0
+    }
+  },
+  "published": true,
+  "operational_acceptance": false,
+  "real_cost_values_modified": false,
+  "financial_math_schema_permissions_workflows_changed": false,
+  "evidence_from_images": "Read-only adult/kits/three-piece cards precede the editor; an independently registered basic-shirt rule has a different value. Do not assume that value is an approved replacement for adult standards.",
+  "contracts_preserved": [
+    "CANONICAL_REVISION_CAS_AND_AUDIT",
+    "MANUAL_COST_AND_RULE_PRECEDENCE",
+    "WHOLE_KIT_NO_DOUBLE_CHARGE",
+    "HISTORICAL_SNAPSHOTS_IMMUTABLE",
+    "CURRENT_ESTIMATE_RECALC_USES_CURRENT_REFERENCE",
+    "FRIDAY_13_BRASILIA",
+    "SIX_AGENTS_AND_CHARTS",
+    "AUTH_CSRF_TENANT_ISOLATION"
+  ],
+  "previous_live_receipt": "docs/owner-operation/validation/publication-dtf-auto-live-20261116.json",
+  "history": "docs/owner-operation/history/continuity-before-shirt-cost-editing-20261116.json",
+  "next_independent_task": "OP-014",
+  "initial_validation_findings": [
+    "Release identity assertions still expected16.3; updated to exact16.4 identity without broadening acceptance.",
+    "Native DTF test source was pinned to16November while the Worker used the real Brasilia day. Fixture accepts an injected time; browser passes the real clock and midnight tests cover both sides. Runtime unchanged.",
+    "Initial local shell lacked espeak-ng on PATH. Existing user-owned tool is supplied through the supported MLS_AI_SALES_ESPEAK_* variables; affected19 tests passed without system installation."
+  ],
+  "validation_head": "c39c57217f059f2aed62cd694cd556d06a12617a",
+  "pull_request": 127,
+  "git_integration": "DRAFT_NO_MERGE_OR_AUTO_MERGE",
+  "ci": {
+    "id": 44110296190,
+    "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44110296190",
+    "head_sha": "c39c57217f059f2aed62cd694cd556d06a12617a",
+    "conclusion": "success",
+    "node": {
+      "total": 4500,
+      "pass": 4500,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0
+    },
+    "python": {
+      "total": 67,
+      "pass": 67
+    },
+    "compiled_hashes": {
+      "app": "f86536f9f50606b2cf20a66b00ae16d25febe474cf4030f0abf791ec69a45f61",
+      "auth": "22540b94a52d0c8ad00959c100bb1319231dac8df17deb1d56c4399e9780dc48",
+      "finance": "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4"
+    },
+    "workflow_preflight_step": "SKIPPED_BY_EXISTING_STACKED_PR_CONDITION",
+    "local_preflight": "FRESH_RELEASE_LOCAL_PREFLIGHT_OK_REQUIRED_BEFORE_PROMOTION"
+  },
+  "prior_ci_attempt": {
+    "id": 44107962093,
+    "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44107962093",
+    "head_sha": "d10b531fb62dca79055d4ad3e89256644004c451",
+    "conclusion": "failure",
+    "node": {
+      "tests": 4498,
+      "pass": 4491,
+      "fail": 7,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    "failures": [
+      "not ok 527 - the human release identifier is static, frozen and safe for an HTTP header",
+      "not ok 528 - the release getter returns a closed serializable DTO without sharing mutable response state",
+      "not ok 1487 - automatic DTF selects and previews without manual buttons, resumes stored PNGs, excludes cancelled/reserved and preserves explicit reserve normal 320",
+      "not ok 1488 - automatic DTF selects and previews without manual buttons, resumes stored PNGs, excludes cancelled/reserved and preserves explicit reserve normal 1365",
+      "not ok 1489 - automatic DTF selects and previews without manual buttons, resumes stored PNGs, excludes cancelled/reserved and preserves explicit reserve minified 320",
+      "not ok 1490 - automatic DTF selects and previews without manual buttons, resumes stored PNGs, excludes cancelled/reserved and preserves explicit reserve minified 1365",
+      "not ok 3321 - compiled owner navigation opens cross-panel details, preserves history and remains reachable at 320–1365px (minify=false)"
+    ],
+    "remediation": "Exact release expectations and current-Brasilia-date DTF fixtures corrected; isolated native navigation revalidation and new exact-head full CI remain required. No runtime, gate or workflow weakened."
+  },
+  "publication_receipt": "docs/owner-operation/validation/publication-shirt-cost-live-20261116.json"
+}

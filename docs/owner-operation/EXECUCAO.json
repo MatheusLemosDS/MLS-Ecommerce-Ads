@@ -616,15 +616,18 @@
         "Custos personalizados, vigência e UNKNOWN permanecem distintos."
       ],
       "estado_desta_especificacao": "ESPECIFICADO_PARA_CODEX",
-      "codigo": "NAO_ALTERADO_NESTE_INCREMENTO",
-      "testes_novo_incremento": "NAO_EXECUTADOS_PARA_ACEITE_DESTA_TAREFA",
-      "publicacao_novo_incremento": "NAO_REALIZADA",
+      "codigo": "EDITOR_EXISTENTE_REUTILIZADO_ACESSO_ADULTO_EM_PRIMEIRO_LUGAR",
+      "testes_novo_incremento": "FULL_EXACT_HEAD_CI_PASS_AND_TARGETED_LOCAL_PASS_INITIAL_FAILURE_HISTORY_PRESERVED",
+      "publicacao_novo_incremento": "PUBLICADO_VERIFICADO_TECNICAMENTE_2026_11_16_4",
       "aceite_operacional_novo_incremento": "NAO_REALIZADO",
-      "evidencias": [],
+      "evidencias": [
+        "validation/shirt-cost-editing.json",
+        "validation/publication-shirt-cost-live-20261116.json"
+      ],
       "bloqueios": [],
       "regra_especial": null,
       "codigo_da_especificacao": "RECONFERIR_REUTILIZAR_EXISTENTE_E_COMPLETAR_LACUNAS",
-      "estado_execucao": "ABERTO",
+      "estado_execucao": "PARCIAL_EDITOR_HISTORICO_VIGENCIA_ACEITE_SEGUEM_SEPARADOS",
       "bloqueia_tarefas_independentes": false
     },
     {
@@ -5716,7 +5719,7 @@
     "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/docs/financial-automation/publication-live-20261113.json"
   ],
   "source_specification": "input/ROADMAP_EXECUTAVEL_USO_PROPRIO_MLS.json",
-  "updated_at": "2026-11-17T02:04:12.419697+00:00",
+  "updated_at": "2026-11-17T15:22:35.648886+00:00",
   "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
   "specification_initial_checkpoint_historical": {
     "fase_corrente": "U0",
@@ -5736,21 +5739,21 @@
     "current_track": "owner_operation",
     "sale_track": "ADIADO_VENDA",
     "code": true,
-    "tested_locally": "4491_NODE_67_PYTHON_38_TARGETED_11_HELPER_PASS",
+    "tested_locally": "88_TARGETED_4_DARK_10_RELEASE_CLOCK_19_ENVIRONMENT_RECOVERY_67_PYTHON_PASS",
     "published": true,
     "operationally_accepted": false,
     "receipt": "validation/dtf-auto-layout.json",
     "next_independent_task": "OP-014",
-    "publication_source_commit": "723bb3a67070c1604579de28f5992a7dc20c5e78",
-    "validation_head": "723bb3a67070c1604579de28f5992a7dc20c5e78",
+    "publication_source_commit": "c39c57217f059f2aed62cd694cd556d06a12617a",
+    "validation_head": "c39c57217f059f2aed62cd694cd556d06a12617a",
     "github_ci": {
-      "id": 43998220684,
-      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43998220684",
-      "head_sha": "723bb3a67070c1604579de28f5992a7dc20c5e78",
+      "id": 44110296190,
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44110296190",
+      "head_sha": "c39c57217f059f2aed62cd694cd556d06a12617a",
       "conclusion": "success",
       "node": {
-        "total": 4494,
-        "pass": 4494,
+        "total": 4500,
+        "pass": 4500,
         "fail": 0,
         "skipped": 0,
         "cancelled": 0
@@ -5760,15 +5763,16 @@
         "pass": 67
       },
       "compiled_hashes": {
-        "app": "787d0435e9b6f4df169239687f501de7db402f1a2ab2b3a8a8fccc3879a13b0b",
-        "auth": "0e4547e61441131c5ad8c5f955a64ac691c0d89ada8eb52bbfe0cad2fe485a45",
+        "app": "f86536f9f50606b2cf20a66b00ae16d25febe474cf4030f0abf791ec69a45f61",
+        "auth": "22540b94a52d0c8ad00959c100bb1319231dac8df17deb1d56c4399e9780dc48",
         "finance": "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4"
       },
       "workflow_preflight_step": "SKIPPED_BY_EXISTING_STACKED_PR_CONDITION",
-      "local_preflight": "FRESH_RELEASE_LOCAL_PREFLIGHT_OK_BEFORE_ACTUAL_PROMOTION"
+      "local_preflight": "FRESH_RELEASE_LOCAL_PREFLIGHT_OK_REQUIRED_BEFORE_PROMOTION"
     },
-    "publication_receipt": "validation/publication-dtf-auto-live-20261116.json",
-    "release_id": "2026-11-16.3"
+    "publication_receipt": "validation/publication-shirt-cost-live-20261116.json",
+    "release_id": "2026-11-16.4",
+    "task": "OP-015_SHIRT_COST_EDITOR_PARTIAL"
   },
   "latest_owner_constraints": {
     "production_friday_13_brasilia": true,
@@ -5915,6 +5919,49 @@
       "operationally_accepted": false,
       "receipt": "validation/dtf-auto-layout.json",
       "next_independent_task": "Complete exact-candidate local and GitHub gates, then controlled Auth/App promotion and source/config/traffic/public verification. Owner real PNG/print acceptance remains separate."
+    },
+    {
+      "branch": "feature/owner-dtf-auto-layout-20261116",
+      "source_commit": "2c225f0b341c57b956baa1519f4b63344a4337a6",
+      "source_parent": "ab4ad7ff3fc92922633e096bd26653d12796ff1b",
+      "base_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
+      "release_candidate": "2026-11-16.3",
+      "current_track": "owner_operation",
+      "sale_track": "ADIADO_VENDA",
+      "code": true,
+      "tested_locally": "4491_NODE_67_PYTHON_38_TARGETED_11_HELPER_PASS",
+      "published": true,
+      "operationally_accepted": false,
+      "receipt": "validation/dtf-auto-layout.json",
+      "next_independent_task": "OP-014",
+      "publication_source_commit": "723bb3a67070c1604579de28f5992a7dc20c5e78",
+      "validation_head": "723bb3a67070c1604579de28f5992a7dc20c5e78",
+      "github_ci": {
+        "id": 43998220684,
+        "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43998220684",
+        "head_sha": "723bb3a67070c1604579de28f5992a7dc20c5e78",
+        "conclusion": "success",
+        "node": {
+          "total": 4494,
+          "pass": 4494,
+          "fail": 0,
+          "skipped": 0,
+          "cancelled": 0
+        },
+        "python": {
+          "total": 67,
+          "pass": 67
+        },
+        "compiled_hashes": {
+          "app": "787d0435e9b6f4df169239687f501de7db402f1a2ab2b3a8a8fccc3879a13b0b",
+          "auth": "0e4547e61441131c5ad8c5f955a64ac691c0d89ada8eb52bbfe0cad2fe485a45",
+          "finance": "ccce234f36f0a763942bf30e274360b9d1223b3594b6600adf3352fafd92efb4"
+        },
+        "workflow_preflight_step": "SKIPPED_BY_EXISTING_STACKED_PR_CONDITION",
+        "local_preflight": "FRESH_RELEASE_LOCAL_PREFLIGHT_OK_BEFORE_ACTUAL_PROMOTION"
+      },
+      "publication_receipt": "validation/publication-dtf-auto-live-20261116.json",
+      "release_id": "2026-11-16.3"
     }
   ]
 }

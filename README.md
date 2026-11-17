@@ -1,11 +1,11 @@
 <!-- OWNER_OPERATION_CURRENT -->
-**DTF 2026-11-16.3 publicado e verificado tecnicamente: seleção e prévia automáticas.** [Uso](docs/owner-operation/README.md) · [checkpoint canônico](docs/MLS_COMMERCE_OS_CHECKPOINT.json) · [recibo](docs/owner-operation/validation/publication-dtf-auto-live-20261116.json).
+**Custos das camisetas 2026-11-16.4 publicados e verificados tecnicamente.** [Uso](docs/owner-operation/README.md) · [checkpoint canônico](docs/MLS_COMMERCE_OS_CHECKPOINT.json) · [recibo](docs/owner-operation/validation/publication-shirt-cost-live-20261116.json).
 
-Com PNGs salvos neste navegador/origem e kits confirmados, as linhas aptas são selecionadas e a prévia é montada sem clicar em Selecionar aptos ou Montar prévia. A mesma entrada preserva o canvas; alteração da fonte o invalida. Seleção manual desativa a automação; a opção explícita a retoma. Reserva, download e impressão continuam exigindo ação do operador. Não há fatos físicos nem lançamentos financeiros por conta da prévia.
+Em Custos e regras, edite P–GG/G1–G3 antes dos resumos e use Salvar custos de produção. Kits e combos seguem o padrão. Regras por tipo e exceções permanecem distintas; confira o custo aplicado em Produtos. Novas referências e recálculos de estimativas antigas usam o custo salvo atual; lotes, CMV e fechamentos históricos não são reescritos. Nenhum valor real foi alterado por esta entrega.
 
-Fonte 723bb3a, CI 43998220684: 4494 Node e 67 Python aprovados, mais 38 testes direcionados. App/Auth ativos com 100% do tráfego e hashes/configurações conferidos; Finance preservado. 8 verificações HTTP e 8 assets públicos exatos; backup privado/restore isolado conferidos. PR #126 rascunho sobre PR #125, sem merge/auto-merge; main 346f30f preservada.
+Fonte c39c572, [CI 44110296190](https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/44110296190): 4500 Node e 67 Python aprovados. 88 testes direcionados, quatro perfis escuros, dez regressões de versão/data DTF e 19 recuperações de mídia passaram localmente. A execução local inicial e suas falhas foram preservadas. App/Auth ativos com 100% e bytes/configurações conferidos; Finance e inventário de assets preservados. PR #127 rascunho sobre PR #126; main 346f30f preservada.
 
-Próximo passo: recarregue Produção → Montador e fila DTF e confira a prévia com os PNGs reais. Não infira fabricação, custos ausentes ou aceite financeiro de um arquivo. [Regras ativas e gates](AGENTS.md#regras-de-domínio-ativas) preservam sexta às 13h/Brasília, confirmações/auditoria, seis agentes, gráficos e contratos. OP-014 segue como próximo desenvolvimento independente; venda ADIADO_VENDA. Históricos integrais seguem abaixo e nas evidências.
+Aceite owner com valores reais ainda pendente. OP-015 parcial; OP-014 segue como próximo desenvolvimento independente. DTF automático, sexta13h/Brasília, UNKNOWN, não duplicação, auditoria, seis agentes, gráficos e permissões preservados. Venda ADIADO_VENDA. Históricos integrais e recibos anteriores continuam acessíveis.
 <!-- END_OWNER_OPERATION_CURRENT -->
 
 <!-- FINANCIAL_AUTOMATION_CURRENT -->
