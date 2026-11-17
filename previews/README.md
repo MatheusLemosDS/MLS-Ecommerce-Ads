@@ -11,3 +11,11 @@ Previews não herdam as configurações de produção. Seus secrets vêm do **Pr
 Testes locais e build não comprovam sucesso externo nem publicação. Os logs/configuração de Builds continuam dependentes do acesso de leitura adequado. Nunca deduza deploy por uma URL que contém `/production/builds/`.
 
 [Diagnóstico e evidências](../docs/owner-operation/validation/builds-recovery.json) · [Configuração oficial de Builds](https://developers.cloudflare.com/workers/ci-cd/builds/configuration/) · [Configuração e secrets de Previews](https://developers.cloudflare.com/workers/previews/configuration/) · [Recursos e isolamento](https://developers.cloudflare.com/workers/previews/resources/) · [Relato primário de falha semelhante](https://github.com/cloudflare/developer-platform/issues/75).
+
+## Empacotamento de produção
+
+Os três geradores já produzem módulos ESM completos. O deploy controlado agora valida o arquivo com o parser/metafile do esbuild antes de chamar Wrangler: recusa dependências estáticas/dinâmicas, chamadas ou aliases CommonJS, código inválido, ausência de export default e arquivos além do cap existente de4MiB. Strings de scripts do navegador e nomes locais não são confundidos com imports.
+
+Com essa prova, `--no-bundle` entrega os mesmos bytes aprovados na CI. O protótipo com Wrangler4.153.0 reduziu App de4.190.201 para3.746.360 bytes, sem mudar configurações, bindings, exports ou o cap. Isso evita acrescentar helpers a funções depois serializadas para o navegador. Finance mantém seus quatro exports. Os testes de dry-run comparam os três arquivos emitidos integralmente, e módulos incompletos impedem chamar Wrangler.
+
+[Prova de empacotamento](../docs/owner-operation/validation/complete-module-packaging.json). Build/dry-run não comprovam publicação; os gates de CI e conferência nativa permanecem obrigatórios.

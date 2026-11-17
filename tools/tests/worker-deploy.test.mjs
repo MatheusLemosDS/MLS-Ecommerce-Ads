@@ -30,6 +30,7 @@ function assertCheckedInDatabases(target, actual, original) {
 function fixture(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'braza-git-deploy-'));
   t.after(() => fs.rmSync(root, {recursive: true, force: true}));
+  fs.mkdirSync(path.join(root,'dist'));for(const role of ['app','auth','finance'])fs.writeFileSync(path.join(root,'dist',role+'-worker.mjs'),"export default {fetch(){return new Response('synthetic')}};\n");
   const save = (name, config) => {
     fs.mkdirSync(path.join(root, 'workers', name), {recursive: true});
     const snapshot = {version: 1, target: name, worker_name: TARGETS[name].name,
@@ -146,7 +147,7 @@ test('valid deployment builds one target and calls pinned Wrangler once with exp
   const [node, args, options] = f.calls[0];
   assert.equal(node, process.execPath);
   assert.deepEqual(args, [path.join(f.root, 'node_modules/wrangler/bin/wrangler.js'), 'deploy', '--config',
-    path.join(f.root, 'workers/finance/wrangler.json'), '--dry-run']);
+    path.join(f.root, 'workers/finance/wrangler.json'), '--no-bundle', '--dry-run']);
   assert.equal(options.cwd, f.root);
 });
 
@@ -167,7 +168,7 @@ test('App automation deploys the authorized effective cron and preserves the mig
   assert.deepEqual(f.built, ['app']);
   assert.equal(f.calls.length, 1);
   assert.deepEqual(f.calls[0][1], [path.join(f.root, 'node_modules/wrangler/bin/wrangler.js'),
-    'deploy', '--config', generatedPath, '--dry-run']);
+    'deploy', '--config', generatedPath, '--no-bundle', '--dry-run']);
   assert.deepEqual(JSON.parse(fs.readFileSync(generatedPath)), expected);
   assert.equal(fs.readFileSync(originalPath, 'utf8'), original);
   assert.equal(fs.readFileSync(snapshotPath, 'utf8'), snapshot);
@@ -349,4 +350,13 @@ test('checked-in browser asset migration preserves all captured routing, storage
   assert.equal(verified.config.assets.run_worker_first, true);
   assert.equal(verified.config.assets.html_handling, 'none');
   assert.equal(verified.config.assets.not_found_handling, 'none');
+});
+
+test('missing or incomplete emitted modules block Wrangler before upload or generated config writes',t=>{
+ const f=fixture(t),file=path.join(f.root,'dist/app-worker.mjs');
+ for(const source of ['import x from "./unresolved.mjs";export default x;','export default {fetch(request){return import(request.url)}};','const loader=require;export default loader;']){
+  fs.writeFileSync(file,source);assert.throws(()=>deployWorker('app',f),e=>['WORKER_COMPLETE_MODULE_INVALID','WORKER_COMPLETE_MODULE_DEPENDENCY'].includes(e.code));assert.equal(f.calls.length,0);
+ }
+ fs.unlinkSync(file);assert.throws(()=>deployWorker('app',f),{code:'WORKER_COMPLETE_MODULE_INVALID'});assert.equal(f.calls.length,0);
+ assert.equal(fs.existsSync(path.join(f.root,'workers/app/.wrangler')),false);
 });
