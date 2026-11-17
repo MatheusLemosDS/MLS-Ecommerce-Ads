@@ -2,7 +2,7 @@
   "schema": "mls_commerce_os_checkpoint_v1",
   "canonical_roadmap": "docs/ROADMAP_MLS_COMMERCE_OS.md",
   "legacy_roadmap": "docs/ROADMAP_BRAZACOMMERCE.md",
-  "updated_at": "2026-11-16T23:33:08.337717+00:00",
+  "updated_at": "2026-11-17T00:19:26Z",
   "product": {
     "name": "MLS Commerce OS",
     "supervisor": "MLS Hermes",
@@ -31,7 +31,7 @@
   },
   "current_phase": "OWNER_OPERATION_U2_DTF_COMPLETE_PRINT_CYCLE",
   "working_branch": "feature/owner-dtf-cycle-20261116",
-  "current_status": "DTF_KIT_COMPOSITION_AND_PRINT_CYCLE_IMPLEMENTED_FULL_GATES_RUNNING",
+  "current_status": "CI_VALIDADA_PUBLICATION_BLOCKED_EXECUTOR",
   "completed_this_phase": [
     "Conciliação de liberações por pedido com estados VERIFIED, LOCATED_UNVERIFIED, AMBIGUOUS e NOT_LOCATED",
     "Repasse-base, ajuste, repasse após ajuste e liberação exibidos sem dupla dedução",
@@ -120,7 +120,7 @@
     }
   },
   "next_actions": [
-    "Complete final-candidate full Node and exact-head GitHub CI, then controlled Auth/App promotion; Finance remains exact and unchanged. Record native source/config/traffic and public assets before claiming publication.",
+    "Reconnect the execution environment. Preserve/reconcile the existing local worktree and final logs before fetching the remote documentation head. Reuse exact-head CI for 7796836ca144d19b8d12f460fb6a3e3d711b0f5e and unchanged worker packages; recover missing local evidence, refresh native baseline/backups, then controlled Auth/App deploy and independent source/config/public-asset verification. Finance stays unchanged. Publication already authorized.",
     "Owner actual acceptance: import original PNGs, verify dimensions/DPI in preview and print at100%; use physical confirmation only after checking complete DTF units.",
     "Never blind-rollback the old DTF server over partial/reversed physical facts; preserve compatible reader and complete append-only audit and use verified backups.",
     "Manufacture, actual costs, partial payments and returns continue by matrix dependencies. Printing/export is not garment manufacture; absent cost/source is unknown, never zero.",
@@ -137,7 +137,7 @@
     "source_commit": "457ddad95953f5b3b8b8c31e71499697ad39cac8",
     "release_candidate": "2026-11-16.2",
     "implementation": true,
-    "local_validation": "KIT_NATIVE_4PASS_BACKEND5PASS_PYTHON67PASS_FULL_NODE_AND_CI_PENDING",
+    "local_validation": "LOCAL_TARGETED_PASS_FULL_LOCAL_RESULT_UNAVAILABLE_AFTER_EXECUTOR_FAILURE",
     "published": false,
     "validated_operationally": false,
     "actual_financial_acceptance": false,
@@ -146,7 +146,29 @@
     "previous_published_receipt": "docs/owner-operation/validation/publication-artwork-live-20261116.json",
     "related_task": "OP-010_DTF_COMPOSITION_SUBSET",
     "pull_request": 125,
-    "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE"
+    "git_integration": "DRAFT_OPEN_NO_MERGE_OR_AUTO_MERGE",
+    "validation_head": "7796836ca144d19b8d12f460fb6a3e3d711b0f5e",
+    "ci_run": 43984485294,
+    "github_validation": {
+      "id": 43984485294,
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43984485294",
+      "head_sha": "7796836ca144d19b8d12f460fb6a3e3d711b0f5e",
+      "conclusion": "success",
+      "node": {
+        "total": 4480,
+        "pass": 4480,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "duration_ms": 735453.95291
+      },
+      "python": {
+        "total": 67,
+        "pass": 67,
+        "fail": 0
+      }
+    },
+    "publication_blocker": "EXECUTOR_UNAVAILABLE_IN_CURRENT_CONVERSATION"
   },
   "incident": {
     "id": "INCIDENT_2026_10_27_PANEL_AGENT_REGRESSION",
@@ -7588,5 +7610,17 @@
       },
       "public_verification": "BLOCKED_ENVIRONMENT_ENVOY_TRANSPORT"
     }
-  ]
+  ],
+  "execution_environment_blocker": {
+    "code": "EXECUTOR_UNAVAILABLE_IN_CURRENT_CONVERSATION",
+    "observed_failure": "failed to query executor configuration capabilities",
+    "provider_status_observation": "RUNNING_CONNECTED_NO_FAILURE_REPORTED",
+    "command_observation": "No usable execution environment is available",
+    "diagnostic_capture_history": "NOT_FOUND",
+    "root_cause": "NOT_ESTABLISHED",
+    "cloudflare_grants_changed": false,
+    "publication_authorization_already_present": true,
+    "next_action": "Reconnect the Codex execution environment, inspect and preserve the existing worktrees before checkout/fetch, recover the final local log or revalidate missing evidence, then reuse exact-head CI and run the existing controlled Auth/App release path after fresh native baseline and backup verification.",
+    "cloudflare_configuration_change_indicated": false
+  }
 }

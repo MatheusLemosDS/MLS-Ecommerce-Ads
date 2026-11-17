@@ -410,18 +410,19 @@
       ],
       "estado_desta_especificacao": "ESPECIFICADO_PARA_CODEX",
       "codigo": "COMPOSICAO_DTF_EXPLICITA_VERSIONADA_POR_VARIACAO_SKU_ORIGINAL_PRESERVADO",
-      "testes_novo_incremento": "5_BACKEND_4_CHROMIUM_KIT_CANDIDATO_FINAL_GATES_COMPLETOS_PENDENTES",
-      "publicacao_novo_incremento": "NAO_REALIZADA",
+      "testes_novo_incremento": "CI do código aprovada:4.480 testes Node e67 Python; zero falhas, skips e cancelamentos nos testes; local final indisponível após perda de acesso ao executor; evidência exata em validation/dtf-cycle.json",
+      "publicacao_novo_incremento": "NAO_REALIZADA_EXECUTOR_INDISPONIVEL",
       "aceite_operacional_novo_incremento": "PENDENTE_CONFERENCIA_REAL_DAS_ARTES_E_DEMAIS_ACEITES_OP010",
       "evidencias": [
         "validation/dtf-cycle.json"
       ],
       "bloqueios": [
-        "Proprietário precisa conferir artes/larguras por variação; cores/tamanhos/lista física e demais aceites OP010 não são comprovados pela composição de estampas."
+        "Proprietário precisa conferir artes/larguras por variação; cores/tamanhos/lista física e demais aceites OP010 não são comprovados pela composição de estampas.",
+        "Executor da conversa indisponível; recuperar terminal e evidências locais antes da publicação controlada já autorizada."
       ],
       "regra_especial": null,
       "codigo_da_especificacao": "RECONFERIR_REUTILIZAR_EXISTENTE_E_COMPLETAR_LACUNAS",
-      "estado_execucao": "PARCIAL_IMPLEMENTADO_SUBESCOPO_COMPOSICAO_DTF",
+      "estado_execucao": "PARCIAL_COMPOSICAO_DTF_CI_VALIDADA_PUBLICACAO_PENDENTE",
       "bloqueia_tarefas_independentes": false
     },
     {
@@ -476,18 +477,19 @@
       ],
       "estado_desta_especificacao": "ESPECIFICADO_PARA_CODEX",
       "codigo": "CICLO_PARCIAL_SALDO_REIMPRESSAO_PERDA_CORRECAO_AUDITADA",
-      "testes_novo_incremento": "CICLO_E_KITS_BACKEND_CHROMIUM_COM_PNGS_SINTETICOS_PYTHON67PASS_GATES_COMPLETOS_PENDENTES",
-      "publicacao_novo_incremento": "NAO_REALIZADA",
+      "testes_novo_incremento": "CI do código aprovada:4.480 testes Node e67 Python; zero falhas, skips e cancelamentos nos testes; local final indisponível após perda de acesso ao executor; evidência exata em validation/dtf-cycle.json",
+      "publicacao_novo_incremento": "NAO_REALIZADA_EXECUTOR_INDISPONIVEL",
       "aceite_operacional_novo_incremento": "PENDENTE_ARTES_IMPRESSORA_E_FATOS_REAIS",
       "evidencias": [
         "validation/dtf-cycle.json"
       ],
       "bloqueios": [
-        "Aceite operacional precisa dos PNGs reais e da conferência de impressão do proprietário; não é substituído por QA sintética."
+        "Aceite operacional precisa dos PNGs reais e da conferência de impressão do proprietário; não é substituído por QA sintética.",
+        "Executor da conversa indisponível; recuperar terminal e evidências locais antes da publicação controlada já autorizada."
       ],
       "regra_especial": null,
       "codigo_da_especificacao": "RECONFERIR_REUTILIZAR_EXISTENTE_E_COMPLETAR_LACUNAS",
-      "estado_execucao": "IMPLEMENTADO_TESTES_DIRECIONADOS_PASSARAM_GATES_PENDENTES",
+      "estado_execucao": "IMPLEMENTADO_CI_VALIDADA_PUBLICACAO_BLOQUEADA_EXECUTOR_ACEITE_REAL_PENDENTE",
       "bloqueia_tarefas_independentes": false
     },
     {
@@ -5675,7 +5677,7 @@
     "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/blob/346f30f200e5cbd3d9efd26663a483c625d9c6e7/docs/financial-automation/publication-live-20261113.json"
   ],
   "source_specification": "input/ROADMAP_EXECUTAVEL_USO_PROPRIO_MLS.json",
-  "updated_at": "2026-11-16T23:33:08.337717+00:00",
+  "updated_at": "2026-11-17T00:19:26Z",
   "canonical_checkpoint": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
   "specification_initial_checkpoint_historical": {
     "fase_corrente": "U0",
@@ -5688,18 +5690,51 @@
   },
   "operational_delivery": {
     "branch": "feature/owner-dtf-cycle-20261116",
-    "source_commit": "bb5d14d78813692950435441333e842aa6759325",
+    "source_commit": "457ddad95953f5b3b8b8c31e71499697ad39cac8",
     "source_parent": "d27f85a67906002c9ac8be4bef101eb793f87358",
     "base_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
     "release_candidate": "2026-11-16.2",
     "current_track": "owner_operation",
     "sale_track": "ADIADO_VENDA",
     "code": true,
-    "tested_locally": "63_TARGETED_PASS_FULL_GATES_PENDING",
+    "tested_locally": "TARGETED_PASS_FULL_LOCAL_FINAL_RESULT_UNAVAILABLE_AFTER_EXECUTOR_LOSS",
     "published": false,
     "operationally_accepted": false,
     "receipt": "validation/dtf-cycle.json",
-    "next_independent_task": "OP-014"
+    "next_independent_task": "RESTORE_EXECUTOR_VERIFY_AND_PUBLISH_CURRENT_DTF_CANDIDATE",
+    "validation_head": "7796836ca144d19b8d12f460fb6a3e3d711b0f5e",
+    "github_ci": {
+      "id": 43984485294,
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43984485294",
+      "head_sha": "7796836ca144d19b8d12f460fb6a3e3d711b0f5e",
+      "conclusion": "success",
+      "node": {
+        "total": 4480,
+        "pass": 4480,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "duration_ms": 735453.95291
+      },
+      "python": {
+        "total": 67,
+        "pass": 67,
+        "fail": 0
+      }
+    },
+    "publication_blocker": {
+      "code": "EXECUTOR_UNAVAILABLE_IN_CURRENT_CONVERSATION",
+      "observed_failure": "failed to query executor configuration capabilities",
+      "provider_status_observation": "RUNNING_CONNECTED_NO_FAILURE_REPORTED",
+      "command_observation": "No usable execution environment is available",
+      "diagnostic_capture_history": "NOT_FOUND",
+      "root_cause": "NOT_ESTABLISHED",
+      "cloudflare_grants_changed": false,
+      "publication_authorization_already_present": true,
+      "next_action": "Reconnect the Codex execution environment, inspect and preserve the existing worktrees before checkout/fetch, recover the final local log or revalidate missing evidence, then reuse exact-head CI and run the existing controlled Auth/App release path after fresh native baseline and backup verification.",
+      "cloudflare_configuration_change_indicated": false
+    },
+    "next_task_after_publication": "OP-014"
   },
   "latest_owner_constraints": {
     "production_friday_13_brasilia": true,

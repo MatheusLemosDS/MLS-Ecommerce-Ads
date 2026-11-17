@@ -5,17 +5,36 @@
   "source_parent": "d27f85a67906002c9ac8be4bef101eb793f87358",
   "base_main": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
   "branch": "feature/owner-dtf-cycle-20261116",
-  "recorded_at_utc": "2026-11-16T23:33:08.337717+00:00",
-  "recorded_at_brasilia": "2026-11-16T20:33:08.337717-03:00",
+  "recorded_at_utc": "2026-11-17T00:19:26Z",
+  "recorded_at_brasilia": "2026-11-16T21:19:26.000-03:00",
   "release_candidate": "2026-11-16.2",
   "implemented": true,
   "tested": {
     "targeted": {
-      "status": "BACKEND_AND_COMPILED_NATIVE_CASES_PASS_BEFORE_COMPLETE_RUN",
-      "new_kit_backend_cases": 5,
-      "new_kit_authenticated_chromium_cases": 4,
-      "exact_final_runtime_native_kit_cases_pass": 4,
-      "full_suite_required": true
+      "completed_local_revalidations": [
+        {
+          "scope": "namespace and affected owner UI/script integration",
+          "pass": 39,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0
+        },
+        {
+          "scope": "native print cycle, normal/minified320/1365",
+          "pass": 4,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0
+        },
+        {
+          "scope": "owner editor release gates",
+          "pass": 5,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0
+        }
+      ],
+      "latest_fixture_adjustment": "Validated by exact-head GitHub CI; local executor unavailable. Application package remains af6b26b6a1fa1237f80d73fe3057ee74d0d2d005dfbc4eb10e92047895a119cf."
     },
     "backend_cases": 13,
     "authenticated_chromium": {
@@ -34,12 +53,68 @@
       "all_pages_and_totals_verified": true
     },
     "sqlite_backup_restore_including_idempotent_retry": true,
-    "full_node": "RUNNING_FINAL_CANDIDATE",
-    "github_ci": "PENDING_FINAL_HEAD",
+    "full_node": {
+      "local_final_result": "UNAVAILABLE_AFTER_EXECUTOR_ACCESS_LOSS",
+      "last_observed_pass_count": 2315,
+      "last_observed_fail_count": 0,
+      "last_observed_head": "b343443412ae4009c2d004561bcab9cc3c01b230",
+      "github_exact_head_result": {
+        "id": 43984485294,
+        "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43984485294",
+        "head_sha": "7796836ca144d19b8d12f460fb6a3e3d711b0f5e",
+        "conclusion": "success",
+        "node": {
+          "total": 4480,
+          "pass": 4480,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "duration_ms": 735453.95291
+        },
+        "python": {
+          "total": 67,
+          "pass": 67,
+          "fail": 0
+        }
+      }
+    },
+    "github_ci": {
+      "id": 43984485294,
+      "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43984485294",
+      "head_sha": "7796836ca144d19b8d12f460fb6a3e3d711b0f5e",
+      "conclusion": "success",
+      "node": {
+        "total": 4480,
+        "pass": 4480,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "duration_ms": 735453.95291
+      },
+      "python": {
+        "total": 67,
+        "pass": 67,
+        "fail": 0
+      },
+      "workflow_preflight_step": {
+        "conclusion": "skipped",
+        "unchanged_condition": "github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'main'",
+        "actual_pr_base": "feature/owner-dtf-artwork-backup-20261116",
+        "workflow_modified": false
+      }
+    },
     "python": {
       "total": 67,
       "pass": 67,
       "fail": 0
+    },
+    "local_release_preflight": {
+      "result_before_executor_loss": "RELEASE_LOCAL_PREFLIGHT_OK",
+      "command": "node tools/release_preflight.mjs --base=origin/main",
+      "local_evidence": "/workspace/work/dtf-cycle-evidence/final-gates-preflight.log",
+      "reviewed_input_tree": "1d62280591a481597d4a259bcbaf34bc5cf28d04",
+      "compatibility": "7796836 changes only two existing test files already included in changedPaths/allowed_files; runtime hashes, admin/build source, config, workflow and preflight inputs are unchanged. Reconfirm the CLI gate after recovering the executor before any publication.",
+      "not_production_approval": true
     }
   },
   "published": false,
@@ -260,7 +335,7 @@
   "commercial_money_or_marketplace_writes": false,
   "workflow_permissions_or_deployment_profile_changes": false,
   "real_artwork_and_printer_acceptance": "PENDING_OWNER_IMPORT_AND_PHYSICAL_CONFERENCE",
-  "next_independent_task": "OP-014 manufacturing/cost/payment foundations by existing technical dependencies; current printing facts never certify garment manufacture.",
+  "next_independent_task": "Restore supported executor access, reconcile the preserved local work and candidate 7796836ca144d19b8d12f460fb6a3e3d711b0f5e, complete missing local evidence and promote through project scripts with native/public verification. No new authorization is needed. OP-014 remains next after the DTF publication increment.",
   "superseded_attempts": [
     {
       "head": "970f2eff5b194d89a90e041939e4b671be85ca92",
@@ -298,6 +373,42 @@
         "conclusion": "failure",
         "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43976343445"
       },
+      "published": false
+    },
+    {
+      "head": "503ca9dfe5e79a39c0e9460e70f76adcab4c4be2",
+      "full_node": {
+        "total": 4471,
+        "pass": 4445,
+        "fail": 26,
+        "cancelled": 0,
+        "skipped": 0
+      },
+      "github_ci": {
+        "id": 43980451797,
+        "total": 4471,
+        "pass": 4447,
+        "fail": 24,
+        "conclusion": "failure"
+      },
+      "resolution": "Exact-script-count and build-probe fixtures updated for the shared DTF engine; native reprint review waits for refreshed enabled controls. Local weekly CDP node replacement also occurred; no application source was changed for these fixture corrections.",
+      "published": false
+    },
+    {
+      "head": "b343443412ae4009c2d004561bcab9cc3c01b230",
+      "github_ci": {
+        "id": 43982442590,
+        "url": "https://github.com/MatheusLemosDS/MLS-Ecommerce-Ads/actions/runs/43982442590",
+        "total": 4480,
+        "pass": 4479,
+        "fail": 1,
+        "cancelled": 0,
+        "skipped": 0,
+        "conclusion": "failure"
+      },
+      "failed_case": "complete DTF cycle through compiled authenticated App normal1365: native file selection preceded artwork-store initialization",
+      "resolution": "Both native kit and print-cycle fixtures now wait for the actual initialized workspace status and enabled art input before selecting files. All action, PNG, quantity and integrity assertions remain.",
+      "application_worker_hash_changed": false,
       "published": false
     }
   ],
@@ -385,6 +496,65 @@
     "merge": false,
     "auto_merge": false,
     "remote_main_verified": "346f30f200e5cbd3d9efd26663a483c625d9c6e7",
-    "supported_transport": "GitHub connector Git Data API; git native transport503; identical tree verified; local predecessor retained."
+    "supported_transport": "GitHub connector Git Data API; git native transport503; identical tree verified; local predecessor retained.",
+    "head": "7796836ca144d19b8d12f460fb6a3e3d711b0f5e",
+    "note": "Remote branch and draft PR preserve the complete source; local worktree last inspected before executor loss. Never overwrite uninspected local work.",
+    "validation_head": "7796836ca144d19b8d12f460fb6a3e3d711b0f5e",
+    "current_documentation_commit": "THIS_FOLLOWUP_COMMIT",
+    "local_head_last_confirmed": "b343443412ae4009c2d004561bcab9cc3c01b230"
+  },
+  "validation_head": "7796836ca144d19b8d12f460fb6a3e3d711b0f5e",
+  "publication_blocker": {
+    "code": "EXECUTOR_UNAVAILABLE_IN_CURRENT_CONVERSATION",
+    "observed_failure": "failed to query executor configuration capabilities",
+    "provider_status_observation": "RUNNING_CONNECTED_NO_FAILURE_REPORTED",
+    "command_observation": "No usable execution environment is available",
+    "diagnostic_capture_history": "NOT_FOUND",
+    "root_cause": "NOT_ESTABLISHED",
+    "cloudflare_grants_changed": false,
+    "publication_authorization_already_present": true,
+    "next_action": "Reconnect the Codex execution environment, inspect and preserve the existing worktrees before checkout/fetch, recover the final local log or revalidate missing evidence, then reuse exact-head CI and run the existing controlled Auth/App release path after fresh native baseline and backup verification.",
+    "cloudflare_configuration_change_indicated": false
+  },
+  "status": "CI_VALIDADA_PUBLICATION_BLOCKED_EXECUTOR",
+  "external_build_access_followup": {
+    "requests": 6,
+    "statuses": [
+      403,
+      403,
+      403,
+      403,
+      403,
+      403
+    ],
+    "cloudflare_error_code": 10000,
+    "production_branch_filters_and_commands": "NOT_OBTAINED",
+    "permission_expansion": false,
+    "source": "GET workers-builds configuration and triggers using existing confirmed worker tags",
+    "controlled_path_authorization": "Owner-invoked own-operation prompt section8.8; scripts, CI and independent release checks remain required.",
+    "observed_utc_date": "2026-11-16",
+    "local_evidence_path": "/workspace/work/dtf-cycle-evidence/build-access.json"
+  },
+  "superseded_continuity_prefixes": {
+    "README.md": "<!-- OWNER_OPERATION_CURRENT -->\nPrioridade: montador DTF e operação própria. [Como usar](docs/owner-operation/README.md), [matriz](docs/owner-operation/EXECUCAO.json), [checkpoint canônico](docs/MLS_COMMERCE_OS_CHECKPOINT.json).\n\nOP010/composição DTF e OP012 implementados: impressão parcial, PNG do saldo, cancelamento de EXPORTED não impresso com motivo/ack dos arquivos, reimpressão por parte, perda e correção auditada. Código457ddad, branchfeature/owner-dtf-cycle-20261116, versão candidata2026-11-16.2.Ciclo e composição explícita dos kits implementados; quatro casos nativos de kit no candidato final e67 Python passaram; backend/Chromium normal+minificado320/1365, histórico1006 eventos e recuperação com retry idempotente. Gates completos/CI/publicação ainda pendentes. Live continua2026-11-16.1, agora com8 HTTP/7 assets conferidos e ledger aprovado. Main346f30f/PR121 e pai d27f85a/PR124 preservados.\n\n[Recibo do incremento](docs/owner-operation/validation/dtf-cycle.json). PNGs reais/impressora e aceite físico/financeiro ainda pendentes. Impressão/exportação não confirma fabricação; custos desconhecidos não são zero. Após fatos parciais, manter backend compatível em retorno da interface; não aplicar servidor antigo cegamente nem apagar o journal. Gráficos, seis agentes, CSRF/tenant/permissões, sexta13h e não duplicar custos/receitas seguem ativos. Venda ADIADO_VENDA. [Histórico](docs/owner-operation/history/continuity-before-op012-20261116.json).\n<!-- END_OWNER_OPERATION_CURRENT -->",
+    "NEXT_CHAT_HANDOFF.txt": "<!-- OWNER_OPERATION_CURRENT -->\nPrioridade: montador DTF e operação própria. [Como usar](docs/owner-operation/README.md), [matriz](docs/owner-operation/EXECUCAO.json), [checkpoint canônico](docs/MLS_COMMERCE_OS_CHECKPOINT.json).\n\nOP010/composição DTF e OP012 implementados: impressão parcial, PNG do saldo, cancelamento de EXPORTED não impresso com motivo/ack dos arquivos, reimpressão por parte, perda e correção auditada. Código457ddad, branchfeature/owner-dtf-cycle-20261116, versão candidata2026-11-16.2.Ciclo e composição explícita dos kits implementados; quatro casos nativos de kit no candidato final e67 Python passaram; backend/Chromium normal+minificado320/1365, histórico1006 eventos e recuperação com retry idempotente. Gates completos/CI/publicação ainda pendentes. Live continua2026-11-16.1, agora com8 HTTP/7 assets conferidos e ledger aprovado. Main346f30f/PR121 e pai d27f85a/PR124 preservados.\n\n[Recibo do incremento](docs/owner-operation/validation/dtf-cycle.json). PNGs reais/impressora e aceite físico/financeiro ainda pendentes. Impressão/exportação não confirma fabricação; custos desconhecidos não são zero. Após fatos parciais, manter backend compatível em retorno da interface; não aplicar servidor antigo cegamente nem apagar o journal. Gráficos, seis agentes, CSRF/tenant/permissões, sexta13h e não duplicar custos/receitas seguem ativos. Venda ADIADO_VENDA. [Histórico](docs/owner-operation/history/continuity-before-op012-20261116.json).\n<!-- END_OWNER_OPERATION_CURRENT -->",
+    "docs/RETOMADA.md": "<!-- OWNER_OPERATION_CURRENT -->\nPrioridade: montador DTF e operação própria. [Como usar](owner-operation/README.md), [matriz](owner-operation/EXECUCAO.json), [checkpoint canônico](MLS_COMMERCE_OS_CHECKPOINT.json).\n\nOP010/composição DTF e OP012 implementados: impressão parcial, PNG do saldo, cancelamento de EXPORTED não impresso com motivo/ack dos arquivos, reimpressão por parte, perda e correção auditada. Código457ddad, branchfeature/owner-dtf-cycle-20261116, versão candidata2026-11-16.2.Ciclo e composição explícita dos kits implementados; quatro casos nativos de kit no candidato final e67 Python passaram; backend/Chromium normal+minificado320/1365, histórico1006 eventos e recuperação com retry idempotente. Gates completos/CI/publicação ainda pendentes. Live continua2026-11-16.1, agora com8 HTTP/7 assets conferidos e ledger aprovado. Main346f30f/PR121 e pai d27f85a/PR124 preservados.\n\n[Recibo do incremento](owner-operation/validation/dtf-cycle.json). PNGs reais/impressora e aceite físico/financeiro ainda pendentes. Impressão/exportação não confirma fabricação; custos desconhecidos não são zero. Após fatos parciais, manter backend compatível em retorno da interface; não aplicar servidor antigo cegamente nem apagar o journal. Gráficos, seis agentes, CSRF/tenant/permissões, sexta13h e não duplicar custos/receitas seguem ativos. Venda ADIADO_VENDA. [Histórico](owner-operation/history/continuity-before-op012-20261116.json).\n<!-- END_OWNER_OPERATION_CURRENT -->",
+    "docs/ROADMAP_MLS_COMMERCE_OS.md": "<!-- OWNER_OPERATION_CURRENT -->\nPrioridade: montador DTF e operação própria. [Como usar](owner-operation/README.md), [matriz](owner-operation/EXECUCAO.json), [checkpoint canônico](MLS_COMMERCE_OS_CHECKPOINT.json).\n\nOP010/composição DTF e OP012 implementados: impressão parcial, PNG do saldo, cancelamento de EXPORTED não impresso com motivo/ack dos arquivos, reimpressão por parte, perda e correção auditada. Código457ddad, branchfeature/owner-dtf-cycle-20261116, versão candidata2026-11-16.2.Ciclo e composição explícita dos kits implementados; quatro casos nativos de kit no candidato final e67 Python passaram; backend/Chromium normal+minificado320/1365, histórico1006 eventos e recuperação com retry idempotente. Gates completos/CI/publicação ainda pendentes. Live continua2026-11-16.1, agora com8 HTTP/7 assets conferidos e ledger aprovado. Main346f30f/PR121 e pai d27f85a/PR124 preservados.\n\n[Recibo do incremento](owner-operation/validation/dtf-cycle.json). PNGs reais/impressora e aceite físico/financeiro ainda pendentes. Impressão/exportação não confirma fabricação; custos desconhecidos não são zero. Após fatos parciais, manter backend compatível em retorno da interface; não aplicar servidor antigo cegamente nem apagar o journal. Gráficos, seis agentes, CSRF/tenant/permissões, sexta13h e não duplicar custos/receitas seguem ativos. Venda ADIADO_VENDA. [Histórico](owner-operation/history/continuity-before-op012-20261116.json).\n<!-- END_OWNER_OPERATION_CURRENT -->",
+    "docs/MLS_CODEX_HANDOFF_2026_10_28.md": "<!-- OWNER_OPERATION_CURRENT -->\nPrioridade: montador DTF e operação própria. [Como usar](owner-operation/README.md), [matriz](owner-operation/EXECUCAO.json), [checkpoint canônico](MLS_COMMERCE_OS_CHECKPOINT.json).\n\nOP010/composição DTF e OP012 implementados: impressão parcial, PNG do saldo, cancelamento de EXPORTED não impresso com motivo/ack dos arquivos, reimpressão por parte, perda e correção auditada. Código457ddad, branchfeature/owner-dtf-cycle-20261116, versão candidata2026-11-16.2.Ciclo e composição explícita dos kits implementados; quatro casos nativos de kit no candidato final e67 Python passaram; backend/Chromium normal+minificado320/1365, histórico1006 eventos e recuperação com retry idempotente. Gates completos/CI/publicação ainda pendentes. Live continua2026-11-16.1, agora com8 HTTP/7 assets conferidos e ledger aprovado. Main346f30f/PR121 e pai d27f85a/PR124 preservados.\n\n[Recibo do incremento](owner-operation/validation/dtf-cycle.json). PNGs reais/impressora e aceite físico/financeiro ainda pendentes. Impressão/exportação não confirma fabricação; custos desconhecidos não são zero. Após fatos parciais, manter backend compatível em retorno da interface; não aplicar servidor antigo cegamente nem apagar o journal. Gráficos, seis agentes, CSRF/tenant/permissões, sexta13h e não duplicar custos/receitas seguem ativos. Venda ADIADO_VENDA. [Histórico](owner-operation/history/continuity-before-op012-20261116.json).\n<!-- END_OWNER_OPERATION_CURRENT -->"
+  },
+  "superseded_owner_readme_status": "**Implementado e testado com PNGs sintéticos reais em desktop/celular; CI completa e publicação pendentes.** A Live continua2026-11-16.1 até o recibo da próxima versão confirmar a publicação. [Evidências](validation/dtf-cycle.json).",
+  "prior_recorded_timestamps": {
+    "utc": "2026-11-16T23:33:08.337717+00:00",
+    "brasilia": "2026-11-16T20:33:08.337717-03:00"
+  },
+  "document_validation": {
+    "scope": "ONLY_DOCUMENTATION_METADATA_CHANGED_AFTER_GREEN_CODE_CI",
+    "json_documents": 4,
+    "markdown_and_handoff_documents": 6,
+    "original_task_instructions_acceptance_dependencies_preserved": true,
+    "continuity_history_suffixes_preserved": true,
+    "previous_current_prefixes_archived_in_this_receipt": true,
+    "known_relative_links_preserved_or_target_existing_AGENTS": true,
+    "functional_suites_repeated_manually": false
   }
 }

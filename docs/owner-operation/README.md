@@ -6,7 +6,7 @@ A trilha ativa é **owner_operation**. Cadastro de outros clientes, e-mail comer
 
 ## Incremento atual OP-012 — montagem e ciclo de impressão
 
-**Implementado e testado com PNGs sintéticos reais em desktop/celular; CI completa e publicação pendentes.** A Live continua2026-11-16.1 até o recibo da próxima versão confirmar a publicação. [Evidências](validation/dtf-cycle.json).
+**Código implementado; CI do código aprovada:4.480 testes Node e67 Python; zero falhas, skips e cancelamentos nos testes. Publicação pendente por indisponibilidade do executor desta conversa.** A última Live verificada é2026-11-16.1. Reconectar o ambiente do Codex e recuperar o log local antes de publicar a candidata2026-11-16.2 pelo caminho autorizado. [Evidências, bloqueio e retomada](validation/dtf-cycle.json).
 
 Antes de selecionar os kits, use **Conferir artes do kit** na linha. Digite a composição completa, por exemplo `frente-27+costas-22`. Se as duas peças realmente usam a mesma arte e largura, clique na opção correspondente; ela não salva sozinha. Informe motivo e marque a confirmação. A aplicação alcança somente esta variação e SKU de origem, em pedidos elegíveis sem reserva ou impressão. Se aparecer saldo de aplicação, confirme novamente. O SKU Shopee é preservado. Lotes reservados/impressos mantêm sua composição. Na fila salva,78 de125 linhas elegíveis precisam dessa conferência; isso não comprova fabricação nem disponibilidade dos PNGs.
 

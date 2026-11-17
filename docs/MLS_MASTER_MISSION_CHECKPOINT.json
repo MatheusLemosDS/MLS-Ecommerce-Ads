@@ -1,6 +1,6 @@
 {
   "schema": "mls_master_mission_checkpoint_v1",
-  "updated_at": "2026-11-16T23:33:08.337717+00:00",
+  "updated_at": "2026-11-17T00:19:26Z",
   "base_visual_sha": "8d860b2c4f26531c53c4cdba0e06a14f51a7eef4",
   "visual_branch": "feature/mls-mockup-parity-real-charts-20261029",
   "visual_pr": 79,
@@ -7057,7 +7057,7 @@
   },
   "current_phase": "OWNER_OPERATION_U2_DTF_COMPLETE_PRINT_CYCLE",
   "working_branch": "feature/owner-dtf-cycle-20261116",
-  "current_status": "SEE_CANONICAL_CHECKPOINT_OWNER_DTF_FINAL_GATES",
+  "current_status": "SEE_CANONICAL_CHECKPOINT_DTF_PUBLICATION_BLOCKED_EXECUTOR",
   "next_phase": "OWNER_OPERATION_BY_TECHNICAL_DEPENDENCY_NOT_SAAS_PHASE_GATES",
   "active_execution_matrix": "docs/owner-operation/EXECUCAO.json",
   "active_charts_catalog": "docs/owner-operation/CATALOGO_GRAFICOS.json",
@@ -7132,5 +7132,12 @@
     "native_verified": true,
     "public_smoke": "BLOCKED_ENVIRONMENT_TRANSPORT",
     "operationally_accepted": false
+  },
+  "current_checkpoint_pointer": {
+    "path": "docs/MLS_COMMERCE_OS_CHECKPOINT.json",
+    "receipt": "docs/owner-operation/validation/dtf-cycle.json",
+    "validation_head": "7796836ca144d19b8d12f460fb6a3e3d711b0f5e",
+    "published": false,
+    "blocker": "EXECUTOR_UNAVAILABLE_IN_CURRENT_CONVERSATION"
   }
 }
